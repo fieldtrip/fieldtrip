@@ -333,7 +333,7 @@ switch dtype
     data   = ft_checkdata(data, 'datatype', 'timelock');
     dtype  = ft_datatype(data);
     dimord = data.dimord;
-  case  {'timelock' 'freq' 'unknown'}
+  case  {'timelock' 'freq' 'chan' 'unknown'}
     dimord = data.dimord;
   case 'comp'
     dimord = 'chan_comp';

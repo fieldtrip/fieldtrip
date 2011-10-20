@@ -1,6 +1,6 @@
 function test_ft_topoplotER
 
-% TEST: test_ft_topoplotER ft_topoplotER ft_topoplotIC
+% TEST: test_ft_topoplotER ft_topoplotER ft_topoplotTFR ft_topoplotIC
 
 % this script tests the functionality of ft_topoplotER with respect to the 
 % different input datatypes. no other functionality is tested.
@@ -119,5 +119,18 @@ granger = ft_connectivityanalysis(cfgc2, freq2);
 cfg.refchannel = 'gui';
 cfg.parameter = 'grangerspctrm';
 figure;ft_topoplotER(cfg, granger);drawnow
+
+%plot a stat structure, containing only 1 freq bin (so without freq-field)
+stat = freq;
+stat.stat = freq.powspctrm(:,10);
+stat = rmfield(stat, 'freq');
+stat = rmfield(stat, 'cumtapcnt');
+stat = rmfield(stat, 'powspctrm');
+stat.dimord = 'chan';
+
+cfg = rmfield(cfg, 'refchannel');
+cfg.parameter = 'stat';
+cfg.interactive = 'no';
+figure;ft_topoplotER(cfg, stat);drawnow
 
 cd(pwdir);
