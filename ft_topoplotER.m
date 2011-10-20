@@ -112,4 +112,4 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 %
 % $Id$
 
-cfg = ft_topoplotER(cfg, varargin{:});
+cfg = ft_topoplotTFR(cfg, varargin{:});
