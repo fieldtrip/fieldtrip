@@ -175,7 +175,7 @@ if Ndata>1 && ~isnumeric(varargin{end})
       f = figure();
       set(f, 'Position', p);
     end
-    ft_topoplotER(cfg, varargin{1:Ndata}, indx);
+    ft_topoplotTFR(cfg, varargin{1:Ndata}, indx);
     indx = indx + 1;
   end
   return
