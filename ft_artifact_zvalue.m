@@ -155,7 +155,8 @@ fltpadding    = round(cfg.artfctdef.zvalue.fltpadding*hdr.Fs);
 artpadding    = round(cfg.artfctdef.zvalue.artpadding*hdr.Fs);
 trl(:,1)      = trl(:,1) - trlpadding;       % pad the trial with some samples, in order to detect
 trl(:,2)      = trl(:,2) + trlpadding;       % artifacts at the edges of the relevant trials.
-trl(:,3)      = nan;                         % the offset is not correct any moretrllength     = trl(:,2) - trl(:,1) + 1;     % length of each trial
+trl(:,3)      = nan;                         % the offset is not correct any more
+trllength     = trl(:,2) - trl(:,1) + 1;     % length of each trial
 numtrl        = size(trl,1);
 cfg.artfctdef.zvalue.trl = trl;              % remember where we are going to look for artifacts
 cfg.artfctdef.zvalue.channel = ft_channelselection(cfg.artfctdef.zvalue.channel, hdr.label);
@@ -716,12 +717,12 @@ subplot(opt.h1);hold on;
 
 % plot as a blue line only once
 if isempty(get(opt.h1, 'children'))
-  for trlop=1:opt.numtrl
-    xval = opt.trl(trlop,1):opt.trl(trlop,2);
+  for k = 1:opt.numtrl
+    xval = opt.trl(k,1):opt.trl(k,2);
     if opt.thresholdsum,
-      yval = opt.zsum{trlop};
+      yval = opt.zsum{k};
     else
-      yval = opt.zmax{trlop};
+      yval = opt.zmax{k};
     end
     plot(opt.h1, xval, yval, 'linestyle', '-', 'color', 'b', 'displayname', 'data');
   end
@@ -755,12 +756,12 @@ end
 thrhandle = findall(h1children, 'displayname', 'reddata');
 if isempty(thrhandle)
   % they have to be drawn
-  for trlop=1:opt.numtrl
-    xval = opt.trl(trlop,1):opt.trl(trlop,2);
+  for k = 1:opt.numtrl
+    xval = opt.trl(k,1):opt.trl(k,2);
     if opt.thresholdsum,
-      yval = opt.zsum{trlop};
+      yval = opt.zsum{k};
     else
-      yval = opt.zmax{trlop};
+      yval = opt.zmax{k};
     end
     dum = yval<=opt.threshold;
     yval(dum) = nan;
@@ -770,17 +771,17 @@ if isempty(thrhandle)
   ylabel('zscore');
 elseif ~isempty(thrhandle) && opt.updatethreshold
   % they can be updated
-  for trlop=1:opt.numtrl
-    xval = opt.trl(trlop,1):opt.trl(trlop,2);
+  for k = 1:opt.numtrl
+    xval = opt.trl(k,1):opt.trl(k,2);
     if opt.thresholdsum,
-      yval = opt.zsum{trlop};
+      yval = opt.zsum{k};
     else
-      yval = opt.zmax{trlop};
+      yval = opt.zmax{k};
     end
     dum = yval<=opt.threshold;
     yval(dum) = nan;
-    set(thrhandle(trlop), 'XData', xval);
-    set(thrhandle(trlop), 'YData', yval);
+    set(thrhandle(k), 'XData', xval);
+    set(thrhandle(k), 'YData', yval);
   end
   set(findall(h1children, 'displayname', 'threshline'), 'YData', [1 1].*opt.threshold);  
 end
