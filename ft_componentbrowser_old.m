@@ -1,7 +1,7 @@
 function [varargout] = ft_componentbrowser_old(cfg, comp)
 
 % FT_COMPONENTBROWSER plots topography and activations of ICA components
-% This function is deprecated, use FT_DATABROWSER with cfg.viewmode='template' instead.
+% This function is deprecated, use FT_DATABROWSER instead.
 %
 % Use as
 %   ft_componentbrowser_old(cfg, comp)
