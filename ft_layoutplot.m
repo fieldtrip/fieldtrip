@@ -77,12 +77,11 @@ ft_defaults
 
 % record start time and total processing time
 ftFuncTimer = tic();
-ftFuncClock = clock();;
+ftFuncClock = clock();
 ftFuncMem   = memtic();
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % basic check/initialization of input arguments
@@ -104,8 +103,6 @@ if ~isempty(cfg.inputfile)
   elseif (nargin<2), 
     data = [];
 end
-
-if ~isstruct(cfg) && ~isempty(cfg), error('argument cfg must be a structure'); end;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % extract/generate layout information
