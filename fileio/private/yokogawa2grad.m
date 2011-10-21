@@ -54,12 +54,16 @@ end
 
 handles    = definehandles;
 isgrad     = (hdr.channel_info(:,2)==handles.AxialGradioMeter | ...
-    hdr.channel_info(:,2)==handles.PlannerGradioMeter | hdr.channel_info(:,2)==handles.MagnetoMeter | ...
-    hdr.channel_info(:,2)==handles.RefferenceAxialGradioMeter  | hdr.channel_info(:,2)==handles.RefferencePlannerGradioMeter | ...
-    hdr.channel_info(:,2)==handles.RefferenceMagnetoMeter);
+              hdr.channel_info(:,2)==handles.PlannerGradioMeter | ...
+              hdr.channel_info(:,2)==handles.MagnetoMeter | ...
+              hdr.channel_info(:,2)==handles.RefferenceAxialGradioMeter);
+% reference channels are excluded because the positions are not specified
+%              hdr.channel_info(:,2)==handles.RefferencePlannerGradioMeter
+%              hdr.channel_info(:,2)==handles.RefferenceMagnetoMeter
 isgrad_handles = hdr.channel_info(isgrad,2);
-ismag = (isgrad_handles(:)==handles.MagnetoMeter | isgrad_handles(:)==handles.RefferenceMagnetoMeter);
+ismag      = (isgrad_handles(:)==handles.MagnetoMeter | isgrad_handles(:)==handles.RefferenceMagnetoMeter);
 grad.pnt   = hdr.channel_info(isgrad,3:5)*100;    % cm
+grad.unit  = 'cm';
 
 % Get orientation of the 1st coil
 ori_1st   = hdr.channel_info(find(isgrad),[6 7]);
