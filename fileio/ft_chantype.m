@@ -288,37 +288,101 @@ elseif ft_senstype(input, 'yokogawa') && isheader
   TriggerChannel                = -1;
   EegChannel                    = -2;
   EcgChannel                    = -3;
-  EtcChannel                    = -4;
-  sel = (hdr.orig.channel_info(:, 2) == NullChannel);
-  type(sel) = {'null'};
-  sel = (hdr.orig.channel_info(:, 2) == MagnetoMeter);
-  type(sel) = {'megmag'};
-  sel = (hdr.orig.channel_info(:, 2) == AxialGradioMeter);
-  type(sel) = {'meggrad'};
-  sel = (hdr.orig.channel_info(:, 2) == PlannerGradioMeter);
-  type(sel) = {'megplanar'};
-  sel = (hdr.orig.channel_info(:, 2) == RefferenceMagnetoMeter);
-  type(sel) = {'refmag'};
-  sel = (hdr.orig.channel_info(:, 2) == RefferenceAxialGradioMeter);
-  type(sel) = {'refgrad'};
-  sel = (hdr.orig.channel_info(:, 2) == RefferencePlannerGradioMeter);
-  type(sel) = {'refplanar'};
-  sel = (hdr.orig.channel_info(:, 2) == TriggerChannel);
-  type(sel) = {'trigger'};
-  sel = (hdr.orig.channel_info(:, 2) == EegChannel);
-  type(sel) = {'eeg'};
-  sel = (hdr.orig.channel_info(:, 2) == EcgChannel);
-  type(sel) = {'ecg'};
-  sel = (hdr.orig.channel_info(:, 2) == EtcChannel);
-  type(sel) = {'etc'};
-
+  EtcChannel                    = -4; 
+  if ft_hastoolbox('yokogawa_meg_reader')
+      % shorten names
+      ch_info = hdr.orig.channel_info.channel;
+      type_orig = [ch_info.type];
+      
+      sel = (type_orig == NullChannel);
+      type(sel) = {'null'};
+      sel = (type_orig == MagnetoMeter);
+      type(sel) = {'megmag'};
+      sel = (type_orig == AxialGradioMeter);
+      type(sel) = {'meggrad'};
+      sel = (type_orig == PlannerGradioMeter);
+      type(sel) = {'megplanar'};
+      sel = (type_orig == RefferenceMagnetoMeter);
+      type(sel) = {'refmag'};
+      sel = (type_orig == RefferenceAxialGradioMeter);
+      type(sel) = {'refgrad'};
+      sel = (type_orig == RefferencePlannerGradioMeter);
+      type(sel) = {'refplanar'};
+      sel = (type_orig == TriggerChannel);
+      type(sel) = {'trigger'};
+      sel = (type_orig == EegChannel);
+      type(sel) = {'eeg'};
+      sel = (type_orig == EcgChannel);
+      type(sel) = {'ecg'};
+      sel = (type_orig == EtcChannel);
+      type(sel) = {'etc'};
+  elseif ft_hastoolbox('yokogawa')
+      sel = (hdr.orig.channel_info(:, 2) == NullChannel);
+      type(sel) = {'null'};
+      sel = (hdr.orig.channel_info(:, 2) == MagnetoMeter);
+      type(sel) = {'megmag'};
+      sel = (hdr.orig.channel_info(:, 2) == AxialGradioMeter);
+      type(sel) = {'meggrad'};
+      sel = (hdr.orig.channel_info(:, 2) == PlannerGradioMeter);
+      type(sel) = {'megplanar'};
+      sel = (hdr.orig.channel_info(:, 2) == RefferenceMagnetoMeter);
+      type(sel) = {'refmag'};
+      sel = (hdr.orig.channel_info(:, 2) == RefferenceAxialGradioMeter);
+      type(sel) = {'refgrad'};
+      sel = (hdr.orig.channel_info(:, 2) == RefferencePlannerGradioMeter);
+      type(sel) = {'refplanar'};
+      sel = (hdr.orig.channel_info(:, 2) == TriggerChannel);
+      type(sel) = {'trigger'};
+      sel = (hdr.orig.channel_info(:, 2) == EegChannel);
+      type(sel) = {'eeg'};
+      sel = (hdr.orig.channel_info(:, 2) == EcgChannel);
+      type(sel) = {'ecg'};
+      sel = (hdr.orig.channel_info(:, 2) == EtcChannel);
+      type(sel) = {'etc'};
+  end
+  
 elseif ft_senstype(input, 'yokogawa') && isgrad
   % all channels in the gradiometer definition are meg
-  type(1:end) = {'meg'};
-
+  % type(1:end) = {'meg'};
+  % channels are identified based on their name: only magnetic as isgrad==1
+  sel = myregexp('^M[0-9][0-9][0-9]$', grad.label);
+  type(sel) = {'megmag'};
+  sel = myregexp('^AG[0-9][0-9][0-9]$', grad.label);
+  type(sel) = {'meggrad'};
+  sel = myregexp('^PG[0-9][0-9][0-9]$', grad.label);
+  type(sel) = {'megplanar'};
+  sel = myregexp('^RM[0-9][0-9][0-9]$', grad.label);
+  type(sel) = {'refmag'};
+  sel = myregexp('^RAG[0-9][0-9][0-9]$', grad.label);
+  type(sel) = {'refgrad'};
+  sel = myregexp('^RPG[0-9][0-9][0-9]$', grad.label);
+  type(sel) = {'refplanar'};
+ 
 elseif ft_senstype(input, 'yokogawa') && islabel
   % the yokogawa channel labels are a mess, so autodetection is not possible
-  type(1:end) = {'meg'};
+  % type(1:end) = {'meg'};
+  sel = myregexp('[0-9][0-9][0-9]$', label);
+  type(sel) = {'null'};
+  sel = myregexp('^M[0-9][0-9][0-9]$', label);
+  type(sel) = {'megmag'};
+  sel = myregexp('^AG[0-9][0-9][0-9]$', label);
+  type(sel) = {'meggrad'};
+  sel = myregexp('^PG[0-9][0-9][0-9]$', label);
+  type(sel) = {'megplanar'};
+  sel = myregexp('^RM[0-9][0-9][0-9]$', label);
+  type(sel) = {'refmag'};
+  sel = myregexp('^RAG[0-9][0-9][0-9]$', label);
+  type(sel) = {'refgrad'};
+  sel = myregexp('^RPG[0-9][0-9][0-9]$', label);
+  type(sel) = {'refplanar'};
+  sel = myregexp('^TRIG[0-9][0-9][0-9]$', label);
+  type(sel) = {'trigger'};
+  sel = myregexp('^EEG[0-9][0-9][0-9]$', label);
+  type(sel) = {'eeg'};
+  sel = myregexp('^ECG[0-9][0-9][0-9]$', label);
+  type(sel) = {'ecg'};
+  sel = myregexp('^ETC[0-9][0-9][0-9]$', label);
+  type(sel) = {'etc'};
 
 elseif ft_senstype(input, 'itab') && isheader
   sel = ([hdr.orig.ch.type]==0);
