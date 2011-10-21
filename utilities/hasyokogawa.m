@@ -94,9 +94,10 @@ end
 
 if nargin>0
   % return a true/false value
-  version = strcmpi(version, desired);
-  if ~version
-    warning('Yokogawa toolbox version "%s" is installed instead of the desired version "%s".', version, desired);
+  if isempty(version)
+    version = false;
+  else 
+    version = strcmpi(version, desired);
   end
 end
 

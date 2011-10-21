@@ -89,7 +89,7 @@ url = {
   'NLXNETCOM'  'see http://www.neuralynx.com'
   'DIPOLI'     'see ftp://ftp.fcdonders.nl/pub/fieldtrip/external'
   'MNE'        'see http://www.nmr.mgh.harvard.edu/martinos/userInfo/data/sofMNE.php'
-  'TCP_UDP_IP' 'see http://www.mathworks.com/matlabcentral/fileexchange/345, or contact Peter Rydes?ter'
+  'TCP_UDP_IP' 'see http://www.mathworks.com/matlabcentral/fileexchange/345, or contact Peter Rydesaeter'
   'BEMCP'      'contact Christophe Phillips'
   'OPENMEEG'   'see http://gforge.inria.fr/projects/openmeeg and http://gforge.inria.fr/frs/?group_id=435'
   'PRTOOLS'    'see http://www.prtools.org'
@@ -158,13 +158,13 @@ switch toolbox
   case 'EEPROBE'
     status  = (exist('read_eep_avr') && exist('read_eep_cnt'));
   case 'YOKOGAWA'
-    status = (exist('hasyokogawa') && hasyokogawa('16bitBeta6'));
+    status = hasyokogawa('16bitBeta6');
  case 'YOKOGAWA16BITBETA3'
-    status = (exist('hasyokogawa') && hasyokogawa('16bitBeta3'));
+    status = hasyokogawa('16bitBeta3');
   case 'YOKOGAWA16BITBETA6'
-    status = (exist('hasyokogawa') && hasyokogawa('16bitBeta6'));
+    status = hasyokogawa('16bitBeta6');
   case 'YOKOGAWA_MEG_READER' 
-    status = (exist('hasyokogawa') && hasyokogawa('1.4')); 
+    status = hasyokogawa('1.4'); 
   case 'BEOWULF'
     status = (exist('evalwulf') && exist('evalwulf') && exist('evalwulf'));
   case 'MENTAT'
