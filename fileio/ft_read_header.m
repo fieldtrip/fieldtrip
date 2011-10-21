@@ -1395,11 +1395,18 @@ switch headerformat
     error('not yet implemented');
 
   case {'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw', 'yokogawa_mrk'}
-    % chek that the required low-level toolbox is available
-    ft_hastoolbox('yokogawa', 1);
-    hdr = read_yokogawa_header(filename);
-    % add a gradiometer structure for forward and inverse modelling
-    hdr.grad = yokogawa2grad(hdr);
+    % header can be read with two toolboxes: Yokogawa MEG Reader and Yokogawa MEG160 (old inofficial toolbox)
+    % newest toolbox takes precedence. 
+    if ft_hastoolbox('yokogawa_meg_reader', 3); %stay silent if it cannot be added
+      hdr = read_yokogawa_header_new(filename);
+      % add a gradiometer structure for forward and inverse modelling
+      hdr.grad = yokogawa2grad_new(hdr);
+    else 
+      ft_hastoolbox('yokogawa', 1);
+      hdr = read_yokogawa_header(filename);
+      % add a gradiometer structure for forward and inverse modelling
+      hdr.grad = yokogawa2grad(hdr);
+    end
 
   case 'nmc_archive_k'
     hdr = read_nmc_archive_k_hdr(filename);
