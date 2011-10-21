@@ -27,7 +27,11 @@ function [vol] = yokogawa2vol(hdr);
 % hdr = read_yokogawa_header(filename);
 hdr = hdr.orig; % use the original Yokogawa header, not the FieldTrip header
 
-if isfield(hdr.mri_info, 'model_name') && strcmp(hdr.mri_info.model_name, 'SphericalModel')
+if ft_hastoolbox('yokogawa_meg_reader') && (hdr.coregist.model.type == 1)
+  % single sphere volume conduction model
+  vol.r = hdr.coregist.model.radius;
+  vol.o = [hdr.coregist.model.cx hdr.coregist.model.cy hdr.coregist.model.cz]; 
+elseif isfield(hdr.mri_info, 'model_name') && strcmp(hdr.mri_info.model_name, 'SphericalModel')
   % single sphere volume conduction model
   vol.r = hdr.mri_info.r;
   vol.o = [hdr.mri_info.cx hdr.mri_info.cy hdr.mri_info.cz];
