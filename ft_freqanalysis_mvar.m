@@ -1,7 +1,9 @@
 function [freq] = ft_freqanalysis_mvar(cfg, data)
 
 % FT_FREQANALYSIS_MVAR performs frequency analysis on
-% mvar data.
+% mvar data, by fourier transformation of the coefficients. The output
+% contains cross-spectral density, spectral transfer matrix, and the
+% covariance of the innovation noise. The dimord = 'chan_chan(_freq)(_time)
 %
 % Use as
 %   [freq] = ft_freqanalysis(cfg, data)
@@ -26,13 +28,13 @@ function [freq] = ft_freqanalysis_mvar(cfg, data)
 %
 % $Id$
 
-if ~isfield(cfg, 'channel'),    cfg.channel    = 'all';          end
-if ~isfield(cfg, 'channelcmb'), cfg.channelcmb = {'all' 'all'};  end
-if ~isfield(cfg, 'foi'),        cfg.foi        = 'all';          end
-if ~isfield(cfg, 'keeptrials'), cfg.keeptrials = 'no';           end
-if ~isfield(cfg, 'jackknife'),  cfg.jackknife  = 'no';           end
-if ~isfield(cfg, 'keeptapers'), cfg.keeptapers = 'yes';          end
-if ~isfield(cfg, 'feedback'),   cfg.feedback   = 'none';         end
+cfg.channel    = ft_getopt(cfg, 'channel',    'all');
+cfg.channelcmb = ft_getopt(cfg, 'channelcmb', {'all' 'all'});
+cfg.foi        = ft_getopt(cfg, 'foi',        'all');
+cfg.keeptrials = ft_getopt(cfg, 'keeptrials', 'no');
+cfg.jackknife  = ft_getopt(cfg, 'jackknife',  'no');
+cfg.keeptapers = ft_getopt(cfg, 'keeptapers', 'yes');
+cfg.feedback   = ft_getopt(cfg, 'feedback',   'none');
 
 if strcmp(cfg.foi, 'all'),
   cfg.foi = (0:1:data.fsampleorig/2);
@@ -103,7 +105,7 @@ freq.crsspctrm = crsspctrm;
 freq.dof       = data.dof;
 
 % remember the configuration details of the input data
-try, cfg.previous = data.cfg; end
+if isfield(data, 'cfg'), cfg.previous = data.cfg; end
 % remember the exact configuration details in the output
 freq.cfg = cfg;
 

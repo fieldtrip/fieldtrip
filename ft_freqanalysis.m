@@ -12,44 +12,59 @@ function [freq] = ft_freqanalysis(cfg, data)
 %
 % The configuration should contain:
 %   cfg.method     = different methods of calculating the spectra
-%                   'mtmfft', analyses an entire spectrum for the entire data
-%                       length, implements multitaper frequency transformation
-%                   'mtmconvol', implements multitaper time-frequency transformation
-%                       based on multiplication in the frequency domain
-%                   'mtmwelch', performs frequency analysis using Welch's averaged
-%                       modified periodogram method of spectral estimation
-%                   'wavelet', implements wavelet time frequency transformation
-%                       (using Morlet wavelets) based on multiplication in the frequency domain
-%                   'tfr', implements wavelet time frequency transformation
-%                       (using Morlet wavelets) based on convolution in the time domain
-%                   'mvar', does a fourier transform on the coefficients of
-%                       an estimated multivariate autoregressive model,
-%                       obtained with FT_MVARANALYSIS
-%                   OR, if you want to use the old implementation (not from the specest module)
-%                   'mtmfft_old'
-%                   'mtmconvol_old'
-%                   'wltconvol_old'
+%                    'mtmfft', analyses an entire spectrum for the entire data
+%                      length, implements multitaper frequency transformation
+%                    'mtmconvol', implements multitaper time-frequency
+%                      transformation based on multiplication in the frequency
+%                      domain.
+%                    'mtmwelch', performs frequency analysis using Welch's
+%                      averaged modified periodogram method of spectral
+%                      estimation.
+%                    'wavelet', implements wavelet time frequency
+%                      transformation (using Morlet wavelets) based on
+%                      multiplication in the frequency domain.
+%                    'tfr', implements wavelet time frequency transformation
+%                        (using Morlet wavelets) based on convolution in the
+%                        time domain.
+%                    'mvar', does a fourier transform on the coefficients of
+%                        an estimated multivariate autoregressive model,
+%                        obtained with FT_MVARANALYSIS. In this case, the
+%                        output will contain a spectral transfer matrix,
+%                        the cross-spectral density matrix, and the
+%                        covariance matrix of the innovatio noise.
+% 
+%                    OR, if you want to use the old implementation (not from
+%                      the specest module)
+%                      'mtmfft_old'
+%                      'mtmconvol_old'
+%                      'wltconvol_old'
 %   cfg.output     = 'pow'       return the power-spectra
 %                    'powandcsd' return the power and the cross-spectra
 %                    'fourier'   return the complex Fourier-spectra
 %   cfg.channel    = Nx1 cell-array with selection of channels (default = 'all'),
-%                    see FT_CHANNELSELECTION for details
+%                      see FT_CHANNELSELECTION for details
 %   cfg.channelcmb = Mx2 cell-array with selection of channel pairs (default = {'all' 'all'}),
-%                    see FT_CHANNELCOMBINATION for details
+%                      see FT_CHANNELCOMBINATION for details
 %   cfg.trials     = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.keeptrials = 'yes' or 'no', return individual trials or average (default = 'no')
 %   cfg.keeptapers = 'yes' or 'no', return individual tapers or average (default = 'no')
-%   cfg.pad        = number or 'maxperlen', length in seconds to which the data can be padded out (default = 'maxperlen')
-%                    The padding will determine your spectral resolution. If you want to
-%                    compare spectra from data pieces of different lengths, you should use
-%                    the same cfg.pad for both, in order to spectrally interpolate them to
-%                    the same spectral resolution.  Note that this will run very slow if you
-%                    specify cfg.pad as maxperlen AND the number of samples turns out to have
-%                    a large prime factor sum. This is because the FFTs will then be computed
-%                    very inefficiently.
-%   cfg.polyremoval = number (default = 1), specifying the order of the polynome which is fitted and subtracted from
-%                       time domain data prior to the spectral analysis. A value of 1 corresponds to a linear trend.
-%                       If just mean subtraction is requested, use a value of 0. If no removal is requested, specify -1.
+%   cfg.pad        = number or 'maxperlen', length in seconds to which the
+%                      data can be padded out (default = 'maxperlen') The
+%                      padding will determine your spectral resolution. If
+%                      you want to compare spectra from data pieces of
+%                      different lengths, you should use the same cfg.pad
+%                      for both, in order to spectrally interpolate them to
+%                      the same spectral resolution.  Note that this will
+%                      run very slow if you specify cfg.pad as maxperlen
+%                      AND the number of samples turns out to have a large
+%                      prime factor sum. This is because the FFTs will then
+%                      be computed very inefficiently.
+%   cfg.polyremoval = number (default = 1), specifying the order of the
+%                       polynome which is fitted and subtracted from the
+%                       time domain data prior to the spectral analysis. A
+%                       value of 1 corresponds to a linear trend. If just
+%                       mean subtraction is requested, use a value of 0. If
+%                       no removal is requested, specify -1.
 %                       see FT_PREPROC_POLYREMOVAL for details
 %
 %
