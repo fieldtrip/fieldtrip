@@ -30,9 +30,6 @@ function [event] = read_yokogawa_event(filename, varargin)
 %
 % $Id$
 
-% ensure that the required toolbox is on the path
-ft_hastoolbox('yokogawa', 1);
-
 event   = [];
 handles = definehandles;
 
@@ -41,42 +38,92 @@ trigindx    = ft_getopt(varargin, 'trigindx');
 threshold   = ft_getopt(varargin, 'threshold');
 detectflank = ft_getopt(varargin, 'detectflank');
 
-% read the dataset header
-hdr = read_yokogawa_header(filename);
-
-% determine the trigger channels (if not specified by the user)
-if isempty(trigindx)
-  trigindx = find(hdr.orig.channel_info(:,2)==handles.TriggerChannel);
-end
-
-if hdr.orig.acq_type==handles.AcqTypeEvokedRaw
-  % read the trigger id from all trials
-  fid   = fopen(filename, 'r');
-  value = GetMeg160TriggerEventM(fid);
-  fclose(fid);
-  % use the standard FieldTrip header for trial events
-  % make an event for each trial as defined in the header
-  for i=1:hdr.nTrials
-    event(end+1).type     = 'trial';
-    event(end  ).sample   = (i-1)*hdr.nSamples + 1;
-    event(end  ).offset   = -hdr.nSamplesPre;
-    event(end  ).duration =  hdr.nSamples;
+% ensure that the required toolbox is on the path
+if ft_hastoolbox('yokogawa_meg_reader');
+ 
+    % read the dataset header
+    hdr = read_yokogawa_header_new(filename);
+    ch_info = hdr.orig.channel_info.channel;
+    type = [ch_info.type];
     
-    if ~isempty(value)
-      event(end  ).value    =  value(i);
+    % determine the trigger channels (if not specified by the user)
+    if isempty(trigindx)
+      trigindx = find(type==handles.TriggerChannel);
     end
-  end
-  
-elseif hdr.orig.acq_type==handles.AcqTypeEvokedAve
-  % make an event for the average
-  event(1).type     = 'average';
-  event(1).sample   = 1;
-  event(1).offset   = -hdr.nSamplesPre;
-  event(1).duration =  hdr.nSamples;
-  
-elseif hdr.orig.acq_type==handles.AcqTypeContinuousRaw
-  % the data structure does not contain events, but flank detection on the trigger channel might reveal them
-  % this is done below for all formats
+ 
+    % Use the MEG Reader documentation if more detailed support is
+    % required.
+    if hdr.orig.acq_type==handles.AcqTypeEvokedRaw
+      % read the trigger id from all trials
+      event = getYkgwHdrEvent(filename);
+      % use the standard FieldTrip header for trial events
+      % make an event for each trial as defined in the header
+      for i=1:hdr.nTrials
+        event(end+1).type     = 'trial';
+        event(end  ).sample   = (i-1)*hdr.nSamples + 1;
+        event(end  ).offset   = -hdr.nSamplesPre;
+        event(end  ).duration =  hdr.nSamples;
+ 
+        if ~isempty(value)
+          event(end  ).value    =  event(i).code;
+        end
+      end
+ 
+    % Use the MEG Reader documentation if more detailed support is required.
+    elseif hdr.orig.acq_type==handles.AcqTypeEvokedAve
+      % make an event for the average
+      event(1).type     = 'average';
+      event(1).sample   = 1;
+      event(1).offset   = -hdr.nSamplesPre;
+      event(1).duration =  hdr.nSamples;
+ 
+    elseif hdr.orig.acq_type==handles.AcqTypeContinuousRaw
+      % the data structure does not contain events, but flank detection on the trigger channel might reveal them
+      % this is done below for all formats
+    end
+ 
+elseif ft_hastoolbox('yokogawa');
+    
+    % read the dataset header
+    hdr = read_yokogawa_header(filename);
+
+    % determine the trigger channels (if not specified by the user)
+    if isempty(trigindx)
+      trigindx = find(hdr.orig.channel_info(:,2)==handles.TriggerChannel);
+    end
+
+    if hdr.orig.acq_type==handles.AcqTypeEvokedRaw
+      % read the trigger id from all trials
+      fid   = fopen(filename, 'r');
+      value = GetMeg160TriggerEventM(fid);
+      fclose(fid);
+      % use the standard FieldTrip header for trial events
+      % make an event for each trial as defined in the header
+      for i=1:hdr.nTrials
+	event(end+1).type     = 'trial';
+	event(end  ).sample   = (i-1)*hdr.nSamples + 1;
+	event(end  ).offset   = -hdr.nSamplesPre;
+	event(end  ).duration =  hdr.nSamples;
+	
+	if ~isempty(value)
+	  event(end  ).value    =  value(i);
+	end
+      end
+      
+    elseif hdr.orig.acq_type==handles.AcqTypeEvokedAve
+      % make an event for the average
+      event(1).type     = 'average';
+      event(1).sample   = 1;
+      event(1).offset   = -hdr.nSamplesPre;
+      event(1).duration =  hdr.nSamples;
+      
+    elseif hdr.orig.acq_type==handles.AcqTypeContinuousRaw
+      % the data structure does not contain events, but flank detection on the trigger channel might reveal them
+      % this is done below for all formats
+    end
+
+else
+    error('cannot determine, whether Yokogawa toolbox is present');
 end
 
 % read the trigger channels and detect the flanks
