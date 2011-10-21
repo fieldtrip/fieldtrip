@@ -35,8 +35,6 @@ function [pnt, ori, lab] = channelposition(sens, varargin)
 % get the optional input arguments
 getref = ft_getopt(varargin, 'channel', false);
 
-keyboard
-
 % remove the balancing from the sensor definition, e.g. 3rd order gradients, PCA-cleaned data or ICA projections
 sens = undobalancing(sens);
 
