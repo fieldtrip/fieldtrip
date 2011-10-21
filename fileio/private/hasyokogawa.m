@@ -7,7 +7,7 @@ function [version] = hasyokogawa(desired)
 % Use as
 %   [string]  = hasyokogawa;
 % which returns a string describing the toolbox version, e.g. "12bitBeta3",
-% "16bitBeta3", or "16bitBeta6" for preliminary versions, or '1.4' for the 
+% "16bitBeta3", or "16bitBeta6" for preliminary versions, or '1.4' for the
 % official Yokogawa MEG Reader Toolbox. An empty string is returned if the toolbox
 % is not installed. The string "unknown" is returned if it is installed but
 % the version is unknown.
@@ -39,78 +39,66 @@ function [version] = hasyokogawa(desired)
 %
 % $Id$
 
-% return empty if not present
-version = [];
+ws = warning('off', 'MATLAB:pfileOlderThanMfile');
 
-try
-  warning('off', 'MATLAB:pfileOlderThanMfile');
-  % Call some functions with input argument "Inf": If
-  % the functions are present they return their revision number.
-  % Call first GetMeg160ADbitInfoM as this is not present in
-  % the 12bit library, in case of error the "catch" part will take over.
-  % The code below is intentionally very literal for easy of reading.
-  res = textscan(evalc('GetMeg160ADbitInfoM(Inf);'),'%s %s %c %s %s %d');
-  rev_ADbitInfoM = res{6};
-  res = textscan(evalc('GetMeg160ChannelInfoM(Inf);'),'%s %s %c %s %s %d');
-  rev_ChannelInfoM = res{6};
-  res = textscan(evalc('GetMeg160AmpGainM(Inf);'),'%s %s %c %s %s %d');
-  rev_AmpGainM = res{6};
-  res = textscan(evalc('GetMeg160MatchingInfoM(Inf);'),'%s %s %c %s %s %d');
-  rev_MatchingInfoM = res{6};
-  if [0 2 1 5] == [rev_ADbitInfoM rev_ChannelInfoM rev_AmpGainM rev_MatchingInfoM]
-    version='16bitBeta3';
-  elseif [0 2 2 5] == [rev_ADbitInfoM rev_ChannelInfoM rev_AmpGainM rev_MatchingInfoM]
-    version='16bitBeta6';
-  else
-    warning('Yokogawa toolbox is installed, but the version cannot be determined.');
-    version = 'unknown';
-  end
-  if nargin>0
-      if ~strcmp(desired, '1.4') 
-	version = strcmpi(version, desired);
-	if ~version
-	  warning('The required version of the Yokogawa input toolbox (%s) is not installed.', desired);
-	end
-      end
-  end
-  warning('on', 'MATLAB:pfileOlderThanMfile');
-catch
-  warning('on', 'MATLAB:pfileOlderThanMfile');
-  m = lasterror;
-  m.identifier;
-  if strcmp(m.identifier, 'MATLAB:UndefinedFunction') || strcmp(m.identifier, 'MATLAB:FileIO:InvalidFid')
-    if (exist('GetMeg160ChannelInfoM') && exist('GetMeg160ContinuousRawDataM'));
-      version = '12bitBeta3';
+% there are a few versions of the old preliminary implementation, such as
+% 12bitBeta3, 16bitBeta3 and 16bitBeta6. Medio 2011 a completely new
+% implementation was officially released, which contains functions with
+% other names. At the time of writing this, the new implementation is
+% version 1.4.
+
+
+if exist('GetMeg160ADbitInfoM') || exist('GetMeg160ChannelInfoM') || exist('GetMeg160ContinuousRawDataM')
+  % start with unknown, try to refine the version
+  version = 'unknown';
+  
+  try
+    % Call some functions with input argument "Inf": If
+    % the functions are present they return their revision number.
+    % Call first GetMeg160ADbitInfoM as this is not present in
+    % the 12bit library, in case of error the "catch" part will take over.
+    % The code below is intentionally very literal for easy of reading.
+    res = textscan(evalc('GetMeg160ADbitInfoM(Inf);'),'%s %s %c %s %s %d');
+    rev_ADbitInfoM = res{6};
+    res = textscan(evalc('GetMeg160ChannelInfoM(Inf);'),'%s %s %c %s %s %d');
+    rev_ChannelInfoM = res{6};
+    res = textscan(evalc('GetMeg160AmpGainM(Inf);'),'%s %s %c %s %s %d');
+    rev_AmpGainM = res{6};
+    res = textscan(evalc('GetMeg160MatchingInfoM(Inf);'),'%s %s %c %s %s %d');
+    rev_MatchingInfoM = res{6};
+    if [0 2 1 5] == [rev_ADbitInfoM rev_ChannelInfoM rev_AmpGainM rev_MatchingInfoM]
+      version='16bitBeta3';
+    elseif [0 2 2 5] == [rev_ADbitInfoM rev_ChannelInfoM rev_AmpGainM rev_MatchingInfoM]
+      version='16bitBeta6';
     else
-      version = 'unknown';
-   end
-  end
-  if nargin>0
-    version = 0; % logical output
+      warning('The version of the installed Yokogawa toolbox cannot be determined.');
+    end
+  catch
+    m = lasterror;
+    m.identifier;
+    if strcmp(m.identifier, 'MATLAB:UndefinedFunction') || strcmp(m.identifier, 'MATLAB:FileIO:InvalidFid')
+      if (exist('GetMeg160ChannelInfoM') && exist('GetMeg160ContinuousRawDataM'));
+        version = '12bitBeta3';
+      end
+    end
   end
   
+elseif exist('getYkgwVersion')
+  res = getYkgwVersion();
+  version = res.version;
+  
+else
+  % return empty if none of them is present
+  version = [];
 end
 
-% the official Yokogawa input toolbox takes precedence over the
-% preliminary versions
-try
-    warning('off', 'MATLAB:pfileOlderThanMfile');
-    res = getYkgwVersion();
-    if nargin == 0
-     	if strcmp(res.version, '1.4'), version = '1.4'; else version = 'unknown'; end            
-    else
-        if strcmp(desired, '1.4') 
-            if strcmp(res.version, '1.4'), version = '1.4'; else version = 'unknown'; end            
-            version = strcmpi(version, desired);
-            if ~version
-                warning('The required version of the Yokogawa input toolbox (%s) is not installed.', desired);
-            end
-        end
-    end
-    warning('on', 'MATLAB:pfileOlderThanMfile');
-catch 
-    warning('on', 'MATLAB:pfileOlderThanMfile');
-    if nargin>0 && strcmp(desired, '1.4')
-	version = 0; % logical output
-    end
+if nargin>0
+  % return a true/false value
+  version = strcmpi(version, desired);
+  if ~version
+    warning('Yokogawa toolbox version "%s" is installed instead of the desired version "%s".', version, desired);
+  end
 end
+
+% revert to the original warning state
+warning(ws);
