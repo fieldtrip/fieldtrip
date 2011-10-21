@@ -5,8 +5,15 @@ function [freq] = ft_freqanalysis_mvar(cfg, data)
 % contains cross-spectral density, spectral transfer matrix, and the
 % covariance of the innovation noise. The dimord = 'chan_chan(_freq)(_time)
 %
+% The function is stand-alone, but is typically called through
+% FT_FREQANALYSIS, specifying cfg.method = 'mvar'.
+%
 % Use as
-%   [freq] = ft_freqanalysis(cfg, data)
+%   [freq] = ft_freqanalysis(cfg, data), with cfg.method = 'mvar'
+%
+% or
+% 
+%   [freq] = ft_freqanalysis_mvar(cfg, data)
 %
 % The input data structure should be a data structure created by
 % FT_MVARANALYSIS, i.e. a data-structure of type 'mvar'. 
