@@ -101,6 +101,7 @@ if strcmp(cfg.method, 'template')
         fprintf('Using the 2-D layout filename to determine the template filename\n');
         cfg.template = [strtok(cfg.layout, '.') '_neighb.mat'];
     end
+    cfg.template = lower(cfg.template);
     if ~exist(cfg.template, 'file') 
         error('Template file could not be found - please check spelling or contact jm.horschig(at)donders.ru.nl if you want to create and share your own template! See also http://fieldtrip.fcdonders.nl/faq/how_can_i_define_my_own_neighbourhood_template');
     end
