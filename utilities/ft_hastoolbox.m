@@ -159,11 +159,13 @@ switch toolbox
     status  = (exist('read_eep_avr') && exist('read_eep_cnt'));
   case 'YOKOGAWA'
     status = hasyokogawa('16bitBeta6');
- case 'YOKOGAWA16BITBETA3'
+  case 'YOKOGAWA12BITBETA3'
+    status = hasyokogawa('12bitBeta3');
+  case 'YOKOGAWA16BITBETA3'
     status = hasyokogawa('16bitBeta3');
   case 'YOKOGAWA16BITBETA6'
     status = hasyokogawa('16bitBeta6');
-  case 'YOKOGAWA_MEG_READER' 
+  case 'YOKOGAWA_MEG_READER'
     status = hasyokogawa('1.4'); 
   case 'BEOWULF'
     status = (exist('evalwulf') && exist('evalwulf') && exist('evalwulf'));
