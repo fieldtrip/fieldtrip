@@ -229,18 +229,29 @@ switch fileformat
     end
 
   case {'yokogawa_mrk', 'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw' }
-    hdr = read_yokogawa_header(filename);
-    marker = hdr.orig.matching_info.marker;
-
+    if ft_hastoolbox('yokogawa_meg_reader')
+       hdr = read_yokogawa_header_new(filename); 
+       marker = hdr.orig.coregist.hpi;     
+    else
+        hdr = read_yokogawa_header(filename);
+        marker = hdr.orig.matching_info.marker;
+    end
+    
     % markers 1-3 identical to zero: try *.mrk file
     if ~any([marker(:).meg_pos])
       [p, f, x] = fileparts(filename);
       filename = fullfile(p, [f '.mrk']);
       if exist(filename, 'file')
-        hdr    = read_yokogawa_header(filename);
-        marker = hdr.orig.matching_info.marker;
+        if ft_hastoolbox('yokogawa_meg_reader')
+            hdr = read_yokogawa_header_new(filename); 
+            marker = hdr.orig.coregist.hpi;     
+        else
+            hdr = read_yokogawa_header(filename);
+            marker = hdr.orig.matching_info.marker;
+        end
       end
-    end
+    end  hdr = read_yokogawa_header(filename);
+    marker = hdr.orig.matching_info.marker;
 
     % non zero markers 1-3
     if any([marker(:).meg_pos])
