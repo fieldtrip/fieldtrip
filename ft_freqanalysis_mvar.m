@@ -7,6 +7,27 @@ function [freq] = ft_freqanalysis_mvar(cfg, data)
 %
 % Use as
 %   [freq] = ft_freqanalysis(cfg, data)
+%
+% The input data structure should be a data structure created by
+% FT_MVARANALYSIS, i.e. a data-structure of type 'mvar'. 
+%
+% The configuration can contain:
+%   cfg.foi = vector with the frequencies at which the spectral quantities
+%               are estimated (in Hz). Default: 0:1:Nyquist
+%   cfg.feedback = 'none', or any of the methods supported by FT_PROGRESS,
+%                    for providing feedback to the user in the command
+%                    window.
+%
+% To facilitate data-handling and distributed computing with the peer-to-peer
+% module, this function has the following options:
+%   cfg.inputfile   =  ...
+%   cfg.outputfile  =  ...
+% If you specify one of these (or both) the input data will be read from a *.mat
+% file on disk and/or the output data will be written to a *.mat file. These mat
+% files should contain only a single variable, corresponding with the
+% input/output structure.
+%
+% See also FT_MVARANALYSIS, FT_DATATYPE_MVAR, FT_PROGRESS
 
 % Copyright (C) 2009, Jan-Mathijs Schoffelen
 %
@@ -28,20 +49,27 @@ function [freq] = ft_freqanalysis_mvar(cfg, data)
 %
 % $Id$
 
-cfg.channel    = ft_getopt(cfg, 'channel',    'all');
-cfg.channelcmb = ft_getopt(cfg, 'channelcmb', {'all' 'all'});
+revision = '$Id$';
+
+% do the general setup of the function
+ft_preamble defaults
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar data
+
 cfg.foi        = ft_getopt(cfg, 'foi',        'all');
-cfg.keeptrials = ft_getopt(cfg, 'keeptrials', 'no');
-cfg.jackknife  = ft_getopt(cfg, 'jackknife',  'no');
-cfg.keeptapers = ft_getopt(cfg, 'keeptapers', 'yes');
 cfg.feedback   = ft_getopt(cfg, 'feedback',   'none');
+%cfg.channel    = ft_getopt(cfg, 'channel',    'all');
+%cfg.keeptrials = ft_getopt(cfg, 'keeptrials', 'no');
+%cfg.jackknife  = ft_getopt(cfg, 'jackknife',  'no');
+%cfg.keeptapers = ft_getopt(cfg, 'keeptapers', 'yes');
 
 if strcmp(cfg.foi, 'all'),
   cfg.foi = (0:1:data.fsampleorig/2);
 end
 
-cfg.channel    = ft_channelselection(cfg.channel,      data.label);
-%cfg.channelcmb = channelcombination(cfg.channelcmb, data.label);
+cfg.channel = ft_channelselection('all', data.label);
+%cfg.channel    = ft_channelselection(cfg.channel,      data.label);
 
 %keeprpt  = strcmp(cfg.keeptrials, 'yes');
 %keeptap  = strcmp(cfg.keeptapers, 'yes');
@@ -104,10 +132,12 @@ freq.noisecov  = data.noisecov;
 freq.crsspctrm = crsspctrm;
 freq.dof       = data.dof;
 
-% remember the configuration details of the input data
-if isfield(data, 'cfg'), cfg.previous = data.cfg; end
-% remember the exact configuration details in the output
-freq.cfg = cfg;
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+ft_postamble previous data
+ft_postamble history freq
+ft_postamble savevar freq
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION to compute transfer-function from ar-parameters
@@ -138,4 +168,3 @@ h   = sqrt(2).*h; %account for the negative frequencies, normalization necessary
 %comparison with non-parametric (fft based) results in fieldtrip
 %FIXME probably the normalization for the zero Hz bin is incorrect
 zar = zar./sqrt(2);
-
