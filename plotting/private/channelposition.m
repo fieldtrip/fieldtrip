@@ -35,6 +35,8 @@ function [pnt, ori, lab] = channelposition(sens, varargin)
 % get the optional input arguments
 getref = ft_getopt(varargin, 'channel', false);
 
+keyboard
+
 % remove the balancing from the sensor definition, e.g. 3rd order gradients, PCA-cleaned data or ICA projections
 sens = undobalancing(sens);
 
@@ -77,30 +79,37 @@ switch ft_senstype(sens)
     % i.e. the bottom coil in the case of axial gradiometers
     % this only works for a full-rank unbalanced tra-matrix
     
-    % add the additional constraint that coils cannot be used twice,
-    % i.e. for the position of 2 channels. A row of the dist matrix can end
-    % up with more than 1 (magnetometer array) or 2 (axial gradiometer array)
-    % non-zero entries when the input grad structure is rank-reduced
-    % FIXME: I don't know whether this works for a vector-gradiometer
-    % system. I t also does not work when the system has mixed gradiometers
-    % and magnetometers
     numcoils = sum(isfinite(dist),2);
-    tmp      = mode(numcoils);
-    niter    = 0;
-    while ~all(numcoils==tmp)
-      niter    = niter + 1;
-      selmode  = find(numcoils==tmp);
-      selrest  = setdiff((1:size(dist,1))', selmode);
-      dist(selrest,sum(~isinf(dist(selmode,:)))>0) = inf;
-      numcoils = sum(isfinite(dist),2);
-      if niter>500
-        error('Failed to extract the positions of the channels. This is most likely due to the balancing matrix being rank deficient. Please replace data.grad with the original grad-structure obtained after reading the header.');
+    
+    if all(numcoils==numcoils(1))
+      % add the additional constraint that coils cannot be used twice,
+      % i.e. for the position of 2 channels. A row of the dist matrix can end
+      % up with more than 1 (magnetometer array) or 2 (axial gradiometer array)
+      % non-zero entries when the input grad structure is rank-reduced
+      % FIXME: I don't know whether this works for a vector-gradiometer
+      % system. It also does not work when the system has mixed gradiometers
+      % and magnetometers
+      
+      % use the magic that Jan-Mathijs implemented
+      tmp      = mode(numcoils);
+      niter    = 0;
+      while ~all(numcoils==tmp)
+        niter    = niter + 1;
+        selmode  = find(numcoils==tmp);
+        selrest  = setdiff((1:size(dist,1))', selmode);
+        dist(selrest,sum(~isinf(dist(selmode,:)))>0) = inf;
+        numcoils = sum(isfinite(dist),2);
+        if niter>500
+          error('Failed to extract the positions of the channels. This is most likely due to the balancing matrix being rank deficient. Please replace data.grad with the original grad-structure obtained after reading the header.');
+        end
       end
+    else
+      % assume that the solution is not so hard and just determine the bottom coil
     end
     
     [junk, ind] = min(dist, [], 2);
     
-    lab(sel) = sens.label;
+    lab(sel)   = sens.label;
     pnt(sel,:) = sens.pnt(ind, :);
     ori(sel,:) = sens.ori(ind, :);
     
