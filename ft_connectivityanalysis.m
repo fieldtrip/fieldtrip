@@ -617,7 +617,8 @@ switch cfg.method
         powindx.n       = n;
       elseif isfield(cfg, 'block') && ~isempty(cfg.block)
         % blockwise granger
-        powindx = cfg.block;
+        powindx  = cfg.block;
+        newlabel = cell(2,1);
         for k = 1:2
           newlabel{k,1} = cat(2,powindx{k});
         end
@@ -720,7 +721,6 @@ switch cfg.method
               'normalize', cfg.normalize, 'hasrpt', hasrpt,      'hasjack', hasjack};
     if exist('powindx', 'var'), cat(2, optarg, {'powindx', powindx}); end        
     [datout, varout, nrpt] = ft_connectivity_psi(data.(inparam), optarg{:});
-    outparam = 'psispctrm';
     
   case 'di'
     % directionality index
@@ -735,7 +735,24 @@ switch cfg.method
 end
 
 %remove the auto combinations if necessary
+if strcmp(cfg.method, 'granger') && isfield(cfg, 'sfmethod') && strcmp(cfg.sfmethod, 'bivariate'),
+  % remove the auto-combinations based on the order in the data
+  switch dtype
+    case {'freq' 'freqmvar'}
+      keepchn = 1:size(datout,1);
+      keepchn = mod(keepchn,4)==2 | mod(keepchn,4)==3;
+      datout  = datout(keepchn,:,:,:,:);
+      if ~isempty(varout),
+        varout = varout(keepchn,:,:,:,:);
+      end
+      data.labelcmb = data.labelcmb(keepchn,:);
+    case 'source'
+      % not yet implemented
+  end
+end
+  
 if exist('powindx', 'var') && ~isempty(powindx),
+  % based on powindx
   switch dtype
     case {'freq' 'freqmvar'}
       if isfield(data, 'labelcmb') && ~isstruct(powindx),
