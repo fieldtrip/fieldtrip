@@ -250,8 +250,7 @@ switch fileformat
             marker = hdr.orig.matching_info.marker;
         end
       end
-    end  hdr = read_yokogawa_header(filename);
-    marker = hdr.orig.matching_info.marker;
+    end  
 
     % non zero markers 1-3
     if any([marker(:).meg_pos])
