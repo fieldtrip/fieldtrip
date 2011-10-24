@@ -55,7 +55,7 @@ if ~isempty(hdmfile)
   end
 else
   % copy the boundaries from the geometry into the volume conduction model
-  vol.bnd = geom.bnd;
+  vol.bnd = geom;
 end
 
 % determine the number of compartments
@@ -70,12 +70,18 @@ if isempty(isolatedsource)
   end
 else
   % convert into a boolean
-  isolatedsource = istrue(cfg.isolatedsource);
+  isolatedsource = istrue(isolatedsource);
 end
 
 if ~isfield(vol, 'cond')
   % assign the conductivity of each compartment
   vol.cond = conductivity;
+end
+
+% this is for backward compatibility
+if isempty(vol.cond) && numboundaries==3
+  fprintf('warning: using default values for the conductivity')
+  vol.cond =  [1 1/80 1] * 0.33;
 end
 
 % determine the nesting of the compartments
@@ -132,11 +138,6 @@ if vol.skin_surface ~= 1
   error('the first compartment should be the skin, the last the source');
 end
 
-% flip faces for openmeeg convention
-for ii=1:length(vol.bnd)
-  vol.bnd(ii).tri = fliplr(vol.bnd(ii).tri);
-end
-
 % store the current path and change folder to the temporary one
 tmpfolder = cd;
 
@@ -145,10 +146,21 @@ try
   
   % write the triangulations to file
   bndfile = {};
+  
+  % check if normals are outward oriented (as they should be)
+  bndom = vol.bnd;
+  ok = checknormals(bndom);
+  % Flip faces for openmeeg convention (inwards normals)
+  if ~ok
+    for ii=1:length(bndom)
+        bndom(ii).tri = fliplr(bndom(ii).tri);
+    end
+  end
+  
   for ii=1:length(vol.bnd)
     [junk,tname] = fileparts(tempname);
     bndfile{ii} = [tname '.tri'];
-    om_save_tri(bndfile{ii}, vol.bnd(ii).pnt, vol.bnd(ii).tri);
+    om_save_tri(bndfile{ii}, bndom(ii).pnt, bndom(ii).tri);
   end
   
   % these will hold the shell script and the inverted system matrix
@@ -235,3 +247,25 @@ delete(hmfile);
 delete(hminvfile);
 delete(exefile);
 
+function ok = checknormals(bnd)
+ok = 0;
+pnt = bnd.pnt;
+tri = bnd.tri;
+% translate to the center
+org = mean(pnt,1);
+pnt(:,1) = pnt(:,1) - org(1);
+pnt(:,2) = pnt(:,2) - org(2);
+pnt(:,3) = pnt(:,3) - org(3);
+
+w = sum(solid_angle(pnt, tri));
+
+if w<0 && (abs(w)-4*pi)<1000*eps
+  % FIXME: this method is rigorous only for star shaped surfaces
+  warning('your normals are not oriented correctly')
+  ok = 0;
+elseif w>0 && abs(w-4*pi)<1000*eps
+  ok = 1;
+else
+  error('your surface probably is irregular')
+  ok = 0;
+end
