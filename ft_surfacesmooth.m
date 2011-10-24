@@ -2,12 +2,11 @@ function bnd = ft_surfacesmooth(cfg,bnd)
 % FT_SURFACESMOOTH returns a smoother version of the surface input
 % 
 % Use as
+%   cfg = [];
+%   cfg.method = 'spharm';
 %   bnd = ft_surfacesmooth(cfg,bnd)
 % 
 % See also FT_SURFACECHECK, FT_SURFACEEXTRACT
-% 
-% This function is a placeholder and is going to be filled with useful
-% functionality soon.
 
 % Copyright (C) 2011, Cristiano Micheli, Robert Oostenveld
 % 
@@ -16,19 +15,23 @@ function bnd = ft_surfacesmooth(cfg,bnd)
 ft_defaults
 
 method  = ft_getopt(cfg, 'method', 'spharm');
-sphord  = ft_getopt(cfg, 'sphord', 12); % n=12, see van 't Ent 
+sphord  = ft_getopt(cfg, 'sphord', 12); % sphord=12, see van 't Ent 
 
 switch method
+  
   case 'spharm'
-    nl = 12;
-    [bnd] = spherical_harmonic_mesh(bnd, nl);
+    cfg = [];
+    cfg.isclosed = 'yes';
+    ft_surfacecheck(cfg,bnd);
+    [bnd] = spherical_harmonic_mesh(bnd, sphord);
 
   otherwise
     error('unsupported method "%s"', cfg.method); 
+    
 end
 
 % Attention .tri is flipped here (see end), otherwise normals' directions change
-function [bnd2] = spherical_harmonic_mesh(bnd, nl)
+function [bnd] = spherical_harmonic_mesh(bnd, nl)
 % SPHERICAL_HARMONIC_MESH realizes the smoothed version of a mesh contained in the first
 % argument bnd. The boundary argument (bnd) contains typically 2 fields
 % called .pnt and .tri referring to vertices and triangulation of a mesh.

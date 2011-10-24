@@ -1,12 +1,21 @@
 function ft_surfacecheck(cfg,bnd)
-% FT_SURFACECHECK computes some quality indexes for the input surface
-% and displays them in the command line
+% FT_SURFACECHECK computes some quality indexes for the input surface/s.
+% The function returns an error if the desired option is not true and if the 'feedback' option is switched 
+% on displays the result as a comment string in the workspace. If the bnd argument contains more than 1 
+% surface the function automatically checks the desired property on all surfaces.
 % 
 % Use as
+%   cfg = [];
+%   cfg.isclosed = 'yes';
+%   cfg.feedback = 'yes';
 %   ft_surfacecheck(cfg,bnd)
 % 
 % Optional input arguments 
-%   feedback           = yes, no
+%   feedback          = 'yes', 'no' (default)
+%   isclosed          = 'yes', 'no' (default)
+%   isstarshaped      = 'yes', 'no' (default)
+%   isoutwardoriented = 'yes', 'no' (default)
+%   isnested          = 'yes', 'no' (default)
 % 
 % See also FT_SURFACEEXTRACT, FT_SURFACEREFINE
 
@@ -16,38 +25,65 @@ function ft_surfacecheck(cfg,bnd)
 
 ft_defaults
 
-feedback  = ft_getopt(cfg, 'feedback', 'yes');
+feedback             = ft_getopt(cfg, 'feedback', 'no');
+chkisclosed          = istrue(ft_getopt(cfg, 'isclosed'));
+chkisstarshaped      = istrue(ft_getopt(cfg, 'isstarshaped','no'));
+chkisoutwardoriented = istrue(ft_getopt(cfg, 'isoutwardoriented','no'));
+chkisnested          = istrue(ft_getopt(cfg, 'isnested','no'));
 
-% let's limit the check to triangulated surfaces 
-if ~isfield(bnd,'tri') && ~isfield(bnd,'pnt')
-  error('this is not a valid surface structure')
-else
-  pnt = bnd.pnt;
-  tri = bnd.tri;
-end
-
-% print some properties
-if ~isequal(feedback, 'no')
+% loop over the boundaries
+for i = 1:numel(bnd)
+  
+  % print index for each input boundary
+  cnt = 1;
+  
+  if ~isfield(bnd(i),'tri') && ~isfield(bnd(i),'pnt')
+    error('the surface %d is not a valid structure\n',i)
+  else
+    pnt = bnd(i).pnt;
+    tri = bnd(i).tri;
+  end
+  
+  % let's limit the check to triangulated surfaces 
   if ~istriangulated(pnt,tri)
-    fprintf('the surface is not a valid triangulation\n');
-    return
+    error('the surface %d is not a valid triangulation\n',i);
   end
-  if isclosed(pnt,tri)
-    fprintf('the surface is closed\n');
-  else
-    fprintf('the surface is not closed\n');
+  
+  if chkisclosed
+    if isclosed(pnt,tri) 
+      msg{cnt} = sprintf('the surface %d is closed\n',i);
+      cnt = cnt + 1;
+    else
+      error(sprintf('the surface %d is not closed\n',i));
+    end
   end
-  if isstarshaped(pnt,tri)
-    fprintf('the surface is star shaped\n');
-  else
-    fprintf('the surface is not star shaped\n');
-  end  
-  if isoutwardoriented(pnt,tri)
-    fprintf('the surface is outwards oriented\n');
-  else
-    fprintf('the surface is not outwards oriented\n');
+  
+  if chkisstarshaped
+    if isstarshaped(pnt,tri) 
+      msg{cnt} = sprintf('the surface %d is star shaped\n',i);
+      cnt = cnt + 1;
+    else
+      error(sprintf('the surface %d is not star shaped\n',i));
+    end
   end
+  
+  if chkisoutwardoriented
+    if isoutwardoriented(pnt,tri) 
+      msg{cnt} = sprintf('the surface %d is outwards oriented\n',i);
+      cnt = cnt + 1;
+    else
+      error(sprintf('the surface %d is not outwards oriented\n',i));
+    end
+  end
+  
+  if ~isequal(feedback, 'yes') && ~isempty(msg)
+    for j=1:cnt
+      fprintf(msg{j});
+    end
+  end
+  
 end
+
 
 function status=istriangulated(pnt,tri)
 status = false;
@@ -192,6 +228,11 @@ for i=1:ntri
     end
   end
 end
+
+function status=isnested(bnd)
+% IS_NESTED checks whether a boundary is nested with all other present
+% boundaries
+% This is a placeholder at the moment
 
 function res=isint(v)
 % Use as
