@@ -735,7 +735,7 @@ switch cfg.method
 end
 
 %remove the auto combinations if necessary
-if strcmp(cfg.method, 'granger') && isfield(cfg, 'sfmethod') && strcmp(cfg.sfmethod, 'bivariate'),
+if (strcmp(cfg.method, 'granger') || strcmp(cfg.method, 'instantaneous_causality') || strcmp(cfg.method, 'total_interdependence')) && isfield(cfg, 'sfmethod') && strcmp(cfg.sfmethod, 'bivariate'),
   % remove the auto-combinations based on the order in the data
   switch dtype
     case {'freq' 'freqmvar'}
