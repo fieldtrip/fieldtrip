@@ -17,6 +17,8 @@ function vol = ft_headmodel_dipoli(geom, varargin)
 % Use as
 %   vol = ft_headmodel_dipoli(geom, ...)
 %
+% The geom is given as a boundary or a struct-array of boundaries (surfaces)
+%
 % Optional input arguments should be specified in key-value pairs and can
 % include
 %   isolatedsource   = string, 'yes' or 'no'
@@ -45,7 +47,7 @@ if ~isempty(hdmfile)
   end
 else
   % copy the boundaries from the geometry into the volume conduction model
-  vol.bnd = geom.bnd;
+  vol.bnd = geom;
 end
 
 % determine the number of compartments

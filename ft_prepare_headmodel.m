@@ -146,11 +146,7 @@ switch cfg.method
     if ~isempty(cfg.hdmfile)
       vol = feval(funname, [],'hdmfile',cfg.hdmfile,'conductivity',cfg.conductivity,'isolatedsource',cfg.isolatedsource);
     elseif ~isempty(geometry)
-      bnd = geometry;
-      for i=1:length(bnd)
-        geom.bnd(i) = bnd(i);
-      end
-      vol = feval(funname, geom,'conductivity',cfg.conductivity,'isolatedsource',cfg.isolatedsource);
+      vol = feval(funname, geometry,'conductivity',cfg.conductivity,'isolatedsource',cfg.isolatedsource);
     else
       error('for cfg.method = %s, you need to supply a data mesh or a cfg.hdmfile', cfg.method);
     end
@@ -186,7 +182,7 @@ switch cfg.method
   case 'singlesphere'
     cfg.conductivity   = ft_getopt(cfg, 'conductivity',   []);
     if ~isempty(geometry)
-    geometry = geometry.pnt;
+      geometry = geometry.pnt;
     elseif ~isempty(cfg.hdmfile)
       geometry = ft_read_headshape(cfg.hdmfile);
       geometry = geometry.pnt;

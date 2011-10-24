@@ -56,22 +56,42 @@ if ~isfield(cfg, 'numvertices'),    cfg.numvertices = [1 2 3] * 500;         end
 if ~isfield(cfg, 'hdmfile'),        cfg.hdmfile = [];                        end
 if ~isfield(cfg, 'isolatedsource'), cfg.isolatedsource = [];                 end
 if ~isfield(cfg, 'method'),         cfg.method = 'dipoli';                   end % dipoli, openmeeg, bemcp, brainstorm
-if ~isfield(cfg, 'conductivity')
-  if isfield(mri, 'cond') 
-    cfg.conductivity = mri.cond;
-  elseif isfield(mri, 'c') 
-    cfg.conductivity = mri.c;
-  else
-    cfg.conductivity = [1 1/80 1] * 0.33;
-  end
-end
 
 % start with an empty volume conductor
 vol = [];
+if ~isempty(cfg.hdmfile)
+  hdm = ft_read_vol(hdmfile);
+  % copy the boundary of the head model file into the volume conduction model
+  vol.bnd = hdm.bnd;
+  if isfield(hdm, 'cond')
+    % also copy the conductivities
+    vol.cond = hdm.cond;
+  end
+else
+  geom = mri;
+  % copy the boundaries from the geometry into the volume conduction model
+  vol.bnd = geom.bnd;
+end
 
-if ~isfield(vol, 'cond')
-  % assign the conductivity of each compartment
-  vol.cond = cfg.conductivity;
+% assign the conductivity
+if ~isfield(vol,'cond')
+  if ~isfield(cfg, 'conductivity')
+    if isfield(mri, 'cond') 
+      vol.cond = mri.cond;
+    elseif isfield(mri, 'c') 
+      vol.cond = mri.c;
+    else
+      fprintf('warning: using default values for the conductivity')
+      vol.cond = [1 1/80 1] * 0.33;
+    end
+  else
+    if ~isempty(cfg.conductivity)
+      vol.cond = cfg.conductivity;
+    else
+      fprintf('warning: using default values for the conductivity')
+      vol.cond = [1 1/80 1] * 0.33;    
+    end
+  end
 end
 
 % determine the number of compartments
@@ -89,15 +109,21 @@ vol.skin_surface   = find_outermost_boundary(vol.bnd);
 fprintf('determining source compartment (%d)\n', vol.source);
 fprintf('determining skin compartment (%d)\n',   vol.skin_surface);
 
+if ~isempty(cfg.isolatedsource)
+  isolatedsource = istrue(cfg.isolatedsource); 
+end
+
 if isempty(cfg.isolatedsource) && Ncompartment>1 && strcmp(cfg.method, 'dipoli')
   % the isolated source compartment is by default the most inner one
-  cfg.isolatedsource = true;
+  isolatedsource = true;
 elseif isempty(cfg.isolatedsource) && Ncompartment==1
   % the isolated source interface should be contained within at least one other interface
-  cfg.isolatedsource = false;
-elseif ~isempty(cfg.isolatedsource) && ~islogical(cfg.isolatedsource)
+  isolatedsource = false;
+elseif ~islogical(isolatedsource)
   error('cfg.isolatedsource should be true or false');
 end
+
+
 
 if cfg.isolatedsource
   fprintf('using compartment %d for the isolated source approach\n', vol.source);
@@ -112,7 +138,7 @@ if strcmp(cfg.method, 'dipoli')
   ft_hastoolbox('dipoli', 1);
   
   % use the dipoli wrapper function
-  vol = dipoli(vol, cfg.isolatedsource);
+  vol = dipoli(vol, isolatedsource);
   vol.type = 'dipoli';
   
 elseif strcmp(cfg.method, 'bemcp')

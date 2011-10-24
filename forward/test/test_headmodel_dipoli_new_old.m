@@ -15,7 +15,7 @@ geom.bnd(3).tri = tri;
 arg(1).name = 'conductivity';
 arg(2).name = 'isolatedsource';
 
-arg(1).value = {[], [1 1/20 1], [0.33 0.125 0.33], [1 1 1], [0.1 0.1 0.1]};% [], 
+arg(1).value = {[], [1 1/20 1], [0.33 0.125 0.33], [1 1 1], [0.1 0.1 0.1]};
 arg(2).value = {'yes' , 'no'};
 
 optarg = constructalloptions(arg);
@@ -25,7 +25,7 @@ for i=1:size(optarg,1)
   arg = optarg(i,:);
   
   % new way - low level:
-  vol1 = ft_headmodel_bem_dipoli(geom,arg{:});
+  vol1 = ft_headmodel_bem_dipoli(geom.bnd,arg{:});
 
   % old way:
   tmpcfg = keyval2cfg(arg{:});
@@ -35,7 +35,7 @@ for i=1:size(optarg,1)
   % new way - high level:
   tmpcfg = keyval2cfg(arg{:});
   tmpcfg.method = 'bem_dipoli';
-  vol3 = ft_prepare_headmodel(tmpcfg,geom.bnd); % FIXME: this argument has to be the same
+  vol3 = ft_prepare_headmodel(tmpcfg,geom.bnd);
 
   % compute an example leadfield
   if ~isequal(vol1,vol2) || ~isequal(vol2,vol3) || ~isequal(vol1,vol3)
@@ -45,6 +45,9 @@ for i=1:size(optarg,1)
 end
 
 return
+
+
+% this code never gets executed
 
 % create a set of electrodes
 sel = find(pnt(:,3)>0);
@@ -71,7 +74,3 @@ for i=1:numel(dip)
     error('not successful')
   end
 end
-
-
-
-
