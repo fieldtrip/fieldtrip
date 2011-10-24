@@ -60,12 +60,18 @@ if isempty(isolatedsource)
   end
 else
   % convert into a boolean
-  isolatedsource = istrue(cfg.isolatedsource);
+  isolatedsource = istrue(isolatedsource);
 end
 
 if ~isfield(vol, 'cond')
   % assign the conductivity of each compartment
   vol.cond = conductivity;
+end
+
+% this is for backward compatibility
+if isempty(vol.cond) && numboundaries==3
+  fprintf('warning: using default values for the conductivity')
+  vol.cond =  [1 1/80 1] * 0.33;
 end
 
 % determine the nesting of the compartments
@@ -126,11 +132,12 @@ fprintf('using the executable "%s"\n', dipoli);
 
 % write the triangulations to file
 bndfile = {};
+bnddip = vol.bnd;
 for i=1:numboundaries
   bndfile{i} = [tempname '.tri'];
   % dipoli has another definition of the direction of the surfaces
-  vol.bnd(i).tri = fliplr(vol.bnd(i).tri);
-  write_tri(bndfile{i}, vol.bnd(i).pnt, vol.bnd(i).tri);
+  bnddip(i).tri = fliplr(bnddip(i).tri);
+  write_tri(bndfile{i}, bnddip(i).pnt, bnddip(i).tri);
 end
 
 % these will hold the shell script and the inverted system matrix
