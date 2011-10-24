@@ -5,7 +5,10 @@ function bnd = ft_surfaceextract(cfg,data)
 %   bnd = ft_surfaceextract(cfg,data)
 % 
 % See also FT_SURFACEREFINE, FT_SURFACECHECK
- 
-% Copyright (C) 2011, Cristiano Micheli
+% 
+% This function is a placeholder and is going to be filled with useful
+% functionality soon.
+
+% Copyright (C) 2011, Cristiano Micheli, Robert Oostenveld
 % 
 % $Id: $

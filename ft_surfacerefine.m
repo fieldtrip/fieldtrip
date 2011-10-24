@@ -7,7 +7,10 @@ function bnd = ft_surfacerefine(cfg,bnd)
 %   bnd = ft_surfacerefine(cfg,bnd)
 % 
 % See also FT_SURFACECHECK, FT_SURFACEEXTRACT
- 
-% Copyright (C) 2011, Cristiano Micheli
+% 
+% This function is a placeholder and is going to be filled with useful
+% functionality soon.
+
+% Copyright (C) 2011, Cristiano Micheli, Robert Oostenveld
 % 
 % $Id: $
