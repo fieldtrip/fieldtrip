@@ -82,6 +82,10 @@ end
 if isempty(vol.cond) && numboundaries==3
   fprintf('warning: using default values for the conductivity')
   vol.cond =  [1 1/80 1] * 0.33;
+elseif isempty(vol.cond) && numboundaries~=3
+  vol.cond =  ones(1,numboundaries);
+else
+  error('wrong conductivity specification')
 end
 
 % determine the nesting of the compartments

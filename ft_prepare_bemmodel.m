@@ -73,6 +73,9 @@ else
   vol.bnd = geom.bnd;
 end
 
+% determine the number of compartments
+Ncompartment = length(vol.cond);
+
 % assign the conductivity
 if ~isfield(vol,'cond')
   if ~isfield(cfg, 'conductivity')
@@ -87,15 +90,15 @@ if ~isfield(vol,'cond')
   else
     if ~isempty(cfg.conductivity)
       vol.cond = cfg.conductivity;
-    else
+    elseif isempty(cfg.conductivity) && Ncompartment==3
       fprintf('warning: using default values for the conductivity')
       vol.cond = [1 1/80 1] * 0.33;    
+    else
+      fprintf('warning: using 1 for all conductivities')
+      vol.cond = ones(1,Ncompartment);
     end
   end
 end
-
-% determine the number of compartments
-Ncompartment = length(vol.cond);
 
 % construct the geometry of the BEM boundaries
 if nargin==1
