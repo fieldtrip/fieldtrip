@@ -98,7 +98,7 @@ for i = 1:numboundaries
 end
 
 if ~isequal(feedback, 'yes') && ~isempty(msg)
-  for j=1:cnt
+  for j=1:cnt-1
     fprintf(msg{j});
   end
 end
