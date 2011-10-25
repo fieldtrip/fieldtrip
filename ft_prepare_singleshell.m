@@ -69,7 +69,7 @@ cfg = ft_checkconfig(cfg, 'deprecated', 'mriunits');
 if ~isfield(cfg, 'smooth');        cfg.smooth = 5;          end % in voxels
 if ~isfield(cfg, 'sourceunits'),   cfg.sourceunits = 'cm';  end
 if ~isfield(cfg, 'threshold'),     cfg.threshold = 0.5;     end % relative
-if ~isfield(cfg, 'numvertices'),   cfg.numvertices = 4000;  end % approximate number of vertices in sphere
+if ~isfield(cfg, 'numvertices'),   cfg.numvertices = [];  end % approximate number of vertices in sphere
 if ~isfield(cfg, 'inputfile'),     cfg.inputfile = [];      end
 
 % construct the geometry of the volume conductor model, containing a single boundary

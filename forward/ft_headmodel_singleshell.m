@@ -20,6 +20,15 @@ function vol = ft_headmodel_singleshell(geometry, varargin)
 %
 % See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
+% if it contains more than 1 shell it retunrs an error
+if isfield(geometry,'pnt')
+  if numel(geometry)>1
+    error('no more than 1 shell at a time is allowed')
+  end
+else
+  error('the input should be a boundary')
+end
+
 vol      = [];
 vol.bnd  = geometry;
 vol.type = 'nolte';
