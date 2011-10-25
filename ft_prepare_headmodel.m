@@ -153,7 +153,7 @@ switch cfg.method
     
   case 'concentricspheres'
     cfg.conductivity   = ft_getopt(cfg, 'conductivity',   []);
-    cfg.fitind         = ft_getopt(cfg, 'fitind', 1);
+    cfg.fitind         = ft_getopt(cfg, 'fitind', []);
     vol = ft_headmodel_concentricspheres(geometry,'conductivity',cfg.conductivity,'fitind',cfg.fitind);
     
   case 'halfspace'
