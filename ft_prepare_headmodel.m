@@ -181,12 +181,9 @@ switch cfg.method
     
   case 'singlesphere'
     cfg.conductivity   = ft_getopt(cfg, 'conductivity',   []);
-    if ~isempty(geometry)
-      geometry = geometry.pnt;
-    elseif ~isempty(cfg.hdmfile)
+    if isempty(geometry) && ~isempty(cfg.hdmfile)
       geometry = ft_read_headshape(cfg.hdmfile);
-      geometry = geometry.pnt;
-    else
+    elseif isempty(geometry)
       error('no input available')
     end
     
