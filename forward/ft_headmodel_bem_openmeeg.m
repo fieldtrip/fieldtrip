@@ -152,11 +152,12 @@ try
   % write the triangulations to file
   bndfile = {};
   
-  % check if normals are outward oriented (as they should be)
+  % check if vertices' normals are inward oriented 
   bndom = vol.bnd;
   ok = checknormals(bndom);
   % Flip faces for openmeeg convention (inwards normals)
   if ~ok
+    fprintf('flipping normals'' direction\n')
     for ii=1:length(bndom)
         bndom(ii).tri = fliplr(bndom(ii).tri);
     end
@@ -253,6 +254,7 @@ delete(hminvfile);
 delete(exefile);
 
 function ok = checknormals(bnd)
+% FIXME: this method is rigorous only for star shaped surfaces
 ok = 0;
 pnt = bnd.pnt;
 tri = bnd.tri;
@@ -265,12 +267,12 @@ pnt(:,3) = pnt(:,3) - org(3);
 w = sum(solid_angle(pnt, tri));
 
 if w<0 && (abs(w)-4*pi)<1000*eps
-  % FIXME: this method is rigorous only for star shaped surfaces
-  warning('your normals are not oriented correctly')
   ok = 0;
+  warning('your normals are outwards oriented\n')
 elseif w>0 && abs(w-4*pi)<1000*eps
   ok = 1;
+%   warning('your normals are inwards oriented')
 else
-  error('your surface probably is irregular')
+  error('your surface probably is irregular\n')
   ok = 0;
 end
