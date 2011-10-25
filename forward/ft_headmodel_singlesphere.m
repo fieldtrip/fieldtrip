@@ -19,7 +19,7 @@ function vol = ft_headmodel_singlesphere(geometry, varargin)
 % FIXME document the EEG case
 
 % get the optional arguments
-conductivity = ft_getopt(varargin, 'conductivity');
+conductivity = ft_getopt(varargin, 'conductivity',1);
 
 if isfield(geometry,'pnt')
   if numel(geometry)>1
