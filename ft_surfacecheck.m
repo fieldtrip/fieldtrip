@@ -32,7 +32,14 @@ chkisoutwardoriented = istrue(ft_getopt(cfg, 'isoutwardoriented','no'));
 chkisnested          = istrue(ft_getopt(cfg, 'isnested','no'));
 
 % loop over the boundaries
-for i = 1:numel(bnd)
+numboundaries = numel(bnd);
+msg = {};
+
+if numboundaries>1
+  [nesting,order] = nestmatrix(bnd);
+end
+
+for i = 1:numboundaries
   
   % print index for each input boundary
   cnt = 1;
@@ -76,14 +83,25 @@ for i = 1:numel(bnd)
     end
   end
   
-  if ~isequal(feedback, 'yes') && ~isempty(msg)
-    for j=1:cnt
-      fprintf(msg{j});
+  if chkisnested
+    % by convention the first boundary is the innermost
+    if sum(nesting(i,:))>0 && i<numboundaries
+      msg{cnt} = sprintf('the surface %d is nested\n',i);
+      cnt = cnt + 1;    
+    elseif sum(nesting(i,:))==0 && i==numboundaries
+      %do nothing
+    else
+      error(sprintf('the surface %d is not nested\n',i));
     end
   end
   
 end
 
+if ~isequal(feedback, 'yes') && ~isempty(msg)
+  for j=1:cnt
+    fprintf(msg{j});
+  end
+end
 
 function status=istriangulated(pnt,tri)
 status = false;
@@ -229,10 +247,36 @@ for i=1:ntri
   end
 end
 
-function status=isnested(bnd)
-% IS_NESTED checks whether a boundary is nested with all other present
+function [nesting,order] = nestmatrix(bnd)
+% nestmatrix checks whether a boundary is nested with all other present
 % boundaries
-% This is a placeholder at the moment
+
+% determine the nesting of the compartments
+order = [];
+numboundaries = numel(bnd);
+nesting = zeros(numboundaries);
+
+for i=1:numboundaries
+  for j=1:numboundaries
+    if i~=j
+      % determine for a single vertex on each surface if it is inside or outside the other surfaces
+      curpos = bnd(i).pnt(1,:); % any point on the boundary is ok
+      curpnt = bnd(j).pnt;
+      curtri = bnd(j).tri;
+      nesting(i,j) = bounding_mesh(curpos, curpnt, curtri);
+    end
+  end
+end
+
+if sum(nesting(:))~=(numboundaries*(numboundaries-1)/2)
+  error('the compartment nesting cannot be determined');
+end
+
+% for a three compartment model, the nesting matrix should look like
+%    0 1 1     the first is nested inside the 2nd and 3rd, i.e. the inner skull
+%    0 0 1     the second is nested inside the 3rd, i.e. the outer skull
+%    0 0 0     the third is the most outside, i.e. the skin
+[~, order] = sort(-sum(nesting,2));
 
 function res=isint(v)
 % Use as

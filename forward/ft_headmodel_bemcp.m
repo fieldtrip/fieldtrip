@@ -33,7 +33,7 @@ if ~isempty(hdmfile)
   end
 else
   % copy the boundaries from the geometry into the volume conduction model
-  vol.bnd = geom.bnd;
+  vol.bnd = geom;
 end
 
 % determine the number of compartments
@@ -42,6 +42,12 @@ numboundaries = length(vol.bnd);
 if ~isfield(vol, 'cond')
   % assign the conductivity of each compartment
   vol.cond = conductivity;
+end
+
+% this is for backward compatibility
+if isempty(vol.cond) && numboundaries==3
+  fprintf('warning: using default values for the conductivity')
+  vol.cond =  [1 1/80 1] * 0.33;
 end
 
 % determine the nesting of the compartments
