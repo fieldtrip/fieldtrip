@@ -43,7 +43,8 @@ for i=1:size(optarg,1)
   vol{3} = rmfield(vol{3},'unit');
   
   % compare the volume conductor structures
-  comb = nchoosek([1 2 3],2);
+  comb = nchoosek(1:numel(vol),2);
+  
   for i=1:size(comb,1)
     chk = comb(i,:);
     try

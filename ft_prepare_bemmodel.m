@@ -74,7 +74,7 @@ else
 end
 
 % determine the number of compartments
-Ncompartment = length(vol.cond);
+Ncompartment = numel(vol.bnd);
 
 % assign the conductivity
 if ~isfield(vol,'cond')

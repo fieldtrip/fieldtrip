@@ -51,7 +51,7 @@ else
 end
 
 % determine the number of compartments
-numboundaries = length(vol.bnd);
+numboundaries = numel(vol.bnd);
 
 if isempty(isolatedsource)
   if numboundaries>1
@@ -71,13 +71,14 @@ if ~isfield(vol, 'cond')
 end
 
 % this is for backward compatibility
-if isempty(vol.cond) && numboundaries==3
-  fprintf('warning: using default values for the conductivity')
-  vol.cond =  [1 1/80 1] * 0.33;
-elseif isempty(vol.cond) && numboundaries~=3
-  vol.cond =  ones(1,numboundaries);
-else
-  error('wrong conductivity specification')
+if isempty(vol.cond) 
+  if numboundaries==3
+    fprintf('warning: using default values for the conductivity')
+    vol.cond =  [1 1/80 1] * 0.33;
+  else
+    fprintf('warning: using 1 for all conductivities')
+    vol.cond =  ones(1,numboundaries);
+  end
 end
 
 % determine the nesting of the compartments

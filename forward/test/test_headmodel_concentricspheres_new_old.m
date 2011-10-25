@@ -52,8 +52,9 @@ for i=1:size(optarg,1)
   tmpcfg.method = 'concentricspheres';
   vol{5} = ft_prepare_headmodel(tmpcfg,geom.bnd(1));
   
-  % compute an example leadfield
-  comb = nchoosek([1 2 3 4 5],2);
+  % compare the volume conductor structures
+  comb = nchoosek(1:numel(vol),2);
+  
   for i=1:size(comb,1)
     chk = comb(i,:);
     try
