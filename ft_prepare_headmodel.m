@@ -93,7 +93,9 @@ cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 cfg = ft_checkconfig(cfg, 'required', 'method');
 cfg = ft_checkconfig(cfg, 'deprecated', 'geom');
 
+cfg.hdmfile     = ft_getopt(cfg, 'hdmfile', []);
 geometry = [];
+
 if nargin>1 && ft_datatype(mri, 'volume') && ~strcmp(cfg.method,'fns')
   fprintf('computing the geometrical description from the segmented MRI\n');
 %   mri = geometry;
@@ -104,7 +106,6 @@ if nargin>1 && ft_datatype(mri, 'volume') && ~strcmp(cfg.method,'fns')
   cfg.sourceunits = ft_getopt(cfg, 'sourceunits', 'cm');
   cfg.threshold   = ft_getopt(cfg, 'threshold',   0.5);
   cfg.numvertices = ft_getopt(cfg, 'numvertices', 4000);
-  cfg.hdmfile     = ft_getopt(cfg, 'hdmfile', []);
     
   tmpcfg = [];
   tmpcfg.smooth       = cfg.smooth;
