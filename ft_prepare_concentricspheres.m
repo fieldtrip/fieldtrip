@@ -60,8 +60,12 @@ cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 % set the defaults
 if ~isfield(cfg, 'fitind'),        cfg.fitind = 'all';                            end
 if ~isfield(cfg, 'feedback'),      cfg.feedback = 'yes';                          end
-if ~isfield(cfg, 'conductivity'),  cfg.conductivity = [0.3300 1 0.0042 0.3300];   end
+if ~isfield(cfg, 'conductivity'),  cfg.conductivity = [1 1/80 1] * 0.33;          end
 if ~isfield(cfg, 'numvertices'),   cfg.numvertices = 'same';                      end
+
+if isempty(cfg.conductivity)
+  cfg.conductivity = [1 1/80 1] * 0.33;
+end
 
 if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
   % convert the nested config-object back into a normal structure
