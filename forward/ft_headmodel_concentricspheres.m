@@ -33,6 +33,13 @@ if isequal(fitind, 'all')
   fitind = 1:numel(geom);
 end
 
+numboundaries = numel(geom);
+% this is for backward compatibility
+if isempty(conductivity) && numboundaries==3
+  fprintf('warning: using default values for the conductivity')
+  conductivity =  [0.42 0.0033 0.42];
+end
+
 % concatenate the vertices of all surfaces
 pnt = [];
 for i = fitind
