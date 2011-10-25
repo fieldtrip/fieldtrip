@@ -104,7 +104,8 @@ if nargin>1 && ft_datatype(mri, 'volume') && ~strcmp(cfg.method,'fns')
   cfg.sourceunits = ft_getopt(cfg, 'sourceunits', 'cm');
   cfg.threshold   = ft_getopt(cfg, 'threshold',   0.5);
   cfg.numvertices = ft_getopt(cfg, 'numvertices', 4000);
-
+  cfg.hdmfile     = ft_getopt(cfg, 'hdmfile', []);
+    
   tmpcfg = [];
   tmpcfg.smooth       = cfg.smooth;
   tmpcfg.sourceunits  = cfg.sourceunits;
@@ -125,15 +126,23 @@ if isfield(cfg, 'geom') && nargin==1
   cfg = rmfield(cfg, 'geom');
 end
 
+if isfield(cfg,'headshape') && nargin == 1 
+  if isstr(cfg.headshape)
+    geometry = ft_read_headshape(cfg.headshape);
+  else
+    geometry = cfg.headshape;
+  end
+elseif isfield(cfg,'hdmfile') && nargin == 1 
+  geometry = ft_read_headshape(cfg.hdmfile);
+end
+
 % the construction of the volume conductor model is performed below
 switch cfg.method
   case 'bem_asa'
-    cfg         = ft_checkconfig(cfg, 'required', 'hdmfile');
-    cfg.hdmfile = ft_getopt(cfg, 'hdmfile', []);
+    cfg = ft_checkconfig(cfg, 'required', 'hdmfile');
     vol = ft_headmodel_bem_asa(cfg.hdmfile);
     
   case {'bem_cp' 'bem_dipoli' 'bem_openmeeg'}
-    cfg.hdmfile        = ft_getopt(cfg, 'hdmfile', []);
     cfg.conductivity   = ft_getopt(cfg, 'conductivity',   []);
     cfg.isolatedsource = ft_getopt(cfg, 'isolatedsource', []);
     if strcmp(cfg.method,'bem_cp')
@@ -170,11 +179,12 @@ switch cfg.method
     if isempty(cfg.grad)
       error('for cfg.method = %s, you need to supply a cfg.grad structure', cfg.method);
     end
-    cfg.feedback  = ft_getopt(cfg, 'feedback',  true);
-    cfg.radius    = ft_getopt(cfg, 'radius',    8.5);
-    cfg.maxradius = ft_getopt(cfg, 'maxradius', 20);
-    cfg.baseline  = ft_getopt(cfg, 'baseline',  5);
-    vol = ft_headmodel_localspheres(geometry,cfg.grad,'feedback',cfg.feedback,'radius',cfg.radius,'maxradius',cfg.maxradius,'baseline',cfg.baseline);
+    cfg.feedback  = ft_getopt(cfg, 'feedback');
+    cfg.radius    = ft_getopt(cfg, 'radius');
+    cfg.maxradius = ft_getopt(cfg, 'maxradius');
+    cfg.baseline  = ft_getopt(cfg, 'baseline');
+    cfg.singlesphere = ft_getopt(cfg, 'singlesphere');
+    vol = ft_headmodel_localspheres(geometry,cfg.grad,'feedback',cfg.feedback,'radius',cfg.radius,'maxradius',cfg.maxradius,'baseline',cfg.baseline,'singlesphere',cfg.singlesphere);
     
   case 'singleshell'
     vol = ft_headmodel_singleshell(geometry);
@@ -224,4 +234,3 @@ end
 % get the output cfg
 cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
-% FIXME should the output vol get a cfg?

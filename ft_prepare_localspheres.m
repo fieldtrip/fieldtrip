@@ -79,7 +79,7 @@ if ~isfield(cfg, 'feedback'),      cfg.feedback = 'yes';    end
 if ~isfield(cfg, 'smooth');        cfg.smooth    = 5;       end % in voxels
 if ~isfield(cfg, 'sourceunits'),   cfg.sourceunits = 'cm';  end
 if ~isfield(cfg, 'threshold'),     cfg.threshold = 0.5;     end % relative
-if ~isfield(cfg, 'numvertices'),   cfg.numvertices = 4000;   end
+if ~isfield(cfg, 'numvertices'),   cfg.numvertices = [];   end
 if ~isfield(cfg, 'singlesphere'),  cfg.singlesphere = 'no'; end
 if ~isfield(cfg, 'headshape'),     cfg.headshape = [];      end
 if ~isfield(cfg, 'inputfile'),     cfg.inputfile = [];      end
@@ -98,8 +98,14 @@ end
 
 if hasdata
   headshape = ft_prepare_mesh(cfg, mri);
+elseif isfield(cfg,'headshape') && nargin == 1 
+  if isstr(cfg.headshape)
+    headshape = ft_read_headshape(cfg.headshape);
+  else
+    headshape = cfg.headshape;
+  end
 else
-  headshape = ft_prepare_mesh(cfg);
+  error('no head shape available')
 end
 
 % read the gradiometer definition from file or copy it from the configuration

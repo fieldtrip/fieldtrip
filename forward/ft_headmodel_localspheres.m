@@ -29,6 +29,7 @@ feedback     = ft_getopt(varargin, 'feedback', true);
 radius       = ft_getopt(varargin, 'radius', 8.5);
 maxradius    = ft_getopt(varargin, 'maxradius', 20);
 baseline     = ft_getopt(varargin, 'baseline', 5);
+singlesphere = ft_getopt(varargin, 'singlesphere', 'no');
 
 % convert from 'yes'/'no' string into boolean value
 feedback = istrue(feedback);
@@ -66,6 +67,13 @@ end
 [single_o, single_r] = fitsphere(geometry.pnt);
 fprintf('single sphere,   %5d surface points, center = [%4.1f %4.1f %4.1f], radius = %4.1f\n', Nshape, single_o(1), single_o(2), single_o(3), single_r);
 
+vol = [];
+if strcmp(singlesphere, 'yes')
+  % only return a single sphere
+  vol.r = single_r;
+  vol.o = single_o;
+  return;
+end
 
 % allocate empty matrices that will hold the results
 vol.r = zeros(Nchan,1);    % radius of every sphere
