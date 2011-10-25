@@ -38,6 +38,8 @@ numboundaries = numel(geom);
 if isempty(conductivity) && numboundaries==3
   fprintf('warning: using default values for the conductivity')
   conductivity =  [1 1/80 1] * 0.33;
+else
+  conductivity = ones(1,numboundaries);
 end
 
 % concatenate the vertices of all surfaces

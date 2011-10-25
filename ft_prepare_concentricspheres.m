@@ -63,9 +63,7 @@ if ~isfield(cfg, 'feedback'),      cfg.feedback = 'yes';                        
 if ~isfield(cfg, 'conductivity'),  cfg.conductivity = [1 1/80 1] * 0.33;          end
 if ~isfield(cfg, 'numvertices'),   cfg.numvertices = 'same';                      end
 
-if isempty(cfg.conductivity)
-  cfg.conductivity = [1 1/80 1] * 0.33;
-end
+
 
 if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
   % convert the nested config-object back into a normal structure
@@ -76,6 +74,10 @@ cfg = ft_checkconfig(cfg, 'forbidden', 'nonlinear');
 
 % get the surface describing the head shape
 headshape = prepare_mesh_headshape(cfg);
+
+if isempty(cfg.conductivity) || numel(cfg.conductivity)~=numel(headshape)
+  cfg.conductivity = ones(1,numel(headshape));
+end
 
 if strcmp(cfg.fitind, 'all')
   fitind = 1:numel(headshape);

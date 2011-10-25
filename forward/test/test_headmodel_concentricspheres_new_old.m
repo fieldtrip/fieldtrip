@@ -19,28 +19,51 @@ arg(1).value = {[], [1 1/20 1], [0.33 0.125 0.33], [1 1 1], [0.1 0.1 0.1]};
 arg(2).value = {'yes' , 'no'};
 
 optarg = constructalloptions(arg);
+% random shuffle the configurations
+optarg = optarg(randperm(size(optarg,1)), :);
+
 
 for i=1:size(optarg,1)
   
   arg = optarg(i,:);
   
   % new way - low level:
-  vol1 = ft_headmodel_concentricspheres(geom.bnd,arg{:});
+  vol{1} = ft_headmodel_concentricspheres(geom.bnd,arg{:});
 
   % old way:
   tmpcfg = keyval2cfg(arg{:});
   tmpcfg.headshape = geom.bnd;
-  vol2 = ft_prepare_concentricspheres(tmpcfg);
-  vol2 = rmfield(vol2,'unit');
+  vol{2} = ft_prepare_concentricspheres(tmpcfg);
+  vol{2} = rmfield(vol{2},'unit');
   
   % new way - high level:
   tmpcfg = keyval2cfg(arg{:});
   tmpcfg.method = 'concentricspheres';
-  vol3 = ft_prepare_headmodel(tmpcfg,geom.bnd);
+  vol{3} = ft_prepare_headmodel(tmpcfg,geom.bnd);
 
-  % compute an example leadfield
-  if ~isequal(vol1,vol2) || ~isequal(vol2,vol3) || ~isequal(vol1,vol3)
-    error('not successful')
-  end
+  % old way, one sphere:
+  tmpcfg = keyval2cfg(arg{:});
+  tmpcfg.headshape = geom.bnd(1);
+  vol{4} = ft_prepare_concentricspheres(tmpcfg);
+  vol{4} = rmfield(vol{4},'unit');
   
+  % new way - high level, one sphere:
+  tmpcfg = keyval2cfg(arg{:});
+  tmpcfg.method = 'concentricspheres';
+  vol{5} = ft_prepare_headmodel(tmpcfg,geom.bnd(1));
+  
+  % compute an example leadfield
+  comb = nchoosek([1 2 3 4 5],2);
+  for i=1:size(comb,1)
+    chk = comb(i,:);
+    try
+      if ~isequal(vol{chk(1)},vol{chk(2)})
+        str = sprintf('combination %d %d not successful\n',chk(1),chk(2));
+        error(str)
+      end
+    catch me
+      fprintf(me.message)
+    end
+  end
+
 end
