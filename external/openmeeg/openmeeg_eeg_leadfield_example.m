@@ -47,15 +47,15 @@ pos = [0 0 70];
 vol = [];
 for ii=1:length(r)
     vol.bnd(ii).pnt = pnt * r(ii);
-    vol.bnd(ii).tri = tri;
+    vol.bnd(ii).tri = fliplr(tri); % pointing inwards!!!
 end
 vol.cond = c;
 
 %% Compute the BEM
 
 % choose BEM implementation (OpenMEEG, bemcp or dipoli)
+cfg=[];
 cfg.method = 'openmeeg';
-
 vol = ft_prepare_bemmodel(cfg, vol);
 
 cfg.vol = vol;
