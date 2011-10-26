@@ -75,35 +75,33 @@ cfg = ft_checkconfig(cfg, 'renamed',	 {'zparam', 'parameter'});
 cfg = ft_checkconfig(cfg, 'deprecated',  {'xparam'});
 
 % set defaults
-xlim          = ft_getopt(cfg, 'xlim', 'maxmin');
-ylim          = ft_getopt(cfg, 'ylim', 'maxmin');
-zlim          = ft_getopt(cfg, 'zlim', 'maxmin');
-xparam        = ft_getopt(cfg, 'xparam','time');
-yparam        = ft_getopt(cfg, 'yparam');                 % default is dealt with below
-parameter     = ft_getopt(cfg, 'parameter', 'powspctrm'); % use power as default
-inputfile     = ft_getopt(cfg, 'inputfile',    []);
-samperframe   = ft_getopt(cfg, 'samperframe',  1);
-framespersec  = ft_getopt(cfg, 'framespersec', 5);
-framesfile    = ft_getopt(cfg, 'framesfile',   []);
-moviefreq     = ft_getopt(cfg, 'moviefreq', []);
-movietime     = ft_getopt(cfg, 'movietime', []);
-movierpt      = ft_getopt(cfg, 'movierpt', 1);
-interactive   = ft_getopt(cfg, 'interactive', 'yes');
-dointeractive = istrue(interactive);
-% yparam default
-if isempty(yparam) && isfield(data, 'freq')
-  % the default is freq (if present)
+cfg.xlim          = ft_getopt(cfg, 'xlim', 'maxmin');
+cfg.ylim          = ft_getopt(cfg, 'ylim', 'maxmin');
+cfg.zlim          = ft_getopt(cfg, 'zlim', 'maxmin');
+cfg.parameter     = ft_getopt(cfg, 'parameter', 'powspctrm'); % use power as default
+cfg.inputfile     = ft_getopt(cfg, 'inputfile',    []);
+cfg.samperframe   = ft_getopt(cfg, 'samperframe',  1);
+cfg.framespersec  = ft_getopt(cfg, 'framespersec', 5);
+cfg.framesfile    = ft_getopt(cfg, 'framesfile',   []);
+cfg.moviefreq     = ft_getopt(cfg, 'moviefreq', []);
+cfg.movietime     = ft_getopt(cfg, 'movietime', []);
+cfg.movierpt      = ft_getopt(cfg, 'movierpt', 1);
+cfg.interactive   = ft_getopt(cfg, 'interactive', 'yes');
+dointeractive     = istrue(cfg.interactive);
+
+xparam = 'time';
+if isfield(data, 'freq')
   yparam = 'freq';
 end
 
 % load optional given inputfile as data
 hasdata      = (nargin>1);
-hasinputfile = ~isempty(inputfile);
+hasinputfile = ~isempty(cfg.inputfile);
 
 if hasinputfile && hasdata
   error('cfg.inputfile should not be used in conjunction with giving input data to this function');
 elseif hasinputfile
-  data = loadvar(inputfile, 'data');
+  data = loadvar(cfg.inputfile, 'data');
 elseif hasdata
   % nothing to be done
 end
@@ -111,66 +109,62 @@ end
 % read or create the layout that will be used for plotting:
 layout = ft_prepare_layout(cfg);
 
-% update the configuration
-cfg.xparam = xparam;
-cfg.yparam = yparam;
-cfg.parameter = parameter;
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the actual computation is done in the middle part
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-xparam    = data.(xparam);
-parameter = data.(parameter);
-if ~isempty(yparam)
-  yparam = data.(yparam);
+xvalues   = data.(xparam);
+parameter = data.(cfg.parameter);
+if exist('yparam', 'var')
+  yvalues = data.(yparam);
 end
 
 % check consistency of xparam and yparam
 % NOTE: i set two different defaults for the 'chan_time' and the 'chan_freq_time' case
 if isfield(data,'dimord')
   if strcmp(data.dimord,'chan_freq_time')
-    if length(xparam)~=size(parameter,3)
-      error('inconsistent size of "%s" compared to "%s"', cfg.parameter, cfg.xparam);
+    if length(xvalues)~=size(parameter,3)
+      error('inconsistent size of "%s" compared to "%s"', cfg.parameter, xparam);
     end
-    if length(yparam)~=size(parameter,2)
-      error('inconsistent size of "%s" compared to "%s"', cfg.parameter, cfg.yparam);
+    if length(yvalues)~=size(parameter,2)
+      error('inconsistent size of "%s" compared to "%s"', cfg.parameter, yparam);
     end
   elseif strcmp(data.dimord,'chan_time')
-    if length(xparam)~=size(parameter,2)
-      error('inconsistent size of "%s" compared to "%s"', cfg.parameter, cfg.xparam);
+    if length(xvalues)~=size(parameter,2)
+      error('inconsistent size of "%s" compared to "%s"', cfg.parameter, xparam);
     end    
   else
     error('input data is incompatible')
   end
 end
 
-if ischar(xlim) && strcmp(xlim, 'maxmin')
-  xlim    = [];
-  xlim(1) = min(xparam);
-  xlim(2) = max(xparam);
+if ischar(cfg.xlim) && strcmp(cfg.xlim, 'maxmin')
+  cfg.xlim    = [];
+  cfg.xlim(1) = min(xvalues);
+  cfg.xlim(2) = max(xvalues);
 end
 
-xbeg = nearest(xparam, xlim(1));
-xend = nearest(xparam, xlim(2));
+xbeg = nearest(xvalues, cfg.xlim(1));
+xend = nearest(xvalues, cfg.xlim(2));
 
 % update the configuration
-cfg.xlim = xparam([xbeg xend]);
+cfg.xlim = xvalues([xbeg xend]);
 
-if ~isempty(yparam)
-  if ischar(ylim) && strcmp(ylim, 'maxmin')
-    ylim    = [];
-    ylim(1) = min(yparam);
-    ylim(2) = max(yparam);
+if exist('yparam', 'var')
+  if ischar(cfg.ylim) && strcmp(cfg.ylim, 'maxmin')
+    cfg.ylim    = [];
+    cfg.ylim(1) = min(yvalues);
+    cfg.ylim(2) = max(yvalues);
   end
-  ybeg = nearest(yparam, ylim(1));
-  yend = nearest(yparam, ylim(2));
+  ybeg = nearest(yvalues, cfg.ylim(1));
+  yend = nearest(yvalues, cfg.ylim(2));
   % update the configuration
-  cfg.ylim = yparam([ybeg yend]);
+  cfg.ylim = yvalues([ybeg yend]);
   hasyparam = true;
 else
   % this allows us not to worry about the yparam any more
-  yparam = nan;
+  yvalues = nan;
+  yparam  = nan;
   ybeg = 1;
   yend = 1;
   cfg.ylim = [];
@@ -185,9 +179,9 @@ if isempty(seldat)
 end
 
 % make a subselection of the data
-xparam = xparam(xbeg:xend);
-yparam = yparam(ybeg:yend);
-if isnan(yparam)
+xvalues = xvalues(xbeg:xend);
+yvalues = yvalues(ybeg:yend);
+if all(isnan(yvalues))
   parameter = parameter(seldat, xbeg:xend);  
 else
   parameter = parameter(seldat, ybeg:yend, xbeg:xend);
@@ -199,17 +193,14 @@ chanx = layout.pos(sellay,1);
 chany = layout.pos(sellay,2);
 
 % get the z-range
-if ischar(zlim) && strcmp(zlim, 'maxmin')
-  zlim    = [];
-  zlim(1) = min(parameter(:));
-  zlim(2) = max(parameter(:));
-  % update the configuration
-  cfg.zlim = zlim;
-elseif ischar(zlim) && strcmp(cfg.zlim,'maxabs')
-  zlim     = [];
-  zlim(1)  = -max(abs(parameter(:)));
-  zlim(2)  =  max(abs(parameter(:)));
-  cfg.zlim = zlim;
+if ischar(cfg.zlim) && strcmp(cfg.zlim, 'maxmin')
+  cfg.zlim    = [];
+  cfg.zlim(1) = min(parameter(:));
+  cfg.zlim(2) = max(parameter(:));
+elseif ischar(cfg.zlim) && strcmp(cfg.zlim,'maxabs')
+  cfg.zlim     = [];
+  cfg.zlim(1)  = -max(abs(parameter(:)));
+  cfg.zlim(2)  =  max(abs(parameter(:)));
 end
 
 h = gcf;
@@ -259,12 +250,12 @@ if dointeractive
   
   hx = uicontrol('style', 'text');
   set(hx, 'position', [pos(3)-140 5 120 20]);
-  set(hx, 'string', sprintf('%s = ', cfg.xparam));
+  set(hx, 'string', sprintf('%s = ', xparam));
   set(hx, 'horizontalalignment', 'left');
   
   hy = uicontrol('style', 'text');
   set(hy, 'position', [pos(3)-140 30 120 20]);
-  set(hy, 'string', sprintf('%s = ', cfg.yparam));
+  set(hy, 'string', sprintf('%s = ', yparam));
   set(hy, 'horizontalalignment', 'left');
   
   if ~hasyparam
@@ -279,10 +270,12 @@ if dointeractive
   opt.lay   = layout;
   opt.chanx = chanx;
   opt.chany = chany;
-  opt.xparam  = xparam; % freq
-  opt.yparam  = yparam; % time
+  opt.xvalues  = xvalues; % freq
+  opt.yvalues  = yvalues; % time
+  opt.xparam = xparam;
+  opt.yparam = yparam;
   opt.dat   = parameter;
-  opt.zlim  = zlim;
+  opt.zlim  = cfg.zlim;
   opt.speed = 1;
   opt.cfg   = cfg;
   opt.sx    = sx; % slider freq
@@ -330,20 +323,20 @@ else
   nanmask = get(hs, 'cdata');
   
   % frequency/time selection
-  if ~isempty(yparam) && any(~isnan(yparam)) 
-    if ~isempty(movietime)
-      indx = movietime;
-      for iFrame = 1:floor(size(parameter, 2)/samperframe)
-        indy = ((iFrame-1)*samperframe+1):iFrame*samperframe;
+  if exist('yparam', 'var') && any(~isnan(yvalues)) 
+    if ~isempty(cfg.movietime)
+      indx = cfg.movietime;
+      for iFrame = 1:floor(size(parameter, 2)/cfg.samperframe)
+        indy = ((iFrame-1)*cfg.samperframe+1):iFrame*cfg.samperframe;
         datavector = squeeze(mean(parameter(:, indy,indx), 2));
         datamatrix = griddata(chanx, chany, datavector, xdata, ydata, 'cubic');
         set(hs, 'cdata',  datamatrix + nanmask);
         F(iFrame) = getframe;
       end 
-    elseif ~isempty(moviefreq)
-      indy = moviefreq;
-      for iFrame = 1:floor(size(parameter, 3)/samperframe)
-        indx = ((iFrame-1)*samperframe+1):iFrame*samperframe;
+    elseif ~isempty(cfg.moviefreq)
+      indy = cfg.moviefreq;
+      for iFrame = 1:floor(size(parameter, 3)/cfg.samperframe)
+        indx = ((iFrame-1)*cfg.samperframe+1):iFrame*cfg.samperframe;
         datavector = squeeze(mean(parameter(:, indy,indx), 3));
         datamatrix = griddata(chanx, chany, datavector, xdata, ydata, 'cubic');
         set(hs, 'cdata',  datamatrix + nanmask);
@@ -353,8 +346,8 @@ else
       error('Either moviefreq or movietime should contain a bin number')
     end
   else
-    for iFrame = 1:floor(size(parameter, 2)/samperframe)
-      indx = ((iFrame-1)*samperframe+1):iFrame*samperframe;
+    for iFrame = 1:floor(size(parameter, 2)/cfg.samperframe)
+      indx = ((iFrame-1)*cfg.samperframe+1):iFrame*cfg.samperframe;
       datavector = mean(parameter(:, indx), 2);    
       datamatrix = griddata(chanx, chany, datavector, xdata, ydata, 'cubic');
       set(hs, 'cdata',  datamatrix + nanmask);
@@ -363,11 +356,11 @@ else
   end
    
   % save movie
-  if ~isempty(framesfile)
-    save(framesfile, 'F');
+  if ~isempty(cfg.framesfile)
+    save(cfg.framesfile, 'F');
   end
   % play movie
-  movie(F, movierpt, framespersec);
+  movie(F, cfg.movierpt, cfg.framespersec);
   
 end
 
@@ -419,8 +412,8 @@ if length(size(opt.dat))>2
   valy = min(valy, size(opt.dat,ydim));
   valy = max(valy, 1);
 
-  set(opt.hx, 'string', sprintf('%s = %f\n', opt.cfg.xparam, opt.xparam(valx)));
-  set(opt.hy, 'string', sprintf('%s = %f\n', opt.cfg.yparam, opt.yparam(valy)));
+  set(opt.hx, 'string', sprintf('%s = %f\n', opt.xparam, opt.xvalues(valx)));
+  set(opt.hy, 'string', sprintf('%s = %f\n', opt.yparam, opt.yvalues(valy)));
 
   % update data, interpolate and render
   datamatrix = griddata(opt.chanx, opt.chany, opt.dat(:,valy,valx), opt.xdata, opt.ydata, 'cubic');
