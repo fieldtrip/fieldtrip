@@ -38,6 +38,32 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 % cfg.linewidth     = linewidth in points (default = 0.5)
 % cfg.graphcolor    = color(s) used for plotting the dataset(s) (default = 'brgkywrgbkywrgbkywrgbkyw')
 %                     alternatively, colors can be specified as nx3 matrix of rgb values
+% cfg.directionality     = '', 'inflow' or 'outflow' specifies for
+%                          connectivity measures whether the inflow into a
+%                          node, or the outflow from a node is plotted. The
+%                          behavior of this option depends on the input
+%                          data. If the input data is of dimord
+%                          'chan_chan_XXX', the value of directionality
+%                          determines whether, given the reference
+%                          channel(s), the columns (inflow), or rows
+%                          (outflow) are selected for plotting. In this
+%                          situation the default is 'inflow'. Note that for
+%                          undirected measures, inflow and outflow should
+%                          give the same output. When the input data is of 
+%                          dimord 'chancmb_XXX', the value
+%                          of directionality determines whether the rows in
+%                          data.labelcmb are selected. With 'inflow' the
+%                          rows are selected if the refchannel(s) occur in
+%                          the right column, with 'outflow' the rows are
+%                          selected if the refchannel(s) occur in the left
+%                          column of the labelcmb-field. Default in this
+%                          case is '', which means that all rows are
+%                          selected in which the refchannel(s) occur. This
+%                          is to robustly support linearly indexed
+%                          undirected connectivity metrics. In the situation 
+%                          where undirected connectivity measures are
+%                          linearly indexed, specifying 'inflow' or
+%                          'outflow' can result in unexpected behavior.
 %
 % to facilitate data-handling and distributed computing with the peer-to-peer
 % module, this function has the following option:
@@ -89,14 +115,16 @@ ftFuncMem   = memtic();
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
-cfg = ft_checkconfig(cfg, 'unused',  {'cohtargetchannel'});
+cfg = ft_checkconfig(cfg, 'unused',     {'cohtargetchannel'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'zlim', 'absmax', 'maxabs'});
-cfg = ft_checkconfig(cfg, 'renamedval', {'matrixside',   'feedforward', 'outflow'});
-cfg = ft_checkconfig(cfg, 'renamedval', {'matrixside',   'feedback',    'inflow'});
-cfg = ft_checkconfig(cfg, 'renamed', {'channelindex',  'channel'});
-cfg = ft_checkconfig(cfg, 'renamed', {'channelname',   'channel'});
-cfg = ft_checkconfig(cfg, 'renamed', {'cohrefchannel', 'refchannel'});
-cfg = ft_checkconfig(cfg, 'renamed',	 {'zparam', 'parameter'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'matrixside',     'directionality'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'directionality', 'feedforward', 'outflow'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'directionality', 'feedback',    'inflow'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'channelindex',   'channel'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'channelname',    'channel'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'cohrefchannel',  'refchannel'});
+cfg = ft_checkconfig(cfg, 'renamed',	  {'zparam',         'parameter'});
+
 cfg = ft_checkconfig(cfg, 'deprecated',  {'xparam'});
 
 
@@ -142,7 +170,7 @@ cfg.linestyle     = ft_getopt(cfg, 'linestyle',    '-');
 cfg.linewidth     = ft_getopt(cfg, 'linewidth',    0.5);
 cfg.maskstyle     = ft_getopt(cfg, 'maskstyle',    'box');
 cfg.channel       = ft_getopt(cfg, 'channel',      'all');
-cfg.matrixside    = ft_getopt(cfg, 'matrixside',   []);
+cfg.directionality    = ft_getopt(cfg, 'directionality',   []);
 
 Ndata = numel(varargin);
 
@@ -151,7 +179,7 @@ Ndata = numel(varargin);
 %   error('interactive plotting is not supported with more than 1 input data set');
 % end
 
-%fixme rename matrixside and cohrefchannel in more meaningful options
+%fixme rename directionality and cohrefchannel in more meaningful options
 if ischar(cfg.graphcolor)
   graphcolor = ['k' cfg.graphcolor];
 elseif isnumeric(cfg.graphcolor)
@@ -334,17 +362,20 @@ if (isfull || haslabelcmb) && isfield(varargin{1}, cfg.parameter)
   for i=1:Ndata
     if ~isfull,
       % convert 2-dimensional channel matrix to a single dimension:
-      if isempty(cfg.matrixside)
+      if isempty(cfg.directionality)
         sel1 = strmatch(cfg.refchannel, varargin{i}.labelcmb(:,2), 'exact');
         sel2 = strmatch(cfg.refchannel, varargin{i}.labelcmb(:,1), 'exact');
-      elseif strcmp(cfg.matrixside, 'outflow')
+      elseif strcmp(cfg.directionality, 'outflow')
         sel1 = [];
         sel2 = strmatch(cfg.refchannel, varargin{i}.labelcmb(:,1), 'exact');
-      elseif strcmp(cfg.matrixside, 'inflow')
+      elseif strcmp(cfg.directionality, 'inflow')
         sel1 = strmatch(cfg.refchannel, varargin{i}.labelcmb(:,2), 'exact');
         sel2 = [];
       end
       fprintf('selected %d channels for %s\n', length(sel1)+length(sel2), cfg.parameter);
+      if length(sel1)+length(sel2)==0
+        error('there are no channels selected for plotting: you may need to look at the specification of cfg.directionality');
+      end
       varargin{i}.(cfg.parameter) = varargin{i}.(cfg.parameter)([sel1;sel2],:,:);
       varargin{i}.label     = [varargin{i}.labelcmb(sel1,1);varargin{i}.labelcmb(sel2,2)];
       varargin{i}.labelcmb  = varargin{i}.labelcmb([sel1;sel2],:);
@@ -353,24 +384,24 @@ if (isfull || haslabelcmb) && isfield(varargin{1}, cfg.parameter)
       % general case
       sel               = match_str(varargin{i}.label, cfg.refchannel);
       siz               = [size(varargin{i}.(cfg.parameter)) 1];
-      if strcmp(cfg.matrixside, 'inflow') || isempty(cfg.matrixside)
+      if strcmp(cfg.directionality, 'inflow') || isempty(cfg.directionality)
         %the interpretation of 'inflow' and 'outflow' depend on
         %the definition in the bivariate representation of the data
         %data.(cfg.parameter) = reshape(mean(data.(cfg.parameter)(:,sel,:),2),[siz(1) 1 siz(3:end)]);
         sel1 = 1:siz(1);
         sel2 = sel;
         meandir = 2;
-      elseif strcmp(cfg.matrixside, 'outflow')
+      elseif strcmp(cfg.directionality, 'outflow')
         %data.(cfg.parameter) = reshape(mean(data.(cfg.parameter)(sel,:,:),1),[siz(1) 1 siz(3:end)]);
         sel1 = sel;
         sel2 = 1:siz(1);
         meandir = 1;
         
-      elseif strcmp(cfg.matrixside, 'ff-fd')
-        error('cfg.matrixside = ''ff-fd'' is not supported anymore, you have to manually subtract the two before the call to ft_singleplotER');
-      elseif strcmp(cfg.matrixside, 'fd-ff')
-        error('cfg.matrixside = ''fd-ff'' is not supported anymore, you have to manually subtract the two before the call to ft_singleplotER');
-      end %if matrixside
+      elseif strcmp(cfg.directionality, 'ff-fd')
+        error('cfg.directionality = ''ff-fd'' is not supported anymore, you have to manually subtract the two before the call to ft_singleplotER');
+      elseif strcmp(cfg.directionality, 'fd-ff')
+        error('cfg.directionality = ''fd-ff'' is not supported anymore, you have to manually subtract the two before the call to ft_singleplotER');
+      end %if directionality
     end %if ~isfull
   end %for i
 end %handle the bivariate data
@@ -611,7 +642,7 @@ fprintf('selected cfg.xlim = [%f %f]\n', cfg.xlim(1), cfg.xlim(2));
 p = get(gcf, 'position');
 f = figure;
 set(f, 'position', p);
-ft_topoplotER(cfg, varargin{:});
+ft_topoplotTFR(cfg, varargin{:});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % subfunction which handles hot keys in the current plot

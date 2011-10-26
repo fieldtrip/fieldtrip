@@ -45,6 +45,31 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 %                        can be selected by holding down the SHIFT key.
 % cfg.masknans         = 'yes' or 'no' (default = 'yes')
 % cfg.renderer         = 'painters', 'zbuffer',' opengl' or 'none' (default = [])
+% cfg.directionality   = '', 'inflow' or 'outflow' specifies for
+%                        connectivity measures whether the inflow into a
+%                        node, or the outflow from a node is plotted. The
+%                        behavior of this option depends on the input data.
+%                        If the input data is of dimord 'chan_chan_XXX',
+%                        the value of directionality determines whether,
+%                        given the reference channel(s), the columns
+%                        (inflow), or rows (outflow) are selected for
+%                        plotting. In this situation the default is
+%                        'inflow'. Note that for undirected measures,
+%                        inflow and outflow should give the same output.
+%                        When the input data is of dimord 'chancmb_XXX',
+%                        the value of directionality determines whether the
+%                        rows in data.labelcmb are selected. With 'inflow'
+%                        the rows are selected if the refchannel(s) occur
+%                        in the right column, with 'outflow' the rows are
+%                        selected if the refchannel(s) occur in the left
+%                        column of the labelcmb-field. Default in this case
+%                        is '', which means that all rows are selected in
+%                        which the refchannel(s) occur. This is to robustly
+%                        support linearly indexed undirected connectivity
+%                        metrics. In the situation where undirected
+%                        connectivity measures are linearly indexed,
+%                        specifying 'inflow' or
+%                          'outflow' can result in unexpected behavior.
 % cfg.layout           = specify the channel layout for plotting using one of 
 %                        the following ways:
 %
@@ -112,13 +137,14 @@ ftFuncMem   = memtic();
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
-cfg = ft_checkconfig(cfg, 'unused', {'cohtargetchannel'});
-cfg = ft_checkconfig(cfg, 'renamedval',  {'zlim',  'absmax',  'maxabs'});
-cfg = ft_checkconfig(cfg, 'renamedval', {'matrixside',   'feedforward', 'outflow'});
-cfg = ft_checkconfig(cfg, 'renamedval', {'matrixside',   'feedback',    'inflow'});
-cfg = ft_checkconfig(cfg, 'renamed', {'cohrefchannel', 'refchannel'});
-cfg = ft_checkconfig(cfg, 'renamed',	 {'zparam', 'parameter'});
-cfg = ft_checkconfig(cfg, 'deprecated',  {'xparam','yparam'});
+cfg = ft_checkconfig(cfg, 'unused',     {'cohtargetchannel'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'zlim',           'absmax',  'maxabs'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'matrixside',     'directionality'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'directionality', 'feedforward', 'outflow'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'directionality', 'feedback',    'inflow'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'cohrefchannel',  'refchannel'});
+cfg = ft_checkconfig(cfg, 'renamed',	  {'zparam',         'parameter'});
+cfg = ft_checkconfig(cfg, 'deprecated', {'xparam',         'yparam'});
 
 % set default for inputfile
 if ~isfield(cfg, 'inputfile'),      cfg.inputfile = [];                end
@@ -137,29 +163,29 @@ elseif hasinputfile
 end
 
 % Set the defaults:
-if ~isfield(cfg,'baseline'),        cfg.baseline = 'no';               end
-if ~isfield(cfg,'baselinetype'),    cfg.baselinetype = 'absolute';     end
-if ~isfield(cfg,'trials'),          cfg.trials = 'all';                end
-if ~isfield(cfg,'xlim'),            cfg.xlim = 'maxmin';               end
-if ~isfield(cfg,'ylim'),            cfg.ylim = 'maxmin';               end
-if ~isfield(cfg,'zlim'),            cfg.zlim = 'maxmin';               end
-if ~isfield(cfg,'magscale'),        cfg.magscale = 1;                  end
-if ~isfield(cfg,'gradscale'),       cfg.gradscale = 1;                 end
-if ~isfield(cfg,'colorbar'),        cfg.colorbar = 'no';               end
-if ~isfield(cfg,'comment'),         cfg.comment = date;                end
-if ~isfield(cfg,'showlabels'),      cfg.showlabels = 'no';             end
-if ~isfield(cfg,'showoutline'),     cfg.showoutline = 'no';            end
-if ~isfield(cfg,'channel'),         cfg.channel = 'all';               end
-if ~isfield(cfg,'fontsize'),        cfg.fontsize = 8;                  end
-if ~isfield(cfg,'interactive'),     cfg.interactive = 'no';            end
-if ~isfield(cfg,'hotkeys'),         cfg.hotkeys = 'no';                end
-if ~isfield(cfg,'renderer'),        cfg.renderer = [];                 end % let matlab decide on default
-if ~isfield(cfg,'maskalpha'),       cfg.maskalpha = 1;                 end
-if ~isfield(cfg,'masknans'),        cfg.masknans = 'no';               end
-if ~isfield(cfg,'maskparameter'),   cfg.maskparameter = [];            end
-if ~isfield(cfg,'maskstyle'),       cfg.maskstyle = 'opacity';         end
-if ~isfield(cfg,'matrixside'),      cfg.matrixside = '';               end
-if ~isfield(cfg,'channel'),         cfg.channel       = 'all';         end
+cfg = ft_getopt(cfg, 'baseline',        'no');
+cfg = ft_getopt(cfg, 'baselinetype',    'absolute');
+cfg = ft_getopt(cfg, 'trials',          'all');
+cfg = ft_getopt(cfg, 'xlim',            'maxmin');
+cfg = ft_getopt(cfg, 'ylim',            'maxmin');
+cfg = ft_getopt(cfg, 'zlim',            'maxmin');
+cfg = ft_getopt(cfg, 'magscale',        1);
+cfg = ft_getopt(cfg, 'gradscale',       1);
+cfg = ft_getopt(cfg, 'colorbar',        'no');
+cfg = ft_getopt(cfg, 'comment',         date);
+cfg = ft_getopt(cfg, 'showlabels',      'no');
+cfg = ft_getopt(cfg, 'showoutline',     'no');
+cfg = ft_getopt(cfg, 'channel',         'all');
+cfg = ft_getopt(cfg, 'fontsize',        8);
+cfg = ft_getopt(cfg, 'interactive',     'no');
+cfg = ft_getopt(cfg, 'hotkeys',         'no');
+cfg = ft_getopt(cfg, 'renderer',        []); % let matlab decide on default
+cfg = ft_getopt(cfg, 'maskalpha',       1);
+cfg = ft_getopt(cfg, 'masknans',        'no');
+cfg = ft_getopt(cfg, 'maskparameter',   []);
+cfg = ft_getopt(cfg, 'maskstyle',       'opacity');
+cfg = ft_getopt(cfg, 'directionality',  '');
+cfg = ft_getopt(cfg, 'channel',         'all');
 if ~isfield(cfg,'box')             
   if ~isempty(cfg.maskparameter)
     cfg.box = 'yes';
@@ -286,17 +312,20 @@ if (isfull || haslabelcmb) && isfield(data, cfg.parameter)
   
   if ~isfull,
     % Convert 2-dimensional channel matrix to a single dimension:
-    if isempty(cfg.matrixside)
+    if isempty(cfg.directionality)
       sel1 = strmatch(cfg.refchannel, data.labelcmb(:,2), 'exact');
       sel2 = strmatch(cfg.refchannel, data.labelcmb(:,1), 'exact');
-    elseif strcmp(cfg.matrixside, 'outflow')
+    elseif strcmp(cfg.directionality, 'outflow')
       sel1 = [];
       sel2 = strmatch(cfg.refchannel, data.labelcmb(:,1), 'exact');
-    elseif strcmp(cfg.matrixside, 'inflow')
+    elseif strcmp(cfg.directionality, 'inflow')
       sel1 = strmatch(cfg.refchannel, data.labelcmb(:,2), 'exact');
       sel2 = [];
     end
     fprintf('selected %d channels for %s\n', length(sel1)+length(sel2), cfg.parameter);
+    if length(sel1)+length(sel2)==0
+      error('there are no channels selected for plotting: you may need to look at the specification of cfg.directionality');
+    end
     data.(cfg.parameter) = data.(cfg.parameter)([sel1;sel2],:,:);
     data.label     = [data.labelcmb(sel1,1);data.labelcmb(sel2,2)];
     data.labelcmb  = data.labelcmb([sel1;sel2],:);
@@ -305,7 +334,7 @@ if (isfull || haslabelcmb) && isfield(data, cfg.parameter)
     % General case
     sel               = match_str(data.label, cfg.refchannel);
     siz               = [size(data.(cfg.parameter)) 1];
-    if strcmp(cfg.matrixside, 'inflow') || isempty(cfg.matrixside)
+    if strcmp(cfg.directionality, 'inflow') || isempty(cfg.directionality)
       %the interpretation of 'inflow' and 'outflow' depend on
       %the definition in the bivariate representation of the data
       %in FieldTrip the row index 'causes' the column index channel
@@ -313,17 +342,17 @@ if (isfull || haslabelcmb) && isfield(data, cfg.parameter)
       sel1 = 1:siz(1);
       sel2 = sel;
       meandir = 2;
-    elseif strcmp(cfg.matrixside, 'outflow')
+    elseif strcmp(cfg.directionality, 'outflow')
       %data.(cfg.parameter) = reshape(mean(data.(cfg.parameter)(sel,:,:),1),[siz(1) 1 siz(3:end)]);
       sel1 = sel;
       sel2 = 1:siz(1);
       meandir = 1;
 
-    elseif strcmp(cfg.matrixside, 'ff-fd')
-      error('cfg.matrixside = ''ff-fd'' is not supported anymore, you have to manually subtract the two before the call to ft_multiplotTFR');
-    elseif strcmp(cfg.matrixside, 'fd-ff')
-      error('cfg.matrixside = ''fd-ff'' is not supported anymore, you have to manually subtract the two before the call to ft_multiplotTFR');
-    end %if matrixside
+    elseif strcmp(cfg.directionality, 'ff-fd')
+      error('cfg.directionality = ''ff-fd'' is not supported anymore, you have to manually subtract the two before the call to ft_multiplotTFR');
+    elseif strcmp(cfg.directionality, 'fd-ff')
+      error('cfg.directionality = ''fd-ff'' is not supported anymore, you have to manually subtract the two before the call to ft_multiplotTFR');
+    end %if directionality
   end %if ~isfull
 end %handle the bivariate data
 
