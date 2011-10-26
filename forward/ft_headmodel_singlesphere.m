@@ -21,6 +21,10 @@ function vol = ft_headmodel_singlesphere(geometry, varargin)
 % get the optional arguments
 conductivity = ft_getopt(varargin, 'conductivity',1);
 
+if length(conductivity)~=1
+  error('the conductivity should be a single number')
+end
+
 if isfield(geometry,'pnt')
   if numel(geometry)>1
     error('no more than 1 shell at a time is allowed')
