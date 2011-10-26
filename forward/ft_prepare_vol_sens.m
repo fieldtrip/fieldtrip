@@ -128,10 +128,11 @@ elseif ismeg
 
   % first only modify the linear combination of coils into channels
   sens.chanpos = sens.chanpos(selsens,:);
+  sens.chanori = sens.chanori(selsens,:);
   sens.label   = sens.label(selsens);
   sens.tra     = sens.tra(selsens,:);
-  % subsequently remove the coils that do not contribute to any sensor output
-  selcoil      = find(sum(sens.tra,1)~=0);
+  % subsequently remove the coils that do not contribute to any channel output
+  selcoil      = any(sens.tra~=0,1);
   sens.coilpos = sens.coilpos(selcoil,:);
   sens.coilori = sens.coilori(selcoil,:);
   sens.tra     = sens.tra(:,selcoil);
@@ -283,24 +284,26 @@ elseif ismeg
   end
 
 elseif iseeg
+
   % select the desired channels from the electrode array
   % order them according to the users specification
-  if ~isfield(sens, 'tra')
-     Nchans    = length(sens.label);
-     Ncontacts = length(sens.label);
-  else
-     Nchans    = size(sens.tra,1);
-     Ncontacts = size(sens.tra,2);
-  end;
-   
-  % In case of Nchans~=Ncontacts it is difficult to determine 
-  % how to deal with contacts positions (keep the original positions)
-  if Nchans == Ncontacts
-    [selchan, selsens] = match_str(channel, sens.label);
+  [selchan, selsens] = match_str(channel, sens.label);
+  Nchans = length(sens.label);
+
+  if isfield(sens, 'tra')
+    % first only modify the linear combination of electrodes into channels
     sens.chanpos = sens.chanpos(selsens,:);
     sens.label   = sens.label(selsens);
+    sens.tra     = sens.tra(selsens,:);
+    % subsequently remove the electrodes that do not contribute to any channel output
+    selelec      = any(sens.tra~=0,1);
+    sens.elecpos = sens.coilpos(selelec,:);
+    sens.tra     = sens.tra(:,selelec);
   else
-    warning('A sub-selection of channels will not be taken into account')
+    % the electrodes and channels are identical
+    sens.chanpos = sens.chanpos(selsens,:);
+    sens.elecpos = sens.elecpos(selsens,:);
+    sens.label   = sens.label(selsens);
   end
   
   % create a 2D projection and triangulation
