@@ -163,29 +163,29 @@ elseif hasinputfile
 end
 
 % Set the defaults:
-cfg = ft_getopt(cfg, 'baseline',        'no');
-cfg = ft_getopt(cfg, 'baselinetype',    'absolute');
-cfg = ft_getopt(cfg, 'trials',          'all');
-cfg = ft_getopt(cfg, 'xlim',            'maxmin');
-cfg = ft_getopt(cfg, 'ylim',            'maxmin');
-cfg = ft_getopt(cfg, 'zlim',            'maxmin');
-cfg = ft_getopt(cfg, 'magscale',        1);
-cfg = ft_getopt(cfg, 'gradscale',       1);
-cfg = ft_getopt(cfg, 'colorbar',        'no');
-cfg = ft_getopt(cfg, 'comment',         date);
-cfg = ft_getopt(cfg, 'showlabels',      'no');
-cfg = ft_getopt(cfg, 'showoutline',     'no');
-cfg = ft_getopt(cfg, 'channel',         'all');
-cfg = ft_getopt(cfg, 'fontsize',        8);
-cfg = ft_getopt(cfg, 'interactive',     'no');
-cfg = ft_getopt(cfg, 'hotkeys',         'no');
-cfg = ft_getopt(cfg, 'renderer',        []); % let matlab decide on default
-cfg = ft_getopt(cfg, 'maskalpha',       1);
-cfg = ft_getopt(cfg, 'masknans',        'no');
-cfg = ft_getopt(cfg, 'maskparameter',   []);
-cfg = ft_getopt(cfg, 'maskstyle',       'opacity');
-cfg = ft_getopt(cfg, 'directionality',  '');
-cfg = ft_getopt(cfg, 'channel',         'all');
+cfg.baseline       = ft_getopt(cfg, 'baseline',        'no');
+cfg.baselinetype   = ft_getopt(cfg, 'baselinetype',    'absolute');
+cfg.trials         = ft_getopt(cfg, 'trials',          'all');
+cfg.xlim           = ft_getopt(cfg, 'xlim',            'maxmin');
+cfg.ylim           = ft_getopt(cfg, 'ylim',            'maxmin');
+cfg.zlim           = ft_getopt(cfg, 'zlim',            'maxmin');
+cfg.magscale       = ft_getopt(cfg, 'magscale',        1);
+cfg.gradscale      = ft_getopt(cfg, 'gradscale',       1);
+cfg.colorbar       = ft_getopt(cfg, 'colorbar',        'no');
+cfg.comment        = ft_getopt(cfg, 'comment',         date);
+cfg.showlabels     = ft_getopt(cfg, 'showlabels',      'no');
+cfg.showoutline    = ft_getopt(cfg, 'showoutline',     'no');
+cfg.channel        = ft_getopt(cfg, 'channel',         'all');
+cfg.fontsize       = ft_getopt(cfg, 'fontsize',        8);
+cfg.interactive    = ft_getopt(cfg, 'interactive',     'no');
+cfg.hotkeys        = ft_getopt(cfg, 'hotkeys',         'no');
+cfg.renderer       = ft_getopt(cfg, 'renderer',        []); % let matlab decide on default
+cfg.maskalpha      = ft_getopt(cfg, 'maskalpha',       1);
+cfg.masknans       = ft_getopt(cfg, 'masknans',        'no');
+cfg.maskparameter  = ft_getopt(cfg, 'maskparameter',   []);
+cfg.maskstyle      = ft_getopt(cfg, 'maskstyle',       'opacity');
+cfg.directionality = ft_getopt(cfg, 'directionality',  '');
+cfg.channel        = ft_getopt(cfg, 'channel',         'all');
 if ~isfield(cfg,'box')             
   if ~isempty(cfg.maskparameter)
     cfg.box = 'yes';
