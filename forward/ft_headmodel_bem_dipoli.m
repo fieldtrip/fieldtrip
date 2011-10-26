@@ -66,18 +66,11 @@ else
 end
 
 if ~isfield(vol, 'cond')
-  % assign the conductivity of each compartment
-  vol.cond = conductivity;
-end
-
-% this is for backward compatibility
-if isempty(vol.cond) 
-  if numboundaries==3
-    fprintf('warning: using default values for the conductivity')
-    vol.cond =  [1 1/80 1] * 0.33;
+  if numel(conductivity)~=numboundaries
+    error('a conductivity value should be specified for each compartment');
   else
-    fprintf('warning: using 1 for all conductivities')
-    vol.cond =  ones(1,numboundaries);
+    % assign the conductivity of each compartment
+    vol.cond = conductivity;
   end
 end
 
@@ -110,10 +103,10 @@ fprintf('%d ', order);
 fprintf('\n');
 
 % update the order of the compartments
-vol.bnd    = vol.bnd(order);
-vol.cond   = vol.cond(order);
-vol.skin_surface   = 1;
-vol.source = numboundaries;
+vol.bnd          = vol.bnd(order);
+vol.cond         = vol.cond(order);
+vol.skin_surface = 1;
+vol.source       = numboundaries; % this is now the last one
 
 if isolatedsource
   fprintf('using compartment %d for the isolated source approach\n', vol.source);

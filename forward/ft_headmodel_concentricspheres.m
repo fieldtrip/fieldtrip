@@ -33,13 +33,11 @@ if isequal(fitind, 'all')
   fitind = 1:numel(geom);
 end
 
-numboundaries = numel(geom);
-% this is for backward compatibility
-if isempty(conductivity) && numboundaries==3
-  fprintf('warning: using default values for the conductivity')
-  conductivity =  [1 1/80 1] * 0.33;
-else
-  conductivity = ones(1,numboundaries);
+% determine the number of compartments
+numboundaries = length(vol.bnd);
+
+if numel(conductivity)~=numboundaries
+  error('a conductivity value should be specified for each compartment');
 end
 
 % concatenate the vertices of all surfaces
