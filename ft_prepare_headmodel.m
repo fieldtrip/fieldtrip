@@ -83,9 +83,7 @@ function vol = ft_prepare_headmodel(cfg, mri)
 
 % Copyright (C) 2011, Cristiano Micheli, Jan-Mathijs Schoffelen
 %
-% $Log$
-
-% FIXME list the options in the documentation to the function
+% $Id$
 
 ft_defaults
 
@@ -93,7 +91,9 @@ cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 cfg = ft_checkconfig(cfg, 'required', 'method');
 cfg = ft_checkconfig(cfg, 'deprecated', 'geom');
 
-cfg.hdmfile     = ft_getopt(cfg, 'hdmfile', []);
+cfg.hdmfile      = ft_getopt(cfg, 'hdmfile', []);
+cfg.conductivity = ft_getopt(cfg, 'conductivity', []);
+cfg.tissue       = ft_getopt(cfg, 'tissue', []);
 geometry = [];
 
 if nargin>1 && ft_datatype(mri, 'volume') && ~strcmp(cfg.method,'fns')
@@ -108,13 +108,15 @@ if nargin>1 && ft_datatype(mri, 'volume') && ~strcmp(cfg.method,'fns')
   cfg.numvertices = ft_getopt(cfg, 'numvertices', 4000);
     
   tmpcfg = [];
+  tmpcfg.tissue       = cfg.tissue;
   tmpcfg.smooth       = cfg.smooth;
   tmpcfg.sourceunits  = cfg.sourceunits;
   tmpcfg.threshold    = cfg.threshold;
   tmpcfg.numvertices  = cfg.numvertices;
 
   % construct a surface-based geometry from the input MRI
-  geometry = ft_prepare_mesh(tmpcfg, mri);
+  % the 'mri' should already contain the segmentation in form of separate tissue fields
+  geometry = ft_prepare_mesh_new(tmpcfg, mri);
   
 elseif nargin>1
   fprintf('using the specified geometrical description\n');
