@@ -114,6 +114,8 @@ fprintf('determining skin compartment (%d)\n',   vol.skin_surface);
 
 if ~isempty(cfg.isolatedsource)
   isolatedsource = istrue(cfg.isolatedsource); 
+else
+  isolatedsource = false;
 end
 
 if isempty(cfg.isolatedsource) && Ncompartment>1 && strcmp(cfg.method, 'dipoli')
