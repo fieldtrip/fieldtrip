@@ -90,17 +90,20 @@ function [cfg] = ft_singleplotTFR(cfg, data)
 %
 % $Id$
 
-ft_defaults
+revision = '$Id$';
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
+% do the general setup of the function
+ft_defaults
+ft_preamble defaults
+ft_preamble callinfo
+ft_preamble trackconfig
+
+% check if the input data is valid for this function
+data = ft_checkdata(data, 'datatype', 'freq');
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 cfg = ft_checkconfig(cfg, 'unused',      {'cohtargetchannel'});
-cfg = ft_checkconfig(cfg, 'renamedval',  {'zlim',  'absmax',  'maxabs'});
+cfg = ft_checkconfig(cfg, 'renamedval',  {'zlim', 'absmax', 'maxabs'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'matrixside',     'directionality'});
 cfg = ft_checkconfig(cfg, 'renamedval',  {'directionality', 'feedforward', 'outflow'});
 cfg = ft_checkconfig(cfg, 'renamedval',  {'directionality', 'feedback',    'inflow'});
@@ -111,26 +114,24 @@ cfg = ft_checkconfig(cfg, 'renamed',	   {'zparam',         'parameter'});
 cfg = ft_checkconfig(cfg, 'deprecated',  {'xparam',         'yparam'});
 
 % Set the defaults:
-cfg.baseline      = ft_getopt(cfg, 'baseline',     'no');
-cfg.baselinetype  = ft_getopt(cfg, 'baselinetype', 'absolute');
-cfg.trials        = ft_getopt(cfg, 'trials',       'all');
-cfg.xlim          = ft_getopt(cfg, 'xlim',         'maxmin'); 
-cfg.ylim          = ft_getopt(cfg, 'ylim',         'maxmin');
-cfg.zlim          = ft_getopt(cfg, 'zlim',         'maxmin');
-cfg.fontsize      = ft_getopt(cfg, 'fontsize',     8);
-cfg.colorbar      = ft_getopt(cfg, 'colorbar',     'yes');
-cfg.interactive   = ft_getopt(cfg, 'interactive',  'no');
-cfg.hotkeys       = ft_getopt(cfg, 'hotkeys',      'no');
-cfg.renderer      = ft_getopt(cfg, 'renderer',     []);
-cfg.maskalpha     = ft_getopt(cfg, 'maskalpha',     1);
-cfg.maskparameter = ft_getopt(cfg, 'maskparameter',[]);
-cfg.maskstyle     = ft_getopt(cfg, 'maskstyle',    'opacity');
-cfg.channel       = ft_getopt(cfg, 'channel',      'all');
-cfg.masknans      = ft_getopt(cfg, 'masknans',     'yes');
-cfg.directionality    = ft_getopt(cfg, 'directionality',   []);
+cfg.baseline       = ft_getopt(cfg, 'baseline',     'no');
+cfg.baselinetype   = ft_getopt(cfg, 'baselinetype', 'absolute');
+cfg.trials         = ft_getopt(cfg, 'trials',       'all');
+cfg.xlim           = ft_getopt(cfg, 'xlim',         'maxmin'); 
+cfg.ylim           = ft_getopt(cfg, 'ylim',         'maxmin');
+cfg.zlim           = ft_getopt(cfg, 'zlim',         'maxmin');
+cfg.fontsize       = ft_getopt(cfg, 'fontsize',      8);
+cfg.colorbar       = ft_getopt(cfg, 'colorbar',     'yes');
+cfg.interactive    = ft_getopt(cfg, 'interactive',  'no');
+cfg.hotkeys        = ft_getopt(cfg, 'hotkeys',      'no');
+cfg.renderer       = ft_getopt(cfg, 'renderer',      []);
+cfg.maskalpha      = ft_getopt(cfg, 'maskalpha',     1);
+cfg.maskparameter  = ft_getopt(cfg, 'maskparameter', []);
+cfg.maskstyle      = ft_getopt(cfg, 'maskstyle',    'opacity');
+cfg.channel        = ft_getopt(cfg, 'channel',      'all');
+cfg.masknans       = ft_getopt(cfg, 'masknans',     'yes');
+cfg.directionality = ft_getopt(cfg, 'directionality',[]);
 
-% for backward compatibility with old data structures
-data   = ft_checkdata(data, 'datatype', 'freq');
 dimord = data.dimord;
 dimtok = tokenize(dimord, '_');
 

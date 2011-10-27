@@ -58,43 +58,31 @@ function [data] = ft_appenddata(cfg, varargin)
 %
 % $Id$
 
+revision = '$Id$';
+
+% do the general setup of the function
 ft_defaults
-
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
-
-% enable configuration tracking
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
-
-% set the defaults
-if ~isfield(cfg, 'inputfile'),    cfg.inputfile  = [];          end
-if ~isfield(cfg, 'outputfile'),   cfg.outputfile = [];          end
-
-hasdata      = nargin>1;
-hasinputfile = ~isempty(cfg.inputfile);
-if hasdata  && hasinputfile
-  error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-elseif hasinputfile
-  for i=1:numel(cfg.inputfile)
-    varargin{i} = loadvar(cfg.inputfile{i}, 'data'); % read datasets from array inputfile
-    Ndata       = numel(cfg.inputfile); % use Ndata as if separate datafiles were specified
-  end
-elseif hasdata
-  Ndata = nargin-1;
-end
-
-if Ndata<2
-  error('you must give at least two datasets to append');
-end
+ft_preamble defaults
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar varargin
 
 % check if the input data is valid for this function
 for i=1:length(varargin)
   varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'raw', 'feedback', 'no', 'hassampleinfo', 'yes');
 end
 
+% set the defaults
+if ~isfield(cfg, 'inputfile'),    cfg.inputfile  = [];          end
+if ~isfield(cfg, 'outputfile'),   cfg.outputfile = [];          end
+
 % determine the dimensions of the data
+Ndata = length(varargin);
+
+if Ndata<2
+  error('you must give at least two datasets to append');
+end
+
 Nchan  = zeros(1,Ndata);
 Ntrial = zeros(1,Ndata);
 label  = {};

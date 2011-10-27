@@ -36,25 +36,25 @@ function ft_multiplotCC(cfg, data)
 %
 % $Id$
 
-ft_defaults
+revision = '$Id$';
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();;
-ftFuncMem   = memtic();
+% do the general setup of the function
+ft_defaults
+ft_preamble defaults
+ft_preamble callinfo
+ft_preamble trackconfig
+
+% check if the input data is valid for this function
+data = ft_checkdata(data);
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 cfg = ft_checkconfig(cfg, 'renamed',	 {'zparam', 'parameter'});
 cfg = ft_checkconfig(cfg, 'deprecated',  {'xparam'});
 
-% if ~isfield(cfg, 'layout'),    cfg.layout = 'CTF151s.lay';       end;
-if ~isfield(cfg, 'xparam'),    cfg.xparam = 'foi';               end;
-if ~isfield(cfg, 'xlim'),      cfg.xlim   = 'all';               end;
-if ~isfield(cfg, 'parameter'),    cfg.parameter = 'avg.icohspctrm';    end;
-
-% for backward compatibility with old data structures
-data = ft_checkdata(data);
+% if ~isfield(cfg, 'layout'),    cfg.layout = 'CTF151s.lay';        end;
+if ~isfield(cfg, 'xparam'),      cfg.xparam = 'foi';                end;
+if ~isfield(cfg, 'xlim'),        cfg.xlim   = 'all';                end;
+if ~isfield(cfg, 'parameter'),   cfg.parameter = 'avg.icohspctrm';  end;
 
 if strcmp(cfg.parameter, 'avg.icohspctrm') && ~issubfield(data, 'avg.icohspctrm'),
   data.avg.icohspctrm = abs(imag(data.avg.cohspctrm));

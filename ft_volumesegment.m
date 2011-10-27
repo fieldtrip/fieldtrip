@@ -11,10 +11,8 @@ function [segment] = ft_volumesegment(cfg, mri)
 %   [segment] = ft_volumesegment(cfg, mri)
 %
 % The input arguments are a configuration structure (see below) and an
-% anatomical MRI structure. Instead of an MRI structure, you can also
-% specify a string with a filename of an MRI file. You can also provide an
-% already segmented volume in the input for the purpose of creating a
-% binary mask.
+% anatomical MRI structure. You can also provide an already segmented
+% volume in the input for the purpose of creating a binary mask.
 %
 % The configuration options are
 %   cfg.output      = 'tpm' (default), 'brain', 'skull', 'skullstrip', 'scalp', or any
@@ -122,9 +120,24 @@ function [segment] = ft_volumesegment(cfg, mri)
 %
 % $Id$
 
-ft_defaults
+revision = '$Id$';
 
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+% do the general setup of the function
+ft_defaults
+ft_preamble defaults
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar mri
+
+% this is not supported any more as of 26/10/2011
+if ischar(mri),
+  error('please use cfg.inputfile instead of specifying the input variable as a sting');
+end
+
+% check if the input data is valid for this function
+mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes');
+
+% check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed',  {'coordinates', 'coordsys'});
 
 % set the defaults
@@ -205,31 +218,6 @@ for k = 1:numel(cfg.output)
 end
 cfg.smooth    = cfgsmooth;
 cfg.threshold = cfgthreshold;
-
-hasdata      = (nargin>1);
-hasinputfile = ~isempty(cfg.inputfile);
-if hasdata && hasinputfile
-  error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-elseif hasinputfile
-  % the input data should be read from file
-  mri = loadvar(cfg.inputfile, 'mri');
-elseif hasdata
-  if ischar(mri),
-    % read the anatomical MRI data from file
-    filename = mri;
-    fprintf('reading MRI from file\n');
-    mri = ft_read_mri(filename);
-    if ft_filetype(filename, 'ctf_mri') && isempty(cfg.coordsys)
-      % based on the filetype assume that the coordinates correspond with CTF convention
-      cfg.coordsys = 'ctf';
-    end
-  end
-else
-  error('neither a data structure, nor a cfg.inputfile is provided');
-end
-
-% check if the input data is valid for this function
-mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes');
 
 % check whether spm is needed to generate tissue probability maps
 needtpm    = any(ismember(cfg.output, {'tpm' 'brain' 'skullstrip'}));

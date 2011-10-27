@@ -1,4 +1,4 @@
-function [data] = ft_appendspike(cfg, varargin);
+function [data] = ft_appendspike(cfg, varargin)
 
 % FT_APPENDSPIKE combines continuous data (i.e. LFP) with point-process data
 % (i.e. spikes) into a single large dataset. For each spike channel an
@@ -36,15 +36,13 @@ function [data] = ft_appendspike(cfg, varargin);
 %
 % $Id$
 
+revision = '$Id$';
+
+% do the general setup of the function
 ft_defaults
-
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
-
-% enable configuration tracking
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+ft_preamble defaults
+ft_preamble callinfo
+ft_preamble trackconfig
 
 isspike = zeros(size(varargin));
 for i=1:length(varargin)

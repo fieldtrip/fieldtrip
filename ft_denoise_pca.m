@@ -6,22 +6,24 @@ function varargout = ft_denoise_pca(cfg, varargin)
 % compute noise cancellation weights on a dataset of interest.
 %
 % Use as
-%   [data] = ft_denoise_pca(cfg, data) or [data] = ft_denoise_pca(cfg, data, refdata)
+%   [data] = ft_denoise_pca(cfg, data) 
+% or 
+%   [data] = ft_denoise_pca(cfg, data, refdata)
 %
 % The configuration should be according to
 %   cfg.refchannel = the channels used as reference signal (default = 'MEGREF')
 %   cfg.channel    = the channels to be denoised (default = 'MEG')
-%   cfg.truncate   = optional truncation of the singular value spectrum
+%   cfg.truncate   = optional truncation of the singular value spectrum (default = 'no')
 %   cfg.zscore     = standardise reference data prior to PCA (default = 'no')
-%     if cfg.truncate is integer n > 1, n will be the number of singular values kept.
-%     if 0 < cfg.truncate < 1, the singular value spectrum will be thresholded at the 
-%     fraction cfg.truncate of the largest singular value.
-%     (default = 'no');
+%
+% if cfg.truncate is integer n > 1, n will be the number of singular values kept.
+% if 0 < cfg.truncate < 1, the singular value spectrum will be thresholded at the 
+% fraction cfg.truncate of the largest singular value.
 
 % Undocumented cfg-option: cfg.pca the output structure of an earlier call
 % to the function. Can be used regress out the reference channels from
 % another data set.
-%
+
 % Copyright (c) 2008-2009, Jan-Mathijs Schoffelen, CCNi Glasgow
 % Copyright (c) 2010-2011, Jan-Mathijs Schoffelen, DCCN Nijmegen
 %
@@ -43,15 +45,20 @@ function varargout = ft_denoise_pca(cfg, varargin)
 %
 % $Id$
 
+revision = '$Id$';
+
+% do the general setup of the function
 ft_defaults
+ft_preamble defaults
+ft_preamble callinfo
+ft_preamble trackconfig
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
+% check if the input data is valid for this function
+for i=1:length(varargin)
+  varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'raw');
+end
 
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
-
+% set the defaults
 cfg.truncate   = ft_getopt(cfg, 'truncate',   'no');
 cfg.channel    = ft_getopt(cfg, 'channel',    'MEG');
 cfg.refchannel = ft_getopt(cfg, 'refchannel', 'MEGREF');

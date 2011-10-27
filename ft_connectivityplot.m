@@ -38,21 +38,27 @@ function h = ft_connectivityplot(cfg, varargin)
 %
 % $Id: ft_connectivityplot$
 
-ft_defaults
+revision = '$Id: ft_freqdescriptives.m 4527 2011-10-19 16:08:12Z roboos $';
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();;
-ftFuncMem   = memtic();
+% do the general setup of the function
+ft_defaults
+ft_preamble defaults
+ft_preamble callinfo
+ft_preamble trackconfig
+
+% check if the input data is valid for this function
+for i=1:length(varargin)
+  varargin{i} = ft_checkdata(varargin{i});
+end
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
-cfg = ft_checkconfig(cfg, 'renamed',	 {'zparam', 'parameter'});
+cfg = ft_checkconfig(cfg, 'renamed', {'zparam', 'parameter'});
 
-cfg.channel   = ft_getopt(cfg, 'channel', 'all');
+% set the defaults
+cfg.channel   = ft_getopt(cfg, 'channel',   'all');
 cfg.parameter = ft_getopt(cfg, 'parameter', 'cohspctrm');
-cfg.zlim      = ft_getopt(cfg, 'zlim', []);
-cfg.color     = ft_getopt(cfg, 'color', 'brgkywrgbkywrgbkywrgbkyw');
+cfg.zlim      = ft_getopt(cfg, 'zlim',       []);
+cfg.color     = ft_getopt(cfg, 'color',     'brgkywrgbkywrgbkywrgbkyw');
 
 % make the function recursive if numel(varargin)>1
 % FIXME check explicitly which channels belong together
