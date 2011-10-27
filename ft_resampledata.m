@@ -70,14 +70,18 @@ function [data] = ft_resampledata(cfg, data)
 %
 % $Id$
 
+revision = '$Id$';
+
+% do the general setup of the function
 ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar data
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
+% ft_checkdata is done further down
 
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+% check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed', {'blc', 'demean'});
 
 % set the defaults
@@ -91,21 +95,10 @@ if ~isfield(cfg, 'method'),     cfg.method     = 'pchip'; end  % interpolation m
 if ~isfield(cfg, 'inputfile'),  cfg.inputfile  = [];      end
 if ~isfield(cfg, 'outputfile'), cfg.outputfile = [];      end
 
-% load optional given inputfile as data
-hasdata = (nargin>1);
-if ~isempty(cfg.inputfile)
-  % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    data = loadvar(cfg.inputfile, 'data');
-  end
-end
-
 % store original datatype
 convert = ft_datatype(data);
   
-% check if the input data is valid for this function
+% check if the input data is valid for this function, this will convert it to raw if needed
 data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
   
 if isempty(cfg.detrend)

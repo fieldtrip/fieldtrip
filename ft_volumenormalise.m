@@ -70,17 +70,25 @@ function [normalise] = ft_volumenormalise(cfg, interp)
 %
 % $Id$
 
+revision = '$Id$';
+
+% do the general setup of the function
 ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar interp
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
+% this is not supported any more as of 26/10/2011
+if ischar(interp),
+  error('please use cfg.inputfile instead of specifying the input variable as a sting');
+end
 
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+% check if the input data is valid for this function
+interp = ft_checkdata(interp, 'datatype', 'volume', 'feedback', 'yes');
+
+% check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed', {'coordinates', 'coordsys'});
-
-%% ft_checkdata see below!!! %%
 
 % set the defaults
 cfg.spmversion       = ft_getopt(cfg, 'spmversion',       'spm8');
@@ -95,28 +103,6 @@ cfg.nonlinear        = ft_getopt(cfg, 'nonlinear',        'yes');
 cfg.smooth           = ft_getopt(cfg, 'smooth',           'no');
 cfg.inputfile        = ft_getopt(cfg, 'inputfile',        []);
 cfg.outputfile       = ft_getopt(cfg, 'outputfile',       []);
-
-% load optional given inputfile as data
-hasdata      = (nargin>1);
-hasinputfile = ~isempty(cfg.inputfile);
-if hasdata && hasinputfile
-  error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-elseif hasinputfile
-  interp = loadvar(cfg.inputfile, 'interp');
-end
-
-% load mri if second input is a string
-if ischar(interp),
-  fprintf('reading source MRI from file\n');
-  interp = ft_read_mri(interp);
-  if ~isfield(interp, 'coordsys') && ft_filetype(filename, 'ctf_mri')
-    % based on the filetype assume that the coordinates correspond with CTF convention
-    interp.coordsys = 'ctf';
-  end
-end
-
-% check if the input data is valid for this function
-interp = ft_checkdata(interp, 'datatype', 'volume', 'feedback', 'yes');
 
 % check whether the input has an anatomy
 if ~isfield(interp,'anatomy'),

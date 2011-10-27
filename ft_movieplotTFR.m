@@ -1,12 +1,11 @@
 function ft_movieplotTFR(cfg, data)
 
-% ft_movieplottfr makes a movie of a
-% time frequency representation of power or coherence that was computed
-% using the ft_freqanalysis or ft_freqdescriptives functions.
+% FT_MOVIEPLOTTFR makes a movie of a time frequency representation of power or coherence 
 %
-% use as
-%   ft_movieplottfr(cfg, data)
-% the configuration can contain
+% Use as
+%   ft_movieplotTFR(cfg, data)
+% where the input data comes from FT_FREQANALYSIS or FT_FREQDESCRIPTIVES and the
+% configuration is a structure that can contain
 %   cfg.parameter    = string, parameter that is color coded (default = 'avg')
 %   cfg.xlim         = selection boundaries over first dimension in data (e.g., time)
 %                          'maxmin' or [xmin xmax] (default = 'maxmin')
@@ -40,7 +39,7 @@ function ft_movieplotTFR(cfg, data)
 % file on disk. this mat files should contain only a single variable named 'data',
 % corresponding to the input structure.
 
-% copyright (c) 2009, ingrid nieuwenhuis
+% copyright (c) 2009, Ingrid nieuwenhuis
 % copyright (c) 2011, jan-mathijs schoffelen, robert oostenveld, cristiano micheli
 %
 % this file is part of fieldtrip, see http://www.ru.nl/neuroimaging/fieldtrip
@@ -61,20 +60,24 @@ function ft_movieplotTFR(cfg, data)
 %
 % $id: ft_movieploter.m 4354 2011-10-05 15:06:02z crimic $
 
-ft_defaults
+revision = '$Id: ft_freqdescriptives.m 4527 2011-10-19 16:08:12Z roboos $';
 
-% record start time and total processing time
-ftfunctimer = tic();
-ftfuncclock = clock();
-ftfuncmem   = memtic();
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar data
+
+% check the input dtaa, this function is also called from ft_movieplotER
+data = ft_checkdata(data, 'datatype', {'timelock', 'freq'});
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
-cfg = ft_checkconfig(cfg, 'renamedval',  {'zlim',  'absmax',  'maxabs'});
-cfg = ft_checkconfig(cfg, 'renamed',	 {'zparam', 'parameter'});
-cfg = ft_checkconfig(cfg, 'deprecated',  {'xparam'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'zlim',  'absmax',  'maxabs'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'zparam', 'parameter'});
+cfg = ft_checkconfig(cfg, 'deprecated', {'xparam'});
 
-% set defaults
+% set the defaults
 cfg.xlim          = ft_getopt(cfg, 'xlim', 'maxmin');
 cfg.ylim          = ft_getopt(cfg, 'ylim', 'maxmin');
 cfg.zlim          = ft_getopt(cfg, 'zlim', 'maxmin');
@@ -92,18 +95,6 @@ dointeractive     = istrue(cfg.interactive);
 xparam = 'time';
 if isfield(data, 'freq')
   yparam = 'freq';
-end
-
-% load optional given inputfile as data
-hasdata      = (nargin>1);
-hasinputfile = ~isempty(cfg.inputfile);
-
-if hasinputfile && hasdata
-  error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-elseif hasinputfile
-  data = loadvar(cfg.inputfile, 'data');
-elseif hasdata
-  % nothing to be done
 end
 
 % read or create the layout that will be used for plotting:

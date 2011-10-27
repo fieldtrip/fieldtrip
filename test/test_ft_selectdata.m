@@ -1,7 +1,7 @@
 function test_ft_selectdata
 
 % TEST test_ft_selectdata
-% TEST ft_selectdata
+% TEST ft_selectdata ft_appendfreq
 
 clear freq*
 
@@ -17,9 +17,9 @@ cfg.parameter = 'powspctrm';
 freq2 = ft_appendfreq(cfg, freq1, freq1);
 freq2 = rmfield(freq2, 'cfg');
 freq2a = ft_selectdata(freq2, freq2);
-assert(identical(freq2, freq2a));
+assert(isequal(freq2, freq2a));
 freq4a = ft_selectdata(freq2, freq2, 'param', 'powspctrm');
-assert(identical(freq2, freq2a));
+assert(isequal(freq2, freq2a));
 
 freq3.label = {'1' '2'};
 freq3.freq  = 1:10;
@@ -31,7 +31,7 @@ cfg.parameter = 'powspctrm';
 freq4 = ft_appendfreq(cfg, freq3, freq3);
 freq4 = rmfield(freq4, 'cfg');
 freq4a = ft_selectdata(freq3, freq3);
-assert(identical(freq4, freq4a));
+assert(isequal(freq4, freq4a));
 freq4a = ft_selectdata(freq3, freq3, 'param', 'powspctrm');
-assert(identical(freq4, freq4a));
+assert(isequal(freq4, freq4a));
 

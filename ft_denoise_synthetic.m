@@ -1,4 +1,4 @@
-function [data] = ft_denoise_synthetic(cfg, data);
+function [data] = ft_denoise_synthetic(cfg, data)
 
 % FT_DENOISE_SYNTHETIC computes CTF higher-order synthetic gradients for
 % preprocessed data and for the corresponding gradiometer definition.
@@ -42,15 +42,14 @@ function [data] = ft_denoise_synthetic(cfg, data);
 %
 % $Id$
 
+revision = '$Id$';
+
+% do the general setup of the function
 ft_defaults
-
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
-
-% enable configuration tracking
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar data
 
 % set the defaults
 if ~isfield(cfg, 'gradient'),   error('cfg.gradient must be specified'); end
@@ -58,19 +57,10 @@ if ~isfield(cfg, 'trials'),     cfg.trials                      = 'all'; end
 if ~isfield(cfg, 'inputfile'),  cfg.inputfile                   = [];    end
 if ~isfield(cfg, 'outputfile'), cfg.outputfile                  = [];    end
 
-% load optional given inputfile as data
-hasdata = (nargin>1);
-if ~isempty(cfg.inputfile)
-  % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    data = loadvar(cfg.inputfile, 'data');
-  end
-end
-
-% store original datatype
+% store the original type of the input data
 dtype = ft_datatype(data);
+
+% this will convert timelocked input data to a raw data representation if needed
 data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hassampleinfo', 'yes');
 
 if ~ft_senstype(data, 'ctf')

@@ -88,18 +88,16 @@ function [interp] = ft_megplanar(cfg, data)
 %
 % $Id$
 
+revision = '$Id$';
+
+% do the general setup of the function
 ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar data
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
-
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
-
-% set defaults
-cfg.inputfile  = ft_getopt(cfg, 'inputfile',  []);
-cfg.outputfile = ft_getopt(cfg, 'outputfile', []);
+% check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'required', {'neighbours'});
 
 if iscell(cfg.neighbours)
@@ -107,23 +105,12 @@ if iscell(cfg.neighbours)
   cfg.neighbours = fixneighbours(cfg.neighbours);
 end
 
-% load optional given inputfile as data
-hasdata = (nargin>1);
-if ~isempty(cfg.inputfile)
-  % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    data = loadvar(cfg.inputfile, 'data');
-  end
-end
-
 isfreq = ft_datatype(data, 'freq');
 israw  = ft_datatype(data, 'raw');
 istlck = ft_datatype(data, 'timelock');  % this will be temporary converted into raw
 
 % check if the input data is valid for this function
-data  = ft_checkdata(data, 'datatype', {'raw' 'freq'}, 'feedback', 'yes', 'hassampleinfo', 'yes', 'ismeg', 'yes', 'senstype', {'ctf151', 'ctf275', 'bti148', 'bti248', 'itab153', 'yokogawa160', 'yokogawa64'});
+data = ft_checkdata(data, 'datatype', {'raw' 'freq'}, 'feedback', 'yes', 'hassampleinfo', 'yes', 'ismeg', 'yes', 'senstype', {'ctf151', 'ctf275', 'bti148', 'bti248', 'itab153', 'yokogawa160', 'yokogawa64'});
 
 if istlck
   % the timelocked data has just been converted to a raw representation
@@ -139,6 +126,8 @@ end
 cfg.channel      = ft_getopt(cfg, 'channel', 'MEG');
 cfg.trials       = ft_getopt(cfg, 'trials',  'all');
 cfg.planarmethod = ft_getopt(cfg, 'planarmethod', 'sincos');
+cfg.inputfile    = ft_getopt(cfg, 'inputfile',  []);
+cfg.outputfile   = ft_getopt(cfg, 'outputfile', []);
 
 if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
   % convert the nested config-object back into a normal structure

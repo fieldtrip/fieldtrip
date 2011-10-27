@@ -162,26 +162,20 @@ function [cfg] = ft_topoplotTFR(cfg, varargin)
 %
 % $Id$
 
-ft_defaults
+revision = '$Id$';
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar varargin
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
-cfg = ft_checkconfig(cfg, 'unused',  {'cohtargetchannel'});
-cfg = ft_checkconfig(cfg, 'renamed', {'cohrefchannel' 'refchannel'});
-
-cfg = ft_checkconfig(cfg, 'renamed',	 {'zparam', 'parameter'});
-cfg = ft_checkconfig(cfg, 'deprecated',  {'xparam'});
-
-% set default for inputfile
-if ~isfield(cfg, 'inputfile'),  cfg.inputfile = [];    end
-
-hasdata      = nargin>1;
-hasinputfile = ~isempty(cfg.inputfile);
+cfg = ft_checkconfig(cfg, 'unused',     {'cohtargetchannel'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'cohrefchannel' 'refchannel'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'zparam', 'parameter'});
+cfg = ft_checkconfig(cfg, 'deprecated', {'xparam'});
 
 Ndata = numel(varargin);
 if ~isempty(varargin) && isnumeric(varargin{end})
@@ -191,6 +185,7 @@ else
   indx  = 1;
 end
 
+% the call with multiple inputs is done by ft_topoplotIC and recursively by ft_topoplotTFR itself
 if Ndata>1 && ~isnumeric(varargin{end})
   for k=1:Ndata
     
@@ -201,28 +196,19 @@ if Ndata>1 && ~isnumeric(varargin{end})
       f = figure();
       set(f, 'Position', p);
     end
+    if isfield(cfg, 'inputfile')
+      cfg = rmfield(cfg, 'inputfile');
+    end
     ft_topoplotTFR(cfg, varargin{1:Ndata}, indx);
     indx = indx + 1;
   end
   return
 end
 
-if hasdata && hasinputfile
-  error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-end
-
-if hasdata
-  data = varargin{indx};
-elseif hasinputfile
-  if iscell(cfg.inputfile), cfg.inputfile = cfg.inputfile{1}; end
-  data = loadvar(cfg.inputfile, 'data');
-  if isfield(cfg, 'interactive') && strcmp(cfg.interactive, 'yes'),
-    warning('switching off interactive mode, this is not supported when loading an inputfile from disk');
-  end
-end
-
-% For backward compatibility with old data structures:
-%data = ft_checkdata(data, 'datatype', {'timelock', 'freq', 'comp'});
+data = varargin{1};
+% check that the input data is correct
+% FIXME at this moment (Oct 2011) this fails due to the recursive call with "indx" 
+% data = ft_checkdata(data, 'datatype', {'timelock', 'freq', 'comp'});
 
 % check for option-values to be renamed
 cfg = ft_checkconfig(cfg, 'renamedval', {'electrodes',   'dotnum',      'numbers'});
@@ -946,7 +932,10 @@ fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, 
 % SUBFUNCTION which is called after selecting channels in case of cfg.refchannel='gui'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function select_topoplotER(label, cfg, varargin)
-
+if isfield(cfg, 'inputfile')
+  % the reading has already been done and varargin contains the data
+  cfg = rmfield(cfg, 'inputfile');
+end
 cfg.refchannel = label;
 fprintf('selected cfg.refchannel = ''%s''\n', cfg.refchannel{:});
 p = get(gcf, 'Position');
@@ -964,6 +953,10 @@ ft_topoplotER(cfg, varargin{:});
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function select_singleplotER(label, cfg, varargin)
 if ~isempty(label)
+  if isfield(cfg, 'inputfile')
+    % the reading has already been done and varargin contains the data
+    cfg = rmfield(cfg, 'inputfile');
+  end
   cfg.xlim = 'maxmin';
   cfg.channel = label;
   fprintf('selected cfg.channel = {');
@@ -982,6 +975,10 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function select_singleplotTFR(label, cfg, varargin)
 if ~isempty(label)
+  if isfield(cfg, 'inputfile')
+    % the reading has already been done and varargin contains the data
+    cfg = rmfield(cfg, 'inputfile');
+  end
   cfg.xlim = 'maxmin';
   cfg.ylim = 'maxmin';
   cfg.channel = label;

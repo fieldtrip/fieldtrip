@@ -128,15 +128,19 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 %
 % $Id$
 
-ft_defaults
+revision = '$Id$';
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();;
-ftFuncMem   = memtic();
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar data
+
+% check if the input data is valid for this function
+data = ft_checkdata(data, 'datatype', 'freq');
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 cfg = ft_checkconfig(cfg, 'unused',     {'cohtargetchannel'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'zlim',           'absmax',  'maxabs'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'matrixside',     'directionality'});
@@ -148,19 +152,6 @@ cfg = ft_checkconfig(cfg, 'deprecated', {'xparam',         'yparam'});
 
 % set default for inputfile
 if ~isfield(cfg, 'inputfile'),      cfg.inputfile = [];                end
-
-hasdata      = (nargin>1);
-hasinputfile = ~isempty(cfg.inputfile);
-
-if hasdata && hasinputfile
-  error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-end
-
-if hasdata
-  % do nothing
-elseif hasinputfile
-  data = loadvar(cfg.inputfile, 'data');
-end
 
 % Set the defaults:
 cfg.baseline       = ft_getopt(cfg, 'baseline',        'no');
@@ -194,8 +185,6 @@ if ~isfield(cfg,'box')
   end
 end
 
-% for backward compatibility with old data structures
-data   = ft_checkdata(data, 'datatype', 'freq');
 dimord = data.dimord;
 dimtok = tokenize(dimord, '_');
 
@@ -687,6 +676,10 @@ end
 % SUBFUNCTION which is called by ft_select_channel in case cfg.refchannel='gui'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function select_multiplotTFR(label, cfg, varargin)
+if isfield(cfg, 'inputfile')
+  % the reading has already been done and varargin contains the data
+  cfg = rmfield(cfg, 'inputfile');
+end
 cfg.refchannel = label;
 fprintf('selected cfg.refchannel = ''%s''\n', join(',', cfg.refchannel));
 p = get(gcf, 'Position');
@@ -699,6 +692,10 @@ ft_multiplotTFR(cfg, varargin{:});
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function select_singleplotTFR(label, cfg, varargin)
 if ~isempty(label)
+  if isfield(cfg, 'inputfile')
+    % the reading has already been done and varargin contains the data
+    cfg = rmfield(cfg, 'inputfile');
+  end
   %cfg.xlim = 'maxmin';
   cfg.ylim = 'maxmin';
   cfg.channel = label;

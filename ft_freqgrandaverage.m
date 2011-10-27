@@ -1,4 +1,4 @@
-function [grandavg] = ft_freqgrandaverage(cfg, varargin);
+function [grandavg] = ft_freqgrandaverage(cfg, varargin)
 
 % FT_FREQGRANDAVERAGE computes the average powerspectrum or time-frequency spectrum
 % over multiple subjects
@@ -49,29 +49,14 @@ function [grandavg] = ft_freqgrandaverage(cfg, varargin);
 %
 % $Id$
 
+revision = '$Id$';
+
+% do the general setup of the function
 ft_defaults
-
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
-
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
-
-% set the defaults
-if ~isfield(cfg, 'inputfile'),    cfg.inputfile  = [];         end
-if ~isfield(cfg, 'outputfile'),   cfg.outputfile = [];         end
-
-hasdata = nargin>1;
-if ~isempty(cfg.inputfile) % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    for i=1:numel(cfg.inputfile)
-      varargin{i} = loadvar(cfg.inputfile{i}, 'freq'); % read datasets from array inputfile
-    end
-  end
-end
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar varargin
 
 % check if the input data is valid for this function
 for i=1:length(varargin)
@@ -79,26 +64,12 @@ for i=1:length(varargin)
 end
 
 % set the defaults
+if ~isfield(cfg, 'inputfile'),    cfg.inputfile  = [];         end
+if ~isfield(cfg, 'outputfile'),   cfg.outputfile = [];         end
 if ~isfield(cfg, 'keepindividual'), cfg.keepindividual = 'no'; end
 if ~isfield(cfg, 'channel'),        cfg.channel = 'all';       end
 if ~isfield(cfg, 'foilim'),         cfg.foilim = 'all';        end
 if ~isfield(cfg, 'toilim'),         cfg.toilim = 'all';        end
-
-% for backward compatibility with old data structures
-if isfield(varargin{1}, 'sgn') && ~isfield(varargin{1}, 'label')
-  warning('renaming "sng" field into label for backward compatibility');
-  for s=1:Nsubj
-    varargin{s}.label = varargin{s}.sgn;
-  end
-end
-
-% for backward compatibility with old data structures
-if isfield(varargin{1}, 'sgncmb') && ~isfield(varargin{1}, 'labelcmb')
-  warning('renaming "sngcmb" field into labelcmb for backward compatibility');
-  for s=1:Nsubj
-    varargin{s}.labelcmb = varargin{s}.sgncmb;
-  end
-end
 
 Nsubj    = length(varargin);
 dimord   = varargin{1}.dimord;

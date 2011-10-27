@@ -92,6 +92,7 @@ cfg = ft_checkconfig(cfg, 'deprecated', 'geom');
 
 % defaults 
 cfg.hdmfile        = ft_getopt(cfg, 'hdmfile', []);
+cfg.headshape      = ft_getopt(cfg, 'headshape', []);
 cfg.conductivity   = ft_getopt(cfg, 'conductivity', []);
 cfg.isolatedsource = ft_getopt(cfg, 'isolatedsource', []);
 cfg.unit           = ft_getopt(cfg, 'unit',  []);
@@ -109,7 +110,7 @@ cfg.elect          = ft_getopt(cfg, 'elec',  []); % fdm/fem
 cfg.transform      = ft_getopt(cfg, 'transform',  []); % fdm/fem
 cfg.feedback       = ft_getopt(cfg, 'feedback'); % localspheres
 cfg.radius         = ft_getopt(cfg, 'radius'); % localspheres
-cfg.maxradius      =    ft_getopt(cfg, 'maxradius'); % localspheres
+cfg.maxradius      = ft_getopt(cfg, 'maxradius'); % localspheres
 cfg.baseline       = ft_getopt(cfg, 'baseline'); % localspheres
 cfg.singlesphere   = ft_getopt(cfg, 'singlesphere'); % localspheres
     
@@ -149,13 +150,13 @@ if isfield(cfg, 'geom') && nargin==1
   cfg = rmfield(cfg, 'geom');
 end
 
-if isfield(cfg,'headshape') && nargin == 1 
-  if isstr(cfg.headshape)
+if ~isempty(cfg.headshape) && nargin == 1 
+  if ischar(cfg.headshape)
     geometry = ft_read_headshape(cfg.headshape);
   else
     geometry = cfg.headshape;
   end
-elseif isfield(cfg,'hdmfile') && nargin == 1 
+elseif ~isempty(cfg.hdmfile) && nargin == 1 
   geometry = ft_read_headshape(cfg.hdmfile);
 end
 

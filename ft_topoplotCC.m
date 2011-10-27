@@ -55,19 +55,20 @@ function cfg = ft_topoplotCC(cfg, freq)
 %
 % $Id$
 
+revision = '$Id$';
+
+% do the general setup of the function
 ft_defaults
-
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();;
-ftFuncMem   = memtic();
-
-% check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
-cfg = ft_checkconfig(cfg, 'required', {'foi', 'layout'});
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar freq
 
 % check if the input data is valid for this function
 freq = ft_checkdata(freq, 'cmbrepresentation', 'sparse');
+
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'required', {'foi', 'layout'});
 
 % set the defaults
 if ~isfield(cfg, 'feedback'),   cfg.feedback = 'text';        end

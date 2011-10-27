@@ -41,17 +41,19 @@ function [down] = ft_volumedownsample(cfg, source)
 %
 % $Id$
 
+revision = '$Id$';
+
+% do the general setup of the function
 ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar source
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
-
-%% ft_checkdata see below!!! %%
+% check if the input data is valid for this function
+source = ft_checkdata(source, 'datatype', 'volume', 'feedback', 'no');
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 cfg = ft_checkconfig(cfg, 'unused',  {'voxelcoord'});
 
 if ~isfield(cfg, 'spmversion'), cfg.spmversion = 'spm8'; end
@@ -62,17 +64,6 @@ if ~isfield(cfg, 'smooth'),     cfg.smooth = 'no';      end
 if ~isfield(cfg, 'inputfile'),  cfg.inputfile  = [];    end
 if ~isfield(cfg, 'outputfile'), cfg.outputfile = [];    end
 
-% load optional given inputfile as data
-hasdata = (nargin>1);
-if ~isempty(cfg.inputfile)
-  % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    source = loadvar(cfg.inputfile, 'source');
-  end
-end
-
 if strcmp(cfg.keepinside, 'yes')
   % add inside to the list of parameters
   if ~iscell(cfg.parameter),
@@ -81,9 +72,6 @@ if strcmp(cfg.keepinside, 'yes')
     cfg.parameter(end+1) = {'inside'};
   end
 end
-
-% check if the input data is valid for this function
-source = ft_checkdata(source, 'datatype', 'volume', 'feedback', 'no');
 
 %make local copy of source and remove all functional parameters
 param = parameterselection('all', source);

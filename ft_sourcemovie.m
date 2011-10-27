@@ -28,21 +28,14 @@ function cfg = ft_sourcemovie(cfg, source)
 % the initial part deals with parsing the input options and data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+revision = '$Id$';
+
+% do the general setup of the function
 ft_defaults
-
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
-
-if isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
-  % the input data should be read from file
-  if (nargin>1)
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    source = loadvar(cfg.inputfile, 'source');
-  end
-end
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar source
 
 % ensure that the input data is valiud for this function, this will also do
 % backward-compatibility conversions of old data that for example was
@@ -50,7 +43,6 @@ end
 source = ft_checkdata(source, 'datatype', 'source', 'feedback', 'yes');
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 cfg = ft_checkconfig(cfg, 'renamed',	 {'zparam',    'funparameter'});
 cfg = ft_checkconfig(cfg, 'renamed',	 {'parameter', 'funparameter'});
 cfg = ft_checkconfig(cfg, 'renamed',	 {'mask',      'maskparameter'});
@@ -60,13 +52,13 @@ cfg = ft_checkconfig(cfg, 'renamed',	 {'mask',      'maskparameter'});
 % cfg = ft_checkconfig(cfg, 'deprecated', 'yparam');
 
 % get the options
-xlim    = ft_getopt(cfg, 'xlim');
-ylim    = ft_getopt(cfg, 'ylim');
-zlim    = ft_getopt(cfg, 'zlim');
-olim    = ft_getopt(cfg, 'alim'); % don't use alim as variable name
-xparam  = ft_getopt(cfg, 'xparam', 'time');                 % use time as default
-yparam  = ft_getopt(cfg, 'yparam');                         % default is dealt with below
-funparameter  = ft_getopt(cfg, 'funparameter', 'avg.pow');  % use power as default
+xlim          = ft_getopt(cfg, 'xlim');
+ylim          = ft_getopt(cfg, 'ylim');
+zlim          = ft_getopt(cfg, 'zlim');
+olim          = ft_getopt(cfg, 'alim');                           % don't use alim as variable name
+xparam        = ft_getopt(cfg, 'xparam', 'time');                 % use time as default
+yparam        = ft_getopt(cfg, 'yparam');                         % default is dealt with below
+funparameter  = ft_getopt(cfg, 'funparameter', 'avg.pow');        % use power as default
 maskparameter = ft_getopt(cfg, 'maskparameter');
 
 if isempty(yparam) && isfield(source, 'freq')

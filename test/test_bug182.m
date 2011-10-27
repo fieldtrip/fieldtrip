@@ -1,15 +1,15 @@
 function test_bug182
 
 % TEST test_bug182
-% TEST ft_preprocessing ft_componentanalysis ft_componentbrowser 
+% TEST ft_preprocessing ft_componentanalysis ft_rejectcomponent ft_componentbrowser ft_databrowser
 
 % this script addresses bug 182.
 % applying ft_componentanalysis and reconstructing the data with
 % ft_rejectcomponent should have the possibility to contain a
 % grad-structure which is balanced according to the mixing matrix
 
-cd('/Volumes/home/common/matlab/fieldtrip/testdata/preproc/meg');
-load('preproc_10trials_ctf151.mat');
+cd('/home/common/matlab/fieldtrip/data/test/raw/meg/');
+load('preproc_ctf151.mat');
 
 % the demean is essential to have an equal output for datanew1 and datanew2
 cfg = [];
@@ -27,7 +27,8 @@ comp = ft_componentanalysis(cfg, data);
 cfg = [];
 cfg.component = 1:20;
 cfg.layout = 'CTF151s.lay';
-ft_componentbrowser(cfg, comp);
+cfg.viewmode = 'component';
+ft_databrowser(cfg, comp);
 
 % now we can call ft_rejectcomponent in two ways,
 % -reconstruct the data using comp only

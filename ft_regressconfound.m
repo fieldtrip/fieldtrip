@@ -1,17 +1,17 @@
 function dataout = ft_regressconfound(cfg, datain)
 
 % FT_REGRESSCONFOUND estimates the regression weight of a set of confounds
-% (GLM) and removes the estimated contribution from the single-trial data
+% using a General Linear Model (GLM) and removes the estimated contribution 
+% from the single-trial data.
 %
 % Use as
-%  timelock = ft_regressconfound(cfg, timelock)
-% or
-%  freq = ft_regressconfound(cfg, freq)
+%   timelock = ft_regressconfound(cfg, timelock)
+% or as
+%   freq     = ft_regressconfound(cfg, freq)
 %
-% where datain comes from FT_TIMELOCKANALYSIS or FT_FREQANALYSIS with
-% keeptrials = 'yes' and cfg is a configuratioun structure that should
-% contain
-%
+% where timelock or freq come from FT_TIMELOCKANALYSIS or FT_FREQANALYSIS
+% respectively, with keeptrials = 'yes'. The cfg argument is a structure 
+% that should contain
 %   cfg.confound    = matrix, [Ntrials X Nconfounds]
 %
 % The following configuration options are supported:
@@ -37,53 +37,57 @@ function dataout = ft_regressconfound(cfg, datain)
 
 % Copyrights (C) 2011, Robert Oostenveld, Arjen Stolk, Lennart Verhagen
 %
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
 % $Id: ft_rejectconfound.m 4375 2011-10-07 09:16:45Z arjsto $
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the initial part deals with parsing the input options and data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+revision = '$Id: ft_freqdescriptives.m 4527 2011-10-19 16:08:12Z roboos $';
+
+% do the general setup of the function
 ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar datain
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
-
-% defaults for optional input/ouputfile
-cfg.inputfile  = ft_getopt(cfg, 'inputfile',  []);
-cfg.outputfile = ft_getopt(cfg, 'outputfile', []);
-
-hasdata = (nargin>1);
-if ~isempty(cfg.inputfile)
-  % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    datain = loadvar(cfg.inputfile, 'data');
-  end
-end
-
-% ensure that the input data is valid for this function, this will also do
-% backward-compatibility conversions of old data that for example was
-% read from an old *.mat file
+% check if the input data is valid for this function
 datain = ft_checkdata(datain, 'datatype', {'timelock', 'freq'}, 'feedback', 'yes', 'hastrials', 'yes');
-
-% check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
 % ensure that the required options are present
 cfg = ft_checkconfig(cfg, 'required', {'confound'});
 
+% set the defaults
+cfg.inputfile  = ft_getopt(cfg, 'inputfile',  []);
+cfg.outputfile = ft_getopt(cfg, 'outputfile', []);
+
 % confound specification
-regr = ft_getopt(cfg, 'confound');  % there is no default value
-nconf = size(regr,2);
-conflist = 1:nconf;
+regr      = ft_getopt(cfg, 'confound');  % there is no default value
+nconf     = size(regr,2);
+conflist  = 1:nconf;
 if ~isfield(cfg, 'reject') || strcmp(cfg.reject, 'all') % default
   cfg.reject = conflist(1:end); % to be removed
 else
   cfg.reject = intersect(conflist, cfg.reject); % to be removed
 end
+
 fprintf('removing confound %s \n', num2str(cfg.reject));
 kprs = setdiff(conflist, cfg.reject); % to be kept
 fprintf('keeping confound %s \n', num2str(kprs));

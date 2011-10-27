@@ -13,10 +13,10 @@ function ft_preamble(cmd, varargin)
 % the following ensures that these scripts are included as dependencies
 % when using the MATLAB compiler
 %
-%#function ft_preamble_callinfo
-%#function ft_preamble_defaults
-%#function ft_preamble_loadvar
+%#function ft_preamble_help
 %#function ft_preamble_trackconfig
+%#function ft_preamble_callinfo
+%#function ft_preamble_loadvar
 
 global ft_default
 

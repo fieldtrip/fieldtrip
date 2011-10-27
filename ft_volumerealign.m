@@ -92,15 +92,20 @@ function [mri] = ft_volumerealign(cfg, mri)
 %
 % $Id$
 
+revision = '$Id$';
+
+% do the general setup of the function
 ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar mri
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
+% check if the input data is valid for this function
+mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes');
 
+% check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'realignfiducial', 'fiducial'});
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
 % set the defaults
 cfg.coordsys   = ft_getopt(cfg, 'coordsys',  '');
@@ -131,19 +136,6 @@ if strcmp(cfg.coordsys, '')
     cfg.coordsys = '';
   end
 end
-
-hasdata = (nargin>1);
-if ~isempty(cfg.inputfile)
-  % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    mri = loadvar(cfg.inputfile, 'mri');
-  end
-end
-
-% check if the input data is valid for this function
-mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes');
 
 basedonmrk = strcmp(cfg.method, 'landmark');
 basedonfid = strcmp(cfg.method, 'fiducial');

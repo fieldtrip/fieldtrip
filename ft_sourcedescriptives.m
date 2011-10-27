@@ -68,14 +68,17 @@ function [source] = ft_sourcedescriptives(cfg, source)
 %
 % $Id$
 
+revision = '$Id$';
+
+% do the general setup of the function
 ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar source
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
-
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+% check if the input data is valid for this function
+source = ft_checkdata(source, 'datatype', 'source', 'feedback', 'yes');
 
 % set the defaults
 if ~isfield(cfg, 'transform'),        cfg.transform        = [];            end
@@ -102,19 +105,6 @@ if ~isfield(cfg, 'zscore'),         cfg.zscore         = 'yes';    end
 
 zscore = strcmp(cfg.zscore, 'yes');
 demean = strcmp(cfg.demean, 'yes');
-
-hasdata = (nargin>1);
-if ~isempty(cfg.inputfile)
-  % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    source = loadvar(cfg.inputfile, 'source');
-  end
-end
-
-% check if the input data is valid for this function
-source = ft_checkdata(source, 'datatype', 'source', 'feedback', 'yes');
 
 % get desired method from source structure
 source.method = ft_getopt(source,'method',[]);

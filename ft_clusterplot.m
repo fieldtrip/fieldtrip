@@ -58,43 +58,27 @@ function ft_clusterplot(cfg, stat)
 %
 % $Id$
 
+revision = '$Id$';
+
+% do the general setup of the function
 ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar stat
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();;
-ftFuncMem   = memtic();
-
-% check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
-
-% default for inputfile
-if ~isfield(cfg, 'inputfile'),  cfg.inputfile                   = [];    end
-
-% load optional given inputfile as data
-hasdata = (nargin>1);
-if ~isempty(cfg.inputfile)
-  % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    stat = loadvar(cfg.inputfile, 'stat');
-  end
-end
-
-% check if given data is appropriate
+% check if the given data is appropriate
 if isfield(stat,'freq') && length(stat.freq) > 1
   error('stat contains multiple frequencies which is not allowed because it should be averaged over frequencies')
 end
 
-% old config options
+% check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed',     {'hlmarkerseries',       'highlightsymbolseries'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'hlmarkersizeseries',   'highlightsizeseries'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'hlcolorpos',           'highlightcolorpos'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'hlcolorneg',           'highlightcolorneg'});
 cfg = ft_checkconfig(cfg, 'deprecated',  {'hllinewidthseries'});
-
-cfg = ft_checkconfig(cfg, 'renamed',	 {'zparam', 'parameter'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'zparam', 'parameter'});
 cfg = ft_checkconfig(cfg, 'deprecated',  {'xparam', 'yparam'});
 
 % added several forbidden options  
@@ -107,7 +91,6 @@ cfg = ft_checkconfig(cfg, 'forbidden',  {'highlightfontsize'});
 cfg = ft_checkconfig(cfg, 'forbidden',  {'xlim'});
 cfg = ft_checkconfig(cfg, 'forbidden',  {'comment'});
 cfg = ft_checkconfig(cfg, 'forbidden',  {'commentpos'});
-
 
 % set the defaults
 if ~isfield(cfg,'alpha'),                  cfg.alpha = 0.05;                                    end;
@@ -140,6 +123,7 @@ if isfield(cfg, 'contournum'),            cfgtopo.contournum     = cfg.contournu
 if isfield(cfg, 'colorbar'),              cfgtopo.colorbar       = cfg.colorbar;        end
 if isfield(cfg, 'shading'),               cfgtopo.shading        = cfg.shading';        end
 if isfield(cfg, 'zlim'),                  cfgtopo.zlim           = cfg.zlim;            end
+
 cfgtopo.parameter = cfg.parameter;
 
 % prepare the layout, this only has to be done once

@@ -1,4 +1,4 @@
-function [interp] = ft_channelrepair(cfg, data);
+function [interp] = ft_channelrepair(cfg, data)
 
 % FT_CHANNELREPAIR repairs bad channels in MEG or EEG data by replacing them
 % with the average of its neighbours. It cannot be used reliably to
@@ -46,14 +46,17 @@ function [interp] = ft_channelrepair(cfg, data);
 %
 % $Id$
 
+revision = '$Id$';
+
+% do the general setup of the function
 ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar data
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
-
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'required', {'neighbours'});
 
 % set the default configuration
 if ~isfield(cfg, 'badchannel'),    cfg.badchannel = {};           end
@@ -61,20 +64,9 @@ if ~isfield(cfg, 'trials'),        cfg.trials = 'all';            end
 if ~isfield(cfg, 'inputfile'),    cfg.inputfile = [];           end
 if ~isfield(cfg, 'outputfile'),   cfg.outputfile = [];          end
 
-cfg = ft_checkconfig(cfg, 'required', {'neighbours'});
 if iscell(cfg.neighbours)
     warning('Neighbourstructure is in old format - converting to structure array');
     cfg.neighbours = fixneighbours(cfg.neighbours);
-end
-
-hasdata = (nargin>1);
-if ~isempty(cfg.inputfile)
-  % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    data = loadvar(cfg.inputfile, 'data');
-  end
 end
 
 % store original datatype
@@ -94,6 +86,7 @@ iseeg = ft_senstype(data, 'eeg');
 ismeg = ft_senstype(data, 'meg');
 
 if iseeg
+  % FIXME this is not always guaranteed to be present
   sens = data.elec;
 elseif ismeg
   sens = data.grad;
@@ -109,11 +102,11 @@ connectivityMatrix = channelconnectivity(cfg, data);
 connectivityMatrix = connectivityMatrix(:, goodchanindcs); % all chans x good chans
 
 Ntrials = length(data.trial);
-Nchans = length(data.label);
-Nsens  = length(sens.label);
+Nchans  = length(data.label);
+Nsens   = length(sens.label);
 
-repair = eye(Nchans,Nchans);
-[badindx] = match_str(data.label, cfg.badchannel);
+repair  = eye(Nchans,Nchans);
+badindx = match_str(data.label, cfg.badchannel);
 
 for k=badindx'
     fprintf('repairing channel %s\n', data.label{k});
@@ -189,11 +182,11 @@ try cfg.previous = data.cfg; end
 interp.cfg = cfg;
 
 % convert back to input type if necessary
-switch dtype 
-    case 'timelock'
-        interp = ft_checkdata(interp, 'datatype', 'timelock');
-    otherwise
-        % keep the output as it is
+switch dtype
+  case 'timelock'
+    interp = ft_checkdata(interp, 'datatype', 'timelock');
+  otherwise
+    % keep the output as it is
 end
 
 % the output data should be saved to a MATLAB file

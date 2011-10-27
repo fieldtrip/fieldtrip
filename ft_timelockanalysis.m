@@ -101,12 +101,23 @@ function [timelock] = ft_timelockanalysis(cfg, data)
 %
 % $Id$
 
-ft_defaults
+revision = '$Id$';
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar data
+
+% check if the input data is valid for this function
+data = ft_checkdata(data, 'datatype', {'raw', 'comp'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
+
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'deprecated',  {'normalizecov', 'normalizevar'});
+cfg = ft_checkconfig(cfg, 'deprecated',  {'latency', 'blcovariance', 'blcovariancewindow'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'blc', 'demean'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'blcwindow', 'baselinewindow'});
 
 % set the defaults
 if ~isfield(cfg, 'channel'),       cfg.channel      = 'all';  end
@@ -118,33 +129,7 @@ if ~isfield(cfg, 'vartrllength'),  cfg.vartrllength = 0;      end
 if ~isfield(cfg, 'feedback'),      cfg.feedback     = 'text'; end
 if ~isfield(cfg, 'inputfile'),     cfg.inputfile    = [];     end
 if ~isfield(cfg, 'outputfile'),    cfg.outputfile   = [];     end
-
-hasdata      = (nargin>1);
-hasinputfile = ~isempty(cfg.inputfile);
-
-if hasinputfile && hasdata
-  error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-end
-
-if hasinputfile
-  data = loadvar(cfg.inputfile, 'data');
-else
-  % nothing needed
-end
-
-% check if the input data is valid for this function
-data = ft_checkdata(data, 'datatype', {'raw', 'comp'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
-
-% check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
-cfg = ft_checkconfig(cfg, 'deprecated',  {'normalizecov', 'normalizevar'});
-cfg = ft_checkconfig(cfg, 'deprecated',  {'latency', 'blcovariance', 'blcovariancewindow'});
-cfg = ft_checkconfig(cfg, 'renamed',     {'blc', 'demean'});
-cfg = ft_checkconfig(cfg, 'renamed',     {'blcwindow', 'baselinewindow'});
-
-% convert average to raw data for convenience, the output will be an average again
-% the purpose of this is to allow for repeated baseline correction, filtering and other preproc options that timelockanalysis supports
-data = data2raw(data);
+if ~isfield(cfg, 'preproc'),       cfg.preproc      = [];     end
 
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
@@ -157,12 +142,11 @@ ntrial = length(data.trial);
 % ensure that the preproc specific options are located in the cfg.preproc substructure
 cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'});
 
-% preprocess the data, i.e. apply filtering, baselinecorrection, etc.
-fprintf('applying preprocessing options\n');
-data = ft_preprocessing(cfg.preproc, data);
-%for i=1:ntrial
-%  [data.trial{i}, data.label, data.time{i}, cfg.preproc] = preproc(data.trial{i}, data.label, data.fsample, cfg.preproc, data.offset(i));
-%end
+if ~isempty(cfg.preproc)
+  % preprocess the data, i.e. apply filtering, baselinecorrection, etc.
+  fprintf('applying preprocessing options\n');
+  data = ft_preprocessing(cfg.preproc, data);
+end
 
 % determine the channels of interest
 cfg.channel = ft_channelselection(cfg.channel, data.label);

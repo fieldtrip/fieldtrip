@@ -48,29 +48,14 @@ function [grandavg] = ft_timelockgrandaverage(cfg, varargin)
 %
 % $Id$
 
+revision = '$Id$';
+
+% do the general setup of the function
 ft_defaults
-
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
-
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
-
-% set the defaults
-if ~isfield(cfg, 'inputfile'),    cfg.inputfile  = []; end
-if ~isfield(cfg, 'outputfile'),   cfg.outputfile = []; end
-
-hasdata      = nargin>2;
-hasinputfile = ~isempty(cfg.inputfile); 
-
-if hasdata && hasinputfile
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-elseif hasinputfile
-  for i=1:numel(cfg.inputfile)
-    varargin{i} = loadvar(cfg.inputfile{i}, 'data'); % read datasets from array inputfile
-  end
-end
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar varargin
 
 % check if the input data is valid for this function
 for i=1:length(varargin)
@@ -78,6 +63,8 @@ for i=1:length(varargin)
 end
 
 % set the defaults
+if ~isfield(cfg, 'inputfile'),      cfg.inputfile      = [];    end
+if ~isfield(cfg, 'outputfile'),     cfg.outputfile     = [];    end
 if ~isfield(cfg, 'channel'),        cfg.channel        = 'all'; end
 if ~isfield(cfg, 'keepindividual'), cfg.keepindividual = 'no';  end
 if ~isfield(cfg, 'latency'),        cfg.latency        = 'all'; end

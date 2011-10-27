@@ -148,14 +148,17 @@ function [source] = ft_dipolefitting(cfg, data)
 %
 % $Id$
 
+revision = '$Id$';
+
+% do the general setup of the function
 ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar data
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
-
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+% check if the input data is valid for this function
+data = ft_checkdata(data, 'datatype', {'timelock', 'freq', 'comp'}, 'feedback', 'yes');
 
 % set the defaults
 if ~isfield(cfg, 'channel'),     cfg.channel = 'all';        end
@@ -168,20 +171,6 @@ if ~isfield(cfg, 'nonlinear'),   cfg.nonlinear = 'yes';      end
 if ~isfield(cfg, 'symmetry'),    cfg.symmetry = [];          end
 if ~isfield(cfg, 'inputfile'),   cfg.inputfile = [];         end
 if ~isfield(cfg, 'outputfile'),  cfg.outputfile = [];        end
-
-% load optional given inputfile as data
-hasdata = (nargin>1);
-if ~isempty(cfg.inputfile)
-  % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    data = loadvar(cfg.inputfile, 'data');
-  end
-end
-
-% check if the input data is valid for this function
-data = ft_checkdata(data, 'datatype', {'timelock', 'freq', 'comp'}, 'feedback', 'yes');
 
 % put the low-level options pertaining to the dipole grid (used for initial scanning) in their own field
 cfg = ft_checkconfig(cfg, 'createsubcfg',  {'grid'});

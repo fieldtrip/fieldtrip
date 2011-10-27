@@ -1,4 +1,4 @@
-function [dataout] = ft_channelnormalise(cfg, data);
+function [dataout] = ft_channelnormalise(cfg, data)
 
 % FT_CHANNELNORMALISE normalises the input data to a mean of 0 and
 % a standard deviation of 1.
@@ -38,29 +38,19 @@ function [dataout] = ft_channelnormalise(cfg, data);
 %
 % $Id$
 
+revision = '$Id$';
+
+% do the general setup of the function
 ft_defaults
-
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
-
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar data
 
 % set the defaults
-if ~isfield(cfg, 'trials'),        cfg.trials = 'all';            end
+if ~isfield(cfg, 'trials'),       cfg.trials = 'all';           end
 if ~isfield(cfg, 'inputfile'),    cfg.inputfile = [];           end
 if ~isfield(cfg, 'outputfile'),   cfg.outputfile = [];          end
-
-hasdata = (nargin>1);
-if ~isempty(cfg.inputfile)
-  % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    data = loadvar(cfg.inputfile, 'data');
-  end
-end
 
 % store original datatype
 dtype = ft_datatype(data);
@@ -133,11 +123,11 @@ try cfg.previous = data.cfg; end
 dataout.cfg = cfg;
 
 % convert back to input type if necessary
-switch dtype 
-    case 'timelock'
-        dataout = ft_checkdata(dataout, 'datatype', 'timelock');
-    otherwise
-        % keep the output as it is
+switch dtype
+  case 'timelock'
+    dataout = ft_checkdata(dataout, 'datatype', 'timelock');
+  otherwise
+    % keep the output as it is
 end
 
 % the output data should be saved to a MATLAB file

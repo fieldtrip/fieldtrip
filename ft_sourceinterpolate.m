@@ -97,17 +97,23 @@ function [interp] = ft_sourceinterpolate(cfg, functional, anatomical)
 %
 % $Id$
 
+revision = '$Id$';
+
+% do the general setup of the function
 ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar functional anatomical
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
+% this is not supported any more as of 26/10/2011
+if ischar(anatomical),
+  error('please use cfg.inputfile instead of specifying the input variable as a sting');
+end
 
-%% ft_checkdata see below!!! %%
+% ft_checkdata is done further down
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 cfg = ft_checkconfig(cfg, 'unused',     {'keepinside'});
 cfg = ft_checkconfig(cfg, 'deprecated', {'sourceunits', 'mriunits'});
 
@@ -120,44 +126,6 @@ if ~isfield(cfg, 'voxelcoord'),   cfg.voxelcoord   = 'yes';     end
 if ~isfield(cfg, 'feedback'),     cfg.feedback     = 'text';    end
 if ~isfield(cfg, 'inputfile'),    cfg.inputfile    = [];        end
 if ~isfield(cfg, 'outputfile'),   cfg.outputfile   = [];        end
-
-hasdata      = (nargin>1);
-hasinputfile = ~isempty(cfg.inputfile);
-
-if hasdata && hasinputfile
-  error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-end
-
-% load optional given *.mat inputfile as data
-if hasinputfile
-  functional = loadvar(cfg.inputfile{1});
-  anatomical = loadvar(cfg.inputfile{2});
-end
-
-% read the anatomical MRI or cortical mesh from file
-if ischar(anatomical)
-  try
-    fprintf('trying to read anatomical MRI from file\n');
-    anatomical = ft_read_mri(anatomical);
-  catch
-    fprintf('anatomical file does not seem to be an anatomical MRI\n');
-  end
-end % if ischar
-
-if ischar(anatomical)
-  try
-    fprintf('trying to read cortical mesh from file\n');
-    anatomical = ft_read_headshape(anatomical);
-  catch
-    fprintf('anatomical file does not seem to be a cortical mesh\n');
-  end
-end % if ischar
-
-if ischar(anatomical)
-  % if it ends up here, it means that all previous attempts failed
-  error('the anatomical file does not seem to contain an anatomical MRI, nor a cortical mesh');
-end % if ischar
-
 
 if isfield(anatomical, 'pnt')
   % anatomical data consists of a mesh, but no smudging possible
@@ -219,8 +187,7 @@ elseif is2Dana && is2Dfun
   
 elseif ~is2Dana && is2Dfun
   
-  % interpolate onto a 3D volume, ensure that the anatomical is indeed a
-  % volume
+  % interpolate onto a 3D volume, ensure that the anatomical is indeed a volume
   anatomical = ft_checkdata(anatomical, 'datatype', 'volume', 'inside', 'logical', 'feedback', 'yes', 'hasunits', 'yes');
   functional = ft_convert_units(functional, anatomical.unit);
   

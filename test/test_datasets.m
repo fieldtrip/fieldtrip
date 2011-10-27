@@ -91,10 +91,10 @@ dataset(end).datatype = 'yokogawa160';
 dataset(end).filename = 'Continuous1.con';
 
 % lfp dataformats
-dataset(end+1).origdir  = origdir; 
-dataset(end).type     = 'lfp/';
-dataset(end).datatype = 'neuralynx';
-dataset(end).filename = '2005-2-10_12-11-19';
+% dataset(end+1).origdir  = origdir; 
+% dataset(end).type     = 'lfp/';
+% dataset(end).datatype = 'neuralynx';
+% dataset(end).filename = '2005-2-10_12-11-19';
 
 dataset(end+1).origdir  = origdir; 
 dataset(end).type     = 'lfp/';

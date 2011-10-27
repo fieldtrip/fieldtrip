@@ -102,8 +102,6 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 % cfg.zlim/xparam (set to a specific frequency range or time range [zmax zmin] for an average
 % over the frequency/time bins for TFR data.  Use in conjunction with e.g. xparam = 'time', and cfg.parameter = 'powspctrm').
 
-
-%
 % This function depends on FT_TIMELOCKBASELINE which has the following options:
 % cfg.baseline, documented
 % cfg.channel
@@ -136,68 +134,52 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 %
 % $Id$
 
-ft_defaults
+revision = '$Id$';
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar varargin
+
+for i=1:length(varargin)
+  varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'timelock', 'freq'});
+end
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
-cfg = ft_checkconfig(cfg, 'unused',  {'cohtargetchannel'});
+cfg = ft_checkconfig(cfg, 'unused',     {'cohtargetchannel'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'zlim', 'absmax', 'maxabs'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'matrixside',     'directionality'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'directionality', 'feedforward', 'outflow'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'directionality', 'feedback',    'inflow'});
-cfg = ft_checkconfig(cfg, 'renamed', {'cohrefchannel', 'refchannel'});
-cfg = ft_checkconfig(cfg, 'renamed',	 {'zparam', 'parameter'});
-cfg = ft_checkconfig(cfg, 'deprecated',  {'xparam'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'cohrefchannel', 'refchannel'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'zparam', 'parameter'});
+cfg = ft_checkconfig(cfg, 'deprecated', {'xparam'});
 
 % set default for inputfile
 if ~isfield(cfg, 'inputfile'),  cfg.inputfile = [];    end
 
-hasdata      = nargin>1;
-hasinputfile = ~isempty(cfg.inputfile);
-
-if hasdata && hasinputfile
-  error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-end
-
-if hasdata
-  % do nothing
-elseif hasinputfile
-  if ischar(cfg.inputfile)
-    cfg.inputfile = {cfg.inputfile};
-  end
-  for i = 1:numel(cfg.inputfile)
-    varargin{i} = loadvar(cfg.inputfile{i}, 'data'); % read datasets
-  end
-  if isfield(cfg, 'interactive') && strcmp(cfg.interactive, 'yes'),
-    warning('switching off interactive mode, this is not supported when loading an inputfile from disk');
-  end
-end
-
-% set the defaults:
-cfg.baseline      = ft_getopt(cfg, 'baseline',    'no');
-cfg.trials        = ft_getopt(cfg, 'trials',      'all');
-cfg.xlim          = ft_getopt(cfg, 'xlim',        'maxmin');
-cfg.ylim          = ft_getopt(cfg, 'ylim',        'maxmin');
-cfg.comment       = ft_getopt(cfg, 'comment',     strcat([date '\n']));
-cfg.axes          = ft_getopt(cfg, 'axes',        'yes');
-cfg.showlabels    = ft_getopt(cfg, 'showlabels',  'no');
-cfg.showoutline   = ft_getopt(cfg, 'showoutline', 'no');
-cfg.box           = ft_getopt(cfg, 'box',         'no');
-cfg.fontsize      = ft_getopt(cfg, 'fontsize',    8);
-cfg.graphcolor    = ft_getopt(cfg, 'graphcolor',  'brgkywrgbkywrgbkywrgbkyw');
-cfg.interactive   = ft_getopt(cfg, 'interactive', 'no');
-cfg.renderer      = ft_getopt(cfg, 'renderer',    []);
-cfg.maskparameter = ft_getopt(cfg, 'maskparameter', []);
-cfg.linestyle     = ft_getopt(cfg, 'linestyle',   '-');
-cfg.linewidth     = ft_getopt(cfg, 'linewidth',   0.5);
-cfg.maskstyle     = ft_getopt(cfg, 'maskstyle',   'box');
-cfg.channel       = ft_getopt(cfg, 'channel',     'all');
-cfg.directionality    = ft_getopt(cfg, 'directionality',  '');
+% set the defaults
+cfg.baseline        = ft_getopt(cfg, 'baseline',    'no');
+cfg.trials          = ft_getopt(cfg, 'trials',      'all');
+cfg.xlim            = ft_getopt(cfg, 'xlim',        'maxmin');
+cfg.ylim            = ft_getopt(cfg, 'ylim',        'maxmin');
+cfg.comment         = ft_getopt(cfg, 'comment',     strcat([date '\n']));
+cfg.axes            = ft_getopt(cfg, 'axes',        'yes');
+cfg.showlabels      = ft_getopt(cfg, 'showlabels',  'no');
+cfg.showoutline     = ft_getopt(cfg, 'showoutline', 'no');
+cfg.box             = ft_getopt(cfg, 'box',         'no');
+cfg.fontsize        = ft_getopt(cfg, 'fontsize',    8);
+cfg.graphcolor      = ft_getopt(cfg, 'graphcolor',  'brgkywrgbkywrgbkywrgbkyw');
+cfg.interactive     = ft_getopt(cfg, 'interactive', 'no');
+cfg.renderer        = ft_getopt(cfg, 'renderer',    []);
+cfg.maskparameter   = ft_getopt(cfg, 'maskparameter', []);
+cfg.linestyle       = ft_getopt(cfg, 'linestyle',   '-');
+cfg.linewidth       = ft_getopt(cfg, 'linewidth',   0.5);
+cfg.maskstyle       = ft_getopt(cfg, 'maskstyle',   'box');
+cfg.channel         = ft_getopt(cfg, 'channel',     'all');
+cfg.directionality  = ft_getopt(cfg, 'directionality',  '');
 
 Ndata = numel(varargin);
 
@@ -213,7 +195,7 @@ if ischar(cfg.linestyle)
   cfg.linestyle = {cfg.linestyle};
 end
 
-if Ndata  > 1
+if Ndata>1
   if (length(cfg.linestyle) < Ndata ) && (length(cfg.linestyle) > 1)
     error('either specify cfg.linestyle as a cell-array with one cell for each dataset, or only specify one linestyle')
   elseif (length(cfg.linestyle) < Ndata ) && (length(cfg.linestyle) == 1)
@@ -230,11 +212,18 @@ end
 %   error('interactive plotting is not supported with more than 1 input data set');
 % end
 
-% ensure that the input is correct, also backward compatibility with old data structures:
+% ensure that the inputs are consistent with each other
 for i=1:Ndata
-  varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'timelock', 'freq'});
-  dtype{i}    = ft_datatype(varargin{i});
-  
+  dtype{i} = ft_datatype(varargin{i});
+end
+if ~all(strcmp(dtype{1}, dtype))
+  error('input data are of different type; this is not supported');
+end
+dtype  = dtype{1};
+dimord = varargin{1}.dimord;
+dimtok = tokenize(dimord, '_');
+
+for i=1:Ndata
   % this is needed for correct treatment of GRAPHCOLOR later on
   if nargin>1,
     if ~isempty(inputname(i+1))
@@ -246,15 +235,6 @@ for i=1:Ndata
     iname{i+1} = cfg.inputfile{i};
   end
 end
-
-if Ndata>1,
-  if ~all(strcmp(dtype{1}, dtype))
-    error('input data are of different type; this is not supported');
-  end
-end
-dtype  = dtype{1};
-dimord = varargin{1}.dimord;
-dimtok = tokenize(dimord, '_');
 
 % Set x/y/parameter defaults according to datatype and dimord
 switch dtype
@@ -806,6 +786,10 @@ end
 % SUBFUNCTION which is called after selecting channels in case of cfg.refchannel='gui'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function select_multiplotER(label, cfg, varargin)
+if isfield(cfg, 'inputfile')
+  % the reading has already been done and varargin contains the data
+  cfg = rmfield(cfg, 'inputfile');
+end
 if iscell(label)
   label = label{1};
 end
@@ -821,6 +805,10 @@ ft_multiplotER(cfg, varargin{:});
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function select_singleplotER(label, cfg, varargin)
 if ~isempty(label)
+  if isfield(cfg, 'inputfile')
+    % the reading has already been done and varargin contains the data
+    cfg = rmfield(cfg, 'inputfile');
+  end
   cfg.xlim = 'maxmin';
   cfg.channel = label;
   fprintf('selected cfg.channel = {');

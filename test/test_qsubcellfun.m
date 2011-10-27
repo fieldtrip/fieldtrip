@@ -2,6 +2,11 @@ function test_qsubcellfun
 
 % TEST qsubcellfun qsubfeval qsubget
 
+if isempty(which('qsubcellfun'))
+  [p, f, x] = fileparts(which('ft_defaults'));
+  addpath(fullfile(p, 'peer'));
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this test script is based on http://fieldtrip.fcdonders.nl/tutorial/distributedcomputing
 

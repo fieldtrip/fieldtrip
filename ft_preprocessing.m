@@ -178,12 +178,14 @@ function [dataout] = ft_preprocessing(cfg, data)
 %
 % $Id$
 
-ft_defaults
+revision = '$Id$';
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar data
 
 if nargin==0
   help(mfilename);
@@ -196,9 +198,10 @@ elseif nargin==1 && isequal(cfg, 'guidelines')
   return
 end
 
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+% check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed', {'blc', 'demean'});
 cfg = ft_checkconfig(cfg, 'renamed', {'blcwindow', 'baselinewindow'});
+cfg = ft_checkconfig(cfg, 'renamed', {'output', 'export'});
 
 % set the defaults
 if ~isfield(cfg, 'method'),       cfg.method = 'trial';         end
@@ -206,7 +209,7 @@ if ~isfield(cfg, 'channel'),      cfg.channel = {'all'};        end
 if ~isfield(cfg, 'removemcg'),    cfg.removemcg = 'no';         end
 if ~isfield(cfg, 'removeeog'),    cfg.removeeog = 'no';         end
 if ~isfield(cfg, 'inputfile'),    cfg.inputfile = [];           end
-if ~isfield(cfg, 'outputfile'),   cfg.outputfile = [];          end % this is for exporting to another file format
+if ~isfield(cfg, 'outputfile'),   cfg.outputfile = [];          end % this is for writing the result to a mat file
 
 if ~isfield(cfg, 'feedback'),
   if strcmp(cfg.method, 'channel')
@@ -246,13 +249,10 @@ if isfield(cfg, 'lnfilter') && strcmp(cfg.lnfilter, 'yes')
   error('line noise filtering using the option cfg.lnfilter is not supported any more, use cfg.bsfilter instead')
 end
 
-% this option has been renamed?
-cfg = ft_checkconfig(cfg, 'renamed', {'output', 'export'});
-
-%this relates to a previous fix to handle 32 bit neuroscan data
+% this relates to a previous fix to handle 32 bit neuroscan data
 if isfield(cfg, 'nsdf'),
-  %FIXME this should be handled by ft_checkconfig, but ft_checkconfig does not allow yet for
-  %specific errors in the case of forbidden fields
+  % FIXME this should be handled by ft_checkconfig, but ft_checkconfig does not allow yet for
+  % specific errors in the case of forbidden fields
   error('the use of cfg.nsdf is deprecated. fieldtrip tries to determine the bit resolution automatically. you can overrule this by specifying cfg.dataformat and cfg.headerformat. see: http://fieldtrip.fcdonders.nl/faq/i_have_problems_reading_in_neuroscan_.cnt_files._how_can_i_fix_this');
 end
 
@@ -264,16 +264,6 @@ if isfield(cfg, 'export') && ~isempty(cfg.export)
 end
 
 hasdata = (nargin>1);
-if ~isempty(cfg.inputfile)
-  % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    data = loadvar(cfg.inputfile, 'data');
-    hasdata = true;
-  end
-end
-
 if hasdata
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % do preprocessing of data that has already been read into memory

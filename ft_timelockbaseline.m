@@ -45,14 +45,19 @@ function [timelock] = ft_timelockbaseline(cfg, timelock)
 %
 % $Id$
 
+revision = '$Id$';
+
+% do the general setup of the function
 ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar timelock
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
+% check if the input data is valid for this function
+timelock = ft_checkdata(timelock, 'datatype', 'timelock', 'feedback', 'yes');
 
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+% check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed', {'blc', 'demean'});
 cfg = ft_checkconfig(cfg, 'renamed', {'blcwindow', 'baselinewindow'});
 
@@ -60,20 +65,6 @@ cfg = ft_checkconfig(cfg, 'renamed', {'blcwindow', 'baselinewindow'});
 if ~isfield(cfg, 'baseline'),   cfg.baseline    = 'no';   end
 if ~isfield(cfg, 'inputfile'),  cfg.inputfile   = [];     end
 if ~isfield(cfg, 'outputfile'), cfg.outputfile  = [];     end
-
-% load optional given inputfile as data
-hasdata = (nargin>1);
-if ~isempty(cfg.inputfile)
-  % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    timelock = loadvar(cfg.inputfile, 'data');
-  end
-end
-
-% check if the input data is valid for this function
-timelock = ft_checkdata(timelock, 'datatype', 'timelock', 'feedback', 'yes');
 
 % the cfg.blc/blcwindow options are used in preprocessing and in
 % ft_timelockanalysis (i.e. in private/preproc), hence make sure that

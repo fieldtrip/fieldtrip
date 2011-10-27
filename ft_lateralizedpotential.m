@@ -1,4 +1,4 @@
-function lrp = ft_lateralizedpotential(cfg, avgL, avgR);
+function lrp = ft_lateralizedpotential(cfg, avgL, avgR)
 
 % FT_LATERALIZEDPOTENTIAL computes lateralized potentials such as the LRP
 %
@@ -68,29 +68,21 @@ function lrp = ft_lateralizedpotential(cfg, avgL, avgR);
 %
 % $Id$
 
+revision = '$Id$';
+
+% do the general setup of the function
 ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar avgL avgR
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
-
-% enable configuration tracking
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+avgL = ft_checkdata(avgL, 'datatype', 'timelock');
+avgR = ft_checkdata(avgR, 'datatype', 'timelock');
 
 % set the defaults
-if ~isfield(cfg, 'inputfile'),  cfg.inputfile                   = [];    end
-if ~isfield(cfg, 'outputfile'), cfg.outputfile                  = [];    end
-
-hasdata = nargin>1;
-if ~isempty(cfg.inputfile) % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    avgL=loadvar(cfg.inputfile{1}, 'data'); % read first element as avgL from array inputfile
-    avgR=loadvar(cfg.inputfile{2}, 'data'); % read second element as avgR from array inputfile
-  end
-end
+if ~isfield(cfg, 'inputfile'),  cfg.inputfile   = [];    end
+if ~isfield(cfg, 'outputfile'), cfg.outputfile  = [];    end
 
 if ~isfield(cfg, 'channelcmb'), 
   cfg.channelcmb = {
@@ -105,8 +97,8 @@ if ~isfield(cfg, 'channelcmb'),
     };
 end
 
-if ~all(avgL.time==avgR.time)
-  error('timeaxes are not the same');
+if ~isequal(avgL.time, avgR.time)
+  error('the time axes are not the same');
 end
 
 % start with an empty output structure

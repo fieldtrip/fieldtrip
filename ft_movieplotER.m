@@ -54,9 +54,10 @@ function ft_movieplotER(cfg, varargin)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
+
 data = varargin{:};
 
-% Checkdata
+% check the input data and set the appropriate defaults
 data = ft_checkdata(data, 'datatype', 'timelock');
 cfg.parameter   = ft_getopt(cfg, 'parameter', 'avg');
 cfg.interactive = ft_getopt(cfg, 'interactive', 'no');

@@ -13,7 +13,7 @@ function test_bug97
 % argument as the corresponding 'value'. In such case [] has a definite meaning
 % (rather than not being defined by the user)
 
-cd('/Volumes/home/common/matlab/fieldtrip/testdata/raw/meg/ctf275/A0132_Aud-Obj-Recognition_20051115_02.ds');
+cd('/home/common/matlab/fieldtrip/data/test/original/meg/ctf275/A0132_Aud-Obj-Recognition_20051115_02.ds');
 headerfile = 'A0132_Aud-Obj-Recognition_20051115_02.res4';
 datafile   = 'A0132_Aud-Obj-Recognition_20051115_02.meg4';
 %hdr        = ft_read_header(headerfile);

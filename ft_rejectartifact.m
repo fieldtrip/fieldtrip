@@ -1,4 +1,4 @@
-function [cfg] = ft_rejectartifact(cfg,data)
+function [cfg] = ft_rejectartifact(cfg, data)
 
 % FT_REJECTARTIFACT removes data segments containing artifacts. It returns a
 % configuration structure with a modified trial definition which can be
@@ -83,12 +83,16 @@ function [cfg] = ft_rejectartifact(cfg,data)
 %
 % $Id$
 
-ft_defaults
+revision = '$Id$';
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar data
+
+% ft_checkdata is done further down
 
 if 0
   % this code snippet ensures that these functions are included in the
@@ -103,7 +107,6 @@ if 0
 end
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 cfg = ft_checkconfig(cfg, 'dataset2files', {'yes'});
 
 % set the defaults
@@ -188,16 +191,8 @@ if isfield(cfg, 'rejectfile')
   end
 end
 
-hasdata = (nargin>1);
-if ~isempty(cfg.inputfile)
-  % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    data = loadvar(cfg.inputfile, 'data');
-    hasdata = true;
-  end
-end
+% the data can be specified as input variable or through cfg.inputfile
+hasdata = exist('data', 'var');
 
 if hasdata
   data = ft_checkdata(data, 'hassampleinfo', 'yes');

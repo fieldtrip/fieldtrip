@@ -7,7 +7,7 @@ function [freqOut] = ft_freqbaseline(cfg, freq)
 % where the freq data comes from FT_FREQANALYSIS and the configuration
 % should contain
 %   cfg.baseline     = [begin end] (default = 'no')
-%   cfg.baselinetype = 'absolute' 'relchange' 'relative' (default = 'absolute')
+%   cfg.baselinetype = 'absolute', 'relchange' or 'relative' (default = 'absolute')
 %   cfg.param        = field for which to apply baseline normalization, or
 %                      cell array of strings to specify multiple fields to normalize
 %                      (default = 'powspctrm')
@@ -40,18 +40,19 @@ function [freqOut] = ft_freqbaseline(cfg, freq)
 %
 % $Id$
 
+revision = '$Id$';
+
+% do the general setup of the function
 ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar freq
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
+% check if the input data is valid for this function
+freq = ft_checkdata(freq, 'datatype', 'freq', 'feedback', 'yes');
 
-%% Input scaffolding
-
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
-
-% set the defaults in the cfg structure
+% set the defaults
 cfg.baseline     =  ft_getopt(cfg, 'baseline', 'no');
 cfg.baselinetype =  ft_getopt(cfg, 'baselinetype', 'absolute');
 cfg.param        =  ft_getopt(cfg, 'param', 'powspctrm');
@@ -82,24 +83,14 @@ elseif ischar(cfg.baseline) && strcmp(cfg.baseline, 'no')
   return
 end
 
-% should we read input data from file?
-if ~isempty(cfg.inputfile)
-  if (nargin > 1)
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    freq = loadvar(cfg.inputfile, 'freq');
-  end
-end
-
-% check if the input data is valid for this function
-freq = ft_checkdata(freq, 'datatype', 'freq', 'feedback', 'yes');
-
 % check if the field of interest is present in the data
 if (~all(isfield(freq, cfg.param)))
   error('cfg.param should be a string or cell array of strings referring to (a) field(s) in the freq input structure')
 end
 
-%% Computation of output
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Computation of output
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % initialize output structure
 freqOut        = [];
@@ -146,7 +137,9 @@ for k = 1:numel(cfg.param)
 
 end
 
-%% Output scaffolding
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Output scaffolding
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % accessing this field here is needed for the configuration tracking
 % by accessing it once, it will not be removed from the output cfg
@@ -182,34 +175,28 @@ if ~isempty(cfg.outputfile)
   savevar(cfg.outputfile, 'freq', freqOut); % use the variable name "freq" in the output file
 end
 
-%% Helper function
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% subfunction that actually performs the normalization on an arbitrary
-% quantity
+% SUBFUNCTION that actually performs the normalization on an arbitrary quantity
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function data = performNormalization(timeVec, data, baseline, baselinetype)
 
-  baselineTimes = (timeVec >= baseline(1) & timeVec <= baseline(2));
+baselineTimes = (timeVec >= baseline(1) & timeVec <= baseline(2));
 
-  if length(size(data)) ~= 3,
-    error('time-frequency matrix should have three dimensions (chan,freq,time)');
-  end
-
-  % compute mean of time/frequency quantity in the baseline interval,
-  % ignoring NaNs, and replicate this over time dimension
-  meanVals = repmat(nanmean(data(:,:,baselineTimes), 3), [1 1 size(data, 3)]);
-
-  if (strcmp(baselinetype, 'absolute'))
-    data = data - meanVals;
-  elseif (strcmp(baselinetype, 'relative'))
-    data = data ./ meanVals;
-  elseif (strcmp(baselinetype, 'relchange'))
-    data = (data - meanVals) ./ meanVals;
-  else
-    error('unsupported method for baseline normalization: %s', baselinetype);
-  end
-
+if length(size(data)) ~= 3,
+  error('time-frequency matrix should have three dimensions (chan,freq,time)');
 end
 
-end % end of top-level function
+% compute mean of time/frequency quantity in the baseline interval,
+% ignoring NaNs, and replicate this over time dimension
+meanVals = repmat(nanmean(data(:,:,baselineTimes), 3), [1 1 size(data, 3)]);
+
+if (strcmp(baselinetype, 'absolute'))
+  data = data - meanVals;
+elseif (strcmp(baselinetype, 'relative'))
+  data = data ./ meanVals;
+elseif (strcmp(baselinetype, 'relchange'))
+  data = (data - meanVals) ./ meanVals;
+else
+  error('unsupported method for baseline normalization: %s', baselinetype);
+end
+

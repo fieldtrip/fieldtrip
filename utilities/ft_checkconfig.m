@@ -170,7 +170,7 @@ if ~isempty(deprecated)
     elseif loose
       warning('The option cfg.%s is deprecated, support is no longer guaranteed\n', deprecated{ismember(deprecated, fieldsused)});
     elseif pedantic
-      error(sprintf('The option cfg.%s is deprecated, support is no longer guaranteed\n', deprecated{ismember(deprecated, fieldsused)}));
+      error(sprintf('The option cfg.%s is not longer supported\n', deprecated{ismember(deprecated, fieldsused)}));
     end
   end
 end
@@ -396,6 +396,15 @@ if ~isempty(createsubcfg)
 
     for i=1:length(fieldname)
       if ~isfield(subcfg, fieldname{i}) && isfield(cfg, fieldname{i})
+        
+        if silent
+          % don't mention it
+        elseif loose
+          warning('The field cfg.%s is deprecated, please specify it as cfg.%s.%s instead of cfg.%s', fieldname{i}, subname, fieldname{i});
+        elseif pedantic
+          error('The field cfg.%s is not longer supported, use cfg.%s.%s instead\n', fieldname{i}, subname, fieldname{i});
+        end
+        
         subcfg = setfield(subcfg, fieldname{i}, getfield(cfg, fieldname{i}));  % set it in the subconfiguration
         cfg = rmfield(cfg, fieldname{i});                                      % remove it from the main configuration
       end

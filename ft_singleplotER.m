@@ -106,15 +106,16 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 %
 % $id: ft_singleplotER.m 3147 2011-03-17 12:38:09z jansch $
 
-ft_defaults
+revision = '$Id$';
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar varargin
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 cfg = ft_checkconfig(cfg, 'unused',     {'cohtargetchannel'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'zlim', 'absmax', 'maxabs'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'matrixside',     'directionality'});
@@ -124,35 +125,9 @@ cfg = ft_checkconfig(cfg, 'renamed',    {'channelindex',   'channel'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'channelname',    'channel'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'cohrefchannel',  'refchannel'});
 cfg = ft_checkconfig(cfg, 'renamed',	  {'zparam',         'parameter'});
+cfg = ft_checkconfig(cfg, 'deprecated', {'xparam'});
 
-cfg = ft_checkconfig(cfg, 'deprecated',  {'xparam'});
-
-
-% set default for inputfile
-cfg.inputfile = ft_getopt(cfg, 'inputfile', []);
-
-hasdata      = nargin>1;
-hasinputfile = ~isempty(cfg.inputfile);
-
-if hasdata && hasinputfile
-  error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-end
-
-if hasdata
-  % do nothing
-elseif hasinputfile
-  if ~ischar(cfg.inputfile)
-    cfg.inputfile = {cfg.inputfile};
-  end
-  for i = 1:numel(cfg.inputfile)
-    varargin{i} = loadvar(cfg.inputfile{i}, 'data'); % read datasets
-  end
-  if isfield(cfg, 'interactive') && strcmp(cfg.interactive, 'yes'),
-    warning('switching off interactive mode, this is not supported when loading an inputfile from disk');
-  end
-end
-
-% set the defaults:
+% set the defaults
 cfg.baseline      = ft_getopt(cfg, 'baseline',    'no');
 cfg.trials        = ft_getopt(cfg, 'trials',      'all');
 cfg.xlim          = ft_getopt(cfg, 'xlim',        'maxmin');
@@ -179,7 +154,7 @@ Ndata = numel(varargin);
 %   error('interactive plotting is not supported with more than 1 input data set');
 % end
 
-%fixme rename directionality and cohrefchannel in more meaningful options
+% FIXME rename directionality and cohrefchannel in more meaningful options
 if ischar(cfg.graphcolor)
   graphcolor = ['k' cfg.graphcolor];
 elseif isnumeric(cfg.graphcolor)
@@ -204,7 +179,7 @@ if Ndata  > 1
 end
 
 % ensure that the input is correct, also backward compatibility with old data structures:
-dtype = cell(Ndata , 1);
+dtype = cell(Ndata, 1);
 for i=1:Ndata
   varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'timelock', 'freq'});
   dtype{i}    = ft_datatype(varargin{i});
@@ -617,23 +592,15 @@ for i=2:length(cells)
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% subfunction which is called by ft_select_channel in case cfg.refchannel='gui'
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function select_singleplotER(label, cfg, varargin)
-cfg.refchannel = label;
-fprintf('selected cfg.refchannel = ''%s''\n', cfg.refchannel);
-p = get(gcf, 'position');
-f = figure;
-set(f, 'position', p);
-ft_singleplotER(cfg, varargin{:});
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % subfunction which is called after selecting a time range
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function select_topoplotER(range, cfg, varargin)
 cfg.comment = 'auto';
-yparam = [];
 cfg.xlim = range(1:2);
+if isfield(cfg, 'inputfile')
+  % the reading has already been done and varargin contains the data
+  cfg = rmfield(cfg, 'inputfile');
+end
 if isfield(cfg, 'showlabels')
   % this is not allowed in topoplotER
   cfg = rmfield(cfg, 'showlabels');

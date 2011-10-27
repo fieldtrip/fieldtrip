@@ -53,12 +53,23 @@ function [data] = ft_combineplanar(cfg, data)
 %
 % $Id$
 
-ft_defaults
+revision = '$Id$';
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar data
+
+% check if the input data is valid for this function
+data = ft_checkdata(data, 'datatype', {'raw', 'freq', 'timelock'}, 'feedback', 'yes', 'senstype', {'ctf151_planar', 'ctf275_planar', 'neuromag122', 'neuromag306', 'bti248_planar', 'bti148_planar', 'itab153_planar', 'yokogawa160_planar', 'yokogawa64_planar', 'yokogawa440_planar'});
+
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',   {'combinegrad'});
+cfg = ft_checkconfig(cfg, 'deprecated',  {'baseline'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'blc', 'demean'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'blcwindow', 'baselinewindow'});
 
 % set the defaults
 if ~isfield(cfg, 'demean'),        cfg.demean         = 'no';       end
@@ -69,25 +80,6 @@ if ~isfield(cfg, 'trials'),        cfg.trials         = 'all';      end
 if ~isfield(cfg, 'feedback'),      cfg.feedback       = 'none';     end
 if ~isfield(cfg, 'inputfile'),     cfg.inputfile      = [];         end
 if ~isfield(cfg, 'outputfile'),    cfg.outputfile     = [];         end
-
-hasdata = (nargin>1);
-if ~isempty(cfg.inputfile)
-  % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    data = loadvar(cfg.inputfile, 'data');
-  end
-end
-
-% check if the input data is valid for this function
-data = ft_checkdata(data, 'datatype', {'raw', 'freq', 'timelock'}, 'feedback', 'yes', 'senstype', {'ctf151_planar', 'ctf275_planar', 'neuromag122', 'neuromag306', 'bti248_planar', 'bti148_planar', 'itab153_planar', 'yokogawa160_planar', 'yokogawa64_planar', 'yokogawa440_planar'});
-
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
-cfg = ft_checkconfig(cfg, 'forbidden',   {'combinegrad'});
-cfg = ft_checkconfig(cfg, 'deprecated',  {'baseline'});
-cfg = ft_checkconfig(cfg, 'renamed',     {'blc', 'demean'});
-cfg = ft_checkconfig(cfg, 'renamed',     {'blcwindow', 'baselinewindow'});
 
 if isfield(cfg, 'baseline')
   warning('only supporting cfg.baseline for backwards compatibility, please update your cfg');

@@ -86,19 +86,19 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %
 % $Id$
 
-%ft_defaults
+revision = '$Id$';
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar data
 
-% check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+% FIXME it should be checked carefully whether the following works
+% data = ft_checkdata(data, 'datatype', {'raw', 'timelock', 'freq', 'source'});
 
 % set the defaults
-
-%FIXME do method specific calls to ft_checkconfig
 cfg.feedback    = ft_getopt(cfg, 'feedback',    'none');
 cfg.channel     = ft_getopt(cfg, 'channel',     'all');
 cfg.channelcmb  = ft_getopt(cfg, 'channelcmb',  {'all' 'all'});
@@ -113,17 +113,6 @@ cfg.blockindx   = ft_getopt(cfg, 'blockindx',   {});
 cfg.inputfile   = ft_getopt(cfg, 'inputfile',   []);
 cfg.outputfile  = ft_getopt(cfg, 'outputfile',  []);
 cfg.parameter   = ft_getopt(cfg, 'parameter',   []);
-
-% load optional given inputfile as data
-hasdata = (nargin>1);
-if ~isempty(cfg.inputfile)
-  % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    data = loadvar(cfg.inputfile, 'data');
-  end
-end
 
 hasjack = (isfield(data, 'method') && strcmp(data.method, 'jackknife')) || (isfield(data, 'dimord') && strcmp(data.dimord(1:6), 'rptjck'));
 hasrpt  = (isfield(data, 'dimord') && ~isempty(strfind(data.dimord, 'rpt'))) || ...

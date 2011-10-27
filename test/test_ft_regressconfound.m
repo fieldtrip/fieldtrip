@@ -1,7 +1,7 @@
-function test_ft_rejectconfound
+function test_ft_regressconfound
 
-% TEST test_ft_rejectconfound
-% TEST ft_rejectconfound
+% TEST test_ft_regressconfound
+% TEST ft_regressconfound
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -13,7 +13,7 @@ freq1.powspctrm = randn(20,2,10);
 
 cfg = [];
 cfg.confound = randn(20,3);
-freq1_out = ft_rejectconfound(cfg, freq1);
+freq1_out = ft_regressconfound(cfg, freq1);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -26,7 +26,7 @@ freq2.powspctrm = randn(20,2,10,5);
 
 cfg = [];
 cfg.confound = randn(20,3);
-freq2_out = ft_rejectconfound(cfg, freq2);
+freq2_out = ft_regressconfound(cfg, freq2);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -38,5 +38,5 @@ timelock.trial = randn(20,2,5);
 
 cfg = [];
 cfg.confound = randn(20,3);
-timelock_out = ft_rejectconfound(cfg, timelock);
+timelock_out = ft_regressconfound(cfg, timelock);
 

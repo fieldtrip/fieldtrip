@@ -1,4 +1,4 @@
-function [data] = ft_rejectvisual(cfg, data);
+function [data] = ft_rejectvisual(cfg, data)
 
 % FT_REJECTVISUAL shows the preprocessed data in all channels and/or trials to
 % allow the user to make a visual selection of the data that should be
@@ -141,15 +141,22 @@ function [data] = ft_rejectvisual(cfg, data);
 % cfg.plotlayout = 'square' (default) or '1col', plotting every channel/trial under each other
 % cfg.viewmode   = 'remove' (default) or 'toggle', remove the data points from the plot, or mark them (summary mode), which allows for getting them back
 
+revision = '$Id$';
+
+% do the general setup of the function
 ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar data
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
+% ft_checkdata is done further down
 
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'renamedval',  {'metric',  'absmax',  'maxabs'});
+cfg = ft_checkconfig(cfg, 'renamedval',  {'method',  'absmax',  'maxabs'});
 
+% set the defaults
 if ~isfield(cfg, 'channel'),     cfg.channel = 'all';          end
 if ~isfield(cfg, 'trials'),      cfg.trials = 'all';           end
 if ~isfield(cfg, 'latency'),     cfg.latency = 'maxperlength'; end
@@ -169,26 +176,13 @@ if ~isfield(cfg, 'outputfile'),  cfg.outputfile = [];          end
 if ~isfield(cfg, 'plotlayout'),  cfg.plotlayout = 'square';    end
 if ~isfield(cfg, 'viewmode'),    cfg.viewmode   = 'remove';    end
 
-% load optional given inputfile as data
-hasdata = (nargin>1);
-if ~isempty(cfg.inputfile)
-  % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    data = loadvar(cfg.inputfile, 'data');
-  end
-end
-
 % store original datatype
 dtype = ft_datatype(data);
 
-% check if the input data is valid for this function
+% check if the input data is valid for this function, this will convert it to raw if needed
 data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hassampleinfo', 'yes');
 
 % for backward compatibility
-cfg = ft_checkconfig(cfg, 'renamedval',  {'metric',  'absmax',  'maxabs'});
-cfg = ft_checkconfig(cfg, 'renamedval',  {'method',  'absmax',  'maxabs'});
 if ~isfield(cfg, 'metric') && any(strcmp(cfg.method, {'var', 'min', 'max', 'maxabs', 'range'}))
   cfg.metric = cfg.method;
   cfg.method = 'summary';

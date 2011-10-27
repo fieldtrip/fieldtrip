@@ -1,4 +1,4 @@
-function [grandavg] = ft_sourcegrandaverage(cfg, varargin);
+function [grandavg] = ft_sourcegrandaverage(cfg, varargin)
 
 % FT_SOURCEGRANDAVERAGE averages source reconstructions over either multiple
 % subjects or conditions. It computes the average and variance for all
@@ -67,19 +67,24 @@ function [grandavg] = ft_sourcegrandaverage(cfg, varargin);
 %
 % $Id$
 
+revision = '$Id$';
+
 if 1,
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % original implementation
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
+  % do the general setup of the function
   ft_defaults
+  ft_preamble help
+  ft_preamble callinfo
+  ft_preamble trackconfig
+  ft_preamble loadvar varargin
   
-  % record start time and total processing time
-  ftFuncTimer = tic();
-  ftFuncClock = clock();
-  ftFuncMem   = memtic();
-  
-  cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+  % check if the input data is valid for this function
+  for i=1:length(varargin)
+    varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'source', 'feedback', 'no');
+  end
   
   % set the defaults
   if ~isfield(cfg, 'parameter'),      cfg.parameter = 'pow';     end
@@ -94,22 +99,6 @@ if 1,
   
   if strcmp(cfg.concatenate, 'yes') && strcmp(cfg.keepindividual, 'yes'),
     error('you can specify either cfg.keepindividual or cfg.concatenate to be yes, but not both');
-  end
-  
-  hasdata = nargin>2;
-  if ~isempty(cfg.inputfile) % the input data should be read from file
-    if hasdata
-      error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-    else
-      for i=1:numel(cfg.inputfile)
-        varargin{i} = loadvar(cfg.inputfile{i}, 'source'); % read datasets from array inputfile
-      end
-    end
-  end
-  
-  % check if the input data is valid for this function
-  for i=1:length(varargin)
-    varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'source', 'feedback', 'no');
   end
   
   Nsubject = length(varargin);
@@ -316,14 +305,20 @@ else
   % new implementation (with restricted functionality)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
+  % do the general setup of the function
   ft_defaults
+  ft_preamble help
+  ft_preamble callinfo
+  ft_preamble trackconfig
+  ft_preamble loadvar varargin
   
-  % record start time and total processing time
-  ftFuncTimer = tic();
-  ftFuncClock = clock();
-  ftFuncMem   = memtic();
+  % check if the input data is valid for this function
+  for i=1:length(varargin)
+    varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'source'}, 'feedback', 'no', 'sourcerepresentation', 'new');
+    % FIXME also allow volume structures to be used
+  end
   
-  cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+  % check if the input cfg is valid for this function
   cfg = ft_checkconfig(cfg, 'deprecated', {'concatenate', 'randomization', 'permutation', 'c1', 'c2'});
   
   % set the defaults
@@ -331,24 +326,6 @@ else
   if ~isfield(cfg, 'keepindividual'), cfg.keepindividual = 'no'; end
   if ~isfield(cfg, 'inputfile'),      cfg.inputfile = [];        end
   if ~isfield(cfg, 'outputfile'),     cfg.outputfile = [];       end
-  
-  hasdata = nargin>2;
-  if ~isempty(cfg.inputfile) % the input data should be read from file
-    if hasdata
-      error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-    else
-      for i=1:numel(cfg.inputfile)
-        varargin{i} = loadvar(cfg.inputfile{i}, 'source'); % read datasets from array inputfile
-      end
-    end
-  end
-  
-  % check if the input data is valid for this function
-  for i=1:length(varargin)
-    varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'source'}, 'feedback', 'no', ...
-      'sourcerepresentation', 'new');
-    %FIXME also allow volume structures to be used
-  end
   
   Nsubject = length(varargin);
   

@@ -61,37 +61,23 @@ function [stat] = ft_timelockstatistics(cfg, varargin)
 %
 % $Id$
 
+revision = '$Id$';
+
+% do the general setup of the function
 ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar varargin
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
-
-% enable configuration tracking
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+% check if the input data is valid for this function
+for i=1:length(varargin)
+  varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'timelock', 'feedback', 'no');
+end
 
 % set the defaults
 if ~isfield(cfg, 'inputfile'),    cfg.inputfile = [];          end
 if ~isfield(cfg, 'outputfile'),   cfg.outputfile = [];         end
-
-hasdata = nargin>1;
-if ~isempty(cfg.inputfile) % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    for i=1:numel(cfg.inputfile)
-      varargin{i} = loadvar(cfg.inputfile{i}, 'data'); % read datasets from array inputfile
-    end
-  end
-end
-
-% % check if the input data is valid for this function
-% for i=1:length(varargin)
-%   % FIXME at this moment (=10 May) this does not work, because the input might not always have an avg
-%   % See freqstatistics
-%   %varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'timelock', 'feedback', 'no');
-% end
 
 % the low-level data selection function does not know how to deal with other parameters, so work around it
 if isfield(cfg, 'parameter')

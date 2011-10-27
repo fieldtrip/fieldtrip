@@ -1,4 +1,4 @@
-function [source] = ft_sourceanalysis(cfg, data, baseline);
+function [source] = ft_sourceanalysis(cfg, data, baseline)
 
 % FT_SOURCEANALYSIS performs beamformer dipole analysis on EEG or MEG data
 % after preprocessing and a timelocked or frequency analysis
@@ -193,29 +193,14 @@ function [source] = ft_sourceanalysis(cfg, data, baseline);
 %
 % $Id$
 
+revision = '$Id$';
+
+% do the general setup of the function
 ft_defaults
-
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
-
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on'); 
-
-% set defaults for optional cfg.inputfile, cfg.outputfile
-if ~isfield(cfg, 'inputfile'),  cfg.inputfile                   = [];    end
-if ~isfield(cfg, 'outputfile'), cfg.outputfile                  = [];    end
-
-% load optional given inputfile as data
-hasdata = (nargin>1);
-if ~isempty(cfg.inputfile)
-  % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    data = loadvar(cfg.inputfile, 'data');
-  end
-end
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar data baseline
 
 % check if the input data is valid for this function
 data = ft_checkdata(data, 'datatype', {'timelock', 'freq', 'comp'}, 'feedback', 'yes');
@@ -279,6 +264,8 @@ if ~isfield(cfg, 'channel'),          cfg.channel = 'all';        end
 if ~isfield(cfg, 'normalize'),        cfg.normalize = 'no';       end
 if ~isfield(cfg, 'prewhiten'),        cfg.prewhiten = 'no';       end
 % if ~isfield(cfg, 'reducerank'),     cfg.reducerank = 'no';      end  % the default for this depends on EEG/MEG and is set below
+if ~isfield(cfg, 'inputfile'),        cfg.inputfile  = [];        end
+if ~isfield(cfg, 'outputfile'),       cfg.outputfile = [];        end
 
 % put the low-level options pertaining to the source reconstruction method in their own field
 % put the low-level options pertaining to the dipole grid in their own field

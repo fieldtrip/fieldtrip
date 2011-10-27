@@ -31,7 +31,7 @@ data = D.ftraw(0);
 clist      = D.condlist;
 conditions = D.conditions;
 
-data.trialinfo = zeros(ntrials,1);
+data.trialinfo = zeros(D.ntrials,1);
 for k = 1:numel(clist)
   fprintf('mapping condition label "%s" to condition code %d\n', clist{k}, k);
   sel=strcmp(clist{k}, conditions);

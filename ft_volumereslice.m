@@ -54,15 +54,17 @@ function resliced = ft_volumereslice(cfg, mri)
 %
 % $Id$
 
+revision = '$Id$';
+
+% do the general setup of the function
 ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar mri
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
-
-% check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+% check if the input data is valid for this function and ensure that the structures correctly describes a volume
+mri = ft_checkdata(mri, 'datatype', 'volume', 'inside', 'logical', 'feedback', 'yes', 'hasunits', 'yes');
 
 % set the defaults
 cfg.resolution = ft_getopt(cfg, 'resolution', 1);
@@ -72,18 +74,6 @@ cfg.outputfile = ft_getopt(cfg, 'outputfile', []);
 cfg.xrange     = ft_getopt(cfg, 'xrange', []);
 cfg.yrange     = ft_getopt(cfg, 'yrange', []);
 cfg.zrange     = ft_getopt(cfg, 'zrange', []);
-
-% load optional given inputfile as data
-hasdata      = (nargin>1);
-hasinputfile = ~isempty(cfg.inputfile);
-
-if hasdata && hasinputfile
-  error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-elseif hasinputfile
-  mri = loadvar(cfg.inputfile, 'mri');
-elseif hasdata
-  % nothing to be done
-end
 
 if isfield(mri, 'coordsys')
   % use some prior knowledge to optimize the location of the bounding box
@@ -118,9 +108,6 @@ end
 if isempty(cfg.zrange),
   cfg.zrange = [-cfg.dim(3)/2+0.5 cfg.dim(3)/2-0.5] * cfg.resolution + zshift;
 end
-
-% check if the input data is valid for this function and ensure that the structures correctly describes a volume
-mri = ft_checkdata(mri, 'datatype', 'volume', 'inside', 'logical', 'feedback', 'yes', 'hasunits', 'yes');
 
 if ~isequal(cfg.downsample, 1)
   % downsample the anatomical volume
