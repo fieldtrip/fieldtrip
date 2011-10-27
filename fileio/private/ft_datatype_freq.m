@@ -43,13 +43,15 @@ function freq = ft_datatype_freq(freq, varargin)
 % (2011/latest) The description of the sensors has changed: see FIXSENS for
 % information
 %
-% (2008/latest) The presence of labelcmb in case of crsspctrm became optional,
+% (2008) The presence of labelcmb in case of crsspctrm became optional,
 % from now on the crsspctrm can also be represented as Nchan * Nchan.
 %
 % (2006) The fourierspctrm field was added as alternative to powspctrm and
 % crsspctrm.
 %
-% (2003) The initial version was defined.
+% (2003v2) The fields sgn and sgncmb were renamed into label and labelcmb.
+%
+% (2003v1) The initial version was defined.
 %
 % See also FT_DATATYPE, FT_DATATYPE_COMP, FT_DATATYPE_DIP, FT_DATATYPE_FREQ,
 % FT_DATATYPE_MVAR, FT_DATATYPE_RAW, FT_DATATYPE_SOURCE, FT_DATATYPE_SPIKE,
@@ -108,7 +110,10 @@ switch version
   case '2006'
     % there are no known conversions for backward or forward compatibility support
 
-  case '2003'
+  case '2003v2'
+    % there are no known conversions for backward or forward compatibility support
+
+  case '2003v1'
     % there are no known conversions for backward or forward compatibility support
 
   otherwise
