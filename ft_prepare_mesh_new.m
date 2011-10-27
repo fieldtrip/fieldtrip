@@ -185,9 +185,12 @@ if basedonmri
   bnd = ft_prepare_mesh_new(cfg, mri);
   
 elseif basedonmriseg
-  if isnumeric(cfg.tissue)
+  if isempty(cfg.tissue) 
+    [dum,tissue] = issegmentation(data,cfg);
+  elseif isnumeric(cfg.tissue)
     error('tissue type should be a string')
   end
+
   fprintf('using the mri segmentation approach\n');
   cfg = [];
   cfg.tissue       = tissue;
@@ -282,16 +285,24 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function res = issegmentation(mri,cfg)
+function [res,fnames] = issegmentation(mri,cfg)
 res = false;
-res = res || any(isfield(mri, {'seg', 'csf', 'white', 'gray', 'skull', 'scalp', 'brain'}));
-% checks for existence of fields declared in the cfg.segment option
-if isfield(cfg,'segment')
-  for i=1:numel(cfg.segment)
-    res = res || isfield(mri,cfg.segment{i});
+% res = res || any(isfield(mri, {'seg', 'csf', 'white', 'gray', 'skull', 'scalp', 'brain'}));
+names = {'segmentation', 'segment', 'seg', 'csf', 'white', 'gray', 'skull', 'scalp', 'brain'};
+fnames = {};
+tmp = fieldnames(mri);
+
+cnt = 1;
+for i=1:numel(tmp)
+  if ismember(tmp{i},names)
+    fnames{cnt} = tmp{i};
+    res = true; cnt = cnt +1;
   end
-elseif isfield(cfg,'tissue')
-  if ~isnumeric(cfg.tissue)
+end
+
+% checks for existence of fields declared in the cfg.tissue option
+if isfield(cfg,'tissue')
+  if ~isempty(cfg.tissue) && ~isnumeric(cfg.tissue)
     res = true;
   end
 end
