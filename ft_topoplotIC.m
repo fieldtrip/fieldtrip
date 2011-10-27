@@ -14,13 +14,13 @@ function [cfg] = ft_topoplotIC(cfg, varargin)
 % The configuration can have the following parameters:
 % cfg.colormap           = any sized colormap, see COLORMAP
 % cfg.zlim               = 'maxmin', 'maxabs' or [zmin zmax] (default = 'maxmin')
-% cfg.marker             = 'on', 'labels', 'numbers', 'off'                    
+% cfg.marker             = 'on', 'labels', 'numbers', 'off'
 % cfg.markersymbol       = channel marker symbol (default = 'o')
 % cfg.markercolor        = channel marker color (default = [0 0 0] (black))
 % cfg.markersize         = channel marker size (default = 2)
-% cfg.markerfontsize     = font size of channel labels (default = 8 pt)                
-% cfg.highlight          = 'on', 'labels', 'numbers', 'off'                    
-% cfg.highlightchannel   =  Nx1 cell-array with selection of channels, or vector containing channel indices see FT_CHANNELSELECTION 
+% cfg.markerfontsize     = font size of channel labels (default = 8 pt)
+% cfg.highlight          = 'on', 'labels', 'numbers', 'off'
+% cfg.highlightchannel   =  Nx1 cell-array with selection of channels, or vector containing channel indices see FT_CHANNELSELECTION
 % cfg.highlightsymbol    = highlight marker symbol (default = 'o')
 % cfg.highlightcolor     = highlight marker color (default = [0 0 0] (black))
 % cfg.highlightsize      = highlight marker size (default = 6)
@@ -95,23 +95,16 @@ function [cfg] = ft_topoplotIC(cfg, varargin)
 %
 % $Id$
 
+revision = '$Id$';
+
+% do the general setup of the function
 ft_defaults
+ft_preamble help
 
-% enable configuration tracking
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'required', 'component');
 
-% this is just a wrapper function around ft_topoplotTFR, therefore it does not need to 
-% measure the time spent in this function with tic/toc
-% measure the memory usage with memtic/memtoc
-
-% set the defaults
-if ~isfield(cfg, 'component'), cfg.component = []; end
-
-% check whether cfg.component is speficied
-if isempty(cfg.component)
-  error('this function requires the cfg.component parameter for input')
-end
-
+% FIXME why is this done like this instead of using ft_checkdata?
 % add a dimord
 varargin{:}.dimord = 'chan_comp';
 
@@ -128,4 +121,3 @@ for i = 1:length(selcomp)
   ft_topoplotTFR(cfg, varargin{:});
   title(['component ' num2str(selcomp(i))]);
 end
-

@@ -29,7 +29,7 @@ function bnd = ft_prepare_mesh(cfg, data)
 % input/output structure.
 %
 % Example use:
-% 
+%
 %   mri = ft_read_mri('Subject01.mri');
 %   cfg = [];
 %   cfg.output = {'scalp', 'skull', 'brain'};
@@ -56,9 +56,16 @@ function bnd = ft_prepare_mesh(cfg, data)
 %
 % $Id: ft_prepare_mesh.m 4119 2011-09-06 14:05:57Z johzum $
 
-ft_defaults
+revision = '$Id: ft_freqdescriptives.m 4527 2011-10-19 16:08:12Z roboos $';
 
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar data
+
+% check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'forbidden', 'numcompartments');
 cfg = ft_checkconfig(cfg, 'forbidden', 'method');
 
@@ -71,38 +78,29 @@ smooth       = ft_getopt(cfg, 'smooth');      % for mri segment
 threshold    = ft_getopt(cfg, 'threshold');   % for mri segment
 
 % ft_prepare_mesh specific options
-headshape    = ft_getopt(cfg, 'headshape');   % input option
-inputfile    = ft_getopt(cfg, 'inputfile');   % input option
-outputfile   = ft_getopt(cfg, 'outputfile');  % output option
+headshape    = ft_getopt(cfg, 'headshape');         % input option
+inputfile    = ft_getopt(cfg, 'inputfile');         % input option
+outputfile   = ft_getopt(cfg, 'outputfile');        % output option
 interactive  = ft_getopt(cfg, 'interactive', 'no'); % to interact with the volume
-smoothseg    = ft_getopt(cfg, 'smoothseg', 0);    % to smooth the seg compartment
-thresholdseg = ft_getopt(cfg, 'thresholdseg', 0); % to threshold the seg compartment
-tissue       = ft_getopt(cfg, 'tissue');      % to perform the meshing on a specific tissue
-numvertices  = ft_getopt(cfg, 'numvertices'); % resolution of the mesh
+smoothseg    = ft_getopt(cfg, 'smoothseg', 0);      % to smooth the seg compartment
+thresholdseg = ft_getopt(cfg, 'thresholdseg', 0);   % to threshold the seg compartment
+tissue       = ft_getopt(cfg, 'tissue');            % to perform the meshing on a specific tissue
+numvertices  = ft_getopt(cfg, 'numvertices');       % resolution of the mesh
 interactive  = istrue(interactive);
 
 % mesh points' unit options
-transform    = ft_getopt(cfg, 'transform',eye(4));
-unit         = ft_getopt(cfg, 'unit');      % target units
+transform    = ft_getopt(cfg, 'transform', eye(4));
+unit         = ft_getopt(cfg, 'unit');              % target units
 
-% load optional given inputfile as data
-hasdata      = (nargin>1);
-hasinputfile = ~isempty(inputfile);
-if hasinputfile && hasdata
-  error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-elseif hasinputfile
-  data = loadvar(inputfile, 'data');
-elseif hasdata
-  % nothing to be done
-end
+hasdata = exist('data', 'var');
 
 if hasdata
   % if the target units are not explicitly given, try to estimate the data
-  % units and use them for the meshes 
+  % units and use them for the meshes
   if ft_datatype(data,'volume')
     if ~isfield(data, 'unit'), data = ft_convert_units(data); end
   end
-  if isempty(unit) 
+  if isempty(unit)
     if ft_datatype(data,'volume')
       mriunits    = data.unit;
       sourceunits = mriunits;
@@ -117,20 +115,10 @@ else
   mriunits      = 'mm';
 end
 
-% load optional given inputfile as data
-hasdata      = (nargin>1);
-hasinputfile = ~isempty(inputfile);
-
-if hasinputfile && hasdata
-  error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-elseif hasinputfile
-  data = loadvar(inputfile, 'data');
-elseif hasdata
-  % nothing to be done
-end
 if isempty(headshape) && ~hasdata && ~hasinputfile
-  error('no input data available')  
+  error('no input data available')
 end
+
 if ~isempty(headshape) && isa(headshape, 'config')
   % convert the nested config-object back into a normal structure
   headshape = struct(headshape);
@@ -182,7 +170,7 @@ if basedonmri
     cfg.resolution = resolution; % FIXME: what happens if this is in cm
     cfg.dim        = resdim;
     mri = ft_volumereslice(cfg, mri);
-  end 
+  end
   
   % segmenting the volume
   cfg = [];
@@ -196,7 +184,7 @@ if basedonmri
   cfg.tissue = output;
   bnd = ft_prepare_mesh_new(cfg, mri);
   
-elseif basedonmriseg 
+elseif basedonmriseg
   if isnumeric(cfg.tissue)
     error('tissue type should be a string')
   end
@@ -207,8 +195,8 @@ elseif basedonmriseg
   cfg.smoothseg    = smoothseg;
   cfg.numvertices  = numvertices;
   bnd = prepare_mesh_segmentation_new(cfg, data);
-
-elseif basedonrawseg 
+  
+elseif basedonrawseg
   if ~isnumeric(cfg.tissue)
     error('tissue type should be a number')
   end
@@ -217,16 +205,16 @@ elseif basedonrawseg
   cfg.tissue       = tissue;
   cfg.thresholdseg = thresholdseg;
   cfg.smoothseg    = smoothseg;
-  cfg.numvertices  = numvertices;  
+  cfg.numvertices  = numvertices;
   bnd = prepare_mesh_segmentation_new(cfg, data);
-
+  
 elseif basedonheadshape
   fprintf('using the head shape to construct a triangulated mesh\n');
   cfg = [];
   cfg.headshape   = headshape;
   cfg.numvertices = numvertices;
   bnd = prepare_mesh_headshape(cfg);
-
+  
 elseif basedonvol
   vol = data;
   fprintf('using the mesh specified in the input volume conductor\n');
@@ -290,6 +278,10 @@ if ~isempty(outputfile)
   savevar(outputfile, 'data', bnd); % use the variable name "data" in the output file
 end
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function res = issegmentation(mri,cfg)
 res = false;
 res = res || any(isfield(mri, {'seg', 'csf', 'white', 'gray', 'skull', 'scalp', 'brain'}));
@@ -304,35 +296,37 @@ elseif isfield(cfg,'tissue')
   end
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function pnt = scaleunit(sourceunits, mriunits, pnt)
-  % convert the MRI surface points into the same units as the source/gradiometer
-  scale = 1;
-  switch sourceunits
-    case 'mm'
-      scale = scale * 1000;
-    case 'cm'
-      scale = scale * 100;
-    case 'dm'
-      scale = scale * 10;
-    case 'm'
-      scale = scale * 1;
-    otherwise
-      error('unknown physical dimension in input ''unit''');
-  end
-  switch mriunits
-    case 'mm'
-      scale = scale / 1000;
-    case 'cm'
-      scale = scale / 100;
-    case 'dm'
-      scale = scale / 10;
-    case 'm'
-      scale = scale / 1;
-    otherwise
-      error('unknown physical dimension in mri.unit');
-  end
-  if scale~=1
-    fprintf('converting MRI surface points from %s into %s\n', sourceunits, mriunits);
-    pnt = pnt*(scale);
-  end
-  
+% convert the MRI surface points into the same units as the source/gradiometer
+scale = 1;
+switch sourceunits
+  case 'mm'
+    scale = scale * 1000;
+  case 'cm'
+    scale = scale * 100;
+  case 'dm'
+    scale = scale * 10;
+  case 'm'
+    scale = scale * 1;
+  otherwise
+    error('unknown physical dimension in input ''unit''');
+end
+switch mriunits
+  case 'mm'
+    scale = scale / 1000;
+  case 'cm'
+    scale = scale / 100;
+  case 'dm'
+    scale = scale / 10;
+  case 'm'
+    scale = scale / 1;
+  otherwise
+    error('unknown physical dimension in mri.unit');
+end
+if scale~=1
+  fprintf('converting MRI surface points from %s into %s\n', sourceunits, mriunits);
+  pnt = pnt*(scale);
+end

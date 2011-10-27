@@ -66,9 +66,16 @@ function [vol, cfg] = ft_prepare_localspheres(cfg, mri)
 %
 % $Id$
 
-ft_defaults
+revision = '$Id$';
 
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar mri
+
+% check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed', {'spheremesh', 'numvertices'}); 
 
 % set the defaults
@@ -84,22 +91,11 @@ if ~isfield(cfg, 'singlesphere'),  cfg.singlesphere = 'no'; end
 if ~isfield(cfg, 'headshape'),     cfg.headshape = [];      end
 if ~isfield(cfg, 'inputfile'),     cfg.inputfile = [];      end
 
-% check for option of cfg.inputfile
-hasdata = (nargin>1);
-if ~isempty(cfg.inputfile)
-  % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    mri = loadvar(cfg.inputfile, 'mri');
-    hasdata = true;
-  end
-end
-
+hasdata = exist('mri', 'var');
 if hasdata
   headshape = ft_prepare_mesh(cfg, mri);
 elseif isfield(cfg,'headshape') && nargin == 1 
-  if isstr(cfg.headshape)
+  if ischar(cfg.headshape)
     headshape = ft_read_headshape(cfg.headshape);
   else
     headshape = cfg.headshape;

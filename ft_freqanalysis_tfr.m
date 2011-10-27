@@ -1,4 +1,4 @@
-function [freq] = ft_freqanalysis_tfr(cfg, data);
+function [freq] = ft_freqanalysis_tfr(cfg, data)
 
 % FT_FREQANALYSIS_TFR computes time-frequency representations of single-trial
 % data using a convolution in the time-domain with Morlet's wavelets.

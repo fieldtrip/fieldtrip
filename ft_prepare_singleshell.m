@@ -59,9 +59,15 @@ function [vol, cfg] = ft_prepare_singleshell(cfg, mri)
 %
 % $Id$
 
-ft_defaults
+revision = '$Id$';
 
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+
+% check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed', {'spheremesh', 'numvertices'});
 cfg = ft_checkconfig(cfg, 'deprecated', 'mriunits');
 

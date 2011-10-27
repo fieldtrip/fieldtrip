@@ -71,10 +71,13 @@ persistent branch  % this corresponds to the horizontal direction in the figure
 persistent parent
 persistent info
 
-ft_defaults
+revision = '$Id$';
 
-% enable configuration tracking
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
 
 % set the defaults
 if ~isfield(cfg, 'filename'),    cfg.filename    = [];   end
@@ -213,7 +216,7 @@ end
 
 if depth==1
   % the recursion has finished, we are again at the top level
-
+  
   % the parents were determined while climbing up the tree
   % now it is time to descend and determine the children
   for branch=1:size(info,1)
@@ -225,7 +228,7 @@ if depth==1
       end
     end
   end
-
+  
   % complement the individual scripts with the input and output variables
   % and the actual function call
   for branch=1:size(info,1)
@@ -234,10 +237,10 @@ if depth==1
       inputvar = '';
       commandline = sprintf('%s = %s(cfg%s);', outputvar, info(branch, depth).name, inputvar);
       disp(commandline);
-
+      
     end
   end
-
+  
   if nargout>0
     % return the complete script as output argument
     script = '';
@@ -247,12 +250,12 @@ if depth==1
       end
     end
   end
-
+  
   if nargout>1
     % return the information details as output argument
     details = info;
   end
-
+  
   if feedbackgui
     fig = figure;
     hold on
@@ -270,7 +273,7 @@ if depth==1
     set(fig, 'WindowButtonUpFcn', @button);
     set(fig, 'KeyPressFcn', @key);
   end % feedbackgui
-
+  
   if ~isempty(cfg.filename)
     % write the complete script to file
     fprintf('writing result to file ''%s''\n', cfg.filename);
@@ -278,7 +281,7 @@ if depth==1
     fprintf(fid, '%s', script);
     fclose(fid);
   end
-
+  
   % clear all persistent variables
   depth  = [];
   branch = [];

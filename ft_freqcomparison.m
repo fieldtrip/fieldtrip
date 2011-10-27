@@ -1,11 +1,11 @@
 function [freq] = ft_freqcomparison(cfg, varargin)
 
-% FT_FREQCOMPARISON performs a comparison between two (rpt-/subj-) 
-% chan-freq datasets. 
-% 
-% Differently from ft_freqbaseline, ft_freqcomparison requires two datasets 
-% for input arguments (n==2) where the first dataset is considered the norm. 
-% The output contains the difference of the second dataset to this norm, 
+% FT_FREQCOMPARISON performs a comparison between two (rpt-/subj-)
+% chan-freq datasets.
+%
+% Differently from ft_freqbaseline, ft_freqcomparison requires two datasets
+% for input arguments (n==2) where the first dataset is considered the norm.
+% The output contains the difference of the second dataset to this norm,
 % expressed in units as determined by cfg.comparisontype.
 %
 % Use as
@@ -19,10 +19,10 @@ function [freq] = ft_freqcomparison(cfg, varargin)
 %
 % See also FT_FREQBASELINE, FT_FREQANALYSIS, FT_TIMELOCKBASELINE
 
-% Copyright (C) 2010-2011, Arjen Stolk, DCCN, Donders Institute
-% 
 % FIXME add support for cohspctrm
 
+% Copyright (C) 2010-2011, Arjen Stolk, DCCN, Donders Institute
+%
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
 %
@@ -38,15 +38,21 @@ function [freq] = ft_freqcomparison(cfg, varargin)
 %
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
 
+revision = '$Id$';
+
+% do the general setup of the function
 ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
 
 % nargin check
-if nargin ~= 3
-    error('two conditions required for input');
+if length(varargin)~=2
+  error('two conditions required as input');
 end
-
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
 % check if the input data is valid for this function
 varargin{1} = ft_checkdata(varargin{1}, 'datatype', 'freq', 'feedback', 'yes');
@@ -81,43 +87,43 @@ freq = varargin{1};
 
 % frequency comparison for multiple trials/subjects
 if strcmp(varargin{1}.dimord, 'rpt_chan_freq') || strcmp(varargin{1}.dimord, 'subj_chan_freq')
-    
-    if size(varargin{1}.powspctrm,3) ~= size(varargin{2}.powspctrm,3)
-        error('input conditions have different sizes');
-    end
-    
-    if strcmp(cfg.comparisontype, 'absolute')
-        for j = 1:size(varargin{2}.powspctrm,1)
-            freq.powspctrm(j,:,:) = varargin{2}.powspctrm(j,:,:) - mean(varargin{1}.powspctrm,1);
-        end
-    elseif strcmp(cfg.comparisontype, 'relchange')
-        for j = 1:size(varargin{2}.powspctrm,1)
-            freq.powspctrm(j,:,:) = (varargin{2}.powspctrm(j,:,:) - mean(varargin{1}.powspctrm,1)) ./ mean(varargin{1}.powspctrm,1);
-        end
-    elseif strcmp(cfg.comparisontype, 'relative')
-        for j = 1:size(varargin{2}.powspctrm,1)
-            freq.powspctrm(j,:,:) = varargin{2}.powspctrm(j,:,:) ./ mean(varargin{1}.powspctrm,1);
-        end
-    else
-        error('unsupported comparisontype');
-    end
   
-% frequency comparison for averages 
+  if size(varargin{1}.powspctrm,3) ~= size(varargin{2}.powspctrm,3)
+    error('input conditions have different sizes');
+  end
+  
+  if strcmp(cfg.comparisontype, 'absolute')
+    for j = 1:size(varargin{2}.powspctrm,1)
+      freq.powspctrm(j,:,:) = varargin{2}.powspctrm(j,:,:) - mean(varargin{1}.powspctrm,1);
+    end
+  elseif strcmp(cfg.comparisontype, 'relchange')
+    for j = 1:size(varargin{2}.powspctrm,1)
+      freq.powspctrm(j,:,:) = (varargin{2}.powspctrm(j,:,:) - mean(varargin{1}.powspctrm,1)) ./ mean(varargin{1}.powspctrm,1);
+    end
+  elseif strcmp(cfg.comparisontype, 'relative')
+    for j = 1:size(varargin{2}.powspctrm,1)
+      freq.powspctrm(j,:,:) = varargin{2}.powspctrm(j,:,:) ./ mean(varargin{1}.powspctrm,1);
+    end
+  else
+    error('unsupported comparisontype');
+  end
+  
+  % frequency comparison for averages
 elseif strcmp(varargin{1}.dimord, 'chan_freq')
-    
-    if size(varargin{1}.powspctrm,2) ~= size(varargin{2}.powspctrm,2)
-        error('input conditions have different sizes');
-    end
-    
-    if strcmp(cfg.comparisontype, 'absolute')
-        freq.powspctrm = varargin{2}.powspctrm - varargin{1}.powspctrm;
-    elseif strcmp(cfg.comparisontype, 'relchange')
-        freq.powspctrm = (varargin{2}.powspctrm - varargin{1}.powspctrm) ./ varargin{1}.powspctrm;
-    elseif strcmp(cfg.comparisontype, 'relative')
-        freq.powspctrm = varargin{2}.powspctrm ./ varargin{1}.powspctrm;
-    else
-        error('unsupported comparisontype');
-    end
+  
+  if size(varargin{1}.powspctrm,2) ~= size(varargin{2}.powspctrm,2)
+    error('input conditions have different sizes');
+  end
+  
+  if strcmp(cfg.comparisontype, 'absolute')
+    freq.powspctrm = varargin{2}.powspctrm - varargin{1}.powspctrm;
+  elseif strcmp(cfg.comparisontype, 'relchange')
+    freq.powspctrm = (varargin{2}.powspctrm - varargin{1}.powspctrm) ./ varargin{1}.powspctrm;
+  elseif strcmp(cfg.comparisontype, 'relative')
+    freq.powspctrm = varargin{2}.powspctrm ./ varargin{1}.powspctrm;
+  else
+    error('unsupported comparisontype');
+  end
 end
 
 % user update

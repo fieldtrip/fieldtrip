@@ -159,42 +159,28 @@ function [cfg] = ft_sourceplot(cfg, data)
 %
 % $Id$
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();;
-ftFuncMem   = memtic();
+revision = '$Id$';
 
-% check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
-cfg = ft_checkconfig(cfg, 'renamed', {'inputcoordsys', 'coordsys'});
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar data
 
-%%% ft_checkdata see below!!! %%%
-
-% set default for inputfile
-cfg.inputfile = ft_getopt(cfg, 'inputfile', []);
-
-% load optional given inputfile as data
-hasdata      = (nargin>1);
-hasinputfile = ~isempty(cfg.inputfile);
-if hasdata && hasinputfile
-  error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-elseif hasdata
-  % do nothing
-elseif hasinputfile
-  data = loadvar(cfg.inputfile, 'data');
-end 
-
-% set the common defaults
-cfg.method = ft_getopt(cfg, 'method', 'ortho');
-if ~isfield(cfg, 'anaparameter'),
-  if isfield(data, 'anatomy'),
-    cfg.anaparameter = 'anatomy';
-  else
-    cfg.anaparameter = [];
-  end
+% this is not supported any more as of 26/10/2011
+if ischar(data)
+  error('please use cfg.inputfile instead of specifying the input variable as a sting');
 end
 
-% all methods
+% check if the input data is valid for this function
+data = ft_checkdata(data, 'datatype', 'volume', 'feedback', 'yes');
+
+% check if the input configuration is valid for this function
+cfg = ft_checkconfig(cfg, 'renamed', {'inputcoordsys', 'coordsys'});
+
+% set the defaults for all methods
+cfg.method        = ft_getopt(cfg, 'method', 'ortho');
 cfg.funparameter  = ft_getopt(cfg, 'funparameter',  []);
 cfg.maskparameter = ft_getopt(cfg, 'maskparameter', []);
 cfg.downsample    = ft_getopt(cfg, 'downsample',    1);
@@ -203,6 +189,14 @@ cfg.atlas         = ft_getopt(cfg, 'atlas',         []);
 cfg.marker        = ft_getopt(cfg, 'marker',        []);
 cfg.markersize    = ft_getopt(cfg, 'markersize',    5);
 cfg.markercolor   = ft_getopt(cfg, 'markercolor',   [1 1 1]);
+
+if ~isfield(cfg, 'anaparameter')
+  if isfield(data, 'anatomy')
+    cfg.anaparameter = 'anatomy';
+  else
+    cfg.anaparameter = [];
+  end
+end
 
 % set the common defaults for the functional data
 cfg.funcolormap   = ft_getopt(cfg, 'funcolormap',   'auto');
@@ -257,17 +251,6 @@ if strcmp(cfg.location, 'interactive')
   cfg.location = 'auto';
   cfg.interactive = 'yes';
 end
-
-%%%%%%%
-if ischar(data)
-  % read the anatomical MRI data from file
-  filename = data;
-  fprintf('reading MRI from file\n');
-  data = ft_read_mri(filename);
-end
-
-% check if the input data is valid for this function
-data = ft_checkdata(data, 'datatype', 'volume', 'feedback', 'yes');
 
 % ensure that the data has interpretable spatial units
 if     ~isfield(data, 'unit') && ~isempty(cfg.units)

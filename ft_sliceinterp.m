@@ -101,14 +101,19 @@ function [outim]=ft_sliceinterp(cfg, ininterp)
 %
 % $Id$
 
-ft_defaults
+revision = '$Id$';
 
-% enable configuration tracking
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar ininterp
 
 % check if the input data is valid for this function
 ininterp = ft_checkdata(ininterp, 'datatype', 'volume', 'feedback', 'yes');
 
+% set the defaults
 if ~isfield(cfg, 'clipmin');      cfg.clipmin = 'auto';        end
 if ~isfield(cfg, 'clipmax');      cfg.clipmax = 'auto';        end
 if ~isfield(cfg, 'clipsym');      cfg.clipsym = 'no';          end

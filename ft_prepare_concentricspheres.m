@@ -53,9 +53,15 @@ function [vol, cfg] = ft_prepare_concentricspheres(cfg)
 %
 % $Id$
 
-ft_defaults
+revision = '$Id$';
 
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble trackconfig
+
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden', 'nonlinear');
 
 % set the defaults
 if ~isfield(cfg, 'fitind'),        cfg.fitind = 'all';                            end
@@ -63,14 +69,10 @@ if ~isfield(cfg, 'feedback'),      cfg.feedback = 'yes';                        
 if ~isfield(cfg, 'conductivity'),  cfg.conductivity = [1 1/80 1] * 0.33;          end
 if ~isfield(cfg, 'numvertices'),   cfg.numvertices = 'same';                      end
 
-
-
 if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
   % convert the nested config-object back into a normal structure
   cfg.headshape = struct(cfg.headshape);
 end
-
-cfg = ft_checkconfig(cfg, 'forbidden', 'nonlinear');
 
 % get the surface describing the head shape
 headshape = prepare_mesh_headshape(cfg);
