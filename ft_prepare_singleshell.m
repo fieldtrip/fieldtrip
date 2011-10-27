@@ -91,6 +91,10 @@ if ~isempty(cfg.inputfile)
   end
 end
 
+if isempty(cfg.numvertices) && nargin>1
+  cfg.numvertices = 3000;
+end
+
 if hasdata
   vol.bnd = ft_prepare_mesh(cfg, mri);
 else
