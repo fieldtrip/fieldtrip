@@ -107,6 +107,9 @@ cfg = ft_checkconfig(cfg, 'unused', {'comps', 'inputfile', 'outputfile'});
 cfg = ft_checkconfig(cfg, 'renamed', {'zscale', 'ylim'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'ylim', 'auto', 'maxabs'});
 
+% ensure that the preproc specific options are located in the cfg.preproc substructure
+cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'});
+
 % set the defaults
 if ~isfield(cfg, 'ylim'),            cfg.ylim = 'maxabs';                 end
 if ~isfield(cfg, 'artfctdef'),       cfg.artfctdef = struct;              end
