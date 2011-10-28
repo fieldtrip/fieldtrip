@@ -104,14 +104,15 @@ function [norm] = ft_electroderealign(cfg)
 %
 % $Id$
 
+revision = '$Id$';
+
+% do the general setup of the function
 ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
-
-%text output
+% text output
 disp('Close the figure to output new sensor positions');
 
 % this is used for feedback of the lower-level functions

@@ -1,4 +1,4 @@
-function ft_movieplotER(cfg, varargin)
+function ft_movieplotER(cfg, data)
 
 % FT_MOVIEPLOTER makes a movie of the topographic distribution of the
 % time-locked average.
@@ -55,11 +55,18 @@ function ft_movieplotER(cfg, varargin)
 %
 % $Id$
 
-data = varargin{:};
+revision = '$Id$';
 
-% check the input data and set the appropriate defaults
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+
+% check if the input data is valid for this function
 data = ft_checkdata(data, 'datatype', 'timelock');
+
+% set the defaults
 cfg.parameter   = ft_getopt(cfg, 'parameter', 'avg');
 cfg.interactive = ft_getopt(cfg, 'interactive', 'no');
 
 ft_movieplotTFR(cfg, data);
+

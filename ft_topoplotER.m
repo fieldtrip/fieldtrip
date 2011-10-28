@@ -73,7 +73,7 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 %
 % The layout defines how the channels are arranged. You can specify the
 % layout in a variety of ways:
-%  - you can provide a pre-computed layout structure (see prepare_layout)
+%  - you can provide a pre-computed layout structure, see FT_PREPARE_LAYOUT
 %  - you can give the name of an ascii layout file with extension *.lay
 %  - you can give the name of an electrode file
 %  - you can give an electrode definition, i.e. "elec" structure
@@ -83,14 +83,11 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 % layout. If you want to have more fine-grained control over the layout
 % of the subplots, you should create your own layout file.
 %
-% FT_TOPOPLOTER calls the function FT_TOPOPLOTTFR to do the plotting.
-%
-% See also:
-%   FT_TOPOPLOTTFR, FT_SINGLEPLOTER, FT_MULTIPLOTER, FT_PREPARE_LAYOUT
+% See also FT_SINGLEPLOTER, FT_MULTIPLOTER, FT_SINGLEPLOTTFR, FT_MULTIPLOTTFR, 
+% FT_TOPOPLOTTFR, FT_PREPARE_LAYOUT
 
 % Undocumented local options:
 % cfg.labeloffset (offset of labels to their marker, default = 0.005)
-
 
 % Copyright (C) 2005-2011, F.C. Donders Centre
 %
@@ -112,4 +109,6 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 %
 % $Id$
 
+% this is just a wrapper function around ft_topoplotTFR which does all the hard work
+% the reason for this wrapper function is to have a placeholder for ER-specific documentation
 cfg = ft_topoplotTFR(cfg, varargin{:});

@@ -10,7 +10,7 @@ function [simulated] = ft_dipolesimulation(cfg)
 %   cfg.hdmfile       = string, file containing the volume conduction model
 % or alternatively
 %   cfg.vol           = structure with volume conduction model
-% If the sensor information is not contained in the data itself you should 
+% If the sensor information is not contained in the data itself you should
 % also specify the sensor information using
 %   cfg.gradfile      = string, file containing the gradiometer definition
 %   cfg.elecfile      = string, file containing the electrode definition
@@ -37,7 +37,7 @@ function [simulated] = ft_dipolesimulation(cfg)
 %   cfg.triallength      time in seconds
 %   cfg.fsample          sampling frequency in Hz
 %
-% Random white noise can be added to the data in each trial, either by 
+% Random white noise can be added to the data in each trial, either by
 % specifying an absolute or a relative noise level
 %   cfg.relnoise    = add noise with level relative to simulated signal
 %   cfg.absnoise    = add noise with absolute level
@@ -77,12 +77,13 @@ function [simulated] = ft_dipolesimulation(cfg)
 %
 % $Id$
 
-ft_defaults
+revision = '$Id$';
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
 
 % set the defaults
 if ~isfield(cfg, 'dip'),        cfg.dip = [];             end
@@ -100,7 +101,7 @@ Ndipoles = size(cfg.dip.pos,1);
 % prepare the volume conductor and the sensor array
 [vol, sens, cfg] = prepare_headmodel(cfg, []);
 
-if ~isfield(cfg, 'ntrials') 
+if ~isfield(cfg, 'ntrials')
   if isfield(cfg.dip, 'signal')
     cfg.ntrials = length(cfg.dip.signal);
   else
@@ -148,7 +149,7 @@ if ~iscell(cfg.dip.signal)
   time      = {};
   nsamples  = length(cfg.dip.signal);
   for trial=1:Ntrials
-    % each trial has the same dipole signal 
+    % each trial has the same dipole signal
     dipsignal{trial} = cfg.dip.signal;
     time{trial} = (0:(nsamples-1))/cfg.fsample;
   end
@@ -156,7 +157,7 @@ else
   dipsignal = {};
   time      = {};
   for trial=1:Ntrials
-    % each trial has a different dipole signal 
+    % each trial has a different dipole signal
     dipsignal{trial} = cfg.dip.signal{trial};
     time{trial} = (0:(length(dipsignal{trial})-1))/cfg.fsample;
   end
@@ -196,7 +197,7 @@ for trial=1:Ntrials
   simulated.trial{trial} = zeros(nchannels,nsamples);
   for i = 1:3,
     simulated.trial{trial}  = simulated.trial{trial} + lf(:,i:3:end) * ...
-       (repmat(dipmom{trial}(i:3:end),1,nsamples) .* dipsignal{trial});
+      (repmat(dipmom{trial}(i:3:end),1,nsamples) .* dipsignal{trial});
   end
   simulated.time{trial}   = time{trial};
 end
@@ -234,7 +235,7 @@ cfg.version.id   = '$Id$';
 
 % add information about the Matlab version used to the configuration
 cfg.callinfo.matlab = version();
-  
+
 % add information about the function call to the configuration
 cfg.callinfo.proctime = toc(ftFuncTimer);
 cfg.callinfo.procmem  = memtoc(ftFuncMem);
@@ -245,6 +246,6 @@ fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, 
 % remember the configuration details of the input data
 try, cfg.previous = data.cfg; end
 
-% remember the exact configuration details in the output 
+% remember the exact configuration details in the output
 simulated.cfg = cfg;
 

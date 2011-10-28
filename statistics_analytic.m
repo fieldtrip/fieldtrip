@@ -1,4 +1,4 @@
-function [stat, cfg] = statistics_analytic(cfg, dat, design);
+function [stat, cfg] = statistics_analytic(cfg, dat, design)
 
 % STATISTICS_ANALYTIC performs a parametric statistical test on the
 % data, based on a known (i.e. analytic) distribution of the test
@@ -13,7 +13,7 @@ function [stat, cfg] = statistics_analytic(cfg, dat, design);
 % where the data is obtained from FT_TIMELOCKANALYSIS, FT_FREQANALYSIS
 % or FT_SOURCEANALYSIS respectively, or from FT_TIMELOCKGRANDAVERAGE,
 % FT_FREQGRANDAVERAGE or FT_SOURCEGRANDAVERAGE respectively.
-% 
+%
 % The configuration can contain
 %   cfg.statistic        = string, statistic to compute for each sample or voxel (see below)
 %   cfg.correctm         = apply multiple-comparison correction, 'no', 'bonferoni', 'holms', 'fdr' (default = 'no')
@@ -56,8 +56,6 @@ function [stat, cfg] = statistics_analytic(cfg, dat, design);
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
-
-ft_defaults
 
 % set the defaults
 if ~isfield(cfg, 'correctm'), cfg.correctm = 'no'; end

@@ -148,12 +148,13 @@ function [data] = ft_freqsimulation(cfg)
 %
 % $Id$
 
-ft_defaults
+revision = '$Id$';
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
 
 % set defaults
 if ~isfield(cfg, 'method'),        cfg.method = 'phalow_amphigh';         end

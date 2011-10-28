@@ -113,12 +113,13 @@ function [elec_realigned] = ft_sensorrealign(cfg, elec_original)
 %
 % $Id$
 
-ft_defaults
+revision = '$Id$';
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
 
 % this is used for feedback of the lower-level functions
 global fb

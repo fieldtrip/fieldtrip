@@ -1,7 +1,7 @@
 function [stat, cfg] = statistics_montecarlo(cfg, dat, design, varargin)
 
-% STATISTICS_MONTECARLO performs a nonparametric statistical test by calculating 
-% Monte-Carlo estimates of the significance probabilities and/or critical values from the 
+% STATISTICS_MONTECARLO performs a nonparametric statistical test by calculating
+% Monte-Carlo estimates of the significance probabilities and/or critical values from the
 % permutation distribution. This function should not be called
 % directly, instead you should call the function that is associated with
 % the type of data on which you want to perform the test.
@@ -13,16 +13,13 @@ function [stat, cfg] = statistics_montecarlo(cfg, dat, design, varargin)
 %
 % Where the data is obtained from FT_TIMELOCKANALYSIS, FT_FREQANALYSIS
 % or FT_SOURCEANALYSIS respectively, or from FT_TIMELOCKGRANDAVERAGE,
-% FT_FREQGRANDAVERAGE or FT_SOURCEGRANDAVERAGE respectively.
+% FT_FREQGRANDAVERAGE or FT_SOURCEGRANDAVERAGE respectively and with
+% cfg.method = 'montecarlo'
 %
-% Required configuration option: cfg.statstic (see below)
-% Forbidden configuration options: cfg.ztransform, cfg.removemarginalmeans,
-% cfg.randomfactor, cfg.voxelthreshold, cfg.voxelstatistic
-%
-% Configuration options that can be specified:
+% The configuration options that can be specified are:
 %   cfg.numrandomization = number of randomizations, can be 'all'
 %   cfg.correctm         = apply multiple-comparison correction, 'no', 'max', cluster', 'bonferoni', 'holms', 'fdr' (default = 'no')
-%   cfg.alpha            = critical value for rejecting the null-hypothesis per tail (default = 0.05) 
+%   cfg.alpha            = critical value for rejecting the null-hypothesis per tail (default = 0.05)
 %   cfg.tail             = -1, 1 or 0 (default = 0)
 %   cfg.correcttail      = correct p-values or alpha-values when doing a two-sided test, 'alpha','prob' or 'no' (default = 'no')
 %   cfg.ivar             = number or list with indices, independent variable(s)
@@ -47,7 +44,7 @@ function [stat, cfg] = statistics_montecarlo(cfg, dat, design, varargin)
 % If you specify an empty neighbourhood structure, clustering will only be done
 % in frequency and time (if available) and not over neighbouring channels.
 %
-% The statistic that is computed for each sample in each random reshuffling 
+% The statistic that is computed for each sample in each random reshuffling
 % of the data is specified as
 %   cfg.statistic       = 'indepsamplesT'     independent samples T-statistic,
 %                         'indepsamplesF'     independent samples F-statistic,
@@ -98,8 +95,6 @@ function [stat, cfg] = statistics_montecarlo(cfg, dat, design, varargin)
 %
 % $Id$
 
-ft_defaults
-
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed',     {'factor',           'ivar'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'unitfactor',       'uvar'});
@@ -110,7 +105,6 @@ cfg = ft_checkconfig(cfg, 'required',    {'statistic'});
 cfg = ft_checkconfig(cfg, 'forbidden',   {'ztransform', 'removemarginalmeans', 'randomfactor'});
 cfg = ft_checkconfig(cfg, 'forbidden',   {'voxelthreshold', 'voxelstatistic'});
 cfg = ft_checkconfig(cfg, 'forbidden',   {'voxelthreshold', 'voxelstatistic'});
-
 
 % set the defaults for the main function
 if ~isfield(cfg, 'alpha'),               cfg.alpha    = 0.05;            end
@@ -180,12 +174,12 @@ fprintf('using "%s" for the single-sample statistics\n', func2str(statfun));
 
 % initialize the random number generator.
 if strcmp(cfg.randomseed, 'no')
-   % do nothing
+  % do nothing
 elseif strcmp(cfg.randomseed, 'yes')
-   rand('state',sum(100*clock));
+  rand('state',sum(100*clock));
 else
-   % seed with the user-given value
-   rand('state',cfg.randomseed);
+  % seed with the user-given value
+  rand('state',cfg.randomseed);
 end;
 
 % construct the resampled design matrix or data-shuffling matrix
@@ -247,7 +241,7 @@ elseif num==2,
 elseif num==3,
   % both the statistic and the (updated) configuration and the (updated) data are returned
   tmpcfg = cfg;
-  if strcmp(cfg. precondition, 'before'), tmpcfg.preconditionflag = 1; end 
+  if strcmp(cfg. precondition, 'before'), tmpcfg.preconditionflag = 1; end
   [statobs, tmpcfg, dat]  = statfun(tmpcfg, dat, design);
 end
 
@@ -274,7 +268,7 @@ end
 if strcmp(cfg.precondition, 'after'),
   tmpcfg = cfg;
   tmpcfg.preconditionflag = 1;
-  [tmpstat, tmpcfg, dat]     = statfun(tmpcfg, dat, design);  
+  [tmpstat, tmpcfg, dat]     = statfun(tmpcfg, dat, design);
 end
 
 % compute the statistic for the randomized data and count the outliers
@@ -304,7 +298,7 @@ for i=1:Nrand
     if isstruct(statrand)
       statrand = getfield(statrand, 'stat');
     end
-    % the following line is for debugging 
+    % the following line is for debugging
     % stat.statkeep(:,i) = statrand;
     if strcmp(cfg.correctm, 'max')
       % compare each data element with the maximum statistic
@@ -326,17 +320,17 @@ if strcmp(cfg.correctm, 'cluster')
   [stat, cfg] = clusterstat(cfg, statrand, statobs,'issource',issource);
 else
   switch cfg.tail
-  case 1
-    clear prb_neg  % not needed any more, free some memory
-    stat.prob = prb_pos./Nrand;
-  case -1
-    clear prb_pos  % not needed any more, free some memory
-    stat.prob = prb_neg./Nrand;
-  case 0
-    % for each observation select the tail that corresponds with the lowest probability
-    prb_neg = prb_neg./Nrand;
-    prb_pos = prb_pos./Nrand;
-    stat.prob = min(prb_neg, prb_pos); % this is the probability for the most unlikely tail
+    case 1
+      clear prb_neg  % not needed any more, free some memory
+      stat.prob = prb_pos./Nrand;
+    case -1
+      clear prb_pos  % not needed any more, free some memory
+      stat.prob = prb_neg./Nrand;
+    case 0
+      % for each observation select the tail that corresponds with the lowest probability
+      prb_neg = prb_neg./Nrand;
+      prb_pos = prb_pos./Nrand;
+      stat.prob = min(prb_neg, prb_pos); % this is the probability for the most unlikely tail
   end
 end
 
@@ -350,7 +344,7 @@ end
 % with the probability in one of the tails (the most extreme tail). This
 % is conceptually equivalent to performing a Bonferroni correction for the
 % two tails.
-% 
+%
 % An alternative solution to distribute the alpha level over both tails is
 % achieved by multiplying the probability with a factor of two, prior to
 % thresholding it wich cfg.alpha.  The advantage of this solution is that

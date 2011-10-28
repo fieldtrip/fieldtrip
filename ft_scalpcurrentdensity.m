@@ -1,4 +1,4 @@
-function [scd] = ft_scalpcurrentdensity(cfg, data);
+function [scd] = ft_scalpcurrentdensity(cfg, data)
 
 % FT_SCALPCURRENTDENSITY computes an estimate of the SCD using the
 % second-order derivative (the surface Laplacian) of the EEG potential
@@ -10,8 +10,8 @@ function [scd] = ft_scalpcurrentdensity(cfg, data);
 %   [timelock] = ft_scalpcurrentdensity(cfg, timelock)
 % where the input data is obtained from FT_PREPROCESSING or from
 % FT_TIMELOCKANALYSIS. The output data has the same format as the input
-% and can be used in combination with most other FieldTrip functions
-% (e.g. FT_FREQNALYSIS or FT_TOPOPLOTER).
+% and can be used in combination with most other FieldTrip functions 
+% such as FT_FREQNALYSIS or FT_TOPOPLOTER.
 %
 % The configuration can contain
 %   cfg.method       = 'finite' for finite-difference method or
@@ -77,12 +77,14 @@ function [scd] = ft_scalpcurrentdensity(cfg, data);
 %
 % $Id$
 
-ft_defaults
+revision = '$Id$';
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar data
 
 % set the defaults
 if ~isfield(cfg, 'method'),        cfg.method = 'spline';    end
@@ -99,19 +101,9 @@ if strcmp(cfg.method, 'hjorth')
     end
 end
 
-% load optional given inputfile as data
-hasdata = (nargin>1);
-if ~isempty(cfg.inputfile)
-  % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    data = loadvar(cfg.inputfile, 'data');
-  end
-end
-
 % store original datatype
 dtype = ft_datatype(data);
+
 % check if the input data is valid for this function
 data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'ismeg', 'no');
 
@@ -142,15 +134,14 @@ else
   error('electrode positions were not specified');
 end
 
-
 % remove all junk fields from the electrode array
 % FIXME see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1055
 elec = ft_datatype_sens(elec); % ensure up-to-date sensor description
 tmp  = elec;
 elec = [];
 elec.chanpos = tmp.chanpos;
-elec.label   = tmp.label;
 elec.elecpos = tmp.elecpos;
+elec.label   = tmp.label;
 
 % find matching electrode positions and channels in the data
 [dataindx, elecindx] = match_str(data.label, elec.label);
@@ -264,10 +255,10 @@ scd.cfg = cfg;
 
 % convert back to input type if necessary
 switch dtype
-    case 'timelock'
-        scd = ft_checkdata(scd, 'datatype', 'timelock');
-    otherwise
-        % keep the output as it is
+  case 'timelock'
+    scd = ft_checkdata(scd, 'datatype', 'timelock');
+  otherwise
+    % keep the output as it is
 end
 
 % the output data should be saved to a MATLAB file

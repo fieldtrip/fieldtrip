@@ -1,4 +1,4 @@
-function [stat, cfg] = statistics_stats(cfg, dat, design);
+function [stat, cfg] = statistics_stats(cfg, dat, design)
 
 % This is a helper function that performs a massive univariate statistical
 % test. This function is called by either FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS
@@ -43,13 +43,8 @@ function [stat, cfg] = statistics_stats(cfg, dat, design);
 %
 % $Id$
 
-ft_defaults
-
 % test for the presence of the statistics toolbox
-hasstats = (exist('ttest') & exist('ttest2'));
-if ~hasstats
-  error('this function requires the Matlab statistics toolbox');
-end
+ft_hastoolbox('stats', 1);
 
 % set the defaults that are common to all methods
 if ~isfield(cfg, 'feedback'), cfg.feedback = 'textbar'; end

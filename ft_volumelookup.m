@@ -78,9 +78,19 @@ function [output] = ft_volumelookup(cfg, volume)
 %
 % $Id$
 
-ft_defaults
+revision = '$Id$';
 
-roi2mask = 0;
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar volume
+
+% the handling of the default cfg options is done further down
+% the checking of the input data is done further down
+
+roi2mask   = 0;
 mask2label = 0;
 if isfield(cfg, 'roi');
   roi2mask = 1;

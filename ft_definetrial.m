@@ -101,13 +101,7 @@ function [cfg] = ft_definetrial(cfg)
 
 ft_defaults
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
-
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 cfg = ft_checkconfig(cfg, 'dataset2files', {'yes'});
 
 if ~isfield(cfg, 'trl') && (~isfield(cfg, 'trialfun') || isempty(cfg.trialfun))
@@ -176,29 +170,3 @@ fprintf('found %d events\n', length(event));
 cfg.event = event;
 fprintf('created %d trials\n', size(trl,1));
 cfg.trl = trl;
-
-% get the output cfg
-cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
-
-% add information about the version of this function to the configuration
-cfg.version.name = mfilename('fullpath');
-cfg.version.id = '$Id$';
-
-% add information about the Matlab version used to the configuration
-cfg.callinfo.matlab = version();
-  
-% add information about the function call to the configuration
-cfg.callinfo.proctime = toc(ftFuncTimer);
-cfg.callinfo.procmem  = memtoc(ftFuncMem);
-cfg.callinfo.calltime = ftFuncClock;
-cfg.callinfo.user = getusername();
-fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
-
-% % remember the exact configuration details in the output
-% cfgtmp = cfg;
-% cfg = [];
-% try cfg.trl        = cfgtmp.trl;        end
-% try cfg.dataset    = cfgtmp.dataset;    end
-% try cfg.datafile   = cfgtmp.datafile;   end
-% try cfg.headerfile = cfgtmp.headerfile; end
-% cfg.previous = cfgtmp;

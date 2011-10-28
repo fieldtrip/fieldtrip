@@ -29,7 +29,7 @@ function [ev] = ft_recodeevent(cfg, event, trl)
 %                     'insidetrial'   only search inside
 %                     'outsidetrial'  only search outside
 %                     'beforetrial'   only search before the trial
-%                     'aftertrial'    only search after  the trial 
+%                     'aftertrial'    only search after  the trial
 %                     'beforezero'    only search before time t=0 of each trial
 %                     'afterzero'     only search after  time t=0 of each trial
 %
@@ -69,8 +69,11 @@ function [ev] = ft_recodeevent(cfg, event, trl)
 %
 % $Id$
 
+revision = '$Id$';
+
 % do the general setup of the function
 ft_defaults
+ft_preamble help
 
 % set the defaults
 if ~isfield(cfg, 'eventtype'),  cfg.eventtype   = [];             end
@@ -165,7 +168,7 @@ for i=1:Ntrl
   trlend    = trl(i,2);
   trloffset = trl(i,3);
   trlzero   = trlbeg - trloffset;  % the sample that corresponds with t=0
-
+  
   if strcmp(cfg.nearestto, 'trialzero')
     trlsample = trlzero;             % the sample that corresponds with t=0
   elseif strcmp(cfg.nearestto, 'trialbegin')
@@ -175,39 +178,39 @@ for i=1:Ntrl
   else
     error('incorrect specification of cfg.nearestto')
   end
-
+  
   % compute a "distance" measure for each event towards this trial
   switch cfg.searchrange
-  case 'anywhere'
-    distance = abs(sample - trlsample);
-  case 'beforezero'
-    distance = abs(sample - trlsample);
-    distance(find(sample>=trlzero)) = inf;
-  case 'afterzero'
-    distance = abs(sample - trlsample);
-    distance(find(sample<=trlzero)) = inf;
-  case 'beforetrial'
-    distance = abs(sample - trlsample);
-    distance(find(sample>=trlbeg)) = inf;
-  case 'aftertrial'
-    distance = abs(sample - trlsample);
-    distance(find(sample<=trlend)) = inf;
-  case 'insidetrial'
-    distance = abs(sample - trlsample);
-    distance(find((sample<trlbeg) | (sample>trlend))) = inf; 
-  case 'outsidetrial'
-    distance = abs(sample - trlsample);
-    distance(find((sample>=trlbeg) & (sample<=trlend))) = inf; 
-  otherwise
-    error('incorrect specification of cfg.searchrange');
+    case 'anywhere'
+      distance = abs(sample - trlsample);
+    case 'beforezero'
+      distance = abs(sample - trlsample);
+      distance(find(sample>=trlzero)) = inf;
+    case 'afterzero'
+      distance = abs(sample - trlsample);
+      distance(find(sample<=trlzero)) = inf;
+    case 'beforetrial'
+      distance = abs(sample - trlsample);
+      distance(find(sample>=trlbeg)) = inf;
+    case 'aftertrial'
+      distance = abs(sample - trlsample);
+      distance(find(sample<=trlend)) = inf;
+    case 'insidetrial'
+      distance = abs(sample - trlsample);
+      distance(find((sample<trlbeg) | (sample>trlend))) = inf;
+    case 'outsidetrial'
+      distance = abs(sample - trlsample);
+      distance(find((sample>=trlbeg) & (sample<=trlend))) = inf;
+    otherwise
+      error('incorrect specification of cfg.searchrange');
   end
-
+  
   % determine the event that has the shortest distance towards this trial
   [mindist, minindx] = min(distance);
   if length(find(distance==mindist))>1
     error('multiple events are at the same distance from the trial');
   end
-
+  
   if isinf(mindist)
     % no event was found
     ev(i) = nan;
@@ -216,24 +219,24 @@ for i=1:Ntrl
     ev(i) = nan;
   else
     switch cfg.output
-    case 'event'
-      ev(i) = event(minindx);
-    case 'eventvalue'
-      ev(i) = event(minindx).value;
-    case 'eventnumber'
-      ev(i) = eventnum(minindx);
-    case 'samplenumber'
-      ev(i) = event(minindx).sample;
-    case 'samplefromoffset'
-      ev(i) = event(minindx).sample - trlzero;
-    case 'samplefrombegin'
-      ev(i) = event(minindx).sample - trlbeg;
-    case 'samplefromend'
-      ev(i) = event(minindx).sample - trlend;
-    otherwise
-      error('incorrect specification of cfg.output');
+      case 'event'
+        ev(i) = event(minindx);
+      case 'eventvalue'
+        ev(i) = event(minindx).value;
+      case 'eventnumber'
+        ev(i) = eventnum(minindx);
+      case 'samplenumber'
+        ev(i) = event(minindx).sample;
+      case 'samplefromoffset'
+        ev(i) = event(minindx).sample - trlzero;
+      case 'samplefrombegin'
+        ev(i) = event(minindx).sample - trlbeg;
+      case 'samplefromend'
+        ev(i) = event(minindx).sample - trlend;
+      otherwise
+        error('incorrect specification of cfg.output');
     end
   end
-
+  
 end % looping over all trials
 

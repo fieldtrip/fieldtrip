@@ -59,12 +59,14 @@ function [stat] = ft_sourcestatistics(cfg, varargin)
 %
 % $Id$
 
-ft_defaults
+revision = '$Id$';
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+ft_preamble loadvar varargin
 
 % this wrapper should be compatible with the already existing statistical
 % functions that only work for source input data

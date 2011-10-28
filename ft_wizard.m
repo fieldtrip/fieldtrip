@@ -29,18 +29,23 @@ function varargout = ft_wizard(wizard_filename)
 
 % Copyright (C) 2007-2010, Robert Oostenveld
 %
-% $Log: wizard.m,v $
-% Revision 1.3  2008/09/22 20:17:44  roboos
-% added call to ft_defaults to the begin of the function
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
 %
-% Revision 1.2  2007/05/14 08:30:56  roboos
-% renamed wizard_gui to wizard_base, updated help
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
 %
-% Revision 1.1  2007/05/10 09:06:21  roboos
-% initial version
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
 %
-
-ft_defaults
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
 
 % this function is a wrapper around the actual GUI function
 % the main purpose of this function is to provide a workspace where the

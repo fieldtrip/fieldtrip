@@ -31,17 +31,24 @@ function [grad] = ft_headmovement(cfg)
 %
 % $Id$
 
+revision = '$Id$';
 
+% do the general setup of the function
 ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'dataset2files', {'yes'});
 
 % set the defaults
 if ~isfield(cfg, 'numclusters'), cfg.numclusters = 12; end
 
-% if neccessary convert dataset into headerfile and datafile
-cfg = ft_checkconfig(cfg, 'dataset2files', {'yes'});
+% read the header information
 hdr = ft_read_header(cfg.headerfile);
 
-% work with gradiometers in dewar coordinates, since HLCs are also 
+% work with gradiometers in dewar coordinates, since HLCs are also
 % in dewar coords. at present I did not find the nas, lpa, rpa channels,
 % which according to ctf's documentation should contain the positions
 % of these channels directly (HDAC channels). FIXME
@@ -61,8 +68,8 @@ tmpcfg              = [];
 tmpcfg.dataset      = cfg.dataset;
 tmpcfg.trl          = cfg.trl;
 tmpcfg.channel      = {'HLC0011' 'HLC0012' 'HLC0013'...
-                       'HLC0021' 'HLC0022' 'HLC0023'...
-                       'HLC0031' 'HLC0032' 'HLC0033'};
+  'HLC0021' 'HLC0022' 'HLC0023'...
+  'HLC0031' 'HLC0032' 'HLC0033'};
 tmpcfg.continuous   = 'yes';
 data                = ft_preprocessing(tmpcfg);
 
@@ -110,8 +117,8 @@ selrpa = strmatch('HLC003', data.label);
 ubin   = unique(bin);
 for k = 1:length(ubin)
   nas(k, :) = cluster(k, selnas);
-  lpa(k, :) = cluster(k, sellpa); 
-  rpa(k, :) = cluster(k, selrpa); 
+  lpa(k, :) = cluster(k, sellpa);
+  rpa(k, :) = cluster(k, selrpa);
   numperbin(k) = sum(wdat(bin==ubin(k)));
 end
 
@@ -121,16 +128,16 @@ if 1,
   xdir  = trf(1,1:3);
   ydir  = trf(2,1:3);
   zdir  = trf(3,1:3);
-
+  
   trf2   = inv(hc.homogenous);
   origin = trf2(1:3,4)';
-
+  
   xaxis  = [repmat(origin, [15 1]) + [0:14]'*xdir];
   yaxis  = [repmat(origin, [9  1]) + [0:8]'*ydir; ...
-            repmat(origin, [9  1]) - [0:8]'*ydir];
+    repmat(origin, [9  1]) - [0:8]'*ydir];
   zaxis  = [repmat(origin, [10 1]) + [0:9]'*zdir; ...
-            repmat(origin, [3  1]) - [0:2]'*zdir];
-
+    repmat(origin, [3  1]) - [0:2]'*zdir];
+  
   %plot some stuff
   figure; hold on;
   plot3(xaxis(:,1),xaxis(:,2),xaxis(:,3),'k.-');
@@ -141,7 +148,7 @@ if 1,
   plot3(hc.dewar.nas(1), hc.dewar.nas(2), hc.dewar.nas(3), 'ro');
   plot3(hc.dewar.lpa(1), hc.dewar.lpa(2), hc.dewar.lpa(3), 'ro');
   plot3(hc.dewar.rpa(1), hc.dewar.rpa(2), hc.dewar.rpa(3), 'ro');
-  axis vis3d; axis off 
+  axis vis3d; axis off
 end
 
 %compute transformation matrix from dewar to head coordinates

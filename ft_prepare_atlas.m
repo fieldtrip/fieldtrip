@@ -31,7 +31,12 @@ function [atlas] = ft_prepare_atlas(filename)
 %
 % $Id$
 
+revision = '$Id$';
+
+% do the general setup of the function
 ft_defaults
+ft_preamble help
+ft_preamble callinfo
 
 useafni = 0;
 usewfu  = 0;

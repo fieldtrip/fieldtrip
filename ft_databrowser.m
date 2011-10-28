@@ -82,9 +82,6 @@ function [cfg] = ft_databrowser(cfg, data)
 % Undocumented options
 % cfg.enablefftbutton = 'yes'/'no' - roevdmei
 % cfg.enablepreprocedit = 'yes'/'no' - roevdmei
-% 
-% 
-
 
 % FIXME these should be removed
 % FIXME document these
@@ -92,12 +89,13 @@ function [cfg] = ft_databrowser(cfg, data)
 % cfg.channelcolormap
 % cfg.colorgroups
 
-ft_defaults
+revision = '$Id$';
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
 
 hasdata = (nargin>1);
 hascomp = hasdata && ft_datatype(data, 'comp');
@@ -133,8 +131,8 @@ if ~isfield(cfg, 'plotlabels'),      cfg.plotlabels = 'yes';              end
 if ~isfield(cfg, 'event'),           cfg.event = [];                      end % this only exists for backward compatibility and should not be documented
 if ~isfield(cfg, 'continuous'),      cfg.continuous = [];                 end % the default is set further down in the code, conditional on the input data
 if ~isfield(cfg, 'ploteventlabels'), cfg.ploteventlabels = 'type=value';  end
-if ~isfield(cfg, 'enablefftbutton'), cfg.enablefftbutton = 'no';          end 
-if ~isfield(cfg, 'enablepreprocedit'), cfg.enablepreprocedit = 'no';      end 
+if ~isfield(cfg, 'enablefftbutton'), cfg.enablefftbutton = 'no';          end
+if ~isfield(cfg, 'enablepreprocedit'), cfg.enablepreprocedit = 'no';      end
 
 
 if ~isfield(cfg, 'viewmode')
@@ -202,7 +200,7 @@ if hasdata
   % this is how the input data is segmented
   trlorg = zeros(numel(data.trial), 3);
   trlorg(:,[1 2]) = data.sampleinfo;
-
+  
   % recreate offset vector (databrowser depends on this for visualisation)
   for ntrl = 1:numel(data.trial)
     trlorg(ntrl,3) = time2offset(data.time{ntrl}, data.fsample);
@@ -721,10 +719,10 @@ endsel = min(endsample, endsel);
 
 
 if strcmp(cfg.selectmode, 'disp')
-  % FIXME this is on    
-%   otherwise
-%     error('unknown cfg.viewmode "%s"', cfg.viewmode);
-% end % switchly for debugging
+  % FIXME this is on
+  %   otherwise
+  %     error('unknown cfg.viewmode "%s"', cfg.viewmode);
+  % end % switchly for debugging
   disp([begsel endsel])
   
 elseif strcmp(cfg.selectmode, 'mark')
@@ -771,7 +769,7 @@ if ~isempty(cfg.preproc)
 else
   code = [];
 end
-  
+
 % add descriptive lines
 nl      = sprintf('\n');
 sep     = sprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
@@ -984,15 +982,15 @@ end
 ylabel('log(power)')
 xlabel('frequency (hz)')
 yrange = abs(max(max(dat)) - min(min(dat)));
-axis([fftopt.xaxis(1) fftopt.xaxis(end) (min(min(dat)) - yrange.*.1) (max(max(dat)) + yrange*.1)]) 
+axis([fftopt.xaxis(1) fftopt.xaxis(end) (min(min(dat)) - yrange.*.1) (max(max(dat)) + yrange*.1)])
 
 % switch log or nonlog
 if togglestate == 0
   ylabel('power')
-  axis([fftopt.xaxis(1) fftopt.xaxis(end) 0 (max(max(dat)) + yrange*.1)]) 
+  axis([fftopt.xaxis(1) fftopt.xaxis(end) 0 (max(max(dat)) + yrange*.1)])
 elseif togglestate == 1
   ylabel('log(power)')
-  axis([fftopt.xaxis(1) fftopt.xaxis(end) (min(min(dat)) - yrange.*.1) (max(max(dat)) + yrange*.1)]) 
+  axis([fftopt.xaxis(1) fftopt.xaxis(end) (min(min(dat)) - yrange.*.1) (max(max(dat)) + yrange*.1)])
 end
 set(gca,'Position', [0.13 0.11 0.725 0.815])
 end
@@ -1011,11 +1009,11 @@ else
 end
 % get focus back to figure
 if ~strcmp(get(h, 'type'), 'figure')
-    set(h, 'enable', 'off');
-    drawnow;
-    set(h, 'enable', 'on');
+  set(h, 'enable', 'off');
+  drawnow;
+  set(h, 'enable', 'on');
 end
-  
+
 h = getparent(h);
 opt = getappdata(h, 'opt');
 cfg = getappdata(h, 'cfg');
@@ -1203,7 +1201,7 @@ switch key
     redraw_cb(h, eventdata);
   case 'i'
     if strcmp(cfg.viewmode, 'butterfly')
-        delete(findobj(h,'tag', 'identify'));
+      delete(findobj(h,'tag', 'identify'));
       % click in data and get name of nearest channel
       fprintf('click in the figure to identify the name of the closest channel\n');
       val = ginput(1);
@@ -1215,17 +1213,17 @@ switch key
       channb = match_str(opt.curdat.label,channame);
       fprintf('channel name: %s\n',channame);
       redraw_cb(h, eventdata);
-      ft_plot_text(pos, 0.9, channame, 'FontSize', 16, 'tag', 'identify');      
+      ft_plot_text(pos, 0.9, channame, 'FontSize', 16, 'tag', 'identify');
       if ~ishold
         hold on
         ft_plot_vector(opt.curdat.time{1}, opt.curdat.trial{1}(channb,:), 'box', false, 'tag', 'identify', ...
-            'hpos', opt.laytime.pos(1,1), 'vpos', opt.laytime.pos(1,2), 'width', opt.laytime.width(1), 'height', opt.laytime.height(1), 'hlim', opt.hlim, 'vlim', opt.vlim, ...
-            'color', 'k', 'linewidth', 2);        
+          'hpos', opt.laytime.pos(1,1), 'vpos', opt.laytime.pos(1,2), 'width', opt.laytime.width(1), 'height', opt.laytime.height(1), 'hlim', opt.hlim, 'vlim', opt.vlim, ...
+          'color', 'k', 'linewidth', 2);
         hold off
       else
         ft_plot_vector(opt.curdat.time{1}, opt.curdat.trial{1}(channb,:), 'box', false, 'tag', 'identify', ...
-            'hpos', opt.laytime.pos(1,1), 'vpos', opt.laytime.pos(1,2), 'width', opt.laytime.width(1), 'height', opt.laytime.height(1), 'hlim', opt.hlim, 'vlim', opt.vlim, ...
-            'color', 'k', 'linewidth', 2);
+          'hpos', opt.laytime.pos(1,1), 'vpos', opt.laytime.pos(1,2), 'width', opt.laytime.width(1), 'height', opt.laytime.height(1), 'hlim', opt.hlim, 'vlim', opt.vlim, ...
+          'color', 'k', 'linewidth', 2);
       end
     else
       warning('only supported with cfg.viewmode=''butterfly''');
@@ -1452,23 +1450,23 @@ delete(findobj(h,'tag', 'timecourse'));
 delete(findobj(h,'tag', 'identify'));
 
 if strcmp(cfg.viewmode, 'butterfly')
-    set(gca,'ColorOrder',opt.chancolors(chanindx,:)) % plot vector does not clear axis, therefore this is possible
-    ft_plot_vector(tim, dat, 'box', false, 'tag', 'timecourse', ...
-        'hpos', opt.laytime.pos(1,1), 'vpos', opt.laytime.pos(1,2), 'width', opt.laytime.width(1), 'height', opt.laytime.height(1), 'hlim', opt.hlim, 'vlim', opt.vlim);
-    
-    
-    % two ticks per channel
-    yTick = sort([opt.laytime.pos(:,2)+(opt.laytime.height/2); ...
-                            opt.laytime.pos(:,2)+(opt.laytime.height/4); ...
-                            opt.laytime.pos(:,2);                        ...
-                            opt.laytime.pos(:,2)-(opt.laytime.height/4); ...
-                            opt.laytime.pos(:,2)-(opt.laytime.height/2)]);
-                        
-    yTickLabel = {num2str(yTick.*range(opt.vlim) + opt.vlim(1))};
-    
-    set(gca, 'yTick', yTick);
-    set(gca, 'yTickLabel', yTickLabel)
-    
+  set(gca,'ColorOrder',opt.chancolors(chanindx,:)) % plot vector does not clear axis, therefore this is possible
+  ft_plot_vector(tim, dat, 'box', false, 'tag', 'timecourse', ...
+    'hpos', opt.laytime.pos(1,1), 'vpos', opt.laytime.pos(1,2), 'width', opt.laytime.width(1), 'height', opt.laytime.height(1), 'hlim', opt.hlim, 'vlim', opt.vlim);
+  
+  
+  % two ticks per channel
+  yTick = sort([opt.laytime.pos(:,2)+(opt.laytime.height/2); ...
+    opt.laytime.pos(:,2)+(opt.laytime.height/4); ...
+    opt.laytime.pos(:,2);                        ...
+    opt.laytime.pos(:,2)-(opt.laytime.height/4); ...
+    opt.laytime.pos(:,2)-(opt.laytime.height/2)]);
+  
+  yTickLabel = {num2str(yTick.*range(opt.vlim) + opt.vlim(1))};
+  
+  set(gca, 'yTick', yTick);
+  set(gca, 'yTickLabel', yTickLabel)
+  
 elseif any(strcmp(cfg.viewmode, {'vertical' 'component'}))
   
   % determine channel indices into data outside of loop
@@ -1494,36 +1492,36 @@ elseif any(strcmp(cfg.viewmode, {'vertical' 'component'}))
   end
   
   if length(chanindx)>19
-      % no space for yticks
-      yTick = [];
-      yTickLabel = [];
+    % no space for yticks
+    yTick = [];
+    yTickLabel = [];
   elseif length(chanindx)> 6
-      % one tick per channel
-      yTick = sort([opt.laytime.pos(:,2)+(opt.laytime.height(laysel)/4); ...
-                    opt.laytime.pos(:,2)-(opt.laytime.height(laysel)/4)]);
-      yTickLabel = {[.25 .75] .* range(opt.vlim) + opt.vlim(1)};
+    % one tick per channel
+    yTick = sort([opt.laytime.pos(:,2)+(opt.laytime.height(laysel)/4); ...
+      opt.laytime.pos(:,2)-(opt.laytime.height(laysel)/4)]);
+    yTickLabel = {[.25 .75] .* range(opt.vlim) + opt.vlim(1)};
   else
-      % two ticks per channel
-      yTick = sort([opt.laytime.pos(:,2)+(opt.laytime.height(laysel)/2); ...
-                    opt.laytime.pos(:,2)+(opt.laytime.height(laysel)/4); ...
-                    opt.laytime.pos(:,2)-(opt.laytime.height(laysel)/4); ...
-                    opt.laytime.pos(:,2)-(opt.laytime.height(laysel)/2)]);
-      yTickLabel = {[.0 .25 .75 1] .* range(opt.vlim) + opt.vlim(1)};
+    % two ticks per channel
+    yTick = sort([opt.laytime.pos(:,2)+(opt.laytime.height(laysel)/2); ...
+      opt.laytime.pos(:,2)+(opt.laytime.height(laysel)/4); ...
+      opt.laytime.pos(:,2)-(opt.laytime.height(laysel)/4); ...
+      opt.laytime.pos(:,2)-(opt.laytime.height(laysel)/2)]);
+    yTickLabel = {[.0 .25 .75 1] .* range(opt.vlim) + opt.vlim(1)};
   end
- 
+  
   yTickLabel = repmat(yTickLabel, 1, length(chanindx));
-  set(gca, 'yTick', yTick);  
+  set(gca, 'yTick', yTick);
   set(gca, 'yTickLabel', yTickLabel);
   
 else
-    error('unknown viewmode "%s"', cfg.viewmode);
+  error('unknown viewmode "%s"', cfg.viewmode);
 end % if strcmp viewmode
 
-  nticks = 11;
-  xTickLabel = cellstr(num2str( linspace(tim(1), tim(end), nticks)' , '%1.2f'))';
-  set(gca, 'xTick', linspace(ax(1), ax(2), nticks))
-  set(gca, 'xTickLabel', xTickLabel)
-  
+nticks = 11;
+xTickLabel = cellstr(num2str( linspace(tim(1), tim(end), nticks)' , '%1.2f'))';
+set(gca, 'xTick', linspace(ax(1), ax(2), nticks))
+set(gca, 'xTickLabel', xTickLabel)
+
 if strcmp(cfg.viewmode, 'component')
   
   % determine the position of each of the original channels for the topgraphy
@@ -1587,27 +1585,27 @@ end
 
 function key = parseKeyboardEvent(eventdata)
 
-  key = eventdata.Key;
-  
-  % handle possible numpad events (different for Windows and UNIX systems)
-  % NOTE: shift+numpad number does not work on UNIX, since the shift
-  % modifier is always sent for numpad events
-  if isunix()
-    shiftInd = match_str(eventdata.Modifier, 'shift');
-    if ~isnan(str2double(eventdata.Character)) && ~isempty(shiftInd)
-      % now we now it was a numpad keystroke (numeric character sent AND
-      % shift modifier present)
-      key = eventdata.Character;
-      eventdata.Modifier(shiftInd) = []; % strip the shift modifier
-    end
-  elseif ispc()
-    if strfind(eventdata.Key, 'numpad')
-      key = eventdata.Character;
-    end
+key = eventdata.Key;
+
+% handle possible numpad events (different for Windows and UNIX systems)
+% NOTE: shift+numpad number does not work on UNIX, since the shift
+% modifier is always sent for numpad events
+if isunix()
+  shiftInd = match_str(eventdata.Modifier, 'shift');
+  if ~isnan(str2double(eventdata.Character)) && ~isempty(shiftInd)
+    % now we now it was a numpad keystroke (numeric character sent AND
+    % shift modifier present)
+    key = eventdata.Character;
+    eventdata.Modifier(shiftInd) = []; % strip the shift modifier
   end
-    
-  if ~isempty(eventdata.Modifier)
-    key = [eventdata.Modifier{1} '+' key];
+elseif ispc()
+  if strfind(eventdata.Key, 'numpad')
+    key = eventdata.Character;
   end
-  
+end
+
+if ~isempty(eventdata.Modifier)
+  key = [eventdata.Modifier{1} '+' key];
+end
+
 end

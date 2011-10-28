@@ -44,8 +44,6 @@ function [freq] = ft_freqanalysis_tfr(cfg, data)
 %
 % $Id$
 
-ft_defaults
-
 % ensure that this function is started as a subfunction of the FT_FREQANALYSIS wrapper
 if ~exist('OCTAVE_VERSION')
   [s, i] = dbstack;
@@ -173,11 +171,9 @@ freq.label     = cfg.channel;
 freq.freq      = cfg.foi;
 freq.time      = indicvect(1:cfg.downsample:end);
 
-% get the output cfg
-cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
-
 % remember the configuration details of the input data
 try, cfg.previous = data.cfg; end
+
 % remember the exact configuration details in the output
 freq.cfg = cfg;
 
