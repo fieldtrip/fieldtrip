@@ -425,8 +425,8 @@ elseif iseeg
     case 'halfspace_monopole'
       lf = eeg_halfspace_monopole(pos, sens.elecpos, vol);  
       
-    case 'strip_monopole'
-      lf = eeg_strip_monopole(pos, sens.elecpos, vol);          
+    case 'slab_monopole'
+      lf = eeg_slab_monopole(pos, sens.elecpos, vol);          
 
     case 'simbio'
       lf = leadfield_simbio(pos, sens, vol);

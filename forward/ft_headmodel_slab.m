@@ -65,7 +65,7 @@ vol.ori2   = N2(:)';
 vol.ori2   = vol.ori2/norm(vol.ori2);
 
 if strcmpi(model,'monopole')
-  vol.type  = 'strip_monopole';    
+  vol.type  = 'slab_monopole';    
 else
   error('unknow method')
 end

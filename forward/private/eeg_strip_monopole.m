@@ -1,11 +1,11 @@
-function [lf] = eeg_strip_monopole(rd, elc, vol)
+function [lf] = eeg_slab_monopole(rd, elc, vol)
 
-% EEG_STRIP_MONOPOLE calculate the strip medium leadfield
+% EEG_SLAB_MONOPOLE calculate the strip medium leadfield
 % on positions pnt for a monopole at position rd and conductivity cond
 % The halfspace solution requires a plane dividing a conductive zone of
 % conductivity cond, from a non coductive zone (cond = 0)
 %       
-% [lf] = eeg_strip_monopole(rd, elc, cond)
+% [lf] = eeg_slab_monopole(rd, elc, cond)
 %
 % Implemented from Malmivuo J, Plonsey R, Bioelectromagnetism (1993)
 % http://www.bem.fi/book/index.htm

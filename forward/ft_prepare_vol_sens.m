@@ -344,7 +344,7 @@ elseif iseeg
       end
       sens.elecpos = pnt;
 
-    case {'strip_monopole'}
+    case {'slab_monopole'}
       % electrodes' all-to-all distances
       numel  = size(sens.elecpos,1);
       ref_el = sens.elecpos(1,:);

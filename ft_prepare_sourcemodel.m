@@ -569,7 +569,7 @@ if ~isfield(grid, 'inside') && ~isfield(grid, 'outside')
     end
     grid.outside = find(outside);
     grid.inside  = find(~outside);   
-  elseif ft_voltype(vol, 'strip_monopole')
+  elseif ft_voltype(vol, 'slab_monopole')
     grid.inside = 1:size(grid.pos,1);
     grid.outside = [];
     outside = zeros(1,size(grid.pos,1));    
