@@ -500,9 +500,9 @@ switch headerformat
     hdr.nSamples            = size(asc.dat,2);
     hdr.nSamplesPre         = 0;
     hdr.nTrials             = 1;
-    hdr.Fs                  = 1000/median(diff(asc.dat(1,:)));  % these timestamps are in miliseconds
     hdr.FirstTimeStamp      = asc.dat(1,1);
-    hdr.TimeStampPerSample  = median(diff(asc.dat(1,:)));
+    hdr.TimeStampPerSample  = mean(diff(asc.dat(1,:)));
+    hdr.Fs                  = 1000/hdr.TimeStampPerSample;  % these timestamps are in miliseconds
     % give this warning only once
     warning_once('creating fake channel names');
     for i=1:hdr.nChans
