@@ -433,9 +433,9 @@ else
   
   % options that don't change over trials
   if isfield(cfg,'tapsmofrq')
-    options = {'pad', cfg.pad, 'freqoi', cfg.foi, 'tapsmofrq', cfg.tapsmofrq, 'polyremoval', cfg.polyremoval};
+    options = {'pad', cfg.pad, 'freqoi', cfg.foi, 'tapsmofrq', cfg.tapsmofrq, 'polyorder', cfg.polyremoval};
   else
-    options = {'pad', cfg.pad, 'freqoi', cfg.foi, 'polyremoval', cfg.polyremoval};
+    options = {'pad', cfg.pad, 'freqoi', cfg.foi, 'polyorder', cfg.polyremoval};
   end
   
   
