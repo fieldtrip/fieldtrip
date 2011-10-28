@@ -99,10 +99,11 @@ if ~isempty(trackconfig) && strcmp(trackconfig, 'on')
 end
 
 % these should be cell arrays and not strings
-if ischar(required),   required   = {required};   end
-if ischar(deprecated), deprecated = {deprecated}; end
-if ischar(unused),     unused     = {unused};     end
-if ischar(forbidden),  forbidden  = {forbidden};  end
+if ischar(required),     required     = {required};      end
+if ischar(deprecated),   deprecated   = {deprecated};    end
+if ischar(unused),       unused       = {unused};        end
+if ischar(forbidden),    forbidden    = {forbidden};     end
+if ischar(createsubcfg), createsubcfg = {createsubcfg};  end
 
 if isfield(cfg, 'checkconfig')
   silent   = strcmp(cfg.checkconfig, 'silent');
