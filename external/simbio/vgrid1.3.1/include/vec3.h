@@ -28,7 +28,7 @@
  *  
  *   3D vector operations
  *
- *   $Id: vec3.h,v 1.4 2004/02/16 14:48:42 berti Exp $
+ *   $Id$
  *
  *   \author F. Kruggel (E-mail kruggel@cns.mpg.de)
  *

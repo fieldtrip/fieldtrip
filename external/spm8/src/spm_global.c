@@ -1,5 +1,5 @@
 /*
- * $Id: spm_global.c 247 2005-10-04 17:20:34Z guillaume $
+ * $Id$
  */
 
 /* returns the global mean for a memory mapped volume image

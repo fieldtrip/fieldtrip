@@ -1,5 +1,5 @@
 /*
- * $Id: spm_mapping.c 2026 2008-08-29 10:41:22Z john $
+ * $Id$
  * John Ashburner
  */
 

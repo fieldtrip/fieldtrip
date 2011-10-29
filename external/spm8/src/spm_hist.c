@@ -1,5 +1,5 @@
 /*
- * $Id: spm_hist.c 938 2007-10-12 19:09:31Z john $
+ * $Id$
  * John Ashburner
  */
 

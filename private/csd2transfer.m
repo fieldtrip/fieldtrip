@@ -54,7 +54,7 @@ function [output] = csd2transfer(freq, varargin)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: csd2transfer $
+% $Id$
 
 numiteration = ft_getopt(varargin, 'numiteration', 100);
 channelcmb   = ft_getopt(varargin, 'channelcmb',   {});

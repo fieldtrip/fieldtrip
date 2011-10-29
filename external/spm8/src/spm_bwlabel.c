@@ -1,5 +1,5 @@
 /*
- * $Id: spm_bwlabel.c 1790 2008-06-05 11:27:02Z spm $
+ * $Id$
  * Jesper Andersson
  */
 

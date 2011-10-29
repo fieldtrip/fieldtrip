@@ -1,5 +1,5 @@
 /*
- * $Id: spm_existfile.c 2267 2008-09-30 21:13:55Z guillaume $
+ * $Id$
  * Guillaume Flandin
  */
  

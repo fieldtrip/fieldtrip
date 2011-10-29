@@ -38,7 +38,7 @@ function h = ft_connectivityplot(cfg, varargin)
 %
 % $Id: ft_connectivityplot$
 
-revision = '$Id: ft_freqdescriptives.m 4527 2011-10-19 16:08:12Z roboos $';
+revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
@@ -144,7 +144,7 @@ cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 % add the version details of this function call to the configuration
 cfg.version.name = mfilename('fullpath'); % this is helpful for debugging
-cfg.version.id   = '$Id: ft_movieplotER.m 4096 2011-09-03 15:49:40Z roboos $'; % this will be auto-updated by the revision control system
+cfg.version.id   = '$Id$'; % this will be auto-updated by the revision control system
 
 % add information about the Matlab version used to the configuration
 cfg.callinfo.matlab = version();

@@ -24,7 +24,7 @@ function [hdr] = read_wdq_header(filename)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: read_wdq_header.m $
+% $Id$
 
 % information about how to interpret the file are taken from the document
 % 'CODAS data storage format'

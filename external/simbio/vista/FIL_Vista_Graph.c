@@ -1,5 +1,5 @@
 /*
- *  $Id: FIL_Vista_Graph.c,v 1.1.1.1 2003/08/21 13:09:52 anwander Exp $
+ *  $Id$
  *
  *  This file contains methods for the graph (VGraph) type.
  */

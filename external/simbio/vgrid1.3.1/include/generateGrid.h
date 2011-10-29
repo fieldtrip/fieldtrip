@@ -44,7 +44,7 @@ using namespace std;
  
    \author Guntram Berti  
 
-   $Id: generateGrid.h,v 1.30 2004/09/13 12:37:16 berti Exp $
+   $Id$
 
    \todo do not overwrite src image (use high resolution for marching tet)
    \todo Preserve material file settings when mapping images with voxel values > 1 byte

@@ -60,7 +60,7 @@ function ft_movieplotTFR(cfg, data)
 %
 % $id: ft_movieploter.m 4354 2011-10-05 15:06:02z crimic $
 
-revision = '$Id: ft_freqdescriptives.m 4527 2011-10-19 16:08:12Z roboos $';
+revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults

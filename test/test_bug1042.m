@@ -3,7 +3,7 @@ function test_bug1042
 % TEST test_bug1042 testbug686
 % TEST 
 
-% $Id: $
+% $Id$
 
 % this is the output of icosahedron162, including it like this
 % makes the test script independent of that function

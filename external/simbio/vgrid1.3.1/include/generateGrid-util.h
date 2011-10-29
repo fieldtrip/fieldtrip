@@ -29,7 +29,7 @@
     
      Some utility types for mesh generation.
      
-     $Id: generateGrid-util.h,v 1.6 2004/02/16 14:49:00 berti Exp $
+     $Id$
  */
 
 

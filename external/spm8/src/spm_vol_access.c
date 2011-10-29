@@ -1,5 +1,5 @@
 /*
- * $Id: spm_vol_access.c 1287 2008-04-01 14:50:25Z guillaume $
+ * $Id$
  * John Ashburner
  */
 

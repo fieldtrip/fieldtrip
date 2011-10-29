@@ -34,7 +34,7 @@
 
    \brief Some useful macros for checking pre/post conditions.
 
-   $Id: pre-post-conditions.h,v 1.5 2004/02/16 14:48:42 berti Exp $
+   $Id$
 
 
   Two different sets of macros are defined:

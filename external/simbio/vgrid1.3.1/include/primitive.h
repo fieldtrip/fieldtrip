@@ -24,7 +24,7 @@
 */
 
 /*
-   $Id: primitive.h,v 1.4 2004/02/16 14:49:00 berti Exp $
+   $Id$
 */
 
 #include "vista.h"

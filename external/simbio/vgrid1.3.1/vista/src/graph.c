@@ -22,7 +22,7 @@
 
 
 /*
- *  $Id: graph.c,v 1.5 2004/02/16 12:50:30 berti Exp $
+ *  $Id$
  *
  *  This file contains methods for the graph (VGraph) type.
  */

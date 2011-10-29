@@ -29,7 +29,7 @@
 
     \author Guntram Berti <berti@ccrl-nece.de>
 
-     $Id: marching-tets.h,v 1.5 2004/02/16 14:48:42 berti Exp $
+     $Id$
 
 */
 

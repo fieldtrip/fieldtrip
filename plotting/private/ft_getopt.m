@@ -14,7 +14,7 @@ function val = ft_getopt(opt, key, default)
 
 % Copyright (C) 2011, Robert Oostenveld
 %
-% $Id: ft_getopt.m 4394 2011-10-09 10:52:46Z roboos $
+% $Id$
 
 if nargin<3
   default = [];

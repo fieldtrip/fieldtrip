@@ -64,9 +64,9 @@ function neighbours = ft_prepare_neighbours(cfg, data)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: ft_prepare_neighbours.m 4096 2011-09-03 15:49:40Z roboos $
+% $Id$
 
-revision = '$Id: ft_freqdescriptives.m 4608 2011-10-27 12:23:22Z roboos $';
+revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults

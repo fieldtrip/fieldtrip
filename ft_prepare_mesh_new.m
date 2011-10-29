@@ -54,9 +54,9 @@ function bnd = ft_prepare_mesh(cfg, data)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: ft_prepare_mesh.m 4119 2011-09-06 14:05:57Z johzum $
+% $Id$
 
-revision = '$Id: ft_freqdescriptives.m 4527 2011-10-19 16:08:12Z roboos $';
+revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults

@@ -53,13 +53,13 @@ function dataout = ft_regressconfound(cfg, datain)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: ft_rejectconfound.m 4375 2011-10-07 09:16:45Z arjsto $
+% $Id$
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the initial part deals with parsing the input options and data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-revision = '$Id: ft_freqdescriptives.m 4527 2011-10-19 16:08:12Z roboos $';
+revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
@@ -272,7 +272,7 @@ cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 % add the version details of this function call to the configuration
 cfg.version.name = mfilename('fullpath'); % this is helpful for debugging
-cfg.version.id   = '$Id: ft_rejectconfound.m 4375 2011-10-07 09:16:45Z arjsto $'; % this will be auto-updated by the revision control system
+cfg.version.id   = '$Id$'; % this will be auto-updated by the revision control system
 
 % add information about the Matlab version used to the configuration
 cfg.callinfo.matlab = version();

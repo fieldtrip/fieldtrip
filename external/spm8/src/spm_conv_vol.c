@@ -1,5 +1,5 @@
 /*
- * $Id: spm_conv_vol.c 1893 2008-07-08 15:05:40Z john $
+ * $Id$
  * John Ashburner
  */
 
