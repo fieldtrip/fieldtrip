@@ -204,7 +204,7 @@ switch toolbox
   case 'NLXNETCOM'
     status  = (exist('MatlabNetComClient') && exist('NlxConnectToServer') && exist('NlxGetNewCSCData'));
   case 'DIPOLI'
-    status  = exist('dipoli.m', 'file');
+    status  = exist('dipoli.maci', 'file');
   case 'MNE'
     status  = (exist('fiff_read_meas_info', 'file') && exist('fiff_setup_read_raw', 'file'));
   case 'TCP_UDP_IP'
