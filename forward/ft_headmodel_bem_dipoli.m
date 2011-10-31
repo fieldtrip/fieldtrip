@@ -137,8 +137,12 @@ bndfile = {};
 bnddip = vol.bnd;
 for i=1:numboundaries
   bndfile{i} = [tempname '.tri'];
-  % dipoli has another definition of the direction of the surfaces
-  bnddip(i).tri = fliplr(bnddip(i).tri);
+  % checks if normals are outwards oriented otherwise flips them
+  ok = checknormals(bnddip(i));
+  if ~ok
+    fprintf('flipping normals'' direction\n')
+    bnddip(i).tri = fliplr(bnddip(i).tri); 
+  end
   write_tri(bndfile{i}, bnddip(i).pnt, bnddip(i).tri);
 end
 
@@ -186,3 +190,26 @@ delete(exefile);
 % remember that it is a dipoli model
 vol.type = 'dipoli';
 
+function ok = checknormals(bnd)
+ok = 0;
+pnt = bnd.pnt;
+tri = bnd.tri;
+% translate to the center
+org = mean(pnt,1);
+pnt(:,1) = pnt(:,1) - org(1);
+pnt(:,2) = pnt(:,2) - org(2);
+pnt(:,3) = pnt(:,3) - org(3);
+
+w = sum(solid_angle(pnt, tri));
+
+if w<0 && (abs(w)-4*pi)<1000*eps
+  % FIXME: this method is rigorous only for star shaped surfaces
+  warning('your normals are outwards oriented\n')
+  ok = 0;
+elseif w>0 && (abs(w)-4*pi)<1000*eps
+%   warning('your normals are inwards oriented\n')
+  ok = 1;
+else
+  error('your surface probably is irregular')
+  ok = 0;
+end
