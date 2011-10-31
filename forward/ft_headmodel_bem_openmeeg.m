@@ -140,6 +140,7 @@ end
 
 % store the current path and change folder to the temporary one
 tmpfolder = cd;
+bndom = vol.bnd;
 
 try
   cd(tempdir)
@@ -147,17 +148,16 @@ try
   % write the triangulations to file
   bndfile = {};
   
-  % check if vertices' normals are inward oriented 
-  bndom = vol.bnd;
-  ok = checknormals(bndom);
-  % Flip faces for openmeeg convention (inwards normals)
-  if ~ok
-    fprintf('flipping normals'' direction\n')
-    for ii=1:length(bndom)
-        bndom(ii).tri = fliplr(bndom(ii).tri);
+  for ii=1:length(bndom)
+    % check if vertices' normals are inward oriented
+    ok = checknormals(bndom(ii));
+    if ~ok
+      % Flip faces for openmeeg convention (inwards normals)
+      fprintf('flipping normals'' direction\n')
+      bndom(ii).tri = fliplr(bndom(ii).tri);
     end
   end
-  
+   
   for ii=1:length(vol.bnd)
     [junk,tname] = fileparts(tempname);
     bndfile{ii} = [tname '.tri'];

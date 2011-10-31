@@ -138,7 +138,7 @@ bndfile = {};
 bnddip = vol.bnd;
 for i=1:numboundaries
   bndfile{i} = [tempname '.tri'];
-  % checks if normals are outwards oriented otherwise flips them
+  % checks if normals are inwards oriented otherwise flips them
   ok = checknormals(bnddip(i));
   if ~ok
     fprintf('flipping normals'' direction\n')

@@ -15,6 +15,9 @@ function [dsm] = openmeeg_dsm(pos, vol)
 % store the current path and change folder to the temporary one
 tmpfolder = cd;
 om_checkombin;
+
+bndom = vol.bnd;
+
 try
     cd(tempdir)
 
@@ -23,7 +26,11 @@ try
     for i=1:length(vol.bnd)
         [junk,tname] = fileparts(tempname);
         bndfile{i} = [tname '.tri'];
-        om_save_tri(bndfile{i}, vol.bnd(i).pnt, vol.bnd(i).tri);
+        ok = checknormals(bndom(i));
+        if ~ok
+          bndom(i).tri = fliplr(bndom(i).tri);
+        end
+        om_save_tri(bndfile{i}, bndom(i).pnt, bndom(i).tri);
     end
     
     % these will hold the shell script and the inverted system matrix
@@ -106,3 +113,26 @@ if exist(exefile,'file'),delete(exefile);end
 if exist(dipfile,'file'),delete(dipfile);end
 if exist(dsmfile,'file'),delete(dsmfile);end
 
+function ok = checknormals(bnd)
+% FIXME: this method is rigorous only for star shaped surfaces
+ok = 0;
+pnt = bnd.pnt;
+tri = bnd.tri;
+% translate to the center
+org = mean(pnt,1);
+pnt(:,1) = pnt(:,1) - org(1);
+pnt(:,2) = pnt(:,2) - org(2);
+pnt(:,3) = pnt(:,3) - org(3);
+
+w = sum(solid_angle(pnt, tri));
+
+if w<0 && (abs(w)-4*pi)<1000*eps
+  ok = 0;
+%   warning('your normals are outwards oriented\n')
+elseif w>0 && (abs(w)-4*pi)<1000*eps
+  ok = 1;
+%   warning('your normals are inwards oriented')
+else
+  error('your surface probably is irregular\n')
+  ok = 0;
+end

@@ -4,7 +4,8 @@
 % create the BEM geometries (in mm)
 bnd = [];
 bnd.pnt = pnt * 100;
-bnd.tri = tri;
+bnd.tri = tri; % normals outwards
+% bnd.tri = fliplr(tri); % normals inwards
 
 % create a set of electrodes
 sel = find(pnt(:,3)>0);
@@ -36,7 +37,6 @@ vol2 = ft_prepare_headmodel(tmpcfg,bnd);
 [vol2, sens2] = ft_prepare_vol_sens(vol2, sens);
 lf2 = ft_compute_leadfield(pos, sens2, vol2);
 
-
 tmpcfg = [];
 tmpcfg.conductivity = [1];  
 tmpcfg.method = 'bem_dipoli';
@@ -44,12 +44,12 @@ vol3 = ft_prepare_headmodel(tmpcfg,bnd);
 [vol3, sens3] = ft_prepare_vol_sens(vol3, sens);
 lf3 = ft_compute_leadfield(pos, sens3, vol3);
 
-% this calls the singlesphere model
-volt = [];
-volt.r = 100;
-volt.c = 1;
-[volt, senst] = ft_prepare_vol_sens(volt, sens);
-lft = ft_compute_leadfield(pos, senst, volt);
+% % this calls the singlesphere model
+% volt = [];
+% volt.r = 100;
+% volt.c = 1;
+% [volt, senst] = ft_prepare_vol_sens(volt, sens);
+% lft = ft_compute_leadfield(pos, senst, volt);
 
 
 figure;
@@ -70,8 +70,8 @@ subplot(2,2,2); ft_plot_topo3d(sens3.chanpos, lf3(:,2))
 subplot(2,2,3); ft_plot_topo3d(sens3.chanpos, lf3(:,3))  
 colorbar
 
-figure;
-subplot(2,2,1); ft_plot_topo3d(senst.chanpos, lft(:,1))
-subplot(2,2,2); ft_plot_topo3d(senst.chanpos, lft(:,2))
-subplot(2,2,3); ft_plot_topo3d(senst.chanpos, lft(:,3))  
-colorbar
+% figure;
+% subplot(2,2,1); ft_plot_topo3d(senst.chanpos, lft(:,1))
+% subplot(2,2,2); ft_plot_topo3d(senst.chanpos, lft(:,2))
+% subplot(2,2,3); ft_plot_topo3d(senst.chanpos, lft(:,3))  
+% colorbar
