@@ -507,4 +507,4 @@ else
 end
 cunit = sprintf('S/%s',gunit);
 str = sprintf('The input units are %s for points and %s for conductivity',gunit,cunit);
-warning_once(str)
+warning_once(str);
