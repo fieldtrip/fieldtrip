@@ -84,7 +84,7 @@ if ~isfield(cfg, 'outputfile'),      cfg.outputfile = [];        end
 if ~isfield(cfg, 'interactive'),     cfg.interactive = 'no';     end
 
 if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
-  % convert the nested cmethodonfig-object back into a normal structure
+  % convert the nested config-object back into a normal structure
   cfg.headshape = struct(cfg.headshape);
 end
 
