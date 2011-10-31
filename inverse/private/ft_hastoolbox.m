@@ -212,7 +212,7 @@ switch toolbox
   case 'BEMCP'
     status  = (exist('bem_Cij_cog', 'file') && exist('bem_Cij_lin', 'file') && exist('bem_Cij_cst', 'file'));
   case 'OPENMEEG'
-    status = exist('openmeeg.m', 'file');
+    status = exist('om_save_tri.m', 'file');
   case 'PLOTTING'
     status  = (exist('ft_plot_topo', 'file') && exist('ft_plot_mesh', 'file') && exist('ft_plot_matrix', 'file'));
   case 'PRTOOLS'
