@@ -13,6 +13,7 @@ function [vol] = openmeeg(vol, isolated)
 % Copyright (C) 2009, Alexandre Gramfort
 % INRIA Odyssee Project Team
 % $Id$
+warning('OPENMEEG is deprecated, please use FT_PREPARE_HEADMODEL with cfg.method = ''bem_openmeeg'' instead.')
 
 openmeeg_license
 om_checkombin;
