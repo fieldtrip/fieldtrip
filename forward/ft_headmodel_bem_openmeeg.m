@@ -31,6 +31,8 @@ function vol = ft_headmodel_bem_openmeeg(geom, varargin)
 %
 % See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
+%$Id$
+
 ft_hastoolbox('openmeeg', 1);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -104,7 +106,7 @@ end
 %    0 0 0     the first is the most outside, i.e. the skin
 %    0 0 1     the second is nested inside the 3rd, i.e. the outer skull
 %    0 1 1     the third is nested inside the 2nd and 3rd, i.e. the inner skull
-[~, order] = sort(sum(nesting,2));
+[dum, order] = sort(sum(nesting,2));
 
 fprintf('reordering the boundaries to: ');
 fprintf('%d ', order);
@@ -127,7 +129,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % show the license once
-openmeeg_license
+% openmeeg_license
 
 % check that the binaries are ok
 om_checkombin;
