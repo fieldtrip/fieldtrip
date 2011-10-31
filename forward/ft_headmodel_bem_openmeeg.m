@@ -264,7 +264,7 @@ w = sum(solid_angle(pnt, tri));
 if w<0 && (abs(w)-4*pi)<1000*eps
   ok = 0;
   warning('your normals are outwards oriented\n')
-elseif w>0 && abs(w-4*pi)<1000*eps
+elseif w>0 && (abs(w)-4*pi)<1000*eps
   ok = 1;
 %   warning('your normals are inwards oriented')
 else

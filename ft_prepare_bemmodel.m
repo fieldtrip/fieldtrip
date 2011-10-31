@@ -46,6 +46,8 @@ function [vol, cfg] = ft_prepare_bemmodel(cfg, mri)
 %
 % $Id$
 
+warning('FT_PREPARE_BEMMODEL is deprecated, please use FT_HEADMODEL_BEM_... with cfg.method = ''bem_bladeebla'' instead.')
+
 revision = '$Id$';
 
 % do the general setup of the function
