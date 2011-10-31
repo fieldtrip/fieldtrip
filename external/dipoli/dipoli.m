@@ -22,6 +22,10 @@ function [vol] = dipoli(vol, isolated)
 % changed reshape and transpose
 %
 
+%$Id$
+
+warning('DIPOLI is deprecated, please use FT_PREPARE_HEADMODEL with cfg.method = ''bem_dipoli'' instead.')
+
 % find the location of the binary
 str = which('dipoli.m');
 [p, f, x] = fileparts(str);
