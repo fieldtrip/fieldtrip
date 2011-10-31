@@ -5,7 +5,7 @@ function vol = ft_headmodel_dipoli(geom, varargin)
 % as input the triangulated surfaces that describe the boundaries and
 % returns as output a volume conduction model which can be used to
 % compute leadfields.
-% 
+%
 % This implements
 %   Oostendorp TF, van Oosterom A. "Source parameter estimation in
 %   inhomogeneous volume conductors of arbitrary shape." IEEE Trans
@@ -117,7 +117,7 @@ else
 end
 
 % find the location of the dipoli binary
-str = which('dipoli');
+str = which('dipoli.maci');
 [p, f, x] = fileparts(str);
 dipoli = fullfile(p, f);  % without the .m extension
 switch mexext
@@ -132,6 +132,7 @@ switch mexext
 end
 fprintf('using the executable "%s"\n', dipoli);
 
+
 % write the triangulations to file
 bndfile = {};
 bnddip = vol.bnd;
@@ -141,7 +142,7 @@ for i=1:numboundaries
   ok = checknormals(bnddip(i));
   if ~ok
     fprintf('flipping normals'' direction\n')
-    bnddip(i).tri = fliplr(bnddip(i).tri); 
+    bnddip(i).tri = fliplr(bnddip(i).tri);
   end
   write_tri(bndfile{i}, bnddip(i).pnt, bnddip(i).tri);
 end
@@ -190,6 +191,7 @@ delete(exefile);
 % remember that it is a dipoli model
 vol.type = 'dipoli';
 
+
 function ok = checknormals(bnd)
 ok = 0;
 pnt = bnd.pnt;
@@ -207,7 +209,7 @@ if w<0 && (abs(w)-4*pi)<1000*eps
   warning('your normals are outwards oriented\n')
   ok = 0;
 elseif w>0 && (abs(w)-4*pi)<1000*eps
-%   warning('your normals are inwards oriented\n')
+  %   warning('your normals are inwards oriented\n')
   ok = 1;
 else
   error('your surface probably is irregular')
