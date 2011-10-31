@@ -105,7 +105,7 @@ url = {
   'SQDPROJECT' 'see http://www.isr.umd.edu/Labs/CSSL/simonlab'
   'BCT'        'see http://www.brain-connectivity-toolbox.net/'
   'CCA'        'see http://www.imt.liu.se/~magnus/cca or contact Magnus Borga'
-  'COMPAT'     'this is part of FieldTrip and is used for backward compatibility'
+  'EGI_MFF'    'see http://www.egi.com/ or contact either Phan Luu or Colin Davey at EGI'
   };
 
 if nargin<2
@@ -247,6 +247,8 @@ switch toolbox
     status = exist('macaque71.mat', 'file') && exist('motif4funct_wei.m', 'file');
   case 'CCA'
     status = exist('ccabss.m', 'file');
+  case 'EGI_MFF'
+    status = exist('mff_getObject.m', 'file') && exist('mff_getSummaryInfo.m', 'file');
 
     % the following are not proper toolboxes, but only subdirectories in the fieldtrip toolbox
     % these are added in ft_defaults and are specified with unix-style forward slashes
