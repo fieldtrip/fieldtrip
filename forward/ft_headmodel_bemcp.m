@@ -73,7 +73,7 @@ end
 %    0 1 1     the first is nested inside the 2nd and 3rd, i.e. the inner skull
 %    0 0 1     the second is nested inside the 3rd, i.e. the outer skull
 %    0 0 0     the third is the most outside, i.e. the skin
-[~, order] = sort(-sum(nesting,2));
+[dum, order] = sort(-sum(nesting,2));
 
 fprintf('reordering the boundaries to: ');
 fprintf('%d ', order);

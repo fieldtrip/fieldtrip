@@ -1,4 +1,4 @@
-function vol = ft_headmodel_dipoli(geom, varargin)
+function vol = ft_headmodel_bem_dipoli(geom, varargin)
 
 % FT_HEADMODEL_DIPOLI creates a volume conduction model of the head
 % using the boundary element method (BEM) for EEG. This function takes
@@ -51,6 +51,28 @@ else
   % copy the boundaries from the geometry into the volume conduction model
   vol.bnd = geom;
 end
+
+% % The following checks can in principle be performed, but are too
+% % time-consuming. Instead the code here relies on the calling function to
+% % feed in the correct geometry.
+% %
+% % if ~all(surface_closed(vol.bnd))
+% %   error('...');
+% % end
+% % if any(surface_intersection(vol.bnd))
+% %   error('...');
+% % end
+% % if any(surface_selfintersection(vol.bnd))
+% %   error('...');
+% % end
+% 
+% % The following checks should always be done.
+% vol.bnd = surface_orientation(vol.bnd, 'outwards'); % might have to be inwards
+% 
+% order = surface_nesting(vol.bnd, 'outsidefirst'); % might  have to be insidefirst
+% vol.bnd = vol.bnd(order);
+% FIXME also the cond
+% 
 
 % determine the number of compartments
 numboundaries = numel(vol.bnd);
