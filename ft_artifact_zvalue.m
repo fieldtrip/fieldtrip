@@ -322,8 +322,8 @@ opt.numtrl       = size(trl,1);
 opt.quit         = 0;
 opt.threshold    = cfg.artfctdef.zvalue.cutoff;
 opt.thresholdsum = thresholdsum;
-opt.trialok      = []; % OK by means of objective criterion
-opt.keep         = []; % OK overruled by user
+opt.trialok      = true(1,opt.numtrl); % OK by means of objective criterion
+opt.keep         = zeros(1,opt.numtrl); % OK overruled by user +1 to keep, -1 to reject, start all zeros for callback to work
 opt.trl          = trl;
 opt.trlop        = 1;
 opt.updatethreshold = true;
@@ -398,9 +398,8 @@ if strcmp(cfg.artfctdef.zvalue.interactive, 'yes')
 else
   % compute the artifacts given the settings in the cfg
   setappdata(h, 'opt', opt);
+  artval_cb(h);
 end
-
-artval_cb(h);
 
 h   = getparent(h);
 opt = getappdata(h, 'opt');
@@ -465,17 +464,13 @@ for trlop=1:opt.numtrl
   opt.trialok(trlop) = isempty(artbeg);
 end
 
-if isempty(opt.keep)
-  opt.keep = opt.trialok;
-end
-
-for trlop = find(opt.keep & ~opt.trialok)
+for trlop = find(opt.keep==1 & opt.trialok==0)
   % overrule the objective criterion, i.e. keep the trial when the user
   % wants to keep it
   artval{trlop}(:) = 0;
 end
 
-for trlop = find(~opt.keep & opt.trialok)
+for trlop = find(opt.keep==-1 & opt.trialok==1)
   % if the user specifies that the trial is not OK
   % reject the whole trial if there is no extra-threshold data,
   % otherwise use the artifact as found by the thresholding
@@ -551,6 +546,7 @@ switch key
     setappdata(h, 'opt', opt);
     artval_cb(h, eventdata);
     redraw_cb(h, eventdata);
+    opt = getappdata(h, 'opt'); % grab the opt-structure from the handle because it has been adjusted in the callbacks  
     opt.updatethreshold = false;
     setappdata(h, 'opt', opt);
   case 'downarrow'
@@ -559,6 +555,7 @@ switch key
     setappdata(h, 'opt', opt);
     artval_cb(h, eventdata);
     redraw_cb(h, eventdata);
+    opt = getappdata(h, 'opt'); % grab the opt-structure from the handle because it has been adjusted in the callbacks
     opt.updatethreshold = false;
     setappdata(h, 'opt', opt);
   case 'shift+uparrow' % change artifact
@@ -644,19 +641,23 @@ switch key
       setappdata(h, 'opt', opt);
       artval_cb(h, eventdata);
       redraw_cb(h, eventdata);
+      opt = getappdata(h, 'opt'); % grab the opt-structure from the handle because it has been adjusted in the callbacks
       opt.updatethreshold = false;
       setappdata(h, 'opt', opt);
     end
   case 'k'
-    opt.keep(opt.trlop) = true;
+    opt.keep(opt.trlop) = 1;
     setappdata(h, 'opt', opt);
     artval_cb(h);
     redraw_cb(h);
+    opt = getappdata(h, 'opt');
   case 'r'
-    opt.keep(opt.trlop) = false;
+    opt.keep(opt.trlop) = -1;
     setappdata(h, 'opt', opt);
     artval_cb(h);
     redraw_cb(h);
+    opt = getappdata(h, 'opt');
+    
   case 'control+control'
     % do nothing
   case 'shift+shift'
@@ -869,6 +870,9 @@ else
   set(findall(h3children, 'displayname', 'vline1b'), 'visible', 'on');
   set(findall(h3children, 'displayname', 'vline2b'), 'visible', 'on');
 end
+
+setappdata(h, 'opt', opt);
+uiresume
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
