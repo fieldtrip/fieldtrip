@@ -210,21 +210,22 @@ if ~isempty(highlight)
       alim([0 1]);
     case 'saturation'
       satmask = highlight;
-      
+      tmpcdat = cdat;
       % Transform cdat-values to have a 0-64 range, dependent on clim
       % (think of it as the data having an exact range of min=clim(1) to max=(clim2), convert this range to 0-64)
-      cdat = (cdat + -clim(1)) * (64 / (-clim(1) + clim(2)));
+      tmpcdat = (tmpcdat + -clim(1)) * (64 / (-clim(1) + clim(2)));
+      %tmpcdat = (tmpcdat + -min(min(tmpcdat))) * (64 / max(max((tmpcdat + -min(min(tmpcdat))))))
       
       % Make sure NaNs are plotted as white pixels, even when using non-integer mask values
-      satmask(isnan(cdat)) = 0;
-      cdat(isnan(cdat)) = 32;
+      satmask(isnan(tmpcdat)) = 0;
+      tmpcdat(isnan(tmpcdat)) = 32;
       
       % ind->rgb->hsv ||change saturation values||  hsv->rgb ->  plot
-      rgbcdat = ind2rgb(uint8(floor(cdat)), colormap);
+      rgbcdat = ind2rgb(uint8(floor(tmpcdat)), colormap);
       hsvcdat = rgb2hsv(rgbcdat);
       hsvcdat(:,:,2) = hsvcdat(:,:,2) .* satmask;
       rgbcdatsat = hsv2rgb(hsvcdat);
-      h = uimagesc(hdat, vdat, rgbcdatsat,clim);
+      h = imagesc(hdat, vdat, rgbcdatsat,clim);
       set(h,'tag',tag);
     case 'outline'
       % the significant voxels could be outlined with a black contour
