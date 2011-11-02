@@ -380,8 +380,8 @@ elseif ischar(input)
 end
 
 % do the general cleanup and bookkeeping at the end of the function
-f_postamble callinfo
-f_postamble history data
+ft_postamble callinfo
+ft_postamble history data
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
