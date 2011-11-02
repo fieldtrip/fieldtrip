@@ -53,10 +53,11 @@ function [interp] = ft_sourceinterpolate(cfg, functional, anatomical)
 %   cfg.parameter     = string, default is 'all'
 %   cfg.interpmethod  = 'linear', 'cubic', 'nearest' or 'spline' when
 %                          interpolating two 3D volumes onto each other
+%                          (default = 'linear')
 %   cfg.interpmethod  = 'nearest', 'sphere_avg' or 'smudge' when
 %                          interpolating a point cloud onto a 3D volume, a
 %                          3D volume onto a point cloud, or a point cloud
-%                          with another point cloud
+%                          with another point cloud (default = 'nearest')
 %   cfg.downsample    = integer number (default = 1, i.e. no downsampling)
 %
 % To facilitate data-handling and distributed computing with the peer-to-peer
@@ -118,14 +119,14 @@ cfg = ft_checkconfig(cfg, 'unused',     {'keepinside'});
 cfg = ft_checkconfig(cfg, 'deprecated', {'sourceunits', 'mriunits'});
 
 % set the defaults
-if ~isfield(cfg, 'parameter'),    cfg.parameter    = 'all';     end
-if ~isfield(cfg, 'interpmethod'), cfg.interpmethod = 'linear';  end
-if ~isfield(cfg, 'sphereradius'), cfg.sphereradius = [];        end
-if ~isfield(cfg, 'downsample');   cfg.downsample   = 1;         end
-if ~isfield(cfg, 'voxelcoord'),   cfg.voxelcoord   = 'yes';     end
-if ~isfield(cfg, 'feedback'),     cfg.feedback     = 'text';    end
-if ~isfield(cfg, 'inputfile'),    cfg.inputfile    = [];        end
-if ~isfield(cfg, 'outputfile'),   cfg.outputfile   = [];        end
+cfg.parameter  = ft_getopt(cfg, 'parameter', 'all');
+cfg.downsample = ft_getopt(cfg, 'downsample', 1);
+cfg.voxelcoord = ft_getopt(cfg, 'voxelcoord', 'yes');
+cfg.feedback   = ft_getopt(cfg, 'feedback',   'text');
+cfg.inputfile  = ft_getopt(cfg, 'inputfile',  []);
+cfg.outputfile = ft_getopt(cfg, 'outputfile', []);
+% cfg.interpmethod depends on how the interpolation should be done and will
+% be specified below
 
 if isfield(anatomical, 'pnt')
   % anatomical data consists of a mesh, but no smudging possible
@@ -186,6 +187,8 @@ elseif is2Dana && is2Dfun
   error('not yet implemented');
   
 elseif ~is2Dana && is2Dfun
+  % set default interpmethod for this situation
+  cfg.interpmethod = ft_getopt(cfg, 'interpmethod', 'nearest');
   
   % interpolate onto a 3D volume, ensure that the anatomical is indeed a volume
   anatomical = ft_checkdata(anatomical, 'datatype', 'volume', 'inside', 'logical', 'feedback', 'yes', 'hasunits', 'yes');
@@ -214,6 +217,8 @@ elseif ~is2Dana && is2Dfun
   end
   
 elseif is2Dana && ~is2Dfun
+  % set default interpmethod for this situation
+  cfg.interpmethod = ft_getopt(cfg, 'interpmethod', 'nearest');
   
   % interpolate the 3D volume onto the anatomy
   anatomical = ft_convert_units(anatomical);
@@ -247,6 +252,9 @@ elseif ~is2Dana && ~is2Dfun
   
   % original implementation interpolate a 3D volume onto another 3D volume
   
+  % set default interpmethod for this situation
+  cfg.interpmethod = ft_getopt(cfg, 'interpmethod', 'linear');
+ 
   % check if the input data is valid for this function and ensure that the structures correctly describes a volume
   functional = ft_checkdata(functional, 'datatype', 'volume', 'inside', 'logical', 'feedback', 'yes', 'hasunits', 'yes');
   anatomical = ft_checkdata(anatomical, 'datatype', 'volume', 'inside', 'logical', 'feedback', 'yes', 'hasunits', 'yes');
