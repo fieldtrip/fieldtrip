@@ -15,7 +15,6 @@ figure; ft_singleplotER(cfg, freq);
 
 
 % the following does not work on purpose, because plotting does not work with cfg.inputfile
-cfg = [];
-cfg.inputfile = 'test_bug103.mat';
-figure; ft_singleplotER(cfg);
-
+%cfg = [];
+%cfg.inputfile = 'test_bug103.mat';
+%figure; ft_singleplotER(cfg);
