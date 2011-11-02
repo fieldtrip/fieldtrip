@@ -80,7 +80,6 @@ function [cfg] = ft_databrowser(cfg, data)
 % $Id$
 
 % Undocumented options
-% cfg.enablefftbutton = 'yes'/'no' - roevdmei
 % cfg.enablepreprocedit = 'yes'/'no' - roevdmei
 
 % FIXME these should be removed
@@ -131,7 +130,6 @@ if ~isfield(cfg, 'plotlabels'),      cfg.plotlabels = 'yes';              end
 if ~isfield(cfg, 'event'),           cfg.event = [];                      end % this only exists for backward compatibility and should not be documented
 if ~isfield(cfg, 'continuous'),      cfg.continuous = [];                 end % the default is set further down in the code, conditional on the input data
 if ~isfield(cfg, 'ploteventlabels'), cfg.ploteventlabels = 'type=value';  end
-if ~isfield(cfg, 'enablefftbutton'), cfg.enablefftbutton = 'no';          end
 if ~isfield(cfg, 'enablepreprocedit'), cfg.enablepreprocedit = 'no';      end
 
 
@@ -489,10 +487,6 @@ if strcmp(cfg.viewmode, 'butterfly')
   uicontrol('tag', 'group3', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'identify', 'userdata', 'i', 'position', [0.91, 0.1, 0.08, 0.05], 'backgroundcolor', [1 1 1])
 end
 
-% implement devel 'simple fft'-button
-if strcmp(cfg.enablefftbutton,'yes')
-  uicontrol('tag', 'simplefft', 'parent', h, 'units', 'normalized', 'style', 'togglebutton', 'string','simple fft','position', [0.91, 0.6 - ((iArt-1)*0.09), 0.08, 0.04],'callback',@simplefft_toggle_cb, 'value',0)
-end
 % implement devel 'edit preproc'-button
 if strcmp(cfg.enablepreprocedit,'yes')
   uicontrol('tag', 'preproccfg', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string','preproc cfg','position', [0.91, 0.55 - ((iArt-1)*0.09), 0.08, 0.04],'callback',@preproc_cfg1_cb)
@@ -833,167 +827,7 @@ redraw_cb(superparent)
 uiresume(superparent)
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function simplefft_toggle_cb(h,eventdata)
-togglestate = get(h,'value');
-parent      = get(h,'parent');
-if togglestate==0
-  set(parent, 'WindowButtonDownFcn',   {@ft_select_range, 'multiple', false, 'xrange', true, 'yrange', false, 'clear', true, 'callback', {@select_range_cb, parent}, 'event', 'WindowButtonDownFcn'});
-  set(parent, 'WindowButtonUpFcn',     {@ft_select_range, 'multiple', false, 'xrange', true, 'yrange', false, 'clear', true, 'callback', {@select_range_cb, parent}, 'event', 'WindowButtonUpFcn'});
-  set(parent, 'WindowButtonMotionFcn', {@ft_select_range, 'multiple', false, 'xrange', true, 'yrange', false, 'clear', true, 'callback', {@select_range_cb, parent}, 'event', 'WindowButtonMotionFcn'});
-  set(h,'backgroundColor',[0.8 0.8 0.8])
-elseif togglestate==1
-  set(parent, 'WindowButtonDownFcn',   {@ft_select_range, 'multiple', false, 'xrange', true, 'yrange', false, 'clear', false, 'callback', {@select_fftrange_cb, parent}, 'event', 'WindowButtonDownFcn'});
-  set(parent, 'WindowButtonUpFcn',     {@ft_select_range, 'multiple', false, 'xrange', true, 'yrange', false, 'clear', false, 'callback', {@select_fftrange_cb, parent}, 'event', 'WindowButtonUpFcn'});
-  set(parent, 'WindowButtonMotionFcn', {@ft_select_range, 'multiple', false, 'xrange', true, 'yrange', false, 'clear', false, 'callback', {@select_fftrange_cb, parent}, 'event', 'WindowButtonMotionFcn'});
-  set(h,'backgroundColor','g')
-end
 
-end
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function select_fftrange_cb(range,h) %range 1X4 in sec relative to current trial
-opt = getappdata(h, 'opt');
-cfg = getappdata(h, 'cfg');
-
-% the range should be in the displayed box
-range(1) = max(opt.hpos-opt.width/2, range(1));
-range(2) = max(opt.hpos-opt.width/2, range(2));
-range(1) = min(opt.hpos+opt.width/2, range(1));
-range(2) = min(opt.hpos+opt.width/2, range(2));
-range = (range-(opt.hpos-opt.width/2)) / opt.width; % left side of the box becomes 0, right side becomes 1
-range = range * (opt.hlim(2) - opt.hlim(1)) + opt.hlim(1);   % 0 becomes hlim(1), 1 becomes hlim(2)
-
-begsample = opt.trlvis(opt.trlop,1);
-endsample = opt.trlvis(opt.trlop,2);
-offset    = opt.trlvis(opt.trlop,3);
-% determine the selection
-if strcmp(opt.trialname, 'trial')
-  % this is appropriate when the offset is defined according to a
-  % different trigger in each trial, which is usually the case in trial data
-  begsel = round(range(1)*opt.fsample+begsample-offset-1);
-  endsel = round(range(2)*opt.fsample+begsample-offset);
-elseif strcmp(opt.trialname, 'segment')
-  % this is appropriate when the offset is defined according to
-  % one trigger, which is always the case in segment data [I think ingnie]
-  begsel = round(range(1)*opt.fsample+1);
-  endsel = round(range(2)*opt.fsample+1);
-end
-% the selection should always be confined to the current trial
-begsel = max(begsample, begsel);
-endsel = min(endsample, endsel);
-
-% select  the requested data segment and do fft
-time     = offset2time(offset+begsel-begsample, opt.fsample, endsel-begsel+1);
-data     = ft_fetch_data(opt.curdat, 'begsample', begsel, 'endsample', endsel);
-fsample  = opt.fsample;
-nsample  = size(data,2);
-fftdat = transpose(fft(transpose(data))); % double
-% scale the same way as mtmfft
-fftdat = fftdat .* sqrt(2 ./ size(data,2));
-% compute powerspectrum (my pref would be to actually don't square, to make line spectra easier to visualize in case of low freq stuff, but doing it so people dont get confused)
-fftdat = abs(fftdat) .^ 2;
-
-% create proper xaxis
-freqboilim = round([0 fsample/2] ./ (fsample ./ nsample)) + 1;
-freqboi    = freqboilim(1):1:freqboilim(2);
-freqoi     = (freqboi-1) ./ (nsample * (1/fsample));
-xaxis = freqoi;
-
-
-
-% make figure window for fft
-ffth = figure('name',['fft trial ' num2str(opt.trlop) ': ' num2str(time(1)) '-' num2str(time(end)) 'ms'],'numbertitle','off','units','normalized');
-% set button
-butth = uicontrol('tag', 'simplefft_l2', 'parent', ffth, 'units', 'normalized', 'style', 'togglebutton', 'string','log of power','position', [0.87, 0.6 , 0.12, 0.10],  'value',1,'callback',{@draw_simple_fft_cb});
-uicontrol('tag', 'simplefft_l2_chansel', 'parent', ffth, 'units', 'normalized', 'style', 'pushbutton', 'string','select channels','position', [0.87, 0.45 , 0.12, 0.10],'callback',{@selectchan_fft_cb});
-
-% put data in fig (sparse)
-fftopt = [];
-fftopt.cfg.viewmode = cfg.viewmode;
-fftopt.chancolors = opt.chancolors;
-fftopt.xaxis      = xaxis;
-fftopt.xaxis      = xaxis;
-fftopt.chanlabel  = opt.curdat.label;
-fftopt.chansel    = 1:size(fftdat,1);
-fftopt.fftdat     = fftdat(:,freqboi);
-fftopt.butth      = butth;
-setappdata(ffth, 'fftopt', fftopt);
-
-% draw fig
-draw_simple_fft_cb(butth)
-end % function
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function selectchan_fft_cb(h,eventdata)
-ffth = get(h,'parent');
-fftopt = getappdata(ffth, 'fftopt');
-
-% open chansel dialog (PRIVATE FUNCTION!)
-chansel = select_channel_list(fftopt.chanlabel, fftopt.chansel, 'select channels for viewing power');
-
-% output data
-fftopt.chansel = chansel;
-setappdata(ffth, 'fftopt', fftopt);
-draw_simple_fft_cb(fftopt.butth)
-
-end
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function draw_simple_fft_cb(h,eventdata)
-togglestate = get(h,'value');
-ffth        = get(h,'parent');
-fftopt = getappdata(ffth, 'fftopt');
-cfg    = fftopt.cfg;
-% clear axis (for switching)
-cla
-
-% switch log or nonlog
-if togglestate == 0
-  dat = fftopt.fftdat;
-  set(h,'backgroundColor',[0.8 0.8 0.8])
-elseif togglestate == 1
-  dat = log(fftopt.fftdat);
-  set(h,'backgroundColor','g')
-end
-
-% select data and chanel colors
-chancolors = fftopt.chancolors(fftopt.chansel,:);
-dat        = dat(fftopt.chansel,:);
-
-% plot using specified colors
-set(0,'currentFigure',ffth)
-for ichan = 1:size(dat,1)
-  if strcmp(cfg.viewmode, 'component')
-    color = 'k';
-  else
-    color = chancolors(ichan,:);
-  end
-  ft_plot_vector(fftopt.xaxis, dat(ichan,:), 'box', false, 'color', color)
-end
-ylabel('log(power)')
-xlabel('frequency (hz)')
-yrange = abs(max(max(dat)) - min(min(dat)));
-axis([fftopt.xaxis(1) fftopt.xaxis(end) (min(min(dat)) - yrange.*.1) (max(max(dat)) + yrange*.1)])
-
-% switch log or nonlog
-if togglestate == 0
-  ylabel('power')
-  axis([fftopt.xaxis(1) fftopt.xaxis(end) 0 (max(max(dat)) + yrange*.1)])
-elseif togglestate == 1
-  ylabel('log(power)')
-  axis([fftopt.xaxis(1) fftopt.xaxis(end) (min(min(dat)) - yrange.*.1) (max(max(dat)) + yrange*.1)])
-end
-set(gca,'Position', [0.13 0.11 0.725 0.815])
-end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
