@@ -1,16 +1,19 @@
-function [data,mri,grid]=nutmeg2fieldtrip(cfg,fileorstruct)
+function [data, mri, grid]=nutmeg2fieldtrip(cfg,fileorstruct)
 
 % NUTMEG2FIELDTRIP converts from NUTMEG either a sensor data structure
 % ('nuts') to a valid FieldTrip 'raw' structure (plus 'grid' and 'mri' if
 % available), OR a source structure 'beam' to a valid FieldTrip source
 % structure
 %
+% Use as
+%    [data, mri, grid] = nutmeg2fieldtrip(cfg, fileorstruct)
+%
 % Input:
 %      cfg
 %          .keepmri (required for either input): =1 calls ft_read_mri for 'mri' output; =0 not save out 'mri'
 %          .out     (required for source input): 's' (pos_freq_time) or 'trial' (pos_rpt)
 %      fileorstruct: may be one of following:
-%         1) *.mat file containing nuts sensor structure 
+%         1) *.mat file containing nuts sensor structure
 %         2) nuts sensor structure
 %         3) s*.mat file containing beam source structure
 %         4) beam source structure (output from Nutmeg (beamforming_gui, tfbf, or tfZ)
@@ -23,7 +26,7 @@ function [data,mri,grid]=nutmeg2fieldtrip(cfg,fileorstruct)
 %            (May be an array of source structures (source{1} etc))
 %            'grid' and 'mri' may be output as well if present in beam structure
 %
-% see ft_datatype_source of current FieldTrip version
+% See alo FT_DATATYPE_SOURCE
 
 % Copyright (C) 2011, Johanna Zumer
 %
@@ -42,187 +45,197 @@ function [data,mri,grid]=nutmeg2fieldtrip(cfg,fileorstruct)
 %
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
+
+revision = '$Id$';
+
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
 
 if ~isstruct(fileorstruct) && exist(fileorstruct,'file')
-    structin=load(fileorstruct);
+  structin=load(fileorstruct);
 elseif isstruct(fileorstruct)
-    structin=fileorstruct;
+  structin=fileorstruct;
 elseif ~isstruct(fileorstruct)
-    error('please enter either a structure (beam or nuts) or filename containing either beam or nuts')
+  error('please enter either a structure (beam or nuts) or filename containing either beam or nuts')
 end
 clear fileorstruct
 
 if isfield(structin,'meg')
-    nutsorbeam=1;
+  nutsorbeam=1;
 elseif isfield(structin,'nuts')
-    structin=structin.nuts;
-    nutsorbeam=1;
+  structin=structin.nuts;
+  nutsorbeam=1;
 elseif isfield(structin,'s')
-    nutsorbeam=2;
+  nutsorbeam=2;
 elseif isfield(structin,'sa')
-    structin=nut_beam_legacy_compatibility(structin);
-    nutsorbeam=2;
+  structin=nut_beam_legacy_compatibility(structin);
+  nutsorbeam=2;
 elseif isfield(structin,'beam')
-    structin=structin.beam;
-    if isfield(structin,'sa')
-        structin=nut_beam_legacy_compatibility(structin);
-    end
-    nutsorbeam=2;
+  structin=structin.beam;
+  if isfield(structin,'sa')
+    structin=nut_beam_legacy_compatibility(structin);
+  end
+  nutsorbeam=2;
 else
-    error('not sure of the input type. maybe you need to call nut_beam_legacy_compatibility?')
+  error('not sure of the input type. maybe you need to call nut_beam_legacy_compatibility?')
 end
 
 if cfg.keepmri
-    mri=ft_read_mri(structin.coreg.mripath);
-    if isfield(mri,'transform')
-        mri.transform=0.1*structin.coreg.meg2mri_tfm*mri.transform; % now .transform goes from MRI voxel to MEG cm, and matches .pos
-    else
-        % not yet sure what to do with lack of mri.transform
-    end
+  mri=ft_read_mri(structin.coreg.mripath);
+  if isfield(mri,'transform')
+    mri.transform=0.1*structin.coreg.meg2mri_tfm*mri.transform; % now .transform goes from MRI voxel to MEG cm, and matches .pos
+  else
+    % not yet sure what to do with lack of mri.transform
+  end
 else
-    mri=[];
+  mri=[];
 end
 
 if isfield(structin,'voxels')
-    grid.pos=0.1*structin.voxels; % NM in CTF mm, FT in cm
-    grid.unit='cm';
-    grid.inside=1:size(structin.voxels,1);
-    grid.outside=[];
+  grid.pos=0.1*structin.voxels; % NM in CTF mm, FT in cm
+  grid.unit='cm';
+  grid.inside=1:size(structin.voxels,1);
+  grid.outside=[];
 end
 if isfield(structin,'Lp')
-    for kk=1:size(structin.Lp,3)
-        grid.leadfield{kk}=structin.Lp(:,:,kk);
-    end
+  for kk=1:size(structin.Lp,3)
+    grid.leadfield{kk}=structin.Lp(:,:,kk);
+  end
 end
 if isfield(structin,'W')
-    grid.filter=structin.W;
+  grid.filter=structin.W;
 end
 
 if nutsorbeam==1
-    for kk=1:size(structin.meg.data,3)
-        raw.trial{kk}=structin.meg.data(:,:,kk)';
-        raw.time{kk}=0.001*structin.meg.latency';
-    end
-    raw.label=structin.meg.sensor_labels;
-    raw.grad.label=structin.meg.sensor_labels;
-    if isfield(structin.meg,'refSensorOrient')
-        raw.grad.ori=[structin.meg.sensorOrient; structin.meg.refSensorOrient];
-        raw.grad.pnt=[structin.meg.sensorCoord; structin.meg.refSensorCoord];
-    else
-        raw.grad.ori=[structin.meg.sensorOrient];
-        raw.grad.pnt=[structin.meg.sensorCoord];
-    end
-    if size(raw.grad.ori,1)<2*size(structin.meg.data,2)
-        raw.grad.ori=cat(1,raw.grad.ori,raw.grad.ori);
-    end
-    raw.grad.pnt=reshape(permute(raw.grad.pnt,[1 3 2]),size(raw.grad.pnt,1)*size(raw.grad.pnt,3),size(raw.grad.pnt,2));
-    if isfield(structin.meg,'chanmixMtx')
-        raw.grad.tra=structin.meg.chanmixMtx{1};
-    else
-        raw.grad.tra=zeros(size(structin.meg.data,2),2*size(structin.meg.data,2)+size(structin.meg.refSensorCoord,1));
-        raw.grad.tra(:,1:size(structin.meg.data,2))=eye(size(structin.meg.data,2));
-        raw.grad.tra(:,size(structin.meg.data,2)+1:2*size(structin.meg.data,2))=eye(size(structin.meg.data,2));
-        raw.grad.tra(:,2*size(structin.meg.data,2)+1:end)=structin.meg.Gcoef;
-        warning('FIXME: should Gcoef be added regardless of structin.meg.grad_order?')
-    end
-    
-    if structin.meg.grad_order==0
-        raw.grad.balance.current='none';
-    elseif structin.meg.grad_order==1
-        raw.grad.balance.current='G1BR';
-    elseif structin.meg.grad_order==2
-        raw.grad.balance.current='G2BR';
-    elseif structin.meg.grad_order==3
-        raw.grad.balance.current='G3BR';
-    end
-    
-    raw.vol.o=structin.meg.lsc; % note this may include reference channels. may need to do str_match of lsc_sensor_labels with sensor_labels?
-    data=raw;
-    clear raw
-    
+  for kk=1:size(structin.meg.data,3)
+    raw.trial{kk}=structin.meg.data(:,:,kk)';
+    raw.time{kk}=0.001*structin.meg.latency';
+  end
+  raw.label=structin.meg.sensor_labels;
+  raw.grad.label=structin.meg.sensor_labels;
+  if isfield(structin.meg,'refSensorOrient')
+    raw.grad.ori=[structin.meg.sensorOrient; structin.meg.refSensorOrient];
+    raw.grad.pnt=[structin.meg.sensorCoord; structin.meg.refSensorCoord];
+  else
+    raw.grad.ori=[structin.meg.sensorOrient];
+    raw.grad.pnt=[structin.meg.sensorCoord];
+  end
+  if size(raw.grad.ori,1)<2*size(structin.meg.data,2)
+    raw.grad.ori=cat(1,raw.grad.ori,raw.grad.ori);
+  end
+  raw.grad.pnt=reshape(permute(raw.grad.pnt,[1 3 2]),size(raw.grad.pnt,1)*size(raw.grad.pnt,3),size(raw.grad.pnt,2));
+  if isfield(structin.meg,'chanmixMtx')
+    raw.grad.tra=structin.meg.chanmixMtx{1};
+  else
+    raw.grad.tra=zeros(size(structin.meg.data,2),2*size(structin.meg.data,2)+size(structin.meg.refSensorCoord,1));
+    raw.grad.tra(:,1:size(structin.meg.data,2))=eye(size(structin.meg.data,2));
+    raw.grad.tra(:,size(structin.meg.data,2)+1:2*size(structin.meg.data,2))=eye(size(structin.meg.data,2));
+    raw.grad.tra(:,2*size(structin.meg.data,2)+1:end)=structin.meg.Gcoef;
+    warning('FIXME: should Gcoef be added regardless of structin.meg.grad_order?')
+  end
+  
+  if structin.meg.grad_order==0
+    raw.grad.balance.current='none';
+  elseif structin.meg.grad_order==1
+    raw.grad.balance.current='G1BR';
+  elseif structin.meg.grad_order==2
+    raw.grad.balance.current='G2BR';
+  elseif structin.meg.grad_order==3
+    raw.grad.balance.current='G3BR';
+  end
+  
+  raw.vol.o=structin.meg.lsc; % note this may include reference channels. may need to do str_match of lsc_sensor_labels with sensor_labels?
+  data=raw;
+  clear raw
+  
 elseif nutsorbeam==2
-    cfg.ftsource='old'; % 'old' way of source structure in FT
-    tmp.pos=0.1*structin.voxels; % NM in CTF mm, FT in cm
-    tmp.inside=1:size(structin.voxels,1);
-    tmp.outside=[];
-    if strcmp(cfg.out,'s')
-        if isfield(structin,'bands')
-            tmp.freq=mean(structin.bands'); % center of each band.
-        end
-        if isfield(structin,'timepts')
-            tmp.time=0.001*structin.timepts'; % NM in ms, FT in s
-        end
-        if strcmp(cfg.ftsource,'old')
-            % must have separate outputs per freq band
-            if size(structin.s{1},4)==1
-                for ii=1:size(structin.s,2)
-                    for jj=1:size(structin.s{1},3)
-                        source{ii,jj}=tmp;
-                        source{ii,jj}.freq=source{ii,jj}.freq(jj);
-                        for vv=1:size(structin.s{ii},1)
-                            source{ii,jj}.avg(vv).pow=structin.s{ii}(vv,:,jj);
-                        end
-                    end
-                end
-            elseif size(structin.s{1},4)>1
-                for ii=1:size(structin.s,2)
-                    source{ii}=tmp;
-                    for kk=1:size(structin.s{ii},4)
-                        for vv=1:size(structin.s{ii},1)
-                            source{ii}.avg(vv).mom(kk,:)=structin.s{ii}(vv,:,1,kk);
-                        end
-                    end
-                end
-            end
-        elseif strcmp(cfg.ftsource,'new')
-            if size(structin.s{1},2)>1 && size(structin.s{1},3)>1
-                tmp.powdimord='pos_freq_time'; % FIXME is this valid dimord?
-            elseif size(structin.s{1},3)>1
-                tmp.powdimord='pos_freq';
-            elseif size(structin.s{1},4)>1
-                tmp.powdimord='pos_ori_time';
-            elseif size(structin.s{1},2)>1
-                tmp.powdimord='pos_time';
-            else
-                tmp.powdimord='pos';
-            end
-            if size(structin.s{1},2)>1
-                if size(structin.s{1},4)==1
-                    for ii=1:size(structin.s,2)
-                        source{ii}=tmp;
-                        source{ii}.pow=squeeze(permute(structin.s{ii},[1 3 2]));
-                    end
-                elseif size(structin.s{1},4)==1
-                    for ii=1:size(structin.s,2)
-                        source{ii}=tmp;
-                        source{ii}.pow=squeeze(permute(structin.s{ii},[1 4 3 2]));
-                    end
-                end
-            end
-        end
-    elseif strcmp(cfg.out,'trial')
-        if isfield(structin,'trial') % from tfZ keeptrials='yes'
-            for ii=1:size(structin.trial,2)
-                source{ii}=tmp;
-                if strcmp(cfg.ftsource,'old')
-                    for jj=1:size(structin.trial{ii},2)
-                        source{ii}.trial(jj).pow=structin.trial{ii}(:,jj);
-                    end
-                elseif strcmp(cfg.ftsource,'new')
-                    source{ii}.powdimord='pos_rpt'; % FIXME is this a valid field?
-                    source{ii}.pow=structin.trial{ii};
-                end
-            end
-        end
-    else
-        error('not a valid cfg.out specified');
+  cfg.ftsource='old'; % 'old' way of source structure in FT
+  tmp.pos=0.1*structin.voxels; % NM in CTF mm, FT in cm
+  tmp.inside=1:size(structin.voxels,1);
+  tmp.outside=[];
+  if strcmp(cfg.out,'s')
+    if isfield(structin,'bands')
+      tmp.freq=mean(structin.bands'); % center of each band.
     end
-    data=source;
-    clear source
+    if isfield(structin,'timepts')
+      tmp.time=0.001*structin.timepts'; % NM in ms, FT in s
+    end
+    if strcmp(cfg.ftsource,'old')
+      % must have separate outputs per freq band
+      if size(structin.s{1},4)==1
+        for ii=1:size(structin.s,2)
+          for jj=1:size(structin.s{1},3)
+            source{ii,jj}=tmp;
+            source{ii,jj}.freq=source{ii,jj}.freq(jj);
+            for vv=1:size(structin.s{ii},1)
+              source{ii,jj}.avg(vv).pow=structin.s{ii}(vv,:,jj);
+            end
+          end
+        end
+      elseif size(structin.s{1},4)>1
+        for ii=1:size(structin.s,2)
+          source{ii}=tmp;
+          for kk=1:size(structin.s{ii},4)
+            for vv=1:size(structin.s{ii},1)
+              source{ii}.avg(vv).mom(kk,:)=structin.s{ii}(vv,:,1,kk);
+            end
+          end
+        end
+      end
+    elseif strcmp(cfg.ftsource,'new')
+      if size(structin.s{1},2)>1 && size(structin.s{1},3)>1
+        tmp.powdimord='pos_freq_time'; % FIXME is this valid dimord?
+      elseif size(structin.s{1},3)>1
+        tmp.powdimord='pos_freq';
+      elseif size(structin.s{1},4)>1
+        tmp.powdimord='pos_ori_time';
+      elseif size(structin.s{1},2)>1
+        tmp.powdimord='pos_time';
+      else
+        tmp.powdimord='pos';
+      end
+      if size(structin.s{1},2)>1
+        if size(structin.s{1},4)==1
+          for ii=1:size(structin.s,2)
+            source{ii}=tmp;
+            source{ii}.pow=squeeze(permute(structin.s{ii},[1 3 2]));
+          end
+        elseif size(structin.s{1},4)==1
+          for ii=1:size(structin.s,2)
+            source{ii}=tmp;
+            source{ii}.pow=squeeze(permute(structin.s{ii},[1 4 3 2]));
+          end
+        end
+      end
+    end
+  elseif strcmp(cfg.out,'trial')
+    if isfield(structin,'trial') % from tfZ keeptrials='yes'
+      for ii=1:size(structin.trial,2)
+        source{ii}=tmp;
+        if strcmp(cfg.ftsource,'old')
+          for jj=1:size(structin.trial{ii},2)
+            source{ii}.trial(jj).pow=structin.trial{ii}(:,jj);
+          end
+        elseif strcmp(cfg.ftsource,'new')
+          source{ii}.powdimord='pos_rpt'; % FIXME is this a valid field?
+          source{ii}.pow=structin.trial{ii};
+        end
+      end
+    end
+  else
+    error('not a valid cfg.out specified');
+  end
+  data=source;
+  clear source
 end
 
-
-
-
-
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+ft_postamble history data
 

@@ -44,8 +44,6 @@ function [collect] = ft_channelcombination(channelcmb, datachannel, includeauto)
 %
 % $Id$
 
-ft_defaults
-
 if nargin==2,
   includeauto = 0;
 end
@@ -163,3 +161,4 @@ else
     end
   end
 end
+

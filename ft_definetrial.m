@@ -79,7 +79,7 @@ function [cfg] = ft_definetrial(cfg)
 % cfg.trl
 % cfg.version
 
-% Copyright (c) 2003, Robert Oostenveld, F.C. Donders Centre
+% Copyright (C) 2003, Robert Oostenveld, FCDC
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -99,7 +99,12 @@ function [cfg] = ft_definetrial(cfg)
 %
 % $Id$
 
+revision = '$Id$';
+
+% do the general setup of the function
 ft_defaults
+ft_preamble help
+ft_preamble callinfo
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'dataset2files', {'yes'});
@@ -170,3 +175,7 @@ fprintf('found %d events\n', length(event));
 cfg.event = event;
 fprintf('created %d trials\n', size(trl,1));
 cfg.trl = trl;
+
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble callinfo
+

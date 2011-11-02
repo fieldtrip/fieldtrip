@@ -1,4 +1,4 @@
-function [lfp, spike, stm, bhv] = spass2fieldtrip(dirname);
+function [lfp, spike, stm, bhv] = spass2fieldtrip(dirname)
 
 % SPASS2FIELDTRIP reads data from a set of SPASS data files and converts
 % the contents into data structures that FieldTrip understands.
@@ -33,12 +33,12 @@ function [lfp, spike, stm, bhv] = spass2fieldtrip(dirname);
 % Revision 1.3  2008/09/22 20:17:44  roboos
 % added call to ft_defaults
 
-ft_defaults
+revision = '$Id$';
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble callinfo
 
 fsample_ana = 1000;
 fsample_swa = 32000;
@@ -128,25 +128,9 @@ end
 stm = stm.data{1}(:);
 bhv = bhv.data{1}(:);
 
+% store some additional information in the cfg structure
 cfg = [];
 
-% add the version details of this function call to the configuration
-cfg.version.name = mfilename('fullpath');
-cfg.version.id   = '$Id$';
-
-% add information about the Matlab version used to the configuration
-cfg.callinfo.matlab = version();
-  
-% add information about the function call to the configuration
-cfg.callinfo.proctime = toc(ftFuncTimer);
-cfg.callinfo.procmem  = memtoc(ftFuncMem);
-cfg.callinfo.calltime = ftFuncClock;
-cfg.callinfo.user = getusername();
-fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
-
-% remember the exact configuration details in the output
-lfp.cfg   = cfg;
-spike.cfg = cfg;
 
 % remember where the lfp trials are on the imaginary continuous timeaxis,
 % this links both the LFP and the spike timestamps to a common continuous
@@ -158,7 +142,14 @@ for i=1:ntrials
   offset    = 0;
   trl(i,:) = [begsample endsample offset];
 end
-lfp.cfg.trl = trl;
+cfg.trl = trl;
+
+% store the header information
 lfp.hdr.FirstTimeStamp = 0;
 lfp.hdr.TimeStampPerSample = fsample_swa./fsample_ana;
+
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+ft_postamble history lfp spike
 

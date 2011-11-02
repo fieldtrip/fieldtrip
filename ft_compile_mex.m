@@ -7,7 +7,7 @@ function ft_compile_mex(force)
 % to choose either the Borland or Microsoft compiler. If you want to use MinGW, you also
 % need to install Gnumex (http://gnumex.sourceforget.net), which comes with its own
 % procedure for setting up the MEX environment.
-
+%
 % The logic in this script is to first build a list of files that actually need compilation for the
 % particular platform that Matlab is running on, and then to go through that list.
 % Functions are added to the list by giving their destination directory and (relative to that) the 
@@ -15,13 +15,15 @@ function ft_compile_mex(force)
 % file needs to be compiled on only, and a list of platforms where you don't compile it on.
 % Finally, you can give extra arguments to the MEX command, e.g., for including other c-sources or
 % giving compiler flags.
+%
+% See also MEX
 
 % Copyright (C) 2010, Stefan Klanke
 %
-% $Log$
+% $Id$
 
 if nargin<1
-   force=false;
+  force=false;
 end
 
 % Possible COMPUTER types
@@ -72,7 +74,6 @@ L = add_mex_source(L,'src','getpid');
 
 L = add_mex_source(L,'realtime/online_mri','ft_omri_smooth_volume');
 L = add_mex_source(L,'realtime/acquisition/siemens', 'sap2matlab',[],[],'siemensap.c -I.');
-
 
 oldDir = pwd;
 [baseDir, myName] = fileparts(mfilename('fullpath'));

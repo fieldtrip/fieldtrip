@@ -33,7 +33,11 @@ function fieldtrip2spss(filename, labels, data)
 %
 % $Id: fieldtrip2spss.m 2439 2010-12-15 16:33:34Z arjsto
 
+revision = '$Id$';
+
+% do the general setup of the function
 ft_defaults
+ft_preamble callinfo
 
 % check whether data and labels have the same lengths
 if ~isequal(size(data,2),size(labels,2))
@@ -46,3 +50,7 @@ txt = sprintf('%s\t',labels{:});
 txt(end) = '';
 dlmwrite(filename, txt, '');
 dlmwrite(filename, data, '-append', 'delimiter', '\t', 'precision', 4);
+
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+

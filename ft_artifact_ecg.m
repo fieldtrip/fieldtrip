@@ -59,15 +59,15 @@ function [cfg, artifact] = ft_artifact_ecg(cfg, data)
 %
 % $Id$
 
-ft_defaults
+revision = '$Id$';
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble loadvar data
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 cfg = ft_checkconfig(cfg, 'renamed',    {'datatype', 'continuous'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
 
@@ -90,21 +90,9 @@ if ~isfield(cfg.artfctdef.ecg,'mindist'),  cfg.artfctdef.ecg.mindist   = 0.5;   
 if ~isfield(cfg.artfctdef.ecg,'feedback'),  cfg.artfctdef.ecg.feedback = 'yes';   end
 if ~isfield(cfg, 'headerformat'),          cfg.headerformat            = [];            end
 if ~isfield(cfg, 'dataformat'),            cfg.dataformat              = [];            end
-if ~isfield(cfg, 'inputfile'),             cfg.inputfile               = [];            end
 
 if ~strcmp(cfg.artfctdef.ecg.method, 'zvalue'),
   error('method "%s" is not applicable', cfg.artfctdef.ecg.method);
-end
-
-hasdata = (nargin>1);
-if ~isempty(cfg.inputfile)
-  % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    data = loadvar(cfg.inputfile, 'data');
-    hasdata = true;
-  end
 end
 
 if ~hasdata
@@ -314,20 +302,7 @@ artifact(:,2) = trl(:,1) - trl(:,3) + round(artfctdef.psttim*hdr.Fs);
 cfg.artfctdef.ecg          = artfctdef;
 cfg.artfctdef.ecg.artifact = artifact;
 
-% get the output cfg
-cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
-
-% add version information to the configuration
-cfg.version.name = mfilename('fullpath');
-cfg.version.id = '$Id$';
-
-% add information about the Matlab version used to the configuration
-cfg.callinfo.matlab = version();
-
-% add information about the function call to the configuration
-cfg.callinfo.proctime = toc(ftFuncTimer);
-cfg.callinfo.procmem  = memtoc(ftFuncMem);
-cfg.callinfo.calltime = ftFuncClock;
-cfg.callinfo.user = getusername();
-fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble callinfo
+ft_postamble previous data
 

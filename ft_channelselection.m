@@ -75,8 +75,6 @@ if isempty(recursion)
   recursion = false;
 end
 
-ft_defaults
-
 % start with the list of desired channels, this will be pruned/expanded
 channel = desired;
 
@@ -442,3 +440,4 @@ end
 % undo the sorting, make the order identical to that of the data channels
 [tmp, indx] = match_str(datachannel, channel);
 channel = channel(indx);
+

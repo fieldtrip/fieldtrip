@@ -51,7 +51,6 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble defaults
 ft_preamble callinfo
 ft_preamble trackconfig
 

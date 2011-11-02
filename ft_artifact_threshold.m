@@ -1,4 +1,4 @@
-function [cfg, artifact] = ft_artifact_threshold(cfg,data)
+function [cfg, artifact] = ft_artifact_threshold(cfg, data)
 
 % FT_ARTIFACT_THRESHOLD scans for trials in which the range, i.e. the minimum,
 % the maximum or the range (min-max difference) of the signal in any
@@ -69,19 +69,17 @@ function [cfg, artifact] = ft_artifact_threshold(cfg,data)
 %
 % $Id$
 
-ft_defaults
+revision = '$Id$';
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble loadvar data
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed',    {'datatype', 'continuous'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
-
-% the inputfile option was removed on 26/10/2011, since the other ft_artifact_xxx functions also don't have this
-cfg = ft_checkconfig(cfg, 'forbidden',  'inputfile');
 
 % set default rejection parameters for clip artifacts if necessary
 if ~isfield(cfg, 'artfctdef'),          cfg.artfctdef            = [];  end
@@ -187,18 +185,7 @@ cfg.artfctdef.threshold.trl      = cfg.trl;         % trialdefinition prior to r
 cfg.artfctdef.threshold.channel  = channel;         % exact channels used for detection
 cfg.artfctdef.threshold.artifact = artifact;        % detected artifacts
 
-% get the output cfg
-cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
-
-% add the version details of this function call to the configuration
-cfg.artfctdef.threshold.version.name = mfilename('fullpath');
-cfg.artfctdef.threshold.version.id = '$Id$';
-
-% add information about the function call to the configuration
-cfg.artfctdef.threshold.callinfo.matlab   = version();
-cfg.artfctdef.threshold.callinfo.proctime = toc(ftFuncTimer);
-cfg.artfctdef.threshold.callinfo.procmem  = memtoc(ftFuncMem);
-cfg.artfctdef.threshold.callinfo.calltime = ftFuncClock;
-cfg.artfctdef.threshold.callinfo.user     = getusername();
-fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.artfctdef.threshold.callinfo.proctime), round(cfg.artfctdef.threshold.callinfo.procmem/(1024*1024)));
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble callinfo
+ft_postamble previous data
 

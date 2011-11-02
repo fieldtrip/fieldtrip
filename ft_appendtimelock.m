@@ -35,7 +35,6 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble defaults
 ft_preamble callinfo
 ft_preamble trackconfig
 ft_preamble loadvar varargin
@@ -54,3 +53,4 @@ ft_postamble callinfo
 ft_postamble previous varargin
 ft_postamble history timelock
 ft_postamble savevar timelock
+

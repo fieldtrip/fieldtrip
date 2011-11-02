@@ -149,3 +149,4 @@ stat.cv = cv;
 
 % required
 stat.trial = [];
+

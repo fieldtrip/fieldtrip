@@ -22,7 +22,7 @@
 % 
 % The functions in this toolbox are copyrighted by their respective authors:
 %   Robert Oostenveld, DCCN, FCDC, SMI, MBFYS
-%   Jan-Matthijs Schoffelen, CCNi, FCDC
+%   Jan-Mathijs Schoffelen, CCNi, FCDC
 %   Pascal Fries, FCDC
 %   Markus Bauer, FCDC
 %   Ole Jensen, FCDC
@@ -31,9 +31,10 @@
 %   Eric Maris, DCC, FCDC
 %   Ingrid Nieuwenhuis, DCCN, FCDC
 %   Saskia Haegens, DCCN, FCDC
+%   and others ...
 %
-% Copyrights (C) 2008-2009, Donders Institute for Brain, Cognition and Behaviour, The Netherlands (DCCN, DCC, DCN)
-% Copyrights (C) 2008-2009, Centre for Cognitive Neuroimaging in Glasgow, United Kingdom (CCNi)
+% Copyrights (C) 2008-2011, Donders Institute for Brain, Cognition and Behaviour, The Netherlands (DCCN, DCC, DCN)
+% Copyrights (C) 2008-2010, Centre for Cognitive Neuroimaging in Glasgow, United Kingdom (CCNi)
 % Copyrights (C) 2003-2008, F.C. Donders Centre, University Nijmegen, The Netherlands (FCDC)
 % Copyrights (C) 2004-2007, Nijmegen Institute for Cognition and Information, The Netherlands (NICI)
 % Copyrights (C) 2004-2005, Universitatsklinikum Hamburg-Eppendorf, Germany (UKE)
@@ -64,6 +65,7 @@
 %   ft_channelrepair
 %   ft_recodeevent
 %   ft_redefinetrial
+%   ft_databrowser
 %   ft_read_header
 %   ft_read_data
 %   ft_read_event
@@ -79,11 +81,6 @@
 %
 % Frequency and Time-Frequency analysis
 %   ft_freqanalysis
-%   ft_freqanalysis_mtmfft
-%   ft_freqanalysis_mtmwelch
-%   ft_freqanalysis_mtmconvol
-%   ft_freqanalysis_wltconvol
-%   ft_freqanalysis_tfr
 %   ft_freqgrandaverage
 %   ft_freqdescriptives
 %   ft_freqstatistics
@@ -115,13 +112,14 @@
 % Plotting and display of data
 %   ft_prepare_layout
 %   ft_layoutplot
-%   ft_topoplot
-%   ft_topoplotER
-%   ft_topoplotTFR
-%   ft_multiplotER
-%   ft_multiplotTFR
 %   ft_singleplotER
+%   ft_multiplotER
+%   ft_topoplotER
 %   ft_singleplotTFR
+%   ft_multiplotTFR
+%   ft_topoplotTFR
+%   ft_topoplotCC
+%   ft_multiplotCC
 %   ft_sourceplot
 %   ft_clusterplot
 

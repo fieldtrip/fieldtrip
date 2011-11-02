@@ -10,12 +10,12 @@ function [data] = spm2fieldtrip(D)
 %
 % See also FT_PREPROCESSING, SPM_EEG_LOAD
 
-ft_defaults
+revision = '$Id$';
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble callinfo
 
 if ~ft_hastoolbox('spm8')
   error('this requires a full version of SPM8 on your MATLAB path');
@@ -46,20 +46,7 @@ end
 %   data.sampleinfo(i,2) = D.indsample(i) + D.nsamples;
 % end
 
-% add the version details of this function call to the configuration
-cfg.version.name = mfilename('fullpath');
-cfg.version.id   = '$Id$';
-
-% add information about the Matlab version used to the configuration
-cfg.callinfo.matlab = version();
-
-% add information about the function call to the configuration
-cfg.callinfo.proctime = toc(ftFuncTimer);
-cfg.callinfo.procmem  = memtoc(ftFuncMem);
-cfg.callinfo.calltime = ftFuncClock;
-cfg.callinfo.user = getusername();
-fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
-
-% remember the configuration details
-data.cfg = cfg;
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble callinfo
+ft_postamble history data
 

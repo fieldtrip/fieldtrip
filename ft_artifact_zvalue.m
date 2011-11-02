@@ -1,4 +1,4 @@
-function [cfg, artifact] = ft_artifact_zvalue(cfg,data)
+function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 
 % FT_ARTIFACT_ZVALUE reads the interesting segments of data from file and
 % identifies artifacts by means of thresholding the z-transformed value
@@ -93,12 +93,13 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg,data)
 %
 % $Id$
 
-ft_defaults
+revision = '$Id$';
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble loadvar data
 
 % set default rejection parameters
 cfg.headerformat = ft_getopt(cfg, 'headerformat', []);
@@ -421,19 +422,11 @@ cfg.artfctdef.zvalue.artifact = artifact;
 
 fprintf('detected %d artifacts\n', size(artifact,1));
 
-% add the version details of this function call to the configuration
-cfg.artfctdef.zvalue.version.name = mfilename('fullpath');
-cfg.artfctdef.zvalue.version.id = '$Id$';
-
-% add information about the function call to the configuration
-cfg.artfctdef.zvalue.callinfo.matlab   = version();
-cfg.artfctdef.zvalue.callinfo.proctime = toc(ftFuncTimer);
-cfg.artfctdef.zvalue.callinfo.procmem  = memtoc(ftFuncMem);
-cfg.artfctdef.zvalue.callinfo.calltime = ftFuncClock;
-cfg.artfctdef.zvalue.callinfo.user     = getusername();
-fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.artfctdef.zvalue.callinfo.proctime), round(cfg.artfctdef.zvalue.callinfo.procmem/(1024*1024)));
-
 delete(h);
+
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble callinfo
+ft_postamble previous data
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
