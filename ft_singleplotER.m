@@ -37,32 +37,29 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 %   cfg.linewidth     = linewidth in points (default = 0.5)
 %   cfg.graphcolor    = color(s) used for plotting the dataset(s) (default = 'brgkywrgbkywrgbkywrgbkyw')
 %                       alternatively, colors can be specified as nx3 matrix of rgb values
-%   cfg.directionality     = '', 'inflow' or 'outflow' specifies for
-%                            connectivity measures whether the inflow into a
-%                            node, or the outflow from a node is plotted. The
-%                            behavior of this option depends on the input
-%                            data. If the input data is of dimord
-%                            'chan_chan_XXX', the value of directionality
-%                            determines whether, given the reference
-%                            channel(s), the columns (inflow), or rows
-%                            (outflow) are selected for plotting. In this
-%                            situation the default is 'inflow'. Note that for
-%                            undirected measures, inflow and outflow should
-%                            give the same output. When the input data is of 
-%                            dimord 'chancmb_XXX', the value
-%                            of directionality determines whether the rows in
-%                            data.labelcmb are selected. With 'inflow' the
-%                            rows are selected if the refchannel(s) occur in
-%                            the right column, with 'outflow' the rows are
-%                            selected if the refchannel(s) occur in the left
-%                            column of the labelcmb-field. Default in this
-%                            case is '', which means that all rows are
-%                            selected in which the refchannel(s) occur. This
-%                            is to robustly support linearly indexed
-%                            undirected connectivity metrics. In the situation 
-%                            where undirected connectivity measures are
-%                            linearly indexed, specifying 'inflow' or
-%                            'outflow' can result in unexpected behavior.
+%   cfg.directionality = '', 'inflow' or 'outflow' specifies for
+%                       connectivity measures whether the inflow into a
+%                       node, or the outflow from a node is plotted. The
+%                       (default) behavior of this option depends on the dimor
+%                       of the input data (see below).
+%
+% For the plotting of directional connectivity data the cfg.directionality
+% option determines what is plotted. The default value and the supported
+% functionality depend on the dimord of the input data. If the input data
+% is of dimord 'chan_chan_XXX', the value of directionality determines
+% whether, given the reference channel(s), the columns (inflow), or rows
+% (outflow) are selected for plotting. In this situation the default is
+% 'inflow'. Note that for undirected measures, inflow and outflow should
+% give the same output. If the input data is of dimord 'chancmb_XXX', the
+% value of directionality determines whether the rows in data.labelcmb are
+% selected. With 'inflow' the rows are selected if the refchannel(s) occur in
+% the right column, with 'outflow' the rows are selected if the
+% refchannel(s) occur in the left column of the labelcmb-field. Default in
+% this case is '', which means that all rows are selected in which the
+% refchannel(s) occur. This is to robustly support linearly indexed
+% undirected connectivity metrics. In the situation where undirected
+% connectivity measures are linearly indexed, specifying 'inflow' or
+% 'outflow' can result in unexpected behavior.
 %  
 % to facilitate data-handling and distributed computing with the peer-to-peer
 % module, this function has the following option:
