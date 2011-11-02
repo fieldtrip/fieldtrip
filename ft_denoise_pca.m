@@ -1,4 +1,4 @@
-function varargout = ft_denoise_pca(cfg, varargin)
+function data = ft_denoise_pca(cfg, varargin)
 
 % DENOISE_PCA performs a pca on specified reference channels and subtracts
 % the projection of the data of interest onto this orthogonal basis from 
@@ -6,19 +6,31 @@ function varargout = ft_denoise_pca(cfg, varargin)
 % compute noise cancellation weights on a dataset of interest.
 %
 % Use as
-%   [data] = ft_denoise_pca(cfg, data) 
+%   [dataout] = ft_denoise_pca(cfg, data) 
 % or 
-%   [data] = ft_denoise_pca(cfg, data, refdata)
+%   [dataout] = ft_denoise_pca(cfg, data, refdata)
+%
+% Where data is an MEG raw data-structure obtained with FT_PREPROCESSING.
+% If an additional data-structure refdata is in the input, the specified
+% reference channels for the regression will be taken from this second data
+% structure. This can be useful when reference channel specific
+% preprocessing needs to be done (e.g. low-pass filtering).
 %
 % The configuration should be according to
 %   cfg.refchannel = the channels used as reference signal (default = 'MEGREF')
 %   cfg.channel    = the channels to be denoised (default = 'MEG')
 %   cfg.truncate   = optional truncation of the singular value spectrum (default = 'no')
 %   cfg.zscore     = standardise reference data prior to PCA (default = 'no')
+%   cfg.pertrial   = 'no' (default) or 'yes'. Regress out the references on
+%                    a per trial basis
+%   cfg.trials     = list of trials that are used (default = 'all')
 %
 % if cfg.truncate is integer n > 1, n will be the number of singular values kept.
 % if 0 < cfg.truncate < 1, the singular value spectrum will be thresholded at the 
 % fraction cfg.truncate of the largest singular value.
+%
+% The output data dataout contains the denoised data. The optional second
+% output argument pca is a structure that contains
 
 % Undocumented cfg-option: cfg.pca the output structure of an earlier call
 % to the function. Can be used regress out the reference channels from
@@ -293,11 +305,6 @@ end
 
 % put the data back in the output
 data.cfg = cfg;
-
-if nargout>=1, varargout(1) = {data}; end
-if nargout>=2, varargout(2) = {pca};  end
-if nargout>=3, varargout(3) = {stdpre}; end
-if nargout>=4, varargout(4) = {stdpst}; end
 
 %%%%%%%%%%%%%%%%%
 % SUBFUNCTIONS
