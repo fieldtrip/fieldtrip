@@ -4,19 +4,14 @@ function [normalise] = ft_volumenormalise(cfg, interp)
 % to a template anatomical MRI.
 %
 % Use as
-%   [volume] = ft_volumenormalise(cfg, volume)
-%
-% The input volume should be the result from FT_SOURCEINTERPOLATE.
-% Alternatively, the input can contain a single anatomical MRI that
-% was read with FT_READ_MRI, or you can specify a filename of an
-% anatomical MRI.
+%   [mri] = ft_volumenormalise(cfg, mri)
+% where the input mri should be a single anatomical volume that was for
+% example read with FT_READ_MRI. 
 %
 % Configuration options are:
-%   cfg.spmversion  = 'spm8' (default) or 'spm2'
-%   cfg.template    = filename of the template anatomical MRI (default is the 'T1.mnc' (spm2) or 'T1.nii' (spm8)
-%                     in the (spm-directory)/templates/)
-%   cfg.parameter   = cell-array with the functional data which has to
-%                     be normalised, can be 'all'
+%   cfg.spmversion  = 'spm8' or 'spm2' (default = 'spm8')
+%   cfg.template    = filename of the template anatomical MRI (default = 'T1.mnc' for spm2 or 'T1.nii' for spm8)
+%   cfg.parameter   = cell-array with the functional data which has to be normalised (default = 'all')
 %   cfg.downsample  = integer number (default = 1, i.e. no downsampling)
 %   cfg.coordinates = 'spm, 'ctf' or empty for interactive (default = [])
 %   cfg.name        = string for output filename
@@ -195,7 +190,7 @@ VF = ft_write_volume([cfg.intermediatename,'_anatomy.img'], interp.anatomy, 'tra
 for parlop=2:length(cfg.parameter)  % skip the anatomy
   tmp  = cfg.parameter{parlop};
   data = reshape(getsubfield(interp, tmp), interp.dim);
-  tmp(find(tmp=='.')) = '_';
+  tmp(tmp=='.') = '_';
   ft_write_volume([cfg.intermediatename,'_' tmp '.img'], data, 'transform', interp.transform, 'spmversion', cfg.spmversion);
 end
 
@@ -241,7 +236,7 @@ final = VG.mat * inv(params.Affine) * inv(VF.mat) * initial;
 for parlop=1:length(cfg.parameter)
   fprintf('creating normalised analyze-file for %s\n', cfg.parameter{parlop});
   tmp = cfg.parameter{parlop};
-  tmp(find(tmp=='.')) = '_';
+  tmp(tmp=='.') = '_';
   files{parlop} = sprintf('%s_%s.img', cfg.intermediatename, tmp);
   [p, f, x] = fileparts(files{parlop});
   wfiles{parlop} = fullfile(p, ['w' f x]);
@@ -272,7 +267,7 @@ if strcmp(cfg.write,'yes')
   for parlop=1:length(cfg.parameter)  % include the anatomy
     tmp  = cfg.parameter{parlop};
     data = reshape(getsubfield(normalise, tmp), normalise.dim);
-    tmp(find(tmp=='.')) = '_';
+    tmp(tmp=='.') = '_';
     ft_write_volume([cfg.name,'_' tmp '.img'], data, 'transform', normalise.transform, 'spmversion', cfg.spmversion);
   end
 end
@@ -287,39 +282,13 @@ if strcmp(cfg.keepintermediate,'no')
   end
 end
 
-% accessing this field here is needed for the configuration tracking
-% by accessing it once, it will not be removed from the output cfg
-cfg.outputfile;
-
-% get the output cfg
-cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
-
 % remember the normalisation parameters in the configuration
 cfg.spmparams = params;
 cfg.final     = final;
 
-% add version information to the configuration
-cfg.version.name = mfilename('fullpath');
-cfg.version.id = '$Id$';
-
-% add information about the Matlab version used to the configuration
-cfg.callinfo.matlab = version();
-  
-% add information about the function call to the configuration
-cfg.callinfo.proctime = toc(ftFuncTimer);
-cfg.callinfo.procmem  = memtoc(ftFuncMem);
-cfg.callinfo.calltime = ftFuncClock;
-cfg.callinfo.user = getusername();
-fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
-fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
-
-% remember the configuration details of the input data
-try, cfg.previous = interp.cfg; end
-
-% remember the exact configuration details in the output
-normalise.cfg = cfg;
-
-% the output data should be saved to a MATLAB file
-if ~isempty(cfg.outputfile)
-  savevar(cfg.outputfile, 'data', normalise); % use the variable name "data" in the output file
-end
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+ft_postamble previous interp
+ft_postamble history normalise
+ft_postamble savevar normalise

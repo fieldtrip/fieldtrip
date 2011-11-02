@@ -1,12 +1,12 @@
-function cfg = ft_sourcemovie(cfg, source)
+function [cfg] = ft_sourcemovie(cfg, source)
 
 % FT_SOURCEMOVIE displays the source reconstruction on a cortical mesh
 % and allows the user to scroll through time with a movie
 %
 % Use as
-%  FT_SOURCEMOVIE(cfg, source)
-% where indata is obtained from FT_SOURCEANALYSIS
-% and cfg is a configuratioun structure that should contain
+%   ft_sourcemovie(cfg, source)
+% where the input source data is obtained from FT_SOURCEANALYSIS and cfg is
+% a configuratioun structure that should contain
 %
 %  cfg.funparameter    = string, functional parameter that is color coded (default = 'avg.pow')
 %  cfg.maskparameter   = string, functional parameter that is used for opacity (default = [])
@@ -269,36 +269,11 @@ set(sx, 'Callback', @cb_slider);
 set(sy, 'Callback', @cb_slider);
 set(p,  'Callback', @cb_playbutton);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% deal with the output
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+ft_postamble previous source
 
-% get the output cfg
-cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
-
-% add the version details of this function call to the configuration
-cfg.version.name = mfilename('fullpath'); % this is helpful for debugging
-cfg.version.id   = '$Id$'; % this will be auto-updated by the revision control system
-
-% add information about the Matlab version used to the configuration
-cfg.callinfo.matlab = version();
-
-% add information about the function call to the configuration
-cfg.callinfo.proctime = toc(ftFuncTimer);
-cfg.callinfo.procmem  = memtoc(ftFuncMem);
-cfg.callinfo.calltime = ftFuncClock;
-cfg.callinfo.user = getusername(); % this is helpful for debugging
-fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
-
-if isfield(source, 'cfg')
-  % remember the configuration details of the input data
-  cfg.previous = source.cfg;
-end
-
-if nargout==0
-  % do not return any output argument
-  clear cfg
-end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

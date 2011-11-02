@@ -1,10 +1,10 @@
-function [interp] = ft_megplanar(cfg, data)
+function [data] = ft_megplanar(cfg, data)
 
 % FT_MEGPLANAR computes planar MEG gradients gradients for raw data
 % obtained from FT_PREPROCESSING or an average ERF that was computed using
-% FT_TIMELOCKANALYSIS. It can also work on data in the frequency domain,
-% obtained with FREQANALYSIS. Prerequisite for this is that the data contain
-% complex-valued fourierspectra.
+% FT_TIMELOCKANALYSIS. It can also convert frequency-domain data that was
+% computed using FT_FREQANALYSIS, as long as it contains the complex-valued
+% fourierspcrm and not only the powspctrm.
 %
 % Use as
 %    [interp] = ft_megplanar(cfg, data)
@@ -302,33 +302,6 @@ if istlck
   israw  = false;
 end
 
-% accessing this field here is needed for the configuration tracking
-% by accessing it once, it will not be removed from the output cfg
-cfg.outputfile;
-
-% get the output cfg
-cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
-
-% store the configuration of this function call, including that of the previous function call
-cfg.version.name = mfilename('fullpath');
-cfg.version.id   = '$Id$';
-
-% add information about the Matlab version used to the configuration
-cfg.callinfo.matlab = version();
-
-% add information about the function call to the configuration
-cfg.callinfo.proctime = toc(ftFuncTimer);
-cfg.callinfo.procmem  = memtoc(ftFuncMem);
-cfg.callinfo.calltime = ftFuncClock;
-cfg.callinfo.user = getusername();
-fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
-
-% remember the configuration details of the input data
-if isfield(data, 'cfg'), cfg.previous = data.cfg; end
-
-% remember the exact configuration details in the output
-interp.cfg = cfg;
-
 % copy the trial specific information into the output
 if isfield(data, 'trialinfo')
   interp.trialinfo = data.trialinfo;
@@ -339,10 +312,16 @@ if isfield(data, 'sampleinfo')
   interp.sampleinfo = data.sampleinfo;
 end
 
-% the output data should be saved to a MATLAB file
-if ~isempty(cfg.outputfile)
-  savevar(cfg.outputfile, 'data', interp); % use the variable name "data" in the output file
-end
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+ft_postamble previous data
+
+% rename the output variable to accomodate the savevar postamble
+data = interp;
+
+ft_postamble history data
+ft_postamble savevar data
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

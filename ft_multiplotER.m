@@ -1,12 +1,13 @@
 function [cfg] = ft_multiplotER(cfg, varargin)
 
-% ft_multiplotER plots the event-related fields or potentials versus time
+% FT_MULTIPLOTER plots the event-related fields or potentials versus time
 % or of oscillatory activity (power or coherence) versus frequency. Multiple
 % datasets can be overlayed.  The plots are arranged according to their
 % location specified in the layout.
 %
-% Use as:
+% Use as
 %   ft_multiplotER(cfg, data)
+% or
 %   ft_multiplotER(cfg, data, data2, ..., dataN)
 %
 % The data can be an ERP/ERF produced by FT_TIMELOCKANALYSIS, a powerspectrum
@@ -90,9 +91,8 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 % corresponding to the input structure. For this particular function, the
 % data should be provided as a cell array.
 %
-% See also:
-%   FT_MULTIPLOTTFR, FT_SINGLEPLOTER, FT_SINGLEPLOTTFR, FT_TOPOPLOTER, FT_TOPOPLOTTFR,
-%   FT_PREPARE_LAYOUT
+% See also FT_MULTIPLOTTFR, FT_SINGLEPLOTER, FT_SINGLEPLOTTFR, FT_TOPOPLOTER, 
+% FT_TOPOPLOTTFR, FT_PREPARE_LAYOUT
 
 % Undocumented local options:
 % cfg.layoutname
@@ -648,30 +648,11 @@ if ~isempty(cfg.renderer)
   set(gcf, 'renderer', cfg.renderer)
 end
 
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+ft_postamble previous varargin
 
-% get the output cfg
-cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% deal with the output
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% get the output cfg
-cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
-
-% add the version details of this function call to the configuration
-cfg.version.name = mfilename('fullpath'); % this is helpful for debugging
-cfg.version.id   = '$Id$'; % this will be auto-updated by the revision control system
-
-% add information about the Matlab version used to the configuration
-cfg.callinfo.matlab = version();
-
-% add information about the function call to the configuration
-cfg.callinfo.proctime = toc(ftFuncTimer);
-cfg.callinfo.procmem  = memtoc(ftFuncMem);
-cfg.callinfo.calltime = ftFuncClock;
-cfg.callinfo.user = getusername(); % this is helpful for debugging
-fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

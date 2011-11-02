@@ -1,16 +1,16 @@
 function [cfg] = ft_sourceplot(cfg, data)
 
-% FT_SOURCEPLOT plots functional source reconstruction data on slices or on a
-% surface, optionally as an overlay on anatomical MRI data, where
-% statistical data can be used to determine the opacity of the mask. 
-% Input data comes from FT_SOURCEANALYSIS, FT_SOURCEGRANDAVERAGE or 
-% statistical values from FT_SOURCESTATISTICS.
+% FT_SOURCEPLOT plots functional source reconstruction data on slices or on
+% a surface, optionally as an overlay on anatomical MRI data, where
+% statistical data can be used to determine the opacity of the mask. Input
+% data comes from FT_SOURCEANALYSIS, FT_SOURCEGRANDAVERAGE or statistical
+% values from FT_SOURCESTATISTICS.
 %
-% Use as:
+% Use as
 %   ft_sourceplot(cfg, data)
-%
-% The data can contain functional data, anatomical MRI data and statistical data,
-% interpolated onto the same grid.
+% where the input data can contain an anatomical MRI, functional source
+% reconstruction results and statistical data, which all have to be
+% interpolated on the same 3-d grid.
 %
 % The configuration should contain:
 %   cfg.method        = 'slice',   plots the data on a number of slices in the same plane
@@ -1127,26 +1127,10 @@ end
 title(cfg.title);
 set(gcf, 'renderer', cfg.renderer);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% deal with the output
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% get the output cfg
-cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
-
-% add the version details of this function call to the configuration
-cfg.version.name = mfilename('fullpath'); % this is helpful for debugging
-cfg.version.id   = '$Id$'; % this will be auto-updated by the revision control system
-
-% add information about the Matlab version used to the configuration
-cfg.callinfo.matlab = version();
-
-% add information about the function call to the configuration
-cfg.callinfo.proctime = toc(ftFuncTimer);
-cfg.callinfo.procmem  = memtoc(ftFuncMem);
-cfg.callinfo.calltime = ftFuncClock;
-cfg.callinfo.user = getusername(); % this is helpful for debugging
-fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+ft_postamble previous data
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION makes an overlay of 3D anatomical, functional and probability

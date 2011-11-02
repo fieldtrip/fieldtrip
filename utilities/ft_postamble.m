@@ -13,11 +13,11 @@ function ft_postamble(cmd, varargin)
 % the following ensures that these scripts are included as dependencies
 % when using the MATLAB compiler
 %
-%#function ft_postamble_callinfo
-%#function ft_postamble_history
-%#function ft_postamble_previous
-%#function ft_postamble_savevar
 %#function ft_postamble_trackconfig
+%#function ft_postamble_callinfo
+%#function ft_postamble_previous
+%#function ft_postamble_history
+%#function ft_postamble_savevar
 
 global ft_default
 

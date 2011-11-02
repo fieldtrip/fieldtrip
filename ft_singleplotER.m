@@ -1,14 +1,17 @@
 function [cfg] = ft_singleplotER(cfg, varargin)
 
-% FT_SINGLEPLOTER plots the event-related fields or potentials of a single channel
-% or the average over multiple channels. multiple datasets can be overlayed.
+% FT_SINGLEPLOTER plots the event-related fields or potentials of a single
+% channel or the average over multiple channels. Multiple datasets can be
+% overlayed.
 %
-% Use as:
+% Use as
 %   ft_singleplotER(cfg, data)
+% or
 %   ft_singleplotER(cfg, data1, data2, ..., datan)
 %
-% The data can be an erp/erf produced by FT_TIMELOCKANALYSIS, a powerspectrum
-% produced by FT_FREQANALYSIS or a connectivityspectrum produced by FT_CONNECTIVITYANALYSIS.
+% The data can be an erp/erf produced by FT_TIMELOCKANALYSIS, a power
+% spectrum produced by FT_FREQANALYSIS or connectivity spectrum produced by
+% FT_CONNECTIVITYANALYSIS.
 %
 % The configuration can have the following parameters:
 %   cfg.parameter     = field to be plotted on y-axis (default depends on data.dimord)
@@ -68,8 +71,7 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 % file on disk. this mat files should contain only a single variable named 'data',
 % corresponding to the input structure.
 %
-% see also:
-%   ft_singleplotTFR, ft_multiplotER, ft_multiplotTFR, ft_topoplotER, ft_topoplotTFR
+% See also FT_SINGLEPLOTTFR, FT_MULTIPLOTER, FT_MULTIPLOTTFR, FT_TOPOPLOTER, FT_TOPOPLOTTFR
 
 % this function depends on ft_timelockbaseline which has the following options:
 % cfg.baseline, documented
@@ -552,26 +554,11 @@ if ~isempty(cfg.renderer)
   set(gcf, 'renderer', cfg.renderer)
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% deal with the output
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+ft_postamble previous varargin
 
-% get the output cfg
-cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
-
-% add the version details of this function call to the configuration
-cfg.version.name = mfilename('fullpath'); % this is helpful for debugging
-cfg.version.id   = '$Id$'; % this will be auto-updated by the revision control system
-
-% add information about the Matlab version used to the configuration
-cfg.callinfo.matlab = version();
-
-% add information about the function call to the configuration
-cfg.callinfo.proctime = toc(ftFuncTimer);
-cfg.callinfo.procmem  = memtoc(ftFuncMem);
-cfg.callinfo.calltime = ftFuncClock;
-cfg.callinfo.user = getusername(); % this is helpful for debugging
-fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % subfunction
@@ -639,4 +626,3 @@ elseif strcmp(eventdata.Key,'m')
   xlim([varargin{1} varargin{2}])
   ylim([varargin{3} varargin{4}])
 end
-

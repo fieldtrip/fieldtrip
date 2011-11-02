@@ -96,7 +96,7 @@ if ischar(cfg.latency) && strcmp(cfg.latency, 'all')
   end
 end
 
-%SELECT TIME WINDOW
+%select time window
 idxs = nearest(varargin{1}.time, min(cfg.latency));
 idxe = nearest(varargin{1}.time, max(cfg.latency));
 % shift start and end index in case of flipped time axis
@@ -109,16 +109,16 @@ end
 ResultsNTimePoints = length(ResultsTimeSelectCases);
 ResultsTime = varargin{1}.time(ResultsTimeSelectCases);
 
-%UPDATE CFG STRUCTURE WITH TIME THAT WAS FINALLY USED
+%update cfg structure with time that was finally used
 cfg.latency = [ResultsTime(1), ResultsTime(end)];
 
-%DETERMINE WHICH CHANNELS ARE AVAILABLE FOR ALL SUBJECTS
+%determine which channels are available for all subjects
 for i=1:Nsubj
   cfg.channel = ft_channelselection(cfg.channel, varargin{i}.label);
 end
 ResultNChannels = size(cfg.channel, 1);
 
-%REDUCE DATASET TO INTERSECTION OF DESIRED AND AVAILABLE CHANNELS
+%reduce dataset to intersection of desired and available channels
 for i=1:Nsubj
   % select channel indices in this average, sorted according to configuration
   [dum, chansel]    = match_str(cfg.channel, varargin{i}.label);
@@ -127,20 +127,20 @@ for i=1:Nsubj
   try, varargin{i}.trial = varargin{i}.trial(chansel,:,:); end
 end
 
-%PREALLOCATE
+%preallocate
 avgmat = zeros(Nsubj, ResultNChannels, ResultsNTimePoints);
-%FILL MATRIX, MAY BE DONE MORE EFFECTIVELY WITH DEAL COMMAND
+%fill matrix, may be done more effectively with deal command
 for s = 1:Nsubj
   avgmat(s, :, :) = varargin{s}.avg(:, ResultsTimeSelectCases);
 end
 
 if strcmp(cfg.keepindividual, 'no')
-  %AVERAGE ACROSS SUBJECT DIMENSION
+  %average across subject dimension
   ResultGrandavg = mean(avgmat, 1);
   ResultGrandavg = reshape(ResultGrandavg, [ResultNChannels, ResultsNTimePoints]);
 
-  %COMPUTE VARIANCE ACROSS SUBJECT DIMENSION
-  %THIS LOOKS AWKWARD (std.^2) BUT IS FAST DUE TO BUILT IN FUNCTIONS
+  %compute variance across subject dimension
+  %this looks awkward (std.^2) but is fast due to built in functions
   switch cfg.normalizevar
     case 'N-1'
       sdflag = 0;
@@ -153,16 +153,12 @@ else
   % do nothing
 end
 
-%--------------------------------------------
-% % collect the results
-%--------------------------------------------
-
+% collect the results
 grandavg           = [];
 grandavg.label     = cfg.channel;       % cell-array
-%grandavg.fsample   = varargin{1}.fsample; % fsample is obsolete
 grandavg.time      = ResultsTime;       % 1 x Nsamples
 
-%KEEP INDIVIDUAL MEANS?
+%keep individual means?
 if strcmp(cfg.keepindividual, 'yes')
   grandavg.individual = avgmat;         % Nsubj x Nchan x Nsamples
   grandavg.dimord = 'subj_chan_time';
@@ -172,37 +168,10 @@ else
   grandavg.dimord = 'chan_time';
 end
 
-% accessing this field here is needed for the configuration tracking
-% by accessing it once, it will not be removed from the output cfg
-cfg.outputfile;
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+ft_postamble previous varargin
+ft_postamble history grandavg
+ft_postamble savevar grandavg
 
-% get the output cfg
-cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
-
-% add version information to the configuration
-cfg.version.name = mfilename('fullpath');
-cfg.version.id = '$Id$';
-
-% add information about the Matlab version used to the configuration
-cfg.callinfo.matlab = version();
-  
-% add information about the function call to the configuration
-cfg.callinfo.proctime = toc(ftFuncTimer);
-cfg.callinfo.procmem  = memtoc(ftFuncMem);
-cfg.callinfo.calltime = ftFuncClock;
-cfg.callinfo.user = getusername();
-fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
-
-% remember the configuration details of the input data
-cfg.previous = [];
-for i=1:length(varargin)
-  try, cfg.previous{i} = varargin{i}.cfg; end
-end
-
-% remember the exact configuration details in the output
-grandavg.cfg = cfg;
-
-% the output data should be saved to a MATLAB file
-if ~isempty(cfg.outputfile)
-  savevar(cfg.outputfile, 'data', grandavg); % use the variable name "data" in the output file
-end

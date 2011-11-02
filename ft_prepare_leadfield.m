@@ -118,8 +118,8 @@ ft_preamble trackconfig
 ft_preamble loadvar data
 
 if nargin<2
-  % the data variable  will be passed to the prepare_headmodel function below
-  % in general it would be used for channel selection
+  % the data variable will be passed to the prepare_headmodel function below
+  % where it would be used for channel selection
   data = [];
 else
   data = ft_checkdata(data);
@@ -231,7 +231,6 @@ else
   ft_progress('close');
 end
 
-
 % fill the positions outside the brain with NaNs
 grid.leadfield(grid.outside) = {nan};
 
@@ -257,26 +256,8 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% get the output cfg
-cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
-
-% add version information to the configuration
-cfg.version.name = mfilename('fullpath');
-cfg.version.id = '$Id$';
-
-% add information about the Matlab version used to the configuration
-cfg.callinfo.matlab = version();
-  
-% add information about the function call to the configuration
-cfg.callinfo.proctime = toc(ftFuncTimer);
-cfg.callinfo.procmem  = memtoc(ftFuncMem);
-cfg.callinfo.calltime = ftFuncClock;
-cfg.callinfo.user = getusername();
-fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
-
-% remember the configuration details of the input data
-try, cfg.previous = data.cfg; end
-
-% remember the exact configuration details in the output
-grid.cfg = cfg;
-
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+ft_postamble previous data
+ft_postamble history grid

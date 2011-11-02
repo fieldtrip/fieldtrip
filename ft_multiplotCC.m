@@ -1,8 +1,8 @@
 function ft_multiplotCC(cfg, data)
 
-% FT_MULTIPLOTCC visualiuzes the coherence between channels by using multiple
-% topoplots. The topoplot at a given channel location shows the coherence
-% of that channel with all other channels.
+% FT_MULTIPLOTCC visualises the coherence between channels by using
+% multiple topoplots. The topoplot at a given channel location shows the
+% coherence of that channel with all other channels.
 %
 % Use as
 %   ft_multiplotCC(cfg, data)
@@ -61,7 +61,7 @@ if strcmp(cfg.parameter, 'avg.icohspctrm') && ~issubfield(data, 'avg.icohspctrm'
 end
 
 if strcmp(data.dimord, 'refchan_chan_freq'),
-  %reshape input-data, such that ft_topoplotTFR will take it
+  % reshape input-data, such that ft_topoplotTFR will take it
   cnt = 1;
   siz = size(data.prob);
   data.labelcmb = cell(siz(1)*siz(2),2);
@@ -88,7 +88,7 @@ if isfield(cfg, 'xparam'),
   end
 end
 
-% Read or create the layout that will be used for plotting
+% R=read or create the layout that will be used for plotting
 lay = ft_prepare_layout(cfg, varargin{1});
 cfg.layout = lay;
 ft_plot_lay(lay, 'box', false,'label','no','point','no');
@@ -129,24 +129,7 @@ for k=1:length(chNum) - 2
   end
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% deal with the output
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% get the output cfg
-cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
-
-% add the version details of this function call to the configuration
-cfg.version.name = mfilename('fullpath'); % this is helpful for debugging
-cfg.version.id   = '$Id$'; % this will be auto-updated by the revision control system
-
-% add information about the Matlab version used to the configuration
-cfg.callinfo.matlab = version();
-
-% add information about the function call to the configuration
-cfg.callinfo.proctime = toc(ftFuncTimer);
-cfg.callinfo.procmem  = memtoc(ftFuncMem);
-cfg.callinfo.calltime = ftFuncClock;
-cfg.callinfo.user = getusername(); % this is helpful for debugging
-fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
-
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+ft_postamble previous data

@@ -1,15 +1,15 @@
 function [cfg] = ft_multiplotTFR(cfg, data)
 
-% ft_multiplotTFR plots time-frequency representations of power or coherence in a 
-% topographical layout. The plots of the indivual sensors are arranged according 
-% to their location specified in the layout.
+% FT_MULTIPLOTTFR plots time-frequency representations of power or
+% coherence in a topographical layout. The plots of the indivual sensors
+% are arranged according to their location specified in the layout.
 %
-% Use as:
+% Use as
 %   ft_multiplotTFR(cfg, data)
 %
 % The data can be a time-frequency representation of power or coherence
-% that 
-% was computed using the FT_FREQANALYSIS or FT_FREQDESCRIPTIVES functions.
+% that was computed using the FT_FREQANALYSIS or FT_FREQDESCRIPTIVES
+% functions.
 %
 % The configuration can have the following parameters:
 %   cfg.parameter        = field to be represented as color (default depends on data.dimord)
@@ -638,26 +638,11 @@ if ~isempty(cfg.renderer)
   set(gcf, 'renderer', cfg.renderer)
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% deal with the output
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+ft_postamble previous data
 
-% get the output cfg
-cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
-
-% add the version details of this function call to the configuration
-cfg.version.name = mfilename('fullpath'); % this is helpful for debugging
-cfg.version.id   = '$Id$'; % this will be auto-updated by the revision control system
-
-% add information about the Matlab version used to the configuration
-cfg.callinfo.matlab = version();
-
-% add information about the function call to the configuration
-cfg.callinfo.proctime = toc(ftFuncTimer);
-cfg.callinfo.procmem  = memtoc(ftFuncMem);
-cfg.callinfo.calltime = ftFuncClock;
-cfg.callinfo.user = getusername(); % this is helpful for debugging
-fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

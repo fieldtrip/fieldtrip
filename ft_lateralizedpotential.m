@@ -1,6 +1,7 @@
-function lrp = ft_lateralizedpotential(cfg, avgL, avgR)
+function [lrp] = ft_lateralizedpotential(cfg, avgL, avgR)
 
-% FT_LATERALIZEDPOTENTIAL computes lateralized potentials such as the LRP
+% FT_LATERALIZEDPOTENTIAL computes lateralized potentials such as the
+% lateralized readiness potential (LRP)
 %
 % Use as
 %   [lrp] = ft_lateralizedpotential(cfg, avgL, avgR)
@@ -110,6 +111,8 @@ lrp.time      = avgL.time;
 % compute the lateralized potentials
 Nchan = size(cfg.channelcmb);
 for i=1:Nchan
+  % here the channel names "C3" and "C4" are used to clarify the 
+  % computation of the lateralized potential on all channel pairs
   C3R = strmatch(cfg.channelcmb{i,1}, avgR.label);
   C4R = strmatch(cfg.channelcmb{i,2}, avgR.label);
   C3L = strmatch(cfg.channelcmb{i,1}, avgL.label);
@@ -125,30 +128,9 @@ for i=1:Nchan
   end
 end
 
-% add version information to the configuration
-cfg.version.name = mfilename('fullpath');
-cfg.version.id = '$Id$';
-
-% add information about the Matlab version used to the configuration
-cfg.callinfo.matlab = version();
-  
-% add information about the function call to the configuration
-cfg.callinfo.proctime = toc(ftFuncTimer);
-cfg.callinfo.procmem  = memtoc(ftFuncMem);
-cfg.callinfo.calltime = ftFuncClock;
-cfg.callinfo.user = getusername();
-fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
-
-% remember the configuration details of the input data
-cfg.previous = [];
-try, cfg.previous{1} = avgL.cfg; end
-try, cfg.previous{2} = avgR.cfg; end
-
-% remember the exact configuration details in the output 
-lrp.cfg = cfg;
-
-% the output data should be saved to a MATLAB file
-if ~isempty(cfg.outputfile)
-  savevar(cfg.outputfile, 'data', lrp); % use the variable name "data" in the output file
-end
-
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+ft_postamble previous avgL avgR
+ft_postamble history lrp
+ft_postamble savevar lrp

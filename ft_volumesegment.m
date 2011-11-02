@@ -5,16 +5,13 @@ function [segment] = ft_volumesegment(cfg, mri)
 % gray/white/csf compartments, a skull-stripped anatomy, or binary masks
 % representing the brain surface, skull, or scalp surface.
 %
-% This function uses the SPM8 toolbox, see http://www.fil.ion.ucl.ac.uk/spm/
-%
 % Use as
-%   [segment] = ft_volumesegment(cfg, mri)
+%   segment = ft_volumesegment(cfg, mri)
+% where the input mri should be a single anatomical volume that was for
+% example read with FT_READ_MRI. You can also provide an already segmented
+% volume as input for the purpose of creating a binary mask.
 %
-% The input arguments are a configuration structure (see below) and an
-% anatomical MRI structure. You can also provide an already segmented
-% volume in the input for the purpose of creating a binary mask.
-%
-% The configuration options are
+% The configuration structure can contain
 %   cfg.output      = 'tpm' (default), 'brain', 'skull', 'skullstrip', 'scalp', or any
 %                        combination of these in a cell-array
 %   cfg.spmversion  = 'spm8' (default) or 'spm2'
@@ -503,35 +500,18 @@ end
 
 % remove unnecessary fields
 for k = 1:numel(removefields)
-  try, segment = rmfield(segment, removefields{k}); end
+  if isfield(segment, removefields{k})
+    segment = rmfield(segment, removefields{k}); 
+  end
 end
 
-% accessing this field here is needed for the configuration tracking
-% by accessing it once, it will not be removed from the output cfg
-cfg.outputfile;
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+ft_postamble previous mri
+ft_postamble history segment
+ft_postamble savevar segment
 
-% get the output cfg
-cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes'); 
-
-% add version information to the configuration
-cfg.version.name = mfilename('fullpath');
-cfg.version.id = '$Id$';
-
-% add information about the Matlab version used to the configuration
-cfg.callinfo.matlab = version();
-
-% remember the configuration details of the input data
-if isfield(segment, 'cfg'),
-  cfg.previous = segment.cfg;
-end
-
-% remember the exact configuration details in the output 
-segment.cfg = cfg;
-
-% the output data should be saved to a MATLAB file
-if ~isempty(cfg.outputfile)
-  savevar(cfg.outputfile, 'segment', segment); % use the variable name "segment" in the output file
-end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [output] = dosmoothing(input, fwhm, str)

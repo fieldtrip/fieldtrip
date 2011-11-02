@@ -71,11 +71,11 @@ for i=1:length(varargin)
 end
 
 % set the defaults
-cfg.truncate   = ft_getopt(cfg, 'truncate',   'no');
-cfg.channel    = ft_getopt(cfg, 'channel',    'MEG');
 cfg.refchannel = ft_getopt(cfg, 'refchannel', 'MEGREF');
-cfg.trials     = ft_getopt(cfg, 'trials',     'all');
+cfg.channel    = ft_getopt(cfg, 'channel',    'MEG');
+cfg.truncate   = ft_getopt(cfg, 'truncate',   'no');
 cfg.zscore     = ft_getopt(cfg, 'zscore',     'no');
+cfg.trials     = ft_getopt(cfg, 'trials',     'all');
 cfg.pertrial   = ft_getopt(cfg, 'pertrial',   'no');
 
 if strcmp(cfg.pertrial, 'yes'),
@@ -280,31 +280,12 @@ else
   warning('fieldtrip:ft_denoise_pca:WeightsNotAppliedToSensors', 'weights have been applied to the data only, not to the sensors');
 end
 
-% get the output cfg
-cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
-
-% add the version details of this function call to the configuration
-cfg.version.name = mfilename('fullpath');
-cfg.version.id   = '$Id$';
-
-% add information about the Matlab version used to the configuration
-cfg.callinfo.matlab = version();
-  
-% add information about the function call to the configuration
-cfg.callinfo.proctime = toc(ftFuncTimer);
-cfg.callinfo.procmem  = memtoc(ftFuncMem);
-cfg.callinfo.calltime = ftFuncClock;
-cfg.callinfo.user = getusername();
-fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
-
-% remember the configuration details of the input data
-cfg.previous = [];
-for i=1:numel(varargin)
-  if isfield(varargin{i}, 'cfg'), cfg.previous{i} = varargin{i}.cfg; end
-end
-
-% put the data back in the output
-data.cfg = cfg;
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+ft_postamble previous varargin
+ft_postamble history data
+ft_postamble savevar data
 
 %%%%%%%%%%%%%%%%%
 % SUBFUNCTIONS

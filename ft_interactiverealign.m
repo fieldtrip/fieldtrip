@@ -7,7 +7,8 @@ function cfg = ft_interactiverealign(cfg)
 % Use as
 %   [cfg] = ft_interactiverealign(cfg)
 %
-% Required configuration options:
+% The configuration structure should contain the individuals geometrical 
+% objects that have to be realigned as
 %  cfg.individual.vol
 %  cfg.individual.elec
 %  cfg.individual.grad
@@ -15,6 +16,8 @@ function cfg = ft_interactiverealign(cfg)
 %  cfg.individual.headshapestyle = 'vertex'  (default), 'surface' or 'both'
 %  cfg.individual.volstyle       = 'edge'    (default), 'surface' or 'both'
 %
+% The configuration structure should also contain the geometrical 
+% objects of a template that serves as target
 %  cfg.template.vol
 %  cfg.template.elec
 %  cfg.template.grad
@@ -107,25 +110,13 @@ clear global norm
 norm = tmp;
 clear tmp
 
-% get the output cfg
-cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
-
-% add version information to the configuration
-cfg.version.name = mfilename('fullpath');
-cfg.version.id = '$Id$';
-
-% add information about the Matlab version used to the configuration
-cfg.callinfo.matlab = version();
-
-% add information about the function call to the configuration
-cfg.callinfo.proctime = toc(ftFuncTimer);
-cfg.callinfo.procmem  = memtoc(ftFuncMem);
-cfg.callinfo.calltime = ftFuncClock;
-cfg.callinfo.user = getusername();
-fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
-
 % remember the transform
 cfg.m = norm.m;
+
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % some simple SUBFUNCTIONs that facilitate 3D plotting

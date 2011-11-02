@@ -99,34 +99,8 @@ if strcmp(cfg.implementation, 'old'),
   else
     [stat, cfg] = statistics_wrapper(cfg, varargin{:});
   end
-  
-  % add version information to the configuration
-  cfg.version.name = mfilename('fullpath');
-  cfg.version.id = '$Id$';
-  
-  % add information about the Matlab version used to the configuration
-  cfg.callinfo.matlab = version();
-  
-  % add information about the function call to the configuration
-  cfg.callinfo.proctime = toc(ftFuncTimer);
-  cfg.callinfo.procmem  = memtoc(ftFuncMem);
-  cfg.callinfo.calltime = ftFuncClock;
-  cfg.callinfo.user = getusername();
-  fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
 
-  % remember the configuration of the input data
-  cfg.previous = [];
-  for i=1:length(varargin)
-    if isfield(varargin{i}, 'cfg')
-      cfg.previous{i} = varargin{i}.cfg;
-    else
-      cfg.previous{i} = [];
-    end
-  end
   
-  % remember the exact configuration details
-  stat.cfg = cfg;
-
 elseif strcmp(cfg.implementation, 'new')
   
   %---------------------------
@@ -442,36 +416,17 @@ elseif strcmp(cfg.implementation, 'new')
     end
   end
 
-  % add version information to the configuration
-  cfg.version.name = mfilename('fullpath');
-  cfg.version.id = '$Id$';
-  
-  % add information about the Matlab version used to the configuration
-  cfg.callinfo.matlab = version();
-  
-  % add information about the function call to the configuration
-  cfg.callinfo.proctime = toc(ftFuncTimer);
-  cfg.callinfo.procmem  = memtoc(ftFuncMem);
-  cfg.callinfo.calltime = ftFuncClock;
-  cfg.callinfo.user = getusername();
-  fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
-  
-  % remember the configuration of the input data
-  cfg.previous = [];
-  for i=1:length(varargin)
-    if isfield(varargin{i}, 'cfg')
-      cfg.previous{i} = varargin{i}.cfg;
-    else
-      cfg.previous{i} = [];
-    end
-  end
-  
-  % remember the exact configuration details
-  stat.cfg = cfg;
-
 else
   error('cfg.implementation can be only old or new');
 end
+
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+ft_postamble previous varargin
+ft_postamble history stat
+ft_postamble savevar stat
+
 
 %-----------------------------------------------------
 %subfunction to extract functional data from the input

@@ -201,9 +201,10 @@ end
 ft_postamble trackconfig
 ft_postamble callinfo
 ft_postamble previous freq
-ft_postamble history output
 
 % rename the output variable to accomodate the savevar postamble
 freq = output;
 
+ft_postamble history freq
 ft_postamble savevar freq
+

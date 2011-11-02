@@ -1,13 +1,13 @@
 function [cfg] = ft_singleplotTFR(cfg, data)
 
-% ft_singleplotTFR plots the time-frequency representations of power of a
+% FT_SINGLEPLOTTFR plots the time-frequency representation of power of a
 % single channel or the average over multiple channels.
 %
-% Use as:
+% Use as
 %   ft_singleplotTFR(cfg,data)
 %
-% The data can be a time-frequency representation of power that was
-% computed using the FT_FREQANALYSIS function.
+% The input freq structure should be a a time-frequency representation of
+% power or coherence that was computed using the FT_FREQANALYSIS function.
 %
 % The configuration can have the following parameters:
 %   cfg.parameter     = field to be plotted on z-axis, e.g. 'powspcrtrm' (default depends on data.dimord)
@@ -60,8 +60,7 @@ function [cfg] = ft_singleplotTFR(cfg, data)
 % connectivity measures are linearly indexed, specifying 'inflow' or
 % 'outflow' can result in unexpected behavior.
 %
-% See also:
-%   FT_SINGLEPLOTER, FT_MULTIPLOTER, FT_MULTIPLOTTFR, FT_TOPOPLOTER, FT_TOPOPLOTTFR
+% See also FT_SINGLEPLOTER, FT_MULTIPLOTER, FT_MULTIPLOTTFR, FT_TOPOPLOTER, FT_TOPOPLOTTFR
 
 % This function depends on FT_FREQBASELINE which has the following options:
 % cfg.baseline, documented
@@ -475,26 +474,11 @@ if ~isempty(cfg.renderer)
   set(gcf, 'renderer', cfg.renderer)
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% deal with the output
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+ft_postamble previous data
 
-% get the output cfg
-cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
-
-% add the version details of this function call to the configuration
-cfg.version.name = mfilename('fullpath'); % this is helpful for debugging
-cfg.version.id   = '$Id$'; % this will be auto-updated by the revision control system
-
-% add information about the Matlab version used to the configuration
-cfg.callinfo.matlab = version();
-
-% add information about the function call to the configuration
-cfg.callinfo.proctime = toc(ftFuncTimer);
-cfg.callinfo.procmem  = memtoc(ftFuncMem);
-cfg.callinfo.calltime = ftFuncClock;
-cfg.callinfo.user = getusername(); % this is helpful for debugging
-fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

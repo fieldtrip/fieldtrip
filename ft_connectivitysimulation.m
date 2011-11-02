@@ -1,4 +1,4 @@
-function [data] = ft_connectivitysimulation(cfg)
+function [simulated] = ft_connectivitysimulation(cfg)
 
 % FT_CONNECTIVITYSIMULATION simulates time series data with a specified
 % connectivity structure.
@@ -7,13 +7,12 @@ function [data] = ft_connectivitysimulation(cfg)
 %   [data] = ft_connectivitysimulation(cfg)
 %
 % where the configuration structure should contain:
-%
-% cfg.method      = string, can be one of the following:
+%   cfg.method      = string, can be one of the following:
 %                    'linear_mix', 'mvnrnd', 'ar' (see below)
-% cfg.nsignal     = scalar, number of signals
-% cfg.ntrials     = scalar, number of trials
-% cfg.triallength = in seconds
-% cfg.fsample     = in Hz
+%   cfg.nsignal     = scalar, number of signals
+%   cfg.ntrials     = scalar, number of trials
+%   cfg.triallength = in seconds
+%   cfg.fsample     = in Hz
 %
 % In addition for the specific methods the configuration may
 % also contain:
@@ -114,11 +113,6 @@ ft_preamble trackconfig
 cfg = ft_checkconfig(cfg, 'required', {'nsignal' 'ntrials' 'triallength' 'fsample' 'method'});
 cfg = ft_checkconfig(cfg, 'rename',   {'blc', 'demean'});
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
-
 % method specific defaults
 switch cfg.method
   case {'ar'}
@@ -150,7 +144,6 @@ for k = 1:cfg.nsignal
 end
 
 switch cfg.method
-  
   case {'ar'}
     
     nlag    = size(cfg.params,3);
@@ -271,27 +264,15 @@ switch cfg.method
 end
 
 % create the output data
-data         = [];
-data.trial   = trial;
-data.time    = time;
-data.fsample = cfg.fsample;
-data.label   = label;
+simulated         = [];
+simulated.trial   = trial;
+simulated.time    = time;
+simulated.fsample = cfg.fsample;
+simulated.label   = label;
 
-% add version details to the configuration
-cfg.version.name = mfilename('fullpath');
-cfg.version.id   = '$Id$';
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+ft_postamble history simulated
+ft_postamble savevar simulated
 
-% add information about the Matlab version used to the configuration
-cfg.callinfo.matlab = version();
-
-% add information about the function call to the configuration
-cfg.callinfo.proctime = toc(ftFuncTimer);
-cfg.callinfo.procmem  = memtoc(ftFuncMem);
-cfg.callinfo.calltime = ftFuncClock;
-cfg.callinfo.user = getusername();
-fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
-
-% remember the configuration details of the input data
-try, cfg.previous = data.cfg; end
-% remember the exact configuration details in the output
-data.cfg     = cfg;

@@ -179,48 +179,13 @@ else
   %warning('the gradiometer description does not match the data anymore');
 end
 
-% accessing this field here is needed for the configuration tracking
-% by accessing it once, it will not be removed from the output cfg
-cfg.outputfile;
-
-% get the output cfg
-cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
-
-% add the version details of this function call to the configuration
-cfg.version.name = mfilename('fullpath');
-cfg.version.id = '$Id$';
-
-% add information about the Matlab version used to the configuration
-cfg.callinfo.matlab = version();
-
-% add information about the function call to the configuration
-cfg.callinfo.proctime = toc(ftFuncTimer);
-cfg.callinfo.procmem  = memtoc(ftFuncMem);
-cfg.callinfo.calltime = ftFuncClock;
-cfg.callinfo.user = getusername();
-fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
-
-if ~hasdata
-  % remember the configuration details of the input data
-  if isfield(comp, 'cfg'), cfg.previous = comp.cfg; end
-  % copy the sampleinfo into the output
-  if isfield(comp, 'sampleinfo')
-    data.sampleinfo = comp.sampleinfo;
-  end
-  % copy the trialinfo into the output
-  if isfield(comp, 'trialinfo')
-    data.trialinfo = comp.trialinfo;
-  end
-elseif hasdata
-  if isfield(comp, 'cfg'), cfg.previous{1} = comp.cfg; end
-  if isfield(comp, 'cfg'), cfg.previous{2} = data.cfg; end
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+if nargin==2
+  ft_postamble previous comp
+elseif nargin==3
+  ft_postamble previous comp data
 end
-
-% keep the configuration in the output
-data.cfg = cfg;
-
-% the output data should be saved to a MATLAB file
-if ~isempty(cfg.outputfile)
-  savevar(cfg.outputfile, 'data', data); % use the variable name "data" in the output file
-end
-
+ft_postamble history data
+ft_postamble savevar data

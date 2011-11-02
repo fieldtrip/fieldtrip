@@ -1,7 +1,7 @@
-function dataout = ft_regressconfound(cfg, datain)
+function [data] = ft_regressconfound(cfg, datain)
 
 % FT_REGRESSCONFOUND estimates the regression weight of a set of confounds
-% using a General Linear Model (GLM) and removes the estimated contribution 
+% using a General Linear Model (GLM) and removes the estimated contribution
 % from the single-trial data.
 %
 % Use as
@@ -10,7 +10,7 @@ function dataout = ft_regressconfound(cfg, datain)
 %   freq     = ft_regressconfound(cfg, freq)
 %
 % where timelock or freq come from FT_TIMELOCKANALYSIS or FT_FREQANALYSIS
-% respectively, with keeptrials = 'yes'. The cfg argument is a structure 
+% respectively, with keeptrials = 'yes'. The cfg argument is a structure
 % that should contain
 %   cfg.confound    = matrix, [Ntrials X Nconfounds]
 %
@@ -54,10 +54,6 @@ function dataout = ft_regressconfound(cfg, datain)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% the initial part deals with parsing the input options and data
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 revision = '$Id$';
 
@@ -234,73 +230,43 @@ elseif isfreq
       % put the clean data back into place
       dataout.powspctrm = reshape(Yc, [nrpt, nchan, nfreq, ntime]); clear Yc;
       dataout.beta      = reshape(beta, [nconf, nchan, nfreq, ntime]);
-            
+      
       % beta statistics
       if isfield(cfg, 'statistics') && strcmp(cfg.statistics, 'yes')
-      fprintf('performing statistics on the regression weights \n');
-      dfe        = nrpt - nconf;                                              % degrees of freedom
-      err        = dat - regr * beta;                                         % err = Y - X * B
-      mse        = sum((err).^2)/dfe;                                         % mean squared error
-      covar      = diag(regr'*regr)';                                         % regressor covariance
-      bvar       = repmat(mse',1,size(covar,2))./repmat(covar,size(mse,2),1); % beta variance
-      tval       = (beta'./sqrt(bvar))';                                      % betas -> t-values
-      prob       = (1-tcdf(tval,dfe))*2;                                      % p-values
-      clear err; clear mse; clear bvar; clear dat; clear regr; clear beta;
-      dataout.stat  = reshape(tval, [nconf, nchan, nfreq, ntime]); clear tval;
-      dataout.prob  = reshape(prob, [nconf, nchan, nfreq, ntime]); clear prob;
+        fprintf('performing statistics on the regression weights \n');
+        dfe        = nrpt - nconf;                                              % degrees of freedom
+        err        = dat - regr * beta;                                         % err = Y - X * B
+        mse        = sum((err).^2)/dfe;                                         % mean squared error
+        covar      = diag(regr'*regr)';                                         % regressor covariance
+        bvar       = repmat(mse',1,size(covar,2))./repmat(covar,size(mse,2),1); % beta variance
+        tval       = (beta'./sqrt(bvar))';                                      % betas -> t-values
+        prob       = (1-tcdf(tval,dfe))*2;                                      % p-values
+        clear err; clear mse; clear bvar; clear dat; clear regr; clear beta;
+        dataout.stat  = reshape(tval, [nconf, nchan, nfreq, ntime]); clear tval;
+        dataout.prob  = reshape(prob, [nconf, nchan, nfreq, ntime]); clear prob;
       end
       
     otherwise
       error('unsupported dimord "%s"', datain.dimord);
   end % switch
   
-  
 else
   error('the input data should be either timelock or freq with trials')
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% deal with the output
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% accessing this field here is needed for the configuration tracking
-% by accessing it once, it will not be removed from the output cfg
-cfg.outputfile;
-
-% get the output cfg
-cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
-
-% add the version details of this function call to the configuration
-cfg.version.name = mfilename('fullpath'); % this is helpful for debugging
-cfg.version.id   = '$Id$'; % this will be auto-updated by the revision control system
-
-% add information about the Matlab version used to the configuration
-cfg.callinfo.matlab = version();
-
-% add information about the function call to the configuration
-cfg.callinfo.proctime = toc(ftFuncTimer);
-cfg.callinfo.procmem  = memtoc(ftFuncMem);
-cfg.callinfo.calltime = ftFuncClock;
-cfg.callinfo.user = getusername(); % this is helpful for debugging
-fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
-
-if hasdata && isfield(datain, 'cfg')
-  % remember the configuration details of the input data
-  cfg.previous = datain.cfg;
-end
-clear datain;
-
-% remember the exact configuration details in the output
-dataout.cfg = cfg;
-
-% discard the gradiometer information because the weightings have been
-% changed
+% discard the gradiometer information because the weightings have been changed
 if isfield(dataout, 'grad')
   warning('discarding gradiometer information because the weightings have been changed');
   dataout = rmfield(dataout, 'grad');
 end
 
-% the output data should be saved to a MATLAB file
-if ~isempty(cfg.outputfile)
-  savevar(cfg.outputfile, 'data', dataout); % use the variable name "data" in the output file
-end
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+ft_postamble previous datain
+
+% rename the output variable to accomodate the savevar postamble
+data = dataout;
+
+ft_postamble history data
+ft_postamble savevar data

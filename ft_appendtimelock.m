@@ -45,38 +45,12 @@ for i=1:length(varargin)
   varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'timelock', 'feedback', 'yes', 'hassampleinfo', 'ifmakessense');
 end
 
-% set the defaults
-if ~isfield(cfg, 'inputfile'),    cfg.inputfile  = [];          end
-if ~isfield(cfg, 'outputfile'),   cfg.outputfile = [];          end
-
 % use a helper function to select the consistent parts of the data and to concatenate it
 timelock = ft_selectdata(varargin{:}, 'param', {'avg' 'trial' 'cov' 'var' 'dof'});
 
-% add version information to the configuration
-cfg.version.name = mfilename('fullpath');
-cfg.version.id = '$Id$';
-
-% add information about the Matlab version used to the configuration
-cfg.callinfo.matlab = version();
-  
-% add information about the function call to the configuration
-cfg.callinfo.proctime = toc(ftFuncTimer);
-cfg.callinfo.procmem  = memtoc(ftFuncMem);
-cfg.callinfo.calltime = ftFuncClock;
-cfg.callinfo.user = getusername();
-fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
-
-% remember the configuration details of the input data
-cfg.previous = cell(1,length(varargin));
-for i=1:numel(varargin)
-  try, cfg.previous{i} = varargin{i}.cfg; end
-end
-
-% remember the exact configuration details in the output
-timelock.cfg = cfg;
-
-% the output data should be saved to a MATLAB file
-if ~isempty(cfg.outputfile)
-  savevar(cfg.outputfile, 'timelock', timelock); % use the variable name "data" in the output file
-end
-
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+ft_postamble previous varargin
+ft_postamble history timelock
+ft_postamble savevar timelock

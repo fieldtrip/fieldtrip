@@ -38,13 +38,16 @@ function dataout = ft_examplefunction(cfg, datain)
 
 revision = '$Id$';
 
-% do the general setup of the function: the ft_preamble function will call a 
-% number of scripts that are able to modify the local workspace
-ft_defaults
-ft_preamble help
-ft_preamble callinfo
-ft_preamble trackconfig
-ft_preamble loadvar datain
+% do the general setup of the function
+
+% the ft_preamble function works by calling a number of scripts from
+% fieldtrip/utility/private that are able to modify the local workspace
+
+ft_defaults                 % this ensures that the path is correct and that the ft_defaults global variable is available
+ft_preamble help            % this will show the function help if nargin==0 and return an error
+ft_preamble callinfo        % this records the time and memory usage at teh beginning of the function
+ft_preamble trackconfig     % this converts the cfg structure in a config object, which tracks the cfg options that are being used
+ft_preamble loadvar datain  % this reads the input data in case the user specified the cfg.inputfile option
 
 % ensure that the input data is valid for this function, this will also do 
 % backward-compatibility conversions of old data that for example was 
@@ -81,36 +84,13 @@ dataout = [];
 % deal with the output
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% accessing this field here is needed for the configuration tracking
-% by accessing it once, it will not be removed from the output cfg
-cfg.outputfile;
+% do the general cleanup and bookkeeping at the end of the function
 
-% get the output cfg
-cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+% the ft_postamble function works by calling a number of scripts from
+% fieldtrip/utility/private that are able to modify the local workspace
 
-% add the version details of this function call to the configuration
-cfg.version.name = mfilename('fullpath'); % this is helpful for debugging
-cfg.version.id   = '$Id$'; % this will be auto-updated by the revision control system
-
-% add information about the Matlab version used to the configuration
-cfg.callinfo.matlab = version();
-  
-% add information about the function call to the configuration
-cfg.callinfo.proctime = toc(ftFuncTimer);
-cfg.callinfo.procmem  = memtoc(ftFuncMem);
-cfg.callinfo.calltime = ftFuncClock;
-cfg.callinfo.user = getusername(); % this is helpful for debugging
-fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
-
-if hasdata && isfield(data, 'cfg')
-  % remember the configuration details of the input data
-  cfg.previous = datain.cfg;
-end
-
-% remember the exact configuration details in the output
-dataout.cfg = cfg;
-
-% the output data should be saved to a MATLAB file
-if ~isempty(cfg.outputfile)
-  savevar(cfg.outputfile, 'data', dataout); % use the variable name "data" in the output file
-end
+ft_postamble trackconfig      % this converts the config object back into a struct and can report on the unused fields
+ft_postamble callinfo         % this records the time and memory at the end of the function, prints them on screen and adds this information together with the function name and matlab version etc. to the output cfg
+ft_postamble previous datain  % this copies the datain.cfg structure into the cfg.previous field. You can also use it for multiple inputs, or for "varargin"
+ft_postamble history dataout  % this adds the local cfg structure to the output data structure, i.e. dataout.cfg = cfg
+ft_postamble savevar dataout  % this saves the output data structure to disk in case the user specified the cfg.outputfile option

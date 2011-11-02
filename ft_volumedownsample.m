@@ -1,12 +1,16 @@
-function [down] = ft_volumedownsample(cfg, source)
+function [downsample] = ft_volumedownsample(cfg, source)
 
 % FT_VOLUMEDOWNSAMPLE downsamples an anatomical MRI or source reconstruction
 % and optionally normalizes its coordinate axes, keeping the homogenous
 % transformation matrix correct.
 %
 % Use as
-%   [volume] = ft_volumedownsample(cfg, volume)
-% where the cconfiguration can contain
+%   [volume] = ft_volumedownsample(cfg, mri)
+% where the input mri should be a single anatomical volume that was
+% for example read with FT_READ_MRI or should be a volumetric source
+% reconstruction resulting from FT_SOURCEANALYSIS or FT_SOURCEINTERPOLATE.
+% 
+% The configuration can contain
 %   cfg.downsample = integer number (default = 1, i.e. no downsampling)
 %   cfg.smooth     = 'no' or the FWHM of the gaussian kernel in voxels (default = 'no')
 %
@@ -75,9 +79,9 @@ end
 
 %make local copy of source and remove all functional parameters
 param = parameterselection('all', source);
-down  = source;
+downsample = source;
 for k = 1:length(param)
-  down = rmsubfield(down, param{k});
+  downsample = rmsubfield(downsample, param{k});
 end
 
 % select the parameters that should be downsampled
@@ -89,17 +93,17 @@ ysel = 1:cfg.downsample:source.dim(2);
 zsel = 1:cfg.downsample:source.dim(3);
 
 % store the coordinate transformation and downsampled axes definition
-down.transform = source.transform;
-down.xgrid     = xsel;
-down.ygrid     = ysel;
-down.zgrid     = zsel;
-down.dim = [length(xsel) length(ysel) length(zsel)];
+downsample.transform = source.transform;
+downsample.xgrid     = xsel;
+downsample.ygrid     = ysel;
+downsample.zgrid     = zsel;
+downsample.dim = [length(xsel) length(ysel) length(zsel)];
 if length(source.dim)>3,
-  down.dim = [down.dim source.dim(4:end)];
+  downsample.dim = [downsample.dim source.dim(4:end)];
 end
 
 % update the downsampled homogenous transformation matrix
-down = grid2transform(down);
+downsample = grid2transform(downsample);
 
 % smooth functional parameters, excluding anatomy and inside
 if isfield(cfg, 'smooth') && ~strcmp(cfg.smooth, 'no'),
@@ -128,47 +132,19 @@ end
 if cfg.downsample~=1
   for i=1:length(cfg.parameter)
     fprintf('downsampling %s\n', cfg.parameter{i});
-    tmp  = getsubfield(source, cfg.parameter{i});
-    down = setsubfield(down, cfg.parameter{i}, tmp(xsel, ysel, zsel));    % downsample the volume
+    tmp        = getsubfield(source, cfg.parameter{i});
+    downsample = setsubfield(downsample, cfg.parameter{i}, tmp(xsel, ysel, zsel));    % downsample the volume
   end
 else
   for i=1:length(cfg.parameter)
     fprintf('not downsampling %s\n', cfg.parameter{i});
-    down = setsubfield(down, cfg.parameter{i}, reshape(getsubfield(source, cfg.parameter{i}), source.dim));
+    downsample = setsubfield(downsample, cfg.parameter{i}, reshape(getsubfield(source, cfg.parameter{i}), source.dim));
   end
 end
 
-% accessing this field here is needed for the configuration tracking
-% by accessing it once, it will not be removed from the output cfg
-cfg.outputfile;
-
-% get the output cfg
-cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
-
-% add version information to the configuration
-cfg.version.name = mfilename('fullpath');
-cfg.version.id = '$Id$';
-
-% add information about the Matlab version used to the configuration
-cfg.callinfo.matlab = version();
-  
-% add information about the function call to the configuration
-cfg.callinfo.proctime = toc(ftFuncTimer);
-cfg.callinfo.procmem  = memtoc(ftFuncMem);
-cfg.callinfo.calltime = ftFuncClock;
-cfg.callinfo.user = getusername();
-fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
-
-% remember the configuration details of the input data
-if isfield(source, 'cfg'),
-  cfg.previous = source.cfg;
-end
-
-% remember the exact configuration details in the output
-down.cfg = cfg;
-
-% the output data should be saved to a MATLAB file
-if ~isempty(cfg.outputfile)
-  savevar(cfg.outputfile, 'source', down); % use the variable name "data" in the output file
-end
-
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+ft_postamble previous source
+ft_postamble history downsample
+ft_postamble savevar downsample

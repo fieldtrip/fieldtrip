@@ -55,7 +55,7 @@ if all(isspike)
   for i=1:length(varargin)
     spike{i} = ft_checkdata(varargin{i}, 'datatype', 'spike');
   end
-
+  
   % check the validity of the channel labels
   label = {};
   for i=1:length(spike)
@@ -64,7 +64,7 @@ if all(isspike)
   if length(unique(label))~=length(label)
     error('not all channel labels are unique');
   end
-
+  
   % concatenate the spikes
   data = spike{1};
   for i=2:length(spike)
@@ -73,42 +73,42 @@ if all(isspike)
     data.timestamp = cat(2, data.timestamp, spike{i}.timestamp);
     data.unit      = cat(2, data.unit, spike{i}.unit);
   end
-
+  
 else
   % this checks the validity of the input data and simultaneously renames it for convenience
   data  = varargin{1}; % ft_checkdata(varargin{1}, 'datatype', 'raw');
-  spike = ft_appendspike([], varargin{2:end}); 
-
+  spike = ft_appendspike([], varargin{2:end});
+  
   % check the validity of the channel labels
   label = cat(1, data.label(:), spike.label(:));
   if length(unique(label))~=length(label)
     error('not all channel labels are unique');
   end
-
+  
   trl = ft_findcfg(data.cfg, 'trl');
   if isempty(trl);
     error('could not find the trial information in the continuous data');
   end
-
+  
   try
     FirstTimeStamp     = data.hdr.FirstTimeStamp;
     TimeStampPerSample = data.hdr.TimeStampPerSample;
   catch
     error('could not find the timestamp information in the continuous data');
   end
-
+  
   for i=1:length(spike.label)
     % append the data with an empty channel
     data.label{end+1} = spike.label{i};
     for j=1:size(trl,1)
       data.trial{j}(end+1,:) = 0;
     end
-
+    
     % determine the corresponding sample numbers for each timestamp
     ts = spike.timestamp{i};
     % timestamps can be uint64, hence explicitely convert to double at the right moment
     sample = round(double(ts-FirstTimeStamp)/TimeStampPerSample + 1);
-
+    
     fprintf('adding spike channel %s\n', spike.label{i});
     for j=1:size(trl,1)
       begsample = trl(j,1);
@@ -121,29 +121,12 @@ else
       end % for k
     end % for j
   end % for i
-
-end
-
-% add version information to the configuration
-cfg.version.name = mfilename('fullpath');
-cfg.version.id = '$Id$';
-
-% add information about the Matlab version used to the configuration
-cfg.callinfo.matlab = version();
   
-% add information about the function call to the configuration
-cfg.callinfo.proctime = toc(ftFuncTimer);
-cfg.callinfo.procmem  = memtoc(ftFuncMem);
-cfg.callinfo.calltime = ftFuncClock;
-cfg.callinfo.user = getusername();
-fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
-
-% remember the configuration details of the input data
-cfg.previous = [];
-for i=1:length(varargin)
-  try, cfg.previous{i} = varargin{i}.cfg; end
 end
-% remember the exact configuration details in the output 
-data.cfg = cfg;
 
-
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+ft_postamble previous varargin
+ft_postamble history data
+ft_postamble savevar data

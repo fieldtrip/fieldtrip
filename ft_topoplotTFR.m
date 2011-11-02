@@ -1,15 +1,14 @@
 function [cfg] = ft_topoplotTFR(cfg, varargin)
 
-% FT_TOPOPLOTTFR plots the topographic distribution of 3-Dimensional ft_datatypes as 
-% the time-frequency representation of power or coherence that was computed
-% using the FT_FREQANALYSIS or FT_FREQDESCRIPTIVES functions, as a 2-D circular
-% view (looking down at the top of the head).
+% FT_TOPOPLOTTFR plots the topographic distribution over the head
+% of a 3-dimensional data representations such as time-frequency
+% representation of the power or coherence spectrum.
 %
-% Use as:
-%   ft_topoplotTFR(cfg, data)
+% Use as
+%   ft_topoplotTFR(cfg, freq)
 %
-% The data can be a time-frequency representation of power that was
-% computed using the FT_FREQANALYSIS function.
+% The input freq structrure should contain a time-resolved power or
+% coherence spectrum from FT_FREQANALYSIS or FT_FREQDESCRIPTIVES.
 %
 % The configuration can have the following parameters:
 %   cfg.parameter          = field that contains the data to be plotted as color
@@ -904,30 +903,14 @@ if strcmp(cfg.interactive, 'yes')
   end
 end
 
-axis off;
-hold off;
-axis equal;
+axis off
+hold off
+axis equal
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% deal with the output
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% get the output cfg
-cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
-
-% add the version details of this function call to the configuration
-cfg.version.name = mfilename('fullpath'); % this is helpful for debugging
-cfg.version.id   = '$Id$'; % this will be auto-updated by the revision control system
-
-% add information about the Matlab version used to the configuration
-cfg.callinfo.matlab = version();
-
-% add information about the function call to the configuration
-cfg.callinfo.proctime = toc(ftFuncTimer);
-cfg.callinfo.procmem  = memtoc(ftFuncMem);
-cfg.callinfo.calltime = ftFuncClock;
-cfg.callinfo.user = getusername(); % this is helpful for debugging
-fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+ft_postamble previous varargin
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

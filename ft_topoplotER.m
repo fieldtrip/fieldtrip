@@ -1,13 +1,18 @@
 function [cfg] = ft_topoplotER(cfg, varargin)
 
-% FT_TOPOPLOTER plots the topographic distribution of 1 or 2-Dimensional channel level data.
+% FT_TOPOPLOTER plots the topographic distribution over the head
+% of a 2-dimensional data representations such as the event-related
+% fields or potentials or the power- or coherence spectrum.
 %
-% Use as:
-%   ft_topoplotER(cfg, data)
+% Use as
+%   ft_topoplotER(cfg, timelock)
+% or
+%   ft_topoplotER(cfg, freq)
 %
-% The data can be an erp/erf produced by FT_TIMELOCKANALYSIS, a powerspectrum (without time dimension)
-% produced by FT_FREQANALYSIS or a connectivityspectrum produced by FT_CONNECTIVITYANALYSIS.
-% Also, the output to FT_FREQSTATISTICS and FT_TIMELOCKSTATISTICS can be visualised. 
+% The data can be an erp/erf produced by FT_TIMELOCKANALYSIS, a powerspectrum
+% (without time dimension) produced by FT_FREQANALYSIS or a connectivityspectrum
+% produced by FT_CONNECTIVITYANALYSIS.  Also, the output to FT_FREQSTATISTICS
+% and FT_TIMELOCKSTATISTICS can be visualised.
 %
 % The configuration can have the following parameters:
 %   cfg.parameter          = field that contains the data to be plotted as color 
@@ -70,13 +75,13 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 %                            In a interactive plot you can select areas and produce a new
 %                            interactive plot when a selected area is clicked. Multiple areas 
 %                            can be selected by holding down the SHIFT key.
-%   cfg.directionality = '', 'inflow' or 'outflow' specifies for
-%                       connectivity measures whether the inflow into a
-%                       node, or the outflow from a node is plotted. The
-%                       (default) behavior of this option depends on the dimor
-%                       of the input data (see below).
-%   cfg.layout        = specify the channel layout for plotting using one of
-%                       the supported ways (see below).
+%   cfg.directionality     = '', 'inflow' or 'outflow' specifies for
+%                            connectivity measures whether the inflow into a
+%                            node, or the outflow from a node is plotted. The
+%                            (default) behavior of this option depends on the dimor
+%                            of the input data (see below).
+%   cfg.layout             = specify the channel layout for plotting using one of
+%                            the supported ways (see below).
 %
 % For the plotting of directional connectivity data the cfg.directionality
 % option determines what is plotted. The default value and the supported
@@ -96,17 +101,17 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 % connectivity measures are linearly indexed, specifying 'inflow' or
 % 'outflow' can result in unexpected behavior.
 %  
-%   The layout defines how the channels are arranged. You can specify the
-%   layout in a variety of ways:
-%    - you can provide a pre-computed layout structure, see FT_PREPARE_LAYOUT
-%    - you can give the name of an ascii layout file with extension *.lay
-%    - you can give the name of an electrode file
-%    - you can give an electrode definition, i.e. "elec" structure
-%    - you can give a gradiometer definition, i.e. "grad" structure
-%   If you do not specify any of these and the data structure contains an
-%   electrode or gradiometer structure, that will be used for creating a
-%   layout. If you want to have more fine-grained control over the layout
-%   of the subplots, you should create your own layout file.
+% The layout defines how the channels are arranged. You can specify the
+% layout in a variety of ways:
+%  - you can provide a pre-computed layout structure, see FT_PREPARE_LAYOUT
+%  - you can give the name of an ascii layout file with extension *.lay
+%  - you can give the name of an electrode file
+%  - you can give an electrode definition, i.e. "elec" structure
+%  - you can give a gradiometer definition, i.e. "grad" structure
+% If you do not specify any of these and the data structure contains an
+% electrode or gradiometer structure, that will be used for creating a
+% layout. If you want to have more fine-grained control over the layout
+% of the subplots, you should create your own layout file.
 %
 % See also FT_SINGLEPLOTER, FT_MULTIPLOTER, FT_SINGLEPLOTTFR, FT_MULTIPLOTTFR, 
 % FT_TOPOPLOTTFR, FT_PREPARE_LAYOUT

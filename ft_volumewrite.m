@@ -7,11 +7,11 @@ function ft_volumewrite(cfg, volume)
 %
 % Use as
 %   ft_volumewrite(cfg, volume)
-%
-% The volume structure should contain a source reconstruction that originates
-% from SOURCANALYSIS, a statistical parameter from FT_SOURCESTATISTICS or an
-% interpolated and re-aligned anatomical MRI  source reconstruction
-% from FT_SOURCEINTERPOLATE.
+% where the input volume structure should represent an anatomical MRI
+% that was for example obtained from FT_READ_MRI, the source
+% reconstruction results from FT_SOURCEANALYSIS, the statistical
+% results from FT_SOURCESTATISTICS or an otherwise processed anatomical
+% or functional volume.
 %
 % The configuration structure should contain the following elements
 %   cfg.parameter     = string, describing the functional data to be processed,

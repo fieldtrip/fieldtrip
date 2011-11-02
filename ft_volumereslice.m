@@ -1,4 +1,4 @@
-function resliced = ft_volumereslice(cfg, mri)
+function [reslice] = ft_volumereslice(cfg, mri)
 
 % FT_VOLUMERESLICE interpolates and reslices a volume along the
 % principal axes of the coordinate system according to a specified
@@ -6,8 +6,10 @@ function resliced = ft_volumereslice(cfg, mri)
 %
 % Use as
 %   mri = ft_volumereslice(cfg, mri)
-% where the mri contains an anatomical or functional volume and cfg is a
-% configuration structure containing
+% where the input mri should be a single anatomical or functional MRI
+% volume that was for example read with FT_READ_MRI.
+%
+% The configuration structure can contain
 %   cfg.resolution = number, in physical units
 % The new spatial extent can be specified with
 %   cfg.xrange     = [min max], in physical units
@@ -121,54 +123,31 @@ xgrid = cfg.xrange(1):cfg.resolution:cfg.xrange(2);
 ygrid = cfg.yrange(1):cfg.resolution:cfg.yrange(2);
 zgrid = cfg.zrange(1):cfg.resolution:cfg.zrange(2);
 
-resliced           = [];
-resliced.dim       = [length(xgrid) length(ygrid) length(zgrid)];
-resliced.transform = translate([cfg.xrange(1) cfg.yrange(1) cfg.zrange(1)]) * scale([cfg.resolution cfg.resolution cfg.resolution]) * translate([-1 -1 -1]);
-resliced.anatomy   = zeros(resliced.dim, 'int8');
-
-% these are the same in the resliced as in the input anatomical MRI
-if isfield(mri, 'coordsys')
-  resliced.coordsys = mri.coordsys;
-end
-if isfield(mri, 'unit')
-  resliced.unit = mri.unit;
-end
+reslice           = [];
+reslice.dim       = [length(xgrid) length(ygrid) length(zgrid)];
+reslice.transform = translate([cfg.xrange(1) cfg.yrange(1) cfg.zrange(1)]) * scale([cfg.resolution cfg.resolution cfg.resolution]) * translate([-1 -1 -1]);
+reslice.anatomy   = zeros(reslice.dim, 'int8');
 
 clear xgrid ygrid zgrid
 
-fprintf('reslicing from [%d %d %d] to [%d %d %d]\n', mri.dim(1), mri.dim(2), mri.dim(3), resliced.dim(1), resliced.dim(2), resliced.dim(3));
+% these are the same in the resliced as in the input anatomical MRI
+if isfield(mri, 'coordsys')
+  reslice.coordsys = mri.coordsys;
+end
+if isfield(mri, 'unit')
+  reslice.unit = mri.unit;
+end
 
+fprintf('reslicing from [%d %d %d] to [%d %d %d]\n', mri.dim(1), mri.dim(2), mri.dim(3), reslice.dim(1), reslice.dim(2), reslice.dim(3));
+
+% the actual work is being done by ft_sourceinterpolate, which interpolates the real mri volume 
+% on the resolution that is defined for the resliced volume
 tmpcfg = [];
-resliced = ft_sourceinterpolate(tmpcfg, mri, resliced);
+reslice = ft_sourceinterpolate(tmpcfg, mri, reslice);
 
-% accessing this field here is needed for the configuration tracking
-% by accessing it once, it will not be removed from the output cfg
-cfg.outputfile;
-
-% add version information to the configuration
-cfg.version.name = mfilename('fullpath');
-cfg.version.id = '$Id$';
-
-% add information about the Matlab version used to the configuration
-cfg.callinfo.matlab = version();
-
-% add information about the function call to the configuration
-cfg.callinfo.proctime = toc(ftFuncTimer);
-cfg.callinfo.procmem  = memtoc(ftFuncMem);
-cfg.callinfo.calltime = ftFuncClock;
-cfg.callinfo.user = getusername();
-fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
-
-% remember the configuration details of the input data
-if isfield(cfg, 'previous'),
-  cfg.previous = mri.cfg;
-end
-
-% remember the exact configuration details in the output
-resliced.cfg = cfg;
-
-% the output data should be saved to a MATLAB file
-if ~isempty(cfg.outputfile)
-  savevar(cfg.outputfile, 'mri', resliced); % use the variable name "mri" in the output file
-end
-
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+ft_postamble previous mri
+ft_postamble history reslice
+ft_postamble savevar reslice

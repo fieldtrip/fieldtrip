@@ -1,4 +1,4 @@
-function [mri] = ft_volumerealign(cfg, mri)
+function [realign] = ft_volumerealign(cfg, mri)
 
 % FT_VOLUMEREALIGN spatially aligns an anatomical MRI with head coordinates based on
 % external fiducials or anatomical landmarks. This function does not change the
@@ -8,14 +8,13 @@ function [mri] = ft_volumerealign(cfg, mri)
 %
 % This function only changes the coordinate system of an anatomical
 % MRI, it does not change the MRI as such. For spatial normalisation
-% (warping) of an MRI to a template brain you should use the
+% (i.e. warping) of an MRI to a template brain you should use the
 % FT_VOLUMENORMALISE function.
 %
 % Use as
 %   [mri] = ft_volumerealign(cfg, mri)
-% where mri is an anatomical volume (i.e. MRI) or a functional
-% volume (i.e. source reconstruction that has been interpolated on
-% an MRI).
+% where the input mri should be a single anatomical or functional MRI
+% volume that was for example read with FT_READ_MRI.
 %
 % The configuration can contain the following options
 %   cfg.method         = different methods for aligning the volume
@@ -469,7 +468,7 @@ if basedonfid
   rpa_head = warp_apply(mri.transform, cfg.fiducial.rpa);
   
   % compute the homogenous transformation matrix describing the new coordinate system
-  [realign, coordsys] = headcoordinates(nas_head, lpa_head, rpa_head, cfg.coordsys);
+  [transform, coordsys] = headcoordinates(nas_head, lpa_head, rpa_head, cfg.coordsys);
   
 elseif basedonmrk
   % the fiducial locations are now specified in voxels, convert them to head
@@ -479,56 +478,36 @@ elseif basedonmrk
   xzpoint= warp_apply(mri.transform, cfg.landmark.xzpoint);
   
   % compute the homogenous transformation matrix describing the new coordinate system
-  [realign, coordsys] = headcoordinates(ac, pc, xzpoint, 'spm');
+  [transform, coordsys] = headcoordinates(ac, pc, xzpoint, 'spm');
   
 else
-  realign = [];
+  transform = [];
   
-end
+end % if basedonXXX
 
-if ~isempty(realign)
+% copy the input anatomical or functional volume
+realign = mri;
+
+if ~isempty(transform)
   % combine the additional transformation with the original one
-  mri.transformorig = mri.transform;
-  mri.transform = realign * mri.transform;
-  mri.coordsys  = coordsys;
+  realign.transformorig = mri.transform;
+  realign.transform     = transform * mri.transform;
+  realign.coordsys      = coordsys;
 else
   warning('no coordinate system realignment has been done');
 end
 
 if exist('pnt', 'var')
-  mri.pnt = pnt;
+  realign.pnt = pnt;
 end
 
-% accessing this field here is needed for the configuration tracking
-% by accessing it once, it will not be removed from the output cfg
-cfg.outputfile;
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+ft_postamble previous mri
+ft_postamble history realign
+ft_postamble savevar realign
 
-% get the output cfg
-cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
-
-% add version information to the configuration
-cfg.version.name = mfilename('fullpath');
-cfg.version.id = '$Id$';
-
-% add information about the Matlab version used to the configuration
-cfg.version.matlab = version();
-
-% add information about the function call to the configuration
-cfg.callinfo.proctime = toc(ftFuncTimer);
-cfg.callinfo.procmem  = memtoc(ftFuncMem);
-cfg.callinfo.calltime = ftFuncClock;
-cfg.callinfo.user = getusername();
-fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
-
-if isfield(mri, 'cfg'), cfg.previous = mri.cfg; end
-
-% remember the configuration
-mri.cfg = cfg;
-
-% the output data should be saved to a MATLAB file
-if ~isempty(cfg.outputfile)
-  savevar(cfg.outputfile, 'mri', mri); % use the variable name "data" in the output file
-end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper function to show three orthogonal slices
