@@ -12,67 +12,67 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 % was computed using the FT_FREQANALYSIS or FT_FREQDESCRIPTIVES functions.
 %
 % The configuration can have the following parameters:
-% cfg.parameter        = field to be represented as color (default depends on data.dimord)
-%                        'powspctrm' or 'cohspctrm' 
-% cfg.maskparameter    = field in the data to be used for opacity masking of data
-% cfg.maskstyle        = style used to mask nans, 'opacity' or 'saturation' (default = 'opacity')
-%                        use 'saturation' when saving to vector-format (like *.eps) to avoid all 
-%                        sorts of image-problems (currently only possible with a white backgroud)
-% cfg.maskalpha        = alpha value used for masking areas dictated by cfg.maskparameter (0 - 1, default = 1)
-% cfg.xlim             = 'maxmin' or [xmin xmax] (default = 'maxmin')
-% cfg.ylim             = 'maxmin' or [ymin ymax] (default = 'maxmin')
-% cfg.zlim             = 'maxmin','maxabs' or [zmin zmax] (default = 'maxmin')
-% cfg.gradscale        = number, scaling to apply to the MEG gradiometer channels prior to display
-% cfg.magscale         = number, scaling to apply to the MEG magnetometer channels prior to display
-% cfg.channel          = Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
-% cfg.refchannel       = name of reference channel for visualising connectivity, can be 'gui'
-% cfg.baseline         = 'yes','no' or [time1 time2] (default = 'no'), see FT_FREQBASELINE
-% cfg.baselinetype     = 'absolute' or 'relative' (default = 'absolute')
-% cfg.trials           = 'all' or a selection given as a 1xN vector (default = 'all')
-% cfg.box              = 'yes', 'no' (default = 'no' if maskparameter given default = 'yes')
-%                        Draw a box around each graph
-% cfg.hotkeys          = enables hotkeys (up/down arrows) for dynamic colorbar adjustment
-% cfg.colorbar         = 'yes', 'no' (default = 'no')
-% cfg.colormap         = any sized colormap, see COLORMAP
-% cfg.comment          = string of text (default = date + zlimits)
-%                        Add 'comment' to graph (according to COMNT in the layout)
-% cfg.showlabels       = 'yes', 'no' (default = 'no')
-% cfg.showoutline      = 'yes', 'no' (default = 'no')
-% cfg.fontsize         = font size of comment and labels (if present) (default = 8)
-% cfg.interactive      = Interactive plot 'yes' or 'no' (default = 'no')
-%                        In a interactive plot you can select areas and produce a new
-%                        interactive plot when a selected area is clicked. Multiple areas 
-%                        can be selected by holding down the SHIFT key.
-% cfg.masknans         = 'yes' or 'no' (default = 'yes')
-% cfg.renderer         = 'painters', 'zbuffer',' opengl' or 'none' (default = [])
-% cfg.directionality   = '', 'inflow' or 'outflow' specifies for
-%                        connectivity measures whether the inflow into a
-%                        node, or the outflow from a node is plotted. The
-%                        behavior of this option depends on the input data.
-%                        If the input data is of dimord 'chan_chan_XXX',
-%                        the value of directionality determines whether,
-%                        given the reference channel(s), the columns
-%                        (inflow), or rows (outflow) are selected for
-%                        plotting. In this situation the default is
-%                        'inflow'. Note that for undirected measures,
-%                        inflow and outflow should give the same output.
-%                        When the input data is of dimord 'chancmb_XXX',
-%                        the value of directionality determines whether the
-%                        rows in data.labelcmb are selected. With 'inflow'
-%                        the rows are selected if the refchannel(s) occur
-%                        in the right column, with 'outflow' the rows are
-%                        selected if the refchannel(s) occur in the left
-%                        column of the labelcmb-field. Default in this case
-%                        is '', which means that all rows are selected in
-%                        which the refchannel(s) occur. This is to robustly
-%                        support linearly indexed undirected connectivity
-%                        metrics. In the situation where undirected
-%                        connectivity measures are linearly indexed,
-%                        specifying 'inflow' or
-%                          'outflow' can result in unexpected behavior.
-% cfg.layout           = specify the channel layout for plotting using one of 
-%                        the following ways:
-%
+%   cfg.parameter        = field to be represented as color (default depends on data.dimord)
+%                          'powspctrm' or 'cohspctrm' 
+%   cfg.maskparameter    = field in the data to be used for opacity masking of data
+%   cfg.maskstyle        = style used to mask nans, 'opacity' or 'saturation' (default = 'opacity')
+%                          use 'saturation' when saving to vector-format (like *.eps) to avoid all 
+%                          sorts of image-problems (currently only possible with a white backgroud)
+%   cfg.maskalpha        = alpha value used for masking areas dictated by cfg.maskparameter (0 - 1, default = 1)
+%   cfg.xlim             = 'maxmin' or [xmin xmax] (default = 'maxmin')
+%   cfg.ylim             = 'maxmin' or [ymin ymax] (default = 'maxmin')
+%   cfg.zlim             = 'maxmin','maxabs' or [zmin zmax] (default = 'maxmin')
+%   cfg.gradscale        = number, scaling to apply to the MEG gradiometer channels prior to display
+%   cfg.magscale         = number, scaling to apply to the MEG magnetometer channels prior to display
+%   cfg.channel          = Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
+%   cfg.refchannel       = name of reference channel for visualising connectivity, can be 'gui'
+%   cfg.baseline         = 'yes','no' or [time1 time2] (default = 'no'), see FT_FREQBASELINE
+%   cfg.baselinetype     = 'absolute' or 'relative' (default = 'absolute')
+%   cfg.trials           = 'all' or a selection given as a 1xN vector (default = 'all')
+%   cfg.box              = 'yes', 'no' (default = 'no' if maskparameter given default = 'yes')
+%                          Draw a box around each graph
+%   cfg.hotkeys          = enables hotkeys (up/down arrows) for dynamic colorbar adjustment
+%   cfg.colorbar         = 'yes', 'no' (default = 'no')
+%   cfg.colormap         = any sized colormap, see COLORMAP
+%   cfg.comment          = string of text (default = date + zlimits)
+%                          Add 'comment' to graph (according to COMNT in the layout)
+%   cfg.showlabels       = 'yes', 'no' (default = 'no')
+%   cfg.showoutline      = 'yes', 'no' (default = 'no')
+%   cfg.fontsize         = font size of comment and labels (if present) (default = 8)
+%   cfg.interactive      = Interactive plot 'yes' or 'no' (default = 'no')
+%                          In a interactive plot you can select areas and produce a new
+%                          interactive plot when a selected area is clicked. Multiple areas 
+%                          can be selected by holding down the SHIFT key.
+%   cfg.masknans         = 'yes' or 'no' (default = 'yes')
+%   cfg.renderer         = 'painters', 'zbuffer',' opengl' or 'none' (default = [])
+%   cfg.directionality   = '', 'inflow' or 'outflow' specifies for
+%                          connectivity measures whether the inflow into a
+%                          node, or the outflow from a node is plotted. The
+%                          behavior of this option depends on the input data.
+%                          If the input data is of dimord 'chan_chan_XXX',
+%                          the value of directionality determines whether,
+%                          given the reference channel(s), the columns
+%                          (inflow), or rows (outflow) are selected for
+%                          plotting. In this situation the default is
+%                          'inflow'. Note that for undirected measures,
+%                          inflow and outflow should give the same output.
+%                          When the input data is of dimord 'chancmb_XXX',
+%                          the value of directionality determines whether the
+%                          rows in data.labelcmb are selected. With 'inflow'
+%                          the rows are selected if the refchannel(s) occur
+%                          in the right column, with 'outflow' the rows are
+%                          selected if the refchannel(s) occur in the left
+%                          column of the labelcmb-field. Default in this case
+%                          is '', which means that all rows are selected in
+%                          which the refchannel(s) occur. This is to robustly
+%                          support linearly indexed undirected connectivity
+%                          metrics. In the situation where undirected
+%                          connectivity measures are linearly indexed,
+%                          specifying 'inflow' or
+%                            'outflow' can result in unexpected behavior.
+%   cfg.layout           = specify the channel layout for plotting using one of 
+%                          the following ways:
+%  
 % The layout defines how the channels are arranged and what the size of each
 % subplot is. You can specify the layout in a variety of ways:
 %  - you can provide a pre-computed layout structure (see ft_prepare_layout)

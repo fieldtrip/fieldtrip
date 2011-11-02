@@ -1,87 +1,88 @@
 function [cfg] = ft_topoplotER(cfg, varargin)
 
-% FT_TOPOPLOTER plots the topographic distribution of 2-Dimensional ft_datatypes as
-% event-related fields (ERF), potentials (ERP), the powerspectrum or coherence spectum
-% that was computed using the FT_TIMELOCKANALYSIS, FT_TIMELOCKGRANDAVERAGE, FT_FREQANALYSIS or
-% FT_FREQDESCRIPTIVES functions, as a 2-D circular view (looking down at the top of the head).
+% FT_TOPOPLOTER plots the topographic distribution of 1 or 2-Dimensional channel level data.
 %
 % Use as:
 %   ft_topoplotER(cfg, data)
 %
-% The configuration can have the following parameters:
-% cfg.parameter          = field that contains the data to be plotted as color 
-%                         'avg', 'powspctrm' or 'cohspctrm' (default depends on data.dimord)
-% cfg.xlim               = selection boundaries over first dimension in data (e.g., time)
-%                          'maxmin' or [xmin xmax] (default = 'maxmin')
-% cfg.ylim               = selection boundaries over second dimension in data (e.g., freq)
-%                          'maxmin' or [xmin xmax] (default = 'maxmin')
-% cfg.zlim               = plotting limits for color dimension, 'maxmin', 'maxabs' or [zmin zmax] (default = 'maxmin')
-% cfg.channel            = Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
-% cfg.refchannel         = name of reference channel for visualising connectivity, can be 'gui'
-% cfg.baseline           = 'yes','no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE or FT_FREQBASELINE
-% cfg.baselinetype       = 'absolute' or 'relative' (default = 'absolute')
-% cfg.trials             = 'all' or a selection given as a 1xN vector (default = 'all')
-% cfg.colormap           = any sized colormap, see COLORMAP
-% cfg.marker             = 'on', 'labels', 'numbers', 'off'                    
-% cfg.markersymbol       = channel marker symbol (default = 'o')
-% cfg.markercolor        = channel marker color (default = [0 0 0] (black))
-% cfg.markersize         = channel marker size (default = 2)
-% cfg.markerfontsize     = font size of channel labels (default = 8 pt)                
-% cfg.highlight          = 'on', 'labels', 'numbers', 'off'                    
-% cfg.highlightchannel   =  Nx1 cell-array with selection of channels, or vector containing channel indices see FT_CHANNELSELECTION 
-% cfg.highlightsymbol    = highlight marker symbol (default = 'o')
-% cfg.highlightcolor     = highlight marker color (default = [0 0 0] (black))
-% cfg.highlightsize      = highlight marker size (default = 6)
-% cfg.highlightfontsize  = highlight marker size (default = 8)
-% cfg.hotkeys            = enables hotkeys (up/down arrows) for dynamic colorbar adjustment
-% cfg.colorbar           = 'yes'
-%                          'no' (default)
-%                          'North'              inside plot box near top
-%                          'South'              inside bottom
-%                          'East'               inside right
-%                          'West'               inside left
-%                          'NorthOutside'       outside plot box near top
-%                          'SouthOutside'       outside bottom
-%                          'EastOutside'        outside right
-%                          'WestOutside'        outside left
-% cfg.interplimits       = limits for interpolation (default = 'head')
-%                          'electrodes' to furthest electrode
-%                          'head' to edge of head
-% cfg.interpolation      = 'linear','cubic','nearest','v4' (default = 'v4') see GRIDDATA
-% cfg.style              = plot style (default = 'both')
-%                          'straight' colormap only
-%                          'contour' contour lines only
-%                          'both' (default) both colormap and contour lines
-%                          'fill' constant color between lines
-%                          'blank' only the head shape
-% cfg.gridscale          = scaling grid size (default = 67)
-%                          determines resolution of figure
-% cfg.shading            = 'flat' 'interp' (default = 'flat')
-% cfg.comment            = string 'no' 'auto' or 'xlim' (default = 'auto')
-%                          'auto': date, xparam and zparam limits are printed
-%                          'xlim': only xparam limits are printed
-% cfg.commentpos         = string or two numbers, position of comment (default 'leftbottom')
-%                          'lefttop' 'leftbottom' 'middletop' 'middlebottom' 'righttop' 'rightbottom'
-%                          'title' to place comment as title
-%                          'layout' to place comment as specified for COMNT in layout
-%                          [x y] coordinates
-% cfg.interactive        = Interactive plot 'yes' or 'no' (default = 'no')
-%                          In a interactive plot you can select areas and produce a new
-%                          interactive plot when a selected area is clicked. Multiple areas 
-%                          can be selected by holding down the SHIFT key.
-% cfg.layout             = specification of the layout, see below
+% The data can be an erp/erf produced by FT_TIMELOCKANALYSIS, a powerspectrum (without time dimension)
+% produced by FT_FREQANALYSIS or a connectivityspectrum produced by FT_CONNECTIVITYANALYSIS.
+% Also, the output to FT_FREQSTATISTICS and FT_TIMELOCKSTATISTICS can be visualised. 
 %
-% The layout defines how the channels are arranged. You can specify the
-% layout in a variety of ways:
-%  - you can provide a pre-computed layout structure, see FT_PREPARE_LAYOUT
-%  - you can give the name of an ascii layout file with extension *.lay
-%  - you can give the name of an electrode file
-%  - you can give an electrode definition, i.e. "elec" structure
-%  - you can give a gradiometer definition, i.e. "grad" structure
-% If you do not specify any of these and the data structure contains an
-% electrode or gradiometer structure, that will be used for creating a
-% layout. If you want to have more fine-grained control over the layout
-% of the subplots, you should create your own layout file.
+% The configuration can have the following parameters:
+%   cfg.parameter          = field that contains the data to be plotted as color 
+%                           'avg', 'powspctrm' or 'cohspctrm' (default depends on data.dimord)
+%   cfg.xlim               = selection boundaries over first dimension in data (e.g., time)
+%                            'maxmin' or [xmin xmax] (default = 'maxmin')
+%   cfg.ylim               = selection boundaries over second dimension in data (e.g., freq)
+%                            'maxmin' or [xmin xmax] (default = 'maxmin')
+%   cfg.zlim               = plotting limits for color dimension, 'maxmin', 'maxabs' or [zmin zmax] (default = 'maxmin')
+%   cfg.channel            = Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
+%   cfg.refchannel         = name of reference channel for visualising connectivity, can be 'gui'
+%   cfg.baseline           = 'yes','no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE or FT_FREQBASELINE
+%   cfg.baselinetype       = 'absolute' or 'relative' (default = 'absolute')
+%   cfg.trials             = 'all' or a selection given as a 1xN vector (default = 'all')
+%   cfg.colormap           = any sized colormap, see COLORMAP
+%   cfg.marker             = 'on', 'labels', 'numbers', 'off'                    
+%   cfg.markersymbol       = channel marker symbol (default = 'o')
+%   cfg.markercolor        = channel marker color (default = [0 0 0] (black))
+%   cfg.markersize         = channel marker size (default = 2)
+%   cfg.markerfontsize     = font size of channel labels (default = 8 pt)                
+%   cfg.highlight          = 'on', 'labels', 'numbers', 'off'                    
+%   cfg.highlightchannel   =  Nx1 cell-array with selection of channels, or vector containing channel indices see FT_CHANNELSELECTION 
+%   cfg.highlightsymbol    = highlight marker symbol (default = 'o')
+%   cfg.highlightcolor     = highlight marker color (default = [0 0 0] (black))
+%   cfg.highlightsize      = highlight marker size (default = 6)
+%   cfg.highlightfontsize  = highlight marker size (default = 8)
+%   cfg.hotkeys            = enables hotkeys (up/down arrows) for dynamic colorbar adjustment
+%   cfg.colorbar           = 'yes'
+%                            'no' (default)
+%                            'North'              inside plot box near top
+%                            'South'              inside bottom
+%                            'East'               inside right
+%                            'West'               inside left
+%                            'NorthOutside'       outside plot box near top
+%                            'SouthOutside'       outside bottom
+%                            'EastOutside'        outside right
+%                            'WestOutside'        outside left
+%   cfg.interplimits       = limits for interpolation (default = 'head')
+%                            'electrodes' to furthest electrode
+%                            'head' to edge of head
+%   cfg.interpolation      = 'linear','cubic','nearest','v4' (default = 'v4') see GRIDDATA
+%   cfg.style              = plot style (default = 'both')
+%                            'straight' colormap only
+%                            'contour' contour lines only
+%                            'both' (default) both colormap and contour lines
+%                            'fill' constant color between lines
+%                            'blank' only the head shape
+%   cfg.gridscale          = scaling grid size (default = 67)
+%                            determines resolution of figure
+%   cfg.shading            = 'flat' 'interp' (default = 'flat')
+%   cfg.comment            = string 'no' 'auto' or 'xlim' (default = 'auto')
+%                            'auto': date, xparam and zparam limits are printed
+%                            'xlim': only xparam limits are printed
+%   cfg.commentpos         = string or two numbers, position of comment (default 'leftbottom')
+%                            'lefttop' 'leftbottom' 'middletop' 'middlebottom' 'righttop' 'rightbottom'
+%                            'title' to place comment as title
+%                            'layout' to place comment as specified for COMNT in layout
+%                            [x y] coordinates
+%   cfg.interactive        = Interactive plot 'yes' or 'no' (default = 'no')
+%                            In a interactive plot you can select areas and produce a new
+%                            interactive plot when a selected area is clicked. Multiple areas 
+%                            can be selected by holding down the SHIFT key.
+%   cfg.layout             = specification of the layout, see below
+%  
+%   The layout defines how the channels are arranged. You can specify the
+%   layout in a variety of ways:
+%    - you can provide a pre-computed layout structure, see FT_PREPARE_LAYOUT
+%    - you can give the name of an ascii layout file with extension *.lay
+%    - you can give the name of an electrode file
+%    - you can give an electrode definition, i.e. "elec" structure
+%    - you can give a gradiometer definition, i.e. "grad" structure
+%   If you do not specify any of these and the data structure contains an
+%   electrode or gradiometer structure, that will be used for creating a
+%   layout. If you want to have more fine-grained control over the layout
+%   of the subplots, you should create your own layout file.
 %
 % See also FT_SINGLEPLOTER, FT_MULTIPLOTER, FT_SINGLEPLOTTFR, FT_MULTIPLOTTFR, 
 % FT_TOPOPLOTTFR, FT_PREPARE_LAYOUT
