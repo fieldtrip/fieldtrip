@@ -69,7 +69,7 @@ vol.o    = single_o;
 vol.c    = conductivity;
 vol.type = 'concentric';
 
-% sort the spheres from the smallest to the largest
+% sort the spheres from the smallest to the largest ('insidefirst' order)
 [vol.r, indx] = sort(vol.r);
 vol.c = vol.c(indx);
 
