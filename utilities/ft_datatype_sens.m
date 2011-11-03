@@ -76,7 +76,7 @@ function [sens] = ft_datatype_sens(sens, varargin)
 % $Id$
 
 % get the optional input arguments, which should be specified as key-value pairs
-version       = ft_getopt(varargin, 'version', 'latest');
+version = ft_getopt(varargin, 'version', 'latest');
 
 if strcmp(version, 'latest')
   version = '2011v2';
@@ -146,6 +146,10 @@ switch version
         % FIXME for EEG or other MEG systems we have not yet figured out how to deal with this
       end
     end
+    
+%     if ~isfield(sens, 'unit')
+%       sens = ft_convert_units(sens);
+%     end
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   otherwise

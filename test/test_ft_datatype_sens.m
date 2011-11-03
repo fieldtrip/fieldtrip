@@ -52,7 +52,7 @@ for i=1:length(filename)
   assert(isfield(sens1, 'chanpos'));
   assert(isfield(sens1, 'chanori'));
   assert(isfield(sens1, 'chantype'));
-  assert(isfield(sens1, 'chanunit'));
+  % assert(isfield(sens1, 'chanunit'));
   % assert(isfield(sens1, 'type'));
   % assert(isfield(sens1, 'unit'));
   
@@ -76,6 +76,9 @@ for i=1:length(filename)
   
   try
     % they should be identical
+    if isfield(sens1, 'unit')
+      sens2 = ft_convert_units(sens2, sens1.unit);
+    end
     assert(isequal(sens1, sens2));
   catch
     warning(lasterr);
