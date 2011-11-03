@@ -88,7 +88,7 @@ end
 artifact = [];
 
 % the data is either passed into the function by the user or read from file with cfg.inputfile
-hasdata = exist('data', var');
+hasdata = exist('data', 'var');
 
 if hasdata
   % read the header
