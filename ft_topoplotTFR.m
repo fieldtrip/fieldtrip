@@ -200,16 +200,25 @@ if Ndata>1 && ~isnumeric(varargin{end})
     if isfield(cfg, 'inputfile')
       cfg = rmfield(cfg, 'inputfile');
     end
+    
+    % the indexing is necessary if ft_topoplotTFR is called from
+    % ft_singleplotER when more input data structures exist. somehow we need to
+    % keep track of which of the data arguments is to be plotted (otherwise the
+    % first data argument is only plotted). yet, we cannot throw away the
+    % other data structures, because in the interactive mode
+    % ft_singleplotER needs all data again and the entry into
+    % ft_singleplotER will be through one of the figures (which thus needs
+    % to have all data avalaible. at the moment I couldn't think of
+    % anything better than using an additional indx variable and letting the 
+    % function recursively call itself.
     ft_topoplotTFR(cfg, varargin{1:Ndata}, indx);
     indx = indx + 1;
   end
   return
 end
 
-data = varargin{1};
-% check that the input data is correct
-% FIXME at this moment (Oct 2011) this fails due to the recursive call with "indx" 
-% data = ft_checkdata(data, 'datatype', {'timelock', 'freq', 'comp'});
+data = varargin{indx}; 
+data = ft_checkdata(data, 'datatype', {'timelock', 'freq', 'comp'});
 
 % check for option-values to be renamed
 cfg = ft_checkconfig(cfg, 'renamedval', {'electrodes',   'dotnum',      'numbers'});
