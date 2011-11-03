@@ -146,6 +146,9 @@ if strcmp(cfg.artfctdef.muscle.method, 'zvalue')
   if isfield(cfg, 'dataformat'),   tmpcfg.dataformat       = cfg.dataformat;    end
   if isfield(cfg, 'headerformat'), tmpcfg.headerformat     = cfg.headerformat;  end
   % call the zvalue artifact detection function
+
+  % the data is either passed into the function by the user or read from file with cfg.inputfile
+  hasdata = exist('data', var');
   
   if hasdata
     % read the header

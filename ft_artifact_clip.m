@@ -87,6 +87,9 @@ end
 % start with an empty artifact list
 artifact = [];
 
+% the data is either passed into the function by the user or read from file with cfg.inputfile
+hasdata = exist('data', var');
+
 if hasdata
   % read the header
   cfg = ft_checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});

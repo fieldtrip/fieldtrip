@@ -95,6 +95,9 @@ if ~strcmp(cfg.artfctdef.ecg.method, 'zvalue'),
   error('method "%s" is not applicable', cfg.artfctdef.ecg.method);
 end
 
+% the data is either passed into the function by the user or read from file with cfg.inputfile
+hasdata = exist('data', var');
+
 if ~hasdata
   cfg = ft_checkconfig(cfg, 'dataset2files', {'yes'});
   cfg = ft_checkconfig(cfg, 'required', {'headerfile', 'datafile'});
