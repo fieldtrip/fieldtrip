@@ -25,9 +25,16 @@ b.sampleinfo = [1 2; 3 4; 5 6];
 ft_checkdata(a, 'datatype', 'timelock', 'hassampleinfo', 'ifmakessense');
 ft_checkdata(b, 'datatype', 'timelock', 'hassampleinfo', 'ifmakessense');
 
-
 c = ft_appendtimelock([], a, b)
 
-if isfield(c, 'avg') && numel(size(c.avg))>2
-  error('the average has incorrect dimensions');
+if isfield(c, 'avg')
+  error('the result should not have an average');
+end
+
+a = rmfield(a, 'trial');
+b = rmfield(b, 'trial');
+c = ft_appendtimelock([], a, b)
+
+if isfield(c, 'avg')
+  error('the result should not have an average');
 end

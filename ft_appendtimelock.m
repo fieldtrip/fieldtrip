@@ -44,8 +44,54 @@ for i=1:length(varargin)
   varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'timelock', 'feedback', 'yes', 'hassampleinfo', 'ifmakessense');
 end
 
-% use a helper function to select the consistent parts of the data and to concatenate it
-timelock = ft_selectdata(varargin{:}, 'param', {'avg' 'trial' 'cov' 'var' 'dof'});
+% set the defaults
+cfg.channel = ft_getopt(cfg, 'channel', 'all');
+
+% ensure that all inputs are sufficiently consistent
+for i=1:length(varargin)
+  if ~isequal(varargin{i}.time, varargin{1}.time)
+    error('this function requires identical time axes for all input structures');
+  end
+end
+
+% select the channels that are in every dataset
+for i=1:length(varargin)
+  cfg.channel = ft_channelselection(cfg.channel, varargin{i}.label);
+end
+
+% start with the initial output structure
+timelock        = [];
+timelock.time   = varargin{1}.time;
+timelock.label  = cfg.channel;
+timelock.dimord = 'rpt_chan_time';
+
+nchan  = length(timelock.label);
+ntime  = length(timelock.time);
+
+if isfield(varargin{1}, 'trial')
+  ntrial = zeros(size(varargin));
+  for i=1:length(varargin)
+    ntrial(i) = size(varargin{i}.trial, 1);
+  end
+  timelock.trial = zeros(sum(ntrial), nchan, ntime);
+  trialsel = cumsum([1 ntrial]);
+  for i=1:length(varargin)
+    % copy the desired data into the output structure
+    begtrial = trialsel(i);
+    endtrial = trialsel(i+1)-1;
+    chansel = match_str(varargin{i}.label, cfg.channel);
+    timelock.trial(begtrial:endtrial,:,:) = varargin{i}.trial(:,chansel,:);
+  end
+  
+elseif isfield(varargin{1}, 'avg')
+  ntrial = numel(varargin);
+  timelock.trial = zeros(ntrial, nchan, ntime);
+  for i=1:length(varargin)
+    % copy the desired data into the output structure
+    chansel = match_str(varargin{i}.label, cfg.channel);
+    timelock.trial(i,:,:) = varargin{i}.avg(chansel,:);
+  end
+end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
@@ -53,4 +99,3 @@ ft_postamble callinfo
 ft_postamble previous varargin
 ft_postamble history timelock
 ft_postamble savevar timelock
-
