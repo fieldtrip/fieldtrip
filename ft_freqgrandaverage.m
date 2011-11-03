@@ -9,11 +9,14 @@ function [grandavg] = ft_freqgrandaverage(cfg, varargin)
 % The input data freq1..N are obtained from either FT_FREQANALYSIS with
 % keeptrials=no or from FT_FREQDESCRIPTIVES. The configuration structure
 % can contain
-%  cfg.keepindividual = 'yes' or 'no' (default = 'no')
-%  cfg.foilim         = [fmin fmax] or 'all', to specify a subset of frequencies (default = 'all')
-%  cfg.toilim         = [tmin tmax] or 'all', to specify a subset of latencies (default = 'all')
-%  cfg.channel        = Nx1 cell-array with selection of channels (default = 'all'),
-%                       see FT_CHANNELSELECTION for details
+%   cfg.keepindividual = 'yes' or 'no' (default = 'no')
+%   cfg.foilim         = [fmin fmax] or 'all', to specify a subset of frequencies (default = 'all')
+%   cfg.toilim         = [tmin tmax] or 'all', to specify a subset of latencies (default = 'all')
+%   cfg.channel        = Nx1 cell-array with selection of channels (default = 'all'),
+%                        see FT_CHANNELSELECTION for details
+%   cfg.parameter      = string or cell-array of strings indicating which
+%                        parameter(s) to average. default is set to
+%                        'powspctrm', if it is present in the data.
 %
 % To facilitate data-handling and distributed computing with the peer-to-peer
 % module, this function has the following options:
@@ -64,18 +67,26 @@ for i=1:length(varargin)
 end
 
 % set the defaults
-if ~isfield(cfg, 'inputfile'),    cfg.inputfile  = [];         end
-if ~isfield(cfg, 'outputfile'),   cfg.outputfile = [];         end
-if ~isfield(cfg, 'keepindividual'), cfg.keepindividual = 'no'; end
-if ~isfield(cfg, 'channel'),        cfg.channel = 'all';       end
-if ~isfield(cfg, 'foilim'),         cfg.foilim = 'all';        end
-if ~isfield(cfg, 'toilim'),         cfg.toilim = 'all';        end
+cfg.inputfile      = ft_getopt(cfg, 'inputfile',  []);
+cfg.outputfile     = ft_getopt(cfg, 'outputfile', []);
+cfg.keepindividual = ft_getopt(cfg, 'keepindividual', 'no');
+cfg.channel        = ft_getopt(cfg, 'channel',    'all');
+cfg.foilim         = ft_getopt(cfg, 'foilim',     'all');
+cfg.toilim         = ft_getopt(cfg, 'toilim',     'all');
+cfg.parameter      = ft_getopt(cfg, 'parameter',  []);
+
+if isempty(cfg.parameter) && isfield(varargin{1}, 'powspctrm')
+  cfg.parameter = 'powspctrm';
+elseif isempty(cfg.parameter)
+  error('you should specify a valid parameter to average');
+end
+
+if ischar(cfg.parameter)
+  cfg.parameter = {cfg.parameter};
+end
 
 Nsubj    = length(varargin);
 dimord   = varargin{1}.dimord;
-haspow   = isfield(varargin{1}, 'powspctrm');             % this should always be true
-hascoh   = isfield(varargin{1}, 'cohspctrm');
-hasplv   = isfield(varargin{1}, 'plvspctrm');
 hasfreq  = ~isempty(strfind(varargin{i}.dimord, 'freq')); % this should always be true
 hastime  = ~isempty(strfind(varargin{i}.dimord, 'time'));
 hasrpt   = ~isempty(strfind(varargin{i}.dimord, 'rpt'));
@@ -83,7 +94,7 @@ hastap   = ~isempty(strfind(varargin{i}.dimord, 'tap'));
 
 % check whether the input data is suitable
 if hasrpt
-  error('the input data of each subject should be an average, use FREQDESCRIPTIVES first');
+  error('the input data of each subject should be an average, use FT_FREQDESCRIPTIVES first');
 end
 if hastap
   error('multiple tapers in the input are not supported');
@@ -121,75 +132,68 @@ cfg.foilim = [fbeg fend];
 cfg.toilim = [tbeg tend];
 
 % select the data in all inputs
-for i=1:Nsubj
-  chansel = match_str(varargin{i}.label, cfg.channel);
-  varargin{i}.label = varargin{i}.label(chansel);
-  if hasfreq
-    freqsel = nearest(varargin{i}.freq, fbeg):nearest(varargin{i}.freq, fend);
-    varargin{i}.freq = varargin{i}.freq(freqsel);
-  end
-  if hastime
-    timesel = nearest(varargin{i}.time, tbeg):nearest(varargin{i}.time, tend);
-    varargin{i}.time = varargin{i}.time(timesel);
-  end
-  % select the overlapping samples in the power spectrum
-  switch dimord
-    case 'chan_freq'
-      varargin{i}.powspctrm = varargin{i}.powspctrm(chansel,freqsel);
-    case 'chan_freq_time'
-      varargin{i}.powspctrm = varargin{i}.powspctrm(chansel,freqsel,timesel);
-    case {'rpt_chan_freq' 'rpttap_chan_freq' 'subj_chan_freq'}
-      varargin{i}.powspctrm = varargin{i}.powspctrm(:,chansel,freqsel);
-    case {'rpt_chan_freq_time' 'rpttap_chan_freq_time' 'subj_chan_freq_time'}
-      varargin{i}.powspctrm = varargin{i}.powspctrm(:,chansel,freqsel,timesel);
-    otherwise
-      error('unsupported dimord');
-  end
-end
+for k=1:numel(cfg.parameter)
+  for i=1:Nsubj
+    if ~isfield(varargin{i}, cfg.parameter{k})
+      error('the field %s is not present in data structure %d', cfg.parameter{k}, i);
+    end
+    chansel = match_str(varargin{i}.label, cfg.channel);
+    varargin{i}.label = varargin{i}.label(chansel);
+    if hasfreq
+      freqsel = nearest(varargin{i}.freq, fbeg):nearest(varargin{i}.freq, fend);
+      varargin{i}.freq = varargin{i}.freq(freqsel);
+    end
+    if hastime
+      timesel = nearest(varargin{i}.time, tbeg):nearest(varargin{i}.time, tend);
+      varargin{i}.time = varargin{i}.time(timesel);
+    end
+    % select the overlapping samples in the power spectrum
+    switch dimord
+      case 'chan_freq'
+        varargin{i}.(cfg.parameter{k}) = varargin{i}.(cfg.parameter{k})(chansel,freqsel);
+      case 'chan_freq_time'
+        varargin{i}.(cfg.parameter{k}) = varargin{i}.(cfg.parameter{k})(chansel,freqsel,timesel);
+      case {'rpt_chan_freq' 'rpttap_chan_freq' 'subj_chan_freq'}
+        varargin{i}.(cfg.parameter{k}) = varargin{i}.(cfg.parameter{k})(:,chansel,freqsel);
+      case {'rpt_chan_freq_time' 'rpttap_chan_freq_time' 'subj_chan_freq_time'}
+        varargin{i}.(cfg.parameter{k}) = varargin{i}.(cfg.parameter{k})(:,chansel,freqsel,timesel);
+      otherwise
+        error('unsupported dimord');
+    end
+  end % for i = subject
+end % for k = parameter
 
 % determine the size of the data to be averaged
-dim = size(varargin{1}.powspctrm);
-if hascoh,
-  cohdim = size(varargin{1}.cohspctrm);
-end
-if hasplv,
-  plvdim = size(varargin{1}.plvspctrm);
+dim = cell(1,numel(cfg.parameter));
+for k=1:numel(cfg.parameter)
+  dim{k} = size(varargin{1}.(cfg.parameter{k}));
 end
 
 % give some feedback on the screen
 if strcmp(cfg.keepindividual, 'no')
-  if haspow, fprintf('computing average power over %d subjects\n', Nsubj); end
-  if hascoh, fprintf('computing average coherence over %d subjects\n', Nsubj); end
-  if hasplv, fprintf('computing average phase-locking value over %d subjects\n', Nsubj); end
-else
-  if haspow, fprintf('not computing grand average, but keeping individual power for %d subjects\n', Nsubj); end
-  if hascoh, fprintf('not computing grand average, but keeping individual coherence for %d subjects\n', Nsubj); end
-  if hasplv, fprintf('not computing grand average, but keeping individual phase-locking value for %d subjects\n', Nsubj); end
-end
-
-% allocate memory to hold the data
-if strcmp(cfg.keepindividual, 'no')
-  if haspow, s_pow = zeros(   dim); end
-  if hascoh, s_coh = zeros(cohdim); end
-  if hasplv, s_plv = zeros(plvdim); end
-else
-  if haspow, s_pow = zeros([Nsubj    dim]); end
-  if hascoh, s_coh = zeros([Nsubj cohdim]); end
-  if hasplv, s_plv = zeros([Nsubj plvdim]); end
-end
-
-for s=1:Nsubj
-  if strcmp(cfg.keepindividual, 'no')
-    % add this subject to the total sum
-    if haspow, s_pow = s_pow + varargin{s}.powspctrm; end
-    if hascoh, s_coh = s_coh + varargin{s}.cohspctrm; end
-    if hasplv, s_plv = s_plv + varargin{s}.plvspctrm; end
-  else
-    % concatenate this subject to the rest
-    if haspow, s_pow(s,:) = varargin{s}.powspctrm(:); end
-    if hascoh, s_coh(s,:) = varargin{s}.cohspctrm(:); end
-    if hasplv, s_plv(s,:) = varargin{s}.plvspctrm(:); end
+  for k=1:numel(cfg.parameter)
+    fprintf('computing average %s over %d subjects\n', cfg.parameter{k}, Nsubj);
   end
+else
+  for k=1:numel(cfg.parameter)
+    fprintf('not computing average, but keeping individual %s for %d subjects\n', cfg.parameter{k}, Nsubj);
+  end
+end
+
+% allocate memory to hold the data and collect it
+for k=1:numel(cfg.parameter)
+  if strcmp(cfg.keepindividual, 'no')
+    tmp = zeros(dim{k});
+    for s=1:Nsubj
+      tmp = tmp + varargin{s}.(cfg.parameter{k})./Nsubj; % do a weighted running sum
+    end
+  elseif strcmp(cfg.keepindividual, 'yes')
+    tmp = zeros([Nsubj dim{k}]);
+    for s=1:Nsubj
+      tmp(s,:,:,:,:) = varargin{s}.(cfg.parameter{k});
+    end
+  end
+  grandavg.(cfg.parameter{k}) = tmp;  
 end
 
 % collect the output data
@@ -199,35 +203,17 @@ if isfield(varargin{1}, 'time')
   % remember the time axis
   grandavg.time = varargin{1}.time;
 end
+if isfield(varargin{1}, 'labelcmb')
+  grandavg.labelcmb = varargin{1}.labelcmb;
+end
 if isfield(varargin{1}, 'grad')
   warning('discarding gradiometer information because it cannot be averaged');
 end
 if isfield(varargin{1}, 'elec')
   warning('discarding electrode information because it cannot be averaged');
 end
-
-if strcmp(cfg.keepindividual, 'no')
-  grandavg.dimord = dimord;
-  grandavg.powspctrm = s_pow/Nsubj;
-  if hascoh,
-    grandavg.labelcmb = varargin{1}.labelcmb;
-    grandavg.cohspctrm = s_coh/Nsubj;
-  end
-  if hasplv,
-    grandavg.labelcmb = varargin{1}.labelcmb;
-    grandavg.plvspctrm = s_plv/Nsubj;
-  end
-else
-  grandavg.dimord = ['subj_' dimord];
-  grandavg.powspctrm = s_pow;
-  if hascoh,
-    grandavg.labelcmb  = varargin{1}.labelcmb;
-    grandavg.cohspctrm = s_coh;
-  end
-  if hasplv,
-    grandavg.labelcmb  = varargin{1}.labelcmb;
-    grandavg.plvspctrm = s_plv;
-  end
+if strcmp(cfg.keepindividual, 'yes')
+  grandavg.dimord = ['subj_',varargin{1}.dimord];
 end
 
 % do the general cleanup and bookkeeping at the end of the function
