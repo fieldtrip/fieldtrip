@@ -214,6 +214,8 @@ if isfield(varargin{1}, 'elec')
 end
 if strcmp(cfg.keepindividual, 'yes')
   grandavg.dimord = ['subj_',varargin{1}.dimord];
+elseif strcmp(cfg.keepindividual, 'no')
+  grandavg.dimord = varargin{1}.dimord;
 end
 
 % do the general cleanup and bookkeeping at the end of the function
