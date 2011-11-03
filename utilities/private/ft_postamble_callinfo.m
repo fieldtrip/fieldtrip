@@ -1,4 +1,8 @@
-% FT_POSTAMBLE_CALLINFO
+% FT_POSTAMBLE_CALLINFO is a helper script that reports the time and memory
+% that was used by the calling function and that stores this information
+% together with user name, MATLAB version and some other stuff in the
+% output cfg structure. This should be used together with FT_PREAMBLE_CALLINFO,
+% which records the time and memory at the start of the function.
 
 stack = dbstack('-completenames');
 % stack(1) is this script
@@ -18,7 +22,12 @@ cfg.callinfo.pwd      = pwd;
 
 % add information about the function filename and revision to the configuration
 cfg.version.name = stack.file;
-cfg.version.id   = revision;
+% the revision number is maintained by SVN in the revision variable in the calling function
+if ~exist('revision', 'var')
+  cfg.version.id   = 'unknown';
+else
+  cfg.version.id   = revision;
+end
 
 % give some feedback
 fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', stack.name, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));

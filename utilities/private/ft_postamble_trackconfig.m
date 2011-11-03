@@ -1,4 +1,7 @@
-% FT_POSTAMBLE_TRACKCONFIG
+% FT_POSTAMBLE_TRACKCONFIG is a helper script that requests ft_checkconfig
+% to switch off the (optional) configuration tracking and to report on the
+% used and unused options and/or clean up the output cfg structure. This
+% should be used together with FT_PREAMBLE_TRACKCONFIG.
 
 % otherwise the empty field would end up in the output cfg
 global ft_default

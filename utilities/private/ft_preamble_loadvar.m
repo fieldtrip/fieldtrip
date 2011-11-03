@@ -1,4 +1,12 @@
-% FT_PREAMBLE_LOADVAR
+% FT_PREAMBLE_LOADVAR is a helper script that optionally loads one or
+% multiple fieldtrip data structures from mat files on disk, as an
+% alternative to the user specifying the data structures as input variables
+% to the calling function. This makes use of the cfg.inputfile variable.
+% 
+% Use as
+%   ft_preamble loadvar data
+%   ft_preamble loadvar source mri
+%   ft_preamble loadvar varargin
 
 % use an anonymous function
 assign = @(var, val) assignin('caller', var, val);

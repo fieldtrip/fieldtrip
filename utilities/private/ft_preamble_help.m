@@ -1,7 +1,8 @@
-% FT_PREAMBLE_HELP
+% FT_PREAMBLE_HELP is a helper script that display the calling-function's
+% help in case the user did not specify any input argument. This can be
+% used in all fieldtrip main functions that take at least a cfg input
+% argument, and most also take one or multiple data structures.
 
-% all fieldtrip main functions take at least a cfg input argument, and most also take one or multiple data structures
-% display the function help in case the user did not specify any input arguments
 if nargin==0
   stack = dbstack('-completenames');
   % stack(1) is this script
