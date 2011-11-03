@@ -68,29 +68,48 @@ timelock.dimord = 'rpt_chan_time';
 nchan  = length(timelock.label);
 ntime  = length(timelock.time);
 
+
 if isfield(varargin{1}, 'trial')
+  % these don't make sense when concatenating the avg
+  hastrialinfo  = isfield(varargin{1}, 'triainfo');
+  hassampleinfo = isfield(varargin{1}, 'sampleinfo');
+  hascov        = isfield(varargin{1}, 'cov') && numel(size(varargin{1}.cov))==3;
+  
   ntrial = zeros(size(varargin));
   for i=1:length(varargin)
     ntrial(i) = size(varargin{i}.trial, 1);
   end
-  timelock.trial = zeros(sum(ntrial), nchan, ntime);
   trialsel = cumsum([1 ntrial]);
+  
+  timelock.trial = zeros(sum(ntrial), nchan, ntime);
+  if hastrialinfo,  timelock.trialinfo = zeros(sum(ntrial), size(varargin{1}.trialinfo,2)); end
+  if hassampleinfo, timelock.sampleinfo = zeros(sum(ntrial), size(varargin{1}.sampleinfo,2)); end
+  if hascov, timelock.cov = zeros(sum(ntrial), nchan, nchan); end
+  
   for i=1:length(varargin)
     % copy the desired data into the output structure
     begtrial = trialsel(i);
     endtrial = trialsel(i+1)-1;
     chansel = match_str(varargin{i}.label, cfg.channel);
     timelock.trial(begtrial:endtrial,:,:) = varargin{i}.trial(:,chansel,:);
-  end
+    if hastrialinfo,  timelock.trialinfo(begtrial:endtrial,:)   = varargin{i}.trialinfo(:,:); end
+    if hassampleinfo, timelock.sampleinfo(begtrial:endtrial,:)  = varargin{i}.sampleinfo(:,:); end
+    if hascov,        timelock.cov(begtrial:endtrial,:,:)       = varargin{i}.cov(:,chanselchansel); end
+  end % for varargin
   
 elseif isfield(varargin{1}, 'avg')
+  hascov = isfield(varargin{1}, 'cov') && numel(size(varargin{1}.cov))==2;
+  
   ntrial = numel(varargin);
   timelock.trial = zeros(ntrial, nchan, ntime);
+  if hascov, timelock.cov = zeros(sum(ntrial),nchan,nchan); end
+  
   for i=1:length(varargin)
     % copy the desired data into the output structure
     chansel = match_str(varargin{i}.label, cfg.channel);
     timelock.trial(i,:,:) = varargin{i}.avg(chansel,:);
-  end
+    if hascov, timelock.cov(i,:,:) = varargin{i}.cov(chansel,chansel); end
+  end % for varargin
 end
 
 % do the general cleanup and bookkeeping at the end of the function
