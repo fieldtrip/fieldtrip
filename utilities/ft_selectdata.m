@@ -228,9 +228,9 @@ if length(data)>1 && ~israw,
       % this is for the 'normal' case
       if catdim==0,
         ndim    = length(size(tmp{1}));
-        data{1}.(param{k}) = permute(cat(ndim+1,tmp{:}),[ndim+1 1:ndim]);
+        datacat.(param{k}) = permute(cat(ndim+1,tmp{:}),[ndim+1 1:ndim]);
       else
-        data{1}.(param{k}) = cat(catdim,tmp{:});
+        datacat.(param{k}) = cat(catdim,tmp{:});
       end
     else
       % this is for source data with the positions in a cell-array
@@ -238,7 +238,7 @@ if length(data)>1 && ~israw,
       if catdim==0,
         error('not implemented yet');
       elseif catdim==1,
-        data{1}.(param{k}) = cat(1, tmp{:});
+        datacat.(param{k}) = cat(1, tmp{:});
       else
         for kk = 1:npos
           tmpsiz = size(tmp{1}{kk});
@@ -246,7 +246,7 @@ if length(data)>1 && ~israw,
             for kkk = 1:numel(data)
               tmp2{kkk} = tmp{kkk}{kk};
             end
-            data{1}.(param{k}){kk} = cat(catdim-1, tmp2{:});
+            datacat.(param{k}){kk} = cat(catdim-1, tmp2{:});
           else
             %keep empty
           end
@@ -337,10 +337,11 @@ if length(data)>1 && ~israw,
         end
       end
     end
-    data{1} = setsubfield(data{1}, dimtok{catdim}, tmp);
-    if isfield(data{1}, 'inside'),
-      data{1} = setsubfield(data{1}, 'inside',  tmpinside);
-      data{1} = setsubfield(data{1}, 'outside', setdiff(1:size(data{1}.pos,1)', tmpinside));
+    datacat = setsubfield(datacat, dimtok{catdim}, tmp);
+    if isfield(datacat, 'inside'),
+      datacat = setsubfield(datacat, 'inside',  tmpinside);
+      datacat = setsubfield(datacat, 'outside', setdiff(1:size(data{1}.pos,1)', tmpinside));
+      datacat = setsubfield(datacat, 'pos', data{1}.pos);
     end
     
     %FIXME think about this
@@ -350,6 +351,15 @@ if length(data)>1 && ~israw,
     sortflag  = 0;
     tryfields = {'cumsumcnt','cumtapcnt','trialinfo'};
   end
+  % add additional descriptive fields
+  if isfield(data{1}, 'label'), datacat.label = data{1}.label; end
+  if isfield(data{1}, 'freq'),  datacat.freq  = data{1}.freq;  end
+  if isfield(data{1}, 'time'),  datacat.time  = data{1}.time;  end
+  if isfield(data{1}, 'cumtapcnt'), datacat.cumtapcnt = data{1}.cumtapcnt; end
+  if isfield(data{1}, 'cumsumcnt'), datacat.cumsumcnt = data{1}.cumsumcnt; end
+  if isfield(data{1}, 'trialinfo'), datacat.trialinfo = data{1}.trialinfo; end
+  if isfield(data{1}, 'labelcmb'),  datacat.labelcmb  = data{1}.labelcmb; end
+  
   
   % concatenate the relevant descriptive fields in the data-structure (continued)
   for k = 1:length(tryfields)
@@ -361,7 +371,7 @@ if length(data)>1 && ~israw,
           tmpfield = [tmpfield; data{m}.(tryfields{k})];
         end
       end
-      data{1}.(tryfields{k}) = tmpfield;
+      datacat.(tryfields{k}) = tmpfield;
     catch
     end
   end
@@ -369,7 +379,7 @@ if length(data)>1 && ~israw,
   
   % FIXME this is ugly: solve it
   %if issource || isvolume,
-  %  data{1}.dim(catdim) = max(size(tmp));
+  %  datacat.dim(catdim) = max(size(tmp));
   %end
   
   % sort concatenated data FIXME this is also ugly and depends on tmp
@@ -385,24 +395,25 @@ if length(data)>1 && ~israw,
       end
       tmp     = permute(tmp, [catdim setdiff(1:length(size(tmp)), catdim)]);
       tmp     = ipermute(tmp(ind,:,:,:,:), [catdim setdiff(1:length(size(tmp)), catdim)]);
-      data{1}.(param{k}) = tmp;
+      datacat.(param{k}) = tmp;
     end
   elseif exist('tmp', 'var') && iscell(tmp)
     %in this case (ugly!) tmp is probably a cell-array containing functional data
   end
   % remove unspecified parameters
   if ~issource,
-    %rmparam = setdiff(parameterselection('all',data{1}),[param 'pos' 'inside' 'outside' 'freq' 'time']);
+    %rmparam = setdiff(parameterselection('all',datacat),[param 'pos' 'inside' 'outside' 'freq' 'time']);
     rmparam = {};
   else
-    rmparam = setdiff(fieldnames(data{1}), [param(:)' paramdimord(:)' 'pos' 'inside' 'outside' 'dim' 'cfg' 'vol' 'cumtapcnt' 'orilabel' 'time' 'freq']);
+    rmparam = setdiff(fieldnames(datacat), [param(:)' paramdimord(:)' 'pos' 'inside' 'outside' 'dim' 'cfg' 'vol' 'cumtapcnt' 'orilabel' 'time' 'freq']);
   end
   for k = 1:length(rmparam)
-    data{1} = rmfield(data{1}, rmparam{k});
+    datacat = rmfield(datacat, rmparam{k});
   end
   
+  
   % keep the first structure only
-  data        = data{1};
+  data        = datacat;
   dimord      = dimord{1};
   if ~issource,
     data.dimord = dimord;
