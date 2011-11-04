@@ -6,62 +6,12 @@ function [vol] = ft_prepare_headmodel(cfg, data)
 % are propagated through the tissue and how these result in externally
 % measureable EEG potentials or MEG fields.
 %
-% This function takes care of all the preparatory steps in the
-% construction of the volume conduction model and sets it up so that
-% subsequent computations are efficient and fast.
-%
-% The input to this function is a geometrical description of the
-% shape of the head. 
-%
-% Use as
-%   vol = ft_prepare_headmodel(cfg)
-%   vol = ft_prepare_headmodel(cfg, vol)
-%   vol = ft_prepare_headmodel(cfg, bnd)
-% 
-% The second input argument can be a surface mesh that was obtained from
-% FT_PREPARE_MESH or a segmented anatomical MRI that was obtained from
-% FT_VOLUMESEGMENT.
-% The mesh can be provided optionally as the name of a surface file in cfg.hdmfile
-%
-% The configuration structure should contain:
-%     cfg.method            string that specifies the forward solution, see below
-%     cfg.conductivity      a number or a vector contining the conductivities
-%                           of the compartments
-% 
-% Additionally, each of the following methods requires the custom cfg options:
-% 
-%  'bem_cp', 'bem_dipoli', 'bem_openmeeg' 
-%     cfg.isolatedsource    (optional)
-% 
-%  'concentricspheres'
-%     cfg.fitind            (optional)
-% 
-%  'localspheres'
-%     cfg.grad   
-%     cfg.feedback          (optional)
-%     cfg.radius            (optional)
-%     cfg.maxradius         (optional)
-%     cfg.baseline          (optional)
-% 
-% 'halfspace'
-%     cfg.point     
-%     cfg.submethod         (optional)
-%     
-% 'simbio' , 'fns'
-%     cfg.tissue      
-%     cfg.tissueval 
-%     cfg.tissuecond  
-%     cfg.elect      
-%     cfg.transform   
-%     cfg.unit      
-% 
-% 'infinite_slab'
-%     cfg.samplepoint
-%     cfg.conductivity
-% 
-% FieldTrip implements a variety of forward solutions, some of
-% them using external toolboxes or executables. Each of the forward
-% solutions requires a set of configuration options which are listed below.
+% FieldTrip implements a variety of forward solutions, some of them using
+% external toolboxes or executables. Each of the forward solutions requires
+% a set of configuration options which are listed below. This function
+% takes care of all the preparatory steps in the construction of the volume
+% conduction model and sets it up so that subsequent computations are
+% efficient and fast.
 %
 % For EEG the following methods are available
 %   singlesphere
@@ -79,6 +29,58 @@ function [vol] = ft_prepare_headmodel(cfg, data)
 %   localspheres
 %   singleshell
 %   infinite
+%
+%
+% Use as
+%   vol = ft_prepare_headmodel(cfg)
+%   vol = ft_prepare_headmodel(cfg, vol)
+%   vol = ft_prepare_headmodel(cfg, bnd)
+% 
+% In general the input to this function is a geometrical description of the
+% shape of the head and a description of the electrical conductivity. The
+% second input argument (vol or bnd) can be a surface mesh that was
+% obtained from FT_PREPARE_MESH or a segmented anatomical MRI that was
+% obtained from FT_VOLUMESEGMENT. If the mesh is stored on disk, it can be
+% provided as filename in cfg.hdmfile.
+%
+% The configuration structure should contain:
+%     cfg.method            string that specifies the forward solution, see below
+%     cfg.conductivity      a number or a vector contining the conductivities
+%                           of the compartments
+% 
+% Additionally, the specific methods each have their specific configuration 
+% options that are listed below.
+% 
+% BEM_CP, BEM_DIPOLI, BEM_OPENMEEG
+%     cfg.isolatedsource    (optional)
+% 
+% CONCENTRICSPHERES
+%     cfg.fitind            (optional)
+% 
+% LOCALSPHERES
+%     cfg.grad   
+%     cfg.feedback          (optional)
+%     cfg.radius            (optional)
+%     cfg.maxradius         (optional)
+%     cfg.baseline          (optional)
+% 
+% HALFSPACE
+%     cfg.point     
+%     cfg.submethod         (optional)
+%     
+% SIMBIO, FNS
+%     cfg.tissue      
+%     cfg.tissueval 
+%     cfg.tissuecond  
+%     cfg.elect      
+%     cfg.transform   
+%     cfg.unit      
+% 
+% INFINITE_SLAB
+%     cfg.samplepoint
+%     cfg.conductivity
+%
+% See also FT_PREPARE_MESH, FT_VOLUMESEGMENT, FT_VOLUMEREALIGN
 
 % Copyright (C) 2011, Cristiano Micheli, Jan-Mathijs Schoffelen
 %
@@ -192,6 +194,13 @@ if isfield(geometry,'bnd')
   geometry = geometry.bnd;
 elseif isfield(geometry,'pnt')
   % already good
+elseif isnumeric(geometry) && size(geometry,2)==3
+  % it seems to be a set of points
+  % the following is to avoid the warning: Struct field assignment overwrites a value with class "double".
+  tmp = geometry;
+  clear geometry
+  geometry.pnt = tmp;
+  clear tmp
 else
   error('the geometry is not corectly specified')
 end

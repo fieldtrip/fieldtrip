@@ -1,7 +1,7 @@
 function test_bug1042
 
 % TEST test_bug1042 testbug686
-% TEST 
+% TEST
 
 % $Id$
 
@@ -534,47 +534,46 @@ conductivity = [1 3 7];
 % openmeeg
 
 for k = 1:numel(conductivity)
-
+  
   cond = conductivity(k);
   
   cfg = [];
-  % FIXME this uses an undocumented option (cfg.geom) of ft_prepare_headmodel, which is due to change in the future
-  cfg.geom.pnt = pnt;
   cfg.conductivity = cond;
-
+  
   cfg.method = 'singlesphere';
-  eegvol_singlesphere = ft_prepare_headmodel(cfg);
-
+  eegvol_singlesphere = ft_prepare_headmodel(cfg, pnt);
+  
   cfg.method = 'concentricspheres';
-  eegvol_concentricspheres = ft_prepare_headmodel(cfg);
+  eegvol_concentricspheres = ft_prepare_headmodel(cfg, pnt);
   % HACK otherwise it will call eeg_leadfield1 instead of eeg_leadfield4
   eegvol_concentricspheres.r = repmat(eegvol_concentricspheres.r, 1, 4);
   eegvol_concentricspheres.c = repmat(eegvol_concentricspheres.c, 1, 4);
-
-
+  
+  
   bnd.pnt = pnt;
   bnd.tri = tri;
-
+  
+  geom(1) = bnd;
+  geom(2) = bnd;
+  geom(3) = bnd;
+  geom(2).pnt = geom(2).pnt*0.9;
+  geom(3).pnt = geom(3).pnt*0.8;
+  
   cfg=[];
-  cfg.geom(1) = bnd;
-  cfg.geom(2) = bnd;
-  cfg.geom(3) = bnd;
-  cfg.geom(2).pnt = cfg.geom(2).pnt*0.9;
-  cfg.geom(3).pnt = cfg.geom(3).pnt*0.8;
   cfg.conductivity = [cond cond cond];
   cfg.method = 'bem_cp';
-  eegvol_bem_cp = ft_prepare_headmodel(cfg);
-
+  eegvol_bem_cp = ft_prepare_headmodel(cfg, geom);
+  
   try
     cfg.method = 'bem_dipoli';
-    eegvol_bem_dipoli = ft_prepare_headmodel(cfg);
+    eegvol_bem_dipoli = ft_prepare_headmodel(cfg, geom);
   catch
     eegvol_bem_dipoli = [];
   end
   
-  try 
+  try
     cfg.method = 'bem_openmeeg';
-    eegvol_bem_openmeeg = ft_prepare_headmodel(cfg);
+    eegvol_bem_openmeeg = ft_prepare_headmodel(cfg, geom);
   catch
     eegvol_bem_openmeeg = [];
   end
@@ -583,15 +582,15 @@ for k = 1:numel(conductivity)
   eegvol_singlesphere_m(k)  = ft_convert_units(eegvol_singlesphere, 'm');
   eegvol_singlesphere_cm(k) = ft_convert_units(eegvol_singlesphere, 'cm');
   eegvol_singlesphere_mm(k) = ft_convert_units(eegvol_singlesphere, 'mm');
-
+  
   eegvol_concentricspheres_m(k)  = ft_convert_units(eegvol_concentricspheres, 'm');
   eegvol_concentricspheres_cm(k) = ft_convert_units(eegvol_concentricspheres, 'cm');
   eegvol_concentricspheres_mm(k) = ft_convert_units(eegvol_concentricspheres, 'mm');
-
+  
   eegvol_bem_cp_m(k)  = ft_convert_units(eegvol_bem_cp, 'm');
   eegvol_bem_cp_cm(k) = ft_convert_units(eegvol_bem_cp, 'cm');
   eegvol_bem_cp_mm(k) = ft_convert_units(eegvol_bem_cp, 'mm');
-
+  
   try
     eegvol_bem_dipoli_m(k)  = ft_convert_units(eegvol_bem_dipoli, 'm');
     eegvol_bem_dipoli_cm(k) = ft_convert_units(eegvol_bem_dipoli, 'cm');
@@ -623,31 +622,33 @@ for k = 1:numel(conductivity)
   cond = conductivity(k);
   
   cfg = [];
-
+  
   % FIXME this uses an undocumented option of ft_prepare_headmodel, which is due to change in the future
-  cfg.geom.pnt = pnt;
   cfg.conductivity = cond;
-
+  
   cfg.method = 'singlesphere';
-  megvol_singlesphere = ft_prepare_headmodel(cfg);
-
+  megvol_singlesphere = ft_prepare_headmodel(cfg, pnt);
+  
   cfg.grad = grad_cm;
   cfg.method = 'localspheres';
-  megvol_localspheres = ft_prepare_headmodel(cfg);
+  megvol_localspheres = ft_prepare_headmodel(cfg, pnt);
 
-  cfg.geom.tri = tri;
+  geom = [];
+  geom.pnt = pnt;
+  geom.tri = tri;
+  
   cfg.method = 'singleshell';
-  megvol_singleshell = ft_prepare_headmodel(cfg);
-
+  megvol_singleshell = ft_prepare_headmodel(cfg, geom);
+  
   % construct them for the different geometrical units
   megvol_singlesphere_m(k)  = ft_convert_units(megvol_singlesphere, 'm');
   megvol_singlesphere_cm(k) = ft_convert_units(megvol_singlesphere, 'cm');
   megvol_singlesphere_mm(k) = ft_convert_units(megvol_singlesphere, 'mm');
-
+  
   megvol_localspheres_m(k)  = ft_convert_units(megvol_localspheres, 'm');
   megvol_localspheres_cm(k) = ft_convert_units(megvol_localspheres, 'cm');
   megvol_localspheres_mm(k) = ft_convert_units(megvol_localspheres, 'mm');
-
+  
   megvol_singleshell_m(k)  = ft_convert_units(megvol_singleshell, 'm');
   megvol_singleshell_cm(k) = ft_convert_units(megvol_singleshell, 'cm');
   megvol_singleshell_mm(k) = ft_convert_units(megvol_singleshell, 'mm');
@@ -713,7 +714,7 @@ for k = 1:numel(conductivity)
   end
 end
 
-%% In the table with scaling factors the columns correspond to m, cm, mm, 
+%% In the table with scaling factors the columns correspond to m, cm, mm,
 % the rows correspond to the different volume conduction models
 
 eeg_table = cellfun(@norm, eeg_leadfield);
