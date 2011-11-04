@@ -3,6 +3,9 @@ function test_bug298
 % TEST test_bug298
 % TEST keyval keyvalx
 
+warning('this test has become obsolete because ot the ft_getopt implementation');
+return
+
 keyVals  = {'frequency', 100,'order', 6,'decimation', 4,'steepness', 20,'name' ,'Stefan','matrix', magic(4)};
 keyValsA = {'frequencyA',100,'orderA',6,'decimationA',4,'steepnessA',20,'nameA','Stefan','matrixA',magic(4)};
 keyValsB = {'frequencyB',100,'orderB',6,'decimationB',4,'steepnessB',20,'nameB','Stefan','matrixB',magic(4)};
