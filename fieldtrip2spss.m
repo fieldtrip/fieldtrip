@@ -31,7 +31,7 @@ function fieldtrip2spss(filename, labels, data)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: fieldtrip2spss.m 2439 2010-12-15 16:33:34Z arjsto
+% $Id$
 
 revision = '$Id$';
 

@@ -29,9 +29,7 @@ function [lfp, spike, stm, bhv] = spass2fieldtrip(dirname)
 
 % Copyright (C) 2007, Robert Oostenveld
 %
-% $Log: spass2fieldtrip.m,v $
-% Revision 1.3  2008/09/22 20:17:44  roboos
-% added call to ft_defaults
+% $Id$
 
 revision = '$Id$';
 

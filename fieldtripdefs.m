@@ -7,13 +7,12 @@ function varargout = funname(varargin)
 % Please look in ft_xxx for the help of the function that you are looking
 % for, where xxx is the name of the function that you were looking for.
 %
-% For this specific function, please look in ft_defaults (not
-% ft_fieldtripdefs).
-
+% For this specific function, please look in ft_defaults, not in
+% ft_fieldtripdefs or in fieldtripdefs.
 
 % Copyright (C) 2009, Robert Oostenveld
 %
-% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
+% $Id$
 
 funhandle = str2func('ft_defaults');
 [varargout{1:nargout}] = funhandle(varargin{:});
