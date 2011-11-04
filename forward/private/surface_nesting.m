@@ -12,9 +12,9 @@ for i=1:numboundaries
   for j=1:numboundaries
     if i~=j
       % determine for a single vertex on each surface if it is inside or outside the other surfaces
-      curpos = vol.bnd(i).pnt(1,:); % any point on the boundary is ok
-      curpnt = vol.bnd(j).pnt;
-      curtri = vol.bnd(j).tri;
+      curpos = bnd(i).pnt(1,:); % any point on the boundary is ok
+      curpnt = bnd(j).pnt;
+      curtri = bnd(j).tri;
       nesting(i,j) = bounding_mesh(curpos, curpnt, curtri);
     end
   end
@@ -24,7 +24,7 @@ if sum(nesting(:))~=(numboundaries*(numboundaries-1)/2)
   error('the compartment nesting cannot be determined');
 end
 
-if desired='outsidefirst'
+if strcmp(desired,'outsidefirst')
   % usually the skin will be the outermost, and this should be the first
   % for a three compartment model, the nesting matrix should look like
   %    0 1 1     the first is nested inside the 2nd and 3rd, i.e. the inner skull
@@ -32,7 +32,7 @@ if desired='outsidefirst'
   %    0 0 0     the third is the most outside, i.e. the skin
   [dum, order] = sort(-sum(nesting,2));
 
-elseif desired='insidefirst'
+elseif strcmp(desired,'insidefirst')
   % usually the brain (i.e. the inside skull) will be the innermost, and this should be the first
   % for a three compartment model, the nesting matrix should look like
   %    0 0 0     the first is the most outside, i.e. the skin
