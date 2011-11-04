@@ -61,6 +61,6 @@ end
 lf = ft_compute_leadfield([0 0 50], sens, vol);
 
 figure;
-subplot(2,2,1); ft_plot_topo3d(sens.pnt, lf(:,1))
-subplot(2,2,2); ft_plot_topo3d(sens.pnt, lf(:,2))
-subplot(2,2,3); ft_plot_topo3d(sens.pnt, lf(:,3))
+subplot(2,2,1); ft_plot_topo3d(sens.chanpos, lf(:,1))
+subplot(2,2,2); ft_plot_topo3d(sens.chanpos, lf(:,2))
+subplot(2,2,3); ft_plot_topo3d(sens.chanpos, lf(:,3))
