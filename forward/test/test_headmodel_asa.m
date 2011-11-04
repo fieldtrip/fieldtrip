@@ -24,7 +24,7 @@ else
   pnt = randn(200,3)*100;
   sel = find(pnt(:,3)>0);
   sens = [];
-  sens.pnt = pnt(sel,:) * 100;
+  sens.elecpos = pnt(sel,:) * 100;
   for i=1:length(sel)
     sens.label{i} = sprintf('chan%03d', i);
   end
@@ -46,9 +46,9 @@ ft_plot_sens(orig, 'style', 'ro');
 lf = ft_compute_leadfield([0 0 50], sens, vol);
 
 figure;
-subplot(2,2,1); ft_plot_topo3d(sens.pnt, lf(:,1))
-subplot(2,2,2); ft_plot_topo3d(sens.pnt, lf(:,2))
-subplot(2,2,3); ft_plot_topo3d(sens.pnt, lf(:,3))
+subplot(2,2,1); ft_plot_topo3d(sens.chanpos, lf(:,1))
+subplot(2,2,2); ft_plot_topo3d(sens.chanpos, lf(:,2))
+subplot(2,2,3); ft_plot_topo3d(sens.chanpos, lf(:,3))
 
 
 

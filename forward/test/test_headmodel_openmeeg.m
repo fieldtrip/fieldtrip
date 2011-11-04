@@ -19,7 +19,7 @@ vol = ft_headmodel_bem_openmeeg(geom, 'conductivity', [1 1/20 1]);
 
 % create a set of electrodes
 sel = find(pnt(:,3)>0);
-sens.pnt = pnt(sel,:) * 100;
+sens.elecpos = pnt(sel,:) * 100;
 for i=1:length(sel)
   sens.label{i} = sprintf('chan%03d', i);
 end
@@ -35,9 +35,9 @@ if any(mean(lf)./mean(abs(lf)) > 100*eps)
 end
 
 figure;
-subplot(2,2,1); ft_plot_topo3d(sens.pnt, lf(:,1))
-subplot(2,2,2); ft_plot_topo3d(sens.pnt, lf(:,2))
-subplot(2,2,3); ft_plot_topo3d(sens.pnt, lf(:,3))
+subplot(2,2,1); ft_plot_topo3d(sens.chanpos, lf(:,1))
+subplot(2,2,2); ft_plot_topo3d(sens.chanpos, lf(:,2))
+subplot(2,2,3); ft_plot_topo3d(sens.chanpos, lf(:,3))
 
 vol2 = [];
 vol2.o = [0 0 0];
@@ -54,9 +54,9 @@ if any(mean(lf2)./mean(abs(lf2)) > 100*eps)
 end
 
 figure;
-subplot(2,2,1); ft_plot_topo3d(sens.pnt, lf2(:,1))
-subplot(2,2,2); ft_plot_topo3d(sens.pnt, lf2(:,2))
-subplot(2,2,3); ft_plot_topo3d(sens.pnt, lf2(:,3))
+subplot(2,2,1); ft_plot_topo3d(sens.chanpos, lf2(:,1))
+subplot(2,2,2); ft_plot_topo3d(sens.chanpos, lf2(:,2))
+subplot(2,2,3); ft_plot_topo3d(sens.chanpos, lf2(:,3))
 
 figure;
 subplot(2,2,1); plot(lf2(:,1), lf(:,1), '.')
@@ -86,9 +86,9 @@ if any(mean(lf)./mean(abs(lf)) > 100*eps)
 end
 
 figure;
-subplot(2,2,1); ft_plot_topo3d(sens.pnt, lf(:,1))
-subplot(2,2,2); ft_plot_topo3d(sens.pnt, lf(:,2))
-subplot(2,2,3); ft_plot_topo3d(sens.pnt, lf(:,3))
+subplot(2,2,1); ft_plot_topo3d(sens.chanpos, lf(:,1))
+subplot(2,2,2); ft_plot_topo3d(sens.chanpos, lf(:,2))
+subplot(2,2,3); ft_plot_topo3d(sens.chanpos, lf(:,3))
 
 vol2 = [];
 vol2.o = [0 0 0];
@@ -105,9 +105,9 @@ if any(mean(lf2)./mean(abs(lf2)) > 100*eps)
 end
 
 figure;
-subplot(2,2,1); ft_plot_topo3d(sens.pnt, lf2(:,1))
-subplot(2,2,2); ft_plot_topo3d(sens.pnt, lf2(:,2))
-subplot(2,2,3); ft_plot_topo3d(sens.pnt, lf2(:,3))
+subplot(2,2,1); ft_plot_topo3d(sens.chanpos, lf2(:,1))
+subplot(2,2,2); ft_plot_topo3d(sens.chanpos, lf2(:,2))
+subplot(2,2,3); ft_plot_topo3d(sens.chanpos, lf2(:,3))
 
 figure;
 subplot(2,2,1); plot(lf2(:,1), lf(:,1), '.')
