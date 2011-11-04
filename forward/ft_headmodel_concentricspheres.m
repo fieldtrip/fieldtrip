@@ -34,7 +34,7 @@ if isequal(fitind, 'all')
 end
 
 % determine the number of compartments
-numboundaries = length(vol.bnd);
+numboundaries = numel(geom);
 
 if numel(conductivity)~=numboundaries
   error('a conductivity value should be specified for each compartment');
