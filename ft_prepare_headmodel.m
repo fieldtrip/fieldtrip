@@ -139,10 +139,10 @@ cfg.singlesphere   = ft_getopt(cfg, 'singlesphere'); % localspheres
     
 % checks on the defaults
 if isempty(cfg.conductivity)
-  if isfield(data,'cond') && nargin>1
+  if nargin>1 && isfield(data,'cond')
     cfg.conductivity = data.cond;
   else
-    error('the conductivity is not specified')
+    warning('the conductivity is not specified');
   end
 end
 
