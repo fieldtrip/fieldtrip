@@ -240,6 +240,15 @@ if strcmp(cfg.demean, 'yes')
   end
 end
 
+% determine the scaling of the data, scale it to approximately unity
+% this will improve the performance of some methods, esp. fastica
+scale = norm((data.trial{1}*data.trial{1}')./size(data.trial{1},2));
+scale = sqrt(scale);
+fprintf('scaling data with 1 over %f\n', scale);
+for trial=1:Ntrials
+  data.trial{trial} = data.trial{trial} ./ scale;
+end
+
 if strcmp(cfg.method, 'predetermined mixing matrix')
   % the single trial data does not have to be concatenated
 elseif strcmp(cfg.method, 'parafac') || strcmp(cfg.method, 'sobi')
@@ -256,8 +265,7 @@ elseif strcmp(cfg.method, 'parafac') || strcmp(cfg.method, 'sobi')
   fprintf('\n');
   fprintf('concatenated data matrix size %dx%dx%d\n', size(dat,1), size(dat,2), size(dat,3));
   if strcmp(cfg.method, 'sobi')
-    % sobi wants Nchans, Nsamples, Ntrials matrix and for Ntrials = 1 remove
-    % trial dimension
+    % sobi wants Nchans, Nsamples, Ntrials matrix and for Ntrials = 1 remove trial dimension
     if Ntrials == 1
       dummy = 0;
       [dat, dummy] = shiftdim(dat);
@@ -289,6 +297,9 @@ switch cfg.method
     % check whether the required low-level toolboxes are installed
     ft_hastoolbox('fastica', 1);       % see http://www.cis.hut.fi/projects/ica/fastica
     
+    % set the number of components to be estimated
+    cfg.fastica.numOfIC = cfg.numcomponent;
+
     try
       % construct key-value pairs for the optional arguments
       optarg = ft_cfg2keyval(cfg.fastica);
@@ -499,7 +510,7 @@ for trial=1:Ntrials
     % FIXME, this is not properly supported yet
     comp.trial{trial} = [];
   else
-    comp.trial{trial} = weights * sphere * data.trial{trial};
+    comp.trial{trial} = scale * weights * sphere * data.trial{trial};
   end
 end
 
