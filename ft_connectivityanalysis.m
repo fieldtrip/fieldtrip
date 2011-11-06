@@ -799,7 +799,9 @@ switch dtype
   case 'source'
     stat         = [];
     stat.pos     = data.pos;
-    stat.dim     = data.dim;
+    if isfield(stat, 'dim'),
+      stat.dim     = data.dim;
+    end
     stat.inside  = data.inside;
     stat.outside = data.outside;
     stat.(outparam) = datout;
@@ -809,7 +811,6 @@ switch dtype
 end
 
 if isfield(data, 'freq'), stat.freq = data.freq; end
-if isfield(data, 'frequency'), stat.frequency = data.frequency; end
 if isfield(data, 'time'), stat.time = data.time; end
 if isfield(data, 'grad'), stat.grad = data.grad; end
 if isfield(data, 'elec'), stat.elec = data.elec; end
