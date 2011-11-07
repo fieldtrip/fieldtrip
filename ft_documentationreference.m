@@ -69,7 +69,10 @@ f13 = {f13.name}';
 f14 = dir(fullfile(p, 'contrib', '*.m'));
 f14 = {f14.name}';
 
-funname = cat(1, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14);
+f15 = dir(fullfile(p, 'qsub', '*.m'));
+f15 = {f15.name}';
+
+funname = cat(1, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15);
 
 for i=1:length(funname)
   [p, funname{i}, x] = fileparts(funname{i});
