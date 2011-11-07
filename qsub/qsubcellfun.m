@@ -36,11 +36,12 @@ function varargout = qsubcellfun(fname, varargin)
 %   x2    = {2, 2, 2, 2, 2};
 %   y     = qsubcellfun(fname, x1, x2, 'memreq', 1024^3, 'timreq', 60);
 %
-% In case you abort your call to qsubcellfun by pressing ctrl-C, the
-% already submitted jobs will continue to run. You will also notice that
-% a lot of temporary files remain in your working directory. To check the
-% status and healthy execution of the jobs in the batch queuing system,
-% you can use
+% In case you abort your call to qsubcellfun by pressing ctrl-c,
+% the already submitted jobs will be canceled. Some small temporary
+% files might remain in your working directory.
+%
+% To check the the status and healthy execution of the jobs in the
+% batch queuing system, you can use
 %   qstat
 %   qstat -an1
 %   qstat -Q
