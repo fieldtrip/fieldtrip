@@ -22,7 +22,6 @@ The RPC routines implemented by the buffer allow a computer program
 to put header, data or event information into the buffer, or to get
 that information from the buffer. The buffer dynamically maintains
 the memory in which the header, data and event information is
-represented.  Multiple programs can send requests to the buffer at
+represented. Multiple programs can send requests to the buffer at
 the same time, which will be handled concurrently in different
 threads.
-
