@@ -63,8 +63,6 @@ for i=1:length(varargin)
 end
 
 % set the defaults
-if ~isfield(cfg, 'inputfile'),      cfg.inputfile      = [];    end
-if ~isfield(cfg, 'outputfile'),     cfg.outputfile     = [];    end
 if ~isfield(cfg, 'channel'),        cfg.channel        = 'all'; end
 if ~isfield(cfg, 'keepindividual'), cfg.keepindividual = 'no';  end
 if ~isfield(cfg, 'latency'),        cfg.latency        = 'all'; end

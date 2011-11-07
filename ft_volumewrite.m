@@ -451,3 +451,8 @@ switch cfg.filetype
   otherwise
     fprintf('unknown fileformat\n');
 end
+
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+

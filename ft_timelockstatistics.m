@@ -75,10 +75,6 @@ for i=1:length(varargin)
   varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'timelock', 'feedback', 'no');
 end
 
-% set the defaults
-if ~isfield(cfg, 'inputfile'),    cfg.inputfile = [];          end
-if ~isfield(cfg, 'outputfile'),   cfg.outputfile = [];         end
-
 % the low-level data selection function does not know how to deal with other parameters, so work around it
 if isfield(cfg, 'parameter')
   if strcmp(cfg.parameter, 'trial') || strcmp(cfg.parameter, 'individual')

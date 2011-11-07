@@ -154,9 +154,6 @@ cfg = ft_checkconfig(cfg, 'renamed',    {'cohrefchannel', 'refchannel'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'zparam', 'parameter'});
 cfg = ft_checkconfig(cfg, 'deprecated', {'xparam'});
 
-% set default for inputfile
-if ~isfield(cfg, 'inputfile'),  cfg.inputfile = [];    end
-
 % set the defaults
 cfg.baseline        = ft_getopt(cfg, 'baseline',    'no');
 cfg.trials          = ft_getopt(cfg, 'trials',      'all');

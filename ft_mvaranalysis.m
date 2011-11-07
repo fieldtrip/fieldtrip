@@ -120,9 +120,6 @@ if ~isfield(cfg, 'toi'),        cfg.toi        = [];             end
 if ~isfield(cfg, 't_ftimwin'),  cfg.t_ftimwin  = [];             end
 if ~isfield(cfg, 'keeptapers'), cfg.keeptapers = 'yes';          end
 if ~isfield(cfg, 'taper'),      cfg.taper      = 'rectwin';      end
-if ~isfield(cfg, 'inputfile'),  cfg.inputfile  = [];             end
-if ~isfield(cfg, 'outputfile'), cfg.outputfile = [];             end
-
 
 % check that cfg.channel and cfg.channelcmb are not both specified
 if ~any(strcmp(cfg.channel, 'all')) && isfield(cfg, 'channelcmb')

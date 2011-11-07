@@ -127,8 +127,6 @@ if ~isfield(cfg, 'covariance'),    cfg.covariance   = 'no';   end
 if ~isfield(cfg, 'removemean'),    cfg.removemean   = 'yes';  end
 if ~isfield(cfg, 'vartrllength'),  cfg.vartrllength = 0;      end
 if ~isfield(cfg, 'feedback'),      cfg.feedback     = 'text'; end
-if ~isfield(cfg, 'inputfile'),     cfg.inputfile    = [];     end
-if ~isfield(cfg, 'outputfile'),    cfg.outputfile   = [];     end
 if ~isfield(cfg, 'preproc'),       cfg.preproc      = [];     end
 
 % select trials of interest

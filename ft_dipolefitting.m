@@ -169,8 +169,6 @@ if ~isfield(cfg, 'feedback'),    cfg.feedback = 'text';      end
 if ~isfield(cfg, 'gridsearch'),  cfg.gridsearch = 'yes';     end
 if ~isfield(cfg, 'nonlinear'),   cfg.nonlinear = 'yes';      end
 if ~isfield(cfg, 'symmetry'),    cfg.symmetry = [];          end
-if ~isfield(cfg, 'inputfile'),   cfg.inputfile = [];         end
-if ~isfield(cfg, 'outputfile'),  cfg.outputfile = [];        end
 
 % put the low-level options pertaining to the dipole grid (used for initial scanning) in their own field
 cfg = ft_checkconfig(cfg, 'createsubcfg',  {'grid'});

@@ -197,8 +197,6 @@ if ~isfield(cfg, 'method'),       cfg.method = 'trial';         end
 if ~isfield(cfg, 'channel'),      cfg.channel = {'all'};        end
 if ~isfield(cfg, 'removemcg'),    cfg.removemcg = 'no';         end
 if ~isfield(cfg, 'removeeog'),    cfg.removeeog = 'no';         end
-if ~isfield(cfg, 'inputfile'),    cfg.inputfile = [];           end
-if ~isfield(cfg, 'outputfile'),   cfg.outputfile = [];          end % this is for writing the result to a mat file
 
 if ~isfield(cfg, 'feedback'),
   if strcmp(cfg.method, 'channel')

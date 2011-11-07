@@ -66,6 +66,7 @@ ft_defaults
 ft_preamble help
 ft_preamble callinfo
 ft_preamble trackconfig
+ft_preamble loadvar mri
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed', {'spheremesh', 'numvertices'});
@@ -75,23 +76,12 @@ cfg = ft_checkconfig(cfg, 'deprecated', 'mriunits');
 if ~isfield(cfg, 'smooth');        cfg.smooth = 5;          end % in voxels
 if ~isfield(cfg, 'sourceunits'),   cfg.sourceunits = 'cm';  end
 if ~isfield(cfg, 'threshold'),     cfg.threshold = 0.5;     end % relative
-if ~isfield(cfg, 'numvertices'),   cfg.numvertices = [];  end % approximate number of vertices in sphere
-if ~isfield(cfg, 'inputfile'),     cfg.inputfile = [];      end
+if ~isfield(cfg, 'numvertices'),   cfg.numvertices = [];    end % approximate number of vertices in sphere
 
-% construct the geometry of the volume conductor model, containing a single boundary
-% the initialization of the forward computation code is done later in prepare_headmodel
-hasdata = (nargin>1);
-if ~isempty(cfg.inputfile)
-  % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    mri = loadvar(cfg.inputfile, 'mri');
-    hasdata = true;
-  end
-end
+% the data is specified as input variable or input file
+hasdata = exist('mri', 'var');
 
-if isempty(cfg.numvertices) && nargin>1
+if hasdata && isempty(cfg.numvertices)
   cfg.numvertices = 3000;
 end
 
@@ -100,7 +90,13 @@ if hasdata
 else
   vol.bnd = ft_prepare_mesh(cfg);
 end
+
 vol.type = 'nolte';
 
-% get the output cfg
-cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+% ensure that the geometrical units are specified
+vol = ft_convert_units(vol);
+
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+

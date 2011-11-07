@@ -78,8 +78,6 @@ if ~isfield(cfg, 'baselinewindow'), cfg.baselinewindow = [-inf inf]; end
 if ~isfield(cfg, 'combinemethod'), cfg.combinemethod  = 'sum';      end
 if ~isfield(cfg, 'trials'),        cfg.trials         = 'all';      end
 if ~isfield(cfg, 'feedback'),      cfg.feedback       = 'none';     end
-if ~isfield(cfg, 'inputfile'),     cfg.inputfile      = [];         end
-if ~isfield(cfg, 'outputfile'),    cfg.outputfile     = [];         end
 
 if isfield(cfg, 'baseline')
   warning('only supporting cfg.baseline for backwards compatibility, please update your cfg');

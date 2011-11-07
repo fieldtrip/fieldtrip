@@ -131,8 +131,6 @@ function [cfg] = ft_topoplotTFR(cfg, varargin)
 %
 % Other options:
 % cfg.labeloffset (offset of labels to their marker, default = 0.005)
-% cfg.inputfile  = one can specifiy preanalysed saved data as input
-%                   The data should be provided in a cell array
 
 % This function depends on FT_TIMELOCKBASELINE which has the following options:
 % cfg.baseline, documented

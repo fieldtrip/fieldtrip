@@ -106,9 +106,8 @@ if ~isfield(cfg, 'artfctdef'),              cfg.artfctdef        = [];         e
 if ~isfield(cfg.artfctdef,'type'),          cfg.artfctdef.type   = {};         end
 if ~isfield(cfg.artfctdef,'reject'),        cfg.artfctdef.reject = 'complete'; end
 if ~isfield(cfg.artfctdef,'minaccepttim'),  cfg.artfctdef.minaccepttim = 0.1;  end
-if ~isfield(cfg.artfctdef,'crittoilim'),    cfg.artfctdef.crittoilim = [];  end
+if ~isfield(cfg.artfctdef,'crittoilim'),    cfg.artfctdef.crittoilim = [];     end
 if ~isfield(cfg.artfctdef,'feedback'),      cfg.artfctdef.feedback = 'no';     end
-if ~isfield(cfg, 'inputfile'),              cfg.inputfile        = [];         end
 
 % convert from old-style to new-style configuration
 if isfield(cfg,'reject')

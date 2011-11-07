@@ -264,8 +264,6 @@ if ~isfield(cfg, 'channel'),          cfg.channel = 'all';        end
 if ~isfield(cfg, 'normalize'),        cfg.normalize = 'no';       end
 if ~isfield(cfg, 'prewhiten'),        cfg.prewhiten = 'no';       end
 % if ~isfield(cfg, 'reducerank'),     cfg.reducerank = 'no';      end  % the default for this depends on EEG/MEG and is set below
-if ~isfield(cfg, 'inputfile'),        cfg.inputfile  = [];        end
-if ~isfield(cfg, 'outputfile'),       cfg.outputfile = [];        end
 
 % put the low-level options pertaining to the source reconstruction method in their own field
 % put the low-level options pertaining to the dipole grid in their own field

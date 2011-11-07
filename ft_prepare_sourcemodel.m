@@ -92,7 +92,7 @@ function [grid, cfg] = ft_prepare_sourcemodel(cfg, vol, sens)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% %Id:$
+% $Id$
 
 revision = '$Id$';
 
@@ -691,3 +691,8 @@ if ~isempty(cfg.symmetry)
 end
 
 % FIXME should the cfg be added to the output grid?
+
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+

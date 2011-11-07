@@ -95,8 +95,6 @@ if ~isfield(cfg, 'feedback'),   cfg.feedback = 'yes'; end
 if ~isfield(cfg, 'trl'),        cfg.trl =  [];        end
 if ~isfield(cfg, 'length'),     cfg.length = [];      end
 if ~isfield(cfg, 'overlap'),    cfg.overlap = 0;      end
-if ~isfield(cfg, 'inputfile'),  cfg.inputfile = [];   end
-if ~isfield(cfg, 'outputfile'), cfg.outputfile = [];  end
 
 % store original datatype
 dtype = ft_datatype(data);

@@ -572,3 +572,7 @@ elseif usewfu
   atlas.descr.value = [ROI.ID]';
   atlas.descr.name  = {ROI.Nom_C}'; % what is difference between Nom_C and Nom_L??
 end
+
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble callinfo
+

@@ -22,7 +22,6 @@ function bnd = ft_prepare_mesh(cfg, data)
 % To facilitate data-handling and distributed computing with the peer-to-peer
 % module, this function has the following options:
 %   cfg.inputfile   =  ...
-%   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat
 % file on disk and/or the output data will be written to a *.mat file. These mat
 % files should contain only a single variable, corresponding with the
@@ -276,11 +275,9 @@ for i=1:length(bnd)
   bnd(i).pnt = scaleunit(sourceunits,mriunits,bnd(i).pnt);
 end
 
-% the output data should be saved to a MATLAB file
-if ~isempty(outputfile)
-  savevar(outputfile, 'data', bnd); % use the variable name "data" in the output file
-end
-
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

@@ -114,12 +114,12 @@ cortex = [255 213 119]/255;
 
 % set the defaults
 if ~isfield(cfg, 'surface_facecolor'), cfg.surface_facecolor = skin_surface;   end
-if ~isfield(cfg, 'surface_edgecolor'), cfg.surface_edgecolor = 'none'; end
-if ~isfield(cfg, 'surface_facealpha'), cfg.surface_facealpha = 0.7;    end
-if ~isfield(cfg, 'surftype'),          cfg.surftype = 'faces';         end
-if ~isfield(cfg, 'inputfile'),         cfg.inputfile = [];             end
+if ~isfield(cfg, 'surface_edgecolor'), cfg.surface_edgecolor = 'none';         end
+if ~isfield(cfg, 'surface_facealpha'), cfg.surface_facealpha = 0.7;            end
+if ~isfield(cfg, 'surftype'),          cfg.surftype = 'faces';                 end
 
 if ~isfield('data', 'var')    
+  % this will be passed into the prepare_headmodel function further down
   data = [];
 end
 

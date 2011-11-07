@@ -86,10 +86,9 @@ if ~isfield(cfg, 'feedback'),      cfg.feedback = 'yes';    end
 if ~isfield(cfg, 'smooth');        cfg.smooth    = 5;       end % in voxels
 if ~isfield(cfg, 'sourceunits'),   cfg.sourceunits = 'cm';  end
 if ~isfield(cfg, 'threshold'),     cfg.threshold = 0.5;     end % relative
-if ~isfield(cfg, 'numvertices'),   cfg.numvertices = [];   end
+if ~isfield(cfg, 'numvertices'),   cfg.numvertices = [];    end
 if ~isfield(cfg, 'singlesphere'),  cfg.singlesphere = 'no'; end
 if ~isfield(cfg, 'headshape'),     cfg.headshape = [];      end
-if ~isfield(cfg, 'inputfile'),     cfg.inputfile = [];      end
 
 hasdata = exist('mri', 'var');
 if hasdata
@@ -219,5 +218,10 @@ end % for all channels
 
 vol.type = 'multisphere';
 
-% get the output cfg
-cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+% ensure that the geometrical units are specified
+vol = ft_convert_units(vol);
+
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+

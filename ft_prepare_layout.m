@@ -72,6 +72,7 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble help
+ft_preamble callinfo
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % basic check/initialization of input arguments
@@ -777,3 +778,7 @@ else
   lay.height = Height;
   lay.label  = label;
 end
+
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble callinfo
+

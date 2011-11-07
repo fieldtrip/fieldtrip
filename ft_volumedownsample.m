@@ -61,12 +61,10 @@ source = ft_checkdata(source, 'datatype', 'volume', 'feedback', 'no');
 cfg = ft_checkconfig(cfg, 'unused',  {'voxelcoord'});
 
 if ~isfield(cfg, 'spmversion'), cfg.spmversion = 'spm8'; end
-if ~isfield(cfg, 'downsample'), cfg.downsample = 1;     end
-if ~isfield(cfg, 'keepinside'), cfg.keepinside = 'yes'; end
-if ~isfield(cfg, 'parameter'),  cfg.parameter = 'all';  end
-if ~isfield(cfg, 'smooth'),     cfg.smooth = 'no';      end
-if ~isfield(cfg, 'inputfile'),  cfg.inputfile  = [];    end
-if ~isfield(cfg, 'outputfile'), cfg.outputfile = [];    end
+if ~isfield(cfg, 'downsample'), cfg.downsample = 1;      end
+if ~isfield(cfg, 'keepinside'), cfg.keepinside = 'yes';  end
+if ~isfield(cfg, 'parameter'),  cfg.parameter = 'all';   end
+if ~isfield(cfg, 'smooth'),     cfg.smooth = 'no';       end
 
 if strcmp(cfg.keepinside, 'yes')
   % add inside to the list of parameters

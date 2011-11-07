@@ -454,6 +454,11 @@ if strcmp(cfg.interactive,'yes')
   guidata(data.hfig,data);
 end
 
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+
+
 % ---------------- subfunctions ----------------
 
 function getcoords(h,eventdata,handles,varargin)

@@ -92,8 +92,6 @@ if ~isfield(cfg, 'demean'),     cfg.demean     = 'no';    end
 if ~isfield(cfg, 'feedback'),   cfg.feedback   = 'text';  end
 if ~isfield(cfg, 'trials'),     cfg.trials     = 'all';   end
 if ~isfield(cfg, 'method'),     cfg.method     = 'pchip'; end  % interpolation method
-if ~isfield(cfg, 'inputfile'),  cfg.inputfile  = [];      end
-if ~isfield(cfg, 'outputfile'), cfg.outputfile = [];      end
 
 % store original datatype
 convert = ft_datatype(data);

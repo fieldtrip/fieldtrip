@@ -49,8 +49,6 @@ ft_preamble loadvar data
 
 % set the defaults
 if ~isfield(cfg, 'trials'),       cfg.trials = 'all';           end
-if ~isfield(cfg, 'inputfile'),    cfg.inputfile = [];           end
-if ~isfield(cfg, 'outputfile'),   cfg.outputfile = [];          end
 
 % store original datatype
 dtype = ft_datatype(data);

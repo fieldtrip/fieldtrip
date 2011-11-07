@@ -74,13 +74,12 @@ ft_preamble loadvar mri
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'forbidden', 'numcompartments');
+cfg = ft_checkconfig(cfg, 'forbidden', 'outputfile');
 
 % set the defaults
 if ~isfield(cfg, 'downsample'),      cfg.downsample = 1;         end
 if ~isfield(cfg, 'tissue'),          cfg.tissue = [];            end
 if ~isfield(cfg, 'numvertices'),     cfg.numvertices = [];       end
-if ~isfield(cfg, 'inputfile'),       cfg.inputfile = [];         end
-if ~isfield(cfg, 'outputfile'),      cfg.outputfile = [];        end
 if ~isfield(cfg, 'interactive'),     cfg.interactive = 'no';     end
 
 if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
@@ -111,7 +110,6 @@ end
 if basedonseg || basedonmri
   % optionally downsample the anatomical MRI and/or the tissue segmentation
   tmpcfg = [];
-  tmpcfg.outputfile = cfg.outputfile;
   tmpcfg.downsample = cfg.downsample;
   mri = ft_volumedownsample(tmpcfg, mri);
 end
@@ -176,7 +174,7 @@ for i=1:length(bnd)
   bnd(i).tri = double(bnd(i).tri);
 end
 
-% the output data should be saved to a MATLAB file
-if ~isempty(cfg.outputfile)
-  savevar(cfg.outputfile, 'data', bnd); % use the variable name "data" in the output file
-end
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+

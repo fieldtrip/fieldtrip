@@ -61,8 +61,6 @@ cfg = ft_checkconfig(cfg, 'required', {'neighbours'});
 % set the default configuration
 if ~isfield(cfg, 'badchannel'),    cfg.badchannel = {};           end
 if ~isfield(cfg, 'trials'),        cfg.trials = 'all';            end
-if ~isfield(cfg, 'inputfile'),    cfg.inputfile = [];           end
-if ~isfield(cfg, 'outputfile'),   cfg.outputfile = [];          end
 
 if iscell(cfg.neighbours)
   warning('Neighbourstructure is in old format - converting to structure array');

@@ -30,7 +30,6 @@ function [vol] = ft_prepare_headmodel(cfg, data)
 %   singleshell
 %   infinite
 %
-%
 % Use as
 %   vol = ft_prepare_headmodel(cfg)
 %   vol = ft_prepare_headmodel(cfg, vol)
@@ -108,6 +107,7 @@ revision = '$Id$';
 ft_defaults
 ft_preamble help
 ft_preamble trackconfig
+ft_preamble callinfo
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'required', 'method');
@@ -278,6 +278,10 @@ switch cfg.method
     error('unsupported method "%s"', cfg.method);
 end
 
-% get the output cfg
-cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
+% ensure that the geometrical units are specified
+vol = ft_convert_units(vol);
+
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
 

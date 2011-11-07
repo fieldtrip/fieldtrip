@@ -90,8 +90,6 @@ ft_preamble loadvar data
 if ~isfield(cfg, 'method'),        cfg.method = 'spline';    end
 if ~isfield(cfg, 'conductivity'),  cfg.conductivity = 0.33;  end    % in S/m
 if ~isfield(cfg, 'trials'),        cfg.trials = 'all';       end
-if ~isfield(cfg, 'inputfile'),     cfg.inputfile = [];       end
-if ~isfield(cfg, 'outputfile'),    cfg.outputfile = [];      end
 
 if strcmp(cfg.method, 'hjorth')
     cfg = ft_checkconfig(cfg, 'required', {'neighbours'});    

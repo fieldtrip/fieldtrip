@@ -94,9 +94,7 @@ if ~isfield(cfg, 'fa'),               cfg.fa               = 'no';          end
 if ~isfield(cfg, 'kurtosis'),         cfg.kurtosis         = 'no';          end
 if ~isfield(cfg, 'keeptrials'),       cfg.keeptrials       = 'no';          end
 if ~isfield(cfg, 'keepcsd'),          cfg.keepcsd          = 'no';          end
-if ~isfield(cfg, 'fixedori'),         cfg.fixedori = 'over_trials';         end
-if ~isfield(cfg, 'inputfile'),        cfg.inputfile        = [];            end
-if ~isfield(cfg, 'outputfile'),       cfg.outputfile       = [];            end
+if ~isfield(cfg, 'fixedori'),         cfg.fixedori         = 'over_trials'; end
 
 % only works for minimumnormestimate
 if ~isfield(cfg, 'demean'),         cfg.demean         = 'yes';    end

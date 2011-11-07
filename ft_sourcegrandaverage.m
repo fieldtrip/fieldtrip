@@ -94,8 +94,6 @@ if 1,
   if ~isfield(cfg, 'permutation'),    cfg.permutation = 'no';    end
   if ~isfield(cfg, 'c1'),             cfg.c1 = [];               end
   if ~isfield(cfg, 'c2'),             cfg.c2 = [];               end
-  if ~isfield(cfg, 'inputfile'),      cfg.inputfile = [];        end
-  if ~isfield(cfg, 'outputfile'),     cfg.outputfile = [];       end
   
   if strcmp(cfg.concatenate, 'yes') && strcmp(cfg.keepindividual, 'yes'),
     error('you can specify either cfg.keepindividual or cfg.concatenate to be yes, but not both');
@@ -289,8 +287,6 @@ else
   % set the defaults
   if ~isfield(cfg, 'parameter'),      cfg.parameter = 'pow';     end
   if ~isfield(cfg, 'keepindividual'), cfg.keepindividual = 'no'; end
-  if ~isfield(cfg, 'inputfile'),      cfg.inputfile = [];        end
-  if ~isfield(cfg, 'outputfile'),     cfg.outputfile = [];       end
   
   Nsubject = length(varargin);
   

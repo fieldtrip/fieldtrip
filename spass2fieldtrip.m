@@ -147,7 +147,6 @@ lfp.hdr.FirstTimeStamp = 0;
 lfp.hdr.TimeStampPerSample = fsample_swa./fsample_ana;
 
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble trackconfig
 ft_postamble callinfo
 ft_postamble history lfp spike
 

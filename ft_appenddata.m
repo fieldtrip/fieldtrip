@@ -71,10 +71,6 @@ for i=1:length(varargin)
   varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'raw', 'feedback', 'no', 'hassampleinfo', 'yes');
 end
 
-% set the defaults
-if ~isfield(cfg, 'inputfile'),    cfg.inputfile  = [];          end
-if ~isfield(cfg, 'outputfile'),   cfg.outputfile = [];          end
-
 % determine the dimensions of the data
 Ndata = length(varargin);
 

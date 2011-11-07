@@ -130,8 +130,6 @@ if ~isfield(cfg, 'feedback'),      cfg.feedback = 'yes';          end
 if ~isfield(cfg, 'trials'),        cfg.trials = 'all';            end
 if ~isfield(cfg, 'channel'),       cfg.channel = 'MEG';           end
 if ~isfield(cfg, 'topoparam'),     cfg.topoparam = 'rms';         end
-if ~isfield(cfg, 'inputfile'),     cfg.inputfile = [];            end
-if ~isfield(cfg, 'outputfile'),    cfg.outputfile = [];           end
 
 % store original datatype
 dtype = ft_datatype(data);

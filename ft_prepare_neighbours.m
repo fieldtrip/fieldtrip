@@ -205,8 +205,6 @@ end
 if k==0, error('No neighbours were found!'); end;
 fprintf('there are on average %.1f neighbours per channel\n', k/length(neighbours));
 
-
-
 if strcmp(cfg.feedback, 'yes')
   % give some graphical feedback
   cfg.neighbours = neighbours;
@@ -216,6 +214,10 @@ if strcmp(cfg.feedback, 'yes')
     ft_neighbourplot(cfg);
   end
 end
+
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that compute the neighbourhood geometry from the

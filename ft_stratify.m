@@ -1,6 +1,6 @@
 function [varargout] = ft_stratify(cfg, varargin)
 
-% T_STRATIFY tries to reduce the variance in a specific feature in the data
+% FT_STRATIFY tries to reduce the variance in a specific feature in the data
 % that is not related to an effect in two or multiple conditions, but where
 % that feature may confound the analysis. Stratification is implemented by
 % randomly removing elements from the data, making the distribution of the
@@ -593,3 +593,4 @@ elseif strcmp(cfg.method, 'lohi')
   varargout{2}(sel) = nan;
   
 end % cfg.method
+

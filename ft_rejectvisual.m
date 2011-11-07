@@ -171,8 +171,6 @@ if ~isfield(cfg, 'emgscale'),    cfg.emgscale = [];            end
 if ~isfield(cfg, 'megscale'),    cfg.megscale = [];            end
 if ~isfield(cfg, 'gradscale'),   cfg.gradscale = [];           end
 if ~isfield(cfg, 'magscale'),    cfg.magscale = [];            end
-if ~isfield(cfg, 'inputfile'),   cfg.inputfile = [];           end
-if ~isfield(cfg, 'outputfile'),  cfg.outputfile = [];          end
 if ~isfield(cfg, 'plotlayout'),  cfg.plotlayout = 'square';    end
 if ~isfield(cfg, 'viewmode'),    cfg.viewmode   = 'remove';    end
 

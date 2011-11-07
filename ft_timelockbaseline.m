@@ -63,8 +63,6 @@ cfg = ft_checkconfig(cfg, 'renamed', {'blcwindow', 'baselinewindow'});
 
 % set the defaults
 if ~isfield(cfg, 'baseline'),   cfg.baseline    = 'no';   end
-if ~isfield(cfg, 'inputfile'),  cfg.inputfile   = [];     end
-if ~isfield(cfg, 'outputfile'), cfg.outputfile  = [];     end
 
 % the cfg.blc/blcwindow options are used in preprocessing and in
 % ft_timelockanalysis (i.e. in private/preproc), hence make sure that
