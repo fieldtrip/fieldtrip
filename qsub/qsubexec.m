@@ -36,30 +36,41 @@ function [argout, optout] = qsubexec(jobid)
 % -----------------------------------------------------------------------
 
 try
-  p = pwd();
-  inputfile  = fullfile(p, sprintf('%s_input.mat', jobid));
-  outputfile = fullfile(p, sprintf('%s_output.mat_', jobid));
-
-  tmp = load(inputfile);
-  delete(inputfile);
-
-  argin = tmp.argin; % this includes the function name and the input arguments
-  optin = tmp.optin; % this includes the path setting, the pwd, the global variables, etc.
-
-  [argout, optout] = fexec(argin, optin);
-  save(outputfile, 'argout', 'optout');
-
-  % remove the _ at the end, note that the rename command here is a private mex file
-  retval = rename(outputfile, outputfile(1:end-1));
-  if retval~=0
-    error('problem renaming output file %s', outputfile);
-  end
-
+    p = pwd();
+    inputfile  = fullfile(p, sprintf('%s_input.mat', jobid));
+    outputfile = fullfile(p, sprintf('%s_output.mat_', jobid));
+    
+    tmp = load(inputfile);
+    delete(inputfile);
+    
+    argin = tmp.argin; % this includes the function name and the input arguments
+    optin = tmp.optin; % this includes the path setting, the pwd, the global variables, etc.
+    
+    [argout, optout] = fexec(argin, optin);
+    
+    % if variables < ~500 MB, store it in old (uncompressed) format, which is
+    % faster
+    
+    s1 = whos(argout);
+    s2 = whos(optout);
+    
+    if (s1.bytes + s2.bytes < 500000000)
+        save(outputfile, 'argout', 'optout', '-v6');
+    else
+        save(outputfile, 'argout', 'optout', '-v7.3');
+    end
+    
+    % remove the _ at the end, note that the rename command here is a private mex file
+    retval = rename(outputfile, outputfile(1:end-1));
+    if retval~=0
+        error('problem renaming output file %s', outputfile);
+    end
+    
 catch err
-  % this is to avoid MATLAB from hanging in case fexec fails, since
-  % after the job execution we want MATLAB to exit
-  disp(err);
-  warning('an error was caught');
-  
+    % this is to avoid MATLAB from hanging in case fexec fails, since
+    % after the job execution we want MATLAB to exit
+    disp(err);
+    warning('an error was caught');
+    
 end % try-catch
 
