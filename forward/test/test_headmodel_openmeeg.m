@@ -20,6 +20,7 @@ vol = ft_headmodel_bem_openmeeg(geom, 'conductivity', [1 1/20 1]);
 % create a set of electrodes
 sel = find(pnt(:,3)>0);
 sens.elecpos = pnt(sel,:) * 100;
+sens.chanpos = sens.elecpos;
 for i=1:length(sel)
   sens.label{i} = sprintf('chan%03d', i);
 end

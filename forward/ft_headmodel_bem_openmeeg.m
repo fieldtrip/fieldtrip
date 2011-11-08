@@ -57,6 +57,9 @@ if ~isempty(hdmfile)
   end
 else
   % copy the boundaries from the geometry into the volume conduction model
+  if isfield(geom,'bnd')
+    geom = geom.bnd;
+  end
   vol.bnd = geom;
 end
 
