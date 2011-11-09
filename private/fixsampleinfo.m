@@ -21,12 +21,23 @@ hastrial   = isfield(data, 'trial');
 hastime    = isfield(data, 'time');
 hasfsample = isfield(data, 'fsample');
 
-if ~hasfsample && isfield(data, 'time')
-  data.fsample = median(1./diff(data.time{1}));
+% check whether we're dealing with a timelock structure that has trials
+istimelock = hastime & hastrial & ~iscell(data.trial) & ~iscell(data.time);
+
+if ~hasfsample && hastime
+  if istimelock
+    data.fsample = median(1./diff(data.time));
+  else
+    data.fsample = median(1./diff(data.time{1}));
+  end
 end
 
-if hastrial,
-  ntrial = length(data.trial);
+if hastrial
+  if istimelock
+    ntrial = size(data.trial,1);
+  else
+    ntrial = numel(data.trial);
+  end
 else
   ntrial = dimlength(data, 'rpt');
   if ~isfinite(ntrial) && strcmp(data.dimord(1:6), 'rpttap') && isfield(data, 'cumtapcnt'),
@@ -38,13 +49,17 @@ end
 
 trl = ft_findcfg(data.cfg, 'trl');
 
-nsmp = zeros(ntrial,1);
-if hastrial,
-  for i=1:ntrial
-    nsmp(i) = size(data.trial{i}, 2);
+if istimelock
+  nsmp = ones(ntrial,1) .* size(data.trial,3);
+else
+  nsmp = zeros(ntrial,1);
+  if hastrial
+    for i=1:ntrial
+      nsmp(i) = size(data.trial{i}, 2);
+    end
+  elseif ~isempty(trl)
+    nsmp = trl(:,2) - trl(:,1) + 1;
   end
-elseif ~isempty(trl)
-  nsmp = trl(:,2) - trl(:,1) + 1;
 end
 
 if isempty(trl)
@@ -71,10 +86,14 @@ if isempty(trl) || ~all(nsmp==trl(:,2)-trl(:,1)+1)
   end
   endsample = begsample + nsmp - 1;
 
-  offset    = zeros(ntrial,1);
-  if hastime,
-    for i=1:ntrial
-      offset(i) = time2offset(data.time{i}, data.fsample);
+  if istimelock
+    offset = ones(ntrial,1) .* time2offset(data.time, data.fsample);
+  else
+    offset    = zeros(ntrial,1);
+    if hastime,
+      for i=1:ntrial
+        offset(i) = time2offset(data.time{i}, data.fsample);
+      end
     end
   end
   trl = [begsample endsample offset];
