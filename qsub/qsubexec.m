@@ -51,8 +51,8 @@ try
     % if variables < ~500 MB, store it in old (uncompressed) format, which is
     % faster
     
-    s1 = whos(argout);
-    s2 = whos(optout);
+    s1 = whos('argout');
+    s2 = whos('optout');
     
     if (s1.bytes + s2.bytes < 500000000)
         save(outputfile, 'argout', 'optout', '-v6');
