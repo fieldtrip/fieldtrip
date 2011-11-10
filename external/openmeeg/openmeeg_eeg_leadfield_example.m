@@ -54,9 +54,13 @@ vol.cond = c;
 %% Compute the BEM
 
 % choose BEM implementation (OpenMEEG, bemcp or dipoli)
+% cfg=[];
+% cfg.method = 'openmeeg';
+% vol = ft_prepare_bemmodel(cfg, vol);
+
 cfg=[];
 cfg.method = 'openmeeg';
-vol = ft_prepare_bemmodel(cfg, vol);
+vol = ft_prepare_headmodel(cfg, vol);
 
 cfg.vol = vol;
 cfg.grid.pos = pos;
