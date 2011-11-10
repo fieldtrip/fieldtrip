@@ -163,25 +163,27 @@ if nargin>1 && ft_datatype(data, 'volume') && ~strcmp(cfg.method,'fns') && ~strc
   if issegmentation(data,cfg);
     % construct a surface-based geometry from the segmented compartments
     % (can be multiple shells)   
-    if isempty(cfg.tissue) && ~strcmp(cfg.method,'singleshell')
-      % tries to infer which fields in the segmentations are the segmented compartments
-      [dum,tissue] = issegmentation(data,cfg);
-      % ...and then tessellates all!
-      tmpcfg = [];
-      tmpcfg.tissue       = tissue;
-      tmpcfg.smooth       = cfg.smooth;
-      tmpcfg.sourceunits  = cfg.sourceunits;
-      tmpcfg.threshold    = cfg.threshold;
-      tmpcfg.numvertices  = cfg.numvertices;
-      geometry = prepare_shells(cfg,data);
-    else
-      tmpcfg = [];
-      tmpcfg.tissue       = cfg.tissue;
-      tmpcfg.smooth       = cfg.smooth;
-      tmpcfg.sourceunits  = cfg.sourceunits;
-      tmpcfg.threshold    = cfg.threshold;
-      tmpcfg.numvertices  = cfg.numvertices;
-      geometry = prepare_singleshell(cfg,data);      
+    if isempty(cfg.tissue) 
+      if strcmp(cfg.method,'singleshell') || strcmp(cfg.method,'singlesphere')
+        tmpcfg = [];
+        tmpcfg.tissue       = cfg.tissue;
+        tmpcfg.smooth       = cfg.smooth;
+        tmpcfg.sourceunits  = cfg.sourceunits;
+        tmpcfg.threshold    = cfg.threshold;
+        tmpcfg.numvertices  = cfg.numvertices;
+        geometry = prepare_singleshell(cfg,data);    
+      else
+         % tries to infer which fields in the segmentations are the segmented compartments
+        [dum,tissue] = issegmentation(data,cfg);
+        % ...and then tessellates all!
+        tmpcfg = [];
+        tmpcfg.tissue       = tissue;
+        tmpcfg.smooth       = cfg.smooth;
+        tmpcfg.sourceunits  = cfg.sourceunits;
+        tmpcfg.threshold    = cfg.threshold;
+        tmpcfg.numvertices  = cfg.numvertices;
+        geometry = prepare_shells(cfg,data); 
+      end
     end
   else
     error('The input data should already contain at least one field with a segmented volume');
