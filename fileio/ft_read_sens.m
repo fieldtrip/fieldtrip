@@ -31,7 +31,7 @@ function [sens] = ft_read_sens(filename, varargin)
 %   grad.chanpos Nx3 matrix with the positions of each sensor
 %
 % See also FT_TRANSFORM_SENS, FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD,
-% FIXSENS
+% FT_DATATYPE_SENS
 
 % Copyright (C) 2005-2010 Robert Oostenveld
 %

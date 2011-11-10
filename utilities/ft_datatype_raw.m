@@ -31,8 +31,8 @@ function data = ft_datatype_raw(data, varargin)
 %
 % Revision history:
 %
-% (2011/latest) The description of the sensors has changed: see FIXSENS for
-% information
+% (2011/latest) The description of the sensors has changed, see FT_DATATYPE_SENS
+% for further information.
 %
 % (2010v2) The trialdef field has been replaced by the sampleinfo and
 % trialinfo fields. The sampleinfo corresponds to trl(:,1:2), the trialinfo
@@ -139,7 +139,7 @@ switch version
       data = rmfield(data, 'trialdef');
     end
 
-  case '2010v1'
+  case {'2010v1' '2010'}
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if ~isfield(data, 'fsample')
       data.fsample = 1/(data.time{1}(2) - data.time{1}(1));
