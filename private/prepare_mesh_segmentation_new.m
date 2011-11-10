@@ -1,4 +1,4 @@
-function bnd = prepare_mesh_segmentation(cfg,mri)
+function bnd = prepare_mesh_segmentation_new(cfg,mri)
 
 % PREPARE_MESH_SEGMENTATION
 % Calculates the surfaces of each compartment from a segmentation or from
@@ -75,6 +75,9 @@ function bnd = dotriangulate(seg, nvert, str)
 % str is just a placeholder for messages
 dim = size(seg);
 [mrix, mriy, mriz] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
+
+% make local variable seg logical 
+seg = logical(seg);
 
 % construct the triangulations of the boundaries from the segmented MRI
 fprintf('triangulating the boundary of compartment %s\n', str);
