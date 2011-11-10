@@ -213,11 +213,19 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % backward compatibility for the gradiometer and electrode definition
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if isfield(cfg, 'grad')
+if isfield(cfg, 'grad') && ~isempty(cfg.grad)
   cfg.grad = ft_datatype_sens(cfg.grad);
 end
-if isfield(cfg, 'elec')
+if isfield(cfg, 'elec')&& ~isempty(cfg.elec)
   cfg.elec = ft_datatype_sens(cfg.elec);
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% backward compatibility for old neighbourstructures
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if isfield(cfg, 'neighbours') && iscell(cfg.neighbours)
+  warning('Neighbourstructure is in old format - converting to structure array');
+  cfg.neighbours= fixneighbours(cfg.neighbours);  
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -608,4 +616,13 @@ for i=1:numel(fieldsorig)
       end
     end
   end
+end
+
+function newNeighbours = fixneighbours(neighbours)
+% Converts a cell array of structure arrays into a structure array
+
+newNeighbours = struct;
+for i=1:numel(neighbours)
+    if i==1, newNeighbours = neighbours{i};    end;
+    newNeighbours(i) = neighbours{i}; 
 end

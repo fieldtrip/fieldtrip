@@ -54,23 +54,21 @@ ft_defaults
 
 % record start time and total processing time
 ftFuncTimer = tic();
-ftFuncClock = clock();;
+ftFuncClock = clock();
 ftFuncMem   = memtic();
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
-if isfield(cfg, 'neighbours')
-  neighbours = cfg.neighbours;
-elseif nargin < 2
-  neighbours = ft_neighbourselection(cfg);
-else
-  neighbours = ft_neighbourselection(cfg, data);
-end
+hasdata = nargin>1;
+if hasdata, data = ft_checkdata(data); end
 
-if iscell(neighbours)
-  warning('Neighbourstructure is in old format - converting to structure array');
-  cfg.neighbours = fixneighbours(cfg.neighbours);
+if isfield(cfg, 'neighbours')
+  cfg.neighbours = cfg.neighbours;
+elseif hasdata
+  cfg.neighbours = ft_neighbourselection(cfg, data);
+else
+  cfg.neighbours = ft_neighbourselection(cfg);
 end
 
 if ~isfield(cfg, 'verbose')
@@ -78,6 +76,7 @@ if ~isfield(cfg, 'verbose')
 elseif strcmp(cfg.verbose, 'yes')
   cfg.verbose = true;
 end
+
 
 % get the the grad or elec if not present in the data
 if exist('data', 'var') && isfield(data, 'grad')
@@ -104,15 +103,11 @@ elseif isfield(cfg, 'layout')
   lay = ft_prepare_layout(cfg);
   sens = [];
   sens.label = lay.label;
-  sens.pnt = lay.pos;
-  sens.pnt(:,3) = 0;
+  sens.chanpos = lay.pos;
+  sens.chanpos(:,3) = 0;
 else
   error('Did not find gradiometer or electrode information.');
 end;
-
-% FIXME replaced fixsens with this, but should not be needed
-% see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1055
-sens = ft_datatype_sens(sens); % ensure up-to-date description of sensor-array (Oct 2011)
 
 % give some graphical feedback
 if all(sens.chanpos(:,3)==0)
@@ -126,8 +121,8 @@ figure
 axis equal
 axis off
 hold on;
-for i=1:length(neighbours)
-  this = neighbours(i);
+for i=1:length(cfg.neighbours)
+  this = cfg.neighbours(i);
   
   sel1 = match_str(sens.label, this.label);
   sel2 = match_str(sens.label, this.neighblabel);
@@ -153,8 +148,8 @@ end
 
 % this is for putting the channels on top of the connections
 set(gcf, 'UserData', []);
-for i=1:length(neighbours)
-  this = neighbours(i);
+for i=1:length(cfg.neighbours)
+  this = cfg.neighbours(i);
   sel1 = match_str(sens.label, this.label);
   sel2 = match_str(sens.label, this.neighblabel);
   % account for missing sensors
@@ -167,7 +162,7 @@ for i=1:length(neighbours)
       'MarkerEdgeColor',  'k',                                        ...
       'MarkerFaceColor',  'k',                                        ...
       'Marker',           'o',                                        ...
-      'MarkerSize',       .125*(2+numel(neighbours(i).neighblabel)^2), ...
+      'MarkerSize',       .125*(2+numel(cfg.neighbours(i).neighblabel)^2), ...
       'UserData',         i,                                          ...
       'ButtonDownFcn',    @showLabelInTitle);
     
@@ -176,7 +171,7 @@ for i=1:length(neighbours)
       'MarkerEdgeColor',  'k',                                        ...
       'MarkerFaceColor',  'k',                                        ...
       'Marker',           'o',                                        ...
-      'MarkerSize',       .125*(2+numel(neighbours(i).neighblabel)^2), ...
+      'MarkerSize',       .125*(2+numel(cfg.neighbours(i).neighblabel)^2), ...
       'UserData',         i,                        ...
       'ButtonDownFcn',    @showLabelInTitle);
   else
@@ -190,14 +185,17 @@ title('[Click on a sensor to see its label]');
     lastSensId  = get(gcf,  'UserData');
     curSensId   = get(gcbo, 'UserData');
     
-    title(['Selected channel: ' neighbours(curSensId).label]);
+    title(['Selected channel: ' cfg.neighbours(curSensId).label]);
     if cfg.verbose
-      str = sprintf('%s, ', cfg.neighbours(1).neighblabel{:});
+      str = sprintf('%s, ', cfg.neighbours(curSensId).neighblabel{:});
       if length(str)>2
         % remove the last comma and space
         str = str(1:end-2);
       end
-      fprintf('Selected channel %s, which has %d neighbours: %s\n', neighbours(curSensId).label, length(neighbours(curSensId).neighblabel), str);
+      fprintf('Selected channel %s, which has %d neighbours: %s\n', ...
+        cfg.neighbours(curSensId).label, ...
+        length(cfg.neighbours(curSensId).neighblabel), ...
+        str);
     end
     
     set(hs(curSensId), 'MarkerFaceColor', 'g');
