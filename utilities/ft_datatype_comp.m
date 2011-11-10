@@ -37,11 +37,8 @@ function comp = ft_datatype_comp(comp, varargin)
 %   - offset
 %
 % Revision history:
-% (2011v2/latest) The unmixing matrix has been added to the component data
+% (2011/latest) The unmixing matrix has been added to the component data
 % structure.
-%
-% (2011v1) The description of the sensors has changed: see FIXSENS for
-% information
 %
 % (2003) The initial version was defined
 %
@@ -73,32 +70,36 @@ function comp = ft_datatype_comp(comp, varargin)
 version = ft_getopt(varargin, 'version', 'latest');
 
 if strcmp(version, 'latest')
-  version = '2011v2';
+  compversion = '2011';
+  rawversion  = 'latest';
+else
+  % Note that this does not ensure for backward compatibility support
+  % that the exact old version of the comp structure will be recreated.
+  % For example compversion=2007 will ensure fsample to be present, but
+  % will not strip off the unmixing field
+  rawversion = compversion;
 end
 
-switch version
-  case '2011v2'
+switch compversion
+  case '2011'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if ~isfield(comp, 'unmixing')
       % in case the unmixing matrix is not present, construct the best estimate
       % based on the mixing (topo) matrix
-      comp.unmixing = pinv(comp.topo);
+      if size(comp.topo,1)==size(comp.topo,2)
+        comp.unmixing = inv(comp.topo);
+      else
+        comp.unmixing = pinv(comp.topo);
+      end
     end
-    
-  case '2011v1'
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    if isfield(comp, 'unmixing')
-      % this field did not exist until November 2011
-      comp = rmfield(comp, 'unmixing');
-    end
-    
+
   case '2003'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if isfield(comp, 'unmixing')
       % this field did not exist until November 2011
       comp = rmfield(comp, 'unmixing');
     end
-    
+
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     error('unsupported version "%s" for comp datatype', version);
@@ -108,7 +109,7 @@ end
 rawdata = comp;
 rawdata = rmfield(rawdata, 'topo');
 rawdata = rmfield(rawdata, 'topolabel');
-rawdata = ft_datatype_raw(rawdata, 'version', version);
+rawdata = ft_datatype_raw(rawdata, 'version', rawversion);
 
 % add the component specific fields again
 rawdata.unmixing  = comp.unmixing;
@@ -116,3 +117,4 @@ rawdata.topo      = comp.topo;
 rawdata.topolabel = comp.topolabel;
 comp = rawdata;
 clear rawdata
+
