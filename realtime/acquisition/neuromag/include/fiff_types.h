@@ -7,60 +7,6 @@
  *
  *
  * $Id$
- * $Log: fiff_types.h,v $
- * Revision 1.19  2010/04/16 12:30:00  mjk
- * Added basic long and unsigned types.
- *
- * Revision 1.18  2009/11/12 12:18:41  skesti
- * Added Aquarius channel values: BIO, SYST, IAS, EXCI.
- *
- * Revision 1.17  2008/04/15 10:59:42  mjk
- * Defines to compile on Apple.
- *
- * Revision 1.16  2008/01/25 08:25:05  jne
- * added FIFFV_COIL_CTF_GRAD
- *
- * Revision 1.15  2007/02/28 08:25:01  jne
- * Some cleaning of comments
- *
- * Revision 1.14  2007/01/09 12:41:40  jne
- * new structs fiffEventBitsRec, fiffHpiCoilRec, fiffHpiSubsysRec
- * new defs FIFFV_XFIT_MAP_SURF_SENSORS, FIFFV_XFIT_MAP_SURF_HEAD, FIFFV_XFIT_MAP_SURF_SPHERE
- *
- * Revision 1.13  2006/05/22  11:24:24  11:24:24  jne (Jukka Nenonen)
- * Added fiffSparseMatrixRec (equivalence fiff_sparse_matrix_t)
- * Added FIFFV_QUAT_CH0...7, FIFFV_ESTIM_ERROR_CH, FIFFV_HEAD_MOVEMENT_CH
- * 
- * Revision 1.12  2005/11/03 14:27:40  skesti
- * Renumbered candela
- *
- * Revision 1.11  2005/07/01  09:11:03  09:11:03  skesti (Sami Kesti)
- * Check in mjk changes
- * 
- * Revision 1.10  2004/05/18 11:52:42  mjk
- * Added some Doxygen tags.
- *
- * Revision 1.9  2003/10/23 08:38:05  mjk
- * Fixed headers to work on Lynxos.
- *
- * Revision 1.8  2003/06/27 14:52:29  mjk
- * Fixed header problem in linux.
- *
- * Revision 1.7  2003/01/23 15:25:55  mjk
- * Fixed FIFFC_DATA_OFFSET and some comments having FIFF_ instead of FIFFV_.
- *
- * Revision 1.6  2002/12/18 15:36:45  mjk
- * Added extractable comments.
- *
- * Revision 1.5  2002/08/23  22:47:40  22:47:40  mjk (Matti Kajola)
- * Rev 1.5.1
- * 
- * Revision 1.4  2002/08/19  11:56:42  11:56:42  mjk (Matti Kajola)
- * Librev 1.5.0
- * 
- * Revision 1.3  2001/09/18  09:36:25  09:36:25  mjk (Matti Kajola)
- * Trying to close 1.4.0.
- * 
  *----------------------------------------------------------------------*/
 /** \file  fiff_types.h
  *  \brief Definitions for describing the objects in a FIFF file.

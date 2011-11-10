@@ -19,20 +19,7 @@
  * prior written consent of the author.
  *
  * $Header: err.hh,v 1.5 2004/09/30 08:34:16 mjk Exp $
- * $Log:	err.hh,v $
-# Revision 1.5  2004/09/30  08:34:16  08:34:16  mjk (Matti Kajola)
-# Redesigned to support both single and multithreaded progs.
-# 
- * Revision 1.4  2004/04/21 12:34:33  mjk
- * Added return value macros.
- *
- * Revision 1.3  2003/11/13 20:58:14  lauri
- * Added KEEP and FLUSH constants.
- *
- * Revision 1.2  2002/08/19 11:52:26  mjk
- * Librev 1.2.0
- *
- * 
+ * $Id$
  */
 
 #include <stdio.h>

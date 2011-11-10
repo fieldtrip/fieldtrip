@@ -7,17 +7,7 @@
  *
  * Copyright (C) 2007, Robert Oostenveld
  *
- * $Log: write_ctf_shm.c,v $
- * Revision 1.1  2009/01/14 09:43:37  roboos
- * moved source code for mex file from fileio/mex to file/private
- * compiling the source code from within Matlab now ensures that the mex file will be located immediately at the right position
- *
- * Revision 1.2  2007/08/01 09:36:16  roboos
- * changed some whitespace
- *
- * Revision 1.1  2007/07/30 13:36:04  roboos
- * new implementation
- *
+ * $Id$
  */
 
 #include <string.h>

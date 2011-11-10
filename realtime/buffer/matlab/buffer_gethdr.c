@@ -3,34 +3,7 @@
  * F.C. Donders Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
  *
- * $Log: buffer_gethdr.c,v $
- * Revision 1.9  2009/06/30 11:35:48  roboos
- * pass more explicit error from buffer onto matlab
- *
- * Revision 1.8  2008/10/29 20:46:12  roboos
- * consistent use of open_connection and close_connection
- * there were some incorrect uses of close() that on windows did not actually close, resulting in the buffer running out of sockets/threads after prolonged use
- *
- * Revision 1.7  2008/07/09 13:34:21  roboos
- * small change in verbose output, using verbose=0|1
- *
- * Revision 1.6  2008/05/22 09:27:22  roboos
- * fixed some issues with Borland compiler, correct pointer arithmetic, declarations at beginning
- *
- * Revision 1.5  2008/03/09 22:36:38  roboos
- * implemented new buffer mex-function, which acts as dispatcher for all functionality
- * changed buffer_xxx code from mex-function into c-function to be included in dispatcher
- *
- * Revision 1.4  2008/02/26 21:43:25  roboos
- * renamed packet_t structure definition into messagedef_t, added message_t structure (contains def+buf)
- *
- * Revision 1.3  2008/02/20 13:49:17  roboos
- * changed somments into ansi style, needed for matlab
- *
- * Revision 1.2  2008/02/19 10:28:33  roboos
- * added copyright statement and log message
- *
- *
+ * $Id$
  */
 
 #include "mex.h"

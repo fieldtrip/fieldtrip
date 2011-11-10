@@ -8,14 +8,7 @@ function write_tri(fn, pnt, dhk)
 
 % Copyright (C) 2002, Robert Oostenveld
 %
-% $Log: write_vtk.m,v $
-% Revision 1.1  2009/01/14 09:33:10  roboos
-% moved even more files from fileio to fileio/private, see previous log entry
-%
-% Revision 1.2  2003/03/11 15:24:52  roberto
-% updated help and copyrights
-%
-
+% $Id$
 fid = fopen(fn, 'wt');
 if fid~=-1
 

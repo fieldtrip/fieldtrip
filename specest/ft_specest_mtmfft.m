@@ -22,7 +22,7 @@ function [spectrum,ntaper,freqoi] = ft_specest_mtmfft(dat, time, varargin)
 
 % Copyright (C) 2010, Donders Institute for Brain, Cognition and Behaviour
 %
-% $Log$
+% $Id$
 
 % get the optional input arguments
 taper     = ft_getopt(varargin, 'taper'); if isempty(taper), error('You must specify a taper'); end

@@ -18,40 +18,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *
- * $Log: read_24bit.c,v $
- * Revision 1.4  2009/06/08 16:33:08  roboos
- * include sys/types.h for all platforms, not only WIN32/64, since also required for OSX 10.4
- *
- * Revision 1.3  2009/03/30 07:23:03  roboos
- * changed ifdef syntax
- *
- * Revision 1.2  2009/03/28 05:32:46  roboos
- * changed ifdef handling to accomodate matlab71, which did not like the WIN32 || WIN64 combination
- *
- * Revision 1.1  2009/01/14 09:43:37  roboos
- * moved source code for mex file from fileio/mex to file/private
- * compiling the source code from within Matlab now ensures that the mex file will be located immediately at the right position
- *
- * Revision 1.7  2008/12/11 17:32:33  roboos
- * added conditional include and define for win32 & 64, thanks to Guillaume
- *
- * Revision 1.6  2008/10/07 07:53:05  roboos
- * replaced fseek with fseeko, which I had forgotten to fix yesterday
- *
- * Revision 1.5  2008/10/06 09:25:24  roboos
- * changed from long int to off_t and included stdint for uint32_t and uint64_t
- * this should allow the mex file also to work on large filed (>2GB) on supported platforms
- *
- * Revision 1.4  2008/04/09 10:10:20  roboos
- * corrected the text of an error message
- *
- * Revision 1.3  2007/10/02 08:49:37  roboos
- * added brackets around the bitshift operations
- *
- * Revision 1.2  2007/09/12 12:43:39  roboos
- * added peter to copyright, merged suggestions from nici (see email 20070821), changed to using bitshift, changed the handing of the sign bit
- *
- *
+ * $Id$
  */
 
 /*

@@ -11,63 +11,7 @@
  *
  * $Header: /sw/tmp/build/libs-fiff-2.1.0/src/RCS/fiff_file.h,v 1.19 2010/04/16 12:32:16 mjk Exp $
  *
- * $Log: fiff_file.h,v $
- * Revision 1.19  2010/04/16 12:32:16  mjk
- * Fixed simple typo.
- *
- * Revision 1.18  2010/04/16 12:27:44  mjk
- * Added basic gantry description tags.
- *
- * Revision 1.17  2010/04/16 12:05:11  mjk
- * Added long,ulong,complex_float,complex_double.
- *
- * Revision 1.16  2009/04/01 09:24:26  skesti
- * Added tag kind FIFF_TIME_STAMP.
- *
- * Revision 1.15  2008/02/08 07:58:00  skesti
- * FIFFB_BAD_CHANNELS is now 359.
- *
- * Revision 1.14  2008/01/25 13:27:38  jne
- * replaced FIFF_DECIMATION_FACTOR by FIFF_STREAM_SEGMENT
- * added FIFFT_STREAM_SEGMENT_STRUCT
- *
- * Revision 1.13  2007/02/28  10:40:42  10:40:42  jne (Jukka Nenonen)
- * added tags FIFFC_EVENT_FROMMASK, FIFFC_EVENT_FROMBITS, FIFFC_EVENT_TOMASK, FIFFC_EVENT_TOBITS
- * 
- * Revision 1.12  2007/02/28 08:54:09  jne
- * added tag FIFFB_BAD_CANNELS
- *
- * Revision 1.11  2007/02/28 08:24:22  jne
- * added tags FIFFV_MRI_FORMAT_VISTA, FIFFV_PROJ_ITEM_EEG_AVREF, FIFF_DATA_BUFFER2, and FIFF_CH_NAME_LIST
- *
- * Revision 1.10  2007/01/09 12:39:25  jne
- * new tags FIFFB_HPI_SUBSYSTEM, FIFF_SIGNAL_CHANNEL, FIFFC_HPI_MAX_NCOIL,
- * FIFF_SSS_ITERATE, FIFF_EVENT_CHANNEL, FIFF_EVENT_BITS, FIFF_XFIT_CONT_SURF_TYPE
- *
- * Revision 1.9  2006/05/29  14:52:46  14:52:46  skesti (Sami Kesti)
- * Merge in jne changes.
- * 
- * Revision 1.8  2006/05/22  11:20:16  11:20:16  jne (Jukka Nenonen)
- * Updated to FIFF-1.2 definitions
- * 
- * Revision 1.7  2005/07/01 09:06:45  skesti
- * Check in mjk changes
- *
- * Revision 1.6  2004/05/18 11:50:16  mjk
- * Fixed overlapping tag FIFFB_XFIT_AUX.
- *
- * Revision 1.5  2002/12/18 15:36:45  mjk
- * Added extractable comments.
- *
- * Revision 1.4  2002/08/23  22:47:39  22:47:39  mjk (Matti Kajola)
- * Rev 1.5.1
- * 
- * Revision 1.3  2001/03/23  16:56:02  16:56:02  mjk (Matti Kajola)
- * Removed unnecessary header files and added a rcs header and log.
- *
- *------------------------------------------------------------------------------
- *
- * First version of functional image file format
+ * $Id$
  */
 
 #ifndef _fiff_file_h

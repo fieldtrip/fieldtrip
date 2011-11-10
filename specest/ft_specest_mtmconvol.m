@@ -28,7 +28,7 @@ function [spectrum,ntaper,freqoi,timeoi] = ft_specest_mtmconvol(dat, time, varar
 
 % Copyright (C) 2010, Donders Institute for Brain, Cognition and Behaviour
 %
-% $Log$
+% $Id$
 
 % get the optional input arguments
 taper     = ft_getopt(varargin, 'taper', 'dpss');

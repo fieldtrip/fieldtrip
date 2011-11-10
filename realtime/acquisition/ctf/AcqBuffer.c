@@ -3,11 +3,7 @@
  *
  * Copyright (C) 2007, Robert Oostenveld
  *
- * $Log: AcqBuffer.c,v $
- * Revision 1.7  2007/08/01 09:32:17  roboos
- * added copyrights and cvs log statement
- *
- *
+ * $Id$
  */
 
 #include <stdio.h>

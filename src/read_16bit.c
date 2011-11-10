@@ -22,16 +22,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *
- * $Log: read_16bit.c,v $
- * Revision 1.1  2009/01/14 09:43:37  roboos
- * moved source code for mex file from fileio/mex to file/private
- * compiling the source code from within Matlab now ensures that the mex file will be located immediately at the right position
- *
- * Revision 1.1  2008/04/09 10:04:37  roboos
- * new code based in 24bit, not tested
- *
- *
- *
+ * $Id$
  */
 
 void

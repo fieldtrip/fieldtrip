@@ -3,18 +3,7 @@
  * F.C. Donders Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
  *
- * $Log: buffer_putdat.c,v $
- * Revision 1.3  2009/06/30 11:35:48  roboos
- * pass more explicit error from buffer onto matlab
- *
- * Revision 1.2  2008/10/29 20:46:12  roboos
- * consistent use of open_connection and close_connection
- * there were some incorrect uses of close() that on windows did not actually close, resulting in the buffer running out of sockets/threads after prolonged use
- *
- * Revision 1.1  2008/10/22 10:46:29  roboos
- * created first implementation, based on puthdr
- *
- *
+ * $Id$
  */
 
 #include "mex.h"

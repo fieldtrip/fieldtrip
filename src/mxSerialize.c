@@ -22,21 +22,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  *
- * $Log: mxSerialize.c,v $
- * Revision 1.1  2009/01/14 09:43:37  roboos
- * moved source code for mex file from fileio/mex to file/private
- * compiling the source code from within Matlab now ensures that the mex file will be located immediately at the right position
- *
- * Revision 1.2  2007/11/07 12:48:37  roboos
- * added declaration of mx functions, since not included in the matlab header files
- *
- * Revision 1.1  2007/11/07 11:57:55  roboos
- * the original code for this function is released under the LGPL v2
- * Copyright (C) 2005, Brad Phelan, http://xtargets.com
- * renamed the functions to the mxSerialize and mxDeserialize
- * added a check on the number of input and output arguments
- *
- *
+ * $Id$
  */
 
 #include "mex.h"

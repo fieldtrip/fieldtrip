@@ -23,7 +23,7 @@ function bnd = prepare_mesh_segmentation(cfg,mri)
 
 % Copyrights (C) 2009, Robert Oostenveld, 2011, Cristiano Micheli
 %
-% $Log$
+% $Id$
 
 % process the inputs
 tissue      = ft_getopt(cfg,'tissue');

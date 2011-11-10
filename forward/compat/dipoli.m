@@ -7,22 +7,7 @@ function [vol] = dipoli(vol, isolated)
 
 % Copyright (C) 2005-2008, Robert Oostenveld
 %
-% $Log: dipoli.m,v $
-% Revision 1.3  2008/12/24 10:25:41  roboos
-% cleaned up the dipoli wrapper, replaced the binary by a better one and added a copy of the helper functions (from fileio)
-%
-% Revision 1.2  2008/12/24 09:20:11  roboos
-% added subfunctions etc as dipoli_xxx and modified dipoli main function accordingly
-%
-% Revision 1.1.1.1  2008/12/24 08:52:28  roboos
-% created new module that will hold the dipoli specific stuff for prepare_bemmodel
-%
-% Revision 1.2  2006/01/20 09:48:36  roboos
-% fill remaining elements of matrix with zeros
-% changed reshape and transpose
-%
-
-%$Id$
+% $Id$
 
 warning('DIPOLI is deprecated, please use FT_PREPARE_HEADMODEL with cfg.method = ''bem_dipoli'' instead.')
 

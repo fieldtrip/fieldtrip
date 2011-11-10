@@ -210,10 +210,7 @@ function [pnt1, tri1] = fairsurface(pnt, tri, N)
 %                    Christophe Phillips & Jeremie Mattout
 % spm_eeg_inv_ElastM.m 1437 2008-04-17 10:34:39Z christophe
 %
-% $Log: fairsurface.m,v $
-% Revision 1.1  2008/04/24 12:27:56  roboos
-% copy of code from Christophe, made compatible with triangle pnt/tri representation
-%
+% $Id$
 
 ts = [];
 ts.XYZmm = pnt';

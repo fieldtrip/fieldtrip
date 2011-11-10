@@ -16,11 +16,7 @@
  * or translated to another program language without the
  * prior written consent of the author.
  *
- * $Log: dacqcomm.hh,v $
- * Revision 1.1  2003/10/22 13:54:36  lauri
- * Initial revision
- *
- *
+ * $Id$
  */
 
 #include <sys/socket.h>

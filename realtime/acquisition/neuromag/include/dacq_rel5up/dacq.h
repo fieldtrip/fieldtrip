@@ -19,20 +19,7 @@
  * prior written consent of the author.
  *
  * $Header: /sw/tmp/build/libs-dacq-1.2.11/src/RCS/dacq.hh,v 1.4 2009/01/12 11:00:38 skesti Exp $
- * $Log: dacq.hh,v $
- * Revision 1.4  2009/01/12 11:00:38  skesti
- * Add Dacq_async_finish function pointer type.
- *
- * Revision 1.3  2005/10/25 10:20:44  skesti
- * Fixed includes
- *
-Revision 1.2  2003/07/23  12:25:33  12:25:33  mjk (Matti Kajola)
-Version 1.2.1
-
- * Revision 1.1  2001/08/21 19:16:42  mjk
- * Initial revision
- *
- * 
+ * $Id$
  */
 
 #include "dacq_clients.h"

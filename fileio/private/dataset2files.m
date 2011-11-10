@@ -8,7 +8,7 @@ function [filename, headerfile, datafile] = dataset2files(filename, format)
 
 % Copyright (C) 2007-2011, Robert Oostenveld
 %
-% $Log$
+% $Id$
 
 if isempty(format)
   format = ft_filetype(filename);

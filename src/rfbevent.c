@@ -39,14 +39,7 @@
  */
 
 /*
- * $Log: rfbevent.c,v $
- * Revision 1.2  2007/10/30 20:27:00  roboos
- * fixed bug in number of arguments, only apparent on odin
- *
- * Revision 1.1  2007/10/23 09:47:50  roboos
- * first working implementation, tested between laprob and mentat001
- *
- *
+ * $Id$
  */
 
 #include "platform.h"

@@ -32,13 +32,7 @@ function [dipout] = beamformer_sam(dip, sens, vol, dat, all_cov, varargin)
 % Copyright (C) 2005-2009, Arjan Hillebrand
 % Copyright (C) 2005-2009, Gareth Barnes
 %
-% $Log: beamformer_sam.m,v $
-% Revision 1.2  2009/06/17 13:40:54  roboos
-% transpose dipole moment
-%
-% Revision 1.1  2009/04/01 16:19:57  roboos
-% first version, uses some helper functions from Gareth
-%
+% $Id$
 
 if mod(nargin-5,2)
   % the first 5 arguments are fixed, the other arguments should come in pairs
