@@ -114,10 +114,10 @@ if length(seldat)~=length(label) && nargin==3,
   warning('the subspace projection is not guaranteed to be correct for non-orthogonal components');
 end
 
-if hasdata,
-  topo     = comp.topo(selcomp,:);
-  invtopo  = pinv(topo);
-  tra      = eye(length(selcomp)) - topo(:, cfg.component)*invtopo(cfg.component, :);
+if hasdata
+  mixing = comp.topo(selcomp,:);
+  unmixing = comp.unmixing(:,selcomp);
+  tra = eye(length(selcomp)) - mixing(:, cfg.component)*unmixing(cfg.component, :);
   %I am not sure about this, but it gives comparable results to the ~hasdata case
   %when comp contains non-orthogonal (=ica) topographies, and contains a complete decomposition
   
@@ -128,9 +128,9 @@ if hasdata,
   keepunused = 'yes'; %keep the original data which are not present in the mixing provided
   
 else
-  topo = comp.topo(selcomp, :);
-  topo(:, cfg.component) = 0;
-  tra      = topo;
+  mixing = comp.topo(selcomp, :);
+  mixing(:, cfg.component) = 0;
+  tra = mixing;
   
   %we are going from components to data
   labelorg = comp.label;

@@ -93,9 +93,9 @@ function [comp] = ft_componentanalysis(cfg, data)
 %   cfg.sobi.p_correlations
 %
 % Instead of specifying a component analysis method, you can also specify
-% a previously computed mixing matrix, which will be used to estimate the
+% a previously computed unmixing matrix, which will be used to estimate the
 % component timecourses in this data. This requires
-%   cfg.topo         = NxN matrix with a component topography in each column
+%   cfg.unmixing     = NxN unmixing matrix
 %   cfg.topolabel    = Nx1 cell-array with the channel labels
 %
 % To facilitate data-handling and distributed computing with the peer-to-peer
@@ -108,10 +108,6 @@ function [comp] = ft_componentanalysis(cfg, data)
 % input/output structure.
 %
 % See also FT_REJECTCOMPONENT, FASTICA, RUNICA, BINICA, SVD, JADER, VARIMAX, DSS, CCA, SOBI
-
-% NOTE parafac is also implemented, but that does not fit into the
-% structure of 2D decompositions very well. Probably I should implement it
-% in a separate function for N-D decompositions
 
 % Copyright (C) 2003-2011, Robert Oostenveld
 %
@@ -148,6 +144,8 @@ data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'forbidden', {'detrend'});
 cfg = ft_checkconfig(cfg, 'renamed',   {'blc', 'demean'});
+cfg = ft_checkconfig(cfg, 'renamedval',   {'method', 'predetermined mixing matrix', 'predetermined unmixing matrix'});
+cfg = ft_checkconfig(cfg, 'deprecated', {'topo'});
 
 % set the defaults
 cfg.method          = ft_getopt(cfg, 'method',       'runica');
@@ -163,6 +161,16 @@ cfg.normalisesphere = ft_getopt(cfg, 'normalisesphere', 'yes');
 cfg.channel = ft_channelselection(cfg.channel, data.label);
 
 if isfield(cfg, 'topo') && isfield(cfg, 'topolabel')
+  warning(['Specifying cfg.topo (= mixing matrix) to determine component '...
+    'timecourses in specified data is deprecated; please specify an '...
+    'unmixing matrix instead with cfg.unmixing. '...
+    'Using cfg.unmixing=pinv(cfg.topo) for now to reproduce old behaviour.']);
+  
+  cfg.unmixing = pinv(cfg.topo);
+  cfg = rmfield(cfg,'topo');
+end
+
+if isfield(cfg, 'unmixing') && isfield(cfg, 'topolabel')
   % use the previously determined unmixing matrix on this dataset
   
   % test whether all required channels are present in the data
@@ -179,11 +187,11 @@ if isfield(cfg, 'topo') && isfield(cfg, 'topolabel')
   tmpcfg              = [];
   tmpcfg.demean       = cfg.demean;
   tmpcfg.trials       = cfg.trials;
-  tmpcfg.topo         = cfg.topo;        % the MxN mixing matrix (M channels, N components)
+  tmpcfg.unmixing     = cfg.unmixing;    % the NxM unmixing matrix (M channels, N components)
   tmpcfg.topolabel    = cfg.topolabel;   % the Mx1 labels of the data that was used in determining the mixing matrix
   tmpcfg.channel      = cfg.channel;     % the Mx1 labels of the data that is presented now to this function
   tmpcfg.numcomponent = 'all';
-  tmpcfg.method       = 'predetermined mixing matrix';
+  tmpcfg.method       = 'predetermined unmixing matrix';
   tmpcfg.outputfile   = cfg.outputfile;
   cfg                 = tmpcfg;
 end
@@ -249,9 +257,8 @@ for trial=1:Ntrials
   data.trial{trial} = data.trial{trial} ./ scale;
 end
 
-if strcmp(cfg.method, 'predetermined mixing matrix')
-  % the single trial data does not have to be concatenated
-elseif strcmp(cfg.method, 'parafac') || strcmp(cfg.method, 'sobi')
+if strcmp(cfg.method, 'sobi')
+  
   % concatenate all the data into a 3D matrix respectively 2D (sobi)
   fprintf('concatenating data');
   Nsamples = Nsamples(1);
@@ -264,17 +271,17 @@ elseif strcmp(cfg.method, 'parafac') || strcmp(cfg.method, 'sobi')
   end
   fprintf('\n');
   fprintf('concatenated data matrix size %dx%dx%d\n', size(dat,1), size(dat,2), size(dat,3));
-  if strcmp(cfg.method, 'sobi')
-    % sobi wants Nchans, Nsamples, Ntrials matrix and for Ntrials = 1 remove trial dimension
-    if Ntrials == 1
-      dummy = 0;
-      [dat, dummy] = shiftdim(dat);
-    else
-      dat = shiftdim(dat,1);
-    end
+  if Ntrials == 1
+    dummy = 0;
+    [dat, dummy] = shiftdim(dat);
+  else
+    dat = shiftdim(dat,1);
   end
-else
-  % concatenate all the data into a 2D matrix
+  
+elseif ~strcmp(cfg.method, 'predetermined unmixing matrix')
+  
+  % concatenate all the data into a 2D matrix unless we already have an
+  % unmixing matrix
   fprintf('concatenating data');
   
   dat = zeros(Nchans, sum(Nsamples));
@@ -286,6 +293,7 @@ else
   end
   fprintf('\n');
   fprintf('concatenated data matrix size %dx%d\n', size(dat,1), size(dat,2));
+  
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -303,9 +311,7 @@ switch cfg.method
     try
       % construct key-value pairs for the optional arguments
       optarg = ft_cfg2keyval(cfg.fastica);
-      [A, W] = fastica(dat, optarg{:});
-      weights = W;
-      sphere = eye(size(W,2));
+      [mixing, unmixing] = fastica(dat, optarg{:});
     catch
       % the "catch me" syntax is broken on MATLAB74, this fixes it
       me = lasterror;
@@ -333,11 +339,13 @@ switch cfg.method
       sphere = sphere./norm(sphere);
     end
     
+    unmixing = weights*sphere;
+    mixing = [];
+    
   case 'binica'
     % check whether the required low-level toolboxes are installed
     % see http://www.sccn.ucsd.edu/eeglab
     ft_hastoolbox('eeglab', 1);
-    
     
     % construct key-value pairs for the optional arguments
     optarg = ft_cfg2keyval(cfg.binica);
@@ -348,21 +356,24 @@ switch cfg.method
       sphere = sphere./norm(sphere);
     end
     
+    unmixing = weights*sphere;
+    mixing = [];
+    
   case 'jader'
     % check whether the required low-level toolboxes are installed
     % see http://www.sccn.ucsd.edu/eeglab
     ft_hastoolbox('eeglab', 1);
     
-    weights = jader(dat);
-    sphere  = eye(size(weights, 2));
+    unmixing = jader(dat, cfg.numcomponent);
+    mixing = [];
     
   case 'varimax'
     % check whether the required low-level toolboxes are installed
     % see http://www.sccn.ucsd.edu/eeglab
     ft_hastoolbox('eeglab', 1);
     
-    weights = varimax(dat);
-    sphere  = eye(size(weights, 2));
+    unmixing = varimax(dat);
+    mixing = [];
     
   case 'cca'
     % check whether the required low-level toolboxes are installed
@@ -370,39 +381,37 @@ switch cfg.method
     ft_hastoolbox('cca', 1);
     
     [y, w] = ccabss(dat);
-    weights = w';
-    sphere  = eye(size(weights, 2));
+    unmixing = w';
+    mixing = [];
     
   case 'pca'
     % compute data cross-covariance matrix
     C = (dat*dat')./(size(dat,2)-1);
+    
     % eigenvalue decomposition (EVD)
     [E,D] = eig(C);
+    
     % sort eigenvectors in descending order of eigenvalues
     d = cat(2,(1:1:Nchans)',diag(D));
     d = sortrows(d,[-2]);
+    
     % return the desired number of principal components
-    weights = E(:,d(1:cfg.numcomponent,1))';
-    sphere = eye(size(weights,2));
+    unmixing = E(:,d(1:cfg.numcomponent,1))';
+    mixing = [];
+    
     clear C D E d
     
   case 'svd'
     if cfg.numcomponent<Nchans
       % compute only the first components
       [u, s, v] = svds(dat, cfg.numcomponent);
-      %u(Nchans, Nchans) = 0;
     else
       % compute all components
       [u, s, v] = svd(dat, 0);
     end
-    weights = u';
-    sphere  = eye(size(weights, 2));
     
-  case 'parafac'
-    % check whether the required low-level toolboxes are installed
-    % see http://www.models.kvl.dk/source/nwaytoolbox
-    ft_hastoolbox('nway', 1);
-    f = parafac(dat, cfg.numcomponent);
+    unmixing = u';
+    mixing = [];
     
   case 'dss'
     % check whether the required low-level toolboxes are installed
@@ -423,12 +432,10 @@ switch cfg.method
     state   = denss(state);  % this is for the DSS toolbox version 1.0
     %weights = state.W;
     %sphere  = state.V;
-    if size(state.A,1)==size(state.A,2)
-      weights  = inv(state.A);
-    else
-      weights  = pinv(state.A);
-    end
-    sphere   = eye(size(weights, 2));
+    
+    mixing = state.A;
+    unmixing = [];
+
     % remember the updated configuration details
     cfg.dss.denf      = state.denf;
     cfg.numcomponent  = state.sdim;
@@ -440,18 +447,18 @@ switch cfg.method
     
     % check for additional options, see SOBI for details
     if ~isfield(cfg, 'sobi')
-      mixm = sobi(dat);
+      mixing = sobi(dat, cfg.numcomponent);
     elseif isfield(cfg.sobi, 'n_sources') && isfield(cfg.sobi, 'p_correlations')
-      mixm = sobi(dat, cfg.sobi.n_sources, cfg.sobi.p_correlations);
+      mixing = sobi(dat, cfg.sobi.n_sources, cfg.sobi.p_correlations);
     elseif isfield(cfg.sobi, 'n_sources')
-      mixm = sobi(dat,cfg.sobi.n_sources);
+      mixing = sobi(dat,cfg.sobi.n_sources);
     else
       error('unknown options for SOBI component analysis');
     end
-    weights = pinv(mixm);
-    sphere  = eye(size(weights, 2));
     
-  case 'predetermined mixing matrix'
+    unmixing = [];
+    
+  case 'predetermined unmixing matrix'
     % check which labels from the cfg are identical to those of the data
     % this gives us the rows of cfg.topo (the channels) and of
     % data.trial (also channels) that we are going to use later
@@ -471,63 +478,62 @@ switch cfg.method
     end
     
     % reorder the mixing matrix so that the channel order matches the order in the data
-    cfg.topo      = cfg.topo(chansel,:);
+    cfg.unmixing  = cfg.unmixing(:,chansel);
     cfg.topolabel = cfg.topolabel(chansel);
     
-    % get the number of channels we are using from the data
-    Nchan   = size(cfg.topo, 1);
-    % get the number of components in which the data was decomposed
+    unmixing = cfg.unmixing;
+    mixing = [];
     
-    Ncomp   = size(cfg.topo, 2);
-    cfg.numcomponent = Ncomp;
-    
-    % initialize sphere and weights
-    sphere  = eye(Nchan,Nchan);
-    
-    % cfg.topo is a Channel x Component matrix (the mixing matrix, A)
-    % lets get the unmixing matrix (weights, W)
-    
-    % now, the weights matrix is simply given by its (pseudo)-inverse
-    if (Nchan==Ncomp)
-      weights = inv(cfg.topo);
-    else
-      weights = pinv(cfg.topo);
-    end
-    
+  case 'parafac'
+    error('parafac is not supported anymore in ft_componentanalysis');
   otherwise
     error('unknown method for component analysis');
 end % switch method
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% collect the results
-if isfield(data, 'fsample'), comp.fsample = data.fsample; end
-if isfield(data, 'time'),    comp.time    = data.time;    end
-
-% compute the activations in each trial
-for trial=1:Ntrials
-  if strcmp(cfg.method, 'parafac')
-    % FIXME, this is not properly supported yet
-    comp.trial{trial} = [];
+% make sure we have both mixing and unmixing matrices
+% if not, compute (pseudo-)inverse to go from one to the other
+if isempty(unmixing)
+  if (size(mixing,1)==size(mixing,2))
+    unmixing = inv(mixing);
   else
-    comp.trial{trial} = scale * weights * sphere * data.trial{trial};
+    unmixing = pinv(mixing);
+  end
+elseif isempty(mixing)
+  if (size(unmixing,1)==size(unmixing,2))
+    mixing = inv(unmixing);
+  else
+    mixing = pinv(unmixing);
   end
 end
 
-% get the mixing matrix
-if strcmp(cfg.method, 'parafac')
-  comp.topo = f{2};
-  comp.f1   = f{1}; %FIXME, this is not properly supported yet
-  comp.f2   = f{2};
-  comp.f3   = f{3};
-elseif size(weights,1)==size(weights,2)
-  comp.topo = inv(weights*sphere);
-else
-  comp.topo = pinv(weights*sphere); %allow fewer sources than sensors
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% collect the results and construct data structure
+
+comp = [];
+if isfield(data, 'fsample'), comp.fsample = data.fsample; end
+if isfield(data, 'time'),    comp.time    = data.time;    end
+
+% make sure we don't return more components than were requested
+% (some methods respect the maxcomponent parameters, others just always
+% return a fixed (i.e., numchans) number of components)
+if size(unmixing,1) > cfg.numcomponent
+  unmixing(cfg.numcomponent+1:end,:) = [];
+end
+if size(mixing,2) > cfg.numcomponent
+  mixing(:,cfg.numcomponent+1:end) = [];
 end
 
+% compute the activations in each trial
+for trial=1:Ntrials
+  comp.trial{trial} = scale * unmixing * data.trial{trial};
+end
+
+% store mixing/unmixing matrices in structure
+comp.topo = mixing;
+comp.unmixing = unmixing;
+
 % get the labels
-if strcmp(cfg.method, 'predetermined mixing matrix'),
+if strcmp(cfg.method, 'predetermined unmixing matrix'),
   prefix = 'component';
 else
   prefix = cfg.method;
@@ -549,7 +555,7 @@ if isfield(data, 'grad') || (isfield(data, 'elec') && isfield(data.elec, 'tra'))
   montage          = [];
   montage.labelorg = data.label;
   montage.labelnew = comp.label;
-  montage.tra      = weights * sphere;
+  montage.tra      = unmixing;
   comp.(sensfield) = ft_apply_montage(data.(sensfield), montage, 'balancename', 'comp', 'keepunused', 'yes');
 end
 
