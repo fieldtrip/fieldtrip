@@ -344,8 +344,6 @@ if isfield(cfg,'tissue')
 end
 
 function bnd          = prepare_shells(cfg,mri)
-
-% PREPARE_MESH_SEGMENTATION
 % Calculates the surfaces of each compartment from a segmentation or from
 % an MRI volume structure to be segmented. As such the input always
 % contains volumetric information.
@@ -363,12 +361,8 @@ function bnd          = prepare_shells(cfg,mri)
 % 
 % cfg.tissue                  the tissue number/string
 % cfg.numvertices             the desired number of vertices
-% 
-% See also PREPARE_MESH_MANUAL,PREPARE_MESH_HEADSHAPE
 
-% Copyrights (C) 2009, Robert Oostenveld, 2011, Cristiano Micheli
-%
-% $Id$
+% FIXME: introduce the sourceunits control as in prepare_singleshell
 
 % process the inputs
 tissue      = ft_getopt(cfg,'tissue');
