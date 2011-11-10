@@ -40,8 +40,8 @@ function freq = ft_datatype_freq(freq, varargin)
 %
 % Revision history:
 %
-% (2011/latest) The description of the sensors has changed: see FIXSENS for
-% information
+% (2011/latest) The description of the sensors has changed, see FT_DATATYPE_SENS
+% for further information.
 %
 % (2008) The presence of labelcmb in case of crsspctrm became optional,
 % from now on the crsspctrm can also be represented as Nchan * Nchan.

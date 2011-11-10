@@ -42,8 +42,8 @@ function mvar = ft_datatype_mvar(mvar, varargin)
 %
 % Revision history:
 %
-% (2011/latest) The description of the sensors has changed: see FIXSENS for
-% information
+% (2011/latest) The description of the sensors has changed, see FT_DATATYPE_SENS
+% for further information.
 %
 % (2008) The initial version was defined.
 %

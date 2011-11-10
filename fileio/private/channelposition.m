@@ -8,7 +8,7 @@ function [pnt, ori, lab] = channelposition(sens, varargin)
 % array and the optional input arguments should be specified as key
 % value pairs.
 %
-% See also FIXSENS, FT_DATATYPE_SENS
+% See also FT_DATATYPE_SENS
 
 % Copyright (C) 2009-2011, Robert Oostenveld & Vladimir Litvak
 %

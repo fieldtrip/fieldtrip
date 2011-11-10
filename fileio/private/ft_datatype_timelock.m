@@ -32,10 +32,11 @@ function timelock = ft_datatype_timelock(timelock, varargin)
 %
 % Revision history:
 %
-% (2011v2/latest) The description of the sensors has changed: see FIXSENS for
-% information
+% (2011v2/latest) The description of the sensors has changed, see FT_DATATYPE_SENS
+% for further information.
 %
 % (2011) The field 'fsample' was removed, as it was redundant.
+%
 % (2003) The initial version was defined.
 %
 % See also FT_DATATYPE, FT_DATATYPE_COMP, FT_DATATYPE_DIP, FT_DATATYPE_FREQ,
