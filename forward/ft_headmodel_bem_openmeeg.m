@@ -150,20 +150,20 @@ try
   end
   
   % these will hold the shell script and the inverted system matrix
-  [~,tname] = fileparts(tempname);
+  [tmp,tname] = fileparts(tempname);
   if ~ispc
     exefile = [tname '.sh'];
   else
     exefile = [tname '.bat'];
   end
   
-  [~,tname] = fileparts(tempname);
+  [tmp,tname] = fileparts(tempname);
   condfile  = [tname '.cond'];
-  [~,tname] = fileparts(tempname);
+  [tmp,tname] = fileparts(tempname);
   geomfile  = [tname '.geom'];
-  [~,tname] = fileparts(tempname);
+  [tmp,tname] = fileparts(tempname);
   hmfile    = [tname '.bin'];
-  [~,tname] = fileparts(tempname);
+  [tmp,tname] = fileparts(tempname);
   hminvfile = [tname '.bin'];
   
   % write conductivity and geometry files

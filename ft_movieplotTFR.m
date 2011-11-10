@@ -305,7 +305,7 @@ if dointeractive
   
 else
   % non interactive mode
-  [~, hs] = ft_plot_topo(chanx, chany, zeros(numel(chanx),1), 'mask', layout.mask, 'outline', layout.outline, 'interpmethod', 'cubic');
+  [tmp, hs] = ft_plot_topo(chanx, chany, zeros(numel(chanx),1), 'mask', layout.mask, 'outline', layout.outline, 'interpmethod', 'cubic');
   caxis(cfg.zlim);
   axis off;
 

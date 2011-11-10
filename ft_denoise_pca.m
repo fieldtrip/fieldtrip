@@ -272,7 +272,7 @@ if isfield(data, 'grad')
   for k = 1:numel(fnames)
     tmp(k) = isstruct(data.grad.balance.(fnames{k}));
   end
-  [~, ix] = sort(tmp,'descend');
+  [tmp, ix] = sort(tmp,'descend');
   data.grad.balance = orderfields(data.grad.balance, fnames(ix));
 
 else

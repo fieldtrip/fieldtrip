@@ -57,15 +57,15 @@ try
     tmpfolder = pwd;
     
     cd(tempdir)
-    [~,tname] = fileparts(tempname);
+    [tmp,tname] = fileparts(tempname);
     segfile   = [tname];     
-    [~,tname] = fileparts(tempname);
+    [tmp,tname] = fileparts(tempname);
     confile   = [tname '.csv'];
-    [~,tname] = fileparts(tempname);
+    [tmp,tname] = fileparts(tempname);
     elecfile = [tname '.h5']; 
-    [~,tname] = fileparts(tempname);
+    [tmp,tname] = fileparts(tempname);
     exefile   = [tname '.sh'];     
-    [~,tname] = fileparts(tempname);
+    [tmp,tname] = fileparts(tempname);
     datafile  = [tname '.h5'];
        
     % create a fake mri structure and write the segmentation on disk

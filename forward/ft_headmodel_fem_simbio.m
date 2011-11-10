@@ -36,22 +36,22 @@ if strcmp(wfmethod,'cubes')
       cd(tempdir)
       
       % temporary file names for vgrid call
-      [~,tname] = fileparts(tempname);
+      [tmp,tname] = fileparts(tempname);
       shfile    = [tname '.sh'];
-      [~,tname] = fileparts(tempname);
+      [tmp,tname] = fileparts(tempname);
       meshfile  = [tname '.v'];
-      [~,tname] = fileparts(tempname);
+      [tmp,tname] = fileparts(tempname);
       MRfile = [tname '.v'];
-      [~,tname] = fileparts(tempname);
+      [tmp,tname] = fileparts(tempname);
       materialsfile = [tname '.mtr'];
       % temporary file names for simbio call
-      [~,tname] = fileparts(tempname);
+      [tmp,tname] = fileparts(tempname);
       exefile   = [tname '.sh'];
-      [~,tname] = fileparts(tempname);
+      [tmp,tname] = fileparts(tempname);
       transfermatrix = [tname];
-      [~,tname] = fileparts(tempname);
+      [tmp,tname] = fileparts(tempname);
       parfile   = [tname '.par'];
-      [~,tname] = fileparts(tempname);
+      [tmp,tname] = fileparts(tempname);
       elcfile   = [tname '.elc'];
       
       if ~ft_hastoolbox('simbio',1,0) || ~ft_hastoolbox('vgrid',1,0)
