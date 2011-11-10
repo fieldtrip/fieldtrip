@@ -122,9 +122,12 @@ cfg.unit           = ft_getopt(cfg, 'unit',  []);
 
 % specific defaults
 cfg.fitind         = ft_getopt(cfg, 'fitind', []); % concentricspheres specific
+
+% FIXME: delete these defaults
 cfg.smooth         = ft_getopt(cfg, 'smooth',      5); % volume input
 cfg.sourceunits    = ft_getopt(cfg, 'sourceunits', 'cm'); % volume input
 cfg.threshold      = ft_getopt(cfg, 'threshold',   0.5); % volume input
+
 cfg.numvertices    = ft_getopt(cfg, 'numvertices', []); % volume input
 cfg.tissue         = ft_getopt(cfg, 'tissue', []); % volume input, can only be a set of strings
 cfg.tissueval      = ft_getopt(cfg, 'tissueval', []); % fdm/fem
@@ -372,7 +375,7 @@ tissue      = ft_getopt(cfg,'tissue');
 sourceunits = ft_getopt(cfg, 'sourceunits', 'cm');
 smoothseg   = ft_getopt(cfg, 'smooth',      5);
 threshseg   = ft_getopt(cfg, 'threshold',   0.5); 
-numvertices = ft_getopt(cfg, 'numvertices', 4000);
+numvertices = ft_getopt(cfg, 'numvertices', 3000);
 
 % check options consistency
 ntissues = numel(tissue);
