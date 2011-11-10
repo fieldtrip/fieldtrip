@@ -19,6 +19,7 @@ function [data] = ft_rejectcomponent(cfg, comp, data)
 %
 % The configuration should contain
 %   cfg.component = list of components to remove, e.g. [1 4 7]
+%   cfg.demean    = 'no' or 'yes', whether to demean the input data (default = 'yes')
 %
 % To facilitate data-handling and distributed computing with the peer-to-peer
 % module, this function has the following options:
@@ -64,6 +65,7 @@ ft_preamble loadvar comp data
 cfg.component  = ft_getopt(cfg, 'component',  []);
 cfg.inputfile  = ft_getopt(cfg, 'inputfile',  []);
 cfg.outputfile = ft_getopt(cfg, 'outputfile', []);
+cfg.demean     = ft_getopt(cfg, 'demean',    'yes');
 
 % the data can be passed as input arguments or can be read from disk
 nargin = 1;
@@ -90,6 +92,14 @@ end
 
 if max(cfg.component)>ncomps
   error('you cannot remove components that are not present in the data');
+end
+
+if nargin==3 && strcmp(cfg.demean, 'yes')
+  % optionally perform baseline correction on each trial
+  fprintf('baseline correcting data \n');
+  for trial=1:Ntrials
+    data.trial{trial} = ft_preproc_baselinecorrect(data.trial{trial});
+  end
 end
 
 % set the rejected component amplitudes to zero
