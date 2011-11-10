@@ -8,13 +8,15 @@ function comp = ft_datatype_comp(comp, varargin)
 % PCA. This data structure is usually generated with the FT_COMPONENTANALYSIS
 % function.
 %
-% An example of a comp data structure with 149 components is shown here:
+% An example of a comp data structure with 100 components that resulted from
+% a 151-channel MEG recording is shown here:
 %
 %          time: {1x10 cell}
 %         trial: {1x10 cell}
-%          topo: [149x149 double]
-%     topolabel: {149x1 cell}
-%         label: {149x1 cell}
+%      unmixing: [100x151 double]
+%          topo: [151x100 double]
+%     topolabel: {151x1 cell}
+%         label: {100x1 cell}
 %       fsample: 300
 %           cfg: [1x1 struct]
 %
@@ -23,7 +25,7 @@ function comp = ft_datatype_comp(comp, varargin)
 % further details.
 %
 % Required fields:
-%   - time, trial, label
+%   - time, trial, label, topo, unmixing
 %
 % Optional fields:
 %   - sampleinfo, trialinfo, grad, elec, hdr, cfg
@@ -35,11 +37,13 @@ function comp = ft_datatype_comp(comp, varargin)
 %   - offset
 %
 % Revision history:
+% (2011v2/latest) The unmixing matrix has been added to the component data
+% structure.
 %
-% (2011/latest) The description of the sensors has changed: see FIXSENS for
+% (2011v1) The description of the sensors has changed: see FIXSENS for
 % information
 %
-% (2003/latest) The initial version was defined
+% (2003) The initial version was defined
 %
 % See also FT_DATATYPE, FT_DATATYPE_COMP, FT_DATATYPE_DIP, FT_DATATYPE_FREQ,
 % FT_DATATYPE_MVAR, FT_DATATYPE_RAW, FT_DATATYPE_SOURCE, FT_DATATYPE_SPIKE,
@@ -68,6 +72,38 @@ function comp = ft_datatype_comp(comp, varargin)
 % get the optional input arguments, which should be specified as key-value pairs
 version = ft_getopt(varargin, 'version', 'latest');
 
+if strcmp(version, 'latest')
+  version = '2011v2';
+end
+
+switch version
+  case '2011v2'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if ~isfield(comp, 'unmixing')
+      % in case the unmixing matrix is not present, construct the best estimate
+      % based on the mixing (topo) matrix
+      comp.unmixing = pinv(comp.topo);
+    end
+    
+  case '2011v1'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if isfield(comp, 'unmixing')
+      % this field did not exist until November 2011
+      comp = rmfield(comp, 'unmixing');
+    end
+    
+  case '2003'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if isfield(comp, 'unmixing')
+      % this field did not exist until November 2011
+      comp = rmfield(comp, 'unmixing');
+    end
+    
+  otherwise
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    error('unsupported version "%s" for comp datatype', version);
+end
+
 % convert it into a raw data structure
 rawdata = comp;
 rawdata = rmfield(rawdata, 'topo');
@@ -75,8 +111,8 @@ rawdata = rmfield(rawdata, 'topolabel');
 rawdata = ft_datatype_raw(rawdata, 'version', version);
 
 % add the component specific fields again
+rawdata.unmixing  = comp.unmixing;
 rawdata.topo      = comp.topo;
 rawdata.topolabel = comp.topolabel;
 comp = rawdata;
 clear rawdata
-
