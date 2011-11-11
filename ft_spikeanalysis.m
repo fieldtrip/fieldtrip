@@ -1,34 +1,25 @@
-function [spike] = ft_spikeanalysis(cfg, data);
+function [spike] = ft_spikeanalysis(cfg, data)
 
 % FT_SPIKEANALYSIS performs analysis on spike data
 %
 % Use as
-%   [spike] = ft_spikeanalysis(cfg, data);
+%   [spike] = ft_spikeanalysis(cfg, data)
 %
 % The following configuration options are supported
-%   cfg.method        = 'rate' (default), or 'spikephase'
+%   cfg.method        = 'rate' or 'spikephase' (default = 'rate')
 %
-%   in combination with cfg.method = 'rate',
-%     cfg.toi    = the spike-rate is computed in a window surrounding the time-points in cfg.toi
-%     cfg.timwin = window width
+% In combination with cfg.method = 'rate' you can specify
+%   cfg.toi    = the spike-rate is computed in a window surrounding the time-points in cfg.toi
+%   cfg.timwin = window width
 %
-%     if cfg.toi and cfg.timwin are not specified, the average rate across each trial is computed.
+% If cfg.toi and cfg.timwin are not specified, the average rate across each
+% trial is computed.
 %
-%   in combination with cfg.method = 'spikephase'
+% In combination with cfg.method = 'spikephase' you can specify
 %     cfg.channelcmb    = cell-array, see FT_CHANNELCOMBINATION
-%     cfg.bpfilter      = 'no' or 'yes'  bandpass filter
+%     cfg.bpfilter      = 'no' or 'yes', use a bandpass filter
 %     cfg.bpfreq        = bandpass frequency range, specified as [low high] in Hz
 %     cfg.bpfiltord     = bandpass filter order
-%
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
-%   cfg.inputfile   =  ...
-%   cfg.outputfile  =  ...
-% If you specify one of these (or both) the input data will be read from a *.mat
-% file on disk and/or the output data will be written to a *.mat file. These mat
-% files should contain only a single variable, corresponding with the
-% input/output structure.
-%
 
 % Undocumented local options:
 % cfg.bpfilttype
@@ -72,6 +63,9 @@ ftFuncMem   = memtic();
 % enable configuration tracking
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
+cfg = ft_checkconfig(cfg, 'forbidden', 'inputfile');   % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1056
+cfg = ft_checkconfig(cfg, 'forbidden', 'outputfile');  % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1056
+
 % set the defaults
 if ~isfield(cfg, 'method'),       cfg.method = 'rate';             end
 if ~isfield(cfg, 'channelcmb'),   cfg.channelcmb = {'all', 'all'}; end
@@ -79,19 +73,6 @@ if ~isfield(cfg, 'bpfilter'),     cfg.bpfilter = 'yes';            end
 if ~isfield(cfg, 'bpfiltord'),    cfg.bpfiltord = 4;               end
 if ~isfield(cfg, 'bpfilttype'),   cfg.bpfilttype = 'but';          end
 if ~isfield(cfg, 'bpfreq'),       cfg.bpfreq = [30 90];            end
-if ~isfield(cfg, 'inputfile'),    cfg.inputfile = [];              end
-if ~isfield(cfg, 'outputfile'),   cfg.outputfile = [];             end
-
-% load optional given inputfile as data
-hasdata = (nargin>1);
-if ~isempty(cfg.inputfile)
-  % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    data = loadvar(cfg.inputfile, 'data');
-  end
-end
 
 if strcmp(cfg.method, 'rate'),
   ntrials = length(data.trial);
@@ -221,7 +202,7 @@ cfg.version.id = '$Id$';
 
 % add information about the Matlab version used to the configuration
 cfg.callinfo.matlab = version();
-  
+
 % add information about the function call to the configuration
 cfg.callinfo.proctime = toc(ftFuncTimer);
 cfg.callinfo.procmem  = memtoc(ftFuncMem);
@@ -234,9 +215,4 @@ try, cfg.previous = data.cfg; end
 
 % remember the exact configuration details in the output
 spike.cfg = cfg;
-
-% the output data should be saved to a MATLAB file
-if ~isempty(cfg.outputfile)
-  savevar(cfg.outputfile, 'data', spike); % use the variable name "data" in the output file
-end
 

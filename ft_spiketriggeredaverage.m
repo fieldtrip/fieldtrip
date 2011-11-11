@@ -1,6 +1,7 @@
 function [timelock] = ft_spiketriggeredaverage(cfg, data)
 
-% FT_SPIKETRIGGEREDAVERAGE computes the avererage of the LFP around the spikes.
+% FT_SPIKETRIGGEREDAVERAGE computes the avererage of the LFP around the
+% spikes.
 %
 % Use as
 %   [timelock] = ft_spiketriggeredaverage(cfg, data)
@@ -14,16 +15,6 @@ function [timelock] = ft_spiketriggeredaverage(cfg, data)
 %                      see FT_CHANNELSELECTION for details
 %   cfg.keeptrials   = 'yes' or 'no', return individual trials or average (default = 'no')
 %   cfg.feedback     = 'no', 'text', 'textbar', 'gui' (default = 'no')
-%
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
-%   cfg.inputfile   =  ...
-%   cfg.outputfile  =  ...
-% If you specify one of these (or both) the input data will be read from a *.mat
-% file on disk and/or the output data will be written to a *.mat file. These mat
-% files should contain only a single variable, corresponding with the
-% input/output structure.
-%
 
 % Copyright (C) 2008, Robert Oostenveld
 %
@@ -55,25 +46,15 @@ ftFuncMem   = memtic();
 % enable configuration tracking
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
+cfg = ft_checkconfig(cfg, 'forbidden', 'inputfile');   % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1056
+cfg = ft_checkconfig(cfg, 'forbidden', 'outputfile');  % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1056
+
 % set the defaults
 if ~isfield(cfg, 'timwin'),       cfg.timwin = [-0.1 0.1];    end
 if ~isfield(cfg, 'channel'),      cfg.channel = 'all';        end
 if ~isfield(cfg, 'spikechannel'), cfg.spikechannel = [];      end
 if ~isfield(cfg, 'keeptrials'),   cfg.keeptrials = 'no';      end
 if ~isfield(cfg, 'feedback'),     cfg.feedback = 'no';        end
-if ~isfield(cfg, 'inputfile'),  cfg.inputfile = [];           end
-if ~isfield(cfg, 'outputfile'), cfg.outputfile = [];          end
-
-% load optional given inputfile as data
-hasdata = (nargin>1);
-if ~isempty(cfg.inputfile)
-  % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    data = loadvar(cfg.inputfile, 'data');
-  end
-end
 
 % autodetect the spike channels
 ntrial = length(data.trial);
@@ -219,7 +200,7 @@ cfg.version.id = '$Id$';
 
 % add information about the Matlab version used to the configuration
 cfg.callinfo.matlab = version();
-  
+
 % add information about the function call to the configuration
 cfg.callinfo.proctime = toc(ftFuncTimer);
 cfg.callinfo.procmem  = memtoc(ftFuncMem);
@@ -232,9 +213,4 @@ try, cfg.previous = data.cfg; end
 
 % remember the exact configuration details in the output
 timelock.cfg = cfg;
-
-% the output data should be saved to a MATLAB file
-if ~isempty(cfg.outputfile)
-  savevar(cfg.outputfile, 'data', timelock); % use the variable name "data" in the output file
-end
 

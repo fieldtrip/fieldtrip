@@ -1,6 +1,7 @@
 function [cfg, spike] = ft_spikedetection(cfg)
 
-% FT_SPIKEDETECTION
+% FT_SPIKEDETECTION reads continuous data from disk and detects spikes. The
+% function writes the unsorted spike waveforms to disk in another file.
 %
 % Use as
 %   cfg = ft_spikedetection(cfg)

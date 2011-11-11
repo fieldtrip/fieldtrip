@@ -1,6 +1,7 @@
-function [spike] = ft_spikesorting(cfg, spike);
+function [spike] = ft_spikesorting(cfg, spike)
 
-% FT_SPIKESORTING performs clustering of spike-waveforms and returns the unit number to which each spike belongs.
+% FT_SPIKESORTING performs clustering of spike-waveforms and returns the
+% unit number to which each spike belongs.
 %
 % Use as
 %   [spike] = ft_spikesorting(cfg, spike)
@@ -18,15 +19,6 @@ function [spike] = ft_spikesorting(cfg, spike);
 %   spike.waveform  = 1 x Nchans cell-array, each element contains a matrix (Nsamples x Nspikes), can be empty
 %   spike.timestamp = 1 x Nchans cell-array, each element contains a vector (1 x Nspikes)
 %   spike.unit      = 1 x Nchans cell-array, each element contains a vector (1 x Nspikes)
-%
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
-%   cfg.inputfile   =  ...
-%   cfg.outputfile  =  ...
-% If you specify one of these (or both) the input data will be read from a *.mat
-% file on disk and/or the output data will be written to a *.mat file. These mat
-% files should contain only a single variable, corresponding with the
-% input/output structure.
 %
 % See also FT_READ_SPIKE, FT_SPIKEDOWNSAMPLE
 
@@ -60,12 +52,13 @@ ftFuncMem   = memtic();
 % enable configuration tracking
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
+cfg = ft_checkconfig(cfg, 'forbidden', 'inputfile');   % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1056
+cfg = ft_checkconfig(cfg, 'forbidden', 'outputfile');  % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1056
+
 % set the defaults
 if ~isfield(cfg, 'feedback'),       cfg.feedback = 'textbar';    end
 if ~isfield(cfg, 'method'),         cfg.method = 'ward';         end
 if ~isfield(cfg, 'channel'),        cfg.channel = 'all';         end
-if ~isfield(cfg, 'inputfile'),      cfg.inputfile = [];          end
-if ~isfield(cfg, 'outputfile'),     cfg.outputfile = [];         end
 
 if isequal(cfg.method, 'ward')
   if ~isfield(cfg, 'ward'),           cfg.ward          = [];       end
@@ -78,17 +71,6 @@ end
 if isequal(cfg.method, 'kmeans')
   if ~isfield(cfg, 'kmeans'),         cfg.kmeans        = [];       end
   if ~isfield(cfg.kmeans, 'aantal'),  cfg.kmeans.aantal = 10;       end
-end
-
-% load optional given inputfile as data
-hasdata = (nargin>1);
-if ~isempty(cfg.inputfile)
-  % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    data = loadvar(cfg.inputfile, 'data');
-  end
 end
 
 % select the channels
@@ -107,7 +89,7 @@ for chanlop=1:nchan
   nspike    = size(waveform,2);
   unit      = zeros(1,nspike);
   fprintf('sorting %d spikes in channel %s\n', nspike, label);
-
+  
   switch cfg.method
     case 'ward'
       dist = ward_distance(cfg, waveform);
@@ -117,21 +99,21 @@ for chanlop=1:nchan
         endsel = sum([0 grootte(1:(i  ))]);
         unit(ordening(begsel:endsel)) = i;
       end
-
+      
     case 'kmeans'
       unit = kmeans(waveform', cfg.kmeans.aantal)';
-
+      
       %               'sqEuclidean'  - Squared Euclidean distance
       %               'cityblock'    - Sum of absolute differences, a.k.a. L1
       %               'cosine'       - One minus the cosine of the included angle
       %                                between points (treated as vectors)
       %               'correlation'  - One minus the sample correlation between
       %                                points (treated as sequences of values)
-
+      
     otherwise
       error('unsupported clustering method');
   end
-
+  
   % remember the sorted units
   spike.unit{chanlop} = unit;
 end
@@ -142,7 +124,7 @@ cfg.version.id = '$Id$';
 
 % add information about the Matlab version used to the configuration
 cfg.callinfo.matlab = version();
-  
+
 % add information about the function call to the configuration
 cfg.callinfo.proctime = toc(ftFuncTimer);
 cfg.callinfo.procmem  = memtoc(ftFuncMem);
@@ -155,11 +137,6 @@ try, cfg.previous    = spike.cfg;     end
 
 % remember the configuration
 spike.cfg = cfg;
-
-% the output data should be saved to a MATLAB file
-if ~isempty(cfg.outputfile)
-  savevar(cfg.outputfile, 'data', spike); % use the variable name "data" in the output file
-end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that computes the distance between all spike waveforms
@@ -205,7 +182,7 @@ switch lower(cfg.ward.distance)
         dist(j,i) = dist(i,j);
       end
     end
-
+    
   otherwise
     error('unsupported distance metric');
 end

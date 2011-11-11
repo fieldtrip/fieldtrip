@@ -1,6 +1,7 @@
 function [freq] = ft_spiketriggeredspectrum(cfg, data)
 
-% FT_SPIKETRIGGEREDSPECTRUM computes the Fourier spectrup of the LFP around the spikes.
+% FT_SPIKETRIGGEREDSPECTRUM computes the Fourier spectrup of the LFP around
+% the spikes.
 %
 % Use as
 %   [freq] = ft_spiketriggeredspectrum(cfg, data)
@@ -23,9 +24,14 @@ function [freq] = ft_spiketriggeredspectrum(cfg, data)
 % If the triggered spike leads a spike in another channel, then the angle
 % of the Fourier spectrum of that other channel will be negative. NOTE that
 % this should be checked for consistency.
+
+% FIXME this function should be merged with ft_spike_triggeredspectrum
 %
-% NOTE: Function should be merged with ft_spike_triggeredspectrum
-%
+% This function uses a NaN-aware spectral estimation technique, which will
+% default to the standard Matlab FFT routine if no NaNs are present. The
+% fft_along_rows subfunction below demonstrates the expected function
+% behaviour.
+
 % Copyright (C) 2008, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
@@ -45,11 +51,6 @@ function [freq] = ft_spiketriggeredspectrum(cfg, data)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
-
-% This function uses a NaN-aware spectral estimation technique, which will
-% default to the standard Matlab FFT routine if no NaNs are present. The
-% fft_along_rows subfunction below demonstrates the expected function
-% behaviour.
 
 ft_defaults
 
@@ -150,11 +151,11 @@ rephase   = sparse(diag(conj(spike_fft)));
 for i=1:ntrial
   spikesmp = find(data.trial{i}(spikesel,:));
   spikecnt = data.trial{i}(spikesel,spikesmp);
-
+  
   if any(spikecnt>5) || any(spikecnt<0)
     error('the spike count lies out of the regular bounds');
   end
-
+  
   % instead of doing the bookkeeping of double spikes below, replicate the double spikes by looking at spikecnt
   sel = find(spikecnt>1);
   tmp = zeros(1,sum(spikecnt(sel)));
@@ -170,19 +171,19 @@ for i=1:ntrial
   spikesmp = [spikesmp tmp];              % add the double spikes as replicated single spikes
   spikecnt = [spikecnt ones(size(tmp))];  % add the double spikes as replicated single spikes
   spikesmp = sort(spikesmp);              % sort them to keep the original ordering (not needed on spikecnt, since that is all ones)
-
+  
   spiketime{i}  = data.time{i}(spikesmp);
   spiketrial{i} = i*ones(size(spikesmp));
   fprintf('processing trial %d of %d (%d spikes)\n', i, ntrial, sum(spikecnt));
-
+  
   spectrum{i} = zeros(length(spikesmp), nchansel, fend-fbeg+1);
-
+  
   ft_progress('init', cfg.feedback, 'spectrally decomposing data around spikes');
   for j=1:length(spikesmp)
     ft_progress(i/ntrial, 'spectrally decomposing data around spike %d of %d\n', j, length(spikesmp));
     begsmp = spikesmp(j) + begpad;
     endsmp = spikesmp(j) + endpad;
-
+    
     if (begsmp<1)
       segment = nan*zeros(nchansel, numsmp);
     elseif endsmp>size(data.trial{i},2)
@@ -190,28 +191,28 @@ for i=1:ntrial
     else
       segment = data.trial{i}(chansel,begsmp:endsmp);
     end
-
-    % substract the DC component from every segment, to avoid any leakage of the taper       
+    
+    % substract the DC component from every segment, to avoid any leakage of the taper
     segmentMean = repmat(nanmean(segment,2),1,numsmp); % nChan x Numsmp
     segment     = segment - segmentMean; % LFP has average of zero now (no DC)
-        
+    
     time  = randn(size(segment)); % this is actually not used
-
+    
     % taper the data segment around the spike and compute the fft
     segment_fft = specest_nanfft(segment * taper, time);
-
+    
     % select the desired output frquencies and normalize
     segment_fft = segment_fft(:,fbeg:fend) ./ sqrt(numsmp/2);
-
+    
     % rotate the estimated phase at each frequency to correct for the segment t=0 not being at the first sample
     segment_fft = segment_fft * rephase;
-
+    
     % store the result for this spike in this trial
     spectrum{i}(j,:,:) = segment_fft;
-
+    
   end % for each spike in this trial
   ft_progress('close');
-
+  
 end % for each trial
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -239,7 +240,7 @@ cfg.version.id = '$Id$';
 
 % add information about the Matlab version used to the configuration
 cfg.callinfo.matlab = version();
-  
+
 % add information about the function call to the configuration
 cfg.callinfo.proctime = toc(ftFuncTimer);
 cfg.callinfo.procmem  = memtoc(ftFuncMem);

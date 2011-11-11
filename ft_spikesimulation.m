@@ -87,10 +87,10 @@ for t=1:cfg.ntrial
   lfp   = zeros(cfg.nlfpchan, nsample);
   spike = zeros(cfg.nspikechan, nsample);
   
-  for i=1:cfg.nlfpchan, 
+  for i=1:cfg.nlfpchan,
     lfp(i,:) = ft_preproc_bandpassfilter(randn(1,nsample), fsample, cfg.bpfreq);
   end
-
+  
   for i=1:cfg.nspikechan
     % the spikes are generated from a probabilistic mix of the LFP channels
     x = spikemix(i,:) * lfp;
@@ -101,7 +101,7 @@ for t=1:cfg.ntrial
     % randomly assign the spikes over the time series
     spike(i,:) = ((cfg.spikerate(i)*nsample/fsample)*x)>=rand(size(x));
   end
-
+  
   data.time{t}  = (1:nsample)./fsample;
   data.trial{t} = [lfp; spike];
   clear lfp spike
@@ -113,7 +113,7 @@ cfg.version.id   = '$Id$';
 
 % add information about the Matlab version used to the configuration
 cfg.callinfo.matlab = version();
-  
+
 % add information about the function call to the configuration
 cfg.callinfo.proctime = toc(ftFuncTimer);
 cfg.callinfo.procmem  = memtoc(ftFuncMem);

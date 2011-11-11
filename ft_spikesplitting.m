@@ -61,7 +61,7 @@ if ~isfield(cfg, 'feedback'),         cfg.feedback = 'textbar';         end
 if ~isfield(cfg, 'output'),           cfg.output = [];                  end % see below
 if ~isfield(cfg, 'format'),           cfg.format = 'int32';             end
 if ~isfield(cfg, 'downscale'),        cfg.downscale = 0;                end
-if ~isfield(cfg, 'headerformat'),     cfg.headerformat = [];            end 
+if ~isfield(cfg, 'headerformat'),     cfg.headerformat = [];            end
 
 if isempty(cfg.output)
   % set smart defaults for the output
@@ -268,7 +268,7 @@ cfg.version.id   = '$Id$';
 
 % add information about the Matlab version used to the configuration
 cfg.callinfo.matlab = version();
-  
+
 % add information about the function call to the configuration
 cfg.callinfo.proctime = toc(ftFuncTimer);
 cfg.callinfo.procmem  = memtoc(ftFuncMem);

@@ -1,29 +1,28 @@
 function [hdl] = ft_spike_plot_isireturn(cfg,isih)
 
-% FT_SPIKE_PLOT_ISIRETURN makes a return plot from ISIH structure (output from FT_SPIKE_ISIHIST). A
-% return plot (or Poincare plots) plots the isi to the next spike versus the isi from the next 
-% spike to the second next spike, and thus gives insight in the second order isi statistics.
-% This func also plots the raw isi-histogram on left and bottom and thereby give a rather
-% complete visualization of the spike-train interval statistics.
+% FT_SPIKE_PLOT_ISIRETURN makes a return plot from ISIH structure. A return
+% plot (or Poincare plots) plots the isi to the next spike versus the isi
+% from the next spike to the second next spike, and thus gives insight in
+% the second order isi statistics. This func also plots the raw
+% isi-histogram on left and bottom and thereby give a rather complete
+% visualization of the spike-train interval statistics.
 %
-%   Inputs:
-%     ISIH must be the output structure from SPIKE_ISIH and contain the field 
-%     ISIH.isi. If cfg.isihist = 'yes', the field ISIH.isih & ISIH.time must be
-%     present as well.
+% Use as
+%   hdl = FT_spike_isireturnplot(cfg,data) 
 %
-%   Use must be as follows:
-%      [HDL]=SPIKE_ISIRETURNPLOT(CFG,DATA) 
+% Inputs:
+%   ISIH must be the output structure from FT_SPIKE_ISIH and contain the field
+%   ISIH.isi. If cfg.isihist = 'yes', the field ISIH.isih and ISIH.time must
+%   be present as well.
 %
-%   General configurations (cfg):
-%
+% General configurations:
 %   cfg.spikechannel     = string or index of single spike channel to trigger on (default = 1)
 %                          Only one spikechannel can be plotted at a time.
 %   cfg.density          = 'yes' or 'no', if 'yes', we will use color shading on top of
 %                          the individual datapoints to indicate the density.
 %   cfg.scatter          = 'yes' (default) or 'no'. If 'yes', we plot the individual values.
 %   
-%   General configurations related to smoothing the scatterplot
-%
+% General configurations related to smoothing the scatterplot:
 %   cfg.smoothmethod     = 'kernel' (default) or 'hist'.
 %                           If 'kernel', we overlay a smooth density plot calculated by 
 %                           non-parametric kernel smoothing with cfg.kernel.
@@ -35,7 +34,7 @@ function [hdl] = ft_spike_plot_isireturn(cfg,isih)
 %   cfg.interpolate      = 'yes' or 'no', determines whether we interpolate the density
 %                           plot
 %
-%   Specific configurations related to kernel smoothing of scatterplot.
+% Specific configurations related to kernel smoothing of the scatterplot:
 %   cfg.kernel           = 'gausswin' or 'boxcar', or N-by-N matrix containing window
 %                           values with which we convolve the scatterplot that is binned
 %                           with resolution cfg.dt. N should be uneven, so it can be centered
@@ -48,6 +47,10 @@ function [hdl] = ft_spike_plot_isireturn(cfg,isih)
 %   cfg.winlen           =  window length in seconds (default = 5*cfg.dt). The total
 %                           length of our window is 2*round*(cfg.winlen/cfg.dt) +1;
 
+% Copyright (C) 2010, Martin Vinck
+%
+% $Id$
+
 ft_defaults
 
 % record start time and total processing time
@@ -58,7 +61,7 @@ ftFuncMem   = memtic();
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
-if nargin~=2, error('MATLAB:spikestation:isireturn:nargin','Two input arguments required'), end
+if nargin~=2, error('MATLAB:spike:isireturn:nargin','Two input arguments required'), end
 
 % general configuration defaults
 defaults.spikechannel = {1};                   
@@ -84,7 +87,7 @@ cfg = ft_spike_sub_defaultcfg(cfg,defaults);
 
 % check if all the required fields are there
 if ~all(isfield(isih,{'isi' 'label' 'time'}))
-    error('MATLAB:spikestation:plot_isireturn:cfg:spikechannel:missingFields',...
+    error('MATLAB:spike:plot_isireturn:cfg:spikechannel:missingFields',...
           'input ISIH should contain the fields isi, label and time')
 end
 
@@ -92,7 +95,7 @@ end
 cfg.channel = ft_channelselection(cfg.spikechannel, isih.label);
 spikesel    = match_str(isih.label, cfg.channel);
 nUnits      = length(cfg.spikechannel); % number of spike channels
-if nUnits~=1, error('MATLAB:spikestation:plot_isireturn:cfg:spikechannel:notOneChan',...
+if nUnits~=1, error('MATLAB:spike:plot_isireturn:cfg:spikechannel:notOneChan',...
                     'Only one unit can be selected at a time'); 
 end  
 isi = isih.isi{spikesel};
@@ -123,7 +126,7 @@ if strcmp(cfg.density,'yes')
   dens = full(sparse(indx2,indx1,ones(1,length(indx1)),nbins,nbins));
     
   if strcmp(cfg.smoothmethod,'kernel')
-    if cfg.winlen<cfg.dt, error('MATLAB:spikestation:plot_isireturn:cfg:dt:winlen',...
+    if cfg.winlen<cfg.dt, error('MATLAB:spike:plot_isireturn:cfg:dt:winlen',...
       'please configure cfg.winlen such that cfg.winlen>=cfg.dt')
     end
     winTime       = [fliplr(0:-cfg.dt:-cfg.winlen) cfg.dt:cfg.dt:cfg.winlen];
@@ -137,13 +140,13 @@ if strcmp(cfg.density,'yes')
     elseif strcmp(cfg.kernel, 'boxcar')
         win    = ones(winLen);
     elseif ~isrealmat(cfg.kernel)
-        error('MATLAB:spikestation:plot_isireturn:cfg:kernel:wrongInput',...
+        error('MATLAB:spike:plot_isireturn:cfg:kernel:wrongInput',...
           'cfg.kernel should be "gausswin", "boxcar" or numerical N-by-N matrix')
     else 
         win    = cfg.kernel;
         szWin  = size(cfg.kernel);
         if  szWin(1)~=szWin(2)||~mod(szWin(1),2), 
-            error('MATLAB:spikestation:spike_isireturnplot:cfg:kernel:wrongSize', ...
+            error('MATLAB:spike:spike_isireturnplot:cfg:kernel:wrongSize', ...
             'cfg.kernel should be N-by-N matrix with N an uneven number')
         end      
     end
@@ -169,7 +172,7 @@ if strcmp(cfg.density,'yes')
   if isrealmat(cfg.colormap) && size(cfg.colormap,2)==3
     colormap(cfg.colormap);
   else
-    error('MATLAB:spikestation:plot_isireturn:cfg:colormap', ...
+    error('MATLAB:spike:plot_isireturn:cfg:colormap', ...
     'cfg.colormap should be N-by-3 numerical matrix')
   end
   view(ax(1),2); % use the top view

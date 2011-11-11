@@ -1,34 +1,33 @@
-function [spikedata] = ft_spikestation_ets2data(cfg,spike,data)
+function [spikedata] = ft_spike_spike2data(cfg,spike,data)
 
-% FT_SPIKESTATION_SPIKE2DATA converts a point representation SPIKE structure to a continuous
-% representation DATA structure. 
-% Use as:
-%   [data] = ft_spikestation_spike2data(cfg,spike,data) 
+% FT_SPIKE_SPIKE2DATA converts a point representation SPIKE
+% structure to a continuous representation DATA structure.
+%
+% Use as
+%   [spikedata] = ft_spike_spike2data(cfg, spike, data)
 % or
-%   [data] = ft_spikestation_spike2data(cfg,spike)
+%   [spikedata] = ft_spike_spike2data(cfg, spike)
 %
 % Inputs:
+%   Data is a standard continuous structure. DATA is an optionary input. If
+%   data is given as input, the output structure will be using the
+%   time-axis as given in data, where each spike is assigned a sample on
+%   that time-axis. Note that in this case, it is very important that for
+%   both data and spike, the trial definitions should be synchronized,
+%   i.e., t = 0 has the same meaning, and there are equal amount of trials.
 %
-%   DATA is a standard continuous structure. DATA is an optionary input. If DATA
-%   is given as input, the output structure will be using the time-axis as given in DATA,
-%   where each spike is assigned a sample on that time-axis.
-%   Note that in this case, it is very important that for both DATA and SPIKE, the trial definitions 
-%   should be synchronized, i.e., t = 0 has the same meaning, and there are equal amount of trials.
-%
-% Configurations options (CFG):
-%
-%  Configuration options related to selection of spike channel and trials:
-%
-%   cfg.fsample          = number in Hz. If DATA.fsample is given as input, cfg.fsample is
-%                          not used and set to DATA.fsample. Otherwise, the default is 1000 (hz).
-%   cfg.sparse           = 'yes' (default) or 'no'. 
+% Configurations:
+%   cfg.fsample = number in Hz. If DATA.fsample is given as input, cfg.fsample is
+%                 not used and set to DATA.fsample. Otherwise, the default is 1000 Hz
+%   cfg.sparse    = 'yes' (default) or 'no'
 %
 %  Outputs:
-%   SPIKEDATA is a continuous representation standard spikestation structure.
-%   If requested, SPIKEDATA.trial contains sparse matrices.
-%  Appending should take place with FT_APPENDDATA!
+%   spikedata is a continuous representation standard spike
+%   structure. If requested, spikedata.trial contains sparse matrices.
+% 
+% Appending should be done with FT_APPENDDATA
 
-%  Copyright (c), Martin Vinck (2010)
+% Copyright (C) 2010, Martin Vinck
 
 if nargin<2, error('MATLAB:ft_spike_spike2data','Minimal twoinputs required'), end
 
@@ -36,25 +35,25 @@ if nargin<2, error('MATLAB:ft_spike_spike2data','Minimal twoinputs required'), e
 cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
 % set the defaults
-try 
-    defaults.fsample   = {data.fsample};
+try
+  defaults.fsample   = {data.fsample};
 catch
-  try 
+  try
     defaults.fsample = {cfg.fsample};
   catch % user should be aware that this is not safe, so issue a warning
     warning('MATLAB:ft_spike_spike2data:cfg:fsample','%s\n%s',...
-            'fsample can not be determined from cfg.fsample or data.fsample, setting',... 
-            'cfg.fsample to 1000 by default')
-   defaults.fsample        = {1000};
+      'fsample can not be determined from cfg.fsample or data.fsample, setting',...
+      'cfg.fsample to 1000 by default')
+    defaults.fsample        = {1000};
   end
 end
-defaults.sparse         = {'yes' 'no'};    
+defaults.sparse         = {'yes' 'no'};
 cfg		 = ft_spike_sub_defaultcfg(cfg,defaults);
 
 % check whether the data has the right structure
 hasAllFields = all(isfield(spike, {'time', 'trial', 'trialtime', 'label'}));
 if ~hasAllFields, error('MATLAB:ft_spike_spike2data:wrongStructInput',...
-      'input SPIKE should be struct with .time, .trial, .trialtime, .label fields')
+    'input SPIKE should be struct with .time, .trial, .trialtime, .label fields')
 end
 
 % check whether all are of right format
@@ -64,7 +63,7 @@ if ~correctInp, error('MATLAB:ft_spike_spike2data:wrongStructInput',...
 end
 
 % check whether the data should be appended
-doSparse = strcmp(cfg.sparse, 'yes'); 
+doSparse = strcmp(cfg.sparse, 'yes');
 
 % get some sizes
 nUnits  = length(spike.label);
@@ -83,44 +82,44 @@ end
 spikedata.trial(1:nTrials) = {[]};
 spikedata.time(1:nTrials)  = {[]};
 for iTrial = 1:nTrials
-     
-    % create the time-axis that belongs to this trial
-    if nargin==3
-      timeAx   = data.time{iTrial};
-    else
-      timeAx   = spike.trialtime(iTrial,1):(1/cfg.fsample):spike.trialtime(iTrial,2); 
-    end
-
-    % convert to continuous
-    trialData = zeros(nUnits,length(timeAx));    
-    for iUnit = 1:nUnits
-      
-      % get the timestamps and only select those timestamps that are in the trial
-      ts       = spike.time{iUnit};  
-      hasTrial = spike.trial{iUnit}==iTrial;
-      ts       = ts(hasTrial);
-
-      % get all the samples at once without using loops
-      sample   = nearest_nd(timeAx,ts);    
-
-      % because we have duplicates, simply get our vector by using histc trick
-      [N] = histc(sample,1:length(timeAx)); 
-
-      % store it in a matrix
-      trialData(iUnit,:) = N;
-    end
+  
+  % create the time-axis that belongs to this trial
+  if nargin==3
+    timeAx   = data.time{iTrial};
+  else
+    timeAx   = spike.trialtime(iTrial,1):(1/cfg.fsample):spike.trialtime(iTrial,2);
+  end
+  
+  % convert to continuous
+  trialData = zeros(nUnits,length(timeAx));
+  for iUnit = 1:nUnits
     
-    % put the created data in the original DATA, which is empty if doAppend==0
-    if doSparse, trialData = sparse(trialData); end
-    spikedata.trial{iTrial} = [spikedata.trial{iTrial};trialData]; 
-    spikedata.time{iTrial} = timeAx; 
-
+    % get the timestamps and only select those timestamps that are in the trial
+    ts       = spike.time{iUnit};
+    hasTrial = spike.trial{iUnit}==iTrial;
+    ts       = ts(hasTrial);
+    
+    % get all the samples at once without using loops
+    sample   = nearest_nd(timeAx,ts);
+    
+    % because we have duplicates, simply get our vector by using histc trick
+    [N] = histc(sample,1:length(timeAx));
+    
+    % store it in a matrix
+    trialData(iUnit,:) = N;
+  end
+  
+  % put the created data in the original DATA, which is empty if doAppend==0
+  if doSparse, trialData = sparse(trialData); end
+  spikedata.trial{iTrial} = [spikedata.trial{iTrial};trialData];
+  spikedata.time{iTrial} = timeAx;
+  
 end
 
 % create the associated labels and other aspects of data such as the header
 spikedata.label = spike.label;
 if nargin~=3
-spikedata.fsample    = cfg.fsample;
+  spikedata.fsample    = cfg.fsample;
 end
 try
   spikedata.hdr     = spike.hdr;
@@ -140,20 +139,20 @@ end
 % remember the configuration details of the input data
 cfg.previous = [];
 try, cfg.previous = spike.cfg; end
-% remember the exact configuration details in the output 
+% remember the exact configuration details in the output
 spikedata.cfg = cfg;
 
 
 function [indx] = nearest_nd(x,y)
 
 % NEAREST return the index of an n-d matrix to an n-d matrix.
-% 
+%
 % [indx] = nearest_nd(x, y)
 %
-% Inputs: 
+% Inputs:
 %   X can be a n-d matrix of any size (scalar, vector, n-d matrix).
 %   Y can be an n-d matrix of any size (scalar, vector, n-d matrix).
-%   
+%
 % If Y is larger than any X, we return the last index that the maximum value of X occurred.
 % Otherwise, we return the first occurence of the nearest X.
 %
@@ -176,7 +175,7 @@ function [indx] = nearest_nd(x,y)
 % indx = nearest_nd(x,y);
 % disp(max(max(y-x(indx))))
 % Note that indx(1) returns the last occurence and indx is a linear index to 2-d X.
-% 
+%
 % Demonstrate the use with a 3-D x and y array.
 % x = reshape([1:100],[10 5 2]);
 % y = rand(5,10,2)*max(x(:));
@@ -201,7 +200,7 @@ nY = length(y);
 nX = length(x);
 hasNan = isnan(y); % indices with nans in y, indx(hasNaN) will be set to NaN later.
 
-if nX==1, 
+if nX==1,
   indx = ones(1,nY);  % only one x value, so nearest is always only element
 else
   if nY==1 % in this case only one y value, so use the old NEAREST code
@@ -219,20 +218,20 @@ else
       indx = zeros(1,nY);
       i = y>max(x);
       [dum,indx] = max(flipud(x));
-      indx(i)       = nX + 1 - indx;    
+      indx(i)       = nX + 1 - indx;
       % for the rest return the first occurence of every number
-      x = x(:); 
+      x = x(:);
       y = y(~i)';
       xRep = x(:,ones(1,length(y)));
       yRep = y(ones(nX,1),:);
       [mindist,indx(~i)] = min(abs(xRep-yRep));
     else
-      x = x(:); 
+      x = x(:);
       y = y';
       xRep = x(:,ones(1,nY));
       yRep = y(ones(nX,1),:);
       [mindist,indx] = min(abs(xRep-yRep));
-    end        
+    end
   end
 end
 % return a NaN in INDX for a NaN in Y
