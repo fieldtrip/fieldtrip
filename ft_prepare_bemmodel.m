@@ -315,7 +315,7 @@ else
 end % which method
 
 % ensure that the geometrical units are specified
-vol = ft_convert_vol(vol);
+vol = ft_convert_units(vol);
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
