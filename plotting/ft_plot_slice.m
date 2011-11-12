@@ -96,7 +96,7 @@ if ~dointerp && ~(resolution==round(resolution)), dointerp = true; end
 % ft_plot_slice has been called from ft_plot_montage
 % this is necessary for the correct allocation of the persistent variables
 st = dbstack;
-if ~dointerp && strcmp(st(2).name, 'ft_plot_montage'), dointerp = true; end
+if ~dointerp && numel(st)>1 && strcmp(st(2).name, 'ft_plot_montage'), dointerp = true; end
 
 if dointerp
   %--------cut a slice using interpn
