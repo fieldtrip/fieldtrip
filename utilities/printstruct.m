@@ -23,6 +23,11 @@ function str = printstruct(name, val)
 %
 % $Id$
 
+if nargin==1
+  val  = name;
+  name = inputname(1);
+end
+
 str = [];
 if isstruct(val)
   if numel(val)>1
