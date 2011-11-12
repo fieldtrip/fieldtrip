@@ -45,8 +45,9 @@ function [cfg] = ft_definetrial(cfg)
 % information (such as triggers) from your dataset and to select
 % pieces of data according to this information.
 %
-% Simple trial definitions (e.g. based on a single trigger) are supported by
-% the default trial function, which supports the following options
+% Simple trial definitions (e.g. based on a single trigger) are supported
+% by TRIALFUN_GENERAL, which is the default trial function. This function
+% supports the following options
 %   cfg.trialdef.eventtype  = 'string'
 %   cfg.trialdef.eventvalue = number, string or list with numbers or strings
 %   cfg.trialdef.prestim    = number, latency in seconds (optional)
@@ -54,11 +55,16 @@ function [cfg] = ft_definetrial(cfg)
 % If you specify cfg.trialdef.eventtype  = '?' a list with the events in your 
 % data file will be displayed on screen.
 %
-% However, there are also many other complex ways in which you can define
-% data pieces of interest, for example based on a conditional sequence
-% of events (e.g. stimulus trigger followed by a correct response).
-% For those cases, you have to supply your own trial function and
-% specify that as cfg.trialfun. See belor for pointers to some examples.
+% If you want to read all data from a continous file in a single or in 
+% multiple segments, TRIALFUN_GENERAL understands the following options
+%    cfg.trialdef.triallength = duration in seconds (can also be 1 or Inf)
+%    cfg.trialdef.ntrials     = number of trials (can also be 1 or Inf)
+%
+% There are also many other complex ways in which you can define data
+% pieces of interest, for example based on a conditional sequence of events
+% (e.g. stimulus trigger followed by a correct response). For those cases,
+% you can supply your own trial function and specify that as
+% cfg.trialfun. See belor for pointers to some examples.
 % 
 % The cfg.trialfun option is a string containing the name of a function
 % that you wrote yourself and that FT_DEFINETRIAL will call. The
