@@ -966,6 +966,10 @@ elseif filetype_check_extension(filename, '.v')
   type = 'vista'; 
   manufacturer = 'University of British Columbia, Canada, http://www.cs.ubc.ca/nest/lci/vista/vista.html';
   content = 'A format for computer vision research, contains meshes or volumes';  
+elseif filetype_check_extension(filename, '.tet')
+  type = 'tet'; 
+  manufacturer = 'a.o. INRIA, see http://shapes.aimatshape.net/';
+  content = 'tetraedral mesh';  
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
