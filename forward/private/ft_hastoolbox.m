@@ -106,6 +106,7 @@ url = {
   'BCT'        'see http://www.brain-connectivity-toolbox.net/'
   'CCA'        'see http://www.imt.liu.se/~magnus/cca or contact Magnus Borga'
   'EGI_MFF'    'see http://www.egi.com/ or contact either Phan Luu or Colin Davey at EGI'
+  'TOOLBOX_GRAPH' 'see http://www.mathworks.com/matlabcentral/fileexchange/5355-toolbox-graph or contact Gabriel Peyre'
   };
 
 if nargin<2
@@ -249,6 +250,8 @@ switch toolbox
     status = exist('ccabss.m', 'file');
   case 'EGI_MFF'
     status = exist('mff_getObject.m', 'file') && exist('mff_getSummaryInfo.m', 'file');
+  case 'TOOLBOX_GRAPH'
+    status = exist('toolbox_graph');
 
     % the following are not proper toolboxes, but only subdirectories in the fieldtrip toolbox
     % these are added in ft_defaults and are specified with unix-style forward slashes
