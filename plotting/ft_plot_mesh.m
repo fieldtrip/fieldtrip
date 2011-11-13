@@ -71,8 +71,9 @@ vertexsize  = ft_getopt(varargin, 'vertexsize',  10);
 facealpha   = ft_getopt(varargin, 'facealpha',   1);
 tag         = ft_getopt(varargin, 'tag',         '');
 
-haspnt = isfield(bnd, 'pnt');
-hastri = isfield(bnd, 'tri');
+haspnt = isfield(bnd, 'pnt'); % vertices
+hastri = isfield(bnd, 'tri'); % triangles   as a Mx3 matrix with vertex indices
+hastet = isfield(bnd, 'tet'); % tetraeders  as a Mx4 matrix with vertex indices
 
 if isempty(vertexcolor)
   if haspnt && hastri
@@ -85,10 +86,6 @@ end
 % convert string into boolean values
 faceindex   = istrue(faceindex);
 vertexindex = istrue(vertexindex);
-
-skin   = [255 213 119]/255;
-brain  = [202 100 100]/255;
-cortex = [255 213 119]/255;
 
 % there a various ways of disabling the plotting
 if isequal(vertexcolor, 'false') || isequal(vertexcolor, 'no') || isequal(vertexcolor, 'off') || isequal(vertexcolor, false)
@@ -117,13 +114,20 @@ end
 
 pnt = bnd.pnt;
 
-if isfield(bnd, 'tri')
+if hastet && hastri
+  error('cannot deal with simultaneous triangles and tetraeders')
+elseif hastri
   tri = bnd.tri;
+elseif hastet
+  % represent the tetraeders as teh four triangles
+  tri = [bnd.tet(:,[1 2 3]); bnd.tet(:,[2 3 4]); bnd.tet(:,[3 4 1]); bnd.tet(:,[4 1 2])];
+  % there are shared triangles betwene neighbouring tetraeders, remove these
+  tri = unique(tri, 'rows');
 else
   tri = [];
 end
 
-if ~isempty(pnt)
+if haspnt
   hs = patch('Vertices', pnt, 'Faces', tri);
   set(hs, 'FaceColor', facecolor);
   set(hs, 'EdgeColor', edgecolor);
