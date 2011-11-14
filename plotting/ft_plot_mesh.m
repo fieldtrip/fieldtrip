@@ -121,6 +121,7 @@ elseif hastri
 elseif hastet
   % represent the tetraeders as teh four triangles
   tri = [bnd.tet(:,[1 2 3]); bnd.tet(:,[2 3 4]); bnd.tet(:,[3 4 1]); bnd.tet(:,[4 1 2])];
+  % or according to SimBio:  (1 2 3), (2 4 3), (4 1 3), (1 4 2)
   % there are shared triangles betwene neighbouring tetraeders, remove these
   tri = unique(tri, 'rows');
 else
