@@ -50,6 +50,27 @@ for N=199:201
   % hold on;plot(linspace(0,1000,N),abs(fft(y9)),'m');axis([0 100 0 inf])
 end
 
+for N=[199 432 1000] % test 'firls' option
+  x1 = randn(1,N);
+  y9 = ft_preproc_bandpassfilter(x1, 1000, [15 25],[],'fir');
+  y19 = ft_preproc_bandpassfilter(x1, 1000, [15 25],[],'firls');
+%   figure;plot(linspace(0,1000,N),abs(fft(y19)));axis([0 40 0 inf])
+%   hold on;plot(linspace(0,1000,N),abs(fft(y9)),'m');axis([0 40 0 inf])
+
+  x1 = randn(1,N);
+  y9 = ft_preproc_lowpassfilter(x1, 1000, [15],[],'fir');
+  y19 = ft_preproc_lowpassfilter(x1, 1000, [15],[],'firls');
+%   figure;plot(linspace(0,1000,N),abs(fft(y19)));axis([0 100 0 inf])
+%   hold on;plot(linspace(0,1000,N),abs(fft(y9)),'m');axis([0 100 0 inf])
+  
+  x1 = randn(1,N);
+  y9 = ft_preproc_highpassfilter(x1, 1000, [15],[],'fir');
+  y19 = ft_preproc_highpassfilter(x1, 1000, [15],[],'firls');
+%   figure;plot(linspace(0,1000,N),abs(fft(y19)));axis([0 100 0 inf])
+%   hold on;plot(linspace(0,1000,N),abs(fft(y9)),'m');axis([0 100 0 inf])
+
+end
+
 %% high-level ft_preprocessing
 load test_bug1129
 

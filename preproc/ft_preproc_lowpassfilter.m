@@ -13,6 +13,7 @@ function [filt] = ft_preproc_lowpassfilter(dat,Fs,Flp,N,type,dir)
 %   type       optional filter type, can be
 %                'but' Butterworth IIR filter (default)
 %                'fir' FIR filter using Matlab fir1 function 
+%                'firls' FIR filter using Matlab firls function (requires Matlab Signal Processing Toolbox)
 %   dir        optional filter direction, can be
 %                'onepass'         forward filter only
 %                'onepass-reverse' reverse filter only, i.e. backward in time
@@ -77,6 +78,28 @@ switch type
       N=floor(size(dat,2)/3) - 1;
     end
     [B, A] = fir1(N, max(Flp)/Fn);
+  case 'firls' % from NUTMEG's implementation
+    if isempty(N)
+      N = 3*fix(Fs / Flp);
+    end
+    if N > floor( (size(dat,2) - 1) / 3)
+      N=floor(size(dat,2)/3) - 1;
+    end
+    
+    f = 0:0.001:1;
+    if rem(length(f),2)~=0
+      f(end)=[];
+    end
+    z = zeros(1,length(f));
+    [val,pos1] = min(abs(Fs*f/2 - 0));
+    if(isfinite(Flp))
+      [val,pos2] = min(abs(Fs*f/2 - Flp));
+    else
+      pos2 = length(f);
+    end
+    z(pos1:pos2) = 1;
+    A = 1;
+    B = firls(N,f,z); % requires Matlab signal processing toolbox
 end  
 
 filt = filter_with_correction(B,A,dat,dir);
