@@ -1,9 +1,10 @@
 function test_ft_timelockanalysis(datainfo, writeflag)
 
-% TEST: test_ft_timelockanalysis ft_timelockanalysis test_datasets
+% TEST test_ft_timelockanalysis
+% ft_timelockanalysis test_datasets
 
-% the optional writeflag determines whether the output should be saved to
-% disk
+% the optional writeflag determines whether the output should be saved
+% to disk
 
 if nargin<2
   writeflag = 0;

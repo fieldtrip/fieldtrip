@@ -1,8 +1,6 @@
-% test_bug931
+function test_bug931
 
-% the following line ensures that this script is automatically triggered
-% when one of the relevant functions is changed on the SVN server
-%
+% TEST test_bug931
 % TEST ft_appendfreq
 
 freq1.label = {'1'};

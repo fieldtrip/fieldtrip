@@ -1,6 +1,7 @@
 function test_ft_preprocessing(datainfo, writeflag)
 
-% TEST: test_ft_preprocessing ft_preprocessing test_datasets
+% TEST test_ft_preprocessing
+% TEST ft_preprocessing test_datasets
 
 % the optional writeflag determines whether the output 
 % should be saved to disk

@@ -1,14 +1,14 @@
 function test_headmodel_singleshell
 
-% TEST: ft_headmodel_singleshell ft_prepare_headmodel
-% ft_prepare_singleshell test_headmodel_singleshell
+% TEST test_headmodel_singleshell
+% TEST ft_headmodel_singleshell ft_prepare_headmodel ft_prepare_singleshell
 
-% function to test ft_headmodel_singleshell. this function is called by
-% ft_prepare_headmodel
-%
-% the function should work either on an input (segmented) mri, or it should
-% have a description of the geometry in the input, or it should have a
-% hdmfile (string) that specifies which file to read
+% function to test ft_headmodel_singleshell. this function is called
+% by ft_prepare_headmodel
+
+% the function should work either on an input (segmented) mri, or it
+% should have a description of the geometry in the input, or it should
+% have a hdmfile (string) that specifies which file to read
 
 success = true;
 

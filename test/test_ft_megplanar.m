@@ -1,6 +1,7 @@
-%function test_ft_megplanar
+function test_ft_megplanar
 
-% TEST: ft_megplanar test_ft_megplanar ft_prepare_neighbours ft_topoplotER
+% TEST test_ft_megplanar
+% TEST ft_megplanar ft_prepare_neighbours ft_topoplotER
 
 datainfo = test_datasets;
 sel      = match_str({datainfo.datatype}',{'bti148' 'bti248' 'ctf151' 'ctf275' 'itab153' 'yokogawa160'}');

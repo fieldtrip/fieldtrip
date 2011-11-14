@@ -1,6 +1,7 @@
-%function test_ft_megrealign
+function test_ft_megrealign
 
-% TEST: ft_megrealign test_ft_megrealign ft_neighbourselection ft_transform_geometry
+% TEST test_ft_megrealign
+% TEST ft_megrealign ft_neighbourselection ft_transform_geometry
 
 datainfo = test_datasets;
 sel      = match_str({datainfo.datatype}',{'bti148' 'bti248' 'ctf151' 'ctf275' 'itab153' 'yokogawa160'}');

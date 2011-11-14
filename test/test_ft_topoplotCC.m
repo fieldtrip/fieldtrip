@@ -1,10 +1,11 @@
 function test_ft_topoplotCC
 
-% TEST: ft_topoplotCC test_ft_topoplotCC
+% TEST test_ft_topoplotCC
+% TEST ft_topoplotCC
 
-% this function tests the ft_topoplotCC function and should display a figure
-% with the ctf151 layout and a few arrows
-% it does no explicit comparisons, but only checks whether it runs through
+% this function tests the ft_topoplotCC function and should display a
+% figure with the ctf151 layout and a few arrows.  It does no explicit
+% comparisons, but only checks whether it runs through
 
 % create artificial data
 conn.label = {

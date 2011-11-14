@@ -1,15 +1,15 @@
 function test_headmodel_localspheres
 
-% TEST: ft_headmodel_localspheres ft_prepare_headmodel
-% ft_prepare_localspheres test_headmodel_localspheres
+% TEST test_headmodel_localspheres
+% TEST ft_headmodel_localspheres ft_prepare_headmodel ft_prepare_localspheres
 
-% function to test ft_headmodel_localspheres. this function is called by
-% ft_prepare_headmodel
-%
-% the function should work either on an input (segmented) mri, or it should
-% have a description of the geometry in the input, or it should have a
-% hdmfile (string) that specifies which file to read
-% in addition, it needs a description of the sensor array
+% function to test ft_headmodel_localspheres. this function is called
+% by ft_prepare_headmodel
+
+% the function should work either on an input (segmented) mri, or it
+% should have a description of the geometry in the input, or it should
+% have a hdmfile (string) that specifies which file to read in addition,
+% it needs a description of the sensor array
 
 success = true;
 

@@ -1,6 +1,7 @@
 function test_bug893
 
-% TEST: ft_freqstatistics statfun_indepsamplesZcoh
+% TEST test_bug893
+% TEST ft_freqstatistics statfun_indepsamplesZcoh
 
 % function to confirm the bug and to test the fix.
 % ft_freqstatistics fails when input data has 'rpttap' in the dimord

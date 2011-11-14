@@ -1,7 +1,15 @@
-% testing ft_timelockanalysis_new (not official yet)
+function test_ft_timelockanalysis_new
 
-load /home/common/matlab/fieldtrip/data/ftp/tutorial/eventrelatedaveraging/dataFC_LP.mat;
-data=dataFC_LP;clear dataFC_LP;
+% TEST test_ft_timelockanalysis_new
+% TEST ft_timelockanalysis_new
+
+% this is a function for testing ft_timelockanalysis_new, which is not official yet
+
+load /home/common/matlab/fieldtrip/data/ftp/tutorial/eventrelatedaveraging/dataFC_LP.mat
+
+data=dataFC_LP;
+clear dataFC_LP;
+
 data.time{2}=data.time{2}+.5; % purposely add some jitter to time window
 data.time{3}=data.time{3}-.5;
 

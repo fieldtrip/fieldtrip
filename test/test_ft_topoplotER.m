@@ -1,6 +1,7 @@
 function test_ft_topoplotER
 
-% TEST: test_ft_topoplotER ft_topoplotER ft_topoplotTFR ft_topoplotIC
+% TEST test_ft_topoplotER
+% TEST ft_topoplotER ft_topoplotTFR ft_topoplotIC
 
 % this script tests the functionality of ft_topoplotER with respect to the 
 % different input datatypes. no other functionality is tested.

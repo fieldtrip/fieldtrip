@@ -1,6 +1,7 @@
 function test_bug996
 
-% TEST: test_bug996 ft_multiplotER ft_singleplotER
+% TEST test_bug996
+% TEST ft_multiplotER ft_singleplotER
 
 % function to reproduce bug 996 and test the fix
 % the problem is the following: JM removed the occurrence of

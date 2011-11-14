@@ -1,6 +1,7 @@
 function test_tutorial_coherence
 
-% TEST: test_tutorial_coherence ft_freqanalysis ft_connectivityanalysis ft_multiplotER ft_singleplotER ft_topoplotER ft_sourceanalysis ft_sourceinterpolate
+% TEST test_tutorial_coherence
+% TEST ft_freqanalysis ft_connectivityanalysis ft_multiplotER ft_singleplotER ft_topoplotER ft_sourceanalysis ft_sourceinterpolate
 
 addpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/coherence');
 addpath('/home/common/matlab/fieldtrip/data/');
