@@ -72,7 +72,10 @@ switch type
     [B, A] = butter(N, [min(Fbp)/Fn max(Fbp)/Fn]);
   case 'fir'
     if isempty(N)
-      N = 25;
+      N = 3*fix(Fs / Fbp(1));
+    end
+    if N > floor( (size(dat,2) - 1) / 3)
+      N=floor(size(dat,2)/3) - 1;
     end
     [B, A] = fir1(N, [min(Fbp)/Fn max(Fbp)/Fn]);
 end
