@@ -275,26 +275,6 @@ if ~isempty(cfg.denoise),
   tmpdat   = ft_preproc_denoise(dat(datlabel,:), dat(reflabel,:), hflag);
   dat(datlabel,:) = tmpdat;
 end
-if strcmp(cfg.medianfilter, 'yes'), dat = ft_preproc_medianfilter(dat, cfg.medianfiltord); end
-if strcmp(cfg.lpfilter, 'yes'),     dat = ft_preproc_lowpassfilter(dat, fsample, cfg.lpfreq, cfg.lpfiltord, cfg.lpfilttype, cfg.lpfiltdir); end
-if strcmp(cfg.hpfilter, 'yes'),     dat = ft_preproc_highpassfilter(dat, fsample, cfg.hpfreq, cfg.hpfiltord, cfg.hpfilttype, cfg.hpfiltdir); end
-if strcmp(cfg.bpfilter, 'yes'),     dat = ft_preproc_bandpassfilter(dat, fsample, cfg.bpfreq, cfg.bpfiltord, cfg.bpfilttype, cfg.bpfiltdir); end
-if strcmp(cfg.bsfilter, 'yes')
-  for i=1:size(cfg.bsfreq,1)
-    % apply a bandstop filter for each of the specified bands, i.e. cfg.bsfreq should be Nx2
-    dat = ft_preproc_bandstopfilter(dat, fsample, cfg.bsfreq(i,:), cfg.bsfiltord, cfg.bsfilttype, cfg.bsfiltdir);
-  end
-end
-if strcmp(cfg.dftfilter, 'yes')
-  datorig = dat;
-  for i=1:length(cfg.dftfreq)
-    % filter out the 50Hz noise, optionally also the 100 and 150 Hz harmonics
-    dat = ft_preproc_dftfilter(dat, fsample, cfg.dftfreq(i));
-  end
-  if strcmp(cfg.dftinvert, 'yes'),
-    dat = datorig - dat;
-  end
-end
 if strcmp(cfg.polyremoval, 'yes')
   nsamples     = size(dat,2);
   % the begin and endsample of the polyremoval period correspond to the complete data minus padding
@@ -327,6 +307,26 @@ if strcmp(cfg.demean, 'yes')
     begsample = nearest(time, cfg.baselinewindow(1));
     endsample = nearest(time, cfg.baselinewindow(2));
     dat       = ft_preproc_baselinecorrect(dat, begsample, endsample);
+  end
+end
+if strcmp(cfg.medianfilter, 'yes'), dat = ft_preproc_medianfilter(dat, cfg.medianfiltord); end
+if strcmp(cfg.lpfilter, 'yes'),     dat = ft_preproc_lowpassfilter(dat, fsample, cfg.lpfreq, cfg.lpfiltord, cfg.lpfilttype, cfg.lpfiltdir); end
+if strcmp(cfg.hpfilter, 'yes'),     dat = ft_preproc_highpassfilter(dat, fsample, cfg.hpfreq, cfg.hpfiltord, cfg.hpfilttype, cfg.hpfiltdir); end
+if strcmp(cfg.bpfilter, 'yes'),     dat = ft_preproc_bandpassfilter(dat, fsample, cfg.bpfreq, cfg.bpfiltord, cfg.bpfilttype, cfg.bpfiltdir); end
+if strcmp(cfg.bsfilter, 'yes')
+  for i=1:size(cfg.bsfreq,1)
+    % apply a bandstop filter for each of the specified bands, i.e. cfg.bsfreq should be Nx2
+    dat = ft_preproc_bandstopfilter(dat, fsample, cfg.bsfreq(i,:), cfg.bsfiltord, cfg.bsfilttype, cfg.bsfiltdir);
+  end
+end
+if strcmp(cfg.dftfilter, 'yes')
+  datorig = dat;
+  for i=1:length(cfg.dftfreq)
+    % filter out the 50Hz noise, optionally also the 100 and 150 Hz harmonics
+    dat = ft_preproc_dftfilter(dat, fsample, cfg.dftfreq(i));
+  end
+  if strcmp(cfg.dftinvert, 'yes'),
+    dat = datorig - dat;
   end
 end
 if ~strcmp(cfg.hilbert, 'no')
