@@ -9,7 +9,8 @@ function [filt] = ft_preproc_lowpassfilter(dat,Fs,Flp,N,type,dir)
 %   dat        data matrix (Nchans X Ntime)
 %   Fsample    sampling frequency in Hz
 %   Flp        filter frequency
-%   N          optional filter order, default is 6 (but) or 25 (fir)
+%   N          optional filter order, default is 4 (but) or dependent upon
+%              frequency band and data length (fir/firls)
 %   type       optional filter type, can be
 %                'but' Butterworth IIR filter (default)
 %                'fir' FIR filter using Matlab fir1 function 
