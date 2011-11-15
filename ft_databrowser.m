@@ -42,6 +42,7 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.megscale                = number, scaling to apply to the MEG channels prior to display
 %   cfg.gradscale               = number, scaling to apply to the MEG gradiometer channels prior to display (in addition to the cfg.megscale factor)
 %   cfg.magscale                = number, scaling to apply to the MEG magnetometer channels prior to display (in addition to the cfg.megscale factor)
+%   cfg.chanscale               = Nx1 vector with scaling factors, one per channel specified in cfg.channel
 %
 % The scaling to the EEG, EOG, ECG, EMG and MEG channels is optional and can
 % be used to bring the absolute numbers of the different channel types in
@@ -125,6 +126,7 @@ if ~isfield(cfg, 'emgscale'),        cfg.emgscale = [];                   end
 if ~isfield(cfg, 'megscale'),        cfg.megscale = [];                   end
 if ~isfield(cfg, 'magscale'),        cfg.magscale = [];                   end
 if ~isfield(cfg, 'gradscale'),       cfg.gradscale = [];                  end
+if ~isfield(cfg, 'chanscale'),       cfg.chanscale = [];                  end
 if ~isfield(cfg, 'layout'),          cfg.layout = [];                     end
 if ~isfield(cfg, 'plotlabels'),      cfg.plotlabels = 'yes';              end
 if ~isfield(cfg, 'event'),           cfg.event = [];                      end % this only exists for backward compatibility and should not be documented
@@ -139,6 +141,15 @@ if ~isfield(cfg, 'viewmode')
     cfg.viewmode = 'component';
   else
     cfg.viewmode = 'butterfly';
+  end
+end
+
+if ~isempty(cfg.chanscale)
+  if ~isfield(cfg,'channel')
+    warning('ignoring cfg.chanscale; this should only be used when an explicit channel selection is being made');
+    cfg.chanscale = [];
+  elseif numel(cfg.channel) ~= numel(cfg.chanscale)
+    error('cfg.chanscale should have the same number of elements as cfg.channel');
   end
 end
 
@@ -1165,6 +1176,10 @@ end
 if ~isempty(cfg.gradscale)
   chansel = match_str(lab, ft_channelselection('MEGGRAD', lab));
   dat(chansel,:) = dat(chansel,:) .* cfg.gradscale;
+end
+if ~isempty(cfg.chanscale)
+  chansel = match_str(lab, ft_channelselection(cfg.channel, lab));
+  dat(chansel,:) = dat(chansel,:) .* repmat(cfg.chanscale,1,size(dat,2));
 end
 
 % to assure current feature is plotted on top
