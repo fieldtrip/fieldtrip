@@ -13,11 +13,14 @@ function vol = ft_datatype_headmodel(vol, varargin)
 %         type: 'bem_dipoli'  the type of forward solution attached to this structure
 %
 % Required fields:
-%
+%   - type
+% 
 % Optional fields:
-%
+%   - bnd, r, o, label
+% 
 % Deprecated fields:
-%
+%   - 
+% 
 % Obsoleted fields:
 %
 % Revision history:
@@ -29,7 +32,7 @@ function vol = ft_datatype_headmodel(vol, varargin)
 
 % Copyright (C) 2011, Cristiano Micheli, Robert Oostenveld
 % 
-% $Id: $
+% $Id:$
 
 % get the optional input arguments, which should be specified as key-value pairs
 version       = ft_getopt(varargin, 'version', 'latest');
@@ -38,20 +41,28 @@ if strcmp(version, 'latest')
 end
 
 switch version
+  
   case '2011'
     if isfield(vol, 'skin_surface')
       vol.skin = vol.skin_surface;
       vol = rmfield(vol, 'skin_surface');
     end
-    if isfield(vol, 'skin_surface')
-      vol.skin = vol.skin_surface;
-      vol = rmfield(vol, 'skin_surface');
+    if strcmp(vol.type,'bem_cp')
+      vol.type = 'bemcp';
     end
-        
+    if strcmp(vol.type,'openmeeg')
+      vol.type = 'bem_openmeeg';
+    end
+    if strcmp(vol.type,'dipoli')
+      vol.type = 'bem_dipoli';
+    end
+    if strcmp(vol.type,'asa')
+      vol.type = 'bem_asa';
+    end
+    
   case '2007'
     
   otherwise
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  error('unsupported version "%s" for raw datatype', version);  
+    error('unsupported version "%s" for raw datatype', version);  
   
 end
