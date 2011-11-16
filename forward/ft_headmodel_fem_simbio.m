@@ -80,14 +80,14 @@ if strcmp(wfmethod,'cubes')
       disp([ 'elapsed time: ' num2str(toc(stopwatch)) ])
       % FIXME: think about adding a translation due to conversion between indices and vertices' world coordinates
       
-      
       % calculate the FE transfer matrix
-      % read the mesh points
-      [nodes,elements,labels] = read_vista_mesh(meshfile);
-      % assign wireframe (also called 'FEM grid', or '3d mesh')
-      wf.nd = nodes;
-      wf.el = elements;
-      wf.labels = labels;
+      
+      % read the mesh points and assign wireframe (also called 'FEM grid', or '3d mesh')
+      if ft_hastoolbox('fileio',1)
+        [wf] = ft_read_headshape(meshfile);
+      else
+        error('you need the fileio module!\n')
+      end
       
       if deepelec
         sb_write_elc(warp_apply(inv(transform),sens.chanpos),sens.label,elcfile,1);
@@ -97,7 +97,7 @@ if strcmp(wfmethod,'cubes')
       
       % write parfile
       disp('writing the parameters file on disk...')
-      sb_write_par(parfile,'cond',tissuecond,'labels',tissueval); %unique(vol.wf.labels)
+      sb_write_par(parfile,'cond',tissuecond,'labels',tissueval);
       
       % write exefile
       efid = fopen(exefile, 'w');

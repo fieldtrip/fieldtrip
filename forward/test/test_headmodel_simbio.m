@@ -1,4 +1,4 @@
-% function test_headmodel_simbio
+function test_headmodel_simbio
 
 % TEST test_headmodel_simbio
 % TEST ft_headmodel_fem_simbio ft_prepare_vol_sens ft_compute_leadfield ft_headmodel_concentricspheres
@@ -46,9 +46,9 @@ svol(3).bnd.tri = tri;
 % bkgrnd = zeros(151,151,151);
 % bkgrnd = MR{1}+MR{2}+MR{3};
 % % save('~crimic/test/SimBio/spheres','bkgrnd')
-fprintf('Loading a volume with a number N = %d of compartments ... ', numel(svol))
-bkgrnd=loadvar('~crimic/fieldtrip-dev/forward/test/spheres.mat','bkgrnd');
-
+fprintf('Loading a volume with a number N = %d of compartments ... \n', numel(svol))
+tmp = load('~crimic/fieldtrip-dev/forward/test/spheres.mat','bkgrnd');
+bkgrnd = tmp.bkgrnd;
 
 % generate volume's external surface (mm)
 [pnt, tri] = icosahedron162;
@@ -61,6 +61,7 @@ bnd.tri = tri;
 clear sens
 sel = find(bnd.pnt(:,3)>0);
 sens.chanpos = bnd.pnt(sel,:);
+sens.elecpos = bnd.pnt(sel,:);
 for i=1:length(sel)
   sens.label{i} = sprintf('chan%03d', i);
 end

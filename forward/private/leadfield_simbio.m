@@ -43,24 +43,28 @@ try
   outfile   = [tname];
   
   % write the electrodes and dipoles positions in the temporary folder
-  disp('writing the electrodes file on disk...')
+  disp('writing the electrodes file on disk...\n')
   if ~isfield(vol,'deepelec')
     sb_write_elc(warp_apply(inv(vol.transform),elc.chanpos),elc.label,elcfile);
   else
     sb_write_elc(warp_apply(inv(vol.transform),elc.chanpos),elc.label,elcfile,1);
   end
-  disp('writing the dipoles file on disk...')
+  disp('writing the dipoles file on disk...\n')
   sb_write_dip(warp_apply(inv(vol.transform),dip),dipfile);
   
   % write the parameters file, contains tissues conductivities, the fe
   % grid and simbio call details, mixed together
   disp('writing the parameters file on disk...')
-  sb_write_par(parfile,'cond',vol.cond,'labels',unique(vol.wf.labels)-100);
+  sb_write_par(parfile,'cond',vol.cond,'labels',unique(vol.wf.index)-100);
   
   % write the vol.wf in a vista format .v file
-  disp('writing the mesh file on disk...')
-  write_vista_mesh(meshfile,vol.wf.nd,vol.wf.el,vol.wf.labels);
-
+  disp('writing the mesh file on disk...\n')
+  if ft_hastoolbox('fileio',1)
+    ft_write_headshape(meshfile,vol.wf);
+  else
+    error('you need the fileio module!\n')
+  end
+  
   % write the transfer matrix on disk
   disp('writing the transfer matrix on disk...')
   sb_write_transfer(vol.transfer,transfermatrix);

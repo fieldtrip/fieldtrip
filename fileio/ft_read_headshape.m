@@ -402,10 +402,15 @@ switch fileformat
   case 'vista'
     ft_hastoolbox('simbio', 1);
     [nodes,elements,labels] = read_vista_mesh(filename);
-    shape.nd     = nodes;
-    shape.el     = elements;
-    shape.labels = labels;
-    shape.unit   = unit;
+    shape.pnt     = nodes;
+    if size(elements,2)==8
+      shape.hex     = elements;
+    elseif size(elements,2)==4
+      shape.tet = elements;
+    else
+      error('unknown elements format')
+    end
+    shape.index = labels;
     
   case 'tet'
     % the toolbox from Gabriel Peyre has a function for this
