@@ -633,13 +633,20 @@ else
   trlvis = [];
   trlvis(:,1) = begsamples';
   trlvis(:,2) = endsamples';
-  if size(opt.trlorg,1) > 1 || isempty(opt.orgdata)
+  
+  % The following was here originally:
+  %if size(opt.trlorg,1) > 1 || isempty(opt.orgdata)
     % offset is now (re)defined that 1st sample is time 0
-    trlvis(:,3) = begsamples-1;
-  else
+    %trlvis(:,3) = begsamples-1;
+  %else
     % offset according to original time axis
-    trlvis(:,3) = opt.trlorg(3) + begsamples - opt.trlorg(1);
-  end
+    %trlvis(:,3) = opt.trlorg(3) + begsamples - opt.trlorg(1);
+  %end
+  % I removed it and added
+  trlvis(:,3) = begsample - 1;
+  % instead, which solves bug 1160. (eelspa, 16-nov-2011)
+  % Added this comment because I was not sure what the purpose of the
+  % original code was.
   
   if isfield(opt, 'trlvis')
     % update the current trial counter and try to keep the current sample the same
