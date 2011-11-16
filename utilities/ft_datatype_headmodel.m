@@ -29,6 +29,29 @@ function vol = ft_datatype_headmodel(vol, varargin)
 
 % Copyright (C) 2011, Cristiano Micheli, Robert Oostenveld
 % 
-% $Id:$
+% $Id: $
 
+% get the optional input arguments, which should be specified as key-value pairs
+version       = ft_getopt(varargin, 'version', 'latest');
+if strcmp(version, 'latest')
+  version = '2011';
+end
 
+switch version
+  case '2011'
+    if isfield(vol, 'skin_surface')
+      vol.skin = vol.skin_surface;
+      vol = rmfield(vol, 'skin_surface');
+    end
+    if isfield(vol, 'skin_surface')
+      vol.skin = vol.skin_surface;
+      vol = rmfield(vol, 'skin_surface');
+    end
+        
+  case '2007'
+    
+  otherwise
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  error('unsupported version "%s" for raw datatype', version);  
+  
+end
