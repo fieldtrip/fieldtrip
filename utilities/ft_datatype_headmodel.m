@@ -32,7 +32,7 @@ function vol = ft_datatype_headmodel(vol, varargin)
 
 % Copyright (C) 2011, Cristiano Micheli, Robert Oostenveld
 % 
-% $Id:$
+% $Id$
 
 % get the optional input arguments, which should be specified as key-value pairs
 version       = ft_getopt(varargin, 'version', 'latest');
