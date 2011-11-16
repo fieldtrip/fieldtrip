@@ -11,43 +11,65 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 % where the first input argument is a configuration structure (see
 % below) and the second argument is the output of FT_PREPROCESSING,
 % FT_TIMELOCKANLAYSIS, FT_FREQANALYSIS, FT_MVARANALYSIS,
-% FT_SOURCEANALYSIS or FT_CONNECTIVITYANALYSIS depending on the
-% connectivity metric that you want to compute.
+% FT_SOURCEANALYSIS or FT_CONNECTIVITYANALYSIS. The different connectivity
+% metrics are supported only for specific datatypes (see below). 
 %
 % The configuration structure has to contain
-%   cfg.method  = 'coh',       coherence, support for freq, freqmvar and
-%                               source data. For partial coherence also
-%                               specify cfg.partchannel
-%                 'csd',       cross-spectral density matrix, can also
-%                               calculate partial csds -
-%                               if cfg.partchannel is specified, support for freq and
-%                               freqmvar data
-%                 'plv',       phase-locking value, support for freq and freqmvar data
-%                 'powcorr',   power correlation, support for freq and source data
-%                 'amplcorr',  amplitude correlation, support for freq and source data
-%                 'granger',   granger causality, support for freq and freqmvar data
-%                 'dtf',       directed transfer function, support for freq and freqmvar data
-%                 'pdc',       partial directed coherence, support for freq and freqmvar data
-%                 'psi',       phaseslope index, support for freq and freqmvar data
-%                 'wpli',      weighted phase lag index (signed one,
-%                              still have to take absolute value to get indication of
-%                              strength of interaction. Note: measure has
-%                              positive bias. Use wpli_debiased to avoid
-%                              this.
-%                 'wpli_debiased'  debiased weighted phase lag index
-%                                 (estimates squared wpli)
-%                 'ppc'        pairwise phase consistency
-%                 'wppc'       weighted pairwise phase consistency
+%   cfg.method  = 
+%     'coh',       coherence, support for freq, freqmvar and source data.
+%                  For partial coherence also specify cfg.partchannel
+%     'csd',       cross-spectral density matrix, can also calculate partial
+%                  csds - if cfg.partchannel is specified, support for freq
+%                  and freqmvar data
+%     'plv',       phase-locking value, support for freq and freqmvar data
+%     'powcorr',   power correlation, support for freq and source data
+%     'amplcorr',  amplitude correlation, support for freq and source data
+%     'granger',   granger causality, support for freq and freqmvar data
+%     'dtf',       directed transfer function, support for freq and
+%                  freqmvar data 
+%     'pdc',       partial directed coherence, support for freq and 
+%                  freqmvar data
+%     'psi',       phaseslope index, support for freq and freqmvar data
+%     'wpli',      weighted phase lag index (signed one,
+%                  still have to take absolute value to get indication of
+%                  strength of interaction. Note: measure has positive
+%                  bias. Use wpli_debiased to avoid this.
+%     'wpli_debiased'  debiased weighted phase lag index
+%                  (estimates squared wpli)
+%     'ppc'        pairwise phase consistency 
+%     'wppc'       weighted pairwise phase consistency
 %
-%            The following methods can be used on channel-level data which already contains
-%              a connectivity measure (i.e. with dimord 'chan_chan_XXX'). These methods are
-%              implemented using the brain connectivity toolbox developed by Olaf Sporns and
-%              colleagues: www.brain-connectivity-toolbox.net.
+% The following methods can be used on channel-level data which already contains
+% a connectivity measure (i.e. with dimord 'chan_chan_XXX'). These methods are
+% implemented using the brain connectivity toolbox developed by Olaf Sporns and
+% colleagues: www.brain-connectivity-toolbox.net.
 %
-%                 'clustering_coef'  clustering coefficient.
-%                 'degrees'
+%     'clustering_coef'  clustering coefficient.
+%     'degrees'
 %
+% Additional configuration options are
+%   cfg.channel    = Nx1 cell-array containing a list of channels which are
+%     used for the subsequent computations. This only has an effect when
+%     the input data is univariate. See FT_CHANNELSELECTION
+%   cfg.channelcmb = Nx2 cell-array containing the channel combinations on
+%     which to compute the connectivity. This only has an effect when the
+%     input data is univariate. See FT_CHANNELCOMBINATION
+%   cfg.trials     = Nx1 vector specifying which trials to include for the
+%     computation. This only has an effect when the input data contains
+%     repetitions.
+%   cfg.feedback   = string, specifying the feedback presented to the user.
+%     Default is 'none'. See FT_PROGRESS
 %
+% For specific methods the cfg can also contain
+%   cfg.partchannel = cell-array containing a list of channels that need to
+%     be partialized out, support for method 'coh', 'csd'
+%   cfg.complex     = 'abs' (default), 'angle', 'complex', 'imag', 'real',
+%     '-logabs', support for method 'coh', 'csd', 'plv'
+%   cfg.removemean  = 'yes' (default), or 'no', support for method
+%     'powcorr' and 'amplcorr'.
+%   cfg.parameter   = string specifying the metric on which to apply the
+%     method from the brain connectivity toolbox
+% 
 % To facilitate data-handling and distributed computing with the peer-to-peer
 % module, this function has the following options:
 %   cfg.inputfile   =  ...
@@ -57,6 +79,12 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
+
+% Undocumented options:
+%   cfg.refindx     
+%   cfg.conditional  
+%   cfg.blockindx    
+%   cfg.jackknife    
 
 % Methods to be implemented
 %
@@ -346,7 +374,7 @@ if any(~isfield(data, inparam)) || (isfield(data, 'crsspctrm') && (ischar(inpara
         try,tmpcfg.npsf = rmfield(tmpcfg.npsf, 'blockindx'); end
         %         end
         optarg = ft_cfg2keyval(tmpcfg.npsf);
-        data   = csd2transfer(data, optarg{:});
+        data   = ft_connectivity_csd2transfer(data, optarg{:});
         
         % convert the inparam back to cell array in the case of granger
         if strcmp(cfg.method, 'granger') || strcmp(cfg.method, 'instantaneous_causality') || strcmp(cfg.method, 'total_interdependence')
