@@ -1,4 +1,4 @@
-function [output] = csd2transfer(freq, varargin)
+function [output] = ft_connectivity_csd2transfer(freq, varargin)
 
 % CSD2TRANSFER computes the transfer-function from frequency domain data
 % using the Wilson-Burg algorithm. The transfer function can be used for
@@ -6,7 +6,7 @@ function [output] = csd2transfer(freq, varargin)
 % causality, partial directed coherence, or directed transfer functions
 %
 % Use as
-%   [output] = csd2transfer(freq, varargin)
+%   [output] = ft_connectivity_csd2transfer(freq, varargin)
 %
 % Where freq is a data structure containing frequency domain data containing
 % the cross-spectral density computed between all pairs of channels, thus
@@ -110,9 +110,6 @@ if ~isempty(block)
   end
 end
 
-%fsample = findcfg(freq.cfg, 'fsample');
-fsample = 0;
-
 if isfield(freq, 'time'),
   ntim = numel(freq.time);
 else
@@ -152,13 +149,14 @@ if strcmp(sfmethod, 'multivariate') && isempty(block) && nrpt>1,
   for k = 1:nrpt
     for m = 1:ntim
       tmp = reshape(freq.crsspctrm(k,:,:,:,m), siz(2:end-1));
-      [Htmp, Ztmp, Stmp] = sfactorization_wilson(tmp, fsample, freq.freq, ...
+      [Htmp, Ztmp, Stmp] = sfactorization_wilson(tmp, freq.freq, ...
                                                    numiteration, tol, fb);
       H(k,:,:,:,m) = Htmp;
       Z(k,:,:,m)   = Ztmp;
       S(k,:,:,:,m) = Stmp;
     end 
   end
+  
 elseif strcmp(sfmethod, 'multivariate') && isempty(block),
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % standard code
@@ -187,7 +185,7 @@ elseif strcmp(sfmethod, 'multivariate') && isempty(block),
       Ztmp = nan;
       Stmp = nan;
     else
-      [Htmp, Ztmp, Stmp] = sfactorization_wilson(tmp, fsample, freq.freq, ...
+      [Htmp, Ztmp, Stmp] = sfactorization_wilson(tmp, freq.freq, ...
                                                    numiteration, tol, fb);
     end
     
@@ -207,9 +205,11 @@ elseif strcmp(sfmethod, 'multivariate') && isempty(block),
 elseif strcmp(sfmethod, 'bivariate') && nrpt>1,
   % error 
   error('single trial estimates and linear combination indexing is not implemented');
+  
 elseif nrpt>1 && ~isempty(block),
   % error 
   error('single trial estimates and blockwise factorisation is not yet implemented');
+  
 elseif strcmp(sfmethod, 'bivariate')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % pairwise factorization resulting in linearly indexed transfer functions
@@ -233,11 +233,10 @@ elseif strcmp(sfmethod, 'bivariate')
   cmbindx    = cmbindx(ok,:);
   channelcmb = channelcmb(ok,:);
   
- 
   %do multiple 2x2 factorization efficiently
   if ntim>1,
     for kk = 1:ntim
-      [Htmp, Ztmp, Stmp] = sfactorization_wilson2x2(freq.crsspctrm(:,:,:,kk), fsample, ...
+      [Htmp, Ztmp, Stmp] = sfactorization_wilson2x2(freq.crsspctrm(:,:,:,kk), ...
                                freq.freq, numiteration, tol, cmbindx, fb);
       if kk==1,
         H   = Htmp;
@@ -263,7 +262,7 @@ elseif strcmp(sfmethod, 'bivariate')
       Z = zeros(4*size(cmbindx,1), 1);
       for k = 1:numel(begchunk)
         fprintf('computing factorization of chunck %d/%d\n', k, numel(begchunk));
-        [Htmp, Ztmp, Stmp] = sfactorization_wilson2x2(freq.crsspctrm, fsample, freq.freq, ...
+        [Htmp, Ztmp, Stmp] = sfactorization_wilson2x2(freq.crsspctrm, freq.freq, ...
                                              numiteration, tol, cmbindx(begchunk(k):endchunk(k),:), fb);
                                            
         begix = (k-1)*4000+1;
@@ -274,7 +273,7 @@ elseif strcmp(sfmethod, 'bivariate')
                                            
       end
     else
-      [H, Z, S] = sfactorization_wilson2x2(freq.crsspctrm, fsample, freq.freq, ...
+      [H, Z, S] = sfactorization_wilson2x2(freq.crsspctrm, freq.freq, ...
                                              numiteration, tol, cmbindx, fb);
     end
   end
@@ -333,7 +332,7 @@ elseif ~isempty(block)
       end
     end
     
-    [Htmp, Ztmp, Stmp] = sfactorization_wilson(Stmp, fsample, freq.freq, ...
+    [Htmp, Ztmp, Stmp] = sfactorization_wilson(Stmp, freq.freq, ...
                                                  numiteration, tol, fb);  
     
     % undo PCA
@@ -405,413 +404,10 @@ output.freq      = freq.freq;
 output.crsspctrm = S;
 output.transfer  = H;
 output.noisecov  = Z;
-try
-  output.time = freq.time;
-catch
-end
-try
-  output.cumtapcnt = freq.cumtapcnt;
-catch
-end
-try 
-  output.cumsumcnt = freq.cumsumcnt;
-catch
-end
+if isfield(freq, 'time'),      output.time      = freq.time;      end
+if isfield(freq, 'cumtapcnt'), output.cumtapcnt = freq.cumtapcnt; end
+if isfield(freq, 'cumsucmtn'), output.cumsumcnt = freq.cumsumcnt; end
 if exist('labelcmb', 'var') && ~isempty(labelcmb)
   output.labelcmb = labelcmb;
   output          = rmfield(output, 'label');
 end
-
-%-------------------------------------------------------------------
-function [H, Z, S, psi] = sfactorization_wilson(S,fs,freq,Niterations,tol,fb)
-
-% Usage  : [H, Z, S, psi] = sfactorization_wilson(S,fs,freq);
-% Inputs : S (1-sided, 3D-spectral matrix in the form of Channel x Channel x frequency) 
-%        : fs (sampling frequency in Hz)
-%        : freq (a vector of frequencies) at which S is given
-% Outputs: H (transfer function)
-%        : Z (noise covariance)
-%        : psi (left spectral factor)
-% This function is an implemention of Wilson's algorithm (Eq. 3.1)
-% for spectral matrix factorization
-% Ref: G.T. Wilson,"The Factorization of Matricial Spectral Densities,"
-% SIAM J. Appl. Math.23,420-426(1972).
-% Written by M. Dhamala & G. Rangarajan, UF, Aug 3-4, 2006.
-% Email addresses: mdhamala@bme.ufl.edu, rangaraj@math.iisc.ernet.in
-
-% number of channels
-m   = size(S,1);
-N   = length(freq)-1;
-N2  = 2*N;
-
-% preallocate memory for efficiency
-Sarr   = zeros(m,m,N2) + 1i.*zeros(m,m,N2);
-gam    = zeros(m,m,N2);
-gamtmp = zeros(m,m,N2);
-psi    = zeros(m,m,N2);
-I      = eye(m); % Defining m x m identity matrix
-
-%Step 1: Forming 2-sided spectral densities for ifft routine in matlab
-f_ind = 0;
-for f = freq
-  f_ind           = f_ind+1;
-  Sarr(:,:,f_ind) = S(:,:,f_ind);
-  if(f_ind>1)
-    Sarr(:,:,2*N+2-f_ind) = S(:,:,f_ind).';
-  end
-end
-
-%Step 2: Computing covariance matrices
-for k1 = 1:m
-  for k2 = 1:m
-    %gam(k1,k2,:) = real(ifft(squeeze(Sarr(k1,k2,:)))*fs); %FIXME think about this
-    gam(k1,k2,:) = real(ifft(squeeze(Sarr(k1,k2,:))));
-  end
-end
-
-%Step 3: Initializing for iterations 
-gam0 = gam(:,:,1);
-[h, dum] = chol(gam0);
-if dum
-  warning('initialization for iterations did not work well, using arbitrary starting condition');
-  h = rand(m,m); h = triu(h); %arbitrary initial condition
-end
-
-for ind = 1:N2
-  psi(:,:,ind) = h; 
-end
-
-%Step 4: Iterating to get spectral factors
-ft_progress('init', fb, 'computing spectral factorization');
-for iter = 1:Niterations
-  ft_progress(iter./Niterations, 'computing iteration %d/%d\n', iter, Niterations);
-  for ind = 1:N2
-    invpsi     = inv(psi(:,:,ind));% + I*eps(psi(:,:,ind))); 
-    g(:,:,ind) = invpsi*Sarr(:,:,ind)*invpsi'+I;%Eq 3.1
-  end
-  gp = PlusOperator(g,m,N+1); %gp constitutes positive and half of zero lags 
-
-  psi_old = psi;
-  for k = 1:N2
-    psi(:,:,k) = psi(:,:,k)*gp(:,:,k);
-    psierr(k)  = norm(psi(:,:,k)-psi_old(:,:,k),1);
-  end
-  psierrf = mean(psierr);
-  if(psierrf<tol), 
-    fprintf('reaching convergence at iteration %d\n',iter);
-    break; 
-  end; % checking convergence
-end 
-ft_progress('close');
-
-%Step 5: Getting covariance matrix from spectral factors
-for k1 = 1:m
-  for k2 = 1:m
-    gamtmp(k1,k2,:) = real(ifft(squeeze(psi(k1,k2,:))));
-  end
-end
-
-%Step 6: Getting noise covariance & transfer function (see Example pp. 424)
-A0    = gamtmp(:,:,1); 
-A0inv = inv(A0);
-
-%Z     = A0*A0.'*fs; %Noise covariance matrix
-Z     = A0*A0.'; %Noise covariance matrix not multiplied by sampling frequency
-
-%FIXME check this; at least not multiplying it removes the need to correct later on
-%this also makes it more equivalent to the noisecov estimated by biosig's mvar-function
-
-H = zeros(m,m,N+1) + 1i*zeros(m,m,N+1);
-for k = 1:N+1
-  H(:,:,k) = psi(:,:,k)*A0inv;       %Transfer function
-  S(:,:,k) = psi(:,:,k)*psi(:,:,k)'; %Updated cross-spectral density
-end
-
-%------------------------------------------------------------------------------
-function [H, Z, S, psi] = sfactorization_wilson2x2(S,fs,freq,Niterations,tol,cmbindx,fb)
-
-% Usage  : [H, Z, psi] = sfactorization_wilson(S,fs,freq);
-% Inputs : S (1-sided, 3D-spectral matrix in the form of Channel x Channel x frequency) 
-%        : fs (sampling frequency in Hz)
-%        : freq (a vector of frequencies) at which S is given
-% Outputs: H (transfer function)
-%        : Z (noise covariance)
-%        : S (cross-spectral density 1-sided)
-%        : psi (left spectral factor)
-% This function is an implemention of Wilson's algorithm (Eq. 3.1)
-% for spectral matrix factorization
-% Ref: G.T. Wilson,"The Factorization of Matricial Spectral Densities,"
-% SIAM J. Appl. Math.23,420-426(1972).
-% Written by M. Dhamala & G. Rangarajan, UF, Aug 3-4, 2006.
-% Email addresses: mdhamala@bme.ufl.edu, rangaraj@math.iisc.ernet.in
-
-
-m   = size(cmbindx,1);
-N   = length(freq)-1;
-N2  = 2*N;
-
-% preallocate memory for efficiency
-Sarr   = zeros(2,2,m,N2) + 1i.*zeros(2,2,m,N2);
-I      = repmat(eye(2),[1 1 m N2]); % Defining 2 x 2 identity matrix
-
-%Step 1: Forming 2-sided spectral densities for ifft routine in matlab
-for c = 1:m
-  % f_ind = 0;
-  Stmp  = S(cmbindx(c,:),cmbindx(c,:),:);
-  for f_ind = 1:(N+1)
-  % for f = freq
-    % f_ind             = f_ind+1;
-    Sarr(:,:,c,f_ind) = Stmp(:,:,f_ind);
-    if(f_ind>1)
-      %Sarr(:,:,c,2*N+2-f_ind) = Stmp(:,:,f_ind).';
-      Sarr(:,:,c,2*N+2-f_ind) = Stmp([2 1],[2 1],f_ind);
-    end
-  end
-end
-
-%Step 2: Computing covariance matrices
-gam = real(reshape(ifft(reshape(Sarr, [4*m N2]), [], 2),[2 2 m N2]));
-
-%Step 3: Initializing for iterations 
-gam0 = gam(:,:,:,1);
-
-h    = complex(zeros(size(gam0)));
-for k = 1:m
-  [tmp, dum] = chol(gam0(:,:,k));
-  if dum
-    warning('initialization for iterations did not work well, using arbitrary starting condition');
-    tmp = rand(2,2); h(:,:,k) = triu(tmp); %arbitrary initial condition
-  else
-    h(:,:,k) = tmp;
-  end
-  %h(:,:,k) = chol(gam0(:,:,k));
-end
-psi  = repmat(h, [1 1 1 N2]);
-
-%Step 4: Iterating to get spectral factors
-ft_progress('init', fb, 'computing spectral factorization');
-for iter = 1:Niterations
-  ft_progress(iter./Niterations, 'computing iteration %d/%d\n', iter, Niterations);
-  invpsi = inv2x2(psi);
-  g      = sandwich2x2(invpsi, Sarr) + I;
-  gp     = PlusOperator2x2(g,m,N+1); %gp constitutes positive and half of zero lags 
-  
-  psi_old = psi;
-  psi     = mtimes2x2(psi, gp);
-  %psierr  = sum(sum(abs(psi-psi_old)));
-  psierr  = abs(psi-psi_old);
-  
-  psierrf = mean(psierr(:));
-  if(psierrf<tol), 
-    fprintf('reaching convergence at iteration %d\n',iter);
-    break; 
-  end; % checking convergence
-end 
-ft_progress('close');
-
-%Step 5: Getting covariance matrix from spectral factors
-gamtmp = reshape(real(ifft(transpose(reshape(psi, [4*m N2]))))', [2 2 m N2]);
-
-%Step 6: Getting noise covariance & transfer function (see Example pp. 424)
-A0    = gamtmp(:,:,:,1); 
-A0inv = inv2x2(A0);
-
-Z = zeros(2,2,m);
-for k = 1:m
-  %Z     = A0*A0.'*fs; %Noise covariance matrix
-  Z(:,:,k) = A0(:,:,k)*A0(:,:,k).'; %Noise covariance matrix not multiplied by sampling frequency
-  %FIXME check this; at least not multiplying it removes the need to correct later on
-  %this also makes it more equivalent to the noisecov estimated by biosig's mvar-function
-end
-
-H = complex(zeros(2,2,m,N+1));
-S = complex(zeros(2,2,m,N+1));
-for k = 1:(N+1)
-  for kk = 1:m
-    H(:,:,kk,k) = psi(:,:,kk,k)*A0inv(:,:,kk);  % Transfer function
-    S(:,:,kk,k) = psi(:,:,kk,k)*psi(:,:,kk,k)'; % Cross-spectral density
-  end
-end
-
-siz = [size(H) 1 1];
-H   = reshape(H, [4*siz(3) siz(4:end)]);
-siz = [size(S) 1 1];
-S   = reshape(S, [4*siz(3) siz(4:end)]);
-siz = [size(Z) 1 1];
-Z   = reshape(Z, [4*siz(3) siz(4:end)]);
-siz = [size(psi) 1 1];
-psi = reshape(psi, [4*siz(3) siz(4:end)]);
-
-%---------------------------------------------------------------------
-function gp = PlusOperator(g,nchan,nfreq)
-
-% This function is for [ ]+operation: 
-% to take the positive lags & half of the zero lag and reconstitute 
-% M. Dhamala, UF, August 2006
-
-g   = transpose(reshape(g, [nchan^2 2*(nfreq-1)]));
-gam = ifft(g);
-
-% taking only the positive lags and half of the zero lag
-gamp  = gam;
-beta0 = 0.5*gam(1,:);
-
-gamp(1,          :) = reshape(triu(reshape(beta0, [nchan nchan])),[1 nchan^2]);
-gamp(nfreq+1:end,:) = 0;
-
-% reconstituting
-gp = fft(gamp);
-gp = reshape(transpose(gp), [nchan nchan 2*(nfreq-1)]); 
-
-%---------------------------------------------------------------------
-function gp = PlusOperator2x2(g,ncmb,nfreq)
-
-% This function is for [ ]+operation: 
-% to take the positive lags & half of the zero lag and reconstitute 
-% M. Dhamala, UF, August 2006
-
-g   = transpose(reshape(g, [4*ncmb 2*(nfreq-1)]));
-gam = ifft(g);
-
-% taking only the positive lags and half of the zero lag
-gamp  = gam;
-beta0 = 0.5*gam(1,:);
-
-%for k = 1:ncmb
-%  gamp(1,(k-1)*4+1:k*4) = reshape(triu(reshape(beta0(1,(k-1)*4+1:k*4),[2 2])),[1 4]);
-%end
-beta0(2:4:4*ncmb)   = 0;
-gamp(1,:)           = beta0;
-gamp(nfreq+1:end,:) = 0;
-
-% reconstituting
-gp = fft(gamp);
-gp = reshape(transpose(gp), [2 2 ncmb 2*(nfreq-1)]); 
-
-%------------------------------------------------------
-%this is the original code; above is vectorized version
-%which is assumed to be faster with many channels present
-%for k1 = 1:nchan
-%  for k2 = 1:nchan
-%    gam(k1,k2,:) = ifft(squeeze(g(k1,k2,:)));
-%  end
-%end
-%
-%% taking only the positive lags and half of the zero lag
-%gamp  = gam;
-%beta0 = 0.5*gam(:,:,1); 
-%gamp(:,:,1) = triu(beta0);  %this is Stau
-%gamp(:,:,nfreq+1:end) = 0;
-%
-%% reconstituting
-%for k1 = 1:nchan
-%  for k2 = 1:nchan
-%    gp(k1,k2,:) = fft(squeeze(gamp(k1,k2,:)));
-%  end
-%end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%subfunctions for the 2x2 functionality
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% %determinant of a 2x2 matrix
-% function [d] = det2x2(x)
-% 
-% %computes determinant of matrix x, using explicit analytic definition if
-% %size(x,1) < 4, otherwise use matlab det-function
-% 
-% siz = size(x);
-% if all(siz(1:2)==2),
-%   d = x(1,1,:,:).*x(2,2,:,:) - x(1,2,:,:).*x(2,1,:,:);
-% elseif all(siz(1:2)==3),
-%   d = x(1,1,:,:).*x(2,2,:,:).*x(3,3,:,:) - ...
-%       x(1,1,:,:).*x(2,3,:,:).*x(3,2,:,:) - ...
-%       x(1,2,:,:).*x(2,1,:,:).*x(3,3,:,:) + ...
-%       x(1,2,:,:).*x(2,3,:,:).*x(3,1,:,:) + ...
-%       x(1,3,:,:).*x(2,1,:,:).*x(3,2,:,:) - ...
-%       x(1,3,:,:).*x(2,2,:,:).*x(3,1,:,:);
-% elseif numel(siz)==2,
-%   d = det(x);
-% else
-%   %error   
-%   %write for loop
-%   %for
-%   %end
-% end
-% 
-% %%%%%%%%%%%%%%%%%%%%%%%%%
-% % inverse of a 2x2 matrix
-% function [d] = inv2x2(x)
-% 
-% %computes inverse of matrix x, using explicit analytic definition if
-% %size(x,1) < 4, otherwise use matlab inv-function
-% 
-% siz = size(x);
-% if all(siz(1:2)==2),
-%   adjx  = [x(2,2,:,:) -x(1,2,:,:); -x(2,1,:,:) x(1,1,:,:)];
-%   denom = det2x2(x);
-%   d     = adjx./denom([1 1],[1 1],:,:);
-% elseif all(siz(1:2)==3),
-%   adjx = [ det2x2(x([2 3],[2 3],:,:)) -det2x2(x([1 3],[2 3],:,:))  det2x2(x([1 2],[2 3],:,:)); ...
-%           -det2x2(x([2 3],[1 3],:,:))  det2x2(x([1 3],[1 3],:,:)) -det2x2(x([1 2],[1 3],:,:)); ...
-% 	   det2x2(x([2 3],[1 2],:,:)) -det2x2(x([1 3],[1 2],:,:))  det2x2(x([1 2],[1 2],:,:))];
-%   denom = det2x2(x);
-%   d     = adjx./denom([1 1 1],[1 1 1],:,:);
-% elseif numel(siz)==2,
-%   d = inv(x);
-% else
-%   error('cannot compute slicewise inverse');
-%   %write for loop for the higher dimensions, using normal inv
-% end
-% 
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%
-% % matrix multiplication 2x2
-% function [z] = mtimes2x2(x, y)
-% 
-% % compute x*y 
-% % and dimensionatity is 2x2xN
-% 
-% z     = complex(zeros(size(x)));
-% xconj = conj(x);
-% 
-% z(1,1,:,:) = x(1,1,:,:).*y(1,1,:,:) + x(1,2,:,:).*y(2,1,:,:);
-% z(1,2,:,:) = x(1,1,:,:).*y(1,2,:,:) + x(1,2,:,:).*y(2,2,:,:);
-% z(2,1,:,:) = x(2,1,:,:).*y(1,1,:,:) + x(2,2,:,:).*y(2,1,:,:);
-% z(2,2,:,:) = x(2,1,:,:).*y(1,2,:,:) + x(2,2,:,:).*y(2,2,:,:);
-% 
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% % quadratic multiplication 2x2 matrix,  sandwiched matrix assumed hermitian
-% function [z] = sandwich2x2(x, y)
-% 
-% % compute x*y*x' provided y = hermitian
-% % and dimensionatity is 2x2xN
-% 
-% %FIXME build in check for hermitianity
-% z     = complex(zeros(size(x)));
-% xconj = conj(x);
-% xabs2 = abs(x).^2;
-% 
-% z(1,1,:,:) = xabs2(1,1,:,:) .* y(1,1,:,:) + ...
-%              xabs2(1,2,:,:) .* y(2,2,:,:) + ...
-%            2.*real(y(2,1,:,:).*xconj(1,1,:,:).*x(1,2,:,:));
-% z(2,1,:,:) = y(1,1,:,:).*xconj(1,1,:,:).*x(2,1,:,:) + ...
-%            y(2,1,:,:).*xconj(1,1,:,:).*x(2,2,:,:) + ...
-%            y(1,2,:,:).*xconj(1,2,:,:).*x(2,1,:,:) + ...
-%            y(2,2,:,:).*xconj(1,2,:,:).*x(2,2,:,:);
-% z(1,2,:,:) = conj(z(2,1,:,:));
-% z(2,2,:,:) = xabs2(2,1,:,:) .* y(1,1,:,:) + ...
-%              xabs2(2,2,:,:) .* y(2,2,:,:) + ...
-%            2.*real(y(1,2,:,:).*xconj(2,2,:,:).*x(2,1,:,:));
-% 
-% %b1 b2     a1 a2'   b1' b3'
-% %b3 b4     a2 a3    b2' b4'
-% %
-% %b1*a1+b2*a2  b1*a2'+b2*a3  b1' b3'
-% %b3*a1+b4*a2  b3*a2'+b4*a3  b2' b4'
-% %
-% %b1*a1*b1'+b2*a2*b1'+b1*a2'*b2'+b2*a3*b2' b1*a1*b3'+b2*a2*b3'+b1*a2'*b4'+b2*a3*b4'
-% %b3*a1*b1'+b4*a2*b1'+b3*a2'*b2'+b4*a3*b2' b3*a1*b3'+b4*a2*b3'+b3*a2'*b4'+b4*a3*b4'
-% %
-% %a1*abs(b1)^2 + a2*(b1'*b2) + a2'*(b1*b2') + a3*abs(b2)^2    a1*b1*b3'    + a2*b2*b3'   + a2'*b1*b4'   + a3*b2*b4'
-% %a1*b1'*b3    + a2*b1'*b4   + a2'*b2'*b3   + a3*b2'*b4       a1*abs(b3)^2 + a2*(b3'*b4) + a2'*(b3*b4') + a3*abs(b4)^2

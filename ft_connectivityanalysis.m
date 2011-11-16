@@ -365,15 +365,15 @@ if any(~isfield(data, inparam)) || (isfield(data, 'crsspctrm') && (ischar(inpara
           data = ft_checkdata(data, 'cmbrepresentation', 'full');
         end
         
-        tmpcfg = ft_checkconfig(cfg, 'createsubcfg',  {'npsf'});
+        tmpcfg = ft_checkconfig(cfg, 'createsubcfg',  {'granger'});
         
         % check whether multiple pairwise decomposition is required (this
         % can most conveniently be handled at this level
         %tmpcfg.npsf = rmfield(tmpcfg.npsf, 'channelcmb');
-        try,tmpcfg.npsf = rmfield(tmpcfg.npsf, 'block');     end
-        try,tmpcfg.npsf = rmfield(tmpcfg.npsf, 'blockindx'); end
+        try,tmpcfg.npsf = rmfield(tmpcfg.granger, 'block');     end
+        try,tmpcfg.npsf = rmfield(tmpcfg.granger, 'blockindx'); end
         %         end
-        optarg = ft_cfg2keyval(tmpcfg.npsf);
+        optarg = ft_cfg2keyval(tmpcfg.granger);
         data   = ft_connectivity_csd2transfer(data, optarg{:});
         
         % convert the inparam back to cell array in the case of granger
