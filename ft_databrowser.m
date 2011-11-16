@@ -643,7 +643,7 @@ else
     %trlvis(:,3) = opt.trlorg(3) + begsamples - opt.trlorg(1);
   %end
   % I removed it and added
-  trlvis(:,3) = begsample - 1;
+  trlvis(:,3) = begsamples - 1;
   % instead, which solves bug 1160. (eelspa, 16-nov-2011)
   % Added this comment because I was not sure what the purpose of the
   % original code was.
