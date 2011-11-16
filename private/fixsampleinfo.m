@@ -22,7 +22,7 @@ hastime    = isfield(data, 'time');
 hasfsample = isfield(data, 'fsample');
 
 % check whether we're dealing with a timelock structure that has trials
-istimelock = hastime & hastrial & ~iscell(data.trial) & ~iscell(data.time);
+istimelock = hastime && hastrial && ~iscell(data.trial) && ~iscell(data.time);
 
 if ~hasfsample && hastime
   if istimelock
