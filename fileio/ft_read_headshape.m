@@ -421,6 +421,14 @@ switch fileformat
     shape.pnt = vertex';
     shape.tet = face';
     
+  case 'tetgen'
+    % reads in the tetgen format and rearranges according to FT conventions
+    % tetgen files also return a 'faces' field (not used here)
+    IMPORT = importdata('filename.1.ele',' ',1);
+    shape.tet = IMPORT.data(:,2:5);
+    IMPORT = importdata('filename.1.node',' ',1);
+    shape.pnt = IMPORT.data(:,2:4);
+  
   otherwise
     % try reading it from an electrode of volume conduction model file
     success = false;

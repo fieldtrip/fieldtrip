@@ -76,7 +76,7 @@ switch fileformat
     write_off(filename,bnd.pnt,bnd.tri);
     
   case 'vista'
-    if ft_hastoolbox('simbio')
+    if ft_hastoolbox('simbio',1)
       % no conversion needed (works in voxel coordinates)
       if isfield(bnd,'hex')
         write_vista_mesh(filename,bnd.pnt,bnd.hex,bnd.index); % bnd.tensor
@@ -88,6 +88,11 @@ switch fileformat
     else
       error('You need Simbio/Vista toolbox to write a .v file')
     end
+    
+  case 'tetgen'
+    % the third argument is the element type. At the moment only type 302
+    % (triangle) is supported
+    surf_to_tetgen('filename', bnd.pnt, bnd.tri, 302*ones(size(bnd.tri,1),1),[],[]);
     
   case []
     error('you must specify the output format');
