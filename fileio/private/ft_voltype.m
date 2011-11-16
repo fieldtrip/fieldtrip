@@ -14,11 +14,12 @@ function [type] = ft_voltype(vol, desired)
 %  multisphere     local spheres model for MEG, one sphere per channel
 %  concentric      analytical 4-sphere model for EEG
 %  infinite        infinite homogenous medium
-%  bem             boundary element model, can be any of the methods below
-%  openmeeg        boundary element method based on the OpenMEEG implementation
+%  bem_openmeeg    boundary element method based on the OpenMEEG implementation
 %  bemcp           boundary element method based on the implementation from Christophe Phillips
-%  dipoli          boundary element method based on the implementation from Thom Oostendorp
-%  asa             boundary element method based on the (commercial) ASA software
+%  bem_dipoli      boundary element method based on the implementation from Thom Oostendorp
+%  bem_asa         boundary element method based on the (commercial) ASA software
+%  simbio          finite elements method based on the SimBio software
+%  fns             finite differences method based on the FNS software
 %
 % See also FT_READ_VOL, FT_COMPUTE_LEADFIELD
 
