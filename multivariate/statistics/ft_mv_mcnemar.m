@@ -2,6 +2,8 @@ function pvalue = ft_mv_mcnemar(design,post1,post2)
 % FT_MV_MCNEMAR performs a mcnemar test which is an approximate binomial
 % test. It compares if post1 is significantly better than post2 given the real outcome (design). 
 %
+% ft_mv_mcnemar(design,post1,post2)
+%
 % RETURNS
 % pvalue      estimated pvalue
 %

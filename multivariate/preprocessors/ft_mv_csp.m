@@ -62,7 +62,7 @@ classdef ft_mv_csp < ft_mv_preprocessor
 %                 
 %                Blankertz B., Curio G., Muller  K.-R., Classifying Single Trial EEG:
 %                Towards Brain Computer Interfacing, in: T. G. Diettrich, S. Becker, and
-%                Z. Ghahramani, eds., Advances in Neural Inf. Proc. Systems (NIPS 01),vol. 14, 157�164, 2002.
+%                Z. Ghahramani, eds., Advances in Neural Inf. Proc. Systems (NIPS 01),vol. 14, 2002.
 %
 %
 %   Extreme Energy Difference (EED) criterion -  

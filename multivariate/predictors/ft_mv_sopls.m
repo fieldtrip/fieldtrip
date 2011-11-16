@@ -40,12 +40,12 @@ classdef ft_mv_sopls < ft_mv_predictor
     
     G             % trained ft_mv_glmnet objects
 
-    method = 'glmnet' % 'pls' (non-sparse), 'native' (sparse plus coupling), 'glmnet' (sparse based on glmnet package)
+    method = 'sopls' % 'pls' (non-sparse), 'opls' (non-sparse orthonormal), 'sopls' (sparse opls)
     
-    alpha = 0.9;      % ridge versus lasso mixing parameter (alpha is a coupling matrix for native)
-    lambda_min = 0.05; % regularization parameter (fraction of maximal lambda)
-    nlambda = 20;     % number of steps to traverse the regularization path
-    
+    % default regularizer
+    regularizer =  ft_mv_glmnet('alpha',0.9,'lambda_min',0.05,'nlambda',20,'method','glmnet','family','gaussian','validator',ft_mv_crossvalidator('nfolds',5,'metric','correlation'));
+      
+        
   end
 
   methods
@@ -57,21 +57,19 @@ classdef ft_mv_sopls < ft_mv_predictor
     end
     
     function obj = train(obj,X,Y)
-
-      opts.alpha = obj.alpha;
-      opts.lambda_min = obj.lambda_min;
-      opts.nlambda = obj.nlambda;
-      opts.verbose = obj.verbose;
-      opts.method = obj.method;
         
-      if ~strcmp(obj.method,'pls')
+      if strcmp(obj.method,'sopls') % sparse orthonormalized partial least squares
         
-        [obj.A,obj.B,bias,obj.G] = ospls(X',Y',obj.nhidden,opts);
+        [obj.A,obj.B,bias,obj.G] = sopls(X',Y',obj.nhidden,obj.regularizer);
       
-        % total bias;
         obj.C = bias * obj.A';
         
-      else
+      elseif strcmp(obj.method,'opls') % orthonormalized partial least squares
+        
+        % to do
+        [obj.A,obj.B,bias,obj.G] = opls(X',Y',obj.nhidden);
+      
+      else % Matlab partial least squares (SIMPLS algorithm)
         
         [XL,YL,XS,YS,beta,pctvar,mse,stats] = plsregress(X,Y,obj.nhidden);
         

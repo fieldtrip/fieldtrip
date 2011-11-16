@@ -556,6 +556,11 @@ classdef ft_mv_glmnet < ft_mv_predictor
       
     end
     
+    function b = bias(obj)
+      % return bias term; required function for ft_mv_sopls
+      b = obj.weights(end);
+    end
+    
   end
   
 end
