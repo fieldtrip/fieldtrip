@@ -40,7 +40,8 @@ for i=1:size(optarg,1)
   tmpcfg = keyval2cfg(arg{:});
   tmpcfg.method = 'concentricspheres';
   vol{3} = ft_prepare_headmodel(tmpcfg,geom.bnd);
-
+  vol{3} = rmfield(vol{3},'unit');
+  
   % old way, one sphere:
   tmpcfg = keyval2cfg(arg{:});
   tmpcfg.headshape = geom.bnd(1);
@@ -50,13 +51,14 @@ for i=1:size(optarg,1)
   % new way - high level, one sphere:
   tmpcfg = keyval2cfg(arg{:});
   tmpcfg.method = 'concentricspheres';
-  vol{5} = ft_prepare_headmodel(tmpcfg,geom.bnd(1));
+  vol{5} = ft_prepare_headmodel(tmpcfg,geom.bnd);
+  vol{5} = rmfield(vol{5},'unit');
   
   % compare the volume conductor structures
   comb = nchoosek(1:numel(vol),2);
   
-  for i=1:size(comb,1)
-    chk = comb(i,:);
+  for j=1:size(comb,1)
+    chk = comb(j,:);
     try
       if ~isequal(vol{chk(1)},vol{chk(2)})
         str = sprintf('combination %d %d not successful\n',chk(1),chk(2));
