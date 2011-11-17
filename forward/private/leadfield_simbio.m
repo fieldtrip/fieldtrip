@@ -60,7 +60,7 @@ try
   % write the vol.wf in a vista format .v file
   disp('writing the mesh file on disk...\n')
   if ft_hastoolbox('fileio',1)
-    ft_write_headshape(meshfile,vol.wf);
+    ft_write_headshape(meshfile,vol.wf,'format','vista');
   else
     error('you need the fileio module!\n')
   end
