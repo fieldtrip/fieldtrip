@@ -105,7 +105,7 @@ for k = 1:nobs
   hits = fliplr(hits);
   fa   = fliplr(fa);
 
-  if true
+  if false
     % this part is optional and should only be used when exploring the data
     figure
     plot(fa, hits, '.-')
