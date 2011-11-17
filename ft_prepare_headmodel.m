@@ -44,7 +44,7 @@ function [vol] = ft_prepare_headmodel(cfg, data)
 %
 % The configuration structure should contain:
 %     cfg.method            string that specifies the forward solution, see below
-%     cfg.conductivity      a number or a vector contining the conductivities
+%     cfg.conductivity      a number or a vector containing the conductivities
 %                           of the compartments
 % 
 % Additionally, the specific methods each have their specific configuration 
@@ -71,7 +71,7 @@ function [vol] = ft_prepare_headmodel(cfg, data)
 %     cfg.tissue      
 %     cfg.tissueval 
 %     cfg.tissuecond  
-%     cfg.elect      
+%     cfg.sens      
 %     cfg.transform   
 %     cfg.unit      
 % 
@@ -116,42 +116,17 @@ cfg = ft_checkconfig(cfg, 'deprecated', 'geom');
 % set the general defaults 
 cfg.hdmfile        = ft_getopt(cfg, 'hdmfile', []);
 cfg.headshape      = ft_getopt(cfg, 'headshape', []);
-cfg.conductivity   = ft_getopt(cfg, 'conductivity', []);
-cfg.isolatedsource = ft_getopt(cfg, 'isolatedsource', []);
 cfg.unit           = ft_getopt(cfg, 'unit',  []);
+cfg.conductivity   = ft_getopt(cfg, 'conductivity');
 
-% specific defaults
-cfg.fitind         = ft_getopt(cfg, 'fitind', []); % concentricspheres specific
-
-% FIXME: delete these defaults
-cfg.smooth         = ft_getopt(cfg, 'smooth',      5); % volume input
-cfg.sourceunits    = ft_getopt(cfg, 'sourceunits', 'cm'); % volume input
-cfg.threshold      = ft_getopt(cfg, 'threshold',   0.5); % volume input
-
-cfg.numvertices    = ft_getopt(cfg, 'numvertices', []); % volume input
-cfg.tissue         = ft_getopt(cfg, 'tissue', []); % volume input, can only be a set of strings
-cfg.tissueval      = ft_getopt(cfg, 'tissueval', []); % fdm/fem
-cfg.tissuecond     = ft_getopt(cfg, 'tissuecond', []); % fdm/fem
-cfg.elect          = ft_getopt(cfg, 'elec',  []); % fdm/fem
-cfg.transform      = ft_getopt(cfg, 'transform',  []); % fdm/fem
-cfg.feedback       = ft_getopt(cfg, 'feedback'); % localspheres
-cfg.radius         = ft_getopt(cfg, 'radius'); % localspheres
-cfg.maxradius      = ft_getopt(cfg, 'maxradius'); % localspheres
-cfg.baseline       = ft_getopt(cfg, 'baseline'); % localspheres
-cfg.singlesphere   = ft_getopt(cfg, 'singlesphere'); % localspheres
-    
 if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
   % convert the nested config-object back into a normal structure
   cfg.headshape = struct(cfg.headshape);
 end
 
-% checks on the defaults
-if isempty(cfg.conductivity)
-  if nargin>1 && isfield(data,'cond')
-    cfg.conductivity = data.cond;
-  else
-    warning('the conductivity is not specified');
-  end
+% if the conductivity is in the data cfg.conductivity is overwritten
+if nargin>1 && isfield(data,'cond')
+  cfg.conductivity = data.cond;
 end
 
 geometry = [];

@@ -1,4 +1,4 @@
-%function test_headmodel_dipoli
+function test_headmodel_dipoli
 
 % TEST test_headmodel_dipoli
 % TEST ft_headmodel_dipoli ft_prepare_vol_sens ft_compute_leadfield
@@ -20,6 +20,7 @@ vol = ft_headmodel_bem_dipoli(geom, 'conductivity', [1 1/20 1]);
 % create a set of electrodes
 sel = find(pnt(:,3)>0);
 sens.elecpos = pnt(sel,:) * 100;
+sens.chanpos = pnt(sel,:) * 100;
 for i=1:length(sel)
   sens.label{i} = sprintf('chan%03d', i);
 end

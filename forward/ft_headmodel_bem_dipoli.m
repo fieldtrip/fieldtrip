@@ -36,6 +36,10 @@ isolatedsource  = ft_getopt(varargin, 'isolatedsource');
 hdmfile         = ft_getopt(varargin, 'hdmfile');
 conductivity    = ft_getopt(varargin, 'conductivity');
 
+if isfield(geom,'bnd')
+  geom = geom.bnd;
+end
+
 % start with an empty volume conductor
 vol = [];
 
@@ -50,6 +54,25 @@ if ~isempty(hdmfile)
 else
   % copy the boundaries from the geometry into the volume conduction model
   vol.bnd = geom;
+end
+
+% determine the number of compartments
+numboundaries = numel(vol.bnd);
+
+if isempty(conductivity)
+  warning('No conductivity is declared, Assuming standard values\n')
+  if numboundaries == 1
+    conductivity = 1;
+  elseif numboundaries == 3
+    % skin/skull/brain
+    conductivity = [1 1/80 1] * 0.33;
+  elseif numboundaries == 4
+    %FIXME: check for better default values here
+    % skin / outer skull / inner skull / brain    
+    conductivity = [1 1/80 1 1] * 0.33;    
+  else
+    error('Conductivity values are required!')
+  end
 end
 
 % % The following checks can in principle be performed, but are too
@@ -73,9 +96,6 @@ end
 % vol.bnd = vol.bnd(order);
 % FIXME also the cond
 % 
-
-% determine the number of compartments
-numboundaries = numel(vol.bnd);
 
 if isempty(isolatedsource)
   if numboundaries>1
