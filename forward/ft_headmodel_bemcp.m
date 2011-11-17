@@ -20,6 +20,10 @@ ft_hastoolbox('bemcp', 1);
 hdmfile         = ft_getopt(varargin, 'hdmfile');
 conductivity    = ft_getopt(varargin, 'conductivity');
 
+if isfield(geom,'bnd')
+  geom = geom.bnd;
+end
+
 % start with an empty volume conductor
 vol = [];
 
@@ -31,16 +35,32 @@ if ~isempty(hdmfile)
     % also copy the conductivities
     vol.cond = hdm.cond;
   end
-elseif isfield(geom, 'bnd')
-  % copy the boundaries from the geometry into the volume conduction model
-  vol.bnd = geom.bnd;
-elseif isfield(geom, 'pnt') && isfield(geom, 'tri')
+else
   % copy the boundaries from the geometry into the volume conduction model
   vol.bnd = geom;
 end
 
 % determine the number of compartments
 numboundaries = length(vol.bnd);
+
+if isempty(conductivity)
+  warning('No conductivity is declared, Assuming standard values\n')
+  if numboundaries == 1
+    conductivity = 1;
+  elseif numboundaries == 3
+    % skin/skull/brain
+    conductivity = [1 1/80 1] * 0.33;
+  elseif numboundaries == 4
+    %FIXME: check for better default values here
+    % skin / outer skull / inner skull / brain    
+    conductivity = [1 1/80 1 1] * 0.33;    
+  else
+    error('Conductivity values are required!')
+  end
+end
+
+% impose the 'outsidefirst' nesting of the compartments
+order = surface_nesting(vol.bnd, 'outsidefirst');
 
 if ~isfield(vol, 'cond')
   if numel(conductivity)~=numboundaries
@@ -50,9 +70,6 @@ if ~isfield(vol, 'cond')
     vol.cond = conductivity;
   end
 end
-
-% impose the 'outsidefirst' nesting of the compartments
-order = surface_nesting(vol.bnd, 'outsidefirst');
 
 % rearrange boundaries and conductivities
 if numel(vol.bnd)>1
