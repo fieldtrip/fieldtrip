@@ -114,10 +114,34 @@ cfg = ft_checkconfig(cfg, 'required', 'method');
 cfg = ft_checkconfig(cfg, 'deprecated', 'geom');
 
 % set the general defaults 
-cfg.hdmfile        = ft_getopt(cfg, 'hdmfile', []);
-cfg.headshape      = ft_getopt(cfg, 'headshape', []);
-cfg.unit           = ft_getopt(cfg, 'unit',  []);
+cfg.hdmfile        = ft_getopt(cfg, 'hdmfile');
+cfg.headshape      = ft_getopt(cfg, 'headshape');
+cfg.unit           = ft_getopt(cfg, 'unit');
 cfg.conductivity   = ft_getopt(cfg, 'conductivity');
+cfg.sourceunits    = ft_getopt(cfg, 'sourceunits');
+
+% volume related options
+cfg.tissue         = ft_getopt(cfg, 'tissue');
+cfg.smooth         = ft_getopt(cfg, 'smooth');
+cfg.threshold      = ft_getopt(cfg, 'threshold');
+
+% other options
+cfg.numvertices    = ft_getopt(cfg, 'numvertices');
+cfg.isolatedsource = ft_getopt(cfg, 'isolatedsource');
+cfg.fitind         = ft_getopt(cfg, 'fitind'); % concentricspheres
+cfg.point          = ft_getopt(cfg, 'point'); % halfspace
+cfg.submethod      = ft_getopt(cfg, 'submethod'); 
+cfg.grad           = ft_getopt(cfg, 'grad'); % localspheres
+cfg.feedback       = ft_getopt(cfg, 'feedback'); 
+cfg.radius         = ft_getopt(cfg, 'radius');
+cfg.maxradius      = ft_getopt(cfg, 'maxradius');
+cfg.baseline       = ft_getopt(cfg, 'baseline');
+cfg.singlesphere   = ft_getopt(cfg, 'singlesphere');
+cfg.tissueval      = ft_getopt(cfg, 'tissueval'); % FEM 
+cfg.tissuecond     = ft_getopt(cfg, 'tissuecond'); 
+cfg.sens           = ft_getopt(cfg, 'sens'); 
+cfg.transform      = ft_getopt(cfg, 'transform'); 
+
 
 if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
   % convert the nested config-object back into a normal structure
@@ -146,7 +170,7 @@ if nargin>1 && ft_datatype(data, 'volume') && ~strcmp(cfg.method,'fns') && ~strc
         tmpcfg.sourceunits  = cfg.sourceunits;
         tmpcfg.threshold    = cfg.threshold;
         tmpcfg.numvertices  = cfg.numvertices;
-        geometry = prepare_singleshell(cfg,data);    
+        geometry = prepare_singleshell(tmpcfg,data);    
       else
          % tries to infer which fields in the segmentations are the segmented compartments
         [dum,tissue] = issegmentation(data,cfg);
@@ -157,7 +181,7 @@ if nargin>1 && ft_datatype(data, 'volume') && ~strcmp(cfg.method,'fns') && ~strc
         tmpcfg.sourceunits  = cfg.sourceunits;
         tmpcfg.threshold    = cfg.threshold;
         tmpcfg.numvertices  = cfg.numvertices;
-        geometry = prepare_shells(cfg,data); 
+        geometry = prepare_shells(tmpcfg,data); 
       end
     end
   else
@@ -271,18 +295,19 @@ switch cfg.method
       funname = 'ft_headmodel_fdm_fns';
     end
     vol = feval(funname,data,'tissue',cfg.tissue,'tissueval',cfg.tissueval, ...
-                               'tissuecond',cfg.tissuecond,'sens',cfg.elect, ...
+                               'tissuecond',cfg.tissuecond,'sens',cfg.sens, ...
                                'transform',cfg.transform,'unit',cfg.unit); 
+
   case 'slab_monopole'
     if numel(geometry)==2
-      geom1 = geometry(1); %FIXME: probably doesnt work
+      geom1 = geometry(1); 
       geom2 = geometry(2);
-      P = ft_getopt(cfg, 'samplepoint');
-      vol = ft_headmodel_slab(geom1,geom2,P,'sourcemodel','monopole');
+      P     = cfg.point;
+      vol = ft_headmodel_slab(geom1,geom2,P,'sourcemodel','monopole','conductivity',cfg.conductivity);
     else
       error('geometry should be described by exactly 2 sets of points')
     end
-    
+
   otherwise
     error('unsupported method "%s"', cfg.method);
 end
