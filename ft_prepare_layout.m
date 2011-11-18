@@ -688,6 +688,9 @@ elseif ~isempty(cfg.output) && strcmpi(cfg.style, '3d')
   error('writing a 3D layout to an output file is not supported');
 end
 
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble callinfo
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 % read the layout information from the ascii file
@@ -778,7 +781,4 @@ else
   lay.height = Height;
   lay.label  = label;
 end
-
-% do the general cleanup and bookkeeping at the end of the function
-ft_postamble callinfo
 
