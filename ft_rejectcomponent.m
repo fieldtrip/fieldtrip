@@ -97,7 +97,7 @@ end
 if nargin==3 && strcmp(cfg.demean, 'yes')
   % optionally perform baseline correction on each trial
   fprintf('baseline correcting data \n');
-  for trial=1:Ntrials
+  for trial=1:numel(data.trial)
     data.trial{trial} = ft_preproc_baselinecorrect(data.trial{trial});
   end
 end
