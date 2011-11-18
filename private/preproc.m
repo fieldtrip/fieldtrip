@@ -319,6 +319,40 @@ if strcmp(cfg.bsfilter, 'yes')
     dat = ft_preproc_bandstopfilter(dat, fsample, cfg.bsfreq(i,:), cfg.bsfiltord, cfg.bsfilttype, cfg.bsfiltdir);
   end
 end
+if strcmp(cfg.polyremoval, 'yes')
+  nsamples     = size(dat,2);
+  % the begin and endsample of the polyremoval period correspond to the complete data minus padding
+  begsample = 1        + begpadding;
+  endsample = nsamples - endpadding;
+  dat = ft_preproc_polyremoval(dat, cfg.polyorder, begsample, endsample);
+end
+if strcmp(cfg.detrend, 'yes')
+  nsamples     = size(dat,2);
+  % the begin and endsample of the detrend period correspond to the complete data minus padding
+  begsample = 1        + begpadding;
+  endsample = nsamples - endpadding;
+  dat = ft_preproc_detrend(dat, begsample, endsample);
+end
+if strcmp(cfg.demean, 'yes') || nargout>2
+  % determine the complete time axis for the baseline correction
+  % but only construct it when really needed, since it takes up a large amount of memory
+  % the time axis should include the filter padding
+  nsamples = size(dat,2);
+  time = (offset - begpadding + (0:(nsamples-1)))/fsample;
+end
+if strcmp(cfg.demean, 'yes')
+  if ischar(cfg.baselinewindow) && strcmp(cfg.baselinewindow, 'all')
+    % the begin and endsample of the baseline period correspond to the complete data minus padding
+    begsample = 1        + begpadding;
+    endsample = nsamples - endpadding;
+    dat       = ft_preproc_baselinecorrect(dat, begsample, endsample);
+  else
+    % determine the begin and endsample of the baseline period and baseline correct for it
+    begsample = nearest(time, cfg.baselinewindow(1));
+    endsample = nearest(time, cfg.baselinewindow(2));
+    dat       = ft_preproc_baselinecorrect(dat, begsample, endsample);
+  end
+end
 if strcmp(cfg.dftfilter, 'yes')
   datorig = dat;
   for i=1:length(cfg.dftfreq)
