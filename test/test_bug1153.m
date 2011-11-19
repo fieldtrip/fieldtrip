@@ -13,5 +13,11 @@ data.sampleinfo = [1 100];
 
 cfg = [];
 cfg.trl = [10 20 0];
-data = ft_redefinetrial(cfg, data);
-isfield(data, 'cfg')
+data2 = ft_redefinetrial(cfg, data);
+isfield(data2, 'cfg')
+
+cfg = [];
+cfg.begsample = 10;
+cfg.endsample = 20;
+data2 = ft_redefinetrial(cfg, data);
+isfield(data2, 'cfg')
