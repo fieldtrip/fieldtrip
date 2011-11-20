@@ -33,7 +33,6 @@ tissueval    = ft_getopt(varargin, 'tissueval', []);
 tissuecond   = ft_getopt(varargin, 'tissuecond', []);
 transform    = ft_getopt(varargin, 'transform', eye(4));
 units        = ft_getopt(varargin, 'units', 'cm');
-% bnd          = ft_getopt(varargin, 'bnd', []);
 sens         = ft_getopt(varargin, 'sens', []);
 deepelec     = ft_getopt(varargin, 'deepelec', []); % used in the case of deep voxel solution
 tolerance    = ft_getopt(varargin, 'tolerance', 1e-8);
@@ -42,8 +41,8 @@ if isempty(sens)
   error('A set of sensors is required')
 end
 
-if ~isunix
-  error('this only works on linux and osx')
+if ispc
+  error('FNS only works on Linux and OSX')
 end
 
 % check the consistency between tissue values and the segmentation
@@ -92,8 +91,10 @@ try
     % write the positions of the electrodes on disk
     disp('writing the electrodes file...')
     pos = warp_apply(inv(transform),sens.chanpos); % in voxel coordinates!
-    fns_elec_write(int32(round(pos)), [1 1 1], size(seg), elecfile); % Hung: convert pos to int32 datatype. 
-
+%     fns_elec_write(int32(round(pos)), [1 1 1], size(seg), elecfile); 
+    % convert pos into int32 datatype. 
+    hdf5write(elecfile, '/electrodes/gridlocs', int32(pos));
+    
     % Exe file 
     efid = fopen(exefile, 'w');
     if ~ispc
@@ -107,7 +108,8 @@ try
     dos(sprintf('chmod +x %s', exefile));
     dos(['./' exefile]);
     
-    transfer = fns_read_transfer(datafile);
+    [transfer,status] = fns_read_transfer(datafile);
+    
     % FIXME : the result of elecsfwd has to be read in a transfer matrix
     % (has to be implemented!)
     cleaner(segfile,confile,elecfile,exefile,datafile)
