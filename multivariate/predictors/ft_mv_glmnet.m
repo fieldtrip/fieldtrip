@@ -25,6 +25,13 @@ classdef ft_mv_glmnet < ft_mv_predictor
 %
 % [a,b,c] = ft_mv_test('mva',{ft_mv_glmnet('validator',ft_mv_crossvalidator('nfolds',5,'metric','logprob'))})
 %
+% NOTE:
+% In case you encounter a failure because libgfortran is not installed,
+% please follow the instructions from here <http://www.cs.ubc.ca/~hoffmanm/matlab.html>
+% to download the libgfortran 4.2 tarball from here
+% <http://r.research.att.com/tools/> listed under OS X 10.6 and copy libgfortran* 
+% files to /usr/local/lib.
+%
 %   Copyright (c) 2010, Marcel van Gerven
 
   properties
