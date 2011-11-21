@@ -51,15 +51,15 @@ if iscell(filename)
   return
 end
 
-% test whether the file exists
-if ~exist(filename)
-  error(sprintf('file ''%s'' does not exist', filename));
-end
-
 % get the options
 fileformat  = ft_getopt(varargin,'format',  ft_filetype(filename));
 coordinates = ft_getopt(varargin,'coordinates', 'head');
 unit        = ft_getopt(varargin,'unit', 'cm');
+
+% test whether the file exists
+if ~strcmp(fileformat,'tetgen') && ~exist(filename)
+  error(sprintf('file ''%s'' does not exist', filename));
+end
 
 % start with an empty structure
 shape           = [];
@@ -424,9 +424,10 @@ switch fileformat
   case 'tetgen'
     % reads in the tetgen format and rearranges according to FT conventions
     % tetgen files also return a 'faces' field (not used here)
-    IMPORT = importdata('filename.1.ele',' ',1);
+    shape = rmfield(shape,'fid');
+    IMPORT = importdata([filename '.1.ele'],' ',1);
     shape.tet = IMPORT.data(:,2:5);
-    IMPORT = importdata('filename.1.node',' ',1);
+    IMPORT = importdata([filename '.1.node'],' ',1);
     shape.pnt = IMPORT.data(:,2:4);
   
   otherwise
