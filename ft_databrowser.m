@@ -155,7 +155,11 @@ end
 
 if ~isfield(cfg, 'channel'),
   if hascomp
-    cfg.channel = 1:10;
+    if size(data.topo,2)>9
+      cfg.channel = 1:10;
+    else
+      cfg.channel = 1:size(data.topo,2);
+    end
   else
     cfg.channel = 'all';
   end
