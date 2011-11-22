@@ -570,10 +570,38 @@ if (isfull || haslabelcmb) && isfield(data, cfg.parameter)
       sel2 = 1:siz(1);
       meandir = 1;
       
-    elseif strcmp(cfg.directionality, 'ff-fd')
-      error('cfg.directionality = ''ff-fd'' is not supported anymore, you have to manually subtract the two before the call to ft_topoplotER');
-    elseif strcmp(cfg.directionality, 'fd-ff')
-      error('cfg.directionality = ''fd-ff'' is not supported anymore, you have to manually subtract the two before the call to ft_topoplotER');
+    elseif strcmp(cfg.directionality, 'inflow-outflow')
+      % do the subtraction and recursively call the function again
+      tmpcfg = cfg;
+      tmpcfg.directionality = 'inflow';
+      tmpdata = data;
+      tmp     = data.(tmpcfg.parameter);
+      siz     = [size(tmp) 1];
+      for k = 1:siz(3)
+        for m = 1:siz(4)
+          tmp(:,:,k,m) = tmp(:,:,k,m)-tmp(:,:,k,m)';
+        end
+      end
+      tmpdata.(tmpcfg.parameter) = tmp;
+      ft_topoplotTFR(tmpcfg, tmpdata);
+      return;
+      
+    elseif strcmp(cfg.directionality, 'outflow-inflow')
+      % do the subtraction and recursively call the function again
+      tmpcfg = cfg;
+      tmpcfg.directionality = 'outflow';
+      tmpdata = data;
+      tmp     = data.(tmpcfg.parameter);
+      siz     = [size(tmp) 1];
+      for k = 1:siz(3)
+        for m = 1:siz(4)
+          tmp(:,:,k,m) = tmp(:,:,k,m)-tmp(:,:,k,m)';
+        end
+      end
+      tmpdata.(tmpcfg.parameter) = tmp;
+      ft_topoplotTFR(tmpcfg, tmpdata);
+      return;
+    
     end
   end
 end
