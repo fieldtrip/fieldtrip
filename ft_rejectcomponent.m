@@ -137,8 +137,6 @@ else
   labelnew = comp.topolabel(selcomp);
   
   %create data structure
-  if hasdata && isfield(data, 'trialinfo'),  trialinfo  = data.trialinfo;  end
-  if hasdata && isfield(data, 'sampleinfo'), sampleinfo = data.sampleinfo; end
   data         = [];
   data.trial   = comp.trial;
   data.time    = comp.time;
@@ -146,8 +144,8 @@ else
   data.fsample = comp.fsample;
   if isfield(comp, 'grad'), data.grad       = comp.grad;  end
   if isfield(comp, 'elec'), data.elec       = comp.elec;  end
-  if exist('trialinfo',  'var'),   data.trialinfo  = trialinfo;  end
-  if exist('sampleinfo', 'var'),   data.sampleinfo = sampleinfo; end
+  if isfield(comp, 'trialinfo'),   data.trialinfo  = comp.trialinfo;  end
+  if isfield(comp, 'sampleinfo'),   data.sampleinfo = comp.sampleinfo; end
   
   keepunused = 'no'; %don't need to keep the original rejected components
 end
