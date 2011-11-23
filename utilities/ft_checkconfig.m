@@ -373,12 +373,12 @@ if ~isempty(createsubcfg)
       case 'sam'
         fieldname = {
           'meansphereorigin'
-          'spinning'
           'feedback'
           'lambda'
+          'fixedori'
+          'reducerank'
           'normalize'
           'normalizeparam'
-          'reducerank'
           };
 
       case 'mvl'
