@@ -9,18 +9,23 @@ function [varargout] = ft_plot_vector(varargin)
 % where X and Y are similar as the input to the Matlab plot function.
 %
 % Optional arguments should come in key-value pairs and can include
-%   style           =
-%   label           =
-%   fontsize        =
 %   axis            = draw the local axis,  can be 'yes', 'no', 'xy', 'x' or 'y'
 %   box             = draw a box around the local axes, can be 'yes' or 'no'
-%   highlight       =
-%   highlightstyle  =
-%   color           =
-%   linewidth       =
-%   markersize      =
-%   markerfacecolor =
-%   tag             =
+%   highlight       = a logical vector of size Y, where 1 means that the
+%                     corresponding values in Y are highlighted
+%                     (according to the highlightstyle)
+%   highlightstyle  = can be 'box', 'thickness', 'saturation' 
+%                     ('opacity' is not supported yet, default='box')
+%   tag             = a name this vector gets. All tags with the same name
+%                     can be deleted in a figure, without deleting other 
+%                     parts of the figure
+%   color           = see MATLAB standard Line Properties
+%   linewidth       = see MATLAB standard Line Properties
+%   markersize      = see MATLAB standard Line Properties
+%   markerfacecolor = see MATLAB standard Line Properties
+%   style           = see MATLAB standard Line Properties
+%   label           = see MATLAB standard Line Properties
+%   fontsize        = see MATLAB standard Line Properties
 %
 % It is possible to plot the object in a local pseudo-axis (c.f. subplot), which is specfied as follows
 %   hpos        = horizontal position of the center of the local axes
@@ -90,6 +95,15 @@ highlightstyle  = ft_getopt(varargin, 'highlightstyle', 'box');
 markersize      = ft_getopt(varargin, 'markersize', 6);
 markerfacecolor = ft_getopt(varargin, 'markerfacecolor', 'none');
 tag            = ft_getopt(varargin, 'tag', '');
+
+if ~isempty(highlight) && any(size(highlight)==1)
+    % ensure that it is a column vector
+    highlight = highlight(:);
+end
+  
+if ~isempty(highlight) && ~isequal(size(highlight), size(vdat))
+  error('the dimensions of the highlight should be identical to the dimensions of the data');
+end
 
 % convert the yes/no strings into boolean values
 box  = istrue(box);
@@ -204,8 +218,8 @@ if ~isempty(highlight)
   switch highlightstyle
     case 'box'
       % find the sample number where the highlight begins and ends
-      begsample = find(diff([0 highlight 0])== 1);
-      endsample = find(diff([0 highlight 0])==-1)-1;
+      begsample = find(diff([0;highlight;0])== 1);
+      endsample = find(diff([0;highlight;0])==-1)-1;
       for i=1:length(begsample)
         begx = hdat(begsample(i));
         endx = hdat(endsample(i));
@@ -219,8 +233,8 @@ if ~isempty(highlight)
       end
     case 'thickness'
       % find the sample number where the highligh begins and ends
-      begsample = find(diff([0 highlight 0])== 1);
-      endsample = find(diff([0 highlight 0])==-1)-1;
+      begsample = find(diff([0;highlight;0])== 1);
+      endsample = find(diff([0;highlight;0])==-1)-1;
       linecolor = get(h,'Color'); % get current line color
       for i=1:length(begsample)
         hor = hdat(begsample(i):endsample(i));
@@ -230,8 +244,8 @@ if ~isempty(highlight)
     case 'saturation'
       % find the sample number where the highligh begins and ends
       highlight = ~highlight; % invert the mask
-      begsample = find(diff([0 highlight 0])== 1);
-      endsample = find(diff([0 highlight 0])==-1)-1;
+      begsample = find(diff([0;highlight;0])== 1);
+      endsample = find(diff([0;highlight;0])==-1)-1;
       linecolor = get(h,'Color'); % get current line color
       linecolor = (linecolor * 0.2) + 0.8; % change saturation of color
       for i=1:length(begsample)

@@ -372,9 +372,9 @@ if ~isempty(cfg.maskparameter)
     mask = reshape(mask, [max(siz(1:2)) siz(3) siz(4)]);
     mask = reshape(mask(sellab, :, :), [siz(3) siz(4)]);
   elseif haslabelcmb && cfg.maskalpha == 1
-    mask = mask(sellab, ymin:ymax, xmin:xmax);
+    mask = squeeze(mask(sellab, ymin:ymax, xmin:xmax));
   elseif cfg.maskalpha == 1
-    mask = mask(sellab, ymin:ymax, xmin:xmax);
+    mask = squeeze(mask(sellab, ymin:ymax, xmin:xmax));
   elseif isfull && cfg.maskalpha ~= 1 %% check me
     maskl = mask(sel1, sel2, ymin:ymax, xmin:xmax);
     maskl = nanmean(maskl, meandir);
