@@ -62,7 +62,7 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %
 % For specific methods the cfg can also contain
 %   cfg.partchannel = cell-array containing a list of channels that need to
-%     be partialized out, support for method 'coh', 'csd'
+%     be partialized out, support for method 'coh', 'csd', 'plv'
 %   cfg.complex     = 'abs' (default), 'angle', 'complex', 'imag', 'real',
 %     '-logabs', support for method 'coh', 'csd', 'plv'
 %   cfg.removemean  = 'yes' (default), or 'no', support for method
@@ -485,13 +485,11 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 switch cfg.method
   case 'coh'
-    % coherence (unsquared), if cfg.complex = 'imag' imaginary part of
-    % coherency
+    % coherence (unsquared), if cfg.complex = 'imag' imaginary part of coherency
     optarg = {'complex',  cfg.complex, 'dimord',  data.dimord, 'feedback', cfg.feedback, ...
       'pownorm',  normpow,     'hasjack', hasjack};
     if ~isempty(cfg.pchanindx), optarg = cat(2, optarg, {'pchanindx', cfg.pchanindx, 'allchanindx', cfg.allchanindx}); end
     if exist('powindx', 'var'), optarg = cat(2, optarg, {'powindx', powindx}); end
-    
     [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg{:});
     
   case 'csd'
@@ -500,7 +498,6 @@ switch cfg.method
       'pownorm',  normpow,     'hasjack', hasjack};
     if ~isempty(cfg.pchanindx), optarg = cat(2, optarg, {'pchanindx', cfg.pchanindx, 'allchanindx', cfg.allchanindx}); end
     if exist('powindx', 'var'), optarg = cat(2, optarg, {'powindx', powindx}); end
-    
     [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg{:});
     
   case {'wpli' 'wpli_debiased'}
@@ -515,16 +512,10 @@ switch cfg.method
     
   case 'plv'
     % phase locking value
-    
     optarg = {'complex',  cfg.complex, 'dimord',  data.dimord, 'feedback', cfg.feedback, ...
       'pownorm',  normpow,     'hasjack', hasjack};
-    if ~isempty(cfg.pchanindx),
-      optarg = cat(2, optarg, {'pchanindx', cfg.pchanindx, 'allchanindx', cfg.allchanindx});
-    end
-    if exist('powindx', 'var'),
-      optarg = cat(2, optarg, {'powindx', powindx});
-    end
-    
+    if ~isempty(cfg.pchanindx), optarg = cat(2, optarg, {'pchanindx', cfg.pchanindx, 'allchanindx', cfg.allchanindx}); end
+    if exist('powindx', 'var'), optarg = cat(2, optarg, {'powindx', powindx}); end
     [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg{:});
     
   case 'corr'
@@ -751,8 +742,9 @@ switch cfg.method
     error('unknown method %s', cfg.method);
 end
 
-%remove the auto combinations if necessary
-if (strcmp(cfg.method, 'granger') || strcmp(cfg.method, 'instantaneous_causality') || strcmp(cfg.method, 'total_interdependence')) && isfield(cfg, 'sfmethod') && strcmp(cfg.sfmethod, 'bivariate'),
+%remove the auto combinations if necessary -> FIXME this is granger specific and
+%thus could move to ft_connectivity_granger
+if (strcmp(cfg.method, 'granger') || strcmp(cfg.method, 'instantaneous_causality') || strcmp(cfg.method, 'total_interdependence')) && isfield(cfg, 'granger') && isfield(cfg.granger, 'sfmethod') && strcmp(cfg.granger.sfmethod, 'bivariate'),
   % remove the auto-combinations based on the order in the data
   switch dtype
     case {'freq' 'freqmvar'}
