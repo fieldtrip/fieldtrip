@@ -62,7 +62,8 @@ cfg = ft_checkconfig(cfg, 'renamed', {'blc', 'demean'});
 cfg = ft_checkconfig(cfg, 'renamed', {'blcwindow', 'baselinewindow'});
 
 % set the defaults
-if ~isfield(cfg, 'baseline'),   cfg.baseline    = 'no';   end
+cfg.baseline = ft_getopt(cfg, 'baseline', 'no');
+cfg.channel  = ft_getopt(cfg, 'channel',  'all');
 
 % the cfg.blc/blcwindow options are used in preprocessing and in
 % ft_timelockanalysis (i.e. in private/preproc), hence make sure that
@@ -89,6 +90,9 @@ if ischar(cfg.baseline)
   end
 end
 
+cfg.channel = ft_channelselection(cfg.channel, timelock.label);
+chansel     = match_str(timelock.label, cfg.channel);
+
 if ~(ischar(cfg.baseline) && strcmp(cfg.baseline, 'no'))
   % determine the time interval on which to apply baseline correction
   tbeg = nearest(timelock.time, cfg.baseline(1));
@@ -96,44 +100,22 @@ if ~(ischar(cfg.baseline) && strcmp(cfg.baseline, 'no'))
   % update the configuration
   cfg.baseline(1) = timelock.time(tbeg);
   cfg.baseline(2) = timelock.time(tend);
-  
-  if isfield(cfg, 'channel')
-    % only apply on selected channels
-    cfg.channel = ft_channelselection(cfg.channel, timelock.label);
-    chansel = match_str(timelock.label, cfg.channel);
+   
+  if isfield(timelock, 'avg')
     timelock.avg(chansel,:) = ft_preproc_baselinecorrect(timelock.avg(chansel,:), tbeg, tend);
-  else
-    % apply on all channels
-    timelock.avg = ft_preproc_baselinecorrect(timelock.avg, tbeg, tend);
   end
   
   if strcmp(timelock.dimord, 'rpt_chan_time')
     fprintf('applying baseline correction on each individual trial\n');
     ntrial = size(timelock.trial,1);
-    if isfield(cfg, 'channel')
-      % only apply on selected channels
-      for i=1:ntrial
-        timelock.trial(i,chansel,:) = ft_preproc_baselinecorrect(shiftdim(timelock.trial(i,chansel,:),1), tbeg, tend);
-      end
-    else
-      % apply on all channels
-      for i=1:ntrial
-        timelock.trial(i,:,:) = ft_preproc_baselinecorrect(shiftdim(timelock.trial(i,:,:),1), tbeg, tend);
-      end
+    for i=1:ntrial
+      timelock.trial(i,chansel,:) = ft_preproc_baselinecorrect(shiftdim(timelock.trial(i,chansel,:),1), tbeg, tend);
     end
   elseif strcmp(timelock.dimord, 'subj_chan_time')
     fprintf('applying baseline correction on each individual subject\n');
     nsubj = size(timelock.individual,1);
-    if isfield(cfg, 'channel')
-      % only apply on selected channels
-      for i=1:nsubj
-        timelock.individual(i,chansel,:) = ft_preproc_baselinecorrect(shiftdim(timelock.individual(i,chansel,:),1), tbeg, tend);
-      end
-    else
-      % apply on all channels
-      for i=1:nsubj
-        timelock.individual(i,:,:) = ft_preproc_baselinecorrect(shiftdim(timelock.individual(i,:,:),1), tbeg, tend);
-      end
+    for i=1:nsubj
+      timelock.individual(i,chansel,:) = ft_preproc_baselinecorrect(shiftdim(timelock.individual(i,chansel,:),1), tbeg, tend);
     end
   end
   
