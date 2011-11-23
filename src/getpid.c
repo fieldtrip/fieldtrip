@@ -1,5 +1,10 @@
 #include <sys/types.h> 
-#include <unistd.h> 
+
+#if defined(_WIN32) || defined(_WIN64)
+    #include <process.h>
+#else
+    #include <unistd.h> 
+#endif
 
 #include "mex.h" 
 
