@@ -49,7 +49,7 @@ function [channel] = ft_channelselection(desired, datachannel)
 % Note that the order of channels that is returned should correspond with
 % the order of the channels in the data.
 
-% Copyright (C) 2003-2009, Robert Oostenveld
+% Copyright (C) 2003-2011, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -88,6 +88,8 @@ if any(size(channel) == 0)
 end
 
 if isnumeric(channel)
+  % remove channels tha fall outside the range
+  channel = channel(channel>=1 & channel<=numel(datachannel));
   % change index into channelname
   channel = datachannel(channel);
   return
