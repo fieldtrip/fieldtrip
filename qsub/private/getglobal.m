@@ -8,6 +8,8 @@ function var = getglobal
 %
 % See also SETGLOBAL
 
+list = whos('global');
+
 var = [];
 for i=1:length(list)
   eval(sprintf('global %s', list(i).name));
