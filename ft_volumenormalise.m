@@ -282,12 +282,15 @@ if strcmp(cfg.keepintermediate,'no')
   end
 end
 
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+
 % remember the normalisation parameters in the configuration
+% FIXME maintain this order for the time being to prevent them to be removed when
+% doing the trackconfig
 cfg.spmparams = params;
 cfg.final     = final;
 
-% do the general cleanup and bookkeeping at the end of the function
-ft_postamble trackconfig
 ft_postamble callinfo
 ft_postamble previous interp
 ft_postamble history normalise
