@@ -52,13 +52,9 @@ function ft_neighbourplot(cfg, data)
 
 ft_defaults
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
-
-% check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
 
 hasdata = nargin>1;
 if hasdata, data = ft_checkdata(data); end
@@ -147,7 +143,6 @@ for i=1:length(cfg.neighbours)
 end
 
 % this is for putting the channels on top of the connections
-set(gcf, 'UserData', []);
 for i=1:length(cfg.neighbours)
   this = cfg.neighbours(i);
   sel1 = match_str(sens.label, this.label);
@@ -181,8 +176,25 @@ end
 hold off;
 title('[Click on a sensor to see its label]');
 
-  function showLabelInTitle(gcbo, EventData, handles)
-    lastSensId  = get(gcf,  'UserData');
+% store what is needed in UserData of figure
+userdata.lastSensId = [];
+userdata.cfg = cfg;
+userdata.hs = hs;
+set(gcf, 'UserData', userdata);
+
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+
+end
+
+
+function showLabelInTitle(gcbo, EventData, handles)
+
+    userdata    = get(gcf, 'UserData');
+    lastSensId  = userdata.lastSensId;
+    cfg         = userdata.cfg;
+    hs          = userdata.hs;
     curSensId   = get(gcbo, 'UserData');
     
     title(['Selected channel: ' cfg.neighbours(curSensId).label]);
@@ -201,29 +213,6 @@ title('[Click on a sensor to see its label]');
     set(hs(curSensId), 'MarkerFaceColor', 'g');
     set(hs(lastSensId), 'MarkerFaceColor', 'k');
     
-    set(gcf, 'UserData', curSensId');
+    userdata.lastSensId = curSensId';    
+    set(gcf, 'UserData', userdata);
   end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% deal with the output
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% get the output cfg
-cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
-
-% add the version details of this function call to the configuration
-cfg.version.name = mfilename('fullpath'); % this is helpful for debugging
-cfg.version.id   = '$Id$'; % this will be auto-updated by the revision control system
-
-% add information about the Matlab version used to the configuration
-cfg.callinfo.matlab = version();
-
-% add information about the function call to the configuration
-cfg.callinfo.proctime = toc(ftFuncTimer);
-cfg.callinfo.procmem  = memtoc(ftFuncMem);
-cfg.callinfo.calltime = ftFuncClock;
-cfg.callinfo.user = getusername(); % this is helpful for debugging
-fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
-
-end
-
