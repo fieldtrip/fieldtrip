@@ -62,16 +62,11 @@ cfg = ft_checkconfig(cfg, 'required', {'neighbours'});
 if ~isfield(cfg, 'badchannel'),    cfg.badchannel = {};           end
 if ~isfield(cfg, 'trials'),        cfg.trials = 'all';            end
 
-if iscell(cfg.neighbours)
-  warning('Neighbourstructure is in old format - converting to structure array');
-  cfg.neighbours = fixneighbours(cfg.neighbours);
-end
+% check if the input data is valid for this function
+data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
 
 % store original datatype
 dtype = ft_datatype(data);
-
-% check if the input data is valid for this function
-data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
 
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')

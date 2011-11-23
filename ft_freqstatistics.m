@@ -104,12 +104,7 @@ end
 % check whether channel neighbourhood information is needed and whether
 % this is present
 if isfield(cfg, 'correctm') && strcmp(cfg.correctm, 'cluster')
-  if ~isfield(cfg,'neighbours')
-    error('if you want to use clustering for multiple comparison correction you have to specify the spatial neighbourhood structure of your channels. See ft_neighbourselection');
-  elseif iscell(cfg.neighbours)
-    warning('Neighbourstructure is in old format - converting to structure array');
-    cfg.neighbours = fixneighbours(cfg.neighbours);
-  end
+  cfg = ft_checkconfig(cfg, 'required', {'neighbours'});    
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
