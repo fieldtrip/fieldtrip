@@ -95,6 +95,8 @@ if ~isfield(cfg, 'absnoise'),   cfg.absnoise = 0;         end
 if ~isfield(cfg, 'feedback'),   cfg.feedback = 'text';    end
 if ~isfield(cfg, 'channel'),    cfg.channel = 'all';      end
 
+cfg = ft_checkconfig(cfg);
+
 cfg.dip = fixdipole(cfg.dip);
 Ndipoles = size(cfg.dip.pos,1);
 

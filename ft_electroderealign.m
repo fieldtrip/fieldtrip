@@ -71,9 +71,9 @@ function [norm] = ft_electroderealign(cfg)
 %
 % If you only want to realign using the fiducials, the template has to contain
 % the three fiducials, e.g.
-%   cfg.template.pnt(1,:) = [110 0 0]  % location of the nose
-%   cfg.template.pnt(2,:) = [0  90 0]  % left ear
-%   cfg.template.pnt(3,:) = [0 -90 0]  % right ear
+%   cfg.template.chanpos(1,:) = [110 0 0]  % location of the nose
+%   cfg.template.chanpos(2,:) = [0  90 0]  % left ear
+%   cfg.template.chanpos(3,:) = [0 -90 0]  % right ear
 %   cfg.template.label    = {'nasion', 'lpa', 'rpa'}
 %
 % If you want to align existing electrodes to the head surface or position
@@ -152,12 +152,11 @@ elseif isfield(cfg, 'elecfile')
 else
   % start with an empty set of electrodes (useful for manual positioning)
   elec = [];
-  elec.pnt    = zeros(0,3);
+  elec.chanpos    = zeros(0,3);
   elec.label  = cell(0,1);
   elec.unit   = 'mm';
 end
 elec = ft_convert_units(elec); % ensure that the units are specified
-elec = ft_datatype_sens(elec); % ensure an up-to-date sensor description (Oct 2011)
 
 usetemplate  = isfield(cfg, 'template')  && ~isempty(cfg.template);
 useheadshape = isfield(cfg, 'headshape') && ~isempty(cfg.headshape);
@@ -191,7 +190,7 @@ if useheadshape
     headshape = cfg.headshape;
   elseif isnumeric(cfg.headshape) && size(cfg.headshape,2)==3
     % use the headshape points specified in the configuration
-    headshape.pnt = cfg.headshape;
+    headshape.chanpos = cfg.headshape;
   elseif ischar(cfg.headshape)
     % read the headshape from file
     headshape = ft_read_headshape(cfg.headshape);
@@ -200,8 +199,8 @@ if useheadshape
   end
   if ~isfield(headshape, 'tri')
     % generate a closed triangulation from the surface points
-    headshape.pnt = unique(headshape.pnt, 'rows');
-    headshape.tri = projecttri(headshape.pnt);
+    headshape.chanpos = unique(headshape.chanpos, 'rows');
+    headshape.tri = projecttri(headshape.chanpos);
   end
   headshape = ft_convert_units(headshape, elec.unit); % ensure that the units are consistent with the electrodes
 end
@@ -250,13 +249,13 @@ if strcmp(cfg.method, 'template') && usetemplate
   for i=1:Ntemplate
     [cfgsel, datsel] = match_str(cfg.channel, template(i).label);
     template(i).label = template(i).label(datsel);
-    template(i).pnt   = template(i).pnt(datsel,:);
+    template(i).chanpos   = template(i).chanpos(datsel,:);
   end
   
   % compute the average of the template electrode positions
   all = [];
   for i=1:Ntemplate
-    all = cat(3, all, template(i).pnt);
+    all = cat(3, all, template(i).chanpos);
   end
   avg    = mean(all,3);
   stderr = std(all, [], 3);
@@ -379,9 +378,9 @@ elseif strcmp(cfg.method, 'fiducial')
     if length(nas_indx)~=1 || length(lpa_indx)~=1 || length(rpa_indx)~=1
       error(sprintf('not all fiducials were found in template %d', i));
     end
-    templ_nas(end+1,:) = template(i).pnt(nas_indx,:);
-    templ_lpa(end+1,:) = template(i).pnt(lpa_indx,:);
-    templ_rpa(end+1,:) = template(i).pnt(rpa_indx,:);
+    templ_nas(end+1,:) = template(i).chanpos(nas_indx,:);
+    templ_lpa(end+1,:) = template(i).chanpos(lpa_indx,:);
+    templ_rpa(end+1,:) = template(i).chanpos(rpa_indx,:);
   end
   templ_nas = mean(templ_nas,1);
   templ_lpa = mean(templ_lpa,1);
@@ -471,8 +470,8 @@ elseif strcmp(cfg.method, 'manual')
   rotate3d on
   ft_plot_mesh(headshape, 'edgecolor', 'k')
   xyz = ft_select_point3d(headshape, 'multiple', true);
-  orig.pnt = xyz;
-  for i=1:size(orig.pnt,1)
+  orig.chanpos = xyz;
+  for i=1:size(orig.chanpos,1)
     orig.label{i,1} = 'unknown';
   end
   
@@ -484,9 +483,9 @@ end
 % electrode labels by their case-sensitive original values
 switch cfg.method
   case 'template'
-    norm.chanpos   = warp_apply(norm.m, orig.pnt, cfg.warp);
+    norm.chanpos   = warp_apply(norm.m, orig.chanpos, cfg.warp);
   case {'fiducial' 'interactive'}
-    norm.chanpos   = warp_apply(norm.m, orig.pnt);
+    norm.chanpos   = warp_apply(norm.m, orig.chanpos);
   case 'manual'
     % the positions are already assigned in correspondence with the mesh
     norm = orig;
@@ -637,7 +636,7 @@ layoutgui(fig, [0.7 0.05 0.25 0.50], position, style, string, value, tag, callba
 function cb_redraw(hObject, eventdata, handles);
 fig = get(hObject, 'parent');
 headshape = getappdata(fig, 'headshape');
-bnd.pnt = headshape.pnt; %ft_plot_mesh wants headshape in bnd fields
+bnd.chanpos = headshape.chanpos; %ft_plot_mesh wants headshape in bnd fields
 bnd.tri = headshape.tri;
 elec = getappdata(fig, 'elec');
 template = getappdata(fig, 'template');
@@ -681,7 +680,7 @@ if ~isempty(headshape)
 end
 
 
-if isfield(elec, 'fid') && ~isempty(elec.fid.pnt)
+if isfield(elec, 'fid') && ~isempty(elec.fid.chanpos)
   ft_plot_sens(elec.fid,'style', 'r*');
 end
 if get(findobj(fig, 'tag', 'toggle axes'), 'value')
