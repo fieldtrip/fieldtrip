@@ -10,7 +10,7 @@ function [scd] = ft_scalpcurrentdensity(cfg, data)
 %   [timelock] = ft_scalpcurrentdensity(cfg, timelock)
 % where the input data is obtained from FT_PREPROCESSING or from
 % FT_TIMELOCKANALYSIS. The output data has the same format as the input
-% and can be used in combination with most other FieldTrip functions 
+% and can be used in combination with most other FieldTrip functions
 % such as FT_FREQNALYSIS or FT_TOPOPLOTER.
 %
 % The configuration can contain
@@ -92,11 +92,9 @@ if ~isfield(cfg, 'conductivity'),  cfg.conductivity = 0.33;  end    % in S/m
 if ~isfield(cfg, 'trials'),        cfg.trials = 'all';       end
 
 if strcmp(cfg.method, 'hjorth')
-    cfg = ft_checkconfig(cfg, 'required', {'neighbours'});    
-    if iscell(cfg.neighbours)
-        warning('Neighbourstructure is in old format - converting to structure array');
-        cfg.neighbours = fixneighbours(cfg.neighbours);
-    end
+  cfg = ft_checkconfig(cfg, 'required', {'neighbours'});
+else
+  cfg = ft_checkconfig(cfg); % perform a simple consistency check
 end
 
 % store original datatype
@@ -122,7 +120,7 @@ elseif isfield(data, 'elec')
   fprintf('using electrodes specified in the data\n');
   elec = data.elec;
 elseif isfield(cfg, 'layout')
-  fprintf('using the 2-D layout to determine electrode position\n');   
+  fprintf('using the 2-D layout to determine electrode position\n');
   % create a dummy electrode structure, this is needed for channel selection
   elec = [];
   elec.label  = cfg.layout.label;
@@ -133,8 +131,6 @@ else
 end
 
 % remove all junk fields from the electrode array
-% FIXME see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1055
-elec = ft_datatype_sens(elec); % ensure up-to-date sensor description
 tmp  = elec;
 elec = [];
 elec.chanpos = tmp.chanpos;

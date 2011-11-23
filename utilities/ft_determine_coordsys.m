@@ -44,6 +44,7 @@ function [data] = ft_determine_coordsys(data, varargin)
 
 dointeractive = ft_getopt(varargin, 'interactive', 'yes');
 
+data = ft_checkdata(data);
 dtype = ft_datatype(data);
 data  = ft_convert_units(data);
 unit  = data.unit;

@@ -100,11 +100,6 @@ ft_preamble loadvar data
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'required', {'neighbours'});
 
-if iscell(cfg.neighbours)
-  warning('Neighbourstructure is in old format - converting to structure array');
-  cfg.neighbours = fixneighbours(cfg.neighbours);
-end
-
 isfreq = ft_datatype(data, 'freq');
 israw  = ft_datatype(data, 'raw');
 istlck = ft_datatype(data, 'timelock');  % this will be temporary converted into raw

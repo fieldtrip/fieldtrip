@@ -121,6 +121,8 @@ if ~isfield(cfg, 'surftype'),          cfg.surftype = 'faces';                 e
 if ~isfield('data', 'var')    
   % this will be passed into the prepare_headmodel function further down
   data = [];
+else
+  data = ft_checkdata(data);
 end
 
 % put the low-level options pertaining to the dipole grid in their own field

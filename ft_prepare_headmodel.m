@@ -148,6 +148,8 @@ if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
   cfg.headshape = struct(cfg.headshape);
 end
 
+if nargin>1, data = ft_checkdata(data); end;
+
 % if the conductivity is in the data cfg.conductivity is overwritten
 if nargin>1 && isfield(data,'cond')
   cfg.conductivity = data.cond;
