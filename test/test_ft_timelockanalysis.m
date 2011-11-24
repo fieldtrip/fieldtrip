@@ -14,9 +14,17 @@ if nargin<1
 end
 for k = 1:numel(datainfo)
   datanew = timelockanalysis10trials(datainfo(k), writeflag);
-
+  
   fname = [datainfo(k).origdir,'timelock/',datainfo(k).type,'timelock_',datainfo(k).datatype];
-  load(fname);
+  tmp = load(fname);
+  if isfield(tmp, 'data')
+    data = tmp.data;
+  elseif isfield(tmp, 'datanew')
+    data = tmp.datanew;
+  else isfield(tmp, 'timelock')
+    data = tmp.timelock;
+  end
+  
   datanew = rmfield(datanew, 'cfg'); % these are per construction different if writeflag = 0;
   data    = rmfield(data,    'cfg');
   assert(isequal(data, datanew));
