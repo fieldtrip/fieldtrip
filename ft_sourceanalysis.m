@@ -238,35 +238,39 @@ end
 % set the defaults
 if ~isfield(cfg, 'method') && istimelock, cfg.method = 'lcmv';      end
 if ~isfield(cfg, 'method') && isfreq,     cfg.method = 'dics';      end
-if ~isfield(cfg, 'keeptrials')        cfg.keeptrials  = 'no';     end
-if ~isfield(cfg, 'keepfilter')        cfg.keepfilter = 'no';      end
-if ~isfield(cfg, 'keepleadfield')     cfg.keepleadfield = 'no';   end
-if ~isfield(cfg, 'keepcsd')           cfg.keepcsd     = 'no';     end
-if ~isfield(cfg, 'keepmom')           cfg.keepmom     = 'yes';    end
-if ~isfield(cfg, 'projectnoise')      cfg.projectnoise = 'no';    end
-if ~isfield(cfg, 'trialweight')       cfg.trialweight = 'equal';  end
-if ~isfield(cfg, 'jackknife'),        cfg.jackknife    = 'no';    end
-if ~isfield(cfg, 'pseudovalue'),      cfg.pseudovalue = 'no';     end
-if ~isfield(cfg, 'bootstrap'),        cfg.bootstrap   = 'no';     end
-if ~isfield(cfg, 'singletrial'),      cfg.singletrial = 'no';     end
-if ~isfield(cfg, 'rawtrial'),         cfg.rawtrial    = 'no';     end
-if ~isfield(cfg, 'randomization'),    cfg.randomization = 'no';   end
-if ~isfield(cfg, 'numrandomization'), cfg.numrandomization = 100; end
-if ~isfield(cfg, 'permutation'),      cfg.permutation = 'no';     end
-if ~isfield(cfg, 'numpermutation'),   cfg.numpermutation = 100;   end
-if ~isfield(cfg, 'wakewulf'),         cfg.wakewulf    = 'yes';    end
-if ~isfield(cfg, 'killwulf'),         cfg.killwulf    = 'yes';    end
-if ~isfield(cfg, 'feedback'),         cfg.feedback    = 'text';   end
-if ~isfield(cfg, 'supdip'),           cfg.supdip = [];            end
-if ~isfield(cfg, 'lambda'),           cfg.lambda = [];            end
-if ~isfield(cfg, 'powmethod'),        cfg.powmethod = [];         end
-if ~isfield(cfg, 'channel'),          cfg.channel = 'all';        end
-if ~isfield(cfg, 'normalize'),        cfg.normalize = 'no';       end
-if ~isfield(cfg, 'prewhiten'),        cfg.prewhiten = 'no';       end
-% if ~isfield(cfg, 'reducerank'),     cfg.reducerank = 'no';      end  % the default for this depends on EEG/MEG and is set below
+if ~isfield(cfg, cfg.method),             cfg.(cfg.method) = [];    end
+cfg.keeptrials       = ft_getopt(cfg, 'keeptrials', 'no');
+cfg.keepleadfield    = ft_getopt(cfg, 'keepleadfield', 'no');
+cfg.trialweight      = ft_getopt(cfg, 'trialweight', 'equal');
+cfg.jackknife        = ft_getopt(cfg, 'jackknife',   'no');
+cfg.pseudovalue      = ft_getopt(cfg, 'pseudovalue', 'no');
+cfg.bootstrap        = ft_getopt(cfg, 'bootstrap',   'no');
+cfg.singletrial      = ft_getopt(cfg, 'singletrial', 'no');
+cfg.rawtrial         = ft_getopt(cfg, 'rawtrial',    'no');
+cfg.randomization    = ft_getopt(cfg, 'randomization', 'no');
+cfg.numrandomization = ft_getopt(cfg, 'numrandomization', 100);
+cfg.permutation      = ft_getopt(cfg, 'permutation',      'no');
+cfg.numpermutation   = ft_getopt(cfg, 'numpermutation',   100);
+cfg.wakewulf         = ft_getopt(cfg, 'wakewulf', 'yes');
+cfg.killwulf         = ft_getopt(cfg, 'killwulf', 'yes');
+cfg.channel          = ft_getopt(cfg, 'channel',  'all');
+cfg.prewhiten        = ft_getopt(cfg, 'prewhiten', 'no');
+cfg.supdip           = ft_getopt(cfg, 'supdip',        []);
 
+% if ~isfield(cfg, 'reducerank'),     cfg.reducerank = 'no';      end  %
+% the default for this depends on EEG/MEG and is set below
 % put the low-level options pertaining to the source reconstruction method in their own field
 % put the low-level options pertaining to the dipole grid in their own field
+
+cfg.(cfg.method).keepfilter    = ft_getopt(cfg.(cfg.method), 'keepfilter',    'no');
+cfg.(cfg.method).keepcsd       = ft_getopt(cfg.(cfg.method), 'keepcsd',       'no');
+cfg.(cfg.method).keepmom       = ft_getopt(cfg.(cfg.method), 'keepmom',       'yes');
+cfg.(cfg.method).projectnoise  = ft_getopt(cfg.(cfg.method), 'projectnoise',  'no');
+cfg.(cfg.method).feedback      = ft_getopt(cfg.(cfg.method), 'feedback',      'text');
+cfg.(cfg.method).lambda        = ft_getopt(cfg.(cfg.method), 'lambda',        []);
+cfg.(cfg.method).powmethod     = ft_getopt(cfg.(cfg.method), 'powmethod',     []);
+cfg.(cfg.method).normalize     = ft_getopt(cfg.(cfg.method), 'normalize',     'no');
+
 cfg = ft_checkconfig(cfg, 'createsubcfg',  {cfg.method, 'grid'});
 
 convertfreq = 0;
