@@ -727,7 +727,7 @@ switch cfg.method
     nbin   = nearest(data.freq, data.freq(1)+cfg.bandwidth)-1;
     optarg = {'feedback',  cfg.feedback,  'dimord', data.dimord, 'nbin',    nbin, ...
       'normalize', cfg.normalize, 'hasrpt', hasrpt,      'hasjack', hasjack};
-    if exist('powindx', 'var'), cat(2, optarg, {'powindx', powindx}); end
+    if exist('powindx', 'var'), optarg = cat(2, optarg, {'powindx', powindx}); end
     [datout, varout, nrpt] = ft_connectivity_psi(data.(inparam), optarg{:});
     
   case 'di'
