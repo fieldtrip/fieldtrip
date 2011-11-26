@@ -23,6 +23,7 @@ function [spectrum,ntaper,freqoi,timeoi] = ft_specest_mtmconvol(dat, time, varar
 %   dimord    = 'tap_chan_freq_time' (default) or 'chan_time_freqtap' for
 %                memory efficiency
 %   verbose   = output progress to console (0 or 1, default 1)
+%   taperopt  = parameter to use for window (see WINDOW) 
 %
 % See also FT_FREQANALYSIS, FT_SPECEST_MTMFFT, FT_SPECEST_CONVOL, FT_SPECEST_HILBERT, FT_SPECEST_WAVELET
 
@@ -41,6 +42,7 @@ dimord    = ft_getopt(varargin, 'dimord', 'tap_chan_freq_time');
 fbopt     = ft_getopt(varargin, 'feedback');
 verbose   = ft_getopt(varargin, 'verbose', true);
 polyorder = ft_getopt(varargin, 'polyorder', 1);
+tapopt    = ft_getopt(varargin, 'taperopt');
 
 if isempty(fbopt),
   fbopt.i = 1;
@@ -58,6 +60,7 @@ elseif (length(timwin) ~= length(freqoi) && ~strcmp(freqoi,'all'))
 end
 
 % Set n's
+
 [nchan,ndatsample] = size(dat);
 
 % Remove polynomial fit from the data -> default is demeaning
@@ -120,7 +123,6 @@ timwinsample = round(timwin .* fsample);
 wltspctrm = cell(nfreqoi,1);
 ntaper    = zeros(nfreqoi,1);
 for ifreqoi = 1:nfreqoi
-  
   switch taper
     case 'dpss'
       % create a sequence of DPSS tapers, ensure that the input arguments are double precision
@@ -157,7 +159,7 @@ for ifreqoi = 1:nfreqoi
       
     otherwise
       % create a single taper according to the window specification as a replacement for the DPSS (Slepian) sequence
-      tap = window(taper, timwinsample(ifreqoi))';
+      tap = window(taper, timwinsample(ifreqoi),tapopt)';
       tap = tap ./ norm(tap,'fro'); % make it explicit that the frobenius norm is being used
   end
   
@@ -236,7 +238,7 @@ switch dimord
         % create a matrix of NaNs if there is no taper for this current frequency-taper-number
         if itap > ntaper(ifreqoi)
           spectrum{itap,ifreqoi} = complex(nan(nchan,ntimeboi));
-        else
+        else                                
           dum = fftshift(transpose(ifft(transpose(datspectrum .* repmat(wltspctrm{ifreqoi}(itap,:),[nchan 1])))),2); % double explicit transpose to speedup fft
           tmp = complex(nan(nchan,ntimeboi));
           tmp(:,reqtimeboiind) = dum(:,reqtimeboi);
