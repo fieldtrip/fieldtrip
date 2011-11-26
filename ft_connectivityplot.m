@@ -1,8 +1,8 @@
 function h = ft_connectivityplot(cfg, varargin)
 
 % FT_CONNECTIVITYPLOT plots frequency domain connectivity with dimord
-% 'chan_chan_freq'. The data are rendered in a square matrix of 'subplots'
-% using fast ft_plot_vector for rendering.
+% 'chan_chan_freq'. The data are rendered in a square grid of subplots
+% and each subplot containing the spectrum.
 %
 % Use as
 %   ft_connectivityplot(cfg, data)
@@ -14,9 +14,9 @@ function h = ft_connectivityplot(cfg, varargin)
 % The cfg can have the following options:
 %   cfg.parameter   = string, the functional parameter to be plotted (default = 'cohspctrm')
 %   cfg.zlim        = [lower upper]
-%   cfg.channel     = list of channels to be included for the plotting (default = 'all')
+%   cfg.channel     = list of channels to be included for the plotting (default = 'all'), see FT_CHANNELSELECTION for details
 %
-% See also FT_CONNECTIVITYANALYSIS, FT_PLOT_VECTOR, FT_CHANNELSELECTION
+% See also FT_CONNECTIVITYANALYSIS, FT_CONNECTIVITYSIMULATION, FT_MULTIPLOTCC, FT_TOPOPLOTCC
 
 % Copyright (C) 2011, Jan-Mathijs Schoffelen
 %

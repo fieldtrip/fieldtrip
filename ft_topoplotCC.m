@@ -34,7 +34,7 @@ function cfg = ft_topoplotCC(cfg, freq)
 % corresponding to the input structure. For this particular function, the input should be
 % structured as a cell array.
 %
-% See also FT_PREPARE_LAYOUT, FT_MULTIPLOTCC
+% See also FT_PREPARE_LAYOUT, FT_MULTIPLOTCC, FT_CONNECTIVITYPLOT
 
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.

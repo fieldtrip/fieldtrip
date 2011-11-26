@@ -7,7 +7,7 @@ function ft_multiplotCC(cfg, data)
 % Use as
 %   ft_multiplotCC(cfg, data)
 %
-% See also FT_TOPOPLOTCC
+% See also FT_PREPARE_LAYOUT, FT_TOPOPLOTCC, FT_CONNECTIVITYPLOT
 
 % Undocumented local options:
 % cfg.layout  = layout filename or a structure produced by prepare_layout
