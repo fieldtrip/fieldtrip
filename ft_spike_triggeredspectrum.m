@@ -66,9 +66,8 @@ cfg = ft_checkopt(cfg,'t_ftimwin',{'doublevector', 'doublescalar'});
 cfg = ft_checkopt(cfg,'foi',{'doublevector', 'doublescalar'});
 cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});
 cfg = ft_checkopt(cfg,'channel', {'cell', 'char', 'double'});
-
-% ensure that all cfg options were valid, and no typos were made
-
+cfg = ft_checkopt(cfg,'taperopt', 'double');
+  
 % length of tapsmofrq, foi and t_ftimwin should all be matched
 if isfield(cfg,'tapsmofrq')
   if length(cfg.tapsmofrq) ~= length(cfg.foi)

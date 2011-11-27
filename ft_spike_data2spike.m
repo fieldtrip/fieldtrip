@@ -23,8 +23,8 @@ ft_preamble callinfo
 ft_preamble trackconfig
 
 % put the defaults and check whether there are ununsed fields
-defaults.spikechannel   = {'all'};
-cfg = ft_spike_sub_defaultcfg(cfg,defaults);
+cfg.spikechannel = ft_getopt(cfg, 'spikechannel', 'all');
+cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});
 
 % check if the input data is valid for this function, should be done with CHECKDATA
 hasAllFields = all(isfield(data,{'time','trial', 'label'}));
