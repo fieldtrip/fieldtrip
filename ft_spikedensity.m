@@ -31,10 +31,10 @@ function [sdf, sdfdata] = density(cfg,data)
 %                          WINDOW.
 %                        (b) vector of length nSamples, used directly as window
 %   cfg.winfuncopt     = options that go with cfg.winfunc
-%                        For cfg.winopt = @alpha: the timeconstant in seconds (default = 0.005s)
-%                        For cfg.winopt = @gauss: the standard devision in seconds (default =
+%                        For cfg.winfunc = @alpha: the timeconstant in seconds (default = 0.005s)
+%                        For cfg.winfunc = @gauss: the standard devision in seconds (default =
 %                                         1/4 of window duration in seconds)
-%                        For cfg.winopt = @wname with @wname any standard window function
+%                        For cfg.winfunc = @wname with @wname any standard window function
 %                                         see window opts in that function and add as cell array
 %   cfg.latency        = [begin end] in seconds, 'maxperiod' (default), 'minperiod',
 %                        'prestim'(t>=0), or 'poststim' (t>=0).
@@ -67,17 +67,27 @@ ft_preamble help
 ft_preamble callinfo
 ft_preamble trackconfig
 
-% set the defaults
-defaults.timwin         = {[-0.05 0.05]};
-defaults.trials         = {'all'};
-defaults.latency        = {'maxperiod'};
-defaults.spikechannel   = {'all'};
-defaults.winfunc        = {'gauss'};
-defaults.winfuncopt     = {[]};
-defaults.vartriallen    = {'yes' 'no'};
-defaults.outputunit     = {'rate' 'spikecount'};
-defaults.keeptrials     = {'no'  'yes'};
-cfg		 = ft_spike_sub_defaultcfg(cfg,defaults);
+% get the default options
+cfg.outputunit   = ft_getopt(cfg, 'outputunit','rate');
+cfg.timwin       = ft_getopt(cfg, 'timwin',[-0.05 0.05]);
+cfg.trials       = ft_getopt(cfg, 'trials', 'all');
+cfg.latency      = ft_getopt(cfg,'latency','maxperiod');
+cfg.spikechannel = ft_getopt(cfg, 'spikechannel', 'all');
+cfg.vartriallen  = ft_getopt(cfg,'vartriallen', 'yes');
+cfg.keeptrials   = ft_getopt(cfg,'keeptrials', 'yes');
+cfg.winfunc      = ft_getopt(cfg,'winfunc', 'gauss');
+cfg.winfuncopt   = ft_getopt(cfg,'winfuncopt', []);
+
+% ensure that the options are valid
+cfg = ft_checkopt(cfg,'outputunit','char', {'rate', 'spikecount'});
+cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});
+cfg = ft_checkopt(cfg,'latency', {'char', 'doublevector'});
+cfg = ft_checkopt(cfg,'trials', {'char', 'doublevector', 'logical'}); 
+cfg = ft_checkopt(cfg,'vartriallen', 'char', {'yes', 'no'});
+cfg = ft_checkopt(cfg,'keeptrials', 'char', {'yes', 'no'});
+cfg = ft_checkopt(cfg,'timwin', 'doublevector');
+cfg = ft_checkopt(cfg,'winfunc', {'char', 'function_handle', 'doublevector'});
+cfg = ft_checkopt(cfg,'winfuncopt', {'cell', 'double'});
 
 % check if the input data is valid for this function
 hasAllFields = all(isfield(data,{'time','trial', 'label','fsample'}));
