@@ -32,12 +32,17 @@ ft_preamble help
 ft_preamble callinfo
 ft_preamble trackconfig
 
-defaults.latency      = {'maxperiod'};
-defaults.errorbars    = {'sem' 'std' 'conf95%', 'no' 'var'};
-defaults.spikechannel = {1};
-defaults.ylim         = {'auto'};
+% get the default options
+cfg.spikechannel = ft_getopt(cfg, 'spikechannel', 'all');
+cfg.latency      = ft_getopt(cfg,'latency','maxperiod');
+cfg.errorbars    = ft_getopt(cfg,'errorbars', 'sem');
+cfg.ylim         = ft_getopt(cfg,'ylim', 'auto');
 
-cfg = ft_spike_sub_defaultcfg(cfg,defaults);% change prefix
+% ensure that the options are valid
+cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});
+cfg = ft_checkopt(cfg,'latency', {'char', 'doublevector'});
+cfg = ft_checkopt(cfg,'errorbars', 'char', {'sem', 'std', 'conf95%', 'no', 'var'});
+cfg = ft_checkopt(cfg,'ylim', {'char','double'});
 
 % select the latencies
 if ischar(cfg.latency)
