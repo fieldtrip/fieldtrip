@@ -45,6 +45,8 @@ function [spike] = ft_spike_maketrials(cfg,spike)
 
 revision = '$Id$';
 
+spike = ft_checkdata(spike,'datatype', 'spikeraw', 'feedback', 'yes');
+
 % do the general setup of the function
 ft_defaults
 ft_preamble help

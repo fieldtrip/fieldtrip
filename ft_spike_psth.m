@@ -54,6 +54,8 @@ function [psth] = ft_spike_psth(cfg,spike)
 
 revision = '$Id$';
 
+spike = ft_checkdata(spike,'datatype', 'spike', 'feedback', 'yes');
+
 % do the general setup of the function
 ft_defaults
 ft_preamble help
