@@ -1,13 +1,13 @@
-function [freq] = ft_spiketriggeredspectrum(cfg, data)
+function [sts] = ft_spiketriggeredspectrum(cfg, data)
 
 % FT_SPIKETRIGGEREDSPECTRUM computes the Fourier spectrup of the LFP around
 % the spikes.
 %
 % Use as
-%   [freq] = ft_spiketriggeredspectrum(cfg, data)
+%   [sts] = ft_spiketriggeredspectrum(cfg, data)
 %
 % The input data should be organised in a structure as obtained from
-% the FT_APPENDSPIKE function. The configuration should be according to
+% the FT_APPENDSPIKE or FT_SPIKE_SPIKE2DATA function. The configuration should be according to
 %
 %   cfg.timwin       = [begin end], time around each spike (default = [-0.1 0.1])
 %   cfg.foilim       = [begin end], frequency band of interest (default = [0 150])
@@ -71,6 +71,7 @@ cfg.channel      = ft_getopt(cfg,'channel', 'all');
 cfg.feedback     = ft_checkopt(cfg,'feedback', 'no');
 cfg.tapsmofrq    = ft_checkopt(cfg,'tapsmofrq', 4);
 cfg.taper        = ft_checkopt(cfg,'taper', 'hanning');
+cfg.foilim       = ft_checkopt(cfg,'foilim', [0 150]);
 
 % ensure that the options are valid
 cfg = ft_checkopt(cfg,'timwin','doublevector');
@@ -79,6 +80,7 @@ cfg = ft_checkopt(cfg,'channel', {'cell', 'char', 'double'});
 cfg = ft_checkopt(cfg,'feedback', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'taper', 'char');
 cfg = ft_checkopt(cfg,'tapsmofrq', 'doublescalar');
+cfg = ft_checkopt(cfg,'foilim', 'doublevector');
 
 if strcmp(cfg.taper, 'sine')
   error('sorry, sine taper is not yet implemented');
@@ -227,27 +229,31 @@ end % for each trial
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % collect the results
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-freq.label          = data.label(chansel);
-freq.freq           = freqaxis(fbeg:fend);
-freq.dimord         = 'rpt_chan_freq';
+sts.label          = data.label(chansel);
+sts.freq           = freqaxis(fbeg:fend);
+sts.dimord         = 'rpt_chan_freq';
 
-freq.fourierspctrm  = cat(1, spectrum{:});
-freq.origtime       = cat(2,spiketime{:})';  % this deviates from the standard output, but is included for reference
-freq.origtrial      = cat(2,spiketrial{:})'; % this deviates from the standard output, but is included for reference
+sts.fourierspctrm  = cat(1, spectrum{:});
+sts.origtime       = cat(2,spiketime{:})';  % this deviates from the standard output, but is included for reference
+sts.origtrial      = cat(2,spiketrial{:})'; % this deviates from the standard output, but is included for reference
 
 % select all trials that do not contain data in the first sample
-sel = isnan(freq.fourierspctrm(:,1,1));
+sel = isnan(sts.fourierspctrm(:,1,1));
 fprintf('removing %d trials from the output that do not contain data\n', sum(sel));
 % remove the selected trials from the output
-freq.fourierspctrm  = freq.fourierspctrm(~sel,:,:);
-freq.origtime       = freq.origtime(~sel);
-freq.origtrial      = freq.origtrial(~sel);
+sts.fourierspctrm  = {sts.fourierspctrm(~sel,:,:)};
+sts.origtime       = {sts.origtime(~sel)};
+sts.origtrial      = {sts.origtrial(~sel)};
+for i = 1:ntrial
+  sts.trialtime(i,:) = [data.time{i}(1) data.time{i}(end)];
+end
+sts.spikechannel   = data.label(spikesel);
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
 ft_postamble callinfo
 ft_postamble previous data
-ft_postamble history freq
+ft_postamble history sts
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION for demonstration purpose
