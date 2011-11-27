@@ -71,19 +71,6 @@ if ~correctInp, error('MATLAB:ft_spike_maketrials:wrongStructInput',...
     'HELP. .timestamp and .label should be cell arrays.')
 end
 
-% make sure that the user explicitly specifies the timestamps per second
-if ~isfield(cfg,'timestampspersecond')
-  error('MATLAB:ft_spike_maketrials:cfg:timestampspersecond',...
-    'How many timestamps are there in a second?')
-end
-
-% make sure that the user explicitly specifies the timestamps per second
-if ~isfield(cfg,'trl')
-  error('MATLAB:ft_spike_maketrials:cfg:timestampspersecond',...
-    'Please give in a cfg.trl structure, I have no clue when your monkey dances')
-end
-
-
 % make sure that the cfg.trl indeed has three columns
 if size(cfg.trl,2)~=3,
   error('MATLAB:ft_spike_maketrials:TRL',...
