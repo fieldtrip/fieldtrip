@@ -59,27 +59,30 @@ ft_preamble help
 ft_preamble callinfo
 ft_preamble trackconfig
 
-% general configuration defaults
-defaults.spikechannel = {1};                   
-defaults.scatter      = {'yes' 'no'};               
-defaults.density      = {'yes' 'no'};               
-defaults.colormap     = flipud(hot(300)); defaults.colormap  = {defaults.colormap(1:256,:)};
-defaults.interpolate  = {'yes' 'no'};               
-defaults.scattersize  = {0.3};                 
-defaults.smoothmethod = {'kernel' 'hist'};            
-defaults.dt           = {0.001};               
-defaults.kernel       = {'mvgauss'};          
-try
-  defaults.winlen       = {cfg.dt*5};
-catch
-  defaults.winlen       = {0.003};
-end
-try 
-  defaults.gaussvar     = {(diff(cfg.winlen)/4).^2}; 
-catch
-  defaults.gaussvar     = {(defaults.winlen{1}/4).^2}; 
-end
-cfg = ft_spike_sub_defaultcfg(cfg,defaults);
+% get the default options
+cfg.spikechannel = ft_getopt(cfg, 'spikechannel', isih.label{1});
+cfg.scatter      = ft_getopt(cfg, 'scatter', 'yes');
+cfg.density      = ft_getopt(cfg,'density', 'yes');
+cfg.colormap     = ft_getopt(cfg,'colormap', flipud(hot(300)));
+cfg.interpolate  = ft_getopt(cfg, 'interpolate', 'yes');
+cfg.scattersize  = ft_getopt(cfg,'scattersize', 0.3);
+cfg.smoothmethod = ft_getopt(cfg,'smoothmethod', 'kernel');
+cfg.dt           = ft_getopt(cfg,'dt', 0.001);
+cfg.kernel       = ft_getopt(cfg,'kernel', 'mvgauss');
+cfg.winlen       = ft_getopt(cfg,'winlen', cfg.dt*5);
+cfg.gaussvar     = ft_getopt(cfg,'gaussvar', (diff(cfg.winlen)/4).^2);
+
+cfg = ft_checkopt(cfg, 'spikechannel', {'char', 'cell'});
+cfg = ft_checkopt(cfg, 'scatter','char', {'yes', 'no'});
+cfg = ft_checkopt(cfg, 'density', 'char', {'yes', 'no'});
+cfg = ft_checkopt(cfg, 'colormap', 'double');
+cfg = ft_checkopt(cfg, 'interpolate', 'char', {'yes', 'no'});
+cfg = ft_checkopt(cfg, 'scattersize', 'doublescalar');
+cfg = ft_checkopt(cfg, 'smoothmethod', 'char', {'kernel', 'hist'});
+cfg = ft_checkopt(cfg, 'dt', 'double');
+cfg = ft_checkopt(cfg, 'kernel',{'char', 'double'});
+cfg = ft_checkopt(cfg, 'winlen', 'double');
+cfg = ft_checkopt(cfg, 'gaussvar', 'double');
 
 % check if all the required fields are there
 if ~all(isfield(isih,{'isi' 'label' 'time'}))
