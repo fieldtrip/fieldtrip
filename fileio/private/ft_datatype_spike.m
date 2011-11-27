@@ -11,29 +11,19 @@ function spike = ft_datatype_spike(spike, varargin)
 % Neuralynx or other animal electrophysiology system file format containing
 % spikes.
 %
+% The spike format is created by using FT_SPIKE_MAKETRIALS which takes a
+% SPIKERAW structure as input.
 % An example spike data structure is:
 %
-%         label: {'chan1', 'chan2', 'chan3'}                         the channel labels
-%     timestamp: {[1x993 uint64]  [1x423 uint64]  [1x3424 uint64]}   timestamp in arbitrary units, depends on the acquisition system
-%      waveform: {[32x993 double] [32x433 double] [32x3424 double]}  spike waveform, here described with 32 samples
-%           hdr: [1x1 struct]                                        the full header information of the original dataset on disk
-%
-% The example above contains three spike channels, each with varying numbers of
-% detected spikes. The timestamps of the spikes are represented, with their
-% waveforms (32 samples per waveform). This type of representation can be seen
-% as raw spike data, because there is no reference to the experimental trials.
-%
-% The spike data representation can also represent spike timepoints in relation
-% to the experimental trials, as in this example:
-%
-%         label: {'chan1'  'chan2'  'chan3'}                           the channel labels
-%          time: {[50481x1 double] [50562x1 double] [50537x1 double]}  the time in the trial for each spike (in seconds)
-%         trial: {[50481x1 double] [50562x1 double] [50537x1 double]}  the trial in which each spike was observed
-%     trialtime: [100x2 double]                                        the begin- and end-time of each trial (in seconds)
-%           cfg: [1x1 struct]                                          the configuration used by the function that generated this data structure
+%         label: {'chan1'  'chan2'  'chan3'}                                  the channel labels
+%         time: {[50481x1 double] [50562x1 double] [50537x1 double]}          the time in the trial for each spike (in seconds)
+%         trial: {[50481x1 double] [50562x1 double] [50537x1 double]}         the trial in which each spike was observed
+%         trialtime: [100x2 double]                                           the begin- and end-time of each trial (in seconds)
+%         waveform: {[32x50481 double] [32x50562 double] [32x50537 double]}   spike waveform, here described with 32 samples
+%         cfg: [1x1 struct]                                                   the configuration used by the function that generated this data structure
 %
 % Required fields:
-%   - label, timestamp
+%   - label, trial, time, trialtime
 %
 % Optional fields:
 %   - waveform, hdr, cfg
@@ -47,8 +37,6 @@ function spike = ft_datatype_spike(spike, varargin)
 % Revision history:
 %
 % (2010/latest) Introduced the time and the trialtime fields.
-%
-% (2007) Introduced the spike data structure.
 %
 % See also FT_DATATYPE, FT_DATATYPE_COMP, FT_DATATYPE_DIP, FT_DATATYPE_FREQ,
 % FT_DATATYPE_MVAR, FT_DATATYPE_RAW, FT_DATATYPE_SOURCE, FT_DATATYPE_SPIKE,
@@ -83,20 +71,10 @@ if strcmp(version, 'latest')
 end
 
 switch version
-  case '2010'
+  case {'2010','2007'}
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % there are no changes required
-    
-  case '2007'
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % the 2007 format did not contain these fields
-    if isfield(spike, 'time')
-      spike = rmfield(spike, 'time');
-    end
-    if isfield(spike, 'trialtime')
-      spike = rmfield(spike, 'trialtime');
-    end
-    
+        
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     error('unsupported version "%s" for spike datatype', version);
