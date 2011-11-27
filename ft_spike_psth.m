@@ -85,8 +85,8 @@ cfg = ft_checkopt(cfg,'keeptrials', 'char', {'yes', 'no'});
 cfg        = trialselection(cfg,spike);
 
 % select the unit - this should be done with channelselection function
-cfg.channel = ft_channelselection(cfg.spikechannel, spike.label);
-spikesel    = match_str(spike.label, cfg.channel);
+cfg.spikechannel = ft_channelselection(cfg.spikechannel, spike.label);
+spikesel    = match_str(spike.label, cfg.spikechannel);
 nUnits      = length(spikesel);
 if nUnits==0, error('ft:spike_psth:cfg:spikechannel:noSpikeChanSelected',...
     'No spikechannel selected by means of cfg.spikechannel');

@@ -83,8 +83,8 @@ chansel            = match_str(sts.label, cfg.channel);
 % get the spikechannels
 spikelabel       = sts.spikechannel;
 cfg.spikechannel = ft_channelselection(cfg.spikechannel, spikelabel);
-unitsel         = match_str(spikelabel, cfg.spikechannel);
-nspikesel        = length(cfg.spikechannel); % number of spike channels
+unitsel          = match_str(spikelabel, cfg.spikechannel);
+nspikesel        = length(unitsel); % number of spike channels
 if nspikesel>1, error('only one unit should be selected for now'); end
 
 % collect frequency information

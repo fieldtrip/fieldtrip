@@ -111,8 +111,8 @@ if ~correctInp, error('MATLAB:spike:plot_raster:wrongStructInput',...
 end
 
 % get the spikechannels
-cfg.channel = ft_channelselection(cfg.spikechannel, spike.label);
-spikesel    = match_str(spike.label, cfg.channel);
+cfg.spikechannel = ft_channelselection(cfg.spikechannel, spike.label);
+spikesel    = match_str(spike.label, cfg.spikechannel);
 nUnits   = length(spikesel); % number of spike channels
 if nUnits==0, error('MATLAB:ft_spike_plot_raster:cfg:spikechannel:noSpikeChanSelected',...
     'No spikechannel selected by means of cfg.spikechannel');

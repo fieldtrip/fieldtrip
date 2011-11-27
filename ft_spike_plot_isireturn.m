@@ -70,7 +70,7 @@ cfg.smoothmethod = ft_getopt(cfg,'smoothmethod', 'kernel');
 cfg.dt           = ft_getopt(cfg,'dt', 0.001);
 cfg.kernel       = ft_getopt(cfg,'kernel', 'mvgauss');
 cfg.winlen       = ft_getopt(cfg,'winlen', cfg.dt*5);
-cfg.gaussvar     = ft_getopt(cfg,'gaussvar', (diff(cfg.winlen)/4).^2);
+cfg.gaussvar     = ft_getopt(cfg,'gaussvar', (cfg.winlen/4).^2);
 
 cfg = ft_checkopt(cfg, 'spikechannel', {'char', 'cell'});
 cfg = ft_checkopt(cfg, 'scatter','char', {'yes', 'no'});
@@ -91,9 +91,9 @@ if ~all(isfield(isih,{'isi' 'label' 'time'}))
 end
 
 % get the spikechannels: maybe replace this by one function with checking etc. in it
-cfg.channel = ft_channelselection(cfg.spikechannel, isih.label);
-spikesel    = match_str(isih.label, cfg.channel);
-nUnits      = length(cfg.spikechannel); % number of spike channels
+cfg.spikechannel = ft_channelselection(cfg.spikechannel, isih.label);
+spikesel    = match_str(isih.label, cfg.spikechannel);
+nUnits      = length(spikesel); % number of spike channels
 if nUnits~=1, error('MATLAB:spike:plot_isireturn:cfg:spikechannel:notOneChan',...
                     'Only one unit can be selected at a time'); 
 end  

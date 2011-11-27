@@ -76,8 +76,8 @@ if (cfg.latency(2) > max(psth.time)), cfg.latency(2) = max(psth.time);
 end
 
 % get the spikechannels
-cfg.channel = ft_channelselection(cfg.spikechannel, psth.label);
-spikesel    = match_str(psth.label, cfg.channel);
+cfg.spikechannel = ft_channelselection(cfg.spikechannel, psth.label);
+spikesel    = match_str(psth.label, cfg.spikechannel);
 nUnits      = length(spikesel);
 if nUnits~=1, error('MATLAB:ft_spike_plot_psth:cfg:spikechannel:wrongInput',...
     'You selected more or less than one spikechannel by means of cfg.spikechannel');

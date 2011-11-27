@@ -89,7 +89,7 @@ nchansel    = length(cfg.channel);                % number of channels
 spikelabel = spike.label;
 cfg.spikechannel = ft_channelselection(cfg.spikechannel, spikelabel);
 spikesel         = match_str(spikelabel, cfg.spikechannel);
-nspikesel        = length(cfg.spikechannel); % number of spike channels
+nspikesel        = length(cfg.spikesel); % number of spike channels
 
 % get the options that will go in the ft_specest_mtmconvol function
 fsample = 1./ (data.time{1}(2)-data.time{1}(1)); % assumes constancy

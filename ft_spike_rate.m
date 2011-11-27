@@ -73,8 +73,8 @@ cfg = ft_checkopt(cfg,'vartriallen', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'keeptrials', 'char', {'yes', 'no'});
 
 % get the spikechannels
-cfg.channel = ft_channelselection(cfg.spikechannel, spike.label);
-spikesel    = match_str(spike.label, cfg.channel);
+cfg.spikechannel = ft_channelselection(cfg.spikechannel, spike.label);
+spikesel    = match_str(spike.label, cfg.spikechannel);
 nUnits      = length(spikesel); % number of spike channels
 if nUnits==0, error('ft:spike_rate:cfg:spikechannel:noSpikeChanSelected',...
     'No spikechannel selected by means of cfg.spikechannel');
