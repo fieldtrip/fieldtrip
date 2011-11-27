@@ -24,7 +24,8 @@ function [Sts] = ft_spike_triggeredspectrum(cfg, data, spike)
 %     cfg.borderspikes = 'yes' (default) or 'no'. If 'yes', we process the spikes
 %                        falling at the border using an LFP that is not centered
 %                        on the spike.
-%
+%     cfg.taperopt     = parameter that goes in WINDOW function (only
+%                        applies to windows like KAISER)
 % If the triggered spike leads a spike in another channel, then the angle
 % of the Fourier spectrum of that other channel will be negative.
 
@@ -55,6 +56,7 @@ end
 % get the options
 cfg.borderspikes   = ft_getopt(cfg, 'borderspikes','yes');
 cfg.taper          = ft_getopt(cfg, 'taper','hanning');
+cfg.taperopt       = ft_getopt(cfg, 'taperopt',[]);
 cfg.spikechannel   = ft_getopt(cfg,'spikechannel', 'all');
 cfg.channel        = ft_getopt(cfg,'channel', 'all');
 
@@ -90,8 +92,8 @@ cfg.spikechannel = ft_channelselection(cfg.spikechannel, spikelabel);
 spikesel         = match_str(spikelabel, cfg.spikechannel);
 nspikesel        = length(cfg.spikechannel); % number of spike channels
 
-% already determine the spectra for the DC, by feeding in zeros in ft_specest_mtmconvol
-fsample = 1./ (data.time{1}(2)-data.time{1}(1));
+% get the options that will go in the ft_specest_mtmconvol function
+fsample = 1./ (data.time{1}(2)-data.time{1}(1)); % assumes constancy
 tmpcfg = [];
 tmpcfg.taper  = cfg.taper;
 tmpcfg.freqoi = cfg.foi;
@@ -104,13 +106,8 @@ numsmp = round(tmpcfg.timwin .* fsample);
 numsmp(~mod(numsmp,2)) = numsmp(~mod(numsmp,2))+1; % make sure we always have uneven samples, since we want the spike in the middle
 tmpcfg.timwin = numsmp ./ fsample;
 tmpcfg.timeoi    = 0;
-timeaxis = -max(numsmp):max(numsmp);
-timeaxis = timeaxis./fsample;
-
-% just run once to get the DC spectrum, this creates some additional processing time but quite negligible
-keys = ft_cfg2keyval(tmpcfg);
-[spec_dc] = ft_specest_mtmconvol(ones(1,length(timeaxis)),timeaxis,keys{:});
-spec_dc = nanmean(spec_dc,1); % to average across tapers if multiple tapers were called for
+tmpcfg.polyorder = -1; % since we do this ourselves in a time-resolved way (it has to)
+tmpcfg.taperopt  = cfg.taperopt;
 
 % preallocate
 nTrials    = length(data.trial); % number of trials
@@ -118,9 +115,7 @@ nTrials    = length(data.trial); % number of trials
 [unitsmp,unittime,unitshift]        = deal(cell(1,nspikesel));
 nSpikes = zeros(1,nspikesel);
 
-
 % compute the spectra
-
 for iTrial = 1:nTrials
   for iUnit = 1:nspikesel
     unitindx = spikesel(iUnit);
@@ -142,6 +137,13 @@ for iTrial = 1:nTrials
   % compute the lfp spectrum for all the timepoints and do the selection afterwards
   tmpcfg.timeoi    = 'all';
   keys = ft_cfg2keyval(tmpcfg);
+  
+  % to compute the DC which must be subtracted
+  len = size(data.trial{iTrial},2);
+  [specDC,ntapers,freqoi,timeoi] = ft_specest_mtmconvol(ones(1,len),data.time{iTrial},keys{:});
+  specDC = nanmean(specDC,1);
+  
+  % to compute the actual spectra
   [spec,ntapers,freqoi,timeoi] = ft_specest_mtmconvol(data.trial{iTrial}(chansel,:),data.time{iTrial},keys{:});
   spec = nanmean(spec,1); % for averaging across tapers
   
@@ -154,11 +156,10 @@ for iTrial = 1:nTrials
       mva(iChan,:)    = conv(data.trial{iTrial}(iChan,:), ones(1,numsmp(iFreq))./numsmp(iFreq),'same');
     end
     % now simply subtract the DC spectrum from the computed LFP spectrum
-    newspec = reshape(spec(1,:,iFreq,:),[nchansel,length(timeoi)]) - mva.*spec_dc(1,1,iFreq); %subtract DC spec
+    newspec = reshape(spec(1,:,iFreq,:),[nchansel,length(timeoi)]) - mva.*repmat(squeeze(specDC(1,1,iFreq,:))',[nchansel,1]); %subtract DC spec
     spec(1,:,iFreq,:) = reshape(newspec,[1 nchansel 1 length(timeoi)]);
   end
-  
-  
+    
   nFreqs = length(freqoi);
   for iUnit = 1:nspikesel
     fprintf('processing trial %d of %d (%d spikes) for unit %s \n', iTrial, nTrials, nSpikes(iUnit), spikelabel{iUnit});
