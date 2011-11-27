@@ -60,14 +60,25 @@ ft_preamble help
 ft_preamble callinfo
 ft_preamble trackconfig
 
-% set the defaults
-if ~isfield(cfg, 'timwin'),       cfg.timwin = [-0.1 0.1];    end
-if ~isfield(cfg, 'foilim'),       cfg.foilim = [0 150];       end
-if ~isfield(cfg, 'taper'),        cfg.taper = 'hanning';      end
-if ~isfield(cfg, 'channel'),      cfg.channel = 'all';        end
-if ~isfield(cfg, 'spikechannel'), cfg.spikechannel = [];      end
-if ~isfield(cfg, 'feedback'),     cfg.feedback = 'no';        end
-if ~isfield(cfg, 'tapsmofrq'),    cfg.tapsmofrq = 4;          end
+% these were supported in the past, but are not any more (for consistency with other spike functions)
+cfg = ft_checkconfig(cfg, 'forbidden', 'inputfile');   % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1056
+cfg = ft_checkconfig(cfg, 'forbidden', 'outputfile');  % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1056
+
+%get the options
+cfg.timwin       = ft_getopt(cfg, 'timwin',[-0.1 0.1]);
+cfg.spikechannel = ft_getopt(cfg,'spikechannel', 'all');
+cfg.channel      = ft_getopt(cfg,'channel', 'all');
+cfg.feedback     = ft_checkopt(cfg,'feedback', 'no');
+cfg.tapsmofrq    = ft_checkopt(cfg,'tapsmofrq', 4);
+cfg.taper        = ft_checkopt(cfg,'taper', 'hanning');
+
+% ensure that the options are valid
+cfg = ft_checkopt(cfg,'timwin','doublevector');
+cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});
+cfg = ft_checkopt(cfg,'channel', {'cell', 'char', 'double'});
+cfg = ft_checkopt(cfg,'feedback', 'char', {'yes', 'no'});
+cfg = ft_checkopt(cfg,'taper', 'char');
+cfg = ft_checkopt(cfg,'tapsmofrq', 'doublescalar');
 
 if strcmp(cfg.taper, 'sine')
   error('sorry, sine taper is not yet implemented');

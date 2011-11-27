@@ -48,14 +48,7 @@ ft_preamble trackconfig
 cfg = ft_checkconfig(cfg, 'forbidden', 'inputfile');   % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1056
 cfg = ft_checkconfig(cfg, 'forbidden', 'outputfile');  % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1056
 
-% set the defaults
-if ~isfield(cfg, 'timwin'),       cfg.timwin = [-0.1 0.1];    end
-if ~isfield(cfg, 'channel'),      cfg.channel = 'all';        end
-if ~isfield(cfg, 'spikechannel'), cfg.spikechannel = [];      end
-if ~isfield(cfg, 'keeptrials'),   cfg.keeptrials = 'no';      end
-if ~isfield(cfg, 'feedback'),     cfg.feedback = 'no';        end
-
-% get the options
+%get the options
 cfg.timwin       = ft_getopt(cfg, 'timwin',[-0.1 0.1]);
 cfg.spikechannel = ft_getopt(cfg,'spikechannel', 'all');
 cfg.channel      = ft_getopt(cfg,'channel', 'all');
