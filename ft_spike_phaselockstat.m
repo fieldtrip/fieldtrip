@@ -290,6 +290,20 @@ cosSum = nansum(real(crss),dim);
 y = (cosSum.^2+sinSum.^2 - dof)./(dof.*(dof-1));     
  
 
+function [angMean] = angularmean(angles,dim)
+
+% works with NaN as well...
+if nargin==1, 
+  dim = min(find(size(angles)~=1));
+  if isempty(dim), dim = 1; end
+end  
+    
+if isreal(angles)
+    angles = exp(i*angles);
+else
+    angles = angles./abs(angles);
+end
+angMean = angle(nansum(angles,dim)); %get the mean angle
 
 
 
