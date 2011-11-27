@@ -1,6 +1,6 @@
-function spike = ft_datatype_spike(spike, varargin)
+function spike = ft_datatype_spikeraw(spike, varargin)
 
-% FT_DATATYPE_SPIKE describes the FieldTrip MATLAB structure for spike data
+% FT_DATATYPE_SPIKERAW describes the FieldTrip MATLAB structure for raw spike data
 %
 % Spike data is characterised as a sparse point-process, i.e. each neuronal
 % firing is only represented as the time at which the firing happened.
@@ -11,19 +11,15 @@ function spike = ft_datatype_spike(spike, varargin)
 % Neuralynx or other animal electrophysiology system file format containing
 % spikes.
 %
-% The spike format is created by using FT_SPIKE_MAKETRIALS which takes a
-% SPIKERAW structure as input.
 % An example spike data structure is:
 %
-%         label: {'chan1'  'chan2'  'chan3'}                                  the channel labels
-%         time: {[50481x1 double] [50562x1 double] [50537x1 double]}          the time in the trial for each spike (in seconds)
-%         trial: {[50481x1 double] [50562x1 double] [50537x1 double]}         the trial in which each spike was observed
-%         trialtime: [100x2 double]                                           the begin- and end-time of each trial (in seconds)
-%         waveform: {[32x50481 double] [32x50562 double] [32x50537 double]}   spike waveform, here described with 32 samples
-%         cfg: [1x1 struct]                                                   the configuration used by the function that generated this data structure
+%         label: {'chan1', 'chan2', 'chan3'}                         the channel labels
+%     timestamp: {[1x993 uint64]  [1x423 uint64]  [1x3424 uint64]}   timestamp in arbitrary units, depends on the acquisition system
+%      waveform: {[32x993 double] [32x433 double] [32x3424 double]}  spike waveform, here described with 32 samples
+%           hdr: [1x1 struct]                                        the full header information of the original dataset on disk
 %
 % Required fields:
-%   - label, trial, time, trialtime
+%   - label, timestamp
 %
 % Optional fields:
 %   - waveform, hdr, cfg
@@ -36,7 +32,7 @@ function spike = ft_datatype_spike(spike, varargin)
 %
 % Revision history:
 %
-% (2010/latest) Introduced the time and the trialtime fields.
+% (2007) Introduced the raw spike data structure.
 %
 % See also FT_DATATYPE, FT_DATATYPE_COMP, FT_DATATYPE_DIP, FT_DATATYPE_FREQ,
 % FT_DATATYPE_MVAR, FT_DATATYPE_RAW, FT_DATATYPE_SOURCE, FT_DATATYPE_SPIKE,
@@ -60,7 +56,7 @@ function spike = ft_datatype_spike(spike, varargin)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id$
+% $Id: ft_datatype_spike.m 4388 2011-10-09 09:55:08Z roboos $
 
 
 % get the optional input arguments, which should be specified as key-value pairs
@@ -72,9 +68,7 @@ end
 
 switch version
   case {'2010','2007'}
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % there are no changes required
-        
+      
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     error('unsupported version "%s" for spike datatype', version);
