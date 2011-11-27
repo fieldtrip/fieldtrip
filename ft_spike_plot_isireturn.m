@@ -72,7 +72,7 @@ cfg.kernel       = ft_getopt(cfg,'kernel', 'mvgauss');
 cfg.winlen       = ft_getopt(cfg,'winlen', cfg.dt*5);
 cfg.gaussvar     = ft_getopt(cfg,'gaussvar', (cfg.winlen/4).^2);
 
-cfg = ft_checkopt(cfg, 'spikechannel', {'char', 'cell'});
+cfg = ft_checkopt(cfg, 'spikechannel', {'char', 'cell', 'double'});
 cfg = ft_checkopt(cfg, 'scatter','char', {'yes', 'no'});
 cfg = ft_checkopt(cfg, 'density', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg, 'colormap', 'double');

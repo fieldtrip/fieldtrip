@@ -69,7 +69,7 @@ cfg = ft_checkconfig(cfg, 'forbidden', 'outputfile');  % see http://bugzilla.fcd
 
 %get the options
 cfg.timwin       = ft_getopt(cfg, 'timwin',[-0.1 0.1]);
-cfg.spikechannel = ft_getopt(cfg,'spikechannel', 'all');
+cfg.spikechannel = ft_getopt(cfg,'spikechannel', []);
 cfg.channel      = ft_getopt(cfg,'channel', 'all');
 cfg.feedback     = ft_checkopt(cfg,'feedback', 'no');
 cfg.tapsmofrq    = ft_checkopt(cfg,'tapsmofrq', 4);

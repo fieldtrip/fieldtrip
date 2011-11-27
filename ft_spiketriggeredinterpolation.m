@@ -61,13 +61,23 @@ data = ft_checkdata(data,'datatype', 'raw', 'feedback', 'yes');
 cfg = ft_checkconfig(cfg, 'forbidden', 'inputfile');   % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1056
 cfg = ft_checkconfig(cfg, 'forbidden', 'outputfile');  % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1056
 
-% set the defaults
-if ~isfield(cfg, 'timwin'),         cfg.timwin = [-0.001 0.002];    end
-if ~isfield(cfg, 'channel'),        cfg.channel = 'all';            end
-if ~isfield(cfg, 'method'),         cfg.method = 'nan';             end
-if ~isfield(cfg, 'spikechannel'),   cfg.spikechannel = [];          end
-if ~isfield(cfg, 'outputexamples'), cfg.outputexamples = 'no';      end
-if ~isfield(cfg, 'feedback'),       cfg.feedback = 'no';            end
+%get the options
+cfg.timwin         = ft_getopt(cfg, 'timwin',[-0.1 0.1]);
+cfg.spikechannel   = ft_getopt(cfg,'spikechannel', []);
+cfg.channel        = ft_getopt(cfg,'channel', 'all');
+cfg.feedback       = ft_getopt(cfg,'feedback', 'yes');
+cfg.method         = ft_getopt(cfg,'method', 'nan');
+cfg.outputexamples = ft_getopt(cfg,'outputexamples', 'no');
+
+% ensure that the options are valid
+cfg = ft_checkopt(cfg,'timwin','doublevector');
+cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});
+cfg = ft_checkopt(cfg,'channel', {'cell', 'char', 'double'});
+cfg = ft_checkopt(cfg,'feedback', 'char', {'yes', 'no'});
+cfg = ft_checkopt(cfg,'method', 'char', {'method', 'interp'});
+cfg = ft_checkopt(cfg,'outputexamples', 'char', {'yes', 'no'});
+cfg = ft_checkopt(cfg,'interptoi', 'double');
+
 if strcmp(cfg.method, 'nan')
   cfg.interptoi = 0;
 else
