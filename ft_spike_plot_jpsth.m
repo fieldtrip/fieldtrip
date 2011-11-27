@@ -57,32 +57,38 @@ ft_preamble help
 ft_preamble callinfo
 ft_preamble trackconfig
 
-% general configuration options
-defaults.channelcmb   = {{1,2}};
-defaults.psth         = {'yes' 'no'};
-defaults.latency      = {'maxperiod'};
-defaults.colorbar     = {'yes' 'no'};
-defaults.colormap     = {jet(256)};
-defaults.interpolate  = {'no' 'yes'};
+% get the default options
+cfg.channelcmb  = ft_getopt(cfg, 'channelcmb', 'all');
+cfg.psth        = ft_getopt(cfg,'psth', 'yes');
+cfg.latency     = ft_getopt(cfg,'latency','maxperiod');
+cfg.colorbar    = ft_getopt(cfg,'colorbar', 'yes');
+cfg.colormap    = ft_getopt(cfg,'colormap', jet(256));
+cfg.interpolate = ft_getopt(cfg,'interpolate', 'no');
+cfg.smooth      = ft_getopt(cfg,'smooth', 'no');
+cfg.kernel      = ft_getopt(cfg,'kernel', 'mvgauss');
+cfg.winlen      = ft_getopt(cfg,'winlen', 5*(jpsth.time(2)-jpsth.time(1)));
+cfg.gaussvar    = ft_getopt(cfg,'gaussvar', (cfg.winlen/4).^2);
 
-% further kernel smoothing configurations
-defaults.smooth       = {'no' 'yes'};
-defaults.kernel       = {'mvgauss'};
-try
-  defaults.winlen       = {5*(jpsth.time(2)-jpsth.time(1))};
-catch
-  defaults.winlen      = {0.01}; %sec
-end
-try
-  defaults.gaussvar     = {(cfg.winlen/4).^2};
-catch
-  defaults.gaussvar     = {(defaults.winlen{1}/4).^2};
-end
-cfg = ft_spike_sub_defaultcfg(cfg,defaults);
+% ensure that the options are valid
+cfg = ft_checkopt(cfg,'channelcmb', {'char', 'cell'});
+cfg = ft_checkopt(cfg,'psth', 'char', {'yes', 'no'});
+cfg = ft_checkopt(cfg,'latency', {'char', 'doublevector'});
+cfg = ft_checkopt(cfg,'colorbar', 'char', {'yes', 'no'});
+cfg = ft_checkopt(cfg,'colormap','double');
+cfg = ft_checkopt(cfg,'interpolate', 'char', {'yes', 'no'});
+cfg = ft_checkopt(cfg,'smooth','char', {'yes','no'});
+cfg = ft_checkopt(cfg,'kernel', {'char', 'double'});
+cfg = ft_checkopt(cfg,'winlen', 'double');
+cfg = ft_checkopt(cfg,'gaussvar', 'double');
 
-% channel combination selection
-cmbindx = ft_spikestation_sub_channelcombination(cfg.channelcmb, jpsth.label);
-nCmbs = size(cmbindx,1);
+% determine the corresponding indices of the requested channel combinations
+cfg.channelcmb = ft_channelcombination(cfg.channelcmb, jpsth.label);
+cmbindx = zeros(size(cfg.channelcmb));
+for k=1:size(cfg.channelcmb,1)
+  cmbindx(k,1) = strmatch(cfg.channelcmb(k,1), jpsth.label, 'exact');
+  cmbindx(k,2) = strmatch(cfg.channelcmb(k,2), jpsth.label, 'exact');
+end
+nCmbs 	   = size(cmbindx,1);
 if nCmbs~=1, error('MATLAB:spike:plot_jpsth:cfg:channelcmb:tooManySelected', ...
     'Currently only supported for a single channel combination')
 end
