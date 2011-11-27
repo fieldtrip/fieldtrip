@@ -34,10 +34,11 @@ function [type, dimord] = ft_datatype(data, desired)
 % $Id$
 
 % determine the type of input data, this can be raw, freq, timelock, comp, spike, source, volume, dip
-israw      =  isfield(data, 'label') && isfield(data, 'time') && isa(data.time, 'cell') && isfield(data, 'trial') && isa(data.trial, 'cell');
+israw      =  isfield(data, 'label') && isfield(data, 'time') && isa(data.time, 'cell') && isfield(data, 'trial') && isa(data.trial, 'cell') && ~isfield(data,'trialtime');
 isfreq     = (isfield(data, 'label') || isfield(data, 'labelcmb')) && isfield(data, 'freq'); %&& (isfield(data, 'powspctrm') || isfield(data, 'crsspctrm') || isfield(data, 'cohspctrm') || isfield(data, 'fourierspctrm') || isfield(data, 'powcovspctrm'));
-istimelock =  isfield(data, 'label') && isfield(data, 'time') && ~isfield(data, 'freq'); %&& ((isfield(data, 'avg') && isnumeric(data.avg)) || (isfield(data, 'trial') && isnumeric(data.trial) || (isfield(data, 'cov') && isnumeric(data.cov))));
-isspike    =  isfield(data, 'label') && isfield(data, 'waveform') && isa(data.waveform, 'cell') && isfield(data, 'timestamp') && isa(data.timestamp, 'cell');
+istimelock =  isfield(data, 'label') && isfield(data, 'time') && ~isfield(data, 'freq') && ~isfield(data,'trialtime'); %&& ((isfield(data, 'avg') && isnumeric(data.avg)) || (isfield(data, 'trial') && isnumeric(data.trial) || (isfield(data, 'cov') && isnumeric(data.cov))));
+isspike    =  isfield(data, 'label') && isfield(data, 'time') && isa(data.time, 'cell') && isfield(data, 'trial') && isa(data.trial, 'cell') && isfield(data, 'trialtime') && isa(data.trialtime, 'numeric');
+isspikeraw =  isfield(data, 'label') && isfield(data, 'timestamp') && isa(data.timestamp, 'cell') && ~isfield(data, 'time') && ~isfield(data, 'trialtime') && ~isfield(data,'trial');
 iscomp     =  isfield(data, 'label') && isfield(data, 'topo') || isfield(data, 'topolabel');
 isvolume   =  isfield(data, 'transform') && isfield(data, 'dim');
 issource   =  isfield(data, 'pos');
@@ -62,6 +63,8 @@ elseif istimelock
   type = 'timelock';
 elseif isspike
   type = 'spike';
+elseif isspikeraw
+  type = 'spikeraw';
 elseif isvolume
   type = 'volume';
 elseif issource
