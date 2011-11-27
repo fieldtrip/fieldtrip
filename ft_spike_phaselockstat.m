@@ -9,7 +9,7 @@ function [stat] = ft_spike_phaselockstat(cfg,sts)
 %   [STAT = FT_SPIKE_PHASELOCKSTAT(CFG,STS)
 %
 % Inputs:
-%   STS should be a structure as obtained from from the FT_SPIKETRIGGEREDSPECTRUM function. 
+%   STS should be a structure as obtained from from the FT_SPIKE_TRIGGEREDSPECTRUM function. 
 %
 %   Configurations (CFG) related to calculation of phaselockingvalue
 %
@@ -35,6 +35,9 @@ function [stat] = ft_spike_phaselockstat(cfg,sts)
 %     stat.spikechannel               =  name of unit;
 %     stat.plv                        =  nChan-by-nFreqs phase-locking value
 %     
+%   References:
+%   Vinck et al. (2010) Neuroimage
+%   Vinck et al. (2011) Journal of Computational Neuroscience
 
 %   Copyright (c) Martin Vinck (2011), University of Amsterdam.
 %
