@@ -56,7 +56,7 @@ cfg = ft_checkconfig(cfg, 'required', {'timestampspersecond', 'trl'});
 
 % ensure that the options are valid
 cfg = ft_checkopt(cfg,'timestampspersecond',{'doublescalar'});
-cfg = ft_checkopt(cfg,'trl', {'numericmatrix'});
+cfg = ft_checkopt(cfg,'trl', {'double'});
 
 
 % detect whether the format of spike is correct
