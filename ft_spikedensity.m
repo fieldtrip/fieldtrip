@@ -93,12 +93,6 @@ cfg = ft_checkopt(cfg,'timwin', 'doublevector');
 cfg = ft_checkopt(cfg,'winfunc', {'char', 'function_handle', 'doublevector'});
 cfg = ft_checkopt(cfg,'winfuncopt', {'cell', 'double'});
 
-% check if the input data is valid for this function
-hasAllFields = all(isfield(data,{'time','trial', 'label','fsample'}));
-if ~hasAllFields, error('MATLAB:spike:density:wrongInput',...
-    'DATA should contain .time, .trial, .label and .fsample fields');
-end
-
 % select the units
 cfg.channel = ft_channelselection(cfg.spikechannel, data.label);
 spikesel    = match_str(data.label, cfg.channel);
@@ -112,9 +106,6 @@ if  strcmp(cfg.trials,'all')
   cfg.trials = 1:length(data.trial);
 elseif islogical(cfg.trials)
   cfg.trials = find(cfg.trials);
-elseif ~isrealvec(cfg.trials);
-  error('MATLAB:spike:density:cfg:trials:unknownOption',...
-    'cfg.trials should be logical or numerical selection or string "all"');
 end
 cfg.trials = sort(cfg.trials(:));
 if max(cfg.trials)>length(data.trial),error('MATLAB:spike:density:cfg:trials:maxExceeded',...

@@ -81,20 +81,6 @@ cfg = ft_checkopt(cfg,'trials', {'char', 'doublevector', 'logical'});
 cfg = ft_checkopt(cfg,'vartriallen', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'keeptrials', 'char', {'yes', 'no'});
 
-% detect whether the format of spike is correct,
-% should - when the spike format solidifies, in the end be done with checkdata in fieldtrip
-hasAllFields = all(isfield(spike, {'trial', 'time', 'trialtime' 'label'}));
-if ~hasAllFields, error('ft:spike_psth:wrongStructInput',...
-    'input SPIKE should be structure  with .trial, .time, .trialtime .label fields')
-end
-
-% check whether all are of right format
-correctInp = iscell(spike.time) && iscell(spike.trial) && iscell(spike.label) && isrealmat(spike.trialtime) ...
-  && size(spike.trialtime,2)==2;
-if ~correctInp, error('ft:spike_psth:wrongStructInput',...
-    '.time, .trial and .label should be cell arrays, .trialtime should be nTrials-by-2 matrix')
-end
-
 % get the number of trials or change DATA according to cfg.trials
 cfg        = trialselection(cfg,spike);
 

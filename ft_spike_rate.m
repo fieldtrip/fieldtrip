@@ -72,19 +72,6 @@ cfg = ft_checkopt(cfg,'trials', {'char', 'doublevector', 'logical'});
 cfg = ft_checkopt(cfg,'vartriallen', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'keeptrials', 'char', {'yes', 'no'});
 
-% detect the format of spike, replace with CHECKDATA eventually, but that needs modification
-hasAllFields = all(isfield(spike, {'time', 'trial', 'trialtime', 'label'}));
-if ~hasAllFields, error('ft:spike_rate:wrongStructInput',...
-    'input spike should be struct with .time, .trial, .trialtime, .label fields')
-end
-
-% check whether all are of right format
-correctInp = iscell(spike.time) && iscell(spike.trial) && iscell(spike.label) && isrealmat(spike.trialtime) ...
-  && size(spike.trialtime,2)==2;
-if ~correctInp, error('ft:spike_rate:wrongStructInput',...
-    '.time, .trial and .label should be cell arrays, trialtime should be nTrials-by-2 matrix')
-end
-
 % get the spikechannels
 cfg.channel = ft_channelselection(cfg.spikechannel, spike.label);
 spikesel    = match_str(spike.label, cfg.channel);

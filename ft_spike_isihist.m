@@ -66,9 +66,6 @@ if  strcmp(cfg.trials,'all')
   cfg.trials = 1:size(spike.trialtime,1);
 elseif islogical(cfg.trials)
   cfg.trials = find(cfg.trials);
-elseif ~isrealvec(cfg.trials);
-  error('MATLAB:ft_spike_isihist:cfg:trials:wrongInput',...
-    'cfg.trials should be logical or numerical selection or string "all"');
 end
 cfg.trials = sort(cfg.trials);
 nTrials    = length(cfg.trials);

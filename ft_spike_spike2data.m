@@ -41,6 +41,9 @@ ft_preamble trackconfig
 
 % control input spike structure
 spike = ft_checkdata(spike,'datatype', 'spike', 'feedback', 'yes');
+if nargin==3
+  data  = ft_checkdata(data,'datatype', 'raw', 'feedback', 'yes');
+end
 
 % ensure that the required options are present
 cfg = ft_checkconfig(cfg, 'required', {'fsample'});
@@ -49,18 +52,6 @@ cfg.sparse = ft_getopt(cfg,'sparse', 'yes');
 % ensure that the options are valid
 cfg = ft_checkopt(cfg,'fsample','doublescalar');
 cfg = ft_checkopt(cfg,'sparse', 'char', {'yes', 'no'});
-
-% check whether the data has the right structure
-hasAllFields = all(isfield(spike, {'time', 'trial', 'trialtime', 'label'}));
-if ~hasAllFields, error('MATLAB:ft_spike_spike2data:wrongStructInput',...
-    'input SPIKE should be struct with .time, .trial, .trialtime, .label fields')
-end
-
-% check whether all are of right format
-correctInp = iscell(spike.time) & iscell(spike.trial) & iscell(spike.label) & size(spike.trialtime,2)==2;
-if ~correctInp, error('MATLAB:ft_spike_spike2data:wrongStructInput',...
-    '.timestamp, .trial and .label should be cell arrays, time should be nTrials-by-2 matrix')
-end
 
 % check whether the data should be appended
 doSparse = strcmp(cfg.sparse, 'yes');

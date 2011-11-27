@@ -104,18 +104,6 @@ cfg = ft_checkopt(cfg,'maxlag', 'double');
 cfg = ft_checkopt(cfg,'binsize', 'double');
 cfg = ft_checkopt(cfg,'outputunit', 'char', {'proportion', 'center', 'raw'});
 
-% detect whether the format of spike is correct, could be done in fieldtrip as we1
-hasAllFields = all(isfield(spike, {'time', 'trial', 'trialtime', 'label'}));
-if ~hasAllFields, error('MATLAB:spike:psth:wrongStructInput',...
-    'input SPIKE should be structurea  with .time, .trial, .trialtime, .label fields')
-end
-
-% check whether all are of right format
-correctInp = iscell(spike.time) & iscell(spike.trial) & iscell(spike.label) & size(spike.trialtime,2)==2;
-if ~correctInp, error('MATLAB:ft_spike_xcorr:wrongStructInput',...
-    '.time, .trial and .label should be cell arrays, trialtime should be nTrials-by-2 matrix')
-end
-
 doShiftPredictor  = strcmp(cfg.shiftpredictor,'yes'); % shift predictor
 doBiased          = strcmp(cfg.biased,'yes'); % debiasing
 
@@ -140,9 +128,6 @@ if  strcmp(cfg.trials,'all')
   cfg.trials = 1:nTrials;
 elseif islogical(cfg.trials)
   cfg.trials = find(cfg.trials);
-elseif ~isrealvec(cfg.trials);
-  error('MATLAB:ft_spike_xcorr:cfg:trials:unknownOption',...
-    'cfg.trials should be logical or numerical selection or string "all"');
 end
 cfg.trials = sort(cfg.trials(:));
 if max(cfg.trials)>nTrials, error('MATLAB:ft_spike_xcorr:cfg:trials:maxExceeded',...
