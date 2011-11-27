@@ -91,7 +91,7 @@ cfg = ft_checkopt(cfg,'vartriallen', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'keeptrials', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'timwin', 'doublevector');
 cfg = ft_checkopt(cfg,'winfunc', {'char', 'function_handle', 'doublevector'});
-cfg = ft_checkopt(cfg,'winfuncopt', {'cell', 'empty'});
+cfg = ft_checkopt(cfg,'winfuncopt', {'cell', 'double', 'empty'});
 
 % select the units
 cfg.channel = ft_channelselection(cfg.spikechannel, data.label);

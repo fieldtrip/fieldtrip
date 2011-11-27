@@ -76,13 +76,12 @@ cfg = ft_checkopt(cfg,'channel', {'cell', 'char', 'double'});
 cfg = ft_checkopt(cfg,'feedback', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'method', 'char', {'method', 'interp'});
 cfg = ft_checkopt(cfg,'outputexamples', 'char', {'yes', 'no'});
-cfg = ft_checkopt(cfg,'interptoi', 'double');
-
 if strcmp(cfg.method, 'nan')
   cfg.interptoi = 0;
 else
   cfg.interptoi = 0.010;
 end
+cfg = ft_checkopt(cfg,'interptoi', 'double');
 
 % autodetect the spike channels
 ntrial = length(data.trial);

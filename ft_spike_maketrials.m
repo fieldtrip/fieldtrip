@@ -59,7 +59,7 @@ cfg = ft_checkconfig(cfg, 'required', {'timestampspersecond', 'trl'});
 
 % ensure that the options are valid
 cfg = ft_checkopt(cfg,'timestampspersecond',{'doublescalar'});
-cfg = ft_checkopt(cfg,'trl', {'double'});
+cfg = ft_checkopt(cfg,'trl', {'numericvector', 'numericmatrix'});
 
 % make sure that the cfg.trl indeed has three columns
 if size(cfg.trl,2)~=3,

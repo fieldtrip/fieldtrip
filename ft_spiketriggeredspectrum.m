@@ -78,7 +78,7 @@ cfg.foilim       = ft_checkopt(cfg,'foilim', [0 150]);
 
 % ensure that the options are valid
 cfg = ft_checkopt(cfg,'timwin','doublevector');
-cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});
+cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double', 'empty'});
 cfg = ft_checkopt(cfg,'channel', {'cell', 'char', 'double'});
 cfg = ft_checkopt(cfg,'feedback', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'taper', 'char');
