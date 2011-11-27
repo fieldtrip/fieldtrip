@@ -91,7 +91,7 @@ cfg = ft_checkopt(cfg,'vartriallen', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'keeptrials', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'timwin', 'doublevector');
 cfg = ft_checkopt(cfg,'winfunc', {'char', 'function_handle', 'doublevector'});
-cfg = ft_checkopt(cfg,'winfuncopt', {'cell', 'double'});
+cfg = ft_checkopt(cfg,'winfuncopt', {'cell', 'empty'});
 
 % select the units
 cfg.channel = ft_channelselection(cfg.spikechannel, data.label);
@@ -270,6 +270,8 @@ for iTrial = 1:nTrials
       ySingleTrial = [NaN(size(padLeft)) y NaN(size(padRight))];
       y        = [padLeft y padRight];
       dofsel   = logical([padLeft dofsel padRight]);
+    else
+      ySingleTrial = y;
     end
     s(iUnit,:)        = nansum([s(iUnit,:);y]);            % compute the sum
     ss(iUnit,:)       = nansum([ss(iUnit,:);y.^2]);         % compute the squared sum
