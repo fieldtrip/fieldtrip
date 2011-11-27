@@ -50,14 +50,21 @@ ft_preamble help
 ft_preamble callinfo
 ft_preamble trackconfig
 
-% check the configuration inputs and enter the defaults
-defaults.shiftpredictor = {'no' 'yes'};
-defaults.normalization  = {'no' 'yes'};
-defaults.trials         = {'all'};
-defaults.latency        = {'maxperiod'};
-defaults.keeptrials     = {'no' 'yes'};
-defaults.channelcmb     = {{'all','all'}};
-cfg = ft_spike_sub_defaultcfg(cfg,defaults);
+% get the default options
+cfg.trials         = ft_getopt(cfg, 'trials', 'all');
+cfg.latency        = ft_getopt(cfg,'latency','maxperiod');
+cfg.keeptrials     = ft_getopt(cfg,'keeptrials', 'yes');
+cfg.shiftpredictor = ft_getopt(cfg,'shiftpredictor', 'no');
+cfg.normalization  = ft_getopt(cfg,'normalization', 'no');
+cfg.channelcmb     = ft_getopt(cfg,'channelcmb', 'all');
+
+% ensure that the options are valid
+cfg = ft_checkopt(cfg,'latency', {'char', 'doublevector'});
+cfg = ft_checkopt(cfg,'trials', {'char', 'doublevector', 'logical'}); 
+cfg = ft_checkopt(cfg,'keeptrials', 'char', {'yes', 'no'});
+cfg = ft_checkopt(cfg,'shiftpredictor', 'char', {'yes', 'no'});
+cfg = ft_checkopt(cfg,'normalization', 'char', {'yes', 'no'});
+cfg = ft_checkopt(cfg,'channelcmb', {'char', 'cell'});
 
 % check whether PSTH contains single trials
 if ~all(isfield(psth,{'trial' 'time'})),

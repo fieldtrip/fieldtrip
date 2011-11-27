@@ -55,6 +55,20 @@ if ~isfield(cfg, 'spikechannel'), cfg.spikechannel = [];      end
 if ~isfield(cfg, 'keeptrials'),   cfg.keeptrials = 'no';      end
 if ~isfield(cfg, 'feedback'),     cfg.feedback = 'no';        end
 
+% get the options
+cfg.timwin       = ft_getopt(cfg, 'timwin',[-0.1 0.1]);
+cfg.spikechannel = ft_getopt(cfg,'spikechannel', 'all');
+cfg.channel      = ft_getopt(cfg,'channel', 'all');
+cfg.keeptrials   = ft_checkopt(cfg,'keeptrials', 'char', {'yes', 'no'});
+cfg.feedback     = ft_checkopt(cfg,'feedback', 'yes');
+
+% ensure that the options are valid
+cfg = ft_checkopt(cfg,'timwin','doublevector');
+cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});
+cfg = ft_checkopt(cfg,'channel', {'cell', 'char', 'double'});
+cfg = ft_checkopt(cfg,'keeptrials', 'char', {'yes', 'no'});
+cfg = ft_checkopt(cfg,'feedback', 'char', {'yes', 'no'});
+
 % autodetect the spike channels
 ntrial = length(data.trial);
 nchans  = length(data.label);

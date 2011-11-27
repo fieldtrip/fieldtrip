@@ -41,7 +41,6 @@ function [Xcorr] = ft_spike_xcorr(cfg,spike)
 %                          specified by cfg.latency and discard those trials that do not.
 %   cfg.trials           = numeric selection of trials (default = 'all')
 %   cfg.keeptrials       = 'yes' or 'no' (default)
-%   cfg.feedback         = 'yes' (default) or 'no'
 %
 % A peak at a negative lag for X.xcorr(:,chan1,chan2) means that chan1 is
 % leading chan2. Thus, a negative lag represents a spike in the second
@@ -78,20 +77,29 @@ ft_preamble help
 ft_preamble callinfo
 ft_preamble trackconfig
 
-% default correlogram configurations:
-defaults.maxlag             = {0.01};
-defaults.biased             = {'no' 'yes'};
-defaults.shiftpredictor     = {'no' 'yes'};
-defaults.binsize            = {0.001};
-defaults.outputunit         = {'proportion' 'center' 'raw'};
+% get the default options
+cfg.trials         = ft_getopt(cfg,'trials', 'all');
+cfg.latency        = ft_getopt(cfg,'latency','maxperiod');
+cfg.keeptrials     = ft_getopt(cfg,'keeptrials', 'yes');
+cfg.shiftpredictor = ft_getopt(cfg,'shiftpredictor', 'no');
+cfg.channelcmb     = ft_getopt(cfg,'channelcmb', 'all');
+cfg.vartriallen    = ft_getopt(cfg,'vartriallen', 'no');
+cfg.biased         = ft_getopt(cfg,'biased', 'no');
+cfg.maxlag         = ft_getopt(cfg,'maxlag', 0.01);
+cfg.binsize        = ft_getopt(cfg,'binsize', 0.001);
+cfg.outputunit     = ft_getopt(cfg,'outputunit', 'proportion');
 
-% default selection configurations
-defaults.channelcmb         = {'all'};
-defaults.latency            = {'maxperiod'};
-defaults.vartriallen        = {'no' 'yes'};
-defaults.trials             = {'all'};
-defaults.keeptrials         = {'no' 'yes'};
-cfg = ft_spike_sub_defaultcfg(cfg,defaults);
+% ensure that the options are valid
+cfg = ft_checkopt(cfg,'latency', {'char', 'doublevector'});
+cfg = ft_checkopt(cfg,'trials', {'char', 'doublevector', 'logical'}); 
+cfg = ft_checkopt(cfg,'keeptrials', 'char', {'yes', 'no'});
+cfg = ft_checkopt(cfg,'shiftpredictor', 'char', {'yes', 'no'});
+cfg = ft_checkopt(cfg,'channelcmb', {'char', 'cell'});
+cfg = ft_checkopt(cfg,'vartriallen', 'char', {'no', 'yes'});
+cfg = ft_checkopt(cfg,'biased', 'char', {'yes', 'no'});
+cfg = ft_checkopt(cfg,'maxlag', 'double');
+cfg = ft_checkopt(cfg,'binsize', 'double');
+cfg = ft_checkopt(cfg,'outputunit', 'char', {'proportion', 'center', 'raw'});
 
 % detect whether the format of spike is correct, could be done in fieldtrip as we1
 hasAllFields = all(isfield(spike, {'time', 'trial', 'trialtime', 'label'}));
