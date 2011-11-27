@@ -32,11 +32,15 @@ ft_preamble help
 ft_preamble callinfo
 ft_preamble trackconfig
 
-% general configuration defaults
-defaults.plotfit      = {'no' 'yes'};
-defaults.spikechannel = {1};
-defaults.ylim         = {'auto'};
-cfg = ft_spike_sub_defaultcfg(cfg,defaults);
+% get the default options
+cfg.spikechannel = ft_getopt(cfg, 'spikechannel', 'all');
+cfg.ylim         = ft_getopt(cfg,'ylim', 'auto');
+cfg.plotfit      = ft_getopt(cfg,'plotfit', 'no');
+
+% ensure that the options are valid
+cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});
+cfg = ft_checkopt(cfg,'ylim', {'char','double'});
+cfg = ft_checkopt(cfg,'plotfit', 'char', {'yes', 'no'});
 
 % get the spikechannels
 cfg.channel = ft_channelselection(cfg.spikechannel, isih.label);
