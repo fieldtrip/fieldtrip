@@ -60,15 +60,23 @@ ft_preamble help
 ft_preamble callinfo
 ft_preamble trackconfig
 
-% check configuration inputs and enter the defaults, should be standardized within fieldtrip
-defaults.binsize           = {0.025};      % sec
-defaults.outputunit        = {'rate' 'spikecount'};
-defaults.spikechannel      = {'all'};
-defaults.trials            = {'all'};
-defaults.latency           = {'maxperiod'};
-defaults.vartriallen       = {'yes' 'no'};
-defaults.keeptrials        = {'yes' 'no'};
-cfg = ft_spike_sub_defaultcfg(cfg,defaults);
+% get the default options
+cfg.outputunit   = ft_getopt(cfg, 'outputunit','rate');
+cfg.binsize      = ft_getopt(cfg, 'binsize',0.025);
+cfg.spikechannel = ft_getopt(cfg, 'spikechannel', 'all');
+cfg.trials       = ft_getopt(cfg, 'trials', 'all');
+cfg.latency      = ft_getopt(cfg,'latency','maxperiod');
+cfg.vartriallen  = ft_getopt(cfg,'vartriallen', 'yes');
+cfg.keeptrials   = ft_getopt(cfg,'keeptrials', 'yes');
+
+% ensure that the options are valid
+cfg = ft_checkopt(cfg,'outputunit','char', {'rate', 'spikecount'});
+cfg = ft_checkopt(cfg,'binsize', 'doublescalar');
+cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});
+cfg = ft_checkopt(cfg,'latency', {'char', 'doublevector'});
+cfg = ft_checkopt(cfg,'trials', {'char', 'doublevector', 'logical'}); 
+cfg = ft_checkopt(cfg,'vartriallen', 'char', {'yes', 'no'});
+cfg = ft_checkopt(cfg,'keeptrials', 'char', {'yes', 'no'});
 
 % detect whether the format of spike is correct,
 % should - when the spike format solidifies, in the end be done with checkdata in fieldtrip
