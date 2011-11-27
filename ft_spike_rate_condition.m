@@ -28,16 +28,16 @@ ft_preamble help
 ft_preamble callinfo
 ft_preamble trackconfig
 
+% ensure that the required options are present
+cfg = ft_checkconfig(cfg, 'required', {'design'});
+cfg = ft_checkopt(cfg,'design','doublevector');
+
 % check whether trials were kept in the rate function
 if ~isfield(Rate, 'trial'), error('MATLAB:ft_spike_rate_condition:noFieldTrial',...
     'RATE should contain the field trial (use cfg.keeptrials = "yes" in spike_rate)');
 end
-if ~isfield(cfg,'design'), error('MATLAB:ft_spike_rate_condition:cfg:designMissing','design is missing'), end
 design = cfg.design(:);
-if ~isrealvec(design)
-  error('MATLAB:ft_spike_rate_condition:design',...
-    'DESIGN should be a real vector');
-end
+
 nTrials = size(Rate.trial,1);
 if nTrials~=length(design)
   error('MATLAB:ft_spike_rate_condition:cfg:designWrongLength',...
