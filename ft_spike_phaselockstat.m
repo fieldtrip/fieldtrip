@@ -41,10 +41,9 @@ function [stat] = ft_spike_phaselockstat(cfg,sts)
 
 %   Copyright (c) Martin Vinck (2011), University of Amsterdam.
 %
-% $Id: ft_spike_phaselockstat.m 
+% $Id$
 
-% defaults: general selection
-revision = '$Id: ft_spike_phaselockstat.m$';
+revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
@@ -227,8 +226,13 @@ stat.ral    = ral;
 stat.plv    = resultantlength(sts.fourierspctrm{unitsel},1);
 stat.freq   = sts.freq(freqindx);
 stat.label  = sts.label(chansel);
-stat.cfg    = cfg;
-    
+
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+ft_postamble previous sts
+ft_postamble history stat
+
 
 function [P] = rayleightest(x,dim)
 
