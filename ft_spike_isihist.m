@@ -40,15 +40,23 @@ ft_preamble help
 ft_preamble callinfo
 ft_preamble trackconfig
 
-% check the configuration inputs and enter the defaults
-defaults.spikechannel   = {'all'};
-defaults.trials         = {'all'};
-defaults.bins           = {0:0.002:0.1};
-defaults.latency        = {'maxperiod'};
-defaults.outputunit     = {'spikecount' 'proportion'};
-defaults.gammafit       = {'yes' 'no'};
-defaults.keeptrials     = {'yes' 'no'};
-cfg = ft_spike_sub_defaultcfg(cfg,defaults);
+% get the default options
+cfg.outputunit   = ft_getopt(cfg, 'outputunit','spikecount');
+cfg.spikechannel = ft_getopt(cfg, 'spikechannel', 'all');
+cfg.trials       = ft_getopt(cfg, 'trials', 'all');
+cfg.latency      = ft_getopt(cfg,'latency','maxperiod');
+cfg.keeptrials   = ft_getopt(cfg,'keeptrials', 'yes');
+cfg.bins         = ft_getopt(cfg,'bins', 0:0.002:1);
+cfg.gammafit     = ft_getopt(cfg,'gammafit', 'yes');
+
+% ensure that the options are valid
+cfg = ft_checkopt(cfg,'outputunit','char', {'spikecount', 'proportion'});
+cfg = ft_checkopt(cfg,'bins', 'doublevector');
+cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});
+cfg = ft_checkopt(cfg,'latency', {'char', 'doublevector'});
+cfg = ft_checkopt(cfg,'trials', {'char', 'doublevector', 'logical'}); 
+cfg = ft_checkopt(cfg,'keeptrials', 'char', {'yes', 'no'});
+cfg = ft_checkopt(cfg,'gammafit', 'char', {'yes', 'no'});
 
 % detect whether the format of spike is correct
 hasAllFields = all(isfield(spike, {'time', 'trial', 'trialtime', 'label'}));
