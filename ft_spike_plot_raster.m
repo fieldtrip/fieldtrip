@@ -1,4 +1,4 @@
-function [hdl] = ft_spike_plot_raster(cfg, spike, topdata)
+function [hdl] = ft_spike_plot_raster(cfg, spike)
 
 % FT_SPIKE_RASTERPLOT makes a raster plot of spike-trains and allows for
 % spike-density or psth plot on top.
@@ -75,19 +75,16 @@ cfg = ft_checkopt(cfg,'trials', {'char', 'doublevector', 'logical'});
 cfg = ft_checkopt(cfg,'linewidth', 'doublescalar');
 cfg = ft_checkopt(cfg,'cmapneurons', {'char', 'double', 'cell'});
 cfg = ft_checkopt(cfg,'spikelength', 'doublescalar');
-cfg = ft_checkopt(cfg,'topdata', 'struct');
+cfg = ft_checkopt(cfg,'topdata', {'struct', 'double'});
 cfg = ft_checkopt(cfg,'topplotsize', 'doublescalar');
 cfg = ft_checkopt(cfg,'topplotfunc', 'char', {'bar', 'line'});
 
 % check which features should be present in the rasterplot and psth
-if nargin==3
-  % this is the new style of calling the function
-  doTopData = true;
-elseif ~isempty(cfg.topdata)
-  % this is the old style of calling, but putting data in the cfg is not how it should be
+if ~isempty(cfg.topdata)
   doTopData = true;
   topData = cfg.topdata;
   cfg = rmfield(cfg, 'topdata');
+  topData = ft_checkdata(topData,'datatype', 'timelock', 'feedback', 'yes');
 end
 
 if doTopData
@@ -96,18 +93,6 @@ if doTopData
     error('MATLAB:ft_spike_plot_raster:topData:wrongFormatStruct',...
       'TOPDATA needs to be (timelock or psth) struct with fields avg, time and label');
   end
-end
-
-% check if input is of correct format
-hasAllFields = all(isfield(spike, {'time', 'trial', 'trialtime', 'label'}));
-if ~hasAllFields, error('MATLAB:spike:plot_raster:wrongStructInput',...
-    'input ETS should be struct with .time, .trial, .trialtime, .label fields')
-end
-
-% check whether all are of right format
-correctInp = iscell(spike.time) & iscell(spike.trial) & iscell(spike.label) & size(spike.trialtime,2)==2;
-if ~correctInp, error('MATLAB:spike:plot_raster:wrongStructInput',...
-    '.time, .trial and .label should be cell arrays, .trialtime should be nTrials-by-2 matrix')
 end
 
 % get the spikechannels
