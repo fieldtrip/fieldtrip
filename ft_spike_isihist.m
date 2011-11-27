@@ -32,10 +32,13 @@ function [isih] = ft_spike_isihist(cfg,spike)
 %
 % $Id$
 
-if nargin~=2, error('MATLAB:ft_spike_isihist:nargin','Two input arguments required'), end
+revision = '$Id$';
 
-% enable configuration tracking
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
 
 % check the configuration inputs and enter the defaults
 defaults.spikechannel   = {'all'};
@@ -184,17 +187,9 @@ if strcmp(cfg.gammafit,'yes')
 end
 isih.coeffvar = coeffvar;
 
-% add version information to the configuration
-try
-  % get the full name of the function
-  cfg.version.name = mfilename('fullpath');
-catch
-  % required for compatibility with Matlab versions prior to release 13 (6.5)
-  [st, i] = dbstack;
-  cfg.version.name = st(i);
-end
-% remember the configuration details of the input data
-try, cfg.previous = spike.cfg; end
-% remember the exact configuration details in the output
-isih.cfg     = cfg;
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+ft_postamble previous spike
+ft_postamble history isih
 

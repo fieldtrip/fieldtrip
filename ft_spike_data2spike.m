@@ -14,10 +14,13 @@ function [spike] = ft_spike_data2spike(cfg,data)
 %
 % $Id$
 
-if nargin~=2, error('MATLAB:ft_spike_data2spike:data2spike:nargin','Two input arguments required'), end
+revision = '$Id$';
 
-% enable configuration tracking
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
 
 % put the defaults and check whether there are ununsed fields
 defaults.spikechannel   = {'all'};
@@ -65,19 +68,11 @@ for iUnit = 1:nUnits
   if iUnit==1, spike.trialtime             = trialTimes; end
 end
 
-% add version information to the configuration
-try
-  % get the full name of the function
-  cfg.version.name = mfilename('fullpath');
-catch
-  % required for compatibility with Matlab versions prior to release 13 (6.5)
-  [st, i] = dbstack;
-  cfg.version.name = st(i);
-end
-% remember the configuration details of the input data
-try, cfg.previous = data.cfg; end
-% remember the exact configuration details in the output
-spike.cfg     = cfg;
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+ft_postamble previous data
+ft_postamble history spike
 
 
 %%%%%%%%%% SUB FUNCTION %%%%%%%%%%

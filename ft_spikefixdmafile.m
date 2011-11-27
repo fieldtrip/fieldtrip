@@ -34,10 +34,13 @@ function ft_spikefixdmafile(cfg)
 %
 % $Id$
 
-ft_defaults
+revision = '$Id$';
 
-% enable configuration tracking
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
 
 % set the general defaults
 if ~isfield(cfg, 'dataset'),  cfg.dataset = [];           end
@@ -115,4 +118,8 @@ while (ok)
 end % while ok
 
 fclose(fin);
+
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
 

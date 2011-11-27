@@ -43,12 +43,13 @@ function [spike] = ft_spike_maketrials(cfg,spike)
 %
 % $Id$
 
-% enable configuration tracking
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+revision = '$Id$';
 
-if nargin<2,
-  error('MATLAB:ft_spike_maketrials:nargin','I can not work with less than 2 inputs'),
-end
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
 
 % detect whether the format of spike is correct
 hasAllFields = all(isfield(spike, {'timestamp' 'label'}));
@@ -145,19 +146,10 @@ for iUnit = 1:nUnits
 end
 spike.trl = cfg.trl;
 
-% add version information to the configuration
-try
-  % get the full name of the function
-  cfg.version.name = mfilename('fullpath');
-catch
-  % required for compatibility with Matlab versions prior to release 13 (6.5)
-  [st, i] = dbstack;
-  cfg.version.name = st(i);
-end
-% remember the configuration details of the input data
-cfg.previous = [];
-try, cfg.previous = spike.cfg; end
-% remember the exact configuration details in the output
-spike.cfg = cfg;
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+ft_postamble previous spike
+ft_postamble history spike
 
 

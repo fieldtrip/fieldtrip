@@ -24,15 +24,13 @@ function [hdl] = ft_spike_plot_psth(cfg,psth)
 %
 % $Id$
 
+revision = '$Id$';
+
+% do the general setup of the function
 ft_defaults
-
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();;
-ftFuncMem   = memtic();
-
-% check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
 
 defaults.latency      = {'maxperiod'};
 defaults.errorbars    = {'sem' 'std' 'conf95%', 'no' 'var'};
@@ -153,6 +151,10 @@ if ~strcmp(cfg.errorbars,'no'), hdl.error = psthSemHdl;  end
 % as usual, make sure that panning and zooming does not distort the y limits
 set(zoom,'ActionPostCallback',{@mypostcallback,cfg.ylim,cfg.latency});
 set(pan,'ActionPostCallback',{@mypostcallback,cfg.ylim,cfg.latency});
+
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % deal with the output

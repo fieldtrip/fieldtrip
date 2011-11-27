@@ -1,4 +1,4 @@
-function [sts_tfr] = ft_spiketriggeredspectrum_ppc_tfr(cfg,freq)
+function [sts_tfr] = ft_spiketriggeredspectrum_ppc_tfr(cfg, freq)
 
 % FT_SPIKETRIGGEREDSPECTRUM_TFR computes time-frequency representation of
 % PPC, phase and rayleigh test Getting a TFR from spike phases is
@@ -41,10 +41,15 @@ function [sts_tfr] = ft_spiketriggeredspectrum_ppc_tfr(cfg,freq)
 
 % Copyright (C) 2010, Martin Vinck
 %
-% $Log$
+% $Id$
 
-% enable configuration tracking
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+revision = '$Id$';
+
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
 
 % defaults business
 defaults.channel      = {'all'};
@@ -176,16 +181,9 @@ sts_tfr.label = freq.label(chansel);
 sts_tfr.time  = bins(1:end-1) + 0.5*dt; % center time-points
 sts_tfr.cfg   = cfg;
 
-% add version information to the configuration
-try
-  % get the full name of the function
-  cfg.version.name = mfilename('fullpath');
-catch
-  % required for compatibility with Matlab versions prior to release 13 (6.5)
-  [st, i] = dbstack;
-  cfg.version.name = st(i);
-end
-% remember the configuration details of the input data
-if isfield(freq,'cfg'),cfg.previous = freq.cfg; end
-% remember the exact configuration details in the output
-sts_tfr .cfg     = cfg;
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+ft_postamble previous freq
+ft_postamble history sts_tfr
+

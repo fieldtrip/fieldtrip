@@ -52,10 +52,13 @@ function [psth] = ft_spike_psth(cfg,spike)
 %
 % $Id$
 
-if nargin~=2, error('ft:spike_psth:nargin','Two input arguments required'), end
+revision = '$Id$';
 
-% enable configuration tracking
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
 
 % check configuration inputs and enter the defaults, should be standardized within fieldtrip
 defaults.binsize           = {0.025};      % sec
@@ -195,19 +198,11 @@ else
   psth.dimord = 'chan_time';
 end
 
-% add version information to the configuration
-try
-  % get the full name of the function
-  cfg.version.name = mfilename('fullpath');
-catch
-  % required for compatibility with Matlab versions prior to release 13 (6.5)
-  [st, i] = dbstack;
-  cfg.version.name = st(i);
-end
-% remember the configuration details of the input data
-if isfield(spike,'cfg'),cfg.previous = spike.cfg; end
-% remember the exact configuration details in the output
-psth.cfg     = cfg;
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+ft_postamble previous spike
+ft_postamble history psth
 
 
 %%%%%%%%% SUB FUNCTIONS %%%%%%%%%

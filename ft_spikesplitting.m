@@ -1,4 +1,4 @@
-function [cfg] = ft_spikesplitting(cfg);
+function [cfg] = ft_spikesplitting(cfg)
 
 % FT_SPIKESPLITTING reads a single Neuralynx DMA log file and writes each
 % individual channel to a seperate file.
@@ -43,15 +43,13 @@ function [cfg] = ft_spikesplitting(cfg);
 %
 % $Id$
 
+revision = '$Id$';
+
+% do the general setup of the function
 ft_defaults
-
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
-
-% enable configuration tracking
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
 
 % set the general defaults
 if ~isfield(cfg, 'dataset'),          cfg.dataset = [];                 end
@@ -262,17 +260,7 @@ for j=1:hdr.nChans
   end
 end
 
-% add the version details of this function call to the configuration
-cfg.version.name = mfilename('fullpath');
-cfg.version.id   = '$Id$';
-
-% add information about the Matlab version used to the configuration
-cfg.callinfo.matlab = version();
-
-% add information about the function call to the configuration
-cfg.callinfo.proctime = toc(ftFuncTimer);
-cfg.callinfo.procmem  = memtoc(ftFuncMem);
-cfg.callinfo.calltime = ftFuncClock;
-cfg.callinfo.user = getusername();
-fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
 

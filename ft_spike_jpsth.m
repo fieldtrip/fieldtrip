@@ -42,6 +42,14 @@ function [jpsth] = ft_spike_jpsth(cfg,psth)
 %
 % $Id$
 
+revision = '$Id$';
+
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
+
 % check the configuration inputs and enter the defaults
 defaults.shiftpredictor = {'no' 'yes'};
 defaults.normalization  = {'no' 'yes'};
@@ -50,9 +58,6 @@ defaults.latency        = {'maxperiod'};
 defaults.keeptrials     = {'no' 'yes'};
 defaults.channelcmb     = {{'all','all'}};
 cfg = ft_spike_sub_defaultcfg(cfg,defaults);
-
-% enable configuration tracking
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
 % check whether PSTH contains single trials
 if ~all(isfield(psth,{'trial' 'time'})),
@@ -328,18 +333,9 @@ else
   jpsth.dimord = 'time_time_chan_chan';
 end
 
-% add version information to the configuration
-try
-  % get the full name of the function
-  cfg.version.name = mfilename('fullpath');
-catch
-  % required for compatibility with Matlab versions prior to release 13 (6.5)
-  [st, i] = dbstack;
-  cfg.version.name = st(i);
-end
-% remember the configuration details of the input data
-if isfield(psth,'cfg'), cfg.previous = psth.cfg; end
-% remember the exact configuration details in the output
-jpsth.cfg     = cfg;
-
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+ft_postamble previous psth
+ft_postamble history jpsth
 

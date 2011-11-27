@@ -20,21 +20,19 @@ function [H] = ft_spike_plot_isi(cfg, isih)
 %   hdl.fit              = handle for line fit. Use SET and GET to access.
 %   hdl.isih             = handle for bar isi histogram. Use SET and GET to access.
 
-
 % Copyright (C) 2010, Martin Vinck
 %
 % $Id$
 
+revision = '$Id$';
+
+% do the general setup of the function
 ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();;
-ftFuncMem   = memtic();
-
-% check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
-
+% general configuration defaults
 defaults.plotfit      = {'no' 'yes'};
 defaults.spikechannel = {1};
 defaults.ylim         = {'auto'};
@@ -105,6 +103,10 @@ H.isih   = isiHdl;
 % as usual, make sure that panning and zooming does not distort the y limits
 set(zoom,'ActionPostCallback',{@mypostcallback,cfg.ylim,[min(isih.time) max(isih.time)]});
 set(pan,'ActionPostCallback',{@mypostcallback,cfg.ylim,[min(isih.time) max(isih.time)]});
+
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % deal with the output

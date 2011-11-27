@@ -16,11 +16,15 @@ function [Stat] = ft_spike_rate_orituning(cfg,Tune)
 %
 % $Id$
 
-% enable configuration tracking
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+revision = '$Id$';
+
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
 
 % check whether trials were kept in the rate function
-
 if ~isfield(Tune, 'avg'), error('MATLAB:ft_spike_rate_tuning:noFieldTrial',...
     'TUNE should contain the field avg');
 end
@@ -95,16 +99,9 @@ end
 
 Stat.label   = Tune.label;
 
-% add version information to the configuration
-try
-  % get the full name of the function
-  cfg.version.name = mfilename('fullpath');
-catch
-  % required for compatibility with Matlab versions prior to release 13 (6.5)
-  [st, k] = dbstack;
-  cfg.version.name = st(k);
-end
-% remember the configuration details of the input data
-try, cfg.previous = Tune.cfg; end
-% remember the exact configuration details in the output
-Stat.cfg     = cfg;
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+ft_postamble previous Tune
+ft_postamble history Stat
+

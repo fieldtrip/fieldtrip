@@ -28,11 +28,16 @@ function [spikedata] = ft_spike_spike2data(cfg,spike,data)
 % Appending should be done with FT_APPENDDATA
 
 % Copyright (C) 2010, Martin Vinck
+%
+% $Id$
 
-if nargin<2, error('MATLAB:ft_spike_spike2data','Minimal twoinputs required'), end
+revision = '$Id$';
 
-% enable configuration tracking
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
 
 % set the defaults
 try
@@ -127,22 +132,20 @@ catch
   spikedata.hdr     = struct([]);
 end
 
-% add version information to the configuration
-try
-  % get the full name of the function
-  cfg.version.name = mfilename('fullpath');
-catch
-  % required for compatibility with Matlab versions prior to release 13 (6.5)
-  [st, i] = dbstack;
-  cfg.version.name = st(i);
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+if nargin==3
+  ft_postamble previous spike data
+elseif nargin==2
+  ft_postamble previous spike
 end
-% remember the configuration details of the input data
-cfg.previous = [];
-try, cfg.previous = spike.cfg; end
-% remember the exact configuration details in the output
-spikedata.cfg = cfg;
+ft_postamble history spikedata
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [indx] = nearest_nd(x,y)
 
 % NEAREST return the index of an n-d matrix to an n-d matrix.
@@ -241,53 +244,4 @@ indx(hasNan) = NaN;
 if (sum(szY>1)>1 || length(szY)>2) % in this case we are dealing with a matrix
   indx = reshape(indx,[szY]);
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

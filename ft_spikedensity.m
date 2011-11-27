@@ -1,4 +1,4 @@
-function [sdf sdfdata] = density(cfg,data)
+function [sdf, sdfdata] = density(cfg,data)
 
 % FT_SPIKESTATION_DENSITY computes the spike density function of the
 % spike trains by convolving the data with a window.
@@ -59,8 +59,13 @@ function [sdf sdfdata] = density(cfg,data)
 %
 % $Id$
 
-% enable configuration tracking
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
+revision = '$Id$';
+
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
 
 % set the defaults
 defaults.timwin         = {[-0.05 0.05]};
@@ -290,26 +295,16 @@ else
 end
 
 % create a new structure that is a standard raw data spike structure itself
-if nargout>1
-  sdfdata.fsample              = fsample;
-  sdfdata.label(1:nUnits)      = data.label(spikesel);
-  sdfdata.hdr                  = data.hdr;
-end
+% this is returned as second output argument
+sdfdata.fsample              = fsample;
+sdfdata.label(1:nUnits)      = data.label(spikesel);
+sdfdata.hdr                  = data.hdr;
 
-% add version information to the configuration
-try
-  % get the full name of the function
-  cfg.version.name = mfilename('fullpath');
-catch
-  % required for compatibility with Matlab versions prior to release 13 (6.5)
-  [st, i] = dbstack;
-  cfg.version.name = st(i);
-end
-% remember the configuration details of the input data
-if isfield(data,'cfg'), cfg.previous = data.cfg; end
-% remember the exact configuration details in the output
-sdf.cfg     = cfg;
-if nargout>1
-  sdfdata.cfg = cfg;
-end
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+ft_postamble previous data
+% store the configuration history in both output arguments
+ft_postamble history sdf
+ft_postamble history sdfdata
 

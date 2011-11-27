@@ -34,17 +34,16 @@ function [Sts] = ft_spike_triggeredspectrum(cfg, data, spike)
 %
 % $Id$
 
+revision = '$Id$';
+
+% do the general setup of the function
 ft_defaults
+ft_preamble help
+ft_preamble callinfo
+ft_preamble trackconfig
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
-
+% check if the input data is valid for this function
 data = ft_checkdata(data, 'datatype', {'raw'}, 'feedback', 'yes');
-
-% check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 
 % ensure that the required options are present
 cfg = ft_checkconfig(cfg, 'required', {'foi','t_ftimwin'});
@@ -214,27 +213,9 @@ for iUnit = 1:nspikesel
 end
 Sts.trialtime = spike.trialtime;
 
-% add information about the Matlab version used to the configuration
-cfg.callinfo.matlab = version();
-
-% add information about the function call to the configuration
-cfg.callinfo.proctime = toc(ftFuncTimer);
-cfg.callinfo.procmem  = memtoc(ftFuncMem);
-cfg.callinfo.calltime = ftFuncClock;
-cfg.callinfo.user     = getusername();
-fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
-
-% add version information to the configuration
-try
-  % get the full name of the function
-  cfg.version.name = mfilename('fullpath');
-catch
-  % required for compatibility with Matlab versions prior to release 13 (6.5)
-  [st, ind] = dbstack;
-  cfg.version.name = st(ind);
-end
-% remember the configuration details of the input data
-try, cfg.previous = data.cfg; end
-% remember the exact configuration details in the output
-Sts.cfg = cfg;
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+ft_postamble previous data spike
+ft_postamble history Sts
 
