@@ -54,17 +54,27 @@ ft_preamble help
 ft_preamble callinfo
 ft_preamble trackconfig
 
-% check the configuration inputs and enter the defaults
-defaults.spikechannel   = {'all'};
-defaults.trials         = {'all'};
-defaults.latency        = {'maxperiod'};
-defaults.linewidth      = {1};
-defaults.cmapneurons    = {'auto'}; % auto based on the number of cells
-defaults.spikelength    = {0.9};
-defaults.topdata        = {[]};
-defaults.topplotsize    = {0.5}; % meaning: top plot takes 50%
-defaults.topplotfunc    = {'bar' 'line'}; % auto means: we check if sdf or psth REMOVE
-cfg = ft_spike_sub_defaultcfg(cfg,defaults);
+% get the default options
+cfg.spikechannel = ft_getopt(cfg, 'spikechannel', 'all');
+cfg.trials       = ft_getopt(cfg, 'trials', 'all');
+cfg.latency      = ft_getopt(cfg,'latency','maxperiod');
+cfg.linewidth    = ft_getopt(cfg,'linewidth', 1);
+cfg.cmapneurons  = ft_getopt(cfg,'cmapneurons', 'auto');
+cfg.spikelength  = ft_getopt(cfg,'spikelength', 0.9);
+cfg.topdata      = ft_getopt(cfg,'topdata', []);
+cfg.topplotsize  = ft_getopt(cfg,'topplotsize', 0.5);
+cfg.topplotfunc  = ft_getopt(cfg,'topplotfunc', 'bar');
+
+% ensure that the options are valid
+cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});
+cfg = ft_checkopt(cfg,'latency', {'char', 'doublevector'});
+cfg = ft_checkopt(cfg,'trials', {'char', 'doublevector', 'logical'}); 
+cfg = ft_checkopt(cfg,'linewidth', 'doublescalar');
+cfg = ft_checkopt(cfg,'cmapneurons', {'char', 'double', 'cell'});
+cfg = ft_checkopt(cfg,'spikelength', 'doublescalar');
+cfg = ft_checkopt(cfg,'topdata', 'struct');
+cfg = ft_checkopt(cfg,'topplotsize', 'doublescalar');
+cfg = ft_checkopt(cfg,'topplotfunc', 'char', {'bar', 'line'});
 
 % check which features should be present in the rasterplot and psth
 if nargin==3
