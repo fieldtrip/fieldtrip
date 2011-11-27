@@ -24,18 +24,16 @@ ft_preamble help
 ft_preamble callinfo
 ft_preamble trackconfig
 
+% ensure that the required options are present
+cfg = ft_checkconfig(cfg, 'required', {'stimuli', 'method'});
+cfg = ft_checkopt(cfg,'stimuli','doublevector');
+cfg = ft_checkopt(cfg,'method', 'char', {'orientation', 'direction'});
+
 % check whether trials were kept in the rate function
 if ~isfield(Tune, 'avg'), error('MATLAB:ft_spike_rate_tuning:noFieldTrial',...
     'TUNE should contain the field avg');
 end
-if ~isfield(cfg,'stimuli'), error('MATLAB:ft_spike_rate_tuning:cfg:stimuliMissing','stimuli missing'), end
-if ~isfield(cfg,'method'), error('MATLAB:ft_spike_rate_tuning:cfg:stimuliMissing','stimuli missing'),...
-    'Please choose a method, "orientation", or "direction"', end
 stimuli = cfg.stimuli(:);
-if ~isrealvec(stimuli)
-  error('MATLAB:ft_spike_rate_tuning:stimui',...
-    'STIMULI should be a real vector');
-end
 nConditions = size(Tune.avg,1);
 if nConditions~=length(stimuli)
   error('MATLAB:ft_spike_rate_tuning:cfg:designWrongLength',...
