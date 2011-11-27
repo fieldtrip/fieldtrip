@@ -75,7 +75,7 @@ cfg = ft_checkopt(cfg,'trials', {'char', 'doublevector', 'logical'});
 cfg = ft_checkopt(cfg,'linewidth', 'doublescalar');
 cfg = ft_checkopt(cfg,'cmapneurons', {'char', 'double', 'cell'});
 cfg = ft_checkopt(cfg,'spikelength', 'doublescalar');
-cfg = ft_checkopt(cfg,'topdata', {'struct', 'double'});
+cfg = ft_checkopt(cfg,'topdata', {'struct', 'empty'});
 cfg = ft_checkopt(cfg,'topplotsize', 'doublescalar');
 cfg = ft_checkopt(cfg,'topplotfunc', 'char', {'bar', 'line'});
 
@@ -85,6 +85,8 @@ if ~isempty(cfg.topdata)
   topData = cfg.topdata;
   cfg = rmfield(cfg, 'topdata');
   topData = ft_checkdata(topData,'datatype', 'timelock', 'feedback', 'yes');
+else
+  doTopData = false;
 end
 
 if doTopData
