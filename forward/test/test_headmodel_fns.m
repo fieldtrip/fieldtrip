@@ -45,6 +45,7 @@ bnd.tri = tri;
 clear sens
 sel = find(bnd.pnt(:,3)>0);
 sens.chanpos = bnd.pnt(sel,:);
+sens.elecpos = bnd.pnt(sel,:);
 for i=1:length(sel)
   sens.label{i} = sprintf('chan%03d', i);
 end
@@ -54,6 +55,10 @@ sens.type = 'eeg';
 % load('~crimic/test/SimBio/spheres','bkgrnd')
 transform = eye(4);
 transform(1:3,4) = [-76 -76 -76]'; % voxels to mm
+
+% FIXME: write a function that reads in the segmentation fields and
+% transforms them into a integer compartments image
+
 % ATTENTION: fns wants the coordinates in voxel units,
 % conductivity in S/m, sensors in voxels, dipoles in voxels
 vol  = ft_headmodel_fdm_fns(bkgrnd,'tissue',{'sph1','sph2','sph3'}, ...

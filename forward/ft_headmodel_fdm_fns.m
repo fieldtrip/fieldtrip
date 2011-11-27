@@ -75,8 +75,10 @@ try
     mri = [];
     mri.dim = size(seg);
     mri.transform = eye(4);
-    mri.seg = seg;
+    mri.seg = uint8(seg);
+    
     cfg = [];
+    cfg.datatype = 'uint8';
     cfg.coordsys  = 'ctf';
     cfg.parameter = 'seg';
     cfg.filename  = segfile;
@@ -91,7 +93,7 @@ try
     % write the positions of the electrodes on disk
     disp('writing the electrodes file...')
     pos = warp_apply(inv(transform),sens.chanpos); % in voxel coordinates!
-%     fns_elec_write(int32(round(pos)), [1 1 1], size(seg), elecfile); 
+
     % convert pos into int32 datatype. 
     hdf5write(elecfile, '/electrodes/gridlocs', int32(pos));
     
@@ -108,10 +110,9 @@ try
     dos(sprintf('chmod +x %s', exefile));
     dos(['./' exefile]);
     
+    % FIXME: find a cleverer way to store the huge transfer matrix (vista?)
     [transfer,status] = fns_read_transfer(datafile);
     
-    % FIXME : the result of elecsfwd has to be read in a transfer matrix
-    % (has to be implemented!)
     cleaner(segfile,confile,elecfile,exefile,datafile)
     
 catch ME
@@ -126,6 +127,7 @@ vol = [];
 vol.tissue     = tissue;
 vol.tissueval  = tissueval;
 vol.transform  = transform;
+vol.segdim     = size(seg);
 vol.units      = units;
 vol.type       = 'fns';
 vol.transfer   = transfer;
