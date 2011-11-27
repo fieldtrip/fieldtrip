@@ -39,21 +39,13 @@ ft_preamble help
 ft_preamble callinfo
 ft_preamble trackconfig
 
-% set the defaults
-try
-  defaults.fsample   = {data.fsample};
-catch
-  try
-    defaults.fsample = {cfg.fsample};
-  catch % user should be aware that this is not safe, so issue a warning
-    warning('MATLAB:ft_spike_spike2data:cfg:fsample','%s\n%s',...
-      'fsample can not be determined from cfg.fsample or data.fsample, setting',...
-      'cfg.fsample to 1000 by default')
-    defaults.fsample        = {1000};
-  end
-end
-defaults.sparse         = {'yes' 'no'};
-cfg		 = ft_spike_sub_defaultcfg(cfg,defaults);
+% ensure that the required options are present
+cfg = ft_checkconfig(cfg, 'required', {'fsample'});
+cfg.sparse = ft_getopt(cfg,'sparse', 'yes');
+
+% ensure that the options are valid
+cfg = ft_checkopt(cfg,'fsample','doublescalar');
+cfg = ft_checkopt(cfg,'sparse', 'char', {'yes', 'no'});
 
 % check whether the data has the right structure
 hasAllFields = all(isfield(spike, {'time', 'trial', 'trialtime', 'label'}));

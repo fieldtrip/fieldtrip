@@ -50,7 +50,8 @@ function [sdf, sdfdata] = density(cfg,data)
 % Outputs:
 %   - SDF is a structure similar to TIMELOCK (output from FT_TIMELOCKANALYSIS) and can be used
 %     in FT_TIMELOCKSTATISTICS for example.
-%   - SDFDATA is a raw DATA type structure that can be used itself in all functions that support
+%   - SDFDATA is a raw DATA type structure that can be used itself in all
+%   functions that support
 %     raw data input (such as FT_TIMELOCKANALYSIS, FT_FREQANALYSIS).
 
 % TODO: check that SDFDATA is indeed completely compatible!
