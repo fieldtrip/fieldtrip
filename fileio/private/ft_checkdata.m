@@ -115,6 +115,7 @@ istimelock = ft_datatype(data, 'timelock');
 iscomp     = ft_datatype(data, 'comp');
 isspike    = ft_datatype(data, 'spike');
 isspikeraw = ft_datatype(data, 'spikeraw');
+issts      = ft_datatype(data, 'sts');
 isvolume   = ft_datatype(data, 'volume');
 issource   = ft_datatype(data, 'source');
 isdip      = ft_datatype(data, 'dip');
@@ -149,6 +150,9 @@ if ~isequal(feedback, 'no')
   elseif isspikeraw
     nchan = length(data.label);
     fprintf('the input is raw spike data with %d channels\n',nchan);
+  elseif issts
+    nchan = length(data.label);
+    fprintf('the input is sts data with %d channels\n',nchan);    
   elseif isvolume
     fprintf('the input is volume data with dimensions [%d %d %d]\n', data.dim(1), data.dim(2), data.dim(3));
   elseif issource
@@ -188,6 +192,8 @@ elseif isspike
   data = ft_datatype_spike(data);
 elseif isspikeraw
   data = ft_datatype_spikeraw(data);
+elseif issts
+  data = ft_datatype_sts(data);
 elseif isvolume
   data = ft_datatype_volume(data);
 elseif issource
@@ -219,6 +225,8 @@ if ~isempty(dtype)
         okflag = okflag + isspike;
       case 'spikeraw'
         okflag = okflag + isspikeraw;
+      case 'sts'
+        okflag = okflag + issts;
       case 'volume'
         okflag = okflag + isvolume;
       case 'source'
