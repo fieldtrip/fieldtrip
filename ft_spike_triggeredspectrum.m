@@ -43,7 +43,8 @@ ft_preamble callinfo
 ft_preamble trackconfig
 
 % check if the input data is valid for this function
-data = ft_checkdata(data, 'datatype', {'raw'}, 'feedback', 'yes');
+data  = ft_checkdata(data, 'datatype', {'raw'}, 'feedback', 'yes');
+spike = ft_checkdata(spike, 'datatype', {'spike'}, 'feedback', 'yes');
 
 % ensure that the required options are present
 cfg = ft_checkconfig(cfg, 'required', {'foi','t_ftimwin'});

@@ -51,9 +51,6 @@ ft_preamble help
 ft_preamble callinfo
 ft_preamble trackconfig
 
-% check if the input data is valid for this function
-data = ft_checkdata(data, 'datatype', {'raw'}, 'feedback', 'yes');
-
 % ensure that the required options are present
 cfg = ft_checkconfig(cfg, 'required', {'foi','t_ftimwin'});
 if  isequal(cfg.taper, 'dpss')

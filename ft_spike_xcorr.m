@@ -77,6 +77,9 @@ ft_preamble help
 ft_preamble callinfo
 ft_preamble trackconfig
 
+% check input spike structure
+spike = ft_checkdata(spike,'datatype', 'spike', 'feedback', 'yes');
+
 % get the default options
 cfg.trials         = ft_getopt(cfg,'trials', 'all');
 cfg.latency        = ft_getopt(cfg,'latency','maxperiod');

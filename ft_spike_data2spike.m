@@ -22,15 +22,12 @@ ft_preamble help
 ft_preamble callinfo
 ft_preamble trackconfig
 
+% check if data is of proper format
+data = ft_checkdata(data,'datatype', 'raw', 'feedback', 'yes');
+
 % put the defaults and check whether there are ununsed fields
 cfg.spikechannel = ft_getopt(cfg, 'spikechannel', 'all');
 cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});
-
-% check if the input data is valid for this function, should be done with CHECKDATA
-hasAllFields = all(isfield(data,{'time','trial', 'label'}));
-if ~hasAllFields, error('MATLAB:ft_spike_data2spike:data2spike:wrongInput',...
-    'DATA should contain .time, .trial, .label');
-end
 
 % spike channel selection, avoid check on max number of spikes here, since we may use spike format
 % for events as well

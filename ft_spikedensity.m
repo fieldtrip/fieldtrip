@@ -68,6 +68,9 @@ ft_preamble help
 ft_preamble callinfo
 ft_preamble trackconfig
 
+% check input data structure
+data = ft_checkdata(data,'datatype', 'raw', 'feedback', 'yes');
+
 % get the default options
 cfg.outputunit   = ft_getopt(cfg, 'outputunit','rate');
 cfg.timwin       = ft_getopt(cfg, 'timwin',[-0.05 0.05]);

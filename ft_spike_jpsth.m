@@ -50,6 +50,8 @@ ft_preamble help
 ft_preamble callinfo
 ft_preamble trackconfig
 
+psth = ft_checkdata(psth, 'datatype', 'timelock', 'hastrials', 'yes', 'feedback', 'yes');
+
 % get the default options
 cfg.trials         = ft_getopt(cfg, 'trials', 'all');
 cfg.latency        = ft_getopt(cfg,'latency','maxperiod');
@@ -65,12 +67,6 @@ cfg = ft_checkopt(cfg,'keeptrials', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'shiftpredictor', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'normalization', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'channelcmb', {'char', 'cell'});
-
-% check whether PSTH contains single trials
-if ~all(isfield(psth,{'trial' 'time'})),
-  error('MATLAB:ft_spike_jpsth:psth:missingFields',...
-    'input PSTH should contain the field trial and time')
-end
 
 % get the number of trials or change DATA according to cfg.trials
 if  strcmp(cfg.trials,'all')

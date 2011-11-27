@@ -54,6 +54,9 @@ ft_preamble help
 ft_preamble callinfo
 ft_preamble trackconfig
 
+% check if input spike structure is indeed a spike structure
+spike = ft_checkdata(spike,'datatype', 'spike', 'feedback', 'yes');
+
 % get the default options
 cfg.spikechannel = ft_getopt(cfg, 'spikechannel', 'all');
 cfg.trials       = ft_getopt(cfg, 'trials', 'all');

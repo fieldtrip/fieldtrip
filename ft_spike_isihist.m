@@ -34,13 +34,14 @@ function [isih] = ft_spike_isihist(cfg,spike)
 
 revision = '$Id$';
 
-spike = ft_checkdata(spike,'datatype', 'spike', 'feedback', 'yes');
-
 % do the general setup of the function
 ft_defaults
 ft_preamble help
 ft_preamble callinfo
 ft_preamble trackconfig
+
+% check if data is of proper format 
+spike = ft_checkdata(spike,'datatype', 'spike', 'feedback', 'yes');
 
 % get the default options
 cfg.outputunit   = ft_getopt(cfg, 'outputunit','spikecount');
@@ -59,18 +60,6 @@ cfg = ft_checkopt(cfg,'latency', {'char', 'doublevector'});
 cfg = ft_checkopt(cfg,'trials', {'char', 'doublevector', 'logical'}); 
 cfg = ft_checkopt(cfg,'keeptrials', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'gammafit', 'char', {'yes', 'no'});
-
-% detect whether the format of spike is correct
-hasAllFields = all(isfield(spike, {'time', 'trial', 'trialtime', 'label'}));
-if ~hasAllFields, error('MATLAB:ft_spike_isihist:wrongStructInput',...
-    'input SPIKE should be struct with .timestamp, .trial, .time, .label fields')
-end
-
-% check whether all are of right format
-correctInp = iscell(spike.time) & iscell(spike.trial) & iscell(spike.label) & size(spike.trialtime,2)==2;
-if ~correctInp, error('MATLAB:ft_spike_isihist:wrongStructInput',...
-    '.timestamp, .trial and .label should be cell arrays, time should be nTrials-by-2 matrix')
-end
 
 % get the number of trials or change DATA according to cfg.trials
 if  strcmp(cfg.trials,'all')

@@ -45,13 +45,14 @@ function [spike] = ft_spike_maketrials(cfg,spike)
 
 revision = '$Id$';
 
-spike = ft_checkdata(spike,'datatype', 'spikeraw', 'feedback', 'yes');
-
 % do the general setup of the function
 ft_defaults
 ft_preamble help
 ft_preamble callinfo
 ft_preamble trackconfig
+
+% check if input data is indeed spikeraw format
+spike = ft_checkdata(spike,'datatype', 'spikeraw', 'feedback', 'yes');
 
 % ensure that the required options are present
 cfg = ft_checkconfig(cfg, 'required', {'timestampspersecond', 'trl'});
@@ -59,19 +60,6 @@ cfg = ft_checkconfig(cfg, 'required', {'timestampspersecond', 'trl'});
 % ensure that the options are valid
 cfg = ft_checkopt(cfg,'timestampspersecond',{'doublescalar'});
 cfg = ft_checkopt(cfg,'trl', {'double'});
-
-
-% detect whether the format of spike is correct
-hasAllFields = all(isfield(spike, {'timestamp' 'label'}));
-if ~hasAllFields, error('MATLAB:ft_spike_maketrials:wrongStructInput',...
-    'HELP. Input SPIKE should be struct with .timestamp and .label fields.')
-end
-
-% check whether all are of right format
-correctInp = iscell(spike.timestamp) & iscell(spike.label);
-if ~correctInp, error('MATLAB:ft_spike_maketrials:wrongStructInput',...
-    'HELP. .timestamp and .label should be cell arrays.')
-end
 
 % make sure that the cfg.trl indeed has three columns
 if size(cfg.trl,2)~=3,

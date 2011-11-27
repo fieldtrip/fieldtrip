@@ -47,13 +47,14 @@ function [rate] = ft_spike_rate(cfg,spike)
 
 revision = '$Id$';
 
-spike = ft_checkdata(spike,'datatype', 'spike', 'feedback', 'yes');
-
 % do the general setup of the function
 ft_defaults
 ft_preamble help
 ft_preamble callinfo
 ft_preamble trackconfig
+
+% control input spike structure
+spike = ft_checkdata(spike,'datatype', 'spike', 'feedback', 'yes');
 
 % get the default options
 cfg.outputunit   = ft_getopt(cfg, 'outputunit','rate');

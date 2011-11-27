@@ -32,6 +32,9 @@ ft_preamble help
 ft_preamble callinfo
 ft_preamble trackconfig
 
+% check the psth datatype
+psth = ft_checkdata(psth, 'datatype', 'timelock', 'feedback', 'yes');
+
 % get the default options
 cfg.spikechannel = ft_getopt(cfg, 'spikechannel', 'all');
 cfg.latency      = ft_getopt(cfg,'latency','maxperiod');

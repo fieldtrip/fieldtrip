@@ -60,6 +60,9 @@ ft_preamble help
 ft_preamble callinfo
 ft_preamble trackconfig
 
+% check input data structure
+data = ft_checkdata(data,'datatype', 'raw', 'feedback', 'yes');
+
 % these were supported in the past, but are not any more (for consistency with other spike functions)
 cfg = ft_checkconfig(cfg, 'forbidden', 'inputfile');   % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1056
 cfg = ft_checkconfig(cfg, 'forbidden', 'outputfile');  % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1056
