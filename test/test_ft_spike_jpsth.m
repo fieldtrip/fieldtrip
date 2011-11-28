@@ -3,12 +3,12 @@ function test_ft_spike_jpsth()
 % TEST test_ft_spike_jpsth
 % ft_spike_jpsth
 
+%% 
 % 1 channelcmb with same latency, gamma
 % 1 channelcmb with fixed spike times
 % 1 channelcmb with shifted latency to see effect
 % 1 lfp channel
 % latencies equal
-clear
 spikesPerTrial = 10;
 nTrials        = 10;
 shapePar       = 2;
@@ -89,7 +89,7 @@ data.cfg.trl = [];
 
 % show that the psth works also with the poisson format
 cfgDE.spikechannel = 2:9;
-spike = ft_spike_data2spike(cfgDE,data);
+spike = checkdata(data,'datatype', 'spike', 'feedback', 'yes')
 
 
 %%
@@ -158,7 +158,7 @@ cfg = [];
 cfg.normalization = 'yes';
 tic,jpsth = ft_spike_jpsth(cfg,psth);toc
 cfg = [];
-for iCmb = 1:21
+for iCmb = 1:5
 figure
 cfg.channelcmb = jpsth.labelcmb(iCmb,:);
 ft_spike_plot_jpsth(cfg,jpsth)
@@ -250,7 +250,7 @@ data.label = {};
 data.label{end+1} = 'spk2';
 data.label{end+1} = 'spk3';
 data.label{end+1} = 'spk4';
-spike = ft_spike_data2spike([],data);
+spike = ft_checkdata(data, 'datatype', 'spike', 'feedback', 'yes');
 
 %%
 % we compute the psth by calling the psth function
@@ -272,3 +272,4 @@ figure
 cfg = [];
 cfg.channelcmb = jpsth.labelcmb(1,:);
 ft_spike_plot_jpsth(cfg,jpsth)
+
