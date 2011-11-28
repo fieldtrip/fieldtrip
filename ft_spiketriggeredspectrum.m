@@ -71,10 +71,10 @@ cfg = ft_checkconfig(cfg, 'forbidden', 'outputfile');  % see http://bugzilla.fcd
 cfg.timwin       = ft_getopt(cfg, 'timwin',[-0.1 0.1]);
 cfg.spikechannel = ft_getopt(cfg,'spikechannel', []);
 cfg.channel      = ft_getopt(cfg,'channel', 'all');
-cfg.feedback     = ft_checkopt(cfg,'feedback', 'no');
-cfg.tapsmofrq    = ft_checkopt(cfg,'tapsmofrq', 4);
-cfg.taper        = ft_checkopt(cfg,'taper', 'hanning');
-cfg.foilim       = ft_checkopt(cfg,'foilim', [0 150]);
+cfg.feedback     = ft_getopt(cfg,'feedback', 'no');
+cfg.tapsmofrq    = ft_getopt(cfg,'tapsmofrq', 4);
+cfg.taper        = ft_getopt(cfg,'taper', 'hanning');
+cfg.foilim       = ft_getopt(cfg,'foilim', [0 150]);
 
 % ensure that the options are valid
 cfg = ft_checkopt(cfg,'timwin','doublevector');
