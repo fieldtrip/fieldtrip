@@ -158,7 +158,7 @@ for i=1:Ndata
       chan = varargin{i}.label;
     end
   else
-    chan = intersect(chan, varargin{i}.label);
+    chan = varargin{i}.label(ismember(varargin{i}.label, chan));
   end
 end
 
