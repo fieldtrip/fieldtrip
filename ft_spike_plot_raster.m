@@ -85,14 +85,6 @@ else
   doTopData = false;
 end
 
-if doTopData
-  % make sure TOPDATA is struct with right fields, and warn if VAR or DOF are missing
-  if ~isstruct(topData) || ~all(isfield(topData,{'avg' 'time' 'label'}))
-    error('MATLAB:ft_spike_plot_raster:topData:wrongFormatStruct',...
-      'TOPDATA needs to be (timelock or psth) struct with fields avg, time and label');
-  end
-end
-
 % get the spikechannels
 cfg.spikechannel = ft_channelselection(cfg.spikechannel, spike.label);
 spikesel    = match_str(spike.label, cfg.spikechannel);
@@ -107,9 +99,6 @@ if  strcmp(cfg.trials,'all')
   cfg.trials = 1:nTrialsOrig;
 elseif islogical(cfg.trials)
   cfg.trials = find(cfg.trials);
-elseif ~isrealvec(cfg.trials);
-  error('MATLAB:ft_spike_plot_raster:cfg:trials:wrongInput',...
-    'cfg.trials should be logical or numerical selection or string "all"');
 end
 cfg.trials = sort(cfg.trials(:));
 if max(cfg.trials)>nTrialsOrig, error('MATLAB:ft_spike_plot_raster:cfg:trials:maxExceeded',...

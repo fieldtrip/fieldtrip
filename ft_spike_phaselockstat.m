@@ -86,9 +86,6 @@ if nspikesel>1, error('only one unit should be selected for now'); end
 % collect frequency information
 if strcmp(cfg.foi, 'all'),  
   cfg.foi           = sts.freq; 
-elseif ~isrealvec(cfg.foi), 
-  error('MATLAB:fieldtrip:spike_phaselocking:cfg:foi:unknownOption',...
-  'cfg.foi should be "all" or vector of frequencies in Hz')
 end
 freqindx         = nearest_nd(sts.freq,cfg.foi); 
 if length(freqindx)~=length(unique(freqindx)) 
@@ -104,15 +101,12 @@ if strcmp(cfg.spikesel,'all'),
   cfg.spikesel = 1:length(sts.trial{unitsel});
 elseif islogical(cfg.spikesel)
   cfg.spikesel = find(cfg.spikesel);
-elseif ~isrealvec(cfg.spikesel) 
-  error('MATLAB:fieldtrip:spike_phaselocking:cfg:spikesel',... 
-  'cfg.spikesel should be a numerical or logical vector ')
 end
 if ~isempty(cfg.spikesel)
-if max(cfg.spikesel)>nSpikes || length(cfg.spikesel)>nSpikes % ease debugging of this error
-  error('MATLAB:fieldtrip:spike_phaselocking:cfg:spikesel',...
-  'cfg.spikesel must not exceed number of spikes and select every spike just once')
-end
+  if max(cfg.spikesel)>nSpikes || length(cfg.spikesel)>nSpikes % ease debugging of this error
+    error('MATLAB:fieldtrip:spike_phaselocking:cfg:spikesel',...
+    'cfg.spikesel must not exceed number of spikes and select every spike just once')
+  end
 end
   
 % select on basis of latency

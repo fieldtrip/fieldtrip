@@ -85,9 +85,6 @@ chansel            = match_str(sts.label, cfg.channel);
 % frequency selection business
 if strcmp(cfg.foilim, 'all'),  
   cfg.foilim           = [sts.freq(1) sts.freq(end)]; 
-elseif ~isrealvec(cfg.foilim) 
-  error('MATLAB:fieldtrip:spike_phaselocking:cfg:foi:unknownOption',...
-  'cfg.foi should be "all" or vector of frequencies in Hz')
 end
 fbeg             = nearest(sts.freq,cfg.foilim(1));
 fend             = nearest(sts.freq,cfg.foilim(end));
@@ -103,9 +100,6 @@ if strcmp(cfg.spikesel,'all'),
   cfg.spikesel = 1:length(sts.trial);
 elseif islogical(cfg.spikesel)
   cfg.spikesel = find(cfg.spikesel);
-elseif ~isrealvec(cfg.spikesel) 
-  error('MATLAB:fieldtrip:spike_phaselocking:cfg:spikesel',... 
-  'cfg.spikesel should be a numerical or logical vector ')
 end
 if max(cfg.spikesel)>nSpikes || length(cfg.spikesel)>nSpikes % ease debugging of this error
   error('MATLAB:fieldtrip:spike_phaselocking:cfg:spikesel',...
