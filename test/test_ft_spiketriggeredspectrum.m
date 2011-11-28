@@ -3,7 +3,6 @@ function test_ft_spiketriggeredspectrum()
 % TEST test_ft_spiketriggeredspectrum
 % ft_spiketriggeredspectrum
 
-
 %% create the data, in which spikes fall at known phases, and in which our spike times
 % fall precicely on the samples. In this case there is no phase error
 data = [];
