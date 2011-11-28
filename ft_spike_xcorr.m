@@ -17,7 +17,8 @@ function [Xcorr] = ft_spike_xcorr(cfg,spike)
 %                          the length of the data segment. Although this scaling reduces the
 %                          bias, it can give a higher variance which might be more
 %                          problematic in some cases.
-%   cfg.shiftpredictor   = 'no' (default) or 'yes'. The shift-predictor is calculated from
+%   cfg.shiftpredictor   = 'no' (default) or 'yes'. The shift-predictor is
+%   calculated from
 %                          channel x in every trial to the channel y in the previous
 %                          trial. If two channels are independent, then the shift
 %                          predictor should give the same correlogram as the raw
@@ -231,9 +232,9 @@ try
       % compute the xcorr if both are non-empty
       if ~isempty(ts1) && ~isempty(ts2)
         if indx(1)<=indx(2)
-          [x]   = ft_spike_sub_crossx(ts1,ts2,cfg.binsize,nLags*2);
+          [x]   = spike_crossx(ts1,ts2,cfg.binsize,nLags*2);
         else
-          [x]   = ft_spike_sub_crossx(ts2,ts1,cfg.binsize,nLags*2);
+          [x]   = spike_crossx(ts2,ts1,cfg.binsize,nLags*2);
         end
         
         % sum the xcorr
@@ -270,9 +271,9 @@ try
           if ~isempty(A) && ~isempty(B),
             
             if indx(1)<=indx(2)
-              [x]   = ft_spike_sub_crossx(ts1,ts2,cfg.binsize,nLags*2);
+              [x]   = spike_crossx(ts1,ts2,cfg.binsize,nLags*2);
             else
-              [x]   = ft_spike_sub_crossx(ts2,ts1,cfg.binsize,nLags*2);
+              [x]   = spike_crossx(ts2,ts1,cfg.binsize,nLags*2);
             end
             % compute the sum
             shiftSum(:,indx(1),indx(2)) =  shiftSum(:,indx(1),indx(2)) + x(:);
