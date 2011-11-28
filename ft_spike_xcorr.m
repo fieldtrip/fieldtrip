@@ -5,8 +5,9 @@ function [Xcorr] = ft_spike_xcorr(cfg,spike)
 % Use as
 %   [xcorr] = ft_spike_xcorr(cfg,data)
 %
-% The input data should be organised either as a spike datatype, obtained
-% from FT_SPIKE_DATA2SPIKE or FT_SPIKE_MAKETRIALS
+% The input SPIKE should be organised as the spike or the raw datatype, obtained from
+% FT_SPIKE_MAKETRIALS or FT_PREPROCESSING (in that case, conversion is done
+% within the function)
 %
 % Configurations options for xcorr general:
 %   cfg.maxlag           = number in seconds, indicating the maximum lag for the

@@ -3,17 +3,13 @@ function [hdl] = ft_spike_plot_raster(cfg, spike)
 % FT_SPIKE_RASTERPLOT makes a raster plot of spike-trains and allows for
 % spike-density or psth plot on top.
 %
+% The input SPIKE should be organised as the spike or the raw datatype, obtained from
+% FT_SPIKE_MAKETRIALS or FT_PREPROCESSING (in that case, conversion is done
+% within the function)
+%
 % Use as
 %   hdl = ft_spike_plot_raster(cfg, spike)
-% or
-%   hdl = ft_spike_plot_raster(cfg, spike, topdata)
 %
-% The input SPIKE should be organised as the spike datatype, obtained from
-% FT_SPIKESTATION_DATA2SPIKE or FT_SPIKE_MAKETRIALS.
-%
-% The optional input TOPDATA is a structure as the output from
-% FT_SPIKE_PSTH or FT_SPIKEDENSITY or FT_TIMELOCKANALYSIS. See those
-% functions for more info.
 %
 % Configuration options related to selection of spike channel and trials and latencies
 %   cfg.spikechannel     =  see FT_CHANNELSELECTION for details

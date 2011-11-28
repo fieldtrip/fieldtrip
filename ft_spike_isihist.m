@@ -2,6 +2,10 @@ function [isih] = ft_spike_isihist(cfg,spike)
 
 % FT_SPIKE_ISIHSIT computes the interspike interval distribution and statistics.
 %
+% The input SPIKE should be organised as the spike or the raw datatype, obtained from
+% FT_SPIKE_MAKETRIALS or FT_PREPROCESSING (in that case, conversion is done
+% within the function)
+%
 % Use as
 %   [isih] = ft_spike_isihist(cfg, spike)
 %

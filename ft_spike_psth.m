@@ -5,8 +5,9 @@ function [psth] = ft_spike_psth(cfg,spike)
 % Use as
 %   [psth] = ft_spike_psth(cfg, spike)
 %
-% The input SPIKE should be organised as the spike datatype, obtained from
-% FT_SPIKE_DATA2SPIKE or from FT_SPIKE_MAKETRIALS.
+% The input SPIKE should be organised as the spike or the raw datatype, obtained from
+% FT_SPIKE_MAKETRIALS or FT_PREPROCESSING (in that case, conversion is done
+% within the function)
 %
 % Configurations:
 %   cfg.binsize          =  [binsize] in sec (default = 0.025 sec);

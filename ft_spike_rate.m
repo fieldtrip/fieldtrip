@@ -5,8 +5,9 @@ function [rate] = ft_spike_rate(cfg,spike)
 % Use as
 %   [rate] = ft_spike_rate(cfg, spike)
 %
-% The input SPIKE should be organised as the spike datatype, obtained from
-% FT_SPIKE_DATA2SPIKE or from FT_SPIKE_MAKETRIALS.
+% The input SPIKE should be organised as the spike or the raw datatype, obtained from
+% FT_SPIKE_MAKETRIALS or FT_PREPROCESSING (in that case, conversion is done
+% within the function)
 %
 % Configurations:
 %   cfg.outputunit       = 'rate' (default) or 'spike'. If 'rate', we convert

@@ -2,7 +2,15 @@ function [Sts] = ft_spike_triggeredspectrum(cfg, data, spike)
 
 % FT_SPIKE_TRIGGEREDSPECTRUM computes the Fourier spectrum of the LFP
 % around the spikes. The difference to FT_SPIKETRIGGEREDSPECTRUM is that
-% this function takes SPIKE input.
+% this function allows for multiple frequencies to be processed with
+% different time-windows per frequency.
+%
+% The input SPIKE should be organised as the spike or the raw datatype, obtained from
+% FT_SPIKE_MAKETRIALS or FT_PREPROCESSING (in that case, conversion is done
+% within the function)
+%
+% The input DATA should be organised as the raw datatype, obtained from
+% FT_PREPROCESSING
 %
 % Use as
 %   [freq] = ft_spike_triggeredspectrum(cfg,data,spike)
