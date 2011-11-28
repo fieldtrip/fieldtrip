@@ -1,6 +1,7 @@
 function test_ft_spike_jpsth()
 
 % TEST test_ft_spike_jpsth
+% ft_spike_jpsth
 
 % 1 channelcmb with same latency, gamma
 % 1 channelcmb with fixed spike times

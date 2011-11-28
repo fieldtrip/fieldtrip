@@ -1,6 +1,7 @@
 function test_ft_spikedensity()
 
 % TEST test_ft_spikedensity
+% ft_spikedensity
 
 nTrials = 100;
 nSamples = 1001;

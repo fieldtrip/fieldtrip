@@ -1,6 +1,7 @@
 function test_ft_spike_rate()
 
 % TEST test_ft_spike_rate
+% ft_spike_rate
 
 clear
 spikesPerTrial = 1;

@@ -1,6 +1,7 @@
 function test_ft_spike_plot_isireturn()
 
 % TEST test_ft_spike_plot_isireturn
+% ft_spike_plot_isireturn
 
 nTrials = 100;
 data = [];

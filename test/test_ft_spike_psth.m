@@ -1,6 +1,7 @@
 function test_ft_spike_psth()
 
 % TEST test_ft_spike_psth
+% ft_spike_psth
 
 % fixed number of spikes, equal length trials, one LFP channel, gamma distribution psth
 % one channel with spikes at known positions
