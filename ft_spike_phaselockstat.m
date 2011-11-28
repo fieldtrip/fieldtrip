@@ -51,12 +51,8 @@ ft_preamble help
 ft_preamble callinfo
 ft_preamble trackconfig
 
-% ensure that the required options are present
-cfg = ft_checkconfig(cfg, 'required', {'foi','t_ftimwin'});
-if  isequal(cfg.taper, 'dpss')
-  cfg = ft_checkconfig(cfg, 'required', {'tapsmofrq'});
-  cfg = ft_checkopt(cfg,'tapsmofrq',{'doublevector', 'doublescalar'});
-end
+% check if the data is of sts format, and convert from old format if required
+sts = ft_checkdata(sts,'datatype', 'sts', 'feedback', 'yes');
 
 % get the options
 cfg.channel        = ft_getopt(cfg,'channel', 'all');
