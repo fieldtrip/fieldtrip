@@ -45,6 +45,9 @@ ft_preamble help
 ft_preamble callinfo
 ft_preamble trackconfig
 
+% check if the data is of sts format, and convert from old format if required
+sts = ft_checkdata(sts,'datatype', 'sts', 'feedback', 'yes');
+
 % get the options
 cfg.channel        = ft_getopt(cfg,'channel', 'all');
 cfg.spikechannel   = ft_getopt(cfg,'spikechannel', sts.spikechannel{1});
@@ -54,6 +57,15 @@ cfg.chanavg        = ft_getopt(cfg,'chanavg', 'no');
 cfg.foilim         = ft_getopt(cfg,'foilim', 'all');
 cfg.fsample        = ft_getopt(cfg,'fsample', 1000);
 cfg.winlen         = ft_getopt(cfg,'winlen', 0.1);
+
+cfg = ft_checkopt(cfg,'channel', {'cell', 'char', 'double'});
+cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double', 'empty'});
+cfg = ft_checkopt(cfg,'winlen', 'double');
+cfg = ft_checkopt(cfg,'latency', {'double', 'char'});
+cfg = ft_checkopt(cfg,'chanavg', 'char', {'yes', 'no'});
+cfg = ft_checkopt(cfg,'fsample', 'double');
+cfg = ft_checkopt(cfg,'foilim', {'char', 'doublevector'});
+cfg = ft_checkopt(cfg,'spikesel', {'logical', 'double', 'char'});
 
 % get the spikechannels
 spikelabel       = sts.spikechannel;

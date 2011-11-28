@@ -9,7 +9,7 @@ function [stat] = ft_spike_phaselockstat(cfg,sts)
 %   [STAT = FT_SPIKE_PHASELOCKSTAT(CFG,STS)
 %
 % Inputs:
-%   STS should be a structure as obtained from from the FT_SPIKE_TRIGGEREDSPECTRUM function. 
+%   STS should be a structure as obtained from from the FT_SPIKE_TRIGGEREDSPECTRUM or FT_SPIKETRIGGEREDSPECTRUM function. 
 %
 %   Configurations (CFG) related to calculation of phaselockingvalue
 %
