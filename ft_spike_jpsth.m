@@ -322,7 +322,6 @@ else
   jpsth.dof      = dofShift;
 end
 jpsth.time     = psth.time;
-try jpsth.bins = psth.bins; end
 jpsth.label    = psth.label(chanSel); % keep this as reference for JPSTH.avg
 jpsth.labelcmb = psth.label(cmbindx); % keep this as reference which channel cmbs have values
 jpsth.psth     = psth.avg(chanSel,:);

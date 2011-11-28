@@ -5,7 +5,6 @@ function test_ft_spike_psth()
 
 % fixed number of spikes, equal length trials, one LFP channel, gamma distribution psth
 % one channel with spikes at known positions
-clear
 spikesPerTrial = 10;
 nTrials = 100;
 shapePar = 2;
@@ -14,10 +13,8 @@ time     = linspace(0,1,1000);
 data.trial(1:nTrials) = {zeros(1,length(time))};
 data.time(1:nTrials) = {time};
 for iTrial = 1:nTrials    
-  iUnit = 1; % lfp channel
-  data.trial{iTrial}(iUnit,:) = rand(1,1000);
   
-  iUnit = 2;
+  iUnit = 1;
   spikeTimes = [];
   while length(spikeTimes)<spikesPerTrial
     spikeTimes = 0.015*gamrnd(shapePar,scalePar,[spikesPerTrial 1]);
@@ -31,7 +28,7 @@ for iTrial = 1:nTrials
   end  
   data.trial{iTrial}(iUnit,smp) = 1;
 
-  iUnit = 3; % unit with fixed positions
+  iUnit = 1; % unit with fixed positions
   
   smp = [];
   spikeTimes = linspace(0.1,0.9,9);
@@ -39,14 +36,11 @@ for iTrial = 1:nTrials
     smp(iSpike)        = nearest(time,spikeTimes(iSpike));
   end  
   data.trial{iTrial}(iUnit,smp) = 1;
-
-
 end
 data.fsample = 1000;
 data.hdr = [];
 data.cfg.trl = [];
-data.label{1} = 'chan1';
-data.label{end+1} = 'spk2';
+data.label{1} = 'spk2';
 data.label{end+1} = 'spk3';
 cfg.spikechannel = 2:3;
 spike = ft_checkdata(data,'datatype', 'spike', 'feedback', 'yes');

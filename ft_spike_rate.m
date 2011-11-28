@@ -37,11 +37,6 @@ function [rate] = ft_spike_rate(cfg,spike)
 %       - rate.dof:          nTrials array containing the degree of freedom per unit
 %       - rate.label:        nUnits cell array containing the labels of the neuronal units%
 
-% TODO 
-% - removed covariance / correlation here since one may get it very easily with COV or corrcoef
-% - add selection on condition
-% - add population script, for correlation - principal components - population vector
-
 % Copyright (C) 2010, Martin Vinck
 %
 % $Id$
@@ -199,9 +194,6 @@ if  strcmp(cfg.trials,'all')
   cfg.trials = 1:nTrials;
 elseif islogical(cfg.trials)
   cfg.trials = find(cfg.trials);
-elseif ~isrealvec(cfg.trials);
-  error('ft:spike_rate:cfg:trials:unknownOption',...
-    'cfg.trials should be logical or numerical selection or string "all"');
 end
 cfg.trials = sort(cfg.trials(:));
 if max(cfg.trials)>nTrials, error('ft:spike_rate:cfg:trials:maxExceeded',...

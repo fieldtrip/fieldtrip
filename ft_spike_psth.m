@@ -46,9 +46,6 @@ function [psth] = ft_spike_psth(cfg,spike)
 %   plotting the PSTH), into FT_SPIKE_JPSTH (calculating the joint psth), into
 %   FT_SPIKE_PLOT_RASTER as cfg.topdata, in which we plot it above a rasterplot.
 
-%  TO ADD: binsize should be optimally determined based on
-%  standard techniques to compute binsize based on bandwidth. Same for FT_SPIKE_DENSITY
-
 %  Copyright (C) 2010, Martin Vinck
 %
 % $Id$
@@ -241,9 +238,6 @@ if  strcmp(cfg.trials,'all')
   cfg.trials = 1:nTrials;
 elseif islogical(cfg.trials)
   cfg.trials = find(cfg.trials);
-elseif ~isrealvec(cfg.trials);
-  error('ft:spike_psth:cfg:trials:unknownOption',...
-    'cfg.trials should be logical or numerical selection or string "all"');
 end
 cfg.trials = sort(cfg.trials(:));
 if max(cfg.trials)>nTrials, error('ft:spike_psth:cfg:trials:maxExceeded',...
