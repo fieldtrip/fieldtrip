@@ -1,4 +1,4 @@
-function spike = ft_datatype_spike(spike, varargin)
+function sts = ft_datatype_spike(sts, varargin)
 
 % FT_DATATYPE_STS describes the FieldTrip MATLAB structure for
 % spiketriggered spectrum data
@@ -73,7 +73,25 @@ switch version
   case {'2010','2007'}
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % there are no changes required
-        
+   
+    if isfield(sts,'origtrial') && isfield(sts,'origtime')
+      warning('The sts datatype format you are using is depreciated. Converting to newer sts format');
+      sts.trial = {sts.origtrial};
+      sts.time  = {sts.origtime};
+      if ~isa(sts.fourierspctrm, 'cell')
+        sts.fourierspctrm = {sts.fourierspctrm};
+      end
+      if ~isfield(sts, 'spikechannel')
+        sts.spikechannel = {'unit1'};
+      end
+      if ~isfield(sts, 'trialtime')
+        % determine from the data itself
+        tmax  = nanmin(sts.trial{1});
+        tsmin = nanmin(sts.time{1});
+        tsmax = nanmax(sts.time{1});
+        sts.trialtime = [tsmin*ones(tmax,1) tsmax*ones(tmax,1)];
+      end
+    end
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     error('unsupported version "%s" for spike datatype', version);
