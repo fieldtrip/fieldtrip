@@ -48,8 +48,9 @@ data.cfg.trl = [];
 data.label{1} = 'chan1';
 data.label{end+1} = 'spk2';
 data.label{end+1} = 'spk3';
-cfg.spikechannel = 2:3
-spike = ft_spike_data2spike(cfg,data);
+cfg.spikechannel = 2:3;
+spike = ft_checkdata(data,'datatype', 'spike', 'feedback', 'yes');
+%%
 cfgC.fsample = 1000;
 data2 = ft_spike_spike2data(cfgC,spike,data);
 
@@ -59,7 +60,12 @@ cfgPsth = [];
 cfgPsth.binsize       = 0.005;
 cfgPsth.outputunit    = 'rate';
 psthData = ft_spike_psth(cfgPsth,spike);
-
+%% show that we can also use the data as input
+cfgPsth = [];
+cfgPsth.binsize       = 0.005;
+cfgPsth.outputunit    = 'rate';
+psthDataRaw = ft_spike_psth(cfgPsth,data);
+psthDataRaw.avg - psthData.avg % should give zeros back
 
 %% make a plot of the psth and compare it to the expected curve
 for iChan = 1:2
@@ -162,7 +168,7 @@ data.label = {};
 data.label{end+1} = 'spk2';
 data.label{end+1} = 'spk3';
 cfg.spikechannel = 1:2
-spike = ft_spike_data2spike(cfg,data);
+spike = ft_checkdata(data,'datatype', 'spike', 'feedback', 'yes');
 
 %% test with maximum latency and no variable trial length, dof should be 1 then
 % this should give dof of 0 or 1, because latency is maxperiod, so max 1 trial can be

@@ -36,9 +36,7 @@ data.label{end+1} = 'spk3';
 
 %% create the spike format as well by means of our conversion script
 % show that the psth works also with the poisson format
-cfgConvert = [];
-cfgConvert.spikechannel = [2 3];
-spike = ft_spike_data2spike(cfgConvert,data);
+spike = ft_checkdata(data,'datatype', 'spike', 'feedback', 'yes');
 
 %% create the first rasterplot, using both types of data format
 % here, we auto-color the different units

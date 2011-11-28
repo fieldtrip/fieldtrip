@@ -30,7 +30,7 @@ data.label{end+1} = 'chan4';
 
 % show that the psth works also with the poisson format
 cfg.spikechannel = 1:3;
-spike = ft_spike_data2spike(cfg,data);
+spike = ft_checkdata(data,'datatype', 'spike', 'feedback', 'yes');
 
 %%
 cfgRate = [];
@@ -39,4 +39,4 @@ RateCnt = ft_spike_rate(cfgRate,spike);
 
 
 RateCnt.avg
-RateCnt.trial
+figure, plot(RateCnt.trial(:,1))
