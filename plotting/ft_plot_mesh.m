@@ -84,8 +84,8 @@ if isempty(vertexcolor)
 end
 
 % convert string into boolean values
-faceindex   = istrue(faceindex);
-vertexindex = istrue(vertexindex);
+faceindex   = istrue(faceindex);   % yes=view the face number
+vertexindex = istrue(vertexindex); % yes=view the vertex number
 
 % there a various ways of disabling the plotting
 if isequal(vertexcolor, 'false') || isequal(vertexcolor, 'no') || isequal(vertexcolor, 'off') || isequal(vertexcolor, false)

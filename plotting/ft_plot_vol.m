@@ -52,8 +52,8 @@ edgecolor   = ft_getopt(varargin, 'edgecolor',   'k');
 facealpha   = ft_getopt(varargin, 'facealpha',   1);
 map         = ft_getopt(varargin, 'colormap');
 
-faceindex   = istrue(faceindex);
-vertexindex = istrue(vertexindex);
+faceindex   = istrue(faceindex);   % yes=view the face number
+vertexindex = istrue(vertexindex); % yes=view the vertex number
 
 % we will probably need a sphere, so let's prepare one
 [pnt, tri] = icosahedron162;
