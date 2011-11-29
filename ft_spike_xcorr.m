@@ -217,75 +217,72 @@ s            = zeros(2*nLags + 1,nChans,nChans);
 keepTrials   = strcmp(cfg.keeptrials,'yes');
 if keepTrials,       singleTrials = zeros(2*nLags+1,nTrials,nChans,nChans);      end
 if doShiftPredictor, shiftSum     = zeros(2*nLags + 1,nChans,nChans);            end
-try
-  for iTrial = 1:nTrials
-    origTrial = cfg.trials(iTrial);
-    
-    for iCmb = 1:nCmbs
-      % take only the times that are in this trial
-      indx  = cmbindx(iCmb,:);
-      inTrial1 = spike.trial{indx(1)}==origTrial;
-      inTrial2 = spike.trial{indx(2)}==origTrial;
-      ts1 = sort(spike.time{indx(1)}(inTrial1));
-      ts2 = sort(spike.time{indx(2)}(inTrial2));
-      
-      % compute the xcorr if both are non-empty
-      if ~isempty(ts1) && ~isempty(ts2)
-        if indx(1)<=indx(2)
-          [x]   = spike_crossx(ts1,ts2,cfg.binsize,nLags*2);
+for iTrial = 1:nTrials
+  origTrial = cfg.trials(iTrial);
+
+  for iCmb = 1:nCmbs
+    % take only the times that are in this trial
+    indx  = cmbindx(iCmb,:);
+    inTrial1 = spike.trial{indx(1)}==origTrial;
+    inTrial2 = spike.trial{indx(2)}==origTrial;
+    ts1 = sort(spike.time{indx(1)}(inTrial1));
+    ts2 = sort(spike.time{indx(2)}(inTrial2));
+
+    % compute the xcorr if both are non-empty
+    if ~isempty(ts1) && ~isempty(ts2)
+      if indx(1)<=indx(2)
+        [x]   = spike_crossx(ts1,ts2,cfg.binsize,nLags*2);
+      else
+        [x]   = spike_crossx(ts2,ts1,cfg.binsize,nLags*2);
+      end
+
+      % sum the xcorr
+      s(:,indx(1),indx(2)) = s(:,indx(1),indx(2)) + x(:);
+      s(:,indx(2),indx(1)) = s(:,indx(2),indx(1)) + flipud(x(:));
+
+      % store individual trials if requested
+      if keepTrials
+        singleTrials(:,iTrial,indx(1),indx(2)) = x(:);
+        singleTrials(:,iTrial,indx(2),indx(1)) = flipud(x(:));
+      end
+    end
+
+    % compute the shift predictor
+    if doShiftPredictor && iTrial>1
+
+      % symmetric, get x21 to x12 and x22 to x11
+      inTrial1_old = spike.trial{indx(1)}==cfg.trials(iTrial-1);
+      ts1_old      = sort(spike.time{indx(1)}(inTrial1_old));
+      inTrial2_old = spike.trial{indx(2)}==cfg.trials(iTrial-1);
+      ts2_old      = sort(spike.time{indx(2)}(inTrial2_old));
+
+      % compute both combinations
+      for k = 1:2
+
+        % take chan from this and previous channel
+        if k==1
+          A = ts1;
+          B = ts2_old;
         else
-          [x]   = spike_crossx(ts2,ts1,cfg.binsize,nLags*2);
+          A = ts1_old;
+          B = ts2;
         end
-        
-        % sum the xcorr
-        s(:,indx(1),indx(2)) = s(:,indx(1),indx(2)) + x(:);
-        s(:,indx(2),indx(1)) = s(:,indx(2),indx(1)) + flipud(x(:));
-        
-        % store individual trials if requested
-        if keepTrials
-          singleTrials(:,iTrial,indx(1),indx(2)) = x(:);
-          singleTrials(:,iTrial,indx(2),indx(1)) = flipud(x(:));
+        if ~isempty(A) && ~isempty(B),
+
+          if indx(1)<=indx(2)
+            [x]   = spike_crossx(ts1,ts2,cfg.binsize,nLags*2);
+          else
+            [x]   = spike_crossx(ts2,ts1,cfg.binsize,nLags*2);
+          end
+          % compute the sum
+          shiftSum(:,indx(1),indx(2)) =  shiftSum(:,indx(1),indx(2)) + x(:);
+          shiftSum(:,indx(2),indx(1)) =  shiftSum(:,indx(2),indx(1)) + flipud(x(:));
         end
       end
-      
-      % compute the shift predictor
-      if doShiftPredictor && iTrial>1
-        
-        % symmetric, get x21 to x12 and x22 to x11
-        inTrial1_old = spike.trial{indx(1)}==cfg.trials(iTrial-1);
-        ts1_old      = sort(spike.time{indx(1)}(inTrial1_old));
-        inTrial2_old = spike.trial{indx(2)}==cfg.trials(iTrial-1);
-        ts2_old      = sort(spike.time{indx(2)}(inTrial2_old));
-        
-        % compute both combinations
-        for k = 1:2
-          
-          % take chan from this and previous channel
-          if k==1
-            A = ts1;
-            B = ts2_old;
-          else
-            A = ts1_old;
-            B = ts2;
-          end
-          if ~isempty(A) && ~isempty(B),
-            
-            if indx(1)<=indx(2)
-              [x]   = spike_crossx(ts1,ts2,cfg.binsize,nLags*2);
-            else
-              [x]   = spike_crossx(ts2,ts1,cfg.binsize,nLags*2);
-            end
-            % compute the sum
-            shiftSum(:,indx(1),indx(2)) =  shiftSum(:,indx(1),indx(2)) + x(:);
-            shiftSum(:,indx(2),indx(1)) =  shiftSum(:,indx(2),indx(1)) + flipud(x(:));
-          end
-        end
-      end % symmetric shift predictor loop
-    end % combinations
-  end % trial loop
-catch
-  keyboard
-end
+    end % symmetric shift predictor loop
+  end % combinations
+end % trial loop
+
 % multiply the shift sum by a factor so it has the same scale: note it is not raw anymore
 dofShiftPred = 2*(nTrials-1);
 if doShiftPredictor, shiftSum = shiftSum*nTrials/dofShiftPred; end
