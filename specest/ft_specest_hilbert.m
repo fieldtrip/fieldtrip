@@ -16,12 +16,13 @@ function [spectrum,freqoi,timeoi] = ft_specest_hilbert(dat, time, varargin)
 %   timeoi    = vector, containing time points of interest (in seconds)
 %   freqoi    = vector, containing frequencies (in Hz)
 %   pad       = number, indicating time-length of data to be padded out to in seconds
-%   width     =
-%   filttype  =
-%   filtorder =
-%   filtdir   =
+%   width     = number or vector, width of band-pass surrounding each element of freqoi
+%   filttype  = string, filter type, 'but' or 'fir' or 'firls'
+%   filtorder = number, filter order
+%   filtdir   = string, filter direction,  'twopass', 'onepass' or 'onepass-reverse' 
+%   verbose   = output progress to console (0 or 1, default 1)
 %
-% See also FT_FREQANALYSIS, FT_SPECEST_MTMFFT, FT_SPECEST_CONVOL, FT_SPECEST_MTMCONVOL, FT_SPECEST_WAVELET
+% See also FT_FREQANALYSIS, FT_SPECEST_MTMFFT, FT_SPECEST_TFR, FT_SPECEST_MTMCONVOL, FT_SPECEST_WAVELET
 
 % Copyright (C) 2010, Robert Oostenveld
 %
@@ -37,6 +38,11 @@ filtdir   = ft_getopt(varargin, 'filtdir');     if isempty(filtdir),   error('yo
 pad       = ft_getopt(varargin, 'pad');
 polyorder = ft_getopt(varargin, 'polyorder', 1);
 verbose   = ft_getopt(varargin, 'verbose', true);
+
+if isempty(fbopt),
+  fbopt.i = 1;
+  fbopt.n = 1;
+end
 
 % Set n's
 [nchan,ndatsample] = size(dat);
@@ -106,9 +112,15 @@ nfreqoi = size(filtfreq,1);
 % preallocate the result and perform the transform
 spectrum = complex(nan(nchan, nfreqoi, ntimeboi), nan(nchan, nfreqoi, ntimeboi));
 for ifreqoi = 1:nfreqoi
-  if verbose
-    fprintf('processing frequency %d (%.2f Hz)\n', ifreqoi,freqoi(ifreqoi));
+  str = sprintf('frequency %d (%.2f Hz)', ifreqoi,freqoi(ifreqoi));
+  [st, cws] = dbstack;
+  if length(st)>1 && strcmp(st(2).name, 'ft_freqanalysis') && verbose
+    % specest_convol has been called by ft_freqanalysis, meaning that ft_progress has been initialised
+    ft_progress(fbopt.i./fbopt.n, ['trial %d, ',str,'\n'], fbopt.i);
+  elseif verbose
+    fprintf([str, '\n']);
   end
+  
   % filter
   flt = ft_preproc_bandpassfilter(dat, fsample, filtfreq(ifreqoi,:), filtorder, filttype, filtdir);
   
@@ -116,3 +128,20 @@ for ifreqoi = 1:nfreqoi
   dum = transpose(hilbert(transpose([repmat(prepad,[nchan, 1]) flt repmat(postpad,[nchan, 1])])));
   spectrum(:,ifreqoi,:) = dum(:,timeboi);
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
