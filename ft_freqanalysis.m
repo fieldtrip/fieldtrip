@@ -500,7 +500,7 @@ else
         hastime = false;
         
       case 'wavelet'
-        [spectrum,foi,toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, 'gwidth', cfg.gwidth,options{:}, fbopt);
+        [spectrum,foi,toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, 'gwidth', cfg.gwidth,options{:}, 'feedback', fbopt);
         
         % the following variable is created to keep track of the number of
         % trials per time bin and is needed for proper normalization if
@@ -514,7 +514,7 @@ else
         spectrum = reshape(spectrum,[1 nchan numel(foi) numel(toi)]);
         
       case 'tfr'
-        [spectrum,foi,toi] = ft_specest_convol(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, 'gwidth', cfg.gwidth,options{:}, fbopt);
+        [spectrum,foi,toi] = ft_specest_tfr(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, 'gwidth', cfg.gwidth,options{:}, 'feedback', fbopt);
         
         % the following variable is created to keep track of the number of
         % trials per time bin and is needed for proper normalization if
@@ -530,7 +530,7 @@ else
         
         
       case 'hilbert'
-        [spectrum,foi,toi] = ft_specest_hilbert(dat, time, 'timeoi', cfg.toi, 'filttype', cfg.filttype, 'filtorder', cfg.filtorder, 'filtdir', cfg.filtdir, 'width', cfg.width, options{:}, fbopt);
+        [spectrum,foi,toi] = ft_specest_hilbert(dat, time, 'timeoi', cfg.toi, 'filttype', cfg.filttype, 'filtorder', cfg.filtorder, 'filtdir', cfg.filtdir, 'width', cfg.width, options{:}, 'feedback', fbopt);
         hastime = true;
         % create FAKE ntaper (this requires very minimal code change below for compatibility with the other specest functions)
         ntaper = ones(1,numel(foi));
