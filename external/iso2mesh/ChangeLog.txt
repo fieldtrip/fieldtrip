@@ -1,0 +1,167 @@
+============================================================================
+
+     iso2mesh - a compact, powerful yet simple-to-use 3D mesh generator
+
+----------------------------------------------------------------------------
+
+iso2mesh ChangeLog (key features marked by *):
+2011/06/03 (1.0.1, codename: Mapo Tofu - Update 1)
+        1. added 64bit CGAL binaries for Linux (Windows/MacOS are not yet supported)
+        2.*plotmesh can use the 4th column of node input as colormap/value
+        3.*accept "cgalpoly" method option in v2m and vol2mesh
+        4. savemedit output supports the label column
+        5.*orient all triangles counter-clockwise for surface plotting
+        6. added edgeneighbors to report neighboring triangles in a surface
+
+2011/02/27 (1.0.0, codename: Mapo Tofu)
+        1. fixed mwpath/mcpath octave warning
+	2. used consistent opt.distbound flag for cgalv2m and cgalv2s
+	3. fixed a bug in plotmesh to allow using plotting styles
+	4. added a method parameter in sms
+	5. fixed a bug in mergemesh with more than 2 inputs
+	6. added mesh quality metric function (Joe-Liu metric)
+	7.*added ray-tracing functions (using the Havel's method)
+	8.*robust and fast surface interior point determination
+	9.*label multi-part surfaces inside vol2surf
+       10. new functions surfplane/surfseeds/surfinterior/meshedge
+       11. use SVN revison number as the default extra version tag
+
+2011/01/31 (0.9.9, codename: Mapo Tofu-RC1)
+        1.*specifying seeds for cgalsurf and cgalmesh modules
+        2.*perturbing isovalues to avoid non-manifold geometries
+        3. added plottetview to call tetview for mesh display on octave
+        4. added a new demo - a "hello world" example
+        5. speed optimization for octave
+        6. optimized memory use for surf2vol
+        7. made nodevolume support surfaces
+        8. added savemedit to export tetrahedral mesh in Medit format
+        9. compress most binaries with upx to save space
+       10. set up binary file extension fallback to help Mac users
+       11.*added functions to mesh simple geometries such as a sphere etc
+       12. added meshmerge to merge multiple meshes and surfaces
+       13. added s2v shortcut for surf2vol
+       14. updated cgalsurf to specify initial point cloud size
+       15. added iso2meshver to track version numbers
+       16. automatic handling of label column in face and elem plots
+
+2010/07/14 (0.9.8, codename: Mapo Tofu-beta)
+        1.*added surf2vol, converting a closed surface to a binary volume
+        2. fixed deletemeshfile bug for Windows
+        3. automatic repairing when meshresample fails
+        4. fast faceneighbors unit
+        5.*added CGAL 3D mesher for robust meshing of segmented volumes
+        6. added CGAL 3D polyhedral mesher as an alternative to tetgen
+        7. corrected bugs in Laplacian+HC and Lowpass smoothing algorithms
+        8. added sms.m as the shortcut for surfsmooth
+        9. added exporters for DXF and VRML mesh formats
+       10. added user name to the temporary files to avoid permission conflict
+       11. added force-bounding-box option for surf2mesh
+       12. added nodevolume, elemvolume from FEMcore and meshreorient
+       13. added sortmesh to optimize node and element ordering
+       14.*mesh refinement using the 4-th column of surface node
+       15. thining a volumetric binary image
+       16.*added remeshsurf to repair self-intersecting surfaces
+       17. added demo scripts for remeshsurf and mesh smoothing
+       18. unify help text format, add bash script to generate function list
+       19. use opt.side to specify upper/lower interface of a labeled region
+       20.*added a mesh plotting function - plotmesh
+
+2009/05/04 (0.8.0, codename: Hotpot)
+        1. added stopping criteria for cgalsurf surface extractor to 
+           avoid hanging for certain datasets
+        2.*added support for mesh generation from 3D gray-scale images
+        3. more robust and fast imedge3d (thanks to Aslak Grinsted)
+        4. fixed the origins for 'simplify' and 'cgalsurf', the origin is now
+           set to the exterior vertex for voxel (1,1,1) (as a cube)
+        5. updated documents
+        6. renamed "bound" to "face" to avoid confusions
+        7.*added v2m, v2s and s2m as the shortcuts for vol2mesh, vol2surf 
+           and surf2mesh, respectively; added demo script for shortcuts
+        8. mcpath searches <iso2mesh>/bin first, no PATH setting is required
+           (thanks to Aslak Grinsted)
+        9. many other minor fixes and cleaning
+
+2009/02/11 (0.7.9-1, codename: Hotpot-beta)
+        1. compiled all the binaries on Mac OS (PowerPC) and
+           tested on an Intel Mac
+        2.*recompiled all linux and windows binaries with optimized speed
+           and reduced system dependencies
+        3. speeded up bounary field calculation with dedicated imedge3d
+        4. added TODO
+
+2009/02/07 (0.7.9, codename: Hotpot-alpha)
+        1.*incorporated CGAL Surface mesher as the default vol2surf
+           mesh extraction scheme (thank to Pierre Alliez's suggestion
+           and Laurent Rineau and Mariette Yvinec for developing this utility)
+        2. added sub-region labeling for multi-valued images
+        3. added cgalsurf binaries for Windows
+        4. tested the toolbox with Octave for Windows on a vista machine,
+           applied a few fixes to make it compatible
+        5. recompiled tetgen.exe to get the max-element-volume constraint
+           finally work
+
+2008/12/27 (0.7.8, codename: Hotpot-alpha)
+        1. try to handle the self-intersecting element problems, 
+           added getintersecttri.m to extract intesecting element IDs
+        2. implemented Laplacian+HC and Low-pass filter mesh smoothing
+           algorithms; unfortunately, they are not effective to remove the 
+           self-intersecting elements
+        3. sent email to CGAL list to ask advices to handle self-intersecting
+           element.
+
+2008/12/05 (0.6.0, codename: Quesadilla)
+        1. iso2mesh is now compatible with GNU Octave.
+        2. replaced matlab's isosurface by a home-made binsurface to produce
+           well-behaved triangular or cubic surfaces from binary images
+        3. added qmeshcut, a fast tetrahedral mesh cross-section plot
+        4. updated tetgen binary for 64bit Linux (mexa64), which caused some crashes
+        5. provided instructions when user encounters a "permission denied" error
+
+2008/11/08 (0.5.1, codename: Footlong)
+        1. added meshing tool binaries for Windows (95-vista)
+        2. added meshing tool binaries for Mac OS
+        3. tagged all bin/ files and binaries files in sample/
+           with -kb option in the cvs
+
+2008/10/30 (0.5, alpha release, codename: Footlong)
+        1. created a sourceforge project, pointing to 
+           the project main page at orbit.
+        2. wrote documents and polish file structures
+        3. included more sample codes and data
+        4. defined a global variable "ISO2MESH_TEMP" to control the 
+           temporary file directory; "ISO2MESH_BIN" for bin folder
+           location and "ISO2MESH_SESSION" for temporary file prefix
+           and enable parallel meshing sessions and restricted user 
+           environments
+        5. renamed all temporary files as pre_smesh/post_smesh/
+           pre_remesh/post_remeshpre_vmesh/post_vmesh to identify
+           the processing stage
+        6. split vol2mesh into vol2surf and surf2mesh
+        7. uploading wiki pages with documentation drafts and 
+           examples outputs
+
+2008/10/10 (0.4)
+        1. added subroutines for mesh validation and repairing
+        2. included JMeshLib for non-manifold node removal
+
+2008/01/10 (0.3)
+        1. added vol2mesh and the related scripts
+        2. iso2mesh is able to mesh breast geometry from 3D 
+           tomosynthesis scan and a mouse head model from CT images.
+
+2008/04/08 (0.2)
+        1. qslim produces self-intersecting meshes after 
+           simplification, which is not good. It is now replaced
+           by CGAL mesh simplification module
+        2. modified CGAL mesh simplification code to preserve all
+           edges nodes (keep them co-planar)
+
+2007/12/27 (0.1.1)
+        1. used mexext to distinguish binaries for different platforms
+
+2007/11/25 (0.1)
+        1. initial upload to cvs, as a module of redbird2
+        2. used qslim to perform mesh simplification and tetgen 
+         for mesh generation
+        3. supported both win32 and Linux
+        4. added sample data and scripts

@@ -1,0 +1,18 @@
+The author of "iso2mesh" toolbox is Qianqian Fang PhD. Dr. Fang
+is currently an Instructor at Massachusetts General Hospital, 
+Harvard Medical School.
+
+Address: Martinos Center for Biomedical Imaging, 
+         Massachusetts General Hospital, 
+         Harvard Medical School
+         Bldg 149, 13th St, Charlestown, MA 02129, USA
+URL: http://nmr.mgh.harvard.edu/~fangq/
+Email: <fangq at nmr.mgh.harvard.edu> or <fangqq at gmail.com>
+
+
+Other people had also contributed to this toolbox, they include
+
+- Aslak Grinsted <ag at glaciology.net>
+- Hang Si <si at wias-berlin.de>
+- Pierre Alliez <pierre.alliez at sophia.inria.fr>
+- Laurent Rineau <laurent.rineau__CGAL at normalesup.org>
