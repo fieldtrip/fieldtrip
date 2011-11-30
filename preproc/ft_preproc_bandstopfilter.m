@@ -108,7 +108,10 @@ switch type
     B = firls(N,f,z); % requires Matlab signal processing toolbox
 end
 
+meandat=mean(dat,2);
+dat=dat-repmat(meandat,[1 size(dat,2)]);
 filt = filter_with_correction(B,A,dat,dir);
+filt=filt+repmat(meandat,[1 size(dat,2)]);
 
 %SK: I think the following is non-sense. Approximating a high-order
 % bandstop filter by a succession of low-order bandstop filters
