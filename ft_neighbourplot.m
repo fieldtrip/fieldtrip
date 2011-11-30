@@ -2,8 +2,7 @@ function ft_neighbourplot(cfg, data)
 
 % FT_NEIGHBOURPLOT visualizes neighbouring channels in a particular channel
 % configuration. The positions of the channel are specified in a
-% gradiometer or electrode configuration or from a layout. Neighbouring
-% channels are obtained by ft_neighbourselection.
+% gradiometer or electrode configuration or from a layout.
 %
 % Use as
 %  ft_neighbourplot(cfg)
@@ -12,25 +11,22 @@ function ft_neighbourplot(cfg, data)
 %
 % where
 %
-%   cfg.neighbours    = neighbour structure from ft_neighbourselection
-%   (optional)
+%   cfg.neighbours    = neighbour structure from FT_PREPARE_NEIGHBOURS (optional)
 %   cfg.elec          = structure with EEG electrode positions
 %   cfg.grad          = structure with MEG gradiometer positions
 %   cfg.elecfile      = filename containing EEG electrode positions
 %   cfg.gradfile      = filename containing MEG gradiometer positions
 %   cfg.layout        = filename of the layout, see FT_PREPARE_LAYOUT
-%   cfg.verbose       = 'yes' or 'no', if 'yes' then the plot callback will
-%                       include text output
+%   cfg.verbose       = 'yes' or 'no', if 'yes' then the plot callback will include text output
 %
-% The following data fields may also be used by FT_NEIGHBOURSELECTION:
+% The following data fields may also be used by FT_PREPARE_NEIGHBOURS:
 %   data.elec     = structure with EEG electrode positions
 %   data.grad     = structure with MEG gradiometer positions
 %
+% If cfg.neighbours is not defined or empty, this function will call
+% FT_PREPARE_NEIGHBOURS to determine the channel neighbours.
 %
-% If cfg.neighbours is no defined or empty, the function calls
-% ft_neighbourselection to compute channel neighbours.
-%
-% See also FT_NEIGHBOURSELECTION
+% See also FT_PREPARE_NEIGHBOURS
 
 % Copyright (C) 2011, J?rn M. Horschig, Robert Oostenveld
 %
@@ -62,9 +58,9 @@ if hasdata, data = ft_checkdata(data); end
 if isfield(cfg, 'neighbours')
   cfg.neighbours = cfg.neighbours;
 elseif hasdata
-  cfg.neighbours = ft_neighbourselection(cfg, data);
+  cfg.neighbours = ft_prepare_neighbours(cfg, data);
 else
-  cfg.neighbours = ft_neighbourselection(cfg);
+  cfg.neighbours = ft_prepare_neighbours(cfg);
 end
 
 if ~isfield(cfg, 'verbose')
