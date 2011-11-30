@@ -139,14 +139,31 @@ for k = 1:size(input, 3)
   for m = 1:size(input, 4)
     switch method
     case 'assortativity'
+      % allocate memory
+      if k==1 && m==1
+        outsiz = size(input);
+        outsiz(1:2) = [];
+        % assortativity gives 1 value per matrix
+        output = zeros(outsiz);
+        dimord = dimord(11:end);
+      end
+      
+      if ~isbinary 
+        warning_once('weights are not taken into account and graph is converted to binary values');
+      end  
+      
+      if isdirected
+        output(k,m) = assortativity(input(:,:,k,m), 1);
+      elseif ~isdirected
+        output(k,m) = assortativity(input(:,:,k,m), 0);
+      end
     case 'betweenness'
     case 'breadthdist'
     case 'breadth'
     case 'charpath'
     case 'clustering_coef'
-  
       % allocate memory
-      if k==1 
+      if k==1 && m==1 
         outsiz = size(input);
         outsiz(1) = []; 
         % remove one of the chan dimensions because the 
@@ -167,9 +184,8 @@ for k = 1:size(input, 3)
       end
   
     case 'degrees'
-      
       % allocate memory
-      if k==1
+      if k==1 && m==1
         outsiz = size(input);
         outsiz(1) = []; 
         % remove one of the chan dimensions because the 
