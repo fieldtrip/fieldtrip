@@ -37,6 +37,7 @@ filtorder = ft_getopt(varargin, 'filtorder');   if isempty(filtorder), error('yo
 filtdir   = ft_getopt(varargin, 'filtdir');     if isempty(filtdir),   error('you need to specify filter direction'),    end
 pad       = ft_getopt(varargin, 'pad');
 polyorder = ft_getopt(varargin, 'polyorder', 1);
+fbopt     = ft_getopt(varargin, 'feedback');
 verbose   = ft_getopt(varargin, 'verbose', true);
 
 if isempty(fbopt),
