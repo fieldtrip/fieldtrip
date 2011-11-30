@@ -1,11 +1,11 @@
 function [interp] = ft_sourceinterpolate(cfg, functional, anatomical)
 
-% FT_SOURCEINTERPOLATE reslices and interpolates a source reconstruction
-% or a statistical distribution as an overlay onto an anatomical MRI.
-%
-% Both the functional data and the anatomical data can either describe a
-% 3-dimensional volume, an arbitrary cloud of points, or a triangulated
-% mesh.
+% FT_SOURCEINTERPOLATE interpolates the source reconstructed activity
+% or a statistical distribution onto the voxels or vertices of an
+% anatomical description of the brain.  Both the functional and the
+% anatomical data can either describe a 3-dimensional volume, a
+% triangulated description of the cortical sheet or an arbitrary cloud
+% of points.
 %
 % The following scenarios are possible:
 %
@@ -32,32 +32,30 @@ function [interp] = ft_sourceinterpolate(cfg, functional, anatomical)
 % coordinate sytem, i.e. either both in CTF coordinates (NAS/LPA/RPA)
 % or both in SPM coordinates (AC/PC).
 %
-% The output data will contain a description of the functional data at the
-% locations at which the anatomical data are defined. For example, if the
-% anatomical data was volumetric, the output data is a volume-structure,
-% containing the resliced source and the anatomical volume that can be
-% plotted together, using FT_SOURCEPLOT or FT_SLICEINTERP,
-% or that can be written to file using FT_SOURCEWRITE.
+% The output data will contain a description of the functional data
+% at the locations at which the anatomical data are defined. For
+% example, if the anatomical data was volumetric, the output data is
+% a volume-structure, containing the resliced source and the anatomical
+% volume that can be plotted together, using FT_SOURCEPLOT or
+% FT_SLICEINTERP, or that can be written to file using FT_SOURCEWRITE.
 %
 % Use as
-%   [interp] = ft_sourceinterpolate(cfg, source, mri)   or
-%   [interp] = ft_sourceinterpolate(cfg, stat, mri)
+%   [interp] = ft_sourceinterpolate(cfg, source, anatomy)
+%   [interp] = ft_sourceinterpolate(cfg, stat, anatomy)
 % where
-%   source is the output of FT_SOURCEANALYSIS
-%   stat   is the output of FT_SOURCESTATISTICS
-%   mri    is the output of FT_READ_MRI or the filename of a MRI,
-%            or
-%          the output of FT_READ_HEADSHAPE or the filename of a file
-%            containing the description of a cortical sheet.
+%   source  is the output of FT_SOURCEANALYSIS
+%   stat    is the output of FT_SOURCESTATISTICS
+%   anatomy is the output of FT_READ_MRI or one of the FT_VOLUMExxx functions, 
+%           or a cortical sheet that was read with FT_READ_HEADSHAPE. 
 % and cfg is a structure with any of the following fields
 %   cfg.parameter     = string, default is 'all'
 %   cfg.interpmethod  = 'linear', 'cubic', 'nearest' or 'spline' when
-%                          interpolating two 3D volumes onto each other
-%                          (default = 'linear')
+%                       interpolating two 3D volumes onto each other
+%                       (default = 'linear')
 %   cfg.interpmethod  = 'nearest', 'sphere_avg' or 'smudge' when
-%                          interpolating a point cloud onto a 3D volume, a
-%                          3D volume onto a point cloud, or a point cloud
-%                          with another point cloud (default = 'nearest')
+%                       interpolating a point cloud onto a 3D volume, a
+%                       3D volume onto a point cloud, or a point cloud
+%                       with another point cloud (default = 'nearest')
 %   cfg.downsample    = integer number (default = 1, i.e. no downsampling)
 %
 % To facilitate data-handling and distributed computing with the peer-to-peer
