@@ -19,6 +19,7 @@ function [spectrum,freqoi,timeoi] = ft_specest_wavelet(dat, time, varargin)
 %   timeoi     = vector, containing time points of interest (in seconds)
 %   width      = number or vector, width of the wavelet, determines the temporal and spectral resolution
 %   gwidth     = number, determines the length of the used wavelets in standard deviations of the implicit Gaussian kernel
+%   verbose    = output progress to console (0 or 1, default 1)
 %
 % See also FT_FREQANALYSIS, FT_SPECEST_MTMCONVOL, FT_SPECEST_CONVOL, FT_SPECEST_HILBERT, FT_SPECEST_MTMFFT
 
@@ -33,6 +34,14 @@ width     = ft_getopt(varargin, 'width', 7);
 gwidth    = ft_getopt(varargin, 'gwidth', 3);
 pad       = ft_getopt(varargin, 'pad');
 polyorder = ft_getopt(varargin, 'polyorder', 1);
+fbopt     = ft_getopt(varargin, 'feedback');
+verbose   = ft_getopt(varargin, 'verbose', true);
+
+if isempty(fbopt),
+  fbopt.i = 1;
+  fbopt.n = 1;
+end
+
 
 % Set n's
 [nchan,ndatsample] = size(dat);
@@ -145,7 +154,15 @@ end
 spectrum = complex(nan(nchan,nfreqoi,ntimeboi),nan(nchan,nfreqoi,ntimeboi));
 datspectrum = transpose(fft(transpose([dat repmat(postpad,[nchan, 1])]))); % double explicit transpose to speedup fft
 for ifreqoi = 1:nfreqoi
-  fprintf('processing frequency %d (%.2f Hz)\n', ifreqoi,freqoi(ifreqoi));
+  str = sprintf('frequency %d (%.2f Hz)', ifreqoi,freqoi(ifreqoi));
+  [st, cws] = dbstack;
+  if length(st)>1 && strcmp(st(2).name, 'ft_freqanalysis') && verbose
+    % specest_convol has been called by ft_freqanalysis, meaning that ft_progress has been initialised
+    ft_progress(fbopt.i./fbopt.n, ['trial %d, ',str,'\n'], fbopt.i);
+  elseif verbose
+    fprintf([str, '\n']);
+  end
+  
   % compute indices that will be used to extracted the requested fft output
   nsamplefreqoi    = taplen(ifreqoi);
   reqtimeboiind    = find((timeboi >=  (nsamplefreqoi ./ 2)) & (timeboi < (ndatsample - (nsamplefreqoi ./2))));
