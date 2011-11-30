@@ -1,5 +1,6 @@
 function test_qsubcellfun
 
+% TEST test_qsubcellfun
 % TEST qsubcellfun qsubfeval qsubget
 
 if isempty(which('qsubcellfun'))
