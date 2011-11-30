@@ -18,7 +18,7 @@ for k = 1:size(input,3)
   end
 end 
 
-% check for directer or not
+% check for directed or not
 isdirected = true;
 for k = 1:size(input,3)
   tmp = input(:,:,k);
@@ -72,7 +72,7 @@ for k = 1:size(input, 3)
     end
 
     if ~isbinary 
-      warning_once('weights are not taken into account; graph is converted to binary values');
+      warning_once('weights are not taken into account and graph is converted to binary values');
     end  
     
     if isdirected

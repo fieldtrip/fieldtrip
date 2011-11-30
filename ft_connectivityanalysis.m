@@ -11,7 +11,7 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 % where the first input argument is a configuration structure (see
 % below) and the second argument is the output of FT_PREPROCESSING,
 % FT_TIMELOCKANLAYSIS, FT_FREQANALYSIS, FT_MVARANALYSIS,
-% FT_SOURCEANALYSIS or FT_CONNECTIVITYANALYSIS. The different connectivity
+% FT_SOURCEANALYSIS. The different connectivity
 % metrics are supported only for specific datatypes (see below). 
 %
 % The configuration structure has to contain
@@ -39,14 +39,6 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %     'ppc'        pairwise phase consistency 
 %     'wppc'       weighted pairwise phase consistency
 %
-% The following methods can be used on channel-level data which already contains
-% a connectivity measure (i.e. with dimord 'chan_chan_XXX'). These methods are
-% implemented using the brain connectivity toolbox developed by Olaf Sporns and
-% colleagues: www.brain-connectivity-toolbox.net.
-%
-%     'clustering_coef'  clustering coefficient.
-%     'degrees'
-%
 % Additional configuration options are
 %   cfg.channel    = Nx1 cell-array containing a list of channels which are
 %     used for the subsequent computations. This only has an effect when
@@ -67,8 +59,6 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %     '-logabs', support for method 'coh', 'csd', 'plv'
 %   cfg.removemean  = 'yes' (default), or 'no', support for method
 %     'powcorr' and 'amplcorr'.
-%   cfg.parameter   = string specifying the metric on which to apply the
-%     method from the brain connectivity toolbox
 % 
 % To facilitate data-handling and distributed computing with the peer-to-peer
 % module, this function has the following options:
@@ -298,18 +288,6 @@ switch cfg.method
     outparam = 'psispctrm';
   case {'di'}
     %wat eigenlijk?
-  case {'clustering_coef' 'degrees'}
-    ft_hastoolbox('BCT', 1);
-    if ~strcmp(data.dimord(1:9), 'chan_chan'),
-      error('the dimord of the input data should start with ''chan_chan''');
-    end
-    if isempty(cfg.parameter)
-      error('when using functions from the brain connectivity toolbox you should give a parameter for which the metric is to be computed');
-    else
-      inparam = cfg.parameter;
-    end
-    needrpt  = 0;
-    outparam = [cfg.method,'spctrm'];
   otherwise
     error('unknown method %s', cfg.method);
 end
@@ -732,12 +710,6 @@ switch cfg.method
     
   case 'di'
     % directionality index
-  case {'clustering_coef' 'degrees'}
-    % gateway function to the brain connectivity toolbox
-    
-    [datout, outdimord] = ft_connectivity_bct(data.(inparam), 'method', cfg.method);
-    varout   = [];
-    data.dimord = outdimord;
   otherwise
     error('unknown method %s', cfg.method);
 end
