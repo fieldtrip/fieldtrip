@@ -59,6 +59,9 @@ switch version
     if strcmp(vol.type,'asa')
       vol.type = 'bem_asa';
     end
+    if strcmp(vol.type,'avo')
+      vol.type = 'bem_avo';
+    end
     
   case '2007'
     
