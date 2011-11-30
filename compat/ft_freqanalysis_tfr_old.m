@@ -44,6 +44,10 @@ function [freq] = ft_freqanalysis_tfr(cfg, data)
 %
 % $Id$
 
+ft_defaults
+warning('this version of ft_freqanalysis_tfr is deprecated, it is no longer being maintained')
+
+
 % ensure that this function is started as a subfunction of the FT_FREQANALYSIS wrapper
 if ~exist('OCTAVE_VERSION')
   [s, i] = dbstack;
@@ -55,8 +59,8 @@ if ~exist('OCTAVE_VERSION')
     caller_ext  = '';
   end
   % evalin('caller', 'mfilename') does not work for Matlab 6.1 and 6.5
-  if ~strcmp(caller_name, 'ft_freqanalysis')
-    error(['you should call FREQANALYSIS, instead of the ' upper(mfilename) ' subfunction']);
+  if ~strcmp(caller_name, 'ft_freqanalysis_old')
+    error(['you should call FREQANALYSIS_OLD, instead of the ' upper(mfilename) ' subfunction']);
   end
 end
 

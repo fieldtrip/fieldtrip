@@ -258,12 +258,12 @@ switch cfg.method
     cfg.width  = ft_getopt(cfg, 'width',  7);
     cfg.gwidth = ft_getopt(cfg, 'gwidth', 3);
    
-%   case 'tfr'
-%     cfg = ft_checkconfig(cfg, 'renamed', {'waveletwidth', 'width'});
-%     cfg = ft_checkconfig(cfg, 'unused',  {'downsample'});
-%     specestflg = 1;
-%     cfg.width  = ft_getopt(cfg, 'width',  7);
-%     cfg.gwidth = ft_getopt(cfg, 'gwidth', 3); 
+  case 'tfr'
+    cfg = ft_checkconfig(cfg, 'renamed', {'waveletwidth', 'width'});
+    cfg = ft_checkconfig(cfg, 'unused',  {'downsample'});
+    specestflg = 1;
+    cfg.width  = ft_getopt(cfg, 'width',  7);
+    cfg.gwidth = ft_getopt(cfg, 'gwidth', 3); 
     
     
   case 'hilbert_devel'

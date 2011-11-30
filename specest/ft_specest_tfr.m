@@ -1,6 +1,6 @@
-function [spectrum, freqoi, timeoi] = ft_specest_convol(dat, time, varargin)
+function [spectrum, freqoi, timeoi] = ft_specest_tfr(dat, time, varargin)
 
-% FT_SPECEST_CONVOL performs time-frequency analysis on any time series trial
+% FT_SPECEST_TFR performs time-frequency analysis on any time series trial
 % data using the 'wavelet method' based on Morlet wavelets, doing
 % convolution in the time domain
 %
