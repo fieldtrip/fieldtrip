@@ -51,7 +51,7 @@ function [stat] = ft_networkanalysis(cfg, data)
 %
 % $Id: ft_connectivityanalysis.m 4812 2011-11-25 13:32:07Z jansch $
 
-revision = '$Id: ft_connectivityanalysis.m 4812 2011-11-25 13:32:07Z jansch $';
+revision = '$Id: ft_networkanalysis.m $';
 
 % do the general setup of the function
 ft_defaults
@@ -79,7 +79,7 @@ end
 outparam = cfg.method;
 
 % gateway subfunction to the brain connectivity toolbox
-[datout, outdimord] = connectivity_bct(data.(inparam), 'method', cfg.method, 'dimord', data.dimord);
+[datout, outdimord] = connectivity_bct(data.(inparam), cfg.method, data.dimord);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % create the output structure
@@ -103,12 +103,10 @@ ft_postamble previous data
 ft_postamble history stat
 ft_postamble savevar stat
 
-function [output, dimord] = connectivity_bct(input, varargin)
-
-% CONNECTIVITY_BCT is a gateway function to the brain-connectivity-toolbox.
-
-method = ft_getopt(varargin, 'method', '');
-dimord = ft_getopt(varargin, 'dimord', '');
+%%%%%%%%%%%%%
+% subfunction
+%%%%%%%%%%%%%
+function [output, dimord] = connectivity_bct(input, method, dimord)
 
 siz   = [size(input) 1];
 input = reshape(input, [siz(1:2) prod(siz(3:end))]);
@@ -116,85 +114,92 @@ input = reshape(input, [siz(1:2) prod(siz(3:end))]);
 % check for binary or not
 isbinary = true;
 for k = 1:size(input,3)
-  tmp = input(:,:,k);
-  isbinary = all(ismember(tmp(:), [0 1]));
-  if ~isbinary,
-    break;
+  for m = 1:size(input,4)
+    tmp = input(:,:,k,m);
+    isbinary = all(ismember(tmp(:), [0 1]));
+    if ~isbinary,
+      break;
+    end
   end
 end 
 
 % check for directed or not
 isdirected = true;
 for k = 1:size(input,3)
-  tmp = input(:,:,k);
-  isdirected = all(all(tmp==tmp.'));
-  if ~isdirected,
-    break;
+  for m = 1:size(input,4)
+    tmp = input(:,:,k,m);
+    isdirected = all(all(tmp==tmp.'));
+    if ~isdirected,
+      break;
+    end
   end
 end 
 
 for k = 1:size(input, 3)
-  switch method
-  case 'assortativity'
-  case 'betweenness'
-  case 'breadthdist'
-  case 'breadth'
-  case 'charpath'
-  case 'clustering_coef'
-
-    % allocate memory
-    if k==1 
-      outsiz = size(input);
-      outsiz(1) = []; 
-      % remove one of the chan dimensions because the 
-      % clustering coefficient is defined per channel
-      % and not per channel pair
-      output = zeros(outsiz);
-      dimord = dimord(6:end);
+  for m = 1:size(input, 4)
+    switch method
+    case 'assortativity'
+    case 'betweenness'
+    case 'breadthdist'
+    case 'breadth'
+    case 'charpath'
+    case 'clustering_coef'
+  
+      % allocate memory
+      if k==1 
+        outsiz = size(input);
+        outsiz(1) = []; 
+        % remove one of the chan dimensions because the 
+        % clustering coefficient is defined per channel
+        % and not per channel pair
+        output = zeros(outsiz);
+        dimord = dimord(6:end);
+      end
+  
+      if isbinary && isdirected
+        output(:,k,m) = clustering_coef_bd(input(:,:,k,m));
+      elseif isbinary && ~isdirected
+        output(:,k,m) = clustering_coef_bu(input(:,:,k,m));
+      elseif ~isbinary && isdirected
+        output(:,k,m) = clustering_coef_wd(input(:,:,k,m));
+      elseif ~isbinary && ~isdirected
+        output(:,k,m) = clustering_coef_wu(input(:,:,k,m));
+      end
+  
+    case 'degrees'
+      
+      % allocate memory
+      if k==1
+        outsiz = size(input);
+        outsiz(1) = []; 
+        % remove one of the chan dimensions because the 
+        % degree is defined per channel
+        % and not per channel pair
+        output = zeros(outsiz);
+        dimord = dimord(6:end);
+      end
+  
+      if ~isbinary 
+        warning_once('weights are not taken into account and graph is converted to binary values');
+      end  
+      
+      if isdirected
+        [in, out, output(:,k,m)] = degrees_dir(input(:,:,k,m));
+        % fixme do something here
+      elseif ~isdirected
+        output(:,k,m) = degrees_und(input(:,:,k,m));
+      end
+  
+    case 'density'
+    case 'distance'
+    case 'edge_betweenness'
+    case 'efficiency'
+    case 'modularity'
+    case 'participation_coef'
+    otherwise
+      error('unsupported connectivity metric %s requested');
     end
 
-    if isbinary && isdirected
-      output(:,k) = clustering_coef_bd(input(:,:,k));
-    elseif isbinary && ~isdirected
-      output(:,k) = clustering_coef_bu(input(:,:,k));
-    elseif ~isbinary && isdirected
-      output(:,k) = clustering_coef_wd(input(:,:,k));
-    elseif ~isbinary && ~isdirected
-      output(:,k) = clustering_coef_wu(input(:,:,k));
-    end
-
-  case 'degrees'
-    
-    % allocate memory
-    if k==1
-      outsiz = size(input);
-      outsiz(1) = []; 
-      % remove one of the chan dimensions because the 
-      % degree is defined per channel
-      % and not per channel pair
-      output = zeros(outsiz);
-      dimord = dimord(6:end);
-    end
-
-    if ~isbinary 
-      warning_once('weights are not taken into account and graph is converted to binary values');
-    end  
-    
-    if isdirected
-      [in, out, output(:,k)] = degrees_dir(input(:,:,k));
-      % fixme do something here
-    elseif ~isdirected
-      output(:,k) = degrees_und(input(:,:,k));
-    end
-
-  case 'density'
-  case 'distance'
-  case 'edge_betweenness'
-  case 'efficiency'
-  case 'modularity'
-  case 'participation_coef'
-  otherwise
-    error('unsupported connectivity metric %s requested');
-  end
-end
+  end % for m
+end % for k
 
