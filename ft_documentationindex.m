@@ -161,6 +161,12 @@ for i=1:size(index,1)
     fprintf(fid, '===== %s =====\n\n', upper(char(currletter)));
   end
   fprintf(fid, '** %s ** // %s //\\\\\n', index{i,2}, index{i,1});
+  
+  % do postprocessing to make sure we don't mess up dokuwiki layout
+  % '' is a markup instruction for dokuwiki so escape by replacing it
+  % with %%''%%
+  index{i,3} = strrep(index{i,3},'''''','%%''''%%');
+  
   fprintf(fid, '%s\n\n', index{i,3});
 end
 fclose(fid);
