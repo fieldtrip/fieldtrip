@@ -18,7 +18,7 @@ function [spectrum,freqoi,timeoi] = ft_specest_hilbert(dat, time, varargin)
 %   pad       = number, indicating time-length of data to be padded out to in seconds
 %   width     = number or vector, width of band-pass surrounding each element of freqoi
 %   filttype  = string, filter type, 'but' or 'fir' or 'firls'
-%   filtorder = number, filter order
+%   filtorder = number or vector, filter order
 %   filtdir   = string, filter direction,  'twopass', 'onepass' or 'onepass-reverse' 
 %   verbose   = output progress to console (0 or 1, default 1)
 %
@@ -94,6 +94,12 @@ if numel(width) == 1
   width = ones(1,nfreqoi) * width;
 end
 
+% expand filter order to array if constant filterorder
+if numel(filtorder) == 1
+  filtorder = ones(1,nfreqoi) * filtorder;
+end
+
+
 % create filter frequencies and check validity
 filtfreq = [];
 invalidind = [];
@@ -123,7 +129,7 @@ for ifreqoi = 1:nfreqoi
   end
   
   % filter
-  flt = ft_preproc_bandpassfilter(dat, fsample, filtfreq(ifreqoi,:), filtorder, filttype, filtdir);
+  flt = ft_preproc_bandpassfilter(dat, fsample, filtfreq(ifreqoi,:), filtorder(ifreqoi), filttype, filtdir);
   
   % transform and insert
   dum = transpose(hilbert(transpose([repmat(prepad,[nchan, 1]) flt repmat(postpad,[nchan, 1])])));
