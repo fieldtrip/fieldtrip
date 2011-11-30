@@ -21,7 +21,7 @@ function [spectrum,freqoi,timeoi] = ft_specest_wavelet(dat, time, varargin)
 %   gwidth     = number, determines the length of the used wavelets in standard deviations of the implicit Gaussian kernel
 %   verbose    = output progress to console (0 or 1, default 1)
 %
-% See also FT_FREQANALYSIS, FT_SPECEST_MTMCONVOL, FT_SPECEST_CONVOL, FT_SPECEST_HILBERT, FT_SPECEST_MTMFFT
+% See also FT_FREQANALYSIS, FT_SPECEST_MTMCONVOL, FT_SPECEST_TFR, FT_SPECEST_HILBERT, FT_SPECEST_MTMFFT
 
 % Copyright (C) 2010, Donders Institute for Brain, Cognition and Behaviour
 %

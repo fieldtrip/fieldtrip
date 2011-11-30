@@ -25,7 +25,7 @@ function [spectrum,ntaper,freqoi,timeoi] = ft_specest_mtmconvol(dat, time, varar
 %   verbose   = output progress to console (0 or 1, default 1)
 %   taperopt  = parameter to use for window (see WINDOW) 
 %
-% See also FT_FREQANALYSIS, FT_SPECEST_MTMFFT, FT_SPECEST_CONVOL, FT_SPECEST_HILBERT, FT_SPECEST_WAVELET
+% See also FT_FREQANALYSIS, FT_SPECEST_MTMFFT, FT_SPECEST_TFR, FT_SPECEST_HILBERT, FT_SPECEST_WAVELET
 
 % Copyright (C) 2010, Donders Institute for Brain, Cognition and Behaviour
 %

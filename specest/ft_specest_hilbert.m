@@ -126,7 +126,7 @@ for ifreqoi = 1:nfreqoi
   
   % transform and insert
   dum = transpose(hilbert(transpose([repmat(prepad,[nchan, 1]) flt repmat(postpad,[nchan, 1])])));
-  spectrum(:,ifreqoi,:) = dum(:,timeboi);
+  spectrum(:,ifreqoi,:) = dum(:,timeboi+numel(prepad));
 end
 
 
