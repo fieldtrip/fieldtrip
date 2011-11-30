@@ -106,7 +106,8 @@ function [freq] = ft_freqanalysis(cfg, data)
 %
 %  WAVELET
 %   WAVELET performs time-frequency analysis on any time series trial data
-%   using the 'wavelet method' based on Morlet wavelets.
+%   using the 'wavelet method' based on Morlet wavelets. Using mulitplication
+%   in the frequency domain instead of convolution in the time domain.
 %   cfg.foi        = vector 1 x numfoi, frequencies of interest
 %       OR
 %   cfg.foilim     = [begin end], frequency band of interest
@@ -126,11 +127,19 @@ function [freq] = ft_freqanalysis(cfg, data)
 %
 %
 %  TFR
-%   TFR computes time-frequency representations of single-trial
-%   data using a convolution in the time-domain with Morlet's wavelets.
-%   cfg.foi           = vector 1 x numfoi, frequencies of interest
-%   cfg.waveletwidth  = 'width' of wavelets expressed in cycles (default = 7)
-%   cfg.downsample    = ratio for downsampling, which occurs after convolution (default = 1)
+%   TFR performs time-frequency analysis on any time series trial data
+%   using the 'wavelet method' based on Morlet wavelets. Using convolution
+%   in the time domain instead of multiplication in the frequency domain.
+%   cfg.foi        = vector 1 x numfoi, frequencies of interest
+%       OR
+%   cfg.foilim     = [begin end], frequency band of interest
+%   cfg.width      = 'width' of the wavelet, determines the temporal and spectral
+%                    resolution of the analysis (default = 7)
+%                    constant, for a 'classical constant-Q' wavelet analysis
+%                    vector, defining a variable width for each frequency
+%   cfg.gwidth     = determines the length of the used wavelets in standard deviations
+%                    of the implicit Gaussian kernel and should be choosen
+%                    >= 3; (default = 3)
 %
 %
 %
@@ -143,7 +152,7 @@ function [freq] = ft_freqanalysis(cfg, data)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_FREQANALYSIS_OLD, FT_FREQANALYSIS_TFR
+% See also FT_FREQANALYSIS_OLD
 
 % Undocumented local options:
 % cfg.correctt_ftimwin (set to yes to try to determine new t_ftimwins based
@@ -248,6 +257,14 @@ switch cfg.method
     specestflg = 1;
     cfg.width  = ft_getopt(cfg, 'width',  7);
     cfg.gwidth = ft_getopt(cfg, 'gwidth', 3);
+   
+%   case 'tfr'
+%     cfg = ft_checkconfig(cfg, 'renamed', {'waveletwidth', 'width'});
+%     cfg = ft_checkconfig(cfg, 'unused',  {'downsample'});
+%     specestflg = 1;
+%     cfg.width  = ft_getopt(cfg, 'width',  7);
+%     cfg.gwidth = ft_getopt(cfg, 'gwidth', 3); 
+    
     
   case 'hilbert_devel'
     warning('the hilbert implementation is under heavy development, do not use it for analysis purposes')
@@ -483,7 +500,7 @@ else
         hastime = false;
         
       case 'wavelet'
-        [spectrum,foi,toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, 'gwidth', cfg.gwidth,options{:});
+        [spectrum,foi,toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, 'gwidth', cfg.gwidth,options{:}, fbopt);
         
         % the following variable is created to keep track of the number of
         % trials per time bin and is needed for proper normalization if
@@ -496,8 +513,24 @@ else
         % modify spectrum for same reason as fake ntaper
         spectrum = reshape(spectrum,[1 nchan numel(foi) numel(toi)]);
         
+      case 'tfr'
+        [spectrum,foi,toi] = ft_specest_convol(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, 'gwidth', cfg.gwidth,options{:}, fbopt);
+        
+        % the following variable is created to keep track of the number of
+        % trials per time bin and is needed for proper normalization if
+        % keeprpt==1 and the triallength is variable
+        if itrial==1, trlcnt = zeros(1, numel(foi), numel(toi)); end
+        
+        hastime = true;
+        % create FAKE ntaper (this requires very minimal code change below for compatibility with the other specest functions)
+        ntaper = ones(1,numel(foi));
+        % modify spectrum for same reason as fake ntaper
+        spectrum = reshape(spectrum,[1 nchan numel(foi) numel(toi)]);
+        
+        
+        
       case 'hilbert'
-        [spectrum,foi,toi] = ft_specest_hilbert(dat, time, 'timeoi', cfg.toi, 'filttype', cfg.filttype, 'filtorder', cfg.filtorder, 'filtdir', cfg.filtdir, 'width', cfg.width, options{:});
+        [spectrum,foi,toi] = ft_specest_hilbert(dat, time, 'timeoi', cfg.toi, 'filttype', cfg.filttype, 'filtorder', cfg.filtorder, 'filtdir', cfg.filtdir, 'width', cfg.width, options{:}, fbopt);
         hastime = true;
         % create FAKE ntaper (this requires very minimal code change below for compatibility with the other specest functions)
         ntaper = ones(1,numel(foi));
