@@ -1463,6 +1463,19 @@ if checkUniqueLabels
   end
 end
 
+% as of November 2011, the header is supposed to include the channel type
+% (see FT_CHANTYPE) and the units of each channel (e.g. uV, fT, ...).
+
+if ~isfield(hdr, 'chantype')
+  % use a helper function which has some built in intelligence
+  hdr.chantype = ft_chantype(hdr);
+end % for
+
+if ~isfield(hdr, 'chanunit')
+  % use a helper function which has some built in intelligence
+  hdr.chanunit = ft_chanunit(hdr);
+end % for
+
 % ensure that these are double precision and not integers, otherwise
 % subsequent computations that depend on these might be messed up
 hdr.Fs          = double(hdr.Fs);
