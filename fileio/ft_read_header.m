@@ -890,19 +890,28 @@ switch headerformat
       if isfield(orig, 'channel_names')
         hdr.label = orig.channel_names;
       else
-        % give this warning only once
-        warning_once('creating fake channel names');
         hdr.label = cell(hdr.nChans,1);
         if hdr.nChans < 2000 % don't do this for fMRI etc.
+          warning_once('creating fake channel names');        % give this warning only once
           for i=1:hdr.nChans
             hdr.label{i} = sprintf('%d', i);
           end
         else
+          warning_once('skipping fake channel names');        % give this warning only once
           checkUniqueLabels = false;
         end
       end
     end
+    
+    
     hdr.orig.bufsize = orig.bufsize;
+    
+    % As of November 2011 the header should also contain the channel type
+    % (e.g. meg, eeg, trigger) and the channel units (e.g. uV, fT).
+    % For the FieldTrip buffer these have not been implemented yet,
+    % therefore we have to return 'unknown' for both.
+    hdr.chantype = repmat('unknown', size(hdr.label));
+    hdr.chanunit = repmat('unknown', size(hdr.label));
     
   case 'fcdc_buffer_offline'
     [hdr, nameFlag] = read_buffer_offline_header(headerfile);
@@ -1547,4 +1556,3 @@ for i=1:length(hdr)
   end
 end
 hdr = tmp;
-
