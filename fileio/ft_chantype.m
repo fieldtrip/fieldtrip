@@ -1,6 +1,7 @@
 function type = ft_chantype(input, desired)
 
-% FT_CHANTYPE determines for each channel what type it is, e.g. planar/axial gradiometer or magnetometer
+% FT_CHANTYPE determines for each channel what type it is, e.g. planar gradiometer, 
+% axial gradiometer, magnetometer, trigger channel, etc.
 %
 % Use as
 %   type = ft_chantype(hdr)
@@ -63,12 +64,12 @@ else
 end
 
 % start with unknown type
-type = cell(numchan,1);
-for i=1:length(type)
-  type{i} = 'unknown';
-end
+type = repmat({'unknown'}, numchan, 1);
 
-if ft_senstype(input, 'neuromag')
+if ft_senstype(input, 'unknown')
+  % don't bother doing all subsequent checks to determine the type of sensor array
+
+elseif ft_senstype(input, 'neuromag')
   % channames-KI is the channel kind, 1=meg, 202=eog, 2=eeg, 3=trigger (I am not sure, but have inferred this from a single test file)
   % chaninfo-TY is the Coil type (0=magnetometer, 1=planar gradiometer)
   if isfield(hdr, 'orig') && isfield(hdr.orig, 'channames')
@@ -460,8 +461,7 @@ label2type = {
   };
 for i = 1:numel(label2type)
   for j = 1:numel(label2type{i})
-    type(intersect(strmatch(label2type{i}{j}, lower(label)),...
-      strmatch('unknown', type, 'exact'))) = label2type{i}(1);
+    type(intersect(strmatch(label2type{i}{j}, lower(label)), strmatch('unknown', type, 'exact'))) = label2type{i}(1);
   end
 end
 
