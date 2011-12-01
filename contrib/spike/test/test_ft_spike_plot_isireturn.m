@@ -21,7 +21,7 @@ data.label{end+1} = 'chan2';
 data.label{end+1} = 'chan3';
 
 % show that the psth works also with the poisson format
-spike = ft_spike_data2spike([],data);
+spike = ft_checkdata(data,'datatype', 'spike', 'feedback', 'yes');
 for iUnit  = 1:3
   spike.time{iUnit} =   spike.time{iUnit} + 0.001*rand(1,length(spike.time{iUnit}))'
 end

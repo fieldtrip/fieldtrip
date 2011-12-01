@@ -5,6 +5,7 @@ function test_ft_spike_psth()
 
 % fixed number of spikes, equal length trials, one LFP channel, gamma distribution psth
 % one channel with spikes at known positions
+data = [];
 spikesPerTrial = 10;
 nTrials = 100;
 shapePar = 2;
@@ -28,7 +29,7 @@ for iTrial = 1:nTrials
   end  
   data.trial{iTrial}(iUnit,smp) = 1;
 
-  iUnit = 1; % unit with fixed positions
+  iUnit = 2; % unit with fixed positions
   
   smp = [];
   spikeTimes = linspace(0.1,0.9,9);
@@ -46,8 +47,8 @@ cfg.spikechannel = 2:3;
 spike = ft_checkdata(data,'datatype', 'spike', 'feedback', 'yes');
 %%
 cfgC.fsample = 1000;
-data2 = ft_spike_spike2data(cfgC,spike,data);
-
+data2 = ft_checkdata(spike,'datatype', 'raw', 'feedback', 'yes', 'fsample', 1000);
+data2 = ft_checkdata(data2,'datatype', 'raw', 'feedback', 'yes');
 %%
 % we compute the psth by calling the psth function
 cfgPsth = [];

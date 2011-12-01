@@ -19,12 +19,12 @@ sts.fourierspctrm{1} = rand(size(randPhases)).*exp(i*randPhases); % random weigh
 sts.trial{1}     = sort(ceil(rand(1,nSpikes)*100));
 sts.time{1}         = rand(1,nSpikes);
 for iChan = 1:nChans
-  sts.label{iChan} = strcat('chan', num2str(iChan));
+  sts.lfplabel{iChan} = strcat('chan', num2str(iChan));
 end
 sts.cfg = [];
 sts.dimord         = 'rpt_chan_freq';
 sts.freq           = 10:10:60;
-sts.spikechannel   = {'unit1'};
+sts.label   = {'unit1'};
 sts.trialtime      = [0,1];
 
 cfgTfr = [];
@@ -62,12 +62,12 @@ sts.fourierspctrm{1} = rand(size(randPhases)).*exp(i*randPhases); % random weigh
 sts.trial{1}     = ones(1,nSpikes);
 sts.time{1}         = rand(1,nSpikes);
 for iChan = 1:nChans
-  sts.label{iChan} = strcat('chan', num2str(iChan));
+  sts.lfplabel{iChan} = strcat('chan', num2str(iChan));
 end
 sts.cfg = [];
 sts.dimord         = 'rpt_chan_freq';
 sts.freq           = 10:10:60;
-sts.spikechannel   = {'unit1'};
+sts.label   = {'unit1'};
 sts.trialtime      = [0,1];
 
 cfgTfr = [];
@@ -103,12 +103,12 @@ sts.fourierspctrm{1} = rand(size(randPhases)).*exp(i*randPhases); % random weigh
 sts.trial{1}     = ones(1,nSpikes);
 sts.time{1}         = rand(1,nSpikes);
 for iChan = 1:nChans
-  sts.label{iChan} = strcat('chan', num2str(iChan));
+  sts.lfplabel{iChan} = strcat('chan', num2str(iChan));
 end
 sts.cfg = [];
 sts.dimord         = 'rpt_chan_freq';
 sts.freq           = 10:10:60;
-sts.spikechannel   = {'unit1'};
+sts.label          = {'unit1'};
 sts.trialtime      = [0,1];
 
 cfgTfr = [];

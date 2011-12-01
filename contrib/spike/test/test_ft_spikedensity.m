@@ -2,7 +2,7 @@ function test_ft_spikedensity()
 
 % TEST test_ft_spikedensity
 % ft_spikedensity
-
+data = [];
 nTrials = 100;
 nSamples = 1001;
 R = 0.51;
@@ -24,6 +24,11 @@ cfgSdf.latency       = [0 1];
 cfgSdf.keeptrials = 'yes';
 
 [sdf sdfdata] = ft_spikedensity(cfgSdf,data);
+%% show that we can also enter a spike input
+spike = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
+[sdf2 sdfdata] = ft_spikedensity(cfgSdf,spike);
+
+any(sdf2.trial(:)-sdf.trial(:))>0
 %%
 nTrials = length(data.trial);
 for iTrial = 1 : 5
