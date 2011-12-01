@@ -970,6 +970,10 @@ elseif filetype_check_extension(filename, '.tet')
   type = 'tet'; 
   manufacturer = 'a.o. INRIA, see http://shapes.aimatshape.net/';
   content = 'tetraedral mesh';  
+elseif filetype_check_extension(filename, '.nc')
+  type = 'netmeg'; 
+  manufacturer = 'Center for Biomedical Research Excellence (COBRE), see http://cobre.mrn.org/megsim/tools/netMEG/netMEG.html';
+  content = 'MEG data';  
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
