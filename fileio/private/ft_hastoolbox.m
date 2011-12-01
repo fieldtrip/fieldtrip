@@ -107,6 +107,7 @@ url = {
   'CCA'        'see http://www.imt.liu.se/~magnus/cca or contact Magnus Borga'
   'EGI_MFF'    'see http://www.egi.com/ or contact either Phan Luu or Colin Davey at EGI'
   'TOOLBOX_GRAPH' 'see http://www.mathworks.com/matlabcentral/fileexchange/5355-toolbox-graph or contact Gabriel Peyre'
+  'NETCDF'     'see http://www.mathworks.com/matlabcentral/fileexchange/15177'
   };
 
 if nargin<2
@@ -252,6 +253,8 @@ switch toolbox
     status = exist('mff_getObject.m', 'file') && exist('mff_getSummaryInfo.m', 'file');
   case 'TOOLBOX_GRAPH'
     status = exist('toolbox_graph');
+  case 'NETCDF'
+    status = exist('netcdf');
 
     % the following are not proper toolboxes, but only subdirectories in the fieldtrip toolbox
     % these are added in ft_defaults and are specified with unix-style forward slashes
