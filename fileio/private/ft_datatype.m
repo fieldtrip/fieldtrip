@@ -37,8 +37,6 @@ function [type, dimord] = ft_datatype(data, desired)
 israw      =  isfield(data, 'label') && isfield(data, 'time') && isa(data.time, 'cell') && isfield(data, 'trial') && isa(data.trial, 'cell') && ~isfield(data,'trialtime');
 isfreq     = (isfield(data, 'label') || isfield(data, 'labelcmb')) && isfield(data, 'freq') && ~isfield(data,'trialtime'); %&& (isfield(data, 'powspctrm') || isfield(data, 'crsspctrm') || isfield(data, 'cohspctrm') || isfield(data, 'fourierspctrm') || isfield(data, 'powcovspctrm'));
 istimelock =  isfield(data, 'label') && isfield(data, 'time') && ~isfield(data, 'freq') && ~isfield(data,'trialtime'); %&& ((isfield(data, 'avg') && isnumeric(data.avg)) || (isfield(data, 'trial') && isnumeric(data.trial) || (isfield(data, 'cov') && isnumeric(data.cov))));
-isspike    =  isfield(data, 'label') && isfield(data, 'time') && isa(data.time, 'cell') && isfield(data, 'trial') && isa(data.trial, 'cell') && isfield(data, 'trialtime') && isa(data.trialtime, 'numeric') && ~isfield(data, 'fourierspctrm');
-isspikeraw =  isfield(data, 'label') && isfield(data, 'timestamp') && isa(data.timestamp, 'cell') && ~isfield(data, 'time') && ~isfield(data, 'trialtime') && ~isfield(data,'trial');
 iscomp     =  isfield(data, 'label') && isfield(data, 'topo') || isfield(data, 'topolabel');
 isvolume   =  isfield(data, 'transform') && isfield(data, 'dim');
 issource   =  isfield(data, 'pos');
@@ -46,7 +44,12 @@ isdip      =  isfield(data, 'dip');
 ismvar     =  isfield(data, 'dimord') && ~isempty(strfind(data.dimord, 'lag'));
 isfreqmvar =  isfield(data, 'freq') && isfield(data, 'transfer');
 ischan     =  isfield(data, 'dimord') && strcmp(data.dimord, 'chan') && ~isfield(data, 'time') && ~isfield(data, 'freq'); 
-issts      =  isfield(data, 'freq') && isfield(data, 'label') && isa(data.label, 'cell') && isfield(data, 'spikechannel') && isa(data.spikechannel, 'cell') && isfield(data,'fourierspctrm') && isa(data.fourierspctrm, 'cell') && isfield(data,'trial') && isfield(data,'time') && isa(data.trial,'cell') && isa(data.time, 'cell') && isfield(data, 'trialtime'); 
+% check if isspike:
+spk_hastimestamp = isfield(data,'label') && isfield(data, 'timestamp') && isa(data.timestamp, 'cell');
+spk_hastrials = isfield(data,'label') && isfield(data, 'time') && isa(data.time, 'cell') && isfield(data, 'trial') && isa(data.trial, 'cell') && ...
+isfield(data, 'trialtime') && isa(data.trialtime, 'numeric');
+isspike = isfield(data, 'label') && (spk_hastimestamp || spk_hastrials);
+
 if iscomp
   % comp should conditionally go before raw, otherwise the returned ft_datatype will be raw
   type = 'comp';  
@@ -63,10 +66,6 @@ elseif istimelock
   type = 'timelock';
 elseif isspike
   type = 'spike';
-elseif isspikeraw
-  type = 'spikeraw';
-elseif issts
-  type = 'sts'; % spike triggered spectrum
 elseif isvolume
   type = 'volume';
 elseif issource
