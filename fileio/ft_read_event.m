@@ -1441,6 +1441,10 @@ switch eventformat
   case 'nmc_archive_k'
     event = read_nmc_archive_k_event(filename);
     
+  case 'netmeg'
+    warning('reading of events for the netmeg format is not yet supported');
+    event = [];
+    
   case 'neuroshare' % NOTE: still under development
     % check that the required neuroshare toolbox is available
     ft_hastoolbox('neuroshare', 1);

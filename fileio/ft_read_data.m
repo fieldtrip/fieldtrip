@@ -307,7 +307,7 @@ switch dataformat
     % this uses a mex file for reading the 24 bit data
     dat = read_biosemi_bdf(filename, hdr, begsample, endsample, chanindx);
 
-  case {'biosemi_old'}
+  case 'biosemi_old'
     % this uses the openbdf and readbdf functions that I copied from the EEGLAB toolbox
     epochlength = hdr.orig.Head.SampleRate(1);
     % it has already been checked in read_header that all channels have the same sampling rate
@@ -414,7 +414,7 @@ switch dataformat
       dat = dat(chanindx,:);  % select the desired channels
     end
 
-  case  'combined_ds'
+  case 'combined_ds'
     dat = read_combined_ds(filename, hdr, begsample, endsample, chanindx);
 
   case {'ctf_ds', 'ctf_meg4', 'ctf_res4'}
@@ -654,6 +654,13 @@ switch dataformat
   case {'mpi_ds', 'mpi_dap'}
     [hdr, dat] = read_mpi_ds(filename);
     dat = dat(chanindx, begsample:endsample); % select the desired channels and samples
+
+  case 'netmeg'
+    % the data is in the same NetCDF file as the header and is cached in the header structure
+    dat = hdr.orig.Var.waveforms;
+    dat = dat(:,:,chanindx);
+    % at the bottom of ft_read_data there is a general handling of the permuting and reshaping
+    dimord = 'trials_samples_chans';
 
   case 'neuralynx_dma'
     dat = read_neuralynx_dma(filename, begsample, endsample, chanindx);

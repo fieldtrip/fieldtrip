@@ -54,8 +54,8 @@ function [sens] = ft_read_sens(filename, varargin)
 % $Id$
 
 % test whether the file exists
-if ~exist(filename)
-  error(sprintf('file ''%s'' does not exist', filename));
+if ~exist(filename, 'file')
+  error('file ''%s'' does not exist', filename);
 end
 
 % get the options
@@ -137,36 +137,44 @@ switch fileformat
     sens.label = tmp{1};
     sens.pnt   = [tmp{2:4}];
    
-  case {'itab_raw' 'itab_mhd'}
-    hdr = ft_read_header(filename);
-    sens = hdr.grad;
-    
-  case 'neuromag_mne'
-    hdr = ft_read_header(filename,'headerformat','neuromag_mne');
-    sens = hdr.elec;    
-    
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % gradiometer information is always stored in the header of the MEG dataset
   % hence uses the standard fieldtrip/fileio read_header function
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-  case {'ctf_ds', 'ctf_res4', 'neuromag_fif', '4d', '4d_pdf', '4d_m4d', '4d_xyz', 'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw'}
-    % check the availability of the required low-level toolbox
-    % this is required because the read_sens function is also on itself included in the forwinv toolbox
+  case {'ctf_ds', 'ctf_res4', 'neuromag_fif', '4d', '4d_pdf', '4d_m4d', '4d_xyz', 'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw', 'itab_raw' 'itab_mhd', 'netmeg'}
     hdr = ft_read_header(filename, 'headerformat', fileformat);
     sens = hdr.grad;
     
   case 'neuromag_mne_grad'
+    % the file can contain both, force reading the gradiometer info
     hdr = ft_read_header(filename,'headerformat','neuromag_mne');
     sens = hdr.grad;
-    
+
+  case 'neuromag_mne_elec'
+    % the file can contain both, force reading the electrode info
+    hdr = ft_read_header(filename,'headerformat','neuromag_mne');
+    sens = hdr.elec;    
+
+  case 'neuromag_mne'
+    % the file can contain both, try to be smart in determining what to return
+    hdr = ft_read_header(filename,'headerformat','neuromag_mne');
+    if isfield(hdr, 'elec') && isfield(hdr, 'grad')
+      warning('returning electrode information, not gradiometer location');
+      sens = hdr.elec;
+    elseif isfield(hdr, 'elec')
+      sens = hdr.elec;
+    elseif isfield(hdr, 'grad')
+      sens = hdr.grad;
+    else
+      error('cannot find electrode or gradiometer information');
+    end
+
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % This is for EEG formats where electrode positions can be stored with the data
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
   case {'spmeeg_mat', 'eeglab_set'}
-    % check the availability of the required low-level toolbox
-    % this is required because the read_sens function is also on itself included in the forwinv toolbox
     hdr = ft_read_header(filename);
     
     if isfield(hdr, 'grad')

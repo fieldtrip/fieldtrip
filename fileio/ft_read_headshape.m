@@ -399,6 +399,14 @@ switch fileformat
     % FIXME this should be implemented, consistent with ft_write_headshape
     keyboard
     
+  case 'netmeg'
+    hdr = ft_read_header(filename);
+    if isfield(hdr.orig, 'headshapedata')
+      shape.pnt = hdr.orig.Var.headshapedata;
+    else
+      error('the NetMEG file "%s" does not contain headshape data', filename);
+    end
+    
   case 'vista'
     ft_hastoolbox('simbio', 1);
     [nodes,elements,labels] = read_vista_mesh(filename);

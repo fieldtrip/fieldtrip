@@ -31,6 +31,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   Neuromag - Elekta (*.fif)
 %   BTi - 4D Neuroimaging (*.m4d, *.pdf, *.xyz)
 %   Yokogawa (*.ave, *.con, *.raw)
+%   NetMEG (*.nc)
 %
 % The following EEG dataformats are supported
 %   ANT - Advanced Neuro Technology, EEProbe (*.avr, *.eeg, *.cnt)
@@ -50,7 +51,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %
 % See also FT_READ_DATA, FT_READ_EVENT, FT_WRITE_DATA, FT_WRITE_EVENT
 
-% Copyright (C) 2003-2010 Robert Oostenveld
+% Copyright (C) 2003-2011 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -987,6 +988,68 @@ switch headerformat
   case {'mpi_ds', 'mpi_dap'}
     hdr = read_mpi_ds(filename);
     
+  case 'netmeg'
+    ft_hastoolbox('netcdf', 1);
+
+    % this will read all NetCDF data from the file and subsequently convert 
+    % each of the three elements into a more easy to parse MATLAB structure
+    s = netcdf(filename);
+    
+    for i=1:numel(s.AttArray)
+      fname = fixname(s.AttArray(i).Str);
+      fval  = s.AttArray(i).Val;
+      if ischar(fval)
+        fval = fval(fval~=0); % remove the \0 characters
+        fval = strtrim(fval); % remove insignificant whitespace
+      end
+      Att.(fname) = fval;
+    end
+    
+    for i=1:numel(s.VarArray)
+      fname = fixname(s.VarArray(i).Str);
+      fval  = s.VarArray(i).Data;
+      if ischar(fval)
+        fval = fval(fval~=0); % remove the \0 characters
+        fval = strtrim(fval); % remove insignificant whitespace
+      end
+      Var.(fname) = fval;
+    end
+    
+    for i=1:numel(s.DimArray)
+      fname = fixname(s.DimArray(i).Str);
+      fval  = s.DimArray(i).Dim;
+      if ischar(fval)
+        fval = fval(fval~=0); % remove the \0 characters
+        fval = strtrim(fval); % remove insignificant whitespace
+      end
+      Dim.(fname) = fval;
+    end
+    
+    % convert the relevant fields into teh default header structure
+    hdr.Fs          = 1000/Var.samplinginterval;
+    hdr.nChans      = length(Var.channelstatus);
+    hdr.nSamples    = Var.numsamples;
+    hdr.nSamplesPre = 0;
+    hdr.nTrials     = size(Var.waveforms, 1);
+    hdr.chanunit    = cellstr(reshape(Var.channelunits, hdr.nChans, 2));
+    hdr.chantype    = cellstr(reshape(lower(Var.channeltypes), hdr.nChans, 3));
+    
+    warning_once('creating fake channel names');
+    hdr.label = cell(hdr.nChans, 1);
+    for i=1:hdr.nChans
+      hdr.label{i} = sprintf('%d', i);
+    end
+    
+    % remember the original details of the file
+    % note that this also includes the data
+    % this is large, but can be reused elsewhere
+    hdr.orig.Att = Att;
+    hdr.orig.Var = Var;
+    hdr.orig.Dim = Dim;
+    
+    % construct the gradiometer structure from the complete header information
+    hdr.grad = netmeg2grad(hdr);
+    
   case 'neuralynx_dma'
     hdr = read_neuralynx_dma(filename);
     
@@ -1556,3 +1619,14 @@ for i=1:length(hdr)
   end
 end
 hdr = tmp;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function out = fixname(str)
+% FIXME this fails in case the string would start with a digit, e.g. "99luftballons"
+out = deblank(lower(str));
+out(out=='-') = '_'; % fix dashes
+out(out==' ') = '_'; % fix spaces
+out(out=='/') = '_'; % fix forward slashes
+out(out=='\') = '_'; % fix backward slashes
+out(out=='.') = '_';
+out(out==',') = '_';

@@ -61,18 +61,17 @@ if istrue(coil)
   end
   
   hs = plot3(pnt(:,1), pnt(:,2), pnt(:,3), style);
+  
 else
   % determine the position of each channel, which is for example the mean of
   % two bipolar electrodes, or the bottom coil of a axial gradiometer
   hs = plot3(sens.chanpos(:,1), sens.chanpos(:,2), sens.chanpos(:,3), style);
   
-  if ~isempty(label)
+  if ~isempty(label) && ~any(strcmp(label, {'off', 'no'}))
     for i=1:length(sens.label)
       switch label
         case {'on', 'yes'}
           str = sens.label{i};
-        case {'off', 'no'}
-          str = '';
         case {'label' 'labels'}
           str = sens.label{i};
         case {'number' 'numbers'}
@@ -82,7 +81,7 @@ else
       end % switch
       text(sens.chanpos(i,1), sens.chanpos(i,2), sens.chanpos(i,3), str);
     end % for
-  end % if
+  end % if empty or off/no
   
 end
 
@@ -96,4 +95,4 @@ if ~holdflag
   hold off
 end
 
-warning(ws); %revert to original state
+warning(ws); % revert to original state

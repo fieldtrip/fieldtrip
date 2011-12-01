@@ -127,7 +127,7 @@ switch version
       end
     end
     
-    if ~isfield(sens, 'chanunit')
+    if ~isfield(sens, 'chanunit') && ~ft_senstype(sens, 'unknown')
       if ft_senstype(sens, 'ctf')
         sens.chanunit = repmat({'T'}, size(sens.label));
       elseif ft_senstype(sens, 'bti')
