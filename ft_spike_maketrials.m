@@ -52,7 +52,7 @@ ft_preamble callinfo
 ft_preamble trackconfig
 
 % check if input data is indeed spikeraw format
-spike = ft_checkdata(spike,'datatype', 'spikeraw', 'feedback', 'yes');
+spike = ft_checkdata(spike,'datatype', 'spike', 'feedback', 'yes');
 
 % ensure that the required options are present
 cfg = ft_checkconfig(cfg, 'required', {'timestampspersecond', 'trl'});
@@ -79,11 +79,13 @@ for iUnit = 1:nUnits
     % find the dimension where we have to select
     sz        = size(spike.waveform{iUnit});
     N         = length(ts);
-    if sz(1)==N
-      waveform  = spike.waveform{iUnit}(indx,:);
-    elseif sz(2)==N
-      waveform  = spike.waveform{iUnit}(:,indx)'; % first dim must be spikes
-      fprintf('forcing first dimension of .waveform to be spikes\n')
+    if length(sz)==3
+      waveform = spike.waveform{iUnit}(:,:,indx);
+    elseif length(sz)==2 && sz(2)==N
+      waveform  = spike.waveform{iUnit}(:,indx);
+    elseif length(sz)==2 && sz(1)==N
+      waveform  = spike.waveform{iUnit}(indx,:)'; % first dim must be spikes
+      fprintf('forcing second dimension of .waveform to be spikes\n')
     else
       ignoreWave = 1;
       fprintf('Number of waveforms does not match number of spikes\n')
@@ -122,14 +124,19 @@ for iUnit = 1:nUnits
   time = [cfg.trl(:,3)/cfg.timestampspersecond (cfg.trl(:,3)/cfg.timestampspersecond + trialDur)]; % make the time-axis
   
   % gather the results
-  spike.time{iUnit}   = dt;
-  spike.trial{iUnit}  = trialNum;
+  spike.time{iUnit}   = dt(:)';
+  spike.trial{iUnit}  = trialNum(:)';
   spike.trialtime     = time;
   if isfield(spike, 'waveform') && ~ignoreWave
-    spike.waveform{iUnit} = waveform(sel,:);
+    if length(size(waveform))==3
+      spike.waveform{iUnit} = waveform(:,:,sel);
+    else
+      spike.waveform{iUnit} = waveform(:,sel);
+    end
   end
+  ts = spike.timestamp{iUnit}(indx(sel));
+  spike.timestamp{iUnit} = ts(:)';
 end
-spike.trl = cfg.trl;
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig

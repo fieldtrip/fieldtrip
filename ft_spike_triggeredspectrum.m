@@ -210,10 +210,10 @@ for iTrial = 1:nTrials
 end
 
 % collect the results
-Sts.label          = data.label(chansel);
+Sts.lfplabel          = data.label(chansel);
 Sts.freq           = freqoi;
 Sts.dimord         = 'rpt_chan_freq';
-Sts.spikechannel   = spikelabel(spikesel);
+Sts.label   = spikelabel(spikesel);
 for iUnit = 1:nspikesel
   Sts.fourierspctrm{iUnit}  = cat(1, spectrum{iUnit,:});
   Sts.time{iUnit}           = cat(1, spiketime{iUnit,:});

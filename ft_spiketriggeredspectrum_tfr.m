@@ -46,11 +46,11 @@ ft_preamble callinfo
 ft_preamble trackconfig
 
 % check if the data is of sts format, and convert from old format if required
-sts = ft_checkdata(sts,'datatype', 'sts', 'feedback', 'yes');
+sts = ft_checkdata(sts,'datatype', 'spike', 'feedback', 'yes');
 
 % get the options
 cfg.channel        = ft_getopt(cfg,'channel', 'all');
-cfg.spikechannel   = ft_getopt(cfg,'spikechannel', sts.spikechannel{1});
+cfg.spikechannel   = ft_getopt(cfg,'spikechannel', sts.label{1});
 cfg.latency        = ft_getopt(cfg,'latency', 'maxperiod');
 cfg.spikesel       = ft_getopt(cfg,'spikesel', 'all');
 cfg.chanavg        = ft_getopt(cfg,'chanavg', 'no');
@@ -68,7 +68,7 @@ cfg = ft_checkopt(cfg,'foilim', {'char', 'doublevector'});
 cfg = ft_checkopt(cfg,'spikesel', {'logical', 'double', 'char'});
 
 % get the spikechannels
-spikelabel       = sts.spikechannel;
+spikelabel       = sts.label;
 cfg.spikechannel = ft_channelselection(cfg.spikechannel, spikelabel);
 unitsel          = match_str(spikelabel, cfg.spikechannel);
 nspikesel        = length(cfg.spikechannel); % number of spike channels
@@ -79,8 +79,8 @@ sts.time  = sts.time{unitsel};
 sts.fourierspctrm = sts.fourierspctrm{unitsel};
 
 % channel selection business
-cfg.channel        = channelselection(cfg.channel, sts.label);
-chansel            = match_str(sts.label, cfg.channel); 
+cfg.channel        = channelselection(cfg.channel, sts.lfplabel);
+chansel            = match_str(sts.lfplabel, cfg.channel); 
 
 % frequency selection business
 if strcmp(cfg.foilim, 'all'),  
@@ -239,15 +239,15 @@ for iChan = 1:nChans
 end
 
 % gather the results
-sts_tfr.ppc0   = ppc0;
-sts_tfr.ppc1   = ppc1;
-sts_tfr.ppc2   = ppc2;
-sts_tfr.plv   = plv;
-sts_tfr.spikechannel = spikelabel(unitsel);
-sts_tfr.phase = phs;
-sts_tfr.ral   = ral;
-sts_tfr.dof   = df;
-sts_tfr.freq  = sts.freq(freqindx);
-sts_tfr.label = sts.label(chansel);
-sts_tfr.time  = bins(1:end-1) + 0.5*dt; % center time-points
-sts_tfr.cfg   = cfg;
+sts_tfr.ppc0     = ppc0;
+sts_tfr.ppc1     = ppc1;
+sts_tfr.ppc2     = ppc2;
+sts_tfr.plv      = plv;
+sts_tfr.label    = spikelabel(unitsel);
+sts_tfr.phase    = phs;
+sts_tfr.ral      = ral;
+sts_tfr.dof      = df;
+sts_tfr.freq     = sts.freq(freqindx);
+sts_tfr.lfplabel = sts.lfplabel(chansel);
+sts_tfr.time     = bins(1:end-1) + 0.5*dt; % center time-points
+sts_tfr.cfg      = cfg;

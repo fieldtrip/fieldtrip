@@ -47,6 +47,10 @@ function [sdf, sdfdata] = density(cfg,data)
 %   cfg.trials         =  numeric or logical selection of trials (default = 'all')
 %   cfg.keeptrials     = 'yes' or 'no' (default). If 'yes', we store the trials in a matrix
 %                         in output SDF as well.
+%   cfg.fsample        = additional user input that can be used when input
+%                        is a SPIKE structure, in that case a continuous
+%                        representation is created using cfg.fsample
+%                        (default = 1000);
 % Outputs:
 %   - SDF is a structure similar to TIMELOCK (output from FT_TIMELOCKANALYSIS) and can be used
 %     in FT_TIMELOCKSTATISTICS for example.
@@ -68,9 +72,6 @@ ft_preamble help
 ft_preamble callinfo
 ft_preamble trackconfig
 
-% check input data structure
-data = ft_checkdata(data,'datatype', 'raw', 'feedback', 'yes');
-
 % get the default options
 cfg.outputunit   = ft_getopt(cfg, 'outputunit','rate');
 cfg.timwin       = ft_getopt(cfg, 'timwin',[-0.05 0.05]);
@@ -81,6 +82,7 @@ cfg.vartriallen  = ft_getopt(cfg,'vartriallen', 'yes');
 cfg.keeptrials   = ft_getopt(cfg,'keeptrials', 'yes');
 cfg.winfunc      = ft_getopt(cfg,'winfunc', 'gauss');
 cfg.winfuncopt   = ft_getopt(cfg,'winfuncopt', []);
+cfg.fsample      = ft_getopt(cfg,'fsample', 1000);
 
 % ensure that the options are valid
 cfg = ft_checkopt(cfg,'outputunit','char', {'rate', 'spikecount'});
@@ -92,6 +94,10 @@ cfg = ft_checkopt(cfg,'keeptrials', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'timwin', 'doublevector');
 cfg = ft_checkopt(cfg,'winfunc', {'char', 'function_handle', 'doublevector'});
 cfg = ft_checkopt(cfg,'winfuncopt', {'cell', 'double', 'empty'});
+cfg = ft_checkopt(cfg,'fsample', 'double');
+
+% check input data structure
+data = ft_checkdata(data,'datatype', 'raw', 'feedback', 'yes', 'fsample', cfg.fsample);
 
 % select the units
 cfg.channel = ft_channelselection(cfg.spikechannel, data.label);

@@ -52,11 +52,11 @@ ft_preamble callinfo
 ft_preamble trackconfig
 
 % check if the data is of sts format, and convert from old format if required
-sts = ft_checkdata(sts,'datatype', 'sts', 'feedback', 'yes');
+sts = ft_checkdata(sts,'datatype', 'spike', 'feedback', 'yes');
 
 % get the options
 cfg.channel        = ft_getopt(cfg,'channel', 'all');
-cfg.spikechannel   = ft_getopt(cfg,'spikechannel', sts.spikechannel{1});
+cfg.spikechannel   = ft_getopt(cfg,'spikechannel', sts.label{1});
 cfg.latency        = ft_getopt(cfg,'latency', 'maxperiod');
 cfg.spikesel       = ft_getopt(cfg,'spikesel', 'all');
 cfg.chanavg        = ft_getopt(cfg,'chanavg', 'no');
@@ -73,11 +73,11 @@ cfg = ft_checkopt(cfg,'powweighted', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'latency', {'char', 'doublevector'});
 
 % collect channel information
-cfg.channel        = ft_channelselection(cfg.channel, sts.label);
-chansel            = match_str(sts.label, cfg.channel); 
+cfg.channel        = ft_channelselection(cfg.channel, sts.lfplabel);
+chansel            = match_str(sts.lfplabel, cfg.channel); 
 
 % get the spikechannels
-spikelabel       = sts.spikechannel;
+spikelabel       = sts.label;
 cfg.spikechannel = ft_channelselection(cfg.spikechannel, spikelabel);
 unitsel          = match_str(spikelabel, cfg.spikechannel);
 nspikesel        = length(unitsel); % number of spike channels
@@ -203,16 +203,16 @@ ang  = angularmean(sts.fourierspctrm{unitsel},1);
 stat.doftrial = dof;
 dof    = sum(~isnan(sts.fourierspctrm{unitsel}),1);
 
-stat.ppc0   = ppc0;
-stat.ppc1   = ppc1;
-stat.ppc2   = ppc2;
-stat.spikechannel = spikelabel{unitsel};
-stat.dofspike = dof;    % also cross-unit purposes
-stat.ang    = ang;
-stat.ral    = ral;
-stat.plv    = resultantlength(sts.fourierspctrm{unitsel},1);
-stat.freq   = sts.freq(freqindx);
-stat.label  = sts.label(chansel);
+stat.ppc0      = ppc0;
+stat.ppc1      = ppc1;
+stat.ppc2      = ppc2;
+stat.label     = sts.label{unitsel};
+stat.dofspike  = dof;    % also cross-unit purposes
+stat.ang       = ang;
+stat.ral       = ral;
+stat.plv       = resultantlength(sts.fourierspctrm{unitsel},1);
+stat.freq      = sts.freq(freqindx);
+stat.lfplabel  = sts.lfplabel(chansel);
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
