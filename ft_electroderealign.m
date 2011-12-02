@@ -190,7 +190,7 @@ if useheadshape
     headshape = cfg.headshape;
   elseif isnumeric(cfg.headshape) && size(cfg.headshape,2)==3
     % use the headshape points specified in the configuration
-    headshape.chanpos = cfg.headshape;
+    headshape.pnt = cfg.headshape;
   elseif ischar(cfg.headshape)
     % read the headshape from file
     headshape = ft_read_headshape(cfg.headshape);
@@ -199,8 +199,8 @@ if useheadshape
   end
   if ~isfield(headshape, 'tri')
     % generate a closed triangulation from the surface points
-    headshape.chanpos = unique(headshape.chanpos, 'rows');
-    headshape.tri = projecttri(headshape.chanpos);
+    headshape.pnt = unique(headshape.pnt, 'rows');
+    headshape.tri = projecttri(headshape.pnt);
   end
   headshape = ft_convert_units(headshape, elec.unit); % ensure that the units are consistent with the electrodes
 end
@@ -636,7 +636,7 @@ layoutgui(fig, [0.7 0.05 0.25 0.50], position, style, string, value, tag, callba
 function cb_redraw(hObject, eventdata, handles);
 fig = get(hObject, 'parent');
 headshape = getappdata(fig, 'headshape');
-bnd.chanpos = headshape.chanpos; %ft_plot_mesh wants headshape in bnd fields
+bnd.chanpos = headshape.pnt; %ft_plot_mesh wants headshape in bnd fields
 bnd.tri = headshape.tri;
 elec = getappdata(fig, 'elec');
 template = getappdata(fig, 'template');
