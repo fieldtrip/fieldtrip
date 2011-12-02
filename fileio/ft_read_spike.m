@@ -7,17 +7,30 @@ function [spike] = ft_read_spike(filename, varargin)
 %  [spike] = ft_read_spike(filename, ...)
 %
 % Additional options should be specified in key-value pairs and can be
-%   'spikeformat'
+%   'spikeformat' = string, described the fileformat (default is automatic)
 %
-% The output spike structure contains
+% The following file formats are supported
+%   'mclust_t'
+%   'neuralynx_ncs' 
+%   'neuralynx_nse'
+%   'neuralynx_nst'
+%   'neuralynx_ntt'
+%   'neuralynx_nts'
+%   'plexon_ddt'
+%   'plexon_nex'
+%   'plexon_plx'
+%   'neuroshare'
+%
+% The output spike structure usually contains
 %   spike.label     = 1xNchans cell-array, with channel labels
 %   spike.waveform  = 1xNchans cell-array, each element contains a matrix (Nsamples X Nspikes)
 %   spike.timestamp = 1xNchans cell-array, each element contains a vector (1 X Nspikes)
 %   spike.unit      = 1xNchans cell-array, each element contains a vector (1 X Nspikes)
+% and is described in more detail in FT_DATATYPE_SPIKE
 %
-% See also FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT
+% See also FT_DATATYPE_SPIKE, FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT
 
-% Copyright (C) 2007-2010 Robert Oostenveld
+% Copyright (C) 2007-2011 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
