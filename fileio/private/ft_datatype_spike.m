@@ -2,99 +2,96 @@ function spike = ft_datatype_spike(spike, varargin)
 
 % FT_DATATYPE_SPIKE describes the FieldTrip MATLAB structure for spike data
 %
-% Spike data is characterised as a sparse point-process, i.e. each neuronal
-% firing is only represented as the time at which the firing happened.
-% Optionally, the spike waveform can also be represented. Using the spike
-% waveform, the neuronal firing events can be sorted into their single units.
+% Spike data is obtained using FT_READ_SPIKE to read files from a Plexon,
+% Neuralynx or other animal electrophysiology data acquisition system. It
+% is characterised as a sparse point-process, i.e. each neuronal firing is
+% only represented as the time at which the firing happened. Optionally,
+% the spike waveform can also be represented. Using this waveform, the
+% neuronal firing events can be sorted into their single units.
 %
-% Spike data is obtained using FT_READ_SPIKE to read it from a Plexon,
-% Neuralynx or other animal electrophysiology system file format containing
-% spikes.
-%
-% The first characteristic of the SPIKE structure is a .label cell array
-% with the label of the (single or multi) units.
+% A required characteristic of the SPIKE structure is a cell-array with the
+% label of the (single or multi) units.
 %
 %         label: {'unit1'  'unit2'  'unit3'}
-%         
-% The main fields of the SPIKE structure then contain specific information
-% per spike, for the different fields.
-% 
-% The SPIKE structure must then either contain a .timestamp (cell array)
-% field, having the raw timestamps as recorded by the hardware system, or a
-% .time (cell array) field, containing the spike times relative to an experimental
+%
+% The fields of the SPIKE structure that contain the specific information
+% per spike depends on the available information. A relevant distinction
+% can be made between the representation of raw spikes that are not related
+% to the temporal strucutre of the experimental design (i.e trials), and
+% the data representation in which the spikes are related to the trial.
+%
+% For a continuous recording the SPIKE structure must contain a cell-array
+% with the raw timestamps as recorded by the hardware system. As example,
+% the original content of the .timestamp field can be
+%
+%         timestamp:  {[1x993 uint64]  [1x423 uint64]  [1x3424 uint64]}
+%
+% An optional field that is typically obtained from the raw recording
+% contains the waveforms for every unit and label as a cell-array. For
+% example, the content of this field may be
+%
+%         waveform:   {[32x993 double] [32x423 double] [32x3224 double]}
+%
+% If the data has been organised to reflect the temporal structure of the
+% experiment (i.e. the trials), the SPIKE structure should contain a
+% cell-array with the spike times relative to an experimental trigger. The
+% FT_SPIKE_REDEFINETRIAL function can be used to reorganise the SPIKE
+% structure such that the spike times are expressed relative to a trigger
+% instead of relative to the acquisition devices internal timestamp clock.
+% The time field then contains only those spikes that ocurred within one of
+% the trials . The spike times are now expressed on seconds relative to the
 % trigger.
 %
-% For example, the original content of the .timestamp field can be
+%         time:       {[1x504 double] [1x50 double] [1x101 double]}
 %
-%         timestamp: {[1x993 uint64]  [1x423 uint64]  [1x3424 uint64]}
+% In addition, for every spike we register in which trial the spike was
+% recorded:
 %
-%
-% An additional, optional field that is typically obtained from the raw recording is
-% the .waveform field
-% This again is a cell-array with the waveforms for every unit and label.
-% 
-% For example, the content of this field may be
-%
-%         waveform: {[32x993 double] [32x423 double] [32x3224 double]}
-%
-% Using FT_SPIKE_REDEFINETRIAL we can make the spike times relative to a
-% trigger.
-%
-%
-% The .time field, a cell-array, then contains less spikes, and spike times
-% are now relative to the trigger.
-%
-%         time: {[1x504 double] [1x50 double] [1x101 double]}                   the time in the trial for each spike relative to the trigger (in seconds)
-%
-% In addition, for every trial we register in which trial the spike was
-% recorded, this is specified by the .trial field.
-%
-%         trial: {[1x504 double] [1x50 double] [1x101 double]}                   the trial in which each spike was observed
+%         trial:      {[1x504 double] [1x50 double] [1x101 double]}
 %
 % To fully reconstruct the structure of the spike-train, it is required
-% that the starts and the ends of the trials are taken into account.
+% that the exact start- and end-point of the trial (in seconds) is
+% represented. This is specified in a nTrials x 2 matrix.
 %
-% This is specified by the .trialtime field, a nTrials x 2 matrix.
+%         trialtime:  [100x2 double]
 %
-%         trialtime: [100x2 double]                                           the begin- and end-time of each trial (in seconds)
+% As an example, FT_SPIKE_REDEFINETRIALS could result in the following
+% SPIKE structure that represents the spikes of three units that were
+% observed in 100 trials:
 %
-%
-% From these trials the spike-train can be fully reconstructed.
-%
-% For example after running FT_SPIKE_REDEFINETRIALS the obtained structure
-% may be:
-%         label: {'unit1'  'unit2'  'unit3'}
-%         timestamp: {[1x504 double] [1x50 double] [1x101 double]} 
-%         time: {[1x504 double] [1x50 double] [1x101 double]}  
-%         trial: {[1x504 double] [1x50 double] [1x101 double]}  
-%         trialtime: [100x2 double]                
-%         waveform: {[32x504 double] [32x50 double] [32x101 double]}
+%         label:      {'unit1'  'unit2'  'unit3'}
+%         timestamp:  {[1x504 double] [1x50 double] [1x101 double]}
+%         time:       {[1x504 double] [1x50 double] [1x101 double]}
+%         trial:      {[1x504 double] [1x50 double] [1x101 double]}
+%         trialtime:  [100x2 double]
+%         waveform:   {[32x504 double] [32x50 double] [32x101 double]}
 %         cfg
 %
-% For analysing the spike-LFP phase-locking, the output structure is also a
-% SPIKE structure with additional fields .fourierspctrm, .lfplabel, .freq and
-% .fourierspctrmdimord.
+% For analysing the relation between the spikes and the local field
+% potential (e.g. phase-locking), the SPIKE structure can have additional
+% fields such as fourierspctrm, lfplabel, freq and fourierspctrmdimord.
 %
 % For example, from the structure above we may obtain
 %
-%         label: {'unit1'  'unit2'  'unit3'}
-%         timestamp: {[1x504 double] [1x50 double] [1x101 double]} 
-%         time: {[1x504 double] [1x50 double] [1x101 double]}  
-%         trial: {[1x504 double] [1x50 double] [1x101 double]}  
-%         trialtime: [100x2 double]                
-%         waveform: {[32x504 double] [32x50 double] [32x101 double]}
-%         fourierspctrmdimord: {chan}_spike_lfplabel_freq
-%         fourierspctrm: {504x2x20, 50x2x20, 101x2x20}
-%         freq: [1x20 double]
-%         lfplabel: {'lfpchan1', 'lfpchan2'}
+%         label:          {'unit1'  'unit2'  'unit3'}
+%         timestamp:      {[1x504 double] [1x50 double] [1x101 double]}
+%         time:           {[1x504 double] [1x50 double] [1x101 double]}
+%         trial:          {[1x504 double] [1x50 double] [1x101 double]}
+%         trialtime:      [100x2 double]
+%         waveform:       {[32x504 double] [32x50 double] [32x101 double]}
+%         fourierspctrm:  {504x2x20, 50x2x20, 101x2x20}
+%         fourierspctrmdimord: '{chan}_spike_lfplabel_freq'
+%         lfplabel:       {'lfpchan1', 'lfpchan2'}
+%         freq:           [1x20 double]
 %         cfg
 %
 % Required fields:
-%   - label, timestamp or the combination (time,trial,trialtime)
+%   - the combination label and timestamp, or
+%   - the combination label, time, trial and trialtime
 %
 % Optional fields:
 %   - waveform
-%   - fourierspctrm, fourierspctrmdimord,freq,lfplabel      extra outputs from FT_SPIKETRIGGEREDSPECTRUM and FT_SPIKE_TRIGGEREDSPECTRUM
+%   - fourierspctrm, fourierspctrmdimord, freq, lfplabel  (these are extra outputs from FT_SPIKETRIGGEREDSPECTRUM and FT_SPIKE_TRIGGEREDSPECTRUM)
 %   - hdr
 %   - cfg
 %
@@ -106,11 +103,15 @@ function spike = ft_datatype_spike(spike, varargin)
 %
 % Revision history:
 %
-% (2010/latest) Introduced the time and the trialtime fields.
+% (2011/latest) Defined a consistent spike data representation that can
+% also contain the Fourier spectrum and other fields. Use the xxxdimord
+% to indicate the dimensions of the field.
 %
-% See also FT_DATATYPE, FT_DATATYPE_COMP, FT_DATATYPE_DIP, FT_DATATYPE_FREQ,
-% FT_DATATYPE_MVAR, FT_DATATYPE_RAW, FT_DATATYPE_SOURCE, FT_DATATYPE_SPIKE,
-% FT_DATATYPE_TIMELOCK, FT_DATATYPE_VOLUME
+% (2010) Introduced the time and the trialtime fields.
+%
+% (2007) Introduced the spike data representation.
+%
+% See also FT_DATATYPE, FT_DATATYPE_RAW, FT_DATATYPE_FREQ, FT_DATATYPE_TIMELOCK
 
 % Copyright (C) 2011, Robert Oostenveld & Martin Vinck
 %
@@ -137,13 +138,13 @@ function spike = ft_datatype_spike(spike, varargin)
 version = ft_getopt(varargin, 'version', 'latest');
 
 if strcmp(version, 'latest')
-  version = '2007';
+  version = '2011';
 end
 
 switch version
-  case {'2010','2007'}
+  case '2011'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-          
+    
     if isfield(spike,'origtrial') && isfield(spike,'origtime')
       warning('The spike datatype format you are using is depreciated. Converting to newer spike format');
       spike.trial = {spike.origtrial};
@@ -153,7 +154,7 @@ switch version
       end
       if ~isfield(spike, 'trialtime')
         % determine from the data itself
-        warning('Reconstructing the field trialtime from spike.origtime and spike.origtrial');      
+        warning('Reconstructing the field trialtime from spike.origtime and spike.origtrial');
         tmax  = nanmin(spike.trial{1});
         tsmin = nanmin(spike.time{1});
         tsmax = nanmax(spike.time{1});
@@ -161,7 +162,7 @@ switch version
       end
       spike.lfplabel = spike.label; % in the old format, these were the lfp channels
       spike.label    = {'unit1'};
-      spike.fourierspctrmdimord = '{chan}_spike_lfplabel_freq';      
+      spike.fourierspctrmdimord = '{chan}_spike_lfplabel_freq';
     end
     
   otherwise
