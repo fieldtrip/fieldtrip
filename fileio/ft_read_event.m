@@ -1450,7 +1450,7 @@ switch eventformat
     ft_hastoolbox('neuroshare', 1);
     
     tmp = read_neuroshare(filename, 'readevent', 'yes');
-    for i=1:length(tmp.hdr.eventinfo)
+    for i=1:length(tmp.event.timestamp)
       event(i).type      = tmp.hdr.eventinfo(i).EventType;
       event(i).value     = tmp.event.data(i);
       event(i).timestamp = tmp.event.timestamp(i);

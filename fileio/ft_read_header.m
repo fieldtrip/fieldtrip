@@ -1504,12 +1504,12 @@ switch headerformat
     ft_hastoolbox('neuroshare', 1);
     
     tmp = read_neuroshare(filename);
-    hdr.Fs          = tmp.hdr.seginfo(1).SampleRate; % take the sampling freq from the first channel (assuming this is the same for all chans)
-    hdr.nChans      = tmp.hdr.fileinfo.EntityCount;
-    hdr.nSamples    = max([tmp.hdr.entityinfo.ItemCount]); % take the number of samples from the longest channel
+    hdr.Fs          = tmp.hdr.analoginfo(end).SampleRate; % take the sampling freq from the last analog channel (assuming this is the same for all chans)
+    hdr.nChans      = length(tmp.list.analog(tmp.analog.contcount~=0)); % get the analog channels, only the ones that are not empty
+    hdr.nSamples    = max([tmp.hdr.entityinfo(tmp.list.analog).ItemCount]); % take the number of samples from the longest channel
     hdr.nSamplesPre = 0; % continuous data
     hdr.nTrials     = 1; % continuous data
-    hdr.label       = {tmp.hdr.entityinfo.EntityLabel}; %%% contains non-unique chans
+    hdr.label       = {tmp.hdr.entityinfo(tmp.list.analog(tmp.analog.contcount~=0)).EntityLabel}; %%% contains non-unique chans?
     hdr.orig        = tmp; % remember the original header
     
   otherwise
