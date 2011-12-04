@@ -432,8 +432,8 @@ elseif iseeg
       lf = leadfield_simbio(pos, sens, vol);
     
     case 'fns'
-      tolerance = 1e-8;
-      lf = leadfield_fns(pos, vol, tolerance);      
+      % tolerance = 1e-8;
+      lf = leadfield_fns(pos, vol);      
     otherwise
       error('unsupported volume conductor model for EEG');
   end % switch voltype for EEG

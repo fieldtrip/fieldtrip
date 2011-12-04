@@ -69,7 +69,7 @@ vol  = ft_headmodel_fdm_fns(bkgrnd,'tissue',{'sph1','sph2','sph3'}, ...
 
 % project the electrodes on the volume conduction model
 [vol, sens] = ft_prepare_vol_sens(vol, sens);
-
+                    
 % compute the lead fields in the output voxels
 lf  = ft_compute_leadfield([0 0 30], sens, vol); % actually here sens not necessary anymore
 
