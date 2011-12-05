@@ -1,0 +1,24 @@
+The brain connectivity toolbox contains a large selection of complex network measures in Matlab. 
+These measures are increasingly used to characterize structural and functional brain connectivity datasets. 
+Several people have contributed to the toolbox, and if you wish to contribute with a new function or set of 
+functions, please contact Olaf Sporns.
+
+All efforts have been made to avoid errors, but users are strongly urged to independently verify the accuracy
+and suitability of toolbox functions for the chosen application. Please report bugs or substantial improvements
+to Olaf Sporns or to Mika Rubinov.
+
+Contributors
+Olaf Sporns	       OS  	osporns at indiana.edu
+Mikail Rubinov	   MR   mr572 at cam.ac.uk
+Rolf Kötter	       RK
+Patric Hagmann	   PH
+Jonathan Power     JP	
+Alexandros Goulas  AG	
+Danielle Bassett   DB	
+
+Citing the toolbox
+Complex network measures of brain connectivity: Uses and interpretations.
+Rubinov M, Sporns O (2010) NeuroImage 52:1059-69.
+Web address: http://www.brain-connectivity-toolbox.net
+
+The functions in this directory are taken from the BCT-version of 2011-03-27
