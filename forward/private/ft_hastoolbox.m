@@ -108,6 +108,7 @@ url = {
   'EGI_MFF'    'see http://www.egi.com/ or contact either Phan Luu or Colin Davey at EGI'
   'TOOLBOX_GRAPH' 'see http://www.mathworks.com/matlabcentral/fileexchange/5355-toolbox-graph or contact Gabriel Peyre'
   'NETCDF'     'see http://www.mathworks.com/matlabcentral/fileexchange/15177'
+  'BCT'        'see http://www.brain-connectivity-toolbox.net/'
   };
 
 if nargin<2
@@ -255,6 +256,8 @@ switch toolbox
     status = exist('toolbox_graph');
   case 'NETCDF'
     status = exist('netcdf');
+  case 'BCT'
+    status = exist('clustering_coef_bd', 'file') && exist('edge_betweenness_wei', 'file');
 
     % the following are not proper toolboxes, but only subdirectories in the fieldtrip toolbox
     % these are added in ft_defaults and are specified with unix-style forward slashes
