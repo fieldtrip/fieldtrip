@@ -18,6 +18,7 @@ cfg.callinfo.proctime = toc(ftFuncTimer);
 cfg.callinfo.procmem  = memtoc(ftFuncMem);
 cfg.callinfo.calltime = ftFuncClock;
 cfg.callinfo.user     = getusername();
+cfg.callinfo.hostname = gethostname();
 cfg.callinfo.pwd      = pwd;
 
 % add information about the function filename and revision to the configuration
