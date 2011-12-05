@@ -73,21 +73,18 @@ if ~strcmp(data.dimord(1:9), 'chan_chan'),
 end
 if isempty(cfg.parameter)
   error('when using functions from the brain connectivity toolbox you should give a parameter for which the metric is to be computed');
-else
-  inparam = cfg.parameter;
 end
-outparam = cfg.method;
 
 % gateway subfunction to the brain connectivity toolbox
-[datout, outdimord] = connectivity_bct(data.(inparam), cfg.method, data.dimord);
+[datout, outdimord] = connectivity_bct(data.(cfg.parameter), cfg.method, data.dimord);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % create the output structure
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-stat            = [];
-stat.(outparam) = datout;
-stat.dimord     = outdimord;
+stat              = [];
+stat.(cfg.method) = datout;
+stat.dimord       = outdimord;
 if isfield(data, 'label'),  stat.label  = data.label;  end
 if isfield(data, 'freq'),   stat.freq   = data.freq;   end
 if isfield(data, 'time'),   stat.time   = data.time;   end
@@ -135,19 +132,26 @@ for k = 1:size(input,3)
   end
 end 
 
+% allocate memory
+switch method
+  case {'assortativity' 'density'}
+    % 1 value per connection matrix
+    outsiz = size(input);
+    outsiz(1:2) = [];
+    output = zeros(outsiz);
+    dimord = dimord(11:end);
+  case {'betweenness' 'clustering_coef' 'degrees'}
+    % 1 value per node
+    outsiz = size(input);
+    outsiz(1) = [];
+    output = zeros(outsiz);
+    dimord = dimord(6:end);
+end
+
 for k = 1:size(input, 3)
   for m = 1:size(input, 4)
     switch method
     case 'assortativity'
-      % allocate memory
-      if k==1 && m==1
-        outsiz = size(input);
-        outsiz(1:2) = [];
-        % assortativity gives 1 value per matrix
-        output = zeros(outsiz);
-        dimord = dimord(11:end);
-      end
-      
       if ~isbinary 
         warning_once('weights are not taken into account and graph is converted to binary values');
       end  
@@ -158,21 +162,14 @@ for k = 1:size(input, 3)
         output(k,m) = assortativity(input(:,:,k,m), 0);
       end
     case 'betweenness'
+      if isbinary
+        output(:,k,m) = betweenness_bin(input(:,:,k,m));
+      elseif ~isbinary
+        output(:,k,m) = betweenness_wei(input(:,:,k,m));
+      end 
     case 'breadthdist'
-    case 'breadth'
     case 'charpath'
     case 'clustering_coef'
-      % allocate memory
-      if k==1 && m==1 
-        outsiz = size(input);
-        outsiz(1) = []; 
-        % remove one of the chan dimensions because the 
-        % clustering coefficient is defined per channel
-        % and not per channel pair
-        output = zeros(outsiz);
-        dimord = dimord(6:end);
-      end
-  
       if isbinary && isdirected
         output(:,k,m) = clustering_coef_bd(input(:,:,k,m));
       elseif isbinary && ~isdirected
@@ -182,19 +179,7 @@ for k = 1:size(input, 3)
       elseif ~isbinary && ~isdirected
         output(:,k,m) = clustering_coef_wu(input(:,:,k,m));
       end
-  
     case 'degrees'
-      % allocate memory
-      if k==1 && m==1
-        outsiz = size(input);
-        outsiz(1) = []; 
-        % remove one of the chan dimensions because the 
-        % degree is defined per channel
-        % and not per channel pair
-        output = zeros(outsiz);
-        dimord = dimord(6:end);
-      end
-  
       if ~isbinary 
         warning_once('weights are not taken into account and graph is converted to binary values');
       end  
@@ -205,7 +190,6 @@ for k = 1:size(input, 3)
       elseif ~isdirected
         output(:,k,m) = degrees_und(input(:,:,k,m));
       end
-  
     case 'density'
     case 'distance'
     case 'edge_betweenness'
