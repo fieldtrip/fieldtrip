@@ -13,7 +13,7 @@ function ft_realtime_headlocalizer(cfg)
 %   cfg.accuracy_orange = orange when within limits, red when out (default =  0.3 cm)
 %
 % The source of the data is configured as
-%   cfg.dataset       = string
+%   cfg.dataset       = string, default is 'buffer://odin:1972'
 % or alternatively to obtain more low-level control as
 %   cfg.datafile      = string
 %   cfg.headerfile    = string
@@ -32,7 +32,7 @@ function ft_realtime_headlocalizer(cfg)
 if ~isfield(cfg, 'template'),       cfg.template = [];                   end
 if ~isfield(cfg, 'blocksize'),      cfg.blocksize = 1;                   end % in seconds
 if ~isfield(cfg, 'bufferdata'),     cfg.bufferdata = 'last';             end % first or last
-if ~isfield(cfg, 'dataset'),        cfg.dataset = 'buffer://odin:1972';  end % first or last
+if ~isfield(cfg, 'dataset'),        cfg.dataset = 'buffer://odin:1972';  end % location of the buffer/dataset
 % distance from fiducial coordinate that makes the localizer turn green or orange
 if ~isfield(cfg, 'accuracy_green'),       cfg.accuracy_green = .15;      end
 if ~isfield(cfg, 'accuracy_orange'),      cfg.accuracy_orange = .3;      end
