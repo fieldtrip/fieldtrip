@@ -29,12 +29,13 @@ function ft_realtime_headlocalizer(cfg)
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 
-if ~isfield(cfg, 'template'),       cfg.template = [];        end
-if ~isfield(cfg, 'blocksize'),      cfg.blocksize = 1;        end % in seconds
-if ~isfield(cfg, 'bufferdata'),     cfg.bufferdata = 'last';  end % first or last
+if ~isfield(cfg, 'template'),       cfg.template = [];                   end
+if ~isfield(cfg, 'blocksize'),      cfg.blocksize = 1;                   end % in seconds
+if ~isfield(cfg, 'bufferdata'),     cfg.bufferdata = 'last';             end % first or last
+if ~isfield(cfg, 'dataset'),        cfg.dataset = 'buffer://odin:1972';  end % first or last
 % distance from fiducial coordinate that makes the localizer turn green or orange
-if ~isfield(cfg, 'accuracy_green'),       cfg.accuracy_green = .15;        end
-if ~isfield(cfg, 'accuracy_orange'),      cfg.accuracy_orange = .3;        end
+if ~isfield(cfg, 'accuracy_green'),       cfg.accuracy_green = .15;      end
+if ~isfield(cfg, 'accuracy_orange'),      cfg.accuracy_orange = .3;      end
 
 % translate dataset into datafile+headerfile
 cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
