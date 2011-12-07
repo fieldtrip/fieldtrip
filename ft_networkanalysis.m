@@ -8,9 +8,9 @@ function [stat] = ft_networkanalysis(cfg, data)
 % where the first input argument is a configuration structure (see
 % below) and the second argument is the output of FT_CONNECTIVITYANALYSIS. 
 % At present the input data should be channel level data with dimord 
-% 'chan_chan(_freq)(_time)'. The metrics are computed using the brain 
-% connectivity toolbox developed by Olaf Sporns and
-% colleagues: www.brain-connectivity-toolbox.net.
+% 'chan_chan(_freq)(_time)' or source data with dimord 'pos_pos(_freq)(_time)'. 
+% The metrics are computed using the brain connectivity toolbox developed by 
+% Olaf Sporns and colleagues: www.brain-connectivity-toolbox.net.
 %
 % The configuration structure has to contain
 %   cfg.method  = 
@@ -60,53 +60,22 @@ ft_preamble callinfo
 ft_preamble trackconfig
 ft_preamble loadvar data
 
-cfg = ft_checkconfig(cfg, 'required', 'method');
+cfg = ft_checkconfig(cfg, 'required', {'method' 'parameter'});
 
 % set the defaults
 cfg.inputfile   = ft_getopt(cfg, 'inputfile',   []);
 cfg.outputfile  = ft_getopt(cfg, 'outputfile',  []);
-cfg.parameter   = ft_getopt(cfg, 'parameter',   []);
 
+% ensure that the bct-toolbox is on the path and check the data for the
+% correct dimord and for the presence of the requested parameter
 ft_hastoolbox('BCT', 1);
-if ~strcmp(data.dimord(1:9), 'chan_chan'),
-  error('the dimord of the input data should start with ''chan_chan''');
-end
-if isempty(cfg.parameter)
-  error('when using functions from the brain connectivity toolbox you should give a parameter for which the metric is to be computed');
+if ~strcmp(data.dimord(1:7), 'pos_pos') && ~strcmp(data.dimord(1:9), 'chan_chan'),
+  error('the dimord of the input data should start with ''chan_chan'' or ''pos_pos''');
 end
 
-% gateway subfunction to the brain connectivity toolbox
-[datout, outdimord] = connectivity_bct(data.(cfg.parameter), cfg.method, data.dimord);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% create the output structure
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-stat              = [];
-stat.(cfg.method) = datout;
-stat.dimord       = outdimord;
-if isfield(data, 'label'),  stat.label  = data.label;  end
-if isfield(data, 'freq'),   stat.freq   = data.freq;   end
-if isfield(data, 'time'),   stat.time   = data.time;   end
-if isfield(data, 'grad'),   stat.grad   = data.grad;   end
-if isfield(data, 'elec'),   stat.elec   = data.elec;   end
-if exist('dof',  'var'),    stat.dof    = dof;         end
-% FIXME this needs to be implemented still
-
-% do the general cleanup and bookkeeping at the end of the function
-ft_postamble trackconfig
-ft_postamble callinfo
-ft_postamble previous data
-ft_postamble history stat
-ft_postamble savevar stat
-
-%%%%%%%%%%%%%
-% subfunction
-%%%%%%%%%%%%%
-function [output, dimord] = connectivity_bct(input, method, dimord)
-
-siz   = [size(input) 1];
-input = reshape(input, [siz(1:2) prod(siz(3:end))]);
+input = double(data.(cfg.parameter)); % conversion to double is needed
+% because some BCT functions want to do matrix multiplications on boolean
+% matrices
 
 % check for binary or not
 isbinary = true;
@@ -133,28 +102,38 @@ for k = 1:size(input,3)
 end 
 
 % allocate memory
-switch method
+switch cfg.method
   case {'assortativity' 'density'}
     % 1 value per connection matrix
     outsiz = size(input);
     outsiz(1:2) = [];
     output = zeros(outsiz);
-    dimord = dimord(11:end);
+    if strcmp(data.dimord(1:3), 'pos')
+      dimord = data.dimord(9:end);
+    elseif strcmp(data.dimord(1:4), 'chan')
+      dimord = data.dimord(11:end);
+    end
   case {'betweenness' 'clustering_coef' 'degrees'}
     % 1 value per node
     outsiz = size(input);
     outsiz(1) = [];
     output = zeros(outsiz);
-    dimord = dimord(6:end);
-end
+    if strcmp(data.dimord(1:3), 'pos')
+      dimord = data.dimord(5:end);
+    elseif strcmp(data.dimord(1:4), 'chan')
+      dimord = data.dimord(6:end);
+    end
+  end
+
+binarywarning = 'weights are not taken into account and graph is converted to binary values by thresholding';
 
 for k = 1:size(input, 3)
   for m = 1:size(input, 4)
-    switch method
+    
+    % switch to the appropriate function from the BCT
+    switch cfg.method
     case 'assortativity'
-      if ~isbinary 
-        warning_once('weights are not taken into account and graph is converted to binary values');
-      end  
+      if ~isbinary, warning_once(binarywarning); end  
       
       if isdirected
         output(k,m) = assortativity(input(:,:,k,m), 1);
@@ -180,9 +159,7 @@ for k = 1:size(input, 3)
         output(:,k,m) = clustering_coef_wu(input(:,:,k,m));
       end
     case 'degrees'
-      if ~isbinary 
-        warning_once('weights are not taken into account and graph is converted to binary values');
-      end  
+      if ~isbinary, warning_once(binarywarning); end  
       
       if isdirected
         [in, out, output(:,k,m)] = degrees_dir(input(:,:,k,m));
@@ -203,3 +180,24 @@ for k = 1:size(input, 3)
   end % for m
 end % for k
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% create the output structure
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+stat              = [];
+stat.(cfg.method) = output;
+stat.dimord       = dimord;
+if isfield(data, 'label'),  stat.label  = data.label;  end
+if isfield(data, 'freq'),   stat.freq   = data.freq;   end
+if isfield(data, 'time'),   stat.time   = data.time;   end
+if isfield(data, 'grad'),   stat.grad   = data.grad;   end
+if isfield(data, 'elec'),   stat.elec   = data.elec;   end
+if exist('dof',  'var'),    stat.dof    = dof;         end
+% FIXME this needs to be implemented still
+
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+ft_postamble previous data
+ft_postamble history stat
+ft_postamble savevar stat

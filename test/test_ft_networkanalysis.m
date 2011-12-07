@@ -17,7 +17,22 @@ data.cfg    = 'this is the cfg';
 tmp = data;
 tmp.cohspctrm = data.cohspctrm>0.3;
 
+% at present just checks for undirected binary and weighted graphs
 cfg           = [];
-cfg.method    = 'degrees';
 cfg.parameter = 'cohspctrm';
-stat = ft_networkanalysis(cfg, tmp);
+
+cfg.method    = 'assortativity';
+stat1 = ft_networkanalysis(cfg, tmp);
+stat2 = ft_networkanalysis(cfg, data);
+
+cfg.method    = 'betweenness';
+stat3 = ft_networkanalysis(cfg, tmp);
+stat4 = ft_networkanalysis(cfg, data);
+
+cfg.method    = 'clustering_coef';
+stat5 = ft_networkanalysis(cfg, tmp);
+stat6 = ft_networkanalysis(cfg, data);
+
+cfg.method    = 'degrees';
+stat7 = ft_networkanalysis(cfg, tmp);
+stat8 = ft_networkanalysis(cfg, data);
