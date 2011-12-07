@@ -6,25 +6,29 @@ function [obj] = ft_convert_coordsys(obj, target)
 % be determined interactively by the user.
 %
 % Use as
+%   [object] = ft_convert_coordsys(object)
+% to only determine the coordinate system, or
 %   [object] = ft_convert_coordsys(object, target)
+% to determine and convert the coordinate system.
 %
 % The following input objects are supported
-%   anatomical mri
+%   anatomical mri, see FT_READ_MRI
+%   anatomical or functional atlas, see FT_PREPARE_ATLAS
 %   (not yet) electrode definition
 %   (not yet) gradiometer array definition
 %   (not yet) volume conductor definition
 %   (not yet) dipole grid definition
 %
-% Possible target coordinate systems are'spm'.
+% Possible target coordinate systems are 'spm'.
 %
-% Note that the conversion will be an automatic one which means that it
+% Note that the conversion will be an automatic one, which means that it
 % will be an approximate conversion, not taking into account differences in
 % individual anatomies/differences in conventions where to put the
 % fiducials.
 %
 % See also FT_DETERMINE_COORDSYS
 
-% Copyright (C) 2005-2008, Robert Oostenveld
+% Copyright (C) 2005-2011, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -45,12 +49,12 @@ function [obj] = ft_convert_coordsys(obj, target)
 % $Id$
 
 if ~isfield(obj, 'coordsys') || isempty(obj.coordsys)
+  % determine the coordinate system of the input object
   obj = ft_determine_coordsys(obj, 'interactive', 'yes');
 end
 
-if strcmpi(target, obj.coordsys)
-  return;
-else
+if nargin>1 && ~strcmpi(target, obj.coordsys)
+  % convert to the desired coordinate system
   switch target
     case {'spm' 'mni' 'tal'}
       switch obj.coordsys
@@ -63,6 +67,6 @@ else
         otherwise
       end %switch obj.coordsys
     otherwise
-      error('conversion from %s to %s is not yet supported', obj.coordsys, target);       
+      error('conversion from %s to %s is not yet supported', obj.coordsys, target);
   end %switch target
 end
