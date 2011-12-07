@@ -106,7 +106,7 @@ end
 filtfreq = [];
 invalidind = [];
 for ifreqoi = 1:nfreqoi
-  tmpfreq = [freqoi(ifreqoi)+width(ifreqoi) freqoi(ifreqoi)-width(ifreqoi)];
+  tmpfreq = [freqoi(ifreqoi)-width(ifreqoi) freqoi(ifreqoi)+width(ifreqoi)];
   if all((sign(tmpfreq) == 1))
     filtfreq(end+1,:) = tmpfreq;
   else
@@ -131,7 +131,7 @@ for ifreqoi = 1:nfreqoi
   end
   
   % filter
-  flt = ft_preproc_bandpassfilter(dat, fsample, filtfreq(ifreqoi,:), filtorder(ifreqoi), filttype, filtdir);
+  flt = ft_preproc_bandpassfilter(dat, fsample, filtfreq(ifreqoi,:), filtorder(ifreqoi), filttype, filtdir); 
   
   % transform and insert
   dum = transpose(hilbert(transpose([repmat(prepad,[nchan, 1]) flt repmat(postpad,[nchan, 1])])));
