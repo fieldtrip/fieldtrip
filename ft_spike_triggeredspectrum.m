@@ -160,7 +160,7 @@ for iTrial = 1:nTrials
     mva = zeros(nchansel,size(data.trial{iTrial},2)); % moving average to compute the DC
     for iChan = chansel(:)'
       % we concove with a kernel that sums to 1 to get the moving average, this is the DC at any time-point
-      mva(iChan,:)    = conv(data.trial{iTrial}(iChan,:), ones(1,numsmp(iFreq))./numsmp(iFreq),'same');
+      mva(iChan,:)    = conv2(data.trial{iTrial}(iChan,:)', ones(1,numsmp(iFreq))'./numsmp(iFreq),'same');
     end
     % now simply subtract the DC spectrum from the computed LFP spectrum
     newspec = reshape(spec(1,:,iFreq,:),[nchansel,length(timeoi)]) - mva.*repmat(squeeze(specDC(1,1,iFreq,:))',[nchansel,1]); %subtract DC spec
