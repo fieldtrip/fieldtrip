@@ -12,7 +12,7 @@ function [data] = ft_determine_coordsys(data, varargin)
 %  - a volume conduction model
 % or most other FieldTrip structures that represent geometrical information.
 %
-% Additional optional input arguments come as key-value pairs. 
+% Additional optional input arguments come as key-value pairs.
 %   interactive  = string, 'yes' or 'no' (default = 'yes')
 %
 % This function wil pop up a figure that allows you to check whether the
@@ -44,7 +44,7 @@ function [data] = ft_determine_coordsys(data, varargin)
 
 dointeractive = ft_getopt(varargin, 'interactive', 'yes');
 
-data = ft_checkdata(data);
+data  = ft_checkdata(data);
 dtype = ft_datatype(data);
 data  = ft_convert_units(data);
 unit  = data.unit;
@@ -130,13 +130,32 @@ end
 figure;
 switch dtype
   case 'volume'
+    funparam = [];
     if isfield(data, 'anatomy')
       funparam = data.anatomy;
     elseif isfield(data, 'gray')
       funparam = data.gray;
+    elseif isfield(data, 'white')
+      funparam = data.white;
+    elseif isfield(data, 'brick0')
+      funparam = data.brick0; % used for an atlas
+    elseif isfield(data, 'brick1')
+      funparam = data.brick1; % used for an atlas
     else
+      % try to determine it automatically
+      fn = fieldnames(data);
+      for i=1:length(fn)
+        if isequal(size(data.(fn{i})), data.dim)
+          funparam = data.(fn{i});
+          break;
+        end
+      end
+    end
+    
+    if isempty(funparam)
       error('don''t know which volumetric parameter to plot');
     end
+    
     ft_plot_ortho(funparam, 'transform', data.transform, 'resolution', 1, 'style', 'intersect');
     axis vis3d
     view([110 36]);
