@@ -180,7 +180,7 @@ for iChan = 1:nChans
     if isempty(dof), continue,end    
     dof(end)    = []; % the last bin is a single point in time, so we delete it
     dof         = dof(:); % force it to be row
-    dof         = conv(dof,win,'same'); % get the total number of spikes across all trials
+    dof         = conv2(dof(:),win(:),'same'); % get the total number of spikes across all trials
     toDel       = indx==length(bins) | indx==0; % delete those points that are equal to last output histc or don't fall in
     vals(toDel) = [];
     tm(toDel)   = [];
@@ -189,7 +189,7 @@ for iChan = 1:nChans
     df(:,iChan,iFreq) = dof;
     
     x    = accumarray(indx(:),vals,[N 1]); % simply the sum of the complex numbers
-    y    = conv(x,win,'same'); % convolution again just means a sum                                
+    y    = conv2(x(:),win(:),'same'); % convolution again just means a sum                                
     
     % compute the ppc using a new trick, doesn't require any loops
     hasnum = dof>1;
@@ -216,8 +216,8 @@ for iChan = 1:nChans
          trlvals(toDel,:,:) = []; % delete those spikes from fourierspctrm as well
          id(toDel) = []; % make sure index doesn't contain them
          x    = accumarray(id(:),trlvals,[N 1]); % simply the sum of the complex numbers
-         y    = conv(x,win,'same'); % convolution again just means a sum                                  
-         d    = conv(d,win,'same'); % get the dof per trial
+         y    = conv2(x(:),win(:),'same'); % convolution again just means a sum                                  
+         d    = conv2(d(:),win(:),'same'); % get the dof per trial
 
          S     = S  + y; % add the imaginary and real components
          SS    = SS + y.*conj(y);
