@@ -1,7 +1,7 @@
 function test_tutorial_connectivity
 
 % TEST test_tutorial_connectivity
-% ft_connectivityanalysis ft_connectivitysimulation ft_freqanalysis ft_connectivityplot ft_mvaranalysis
+% TEST ft_connectivityanalysis ft_connectivitysimulation ft_freqanalysis ft_connectivityplot ft_mvaranalysis
 
 % simulate data
 cfg             = [];
