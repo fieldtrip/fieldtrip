@@ -1,13 +1,26 @@
 function ft_defaults
 
 % FT_DEFAULTS is called at the begin of all FieldTrip functions and
-% contains some defaults and path settings
-% (formerly known as fieldtripdefs.m)
+% contains some general settings. Furthermore, this function takes care of
+% the required path settings.
 %
+% The configuration defaults are stored in the global ft_default structure.
+% The ft_checkconfig function that is called by many FieldTrip functions
+% will merge the ft_default structure with the cfg ctructure that you pass
+% to the FieldTrip function that you are calling.
+%
+% The global options and their default values are
+%   ft_default.trackconfig    string, can be cleanup, report, off (default = 'off')
+%   ft_default.checkconfig    string, can be pedantic, loose, silent (default = 'loose')
+%   ft_default.checksize      number in bytes, can be inf (default = 1e5)
+%   ft_default.showcallinfo   string, can be yes or no (default = 'yes')
+%
+% See also FT_HASTOOLBOX, FT_CHECKCONFIG
+
 % Note that this should be a function and not a script, otherwise the
 % ft_hastoolbox function appears not be found in fieldtrip/private.
 
-% Copyright (C) 2009, Robert Oostenveld
+% Copyright (C) 2009-2011, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -29,20 +42,16 @@ function ft_defaults
 
 % set the global defaults, the ft_checkconfig function will copy these into the local configurations
 global ft_default
-if ~isfield(ft_default, 'trackconfig'), ft_default.trackconfig = 'off';    end % cleanup, report, off
-if ~isfield(ft_default, 'checkconfig'), ft_default.checkconfig = 'loose';  end % pedantic, loose, silent
-if ~isfield(ft_default, 'checksize'),   ft_default.checksize   = 1e5;      end % number in bytes, can be inf
-
-% this is for Matlab version specific backward compatibility support
-% the version specific path should only be added once in every session
-persistent versionpath
-persistent signalpath
+if ~isfield(ft_default, 'trackconfig'),  ft_default.trackconfig  = 'off';    end % cleanup, report, off
+if ~isfield(ft_default, 'checkconfig'),  ft_default.checkconfig  = 'loose';  end % pedantic, loose, silent
+if ~isfield(ft_default, 'checksize'),    ft_default.checksize    = 1e5;      end % number in bytes, can be inf
+if ~isfield(ft_default, 'showcallinfo'), ft_default.showcallinfo = 'yes';    end % yes or no, this is used in ft_postamble_callinfo
 
 % some people mess up their path settings with addpath(genpath(...))which
 % results in different versions of SPM or other other toolboxes on the path
 list = which('spm', '-all');
 if length(list)>1
-  [ws warned] = warning_once('multiple versions of SPM on your path will confuse FieldTrip');
+  [ws, warned] = warning_once('multiple versions of SPM on your path will confuse FieldTrip');
   if warned % only throw the warning once
     for i=1:length(list)
       warning('one version of SPM is found here: %s', list{i});
@@ -126,8 +135,8 @@ end
 
 try
   % this contains specific code and examples for realtime processing
-  ft_hastoolbox('realtime', 3, 1);             % not required
-  ft_hastoolbox('realtime/datasource', 3, 1);  % not required
+  ft_hastoolbox('realtime', 3, 1);                    % not required
+  ft_hastoolbox('realtime/acquisition/matlab', 3, 1); % not required
 end
 
 try
