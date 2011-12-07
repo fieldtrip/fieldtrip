@@ -1,4 +1,4 @@
-function [vol] = ft_prepare_headmodel(cfg, data)
+function [vol, cfg] = ft_prepare_headmodel(cfg, data)
 
 % FT_PREPARE_HEADMODEL constructs a volume conduction model from
 % the geometry of the head. The volume conduction model specifies how
@@ -320,6 +320,7 @@ vol = ft_convert_units(vol);
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
 ft_postamble callinfo
+ft_postamble history vol
 
 %FIXME: the next section is supposed to be partially transferred to other
 %functions (e.g. ft_surface...)

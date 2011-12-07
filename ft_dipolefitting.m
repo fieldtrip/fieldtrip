@@ -336,7 +336,7 @@ if strcmp(cfg.gridsearch, 'yes')
   try, tmpcfg.spheremesh  = cfg.spheremesh;   end
   try, tmpcfg.inwardshift = cfg.inwardshift;  end
   try, tmpcfg.sourceunits = cfg.sourceunits;  end
-  [grid, tmpcfg] = ft_prepare_sourcemodel(tmpcfg);
+  grid = ft_prepare_sourcemodel(tmpcfg);
 
   ft_progress('init', cfg.feedback, 'scanning grid');
   for i=1:length(grid.inside)

@@ -1,4 +1,4 @@
-function neighbours = ft_prepare_neighbours(cfg, data)
+function [neighbours, cfg] = ft_prepare_neighbours(cfg, data)
 
 % FT_PREPARE_NEIGHBOURS finds the neighbours of the channels based on three
 % different methods. Using the 'distance'-method, prepare_neighbours is
@@ -208,7 +208,7 @@ fprintf('there are on average %.1f neighbours per channel\n', k/length(neighbour
 if strcmp(cfg.feedback, 'yes')
   % give some graphical feedback
   cfg.neighbours = neighbours;
-  if exist('data', 'var')
+  if hasdata
     ft_neighbourplot(cfg, data);
   else
     ft_neighbourplot(cfg);
@@ -218,6 +218,10 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
 ft_postamble callinfo
+if hasdata
+  ft_postamble previous data
+end
+ft_postamble history neighbours
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that compute the neighbourhood geometry from the

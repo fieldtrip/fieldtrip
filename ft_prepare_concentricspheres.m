@@ -4,7 +4,7 @@ function [vol, cfg] = ft_prepare_concentricspheres(cfg)
 % multiple concentric spheres.
 %
 % Use as
-%   [vol, cfg] = ft_prepare_concentricspheres(cfg)
+%   vol = ft_prepare_concentricspheres(cfg)
 %
 % The input configuration should contain
 %   cfg.headshape     = a filename containing headshape, a Nx3 matrix with surface 
@@ -156,4 +156,5 @@ vol = ft_convert_units(vol);
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
 ft_postamble callinfo
+ft_postamble history vol
 

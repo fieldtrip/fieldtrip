@@ -5,7 +5,7 @@ function [grid, cfg] = ft_prepare_sourcemodel(cfg, vol, sens)
 % estimation and MEG interpolation.
 %
 % Use as
-%   [grid, cfg] = prepare_dipole_grid(cfg)
+%   grid = prepare_dipole_grid(cfg)
 % where the configuration structure contains the details on how the source
 % model should be constructed.
 %
@@ -690,9 +690,8 @@ if ~isempty(cfg.symmetry)
   grid.pos = grid.pos(:,expand) .* repmat(mirror, size(grid.pos,1), 1);
 end
 
-% FIXME should the cfg be added to the output grid?
-
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
 ft_postamble callinfo
+ft_postamble history grid
 

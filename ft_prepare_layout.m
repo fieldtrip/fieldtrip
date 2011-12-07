@@ -1,4 +1,4 @@
-function [lay] = ft_prepare_layout(cfg, data)
+function [lay, cfg] = ft_prepare_layout(cfg, data)
 
 % FT_PREPARE_LAYOUT creates a 2-D layout of the channel locations. This layout
 % is required for plotting the topographical distribution of the potential
@@ -678,6 +678,8 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble callinfo
+ft_postamble previous data
+ft_postamble history lay
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

@@ -242,7 +242,7 @@ try, tmpcfg.threshold   = cfg.threshold;    end
 try, tmpcfg.spheremesh  = cfg.spheremesh;   end
 try, tmpcfg.inwardshift = cfg.inwardshift;  end
 try, tmpcfg.sourceunits = cfg.sourceunits;  end
-[grid, tmpcfg] = ft_prepare_sourcemodel(tmpcfg);
+grid = ft_prepare_sourcemodel(tmpcfg);
 pos = grid.pos;
 
 % sometimes some of the dipole positions are nan, due to problems with the headsurface triangulation

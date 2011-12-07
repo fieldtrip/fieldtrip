@@ -1,4 +1,4 @@
-function bnd = ft_prepare_mesh(cfg, mri)
+function [bnd, cfg] = ft_prepare_mesh(cfg, mri)
 
 % FT_PREPARE_MESH creates a triangulated surface mesh for the volume
 % conduction model. The mesh can either be selected manually from raw

@@ -1,6 +1,6 @@
-function bnd = ft_prepare_mesh(cfg, data)
+function [bnd, cfg] = ft_prepare_mesh_new(cfg, data)
 
-% FT_PREPARE_MESH creates a triangulated surface mesh for the volume
+% FT_PREPARE_MESH_NEW creates a triangulated surface mesh for the volume
 % conduction model. The mesh can either be selected manually from raw
 % mri data or can be generated starting from a segmented volume
 % information stored in the mri structure. The result is a bnd

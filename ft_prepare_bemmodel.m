@@ -5,10 +5,10 @@ function [vol, cfg] = ft_prepare_bemmodel(cfg, mri)
 % computes the BEM system matrix.
 %
 % Use as
-%   [vol, cfg] = ft_prepare_bemmodel(cfg, mri), or
-%   [vol, cfg] = ft_prepare_bemmodel(cfg, seg), or
-%   [vol, cfg] = ft_prepare_bemmodel(cfg, vol), or
-%   [vol, cfg] = ft_prepare_bemmodel(cfg)
+%   [vol] = ft_prepare_bemmodel(cfg, mri), or
+%   [vol] = ft_prepare_bemmodel(cfg, seg), or
+%   [vol] = ft_prepare_bemmodel(cfg, vol), or
+%   [vol] = ft_prepare_bemmodel(cfg)
 %
 % The configuration can contain
 %   cfg.tissue         = [1 2 3], segmentation value of each tissue type
@@ -320,4 +320,5 @@ vol = ft_convert_units(vol);
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
 ft_postamble callinfo
+ft_postamble history vol
 

@@ -7,9 +7,9 @@ function [vol, cfg] = ft_prepare_singleshell(cfg, mri)
 % constructed from spherical harmonics.
 %
 % Use as
-%   [vol, cfg] = ft_prepare_singleshell(cfg, seg), or
-%   [vol, cfg] = ft_prepare_singleshell(cfg, mri), or
-%   [vol, cfg] = ft_prepare_singleshell(cfg)
+%   vol = ft_prepare_singleshell(cfg, seg), or
+%   vol = ft_prepare_singleshell(cfg, mri), or
+%   vol = ft_prepare_singleshell(cfg)
 %
 % If you do not use a segmented MRI, the configuration should contain
 %   cfg.headshape   = a filename containing headshape, a structure containing a
@@ -79,13 +79,13 @@ if ~isfield(cfg, 'threshold'),     cfg.threshold = 0.5;     end % relative
 if ~isfield(cfg, 'numvertices'),   cfg.numvertices = [];    end % approximate number of vertices in sphere
 
 % the data is specified as input variable or input file
-hasdata = exist('mri', 'var');
+hasmri = exist('mri', 'var');
 
-if hasdata && isempty(cfg.numvertices)
+if hasmri && isempty(cfg.numvertices)
   cfg.numvertices = 3000;
 end
 
-if hasdata
+if hasmri
   vol.bnd = ft_prepare_mesh(cfg, mri);
 else
   vol.bnd = ft_prepare_mesh(cfg);
@@ -99,4 +99,8 @@ vol = ft_convert_units(vol);
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
 ft_postamble callinfo
+if hasmri
+  ft_postamble previous mri
+end
+ft_postamble history vol
 
