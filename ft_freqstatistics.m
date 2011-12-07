@@ -103,9 +103,9 @@ end
 
 % check whether channel neighbourhood information is needed and whether
 % this is present
-% if isfield(cfg, 'correctm') && strcmp(cfg.correctm, 'cluster')
-%   cfg = ft_checkconfig(cfg, 'required', {'neighbours'});    
-% end
+if isfield(cfg, 'correctm') && strcmp(cfg.correctm, 'cluster')
+  cfg = ft_checkconfig(cfg, 'required', {'neighbours'});    
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % data bookkeeping
