@@ -1,17 +1,23 @@
-function [atlas] = ft_prepare_atlas(filename)
+function [atlas, cfg] = ft_prepare_atlas(cfg)
 
-% FT_PREPARE_ATLAS reads in a specified atlas with coordinates and anatomical
-% labels. It either uses the AFNI brik file that is available from
-% http://afni.nimh.nih.gov/afni/doc/misc/ttatlas_tlrc, or it uses one of
-% the WFU atlasses available from  http://fmri.wfubmc.edu. This function is
-% called by functions that make use of an atlas. 
+% FT_PREPARE_ATLAS reads in a specified atlas with coordinates and
+% anatomical labels. It either uses the AFNI brik file that is available
+% from http://afni.nimh.nih.gov/afni/doc/misc/ttatlas_tlrc, or it
+% uses one of the WFU atlasses available from http://fmri.wfubmc.edu.
 %
-% Use as:
-%   [atlas] = ft_prepare_atlas(filename)
+% This function is called by other FieldTrip functions that make
+% use of an atlas, for example for plotting or for selection of an
+% anatomical region of interest.
 %
-% See also FT_VOLUMELOOKUP, FT_SOURCEPLOT
+% Use as
+%   [atlas] = ft_prepare_atlas(cfg)
+% 
+% where the configuration should contain
+%   cfg.atlas      string, filename of the atlas to use
+%
+% See also FT_VOLUMELOOKUP, FT_SOURCEPLOT, FT_SOURCESTATISTICS
 
-% Copyright (C) 2005-2008, Robert Oostenveld, Ingrid Nieuwenhuis
+% Copyright (C) 2005-2011, Robert Oostenveld, Ingrid Nieuwenhuis
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -38,10 +44,16 @@ ft_defaults
 ft_preamble help
 ft_preamble callinfo
 
+if ischar(cfg)
+  % prior to 7 December 2011, this function was called with the filename as input
+  % for consistency with other fieldtrip functions, it is now in a cfg field
+  cfg.atlas = cfg;
+end
+
 useafni = 0;
 usewfu  = 0;
 
-[p, f, x] = fileparts(filename);
+[p, f, x] = fileparts(cfg.atlas);
 
 if strcmp(f, 'TTatlas+tlrc')
   useafni = 1;
@@ -53,7 +65,7 @@ if useafni
   % check whether the required AFNI toolbox is available
   ft_hastoolbox('afni', 1);
 
-  atlas = ft_read_mri(filename);
+  atlas = ft_read_mri(cfg.atlas);
 
   % the AFNI atlas contains two volumes at 1mm resolution
   atlas.brick0 = atlas.anatomy(:,:,:,1);
@@ -554,7 +566,7 @@ if useafni
     };
 
 elseif usewfu
-  atlas = ft_read_mri(filename); % /home/... works, ~/.... does not work
+  atlas = ft_read_mri(cfg.atlas); % /home/... works, ~/.... does not work
   atlas.brick0 = atlas.anatomy(:,:,:);
   atlas = rmfield(atlas, 'anatomy');
   atlas.coord = 'mni';
@@ -563,7 +575,7 @@ elseif usewfu
   % to keep it compatible with the existing code, add a dummy atlas volume
   atlas.brick1 = zeros(size(atlas.brick0));
 
-  [p, f, x] = fileparts(filename);
+  [p, f, x] = fileparts(cfg.atlas);
   f = [f '_List.mat'];
   load(fullfile(p, f));
 

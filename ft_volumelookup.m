@@ -130,7 +130,7 @@ if roi2mask
   xyz = volume.transform * ijk; % note that this is 4xN
 
   if isatlas
-    atlas = ft_prepare_atlas(cfg.atlas);
+    atlas = ft_prepare_atlas(cfg);
 
     if ischar(cfg.roi)
       cfg.roi = {cfg.roi};

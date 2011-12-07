@@ -297,7 +297,7 @@ if hasatlas
   % initialize the atlas
   [p, f, x] = fileparts(cfg.atlas);
   fprintf(['reading ', f,' atlas coordinates and labels\n']);
-  atlas = ft_prepare_atlas(cfg.atlas);
+  atlas = ft_prepare_atlas(cfg);
 end
 
 hasroi = ~isempty(cfg.roi);
