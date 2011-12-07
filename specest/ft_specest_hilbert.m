@@ -15,7 +15,7 @@ function [spectrum,freqoi,timeoi] = ft_specest_hilbert(dat, time, varargin)
 % Optional arguments should be specified in key-value pairs and can include:
 %   timeoi    = vector, containing time points of interest (in seconds)
 %   freqoi    = vector, containing frequencies (in Hz)
-%   pad       = number, indicating time-length of data to be padded out to in seconds
+%   pad       = number, indicating time-length of data to be padded out to in seconds (used for spectral interpolation, NOT filtering)
 %   width     = number or vector, width of band-pass surrounding each element of freqoi
 %   filttype  = string, filter type, 'but' or 'fir' or 'firls'
 %   filtorder = number or vector, filter order
@@ -66,6 +66,8 @@ if isempty(pad) % if no padding is specified padding is equal to current data le
 end
 prepad  = zeros(1,floor(((pad - dattime) * fsample)./2));
 postpad = zeros(1,ceil(((pad - dattime) * fsample)./2));
+%postpad = zeros(1,round((pad - dattime) * fsample));
+
 
 % set a default sampling for the frequencies-of-interest
 if isempty(freqoi),
@@ -134,6 +136,8 @@ for ifreqoi = 1:nfreqoi
   % transform and insert
   dum = transpose(hilbert(transpose([repmat(prepad,[nchan, 1]) flt repmat(postpad,[nchan, 1])])));
   spectrum(:,ifreqoi,:) = dum(:,timeboi+numel(prepad));
+%   dum = transpose(hilbert(transpose([flt repmat(postpad,[nchan, 1])])));
+%   spectrum(:,ifreqoi,:) = dum(:,timeboi);
 end
 
 

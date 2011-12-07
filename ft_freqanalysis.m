@@ -266,14 +266,12 @@ switch cfg.method
     cfg.gwidth = ft_getopt(cfg, 'gwidth', 3); 
     
     
-  case 'hilbert_devel'
-    warning('the hilbert implementation is under heavy development, do not use it for analysis purposes')
+  case 'hilbert'
     specestflg = 1;
     if ~isfield(cfg, 'filttype'),         cfg.filttype      = 'but';        end
     if ~isfield(cfg, 'filtorder'),        cfg.filtorder     = 4;            end
     if ~isfield(cfg, 'filtdir'),          cfg.filtdir       = 'twopass';    end
     if ~isfield(cfg, 'width'),            cfg.width         = 1;            end
-    cfg.method = 'hilbert';
     
   case 'mtmwelch' % mtmwelch is a special case, it is no longer maintained, and no specest function is intended for it
     error('ft_freqanalysis_mtmwelch is deprecated, and is no longer maintained. You can still use this method by calling ft_freqanalysis_old')
@@ -526,8 +524,6 @@ else
         ntaper = ones(1,numel(foi));
         % modify spectrum for same reason as fake ntaper
         spectrum = reshape(spectrum,[1 nchan numel(foi) numel(toi)]);
-        
-        
         
       case 'hilbert'
         [spectrum,foi,toi] = ft_specest_hilbert(dat, time, 'timeoi', cfg.toi, 'filttype', cfg.filttype, 'filtorder', cfg.filtorder, 'filtdir', cfg.filtdir, 'width', cfg.width, options{:}, 'feedback', fbopt);
