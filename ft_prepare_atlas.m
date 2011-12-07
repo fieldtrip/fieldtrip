@@ -11,7 +11,7 @@ function [atlas, cfg] = ft_prepare_atlas(cfg)
 %
 % Use as
 %   [atlas] = ft_prepare_atlas(cfg)
-% 
+%
 % where the configuration should contain
 %   cfg.atlas      string, filename of the atlas to use
 %
@@ -64,9 +64,9 @@ end
 if useafni
   % check whether the required AFNI toolbox is available
   ft_hastoolbox('afni', 1);
-
+  
   atlas = ft_read_mri(cfg.atlas);
-
+  
   % the AFNI atlas contains two volumes at 1mm resolution
   atlas.brick0 = atlas.anatomy(:,:,:,1);
   atlas.brick1 = atlas.anatomy(:,:,:,2);
@@ -198,7 +198,7 @@ if useafni
   % 1   127 Dentate
   % 0   64  Tuber
   % 0   67  Cerebellar Lingual
-
+  
   atlas.descr.brick = [
     1
     1
@@ -320,7 +320,7 @@ if useafni
     0
     0
     ];
-
+  
   atlas.descr.value = [
     68
     71
@@ -442,7 +442,7 @@ if useafni
     64
     67
     ];
-
+  
   atlas.descr.name = {
     'Hippocampus'
     'Amygdala'
@@ -564,27 +564,71 @@ if useafni
     'Tuber'
     'Cerebellar Lingual'
     };
-
+  
 elseif usewfu
   atlas = ft_read_mri(cfg.atlas); % /home/... works, ~/.... does not work
   atlas.brick0 = atlas.anatomy(:,:,:);
   atlas = rmfield(atlas, 'anatomy');
   atlas.coord = 'mni';
-
+  
   % the WFU atlas contains a single atlas volume at 2mm resolution
   % to keep it compatible with the existing code, add a dummy atlas volume
   atlas.brick1 = zeros(size(atlas.brick0));
-
+  
   [p, f, x] = fileparts(cfg.atlas);
-  f = [f '_List.mat'];
-  load(fullfile(p, f));
-
-  atlas.descr = [];
-  atlas.descr.brick = zeros(length(ROI),1);
-  atlas.descr.value = [ROI.ID]';
-  atlas.descr.name  = {ROI.Nom_C}'; % what is difference between Nom_C and Nom_L??
+  filename1 = fullfile(p, [f '_List.mat']);
+  filename2 = fullfile(p, [f '.txt']);
+  
+  if exist(filename1, 'file')
+    % this is a mat file that Ingrid apparently discovered somewhere
+    load(filename1);
+    atlas.descr = [];
+    atlas.descr.brick = zeros(length(ROI),1);
+    atlas.descr.value = [ROI.ID]';
+    atlas.descr.name  = {ROI.Nom_C}'; % what is difference between Nom_C and Nom_L??
+    
+  elseif exist(filename2, 'file')
+    % the download from http://fmri.wfubmc.edu comes with pairs of nii and txt files
+    % the text file looks like this, with tabs between the colums
+    % the section at the end with three times 191 does not always exist
+    %
+    % [ TD Labels]
+    % 53	Angular Gyrus			191 191 191
+    % 39	Anterior Cingulate		191 191 191
+    % 36	Caudate				191 191 191
+    % 27	Cerebellar Lingual		191 191 191
+    % 2	Cerebellar Tonsil		191 191 191
+    % 52	Cingulate Gyrus			191 191 191
+    % ...
+    
+    atlas.descr = [];
+    atlas.descr.brick = [];
+    atlas.descr.value = [];
+    atlas.descr.name  = {};
+    
+    fid = fopen(filename2);
+    i = 1;
+    while 1
+      tline = fgetl(fid);
+      if ~ischar(tline), break, end
+      % use TAB as deliniter
+      [num, rem] = strtok(tline, 9);
+      [str, rem] = strtok(rem, 9);
+      num = str2double(num);
+      if ~isnan(num)
+        atlas.descr.brick(i) = 0;
+        atlas.descr.value(i) = num;
+        atlas.descr.name{i}  = str;
+        i = i+1;
+      end % if num
+    end
+    fclose(fid);
+    
+  else
+    error('cannot locate the file that maps the labels to the numbers');
+  end
 end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble callinfo
-
+ft_postamble history atlas
