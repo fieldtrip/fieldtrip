@@ -155,6 +155,9 @@ function [freq] = ft_freqanalysis(cfg, data)
 % See also FT_FREQANALYSIS_OLD
 
 % Undocumented local options:
+% cfg.method = 'hilbert'. Keeping this as undocumented as it does not make sense to use 
+%              in ft_freqanalysis unless the user is doing his own filter-padding
+%              to remove edge-artifacts
 % cfg.correctt_ftimwin (set to yes to try to determine new t_ftimwins based
 % on correct cfg.foi)
 
@@ -267,6 +270,7 @@ switch cfg.method
     
     
   case 'hilbert'
+    warning('method = hilbert requires user action to deal with filtering-artifacts')
     specestflg = 1;
     if ~isfield(cfg, 'filttype'),         cfg.filttype      = 'but';        end
     if ~isfield(cfg, 'filtorder'),        cfg.filtorder     = 4;            end
