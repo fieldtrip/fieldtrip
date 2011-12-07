@@ -1,12 +1,12 @@
-function [H] = ft_spike_plot_jpsth(cfg,jpsth)
+function [cfg] = ft_spike_plot_jpsth(cfg, jpsth)
 
 % FT_SPIKE_PLOT_JPSTH makes a plot from JPSTH structure.
 %
 % Use as
-%   hdl = ft_spike_plot_jpsth(cfg, jpsth)
+%   ft_spike_plot_jpsth(cfg, jpsth)
 %
 % Inputs:
-%   JPSTH must be the output structure from SPIKE_JPSTH and contain the
+%   JPSTH must be the output structure from FT_SPIKE_JPSTH and contain the
 %   field JPSTH.avg. If cfg.psth = 'yes', the field JPSTH.psth must be
 %   present as well.
 %
@@ -299,6 +299,7 @@ set(pan,'ActionPostCallback',{@mypostcallback,ax,cfg.latency,psthLim});
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
 ft_postamble callinfo
+ft_postamble previous jpsth
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

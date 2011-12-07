@@ -139,6 +139,19 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 %
 % $Id$
 
+revision = '$Id$';
+
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble callinfo
+
 % this is just a wrapper function around ft_topoplotTFR which does all the hard work
 % the reason for this wrapper function is to have a placeholder for ER-specific documentation
 cfg = ft_topoplotTFR(cfg, varargin{:});
+
+% do the general cleanup and bookkeeping at the end of the function
+% this will replace the ft_topoplotTFR callinfo with that of ft_topoplotER
+ft_postamble callinfo
+ft_postamble previous varargin
+

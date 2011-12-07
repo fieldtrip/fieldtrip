@@ -1,4 +1,4 @@
-function ft_multiplotCC(cfg, data)
+function [cfg] = ft_multiplotCC(cfg, data)
 
 % FT_MULTIPLOTCC visualises the coherence between channels by using
 % multiple topoplots. The topoplot at a given channel location shows the
@@ -40,6 +40,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
+ft_preamble help
 ft_preamble callinfo
 ft_preamble trackconfig
 

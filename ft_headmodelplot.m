@@ -66,7 +66,6 @@ function [cfg] = ft_headmodelplot(cfg, data)
 % cfg.surface_edgecolor
 % cfg.surface_facealpha
 
-%
 % This function depends on FT_PREPARE_VOL_SENS which has the following options:
 % cfg.channel, documented
 % cfg.elec, documented
@@ -483,3 +482,5 @@ hold off
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
 ft_postamble callinfo
+ft_postamble previous data
+

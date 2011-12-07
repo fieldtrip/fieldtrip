@@ -1,16 +1,15 @@
-function ft_neighbourplot(cfg, data)
+function [cfg] = ft_neighbourplot(cfg, data)
 
 % FT_NEIGHBOURPLOT visualizes neighbouring channels in a particular channel
 % configuration. The positions of the channel are specified in a
 % gradiometer or electrode configuration or from a layout.
 %
 % Use as
-%  ft_neighbourplot(cfg)
+%   ft_neighbourplot(cfg)
 % or as
-%  ft_neighbourplot(cfg, data)
+%   ft_neighbourplot(cfg, data)
 %
-% where
-%
+% where the configuration can contain
 %   cfg.neighbours    = neighbour structure from FT_PREPARE_NEIGHBOURS (optional)
 %   cfg.elec          = structure with EEG electrode positions
 %   cfg.grad          = structure with MEG gradiometer positions
@@ -46,8 +45,10 @@ function ft_neighbourplot(cfg, data)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 
-ft_defaults
+revision = '$Id$';
 
+% do the general setup of the function
+ft_defaults
 ft_preamble help
 ft_preamble callinfo
 ft_preamble trackconfig
@@ -181,8 +182,9 @@ set(gcf, 'UserData', userdata);
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
 ft_postamble callinfo
+ft_postamble previous data
 
-end
+end % main function
 
 
 function showLabelInTitle(gcbo, EventData, handles)

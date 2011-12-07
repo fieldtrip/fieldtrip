@@ -1,4 +1,4 @@
-function cfg = ft_topoplotCC(cfg, freq)
+function [cfg] = ft_topoplotCC(cfg, freq)
 
 % FT_TOPOPLOTCC plots the coherence between channel pairs
 %

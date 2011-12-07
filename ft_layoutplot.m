@@ -1,4 +1,4 @@
-function ft_layoutplot(cfg, data)
+function [cfg] = ft_layoutplot(cfg, data)
 
 % FT_LAYOUTPLOT makes a figure with the 2-D layout of the channel positions
 % for topoplotting and the individual channel axes (i.e. width and height
@@ -166,3 +166,5 @@ end % if montage
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
 ft_postamble callinfo
+ft_postamble previous data
+

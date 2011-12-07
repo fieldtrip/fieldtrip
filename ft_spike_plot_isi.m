@@ -1,9 +1,9 @@
-function [H] = ft_spike_plot_isi(cfg, isih)
+function [cfg] = ft_spike_plot_isi(cfg, isih)
 
 % FT_SPIKE_PLOT_ISI makes an inter-spike-interval bar plot.
 %
 % Use as
-%   hdl = ft_spike_plot_isi(cfg, isih)
+%   ft_spike_plot_isi(cfg, isih)
 %
 % Inputs:
 %   ISIH is the output from FT_SPIKE_ISIHIST
@@ -111,6 +111,7 @@ set(pan,'ActionPostCallback',{@mypostcallback,cfg.ylim,[min(isih.time) max(isih.
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
 ft_postamble callinfo
+ft_postamble previous isih
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

@@ -1,4 +1,4 @@
-function h = ft_connectivityplot(cfg, varargin)
+function [cfg] = ft_connectivityplot(cfg, varargin)
 
 % FT_CONNECTIVITYPLOT plots frequency domain connectivity with dimord
 % 'chan_chan_freq'. The data are rendered in a square grid of subplots
@@ -42,6 +42,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
+ft_preamble help
 ft_preamble callinfo
 ft_preamble trackconfig
 

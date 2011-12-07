@@ -101,6 +101,7 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble help
+ft_preamble callinfo
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'required', 'component');
@@ -122,4 +123,8 @@ for i = 1:length(selcomp)
   ft_topoplotTFR(cfg, varargin{:});
   title(['component ' num2str(selcomp(i))]);
 end
+
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble callinfo
+ft_postamble previous varargin
 

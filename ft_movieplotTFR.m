@@ -1,4 +1,4 @@
-function ft_movieplotTFR(cfg, data)
+function [cfg] = ft_movieplotTFR(cfg, data)
 
 % FT_MOVIEPLOTTFR makes a movie of a time frequency representation of power or coherence 
 %
@@ -39,8 +39,8 @@ function ft_movieplotTFR(cfg, data)
 % file on disk. this mat files should contain only a single variable named 'data',
 % corresponding to the input structure.
 
-% copyright (c) 2009, Ingrid nieuwenhuis
-% copyright (c) 2011, jan-mathijs schoffelen, robert oostenveld, cristiano micheli
+% Copyright (c) 2009, Ingrid Nieuwenhuis
+% Copyright (c) 2011, jan-Mathijs Schoffelen, Robert Oostenveld, Cristiano Micheli
 %
 % this file is part of fieldtrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.

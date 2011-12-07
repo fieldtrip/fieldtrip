@@ -1,4 +1,4 @@
-function [hdl] = ft_spike_plot_isireturn(cfg,isih)
+function [cfg] = ft_spike_plot_isireturn(cfg, isih)
 
 % FT_SPIKE_PLOT_ISIRETURN makes a return plot from ISIH structure. A return
 % plot (or Poincare plots) plots the isi to the next spike versus the isi
@@ -8,7 +8,7 @@ function [hdl] = ft_spike_plot_isireturn(cfg,isih)
 % visualization of the spike-train interval statistics.
 %
 % Use as
-%   hdl = FT_spike_isireturnplot(cfg,data) 
+%   ft_spike_plot_isireturn(cfg, data) 
 %
 % Inputs:
 %   ISIH must be the output structure from FT_SPIKE_ISIH and contain the field
@@ -242,6 +242,7 @@ set(pan,'ActionPostCallback',{@mypostcallback,ax,[0 max(isih.time)],limIsi});
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
 ft_postamble callinfo
+ft_postamble previous isih
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

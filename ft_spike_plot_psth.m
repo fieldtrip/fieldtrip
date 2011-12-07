@@ -1,7 +1,10 @@
-function [hdl] = ft_spike_plot_psth(cfg,psth)
+function [cfg] = ft_spike_plot_psth(cfg, psth)
 
 % FT_SPIKE_PLOT_PSTH makes a bar plot of PSTH structure with error bars.
 %
+% Use as
+%   ft_spike_plot_psth(cfg, psth)
+% 
 %	Inputs:
 %		PSTH typically is a structure from FT_SPIKE_PSTH.
 %
@@ -15,8 +18,8 @@ function [hdl] = ft_spike_plot_psth(cfg,psth)
 %   cfg.ylim             = [min max] or 'auto' (default)
 %                          If 'standard', we plot from 0 to 110% of maximum plotted value);
 % Outputs:
-%	  HDL.avg             = figure handle for the bar plot, psth average. Use SET and GET to access.
-%	  HDL.var             = figure handle for the error lines. Use GET and SET to access.
+%	  HDL.avg              = figure handle for the bar plot, psth average. Use SET and GET to access.
+%	  HDL.var              = figure handle for the error lines. Use GET and SET to access.
 %
 % See also FT_SPIKE_PSTH
 
@@ -163,6 +166,7 @@ set(pan,'ActionPostCallback',{@mypostcallback,cfg.ylim,cfg.latency});
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
 ft_postamble callinfo
+ft_postamble previous psth
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

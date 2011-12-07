@@ -1,15 +1,14 @@
-function [hdl] = ft_spike_plot_raster(cfg, spike)
+function [cfg] = ft_spike_plot_raster(cfg, spike)
 
 % FT_SPIKE_RASTERPLOT makes a raster plot of spike-trains and allows for
 % spike-density or psth plot on top.
 %
 % The input SPIKE should be organised as the spike or the raw datatype, obtained from
 % FT_SPIKE_MAKETRIALS or FT_PREPROCESSING (in that case, conversion is done
-% within the function)
+% within the function).
 %
 % Use as
-%   hdl = ft_spike_plot_raster(cfg, spike)
-%
+%   ft_spike_plot_raster(cfg, spike)
 %
 % Configuration options related to selection of spike channel and trials and latencies
 %   cfg.spikechannel     =  see FT_CHANNELSELECTION for details
@@ -23,7 +22,7 @@ function [hdl] = ft_spike_plot_raster(cfg, spike)
 %                           cfg.spikelength = 1, then no space will be left between
 %                           subsequent rows representing trials (row-unit is 1).
 %
-%  Configuration options related to additionally plotting the TOPDATA
+% Configuration options related to additionally plotting the TOPDATA
 %   cfg.topdata          =  output structure from FT_SPIKE_PSTH
 %                           or FT_SPIKEDENSITY or FT_TIMELOCKANALYSIS. See those functions for more
 %                           info.
@@ -32,7 +31,7 @@ function [hdl] = ft_spike_plot_raster(cfg, spike)
 %                           plot will be 70% of the rasterplot in size). Default = 0.5.
 %   cfg.topplotfunc      =  'bar' (default) or 'line'.
 %
-%  Outputs:
+% Outputs:
 %   hdl.top              =  handle of the plot of the topdata (psth or sdf)
 %   hdl.raster           =  handle for each individual spike.
 %   hdl.ax               =  axes handles: ax(1) the rasterplot and ax(2) the topplot.
@@ -286,6 +285,7 @@ hdl.cfg = cfg;
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
 ft_postamble callinfo
+ft_postamble previous spike
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

@@ -1,4 +1,4 @@
-function ft_movieplotER(cfg, data)
+function [cfg] = ft_movieplotER(cfg, data)
 
 % FT_MOVIEPLOTER makes a movie of the topographic distribution of the
 % time-locked average.
@@ -60,6 +60,7 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble help
+ft_preamble callinfo
 
 % check if the input data is valid for this function
 data = ft_checkdata(data, 'datatype', 'timelock');
@@ -68,5 +69,10 @@ data = ft_checkdata(data, 'datatype', 'timelock');
 cfg.parameter   = ft_getopt(cfg, 'parameter', 'avg');
 cfg.interactive = ft_getopt(cfg, 'interactive', 'no');
 
-ft_movieplotTFR(cfg, data);
+cfg = ft_movieplotTFR(cfg, data);
+
+% do the general cleanup and bookkeeping at the end of the function
+% this will replace the ft_movieplotTFR callinfo with that of ft_movieplotER
+ft_postamble callinfo
+ft_postamble previous data
 
