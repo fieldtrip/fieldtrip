@@ -109,9 +109,9 @@ switch cfg.method
   case 'wltconvol'
     cfg = ft_checkconfig(cfg, 'renamedval', {'method','wltconvol', 'wltconvol_old'});
   case 'mtmwelch'
-    error('''mtmwelch'' has not been implemented yet in the specest module, please use ft_freqanalysis.m')
+    cfg = ft_checkconfig(cfg, 'renamedval', {'method','mtmwelch', 'mtmwelch_old'});
   case 'tfr'
-    error('''tfr'' has not been implemented yet in the specest module, please use ft_freqanalysis.m')
+    cfg = ft_checkconfig(cfg, 'renamedval', {'method','tfr', 'tfr_old'});
   case 'mvar'
     error('''mvar'' has not been implemented yet in the specest module, please use ft_freqanalysis.m')
 end
