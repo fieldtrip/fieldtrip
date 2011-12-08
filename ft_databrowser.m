@@ -1,16 +1,26 @@
 function [cfg] = ft_databrowser(cfg, data)
 
-% FT_DATABROWSER can be used for visual inspection of data. Artifacts that were detected
-% by artifact functions (see FT_ARTIFACT_xxx functions where xxx is the type of artifact)
-% are marked. Additionally data pieces can be marked and unmarked as artifact by
-% manual selection. The output cfg contains the updated artifactdef field.
+% FT_DATABROWSER can be used for visual inspection of data. Artifacts that
+% were detected by artifact functions (see FT_ARTIFACT_xxx functions where
+% xxx is the type of artifact) are marked. Additionally data pieces can be
+% marked and unmarked as artifact by manual selection. The output cfg
+% contains the updated specification of the artifacts.
 %
 % Use as
 %   cfg = ft_databrowser(cfg)
-%   required configuration options:
-% with the cfg.dataset or cfg.headerfile and cfg.datafile option, or use as
+% where the configuration structure contains the reference to the dataset
+% on your hard disk (see below), or use as
 %   cfg = ft_databrowser(cfg, data)
-% where the input data is a structure as obtained from FT_PREPROCESSING or FT_COMPONENTANALYSIS.
+% where the input data is a structure as obtained from FT_PREPROCESSING or
+% from FT_COMPONENTANALYSIS.
+%
+% If you want to browse data that is on disk, you have to specify 
+%   cfg.dataset                 = string with the filename
+% Instead of specifying the dataset, you can also explicitely specify the
+% name of the file containing the header information and the name of the
+% file containing the data, using
+%   cfg.datafile                = string with the filename
+%   cfg.headerfile              = string with the filename
 %
 % The following configuration options are supported:
 %   cfg.ylim                    = vertical scaling, can be 'maxmin', 'maxabs' or [ymin ymax] (default = 'maxabs')
@@ -44,9 +54,9 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.magscale                = number, scaling to apply to the MEG magnetometer channels prior to display (in addition to the cfg.megscale factor)
 %   cfg.chanscale               = Nx1 vector with scaling factors, one per channel specified in cfg.channel
 %
-% The scaling to the EEG, EOG, ECG, EMG and MEG channels is optional and can
-% be used to bring the absolute numbers of the different channel types in
-% the same range (e.g. fT and uV). The channel types are determined from
+% The scaling to the EEG, EOG, ECG, EMG and MEG channels is optional and
+% can be used to bring the absolute numbers of the different channel types
+% in the same range (e.g. fT and uV). The channel types are determined from
 % the input data using FT_CHANNELSELECTION.
 %
 % The "artifact" field in the output cfg is a Nx2 matrix comparable to the
@@ -54,13 +64,15 @@ function [cfg] = ft_databrowser(cfg, data)
 % beginsamples of an artifact period, the second column contains the
 % endsamples of the artifactperiods.
 %
-% NOTE for debugging: in case the databrowser crashes, use delete(gcf) to kill the figure.
+% NOTE for debugging: in case the databrowser crashes, use delete(gcf) to
+% kill the figure.
 %
-% See also FT_PREPROCESSING, FT_REJECTARTIFACT, FT_ARTIFACT_EOG, FT_ARTIFACT_MUSCLE,
-% FT_ARTIFACT_JUMP, FT_ARTIFACT_MANUAL, FT_ARTIFACT_THRESHOLD,
-% FT_ARTIFACT_CLIP, FT_ARTIFACT_ECG, FT_COMPONENTANALYIS
+% See also FT_PREPROCESSING, FT_REJECTARTIFACT, FT_ARTIFACT_EOG,
+% FT_ARTIFACT_MUSCLE, FT_ARTIFACT_JUMP, FT_ARTIFACT_MANUAL,
+% FT_ARTIFACT_THRESHOLD, FT_ARTIFACT_CLIP, FT_ARTIFACT_ECG,
+% FT_COMPONENTANALYSIS
 
-% Copyright (C) 2009-2011, Robert Oostenveld, Ingrid Niewenhuis
+% Copyright (C) 2009-2011, Robert Oostenveld, Ingrid Nieuwenhuis
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
