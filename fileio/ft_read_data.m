@@ -337,10 +337,7 @@ switch dataformat
     dat = read_biosig_data(filename, hdr, begsample, endsample, chanindx);
 
   case {'brainvision_eeg', 'brainvision_dat', 'brainvision_seg'}
-    dat = read_brainvision_eeg(filename, hdr.orig, begsample, endsample);
-    if ~isequal(chanindx(:)', 1:hdr.nChans)
-      dat = dat(chanindx,:);  % select the desired channels
-    end
+    dat = read_brainvision_eeg(filename, hdr.orig, begsample, endsample, chanindx);
 
   case 'ced_son'
     % chek the availability of the required low-level toolbox

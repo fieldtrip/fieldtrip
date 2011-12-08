@@ -1,4 +1,4 @@
-function [dat] = read_brainvision_eeg(filename, hdr, begsample, endsample);
+function [dat] = read_brainvision_eeg(filename, hdr, begsample, endsample, chanindx)
 
 % READ_BRAINVISION_EEG reads raw data from an EEG file
 % and returns it as a Nchans x Nsamples matrix
@@ -9,7 +9,7 @@ function [dat] = read_brainvision_eeg(filename, hdr, begsample, endsample);
 %
 % See also READ_BRAINVISION_VHDR, READ_BRAINVISION_VMRK
 
-% Copyright (C) 2003, Robert Oostenveld
+% Copyright (C) 2003-2011, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -29,30 +29,60 @@ function [dat] = read_brainvision_eeg(filename, hdr, begsample, endsample);
 %
 % $Id$
 
-if strcmpi(hdr.DataFormat, 'binary') && strcmpi(hdr.DataOrientation, 'multiplexed') && strcmpi(hdr.BinaryFormat, 'int_16')
-  fid = fopen(filename, 'rb', 'ieee-le');
-  fseek(fid, hdr.NumberOfChannels*2*(begsample-1), 'cof');
-  [dat, siz] = fread(fid, [hdr.NumberOfChannels, (endsample-begsample+1)], 'int16');
-  fclose(fid);
-  % compute real microvolts using the calibration factor (resolution)
-  res = sparse(diag(hdr.resolution));
-  dat = res * dat;
+if nargin<5
+  % read all channels
+  chanindx = [];
+end
 
-elseif strcmpi(hdr.DataFormat, 'binary') && strcmpi(hdr.DataOrientation, 'multiplexed') && strcmpi(hdr.BinaryFormat, 'int_32')
-  fid = fopen(filename, 'rb', 'ieee-le');
-  fseek(fid, hdr.NumberOfChannels*4*(begsample-1), 'cof');
-  [dat, siz] = fread(fid, [hdr.NumberOfChannels, (endsample-begsample+1)], 'int32');
-  fclose(fid);
-  % compute real microvolts using the calibration factor (resolution)
-  res = sparse(diag(hdr.resolution));
-  dat = res * dat;
+if isequal(chanindx, 1:hdr.NumberOfChannels);
+  % read all channels
+  chanindx = [];
+end
 
-elseif strcmpi(hdr.DataFormat, 'binary') && strcmpi(hdr.DataOrientation, 'multiplexed') && strcmpi(hdr.BinaryFormat, 'ieee_float_32')
-  fid = fopen(filename, 'rb', 'ieee-le');
-  fseek(fid, hdr.NumberOfChannels*4*(begsample-1), 'cof');
-  [dat, siz] = fread(fid, [hdr.NumberOfChannels, (endsample-begsample+1)], 'float32');
-  fclose(fid);
+% FIXME it would be nice to also implement the efficient reading of the
+% selected channels for the other file formats but at the moment only the
+% implementation of the binary multiplexed formats is smart enough.
 
+if strcmpi(hdr.DataFormat, 'binary') && strcmpi(hdr.DataOrientation, 'multiplexed') && any(strcmpi(hdr.BinaryFormat, {'int_16', 'int_32', 'ieee_float_32'}))
+  
+  switch lower(hdr.BinaryFormat)
+    case 'int_16'
+      sampletype = 'int16';
+      samplesize = 2;
+    case 'int_32'
+      sampletype = 'int32';
+      samplesize = 4;
+    case 'ieee_float_32'
+      sampletype = 'float32';
+      samplesize = 4;
+  end % case
+  
+  fid = fopen(filename, 'rb', 'ieee-le');
+  
+  if isempty(chanindx)
+    % read all the channels
+    fseek(fid, hdr.NumberOfChannels*2*(begsample-1), 'cof');
+    dat = fread(fid, [hdr.NumberOfChannels, (endsample-begsample+1)], sampletype);
+    % compute real microvolts using the calibration factor (resolution)
+    res = sparse(diag(hdr.resolution));
+    dat = res * dat;
+    
+  else
+    % read only the selected channels
+    dat = zeros(length(chanindx), endsample-begsample+1);
+    for chan = length(chanindx):-1:1
+      fseek(fid, hdr.NumberOfChannels*samplesize*(begsample-1) + (chanindx(chan)-1)*samplesize, 'bof');
+      dat(chan,:) = fread(fid, [1, (endsample-begsample+1)], sampletype, (hdr.NumberOfChannels-1)*samplesize);
+    end
+    % compute real microvolts using the calibration factor (resolution)
+    res = sparse(diag(hdr.resolution(chanindx)));
+    dat = res * dat;
+    % don't do the channel selection again at the end of the function
+    chanindx = [];
+  end
+  
+  fclose(fid);
+  
 elseif strcmpi(hdr.DataFormat, 'binary') && strcmpi(hdr.DataOrientation, 'vectorized') && strcmpi(hdr.BinaryFormat, 'ieee_float_32')
   fid = fopen(filename, 'rb', 'ieee-le');
   fseek(fid, 0, 'eof');
@@ -66,7 +96,7 @@ elseif strcmpi(hdr.DataFormat, 'binary') && strcmpi(hdr.DataOrientation, 'vector
     dat(chan,:) = tmp(:)';
   end
   fclose(fid);
-
+  
 elseif strcmpi(hdr.DataFormat, 'ascii') && strcmpi(hdr.DataOrientation, 'multiplexed')
   fid = fopen(filename, 'rt');
   for line=1:(begsample-1)
@@ -75,14 +105,14 @@ elseif strcmpi(hdr.DataFormat, 'ascii') && strcmpi(hdr.DataOrientation, 'multipl
   end
   dat = zeros(endsample-begsample+1, hdr.NumberOfChannels);
   for line=1:(endsample-begsample+1)
-    str = fgets(fid);           % read a single line with Nchan samples
-    str(find(str==',')) = '.';      % replace comma with point
+    str = fgets(fid);         % read a single line with Nchan samples
+    str(str==',') = '.';      % replace comma with point
     dat(line,:) = str2num(str);
   end
   fclose(fid);
   % transpose the data
   dat = dat';
-
+  
 elseif strcmpi(hdr.DataFormat, 'ascii') && strcmpi(hdr.DataOrientation, 'vectorized')
   % this is a very inefficient fileformat to read data from, since it requires to
   % read in all the samples of each channel and then select only the samples of interest
@@ -91,10 +121,10 @@ elseif strcmpi(hdr.DataFormat, 'ascii') && strcmpi(hdr.DataOrientation, 'vectori
   for chan=1:hdr.NumberOfChannels
     % this is very slow, so better give some feedback to indicate that something is happening
     fprintf('reading channel %d from ascii file to get data from sample %d to %d\n', chan, begsample, endsample);
-
+    
     str = fgets(fid);             % read all samples of a single channel
-    str(find(str==',')) = '.';      % replace comma with point
-
+    str(str==',') = '.';          % replace comma with point
+    
     if ~isempty(regexp(str(1:10), '[a-zA-Z]', 'once'))
       % the line starts with letters, not numbers: probably it is a channel label
       % find the first number and remove the preceding part
@@ -109,8 +139,14 @@ elseif strcmpi(hdr.DataFormat, 'ascii') && strcmpi(hdr.DataOrientation, 'vectori
     dat(chan,:) = tmp(begsample:endsample);
   end
   fclose(fid);
-
+  
 else
   error('unsupported sub-fileformat');
 end
 
+if ~isempty(chanindx)
+  % for the the multiplexed binary formats the channel selection was
+  % already done in the code above, for the other formats the selection
+  % still has to be done here
+  dat = dat(chanindx,:);
+end
