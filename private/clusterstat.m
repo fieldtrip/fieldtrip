@@ -57,6 +57,8 @@ end
 % create neighbour structure (but only when not using source data)
 if isfield(cfg, 'neighbours') && ~issource
     channeighbstructmat = makechanneighbstructmat(cfg);
+else
+    channeighbstructmat  = 0;
 end
 
 % perform fixinside fix if input data is source data
