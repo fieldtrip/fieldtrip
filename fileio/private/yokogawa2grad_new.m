@@ -79,6 +79,12 @@ handles    = definehandles;
 grad_ind = [1:hdr.channel_count];
 isgrad   = (type==handles.AxialGradioMeter | type==handles.PlannerGradioMeter |  ...
     type==handles.MagnetoMeter);
+isref = (type==handles.RefferenceAxialGradioMeter | type==handles.RefferencePlannerGradioMeter |  ...
+    type==handles.RefferenceMagnetoMeter); 
+for i = 1: hdr.channel_count
+    if isref(i) &&  sum( ch_info( i ).data.x^2 + ch_info( i ).data.y^2 + ch_info( i ).data.z^2 ) > 0.0, isgrad(i) = 1; end;
+end
+
 grad_ind = grad_ind(isgrad);
 grad_nr = size(grad_ind,2);
 
@@ -94,7 +100,7 @@ for i = 1:grad_nr
   grad.coilpos(i,3) =  ch_info(ch_ind).data.z*100; % cm
   grad.chanpos = grad.coilpos(1:grad_nr,:);
   
-  if ch_info(ch_ind).type==handles.AxialGradioMeter 
+  if ch_info(ch_ind).type==handles.AxialGradioMeter || ch_info(ch_ind).type==handles.RefferenceAxialGradioMeter 
       baseline = ch_info(ch_ind).data.baseline;
       
       ori_1st = [ch_info(ch_ind).data.zdir ch_info(ch_ind).data.xdir ];
@@ -108,7 +114,7 @@ for i = 1:grad_nr
       
       grad.coilpos(i+grad_nr,:) = [grad.coilpos(i,:)+ori_1st*baseline*100];
       grad.coilori(i+grad_nr,:) = -ori_1st;
-  elseif ch_info(ch_ind).type==handles.PlannerGradioMeter 
+  elseif ch_info(ch_ind).type==handles.PlannerGradioMeter || ch_info(ch_ind).type==handles.RefferencePlannerGradioMeter
       baseline = ch_info(ch_ind).data.baseline;
       
       ori_1st = [ch_info(ch_ind).data.zdir1 ch_info(ch_ind).data.xdir1 ];
