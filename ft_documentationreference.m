@@ -27,7 +27,7 @@ ft_defaults
 
 p = fileparts(which(mfilename));
 
-f1 = dir(fullfile(p, 'ft_*.m'));
+f1 = dir(fullfile(p, '*.m'));
 f1 = {f1.name}';
 
 f2 = dir(fullfile(p, 'utilities', '*.m'));
