@@ -636,7 +636,7 @@ layoutgui(fig, [0.7 0.05 0.25 0.50], position, style, string, value, tag, callba
 function cb_redraw(hObject, eventdata, handles);
 fig = get(hObject, 'parent');
 headshape = getappdata(fig, 'headshape');
-bnd.chanpos = headshape.pnt; %ft_plot_mesh wants headshape in bnd fields
+bnd.pnt = headshape.pnt; %ft_plot_mesh wants headshape in bnd fields
 bnd.tri = headshape.tri;
 elec = getappdata(fig, 'elec');
 template = getappdata(fig, 'template');
