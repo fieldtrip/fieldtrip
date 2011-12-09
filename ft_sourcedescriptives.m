@@ -81,25 +81,27 @@ ft_preamble loadvar source
 source = ft_checkdata(source, 'datatype', 'source', 'feedback', 'yes');
 
 % set the defaults
-if ~isfield(cfg, 'transform'),        cfg.transform        = [];            end
-if ~isfield(cfg, 'projectmom'),       cfg.projectmom       = 'no';          end % if yes -> svdfft
-if ~isfield(cfg, 'numcomp'),          cfg.numcomp          = 1;             end
-if ~isfield(cfg, 'powmethod'),        cfg.powmethod        = [];            end % see below
-if ~isfield(cfg, 'cohmethod'),        cfg.cohmethod        = [];            end % see below
-if ~isfield(cfg, 'feedback'),         cfg.feedback         = 'textbar';     end
-if ~isfield(cfg, 'supmethod'),        cfg.supmethod        = 'none';        end
-if ~isfield(cfg, 'resolutionmatrix'), cfg.resolutionmatrix = 'no';          end
-if ~isfield(cfg, 'eta'),              cfg.eta              = 'no';          end
-if ~isfield(cfg, 'fa'),               cfg.fa               = 'no';          end
-if ~isfield(cfg, 'kurtosis'),         cfg.kurtosis         = 'no';          end
-if ~isfield(cfg, 'keeptrials'),       cfg.keeptrials       = 'no';          end
-if ~isfield(cfg, 'keepcsd'),          cfg.keepcsd          = 'no';          end
-if ~isfield(cfg, 'fixedori'),         cfg.fixedori         = 'over_trials'; end
+cfg.transform        = ft_getopt(cfg, 'transform',        []);
+cfg.projectmom       = ft_getopt(cfg, 'projectmom',       'no');% if yes -> svdfft
+cfg.numcomp          = ft_getopt(cfg, 'numcomp',          1);
+cfg.powmethod        = ft_getopt(cfg, 'powmethod',        []);% see below
+cfg.cohmethod        = ft_getopt(cfg, 'cohmethod',        []);% see below
+cfg.feedback         = ft_getopt(cfg, 'feedback',         'textbar');
+cfg.supmethod        = ft_getopt(cfg, 'supmethod',        'none');
+cfg.resolutionmatrix = ft_getopt(cfg, 'resolutionmatrix', 'no'); 
+cfg.eta              = ft_getopt(cfg, 'eta',              'no');
+cfg.fa               = ft_getopt(cfg, 'fa',               'no');
+cfg.kurtosis         = ft_getopt(cfg, 'kurtosis',         'no');
+cfg.keeptrials       = ft_getopt(cfg, 'keeptrials',       'no'); 
+cfg.keepcsd          = ft_getopt(cfg, 'keepcsd',          'no');
+cfg.fwhm             = ft_getopt(cfg, 'fwhm',             'no');
+cfg.fwhmremovecenter = ft_getopt(cfg, 'fwhmremovecenter', 0);
+cfg.fixedori         = ft_getopt(cfg, 'fixedori',         'over_trials');
 
 % only works for minimumnormestimate
-if ~isfield(cfg, 'demean'),         cfg.demean         = 'yes';    end
-if ~isfield(cfg, 'baselinewindow'), cfg.baselinewindow = [-inf 0]; end 
-if ~isfield(cfg, 'zscore'),         cfg.zscore         = 'yes';    end
+cfg.demean         = ft_getopt(cfg, 'demean',         'yes');
+cfg.baselinewindow = ft_getopt(cfg, 'baselinewindow', [-inf 0]);
+cfg.zscore         = ft_getopt(cfg, 'zscore',         'yes');
 
 zscore = strcmp(cfg.zscore, 'yes');
 demean = strcmp(cfg.demean, 'yes');
@@ -117,10 +119,10 @@ elseif isfield(source, 'method') && strcmp(source.method, 'jacknife')
 end
 
 % determine the type of data, this is only relevant for a few specific types
-ispccdata = isfield(source, 'avg') && isfield(source.avg, 'csdlabel');
-islcmvavg = isfield(source, 'avg') && isfield(source, 'time') && isfield(source.avg, 'mom') && size(source.avg.pow, 2)==1;
+ispccdata = isfield(source, 'avg')   && isfield(source.avg, 'csdlabel');
+islcmvavg = isfield(source, 'avg')   && isfield(source, 'time') && isfield(source.avg,   'mom') && size(source.avg.pow, 2)==1;
 islcmvtrl = isfield(source, 'trial') && isfield(source, 'time') && isfield(source.trial, 'mom');
-ismneavg = isfield(source, 'avg') && isfield(source, 'time') && isfield(source.avg, 'mom') && size(source.avg.pow, 2)==numel(source.time);
+ismneavg  = isfield(source, 'avg')   && isfield(source, 'time') && isfield(source.avg,   'mom') && size(source.avg.pow, 2)==numel(source.time);
 
 % check the consistency of the defaults
 if strcmp(cfg.projectmom, 'yes')
@@ -152,6 +154,12 @@ if strcmp(cfg.resolutionmatrix, 'yes')
     error('The computation of the resolution matrix requires keepfilter=''yes'' in sourceanalysis.');
   elseif ~isfield(source, 'leadfield')
     error('The computation of the resolution matrix requires keepleadfield=''yes'' in sourceanalysis.');
+  end
+end
+
+if strcmp(cfg.fwhm, 'yes')
+  if ~isfield(source.avg, 'filter')
+    error('The computation of the fwhm requires keepfilter=''yes'' in sourceanalysis.');
   end
 end
 
@@ -459,10 +467,10 @@ if ispccdata
       % compute eta
       if strcmp(cfg.eta, 'yes')
         [source.avg.eta(i), source.avg.ori{i}] = csd2eta(source.avg.csd{i}(dipsel,dipsel));
-    if ~isempty(refsel),
-      %FIXME this only makes sense when only a reference signal OR a dipole is selected
-      [source.avg.etacsd(i), source.avg.ucsd{i}] = csd2eta(source.avg.csd{i}(dipsel,refsel));
-    end
+        if ~isempty(refsel),
+          %FIXME this only makes sense when only a reference signal OR a dipole is selected
+          [source.avg.etacsd(i), source.avg.ucsd{i}] = csd2eta(source.avg.csd{i}(dipsel,refsel));
+        end
       end
 
       %compute fa
@@ -477,6 +485,7 @@ if ispccdata
     if strcmp(cfg.keepcsd, 'no') && isnoise
       source.avg = rmfield(source.avg, 'noisecsd');
     end
+    
   end
 
 elseif ismneavg
@@ -928,6 +937,12 @@ if strcmp(cfg.resolutionmatrix, 'yes')
   source.resolution(source.inside, source.inside) = allfilter*allleadfield;
 end
 
+% compute fwhm
+if strcmp(cfg.fwhm, 'yes')
+  fprintf('computing fwhm of spatial filters\n');
+  source = estimate_fwhm1(source, cfg.fwhmremovecenter);
+end
+    
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
 ft_postamble callinfo
