@@ -264,7 +264,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       sumis       = mxGetData(plhs[3]); 
       }
     
-    if (inputi_p == NULL)
+    if (inputi_ps == NULL)
       {
       /*compute running sum*/ 
       for (i=0; i<numelin; i++)
