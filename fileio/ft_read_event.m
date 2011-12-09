@@ -1429,7 +1429,9 @@ switch eventformat
     
   case {'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw'}
     % check that the required low-level toolbox is available
-    ft_hastoolbox('yokogawa', 1);
+    if ~ft_hastoolbox('yokogawa', 0);
+        ft_hastoolbox('yokogawa_meg_reader', 1);
+    end
     % the user should be able to specify the analog threshold
     % the user should be able to specify the trigger channels
     % the user should be able to specify the flank, but the code falls back to 'auto' as default
