@@ -1,8 +1,12 @@
 function unit = ft_estimate_units(size)
 
 % FT_ESTIMATE_UNITS tries to determine the units of a geometrical object by
-% looking at its size and by relating this to the size of the human
-% brain.
+% looking at its size and by relating this to the approximate size of the
+% human head according to the following table:
+%   from  0.050 to   0.500 -> meter
+%   from  0.500 to   5.000 -> decimeter
+%   from  5.000 to  50.000 -> centimeter
+%   from 50.000 to 500.000 -> millimeter
 %
 % Use as
 %   unit = ft_estimate_units(size)
@@ -15,7 +19,7 @@ function unit = ft_estimate_units(size)
 %
 % See also FT_CONVERT_UNITS
 
-% Copyright (C) 2009, Robert Oostenveld
+% Copyright (C) 2009-2011, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -37,7 +41,10 @@ function unit = ft_estimate_units(size)
 
 % do some magic based on the size
 unit = {'m', 'dm', 'cm', 'mm'};
-indx = round(log10(size)+2-0.2);
+indx = round(log10(size)+1.8);
+
+% FIXME we can consider to give a warning if the index is not very decisive, 
+% e.g round(1.49) results in meter, but round(1.51) results in decimeter
 
 if indx>length(unit)
   indx = length(unit);
