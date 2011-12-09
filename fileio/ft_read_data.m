@@ -919,7 +919,6 @@ switch dataformat
 
     if ft_hastoolbox('yokogawa_meg_reader', 3); %stay silent if it cannot be added
       dat = read_yokogawa_data_new(filename, hdr, begsample, endsample, chanindx);
-      dat = read_yokogawa_data_new(filename, hdr, begsample, endsample, chanindx);
     elseif ft_hastoolbox('sqdproject', 2) % give warning if it cannot be added
       % channels are counted 0-based, samples are counted 1-based
       [dat, info] = sqdread(filename, 'channels', chanindx-1, 'samples', [begsample endsample]);
