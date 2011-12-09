@@ -37,4 +37,8 @@ function [dat,beta,x] = ft_preproc_detrend(dat, begsample, endsample)
 %
 % $Id$
 
-[dat,beta,x] = ft_preproc_polyremoval(dat,1,begsample,endsample);
+if nargin < 2
+  [dat,beta,x] = ft_preproc_polyremoval(dat,1);
+else
+  [dat,beta,x] = ft_preproc_polyremoval(dat,1,begsample,endsample);
+end

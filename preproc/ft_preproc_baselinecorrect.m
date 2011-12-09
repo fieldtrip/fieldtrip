@@ -39,7 +39,12 @@ function [dat,baseline] = ft_preproc_baselinecorrect(dat, begsample, endsample)
 
 % the beta returned by polyremoval should exactly be equal to the mean,
 % since we assume that polyremoval uses ones as its constant regressor
-[dat,baseline] = ft_preproc_polyremoval(dat,0,begsample,endsample);
+
+if nargin < 2
+  [dat,baseline] = ft_preproc_polyremoval(dat,0);
+else
+  [dat,baseline] = ft_preproc_polyremoval(dat,0,begsample,endsample);
+end
 
 % save this old code because it looks non-trivially optimized
 %
