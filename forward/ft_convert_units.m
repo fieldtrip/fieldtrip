@@ -49,6 +49,7 @@ function [obj] = ft_convert_units(obj, target)
 if isfield(obj, 'unit') && ~isempty(obj.unit)
   % use the units specified in the object
   unit = obj.unit;
+
 else
   % try to estimate the units from the object
   type = ft_voltype(obj);
@@ -101,22 +102,9 @@ else
     unit = ft_estimate_units(size);
     
   elseif isfield(obj, 'transform') && ~isempty(obj.transform)
-    % construct the corner points of the voxel grid in head coordinates
-    xi = 1:obj.dim(1);
-    yi = 1:obj.dim(2);
-    zi = 1:obj.dim(3);
-    pos = [
-      xi(  1) yi(  1) zi(  1)
-      xi(  1) yi(  1) zi(end)
-      xi(  1) yi(end) zi(  1)
-      xi(  1) yi(end) zi(end)
-      xi(end) yi(  1) zi(  1)
-      xi(end) yi(  1) zi(end)
-      xi(end) yi(end) zi(  1)
-      xi(end) yi(end) zi(end)
-      ];
-    pos = warp_apply(obj.transform, pos);
-    size = norm(range(pos));
+    % construct the corner points of the volume in voxel and in head coordinates
+    [pos_voxel, pos_head] = cornerpoints(obj.dim, obj.transform);
+    size = norm(range(pos_head));
     unit = ft_estimate_units(size);
     
   elseif isfield(obj, 'fid') && isfield(obj.fid, 'pnt') && ~isempty(obj.fid.pnt)

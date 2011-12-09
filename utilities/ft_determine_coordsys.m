@@ -7,12 +7,13 @@ function [data] = ft_determine_coordsys(data, varargin)
 % Use as
 %   [dataout] = ft_determine_coordsys(datain, 'key1', value1, ...)
 % where the input data structure can be
-%  - an anatomical MRI, which can be segmented
+%  - an anatomical MRI
 %  - an electrode or gradiometer definition
 %  - a volume conduction model
 % or most other FieldTrip structures that represent geometrical information.
 %
-% Additional optional input arguments come as key-value pairs.
+% Additional optional input arguments should be specified as key-value pairs 
+% and can include
 %   interactive  = string, 'yes' or 'no' (default = 'yes')
 %
 % This function wil pop up a figure that allows you to check whether the
@@ -43,6 +44,7 @@ function [data] = ft_determine_coordsys(data, varargin)
 % $Id$
 
 dointeractive = ft_getopt(varargin, 'interactive', 'yes');
+axisscale     = ft_getopt(varargin, 'axisscale', 1); % this is used to scale the axmax and rbol
 
 data  = ft_checkdata(data);
 dtype = ft_datatype(data);
@@ -75,6 +77,10 @@ switch unit
   otherwise
     error('unknown units (%s)', unit);
 end
+
+% this is useful if the anatomy is from a non-human primate or rodent
+axmax = axisscale*axmax;
+rbol  = axisscale*rbol;
 
 if isfield(data, 'coordsys') && ~isempty(data.coordsys)
   label = cell(3,1);
@@ -156,7 +162,14 @@ switch dtype
       error('don''t know which volumetric parameter to plot');
     end
     
-    ft_plot_ortho(funparam, 'transform', data.transform, 'resolution', 1, 'style', 'intersect');
+    % the volumetric data needs to be interpolated onto three orthogonal planes
+    % determine a resolution that is close to, or identical to the original resolution
+    [corner_vox, corner_head] = cornerpoints(data.dim, data.transform);
+    diagonal_head = norm(range(corner_head));
+    diagonal_vox  = norm(range(corner_vox));
+    resolution    = diagonal_head/diagonal_vox; % this is in units of "data.unit"
+
+    ft_plot_ortho(funparam, 'transform', data.transform, 'resolution', resolution, 'style', 'intersect');
     axis vis3d
     view([110 36]);
     
@@ -282,7 +295,7 @@ end % if interactive
 function [labelx, labely, labelz] = xyz2label(str)
 
 if ~isempty(str) && ~strcmp(str, 'unknown')
-  % the first part is important for th eorientations
+  % the first part is important for the orientations
   % the second part optionally contains information on the origin
   strx = tokenize(str, '_');
   

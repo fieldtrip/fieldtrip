@@ -6,22 +6,20 @@ function [hx, hy, hz] = ft_plot_ortho(dat, varargin)
 %   ft_plot_ortho(dat, ...)
 %
 % Additional options should be specified in key-value pairs and can be
-%   'style'        'subplot' (default) or 'intersect'
-%   'transform'    a 4x4 homogeneous transformation matrix specifying the mapping from
+%   'style'        = string, 'subplot' or 'intersect' (default = 'subplot')
+%   'transform'    = 4x4 homogeneous transformation matrix specifying the mapping from
 %                    voxel space to the coordinate system in which the data are plotted.
-%   'location'     a 1x3 vector specifying a point on the plane which will be plotted
+%   'location'     = 1x3 vector specifying a point on the plane which will be plotted
 %                    the coordinates are expressed in the coordinate system in which the
 %                    data will be plotted. location defines the origin of the plane
-%   'orientation'  a 3x3 matrix specifying the directions orthogonal through the planes
+%   'orientation'  = 3x3 matrix specifying the directions orthogonal through the planes
 %                    which will be plotted.
-%   'datmask'      a 3D-matrix with the same size as the matrix dat, serving as opacitymap
-%   'interpmethod' a string specifying the method for the interpolation, default = 'nearest'
-%                    see INTERPN
-%   'colormap'
-%
+%   'datmask'      = 3D-matrix with the same size as the matrix dat, serving as opacitymap
+%   'interpmethod' = string specifying the method for the interpolation, see INTERPN (default = 'nearest')
+%   'colormap'     = string, see COLORMAP
 %   'interplim'
 %
-% This function uses FT_PLOT_SLICE
+% See also FT_PLOT_SLICE, FT_SOURCEPLOT
 
 % Copyrights (C) 2010, Jan-Mathijs Schoffelen
 %
@@ -44,21 +42,21 @@ function [hx, hy, hz] = ft_plot_ortho(dat, varargin)
 % $Id$
 
 % get the optional input arguments
+% other options such as location and transform are passed along to ft_plot_slice
 style     = ft_getopt(varargin, 'style',       'subplot');
-loc       = ft_getopt(varargin, 'location',    [0 0 0]);
 ori       = ft_getopt(varargin, 'orientation', eye(3));
-transform = ft_getopt(varargin, 'transform',   eye(4));
 
 if ~isa(dat, 'double')
   dat = cast(dat, 'double');
 end
 
-% add orientation key-value pair if it does not exist
+% determine the orientation key-value pair
 keys = varargin(1:2:end);
 sel  = strmatch('orientation', keys);
 if isempty(sel)
-  sel           = numel(varargin)+1;
-  varargin{sel} = 'orientation';
+  % add orientation key-value pair if it does not exist
+  sel             = numel(varargin)+1;
+  varargin{sel  } = 'orientation';
   varargin{sel+1} = [];
 end
 
