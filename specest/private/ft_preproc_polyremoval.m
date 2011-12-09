@@ -1,4 +1,4 @@
-function dat = ft_preproc_polyremoval(dat, order, begsample, endsample)
+function [dat,beta,x] = ft_preproc_polyremoval(dat, order, begsample, endsample)
 
 % FT_PREPROC_POLYREMOVAL removed an Nth order polynomal from the data
 % 
@@ -6,7 +6,7 @@ function dat = ft_preproc_polyremoval(dat, order, begsample, endsample)
 %   dat = ft_preproc_polyremoval(dat, order, begsample, endsample)
 % where
 %   dat        data matrix (Nchans X Ntime)
-%   order      the order of teh polynomial
+%   order      the order of the polynomial
 %   begsample  index of the begin sample for the estimate of the polynomial
 %   endsample  index of the end sample for the estimate of the polynomial
 %
@@ -15,7 +15,7 @@ function dat = ft_preproc_polyremoval(dat, order, begsample, endsample)
 %
 % For example
 %   ft_preproc_polyremoval(dat, 0)
-% removes the basline by de-meaning the data and 
+% removes the baseline by de-meaning the data and 
 %   ft_preproc_polyremoval(dat, 1)
 % removes the mean and the linear trend.
 %
@@ -61,8 +61,8 @@ end
 %a = dat(:,begsample:endsample)/x(:,begsample:endsample); <-this leads to
 %numerical issues, even in simple examples
 invxcov = inv(x(:,begsample:endsample)*x(:,begsample:endsample)');
-a       = dat(:,begsample:endsample)*x(:,begsample:endsample)'*invxcov; 
+beta    = dat(:,begsample:endsample)*x(:,begsample:endsample)'*invxcov; 
 
 % remove the estimated basis functions
-dat = dat - a*x;
+dat = dat - beta*x;
 
