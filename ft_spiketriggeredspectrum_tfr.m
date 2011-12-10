@@ -101,7 +101,7 @@ if strcmp(cfg.spikesel,'all'),
 elseif islogical(cfg.spikesel)
   cfg.spikesel = find(cfg.spikesel);
 end
-if max(cfg.spikesel)>nSpikes || length(cfg.spikesel)>nSpikes % ease debugging of this error
+if max(cfg.spikesel)>nSpikes | length(cfg.spikesel)>nSpikes % ease debugging of this error
   error('MATLAB:fieldtrip:spike_phaselocking:cfg:spikesel',...
   'cfg.spikesel must not exceed number of spikes and select every spike just once')
 end
