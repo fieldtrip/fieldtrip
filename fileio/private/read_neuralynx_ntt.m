@@ -108,7 +108,7 @@ if begrecord>=1 && endrecord>=begrecord
   ntt.Param      = Param;
   % FIXME apply the scaling factor from ADBitVolts and convert to uV
   % ntt.dat        = Samp * 1e6 * hdr.ADBitVolts;
-  nst.dat        = Samp;
+  ntt.dat        = Samp;
 end
 fclose(fid);
 
