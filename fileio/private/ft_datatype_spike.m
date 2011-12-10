@@ -157,7 +157,7 @@ switch version
       if ~isfield(spike, 'trialtime')
         % determine from the data itself
         warning('Reconstructing the field trialtime from spike.origtime and spike.origtrial');
-        tmax  = nanmin(spike.trial{1});
+        tmax  = nanmax(spike.trial{1});
         tsmin = nanmin(spike.time{1});
         tsmax = nanmax(spike.time{1});
         spike.trialtime = [tsmin*ones(tmax,1) tsmax*ones(tmax,1)];
