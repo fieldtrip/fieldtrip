@@ -133,7 +133,7 @@ end
 inWindow = find(sts.time{unitsel}>=cfg.latency(1) & cfg.latency(2)>=sts.time{unitsel});
 
 % selection of the trials
-cfg        = trialselection(cfg,spike);
+cfg        = trialselection(cfg,sts);
 
 % do the final selection
 isintrial    = ismember(sts.trial{unitsel}, cfg.trials);
