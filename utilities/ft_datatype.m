@@ -48,7 +48,8 @@ ischan     =  isfield(data, 'dimord') && strcmp(data.dimord, 'chan') && ~isfield
 spk_hastimestamp = isfield(data,'label') && isfield(data, 'timestamp') && isa(data.timestamp, 'cell');
 spk_hastrials = isfield(data,'label') && isfield(data, 'time') && isa(data.time, 'cell') && isfield(data, 'trial') && isa(data.trial, 'cell') && ...
 isfield(data, 'trialtime') && isa(data.trialtime, 'numeric');
-isspike = isfield(data, 'label') && (spk_hastimestamp || spk_hastrials);
+spk_hasorig = isfield(data,'origtrial') && isfield(data,'origtime'); %% for compatibility
+isspike = isfield(data, 'label') && (spk_hastimestamp || spk_hastrials || spk_hasorig);
 
 if iscomp
   % comp should conditionally go before raw, otherwise the returned ft_datatype will be raw
