@@ -24,6 +24,10 @@ function [stat] = ft_spike_phaselockstat(cfg,sts)
 %   cfg.chanavg                     = 'yes' or 'no' (default).
 %   cfg.powweighted                 = 'yes' or 'no' (default). If 'yes', we
 %                                     average across channels by weighting by the LFP power.
+%   cfg.trials                      = vector of indices (e.g., 1:2:10)
+%                                    logical selection of trials (e.g., [1010101010])
+%                                    'all' (default), selects all trials
+
 %   Main outputs:
 %
 %     stat.ppc0                       =  nChan-by-nFreqs matrix with the ppc 0
@@ -62,6 +66,7 @@ cfg.spikesel       = ft_getopt(cfg,'spikesel', 'all');
 cfg.chanavg        = ft_getopt(cfg,'chanavg', 'no');
 cfg.powweighted    = ft_getopt(cfg,'powweighted', 'no');
 cfg.foi            = ft_getopt(cfg,'foi', 'all');
+cfg.trials         = ft_getopt(cfg,'trials', 'all');
 
 % ensure that the options are valid
 cfg = ft_checkopt(cfg,'foi',{'char', 'double'});
@@ -71,6 +76,7 @@ cfg = ft_checkopt(cfg,'spikesel', {'char', 'logical', 'double'});
 cfg = ft_checkopt(cfg,'chanavg', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'powweighted', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'latency', {'char', 'doublevector'});
+cfg = ft_checkopt(cfg,'trials', {'char', 'double', 'logical'}); 
 
 % collect channel information
 cfg.channel        = ft_channelselection(cfg.channel, sts.lfplabel);
@@ -126,9 +132,12 @@ if cfg.latency(1)>=cfg.latency(2),
 end
 inWindow = find(sts.time{unitsel}>=cfg.latency(1) & cfg.latency(2)>=sts.time{unitsel});
 
+% selection of the trials
+cfg        = trialselection(cfg,spike);
+
 % do the final selection
-%isNum        = find(isfinite(sts.fourierspctrm{unitsel}(:,1,1)));
-spikesel     = intersect(cfg.spikesel(:),inWindow(:));
+isintrial    = ismember(sts.trial{unitsel}, cfg.trials);
+spikesel     = intersect(cfg.spikesel(:),inWindow(:) & isintrial(:));
 cfg.spikesel = spikesel; %intersect(spikesel(:),isNum(:));
 spikenum     = length(cfg.spikesel); % number of spikes that were finally selected
 if isempty(spikenum), warning('MATLAB:fieldtrip:spike_phaselocking:silentNeuron',...
@@ -292,6 +301,26 @@ else
     angles = angles./abs(angles);
 end
 angMean = angle(nansum(angles,dim)); %get the mean angle
+
+
+
+function [cfg] = trialselection(cfg,spike)
+
+% get the number of trials or change DATA according to cfg.trials
+nTrials = size(spike.trialtime,1);
+if  strcmp(cfg.trials,'all')
+  cfg.trials = 1:nTrials;
+elseif islogical(cfg.trials)
+  cfg.trials = find(cfg.trials);
+end
+cfg.trials = sort(cfg.trials(:));
+if max(cfg.trials)>nTrials, error('ft:spike_rate:cfg:trials:maxExceeded',...
+    'maximum trial number in cfg.trials should not exceed length of DATA.trial')
+end
+if isempty(cfg.trials), error('ft:spike_rate:cfg:trials:noneSelected',...
+    'No trials were selected by you, rien ne va plus');
+end
+
 
 
 
