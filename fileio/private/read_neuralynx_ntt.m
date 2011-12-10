@@ -98,7 +98,7 @@ if begrecord>=1 && endrecord>=begrecord
     TimeStamp(k)  = fread(fid, 1, 'uint64=>uint64');
     ScNumber(k)   = fread(fid, 1, 'int32');
     CellNumber(k) = fread(fid, 1, 'int32');
-    Param(k,:)    = fread(fid, 8, 'int32');
+    Param(:,k)    = fread(fid, 8, 'int32');
     Samp(:,:,k)   = fread(fid, [4 32], 'int16'); % chan W, X, Y, Z
   end
 
