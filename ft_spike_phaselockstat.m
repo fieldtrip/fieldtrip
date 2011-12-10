@@ -137,7 +137,8 @@ cfg        = trialselection(cfg,sts);
 
 % do the final selection
 isintrial    = ismember(sts.trial{unitsel}, cfg.trials);
-spikesel     = intersect(cfg.spikesel(:),inWindow(:) & isintrial(:));
+spikesel     = intersect(cfg.spikesel(:),inWindow(:));
+spikesel     = intersect(spikesel,find(isintrial));
 cfg.spikesel = spikesel; %intersect(spikesel(:),isNum(:));
 spikenum     = length(cfg.spikesel); % number of spikes that were finally selected
 if isempty(spikenum), warning('MATLAB:fieldtrip:spike_phaselocking:silentNeuron',...
