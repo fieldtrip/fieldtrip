@@ -245,7 +245,7 @@ sel = isnan(sts.fourierspctrm(:,1,1));
 fprintf('removing %d trials from the output that do not contain data\n', sum(sel));
 % remove the selected trials from the output
 sts.fourierspctrm  = {sts.fourierspctrm(~sel,:,:)};
-sts.fourierspctrmdimord = '{chan}_spike_lfplabel_freq';
+sts.fourierspctrmdimord = '{chan}_spike_lfpchan_freq';
 sts.time       = {sts.time(~sel)};
 sts.trial      = {sts.trial(~sel)};
 for i = 1:ntrial

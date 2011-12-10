@@ -251,5 +251,5 @@ sts_tfr.freq     = sts.freq(freqindx);
 sts_tfr.lfplabel = sts.lfplabel(chansel);
 sts_tfr.time     = bins(1:end-1) + 0.5*dt; % center time-points
 sts_tfr.cfg      = cfg;
-sts_tfr.dimord    = 'time_chan_freq';
+sts_tfr.dimord    = 'time_lfpchan_freq';
 
