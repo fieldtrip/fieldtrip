@@ -213,6 +213,7 @@ stat.ral       = ral;
 stat.plv       = resultantlength(sts.fourierspctrm{unitsel},1);
 stat.freq      = sts.freq(freqindx);
 stat.lfplabel  = sts.lfplabel(chansel);
+stat.dimord    = '1_chan_freq';
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig

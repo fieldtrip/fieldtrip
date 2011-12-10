@@ -244,10 +244,12 @@ sts_tfr.ppc1     = ppc1;
 sts_tfr.ppc2     = ppc2;
 sts_tfr.plv      = plv;
 sts_tfr.label    = spikelabel(unitsel);
-sts_tfr.phase    = phs;
+sts_tfr.ang      = phs;
 sts_tfr.ral      = ral;
 sts_tfr.dof      = df;
 sts_tfr.freq     = sts.freq(freqindx);
 sts_tfr.lfplabel = sts.lfplabel(chansel);
 sts_tfr.time     = bins(1:end-1) + 0.5*dt; % center time-points
 sts_tfr.cfg      = cfg;
+sts_tfr.dimord    = 'time_chan_freq';
+
