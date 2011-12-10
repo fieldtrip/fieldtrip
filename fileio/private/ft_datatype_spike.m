@@ -148,7 +148,9 @@ switch version
     if isfield(spike,'origtrial') && isfield(spike,'origtime')
       warning('The spike datatype format you are using is depreciated. Converting to newer spike format');
       spike.trial = {spike.origtrial};
+      spike       = rmfield(spike,'origtrial');      
       spike.time  = {spike.origtime};
+      spike       = rmfield(spike,'origtime');
       if ~isa(spike.fourierspctrm, 'cell')
         spike.fourierspctrm = {spike.fourierspctrm};
       end
