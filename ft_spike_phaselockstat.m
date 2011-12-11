@@ -95,10 +95,10 @@ if strcmp(cfg.foi, 'all'),
   freqindx          = 1:length(sts.freq);
 else
   for iFreq = 1:length(cfg.foi)
-    freqindx         = nearest(sts.freq,cfg.foi(iFreq)); 
+    freqindx(iFreq)         = nearest(sts.freq,cfg.foi(iFreq)); 
   end
 end
-  
+
 if length(freqindx)~=length(unique(freqindx)) 
   error('MATLAB:fieldtrip:spike_phaselocking:cfg:foi:notUniqueSelection',... 
   'Please select every frequency only once, are you sure you selected in Hz?')
