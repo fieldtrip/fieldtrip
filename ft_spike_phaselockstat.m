@@ -92,8 +92,13 @@ if nspikesel>1, error('only one unit should be selected for now'); end
 % collect frequency information
 if strcmp(cfg.foi, 'all'),  
   cfg.foi           = sts.freq; 
+  freqindx          = 1:length(sts.freq);
+else
+  for iFreq = 1:length(cfg.foi)
+    freqindx         = nearest(sts.freq,cfg.foi(iFreq)); 
+  end
 end
-freqindx         = nearest_nd(sts.freq,cfg.foi); 
+  
 if length(freqindx)~=length(unique(freqindx)) 
   error('MATLAB:fieldtrip:spike_phaselocking:cfg:foi:notUniqueSelection',... 
   'Please select every frequency only once, are you sure you selected in Hz?')
