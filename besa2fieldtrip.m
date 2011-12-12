@@ -242,7 +242,7 @@ elseif ischar(input)
     for i=1:size(buf,1)
       data.label{i,1} = sprintf('chan%03d', i);
     end
-    data.fsample = 1/(time(2)-time(1));  % time is already in seconds
+    data.fsample = 1./mean(diff(time));  % time is already in seconds
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   elseif strcmp(type, 'besa_tfc') && hasbesa
@@ -312,7 +312,7 @@ elseif ischar(input)
     data.label   = fixlabels(swf.waveName);
     data.avg     = swf.data;
     data.time    = swf.Time * 1e-3; % convert to seconds
-    data.fsample = 1/(data.time(2)-data.time(1));
+    data.fsample = 1/mean(diff(data.time));
     data.dimord  = 'chan_time';
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

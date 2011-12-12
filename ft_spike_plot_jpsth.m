@@ -66,7 +66,7 @@ cfg.colormap    = ft_getopt(cfg,'colormap', jet(256));
 cfg.interpolate = ft_getopt(cfg,'interpolate', 'no');
 cfg.smooth      = ft_getopt(cfg,'smooth', 'no');
 cfg.kernel      = ft_getopt(cfg,'kernel', 'mvgauss');
-cfg.winlen      = ft_getopt(cfg,'winlen', 5*(jpsth.time(2)-jpsth.time(1)));
+cfg.winlen      = ft_getopt(cfg,'winlen', 5*(mean(diff(jpsth.time))));
 cfg.gaussvar    = ft_getopt(cfg,'gaussvar', (cfg.winlen/4).^2);
 
 % ensure that the options are valid
@@ -122,7 +122,7 @@ end
 
 % get the samples of our window, and the binwidth of the JPSTH
 timeSel = jpsth.time>=cfg.latency(1) & jpsth.time <= cfg.latency(2);
-sampleTime    = jpsth.time(2) - jpsth.time(1); % get the binwidth
+sampleTime    = mean(diff(jpsth.time)); % get the binwidth
 
 % for convenience create a separate variable
 dens = squeeze(jpsth.avg(:,:,cmbindx(1,1),cmbindx(1,2))); % density

@@ -49,7 +49,7 @@ datatype  = ft_getopt(varargin, 'datatype');
 
 % determine the data characteristics
 [nchan, nsample] = size(dat);
-fsample = 1/(time(2)-time(1));
+fsample = 1./mean(diff(time));
 
 if mod(nsample,2)==0
   % the number of samples is even
