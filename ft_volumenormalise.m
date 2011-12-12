@@ -184,14 +184,14 @@ ws = warning('off');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % create an spm-compatible header for the anatomical volume data
-VF = ft_write_volume([cfg.intermediatename,'_anatomy.img'], interp.anatomy, 'transform', interp.transform, 'spmversion', cfg.spmversion);
+VF = ft_write_mri([cfg.intermediatename,'_anatomy.img'], interp.anatomy, 'transform', interp.transform, 'spmversion', cfg.spmversion);
 
 % create an spm-compatible file for each of the functional volumes
 for parlop=2:length(cfg.parameter)  % skip the anatomy
   tmp  = cfg.parameter{parlop};
   data = reshape(getsubfield(interp, tmp), interp.dim);
   tmp(tmp=='.') = '_';
-  ft_write_volume([cfg.intermediatename,'_' tmp '.img'], data, 'transform', interp.transform, 'spmversion', cfg.spmversion);
+  ft_write_mri([cfg.intermediatename,'_' tmp '.img'], data, 'transform', interp.transform, 'spmversion', cfg.spmversion);
 end
 
 % read the template anatomical volume
@@ -268,7 +268,7 @@ if strcmp(cfg.write,'yes')
     tmp  = cfg.parameter{parlop};
     data = reshape(getsubfield(normalise, tmp), normalise.dim);
     tmp(tmp=='.') = '_';
-    ft_write_volume([cfg.name,'_' tmp '.img'], data, 'transform', normalise.transform, 'spmversion', cfg.spmversion);
+    ft_write_mri([cfg.name,'_' tmp '.img'], data, 'transform', normalise.transform, 'spmversion', cfg.spmversion);
   end
 end
 

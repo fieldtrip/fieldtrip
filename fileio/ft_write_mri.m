@@ -1,9 +1,10 @@
-function [V] = ft_write_volume(filename, dat, varargin)
+function [V] = ft_write_mri(filename, dat, varargin)
 
-% FT_WRITE_VOLUME exports volumetric data to a file.
+% FT_WRITE_MRI exports volumetric data such as anatomical and functional
+% MRI to a file.
 %
 % Use as
-%   V = ft_write_volume(filename, dat, ...)
+%   V = ft_write_mri(filename, dat, ...)
 %
 % The specified filename can already contain the filename extention,
 % but that is not required since it will be added automatically.
@@ -20,7 +21,7 @@ function [V] = ft_write_volume(filename, dat, varargin)
 %   nifti
 %   mgz (freesurfer)
 %
-% See also FT_WRITE_DATA 
+% See also FT_READ_MRI, FT_WRITE_DATA, FT_WRITE_HEADSHAPE
 
 % Copyright (C) 2011 Jan-Mathijs Schoffelen
 %

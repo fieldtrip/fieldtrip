@@ -412,7 +412,7 @@ switch cfg.filetype
     if isempty(ext)
       cfg.filename = [cfg.filename,'.nii'];
     end
-    ft_write_volume(cfg.filename, data, 'dataformat', 'nifti', 'transform', transform, 'spmversion', 'SPM8');
+    ft_write_mri(cfg.filename, data, 'dataformat', 'nifti', 'transform', transform, 'spmversion', 'SPM8');
     
   case 'nifti_img'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -423,7 +423,7 @@ switch cfg.filetype
     if isempty(ext)
       cfg.filename = [cfg.filename,'.img'];
     end
-    ft_write_volume(cfg.filename, data, 'dataformat', 'nifti', 'transform', transform, 'spmversion', 'SPM8');
+    ft_write_mri(cfg.filename, data, 'dataformat', 'nifti', 'transform', transform, 'spmversion', 'SPM8');
     
   case 'analyze_spm'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -434,7 +434,7 @@ switch cfg.filetype
     if isempty(ext)
       cfg.filename = [cfg.filename,'.img'];
     end
-    ft_write_volume(cfg.filename, data, 'dataformat', 'analyze', 'transform', transform, 'spmversion', 'SPM2');
+    ft_write_mri(cfg.filename, data, 'dataformat', 'analyze', 'transform', transform, 'spmversion', 'SPM2');
     
   case 'mgz'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -445,7 +445,7 @@ switch cfg.filetype
     if isempty(ext)
       cfg.filename = [cfg.filename,'.mgz'];
     end
-    ft_write_volume(cfg.filename, data, 'dataformat', 'mgz', 'transform', transform);
+    ft_write_mri(cfg.filename, data, 'dataformat', 'mgz', 'transform', transform);
     
     
   otherwise

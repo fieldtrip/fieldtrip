@@ -262,7 +262,7 @@ if dotpm
   % of the segmentation algorithm
   [mri,permutevec,flipflags] = align_ijk2xyz(mri);
   
-  Va = ft_write_volume([cfg.name,'.img'], mri.anatomy, 'transform', mri.transform, 'spmversion', cfg.spmversion);
+  Va = ft_write_mri([cfg.name,'.img'], mri.anatomy, 'transform', mri.transform, 'spmversion', cfg.spmversion);
 
   % spm is quite noisy, prevent the warnings from displaying on screen
   % warning off;
