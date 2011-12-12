@@ -1,0 +1,112 @@
+function test_bug1049
+
+% TEST test_bug1049
+
+% this function creates a set of source-structures to be used for testing
+
+% get volume conductor model
+cd('/home/common/matlab/fieldtrip/data/test/original/meg/ctf151/Subject01.ds');
+vol = ft_read_vol('default.hdm');
+
+% get data + sensor info
+cd('/home/common/matlab/fieldtrip/data/test/raw/meg');
+load('preproc_ctf151');
+
+% create 3D grid
+cfg      = [];
+cfg.grad = data.grad;
+cfg.vol  = vol;
+cfg.channel = 'MEG';
+cfg.grid.resolution = 1.5;
+grid = ft_prepare_leadfield(cfg);
+
+% create 2D grid
+[pnt, tri] = icosahedron162;
+pnt   = pnt*(vol.orig.MEG_Sphere.RADIUS-1.5);
+shift = [vol.orig.MEG_Sphere.ORIGIN_X vol.orig.MEG_Sphere.ORIGIN_Y vol.orig.MEG_Sphere.ORIGIN_Z];
+pnt   = pnt+repmat(shift,[size(pnt,1) 1]);
+grid2.pnt = pnt;
+grid2.tri = tri;
+grid2.inside = 1:size(grid2.pnt,1);
+grid2.outside = [];
+
+cfg      = [];
+cfg.grad = data.grad;
+cfg.vol  = vol;
+cfg.grid = grid2;
+cfg.channel = 'MEG';
+grid2 = ft_prepare_leadfield(cfg);
+
+% create timelock structure with covariance for lcmv beamforming and
+% minimumnormestimate
+cfg  = [];
+cfg.covariance = 'yes';
+cfg.keeptrials = 'yes';
+cfg.channel    = 'MEG';
+tlck = ft_timelockanalysis(cfg, data);
+
+% create freq structure for dics beamforming and pcc beamforming
+cfg  = [];
+cfg.method = 'mtmfft';
+cfg.output = 'fourier';
+cfg.tapsmofrq = 4;
+cfg.foilim = [0 20];
+cfg.channel = 'MEG';
+freq = ft_freqanalysis(cfg, data);
+
+% do LCMV beamforming
+cfg            = [];
+cfg.method     = 'lcmv';
+cfg.lcmv.keepleadfield = 'yes';
+cfg.lcmv.keepfilter    = 'yes';
+cfg.lcmv.keepcov       = 'yes';
+cfg.lcmv.lambda        = '5%';
+cfg.grid       = grid;
+cfg.vol        = vol;
+sourcelcmv3d1  = ft_sourceanalysis(cfg, tlck);
+cfg.grid       = grid2;
+sourcelcmv2d1  = ft_sourceanalysis(cfg, tlck);
+
+cfg.rawtrial    = 'yes';
+cfg.grid        = grid;
+cfg.grid.filter = sourcelcmv3d1.avg.filter;
+sourcelcmv3d2   = ft_sourceanalysis(cfg, tlck);
+cfg.grid        = grid2;
+cfg.grid.filter = sourcelcmv2d1.avg.filter;
+sourcelcmv2d2   = ft_sourceanalysis(cfg, tlck);
+
+% do MNE
+cfg = [];
+cfg.method   = 'mne';
+cfg.mne.keepleadfield = 'yes';
+cfg.mne.keepfilter = 'yes';
+cfg.mne.lambda     = 1e4;
+cfg.vol  = vol;
+cfg.grid = grid;
+sourcemne3d1 = ft_sourceanalysis(cfg, tlck);
+cfg.grid = grid2;
+sourcemne2d1 = ft_sourceanalysis(cfg, tlck);
+
+% do DICS
+cfg = [];
+cfg.method = 'dics';
+cfg.dics.keepfilter    = 'yes';
+cfg.dics.keepleadfield = 'yes';
+cfg.dics.keepcsd       = 'yes';
+cfg.dics.lambda        = '5%';
+cfg.frequency = 10;
+cfg.vol  = vol;
+cfg.grid = grid;
+sourcedics3d1 = ft_sourceanalysis(cfg, freq);
+cfg.grid = grid2;
+sourcedics2d1 = ft_sourceanalysis(cfg, freq);
+
+cfg.rawtrial    = 'yes';
+cfg.grid        = grid;
+cfg.grid.filter = sourcelcmv3d1.avg.filter;
+sourcedics3d2   = ft_sourceanalysis(cfg, freq);
+cfg.grid        = grid2;
+cfg.grid.filter = sourcelcmv2d1.avg.filter;
+sourcedics2d2   = ft_sourceanalysis(cfg, freq);
+
+
