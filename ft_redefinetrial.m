@@ -229,6 +229,9 @@ elseif ~isempty(cfg.trl)
     
     % original trial
     iTrlorig  = find(dataold.sampleinfo(:,1)<=begsample & dataold.sampleinfo(:,2)>=endsample);
+    if isempty(iTrlorig)
+      error('some sample indices [%d %d] specified in cfg.trl are not present in the data', begsample, endsample);
+    end
    
     % used to speed up ft_fetch_data
     if iTrl==1,
