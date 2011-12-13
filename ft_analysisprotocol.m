@@ -20,6 +20,12 @@ function [script, details] = ft_analysisprotocol(cfg, datacfg)
 % The configuration options that apply to the behaviour of this function are
 %  cfg.feedback   = 'no', 'text', 'gui' or 'yes', whether text and/or
 %                   graphical feedback should be presented (default = 'yes')
+%  cfg.showinfo   = string or cell array of strings, information to display
+%                   in the gui boxes, can be any combination of
+%                   'functionname', 'revision', 'matlabversion',
+%                   'computername', 'username', 'calltime', 'timeused',
+%                   'memused', 'workingdir', 'scriptpath' (default =
+%                   'functionname', only display function name)
 %  cfg.filename   = string, filename of m-file to which the script will be
 %                   written (default = [])
 %  cfg.remove     = cell-array with strings, determines which objects will
@@ -81,6 +87,7 @@ ft_preamble trackconfig
 
 % set the defaults
 if ~isfield(cfg, 'filename'),    cfg.filename    = [];   end
+if ~isfield(cfg, 'showinfo'),    cfg.showinfo    = {'functionname'};   end
 if ~isfield(cfg, 'keepremoved'), cfg.keepremoved = 'no'; end
 if ~isfield(cfg, 'feedback'),    cfg.feedback = 'yes';   end
 
@@ -103,11 +110,17 @@ if ~isfield(cfg, 'remove')
     'grid.pos'
     'grid.inside'
     'grid.outside'
-    'version.name'
-    'version.id'
     'vol.bnd.pnt'
     'vol.bnd.tri'
     };
+elseif ~iscell(cfg.remove)
+  cfg.remove = {cfg.remove};
+end
+
+if ~isfield(cfg, 'showinfo')
+  cfg.showinfo = {'functionname'};
+elseif ~iscell(cfg.showinfo)
+  cfg.showinfo = {cfg.showinfo};
 end
 
 feedbackgui  = strcmp(cfg.feedback, 'gui') || strcmp(cfg.feedback, 'yes');
@@ -217,6 +230,10 @@ end
 if depth==1
   % the recursion has finished, we are again at the top level
   
+  % record total processing time and maximum memory requirement
+  totalproctime = 0;
+  maxmemreq = 0;
+  
   % the parents were determined while climbing up the tree
   % now it is time to descend and determine the children
   for branch=1:size(info,1)
@@ -225,6 +242,14 @@ if depth==1
         parentbranch = info(branch, depth).parent(1);
         parentdepth  = info(branch, depth).parent(2);
         info(parentbranch, parentdepth).children{end+1} = [branch depth];
+        
+        if isfield(info(branch,depth).cfg, 'callinfo') && isfield(info(branch,depth).cfg.callinfo, 'proctime')
+          totalproctime = totalproctime + info(branch,depth).cfg.callinfo.proctime;
+        end
+        if isfield(info(branch,depth).cfg, 'callinfo') && isfield(info(branch,depth).cfg.callinfo, 'procmem')
+          maxmemreq = max(maxmemreq, info(branch,depth).cfg.callinfo.procmem);
+        end
+        
       end
     end
   end
@@ -262,13 +287,14 @@ if depth==1
     % the axis should not change during the contruction of the arrows,
     % otherwise the arrowheads will be distorted
     axis manual;
+    set(gca,'Units','normalized'); % use normalized units
     for branch=1:size(info,1)
       for depth=1:size(info,2)
-        plotinfo(info(branch,depth));
+        plotinfo(cfg,info(branch,depth),size(info,1),size(info,2));
       end
     end
-    axis auto
-    axis off
+    axis off;
+    axis tight;
     guidata(fig,info);
     set(fig, 'WindowButtonUpFcn', @button);
     set(fig, 'KeyPressFcn', @key);
@@ -282,12 +308,21 @@ if depth==1
     fclose(fid);
   end
   
+  % give a report on the total time used and max. memory required
+  if totalproctime > 3600
+    proclabel = sprintf('%0.1f hours', totalproctime./3600);
+  else
+    proclabel = sprintf('%d seconds', totalproctime);
+  end
+  fprintf('the entire analysis pipeline took %s to run\n', proclabel);
+  fprintf('the maximum memory requirement of the analysis pipeline was %d MB\n',...
+    maxmemreq./1024./1024);
+  
   % clear all persistent variables
   depth  = [];
   branch = [];
   info   = [];
   parent = [];
-  fig    = [];
 else
   % this level of recursion has finished, decrease the depth
   depth = depth - 1;
@@ -301,42 +336,154 @@ ft_postamble callinfo
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function plotinfo(element)
+function plotinfo(cfg,element,numbranch,numdepth)
 if isempty(element.name)
   return
 end
-w = 0.6;
-h = 0.3;
-% create the 4 courners that can be used as patch
-x = [-w/2  w/2  w/2 -w/2];
-y = [-h/2 -h/2  h/2  h/2];
+
+%  cfg.showinfo   = string or cell array of strings, information to display
+%                   in the gui boxes, can be any combination of
+%                   'functionname', 'revision', 'matlabversion',
+%                   'computername', 'username', 'calltime', 'timeused',
+%                   'memused', 'workingdir', 'scriptdir' (default =
+%                   'functionname', only display function name)
+
+% create the text information to display
+label = {};
+for k = 1:numel(cfg.showinfo)
+  switch cfg.showinfo{k}
+    
+    case 'functionname'
+      label{end+1} = ['{\bf ' element.name '}'];
+      if k == 1 % add blank line if function name is on top, looks nice
+        label{end+1} = '';
+        firstLabelIsName = 1;
+      end
+      
+    case 'revision'
+      if isfield(element.cfg, 'version') && isfield(element.cfg.version, 'id')
+        label{end+1} = element.cfg.version.id;
+      else
+        label{end+1} = '<revision unknown>';
+      end
+      
+    case 'matlabversion'
+      if isfield(element.cfg, 'callinfo') && isfield(element.cfg.callinfo, 'matlab')
+        label{end+1} = ['MATLAB ' element.cfg.callinfo.matlab];
+      else
+        label{end+1} = '<MATLAB version unknown>';
+      end
+      
+    case 'computername'
+      if isfield(element.cfg, 'callinfo') && isfield(element.cfg.callinfo, 'hostname')
+        label{end+1} = ['Computer name: ' element.cfg.callinfo.hostname];
+      else
+        label{end+1} = '<hostname unknown>';
+      end
+      
+    case 'username'
+      if isfield(element.cfg, 'callinfo') && isfield(element.cfg.callinfo, 'user')
+        label{end+1} = ['Username: ' element.cfg.callinfo.user];
+      else
+        label{end+1} = '<username unknown>';
+      end
+      
+    case 'calltime'
+      if isfield(element.cfg, 'callinfo') && isfield(element.cfg.callinfo, 'calltime')
+        label{end+1} = ['Function called at ' datestr(element.cfg.callinfo.calltime)];
+      else
+        label{end+1} = '<function call time unknown>';
+      end
+      
+    case 'timeused'
+      if isfield(element.cfg, 'callinfo') && isfield(element.cfg.callinfo, 'proctime')
+        label{end+1} = sprintf('Function call required %d seconds.', round(element.cfg.callinfo.proctime));
+      else
+        label{end+1} = '<processing time unknown>';
+      end
+      
+    case 'memused'
+      if isfield(element.cfg, 'callinfo') && isfield(element.cfg.callinfo, 'procmem')
+        label{end+1} = sprintf('Function call required %d MB.', round(element.cfg.callinfo.procmem/1024/1024));
+      else
+        label{end+1} = '<memory requirement unknown>';
+      end
+      
+    case 'workingdir'
+      if isfield(element.cfg, 'callinfo') && isfield(element.cfg.callinfo, 'pwd')
+        label{end+1} = sprintf('Working directory was %s.', element.cfg.callinfo.pwd);
+      else
+        label{end+1} = '<working directory unknown>';
+      end
+      
+    case 'scriptpath'
+      if isfield(element.cfg, 'version') && isfield(element.cfg.version, 'name')
+        label{end+1} = sprintf('Full path to script was %s.', element.cfg.version.name);
+      else
+        label{end+1} = '<script path unknown>';
+      end
+  end
+end
+
+% escape underscores
+label = strrep(label, '_', '\_');
+
+% strip blank line if present and not needed
+if strcmp(label{end},'')
+  label(end) = [];
+end
+
+% compute width and height of each box
+% note that axis Units are set to Normalized
+wh = [1./numbranch 1./numdepth];
+boxpadding = wh ./ 5 ./ numel(label);
+boxmargin = wh ./ 5;
+% adjust actual, inner, width/height for computed padding and margin
+wh = wh - boxpadding.*2 - boxmargin.*2;
+
+% create the 4 corners for our patch
+x = [0 1 1 0] .* (wh(1)+boxpadding(1).*2);
+y = [0 0 1 1] .* (wh(2)+boxpadding(2).*2);
 % close the patch
 x = [x x(end)];
 y = [y y(end)];
-% move the patch to the desired location
-x = element.this(1) + x;
-y = element.this(2) + y;
+% move the patch
+location = (element.this-1).*(wh+boxpadding.*2) + element.this.*boxmargin;
+% location is at bottom left corner of patch
+x = x + location(1);
+y = y + location(2);
 
 p = patch(x', y', 0);
 set(p, 'Facecolor', [1 1 0.6])
 
-label{1} = element.name;
-% label{2} = num2str(element.this);
-
-l = text(element.this(1), element.this(2), label);
-set(l, 'HorizontalAlignment', 'center')
-set(l, 'interpreter', 'none')
-set(l, 'fontUnits', 'normalized')
-set(l, 'fontSize', 0.03)
-% set(l, 'fontName', 'courier')
-
-% draw an arrow to connect this box to its parent
-if ~isempty(element.parent)
-  base = element.this   - [0 h/2];
-  tip  = element.parent + [0 h/2];
-  % ARROW(Start,Stop,Length,BaseAngle,TipAngle,Width,Page,CrossDir)
-  arrow(base, tip, [], [], [], [], [], []);
+if numel(label) == 1
+  % center of patch
+  textloc = location+boxpadding+wh./2;
+  l = text(textloc(1), textloc(2), label);
+  set(l, 'HorizontalAlignment', 'center');
+  set(l, 'VerticalAlignment', 'middle');
+  set(l, 'fontUnits', 'normalized');
+  set(l, 'fontSize', 0.05);
+else
+  % top left corner of patch, inside padding
+  textloc = [location(1)+boxpadding(1) location(2)+wh(2)];
+  l = text(textloc(1), textloc(2), label);
+  set(l, 'HorizontalAlignment', 'left');
+  set(l, 'VerticalAlignment', 'top');
+  set(l, 'fontUnits', 'normalized');
+  set(l, 'fontSize', 0.04 ./ numel(label) ./ numdepth);
 end
+
+set(l, 'interpreter', 'tex');
+
+% draw an arrow if appropriate
+if ~isempty(element.parent)
+  parentlocation = (element.parent-1).*(wh+boxpadding.*2) + element.parent.*boxmargin;
+  tip = parentlocation + [0.5 1].*wh + [1 2].*boxpadding;
+  base = location + [0.5 0].*wh + [1 0].*boxpadding;
+  arrow(base,tip);
+end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
