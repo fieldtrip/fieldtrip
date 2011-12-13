@@ -48,9 +48,9 @@ dataformat    = ft_getopt(varargin, 'dataformat', ft_filetype(filename));
 transform     = ft_getopt(varargin, 'transform', eye(4));
 spmversion    = ft_getopt(varargin, 'spmversion', 'SPM8');
 
-if strcmp(dataformat, 'nifti') && strcmp(spmversion, 'SPM2') 
-  error('nifti can only be written by SPM5 or later');
-end
+% if strcmp(dataformat, 'nifti') && strcmp(spmversion, 'SPM2') 
+%   error('nifti can only be written by SPM5 or later');
+% end
 
 switch dataformat
    
@@ -70,9 +70,17 @@ switch dataformat
     V = [];
  
   case {'nifti'}
-    %nifti data, using SPM
-    V = volumewrite_spm(filename, dat, transform, spmversion); 
-  
+    %%nifti data, using SPM
+    %V = volumewrite_spm(filename, dat, transform, spmversion); 
+    
+    % nifti data, using Freesurfer
+    ft_hastoolbox('freesurfer', 1);
+    
+    mri          = [];
+    mri.vol      = dat;
+    mri.vox2ras0 = vox2ras_1to0(transform);
+    err = MRIwrite(mri, filename, class(mri.vol))
+    
   case {'vista'}
     if ft_hastoolbox('simbio')
       write_vista_vol(size(dat), dat, filename);

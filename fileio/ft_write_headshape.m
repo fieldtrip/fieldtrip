@@ -12,13 +12,21 @@ function ft_write_headshape(filename, bnd, varargin)
 % (bnd.pnt and bnd.tri), or where pnt describes the surface or source
 % points.
 %
-% Optional input arguments should be specified as key-value pairs and
+% Required input arguments should be specified as key-value pairs and
 % should include
 %   format		= string, see below
+% Optional input arguments should be specified as key-value pairs and
+% can include
+%   data      = data matrix, size(1) should be number of vertices
+%   dimord    = string describing the dimensions of the data, e.g. 'pos_time'
 %
 % Supported output formats are
 %   'mne_tri'		MNE surface desciption in ascii format
 %   'mne_pos'		MNE source grid in ascii format, described as 3D points
+%   'off'
+%   'vista'
+%   'tetgen'
+%   'gifti'
 %
 % See also FT_READ_HEADSHAPE
 
@@ -27,6 +35,8 @@ function ft_write_headshape(filename, bnd, varargin)
 % $Rev$
 
 fileformat = ft_getopt(varargin,'format','unknown');
+data       = ft_getopt(varargin,'data',  []); % can be stored in a gifti file
+dimord     = ft_getopt(varargin,'dimord',[]); % optional for data
 
 if ~isstruct(bnd)
   bnd.pnt = bnd;
@@ -93,6 +103,21 @@ switch fileformat
     % the third argument is the element type. At the moment only type 302
     % (triangle) is supported
     surf_to_tetgen(filename, bnd.pnt, bnd.tri, 302*ones(size(bnd.tri,1),1),[],[]);
+  
+  case 'stl'
+    nrm = normals(bnd.pnt, bnd.tri, 'triangle');
+    write_stl(filename, bnd.pnt, bnd.tri, nrm);
+
+  case 'gifti'
+    ft_hastoolbox('gifti', 1);
+    tmp = [];
+    tmp.vertices = bnd.pnt;
+    tmp.faces    = bnd.tri;
+    if ~isempty(data)
+      tmp.cdata = data;
+    end
+    tmp = gifti(tmp);
+    save(tmp, filename);
     
   case []
     error('you must specify the output format');
