@@ -119,6 +119,7 @@ end
 
 isfreq     = ft_datatype(datain, 'freq');
 istimelock = ft_datatype(datain, 'timelock');
+issource   = ft_datatype(datain, 'source');
 
 if istimelock
   switch datain.dimord
@@ -210,12 +211,12 @@ elseif isfreq
       nrpt  = size(datain.powspctrm, 1);
       nchan = size(datain.powspctrm, 2);
       nfreq = size(datain.powspctrm, 3);
-      ntime = size(datain.powspctrm, 3); % this will be a singleton dimension in case there is no time
+      ntime = size(datain.powspctrm, 4); % this will be a singleton dimension in case there is no time
       
       % initialize output variable
       dataout       = datain;
       
-      if nrpt~=size(confound,1)
+      if nrpt~=size(regr,1)
         error('the size of your confound matrix does not match with the number of trials/subjects');
       end
       
@@ -250,6 +251,8 @@ elseif isfreq
       error('unsupported dimord "%s"', datain.dimord);
   end % switch
   
+elseif issource
+  error('not yet implemented')
 else
   error('the input data should be either timelock or freq with trials')
 end
