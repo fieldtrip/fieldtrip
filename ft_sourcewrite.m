@@ -44,7 +44,7 @@ cfg.filename  = ft_getopt(cfg, 'filename');
 
 if isfield(source, 'dim')
   % source positions are on a regular 3D lattice, save as nifti
-  if numel(cfg.filename)<=4 || ~strcmp(cfg.filename(end-4:end), '.nii');
+  if numel(cfg.filename)<=4 || ~strcmp(cfg.filename(end-3:end), '.nii');
     cfg.filename = cat(2, cfg.filename, '.nii');
   end
   
@@ -60,7 +60,7 @@ if isfield(source, 'dim')
 elseif isfield(source, 'tri')
   % there's a specification of a mesh, so the source positions are on a 2D
   % sheet, save as gifti
-  if numel(cfg.filename)<=4 || ~strcmp(cfg.filename(end-4:end), '.gii');
+  if numel(cfg.filename)<=4 || ~strcmp(cfg.filename(end-3:end), '.gii');
     cfg.filename = cat(2, cfg.filename, '.gii');
   end
   

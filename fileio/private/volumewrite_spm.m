@@ -58,8 +58,13 @@ case {'spm8'}
   Va         = [];
   Va.mat     = transform;
   Va.fname   = filename;
-  Va.dim     = dim;
-  Va.n       = 1;
+  if numel(dim)>3
+    Va.dim = dim(1:3);
+    Va.n   = dim(4:end);
+  else
+    Va.dim     = dim;
+    Va.n       = 1;
+  end
   Va.pinfo   = [1 0 0]';
   %Va.dt      = [typ 1]; % this is not necessary because assigned in spm_create_vol
 otherwise
