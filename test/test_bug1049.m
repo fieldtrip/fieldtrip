@@ -54,6 +54,8 @@ cfg.foilim = [0 20];
 cfg.channel = 'MEG';
 freq = ft_freqanalysis(cfg, data);
 
+cd('/home/common/matlab/fieldtrip/data/test/source/meg');
+
 % do LCMV beamforming
 cfg            = [];
 cfg.method     = 'lcmv';
@@ -63,15 +65,19 @@ cfg.lcmv.keepcov       = 'yes';
 cfg.lcmv.lambda        = '5%';
 cfg.grid       = grid;
 cfg.vol        = vol;
+cfg.outputfile = 'ctf151_lcmv3d_avg';
 sourcelcmv3d1  = ft_sourceanalysis(cfg, tlck);
 cfg.grid       = grid2;
+cfg.outputfile = 'ctf151_lcmv2d_avg';
 sourcelcmv2d1  = ft_sourceanalysis(cfg, tlck);
 
 cfg.rawtrial    = 'yes';
 cfg.grid        = grid;
+cfg.outputfile  = 'ctf151_lcmv3d_trial';
 cfg.grid.filter = sourcelcmv3d1.avg.filter;
 sourcelcmv3d2   = ft_sourceanalysis(cfg, tlck);
 cfg.grid        = grid2;
+cfg.outputfile  = 'ctf151_lcmv2d_trial';
 cfg.grid.filter = sourcelcmv2d1.avg.filter;
 sourcelcmv2d2   = ft_sourceanalysis(cfg, tlck);
 
@@ -83,8 +89,10 @@ cfg.mne.keepfilter = 'yes';
 cfg.mne.lambda     = 1e4;
 cfg.vol  = vol;
 cfg.grid = grid;
+cfg.outputfile = 'ctf151_mne3d';
 sourcemne3d1 = ft_sourceanalysis(cfg, tlck);
 cfg.grid = grid2;
+cfg.outputfile = 'ctf151_mne2d';
 sourcemne2d1 = ft_sourceanalysis(cfg, tlck);
 
 % do DICS
@@ -97,16 +105,38 @@ cfg.dics.lambda        = '5%';
 cfg.frequency = 10;
 cfg.vol  = vol;
 cfg.grid = grid;
+cfg.outputfile = 'ctf151_dics3d_avg';
 sourcedics3d1 = ft_sourceanalysis(cfg, freq);
 cfg.grid = grid2;
+cfg.outputfile = 'ctf151_dics2d_avg';
 sourcedics2d1 = ft_sourceanalysis(cfg, freq);
 
 cfg.rawtrial    = 'yes';
 cfg.grid        = grid;
 cfg.grid.filter = sourcelcmv3d1.avg.filter;
+cfg.outputfile  = 'ctf151_dics3d_trial';
 sourcedics3d2   = ft_sourceanalysis(cfg, freq);
 cfg.grid        = grid2;
 cfg.grid.filter = sourcelcmv2d1.avg.filter;
+cfg.outputfile  = 'ctf151_dics2d_trial';
 sourcedics2d2   = ft_sourceanalysis(cfg, freq);
+
+
+% do PCC
+cfg = [];
+cfg.method = 'pcc';
+cfg.pcc.keepfilter    = 'yes';
+cfg.pcc.keepleadfield = 'yes';
+cfg.pcc.keepcsd       = 'yes';
+cfg.pcc.keepmom       = 'yes';
+cfg.pcc.lambda        = '5%';
+cfg.frequency = 10;
+cfg.vol  = vol;
+cfg.grid = grid;
+cfg.outputfile = 'ctf151_pcc3d';
+sourcepcc3d1 = ft_sourceanalysis(cfg, freq);
+cfg.grid = grid2;
+cfg.outputfile = 'ctf151_pcc2d';
+sourcepcc2d1 = ft_sourceanalysis(cfg, freq);
 
 
