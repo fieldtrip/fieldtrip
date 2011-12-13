@@ -24,7 +24,7 @@ npos = size(pos,1);
 dpos = zscore(abs(diff(pos,[],1)));
 
 [tmp, ind] = max(dpos,[],2);
-dim(1)     = find(tmp>2,1,'first');
+dim(1)     = find(tmp>1.5,1,'first');
 dpos       = dpos(dim:dim:npos-1,:);
 [tmp, ind] = max(dpos(:,setdiff(1:3, ind(dim))),[],2);
 dim(2)     = find(tmp>1.1*min(tmp),1,'first'); %this threshold seems to work on what I tried out

@@ -12,7 +12,7 @@ function [transform] = pos2transform(pos)
 
 % Copyright (C) 2009, Jan-Mathijs Schoffelen
 
-dim = pos2dim3d(pos);
+dim = pos2dim(pos);
 x   = 1:dim(1);
 y   = 1:dim(2);
 z   = 1:dim(3);
