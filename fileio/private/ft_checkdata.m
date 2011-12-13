@@ -529,7 +529,7 @@ if issource || isvolume,
   %  dim = [size(data.pos,1) 1]; %sparsely represented source structure new style
   elseif isfield(data, 'dim'),
     dim = [data.dim 1];
-  elseif issource
+  elseif issource && ~isfield(data, 'dimord')
     dim = [size(data.pos,1) 1];
   elseif isfield(data, 'dimord'),
     %HACK
