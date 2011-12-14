@@ -89,7 +89,10 @@ mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[])
   {
     dat_p[i] = (double)(buf[i]);
   }
-  
+
+  /* explicitely free the buffer memory and don't wait for the garbage collector */
+  mxFree(buf);
+
   /* assign the output parameters */
   plhs[0] = dat;
   return;
