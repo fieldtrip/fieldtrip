@@ -48,7 +48,7 @@ if isfield(hdr, 'Meg_pos'),
     grad.label{i} = sprintf('A%d', i); % according to BTi convention
   end
   grad.label = grad.label(:);
-  grad.tra = sparse(eye(size(grad.pnt,1)));
+  grad.tra = eye(size(grad.pnt,1));
   
 elseif isfield(hdr, 'config'),
   % hdr has been derived from read_4d_hdr
@@ -211,6 +211,6 @@ elseif isfield(hdr, 'grad'),
   %hdr has been derived in a different way and grad is already there, possibly without tra
   grad = hdr.grad;
   if ~isfield(grad, 'tra'), 
-    grad.tra = sparse(eye(size(grad.pnt,1)));
+    grad.tra = eye(size(grad.pnt,1));
   end
 end

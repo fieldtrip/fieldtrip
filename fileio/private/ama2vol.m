@@ -37,6 +37,6 @@ npnt = size(vol.mat,2);
 if size(vol.mat,1)<npnt
   vol.mat(npnt, npnt) = 0;    % it should be a square matrix
 end
-vol.mat  = sparse(vol.mat);   % convert to sparse for faster multiplications
+vol.mat  = vol.mat;
 vol.type = 'dipoli';
 

@@ -54,9 +54,14 @@ sel = find((trlNum>=begtrial) & (trlNum<=endtrial));
 
 % this is for calibrating the integer values to physical values
 if isfield(hdr, 'orig') && isfield(hdr.orig, 'gainV')
-  gain = sparse(diag(hdr.orig.gainV(chanindx)));
+  gain = diag(hdr.orig.gainV(chanindx));
 elseif isfield(hdr, 'orig') && isfield(hdr.orig, 'res4')
-  gain = sparse(diag([hdr.orig.res4.senres(chanindx).gain]));
+  gain = diag([hdr.orig.res4.senres(chanindx).gain]);
+end
+
+if length(chanindx)>1
+  % this speeds up the multiplication, but would result in a sparse matrix when nchans=1
+  gain = sparse(gain);
 end
 
 for i=1:length(sel)

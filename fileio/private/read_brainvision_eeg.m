@@ -64,8 +64,9 @@ if strcmpi(hdr.DataFormat, 'binary') && strcmpi(hdr.DataOrientation, 'multiplexe
     fseek(fid, hdr.NumberOfChannels*2*(begsample-1), 'cof');
     dat = fread(fid, [hdr.NumberOfChannels, (endsample-begsample+1)], sampletype);
     % compute real microvolts using the calibration factor (resolution)
-    res = sparse(diag(hdr.resolution));
-    dat = res * dat;
+    calib = diag(hdr.resolution);
+    % using a sparse multiplication speeds it up
+    dat = full(sparse(calib) * dat);
     
   else
     % read only the selected channels
@@ -75,8 +76,9 @@ if strcmpi(hdr.DataFormat, 'binary') && strcmpi(hdr.DataOrientation, 'multiplexe
       dat(chan,:) = fread(fid, [1, (endsample-begsample+1)], sampletype, (hdr.NumberOfChannels-1)*samplesize);
     end
     % compute real microvolts using the calibration factor (resolution)
-    res = sparse(diag(hdr.resolution(chanindx)));
-    dat = res * dat;
+    calib = diag(hdr.resolution(chanindx));
+    % using a sparse multiplication speeds it up
+    dat = full(sparse(calib) * dat);
     % don't do the channel selection again at the end of the function
     chanindx = [];
   end

@@ -1,34 +1,41 @@
 function [sens] = ft_read_sens(filename, varargin)
 
-% FT_READ_SENS read sensor positions from various manufacturer specific files. 
-% Currently supported are ASA, BESA, Polhemus and Matlab for EEG 
-% electrodes and CTF and Neuromag for MEG gradiometers.
+% FT_READ_SENS read sensor positions from various manufacturer
+% specific files. The following acsuisition system and analysis
+% platform EEG and MEG file formats are currently supported:
+%
+%   asa_elc besa_elp besa_pos besa_sfp yokogawa_ave yokogawa_con
+%   yokogawa_raw 4d 4d_pdf 4d_m4d 4d_xyz ctf_ds ctf_res4 itab_raw
+%   itab_mhd netmeg neuromag_fif neuromag_mne neuromag_mne_elec
+%   neuromag_mne_grad polhemus_fil polhemus_pos zebris_sfp spmeeg_mat
+%   eeglab_set matlab
 %
 % Use as
 %   grad = ft_read_sens(filename, ...)  % for gradiometers
 %   elec = ft_read_sens(filename, ...)  % for electrodes
 %
 % Additional options should be specified in key-value pairs and can be
-%   'fileformat'   string
+%   'fileformat' = string, see the list of supported file formats (the
+%                  default is determined automatically)
 %
 % An electrode definition contain the following fields
-%   elec.elecpos Nx3 matrix with carthesian (x,y,z) coordinates of each
-%                electrode
-%   elec.label   cell-array of length N with the label of each electrode
-%   elec.chanpos Nx3 matrix with coordinates of each sensor
+%   elec.elecpos = Nx3 matrix with carthesian (x,y,z) coordinates of each
+%                  electrode
+%   elec.label   = cell-array of length N with the label of each electrode
+%   elec.chanpos = Nx3 matrix with coordinates of each sensor
 %
 % A gradiometer definition generally consists of multiple coils per
 % channel, e.g.two coils for a 1st order gradiometer in which the
 % orientation of the coils is opposite. Each coil is described
-% separately and a large "tra" matrix (can be sparse) has to be
-% given that defines how the forward computed field is combined over
-% the coils to generate the output of each channel. The gradiometer
-% definition constsis of the following fields
-%   grad.coilpos Mx3 matrix with the position of each coil
-%   grad.coilori Mx3 matrix with the orientation of each coil
-%   grad.tra     NxM matrix with the weight of each coil into each channel
-%   grad.label   cell-array of length N with the label of each of the channels
-%   grad.chanpos Nx3 matrix with the positions of each sensor
+% separately and a large "tra" matrix has to be given that defines
+% how the forward computed field is combined over the coils to generate
+% the output of each channel. The gradiometer definition constsis of
+% the following fields
+%   grad.coilpos = Mx3 matrix with the position of each coil
+%   grad.coilori = Mx3 matrix with the orientation of each coil
+%   grad.tra     = NxM matrix with the weight of each coil into each channel
+%   grad.label   = cell-array of length N with the label of each of the channels
+%   grad.chanpos = Nx3 matrix with the positions of each sensor
 %
 % See also FT_TRANSFORM_SENS, FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD,
 % FT_DATATYPE_SENS

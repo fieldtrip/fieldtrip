@@ -110,10 +110,6 @@ if any(ismag)
     grad.tra(ismag,not_2nd_coil) = 0;
 end
 
-% Make the matrix sparse to speed up the multiplication in the forward
-% computation with the coil-leadfield matrix to get the channel leadfield
-grad.tra = sparse(grad.tra);
-
 % the gradiometer labels should be consistent with the channel labels in
 % read_yokogawa_header, the predefined list of channel names in ft_senslabel
 % and with ft_channelselection

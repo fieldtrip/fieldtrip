@@ -119,7 +119,7 @@ elseif ismeg
     if Nchans~=Ncoils
       error('inconsistent number of channels and coils');
     end
-    sens.tra = sparse(eye(Nchans, Ncoils));
+    sens.tra = eye(Nchans, Ncoils);
   end
 
   % select the desired channels from the gradiometer array
@@ -484,10 +484,27 @@ elseif iseeg
   % % always ensure that there is a linear transfer matrix for
   % % rereferencing the EEG potential
   % if ~isfield(sens, 'tra');
-  %   sens.tra = sparse(eye(length(sens.label)));
+  %   sens.tra = eye(length(sens.label));
   % end
 
 end % if iseeg or ismeg
+
+if isfield(sens, 'tra') 
+  if issparse(sens.tra) && size(sens.tra, 1)==1
+    % this multiplication would result in a sparse leadfield, which is not what we want
+    % the effect can be demonstrated as sparse(1)*rand(1,10), see also http://bugzilla.fcdonders.nl/show_bug.cgi?id=1169#c7
+    sens.tra = full(sens.tra);
+  elseif ~issparse(sens.tra) && size(sens.tra, 1)>1
+    % the multiplication of the "sensor" leadfield (electrode or coil) with the tra matrix to get the "channel" leadfield
+    % is faster for most cases if the pre-multiplying weighting matrix is made sparse
+    sens.tra = sparse(sens.tra);
+  end
+end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function Ppr = pointproj(P,plane)
 % projects a point on a plane
@@ -504,3 +521,4 @@ dp = plane(1:3) - line(:, 1:3);
 t = dot(ori(~par,:), dp(~par,:), 2)./dot(ori(~par,:), line(~par,4:6), 2);
 % compute coord of intersection point
 Ppr(~par, :) = line(~par,1:3) + repmat(t,1,3).*line(~par,4:6);
+

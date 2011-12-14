@@ -93,10 +93,10 @@ end
 % use default transfer from sensors to channels if not specified
 if isfield(sens, 'pnt') && ~isfield(sens, 'tra')
   nchan = size(sens.pnt,1);
-  sens.tra = sparse(eye(nchan));
+  sens.tra = eye(nchan);
 elseif isfield(sens, 'chanpos') && ~isfield(sens, 'tra')
   nchan = size(sens.chanpos,1);
-  sens.tra = sparse(eye(nchan));
+  sens.tra = eye(nchan);
 end
 
 % select and keep the columns that are non-empty, i.e. remove the empty columns
@@ -155,13 +155,20 @@ end
 
 % reorder the columns of the montage matrix
 [selsens, selmont] = match_str(sens.label, montage.labelorg);
-montage.tra        = double(sparse(montage.tra(:,selmont)));
+montage.tra        = double(montage.tra(:,selmont));
 montage.labelorg   = montage.labelorg(selmont);
+
+% making the tra matrix sparse will speed up subsequent multiplications
+% but should not result in a sparse matrix
+if size(montage.tra,1)>1
+  montage.tra = sparse(montage.tra);
+end
 
 if isfield(sens, 'labelorg') && isfield(sens, 'labelnew')
   % apply the montage on top of the other montage
   sens       = rmfield(sens, 'label');
   if isa(sens.tra, 'single')
+    % sparse matrices and single precision do not match
     sens.tra = full(montage.tra) * sens.tra;
   else
     sens.tra = montage.tra * sens.tra;
@@ -171,6 +178,7 @@ if isfield(sens, 'labelorg') && isfield(sens, 'labelnew')
 elseif isfield(sens, 'tra')
   % apply the montage to the sensor array
   if isa(sens.tra, 'single')
+    % sparse matrices and single precision do not match
     sens.tra = full(montage.tra) * sens.tra;
   else
     sens.tra = montage.tra * sens.tra;

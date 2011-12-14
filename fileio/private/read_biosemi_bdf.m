@@ -252,14 +252,13 @@ else
   dat = dat(:, begsample:endsample);
 
   % Calibrate the data
+  calib = diag(EDF.Cal(chanindx));
   if length(chanindx)>1
     % using a sparse matrix speeds up the multiplication
-    calib = sparse(diag(EDF.Cal(chanindx,:)));
-    dat   = calib * dat;
+    dat = sparse(calib) * dat;
   else
-    % in case of one channel the calibration would result in a sparse array
-    calib = diag(EDF.Cal(chanindx,:));
-    dat   = calib * dat;
+    % in case of one channel the sparse multiplication would result in a sparse array
+    dat = calib * dat;
   end
 end
 
