@@ -797,7 +797,7 @@ switch dataformat
 
   case 'neuroprax_eeg'
     tmp = np_readdata(filename, hdr.orig, begsample - 1, endsample - begsample + 1, 'samples');
-    dat = tmp.data';
+    dat = tmp.data(:,chanindx)';
 
   case 'plexon_ds'
     dat = read_plexon_ds(filename, hdr, begsample, endsample, chanindx);
