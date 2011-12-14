@@ -4,6 +4,7 @@ function test_randomseed
 
 % this is related to bug 1205
 % call this for every possible MATLAB version
+ft_defaults;
 
 state1=randomseed([]);
 x=rand;
