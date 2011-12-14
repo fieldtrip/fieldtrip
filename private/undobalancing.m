@@ -23,7 +23,7 @@ while isfield(sens, 'balance') && isfield(sens.balance, 'current') && ~strcmp(se
       tmp  = tmp*tmp';  % this is the part which was removed at some point
       [ix,iy]     = match_str(sens.balance.comp.labelorg, sens.balance.invcomp.labelnew);
       tra3(iy,iy) = (eye(numel(ix))+tmp(ix,ix))*tra1(iy,iy);
-      sens.balance.invcomp.tra = sparse(tra3);
+      sens.balance.invcomp.tra = tra3;
       % FIXME check whether this is robust
     end
 
