@@ -507,6 +507,10 @@ void closeSharedMem(ACQ_MessagePacketType *packet) {
 */
 void initSharedMem(ACQ_MessagePacketType *packet) {
 	int i;
+    size_t siz = sizeof(ACQ_MessagePacketType)*ACQ_MSGQ_SIZE;
+    siz += OVERALLOC*sizeof(int); /* to overcome Acq bug */
+
+    bzero(packet, siz);
 	for (i=0;i<ACQ_MSGQ_SIZE;i++) {
 		packet[i].message_type =  ACQ_MSGQ_INVALID;
 	}	
