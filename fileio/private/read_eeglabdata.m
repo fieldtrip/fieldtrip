@@ -49,8 +49,8 @@ begtrial  = ft_getopt(varargin, 'begtrial');
 endtrial  = ft_getopt(varargin, 'endtrial');
 chanindx  = ft_getopt(varargin, 'chanindx');
 
-if isempty(hdr)
-  hdr = read_eeglabheader(filename);
+if isempty(header)
+  header = read_eeglabheader(filename);
 end
 
 if ischar(header.orig.data)
