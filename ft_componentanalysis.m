@@ -98,6 +98,12 @@ function [comp] = ft_componentanalysis(cfg, data)
 %   cfg.unmixing     = NxN unmixing matrix
 %   cfg.topolabel    = Nx1 cell-array with the channel labels
 %
+% You may specify a particular seed for random numbers called by
+% rand/randn/randi, or the random state used by a previous call to this
+% function to replicate results. For example:
+%   cfg.randomseed   = integer seed value of user's choice
+%   cfg.randomseed   = comp.cfg.callinfo.randomseed (from previous call)
+%
 % To facilitate data-handling and distributed computing with the peer-to-peer
 % module, this function has the following options:
 %   cfg.inputfile   =  ...
@@ -135,6 +141,7 @@ revision = '$Id$';
 ft_defaults
 ft_preamble help
 ft_preamble callinfo
+ft_preamble randomseed
 ft_preamble trackconfig
 ft_preamble loadvar data
 
@@ -572,6 +579,7 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
 ft_postamble callinfo
+ft_postamble randomseed
 ft_postamble previous data
 ft_postamble history comp
 ft_postamble savevar comp
