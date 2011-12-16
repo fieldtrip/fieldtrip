@@ -21,6 +21,8 @@ function [varargout] = ft_qualitycheck(cfg)
 %                    with analyze = 'no'
 %   cfg.visualize = 'yes' or 'no' to visualize the analysis (default = 'yes')
 %   cfg.saveplot  = 'yes' or 'no' to save the visualization (default = 'yes')
+%   cfg.linefreq  = scalar, frequency of power line (default = 50)
+%   cfg.plotunit  = the length of time to be plotted in one panel (default = 3600)
 
 % Copyright (C) 2010-2011, Arjen Stolk, Bram Daams, Robert Oostenveld
 %
@@ -51,11 +53,13 @@ ft_preamble callinfo
 ft_preamble trackconfig
 
 % set the defaults
-if ~isfield(cfg,'analyze'),        cfg.analyze   = 'yes';                         end
-if ~isfield(cfg,'savemat'),        cfg.savemat   = 'yes';                         end
-if ~isfield(cfg,'matfile'),        cfg.matfile   = [];                            end
-if ~isfield(cfg,'visualize'),      cfg.visualize = 'yes';                         end
-if ~isfield(cfg,'saveplot'),       cfg.saveplot  = 'yes';                         end
+cfg.analyze   = ft_getopt(cfg, 'analyze',   'yes');
+cfg.savemat   = ft_getopt(cfg, 'savemat',   'yes');
+cfg.matfile   = ft_getopt(cfg, 'matfile',   []);
+cfg.visualize = ft_getopt(cfg, 'visualize', 'yes');
+cfg.saveplot  = ft_getopt(cfg, 'saveplot',  'yes');
+cfg.linefreq  = ft_getopt(cfg, 'linefreq',  50);
+cfg.plotunit  = ft_getopt(cfg, 'plotunit',  3600);
 
 %% ANALYSIS
 if strcmp(cfg.analyze,'yes')
@@ -95,7 +99,7 @@ if strcmp(cfg.analyze,'yes')
   cfgdef                      = ft_definetrial(cfgdef);
   ntrials                     = size(cfgdef.trl,1)-1; % remove last trial
   timeunit                    = cfgdef.trialdef.triallength;
-  
+   
   % channelselection for jump detection (all) and for FFT (brain)
   if ismeg
     allchans                   = ft_channelselection({'MEG','MEGREF'}, info.hdr.label);
@@ -113,23 +117,27 @@ if strcmp(cfg.analyze,'yes')
   
   % find headcoil channels
   if isctf % this fails for older CTF data sets
-    try
-      Nx = strmatch('HLC0011', info.hdr.label); % x nasion coil
-      Ny = strmatch('HLC0012', info.hdr.label); % y nasion
-      Nz = strmatch('HLC0013', info.hdr.label); % z nasion
-      Lx = strmatch('HLC0021', info.hdr.label); % x left coil
-      Ly = strmatch('HLC0022', info.hdr.label); % y left
-      Lz = strmatch('HLC0023', info.hdr.label); % z left
-      Rx = strmatch('HLC0031', info.hdr.label); % x right coil
-      Ry = strmatch('HLC0032', info.hdr.label); % y right
-      Rz = strmatch('HLC0033', info.hdr.label); % z right
-      hasheadpos     = true;
-      headpos.dimord = 'chan_time';
-      headpos.time   = [timeunit-timeunit/2:timeunit:timeunit*ntrials-timeunit/2];
-      headpos.label  = {'Nx';'Ny';'Nz';'Lx';'Ly';'Lz';'Rx';'Ry';'Rz'};
-      headpos.avg    = NaN(length(headpos.label), ntrials);
-      headpos.grad   = info.hdr.grad;
-    end % try
+    Nx = strmatch('HLC0011', info.hdr.label); % x nasion coil
+    Ny = strmatch('HLC0012', info.hdr.label); % y nasion
+    Nz = strmatch('HLC0013', info.hdr.label); % z nasion
+    Lx = strmatch('HLC0021', info.hdr.label); % x left coil
+    Ly = strmatch('HLC0022', info.hdr.label); % y left
+    Lz = strmatch('HLC0023', info.hdr.label); % z left
+    Rx = strmatch('HLC0031', info.hdr.label); % x right coil
+    Ry = strmatch('HLC0032', info.hdr.label); % y right
+    Rz = strmatch('HLC0033', info.hdr.label); % z right
+    headpos.dimord = 'chan_time';
+    headpos.time   = (timeunit-timeunit/2:timeunit:timeunit*ntrials-timeunit/2);
+    headpos.label  = {'Nx';'Ny';'Nz';'Lx';'Ly';'Lz';'Rx';'Ry';'Rz'};
+    headpos.avg    = NaN(length(headpos.label), ntrials);
+    headpos.grad   = info.hdr.grad;
+   
+    if numel(cat(1,Nx,Ny,Nz,Lx,Ly,Lz,Rx,Ry,Rz))==9
+      hasheadpos = true;
+    else
+      hasheadpos = false;
+    end
+  
   end % if
   
   % analysis settings
@@ -148,7 +156,7 @@ if strcmp(cfg.analyze,'yes')
   % output variables
   timelock.dimord = 'chan_time';
   timelock.label  = allchans;
-  timelock.time   = [timeunit-timeunit/2:timeunit:timeunit*ntrials-timeunit/2];
+  timelock.time   = (timeunit-timeunit/2:timeunit:timeunit*ntrials-timeunit/2);
   timelock.avg    = NaN(length(allchans), ntrials); % updated in loop
   timelock.median = NaN(length(allchans), ntrials); % updated in loop
   timelock.jumps  = NaN(length(allchans), ntrials); % updated in loop
@@ -158,30 +166,31 @@ if strcmp(cfg.analyze,'yes')
   
   freq.dimord     = 'chan_freq_time';
   freq.label      = allchans;
-  freq.freq       = [cfgfreq.foilim(1):cfgfreq.foilim(2)];
-  freq.time       = [timeunit-timeunit/2:timeunit:timeunit*ntrials-timeunit/2];
+  freq.freq       = (cfgfreq.foilim(1):cfgfreq.foilim(2));
+  freq.time       = (timeunit-timeunit/2:timeunit:timeunit*ntrials-timeunit/2);
   freq.powspctrm  = NaN(length(allchans), length(freq.freq), ntrials); % updated in loop
   
   summary.dimord  = 'chan_time';
-  summary.time    = [timeunit-timeunit/2:timeunit:timeunit*ntrials-timeunit/2];
+  summary.time    = (timeunit-timeunit/2:timeunit:timeunit*ntrials-timeunit/2);
   summary.label   = {'Mean';'Median';'Min';'Max';'Range';'HmotionN';'HmotionL';'HmotionR';'LowFreqPower';'LineFreqPower';'Jumps'};
   summary.avg     = NaN(length(summary.label), ntrials); % updated in loop
   
   % try add gradiometer info
-  try
-    timelock.grad   = info.hdr.grad;
-    freq.grad       = info.hdr.grad;
-    summary.grad    = info.hdr.grad;
+  if isfield(info.hdr, 'grad'), 
+    timelock.grad = info.hdr.grad;
+    freq.grad     = info.hdr.grad;
+    summary.grad  = info.hdr.grad;
   end
   
+   
   % process trial by trial
   for t = 1:ntrials
     fprintf('analyzing trial %s of %s \n', num2str(t), num2str(ntrials));
     
     % preprocess
-    cfgpreproc                  = cfgdef;
-    cfgpreproc.trl              = cfgdef.trl(t,:);
-    data                        = ft_preprocessing(cfgpreproc); clear cfgpreproc;
+    cfgpreproc     = cfgdef;
+    cfgpreproc.trl = cfgdef.trl(t,:);
+    data           = ft_preprocessing(cfgpreproc); clear cfgpreproc;
     
     % determine headposition
     if isctf && hasheadpos
@@ -197,23 +206,23 @@ if strcmp(cfg.analyze,'yes')
     end
     
     % update values
-    timelock.avg(:,t)           = mean(data.trial{1}(allchanindx,:),2);
-    timelock.median(:,t)        = median(data.trial{1}(allchanindx,:),2);
-    timelock.range(:,t)         = max(data.trial{1}(allchanindx,:),[],2) - min(data.trial{1}(allchanindx,:),[],2);
-    timelock.min(:,t)           = min(data.trial{1}(allchanindx,:),[],2);
-    timelock.max(:,t)           = max(data.trial{1}(allchanindx,:),[],2);
+    timelock.avg(:,t)    = mean(data.trial{1}(allchanindx,:),2);
+    timelock.median(:,t) = median(data.trial{1}(allchanindx,:),2);
+    timelock.range(:,t)  = max(data.trial{1}(allchanindx,:),[],2) - min(data.trial{1}(allchanindx,:),[],2);
+    timelock.min(:,t)    = min(data.trial{1}(allchanindx,:),[],2);
+    timelock.max(:,t)    = max(data.trial{1}(allchanindx,:),[],2);
     
     % detect jumps
     for c = 1:size(data.trial{1}(allchanindx,:),1)
-      timelock.jumps(c,t)     = length(find(diff(data.trial{1,1}(allchanindx(c),:)) > jumpthreshold));
+      timelock.jumps(c,t) = length(find(diff(data.trial{1,1}(allchanindx(c),:)) > jumpthreshold));
     end
     
     % FFT and noise estimation
-    redef                       = ft_redefinetrial(cfgredef, data); clear data;
-    FFT                         = ft_freqanalysis(cfgfreq, redef); clear redef;
-    freq.powspctrm(:,:,t)       = FFT.powspctrm;
-    summary.avg(9,t)            = mean(mean(findpower(0, 2, FFT, chanindx))); % Low Freq Power
-    summary.avg(10,t)           = mean(mean(findpower(49, 51, FFT, chanindx))); clear FFT; % Line Freq Power
+    redef                 = ft_redefinetrial(cfgredef, data); clear data;
+    FFT                   = ft_freqanalysis(cfgfreq, redef); clear redef;
+    freq.powspctrm(:,:,t) = FFT.powspctrm;
+    summary.avg(9,t)      = mean(mean(findpower(0,  2,  FFT, chanindx))); % Low Freq Power
+    summary.avg(10,t)     = mean(mean(findpower(cfg.linefreq-1, cfg.linefreq+1, FFT, chanindx))); clear FFT; % Line Freq Power
     
     toc
   end % end of trial loop
@@ -233,13 +242,6 @@ if strcmp(cfg.analyze,'yes')
   summary.avg(5,:)   = mean(timelock.range(chanindx,:),1);
   summary.avg(11,:)  = mean(timelock.jumps(chanindx,:),1);
   
-  % do the general cleanup and bookkeeping at the end of the function
-  ft_postamble trackconfig
-  ft_postamble callinfo
-  ft_postamble history timelock   % add the input cfg to multiple outputs
-  ft_postamble history freq       % add the input cfg to multiple outputs
-  ft_postamble history summary    % add the input cfg to multiple outputs
-  
   % save to .mat
   if strcmp(cfg.savemat, 'yes')
     if isctf && hasheadpos
@@ -249,6 +251,7 @@ if strcmp(cfg.analyze,'yes')
       save(exportname, 'info','timelock','freq','summary');
     end
   end
+  
 end % end of analysis
 
 %% VISUALIZATION
@@ -266,31 +269,33 @@ if strcmp(cfg.visualize, 'yes')
   end
   
   % determine number of 1-hour plots to be made
-  nplots = ceil(length(freq.time)/(3600/10));
+  nplots = ceil(length(freq.time)/(cfg.plotunit/10));
   
   % create GUI-like figure(s)
   for p = 1:nplots
     fprintf('visualizing %s of %s \n', num2str(p), num2str(nplots));
-    toi = [p*3600-3595 p*3600-5]; % select 1-hour chunks
+    toi = [p*cfg.plotunit-(cfg.plotunit-5) p*cfg.plotunit-5]; % select 1-hour chunks
     
     if exist('headpos','var')
       temp_timelock = ft_selectdata(timelock, 'toilim', toi);
-      temp_freq     = ft_selectdata(freq, 'toilim', toi);
-      temp_summary  = ft_selectdata(summary, 'toilim', toi);
-      temp_headpos  = ft_selectdata(headpos, 'toilim', toi);
+      temp_timelock.cfg = cfg; % be sure to add the cfg here
+      temp_freq     = ft_selectdata(freq,     'toilim', toi);
+      temp_summary  = ft_selectdata(summary,  'toilim', toi);
+      temp_headpos  = ft_selectdata(headpos,  'toilim', toi);
       draw_figure(info, temp_timelock, temp_freq, temp_summary, temp_headpos, toi);
       clear temp_timelock; clear temp_freq; clear temp_summary; clear temp_headpos; clear toi;
     else
       temp_timelock = ft_selectdata(timelock, 'toilim', toi);
-      temp_freq     = ft_selectdata(freq, 'toilim', toi);
-      temp_summary  = ft_selectdata(summary, 'toilim', toi);
+      temp_timelock.cfg = cfg; % be sure to add the cfg here
+      temp_freq     = ft_selectdata(freq,     'toilim', toi);
+      temp_summary  = ft_selectdata(summary,  'toilim', toi);
       draw_figure(info, temp_timelock, temp_freq, temp_summary, toi);
       clear temp_timelock; clear temp_freq; clear temp_summary; clear toi;
     end
     
     % export to .PNG and .PDF
     if strcmp(cfg.saveplot, 'yes')
-      [pathstr,name,extr,versn] = fileparts(exportname);
+      [pathstr,name,extr] = fileparts(exportname);
       if p == 1
         exportfilename = name;
       else
@@ -305,6 +310,13 @@ if strcmp(cfg.visualize, 'yes')
     end
   end % end of nplots
 end % end of visualization
+
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+ft_postamble history timelock   % add the input cfg to multiple outputs
+ft_postamble history freq       % add the input cfg to multiple outputs
+ft_postamble history summary    % add the input cfg to multiple outputs
 
 %% VARARGOUT
 if nargout>0
@@ -325,10 +337,10 @@ end
 function [x] = clipat(x, v, v2)
 v = [v v2]; % clip between value v and v2
 if length(v) == 1
-  x(find(x>v)) = v;
+  x(x>v) = v;
 elseif length(v) == 2
-  x(find(x<v(1))) = v(1);
-  x(find(x>v(2))) = v(2);
+  x(x<v(1)) = v(1);
+  x(x>v(2)) = v(2);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%% SUBFUNCTION %%%%%%%%%%%%%%%%%%%%%%%%%
@@ -486,7 +498,7 @@ h.TimeText = uicontrol(...
   'Position',[.01 .78 .99 .1]);
 
 if ismeg
-  allchans = ft_senslabel('ctf275');
+  allchans = ft_senslabel(ft_senstype(timelock));
   misschans = setdiff(ft_channelselection('MEG', info.hdr.label), allchans);
   nchans = num2str(size(ft_channelselection('MEG', info.hdr.label),1));
 else
@@ -522,7 +534,7 @@ if exist('headpos','var')
   
   hmotions = ([summary.avg(8,:)' summary.avg(7,:)' summary.avg(6,:)'])*10;
   boxplot(h.HmotionAxes, hmotions, 'orientation', 'horizontal', 'notch', 'on');
-  set(h.HmotionAxes,'YTick',[1:3]);
+  set(h.HmotionAxes,'YTick',1:3);
   set(h.HmotionAxes,'YTickLabel',{'R','L','N'});
   xlim(h.HmotionAxes, [0 10]);
   xlabel(h.HmotionAxes, 'Headmotion from start [mm]');
@@ -566,7 +578,7 @@ if exist('headpos','var')
     summary.time, clipat(summary.avg(8,:)*10, 0, 10), 'LineWidth',2);
   ylim(h.HmotionTimecourseAxes,[0 10]);
   ylabel(h.HmotionTimecourseAxes, 'Coil distance [mm]');
-  xlim(h.HmotionTimecourseAxes,[toi]);
+  xlim(h.HmotionTimecourseAxes,toi);
   grid(h.HmotionTimecourseAxes,'on');
   legend(h.HmotionTimecourseAxes, 'N','L','R');
 end
@@ -577,7 +589,7 @@ set(h.SignalAxes,'Nextplot','add');
 plot(h.SignalAxes, summary.time, summary.avg(3,:)*scaling, summary.time, summary.avg(4,:)*scaling, 'LineWidth', 1, 'Color', [255/255 127/255 39/255]);
 grid(h.SignalAxes,'on');
 ylabel(h.SignalAxes, ['Amplitude [' ylab ']']);
-xlim(h.SignalAxes,[toi]);
+xlim(h.SignalAxes,toi);
 legend(h.SignalAxes,'Range','Mean','Min','Max');
 set(h.SignalAxes,'XTickLabel','');
 
@@ -586,13 +598,13 @@ semilogy(h.LinenoiseAxes, summary.time, clipat(summary.avg(10,:)*powscaling, 1e2
 grid(h.LinenoiseAxes,'on');
 legend(h.LinenoiseAxes, ['LineFreq [' ylab '^2/Hz]']);
 set(h.LinenoiseAxes,'XTickLabel','');
-xlim(h.LinenoiseAxes,[toi]);
+xlim(h.LinenoiseAxes,toi);
 ylim(h.LinenoiseAxes,[1e2 1e4]); % before april 28th this was 1e0 - 1e3
 
 % plot lowfreqnoise
 semilogy(h.LowfreqnoiseAxes, summary.time, clipat(summary.avg(9,:)*powscaling, 1e10, 1e12), 'LineWidth',2);
 grid(h.LowfreqnoiseAxes,'on');
-xlim(h.LowfreqnoiseAxes,[toi]);
+xlim(h.LowfreqnoiseAxes,toi);
 ylim(h.LowfreqnoiseAxes,[1e10 1e12]);
 legend(h.LowfreqnoiseAxes, ['LowFreq [' ylab '^2/Hz]']);
 xlabel(h.LowfreqnoiseAxes, 'Time [seconds]'); % before april 28th this was 1e0 - 1e10
@@ -605,14 +617,17 @@ h.EventPanel = uipanel(...
   'Position',[.7 .01 .29 .3]);
 
 % event details
-[a,b,c] = unique({info.event.type});
 eventtypes    = {};
 eventtriggers = {};
 eventvalues   = {};
-for j=1:length(a)
-  eventtypes{j,1}    = a{j};
-  eventtriggers{j,1} = sum(c==j);
-  eventvalues{j,1}   = length(unique([info.event(c==j).value]));
+
+if ~isempty(info.event)
+  [a,b,c] = unique({info.event.type});
+  for j=1:length(a)
+    eventtypes{j,1}    = a{j};
+    eventtriggers{j,1} = sum(c==j);
+    eventvalues{j,1}   = length(unique([info.event(c==j).value]));
+  end
 end
 if isempty(eventtypes)
   eventtypes{1,1} = 'no triggers found';
@@ -688,7 +703,7 @@ h.JumpText = uicontrol(...
   'Style','text',...
   'Units','normalized',...
   'FontSize',10,...
-  'String',[jumpchans],...
+  'String',jumpchans,...
   'Backgroundcolor','white',...
   'Position',[.15 .5 .25 .4]);
 
@@ -697,7 +712,7 @@ h.JumpText2 = uicontrol(...
   'Style','text',...
   'Units','normalized',...
   'FontSize',10,...
-  'String',[jumpcounts],...
+  'String',jumpcounts,...
   'Backgroundcolor','white',...
   'Position',[.65 .5 .2 .4]);
 
@@ -719,8 +734,8 @@ if ismeg
   cfgtopo.layout           = ft_prepare_layout(timelock);
   cfgtopo.highlight        = 'on';
   cfgtopo.highlightsymbol  = '.';
-  cfgtopo.highlightsize    = [14];
-  cfgtopo.highlightchannel = [find(sum(timelock.jumps(MEGchanindx,:),2)>0)];
+  cfgtopo.highlightsize    = 14;
+  cfgtopo.highlightchannel = find(sum(timelock.jumps(MEGchanindx,:),2)>0);
   data.label               = MEGchans;
   data.powspctrm           = sum(timelock.jumps(MEGchanindx,:),2);
   data.dimord              = 'chan_freq';
