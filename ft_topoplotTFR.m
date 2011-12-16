@@ -909,7 +909,10 @@ end
 hold on;
 
 % Set colour axis
-caxis([zmin zmax]);
+if ~strcmp(cfg.style, 'blank')
+  caxis([zmin zmax]);
+end
+
 if strcmp('yes',cfg.hotkeys)
   %  Attach data and cfg to figure and attach a key listener to the figure
   set(gcf, 'KeyPressFcn', {@key_sub, zmin, zmax})
