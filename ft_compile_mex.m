@@ -72,6 +72,16 @@ L = add_mex_source(L,'src','ft_spike_sub_crossx');
 L = add_mex_source(L,'src','rename');
 L = add_mex_source(L,'src','getpid');
 
+L = add_mex_source(L,'src','nanmean');
+L = add_mex_source(L,'src','nanstd');
+L = add_mex_source(L,'src','nansum');
+L = add_mex_source(L,'src','nanstd');
+L = add_mex_source(L,'src','det2x2');
+L = add_mex_source(L,'src','inv2x2');
+L = add_mex_source(L,'src','mtimes2x2');
+L = add_mex_source(L,'src','sandwich2x2');
+
+
 L = add_mex_source(L,'realtime/online_mri','ft_omri_smooth_volume');
 L = add_mex_source(L,'realtime/acquisition/siemens', 'sap2matlab',[],[],'siemensap.c -I.');
 
