@@ -1,4 +1,4 @@
-function val = ft_getopt(opt, key, default)
+function val = ft_getopt(opt, key, default, emptymeaningful)
 
 % FT_GETOPT gets the value of a specified option from a configuration structure
 % or from a cell-array with key-value pairs.
@@ -10,6 +10,13 @@ function val = ft_getopt(opt, key, default)
 % It will return the value of the option, or an empty array if the option was
 % not present.
 %
+% The optional fourth argument allows you to specify whether
+% or not an empty value in the configuration structure/cell array should be
+% interpreted as meaningful. If emptymeaningful = 1, then an empty
+% configuration option will be returned if present. If emptymeaningful = 0,
+% then the specified default will be returned if an empty value is
+% encountered. The default value for emptymeaningful = 0.
+%
 % See also FT_SETOPT, FT_CHECKOPT
 
 % Copyright (C) 2011, Robert Oostenveld
@@ -18,6 +25,10 @@ function val = ft_getopt(opt, key, default)
 
 if nargin<3
   default = [];
+end
+
+if nargin < 4
+  emptymeaningful = 0;
 end
 
 if isa(opt, 'struct') || isa(opt, 'config')
@@ -61,11 +72,11 @@ elseif isa(opt, 'cell')
   end
 
 elseif isempty(opt)
-  % the input might be empty, in which case the default applies
+  % no options are specified, return default
   val = default;
 end % isstruct or iscell or isempty
 
-if isempty(val) && ~isempty(default)
+if isempty(val) && ~isempty(default) && ~emptymeaningful
   % use the default value instead of the empty input that was specified:
   % this applies for example if you do functionname('key', []), where
   % the empty is meant to indicate that the user does not know or care
