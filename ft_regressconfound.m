@@ -23,9 +23,13 @@ function [data] = ft_regressconfound(cfg, datain)
 %   cfg.normalize   = string, 'yes' or 'no', normalization to
 %                     make the confounds orthogonal (default = 'yes')
 %   cfg.statistics  = string, 'yes' or 'no', whether to add the statistics
-%                     to the output (default = 'no')
+%                     on the regression weights to the output (default = 'no')
 %   cfg.model       = string, 'yes' or 'no', whether to add the model to
 %                     the output (default = 'no')
+%   cfg.Ftest       = string array, {N X Nconfounds}, to F-test whether
+%                     the full model explains more variance than reduced models
+%                     (e.g. {'1 2'; '3 4'; '5'} where iteratively the added value of
+%                     regressors 1 and 2, and then 3 and 4, etc., are tested)
 %
 % To facilitate data-handling and distributed computing with the peer-to-peer
 % module, this function has the following options:
@@ -192,14 +196,51 @@ if istimelock
         bvar       = repmat(mse',1,size(covar,2))./repmat(covar,size(mse,2),1); % beta variance
         tval       = (beta'./sqrt(bvar))';                                      % betas -> t-values
         prob       = (1-tcdf(tval,dfe))*2;                                      % p-values
-        clear err; clear mse; clear dat; clear regr; clear bvar;
+        clear err dfe mse bvar;
         dataout.stat     = reshape(tval, [nconf, nchan, ntime]); clear tval;
         dataout.prob     = reshape(prob, [nconf, nchan, ntime]); clear prob;
         % FIXME: drop in replace tcdf from the statfun/private dir
       end
       
+      % reduced models analyses
+      if isfield(cfg, 'Ftest') && ~isempty(cfg.Ftest)
+        dfe        = nrpt - nconf;                                              % degrees of freedom
+        err        = dat - regr * beta;                                         % err = Y - X * B
+        tmse       = sum((err).^2)/dfe;                                         % mean squared error
+        for iter = 1:numel(cfg.Ftest)
+          % regressors to test if they explain additional variance
+          r          = str2num(cfg.Ftest{iter});
+          fprintf('F-testing explained additional variance of regressors %s \n', num2str(r));
+          % regressors in reduced design (that is the original design)
+          ri         = ~ismember(1:size(regr,2),r);
+          rX         = regr(:,ri);               % reduced design
+          rnr        = size(rX,2);               % number of regressors in reduced design
+          % estimate reduced model betas
+          rXcov      = pinv(rX'*rX);             % inverse design covariance matrix
+          rb         = rXcov*rX'*dat;          	 % beta estimates using pinv
+          % calculate mean squared error of reduced model
+          rdfe       = size(dat,1) - size(rX,2); % degrees of freedom of the error
+          rerr       = dat-rX*rb;                % residual error
+          rmse       = sum(rerr'.^2,2)./rdfe;	   % mean squared error
+          % F-test
+          F          = ((rmse'-tmse)./(nconf-rnr)) ./ (tmse./(dfe-2));
+          dataout.Fvar(iter,:,:) = reshape(F, [nchan, ntime]);
+          % Rik Henson defined F-test
+          % F = ( ( rerr'*rerr - err'*err ) / ( nconf-rnr ) ) / ( err'*err/ ( nrpt-nconf ) );
+          % convert F-value to p-value
+          idx_pos    = F >= 0;
+          idx_neg    = ~idx_pos;
+          p          = nan(size(F));
+          p(idx_pos) = (1-fcdf(F(idx_pos),rnr,rdfe));
+          p(idx_neg) = fcdf(-F(idx_neg),rnr,rdfe);
+          dataout.pvar(iter,:,:) = reshape(p, [nchan, ntime]);
+          clear rerr rmse F p;
+        end
+        clear dfe err tmse;
+      end
+      
       % add the beta weights to the output
-      dataout.beta     = reshape(beta, [nconf, nchan, ntime]); clear beta;
+      dataout.beta     = reshape(beta, [nconf, nchan, ntime]); clear beta dat;
       
     otherwise
       error('unsupported dimord "%s"', datain.dimord);
@@ -275,14 +316,51 @@ elseif isfreq
         bvar       = repmat(mse',1,size(covar,2))./repmat(covar,size(mse,2),1); % beta variance
         tval       = (beta'./sqrt(bvar))';                                      % betas -> t-values
         prob       = (1-tcdf(tval,dfe))*2;                                      % p-values
-        clear err; clear mse; clear dat; clear regr; clear bvar;
+        clear err; clear mse; clear bvar;
         dataout.stat     = reshape(tval, [nconf, nchan, nfreq, ntime]); clear tval;
         dataout.prob     = reshape(prob, [nconf, nchan, nfreq, ntime]); clear prob;
         % FIXME: drop in replace tcdf from the statfun/private dir
       end
       
+      % reduced models analyses
+      if isfield(cfg, 'Ftest') && ~isempty(cfg.Ftest)
+        dfe        = nrpt - nconf;                                              % degrees of freedom
+        err        = dat - regr * beta;                                         % err = Y - X * B
+        tmse       = sum((err).^2)/dfe;                                         % mean squared error
+        for iter = 1:numel(cfg.Ftest)
+          % regressors to test if they explain additional variance
+          r          = str2num(cfg.Ftest{iter});
+          fprintf('F-testing explained additional variance of regressors %s \n', num2str(r));
+          % regressors in reduced design (that is the original design)
+          ri         = ~ismember(1:size(regr,2),r);
+          rX         = regr(:,ri);               % reduced design
+          rnr        = size(rX,2);               % number of regressors in reduced design
+          % estimate reduced model betas
+          rXcov      = pinv(rX'*rX);             % inverse design covariance matrix
+          rb         = rXcov*rX'*dat;          	 % beta estimates using pinv
+          % calculate mean squared error of reduced model
+          rdfe       = size(dat,1) - size(rX,2); % degrees of freedom of the error
+          rerr       = dat-rX*rb;                % residual error
+          rmse       = sum(rerr'.^2,2)./rdfe;	   % mean squared error
+          % F-test
+          F          = ((rmse'-tmse)./(nconf-rnr)) ./ (tmse./(dfe-2));
+          dataout.Fvar(iter,:,:,:) = reshape(F, [nchan, nfreq, ntime]);
+          % Rik Henson defined F-test
+          % F = ( ( rerr'*rerr - err'*err ) / ( nconf-rnr ) ) / ( err'*err/ ( nrpt-nconf ) );
+          % convert F-value to p-value
+          idx_pos    = F >= 0;
+          idx_neg    = ~idx_pos;
+          p          = nan(size(F));
+          p(idx_pos) = (1-fcdf(F(idx_pos),rnr,rdfe));
+          p(idx_neg) = fcdf(-F(idx_neg),rnr,rdfe);
+          dataout.pvar(iter,:,:,:) = reshape(p, [nchan, nfreq, ntime]);
+          clear rerr rmse F p;
+        end
+        clear dfe err tmse;
+      end
+      
       % add the beta weights to the output
-      dataout.beta     = reshape(beta, [nconf, nchan, nfreq, ntime]); clear beta;
+      dataout.beta     = reshape(beta, [nconf, nchan, nfreq, ntime]); clear beta dat;
       
     otherwise
       error('unsupported dimord "%s"', datain.dimord);
@@ -362,7 +440,7 @@ elseif issource
     bvar       = repmat(mse',1,size(covar,2))./repmat(covar,size(mse,2),1); % beta variance
     tval       = (beta'./sqrt(bvar))';                                      % betas -> t-values
     prob       = (1-tcdf(tval,dfe))*2;                                      % p-values
-    clear err; clear mse; clear dat; clear regr; clear bvar;
+    clear err mse bvar;
     dataout.stat                       = zeros(nconf, nvox);
     dataout.stat(:,dataout.inside)     = tval; clear tval;
     dataout.prob                       = zeros(nconf, nvox);
@@ -370,9 +448,49 @@ elseif issource
     % FIXME: drop in replace tcdf from the statfun/private dir
   end
   
+  % reduced models analyses
+  if isfield(cfg, 'Ftest') && ~isempty(cfg.Ftest)
+    nvars          = size(cfg.Ftest,1);
+    dfe            = nrpt - nconf;                                              % degrees of freedom
+    err            = dat - regr * beta;                                         % err = Y - X * B
+    tmse           = sum((err).^2)/dfe;                                         % mean squared error
+    dataout.Fvar   = zeros(nvars, nvox);
+    dataout.pvar   = zeros(nvars, nvox);
+    for iter = 1:numel(cfg.Ftest)
+      % regressors to test if they explain additional variance
+      r          = str2num(cfg.Ftest{iter});
+      fprintf('F-testing explained additional variance of regressors %s \n', num2str(r));
+      % regressors in reduced design (that is the original design)
+      ri         = ~ismember(1:size(regr,2),r);
+      rX         = regr(:,ri);               % reduced design
+      rnr        = size(rX,2);               % number of regressors in reduced design
+      % estimate reduced model betas
+      rXcov      = pinv(rX'*rX);             % inverse design covariance matrix
+      rb         = rXcov*rX'*dat;          	 % beta estimates using pinv
+      % calculate mean squared error of reduced model
+      rdfe       = size(dat,1) - size(rX,2); % degrees of freedom of the error
+      rerr       = dat-rX*rb;                % residual error
+      rmse       = sum(rerr'.^2,2)./rdfe;	   % mean squared error
+      % F-test
+      F          = ((rmse'-tmse)./(nconf-rnr)) ./ (tmse./(dfe-2));
+      dataout.Fvar(iter,dataout.inside) = F;
+      % Rik Henson defined F-test
+      % F = ( ( rerr'*rerr - err'*err ) / ( nconf-rnr ) ) / ( err'*err/ ( nrpt-nconf ) );
+      % convert F-value to p-value
+      idx_pos    = F >= 0;
+      idx_neg    = ~idx_pos;
+      p          = nan(size(F));
+      p(idx_pos) = (1-fcdf(F(idx_pos),rnr,rdfe));
+      p(idx_neg) = fcdf(-F(idx_neg),rnr,rdfe);
+      dataout.pvar(iter,dataout.inside) = p;
+      clear rerr rmse F p;
+    end
+    clear dfe err tmse;
+  end
+  
   % add the beta weights to the output
   dataout.beta = zeros(nconf, nvox);
-  dataout.beta(:,dataout.inside) = beta; clear beta;
+  dataout.beta(:,dataout.inside) = beta; clear beta dat;
   
 else
   error('the input data should be either timelock, freq, or source with trials')
