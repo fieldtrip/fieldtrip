@@ -262,6 +262,8 @@ cfg.supdip           = ft_getopt(cfg, 'supdip',        []);
 % put the low-level options pertaining to the source reconstruction method in their own field
 % put the low-level options pertaining to the dipole grid in their own field
 
+cfg = ft_checkconfig(cfg, 'createsubcfg',  {cfg.method, 'grid'});
+
 cfg.(cfg.method).keepfilter    = ft_getopt(cfg.(cfg.method), 'keepfilter',    'no');
 cfg.(cfg.method).keepcsd       = ft_getopt(cfg.(cfg.method), 'keepcsd',       'no');
 cfg.(cfg.method).keepmom       = ft_getopt(cfg.(cfg.method), 'keepmom',       'yes');
@@ -270,8 +272,6 @@ cfg.(cfg.method).feedback      = ft_getopt(cfg.(cfg.method), 'feedback',      't
 cfg.(cfg.method).lambda        = ft_getopt(cfg.(cfg.method), 'lambda',        []);
 cfg.(cfg.method).powmethod     = ft_getopt(cfg.(cfg.method), 'powmethod',     []);
 cfg.(cfg.method).normalize     = ft_getopt(cfg.(cfg.method), 'normalize',     'no');
-
-cfg = ft_checkconfig(cfg, 'createsubcfg',  {cfg.method, 'grid'});
 
 convertfreq = 0;
 convertcomp = 0;
