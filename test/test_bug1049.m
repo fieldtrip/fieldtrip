@@ -95,6 +95,16 @@ cfg.grid = grid2;
 cfg.outputfile = 'ctf151_mne2d';
 sourcemne2d1 = ft_sourceanalysis(cfg, tlck);
 
+cfg.rawtrial    = 'yes';
+cfg.grid        = grid;
+cfg.grid.filter = sourcemne3d1.avg.filter;
+cfg.outputfile  = 'ctf151_mne3d_trial';
+sourcemne3d2   = ft_sourceanalysis(cfg, tlck);
+cfg.grid        = grid2;
+cfg.grid.filter = sourcemne2d1.avg.filter;
+cfg.outputfile  = 'ctf151_mne2d_trial';
+sourcemne2d2   = ft_sourceanalysis(cfg, tlck);
+
 % do DICS
 cfg = [];
 cfg.method = 'dics';
@@ -113,11 +123,11 @@ sourcedics2d1 = ft_sourceanalysis(cfg, freq);
 
 cfg.rawtrial    = 'yes';
 cfg.grid        = grid;
-cfg.grid.filter = sourcelcmv3d1.avg.filter;
+cfg.grid.filter = sourcedics3d1.avg.filter;
 cfg.outputfile  = 'ctf151_dics3d_trial';
 sourcedics3d2   = ft_sourceanalysis(cfg, freq);
 cfg.grid        = grid2;
-cfg.grid.filter = sourcelcmv2d1.avg.filter;
+cfg.grid.filter = sourcedics2d1.avg.filter;
 cfg.outputfile  = 'ctf151_dics2d_trial';
 sourcedics2d2   = ft_sourceanalysis(cfg, freq);
 

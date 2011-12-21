@@ -861,9 +861,9 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne', 'loreta', 'rv
     for i=1:Nrepetitions
       fprintf('estimating current density distribution for repetition %d\n', i);
       if hascovariance 
-        dip(i) = minimumnormestimate(grid, sens, vol, squeeze(avg(i,:,:)),                     optarg{:}, 'noisecov', squeeze(Cy(i,:,:)));
+        dip(i) = minimumnormestimate(grid, sens, vol, squeeze(avg(i,:,:)), optarg{:}, 'noisecov', squeeze(Cy(i,:,:)));
       else
-        dip(i) = minimumnormestimate(grid, sens, vol, squeeze(avg(i,:,:)),                     optarg{:});
+        dip(i) = minimumnormestimate(grid, sens, vol, squeeze(avg(i,:,:)), optarg{:});
       end
     end
   elseif strcmp(cfg.method, 'loreta')

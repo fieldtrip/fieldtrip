@@ -310,26 +310,28 @@ if ~isempty(createsubcfg)
         fieldname = {
           'feedback'
           'fixedori'
+          'keepcsd'
           'keepfilter'
           'keepmom'
+          'keepsubspace'
           'lambda'
           'normalize'
           'normalizeparam'
           'powmethod'
           'projectnoise'
           'reducerank'
-          'keepcsd'
           'realfilter'
           'subspace'
-          'keepsubspace'
           };
 
       case 'lcmv'
         fieldname = {
           'feedback'
           'fixedori'
+          'keepcov'
           'keepfilter'
           'keepmom'
+          'keepsubspace'
           'lambda'
           'normalize'
           'normalizeparam'
@@ -337,9 +339,7 @@ if ~isempty(createsubcfg)
           'projectnoise'
           'projectmom'
           'reducerank'
-          'keepcov'
           'subspace'
-          'keepsubspace'
           };
 
       case 'pcc'
@@ -358,12 +358,19 @@ if ~isempty(createsubcfg)
           'fixedori'
           };
 
-      case {'mne', 'loreta', 'rv'}
+      case {'loreta', 'rv'}
         fieldname = {
           'feedback'
           'lambda'
           };
-
+       
+      case 'mne'
+        fieldname = {
+          'feedback'
+          'lambda'
+          'keepfilter'
+          };
+          
       case 'music'
         fieldname = {
           'feedback'

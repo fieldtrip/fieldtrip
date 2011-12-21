@@ -1,4 +1,4 @@
-function [dipout] = minimumnormestimate(dip, grad, vol, dat, varargin);
+function [dipout] = minimumnormestimate(dip, grad, vol, dat, varargin)
 
 % MINIMUMNORMESTIMATE computes a linear estimate of the current 
 % in a distributed source model  
@@ -14,6 +14,8 @@ function [dipout] = minimumnormestimate(dip, grad, vol, dat, varargin);
 %  'reducerank'       = reduce the leadfield rank, can be 'no' or a number (e.g. 2)
 %  'normalize'        = normalize the leadfield
 %  'normalizeparam'   = parameter for depth normalization (default = 0.5)
+%  'keepfilter'       = 'no' or 'yes', keep the spatial filter in the
+%                       output
 %
 % Note that leadfield normalization (depth regularisation) should be
 % done by scaling the leadfields outside this function, e.g. in
@@ -46,90 +48,103 @@ dip.inside = dip.inside(:)';
 dip.outside = dip.outside(:)';
 
 % get the optional inputs for the MNE method according to Dale et al 2000, and Liu et al. 2002
-noisecov       = keyval('noisecov',       varargin);
-sourcecov      = keyval('sourcecov',      varargin);
-lambda         = keyval('lambda',         varargin);  % can be empty, it will then be estimated based on SNR
-snr            = keyval('snr',            varargin);  % is used to estimate lambda if lambda is not specified
+noisecov       = ft_getopt(varargin, 'noisecov');
+sourcecov      = ft_getopt(varargin, 'sourcecov');
+lambda         = ft_getopt(varargin, 'lambda');  % can be empty, it will then be estimated based on SNR
+snr            = ft_getopt(varargin, 'snr');  % is used to estimate lambda if lambda is not specified
 % these settings pertain to the forward model, the defaults are set in compute_leadfield
-reducerank     = keyval('reducerank',     varargin);
-normalize      = keyval('normalize',      varargin);
-normalizeparam = keyval('normalizeparam', varargin);
+reducerank     = ft_getopt(varargin, 'reducerank');
+normalize      = ft_getopt(varargin, 'normalize');
+normalizeparam = ft_getopt(varargin, 'normalizeparam');
+keepfilter     = istrue(ft_getopt(varargin, 'keepfilter'));
 
-if ~isfield(dip, 'leadfield')
-  fprintf('computing forward model\n');
-  if isfield(dip, 'mom')
-    for i=dip.inside
-      % compute the leadfield for a fixed dipole orientation
-      dip.leadfield{i} = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,i);
+if ~isfield(dip, 'filter')
+  
+  % compute the leadfields if needed
+  if ~isfield(dip, 'leadfield')
+    fprintf('computing forward model\n');
+    if isfield(dip, 'mom')
+      for i=dip.inside
+        % compute the leadfield for a fixed dipole orientation
+        dip.leadfield{i} = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,i);
+      end
+    else
+      for i=dip.inside
+        % compute the leadfield
+        dip.leadfield{i} = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
+      end
+    end
+    for i=dip.outside
+      dip.leadfield{i} = nan;
     end
   else
-    for i=dip.inside
-      % compute the leadfield
-      dip.leadfield{i} = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
+    fprintf('using specified forward model\n');
+  end
+  
+  Nchan = length(grad.label);
+  
+  % count the number of leadfield components for each source
+  Nsource = 0;
+  for i=dip.inside
+    Nsource = Nsource + size(dip.leadfield{i}, 2);
+  end
+  
+  % concatenate the leadfield components of all sources into one large matrix
+  lf = zeros(Nchan, Nsource);
+  n = 1;
+  for i=dip.inside
+    cbeg = n;
+    cend = n + size(dip.leadfield{i}, 2) - 1;
+    lf(:,cbeg:cend) = dip.leadfield{i};
+    n = n + size(dip.leadfield{i}, 2);
+  end
+  
+  fprintf('computing MNE source reconstruction, this may take some time...\n');
+  % compute the inverse o the forward model, this is where prior information
+  % on source and noise covariance would be usefull
+  if isempty(noisecov)
+    % use an unregularised minimum norm solution, i.e. using the Moore-Penrose pseudoinverse
+    warning('doing a unregularised minimum norm solution. This typically does not work');
+    w = pinv(lf);
+  else
+    % the noise covariance has been given and can be used to regularise the solution
+    if isempty(sourcecov)
+      sourcecov = speye(Nsource);
     end
+    % rename some variables for consistency with the publications
+    A = lf;
+    R = sourcecov;
+    C = noisecov;
+    % the regularisation parameter can be estimated from the noise covariance, see equation 6 in Lin et al. 2004
+    if isempty(lambda)
+      lambda = trace(A * R * A')/(trace(C)*snr^2);
+    end
+    % equation 5 from Lin et al 2004 (this implements Dale et al 2000, and Liu et al. 2002)
+    w = R * A' * inv( A * R * A' + (lambda^2) * C);
   end
-  for i=dip.outside
-    dip.leadfield{i} = nan;
+  
+  % for each of the timebins, estimate the source strength
+  mom = w * dat;
+  
+  % re-assign the estimated source strength over the inside and outside dipoles
+  n = 1;
+  for i=dip.inside
+    cbeg = n;
+    cend = n + size(dip.leadfield{i}, 2) - 1;
+    dipout.mom{i} = mom(cbeg:cend,:);
+    n = n + size(dip.leadfield{i}, 2);
   end
+  dipout.mom(dip.outside) = {nan};
 else
-  fprintf('using specified forward model\n');
-end
-
-Nchan = length(grad.label);
-
-% count the number of leadfield components for each source
-Nsource = 0;
-for i=dip.inside
-  Nsource = Nsource + size(dip.leadfield{i}, 2);
-end
-
-% concatenate the leadfield components of all sources into one large matrix
-lf = zeros(Nchan, Nsource);
-n = 1;
-for i=dip.inside
-  cbeg = n;
-  cend = n + size(dip.leadfield{i}, 2) - 1;
-  lf(:,cbeg:cend) = dip.leadfield{i};
-  n = n + size(dip.leadfield{i}, 2);
-end
-
-fprintf('computing MNE source reconstruction, this may take some time...\n');
-% compute the inverse o the forward model, this is where prior information
-% on source and noise covariance would be usefull
-if isempty(noisecov)
-  % use an unregularised minimum norm solution, i.e. using the Moore-Penrose pseudoinverse
-  warning('doing a unregularised minimum norm solution. This typically does not work');
-  w = pinv(lf);
-else 
-  % the noise covariance has been given and can be used to regularise the solution
-  if isempty(sourcecov)
-    sourcecov = speye(Nsource);
+  
+  % if the filter has been pre computed
+  fprintf('using pre-computed spatial filters\n');
+  for i=dip.inside
+    dipout.mom{i} = dip.filter{i} * dat;
   end
-  % rename some variables for consistency with the publications
-  A = lf;
-  R = sourcecov;
-  C = noisecov;
-  % the regularisation parameter can be estimated from the noise covariance, see equation 6 in Lin et al. 2004
-  if isempty(lambda)
-    lambda = trace(A * R * A')/(trace(C)*snr^2);
-  end
-  % equation 5 from Lin et al 2004 (this implements Dale et al 2000, and Liu et al. 2002)
-  w = R * A' * inv( A * R * A' + (lambda^2) * C);
+  dipout.mom(dip.outside) = {nan};
+  
 end
-
-% for each of the timebins, estimate the source strength
-mom = w * dat;
-
-% re-assign the estimated source strength over the inside and outside dipoles
-n = 1;
-for i=dip.inside
-  cbeg = n;
-  cend = n + size(dip.leadfield{i}, 2) - 1;
-  dipout.mom{i} = mom(cbeg:cend,:);
-  n = n + size(dip.leadfield{i}, 2);
-end
-dipout.mom(dip.outside) = {nan};
-
 % for convenience also compute power (over the three orientations) at each location and for each time
 dipout.pow = nan( size(dipout.mom,2), size(dat,2));
 for i=dip.inside
@@ -141,3 +156,16 @@ dipout.pos     = dip.pos;
 dipout.inside  = dip.inside;
 dipout.outside = dip.outside;
 
+if keepfilter && ~isfield(dip, 'filter')
+  % re-assign spatial filter to conventional 1 cell per dipole location
+  n = 1;
+  for i=dip.inside
+    cbeg = n;
+    cend = n + size(dip.leadfield{i}, 2) - 1;
+    dipout.filter{i} = w(cbeg:cend,:);
+    n = n + size(dip.leadfield{i}, 2);
+  end
+  dipout.filter(dip.outside) = {nan};
+else
+  dipout.filter = dip.filter;
+end
