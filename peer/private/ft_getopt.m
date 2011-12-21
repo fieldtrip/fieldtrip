@@ -4,18 +4,23 @@ function val = ft_getopt(opt, key, default, emptymeaningful)
 % or from a cell-array with key-value pairs.
 %
 % Use as
-%   val = ft_getopt(s, key, default)
-% where s is a structure or a cell array.
+%   val = ft_getopt(s, key, default, emptymeaningful)
+% where the input values are
+%   s               = structure or cell-array
+%   key             = string
+%   default         = any valid MATLAB data type
+%   emptymeaningful = boolean value (optional, default = 0)
 %
-% It will return the value of the option, or an empty array if the option was
-% not present.
+% If the key is present as field in the structure, or as key-value
+% pair in the cell-array, the corersponding value will be returned.
+% 
+% If the key is not present, ft_getopt will return an empty array.
 %
-% The optional fourth argument allows you to specify whether
-% or not an empty value in the configuration structure/cell array should be
-% interpreted as meaningful. If emptymeaningful = 1, then an empty
-% configuration option will be returned if present. If emptymeaningful = 0,
-% then the specified default will be returned if an empty value is
-% encountered. The default value for emptymeaningful = 0.
+% If the key is present but has an empty value, then the emptymeaningful
+% flag specifies whether the empty value or the default value should
+% be returned. If emptymeaningful==true, then an empty array will be
+% returned. If emptymeaningful==false, then the specified default will
+% be returned.
 %
 % See also FT_SETOPT, FT_CHECKOPT
 
