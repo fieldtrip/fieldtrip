@@ -45,7 +45,8 @@ success = success && isequal(ft_getopt(cfg, 'key4'), []);
 success = success && isequal(ft_getopt(cfg, 'key4', 'default'), 'default');
 
 % test the emptymeaningful option
-success = success && isempty(ft_getopt({'key',[]},'key','default',1));
+success = success &&  isempty(ft_getopt({'key',[]},'key','default',1));
+success = success && ~isempty(ft_getopt({'key',[]},'key','default',0));
 
 if ~success
   error('there is a problem with ft_getopt');
