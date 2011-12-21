@@ -62,7 +62,7 @@ switch dataformat
   case {'freesurfer_mgz' 'mgz'}
     % mgz-volume using freesurfer
     ft_hastoolbox('freesurfer', 1);
-
+    
     % in matlab the transformation matrix assumes the voxel indices to be 1-based
     % freesurfer assumes the voxel indices to be 0-based
     transform = vox2ras_1to0(transform);  
@@ -76,10 +76,39 @@ switch dataformat
     % nifti data, using Freesurfer
     ft_hastoolbox('freesurfer', 1);
     
+    datatype = class(dat);
+    switch(datatype)
+      case 'int8'
+        datatype = 'uchar';
+      case 'int16'
+        datatype = 'short';
+      case 'int32'
+        datatype = 'int';
+      case 'double'
+        datatype = 'double';
+      case 'single'
+        datatype = 'float';
+      case 'logical'
+        datatype = 'uchar';
+      otherwise
+        error('unsupported datatype to write to Nifti');
+    end
+    
+    ndims = numel(size(dat));
+    if ndims==3
+      dat = ipermute(dat, [2 1 3]); %FIXME although this is probably correct
+      %see the help of MRIread, anecdotally columns and rows seem to need a swap
+      %in order to match the transform matrix (alternatively a row switch of the
+      %latter can be done)
+      %to keep the writing consistent with the reading 
+    elseif ndims==4
+      dat = ipermute(dat, [2 1 3 4]);
+    end
+    
     mri          = [];
     mri.vol      = dat;
     mri.vox2ras0 = vox2ras_1to0(transform);
-    err = MRIwrite(mri, filename, class(mri.vol))
+    MRIwrite(mri, filename, datatype);
     
   case {'vista'}
     if ft_hastoolbox('simbio')
