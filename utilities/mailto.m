@@ -11,7 +11,7 @@ function mailto(address, subject, varargin)
 % See also system
 
 % Copyright (C) 2006, Ingrid Nieuwenhuis
-
+%
 % $Id$
 
 ft_defaults
@@ -27,7 +27,6 @@ fprintf(fh, '%s', message_body);
 
 % close the file
 fclose(fh);
-
 
 % construct the shell commando for sending the email with or without
 % attachment
