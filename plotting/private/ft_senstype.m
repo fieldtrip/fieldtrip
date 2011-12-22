@@ -18,10 +18,11 @@ function [type] = ft_senstype(input, desired)
 %   'bti248_planar'
 %   'itab153'
 %   'itab153_planar'
-%   'yokogawa160'
-%   'yokogawa160_planar'
+%   'yokogawa9'
 %   'yokogawa64'
 %   'yokogawa64_planar'
+%   'yokogawa160'
+%   'yokogawa160_planar'
 %   'yokogawa440'
 %   'yokogawa440'_planar
 %   'neuromag122'
@@ -194,7 +195,11 @@ elseif issubfield(input, 'orig.stname')
   
 elseif issubfield(input, 'orig.sys_name')
   % this is a complete header that was read from a Yokogawa dataset
-  if input.orig.channel_count<160
+  if strcmp(input.orig.sys_name, '9ch Biomagnetometer System') || input.orig.channel_count<20
+    % this is the small animal system that is installed at the UCL Ear Institute
+    % see http://www.ucl.ac.uk/news/news-articles/0907/09070101
+    type = 'yokogawa9';
+  elseif input.orig.channel_count<160
     type = 'yokogawa64';
   elseif input.orig.channel_count<300
     type = 'yokogawa160';
@@ -252,6 +257,8 @@ else
       type = 'yokogawa64';
     elseif (mean(ismember(ft_senslabel('yokogawa64_planar'), sens.label)) > 0.4)
       type = 'yokogawa64_planar';
+    elseif (mean(ismember(ft_senslabel('yokogawa9'),    sens.label)) > 0.8)
+      type = 'yokogawa9';
       
     elseif (mean(ismember(ft_senslabel('neuromag306'),   sens.label)) > 0.8)
       type = 'neuromag306';

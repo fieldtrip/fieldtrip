@@ -69,7 +69,7 @@ url = {
   'NEUROSHARE' 'see http://www.neuroshare.org'
   'BESA'       'see http://www.megis.de, or contact Karsten Hoechstetter'
   'EEPROBE'    'see http://www.ant-neuro.com, or contact Maarten van der Velde'
-  'YOKOGAWA'   'outdated, use toolbox indicated in next line'
+  'YOKOGAWA'   'this is deprecated, please use YOKOGAWA_MEG_READER instead'
   'YOKOGAWA_MEG_READER' 'see http://www.yokogawa.com/me/me-login-en.htm'
   'BEOWULF'    'see http://oostenveld.net, or contact Robert Oostenveld'
   'MENTAT'     'see http://oostenveld.net, or contact Robert Oostenveld'
