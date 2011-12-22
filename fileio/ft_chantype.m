@@ -15,14 +15,17 @@ function type = ft_chantype(input, desired)
 %   type = ft_chantype(sens,  desired)
 %   type = ft_chantype(label, desired)
 %
-% This function returns a Nchan*1 cell-array with a string describing the
-% type of each channel. The specification of the channel types depends on
-% the acquisition system, for example the CTF275 system contains meggrad,
-% refmag, refgrad, adc, trigger, eeg, headloc and headloc_gof channels.
+% If the desired unit is not specified as second input argument, this
+% function returns a Nchan*1 cell-array with a string describing the type
+% of each channel.
 %
 % If the desired unit is specified as second input argument, this function
 % returns a Nchan*1 boolean vector with "true" for the channels of the
 % desired type and "false" for the ones that do not match.
+%
+% The specification of the channel types depends on the acquisition system,
+% for example the ctf275 system includes the following type of channels:
+% meggrad, refmag, refgrad, adc, trigger, eeg, headloc, headloc_gof.
 %
 % See also FT_READ_HEADER, FT_SENSTYPE, FT_CHANUNIT
 

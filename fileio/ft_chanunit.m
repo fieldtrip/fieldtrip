@@ -18,6 +18,10 @@ function chanunit = ft_chanunit(hdr, desired)
 % returns a Nchan*1 boolean vector with "true" for the channels that match
 % the desired physical units and "false" for the ones that do not match.
 %
+% The specification of the channel units depends on the acquisition system,
+% for example the neuromag306 system includes channel with the following
+% units: uV, T and T/cm.
+%
 % See also FT_CHANTYPE
 
 % Copyright (C) 2011, Robert Oostenveld
