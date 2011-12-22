@@ -100,7 +100,7 @@ switch version
     end
     
     if ~isfield(data, 'fsample')
-      data.fsample = 1/(data.time{1}(2) - data.time{1}(1));
+      data.fsample = 1/mean(diff(data.time{1}));
     end
 
     if isfield(data, 'offset')
