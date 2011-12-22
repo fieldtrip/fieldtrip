@@ -351,8 +351,8 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 				break;
 			}
 			
-			pthread_mutex_lock(&mutexdata);
 			pthread_mutex_lock(&mutexheader);
+			pthread_mutex_lock(&mutexdata);
 
 			if (request->def->bufsize) {
 				/* the selection has been specified */
