@@ -12,7 +12,7 @@ function val = ft_getopt(opt, key, default, emptymeaningful)
 %   emptymeaningful = boolean value (optional, default = 0)
 %
 % If the key is present as field in the structure, or as key-value
-% pair in the cell-array, the corersponding value will be returned.
+% pair in the cell-array, the corresponding value will be returned.
 % 
 % If the key is not present, ft_getopt will return an empty array.
 %
