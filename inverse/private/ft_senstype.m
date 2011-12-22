@@ -1,13 +1,11 @@
 function [type] = ft_senstype(input, desired)
 
-% FT_SENSTYPE determines the type of sensors by looking at the channel names
-% and comparing them with predefined lists.
+% FT_SENSTYPE determines the type of acquisition device by looking at the
+% channel names and comparing them with predefined lists.
 %
 % Use as
 %   [type] = ft_senstype(sens)
-% to get a string describing the type, or
 %   [flag] = ft_senstype(sens, desired)
-% to get a boolean value.
 %
 % The output type can be any of the following
 %   'ctf151'
@@ -50,18 +48,21 @@ function [type] = ft_senstype(input, desired)
 %   'bti'
 %   'neuromag'
 %   'yokogawa'
+% If you specify the desired type, this function will return a boolean
+% true/false depending on the input data.
 %
-% Besides specifiying a grad or elec structure as input, also allowed is
-% giving a data structure containing a grad or elec field, or giving a list
-% of channel names (as cell-arrray). I.e. assuming a FieldTrip data
-% structure, all of the following calls would be correct.
+% Besides specifiying a sensor definition (i.e. a grad or elec structure,
+% see FT_DATATYPE_SENS), it is also possible to give a data structure
+% containing a grad or elec field, or giving a list of channel names (as
+% cell-arrray). So assuming that you have a FieldTrip data structure, any
+% of the following calls would also be fine.
 %   ft_senstype(hdr)
 %   ft_senstype(data)
 %   ft_senstype(data.label)
 %   ft_senstype(data.grad)
 %   ft_senstype(data.grad.label)
 %
-% See also FT_SENSLABEL, FT_CHANTYPE, FT_READ_SENS, FT_COMPUTE_LEADFIELD
+% See also FT_SENSLABEL, FT_CHANTYPE, FT_READ_SENS, FT_COMPUTE_LEADFIELD, FT_DATATYPE_SENS
 
 % Copyright (C) 2007-2011, Robert Oostenveld
 %
