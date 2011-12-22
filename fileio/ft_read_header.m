@@ -20,7 +20,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   hdr.label               Nx1 cell-array with the label of each channel
 %   hdr.chantype            Nx1 cell-array with the channel type, see FT_CHANTYPE
 %   hdr.chanunit            Nx1 cell-array with the physical units, see FT_CHANUNIT
-% 
+%
 % For continuously recorded data, nSamplesPre=0 and nTrials=1.
 %
 % For some data formats that are recorded on animal electrophysiology
@@ -997,8 +997,8 @@ switch headerformat
     
   case 'netmeg'
     ft_hastoolbox('netcdf', 1);
-
-    % this will read all NetCDF data from the file and subsequently convert 
+    
+    % this will read all NetCDF data from the file and subsequently convert
     % each of the three elements into a more easy to parse MATLAB structure
     s = netcdf(filename);
     
@@ -1492,12 +1492,12 @@ switch headerformat
   case {'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw', 'yokogawa_mrk'}
     % header can be read with two toolboxes: Yokogawa MEG Reader and Yokogawa MEG160 (old inofficial toolbox)
     % newest toolbox takes precedence.
-    if ft_hastoolbox('yokogawa_meg_reader', 3); %stay silent if it cannot be added
+    if ft_hastoolbox('yokogawa_meg_reader', 3); % stay silent if it cannot be added
       hdr = read_yokogawa_header_new(filename);
       % add a gradiometer structure for forward and inverse modelling
       hdr.grad = yokogawa2grad_new(hdr);
     else
-      ft_hastoolbox('yokogawa', 1);
+      ft_hastoolbox('yokogawa', 1); % try it with the old version of the toolbox
       hdr = read_yokogawa_header(filename);
       % add a gradiometer structure for forward and inverse modelling
       hdr.grad = yokogawa2grad(hdr);
@@ -1542,6 +1542,9 @@ if checkUniqueLabels
   end
 end
 
+% ensure taht it is a column array
+hdr.label = hdr.label(:);
+
 % as of November 2011, the header is supposed to include the channel type
 % (see FT_CHANTYPE) and the units of each channel (e.g. uV, fT, ...).
 
@@ -1577,7 +1580,7 @@ end
 function [siz] = filesize(filename)
 l = dir(filename);
 if l.isdir
-  error(sprintf('"%s" is not a file', filename));
+  error('"%s" is not a file', filename);
 end
 siz = l.bytes;
 
@@ -1629,7 +1632,7 @@ hdr = tmp;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function out = fixname(str)
-% FIXME this fails in case the string would start with a digit, e.g. "99luftballons"
+% FIXME this still fails if the string starts with a digit, e.g. "99luftballons"
 out = deblank(lower(str));
 out(out=='-') = '_'; % fix dashes
 out(out==' ') = '_'; % fix spaces
