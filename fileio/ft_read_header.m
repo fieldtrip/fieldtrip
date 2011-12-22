@@ -17,11 +17,17 @@ function [hdr] = ft_read_header(filename, varargin)
 %   hdr.nSamples            number of samples per trial
 %   hdr.nSamplesPre         number of pre-trigger samples in each trial
 %   hdr.nTrials             number of trials
-%   hdr.label               cell-array with labels of each channel
-%   hdr.FirstTimeStamp      integer, only available for some subformats (mainly animal electrophisiology systems)
-%   hdr.TimeStampPerSample  integer, only available for some subformats (mainly animal electrophisiology systems)
+%   hdr.label               Nx1 cell-array with the label of each channel
+%   hdr.chantype            Nx1 cell-array with the channel type, see FT_CHANTYPE
+%   hdr.chanunit            Nx1 cell-array with the physical units, see FT_CHANUNIT
+% 
+% For continuously recorded data, nSamplesPre=0 and nTrials=1.
 %
-% For continuous data, nSamplesPre=0 and nTrials=1.
+% For some data formats that are recorded on animal electrophysiology
+% systems (e.g. Neuralynx, Plexon), the following optional fields are
+% returned, which allows for relating the timinng of spike and LFP data
+%   hdr.FirstTimeStamp      number, 32 bit or 64 bit unsigned integer
+%   hdr.TimeStampPerSample  double
 %
 % Depending on the file format, additional header information can be
 % returned in the hdr.orig subfield.
@@ -49,7 +55,8 @@ function [hdr] = ft_read_header(filename, varargin)
 %   CED - Cambridge Electronic Design (*.smr)
 %   MPI - Max Planck Institute (*.dap)
 %
-% See also FT_READ_DATA, FT_READ_EVENT, FT_WRITE_DATA, FT_WRITE_EVENT
+% See also FT_READ_DATA, FT_READ_EVENT, FT_WRITE_DATA, FT_WRITE_EVENT,
+% FT_CHANTYPE, FT_CHANUNIT
 
 % Copyright (C) 2003-2011 Robert Oostenveld
 %

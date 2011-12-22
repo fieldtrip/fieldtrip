@@ -1,7 +1,10 @@
 function type = ft_chantype(input, desired)
 
-% FT_CHANTYPE determines for each channel what type it is, e.g. planar gradiometer, 
-% axial gradiometer, magnetometer, trigger channel, etc.
+% FT_CHANTYPE determines for each individual channel what type of data it
+% represents, e.g. a planar gradiometer, axial gradiometer, magnetometer,
+% trigger channel, etc. If you want to know what the acquisition system is
+% (e.g. ctf151 or neuromag306), you should not use this function but
+% FT_SENSTYPE instead.
 %
 % Use as
 %   type = ft_chantype(hdr)
@@ -11,6 +14,17 @@ function type = ft_chantype(input, desired)
 %   type = ft_chantype(hdr,   desired)
 %   type = ft_chantype(sens,  desired)
 %   type = ft_chantype(label, desired)
+%
+% This function returns a Nchan*1 cell-array with a string describing the
+% type of each channel. The specification of the channel types depends on
+% the acquisition system, for example the CTF275 system contains meggrad,
+% refmag, refgrad, adc, trigger, eeg, headloc and headloc_gof channels.
+%
+% If the desired unit is specified as second input argument, this function
+% returns a Nchan*1 boolean vector with "true" for the channels of the
+% desired type and "false" for the ones that do not match.
+%
+% See also FT_READ_HEADER, FT_SENSTYPE, FT_CHANUNIT
 
 % Copyright (C) 2008-2011, Robert Oostenveld
 %
@@ -496,6 +510,7 @@ end
 if nargin>1
   % return a boolean vector
   if isequal(desired, 'meg') || isequal(desired, 'ref')
+    % only compare the first three characters, i.e. meggrad or megmag should match
     type = strncmp(desired, type, 3);
   else
     type = strcmp(desired, type);

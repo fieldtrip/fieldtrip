@@ -9,6 +9,15 @@ function chanunit = ft_chanunit(hdr, desired)
 % or as
 %   unit = ft_chanunit(hdr, desired)
 %
+% If the desired unit is not specified as second input argument, this
+% function returns a Nchan*1 cell array with a string describing the
+% physical units of each channel, or 'unknown' if those cannot be
+% determined.
+%
+% If the desired unit is specified as second input argument, this function
+% returns a Nchan*1 boolean vector with "true" for the channels that match
+% the desired physical units and "false" for the ones that do not match.
+%
 % See also FT_CHANTYPE
 
 % Copyright (C) 2011, Robert Oostenveld
@@ -76,6 +85,6 @@ else
 end % if isfield
 
 if nargin>1
-  type = strcmp(desired, chanunit);
+  chanunit = strcmp(desired, chanunit);
 end
 
