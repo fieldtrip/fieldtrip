@@ -295,7 +295,7 @@ cfg.channel           = ft_getopt(cfg, 'channel',           'all');
 if isnumeric(cfg.highlight)
   cfg.highlightchannel = cfg.highlight;
   cfg.highlight = 'on';
-  warning('cfg.highlight is now used for specifing highlighting-mode, use cfg.highlightchannel instead of cfg.highlight for specifiying channels')
+  warning('cfg.highlight is now used for specifying highlighting-mode, use cfg.highlightchannel instead of cfg.highlight for specifying channels')
 elseif iscell(cfg.highlight)
   if ~iscell(cfg.highlightchannel)
     cfg.highlightchannel = cell(1,length(cfg.highlight));
@@ -304,13 +304,13 @@ elseif iscell(cfg.highlight)
     if isnumeric(cfg.highlight{icell})
       cfg.highlightchannel{icell} = cfg.highlight{icell};
       cfg.highlight{icell} = 'on';
-      warning('cfg.highlight is now used for specifing highlighting-mode, use cfg.highlightchannel instead of cfg.highlight for specifiying channels')
+      warning('cfg.highlight is now used for specifying highlighting-mode, use cfg.highlightchannel instead of cfg.highlight for specifying channels')
     end
   end
 end
 
-% Converting all higlight options to cell-arrays if they're not cell-arrays,
-% to make defaulting, checking for backwards compatability and error
+% Converting all highlight options to cell-arrays if they're not cell-arrays,
+% to make defaulting, checking for backwards compatibility and error
 % checking easier
 if ~iscell(cfg.highlight),            cfg.highlight         = {cfg.highlight};            end
 if ~iscell(cfg.highlightchannel),     cfg.highlightchannel  = {cfg.highlightchannel};     end
