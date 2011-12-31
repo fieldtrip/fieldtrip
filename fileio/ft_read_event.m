@@ -1471,6 +1471,9 @@ switch eventformat
       event(i).sample = iy(i);
     end
     
+  case 'bucn_nirs'
+    event = read_bucn_nirsevent(filename);
+    
   otherwise
     error('unsupported event format (%s)', eventformat);
 end

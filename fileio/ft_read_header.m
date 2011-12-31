@@ -1518,6 +1518,11 @@ switch headerformat
     hdr.nTrials     = 1; % continuous data
     hdr.label       = {tmp.hdr.entityinfo(tmp.list.analog(tmp.analog.contcount~=0)).EntityLabel}; %%% contains non-unique chans?
     hdr.orig        = tmp; % remember the original header
+  
+  case 'bucn_nirs'
+    orig = read_bucn_nirshdr(filename);
+    hdr  = rmfield(orig, 'time');
+    hdr.orig = orig;
     
   otherwise
     if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)

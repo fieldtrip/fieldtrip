@@ -937,7 +937,10 @@ switch dataformat
 
     tmp = read_neuroshare(filename, 'readanalog', 'yes', 'chanindx', chanindx, 'begsample', begsample, 'endsample', endsample);
     dat = tmp.analog.data';
-
+  
+  case 'bucn_nirs'
+    dat = read_bucn_nirsdata(filename, hdr, begsample, endsample, chanindx);
+    
   otherwise
     if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
       dat = read_biosig_data(filename, hdr, begsample, endsample, chanindx);
