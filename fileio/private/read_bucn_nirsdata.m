@@ -28,14 +28,28 @@ function [dat] = read_bucn_nirsdata(filename, hdr, begsample, endsample, chanind
 %
 % $Id:$
 
-% read the whole data file apart from the header line
+% initialize some variables
+nchan = numel(hdr.label);
+str   = repmat('%f', [1 nchan]);
+
+% read the designated samples
 fid = fopen(filename, 'r');
-dat = textscan(fid, '%f', 'HeaderLines', 1);
+dat = textscan(fid, str, endsample-begsample+1, 'HeaderLines', begsample);
 fclose(fid);
 
 % reshape into a channelxsamples matrix
-nchan = numel(hdr.label);
-dat   = reshape(dat{1}, nchan, []);
+dat = cat(2, dat{:})';
 
 % make the subselection
-dat   = dat(chanindx, begsample:endsample);
+dat   = dat(chanindx, :);
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% the slower alternative is below which reads the whole file each time
+% and thus is slow for multiple trials
+%
+% fid = fopen(filename, 'r');
+% dat = textscan(fid, '%f', 'Headerlines', 1);
+% dat = reshape(dat, nchan, []);
+% dat = dat(chanindx, begsample:endsample);
+%
