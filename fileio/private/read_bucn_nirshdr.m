@@ -27,14 +27,23 @@ function [hdr] = read_bucn_nirshdr(filename)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id:$
+% $Id: read_bucn_nirshdr.m$
 
 fid = fopen(filename, 'r');
 
 % read the first line
-line1 = textscan(fid,         '%[^\n]',1);
-label = textscan(line1{1}{1}, '%[^\t]');
-label = label{1};
+line1 = textscan(fid, '%[^\n]',1);
+
+% field delimiter can be space or tab
+labelspc = textscan(line1{1}{1}, '%[^ ]');
+labeltab = textscan(line1{1}{1}, '%[^\t]');
+
+% let tab as a delimiter prevail
+if numel(labeltab{1})>1
+  label = labeltab{1};
+else
+  label = labelspc{1};
+end
 nchan = numel(label);
 Fs    = str2num(strtok(strtok(label{1},'#Time.'),'Hz'));
 
