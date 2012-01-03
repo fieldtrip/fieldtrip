@@ -280,7 +280,7 @@ cfg.markercolor    = ft_getopt(cfg, 'markercolor',   [0 0 0]);
 cfg.markersize     = ft_getopt(cfg, 'markersize',    2);
 cfg.markerfontsize = ft_getopt(cfg, 'markerfontsize', 8);
 cfg.highlight      = ft_getopt(cfg, 'highlight',     'off');
-cfg.highlightchannel  = ft_getopt(cfg, 'highlightchannel',  'all');
+cfg.highlightchannel  = ft_getopt(cfg, 'highlightchannel',  'all', 1); % highlight may be 'on', making highlightchannel {} meaningful
 cfg.highlightsymbol   = ft_getopt(cfg, 'highlightsymbol',   '*');
 cfg.highlightcolor    = ft_getopt(cfg, 'highlightcolor',    [0 0 0]);
 cfg.highlightsize     = ft_getopt(cfg, 'highlightsize',     6);
@@ -313,6 +313,7 @@ end
 % to make defaulting, checking for backwards compatibility and error
 % checking easier
 if ~iscell(cfg.highlight),            cfg.highlight         = {cfg.highlight};            end
+if isempty(cfg.highlightchannel),     cfg.highlightchannel  = ''; end
 if ~iscell(cfg.highlightchannel),     cfg.highlightchannel  = {cfg.highlightchannel};     end
 if ischar(cfg.highlightchannel{1}),   cfg.highlightchannel  = {cfg.highlightchannel};     end % {'all'} is valid input to channelselection, {1:5} isn't
 if ~iscell(cfg.highlightsymbol),      cfg.highlightsymbol   = {cfg.highlightsymbol};      end

@@ -21,7 +21,7 @@ data.label{3} = 'FREE3';
 data.label{4} = 'FREE4';
 
 cfg = [];
-cfg.demean = 'yes';
+cfg.preproc.demean = 'yes';
 tlck = ft_timelockanalysis(cfg, data);
 
 cfg = [];
@@ -34,6 +34,12 @@ cfg.interactive = 'yes';
 
 %plot timelocked-data
 figure;ft_topoplotER(cfg, tlck);drawnow
+
+%reproduce bug 1239
+cfgtmp = cfg;
+cfgtmp.highlight = 'on';
+cfgtmp.highlightchannel = {};
+figure;ft_topoplotER(cfgtmp, tlck);drawnow
 
 %plot subplots
 cfg.xlim = (-1:0.25:1);
