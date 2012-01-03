@@ -10,6 +10,7 @@ data.trial{1} = randn(1,100);
 data.time{1}  = 1:100;
 data.label{1} = 'chan1';
 data.sampleinfo = [1 100];
+data.cfg = 'this is the cfg';
 
 cfg = [];
 cfg.trl = [10 20 0];
@@ -20,4 +21,6 @@ cfg = [];
 cfg.begsample = 10;
 cfg.endsample = 20;
 data2 = ft_redefinetrial(cfg, data);
-isfield(data2, 'cfg')
+if ~isfield(data2, 'cfg'), error('output data does not contain a cfg'); end
+if ~isfield(data2.cfg, 'previous'), error('output data does not contain a cfg.previous'); end
+
