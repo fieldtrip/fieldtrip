@@ -331,8 +331,10 @@ end
 ft_postamble trackconfig
 ft_postamble callinfo
 if ~isempty(cfg.trl)
+  % the input data has been renamed to dataold
   ft_postamble previous dataold
 else
-  ft_postamble history data
+  ft_postamble previous data
 end
+ft_postamble history data
 ft_postamble savevar data
