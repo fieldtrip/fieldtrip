@@ -9,7 +9,7 @@ function [comp] = ft_componentanalysis(cfg, data)
 %
 % where the data comes from FT_PREPROCESSING or FT_TIMELOCKANALYSIS and the
 % configuration structure can contain
-%   cfg.method       = 'runica', 'fastica', 'binica', 'pca', 'svd', 'jader', 'varimax', 'dss', 'cca', 'sobi' (default = 'runica')
+%   cfg.method       = 'runica', 'fastica', 'binica', 'pca', 'svd', 'jader', 'varimax', 'dss', 'cca', 'sobi', 'white' (default = 'runica')
 %   cfg.channel      = cell-array with channel selection (default = 'all'), see FT_CHANNELSELECTION for details
 %   cfg.trials       = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.numcomponent = 'all' or number (default = 'all')
@@ -115,7 +115,7 @@ function [comp] = ft_componentanalysis(cfg, data)
 %
 % See also FT_REJECTCOMPONENT, FASTICA, RUNICA, BINICA, SVD, JADER, VARIMAX, DSS, CCA, SOBI
 
-% Copyright (C) 2003-2011, Robert Oostenveld
+% Copyright (C) 2003-2012, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -285,6 +285,19 @@ if strcmp(cfg.method, 'sobi')
     dat = shiftdim(dat,1);
   end
   
+elseif strcmp(cfg.method, 'csp')
+  
+  % concatenate the trials into two data matrices, one for each class
+  sel1 = find(cfg.classlabel==1);
+  sel2 = find(cfg.classlabel==2);
+  if length(sel1)+length(sel2)~=length(cfg.classlabel)
+    error('not all trials belong to class 1 or 2');
+  end
+  dat1 = cat(2, data.trial{sel1});
+  dat2 = cat(2, data.trial{sel2});
+  fprintf('concatenated data matrix size for class 1 is %dx%d\n', size(dat1,1), size(dat1,2));
+  fprintf('concatenated data matrix size for class 2 is %dx%d\n', size(dat2,1), size(dat2,2));
+  
 elseif ~strcmp(cfg.method, 'predetermined unmixing matrix')
   
   % concatenate all the data into a 2D matrix unless we already have an
@@ -314,7 +327,7 @@ switch cfg.method
     
     % set the number of components to be estimated
     cfg.fastica.numOfIC = cfg.numcomponent;
-
+    
     try
       % construct key-value pairs for the optional arguments
       optarg = ft_cfg2keyval(cfg.fastica);
@@ -442,7 +455,7 @@ switch cfg.method
     
     mixing = state.A;
     unmixing = [];
-
+    
     % remember the updated configuration details
     cfg.dss.denf      = state.denf;
     cfg.numcomponent  = state.sdim;
@@ -489,10 +502,31 @@ switch cfg.method
     cfg.topolabel = cfg.topolabel(chansel);
     
     unmixing = cfg.unmixing;
-    mixing = [];
+    mixing   = [];
+    
+  case 'white'
+    % compute the covariance matrix and an unmixing matrix that makes the data white
+    c = dat*dat';
+    c = c./(size(dat,2)-1);
+    [u, s] = svd(c);
+    % split the singular values into half
+    for i=1:size(s)
+      if (s(i,i)/s(1,1))>(100*eps)
+        s(i,i) = 1./sqrt(s(i,i));
+      else
+        s(i,i) = 0;
+      end
+    end
+    unmixing = s * u';
+    mixing   = [];
+
+  case 'csp'
+    unmixing = csp(dat1, dat2);
+    mixing   = [];  % will be computed below
     
   case 'parafac'
     error('parafac is not supported anymore in ft_componentanalysis');
+    
   otherwise
     error('unknown method for component analysis');
 end % switch method
@@ -506,7 +540,7 @@ if isempty(unmixing)
     unmixing = pinv(mixing);
   end
 elseif isempty(mixing)
-  if (size(unmixing,1)==size(unmixing,2))
+  if (size(unmixing,1)==size(unmixing,2)) && rank(unmixing)==size(unmixing,1)
     mixing = inv(unmixing);
   else
     mixing = pinv(unmixing);
