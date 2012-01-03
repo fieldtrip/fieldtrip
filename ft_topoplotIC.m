@@ -11,7 +11,7 @@ function [cfg] = ft_topoplotIC(cfg, varargin)
 % The configuration should have the following parameters:
 %   cfg.component          = field that contains the independent component(s) to be plotted as color
 %   cfg.layout             = specification of the layout, see below
-%  
+%
 % The configuration can have the following parameters:
 %   cfg.colormap           = any sized colormap, see COLORMAP
 %   cfg.zlim               = 'maxmin', 'maxabs' or [zmin zmax] (default = 'maxmin')
@@ -113,6 +113,12 @@ varargin{:}.dimord = 'chan_comp';
 % create temporary variable
 selcomp = cfg.component;
 
+% prepare the layout only once
+cfg.layout = ft_prepare_layout(cfg, varargin{:});
+
+% don't show the callinfo for each separate component
+cfg.showcallinfo = 'no';
+
 % allow multiplotting
 nplots = numel(selcomp);
 nyplot = ceil(sqrt(nplots));
@@ -123,6 +129,9 @@ for i = 1:length(selcomp)
   ft_topoplotTFR(cfg, varargin{:});
   title(['component ' num2str(selcomp(i))]);
 end
+
+% show the callinfo for all components together
+cfg.showcallinfo = 'yes';
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble callinfo
