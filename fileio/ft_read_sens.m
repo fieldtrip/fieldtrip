@@ -94,7 +94,7 @@ switch fileformat
     el = tmp{4}(sel) * pi/180;
     r  = ones(size(el));
     [x, y, z] = sph2cart(az, el, r);
-    sens.pnt = [x y z];
+    sens.chanpos = [x y z];
     
   case 'besa_pos'
     tmp = importdata(filename);
@@ -141,8 +141,8 @@ switch fileformat
     fid        = fopen(filename);
     tmp        = textscan(fid, ' %[^ \t]%n%n%n');
     fclose(fid);
-    sens.label = tmp{1};
-    sens.pnt   = [tmp{2:4}];
+    sens.label   = tmp{1};
+    sens.chanpos = [tmp{2:4}];
    
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % gradiometer information is always stored in the header of the MEG dataset
