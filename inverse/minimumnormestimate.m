@@ -166,6 +166,6 @@ if keepfilter && ~isfield(dip, 'filter')
     n = n + size(dip.leadfield{i}, 2);
   end
   dipout.filter(dip.outside) = {nan};
-else
+elseif isfield(dip, 'filter')
   dipout.filter = dip.filter;
 end
