@@ -3,27 +3,30 @@ function stat = statistics_crossvalidate(cfg, dat, design)
 % STATISTICS_CROSSVALIDATE performs cross-validation using a prespecified
 % multivariate analysis given by cfg.mva
 %
+% Use as
+%   stat = ft_timelockstatistics(cfg, data1, data2, data3, ...)
+%   stat = ft_freqstatistics    (cfg, data1, data2, data3, ...)
+%   stat = ft_sourcestatistics  (cfg, data1, data2, data3, ...)
+%
 % Options:
-% cfg.metric        = the performance metric to report (default = 'accuracy')
-% cfg.sigtest       = the significance test to report (default = 'mcnemar')
-% cfg.cv            = crossvalidator object
-%  overloads the following
-%   cfg.mva         = a multivariate analysis (default = {standardizer svmmethod})
-%   cfg.nfolds      = number of folds (default = 10)
-%   cfg.compact     = whether or not to save the mva procedure (true)
-%   cfg.model       = whether or not to save the average model (true)
+%   cfg.metric        = the performance metric to report (default = 'accuracy')
+%   cfg.sigtest       = the significance test to report (default = 'mcnemar')
+%   cfg.cv            = crossvalidator object
+% overloads the following
+%   cfg.mva           = a multivariate analysis (default = {standardizer svmmethod})
+%   cfg.nfolds        = number of folds (default = 10)
+%   cfg.compact       = whether or not to save the mva procedure (true)
+%   cfg.model         = whether or not to save the average model (true)
 %
 % Returns:
-% stat.performance  = computed using the specified metric
-% stat.pvalue       = p-value for the specified significance test
-% stat.cv           = the trained crossvalidator
-% stat.model<n>     = the n-th model associated with this multivariate analysis
+%   stat.performance  = computed using the specified metric
+%   stat.pvalue       = p-value for the specified significance test
+%   stat.cv           = the trained crossvalidator
+%   stat.model<n>     = the n-th model associated with this multivariate analysis
 %
 % See also CROSSVALIDATE, MVA
-%
-% Requires: multivariate analysis toolbox
 
-% Copyright (c) 2007, Marcel van Gerven, F.C. Donders Centre
+% Copyright (c) 2007-2011, Marcel van Gerven, F.C. Donders Centre
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -71,10 +74,18 @@ if ~isfield(cfg,'metric'),
 else
   cv.metric = cfg.metric;
 end
+
 if ~isfield(cfg,'sigtest'),
   cv.sigtest = 'binomial';
 else
   cv.sigtest = cfg.sigtest;
+end
+
+if isfield(cfg, 'trainfolds')
+  cv.trainfolds = cfg.trainfolds;
+end
+if isfield(cfg, 'testfolds')
+  cv.testfolds = cfg.testfolds;
 end
 
 % check for transfer learning; this is implemented by cfg.dataset,
@@ -149,4 +160,3 @@ stat.cv = cv;
 
 % required
 stat.trial = [];
-
