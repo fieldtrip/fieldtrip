@@ -26,8 +26,8 @@
 % which the callback function was called.
 
 maxnum = ft_getopt(varargin, 'maxnum', Inf);
-filter = ft_getopt(varargin, 'filter', [generatejobid() '.*']);
-sleep = ft_getopt(varargin, 'sleep', 0);
+filter = ft_getopt(varargin, 'filter', [generatesesionid '.*']);
+sleep  = ft_getopt(varargin, 'sleep', 0);
 
 if ischar(filter)
   regexpFilt = 1;

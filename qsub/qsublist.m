@@ -44,7 +44,7 @@ persistent list_jobid list_pbsid
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if nargin<1 
+if nargin<1
   cmd = 'list';
 end
 
@@ -75,48 +75,48 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 switch cmd
-case 'add'
-  % add it to the persistent lists
-  list_jobid{end+1} = jobid;
-  list_pbsid{end+1} = pbsid;
-
-case 'del'
-  sel = strmatch(jobid, list_jobid);
-  if ~isempty(sel)
-    % remove it from the persistent lists
-    list_jobid(sel) = [];
-    list_pbsid(sel) = [];
-  end
-
-case 'kill'
-  sel = strmatch(jobid, list_jobid);
-  if ~isempty(sel)
-    % remove it from the batch queue
-    system(sprintf('qdel %s', pbsid));
-    % remove the corresponing files from the shared storage
-    system(sprintf('rm -f %s*', jobid));
-    % remove it from the persistent lists
-    list_jobid(sel) = [];
-    list_pbsid(sel) = [];
-  end
-
-case 'killall'
-  if length(list_jobid)>0
-    % give an explicit warning, because chances are that the user will see messages from qdel
-    % about jobs that have just completed and hence cannot be deleted any more
-    warning('cleaning up all scheduled and running jobs, don''t worry if you see warnings from "qdel"');
-  end
-  % start at the end, work towards the begin of the list
-  for i=length(list_jobid):-1:1
-    qsublist('kill', list_jobid{i}, list_pbsid{i});
-  end
-
-case 'list'
-  for i=1:length(list_jobid)
-    fprintf('%s %s\n', list_jobid{i}, list_pbsid{i});
-  end
-
-otherwise 
-  error('unsupported command (%s)', cmd); 
+  case 'add'
+    % add it to the persistent lists
+    list_jobid{end+1} = jobid;
+    list_pbsid{end+1} = pbsid;
+    
+  case 'del'
+    sel = strmatch(jobid, list_jobid);
+    if ~isempty(sel)
+      % remove it from the persistent lists
+      list_jobid(sel) = [];
+      list_pbsid(sel) = [];
+    end
+    
+  case 'kill'
+    sel = strmatch(jobid, list_jobid);
+    if ~isempty(sel)
+      % remove it from the batch queue
+      system(sprintf('qdel %s', pbsid));
+      % remove the corresponing files from the shared storage
+      system(sprintf('rm -f %s*', jobid));
+      % remove it from the persistent lists
+      list_jobid(sel) = [];
+      list_pbsid(sel) = [];
+    end
+    
+  case 'killall'
+    if length(list_jobid)>0
+      % give an explicit warning, because chances are that the user will see messages from qdel
+      % about jobs that have just completed and hence cannot be deleted any more
+      warning('cleaning up all scheduled and running jobs, don''t worry if you see warnings from "qdel"');
+    end
+    % start at the end, work towards the begin of the list
+    for i=length(list_jobid):-1:1
+      qsublist('kill', list_jobid{i}, list_pbsid{i});
+    end
+    
+  case 'list'
+    for i=1:length(list_jobid)
+      fprintf('%s %s\n', list_jobid{i}, list_pbsid{i});
+    end
+    
+  otherwise
+    error('unsupported command (%s)', cmd);
 end % switch
 

@@ -1,7 +1,7 @@
 function varargout = qsubcellfun(fname, varargin)
 
 % QSUBCELLFUN applies a function to each element of a cell-array. The
-% function execution is done in parallel using the Torque, SGE or PBS 
+% function execution is done in parallel using the Torque, SGE or PBS
 % batch queue system.
 %
 % Use as
@@ -17,6 +17,8 @@ function varargout = qsubcellfun(fname, varargin)
 %   timreq         = number, the time in seconds required to run a single job
 %   memreq         = number, the memory in bytes required to run a single job
 %   stack          = number, stack multiple jobs in a single qsub job (default = 'auto')
+%   backend        = string, can be 'sge', 'torque', 'slurm', 'local' (default is automatic)
+%   compile        = string, can be 'yes', 'no', 'auto', 'local' (default = 'no')
 %
 % It is required to give an estimate of the time and memory requirements of
 % the individual jobs. The memory requirement of the MATLAB executable
@@ -40,20 +42,20 @@ function varargout = qsubcellfun(fname, varargin)
 % the already submitted jobs will be canceled. Some small temporary
 % files might remain in your working directory.
 %
-% To check the the status and healthy execution of the jobs in the
+% To check the the status and healthy execution of the jobs on the Torque
 % batch queuing system, you can use
 %   qstat
 %   qstat -an1
 %   qstat -Q
-% comands on the linux command line. To delete jobs from the queue  and
-% to abort already running jobs, you can use
+% comands on the linux command line. To delete jobs from the Torque batch 
+% queue and to abort already running jobs, you can use
 %   qdel <jobnumber>
 %   qdel all
 %
 % See also QSUBFEVAL, CELLFUN, PEERCELLFUN, FEVAL, DFEVAL, DFEVALASYNC
 
 % -----------------------------------------------------------------------
-% Copyright (C) 2011, Robert Oostenveld
+% Copyright (C) 2011-2012, Robert Oostenveld
 %
 % This program is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -70,7 +72,7 @@ function varargout = qsubcellfun(fname, varargin)
 % -----------------------------------------------------------------------
 
 % this persistent variable is used to assign unique names to the jobs in each subsequent batch
-persistent batch;
+persistent batch
 
 if matlabversion(7.8, Inf)
   % switch to zombie when finished or when ctrl-c gets pressed
@@ -92,8 +94,10 @@ UniformOutput = ft_getopt(optarg, 'UniformOutput', false   );
 StopOnError   = ft_getopt(optarg, 'StopOnError',   true    );
 diary         = ft_getopt(optarg, 'diary',         'error' ); % 'always', 'never', 'warning', 'error'
 timreq        = ft_getopt(optarg, 'timreq');
-memreq        = ft_getopt(optarg, 'memreq'); 
-stack         = ft_getopt(optarg, 'stack', 'auto'); % 'auto' or a number
+memreq        = ft_getopt(optarg, 'memreq');
+stack         = ft_getopt(optarg, 'stack', 'auto');   % 'auto' or a number
+backend       = ft_getopt(optarg, 'backend', []);     % this will be dealt with in qsubfeval
+compile       = ft_getopt(optarg, 'compile', 'no');   % can be 'auto', 'yes' or 'no'
 
 % skip the optional key-value arguments
 if ~isempty(optbeg)
@@ -113,6 +117,14 @@ end
 % determine the number of input arguments and the number of jobs
 numargin    = numel(varargin);
 numjob      = numel(varargin{1});
+
+% keep a record of how many calls to this function have been made (useful for creating meaningful job IDs)
+% subsequent batches of jobs will have different names
+if isempty(batch)
+  batch = 1;
+else
+  batch = batch+1;
+end
 
 % determine the number of MATLAB jobs to "stack" together into seperate qsub jobs
 if isequal(stack, 'auto')
@@ -140,14 +152,6 @@ submitted   = false(1, numjob);
 collected   = false(1, numjob);
 submittime  = inf(1, numjob);
 collecttime = inf(1, numjob);
-
-% keep a record of how many calls to this function have been made (useful for creating meaningful job IDs)
-% subsequent batches of jobs will have different names
-if isempty(batch)
-  batch = 1;
-else
-  batch = batch+1;
-end
 
 % it can be difficult to determine the number of output arguments
 try
@@ -181,7 +185,7 @@ if stack>1
   if ~any(strcmpi(optarg, 'timreq'))
     optarg{end+1} = 'timreq';
     optarg{end+1} = timreq;
-  end  
+  end
   if ~any(strcmpi(optarg, 'stack'))
     optarg{end+1} = 'stack';
     optarg{end+1} = stack;
@@ -190,12 +194,12 @@ if stack>1
     optarg{end+1} = 'UniformOutput';
     optarg{end+1} = UniformOutput;
   end
-
+  
   % update these settings for the recursive call
   optarg{find(strcmpi(optarg, 'timreq'))+1}        = timreq*stack;
   optarg{find(strcmpi(optarg, 'stack'))+1}         = 1;
   optarg{find(strcmpi(optarg, 'UniformOutput'))+1} = false;
-
+  
   % FIXME the partitioning can be further perfected
   partition     = floor((0:numjob-1)/stack)+1;
   numpartition  = partition(end);
@@ -204,7 +208,7 @@ if stack>1
   stackargin{1}     = repmat({str2func(fname)},1,numpartition);  % fname
   stackargin{end-1} = repmat({'uniformoutput'},1,numpartition);  % uniformoutput
   stackargin{end}   = repmat({false},1,numpartition);            % false
-
+  
   % reorganise the original input into the stacked format
   for i=1:numargin
     tmp = cell(1,numpartition);
@@ -212,12 +216,12 @@ if stack>1
       tmp{j} = {varargin{i}{partition==j}};
     end
     stackargin{i+1} = tmp; % note that the first element is the fname
-	clear tmp
+    clear tmp
   end
   
   stackargout = cell(1,numargout);
   [stackargout{:}] = qsubcellfun(@cellfun, stackargin{:}, optarg{:});
-
+  
   % reorganise the stacked output into the original format
   for i=1:numargout
     tmp = cell(size(varargin{1}));
@@ -227,13 +231,38 @@ if stack>1
     varargout{i} = tmp;
     clear tmp
   end
-
+  
   if numargout>0 && UniformOutput
     [varargout{:}] = makeuniform(varargout{:});
   end
-
+  
   return;
 end
+
+% running a compiled version in parallel takes no MATLAB licenses
+if strcmp(compile, 'yes') || (strcmp(compile, 'auto') && (numjob*timreq/3600)>0.5)
+  try
+    % try to compile into a stand-allone application
+    batchid = generatebatchid(batch);
+    fprintf('started compiling %s\n', batchid);
+    mcc('-N', '-R', '-nodisplay', '-o', batchid, '-m', 'qsubexec', fname);
+    fprintf('finished compiling\n');
+    
+    % this is passed on to qsubfeval if  compilation succeeded
+    compile = 'yes';
+  catch
+    if strcmp(compile, 'yes')
+      % the error that was caught is critical
+      rethrow(lasterror);
+    elseif strcmp(compile, 'auto')
+      % compilation was only optional, the caught error is not critical
+      warning(lasterr);
+      compile = 'no';
+    end
+  end % try-catch
+else
+  compile = 'no';
+end % if compile
 
 % check the input arguments
 for i=1:numargin
@@ -251,10 +280,10 @@ for submit=1:numjob
   for j=1:numargin
     argin{j} = varargin{j}{submit};
   end
-
+  
   % submit the job
-  [curjobid curputtime] = qsubfeval(fname, argin{:}, 'memreq', memreq, 'timreq', timreq, 'diary', diary, 'batch', batch);
-
+  [curjobid curputtime] = qsubfeval(fname, argin{:}, 'memreq', memreq, 'timreq', timreq, 'diary', diary, 'batch', batch, 'compile', compile, 'backend', backend);
+  
   % fprintf('submitted job %d\n', submit);
   jobid{submit}      = curjobid;
   puttime(submit)    = curputtime;
@@ -265,31 +294,31 @@ end % for
 
 while (~all(collected))
   % try to collect the jobs that have finished
-
+  
   for collect=find(~collected)
     % this will return empty arguments if the job has not finished
     ws = warning('off', 'FieldTrip:qsub:jobNotAvailable');
     [argout, options] = qsubget(jobid{collect}, 'output', 'cell', 'diary', diary, 'StopOnError', StopOnError);
     warning(ws);
-
+    
     if ~isempty(argout) || ~isempty(options)
       % fprintf('collected job %d\n', collect);
       collected(collect)   = true;
       collecttime(collect) = toc(stopwatch);
-
+      
       % redistribute the output arguments
       for j=1:numargout
         varargout{j}{collect} = argout{j};
       end
-
+      
       % gather the job statistics
       % these are empty in case an error happened during remote evaluation, therefore the default value of NaN is specified
       timused(collect) = ft_getopt(options, 'timused', nan);
       memused(collect) = ft_getopt(options, 'memused', nan);
-
+      
     end  % if
   end % for
-
+  
   pause(0.1);
 end % while
 
@@ -302,12 +331,18 @@ if numargout>0 && UniformOutput
   [varargout{:}] = makeuniform(varargout{:});
 end
 
+% clean up the remains of the compilation
+if istrue(compile)
+  system(sprintf('rm -rf %s*',        batchid));
+  system(sprintf('rm -rf run_%s*.sh', batchid));
+  system('rm -rf mccExcludedFiles.log');
+  % system('rm -rf readme.txt'); % FIXME
+end
+
 % compare the time used inside this function with the total execution time
 fprintf('computational time = %.1f sec, elapsed = %.1f sec, speedup %.1f x\n', nansum(timused), toc(stopwatch), nansum(timused)/toc(stopwatch));
 
 if all(puttime>timused)
-  % FIXME this could be detected in the loop above, and the strategy could automatically
-  % be adjusted from using the peers to local execution
   warning('copying the jobs over the network took more time than their execution');
 end
 

@@ -10,7 +10,7 @@ function [jobid, puttime] = qsubfeval(varargin)
 % See also QSUBCELLFUN, QSUBGET, FEVAL, DFEVAL, DFEVALASYNC
 
 % -----------------------------------------------------------------------
-% Copyright (C) 2011, Robert Oostenveld
+% Copyright (C) 2011-2012, Robert Oostenveld
 %
 % This program is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -35,13 +35,13 @@ stopwatch = tic;
 
 % check if torque or sge is present and running
 if ~isempty(getenv('SGE_ROOT'))
- defaultbackend = 'sge';
+  defaultbackend = 'sge';
 elseif ~isempty(getenv('TORQUEHOME'))
- defaultbackend = 'torque';
+  defaultbackend = 'torque';
 else
- defaultbackend = 'local';
+  defaultbackend = 'local';
 end
- 
+
 % convert the input arguments into something that strmatch can work with
 strargin = varargin;
 strargin(~cellfun(@ischar, strargin)) = {''};
@@ -51,7 +51,8 @@ optbeg = false(size(strargin));
 optbeg = optbeg | strcmp('memreq',  strargin);
 optbeg = optbeg | strcmp('timreq',  strargin);
 optbeg = optbeg | strcmp('diary',   strargin);
-optbeg = optbeg | strcmp('batch',    strargin);
+optbeg = optbeg | strcmp('batch',   strargin);
+optbeg = optbeg | strcmp('compile', strargin);
 optbeg = optbeg | strcmp('timoverhead', strargin);
 optbeg = optbeg | strcmp('memoverhead', strargin);
 optbeg = optbeg | strcmp('backend', strargin);
@@ -70,6 +71,10 @@ batch       = ft_getopt(optarg, 'batch',    1);
 timoverhead = ft_getopt(optarg, 'timoverhead', 180);            % allow some overhead to start up the MATLAB executable
 memoverhead = ft_getopt(optarg, 'memoverhead', 1024*1024*1024); % allow some overhead for the MATLAB executable in memory
 backend     = ft_getopt(optarg, 'backend', defaultbackend);     % can be torque, local, sge
+compile     = ft_getopt(optarg, 'compile', false);              % can be true or false, the compilation should be done in qsubcellfun
+
+% convert yes/no into true/false
+compile = istrue(compile);
 
 % skip the optional key-value arguments
 if ~isempty(optbeg)
@@ -109,58 +114,70 @@ argin = varargin;
 optin = options;
 save(inputfile, 'argin', 'optin');
 
-if matlabversion(7.1)
-  matlabcmd = 'matlab71';
-elseif matlabversion(7.2)
-  matlabcmd = 'matlab72';
-elseif matlabversion(7.3)
-  matlabcmd = 'matlab73';
-elseif matlabversion(7.4)
-  matlabcmd = 'matlab74';
-elseif matlabversion(7.5)
-  matlabcmd = 'matlab75';
-elseif matlabversion(7.6)
-  matlabcmd = 'matlab76';
-elseif matlabversion(7.7)
-  matlabcmd = 'matlab77';
-elseif matlabversion(7.8) % 2009a
-  matlabcmd = 'matlab78 -singleCompThread';
-elseif matlabversion(7.9) % 2009b
-  matlabcmd = 'matlab79 -singleCompThread';
-elseif matlabversion('2010a')
-  matlabcmd = 'matlab2010a -singleCompThread';
-elseif matlabversion('2010b')
-  matlabcmd = 'matlab2010b -singleCompThread';
-elseif matlabversion('2011a')
-  matlabcmd = 'matlab2011a -singleCompThread';
-elseif matlabversion('2011b')
-  matlabcmd = 'matlab2011b -singleCompThread';
-elseif matlabversion('2012a')
-  matlabcmd = 'matlab2012a -singleCompThread';
-elseif matlabversion('2012b')
-  matlabcmd = 'matlab2012b -singleCompThread';
-else
-  % use whatever is available as default
-  matlabcmd = 'matlab';
-end
-
-% create the matlab script commands (one entry per line)
-matlabscript = [...
-  'restoredefaultpath;',...
-  sprintf('cd(''%s'');', curPwd),...
-  sprintf('addpath(''%s'');', fileparts(mfilename('fullpath'))),...
-  sprintf('qsubexec(''%s'');', jobid),...
-  sprintf('exit')];
-
+if ~compile
+  if matlabversion(7.1)
+    matlabcmd = 'matlab71';
+  elseif matlabversion(7.2)
+    matlabcmd = 'matlab72';
+  elseif matlabversion(7.3)
+    matlabcmd = 'matlab73';
+  elseif matlabversion(7.4)
+    matlabcmd = 'matlab74';
+  elseif matlabversion(7.5)
+    matlabcmd = 'matlab75';
+  elseif matlabversion(7.6)
+    matlabcmd = 'matlab76';
+  elseif matlabversion(7.7)
+    matlabcmd = 'matlab77';
+  elseif matlabversion(7.8) % 2009a
+    matlabcmd = 'matlab78 -singleCompThread';
+  elseif matlabversion(7.9) % 2009b
+    matlabcmd = 'matlab79 -singleCompThread';
+  elseif matlabversion('2010a')
+    matlabcmd = 'matlab2010a -singleCompThread';
+  elseif matlabversion('2010b')
+    matlabcmd = 'matlab2010b -singleCompThread';
+  elseif matlabversion('2011a')
+    matlabcmd = 'matlab2011a -singleCompThread';
+  elseif matlabversion('2011b')
+    matlabcmd = 'matlab2011b -singleCompThread';
+  elseif matlabversion('2012a')
+    matlabcmd = 'matlab2012a -singleCompThread';
+  elseif matlabversion('2012b')
+    matlabcmd = 'matlab2012b -singleCompThread';
+  else
+    % use whatever is available as default
+    matlabcmd = 'matlab';
+  end
+  
+  % these options can be appended regardless of the version
+  matlabcmd = [matlabcmd ' -nosplash -nodisplay'];
+  
+  % create the matlab script commands (one entry per line)
+  matlabscript = [...
+    'restoredefaultpath;',...
+    sprintf('cd(''%s'');', curPwd),...
+    sprintf('addpath(''%s'');', fileparts(mfilename('fullpath'))),...
+    sprintf('qsubexec(''%s'');', jobid),...
+    sprintf('exit')];
+  
+end % if ~compile
 
 % set the job requirements according to the users specification
 switch backend
   case 'local'
-    % this is for testing the execution in case no cluster is available
-    % for example when on the road with a laptop
-    cmdline = sprintf('%s -nosplash -nodisplay -r "%s"\n', matlabcmd, matlabscript);
+    % this is for testing the execution in case no cluster is available,
+    % for example when working on the road with a laptop
+    if compile
+      % create the command line for the compiled application
+      cmdline = sprintf('%s/run_%s.sh %s %s\n', pwd, generatebatchid(batch), matlabroot, jobid);
+    else
+      % create the shell commands to execute matlab
+      cmdline = sprintf('%s -r "%s"\n', matlabcmd, matlabscript);
+    end
     
   case 'sge'
+    % this is for Sun Grid Engine, Oracle Grid Engine, and other derivatives
     requirements = '';
     if ~isempty(timreq)
       requirements = [requirements sprintf('-l h_rt=%d ', timreq+timoverhead)];
@@ -169,13 +186,19 @@ switch backend
       requirements = [requirements sprintf('-l h_vmem=%.0f ',   memreq+memoverhead)];
     end
     
-    % create the shell commands to execute matlab
-    cmdline = sprintf('%s -nosplash -nodisplay -r \\"%s\\"\n', matlabcmd, matlabscript);
+    if compile
+      % create the command line for the compiled application
+      cmdline = sprintf('%s/run_%s.sh %s %s\n', pwd, generatebatchid(batch), matlabroot, jobid);
+    else
+      % create the shell commands to execute matlab
+      cmdline = sprintf('%s -r \\"%s\\"\n', matlabcmd, matlabscript);
+    end
     
     % pass the command to qsub with all requirements
     cmdline = sprintf('echo "%s" | qsub -N %s %s -o %s -e %s', cmdline, jobid, requirements, curPwd, curPwd);
     
   case 'torque'
+    % this is for PBS, Torque, and other derivatives
     requirements = '';
     if ~isempty(timreq)
       requirements = [requirements sprintf('-l walltime=%d ', timreq+timoverhead)];
@@ -188,16 +211,29 @@ switch backend
       %   requirements = [requirements sprintf('-l pvmem=%.0f ', memreq+memoverhead)];
     end
     
-    % In the command below both stderr and stout are redirected to /dev/null, so any
-    % output information will not be available for inspection. However, any
-    % matlab errors will be reported back by fexec.
+    % In the command below both stderr and stout are redirected to /dev/null,
+    % so any output information will not be available for inspection.
+    % However, any matlab errors will be reported back by fexec.
     % cmdline = ['qsub -e /dev/null -o /dev/null -N ' jobid ' ' requirements shellscript];
     
-    % create the shell commands to execute matlab
-    cmdline = sprintf('%s -nosplash -nodisplay -r \\"%s\\"\n', matlabcmd, matlabscript);
+    if compile
+      % create the command line for the compiled application
+      cmdline = sprintf('%s/run_%s.sh %s %s\n', pwd, generatebatchid(batch), matlabroot, jobid);
+    else
+      % create the shell commands to execute matlab
+      cmdline = sprintf('%s -r \\"%s\\"\n', matlabcmd, matlabscript);
+    end
     
     % pass the command to qsub with all requirements
     cmdline = sprintf('echo "%s" | qsub -N %s %s -o %s -e %s', cmdline, jobid, requirements, curPwd, curPwd);
+    
+  case 'slurm'
+    % this is for Simple Linux Utility for Resource Management
+    error('not yet implemented');
+    
+  otherwise
+    error('unsupported backend "%s"', backend);
+    
 end % switch
 
 fprintf('submitting job %s...', jobid);
@@ -213,7 +249,7 @@ if strcmp(backend, 'local')
   fclose(fopen(logerr, 'w'));
 end
 
-% add the job to the persistent list, this is used for cleanup in case of ctrl-C
+% add the job to the persistent list, this is used for cleanup in case of Ctrl-C
 qsublist('add', jobid, strtrim(result));
 
 puttime = toc(stopwatch);
