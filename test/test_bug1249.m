@@ -5,9 +5,10 @@ function test_bug1249
 
 load('/home/common/matlab/fieldtrip/data/test/raw/meg/preproc_ctf275')
 
+cfg = [];
 cfg.method = 'fastica';
 cfg.numcomponent = 20;
-cfg.channel = 'meg';
+cfg.channel = 'MEG';
 comp = ft_componentanalysis(cfg, data);
 
 cfg = [];
