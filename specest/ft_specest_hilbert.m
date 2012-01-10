@@ -21,6 +21,8 @@ function [spectrum,freqoi,timeoi] = ft_specest_hilbert(dat, time, varargin)
 %   filtorder = number or vector, filter order
 %   filtdir   = string, filter direction,  'twopass', 'onepass' or 'onepass-reverse' 
 %   verbose   = output progress to console (0 or 1, default 1)
+%   polyorder = number, the order of the polynomial to fitted to and removed from the data
+%                  prior to the fourier transform (default = 0 -> remove DC-component)
 %
 % See also FT_FREQANALYSIS, FT_SPECEST_MTMFFT, FT_SPECEST_TFR, FT_SPECEST_MTMCONVOL, FT_SPECEST_WAVELET
 
@@ -36,7 +38,7 @@ filttype  = ft_getopt(varargin, 'filttype');    if isempty(filttype),  error('yo
 filtorder = ft_getopt(varargin, 'filtorder');   if isempty(filtorder), error('you need to specify filter order'),        end
 filtdir   = ft_getopt(varargin, 'filtdir');     if isempty(filtdir),   error('you need to specify filter direction'),    end
 pad       = ft_getopt(varargin, 'pad');
-polyorder = ft_getopt(varargin, 'polyorder', 1);
+polyorder = ft_getopt(varargin, 'polyorder', 0);
 fbopt     = ft_getopt(varargin, 'feedback');
 verbose   = ft_getopt(varargin, 'verbose', true);
 

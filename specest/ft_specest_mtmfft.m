@@ -17,6 +17,8 @@ function [spectrum,ntaper,freqoi] = ft_specest_mtmfft(dat, time, varargin)
 %   pad        = number, total length of data after zero padding (in seconds)
 %   freqoi     = vector, containing frequencies of interest                                           
 %   tapsmofrq  = the amount of spectral smoothing through multi-tapering. Note: 4 Hz smoothing means plus-minus 4 Hz, i.e. a 8 Hz smoothing box
+%   polyorder  = number, the order of the polynomial to fitted to and removed from the data
+%                  prior to the fourier transform (default = 0 -> remove DC-component)
 %
 % See also FT_FREQANALYSIS, FT_SPECEST_MTMCONVOL, FT_SPECEST_TFR, FT_SPECEST_HILBERT, FT_SPECEST_WAVELET
 
@@ -30,7 +32,7 @@ pad       = ft_getopt(varargin, 'pad');
 freqoi    = ft_getopt(varargin, 'freqoi', 'all');
 tapsmofrq = ft_getopt(varargin, 'tapsmofrq'); 
 fbopt     = ft_getopt(varargin, 'feedback');
-polyorder = ft_getopt(varargin, 'polyorder', 1);
+polyorder = ft_getopt(varargin, 'polyorder', 0);
 
 if isempty(fbopt),
   fbopt.i = 1;
