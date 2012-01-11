@@ -1,6 +1,9 @@
 % nanmean() - Average, not considering NaN values
 %
 % Usage: same as mean()
+% Note: all nanXXX.m functionalities are implemented through mex-files that 
+% are more memory-efficient. The code in the MATLAB mfile is not necessarily
+% identical to that in the mex-file.
 
 % Author: Arnaud Delorme, CNL / Salk Institute, 16 Oct 2002
 
