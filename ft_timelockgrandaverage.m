@@ -53,9 +53,15 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble help
+ft_preamble distribute
 ft_preamble callinfo
 ft_preamble trackconfig
 ft_preamble loadvar varargin
+
+% return immediately after distributed execution
+if ~isempty(ft_getopt(cfg, 'distribute'))
+  return
+end
 
 % check if the input data is valid for this function
 for i=1:length(varargin)
