@@ -6,26 +6,23 @@ function [jobid, puttime] = peerfeval(varargin)
 %   jobid  = peerfeval(fname, arg1, arg2, ...)
 %   argout = peerget(jobid, ...)
 %
-% This function has a number of  optional arguments that have to passed
+% This function has a number of optional arguments that have to passed
 % as key-value pairs at the end of the list of input arguments. All other
 % input arguments (including other key-value pairs) will be passed to the
 % function to be evaluated.
 %   timeout  = number, in seconds (default = inf)
 %   sleep    = number, in seconds (default = 0.01)
+%   memreq   = number, in bytes   (default = 0)
+%   timreq   = number, in seconds (default = 0)
+%   hostid   = number, only evaluate on a particular host
+%   diary    = string, can be 'always', 'warning' or 'error'
 %
 % Example
-%   jobid = peerfeval('unique', randn(1,10));
+%   jobid  = peerfeval('unique', randn(1,10));
 %   argout = peerget(jobid, 'timeout', inf);
 %   disp(argout);
 %
 % See also PEERGET, PEERCELLFUN, PEERMASTER, PEERSLAVE, FEVAL, DFEVAL, DFEVALASYNC
-
-% Undocumented options
-%   memreq   default = 0
-%   cpureq   default = 0
-%   timreq   default = 0
-%   hostid
-%   diary
 
 % -----------------------------------------------------------------------
 % Copyright (C) 2010, Robert Oostenveld
@@ -43,9 +40,6 @@ function [jobid, puttime] = peerfeval(varargin)
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/
 % -----------------------------------------------------------------------
-
-% Undocumented
-%   hostid   = number, only evaluate on a particular host
 
 % these are used to speed up the processing of multiple function calls with
 % the same input arguments (e.g. from peercellfun)
