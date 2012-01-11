@@ -1,15 +1,24 @@
 function [varargout] = ft_qualitycheck(cfg)
 
-% FT_QUALITYCHECK facilitates quality inspection of a dataset. 1) The data is
-% analyzed, quantified, and stored in a .mat file in a timelock- and
-% freq- like fashion. 2) The quantifications are visualized and exported to
-% a .PNG and .PDF file.
+% FT_QUALITYCHECK performs a quality inspection of a given MEG/EEG dataset, 
+% stores (.mat), and visualizes the result (.png and .pdf).
 %
-% In case the data is MEG data recorded with a CTF system, the output contains
-% the headpositions.
+% This function segments the data into 10-second pieces and performs the
+% following analyses:
+% 1) reads the properties of the dataset
+% 2) computes the headpositions and distance covered from recording onset
+%    (CTF only)
+% 3) computes the mean, max, min, and range of the signal amplitude
+% 4) detects trigger events
+% 5) detects jump artifacts
+% 6) computes the powerspectrum
+% 7) estimates the low-frequency (<2 Hz) and line noise (~50 Hz) 
 %
 % Use as
 %   [info, timelock, freq, summary, headpos] = ft_qualitycheck(cfg)
+% where info contains the dataset properties, timelock the timelocked data, 
+% freq the powerspectra, summary the mean descriptives, and headpos the
+% headpositions throughout the recording
 %
 % The configuration should contain:
 %   cfg.dataset = a string (e.g. 'dataset.ds')
