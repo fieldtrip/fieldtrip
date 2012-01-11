@@ -22,6 +22,8 @@
 %
 % $Id$
 
+return; %JM added this because of unexpected behavior in FT-functions with optional input arguments (that are not defined
+
 % determine the name of the calling FieldTrip function
 s = dbstack;
 fname = s(3).name;
