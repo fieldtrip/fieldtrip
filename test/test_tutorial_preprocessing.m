@@ -4,11 +4,8 @@ function test_tutorial_preprocessing
 % TEST ft_definetrial ft_preprocessing 
 
 
-current = cd('/home/common/matlab/fieldtrip/data');
-
-
 cfg                         = [];
-  cfg.dataset                 = 'Subject01.ds';
+  cfg.dataset                 = '/home/common/matlab/fieldtrip/data/Subject01.ds';
   cfg.trialdef.eventtype      = 'backpanel trigger';
   cfg.trialdef.eventvalue     = 3; % the value of the stimulus trigger for fully incongruent (FIC).
   cfg.trialdef.prestim        = 1; % in seconds
@@ -23,7 +20,7 @@ dataFIC = ft_preprocessing(cfg);
 
 
 cfg                         = [];
-cfg.dataset                 = 'Subject01.ds';
+cfg.dataset                 = '/home/common/matlab/fieldtrip/data/Subject01.ds';
 cfg.trialdef.eventtype      = 'backpanel trigger';  
 cfg.trialdef.eventvalue     = 5; % the value of the stimulus trigger for initially congruent (IC).
 cfg.trialdef.prestim        = 1; % in seconds
@@ -36,7 +33,7 @@ cfg.continuous = 'yes';
 dataIC = ft_preprocessing(cfg);
 
 cfg                         = [];
-cfg.dataset                 = 'Subject01.ds';
+cfg.dataset                 = '/home/common/matlab/fieldtrip/data/Subject01.ds';
 cfg.trialdef.eventtype      = 'backpanel trigger';
 cfg.trialdef.eventvalue     = 9; % the value of the stimulus trigger for fully congruent (FC).
 cfg.trialdef.prestim        = 1; % in seconds
@@ -62,5 +59,5 @@ dataFC = ft_preprocessing(cfg);
 % % 
 % cfg.channel = {'MEG' 'STIM'};
 % dataMytrialfun = ft_preprocessing(cfg);
-cd(current);
+
 end
