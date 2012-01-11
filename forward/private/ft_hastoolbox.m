@@ -15,7 +15,7 @@ function [status] = ft_hastoolbox(toolbox, autoadd, silent)
 % silent = 0 means that it will give some feedback about adding the toolbox
 % silent = 1 means that it will not give feedback
 
-% Copyright (C) 2005-2010, Robert Oostenveld
+% Copyright (C) 2005-2012, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -79,6 +79,8 @@ url = {
   'OPTIM'      'see http://www.mathworks.com/products/optim'
   'IMAGE'      'see http://www.mathworks.com/products/image'
   'SPLINES'    'see http://www.mathworks.com/products/splines'
+  'DISTCOMP'   'see http://www.mathworks.nl/products/parallel-computing/'
+  'COMPILER'   'see http://www.mathworks.com/products/compiler'
   'FASTICA'    'see http://www.cis.hut.fi/projects/ica/fastica'
   'BRAINSTORM' 'see http://neuroimage.ucs.edu/brainstorm'
   'FILEIO'     'see http://www.ru.nl/neuroimaging/fieldtrip'
@@ -169,7 +171,7 @@ switch toolbox
   case 'YOKOGAWA16BITBETA6'
     status = hasyokogawa('16bitBeta6');
   case 'YOKOGAWA_MEG_READER'
-    status = hasyokogawa('1.4'); 
+    status = hasyokogawa('1.4');
   case 'BEOWULF'
     status = (exist('evalwulf') && exist('evalwulf') && exist('evalwulf'));
   case 'MENTAT'
@@ -188,24 +190,26 @@ switch toolbox
     status = license('checkout', 'signal_toolbox');             % also check the availability of a toolbox license
   case 'IMAGE'
     status = license('checkout', 'image_toolbox');              % also check the availability of a toolbox license
-  case 'DCT'
+  case {'DCT', 'DISTCOMP'}
     status = license('checkout', 'distrib_computing_toolbox');  % also check the availability of a toolbox license
+  case 'COMPILER'
+    status = license('checkout', 'compiler');                   % also check the availability of a toolbox license
   case 'FASTICA'
     status  = exist('fastica', 'file');
   case 'BRAINSTORM'
     status  = exist('bem_xfer');
   case 'FILEIO'
-    status  = (exist('ft_read_header') && exist('ft_read_data') && exist('ft_read_event') && exist('ft_read_sens'));
+    status  = (exist('ft_read_header', 'file') && exist('ft_read_data', 'file') && exist('ft_read_event', 'file') && exist('ft_read_sens', 'file'));
   case 'FORMWARD'
-    status  = (exist('ft_compute_leadfield') && exist('ft_prepare_vol_sens'));
+    status  = (exist('ft_compute_leadfield', 'file') && exist('ft_prepare_vol_sens', 'file'));
   case 'DENOISE'
-    status  = (exist('tsr') && exist('sns'));
+    status  = (exist('tsr', 'file') && exist('sns', 'file'));
   case 'CTF'
     status  = (exist('getCTFBalanceCoefs') && exist('getCTFdata'));
   case 'BCI2000'
     status  = exist('load_bcidat');
   case 'NLXNETCOM'
-    status  = (exist('MatlabNetComClient') && exist('NlxConnectToServer') && exist('NlxGetNewCSCData'));
+    status  = (exist('MatlabNetComClient', 'file') && exist('NlxConnectToServer', 'file') && exist('NlxGetNewCSCData', 'file'));
   case 'DIPOLI'
     status  = exist('dipoli.maci', 'file');
   case 'MNE'
@@ -222,9 +226,9 @@ switch toolbox
     status  = (exist('prversion', 'file') && exist('dataset', 'file') && exist('svc', 'file'));
   case 'ITAB'
     status  = (exist('lcReadHeader', 'file') && exist('lcReadData', 'file'));
-  case 'BSMART' 
-    status  = exist('bsmart'); 
-  case 'PEER' 
+  case 'BSMART'
+    status  = exist('bsmart');
+  case 'PEER'
     status  = exist('peerslave', 'file') && exist('peermaster', 'file');
   case 'CONNECTIVITY'
     status  = exist('ft_connectivity_corr', 'file') && exist('ft_connectivity_granger', 'file');
@@ -258,7 +262,7 @@ switch toolbox
     status = exist('netcdf');
   case 'BCT'
     status = exist('clustering_coef_bd', 'file') && exist('edge_betweenness_wei', 'file');
-
+    
     % the following are not proper toolboxes, but only subdirectories in the fieldtrip toolbox
     % these are added in ft_defaults and are specified with unix-style forward slashes
   case 'COMPAT'
@@ -288,19 +292,19 @@ switch toolbox
     if ~silent, warning('cannot determine whether the %s toolbox is present', toolbox); end
     status = 0;
 end
-  
+
 % it should be a boolean value
 status = (status~=0);
 
 % try to determine the path of the requested toolbox
 if autoadd>0 && ~status
-
+  
   % for core fieldtrip modules
   prefix = fileparts(which('ft_defaults'));
   if ~status
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
   end
-
+  
   % for external fieldtrip modules
   prefix = fullfile(fileparts(which('ft_defaults')), 'external');
   if ~status
@@ -312,25 +316,25 @@ if autoadd>0 && ~status
       feval(licensefile);
     end
   end
-
+  
   % for linux computers in the F.C. Donders Centre
   prefix = '/home/common/matlab';
   if ~status && (strcmp(computer, 'GLNX86') || strcmp(computer, 'GLNXA64'))
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
   end
-
+  
   % for windows computers in the F.C. Donders Centre
   prefix = 'h:\common\matlab';
   if ~status && (strcmp(computer, 'PCWIN') || strcmp(computer, 'PCWIN64'))
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
   end
-
+  
   % use the matlab subdirectory in your homedirectory, this works on unix and mac
   prefix = [getenv('HOME') '/matlab'];
   if ~status
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
   end
-
+  
   if ~status
     % the toolbox is not on the path and cannot be added
     sel = find(strcmp(url(:,1), toolbox));
@@ -364,9 +368,9 @@ previouspath = path;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function status = myaddpath(toolbox, silent)
 if exist(toolbox, 'dir')
-  if ~silent, 
+  if ~silent,
     ws = warning('backtrace', 'off');
-    warning('adding %s toolbox to your Matlab path', toolbox); 
+    warning('adding %s toolbox to your Matlab path', toolbox);
     warning(ws); % return to the previous warning level
   end
   addpath(toolbox);
