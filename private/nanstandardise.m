@@ -1,8 +1,11 @@
-function [x,mx,sx] = standardise(x,dim)
+function [x,mx,sx] = nanstandardise(x,dim)
 
 % X = NANSTANDARDISE(X, DIM) computes the zscore of a matrix along dimension 
 % dim, taking nans into account
 % has similar functionality as the stats-toolbox's zscore function
+% Note: all nanXXX.m functionalities are implemented through mex-files that 
+% are more memory-efficient. The code in the MATLAB mfile is not necessarily
+% identical to that in the mex-file.
 
 % Copyright (C) 2010, Jan-Mathijs Schoffelen
 %
