@@ -1,6 +1,6 @@
-function test_headmodel_singleshell
+function test_ft_prepare_singleshell
 
-% TEST test_headmodel_singleshell
+% TEST test_ft_prepare_singleshell
 % TEST ft_headmodel_singleshell ft_prepare_headmodel ft_prepare_singleshell
 
 % function to test ft_headmodel_singleshell. this function is called

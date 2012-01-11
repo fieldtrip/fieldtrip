@@ -78,7 +78,7 @@ dataset(end).filename = 'gibb0101.raw';
 dataset(end+1).origdir  = origdir; 
 dataset(end).type     = 'meg/';
 dataset(end).datatype = 'neuromag122';
-dataset(end).filename = 'nmStim150.fif';
+dataset(end).filename = 'jg_single_01raw.fif';
 
 dataset(end+1).origdir  = origdir; 
 dataset(end).type     = 'meg/';

@@ -1,6 +1,6 @@
-function test_headmodel_localspheres
+function test_ft_prepare_localspheres
 
-% TEST test_headmodel_localspheres
+% TEST test_ft_prepare_localspheres
 % TEST ft_headmodel_localspheres ft_prepare_headmodel ft_prepare_localspheres
 
 % function to test ft_headmodel_localspheres. this function is called

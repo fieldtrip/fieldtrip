@@ -1,6 +1,6 @@
-function test_bug932
+function test_bug941
 
-% TEST test_bug932
+% TEST test_bug941
 % TEST ft_channelrepair ft_databrowser
 
 % load data
