@@ -51,13 +51,7 @@ if nargin < 1
 end
 if nargin == 1, flag = 0; end
 if nargin <  3,
-  if size(in,1) ~= 1
-    dim = 1;
-  elseif size(in,2) ~= 1 
-    dim = 2; 
-  else
-    dim = 3;
-  end
+  dim = find(size(in)>1,1,'first');  
 end
 if nargin == 2, flag = varargin{1}; end
 if nargin == 3,
