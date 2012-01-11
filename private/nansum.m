@@ -50,13 +50,7 @@ if nargin < 1
   return;
 end;
 if nargin < 2
-  if size(in,1) ~= 1
-    dim = 1;
-  elseif size(in,2) ~= 1
-    dim = 2;
-  else 
-    dim = 3; 
-  end;
+  dim = find(size(in)>1,1,'first');  
 end;
 tmpin = in;
 tmpin(find(isnan(in(:)))) = 0;
