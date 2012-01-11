@@ -45,7 +45,7 @@ if useafni
   % check whether the required AFNI toolbox is available
   hastoolbox('afni', 1);
 
-  atlas = read_fcdc_mri(filename);
+  atlas = ft_read_mri(filename);
 
   % the AFNI atlas contains two volumes at 1mm resolution
   atlas.brick0 = atlas.anatomy(:,:,:,1);
@@ -546,7 +546,7 @@ if useafni
     };
 
 elseif usewfu
-  atlas = read_fcdc_mri(filename); % /home/... works, ~/.... does not work
+  atlas = ft_read_mri(filename); % /home/... works, ~/.... does not work
   atlas.brick0 = atlas.anatomy(:,:,:);
   atlas = rmfield(atlas, 'anatomy');
   atlas.coord = 'mni';

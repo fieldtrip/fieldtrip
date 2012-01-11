@@ -374,7 +374,7 @@ for i=chansel(:)'
       % write the spike data to a new file
       datafile = fullfile(cfg.output, spike.label{1});  % this is without filename extension
       fprintf(', writing to %s\n', datafile);
-      ft_write_fcdc_spike(datafile, spike, 'dataformat', cfg.dataformat, 'fsample', hdr.Fs, 'TimeStampPerSample', hdr.TimeStampPerSample*hdr.Fs);
+      ft_write_spike(datafile, spike, 'dataformat', cfg.dataformat, 'fsample', hdr.Fs, 'TimeStampPerSample', hdr.TimeStampPerSample*hdr.Fs);
 
       % jump out of the interactive loop
       runloop = false;
