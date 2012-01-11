@@ -1,7 +1,9 @@
 function [lfp, spike, stm, bhv] = spass2fieldtrip(dirname)
 
 % SPASS2FIELDTRIP reads data from a set of SPASS data files and converts
-% the contents into data structures that FieldTrip understands.
+% the contents into data structures that FieldTrip understands. Note that
+% dependent on the SPASS data it might be required to change some
+% hard-coded parameters inside this function.
 %
 % Use as
 %   [lfp, spike, stm, bhv] = spass2fieldtrip(dirname)
@@ -23,9 +25,9 @@ function [lfp, spike, stm, bhv] = spass2fieldtrip(dirname)
 %
 % Subsequently you can analyze the data in fieldtrip, or write the spike
 % waveforms to a nex file for offline sorting using
-%   write_fcdc_spike('jeb012a02_ch1.nex', spike, 'dataformat', 'plexon_nex', 'chanindx', 1)
-%   write_fcdc_spike('jeb012a02_ch2.nex', spike, 'dataformat', 'plexon_nex', 'chanindx', 2)
-%   write_fcdc_spike('jeb012a02_ch3.nex', spike, 'dataformat', 'plexon_nex', 'chanindx', 3)
+%   ft_write_spike('jeb012a02_ch1.nex', spike, 'dataformat', 'plexon_nex', 'chanindx', 1)
+%   ft_write_spike('jeb012a02_ch2.nex', spike, 'dataformat', 'plexon_nex', 'chanindx', 2)
+%   ft_write_spike('jeb012a02_ch3.nex', spike, 'dataformat', 'plexon_nex', 'chanindx', 3)
 
 % Copyright (C) 2007, Robert Oostenveld
 %
@@ -129,7 +131,6 @@ bhv = bhv.data{1}(:);
 % store some additional information in the cfg structure
 cfg = [];
 
-
 % remember where the lfp trials are on the imaginary continuous timeaxis,
 % this links both the LFP and the spike timestamps to a common continuous
 % timeaxis
@@ -149,4 +150,3 @@ lfp.hdr.TimeStampPerSample = fsample_swa./fsample_ana;
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble callinfo
 ft_postamble history lfp spike
-
