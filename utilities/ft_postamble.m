@@ -21,10 +21,14 @@ function ft_postamble(cmd, varargin)
 
 global ft_default
 
+% this is a trick to pass the input arguments into the ft_postamble_xxx script
 ft_default.postamble = varargin;
 
 if exist(['ft_postamble_' cmd], 'file')
   evalin('caller', ['ft_postamble_' cmd]);
 end
 
-ft_default = rmfield(ft_default, 'postamble');
+if isfield(ft_default, 'postamble')
+  % the postamble field should not remain in the ft_default structure
+  ft_default = rmfield(ft_default, 'postamble');
+end

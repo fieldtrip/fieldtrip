@@ -70,6 +70,7 @@ if isempty(ft_default)
   ft_default = struct;
 end
 
+% merge the input cfg with the fields from ft_default
 fieldsused = fieldnames(ft_default);
 for i=1:length(fieldsused)
   fn = fieldsused{i};
