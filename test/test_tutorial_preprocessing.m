@@ -1,7 +1,7 @@
 function test_tutorial_preprocessing
 
 % TEST test_tutorial_preprocessing
-% TEST ft_definetrial ft_preprocessing ft_read_header ft_read_event
+% TEST ft_definetrial ft_preprocessing 
 
 
 current = cd('/home/common/matlab/fieldtrip/data');
