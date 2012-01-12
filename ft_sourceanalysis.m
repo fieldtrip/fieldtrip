@@ -1034,6 +1034,7 @@ ft_postamble callinfo
 if nargin==2
   ft_postamble previous data
 elseif nargin==3
-  ft_postamble history data baseline
+  ft_postamble previous data baseline
 end
+ft_postamble history source
 ft_postamble savevar source
