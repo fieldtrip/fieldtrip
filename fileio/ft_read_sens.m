@@ -143,6 +143,7 @@ switch fileformat
     fclose(fid);
     sens.label   = tmp{1};
     sens.chanpos = [tmp{2:4}];
+    sens.elecpos = sens.chanpos;
    
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % gradiometer information is always stored in the header of the MEG dataset
