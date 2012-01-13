@@ -25,7 +25,10 @@ function [script, details] = ft_analysisprotocol(cfg, datacfg)
 %                   'functionname', 'revision', 'matlabversion',
 %                   'computername', 'username', 'calltime', 'timeused',
 %                   'memused', 'workingdir', 'scriptpath' (default =
-%                   'functionname', only display function name)
+%                   'functionname', only display function name). Can also
+%                   be 'all', show all info. Please note that if you want
+%                   to show a lot of information, this will require a lot
+%                   of screen real estate.
 %  cfg.filename   = string, filename of m-file to which the script will be
 %                   written (default = [])
 %  cfg.remove     = cell-array with strings, determines which objects will
@@ -79,6 +82,10 @@ persistent info
 
 revision = '$Id$';
 
+% callinfo feedback is highly annoying in this recursive function
+% do this here, otherwise ft_defaults will override our setting
+if ~isfield(cfg, 'showcallinfo'), cfg.showcallinfo = 'no';   end
+
 % do the general setup of the function
 ft_defaults
 ft_preamble help
@@ -117,6 +124,14 @@ elseif ~iscell(cfg.remove)
   cfg.remove = {cfg.remove};
 end
 
+if strcmp(cfg.showinfo, 'all')
+  cfg.showinfo = {
+    'functionname', 'revision', 'matlabversion',...
+    'computername', 'username', 'calltime', 'timeused',...
+    'memused', 'workingdir', 'scriptpath'...
+  };
+end
+
 if ~isfield(cfg, 'showinfo')
   cfg.showinfo = {'functionname'};
 elseif ~iscell(cfg.showinfo)
@@ -124,7 +139,8 @@ elseif ~iscell(cfg.showinfo)
 end
 
 feedbackgui  = strcmp(cfg.feedback, 'gui') || strcmp(cfg.feedback, 'yes');
-feedbacktext = strcmp(cfg.feedback, 'text') || strcmp(cfg.feedback, 'yes');
+feedbacktext = strcmp(cfg.feedback, 'text') || strcmp(cfg.feedback, 'yes') || strcmp(cfg.feedback, 'verbose');
+feedbackverbose = strcmp(cfg.feedback, 'verbose');
 
 % we are only interested in the cfg-part of the data
 if isfield(datacfg, 'cfg')
@@ -134,6 +150,10 @@ end
 % set up the persistent variables
 if isempty(depth),  depth = 1; end
 if isempty(branch), branch = 1; end
+
+if depth==1 && branch==1 && feedbacktext
+  fprintf('steps found in analysis pipeline:\n\n');
+end
 
 % start with an empty script
 script = '';
@@ -157,18 +177,21 @@ catch
   thisid = 'unknown';
 end
 
-if feedbacktext
+if feedbackverbose
   % give some feedback on screen
   fprintf('\n');
   fprintf('recursion depth = %d, branch = %d\n', depth, branch);
   disp(thisname)
   disp(thisid)
+elseif feedbacktext
+  % give abridged feedback
+  fprintf('%-30s  depth = %2d  branch = %2d\n', thisname, depth, branch);
 end
 
 % remove the fields that are too large or not interesting
 for i=1:length(cfg.remove)
   if issubfield(datacfg, cfg.remove{i})
-    if feedbacktext
+    if feedbackverbose
       fprintf('removing %s\n', cfg.remove{i});
     end
     siz = size(getsubfield(datacfg, cfg.remove{i}));
@@ -205,27 +228,64 @@ info(branch,depth).this     = [branch depth];
 info(branch,depth).parent   = parent;
 info(branch,depth).children = {}; % this will be determined later
 
+% this will keep track of whether an extra branch has been found in this
+% step
+extraBranchesFound = 0;
+
+prev   = parent;
+parent = [branch depth]; % this will be used in the recursive call
+  
 if isfield(datacfg, 'previous')
-  prev   = parent;
-  parent = [branch depth]; % this will be used in the recursive call
+  
   if isstruct(datacfg.previous)
+    % single previous cfg, no branching here
+    
     % increment the depth counter
     depth = depth + 1;
+    
+    % increment the branch counter
+    branch = branch + extraBranchesFound;
+    extraBranchesFound = 1;
+    
     % use recursion to parse the previous section of the tree
     ft_analysisprotocol(cfg, datacfg.previous);
+    
   elseif iscell(datacfg.previous)
+    % multiple previous cfgs, branch
+    
     for i=1:length(datacfg.previous(:))
-      % increment the branch counter
-      branch = branch + (i>1);
       % increment the depth counter
       depth = depth + 1;
+
+      % increment the branch counter
+      branch = branch + extraBranchesFound;
+      extraBranchesFound = 1;
+      
       % use recursion to parse each previous section of the tree
       ft_analysisprotocol(cfg, datacfg.previous{i});
+      
     end
   end
-  % revert to the orignal parent
-  parent = prev;
 end
+
+% check all fields of the cfg to see if any of them have a sub-cfg that
+% would be appropriate to include as a branch
+fn = fieldnames(datacfg);
+for i=1:length(fn)
+  if isa(datacfg.(fn{i}), 'struct') && isfield(datacfg.(fn{i}), 'cfg')
+    % increment the depth counter
+    depth = depth + 1;
+    
+    % increment the branch counter
+    branch = branch + extraBranchesFound;
+    extraBranchesFound = 1;
+    
+    ft_analysisprotocol(cfg, datacfg.(fn{i}).cfg);
+  end
+end
+
+% revert to the orignal parent
+parent = prev;
 
 if depth==1
   % the recursion has finished, we are again at the top level
@@ -261,7 +321,10 @@ if depth==1
       outputvar = sprintf('var_%d_%d', info(branch, depth).this);
       inputvar = '';
       commandline = sprintf('%s = %s(cfg%s);', outputvar, info(branch, depth).name, inputvar);
-      disp(commandline);
+      
+      
+      % this seems pointless?
+      %disp(commandline);
       
     end
   end
@@ -310,13 +373,13 @@ if depth==1
   
   % give a report on the total time used and max. memory required
   if totalproctime > 3600
-    proclabel = sprintf('%0.1f hours', totalproctime./3600);
+    proclabel = sprintf('%5.2g hours', totalproctime./3600);
   else
-    proclabel = sprintf('%d seconds', totalproctime);
+    proclabel = sprintf('%d seconds', round(totalproctime));
   end
-  fprintf('the entire analysis pipeline took %s to run\n', proclabel);
-  fprintf('the maximum memory requirement of the analysis pipeline was %d MB\n',...
-    maxmemreq./1024./1024);
+  fprintf('\nthe entire analysis pipeline took %s to run\n', proclabel);
+  fprintf('the maximum memory requirement of the analysis pipeline was %d MB\n\n',...
+    round(maxmemreq./1024./1024));
   
   % clear all persistent variables
   depth  = [];
@@ -462,16 +525,16 @@ if numel(label) == 1
   l = text(textloc(1), textloc(2), label);
   set(l, 'HorizontalAlignment', 'center');
   set(l, 'VerticalAlignment', 'middle');
-  set(l, 'fontUnits', 'normalized');
-  set(l, 'fontSize', 0.05);
+  set(l, 'fontUnits', 'points');
+  set(l, 'fontSize', 10);
 else
   % top left corner of patch, inside padding
   textloc = [location(1)+boxpadding(1) location(2)+wh(2)];
   l = text(textloc(1), textloc(2), label);
   set(l, 'HorizontalAlignment', 'left');
   set(l, 'VerticalAlignment', 'top');
-  set(l, 'fontUnits', 'normalized');
-  set(l, 'fontSize', 0.04 ./ numel(label) ./ numdepth);
+  set(l, 'fontUnits', 'points');
+  set(l, 'fontSize', 10);
 end
 
 set(l, 'interpreter', 'tex');
@@ -481,7 +544,7 @@ if ~isempty(element.parent)
   parentlocation = (element.parent-1).*(wh+boxpadding.*2) + element.parent.*boxmargin;
   tip = parentlocation + [0.5 1].*wh + [1 2].*boxpadding;
   base = location + [0.5 0].*wh + [1 0].*boxpadding;
-  arrow(base,tip);
+  arrow(base,tip,'Length',8);
 end
 
 
