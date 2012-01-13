@@ -18,7 +18,7 @@ function varargout = qsubcellfun(fname, varargin)
 %   memreq         = number, the memory in bytes required to run a single job
 %   stack          = number, stack multiple jobs in a single qsub job (default = 'auto')
 %   backend        = string, can be 'sge', 'torque', 'slurm', 'local' (default is automatic)
-%   compile        = string, can be 'yes', 'no', 'auto', 'local' (default = 'no')
+%   compile        = string, can be 'auto', 'yes', 'no' (default = 'no')
 %
 % It is required to give an estimate of the time and memory requirements of
 % the individual jobs. The memory requirement of the MATLAB executable
@@ -38,6 +38,14 @@ function varargout = qsubcellfun(fname, varargin)
 %   x2    = {2, 2, 2, 2, 2};
 %   y     = qsubcellfun(fname, x1, x2, 'memreq', 1024^3, 'timreq', 60);
 %
+% Using the compile=yes or compile=auto option, you can compile your
+% function into a stand-alone executable that can be executed on the cluster
+% without requiring additional MATLAB licenses. You can also call the
+% QSUBCOMPILE function prior to calling QSUBCELLFUN. If you plan multiple
+% batches of the same function, compiling it prior to QSUBCELLFUN is more
+% efficient. In that case you will have to delete the compiled executable
+% yourself once you are done.
+%
 % In case you abort your call to qsubcellfun by pressing ctrl-c,
 % the already submitted jobs will be canceled. Some small temporary
 % files might remain in your working directory.
@@ -47,12 +55,12 @@ function varargout = qsubcellfun(fname, varargin)
 %   qstat
 %   qstat -an1
 %   qstat -Q
-% comands on the linux command line. To delete jobs from the Torque batch 
+% comands on the linux command line. To delete jobs from the Torque batch
 % queue and to abort already running jobs, you can use
 %   qdel <jobnumber>
 %   qdel all
 %
-% See also QSUBFEVAL, CELLFUN, PEERCELLFUN, FEVAL, DFEVAL, DFEVALASYNC
+% See also QSUBCOMPILE, QSUBFEVAL, CELLFUN, PEERCELLFUN, FEVAL, DFEVAL, DFEVALASYNC
 
 % -----------------------------------------------------------------------
 % Copyright (C) 2011-2012, Robert Oostenveld
@@ -70,9 +78,6 @@ function varargout = qsubcellfun(fname, varargin)
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/
 % -----------------------------------------------------------------------
-
-% this persistent variable is used to assign unique names to the jobs in each subsequent batch
-persistent batch
 
 if matlabversion(7.8, Inf)
   % switch to zombie when finished or when ctrl-c gets pressed
@@ -107,6 +112,14 @@ end
 if isa(fname, 'function_handle')
   % convert the function handle back into a string (e.g. @plus should be 'plus')
   fname = func2str(fname);
+  fcomp = [];
+elseif isstruct(fname)
+  % the function has been compiled by qsubcompile
+  fcomp = fname;
+  fname = fcomp.fname;
+else
+  fname = fname;
+  fcomp = [];
 end
 
 % there are potentially errors to catch from the which() function
@@ -118,13 +131,10 @@ end
 numargin    = numel(varargin);
 numjob      = numel(varargin{1});
 
-% keep a record of how many calls to this function have been made (useful for creating meaningful job IDs)
-% subsequent batches of jobs will have different names
-if isempty(batch)
-  batch = 1;
-else
-  batch = batch+1;
-end
+% keep a record of how many batches with jobs have been started. This
+% is useful for creating meaningful job IDs and to ensure that subsequent
+% batches of jobs will have different names
+batch = getbatch;
 
 % determine the number of MATLAB jobs to "stack" together into seperate qsub jobs
 if isequal(stack, 'auto')
@@ -205,7 +215,11 @@ if stack>1
   numpartition  = partition(end);
   
   stackargin        = cell(1,numargin+3); % include the fname, uniformoutput, false
-  stackargin{1}     = repmat({str2func(fname)},1,numpartition);  % fname
+  if compile
+    stackargin{1}     = repmat({fcomp},1,numpartition);  % fcomp
+  else
+    stackargin{1}     = repmat({fname},1,numpartition);  % fname
+  end
   stackargin{end-1} = repmat({'uniformoutput'},1,numpartition);  % uniformoutput
   stackargin{end}   = repmat({false},1,numpartition);            % false
   
@@ -240,16 +254,11 @@ if stack>1
 end
 
 % running a compiled version in parallel takes no MATLAB licenses
+% auto compilation will be attempted if the total batch takes more than 30 minutes
 if strcmp(compile, 'yes') || (strcmp(compile, 'auto') && (numjob*timreq/3600)>0.5)
   try
     % try to compile into a stand-allone application
-    batchid = generatebatchid(batch);
-    fprintf('started compiling %s\n', batchid);
-    mcc('-N', '-R', '-nodisplay', '-o', batchid, '-m', 'qsubexec', fname);
-    fprintf('finished compiling\n');
-    
-    % this is passed on to qsubfeval if  compilation succeeded
-    compile = 'yes';
+    fcomp = qsubcompile(fname, batch);
   catch
     if strcmp(compile, 'yes')
       % the error that was caught is critical
@@ -257,11 +266,8 @@ if strcmp(compile, 'yes') || (strcmp(compile, 'auto') && (numjob*timreq/3600)>0.
     elseif strcmp(compile, 'auto')
       % compilation was only optional, the caught error is not critical
       warning(lasterr);
-      compile = 'no';
     end
   end % try-catch
-else
-  compile = 'no';
 end % if compile
 
 % check the input arguments
@@ -282,7 +288,13 @@ for submit=1:numjob
   end
   
   % submit the job
-  [curjobid curputtime] = qsubfeval(fname, argin{:}, 'memreq', memreq, 'timreq', timreq, 'diary', diary, 'batch', batch, 'compile', compile, 'backend', backend);
+  if ~isempty(fcomp)
+    % use the compiled version
+    [curjobid curputtime] = qsubfeval(fcomp, argin{:}, 'memreq', memreq, 'timreq', timreq, 'diary', diary, 'batch', batch, 'backend', backend);
+  else
+    % use the non-compiled version
+    [curjobid curputtime] = qsubfeval(fname, argin{:}, 'memreq', memreq, 'timreq', timreq, 'diary', diary, 'batch', batch, 'backend', backend);
+  end
   
   % fprintf('submitted job %d\n', submit);
   jobid{submit}      = curjobid;
@@ -332,11 +344,12 @@ if numargout>0 && UniformOutput
 end
 
 % clean up the remains of the compilation
-if istrue(compile)
-  system(sprintf('rm -rf %s*',        batchid));
-  system(sprintf('rm -rf run_%s*.sh', batchid));
-  system('rm -rf mccExcludedFiles.log');
-  % system('rm -rf readme.txt'); % FIXME
+if (strcmp(compile, 'yes') || strcmp(compile, 'auto')) && ~isempty(fcomp)
+  % the extension might be .app or .exe or none
+  system(sprintf('rm -rf %s',         fcomp.batchid)); % on Linux
+  system(sprintf('rm -rf %s.app',     fcomp.batchid)); % on Apple OS X
+  system(sprintf('rm -rf %s.exe',     fcomp.batchid)); % on Windows
+  system(sprintf('rm -rf run_%s*.sh', fcomp.batchid));
 end
 
 % compare the time used inside this function with the total execution time
@@ -406,4 +419,3 @@ function cleanupfun
 % the qsublist function maintains a persistent list with all jobs
 % request it to kill all the jobs and to cleanup all the files
 qsublist('killall');
-

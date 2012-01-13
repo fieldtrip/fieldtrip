@@ -37,26 +37,26 @@ optout = {};
 
 % there are many reasons why the execution may fail, hence the elaborate try-catch
 try
-
+  
   if ~iscell(argin)
     error('input argument should be a cell-array');
   end
-
+  
   if ~ischar(argin{1})
     error('input argument #1 should be a string');
   end
-
+  
   fname = argin{1};
   argin = argin(2:end);
-
+  
   if ~iscell(optin)
     error('input options should be a cell-array');
   end
-
+  
   % check whether a diary file should be created
   usediary = ft_getopt(optin, 'diary');
   usediary = any(strcmp(usediary, {'always', 'warning', 'error'}));
-
+  
   % check whether a watchdog should be set
   % this only applies to the peer distributed computing system
   masterid = ft_getopt(optin, 'masterid');
@@ -65,19 +65,19 @@ try
   if ~isempty(masterid) || ~isempty(timallow) || ~isempty(memallow)
     watchdog(masterid, timallow, memallow);
   end
-
+  
   % try setting the same path directory
   option_path = ft_getopt(optin, 'path');
   setcustompath(option_path);
-
+  
   % try changing to the same working directory
   option_pwd = ft_getopt(optin, 'pwd');
   setcustompwd(option_pwd);
-
+  
   % try assigning the same global variables
   option_global = ft_getopt(optin, 'global');
   setglobal(option_global);
-
+  
   % seed the random number generator
   option_randomseed = ft_getopt(optin, 'randomseed');
   if ~isempty(option_randomseed)
@@ -87,21 +87,21 @@ try
       randn('seed', option_randomseed);
     else
       % this is according to http://www.mathworks.com/help/techdoc/math/bsn94u0-1.html
-      % and is needed to avoid a warning about Using 'seed' to set RAND's internal state causes RAND, RANDI, and RANDN to use legacy random number generators. 
+      % and is needed to avoid a warning about Using 'seed' to set RAND's internal state causes RAND, RANDI, and RANDN to use legacy random number generators.
       s = RandStream('mcg16807', 'Seed', option_randomseed);
       % s = RandStream('mt19937ar','Seed', option_randomseed);
       RandStream.setDefaultStream(s);
     end
   end
-
+  
   % there are potentially errors to catch from the which() function
   if isempty(which(fname))
     error('Not a valid M-file (%s).', fname);
   end
-
+  
   % it can be difficult to determine the number of output arguments
   try
-    if isequal(fname, 'cellfun') || isequal(fname, @cellfun)
+    if (isequal(fname, 'cellfun') || isequal(fname, @cellfun))
       numargout = nargout(argin{1});
     else
       numargout = nargout(fname);
@@ -116,26 +116,26 @@ try
       rethrow(nargout_error);
     end
   end
-
+  
   if numargout<0
     % the nargout function returns -1 in case of a variable number of output arguments
     numargout = 1;
   end
-
+  
   % start measuring the time and memory requirements
   memprofile on
   timused = toc(stopwatch);
-
+  
   if usediary
     % switch on the diary
     diaryfile = tempname;
     diary(diaryfile);
   end
-
+  
   % evaluate the function and get the output arguments
-  argout  = cell(1, numargout);
+  argout = cell(1, numargout);
   [argout{:}] = feval(fname, argin{:});
-
+  
   if usediary && exist(diaryfile, 'file')
     % close the diary and read the contents
     diary off
@@ -146,16 +146,16 @@ try
     % return an empty diary
     diarystring = [];
   end
-
+  
   % determine the time and memory requirements
   timused = toc(stopwatch) - timused;
   memstat = memprofile('info');
   memprofile off
   memprofile clear
-
+  
   % determine the maximum amount of memory that was used during the function evaluation
   memused = max([memstat.mem]) - min([memstat.mem]);
-
+  
   % Note that the estimated memory is inaccurate, because of
   % the dynamic memory management of Matlab and the garbage
   % collector. Especially on small jobs, the reported memory
@@ -163,16 +163,16 @@ try
   % the computation. Matlab is able to squeeze these small jobs
   % in some left-over memory fragment that was not yet deallocated.
   % Larger memory jobs return more reliable measurements.
-
+  
   fprintf('executing job took %f seconds and %d bytes\n', timused, memused);
-
+  
   % collect the output options
   optout = {'timused', timused, 'memused', memused, 'lastwarn', lastwarn, 'lasterr', '', 'diary', diarystring, 'release', version('-release')};
-
+  
 catch
   % the "catch me" syntax is broken on MATLAB74, this fixes it
   feval_error = lasterror;
-
+  
   if usediary && exist(diaryfile, 'file')
     % close the diary and read the contents
     diary off
@@ -183,14 +183,14 @@ catch
     % return an empty diary
     diarystring = [];
   end
-
+  
   % the output options will include the error
   % note that the error cannot be sent as object, but has to be sent as struct
   optout = {'lastwarn', lastwarn, 'lasterr', struct(feval_error), 'diary', diarystring};
-
+  
   % an error was detected while executing the job
   warning('an error was detected during job execution');
-
+  
   % ensure that the memory profiler is switched off
   memprofile off
   memprofile clear
@@ -225,4 +225,3 @@ end
 % clear the previous warning and error messages
 lastwarn('');
 lasterr('');
-
