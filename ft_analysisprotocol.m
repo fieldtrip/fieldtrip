@@ -358,7 +358,6 @@ if depth==1
     end
     axis off;
     axis tight;
-    guidata(fig,info);
     set(fig, 'WindowButtonUpFcn', @button);
     set(fig, 'KeyPressFcn', @key);
   end % feedbackgui
@@ -519,6 +518,17 @@ y = y + location(2);
 p = patch(x', y', 0);
 set(p, 'Facecolor', [1 1 0.6])
 
+% store data for this patch
+tmpGuidata = guidata(p);
+if ~isfield(tmpGuidata, 'patches')
+  tmpGuidata.patches = {};
+end
+tmpGuidata.patches{end+1} = [];
+tmpGuidata.patches{end}.x = x';
+tmpGuidata.patches{end}.y = y';
+tmpGuidata.patches{end}.element = element;
+guidata(p, tmpGuidata);
+
 if numel(label) == 1
   % center of patch
   textloc = location+boxpadding+wh./2;
@@ -562,15 +572,17 @@ function varargout = button(h, eventdata, handles, varargin)
 pos = get(get(gcbo, 'CurrentAxes'), 'CurrentPoint');
 x = pos(1,1);
 y = pos(1,2);
-info = guidata(h);
-dist = zeros(size(info)) + inf;
-for i=1:numel(info)
-  if ~isempty(info(i).this)
-    dist(i) = norm(info(i).this - [x y]);
+patches = guidata(h);
+patches = patches.patches; % stupid matlab syntax doesn't allow guidata(h).patches
+
+for k = 1:numel(patches)
+  patchX = patches{k}.x;
+  patchY = patches{k}.y;
+  
+  if (x >= patchX(1) && x <= patchX(2) ...
+      && y >= patchY(1) && y <= patchY(3))
+    uidisplaytext(patches{k}.element.script, patches{k}.element.name);
+    break;
   end
 end
-% determine the box that is nearest by the mouse click
-[m, indx] = min(dist(:));
-% show the information contained in that box
-uidisplaytext(info(indx).script, info(indx).name);
 
