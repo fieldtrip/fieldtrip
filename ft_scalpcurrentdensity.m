@@ -150,7 +150,7 @@ end
 % compute SCD for each trial
 if strcmp(cfg.method, 'spline')
   for trlop=1:Ntrials
-    % do not compute intrepolation, but only one value at [0 0 1]
+    % do not compute interpolation, but only one value at [0 0 1]
     % this also gives L1, the laplacian of the original data in which we
     % are interested here
     fprintf('computing SCD for trial %d\n', trlop);
