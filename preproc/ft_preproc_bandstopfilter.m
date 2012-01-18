@@ -74,9 +74,11 @@ switch type
   case 'fir'
     if isempty(N)
       N = 3*fix(Fs / Fbp(1));
+      if rem(N,2)==1,   N=N+1;    end
     end
     if N > floor( (size(dat,2) - 1) / 3)
       N=floor(size(dat,2)/3) - 2;
+      if rem(N,2)==1,   N=N+1;    end
     end
     [B, A] = fir1(N, [min(Fbp)/Fn max(Fbp)/Fn], 'stop');
   case 'firls' % from NUTMEG's implementation
