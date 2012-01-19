@@ -336,11 +336,20 @@ end
 % FIXME squeeze out the appropriate dimords if avgoverfreq etc.
 stat.dimord = cfg.dimord;
 
+% HACK if a bivariate statistic is in the output, replace label with the
+% appropriate labelcmb
+if strcmp(cfg.statistic, 'indepsamplesZcoh') && isfield(stat, 'label')
+  stat.labelcmb(:,1) = stat.label(cfg.chancmbindx(:,1));
+  stat.labelcmb(:,2) = stat.label(cfg.chancmbindx(:,2));
+  stat = rmfield(stat, 'label');
+end
+
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
 ft_postamble callinfo
 ft_postamble previous varargin
 ft_postamble history stat
 ft_postamble savevar stat
+
 
 

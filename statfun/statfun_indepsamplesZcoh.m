@@ -146,3 +146,11 @@ if strcmp(cfg.dimord(1:3), 'pos')
 elseif strcmp(cfg.dimord(1:4), 'chan')
   cfg.dimord = ['chancmb',cfg.dimord(5:end)];
 end
+
+% append an indexing matrix to the cfg to be able to recover the channel
+% combinations
+chanindx = tril(true(nchan),-1);
+cmbindx1 = repmat((1:nchan)', [1 nchan]);
+cmbindx2 = repmat((1:nchan),  [nchan 1]);
+cfg.chancmbindx(:,1) = cmbindx1(chanindx);
+cfg.chancmbindx(:,2) = cmbindx2(chanindx);
