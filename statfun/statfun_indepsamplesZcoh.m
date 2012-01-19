@@ -1,4 +1,4 @@
-function [s] = statfun_indepsamplesZcoh(cfg, dat, design)
+function [s, cfg] = statfun_indepsamplesZcoh(cfg, dat, design)
 
 % STATFUN_indepsamplesZcoh calculates the independent samples coherence Z-statistic 
 % on the biological data in dat (the dependent variable), using the information on 
@@ -63,15 +63,16 @@ end;
 if isfield(cfg,'uvar') && ~isempty(cfg.uvar)
     error('cfg.uvar should not exist for an independent samples statistic');
 end
-if ~isfield(cfg, 'label') && ~isfield(cfg, 'pos')
-  error('the configuration needs to contain either a label or a pos field');
-elseif isfield(cfg, 'label') && isfield(cfg, 'pos') && ~isempty(cfg.label) && ~isempty(cfg.pos)
-  error('the configuration needs to contain either a non-empty label or a non-empty pos field');
-elseif isfield(cfg, 'label') && ~isempty(cfg.label)
-  nchan = length(cfg.label);
-elseif isfield(cfg, 'pos') && ~isempty(cfg.pos)
-  nchan = size(cfg.pos,1);
-end
+% if ~isfield(cfg, 'label') && ~isfield(cfg, 'pos')
+%   error('the configuration needs to contain either a label or a pos field');
+% elseif isfield(cfg, 'label') && isfield(cfg, 'pos') && ~isempty(cfg.label) && ~isempty(cfg.pos)
+%   error('the configuration needs to contain either a non-empty label or a non-empty pos field');
+% elseif isfield(cfg, 'label') && ~isempty(cfg.label)
+%   nchan = length(cfg.label);
+% elseif isfield(cfg, 'pos') && ~isempty(cfg.pos)
+%   nchan = size(cfg.pos,1);
+% end
+nchan = cfg.dim(1);
 
 % perform some checks on the design
 selc1 = find(design(cfg.ivar,:)==1);
@@ -113,6 +114,7 @@ if strcmp(cfg.computestat, 'yes')
     tempstat=(atanh(abs(csdc1))-biasc1-atanh(abs(csdc2))+biasc2)./denomZ;
     s.stat(((freqtimindx-1)*nchancmb + 1):(freqtimindx*nchancmb))=tempstat(chancmbsel);
   end;
+  s.stat = reshape(s.stat, [nchancmb nfreqtim]);
 end;
 
 if strcmp(cfg.computecritval,'yes')
@@ -135,4 +137,12 @@ if strcmp(cfg.computeprob,'yes')
   elseif cfg.tail==1
     s.prob = 1-normcdf(s.stat);
   end;
+  s.prob = reshape(s.prob, [nchancmb nfreqtim]);
+end
+
+% adjust the dimord
+if strcmp(cfg.dimord(1:3), 'pos')
+  cfg.dimord = ['poscmb',cfg.dimord(4:end)];
+elseif strcmp(cfg.dimord(1:4), 'chan')
+  cfg.dimord = ['chancmb',cfg.dimord(5:end)];
 end
