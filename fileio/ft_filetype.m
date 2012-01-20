@@ -1003,6 +1003,10 @@ if isempty(previous_argin) && ~strcmp(type, 'unknown')
   previous_argin  = current_argin;
   previous_argout = current_argout;
   previous_pwd    = current_pwd;
+elseif  isempty(previous_argin) && (exist(filename,'file') || exist(filename,'dir')) && strcmp(type, 'unknown') % if the type is unknown, but the file or dir exists, save the current output
+  previous_argin  = current_argin;
+  previous_argout = current_argout;
+  previous_pwd    = current_pwd;
 else
   % don't remember in case unknown
   previous_argin  = [];
