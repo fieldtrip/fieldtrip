@@ -68,12 +68,13 @@ if nargin>1 && all(cellfun(@isnumeric, varargin(1:2)) | cellfun(@islogical, vara
 else
   % the function was called like plot(y, ...)
   vdat = varargin{1};
-  if any(size(vdat)==1)
-    % ensure that it is a column vector
-    vdat = vdat(:);
-  end
   hdat = 1:size(vdat,1);
   varargin = varargin(2:end);
+end
+
+if any(size(vdat)==1)
+  % ensure that it is a column vector
+  vdat = vdat(:);
 end
 
 % get the optional input arguments

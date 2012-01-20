@@ -474,7 +474,7 @@ for i=1:Ndata
   if ~isempty(cfg.maskparameter)
     datmask = varargin{1}.(cfg.maskparameter)(sellab,:);
     datmask = datmask(xidmin(i):xidmax(i));
-    maskdatavector = reshape(mean(datmask,1), [1 numel(xvector)]);
+    maskdatavector = reshape(mean(datmask,1), [1 numel(xval)]);
   else
     maskdatavector = [];
   end
