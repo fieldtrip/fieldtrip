@@ -138,7 +138,11 @@ batch = getbatch;
 
 % determine the number of MATLAB jobs to "stack" together into seperate qsub jobs
 if isequal(stack, 'auto')
-  if ~isempty(timreq)
+  if strcmp(compile, 'yes') || strcmp(compile, 'auto') || ~isempty(fcomp)
+    % compilation and stacking are incompatible with each other
+    % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1255
+    stack = 1;
+  elseif ~isempty(timreq)
     stack = floor(180/timreq);
   else
     stack = 1;
