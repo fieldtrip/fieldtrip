@@ -3,6 +3,8 @@ function test_bug798
 % TEST test_bug798
 % TEST ft_freqstatistics ft_selectdata ft_datatype_freq ft_appendfreq
 
+% note that this bug is related to bug 921
+
 cd /home/common/matlab/fieldtrip/data/test/bug798
 load t2_subj1.mat
 load t2_subj1_null
@@ -56,10 +58,6 @@ argin{3} = ft_checkdata(t2_subj2, 'datatype', 'freq');
 argin{4} = ft_checkdata(t2_subj2_null, 'datatype', 'freq');
 % and
 data = ft_selectdata(argin{:}, 'param', 'powspctrm');
-% after which the prob and stat are not removed, and dimord not updated
-% FIXME the following tests fail, see bug  
-% assert(~isfield(data, 'stat'));
-% assert(~isfield(data, 'prob'));
 assert(strcmp(data.dimord, 'rpt_chan_freq'));
 
 % but this should now work
