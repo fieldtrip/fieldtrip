@@ -70,8 +70,8 @@ function [cfg] = ft_topoplotIC(cfg, varargin)
 % layout. If you want to have more fine-grained control over the layout
 % of the subplots, you should create your own layout file.
 %
-% See also:
-%   FT_TOPOPLOTTFR, FT_SINGLEPLOTTFR, FT_MULTIPLOTTFR, FT_PREPARE_LAYOUT
+% See also FT_COMPONENTANALYSIS, FT_REJECTCOMPONENT, FT_TOPOPLOTTFR,
+% FT_SINGLEPLOTTFR, FT_MULTIPLOTTFR, FT_PREPARE_LAYOUT
 
 % Undocumented local options:
 % cfg.labeloffset (offset of labels to their marker, default = 0.005)

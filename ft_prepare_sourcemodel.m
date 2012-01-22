@@ -1,11 +1,12 @@
 function [grid, cfg] = ft_prepare_sourcemodel(cfg, vol, sens)
 
-% FT_PREPARE_SOURCEMODEL helps to make a source model that can be
-% used for source reconstruction, beamformer scanning, linear
-% estimation and MEG interpolation.
+% FT_PREPARE_SOURCEMODEL constructs a source model, for example a 3-D grid or a
+% cortical sheet. The source model that can be used for source reconstruction,
+% beamformer scanning, linear estimation and MEG interpolation.
 %
 % Use as
 %   grid = prepare_dipole_grid(cfg)
+%
 % where the configuration structure contains the details on how the source
 % model should be constructed.
 %
@@ -25,7 +26,7 @@ function [grid, cfg] = ft_prepare_sourcemodel(cfg, vol, sens)
 %   cfg.grid.ygrid      = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
 %   cfg.grid.zgrid      = vector (e.g.   0:1:20) or 'auto' (default = 'auto')
 %   cfg.grid.resolution = number (e.g. 1 cm) for automatic grid generation
-%   cfg.sourceunits     = 'auto' (in which case the sourceunits default to the unit in the 
+%   cfg.sourceunits     = 'auto' (in which case the sourceunits default to the unit in the
 %                          sensor description), or 'mm'/'cm'/'dm'/'m'
 %
 % Configuration options for a predefined grid
@@ -41,8 +42,8 @@ function [grid, cfg] = ft_prepare_sourcemodel(cfg, vol, sens)
 %
 % Configuration options for cortex segmentation, i.e. for placing dipoles in grey matter
 %   cfg.mri           = can be filename, MRI structure or segmented MRI structure
-%   cfg.sourceunits   = 'auto' (in which case the sourceunits default to the unit in the 
-%                          sensor description, if provided). otherwise it defaults to 'cm'
+%   cfg.sourceunits   = 'auto' (in which case the sourceunits default to the unit in the
+%                       sensor description, if provided). otherwise it defaults to 'cm'
 %   cfg.threshold     = 0.1, relative to the maximum value in the segmentation
 %   cfg.smooth        = 5, smoothing in voxels
 %
@@ -60,7 +61,7 @@ function [grid, cfg] = ft_prepare_sourcemodel(cfg, vol, sens)
 %                      single triangulated boundary, or a Nx3 matrix with surface
 %                      points
 %
-% See also FT_SOURCEANALYSIS, FT_MEGREALIGN, FT_DIPOLEFITTING, FT_PREPARE_LEADFIELD
+% See also FT_PREPARE_LEADFIELD, FT_SOURCEANALYSIS, FT_DIPOLEFITTING, FT_MEGREALIGN
 
 % Searching through the code, it seems that the following cfg fields are being used
 % cfg.grid
@@ -167,32 +168,32 @@ if basedonauto
   cfg.grid.ygrid  = ft_getopt(cfg.grid, 'ygrid', 'auto');
   cfg.grid.zgrid  = ft_getopt(cfg.grid, 'zgrid', 'auto');
   cfg.inwardshift = ft_getopt(cfg,      'inwardshift', 0); %in this case for inside detection, FIXME move to cfg.grid
-  cfg.grid.tight  = ft_getopt(cfg.grid, 'tight', 'yes'); 
+  cfg.grid.tight  = ft_getopt(cfg.grid, 'tight', 'yes');
   cfg.sourceunits = ft_getopt(cfg,      'sourceunits', 'auto');
 end
 
 if basedongrid
   fprintf('creating dipole grid based on user specified 3D grid\n');
   cfg.inwardshift = ft_getopt(cfg,      'inwardshift', 0); %in this case for inside detection, FIXME move to cfg.grid
-  cfg.grid.tight  = ft_getopt(cfg.grid, 'tight', 'yes'); 
+  cfg.grid.tight  = ft_getopt(cfg.grid, 'tight', 'yes');
 end
 
 if basedonpos
   fprintf('creating dipole grid based on user specified dipole positions\n');
   cfg.inwardshift = ft_getopt(cfg,      'inwardshift', 0); %in this case for inside detection, FIXME move to cfg.grid
-  cfg.grid.tight  = ft_getopt(cfg.grid, 'tight', 'no'); 
+  cfg.grid.tight  = ft_getopt(cfg.grid, 'tight', 'no');
 end
 
 if basedonshape
   fprintf('creating dipole grid based on inward-shifted head shape\n');
   cfg.inwardshift = ft_getopt(cfg,      'inwardshift', 0); %in this case for inside detection, FIXME move to cfg.grid
   cfg.spheremesh  = ft_getopt(cfg,      'spheremesh', 642); % FIXME move spheremesh to cfg.grid
-  cfg.grid.tight  = ft_getopt(cfg.grid, 'tight',      'yes'); 
+  cfg.grid.tight  = ft_getopt(cfg.grid, 'tight',      'yes');
 end
 
 if basedoncortex
   cfg.sourceunits       = ft_getopt(cfg,      'sourceunits', 'auto');
-  cfg.grid.tight  = ft_getopt(cfg.grid, 'tight', 'yes'); 
+  cfg.grid.tight  = ft_getopt(cfg.grid, 'tight', 'yes');
 end
 
 if basedonmri
@@ -200,14 +201,14 @@ if basedonmri
   cfg.threshold   = ft_getopt(cfg,      'threshold', 0.1); % relative
   cfg.smooth      = ft_getopt(cfg,      'smooth',    5);   % in voxels
   cfg.sourceunits       = ft_getopt(cfg,      'sourceunits',     'auto');
-  cfg.grid.tight  = ft_getopt(cfg.grid, 'tight',     'yes'); 
+  cfg.grid.tight  = ft_getopt(cfg.grid, 'tight',     'yes');
 end
 
 if basedonvol
   fprintf('creating dipole grid based on inward-shifted brain surface from volume conductor model\n');
   cfg.inwardshift = ft_getopt(cfg,      'inwardshift', 0); %in this case for inside detection, FIXME move to cfg.grid
   cfg.spheremesh  = ft_getopt(cfg,      'spheremesh', 642); % FIXME move spheremesh to cfg.grid
-  cfg.grid.tight  = ft_getopt(cfg.grid, 'tight',      'no'); 
+  cfg.grid.tight  = ft_getopt(cfg.grid, 'tight',      'no');
 end
 
 % these are mutually exclusive
@@ -262,7 +263,7 @@ elseif isfield(cfg, 'sourceunits') && isempty(sens)
   if strcmp(cfg.sourceunits, 'auto')
     cfg.sourceunits = 'cm';
   end
-end  
+end
 
 % ensure the vol to have the same units as cfg.sourceunits
 if isfield(cfg, 'sourceunits') && ~isempty(vol)
@@ -276,7 +277,7 @@ if basedonauto
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   if isempty(sens)
     error('creating a 3D-grid sourcemodel based on automatic detection requires sensor position information');
-  end 
+  end
   if ischar(cfg.grid.xgrid) && strcmp(cfg.grid.xgrid, 'auto')
     grid.xgrid = floor(min(sens.chanpos(:,1))):cfg.grid.resolution:ceil(max(sens.chanpos(:,1)));
   end
@@ -372,18 +373,18 @@ if basedonmri
   % construct a grid based on the segmented MRI that is provided in the
   % configuration, only voxels in gray matter will be used
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+  
   if ischar(cfg.mri)
     mri = ft_read_mri(cfg.mri);
   else
-    mri = cfg.mri; 
+    mri = cfg.mri;
   end
-
+  
   % ensure the mri to have units
   if ~isfield(mri, 'unit')
     mri = ft_convert_units(mri);
-  end 
- 
+  end
+  
   % convert the source/functional data into the same units as the anatomical MRI
   scale = 1;
   switch cfg.sourceunits
@@ -489,7 +490,7 @@ if basedonmri
   grid.inside         = inside(:);
   grid.outside        = setdiff(1:size(grid.pos,1),grid.inside)';
   grid.unit           = cfg.sourceunits;
-   
+  
   fprintf('the regular 3D grid encompassing the cortex contains %d grid points\n', size(grid.pos,1));
   fprintf('%d grid points inside gray matter\n', length(grid.inside));
   fprintf('%d grid points outside gray matter\n', length(grid.outside));
@@ -589,11 +590,11 @@ if ~isfield(grid, 'inside') && ~isfield(grid, 'outside')
       end
     end
     grid.outside = find(outside);
-    grid.inside  = find(~outside);   
+    grid.inside  = find(~outside);
   elseif ft_voltype(vol, 'slab_monopole')
     grid.inside = 1:size(grid.pos,1);
     grid.outside = [];
-    outside = zeros(1,size(grid.pos,1));    
+    outside = zeros(1,size(grid.pos,1));
     for i =1:size(grid.pos,1);
       invacuum = false;
       pol = grid.pos(i,:);
@@ -608,7 +609,7 @@ if ~isfield(grid, 'inside') && ~isfield(grid, 'outside')
       end
     end
     grid.outside = find(outside);
-    grid.inside  = find(~outside);      
+    grid.inside  = find(~outside);
   else
     if isfield(sens, 'coilori') && isfield(sens, 'coilpos') && isfield(sens, 'tra')
       % in case of MEG, make a triangulation of the outermost surface

@@ -1,6 +1,8 @@
 function y = config(x, varargin)
 
-% CONFIG Construct a config object.
+% CONFIG constructs an object that can be used to track used and unused
+% options that are represented in the cfg structure in the FieldTrip
+% toolbox.
 %
 % y = CONFIG( ) creates an empty config object.
 % y = CONFIG(x) creates a config object from the

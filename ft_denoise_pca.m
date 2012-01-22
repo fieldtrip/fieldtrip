@@ -1,20 +1,25 @@
 function data = ft_denoise_pca(cfg, varargin)
 
-% DENOISE_PCA performs a pca on specified reference channels and subtracts
-% the projection of the data of interest onto this orthogonal basis from 
-% the data of interest. This is the algorithm which is applied by 4D to 
-% compute noise cancellation weights on a dataset of interest.
+% FT_DENOISE_PCA performs a principal component analysis (PCA) on specified
+% reference channels and subtracts the projection of the data of interest onto
+% this orthogonal basis from the data of interest. This is the algorithm which
+% is applied by 4D to compute noise cancellation weights on a dataset of
+% interest. This function has been designed for 4D MEG data, but can also be
+% applied to data from other MEG systems.
 %
 % Use as
 %   [dataout] = ft_denoise_pca(cfg, data) 
 % or 
 %   [dataout] = ft_denoise_pca(cfg, data, refdata)
 %
-% Where data is an MEG raw data-structure obtained with FT_PREPROCESSING.
-% If an additional data-structure refdata is in the input, the specified
-% reference channels for the regression will be taken from this second data
-% structure. This can be useful when reference channel specific
+% where data is a raw data-structure with MEG data that was obtained with
+% FT_PREPROCESSING. If an additional data-structure refdata is in the input, the
+% specified reference channels for the regression will be taken from this second
+% data structure. This can be useful when reference channel specific
 % preprocessing needs to be done (e.g. low-pass filtering).
+%
+% The output structure dataout contains the denoised data in a format that is
+% consistent with the output of FT_PREPROCESSING.
 %
 % The configuration should be according to
 %   cfg.refchannel = the channels used as reference signal (default = 'MEGREF')
@@ -29,8 +34,7 @@ function data = ft_denoise_pca(cfg, varargin)
 % if 0 < cfg.truncate < 1, the singular value spectrum will be thresholded at the 
 % fraction cfg.truncate of the largest singular value.
 %
-% The output data dataout contains the denoised data. The optional second
-% output argument pca is a structure that contains
+% See also FT_PREPROCESSING, FT_DENOISE_SYNTHETIC 
 
 % Undocumented cfg-option: cfg.pca the output structure of an earlier call
 % to the function. Can be used regress out the reference channels from

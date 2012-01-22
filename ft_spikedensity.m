@@ -1,16 +1,15 @@
-function [sdf, sdfdata] = density(cfg,data)
+function [sdf, sdfdata] = ft_spikedensity(cfg,data)
 
-% FT_SPIKESTATION_DENSITY computes the spike density function of the
-% spike trains by convolving the data with a window.
+% FT_SPIKEDENSITY computes the spike density function of the spike trains by
+% convolving the data with a window.
 %
 % Use as
-%   [sdf, sdfdata] = ft_spike_density(cfg, data)
-% or
 %   [sdf]          = ft_spike_density(cfg, data)
-% In this case only the average and variance of spikedensityfunction across
-% trials will be computed and individual trials are not kept (SDFDATA has
-% those). See cfg.winfunc below for more information on the specific
-% use.
+%   [sdf, sdfdata] = ft_spike_density(cfg, data)
+% 
+% If you specify one output argument, only the average and variance of
+% spikedensityfunction across trials will be computed and individual trials are
+% not kept. See cfg.winfunc below for more information on the specific use.
 %
 % Inputs:
 %   DATA should be organised in a structure as obtained from the

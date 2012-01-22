@@ -20,7 +20,7 @@ function [data] = ft_denoise_synthetic(cfg, data)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_PREPROCESSING
+% See also FT_PREPROCESSING, FT_DENOISE_PCA
 
 % Copyright (C) 2004-2008, Robert Oostenveld
 %

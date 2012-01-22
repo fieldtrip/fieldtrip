@@ -1,6 +1,7 @@
 function data = ft_spikesimulation(cfg)
 
-% FT_SPIKESIMULATION
+% FT_SPIKESIMULATION simulates a spiketrain with a structures timing of the
+% neuronal firing.
 %
 % Use as
 %   data = ft_spikesimulation(cfg)

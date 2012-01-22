@@ -1,8 +1,19 @@
 function [stat, cfg] = statistics_stats(cfg, dat, design)
 
-% This is a helper function that performs a massive univariate statistical
-% test. This function is called by either FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS
-% or FT_SOURCSTATISTICS.
+% STATISTICS_STATS performs a massive univariate statistical test using the
+% MATLAB statistics toolbox. This function should not be called directly,
+% instead you should call the function that is associated with the type of data
+% on which you want to perform the test.
+%
+% Use as
+%   stat = ft_timelockstatistics(cfg, data1, data2, data3, ...)
+%   stat = ft_freqstatistics    (cfg, data1, data2, data3, ...)
+%   stat = ft_sourcestatistics  (cfg, data1, data2, data3, ...)
+%
+% Where the data is obtained from FT_TIMELOCKANALYSIS, FT_FREQANALYSIS
+% or FT_SOURCEANALYSIS respectively, or from FT_TIMELOCKGRANDAVERAGE,
+% FT_FREQGRANDAVERAGE or FT_SOURCEGRANDAVERAGE respectively and with
+% cfg.method = 'montecarlo'
 %
 %  This function uses the Matlab statistics toolbox to perform various
 %  statistical tests on timelock, frequency or source data. Supported

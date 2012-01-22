@@ -1,15 +1,15 @@
 function [cfg] = ft_connectivityplot(cfg, varargin)
 
-% FT_CONNECTIVITYPLOT plots frequency domain connectivity with dimord
-% 'chan_chan_freq'. The data are rendered in a square grid of subplots
-% and each subplot containing the spectrum.
+% FT_CONNECTIVITYPLOT plots frequency-resolved connectivity between EEG/MEG
+% channels. The data are rendered in a square grid of subplots and each
+% subplot containing the connectivity spectrum.
 %
 % Use as
 %   ft_connectivityplot(cfg, data)
 %
-% The data is a structure containing the output to FT_CONNECTIVITYANALYSIS
-% using a frequency domain metric of connectivity, and with a dimord of
-% 'chan_chan_freq'.
+% The input data is a structure containing the output to FT_CONNECTIVITYANALYSIS
+% using a frequency domain metric of connectivity. Consequently the input
+% data should have a dimord of 'chan_chan_freq'.
 %
 % The cfg can have the following options:
 %   cfg.parameter   = string, the functional parameter to be plotted (default = 'cohspctrm')

@@ -1,14 +1,16 @@
 function [comp] = ft_componentanalysis(cfg, data)
 
-% FT_COMPONENTANALYSIS principal or independent component analysis
-% computes the topography and timecourses of the ICA/PCA components
-% in the EEG/MEG data.
+% FT_COMPONENTANALYSIS performs independent component analysis or other
+% spatio-temporal decompositions of EEG or MEG data. This function computes
+% the topography and timecourses of the components. The output of this
+% function can be further analyzed with FT_TIMELOCKANALYSIS or
+% FT_FREQNANALYSIS.
 %
 % Use as
 %   [comp] = ft_componentanalysis(cfg, data)
 %
-% where the data comes from FT_PREPROCESSING or FT_TIMELOCKANALYSIS and the
-% configuration structure can contain
+% where the data comes from FT_PREPROCESSING and the configuration
+% structure can contain
 %   cfg.method       = 'runica', 'fastica', 'binica', 'pca', 'svd', 'jader', 'varimax', 'dss', 'cca', 'sobi', 'white' (default = 'runica')
 %   cfg.channel      = cell-array with channel selection (default = 'all'), see FT_CHANNELSELECTION for details
 %   cfg.trials       = 'all' or a selection given as a 1xN vector (default = 'all')
@@ -113,7 +115,8 @@ function [comp] = ft_componentanalysis(cfg, data)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_REJECTCOMPONENT, FASTICA, RUNICA, BINICA, SVD, JADER, VARIMAX, DSS, CCA, SOBI
+% See also FT_TOPOPLOTIC, FT_REJECTCOMPONENT, FASTICA, RUNICA, BINICA, SVD,
+% JADER, VARIMAX, DSS, CCA, SOBI
 
 % Copyright (C) 2003-2012, Robert Oostenveld
 %

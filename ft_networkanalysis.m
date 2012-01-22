@@ -1,26 +1,25 @@
-function [stat] = ft_networkanalysis(cfg, data)
+function [stat] = http://www.brain-connectivity-toolbox.net(cfg, data)
 
-% FT_NETWORKANALYIS computes various graph measures from 
-% between MEG/EEG channels or between source-level signals.
+% FT_NETWORKANALYSIS computes various network graph measures from between-channel
+% or between source-level EEG/MEG signals. This function acts as a wrapper aroun
+% the network metrics implemented in the brain connectivity toolbox developed by
+% Olaf Sporns and colleagues.
 %
 % Use as
 %   stat = ft_networkanalysis(cfg, data)
+%
 % where the first input argument is a configuration structure (see
-% below) and the second argument is the output of FT_CONNECTIVITYANALYSIS. 
-% At present the input data should be channel level data with dimord 
-% 'chan_chan(_freq)(_time)' or source data with dimord 'pos_pos(_freq)(_time)'. 
-% The metrics are computed using the brain connectivity toolbox developed by 
-% Olaf Sporns and colleagues: www.brain-connectivity-toolbox.net.
+% below) and the second argument is the output of FT_CONNECTIVITYANALYSIS.
+%
+% At present the input data should be channel-level data with dimord
+% 'chan_chan(_freq)(_time)' or source data with dimord 'pos_pos(_freq)(_time)'.
 %
 % The configuration structure has to contain
-%   cfg.method  = 
-%
-%     'clustering_coef'  clustering coefficient.
-%     'degrees'
+%   cfg.method  = string, can be 'clustering_coef', 'degrees'
 %
 % Additional configuration options are
 %   cfg.parameter   = string specifying the metric
-% 
+%
 % To facilitate data-handling and distributed computing with the peer-to-peer
 % module, this function has the following options:
 %   cfg.inputfile   =  ...
@@ -30,6 +29,7 @@ function [stat] = ft_networkanalysis(cfg, data)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
+% See also FT_CONNECTIVITYANALYSIS, FT_CONNECTIVITYPLOT
 
 % Copyright (C) 2011, Jan-Mathijs Schoffelen
 %
@@ -66,16 +66,17 @@ cfg = ft_checkconfig(cfg, 'required', {'method' 'parameter'});
 cfg.inputfile   = ft_getopt(cfg, 'inputfile',   []);
 cfg.outputfile  = ft_getopt(cfg, 'outputfile',  []);
 
-% ensure that the bct-toolbox is on the path and check the data for the
-% correct dimord and for the presence of the requested parameter
+% ensure that the bct-toolbox is on the path
 ft_hastoolbox('BCT', 1);
+
+% check the data for the correct dimord and for the presence of the requested parameter
 if ~strcmp(data.dimord(1:7), 'pos_pos') && ~strcmp(data.dimord(1:9), 'chan_chan'),
   error('the dimord of the input data should start with ''chan_chan'' or ''pos_pos''');
 end
 
-input = double(data.(cfg.parameter)); % conversion to double is needed
-% because some BCT functions want to do matrix multiplications on boolean
-% matrices
+% conversion to double is needed because some BCT functions want to do matrix
+% multiplications on boolean matrices
+input = double(data.(cfg.parameter));
 
 % check for binary or not
 isbinary = true;
@@ -87,7 +88,7 @@ for k = 1:size(input,3)
       break;
     end
   end
-end 
+end
 
 % check for directed or not
 isdirected = true;
@@ -99,7 +100,7 @@ for k = 1:size(input,3)
       break;
     end
   end
-end 
+end
 
 % allocate memory
 switch cfg.method
@@ -123,7 +124,7 @@ switch cfg.method
     elseif strcmp(data.dimord(1:4), 'chan')
       dimord = data.dimord(6:end);
     end
-  end
+end
 
 binarywarning = 'weights are not taken into account and graph is converted to binary values by thresholding';
 
@@ -132,51 +133,51 @@ for k = 1:size(input, 3)
     
     % switch to the appropriate function from the BCT
     switch cfg.method
-    case 'assortativity'
-      if ~isbinary, warning_once(binarywarning); end  
-      
-      if isdirected
-        output(k,m) = assortativity(input(:,:,k,m), 1);
-      elseif ~isdirected
-        output(k,m) = assortativity(input(:,:,k,m), 0);
-      end
-    case 'betweenness'
-      if isbinary
-        output(:,k,m) = betweenness_bin(input(:,:,k,m));
-      elseif ~isbinary
-        output(:,k,m) = betweenness_wei(input(:,:,k,m));
-      end 
-    case 'breadthdist'
-    case 'charpath'
-    case 'clustering_coef'
-      if isbinary && isdirected
-        output(:,k,m) = clustering_coef_bd(input(:,:,k,m));
-      elseif isbinary && ~isdirected
-        output(:,k,m) = clustering_coef_bu(input(:,:,k,m));
-      elseif ~isbinary && isdirected
-        output(:,k,m) = clustering_coef_wd(input(:,:,k,m));
-      elseif ~isbinary && ~isdirected
-        output(:,k,m) = clustering_coef_wu(input(:,:,k,m));
-      end
-    case 'degrees'
-      if ~isbinary, warning_once(binarywarning); end  
-      
-      if isdirected
-        [in, out, output(:,k,m)] = degrees_dir(input(:,:,k,m));
-        % fixme do something here
-      elseif ~isdirected
-        output(:,k,m) = degrees_und(input(:,:,k,m));
-      end
-    case 'density'
-    case 'distance'
-    case 'edge_betweenness'
-    case 'efficiency'
-    case 'modularity'
-    case 'participation_coef'
-    otherwise
-      error('unsupported connectivity metric %s requested');
+      case 'assortativity'
+        if ~isbinary, warning_once(binarywarning); end
+        
+        if isdirected
+          output(k,m) = assortativity(input(:,:,k,m), 1);
+        elseif ~isdirected
+          output(k,m) = assortativity(input(:,:,k,m), 0);
+        end
+      case 'betweenness'
+        if isbinary
+          output(:,k,m) = betweenness_bin(input(:,:,k,m));
+        elseif ~isbinary
+          output(:,k,m) = betweenness_wei(input(:,:,k,m));
+        end
+      case 'breadthdist'
+      case 'charpath'
+      case 'clustering_coef'
+        if isbinary && isdirected
+          output(:,k,m) = clustering_coef_bd(input(:,:,k,m));
+        elseif isbinary && ~isdirected
+          output(:,k,m) = clustering_coef_bu(input(:,:,k,m));
+        elseif ~isbinary && isdirected
+          output(:,k,m) = clustering_coef_wd(input(:,:,k,m));
+        elseif ~isbinary && ~isdirected
+          output(:,k,m) = clustering_coef_wu(input(:,:,k,m));
+        end
+      case 'degrees'
+        if ~isbinary, warning_once(binarywarning); end
+        
+        if isdirected
+          [in, out, output(:,k,m)] = degrees_dir(input(:,:,k,m));
+          % fixme do something here
+        elseif ~isdirected
+          output(:,k,m) = degrees_und(input(:,:,k,m));
+        end
+      case 'density'
+      case 'distance'
+      case 'edge_betweenness'
+      case 'efficiency'
+      case 'modularity'
+      case 'participation_coef'
+      otherwise
+        error('unsupported connectivity metric %s requested');
     end
-
+    
   end % for m
 end % for k
 

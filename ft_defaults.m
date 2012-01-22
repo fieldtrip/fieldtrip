@@ -1,13 +1,12 @@
 function ft_defaults
 
-% FT_DEFAULTS is called at the begin of all FieldTrip functions and
-% contains some general settings. Furthermore, this function takes care of
-% the required path settings.
+% FT_DEFAULTS contains some general settings and takes care of the required path
+% settings. This function is called at the begin of all FieldTrip functions.
 %
-% The configuration defaults are stored in the global ft_default structure.
-% The ft_checkconfig function that is called by many FieldTrip functions
-% will merge the ft_default structure with the cfg ctructure that you pass
-% to the FieldTrip function that you are calling.
+% The configuration defaults are stored in the global "ft_default" structure.
+% The ft_checkconfig function that is called by many FieldTrip functions will
+% merge this global ft_default structure with the cfg ctructure that you pass to
+% the FieldTrip function that you are calling.
 %
 % The global options and their default values are
 %   ft_default.trackconfig    string, can be cleanup, report, off (default = 'off')

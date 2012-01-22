@@ -1,9 +1,14 @@
 function ft_documentationreference(outdir)
 
-% FT_DOCUMENTATIONREFERENCE is a helper function to maintain the online
-% documentation
+% FT_DOCUMENTATIONREFERENCE is a function to maintain the online documentation.
+%
+% Normal users will not be calling this function, but will rather look at
+% http://fieldtrip.fcdonders.nl/reference where the output of this function can
+% be found.
+%
+% See FT_DOCUMENTATIONINDEX
 
-% Copyright (C) 2008, Robert Oostenveld
+% Copyright (C) 2008-2012, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -82,7 +87,6 @@ end
 if ~isdir(outdir)
   mkdir(outdir);
 end
-
 
 funname = flipdim(funname,1); % to avoid problems with overlapping function names
 for i=1:length(funname)
