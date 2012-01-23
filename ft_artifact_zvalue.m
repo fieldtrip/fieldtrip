@@ -345,7 +345,7 @@ end
 
 if strcmp(cfg.artfctdef.zvalue.interactive, 'yes')
   set(h, 'visible', 'on');
-  
+  set(h, 'CloseRequestFcn', @cleanup_cb);
   % give graphical feedback and allow the user to modify the threshold
   set(h, 'position', [100 200 900 400]);
   h1 = axes('position', [0.05 0.15 0.4 0.8]);
