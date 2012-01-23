@@ -263,10 +263,16 @@ elseif isfield(cfg, 'channel') && isfield(varargin{1}, 'labelcmb')
   cfg.channel = ft_channelselection(cfg.channel, unique(varargin{1}.labelcmb(:)));
 end
 
-% perform channel selection but only allow this when cfg.interactive = 'no'
-if isfield(varargin{1}, 'label') && strcmp(cfg.interactive, 'no')
+% perform channel selection, unless in the other plotting functions this
+% can always be done because ft_multiplotER is the entry point into the
+% interactive stream, but will not be revisited
+for i=1:Ndata
+  varargin{i} = ft_selectdata(varargin{i}, 'channel', cfg.channel);
+end
+
+if isfield(varargin{1}, 'label') % && strcmp(cfg.interactive, 'no')
   selchannel = ft_channelselection(cfg.channel, varargin{1}.label);
-elseif isfield(varargin{1}, 'labelcmb') && strcmp(cfg.interactive, 'no')
+elseif isfield(varargin{1}, 'labelcmb') % && strcmp(cfg.interactive, 'no')
   selchannel = ft_channelselection(cfg.channel, unique(varargin{1}.labelcmb(:)));
 end
 
