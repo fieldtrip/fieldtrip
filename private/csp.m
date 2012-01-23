@@ -1,58 +1,51 @@
-function [unmixing] = csp(dat1, dat2)
-
-% CSP Common spatial pattern decomposition
+function [W] = csp(C1, C2, m)
+% CSP calculates the common spatial pattern (CSP) projection.
 %
-% Use as
-%   [unmixing] = csp(dat1, dat2)
+% Use as:
+%   [W] = csp(C1, C2)
 %
-% This implements Ramoser, H., Gerking, M., and Pfurtscheller, G. "Optimal
-% spatial filtering of single trial EEG during imagined hand movement."
-% IEEE Trans. Rehab. Eng 8 (2000), 446, 441.
+% This function implements the intents of the CSP algorithm described in [1].
+% Specifically, CSP finds m spatial projections that maximize the variance (or
+% band power) in one condition (described by the [p x p] channel-covariance
+% matrix C1), and simultaneously minimizes the variance in the other (C2):
+%
+%   W C1 W' = D
+%
+% and
+%
+%   W (C1 + C2) W' = I,
+%
+% Where D is a diagonal matrix with decreasing values on it's diagonal, and I
+% is the identity matrix of matching shape.
+% The resulting [m x p] matrix can be used to project a zero-centered [p x n]
+% trial matrix X:
+%
+%   S = W X.
+%
+%
+% Although the CSP is the de facto standard method for feature extraction for
+% motor imagery induced event-related desynchronization, it is not strictly
+% necessary [2].
+%
+% [1] Zoltan J. Koles. The quantitative extraction and topographic mapping of
+%     the abnormal components in the clinical EEG. Electroencephalography and
+%     Clinical Neurophysiology, 79(6):440--447, December 1991.
+%
+% [2] Jason Farquhar. A linear feature space for simultaneous learning of
+%     spatio-spectral filters in BCI. Neural Networks, 22:1278--1285, 2009.
 
-% The initial version was coded by James Ethridge and William Weaver.
-% See http://www.mathworks.com/matlabcentral/fileexchange/22915-common-spatial-patterns
-% Some cleanups by Robert Oostenveld, 2012
+% Copyright (c) 2012, Boris Reuderink
 
-R1 = dat1*dat1';
-R1 = R1/trace(R1);
-R2 = dat2*dat2';
-R2 = R2/trace(R2);
+P = whiten(C1 + C2, 1e-14);        % decorrelate over conditions
+[B, Lamb, B2] = svd(P * C1 * P');  % rotation to decorrelate within condition.
+W = B' * P;
 
-% Ramoser equation (2)
-Rsum = R1+R2;
+% keep m projections at ends
+keep = circshift(1:size(W, 1) <= m, [0, -m/2]);  
+W = W(keep,:);
 
-% Find Eigenvalues and Eigenvectors of RC
-% Sort eigenvalues in descending order
-[EVecsum,EValsum] = eig(Rsum);
-[EValsum,ind] = sort(diag(EValsum),'descend');
-EVecsum = EVecsum(:,ind);
-
-% Find Whitening Transformation Matrix - Ramoser Equation (3)
-W = sqrt(pinv(diag(EValsum))) * EVecsum';
-
-% Whiten Data Using Whiting Transform - Ramoser Equation (4)
-S1 = W * R1 * W';
-S2 = W * R2 * W';
-
-% Ramoser equation (5)
-% [U1,Psi1] = eig(S1);
-% [U2,Psi2] = eig(S2);
-
-%generalized eigenvectors/values
-[B,D] = eig(S1,S2);
-
-% Simultanous diagonalization
-% Should be equivalent to [B,D]=eig(S1);
-
-% verify algorithim
-%disp('test1:Psi1+Psi2=I')
-%Psi1+Psi2
-
-% sort ascending by default
-%[Psi1,ind] = sort(diag(Psi1)); U1 = U1(:,ind);
-%[Psi2,ind] = sort(diag(Psi2)); U2 = U2(:,ind);
-[D,ind]=sort(diag(D));
-B=B(:,ind);
-
-% Resulting Projection Matrix-these are the spatial filter coefficients
-unmixing = B'*W;
+function P = whiten(C, rtol)
+  [U, l, U2] = svd(C);
+  l = diag(l);
+  keep = l > max(l) * rtol;
+  P = diag(l(keep).^(-.5)) * U(:,keep)';
