@@ -2,13 +2,12 @@ function [W] = csp(C1, C2, m)
 % CSP calculates the common spatial pattern (CSP) projection.
 %
 % Use as:
-%   [W] = csp(C1, C2)
+%   [W] = csp(C1, C2, m)
 %
 % This function implements the intents of the CSP algorithm described in [1].
 % Specifically, CSP finds m spatial projections that maximize the variance (or
 % band power) in one condition (described by the [p x p] channel-covariance
-% matrix C1), and simultaneously minimizes the variance in the other condition
-% (C2), and vise-versa:
+% matrix C1), and simultaneously minimizes the variance in the other (C2):
 %
 %   W C1 W' = D
 %
