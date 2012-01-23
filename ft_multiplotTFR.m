@@ -679,6 +679,10 @@ if ~isempty(label)
   %cfg.xlim = 'maxmin';
   cfg.ylim = 'maxmin';
   cfg.channel = label;
+  
+  % make sure ft_singleplotTFR does not apply a baseline correction again
+  cfg.baseline = 'no';
+  
   fprintf('selected cfg.channel = {');
   for i=1:(length(cfg.channel)-1)
     fprintf('''%s'', ', cfg.channel{i});
