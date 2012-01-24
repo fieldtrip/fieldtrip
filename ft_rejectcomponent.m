@@ -174,13 +174,26 @@ if isfield(data, 'grad') || (isfield(data, 'elec') && isfield(data.elec, 'tra'))
   % be removed in a second step
   tmp = ft_apply_montage(data.(sensfield), montage, 'keepunused', 'yes', 'balancename', 'invcomp');
   
+  % there could have been sequential subspace projections, so the
+  % invcomp-field may have been renamed into invcompX. If this it the case,
+  % take the one with the highest suffix
+  invcompfield = 'invcomp';
+  if ~isfield(tmp.balance, 'invcomp')
+    for k = 10:-1:1
+      if isfield(tmp.balance, ['invcomp',num2str(k)])
+        invcompfield = [invcompfield,num2str(k)];
+        break;
+      end
+    end
+  end
+  
   % remove the unused components from the balancing and from the tra
   [junk, remove]    = match_str(comp.label, tmp.label);
   tmp.tra(remove,:) = [];
   tmp.label(remove) = [];
-  [junk, remove]    = match_str(comp.label, tmp.balance.invcomp.labelnew);
-  tmp.balance.invcomp.tra(remove, :)   = [];
-  tmp.balance.invcomp.labelnew(remove) = [];
+  [junk, remove]    = match_str(comp.label, tmp.balance.(invcompfield).labelnew);
+  tmp.balance.(invcompfield).tra(remove, :)   = [];
+  tmp.balance.(invcompfield).labelnew(remove) = [];
   data.(sensfield)  = tmp;
   %data.(sensfield)  = ft_apply_montage(data.(sensfield), montage, 'keepunused', 'no', 'balancename', 'invcomp');
 else
