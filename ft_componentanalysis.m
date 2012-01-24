@@ -223,6 +223,10 @@ cfg.dss.denf          = ft_getopt(cfg.dss,      'denf',     []);
 cfg.dss.denf.function = ft_getopt(cfg.dss.denf, 'function', 'denoise_fica_tanh');
 cfg.dss.denf.params   = ft_getopt(cfg.dss.denf, 'params',   []);
 
+% additional options, see CSP for details
+cfg.csp = ft_getopt(cfg, 'csp', [])
+cfg.csp.numfilters = ft_getopt(cfg.csp, 'numfilters', 6)
+
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
   fprintf('selecting %d trials\n', length(cfg.trials));
@@ -294,7 +298,7 @@ elseif strcmp(cfg.method, 'csp')
   sel1 = find(cfg.classlabel==1);
   sel2 = find(cfg.classlabel==2);
   if length(sel1)+length(sel2)~=length(cfg.classlabel)
-    error('not all trials belong to class 1 or 2');
+    warning('not all trials belong to class 1 or 2');
   end
   dat1 = cat(2, data.trial{sel1});
   dat2 = cat(2, data.trial{sel2});
@@ -524,7 +528,7 @@ switch cfg.method
     mixing   = [];
 
   case 'csp'
-    unmixing = csp(dat1, dat2);
+    unmixing = csp(cov(dat1'), cov(dat2'), cfg.csp.numfilters);
     mixing   = [];  % will be computed below
     
   case 'parafac'
