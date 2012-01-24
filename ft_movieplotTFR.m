@@ -19,6 +19,7 @@ function [cfg] = ft_movieplotTFR(cfg, data)
 %   cfg.moviefreq    = number, movie frames are all time points at the fixed frequency moviefreq (default = []);
 %   cfg.movietime    = number, movie frames are all frequencies at the fixed time movietime (default = []);
 %   cfg.layout       = specification of the layout, see below
+%   cfg.interactive  = 'no' or 'yes', make it interactive
 %
 % the layout defines how the channels are arranged. you can specify the
 % layout in a variety of ways:
@@ -278,7 +279,7 @@ if dointeractive
   else
     opt.timdim = 3;
   end
-  [dum, hs] = ft_plot_topo(chanx, chany, zeros(numel(chanx),1), 'mask', layout.mask, 'outline', layout.outline, 'interpmethod', 'cubic');
+  [dum, hs] = ft_plot_topo(chanx, chany, zeros(numel(chanx),1), 'mask', layout.mask, 'outline', layout.outline, 'interpmethod', 'v4', 'interplim', 'mask');
   caxis(cfg.zlim);
   axis off;
   
@@ -305,7 +306,7 @@ if dointeractive
   
 else
   % non interactive mode
-  [tmp, hs] = ft_plot_topo(chanx, chany, zeros(numel(chanx),1), 'mask', layout.mask, 'outline', layout.outline, 'interpmethod', 'cubic');
+  [tmp, hs] = ft_plot_topo(chanx, chany, zeros(numel(chanx),1), 'mask', layout.mask, 'outline', layout.outline, 'interpmethod', 'v4');
   caxis(cfg.zlim);
   axis off;
 
@@ -320,7 +321,7 @@ else
       for iFrame = 1:floor(size(parameter, 2)/cfg.samperframe)
         indy = ((iFrame-1)*cfg.samperframe+1):iFrame*cfg.samperframe;
         datavector = squeeze(mean(parameter(:, indy,indx), 2));
-        datamatrix = griddata(chanx, chany, datavector, xdata, ydata, 'cubic');
+        datamatrix = griddata(chanx, chany, datavector, xdata, ydata, 'v4');
         set(hs, 'cdata',  datamatrix + nanmask);
         F(iFrame) = getframe;
       end 
@@ -329,7 +330,7 @@ else
       for iFrame = 1:floor(size(parameter, 3)/cfg.samperframe)
         indx = ((iFrame-1)*cfg.samperframe+1):iFrame*cfg.samperframe;
         datavector = squeeze(mean(parameter(:, indy,indx), 3));
-        datamatrix = griddata(chanx, chany, datavector, xdata, ydata, 'cubic');
+        datamatrix = griddata(chanx, chany, datavector, xdata, ydata, 'v4');
         set(hs, 'cdata',  datamatrix + nanmask);
         F(iFrame) = getframe;
       end      
@@ -340,7 +341,7 @@ else
     for iFrame = 1:floor(size(parameter, 2)/cfg.samperframe)
       indx = ((iFrame-1)*cfg.samperframe+1):iFrame*cfg.samperframe;
       datavector = mean(parameter(:, indx), 2);    
-      datamatrix = griddata(chanx, chany, datavector, xdata, ydata, 'cubic');
+      datamatrix = griddata(chanx, chany, datavector, xdata, ydata, 'v4');
       set(hs, 'cdata',  datamatrix + nanmask);
       F(iFrame) = getframe;
     end
@@ -387,11 +388,11 @@ if length(size(opt.dat))>2
   set(opt.hy, 'string', sprintf('%s = %f\n', opt.yparam, opt.yvalues(valy)));
 
   % update data, interpolate and render
-  datamatrix = griddata(opt.chanx, opt.chany, opt.dat(:,valy,valx), opt.xdata, opt.ydata, 'cubic');
+  datamatrix = griddata(opt.chanx, opt.chany, opt.dat(:,valy,valx), opt.xdata, opt.ydata, 'v4');
 else
-  set(opt.hx, 'string', sprintf('%s = %f\n', opt.cfg.xparam, opt.xparam(valx)));
+  set(opt.hx, 'string', sprintf('%s = %f\n', opt.xparam, opt.xvalues(valx)));
   % update data, interpolate and render
-  datamatrix = griddata(opt.chanx, opt.chany, opt.dat(:,valx), opt.xdata, opt.ydata, 'cubic');  
+  datamatrix = griddata(opt.chanx, opt.chany, opt.dat(:,valx), opt.xdata, opt.ydata, 'v4');  
 end
 set(opt.hs, 'cdata',  datamatrix + opt.nanmask);
 
@@ -415,7 +416,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % subfunction
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_timer(obj, info, h)
+function cb_timer(obj, event, h)
 if ~ishandle(h)
   return
 end
