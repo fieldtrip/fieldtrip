@@ -1,3 +1,4 @@
+function test_csp
 % Please beware of notations mistakes in [1]. For example equation (1) does not
 % compute the t by t channel covariance, but an n by n time covariance matrix.
 
