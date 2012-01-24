@@ -138,6 +138,9 @@ switch fileformat
     g = gifti(filename);
     shape.pnt = warp_apply(g.mat, g.vertices);
     shape.tri = g.faces;
+    if isfield(g, 'cdata')
+      shape.mom = g.cdata;
+    end
     
   case 'neuromag_mex'
     [co,ki,nu] = hpipoints(filename);
