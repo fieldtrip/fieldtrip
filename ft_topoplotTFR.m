@@ -942,6 +942,24 @@ if strcmp(cfg.interactive, 'yes')
   end
 end
 
+% set the figure window title
+if isfield(cfg,'funcname')
+  funcname = cfg.funcname;
+else
+  funcname = mfilename;
+end
+if isfield(cfg,'dataname')
+  if iscell(cfg.dataname)
+    dataname = cfg.dataname{indx};
+  else
+    dataname = cfg.dataname;
+  end
+else
+  dataname = inputname(2);
+end
+set(gcf, 'Name', sprintf('%d: %s: %s', gcf, funcname, join_str(', ',dataname)));
+set(gcf, 'NumberTitle', 'off');
+
 axis off
 hold off
 axis equal

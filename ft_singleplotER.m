@@ -534,6 +534,23 @@ if strcmp('yes',cfg.hotkeys)
   set(gcf, 'keypressfcn', {@key_sub, xmin, xmax, ymin, ymax})
 end
 
+% set the figure window title, add channel labels if number is small
+if length(sellab) < 5
+  chans = join_str(',', cfg.channel);
+else
+  chans = '<multiple channels>';
+end
+if isfield(cfg, 'dataname')
+  dataname = cfg.dataname;
+else
+  dataname = inputname(2);
+  for k = 2:Ndata
+    dataname = [dataname ', ' inputname(k+1)];
+  end
+end
+set(gcf, 'Name', sprintf('%d: %s: %s (%s)', gcf, mfilename, join_str(', ',dataname), chans));
+set(gcf, 'NumberTitle', 'off');
+
 % make the figure interactive
 if strcmp(cfg.interactive, 'yes')
   set(gcf, 'windowbuttonupfcn',     {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER, cfg, varargin{:}}, 'event', 'windowbuttonupfcn'});
@@ -545,7 +562,7 @@ end
 if length(sellab) == 1
   t = [char(cfg.channel) ' / ' num2str(sellab) ];
 else
-  t = sprintf('mean(%0s)', join(',', cfg.channel));
+  t = sprintf('mean(%0s)', join_str(',', cfg.channel));
 end
 h = title(t,'fontsize', cfg.fontsize);
 
@@ -559,25 +576,11 @@ ft_postamble trackconfig
 ft_postamble callinfo
 ft_postamble previous varargin
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% subfunction
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function t = join(separator,cells)
-if isempty(cells)
-  t = '';
-  return;
-end
-t = char(cells{1});
-
-for i=2:length(cells)
-  t = [t separator char(cells{i})];
-end
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % subfunction which is called after selecting a time range
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function select_topoplotER(range, cfg, varargin)
+fprintf('DUS\n\n');
 cfg.comment = 'auto';
 cfg.xlim = range(1:2);
 if isfield(cfg, 'inputfile')
@@ -592,7 +595,7 @@ fprintf('selected cfg.xlim = [%f %f]\n', cfg.xlim(1), cfg.xlim(2));
 p = get(gcf, 'position');
 f = figure;
 set(f, 'position', p);
-ft_topoplotTFR(cfg, varargin{:});
+ft_topoplotER(cfg, varargin{:});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % subfunction which handles hot keys in the current plot

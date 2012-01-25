@@ -462,9 +462,23 @@ end
 if length(sellab) == 1
   t = [char(cfg.channel) ' / ' num2str(sellab) ];
 else
-  t = sprintf('mean(%0s)', join(',', cfg.channel));
+  t = sprintf('mean(%0s)', join_str(',', cfg.channel));
 end
 h = title(t,'fontsize', cfg.fontsize);
+
+% set the figure window title, add channel labels if number is small
+if length(sellab) < 5
+  chans = join_str(',', cfg.channel);
+else
+  chans = '<multiple channels>';
+end
+if isfield(cfg,'dataname')
+  dataname = cfg.dataname;
+else
+  dataname = inputname(2);
+end
+set(gcf, 'Name', sprintf('%d: %s: %s (%s)', gcf, mfilename, dataname, chans));
+set(gcf, 'NumberTitle', 'off');
 
 axis tight;
 hold off;
@@ -478,21 +492,6 @@ end
 ft_postamble trackconfig
 ft_postamble callinfo
 ft_postamble previous data
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function t = join(separator,cells)
-if isempty(cells)
-  t = '';
-  return;
-end
-t = char(cells{1});
-
-for i=2:length(cells)
-  t = [t separator char(cells{i})];
-end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION which is called after selecting a time range

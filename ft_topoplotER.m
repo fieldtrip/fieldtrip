@@ -148,7 +148,16 @@ ft_preamble callinfo
 
 % this is just a wrapper function around ft_topoplotTFR which does all the hard work
 % the reason for this wrapper function is to have a placeholder for ER-specific documentation
+
+% make sure figure window titles are labeled appropriately, pass this onto
+% the actual plotting function
+% if we don't specify this, the window will be called 'ft_topoplotTFR',
+% which is confusing to the user
+cfg.funcname = mfilename;
+
 cfg = ft_topoplotTFR(cfg, varargin{:});
+
+cfg = rmfield(cfg, 'funcname');
 
 % do the general cleanup and bookkeeping at the end of the function
 % this will replace the ft_topoplotTFR callinfo with that of ft_topoplotER

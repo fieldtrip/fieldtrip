@@ -607,6 +607,15 @@ if strcmp('yes',cfg.hotkeys)
   set(gcf, 'KeyPressFcn', {@key_sub, zmin, zmax})
 end
 
+% set the figure window title
+if isfield(cfg,'dataname')
+  dataname = cfg.dataname;
+else
+  dataname = inputname(2);
+end
+set(gcf, 'Name', sprintf('%d: %s: %s', gcf, mfilename, dataname));
+set(gcf, 'NumberTitle', 'off');
+
 % Make the figure interactive:
 if strcmp(cfg.interactive, 'yes')
     % add the channel information to the figure
@@ -614,6 +623,7 @@ if strcmp(cfg.interactive, 'yes')
     info.x     = lay.pos(:,1);
     info.y     = lay.pos(:,2);
     info.label = lay.label;
+    info.dataname = dataname;
     guidata(gcf, info);
 
     set(gcf, 'WindowButtonUpFcn',     {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR, cfg, data}, 'event', 'WindowButtonUpFcn'});
@@ -660,8 +670,13 @@ if isfield(cfg, 'inputfile')
   % the reading has already been done and varargin contains the data
   cfg = rmfield(cfg, 'inputfile');
 end
+
+% put data name in here, this cannot be resolved by other means
+info = guidata(gcf);
+cfg.dataname = info.dataname;
+
 cfg.refchannel = label;
-fprintf('selected cfg.refchannel = ''%s''\n', join(',', cfg.refchannel));
+fprintf('selected cfg.refchannel = ''%s''\n', join_str(',', cfg.refchannel));
 p = get(gcf, 'Position');
 f = figure;
 set(f, 'Position', p);
@@ -683,6 +698,10 @@ if ~isempty(label)
   % make sure ft_singleplotTFR does not apply a baseline correction again
   cfg.baseline = 'no';
   
+  % put data name in here, this cannot be resolved by other means
+  info = guidata(gcf);
+  cfg.dataname = info.dataname;
+  
   fprintf('selected cfg.channel = {');
   for i=1:(length(cfg.channel)-1)
     fprintf('''%s'', ', cfg.channel{i});
@@ -692,20 +711,6 @@ if ~isempty(label)
   f = figure;
   set(f, 'Position', p);
   ft_singleplotTFR(cfg, varargin{:});
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function t = join(separator,cells)
-if isempty(cells)
-  t = '';
-  return;
-end
-t = char(cells{1});
-
-for i=2:length(cells)
-  t = [t separator char(cells{i})];
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

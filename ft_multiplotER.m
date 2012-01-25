@@ -624,6 +624,14 @@ if ~isempty(l)
   plotScales([xmin xmax],[ymin ymax],X(l),Y(l),width(1),height(1),cfg)
 end
 
+% set the figure window title
+dataname = {inputname(2)};
+for k = 2:Ndata
+  dataname{end+1} = inputname(k+1);
+end
+set(gcf, 'Name', sprintf('%d: %s: %s', gcf, mfilename, join_str(', ',dataname)));
+set(gcf, 'NumberTitle', 'off');
+
 % Make the figure interactive:
 if strcmp(cfg.interactive, 'yes')
   
@@ -632,6 +640,7 @@ if strcmp(cfg.interactive, 'yes')
   info.x     = lay.pos(:,1);
   info.y     = lay.pos(:,2);
   info.label = lay.label;
+  info.dataname = dataname;
   guidata(gcf, info);
   
   set(gcf, 'WindowButtonUpFcn',     {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER, cfg, varargin{:}}, 'event', 'WindowButtonUpFcn'});
@@ -773,6 +782,11 @@ if isfield(cfg, 'inputfile')
   % the reading has already been done and varargin contains the data
   cfg = rmfield(cfg, 'inputfile');
 end
+
+% put data name in here, this cannot be resolved by other means
+info = guidata(gcf);
+cfg.dataname = info.dataname;
+
 if iscell(label)
   label = label{1};
 end
@@ -794,6 +808,11 @@ if ~isempty(label)
   end
   cfg.xlim = 'maxmin';
   cfg.channel = label;
+  
+  % put data name in here, this cannot be resolved by other means
+  info = guidata(gcf);
+  cfg.dataname = info.dataname;
+  
   fprintf('selected cfg.channel = {');
   for i=1:(length(cfg.channel)-1)
     fprintf('''%s'', ', cfg.channel{i});
