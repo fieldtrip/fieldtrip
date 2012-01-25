@@ -31,8 +31,11 @@ end
 str = [];
 if isstruct(val)
   if numel(val)>1
-    % this function cannot print struct arrays with multiple elements
-    str = sprintf('%s = ''FIXME'';', name);
+    str = cell(size(val));
+    for i=1:numel(val)
+      str{i} = printstruct(sprintf('%s(%d)', name, i), val(i));
+    end
+    str = cat(2, str{:});
     return
   else
     % print it as a named structure
