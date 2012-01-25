@@ -55,9 +55,8 @@ function [norm] = ft_electroderealign(cfg)
 %                        between electrode labels are case sensitive (default = 'yes')
 %   cfg.feedback       = 'yes' or 'no' (default = 'no')
 %
-% The electrode set that will be realigned is specified as
-%   cfg.elecfile       = string with filename, or alternatively
-%   cfg.elec           = structure with electrode definition
+% The electrode set that will be realigned is specified in the cfg, see
+% FT_FETCH_SENS.
 %
 % If you want to align the electrodes to a single template electrode set
 % or to multiple electrode sets (which will be averaged), you should
@@ -145,16 +144,19 @@ else
 end
 
 % get the electrode definition that should be warped
-if isfield(cfg, 'elec')
-  elec = cfg.elec;
-elseif isfield(cfg, 'elecfile')
-  elec = ft_read_sens(cfg.elecfile);
-else
-  % start with an empty set of electrodes (useful for manual positioning)
-  elec = [];
-  elec.chanpos    = zeros(0,3);
-  elec.label  = cell(0,1);
-  elec.unit   = 'mm';
+if nargin==1
+  try % try to get the description from the cfg
+    elec = ft_fetch_sens(cfg);
+  catch lasterr
+    % start with an empty set of electrodes, this is useful for manual positioning
+    elec = [];
+    elec.pnt    = zeros(0,3);
+    elec.label  = cell(0,1);
+    elec.unit   = 'mm';
+    warning(lasterr.message, lasterr.identifier);
+  end
+elseif nargin>1
+  % the input electrodes were specified as second input argument
 end
 elec = ft_convert_units(elec); % ensure that the units are specified
 

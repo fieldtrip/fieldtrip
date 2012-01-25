@@ -25,7 +25,7 @@ function [cfg] = ft_neighbourplot(cfg, data)
 % If cfg.neighbours is not defined or empty, this function will call
 % FT_PREPARE_NEIGHBOURS to determine the channel neighbours.
 %
-% See also FT_PREPARE_NEIGHBOURS
+% See also FT_PREPARE_NEIGHBOURS, FT_FETCH_SENS
 
 % Copyright (C) 2011, J?rn M. Horschig, Robert Oostenveld
 %
@@ -70,37 +70,12 @@ elseif strcmp(cfg.verbose, 'yes')
   cfg.verbose = true;
 end
 
-
-% get the the grad or elec if not present in the data
-if exist('data', 'var') && isfield(data, 'grad')
-  fprintf('Using the gradiometer configuration from the dataset.\n');
-  sens = data.grad;
-elseif exist('data', 'var') && isfield(data, 'elec')
-  fprintf('Using the electrode configuration from the dataset.\n');
-  sens = data.elec;
-elseif isfield(cfg, 'grad')
-  fprintf('Obtaining the gradiometer configuration from the configuration.\n');
-  sens = cfg.grad;
-elseif isfield(cfg, 'elec')
-  fprintf('Obtaining the electrode configuration from the configuration.\n');
-  sens = cfg.elec;
-elseif isfield(cfg, 'gradfile')
-  fprintf('Obtaining the gradiometer configuration from a file.\n');
-  sens = ft_read_sens(cfg.gradfile);
-  % extract true channelposition
-elseif isfield(cfg, 'elecfile')
-  fprintf('Obtaining the electrode configuration from a file.\n');
-  sens = ft_read_sens(cfg.elecfile);
-elseif isfield(cfg, 'layout')
-  fprintf('Using the 2-D layout to determine the neighbours\n');
-  lay = ft_prepare_layout(cfg);
-  sens = [];
-  sens.label = lay.label;
-  sens.chanpos = lay.pos;
-  sens.chanpos(:,3) = 0;
+% get the the grad or elec
+if hasdata
+  sens = ft_fetch_sens(cfg, data);
 else
-  error('Did not find gradiometer or electrode information.');
-end;
+  sens = ft_fetch_sens(cfg);
+end
 
 % give some graphical feedback
 if all(sens.chanpos(:,3)==0)

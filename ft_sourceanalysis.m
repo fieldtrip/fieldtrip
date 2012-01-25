@@ -64,18 +64,9 @@ function [source] = ft_sourceanalysis(cfg, data, baseline)
 %   cfg.numrandomization   = number, e.g. 500
 %   cfg.numpermutation     = number, e.g. 500 or 'all'
 %
-% You should specify the volume conductor model with
-%   cfg.hdmfile       = string, file containing the volume conduction model
-% or alternatively
-%   cfg.vol           = structure with volume conduction model
+% You should specify the volume conductor model, see FT_FETCH_VOL.
 %
-% If the sensor information is not contained in the data itself you should
-% also specify the sensor information using
-%   cfg.gradfile      = string, file containing the gradiometer definition
-%   cfg.elecfile      = string, file containing the electrode definition
-% or alternatively
-%   cfg.grad          = structure with gradiometer definition
-%   cfg.elec          = structure with electrode definition
+% If the sensor information is obtained using FT_FETCH_SENS.
 %
 % If you have not specified a grid with pre-computed leadfields,
 % the leadfield for each grid location will be computed on the fly.

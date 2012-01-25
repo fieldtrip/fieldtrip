@@ -145,6 +145,7 @@ cfg = [];
 clf
 subplot(121)
 cfg.xlim = [0.3 0.5];
+cfg.layout = 'CTF151.lay';
 cfg.zlim = 'maxmin';
 cfg.colorbar = 'yes';
 ft_topoplotER(cfg,avgFIC)

@@ -30,18 +30,8 @@ function [grid, cfg] = ft_prepare_leadfield(cfg, data)
 %   cfg.grid.inside     = vector with indices of the sources inside the brain (optional)
 %   cfg.grid.outside    = vector with indices of the sources outside the brain (optional)
 %
-% You should specify the volume conductor model with
-%   cfg.headshape       = string, file containing the volume conduction model
-% or alternatively
-%   cfg.vol             = structure with volume conduction model
-%
-% If the sensor information is not contained in the data itself you should
-% also specify the sensor information using
-%   cfg.gradfile        = string, file containing the gradiometer definition
-%   cfg.elecfile        = string, file containing the electrode definition
-% or alternatively
-%   cfg.grad            = structure with gradiometer definition
-%   cfg.elec            = structure with electrode definition
+% You should specify the volume conductor model, see FT_FETCH_VOL, and the 
+% sensor information, see FT_FETCH_SENS.
 %
 % Optionally, you can modify the leadfields by reducing the rank (i.e.
 % remove the weakest orientation), or by normalizing each column.

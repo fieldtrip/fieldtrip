@@ -4,18 +4,9 @@ function [vol, sens, cfg] = prepare_headmodel(cfg, data)
 % SUBFUNCTION that helps to prepare the electrodes/gradiometers and the volume
 % this is used in sourceanalysis and dipolefitting
 %
-% This function will get the gradiometer/electrode definition from
-%   cfg.channel
-%   cfg.gradfile
-%   cfg.elecfile
-%   cfg.elec
-%   cfg.grad
-%   data.grad
-%   data.elec
-% and the volume conductor definition from
-%   cfg.hdmfile
-%   cfg.vol
-%   data.vol
+% This function will get the gradiometer/electrode definition using
+% FT_FETCH_SENS and the volume conductor definition using FT_FETCH_VOL
+%
 % Subsequently it will remove the gradiometers/electrodes that are not
 % present in the data. Finally it with attach the gradiometers to a
 % multi-sphere head model (if supplied) or attach the electrodes to
@@ -56,41 +47,10 @@ if nargin<2
 end
 
 % get the volume conduction model
-if isfield(cfg, 'hdmfile')
-  fprintf('reading headmodel from file ''%s''\n', cfg.hdmfile);
-  vol = read_vol(cfg.hdmfile);
-elseif isfield(cfg, 'vol')
-  fprintf('using headmodel specified in the configuration\n');
-  vol = cfg.vol;
-elseif isfield(data, 'vol')
-  fprintf('using headmodel specified in the data\n');
-  vol = data.vol;
-else
-  error('no headmodel specified');
-end
+vol = ft_fetch_vol(cfg, data);
 
 % get the gradiometer or electrode definition
-if isfield(cfg, 'gradfile')
-  fprintf('reading gradiometers from file ''%s''\n', cfg.gradfile);
-  sens = read_sens(cfg.gradfile);
-elseif isfield(cfg, 'grad')
-  fprintf('using gradiometers specified in the configuration\n');
-  sens = cfg.grad;
-elseif isfield(data, 'grad')
-  fprintf('using gradiometers specified in the data\n');
-  sens = data.grad;
-elseif isfield(cfg, 'elecfile')
-  fprintf('reading electrodes from file ''%s''\n', cfg.elecfile);
-  sens = read_sens(cfg.elecfile);
-elseif isfield(cfg, 'elec')
-  fprintf('using electrodes specified in the configuration\n');
-  sens = cfg.elec;
-elseif isfield(data, 'elec')
-  fprintf('using electrodes specified in the data\n');
-  sens = data.elec;
-else
-  error('no electrodes or gradiometers specified');
-end
+sens = ft_fetch_sens(cfg, data);
 
 if isfield(data, 'topolabel')
   % the data reflects a componentanalysis, where the topographic and the

@@ -110,25 +110,7 @@ if ~strcmp(cfg.trials, 'all')
 end
 
 % get the electrode positions
-if isfield(cfg, 'elecfile')
-  fprintf('reading electrodes from file %s\n', cfg.elecfile);
-  elec = ft_read_sens(cfg.elecfile);
-elseif isfield(cfg, 'elec')
-  fprintf('using electrodes specified in the configuration\n');
-  elec = cfg.elec;
-elseif isfield(data, 'elec')
-  fprintf('using electrodes specified in the data\n');
-  elec = data.elec;
-elseif isfield(cfg, 'layout')
-  fprintf('using the 2-D layout to determine electrode position\n');
-  % create a dummy electrode structure, this is needed for channel selection
-  elec = [];
-  elec.label  = cfg.layout.label;
-  elec.pnt    = cfg.layout.pos;
-  elec.pnt(:,3) = 0;
-else
-  error('electrode positions were not specified');
-end
+elec = ft_fetch_sens(cfg, data);
 
 % remove all junk fields from the electrode array
 tmp  = elec;

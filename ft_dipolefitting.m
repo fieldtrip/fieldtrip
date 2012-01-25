@@ -22,17 +22,8 @@ function [source] = ft_dipolefitting(cfg, data)
 %   cfg.nonlinear   = 'yes' or 'no', perform nonlinear search for optimal
 %                     dipole parameters (default = 'yes')
 %
-% You should specify the volume conductor model with
-%   cfg.hdmfile     = string, file containing the volume conduction model
-% or alternatively
-%   cfg.vol         = structure with volume conduction model
-% If the sensor information is not contained in the data itself you should
-% also specify the sensor information using
-%   cfg.gradfile    = string, file containing the gradiometer definition
-%   cfg.elecfile    = string, file containing the electrode definition
-% or alternatively
-%   cfg.grad        = structure with gradiometer definition
-%   cfg.elec        = structure with electrode definition
+% You should specify the volume conductor model, see FT_FETCH_VOL, and the 
+% sensor information, see FT_FETCH_SENS.
 %
 % If you start with a grid search, you should specify the grid locations at
 % which a test dipole will be placed. The positions of the dipoles can be
@@ -89,7 +80,7 @@ function [source] = ft_dipolefitting(cfg, data)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_SOURCEANALYSIS, FT_PREPARE_LEADFIELD
+% See also FT_SOURCEANALYSIS, FT_PREPARE_LEADFIELD, FT_FETCH_SENS
 
 % TODO change the output format, more suitable would be something like:
 % dip.label

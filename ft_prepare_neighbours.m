@@ -29,7 +29,7 @@ function [neighbours, cfg] = ft_prepare_neighbours(cfg, data)
 %   cfg.gradfile      = filename containing MEG gradiometer positions
 %   cfg.feedback      = 'yes' or 'no' (default = 'no')
 %
-% The following data fields may also be used by FT_prepare_neighbours:
+% The following data fields may also be used by FT_PREPARE_NEIGHBOURS:
 %   data.elec     = structure with EEG electrode positions
 %   data.grad     = structure with MEG gradiometer positions
 %
@@ -44,7 +44,7 @@ function [neighbours, cfg] = ft_prepare_neighbours(cfg, data)
 %        etc.
 % Note that a channel is not considered to be a neighbour of itself.
 %
-% See also FT_NEIGHBOURPLOT
+% See also FT_NEIGHBOURPLOT, FT_FETCH_SENS
 
 % Copyright (C) 2006-2011, Eric Maris, Jorn M. Horschig, Robert Oostenveld
 %
@@ -116,42 +116,11 @@ if strcmp(cfg.method, 'template')
   fprintf('Successfully loaded neighbour structure from %s\n', cfg.template);
 else
   % get the the grad or elec if not present in the data
-  if hasdata && isfield(data, 'grad')
-    fprintf('Using the gradiometer configuration from the dataset.\n');
-    sens = data.grad;
-  elseif hasdata && isfield(data, 'elec')
-    fprintf('Using the electrode configuration from the dataset.\n');
-    sens = data.elec;
-  elseif hasdata && isfield(data, 'pnt') && isfield(data, 'label')
-    % could be a sensor description
-    fprintf('Using the sensor positions in the data.\n');
-    sens = data;
-  elseif hasdata && isfield(data, 'chanpos') && isfield(data, 'label')
-    % could be a sensor description
-    fprintf('Using the sensor positions in the data.\n');
-    sens = data;
-  elseif isfield(cfg, 'grad')
-    fprintf('Obtaining the gradiometer configuration from the configuration.\n');
-    sens = cfg.grad;
-  elseif isfield(cfg, 'elec')
-    fprintf('Obtaining the electrode configuration from the configuration.\n');
-    sens = cfg.elec;
-  elseif isfield(cfg, 'gradfile')
-    fprintf('Obtaining the gradiometer configuration from a file.\n');
-    sens = ft_read_sens(cfg.gradfile);
-  elseif isfield(cfg, 'elecfile')
-    fprintf('Obtaining the electrode configuration from a file.\n');
-    sens = ft_read_sens(cfg.elecfile);
-  elseif isfield(cfg, 'layout')
-    fprintf('Using the 2-D layout to determine the neighbours\n');
-    lay = ft_prepare_layout(cfg);
-    sens = [];
-    sens.label = lay.label;
-    sens.chanpos = lay.pos;
-    sens.chanpos(:,3) = 0;
+  if hasdata 
+    sens = ft_fetch_sens(cfg, data);
   else
-    error('Did not find gradiometer or electrode information or a layout.');
-  end;
+    sens = ft_fetch_sens(cfg);
+  end
   
   switch lower(cfg.method)
     case 'distance'

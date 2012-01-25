@@ -26,9 +26,8 @@ function [data] = ft_megplanar(cfg, data)
 % the head and of a source model. The 'sourceproject' method is not supported for
 % frequency domain data.
 %
-% A head model must be specified with
-%   cfg.hdmfile     = string, file containing the volume conduction model
-% or alternatively manually using
+% A head model must be specified, see FT_FETCH_VOL, or alternatively 
+% manually using
 %   cfg.vol.r       = radius of sphere
 %   cfg.vol.o       = [x, y, z] position of origin
 %

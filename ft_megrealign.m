@@ -24,9 +24,8 @@ function [data] = ft_megrealign(cfg, data)
 % gradiometer array. This requires the specification of a volume conduction
 % model of the head and of a source model.
 %
-% A head model must be specified with
-%   cfg.hdmfile     = string, file containing the volume conduction model
-% or alternatively manually using
+% A head model must be specified, see FT_FETCH_SENS,or alternatively 
+% manually using
 %   cfg.vol.r       = radius of sphere
 %   cfg.vol.o       = [x, y, z] position of origin
 %

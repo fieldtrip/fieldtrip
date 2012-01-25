@@ -64,16 +64,15 @@ if ~isfield(cfg, 'isolatedsource'), cfg.isolatedsource = [];                 end
 if ~isfield(cfg, 'method'),         cfg.method = 'dipoli';                   end % dipoli, openmeeg, bemcp, brainstorm
 
 % start with an empty volume conductor
-vol = [];
-if ~isempty(cfg.hdmfile)
-  hdm = ft_read_vol(hdmfile);
-  % copy the boundary of the head model file into the volume conduction model
+try
+  hdm = ft_fetch_vol(cfg);
   vol.bnd = hdm.bnd;
   if isfield(hdm, 'cond')
     % also copy the conductivities
     vol.cond = hdm.cond;
   end
-else
+catch
+  vol = [];
   geom = mri;
   % copy the boundaries from the geometry into the volume conduction model
   vol.bnd = geom.bnd;

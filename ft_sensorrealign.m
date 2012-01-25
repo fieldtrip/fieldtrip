@@ -64,11 +64,8 @@ function [elec_realigned] = ft_sensorrealign(cfg, elec_original)
 %   cfg.feedback       = 'yes' or 'no' (default = 'no')
 %
 % The electrodes or the gradiometers that will be realigned can be
-% specified in the second input argument, or optionally as
-%   cfg.elecfile       = string with filename, or alternatively
-%   cfg.elec           = structure with electrode definition
-%   cfg.gradfile       = string with filename, or alternatively
-%   cfg.grad           = structure with gradiometer definition
+% specified in the second input argument, or optionally as specified in the
+% cfg. See FT_FETCH_SENS.
 %
 % To realign the sensors using the fiducials, the target has to contain the
 % three template fiducials, e.g.
@@ -91,7 +88,8 @@ function [elec_realigned] = ft_sensorrealign(cfg, elec_original)
 %                        single triangulated boundary, or a Nx3 matrix with surface
 %                        points
 %
-% See also FT_READ_SENS, FT_VOLUMEREALIGN, FT_INTERACTIVEREALIGN
+% See also FT_READ_SENS, FT_VOLUMEREALIGN, FT_INTERACTIVEREALIGN,
+% FT_FETCH_SENS
 
 % Copyright (C) 2005-2011, Robert Oostenveld
 %
@@ -183,22 +181,19 @@ else
 end
 
 % get the electrode definition that should be warped
-if isfield(cfg, 'elec')
-  elec_original = cfg.elec;
-elseif isfield(cfg, 'elecfile')
-  elec_original = ft_read_sens(cfg.elecfile);
-elseif isfield(cfg, 'grad')
-  elec_original = cfg.grad;
-elseif isfield(cfg, 'gradfile')
-  elec_original = ft_read_sens(cfg.gradfile);
+if nargin==1
+  try % try to get the description from the cfg
+    elec_original = ft_fetch_sens(cfg);
+  catch lasterr
+    % start with an empty set of electrodes, this is useful for manual positioning
+    elec_original = [];
+    elec_original.pnt    = zeros(0,3);
+    elec_original.label  = cell(0,1);
+    elec_original.unit   = 'mm';
+    warning(lasterr.message, lasterr.identifier);
+  end
 elseif nargin>1
   % the input electrodes were specified as second input argument
-else
-  % start with an empty set of electrodes, this is usefull for manual positioning
-  elec_original = [];
-  elec_original.pnt    = zeros(0,3);
-  elec_original.label  = cell(0,1);
-  elec_original.unit   = 'mm';
 end
 
 % ensure that the units are specified

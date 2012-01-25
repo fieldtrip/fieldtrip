@@ -13,13 +13,7 @@ function [cfg] = ft_headmodelplot(cfg, data)
 % or alternatively
 %   cfg.vol           = structure with volume conduction model
 %
-% If the sensor information is not contained in the data itself you should
-% also specify the sensor information using
-%   cfg.gradfile      = string, file containing the gradiometer definition
-%   cfg.elecfile      = string, file containing the electrode definition
-% or alternatively
-%   cfg.grad          = structure with gradiometer definition
-%   cfg.elec          = structure with electrode definition
+% If the sensor information is obtained by FT_FETCH_SENS.
 %
 % The positions of the sources can be specified as a regular 3-D
 % grid that is aligned with the axes of the head coordinate system

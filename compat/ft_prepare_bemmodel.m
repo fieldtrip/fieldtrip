@@ -14,12 +14,13 @@ function [vol, cfg] = ft_prepare_bemmodel(cfg, mri)
 %   cfg.tissue         = [1 2 3], segmentation value of each tissue type
 %   cfg.numvertices    = [Nskin_surface Nouter_skull_surface Ninner_skull_surface]
 %   cfg.conductivity   = [Cskin_surface Couter_skull_surface Cinner_skull_surface]
-%   cfg.hdmfile        = string, file containing the volume conduction model (can be empty)
-%   cfg.isolatedsource = compartment number, or 0
 %   cfg.method         = 'dipoli', 'openmeeg', 'brainstorm' or 'bemcp'
-%
+%   cfg.isolatedsource = compartment number, or 0
 % Although the example configuration uses 3 compartments, you can use
 % an arbitrary number of compartments.
+%
+% When the headmodel should be derived from the cfg, see FT_FETCH_VOL
+%
 %
 % This function implements
 %   Oostendorp TF, van Oosterom A.
@@ -72,7 +73,7 @@ if ~isempty(cfg.hdmfile)
     % also copy the conductivities
     vol.cond = hdm.cond;
   end
-else
+else % if specified as second input argument
   geom = mri;
   % copy the boundaries from the geometry into the volume conduction model
   vol.bnd = geom.bnd;

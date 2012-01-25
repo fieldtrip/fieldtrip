@@ -6,17 +6,9 @@ function [simulated] = ft_dipolesimulation(cfg)
 % Use as
 %   data = ft_dipolesimulation(cfg)
 %
-% You should specify the volume conductor model with
-%   cfg.hdmfile       = string, file containing the volume conduction model
-% or alternatively
-%   cfg.vol           = structure with volume conduction model
+% You should specify the volume conductor model as defined by FT_FETCH_VOL
 % If the sensor information is not contained in the data itself you should
-% also specify the sensor information using
-%   cfg.gradfile      = string, file containing the gradiometer definition
-%   cfg.elecfile      = string, file containing the electrode definition
-% or alternatively
-%   cfg.grad          = structure with gradiometer definition
-%   cfg.elec          = structure with electrode definition
+% also specify the sensor information, see FT_FETCH_SENS
 %
 % optionally
 %   cfg.channel    = Nx1 cell-array with selection of channels (default = 'all'),

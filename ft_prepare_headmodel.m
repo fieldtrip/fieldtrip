@@ -79,7 +79,8 @@ function [vol, cfg] = ft_prepare_headmodel(cfg, data)
 %     cfg.samplepoint
 %     cfg.conductivity
 %
-% See also FT_PREPARE_MESH, FT_VOLUMESEGMENT, FT_VOLUMEREALIGN
+% See also FT_PREPARE_MESH, FT_VOLUMESEGMENT, FT_VOLUMEREALIGN,
+% FT_FETCH_SENS
 
 % Copyright (C) 2011, Cristiano Micheli, Jan-Mathijs Schoffelen
 %
@@ -139,8 +140,15 @@ cfg.baseline       = ft_getopt(cfg, 'baseline');
 cfg.singlesphere   = ft_getopt(cfg, 'singlesphere');
 cfg.tissueval      = ft_getopt(cfg, 'tissueval'); % FEM 
 cfg.tissuecond     = ft_getopt(cfg, 'tissuecond'); 
-cfg.sens           = ft_getopt(cfg, 'sens'); 
 cfg.transform      = ft_getopt(cfg, 'transform'); 
+
+% new way of getting sens structure:
+%cfg.sens           = ft_getopt(cfg, 'sens'); 
+try
+  cfg.sens = ft_fetch_sens(cfg, data);
+catch
+  cfg.sens = [];
+end
 
 
 if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
@@ -288,7 +296,7 @@ switch cfg.method
     vol = ft_headmodel_singlesphere(geometry,'conductivity',cfg.conductivity);
     
   case {'simbio' 'fns'}
-    if length([cfg.tissue cfg.tissueval cfg.tissuecond cfg.elect cfg.transform cfg.unit])<6
+    if length([cfg.tissue cfg.tissueval cfg.tissuecond cfg.elec cfg.transform cfg.unit])<6
       error('Not all the required fields have been provided, see help')
     end
     if strcmp(method,'simbio')
