@@ -19,7 +19,9 @@ function [stat] = ft_freqstatistics(cfg, varargin)
 %   cfg.avgovertime = 'yes' or 'no'                   (default = 'no')
 %   cfg.avgoverfreq = 'yes' or 'no'                   (default = 'no')
 %   cfg.parameter   = string                          (default = 'powspctrm')
-%   cfg.neighbours  = see FT_NEIGHBOURSELECTION       (no default, required if cfg.correctm='cluster')
+%
+% If you specify cfg.correctm='cluster', then the following is required
+%   cfg.neighbours  = neighbourhood structure, see FT_PREPARE_NEIGHBOURS
 %
 % Furthermore, the configuration should contain
 %   cfg.method       = different methods for calculating the significance probability and/or critical value

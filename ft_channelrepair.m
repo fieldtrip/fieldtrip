@@ -9,7 +9,7 @@ function [data] = ft_channelrepair(cfg, data)
 %
 % The configuration must contain
 %   cfg.badchannel     = cell-array, see FT_CHANNELSELECTION for details
-%   cfg.neighbours     = neighbourhoodstructure, see also FT_NEIGHBOURSELECTION
+%   cfg.neighbours     = neighbourhoodstructure, see also FT_PREPARE_NEIGHBOURS
 %   cfg.trials         = 'all' or a selection given as a 1xN vector (default = 'all')
 %
 % Since a nearest neighbour average is used, the input should contain

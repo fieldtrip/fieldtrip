@@ -44,7 +44,7 @@ function [stat, cfg] = statistics_montecarlo(cfg, dat, design, varargin)
 %   cfg.clustertail      = -1, 1 or 0 (default = 0)
 %
 % To include the channel dimension for clustering, you should specify
-%   cfg.neighbours       = structure with the neighbours of each channel, see FT_NEIGHBOURSELECTION
+%   cfg.neighbours       = neighbourhood structure, see FT_PREPARE_NEIGHBOURS
 % If you specify an empty neighbourhood structure, clustering will only be done
 % in frequency and time (if available) and not over neighbouring channels.
 %

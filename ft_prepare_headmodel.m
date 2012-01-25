@@ -34,6 +34,7 @@ function [vol, cfg] = ft_prepare_headmodel(cfg, data)
 %   vol = ft_prepare_headmodel(cfg)
 %   vol = ft_prepare_headmodel(cfg, vol)
 %   vol = ft_prepare_headmodel(cfg, bnd)
+%   vol = ft_prepare_headmodel(cfg, elec)
 % 
 % In general the input to this function is a geometrical description of the
 % shape of the head and a description of the electrical conductivity. The

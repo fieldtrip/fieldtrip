@@ -19,8 +19,13 @@ function [scd] = ft_scalpcurrentdensity(cfg, data)
 %                      'hjorth' for Hjorth approximation method
 %   cfg.elecfile     = string, file containing the electrode definition
 %   cfg.elec         = structure with electrode definition
-%   cfg.conductivity = conductivity of the skin (default = 0.33 S/m)
 %   cfg.trials       = 'all' or a selection given as a 1xN vector (default = 'all')
+%
+% The spline and finite method require the following
+%   cfg.conductivity = conductivity of the skin (default = 0.33 S/m)
+% 
+% The hjorth method requires the following
+%   cfg.neighbours   = neighbourhood structure, see FT_PREPARE_NEIGHBOURS
 %
 % Note that the skin conductivity, electrode dimensions and the potential
 % all have to be expressed in the same SI units, otherwise the units of
@@ -53,11 +58,11 @@ function [scd] = ft_scalpcurrentdensity(cfg, data)
 %   Neurophysiology 76:565.
 %
 % The 'hjorth' method implements
-%   B. Hjort; An on-line transformation of EEG ccalp potentials into
+%   B. Hjort; An on-line transformation of EEG scalp potentials into
 %   orthogonal source derivation. Electroencephalography and Clinical
 %   Neurophysiology 39:526-530, 1975.
 
-% Copyright (C) 2004-2006, Robert Oostenveld
+% Copyright (C) 2004-2012, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.

@@ -17,7 +17,7 @@ function [data] = ft_megplanar(cfg, data)
 %
 % The methods orig, sincos and fitplane are all based on a neighbourhood
 % interpolation. For these methods you need to specify
-%   cfg.neighbours     = neighbourhood structure, see FT_NEIGHBOURSELECTION
+%   cfg.neighbours     = neighbourhood structure, see FT_PREPARE_NEIGHBOURS
 %
 % In the 'sourceproject' method a minumum current estimate is done using a
 % large number of dipoles that are placed in the upper layer of the brain

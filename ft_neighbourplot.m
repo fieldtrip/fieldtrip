@@ -10,22 +10,22 @@ function [cfg] = ft_neighbourplot(cfg, data)
 %   ft_neighbourplot(cfg, data)
 %
 % where the configuration can contain
-%   cfg.neighbours    = neighbour structure from FT_PREPARE_NEIGHBOURS (optional)
+%   cfg.verbose       = 'yes' or 'no', if 'yes' then the plot callback will include text output
+%   cfg.neighbours    = neighbourhood structure, see FT_PREPARE_NEIGHBOURS (optional)
+% or one of the following options
+%   cfg.layout        = filename of the layout, see FT_PREPARE_LAYOUT
 %   cfg.elec          = structure with EEG electrode positions
 %   cfg.grad          = structure with MEG gradiometer positions
 %   cfg.elecfile      = filename containing EEG electrode positions
 %   cfg.gradfile      = filename containing MEG gradiometer positions
-%   cfg.layout        = filename of the layout, see FT_PREPARE_LAYOUT
-%   cfg.verbose       = 'yes' or 'no', if 'yes' then the plot callback will include text output
 %
-% The following data fields may also be used by FT_PREPARE_NEIGHBOURS:
+% If cfg.neighbours is not defined or empty, this function will call
+% FT_PREPARE_NEIGHBOURS to determine the channel neighbours. The
+% following data fields may also be used by FT_PREPARE_NEIGHBOURS
 %   data.elec     = structure with EEG electrode positions
 %   data.grad     = structure with MEG gradiometer positions
 %
-% If cfg.neighbours is not defined or empty, this function will call
-% FT_PREPARE_NEIGHBOURS to determine the channel neighbours.
-%
-% See also FT_PREPARE_NEIGHBOURS, FT_FETCH_SENS
+% See also FT_PREPARE_NEIGHBOURS, FT_PREPARE_LAYOUT
 
 % Copyright (C) 2011, J?rn M. Horschig, Robert Oostenveld
 %
