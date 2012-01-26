@@ -133,24 +133,36 @@ if ~compile
   elseif matlabversion(7.7)
     matlabcmd = 'matlab77';
   elseif matlabversion(7.8) % 2009a
-    matlabcmd = 'matlab78 -singleCompThread';
+    matlabcmd = 'matlab78';
   elseif matlabversion(7.9) % 2009b
-    matlabcmd = 'matlab79 -singleCompThread';
+    matlabcmd = 'matlab79';
   elseif matlabversion('2010a')
-    matlabcmd = 'matlab2010a -singleCompThread';
+    matlabcmd = 'matlab2010a';
   elseif matlabversion('2010b')
-    matlabcmd = 'matlab2010b -singleCompThread';
+    matlabcmd = 'matlab2010b';
   elseif matlabversion('2011a')
-    matlabcmd = 'matlab2011a -singleCompThread';
+    matlabcmd = 'matlab2011a';
   elseif matlabversion('2011b')
-    matlabcmd = 'matlab2011b -singleCompThread';
+    matlabcmd = 'matlab2011b';
   elseif matlabversion('2012a')
-    matlabcmd = 'matlab2012a -singleCompThread';
+    matlabcmd = 'matlab2012a';
   elseif matlabversion('2012b')
-    matlabcmd = 'matlab2012b -singleCompThread';
+    matlabcmd = 'matlab2012b';
   else
     % use whatever is available as default
     matlabcmd = 'matlab';
+  end
+  
+  if system(sprintf('which %s', matlabcmd))==1
+    % the linux command "which" returns 0 on succes and 1 on failure
+    warning('the executable for "%s" could not be found, trying "matlab" instead', matlabcmd);
+    % use whatever is available as default
+    matlabcmd = 'matlab';
+  end
+  
+  if matlabversion(7.8, inf)
+    % this is only supported for version 7.8 onward
+    matlabcmd = [matlabcmd ' -singleCompThread'];
   end
   
   % these options can be appended regardless of the version

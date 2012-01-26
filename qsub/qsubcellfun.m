@@ -36,7 +36,7 @@ function varargout = qsubcellfun(fname, varargin)
 %   fname = 'power';
 %   x1    = {1, 2, 3, 4, 5};
 %   x2    = {2, 2, 2, 2, 2};
-%   y     = qsubcellfun(fname, x1, x2, 'memreq', 1024^3, 'timreq', 60);
+%   y     = qsubcellfun(fname, x1, x2, 'memreq', 1024^3, 'timreq', 300);
 %
 % Using the compile=yes or compile=auto option, you can compile your
 % function into a stand-alone executable that can be executed on the cluster
@@ -80,7 +80,7 @@ function varargout = qsubcellfun(fname, varargin)
 % -----------------------------------------------------------------------
 
 if matlabversion(7.8, Inf)
-  % switch to zombie when finished or when ctrl-c gets pressed
+  % switch to zombie when finished or when Ctrl-C gets pressed
   % the onCleanup function does not exist for older versions
   onCleanup(@cleanupfun);
 end
@@ -100,9 +100,9 @@ StopOnError   = ft_getopt(optarg, 'StopOnError',   true    );
 diary         = ft_getopt(optarg, 'diary',         'error' ); % 'always', 'never', 'warning', 'error'
 timreq        = ft_getopt(optarg, 'timreq');
 memreq        = ft_getopt(optarg, 'memreq');
-stack         = ft_getopt(optarg, 'stack', 'auto');   % 'auto' or a number
-backend       = ft_getopt(optarg, 'backend', []);     % this will be dealt with in qsubfeval
-compile       = ft_getopt(optarg, 'compile', 'no');   % can be 'auto', 'yes' or 'no'
+stack         = ft_getopt(optarg, 'stack',   'auto');   % 'auto' or a number
+compile       = ft_getopt(optarg, 'compile', 'no');     % can be 'auto', 'yes' or 'no'
+backend       = ft_getopt(optarg, 'backend', []);       % this will be dealt with in qsubfeval
 
 % skip the optional key-value arguments
 if ~isempty(optbeg)
@@ -219,10 +219,10 @@ if stack>1
   numpartition  = partition(end);
   
   stackargin        = cell(1,numargin+3); % include the fname, uniformoutput, false
-  if compile
-    stackargin{1}     = repmat({fcomp},1,numpartition);  % fcomp
+  if istrue(compile)
+    stackargin{1}     = repmat({str2func(fcomp)},1,numpartition);  % fcomp
   else
-    stackargin{1}     = repmat({fname},1,numpartition);  % fname
+    stackargin{1}     = repmat({str2func(fname)},1,numpartition);  % fname
   end
   stackargin{end-1} = repmat({'uniformoutput'},1,numpartition);  % uniformoutput
   stackargin{end}   = repmat({false},1,numpartition);            % false
@@ -277,7 +277,7 @@ end % if compile
 % check the input arguments
 for i=1:numargin
   if ~isa(varargin{i}, 'cell')
-    error('input argument #%d shoudl be a cell-array', i+1);
+    error('input argument #%d should be a cell-array', i+1);
   end
   if numel(varargin{i})~=numjob
     error('inconsistent number of elements in input #%d', i+1);
