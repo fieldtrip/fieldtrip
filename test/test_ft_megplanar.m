@@ -9,7 +9,7 @@ datainfo = datainfo(sel);
 
 %% check whether all runs through smoothly
 for k = 1:numel(datainfo)
-  fname = [datainfo(k).origdir,'raw/',datainfo(k).type,'preproc_',datainfo(k).datatype];
+  fname = [datainfo(k).origdir,'latest/raw/',datainfo(k).type,'preproc_',datainfo(k).datatype];
   load(fname);
 
   cfg = [];
