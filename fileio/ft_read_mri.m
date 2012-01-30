@@ -173,76 +173,91 @@ elseif strcmp(mriformat, 'neuromag_fif')
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif strcmp(mriformat, 'dicom')
-  % this uses the Image processing toolbox
-  % the DICOM file probably represents a stack of slices, possibly even multiple volumes
-  orig = dicominfo(filename);
-  dim(1) = orig.Rows;
-  dim(2) = orig.Columns;
-
-  [p, f] = fileparts(filename);
-
-  % this works for the Siemens scanners at the FCDC
-  tok = tokenize(f, '.');
-  for i=5:length(tok)
-    tok{i} = '*';  
-  end
-  filename = sprintf('%s.', tok{:});  % reconstruct the filename with wildcards and '.' between the segments
-  filename = filename(1:end-1);       % remove the last '.'
-  dirlist  = dir(fullfile(p, filename));
-  dirlist  = {dirlist.name};
-
-  if length(dirlist)==1
-    % try something else to get a list of all the slices
-    dirlist = dir(fullfile(p, '*'));
-    dirlist = {dirlist(~[dirlist.isdir]).name};
-  end
-    
-  keep = false(1, length(dirlist));
-  for i=1:length(dirlist)
-    filename = char(fullfile(p, dirlist{i}));
-    if ~strcmp(mriformat, 'dicom')
-      keep(i) = false;
-      fprintf('skipping ''%s'' because of incorrect filetype\n', filename);
-    end
-    % read the header information
-    info     = dicominfo(filename);
-    if info.SeriesNumber~=orig.SeriesNumber
-      keep(i) = false;
-      fprintf('skipping ''%s'' because of different SeriesNumber\n', filename);
-    else
-      keep(i) = true;
-      hdr(i)  = info;
-    end
-  end
-  % remove the files that were skipped
-  hdr     = hdr(keep);
-  dirlist = dirlist(keep);
-
-  % pre-allocate enough space for the subsequent slices
-  dim(3) = length(dirlist);
-  img    = zeros(dim(1), dim(2), dim(3));
-  for i=1:length(dirlist)
-    filename = char(fullfile(p, dirlist{i}));
-    fprintf('reading image data from ''%s''\n', filename);
-    img(:,:,i) = dicomread(hdr(i));
-  end
   
-  % reorder the slices
-  [z, indx]   = sort(cell2mat({hdr.SliceLocation}));
-  hdr = hdr(indx);
-  img = img(:,:,indx);
-  
-  try
-    % construct a homgeneous transformation matrix that performs the scaling from voxels to mm
-    dx = hdr(1).PixelSpacing(1);
-    dy = hdr(1).PixelSpacing(2);
-    dz = hdr(2).SliceLocation - hdr(1).SliceLocation;
-    transform = eye(4);
-    transform(1,1) = dx;
-    transform(2,2) = dy;
-    transform(3,3) = dz;
+  % use the freesurfer toolbox
+  ft_hastoolbox('freesurfer', 1);
+  [dcmdir,junk1,junk2] = fileparts(filename);
+  if isempty(dcmdir),
+    dcmdir = '.';
   end
+  [img,transform,hdr,mr_params] = load_dicom_series(dcmdir,dcmdir,filename);
+  transform = vox2ras_0to1(transform);
   
+%   % this uses the Image processing toolbox
+%   % the DICOM file probably represents a stack of slices, possibly even multiple volumes
+%   orig = dicominfo(filename);
+%   dim(1) = orig.Rows;
+%   dim(2) = orig.Columns;
+% 
+%   [p, f] = fileparts(filename);
+% 
+%   % this works for the Siemens scanners at the FCDC
+%   tok = tokenize(f, '.');
+%   for i=5:length(tok)
+%     tok{i} = '*';  
+%   end
+%   filename = sprintf('%s.', tok{:});  % reconstruct the filename with wildcards and '.' between the segments
+%   filename = filename(1:end-1);       % remove the last '.'
+%   dirlist  = dir(fullfile(p, filename));
+%   dirlist  = {dirlist.name};
+% 
+%   if length(dirlist)==1
+%     % try something else to get a list of all the slices
+%     dirlist = dir(fullfile(p, '*'));
+%     dirlist = {dirlist(~[dirlist.isdir]).name};
+%   end
+%     
+%   keep = false(1, length(dirlist));
+%   for i=1:length(dirlist)
+%     filename = char(fullfile(p, dirlist{i}));
+%     if ~strcmp(mriformat, 'dicom')
+%       keep(i) = false;
+%       fprintf('skipping ''%s'' because of incorrect filetype\n', filename);
+%     end
+%     % read the header information
+%     info     = dicominfo(filename);
+%     if info.SeriesNumber~=orig.SeriesNumber
+%       keep(i) = false;
+%       fprintf('skipping ''%s'' because of different SeriesNumber\n', filename);
+%     else
+%       keep(i) = true;
+%       hdr(i)  = info;
+%     end
+%   end
+%   % remove the files that were skipped
+%   hdr     = hdr(keep);
+%   dirlist = dirlist(keep);
+% 
+%   % pre-allocate enough space for the subsequent slices
+%   dim(3) = length(dirlist);
+%   img    = zeros(dim(1), dim(2), dim(3));
+%   for i=1:length(dirlist)
+%     filename = char(fullfile(p, dirlist{i}));
+%     fprintf('reading image data from ''%s''\n', filename);
+%     img(:,:,i) = dicomread(hdr(i));
+%   end
+%   
+%   % reorder the slices
+%   [z, indx]   = sort(cell2mat({hdr.SliceLocation}));
+%   hdr = hdr(indx);
+%   img = img(:,:,indx);
+%   
+%   try
+%     % construct a homgeneous transformation matrix that performs the scaling from voxels to mm
+%     dx = hdr(1).PixelSpacing(1);
+%     dy = hdr(1).PixelSpacing(2);
+%     dz = hdr(2).SliceLocation - hdr(1).SliceLocation;
+% %     transform = eye(4);
+% %     transform(1,1) = dx;
+% %     transform(2,2) = dy;
+% %     transform(3,3) = dz;
+%     dc = hdr(1).ImageOrientationPatient;
+%     dc = [dc(1:3) dc(4:6) cross(dc(1:3), dc(4:6))];
+%     transform = diag([dx;dy;dz])*dc;
+%     transform(4,4) = 1;
+%   end
+%   
+ 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif strcmp(mriformat, 'nifti') || strcmp(mriformat, 'freesurfer_mgz') || strcmp(mriformat, 'nifti_fsl')
   ft_hastoolbox('freesurfer', 1);
