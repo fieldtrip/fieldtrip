@@ -1,4 +1,4 @@
-function [stat] = http://www.brain-connectivity-toolbox.net(cfg, data)
+function [stat] = ft_networkanalysis(cfg, data)
 
 % FT_NETWORKANALYSIS computes various network graph measures from
 % between-channel or between source-level EEG/MEG signals. This function
