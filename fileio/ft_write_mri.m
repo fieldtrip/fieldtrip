@@ -59,7 +59,7 @@ switch dataformat
     %analyze data, using SPM
     V = volumewrite_spm(filename, dat, transform, spmversion);
 
-  case {'freesurfer_mgz' 'mgz'}
+  case {'freesurfer_mgz' 'mgz' 'mgh'}
     % mgz-volume using freesurfer
     ft_hastoolbox('freesurfer', 1);
     

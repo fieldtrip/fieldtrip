@@ -862,6 +862,10 @@ elseif filetype_check_extension(filename, '.mgz')
   type = 'freesurfer_mgz';
   manufacturer = 'FreeSurfer';
   content = 'anatomical MRI';
+elseif filetype_check_extension(filename, '.mgh')
+  type = 'freesurfer_mgh';
+  manufacturer = 'FreeSurfer';
+  content = 'anatomical MRI';
 elseif filetype_check_header(filename, [255 255 254])
   % FreeSurfer Triangle Surface Binary Format
   type = 'freesurfer_triangle_binary';	% there is also an ascii triangle format

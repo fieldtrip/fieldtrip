@@ -247,7 +247,7 @@ switch cfg.filetype
       data = flipdim(data, 1);
     end
     siz = size(data);
-  case {'analyze_spm', 'nifti', 'nifti_img' 'mgz'}
+  case {'analyze_spm', 'nifti', 'nifti_img' 'mgz' 'mgh'}
     % this format supports a homogenous transformation matrix
     % nothing needs to be changed
   otherwise
@@ -436,16 +436,20 @@ switch cfg.filetype
     end
     ft_write_mri(cfg.filename, data, 'dataformat', 'analyze', 'transform', transform, 'spmversion', 'SPM2');
     
-  case 'mgz'
+  case {'mgz' 'mgh'}
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % write in freesurfer_mgz format, using functions from  the freesurfer toolbox
     % this format supports a homogenous transformation matrix
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if ispc && strcmp(cfg.filetype, 'mgz')
+      warning('Saving in .mgz format is not possible on a PC, saving in .mgh format instead');
+      cfg.filetype = 'mgh';
+    end
     [pathstr, name, ext] = fileparts(cfg.filename);
     if isempty(ext)
-      cfg.filename = [cfg.filename,'.mgz'];
+      cfg.filename = [cfg.filename,'.',cfg.filetype];
     end
-    ft_write_mri(cfg.filename, data, 'dataformat', 'mgz', 'transform', transform);
+    ft_write_mri(cfg.filename, data, 'dataformat', cfg.filetype, 'transform', transform);
     
     
   otherwise
