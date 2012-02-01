@@ -261,7 +261,6 @@ time_eval = cputime - time_pre;
 fprintf('estimated time per randomization is %d seconds\n', round(time_eval));
 
 % pre-allocate some memory
-%if strcmp(cfg.correctm, 'cluster')
 if strcmp(cfg.correctm, 'cluster')
   statrand = zeros(size(statobs,1), size(resample,1));
 else
@@ -323,6 +322,13 @@ if strcmp(cfg.correctm, 'cluster')
   % do the cluster postprocessing
   [stat, cfg] = clusterstat(cfg, statrand, statobs,'issource',issource);
 else
+  if ~isequal(cfg.numrandomization, 'all')
+    % in case of random permutations (i.e., montecarlo sample, and NOT full
+    % permutation), the minimum p-value should not be 0, but 1/N
+    prb_pos = prb_pos + 1;
+    prb_neg = prb_neg + 1;
+    Nrand = Nrand + 1;
+  end
   switch cfg.tail
     case 1
       clear prb_neg  % not needed any more, free some memory

@@ -378,7 +378,11 @@ if needpos,
       % compare all clusters simultaneosuly
       prob = prob + any(posdistribution(:,i)>stat(:));
     end
-    prob = prob/Nrand;
+    if isequal(cfg.numrandomization, 'all')
+      prob = prob/Nrand;
+    else % the minimum possible p-value should not be 0, but 1/N
+      prob = (prob + 1)/(Nrand + 1);
+    end
     for j = 1:Nobspos
       % collect a summary of the cluster properties
       posclusters(j).prob = prob;
@@ -390,7 +394,11 @@ if needpos,
     % compare the Nth ovbserved cluster against the randomization distribution of the Nth cluster
     prob = zeros(1,Nobspos);
     for j = 1:Nobspos
-      prob(j) = sum(posdistribution(j,:)>stat(j))/Nrand;
+      if isequal(cfg.numrandomization, 'all')
+        prob(j) = sum(posdistribution(j,:)>stat(j))/Nrand;
+      else % the minimum possible p-value should not be 0, but 1/N
+        prob(j) = (sum(posdistribution(j,:)>stat(j)) + 1)/(Nrand + 1);
+      end
       % collect a summary of the cluster properties
       posclusters(j).prob = prob(j);
       posclusters(j).clusterstat = stat(j);
@@ -401,7 +409,11 @@ if needpos,
     % univariate -> each cluster has it's own probability
     prob = zeros(1,Nobspos);
     for j = 1:Nobspos
-      prob(j) = sum(posdistribution>stat(j))/Nrand;
+      if isequal(cfg.numrandomization, 'all')
+        prob(j) = sum(posdistribution>stat(j))/Nrand;
+      else % the minimum possible p-value should not be 0, but 1/N
+        prob(j) = (sum(posdistribution>stat(j)) + 1)/(Nrand + 1);
+      end
       % collect a summary of the cluster properties
       posclusters(j).prob = prob(j);
       posclusters(j).clusterstat = stat(j);
@@ -442,7 +454,11 @@ if needneg,
       % compare all clusters simultaneosuly
       prob = prob + any(negdistribution(:,i)<stat(:));
     end
-    prob = prob/Nrand;
+    if isequal(cfg.numrandomization, 'all')
+      prob = prob/Nrand;
+    else % the minimum possible p-value should not be 0, but 1/N
+      prob = (prob + 1)/(Nrand + 1);
+    end
     for j = 1:Nobsneg
       % collect a summary of the cluster properties
       negclusters(j).prob = prob;
@@ -454,7 +470,11 @@ if needneg,
     % compare the Nth ovbserved cluster against the randomization distribution of the Nth cluster
     prob = zeros(1,Nobsneg);
     for j = 1:Nobsneg
-      prob(j) = sum(negdistribution(j,:)<stat(j))/Nrand;
+      if isequal(cfg.numrandomization, 'all')
+        prob(j) = sum(negdistribution(j,:)<stat(j))/Nrand;
+      else % the minimum possible p-value should not be 0, but 1/N
+        prob(j) = (sum(negdistribution(j,:)<stat(j)) + 1)/(Nrand + 1);
+      end
       % collect a summary of the cluster properties
       negclusters(j).prob = prob(j);
       negclusters(j).clusterstat = stat(j);
@@ -465,7 +485,11 @@ if needneg,
     % univariate -> each cluster has it's own probability
     prob = zeros(1,Nobsneg);
     for j = 1:Nobsneg
-      prob(j) = sum(negdistribution<stat(j))/Nrand;
+      if isequal(cfg.numrandomization, 'all')
+        prob(j) = sum(negdistribution<stat(j))/Nrand;
+      else % the minimum possible p-value should not be 0, but 1/N
+        prob(j) = (sum(negdistribution<stat(j)) + 1)/(Nrand + 1);
+      end
       % collect a summary of the cluster properties
       negclusters(j).prob = prob(j);
       negclusters(j).clusterstat = stat(j);
