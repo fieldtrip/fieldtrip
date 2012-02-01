@@ -27,7 +27,7 @@ for k = 1:numel(datainfo)
   
   datanew = rmfield(datanew, 'cfg'); % these are per construction different if writeflag = 0;
   data    = rmfield(data,    'cfg');
-  assert(isequal(data, datanew));
+  assert(isequalwithequalnans(data, datanew));
 end
 
 function [tlck] = timelockanalysis10trials(dataset, writeflag)
