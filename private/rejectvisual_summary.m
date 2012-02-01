@@ -507,6 +507,7 @@ currfig = gcf;
 for n = 1:length(trls)
   figure()
   cfg_mp.trials = trls(n);
+  cfg_mp.interactive = 'yes';
   ft_multiplotER(cfg_mp, info.data);
   title(sprintf('Trial %i',trls(n)));
 end
