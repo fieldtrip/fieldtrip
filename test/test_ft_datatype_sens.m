@@ -3,29 +3,35 @@ function test_ft_datatype_sens
 % TEST test_ft_datatype_sens
 % TEST ft_datatype_sens ft_read_sens ft_read_header ctf2grad bti2grad itab2grad fif2grad yokogawa2grad
 
-
-path1 = '/home/common/matlab/fieldtrip/data/test/original/meg';
+if isunix
+  path1 = '/home/common/matlab/fieldtrip/data/test/original/meg';
+elseif ispc
+  path1 = fullfile('H:', 'common', 'matlab', 'fieldtrip', 'data', 'test', 'original', 'meg');
+end
 path2 = '/Users/robert/Manzana/data/dataformat/testdata';
 
 filename = {
-  'ctf151/Subject01.ds'
+  fullfile('ctf151', 'Subject01.ds')
   % this one fails because the ctf64 dataset requires special headerformat/dataformat flags
   % 'ctf64/Wat123r1raw.ds'
-  'ctf275/A0132_Aud-Obj-Recognition_20051115_02.ds'
-  'neuromag122/nmStim150.fif'
-  'neuromag306/raw.fif'
-  'itab153/srgcst85_0105.raw'
-  'itab153/srgcst85_0105.raw.mhd'
-  'yokogawa160/Continuous1.con'
-  'itab28/gibb0101.raw'
-  'itab28/gibb0101.raw.mhd'
-  'bti148/c,rfhp0.1Hz'
-  'bti248/e,rfDC'
-  'bti248/e,rfDC,F,a'
-  'itab28_old/gibb0101.raw'
-  'itab28_old/gibb0101.raw.mhd'
-  'yokogawa64/2011_01_28_0354_ME053_AEF.con'
-  'yokogawa440/S1_MEG_Epoch.raw'
+  fullfile('ctf275', 'A0132_Aud-Obj-Recognition_20051115_02.ds')
+  % this one is not there anymore or got renamed
+  % fullfile('neuromag122', 'nmStim150.fif')
+  % but this one is there, now
+  fullfile('neuromag122', 'jg_single_01raw.fif')
+  fullfile('neuromag306', 'raw.fif')
+  fullfile('itab153', 'srgcst85_0105.raw')
+  fullfile('itab153', 'srgcst85_0105.raw.mhd')
+  fullfile('yokogawa160', 'Continuous1.con')
+  fullfile('itab28', 'gibb0101.raw')
+  fullfile('itab28', 'gibb0101.raw.mhd')
+  fullfile('bti148', 'c,rfhp0.1Hz')
+  fullfile('bti248', 'e,rfDC')
+  fullfile('bti248', 'e,rfDC,F,a')
+  fullfile('itab28_old', 'gibb0101.raw')
+  fullfile('itab28_old', 'gibb0101.raw.mhd')
+  fullfile('yokogawa64', '2011_01_28_0354_ME053_AEF.con')
+  fullfile('yokogawa440', 'S1_MEG_Epoch.raw')
   };
 
 for i=1:length(filename)
@@ -40,11 +46,11 @@ for i=1:length(filename)
     if length(b)>1
       dataset = deblank(b);
     else
-      warning('unable to test with the dataset "%s" because it cannot be found', filename{i});
+      warning('unable to test with the dataset "%s" because it cannot be found\n', filename{i});
       continue
     end
   else
-    error('unable to test with the dataset "%d" because it cannot be found', filename{i});
+    error('unable to test with the dataset "%d" because it cannot be found\n', filename{i});
   end
   
   sens1 = ft_read_sens(dataset);
