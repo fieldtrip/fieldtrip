@@ -156,7 +156,7 @@ end
 % raw data is supposed to contain the sampling frequency
 if ~isfield(data, 'fsample')
   % compute the sampling frequency from the first two timepoints
-  data.fsample = 1/(data.time{1}(2)-data.time{1}(1));
+  data.fsample = 1/mean(diff(data.time{1}));
 end
 
 % these fields cannot be used by the external functions that want the data in raw format
