@@ -84,6 +84,7 @@ hasdata = nargin>1;
 if hasdata, data = ft_checkdata(data); end
 
 if strcmp(cfg.method, 'template')
+  neighbours = [];
   fprintf('Trying to load sensor neighbours from a template\n');
   if ~isfield(cfg, 'template')
     if hasdata
@@ -114,6 +115,14 @@ if strcmp(cfg.method, 'template')
   end
   load(cfg.template);
   fprintf('Successfully loaded neighbour structure from %s\n', cfg.template);
+  
+  % only select those channels that are in the data
+  if (hasdata)
+    neighb_chans = {neighbours(:).label};
+    chans = ft_channelselection(data.label, neighb_chans);
+    neighb_idx = ismember(neighb_chans, chans);
+    neighbours = neighbours(neighb_idx);
+  end
 else
   % get the the grad or elec if not present in the data
   if hasdata 
