@@ -770,7 +770,7 @@ else
     d(:, tmpsel) = inf;
   end
   
-  mindist = min(d(:));
+  mindist = min(d(d>100*eps));
   X = prj(:,1);
   Y = prj(:,2);
   Width  = ones(size(X)) * mindist * 0.8;
