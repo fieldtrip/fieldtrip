@@ -114,6 +114,8 @@ end
 
 fclose(fid);
 
+event = [];
+
 if ~isempty(trigger)
   for E=1:length(trigger)
     event(E).type    = 'MARKER';
