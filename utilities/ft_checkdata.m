@@ -642,6 +642,13 @@ if issource && ~strcmp(haspow, 'no')
  data = fixsource(data, 'type', sourcerepresentation, 'haspow', haspow);
 end 
 
+if isfield(data, 'grad')
+  % ensure that the gradiometer balancing is specified
+  if ~isfield(data.grad, 'balance') || ~isfield(data.grad.balance, 'current')
+    data.grad.balance.current = 'none';
+  end
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % represent the covariance matrix in a particular manner
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
