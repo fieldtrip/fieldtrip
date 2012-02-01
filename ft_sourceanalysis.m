@@ -245,7 +245,6 @@ cfg.numpermutation   = ft_getopt(cfg, 'numpermutation',   100);
 cfg.wakewulf         = ft_getopt(cfg, 'wakewulf', 'yes');
 cfg.killwulf         = ft_getopt(cfg, 'killwulf', 'yes');
 cfg.channel          = ft_getopt(cfg, 'channel',  'all');
-cfg.prewhiten        = ft_getopt(cfg, 'prewhiten', 'no');
 cfg.supdip           = ft_getopt(cfg, 'supdip',        []);
 
 % if ~isfield(cfg, 'reducerank'),     cfg.reducerank = 'no';      end  %
@@ -283,8 +282,8 @@ end
 % select only those channels that are present in the data
 cfg.channel = ft_channelselection(cfg.channel, data.label);
 
-if nargin>2 && (strcmp(cfg.randomization, 'no') && strcmp(cfg.permutation, 'no') && strcmp(cfg.prewhiten, 'no'))
-  error('input of two conditions only makes sense if you want to randomize or permute, or if you want to prewhiten');
+if nargin>2 && (strcmp(cfg.randomization, 'no') && strcmp(cfg.permutation, 'no')
+  error('input of two conditions only makes sense if you want to randomize or permute');
 elseif nargin<3 && (strcmp(cfg.randomization, 'yes') || strcmp(cfg.permutation, 'yes'))
   error('randomization or permutation requires that you give two conditions as input');
 end
@@ -376,7 +375,7 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc'}))
     cfg.supchan = ft_channelselection(cfg.supchan, data.label);
     
     % HACK: use some experimental code
-    if nargin>2 && strcmp(cfg.prewhiten, 'no'),
+    if nargin>2,
       error('not supported')
     end
     tmpcfg         = cfg;
@@ -393,11 +392,6 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc'}))
     
     % select the data in the channels and the frequency of interest
     [Cf, Cr, Pr, Ntrials, tmpcfg] = prepare_freq_matrices(tmpcfg, data);
-    if strcmp(cfg.prewhiten, 'yes'),
-      [Cfb, Crb, Prb, Ntrialsb, tmpcfgb] = prepare_freq_matrices(tmpcfg, baseline);
-      Cf      = prewhitening_filter2(squeeze(mean(Cf,1)), squeeze(mean(Cfb,1)));
-      Ntrials = 1;
-    end
     
     if isfield(cfg, 'refchan') && ~isempty(cfg.refchan)
       [dum, refchanindx] = match_str(cfg.refchan, tmpcfg.channel);
