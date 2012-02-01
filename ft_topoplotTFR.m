@@ -331,7 +331,7 @@ for icell = 1:ncellhigh
   if isempty(cfg.highlightsymbol{icell}),    cfg.highlightsymbol{icell} = 'o';     end
   if isempty(cfg.highlightcolor{icell}),     cfg.highlightcolor{icell} = [0 0 0];  end
   if isempty(cfg.highlightsize{icell}),      cfg.highlightsize{icell} = 6;         end
-  if isempty(cfg.highlightfontsize{icell}),  cfg.h1tighlightfontsize{icell} = 8;     end
+  if isempty(cfg.highlightfontsize{icell}),  cfg.highlightfontsize{icell} = 8;     end
 end
 
 % for backwards compatability
