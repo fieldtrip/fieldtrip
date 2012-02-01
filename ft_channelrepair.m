@@ -1,19 +1,27 @@
 function [data] = ft_channelrepair(cfg, data)
 
-% FT_CHANNELREPAIR repairs bad channels in MEG or EEG data by replacing them
-% with the average of its neighbours. It cannot be used reliably to
-% repair multiple bad channels that lie next to each other.
+% FT_CHANNELREPAIR repairs bad or missing channels in MEG or EEG data by
+% replacing them with the average of its neighbours (nearest-neighbour
+% approach). It cannot be used reliably to repair multiple bad channels
+% that lie next to each other.
 %
 % Use as
 %   [interp] = ft_channelrepair(cfg, data)
 %
 % The configuration must contain
 %   cfg.badchannel     = cell-array, see FT_CHANNELSELECTION for details
+%   cfg.missingchannel = cell-array, see FT_CHANNELSELECTION for details
 %   cfg.neighbours     = neighbourhoodstructure, see also FT_PREPARE_NEIGHBOURS
 %   cfg.trials         = 'all' or a selection given as a 1xN vector (default = 'all')
 %
-% Since a nearest neighbour average is used, the input should contain
-% a gradiometer or electrode definition, i.e. data.grad or data.elec.
+% For reconstructing channels that are absent in your data, please define
+% your neighbours by setting cfg.method='template' and call
+% FT_PREPARE_NEIGHBOURS *without* the data argument:
+%   cfg.neighbours = ft_prepare_neighbours(cfg);
+% This will include channels that are missing in your in the neighbour-
+% definition.
+%
+% You should define sensor positions as defined by FT_FETCH_SENS
 %
 % To facilitate data-handling and distributed computing with the peer-to-peer
 % module, this function has the following options:
@@ -24,7 +32,8 @@ function [data] = ft_channelrepair(cfg, data)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_MEGREALIGN, FT_MEGPLANAR, FT_NEIGHBOURSELECTION
+% See also FT_MEGREALIGN, FT_MEGPLANAR, FT_NEIGHBOURSELECTION,
+% FT_FETCH_SENS
 
 % Copyright (C) 2004-2009, Robert Oostenveld
 
@@ -78,17 +87,23 @@ end
 iseeg = ft_senstype(data, 'eeg');
 ismeg = ft_senstype(data, 'meg');
 
-if iseeg
-  % FIXME this is not always guaranteed to be present
-  sens = data.elec;
-elseif ismeg
-  sens = data.grad;
-else
-  error('the data should contain either an electrode or a gradiometer definition');
+sens = ft_fetch_sens(cfg, data);
+
+
+channels = ft_channelselection(cfg.badchannel, data.label);
+% get selection of channels that are missing
+cfg.missingchannel = cfg.badchannel(~ismember(cfg.badchannel, channels));
+
+% warn if nearest neighbour approach (see
+% http://bugzilla.fcdonders.nl/show_bug.cgi?id=634)
+if ~isempty(cfg.missingchannel)
+  warning('Reconstructing missing channels using the nearest neighbour approach is not recommended!');
 end
 
 % get the selection of channels that are bad
-cfg.badchannel = ft_channelselection(cfg.badchannel, data.label);
+cfg.badchannel = channels;
+
+% first repair badchannels
 [goodchanlabels,goodchanindcs] = setdiff(data.label,cfg.badchannel);
 goodchanindcs = sort(goodchanindcs); % undo automatical sorting by setdiff
 connectivityMatrix = channelconnectivity(cfg, data);
@@ -125,10 +140,12 @@ repair = sparse(repair);
 
 % compute the repaired data for each trial
 fprintf('\n');
+fprintf('repairing bad channels for %i trials %d', Ntrials);
 for i=1:Ntrials
-  fprintf('repairing bad channels for trial %d\n', i);
+  fprintf('.');
   interp.trial{i} = repair * data.trial{i};
 end
+fprintf('\n');
 
 % store the realigned data in a new structure
 interp.fsample = data.fsample;
@@ -147,6 +164,66 @@ end
 if isfield(data, 'trialinfo')
   interp.trialinfo = data.trialinfo;
 end
+
+
+% interpolation missing channels
+goodchanindcs = 1:numel(data.label);
+for chan=cfg.missingchannel
+  interp.label{end+1} = chan{1};
+  % creating dummy trial data
+  for i=1:Ntrials
+    interp.trial{i}(end+1, :) = 0;
+  end
+end
+connectivityMatrix = channelconnectivity(cfg, interp);
+connectivityMatrix = connectivityMatrix(:, goodchanindcs); % all chans x good chans
+
+Ntrials = length(interp.trial);
+Nchans  = length(interp.label);
+Nsens   = length(sens.label);
+
+repair  = eye(Nchans,Nchans);
+missingindx = match_str(interp.label, cfg.missingchannel);
+unable = [];
+for k=missingindx'
+  fprintf('trying to reconstruct missing channel %s\n', interp.label{k});
+  repair(k,k) = 0;
+  l = goodchanindcs(connectivityMatrix(k, :));  
+  % get bad channels out
+  [a, b] = setdiff(data.label(l), interp.label(missingindx));
+  b = sort(b); % undo automatical sorting by setdiff
+  l(~ismember(find(l), b)) = [];
+  % get corresponding ids for sens structure
+  [a, b] = match_str(sens.label, interp.label(l));
+  goodsensindx = a(b);
+  if isempty(goodsensindx)
+    fprintf('\tcannot reconstruct channel - no neighbours in the original data or in the sensor position\n');
+    unable = [unable k];
+  else
+    [a, b] = match_str(sens.label, interp.label(k));
+    badsensindx = a(b);  
+    fprintf('\tusing neighbour %s\n', sens.label{goodsensindx});
+    distance = sqrt(sum((sens.chanpos(goodsensindx,:) - repmat(sens.chanpos(badsensindx, :), numel(goodsensindx), 1)).^2, 2));
+    repair(k,l) = (1./distance);
+    repair(k,l) = repair(k,l) ./ sum(repair(k,l));
+  end
+end
+
+% use sparse matrix to speed up computations
+repair = sparse(repair);
+
+fprintf('\n');
+% compute the missing data for each trial and remove those could not be
+% reconstructed
+fprintf('\n');
+fprintf('interpolating missing channel for %i trials %d', Ntrials);
+for i=1:Ntrials
+  fprintf('.');
+  interp.trial{i} = repair * interp.trial{i};
+  interp.trial{i}(unable, :) = [];
+end
+interp.label(unable) = [];
+fprintf('\n');
 
 % convert back to input type if necessary
 switch dtype
