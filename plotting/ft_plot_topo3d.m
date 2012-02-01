@@ -9,7 +9,10 @@ function ft_plot_topo3d(pnt, val, varargin)
 % given as Nx1 vector.
 
 % Optional input arguments should be specified in key-value pairs and can include
-%   ...
+% 'contourstyle'  false  (default), 'black', 'color' (makes contours of b/w or colored lines)
+% 'isocontour'    'auto' (default - and only - option)
+% 'topostyle'     'color'(default - and only - option)
+
 %
 % See also FT_PLOT_TOPO
 %
