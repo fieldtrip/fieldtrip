@@ -35,7 +35,7 @@ function [data] = ft_appenddata(cfg, varargin)
 % input/output structure. The data structure in the input file should be a
 % cell array for this particular function.
 %
-% See also FT_PREPROCESSING
+% See also FT_PREPROCESSING, FT_APPENDFREQ
 
 % Copyright (C) 2005-2008, Robert Oostenveld
 % Copyright (C) 2009-2011, Jan-Mathijs Schoffelen
