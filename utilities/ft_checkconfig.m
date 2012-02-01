@@ -30,6 +30,7 @@ function [cfg] = ft_checkconfig(cfg, varargin)
 % Optional input arguments should be specified as key-value pairs and can include
 %   renamed         = {'old',  'new'}        % list the old and new option
 %   renamedval      = {'opt',  'old', 'new'} % list option and old and new value
+%   allowedval      = {'opt', 'allowed1'...} % list of allowed values for a particular option, anything else will throw an error
 %   required        = {'opt1', 'opt2', etc.} % list the required options
 %   deprecated      = {'opt1', 'opt2', etc.} % list the deprecated options
 %   unused          = {'opt1', 'opt2', etc.} % list the unused options, these will be removed and a warning is issued
@@ -81,6 +82,7 @@ end
 
 renamed         = ft_getopt(varargin, 'renamed');
 renamedval      = ft_getopt(varargin, 'renamedval');
+allowedval      = ft_getopt(varargin, 'allowedval');
 required        = ft_getopt(varargin, 'required');
 deprecated      = ft_getopt(varargin, 'deprecated');
 unused          = ft_getopt(varargin, 'unused');
@@ -209,6 +211,19 @@ if ~isempty(forbidden)
       error(sprintf('The field cfg.%s is forbidden\n', forbidden{ismember(forbidden, fieldsused)}));
     end
   end
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% check for allowed values, give error if non-allowed value is specified
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if ~isempty(allowedval) && isfield(cfg, allowedval{1}) ...
+  && ~any(strcmp(cfg.(allowedval{1}), allowedval(2:end)))
+    s = ['The only allowed values for cfg.' allowedval{1} ' are: '];
+    for k = 2:numel(allowedval)
+      s = [s allowedval{k} ', '];
+    end
+    s = s(1:end-2); % strip last comma
+    error(s);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
