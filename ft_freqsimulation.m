@@ -173,7 +173,7 @@ if isempty(cfg.time)
   if ~isfield(cfg, 'numtrl'),        cfg.numtrl = 1;                        end
 else
   cfg.trllen = [];                                    % can be variable
-  cfg.fsample = 1/(cfg.time{1}(2) - cfg.time{1}(1));  % determine from time-axis
+  cfg.fsample = 1/mean(diff(cfg.time{1}));  % determine from time-axis
   cfg.numtrl = length(cfg.time);
 end
 

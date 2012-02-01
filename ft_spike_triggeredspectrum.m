@@ -100,7 +100,7 @@ spikesel         = match_str(spikelabel, cfg.spikechannel);
 nspikesel        = length(spikesel); % number of spike channels
 
 % get the options that will go in the ft_specest_mtmconvol function
-fsample = 1./ (data.time{1}(2)-data.time{1}(1)); % assumes constancy
+fsample = 1./ mean(diff(data.time{1})); % assumes constancy
 tmpcfg = [];
 tmpcfg.taper  = cfg.taper;
 tmpcfg.freqoi = cfg.foi;

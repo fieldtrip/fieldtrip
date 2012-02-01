@@ -175,7 +175,7 @@ if hasdata
   
   cfg.channel = ft_channelselection(cfg.channel, data.label);
   chansel = match_str(data.label, cfg.channel);
-  fsample = 1/(data.time{1}(2)-data.time{1}(1));
+  fsample = 1/mean(diff(data.time{1}));
   Nchans  = length(chansel);
   
   % this is how the input data is segmented

@@ -121,7 +121,7 @@ switch version
   case '2010v2'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if ~isfield(data, 'fsample')
-      data.fsample = 1/(data.time{1}(2) - data.time{1}(1));
+      data.fsample = 1/mean(diff(data.time{1}));
     end
 
     if isfield(data, 'offset')
@@ -142,7 +142,7 @@ switch version
   case {'2010v1' '2010'}
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if ~isfield(data, 'fsample')
-      data.fsample = 1/(data.time{1}(2) - data.time{1}(1));
+      data.fsample = 1/mean(diff(data.time{1}));
     end
 
     if isfield(data, 'offset')
@@ -157,7 +157,7 @@ switch version
   case '2007'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if ~isfield(data, 'fsample')
-      data.fsample = 1/(data.time{1}(2) - data.time{1}(1));
+      data.fsample = 1/mean(diff(data.time{1}));
     end
 
     if isfield(data, 'offset')
@@ -167,7 +167,7 @@ switch version
   case '2003'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if ~isfield(data, 'fsample')
-      data.fsample = 1/(data.time{1}(2) - data.time{1}(1));
+      data.fsample = 1/mean(diff(data.time{1}));
     end
 
     if ~isfield(data, 'offset')

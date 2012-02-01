@@ -206,7 +206,7 @@ end
 scd.elec    = elec;
 scd.time    = data.time;
 scd.label   = data.label;
-scd.fsample = 1/(data.time{1}(2) - data.time{1}(1));
+scd.fsample = 1/mean(diff(data.time{1}));
 if isfield(data, 'sampleinfo')
   scd.sampleinfo = data.sampleinfo;
 end

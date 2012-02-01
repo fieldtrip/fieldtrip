@@ -11,7 +11,7 @@ chansel = false(1,nchan);
 chansel(match_str(data.label, cfg.channel)) = 1;
 
 % compute the sampling frequency from the first two timepoints
-fsample = 1/(data.time{1}(2) - data.time{1}(1));
+fsample = 1/mean(diff(data.time{1}));
 
 % compute the offset from the time axes
 offset = zeros(ntrl,1);

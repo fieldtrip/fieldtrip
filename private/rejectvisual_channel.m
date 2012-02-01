@@ -35,7 +35,7 @@ nchan = sum(chansel);
 data = ft_selectdata(data, 'channel', cfg.channel);
 
 % compute the sampling frequency from the first two timepoints
-fsample = 1/(data.time{1}(2) - data.time{1}(1));
+fsample = 1/mean(diff(data.time{1}));
 
 % compute the offset from the time axes
 offset = zeros(ntrl,1);
