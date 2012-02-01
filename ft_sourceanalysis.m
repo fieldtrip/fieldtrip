@@ -282,7 +282,7 @@ end
 % select only those channels that are present in the data
 cfg.channel = ft_channelselection(cfg.channel, data.label);
 
-if nargin>2 && (strcmp(cfg.randomization, 'no') && strcmp(cfg.permutation, 'no')
+if nargin>2 && (strcmp(cfg.randomization, 'no') && strcmp(cfg.permutation, 'no'))
   error('input of two conditions only makes sense if you want to randomize or permute');
 elseif nargin<3 && (strcmp(cfg.randomization, 'yes') || strcmp(cfg.permutation, 'yes'))
   error('randomization or permutation requires that you give two conditions as input');
