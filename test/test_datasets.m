@@ -1,6 +1,6 @@
 function dataset = datasets
 
-origdir = '/home/common/matlab/fieldtrip/data/test/';
+origdir = '/home/common/matlab/fieldtrip/data/test/latest/';
 
 % eeg dataformats
 dataset(1).origdir  = origdir; 
