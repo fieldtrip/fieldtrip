@@ -452,7 +452,7 @@ end % iseeg or ismeg
 if strcmpi(reducerank,'yes')
   reducerank = size(lf,2) - 1;
 end
-if ~strcmp(reducerank, 'no') && reducerank<size(lf,2) && ~strcmp(ft_voltype(vol),'openmeeg')
+if ~strcmp(reducerank, 'no') && reducerank<size(lf,2) 
     % decompose the leadfield
     for ii=1:Ndipoles
         lftmp=lf(:,(3*ii-2):(3*ii));
