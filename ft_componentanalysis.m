@@ -11,7 +11,7 @@ function [comp] = ft_componentanalysis(cfg, data)
 %
 % where the data comes from FT_PREPROCESSING and the configuration
 % structure can contain
-%   cfg.method       = 'runica', 'fastica', 'binica', 'pca', 'svd', 'jader', 'varimax', 'dss', 'cca', 'sobi', 'white' (default = 'runica')
+%   cfg.method       = 'runica', 'fastica', 'binica', 'pca', 'svd', 'jader', 'varimax', 'dss', 'cca', 'sobi', 'white' or 'csp' (default = 'runica')
 %   cfg.channel      = cell-array with channel selection (default = 'all'), see FT_CHANNELSELECTION for details
 %   cfg.trials       = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.numcomponent = 'all' or number (default = 'all')
@@ -93,6 +93,11 @@ function [comp] = ft_componentanalysis(cfg, data)
 % these options can take can be found with HELP SOBI.
 %   cfg.sobi.n_sources
 %   cfg.sobi.p_correlations
+%
+% The csp method implements the common-spatial patterns method. For CSP, the
+% following specific options can be defined:
+%   cfg.csp.classlabels = vector that assigns a trial to class 1 or 2.
+%   cfg.csp.numfilters  = the number of spatial filters to use (default: 6).
 %
 % Instead of specifying a component analysis method, you can also specify
 % a previously computed unmixing matrix, which will be used to estimate the
@@ -224,8 +229,9 @@ cfg.dss.denf.function = ft_getopt(cfg.dss.denf, 'function', 'denoise_fica_tanh')
 cfg.dss.denf.params   = ft_getopt(cfg.dss.denf, 'params',   []);
 
 % additional options, see CSP for details
-cfg.csp = ft_getopt(cfg, 'csp', [])
-cfg.csp.numfilters = ft_getopt(cfg.csp, 'numfilters', 6)
+cfg.csp = ft_getopt(cfg, 'csp', []);
+cfg.csp.numfilters = ft_getopt(cfg.csp, 'numfilters', 6);
+cfg.csp.classlabels = ft_getopt(cfg.csp, 'classlabels');
 
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
@@ -295,9 +301,12 @@ if strcmp(cfg.method, 'sobi')
 elseif strcmp(cfg.method, 'csp')
   
   % concatenate the trials into two data matrices, one for each class
-  sel1 = find(cfg.classlabel==1);
-  sel2 = find(cfg.classlabel==2);
-  if length(sel1)+length(sel2)~=length(cfg.classlabel)
+  sel1 = find(cfg.csp.classlabels==1);
+  sel2 = find(cfg.csp.classlabels==2);
+  if min(length(sel1), length(sel2)) == 0
+    error('CSP requires class labels!');
+  end
+  if length(sel1)+length(sel2)~=length(cfg.csp.classlabels)
     warning('not all trials belong to class 1 or 2');
   end
   dat1 = cat(2, data.trial{sel1});
