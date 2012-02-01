@@ -121,7 +121,7 @@ else
   fallback = ft_getopt(varargin, 'fallback');
   
   if isempty(cache),
-    if strcmp(headerformat, 'bci2000_dat') || strcmp(headerformat, 'eyelink_asc') || || strcmp(headerformat, 'gtec_mat') || strcmp(headerformat, 'biosig')
+    if strcmp(headerformat, 'bci2000_dat') || strcmp(headerformat, 'eyelink_asc') || strcmp(headerformat, 'gtec_mat') || strcmp(headerformat, 'biosig')
       cache = true;
     else
       cache = false;
