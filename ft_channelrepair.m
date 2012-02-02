@@ -169,8 +169,8 @@ end
 
 % interpolation missing channels
 goodchanindcs = 1:numel(data.label);
-for chan=cfg.missingchannel
-  interp.label{end+1} = chan{1};
+for chan=1:numel(cfg.missingchannel)
+  interp.label{end+1} = cfg.missingchannel{chan};
   % creating dummy trial data
   for i=1:Ntrials
     interp.trial{i}(end+1, :) = 0;
