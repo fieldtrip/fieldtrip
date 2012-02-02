@@ -21,7 +21,9 @@ function [data] = ft_channelrepair(cfg, data)
 % This will include channels that are missing in your in the neighbour-
 % definition.
 %
-% You should define sensor positions as defined by FT_FETCH_SENS
+% You should define sensor positions as defined by FT_FETCH_SENS, but sens
+% definitions in the cfg will be preferred over sens definition from the
+% data
 %
 % To facilitate data-handling and distributed computing with the peer-to-peer
 % module, this function has the following options:
@@ -88,7 +90,12 @@ end
 iseeg = ft_senstype(data, 'eeg');
 ismeg = ft_senstype(data, 'meg');
 
-sens = ft_fetch_sens(cfg, data);
+% prefer sens from cfg over sens from data
+try
+  sens = ft_fetch_sens(cfg);
+catch
+  sens = ft_fetch_sens(cfg, data);
+end
 
 
 channels = ft_channelselection(cfg.badchannel, data.label);
