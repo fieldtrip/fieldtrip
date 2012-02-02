@@ -126,11 +126,11 @@ cfg.outputfile = ft_getopt(cfg, 'outputfile', []);
 % cfg.interpmethod depends on how the interpolation should be done and will
 % be specified below
 
-if isfield(anatomical, 'pnt')
-  % anatomical data consists of a mesh, but no smudging possible
-  is2Dana  = 1;
-elseif isfield(anatomical, 'transform') && isfield(anatomical, 'dim')
+if isfield(anatomical, 'transform') && isfield(anatomical, 'dim')
   is2Dana  = 0;
+elseif isfield(anatomical, 'pnt')
+  % anatomical data consists of a mesh, but no smudging possible
+  is2Dana  = 1; 
 end
 
 if isfield(functional, 'dim') && numel(functional.dim)==3
