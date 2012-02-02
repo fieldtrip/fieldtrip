@@ -68,8 +68,9 @@ ft_preamble loadvar data
 cfg = ft_checkconfig(cfg, 'required', {'neighbours'});
 
 % set the default configuration
-if ~isfield(cfg, 'badchannel'),    cfg.badchannel = {};           end
-if ~isfield(cfg, 'trials'),        cfg.trials = 'all';            end
+if ~isfield(cfg, 'badchannel'),     cfg.badchannel = {};           end
+if ~isfield(cfg, 'missingchannel'), cfg.missingchannel = {};       end
+if ~isfield(cfg, 'trials'),         cfg.trials = 'all';            end
 
 % check if the input data is valid for this function
 data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
@@ -92,7 +93,7 @@ sens = ft_fetch_sens(cfg, data);
 
 channels = ft_channelselection(cfg.badchannel, data.label);
 % get selection of channels that are missing
-cfg.missingchannel = cfg.badchannel(~ismember(cfg.badchannel, channels));
+cfg.missingchannel = [cfg.missingchannel cfg.badchannel(~ismember(cfg.badchannel, channels))];
 
 % warn if nearest neighbour approach (see
 % http://bugzilla.fcdonders.nl/show_bug.cgi?id=634)
