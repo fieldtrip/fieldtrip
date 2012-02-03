@@ -1,15 +1,15 @@
 function [realign] = ft_volumerealign(cfg, mri)
 
-% FT_VOLUMEREALIGN spatially aligns an anatomical MRI with head coordinates based on
-% external fiducials or anatomical landmarks. This function does not change the
-% volume itself, but adjusts the homogeneous transformation matrix that describes
-% the coordinate system. It also appends a coordsys-field to the mri, which specifies
-% the coordinate system.
+% FT_VOLUMEREALIGN spatially aligns an anatomical MRI with head coordinates
+% based on external fiducials or anatomical landmarks. This function does
+% not change the volume itself, but adjusts the homogeneous transformation
+% matrix that describes the coordinate system. It also appends a
+% coordsys-field to the mri, which specifies the coordinate system.
 %
-% This function only changes the coordinate system of an anatomical
-% MRI, it does not change the MRI as such. For spatial normalisation
-% (i.e. warping) of an MRI to a template brain you should use the
-% FT_VOLUMENORMALISE function.
+% This function only changes the coordinate system of an anatomical MRI, it
+% does not change the MRI as such. For spatial normalisation (i.e. warping)
+% of an MRI to a template brain you should use the FT_VOLUMENORMALISE
+% function.
 %
 % Use as
 %   [mri] = ft_volumerealign(cfg, mri)
@@ -18,73 +18,80 @@ function [realign] = ft_volumerealign(cfg, mri)
 %
 % The configuration can contain the following options
 %   cfg.method         = different methods for aligning the volume
-%                        'interactive' manually using graphical user interface
-%                        'fiducial' realign the volume to the fiducials,
-%                                     which are assumed to specify the positions of
-%                                     the nasion, left and right pre-auricular points.
-%                        'landmark' realign the volume to anatomical landmarks,
-%                                     which are assumed to specify the positions of
-%                                       the anterior and posterior commissures, and a
-%                                       point in the XZ-plane.
-%                                     this leads to a head coordinate system using
-%                                     RAS_Tal convention, i.e. the origin corresponds
-%                                       with the anterior commissure
-%                                     the Y-axis is along the line from the posterior
-%                                       commissure to the anterior commissure
-%                                     the Z-axis is towards the vertex, in between the
-%                                       hemispheres
-%                                     the X-axis is orthogonal to the YZ-plane,
-%                                       positive to the right
-%   cfg.coordsys       = 'ctf' (default when specifying cfg.method = 'interactive' or
-%                                 'fiducial') or 'spm' (default when specifying
-%                                 cfg.method = 'landmark'). Specifies the coordinate
-%                                     system of the head. This string
-%                                     specifies the origin and the axes of the
-%                                     coordinate system. supported coordinate systems
-%                                     are, 'ctf', '4d', 'yokogawa', 'neuromag', 'itab'
-%                                     'spm', 'tal'.
+%                        'interactive', 'fiducial', 'landmark' (see below)
+%   cfg.coordsys       = 'ctf' (default when specifying cfg.method =
+%                         'interactive' or 'fiducial') or 'spm' (default 
+%                         when specifying cfg.method = 'landmark').
+%                         Specifies the coordinate system of the head. This
+%                         string specifies the origin and the axes of the
+%                         coordinate system. supported coordinate systems
+%                         are: 'ctf', '4d', 'yokogawa', 'neuromag', 'itab'
+%                         'spm', 'tal'.
 %   cfg.clim           = [min max], scaling of the anatomy color (default
 %                        is to adjust to the minimum and maximum)
-%   cfg.parameter      = 'anatomy' the parameter which is used for the visualization
+%   cfg.parameter      = 'anatomy' the parameter which is used for the
+%                         visualization
 %
-% For realigning to the fiducials, you should specify the position of the
-% fiducials in voxel indices.
-%   cfg.fiducial.nas  = [i j k], position of nasion
+% When cfg.method = 'fiducial', the following cfg-option is required:
+%   cfg.fiducial.nas  = [i j k], position of nasion 
 %   cfg.fiducial.lpa  = [i j k], position of LPA
 %   cfg.fiducial.rpa  = [i j k], position of RPA
+%   cfg.fiducial.zpoint = [i j k], a point on the positive z-axis. This is
+%     an optional 'fiducial', and can be used to determine whether the
+%     input voxel coordinate axes are left-handed (i.e. flipped in one of
+%     the dimensions). If this additional point is specified, and the voxel
+%     coordinate axes are left handed, the volume is flipped to yield right
+%     handed voxel axes.
 %
-% For realigning to the landmarks, you should specify the position of the
-% landmarks in voxel indices.
+% When cfg.method = 'landmark', the following cfg-option is required:
 %   cfg.landmark.ac      = [i j k], position of anterior commissure
 %   cfg.landmark.pc      = [i j k], position of posterior commissure
-%   cfg.landmark.xzpoint = [i j k], point on the midsagittal-plane with positive Z-coordinate,
-%                                     i.e. interhemispheric point above ac and pc
+%   cfg.landmark.xzpoint = [i j k], point on the midsagittal-plane with
+%     positive Z-coordinate, i.e. interhemispheric point above ac and pc
+% The coordinate system will be according to the RAS_Tal convention i.e.
+% the origin corresponds with the anterior commissure the Y-axis is along
+% the line from the posterior commissure to the anterior commissure the
+% Z-axis is towards the vertex, in between the hemispheres the X-axis is
+% orthogonal to the YZ-plane, positive to the right
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
-%   cfg.inputfile   =  ...
-%   cfg.outputfile  =  ...
-% If you specify one of these (or both) the input data will be read from a *.mat
-% file on disk and/or the output data will be written to a *.mat file. These mat
-% files should contain only a single variable, corresponding with the
-% input/output structure.
+% When cfg.method = 'interactive', a user interface allows for the
+% specification of the fiducials or landmarks using the mouse, cursor keys
+% and keyboard. Using the n/l/r keys the fiducials can be specified, the
+% landmarks can be specified with a/p/z. When pressing q the 
+%
+% With the 'interactive' and 'fiducial' methods it is possible to define an
+% additional point, which should be a point on the positive side of the
+% xy-plane, i.e. with a positive z-coordinate in world coordinates. This
+% point will subsequently be used to check whether the input coordinate
+% system is left or right-handed, and the volume will be flipped to yield a
+% consistent right-handed coordinate system, both in the input and output
+% coordinate systems.
+%
+% To facilitate data-handling and distributed computing with the
+% peer-to-peer module, this function has the following options:
+%   cfg.inputfile   =  ... cfg.outputfile  =  ...
+% If you specify one of these (or both) the input data will be read from a
+% *.mat file on disk and/or the output data will be written to a *.mat
+% file. These mat files should contain only a single variable,
+% corresponding with the input/output structure.
 %
 % See also FT_READ_MRI, FT_ELECTRODEREALIGN HEADCOORDINATES
 
 % Copyright (C) 2006-2011, Robert Oostenveld, Jan-Mathijs Schoffelen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
-% for the documentation and details.
+% This file is part of FieldTrip, see
+% http://www.ru.nl/neuroimaging/fieldtrip for the documentation and
+% details.
 %
-%    FieldTrip is free software: you can redistribute it and/or modify
-%    it under the terms of the GNU General Public License as published by
-%    the Free Software Foundation, either version 3 of the License, or
-%    (at your option) any later version.
+%    FieldTrip is free software: you can redistribute it and/or modify it
+%    under the terms of the GNU General Public License as published by the
+%    Free Software Foundation, either version 3 of the License, or (at your
+%    option) any later version.
 %
-%    FieldTrip is distributed in the hope that it will be useful,
-%    but WITHOUT ANY WARRANTY; without even the implied warranty of
-%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-%    GNU General Public License for more details.
+%    FieldTrip is distributed in the hope that it will be useful, but
+%    WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+%    General Public License for more details.
 %
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
@@ -145,11 +152,6 @@ if iscell(cfg.parameter)
   cfg.parameter = cfg.parameter{1};
 end
 
-h  = figure;
-h1 = subplot('position',[0.02 0.55 0.44 0.44]);%subplot(2,2,1);
-h2 = subplot('position',[0.52 0.55 0.44 0.44]);%subplot(2,2,2);
-h3 = subplot('position',[0.02 0.05 0.44 0.44]);%subplot(2,2,3);
-handles = {h1 h2 h3};
 switch cfg.method
   case 'fiducial'
     % do nothing
@@ -158,6 +160,12 @@ switch cfg.method
     % do nothing
     
   case 'interactive'
+    h  = figure;
+    h1 = subplot('position',[0.02 0.55 0.44 0.44]);%subplot(2,2,1);
+    h2 = subplot('position',[0.52 0.55 0.44 0.44]);%subplot(2,2,2);
+    h3 = subplot('position',[0.02 0.05 0.44 0.44]);%subplot(2,2,3);
+    handles = {h1 h2 h3};
+  
     showcrosshair = true;
     showmarkers   = 1;
     dat = mri.(cfg.parameter);
@@ -422,7 +430,7 @@ switch cfg.method
         fprintf('xzpoint_voxel = [%f %f %f], xzpoint_head = [%f %f %f]\n', xzpoint, warp_apply(mri.transform, xzpoint));
         markerpos   = [markerpos; xzpoint];
         markerlabel = [markerlabel; {'xzpoint'}];
-        markercolor = [markercolor; {'r'}];
+        markercolor = [markercolor; {'y'}];
       end
       if ~isempty(pnt)
         fprintf('%f extra points selected\n', size(pnt,1));
@@ -432,9 +440,10 @@ switch cfg.method
       end
     end % while true
     
-    cfg.fiducial.nas = nas;
-    cfg.fiducial.lpa = lpa;
-    cfg.fiducial.rpa = rpa;
+    cfg.fiducial.nas    = nas;
+    cfg.fiducial.lpa    = lpa;
+    cfg.fiducial.rpa    = rpa;
+    cfg.fiducial.zpoint = xzpoint;
     
     cfg.landmark.ac     = antcomm;
     cfg.landmark.pc     = pstcomm;
@@ -466,10 +475,13 @@ if basedonfid
   nas_head = warp_apply(mri.transform, cfg.fiducial.nas);
   lpa_head = warp_apply(mri.transform, cfg.fiducial.lpa);
   rpa_head = warp_apply(mri.transform, cfg.fiducial.rpa);
-  
-  % compute the homogenous transformation matrix describing the new coordinate system
-  [transform, coordsys] = headcoordinates(nas_head, lpa_head, rpa_head, cfg.coordsys);
-  
+  if isfield(cfg.fiducial, 'zpoint') && ~isempty(cfg.fiducial.zpoint)
+    zpnt_head = warp_apply(mri.transform, cfg.fiducial.zpoint);
+    [transform, coordsys] = headcoordinates(nas_head, lpa_head, rpa_head, zpnt_head, cfg.coordsys);
+  else
+    % compute the homogeneous transformation matrix describing the new coordinate system
+    [transform, coordsys] = headcoordinates(nas_head, lpa_head, rpa_head, cfg.coordsys);
+  end
 elseif basedonmrk
   % the fiducial locations are now specified in voxels, convert them to head
   % coordinates according to the existing transform matrix
@@ -493,6 +505,22 @@ if ~isempty(transform)
   realign.transformorig = mri.transform;
   realign.transform     = transform * mri.transform;
   realign.coordsys      = coordsys;
+  
+  % check the transformation matrix for handedness and flip the volume in
+  % case it is left-handed
+  dir3   = realign.transform(3,1:3)./norm(realign.transform(3,1:3));
+  cosphi = dir3*cross(realign.transform(1,1:3),realign.transform(2,1:3))';
+  if sign(cosphi)<0
+    warning('the input coordinate system appears to be left-handed: flipping the volume in order to obtain a right-handed coordinate system');
+    [m,ix] = max(abs(realign.transform(1,1:3)));
+    
+    realign.anatomy   = flipdim(realign.anatomy,ix);
+    realign           = rmfield(realign, 'transformorig'); % don't know what to do here; better to get rid of it
+    T                 = inv(realign.transform);
+    T(1:3,1)          = -T(1:3,1);
+    T(ix,4)           = -T(ix,4) + realign.dim(ix) + 1;
+    realign.transform = inv(T);
+  end
 else
   warning('no coordinate system realignment has been done');
 end

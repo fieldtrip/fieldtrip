@@ -1,4 +1,4 @@
-function [h, flag] = headcoordinates(nas, lpa, rpa, flag)
+function [h, flag] = headcoordinates(nas, lpa, rpa, extrapoint, flag)
 
 % HEADCOORDINATES returns the homogeneous coordinate transformation matrix
 % that converts the specified fiducials in any coordinate system (e.g. MRI)
@@ -8,8 +8,10 @@ function [h, flag] = headcoordinates(nas, lpa, rpa, flag)
 % [h, coordsys] = headcoordinates(pt1, pt2, pt3,    flag)
 % [h, coordsys] = headcoordinates(ac,  pc,  zpoint, flag)
 %
+% [h, coordsys] = headcoordinates(nas, lpa, rpa, extrapoint, flag)
+% 
 % The optional flag determines how the direction of the axes and the
-% location of the origin should be specified
+% location of the origin will be specified
 %   according to CTF conventions:             flag = 'ctf' (default)
 %   according to 4D-neuroimaging conventions: flag = '4d' or 'bti'
 %   according to YOKOGAWA conventions:        flag = 'yokogawa'
@@ -19,6 +21,12 @@ function [h, flag] = headcoordinates(nas, lpa, rpa, flag)
 %   according to FTG conventions:             flag = 'ftg'
 %   according to Talairach conventions:       flag = 'tal'
 %   according to SPM conventions:             flag = 'spm'
+%
+% If the function is provided with 5 input arguments, the extrapoint will
+% be used as extra point to ensure correct orientation of the Z-axis (ctf,
+% 4d, yokogawa, itab, neuromag) or X-axis (tal, spm) NOT YET IMPLEMENTED.
+% This could result in the handedness of the transformation to be changed, but ensures
+% consistency with the handedness of the input coordinate system.
 %
 % The CTF/4D/YOKOGAWA coordinate system defined as follows:
 %   the origin is exactly between lpa and rpa
@@ -71,18 +79,26 @@ function [h, flag] = headcoordinates(nas, lpa, rpa, flag)
 %
 % $Id$
 
+% check whether function call is old or new style
 if nargin<4
-  flag=0;
+  flag       = 0;
+  extrapoint = [];
+elseif nargin==4
+  % old style
+  flag       = extrapoint;
+  extrapoint = [];
+elseif nargin==5
+  % do nothing
 end
 
 if isnumeric(flag)
   % these are for backward compatibility, but should preferably not be used any more
   if flag==0,
-    flag = 'CTF';
+    flag = 'ctf';
   elseif flag==1,
-    flag = 'ASA';
+    flag = 'asa';
   elseif flag==2,
-    flag = 'FTG';
+    flag = 'ftg';
   else
     error('if flag is numeric, it should assume one of the values 0/1/2');
   end
@@ -145,6 +161,20 @@ switch lower(flag)
     dirz   = cross(dirx,diry);
   otherwise
     error('unrecognized headcoordinate system requested');
+end
+
+if ~isempty(extrapoint)
+  dirq = extrapoint-origin;
+  dirq = dirq/norm(dirq);
+  if any(strcmp(lower(flag), {'als_ctf' 'ctf' 'bti' '4d' 'yokogawa' 'ras_itab' 'itab' 'neuromag'}))
+    phi = dirq(:)'*dirz(:);
+    if sign(phi)<0
+      warning('the input coordinate system seems left-handed, flipping z-axis to keep the transformation matrix consistent');
+      dirz = -dirz;
+    end
+  else
+    warning('the extra input coordinate is not used');
+  end
 end
 
 % compute the rotation matrix
