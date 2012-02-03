@@ -150,7 +150,8 @@ elseif isdatasens
   display('The data input might already be a sensor description.\n');
   sens = data;
 else
-  error('no electrodes or gradiometers specified');
+  help('ft_fetch_sens');
+  error('no electrodes or gradiometers specified, see help above');
 end
 
 % ensure that the sensor description is up-to-date
