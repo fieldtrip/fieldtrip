@@ -21,6 +21,20 @@ static unsigned int current_max_num_sample = 0;
 static int thissample = 0;    /* points at the buffer */
 static int thisevent = 0;     /* points at the buffer */
 
+/* Note that there have been problems with the order of the mutexes (e.g.
+ * http://bugzilla.fcdonders.nl/show_bug.cgi?id=933). 
+ * I have attempted to make the order of locking consistent, but can't give
+ * guarantees. A more long term solution could be:
+ * - find the dependencies between modifications of volatile data (e.g. events
+ * depend on header),
+ * - keep locks as shortly as possible (get info, release again).
+ * 
+ * This could results in a global lock (robust, probably not optimal in terms
+ * of speed), or a series of locks sandwiching modification code in dedicated
+ * functions.
+ *
+ * -- Boris
+*/
 pthread_mutex_t mutexheader   = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutexdata     = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutexevent    = PTHREAD_MUTEX_INITIALIZER;
@@ -210,9 +224,9 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 				response->def->command = PUT_ERR;	
 			}
 
-			pthread_mutex_unlock(&mutexheader);
-			pthread_mutex_unlock(&mutexdata);
 			pthread_mutex_unlock(&mutexevent);
+			pthread_mutex_unlock(&mutexdata);
+			pthread_mutex_unlock(&mutexheader);
 			break;
 
 		case PUT_DAT:
@@ -399,8 +413,8 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 					pthread_mutex_unlock(&getData_mutex);
 					
 					// Lock the mutexes again
-					pthread_mutex_lock(&mutexdata);
 					pthread_mutex_lock(&mutexheader);
+					pthread_mutex_lock(&mutexdata);
 					if(datasel.begsample == (datasel.endsample+1))
 						datasel.endsample = header->def->nsamples - 1;
 				}
@@ -590,9 +604,9 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 				response->def->command = FLUSH_ERR;
 				response->def->bufsize = 0;
 			}
-			pthread_mutex_unlock(&mutexheader);
-			pthread_mutex_unlock(&mutexdata);
 			pthread_mutex_unlock(&mutexevent);
+			pthread_mutex_unlock(&mutexdata);
+			pthread_mutex_unlock(&mutexheader);
 			break;
 
 		case FLUSH_DAT:
