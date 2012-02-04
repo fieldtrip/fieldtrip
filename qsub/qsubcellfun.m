@@ -262,7 +262,7 @@ end
 if strcmp(compile, 'yes') || (strcmp(compile, 'auto') && (numjob*timreq/3600)>0.5)
   try
     % try to compile into a stand-allone application
-    fcomp = qsubcompile(fname, batch);
+    fcomp = qsubcompile(fname, 'batch', batch);
   catch
     if strcmp(compile, 'yes')
       % the error that was caught is critical
