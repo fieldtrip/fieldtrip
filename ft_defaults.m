@@ -58,7 +58,7 @@ if length(list)>1
   end
 end
 
-if isempty(which('ft_hastoolbox'))
+if ~isdeployed && isempty(which('ft_hastoolbox'))
   % the fieldtrip/utilities directory contains the ft_hastoolbox function
   % which is required for the remainder of this script
   addpath(fullfile(fileparts(which('ft_defaults')), 'utilities'));

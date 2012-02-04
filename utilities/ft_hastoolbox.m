@@ -367,7 +367,9 @@ previouspath = path;
 % helper function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function status = myaddpath(toolbox, silent)
-if exist(toolbox, 'dir')
+if isdeployed
+  warning('cannot change path settings for %s in a compiled application', toolbox);
+elseif exist(toolbox, 'dir')
   if ~silent,
     ws = warning('backtrace', 'off');
     warning('adding %s toolbox to your Matlab path', toolbox);
