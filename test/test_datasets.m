@@ -1,9 +1,21 @@
-function dataset = datasets
+function dataset = test_datasets
+
+% We have collected a whole bunch of datasets in the original acquisition
+% systems file format that can be used for testing whether FT functions
+% work properly for other types of data and not only for MEG data
+% that was recorded on our ctf275 system.  These test datasets (files,
+% directories) are located on a shared network disk and are organized
+% in a structure according to PATH/TYPE/DATATYPE/datafile or directory
+% 
+% where
+%   PATH = somewhere on home/common
+%   TYPE = eeg, meg, lfp
+%   DATATYPE = for example ctf64, ctf151, ctf275
 
 if isunix
-  origdir = '/home/common/matlab/fieldtrip/data/test/latest';
+  origdir = '/home/common/matlab/fieldtrip/data/test/original';
 elseif ispc
-  origdir = fullfile('H:', 'common', 'matlab', 'fieldtrip', 'data', 'test', 'latest');
+  origdir = fullfile('H:', 'common', 'matlab', 'fieldtrip', 'data', 'test', 'original');
 end
 
 % eeg dataformats
