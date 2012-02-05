@@ -28,9 +28,9 @@ function fieldtrip2fiff(filename, data)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: ft_read_mri.m 5187 2012-01-31 08:42:56Z jansch $
+% $Id: ft_fieldtrip2fiff.m 5187 2012-01-31 08:42:56Z jansch $
 
-revision = '$Id: ft_read_mri.m 5187 2012-01-31 08:42:56Z jansch $';
+revision = '$Id: ft_fieldtrip2fiff.m 5187 2012-01-31 08:42:56Z jansch $';
 
 ft_defaults                 % this ensures that the path is correct and that the ft_defaults global variable is available
 ft_preamble help            % this will show the function help if nargin==0 and return an error
