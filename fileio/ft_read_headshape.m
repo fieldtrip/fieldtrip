@@ -33,8 +33,33 @@ function [shape] = ft_read_headshape(filename, varargin)
 if iscell(filename)
   for i=1:numel(filename)
     tmpshape = ft_read_headshape(filename{i}, varargin{:});
+    [path,name,ext] = fileparts(filename{i});
+    if strcmp(ext, '.inflated') && strcmp(name, 'lh')
+      % assume freesurfer inflated mesh in mm, mni space
+      % move the mesh a bit to the left, to avoid overlap with the right
+      % hemisphere
+      tmpshape.pnt(:,1) = tmpshape.pnt(:,1) - max(tmpshape.pnt(:,1)) - 10;
+      
+    elseif strcmp(ext, '.inflated') && strcmp(name, 'rh')
+      % id.
+      % move the mesh a bit to the right, to avoid overlap with the left
+      % hemisphere
+      tmpshape.pnt(:,1) = tmpshape.pnt(:,1) - min(tmpshape.pnt(:,1)) + 10;
+    end
+    
+    % try to read info regarding the sulcal pattern
+    ft_hastoolbox('freesurfer', 1);
+    try,
+      tmpsulc = read_curv([name,'.sulc']);
+    catch
+      tmpsulc = [];
+    end
+    
     if i==1,
       shape = tmpshape;
+      if ~isempty(tmpsulc)
+        shape.sulc = tmpsulc;
+      end
     else
       tmpshape  = ft_convert_units(tmpshape, shape.unit);
       npnt      = size(shape.pnt,1);
@@ -45,6 +70,9 @@ if iscell(filename)
         % this is ok
       else
         error('not all input files seem to contain a triangulation');
+      end
+      if ~isempty(tmpsulc)
+        shape.sulc = cat(1, shape.sulc, tmpsulc);
       end
     end
   end
