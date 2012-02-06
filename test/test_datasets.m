@@ -13,9 +13,9 @@ function dataset = test_datasets
 %   DATATYPE = for example ctf64, ctf151, ctf275
 
 if isunix
-  origdir = '/home/common/matlab/fieldtrip/data/test/original';
+  origdir = '/home/common/matlab/fieldtrip/data/test/';
 elseif ispc
-  origdir = fullfile('H:', 'common', 'matlab', 'fieldtrip', 'data', 'test', 'original');
+  origdir = fullfile('H:', 'common', 'matlab', 'fieldtrip', 'data', 'test');
 end
 
 % eeg dataformats

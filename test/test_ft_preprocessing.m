@@ -1,4 +1,4 @@
-function test_ft_preprocessing(datainfo, writeflag)
+function datanew = test_ft_preprocessing(datainfo, writeflag)
 
 % TEST test_ft_preprocessing
 % TEST ft_preprocessing test_datasets
@@ -15,15 +15,19 @@ end
 for k = 1:numel(datainfo)
   datanew = preprocessing10trials(datainfo(k), writeflag);
 
-  fname = [datainfo(k).origdir,'raw/',datainfo(k).type,'preproc_',datainfo(k).datatype];
+  fname = [datainfo(k).origdir,'latest/raw/',datainfo(k).type,'preproc_',datainfo(k).datatype];
   load(fname);
   % these are per construction different if writeflag = 0;
   datanew = rmfield(datanew, 'cfg');
   data    = rmfield(data,    'cfg');
   % these can have subtle differences eg. in hdr.orig.FID
-  data.hdr = [];
-  datanew.hdr = [];
-  assert(isequalwithequalnans(data, datanew));
+  data.hdr     = [];
+  datanew2     = datanew; 
+  datanew2.hdr = [];
+  
+  % do the comparison with the header removed, the output argument still
+  % contains the header
+  assert(isequalwithequalnans(data, datanew2));
 end
 
 
@@ -35,7 +39,7 @@ function [data] = preprocessing10trials(dataset, writeflag)
 cfg            = [];
 cfg.dataset    = [dataset.origdir,'original/',dataset.type,dataset.datatype,'/',dataset.filename];
 if writeflag,
-  cfg.outputfile = [dataset.origdir,'raw/',dataset.type,'preproc_',dataset.datatype];
+  cfg.outputfile = [dataset.origdir,'latest/raw/',dataset.type,'preproc_',dataset.datatype];
 end
 
 % get header and event information
