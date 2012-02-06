@@ -56,8 +56,8 @@ snr            = ft_getopt(varargin, 'snr');  % is used to estimate lambda if la
 reducerank     = ft_getopt(varargin, 'reducerank');
 normalize      = ft_getopt(varargin, 'normalize');
 normalizeparam = ft_getopt(varargin, 'normalizeparam');
-keepfilter     = istrue(ft_getopt(varargin, 'keepfilter'));
-
+keepfilter     = istrue(ft_getopt(varargin, 'keepfilter', false));
+dowhiten       = istrue(ft_getopt(varargin, 'prewhiten',  false));
 if ~isfield(dip, 'filter')
   
   % compute the leadfields if needed
@@ -104,9 +104,10 @@ if ~isfield(dip, 'filter')
   % on source and noise covariance would be usefull
   if isempty(noisecov)
     % use an unregularised minimum norm solution, i.e. using the Moore-Penrose pseudoinverse
-    warning('doing a unregularised minimum norm solution. This typically does not work');
+    warning('computing a unregularised minimum norm solution. This typically does not work due to numerical accuracy problems');
     w = pinv(lf);
-  else
+  elseif ~isempty(noisecov) && ~dowhiten
+    fprintf('computing the solution where the noise covariance is used for regularisation'); 
     % the noise covariance has been given and can be used to regularise the solution
     if isempty(sourcecov)
       sourcecov = speye(Nsource);
@@ -120,7 +121,40 @@ if ~isfield(dip, 'filter')
       lambda = trace(A * R * A')/(trace(C)*snr^2);
     end
     % equation 5 from Lin et al 2004 (this implements Dale et al 2000, and Liu et al. 2002)
-    w = R * A' * inv( A * R * A' + (lambda^2) * C);
+    w = R * A' / ( A * R * A' + (lambda^2) * C);
+  elseif ~isempty(noisecov) && dowhiten
+    fprintf('using prewhitening of the leadfields and scaled identity for regularisation\n');
+    
+    % rename some variables for consistency with the publications
+    A = lf;
+    C = noisecov;
+    
+    % compute the prewhitening matrix
+    fprintf('computing the prewhitening matrix\n');
+    [U,S,V] = svd(C);
+    Tol     = 1e-8;
+    diagS   = diag(S);
+    sel     = find(diagS>Tol.*diagS(1));
+   
+    P = diag(1./sqrt(diag(S(sel,sel))))*U(:,sel)';
+    
+    % prewhiten the leadfields
+    A = P*A;
+    
+    % estimate sourcecov such that trace(ARA')/trace(I) = 1 (see
+    % http://martinos.org/mne/manual/mne.html
+    fprintf('estimating source covariance\n');
+    if isempty(sourcecov)
+      R     = speye(Nsource);
+      scale = trace(A*R*A')./trace(eye(Nchan));
+      R     = R./scale;
+    else
+      R     = sourcecov;
+    end
+    
+    %NOTE: no square of lambda is taken here!
+    w = (R * A' / ( A * R * A' + lambda * eye(size(A,1)))) * P;
+    
   end
   
   % for each of the timebins, estimate the source strength

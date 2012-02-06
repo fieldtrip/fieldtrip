@@ -385,6 +385,7 @@ if ~isempty(createsubcfg)
           'feedback'
           'lambda'
           'keepfilter'
+          'prewhiten'
           };
           
       case 'music'
