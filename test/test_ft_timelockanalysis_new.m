@@ -1,12 +1,54 @@
-function test_ft_timelockanalysis_new
+function test_ft_timelockanalysis_new(datainfo,writeflag)
 
 % TEST test_ft_timelockanalysis_new
-% TEST ft_timelockanalysis_new
+% ft_timelockanalysis_new ft_timelockanalysis test_datasets
 
 % this is a function for testing ft_timelockanalysis_new, which is not official yet
 
-load /home/common/matlab/fieldtrip/data/ftp/tutorial/eventrelatedaveraging/dataFC_LP.mat
+% the optional writeflag determines whether the output should be saved to
+% disk
 
+if nargin<2
+  writeflag = 0;
+end
+if nargin<1
+  datainfo = test_datasets;
+end
+% for k = 1:numel(datainfo)
+for k = 1:10
+  datanew = timelockanalysis10trials(datainfo(k), writeflag);
+  
+  fname = [datainfo(k).origdir,'latest/timelock/',datainfo(k).type,'timelock_',datainfo(k).datatype];
+  tmp = load(fname);
+  if isfield(tmp, 'data')
+    data = tmp.data;
+  elseif isfield(tmp, 'datanew')
+    data = tmp.datanew;
+  else isfield(tmp, 'timelock')
+    data = tmp.timelock;
+  end
+  
+  datanew = rmfield(datanew, 'cfg'); % these are per construction different if writeflag = 0;
+  data    = rmfield(data,    'cfg');
+  assert(isequalwithequalnans(data, datanew));
+end
+
+test_cfg_options;
+
+function [tlck] = timelockanalysis10trials(dataset, writeflag)
+
+cfg        = [];
+cfg.inputfile  = [dataset.origdir,'latest/raw/',dataset.type,'preproc_',dataset.datatype];
+if writeflag
+  cfg.outputfile = [dataset.origdir,'latest/timelock/',dataset.type,'timelock_',dataset.datatype];
+end
+tlck = ft_timelockanalysis(cfg);
+tlck1 = ft_timelockanalysis_new(cfg);
+return
+
+
+function test_cfg_options
+load /home/common/matlab/fieldtrip/data/ftp/tutorial/eventrelatedaveraging/dataFC_LP.mat
 data=dataFC_LP;
 clear dataFC_LP;
 
@@ -17,16 +59,16 @@ cfg=[];
 try
     tlock=ft_timelockanalysis_new(cfg,data);
 catch me
-    if ~strcmp(me.message,'the type of the option "output" is invalid, it should be "char" instead of "double"');
+%     if ~strcmp(me.message,'the option "output" was not specified or was empty');
         error(me.message)
-    end
+%     end
 end
 cfg=[];
 cfg.output='rubbish';
 try
     tlock=ft_timelockanalysis_new(cfg,data);
 catch me
-    if ~strcmp(me.message,'the value of the option "output" is invalid');
+    if ~strcmp(me.message,'the value of cfg.output is not set correctly');
         error(me.message)
     end
 end
@@ -38,36 +80,57 @@ cfg.output='avg';
 cfg.feedback='none';
 cfg.preproc.feedback='textbar';
 tlock=ft_timelockanalysis_new(cfg,data);
+if ~strmatch(ft_datatype(tlock),'timelock'),error('datatype');end;
+% cfg.vartrllength=1;
+% tlocko=ft_timelockanalysis(cfg,data);
 cfg=[];
 cfg.output='cov';
 cfg.feedback='none';
 cfg.preproc.feedback='textbar';
 cfg.keeptrials='no';
 tlock=ft_timelockanalysis_new(cfg,data);
+if ~strmatch(ft_datatype(tlock),'timelock'),error('datatype');end;
+if ~strcmp(ft_datatype(ft_checkdata(tlock,'datatype','raw')),'raw') || ~strcmp(ft_datatype(ft_checkdata(tlock)),'timelock'),error('checkdata');end
 cfg=[];
 cfg.output='avgandcov';
 cfg.feedback='none';
 cfg.preproc.feedback='textbar';
 cfg.keeptrials='no';
 tlock=ft_timelockanalysis_new(cfg,data);
+if ~strmatch(ft_datatype(tlock),'timelock'),error('datatype');end;
+if ~strcmp(ft_datatype(ft_checkdata(tlock,'datatype','raw')),'raw') || ~strcmp(ft_datatype(ft_checkdata(tlock)),'timelock'),error('checkdata');end
+% cfg.covariance='yes';
+% cfg.vartrllength=1;
+% tlocko=ft_timelockanalysis(cfg,data);
 cfg=[];
 cfg.output='avg';
 cfg.feedback='none';
 cfg.preproc.feedback='textbar';
 cfg.keeptrials='yes';
 tlock=ft_timelockanalysis_new(cfg,data);
+if ~strmatch(ft_datatype(tlock),'timelock'),error('datatype');end;
+if ~strcmp(ft_datatype(ft_checkdata(tlock,'datatype','raw')),'raw') || ~strcmp(ft_datatype(ft_checkdata(tlock)),'timelock'),error('checkdata');end
+% cfg.vartrllength=1;
+% tlocko=ft_timelockanalysis(cfg,data);
 cfg=[];
 cfg.output='cov';
 cfg.feedback='none';
 cfg.preproc.feedback='textbar';
 cfg.keeptrials='yes';
 tlock=ft_timelockanalysis_new(cfg,data);
+if ~strmatch(ft_datatype(tlock),'timelock'),error('datatype');end;
+if ~strcmp(ft_datatype(ft_checkdata(tlock,'datatype','raw')),'raw') || ~strcmp(ft_datatype(ft_checkdata(tlock)),'timelock'),error('checkdata');end
 cfg=[];
 cfg.output='avgandcov';
 cfg.feedback='none';
 cfg.preproc.feedback='textbar';
 cfg.keeptrials='yes';
 tlock=ft_timelockanalysis_new(cfg,data);
+if ~strmatch(ft_datatype(tlock),'timelock'),error('datatype');end;
+if ~strcmp(ft_datatype(ft_checkdata(tlock,'datatype','raw')),'raw') || ~strcmp(ft_datatype(ft_checkdata(tlock)),'timelock'),error('checkdata');end
+% cfg.covariance='yes';
+% cfg.vartrllength=1;
+% tlocko=ft_timelockanalysis(cfg,data);
 
 % options with .latency and .covlatency specified
 cfg=[];
@@ -77,14 +140,26 @@ cfg.preproc.feedback='textbar';
 cfg.keeptrials='no';
 cfg.latency=[min(data.time{1}) max(data.time{1})];
 tlock=ft_timelockanalysis_new(cfg,data);
+if ~strmatch(ft_datatype(tlock),'timelock'),error('datatype');end;
+if ~strcmp(ft_datatype(ft_checkdata(tlock,'datatype','raw')),'raw') || ~strcmp(ft_datatype(ft_checkdata(tlock)),'timelock'),error('checkdata');end
+% cfg.vartrllength=1;
+% tlocko=ft_timelockanalysis(cfg,data);
 cfg.latency='maxperlength';
 tlock=ft_timelockanalysis_new(cfg,data);
+if ~strmatch(ft_datatype(tlock),'timelock'),error('datatype');end;
+if ~strcmp(ft_datatype(ft_checkdata(tlock,'datatype','raw')),'raw') || ~strcmp(ft_datatype(ft_checkdata(tlock)),'timelock'),error('checkdata');end
 cfg.latency='minperlength';
 tlock=ft_timelockanalysis_new(cfg,data);
+if ~strmatch(ft_datatype(tlock),'timelock'),error('datatype');end;
+if ~strcmp(ft_datatype(ft_checkdata(tlock,'datatype','raw')),'raw') || ~strcmp(ft_datatype(ft_checkdata(tlock)),'timelock'),error('checkdata');end
 cfg.latency='prestim';
 tlock=ft_timelockanalysis_new(cfg,data);
+if ~strmatch(ft_datatype(tlock),'timelock'),error('datatype');end;
+if ~strcmp(ft_datatype(ft_checkdata(tlock,'datatype','raw')),'raw') || ~strcmp(ft_datatype(ft_checkdata(tlock)),'timelock'),error('checkdata');end
 cfg.latency='poststim';
 tlock=ft_timelockanalysis_new(cfg,data);
+if ~strmatch(ft_datatype(tlock),'timelock'),error('datatype');end;
+if ~strcmp(ft_datatype(ft_checkdata(tlock,'datatype','raw')),'raw') || ~strcmp(ft_datatype(ft_checkdata(tlock)),'timelock'),error('checkdata');end
 
 cfg=[];
 cfg.feedback='none';
@@ -93,14 +168,24 @@ cfg.output='avg';
 cfg.keeptrials='yes';
 cfg.latency=[min(data.time{1}) max(data.time{1})];
 tlock=ft_timelockanalysis_new(cfg,data);
+if ~strmatch(ft_datatype(tlock),'timelock'),error('datatype');end;
+if ~strcmp(ft_datatype(ft_checkdata(tlock,'datatype','raw')),'raw') || ~strcmp(ft_datatype(ft_checkdata(tlock)),'timelock'),error('checkdata');end
 cfg.latency='maxperlength';
 tlock=ft_timelockanalysis_new(cfg,data);
+if ~strmatch(ft_datatype(tlock),'timelock'),error('datatype');end;
+if ~strcmp(ft_datatype(ft_checkdata(tlock,'datatype','raw')),'raw') || ~strcmp(ft_datatype(ft_checkdata(tlock)),'timelock'),error('checkdata');end
 cfg.latency='minperlength';
 tlock=ft_timelockanalysis_new(cfg,data);
+if ~strmatch(ft_datatype(tlock),'timelock'),error('datatype');end;
+if ~strcmp(ft_datatype(ft_checkdata(tlock,'datatype','raw')),'raw') || ~strcmp(ft_datatype(ft_checkdata(tlock)),'timelock'),error('checkdata');end
 cfg.latency='prestim';
 tlock=ft_timelockanalysis_new(cfg,data);
+if ~strmatch(ft_datatype(tlock),'timelock'),error('datatype');end;
+if ~strcmp(ft_datatype(ft_checkdata(tlock,'datatype','raw')),'raw') || ~strcmp(ft_datatype(ft_checkdata(tlock)),'timelock'),error('checkdata');end
 cfg.latency='poststim';
 tlock=ft_timelockanalysis_new(cfg,data);
+if ~strmatch(ft_datatype(tlock),'timelock'),error('datatype');end;
+if ~strcmp(ft_datatype(ft_checkdata(tlock,'datatype','raw')),'raw') || ~strcmp(ft_datatype(ft_checkdata(tlock)),'timelock'),error('checkdata');end
 
 cfg=[];
 cfg.feedback='none';
@@ -110,8 +195,15 @@ cfg.keeptrials='no';
 cfg.latency=[min(data.time{1}) max(data.time{1})];
 cfg.covlatency=[min(data.time{1}) max(data.time{1})];
 tlock=ft_timelockanalysis_new(cfg,data);
+if ~strmatch(ft_datatype(tlock),'timelock'),error('datatype');end;
+if ~strcmp(ft_datatype(ft_checkdata(tlock,'datatype','raw')),'raw') || ~strcmp(ft_datatype(ft_checkdata(tlock)),'timelock'),error('checkdata');end
+% cfg.covariance='yes';
+% cfg.vartrllength=1;
+% tlocko=ft_timelockanalysis(cfg,data);
 cfg.latency='maxperlength';
 tlock=ft_timelockanalysis_new(cfg,data);
+if ~strmatch(ft_datatype(tlock),'timelock'),error('datatype');end;
+if ~strcmp(ft_datatype(ft_checkdata(tlock,'datatype','raw')),'raw') || ~strcmp(ft_datatype(ft_checkdata(tlock)),'timelock'),error('checkdata');end
 
 
 cfg=[];
@@ -122,6 +214,11 @@ cfg.keeptrials='yes';
 cfg.latency=[min(data.time{1}) max(data.time{1})];
 cfg.covlatency=[min(data.time{1}) max(data.time{1})];
 tlock=ft_timelockanalysis_new(cfg,data);
+if ~strmatch(ft_datatype(tlock),'timelock'),error('datatype');end;
+if ~strcmp(ft_datatype(ft_checkdata(tlock,'datatype','raw')),'raw') || ~strcmp(ft_datatype(ft_checkdata(tlock)),'timelock'),error('checkdata');end
+% cfg.covariance='yes';
+% cfg.vartrllength=1;
+% tlocko=ft_timelockanalysis(cfg,data);
 
 cfg=[];
 cfg.feedback='none';
@@ -131,6 +228,8 @@ cfg.keeptrials='no';
 cfg.latency=[min(data.time{1}) max(data.time{1})];
 cfg.covlatency=[min(data.time{1}) max(data.time{1})];
 tlock=ft_timelockanalysis_new(cfg,data);
+if ~strmatch(ft_datatype(tlock),'timelock'),error('datatype');end;
+if ~strcmp(ft_datatype(ft_checkdata(tlock,'datatype','raw')),'raw') || ~strcmp(ft_datatype(ft_checkdata(tlock)),'timelock'),error('checkdata');end
 
 cfg=[];
 cfg.feedback='none';
@@ -140,6 +239,8 @@ cfg.keeptrials='yes';
 cfg.latency=[min(data.time{1}) max(data.time{1})];
 cfg.covlatency=[min(data.time{1}) max(data.time{1})];
 tlock=ft_timelockanalysis_new(cfg,data);
+if ~strmatch(ft_datatype(tlock),'timelock'),error('datatype');end;
+if ~strcmp(ft_datatype(ft_checkdata(tlock,'datatype','raw')),'raw') || ~strcmp(ft_datatype(ft_checkdata(tlock)),'timelock'),error('checkdata');end
 
 % check toi options
 cfg=[];
@@ -152,6 +253,8 @@ cfg.toi=[-0.5 0.7];
 cfg.timwin=1;
 cfg.equatenumtrials='yes';
 tlock=ft_timelockanalysis_new(cfg,data);
+if ~strmatch(ft_datatype(tlock),'timelock'),error('datatype');end;
+if ~strcmp(ft_datatype(ft_checkdata(tlock,'datatype','raw')),'raw') || ~strcmp(ft_datatype(ft_checkdata(tlock)),'timelock'),error('checkdata');end
 
 cfg=[];
 cfg.feedback='none';
@@ -162,6 +265,8 @@ cfg.toi=[-.8:.3:0.1];
 cfg.timwin=1;
 cfg.equatenumtrials='no';
 tlock=ft_timelockanalysis_new(cfg,data);
+if ~strmatch(ft_datatype(tlock),'timelock'),error('datatype');end;
+if ~strcmp(ft_datatype(ft_checkdata(tlock,'datatype','raw')),'raw') || ~strcmp(ft_datatype(ft_checkdata(tlock)),'timelock'),error('checkdata');end
 
 cfg=[];
 cfg.feedback='none';
@@ -174,6 +279,8 @@ cfg.equatenumtrials='no';
 cfg.keeptrials='yes';
 try
     tlock=ft_timelockanalysis_new(cfg,data);
+    if ~strmatch(ft_datatype(tlock),'timelock'),error('datatype');end;
+if ~strcmp(ft_datatype(ft_checkdata(tlock,'datatype','raw')),'raw') || ~strcmp(ft_datatype(ft_checkdata(tlock)),'timelock'),error('checkdata');end
 catch me
     if ~strcmp(me.message,'sorry, if keeping trials and computing cov, cfg.equatenumtrials should be yes')
         error(me.message)
@@ -189,6 +296,8 @@ cfg.toi=[-.8:.3:0.1];
 cfg.timwin=1;
 cfg.equatenumtrials='yes';
 tlock=ft_timelockanalysis_new(cfg,data);
+if ~strmatch(ft_datatype(tlock),'timelock'),error('datatype');end;
+if ~strcmp(ft_datatype(ft_checkdata(tlock,'datatype','raw')),'raw') || ~strcmp(ft_datatype(ft_checkdata(tlock)),'timelock'),error('checkdata');end
 
 cfg=[];
 cfg.feedback='none';
@@ -200,6 +309,8 @@ cfg.timwin=1;
 cfg.equatenumtrials='yes';
 cfg.keeptrials='yes';
 tlock=ft_timelockanalysis_new(cfg,data);
+if ~strmatch(ft_datatype(tlock),'timelock'),error('datatype');end;
+if ~strcmp(ft_datatype(ft_checkdata(tlock,'datatype','raw')),'raw') || ~strcmp(ft_datatype(ft_checkdata(tlock)),'timelock'),error('checkdata');end
 
 %% ignore for svn testing, but used to test output of new function in further functions
 
@@ -218,16 +329,20 @@ if 0
     source=ft_sourceanalysis(cfg,tlock);
     
     
-    load dataFC_LP;
-    load dataFIC_LP;
     cfg = [];
     cfg.covariance = 'yes';
+    cfg.vartrllength=1;
     cfg.covariancewindow = [-inf 0]; %it will calculate the covariance matrix
     % on the timepoints that are
     % before the zero-time point in the trials
-    tlckFC = ft_timelockanalysis(cfg, dataFC_LP);
-    tlckFIC = ft_timelockanalysis(cfg, dataFIC_LP);
+    tlckFC = ft_timelockanalysis(cfg, data);
+%     tlckFIC = ft_timelockanalysis(cfg, dataFIC_LP);
     save tlck tlckFC tlckFIC;
+    cfg=[];
+    cfg.method='lcmv';
+    cfg.hdmfile=['/home/common/matlab/fieldtrip/data/Subject01.hdm'];
+    cfg.grad=data.grad;
+    sourceFC=ft_sourceanalysis(cfg,tlckFC);
 end
 
 % spin off of beamformer tutorial but in time-domain, results won't match exactly
@@ -291,7 +406,19 @@ end
 % test ft_timelockstatistics
 if 0
     
+cfg=[];
+cfg.output='cov';
+cfg.feedback='none';
+cfg.keeptrials='yes';
+cfg.preproc.feedback='textbar';
+tlock=ft_timelockanalysis_new(cfg,data);
     
-    
+tlock1 = ft_selectdata(tlock, 'rpt',1:36)
+tlock2 = ft_selectdata(tlock, 'rpt',37:72)
+
+cfg=[];
+cfg.method='analytic';
+   cfg.statistic='indepsamplesT' ;
+stat=ft_timelockstatistics(cfg,tlock1,tlock2);
 end
 

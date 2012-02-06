@@ -17,7 +17,7 @@ end
 for k = 1:numel(datainfo)
   datanew = freqanalysisMtmfft(datainfo(k), writeflag);
 
-  fname = [datainfo(k).origdir,'freq/',datainfo(k).type,'freq_mtmfft_',datainfo(k).datatype];
+  fname = [datainfo(k).origdir,'latest/freq/',datainfo(k).type,'freq_mtmfft_',datainfo(k).datatype];
   load(fname);
   datanew = rmfield(datanew, 'cfg'); % these are per construction different if writeflag = 0;
   freq    = rmfield(freq,    'cfg');
@@ -27,7 +27,7 @@ end
 for k = 1:numel(datainfo)
   datanew = freqanalysisMtmconvol(datainfo(k), writeflag);
 
-  fname = [datainfo(k).origdir,'freq/',datainfo(k).type,'freq_mtmconvol_',datainfo(k).datatype];
+  fname = [datainfo(k).origdir,'latest/freq/',datainfo(k).type,'freq_mtmconvol_',datainfo(k).datatype];
   load(fname);
   datanew = rmfield(datanew, 'cfg'); % these are per construction different if writeflag = 0;
   freq    = rmfield(freq,    'cfg');
@@ -46,9 +46,9 @@ cfg.foi    = 2:2:30;
 cfg.taper  = 'hanning';
 cfg.t_ftimwin = ones(1,numel(cfg.foi)).*0.5;
 cfg.toi    = (250:50:750)./1000;
-cfg.inputfile  = [dataset.origdir,'raw/',dataset.type,'preproc_',dataset.datatype];
+cfg.inputfile  = [dataset.origdir,'latest/raw/',dataset.type,'preproc_',dataset.datatype];
 if writeflag,
-  cfg.outputfile = [dataset.origdir,'freq/',dataset.type,'freq_mtmconvol_',dataset.datatype];
+  cfg.outputfile = [dataset.origdir,'latest/freq/',dataset.type,'freq_mtmconvol_',dataset.datatype];
 end
 freq = ft_freqanalysis(cfg);
 
@@ -59,8 +59,8 @@ cfg.method = 'mtmfft';
 cfg.output = 'pow';
 cfg.foilim = [0 100];
 cfg.taper  = 'hanning';
-cfg.inputfile  = [dataset.origdir,'raw/',dataset.type,'preproc_',dataset.datatype];
+cfg.inputfile  = [dataset.origdir,'latest/raw/',dataset.type,'preproc_',dataset.datatype];
 if writeflag,
-  cfg.outputfile = [dataset.origdir,'freq/',dataset.type,'freq_mtmfft_',dataset.datatype];
+  cfg.outputfile = [dataset.origdir,'latest/freq/',dataset.type,'freq_mtmfft_',dataset.datatype];
 end
 freq = ft_freqanalysis(cfg);

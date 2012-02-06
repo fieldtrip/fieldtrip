@@ -10,7 +10,7 @@ eeginfo = datainfo(3);
 meginfo = datainfo(7);
 
 % do the MEG processing
-fname = [meginfo.origdir,'raw/',meginfo.type,'preproc_',meginfo.datatype];
+fname = [meginfo.origdir,'latest/raw/',meginfo.type,'preproc_',meginfo.datatype];
 load(fname);
 
 cfg = [];
