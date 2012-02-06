@@ -127,6 +127,10 @@ cfg.outputfile = ft_getopt(cfg, 'outputfile', []);
 % be specified below
 
 if isfield(anatomical, 'transform') && isfield(anatomical, 'dim')
+  % anatomical volume
+  is2Dana  = 0;
+elseif isfield(anatomical, 'pos') && isfield(anatomical, 'dim')
+  % 3D regular grid
   is2Dana  = 0;
 elseif isfield(anatomical, 'pnt')
   % anatomical data consists of a mesh, but no smudging possible
@@ -187,13 +191,14 @@ elseif is2Dana && is2Dfun
 elseif ~is2Dana && is2Dfun
   % set default interpmethod for this situation
   cfg.interpmethod = ft_getopt(cfg, 'interpmethod', 'nearest');
+  cfg.sphereradius = ft_getopt(cfg, 'sphereradius', 0.5);
   
   % interpolate onto a 3D volume, ensure that the anatomical is indeed a volume
   anatomical = ft_checkdata(anatomical, 'datatype', 'volume', 'inside', 'logical', 'feedback', 'yes', 'hasunits', 'yes');
   functional = ft_convert_units(functional, anatomical.unit);
   
   % select the parameters that should be interpolated
-  cfg.parameter = parameterselection(cfg.parameter, functional);
+  % cfg.parameter = parameterselection(cfg.parameter, functional);
   cfg.parameter = setdiff(cfg.parameter, 'inside'); % inside is handled separately
   
   % get voxel indices and use interp_ungridded
@@ -211,7 +216,9 @@ elseif ~is2Dana && is2Dfun
   
   interpmat(~anatomical.inside(:), :) = 0;
   for k = 1:numel(cfg.parameter)
-    interp = setsubfield(interp, cfg.parameter{k}, reshape(interpmat*getsubfield(functional, cfg.parameter{k}),dim));
+    tmp    = getsubfield(functional, cfg.parameter{k});
+    siz    = size(tmp);
+    interp = setsubfield(interp, cfg.parameter{k}, reshape(interpmat*tmp,[dim siz(2)]));
   end
   
 elseif is2Dana && ~is2Dfun
@@ -383,6 +390,10 @@ if isfield(anatomical, 'coordsys')
 end
 if isfield(anatomical, 'unit')
   interp.unit = anatomical.unit;
+end
+if exist('interpmat', 'var')
+  cfg.interpmat = interpmat;
+  cfg.interpmat; % access it once to fool the cfg-tracking
 end
 
 % do the general cleanup and bookkeeping at the end of the function
