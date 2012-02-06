@@ -1588,6 +1588,13 @@ if ~isfield(hdr, 'chanunit')
   hdr.chanunit = ft_chanunit(hdr);
 end % for
 
+% ensure that the output grad/elec is according to the latest definition
+if isfield(hdr, 'grad')
+  hdr.grad = ft_datatype_sens(hdr.grad);
+elseif isfield(hdr, 'elec')
+  hdr.elec = ft_datatype_sens(hdr.elec);
+end
+
 % ensure that these are double precision and not integers, otherwise
 % subsequent computations that depend on these might be messed up
 hdr.Fs          = double(hdr.Fs);
