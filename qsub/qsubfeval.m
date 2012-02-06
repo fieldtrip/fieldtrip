@@ -211,7 +211,7 @@ switch backend
     end
     
     % pass the command to qsub with all requirements
-    cmdline = sprintf('echo "%s" | qsub -N %s %s -cwd %s -o %s -e %s', cmdline, jobid, requirements, curPwd, curPwd, curPwd);
+    cmdline = sprintf('echo "%s" | qsub -N %s %s -cwd -o %s -e %s', cmdline, jobid, requirements, curPwd, curPwd, curPwd);
     
   case 'torque'
     % this is for PBS, Torque, and other derivatives
