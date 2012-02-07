@@ -163,63 +163,63 @@ set(h, 'toolbar', 'figure');
 
 % add the GUI elements for changing the speed
 p = uicontrol('style', 'text');
-set(p, 'position', [20 75 50 20]);
+set(p, 'position', [20 50 50 20]);
 set(p, 'string', 'speed')
 button_slower = uicontrol('style', 'pushbutton');
-set(button_slower, 'position', [75 75 20 20]);
+set(button_slower, 'position', [75 50 20 20]);
 set(button_slower, 'string', '-')
 set(button_slower, 'Callback', @cb_speed);
 button_faster = uicontrol('style', 'pushbutton');
-set(button_faster, 'position', [100 75 20 20]);
+set(button_faster, 'position', [100 50 20 20]);
 set(button_faster, 'string', '+')
 set(button_faster, 'Callback', @cb_speed);
 
 % add the GUI elements for changing the color limits
 p = uicontrol('style', 'text');
-set(p, 'position', [20 100 50 20]);
+set(p, 'position', [20 72 50 20]);
 set(p, 'string', 'zlim')
 button_slower = uicontrol('style', 'pushbutton');
-set(button_slower, 'position', [75 100 20 20]);
+set(button_slower, 'position', [75 72 20 20]);
 set(button_slower, 'string', '-')
 set(button_slower, 'Callback', @cb_zlim);
 button_faster = uicontrol('style', 'pushbutton');
-set(button_faster, 'position', [100 100 20 20]);
+set(button_faster, 'position', [100 72 20 20]);
 set(button_faster, 'string', '+')
 set(button_faster, 'Callback', @cb_zlim);
 
 % add the GUI elements for changing the opacity limits
 p = uicontrol('style', 'text');
-set(p, 'position', [20 125 50 20]);
+set(p, 'position', [20 94 50 20]);
 set(p, 'string', 'alim')
 button_slower = uicontrol('style', 'pushbutton');
-set(button_slower, 'position', [75 125 20 20]);
+set(button_slower, 'position', [75 94 20 20]);
 set(button_slower, 'string', '-')
 set(button_slower, 'Callback', @cb_alim);
 button_faster = uicontrol('style', 'pushbutton');
-set(button_faster, 'position', [100 125 20 20]);
+set(button_faster, 'position', [100 94 20 20]);
 set(button_faster, 'string', '+')
 set(button_faster, 'Callback', @cb_alim);
 
 sx = uicontrol('style', 'slider');
-set(sx, 'position', [20 20 pos(3)-160 20]);
+set(sx, 'position', [20 25 pos(3)-160 20]);
 % note that "sx" is needed further down
 
 sy = uicontrol('style', 'slider');
-set(sy, 'position', [20 45 pos(3)-160 20]);
+set(sy, 'position', [20 2 pos(3)-160 20]);
 % note that "sy" is needed further down
 
 p = uicontrol('style', 'pushbutton');
-set(p, 'position', [20 150 50 20]);
+set(p, 'position', [20 116 50 20]);
 set(p, 'string', 'play')
 % note that "p" is needed further down
 
 hx = uicontrol('style', 'text');
-set(hx, 'position', [pos(3)-140 20 120 20]);
+set(hx, 'position', [pos(3)-140 25 120 20]);
 set(hx, 'string', sprintf('%s = ', cfg.xparam));
 set(hx, 'horizontalalignment', 'left');
 
 hy = uicontrol('style', 'text');
-set(hy, 'position', [pos(3)-140 45 120 20]);
+set(hy, 'position', [pos(3)-140 2 120 20]);
 set(hy, 'string', sprintf('%s = ', cfg.yparam));
 set(hy, 'horizontalalignment', 'left');
 
@@ -239,14 +239,22 @@ opt.dat     = fun;
 opt.mask    = mask;
 opt.speed   = 1;
 
-ft_plot_mesh(source, 'edgecolor', 'none', 'facecolor', [0.5 0.5 0.5]);
+if isfield(source, 'sulc')
+  vdat = source.sulc;
+  vdat = vdat-min(vdat)+1;
+  vdat = vdat./max(vdat);
+  vdat = 0.8.*repmat(vdat,[1 3]);
+  ft_plot_mesh(source, 'edgecolor', 'none', 'vertexcolor', vdat);
+else
+  ft_plot_mesh(source, 'edgecolor', 'none', 'facecolor', [0.5 0.5 0.5]);
+end
 lighting gouraud
 set(gca, 'Position', [0.2 0.2 0.7 0.7]);
 
 hs = ft_plot_mesh(source, 'edgecolor', 'none', 'vertexcolor', 0*opt.dat(:,1,1), 'facealpha', 0*opt.mask(:,1,1));
 lighting gouraud
-camlight left
-camlight right
+cam1 = camlight('left');
+cam2 = camlight('right');
 
 caxis(cfg.zlim);
 alim(cfg.alim);
