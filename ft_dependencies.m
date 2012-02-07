@@ -38,44 +38,45 @@ function items = ft_dependencies(cfg)
 
 warning('This function is not finished yet!');
 
+
 items        = mex_item('@config/private','deepcopy');
-items(end+1) = mex_item('@config/private','increment');
-items(end+1) = mex_item('@config/private','reset');
-items(end+1) = mex_item('fileio/@uint64','abs');
-items(end+1) = mex_item('fileio/@uint64','max');
-items(end+1) = mex_item('fileio/@uint64','min');
-items(end+1) = mex_item('fileio/@uint64','minus');
-items(end+1) = mex_item('fileio/@uint64','plus');
-items(end+1) = mex_item('fileio/@uint64','rdivide');
-items(end+1) = mex_item('fileio/@uint64','times');
-items(end+1) = mex_item('src','det2x2');
-items(end+1) = mex_item('src','ft_getopt');
-items(end+1) = mex_item('src','ft_spike_sub_crossx');
-items(end+1) = mex_item('src','getpid');
-items(end+1) = mex_item('src','inv2x2');
-items(end+1) = mex_item('src','meg_leadfield1');
-items(end+1) = mex_item('src','mtimes2x2');
-items(end+1) = mex_item('src','mxDeserialize');
-items(end+1) = mex_item('src','mxSerialize');
-items(end+1) = mex_item('src','nanmean');
-items(end+1) = mex_item('src','nanstd');
-items(end+1) = mex_item('src','nanvar');
-items(end+1) = mex_item('src','nansum');
-items(end+1) = mex_item('src','plgndr');
-items(end+1) = mex_item('src','read_16bit');
-items(end+1) = mex_item('src','read_24bit');
-items(end+1) = mex_item('src','rename');
-items(end+1) = mex_item('src','sandwich2x2');
-items(end+1) = mex_item('src','splint_gh');
-items(end+1) = mex_item('src','lmoutr'  , 'extras', 'geometry.c -I.');
-items(end+1) = mex_item('src','ltrisect', 'extras', 'geometry.c -I.');
-items(end+1) = mex_item('src','plinproj', 'extras' ,'geometry.c -I.');
-items(end+1) = mex_item('src','ptriproj', 'extras' ,'geometry.c -I.');
-items(end+1) = mex_item('src','routlm', 'extras','geometry.c -I.');
-items(end+1) = mex_item('src','solid_angle', 'extras','geometry.c -I.');
-items(end+1) = mex_item('src','rfbevent', 'excludePlatform',{'PCWIN', 'PCWIN64'}, 'extras', 'd3des.c -I.');
-items(end+1) = mex_item('src','read_ctf_shm', 'matchPlatform', {'GitemsNX86'});
-items(end+1) = mex_item('src','write_ctf_shm', 'matchPlatform', {'GitemsNX86'});
+items = [items mex_item('@config/private','increment')];
+items = [items mex_item('@config/private','reset')];
+items = [items mex_item('fileio/@uint64','abs')];
+items = [items mex_item('fileio/@uint64','max')];
+items = [items mex_item('fileio/@uint64','min')];
+items = [items mex_item('fileio/@uint64','minus')];
+items = [items mex_item('fileio/@uint64','plus')];
+items = [items mex_item('fileio/@uint64','rdivide')];
+items = [items mex_item('fileio/@uint64','times')];
+items = [items mex_item('src','det2x2')];
+items = [items mex_item('src','ft_getopt')];
+items = [items mex_item('src','ft_spike_sub_crossx')];
+items = [items mex_item('src','getpid')];
+items = [items mex_item('src','inv2x2')];
+items = [items mex_item('src','meg_leadfield1')];
+items = [items mex_item('src','mtimes2x2')];
+items = [items mex_item('src','mxDeserialize')];
+items = [items mex_item('src','mxSerialize')];
+items = [items mex_item('src','nanmean')];
+items = [items mex_item('src','nanstd')];
+items = [items mex_item('src','nanvar')];
+items = [items mex_item('src','nansum')];
+items = [items mex_item('src','plgndr')];
+items = [items mex_item('src','read_16bit')];
+items = [items mex_item('src','read_24bit')];
+items = [items mex_item('src','rename')]; 
+items = [items mex_item('src','sandwich2x2')];
+items = [items mex_item('src','splint_gh')];
+items = [items mex_item('src', 'lmoutr'     , 'depends', {'geometry.c'}, 'mexFlags' , '-I.')];
+items = [items mex_item('src', 'ltrisect'   , 'depends', {'geometry.c'}, 'mexFlags' , '-I.')];
+items = [items mex_item('src', 'plinproj'   , 'depends', {'geometry.c'}, 'mexFlags' , '-I.')];
+items = [items mex_item('src', 'ptriproj'   , 'depends', {'geometry.c'}, 'mexFlags' , '-I.')];
+items = [items mex_item('src', 'routlm'     , 'depends', {'geometry.c'}, 'mexFlags' , ' -I.')];
+items = [items mex_item('src', 'solid_angle', 'depends', {'geometry.c'}, 'mexFlags' , '-I.')];
+items = [items mex_item('src','rfbevent', 'excludePlatform',{'win32', 'win64'}, 'extras', 'd3des.c -I.')];
+items = [items mex_item('src','read_ctf_shm', 'matchPlatform', {'glnx86'})];
+items = [items mex_item('src','write_ctf_shm', 'matchPlatform', {'glnx86'})];
 
 
 function item = mex_item(directory, relName, varargin)
@@ -85,10 +86,31 @@ p.addRequired('relName'           , @ischar);
 p.addParamValue('matchPlatform'   , []        , @iscellstr);
 p.addParamValue('excludePlatform' , []        , @iscellstr);
 p.addParamValue('extras'          , ''        , @ischar);
-p.parse(directory, relName, varargin{:});
+p.addParamValue('mexFlags'        , ''        , @ischar);
+p.addParamValue('depends'         , []        , @iscellstr);
+p.parse(directory                 , relName   , varargin{:});
 
-item.target_dir         = p.Results.directory;
-item.rel_source         = p.Results.relName;
-item.platform_whitelist = p.Results.matchPlatform;
-item.platform_blacklist = p.Results.excludePlatform;
-item.mex_flags          = p.Results.extras;
+MEXEXT = mexext('all');  % FIXME: probably we can cache this func-call.
+for i = 1:length(MEXEXT)
+
+  % Test if dependency needs to be generated for this platform:
+  if ~isempty(p.Results.matchPlatform)
+    if ~any(strncmp(MEXEXT(i).arch, p.Results.matchPlatform, ...
+      length(MEXEXT(i).arch)))
+      continue
+    end
+  end
+  if ~isempty(p.Results.excludePlatform)
+    if any(strncmp(MEXEXT(i).arch, p.Results.excludePlatform, ...
+      length(MEXEXT(i).arch)))
+      continue
+    end
+  end
+
+  item(i).mex_flags  = p.Results.extras;
+  item(i).arch       = MEXEXT(i).arch;
+  item(i).target     = [p.Results.directory, '/', p.Results.relName, '.', MEXEXT(i).arch];
+  item(i).source     = [[p.Results.directory, '/', p.Results.relName, '.c'], ...
+    p.Results.depends];
+  
+end
