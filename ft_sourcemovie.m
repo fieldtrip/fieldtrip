@@ -1,4 +1,4 @@
-function [cfg] = ft_sourcemovie(cfg, source)
+function [cfg, M] = ft_sourcemovie(cfg, source)
 
 % FT_SOURCEMOVIE displays the source reconstruction on a cortical mesh
 % and allows the user to scroll through time with a movie
@@ -213,6 +213,14 @@ set(p, 'position', [20 116 50 20]);
 set(p, 'string', 'play')
 % note that "p" is needed further down
 
+m = uicontrol('style', 'pushbutton');
+set(m, 'position', [20 138 50 20]);
+set(m, 'string', 'record');
+
+q = uicontrol('style', 'pushbutton');
+set(q, 'position', [20 160 50 20]);
+set(q, 'string', 'quit');
+
 hx = uicontrol('style', 'text');
 set(hx, 'position', [pos(3)-140 25 120 20]);
 set(hx, 'string', sprintf('%s = ', cfg.xparam));
@@ -238,6 +246,9 @@ opt.yparam  = yparam;
 opt.dat     = fun;
 opt.mask    = mask;
 opt.speed   = 1;
+opt.record  = 0;
+opt.frame   = 0;
+opt.cleanup = false;
 
 if isfield(source, 'sulc')
   vdat = source.sulc;
@@ -261,6 +272,7 @@ alim(cfg.alim);
 
 
 % remember the varous handles
+opt.h   = h;
 opt.hs  = hs;
 opt.p   = p;
 opt.t   = t;
@@ -276,11 +288,34 @@ guidata(h, opt);
 set(sx, 'Callback', @cb_slider);
 set(sy, 'Callback', @cb_slider);
 set(p,  'Callback', @cb_playbutton);
+set(m,  'Callback', @cb_recordbutton);
+set(q,  'Callback', @cb_quit);
 
-% do the general cleanup and bookkeeping at the end of the function
-ft_postamble trackconfig
-ft_postamble callinfo
-ft_postamble previous source
+if nargout
+  % wait until the user interface is closed
+  %set(h, 'CloseRequestFcn', @cb_quit);
+  
+  while ishandle(h)
+    uiwait(h);
+    opt = guidata(h);
+    if opt.cleanup
+      if isfield(opt, 'movie')
+        M = opt.movie;
+      else
+        M = [];
+      end
+      delete(h);
+    end
+  end
+  
+  
+  % do the general cleanup and bookkeeping at the end of the function
+  ft_postamble trackconfig
+  ft_postamble callinfo
+  ft_postamble previous source
+
+end % if nargout
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -304,6 +339,12 @@ set(opt.hy, 'string', sprintf('%s = %f\n', opt.cfg.yparam, opt.yparam(valy)));
 set(opt.hs, 'FaceVertexCData', squeeze(opt.dat(:,valx,valy)));
 set(opt.hs, 'FaceVertexAlphaData', squeeze(opt.mask(:,valx,valy)));
 
+if opt.record
+  opt.frame = opt.frame + 1;
+  opt.movie(opt.frame) = getframe(opt.h);
+  guidata(h, opt);
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -320,6 +361,35 @@ switch get(h, 'string')
     set(h, 'string', 'play');
     stop(opt.t);
 end
+uiresume;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_recordbutton(h, eventdata)
+if ~ishandle(h)
+  return
+end
+opt = guidata(h);
+switch get(h, 'string')
+  case 'record'
+    set(h, 'string', 'stop');
+    opt.record = 1;
+  case 'stop'
+    set(h, 'string', 'record');
+    opt.record = 0;
+end
+guidata(h, opt);
+uiresume;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_quit(h, eventdata)
+opt = guidata(h);
+opt.cleanup = 1;
+guidata(h, opt);
+uiresume;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -337,6 +407,7 @@ if val>1
 end
 set(opt.sx, 'value', val);
 cb_slider(h);
+uiresume;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -353,6 +424,7 @@ switch get(h, 'String')
     alim(alim/sqrt(2));
 end % switch
 guidata(h, opt);
+uiresume;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -369,6 +441,7 @@ switch get(h, 'String')
     caxis(caxis/sqrt(2));
 end % switch
 guidata(h, opt);
+uiresume;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -386,5 +459,5 @@ switch get(h, 'String')
     opt.speed = max(opt.speed, 1); % should not be smaller than 1
 end % switch
 guidata(h, opt);
-
+uiresume;
 
