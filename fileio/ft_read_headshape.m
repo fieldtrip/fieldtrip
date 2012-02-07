@@ -376,6 +376,9 @@ switch fileformat
   case 'polhemus_fil'
     [shape.fid.pnt, shape.pnt, shape.fid.label] = read_polhemus_fil(filename, 0);
     
+  case 'polhemus_pos'
+    [shape.fid.pnt, shape.pnt, shape.fid.label] = read_ctf_pos(filename);      
+    
   case 'spmeeg_mat'
     tmp = load(filename);
     if isfield(tmp.D, 'fiducials') && ~isempty(tmp.D.fiducials)
