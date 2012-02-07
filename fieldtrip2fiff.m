@@ -69,7 +69,6 @@ else
   info.meas_id.usecs   = nan;
   info.meas_date       = [nan;nan];
   
-  info.sfreq    = fsample;
   info.nchan    = numel(data.label);
   info.highpass = nan;
   info.lowpass  = nan;
@@ -113,8 +112,8 @@ if istlck
   evoked.aspect_kind = 100;
   evoked.is_smsh     = 0;
   evoked.nave        = max(data.dof(:));
-  evoked.first       = round(data.time(1)*fsample);
-  evoked.last        = round(data.time(end)*fsample);
+  evoked.first       = round(data.time(1)*info.sfreq);
+  evoked.last        = round(data.time(end)*info.sfreq);
   evoked.times       = data.time;
   evoked.comment     = sprintf('FieldTrip data averaged');
   evoked.epochs      = data.avg;
@@ -123,8 +122,8 @@ elseif israw
     evoked(j).aspect_kind = 100;
     evoked(j).is_smsh     = 0; % FIXME: How could we tell?
     evoked(j).nave        = 1; % FIXME: Use the real value
-    evoked(j).first       = round(data.time{j}(1)*data.fsample);
-    evoked(j).last        = round(data.time{j}(end)*data.fsample);
+    evoked(j).first       = round(data.time{j}(1)*info.sfreq);
+    evoked(j).last        = round(data.time{j}(end)*info.sfreq);
     evoked(j).times       = data.time{j};
     evoked(j).comment     = sprintf('FieldTrip data, category/trial %d', j);
     evoked(j).epochs      = data.trial{j};
