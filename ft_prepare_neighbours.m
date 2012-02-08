@@ -33,7 +33,7 @@ function [neighbours, cfg] = ft_prepare_neighbours(cfg, data)
 %   data.elec     = structure with EEG electrode positions
 %   data.grad     = structure with MEG gradiometer positions
 %
-% The output is an array of structures with the "neighbours" which is 
+% The output is an array of structures with the "neighbours" which is
 % structured like this:
 %        neighbours(1).label = 'Fz';
 %        neighbours(1).neighblabel = {'Cz', 'F3', 'F3A', 'FzA', 'F4A', 'F4'};
@@ -86,7 +86,9 @@ if hasdata, data = ft_checkdata(data); end
 if strcmp(cfg.method, 'template')
   neighbours = [];
   fprintf('Trying to load sensor neighbours from a template\n');
+  % determine from where to load the neighbour template
   if ~isfield(cfg, 'template')
+    % if data has been put in, try to estimate the sensor type
     if hasdata
       fprintf('Estimating sensor type of data to determine the layout filename\n');
       senstype = ft_senstype(data.label);
@@ -102,14 +104,26 @@ if strcmp(cfg.method, 'template')
       end
     end
   end
+  % if that failed
   if ~isfield(cfg, 'template')
+    % check whether a layout can be used
     if ~isfield(cfg, 'layout')
+      % error if that fails as well
       error('You need to define a template or layout or give data as an input argument when ft_prepare_neighbours is called with cfg.method=''template''');
     end
     fprintf('Using the 2-D layout filename to determine the template filename\n');
     cfg.template = [strtok(cfg.layout, '.') '_neighb.mat'];
   end
-  cfg.template = lower(cfg.template);
+  % adjust filename
+  cfg.template = lower(cfg.template);  
+  % add necessary extensions
+  if numel(cfg.template) < 4 || ~isequal(cfg.template(end-3:end), '.mat')
+    if numel(cfg.template) < 7 || ~isequal(cfg.template(end-6:end), '_neighb')
+      cfg.template = [cfg.template, '_neighb'];
+    end
+    cfg.template = [cfg.template, '.mat'];
+  end
+  % check for existence
   if ~exist(cfg.template, 'file')
     error('Template file could not be found - please check spelling or contact jm.horschig(at)donders.ru.nl if you want to create and share your own template! See also http://fieldtrip.fcdonders.nl/faq/how_can_i_define_my_own_neighbourhood_template');
   end
@@ -125,7 +139,7 @@ if strcmp(cfg.method, 'template')
   end
 else
   % get the the grad or elec if not present in the data
-  if hasdata 
+  if hasdata
     sens = ft_fetch_sens(cfg, data);
   else
     sens = ft_fetch_sens(cfg);
@@ -259,7 +273,7 @@ for i=1:nsensors
   neighbours(i).neighblabel = sens.label(neighbidx);
 end
 
-% remove neighbouring channels that are too far away (imporntant e.g. in 
+% remove neighbouring channels that are too far away (imporntant e.g. in
 % case of missing sensors)
 neighbdist = mean(alldist)+3*std(alldist);
 for i=1:nsensors

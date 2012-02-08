@@ -30,7 +30,7 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 % a call to FT_PREPROCESSING.
 %
 % If you encounter difficulties with memory usage, you can use
-%   cfg.memory = 'low' or 'high', whether to be computationally or memory efficient (default = 'high')
+%   cfg.memory = 'low' or 'high', whether to be memory or computationally efficient, respectively (default = 'high')
 %
 % The required configuration settings are:
 %   cfg.trl
