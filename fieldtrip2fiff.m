@@ -79,22 +79,7 @@ else
   info.comps    = [];
   info.bads     = [];
   info.ch_names = data.label(:)';
-  for k = 1:numel(data.label)
-    % create a struct for each channel
-    info.chs(1,k).scanno       = nan;
-    info.chs(1,k).logno        = nan;
-    info.chs(1,k).kind         = nan;
-    info.chs(1,k).range        = 1;
-    info.chs(1,k).cal          = 1;
-    info.chs(1,k).coil_type    = nan;
-    info.chs(1,k).loc          = zeros(12,1)+nan;
-    info.chs(1,k).coil_trans   = eye(4);
-    info.chs(1,k).eeg_loc      = [];
-    info.chs(1,k).coord_frame  = nan;
-    info.chs(1,k).unit         = nan;
-    info.chs(1,k).unit_mul     = 0;
-    info.chs(1,k).ch_name      = data.label{k};
-  end
+  info.chs      = grad2fiff(data);
   if istlck,
     info.sfreq     = 1./mean(diff(data.time));
     info.isaverage = 1;
@@ -140,13 +125,53 @@ ft_postamble previous datain  % this copies the datain.cfg structure into the cf
 ft_postamble history dataout  % this adds the local cfg structure to the output data structure, i.e. dataout.cfg = cfg
 ft_postamble savevar dataout  % this saves the output data structure to disk in case the user specified the cfg.outputfile option
 
+%-------------------
+% subfunction
+function [chs] = grad2fiff(data)
+
+if isfield(data, 'grad')
+  hasgrad = true;
+else
+  hasgrad = false;
+end
+
+for k = 1:numel(data.label)
+  % create a struct for each channel
+  chs(1,k).scanno       = 1;
+  chs(1,k).logno        = 1;
+  chs(1,k).kind         = nan;
+  chs(1,k).range        = 1;
+  chs(1,k).cal          = 1;
+  chs(1,k).coil_type    = nan;
+  chs(1,k).loc          = zeros(12,1);
+  chs(1,k).coil_trans   = eye(4);
+  chs(1,k).eeg_loc      = [];
+  chs(1,k).coord_frame  = nan;
+  chs(1,k).unit         = nan;
+  chs(1,k).unit_mul     = 0;
+  chs(1,k).ch_name      = data.label{k};
+end
+
+if hasgrad
+  % the position information can be recovered, too
+  [i1,i2] = match_str(data.label, data.grad.label);
+  for k = 1:numel(i1)
+    chs(1,i1(k)).kind        = 1;
+    chs(1,i1(k)).coil_type   = 3022;
+    chs(1,i1(k)).unit        = 112;
+    chs(1,i1(k)).coord_frame = int32(4); % head coordinates
+    chs(1,i1(k)).loc(1:3)    = data.grad.chanpos(i2(k),:);
+    chs(1,i1(k)).loc(4:end)  = reshape(eye(3),[9 1]);
+  end
+end
+
 % Below the documentation to the original code contributed by Lauri
 % Parkkonen
 %
 % fieldtrip2fiff(filename, data)
 %
 % Write the data in the FieldTrip structure 'data' to a FIFF file
-% 'filename'. If an average 
+% 'filename'. If an average
 %
 % Caveats:
 %
@@ -169,7 +194,7 @@ ft_postamble savevar dataout  % this saves the output data structure to disk in 
 % % Construct the evoked data aspect for each category
 % ave = isfield(data, 'average');
 % trl = isfield(data, 'trial');
-% 
+%
 % if ave && trl
 %     fprintf('WARNING: Data structure contains both an average and individual trials; writing out the average');
 %     dataout = data.average;
