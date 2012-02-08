@@ -115,6 +115,8 @@ switch eventformat
     write_serial_event(filename, event);
 
   case 'fcdc_mysql'
+    % check that the required low-level toolbox is available
+    ft_hastoolbox('mysql', 1);
     % write to a MySQL server listening somewhere else on the network
     db_open(filename);
     for i=1:length(event)

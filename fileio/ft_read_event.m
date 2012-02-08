@@ -932,6 +932,8 @@ switch eventformat
     event = read_serial_event(filename);
     
   case 'fcdc_mysql'
+    % check that the required low-level toolbox is available
+    ft_hastoolbox('mysql', 1);
     % read from a MySQL server listening somewhere else on the network
     db_open(filename);
     if db_blob
