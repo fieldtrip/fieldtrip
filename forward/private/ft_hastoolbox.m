@@ -111,6 +111,7 @@ url = {
   'TOOLBOX_GRAPH' 'see http://www.mathworks.com/matlabcentral/fileexchange/5355-toolbox-graph or contact Gabriel Peyre'
   'NETCDF'     'see http://www.mathworks.com/matlabcentral/fileexchange/15177'
   'BCT'        'see http://www.brain-connectivity-toolbox.net/'
+  'MYSQL'      'see http://www.mathworks.com/matlabcentral/fileexchange/8663-mysql-database-connector'
   };
 
 if nargin<2
@@ -262,6 +263,8 @@ switch toolbox
     status = exist('netcdf');
   case 'BCT'
     status = exist('clustering_coef_bd', 'file') && exist('edge_betweenness_wei', 'file');
+  case 'MYSQL'
+    status = exist(['mysql.' mexext], 'file'); % this only consists of a single mex file
     
     % the following are not proper toolboxes, but only subdirectories in the fieldtrip toolbox
     % these are added in ft_defaults and are specified with unix-style forward slashes
