@@ -26,19 +26,34 @@ if ~isempty(selchan)
 end
 
 if ~isempty(seltim)
+  
   oktrial = true(numel(data.trial), 1);
   for k = 1:numel(data.trial)
     ok = data.time{k}>=seltim(1) & data.time{k}<=seltim(2);
+    
     if sum(ok)>0
+      % there are samples in trial k that fall within latency
+      
       data.trial{k} = data.trial{k}(:,ok);
       data.time{k}  = data.time{k}(ok);
+      
+      % how many samples at the beginning and/or end were removed?
+      beginLatency = find(ok,1,'first') - 1;
+      endLatency = numel(ok) - find(ok,1,'last');
+      
+      % update sampleinfo to reflect this
+      data.sampleinfo(k,1) = data.sampleinfo(k,1) + beginLatency;
+      data.sampleinfo(k,2) = data.sampleinfo(k,2) - endLatency;
+      
     else
+      
+      % whole trial falls outside latency
       oktrial(k) = false;
+      
     end
   end
   
-  % remove sampleinfo if present
-  % FIXME change this into update sampleinfo
-  if isfield(data, 'sampleinfo'), data = rmfield(data, 'sampleinfo'); end
+  % remove all trials that had no samples within latency
   data = selfromraw(data, 'rpt', find(oktrial));
+  
 end
