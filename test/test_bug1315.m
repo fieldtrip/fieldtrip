@@ -1,0 +1,25 @@
+function test_bug1315
+
+% TEST test_bug1315
+% TEST ft_checkdata ft_prepare_neighbours ft_megplanar ft_combineplanar
+
+load test_bug1315.m
+
+% neighbours
+cfg = [];
+cfg.method = 'template';
+cfg.layout = 'CTF275.lay';
+neighbours = ft_prepare_neighbours(cfg, data);
+%% producing the bug
+cfg = [];
+cfg.neighbours = neighbours;
+erf_planar = ft_megplanar(cfg, data);
+
+erf_combined = ft_combineplanar([], erf_planar);
+
+if size(erf_combined.time, 2) ~= size(erf_combined.trial, 3) ...
+   || any(erf_combined.time ~= data.time)
+  error('Time axis screwed up (again)');
+end
+
+  
