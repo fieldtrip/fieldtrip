@@ -1629,7 +1629,6 @@ for i=1:nrpt
 end
 nsmp = cellfun('size',data.time,2);
 seln = find(nsmp>1,1, 'first');
-data.fsample = 1/(data.time{seln}(2)-data.time{seln}(1));
 
 if isfield(freq, 'trialinfo'), data.trialinfo = freq.trialinfo; end;
 
@@ -1648,18 +1647,26 @@ if ntrial==1
   data        = rmfield(data, 'trial');
   data.dimord = 'chan_time';
 else
-  % determine the location of the trials relative to the resulting combined time axis
-  begtime  = cellfun(@min,  data.time);
-  endtime  = cellfun(@max,  data.time);
-  begsmp   = round((begtime - min(begtime)) * data.fsample) + 1;
-  endsmp   = round((endtime - min(begtime)) * data.fsample) + 1;
-
-  % create a combined time axis and concatenate all trials
-  tmptime  = min(begtime):(1/data.fsample):max(endtime);
-  tmptrial = zeros(ntrial, nchan, length(tmptime)) + nan;
-  for i=1:ntrial
-    tmptrial(i,:,begsmp(i):endsmp(i)) = data.trial{i};
+  
+  for i = 1:ntrial
+    ix(i) = nearest(data.time{i}, -inf); % most negative sample
+    iy(i) = nearest(data.time{i}, inf); % most positive
   end
+  
+  [mx,ix2] = min(ix); %most negative sample
+  [my,iy2] = max(iy); %most positive sample
+  nsmp = mx+my-1; 
+
+  tmptime = linspace(data.time{ix2}(mx), data.time{iy2}(my), nsmp);
+  
+  % concatenate all trials
+  tmptrial = zeros(ntrial, nchan, length(tmptime)) + nan;
+  
+  for i=1:ntrial
+    begsmp(i) = nearest(tmptime, data.time{i}(1));
+    endsmp(i) = nearest(tmptime, data.time{i}(end));
+    tmptrial(i,:,begsmp(i):endsmp(i)) = data.trial{i};
+  end   
 
   % update the sampleinfo
   begpad = begsmp - min(begsmp);
@@ -1675,7 +1682,6 @@ else
   data.trial   = tmptrial;
   data.time    = tmptime;
   data.dimord = 'rpt_chan_time';
-  data = rmfield(data, 'fsample'); % fsample in timelock data is obsolete
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1693,7 +1699,6 @@ switch data.dimord
     data.time     = {data.time};
     data          = rmfield(data, 'avg');
     seln = find(nsmp>1,1, 'first');
-    data.fsample = 1/(data.time{seln}(2)-data.time{seln}(1));
   case 'rpt_chan_time'
     tmptrial = {};
     tmptime  = {};
@@ -1708,7 +1713,6 @@ switch data.dimord
     data.trial = tmptrial;
     data.time  = tmptime;
     seln = find(nsmp>1,1, 'first');
-    data.fsample = 1/(data.time{seln}(2)-data.time{seln}(1));
   case 'subj_chan_time'
     tmptrial = {};
     tmptime  = {};
@@ -1723,7 +1727,6 @@ switch data.dimord
     data.trial = tmptrial;
     data.time  = tmptime;
     seln = find(nsmp>1,1, 'first');
-    data.fsample = 1/(data.time{seln}(2)-data.time{seln}(1));    
   otherwise
     error('unsupported dimord');
 end
