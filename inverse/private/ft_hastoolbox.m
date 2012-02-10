@@ -290,6 +290,8 @@ switch toolbox
     status = ~isempty(regexp(unixpath(path), 'fieldtrip/template/electrode',  'once'));
   case 'TEMPLATE/NEIGHBOURS'
     status = ~isempty(regexp(unixpath(path), 'fieldtrip/template/neighbours', 'once'));
+  case 'TEMPLATE/SOURCEMODEL'
+    status = ~isempty(regexp(unixpath(path), 'fieldtrip/template/sourcemodel', 'once'));
     
   otherwise
     if ~silent, warning('cannot determine whether the %s toolbox is present', toolbox); end
