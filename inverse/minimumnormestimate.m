@@ -118,7 +118,7 @@ if ~isfield(dip, 'filter')
     warning('computing a unregularised minimum norm solution. This typically does not work due to numerical accuracy problems');
     w = pinv(lf);
   elseif ~isempty(noisecov)
-    fprintf('computing the solution where the noise covariance is used for regularisation'); 
+    fprintf('computing the solution where the noise covariance is used for regularisation\n'); 
     % the noise covariance has been given and can be used to regularise the solution
     if isempty(sourcecov)
       sourcecov = speye(Nsource);
@@ -140,7 +140,7 @@ if ~isfield(dip, 'filter')
       P = diag(1./sqrt(diag(S(sel,sel))))*U(:,sel)';
       
       A = P*A;
-      C = eye(Nchan);
+      C = eye(size(P,1));
     end
     
     if doscale
@@ -161,7 +161,13 @@ if ~isfield(dip, 'filter')
     end
     
     % equation 5 from Lin et al 2004 (this implements Dale et al 2000, and Liu et al. 2002)
-    w = R * A' / ( A * R * A' + (lambda^2) * C);
+    denom = (A*R*A'+(lambda^2)*C);
+    if cond(denom)<1e12
+      w = R * A' / denom;
+    else
+      fprintf('taking pseudo-inverse due to large condition number\n');
+      w = R * A' * pinv(denom);
+    end
   
     % unwhiten the filters to bring them back into signal subspace
     if dowhiten
