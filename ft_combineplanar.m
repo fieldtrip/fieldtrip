@@ -72,12 +72,12 @@ cfg = ft_checkconfig(cfg, 'renamed',     {'blc', 'demean'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'blcwindow', 'baselinewindow'});
 
 % set the defaults
-if ~isfield(cfg, 'demean'),        cfg.demean         = 'no';       end
-if ~isfield(cfg, 'foilim'),        cfg.foilim         = [-inf inf]; end
-if ~isfield(cfg, 'baselinewindow'), cfg.baselinewindow = [-inf inf]; end
-if ~isfield(cfg, 'combinemethod'), cfg.combinemethod  = 'sum';      end
-if ~isfield(cfg, 'trials'),        cfg.trials         = 'all';      end
-if ~isfield(cfg, 'feedback'),      cfg.feedback       = 'none';     end
+cfg.demean         = ft_getopt(cfg, 'demean',         'no');
+cfg.foilim         = ft_getopt(cfg, 'foilim',         [-inf inf]);
+cfg.baselinewindow = ft_getopt(cfg, 'baselinewindow', [-inf inf]);
+cfg.combinemethod  = ft_getopt(cfg, 'combinemethod',  'sum');
+cfg.trials         = ft_getopt(cfg, 'trials',         'all');
+cfg.feedback       = ft_getopt(cfg, 'feedback',       'none');
 
 if isfield(cfg, 'baseline')
   warning('only supporting cfg.baseline for backwards compatibility, please update your cfg');
@@ -88,7 +88,9 @@ end
 israw      = ft_datatype(data, 'raw');
 isfreq     = ft_datatype(data, 'freq');
 istimelock = ft_datatype(data, 'timelock');
-try, dimord = data.dimord; end
+if isfield(data, 'dimord'),
+  dimord = data.dimord;
+end
 
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
@@ -251,6 +253,31 @@ end % which ft_datatype
 % remove the fields for which the planar gradient could not be combined
 try, data = rmfield(data, 'crsspctrm');   end
 try, data = rmfield(data, 'labelcmb');    end
+
+if isfield(data, 'grad')
+  % update the grad and only retain the channel related info
+  [sel_dH, sel_comb] = match_str(data.grad.label, planar(:,1));  % indices of the horizontal channels
+  sel_dV    = match_str(data.grad.label, planar(:,2));  % indices of the vertical   channels
+  
+  % find the other channels that are present in the data
+  sel_other = setdiff(1:length(data.grad.label), [sel_dH(:)' sel_dV(:)']);
+  
+  lab_other = data.grad.label(sel_other);
+  lab_comb  = planar(sel_comb,3);
+ 
+  sel      = [sel_comb(:);sel_other(:)];
+  newlabel = [lab_comb;data.grad.label(sel_other(:))];
+  
+  newgrad.chanpos = data.grad.chanpos(sel,:);
+  newgrad.chanori = data.grad.chanori(sel,:);
+  newgrad.chantype = data.grad.chantype(sel);
+  newgrad.chanunit = data.grad.chanunit(sel);
+  newgrad.label    = newlabel;
+  newgrad.unit     = data.grad.unit;
+  
+  data.grad = newgrad; 
+end
+
 
 % convert back to input type if necessary
 if istimelock
