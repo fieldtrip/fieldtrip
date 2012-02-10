@@ -82,6 +82,10 @@ if strcmp(version, 'latest')
   version = '2011v2';
 end
 
+if isempty(sens)
+  return;
+end
+
 % there are many cases which deal with either eeg or meg
 isgrad = ft_senstype(sens, 'meg');
 
