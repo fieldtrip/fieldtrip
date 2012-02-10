@@ -143,6 +143,7 @@ fprintf('reslicing from [%d %d %d] to [%d %d %d]\n', mri.dim(1), mri.dim(2), mri
 % the actual work is being done by ft_sourceinterpolate, which interpolates the real mri volume 
 % on the resolution that is defined for the resliced volume
 tmpcfg = [];
+tmpcfg.parameter = 'anatomy';
 reslice = ft_sourceinterpolate(tmpcfg, mri, reslice);
 
 % do the general cleanup and bookkeeping at the end of the function
