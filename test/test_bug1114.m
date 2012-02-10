@@ -1,15 +1,8 @@
-% function test_bugXXX
+function test_bug1114
 
-% This function parses all "fieldtrip/ft_*.m" main functions and determines
+% This function parses all fieldtrip main and module functions and determines
 % whether there are any dependencies on fieldtrip/compat or any other
 % compat directory. If so, the files are printed with an error.
-
-% TODO
-%  crimic should be explained how to use compat
-%  fixed a spike function (channelselection), should be committed
-%  fieldtrip/compat/openmeeg.m should be removed
-%  fieldtrip/ft_headmodelplot.m should be removed
-%  compat/ft_prepare_bemmodel.m and ft_prepare_bemmodel.m should be merged, the compat one should then be removed
 
 fieldtripdir = fileparts(which('ft_defaults'));
 
@@ -21,22 +14,40 @@ addpath(fullfile(fieldtripdir, 'plotting/compat'))
 addpath(fullfile(fieldtripdir, 'preproc/compat'))
 addpath(fullfile(fieldtripdir, 'utilities/compat'))
 
-mainfunctionlist = dir(fullfile(fieldtripdir, 'ft_*.m'));
-mainfunctionlist = {mainfunctionlist.name};
+dirlist = {
+  fieldtripdir
+  fullfile(fieldtripdir, 'fileio')
+  fullfile(fieldtripdir, 'forward')
+  fullfile(fieldtripdir, 'inverse')
+  fullfile(fieldtripdir, 'plotting')
+  fullfile(fieldtripdir, 'connectivity')
+  fullfile(fieldtripdir, 'specest')
+  fullfile(fieldtripdir, 'trialfun')
+  fullfile(fieldtripdir, 'statfun')
+  fullfile(fieldtripdir, 'utilities')
+  fullfile(fieldtripdir, 'private')
+  };
 
-% find the dependencies
-[outlist, depmat] = mydepfun(mainfunctionlist);
+for dirindex=1:length(dirlist)
+  functionlist = dir(fullfile(dirlist{dirindex}, '*.m'));
+  functionlist = {functionlist.name};
+  
+  % find the dependencies
+  [outlist, depmat] = mydepfun(functionlist);
+  
+  compat = false(size(outlist));
+  for i=1:length(outlist)
+    compat(i) = ~isempty(regexp(outlist{i}, '/compat', 'once'));
+  end
+  % switch to list indices
+  compat = find(compat);
+  
+  if ~isempty(compat)
+    % report on the problems
+    disp(outlist(compat));
+    disp(functionlist(any(depmat(:,compat),2))');
+    error('some of the FT functions depend on compat functions');
+    % warning('some of the FT functions depend on compat functions');
+  end
+end % for dirlist
 
-compat = false(size(outlist));
-for i=1:length(outlist)
-  compat(i) = ~isempty(regexp(outlist{i}, '/compat', 'once'));
-end
-% switch to list indices
-compat = find(compat);
-
-if ~isempty(compat)
-  % report on the problems
-  disp(outlist(compat));
-  disp(mainfunctionlist(any(depmat(:,compat),2))');
-  error('some of the FT main functions depend on compat functions');
-end
