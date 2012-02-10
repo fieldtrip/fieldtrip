@@ -386,6 +386,8 @@ if ~isempty(createsubcfg)
           'lambda'
           'keepfilter'
           'prewhiten'
+          'snr'
+          'scalesourcecov'
           };
           
       case 'music'
