@@ -1,5 +1,63 @@
 function test_ft_checkdata
 
+% TEST test_ft_checkdata
+% TEST ft_checkdata
+
+%% converting raw data to timelock data
+
+% make some raw data with unequal time-axis, excluding 0
+data = [];
+data.label = {'1', '2'};
+data.time{1} = [-1.5 -1.28];
+data.time{2} = [2.68 2.9];
+
+for i=1:numel(data.time)
+  data.trial{i} = rand(size(data.label, 2), size(data.time{i}, 2));
+end
+
+tmp = ft_checkdata(data, 'datatype', 'timelock');
+
+if sum(tmp.time-[-1.5:0.22:3]) > 12e-17 | numel(tmp.time) ~= 21
+  error('time axis is wrong');
+end
+
+% make some raw data with unequal time-axis, including 0 implicitly
+data = [];
+data.label = {'1', '2'};
+data.time{1} = [-2 -1];
+data.time{2} = [3 4];
+
+for i=1:numel(data.time)
+  data.trial{i} = rand(size(data.label, 2), size(data.time{i}, 2));
+end
+
+tmp = ft_checkdata(data, 'datatype', 'timelock');
+
+if ~isequal(tmp.time, [-2:4])
+  error('time axis is wrong');
+end
+
+% make some raw data with unequal time-axis, including 0, with some jitter
+
+  success = 0;
+  attempts = 5; % this might not work if the RNG sucks
+ while ~success
+  try
+    data = [];
+  data.label = {'1', '2'};
+  data.time{1} = -.5:.25:1;
+  data.time{2} = -.25:.25:.25;
+  data.time{3} = .25:.25:1;
+  data.time{4} = -.5:.25:-.25;
+
+  for i=1:numel(data.time)
+    data.time{i} = data.time{i} + (rand-0.5)/1000;
+    data.trial{i} = rand(size(data.label, 2), size(data.time{i}, 2));
+  end
+  tmp = ft_checkdata(data, 'datatype', 'timelock');
+    success = 1;
+  end
+end
 
 %% converting raw data to timelock data
 
@@ -89,7 +147,7 @@ function sanityCheck(tmp)
      || any(isnan(tmp.trial(2, 3:8)))  || any(~isnan(tmp.trial(2, [1 2 9:14]))) ...
      || any(isnan(tmp.trial(3, 7:14))) || any(~isnan(tmp.trial(3, [1:6]))) ...
      || any(isnan(tmp.trial(4, 1:4)))  || any(~isnan(tmp.trial(4, [5:14])))
-    error('nans are misplaced in .trial');
+     error('nans are misplaced in .trial');
   end
 end
 

@@ -1648,16 +1648,24 @@ if ntrial==1
   data.dimord = 'chan_time';
 else
   
-  for i = 1:ntrial
-    ix(i) = nearest(data.time{i}, -inf); % most negative sample
-    iy(i) = nearest(data.time{i}, inf); % most positive
-  end
+  begtime = cellfun(@min,data.time);
+  endtime = cellfun(@max,data.time);
   
-  [mx,ix2] = min(ix); %most negative sample
-  [my,iy2] = max(iy); %most positive sample
-  nsmp = mx+my-1; 
+  for i = 1:ntrial
+    mint    = min(eps, begtime(i));
+    maxt    = max(eps, endtime(i));
+    time = data.time{i};
+    % extrapolate so that we get near 0
+    time =  interp1(time, time, mint:mean(diff(time)):maxt, 'linear', 'extrap');
+    ix(i) = sum(time<0); % number of samples pre-zero
+    iy(i) = sum(time>=0); % number of samples post-zer
+  end  
+  
+  [mx,ix2] = max(ix);
+  [my,iy2] = max(iy);
+  nsmp = mx+my; 
 
-  tmptime = linspace(data.time{ix2}(mx), data.time{iy2}(my), nsmp);
+  tmptime = linspace(min(begtime), max(endtime), nsmp);
   
   % concatenate all trials
   tmptrial = zeros(ntrial, nchan, length(tmptime)) + nan;
