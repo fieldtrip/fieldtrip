@@ -420,6 +420,9 @@ artifact = [artbeg(:) artend(:)];
 % remember the artifacts that were found
 cfg.artfctdef.zvalue.artifact = artifact;
 
+% also update the threshold
+cfg.artfctdef.zvalue.cutoff   = opt.threshold;
+
 fprintf('detected %d artifacts\n', size(artifact,1));
 
 delete(h);
