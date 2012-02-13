@@ -92,7 +92,11 @@ switch cmd
     sel = strmatch(jobid, list_jobid);
     if ~isempty(sel)
       % remove it from the batch queue
-      system(sprintf('qdel %s', pbsid));
+      if ~isempty(getenv('SLURM_ENABLE'))
+        system(sprintf('scancel --name %s', jobid));
+      else
+        system(sprintf('qdel %s', pbsid));
+      end
       % remove the corresponing files from the shared storage
       system(sprintf('rm -f %s*', jobid));
       % remove it from the persistent lists

@@ -7,7 +7,24 @@ function [jobid, puttime] = qsubfeval(varargin)
 %   jobid  = qsubfeval(fname, arg1, arg2, ...)
 %   argout = qsubget(jobid, ...)
 %
+% This function has a number of optional arguments that have to passed
+% as key-value pairs at the end of the list of input arguments. All other
+% input arguments (including other key-value pairs) will be passed to the
+% function to be evaluated.
+%   memreq      = number in bytes, how much memory does the job require (no default)
+%   memoverhead = number in bytes, how much memory to account for MATLAB itself (default = 1024^3, i.e. 1GB)
+%   timreq      = number in seconds, how much time does the job require (no default)
+%   timoverhead = number in seconds, how much time to allow MATLAB to start (default = 180 seconds)
+%   backend     = string, can be 'sge', 'torque', 'slurm', 'local' (default is automatic)
+%   diary       = string, can be 'always', 'never', 'warning', 'error' (default = 'error')
+%   queue       = string, which queue to submit the job in (default is empty)
+%   options     = string, additional options that will be passed to qsub/srun (default is empty)
+%
 % See also QSUBCELLFUN, QSUBGET, FEVAL, DFEVAL, DFEVALASYNC
+
+% Undocumented option
+%   'batch'     = number of the bach to which the job belongs, this is
+%                 specified by qsubcellfun
 
 % -----------------------------------------------------------------------
 % Copyright (C) 2011-2012, Robert Oostenveld
@@ -38,6 +55,8 @@ if ~isempty(getenv('SGE_ROOT'))
   defaultbackend = 'sge';
 elseif ~isempty(getenv('TORQUEHOME'))
   defaultbackend = 'torque';
+elseif ~isempty(getenv('SLURM_ENABLE'))
+  defaultbackend = 'slurm';
 else
   defaultbackend = 'local';
 end
@@ -55,6 +74,8 @@ optbeg = optbeg | strcmp('batch',   strargin);
 optbeg = optbeg | strcmp('timoverhead', strargin);
 optbeg = optbeg | strcmp('memoverhead', strargin);
 optbeg = optbeg | strcmp('backend', strargin);
+optbeg = optbeg | strcmp('queue',   strargin);
+optbeg = optbeg | strcmp('options', strargin);
 optbeg = find(optbeg);
 optarg = varargin(optbeg:end);
 
@@ -63,13 +84,15 @@ ft_checkopt(optarg, 'memreq', 'numericscalar');
 ft_checkopt(optarg, 'timreq', 'numericscalar');
 
 % get the optional input arguments
-memreq      = ft_getopt(optarg, 'memreq');
-timreq      = ft_getopt(optarg, 'timreq');
-diary       = ft_getopt(optarg, 'diary',   []);
-batch       = ft_getopt(optarg, 'batch',    1);
-timoverhead = ft_getopt(optarg, 'timoverhead', 180);            % allow some overhead to start up the MATLAB executable
-memoverhead = ft_getopt(optarg, 'memoverhead', 1024*1024*1024); % allow some overhead for the MATLAB executable in memory
-backend     = ft_getopt(optarg, 'backend', defaultbackend);     % can be torque, local, sge
+memreq        = ft_getopt(optarg, 'memreq');
+timreq        = ft_getopt(optarg, 'timreq');
+diary         = ft_getopt(optarg, 'diary', []);
+batch         = ft_getopt(optarg, 'batch', 1);
+timoverhead   = ft_getopt(optarg, 'timoverhead', 180);            % allow some overhead to start up the MATLAB executable
+memoverhead   = ft_getopt(optarg, 'memoverhead', 1024*1024*1024); % allow some overhead for the MATLAB executable in memory
+backend       = ft_getopt(optarg, 'backend', defaultbackend);     % can be torque, local, sge
+queue         = ft_getopt(optarg, 'queue', []);
+submitoptions = ft_getopt(optarg, 'options', []);
 
 % skip the optional key-value arguments
 if ~isempty(optbeg)
@@ -194,12 +217,22 @@ switch backend
     
   case 'sge'
     % this is for Sun Grid Engine, Oracle Grid Engine, and other derivatives
-    requirements = '';
-    if ~isempty(timreq)
-      requirements = [requirements sprintf('-l h_rt=%d ', timreq+timoverhead)];
+    
+    if isempty(submitoptions)
+      % start with an empty string
+      submitoptions = '';
     end
+    
+    if ~isempty(queue)
+      submitoptions = [submitoptions sprintf('-q %s ', queue)];
+    end
+    
+    if ~isempty(timreq)
+      submitoptions = [submitoptions sprintf('-l h_rt=%d ', timreq+timoverhead)];
+    end
+    
     if ~isempty(memreq)
-      requirements = [requirements sprintf('-l h_vmem=%.0f ',   memreq+memoverhead)];
+      submitoptions = [submitoptions sprintf('-l h_vmem=%.0f ', memreq+memoverhead)];
     end
     
     if compile
@@ -211,20 +244,30 @@ switch backend
     end
     
     % pass the command to qsub with all requirements
-    cmdline = sprintf('echo "%s" | qsub -N %s %s -cwd -o %s -e %s', cmdline, jobid, requirements, curPwd, curPwd);
+    cmdline = sprintf('echo "%s" | qsub -N %s %s -cwd -o %s -e %s', cmdline, jobid, submitoptions, curPwd, curPwd);
     
   case 'torque'
     % this is for PBS, Torque, and other derivatives
-    requirements = '';
-    if ~isempty(timreq)
-      requirements = [requirements sprintf('-l walltime=%d ', timreq+timoverhead)];
+    
+    if isempty(submitoptions)
+      % start with an empty string
+      submitoptions = '';
     end
+    
+    if ~isempty(queue)
+      submitoptions = [submitoptions sprintf('-q %s ', queue)];
+    end
+    
+    if ~isempty(timreq)
+      submitoptions = [submitoptions sprintf('-l walltime=%d ', timreq+timoverhead)];
+    end
+    
     if ~isempty(memreq)
       % mem is the real memory, vmem is the virtual, pmem and pvmem relate to the memory per process in case of an MPI job with multiple processes
-      requirements = [requirements sprintf('-l mem=%.0f ',   memreq+memoverhead)];
-      %   requirements = [requirements sprintf('-l vmem=%.0f ',  memreq+memoverhead)];
-      %   requirements = [requirements sprintf('-l pmem=%.0f ',  memreq+memoverhead)];
-      %   requirements = [requirements sprintf('-l pvmem=%.0f ', memreq+memoverhead)];
+      submitoptions = [submitoptions sprintf('-l mem=%.0f ',   memreq+memoverhead)];
+      %   submitoptions = [submitoptions sprintf('-l vmem=%.0f ',  memreq+memoverhead)];
+      %   submitoptions = [submitoptions sprintf('-l pmem=%.0f ',  memreq+memoverhead)];
+      %   submitoptions = [submitoptions sprintf('-l pvmem=%.0f ', memreq+memoverhead)];
     end
     
     % In the command below both stderr and stout are redirected to /dev/null,
@@ -241,11 +284,41 @@ switch backend
     end
     
     % pass the command to qsub with all requirements
-    cmdline = sprintf('echo "%s" | qsub -N %s %s -d %s -o %s -e %s', cmdline, jobid, requirements, curPwd, curPwd, curPwd);
+    cmdline = sprintf('echo "%s" | qsub -N %s %s -d %s -o %s -e %s', cmdline, jobid, submitoptions, curPwd, curPwd, curPwd);
     
   case 'slurm'
     % this is for Simple Linux Utility for Resource Management
-    error('not yet implemented');
+    
+    if isempty(submitoptions)
+      % start with an empty string
+      submitoptions = '';
+    end
+    
+    if ~isempty(queue)
+      % FIXME
+      warning('don''t know how to specify queue "%s" in slurm', queue);
+    end
+    
+    if ~isempty(timreq)
+      submitoptions = [submitoptions sprintf('-l h_rt=%d ', timreq+timoverhead)];
+    end
+    
+    if ~isempty(memreq)
+      submitoptions = [submitoptions sprintf('-l h_vmem=%.0f ', memreq+memoverhead)];
+    end
+    
+    % FIXME specifying the o and e names might be useful for the others as well
+    logout = fullfile(curPwd, sprintf('%s.o', jobid));
+    logerr = fullfile(curPwd, sprintf('%s.e', jobid));
+    
+    if compile
+      % create the command line for the compiled application
+      cmdline = sprintf('%s %s %s', compiledfun, matlabroot, jobid);
+    else
+      % create the shell commands to execute matlab
+      % FIXME nohup might be useful for the others as well
+      cmdline = sprintf('nohup srun -n1 --job-name=%s --output=%s --error=%s %s %s -r "%s" &', jobid, logout, logerr, submitoptions, matlabcmd, matlabscript);
+    end
     
   otherwise
     error('unsupported backend "%s"', backend);

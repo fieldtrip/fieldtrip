@@ -19,6 +19,8 @@ function varargout = qsubcellfun(fname, varargin)
 %   stack          = number, stack multiple jobs in a single qsub job (default = 'auto')
 %   backend        = string, can be 'sge', 'torque', 'slurm', 'local' (default is automatic)
 %   compile        = string, can be 'auto', 'yes', 'no' (default = 'no')
+%   queue          = string, which queue to submit the job in (default is empty)
+%   options        = string, additional options that will be passed to qsub/srun (default is empty)
 %
 % It is required to give an estimate of the time and memory requirements of
 % the individual jobs. The memory requirement of the MATLAB executable
@@ -103,6 +105,8 @@ memreq        = ft_getopt(optarg, 'memreq');
 stack         = ft_getopt(optarg, 'stack',   'auto');   % 'auto' or a number
 compile       = ft_getopt(optarg, 'compile', 'no');     % can be 'auto', 'yes' or 'no'
 backend       = ft_getopt(optarg, 'backend', []);       % this will be dealt with in qsubfeval
+queue         = ft_getopt(optarg, 'queue', []);
+submitoptions = ft_getopt(optarg, 'options', []);
 
 % skip the optional key-value arguments
 if ~isempty(optbeg)
@@ -294,10 +298,10 @@ for submit=1:numjob
   % submit the job
   if ~isempty(fcomp)
     % use the compiled version
-    [curjobid curputtime] = qsubfeval(fcomp, argin{:}, 'memreq', memreq, 'timreq', timreq, 'diary', diary, 'batch', batch, 'backend', backend);
+    [curjobid curputtime] = qsubfeval(fcomp, argin{:}, 'memreq', memreq, 'timreq', timreq, 'diary', diary, 'batch', batch, 'backend', backend, 'options', submitoptions, 'queue', queue);
   else
     % use the non-compiled version
-    [curjobid curputtime] = qsubfeval(fname, argin{:}, 'memreq', memreq, 'timreq', timreq, 'diary', diary, 'batch', batch, 'backend', backend);
+    [curjobid curputtime] = qsubfeval(fname, argin{:}, 'memreq', memreq, 'timreq', timreq, 'diary', diary, 'batch', batch, 'backend', backend, 'options', submitoptions, 'queue', queue);
   end
   
   % fprintf('submitted job %d\n', submit);

@@ -11,7 +11,7 @@ function [fcomp] = qsubcompile(fname, varargin)
 %   argout      = qsubcellfun(compiledfun, argin, ...)
 % or
 %   compiledfun = qsubcompile(fname)
-%   jobid       = qsubfexec(compiledfun, argin, ...)
+%   jobid       = qsubfeval(compiledfun, argin, ...)
 %   argout      = qsubget(jobid)
 %
 % When executing a single batch of jobs using QSUBCELLFUN, you can also
