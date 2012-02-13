@@ -10,7 +10,7 @@ eeginfo = datainfo(3);
 meginfo = datainfo(7);
 
 % do the MEG processing
-fname = [meginfo.origdir,'latest/raw/',meginfo.type,'preproc_',meginfo.datatype];
+fname = fullfile(meginfo.origdir,'latest', 'raw',meginfo.type,['preproc_' meginfo.datatype]);
 load(fname);
 
 cfg = [];
@@ -37,3 +37,58 @@ newdata = ft_channelrepair(cfg, data);
 % cfg.neighbours = neighbours;
 % newdata = ft_channelrepair(cfg, data);
 
+
+%% part 2 - missing channels and EEG data
+% make use of bug941 data
+% load data
+if ispc
+    home_dir = 'H:';
+else    
+    home_dir = 'home';cd /home/common/matlab/fieldtrip/data/test/
+end
+main_dir = fullfile(home_dir, 'common', 'matlab', 'fieldtrip', 'data', 'test');
+bug_data = 'bug941.mat';
+load(fullfile(main_dir, bug_data));
+
+% treat as a bad channel
+data_eeg_clean.elec = elec_new;
+cfg = [];
+cfg.badchannel = {'25'};
+cfg.neighbours = neighbours;
+data_eeg_repaired = ft_channelrepair(cfg,data_eeg_clean);
+
+cfg = [];
+cfg.channel = {'19','20','24','25','26'};
+ft_databrowser(cfg, data_eeg_repaired);
+
+% treat as a missing channel
+data_eeg_miss = data_eeg_clean;
+data_eeg_miss.label(25) = []; % remove channel 25
+
+for i=1:numel(data_eeg_miss.trial) 
+  data_eeg_miss.trial{i}(25, :) = []; % remove data from channel 25
+end
+
+cfg = [];
+cfg.missingchannel = {'25'};
+cfg.neighbours = neighbours;
+data_eeg_interp = ft_channelrepair(cfg,data_eeg_miss);
+
+cfg = [];
+cfg.channel = {'19','20','24','25','26'};
+ft_databrowser(cfg, data_eeg_interp);
+
+% check for each trial whether the value for channel 25 is in between its 
+% neighbours (it's now the last channel), and equals data_eeg_repaired
+cfg.neighbours = [19 20 24 26];
+for tr=1:numel(data_eeg_interp.trial)
+  tmp = repmat(data_eeg_interp.trial{tr}(end, :), 4, 1);
+  if all(tmp < data_eeg_interp.trial{tr}(cfg.neighbours, :)) | ...
+      all(tmp > data_eeg_interp.trial{tr}(cfg.neighbours, :))
+    error(['The average is not in between its channel neighbours at for trial ' num2str(tr)]);
+  elseif ~all(data_eeg_interp.trial{tr}(end, :) == data_eeg_repaired.trial{tr}(25, :))
+    error('The reconstruction of the same channel differs when being treated as a missing channel compared to a bad channel');
+  else
+    fprintf('trial %i is fine\n', tr);
+  end
+end
