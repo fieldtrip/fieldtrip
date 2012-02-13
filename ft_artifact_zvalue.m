@@ -231,7 +231,7 @@ for trlop = 1:numtrl
     
     nsmp          = size(dat,2);
     zdata         = (dat - datavg(:,ones(1,nsmp)))./datstd(:,ones(1,nsmp));  % convert the filtered data to z-values
-    zsum{trlop}   = sum(zdata,1);                   % accumulate the z-values over channels
+    zsum{trlop}   = nansum(zdata,1);                   % accumulate the z-values over channels
     [zmax{trlop},ind] = max(zdata,[],1);            % find the maximum z-value and remember it
     zindx{trlop}      = sgnind(ind);                % also remember the channel number that has the largest z-value
   else
@@ -242,7 +242,7 @@ for trlop = 1:numtrl
     
     nsmp          = size(dat{trlop},2);
     zdata         = (dat{trlop} - datavg(:,ones(1,nsmp)))./datstd(:,ones(1,nsmp));  % convert the filtered data to z-values
-    zsum{trlop}   = sum(zdata,1);                   % accumulate the z-values over channels
+    zsum{trlop}   = nansum(zdata,1);                   % accumulate the z-values over channels
     [zmax{trlop},ind] = max(zdata,[],1);            % find the maximum z-value and remember it
     zindx{trlop}      = sgnind(ind);                % also remember the channel number that has the largest z-value
   end
