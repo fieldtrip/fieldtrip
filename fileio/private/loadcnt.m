@@ -7,8 +7,10 @@
 %   filename - name of the file with extension
 %
 % Optional inputs:
-%  't1'         - start at time t1, default 0
-%  'sample1'    - start at sample1, default 0, overrides t1
+%  't1'         - start at time t1, default 0. Warning, events latency
+%                 might be innacurate (this is an open issue).
+%  'sample1'    - start at sample1, default 0, overrides t1. Warning,
+%                 events latency might be innacurate.
 %  'lddur'      - duration of segment to load, default = whole file
 %  'ldnsamples' - number of samples to load, default = whole file,
 %                 overrides lddur
@@ -39,8 +41,6 @@
 % Known limitations:
 %  For more see http://www.cnl.salk.edu/~arno/cntload/index.html
 
-%123456789012345678901234567890123456789012345678901234567890123456789012
-
 % Copyright (C) 2000 Sean Fitzgibbon, <psspf@id.psy.flinders.edu.au>
 % Copyright (C) 2003 Arnaud Delorme, Salk Institute, arno@salk.edu
 %
@@ -57,7 +57,6 @@
 % You should have received a copy of the GNU General Public License
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-%
 
 function [f,lab,ev2p] = loadcnt(filename,varargin)
 
@@ -72,7 +71,7 @@ try, r.lddur;      catch, r.lddur=[]; end
 try, r.ldnsamples; catch, r.ldnsamples=[]; end
 try, r.scale;      catch, r.scale='on'; end
 try, r.blockread;  catch, r.blockread = []; end
-try, r.dataformat; catch, r.dataformat = 'int16'; end
+try, r.dataformat; catch, r.dataformat = 'auto'; end
 try, r.memmapfile; catch, r.memmapfile = ''; end
 
 
@@ -311,6 +310,17 @@ end
 % finding if 32-bits of 16-bits file
 % ----------------------------------
 begdata = ftell(fid);
+if strcmpi(r.dataformat, 'auto')
+  r.dataformat = 'int16';
+  if (h.nextfile > 0)
+    fseek(fid,h.nextfile+52,'bof');
+    is32bit = fread(fid,1,'char');
+    if (is32bit == 1)
+      r.dataformat = 'int32'
+    end;
+    fseek(fid,begdata,'bof');
+  end;
+end;
 enddata = h.eventtablepos;   % after data
 if strcmpi(r.dataformat, 'int16')
   nums    = (enddata-begdata)/h.nchannels/2;
@@ -325,8 +335,8 @@ else
   r.sample1 = r.t1*h.rate;
 end;
 if strcmpi(r.dataformat, 'int16')
-  startpos = round(r.t1*h.rate*2*h.nchannels);
-else startpos = round(r.t1*h.rate*4*h.nchannels);
+  startpos = r.t1*h.rate*2*h.nchannels;
+else startpos = r.t1*h.rate*4*h.nchannels;
 end;
 if isempty(r.ldnsamples)
   if ~isempty(r.lddur)
@@ -334,9 +344,6 @@ if isempty(r.ldnsamples)
   else r.ldnsamples = nums;
   end;
 end;
-
-% VL modification 1 =========================
-h.nums = nums;
 
 % channel offset
 % --------------
@@ -354,10 +361,7 @@ if type == 'cnt'
   % while (ftell(fid) +1 < h.eventtablepos)
   %d(:,i)=fread(fid,h.nchannels,'int16');
   %end
-  if fseek(fid, startpos, 'cof')<0
-    fclose(fid);
-    error('fseek failed');
-  end
+  fseek(fid, startpos, 0);
   % **** This marks the beginning of the code modified for reading
   % large .cnt files
   
@@ -379,9 +383,9 @@ if type == 'cnt'
     data_block = 4000000 ;
     max_rows =  data_block / h.nchannels ;
     
-    ws = warning('off');
+    %warning off ;
     max_written = h.nchannels * uint32(max_rows) ;
-    warning(ws);
+    %warning on ;
     
     % This while look tracks the remaining samples.  The
     % data is processed in chunks rather than put into
@@ -442,11 +446,17 @@ if type == 'cnt'
   % original code.
   if (bReadIntoMemory == true)
     if h.channeloffset <= 1
-      dat=fread(fid, [h.nchannels r.ldnsamples], r.dataformat);
+      dat=fread(fid, [h.nchannels Inf], r.dataformat);
+      if size(dat,2) < r.ldnsamples
+        dat=single(dat);
+        r.ldnsamples = size(dat,2);
+      else
+        dat=single(dat(:,1:r.ldnsamples));
+      end;
     else
       h.channeloffset = h.channeloffset/2;
       % reading data in blocks
-      dat = zeros( h.nchannels, r.ldnsamples);
+      dat = zeros( h.nchannels, r.ldnsamples, 'single');
       dat(:, 1:h.channeloffset) = fread(fid, [h.channeloffset h.nchannels], r.dataformat)';
       
       counter = 1;
@@ -470,9 +480,7 @@ if type == 'cnt'
   end ;
   
   ET_offset = (double(h.prevfile) * (2^32)) + double(h.eventtablepos);    % prevfile contains high order bits of event table offset, eventtablepos contains the low order bits
-  if fseek(fid, ET_offset, 'bof')<0
-    error('fseek failed');
-  end
+  fseek(fid, ET_offset, 'bof');
   
   disp('Reading Event Table...')
   eT.teeg   = fread(fid,1,'uchar');
@@ -578,8 +586,7 @@ if type == 'cnt'
   %%%% to change offest in bytes to points
   if ~isempty(ev2)
     if r.sample1 ~= 0
-      % VL modification 2 =========================
-      % fprintf(2,'Warning: events imported with a time shift might be innacurate (bug 661)\n');
+      fprintf(2,'Warning: events imported with a time shift might be innacurate\n');
     end;
     ev2p=ev2;
     ioff=900+(h.nchannels*75); %% initial offset : header + electordes desc
@@ -595,6 +602,7 @@ if type == 'cnt'
     f.event = ev2p;
   end;
   
+  frewind(fid);
   fclose(fid);
   
 end
