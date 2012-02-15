@@ -163,6 +163,9 @@ cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'});
 if ~isempty(cfg.preproc)
   % preprocess the data, i.e. apply filtering, baselinecorrection, etc.
   fprintf('applying preprocessing options\n');
+  if ~isfield(cfg.preproc, 'feedback')
+    cfg.preproc.feedback = cfg.feedback;
+  end
   data = ft_preprocessing(cfg.preproc, data);
 end
 

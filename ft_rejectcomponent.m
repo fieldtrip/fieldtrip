@@ -66,6 +66,7 @@ cfg.component  = ft_getopt(cfg, 'component',  []);
 cfg.inputfile  = ft_getopt(cfg, 'inputfile',  []);
 cfg.outputfile = ft_getopt(cfg, 'outputfile', []);
 cfg.demean     = ft_getopt(cfg, 'demean',    'yes');
+cfg.feedback   = ft_getopt(cfg, 'feedback',  'text');
 
 % the data can be passed as input arguments or can be read from disk
 nargin = 1;
@@ -162,7 +163,7 @@ montage          = [];
 montage.tra      = tra;
 montage.labelorg = labelorg;
 montage.labelnew = labelnew;
-data             = ft_apply_montage(data, montage, 'keepunused', keepunused);
+data             = ft_apply_montage(data, montage, 'keepunused', keepunused, 'feedback', cfg.feedback);
 if isfield(data, 'grad') || (isfield(data, 'elec') && isfield(data.elec, 'tra')),
   if isfield(data, 'grad')
     sensfield = 'grad';
@@ -172,7 +173,7 @@ if isfield(data, 'grad') || (isfield(data, 'elec') && isfield(data.elec, 'tra'))
   % keepunused = 'yes' is required to get back e.g. reference or otherwise
   % unused sensors in the sensor description. the unused components need to
   % be removed in a second step
-  tmp = ft_apply_montage(data.(sensfield), montage, 'keepunused', 'yes', 'balancename', 'invcomp');
+  tmp = ft_apply_montage(data.(sensfield), montage, 'keepunused', 'yes', 'balancename', 'invcomp', 'feedback', cfg.feedback);
   
   % there could have been sequential subspace projections, so the
   % invcomp-field may have been renamed into invcompX. If this it the case,
