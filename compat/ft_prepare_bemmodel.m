@@ -5,22 +5,21 @@ function [vol, cfg] = ft_prepare_bemmodel(cfg, mri)
 % computes the BEM system matrix.
 %
 % Use as
-%   [vol, cfg] = ft_prepare_bemmodel(cfg, mri), or
-%   [vol, cfg] = ft_prepare_bemmodel(cfg, seg), or
-%   [vol, cfg] = ft_prepare_bemmodel(cfg, vol), or
-%   [vol, cfg] = ft_prepare_bemmodel(cfg)
+%   [vol] = ft_prepare_bemmodel(cfg, mri), or
+%   [vol] = ft_prepare_bemmodel(cfg, seg), or
+%   [vol] = ft_prepare_bemmodel(cfg, vol), or
+%   [vol] = ft_prepare_bemmodel(cfg)
 %
 % The configuration can contain
 %   cfg.tissue         = [1 2 3], segmentation value of each tissue type
 %   cfg.numvertices    = [Nskin_surface Nouter_skull_surface Ninner_skull_surface]
 %   cfg.conductivity   = [Cskin_surface Couter_skull_surface Cinner_skull_surface]
-%   cfg.method         = 'dipoli', 'openmeeg', 'brainstorm' or 'bemcp'
+%   cfg.hdmfile        = string, file containing the volume conduction model (can be empty)
 %   cfg.isolatedsource = compartment number, or 0
+%   cfg.method         = 'dipoli', 'openmeeg', 'brainstorm' or 'bemcp'
+%
 % Although the example configuration uses 3 compartments, you can use
 % an arbitrary number of compartments.
-%
-% When the headmodel should be derived from the cfg, see FT_FETCH_VOL
-%
 %
 % This function implements
 %   Oostendorp TF, van Oosterom A.
@@ -54,6 +53,7 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble help
+ft_preamble callinfo
 ft_preamble trackconfig
 
 % set the defaults
@@ -64,16 +64,15 @@ if ~isfield(cfg, 'isolatedsource'), cfg.isolatedsource = [];                 end
 if ~isfield(cfg, 'method'),         cfg.method = 'dipoli';                   end % dipoli, openmeeg, bemcp, brainstorm
 
 % start with an empty volume conductor
-vol = [];
-if ~isempty(cfg.hdmfile)
-  hdm = ft_read_vol(hdmfile);
-  % copy the boundary of the head model file into the volume conduction model
+try
+  hdm = ft_fetch_vol(cfg);
   vol.bnd = hdm.bnd;
   if isfield(hdm, 'cond')
     % also copy the conductivities
     vol.cond = hdm.cond;
   end
-else % if specified as second input argument
+catch
+  vol = [];
   geom = mri;
   % copy the boundaries from the geometry into the volume conduction model
   vol.bnd = geom.bnd;
@@ -313,4 +312,12 @@ elseif strcmp(cfg.method, 'brainstorm')
 else
   error('unsupported method');
 end % which method
+
+% ensure that the geometrical units are specified
+vol = ft_convert_units(vol);
+
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+ft_postamble history vol
 
