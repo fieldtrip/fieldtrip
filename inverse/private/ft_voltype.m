@@ -46,6 +46,8 @@ function [type] = ft_voltype(vol, desired)
 % these are for remembering the type on subsequent calls with the same input arguments
 persistent previous_argin previous_argout
 
+vol = ft_datatype_headmodel(vol);
+
 if iscell(vol) && numel(vol)<4
   % this might represent combined EEG, ECoG and/or MEG
   type = cell(size(vol));
@@ -90,8 +92,8 @@ elseif isfield(vol, 'r') && isfield(vol, 'o') && size(vol.r,1)==size(vol.o,1) &&
 elseif isfield(vol, 'r') && numel(vol.r)>=2 && ~isfield(vol, 'label')
   type = 'concentric';
 
-elseif isfield(vol, 'bnd')
-  type = 'bem';
+elseif isfield(vol, 'bnd') && strcmp(type, {'bem_dipoli', 'bem_asa', 'bem_avo', 'bemcp', 'bem_openmeeg'})
+  type = any(strcmp(type, {'bem_dipoli', 'bem_asa', 'bem_avo', 'bemcp', 'bem_openmeeg'}));
 
 elseif isempty(vol)
   type = 'infinite';
@@ -102,13 +104,7 @@ else
 end % if isfield(vol, 'type')
 
 if ~isempty(desired)
-  % return a boolean flag
-  switch desired
-    case 'bem'
-      type = any(strcmp(type, {'bem', 'dipoli', 'asa', 'avo', 'bemcp', 'openmeeg'}));
-    otherwise
-      type = any(strcmp(type, desired));
-  end
+  type = any(strcmp(type, desired));
 end
 
 % remember the current input and output arguments, so that they can be

@@ -33,17 +33,19 @@ for i=1:size(optarg,1)
   tmpcfg = keyval2cfg(arg{:});
   tmpcfg.method = 'bemcp';
   vol{2} = ft_prepare_bemmodel(tmpcfg,geom);
-
+  vol{2} = rmfield(vol{2},'unit');
+  
   % new way - high level:
   tmpcfg = keyval2cfg(arg{:});
   tmpcfg.method = 'bem_cp';
   vol{3} = ft_prepare_headmodel(tmpcfg,geom.bnd);
+  vol{3} = rmfield(vol{3},'unit');
 
   % compare the volume conductor structures
   comb = nchoosek(1:numel(vol),2);
   
-  for i=1:size(comb,1)
-    chk = comb(i,:);
+  for j=1:size(comb,1)
+    chk = comb(j,:);
     try
       if ~isequal(vol{chk(1)},vol{chk(2)})
         str = sprintf('combination %d %d not successful\n',chk(1),chk(2));

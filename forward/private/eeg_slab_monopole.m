@@ -64,13 +64,13 @@ for i=1:Npoles
   r4 = elc - ones(Nelc,1) * pole4;
   
   % denominator
-  R1 =  (4*pi*vol.cond) * (sum(r1' .^2 ) )';
+  R1 =  (4*pi*vol.cond) * sqrt(sum(r1' .^2 ) )';
   % denominator, mirror term
-  R2 = -(4*pi*vol.cond) * (sum(r2' .^2 ) )';
+  R2 = -(4*pi*vol.cond) * sqrt(sum(r2' .^2 ) )';
   % denominator, mirror term of P1, plane 2
-  R3 = -(4*pi*vol.cond) * (sum(r3' .^2 ) )';  
+  R3 = -(4*pi*vol.cond) * sqrt(sum(r3' .^2 ) )';  
   % denominator, mirror term of P2, plane 2
-  R4 =  (4*pi*vol.cond) * (sum(r4' .^2 ) )';    
+  R4 =  (4*pi*vol.cond) * sqrt(sum(r4' .^2 ) )';    
   
   % condition of poles falling in the non conductive halfspace    
   instrip1 = acos(dot(vol.ori1,(pole1-vol.pnt1)./norm(pole1-vol.pnt1))) > pi/2;
