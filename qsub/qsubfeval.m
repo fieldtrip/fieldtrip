@@ -46,6 +46,7 @@ function [jobid, puttime] = qsubfeval(varargin)
 % these are used to speed up the processing of multiple function calls with
 % the same input arguments (e.g. from peercellfun)
 persistent previous_argin
+persistent previous_matlabcmd
 
 % keep track of the time
 stopwatch = tic;
@@ -141,48 +142,59 @@ optin = options;
 save(inputfile, 'argin', 'optin');
 
 if ~compile
-  if matlabversion(7.1)
-    matlabcmd = 'matlab71';
-  elseif matlabversion(7.2)
-    matlabcmd = 'matlab72';
-  elseif matlabversion(7.3)
-    matlabcmd = 'matlab73';
-  elseif matlabversion(7.4)
-    matlabcmd = 'matlab74';
-  elseif matlabversion(7.5)
-    matlabcmd = 'matlab75';
-  elseif matlabversion(7.6)
-    matlabcmd = 'matlab76';
-  elseif matlabversion(7.7)
-    matlabcmd = 'matlab77';
-  elseif matlabversion(7.8) % 2009a
-    matlabcmd = 'matlab78';
-  elseif matlabversion(7.9) % 2009b
-    matlabcmd = 'matlab79';
-  elseif matlabversion('2010a')
-    matlabcmd = 'matlab2010a';
-  elseif matlabversion('2010b')
-    matlabcmd = 'matlab2010b';
-  elseif matlabversion('2011a')
-    matlabcmd = 'matlab2011a';
-  elseif matlabversion('2011b')
-    matlabcmd = 'matlab2011b';
-  elseif matlabversion('2012a')
-    matlabcmd = 'matlab2012a';
-  elseif matlabversion('2012b')
-    matlabcmd = 'matlab2012b';
+
+  if isempty(previous_matlabcmd)
+    % determine the name of the matlab startup script
+    if matlabversion(7.1)
+      matlabcmd = 'matlab71';
+    elseif matlabversion(7.2)
+      matlabcmd = 'matlab72';
+    elseif matlabversion(7.3)
+      matlabcmd = 'matlab73';
+    elseif matlabversion(7.4)
+      matlabcmd = 'matlab74';
+    elseif matlabversion(7.5)
+      matlabcmd = 'matlab75';
+    elseif matlabversion(7.6)
+      matlabcmd = 'matlab76';
+    elseif matlabversion(7.7)
+      matlabcmd = 'matlab77';
+    elseif matlabversion(7.8) % 2009a
+      matlabcmd = 'matlab78';
+    elseif matlabversion(7.9) % 2009b
+      matlabcmd = 'matlab79';
+    elseif matlabversion('2010a')
+      matlabcmd = 'matlab2010a';
+    elseif matlabversion('2010b')
+      matlabcmd = 'matlab2010b';
+    elseif matlabversion('2011a')
+      matlabcmd = 'matlab2011a';
+    elseif matlabversion('2011b')
+      matlabcmd = 'matlab2011b';
+    elseif matlabversion('2012a')
+      matlabcmd = 'matlab2012a';
+    elseif matlabversion('2012b')
+      matlabcmd = 'matlab2012b';
+    else
+      % use whatever is available as default
+      matlabcmd = 'matlab';
+    end
+
+    if system(sprintf('which %s > /dev/null', matlabcmd))==1
+      % the linux command "which" returns 0 on succes and 1 on failure
+      warning('the executable for "%s" could not be found, trying "matlab" instead', matlabcmd);
+      % use whatever is available as default
+      matlabcmd = 'matlab';
+    end
+
+    % keep the matlab command for subsequent calls, this will save all the matlabversion calls
+    % and the system('which ...') call on the scheduling of subsequent distributed jobs
+    previous_matlabcmd = matlabcmd;
   else
-    % use whatever is available as default
-    matlabcmd = 'matlab';
+    % re-use the matlab command that was determined on the previous call to this function
+    matlabcmd = previous_matlabcmd;
   end
-  
-  if system(sprintf('which %s', matlabcmd))==1
-    % the linux command "which" returns 0 on succes and 1 on failure
-    warning('the executable for "%s" could not be found, trying "matlab" instead', matlabcmd);
-    % use whatever is available as default
-    matlabcmd = 'matlab';
-  end
-  
+
   if matlabversion(7.8, inf)
     % this is only supported for version 7.8 onward
     matlabcmd = [matlabcmd ' -singleCompThread'];
@@ -288,26 +300,28 @@ switch backend
     
   case 'slurm'
     % this is for Simple Linux Utility for Resource Management
-    
+   
     if isempty(submitoptions)
       % start with an empty string
       submitoptions = '';
     end
     
     if ~isempty(queue)
-      % FIXME
-      warning('don''t know how to specify queue "%s" in slurm', queue);
+      % with slurm queues are "partitions"
+      submitoptions = [submitoptions sprintf('--partition=%s ', queue)]; 
     end
     
     if ~isempty(timreq) && ~isnan(timreq) && ~isinf(timreq)
-      submitoptions = [submitoptions sprintf('-l h_rt=%d ', timreq+timoverhead)];
+      % TESTME this is experimental and needs more testing!
+      % submitoptions = [submitoptions sprintf('--time=%d ', timreq+timoverhead)]; 
     end
     
     if ~isempty(memreq) && ~isnan(memreq) && ~isinf(memreq)
-      submitoptions = [submitoptions sprintf('-l h_vmem=%.0f ', memreq+memoverhead)];
+      % TESTME this is experimental and needs more testing!
+      % submitoptions = [submitoptions sprintf('--mem-per-cpu=%.0f ', round((memreq+memoverhead)./1024^2))]; 
     end
     
-    % FIXME specifying the o and e names might be useful for the others as well
+    % specifying the o and e names might be useful for the others as well
     logout = fullfile(curPwd, sprintf('%s.o', jobid));
     logerr = fullfile(curPwd, sprintf('%s.e', jobid));
     
@@ -316,8 +330,13 @@ switch backend
       cmdline = sprintf('%s %s %s', compiledfun, matlabroot, jobid);
     else
       % create the shell commands to execute matlab
-      % FIXME nohup might be useful for the others as well
-      cmdline = sprintf('nohup srun -n1 --job-name=%s --output=%s --error=%s %s %s -r "%s" &', jobid, logout, logerr, submitoptions, matlabcmd, matlabscript);
+      % we decided to use srun instead of sbatch since handling job paramters is easier this way
+      %
+      % nohup was found to signficantly speed up the submission. Due to the existing error handling its safe to detach to the init, but debugging 
+      % gets harder since output will be redirected to nohpu.out and thus overwritten everytime qsubfeval is launched. Using nohup only makes sense 
+      % if you intend to sumbit jobs which compute in less than a minute since the difference in submit time is about 3-4 seconds per job only!
+      % cmdline = sprintf('nohup srun --job-name=%s %s --output=%s --error=%s %s -r "%s" & ', jobid, submitoptions, logout, logerr, matlabcmd, matlabscript); 
+      cmdline = sprintf('srun --job-name=%s %s --output=%s --error=%s %s -r "%s" ', jobid, submitoptions, logout, logerr, matlabcmd, matlabscript); 
     end
     
   otherwise
@@ -327,7 +346,18 @@ end % switch
 
 fprintf('submitting job %s...', jobid);
 [status, result] = system(cmdline);
-fprintf(' qstat job id %s\n', strtrim(result));
+
+switch backend
+case 'slurm'
+  % srun will not return a jobid (besides in verbose mode) we decided to use jobname=jobid instead to identify processes 
+  % since the jobid is a uniq identifier for every job! 
+  result = jobid; 
+otherwise
+  % for torque and sge it is enough to remove the white space
+  result = strtrim(result);
+end
+
+fprintf(' qstat job id %s\n', result);
 
 % both Torque and SGE will return a log file with stdout and stderr information
 % for local execution we have to emulate these files, because qsubget expects them
@@ -339,7 +369,7 @@ if strcmp(backend, 'local')
 end
 
 % add the job to the persistent list, this is used for cleanup in case of Ctrl-C
-qsublist('add', jobid, strtrim(result));
+qsublist('add', jobid, result);
 
 puttime = toc(stopwatch);
 
