@@ -470,7 +470,7 @@ switch cfg.method
     %sphere  = state.V;
     
     mixing = state.A;
-    unmixing = [];
+    unmixing = state.B;
     
     % remember the updated configuration details
     cfg.dss.denf      = state.denf;
