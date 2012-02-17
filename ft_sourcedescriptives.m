@@ -541,7 +541,7 @@ elseif ismneavg
       ft_progress(diplop/length(source.inside), 'computing power %d/%d\n', diplop, length(source.inside));
       mom = source.avg.mom{source.inside(diplop)};
       mmom = mean(mom(:,begsmp:endsmp),2);
-      smom = std(mom(:,begsmp:endsmp),2);
+      smom = std(mom(:,begsmp:endsmp),[],2);
       pow  = sum(((mom-mmom(:,ones(size(mom,2),1)))./smom(:,ones(size(mom,2),1))).^2,1); 
       source.avg.pow(source.inside(diplop),:) = pow;
       %source.avg.absmom(source.inside(diplop),:) = sum((mom-mmom)./smom,1);
