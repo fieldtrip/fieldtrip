@@ -59,7 +59,7 @@ keepfilter     = istrue(ft_getopt(varargin, 'keepfilter', false));
 dowhiten       = istrue(ft_getopt(varargin, 'prewhiten',  false));
 doscale        = istrue(ft_getopt(varargin, 'scalesourcecov', false));
 
-if isempty(lambda) && isempty(snr)
+if isempty(lambda) && isempty(snr) && ~isfield(dip, 'filter')
   error('either lambda or snr should be specified');
 elseif ~isempty(lambda) && ~isempty(snr)
   error('either lambda or snr should be specified, not both');
@@ -133,7 +133,7 @@ if ~isfield(dip, 'filter')
       
       % compute the prewhitening matrix
       [U,S,V] = svd(C);
-      Tol     = 1e-8;
+      Tol     = 1e-12;
       diagS   = diag(S);
       sel     = find(diagS>Tol.*diagS(1));
       
@@ -192,12 +192,14 @@ else
   
   % if the filter has been pre computed
   fprintf('using pre-computed spatial filters\n');
+  dipout.mom = cell(size(dip.pos,1),1);
   for i=dip.inside
     dipout.mom{i} = dip.filter{i} * dat;
   end
   dipout.mom(dip.outside) = {nan};
   
 end
+
 % for convenience also compute power (over the three orientations) at each location and for each time
 dipout.pow = nan( size(dipout.mom,2), size(dat,2));
 for i=dip.inside
@@ -209,16 +211,32 @@ dipout.pos     = dip.pos;
 dipout.inside  = dip.inside;
 dipout.outside = dip.outside;
 
-if keepfilter && ~isfield(dip, 'filter')
+if (keepfilter || ~isempty(noisecov)) && ~isfield(dip, 'filter')
   % re-assign spatial filter to conventional 1 cell per dipole location
   n = 1;
   for i=dip.inside
     cbeg = n;
     cend = n + size(dip.leadfield{i}, 2) - 1;
-    dipout.filter{i} = w(cbeg:cend,:);
+    
+    if keepfilter
+      dipout.filter{i} = w(cbeg:cend,:);
+    end
+    
+    if ~isempty(noisecov)
+      dipout.noisecov{i} = w(cbeg:cend,:)*noisecov*w(cbeg:cend,:)';
+    end
+    
     n = n + size(dip.leadfield{i}, 2);
   end
-  dipout.filter(dip.outside) = {nan};
+  
+  if keepfilter,         dipout.filter(dip.outside)  = {nan}; end
+  if ~isempty(noisecov), dipout.noisecov(dip.outside) = {nan}; end
 elseif isfield(dip, 'filter')
   dipout.filter = dip.filter;
+  if ~isempty(noisecov)
+    for i=dip.inside
+      dipout.noisecov{i} = dipout.filter{i}*noisecov*dipout.filter{i}';
+    end
+    dipout.noisecov(dip.outside) = {nan};
+  end
 end

@@ -504,6 +504,10 @@ elseif ismneavg
   end
 
   if projectmom
+    if isfield(source, 'tri')
+      nrm = normals(source.pos, source.tri, 'vertex');
+      source.avg.phi = zeros(size(source.pos,1),1);
+    end
     ft_progress('init', cfg.feedback, 'projecting dipole moment');
     for diplop=1:length(source.inside)
       ft_progress(diplop/length(source.inside), 'projecting dipole moment %d/%d\n', diplop, length(source.inside));
@@ -511,6 +515,18 @@ elseif ismneavg
       [mom, rmom] = svdfft(mom, 1);
       source.avg.mom{source.inside(diplop)} = mom;
       source.avg.ori{source.inside(diplop)} = rmom;
+    end
+    if isfield(source, 'tri')
+      for diplop = source.inside(:)'
+        source.avg.phi(diplop) = source.avg.ori{diplop}*nrm(diplop,:)';
+      end
+    end
+    if isfield(source.avg, 'noisecov')
+      source.avg.noise = nan+zeros(size(source.pos,1),1);
+      for diplop=1:length(source.inside)
+        rmom = source.avg.ori{source.inside(diplop)};
+        source.avg.noise(source.inside(diplop)) = rmom*source.avg.noisecov{source.inside(diplop)}*rmom';
+      end
     end
     ft_progress('close');
   end
@@ -520,28 +536,28 @@ elseif ismneavg
     endsmp = nearest(source.time, cfg.baselinewindow(2));
     % zscore using baselinewindow for power
     ft_progress('init', cfg.feedback, 'computing power');
-    source.avg.absmom = source.avg.pow;
+    %source.avg.absmom = source.avg.pow;
     for diplop=1:length(source.inside)
       ft_progress(diplop/length(source.inside), 'computing power %d/%d\n', diplop, length(source.inside));
       mom = source.avg.mom{source.inside(diplop)};
-      mmom = mean(mom(begsmp:endsmp));
-      smom = std(mom(begsmp:endsmp));
-      pow  = sum(((mom-mmom)./smom).^2,1); 
+      mmom = mean(mom(:,begsmp:endsmp),2);
+      smom = std(mom(:,begsmp:endsmp),2);
+      pow  = sum(((mom-mmom(:,ones(size(mom,2),1)))./smom(:,ones(size(mom,2),1))).^2,1); 
       source.avg.pow(source.inside(diplop),:) = pow;
-      source.avg.absmom(source.inside(diplop),:) = sum((mom-mmom)./smom,1);
+      %source.avg.absmom(source.inside(diplop),:) = sum((mom-mmom)./smom,1);
     end
     ft_progress('close');
     
   else
     % just square for power
     ft_progress('init', cfg.feedback, 'computing power');
-    source.avg.absmom = source.avg.pow;
+    %source.avg.absmom = source.avg.pow;
     for diplop=1:length(source.inside)
       ft_progress(diplop/length(source.inside), 'computing power %d/%d\n', diplop, length(source.inside));
       mom = source.avg.mom{source.inside(diplop)};
       pow = sum(mom.^2,1); 
       source.avg.pow(source.inside(diplop),:) = pow;
-      source.avg.absmom(source.inside(diplop),:) = sum(mom,1);
+      %source.avg.absmom(source.inside(diplop),:) = sum(mom,1);
     end
     ft_progress('close');
     
@@ -672,7 +688,7 @@ elseif islcmvtrl
 
 end % dealing with pcc or lcmv input
 
-if isfield(source, 'avg') && isfield(source.avg, 'pow') && isfield(source.avg, 'noise')
+if isfield(source, 'avg') && isfield(source.avg, 'pow') && isfield(source.avg, 'noise') && ~ismneavg
   % compute the neural activity index for the average
   source.avg.nai = source.avg.pow(:) ./ source.avg.noise(:);
 end
