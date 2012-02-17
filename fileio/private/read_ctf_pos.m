@@ -40,3 +40,27 @@ end
 fid   = pnt(isfid,:);
 label = label(isfid);
 pnt   = pnt(~isfid,:);
+
+% average the double occurrences
+[u,i1,i2] = unique(label);
+newlabel  = cell(numel(i1),1);
+newfid    = zeros(numel(i1),3);
+for k = 1:numel(i1)
+  newlabel{k} = u{k};
+  newfid(k,:) = mean(fid(i2==k,:),1);
+end
+fid   = newfid;
+label = newlabel;
+
+% rename the fiducials into lpa/rpa/nasion
+for k = 1:numel(label)
+  if any(strcmp(label{k}, {'nasion' 'nose' 'nz'}))
+    label{k} = 'nas';
+  end
+  if any(strcmp(label{k}, {'left'}))
+    label{k} = 'lpa';
+  end
+  if any(strcmp(label{k}, {'right'}))
+    label{k} = 'rpa';
+  end
+end
