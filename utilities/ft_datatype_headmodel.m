@@ -48,22 +48,22 @@ switch version
       vol = rmfield(vol, 'skin_surface');
     end
     
-    if strcmp(vol.type,'bem')
+    if isfield(vol, 'type') && strcmp(vol.type,'bem')
       error('not able to convert the original ''bem'' volume type, try using vol.type=''bem_dipoli'''); 
     end
-    if strcmp(vol.type,'bem_cp')
+    if isfield(vol, 'type') && strcmp(vol.type,'bem_cp')
       vol.type = 'bemcp';
     end
-    if strcmp(vol.type,'openmeeg')
+    if isfield(vol, 'type') && strcmp(vol.type,'openmeeg')
       vol.type = 'bem_openmeeg';
     end
-    if strcmp(vol.type,'dipoli')
+    if isfield(vol, 'type') && strcmp(vol.type,'dipoli')
       vol.type = 'bem_dipoli';
     end
-    if strcmp(vol.type,'asa')
+    if isfield(vol, 'type') && strcmp(vol.type,'asa')
       vol.type = 'bem_asa';
     end
-    if strcmp(vol.type,'avo')
+    if isfield(vol, 'type') && strcmp(vol.type,'avo')
       vol.type = 'bem_avo';
     end 
     
