@@ -81,6 +81,7 @@ cfg.truncate   = ft_getopt(cfg, 'truncate',   'no');
 cfg.zscore     = ft_getopt(cfg, 'zscore',     'no');
 cfg.trials     = ft_getopt(cfg, 'trials',     'all');
 cfg.pertrial   = ft_getopt(cfg, 'pertrial',   'no');
+cfg.feedback   = ft_getopt(cfg, 'feedback',   'none');
 
 if strcmp(cfg.pertrial, 'yes'),
   tmpcfg          = cfg;
@@ -105,6 +106,7 @@ if length(varargin)==1,
   % split data into data and refdata
   tmpcfg  = [];
   tmpcfg.channel = refchan;
+  tmpcfg.feedback = cfg.feedback;
   refdata = ft_preprocessing(tmpcfg, data);
   tmpcfg.channel = megchan;
   data    = ft_preprocessing(tmpcfg, data);
@@ -118,6 +120,7 @@ else
   % split data into data and refdata
   tmpcfg  = [];
   tmpcfg.channel = refchan;
+  tmpcfg.feedback = cfg.feedback;
   refdata = ft_preprocessing(tmpcfg, refdata);
   tmpcfg.channel = megchan;
   data    = ft_preprocessing(tmpcfg, data);
