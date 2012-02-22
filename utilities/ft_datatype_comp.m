@@ -80,6 +80,10 @@ else
   rawversion = compversion;
 end
 
+if isempty(comp)
+  return;
+end
+
 switch compversion
   case '2011'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

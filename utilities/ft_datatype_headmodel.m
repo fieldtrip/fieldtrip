@@ -40,6 +40,10 @@ if strcmp(version, 'latest')
   version = '2011v2';
 end
 
+if isempty(vol)
+  return;
+end
+
 switch version
     
   case {'2011v2' '2011v1' '2010v2' '2010v1' '2009v2' '2009v1'}

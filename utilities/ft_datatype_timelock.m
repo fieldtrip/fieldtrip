@@ -70,6 +70,10 @@ if strcmp(version, 'latest')
   version = '2011v2';
 end
 
+if isempty(timelock)
+  return;
+end
+
 % ensure consistency between the dimord string and the axes that describe the data dimensions
 timelock = fixdimord(timelock);
 

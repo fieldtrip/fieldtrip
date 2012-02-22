@@ -84,6 +84,10 @@ if strcmp(version, 'latest')
   version = '2011';
 end
 
+if isempty(freq)
+  return;
+end
+
 % ensure consistency between the dimord string and the axes that describe the data dimensions
 freq = fixdimord(freq);
 

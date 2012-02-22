@@ -448,7 +448,7 @@ elseif issource
     % FIXME: drop in replace tcdf from the statfun/private dir
   end
   
-  % reduced models analyses
+  % reduced models vs. full model analyses
   if isfield(cfg, 'Ftest') && ~isempty(cfg.Ftest)
     nvars          = size(cfg.Ftest,1);
     dfe            = nrpt - nconf;                                              % degrees of freedom
@@ -508,7 +508,7 @@ ft_postamble callinfo
 ft_postamble previous datain
 
 % rename the output variable to accomodate the savevar postamble
-data = dataout;
+data = dataout; clear dataout
 
 ft_postamble history data
 ft_postamble savevar data

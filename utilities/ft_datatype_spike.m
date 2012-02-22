@@ -141,6 +141,10 @@ if strcmp(version, 'latest')
   version = '2011';
 end
 
+if isempty(spike)
+  return;
+end
+
 switch version
   case '2011'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

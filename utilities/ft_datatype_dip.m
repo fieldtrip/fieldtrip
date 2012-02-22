@@ -32,3 +32,7 @@ function dip = ft_datatype_dip(dip, varargin)
 %
 % $Id$
 
+if isempty(dip)
+  return;
+end
+

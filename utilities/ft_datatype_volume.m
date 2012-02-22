@@ -68,6 +68,10 @@ if strcmp(version, 'latest')
   version = '2011';
 end
 
+if isempty(volume)
+  return;
+end
+
 % it should  never have contained these, but they might be present due to an unclear
 % distinction between the volume and the source representation
 if isfield(volume, 'xgrid'),     volume = rmfield(volume, 'xgrid');     end
