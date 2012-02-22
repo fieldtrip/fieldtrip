@@ -394,20 +394,30 @@ else
 end
 
 dat = data.(cfg.parameter);
-if isfull
+% get dimord dimensions
+dims = textscan(data.dimord,'%s', 'Delimiter', '_');
+dims = dims{1};
+ydim = find(strcmp(yparam, dims));
+xdim = find(strcmp(xparam, dims));
+zdim = setdiff(1:ndims(dat), [ydim xdim]);
+% and permute
+dat = permute(dat, [zdim(:)' ydim xdim]);
+if isfull  
   dat = dat(sel1, sel2, ymin:ymax, xmin:xmax);
   dat = nanmean(dat, meandir);
   siz = size(dat);
   dat = reshape(dat, [max(siz(1:2)) siz(3) siz(4)]);
   dat = dat(sellab, :, :);
-elseif haslabelcmb
-  dat = dat(sellab, ymin:ymax, xmin:xmax);
+% this makes no sense, so COMMENTED OUT AS OF FEBURARY 22 2012
+% elseif haslabelcmb 
+%   dat = dat(sellab, ymin:ymax, xmin:xmax);
 else
   dat = dat(sellab, ymin:ymax, xmin:xmax);
 end
 
 if ~isempty(cfg.maskparameter)
   mask = data.(cfg.maskparameter);
+  mask = permute(mask, [zdim(:)' ydim xdim]);
   if isfull && cfg.maskalpha == 1
     mask = mask(sel1, sel2, ymin:ymax, xmin:xmax);
     mask = nanmean(nanmean(nanmean(mask, meandir), 4), 3);
