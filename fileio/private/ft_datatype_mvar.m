@@ -78,6 +78,10 @@ if strcmp(version, 'latest')
   version = '2011';
 end
 
+if isempty(mvar)
+  return;
+end
+
 switch version
   case '2011'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

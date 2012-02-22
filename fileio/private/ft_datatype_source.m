@@ -81,6 +81,10 @@ if strcmp(version, 'latest')
   version = '2011';
 end
 
+if isempty(source)
+  return;
+end
+
 % old data structures may use latency/frequency instead of time/freq. It is
 % unclear when these were introduced and removed again, but they were never
 % used by any fieldtrip function itself
