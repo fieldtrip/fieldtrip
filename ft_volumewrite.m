@@ -15,7 +15,7 @@ function ft_volumewrite(cfg, volume)
 %
 % The configuration structure should contain the following elements
 %   cfg.parameter     = string, describing the functional data to be processed,
-%                         e.g. 'pow', 'coh' or 'nai'
+%                         e.g. 'pow', 'coh', 'nai' or 'anatomy'
 %   cfg.filename      = filename without the extension
 %   cfg.filetype      = 'analyze', 'nifti', 'nifti_img', 'analyze_spm', 'mgz',
 %                         'vmp' or 'vmr'
