@@ -41,6 +41,9 @@ function [data] = ft_megplanar(cfg, data)
 % If no headshape is specified, the dipole layer will be based on the inner compartment
 % of the volume conduction model.
 %
+% The following cfg fields are optional:
+%   cfg.feedback
+%
 % To facilitate data-handling and distributed computing with the peer-to-peer
 % module, this function has the following options:
 %   cfg.inputfile   =  ...
@@ -117,12 +120,13 @@ if isfreq,
 end
 
 % set the default configuration
-cfg.channel      = ft_getopt(cfg, 'channel', 'MEG');
-cfg.trials       = ft_getopt(cfg, 'trials',  'all');
+cfg.channel      = ft_getopt(cfg, 'channel',      'MEG');
+cfg.trials       = ft_getopt(cfg, 'trials',       'all');
 cfg.planarmethod = ft_getopt(cfg, 'planarmethod', 'sincos');
-cfg.inputfile    = ft_getopt(cfg, 'inputfile',  []);
-cfg.outputfile   = ft_getopt(cfg, 'outputfile', []);
-
+cfg.inputfile    = ft_getopt(cfg, 'inputfile',    []);
+cfg.outputfile   = ft_getopt(cfg, 'outputfile',   []);
+cfg.feedback     = ft_getopt(cfg, 'feedback',     'text');
+ 
 if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
   % convert the nested config-object back into a normal structure
   cfg.headshape = struct(cfg.headshape);
@@ -268,7 +272,7 @@ else
   planarmontage = eval([fun '(cfg, data.grad)']);
   
   % apply the linear transformation to the data
-  interp  = ft_apply_montage(data, planarmontage, 'keepunused', 'yes');
+  interp  = ft_apply_montage(data, planarmontage, 'keepunused', 'yes', 'feedback', cfg.feedback);
   
   % also apply the linear transformation to the gradiometer definition
   interp.grad = ft_apply_montage(data.grad, planarmontage, 'balancename', 'planar', 'keepunused', 'yes');
