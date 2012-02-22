@@ -1,9 +1,9 @@
 function [conjunction] = ft_conjunctionanalysis(cfg, varargin)
 
-% FT_CONJUNCTIONANALYSIS finds minimalistic (maximum common) T
-% values, clusters and probabilities in the input contrasts (n>=2).
-% Furthermore, the output mask structure shows the overlap of
-% sensors/voxels that are significantly different (logical AND).
+% FT_CONJUNCTIONANALYSIS finds the minimum statistic common across two or 
+% more contrasts, i.e. data following ft_xxxstatistics. Furthermore, it 
+% finds the overlap of sensors/voxels that show statistically significant 
+% results (a logical AND on the mask fields).
 %
 % Alternatively, it finds minimalistic mean power values in the
 % input datasets. Here, a type 'relative change' baselinecorrection
@@ -23,7 +23,7 @@ function [conjunction] = ft_conjunctionanalysis(cfg, varargin)
 % See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS, FT_SOURCESTATISTICS
 
 % Copyright (C) 2010-2012, Arjen Stolk
-%
+
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
 %
