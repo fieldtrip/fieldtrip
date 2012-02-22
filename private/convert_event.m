@@ -69,7 +69,9 @@ elseif iscell(obj)
     % could be a strange trl-matrix with multiple columns
     input_obj = 'trl';
     for i = 1:length(obj)
-      obj{i} = obj{i}(:,1:3);
+      if ~isempty(obj{i})
+        obj{i} = obj{i}(:,1:3);
+      end
     end
   else
     error('incorrect input object, see help for what is allowed.')
