@@ -33,10 +33,6 @@ function [type, dimord] = ft_datatype(data, desired)
 %
 % $Id$
 
-if isempty(data)
-  return;
-end
-
 % determine the type of input data, this can be raw, freq, timelock, comp, spike, source, volume, dip
 israw      =  isfield(data, 'label') && isfield(data, 'time') && isa(data.time, 'cell') && isfield(data, 'trial') && isa(data.trial, 'cell') && ~isfield(data,'trialtime');
 isfreq     = (isfield(data, 'label') || isfield(data, 'labelcmb')) && isfield(data, 'freq') && ~isfield(data,'trialtime') && ~isfield(data,'origtrial'); %&& (isfield(data, 'powspctrm') || isfield(data, 'crsspctrm') || isfield(data, 'cohspctrm') || isfield(data, 'fourierspctrm') || isfield(data, 'powcovspctrm'));
