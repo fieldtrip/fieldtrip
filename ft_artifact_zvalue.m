@@ -134,7 +134,13 @@ if nargin > 1
 elseif nargin == 1
   % only cfg given
   isfetch = 0;
-  hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat); 
+  hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
+  
+  % check whether the value for trlpadding makes sense; negative trlpadding
+  % only allowed with in-memory data
+  if cfg.artfctdef.zvalue.trlpadding < 0
+    error('negative trlpadding is only allowed with in-memory data');
+  end
 end
 
 % set default cfg.continuous
@@ -786,7 +792,7 @@ end
 %--------------------------------------------------
 % get trial specific x-axis values and padding info
 xval = trl(trlop,1):trl(trlop,2);
-if trlpadsmp
+if trlpadsmp>0
   sel    = trlpadsmp:(size(data,2)-trlpadsmp);
   selpad = 1:size(data,2); 
 else
