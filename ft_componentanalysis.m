@@ -537,7 +537,9 @@ switch cfg.method
     mixing   = [];
 
   case 'csp'
-    unmixing = csp(cov(dat1'), cov(dat2'), cfg.csp.numfilters);
+    C1 = cov(dat1');
+    C2 = cov(dat2');
+    unmixing = csp(C1, C2, cfg.csp.numfilters);
     mixing   = [];  % will be computed below
     
   case 'parafac'
