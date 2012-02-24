@@ -849,7 +849,7 @@ if isempty(get(opt.h3, 'children'))
   zval(~artval) = nan;
   plot(xval, zval, 'r-', 'displayname', 'line3b');
   xlabel('samples');
-  ylabel('uV or Tesla');
+  ylabel('zscore');
 else
   % update in the existing handles
   h3children = get(opt.h3, 'children');
