@@ -352,10 +352,6 @@ int main(int argc, char **argv) {
 			case RDA_STOP_MSG:
 				printf("\nRemote Data Acquisition stopped\n\n");
 				break;
-			default:
-				fprintf(stderr, "Unrecognized packet type (%i), has size %i - exiting\n", header.nType, header.nSize);
-				keepRunning = 0;
-				break;
 		}
 		
 		free(buf);

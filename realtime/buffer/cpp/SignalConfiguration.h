@@ -89,7 +89,7 @@ struct ChannelSelection {
 class SignalConfiguration {
 	public:
 	
-	SignalConfiguration() : chanSelSave(), chanSelStream(), 
+	SignalConfiguration() : splitTrigger(0), chanSelSave(), chanSelStream(), 
 							downSample(1), maxChanSave(0), maxChanStream(0), 
 							order(0), bandwidth(-1.0), sampleRate(0.0), 
 							batteryRefresh(10), statusRefresh(2) {};
