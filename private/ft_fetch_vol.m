@@ -42,7 +42,7 @@ function [vol] = ft_fetch_vol(cfg, data)
 %
 
 % check input arguments
-if nargin > 1
+if nargin > 1 && ~isempty(data)
   data = ft_checkdata(data);
   % determine the type of data
   iseeg = ft_senstype(data, 'eeg');
