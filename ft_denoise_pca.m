@@ -86,7 +86,7 @@ cfg.feedback   = ft_getopt(cfg, 'feedback',   'none');
 if strcmp(cfg.pertrial, 'yes'),
   tmpcfg          = cfg;
   tmpcfg.pertrial = 'no';
-  tmp             = cell(numel(varargin{1}.trial));
+  tmp             = cell(numel(varargin{1}.trial),1);
   for k = 1:numel(varargin{1}.trial)
     tmpcfg.trials = k;
     tmp{k,1}      = ft_denoise_pca(tmpcfg, varargin{:});
