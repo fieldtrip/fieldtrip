@@ -18,6 +18,12 @@ ifeq "$(PLATFORM)" "mingw32"
    SUFFIX = .exe
 endif
 
+ifeq "$(PLATFORM)" "i686-apple-darwin10"
+   LDFLAGS = -lpthread ../../buffer/src/socketserver.o ../../buffer/src/libbuffer.a -ldl 
+   INCPATH = -I../../buffer/src -I. -I$(CPPDIR)
+   SUFFIX = .maci64
+endif
+
 CFLAGS = $(INCPATH) -Wunused -Wall -pedantic -O3 -g
 
 all: modeeg2ft$(SUFFIX)  modeeg2ft_2chn$(SUFFIX) setupbluesmirf$(SUFFIX)
@@ -39,3 +45,4 @@ modeeg2ft_2chn$(SUFFIX): modeeg2ft_2chn.o serial.o
 
 setupbluesmirf$(SUFFIX): setupbluesmirf.c serial.o
 	gcc -o $@ $^ -I.
+
