@@ -24,7 +24,7 @@ int rbIntWritePos;
 int rbIntReadPos;
 
 // pipe or socketpair for inter-thread communication
-LocalPipe pipe;
+LocalPipe threadpipe;
 // GDF writing object
 
 GDF_Writer *gdfWriter = NULL;
@@ -89,7 +89,7 @@ void *savingThreadFunction(void *arg) {
 		int16_t *rbIntPtr;
 		int64_t newSize;
 		
-		n = pipe.read(sizeof(int), &writePtr);
+		n = threadpipe.read(sizeof(int), &writePtr);
 		if (n!=sizeof(int)) {
 			// this should never happen for blocking sockets/pipes
 			fprintf(stderr, "Unexpected error in pipe communication\n");
@@ -385,7 +385,7 @@ int main(int argc, char *argv[]) {
 				
 				if (++rbIntWritePos == rbIntSize) rbIntWritePos = 0;
 			}
-			pipe.write(sizeof(int), static_cast<void *>(&rbIntWritePos)); 
+			threadpipe.write(sizeof(int), static_cast<void *>(&rbIntWritePos)); 
 		}
 	
 		// streaming stuff
@@ -424,7 +424,7 @@ int main(int argc, char *argv[]) {
 cleanup:	
 	if (gdfWriter != NULL) {
 		int quitValue = -1;
-		pipe.write(sizeof(int), &quitValue);
+		threadpipe.write(sizeof(int), &quitValue);
 	}
 	
 	serialClose(&SP);
