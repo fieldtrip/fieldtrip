@@ -9,7 +9,7 @@ cd('/home/common/matlab/fieldtrip/data/test/original/meg/ctf151/Subject01.ds');
 vol = ft_read_vol('default.hdm');
 
 % get data + sensor info
-cd('/home/common/matlab/fieldtrip/data/test/raw/meg');
+cd('/home/common/matlab/fieldtrip/data/test/latest/raw/meg');
 load('preproc_ctf151');
 
 % create 3D grid

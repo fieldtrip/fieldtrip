@@ -4,7 +4,7 @@ function test_bug895
 % contains 'chan' in the dimord, rather than 'chancmb'
 
 % load some data
-load('/home/common/matlab/fieldtrip/data/test/raw/meg/preproc_ctf275');
+load('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf275');
 
 % do spectral transformation
 cfg = [];

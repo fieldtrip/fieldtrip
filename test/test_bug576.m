@@ -4,19 +4,19 @@ function test_bug576
 % TEST ft_checkdata ft_senstype
 
 dataset122 = {
-  '/home/common/matlab/fieldtrip/data/test/raw/meg/preproc_neuromag122.mat'
-  '/home/common/matlab/fieldtrip/data/test/comp/meg/comp_neuromag122.mat'
-  '/home/common/matlab/fieldtrip/data/test/freq/meg/freq_mtmfft_neuromag122.mat'
-  '/home/common/matlab/fieldtrip/data/test/freq/meg/freq_mtmconvol_neuromag122.mat'
-  '/home/common/matlab/fieldtrip/data/test/timelock/meg/timelock_neuromag122.mat'
+  '/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_neuromag122.mat'
+  '/home/common/matlab/fieldtrip/data/test/latest/comp/meg/comp_neuromag122.mat'
+  '/home/common/matlab/fieldtrip/data/test/latest/freq/meg/freq_mtmfft_neuromag122.mat'
+  '/home/common/matlab/fieldtrip/data/test/latest/freq/meg/freq_mtmconvol_neuromag122.mat'
+  '/home/common/matlab/fieldtrip/data/test/latest/timelock/meg/timelock_neuromag122.mat'
   };
 
 dataset306 = {
-  '/home/common/matlab/fieldtrip/data/test/raw/meg/preproc_neuromag306.mat'
-  '/home/common/matlab/fieldtrip/data/test/comp/meg/comp_neuromag306.mat'
-  '/home/common/matlab/fieldtrip/data/test/freq/meg/freq_mtmfft_neuromag306.mat'
-  '/home/common/matlab/fieldtrip/data/test/freq/meg/freq_mtmconvol_neuromag306.mat'
-  '/home/common/matlab/fieldtrip/data/test/timelock/meg/timelock_neuromag306.mat'
+  '/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_neuromag306.mat'
+  '/home/common/matlab/fieldtrip/data/test/latest/comp/meg/comp_neuromag306.mat'
+  '/home/common/matlab/fieldtrip/data/test/latest/freq/meg/freq_mtmfft_neuromag306.mat'
+  '/home/common/matlab/fieldtrip/data/test/latest/freq/meg/freq_mtmconvol_neuromag306.mat'
+  '/home/common/matlab/fieldtrip/data/test/latest/timelock/meg/timelock_neuromag306.mat'
   };
 
 

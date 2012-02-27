@@ -9,8 +9,8 @@ function test_ft_topoplotER
 
 pwdir = pwd;
 
-%cd('/Volumes/home/common/matlab/fieldtrip/data/test/raw/eeg');
-cd('/home/common/matlab/fieldtrip/data/test/raw/eeg');
+%cd('/Volumes/home/common/matlab/fieldtrip/data/test/latest/raw/eeg');
+cd('/home/common/matlab/fieldtrip/data/test/latest/raw/eeg');
 load('preproc_neuroscan16');
 
 %there's an unresolved issue with duplicate labels 'FREE'

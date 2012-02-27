@@ -7,7 +7,7 @@ function test_bug1043
 % sensor descriptions that contain coilori/pos chanori/pos.
 % The chanori/chanpos get lost along the way
 
-cd /home/common/matlab/fieldtrip/data/test/raw/meg/
+cd /home/common/matlab/fieldtrip/data/test/latest/raw/meg/
 load preproc_ctf151
 
 cfg        = [];

@@ -8,7 +8,7 @@ function test_bug950
 % the headmodel for the inverse/forward steps
 
 % load in some data
-cd('/home/common/matlab/fieldtrip/data/test/raw/meg/');
+cd('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/');
 load('preproc_ctf151');
 
 cfg = [];

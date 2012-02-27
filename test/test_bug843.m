@@ -6,7 +6,7 @@ function test_bug843
 % behave robustly in combination with a specified refchannel; also
 % directionality needs to be documented
 
-cd('/home/common/matlab/fieldtrip/data/test/raw/meg');
+cd('/home/common/matlab/fieldtrip/data/test/latest/raw/meg');
 load('preproc_ctf275');
 
 % constrain to MEG channels
