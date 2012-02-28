@@ -1,21 +1,25 @@
-function test_ft_timelockanalysis(datainfo, writeflag)
+function test_ft_timelockanalysis(datainfo, writeflag, version)
 
 % TEST test_ft_timelockanalysis
 % ft_timelockanalysis test_datasets
 
-% the optional writeflag determines whether the output should be saved
-% to disk
+% writeflag determines whether the output should be saved to disk
+% version determines the output directory
 
-if nargin<2
-  writeflag = 0;
-end
 if nargin<1
   datainfo = test_datasets;
 end
+if nargin<2
+  writeflag = 0;
+end
+if nargin<3
+  version = 'latest';
+end
+
 for k = 1:numel(datainfo)
-  datanew = timelockanalysis10trials(datainfo(k), writeflag);
+  datanew = timelockanalysis10trials(datainfo(k), writeflag, version);
   
-  fname = [datainfo(k).origdir,'latest/timelock/',datainfo(k).type,'timelock_',datainfo(k).datatype];
+  fname = fullfile(datainfo(k).origdir,version,'timelock',datainfo(k).type,['timelock_',datainfo(k).datatype]);
   tmp = load(fname);
   if isfield(tmp, 'data')
     data = tmp.data;
@@ -30,11 +34,25 @@ for k = 1:numel(datainfo)
   assert(isequalwithequalnans(data, datanew));
 end
 
-function [tlck] = timelockanalysis10trials(dataset, writeflag)
+function [timelock] = timelockanalysis10trials(dataset, writeflag, version)
 
-cfg        = [];
-cfg.inputfile  = [dataset.origdir,'latest/raw/',dataset.type,'preproc_',dataset.datatype];
-if writeflag
-  cfg.outputfile = [dataset.origdir,'latest/timelock/',dataset.type,'timelock_',dataset.datatype];
+% --- HISTORICAL --- attempt forward compatibility with function handles
+if ~exist('ft_timelockanalysis') && exist('timelockanalysis')
+  eval('ft_timelockanalysis = @timelockanalysis;');
 end
-tlck = ft_timelockanalysis(cfg);
+
+cfg = [];
+cfg.inputfile  = fullfile(dataset.origdir,version,'raw',dataset.type,['preproc_',dataset.datatype]);
+if writeflag
+  cfg.outputfile = fullfile(dataset.origdir,version,'timelock',dataset.type,['timelock_',dataset.datatype]);
+end
+
+if ~strcmp(version, 'latest') && str2num(version)<20100000
+  % -- HISTORICAL --- older fieldtrip versions don't support inputfile and outputfile
+  load(cfg.inputfile, 'data');
+  timelock = ft_timelockanalysis(cfg, data);
+  save(cfg.outputfile, 'timelock');
+else
+  timelock = ft_timelockanalysis(cfg);
+end
+

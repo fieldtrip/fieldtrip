@@ -1,21 +1,25 @@
-function datanew = test_ft_preprocessing(datainfo, writeflag)
+function datanew = test_ft_preprocessing(datainfo, writeflag, version)
 
 % TEST test_ft_preprocessing
 % TEST ft_preprocessing test_datasets
 
-% the optional writeflag determines whether the output 
-% should be saved to disk
+% writeflag determines whether the output should be saved to disk
+% version determines the output directory
 
-if nargin<2
-  writeflag = 0;
-end
 if nargin<1
   datainfo = test_datasets;
 end
-for k = 1:numel(datainfo)
-  datanew = preprocessing10trials(datainfo(k), writeflag);
+if nargin<2
+  writeflag = 0;
+end
+if nargin<3
+  version = 'latest';
+end
 
-  fname = [datainfo(k).origdir,'latest/raw/',datainfo(k).type,'preproc_',datainfo(k).datatype];
+for k = 1:numel(datainfo)
+  datanew = preprocessing10trials(datainfo(k), writeflag, version);
+
+  fname = fullfile(datainfo(k).origdir,version,'raw',datainfo(k).type,['preproc_',datainfo(k).datatype]);
   load(fname);
   % these are per construction different if writeflag = 0;
   datanew = rmfield(datanew, 'cfg');
@@ -34,12 +38,27 @@ end
 %----------------------------------------------------------
 % subfunction to read in 10 trials of data
 %----------------------------------------------------------
-function [data] = preprocessing10trials(dataset, writeflag)
+function [data] = preprocessing10trials(dataset, writeflag, version)
+
+% --- HISTORICAL --- attempt forward compatibility with function handles
+if ~exist('ft_preprocessing') && exist('preprocessing')
+  eval('ft_preprocessing = @preprocessing;');
+end
+if ~exist('ft_read_header') && exist('read_header')
+  eval('ft_read_header = @read_header;');
+elseif ~exist('ft_read_header') && exist('read_fcdc_header')
+  eval('ft_read_header = @read_fcdc_header;');
+end
+if ~exist('ft_read_event') && exist('read_event')
+  eval('ft_read_event = @read_event;');
+elseif ~exist('ft_read_event') && exist('read_fcdc_event')
+  eval('ft_read_event = @read_fcdc_event;');
+end
 
 cfg            = [];
-cfg.dataset    = [dataset.origdir,'original/',dataset.type,dataset.datatype,'/',dataset.filename];
+cfg.dataset    = fullfile(dataset.origdir,'original',dataset.type,dataset.datatype,'/',dataset.filename);
 if writeflag,
-  cfg.outputfile = [dataset.origdir,'latest/raw/',dataset.type,'preproc_',dataset.datatype];
+  cfg.outputfile = fullfile(dataset.origdir,version,'raw',dataset.type,['preproc_',dataset.datatype '.mat']);
 end
 
 % get header and event information
@@ -65,3 +84,9 @@ cfg.trl   = cfg.trl(sel,:);
 
 cfg.continuous = 'yes';
 data           = ft_preprocessing(cfg);
+
+if ~strcmp(version, 'latest') && str2num(version)<20100000
+  % -- HISTORICAL --- older fieldtrip versions don't support outputfile
+  save(cfg.outputfile, 'data');
+end
+
