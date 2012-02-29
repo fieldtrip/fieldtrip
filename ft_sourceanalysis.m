@@ -666,7 +666,7 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne', 'loreta', 'rv
       % keeptrial=yes and only a single trial in the raw data.
       % In that case the covariance should be represented as Nchan*Nchan
       data.avg = data.avg(datchanindx,:);
-      data.cov = reshape(data.cov, length(datchanindx), length(datchanindx));
+      %data.cov = reshape(data.cov, length(datchanindx), length(datchanindx));
       data.cov = data.cov(datchanindx,datchanindx);
     else
       data.avg   = data.avg(datchanindx,:);
