@@ -40,11 +40,18 @@ function [source] = ft_sourceanalysis(cfg, data, baseline)
 %   cfg.grid.outside    = vector with indices of the sources outside the brain (optional)
 % You can also use the FT_PREPARE_LEADFIELD function to create a grid with
 % dipole positions and with precomputed leadfields.
+% You may also include (if previously computed):
+%   cfg.grid.filter
+%   cfg.grid.leadfield
+% and please add them in addition to cfg.grid.pos, else they could be removed by ft_preapre_sourcemodel.m
+%
+
 %
 % The following strategies are supported to obtain statistics for the source parameters using
 % multiple trials in the data, either directly or through a resampling-based approach
 %   cfg.singletrial   = 'no' or 'yes'   construct filter from average, apply to single trials
 %   cfg.rawtrial      = 'no' or 'yes'   construct filter from single trials, apply to single trials
+%                       Note: also set cfg.keeptrials='yes' to keep out trial information, especially if using in combination with grid.filter
 %   cfg.jackknife     = 'no' or 'yes'   jackknife resampling of trials
 %   cfg.pseudovalue   = 'no' or 'yes'   pseudovalue resampling of trials
 %   cfg.bootstrap     = 'no' or 'yes'   bootstrap resampling of trials
@@ -294,6 +301,10 @@ end
 
 if sum([strcmp(cfg.jackknife, 'yes'), strcmp(cfg.bootstrap, 'yes'), strcmp(cfg.pseudovalue, 'yes'), strcmp(cfg.singletrial, 'yes'), strcmp(cfg.rawtrial, 'yes'), strcmp(cfg.randomization, 'yes'), strcmp(cfg.permutation, 'yes')])>1
   error('jackknife, bootstrap, pseudovalue, singletrial, rawtrial, randomization and permutation are mutually exclusive');
+end
+
+if strcmp(cfg.rawtrial,'yes') && isfield(cfg,'grid') && ~isfield(cfg.grid,'filter')
+  error('Using each trial to compute its own filter is not currently recommended. Use this option only with precomputed filters in grid.filter');
 end
 
 if isfreq
