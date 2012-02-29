@@ -14,12 +14,12 @@ function [type] = ft_voltype(vol, desired)
 %  multisphere     local spheres model for MEG, one sphere per channel
 %  concentric      analytical 4-sphere model for EEG
 %  infinite        infinite homogenous medium
-%  bem_openmeeg    boundary element method based on the OpenMEEG implementation
-%  bemcp           boundary element method based on the implementation from Christophe Phillips
-%  bem_dipoli      boundary element method based on the implementation from Thom Oostendorp
-%  bem_asa         boundary element method based on the (commercial) ASA software
-%  simbio          finite elements method based on the SimBio software
-%  fns             finite differences method based on the FNS software
+%  openmeeg    volume based on the OpenMEEG boundary element implementation
+%  bemcp           volume based on the implementation from Christophe Phillips
+%  dipoli      volume based on the implementation from Thom Oostendorp
+%  asa         volume based on the (commercial) ASA software
+%  simbio          volume based on the FEM SimBio software
+%  fns             volume based on the FNS finite differences software
 %
 % See also FT_READ_VOL, FT_COMPUTE_LEADFIELD
 
@@ -92,8 +92,8 @@ elseif isfield(vol, 'r') && isfield(vol, 'o') && size(vol.r,1)==size(vol.o,1) &&
 elseif isfield(vol, 'r') && numel(vol.r)>=2 && ~isfield(vol, 'label')
   type = 'concentric';
 
-elseif isfield(vol, 'bnd') && strcmp(type, {'bem_dipoli', 'bem_asa', 'bem_avo', 'bemcp', 'bem_openmeeg'})
-  type = any(strcmp(type, {'bem_dipoli', 'bem_asa', 'bem_avo', 'bemcp', 'bem_openmeeg'}));
+elseif isfield(vol, 'bnd') && strcmp(type, {'dipoli', 'asa', 'bemcp', 'openmeeg'})
+  type = any(strcmp(type, {'dipoli', 'asa', 'bemcp', 'openmeeg'}));
 
 elseif isempty(vol)
   type = 'infinite';
@@ -104,8 +104,14 @@ else
 end % if isfield(vol, 'type')
 
 if ~isempty(desired)
-  type = any(strcmp(type, desired));
-end
+  % return a boolean flag
+  switch desired
+    case 'bem'
+      type = any(strcmp(type, {'dipoli', 'asa', 'bemcp', 'openmeeg'}));
+    otherwise
+      type = any(strcmp(type, desired));
+  end % switch desired
+end % detemine the correspondence to the desired type
 
 % remember the current input and output arguments, so that they can be
 % reused on a subsequent call in case the same input argument is given
