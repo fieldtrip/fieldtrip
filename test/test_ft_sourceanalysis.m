@@ -1020,12 +1020,12 @@ for j = 1:size(combination,1)
     inputfile = fullfile(datainfo(k).origdir,version,'freq',    datainfo(k).type,[datarepresentation '_' datainfo(k).datatype '.mat']);
     load(inputfile);
     data = freq;
-    sourcerepresentation = ['source_' datarepresentation(6:end)];
+    sourcerepresentation = ['source_' sourcemodel '_' datarepresentation(6:end)]; % drop the 'freq' from the name
   case 't'
     inputfile = fullfile(datainfo(k).origdir,version,'timelock',datainfo(k).type,[datarepresentation '_' datainfo(k).datatype '.mat']);
     load(inputfile);
     data = timelock;
-    sourcerepresentation = ['source_' datarepresentation(10:end)];
+    sourcerepresentation = ['source_' sourcemodel '_' datarepresentation];
   end
 
   testfunction = str2func(sprintf('sourceanalysis_%s', algorithm));
