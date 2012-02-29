@@ -5,6 +5,11 @@ audio data from the sound card, and stream it to a FieldTrip buffer. Further
 processing can be performed by clients that connect to the FieldTrip buffer. To
 acquire the audio data, the PortAudio library [1] is used.
 
+## TODO:
+- Compilation is broken. Perhaps it is designed for an outdated PortAudio
+  library.
+- Remove config file and replace with getopt.
+
 
 # Usage
 
@@ -31,7 +36,10 @@ example_config.txt.
 
 Audio2ft can be compiled with `make`. Building on Windows is supported through
 the MinGW compiler. For windows a pre-compiled DLL is available. 
-Note that you might need to compile the buffer library first.
+you might need to compile the buffer library first.
+
+*NOTE THAT COMPILATION SEEMS TO BE BROKEN*. On Ubuntu Linux with PortAudio 1.9
+lots of symbols are undefined.
 
 
 # References
