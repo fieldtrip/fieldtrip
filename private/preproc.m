@@ -31,15 +31,6 @@ function [dat, label, time, cfg] = preproc(dat, label, time, cfg, begpadding, en
 % can be different, for example when the user specifies that he/she wants
 % to add the implicit EEG reference channel to the data matrix.
 %
-% The offset field specifies the difference in the latency of the beginning
-% of the data relative to the occurence of the trigger (expressed in
-% samples). An offset of 0 means that the first sample of the trial
-% corresponds with the trigger. A positive offset indicates that the first
-% sample is later than the triger, a negative offset indicates that the
-% trial begins before the trigger. The offset should be specified EXCLUDING
-% the filter padding at the begin of the data. You can leave it empty,
-% which implies that the first sample of the data corresponds with latency 0.
-%
 % The filtering of the data can introduce artifacts at the edges, hence it
 % is better to pad the data with some extra signal at the begin and end.
 % After filtering, this padding is removed and the other preprocessing
