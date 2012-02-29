@@ -7,10 +7,6 @@ For more information please visit http://www.ru.nl/neuroimaging/fieldtrip
 
 The source code for zlib is available at http://www.zlib.net
 
-The following files were downloaded from http://www.koders.com
-  base64.c
-  base64.h
-
 The FieldTrip software is free but copyrighted software, distributed
 under the terms of the GNU General Public Licence as published by
 the Free Software Foundation (either version 2, or at your option
