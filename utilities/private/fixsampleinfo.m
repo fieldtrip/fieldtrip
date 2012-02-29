@@ -102,6 +102,7 @@ end
 if ~isfield(data, 'sampleinfo') && ~isempty(trl)
   data.sampleinfo = trl(:, 1:2);
 elseif ~isfield(data, 'sampleinfo') && isempty(trl)
+  % this is probably an unreachable statement
   warning_once('failed to create sampleinfo field');
 end
 
@@ -109,7 +110,7 @@ if (~isfield(data, 'trialinfo') || isempty(data.trialinfo)) && ~isempty(trl) && 
   data.trialinfo = trl(:, 4:end);
 end
 
-% if data is not raw then it does not make sense to keep the sampleinfo
+% if data does not have repetitions (i.e. trials) then it does not make sense to keep the sampleinfo
 if ~hastrial && isfield(data, 'sampleinfo')
   data = rmfield(data, 'sampleinfo');
 end
