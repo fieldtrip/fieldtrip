@@ -403,7 +403,7 @@ int create_udp_receiver(int port) {
 #else
 	optval = fcntl(sock, F_GETFL, NULL);
 	optval = optval | O_NONBLOCK;
-	if (fcntl(s, F_SETFL, optval)<0) {
+	if (fcntl(sock, F_SETFL, optval)<0) {
 		perror("fcntl (set non-blocking)");
 		closesocket(sock);
 		return -1;

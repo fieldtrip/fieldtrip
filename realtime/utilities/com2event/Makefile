@@ -9,15 +9,15 @@ PLATFORM = $(shell gcc -dumpmachine)
 
 ifeq "$(PLATFORM)" "mingw32"
    LDFLAGS = pthreadGC2.dll ../buffer/src/libbuffer.a -LC:/msys/1.0/local/lib -lws2_32 -lwinmm 
-   ADDINC = -I../buffer/pthreads-win32/include
+   ADDINC = -I../../buffer/pthreads-win32/include
    SUFFIX = .exe
 else
-   LDFLAGS = -lpthread ../buffer/src/libbuffer.a
+   LDFLAGS = -lpthread ../../buffer/src/libbuffer.a
    ADDINC = 
    SUFFIX = 
 endif
 
-CFLAGS = -I../buffer/src -I. $(ADDINC) -Wunused -Wall -pedantic
+CFLAGS = -I../../buffer/src -I. $(ADDINC) -Wunused -Wall -pedantic
 
 all: serial_event$(SUFFIX)
 
