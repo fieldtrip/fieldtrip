@@ -17,7 +17,11 @@ if nargin<3
 end
 
 for k = 1:numel(datainfo)
-  datanew = freqanalysisMtmfft(datainfo(k), writeflag, version);
+  datanew = freqanalysisMtmfft(datainfo(k), writeflag, version, 'fourier',   'yes');
+  datanew = freqanalysisMtmfft(datainfo(k), writeflag, version, 'powandcsd', 'yes');
+  datanew = freqanalysisMtmfft(datainfo(k), writeflag, version, 'pow',       'yes');
+  datanew = freqanalysisMtmfft(datainfo(k), writeflag, version, 'powandcsd', 'no');
+  datanew = freqanalysisMtmfft(datainfo(k), writeflag, version, 'pow',       'no');
 
   fname = fullfile(datainfo(k).origdir,version,'freq',datainfo(k).type,['freq_mtmfft_',datainfo(k).datatype]);
   load(fname);
@@ -27,7 +31,11 @@ for k = 1:numel(datainfo)
 end
 
 for k = 1:numel(datainfo)
-  datanew = freqanalysisMtmconvol(datainfo(k), writeflag, version);
+  datanew = freqanalysisMtmconvol(datainfo(k), writeflag, version, 'fourier',   'yes');
+  datanew = freqanalysisMtmconvol(datainfo(k), writeflag, version, 'powandcsd', 'yes');
+  datanew = freqanalysisMtmconvol(datainfo(k), writeflag, version, 'pow',       'yes');
+  datanew = freqanalysisMtmconvol(datainfo(k), writeflag, version, 'powandcsd', 'no');
+  datanew = freqanalysisMtmconvol(datainfo(k), writeflag, version, 'pow',       'no');
 
   fname = fullfile(datainfo(k).origdir,version,'freq',datainfo(k).type,['freq_mtmconvol_',datainfo(k).datatype]);
   load(fname);
@@ -36,26 +44,61 @@ for k = 1:numel(datainfo)
   assert(isequalwithequalnans(freq, datanew));
 end
 
-%----------------------
-% subfunctions
-%----------------------
-function [freq] = freqanalysisMtmconvol(dataset, writeflag, version)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [freq] = freqanalysisMtmconvol(dataset, writeflag, version, output, keeptrials)
+
+if isempty(output)
+  output = 'pow';
+  % output = 'powandcsd';
+  % output = 'fourier';
+end
+
+if isempty(keeptrials)
+  output = 'no';
+  % output = 'yes';
+end
+
+% the file names should distinguish between the cfg.output and cfg.keeptrials option
+postfix = '';
+switch output
+case 'pow'
+  % don't change
+case 'powandcsd'
+  postfix = [postfix 'powandcsd_'];
+case 'fourier'
+  postfix = [postfix 'fourier_'];
+otherwise
+  error('unexpected output');
+end
+
+% the file names should distinguish between the cfg.output and cfg.keeptrials option
+switch keeptrials
+case 'no'
+  % don't change
+case 'yes'
+  postfix = [postfix 'trl_'];
+otherwise
+  error('unexpected keeptrials');
+end
 
 % --- HISTORICAL --- attempt forward compatibility with function handles
 if ~exist('ft_freqanalysis') && exist('freqanalysis')
   eval('ft_freqanalysis = @freqanalysis;');
 end
 
-cfg        = [];
-cfg.method = 'mtmconvol';
-cfg.output = 'pow';
-cfg.foi    = 2:2:30;
-cfg.taper  = 'hanning';
-cfg.t_ftimwin = ones(1,numel(cfg.foi)).*0.5;
-cfg.toi    = (250:50:750)./1000;
+cfg            = [];
+cfg.method     = 'mtmconvol';
+cfg.output     = output;
+cfg.keeptrials = keeptrials;
+cfg.foi        = 2:2:30;
+cfg.taper      = 'hanning';
+cfg.t_ftimwin  = ones(1,numel(cfg.foi)).*0.5;
+cfg.toi        = (250:50:750)./1000;
 cfg.inputfile = fullfile(dataset.origdir,version,'raw',dataset.type,['preproc_',dataset.datatype]);
 if writeflag,
-  cfg.outputfile = fullfile(dataset.origdir,version,'freq',dataset.type,['freq_mtmconvol_',dataset.datatype]);
+  cfg.outputfile = fullfile(dataset.origdir,version,'freq',dataset.type,['freq_mtmconvol_',postfix,dataset.datatype]);
 end
 
 if ~strcmp(version, 'latest') && str2num(version)<20100000
@@ -67,21 +110,59 @@ else
   freq = ft_freqanalysis(cfg);
 end
 
-function [freq] = freqanalysisMtmfft(dataset, writeflag, version)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [freq] = freqanalysisMtmfft(dataset, writeflag, version, output, keeptrials)
 
 % --- HISTORICAL --- attempt forward compatibility with function handles
 if ~exist('ft_freqanalysis') && exist('freqanalysis')
   eval('ft_freqanalysis = @freqanalysis;');
 end
 
-cfg        = [];
-cfg.method = 'mtmfft';
-cfg.output = 'pow';
-cfg.foilim = [0 100];
-cfg.taper  = 'hanning';
-cfg.inputfile = fullfile(dataset.origdir,version,'raw',dataset.type,['preproc_',dataset.datatype]);
+if isempty(output)
+  output = 'pow';
+  % output = 'powandcsd';
+  % output = 'fourier';
+end
+
+if isempty(keeptrials)
+  keeptrials = 'no';
+  % keeptrials = 'yes';
+end
+
+% the file names should distinguish between the cfg.output and cfg.keeptrials option
+postfix = '';
+switch output
+case 'pow'
+  % don't change
+case 'powandcsd'
+  postfix = [postfix 'powandcsd_'];
+case 'fourier'
+  postfix = [postfix 'fourier_'];
+otherwise
+  error('unexpected output');
+end
+
+% the file names should distinguish between the cfg.output and cfg.keeptrials option
+switch keeptrials
+case 'no'
+  % don't change
+case 'yes'
+  postfix = [postfix 'trl_'];
+otherwise
+  error('unexpected keeptrials');
+end
+
+cfg            = [];
+cfg.method     = 'mtmfft';
+cfg.output     = output;
+cfg.keeptrials = keeptrials;
+cfg.foilim     = [0 100];
+cfg.taper      = 'hanning';
+cfg.inputfile  = fullfile(dataset.origdir,version,'raw',dataset.type,['preproc_',dataset.datatype]);
 if writeflag,
-  cfg.outputfile = fullfile(dataset.origdir,version,'freq',dataset.type,['freq_mtmfft_',dataset.datatype]);
+  cfg.outputfile = fullfile(dataset.origdir,version,'freq',dataset.type,['freq_mtmfft_',postfix,dataset.datatype]);
 end
 
 if ~strcmp(version, 'latest') && str2num(version)<20100000

@@ -17,7 +17,10 @@ if nargin<3
 end
 
 for k = 1:numel(datainfo)
-  datanew = timelockanalysis10trials(datainfo(k), writeflag, version);
+  datanew = timelockanalysis10trials(datainfo(k), writeflag, version, 'yes', 'yes');
+  datanew = timelockanalysis10trials(datainfo(k), writeflag, version, 'yes', 'no');
+  datanew = timelockanalysis10trials(datainfo(k), writeflag, version, 'no', 'yes');
+  datanew = timelockanalysis10trials(datainfo(k), writeflag, version, 'no', 'no'); % should be the latest
   
   fname = fullfile(datainfo(k).origdir,version,'timelock',datainfo(k).type,['timelock_',datainfo(k).datatype]);
   tmp = load(fname);
@@ -34,17 +37,50 @@ for k = 1:numel(datainfo)
   assert(isequalwithequalnans(data, datanew));
 end
 
-function [timelock] = timelockanalysis10trials(dataset, writeflag, version)
+function [timelock] = timelockanalysis10trials(dataset, writeflag, version, covariance, keeptrials)
 
 % --- HISTORICAL --- attempt forward compatibility with function handles
 if ~exist('ft_timelockanalysis') && exist('timelockanalysis')
   eval('ft_timelockanalysis = @timelockanalysis;');
 end
 
+if isempty(covariance)
+  covariance = 'no';
+  % covariance = 'yes';
+end
+
+if isempty(keeptrials)
+  keeptrials = 'no';
+  % keeptrials = 'yes';
+end
+
+% the file names should distinguish between the cfg.covariance and cfg.keeptrials option
+postfix = '';
+switch covariance
+case 'no'
+  % don't change
+case 'yes'
+  postfix = [postfix 'cov_'];
+otherwise
+  error('unexpected keeptrials');
+end
+
+% the file names should distinguish between the cfg.covariance and cfg.keeptrials option
+switch keeptrials
+case 'no'
+  % don't change
+case 'yes'
+  postfix = [postfix 'trl_'];
+otherwise
+  error('unexpected keeptrials');
+end
+
 cfg = [];
+cfg.keeptrials = keeptrials;
+cfg.covariance = covariance;
 cfg.inputfile  = fullfile(dataset.origdir,version,'raw',dataset.type,['preproc_',dataset.datatype]);
 if writeflag
-  cfg.outputfile = fullfile(dataset.origdir,version,'timelock',dataset.type,['timelock_',dataset.datatype]);
+  cfg.outputfile = fullfile(dataset.origdir,version,'timelock',dataset.type,['timelock_',postfix,dataset.datatype]);
 end
 
 if ~strcmp(version, 'latest') && str2num(version)<20100000
