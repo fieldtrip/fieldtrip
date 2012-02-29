@@ -39,7 +39,7 @@ sourcemodel_sheet.inside = 1:size(sourcemodel_sheet.pos,1);  % FIXME this should
 
 % 3D regular grid
 sourcemodel_grid = [];
-sourcemodel_grid.resolution = 1.5;
+sourcemodel_grid.resolution = 2.5;
 sourcemodel_grid.xgrid = 'auto';
 sourcemodel_grid.ygrid = 'auto';
 sourcemodel_grid.zgrid = 'auto';
