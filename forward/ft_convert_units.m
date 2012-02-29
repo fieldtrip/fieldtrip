@@ -103,7 +103,7 @@ else
     siz = norm(idrange(obj.bnd.pnt));
     unit = ft_estimate_units(siz);
     
-  elseif ft_voltype(obj,'bem') | ft_voltype(obj,'dipoli') | ft_voltype(obj,'bemcp') | ft_voltype(obj,'asa')| ft_voltype(obj,'avo') | ft_voltype(obj,'openmeeg') 
+  elseif ft_voltype(obj,'bem') | ft_voltype(obj,'dipoli') | ft_voltype(obj,'bemcp') | ft_voltype(obj,'asa') | ft_voltype(obj,'openmeeg') 
     siz = norm(idrange(obj.bnd(1).pnt));
     unit = ft_estimate_units(siz);
     
