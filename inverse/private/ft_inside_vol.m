@@ -90,7 +90,7 @@ switch ft_voltype(vol)
     inside  = inside>0;
 
     % realistic BEM volume conductor model
-  case {'bem', 'dipoli', 'bemcp', 'asa', 'avo', 'nolte', 'neuromag'}
+  case {'bem', 'dipoli', 'bemcp', 'asa', 'nolte', 'neuromag'}
     if ~isfield(vol, 'source')
       % locate the innermost compartment and remember it
       vol.source = find_innermost_boundary(vol.bnd);
