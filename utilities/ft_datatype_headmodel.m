@@ -32,7 +32,7 @@ function vol = ft_datatype_headmodel(vol, varargin)
 
 % Copyright (C) 2011, Cristiano Micheli, Robert Oostenveld
 % 
-% $Id$
+% $Id: $
 
 % get the optional input arguments, which should be specified as key-value pairs
 version       = ft_getopt(varargin, 'version', 'latest');
@@ -46,30 +46,33 @@ end
 
 switch version
     
-  case {'2011v2' '2011v1' '2010v2' '2010v1' '2009v2' '2009v1'}
+  case '2011v2' 
     if isfield(vol, 'skin_surface')
       vol.skin = vol.skin_surface;
       vol = rmfield(vol, 'skin_surface');
-    end
-    
+    end    
     if isfield(vol, 'type') && strcmp(vol.type,'bem')
-      error('not able to convert the original ''bem'' volume type, try using vol.type=''bem_dipoli'''); 
+      error('not able to convert the original ''bem'' volume type, try using vol.type=''dipoli'''); 
     end
     if isfield(vol, 'type') && strcmp(vol.type,'bem_cp')
       vol.type = 'bemcp';
     end
-    if isfield(vol, 'type') && strcmp(vol.type,'openmeeg')
-      vol.type = 'bem_openmeeg';
-    end
-    if isfield(vol, 'type') && strcmp(vol.type,'dipoli')
-      vol.type = 'bem_dipoli';
-    end
-    if isfield(vol, 'type') && strcmp(vol.type,'asa')
-      vol.type = 'bem_asa';
-    end
     if isfield(vol, 'type') && strcmp(vol.type,'avo')
-      vol.type = 'bem_avo';
+      error('This format is not supported anymore');
     end 
+    
+  case {'2011v1' '2010v2' '2010v1' '2009v2' '2009v1'}
+    if isfield(vol, 'skin_surface')
+      vol.skin = vol.skin_surface;
+      vol = rmfield(vol, 'skin_surface');
+    end
+    if isfield(vol, 'type') && strcmp(vol.type,'bem')
+      error('not able to convert the original ''bem'' volume type, try using vol.type=''dipoli'''); 
+    end
+    if isfield(vol, 'type') && strcmp(vol.type,'bem_cp')
+      vol.type = 'bemcp';
+    end
+
     
   otherwise
     error('converting to version "%s" is not supported', version);  

@@ -79,7 +79,7 @@ switch ft_voltype(vol)
       bnd(i).tri = tri;
     end
     
-  case {'bem', 'dipoli', 'asa', 'avo', 'bemcp', 'nolte'}
+  case {'bem', 'dipoli', 'asa', 'bemcp', 'nolte' 'openmeeg'}
     % these already contain one or multiple triangulated surfaces for the boundaries
     bnd = vol.bnd;
     

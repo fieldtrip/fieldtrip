@@ -138,7 +138,7 @@ elseif ismeg
   sens.tra     = sens.tra(:,selcoil);
 
   switch ft_voltype(vol)
-    case 'infinite'
+    case {'infinite' 'infinite_monopole'}
       % nothing to do
 
     case 'singlesphere'
@@ -315,7 +315,7 @@ elseif iseeg
   end
   
   switch ft_voltype(vol)
-    case 'infinite'
+    case {'infinite' 'infinite_monopole'}
       % nothing to do
 
     case {'halfspace', 'halfspace_monopole'}
@@ -400,7 +400,7 @@ elseif iseeg
       end
       sens.elecpos = pnt;
 
-    case {'bem', 'dipoli', 'asa', 'avo', 'bemcp', 'openmeeg'}
+    case {'bem', 'dipoli', 'asa', 'bemcp', 'openmeeg'}
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % do postprocessing of volume and electrodes in case of BEM model
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

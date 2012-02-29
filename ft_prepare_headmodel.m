@@ -15,10 +15,10 @@ function [vol, cfg] = ft_prepare_headmodel(cfg, data)
 %
 % For EEG the following methods are available
 %   singlesphere
-%   bem_asa
-%   bem_cp
-%   bem_dipoli
-%   bem_openmeeg
+%   asa
+%   bemcp
+%   dipoli
+%   openmeeg
 %   concentricspheres
 %   halfspace
 %   infinite
@@ -51,7 +51,7 @@ function [vol, cfg] = ft_prepare_headmodel(cfg, data)
 % Additionally, the specific methods each have their specific configuration 
 % options that are listed below.
 % 
-% BEM_CP, BEM_DIPOLI, BEM_OPENMEEG
+% BEMCP, BEM_DIPOLI, BEM_OPENMEEG
 %     cfg.isolatedsource    (optional)
 % 
 % CONCENTRICSPHERES
@@ -204,9 +204,9 @@ elseif nargin>1
   geometry = data;
 end
 
-if ~isempty(cfg.hdmfile) 
-  cfg.headshape=cfg.hdmfile;
-end
+% if ~isempty(cfg.hdmfile) 
+%   cfg.headshape=cfg.hdmfile;
+% end
 
 % only cfg was specified, this is for backward compatibility
 if isfield(cfg, 'geom') && nargin==1
@@ -228,7 +228,11 @@ if ~isempty(cfg.headshape)&& nargin == 1
 end
 
 if isempty(geometry) && ~isempty(cfg.hdmfile)
-  geometry = ft_read_headshape(cfg.hdmfile);
+  if ft_filetype(cfg.hdmfile,'asa_vol')
+    geometry = ft_read_vol(cfg.hdmfile);
+  else
+    geometry = ft_read_headshape(cfg.hdmfile);
+  end
 elseif isempty(geometry) && ~(strcmp(cfg.method,'fns') || strcmp(cfg.method,'simbio')) 
   error('no input available')
 end
@@ -251,12 +255,12 @@ end
 
 % the construction of the volume conductor model is performed below
 switch cfg.method
-  case 'bem_asa'
+  case 'asa'
     cfg = ft_checkconfig(cfg, 'required', 'hdmfile');
     vol = ft_headmodel_bem_asa(cfg.hdmfile);
        
-  case {'bem_cp' 'bem_dipoli' 'bem_openmeeg'}
-    if strcmp(cfg.method,'bem_cp')
+  case {'bemcp' 'dipoli' 'openmeeg'}
+    if strcmp(cfg.method,'bemcp')
       funname = 'ft_headmodel_bemcp';
     elseif strcmp(cfg.method,'bem_dipoli')
       funname = 'ft_headmodel_bem_dipoli';
@@ -606,9 +610,14 @@ function bnd = prepare_mesh_headshape(cfg)
 % $Id$
 
 % get the surface describing the head shape
-if isstruct(cfg.headshape) && isfield(cfg.headshape, 'pnt')
+if isstruct(cfg.headshape) && isfield(cfg.headshape, 'pnt') 
   % use the headshape surface specified in the configuration
   headshape = cfg.headshape;
+elseif isstruct(cfg.headshape) &&  isfield(cfg.headshape, 'bnd')
+  for i=1:numel(cfg.headshape.bnd)
+    headshape(i).pnt = cfg.headshape.bnd(i).pnt;
+    headshape(i).tri = cfg.headshape.bnd(i).tri;
+  end
 elseif isnumeric(cfg.headshape) && size(cfg.headshape,2)==3
   % use the headshape points specified in the configuration
   headshape.pnt = cfg.headshape;

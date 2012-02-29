@@ -52,7 +52,7 @@ case {'singlesphere', 'concentric'}
   depth = sqrt(sum(tmp.^2, 2))-vol.r(vol.source); % positive if outside, negative if inside
 
 % boundary element model
-case {'bem' 'dipoli', 'bemcp', 'asa', 'avo', 'nolte', 'neuromag','openmeeg'}
+case {'bem' 'dipoli', 'bemcp', 'asa', 'nolte', 'neuromag','openmeeg'}
   if isfield(vol, 'source')
     % use the specified source compartment
     pnt = vol.bnd(vol.source).pnt;

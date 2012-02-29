@@ -379,7 +379,7 @@ elseif iseeg
         lf(:,(3*i-2):(3*i)) = feval(funnam,pos(i,:), sens.elecpos, vol);
       end
 
-    case {'bem', 'dipoli', 'asa', 'avo', 'bemcp'}
+    case {'bem', 'dipoli', 'asa', 'bemcp'}
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % EEG boundary element method volume conductor model
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -421,6 +421,9 @@ elseif iseeg
   
     case 'halfspace'
       lf = eeg_halfspace_medium_leadfield(pos, sens.elecpos, vol);
+      
+    case 'infinite_monopole'
+      lf = eeg_infinite_monopole(pos, sens.elecpos, vol);    
       
     case 'halfspace_monopole'
       lf = eeg_halfspace_monopole(pos, sens.elecpos, vol);  
