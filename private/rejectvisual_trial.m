@@ -19,12 +19,14 @@ for i=1:ntrl
   offset(i) = time2offset(data.time{i}, fsample);
 end
 
-ft_progress('init', cfg.feedback, 'filtering data');
-for i=1:ntrl
-  ft_progress(i/ntrl, 'filtering data in trial %d of %d\n', i, ntrl);
-  [data.trial{i}, label, time, cfg.preproc] = preproc(data.trial{i}, data.label, fsample, cfg.preproc, offset(i));
+if (isfield(cfg, 'preproc') && ~isempty(cfg.preproc))
+  ft_progress('init', cfg.feedback, 'filtering data');
+  for i=1:ntrl
+    ft_progress(i/ntrl, 'filtering data in trial %d of %d\n', i, ntrl);
+    [data.trial{i}, label, time, cfg.preproc] = preproc(data.trial{i}, data.label, fsample, cfg.preproc, offset(i));
+  end
+  ft_progress('close');
 end
-ft_progress('close');
 
 % select the specified latency window from the data
 % this is done AFTER the filtering to prevent edge artifacts
