@@ -26,6 +26,7 @@ version = {
 
 writeflag = true;
 datainfo  = test_datasets;
+datainfo = datainfo(10); % this is the ctf275 dataset
 
 for i=1:length(version)
   restoredefaultpath
@@ -37,12 +38,34 @@ for i=1:length(version)
   for j=1:length(datainfo)
     try
       test_ft_preprocessing(datainfo(j), writeflag, version{i});
+    catch me
+      disp(me)
+    end % try
+  end % for datainfo
+
+  for j=1:length(datainfo)
+    try
       test_ft_timelockanalysis(datainfo(j), writeflag, version{i});
+    catch me
+      disp(me)
+    end % try
+  end % for datainfo
+
+  for j=1:length(datainfo)
+    try
       test_ft_freqanalysis(datainfo(j), writeflag, version{i});
+    catch me
+      disp(me)
+    end % try
+  end % for datainfo
+
+  for j=1:length(datainfo)
+    try
       test_ft_sourceanalysis(datainfo(j), writeflag, version{i});
     catch me
       disp(me)
     end % try
   end % for datainfo
+
 end % for version
 
