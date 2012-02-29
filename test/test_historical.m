@@ -6,22 +6,22 @@ function test_historical
 % return
 
 version = {
-%  '20111231'
-%  '20110630'
-%  '20101231'
-%  '20100630' % from this one on it works quite well
-%  '20091231' % this one and previous don't have inputfile/outputfile
-%  '20090630' % this one and previous don't have the ft-prefix
-%  '20081231'
-%  '20080630'
-%  '20071231'
-%  '20070630'
-%  '20061231'
-%  '20060630'
-%  '20051231'
-%  '20050630'
+   '20111231'
+   '20110630'
+   '20101231'
+   '20100630' % from this one on it works quite well
+   '20091231' % this one and previous don't have inputfile/outputfile
+   '20090630' % this one and previous don't have the ft-prefix
+   '20081231'
+   '20080630'
+   '20071231'
+   '20070630'
+   '20061231'
+   '20060630'
+   '20051231'
+   '20050630'
    '20040623'
-%  '20031128'
+   '20031128'
 };
 
 writeflag = true;
@@ -39,6 +39,7 @@ for i=1:length(version)
       test_ft_preprocessing(datainfo(j), writeflag, version{i});
       test_ft_timelockanalysis(datainfo(j), writeflag, version{i});
       test_ft_freqanalysis(datainfo(j), writeflag, version{i});
+      test_ft_sourceanalysis(datainfo(j), writeflag, version{i});
     catch me
       disp(me)
     end % try
