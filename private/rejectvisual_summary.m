@@ -152,7 +152,7 @@ if strcmp(info.metric,'zvalue') || strcmp(info.metric, 'maxzvalue')
     runss=zeros(info.nchan,1);
     runnum=0;
     for i=1:info.ntrl
-        [dat] = preproc(info.data.trial{i}, info.data.label, info.fsample, info.cfg.preproc, info.offset(i));
+        [dat] = preproc(info.data.trial{i}, info.data.label, offset2time(info.offset(i), info.fsample, size(info.data.trial{i},2)), info.cfg.preproc); % not entirely sure whether info.data.time{i} is correct, so making it on the fly
         dat(info.chansel==0,:) = nan;
         runsum=runsum+sum(dat,2);
         runss=runss+sum(dat.^2,2);
@@ -163,7 +163,7 @@ if strcmp(info.metric,'zvalue') || strcmp(info.metric, 'maxzvalue')
 end
 for i=1:info.ntrl
   ft_progress(i/info.ntrl, 'computing metric %d of %d\n', i, info.ntrl);
-  [dat, label, time, info.cfg.preproc] = preproc(info.data.trial{i}, info.data.label, info.fsample, info.cfg.preproc, info.offset(i));
+  [dat, label, time, info.cfg.preproc] = preproc(info.data.trial{i}, info.data.label, offset2time(info.offset(i), info.fsample, size(info.data.trial{i},2)), info.cfg.preproc); % not entirely sure whether info.data.time{i} is correct, so making it on the fly
   dat(info.chansel==0,:) = nan;
   switch info.metric
     case 'var'

@@ -945,7 +945,7 @@ fprintf('done\n');
 
 % apply preprocessing and determine the time axis
 fprintf('preprocessing data... ');
-[dat, lab, tim] = preproc(dat, opt.hdr.label(chanindx), opt.fsample, opt.cfg.preproc, offset);
+[dat, lab, tim] = preproc(dat, opt.hdr.label(chanindx), offset2time(offset, opt.fsample, size(dat,2)), opt.cfg.preproc);
 fprintf('done\n');
 
 opt.curdat.label    = lab;

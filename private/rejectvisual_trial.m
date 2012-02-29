@@ -23,7 +23,7 @@ if (isfield(cfg, 'preproc') && ~isempty(cfg.preproc))
   ft_progress('init', cfg.feedback, 'filtering data');
   for i=1:ntrl
     ft_progress(i/ntrl, 'filtering data in trial %d of %d\n', i, ntrl);
-    [data.trial{i}, label, time, cfg.preproc] = preproc(data.trial{i}, data.label, fsample, cfg.preproc, offset(i));
+    [data.trial{i}, label, time, cfg.preproc] = preproc(data.trial{i}, data.label, data.time{i}, cfg.preproc);
   end
   ft_progress('close');
 end

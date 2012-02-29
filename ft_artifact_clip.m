@@ -138,7 +138,7 @@ for trlop=1:ntrl
     offset = time2offset(data.time{trlop},hdr.Fs);
     trl(trlop,3) = offset;
   end
-  datflt = preproc(dat, label, hdr.Fs, artfctdef, trl(trlop,3));
+  datflt = preproc(dat, label, data.time{trlop}, artfctdef);
   % detect all samples that have the same value as the previous sample
   identical = (datflt(:,1:(end-1)) == datflt(:,2:end));
   % ensure that the number of samples does not change

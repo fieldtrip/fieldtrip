@@ -212,7 +212,7 @@ switch cfg.method
     
     for tr = 1:cfg.ntrials
       mixsignal = randn(nmixsignal,  nsmp + 2*fltpad + maxdelay);
-      mixsignal = preproc(mixsignal, label, cfg.fsample, cfg, -fltpad, fltpad, fltpad);
+      mixsignal = preproc(mixsignal, label, offset2time(-fltpad, cfg.fsample, size(mixsignal,2)), cfg, fltpad, fltpad);
       tmp       = zeros(cfg.nsignal, nsmp);
       for i=1:cfg.nsignal
         for j=1:nmixsignal
@@ -248,7 +248,7 @@ switch cfg.method
       end
       
       % apply preproc
-      newtmp = preproc(newtmp, label, cfg.fsample, cfg, -fltpad, fltpad, fltpad);
+      newtmp = preproc(newtmp, label, offset2time(-fltpad, cfg.fsample, size(newtmp,2)), cfg, fltpad, fltpad);
       
       trial{k} = newtmp;
       

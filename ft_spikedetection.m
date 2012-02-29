@@ -228,7 +228,7 @@ for i=chansel(:)'
       end
       % apply preprocessing
       fprintf('applying preprocessing options\n');
-      dat = preproc(org, hdr.label(i), hdr.Fs, cfg.preproc);
+      dat = preproc(org, hdr.label(i), offset2time(0, hdr.Fs, size(org,2)), cfg.preproc);      
     end % if newdata
 
     peaks = [];

@@ -167,9 +167,9 @@ for(i=1:dat.numtrl)
   endpadding = round(cfg.artfctdef.manual.posttrialtime.*hdr.Fs);
   ival{i}=(cfg.trl(i,1)-begpadding):(cfg.trl(i,2)+endpadding);
   dataY{i}=show(ival{i},:);
-
+ 
   % don't remove the padding
-  [dataY{i}, dumlab, dumtime, dumcfg] = preproc(dataY{i}', cfg.artfctdef.manual.channel, hdr.Fs, cfg.artfctdef.manual, cfg.trl(i,3)-begpadding, 0, 0);
+  [dataY{i}, dumlab, dumtime, dumcfg] = preproc(dataY{i}', cfg.artfctdef.manual.channel, offset2time(cfg.trl(i,3)-begpadding, hdr.Fs, size(dataY{i}',2)), cfg.artfctdef.manual, 0, 0);
   dataY{i} = dataY{i}';
 
   try, if(~rem(i,fix(dat.numtrl/10)))fprintf('.');end; end

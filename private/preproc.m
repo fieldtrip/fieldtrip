@@ -1,4 +1,4 @@
-function [dat, label, time, cfg] = preproc(dat, label, fsample, cfg, offset, begpadding, endpadding)
+function [dat, label, time, cfg] = preproc(dat, label, time, cfg, begpadding, endpadding)
 
 % PREPROC applies various preprocessing steps on a piece of EEG/MEG data
 % that already has been read from a data file.
@@ -10,15 +10,14 @@ function [dat, label, time, cfg] = preproc(dat, label, fsample, cfg, offset, beg
 % options.
 %
 % Use as
-%   [dat, label, time, cfg] = preproc(dat, label, fsample, cfg, offset, begpadding, endpadding)
+%   [dat, label, time, cfg] = preproc(dat, label, time, cfg, begpadding, endpadding)
 %
 % The required input arguments are
 %   dat         Nchan x Ntime data matrix
 %   label       Nchan x 1 cell-array with channel labels
+%   time        Ntime x 1 vector with the latency in seconds
 %   cfg         configuration structure, see below
-%   fsample     sampling frequency
 % and the optional input arguments are
-%   offset      of the first datasample (see below)
 %   begpadding  number of samples that was used for padding (see below)
 %   endpadding  number of samples that was used for padding (see below)
 %
@@ -113,15 +112,17 @@ function [dat, label, time, cfg] = preproc(dat, label, fsample, cfg, offset, beg
 %
 % $Id$
 
+% compute fsample
+fsample = 1./mean(diff(time));
+
+% for the moment, compute offset
+offset = time2offset(time,fsample);
 
 
-if nargin<5 || isempty(offset)
-  offset = 0;
-end
-if nargin<6 || isempty(begpadding)
+if nargin<5 || isempty(begpadding)
   begpadding = 0;
 end
-if nargin<7 || isempty(endpadding)
+if nargin<6 || isempty(endpadding)
   endpadding = 0;
 end
 
@@ -133,13 +134,13 @@ if iscell(cfg)
   for i=1:length(cfg)
     tmpcfg = cfg{i};
     if nargout==1
-      [dat                     ] = preproc(dat, label, fsample, tmpcfg, offset, begpadding, endpadding);
+      [dat                     ] = preproc(dat, label, time, tmpcfg, begpadding, endpadding);
     elseif nargout==2
-      [dat, label              ] = preproc(dat, label, fsample, tmpcfg, offset, begpadding, endpadding);
+      [dat, label              ] = preproc(dat, label, time, tmpcfg, begpadding, endpadding);
     elseif nargout==3
-      [dat, label, time        ] = preproc(dat, label, fsample, tmpcfg, offset, begpadding, endpadding);
+      [dat, label, time        ] = preproc(dat, label, time, tmpcfg, begpadding, endpadding);
     elseif nargout==4
-      [dat, label, time, tmpcfg] = preproc(dat, label, fsample, tmpcfg, offset, begpadding, endpadding);
+      [dat, label, time, tmpcfg] = preproc(dat, label, time, tmpcfg, begpadding, endpadding);
       cfg{i} = tmpcfg;
     end
   end

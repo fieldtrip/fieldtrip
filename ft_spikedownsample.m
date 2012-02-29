@@ -239,7 +239,7 @@ for i=chansel(:)'
 
   % apply preprocessing and downsample
   fprintf('preprocessing\n');
-  dat = preproc(org, label, hdr.Fs, cfg.preproc);
+  dat = preproc(org, label, offset2time(0, hdr.Fs, size(org,2)), cfg.preproc);
   dat = ft_preproc_resample(dat, hdr.Fs, cfg.fsample, cfg.method);
 
   chanhdr             = [];
