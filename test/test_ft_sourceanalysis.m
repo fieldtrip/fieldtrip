@@ -1089,7 +1089,7 @@ cfg.vol               = vol;
 cfg.grid              = grid;
 source = ft_sourceanalysis(cfg, data);
 
-function source = sourceanalysis_MNE_keepall_rawtrial(data, grid, vol) %% this fails
+function source = sourceanalysis_MNE_keepall_rawtrial(data, grid, vol) 
 % construct the average spatial filter
 source = sourceanalysis_MNE_keepall(data, grid, vol);
 % project all trials through the average spatial filter
@@ -1104,7 +1104,7 @@ cfg.rawtrial          = 'yes';
 cfg.grid.filter       = source.avg.filter;
 source = ft_sourceanalysis(cfg, data);
 
-function source = sourceanalysis_MNE_keepnothing_rawtrial(data, grid, vol) %% this fails
+function source = sourceanalysis_MNE_keepnothing_rawtrial(data, grid, vol)
 % construct the average spatial filter
 source = sourceanalysis_MNE_keepall(data, grid, vol);
 % project all trials through the average spatial filter
@@ -1147,7 +1147,7 @@ cfg.vol                = vol;
 cfg.grid               = grid;
 source = ft_sourceanalysis(cfg, data);
 
-function source = sourceanalysis_LCMV_keepall_rawtrial(data, grid, vol) %% this fails
+function source = sourceanalysis_LCMV_keepall_rawtrial(data, grid, vol)
 % construct the average spatial filter
 source = sourceanalysis_LCMV_keepall(data, grid, vol);
 % project all trials through the average spatial filter
@@ -1163,7 +1163,7 @@ cfg.rawtrial           = 'yes';
 cfg.grid.filter        = source.avg.filter;
 source = ft_sourceanalysis(cfg, data);
 
-function source = sourceanalysis_LCMV_keepnothing_rawtrial(data, grid, vol) %% this fails
+function source = sourceanalysis_LCMV_keepnothing_rawtrial(data, grid, vol)
 % construct the average spatial filter
 source = sourceanalysis_LCMV_keepall(data, grid, vol);
 % project all trials through the average spatial filter
@@ -1392,4 +1392,3 @@ cfg.grid              = grid;
 cfg.refdip            = [2 5 9];
 %cfg.keepcsd           = 'yes';   % keepcsd is ALWAYS ON with PCC
 source                = ft_sourceanalysis(cfg, data);
-
