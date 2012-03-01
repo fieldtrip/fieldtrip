@@ -104,6 +104,7 @@ right_offset        = 0.5;
 right_mult          = 127/0.5;
 
 close all;
+figure
 
 TFR = zeros(2,(cfg.foilim(2)-cfg.foilim(1)+1),100);
 
@@ -151,9 +152,7 @@ while true
       dat = ft_preproc_highpassfilter(dat,hdr.Fs,5,1,'but','twopass');
       dat = ft_preproc_bandstopfilter(dat,hdr.Fs,[45  55],4,'but','twopass');
       dat = ft_preproc_bandstopfilter(dat,hdr.Fs,[95 115],4,'but','twopass');
-      
-      figure(1)
-      
+            
       %             h = get(gca, 'children');
       %             hold on
       %
@@ -292,6 +291,9 @@ while true
       midiOut(uint8([16*14+2-1,0, volume_right])); % ptich
       
       % schemerlamp.setLevel(9);
+
+      % force an update of the figure
+      drawnow
       
     end % if enough blocks
   end % if enough new samples
