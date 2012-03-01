@@ -99,7 +99,7 @@ for n=1:orig.nchan
     kCoil=kCoil+1;
     grad.label{k}=deblank(orig.ch_names{n});
     k=k+1;
-  elseif (orig.chs(k).coil_type==3012|orig.chs(k).coil_type==3013|orig.chs(k).coil_type==3014) %planar gradiometer
+  elseif (orig.chs(n).coil_type==3012|orig.chs(n).coil_type==3013|orig.chs(n).coil_type==3014) %planar gradiometer
     t=orig.chs(n).coil_trans;
     grad.pnt(kCoil,:)=100*(t(1:3,4)-0.008*t(1:3,1)); % multiply with 100 to get cm
     grad.ori(kCoil,:)=t(1:3,3);
