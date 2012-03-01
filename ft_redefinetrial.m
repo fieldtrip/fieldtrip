@@ -80,7 +80,7 @@ ft_defaults
 ft_preamble help
 ft_preamble callinfo
 ft_preamble trackconfig
-ft_preamble loadvar datain
+ft_preamble loadvar data
 
 % ft_checkdata is done further down
 
