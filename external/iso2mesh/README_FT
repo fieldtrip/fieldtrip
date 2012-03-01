@@ -1,0 +1,12 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% README for iso2mesh toolbox in FieldTrip
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The version of iso2mesh toolbox released with FieldTrip refers to the 
+svn revision #362 of March the 1st 2012, thanks to Quianqian Fang for 
+committing the latest changes.
+You may find the complete version at:
+http://iso2mesh.sourceforge.net/cgi-bin/index.cgi
+
+
+Note: At the moment only the linux 64 version of iso2mesh is supported within FieldTrip.

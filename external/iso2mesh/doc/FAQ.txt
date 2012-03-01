@@ -1,0 +1,265 @@
+   #[1]iso2mesh: a Matlab/Octave-based mesh generator
+
+Frequently asked questions about iso2mesh
+
+          1. [2]I am getting a "Two subfaces ... are found intersecting
+          each other" error, what should I do?
+
+          2. [3]After mesh generation, the surface plot looks messed up,
+          what was wrong?
+
+          3. [4]Matlab complains about imread, imclose or imfill missing
+
+          4. [5]iso2mesh failed when writing files to disk
+
+          5. [6]When displaying the surface produced by iso2mesh with
+          OpenGL, there are lot of holes, how to fix this?
+
+          6. [7]Subroutine meshresample returns an empty mesh, why?
+
+          7. [8]Which meshing option should I choose?
+
+          8. [9]How do I control mesh density in iso2mesh?
+
+          9. [10]How to mesh a domain containing multiple isolated objects
+          ?
+
+1. I am getting a "Two subfaces ... are found intersecting each other" error, what should I do?
+
+   This is the most frequently encountered problem using this toolbox.
+   There are three possible causes of this error:
+
+1. the volume you are trying to mesh contains regions having shared boundarysegments
+
+   This is most likely happening when you see the above error message. Try
+   to plot your volume slice by slice, and pay attention to any voxels
+   whose neighbors have more than 2 different values. If you do see these
+   type of voxels (junctions), unfortunately, iso2mesh can not handle this
+   situation at this point. Here are two possible temporary work-arounds:
+    1. if there are not many junction voxels, you may want to manually
+       edit your image and disconnect the regions that share the same
+       boundary and make sure all the sub-regions are either completely
+       disjointed, or completely enclosed by another.
+    2. merge the regions that have shared boundaries, and mesh the
+       resulting merged volume; after you get the tetrahedra, compute the
+       centroid of each element in the merged domain (identified by their
+       labels), and map them back to your original segmented image;
+       determine the original region id using the voxel containing the
+       centroids.
+
+   If you have any better suggestions to enable iso2mesh to handle this
+   situation, please let [11]me know.
+
+2. you are using 'simplify' method to mesh a complex domain
+
+   There are two possible methods for volume-to-surface conversion,
+   'simplify' and 'cgalsurf'. The second method always returns a
+   well-posed surface where no self-intersecting elements present;
+   however, the 'simplify' approach does not. The default method for
+   vol2mesh/vol2surf (v2m/v2s) is 'cgalsurf'. If you have to use
+   'simplify', you may have to experiment different surface densities for
+   the surface extraction. You may lucky enough to find a working
+   configuration, but very likely, you may not. Please use 'cgalsurf'
+   option whenever possible.
+
+3. your surface mesh is too coarse and intersects the enclosed surfaces
+
+   The mesh extraction will represent the region boundaries by a sheet of
+   triangles. Near sharp edges, this representation may generate a rounded
+   edge and does not exactly preserve the shape of the original domain. If
+   you happen to mesh a thin layer of material, the resulting surface may
+   intersect each other at sharp edges if your surface element is too big.
+   Please use a small opt.radbound value to run the mesh generation again.
+
+2. After mesh generation, the surface plot looks messed up, what was wrong?
+
+   It is very likely you incorrectly used the output variables. The output
+   of vol2mesh or surf2mesh include elem: the tetrahedral element indices,
+   and face: the surface triangle indices. But be careful, both of these
+   two arrays have an additional column. The last column is a label field,
+   indicating the origin (sub-region) of the elements. You should never
+   use the last columns of these two arrays for plotting. To make a
+   correct surface plot, you should use something like
+ trisurf(face(:,1:3),node(:,1),node(:,2),node(:,3));
+
+   and don't use the full face array as the first parameter.
+
+   If you are using iso2mesh newer than 0.9.8, you can use a function
+   called "plotmesh" to visualize the produced surfaces and volumes. The
+   script will attempt to recognize the extra column of "face" by using
+   the Euler characteristics and automatically ignore it if present.
+
+3. Matlab complains about imread, imclose or imfill missing
+
+   Under the sample/ directory, demo_vol2mesh_ex2.m requires imread, which
+   is a build-in function in matlab, but not in octave. You have to
+   install octave-image via apt-get or yum first. In example
+   demo_vol2mesh_ex3.m, functions imclose and imfill are needed. These two
+   functions can only be found in matlab's image processing toolbox. If
+   you don't have this toolbox installed (of course, it is not free), you
+   can simply pass this example. For octave, unfortunately, these
+   functions do not exist yet, and hopefully someone can fill them in
+   soon.
+
+4. iso2mesh failed when writing files to disk
+
+   If you are working on a multi-user workstation, and multiple users were
+   using iso2mesh, some temporary files may have a conflict in read/write
+   permission under /tmp directory. If user A runs iso2mesh first, and
+   user B will get this error, because iso2mesh fails to create the
+   temporary files as it does not have the permissions to overwrite those
+   files created by A. To solve this issue, please define your own
+   temporary folder, or set your session id, you can find more info at
+   [12]Advanced page.
+
+5. When displaying the surface produced by iso2mesh with OpenGL, there are lot of holes, how to fix this?
+
+   The node orders in the output surface mesh are random, some are
+   oriented clockwise, some are counter-clockwise. This will make OpenGL,
+   or OpenGL based applications, render the surface with different
+   materials. To correct this, you can simply call
+ [newnode,newface]=meshcheckrepair(node,face);
+
+   and the new surface: [newnode,newface] will have consistent
+   orientations. Again, be careful if you are using the face output from
+   vol2surf/v2s, it has an extra column. You only need to use the first 3
+   columns in the face array when making plots.
+
+6. Subroutine meshresample returns an empty mesh, why?
+
+   When the input surface mesh contains topological defects, such as
+   non-manifold nodes, the meshresample() subroutine will not proceed and
+   return an empty mesh (the output message will show "0 total edges
+   collapsed"). In this case, you need to first call meshcheckrepair()
+   subroutine to fix your input mesh, and them pass it to meshresample. An
+   example is shown below:
+  [no2,fc2]=meshcheckrepair(node_in,face_in);
+  [node_out,face_out]=meshresample(no2,fc2,0.2);
+
+   (this issue is automatically corrected in iso2mesh 0.8 or newer)
+
+7. Which meshing option should I choose?
+
+   Iso2mesh provides 3 options for v2m and vol2mesh, namely, 'cgalmesh',
+   'cgalsurf' and 'simplify'. Some users may get confused which one to
+   use. In fact, we were hoping not to put users in this situation, as
+   iso2mesh was designed for simplicity and efficiency. Unfortunately, we
+   haven't really found a single option that works for all of the
+   situations, and each of the 3 options have there good and bad sides.
+
+     * cgalmesh: this is the most powerful option of all, and is
+       potentially the ideal candidate as the default option. With
+       'cgalmesh', iso2mesh can easily process a binary volume and a
+       volume with multi-region labels with good speed and robustness. It
+       can produce both volumetric and surfaces meshes at the same time,
+       and clearly labels the element and surfaces for each individual
+       sub-region. However, it is not perfect. It can not extract
+       iso-surfaces from a gray-scale image. When you want to control mesh
+       densities near a specific isosurface (such as [13]this case),
+       cgalmesh option is not as flexible as the other two. In short,
+       cgalmesh is the best choice for producing uniform-sized meshes from
+       an arbitrary segmented volume.
+     * cgalsurf: cgalsurf option produces surface and volumetric meshes
+       with a standard 2-step process as shown in the [14]workflow. When
+       extracting multiple isosurfaces, it will do the extraction
+       sequentially. The strengths of cgalsurf include 1) all the
+       extracted surfaces are guaranteed to be free of self-intersecting
+       elements, individually, and 2) it can handle gray-scale volumes.
+       The main issue for cgalsurf is when multiple isosurfaces overlap to
+       each other, v2m/vol2mesh will break as the combined surface
+       contains self-intersecting elements. In short, cgalsurf is the best
+       option when multiple sub-regions are disconnected, or one enclosing
+       another.
+     * simplify: this is as flexible as cgalsurf, but it is not as
+       reliable. After the mesh simplification, a surface may become
+       self-intersecting and v2m/vol2mesh will stop working. However, when
+       you only have a dense surface to start with, this is the only
+       option you can use.
+
+   To make it easy to remember:
+    1. when meshing a simple binary volume, 'cgalmesh' and 'cgalsurf' are
+       both good choices
+    2. when meshing a segmented volumes with multiple sub-regions, use
+       'cgalmesh'
+    3. when meshing a gray-scale volume, use 'cgalsurf'
+    4. when other options fail, try 'simplify'.
+
+8. How do I control mesh density in iso2mesh?
+
+   Iso2mesh uses two parameters to quantitatively control the mesh
+   density. In v2m or vol2mesh, parameter opt sets the maximum edge length
+   of the surface triangles (i.e. controlling the density of the mesh on
+   the surface), and maxvol sets the maximum tetrahedron volume.
+
+   If you want to let the mesh be denser on the surface and coarser
+   inside, you can use a small opt value and a large maxvol value.
+
+   If you want to control the surface mesh density so that it adapts
+   depending on the curvature, you can do so by defining opt as a struct,
+   and set the opt.radbound and opt.distbound values. You can find
+   examples from [15]this presentation (slide 15). This example can also
+   be accessed from iso2mesh/sample/demo_helloworld.m
+
+9. How to mesh a domain containing multiple isolated objects ?
+
+   A couple of users had reported that iso2mesh failed to return all
+   inclusions in a 3D image when using the 'cgalsurf' and 'cgalmesh'
+   options. The 'simplify' option did work but it occasionally raised the
+   [16]intersecting-surface error and aborted the meshing process.
+
+   This issue was found to be related to the methods in CGAL to populate
+   the initial mesh. It does not reliably cover all inclusions for a
+   general input. A further investigation is needed to fix the problem in
+   the CGAL code.
+
+   If the target domain is a binary image, the following command is a
+   work-around:
+function [node,elem]=meshisolatedobj(img,opt,maxvol)
+%
+% Usage:
+%    [node,elem]=meshisolatedobj(img,opt,maxvol)
+%    Author: Qianqian Fang <fangq at nmr.mgh.harvard.edu>
+%
+img=logical(img);
+[bin,regionnum]=bwlabeln(img,6);
+node=[];
+elem=[];
+
+for regionid=1:regionnum
+    fprintf(1,'meshing region #%d ...\n',regionid);
+
+    [no,el]=v2m(bin==regionid,0.5,opt,maxvol);
+
+    % merge the resulting mesh with other regions
+    el(:,5)=regionid;
+    el(:,1:4)=el(:,1:4)+size(node,1);
+    if(regionid>1)
+        elem=[elem;el];
+        node=[node;no];
+    else
+        node=no;
+        elem=el;
+    end
+end
+
+   This function only works in Matlab because function bwlabeln is not
+   available in Octave.
+
+References
+
+   1. http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?action=rss
+   2. http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?Doc/FAQ#I_am_getting_a_Two_subfaces_are_found_intersecting_each_other_error_what_should_I_do
+   3. http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?Doc/FAQ#After_mesh_generation_the_surface_plot_looks_messed_up_what_was_wrong
+   4. http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?Doc/FAQ#Matlab_complains_about_imread_imclose_or_imfill_missing
+   5. http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?Doc/FAQ#iso2mesh_failed_when_writing_files_to_disk
+   6. http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?Doc/FAQ#When_displaying_the_surface_produced_by_iso2mesh_with_OpenGL_there_are_lot_of_holes_how_to_fix_this
+   7. http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?Doc/FAQ#Subroutine_meshresample_returns_an_empty_mesh_why
+   8. http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?Doc/FAQ#Which_meshing_option_should_I_choose
+   9. http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?Doc/FAQ#How_do_I_control_mesh_density_in_iso2mesh
+  10. http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?Doc/FAQ#How_to_mesh_a_domain_containing_multiple_isolated_objects
+  11. http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?FangQ
+  12. http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?Advanced
+  13. http://iso2mesh.sourceforge.net/upload/head_mesh.jpg
+  14. http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?Doc/Workflow
+  15. http://iso2mesh.sf.net/upload/iso2mesh_a_one_liner_mesh_generator.pdf
+  16. http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?Doc/FAQ#I_am_getting_a_Two_subfaces_are_found_intersecting_each_other_error_what_should_I_do

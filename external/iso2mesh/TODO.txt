@@ -1,0 +1,38 @@
+====================================================================
+                         iso2mesh TODO list
+====================================================================
+
+== high priority ==
+
+* detect multi-value interfaces (i.e. voxels where more than 2 values meet) \
+and perturb the levelset surface mesh to avoid intersection [proposed on 2009/02/11]
+
+== low priority ==
+
+* 2D image-based mesh generation support ? [proposed on 2009/02/11]
+
+* adaptive refining [proposed on 2009/02/11]
+
+* moving mesh
+
+* edge sharpening
+
+
+
+== completed ==
+
+* on Windows, the deletemeshfile will gave warning message, seemed the \
+files were opened but not closed and can not be deleted \
+- done, by FangQ 2009/05/04
+
+* processing gray-scale images directly [proposed on 2009/02/11] \
+- done, by FangQ 2009/05/04
+
+* setting RNG seeds when calling CGAL tools to ensure repeatibility \
+of the meshing [proposed 2010/07/17] \
+- done, by FangQ 2010/11/08
+
+* if one levelset contains multiple disjointed surfaces, separate them, \
+and do sub-region labeling for each component [proposed on 2009/02/11]
+- done, by FangQ 2011/02/26
+

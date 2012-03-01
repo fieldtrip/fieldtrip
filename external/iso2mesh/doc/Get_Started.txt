@@ -1,0 +1,53 @@
+   #[1]iso2mesh: a Matlab/Octave-based mesh generator
+
+Getting Started with iso2mesh
+
+   Although iso2mesh provides a rich collection of [2]mesh-related
+   functions, the core functionality, i.e. creating volumetric meshes from
+   surfaces or binary image stacks, is very straightforward to use. A
+   minimum step to perform such task only requires about 3 to 5 lines of
+   matlab code. You can find a list of examples under the "sample"
+   directory. In [3]this page, we summarize the overall work-flow of this
+   toolbox.
+
+   To outline a simple meshing session, let's assume you have a 3D image
+   array, named "mydata", saved in a file called "mydata.mat". Variable
+   mydata can be any 3D image, a MRI/CT scan or a simple binary mask
+   produced by your own command. Here are the commands you need to produce
+   a volumetric FEM mesh from this volume:
+
+ load mydata.mat
+ [node,elem,face]=v2m(mydata,0.5,5,100);
+ plotmesh(node,face)
+
+   Needless to say, the first line loads the data to your current session.
+   The second line calls an iso2mesh function, 'v2m', the shortcut for
+   vol2mesh, to construct a volumetric mesh from this data array. The
+   first argument of v2m, "mydata", is the volumetric image you are about
+   to mesh; the 2nd argument is the threshold value at which you define
+   the boundary surface of the mesh; the 3rd argument, 5, defines the
+   maximum size of the surface triangles; the last argument, 100, defines
+   the maximum volume of the resulting tetrahedral elements. You can
+   define a vector for the second argument, asking iso2mesh to produce
+   multiple level-sets as the exterior or internal interfaces of the
+   target domain. Both the 3rd and 4th arguments controls the density of
+   the resulting mesh: the smaller the values, the more triangles on the
+   surface and more tetrahedra in the volumetric mesh.
+
+   There are 3 outputs from v2m command:
+     * node: the node coordinates for the generated volumetric mesh, with
+       dimension of NN x 3, with each column being x, y and z,
+       respectively.
+     * elem: the tetrahedral element info, with a dimension of NE x 4;
+       each row represents an element, and each column are the node
+       indices for each corner of a tetrahedron.
+     * face: triangular surface element info, with a dimension of NS x
+       4,;the first 3 columns are the node indices of each corner of the
+       triangle, and the last column is a flag to identify its mapping to
+       the original surface id.
+
+References
+
+   1. http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?action=rss
+   2. http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?Doc/FunctionList
+   3. http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?Doc/Workflow
