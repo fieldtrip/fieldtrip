@@ -632,7 +632,7 @@ end
 % FIXME use inside_vol instead of this replication of code
 % determine the dipole locations inside the brain volume
 if ~isfield(grid, 'inside') && ~isfield(grid, 'outside')
-  if ft_voltype(vol, 'infinite')
+  if ft_voltype(vol, 'infinite') || ft_voltype(vol, 'infinite_monopole')
     % an empty vol in combination with gradiometers indicates a magnetic dipole
     % in an infinite vacuum, i.e. all dipoles can be considered to be inside
     grid.inside = 1:size(grid.pos,1);
