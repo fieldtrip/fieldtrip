@@ -46,3 +46,9 @@ modeeg2ft_2chn$(SUFFIX): modeeg2ft_2chn.o serial.o
 setupbluesmirf$(SUFFIX): setupbluesmirf.c serial.o
 	gcc -o $@ $^ -I.
 
+clean:
+	rm -f *.o
+	rm -f modeeg2ft$(SUFFIX)
+	rm -f modeeg2ft_2chn$(SUFFIX)
+	rm -f setupbluesmirf$(SUFFIX)
+

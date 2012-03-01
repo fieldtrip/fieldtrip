@@ -1,4 +1,4 @@
-/** ModularEEG acqusition tool to stream data to a FieldTrip buffer,
+/*//i* ModularEEG acqusition tool to stream data to a FieldTrip buffer,
 	and write data to one or multiple GDF files (if you ever reach the size limit...).
 	(C) 2010 S. Klanke
 */
@@ -342,7 +342,7 @@ int main(int argc, char *argv[]) {
 			continue;
 		}
 		
-		// printf("%i sample(s) , %i bytes\n", numSamples, numTotal);
+		printf("%i sample(s) , %i bytes\n", numSamples, numTotal);
 		
 		// first decode into switchData + sampleData arrays
 		for (int j=0;j<numSamples;j++) {
