@@ -1067,17 +1067,6 @@ end % datainfo
 % MNE subfunctions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% cd('/home/common/matlab/fieldtrip/data/test/latest/timelock/meg');
-% load('timelock_cov_trl_ctf275');
-% data = timelock;
-% % create 3D grid
-% cfg      = [];
-% cfg.grad = data.grad;
-% cfg.vol  = vol;
-% cfg.channel = 'MEG';
-% cfg.grid.resolution = 1.5;
-% grid = ft_prepare_leadfield(cfg);
-
 function source = sourceanalysis_MNE_keepall(data, grid, vol)
 cfg                   = [];
 cfg.channel           = 'MEG';
@@ -1133,17 +1122,6 @@ source = ft_sourceanalysis(cfg, data);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % LCMV subfunctions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% cd('/home/common/matlab/fieldtrip/data/test/latest/timelock/meg');
-% load('timelock_cov_trl_ctf275');
-% data = timelock;
-% % create 3D grid
-% cfg      = [];
-% cfg.grad = data.grad;
-% cfg.vol  = vol;
-% cfg.channel = 'MEG';
-% cfg.grid.resolution = 1.5;
-% grid = ft_prepare_leadfield(cfg);
 
 function source = sourceanalysis_LCMV_keepall(data, grid, vol)
 cfg                    = [];
