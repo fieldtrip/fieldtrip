@@ -10,7 +10,13 @@ function vol = ft_headmodel_infinite(varargin)
 %
 % See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
+model = ft_getopt(varargin, 'sourcemodel', 'dipole');
+
 % this is an easy one
 vol = [];
-vol.type = 'infinite';
 
+if strcmp(model,'monopole')
+  vol.type = 'infinite_monopole';  
+else
+  vol.type = 'infinite';
+end
