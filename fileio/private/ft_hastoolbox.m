@@ -112,6 +112,7 @@ url = {
   'NETCDF'     'see http://www.mathworks.com/matlabcentral/fileexchange/15177'
   'BCT'        'see http://www.brain-connectivity-toolbox.net/'
   'MYSQL'      'see http://www.mathworks.com/matlabcentral/fileexchange/8663-mysql-database-connector'
+  'ISO2MESH'   'see http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?Home or contact Qianqian Fang'
   };
 
 if nargin<2
@@ -291,8 +292,9 @@ switch toolbox
   case 'TEMPLATE/NEIGHBOURS'
     status = ~isempty(regexp(unixpath(path), 'fieldtrip/template/neighbours', 'once'));
   case 'TEMPLATE/SOURCEMODEL'
-    status = ~isempty(regexp(unixpath(path), 'fieldtrip/template/sourcemodel', 'once'));
-    
+    status = ~isempty(regexp(unixpath(path), 'fieldtrip/template/sourcemodel', 'once')); 
+  case 'ISO2MESH'
+    status = exist('vol2surf.m', 'file') && exist('qmeshcut.m', 'file');
   otherwise
     if ~silent, warning('cannot determine whether the %s toolbox is present', toolbox); end
     status = 0;
