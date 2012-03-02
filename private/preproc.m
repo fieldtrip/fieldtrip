@@ -106,9 +106,8 @@ function [dat, label, time, cfg] = preproc(dat, label, time, cfg, begpadding, en
 % compute fsample
 fsample = 1./mean(diff(time));
 
-% for the moment, compute offset
+% compute offset, which is used later on to compute the full time-axis for padded data
 offset = time2offset(time,fsample);
-
 
 if nargin<5 || isempty(begpadding)
   begpadding = 0;
@@ -249,10 +248,6 @@ end
 
 if any(any(isnan(dat)))
   % filtering is not possible for at least a selection of the data
-  if nargout>2
-    nsamples = size(dat,2);
-    time = (offset - begpadding + (0:(nsamples-1)))/fsample;
-  end
   warning('data contains NaNs, no filtering applied');
   return;
 end
