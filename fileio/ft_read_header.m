@@ -1358,7 +1358,7 @@ switch headerformat
     % do some reformatting/renaming of the header items
     hdr.Fs          = orig.header.rate;
     hdr.nChans      = orig.header.nchannels;
-    hdr.nSamples    = orig.header.nums;
+    hdr.nSamples    = orig.header.numsamples;
     hdr.nSamplesPre = 0;
     hdr.nTrials     = 1;
     for i=1:hdr.nChans

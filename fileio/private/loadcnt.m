@@ -316,7 +316,7 @@ if strcmpi(r.dataformat, 'auto')
     fseek(fid,h.nextfile+52,'bof');
     is32bit = fread(fid,1,'char');
     if (is32bit == 1)
-      r.dataformat = 'int32'
+      r.dataformat = 'int32';
     end;
     fseek(fid,begdata,'bof');
   end;
