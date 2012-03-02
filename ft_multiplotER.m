@@ -282,7 +282,15 @@ if strcmp(dtype, 'timelock') && hasrpt,
   tmpcfg        = [];
   tmpcfg.trials = cfg.trials;
   for i=1:Ndata
+    % save mask (timelockanalysis will remove it)
+    if ~isempty(cfg.maskparameter)
+      tmpmask = varargin{i}.(cfg.maskparameter);
+    end
     varargin{i} = ft_timelockanalysis(tmpcfg, varargin{i});
+    % put back mask 
+    if ~isempty(cfg.maskparameter)
+       varargin{i}.(cfg.maskparameter) = tmpmask;
+    end
   end
   dimord        = varargin{1}.dimord;
   dimtok        = tokenize(dimord, '_');
