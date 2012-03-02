@@ -224,6 +224,7 @@ if basedonvol
 end
 
 if basedonmni
+  cfg.sourceunits = ft_getopt(cfg,      'sourceunits', 'auto');
   cfg.grid.tight  = ft_getopt(cfg.grid, 'tight', 'no');
 end
 
