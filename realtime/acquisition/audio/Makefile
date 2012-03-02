@@ -24,7 +24,7 @@ endif
 CFLAGS = $(INCPATH) -Wunused -Wall -pedantic -O3 -g
 CPPOBJS = $(CPPDIR)/GdfWriter.o $(CPPDIR)/SignalConfiguration.o $(CPPDIR)/FtConnection.o $(CPPDIR)/StringServer.o
 
-all: audio2ft$(SUFFIX) ft2audio$(SUFFIX)
+all: audio2ft$(SUFFIX)
 
 audio2ft.o: audio2ft.cc 
 	g++ -c $^ $(CFLAGS) 
