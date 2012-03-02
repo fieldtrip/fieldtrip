@@ -187,7 +187,7 @@ if issource
   if strcmp(cfg.parameter, 'mom') && isfield(varargin{1}, 'avg') && isfield(varargin{1}.avg, 'csdlabel') && isfield(varargin{1}, 'cumtapcnt')
     [dat, cfg] = get_source_pcc_mom(cfg, varargin{:});
   elseif strcmp(cfg.parameter, 'mom') && isfield(varargin{1}, 'avg') && ~isfield(varargin{1}.avg, 'csdlabel')
-    [dat, cfg] = get_source_lcmv_mom(cfg, varargin{:});
+    [dat, cfg] = get_source_lcmv_mom(cfg, varargin{:});  
   elseif isfield(varargin{1}, 'trial')
     [dat, cfg] = get_source_trial(cfg, varargin{:});
   else
@@ -534,19 +534,41 @@ function [dat, cfg] = get_source_avg(cfg, varargin)
 Nsource = length(varargin);
 Nvoxel  = length(varargin{1}.inside) + length(varargin{1}.outside);
 dim     = varargin{1}.dim;
+
+inside  = false(prod(dim),1);
+inside(varargin{1}.inside) = true;
+
+tmp     = getsubfield(varargin{1}, cfg.parameter);
+if size(tmp,2)>1
+  if isfield(varargin{1}, 'freq')
+    Nvoxel = Nvoxel*numel(varargin{1}.freq);
+    dim    = [dim numel(varargin{1}.freq)];
+    inside = repmat(inside, [1 numel(varargin{1}.freq)]);
+  end
+  if isfield(varargin{1}, 'time')
+    Nvoxel = Nvoxel*numel(varargin{1}.time);
+    dim    = [dim numel(varargin{1}.time)];
+    if isfield(varargin{1},'freq')
+      inside = repmat(inside, [1 1 numel(varargin{1}.time)]);
+    else
+      inside = repmat(inside, [1 numel(varargin{1}.time)]);
+    end
+  end
+end
 dat = zeros(Nvoxel, Nsource);
 for i=1:Nsource
   tmp = getsubfield(varargin{i}, cfg.parameter);
   dat(:,i) = tmp(:);
 end
+inside = find(inside(:));
 if isfield(varargin{1}, 'inside')
   fprintf('only selecting voxels inside the brain for statistics (%.1f%%)\n', 100*length(varargin{1}.inside)/prod(varargin{1}.dim));
-  dat = dat(varargin{1}.inside,:);
+  dat = dat(inside,:);
 end
 % remember the dimension of the source data
 cfg.dim = dim;
 % remember which voxels are inside the brain
-cfg.inside = varargin{1}.inside;
+cfg.inside = find(inside(:));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION for creating a design matrix
