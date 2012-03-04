@@ -46,7 +46,8 @@ function [interp] = ft_sourceinterpolate(cfg, functional, anatomical)
 %   source  is the output of FT_SOURCEANALYSIS
 %   stat    is the output of FT_SOURCESTATISTICS
 %   anatomy is the output of FT_READ_MRI or one of the FT_VOLUMExxx functions, 
-%           or a cortical sheet that was read with FT_READ_HEADSHAPE. 
+%           a cortical sheet that was read with FT_READ_HEADSHAPE, or a regular
+%           3D grid created with FT_PREPARE_SOURCEMODEL. 
 % and cfg is a structure with any of the following fields
 %   cfg.parameter     = string (or cell-array) of the parameter(s) to be interpolated
 %   cfg.interpmethod  = 'linear', 'cubic', 'nearest' or 'spline' when
@@ -206,16 +207,29 @@ elseif ~is2Dana && is2Dfun
   clear X Y Z;
   
   interp = [];
-  interp.dim       = dim;
-  interp.transform = anatomical.transform;
-  interp.inside    = anatomical.inside;
+  if isfield(functional, 'time')
+    interp.time = functional.time;
+  end
+  if isfield(functional, 'freq')
+    interp.freq = functional.freq;
+  end
   
   interpmat(~anatomical.inside(:), :) = 0;
   for k = 1:numel(cfg.parameter)
     tmp    = getsubfield(functional, cfg.parameter{k});
     siz    = size(tmp);
-    interp = setsubfield(interp, cfg.parameter{k}, reshape(interpmat*tmp,[dim siz(2)]));
+    tmp    = interpmat*tmp;
+    interp = setsubfield(interp, cfg.parameter{k}, tmp);
   end
+  
+  % get the positions
+  [x,y,z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
+  pos     = warp_apply(anatomical.transform, [x(:) y(:) z(:)]);
+  clear x y z
+  
+  interp.pos     = pos;
+  interp.inside  = find(anatomical.inside)';
+  interp.outside = setdiff(1:prod(dim), interp.inside(:)');
   
 elseif is2Dana && ~is2Dfun
   % set default interpmethod for this situation
