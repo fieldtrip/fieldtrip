@@ -6,6 +6,7 @@ function retval = engpool(varargin)
 % Use as
 %   engpool open <number> <command>
 %   engpool close
+%   engpool info
 %
 % The number specifies how many MATLAB engines should be started. In general
 % it is advisable to start as many engines as the number of CPU cores.
@@ -54,6 +55,22 @@ poolsize = length(pool);
 switch cmd
   case 'info'
     retval = pool;
+    if nargout==0
+      isbusy = false(1,numel(pool));
+      hasjob = false(1,numel(pool));
+      for i=1:numel(pool)
+        isbusy(i) = engine('isbusy', i);
+        hasjob(i) = ~isempty(pool{i});
+      end
+      % give some feedback to the user
+      if poolsize>0
+        fprintf('there are %d engines\n', poolsize);
+        fprintf('%d of them have a job\n', sum(hasjob));
+        fprintf('%d of them are busy\n',   sum(isbusy));
+      else
+        fprintf('there are no engines\n');
+      end
+    end
     
   case 'open'
     if poolsize>1
