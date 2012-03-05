@@ -24,6 +24,7 @@
 #include "mex.h"
 #include "matrix.h"
 #include "engine.h"
+#include "platform.h"
 
 typedef struct {
 		Engine *ep;
@@ -34,15 +35,14 @@ typedef struct {
 } engine_t;
 
 #define STRLEN 256
-
 #define FREE(x) {if (x) {free(x); x=NULL;}}
 
 pthread_mutex_t enginemutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t busycondition = PTHREAD_COND_INITIALIZER;
 
 engine_t *enginepool = NULL;
-int initialized = 0;
-int poolsize = 0;
+unsigned int initialized = 0;
+unsigned int poolsize = 0;
 
 /* this is called the first time that the mex-file is loaded */
 void initFun(void) {
