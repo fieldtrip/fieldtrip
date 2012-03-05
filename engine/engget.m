@@ -35,8 +35,6 @@ function varargout = engget(jobid, varargin)
 % the following are to speed up subsequent calls
 persistent previous_varargin previous_output previous_diary previous_timeout previous_StopOnError
 
-stopwatch = tic;
-
 if isequal(previous_varargin, varargin)
   % prevent the ft_getopt function from being called, because it is slow
   % reuse the values from the previous call
@@ -57,7 +55,8 @@ if numel(enghandle)~=1
   error('FieldTrip:engine:jobNotFound', 'cannot locate the engine with this job');
 end
 
-success = false;
+success   = false;
+stopwatch = tic;
 while(toc(stopwatch)<timeout)
   if ~engine('isbusy', enghandle)
     argout  = engine('get', enghandle, 'argout');

@@ -258,7 +258,6 @@ while ~all(submitted) || ~all(collected)
       [argout, options] = engget(pool{ready}, 'output', 'cell', 'diary', diary, 'StopOnError', StopOnError);
       warning(ws);
     catch
-      
       keyboard
       % FIXME
     end
