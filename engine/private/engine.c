@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "mex.h"
 #include "matrix.h"
@@ -96,7 +97,7 @@ void *evalString(void *argin) {
 		pthread_mutex_lock(&enginemutex);
 		engine[0].retval = retval;
 		engine[0].busy   = 0;
-		engine[0].tid    = 0;
+//		engine[0].tid    = NULL;
 		FREE(engine[0].cmd); 
 		pthread_mutex_unlock(&enginemutex);
 
@@ -161,8 +162,12 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				enginepool = (engine_t *)malloc(poolsize*sizeof(engine_t));
 				status = 1;
 				for (i=0; i<poolsize; i++) {
+                        #ifdef PLATFORM_WINDOWS
+                        enginepool[i].ep     = engOpen(NULL); /* returns NULL on failure */
+                        #else
 						enginepool[i].ep     = engOpen(matlabcmd); /* returns NULL on failure */
-						enginepool[i].tid    = NULL;
+                        #endif
+//						enginepool[i].tid    = NULL;
 						enginepool[i].busy   = 0;
 						enginepool[i].retval = 0;
 						enginepool[i].cmd    = NULL;
