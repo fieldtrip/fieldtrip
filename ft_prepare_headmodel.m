@@ -51,7 +51,7 @@ function [vol, cfg] = ft_prepare_headmodel(cfg, data)
 % Additionally, the specific methods each have their specific configuration 
 % options that are listed below.
 % 
-% BEMCP, BEM_DIPOLI, BEM_OPENMEEG
+% BEMCP, DIPOLI, OPENMEEG
 %     cfg.isolatedsource    (optional)
 % 
 % CONCENTRICSPHERES
@@ -262,7 +262,7 @@ switch cfg.method
   case {'bemcp' 'dipoli' 'openmeeg'}
     if strcmp(cfg.method,'bemcp')
       funname = 'ft_headmodel_bemcp';
-    elseif strcmp(cfg.method,'bem_dipoli')
+    elseif strcmp(cfg.method,'dipoli')
       funname = 'ft_headmodel_bem_dipoli';
     else
       funname = 'ft_headmodel_bem_openmeeg';
