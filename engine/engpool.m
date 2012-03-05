@@ -49,21 +49,26 @@ else
   cmd = varargin{1};
 end
 
-num = length(pool);
+poolsize = length(pool);
 
 switch cmd
   case 'info'
     retval = pool;
     
   case 'open'
-    matlabcmd = getpref('engine', 'matlabcmd', 'matlab -singleCompThread -nodesktop -nosplash');
-    
-    if num>1
+    if poolsize>1
       error('you first have to close the existing pool before opening another one');
     end
+    
     desired = varargin{2};
     if ischar(desired)
       desired = str2double(desired);
+    end
+    
+    if nargin>2
+      matlabcmd = varargin{3};
+    else
+      matlabcmd = getpref('engine', 'matlabcmd', 'matlab -singleCompThread -nodesktop -nosplash');
     end
     
     % start the engines
@@ -91,8 +96,8 @@ switch cmd
     if ischar(index)
       index = str2double(index);
     end
-    if index>num
-      error('invalid index %s, the pool only contains %d workers', index, num);
+    if index>poolsize
+      error('invalid index %s, the pool only contains %d workers', index, poolsize);
     end
     
     % add the specified job ID to the persistent list
@@ -104,8 +109,8 @@ switch cmd
     if ischar(index)
       index = str2double(index);
     end
-    if index>num
-      error('invalid index %s, the pool only contains %d workers', index, num);
+    if index>poolsize
+      error('invalid index %s, the pool only contains %d workers', index, poolsize);
     end
     
     % remove the job ID from the persistent list

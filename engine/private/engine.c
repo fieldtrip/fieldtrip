@@ -55,12 +55,14 @@ void initFun(void) {
 
 /* this function is called upon unloading of the mex-file */
 void exitFun(void) {
-		mexPrintf("engine exit()\n");
+		mexPrintf("engine cleanup()\n");
 		/* FIXME list over the engines, check whether any one is busy, give warning */
-		while (poolsize--) {
-				if (enginepool[poolsize].busy)
+		while (poolsize) {
+				if (enginepool[poolsize-1].busy)
 						mexWarnMsgTxt("Closing busy engine");
-				engClose(enginepool[poolsize].ep);
+				if (enginepool[poolsize-1].ep!=NULL)
+						engClose(enginepool[poolsize].ep);
+        poolsize--;
 		}
 		FREE(enginepool);
 		initialized = 0;
@@ -106,7 +108,7 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 		char command[STRLEN];
 		char matlabcmd[STRLEN];
 		char *ptr;
-		int retval, block, num, i;
+		int retval, block, num, i, status;
 
 		initFun();
 		mexAtExit(exitFun);
@@ -157,14 +159,20 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 
 				pthread_mutex_lock(&enginemutex);
 				enginepool = (engine_t *)malloc(poolsize*sizeof(engine_t));
+				status = 1;
 				for (i=0; i<poolsize; i++) {
-						enginepool[i].ep     = engOpen(matlabcmd);
+						enginepool[i].ep     = engOpen(matlabcmd); /* returns NULL on failure */
 						enginepool[i].tid    = NULL;
 						enginepool[i].busy   = 0;
 						enginepool[i].retval = 0;
 						enginepool[i].cmd    = NULL;
+						status = status & (enginepool[i].ep!=NULL);
 				}
 				pthread_mutex_unlock(&enginemutex);
+				if (!status) {
+						exitFun(); /* this cleans up all engines */
+						mexErrMsgTxt("failed to open MATLAB engine");
+				}
 		}
 
 		/****************************************************************************/

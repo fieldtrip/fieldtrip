@@ -82,20 +82,16 @@ enghandle = find(~busy, 1, 'first');
 % create a unique identifier for the job (string)
 jobid = generatejobid(batch);
 
-% get the current working directory to store the temp files in
-curPwd = getcustompwd();
-
 % each job should have a different random number sequence
 randomseed = rand(1)*double(intmax);
 
 % pass some options that influence the remote execution
 % options = {'pwd', curPwd, 'path', getcustompath, 'global', getglobal, 'diary', diary, 'memreq', memreq, 'timreq', timreq, 'randomseed', randomseed};
-options = {'pwd', curPwd, 'path', getcustompath, 'global', getglobal, 'diary', diary, 'randomseed', randomseed, 'engine', enghandle};
+options = {'pwd', getcustompwd, 'path', getcustompath, 'global', getglobal, 'diary', diary, 'randomseed', randomseed, 'engine', enghandle};
 
 % create the matlab script commands (one entry per line)
 matlabscript = [...
   'restoredefaultpath;',...
-  sprintf('cd(''%s'');', curPwd),...
   sprintf('addpath(''%s'');', fileparts(mfilename('fullpath'))),...
   sprintf('[argout, optout] = engexec(argin, optin);'),...
   ];

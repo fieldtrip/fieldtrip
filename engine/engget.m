@@ -61,6 +61,7 @@ while(toc(stopwatch)<timeout)
   if ~engine('isbusy', enghandle)
     argout  = engine('get', enghandle, 'argout');
     options = engine('get', enghandle, 'optout');
+    engine('eval', enghandle, 'clear all');
     engpool('release', enghandle);
     success = true;
     break
