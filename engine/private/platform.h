@@ -30,10 +30,12 @@
 #elif defined(_WIN64) || defined(__WIN64__) || defined(WIN64)
 /* win64 */
 #define PLATFORM_WIN64
+#define PLATFORM_WINDOWS
 
 #elif defined(_WIN32) || defined(__WIN32__) || defined(WIN32)
 /* win32 */
 #define PLATFORM_WIN32
+#define PLATFORM_WINDOWS
 
 #elif defined(__BEOS__)
 /* BeOS */
