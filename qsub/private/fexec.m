@@ -6,10 +6,10 @@ function [argout, optout] = fexec(argin, optin)
 %
 % This function should not be called directly.
 %
-% See also PEEREXEC, QSUBEXEC
+% See also PEEREXEC, QSUBEXEC, ENGEXEC
 
 % -----------------------------------------------------------------------
-% Copyright (C) 2011, Robert Oostenveld
+% Copyright (C) 2011-2012, Robert Oostenveld
 %
 % This program is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
