@@ -167,8 +167,6 @@ while ~all(submitted) || ~all(collected)
   % PART 1: submit the jobs
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
-  % select all jobs that still need to be submitted
-  submit = find(~submitted);
   
   pool   = engpool('info');
   isbusy = false(1,numel(pool));
@@ -178,11 +176,13 @@ while ~all(submitted) || ~all(collected)
     hasjob(i) = ~isempty(pool{i});
   end
   
-  if ~isempty(submit) && ~all(hasjob | isbusy)
+  % try to submit as many jobs as possible
+  for submit = find(~submitted);
     
-    % determine the job to submit, the one with the smallest priority number goes first
-    [dum, sel] = min(priority(submit));
-    submit = submit(sel(1));
+    if all(hasjob | isbusy)
+      % all engines are busy, we have to wait for and collect some results before submitting new jobs
+      break
+    end
     
     % redistribute the input arguments
     argin = cell(1, numargin);
@@ -203,17 +203,19 @@ while ~all(submitted) || ~all(collected)
     end
     
     clear argin
-  end % if ~isempty(submitlist)
+    
+    % check the availability of the engines
+    pool   = engpool('info');
+    isbusy = false(1,numel(pool));
+    hasjob = false(1,numel(pool));
+    for i=1:numel(pool)
+      isbusy(i) = engine('isbusy', i);
+      hasjob(i) = ~isempty(pool{i});
+    end
+    
+  end % while not all engines are busy
   
-  % check the availability of the engines
-  pool   = engpool('info');
-  isbusy = false(1,numel(pool));
-  hasjob = false(1,numel(pool));
-  for i=1:numel(pool)
-    isbusy(i) = engine('isbusy', i);
-    hasjob(i) = ~isempty(pool{i});
-  end
-  
+
   if sum(collected)>prevnumcollected || sum(isbusy)~=prevnumbusy
     % give an update of the progress
     fprintf('submitted %d/%d, collected %d/%d, busy %d, speedup %.1f\n', sum(submitted), numel(submitted), sum(collected), numel(collected), sum(isbusy), nansum(timused(collected))/toc(stopwatch));
@@ -226,41 +228,16 @@ while ~all(submitted) || ~all(collected)
   % PART 2: collect the job results that have finished sofar
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
-  % check whether one of the engines finished
-  ready = hasjob & ~isbusy;
-  
-  % get the output of that engine
-  if any(ready)
+  % try to collect as many jobs as possible
+  for ready = find(hasjob & ~isbusy)
     
-    % select the first engine that is ready
-    ready = find(ready, 1, 'first');
-    % figure out to which job its results belong
+    % figure out to which job this engines result belong
     collect = find(jobid == pool{ready});
-    
-    if isempty(collect)
-      % this job is not interesting to collect, probably it reflects some junk
-      % from a previous call or a failed resubmission
-      keyboard
-      % FIXME
-      continue;
-    end
-    
-    if collected(collect)
-      % this job is the result of a resubmission, where the original result did return
-      keyboard
-      % FIXME
-      continue;
-    end
-    
+   
     % collect the output arguments
-    try
-      ws = warning('Off','Backtrace');
-      [argout, options] = engget(pool{ready}, 'output', 'cell', 'diary', diary, 'StopOnError', StopOnError);
-      warning(ws);
-    catch
-      keyboard
-      % FIXME
-    end
+    ws = warning('Off','Backtrace');
+    [argout, options] = engget(pool{ready}, 'output', 'cell', 'diary', diary, 'StopOnError', StopOnError);
+    warning(ws);
     
     % fprintf('collected job %d\n', collect);
     collected(collect)   = true;

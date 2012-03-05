@@ -79,7 +79,12 @@ switch cmd
     % clear the list with job IDs
     pool = {};
     % close the engines
-    engine('close');
+    try
+      engine('close');
+    catch
+      % this happens if engpool and engine get out of sync
+      warning(lasterr);
+    end
     
   case 'block'
     index = varargin{2};
