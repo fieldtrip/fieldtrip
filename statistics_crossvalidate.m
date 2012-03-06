@@ -9,22 +9,15 @@ function stat = statistics_crossvalidate(cfg, dat, design)
 %   stat = ft_sourcestatistics  (cfg, data1, data2, data3, ...)
 %
 % Options:
-%   cfg.metric        = the performance metric to report (default = 'accuracy')
-%   cfg.sigtest       = the significance test to report (default = 'mcnemar')
-%   cfg.cv            = crossvalidator object
-% overloads the following
-%   cfg.mva           = a multivariate analysis (default = {standardizer svmmethod})
-%   cfg.nfolds        = number of folds (default = 10)
-%   cfg.compact       = whether or not to save the mva procedure (true)
-%   cfg.model         = whether or not to save the average model (true)
+%   cfg.mva           = a multivariate analysis (default = {dml.standardizer dml.svm})
+%   cfg.statistic     = a cell-array of statistics to report (default = {'accuracy' 'binomial'})
+%   cfg.nfolds        = number of cross-validation folds (default = 5)
 %
 % Returns:
-%   stat.performance  = computed using the specified metric
+%   stat.statistic    = the statistics to report
 %   stat.pvalue       = p-value for the specified significance test
-%   stat.cv           = the trained crossvalidator
 %   stat.model<n>     = the n-th model associated with this multivariate analysis
 %
-% See also CROSSVALIDATE, MVA
 
 % Copyright (c) 2007-2011, Marcel van Gerven, F.C. Donders Centre
 %
@@ -47,40 +40,26 @@ function stat = statistics_crossvalidate(cfg, dat, design)
 % $Id$
 
 % specify classification procedure
-if isfield(cfg,'cv')
-  cv = cfg.cv;
-else
   
-  if ~isfield(cfg,'mva')
-    cfg.mva = ft_mv_analysis({ ...
-      ft_mv_standardizer('verbose',true) ...
-      ft_mv_svm('verbose',true) ...
-      });
-  else
-    if ~isa(cfg.mva,'ft_mv_analysis')
-      cfg.mva = ft_mv_analysis(cfg.mva);
-    end
+if ~isfield(cfg,'mva')
+  cfg.mva = dml.analysis({ ...
+    dml.standardizer('verbose',true) ...
+    dml.svm('verbose',true) ...
+    });
+else
+  if ~isa(cfg.mva,'dml.analysis')
+    cfg.mva = dml.analysis(cfg.mva);
   end
-  
-  if ~isfield(cfg,'nfolds'), cfg.nfolds = 10; end
-  if ~isfield(cfg,'compact'), cfg.compact = true; end
-  
-  cv = ft_mv_crossvalidator('mva',cfg.mva,'nfolds',cfg.nfolds,'compact',cfg.compact,'verbose',true);
-  
 end
 
-if ~isfield(cfg,'metric'),
-  cv.metric = 'accuracy';
-else
-  cv.metric = cfg.metric;
+if ~isfield(cfg,'statistic'),
+  cfg.statistic = {'accuracy' 'binomial'};
 end
 
-if ~isfield(cfg,'sigtest'),
-  cv.sigtest = 'binomial';
-else
-  cv.sigtest = cfg.sigtest;
-end
+if ~isfield(cfg,'nfolds'), cfg.nfolds = 5; end
 
+cv = dml.crossvalidator('mva',cfg.mva,'type','nfold','folds',cfg.nfolds,'compact',true,'verbose',true);
+  
 if isfield(cfg, 'trainfolds')
   cv.trainfolds = cfg.trainfolds;
 end
@@ -88,75 +67,28 @@ if isfield(cfg, 'testfolds')
   cv.testfolds = cfg.testfolds;
 end
 
-% check for transfer learning; this is implemented by cfg.dataset,
-% indicating the dataset number for each element in the design matrix
-
-if isfield(cfg,'dataset') && ~isempty(cfg.dataset)
-  
-  % split up the datasets
-  
-  tmpdat = dat';
-  tmpdesign = design';
-  
-  n = max(cfg.dataset);
-  
-  dat = cell(1,n);
-  design = cell(1,n);
-  for c=1:n
-    dat{c}    = tmpdat(cfg.dataset == c,:);
-    design{c} = tmpdesign(cfg.dataset == c,:);
-  end
-  
-else
-  
-  dat = dat';
-  design = design';
-  
-end
-
-% perform everything ;o)
-cv = cv.train(dat,design);
+% perform everything!
+cv = cv.train(dat',design');
 
 % the statistic of interest
-stat.performance = cv.performance();
-
-% null-hypothesis rejected?
-stat.pvalue = cv.significance();
-
-if ~cfg.compact
-  stat.X = dat;
-  stat.Y = design;
+s = cv.statistic(cfg.statistic);
+for i=1:length(cfg.statistic)
+ stat.statistic.(cfg.statistic{i}) = s{i};
 end
 
-% get the models
+% get the model averaged over folds
+stat.model = cv.model; 
 
-m = cv.model;
-desc = cv.description;
-
-for c=1:size(m,1) % iterate over parameter types
+fn = fieldnames(stat.model{1});
+for i=1:length(stat.model)
   
-  if size(m,2) > 1 % transfer learning
-    
-    for j=1:size(m,2)
-      
-      if numel(m{c,j}) == prod(cfg.dim)
-        stat.(sprintf('model%d_%d',c,j)) = reshape(m{c,j},cfg.dim);
-      end
-    end
-    
-  else
-    if numel(m{c}) == prod(cfg.dim)
-      stat.(sprintf('model%d',c)) = reshape(m{c},cfg.dim);
+  for k=1:length(fn)
+    if prod(size(stat.model{i}.(fn{k})))==prod(cfg.dim)
+      stat.model{i}.(fn{k}) = squeeze(reshape(stat.model{i}.(fn{k}),cfg.dim));
     end
   end
+     
 end
-
-for c=1:size(desc,1) % iterate over parameter types
-  stat.(sprintf('desc%d',c)) = desc{c};
-end
-
-% save crossvalidator object
-stat.cv = cv;
-
+  
 % required
 stat.trial = [];

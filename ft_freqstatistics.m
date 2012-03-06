@@ -340,7 +340,7 @@ stat.dimord = cfg.dimord;
 
 % HACK if a bivariate statistic is in the output, replace label with the
 % appropriate labelcmb
-if strcmp(cfg.statistic, 'indepsamplesZcoh') && isfield(stat, 'label')
+if isfield(cfg,'statistic') && strcmp(cfg.statistic, 'indepsamplesZcoh') && isfield(stat, 'label')
   stat.labelcmb(:,1) = stat.label(cfg.chancmbindx(:,1));
   stat.labelcmb(:,2) = stat.label(cfg.chancmbindx(:,2));
   stat = rmfield(stat, 'label');

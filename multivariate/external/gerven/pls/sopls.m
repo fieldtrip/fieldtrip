@@ -75,26 +75,26 @@ else
         Z = A'*Y;    % reconstruct Z given A from output Y
        
         % Use glmnet elastic net code to fit reconstructed Z given input X
-        %try
+        try
      
           f = reg.train(X',Z');
           
-%          B = f.model{1}';
-          B = f.model.weights';
-          C = f.model.bias;
+          B = f.model{1}';
+          %B = f.model.weights';
+          C = f.bias;
           
-%         catch
-%           
-%           % we end up in the catch block when the number of included
-%           % variables pmax has been exceeded; this should not happen
-%           warning(lasterr);
-%           
-%           B = zeros(ninput,1);
-%           C = 0;
-%           
-%           % this implies that deflation has no effect anymore
-%           
-%         end
+        catch
+          
+          % we end up in the catch block when the number of included
+          % variables pmax has been exceeded; this should not happen
+          warning(lasterr);
+          
+          B = zeros(ninput,1);
+          C = 0;
+          
+          % this implies that deflation has no effect anymore
+          
+        end
         
         Z = B'*X + C;   % reconstruct Z given B and C
         
