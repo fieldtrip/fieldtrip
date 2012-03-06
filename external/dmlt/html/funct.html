@@ -1,0 +1,98 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>DML Toolbox Functions</title><meta name="generator" content="MATLAB 7.13"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2012-02-06"><meta name="DC.source" content="funct.m"><style type="text/css">
+
+body {
+  background-color: white;
+  margin:10px;
+}
+
+h1 {
+  color: #990000; 
+  font-size: x-large;
+}
+
+h2 {
+  color: #990000;
+  font-size: medium;
+}
+
+/* Make the text shrink to fit narrow windows, but not stretch too far in 
+wide windows. */ 
+p,h1,h2,div.content div {
+  max-width: 600px;
+  /* Hack for IE6 */
+  width: auto !important; width: 600px;
+}
+
+pre.codeinput {
+  background: #EEEEEE;
+  padding: 10px;
+}
+@media print {
+  pre.codeinput {word-wrap:break-word; width:100%;}
+} 
+
+span.keyword {color: #0000FF}
+span.comment {color: #228B22}
+span.string {color: #A020F0}
+span.untermstring {color: #B20000}
+span.syscmd {color: #B28C00}
+
+pre.codeoutput {
+  color: #666666;
+  padding: 10px;
+}
+
+pre.error {
+  color: red;
+}
+
+p.footer {
+  text-align: right;
+  font-size: xx-small;
+  font-weight: lighter;
+  font-style: italic;
+  color: gray;
+}
+
+  </style></head><body><div class="content"><h1>DML Toolbox Functions</h1><div><ul><li><a href="analysis.html"><tt>dml.analysis</tt></a> - multivariate analysis class</li><li><a href="blogreg.html"><tt>dml.blogreg</tt></a> - Bayesian logistic regression</li><li><a href="bootstrap.html"><tt>dml.bootstrap</tt></a> - bootstrapping to determine parameter relevance</li><li><a href="circreg.html"><tt>dml.circreg</tt></a> - circular regression method</li><li><a href="corclas.html"><tt>dml.corclas</tt></a> - template matching correlation based classifier</li><li><a href="crossvalidator.html"><tt>dml.crossvalidator</tt></a> - crossvalidation class</li><li><a href="enet.html"><tt>dml.enet</tt></a> - native implementation of elastic net algorithm</li><li><a href="glmnet.html"><tt>dml.glmnet</tt></a> - efficient elastic net algorithm</li><li><a href="gridsearch.html"><tt>dml.gridsearch</tt></a> - grid search method</li><li><a href="hmm.html"><tt>dml.hmm</tt></a> - Hidden Markov Model with discrete state and continu</li><li><a href="lds.html"><tt>dml.lds</tt></a> - linear dynamical system</li><li><a href="method.html"><tt>dml.method</tt></a> - abstract class for multivariate methods</li><li><a href="naive.html"><tt>dml.naive</tt></a> - gaussian naive Bayes classifier</li><li><a href="ndata.html"><tt>dml.ndata</tt></a> - wrapper class to make methods handle multiple datas</li><li><a href="one_against_one.html"><tt>dml.one_against_one</tt></a> - one-against-one binary classification</li><li><a href="one_against_rest.html"><tt>dml.one_against_rest</tt></a> - one-against-rest binary classification</li><li><a href="permutation.html"><tt>dml.permutation</tt></a> - permutation testing class</li><li><a href="prior.html"><tt>dml.prior</tt></a> - used to created smoothing and shrinkage priors</li><li><a href="searchlight.html"><tt>dml.searchlight</tt></a> - searchlight analysis</li><li><a href="sincos.html"><tt>dml.sincos</tt></a> - circular regression by decomposing into sine and co</li><li><a href="slda.html"><tt>dml.slda</tt></a> - shrinkage linear discriminant analysis</li><li><a href="sopls.html"><tt>dml.sopls</tt></a> - sparse orthonormalized partial least squares</li><li><a href="standardizer.html"><tt>dml.standardizer</tt></a> - takes zscores</li><li><a href="statistic.html"><tt>dml.statistic</tt></a> - test statistics</li><li><a href="svm.html"><tt>dml.svm</tt></a> - support vector machine</li><li><a href="whiten.html"><tt>dml.whiten</tt></a> - whitens the data</li></ul></div><p class="footer"><br>
+      Published with MATLAB&reg; 7.13<br></p></div><!--
+##### SOURCE BEGIN #####
+%% DML Toolbox Functions
+%
+% * <analysis.html |dml.analysis|> - multivariate analysis class
+% * <blogreg.html |dml.blogreg|> - Bayesian logistic regression
+% * <bootstrap.html |dml.bootstrap|> - bootstrapping to determine parameter relevance
+% * <circreg.html |dml.circreg|> - circular regression method
+% * <corclas.html |dml.corclas|> - template matching correlation based classifier
+% * <crossvalidator.html |dml.crossvalidator|> - crossvalidation class
+% * <enet.html |dml.enet|> - native implementation of elastic net algorithm
+% * <glmnet.html |dml.glmnet|> - efficient elastic net algorithm
+% * <gridsearch.html |dml.gridsearch|> - grid search method
+% * <hmm.html |dml.hmm|> - Hidden Markov Model with discrete state and continu
+% * <lds.html |dml.lds|> - linear dynamical system
+% * <method.html |dml.method|> - abstract class for multivariate methods
+% * <naive.html |dml.naive|> - gaussian naive Bayes classifier
+% * <ndata.html |dml.ndata|> - wrapper class to make methods handle multiple datas
+% * <one_against_one.html |dml.one_against_one|> - one-against-one binary classification
+% * <one_against_rest.html |dml.one_against_rest|> - one-against-rest binary classification
+% * <permutation.html |dml.permutation|> - permutation testing class
+% * <prior.html |dml.prior|> - used to created smoothing and shrinkage priors
+% * <searchlight.html |dml.searchlight|> - searchlight analysis
+% * <sincos.html |dml.sincos|> - circular regression by decomposing into sine and co
+% * <slda.html |dml.slda|> - shrinkage linear discriminant analysis
+% * <sopls.html |dml.sopls|> - sparse orthonormalized partial least squares
+% * <standardizer.html |dml.standardizer|> - takes zscores
+% * <statistic.html |dml.statistic|> - test statistics
+% * <svm.html |dml.svm|> - support vector machine
+% * <whiten.html |dml.whiten|> - whitens the data
+
+##### SOURCE END #####
+--></body></html>

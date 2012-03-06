@@ -1,0 +1,41 @@
+This directory contains all the files needed to fix the matlab repmat and multi-dimensional multiply bugs. 
+
+To install:
+1) Put all these files in a directory where matlab can see them.
+2) There is no step 2. ;-)
+   just go ahead and type: repop() or repop_testcases() to check it works. 
+   (Actually the codes are written such that matlab will automatically make 
+    the required mex files when you first use them -- provided you matlab is 
+    set-up correctly this should be transparent to you).
+
+To get help:
+help repop
+from the matlab prompt
+
+
+FILELIST
+
+readme           -- this file
+mxInfo.c mxInfo.h -- utility functions for storing info about matrices 
+repop.c repop.h   -- generic (i.e. non-matlab specific) tprod code
+repop_mex.c       -- matlab wrapper code to use repop.c
+repop.def         -- macro-code to auto-generate code for the different operators and
+                     real/complex argument mixes for repop calls.
+ddrepop.c, dsrepop.c, sdrepop.c, ssrepop.c --
+                     wrapper source files to generate code for the different 
+                     combinationd of double/single inputs. 
+repop.m           -- M-file wrapper for the repop help and for the mex-hiding 
+                     routines.
+repop_testcases.m -- M-file to run a load of tprod unit-tests to verify 
+                     correctness.
+req.m rge.m rgt.m rldivide.m rle.m rlt.m rminus.m rne.m rplus.m rpower.m rrdivide.m -- 
+                     M-file wrappers for the repop help for the different 
+							operators
+
+Non-MATLAB specific codes (not needed for MATLAB repop use)
+repop_testcase.c  -- non-MATLAB wrapper code to use repop.c
+mxUtils.c mxUtils.h -- non-MATLAB helper functions for manipulating mxInfo 
+                       structs
+valgrind.sh       -- shell-script to run the non-MATLAB code through valgrind
+
+

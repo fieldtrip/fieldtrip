@@ -1,0 +1,143 @@
+<html>
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <link rel="stylesheet" href="file:////Applications/MATLAB_R2011b.app/toolbox/matlab/helptools/private/helpwin.css">
+      <title>MATLAB File Help: dml.enet</title>
+   </head>
+   <body>
+      <!--Single-page help-->
+      <table border="0" cellspacing="0" width="100%">
+         <tr class="subheader">
+            <td class="headertitle">MATLAB File Help: dml.enet</td>
+            <td class="subheader-left"><a href="matlab:edit dml.enet">View code for dml.enet</a></td>
+            <td class="subheader-right"><a href="matlab:helpwin">Default Topics</a></td>
+         </tr>
+      </table>
+      <div class="title">dml.enet</div>
+      <div class="helptext"><pre><!--helptext --> <span class="helptopic">enet</span> native implementation of elastic net algorithm.
+ 
+    DESCRIPTION
+    Elastic net linear and logistic regression
+ 
+    REFERENCE
+    Regularization paths for generalized linear models via coordinate descent 
+    by Friedman et al.
+ 
+    EXAMPLE
+    X = rand(10,20); Y = [1 1 1 1 1 2 2 2 2 2]';
+    m = dml.enet
+    m = m.train(X,Y);
+    Z = m.test(X);
+ 
+    DEVELOPER
+    Marcel van Gerven (m.vangerven@donders.ru.nl)</pre></div><!--after help -->
+      <!--Class-->
+      <div class="sectiontitle">Class Details</div>
+      <table class="class-details">
+         <tr>
+            <td class="class-detail-label">Superclasses</td>
+            <td><a href="matlab:helpwin('dml.method')">dml.method</a></td>
+         </tr>
+         <tr>
+            <td class="class-detail-label">Sealed</td>
+            <td>false</td>
+         </tr>
+         <tr>
+            <td class="class-detail-label">Construct on load</td>
+            <td>false</td>
+         </tr>
+      </table>
+      <!--Constructors-->
+      <div class="sectiontitle"><a name="constructors"></a>Constructor Summary
+      </div>
+      <table class="summary-list">
+         <tr class="summary-item">
+            <td class="name"><a href="matlab:helpwin('dml.enet.enet')">enet</a></td>
+            <td class="m-help">native implementation of elastic net algorithm.&nbsp;</td>
+         </tr>
+      </table>
+      <!--Properties-->
+      <div class="sectiontitle"><a name="properties"></a>Property Summary
+      </div>
+      <table class="summary-list">
+         <tr class="summary-item">
+            <td class="name"><a href="matlab:helpwin('dml.enet.L1')">L1</a></td>
+            <td class="m-help">lasso penalty&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="name"><a href="matlab:helpwin('dml.enet.L2')">L2</a></td>
+            <td class="m-help">nfeatures x nfeatures ridge penalty    &nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="name"><a href="matlab:helpwin('dml.enet.conv')">conv</a></td>
+            <td class="m-help">plot of the convergence of the parameters sum(abs(beta-betaold));&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="name"><a href="matlab:helpwin('dml.enet.family')">family</a></td>
+            <td class="m-help">gaussian, binomial, or multinomial&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="name"><a href="matlab:helpwin('dml.enet.indims')">indims</a></td>
+            <td class="m-help">dimensions of the input data (excluding the trial dim and time dim in time series data)&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="name"><a href="matlab:helpwin('dml.enet.maxiter')">maxiter</a></td>
+            <td class="m-help">maximum number of iterations for native elastic net&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="name"><a href="matlab:helpwin('dml.enet.restart')">restart</a></td>
+            <td class="m-help">when false, starts at the previously learned parameters; needed for online learning and grid search&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="name"><a href="matlab:helpwin('dml.enet.tolerance')">tolerance</a></td>
+            <td class="m-help">tolerance in the error for native elastic net&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="name"><a href="matlab:helpwin('dml.enet.verbose')">verbose</a></td>
+            <td class="m-help">whether or not to generate diagnostic output&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="name"><a href="matlab:helpwin('dml.enet.weights')">weights</a></td>
+            <td class="m-help">regression weights (offset last)&nbsp;</td>
+         </tr>
+      </table>
+      <!--Methods-->
+      <div class="sectiontitle"><a name="methods"></a>Method Summary
+      </div>
+      <table class="summary-list">
+         <tr class="summary-item">
+            <td class="attributes">Static 
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:helpwin('dml.enet.lambdapath')">lambdapath</a></td>
+            <td class="m-help">&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="attributes">
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:helpwin('dml.enet.model')">model</a></td>
+            <td class="m-help">returns &nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="attributes">
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:helpwin('dml.enet.test')">test</a></td>
+            <td class="m-help">&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="attributes">
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:helpwin('dml.enet.train')">train</a></td>
+            <td class="m-help">handle multiple datasets&nbsp;</td>
+         </tr>
+      </table>
+   </body>
+</html>

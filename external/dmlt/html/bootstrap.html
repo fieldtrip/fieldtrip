@@ -1,0 +1,95 @@
+<html>
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <link rel="stylesheet" href="file:////Applications/MATLAB_R2011b.app/toolbox/matlab/helptools/private/helpwin.css">
+      <title>MATLAB File Help: dml.bootstrap</title>
+   </head>
+   <body>
+      <!--Single-page help-->
+      <table border="0" cellspacing="0" width="100%">
+         <tr class="subheader">
+            <td class="headertitle">MATLAB File Help: dml.bootstrap</td>
+            <td class="subheader-left"><a href="matlab:edit dml.bootstrap">View code for dml.bootstrap</a></td>
+            <td class="subheader-right"><a href="matlab:helpwin">Default Topics</a></td>
+         </tr>
+      </table>
+      <div class="title">dml.bootstrap</div>
+      <div class="helptext"><pre><!--helptext -->  <span class="helptopic">bootstrap</span> bootstrapping to determine parameter relevance.
+ 
+    DESCRIPTION
+    Performs a bootstrap test on a dataset given a particular
+    multivariate analysis. The stored results are the outputs of the
+    model function.
+ 
+    EXAMPLE
+    m = dml.bootstrap('mva',{dml.standardizer dml.naive},'nboot',100)
+    m = m.train(X,Y);
+ 
+    DEVELOPER
+    Marcel van Gerven (m.vangerven@donders.ru.nl)</pre></div><!--after help -->
+      <!--Class-->
+      <div class="sectiontitle">Class Details</div>
+      <table class="class-details">
+         <tr>
+            <td class="class-detail-label">Sealed</td>
+            <td>false</td>
+         </tr>
+         <tr>
+            <td class="class-detail-label">Construct on load</td>
+            <td>false</td>
+         </tr>
+      </table>
+      <!--Constructors-->
+      <div class="sectiontitle"><a name="constructors"></a>Constructor Summary
+      </div>
+      <table class="summary-list">
+         <tr class="summary-item">
+            <td class="name"><a href="matlab:helpwin('dml.bootstrap.bootstrap')">bootstrap</a></td>
+            <td class="m-help">parse options&nbsp;</td>
+         </tr>
+      </table>
+      <!--Properties-->
+      <div class="sectiontitle"><a name="properties"></a>Property Summary
+      </div>
+      <table class="summary-list">
+         <tr class="summary-item">
+            <td class="name"><a href="matlab:helpwin('dml.bootstrap.mva')">mva</a></td>
+            <td class="m-help">multivariate analysis&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="name"><a href="matlab:helpwin('dml.bootstrap.nboot')">nboot</a></td>
+            <td class="m-help">number of permutations&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="name"><a href="matlab:helpwin('dml.bootstrap.outcome')">outcome</a></td>
+            <td class="m-help">bootstrap results&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="name"><a href="matlab:helpwin('dml.bootstrap.verbose')">verbose</a></td>
+            <td class="m-help">whether or not to generate diagnostic output&nbsp;</td>
+         </tr>
+      </table>
+      <!--Methods-->
+      <div class="sectiontitle"><a name="methods"></a>Method Summary
+      </div>
+      <table class="summary-list">
+         <tr class="summary-item">
+            <td class="attributes">
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:helpwin('dml.bootstrap.statistic')">statistic</a></td>
+            <td class="m-help">return mean and standard error of the mean for all parameters in&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="attributes">
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:helpwin('dml.bootstrap.train')">train</a></td>
+            <td class="m-help">&nbsp;</td>
+         </tr>
+      </table>
+   </body>
+</html>

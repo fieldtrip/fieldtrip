@@ -1,0 +1,38 @@
+<?xml version='1.0' encoding="utf-8"?>
+
+<toc version="2.0">
+<!-- First tocitem specifies top level in Help browser Contents pane -->
+<!-- This can be a roadmap page, as shown below, or a content page -->
+    <tocitem target="dml_product_page.html">DML Toolbox
+        <!-- Nest tocitems to create hierarchical entries in  Contents-->
+        <!-- To include icons, use the following syntax for tocitems: -->
+        <!-- <tocitem target="foo.html" image="HelpIcon.NAME"> -->
+        <!-- Title-of-Section </tocitem> -->
+        <!-- where NAME is one of the following (use capital letters): -->
+        <!-- FUNCTION, USER_GUIDE, EXAMPLES, BLOCK, GETTING_STARTED, -->
+        <!-- DEMOS, RELEASE_NOTES --> 
+        <!-- Icon images used for these entries are also stored in -->
+        <!-- matlabroot/toolbox/matlab/icons -->
+        <!-- A Getting Started Guide usually comes first -->
+        <tocitem target="start.html" image="HelpIcon.GETTING_STARTED">
+            Getting Started with the DML Toolbox
+        </tocitem>
+        <!-- User Guide comes next -->
+        <tocitem target="guide.html" 
+            image="HelpIcon.USER_GUIDE">DML User Guide
+        </tocitem>
+        <!-- Function reference next -->
+        <!-- First item is page describing function categories, if any -->
+        <tocitem target="funct.html" 
+                 image="HelpIcon.FUNCTION">Function Reference
+        </tocitem>
+        <!-- Optional List of Examples, with hyperlinks to examples in other files -->
+        <tocitem target="examples.html" 
+                 image="HelpIcon.EXAMPLES">DML Examples
+        </tocitem>
+        <!-- Optional link or links to your or other Web sites -->
+        <tocitem target="http://www.distrep.org" 
+                 image="HelpIcon.RELEASE_NOTES">Developer Web Site
+        </tocitem>
+    </tocitem>
+</toc>

@@ -1,0 +1,710 @@
+/* -*- mode:c -*-  */
+/* emacs stuff */
+/* 
+
+	Template definition code for the tensor-product code.  This code is
+	included by the pre-processor with appropriate #defines to generate the
+	specific code for the various combinations of real and complex inputs.
+
+	$Id: tprod.def,v 1.45 2007-09-21 10:24:55 jdrf Exp $
+
+ Copyright 2006-     by Jason Farquhar (jdrf@zepler.org)
+ Permission is granted for anyone to copy, use, or modify this
+ software and accompanying documents for any uncommercial purposes,
+ provided this copyright notice is retained, and note is made of
+ any changes that have been made. This software and documents are
+ distributed without any warranty, express or implied.
+
+ */
+/* macro to automatically construct the function name by concatenating:
+   thename itself, the type of x/y inputs.
+   N.B. we seem to need a double nested call to fix a (bug?) in gcc*/
+#ifndef CAT
+#define CAT2(A,B) A##B
+#define CAT(A,B) CAT2(A,B)
+#endif
+
+#ifndef MAX
+#define MAX(A,B) ((A) < (B) ? (B) : (A))
+#define MIN(A,B) ((A) < (B) ? (A) : (B))
+#endif
+
+#undef ZISCOMPLEX
+#if defined(YISCOMPLEX) || defined(XISCOMPLEX)
+#define ZISCOMPLEX
+#endif 
+
+/* use pre-processor to set the right function name */
+/*---------------------------------------------------------------------------*/
+/* Compute the type of the arguments */
+#undef COMPLEXSTR /* just so the compilier doesn't complain */
+#if defined(XISCOMPLEX) && defined(YISCOMPLEX)
+#define COMPLEXSTR cxcy
+#elif defined(XISCOMPLEX)
+#define COMPLEXSTR cxry
+#elif defined(YISCOMPLEX)
+#define COMPLEXSTR rxcy
+#else
+#define COMPLEXSTR rxry
+#endif
+
+/*---------------------------------------------------------------------------*/
+/* Add the matrix type to the function name generation */
+#undef FNNMEXT
+#define FNNMEXT CAT(TYPESTR,COMPLEXSTR)
+ 
+/* some utility conditional macros to add/remove code -- which makes the
+	resulting code more readable and (hopefully?) more reliable */
+#undef XCOMPCODE
+#undef XCOMPASSIGN
+#ifdef XISCOMPLEX
+#define XCOMPCODE(A) A
+#define XCOMPASSIGN(R,I,V) R V; I V
+#else
+#define XCOMPCODE(A)
+#define XCOMPASSIGN(R,I,V) R V
+#endif
+
+#undef YCOMPCODE
+#undef YCOMPASSIGN
+#ifdef YISCOMPLEX
+#define YCOMPCODE(A) A
+#define YCOMPASSIGN(R,I,V) R V; I V
+#else
+#define YCOMPCODE(A)
+#define YCOMPASSIGN(R,I,V) R V
+#endif
+
+#undef ZCOMPCODE
+#undef ZCOMPASSIGN
+#ifdef ZISCOMPLEX
+#define ZCOMPCODE(A) A
+#define ZCOMPASSIGN(R,I,V) R V; I V
+#else
+#define ZCOMPCODE(A)
+#define ZCOMPASSIGN(R,I,V) R V
+#endif
+
+/* #ifndef _TIMESCODE_ /\* stop defining multiple times *\/ */
+/* #define _TIMESCODE_  */
+#if !defined(XISCOMPLEX) && !defined(YISCOMPLEX)
+INLINE void CAT(timesacc_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+								  ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  *zrp += *xrp * *yrp;
+}
+#endif
+#if defined(XISCOMPLEX) && defined(YISCOMPLEX)
+INLINE void CAT(timesacc_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+								  ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  *zrp +=  *xrp * *yrp - *xip * *yip;
+  *zip +=  *xip * *yrp + *yip * *xrp;
+}
+#endif
+#if defined(XISCOMPLEX) && !defined(YISCOMPLEX)
+INLINE void CAT(timesacc_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+								  ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  *zrp += *xrp * *yrp;
+  *zip += *xip * *yrp;
+}
+#endif
+#if !defined(XISCOMPLEX) && defined(YISCOMPLEX)
+INLINE void CAT(timesacc_,FNNMEXT)(ZTYPE *zrp, const XTYPE *xrp, const YTYPE *yrp, 
+								  ZTYPE *zip, const XTYPE *xip, const YTYPE *yip){
+  *zrp += *xrp * *yrp;
+  *zip += *yip * *xrp;
+}
+#endif
+
+/* 2x2 version of the above */
+INLINE void CAT(b22timesacc_,FNNMEXT)/*_rxry*/
+             (ZTYPE *zrp00, ZTYPE *zrp10, ZTYPE *zrp01, ZTYPE *zrp11,     
+				  const XTYPE *xrp00, const XTYPE *xrp10, 
+				  const XTYPE *xrp01, const XTYPE *xrp11,
+				  const YTYPE *yrp00, const YTYPE *yrp10,
+				  const YTYPE *yrp01, const YTYPE *yrp11,
+				  ZTYPE *zip00, ZTYPE *zip10, ZTYPE *zip01, ZTYPE *zip11,     
+				  const XTYPE *xip00, const XTYPE *xip10, 
+				  const XTYPE *xip01, const XTYPE *xip11,
+				  const YTYPE *yip00, const YTYPE *yip10,
+				  const YTYPE *yip01, const YTYPE *yip11){
+  CAT(timesacc_,FNNMEXT)(zrp00, xrp00, yrp00, zip00, xip00, yip00);
+  CAT(timesacc_,FNNMEXT)(zrp10, xrp10, yrp10, zip10, xip10, yip10);
+  CAT(timesacc_,FNNMEXT)(zrp01, xrp01, yrp01, zip01, xip01, yip01);
+  CAT(timesacc_,FNNMEXT)(zrp11, xrp11, yrp11, zip11, xip11, yip11);
+}
+
+/* function to do a multiply accumulate over the 2 matrices defined by their
+	start points, sizes and stride sizes */
+/* This is the simpliest code and hence generally the slowest.  Used as a
+	last resort fall-back code when none of the later specialized codes work*/
+INLINE void 
+CAT(macc_,FNNMEXT)(ZTYPE *zrp, ZTYPE *zip,
+						 const XTYPE *xrp, const XTYPE *xip, const MxInfo *xmacc, 
+						 const YTYPE *yrp, const YTYPE *yip, const MxInfo *ymacc, 
+						 int *subs){
+  int i=0;
+  ZTYPE accr=0, acci=0;
+  char fin=0;
+  int maccnd=xmacc->nd;
+  const int xstride=xmacc->stride[0];
+  const int ystride=ymacc->stride[0];  
+  const XTYPE *xrpi, *xipi=0, *xendpi;
+  const YTYPE *yrpi, *yipi=0;
+  while (fin==0){ /* loop over every element of the acc array */
+  
+	 /* alternative inner loop version may be faster? */
+	 yrpi  = yrp;	 YCOMPCODE( yipi = yip );
+	 xrpi  = xrp;	 XCOMPCODE( xipi = xip );
+	 xendpi = xrp+xstride*xmacc->sz[0];
+	 while( xrpi<xendpi ){
+			 CAT(timesacc_,FNNMEXT)(&accr,xrpi,yrpi,&acci,xipi,yipi);			 
+			 XCOMPASSIGN(xrpi,xipi, +=xstride);
+			 YCOMPASSIGN(yrpi,yipi, +=ystride);
+	 }
+
+	 /* outer loop over the rest of the dims -- N.B. recursive call would be
+		 more efficient? */
+	 for (fin=1, i=1; i < maccnd; i++) { /* N.B. dim from 1 */
+		XCOMPASSIGN(xrp,xip, += xmacc->stride[i]);
+		YCOMPASSIGN(yrp,yip, += ymacc->stride[i]);
+		subs[i]++;        /* move on to the next element */
+		if (subs[i] < xmacc->sz[i]) {
+		  fin=0; break; /* dropout when we've incremented dim*/
+		} else { /* past end of the dim so restart */
+		  subs[i] = 0; 
+		  XCOMPASSIGN(xrp,xip,-= xmacc->stride[i]*xmacc->sz[i]);
+		  YCOMPASSIGN(yrp,yip,-= ymacc->stride[i]*ymacc->sz[i]);
+		}
+	 }
+  }
+  /* accumulate the result into z */
+  *zrp+=accr;  ZCOMPCODE( *zip+=acci );
+}
+
+/* function to do a multiply accumulate over the 2 matrices defined by their
+	start points, sizes and stride sizes */
+/* This code re-orders the first dim of the outerproduct loop to be the
+	innermost loop of the macc.  This is useful when the outerproduct loop is
+	memory aligned and the inner-product loop is not as it allows the cache
+	pre-fetch mechanism to work well */
+/* N.B. this code assumes that 
+	     z->stride[0]==1 and x->stride[0]==1 and y->stride[0]==0 */
+INLINE void 
+CAT(romacc_,FNNMEXT)(ZTYPE *zrp, ZTYPE *zip, const MxInfo *zinf,
+							const XTYPE *xrp, const XTYPE *xip, const MxInfo *xmacc,
+							const YTYPE *yrp, const YTYPE *yip, const MxInfo *ymacc,
+							int *subs){
+  int i=0;
+  YTYPE accr=0, acci=0; /* accumulate over Y */
+  ZTYPE *zrpi, *zipi=0;
+  const XTYPE *xrpi, *xipi=0, *xendpi;
+  char fin=0;
+  while (fin==0){ /* loop over every element of the acc array */
+	 
+	 /* inner loop over the first z dim */
+	 accr  = *yrp;	 YCOMPCODE(  acci = *yip );	 
+	 zrpi  = zrp;   ZCOMPCODE(  zipi = zip );
+	 xrpi  = xrp;   XCOMPCODE(  xipi = xip );
+	 xendpi=xrpi+zinf->stride[0]*zinf->sz[0];
+	 while( xrpi<xendpi ){
+		CAT(timesacc_,FNNMEXT)(zrpi,xrpi,&accr,zipi,xipi,&acci);
+		XCOMPASSIGN( xrpi,xipi, +=1 );
+		ZCOMPASSIGN( zrpi,zipi, +=1 );
+	 }
+	 
+	 /* outer loop over the rest of the dims -- N.B. recursive call would be
+		 more efficient? */
+	 for (fin=1, i=0; i < xmacc->nd; i++) { /* N.B. dim from 0 */
+		XCOMPASSIGN(xrp,xip,+= xmacc->stride[i]);
+		YCOMPASSIGN(yrp,yip,+= ymacc->stride[i]);
+		subs[i]++;        /* move on to the next element */
+		if (subs[i] < xmacc->sz[i]) {
+		  fin=0; break; /* dropout when we've incremented dim*/
+		} else { /* past end of the dim so restart */
+		  subs[i] = 0; 
+		  XCOMPASSIGN(xrp,xip,-= xmacc->stride[i]*xmacc->sz[i]);
+		  YCOMPASSIGN(yrp,yip,-= ymacc->stride[i]*ymacc->sz[i]);
+		}
+	 }
+  }
+}
+
+/* Specialised 2x2 blocked code.  This version ASSUMES that X is OP only in
+dim 0 and Y is op only in dim 1.  Hence we can automatically re-use the X/Y
+entries to compute the rest of the block entries. */
+INLINE void 
+CAT(b22XYmacc_,FNNMEXT)(ZTYPE *zrp, ZTYPE *zip, 
+							 const MxInfo *zinf, const MxInfo *xop, const MxInfo *yop,
+							 const XTYPE *xrp, const XTYPE *xip, const MxInfo *xmacc,
+							 const YTYPE *yrp, const YTYPE *yip, const MxInfo *ymacc,
+								int *subs){
+  /* N.B. dim0 is op0, dim1 is op1 */
+  ZTYPE ar[4], ai[4];
+  const XTYPE *xrpi, *xipi=0;
+  const YTYPE *yrpi, *yipi=0;
+  const XTYPE *xendpi;
+  const int ystride=ymacc->stride[0];
+  const int xstride=xmacc->stride[0];
+  int d=0;
+  ar[0]= ar[1]= ar[2]= ar[3]= 0;  ZCOMPCODE( ai[0]= ai[1]= ai[2]= ai[3] =0 );
+  while (d < xmacc->nd){ /* loop over every element of the acc array */
+	 
+	 /* alternative inner loop version may be faster? */
+	 yrpi  = yrp;	 YCOMPCODE( yipi = yip );
+	 xrpi  = xrp;	 XCOMPCODE( xipi = xip );
+	 xendpi = xrp+xstride*xmacc->sz[0];
+	 while( xrpi<xendpi ){
+
+		/*Look - 4 Loads for 4 results! --IFF at least 2 entries have stride 0 */
+		/* N.B. dim 1 is rest0, dim2 is rest1 */
+		CAT(b22timesacc_,FNNMEXT)
+		  (ar,           ar+1,	               ar+2,              ar+3,
+			xrpi,  xrpi + xop->stride[0],       xrpi,       xrpi + xop->stride[0],
+			yrpi,         yrpi,       yrpi + yop->stride[1],yrpi + yop->stride[1],
+			ai,    ai ZCOMPCODE(+1),	   ai ZCOMPCODE(+2),  ai ZCOMPCODE(+3),
+			xipi,         xipi XCOMPCODE(+xop->stride[0]),
+			xipi,         xipi XCOMPCODE(+xop->stride[0]),
+			yipi,         yipi,
+			yipi YCOMPCODE(+yop->stride[1]),yipi YCOMPCODE(+yop->stride[1]) );
+
+		YCOMPASSIGN(yrpi,yipi,+=ystride);
+		XCOMPASSIGN(xrpi,xipi,+=xstride);
+	 }
+	 
+	 /* outer loop over the rest of the dims -- N.B. recursive call would be
+		 more efficient? */
+	 for (d=1; d < xmacc->nd; d++) { /* N.B. dim from 1 */
+		XCOMPASSIGN(xrp,xip, += xmacc->stride[d]);
+		YCOMPASSIGN(yrp,yip, += ymacc->stride[d]);
+		subs[d]++;        /* move on to the next element */
+		if (subs[d] < xmacc->sz[d]) { /* dropout when we've incremented dim*/
+		  break;
+		} else { /* past end of the dim so restart */
+		  subs[d] = 0; 
+		  XCOMPASSIGN(xrp,xip, -= xmacc->stride[d]*xmacc->sz[d]);
+		  YCOMPASSIGN(yrp,yip, -= ymacc->stride[d]*ymacc->sz[d]);
+		}
+	 }
+  }
+  /* accumulate the result into the output matrix */
+  zrp[0]+=ar[0];
+  zrp[zinf->stride[0]]+=ar[1];
+  zrp[zinf->stride[1]]+=ar[2];
+  zrp[zinf->stride[0]+zinf->stride[1]]+=ar[3];
+  ZCOMPCODE( zip[0]+=ai[0] );
+  ZCOMPCODE( zip[zinf->stride[0]]+=ai[1] );
+  ZCOMPCODE( zip[zinf->stride[1]]+=ai[2] );
+  ZCOMPCODE( zip[zinf->stride[0]+zinf->stride[1]]+=ai[3] );
+}
+ 
+
+/*---------------------------------------------------------------------------*/
+
+/* tprod computation for 1x1 steps */
+void CAT(simp_tprod_,FNNMEXT)(ZTYPE *zrp, ZTYPE *zip, 
+										const XTYPE *xrp, const XTYPE *xip,
+										const YTYPE *yrp, const YTYPE *yip,
+										const MxInfo *zrestinfo, 
+										const MxInfo *xrestinfo, const MxInfo *yrestinfo,
+										const MxInfo *xmaccinfo, const MxInfo *ymaccinfo,
+										int *subs, int *maccsubs){
+  int d=0;
+  while( d<xrestinfo->nd ){
+ 
+	 /* compute the result for this output index */
+	 CAT(macc_,FNNMEXT)(zrp,zip,
+							  xrp,xip,xmaccinfo,
+							  yrp,yip,ymaccinfo,maccsubs);
+
+	 /* move to the next computation in this input set */
+	 for( d=0; d < xrestinfo->nd; d++ ){
+		/* if reached the last element of this dim */
+		ZCOMPASSIGN (zrp,zip, += zrestinfo->stride[d]);
+		XCOMPASSIGN (xrp,xip, += xrestinfo->stride[d]);
+		YCOMPASSIGN (yrp,yip, += yrestinfo->stride[d]);
+
+		subs[d]++;        /* move on to the next element */
+		if( subs[d] < zrestinfo->sz[d] ){
+		  break;            /* dropout when we've incremented a dim*/
+
+		} else {
+		  subs[d] = 0; /* reset to the start again! */
+		  XCOMPASSIGN (xrp, xip, -= xrestinfo->stride[d]*zrestinfo->sz[d] ); 
+		  YCOMPASSIGN (yrp, yip, -= yrestinfo->stride[d]*zrestinfo->sz[d] ); 
+		  ZCOMPASSIGN (zrp, zip, -= zrestinfo->stride[d]*zrestinfo->sz[d] ); 
+		}
+	 }
+  }
+}
+
+
+void CAT(ro_tprod_,FNNMEXT)(ZTYPE *zrp, ZTYPE *zip, 
+									 const XTYPE *xrp, const XTYPE *xip,
+									 const YTYPE *yrp, const YTYPE *yip,
+									 const MxInfo *zrestinfo, 
+									 const MxInfo *xrestinfo, const MxInfo *yrestinfo,
+									 const MxInfo *xmaccinfo, const MxInfo *ymaccinfo,
+									 int * subs, int *maccsubs){
+  /* treat z as consisting of 2 dims, xrestinfo[0] and everything else*/
+  int d=0;
+  while( d < xrestinfo->nd ){
+ 
+	 /* compute the result for this output index */
+	 CAT(romacc_,FNNMEXT)(zrp,zip,xrestinfo,
+								 xrp,xip,xmaccinfo,
+								 yrp,yip,ymaccinfo,maccsubs);
+	 
+	 /* move to the next computation in this input set */
+	 for( d=1; d < xrestinfo->nd; d++ ){ /* N.B. count from dim 1 */
+		/* if reached the last element of this dim */
+		ZCOMPASSIGN( zrp, zip, += zrestinfo->stride[d] );
+		XCOMPASSIGN( xrp, xip, += xrestinfo->stride[d] );
+		YCOMPASSIGN( yrp, yip, += yrestinfo->stride[d] );
+		subs[d]++;        /* move on to the next element */
+
+		if( subs[d] < zrestinfo->sz[d] ){/*move this dim on by one and stop!*/
+		  break;            /* dropout when we've incremented a dim*/
+		} else {
+		  subs[d] = 0; /* reset to the start again! */
+		  XCOMPASSIGN(  xrp,xip, -= xrestinfo->stride[d]*zrestinfo->sz[d] ); 
+		  YCOMPASSIGN(  yrp,yip, -= yrestinfo->stride[d]*zrestinfo->sz[d] ); 
+		  ZCOMPASSIGN(  zrp,zip, -= zrestinfo->stride[d]*zrestinfo->sz[d] ); 
+		} 
+	 }
+  }
+}
+
+
+INLINE void CAT(dgemm22_,FNNMEXT)
+	  (MxInfo *zop,  const MxInfo *xop, const MxInfo *yop,
+		const MxInfo *xmacc,const MxInfo *ymacc){
+  ZTYPE ar[4], ai[4];
+  ZTYPE *zrp0, *zip0, *zend0, *zend1;
+  const XTYPE *xrp0, *xip0, *xrpk, *xipk=0, *xendk;
+  const YTYPE *yrp0, *yip0, *yrpk, *yipk=0;
+  const int sz0=(zop->sz[0]-(zop->sz[0]&1))*zop->stride[0];
+  ZTYPE *zrp1=(ZTYPE*)zop->rp, *zip1=(ZTYPE*)zop->ip;
+  const XTYPE *xrp1=(XTYPE*)xop->rp,   *xip1=(XTYPE*)xop->ip;
+  const YTYPE *yrp1=(YTYPE*)yop->rp,   *yip1=(YTYPE*)yop->ip;
+
+  /* compute the result for this output index */
+  zend1=zrp1+(zop->sz[1]-(zop->sz[1]&1))*zop->stride[1];
+  while(zrp1<zend1){ /* dim OP 1 --- z & y */
+
+	 xrp0=xrp1; XCOMPCODE(xip0=xip1);
+	 zrp0=zrp1; ZCOMPCODE(zip0=zip1);
+	 zend0=zrp1+sz0;
+	 while(zrp0<zend0){ /* dim OP 0 --- z & x */
+
+		ar[0]= ar[1]= ar[2]= ar[3]=0;	ZCOMPCODE( ai[0]= ai[1]= ai[2]= ai[3]=0 );
+		yrpk  = yrp1;	 YCOMPCODE( yipk = yip1 );
+		xrpk  = xrp0;	 XCOMPCODE( xipk = xip0 );
+		xendk = xrp0+xmacc->stride[0]*xmacc->sz[0];
+		while( xrpk<xendk ){ /* macc0 -- k */
+
+		  /*Look-4 Loads for 4 results! IFF at least 2 entries have stride 0 */
+		  CAT(b22timesacc_,FNNMEXT)
+			 (ar,           ar+1,	             ar+2,              ar+3,
+			  xrpk,    xrpk+xop->stride[0],      xrpk,        xrpk+xop->stride[0],
+			  yrpk,         yrpk,        yrpk+yop->stride[1], yrpk+yop->stride[1],
+			  ai,      ai ZCOMPCODE(+1),	  ai ZCOMPCODE(+2),  ai ZCOMPCODE(+3),
+			  xipk, xipk XCOMPCODE(+xop->stride[0]),
+			  xipk, xipk XCOMPCODE(+xop->stride[0]),
+			  yipk,         yipk,
+			  yipk YCOMPCODE(+yop->stride[1]),yipk YCOMPCODE(+yop->stride[1]) );
+
+		  YCOMPASSIGN( yrpk,yipk, +=ymacc->stride[0] );
+		  XCOMPASSIGN( xrpk,xipk, +=xmacc->stride[0] );
+		}
+	 
+		/* accumulate the result into the output matrix */
+		zrp0[0]+=ar[0];
+		zrp0[zop->stride[0]]+=ar[1];
+		zrp0[zop->stride[1]]+=ar[2];
+		zrp0[zop->stride[0]+zop->stride[1]]+=ar[3];
+		ZCOMPCODE( zip0[0]+=ai[0] );
+		ZCOMPCODE( zip0[zop->stride[0]]+=ai[1] );
+		ZCOMPCODE( zip0[zop->stride[1]]+=ai[2] );
+		ZCOMPCODE( zip0[zop->stride[0]+zop->stride[1]]+=ai[3] );
+
+		XCOMPASSIGN( xrp0,xip0, +=2*xop->stride[0] );
+		ZCOMPASSIGN( zrp0,zip0, +=2*zop->stride[0] );
+	 }
+
+	 YCOMPASSIGN( yrp1,yip1, +=2*yop->stride[1] );
+	 ZCOMPASSIGN( zrp1,zip1, +=2*zop->stride[1] );
+  }
+  if ( (zop->sz[1]&1) ) { /* clean up 1 */
+	 xrp0=xrp1; XCOMPCODE( xip0=xip1 );
+	 yrp0=yrp1; YCOMPCODE( yip0=yip1 );
+	 zrp0=zrp1; ZCOMPCODE( zip0=zip1 );
+	 zend0=zrp0+zop->stride[0]*zop->sz[0];
+	 while(zrp0<zend0){ /* loop over the left over dim 0 entries */
+		ar[0]=0; ZCOMPCODE(ai[0]=0);
+		yrpk  = yrp0;	 YCOMPCODE( yipk = yip0 );
+		xrpk  = xrp0;	 XCOMPCODE( xipk = xip0 );
+		xendk = xrpk+xmacc->stride[0]*xmacc->sz[0]; 
+		while( xrpk<xendk ){
+		  CAT(timesacc_,FNNMEXT)(ar,xrpk,yrpk,ai,xipk,yipk);
+		  XCOMPASSIGN( xrpk,xipk, +=xmacc->stride[0] );
+		  YCOMPASSIGN( yrpk,yipk, +=ymacc->stride[0] );
+		}
+		zrp0[0]+=ar[0]; ZCOMPCODE(zip0[0]+=ai[0]);
+		ZCOMPASSIGN( zrp0,zip0, +=zop->stride[0] );
+		XCOMPASSIGN( xrp0,xip0, +=xop->stride[0] );
+	 }
+  }
+  if( (zop->sz[0]&1) ) { /* clean up 0 */
+	 yrp0=(YTYPE*)yop->rp;      YCOMPCODE( yip0=(YTYPE*)yop->ip );
+	 zrp0=(ZTYPE*)zop->rp+sz0;  ZCOMPCODE( zip0=(ZTYPE*)zop->ip+sz0 );
+	 xrp0=(XTYPE*)xop->rp+(xop->sz[0]-1)*xop->stride[0];      
+	 XCOMPCODE( xip0=(XTYPE*)xop->ip+(xop->sz[0]-1)*xop->stride[0] );
+	 zend0=zrp0+(zop->sz[1]-(zop->sz[1]&1))*zop->stride[1];
+	 /* 		zend0=zrp0+zop->stride[1]*2; */
+	 while(zrp0<zend0){ /* loop over the left over dim 1 entries */
+		ar[0]=0;        ZCOMPCODE(ai[0]=0);
+		yrpk  = yrp0;	 YCOMPCODE( yipk = yip0 );
+		xrpk  = xrp0;	 XCOMPCODE( xipk = xip0 );
+		xendk = xrp0+xmacc->stride[0]*xmacc->sz[0];
+		while( xrpk<xendk ){
+		  CAT(timesacc_,FNNMEXT)(ar,xrpk,yrpk,ai,xipk,yipk);
+		  XCOMPASSIGN( xrpk,xipk, +=xmacc->stride[0] );
+		  YCOMPASSIGN( yrpk,yipk, +=ymacc->stride[0] );
+		}
+		zrp0[0]+=ar[0]; ZCOMPCODE(zip0[0]+=ai[0]);
+
+		ZCOMPASSIGN( zrp0,zip0, +=zop->stride[1] );
+		YCOMPASSIGN( yrp0,yip0, +=yop->stride[1] );
+	 }
+  }
+}
+
+
+/* tprod computation for 2x2 steps */
+void CAT(b22XY_tprod_,FNNMEXT)(ZTYPE *zrp, ZTYPE *zip, 
+										 const XTYPE *xrp, const XTYPE *xip,
+										 const YTYPE *yrp, const YTYPE *yip,
+										 const MxInfo *zop, 
+										 const MxInfo *xop,const MxInfo *yop,
+										 const MxInfo *xmacc,const MxInfo *ymacc,
+										 int *subs, int *maccsubs){
+  int i;
+  const char odd0=(zop->sz[0]&1);
+  const char odd1=(zop->sz[1]&1);
+  const int sz0=(zop->sz[0]-odd0)*zop->stride[0];
+  const int sz1=(zop->sz[1]-odd1)*zop->stride[1];
+  const int z2stride0=zop->stride[0]*2, z2stride1=zop->stride[1]*2;
+  const int x2stride0=xop->stride[0]*2, y2stride1=yop->stride[1]*2;
+  ZTYPE *zrp1, *zip1, *zrp0, *zip0=0, *zend0, *zend1;
+  const XTYPE *xrp0, *xip0=0;
+  const YTYPE *yrp1, *yip1=0;
+  char fin=0;
+  while( fin==0 ){
+
+	 /* compute the result for this output index */
+	 /* N.B. for efficiency reasons (30% faster!) b2macc assumes that 
+		 we have xop.stride[1]==0 && yop.stride[0]==0 */
+	 /* block over the first 2 outer product dims */	
+	 /* unroll the inner-most 2 dimensions as these are the stride==2 dims */
+	 zrp1=zrp; ZCOMPCODE(zip1=zip);
+	 yrp1=yrp; YCOMPCODE(yip1=yip);
+	 zend1=zrp+sz1;
+	 while(zrp1<zend1){
+
+		xrp0=xrp; XCOMPCODE( xip0=xip );
+		zrp0=zrp1;ZCOMPCODE( zip0=zip1 );
+		zend0=zrp1+sz0; 
+		while(zrp0<zend0){		
+		  CAT(b22XYmacc_,FNNMEXT)(zrp0,zip0,        zop,xop,yop,
+										  xrp0,xip0,xmacc,  yrp1,yip1,ymacc,
+										  maccsubs);
+
+		  ZCOMPASSIGN( zrp0,zip0, +=z2stride0 );
+		  XCOMPASSIGN( xrp0,xip0, +=x2stride0 );
+		}
+
+		if( odd0 ) { /* clean up 0 */
+		  CAT(macc_,FNNMEXT)(zrp0, zip0, xrp0, xip0,xmacc,	yrp1, yip1,ymacc,
+									maccsubs);
+		  CAT(macc_,FNNMEXT)(zrp0+zop->stride[1], 
+									zip0 ZCOMPCODE(+zop->stride[1]),
+									xrp0,xip0,xmacc,
+									yrp1+yop->stride[1], 
+									yip1 YCOMPCODE(+yop->stride[1]),ymacc,
+									maccsubs);
+		}
+
+		ZCOMPASSIGN( zrp1,zip1, +=z2stride1 );
+		YCOMPASSIGN( yrp1,yip1, +=y2stride1 );
+	 }
+	 if ( odd1 ) { /* clean up 1 */
+		xrp0=xrp;  XCOMPCODE( xip0=xip ); /* x goes back to the start */
+		zrp0=zrp1; ZCOMPCODE( zip0=zip1 );
+		zend0=zrp1+zop->stride[0]*zop->sz[0];
+		while(zrp0<zend0){
+		  CAT(macc_,FNNMEXT)(zrp0, zip0,	xrp0, xip0,xmacc,	yrp1, yip1,ymacc,
+									maccsubs);
+		  ZCOMPASSIGN( zrp0,zip0, +=zop->stride[0] );
+		  XCOMPASSIGN( xrp0,xip0, +=xop->stride[0] );
+		}
+	 }
+	 
+	 /* move to the next computation in this input set */
+	 for( fin=1, i=2; i < zop->nd; i++ ){ /* N.B. dim from 2 */
+		ZCOMPASSIGN( zrp,zip, +=zop->stride[i] );
+		XCOMPASSIGN( xrp,xip, +=xop->stride[i] );
+		YCOMPASSIGN( yrp,yip, +=yop->stride[i] );
+		
+		subs[i]++;        /* move on to the next element */
+		if( subs[i] < zop->sz[i] ){/*move this dim on by one and stop!*/
+		  fin=0; break;            /* dropout when we've incremented a dim*/
+		  
+		} else {		  
+		  subs[i] = 0; /* reset to the start again! */
+		  XCOMPASSIGN( xrp,xip, -=xop->stride[i]*zop->sz[i] ); 
+		  YCOMPASSIGN( yrp,yip, -=yop->stride[i]*zop->sz[i] ); 
+		  ZCOMPASSIGN( zrp,zip, -=zop->stride[i]*zop->sz[i] ); 
+		}
+	 }
+  }
+}
+
+/* blk XY tprod computation where the macc is performed in blocks */
+void CAT(b22XY_blkmacc_,FNNMEXT) 
+	  (ZTYPE *zrp, ZTYPE *zip, 
+		const XTYPE *xrp, const XTYPE *xip,
+		const YTYPE *yrp, const YTYPE *yip,
+		const MxInfo *zrest,    const MxInfo *xrest,   const MxInfo *yrest,
+		const MxInfo *xmacc,	   const MxInfo *ymacc,
+		int *subs, int *maccsubs,
+		const MxInfo *xmaccOut, const MxInfo *ymaccOut,
+		int *maccOutsubs, int maccOutRem){
+  const XTYPE *xipi=0, *xrpi;
+  const YTYPE *yipi=0, *yrpi;
+  const XTYPE *xendpi;
+  int maccOutsz=xmacc->sz[xmacc->nd-1];
+  int i;
+  char fin=0;
+  if ( xmaccOut->nd==0 ) { /* no outer acc case */
+	 CAT(b22XY_tprod_,FNNMEXT)(zrp,zip, xrp,xip, yrp,yip,
+										zrest,   xrest,   yrest,
+										xmacc,   ymacc, 
+										subs, maccsubs);
+	 return;
+  }
+  while ( fin==0 ) {
+	 /* unroll the inner loop which is the only one we may have to clean up */	 
+	 xrpi=xrp; XCOMPCODE(xipi=xip);
+	 yrpi=yrp; YCOMPCODE(yipi=yip);
+	 xendpi=xrp+xmaccOut->sz[0]*xmaccOut->stride[0];
+	 while( xrpi<xendpi ){
+		CAT(b22XY_tprod_,FNNMEXT)(zrp,zip, xrpi,xipi, yrpi,yipi,
+										  zrest,   xrest,     yrest,
+										  xmacc,   ymacc, 
+										  subs, maccsubs);
+		XCOMPASSIGN( xrpi,xipi, +=xmaccOut->stride[0] );
+		YCOMPASSIGN( yrpi,yipi, +=ymaccOut->stride[0] );
+	 }
+	 if(  maccOutRem>0 ){/*clean up code for the last macc bit*/
+		xmacc->sz[xmacc->nd-1]=maccOutRem;
+		ymacc->sz[xmacc->nd-1]=maccOutRem;
+		CAT(b22XY_tprod_,FNNMEXT)(zrp,zip, xrpi,xipi, yrpi,yipi,
+										  zrest,   xrest,     yrest,
+										  xmacc,   ymacc, 
+										  subs, maccsubs);
+		xmacc->sz[xmacc->nd-1]=maccOutsz; 
+		ymacc->sz[xmacc->nd-1]=maccOutsz;
+	 }
+	 
+	 for( fin=1, i=1; i < xmaccOut->nd; i++ ){ /* N->B. dim from 1 */
+		XCOMPASSIGN( xrp,xip, +=xmaccOut->stride[i] );
+		YCOMPASSIGN( yrp,yip, +=ymaccOut->stride[i] );		
+		maccOutsubs[i]++;
+		if( maccOutsubs[i]<xmaccOut->sz[i] ){
+		  fin=0; break;            
+		} else {
+		  maccOutsubs[i] = 0; /* reset to the start again! */
+		  XCOMPASSIGN( xrp,xip, -=xmacc->stride[i]*xmacc->sz[i]); 
+		  YCOMPASSIGN( yrp,yip, -=ymacc->stride[i]*ymacc->sz[i]); 
+		}
+	 }
+  }
+}
+
+void CAT(blk_b22XY_tprod_,FNNMEXT) 
+	  (ZTYPE *zrp, ZTYPE *zip, 
+		const XTYPE *xrp, const XTYPE *xip,
+		const YTYPE *yrp, const YTYPE *yip,
+		const MxInfo *zrest,    const MxInfo *xrest,   const MxInfo *yrest,
+		const MxInfo *xmaccIn,	   const MxInfo *ymaccIn,
+		int *subs, int *maccsubs,
+		const MxInfo *xmaccOut, const MxInfo *ymaccOut, int maccOutRem,
+		const MxInfo *zrestIn, const MxInfo *xrestIn, const MxInfo *yrestIn,
+		int blksz0, int blksz1, int restOutrem0, int restOutrem1
+		){
+
+  int *blkmaccsubs=(int*)CALLOC(xmaccIn->nd+xmaccOut->nd+zrest->nd,sizeof(int)); 
+  int *blksubs    =blkmaccsubs+xmaccIn->nd+xmaccOut->nd;
+  int i,j;
+  char fin=0;	 
+  while( fin==0 ){ /* wrap 2-d blocked comp with a N-d wrapper */
+
+	 for(j=0;j<zrest->sz[1];j+=blksz1){ /* rows */
+		if ( restOutrem1>0 && j>zrest->sz[1]-blksz1 ){ /* clean up dim 1 */
+		  zrestIn->sz[1]=restOutrem1;
+		  yrestIn->sz[1]=restOutrem1;			 
+		}
+		for(i=0;i<=zrest->sz[0]-blksz0;i+=blksz0){ /* cols */
+		  /* do the macc bit in blocks */
+		  CAT(b22XY_blkmacc_,FNNMEXT)
+			 (zrp+i*zrest->stride[0]+j*zrest->stride[1],
+			  zip ZCOMPCODE(+i*zrest->stride[0]+j*zrest->stride[1]),
+			  xrp+i*xrest->stride[0],	  xip XCOMPCODE(+i*xrest->stride[0]),
+			  yrp+j*yrest->stride[1],    yip YCOMPCODE(+j*yrest->stride[1]),
+			  zrestIn, xrestIn, yrestIn,
+			  xmaccIn, ymaccIn,
+			  subs, maccsubs,
+			  xmaccOut, ymaccOut,/* blk of macc */
+			  blkmaccsubs, maccOutRem); /*N.B. blkmaccrem needed for cleanup*/
+		}
+		if ( restOutrem0>0 ) { /* clean up dim 0 */
+		  zrestIn->sz[0]=restOutrem0;
+		  xrestIn->sz[0]=restOutrem0;
+		  CAT(b22XY_blkmacc_,FNNMEXT)
+			 (zrp+i*zrest->stride[0]+j*zrest->stride[1],
+			  zip ZCOMPCODE(+i*zrest->stride[0]+j*zrest->stride[1]),
+			  xrp+i*xrest->stride[0],	 xip XCOMPCODE(+i*xrest->stride[0]),
+			  yrp+j*yrest->stride[1],	 yip YCOMPCODE(+j*yrest->stride[1]),
+			  zrestIn, xrestIn, yrestIn,
+			  xmaccIn, ymaccIn,
+			  subs, maccsubs,
+			  xmaccOut, ymaccOut,         /* blk of macc */
+			  blkmaccsubs, maccOutRem); /*N.B. blkmaccrem needed for cleanup*/
+		  zrestIn->sz[0]=blksz0;
+		  xrestIn->sz[0]=blksz0;
+		}
+	 }
+	 zrestIn->sz[1]=blksz1;
+	 yrestIn->sz[1]=blksz1;
+		
+
+	 /* move to the next computation in this input set */
+	 for( fin=1, i=2; i < zrest->nd; i++ ){ /* N.B. dim from 2 */
+		XCOMPASSIGN( xrp,xip, +=xrest->stride[i] );
+		YCOMPASSIGN( yrp,yip, +=yrest->stride[i] );
+		ZCOMPASSIGN( zrp,zip, +=zrest->stride[i] );
+		
+		blksubs[i]++;        /* move on to the next element */
+		if( blksubs[i]<zrest->sz[i] ){/*move this dim on by one and stop*/
+		  fin=0; break;            /* dropout when we've incremented a dim*/
+		  
+		} else {
+		  blksubs[i] = 0; /* reset to the start again! */
+		  XCOMPASSIGN( xrp,xip, -=xrest->stride[i]*zrest->sz[i]); 
+		  YCOMPASSIGN( yrp,yip, -=yrest->stride[i]*zrest->sz[i] ); 
+		  ZCOMPASSIGN( zrp,zip, -=zrest->stride[i]*zrest->sz[i] ); 
+		}
+	 }
+  }
+  FREE(blkmaccsubs);
+}
