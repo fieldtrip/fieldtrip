@@ -1,10 +1,10 @@
-function [argout, optout] = engexec(argin, optin)
+function [argout, optout] = engineexec(argin, optin)
 
-% ENGEXEC is a helper function to execute a command in another engine.
+% ENGINEEXEC is a helper function to execute a command in another engine.
 % Normally you should not start this function yourself, but rather
-% use ENGCELLFUN or ENGFEVAL.
+% use ENGINECELLFUN or ENGINEFEVAL.
 %
-% See also ENGPOOL, ENGCELLFUN, ENGFEVAL, ENGGET
+% See also ENGINEPOOL, ENGINECELLFUN, ENGINEFEVAL, ENGINEGET
 
 % -----------------------------------------------------------------------
 % Copyright (C) 2012, Robert Oostenveld

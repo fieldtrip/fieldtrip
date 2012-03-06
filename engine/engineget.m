@@ -1,10 +1,10 @@
-function varargout = engget(jobid, varargin)
+function varargout = engineget(jobid, varargin)
 
-% ENGGET get the output arguments after the remote job has been executed.
+% ENGINEGET get the output arguments after the remote job has been executed.
 %
 % Use as
-%   jobid  = engfeval(fname, arg1, arg2, ...)
-%   argout = engget(jobid, ...)
+%   jobid  = enginefeval(fname, arg1, arg2, ...)
+%   argout = engineget(jobid, ...)
 %
 % Optional arguments can be specified in key-value pairs and can include
 %   StopOnError    = boolean (default = true)
@@ -13,7 +13,7 @@ function varargout = engget(jobid, varargin)
 %   output         = string, 'varargout' or 'cell' (default = 'varargout')
 %   diary          = string, can be 'always', 'warning', 'error' (default = 'error')
 %
-% See also ENGFEVAL, ENGCELLFUN, ENGPOOL
+% See also ENGINEFEVAL, ENGINECELLFUN, ENGINEPOOL
 
 % -----------------------------------------------------------------------
 % Copyright (C) 2012, Robert Oostenveld
@@ -50,7 +50,7 @@ else
   timeout     = ft_getopt(varargin, 'timeout',     5);
 end
 
-enghandle = engpool('find', jobid);
+enghandle = enginepool('find', jobid);
 if numel(enghandle)~=1
   error('FieldTrip:engine:jobNotFound', 'cannot locate the engine with this job');
 end
@@ -62,7 +62,7 @@ while(toc(stopwatch)<timeout)
     argout  = engine('get', enghandle, 'argout');
     options = engine('get', enghandle, 'optout');
     engine('eval', enghandle, 'clear all', 1); % this should be a blocking call
-    engpool('release', enghandle);
+    enginepool('release', enghandle);
     success = true;
     break
   else

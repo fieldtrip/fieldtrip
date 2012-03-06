@@ -1,12 +1,12 @@
-function retval = engpool(varargin)
+function retval = enginepool(varargin)
 
-% ENGPOOL manages the pool of MATLAB engine workers that is available
+% ENGINEPOOL manages the pool of MATLAB engine workers that is available
 % for distributed computing
 %
 % Use as
-%   engpool open <number> <command>
-%   engpool close
-%   engpool info
+%   enginepool open <number> <command>
+%   enginepool close
+%   enginepool info
 %
 % The number specifies how many MATLAB engines should be started. In general
 % it is advisable to start as many engines as the number of CPU cores.
@@ -15,15 +15,15 @@ function retval = engpool(varargin)
 % and the command-line options. The default for Linux is
 %   command = "matlab -singleCompThread -nodesktop -nosplash"
 %
-% See also ENGCELLFUN, ENGFEVAL, ENGGET
+% See also ENGINECELLFUN, ENGINEFEVAL, ENGINEGET
 
 % Some undocumented features of this function allow it to maintain an
 % internal list that maps between job IDs and engine numbers.
 % This use is reserved for engcellfun.
-%   engpool('info')
-%   engpool('block',   index, jobid)
-%   engpool('release', index)
-%   engpool('find',    jobid)
+%   enginepool('info')
+%   enginepool('block',   index, jobid)
+%   enginepool('release', index)
+%   enginepool('find',    jobid)
 
 % -----------------------------------------------------------------------
 % Copyright (C) 2012, Robert Oostenveld
@@ -104,7 +104,7 @@ switch cmd
     try
       engine('close');
     catch
-      % this happens if engpool and engine get out of sync
+      % this happens if enginepool and engine get out of sync
       warning(lasterr);
     end
     

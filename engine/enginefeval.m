@@ -1,13 +1,13 @@
-function [jobid, puttime] = engfeval(varargin)
+function [jobid, puttime] = enginefeval(varargin)
 
-% ENGFEVAL evaluates the specified MATLAB function on the input arguments
+% ENGINEFEVAL evaluates the specified MATLAB function on the input arguments
 % using locally or remotely running MATLAB engines.
 %
 % Use as
-%   jobid  = engfeval(fname, arg1, arg2, ...)
-%   argout = engget(jobid, ...)
+%   jobid  = enginefeval(fname, arg1, arg2, ...)
+%   argout = engineget(jobid, ...)
 %
-% See also ENGGET, ENGCELLFUN, ENGPOOL
+% See also ENGINEGET, ENGINECELLFUN, ENGINEPOOL
 
 % -----------------------------------------------------------------------
 % Copyright (C) 2012, Robert Oostenveld
@@ -66,9 +66,9 @@ elseif isa(varargin{1}, 'struct')
   varargin{1} = varargin{1}.fname;
 end
 
-pool = engpool('info');
+pool = enginepool('info');
 if isempty(pool)
-  error('engine pool has not been started yet, please see "help engpool"');
+  error('the pool of engines has not been started yet, please see "help enginepool"');
 end
 
 busy = ~cellfun(@isempty, pool);
@@ -93,7 +93,7 @@ options = {'pwd', getcustompwd, 'path', getcustompath, 'global', getglobal, 'dia
 matlabscript = [...
   'restoredefaultpath;',...
   sprintf('addpath(''%s'');', fileparts(mfilename('fullpath'))),...
-  sprintf('[argout, optout] = engexec(argin, optin);'),...
+  sprintf('[argout, optout] = engineexec(argin, optin);'),...
   ];
 
 % copy the cell-arrays with the input arguments and the options
@@ -101,5 +101,5 @@ engine('put', enghandle, 'argin', varargin);
 engine('put', enghandle, 'optin', options);
 
 puttime = toc(stopwatch);
-engpool('block', enghandle, jobid);
+enginepool('block', enghandle, jobid);
 engine('eval', enghandle, matlabscript);

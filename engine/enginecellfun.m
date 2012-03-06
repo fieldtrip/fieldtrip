@@ -1,10 +1,10 @@
-function varargout = engcellfun(fname, varargin)
+function varargout = enginecellfun(fname, varargin)
 
-% ENGCELLFUN applies a function to each element of a cell-array. The function
+% ENGINECELLFUN applies a function to each element of a cell-array. The function
 % execution is done in parallel on locally or remotely running MATLAB engines.
 %
 % Use as
-%   argout = engcellfun(fname, x1, x2, ...)
+%   argout = enginecellfun(fname, x1, x2, ...)
 %
 % Optional arguments can be specified in key-value pairs and can include
 %   UniformOutput  = boolean (default = false)
@@ -15,11 +15,11 @@ function varargout = engcellfun(fname, varargin)
 %  Example
 %    x1 = {1, 2, 3, 4, 5};
 %    x2 = {2, 2, 2, 2, 2};
-%    engpool open 4
-%    y  = engcellfun(@power, x1, x2);
-%    engpool close
+%    enginepool open 4
+%    y  = enginecellfun(@power, x1, x2);
+%    enginepool close
 %
-% See also ENGPOOL, ENGFEVAL, ENGGET
+% See also ENGINEPOOL, ENGINEFEVAL, ENGINEGET
 
 % -----------------------------------------------------------------------
 % Copyright (C) 2012, Robert Oostenveld
@@ -106,8 +106,8 @@ for i=1:numargin
 end
 
 % check the availability of the engines
-pool = engpool('info');
-pool   = engpool('info');
+pool = enginepool('info');
+pool   = enginepool('info');
 isbusy = false(1,numel(pool));
 hasjob = false(1,numel(pool));
 for i=1:numel(pool)
@@ -168,7 +168,7 @@ while ~all(submitted) || ~all(collected)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
   
-  pool   = engpool('info');
+  pool   = enginepool('info');
   isbusy = false(1,numel(pool));
   hasjob = false(1,numel(pool));
   for i=1:numel(pool)
@@ -191,7 +191,7 @@ while ~all(submitted) || ~all(collected)
     end
     
     % submit the job for execution
-    [curjobid curputtime] = engfeval(fname, argin{:}, 'diary', diary);
+    [curjobid curputtime] = enginefeval(fname, argin{:}, 'diary', diary);
     
     if ~isempty(curjobid)
       % fprintf('submitted job %d\n', submit);
@@ -205,7 +205,7 @@ while ~all(submitted) || ~all(collected)
     clear argin
     
     % check the availability of the engines
-    pool   = engpool('info');
+    pool   = enginepool('info');
     isbusy = false(1,numel(pool));
     hasjob = false(1,numel(pool));
     for i=1:numel(pool)
@@ -236,7 +236,7 @@ while ~all(submitted) || ~all(collected)
    
     % collect the output arguments
     ws = warning('Off','Backtrace');
-    [argout, options] = engget(pool{ready}, 'output', 'cell', 'diary', diary, 'StopOnError', StopOnError);
+    [argout, options] = engineget(pool{ready}, 'output', 'cell', 'diary', diary, 'StopOnError', StopOnError);
     warning(ws);
     
     % fprintf('collected job %d\n', collect);
@@ -305,9 +305,9 @@ end
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cleanupfun
-pool = engpool('info');
+pool = enginepool('info');
 for i=1:length(pool)
-  engpool('release', i);
+  enginepool('release', i);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

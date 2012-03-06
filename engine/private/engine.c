@@ -23,7 +23,6 @@
 #include <ctype.h>
 
 #include "mex.h"
-#include "matrix.h"
 #include "engine.h"
 #include "platform.h"
 
@@ -164,12 +163,10 @@ void mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) 
 				enginepool = (engine_t *)malloc(poolsize*sizeof(engine_t));
 				status = 1;
 				for (i=0; i<poolsize; i++) {
-                        #ifdef PLATFORM_WINDOWS
+#ifdef PLATFORM_WINDOWS
                         enginepool[i].ep     = engOpen(NULL); /* returns NULL on failure */
-                        #else
+#else
 						enginepool[i].ep     = engOpen(matlabcmd); /* returns NULL on failure */
-                        #endif
-#ifndef PLATFORM_WINDOWS
 						enginepool[i].tid    = NULL;
 #endif
 						enginepool[i].busy   = 0;
