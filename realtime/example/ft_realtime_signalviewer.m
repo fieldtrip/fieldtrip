@@ -86,9 +86,9 @@ overlap   = round(cfg.overlap*hdr.Fs);
 if strcmp(cfg.jumptoeof, 'yes')
   prevSample = hdr.nSamples * hdr.nTrials;
 else
-  prevSample  = 0;
+  prevSample = 0;
 end
-count       = 0;
+count = 0;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this is the general BCI loop where realtime incoming data is handled

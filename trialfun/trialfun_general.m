@@ -195,6 +195,9 @@ for i=sel
     trl = [trl; [trlbeg trlend trloff]];
     if isnumeric(event(i).value), 
       val = [val; event(i).value];
+    elseif strcmp(cfg.headerformat, 'brainvision_vhdr') && (event(i).value(1)=='S'|| event(i).value(1)=='R')
+      % these are called 'S  1' for stimuli or 'R  1' for responses
+      val = [val; str2double(event(i).value(2:end))];
     else
       val = [val; nan];
     end

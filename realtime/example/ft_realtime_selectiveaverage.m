@@ -31,6 +31,7 @@ if ~isfield(cfg, 'headerformat'),   cfg.headerformat = [];    end % default is d
 if ~isfield(cfg, 'eventformat'),    cfg.eventformat = [];     end % default is detected automatically
 if ~isfield(cfg, 'channel'),        cfg.channel = 'all';      end
 if ~isfield(cfg, 'bufferdata'),     cfg.bufferdata = 'last';  end % first or last
+if ~isfield(cfg, 'jumptoeof'),      cfg.jumptoeof = 'no';     end % jump to end of file at initialization
 
 % translate dataset into datafile+headerfile
 cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
@@ -49,8 +50,12 @@ if nchan==0
   error('no channels were selected');
 end
 
-prevSample = 0;
-count      = 0;
+if strcmp(cfg.jumptoeof, 'yes')
+  prevSample = hdr.nSamples * hdr.nTrials;
+else
+  prevSample = 0;
+end
+count = 0;
 
 % initialize the timelock cell-array, each cell will hold the average in one condition
 timelock = {};
@@ -72,7 +77,7 @@ while true
 
   % the code below assumes that the 4th column of the trl matrix contains the condition index
   % set the default condition to one if no condition index was given
-  if size(trl,2)<4
+  if size(trl,1)>0 && size(trl,2)<4
     trl(:,4) = 1;
   end
 
