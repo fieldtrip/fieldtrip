@@ -23,6 +23,8 @@ function [bnd] = ft_fetch_headshape(cfg, data)
 %
 % See also FT_PREPARE_VOL_SENS, FT_READ_VOL, FT_FETCH_VOL
 
+%$Id$
+
 % Copyright (C) 2012, Cristiano Micheli
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
@@ -42,8 +44,25 @@ function [bnd] = ft_fetch_headshape(cfg, data)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 
+hdmfile   = ft_getopt(cfg,'hdmfile');
+headshape = ft_getopt(cfg,'headshape');
+if nargin<2
+  data = [];
+end
+
+% booleans
+hashdmfile    = ~isempty(hdmfile); 
+hasheadshape  = ~isempty(headshape);
+hasdata       = ~isempty(data);
+hasdatavol    = isfield(data, 'vol');
+hasdatashape  = ~isempty(data) && ~hasdatavol;
+
+if (hashdmfile + hasheadshape + hasdata)==0
+  error('No headshape found in input')
+end
+
 % check input arguments
-if nargin > 1 && ~isempty(data)
+if hasdata
   data = ft_checkdata(data);
 else
   data = struct; % initialize as empty struct
@@ -51,58 +70,48 @@ end
 
 cfg = ft_checkconfig(cfg);
 
-% in case headshape is given as a file string, convert it
-if ischar(cfg.headshape)
-  cfg.hdmfile = cfg.headshape;
-  cfg=rmfield(cfg,'headshape');
-end
-
-% booleans
-hashdmfile       = isfield(cfg, 'hdmfile'); 
-hascfgheadshape  = isfield(cfg, 'headshape');
-hasdatavol       = isfield(data, 'vol');
-hasdataheadshape = isfield(data, 'bnd');
-
-if hashdmfile
-  if isempty(cfg.hdmfile)
-    cfg = rmfield(cfg,'hdmfile');
-    hashdmfile = false;
+if hasheadshape
+  % in case headshape is given as a file string, convert it
+  if ischar(headshape)
+    hdmfile = headshape;
+    hashdmfile = true;
+    hasheadshape = false;
+  elseif isa(headshape, 'config')
+    headshape = struct(headshape);
   end
 end
 
-if hascfgheadshape
-  if isempty(cfg.headshape)
-    cfg = rmfield(cfg,'headshape');
-    hascfgheadshape = false;
-  else
-    if isa(cfg.headshape, 'config')
-      % convert the nested config-object back into a normal structure
-      cfg.headshape = struct(cfg.headshape);
-    end
-  end
-end
-
-if (hashdmfile + hascfgheadshape + hasdatavol + hasdataheadshape) > 1
+if (hashdmfile + hasheadshape + hasdata) > 1
   display = @warning;
-  fprintf('Your data and configuration allow for multiple headmodel definitions.\n');
+  fprintf('Your data and/or configuration allow for multiple headmodel definitions.\n');
   keyboard
 else
   display = @fprintf;
 end
 
 % get the head model definition
-if isfield(cfg, 'hdmfile')
-  display('reading headmodel from file ''%s''\n', cfg.hdmfile);
-  [bnd] = ft_read_headshape(cfg.hdmfile);
-elseif isfield(cfg, 'headshape')
-  display('using headmodel specified in the configuration\n');
-  [bnd] = cfg.headshape;
-elseif isfield(data, 'vol')
+if hashdmfile
+  display('reading headmodel from file ''%s''\n', hdmfile);
+  [bnd] = ft_read_headshape(hdmfile);
+elseif hasdatavol
   display('using headmodel specified in the data\n');
   vol = data.vol;
   [bnd] = vol.bnd;
-elseif isfield(data, 'bnd')
-  [bnd] = data.bnd;
+elseif hasheadshape
+  display('using headmodel specified in the configuration\n');
+  [bnd] = getbnd(headshape);
+elseif hasdatashape
+  [bnd] = getbnd(data);
 else
   error('no headmodel specified');
+end
+
+function bnd = getbnd(input)
+bnd = [];
+if isfield(input,'bnd')
+  bnd = input.bnd;
+elseif isfield(input,'vol') 
+  bnd = input.vol.bnd;
+else
+  bnd = input;
 end

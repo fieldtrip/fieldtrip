@@ -143,6 +143,12 @@ cfg.tissueval      = ft_getopt(cfg, 'tissueval'); % FEM
 cfg.tissuecond     = ft_getopt(cfg, 'tissuecond'); 
 cfg.transform      = ft_getopt(cfg, 'transform'); 
 
+if nargin>1, 
+  data = ft_checkdata(data); 
+else
+  data = [];
+end
+
 % new way of getting sens structure:
 %cfg.sens           = ft_getopt(cfg, 'sens'); 
 try
@@ -151,25 +157,32 @@ catch
   cfg.sens = [];
 end
 
-
-if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
-  % convert the nested config-object back into a normal structure
-  cfg.headshape = struct(cfg.headshape);
-end
-
-if nargin>1, data = ft_checkdata(data); end;
-
 % if the conductivity is in the data cfg.conductivity is overwritten
 if nargin>1 && isfield(data,'cond')
   cfg.conductivity = data.cond;
 end
 
-geometry = [];
+% boolean variables to manages the different input types
+hasdata    = ~isempty(data);
+hasvolume  = ft_datatype(data, 'volume');
+needvolcnd = strcmp(cfg.method,'asa'); % only for ASA
+needvolume = strcmp(cfg.method,'fns') || strcmp(cfg.method,'simbio'); % only for FNS & SIMBIO
+needbnd    = ~needvolcnd && ~needvolume; % all other methods
 
-if nargin>1 && ft_datatype(data, 'volume') && ~strcmp(cfg.method,'fns') && ~strcmp(cfg.method,'simbio')
-  
+% new way of getting headmodel structure:
+geometry = [];
+if needvolcnd
+  cfg = ft_checkconfig(cfg, 'required', 'hdmfile');
+  asafilename = cfg.hdmfile;
+elseif needbnd && hasdata
+  geometry = ft_fetch_headshape(cfg,data);
+elseif needbnd && ~hasdata
+  geometry = ft_fetch_headshape(cfg);
+elseif needvolume && hasvolume
+  fprintf('using the specified geometrical description\n');
+  geometry = data;  
+elseif hasvolume && needbnd
   fprintf('computing the geometrical description from the segmented MRI\n');
-  
   if issegmentation(data,cfg);
     % construct a surface-based geometry from the segmented compartments
     % (can be multiple shells)   
@@ -198,67 +211,15 @@ if nargin>1 && ft_datatype(data, 'volume') && ~strcmp(cfg.method,'fns') && ~strc
   else
     error('The input data should already contain at least one field with a segmented volume');
   end
-  
-elseif nargin>1
-  fprintf('using the specified geometrical description\n');
-  geometry = data;
-end
-
-% if ~isempty(cfg.hdmfile) 
-%   cfg.headshape=cfg.hdmfile;
-% end
-
-% only cfg was specified, this is for backward compatibility
-if isfield(cfg, 'geom') && nargin==1
-  cfg.headshape = cfg.geom;
-  cfg = rmfield(cfg, 'geom');
-end
-
-if ~isempty(cfg.headshape)&& nargin == 1 
-%   if ischar(cfg.headshape)
-%     geometry = ft_read_headshape(cfg.headshape);
-%   else
-%     geometry = cfg.headshape;
-%   end
-  fprintf('using the head shape to construct a triangulated mesh\n');
-  geometry = prepare_mesh_headshape(cfg);
-  
-% elseif ~isempty(cfg.hdmfile) && nargin == 1 
-%   geometry = ft_read_headshape(cfg.hdmfile);
-end
-
-if isempty(geometry) && ~isempty(cfg.hdmfile)
-  if ft_filetype(cfg.hdmfile,'asa_vol')
-    geometry = ft_read_vol(cfg.hdmfile);
-  else
-    geometry = ft_read_headshape(cfg.hdmfile);
-  end
-elseif isempty(geometry) && ~(strcmp(cfg.method,'fns') || strcmp(cfg.method,'simbio')) 
-  error('no input available')
-end
-    
-% the input to the following methods should always be a boundary
-if isfield(geometry,'bnd')
-  geometry = geometry.bnd;
-elseif isfield(geometry,'pnt')
-  % already good
-elseif isnumeric(geometry) && size(geometry,2)==3
-  % it seems to be a set of points
-  % the following is to avoid the warning: Struct field assignment overwrites a value with class "double".
-  tmp = geometry;
-  clear geometry
-  geometry.pnt = tmp;
-  clear tmp
 else
-  error('the geometry is not corectly specified')
+  error('Not able to find or build a geometrical description for the head');
 end
 
 % the construction of the volume conductor model is performed below
 switch cfg.method
   case 'asa'
-    cfg = ft_checkconfig(cfg, 'required', 'hdmfile');
-    vol = ft_headmodel_bem_asa(cfg.hdmfile);
-       
+    vol = ft_headmodel_bem_asa(asafilename);
+    
   case {'bemcp' 'dipoli' 'openmeeg'}
     if strcmp(cfg.method,'bemcp')
       funname = 'ft_headmodel_bemcp';
@@ -309,11 +270,13 @@ switch cfg.method
     else
       funname = 'ft_headmodel_fdm_fns';
     end
-    vol = feval(funname,data,'tissue',cfg.tissue,'tissueval',cfg.tissueval, ...
+    vol = feval(funname,geometry,'tissue',cfg.tissue,'tissueval',cfg.tissueval, ...
                                'tissuecond',cfg.tissuecond,'sens',cfg.sens, ...
                                'transform',cfg.transform,'unit',cfg.unit); 
 
   case 'slab_monopole'
+    % geometry is composed by a structarray of 2 elements, each containing
+    % 'pnt' field
     if numel(geometry)==2
       geom1 = geometry(1); 
       geom2 = geometry(2);
@@ -335,8 +298,7 @@ ft_postamble trackconfig
 ft_postamble callinfo
 ft_postamble history vol
 
-%FIXME: the next section is supposed to be partially transferred to other
-%functions (e.g. ft_surface...)
+%FIXME: the next section is supposed to be partially transferred to other functions (e.g. ft_surface...)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % volumetric/mesh functions (either seg2seg or seg2mesh)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -428,8 +390,76 @@ for i =1:numel(tissue)
   bnd(i) = dotriangulate(seg, numvertices(i), num2str(i));
 end
 
-function bnd          = prepare_singleshell(cfg,mri)
+function bnd          = dotriangulate(seg, nvert, str)
+% Triangulates a volume, and creates a boundary out of it
+% by projecting rays from the center of the 3D matrix 
 
+% str is just a placeholder for messages
+dim = size(seg);
+[mrix, mriy, mriz] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
+
+% make local variable seg logical 
+seg = logical(seg);
+
+% construct the triangulations of the boundaries from the segmented MRI
+fprintf('triangulating the boundary of compartment %s\n', str);
+ori(1) = mean(mrix(seg(:)));
+ori(2) = mean(mriy(seg(:)));
+ori(3) = mean(mriz(seg(:)));
+[pnt, tri] = triangulate_seg(seg, nvert, ori); 
+
+% output
+bnd.pnt = pnt;
+bnd.tri = tri;
+fprintf(['segmentation compartment %s completed\n'],str);
+
+function [output]     = threshold(input, thresh, str)
+
+if thresh>0 && thresh<1
+  fprintf('thresholding %s at a relative threshold of %0.3f\n', str, thresh);
+
+  % mask by taking the negative of the brain, thus ensuring
+  % that no holes are within the compartment and do a two-pass 
+  % approach to eliminate potential vitamin E capsules etc.
+
+  output   = double(input>(thresh*max(input(:))));
+  [tmp, N] = spm_bwlabel(output, 6);
+  for k = 1:N
+    n(k,1) = sum(tmp(:)==k);
+  end
+  output   = double(tmp~=find(n==max(n))); clear tmp;
+  [tmp, N] = spm_bwlabel(output, 6);
+  for k = 1:N
+    m(k,1) = sum(tmp(:)==k);
+  end
+  output   = double(tmp~=find(m==max(m))); clear tmp;
+else
+  output = input;
+end
+
+function [output]     = fill(input, str)
+fprintf('filling %s\n', str);
+  output = input;
+  dim = size(input);
+  for i=1:dim(2)
+    slice=squeeze(input(:,i,:));
+    im = imfill(slice,8,'holes');
+    output(:,i,:) = im;
+  end
+
+function [output]     = dosmoothing(input, fwhm, str)
+if fwhm>0
+  fprintf('smoothing %s with a %d-voxel FWHM kernel\n', str, fwhm);
+  spm_smooth(input, input, fwhm);
+end
+output = input;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% mesh functions (mesh2mesh)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function bnd = prepare_singleshell(cfg,mri)
+% prepares the spheres boundaries for the methods 'singlesphere' and
+% 'singleshell'
 cfg.sourceunits    = ft_getopt(cfg, 'sourceunits', 'cm');
 cfg.smooth         = ft_getopt(cfg, 'smooth',      5);
 cfg.threshold      = ft_getopt(cfg, 'threshold',   0.5); 
@@ -519,70 +549,6 @@ bnd.pnt = pnt;
 bnd.tri = tri;
 fprintf('Triangulation completed\n');
 
-function bnd          = dotriangulate(seg, nvert, str)
-% str is just a placeholder for messages
-dim = size(seg);
-[mrix, mriy, mriz] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
-
-% make local variable seg logical 
-seg = logical(seg);
-
-% construct the triangulations of the boundaries from the segmented MRI
-fprintf('triangulating the boundary of compartment %s\n', str);
-ori(1) = mean(mrix(seg(:)));
-ori(2) = mean(mriy(seg(:)));
-ori(3) = mean(mriz(seg(:)));
-[pnt, tri] = triangulate_seg(seg, nvert, ori); % is tri okay? tri = projecttri(pnt);
-
-% output
-bnd.pnt = pnt;
-bnd.tri = tri;
-fprintf(['segmentation compartment %s completed\n'],str);
-
-function [output]     = threshold(input, thresh, str)
-
-if thresh>0 && thresh<1
-  fprintf('thresholding %s at a relative threshold of %0.3f\n', str, thresh);
-
-  % mask by taking the negative of the brain, thus ensuring
-  % that no holes are within the compartment and do a two-pass 
-  % approach to eliminate potential vitamin E capsules etc.
-
-  output   = double(input>(thresh*max(input(:))));
-  [tmp, N] = spm_bwlabel(output, 6);
-  for k = 1:N
-    n(k,1) = sum(tmp(:)==k);
-  end
-  output   = double(tmp~=find(n==max(n))); clear tmp;
-  [tmp, N] = spm_bwlabel(output, 6);
-  for k = 1:N
-    m(k,1) = sum(tmp(:)==k);
-  end
-  output   = double(tmp~=find(m==max(m))); clear tmp;
-else
-  output = input;
-end
-
-function [output]     = fill(input, str)
-fprintf('filling %s\n', str);
-  output = input;
-  dim = size(input);
-  for i=1:dim(2)
-    slice=squeeze(input(:,i,:));
-    im = imfill(slice,8,'holes');
-    output(:,i,:) = im;
-  end
-
-function [output]     = dosmoothing(input, fwhm, str)
-if fwhm>0
-  fprintf('smoothing %s with a %d-voxel FWHM kernel\n', str, fwhm);
-  spm_smooth(input, input, fwhm);
-end
-output = input;
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% mesh functions (mesh2mesh)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function bnd = prepare_mesh_headshape(cfg)
 
 % PREPARE_MESH_HEADSHAPE
