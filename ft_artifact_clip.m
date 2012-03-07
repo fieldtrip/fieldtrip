@@ -119,9 +119,10 @@ artfctdef = cfg.artfctdef.clip;
 
 if isfield(cfg,'trl')
   trl = cfg.trl;
-else
-  hastrl = false;
+elseif hasdata
   trl = data.sampleinfo;
+else
+  error('either the cfg should contain a trl or data has to be given as input')
 end
 ntrl = size(trl,1);
 nsgn = length(sgnindx);
@@ -133,12 +134,13 @@ for trlop=1:ntrl
   else
     dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1), 'endsample', trl(trlop,2), 'chanindx', sgnindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
   end
-  % apply filtering etc to the data
-  if ~hastrl
-    offset = time2offset(data.time{trlop},hdr.Fs);
-    trl(trlop,3) = offset;
+  % get time
+  if size(trl,2)>=3
+    time = offset2time(trl(trlop,3), hdr.Fs, size(dat,2));
+  elseif hasdata
+    time = data.time{trlop};
   end
-  datflt = preproc(dat, label, data.time{trlop}, artfctdef);
+  datflt = preproc(dat, label, time, artfctdef);
   % detect all samples that have the same value as the previous sample
   identical = (datflt(:,1:(end-1)) == datflt(:,2:end));
   % ensure that the number of samples does not change
