@@ -195,190 +195,204 @@ while true
       end
       
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      % make the GUI elements
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      try
+        
+        if ~exist('c1')
+          pos = [0.25 0.95 0.1 0.05];
+          c1 = uicontrol('style', 'edit', 'units', 'normalized', 'callback', @update_channel, 'BackgroundColor', 'white');
+          set(c1, 'position', pos);
+          set(c1, 'string', chanindx(1));
+          set(c1, 'tag', 'c1');
+        end
+        
+        if ~exist('c2')
+          pos = [0.70 0.95 0.1 0.05];
+          c2 = uicontrol('style', 'edit', 'units', 'normalized', 'callback', @update_channel, 'BackgroundColor', 'white');
+          set(c2, 'position', pos);
+          set(c2, 'string', chanindx(2));
+          set(c2, 'tag', 'c2');
+        end
+        
+        if ~exist('u1')
+          pos = get(p1, 'position'); % link the position to the subplot
+          pos(1) = pos(1)-0.1;
+          pos(2) = pos(2)-0.05;
+          pos(3) = 0.1;
+          pos(4) = 0.05;
+          u1 = uicontrol('style', 'edit', 'units', 'normalized', 'callback', @update_axis, 'BackgroundColor', 'white');
+          set(u1, 'position', pos);
+          set(u1, 'string', num2str(vaxis(1,2)));
+          set(u1, 'tag', 'u1');
+        end
+        
+        if ~exist('u2')
+          pos = get(p2, 'position'); % link the position to the subplot
+          pos(1) = pos(1)-0.1;
+          pos(2) = pos(2)-0.05;
+          pos(3) = 0.1;
+          pos(4) = 0.05;
+          u2 = uicontrol('style', 'edit', 'units', 'normalized', 'callback', @update_axis, 'BackgroundColor', 'white');
+          set(u2, 'position', pos);
+          set(u2, 'string', num2str(vaxis(2,2)));
+          set(u2, 'tag', 'u2');
+        end
+        
+        if ~exist('u3')
+          pos = get(p3, 'position'); % link the position to the subplot
+          pos(1) = pos(1)-0.1;
+          pos(2) = pos(2)-0.05;
+          pos(3) = 0.1;
+          pos(4) = 0.05;
+          u3 = uicontrol('style', 'edit', 'units', 'normalized', 'callback', @update_axis, 'BackgroundColor', 'white');
+          set(u3, 'position', pos);
+          set(u3, 'position', pos);
+          set(u3, 'string', num2str(vaxis(3,2)));
+          set(u3, 'tag', 'u3');
+        end
+        
+        if ~exist('u4')
+          pos = get(p4, 'position'); % link the position to the subplot
+          pos(1) = pos(1)-0.1;
+          pos(2) = pos(2)-0.05;
+          pos(3) = 0.1;
+          pos(4) = 0.05;
+          u4 = uicontrol('style', 'edit', 'units', 'normalized', 'callback', @update_axis, 'BackgroundColor', 'white');
+          set(u4, 'position', pos);
+          set(u4, 'string', num2str(vaxis(4,2)));
+          set(u4, 'tag', 'u4');
+        end
+        
+        if ~exist('u5')
+          pos = get(p5, 'position'); % link the position to the subplot
+          pos(1) = pos(1)-0.1;
+          pos(2) = pos(2)-0.05;
+          pos(3) = 0.1;
+          pos(4) = 0.05;
+          u5 = uicontrol('style', 'edit', 'units', 'normalized', 'callback', @update_axis, 'BackgroundColor', 'white');
+          set(u5, 'position', pos);
+          set(u5, 'string', num2str(vaxis(5,2)));
+          set(u5, 'tag', 'u5');
+        end
+        
+        if ~exist('u6')
+          pos = get(p6, 'position'); % link the position to the subplot
+          pos(1) = pos(1)-0.1;
+          pos(2) = pos(2)-0.05;
+          pos(3) = 0.1;
+          pos(4) = 0.05;
+          u6 = uicontrol('style', 'edit', 'units', 'normalized', 'callback', @update_axis, 'BackgroundColor', 'white');
+          set(u6, 'position', pos);
+          set(u6, 'string', num2str(vaxis(6,2)));
+          set(u6, 'tag', 'u6');
+        end
+        
+      end % try
+      
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % visualize the data in 2*3 subplots
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-      if ~exist('c1')
-        pos = [0.25 0.95 0.1 0.05];
-        c1 = uicontrol('style', 'edit', 'units', 'normalized', 'callback', @update_channel, 'BackgroundColor', 'white');
-        set(c1, 'position', pos);
-        set(c1, 'string', chanindx(1));
-        set(c1, 'tag', 'c1');
-      end
-      
-      if ~exist('c2')
-        pos = [0.70 0.95 0.1 0.05];
-        c2 = uicontrol('style', 'edit', 'units', 'normalized', 'callback', @update_channel, 'BackgroundColor', 'white');
-        set(c2, 'position', pos);
-        set(c2, 'string', chanindx(2));
-        set(c2, 'tag', 'c2');
-      end
-      
-      if ~exist('p1')
-        p1 = subplot(3, 2, 1);
-      else
-        subplot(p1);
-        h1 = plot(time, dat(1, :));
-        axis([min(time) max(time) vaxis(1, 1) vaxis(1, 2)]);
-        set(p1, 'XTickLabel', []);
-        ylabel('amplitude (uV)');
-        xlabel(sprintf('time: %d seconds', cfg.blocksize*cfg.blockmem));
-        grid on
-        if strcmp(cfg.feedback, 'yes')
+      try
+        
+        if ~exist('p1')
+          p1 = subplot(3, 2, 1);
+        else
+          
+          subplot(p1);
+          h1 = plot(time, dat(1, :));
+          axis([min(time) max(time) vaxis(1, 1) vaxis(1, 2)]);
+          set(p1, 'XTickLabel', []);
+          ylabel('amplitude (uV)');
+          xlabel(sprintf('time: %d seconds', cfg.blocksize*cfg.blockmem));
+          grid on
+          if strcmp(cfg.feedback, 'yes')
+            ax = axis;
+            line([ax(1) ax(2)], [left_thresh_ampl left_thresh_ampl], 'color', 'red');
+            line([ax(1) + left_thresh_time(1)/hdr.Fs ax(1) + left_thresh_time(1)/hdr.Fs], [-300 300], 'color', 'green');
+            line([ax(1) + left_thresh_time(2)/hdr.Fs ax(1) + left_thresh_time(2)/hdr.Fs], [-300 300], 'color', 'green');
+          end
+          
+        end
+        
+        if ~exist('p2')
+          p2 = subplot(3, 2, 2);
+        else
+          subplot(p2);
+          h2 = plot(time, dat(2, :));
+          axis([min(time) max(time) vaxis(2, 1) vaxis(2, 2)]);
+          set(p2, 'XTickLabel', []);
+          ylabel('amplitude (uV)');
+          xlabel(sprintf('time: %d seconds', cfg.blocksize*cfg.blockmem));
+          grid on
+        end
+        
+        if ~exist('p3')
+          p3 = subplot(3, 2, 3);
+        else
+          subplot(p3)
+          h3 = bar(1:length(ifreq), pow(1, :), 0.5);
+          % plot(pow(1).Frequencies, pow(1).Data);
+          % bar(pow(1).Frequencies, pow(1).Data);
+          axis([cfg.foilim(1) cfg.foilim(2) vaxis(3, 1) vaxis(3, 2)]);
+          % str = sprintf('time = %d s\n', round(mean(time)));
+          % title(str);
+          xlabel('frequency (Hz)');
+          ylabel('power');
+          
+        end
+        
+        if ~exist('p4')
+          p4 = subplot(3, 2, 4);
+        else
+          subplot(p4)
+          h4 = bar(1:length(ifreq), pow(2, :), 0.5);
+          % plot(pow(2).Frequencies, pow(2).Data);
+          % bar(pow(2).Frequencies, pow(2).Data);
           ax = axis;
-          line([ax(1) ax(2)], [left_thresh_ampl left_thresh_ampl], 'color', 'red');
-          line([ax(1) + left_thresh_time(1)/hdr.Fs ax(1) + left_thresh_time(1)/hdr.Fs], [-300 300], 'color', 'green');
-          line([ax(1) + left_thresh_time(2)/hdr.Fs ax(1) + left_thresh_time(2)/hdr.Fs], [-300 300], 'color', 'green');
+          axis([cfg.foilim(1) cfg.foilim(2) vaxis(4, 1) vaxis(4, 2)]);
+          if strcmp(cfg.feedback, 'yes')
+            line([right_freq(1) right_freq(1)], [ax(3) ax(4)]);
+            line([right_freq(2) right_freq(2)], [ax(3) ax(4)]);
+            line([right_freq(1) right_freq(2)], [right_offset right_offset]);
+          end
+          xlabel('frequency (Hz)');
+          ylabel('power');
         end
-      end
-      
-      if ~exist('u1')
-        pos = get(p1, 'position'); % link the position to the subplot
-        pos(1) = pos(1)-0.1;
-        pos(2) = pos(2)-0.05;
-        pos(3) = 0.1;
-        pos(4) = 0.05;
-        u1 = uicontrol('style', 'edit', 'units', 'normalized', 'callback', @update_axis, 'BackgroundColor', 'white');
-        set(u1, 'position', pos);
-        set(u1, 'string', num2str(vaxis(1,2)));
-        set(u1, 'tag', 'u1');
-      end
-      
-      if ~exist('p2')
-        p2 = subplot(3, 2, 2);
-      else
-        subplot(p2);
-        h2 = plot(time, dat(2, :));
-        axis([min(time) max(time) vaxis(2, 1) vaxis(2, 2)]);
-        set(p2, 'XTickLabel', []);
-        ylabel('amplitude (uV)');
-        xlabel(sprintf('time: %d seconds', cfg.blocksize*cfg.blockmem));
-        grid on
-      end
-      
-      if ~exist('u2')
-        pos = get(p2, 'position'); % link the position to the subplot
-        pos(1) = pos(1)-0.1;
-        pos(2) = pos(2)-0.05;
-        pos(3) = 0.1;
-        pos(4) = 0.05;
-        u2 = uicontrol('style', 'edit', 'units', 'normalized', 'callback', @update_axis, 'BackgroundColor', 'white');
-        set(u2, 'position', pos);
-        set(u2, 'string', num2str(vaxis(2,2)));
-        set(u2, 'tag', 'u2');
-      end
-      
-      if ~exist('p3')
-        p3 = subplot(3, 2, 3);
-      else
-        subplot(p3)
-        h3 = bar(1:length(ifreq), pow(1, :), 0.5);
-        % plot(pow(1).Frequencies, pow(1).Data);
-        % bar(pow(1).Frequencies, pow(1).Data);
-        axis([cfg.foilim(1) cfg.foilim(2) vaxis(3, 1) vaxis(3, 2)]);
-        % str = sprintf('time = %d s\n', round(mean(time)));
-        % title(str);
-        xlabel('frequency (Hz)');
-        ylabel('power');
-      end
-      
-      if ~exist('u3')
-        pos = get(p3, 'position'); % link the position to the subplot
-        pos(1) = pos(1)-0.1;
-        pos(2) = pos(2)-0.05;
-        pos(3) = 0.1;
-        pos(4) = 0.05;
-        u3 = uicontrol('style', 'edit', 'units', 'normalized', 'callback', @update_axis, 'BackgroundColor', 'white');
-        set(u3, 'position', pos);
-        set(u3, 'position', pos);
-        set(u3, 'string', num2str(vaxis(3,2)));
-        set(u3, 'tag', 'u3');
-      end
-      
-      if ~exist('p4')
-        p4 = subplot(3, 2, 4);
-      else
-        subplot(p4)
-        h4 = bar(1:length(ifreq), pow(2, :), 0.5);
-        % plot(pow(2).Frequencies, pow(2).Data);
-        % bar(pow(2).Frequencies, pow(2).Data);
-        ax = axis;
-        axis([cfg.foilim(1) cfg.foilim(2) vaxis(4, 1) vaxis(4, 2)]);
-        if strcmp(cfg.feedback, 'yes')
-          line([right_freq(1) right_freq(1)], [ax(3) ax(4)]);
-          line([right_freq(2) right_freq(2)], [ax(3) ax(4)]);
-          line([right_freq(1) right_freq(2)], [right_offset right_offset]);
+        
+        if ~exist('p5')
+          p5 = subplot(3, 2, 5);
+        else
+          subplot(p5)
+          h5 = surf(squeeze(TFR(1, :, :)));
+          axis([1 100 cfg.foilim(1) cfg.foilim(2) vaxis(5, 1) vaxis(5, 2)]);
+          view(110, 45);
+          xlabel(''); % this is the historical time
+          ylabel('frequency (Hz)');
+          zlabel('power');
+          set(p5, 'XTickLabel', []);
+          set(h5, 'EdgeColor', 'none');
+          shading interp
+          box off
         end
-        xlabel('frequency (Hz)');
-        ylabel('power');
-      end
-      
-      if ~exist('u4')
-        pos = get(p4, 'position'); % link the position to the subplot
-        pos(1) = pos(1)-0.1;
-        pos(2) = pos(2)-0.05;
-        pos(3) = 0.1;
-        pos(4) = 0.05;
-        u4 = uicontrol('style', 'edit', 'units', 'normalized', 'callback', @update_axis, 'BackgroundColor', 'white');
-        set(u4, 'position', pos);
-        set(u4, 'string', num2str(vaxis(4,2)));
-        set(u4, 'tag', 'u4');
-      end
-      
-      if ~exist('p5')
-        p5 = subplot(3, 2, 5);
-      else
-        subplot(p5)
-        h5 = surf(squeeze(TFR(1, :, :)));
-        axis([1 100 cfg.foilim(1) cfg.foilim(2) vaxis(5, 1) vaxis(5, 2)]);
-        view(110, 45);
-        xlabel('history');
-        ylabel('frequency (Hz)');
-        zlabel('power');
-        set(p5, 'XTickLabel', []);
-        set(h5, 'EdgeColor', 'none');
-        shading interp
-        box off
-      end
-      
-      if ~exist('u5')
-        pos = get(p5, 'position'); % link the position to the subplot
-        pos(1) = pos(1)-0.1;
-        pos(2) = pos(2)-0.05;
-        pos(3) = 0.1;
-        pos(4) = 0.05;
-        u5 = uicontrol('style', 'edit', 'units', 'normalized', 'callback', @update_axis, 'BackgroundColor', 'white');
-        set(u5, 'position', pos);
-        set(u5, 'string', num2str(vaxis(5,2)));
-        set(u5, 'tag', 'u5');
-      end
-      
-      if ~exist('p6')
-        p6 = subplot(3, 2, 6);
-      else
-        subplot(p6)
-        h6 = surf(squeeze(TFR(2, :, :)));
-        axis([1 100 cfg.foilim(1) cfg.foilim(2) vaxis(6, 1) vaxis(6, 2)]);
-        view(110, 45);
-        xlabel('history');
-        ylabel('frequency (Hz)');
-        zlabel('power');
-        set(p6, 'XTickLabel', []);
-        set(h6, 'EdgeColor', 'none');
-        shading interp
-        box off
-      end
-      
-      if ~exist('u6')
-        pos = get(p6, 'position'); % link the position to the subplot
-        pos(1) = pos(1)-0.1;
-        pos(2) = pos(2)-0.05;
-        pos(3) = 0.1;
-        pos(4) = 0.05;
-        u6 = uicontrol('style', 'edit', 'units', 'normalized', 'callback', @update_axis, 'BackgroundColor', 'white');
-        set(u6, 'position', pos);
-        set(u6, 'string', num2str(vaxis(6,2)));
-        set(u6, 'tag', 'u6');
-      end
+        
+        if ~exist('p6')
+          p6 = subplot(3, 2, 6);
+        else
+          subplot(p6)
+          h6 = surf(squeeze(TFR(2, :, :)));
+          axis([1 100 cfg.foilim(1) cfg.foilim(2) vaxis(6, 1) vaxis(6, 2)]);
+          view(110, 45);
+          xlabel(''); % this is the historical time
+          ylabel('frequency (Hz)');
+          zlabel('power');
+          set(p6, 'XTickLabel', []);
+          set(h6, 'EdgeColor', 'none');
+          shading interp
+          box off
+        end
+        
+      end % try
       
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % present MIDI feedback if the data exceeds the specified limits
