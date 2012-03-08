@@ -65,9 +65,9 @@ if strcmp(cfg.feedback, 'yes')
   midiOut(uint8([175+2, 7, 0]));
 end % if MIDI feedback
 
-% these are used by the callbacks
-global vaxis
-global hdr chanindx
+% these are used by the GUI callbacks
+clear global vaxis hdr chanindx
+global vaxis hdr chanindx
 
 % this specifies the vertical axis for each of the 6 subplots
 vaxis = [
@@ -78,6 +78,8 @@ vaxis = [
   0 10
   0 10
   ];
+
+b2clicked = false;
 
 % schemerlamp = Lamp('com9');
 
@@ -288,7 +290,20 @@ while true
           set(u6, 'tag', 'u6');
         end
         
+        if ~exist('b2')
+          pos = [0.88 0.01 0.1 0.05];
+          b2 = uicontrol('style', 'pushbutton', 'units', 'normalized', 'callback', 'evalin(''caller'', ''b2clicked = true'')');
+          set(b2, 'position', pos);
+          set(b2, 'string', 'quit');
+          set(b2, 'tag', 'b2');
+        end
+        
       end % try
+      
+      if b2clicked
+        return
+        b2clicked = false;
+      end
       
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % visualize the data in 2*3 subplots

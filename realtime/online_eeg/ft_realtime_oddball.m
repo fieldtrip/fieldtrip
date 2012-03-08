@@ -37,8 +37,21 @@ if ~isfield(cfg, 'jumptoeof'),      cfg.jumptoeof = 'no';     end % jump to end 
 cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
 cfg = ft_checkconfig(cfg, 'required', {'datafile' 'headerfile'});
 
+% these are used by the GUI callbacks
+clear global chansel chanindx vaxis hdr
+global chansel chanindx vaxis hdr
+
+b1clicked = false;
+b2clicked = false;
+chansel = 1; % this is the subselection out of chanindx
+vaxis = [
+  -6 6
+  -3 3
+  ];
+
 % ensure that the persistent variables related to caching are cleared
 clear ft_read_header
+
 % start by reading the header from the realtime buffer
 hdr = ft_read_header(cfg.headerfile, 'cache', true);
 
@@ -58,13 +71,6 @@ end
 count = 0;
 
 f1 = nan;
-
-global chansel hdr vaxis
-chansel = 1;
-vaxis = [
-  -20 20
-  -2.5 2.5
-  ];
 
 % initialize the timelock cell-array, each cell will hold the average in one condition
 timelock = {};
@@ -111,15 +117,16 @@ while true
     % from here onward it is specific to the processing of the data
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
+    % apply some preprocessing options
+    dat = ft_preproc_lowpassfilter(dat, hdr.Fs, 45);
+    dat = ft_preproc_baselinecorrect(dat, 1, -offset);
+    
     % put the data in a fieldtrip-like raw structure
     data.trial{1} = dat;
     data.time{1}  = offset2time(offset, hdr.Fs, endsample-begsample+1);
     data.label    = hdr.label(chanindx);
     data.hdr      = hdr;
     data.fsample  = hdr.Fs;
-    
-    % apply some preprocessing options
-    data.trial{1} = ft_preproc_baselinecorrect(data.trial{1});
     
     if length(timelock)<condition || isempty(timelock{condition})
       % this is the first occurence of this condition, initialize an empty timelock structure
@@ -146,59 +153,137 @@ while true
     timelock{condition}.var = (timelock{condition}.ss - (timelock{condition}.s.^2)./timelock{condition}.n) ./ (timelock{condition}.n-1);
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % from here onward additional processing of the selective averages could be done
-    % as an example here the ERP of each condition is plotted in its own figure
+    % from here onward the GUI is constructed
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
-    if ~ishandle(f1)
-      close all
-      f1 = figure;
-    end
-    
-    if ~exist('p1')
-      p1 = subplot(2,1,1);
-    end
-    
-    if ~exist('p2')
-      p2 = subplot(2,1,2);
-    end
-    
-    if length(timelock)>1
-      sel = ~cellfun(@isempty, timelock);
-      sel = find(sel, 2, 'first');
-      if length(sel)~=2
-        break
-      end
-      standard  = timelock{sel(1)};
-      deviant   = timelock{sel(2)};
-      tscore    = (standard.avg - deviant.avg) ./ sqrt(standard.var./standard.n + deviant.var./deviant.n);
+    try
       
-      if exist('p1')
-        subplot(p1)
-        cla
-        hold on
-        hs = plot(standard.time, standard.avg(chansel,:), 'b-');
-        hd = plot(deviant.time, deviant.avg(chansel,:), 'r-');
-        set(hs, 'lineWidth', 1.5)
-        set(hd, 'lineWidth', 1.5)
-        grid on
-        legend('standard', 'deviant');
-        xlabel('time (s)');
-        ylabel('amplitude (uV)');
+      if ~ishandle(f1)
+        close all;
+        f1 = figure;
+        clear u1 u2
+        clear p1 p2
+        clear c1
+        set(f1, 'resizeFcn', 'clear u1 u2 p1 p2 c1 b1 b2')
       end
       
-      if exist('p2')
-        subplot(p2)
-        cla
-        hold on
-        ht = plot(standard.time, tscore(chansel,:), 'g-');
-        set(ht, 'lineWidth', 1.5)
-        grid on
-        xlabel('time (s)');
-        ylabel('t-score (a.u.)');
+      if ~exist('p1')
+        p1 = subplot(2,1,1);
       end
       
-    end % two conditions are available
+      if ~exist('p2')
+        p2 = subplot(2,1,2);
+      end
+      
+      if ~exist('c1')
+        pos = [0.75 0.93 0.1 0.05];
+        c1 = uicontrol('style', 'edit', 'units', 'normalized', 'callback', @update_channel, 'BackgroundColor', 'white');
+        set(c1, 'position', pos);
+        set(c1, 'string', chanindx(chansel));
+        set(c1, 'tag', 'c1');
+      end
+      
+      if ~exist('u1')
+        pos = get(p1, 'position'); % link the position to the subplot
+        pos(1) = pos(1)-0.1;
+        pos(2) = pos(2)-0.05;
+        pos(3) = 0.1;
+        pos(4) = 0.05;
+        u1 = uicontrol('style', 'edit', 'units', 'normalized', 'callback', @update_axis, 'BackgroundColor', 'white');
+        set(u1, 'position', pos);
+        set(u1, 'string', num2str(vaxis(1,2)));
+        set(u1, 'tag', 'u1');
+      end
+      
+      if ~exist('u2')
+        pos = get(p2, 'position'); % link the position to the subplot
+        pos(1) = pos(1)-0.1;
+        pos(2) = pos(2)-0.05;
+        pos(3) = 0.1;
+        pos(4) = 0.05;
+        u2 = uicontrol('style', 'edit', 'units', 'normalized', 'callback', @update_axis, 'BackgroundColor', 'white');
+        set(u2, 'position', pos);
+        set(u2, 'string', num2str(vaxis(2,2)));
+        set(u2, 'tag', 'u1');
+      end
+      
+      if ~exist('b1')
+        pos = [0.75 0.01 0.1 0.05];
+        b1 = uicontrol('style', 'pushbutton', 'units', 'normalized', 'callback', 'evalin(''caller'', ''b1clicked = true'')');
+        set(b1, 'position', pos);
+        set(b1, 'string', 'reset');
+        set(b1, 'tag', 'b1');
+      end
+      
+      if ~exist('b2')
+        pos = [0.88 0.01 0.1 0.05];
+        b2 = uicontrol('style', 'pushbutton', 'units', 'normalized', 'callback', 'evalin(''caller'', ''b2clicked = true'')');
+        set(b2, 'position', pos);
+        set(b2, 'string', 'quit');
+        set(b2, 'tag', 'b2');
+      end
+      
+    end % try
+    
+    if b1clicked
+      timelock = {};
+      try, cla(p1); end
+      try, cla(p2); end
+      b1clicked = false;
+    end
+    
+    if b2clicked
+      return
+      b2clicked = false;
+    end
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % from here onward the data is plotted
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    try
+      
+      if length(timelock)>1
+        sel = ~cellfun(@isempty, timelock);
+        sel = find(sel, 2, 'first');
+        if length(sel)~=2
+          break
+        end
+        standard  = timelock{sel(1)};
+        deviant   = timelock{sel(2)};
+        tscore    = (deviant.avg - standard.avg) ./ sqrt(standard.var./standard.n + deviant.var./deviant.n);
+        time      = standard.time; % deviant is the same
+        
+        if exist('p1')
+          subplot(p1)
+          cla
+          hold on
+          hs = plot(time, standard.avg(chansel,:), 'b-');
+          hd = plot(time, deviant.avg(chansel,:), 'r-');
+          set(hs, 'lineWidth', 1.5)
+          set(hd, 'lineWidth', 1.5)
+          grid on
+          axis([time(1) time(end) vaxis(1,1) vaxis(1,2)])
+          legend(sprintf('standard (n=%d)', standard.n), sprintf('deviant (n=%d)', deviant.n));
+          xlabel('time (s)');
+          ylabel('amplitude (uV)');
+          title(sprintf('channel "%s"', hdr.label{chanindx(chansel)}));
+        end
+        
+        if exist('p2')
+          subplot(p2)
+          cla
+          hold on
+          ht = plot(time, tscore(chansel,:), 'g-');
+          set(ht, 'lineWidth', 1.5)
+          grid on
+          axis([time(1) time(end) vaxis(2,1) vaxis(2,2)])
+          legend('difference');
+          xlabel('time (s)');
+          ylabel('t-score (a.u.)');
+        end
+        
+      end % two conditions are available
+      
+    end % try
     
     % force matlab to redraw the figure
     drawnow
@@ -213,3 +298,36 @@ function [time] = offset2time(offset, fsample, nsamples)
 offset   = double(offset);
 nsamples = double(nsamples);
 time = (offset + (0:(nsamples-1)))/fsample;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function update_channel(h, varargin)
+global chansel chanindx hdr
+val = abs(str2num(get(h, 'string')));
+val = max(1, min(val, length(chanindx)));
+if ~isempty(val)
+  switch get(h, 'tag')
+    case 'c1'
+      chansel = val;
+      set(h, 'string', num2str(val));
+      fprintf('switching to channel "%s"', hdr.label{chanindx(chansel)});
+  end
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function update_axis(h, varargin)
+global vaxis
+val = abs(str2num(get(h, 'string')));
+if ~isempty(val)
+  switch get(h, 'tag')
+    case 'u1'
+      vaxis(1,:) = [-val val];
+    case 'u2'
+      vaxis(2,:) = [-val val];
+  end
+end
