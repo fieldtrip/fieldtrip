@@ -417,6 +417,7 @@ switch eventformat
       trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank);
       event   = appendevent(event, trigger);
     end
+    
   case {'ctf_ds', 'ctf_meg4', 'ctf_res4', 'ctf_old'}
     % obtain the dataset name
     if ft_filetype(filename, 'ctf_meg4') ||  ft_filetype(filename, 'ctf_res4')
