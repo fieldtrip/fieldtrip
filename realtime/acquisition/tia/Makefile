@@ -1,11 +1,15 @@
-LDFLAGS = -Llib/tia/amd64 -Llib/ticpp/linux -lpthread -lboost_thread \
-	-lboost_system -ltia -lticpp_64
+LDFLAGS = \
+	-lpthread -lboost_thread -lboost_system \
+	-Llib/tia/amd64 -Llib/ticpp/linux -ltia -lticpp_64 \
+	-L../../buffer/src -lbuffer
+
+CXXFLAGS = -c -Iinclude -I ../../buffer/src
 
 tia2ft: tia2ft.o
-	$(CXX) $(LDFLAGS) -o $@ $^
+	$(CXX) -o $@ $^ $(LDFLAGS)
 
 %.o: %.cpp
-	$(CXX) -c -Iinclude -o $@  $^
+	$(CXX) $(CXXFLAGS) -o $@  $^
 
 .PHONY: clean run
 
