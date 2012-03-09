@@ -45,6 +45,16 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 %   cfg.artfctdef.zvalue.interactive = 'yes', a GUI will be started and you
 %     can manually accept/reject detected artifacts, and/or change the threshold
 %
+% If you specify
+%   cfg.artfctdef.zvalue.artfctpeak='yes', the maximum value of the artifact 
+%       within its range will be found; saved into cfg.artfctdef.zvalue.peaks
+% Use also, e.g. as input to DSS option of ft_componentanalysis:
+%   cfg.artfctdef.zvalue.artfctpeakrange= [-0.25 0.25]; (in seconds), (for example) 
+%       to indicate range around peak to include, saved into cfg.artfctdef.zvalue.dssartifact
+%       Default values: [0 0]
+%       Range will respect trial boundaries (i.e. be shorter if peak is near beginning or end of trial)
+%       Samples between trials will be removed; thus this won't match .sampleinfo of the data structure
+%
 % Configuration settings related to the preprocessing of the data are
 %   cfg.artfctdef.zvalue.lpfilter      = 'no' or 'yes'  lowpass filter
 %   cfg.artfctdef.zvalue.hpfilter      = 'no' or 'yes'  highpass filter
@@ -113,6 +123,8 @@ cfg.artfctdef.zvalue.fltpadding  = ft_getopt(cfg.artfctdef.zvalue, 'fltpadding',
 cfg.artfctdef.zvalue.artpadding  = ft_getopt(cfg.artfctdef.zvalue, 'artpadding', 0);
 cfg.artfctdef.zvalue.interactive = ft_getopt(cfg.artfctdef.zvalue, 'interactive', 'no');
 cfg.artfctdef.zvalue.cumulative  = ft_getopt(cfg.artfctdef.zvalue, 'cumulative', 'yes');
+cfg.artfctdef.zvalue.artfctpeak  = ft_getopt(cfg.artfctdef.zvalue, 'artfctpeak', 'no');
+cfg.artfctdef.zvalue.artfctpeakrange  = ft_getopt(cfg.artfctdef.zvalue, 'artfctpeakrange',[0 0]);
 
 % for backward compatibility
 cfg.artfctdef        = ft_checkconfig(cfg.artfctdef, 'renamed',    {'blc', 'demean'});
@@ -422,6 +434,34 @@ artval = dum;
 artbeg = find(diff([0 artval])== 1);
 artend = find(diff([artval 0])==-1);
 artifact = [artbeg(:) artend(:)];
+
+if strcmp(cfg.artfctdef.zvalue.artfctpeak,'yes')
+  cnt=1;
+  shift=0;
+  for tt=1:opt.numtrl    
+    if tt==1
+      tind{tt}=find(artifact(:,2)<opt.trl(tt,2));
+    else
+      tind{tt}=intersect(find(artifact(:,2)<opt.trl(tt,2)),find(artifact(:,2)>opt.trl(tt-1,2)));
+    end
+    artbegend=[(artifact(tind{tt},1)-opt.trl(tt,1)+1) (artifact(tind{tt},2)-opt.trl(tt,1)+1)];
+    for rr=1:size(artbegend,1)
+      [mx,mxnd]=max(opt.zval{tt}(artbegend(rr,1):artbegend(rr,2)));
+      peaks(cnt)=artifact(tind{tt}(rr),1)+mxnd-1;
+      dssartifact(cnt,1)=max(peaks(cnt)+cfg.artfctdef.zvalue.artfctpeakrange(1)*hdr.Fs,opt.trl(tt,1));
+      dssartifact(cnt,2)=min(peaks(cnt)+cfg.artfctdef.zvalue.artfctpeakrange(2)*hdr.Fs,opt.trl(tt,2));
+      peaks(cnt)=peaks(cnt)-shift;
+      dssartifact(cnt,:)=dssartifact(cnt,:)-shift;
+      cnt=cnt+1;
+    end
+    if tt<opt.numtrl
+      shift=shift+opt.trl(tt+1,1)-opt.trl(tt,2)-1;
+    end
+    clear artbegend
+  end
+  cfg.artfctdef.zvalue.peaks=peaks';
+  cfg.artfctdef.zvalue.dssartifact=dssartifact;
+end
 
 % remember the artifacts that were found
 cfg.artfctdef.zvalue.artifact = artifact;
