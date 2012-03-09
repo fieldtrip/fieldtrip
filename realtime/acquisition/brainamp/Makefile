@@ -18,6 +18,12 @@ ifeq "$(PLATFORM)" "mingw32"
    SUFFIX = .exe
 endif
 
+ifeq "$(PLATFORM)" "i686-apple-darwin10"
+   LDFLAGS = -lpthread ../../buffer/src/libbuffer.a
+   INCPATH = -I../../buffer/src -I. 
+   SUFFIX = .maci64
+endif
+
 CFLAGS = $(INCPATH) -Wunused -Wall -pedantic
 
 all: rda2ft$(SUFFIX)

@@ -2,10 +2,12 @@
  * (C) 2010 Stefan Klanke
  */
 #include <buffer.h>
-#include <socketserver.h>
-#include <rdadefs.h>
 #include <signal.h>
 #include <string.h>
+
+#include "socketserver.h"
+#include "rdadefs.h"
+#include "platform.h"
 
 #define MAXLINE 256
 #define MAX_PRINT_CHN  300
@@ -23,7 +25,7 @@ static char usage[] =
 "Calling 'rda2ft' with only the rda* arguments starts a local FieldTrip buffer on port 1972.\n" \
 "Using '-' for the FieldTrip buffer hostname (ftHost) starts a local buffer on the given port (ftPort).\n";
 
-#ifdef WIN32
+#ifndef PLATFORM_LINUX
 
 int strnlen(const char *s, int max) {
 	int n = 0;
