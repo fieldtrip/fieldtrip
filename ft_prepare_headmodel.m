@@ -174,7 +174,7 @@ geometry = [];
 if needvolcnd
   cfg = ft_checkconfig(cfg, 'required', 'hdmfile');
   asafilename = cfg.hdmfile;
-elseif needbnd && hasdata
+elseif needbnd && hasdata && ~hasvolume
   geometry = ft_fetch_headshape(cfg,data);
 elseif needbnd && ~hasdata
   geometry = ft_fetch_headshape(cfg);
