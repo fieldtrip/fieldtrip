@@ -391,17 +391,6 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function out = fixname(toolbox)
-% FIXME this fails in case the toolbox directory name would start with a digit, e.g. "99luftballons"
-out = lower(toolbox);
-out(out=='-') = '_'; % fix dashes
-out(out==' ') = '_'; % fix spaces
-out(out=='/') = '_'; % fix forward slashes
-out(out=='\') = '_'; % fix backward slashes
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% helper function
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function path = unixpath(path)
 path(path=='\') = '/'; % replace backward slashes with forward slashes
 
