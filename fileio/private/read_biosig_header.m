@@ -11,7 +11,7 @@ function [hdr] = read_biosig_header(filename)
 %
 % See also READ_BIOSIG_DATA
 
-% Copyright (C) 2004, Robert Oostenveld
+% Copyright (C) 2004-2012, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -44,13 +44,13 @@ sclose(biosig);
 %   hdr.nTrials      number of trials
 %   hdr.label        cell-array with labels of each channel
 
-if length(biosig.SampleRate)>1 & any(diff(biosig.SampleRate))
+if length(biosig.SampleRate)>1 && any(diff(biosig.SampleRate))
   error('channels with different sampling rates are not supported');
 else
   hdr.Fs          = biosig.SampleRate(1);
 end
 
-if length(biosig.SPR)>1 & any(diff(biosig.SPR))
+if length(biosig.SPR)>1 && any(diff(biosig.SPR))
   error('channels with different number of samples are not supported');
 else
   hdr.nSamples  = biosig.SPR(1);
@@ -60,6 +60,13 @@ hdr.nChans      = biosig.NS;
 hdr.nTrials     = biosig.NRec;
 hdr.nSamplesPre = 0;      % this one is not in the biosig header
 hdr.label       = {};     % start with empty labels and fill them below
+
+if hdr.nTrials>1 && hdr.nSamples==1
+  % there are many trials with one sample, i.e. the data is stored in a multiplexed format instead of a block format
+  % represent it in the header as a continuous format
+  hdr.nSamples = hdr.nTrials;
+  hdr.nTrials  = 1;
+end
 
 if isfield(biosig, 'Label')
   hdr.label = biosig.Label;

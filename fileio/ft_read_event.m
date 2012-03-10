@@ -66,7 +66,7 @@ function [event] = ft_read_event(filename, varargin)
 % See also:
 %   FT_READ_HEADER, FT_READ_DATA, FT_WRITE_DATA, FT_WRITE_EVENT, FT_FILTER_EVENT
 
-% Copyright (C) 2004-2010 Robert Oostenveld
+% Copyright (C) 2004-2012 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -344,6 +344,10 @@ switch eventformat
   case {'biosig', 'gdf'}
     % FIXME it would be nice to figure out how sopen/sread return events
     % for all possible fileformats that can be processed with biosig
+    %
+    % This section of code is opaque with respect to the gdf file being a 
+    % single file or the first out of a sequence with postfix _1, _2, ...
+    % because it uses private/read_trigger which again uses ft_read_data
     if isempty(hdr)
       hdr = ft_read_header(filename);
     end

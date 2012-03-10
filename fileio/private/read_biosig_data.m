@@ -1,4 +1,4 @@
-function [dat] = read_biosig_data(filename, hdr, begsample, endsample, chanindx);
+function [dat] = read_biosig_data(filename, hdr, begsample, endsample, chanindx)
 
 % READ_BIOSIG_DATA reads data from EEG file using the BIOSIG
 % toolbox and returns it in the FCDC framework standard format
@@ -9,7 +9,7 @@ function [dat] = read_biosig_data(filename, hdr, begsample, endsample, chanindx)
 %
 % The following data formats are supported: EDF, BKR, CNT, BDF, GDF
 
-% Copyright (C) 2004, Robert Oostenveld
+% Copyright (C) 2004-2012, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -31,31 +31,39 @@ function [dat] = read_biosig_data(filename, hdr, begsample, endsample, chanindx)
 
 persistent cacheheader        % for caching
 
-% open the file and read the header or use cached header
+% get the details from the file
 details = dir(filename);
+if nargin>4
+  % the channel selection is made when opening the file
+  % and should be remembered over multiple calls
+  details.chan = chanindx;
+end
+
+% open the file and read the header or use the cached header
 if isempty(cacheheader) || ~isequal(details, cacheheader.details)
-    % close previous file, if different
-    if ~isempty(cacheheader) && exist(cacheheader.fullname, 'file'), sclose(cacheheader); end 
-    biosig = sopen(filename,'r'); 
-    % put the header in the cache
-    cacheheader = biosig;
-    % update the header details (including time stampp, size and name)
-    cacheheader.details = dir(filename);
-    % we need full path for file closing
-    cacheheader.fullname = filename;
+  % close previous file, if different
+  if ~isempty(cacheheader) && exist(cacheheader.fullname, 'file')
+    sclose(cacheheader);
+  end
+  if nargin>4
+    HDR = sopen(filename,'r', chanindx);
+  else
+    HDR = sopen(filename,'r');
+  end
+  % put the header in the cache
+  cacheheader = HDR;
+  % update the header details (including time stampp, size and name)
+  cacheheader.details = dir(filename);
+  % we need full path for file closing
+  cacheheader.fullname = filename;
 else
-    biosig = cacheheader;  
+  HDR = cacheheader;
 end
 
 begtime = (begsample-1) / hdr.Fs;
 endtime = (endsample  ) / hdr.Fs;
 duration = endtime-begtime;
 
-% read the selected data 
-dat = sread(biosig, duration, begtime);
+% read the selected data
+dat = sread(HDR, duration, begtime);
 dat = dat';
-
-if nargin>4
-  % select the channels of interest
-  dat = dat(chanindx,:);
-end

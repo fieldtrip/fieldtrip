@@ -59,7 +59,7 @@ function [hdr] = ft_read_header(filename, varargin)
 % See also FT_READ_DATA, FT_READ_EVENT, FT_WRITE_DATA, FT_WRITE_EVENT,
 % FT_CHANTYPE, FT_CHANUNIT
 
-% Copyright (C) 2003-2011 Robert Oostenveld
+% Copyright (C) 2003-2012 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -256,14 +256,61 @@ switch headerformat
     hdr.nTrials     = 1;
     hdr.label       = orig.label;
     
-  case {'biosig' 'gdf'}
-    % use the biosig toolbox if available
+  case {'biosig'}
+    % this requires the biosig toolbox
     ft_hastoolbox('BIOSIG', 1);
     hdr = read_biosig_header(filename);
-    % gdf always represents continuous data
-    hdr.nSamples    = hdr.nSamples*hdr.nTrials;
-    hdr.nTrials     = 1;
-    hdr.nSamplesPre = 0;
+    
+  case {'gdf'}
+    % this requires the biosig toolbox
+    ft_hastoolbox('BIOSIG', 1);
+    % In the case that the gdf files are written by one of the FieldTrip 
+    % realtime applications, such as biosig2ft, the gdf recording can be 
+    % split over multiple 1GB files. The sequence of files is then
+    %   filename.gdf   <- this is the one that should be specified as the filename/dataset
+    %   filename_1.gdf
+    %   filename_2.gdf
+    %   ...
+    
+    [p, f, x] = fileparts(filename);
+    if exist(sprintf('%s_%d%s', fullfile(p, f), 1, x), 'file')
+      % there are multiple files, count the number of additional files (excluding the first one)
+      count = 0;
+      while exist(sprintf('%s_%d%s', fullfile(p, f), count+1, x), 'file')
+        count = count+1;
+      end
+      hdr = read_biosig_header(filename);
+      for i=1:count
+        hdr(i+1) = read_biosig_header(sprintf('%s_%d%s', fullfile(p, f), i, x));
+        % do some sanity checks
+        if hdr(i+1).nChans~=hdr(1).nChans
+          error('multiple GDF files detected that should be appended, but the channel count is inconsistent');
+        elseif hdr(i+1).Fs~=hdr(1).Fs
+          error('multiple GDF files detected that should be appended, but the sampling frequency is inconsistent');
+        elseif ~isequal(hdr(i+1).label, hdr(1).label)
+          error('multiple GDF files detected that should be appended, but the channel names are inconsistent');
+        end
+      end % for count
+      % combine all headers into one
+      combinedhdr             = [];
+      combinedhdr.Fs          = hdr(1).Fs;
+      combinedhdr.nChans      = hdr(1).nChans;
+      combinedhdr.nSamples    = sum([hdr.nSamples].*[hdr.nTrials]);
+      combinedhdr.nSamplesPre = 0;
+      combinedhdr.nTrials     = 1;
+      combinedhdr.label       = hdr(1).label;
+      combinedhdr.orig        = hdr; % include all individual file details
+      hdr = combinedhdr;
+      
+    else
+      % there is only a single file
+      hdr = read_biosig_header(filename);
+      % the GDF format is always continuous
+      hdr.nSamples = hdr.nSamples * hdr.nTrials;
+      hdr.nTrials = 1;
+      hdr.nSamplesPre = 0;
+    end % if single or multiple gdf files
+    
     
   case {'biosemi_bdf', 'bham_bdf'}
     hdr = read_biosemi_bdf(filename);
@@ -283,7 +330,7 @@ switch headerformat
     end
     
   case {'biosemi_old'}
-    % this uses the openbdf and readbdf functions that I copied from the EEGLAB toolbox
+    % this uses the openbdf and readbdf functions that were copied from EEGLAB
     orig = openbdf(filename);
     if any(orig.Head.SampleRate~=orig.Head.SampleRate(1))
       error('channels with different sampling rate not supported');
@@ -953,7 +1000,7 @@ switch headerformat
       hdr = db_select('fieldtrip.header', {'nChans', 'nSamples', 'nSamplesPre', 'Fs', 'label'}, 1);
       hdr.label = mxDeserialize(hdr.label);
     end
-
+    
   case 'gtec_mat'
     % this is a simple MATLAB format, it contains a log and a names variable
     tmp = load(headerfile);
@@ -965,7 +1012,7 @@ switch headerformat
     hdr.nSamples = size(log,2);
     hdr.nSamplesPre = 0;
     hdr.nTrials = 1; % assume continuous data, not epoched
-
+    
     % compute the sampling frequency from the time channel
     sel = strcmp(hdr.label, 'Time');
     time = log(sel,:);
@@ -977,7 +1024,7 @@ switch headerformat
       hdr.orig.log = log;
       hdr.orig.names = names;
     end
-
+    
   case {'itab_raw' 'itab_mhd'}
     % read the full header information frtom the binary header structure
     header_info = read_itab_mhd(headerfile);
@@ -1545,7 +1592,7 @@ switch headerformat
     hdr.nTrials     = 1; % continuous data
     hdr.label       = {tmp.hdr.entityinfo(tmp.list.analog(tmp.analog.contcount~=0)).EntityLabel}; %%% contains non-unique chans?
     hdr.orig        = tmp; % remember the original header
-  
+    
   case 'bucn_nirs'
     orig = read_bucn_nirshdr(filename);
     hdr  = rmfield(orig, 'time');

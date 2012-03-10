@@ -1,10 +1,19 @@
 function [dat] = read_combined_ds(dirname, hdr, begsample, endsample, chanindx)
 
-% READ_COMBINED_DS
+% READ_COMBINED_DS reads electrophysiological data from a collection
+% of files that are located in one directory, where each of the files
+% should contain one channel and should have the same sampling frequency
+% and number of samples as all other files.
 %
 % Use as
 %   hdr = read_combined_ds(dirname)
 %   dat = read_combined_ds(dirname, hdr, begsample, endsample, chanindx)
+%
+% This is supported for single channel files in one of the following formats
+%   plexon_nex
+%   neuralynx_bin
+%   neuralynx_ncs
+%   fcdc_matbin
 
 % Copyright (C) 2008, Robert Oostenveld
 %
