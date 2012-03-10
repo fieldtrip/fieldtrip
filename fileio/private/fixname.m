@@ -52,6 +52,6 @@ str(str==']') = '_';
 str(str=='<') = '_';
 str(str=='>') = '_';
 str(str=='?') = '_';
-while(out(1) == '_'),   out = out(2:end); end;   % remove all underscore at the begin of the string
-while(out(end) == '_'), out = out(1:end-1); end; % remove all underscore at the end of the string
+while(str(1) == '_'),   str = str(2:end); end;   % remove all underscore at the begin of the string
+while(str(end) == '_'), str = str(1:end-1); end; % remove all underscore at the end of the string
 
