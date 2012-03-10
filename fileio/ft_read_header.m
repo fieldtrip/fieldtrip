@@ -1716,13 +1716,3 @@ for i=1:length(hdr)
 end
 hdr = tmp;
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function out = fixname(str)
-% FIXME this still fails if the string starts with a digit, e.g. "99luftballons"
-out = deblank(lower(str));
-out(out=='-') = '_'; % fix dashes
-out(out==' ') = '_'; % fix spaces
-out(out=='/') = '_'; % fix forward slashes
-out(out=='\') = '_'; % fix backward slashes
-out(out=='.') = '_';
-out(out==',') = '_';
