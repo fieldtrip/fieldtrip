@@ -35,6 +35,11 @@ end
 
 id = sprintf('%s_%s_p%d_b%d_j%03d', getusername(), gethostname(), getpid(), batch, job);
 
+% ensure that it can be used as filename, struct fieldname, etc.
+id = fixname(id);
+
 % remember the current job number for the current batch
 jobNum(batch) = job;
+
+
 
