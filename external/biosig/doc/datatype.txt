@@ -1,0 +1,38 @@
+SPECIFICATION OF DATATYPES
+-----------------------------------------------
+This is used by PLOTA.M
+
+$Id$
+Date: 4 Apr 2003
+(C) Alois Schloegl <a.schloegl@ieee.org>
+Version 1.0 (0.10 for testing)
+
+
+
+CONTENT:
+=========
+
+TSD_BCI7: summarizes BCI results (online and offline)
+    input: FINDCLASSIFIER1, OCO
+    output: PLOTA
+    
+TF_MVAR: result of time-varying multivariate AR analyis	
+    input: TFMVAR
+    output: PLOTA    
+    
+HISTOGRAM:	
+    input: HISTO, HISTO2, HISTO3 
+    output: PLOTA    
+    
+SCATTER:	
+    input: 
+    output: PLOTA    
+    
+REV:	
+    input: 
+    output: PLOTA    
+    
+:	
+    input: 
+    output:     
+    	

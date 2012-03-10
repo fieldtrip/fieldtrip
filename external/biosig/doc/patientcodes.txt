@@ -1,0 +1,90 @@
+### Table of patient codes. 
+# This file is part of the biosig project http://biosig.sf.net/
+# Copyright (C) 2004-2005 Alois Schloegl <a.schloegl@ieee.org>
+# $Revision: 1.12 $
+# $Id: eventcodes.txt,v 1.12 2005/05/21 21:05:13 schloegl Exp $
+#
+### table of patient codes: lines starting with # are omitted
+
+0000 	unknown
+0001	healthy
+
+# neurology
+0101	parkinson
+0102	alzheimer
+0103	huntington's disease
+0104	epilepsy
+		(Seizure: simple partial SP, complex partial CP, generalized tonic-clonic GTC)
+
+# pulmology
+0201	OSAS
+0202	
+
+# psychology
+	depression
+	anxiety disorder
+	attention deficit/hyperactive disorder (ADHD)
+	
+# disabled 
+	Amytrophic lateral sclerosis (ALS) 
+	Locked-in
+	Stroke 
+	tetraplegics
+
+# Sleep
+	Apnea
+	general anxiety
+	mood
+	PLM
+	Parkinson 
+# BCI
+	ALS
+	Paraplegia
+	Locked-In
+	Stroke
+
+others
+    tumors
+    encephalitis
+    mental redardation 
+    sleep disorders
+    alcoholism
+    schizophrenia
+    autism 
+    determination of brain death 
+    anesthesia
+    coma
+    cerebral palsy
+    migraine 
+    Creutzfeldt-Jakob's disease
+    
+    * Arteriovenous malformation (cerebral)
+    * Benign positional vertigo
+    * Cerebral aneurysm
+    * Complicated alcohol abstinence (delirium tremens)
+    * Creutzfeldt-Jacob disease
+    * Delirium
+    * Dementia
+    * Dementia due to metabolic causes
+    * Febrile seizure (children)
+    * Generalized tonic-clonic seizure
+    * Hepatic encephalopathy
+    * Hepatorenal syndrome
+    * Insomnia
+    * Labyrinthitis
+    * Meniere's disease
+    * Metastatic brain tumor
+    * Multiple sclerosis
+    * Optic glioma
+    * Partial (focal) seizure
+    * Partial complex seizure
+    * Petit mal seizure
+    * Pick's disease
+    * Senile dementia (Alzheimer's type)
+    * Shy-Drager syndrome
+    * Syphilitic aseptic meningitis
+    * Temporal lobe seizure
+
+    
+    	    
+	

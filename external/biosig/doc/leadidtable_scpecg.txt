@@ -1,0 +1,201 @@
+# EN1064 Lead Identification Table of the SCP-ECG format 
+#
+# Reference: 
+# [1] Health informatics - Standard Communication Protocol - Computer-assisted electrocardiography
+#      CEN TC 251/N02-015 prEN1064:2002. CEN/TC251 Secretariat: SIS - Swedish Standards Institute. 
+# [2] ISO/IEEE 11073-10101, Health informatics - point-of-care medical device communication - nomenclature (VITAL)
+# [3] EN1064_amendment1f.doc STD Version 2.2 
+#     CEN/TC 251 2005-07 prEN1064:2005/A1 
+# [4] 64_e_stm_ver22.pdf EN1064:2005+A1:2007(E) Table 5 - Lead Identification Codes
+#
+#	$Id: leadidtable_scpecg.txt,v 1.3 2007-04-30 10:10:53 schloegl Exp $
+#	(C) 2005,2007 by Alois Schloegl <a.schloegl@ieee.org>	
+#    	This is part of the BIOSIG-toolbox http://biosig.sf.net/
+#
+# EN1064 SCP Lead identification table 
+# SCP-ECG Name  SCP-ECG Code    Description     	VITAL Ref ID 
+- 	0 	Unspecified lead 			MDC_ECG_LEAD_CONFIG
+I 	1 	Lead I 					MDC_ECG_LEAD_I
+II 	2 	Lead II					MDC_ECG_LEAD_II
+V1 	3 	V1 					MDC_ECG_LEAD_V1
+V2 	4 	V2 					MDC_ECG_LEAD_V2
+V3 	5 	V3 					MDC_ECG_LEAD_V3
+V4 	6 	V4 					MDC_ECG_LEAD_V4
+V5 	7 	V5 					MDC_ECG_LEAD_V5
+V6 	8 	V6 					MDC_ECG_LEAD_V6
+V7 	9 	V7 					MDC_ECG_LEAD_V7		
+V2R 	10 	V2R 					MDC_ECG_LEAD_V2R
+V3R 	11 	V3R 					MDC_ECG_LEAD_V3R
+V4R 	12 	V4R 					MDC_ECG_LEAD_V4R
+V5R 	13 	V5R 					MDC_ECG_LEAD_V5R
+V6R 	14 	V6R 					MDC_ECG_LEAD_V6R
+V7R 	15 	V7R 					MDC_ECG_LEAD_V7R
+X 	16 	X 					MDC_ECG_LEAD_X
+Y 	17 	Y 					MDC_ECG_LEAD_Y
+Z 	18 	Z 					MDC_ECG_LEAD_Z
+CC5 	19 	CC5, per V5 and V5R placement 		MDC_ECG_LEAD_CC5
+CM5 	20 	CM5, per V5 placement 			MDC_ECG_LEAD_CM5
+LA 	21 	Left Arm 				MDC_ECG_LEAD_LA
+RA 	22 	Right Arm 				MDC_ECG_LEAD_RA
+LL 	23 	Left Leg 				MDC_ECG_LEAD_LL
+fI 	24 	fI 					MDC_ECG_LEAD_fI
+fE 	25 	fE 					MDC_ECG_LEAD_fE
+fC 	26 	fC 					MDC_ECG_LEAD_fC		
+fA 	27 	fA 					MDC_ECG_LEAD_fA
+fM 	28 	fM 					MDC_ECG_LEAD_fM
+fF 	29 	fF 					MDC_ECG_LEAD_fF
+fH 	30 	fH 					MDC_ECG_LEAD_fH
+dI 	31 	derived lead I 				MDC_ECG_LEAD_dI
+dII 	32 	derived lead II 			MDC_ECG_LEAD_dII
+dV1 	33 	derived lead V1 			MDC_ECG_LEAD_dV1
+dV2 	34 	derived lead V2 			MDC_ECG_LEAD_dV2
+dV3 	35 	derived lead V3 			MDC_ECG_LEAD_dV3
+dV4 	36 	derived lead V4 			MDC_ECG_LEAD_dV4
+dV5 	37 	derived lead V5 			MDC_ECG_LEAD_dV5
+dV6 	38 	derived lead V6 			MDC_ECG_LEAD_dV6
+dV7 	39 	derived lead V7
+dV2R 	40 	derived lead V2R
+dV3R 	41 	derived lead V3R
+dV4R 	42 	derived lead V4R
+dV5R 	43 	derived lead V5R
+dV6R 	44 	derived lead V6R
+dV7R 	45 	derived lead V7R
+dX 	46 	derived lead X
+dY 	47 	derived lead Y
+dZ 	48 	derived lead Z
+dCC5 	49 	derived lead CC5
+dCM5 	50 	derived lead CM5
+dLA 	51 	derived lead LA
+dRA 	52 	derived lead RA
+dLL 	53	derived lead LL
+dfI 	54 	derived lead fI
+dfE 	55 	derived lead fE
+dfC 	56 	derived lead fC
+dfA 	57 	derived lead fA
+dfM 	58 	derived lead fM
+dfF 	59 	derived lead fF
+dfH 	60 	derived lead fH
+III 	61 	Lead III 					MDC_ECG_LEAD_III
+aVR 	62 	aVR, augmented voltage, right 			MDC_ECG_LEAD_AVR
+aVL 	63 	aVL, augmented voltage, left 			MDC_ECG_LEAD_AVL
+aVF 	64 	aVF, augmented voltage, foot 			MDC_ECG_LEAD_AVF
+aVRneg 	65 	aVRneg 						MDC_ECG_LEAD_AVRneg
+V8 	66 	V8 						MDC_ECG_LEAD_V8
+V9 	67 	V9 						MDC_ECG_LEAD_V9
+V8R 	68	V8R 						MDC_ECG_LEAD_V8R
+V9R 	69 	V9R 						MDC_ECG_LEAD_V9R
+D 	70 	D (Nehb – Dorsal) 				MDC_ECG_LEAD_D
+A 	71 	A (Nehb – Anterior) 				MDC_ECG_LEAD_A
+J 	72 	J (Nehb – Inferior) 				MDC_ECG_LEAD_J
+Defib 	73 	Defibrillator lead: anterior-lateral 		MDC_ECG_LEAD_DEFIB
+Extern 	74 	External pacing lead: anterior-posterior 	MDC_ECG_LEAD_EXTERN
+A1 	75 	A1 (Auxiliary unipolar lead #1) 		MDC_ECG_LEAD_A1
+A2 	76 	A2 (Auxiliary unipolar lead #2) 		MDC_ECG_LEAD_A2
+A3 	77 	A3 (Auxiliary unipolar lead #3) 		MDC_ECG_LEAD_A3
+A4 	78 	A4 (Auxiliary unipolar lead #4) 		MDC_ECG_LEAD_A4
+dV8 	79 	derived lead V8
+dV9 	80 	derived lead V9
+dV8R 	81 	derived lead V8R
+dV9R 	82 	derived lead V9R
+dD 	83 	derived lead D (Nehb – Dorsal)
+dA 	84 	derived lead A (Nehb – Anterior)
+dJ 	85 	derived lead J (Nehb – Inferior)
+Chest 	86 	Chest lead 					MDC_ECG_LEAD_C
+V 	87 	Precordial lead 				MDC_ECG_LEAD_V
+VR 	88 	VR, nonaugmented voltage, vector of RA 		MDC_ECG_LEAD_VR
+VL 	89 	VL, nonaugmented voltage, vector of LA 		MDC_ECG_LEAD_VL
+VF 	90 	VF, nonaugmented voltage, vector of LL 		MDC_ECG_LEAD_VF
+MCL	91 	Modified chest lead (left arm indifferent) 	MDC_ECG_LEAD_MCL
+MCL1 	92 	MCL, per V1 placement 				MDC_ECG_LEAD_MCL1
+MCL2	93 	MCL, per V2 placement 				MDC_ECG_LEAD_MCL2
+MCL3	94 	MCL, per V3 placement 				MDC_ECG_LEAD_MCL3
+MCL4	95 	MCL, per V4 placement 				MDC_ECG_LEAD_MCL4
+MCL5	96 	MCL, per V5 placement 				MDC_ECG_LEAD_MCL5
+MCL6	97 	MCL, per V6 placement 				MDC_ECG_LEAD_MCL6
+CC	98 	Chest lead (symmetric placement) 		MDC_ECG_LEAD_CC
+CC1	99 	CC1, per V1 and V1R placement 			MDC_ECG_LEAD_CC1
+CC2	100 	CC2, per V2 and V2R placement 			MDC_ECG_LEAD_CC2
+CC3	101 	CC3, per V3 and V3R placement 			MDC_ECG_LEAD_CC3
+CC4	102 	CC4, per V4 and V4R placement 			MDC_ECG_LEAD_CC4
+CC6	103 	CC6, per V6 and V6R placement 			MDC_ECG_LEAD_CC6
+CC7	104 	CC7, per V7 and V8R placement 			MDC_ECG_LEAD_CC7
+CM	105 	Chest-manubrium 				MDC_ECG_LEAD_CM
+CM1	106 	CM1, per V1 placement 				MDC_ECG_LEAD_CM1
+CM2	107 	CM2, per V2 placement 				MDC_ECG_LEAD_CM2
+CM3	108 	CM3, per V3 placement 				MDC_ECG_LEAD_CM3
+CM4	109 	CM4, per V4 placement 				MDC_ECG_LEAD_CM4
+CM6	110 	CM6, per V6 placement 				MDC_ECG_LEAD_CM6
+dIII	111 	derived lead III 				MDC_ECG_LEAD_dIII
+daVR	112 	derived lead aVR 				MDC_ECG_LEAD_daVR
+daVL	113 	derived lead aVL 				MDC_ECG_LEAD_daVL
+daVF	114 	derived lead aVF 				MDC_ECG_LEAD_daVF
+daVRneg	115 	derived lead aVRneg
+dChest	116 	derived lead Chest
+dV	117 	derived lead V
+dVR	118 	derived lead VR
+dVL	119 	derived lead VL
+dVF	120 	derived lead VF
+CM7 	121 	CM7, per V7 placement 				MDC_ECG_LEAD_CM7
+CH5 	122 	CH5 						MDC_ECG_LEAD_CH5
+CS5 	123 	negative: right infraclavicular fossa 		MDC_ECG_LEAD_CS5
+CB5 	124 	negative: low right scapula 			MDC_ECG_LEAD_CB5
+CR5 	125 	CR5 						MDC_ECG_LEAD_CR5
+ML 	126 	ML, modified limb lead, ~ Lead II 		MDC_ECG_LEAD_ML
+AB1 	127 	AB1 (auxiliary bipolar lead #1) 		MDC_ECG_LEAD_AB1
+AB2 	128 	AB2 (auxiliary bipolar lead #2) 		MDC_ECG_LEAD_AB2
+AB3 	129 	AB3 (auxiliary bipolar lead #3) 		MDC_ECG_LEAD_AB3
+AB4 	130 	AB4 (auxiliary bipolar lead #4) 		MDC_ECG_LEAD_AB4
+ES 	131 	EASI ES 					MDC_ECG_LEAD_ES
+AS 	132 	EASI AS 					MDC_ECG_LEAD_AS
+AI 	133 	EASI AI 					MDC_ECG_LEAD_AI
+S 	134 	EASI upper sternum lead 			MDC_ECG_LEAD_S
+dDefib 	135 	derived lead Defib: Defibrillator lead: anteriorlateral
+dExtern	136 	derived lead Extern: External pacing lead: anterior-posterior
+dA1 	137 	derived lead A1 (Auxiliary unipolar lead #1)
+dA2 	138 	derived lead A2 (Auxiliary unipolar lead #2)
+dA3 	139 	derived lead A3 (Auxiliary unipolar lead #3)
+dA4 	140 	derived lead A4 (Auxiliary unipolar lead #4)
+dMCL1 	141 	derived lead MCL1: MCL, per V1 placement
+dMCL2 	142 	derived lead MCL2: MCL, per V2 placement
+dMCL3 	143 	derived lead MCL3: MCL, per V3 placement
+dMCL4 	144 	derived lead MCL4: MCL, per V4 placement
+dMCL5 	145 	derived lead MCL5: MCL, per V5 placement
+dMCL6 	146 	derived lead MCL6: MCL, per V6 placement
+RL 	147 	right leg 					MDC_ECG_LEAD_RL
+CV5RL 	148 	Canine, fifth right intercostal space near the edge of the sternum at the most curved part of the costal cartilage 	MDC_ECG_LEAD_CV5RL
+CV6LL 	149 	Canine, sixth left intercostal space near the edge of the sternum at the most curved part of the costal cartilage 	MDC_ECG_LEAD_CV6LL
+CV6LU 	150 	Canine, sixth left intercostal space at the costochondral junction 	MDC_ECG_LEAD_CV6LU
+V10 	151	Canine, over dorsal spinous process of the seventh thoracic vertebra 	MDC_ECG_LEAD_V10
+dMCL 	152 	derived lead MCL: Modified chest lead (left arm indifferent)
+dCC 	153 	derived lead CC: Chest lead (symmetric placement)
+dCC1 	154 	derived lead CC1, per V1 and V1R placement
+dCC2 	155 	derived lead CC2, per V2 and V2R placement
+dCC3 	156 	derived lead CC3, per V3 and V3R placement
+dCC4 	157 	derived lead CC4, per V4 and V4R placement
+dCC6 	158 	derived lead CC6, per V6 and V6R placement
+dCC7 	159 	derived lead CC7, per V7 and V8R placement
+dCM 	160 	derived lead CM Chest-manubrium
+dCM1 	161 	derived lead CM1, per V1 placement
+dCM2 	162 	derived lead CM2, per V2 placement
+dCM3 	163 	derived lead CM3, per V3 placement
+dCM4 	164 	derived lead CM4, per V4 placement
+dCM6 	165 	derived lead CM6, per V6 placement
+dCM7 	166 	derived lead CM7, per V7 placement
+dCH5 	167 	derived lead CH5
+dCS5 	168 	derived lead CS5: negative: right infraclavicular fossa
+dCB5 	169 	derived lead CB5: negative: low right scapula
+dCR5 	170	derived lead CR5
+dML 	171 	derived lead ML, modified limb lead, ~ Lead II
+dAB1 	172 	derived lead AB1 (auxiliary bipolar lead #1)
+dAB2 	173 	derived lead AB2 (auxiliary bipolar lead #2)
+dAB3 	174 	derived lead AB3 (auxiliary bipolar lead #3)
+dAB4 	175 	derived lead AB4 (auxiliary bipolar lead #4)
+dES 	176 	derived lead ES: EASI™ ES
+dAS 	177 	derived lead AS: EASI AS
+dAI 	178 	derived lead AI: EASI AI
+dS 	179 	derived lead S: EASI upper sternum lead
+dRL 	180 	derived lead RL: right leg
+dCV5RL 	181 	derived lead CV5RL: Canine, fifth right intercostal space near the edge of the sternum at the most curved part of the costal cartilage
+dCV6LL 	182 	derived lead CV6LL: Canine, sixth left intercostal space near the edge of the sternum at the most curved part of the costal cartilage
+dCV6LU 	183 	derived lead CV6LU: Canine, sixth left intercostal space at the costochondral junction
+dV10 	184 	derived lead V10: Canine, over dorsal spinous process of the seventh thoracic vertebra

@@ -1,0 +1,53 @@
+
+The following people have significantly contributed to the BIOSIG proejct: 
+--------------------------------------------------------------------------
+
+Guido Nolte
+    2-d visualization of EEG coupling  
+Claudia Hemmelmann
+    for the statistical tests based on FDR (false discovery rate)
+Jurjen D. Tebbens 
+    for code of the Sparse-LDA classifier (TRAIN_LDA_SPARSE, TEST_SC)
+Andreas Glatz
+    BioProFeed
+Thomas Brunner
+    SigViewer
+Robert Oostenveld
+    for the support of formats CTF, FIF, EEProbe, Brainvision    
+Andrey Vankov 
+    for the Information on the XLTEK format
+Guillaume Flandin 
+    for the XML-toolbox
+Johannes Peham
+    QRSCORR, ECTBCORR    
+Kasess Christian
+    MVAAR 
+Franz Einspieler
+    SVIEWER and related subfunctions
+J Chen from Hongkong
+    for sample files of the RigSys format 
+Robert Reijntjes 
+    improved support for WG1 data 
+Reinhold Scherer
+    rtsBCI: a Matlab/Simulink package for realtime 
+	processing of biosignals and for BCI research
+Paul Kienzle and Peter Baum
+    DATENUM: they provide an open source implementation of datenum.m 
+Peter Rydesater 
+    for the XML toolbox 
+David Bateman 
+    for converting the MEX function xmldata.c into an OCT function. 
+Rupert Ortner
+    for NQRSDETECT and RESPDETECT
+Clemens Brunner 
+    categories T310 and T510 in BioSig4OctMat
+Jürgen Kurzmann
+    suggestions for improving ETG4000 support
+Jens Stampe Sorensen 
+    made NQRSDETECT (Afonso QRS detector) more efficient 
+    
+many others for feedback and bug reports 
+        
+
+
+

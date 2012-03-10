@@ -1,0 +1,259 @@
+### Vital Signs Units of Measurement
+# OpenOffice 1.1.3 (Writer and Calc) from the document IEEEandUCUM.1c.doc 2006-11-014T15,
+# "Excerpted from ‘11073-10101-D05e.doc’, dated 2002-12-16 (from Paul Schluter Nov. 3, 2006)" 
+# Copyright (C) IEEE and ISO. 
+# According to http://www.iso.org/iso/copyright.htm a written permission is required before the table can be published. 
+
+# $Id$
+# This file is part of the biosig project http://biosig.sf.net/
+#
+#
+"Dimension"	"Unit of Measurement"	"Symbol  (informative)"	"UCUM"	"Reference ID"	"Code  (base code)"
+"Unspecified"					
+	"<Unspecified>"	"?"	"{?} {unknown}"		0
+"Dimension- less"					
+"1 10*N 10^N {unitless}"	"NOM_DIM_DIMLESS"	512			
+	"Decibel"	"DB"	"dB  "	"NOM_DIM_DECIBEL"	6448
+	"10-2 (percent)"	"%"	"%"	"NOM_DIM_PERCENT"	544
+	"10-3 (part(s) per thousand )"	"Ppht"	"[ppth]"	"NOM_DIM_PARTS_PER_THOUSAND"	576
+	"10-6 (part(s) per million )"	"Ppm"	"[ppm]"	"NOM_DIM_PARTS_PER_MILLION"	608
+	"10-9 (part(s) per milliard)"	"Ppmd"	"10*-9 10^-9"	"NOM_DIM_PPMD"	640
+	"10-12 (part(s) per billion )"	"Ppb"	"10*-12 10^-12"	"NOM_DIM_PARTS_PER_BILLION"	672
+	"10-18 (part(s) per trillion )"	"Ppt"	"10*-15 10^-15"	"NOM_DIM_PARTS_PER_TRILLION"	704
+"- angles"	"angle degree"	"Degree"	"deg"	"NOM_DIM_ANG_DEG"	736
+	"angle radian"	"Rad"	"rad"	"NOM_DIM_ANG_RAD"	768
+"- mass fraction"	"<magnitude> gram(s) per gram"	"g g-1"	"g/g"	"NOM_DIM_X_G_PER_G"	800
+	"<magnitude> gram(s) per kilogram"	"g kg-1"	"g/kg"	"NOM_DIM_G_PER_KG"	832
+	"<magnitude> gram(s) per milligram"	"g mg-1"	"g/mg"	"NOM_DIM_X_G_PER_MG"	6464
+"- relative quantity"	"<magnitude> mole(s) per mole"	"mol mol-1"	"mol/mol"	"NOM_DIM_X_MOLE_PER_MOLE"	864
+"- volume fraction"	"<magnitude> litre(s) per litre"	"l l-1"	"L/L"	"NOM_DIM_X_L_PER_L"	896
+	"cubic <magnitude> metre(s) per cubic metre"	"m m-3 "	"???"	"NOM_DIM_CUBIC_X_M_PER_M_CUBE"	928
+	"cubic <magnitude> metre(s) per cubic centimetre"	"m cm-3"	"???"	"NOM_DIM_CUBIC_X_M_PER_CM_CUBE"	960
+	"volume percent"	"vol %"	"%{vol}"	"NOM_DIM_VOL_PERCENT"	6240
+"- special vital signs counts"	"pH"	"PH"	"[pH]"	"NOM_DIM_PH"	992
+	"drop"	"Drop"	"[drp]"	"NOM_DIM_DROP"	1024
+	"red blood cell(s)"	"Rbc"	"{rbc}"	"NOM_DIM_RBC"	1056
+	"beat"	"Beat"	"{beat}"	"NOM_DIM_BEAT"	1088
+	"breath"	"Breath"	"{breath}"	"NOM_DIM_BREATH"	1120
+	"cell"	"Cell"	"{cell}"	"NOM_DIM_CELL"	1152
+	"cough"	"Cough"	"{cough}"	"NOM_DIM_COUGH"	1184
+	"sigh"	"Sigh"	"{sigh}"	"NOM_DIM_SIGH"	1216
+	"percent of packed cell volume"	"%PCV"	"%{pcv}"	"NOM_DIM_PCT_PCV"	1248
+"L (length)"					
+	"<magnitude> metre(s)"	"m [km, mm,etc.]"	"m"	"NOM_DIM_X_M"	1280
+	"<magnitude> yard"	"Yd"	"[yd_i]"	"NOM_DIM_X_YARD"	1312
+	"<magnitude> foot"	"Ft"	"[ft_i]"	"NOM_DIM_X_FOOT"	1344
+	"<magnitude> inch"	"In"	"[in_i]"	"NOM_DIM_X_INCH"	1376
+"L (areic volume)"					
+	"<magnitude> litre(s) per square metre"	"lm-2"	"L/m2"	"NOM_DIM_X_L_PER_M_SQ"	1408
+"L-1 "					
+	"per <magnitude> metre"	"m-1 [cm-1 , mm-1 ]"	"/m"	"NOM_DIM_PER_X_M"	1440
+"L-1 T-1"					
+	"<magnitude> metre per minute"	"[cm , mm ]min-1 "	"m/min"	"NOM_DIM_X_M_PER_MIN"	6560
+"L2 (area)"					
+	"square <magnitude> metre(s)"	"m2"	"m2"	"NOM_DIM_SQ_X_M"	1472
+	"square <magnitude> inch"	"in2"	"[in_i]2"	"NOM_DIM_SQ_X_INCH"	1504
+"L-2"					
+	"per square <magnitude> metre"	"m-2"	"/m2"	"NOM_DIM_PER_SQ_X_M"	1536
+"L3 (volume)"					
+	"cubic <magnitude> metre(s)"	"m3 [cm3 , mm3 ]"	"m3"	"NOM_DIM_CUBIC_X_M"	1568
+	"<magnitude> litre(s)"	"l [ml]"	"L"	"NOM_DIM_X_L"	1600
+	"<magnitude> litre(s) per breath"	"l breath-1"	"L/{breath}"	"NOM_DIM_X_L_PER_BREATH"	1632
+	"<magnitude> litre(s) per beat"	"l beat-1"	"L/{beat}"	"NOM_DIM_X_L_PER_BEAT"	6112
+"L-3 "					
+	"per cubic <magnitude> metre"	"m-3 [cm-3 , mm-3 ]"	"/m3"	"NOM_DIM_PER_CUBIC_X_M"	1664
+	"per <magnitude> litre"	"l-1 [ml-1]"	"/L"	"NOM_DIM_PER_X_L"	1696
+"M (mass)"					
+	"<magnitude> gram"	"g [kg, mg]"	"g"	"NOM_DIM_X_G"	1728
+	"<magnitude> pound"	"lb"	"[lb_av]"	"NOM_DIM_X_LB"	1760
+	"<magnitude> ounce"	"oz"	"[oz_av]"	"NOM_DIM_X_OZ"	1792
+"M-1"					
+	"per  <magnitude> gram"	"g-1 [kg-1 , mg-1 ]"	"/g"	"NOM_DIM_PER_X_G"	1824
+"ML"					
+	"<magnitude> gram metre"	"g m [kg m]"	"g.m"	"NOM_DIM_X_G_M"	1856
+"ML-1"					
+	"<magnitude> gram(s) meter per square metre"	"g m m-2  [kg m m-2]"	"g.m/m2"	"NOM_DIM_X_G_M_PER_M_SQ"	1888
+"ML2 (moment of inertia)"					
+	"<magnitude> gram metre squared"	"kg m2"	"kg.m2"	"NOM_DIM_X_G_M_SQ"	1920
+"ML-2"					
+	"kilogram(s) per square metre"	"kg m-2"	"kg/m2"	"NOM_DIM_KG_PER_M_SQ"	1952
+"ML-3 (concentration of mass)"					
+	"<magnitude> gram(s) per cubic metre"	"g m-3  [kg m-3]"	"g/m3"	"NOM_DIM_X_G_PER_M_CUBE"	1984
+	"<magnitude> gram(s) per cubic centimetre"	"g cm-3"	"g/cm3"	"NOM_DIM_X_G_PER_CM_CUBE"	2016
+	"<magnitude> gram(s) per litre"	"g l-1"	"g/L"	"NOM_DIM_X_G_PER_L"	2048
+	"<magnitude> gram(s) per centilitre"	"g cl-3"	"g/cL"	"NOM_DIM_X_G_PER_CL"	2080
+	"<magnitude> gram(s) per decilitre"	"g dl-3"	"g/dL"	"NOM_DIM_X_G_PER_DL"	2112
+	"<magnitude> gram(s) per millilitre"	"g ml-3"	"g/mL"	"NOM_DIM_X_G_PER_ML"	2144
+"T (time)"					
+	"<magnitude> second"	"s [ms, us, ns]"	"s"	"NOM_DIM_SEC"	2176
+	"minute"	"min"	"min"	"NOM_DIM_MIN"	2208
+	"hour"	"h"	"h"	"NOM_DIM_HR"	2240
+	"day"	"d"	"d"	"NOM_DIM_DAY"	2272
+	"weeks"	"weeks"	"wk"	"NOM_DIM_WEEKS"	2304
+	"months"	"mth"	"mo"	"NOM_DIM_MON"	2336
+	"year"	"y"	"a"	"NOM_DIM_YR"	2368
+	"time of day - hh:mm:ss"	"TOD"		"NOM_DIM_TOD"	2400
+	"date - yyyy-mm-dd"	"DATE"		"NOM_DIM_DATE"	2432
+"T-1 (rate, frequency)"					
+	"per <magnitude> second"	"s-1"	"/s"	"NOM_DIM_PER_X_SEC"	2464
+	"hertz"	"Hz"	"Hz"	"NOM_DIM_HZ"	2496
+	"per minute"	"min-1"	"/min"	"NOM_DIM_PER_MIN"	2528
+	"per hour"	"h-1"	"/h"	"NOM_DIM_PER_HR"	2560
+	"per day"	"d-1"	"/d"	"NOM_DIM_PER_DAY"	2592
+	"per week"	"week-1"	"/wk"	"NOM_DIM_PER_WK"	2624
+	"per month"	"mth-1"	"/mo"	"NOM_DIM_PER_MO"	2656
+	"per year"	"y-1"	"/a"	"NOM_DIM_PER_YR"	2688
+"- special vital signs rates"	"beat per minute"	"bpm"	"{beat}/min"	"NOM_DIM_BEAT_PER_MIN"	2720
+	"beat per minute per <magnitude> liter"	"bpm l-1"	"{beat}/min/L"	"NOM_DIM_BEAT_PER_MIN_PER_X_L"	6496
+	"puls per minute"	"puls min-1"	"{puls}/min"	"NOM_DIM_PULS_PER_MIN"	2752
+	"respirations per minute"	"resp min-1"	"{resp}/min"	"NOM_DIM_RESP_PER_MIN"	2784
+"LT-1  (velocity)"					
+	"<magnitude> metre(s) per second"	"m s-1"	"m/s"	"NOM_DIM_X_M_PER_SEC"	2816
+"LT-1  (areic volume rate)"					
+	"<magnitude> litre(s) per minute per square meter"	"l min-1 m-2"	"L/min/m2"	"NOM_DIM_X_L_PER_MIN_PER_M_SQ"	2848
+	"square <magnitude>  metre(s) per second"	"m2 s-1 [cm2 s-1]"	"m2/s"	"NOM_DIM_SQ_X_M_PER_SEC"	2880
+"L3T-1  (volume flow rate)"					
+	"cubic <magnitude> metre(s) per second"	"m3 s-1"	"m3/s"	"NOM_DIM_CUBIC_X_M_PER_SEC"	2912
+	"cubic <magnitude> metre(s) per minute"	"m3 min-1"	"m3/min"	"NOM_DIM_CUBIC_X_M_PER_MIN"	2944
+	"cubic <magnitude> metre(s) per hour"	"m3 h-1"	"m3/h"	"NOM_DIM_CUBIC_X_M_PER_HR"	2976
+	"cubic <magnitude> metre(s) per day"	"m3 d-1"	"m3/d"	"NOM_DIM_CUBIC_X_M_PER_DAY"	3008
+	"<magnitude> litre(s) per second"	"l s-1"	"L/s"	"NOM_DIM_X_L_PER_SEC"	3040
+	"<magnitude> litre(s) per minute"	"l min-1"	"L/min"	"NOM_DIM_X_L_PER_MIN"	3072
+	"<magnitude> litre(s) per hour"	"l h-1"	"L/h"	"NOM_DIM_X_L_PER_HR"	3104
+	"<magnitude> litre(s) per day"	"l d-1"	"L/d"	"NOM_DIM_X_L_PER_DAY"	3136
+"L3M-1 (volume content)"					
+	"<magnitude> litre(s) per kilogram"	"l kg-1"	"L/kg"	"NOM_DIM_X_L_PER_KG"	3168
+	"cubic <magnitude> metre(s) per kilogram"	"m3 d-1"	"m3/kg"	"NOM_DIM_CUBIC_X_L_PER_KG"	3200
+"L2M-1T (permeability)"					
+	"<magnitude> meter per pascal second"	"m Pa-1s-1"	"m/Pa/s"	"NOM_DIM_X_M_PER_PASCAL_SEC"	3232
+	"<magnitude> litre per min. per millimetre of mercury"	"l min-1 mmHG-1"	"L/min/mm[Hg]"	"NOM_DIM_X_L_PER_MIN_PER_ML_HG"	3264
+"MT-1 (mass flow rate)"					
+	"<magnitude> gram(s) per second"	"g s-1"	"g/s"	"NOM_DIM_X_G_PER_SEC"	3296
+	"<magnitude> gram(s) per minute"	"g m-1"	"g/m"	"NOM_DIM_X_G_PER_MIN"	3328
+	"<magnitude> gram(s) per hour"	"g h-1"	"g/h"	"NOM_DIM_X_G_PER_HR"	3360
+	"<magnitude> gram(s) per day"	"g d-1"	"g/d"	"NOM_DIM_X_G_PER_DAY"	3392
+"MT-1M-1 (mass fraction rate, dosage)"					
+	"<magnitude> gram(s) per kilogram per second"	"g kg-1 s-1"	"g/kg/s"	"NOM_DIM_X_G_PER_KG_PER_SEC"	3424
+	"<magnitude> gram(s) per kilogram per minute"	"g kg-1 m-1"	"g/kg/min"	"NOM_DIM_X_G_PER_KG_PER_MIN"	3456
+	"<magnitude> gram(s) per kilogram per hour"	"g kg-1 h-1"	"g/kg/h"	"NOM_DIM_X_G_PER_KG_PER_HR"	3488
+	"<magnitude> gram(s) per kilogram per day"	"g kg-1 d-1"	"g/kg/d"	"NOM_DIM_X_G_PER_KG_PER_DAY"	3520
+"L-3MT-1 (mass concentration rate)"					
+	"<magnitude> gram (s) per litre per second"	"g l-1 s-1"	"g/L/s"	"NOM_DIM_X_G_PER_L_PER_SEC"	3552
+	"<magnitude> gram(s) per litre per minute"	"g l-1 m-1"	"g/L/min"	"NOM_DIM_X_G_PER_L_PER_MIN"	3584
+	"<magnitude> gram(s) per litre per hour"	"g l-1 h-1"	"g/L/h"	"NOM_DIM_X_G_PER_L_PER_HR"	3616
+	"<magnitude> gram(s) per litre per day"	"g l-1 d-1"	"g/L/d"	"NOM_DIM_X_G_PER_L_PER_DAY"	3648
+"L-1MT-1 (dynamic viscosity)"					
+	"<magnitude> gram(s) per meter per second"	"g m-1 s-1"	"g/m/s"	"NOM_DIM_X_G_PER_M_PER_SEC"	3680
+"LMT-1 (momentum, impulse)"					
+	"<magnitude> gram metre(s) per second"	"gm s-1"	"g.m/s"	"NOM_DIM_X_G_M_PER_SEC"	3712
+	"<magnitude> newton second(s)"	"Ns"		"NOM_DIM_X_NEWTON_SEC"	3744
+"LMT-2 (force)"					
+	"<magnitude> newton"	"N"	"[G]"	"NOM_DIM_X_NEWTON"	3776
+	"<magnitude> dyne"	"dyn"	"dyn"	"NOM_DIM_X_DYNE"	3808
+"L-1MT-2 (pressure)"					
+	"<magnitude> pascal"	"Pa"	"Pa"	"NOM_DIM_X_PASCAL"	3840
+	"millimetre(s) of mercury"	"mmHg"	"mm[Hg]"	"NOM_DIM_MMHG"	3872
+	"centimetre of water"	"cm H2O"	"cm[H20]"	"NOM_DIM_CM_H2O"	3904
+	"<magnitude> bar"	"bar"	"bar"	"NOM_DIM_X_BAR"	3936
+	"<magnitude> pounds per square inch"	"PSI"	"[psi]"	"NOM_DIM_PSI"	6592
+"L2MT-2 (energy)"					
+	"<magnitude> joule(s)"	"J"	"J"	"NOM_DIM_X_JOULES"	3968
+	"<magnitude> electronvolt(s)"	"eV"	"eV"	"NOM_DIM_EVOLT"	4000
+"L2MT-3 (power)"					
+	"<magnitude> watt(s)"	"W"	"W"	"NOM_DIM_X_WATT"	4032
+"L-4MT-1 (hydraulic impedance)"					
+	"<magnitude> pascal second per cubic meter"	"Pa s m-3"	"Pa.s/m3"	"NOM_DIM_X_PASCAL_SEC_PER_M_CUBE"	4064
+	"<magnitude> pascal second per litre"	"Pa s l-1"	"Pa.s/L"	"NOM_DIM_X_PASCAL_SEC_PER_L"	4096
+	"<magnitude> dyne second per cm5"	"dyn s cm-5"	"dyn.s/cm5"	"NOM_DIM_X_DYNE_PER_SEC_PER_CM5"	4128
+"L4M-1T2 (compliance)"					
+	"<magnitude> litre per centimetre of water"	"l (cmH2O)-1"	"L/cm[H20]"	"NOM_DIM_X_L_PER_CM_H2O"	5888
+	"<magnitude> litre per millimetre of mercury"	"l (mmHg)-1"	"L/mm[Hg]"	"NOM_DIM_X_L_PER_MM_HG"	6272
+	"<magnitude> litre per pascal"	"l Pa-1"	"L/Pa"	"NOM_DIM_X_L_PER_MM_PA"	6304
+"L-44M1T-2 (elastance)"					
+	"centimetre of water per <magnitude> litre"	"cmH2O l-1"	"cm[H20]/L"	"NOM_DIM_CM_H2O_PER_L"	6144
+	"millimetre of mercury per <magnitude> litre"	"mmHg l-1"	"mm[Hg]/L"	"NOM_DIM_MM_HG_PER_X_L"	6336
+	"pascal per <magnitude> litre"	"Pa l-1"	"Pa/L"	"NOM_DIM_PA_PER_X_L"	6368
+	"per <magnitude> litre per minute"	" l-1 min-1"	"L/m"	"NOM_DIM_PER_X_L_PER_MIN"	6528
+"I (electrical current)"					
+	"<magnitude> ampere(s)"	"A"	"A"	"NOM_DIM_X_AMPS"	4160
+"IT (electrical charge)"					
+	"<magnitude> coulomb(s)"	"C"	"C"	"NOM_DIM_X_COULOMB"	4192
+	"<magnitude> ampere(s) hour"	"Ah"	"A.h"	"NOM_DIM_X_AMP_HR"	6080
+"IL-1 (magnetic field strength)"					
+	"<magnitude> ampere(s) per metre"	"A m-1"	"A/m"	"NOM_DIM_X_AMPS_PER_M"	4224
+"ML2I-1T-3 (electric potential)"					
+	"<magnitude> volt(s)"	"V"	"V"	"NOM_DIM_X_VOLT"	4256
+"ML2I-2T-3 (electric resistance)"					
+	"<magnitude> ohm(s)"	"?"	"Ohm"	"NOM_DIM_X_OHM"	4288
+"ML3I-2T-3 (electrical resistivity)"					
+	"<magnitude> ohm metre(s)"	"?m"	"Ohm/m"	"NOM_DIM_X_OHM_M"	4320
+"I2T4M-1L-2 (electrical capacitance)"					
+	"<magnitude> farad(s)"	"F"	"F"	"NOM_DIM_X_FARAD"	4352
+"?(temperature)"					
+	"kelvin"	"K"	"K"	"NOM_DIM_KELVIN"	4384
+	"degree Celcius"	"?C"	"Cel"	"NOM_DIM_DEGC"	6048
+	"degree Fahrenheit"	"?F"	"[degF]"	"NOM_DIM_FAHR"	4416
+"?T3M-1L-2 (thermal resistance)"					
+	"kelvin(s) per <magnitude> watt"	"K W-1"	"K/W"	"NOM_DIM_KELVIN_PER_X_WATT"	4448
+"J (luminous intensity)"					
+	"<magnitude> candela(s)"	"cd"	"cd"	"NOM_DIM_X_CANDELA"	4480
+"N (amount of substance)"					
+	"<magnitude> osmole(s)"	"osmole"	"osm"	"NOM_DIM_X_OSM"	4512
+	"<magnitude> mole(s)"	"mol"	"mol"	"NOM_DIM_X_MOLE"	4544
+	"<magnitude> equivalent"	"eq"	"eq"	"NOM_DIM_X_EQUIV"	4576
+"NL-3 (concentration)"					
+	"<magnitude> osmoles per litre"	"osmol l-1"	"osm/L"	"NOM_DIM_X_OSM_PER_L"	4608
+	"<magnitude> mole(s) per cubic centimetre"	"mol cm-3"	"osm/cm3"	"NOM_DIM_X_MOLE_PER_CM_CUBE"	4640
+	"<magnitude> mole(s) per cubic metre"	"mol m-3"	"mol/m3"	"NOM_DIM_X_MOLE_PER_M_CUBE"	4672
+	"<magnitude> mole(s) per litre"	"mol l-1"	"mol/L"	"NOM_DIM_X_MOLE_PER_L"	4704
+	"<magnitude> mole(s) per millilitre"	"mol ml-1"	"mol/mL"	"NOM_DIM_X_MOLE_PER_ML"	4736
+	"<magnitude> equivalents per cubic centimetre"	"eq cm-3"	"mol/cm3"	"NOM_DIM_X_EQUIV_PER_CM_CUBE"	4768
+	"<magnitude> equivalents per cubic metre"	"eq m-3"	"eq/m3"	"NOM_DIM_X_EQUIV_PER_M_CUBE"	4800
+	"<magnitude> equivalents per litre"	"eq l-1"	"eq/L"	"NOM_DIM_X_EQUIV_PER_L"	4832
+	"<magnitude> equivalents per millilitre"	"eq ml-1"	"eq/mL"	"NOM_DIM_X_EQUIV_PER_ML"	4864
+"NM-1 (substance content)"					
+	"<magnitude> osmoles per kilogram"	"osmol  kg-1"	"osm/kg"	"NOM_DIM_X_OSM_PER_KG"	4896
+	"<magnitude> mole(s) per kilogram"	"mol kg-1"	"mol/kg"	"NOM_DIM_X_MOLE_PER_KG"	4928
+"NT-1 (substance rate)"					
+	"<magnitude> mole(s) per second"	"mol s-1"	"mol/s"	"NOM_DIM_X_MOLE_PER_SEC"	4960
+	"<magnitude> mole(s) per minute"	"mol min-1"	"mol/min"	"NOM_DIM_X_MOLE_PER_MIN"	4992
+	"<magnitude> mole(s) per hour"	"mol h-1"	"mol/h"	"NOM_DIM_X_MOLE_PER_HR"	5024
+	"<magnitude> mole(s) per day"	"mol d-1"	"mol/d"	"NOM_DIM_X_MOLE_PER_DAY"	5056
+	"<magnitude> equivalents per second"	"eq s-1"	"eq/s"	"NOM_DIM_X_EQUIV_PER_SEC"	5088
+	"<magnitude> equivalents per minute"	"eq min-1"	"eq/min"	"NOM_DIM_X_EQUIV_PER_MIN"	5120
+	"<magnitude> equivalents per hour"	"eq h-1"	"eq/h"	"NOM_DIM_X_EQUIV_PER_HR"	5152
+	"<magnitude> equivalents per day"	"eq d-1"	"eq/d"	"NOM_DIM_X_EQUIV_PER_DAY"	5184
+"NT-1M-1 (subst. fraction rate, dosage)"					
+	"<magnitude> mole(s) per kilogram per second"	"mol kg-1 s-1"	"mol/kg/s"	"NOM_DIM_X_MOLE_PER_KG_PER_SEC"	5216
+	"<magnitude> mole(s) per kilogram per minute"	"mol kg-1 min-1"	"mol/kg/min"	"NOM_DIM_X_MOLE_PER_KG_PER_MIN"	5248
+	"<magnitude> mole(s) per kilogram per hour"	"mol kg-1 h-1"	"mol/kg/h"	"NOM_DIM_X_MOLE_PER_KG_PER_HR"	5280
+	"<magnitude> mole(s) per kilogram per day"	"mol kg-1 d-1"	"mol/kg/d"	"NOM_DIM_X_MOLE_PER_KG_PER_DAY"	5312
+	"<magnitude> equivalents per kilogram per second"	"eq kg-1 s-1"	"eq/kg/s"	"NOM_DIM_X_EQUIV_PER_KG_PER_SEC"	5344
+	"<magnitude> equivalents per kilogram per minute"	"eq kg-1 min-1"	"eq/kg/min"	"NOM_DIM_X_EQUIV_PER_KG_PER_MIN"	5376
+	"<magnitude> equivalents per kilogram per hour"	"eq kg-1 h-1"	"eq/kg/h"	"NOM_DIM_X_EQUIV_PER_KG_PER_HR"	5408
+	"<magnitude> equivalents per kilogram per day"	"eq kg-1 d-1"	"eq/kg/d"	"NOM_DIM_X_EQUIV_PER_KG_PER_DAY"	5440
+"International Unit"					
+	"<magnitude> international unit"	"i.u."	"[iU]"	"NOM_DIM_X_INTL_UNIT"	5472
+"- concentration"	"<magnitude> international units per cubic centimetre"	"i.u. cm-3"	"[iU]/cm3"	"NOM_DIM_X_INTL_UNIT_PER_CM_CUBE"	5504
+	"<magnitude> international units per cubic meter"	"i.u. m-3"	"[iU]/m3"	"NOM_DIM_X_INTL_UNIT_PER_M_CUBE"	5536
+	"<magnitude> international units per litre"	"i.u. l-1"	"[iU]/L"	"NOM_DIM_X_INTL_UNIT_PER_L"	5568
+	"<magnitude> international units per millilitre"	"i.u. ml-1"	"[iU]/mL"	"NOM_DIM_X_INTL_UNIT_PER_ML"	5600
+"- mass flow rate"	"<magnitude> international units per second"	"i.u. s-1"	"[iU]/s"	"NOM_DIM_X_INTL_UNIT_PER_SEC"	5632
+	"<magnitude> international units per minute"	"i.u. min-1"	"[iU]/min"	"NOM_DIM_X_INTL_UNIT_PER_MIN"	5664
+	"<magnitude> international units per hour"	"i.u. h-1"	"[iU]/h"	"NOM_DIM_X_INTL_UNIT_PER_HR"	5696
+	"<magnitude> international units per day"	"i.u. d-1"	"[iU]/d"	"NOM_DIM_X_INTL_UNIT_PER_DAY"	5728
+"- dosage"	"<magnitude> int. units per kilogram per second"	"i.u. kg-1 s-1"	"[iU]/kg/s"	"NOM_DIM_X_INTL_UNIT_PER_KG_PER_SEC"	5760
+	"<magnitude> int. units per kilogram per minute"	"i.u. kg-1 min-1"	"[iU]/kg/m"	"NOM_DIM_X_INTL_UNIT_PER_KG_PER_MIN"	5792
+	"<magnitude> int. units per kilogram per hour"	"i.u. kg-1 h-1"	"[iU]/kg/h"	"NOM_DIM_X_INTL_UNIT_PER_KG_PER_HR"	5824
+	"<magnitude> int. units per kilogram per day"	"i.u. kg-1 d-1"	"[iU]/kg/d"	"NOM_DIM_X_INTL_UNIT_PER_KG_PER_DAY"	5856
+"Units for Specific Measurements"					
+"- Lung Resistance"	"centimetre of water per litre per second"	"cmH2O l-1s-1"	"cm[H20]/L/s"	"NOM_DIM_CM_H2O_PER_L_PER_SEC"	5920
+"- HF Transport Coefficient"	"<magnitude> litre squared per second"	"l2s-1"	"L2/s"	"NOM_DIM_X_L_SQ_PER_SEC"	5952
+"- ratio of paO2 to FIO2"	"centimetre of water per percent"	"cmH2O %-1"	"cm[H20]/%"	"NOM_DIM_CM_H2O_PER_PERCENT"	5984
+"- ratio of paO2 to FIO2"	"millimetre(s) of mercury per percent"	"mmHg %-1"	"mm[Hg]/%"	"NOM_DIM_MM_HG_PER_PERCENT"	6176
+"- ratio of paO2 to FIO2"	"<magnitude> pascal per percent"	"Pa %-1"	"Pa/%"	"NOM_DIM_X_PA_PER_PERCENT"	6208
+"- Pulmonary/ Systemic Vascular Resistance Index"	"dyne seconds per square meter per centimetre to the power of 5"	"dyne s m-2 cm-5"	"dyn/m2/cm5"	"NOM_DIM_DYNE_SEC_PER_M_SQ_PER_CM_5"	6016
+					
+"MISSING FROM IEEE"					
+"thermal calories"			"cal"		
+"nutritional calories"	"Err:501"		"[Cal]"		

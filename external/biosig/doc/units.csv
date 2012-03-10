@@ -1,0 +1,283 @@
+### Vital Signs Units of Measurement
+# prEN ISO 11073-10101 (Nov 2003)
+# ISO/IEEE 11073-10101:2004
+# Health Informatics - Point-of-care medical device communications - Part 10101: Nomenclature
+# p.62-75. Table A.6.3: Vital signs units of measurements 
+#
+# CEN/TC251/PT40 2001	
+# File Exchange Format for Vital Signs - Annex A 
+#
+# $Id: units.csv,v 1.12 2008/08/29 16:30:14 schloegl Exp $
+# Copyright (C) 2005,2006,2008 Alois Schloegl <alois.schloegl@gmail.com>
+# This file is part of the biosig project http://biosig.sf.net/
+#
+#
+#"Code (base code)","Symbol  (not normative)","Dimension","Unit of Measurement"
+,,"Unspecified",
+0,"?",,"<Unspecified>"
+,,"Dimension- less",
+512,"-",,"<dimensionless>"
+544,"%",,"10-2 (percent)"
+544,"percent",,"10-2 (percent)"
+576,"ppht",,"10-3 (part(s) per thousand )"
+608,"ppm",,"10-6 (part(s) per million )"
+640,"ppmd",,"10-9 (part(s) per milliard)"
+672,"ppb",,"10-12 (part(s) per billion )"
+704,"ppt",,"10-18 (part(s) per trillion )"
+736,"degree","- angles","angle degree"
+768,"rad",,"angle radian"
+800,"g g-1","- mass fraction","<magnitude> gram(s) per gram"
+832,"g kg-1",,"<magnitude> gram(s) per kilogram"
+864,"mol mol-1","- relative quantity","<magnitude> mole(s) per mole"
+896,"l l-1","- volume fraction","<magnitude> litre(s) per litre"
+928,"m m-3 ",,"cubic <magnitude> metre(s) per cubic metre"
+960,"m cm-3",,"cubic <magnitude> metre(s) per cubic centimetre"
+6240,"vol %",,"volume percent"
+992,"pH","- special vital signs counts","pH"
+1024,"drop",,"drop"
+1056,"rbc",,"red blood cell(s)"
+1088,"beat",,"beat"
+1120,"breath",,"breath"
+1152,"cell",,"cell"
+1184,"cough",,"cough"
+1216,"sigh",,"sigh"
+1248,"%PCV",,"percent of packed cell volume"
+,,"L (length)",
+1280,"m [km, mm,etc.]",,"<magnitude> metre(s)"
+1312,"yd",,"<magnitude> yard"
+1344,"ft",,"<magnitude> foot"
+1376,"in",,"<magnitude> inch"
+,,"L (areic volume)",
+1408,"lm-2",,"<magnitude> litre(s) per square metre"
+,,"L-1 ",
+1440,"m-1 [cm-1 , mm-1 ]",,"per <magnitude> metre"
+,,"L2 (area)",
+1472,"m2",,"square <magnitude> metre(s)"
+1504,"in2",,"square <magnitude> inch"
+,,"L-2",
+1536,"m-2",,"per square <magnitude> metre"
+,,"L3 (volume)",
+1568,"m3 [cm3 , mm3 ]",,"cubic <magnitude> metre(s)"
+1600,"l [ml]",,"<magnitude> litre(s)"
+1632,"l breath-1",,"<magnitude> litre(s) per breath"
+6112,"l beat-1",,"<magnitude> litre(s) per beat"
+,,"L-3 ",
+1664,"m-3 [cm-3 , mm-3 ]",,"per cubic <magnitude> metre"
+1696,"l-1 [ml-1]",,"per <magnitude> litre"
+,,"M (mass)",
+1728,"g [kg, mg]",,"<magnitude> gram"
+1760,"lb",,"<magnitude> pound"
+1792,"oz",,"<magnitude> ounce"
+,,"M-1",
+1824,"g-1 [kg-1 , mg-1 ]",,"per  <magnitude> gram"
+,,"ML",
+1856,"g m [kg m]",,"<magnitude> gram metre"
+#------ Q: Is a new number needed or should the symbol change ? 
+####,"gf m [kg m]",,"<magnitude> gram-force metre"
+,,"ML-1",
+1888,"g m m-2  [kg m m-2]",,"<magnitude> gram(s) meter per square metre"
+#------ Q: Is a new number needed or should the symbol change ? 
+####,"gf m m-2  [kg m m-2]",,"<magnitude> gram-force meter per square 
+,,"ML2 (moment of inertia)",
+1920,"kg m2",,"<magnitude> gram metre squared"
+,,"ML-2",
+1952,"kg m-2",,"kilogram(s) per square metre"
+,,"ML-3 (concentration of mass)",
+1984,"g m-3  [kg m-3]",,"<magnitude> gram(s) per cubic metre"
+2016,"g cm-3",,"<magnitude> gram(s) per cubic centimetre"
+2048,"g l-1",,"<magnitude> gram(s) per litre"
+2080,"g cl-3",,"<magnitude> gram(s) per centilitre"
+2112,"g dl-3",,"<magnitude> gram(s) per decilitre"
+2144,"g ml-3",,"<magnitude> gram(s) per millilitre"
+,,"T (time)",
+2176,"s [ms, us, ns]",,"<magnitude> second"
+2208,"min",,"minute"
+2240,"h",,"hour"
+2272,"d",,"day"
+2304,"weeks",,"weeks"
+2336,"mth",,"months"
+2368,"y",,"year"
+2400,"TOD",,"time of day - hh:mm:ss"
+2432,"DATE",,"date - yyyy-mm-dd"
+,,"T-1 (rate, frequency)",
+2464,"s-1",,"per <magnitude> second"
+2496,"Hz",,"hertz"
+2528,"min-1",,"per minute"
+2560,"h-1",,"per hour"
+2592,"d-1",,"per day"
+2624,"week-1",,"per week"
+2656,"mth-1",,"per month"
+2688,"y-1",,"per year"
+2720,"bpm","- special vital signs rates","beat per minute"
+2752,"puls min-1",,"puls per minute"
+2784,"resp min-1",,"respirations per minute"
+,,"LT-1  (velocity)",
+2816,"m s-1",,"<magnitude> metre(s) per second"
+,,"LT-1  (areic volume rate)",
+2848,"l min-1 m-2",,"<magnitude> litre(s) per minute per square meter"
+2848,"l/(min*m²)",,"<magnitude> litre(s) per minute per square meter"
+2880,"m2 s-1 [cm2 s-1]",,"square <magnitude>  metre(s) per second"
+,,"L3T-1  (volume flow rate)",
+2912,"m3 s-1",,"cubic <magnitude> metre(s) per second"
+2944,"m3 min-1",,"cubic <magnitude> metre(s) per minute"
+2976,"m3 h-1",,"cubic <magnitude> metre(s) per hour"
+3008,"m3 d-1",,"cubic <magnitude> metre(s) per day"
+3040,"l s-1",,"<magnitude> litre(s) per second"
+3072,"l min-1",,"<magnitude> litre(s) per minute"
+3072,"l/min",,"<magnitude> litre(s) per minute"
+3104,"l h-1",,"<magnitude> litre(s) per hour"
+3136,"l d-1",,"<magnitude> litre(s) per day"
+,,"L3M-1 (volume content)",
+3168,"l kg-1",,"<magnitude> litre(s) per kilogram"
+3200,"m3 d-1",,"cubic <magnitude> metre(s) per kilogram"
+,,"L2M-1T (permeability)",
+3232,"m Pa-1s-1",,"<magnitude> meter per pascal second"
+3264,"l min-1 mmHG-1",,"<magnitude> litre per min. per millimetre of mercury"
+,,"MT-1 (mass flow rate)",
+3296,"g s-1",,"<magnitude> gram(s) per second"
+3328,"g m-1",,"<magnitude> gram(s) per minute"
+3360,"g h-1",,"<magnitude> gram(s) per hour"
+3392,"g d-1",,"<magnitude> gram(s) per day"
+,,"MT-1M-1 (mass fraction rate, dosage)",
+3424,"g kg-1 s-1",,"<magnitude> gram(s) per kilogram per second"
+3456,"g kg-1 m-1",,"<magnitude> gram(s) per kilogram per minute"
+3488,"g kg-1 h-1",,"<magnitude> gram(s) per kilogram per hour"
+3520,"g kg-1 d-1",,"<magnitude> gram(s) per kilogram per day"
+,,"L-3MT-1 (mass concentration rate)",
+3552,"g l-1 s-1",,"<magnitude> gram (s) per litre per second"
+3584,"g l-1 m-1",,"<magnitude> gram(s) per litre per minute"
+3616,"g l-1 h-1",,"<magnitude> gram(s) per litre per hour"
+3648,"g l-1 d-1",,"<magnitude> gram(s) per litre per day"
+,,"L-1MT-1 (dynamic viscosity)",
+3680,"g m-1 s-1",,"<magnitude> gram(s) per meter per second"
+,,"LMT-1 (momentum, impulse)",
+3712,"gm s-1",,"<magnitude> gram metre(s) per second"
+3744,"Ns",,"<magnitude> newton second(s)"
+,,"LMT-2 (force)",
+3776,"N",,"<magnitude> newton"
+3808,"dyn",,"<magnitude> dyne"
+,,"L-1MT-2 (pressure)",
+3840,"Pa",,"<magnitude> pascal"
+3872,"mmHg",,"millimetre(s) of mercury"
+3904,"cm H2O",,"centimetre of water"
+3936,"bar",,"<magnitude> bar"
+,,"L2MT-2 (energy)",
+3968,"J [gf m]",,"<magnitude> joule(s), mass-force x distance"
+4000,"eV",,"<magnitude> electronvolt(s)"
+,,"L2MT-3 (power)",
+4032,"W [gf m s-1]",,"<magnitude> watt(s), mass-force x velocity"
+,,"L-4MT-1 (hydraulic impedance)",
+4064,"Pa s m-3",,"<magnitude> pascal second per cubic meter"
+4096,"Pa s l-1",,"<magnitude> pascal second per litre"
+4128,"dyn s cm-5",,"<magnitude> dyne second per cm5"
+4128,"dyne*s/cm^5",,"<magnitude> dyne second per cm5"
+,,"L4M-1T2 (compliance)",
+5888,"l (cmH2O)-1",,"<magnitude> litre per centimetre of water"
+6272,"l (mmHg)-1",,"<magnitude> litre per millimetre of mercury"
+6304,"l Pa-1",,"<magnitude> litre per pascal"
+,,"L-44M1T-2 (elastance)",
+6144,"cmH2O l-1",,"centimetre of water per <magnitude> litre"
+6336,"mmHg l-1",,"millimetre of mercury per <magnitude> litre"
+6368,"Pa l-1",,"pascal per <magnitude> litre"
+,,"I (electrical current)",
+4160,"A",,"<magnitude> ampere(s)"
+,,"IT (electrical charge)",
+4192,"C",,"<magnitude> coulomb(s)"
+6080,"Ah",,"<magnitude> ampere(s) hour"
+,,"IL-1 (magnetic field strength)",
+4224,"A m-1",,"<magnitude> ampere(s) per metre"
+,,"ML2I-1T-3 (electric potential)",
+4256,"V",,"<magnitude> volt(s)"
+,,"ML2I-2T-3 (electric resistance)",
+4288,"Ohm",,"<magnitude> ohm(s)"
+,,"ML3I-2T-3 (electrical resistivity)",
+4320,"Wm",,"<magnitude> ohm metre(s)"
+,,"I2T4M-1L-2 (electrical capacitance)",
+4352,"F",,"<magnitude> farad(s)"
+,,"Q(temperature)",
+4384,"K",,"Kelvin"
+6048,"°C",,"degree Celcius"
+4416,"°F",,"degree Fahrenheit"
+,,"QT3M-1L-2 (thermal resistance)",
+4448,"K W-1",,"kelvin(s) per <magnitude> watt"
+,,"J (luminous intensity)",
+4480,"cd",,"<magnitude> candela(s)"
+,,"N (amount of substance)",
+4512,"osmole",,"<magnitude> osmole(s)"
+4544,"mol",,"<magnitude> mole(s)"
+4576,"eq",,"<magnitude> equivalent"
+,,"NL-3 (concentration)",
+4608,"osmol l-1",,"<magnitude> osmoles per litre"
+4640,"mol cm-3",,"<magnitude> mole(s) per cubic centimetre"
+4672,"mol m-3",,"<magnitude> mole(s) per cubic metre"
+4704,"mol l-1",,"<magnitude> mole(s) per litre"
+4736,"mol ml-1",,"<magnitude> mole(s) per millilitre"
+4768,"eq cm-3",,"<magnitude> equivalents per cubic centimetre"
+4800,"eq m-3",,"<magnitude> equivalents per cubic metre"
+4832,"eq l-1",,"<magnitude> equivalents per litre"
+4864,"eq ml-1",,"<magnitude> equivalents per millilitre"
+,,"NM-1 (substance content)",
+4896,"osmol  kg-1",,"<magnitude> osmoles per kilogram"
+4928,"mol kg-1",,"<magnitude> mole(s) per kilogram"
+,,"NT-1 (substance rate)",
+4960,"mol s-1",,"<magnitude> mole(s) per second"
+4992,"mol min-1",,"<magnitude> mole(s) per minute"
+5024,"mol h-1",,"<magnitude> mole(s) per hour"
+5056,"mol d-1",,"<magnitude> mole(s) per day"
+5088,"eq s-1",,"<magnitude> equivalents per second"
+5120,"eq min-1",,"<magnitude> equivalents per minute"
+5152,"eq h-1",,"<magnitude> equivalents per hour"
+5184,"eq d-1",,"<magnitude> equivalents per day"
+,,"NT-1M-1 (subst. fraction rate, dosage)",
+5216,"mol kg-1 s-1",,"<magnitude> mole(s) per kilogram per second"
+5248,"mol kg-1 min-1",,"<magnitude> mole(s) per kilogram per minute"
+5280,"mol kg-1 h-1",,"<magnitude> mole(s) per kilogram per hour"
+5312,"mol kg-1 d-1",,"<magnitude> mole(s) per kilogram per day"
+5344,"eq kg-1 s-1",,"<magnitude> equivalents per kilogram per second"
+5376,"eq kg-1 min-1",,"<magnitude> equivalents per kilogram per minute"
+5408,"eq kg-1 h-1",,"<magnitude> equivalents per kilogram per hour"
+5440,"eq kg-1 d-1",,"<magnitude> equivalents per kilogram per day"
+,,"International Unit",
+5472,"i.u.",,"<magnitude> international unit"
+5504,"i.u. cm-3","- concentration","<magnitude> international units per cubic centimetre"
+5536,"i.u. m-3",,"<magnitude> international units per cubic meter"
+5568,"i.u. l-1",,"<magnitude> international units per litre"
+5600,"i.u. ml-1",,"<magnitude> international units per millilitre"
+5632,"i.u. s-1","- mass flow rate","<magnitude> international units per second"
+5664,"i.u. min-1",,"<magnitude> international units per minute"
+5696,"i.u. h-1",,"<magnitude> international units per hour"
+5728,"i.u. d-1",,"<magnitude> international units per day"
+5760,"i.u. kg-1 s-1","- dosage","<magnitude> int. units per kilogram per second"
+5792,"i.u. kg-1 min-1",,"<magnitude> int. units per kilogram per minute"
+5824,"i.u. kg-1 h-1",,"<magnitude> int. units per kilogram per hour"
+5856,"i.u. kg-1 d-1",,"<magnitude> int. units per kilogram per day"
+,,"Units for Specific Measurements",
+5920,"cmH2O l-1s-1","- Lung Resistance","centimetre of water per litre per second"
+5952,"l2s-1","- HF Transport Coefficient","<magnitude> litre squared per second"
+5984,"cmH2O %-1","- ratio of paO2 to FIO2","centimetre of water per percent"
+6016,"dyne s m-2 cm-5","- Pulmonary/ Systemic Vascular Resistance Index","dyne seconds per square meter per centimetre to the power of 5"
+6176,"mmHg %-1","- ratio of paO2 to FIO2","millimetre(s) of mercury per percent"
+6208,"Pa %-1","- ratio of paO2 to FIO2","<magnitude> pascal per percent"
+6432,"B", "Bel", "relative power decibel"	
+6624,"m s-2", "meter per second squared", "acceleration"
+6624,"m/s²", "meter per second squared", "acceleration"
+6656,"rad s2-2", "radians per second squared", "(angular) acceleration" 
+### private: units with no standardized code
+#,"kgf m [J]",,Left Stroke Work (LSW)
+#,"kgf m min-1 [W]",,Left Cardiac Work (LCW)
+65184,"m/m",,""
+65216,"km/h",,"velocity kilometer per hour"
+65248,"g s-2 [J m-2, gf m-1]",,"Left Stroke Work Index (LSWI)"
+65280,"g s-3 [W m-2, gf m-1 s-1]",,"Indexed Left Cardiac Work (LCWI)"
+65312,"mHg s-1",,
+65344,"mol l-1 mm","change in blood chromophore concentration per effective optical path length","milli(Mol/Liter)*millimeter"
+65376,"r.p.m",,"rotations per minute"
+65408,"B", "Bel", "relative power decibel"
+65440,"dyne s m2 cm-5","Vascular Resistance Index","dyne seconds square meter per centimetre to the power of 5"
+65440,"dyne*s*m²/cm^5","Vascular Resistance Index","dyne seconds square meter per centimetre to the power of 5"
+65472,"l m-2","stroke index","litres per square meter"
+65472,"l/m²","stroke index","litres per square meter"
+65504,"T",,"<magnitude> Tesla" 
+65504,"ml/m²",,"<magnitude> Tesla" 
+#
+#

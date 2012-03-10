@@ -1,0 +1,302 @@
+
+SPECIFICATION OF HEADERINFORMATION OF EEG-Files
+-----------------------------------------------
+
+
+$Id: header.txt 2243 2009-12-02 09:29:47Z schloegl $
+Copyright (C) Alois Schloegl 2003-2005,2008,2009 <a.schloegl@ieee.org>
+This is part of the BIOSIG-toolbox http://biosig.sf.net/
+
+
+CONTENT:
+=========
+(A)  Basic header definition (common for all file formats)
+(B)  Header definition for data acquisition
+(C)  Header definition of EDF/BDF/GDF/SDF-Files 
+
+
+
+(A)========== Basic header definition ================================
+
+Name_of_field		type		description
+-------------------------------------------------------------------------
+HDR.TYPE		string		type of data format,  
+HDR.VERSION		string		[OPTIONAL] depends on data format 
+
+HDR.FileName				full filename
+HDR.FILE	# file handling information 
+    FILE.Path [optional]		path 
+    FILE.Name [optional]		filename
+    FILE.Ext  [optional]		extension
+    FILE.OPEN				status: 0 (close), 1 (read), 2(write),3(rewrite header when SCLOSE)
+    FILE.POS				position of the file handle (units depend on data format)
+    FILE.PERMISSION			'r': read; 'w': write; 'z': on-the-fly (de-)compression 
+    FILE.stdout	[optional]		output stream
+    FILE.stderr	[optional]		error stream 
+    FILE.size	[optional]
+
+HDR.T0			float[1..6]	start time, [yyyy mm dd hh MM ss.cc] see HELP CLOCK  
+HDR.NS			integer		number of channels
+HDR.SampleRate		integer		sampling frequency in [Hz]
+HDR.NRec		integer		number of records or blocks; 1 for continous data 
+HDR.SPR			integer		samples per record  
+HDR.Dur			float		Duration=SPR/SampleRate (in [s]) of data block [depreciated]
+
+HDR.Calib		 		Matrix for all kind of rereferencing, depends on scaling factors as well as input argument
+HDR.InChanSelect			input channel selection, # read from Raw-data 
+
+HDR.EVENT 	# two versions are possible. Version 1:  
+    EVENT.SampleRate	float		how many units [sample] give one second
+    EVENT.POS		uint32		Position of event [in samples]
+    EVENT.TYP		uint16		Type of event/marker/annotation according to table biosig/t200/eventcodes.txt 
+  		# or Version 3: 
+    EVENT.SampleRate	float		how many units [sample] give one second
+    EVENT.POS		uint32		Position of event [in samples]
+    EVENT.TYP		uint16		Type of event/marker/annotation according to table biosig/t200/eventcodes.txt 
+    EVENT.CHN		uint16		associated channel; is zero if event applies to no specific or all channels
+    EVENT.DUR		uint32		event duration in samples
+    EVENT.VAL		(*)		use for sparse (non-equidistant) sample values). The type corresponds to GDFTYP of the respective channel. 
+                                        and must not exceed 32 bits (4 bytes). Currently, only integer types are supported. 
+		# [OPTIONAL]
+    EVENT.CodeDesc	text		description of (user-specified) Eventtypes
+    EVENT.Desc		text		description of Event [depreciated, will become obsolete]
+    EVENT.CodeIndex	int		corresponding index [depreciated, will become obsolete]
+
+HDR.ELEC.
+    ELEC.XYZ		float 		electrode positions
+
+HDR.Label		char-array	e.g. '+C3a - C3p  '
+HDR.LeadIdCode          uint16          Lead identification label according to SCP or FEF standard
+HDR.PhysDim		string		physical dimension e.g. 'uV'
+HDR.PhysDimCode		uint16		Code of physical dimension according to "File Exchange Format for Vital Signs - Annex A "
+HDR.PhysMax		float		physical maximum (for calibration)
+HDR.DigMax		integer		digital maximum (for calibration)
+HDR.PhysMin		float		physical minimum (for calibration) 
+HDR.DigMin		integer		digital minimum (for calibration) 
+HDR.Bits		integer		number of bits used
+HDR.THRESHOLD		numeric		digital minimum and maximum (for saturation detection);
+					a third column indicates the encoding of missing data;  
+HDR.CHANTYP		ascii		guess for signal type 
+HDR.Impedance	        float32	        Electrode Impedance for Voltage data channels  
+HDR.fZ                	float32	        Probe frequency of impedance channels  
+
+HDR.FLAG.TRIGGERED	int		0=no, 1=yes
+HDR.FLAG.REFERENCE	string          COM, CAR: common average reference; LOC,LAR local average ref; LAP Laplacian derivation, WGT weighted average
+HDR.FLAG.UCAL		int		0: data is calibrated (scaled), 1: data is not calibrated (scaled)
+HDR.FLAG.OVERFLOWDETECTION 	int	1: automated overflow detection if HDR.THRESHOLD is available; 0: no overflow detection 
+HDR.FLAG.OUTPUT		ascii		'double': data is a double; 'single': data is single precision 	
+	
+HDR.Classlabel		int		0: left, 1: right, etc.
+HDR.ArtifactSelection	int		[OPTIONAL] 0: ok, 1: artifact 
+HDR.TriggerOffset       samples         [OPTIONAL] Offset time between TriggerOnset and begin of trial
+
+HDR.Filter	% filter information, usually for each channel separatily
+    Filter.LowPass	float		[Hz]
+    Filter.HighPass	float		[Hz]
+    Filter.Notch 	float		[Hz] NaN: unknown, -1(<0): off
+HDR.PreFilt		string		[OPTIONAL] filter setting - used by GDF, BDF, EDF
+
+HDR.Patient	# contains patient information [OPTIONAL]
+    Patient.Name			Name of Patient: should not be used because of privacy protection
+    Patient.Id				Patient identification code as used in hospital
+    Patient.Age				Age of Patient
+    Patient.Sex				Patient Gender  0: unknown, 1: male, 2: female
+    Patient.Handedness			Patient Handedness  0:unknown, 1: right, 2:left, 3: equal
+    Patient.Medication			Medication
+    Patient.Classification		Classification of Patient
+    Patient.Height			height in centimeters [cm]
+    Patient.Weight			weight in kilogram [kg]
+    Patient.BMI				Body mass index
+    Patient.Headsize	3xfloat32	Distance Nasion-Inion, distance A1-A2, Circumference of head
+    Patient.Birthday			[Y M D h m s]: approx. Birthday, to calculate patient's age. 
+    Patient.Impairment.Heart		0: unknown 1: NO 2: YES 3: pacemaker 
+    Patient.Impairment.Visual		0: unknown 1: NO 2: YES 3: corrected (with visual aid) 
+    Patient.Smoking			0: unknown 1: NO 2: YES 
+    Patient.AlcoholAbuse		0: unknown 1: NO 2: YES 
+    Patient.DrugAbuse			0: unknown 1: NO 2: YES
+     
+HDR.Manufacturer	# Manufacturer information			
+    Manufacturer.Name			name of manufacture
+    Manufacturer.Model			device model 
+    Manufacturer.Version		version of device
+    Manufacturer.SerialNumber    	Serial number 
+    
+HDR.REC.Hospital			Identification of hospital
+HDR.RID					Identification of Recording, StudyID, consecutive number
+HDR.REC.Technician			identity of recording technician
+# HDR.REC.Doctor			Identification of refering doctor
+HDR.REC.Equipment			recording equipment
+HDR.REC.LOC		16 byte		Latitude, Longitude and Altitude 3 x INT32 according to RFC1876
+HDR.REC.IPaddr		4(16)xuint8	IP address of recording system
+# HDR.REC.Reference			reference (monopolar | CAR | LAR | Laplacian | Linked ears | weighted )
+HDR.REC.Impedance	NS*float32	[OBSOLETE] replaced with HDR.Impedance  
+HDR.ELEC.XYZ		3xNSxfloat32	sensor position in cartesion coordinates
+HDR.ELEC.Orientation	3xNSxfloat32	sensor orientation in cartesion coordinates
+HDR.ELEC.Area		NSxfloat32	area [m^2] of (MEG) sensor
+HDR.ELEC.REF		3xfloat32	position of reference electrode 
+HDR.ELEC.GND		3xfloat32	position of ground electrode 
+
+HDR.AS		# provides some internal information	
+    AS.SPR				samples per record for each channel
+    AS.bpb				bytes per block
+    AS.spb				samples per block
+    AS.bi				cumulative index
+    AS.SampleRate                       samplerate of each channel 
+    AS.EVENTTABLEPOS                    position of eventtable   
+
+
+(B)======= FOR DATA ACQUISITION (T100) ONLY  =======================
+[OBSOLETE - MIGHT BE REMOVED IN FUTURE]
+
+Name_of_field		type		example
+-------------------------------------------------------------------------
+HDR.T100.Version	string		'BCI 0.10' testing state of RS's data aquisition module 
+					'BCI 1.00' testing state of RS's data aquisition module 
+HDR.T100.AmpSens	float		Sensitivity of g.Tec-Amplifier 
+HDR.T100.Range		float		Maximum physical value in DAQ
+HDR.T100.Bits		integer		Number of bits in ADC
+
+HDR.T100.DAQ_ID		<any>		z.B. "NI 9876"
+HDR.T100.AmpName	string		z.B. "g.tec: Ser.No: 01234567"
+HDR.Filter.LowPass	float		[Hz]
+HDR.Filter.HighPass	float		[Hz]
+HDR.Filter.Notch 	int8		0=Off, 1=On
+
+HDR.T0			float[1..6]	[yyyy mm dd hh MM ss.cc] see HELP CLOCK  
+HDR.NS			Integer		number of channels
+HDR.SampleRate		Integer		sampling frequency in [Hz]
+
+HDR.Label		char-array	z.B. '+C3a - C3p  '
+HDR.PhysDim		char-array	'uV    '
+-------------------------------------------------------------------------
+
+
+
+
+(C) ================== Header of EDF-files ========================
+
+This documents is based on the EDF-header as defined in the "EDF/GDF toolbox for Matlab"                                                            
+It will be used as template to define the header information based on different formats   
+                                                         
+=================|=====|===============================|=======================================
+ field name       level  type and size                   text	
+=================|=1234|===============================|=======================================
+EDF.
+   .FILE.
+      .FID	     *	file identifier		
+ 	.OPEN		2 | 1 | 0    			set to 1 by EDFOPEN and set to 0 by EDFCLOSE
+ 	.Ext		char(n)				file extension, usually 'edf' or 'rec'
+ 	.Name         #	char(n)				file name
+ 	.Path        	char(n)				path 
+ 	.POS	     *	int					Position in EDF-Blocks
+    .FileName           char(n)				full file name, including path,filename and extension
+    .VERSION	     *	char(8) 				EDF field: Version
+    .PID              # char(n)			     	Patient ID: ##OBSOLETE## this field will be replaced with HDR.Patient.Id	
+    .RID              # char(n)                       	Recording ID: ##OBSOLETE## this field will be replaced with HDR.ID.Recording 
+    .T0                 int(6) [yyyy mm dd hh MM ss]	startdatetime of recording
+    .HeadLen         *  int				Header Length
+    .NRec            *  int                     	number of records
+    .Dur             *  float                       	Duration of record
+    .NS		     *# int                      	number of channels                               
+    .Label	      #	char array [NS,:]         	Label
+    .Transducer       #	char array [NS,80]        	Transducer
+    .PhysDim          #	char array [NS,:]         	physical dimension
+    .PhysMin         *  float array [NS,1]        	physical minimum
+    .PhysMax         *  float array [NS,1]        	physical maximum
+    .DigMin          *  int array  [NS,1]         	digital minimum
+    .DigMax          *  int array  [NS,1]         	digital maximum
+    .PreFilt	      #	char array [NS,80]        	Pre-filtering
+    .SPR	     *	int array  [NS,1]         	Samples per Record 
+    .GDFTYP 	     *	int [NS]				defines datatype of the channel  
+    .Cal	      #	float array [NS,1]        
+    .Off              # float array [NS,1]         
+    .Calib		float array [1+NS,NS]      
+    .SampleRate	      #	float array [NS,1]         
+    .Chan_Select        bool array [NS,1]          
+    .ChanTyp            char array [1,EDF.NS]		indicates EEG, EOG, ECG, EMG, channel
+HDR.ID.
+	.Recording					Recording Identification 
+HDR.Patient...
+	.Id						Patient Identification 
+	.Sex						Gender: 1: Male 2: Female 
+	.Weigth						
+	.Heigth
+	.Birth						Birth date and time 
+	.Name							
+    .AS.                					undocumented
+       .bpb             int
+       .spb             int
+       .bi              int array [1+NS,1]      
+       .GDFbi           int array [1+NS,1]      
+       .INFO		char array
+       .Method		char array
+       .Date		int(6)
+=================|=====|===============================|=======================================
+EDF.AS.startrec		record number at beginning of last gdfread(...)
+EDF.AS.numrec		number of records loaded with last gdfread(...)
+
+EDF.SIE	-----------	fields for Version 0.50 and higher
+EDF.SIE.RS		switch for Resampling (0 = none)
+EDF.SIE.RR		switch for Calibration and ReReferinzing (0 = none)
+EDF.SIE.TH		Overflow detection (1=yes)
+EDF.SIE.RAW		Raw EDF format (1, each column contains one block)
+EDF.SIE.AFIR		apply AFIR (1=yes)
+
+EDF.SIE.InChanSelect	input channel selection, # read from Raw-EDF input file
+EDF.SIE.ChanSelect	(output) channel selection, 
+
+EDF.SIE.ReRefMx		ReReferenzing Matrix
+EDF.SIE.REG		Regression Matrix
+
+
+EDF.AFIR	-----------	fields for Adaptive Filter for ECG minimization
+
+=================|=====|===============================|=======================================
+     
+#  level 4, application  exported, always available in all future version (strict definition).
+*  level 3, transport	EDF/GDF specific properties, useful for lower level EDF access,
+   level 2, access	matlab specific fields, only used within the EDF toolbox, can change ithout further notices.
+   level 1, low level	Binary representation as defined in the EDF specification,         
+                              
+Status of this document: Finished, not proofread yet.
+(C) 1998 by Alois Schloegl
+13.Nov.1998
+
+This document holds at least for Version 3 of the "EDF toolbox for the use with Matlab". 
+All fields are case sensitive.
+
+"not supported" means, you can not rely on that field.
+char(n) is a char array, string
+The types int, float, bool, are always stored in double. 
+                                                                                       
+The definition holds for Version #3.00 - #3.08 (current). Level 1,2 fields might change without further notice. 
+Further changes will be added at the end of this document. There should be none.
+
+
+AMENDMENTS:
+=) Changes due to the consideration of GDF:
+The definition above holds for the "EDF/GDF toolbox for Matlab" Ver 0.40, too.
+The following changes were performed. 
+
+=================|=====|===============================|=======================================
+ field name       level  type and size                   text	
+=================|=1234|===============================|=======================================
+~ (modified) 11:09 05.08.99 V0.56 
+ 	.POS	     *	int					Position in EDF-Blocks
+
++ (added) 11:09 12.05.99 V0.46 
+EDF.AS.startrec    	int				
+EDF.AS.numrec		int				
+
+* (changed)
+EDF.FILE.OPEN	 	2 | 1 | 0    			set to 0,1 and 2 by EDFCLOSE, EDFOPEN(.,'r') and EDFOPEN(.,'w'), respectively
+
++ (added)
+EDF.GDFTYP 	     *	int [NS]			defines datatype of the channel  
+EDF.AS.bpb              int				bytes per block
+EDF.AS.GDFbi            int				bytes per block
+
+- (removed)
+    .sPhysMin		char array [NS,8]         	EDF field: physical minimum (8*ASCII)
+    .sPhysMax  		char array [NS,8]         	EDF field: physical maximum (8*ASCII)
+=================|=====|===============================|=======================================
