@@ -15,16 +15,17 @@ function [jobid, puttime] = qsubfeval(varargin)
 %   memoverhead = number in bytes, how much memory to account for MATLAB itself (default = 1024^3, i.e. 1GB)
 %   timreq      = number in seconds, how much time does the job require (no default)
 %   timoverhead = number in seconds, how much time to allow MATLAB to start (default = 180 seconds)
-%   backend     = string, can be 'sge', 'torque', 'slurm', 'local' (default is automatic)
+%   backend     = string, can be 'sge', 'torque', 'slurm', 'system', 'local' (default is automatic)
 %   diary       = string, can be 'always', 'never', 'warning', 'error' (default = 'error')
 %   queue       = string, which queue to submit the job in (default is empty)
 %   options     = string, additional options that will be passed to qsub/srun (default is empty)
+%   batch       = number, of the bach to which the job belongs. When called by QSUBCELLFUN
+%                 it will be a number that is automatically incremented over subsequent calls.
+%   batchid     = string that is used for the compiled application filename and to identify
+%                the jobs in the queue, the default is automatically determined and looks
+%                like user_host_pid_batch.
 %
 % See also QSUBCELLFUN, QSUBGET, FEVAL, DFEVAL, DFEVALASYNC
-
-% Undocumented option
-%   'batch'     = number of the bach to which the job belongs, this is
-%                 specified by qsubcellfun
 
 % -----------------------------------------------------------------------
 % Copyright (C) 2011-2012, Robert Oostenveld
@@ -59,6 +60,8 @@ elseif ~isempty(getenv('TORQUEHOME'))
 elseif ~isempty(getenv('SLURM_ENABLE'))
   defaultbackend = 'slurm';
 else
+  % backend=local causes the job to be executed in this MATLAB by feval
+  % backend=system causes the job to be executed by system('matlab -r ...')
   defaultbackend = 'local';
 end
 
@@ -68,15 +71,16 @@ strargin(~cellfun(@ischar, strargin)) = {''};
 
 % locate the begin of the optional key-value arguments
 optbeg = false(size(strargin));
-optbeg = optbeg | strcmp('memreq',  strargin);
-optbeg = optbeg | strcmp('timreq',  strargin);
-optbeg = optbeg | strcmp('diary',   strargin);
-optbeg = optbeg | strcmp('batch',   strargin);
+optbeg = optbeg | strcmp('memreq',      strargin);
+optbeg = optbeg | strcmp('timreq',      strargin);
+optbeg = optbeg | strcmp('diary',       strargin);
+optbeg = optbeg | strcmp('batch',       strargin);
+optbeg = optbeg | strcmp('batchid',     strargin);
 optbeg = optbeg | strcmp('timoverhead', strargin);
 optbeg = optbeg | strcmp('memoverhead', strargin);
-optbeg = optbeg | strcmp('backend', strargin);
-optbeg = optbeg | strcmp('queue',   strargin);
-optbeg = optbeg | strcmp('options', strargin);
+optbeg = optbeg | strcmp('backend',     strargin);
+optbeg = optbeg | strcmp('queue',       strargin);
+optbeg = optbeg | strcmp('options',     strargin);
 optbeg = find(optbeg);
 optarg = varargin(optbeg:end);
 
@@ -87,8 +91,9 @@ ft_checkopt(optarg, 'timreq', 'numericscalar');
 % get the optional input arguments
 memreq        = ft_getopt(optarg, 'memreq');
 timreq        = ft_getopt(optarg, 'timreq');
-diary         = ft_getopt(optarg, 'diary', []);
+diary         = ft_getopt(optarg, 'diary');
 batch         = ft_getopt(optarg, 'batch', 1);
+batchid       = ft_getopt(optarg, 'batchid');
 timoverhead   = ft_getopt(optarg, 'timoverhead', 180);            % allow some overhead to start up the MATLAB executable
 memoverhead   = ft_getopt(optarg, 'memoverhead', 1024*1024*1024); % allow some overhead for the MATLAB executable in memory
 backend       = ft_getopt(optarg, 'backend', defaultbackend);     % can be torque, local, sge
@@ -121,7 +126,7 @@ if ~isempty(previous_argin) && ~isequal(varargin{1}, previous_argin{1})
 end
 
 % create a unique identifier for the job (string)
-jobid = generatejobid(batch);
+jobid = generatejobid(batch, batchid);
 
 % get the current working directory to store the temp files in
 curPwd = getcustompwd();
@@ -142,7 +147,7 @@ optin = options;
 save(inputfile, 'argin', 'optin');
 
 if ~compile
-
+  
   if isempty(previous_matlabcmd)
     % determine the name of the matlab startup script
     if matlabversion(7.1)
@@ -179,14 +184,14 @@ if ~compile
       % use whatever is available as default
       matlabcmd = 'matlab';
     end
-
+    
     if system(sprintf('which %s > /dev/null', matlabcmd))==1
       % the linux command "which" returns 0 on succes and 1 on failure
       warning('the executable for "%s" could not be found, trying "matlab" instead', matlabcmd);
       % use whatever is available as default
       matlabcmd = 'matlab';
     end
-
+    
     % keep the matlab command for subsequent calls, this will save all the matlabversion calls
     % and the system('which ...') call on the scheduling of subsequent distributed jobs
     previous_matlabcmd = matlabcmd;
@@ -194,7 +199,7 @@ if ~compile
     % re-use the matlab command that was determined on the previous call to this function
     matlabcmd = previous_matlabcmd;
   end
-
+  
   if matlabversion(7.8, inf)
     % this is only supported for version 7.8 onward
     matlabcmd = [matlabcmd ' -singleCompThread'];
@@ -215,6 +220,12 @@ end % if ~compile
 % set the job requirements according to the users specification
 switch backend
   case 'local'
+    % this is for testing the execution in case no cluster is available,
+    % for example when working on the road with a laptop
+    
+    cmdline = [];
+    
+  case 'system'
     % this is for testing the execution in case no cluster is available,
     % for example when working on the road with a laptop
     
@@ -299,7 +310,7 @@ switch backend
     
   case 'slurm'
     % this is for Simple Linux Utility for Resource Management
-   
+    
     if isempty(submitoptions)
       % start with an empty string
       submitoptions = '';
@@ -307,17 +318,17 @@ switch backend
     
     if ~isempty(queue)
       % with slurm queues are "partitions"
-      submitoptions = [submitoptions sprintf('--partition=%s ', queue)]; 
+      submitoptions = [submitoptions sprintf('--partition=%s ', queue)];
     end
     
     if ~isempty(timreq) && ~isnan(timreq) && ~isinf(timreq)
       % TESTME this is experimental and needs more testing!
-      % submitoptions = [submitoptions sprintf('--time=%d ', timreq+timoverhead)]; 
+      % submitoptions = [submitoptions sprintf('--time=%d ', timreq+timoverhead)];
     end
     
     if ~isempty(memreq) && ~isnan(memreq) && ~isinf(memreq)
       % TESTME this is experimental and needs more testing!
-      % submitoptions = [submitoptions sprintf('--mem-per-cpu=%.0f ', round((memreq+memoverhead)./1024^2))]; 
+      % submitoptions = [submitoptions sprintf('--mem-per-cpu=%.0f ', round((memreq+memoverhead)./1024^2))];
     end
     
     % specifying the o and e names might be useful for the others as well
@@ -331,11 +342,11 @@ switch backend
       % create the shell commands to execute matlab
       % we decided to use srun instead of sbatch since handling job paramters is easier this way
       %
-      % nohup was found to signficantly speed up the submission. Due to the existing error handling its safe to detach to the init, but debugging 
-      % gets harder since output will be redirected to nohpu.out and thus overwritten everytime qsubfeval is launched. Using nohup only makes sense 
+      % nohup was found to signficantly speed up the submission. Due to the existing error handling its safe to detach to the init, but debugging
+      % gets harder since output will be redirected to nohpu.out and thus overwritten everytime qsubfeval is launched. Using nohup only makes sense
       % if you intend to sumbit jobs which compute in less than a minute since the difference in submit time is about 3-4 seconds per job only!
-      % cmdline = sprintf('nohup srun --job-name=%s %s --output=%s --error=%s %s -r "%s" & ', jobid, submitoptions, logout, logerr, matlabcmd, matlabscript); 
-      cmdline = sprintf('srun --job-name=%s %s --output=%s --error=%s %s -r "%s" ', jobid, submitoptions, logout, logerr, matlabcmd, matlabscript); 
+      % cmdline = sprintf('nohup srun --job-name=%s %s --output=%s --error=%s %s -r "%s" & ', jobid, submitoptions, logout, logerr, matlabcmd, matlabscript);
+      cmdline = sprintf('srun --job-name=%s %s --output=%s --error=%s %s -r "%s" ', jobid, submitoptions, logout, logerr, matlabcmd, matlabscript);
     end
     
   otherwise
@@ -343,24 +354,35 @@ switch backend
     
 end % switch
 
-fprintf('submitting job %s...', jobid);
-[status, result] = system(cmdline);
+fprintf('submitting job %s...', jobid); % note the lack of the end-of-line, the qsub outpt will follow
+if ~strcmp(backend, 'local')
+  [status, result] = system(cmdline);
+else
+  % this will read the job input *.mat file, call feval with all try-catch
+  % precautions, measure time and memory and eventually write the results to
+  % the job output *.mat file
+  fprintf('\n');
+  qsubexec(jobid);
+end
 
 switch backend
-case 'slurm'
-  % srun will not return a jobid (besides in verbose mode) we decided to use jobname=jobid instead to identify processes 
-  % since the jobid is a uniq identifier for every job! 
-  result = jobid; 
-otherwise
-  % for torque and sge it is enough to remove the white space
-  result = strtrim(result);
+  case 'slurm'
+    % srun will not return a jobid (besides in verbose mode) we decided to use jobname=jobid instead to identify processes
+    % since the jobid is a uniq identifier for every job!
+    result = jobid;
+  case 'local'
+    % the job was executed by a local feval call, but the results will still be written in a job file
+    result = jobid;
+  otherwise
+    % for torque and sge it is enough to remove the white space
+    result = strtrim(result);
 end
 
 fprintf(' qstat job id %s\n', result);
 
 % both Torque and SGE will return a log file with stdout and stderr information
 % for local execution we have to emulate these files, because qsubget expects them
-if strcmp(backend, 'local')
+if any(strcmp(backend, {'system', 'local'}))
   logout       = fullfile(curPwd, sprintf('%s.o', jobid));
   logerr       = fullfile(curPwd, sprintf('%s.e', jobid));
   fclose(fopen(logout, 'w'));

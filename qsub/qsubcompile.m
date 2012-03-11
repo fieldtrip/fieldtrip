@@ -14,6 +14,15 @@ function [fcomp] = qsubcompile(fname, varargin)
 %   jobid       = qsubfeval(compiledfun, argin, ...)
 %   argout      = qsubget(jobid)
 %
+% Optional input arguments should be specified in key-value pairs
+% and can include
+%   batchid        = string that is used for the compiled application
+%                    filename and to identify the jobs in the queue, the
+%                    default is automatically determined and looks
+%                    like user_host_pid_batch.
+%   toolbox        = string or cell-array with strings, non-standard
+%                    Mathworks toolboxes to include (see below).
+%
 % When executing a single batch of jobs using QSUBCELLFUN, you can also
 % compile your function on the fly with the compile flag like this
 %   argout      = qsubcellfun(fname, argin, ..., 'compile', 'yes')
@@ -25,6 +34,11 @@ function [fcomp] = qsubcompile(fname, varargin)
 % constructs like feval(sprintf(...)), you can specify fname as a
 % cell-array. For example
 %   compiledfun = qsubcompile({@ft_definetrial, @trialfun_custom})
+%
+% If you need to include Mathworks toolboxes that are not automatically
+% detected as dependencies by the MATLAB compiler, you can specify them
+% likt this
+%   compiledfun = qsubcompile(fname, 'toolbox', {'signal', 'image', 'stats'})
 %
 % A common problem for compilation is caused by the use of addpath in
 % your startup.m file. Please change your startup.m file into
@@ -61,9 +75,15 @@ function [fcomp] = qsubcompile(fname, varargin)
 % others, each batch of jobs (i.e. instance of qsubcellfun) should get a
 % unique identifier that is used in the filename of the temporary mat files.
 
-% the batch is a unique number, the batchid is a string like user_host_pid_batch
-batch   = ft_getopt(varargin, 'batch', getbatch());
-batchid = generatebatchid(batch);    % this is user_host_pid_batch
+% get the optional input arguments
+batch   = ft_getopt(varargin, 'batch',   getbatch());               % this is a number that is automatically incremented
+batchid = ft_getopt(varargin, 'batchid', generatebatchid(batch));   % this is a string like user_host_pid_batch
+toolbox = ft_getopt(varargin, 'toolbox', {});
+
+if ischar(toolbox)
+  % this should be a cell-array with strings
+  toolbox = {toolbox};
+end
 
 % some temporary filse are made during compilation, these flags determine
 % whether they can be cleaned up afterwards
@@ -88,10 +108,28 @@ for i=1:length(fdeps)
   end
 end
 
+if ~isempty(toolbox)
+  % each toolbox should be added to the mcc command line as -p <full_path>
+  toolboxopt = cell(1,length(toolbox));
+  for i=1:length(toolbox)
+    % find the directory where the toolbox is to be found
+    toolboxpath = fileparts(which(fullfile(toolbox{i}, 'Contents.m')));
+    if isempty(toolboxpath)
+      error('the Mathworks toolbox "%s" could not be found', toolbox{i});
+    else
+      fprintf('including %s\n', toolboxpath);
+    end
+    toolboxopt{2*(i-1)+1} = '-p';
+    toolboxopt{2*(i-1)+2} = toolboxpath;
+  end
+else
+  toolboxopt = {};
+end
+
 fprintf('compiling %s into %s\n', fname, batchid);
 % try to compile into a stand-allone application
 % ensure that cellfun is included, it might be needed for stacked jobs
-mcc('-N', '-R', '-nodisplay', '-o', batchid, '-m', 'qsubexec', 'cellfun', fname, fdeps{:});
+mcc('-N', '-R', '-nodisplay', '-o', batchid, toolboxopt{:}, '-m', 'qsubexec', 'cellfun', fname, fdeps{:});
 fprintf('finished compiling\n');
 
 if ~hasreadme

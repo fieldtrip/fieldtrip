@@ -18,6 +18,7 @@ function varargout = qsubcellfun(fname, varargin)
 %   memreq         = number, the memory in bytes required to run a single job
 %   stack          = number, stack multiple jobs in a single qsub job (default = 'auto')
 %   backend        = string, can be 'sge', 'torque', 'slurm', 'local' (default is automatic)
+%   batchid        = string, to identify the jobs in the queue (default is user_host_pid_batch)
 %   compile        = string, can be 'auto', 'yes', 'no' (default = 'no')
 %   queue          = string, which queue to submit the job in (default is empty)
 %   options        = string, additional options that will be passed to qsub/srun (default is empty)
@@ -107,6 +108,8 @@ compile       = ft_getopt(optarg, 'compile', 'no');     % can be 'auto', 'yes' o
 backend       = ft_getopt(optarg, 'backend', []);       % this will be dealt with in qsubfeval
 queue         = ft_getopt(optarg, 'queue', []);
 submitoptions = ft_getopt(optarg, 'options', []);
+batch         = ft_getopt(optarg, 'batch',   getbatch());               % this is a number that is automatically incremented
+batchid       = ft_getopt(optarg, 'batchid', generatebatchid(batch));   % this is a string like user_host_pid_batch
 
 % skip the optional key-value arguments
 if ~isempty(optbeg)
@@ -122,7 +125,6 @@ elseif isstruct(fname)
   fcomp = fname;
   fname = fcomp.fname;
 else
-  fname = fname;
   fcomp = [];
 end
 
@@ -134,11 +136,6 @@ end
 % determine the number of input arguments and the number of jobs
 numargin    = numel(varargin);
 numjob      = numel(varargin{1});
-
-% keep a record of how many batches with jobs have been started. This
-% is useful for creating meaningful job IDs and to ensure that subsequent
-% batches of jobs will have different names
-batch = getbatch;
 
 % determine the number of MATLAB jobs to "stack" together into seperate qsub jobs
 if isequal(stack, 'auto')
@@ -266,7 +263,7 @@ end
 if strcmp(compile, 'yes') || (strcmp(compile, 'auto') && (numjob*timreq/3600)>0.5)
   try
     % try to compile into a stand-allone application
-    fcomp = qsubcompile(fname, 'batch', batch);
+    fcomp = qsubcompile(fname, 'batch', batch, 'batchid', batchid);
   catch
     if strcmp(compile, 'yes')
       % the error that was caught is critical
@@ -298,10 +295,10 @@ for submit=1:numjob
   % submit the job
   if ~isempty(fcomp)
     % use the compiled version
-    [curjobid curputtime] = qsubfeval(fcomp, argin{:}, 'memreq', memreq, 'timreq', timreq, 'diary', diary, 'batch', batch, 'backend', backend, 'options', submitoptions, 'queue', queue);
+    [curjobid curputtime] = qsubfeval(fcomp, argin{:}, 'memreq', memreq, 'timreq', timreq, 'diary', diary, 'batch', batch, 'batchid', batchid, 'backend', backend, 'options', submitoptions, 'queue', queue);
   else
     % use the non-compiled version
-    [curjobid curputtime] = qsubfeval(fname, argin{:}, 'memreq', memreq, 'timreq', timreq, 'diary', diary, 'batch', batch, 'backend', backend, 'options', submitoptions, 'queue', queue);
+    [curjobid curputtime] = qsubfeval(fname, argin{:}, 'memreq', memreq, 'timreq', timreq, 'diary', diary, 'batch', batch, 'batchid', batchid, 'backend', backend, 'options', submitoptions, 'queue', queue);
   end
   
   % fprintf('submitted job %d\n', submit);

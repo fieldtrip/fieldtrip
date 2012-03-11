@@ -1,4 +1,4 @@
-function id = generatejobid(batch)
+function id = generatejobid(batch, batchid)
 
 % GENERATEJOBID generates a unique identifier for a job to be submitted to the
 % batch queueing system. It maintains an internal counter to allow it to be
@@ -16,13 +16,24 @@ function id = generatejobid(batch)
 %   user_host_pid        % as sessionid
 % where M is the batch number and N the sequential job number (per batch).
 %
+% Besides specifying a batch number, it is also possible to specify the full
+% batch name as string. This allows the user to override the default
+% user_host_pid_bM part of the jobid. This works like
+%   jobid     = generatejobid(batch, batchid)
+% where for example generatejobid(1, 'freqanalysis') returns the sequence
+% of strings 'freqanalysis_j001', 'freqanalysis_j002', ...
+%
 % See also GENERATEBATCHID, GENERATESESSIONID
 
-% jobNum will be numQueues X 1 vector
+% jobNum will be a vector with one entry for each batch number
 persistent jobNum
 
-if nargin~=1
+if nargin<1
   error('incorrect number of input arguments');
+end
+
+if nargin<2
+  batchid = [];
 end
 
 if length(jobNum)>=batch
@@ -33,13 +44,14 @@ else
   job = 1;
 end
 
-id = sprintf('%s_%s_p%d_b%d_j%03d', getusername(), gethostname(), getpid(), batch, job);
+if ~isempty(batchid)
+  id = sprintf('%s_j%03d', batchid, job);
+else
+  id = sprintf('%s_%s_p%d_b%d_j%03d', getusername(), gethostname(), getpid(), batch, job);
+end
 
 % ensure that it can be used as filename, struct fieldname, etc.
 id = fixname(id);
 
 % remember the current job number for the current batch
 jobNum(batch) = job;
-
-
-
