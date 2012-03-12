@@ -20,7 +20,7 @@ function [trl, event] = trialfun_general(cfg)
 %
 % See also FT_DEFINETRIAL, FT_PREPROCESSING
 
-% Copyright (C) 2005-2008, Robert Oostenveld
+% Copyright (C) 2005-2012, Robert Oostenveld
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
@@ -63,7 +63,8 @@ else
     fprintf('reading the events from ''%s''\n', cfg.headerfile);
     event = ft_read_event(cfg.headerfile, 'headerformat', cfg.headerformat, 'eventformat', cfg.eventformat, 'dataformat', cfg.dataformat);
   catch
-    event = [];
+    % ensure that it has the correct fields, even if it is empty
+    event = struct('type', {}, 'value', {}, 'sample', {}, 'offset', {}, 'duration', {});
   end
 end
 
@@ -195,8 +196,8 @@ for i=sel
     trl = [trl; [trlbeg trlend trloff]];
     if isnumeric(event(i).value), 
       val = [val; event(i).value];
-    elseif strcmp(cfg.headerformat, 'brainvision_vhdr') && (event(i).value(1)=='S'|| event(i).value(1)=='R')
-      % these are called 'S  1' for stimuli or 'R  1' for responses
+    elseif ischar(event(i).value) && (event(i).value(1)=='S'|| event(i).value(1)=='R')
+      % on brainvision these are called 'S  1' for stimuli or 'R  1' for responses
       val = [val; str2double(event(i).value(2:end))];
     else
       val = [val; nan];

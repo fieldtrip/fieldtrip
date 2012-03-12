@@ -1531,6 +1531,10 @@ end
 % apply the optional filters
 event = ft_filter_event(event, varargin{:});
 
+if isempty(event)
+  % ensure that it has the correct fields, even if it is empty
+  event = struct('type', {}, 'value', {}, 'sample', {}, 'offset', {}, 'duration', {});
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % poll implementation for backwards compatibility with ft buffer version 1
