@@ -235,7 +235,7 @@ elseif catlabel
   fprintf('concatenating the channels within each trial\n');
   data = varargin{1};
   if ~all(diff(Ntrial)==0)
-    error('not all datasets have the same number of trials')
+    error('not all datasets have the same number of trials');
   else
     Ntrial = Ntrial(1);
   end

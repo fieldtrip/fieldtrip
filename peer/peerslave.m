@@ -201,9 +201,9 @@ while true
 
     % display the time every second
     currtime = toc(stopwatch);
-    if (currtime-prevtime>=1)
-      prevtime = currtime;
-      disp(datestr(now));
+    if (currtime-prevtime>=10)
+      prevtime = currtime; peerlist
+     % disp(datestr(now));
     end
 
   else

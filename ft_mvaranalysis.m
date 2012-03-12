@@ -241,6 +241,7 @@ if strcmp(cfg.demean, 'yes'),
   tmpcfg           = [];
   tmpcfg.demean    = 'yes';
   tmpcfg.baselinewindow = cfg.toi([1 end]) + cfg.t_ftimwin.*[-0.5 0.5];
+  tmpcfg.feedback  = 'none';
   data             = ft_preprocessing(tmpcfg, data);
 else
   %do nothing

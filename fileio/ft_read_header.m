@@ -719,7 +719,7 @@ switch headerformat
       else
         fieldname = xmlfiles(i).name(1:end-4);
         filename_xml  = fullfile(filename, xmlfiles(i).name);
-        orig.xml.(fieldname) = xml2struct(filename_xml);
+        orig.xml.(fieldname) = xml2struct(filename_xml);        
       end
     end
     warning('on', 'MATLAB:REGEXP:deprecated')
@@ -829,19 +829,19 @@ switch headerformat
     end
     
     % check if multiple epochs are present
-    if isfield(orig.xml,'epoch') && length(orig.xml.epoch) > 1
+    if isfield(orig.xml,'epochs') && length(orig.xml.epochs) > 1 % changed epoch into epochs IVerweij 07122011
       % add info to header about which sample correspond to which epochs, becasue this is quite hard for user to get...
-      epochdef = zeros(length(orig.xml.epoch),3);
-      for iEpoch = 1:length(orig.xml.epoch)
+      epochdef = zeros(length(orig.xml.epochs),3);
+      for iEpoch = 1:length(orig.xml.epochs)
         if iEpoch == 1
-          epochdef(iEpoch,1) = round(str2double(orig.xml.epoch(iEpoch).epoch.beginTime)./1000./hdr.Fs)+1;
-          epochdef(iEpoch,2) = round(str2double(orig.xml.epoch(iEpoch).epoch.endTime)./1000./hdr.Fs);
-          epochdef(iEpoch,3) = round(str2double(orig.xml.epoch(iEpoch).epoch.beginTime)./1000./hdr.Fs); %offset corresponds to timing
+          epochdef(iEpoch,1) = round(str2double(orig.xml.epochs(iEpoch).epoch.beginTime)./1000./hdr.Fs)+1;
+          epochdef(iEpoch,2) = round(str2double(orig.xml.epochs(iEpoch).epoch.endTime)./1000./hdr.Fs);
+          epochdef(iEpoch,3) = round(str2double(orig.xml.epochs(iEpoch).epoch.beginTime)./1000./hdr.Fs); %offset corresponds to timing
         else
-          NbSampEpoch = round(str2double(orig.xml.epoch(iEpoch).epoch.endTime)./1000./hdr.Fs - str2double(orig.xml.epoch(iEpoch).epoch.beginTime)./1000./hdr.Fs);
+          NbSampEpoch = round(str2double(orig.xml.epochs(iEpoch).epoch.endTime)./1000./hdr.Fs - str2double(orig.xml.epochs(iEpoch).epoch.beginTime)./1000./hdr.Fs);
           epochdef(iEpoch,1) = epochdef(iEpoch-1,2) + 1;
           epochdef(iEpoch,2) = epochdef(iEpoch-1,2) + NbSampEpoch;
-          epochdef(iEpoch,3) = round(str2double(orig.xml.epoch(iEpoch).epoch.beginTime)./1000./hdr.Fs); %offset corresponds to timing
+          epochdef(iEpoch,3) = round(str2double(orig.xml.epochs(iEpoch).epoch.beginTime)./1000./hdr.Fs); %offset corresponds to timing
         end
       end
       warning('the data contains multiple epochs with possibly discontinuous boundaries. Added ''epochdef'' to hdr.orig defining begin and end sample of each epoch. See hdr.orig.xml.epoch for epoch details, use ft_read_header to obtain header or look in data.dhr.')

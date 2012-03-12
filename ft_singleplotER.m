@@ -402,7 +402,7 @@ end
 if strcmp('freq',yparam) && strcmp('freq',dtype)
   for i=1:Ndata
     varargin{i} = ft_selectdata(varargin{i},'param',cfg.parameter,'foilim',cfg.zlim,'avgoverfreq','yes');
-    varargin{i}.(cfg.parameter) = squeeze(varargin{i}.(cfg.parameter));
+    varargin{i}.(cfg.parameter) = permute(varargin{i}.(cfg.parameter), [1 3 2]);
   end
 elseif strcmp('time',yparam) && strcmp('freq',dtype)
   for i=1:Ndata

@@ -611,7 +611,7 @@ end
 % the max allowed size should be specified in cfg.checksize (this can be
 % set with ft_defaults)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if strcmp(checksize, 'yes') && ~isinf(cfg.checksize)
+if 0%strcmp(checksize, 'yes') && ~isinf(cfg.checksize)
   cfg = checksizefun(cfg, cfg.checksize);
 end
 
