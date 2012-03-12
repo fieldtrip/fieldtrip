@@ -437,7 +437,7 @@ artifact = [artbeg(:) artend(:)];
 
 if strcmp(cfg.artfctdef.zvalue.artfctpeak,'yes')
   cnt=1;
-  shift=0;
+  shift=opt.trl(1,1)-1;
   for tt=1:opt.numtrl    
     if tt==1
       tind{tt}=find(artifact(:,2)<opt.trl(tt,2));
