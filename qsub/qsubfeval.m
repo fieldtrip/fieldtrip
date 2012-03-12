@@ -254,7 +254,7 @@ switch backend
     end
     
     if ~isempty(memreq) && ~isnan(memreq) && ~isinf(memreq)
-      submitoptions = [submitoptions sprintf('-l h_vfree=%.0f ', memreq+memoverhead)];
+      submitoptions = [submitoptions sprintf('-l h_vmem=%.0f ', memreq+memoverhead)];
     end
     
     if compile
