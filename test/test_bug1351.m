@@ -14,12 +14,38 @@ cfg.layout = 'CTF275.lay';
 max_it = 10;
 figure;
 
+profile on -history -timer real;
 t = inf(max_it, 1);
 for i=1:max_it
 tic;
 evalc('ft_topoplotER(cfg, tmpdata)'); % surpress output
 t(i) = toc;
 end
+profile off;
+
+stats = profile('info')
+time = [stats.FunctionTable.TotalTime];
+[tmp, idx] = sort(time);
+
+fprintf('\n');
+fprintf('-------------------------------------------------------------\n');
+fprintf('-------------- Functions and computation time ---------------\n');
+fprintf('-------------------------------------------------------------\n');
+fprintf('\n');
+fprintf('Function\tTime\tRelativeTime\n');
+for i=1:15
+  fprintf('%s\t\t\t%.2fs\t\t\t%.2f%%\n', ...
+    stats.FunctionTable(idx(end-i)).FunctionName, ...
+    stats.FunctionTable(idx(end-i)).TotalTime, ...
+    100*...
+      stats.FunctionTable(idx(end-i)).TotalTime./...
+      stats.FunctionTable(idx(end)).TotalTime);
+end
+fprintf('\n');
+
+stats.FunctionTable(idx(end))
+
+
 
 fprintf('Plotting took on average %.2fms (%.2fms to %.2fms)...\n', 1000*mean(t), 1000*min(t), 1000*max(t));
 close all;
