@@ -109,8 +109,13 @@ while true
     prevSample  = endsample;
     count       = count + 1;
     fprintf('processing segment %d from sample %d to %d, condition = %d\n', count, begsample, endsample, condition);
+
+    while (hdr.nSamples*hdr.nTrials < endsample)
+      % wait until all data up to the endsample has arrived
+      hdr = ft_read_header(cfg.headerfile, 'cache', true);
+    end
     
-    % read data segment from buffer
+    % read the selected data segment from the buffer
     dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', false);
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
