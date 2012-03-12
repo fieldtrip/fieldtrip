@@ -232,10 +232,10 @@ if usetemplate
   
   clear tmp
   for i=1:Ntemplate
- %   tmp(i) = ft_datatype_sens(template(i));            % ensure up-to-date sensor description
- %   tmp(i) = ft_convert_units(template(i), elec.unit); % ensure that the units are consistent with the electrodes
+    tmp(i) = ft_datatype_sens(template(i));            % ensure up-to-date sensor description
+    tmp(i) = ft_convert_units(template(i), elec.unit); % ensure that the units are consistent with the electrodes
   end
-  %template = tmp;
+  template = tmp;
 end
 
 if useheadshape

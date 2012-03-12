@@ -155,7 +155,7 @@ end
 
 if basedonmri
   fprintf('using the mri approach\n');
-  mri = ft_datatype(data,'volume'); mri=data; % giopia
+  mri = ft_datatype(data,'volume');
   if isempty(resdim)
     resdim = mri.dim;
   end
@@ -180,7 +180,7 @@ if basedonmri
   mri = ft_volumesegment(cfg,mri);
   
   cfg = [];
-  cfg.tissue = output; cfg.numvertices  = numvertices; % giopia
+  cfg.tissue = output;
   bnd = ft_prepare_mesh_new(cfg, mri);
   
 elseif basedonmriseg

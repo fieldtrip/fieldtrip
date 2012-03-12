@@ -264,11 +264,11 @@ switch dimord
     datspectrum = transpose(fft(transpose([dat repmat(postpad,[nchan, 1])]))); % double explicit transpose to speedup fft
     spectrum = complex(zeros([nchan ntimeboi sum(ntaper)]));
     for ifreqoi = 1:nfreqoi
-%      str = sprintf('frequency %d (%.2f Hz), %d tapers', ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
+      str = sprintf('frequency %d (%.2f Hz), %d tapers', ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
       [st, cws] = dbstack;
       if length(st)>1 && strcmp(st(2).name, 'ft_freqanalysis') && verbose
         % specest_mtmconvol has been called by ft_freqanalysis, meaning that ft_progress has been initialised
- %       ft_progress(fbopt.i./fbopt.n, ['trial %d, ',str,'\n'], fbopt.i);
+        ft_progress(fbopt.i./fbopt.n, ['trial %d, ',str,'\n'], fbopt.i);
       elseif verbose
         fprintf([str, '\n']);
       end
