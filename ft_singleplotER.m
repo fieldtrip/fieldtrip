@@ -401,13 +401,11 @@ end
 
 if strcmp('freq',yparam) && strcmp('freq',dtype)
   for i=1:Ndata
-    varargin{i} = ft_selectdata(varargin{i},'param',cfg.parameter,'foilim',cfg.zlim,'avgoverfreq','yes');
-    varargin{i}.(cfg.parameter) = permute(varargin{i}.(cfg.parameter), [1 3 2]);
+    varargin{i} = ft_selectdata(varargin{i},'param',cfg.parameter,'foilim',cfg.zlim,'avgoverfreq','yes');    
   end
 elseif strcmp('time',yparam) && strcmp('freq',dtype)
   for i=1:Ndata
     varargin{i} = ft_selectdata(varargin{i},'param',cfg.parameter,'toilim',cfg.zlim,'avgovertime','yes');
-    varargin{i}.(cfg.parameter) = squeeze(varargin{i}.(cfg.parameter));
   end
 end
 
@@ -427,6 +425,16 @@ for i=1:Ndata
   
   % make vector dat with one value for each channel
   dat  = varargin{i}.(cfg.parameter);
+  % get dimord dimensions
+  dims = textscan(varargin{i}.dimord,'%s', 'Delimiter', '_');
+  dims = dims{1};
+  ydim = find(strcmp(yparam, dims));
+  xdim = find(strcmp(xparam, dims));
+  zdim = setdiff(1:ndims(dat), [ydim xdim]);
+  % and permute to make sure that dimensions are in the correct order
+  dat = permute(dat, [zdim(:)' ydim xdim]);
+
+
   xval = varargin{i}.(xparam);
   
   % take subselection of channels

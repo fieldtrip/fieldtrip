@@ -39,11 +39,12 @@ freq.powspctrm = randn(nchan, ntime, nfreq);
 cfg = [];
 cfg.parameter = 'powspctrm';
 cfg.layout = lay;
-ft_multiplotTFR(cfg, freq) % this fails, visual inspection is needed to observe the problem
+ft_multiplotTFR(cfg, freq) % this still works
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the following one is more specifically for Linsey
+failed = true;
 
 nchan = length(label);
 nfreq = 1;
@@ -53,15 +54,20 @@ freq = [];
 freq.label = label;
 freq.freq = 1:nfreq;
 freq.time = 1:ntime;
-freq.dimord = 'chan_time_freq';
+freq.dimord = 'chan_freq_time';
 freq.powspctrm = randn(nchan, nfreq, ntime);
-ft_multiplotTFR(cfg, freq) % this fails, visual inspection is needed to observe the problem
+try
+  ft_multiplotTFR(cfg, freq) % this fails, nothing is plotted, visual inspection needed
+  failed = false;
+catch
+  failed = true;
+end
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-if false
+try
   % the following rightfully fails because the data structure is not recognized as freq structure
   % but if the data structure would have had a freq dimension, it should have worked
   nax1 = 50;
@@ -78,9 +84,12 @@ if false
   cfg.parameter = 'powspctrm';
   cfg.layout = lay;
   ft_multiplotTFR(cfg, freq)
+  failed = false;
+catch
+  failed = failed & true;
 end
 
-if false
+try
   % the following rightfully fails because ax2 is not known as dimension
   nfreq = 50;
   nax2 = 100;
@@ -96,4 +105,12 @@ if false
   cfg.parameter = 'powspctrm';
   cfg.layout = lay;
   ft_multiplotTFR(cfg, freq)
+  failed = false;
+catch
+  failed = failed & true;
 end
+
+if ~failed
+  error('either of the two cases which should fail works')
+end
+  

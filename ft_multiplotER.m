@@ -159,6 +159,7 @@ cfg.baseline        = ft_getopt(cfg, 'baseline',    'no');
 cfg.trials          = ft_getopt(cfg, 'trials',      'all');
 cfg.xlim            = ft_getopt(cfg, 'xlim',        'maxmin');
 cfg.ylim            = ft_getopt(cfg, 'ylim',        'maxmin');
+cfg.zlim            = ft_getopt(cfg, 'zlim',        'maxmin');
 cfg.comment         = ft_getopt(cfg, 'comment',     strcat([date '\n']));
 cfg.axes            = ft_getopt(cfg, 'axes',        'yes');
 cfg.showlabels      = ft_getopt(cfg, 'showlabels',  'no');
@@ -466,12 +467,10 @@ end
 if strcmp('freq',yparam) && strcmp('freq',dtype)
   for i=1:Ndata
     varargin{i} = ft_selectdata(varargin{i},'param',cfg.parameter,'foilim',cfg.zlim,'avgoverfreq','yes');
-    varargin{i}.(cfg.parameter) = squeeze(varargin{i}.(cfg.parameter));
   end
 elseif strcmp('time',yparam) && strcmp('freq',dtype)
   for i=1:Ndata
     varargin{i} = ft_selectdata(varargin{i},'param',cfg.parameter,'toilim',cfg.zlim,'avgovertime','yes');
-    varargin{i}.(cfg.parameter) = squeeze(varargin{i}.(cfg.parameter));
   end
 end
 
@@ -530,6 +529,15 @@ end
 for i=1:Ndata
   % Make vector dat with one value for each channel
   dat  = varargin{i}.(cfg.parameter);
+  % get dimord dimensions
+  dims = textscan(varargin{i}.dimord,'%s', 'Delimiter', '_');
+  dims = dims{1};
+  ydim = find(strcmp(yparam, dims));
+  xdim = find(strcmp(xparam, dims));
+  zdim = setdiff(1:ndims(dat), [ydim xdim]);
+  % and permute
+  dat = permute(dat, [zdim(:)' ydim xdim]);
+
   xval = varargin{i}.(xparam);
   
   % Take subselection of channels, this only works
@@ -542,34 +550,14 @@ for i=1:Ndata
     label  = varargin{i}.label;
   end
   
-  %   if ~isempty(yparam)
-  %     if isfull
-  %       dat = dat(sel1, sel2, ymin:ymax, xidmin(i):xidmax(i));
-  %       dat = nanmean(nanmean(dat, meandir), 3);
-  %       siz = size(dat);
-  %       %FIXMEdat = reshape(dat, [siz(1:2) siz(4)]);
-  %     elseif haslabelcmb
-  %       dat = dat(sellab, ymin:ymax, xidmin(i):xidmax(i));
-  %       dat = nanmean(dat, 2);
-  %       siz = size(dat);
-  %       dat = reshape(dat, [siz(1) siz(3)]);
-  %     else
-  %       dat = dat(sellab, ymin:ymax, xidmin(i):xidmax(i));
-  %       dat = nanmean(nanmean(dat, 3), 2);
-  %       siz = size(dat);
-  %       dat = reshape(dat, [siz(1) siz(3)]);
-  %     end
-  %   else
   if isfull
     dat = dat(sel1, sel2, xidmin(i):xidmax(i));
     dat = nanmean(dat, meandir);
-    %FIXME
   elseif haslabelcmb
     dat = dat(sellab, xidmin(i):xidmax(i));
   else
     dat = dat(sellab, xidmin(i):xidmax(i));
   end
-  %   end
   xval = xval(xidmin(i):xidmax(i));
   
   % Select the channels in the data that match with the layout:

@@ -32,8 +32,8 @@ fprintf('-------------------------------------------------------------\n');
 fprintf('-------------- Functions and computation time ---------------\n');
 fprintf('-------------------------------------------------------------\n');
 fprintf('\n');
-fprintf('Function\tTime\tRelativeTime\n');
-for i=1:15
+fprintf('Function\t\t\tTime\t\t\tRelativeTime\n');
+for i=0:15
   fprintf('%s\t\t\t%.2fs\t\t\t%.2f%%\n', ...
     stats.FunctionTable(idx(end-i)).FunctionName, ...
     stats.FunctionTable(idx(end-i)).TotalTime, ...
@@ -43,14 +43,11 @@ for i=1:15
 end
 fprintf('\n');
 
-stats.FunctionTable(idx(end))
 
-
-
-fprintf('Plotting took on average %.2fms (%.2fms to %.2fms)...\n', 1000*mean(t), 1000*min(t), 1000*max(t));
-close all;
-if min(t) > 5 % note that usually we plot >2 subjects and >15 channels
-  error('This is unacceptable')
-else
-  fprintf('This is fine!\n');
-end
+% fprintf('Plotting took on average %.2fms (%.2fms to %.2fms)...\n', 1000*mean(t), 1000*min(t), 1000*max(t));
+% close all;
+% if min(t) > 5 % note that usually we plot >2 subjects and >15 channels
+%   error('This is unacceptable')
+% else
+%   fprintf('This is fine!\n');
+% end

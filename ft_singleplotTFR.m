@@ -352,6 +352,14 @@ if length(sellab) > 1 && ~isempty(cfg.maskparameter)
 end
 
 dat = data.(cfg.parameter);
+% get dimord dimensions
+dims = textscan(data.dimord,'%s', 'Delimiter', '_');
+dims = dims{1};
+ydim = find(strcmp(yparam, dims));
+xdim = find(strcmp(xparam, dims));
+zdim = setdiff(1:ndims(dat), [ydim xdim]);
+% and permute
+dat = permute(dat, [zdim(:)' ydim xdim]);
 if isfull
   dat = dat(sel1, sel2, ymin:ymax, xmin:xmax);
   dat = nanmean(dat, meandir);

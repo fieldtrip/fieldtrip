@@ -1,13 +1,13 @@
 function sourceanalysisDICS(data, grid, vol)
 
 % general source
-sourceanalysisDICS_keepall(data, grid, vol);
-sourceanalysisDICS_keepall_rawtrial(data, grid, vol);
-sourceanalysisDICS_keepnothing(data, grid, vol);
-sourceanalysisDICS_keepnothing_rawtrial(data, grid, vol);
+% sourceanalysisDICS_keepall(data, grid, vol);
+% sourceanalysisDICS_keepall_rawtrial(data, grid, vol);
+% sourceanalysisDICS_keepnothing(data, grid, vol);
+% sourceanalysisDICS_keepnothing_rawtrial(data, grid, vol);
 
 % dics specific
-sourceanalysisDICS_refdip(data, grid, vol);
+source = sourceanalysisDICS_refdip(data, grid, vol);
 sourceanalysisDICS_refchan(data, grid, vol);
 sourceanalysisDICS_realfilter(data, grid, vol);
 sourceanalysisDICS_fixedori(data, grid, vol);
@@ -157,7 +157,7 @@ cfg.vol          = vol;
 cfg.channel      = 'MEG';
 cfg.grid         = grid;
 cfg.frequency    = 10;
-cfg.refdip       = [2 5 9];
+cfg.dics.refdip       = [2 5 9];
 cfg.keepcsd      = 'yes';
 cfg.feedback     = 'none';
 
