@@ -188,24 +188,12 @@ elseif hasvolume && needbnd
     % (can be multiple shells)   
     if isempty(cfg.tissue) 
       if strcmp(cfg.method,'singleshell') || strcmp(cfg.method,'singlesphere')
-        tmpcfg = [];
-        tmpcfg.tissue       = cfg.tissue;
-        tmpcfg.smooth       = cfg.smooth;
-        tmpcfg.sourceunits  = cfg.sourceunits;
-        tmpcfg.threshold    = cfg.threshold;
-        tmpcfg.numvertices  = cfg.numvertices;
-        geometry = prepare_singleshell(tmpcfg,data);    
+        geometry = prepare_singleshell(cfg,data);    
       else
          % tries to infer which fields in the segmentations are the segmented compartments
         [dum,tissue] = issegmentation(data,cfg);
         % ...and then tessellates all!
-        tmpcfg = [];
-        tmpcfg.tissue       = tissue;
-        tmpcfg.smooth       = cfg.smooth;
-        tmpcfg.sourceunits  = cfg.sourceunits;
-        tmpcfg.threshold    = cfg.threshold;
-        tmpcfg.numvertices  = cfg.numvertices;
-        geometry = prepare_shells(tmpcfg,data); 
+        geometry = prepare_shells(cfg,data); 
       end
     end
   else
@@ -259,7 +247,7 @@ switch cfg.method
     elseif isempty(geometry)
       error('no input available')
     end
-    vol = ft_headmodel_singlesphere(geometry,'conductivity',cfg.conductivity);
+    vol = ft_headmodel_singlesphere(geometry,'conductivity',cfg.conductivity,'unit',cfg.unit);
     
   case {'simbio' 'fns'}
     if length([cfg.tissue cfg.tissueval cfg.tissuecond cfg.elec cfg.transform cfg.unit])<6
@@ -342,11 +330,11 @@ function bnd          = prepare_shells(cfg,mri)
 % cfg.tissue                  the tissue number/string
 % cfg.numvertices             the desired number of vertices
 
-% FIXME: introduce the sourceunits control as in prepare_singleshell
+% FIXME: introduce the cfg.unit check as in prepare_singleshell
 
 % process the inputs
 tissue      = ft_getopt(cfg,'tissue');
-sourceunits = ft_getopt(cfg, 'sourceunits', 'cm');
+unit        = ft_getopt(cfg, 'unit', 'cm');
 smoothseg   = ft_getopt(cfg, 'smooth',      5);
 threshseg   = ft_getopt(cfg, 'threshold',   0.5); 
 numvertices = ft_getopt(cfg, 'numvertices', 3000);
@@ -376,6 +364,14 @@ else % only one tissue, choose the first parameter
   threshseg   = threshseg(1);
 end
 
+% convert the surface points into the input or MRI units 
+if ~isempty(cfg.unit)&&isfield(mri,'unit')
+  scale = get_scale(cfg.unit,mri.unit);
+else
+  scale  = 1;
+end
+
+
 % do the mesh extrapolation
 for i =1:numel(tissue)
   if ~isnumeric(tissue(i))
@@ -388,6 +384,10 @@ for i =1:numel(tissue)
   seg    = threshold(seg, threshseg(i), num2str(i));
   seg    = fill(seg, num2str(i));
   bnd(i) = dotriangulate(seg, numvertices(i), num2str(i));
+  if scale~=1
+    fprintf('converting MRI surface points from %s into %s\n', mri.unit, cfg.unit);
+    bnd(i).pnt = bnd(i).pnt* scale;
+  end
 end
 
 function bnd          = dotriangulate(seg, nvert, str)
@@ -460,7 +460,7 @@ output = input;
 function bnd = prepare_singleshell(cfg,mri)
 % prepares the spheres boundaries for the methods 'singlesphere' and
 % 'singleshell'
-cfg.sourceunits    = ft_getopt(cfg, 'sourceunits', 'cm');
+cfg.unit           = ft_getopt(cfg, 'unit', 'cm');
 cfg.smooth         = ft_getopt(cfg, 'smooth',      5);
 cfg.threshold      = ft_getopt(cfg, 'threshold',   0.5); 
 cfg.numvertices    = ft_getopt(cfg, 'numvertices', 3000);
@@ -507,16 +507,31 @@ ori(1) = mean(mrix(seg(:)));
 ori(2) = mean(mriy(seg(:)));
 ori(3) = mean(mriz(seg(:)));
 [pnt, tri] = triangulate_seg(seg, cfg.numvertices, ori);
-% FIXME: corrects the original tri because is weird
-%tri = projecttri(pnt);
+
 % apply the coordinate transformation from voxel to head coordinates
 pnt(:,4) = 1;
 pnt = (mri.transform * (pnt'))';
 pnt = pnt(:,1:3);
 
-% convert the MRI surface points into the same units as the source/gradiometer
+% convert the surface points into the input or MRI units 
+if ~isempty(cfg.unit)&&isfield(mri,'unit')
+  scale = get_scale(cfg.unit,mri.unit);
+else
+  scale = 1;
+end
+if scale~=1
+  fprintf('converting MRI surface points from %s into %s\n', mri.unit, cfg.unit);
+  pnt = pnt* scale;
+end
+
+bnd.pnt = pnt;
+bnd.tri = tri;
+fprintf('Triangulation completed\n');
+
+function scale = get_scale(sourceunit,mriunit)
+% determines the scaling factor
 scale = 1;
-switch cfg.sourceunits
+switch sourceunit
   case 'mm'
     scale = scale * 1000;
   case 'cm'
@@ -526,9 +541,9 @@ switch cfg.sourceunits
   case 'm'
     scale = scale * 1;
   otherwise
-    error('unknown physical dimension in cfg.sourceunits');
+    error('unknown physical dimension in source unit');
 end
-switch mri.unit
+switch mriunit
   case 'mm'
     scale = scale / 1000;
   case 'cm'
@@ -538,16 +553,8 @@ switch mri.unit
   case 'm'
     scale = scale / 1;
   otherwise
-    error('unknown physical dimension in mri.unit');
+    error('unknown physical dimension in mri unit');
 end
-if scale~=1
-  fprintf('converting MRI surface points from %s into %s\n', cfg.sourceunits, mri.unit);
-  pnt = pnt* scale;
-end
-
-bnd.pnt = pnt;
-bnd.tri = tri;
-fprintf('Triangulation completed\n');
 
 function bnd = prepare_mesh_headshape(cfg)
 
