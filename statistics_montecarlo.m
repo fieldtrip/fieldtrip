@@ -106,9 +106,11 @@ cfg = ft_checkconfig(cfg, 'renamed',     {'repeatedmeasures', 'uvar'});
 cfg = ft_checkconfig(cfg, 'renamedval',  {'clusterthreshold', 'nonparametric', 'nonparametric_individual'});
 cfg = ft_checkconfig(cfg, 'renamedval',  {'correctm', 'yes', 'max'});
 cfg = ft_checkconfig(cfg, 'required',    {'statistic'});
-cfg = ft_checkconfig(cfg, 'forbidden',   {'ztransform', 'removemarginalmeans', 'randomfactor'});
-cfg = ft_checkconfig(cfg, 'forbidden',   {'voxelthreshold', 'voxelstatistic'});
-cfg = ft_checkconfig(cfg, 'forbidden',   {'voxelthreshold', 'voxelstatistic'});
+cfg = ft_checkconfig(cfg, 'forbidden',   {'ztransform', ...
+                                          'removemarginalmeans', ...
+                                          'randomfactor', ...
+                                          'voxelthreshold', ...
+                                          'voxelstatistic'});
 
 % set the defaults for the main function
 if ~isfield(cfg, 'alpha'),               cfg.alpha    = 0.05;            end

@@ -48,8 +48,8 @@ ft_preamble trackconfig
 data = ft_checkdata(data,'datatype', 'raw', 'feedback', 'yes');
 
 % these were supported in the past, but are not any more (for consistency with other spike functions)
-cfg = ft_checkconfig(cfg, 'forbidden', 'inputfile');   % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1056
-cfg = ft_checkconfig(cfg, 'forbidden', 'outputfile');  % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1056
+cfg = ft_checkconfig(cfg, 'forbidden', 'inputfile', ...
+                                       'outputfile');  % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1056
 
 %get the options
 cfg.timwin       = ft_getopt(cfg, 'timwin',[-0.1 0.1]);

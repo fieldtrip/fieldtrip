@@ -221,11 +221,11 @@ data = ft_checkdata(data, 'datatype', {'timelock', 'freq', 'comp'});
 % check for option-values to be renamed
 cfg = ft_checkconfig(cfg, 'renamedval', {'electrodes',   'dotnum',      'numbers'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'zlim',         'absmax',      'maxabs'});
-cfg = ft_checkconfig(cfg, 'renamed',    {'matrixside',       'directionality'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'directionality',   'feedforward', 'outflow'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'directionality',   'feedback',    'inflow'});
 
 % check for renamed options
+cfg = ft_checkconfig(cfg, 'renamed',     {'matrixside',    'directionality'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'electrodes',    'marker'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'emarker',       'markersymbol'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'ecolor',        'markercolor'});
@@ -245,15 +245,14 @@ cfg = ft_checkconfig(cfg, 'renamed',     {'emsize',        'markersize'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'efsize',        'markerfontsize'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'headlimits',    'interplimits'});
 % check for forbidden options
-cfg = ft_checkconfig(cfg, 'forbidden',  {'hllinewidth'});
-cfg = ft_checkconfig(cfg, 'forbidden',  {'headcolor'});
-cfg = ft_checkconfig(cfg, 'forbidden',  {'hcolor'});
-cfg = ft_checkconfig(cfg, 'forbidden',  {'hlinewidth'});
-cfg = ft_checkconfig(cfg, 'forbidden',  {'contcolor'});
-cfg = ft_checkconfig(cfg, 'forbidden',  {'outline'});
-cfg = ft_checkconfig(cfg, 'forbidden',  {'highlightfacecolor'});
-cfg = ft_checkconfig(cfg, 'forbidden',  {'showlabels'});
-cfg = ft_checkconfig(cfg, 'forbidden',  {'hllinewidth'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'hllinewidth', ...
+                                         'headcolor', ...
+                                         'hcolor', ...
+                                         'hlinewidth', ...
+                                         'contcolor', ...
+                                         'outline', ...
+                                         'highlightfacecolor', ...
+                                         'showlabels'});
 
 % Set other config defaults:
 cfg.xlim           = ft_getopt(cfg, 'xlim',          'maxmin');

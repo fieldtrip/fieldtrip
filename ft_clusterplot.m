@@ -77,20 +77,20 @@ cfg = ft_checkconfig(cfg, 'renamed',     {'hlmarkerseries',       'highlightsymb
 cfg = ft_checkconfig(cfg, 'renamed',     {'hlmarkersizeseries',   'highlightsizeseries'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'hlcolorpos',           'highlightcolorpos'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'hlcolorneg',           'highlightcolorneg'});
-cfg = ft_checkconfig(cfg, 'deprecated',  {'hllinewidthseries'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'zparam', 'parameter'});
+cfg = ft_checkconfig(cfg, 'deprecated',  {'hllinewidthseries'});
 cfg = ft_checkconfig(cfg, 'deprecated',  {'xparam', 'yparam'});
 
 % added several forbidden options
-cfg = ft_checkconfig(cfg, 'forbidden',  {'highlight'});
-cfg = ft_checkconfig(cfg, 'forbidden',  {'highlightchannel'});
-cfg = ft_checkconfig(cfg, 'forbidden',  {'highlightsymbol'});
-cfg = ft_checkconfig(cfg, 'forbidden',  {'highlightcolor'});
-cfg = ft_checkconfig(cfg, 'forbidden',  {'highlightsize'});
-cfg = ft_checkconfig(cfg, 'forbidden',  {'highlightfontsize'});
-cfg = ft_checkconfig(cfg, 'forbidden',  {'xlim'});
-cfg = ft_checkconfig(cfg, 'forbidden',  {'comment'});
-cfg = ft_checkconfig(cfg, 'forbidden',  {'commentpos'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'highlight', ...
+                                         'highlightchannel', ...
+                                         'highlightsymbol', ... 
+                                         'highlightcolor', ...
+                                         'highlightsize', ...
+                                         'highlightfontsize', ...
+                                         'xlim', ...
+                                         'comment', ...
+                                         'commentpos'});
 
 % set the defaults
 if ~isfield(cfg,'alpha'),                  cfg.alpha = 0.05;                                    end;

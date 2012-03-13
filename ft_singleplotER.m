@@ -116,9 +116,9 @@ ft_preamble loadvar varargin
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'unused',     {'cohtargetchannel'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'zlim', 'absmax', 'maxabs'});
-cfg = ft_checkconfig(cfg, 'renamed',    {'matrixside',     'directionality'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'directionality', 'feedforward', 'outflow'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'directionality', 'feedback',    'inflow'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'matrixside',     'directionality'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'channelindex',   'channel'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'channelname',    'channel'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'cohrefchannel',  'refchannel'});
@@ -126,24 +126,24 @@ cfg = ft_checkconfig(cfg, 'renamed',	  {'zparam',         'parameter'});
 cfg = ft_checkconfig(cfg, 'deprecated', {'xparam'});
 
 % set the defaults
-cfg.baseline      = ft_getopt(cfg, 'baseline',    'no');
-cfg.trials        = ft_getopt(cfg, 'trials',      'all');
-cfg.xlim          = ft_getopt(cfg, 'xlim',        'maxmin');
-cfg.ylim          = ft_getopt(cfg, 'ylim',        'maxmin');
-cfg.zlim          = ft_getopt(cfg, 'zlim',        'maxmin');
-cfg.comment       = ft_getopt(cfg, 'comment',     strcat([date '\n']));
-cfg.axes          = ft_getopt(cfg,' axes',        'yes');
-cfg.fontsize      = ft_getopt(cfg, 'fontsize',    8);
-cfg.graphcolor    = ft_getopt(cfg, 'graphcolor',  'brgkywrgbkywrgbkywrgbkyw');
-cfg.hotkeys       = ft_getopt(cfg, 'hotkeys', 'no');
-cfg.interactive   = ft_getopt(cfg, 'interactive',  'no');
-cfg.renderer      = ft_getopt(cfg, 'renderer',     []);
-cfg.maskparameter = ft_getopt(cfg, 'maskparameter',[]);
-cfg.linestyle     = ft_getopt(cfg, 'linestyle',    '-');
-cfg.linewidth     = ft_getopt(cfg, 'linewidth',    0.5);
-cfg.maskstyle     = ft_getopt(cfg, 'maskstyle',    'box');
-cfg.channel       = ft_getopt(cfg, 'channel',      'all');
-cfg.directionality    = ft_getopt(cfg, 'directionality',   []);
+cfg.baseline        = ft_getopt(cfg, 'baseline',    'no');
+cfg.trials          = ft_getopt(cfg, 'trials',      'all');
+cfg.xlim            = ft_getopt(cfg, 'xlim',        'maxmin');
+cfg.ylim            = ft_getopt(cfg, 'ylim',        'maxmin');
+cfg.zlim            = ft_getopt(cfg, 'zlim',        'maxmin');
+cfg.comment         = ft_getopt(cfg, 'comment',     strcat([date '\n']));
+cfg.axes            = ft_getopt(cfg,' axes',        'yes');
+cfg.fontsize        = ft_getopt(cfg, 'fontsize',    8);
+cfg.graphcolor      = ft_getopt(cfg, 'graphcolor',  'brgkywrgbkywrgbkywrgbkyw');
+cfg.hotkeys         = ft_getopt(cfg, 'hotkeys', 'no');
+cfg.interactive     = ft_getopt(cfg, 'interactive',  'no');
+cfg.renderer        = ft_getopt(cfg, 'renderer',     []);
+cfg.maskparameter   = ft_getopt(cfg, 'maskparameter',[]);
+cfg.linestyle       = ft_getopt(cfg, 'linestyle',    '-');
+cfg.linewidth       = ft_getopt(cfg, 'linewidth',    0.5);
+cfg.maskstyle       = ft_getopt(cfg, 'maskstyle',    'box');
+cfg.channel         = ft_getopt(cfg, 'channel',      'all');
+cfg.directionality  = ft_getopt(cfg, 'directionality',   []);
 
 Ndata = numel(varargin);
 

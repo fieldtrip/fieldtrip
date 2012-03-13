@@ -51,8 +51,8 @@ ft_preamble callinfo
 ft_preamble trackconfig
 
 % these were supported in the past, but are not any more (for consistency with other spike functions)
-cfg = ft_checkconfig(cfg, 'forbidden', 'inputfile');   % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1056
-cfg = ft_checkconfig(cfg, 'forbidden', 'outputfile');  % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1056
+cfg = ft_checkconfig(cfg, 'forbidden', 'inputfile', ...
+                                       'outputfile');  % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1056
 
 % set the defaults
 if ~isfield(cfg, 'feedback'),       cfg.feedback = 'textbar';    end

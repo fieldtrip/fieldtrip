@@ -65,8 +65,8 @@ ft_preamble trackconfig
 ft_preamble loadvar data
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'forbidden', 'numcompartments');
-cfg = ft_checkconfig(cfg, 'forbidden', 'method');
+cfg = ft_checkconfig(cfg, 'forbidden', 'numcompartments', ...
+                                       'method');
 
 % mri defaults
 resolution   = ft_getopt(cfg, 'resolution');  % for mri reslice

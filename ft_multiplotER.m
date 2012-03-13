@@ -147,9 +147,9 @@ end
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'unused',     {'cohtargetchannel'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'zlim', 'absmax', 'maxabs'});
-cfg = ft_checkconfig(cfg, 'renamed',    {'matrixside',     'directionality'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'directionality', 'feedforward', 'outflow'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'directionality', 'feedback',    'inflow'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'matrixside',     'directionality'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'cohrefchannel', 'refchannel'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'zparam', 'parameter'});
 cfg = ft_checkconfig(cfg, 'deprecated', {'xparam'});

@@ -116,7 +116,8 @@ if roi2mask
   if ~isfield(cfg, 'round2nearestvoxel'),  cfg.round2nearestvoxel = 'no';  end
 
   if iscell(cfg.roi) || ischar(cfg.roi)
-    ft_checkconfig(cfg, 'forbidden', {'sphere' 'box'}, 'required', {'atlas' 'inputcoord'});
+    ft_checkconfig(cfg, 'forbidden', {'sphere' 'box'}, ...
+                        'required',  {'atlas' 'inputcoord'});
     isatlas = 1;
     ispoi = 0;
   elseif isnumeric(cfg.roi)
