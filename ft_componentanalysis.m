@@ -542,6 +542,10 @@ switch cfg.method
     unmixing = csp(C1, C2, cfg.csp.numfilters);
     mixing   = [];  % will be computed below
     
+  case 'bsscca'
+    unmixing = bsscca(dat);
+    mixing   = [];
+    
   case 'parafac'
     error('parafac is not supported anymore in ft_componentanalysis');
     
