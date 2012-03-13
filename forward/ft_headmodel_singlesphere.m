@@ -20,6 +20,7 @@ function vol = ft_headmodel_singlesphere(geometry, varargin)
 
 % get the optional arguments
 conductivity = ft_getopt(varargin, 'conductivity',1);
+unit = ft_getopt(varargin,'unit');
 
 if length(conductivity)~=1
   error('the conductivity should be a single number')
@@ -44,5 +45,7 @@ vol.r = single_r;
 vol.o = single_o;
 vol.c = conductivity;
 vol.type = 'singlesphere';
-vol   = ft_convert_units(vol);
+if isempty(unit)
+  vol   = ft_convert_units(vol);
+end
 
