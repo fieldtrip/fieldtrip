@@ -37,7 +37,11 @@ function [argout, optout] = qsubexec(jobid)
 
 try
   
-  p = pwd();
+  [p, jobid] = fileparts(jobid);
+  if isempty(p)
+    p = pwd();
+  end
+  
   inputfile  = fullfile(p, sprintf('%s_input.mat',   jobid));
   outputfile = fullfile(p, sprintf('%s_output.mat_', jobid));
   
