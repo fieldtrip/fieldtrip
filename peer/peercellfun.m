@@ -146,7 +146,7 @@ end
 % check the input arguments
 for i=1:numargin
   if ~isa(varargin{i}, 'cell')
-    error('input argument #%d shoudl be a cell-array', i+1);
+    error('input argument #%d should be a cell-array', i+1);
   end
   if numel(varargin{i})~=numjob
     error('inconsistent number of elements in input #%d', i+1);
