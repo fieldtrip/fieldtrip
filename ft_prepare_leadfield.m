@@ -167,6 +167,15 @@ if ft_voltype(vol, 'openmeeg')
   % the system call to the openmeeg executable makes it rather slow
   % calling it once is much more efficient
   fprintf('calculating leadfield for all positions at once, this may take a while...\n');
+
+  if ~strcmp(cfg.normalize, 'no')
+    % See http://bugzilla.fcdonders.nl/show_bug.cgi?id=1368
+    % 
+    % The problem is that ft_compute_leadfield does not know how to
+    % separate the leadfields of the individual dipole positions and will
+    % scale the concatenated leadfield matrix by a single number.
+    error('leadfield normalization is currently not supported in combination with the openmeeg forward solution');
+  end
   
   ndip = length(grid.inside);
   ok = false(1,ndip);
