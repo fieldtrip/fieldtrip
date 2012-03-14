@@ -30,16 +30,10 @@ num_fncs = numel(freq_idx);
 % loop through all functions
 cfg_prefix = 'cfg.';
 for i=1:num_fncs
-  % open files
-  s_fid = fopen(fullfile('..', source_functions(source_idx(i)).name));
-  f_fid = fopen(fullfile('..', freq_functions(freq_idx(i)).name));
-  
-  s_content = fscanf(s_fid, '%c');
-  f_content = fscanf(f_fid, '%c');
-    
-  fclose(s_fid); % we don't need that anymore
-  fclose(f_fid); % we don't need that anymore
-  
+  % open file content 
+  s_content = cell2mat(textread(fullfile('..', source_functions(source_idx(i)).name), '%s', 'commentstyle', 'matlab', 'delimiter', '\n')');
+  f_content = cell2mat(textread(fullfile('..', freq_functions(freq_idx(i)).name), '%s', 'commentstyle', 'matlab', 'delimiter', '\n')');
+      
   % find cfg.* for each function
   s_cfg = strfind(s_content, cfg_prefix);
   f_cfg = strfind(f_content, cfg_prefix);
@@ -50,7 +44,7 @@ for i=1:num_fncs
   delimiters = '=.%(,)\t '';/*-+{}<>[]';
   for j=1:numel(s_cfg)
     s_opts = s_content(s_cfg(j)+numel(cfg_prefix):end);
-    s_opts = textscan(s_opts, '%s', 'delimiter', delimiters);
+    s_opts = textscan(s_opts, '%s', 'delimiter', delimiters, 'commentstyle', 'matlab');
     if isempty(s_opts{1}{1})
       continue;
     end
@@ -61,7 +55,7 @@ for i=1:num_fncs
   f_hash = [];
   for j=1:numel(f_cfg)
     f_opts = f_content(f_cfg(j)+numel(cfg_prefix):end);
-    f_opts = textscan(f_opts, '%s', 'delimiter', delimiters);
+    f_opts = textscan(f_opts, '%s', 'delimiter', delimiters, 'commentstyle', 'matlab');
     if isempty(f_opts{1}{1})
       continue;
     end
