@@ -53,9 +53,9 @@ if nargin==1
     y = deepcopy(x);
     key = fieldnames(x);
     for i=1:length(key)
-      reset(y.assign   .(key{i}));      % reset the counter to zero
-      reset(y.reference.(key{i}));      % reset the counter to zero
-      reset(y.original .(key{i}));      % first set to zero and then increment with one,
+      setzero(y.assign   .(key{i}));      % reset the counter to zero
+      setzero(y.reference.(key{i}));      % reset the counter to zero
+      setzero(y.original .(key{i}));      % first set to zero and then increment with one,
       increment(y.original.(key{i}));   % since all fields were present in the original
     end
   elseif isa(x, 'struct')
