@@ -9,3 +9,4 @@ if nargin~=1
 end
 
 id = sprintf('%s_%s_p%d_b%d', getusername(), gethostname(), getpid(), batch);
+id = fixname(id);
