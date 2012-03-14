@@ -1,6 +1,6 @@
-function [varargout] = reset(varargin)
+function [varargout] = setzero(varargin)
 
-% RESET Set the value of the input to zero, using pass-by-reference.
+% SETZERO Set the value of the input to zero, using pass-by-reference.
 %
 % Example
 %  a = 1;
