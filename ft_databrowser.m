@@ -163,6 +163,12 @@ if ~isempty(cfg.chanscale)
   elseif numel(cfg.channel) ~= numel(cfg.chanscale)
     error('cfg.chanscale should have the same number of elements as cfg.channel');
   end
+  
+  % make sure chanscale is a column vector, not a row vector
+  if size(cfg.chanscale,2) > size(cfg.chanscale,1)
+    cfg.chanscale = cfg.chanscale';
+  end
+  
 end
 
 if ~isfield(cfg, 'channel'),
