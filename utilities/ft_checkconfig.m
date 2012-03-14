@@ -617,12 +617,20 @@ end
 
 function [cfg] = checksizefun(cfg, max_size)
 
+% first check the total size of the cfg
+s = whos('cfg');
+if (s.bytes <= max_size)
+  return;
+end
+
 ignorefields = {'checksize', 'trl', 'trlold', 'event', 'artifact', 'artfctdef', 'previous'}; % these fields should never be removed!
+norecursion = {'event'}; % these fields should not be handled recursively
 
 fieldsorig = fieldnames(cfg);
 for i=1:numel(fieldsorig)
   for k=1:numel(cfg)
-    if ~isstruct(cfg(k).(fieldsorig{i})) && ~any(strcmp(fieldsorig{i}, ignorefields))
+    if (~isstruct(cfg(k).(fieldsorig{i})) && ~any(strcmp(fieldsorig{i}, ignorefields)))...
+        || any(strcmp(fieldsorig{i}, norecursion))
       % find large fields and remove them from the cfg, skip fields that should be ignored
       temp = cfg(k).(fieldsorig{i});
       s = whos('temp');
