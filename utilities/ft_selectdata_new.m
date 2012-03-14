@@ -221,24 +221,31 @@ end
 end % function keepfields
 
 function [data] = makeselection(data, seldim, selindx, datfields)
-for i=1:numel(datfields)
-  switch seldim
-    case 1
-      data.(datfields{i}) = data.(datfields{i})(selindx,:,:,:,:,:);
-    case 2
-      data.(datfields{i}) = data.(datfields{i})(:,selindx,:,:,:,:);
-    case 3
-      data.(datfields{i}) = data.(datfields{i})(:,:,selindx,:,:,:);
-    case 4
-      data.(datfields{i}) = data.(datfields{i})(:,:,:,selindx,:,:);
-    case 5
-      data.(datfields{i}) = data.(datfields{i})(:,:,:,:,selindx,:);
-    case 16
-      data.(datfields{i}) = data.(datfields{i})(:,:,:,:,:,selindx);
-    otherwise
-      error('unsupported dimension (%d) for making a selection for %s', seldim, datfields{i});
-  end % switch
-end % for datfields
+
+  if numel(seldim) > 1
+    for k = 1:numel(seldim)
+      data = makeselection(data, seldim(k), selindx, datfields);
+    end
+  end
+
+  for i=1:numel(datfields)
+    switch seldim
+      case 1
+        data.(datfields{i}) = data.(datfields{i})(selindx,:,:,:,:,:);
+      case 2
+        data.(datfields{i}) = data.(datfields{i})(:,selindx,:,:,:,:);
+      case 3
+        data.(datfields{i}) = data.(datfields{i})(:,:,selindx,:,:,:);
+      case 4
+        data.(datfields{i}) = data.(datfields{i})(:,:,:,selindx,:,:);
+      case 5
+        data.(datfields{i}) = data.(datfields{i})(:,:,:,:,selindx,:);
+      case 6
+        data.(datfields{i}) = data.(datfields{i})(:,:,:,:,:,selindx);
+      otherwise
+        error('unsupported dimension (%d) for making a selection for %s', seldim, datfields{i});
+    end % switch
+  end % for datfields
 
 end % function makeselection
 
