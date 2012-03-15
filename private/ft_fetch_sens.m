@@ -78,6 +78,10 @@ haselecfile = iseeg & isfield(cfg, 'elecfile');
 hascfgelec  = iseeg & isfield(cfg, 'elec');
 hasdataelec = iseeg & isfield(data, 'elec');
 
+if hascfgelec
+  haselectra = isfield(cfg.elec, 'tra') ;
+end
+
 % other
 haslayout   = isfield(cfg, 'layout');
 iscfgsens   = isfield(cfg, 'pnt')  || isfield(cfg, 'chanpos');
@@ -125,6 +129,9 @@ elseif hascfgelec
   sens.chanpos = dum.chanpos;
   sens.elecpos = dum.elecpos;
   sens.label   = dum.label;
+  if haselectra
+    sens.tra = dum.tra;
+  end
 elseif hasdataelec
   display('using electrodes specified in the data\n');
   sens = data.elec;
