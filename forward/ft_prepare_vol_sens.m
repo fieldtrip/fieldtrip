@@ -297,7 +297,7 @@ elseif iseeg
     sens.tra     = sens.tra(selsens,:);
     % subsequently remove the electrodes that do not contribute to any channel output
     selelec      = any(sens.tra~=0,1);
-    sens.elecpos = sens.coilpos(selelec,:);
+    sens.elecpos = sens.elecpos(selelec,:);
     sens.tra     = sens.tra(:,selelec);
   else
     % the electrodes and channels are identical
