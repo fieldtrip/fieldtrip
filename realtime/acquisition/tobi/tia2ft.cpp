@@ -19,7 +19,8 @@
   [ ] support "localhost" instead of 127.0.0.1
   [V] think of support for heterogeneous streams.
   [ ] think of support for heterogeneous streams.
-  [ ] ask Christian to read code.[
+  [ ] ask Christian to read code.
+  [ ] exit cleanly on ctrl-c.
   [ ] test in TOBI environment.
 */
 
@@ -145,8 +146,9 @@ int sync_meta_info(tia::TiAClient &tia_client, int ft_buffer) {
   message_t *response = NULL;  // client request expects a *double* pointer
   int status = clientrequest(ft_buffer, &req, &response);
   cout << "clientreq returned: " << status << endl;
-  assert(response->def->bufsize == 0);  // unexpected payload in response
-  // TODO: free response (check for mem-leaks)
+  free(response->buf);
+  free(response->def);
+  free(response);
 }
 
 
@@ -191,7 +193,7 @@ void forward_packet(tia::DataPacket &packet, int ft_buffer)
 
   data_t data = {0};
   data.def = &data_hdr;
-  data.buf = (void *) &payload[0]; // TODO: cast & find correct accessor.
+  data.buf = (void *) &payload[0];
   cout << "ft packet payload: " << payload[0] << endl;
 
   messagedef_t req_hdr = {0};
@@ -201,15 +203,15 @@ void forward_packet(tia::DataPacket &packet, int ft_buffer)
   message_t req = {0};
   req.def = &req_hdr;
   req.buf = &data;
-  req_hdr.bufsize = sizeof(data) + data.def->bufsize; 
+  req_hdr.bufsize = sizeof(data); // FIXME + data.def->bufsize; 
   cout << "req_hdr.bufsize = " << req_hdr.bufsize << endl;
 
   message_t *response = NULL; 
   int status = clientrequest(ft_buffer, &req, &response);
   cout << "clientreq returned: " << status << endl;
-  assert(status == 0);
-  assert(response->def->bufsize == 0);  // unexpected payload in response
-  // TODO: free response (check for mem-leaks)
+  free(response->buf);
+  free(response->def);
+  free(response);
 }
 
 int main(int argc, char *argv[])
