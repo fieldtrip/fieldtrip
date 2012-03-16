@@ -123,7 +123,6 @@ int sync_meta_info(tia::TiAClient &tia_client, int ft_buffer) {
   cout << sens_lab.c_str() << endl;
   */
 
-  // TODO: Send info to FT-buffer
   cout << "Sending to FieldTrip buffer..." << endl;
   
   // Build data-structures for sending header information.
@@ -141,7 +140,7 @@ int sync_meta_info(tia::TiAClient &tia_client, int ft_buffer) {
   req.def = &req_hdr;
   req.buf = &hdr;
   req_hdr.bufsize = sizeof(headerdef_t);  // update with buffer size
-  // add FT_CHUNK_CHANNEL_NAMES
+  // TODO add FT_CHUNK_CHANNEL_NAMES
 
   message_t *response = NULL;  // client request expects a *double* pointer
   int status = clientrequest(ft_buffer, &req, &response);
@@ -175,40 +174,38 @@ void forward_packet(tia::DataPacket &packet, int ft_buffer)
     packet.getData().begin(), packet.getData().end());  // cast to float
 
   cout << "|data|: " << payload.size() << endl;
-
-  /* Vector payload now contains the data. The values are multiplexed as
+  /* Vector payload contains the data. The values are multiplexed as
    * follows: 
    * [Ch1_samp1, Ch2_samp1, ... Chn_samp1, Ch1_samp2, Chan2_samp2, ...].
    */
 
   // Add raw data to FT-buffer
-  datadef_t data_hdr;
-  memset(&data_hdr, 0, sizeof(datadef_t));
+  datadef_t data_hdr = {0};
   data_hdr.nchans = packet.getNrOfChannels()[0];
   data_hdr.nsamples = packet.getNrOfSamples()[0];
   data_hdr.data_type = DATATYPE_FLOAT32; // FIXME: already stated in PUT_HDR?
-  data_hdr.bufsize = payload.size() * sizeof(float);  // Redundant?
+  data_hdr.bufsize = payload.size() * sizeof(float);
+
   cout << "Creating packet of " << data_hdr.nchans << "x" 
     << data_hdr.nsamples << "@" << sizeof(float) << " bytes." << endl;
-
-  data_t data = {0};
-  data.def = &data_hdr;
-  data.buf = (void *) &payload[0];
-  cout << "ft packet payload: " << payload[0] << endl;
 
   messagedef_t req_hdr = {0};
   req_hdr.version = VERSION;
   req_hdr.command = PUT_DAT;
+  req_hdr.bufsize = sizeof(data_hdr) + data_hdr.bufsize;
 
   message_t req = {0};
   req.def = &req_hdr;
-  req.buf = &data;
-  req_hdr.bufsize = sizeof(data); // FIXME + data.def->bufsize; 
+  req.buf = malloc(req_hdr.bufsize);
+  memcpy(req.buf, &data_hdr, sizeof(data_hdr));
+  memcpy((char *) req.buf + sizeof(data_hdr), &payload[0], data_hdr.bufsize);
+
   cout << "req_hdr.bufsize = " << req_hdr.bufsize << endl;
 
   message_t *response = NULL; 
   int status = clientrequest(ft_buffer, &req, &response);
   cout << "clientreq returned: " << status << endl;
+  free(req.buf);
   free(response->buf);
   free(response->def);
   free(response);
