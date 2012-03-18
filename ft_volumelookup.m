@@ -90,13 +90,13 @@ ft_preamble loadvar volume
 % the handling of the default cfg options is done further down
 % the checking of the input data is done further down
 
-cfg.maskparameter = ft_getopt(cfg,'maskparameter'));
-cfg.roi           = ft_getopt(cfg,'roi');
-cfg.inputcoord    = ft_getopt(cfg,'inputcoord');
-cfg.atlas         = ft_getopt(cfg,'atlas');
+cfg.maskparameter      = ft_getopt(cfg,'maskparameter');
+cfg.roi                = ft_getopt(cfg,'roi');
+cfg.inputcoord         = ft_getopt(cfg,'inputcoord');
+cfg.atlas              = ft_getopt(cfg,'atlas');
 cfg.round2nearestvoxel = ft_getopt(cfg,'round2nearestvoxel');
-cfg.box           = ft_getopt(cfg,'box');
-cfg.maxqueryrange = ft_getopt(cfg,'maxqueryrange');
+cfg.box                = ft_getopt(cfg,'box');
+cfg.maxqueryrange      = ft_getopt(cfg,'maxqueryrange');
 
 roi2mask   = 0;
 mask2label = 0;
