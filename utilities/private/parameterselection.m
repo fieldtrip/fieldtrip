@@ -86,23 +86,23 @@ for i=1:length(param)
       select{end+1} = param{i}; 
     elseif isfield(data, 'dim') && prod(dim)==prod(data.dim)
       select{end+1} = param{i}; 
-    elseif isfield(data, 'pos') && prod(dim)==size(data.pos, 1)
+    elseif isfield(data, 'pos') && (prod(dim)==size(data.pos, 1) || dim(1)==size(data.pos,1))
       select{end+1} = param{i}; 
     elseif isfield(data, 'dimord') && (isfield(data, 'pos') || isfield(data, 'transform')),
       dimtok = tokenize(data.dimord, '_');
       nels   = 1;
       for k=1:numel(dimtok)
         if strcmp(dimtok{k}, 'rpt') || strcmp(dimtok{k}, 'rpttap')
-	  nels = nels*dim(k);
-	elseif strcmp(dimtok{k}, 'pos') && isfield(data, 'pos')
-	  %for source structure
-	  nels = nels*size(data.pos,1);
-	elseif strcmp(dimtok{k}, 'pos') 
-	  %for volume structure FIXME 'pos' in dimord is not OK
-	  nels = nels*prod(data.dim(1:3));
-	else
+	      nels = nels*dim(k);
+	    elseif strcmp(dimtok{k}, 'pos') && isfield(data, 'pos')
+	      %for source structure
+	      nels = nels*size(data.pos,1);
+	    elseif strcmp(dimtok{k}, 'pos') 
+	      %for volume structure FIXME 'pos' in dimord is not OK
+	      nels = nels*prod(data.dim(1:3));
+	    else
           nels = nels*numel(getfield(data, dimtok{k}));
-	end
+	    end
       end
       if nels==prod(dim),
         select{end+1} = param{i};
