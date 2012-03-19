@@ -18,7 +18,6 @@
   [ ] should we support UDP? -> I think not
   [ ] support "localhost" instead of 127.0.0.1
   [V] think of support for heterogeneous streams.
-  [ ] think of support for heterogeneous streams.
   [ ] ask Christian to read code.
   [ ] exit cleanly on ctrl-c.
   [ ] test in TOBI environment.
@@ -45,6 +44,111 @@ extern "C" {
 using namespace std;
 namespace po = boost::program_options;
 
+// Forward declarations
+int ft_put_data(int ft_buffer, int nchannels, int nsamples, 
+  const float *chan_samp);
+int ft_put_hdr(int ft_buffer, int nchann, int fsample);
+
+bool connect_tia_client(tia::TiAClient &client, const string tia_serv_addr, 
+  int tia_serv_port);
+void start_ft_buffer(int port);
+int sync_meta_info(tia::TiAClient &tia_client, int ft_buffer);
+int forward_packet(tia::DataPacket &packet, int ft_buffer);
+
+
+int main(int argc, char *argv[])
+{
+  // Variables for CLI config:
+  string tia_host, ft_host;
+  int tia_port, ft_port;
+  bool serve_ft_buffer, verbose;
+
+  // Since boost is used in TiA's header files, we might use exploit that fact
+  // here as well for argument parsing:
+  po::options_description desc("Allowed options");
+  desc.add_options()
+    ("help,h", "Show help message.")
+    ("verbose,v", 
+      po::value<bool>(&verbose)->default_value(false)->zero_tokens(),
+      "Print more info.")
+    ("tia-host", po::value<string>(&tia_host)->default_value("127.0.0.1"), 
+      "Set host name of TiA server.")
+    ("tia-port", po::value<int>(&tia_port)->default_value(9000), 
+      "Set port of TiA server.")
+    ("fieldtrip-host", po::value<string>(&ft_host)->default_value("localhost"), 
+      "Set host name of FieldTrip buffer server.")
+    ("fieldtrip-port", po::value<int>(&ft_port)->default_value(1972), 
+      "Set port of FieldTrip buffer server.")
+    ("serve-ft-buffer", po::value<bool>(&serve_ft_buffer)->default_value(false),
+      "Start a new FieldTrip buffer instead of connecting to an existing one.")
+    ;
+
+  po::variables_map vm;
+  po::store(po::parse_command_line(argc, argv, desc), vm);
+  po::notify(vm);
+
+  // Show help if requested.
+  if (vm.count("help")) {
+    cout << desc << endl;
+    return 1;
+  }
+
+  // Show config:
+  cout << "TiA: " << tia_host << ":" << tia_port << endl;
+  cout << "FT: " << ft_host << ":" << ft_port << endl;
+
+  // Connect to TiA.
+  tia::TiAClient tia_client(true);  // use new-style TiA implementation
+  if (!connect_tia_client(tia_client, tia_host, tia_port)) {
+    cerr << "Could not connect to TiA server. Closing." << endl;
+    cout << desc << endl;
+    exit(-1);
+  }
+  cout << "Connected to TiA server." << endl;
+  tia_client.startReceiving(false);  // use TCP
+
+
+  // Connect to FT buffer, and start one if requested:
+  if (serve_ft_buffer)
+    start_ft_buffer(1972);
+
+  int ft_buffer = open_connection(ft_host.c_str(), ft_port);
+  if(ft_buffer <= 0) {
+    cerr << "Could not connect to FieldTrip buffer. Closing." << endl;
+    cout << desc << endl;
+    exit(-1);
+  }
+
+  // Sync information on data stream:
+  sync_meta_info(tia_client, ft_buffer);
+
+  // Main loop
+  tia::DataPacket *packet = tia_client.getEmptyDataPacket();
+  while (true) {
+    cout << "." << flush;
+    tia_client.getDataPacket(*packet);
+    
+    if (verbose) {
+      cout << "#: " << packet->getConnectionPacketNr() << endl;
+      cout << "time: " << packet->getTimestamp() << endl;
+      cout << "nchan: " << packet->getNrOfChannels()[0] << endl;
+      cout << "samp/chan: " << packet->getNrSamplesPerChannel()[0] << endl;
+    }
+
+    forward_packet(*packet, ft_buffer);
+  }
+
+  try {
+    tia_client.stopReceiving();
+  } catch (std::exception &e) {
+    cerr << "Stop Receiving failed -- Error:" << "--> " << e.what() << endl;
+  }
+
+  return(0);
+}
+
+
+/* Connect to TiA server. */
 bool connect_tia_client(tia::TiAClient &client, const string tia_serv_addr, 
   int tia_serv_port) {
   // connect to TiA server
@@ -77,7 +181,8 @@ int sync_meta_info(tia::TiAClient &tia_client, int ft_buffer) {
     tia_client.requestConfig();
   } 
   catch (std::exception &e) {
-    cerr << "Requesting config failed -- Error:" << "--> " << e.what() << endl;
+    cerr << "Requesting TiA config failed -- Error:" << "--> " 
+    << e.what() << endl;
     return 1;
   }
 
@@ -89,26 +194,6 @@ int sync_meta_info(tia::TiAClient &tia_client, int ft_buffer) {
   cout << "Sampling rate: " << fsample << endl;
   cout << "Block size: " << sigInfo.masterBlockSize() << endl;
 
-  /*
-  int nchann = 0;
-  tia::SignalInfo::SignalMap::iterator i;
-  for(i = sigInfo.signals().begin(); i != sigInfo.signals().end(); ++i) {
-    // i contains (string, Signal) pairs
-    cout << i->first << endl;
-
-    tia::Signal signal (i->second);
-    cout << "Signal (modality) fs: " << signal.samplingRate() << endl;
-
-    std::vector<tia::Channel> channels = signal.channels();
-    cout << "Detected " << channels.size() << " channels:" << endl;
-    nchann += channels.size();
-    for(int i = 0; i < channels.size(); ++i) {
-      cout << channels[i].id() << (i < channels.size() - 1 ? ", " : "");
-    }
-  }
-  cout << "." << endl;  // end enumeration.
-  */
-
   tia::Signal signal = sigInfo.signals().begin()->second;
   int nchann = signal.channels().size();
 
@@ -119,14 +204,55 @@ int sync_meta_info(tia::TiAClient &tia_client, int ft_buffer) {
       //<< signal.channels[i].id() 
       << "\n";
   }
-  
   cout << sens_lab.c_str() << endl;
   */
 
   cout << "Sending to FieldTrip buffer..." << endl;
-  
-  // Build data-structures for sending header information.
+  return ft_put_hdr(ft_buffer, nchann, fsample);
+}
+ 
 
+
+/* Take a TiA packet, and append it in the FieldTrip buffer. Apparently, the
+ * packet *cannot be const*. 
+ * 
+ * Note that TiA support streaming of heterogeneous data streams, that can have
+ * different sampling rates and block-sizes. Since the FT-buffer only supports
+ * homogeneous data streams and there is no demand yet, only homogeneous
+ * data streams are supported.
+ * 
+ * Support for heterogeneous data streams can be implemented by using a
+ * sampling rate that an integer multiple of the modality's sampling rates, and
+ * re-sampling the signals accordingly.
+ */
+int forward_packet(tia::DataPacket &packet, int ft_buffer)
+{
+  if (packet.getNrOfSignalTypes() != 1){
+    cerr << "Heterogeneous signal streams are not yet supported :/." << endl;
+    exit(2);
+  }
+
+  /* Vector tia_raw contains the data. The values are multiplexed as follows: 
+   * [channel 1 sample 1...n, channel 2 sample 1..n, ...]
+   */
+  std::vector<double> tia_raw = packet.getData();
+  int nchannels = packet.getNrOfChannels()[0];
+  int nsamples = packet.getNrSamplesPerChannel()[0];
+
+  // Convert to FT-buffer byte-order.
+  std::vector<float> ft_raw(tia_raw.size(), 0);
+  for (int ci=0; ci < nchannels; ++ci)
+    for (int si=0; si < nsamples; ++si)
+      ft_raw[ci + si * nchannels] = tia_raw[si + ci * nsamples];
+
+  return ft_put_data(ft_buffer, nchannels, nsamples, &ft_raw[0]);
+}
+
+
+/* Convenience function to call put data (PUT_DAT) in a FT buffer */
+int ft_put_hdr(int ft_buffer, int nchann, int fsample)
+{
+  // Build data-structures for sending header information.
   headerdef_t hdr = {0};
   hdr.nchans = nchann;
   hdr.fsample = fsample;
@@ -158,80 +284,36 @@ int sync_meta_info(tia::TiAClient &tia_client, int ft_buffer) {
 }
 
 
-/* Take a TiA packet, and append it in the FieldTrip buffer. Apparently, the
- * packet *cannot be const*. 
- * 
- * Note that TiA support streaming of heterogeneous data streams, that can have
- * different sampling rates and block-sizes. Since the FT-buffer only supports
- * homogeneous data streams and there is no demand yet, only homogeneous
- * data streams are supported.
- * 
- * Support for heterogeneous data streams can be implemented by using a
- * sampling rate that an integer multiple of the modality's sampling rates, and
- * re-sampling the signals accordingly.
- */
-void forward_packet(tia::DataPacket &packet, int ft_buffer)
+/* Convenience wrapper to perform a PUT_DAT on ft_buffer */
+int ft_put_data(int ft_buffer, int nchannels, int nsamples, 
+  const float *chan_samp)
 {
-  if (packet.getNrOfSignalTypes() != 1){
-    cerr << "Heterogeneous signal streams are not yet supported :/." << endl;
-    exit(2);
-  }
-
-  std::vector<double> raw = packet.getData();
-  std::vector<float> payload(raw.size(), 0);
-  //  packet.getData().begin(), packet.getData().end());  // cast to float
-
-  cout << "|data|: " << payload.size() << endl;
-  /* Vector payload contains the data. The values are multiplexed as
-   * follows: 
-   * [channel 1 sample 1...n, channel 2 sample 1..n, ...]
-   */
-
-  // Add raw data to FT-buffer
+  // Create descriptor of raw data for FT-buffer:
   datadef_t data_hdr = {0};
-  data_hdr.nchans = packet.getNrOfChannels()[0];
-  data_hdr.nsamples = packet.getNrSamplesPerChannel()[0];
+  data_hdr.nchans = nchannels;
+  data_hdr.nsamples = nsamples;
   data_hdr.data_type = DATATYPE_FLOAT32;
-  data_hdr.bufsize = payload.size() * sizeof(float);
+  data_hdr.bufsize = nchannels * nsamples * sizeof(float);
 
-  for (int ci=0; ci < data_hdr.nchans; ++ci) {
-    printf("Channel %d.\n", ci);
-    for (int si=0; si < data_hdr.nsamples; ++si) {
-      float f = raw[si + ci * data_hdr.nsamples];
-      //float f = raw[ci + si * data_hdr.nsamples];
-      payload[ci + si * data_hdr.nchans] = f;
-      printf("(%d,%d) = %.3f ", ci, si, f);
-    }
-    printf("\n\n");
-  }
-
-
-  cout << "Creating packet of " << data_hdr.nchans << "x" 
-    << data_hdr.nsamples << "@" << sizeof(float) << " bytes." << endl;
-
+  // Create packet header for FT-buffer request
   messagedef_t req_hdr = {0};
   req_hdr.version = VERSION;
   req_hdr.command = PUT_DAT;
   req_hdr.bufsize = sizeof(data_hdr) + data_hdr.bufsize;
 
-  // compose final packet
+  // Compose final FT-buffer request
   message_t req = {0};
   req.def = &req_hdr;
   req.buf = malloc(req_hdr.bufsize);
   memset(req.buf, 0, req_hdr.bufsize);
   memcpy(req.buf, &data_hdr, sizeof(data_hdr));
-  memcpy((char *) req.buf + sizeof(data_hdr), &payload[0], data_hdr.bufsize);
-
-  cout << "sizeof(req_hdr): " << sizeof(req_hdr) << endl;
-  cout << "sizeof(data_hdr): " << sizeof(data_hdr) << endl;
-  cout << "data_hdr.bufsize = " << req_hdr.bufsize << endl;
+  memcpy((char *) req.buf + sizeof(data_hdr), chan_samp, data_hdr.bufsize);
 
   message_t *response = NULL; 
-  int status = clientrequest(ft_buffer, &req, &response);
-  cout << "clientreq returned: " << status << endl;
-
-  cout << "response->def->command: " << response->def->command << endl;
-  assert(response->def->command == PUT_OK);
+  if (!clientrequest(ft_buffer, &req, &response))
+    return -1; // TODO: this does not free!
+  if (response->def->command != PUT_OK)
+    return -2; // TODO: this does not free!
 
   free(req.buf);
   free(response->buf);
@@ -239,86 +321,3 @@ void forward_packet(tia::DataPacket &packet, int ft_buffer)
   free(response);
 }
 
-int main(int argc, char *argv[])
-{
-
-  // Since boost is used in TiA's header files, we might use exploit that fact
-  // here as well for argument parsing:
-
-  string tia_host, ft_host;
-  int tia_port, ft_port;
-  bool serve_ft_buffer;
-
-  // parse command line
-  po::options_description desc("Allowed options");
-  desc.add_options()
-    ("help,h", "Show help message.")
-    ("tia-host", po::value<string>(&tia_host)->default_value("127.0.0.1"), 
-      "Set host name of TiA server.")
-    ("tia-port", po::value<int>(&tia_port)->default_value(9000), 
-      "Set port of TiA server.")
-    ("fieldtrip-host", po::value<string>(&ft_host)->default_value("localhost"), 
-      "Set host name of FieldTrip buffer server.")
-    ("fieldtrip-port", po::value<int>(&ft_port)->default_value(1972), 
-      "Set port of FieldTrip buffer server.")
-    ("serve-ft-buffer", po::value<bool>(&serve_ft_buffer)->default_value(false),
-      "Start a new FieldTrip buffer instead of connecting to an existing one.")
-    ;
-
-  po::variables_map vm;
-  po::store(po::parse_command_line(argc, argv, desc), vm);
-  po::notify(vm);
-
-  if (vm.count("help")) {
-    cout << desc << endl;
-    return 1;
-  }
-
-  cout << "tia: " << tia_host << ":" << tia_port << endl;
-  cout << "ft: " << ft_host << ":" << ft_port << endl;
-
-  // initialize connections
-  tia::TiAClient tia_client(true);  // use new-style TiA implementation
-  connect_tia_client(tia_client, tia_host, tia_port);
-  cout << "Connected to TiA server." << endl;
-
-  if (serve_ft_buffer)
-    start_ft_buffer(1972);
-
-  // Start receiving:
-  tia_client.startReceiving(false);  // use TCP
-
-  // TODO connect to FT buffer
-  int ft_buffer = open_connection(ft_host.c_str(), ft_port);
-  if(ft_buffer <= 0)
-  {
-    cerr << "Could not connect to FieldTrip buffer. Closing." << endl;
-    exit(-1);
-  }
-
-  sync_meta_info(tia_client, ft_buffer);
-
-  // Main loop
-  tia::DataPacket *packet = tia_client.getEmptyDataPacket();
-  while (true) {
-    cout << "Getting packet..." << flush;
-    tia_client.getDataPacket(*packet);
-
-    cout << "#: " << packet->getConnectionPacketNr() << endl;
-    cout << "Flags: " << packet->getFlags() << endl;
-    cout << "time: " << packet->getTimestamp() << endl;
-    cout << "nchan: " << packet->getNrOfChannels()[0] << endl;
-    cout << "nsamp: " << packet->getNrOfSamples()[0] << endl;
-    cout << "samp/chan: " << packet->getNrSamplesPerChannel()[0] << endl;
-
-    forward_packet(*packet, ft_buffer);
-  }
-
-  try {
-    tia_client.stopReceiving();
-  } catch (std::exception &e) {
-    cerr << "Stop Receiving failed -- Error:" << "--> " << e.what() << endl;
-  }
-
-  return(0);
-}
