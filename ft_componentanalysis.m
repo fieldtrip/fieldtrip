@@ -314,7 +314,7 @@ elseif strcmp(cfg.method, 'csp')
   fprintf('concatenated data matrix size for class 1 is %dx%d\n', size(dat1,1), size(dat1,2));
   fprintf('concatenated data matrix size for class 2 is %dx%d\n', size(dat2,1), size(dat2,2));
   
-elseif ~strcmp(cfg.method, 'predetermined unmixing matrix')
+elseif (~strcmp(cfg.method, 'predetermined unmixing matrix') && ~strcmp(cfg.method, 'bsscca'))
   
   % concatenate all the data into a 2D matrix unless we already have an
   % unmixing matrix
@@ -543,7 +543,14 @@ switch cfg.method
     mixing   = [];  % will be computed below
     
   case 'bsscca'
-    unmixing = bsscca(dat);
+    % this method relies on time shifting of the original data, in much the
+    % same way as ft_denoise_tsr. as such it is more natural to represent
+    % the data in the cell-array, because the trial-boundaries are clear.
+    % if represented in a concatenated array one has to keep track of the
+    % trial boundaries
+    
+    
+    unmixing = bsscca(data.trial,[1]);
     mixing   = [];
     
   case 'parafac'
