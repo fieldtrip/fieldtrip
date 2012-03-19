@@ -174,7 +174,12 @@ if ischar(data)
 end
 
 % check if the input data is valid for this function
-data = ft_checkdata(data, 'datatype', 'volume', 'feedback', 'yes');
+data     = ft_checkdata(data, 'datatype', {'volume' 'source'}, 'feedback', 'yes');
+issource = ft_datatype(data, 'source');
+isvolume = ft_datatype(data, 'volume');
+if issource && ~isfield(data, 'dim')
+  error('the input data needs to be defined on a regular 3D grid');
+end
 
 % check if the input configuration is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed', {'inputcoordsys', 'coordsys'});
@@ -283,11 +288,13 @@ cfg.maskparameter = parameterselection(cfg.maskparameter, data);
 try, cfg.funparameter  = cfg.funparameter{1};  end
 try, cfg.maskparameter = cfg.maskparameter{1}; end
 
-% downsample all volumes
-tmpcfg = [];
-tmpcfg.parameter  = {cfg.funparameter, cfg.maskparameter, cfg.anaparameter};
-tmpcfg.downsample = cfg.downsample;
-data = ft_volumedownsample(tmpcfg, data);
+if cfg.downsample ~=1 && isvolume
+  % downsample all volumes
+  tmpcfg = [];
+  tmpcfg.parameter  = {cfg.funparameter, cfg.maskparameter, cfg.anaparameter};
+  tmpcfg.downsample = cfg.downsample;
+  data = ft_volumedownsample(tmpcfg, data);
+end
 
 %%% make the local variables:
 dim = data.dim;
@@ -426,22 +433,30 @@ elseif hasfun
   end
 
   %what if fun is 4D?
-  if ndims(fun)>3,
+  if ndims(fun)>3 || prod(dim)==size(fun,1)
     if isfield(data, 'time') && isfield(data, 'freq'),
       %data contains timefrequency representation
       qi      = [1 1];
       hasfreq = 1;
       hastime = 1;
+      fun     = reshape(fun, [dim numel(data.freq) numel(data.time)]);
     elseif isfield(data, 'time')
       %data contains evoked field
       qi      = 1;
       hasfreq = 0;
       hastime = 1;
+      fun     = reshape(fun, [dim numel(data.time)]);
     elseif isfield(data, 'freq')
       %data contains frequency spectra
       qi      = 1;
       hasfreq = 1;
       hastime = 0;
+      fun     = reshape(fun, [dim numel(data.freq)]);
+    else
+      qi      = 1;
+      hasfreq = 0;
+      hastime = 0;
+      fun     = reshape(fun, dim);
     end
   else
     %do nothing
@@ -653,27 +668,36 @@ if isequal(cfg.method,'ortho')
     end
     
     ijk = [xi yi zi 1]';
-    xyz = data.transform * ijk;
+    if isvolume
+      xyz = data.transform * ijk;
+    elseif issource
+      ix  = sub2ind(dim,xi,yi,zi);
+      xyz = data.pos(ix,:);
+    end
     
     % construct a string with user feedback
-    str = sprintf('voxel %d, indices [%d %d %d]', sub2ind(dim(1:3), xi, yi, zi), ijk(1:3));
+    str1 = sprintf('voxel %d, indices [%d %d %d]', sub2ind(dim(1:3), xi, yi, zi), ijk(1:3));
 
     if isfield(data, 'coordsys') && isfield(data, 'unit')
-      str = sprintf('%s, %s coordinates [%.1f %.1f %.1f] %s', str, data.coordsys, xyz(1:3), data.unit);
+      str2 = sprintf('%s coordinates [%.1f %.1f %.1f] %s', data.coordsys, xyz(1:3), data.unit);
     elseif ~isfield(data, 'coordsys') && isfield(data, 'unit')
-      str = sprintf('%s, location [%.1f %.1f %.1f] %s', str, xyz(1:3), data.unit);
+      str2 = sprintf('location [%.1f %.1f %.1f] %s', xyz(1:3), data.unit);
     elseif isfield(data, 'coordsys') && ~isfield(data, 'unit')
-      str = sprintf('%s, %s coordinates [%.1f %.1f %.1f]', str, data.coordsys, xyz(1:3));
-    elseif ~isfield(data, 'coordsys') && ~isfield(data, 'unis')
-      str = sprintf('%s, location [%.1f %.1f %.1f]', str, xyz(1:3));
+      str2 = sprintf('%s coordinates [%.1f %.1f %.1f]', data.coordsys, xyz(1:3));
+    elseif ~isfield(data, 'coordsys') && ~isfield(data, 'unit')
+      str2 = sprintf('location [%.1f %.1f %.1f]', xyz(1:3));
+    else
+      str2 = '';
     end
     
     if hasfreq && hastime,
-      str = sprintf('%s, %.1f s, %.1f Hz', str, qi(1), qi(2));
+      str3 = sprintf('%.1f s, %.1f Hz', data.freq(qi(1)), data.time(qi(2)));
     elseif ~hasfreq && hastime,
-      str = sprintf('%s, %.1f s', str, qi(1));
+      str3 = sprintf('%.1f s', data.time(qi(1)));
     elseif hasfreq && ~hastime,
-      str = sprintf('%s, %.1f Hz', str, qi(1));
+      str3 = sprintf('%.1f Hz', data.freq(qi(1)));
+    else 
+      str3 = '';
     end
     
     if hasfun
@@ -686,10 +710,12 @@ if isequal(cfg.method,'ortho')
       elseif hasfreq && hastime
         val = fun(xi, yi, zi, qi(1), qi(2));
       end
-      str = sprintf('%s, value %f', str, val);
+      str4 = sprintf('value %f', val);
+    else
+      str4 = '';
     end
     
-    fprintf('%s\n', str);
+    fprintf('%s %s %s %s\n', str1, str2, str3, str4);
 
     if hasatlas
       % determine the anatomical label of the current position
@@ -717,19 +743,32 @@ if isequal(cfg.method,'ortho')
       error('no anatomy is present and no functional data is selected, please check your cfg.funparameter');
     end
     
-    h1 = subplot(2,2,1);
+    % enforce the size of the subplots to be isotropic
+    xdim = dim(1) + dim(2);
+    ydim = dim(2) + dim(3);
+    mdim = max(xdim, ydim);
+    
+    xsize(1) = 0.82*dim(1)/xdim;
+    xsize(2) = 0.82*dim(2)/xdim;
+    ysize(1) = 0.82*dim(3)/ydim;
+    ysize(2) = 0.82*dim(2)/ydim;
+    
+    h1 = subplot('position',[0.07 0.07+ysize(2)+0.05 xsize(1) ysize(1)]);
     [vols2D] = handle_ortho(vols, [xi yi zi qi], 2, dim, doimage);
     plot2D(vols2D, scales, doimage);
     xlabel('i'); ylabel('k'); axis(cfg.axis);
+    set(gca,'XAxisLocation','top');
     if strcmp(cfg.crosshair, 'yes'), crosshair([xi zi]); end
 
-    h2 = subplot(2,2,2);
+    h2 = subplot('position',[0.07+xsize(1)+0.05 0.07+ysize(2)+0.05 xsize(2) ysize(1)]);
     [vols2D] = handle_ortho(vols, [xi yi zi qi], 1, dim, doimage);
     plot2D(vols2D, scales, doimage);
     xlabel('j'); ylabel('k'); axis(cfg.axis);
+    set(gca,'XAxisLocation','top');
+    set(gca,'YAxisLocation','right');
     if strcmp(cfg.crosshair, 'yes'), crosshair([yi zi]); end
 
-    h3 = subplot(2,2,3);
+    h3 = subplot('position',[0.07 0.07 xsize(1) ysize(2)]);
     [vols2D] = handle_ortho(vols, [xi yi zi qi], 3, dim, doimage);  
     plot2D(vols2D, scales, doimage);
     xlabel('i'); ylabel('j'); axis(cfg.axis);
@@ -760,16 +799,17 @@ if isequal(cfg.method,'ortho')
       if hasfun
         % vectorcolorbar = linspace(fcolmin, fcolmax,length(cfg.funcolormap));
         % imagesc(vectorcolorbar,1,vectorcolorbar);colormap(cfg.funcolormap);
-        subplot(2,2,4);
         % use a normal Matlab colorbar, attach it to the invisible 4th subplot
         try
           caxis([fcolmin fcolmax]);
         end
         hc = colorbar;
+        set(hc,'location','southoutside');
+        set(hc,'position',[0.07+xsize(1)+0.05 0.07+ysize(2)-0.05 xsize(2) 0.05]);
+        
         try
-          set(hc, 'YLim', [fcolmin fcolmax]);
+          set(hc, 'XLim', [fcolmin fcolmax]);
         end
-        set(gca, 'Visible', 'off');
       else
         warning('no colorbar possible without functional data')
       end
@@ -778,6 +818,20 @@ if isequal(cfg.method,'ortho')
     set(gcf, 'renderer', cfg.renderer); % ensure that this is done in interactive mode
     drawnow;
 
+    if ~(hasfreq || hastime) && ~exist('ht1')%,'var')
+      subplot('position',[0.07+xsize(1)+0.05 0.07 xsize(2) ysize(2)]);
+      set(gca,'visible','off');
+      ht1=text(0,0.6,str1);
+      ht2=text(0,0.5,str2);
+      ht3=text(0,0.4,str4);
+      ht4=text(0,0.3,str3);
+    elseif ~(hasfreq || hastime)
+      set(ht1,'string',str1);
+      set(ht2,'string',str2);
+      set(ht3,'string',str4);
+      set(ht4,'string',str3);
+    end
+      
     if interactive_flag
       try
         [d1, d2, key] = ginput(1);
