@@ -135,16 +135,23 @@ int sync_meta_info(tia::TiAClient &tia_client, int ft_buffer) {
   messagedef_t req_hdr = {0};
   req_hdr.version = VERSION;  // VERSION could use a prefix.
   req_hdr.command = PUT_HDR;
+  req_hdr.bufsize = sizeof(req_hdr) + sizeof(headerdef_t);
 
   message_t req = {0};
   req.def = &req_hdr;
-  req.buf = &hdr;
-  req_hdr.bufsize = sizeof(headerdef_t);  // update with buffer size
+  req.buf = malloc(req_hdr.bufsize);
+  memset(req.buf, 0, req_hdr.bufsize);
+  memcpy(req.buf, &hdr, sizeof(hdr));
   // TODO add FT_CHUNK_CHANNEL_NAMES
 
   message_t *response = NULL;  // client request expects a *double* pointer
   int status = clientrequest(ft_buffer, &req, &response);
   cout << "clientreq returned: " << status << endl;
+  assert(response->def->command == PUT_OK);
+
+  // Note: if PUT_HDR fails, it still can modify the HDR information.
+
+  free(req.buf);
   free(response->buf);
   free(response->def);
   free(response);
@@ -182,8 +189,8 @@ void forward_packet(tia::DataPacket &packet, int ft_buffer)
   // Add raw data to FT-buffer
   datadef_t data_hdr = {0};
   data_hdr.nchans = packet.getNrOfChannels()[0];
-  data_hdr.nsamples = packet.getNrOfSamples()[0];
-  data_hdr.data_type = DATATYPE_FLOAT32; // FIXME: already stated in PUT_HDR?
+  data_hdr.nsamples = packet.getNrSamplesPerChannel()[0];
+  data_hdr.data_type = DATATYPE_FLOAT32;
   data_hdr.bufsize = payload.size() * sizeof(float);
 
   cout << "Creating packet of " << data_hdr.nchans << "x" 
@@ -194,17 +201,25 @@ void forward_packet(tia::DataPacket &packet, int ft_buffer)
   req_hdr.command = PUT_DAT;
   req_hdr.bufsize = sizeof(data_hdr) + data_hdr.bufsize;
 
+  // compose final packet
   message_t req = {0};
   req.def = &req_hdr;
   req.buf = malloc(req_hdr.bufsize);
+  memset(req.buf, 0, req_hdr.bufsize);
   memcpy(req.buf, &data_hdr, sizeof(data_hdr));
   memcpy((char *) req.buf + sizeof(data_hdr), &payload[0], data_hdr.bufsize);
 
-  cout << "req_hdr.bufsize = " << req_hdr.bufsize << endl;
+  cout << "sizeof(req_hdr): " << sizeof(req_hdr) << endl;
+  cout << "sizeof(data_hdr): " << sizeof(data_hdr) << endl;
+  cout << "data_hdr.bufsize = " << req_hdr.bufsize << endl;
 
   message_t *response = NULL; 
   int status = clientrequest(ft_buffer, &req, &response);
   cout << "clientreq returned: " << status << endl;
+
+  cout << "response->def->command: " << response->def->command << endl;
+  assert(response->def->command == PUT_OK);
+
   free(req.buf);
   free(response->buf);
   free(response->def);
