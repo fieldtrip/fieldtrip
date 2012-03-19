@@ -177,13 +177,14 @@ void forward_packet(tia::DataPacket &packet, int ft_buffer)
     exit(2);
   }
 
-  std::vector<float> const payload(
-    packet.getData().begin(), packet.getData().end());  // cast to float
+  std::vector<double> raw = packet.getData();
+  std::vector<float> payload(raw.size(), 0);
+  //  packet.getData().begin(), packet.getData().end());  // cast to float
 
   cout << "|data|: " << payload.size() << endl;
   /* Vector payload contains the data. The values are multiplexed as
    * follows: 
-   * [Ch1_samp1, Ch2_samp1, ... Chn_samp1, Ch1_samp2, Chan2_samp2, ...].
+   * [channel 1 sample 1...n, channel 2 sample 1..n, ...]
    */
 
   // Add raw data to FT-buffer
@@ -192,6 +193,18 @@ void forward_packet(tia::DataPacket &packet, int ft_buffer)
   data_hdr.nsamples = packet.getNrSamplesPerChannel()[0];
   data_hdr.data_type = DATATYPE_FLOAT32;
   data_hdr.bufsize = payload.size() * sizeof(float);
+
+  for (int ci=0; ci < data_hdr.nchans; ++ci) {
+    printf("Channel %d.\n", ci);
+    for (int si=0; si < data_hdr.nsamples; ++si) {
+      float f = raw[si + ci * data_hdr.nsamples];
+      //float f = raw[ci + si * data_hdr.nsamples];
+      payload[ci + si * data_hdr.nchans] = f;
+      printf("(%d,%d) = %.3f ", ci, si, f);
+    }
+    printf("\n\n");
+  }
+
 
   cout << "Creating packet of " << data_hdr.nchans << "x" 
     << data_hdr.nsamples << "@" << sizeof(float) << " bytes." << endl;
