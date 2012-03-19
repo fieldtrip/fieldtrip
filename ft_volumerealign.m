@@ -490,7 +490,7 @@ elseif basedonmrk
   xzpoint= warp_apply(mri.transform, cfg.landmark.xzpoint);
   
   % compute the homogenous transformation matrix describing the new coordinate system
-  [transform, coordsys] = headcoordinates(ac, pc, xzpoint, 'spm');
+  [transform, coordsys] = headcoordinates(ac, pc, xzpoint, isrighthanded, 'spm');
   
 else
   transform = [];
@@ -505,22 +505,6 @@ if ~isempty(transform)
   realign.transformorig = mri.transform;
   realign.transform     = transform * mri.transform;
   realign.coordsys      = coordsys;
-  
-  % check the transformation matrix for handedness and flip the volume in
-  % case it is left-handed
-  dir3   = realign.transform(3,1:3)./norm(realign.transform(3,1:3));
-  cosphi = dir3*cross(realign.transform(1,1:3),realign.transform(2,1:3))';
-  if sign(cosphi)<0
-    warning('the input coordinate system appears to be left-handed: flipping the volume in order to obtain a right-handed coordinate system');
-    [m,ix] = max(abs(realign.transform(1,1:3)));
-    
-    realign.anatomy   = flipdim(realign.anatomy,ix);
-    realign           = rmfield(realign, 'transformorig'); % don't know what to do here; better to get rid of it
-    T                 = inv(realign.transform);
-    T(1:3,1)          = -T(1:3,1);
-    T(ix,4)           = -T(ix,4) + realign.dim(ix) + 1;
-    realign.transform = inv(T);
-  end
 else
   warning('no coordinate system realignment has been done');
 end
