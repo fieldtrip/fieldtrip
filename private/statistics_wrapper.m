@@ -326,6 +326,8 @@ if issource
     try stat.outside   = varargin{1}.outside;    end
     try stat.pos       = varargin{1}.pos;        end
     try stat.transform = varargin{1}.transform;  end
+    try stat.freq      = varargin{1}.freq;       end
+    try stat.time      = varargin{1}.time;       end
   else
     stat.inside  = 1:length(roilabel);
     stat.outside = [];
@@ -343,10 +345,41 @@ if issource
         tmp(varargin{1}.inside)  = tmp;
         tmp(varargin{1}.outside) = nan;
       end
+      extradim = 1;
+    elseif isfield(varargin{1}, 'inside') && isfield(varargin{1}, 'freq') && numel(tmp)==length(varargin{1}.inside)*length(varargin{1}.freq)
+      % the statistic is a higher dimensional matrix (here as a function of freq) computed only on the
+      % inside voxels
+      newtmp = zeros(length(varargin{1}.inside)+length(varargin{1}.outside), length(varargin{1}.freq));
+      if islogical(tmp)
+        newtmp(varargin{1}.inside, :)  = reshape(tmp, length(varargin{1}.inside), []);
+        newtmp(varargin{1}.outside, :) = false;
+      else
+        newtmp(varargin{1}.inside, :)  = reshape(tmp, length(varargin{1}.inside), []);
+        newtmp(varargin{1}.outside, :) = nan;
+      end
+      tmp = newtmp; clear newtmp;
+      extradim = length(varargin{1}.freq);
+    elseif isfield(varargin{1}, 'inside') && isfield(varargin{1}, 'time') && numel(tmp)==length(varargin{1}.inside)*length(varargin{1}.time)
+      % the statistic is a higher dimensional matrix (here as a function of time) computed only on the
+      % inside voxels
+      newtmp = zeros(length(varargin{1}.inside)+length(varargin{1}.outside), length(varargin{1}.time));
+      if islogical(tmp)
+        newtmp(varargin{1}.inside, :)  = reshape(tmp, length(varargin{1}.inside), []);
+        newtmp(varargin{1}.outside, :) = false;
+      else
+        newtmp(varargin{1}.inside, :)  = reshape(tmp, length(varargin{1}.inside), []);
+        newtmp(varargin{1}.outside, :) = nan;
+      end
+      tmp = newtmp; clear newtmp;
+      extradim = length(varargin{1}.time);
+    else
+      extradim = 1;
     end
     if numel(tmp)==prod(varargin{1}.dim)
       % reshape the statistical volumes into the original format
       stat = setsubfield(stat, statfield{i}, reshape(tmp, varargin{1}.dim));
+    else
+      stat = setsubfield(stat, statfield{i}, tmp);
     end
   end
 else
