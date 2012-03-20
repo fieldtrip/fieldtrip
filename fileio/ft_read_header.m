@@ -838,7 +838,7 @@ switch headerformat
           epochdef(iEpoch,2) = round(str2double(orig.xml.epoch(iEpoch).epoch.endTime)./1000./hdr.Fs);
           epochdef(iEpoch,3) = round(str2double(orig.xml.epoch(iEpoch).epoch.beginTime)./1000./hdr.Fs); %offset corresponds to timing
         else
-          NbSampEpoch = round(str2double(orig.xml.epoch(iEpoch).epoch.endTime)./1000./hdr.Fs - str2double(orig.xml.epochs(iEpoch).epoch.beginTime)./1000./hdr.Fs);
+          NbSampEpoch = round(str2double(orig.xml.epoch(iEpoch).epoch.endTime)./1000./hdr.Fs - str2double(orig.xml.epoch(iEpoch).epoch.beginTime)./1000./hdr.Fs);
           epochdef(iEpoch,1) = epochdef(iEpoch-1,2) + 1;
           epochdef(iEpoch,2) = epochdef(iEpoch-1,2) + NbSampEpoch;
           epochdef(iEpoch,3) = round(str2double(orig.xml.epoch(iEpoch).epoch.beginTime)./1000./hdr.Fs); %offset corresponds to timing
