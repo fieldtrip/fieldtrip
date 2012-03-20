@@ -21,16 +21,43 @@ tissueweight = ft_getopt(varargin, 'tissueweight', ones(1,numel(tissueval))); % 
 deepelec     = istrue(ft_getopt(varargin, 'deepelec', 'no'));% used in the case of deep voxel solution
 % bnd          = ft_getopt(varargin, 'bnd', []);        % used in the case the solution has to be calculated on a triangulated surface (typically the scalp)
 sens         = ft_getopt(varargin, 'sens', []);
+geomfile     = ft_getopt(varargin, 'geomfile', []);
 
 % define a wireframe for each compartment (FEM grid)
-wf = []; tMat = [];
+wf = [];
+if ~isempty(geomfile)
+  if ft_hastoolbox('fileio',1)
+    [wf] = ft_read_headshape(geomfile);
+  else
+    error('you need the fileio module!\n')
+  end
+  if ~isfield(wf,'tet')
+    error('the input should be a tetrahedrical mesh')
+  end
+end
 
 if isempty(sens)
   error('A set of sensors is required')
 end
 
-if strcmp(wfmethod,'cubes')
-  if isunix
+if ~ft_hastoolbox('simbio',1,0)
+  error('Cannot proceed without Simbio toolbox')
+end
+
+if isunix
+  % temporary file names for simbio call
+  [tmp,tname] = fileparts(tempname);
+  meshfile  = [tname '.v'];
+  [tmp,tname] = fileparts(tempname);
+  exefile   = [tname '.sh'];
+  [tmp,tname] = fileparts(tempname);
+  transfermatrix = [tname];
+  [tmp,tname] = fileparts(tempname);
+  parfile   = [tname '.par'];
+  [tmp,tname] = fileparts(tempname);
+  elcfile   = [tname '.elc'];
+  
+  if strcmp(wfmethod,'cubes')
     try % write wireframe grid with vgrid
       tmpfolder = cd;
       cd(tempdir)
@@ -39,23 +66,12 @@ if strcmp(wfmethod,'cubes')
       [tmp,tname] = fileparts(tempname);
       shfile    = [tname '.sh'];
       [tmp,tname] = fileparts(tempname);
-      meshfile  = [tname '.v'];
-      [tmp,tname] = fileparts(tempname);
       MRfile = [tname '.v'];
       [tmp,tname] = fileparts(tempname);
       materialsfile = [tname '.mtr'];
-      % temporary file names for simbio call
-      [tmp,tname] = fileparts(tempname);
-      exefile   = [tname '.sh'];
-      [tmp,tname] = fileparts(tempname);
-      transfermatrix = [tname];
-      [tmp,tname] = fileparts(tempname);
-      parfile   = [tname '.par'];
-      [tmp,tname] = fileparts(tempname);
-      elcfile   = [tname '.elc'];
       
-      if ~ft_hastoolbox('simbio',1,0) || ~ft_hastoolbox('vgrid',1,0)
-        error('Cannot proceed without Simbio and Vgrid toolboxes')
+      if ~ft_hastoolbox('vgrid',1,0)
+        error('Cannot proceed without Vgrid toolbox')
       end
       
       % write the segmented volume in a Vista format .v file
@@ -79,9 +95,6 @@ if strcmp(wfmethod,'cubes')
       dos(['./' shfile]);
       disp([ 'elapsed time: ' num2str(toc(stopwatch)) ])
       % FIXME: think about adding a translation due to conversion between indices and vertices' world coordinates
-      
-      % calculate the FE transfer matrix
-      
       % read the mesh points and assign wireframe (also called 'FEM grid', or '3d mesh')
       if ft_hastoolbox('fileio',1)
         [wf] = ft_read_headshape(meshfile);
@@ -89,47 +102,61 @@ if strcmp(wfmethod,'cubes')
         error('you need the fileio module!\n')
       end
       
-      if deepelec
-        sb_write_elc(warp_apply(inv(transform),sens.chanpos),sens.label,elcfile,1);
-      else
-        sb_write_elc(warp_apply(inv(transform),sens.chanpos),sens.label,elcfile);
-      end
-      
-      % write parfile
-      disp('writing the parameters file on disk...')
-      sb_write_par(parfile,'cond',tissuecond,'labels',tissueval);
-      
-      % write exefile
-      efid = fopen(exefile, 'w');
-      fprintf(efid,'#!/usr/bin/env bash\n');
-      fprintf(efid,['ipm_linux_opt -i FEtransfermatrix -h ./' meshfile ' -s ./' elcfile, ...
-        ' -o ./' transfermatrix ' -p ./' parfile ' -sens EEG \n']); %2>&1 > /dev/null
-      fclose(efid);
-      dos(sprintf('chmod +x %s', exefile));
-      disp('simbio is calculating the transfer matrix, this may take some time ...')
-      
-      % generate the transfer matrix
-      stopwatch = tic;
-      dos(['./' exefile]);
-      disp([ 'elapsed time: ' num2str(toc(stopwatch)) ])
-      
-      % read the transfer matrix
-      transfer = sb_read_transfer(transfermatrix);
-      cleaner(shfile,meshfile,MRfile,materialsfile,exefile,transfermatrix,parfile,elcfile)
     catch ME
-      disp('The transfer matrix was not written')
+      disp('Vgrid failed to create the hexahedrons mesh')
       cleaner(shfile,meshfile,MRfile,materialsfile,exefile,transfermatrix,parfile,elcfile)
       cd(tmpfolder)
       rethrow(ME)
     end
     
-  end %  if isunix
+  elseif strcmp(wfmethod,'tetra')
+    % writes the input mesh into the vista format
+    labels = ones(size(wf.tet,1),1);
+    % FIXME: assign labels according to vertices of the tetra and their
+    % centroid
+    write_vista_mesh(meshfile,wf.pnt,wf.tet,labels);
+  else
+    error('Unsupported method')
+  end
   
-elseif strcmp(wfmethod,'tetra')
-  % not yet implemented
-else
-  error('Unsupported method')
-end
+  % Simbio specific commands
+  if deepelec
+    sb_write_elc(warp_apply(inv(transform),sens.chanpos),sens.label,elcfile,1);
+  else
+    sb_write_elc(warp_apply(inv(transform),sens.chanpos),sens.label,elcfile);
+  end
+  
+  % calculate the FE transfer matrix
+  try
+    % write parfile
+    disp('writing the parameters file on disk...')
+    sb_write_par(parfile,'cond',tissuecond,'labels',tissueval);
+    
+    % write exefile
+    efid = fopen(exefile, 'w');
+    fprintf(efid,'#!/usr/bin/env bash\n');
+    fprintf(efid,['ipm_linux_opt -i FEtransfermatrix -h ./' meshfile ' -s ./' elcfile, ...
+      ' -o ./' transfermatrix ' -p ./' parfile ' -sens EEG \n']); %2>&1 > /dev/null
+    fclose(efid);
+    dos(sprintf('chmod +x %s', exefile));
+    disp('simbio is calculating the transfer matrix, this may take some time ...')
+    
+    % generate the transfer matrix
+    stopwatch = tic;
+    dos(['./' exefile]);
+    disp([ 'elapsed time: ' num2str(toc(stopwatch)) ])
+    
+    % read the transfer matrix
+    transfer = sb_read_transfer(transfermatrix);
+    cleaner(shfile,meshfile,MRfile,materialsfile,exefile,transfermatrix,parfile,elcfile)
+  catch
+    disp('The transfer matrix was not written')
+    cleaner(meshfile,exefile,transfermatrix,parfile,elcfile)
+    cd(tmpfolder)
+    rethrow(ME)
+  end
+  
+end %  if isunix
 
 vol = [];
 vol.wf        = wf;
