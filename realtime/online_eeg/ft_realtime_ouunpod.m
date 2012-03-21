@@ -215,9 +215,9 @@ while true
       % translate channel 2 into a neurofeedback command
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       
-      if value2>threshold
-        outputfunction(cfg.feedback2);
-      end
+%       if value2>threshold
+%         controlfunction(cfg.feedback2);
+%       end
 
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % make the GUI elements
