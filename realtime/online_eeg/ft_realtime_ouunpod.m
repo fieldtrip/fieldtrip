@@ -198,27 +198,30 @@ while true
       % translate channel 1 into a neurofeedback command
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       
-      % compute the average power in a frequency range
-      fbeg = nearest(freqoi, cfg.feedback1.foi(1));
-      fend = nearest(freqoi, cfg.feedback1.foi(2));
-      value1 = mean(pow(1, fbeg:fend));
-      % scale the value between 0 and 1
-      historicalmean = mean(nanmean(TFR(1,fbeg:fend,:),3),2);
-      historicalmin  = min (nanmin (TFR(1,fbeg:fend,:),3),2);
-      historicalmax  = max (nanmax (TFR(1,fbeg:fend,:),3),2);
-      % the value can be larger than expected from the history
-      value1 = (value - historicalmin) ./ (historicalmax - historicalmin);
-      
-      controlfunction(cfg.feedback1, value1);
+      if strcmp(cfg.feedback, 'yes')
+        % compute the average power in the specified frequency range
+        fbeg = nearest(freqoi, cfg.feedback1.foilim(1));
+        fend = nearest(freqoi, cfg.feedback1.foilim(2));
+        value1 = mean(pow(1, fbeg:fend));
+        % scale the value between 0 and 1
+        historicalmean = mean(nanmean(TFR(1,fbeg:fend,:),3),2);
+        historicalmin  = min (nanmin (TFR(1,fbeg:fend,:),3),2);
+        historicalmax  = max (nanmax (TFR(1,fbeg:fend,:),3),2);
+        % the value can be larger than expected from the history
+        value1 = (value1 - historicalmin) ./ (historicalmax - historicalmin);
+        
+        controlfunction(cfg.feedback1, value1);
+      end
       
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % translate channel 2 into a neurofeedback command
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       
+if strcmp(cfg.feedback, 'yes')      
 %       if value2>threshold
 %         controlfunction(cfg.feedback2);
 %       end
-
+end
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % make the GUI elements
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

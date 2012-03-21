@@ -1,4 +1,5 @@
-function midiOut(varargin)
+function varargout = midiOut(varargin)
+
 %midiOut  --  connect to a MIDI output device and send notes
 %
 % Usage:
@@ -35,7 +36,8 @@ function midiOut(varargin)
 
 % (C) 2010 Stefan Klanke
 
-error 'M-file called: It seems you have not compiled the midiOut MEX file.'
+error('the %s mex file is not available for your platform (%s)', mfilename, mexext);
+
 
 
 
