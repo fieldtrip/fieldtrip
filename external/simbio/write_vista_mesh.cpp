@@ -37,7 +37,7 @@ public:
 void mexFunction (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
    VUByte flag=0;
-   
+
 /*   static VOptionDescRec options[] = {
             { "conv", VUByteRepn, 1, &flag, VOptionalOpt, NULL, 
    		 	"Input node numbering in C-convention: 0 -- " }
@@ -47,7 +47,7 @@ void mexFunction (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
    
    // check number of arguments
    int nargin = nrhs;
-   /*if((nargin != 4)&(nargin != 5))
+   if((nargin != 4)&&(nargin != 5))
    {
        mexErrMsgTxt("Not enough arguments. Usage: <filename>, <nodes>, <elements> (,<labels)\n");
    }
@@ -67,11 +67,10 @@ void mexFunction (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
    {
        mexErrMsgTxt("Wrong type of argument. <labels> must be of type 'double'.");
    }
-   else if((!mxIsDouble(prhs[4]))&(nargin==5))
+   else if((!mxIsDouble(prhs[4]))&&(nargin==5))
    {
        mexErrMsgTxt("Wrong type of argument. <tensors> must be of type 'double'.");
-   }*/
-   
+   }
    const mxArray *mxelements = prhs[2];
    const mxArray *mxnodes = prhs[1];
    const mxArray *mxlabels = prhs[3];
@@ -88,7 +87,7 @@ void mexFunction (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
    int colNod = mxGetM(mxnodes);
    int rowTen = 0;
    int colTen = 0;
-     
+   
    if(nargin == 5){
       mxtensors = prhs[4];
       tensors = mxGetPr(mxtensors);
@@ -108,8 +107,6 @@ void mexFunction (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     
    // get filename from arguments
    std::string filename(mxArrayToString(prhs[0]));
-   
-   
    FILE *outf;
    outf = fopen (filename.c_str(),"w");
 
@@ -126,11 +123,12 @@ void mexFunction (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     for(int i=0; i<colNod; i++){
 
-		double x=(double)nodes[i]; //static_cast<double>(nodes[i])
-		double y=(double)nodes[colNod + i]; //static_cast<double>
-		double z=(double)nodes[2*colNod + i]; //static_cast<double>
+		double x=static_cast<double>(nodes[i]);
+		double y=static_cast<double>(nodes[colNod + i]);
+		double z=static_cast<double>(nodes[2*colNod + i]);
         
-        //if(i<10) mexPrintf("coord: %f %f %f \n",x,y,z);
+        /*if(i<10)
+            mexPrintf("coord: %f %f %f \n",x,y,z);*/
 
 		vertex u(x, y, z);
         u.hops = i+1;
@@ -166,11 +164,12 @@ void mexFunction (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             mexErrMsgTxt("Allocate: cannot create attribute image\n");
     
         VSetAttr(VImageAttrList(AttributeImage),"component_repn",NULL,VStringRepn,"tensor6");
-        VSetAttr(VImageAttrList(AttributeImage),"component_interp",NULL,VStringRepn,"conductivity S/mm");
+        VSetAttr(VImageAttrList(AttributeImage),"component_interp",NULL,VStringRepn,"conductivity S/m");
     }
     
     primitive p;
     
+    int count = 0;
 	for(int i=0; i<colEle; i++) {
 
       // FE-type: m = 303 -> tet    m = 323 -> hex 
@@ -179,10 +178,10 @@ void mexFunction (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       if (rowEle == 4) {
 
         p.vcnt  = 4;
-        p.id[0] = (int)elements[i]; //static_cast<int>(elements[i]);
-        p.id[1] = (int)elements[colEle + i];
-        p.id[2] = (int)elements[2*colEle + i];
-        p.id[3] = (int)elements[3*colEle + i];
+        p.id[0] = static_cast<int>(elements[i]);
+        p.id[1] = static_cast<int>(elements[colEle + i]);
+        p.id[2] = static_cast<int>(elements[2*colEle + i]);
+        p.id[3] = static_cast<int>(elements[3*colEle + i]);
 
 	  linkNodes(vertices, p.id[0], p.id[1]);
 	  linkNodes(vertices, p.id[0], p.id[2]);
@@ -198,14 +197,14 @@ void mexFunction (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 //        fprintf(stdout," %i %i %i %i %i %i %i %i\n",id[0], id[1], id[2], id[3], id[4], id[5], id[6], id[7]); fflush(stdout);
 
         p.vcnt  = 8;
-        p.id[0] = (int)elements[i]; //static_cast<int>(elements[i]);
-        p.id[1] = (int)elements[colEle + i];
-        p.id[2] = (int)elements[2*colEle + i];
-        p.id[3] = (int)elements[3*colEle + i];
-        p.id[4] = (int)elements[4*colEle + i];
-        p.id[5] = (int)elements[5*colEle + i];
-        p.id[6] = (int)elements[6*colEle + i];
-        p.id[7] = (int)elements[7*colEle + i];
+        p.id[0] = static_cast<int>(elements[i]);
+        p.id[1] = static_cast<int>(elements[colEle + i]);
+        p.id[2] = static_cast<int>(elements[2*colEle + i]);
+        p.id[3] = static_cast<int>(elements[3*colEle + i]);
+        p.id[4] = static_cast<int>(elements[4*colEle + i]);
+        p.id[5] = static_cast<int>(elements[5*colEle + i]);
+        p.id[6] = static_cast<int>(elements[6*colEle + i]);
+        p.id[7] = static_cast<int>(elements[7*colEle + i]);
 
 
 		linkNodes(vertices, p.id[0], p.id[1]);
@@ -225,9 +224,9 @@ void mexFunction (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       }
       else if (rowEle == 3) {
         p.vcnt  = 3;
-        p.id[0] = (int)elements[i];
-        p.id[1] = (int)elements[colEle + i];
-        p.id[2] = (int)elements[2*colEle + i];
+        p.id[0] = static_cast<int>(elements[i]);
+        p.id[1] = static_cast<int>(elements[colEle + i]);
+        p.id[2] = static_cast<int>(elements[2*colEle + i]);
 
 	    linkNodes(vertices, p.id[0], p.id[1]);
 	    linkNodes(vertices, p.id[0], p.id[2]);
@@ -236,20 +235,32 @@ void mexFunction (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		VGraphAddAndGrow(primitives, (VNode)&p, i+1);
       }
       
-      //if(i<10) mexPrintf("primitive: %d %d %d %d %d %d %d %d \n",p.id[0],p.id[1],p.id[2],p.id[3],p.id[4],p.id[5],p.id[6],p.id[7]);
+      /*if(i<10)
+        mexPrintf("primitive: %d %d %d %d %d %d %d %d \n",p.id[0],p.id[1],p.id[2],p.id[3],p.id[4],p.id[5],p.id[6],p.id[7]);*/
       
       if ((rowEle == 4)||(rowEle == 8)) {
           int m = (int)labels[i];
-          //if(i<10) mexPrintf("label: %d \n",m);
+          /*if(i<10)
+              mexPrintf("label: %d \n",m);*/
           // set mp image
           VSetPixel(mp, 0, 0, i, m);
           
           if( nargin == 5){
             for(int j=0; j < 6; j++ ){		// for all dimensions, sequence xx-xy-xz-yy-yz-zz
-                double tens = (double)tensors[j*colEle + i];
+                double tens = 0;
+                if(j < 3)
+                    tens = (double)tensors[j*colEle + i];
+                else if(j < 5)
+                    tens = (double)tensors[(j+1)*colEle + i];
+                else if(j == 5)
+                    tens = (double)tensors[(j+3)*colEle + i];
                 VSetPixel(AttributeImage, j, 0, i, tens);
             }
-        }
+            if((count < 10)&&((int)labels[i]==105)){
+                mexPrintf("xx %f xy %f xz %f yy %f yz %f zz %f \n",tensors[i],tensors[colEle + i],tensors[2*colEle + i],tensors[4*colEle + i],tensors[5*colEle + i],tensors[8*colEle + i]);
+                ++count;
+            }
+         }
       }
 
     
@@ -277,18 +288,14 @@ void mexFunction (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         
     //save graphs
     VGraph g[2];
-   
 /*    vertices->size = colNod;
     vertices->nnodes = colNod;
     primitives->size = colEle;
     primitives->nnodes = colEle;*/
-   
-   
     g[0] = vertices;
     g[1] = primitives;
     VWriteGraphs(outf, NULL, 2, g);
     fclose(outf);
     if (vertices) 		VDestroyGraph(vertices);   vertices   = 0;
     if (primitives) 	VDestroyGraph(primitives); primitives = 0;
-    
 }

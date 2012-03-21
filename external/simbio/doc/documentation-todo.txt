@@ -1,0 +1,49 @@
+Workflow:
+
+sb_transfer
+	-> sb_calc_stiff
+		-> calc_stiff_matrix_val
+	-> sb_find_elec
+	-> sb_calc_vecx
+		-> sb_set_bndcon
+		-> sb_solve
+
+sb_calc_gain %still todo
+	-> sb_rhs_venant
+
+-----------------------------------------------------------------------------------------------
+Used functions:
+
+sb_transfer
+
+Calculate transfer matrix out of given wireframe, electrode positions (and tissue conductivities).
+
+sb_transfer -> sb_calc_stiff
+
+Calculate stiffness matrix out of given wireframe consisting of nodes, elements, conductivity-field.
+
+sb_calc_stiff -> calc_stiff_matrix_val
+
+fortran function calculating the stiffness matrix
+%TODO: add documentation to the source code
+
+sb_transfer -> sb_find_elec
+
+Find wireframe nodes corresponding to electrode positions.
+
+sb_transfer -> sb_calc_vecx
+
+Calculate solution vector out of gifen stiffness matrix, right-hand-side vector vecb and dirichlet-node.
+%ALTERNATIVE:
+sb_calc_vecx_fort
+same function/slightly different input, uses fortran solver to compute the solution, is faster then sb_calc_vecx
+
+sb_rhs_venant
+
+Calculate rhs for venant approach.
+%TODO: optimize implementation, function is still relatively slow
+
+sb_rhs_venant -> sb_calc_ven_loads
+
+Calculates the loads for the venant approach.
+

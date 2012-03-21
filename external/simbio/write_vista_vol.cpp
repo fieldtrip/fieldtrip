@@ -73,6 +73,6 @@ void mexFunction (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	     }
     
     /*write out the resulting image*/
-    VWriteImages(outf, NULL, 1, &dst) ; 
+    VWriteImages(outf, NULL, 1, &dst); 
 fclose(outf);
 }

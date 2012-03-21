@@ -49,11 +49,11 @@ end
 % Step 1
 % compile the libvista.a shared library for UNIX/LINUX
 L = [];
-L = add_mex_source(L,'vista','FIL_Vista_Attr.c',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o FIL_Vista_Attr.o');
-L = add_mex_source(L,'vista','FIL_Vista_Basic.c',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o FIL_Vista_Basic.o');
-L = add_mex_source(L,'vista','FIL_Vista_File.c',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o FIL_Vista_File.o');
-L = add_mex_source(L,'vista','FIL_Vista_Graph.c',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o FIL_Vista_Graph.o');
-L = add_mex_source(L,'vista','FIL_Vista_Image.c',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o FIL_Vista_Image.o');
+L = add_mex_source(L,'vista','FIL_Vista_Attr.c',{'GLNX86','GLNXA64','PCWIN','PCWIN64','MACI','MACI64'},[],'-Ivista -c');
+L = add_mex_source(L,'vista','FIL_Vista_Basic.c',{'GLNX86','GLNXA64','PCWIN','PCWIN64','MACI','MACI64'},[],'-Ivista -c');
+L = add_mex_source(L,'vista','FIL_Vista_File.c',{'GLNX86','GLNXA64','PCWIN','PCWIN64','MACI','MACI64'},[],'-Ivista -c');
+L = add_mex_source(L,'vista','FIL_Vista_Graph.c',{'GLNX86','GLNXA64','PCWIN','PCWIN64','MACI','MACI64'},[],'-Ivista -c');
+L = add_mex_source(L,'vista','FIL_Vista_Image.c',{'GLNX86','GLNXA64','PCWIN','PCWIN64','MACI','MACI64'},[],'-Ivista -c');
 
 oldDir = pwd;
 [baseDir, myName] = fileparts(mfilename('fullpath'));
@@ -66,17 +66,23 @@ catch
 end
 cd(baseDir);
 % FIXME: the following should be done inside a function called add_shared_library
-if isunix
-  system('ar rcs libvista.a vista/FIL_Vista_Attr.o vista/FIL_Vista_Basic.o vista/FIL_Vista_File.o vista/FIL_Vista_Graph.o vista/FIL_Vista_Image.o');
-end
 
 % Step 2
 % compile the mesh/vol functions
-L = [];
-L = add_mex_source(L,'.','vistaprimitive.cpp',{'GLNX86', 'GLNXA64'},[],'-Ivista -c -o vistaprimitive.o');
-L = add_mex_source(L,'.','read_vista_mesh.cpp',{'GLNX86', 'GLNXA64'},[],'-Ivista vistaprimitive.o libvista.a');
-L = add_mex_source(L,'.','write_vista_mesh.cpp',{'GLNX86', 'GLNXA64'},[],'-Ivista libvista.a');
-L = add_mex_source(L,'.','write_vista_vol.cpp',{'GLNX86', 'GLNXA64'},[],'-Ivista libvista.a');
+if isunix || ismac
+  system('ar rcs libvista.a vista/FIL_Vista_Attr.o vista/FIL_Vista_Basic.o vista/FIL_Vista_File.o vista/FIL_Vista_Graph.o vista/FIL_Vista_Image.o');
+  L = [];
+  L = add_mex_source(L,'.','vistaprimitive.cpp',{'GLNX86','GLNXA64','MACI','MACI64'},[],'-Ivista -c');
+  L = add_mex_source(L,'.','read_vista_mesh.cpp',{'GLNX86','GLNXA64','MACI','MACI64'},[],'-Ivista vistaprimitive.o libvista.a');
+  L = add_mex_source(L,'.','write_vista_mesh.cpp',{'GLNX86','GLNXA64','MACI','MACI64'},[],'-Ivista libvista.a');
+  L = add_mex_source(L,'.','write_vista_vol.cpp',{'GLNX86','GLNXA64','MACI','MACI64'},[],'-Ivista libvista.a');
+elseif ispc
+  L = [];
+  L = add_mex_source(L,'.','vistaprimitive.cpp',{'PCWIN','PCWIN64'},[],'-Ivista -c');
+  L = add_mex_source(L,'.','read_vista_mesh.cpp',{'PCWIN','PCWIN64'},[],'-Ivista vistaprimitive.obj vista\*.obj');
+  L = add_mex_source(L,'.','write_vista_mesh.cpp',{'PCWIN','PCWIN64'},[],'-Ivista vista\*.obj');
+  L = add_mex_source(L,'.','write_vista_vol.cpp',{'PCWIN','PCWIN64'},[],'-Ivista vista\*.obj');
+end
 
 try
   compile_mex_list_vista(L, baseDir, force); 
@@ -110,15 +116,25 @@ for i=1:length(L)
    end
    
    if ~force
-      mfname = [baseDir filesep L(i).dir filesep name '.' mexext];
-      MF = dir(mfname);
+      if(~isempty(strfind(L(i).extras,'-c')))
+          if isunix || ismac
+              mfname = [baseDir filesep L(i).dir filesep name '.o'];
+              MF = dir(mfname);
+          elseif ispc
+              mfname = [baseDir filesep L(i).dir filesep name '.obj'];
+              MF = dir(mfname);
+          end
+      else
+          mfname = [baseDir filesep L(i).dir filesep name '.' mexext];
+          MF = dir(mfname);
+      end
       if numel(MF)==1 && datenum(SF.date) <= datenum(MF.date)
-         fprintf(1,'Skipping up-to-date MEX file %s/%s\n', L(i).dir, name);
+         fprintf(1,'Skipping up-to-date MEX file %s%s%s\n', L(i).dir, filesep, name);
          continue;
       end 
    end
-   fprintf(1,'Compiling MEX file %s/%s ...\n', L(i).dir, name);
-   cd([baseDir '/' L(i).dir]);
+   fprintf(1,'Compiling MEX file %s%s%s ...\n', L(i).dir, filesep, name);
+   cd([baseDir filesep L(i).dir]);
    cmd = sprintf('mex %s %s', L(i). relName, L(i).extras);
    eval(cmd);
 end
