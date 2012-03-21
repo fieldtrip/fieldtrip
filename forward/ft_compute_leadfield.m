@@ -219,7 +219,7 @@ elseif ismeg
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % the dipole position and orientation should be combined in a single matrix
       % furthermore, here I want to compute the leadfield for each of the
-      % orthogonzl x/y/z directions
+      % orthogonal x/y/z directions
       dippar = zeros(Ndipoles*3, 6);
       for i=1:Ndipoles
         dippar((i-1)*3+1,:) = [pos(i,:) 1 0 0];  % single dipole, x-orientation
@@ -441,25 +441,31 @@ elseif iseeg
       error('unsupported volume conductor model for EEG');
   end % switch voltype for EEG
 
-  % compute average reference for EEG leadfield
-  avg = mean(lf, 1);
-  lf  = lf - repmat(avg, size(lf,1), 1);
-  % apply the correct montage to the leadfield
-  if isfield(sens,'tra')
-    lf = sens.tra*lf;
+  for i=1:Ndipoles
+    if isfield(sens,'tra')
+      tmplf{i} = lf(:,(3*i - 2) : (3 * i));
+      % apply the correct montage to the leadfield
+      tmplf{i} = sens.tra*tmplf{i};
+      lf = cat(2,tmplf{:});
+    else
+      tmplf = lf(:,(3*i - 2) : (3 * i));
+      % compute average reference for EEG leadfield
+      avg = mean(tmplf, 1);
+      lf(:,(3*i - 2) : (3 * i)) = tmplf - repmat(avg, size(tmplf,1), 1);
+    end
   end
-  
 end % iseeg or ismeg
 
 % optionally apply leadfield rank reduction
 if strcmpi(reducerank,'yes')
-  reducerank = size(lf,2) - 1;
-end
-if ~strcmp(reducerank, 'no') && reducerank<size(lf,2) 
+  reducerank = size(lf(:,1:3),2) - 1;
+end  
+
+if ~strcmp(reducerank, 'no') && reducerank<3
     % decompose the leadfield
     for ii=1:Ndipoles
-        lftmp=lf(:,(3*ii-2):(3*ii));
-        [u, s, v] = svd(lftmp);
+        tmplfd=lf(:,(3*ii-2):(3*ii));
+        [u, s, v] = svd(tmplfd);
         r = diag(s);
         s(:) = 0;
         for j=1:reducerank
@@ -470,27 +476,35 @@ if ~strcmp(reducerank, 'no') && reducerank<size(lf,2)
     end
 end
 
-% optionally apply leadfield normaliziation
+% optionally apply leadfield normalization
 switch normalize
-case 'yes'
-  if normalizeparam==0.5
-    % normalize the leadfield by the Frobenius norm of the matrix
-    % this is the same as below in case normalizeparam is 0.5
-    nrm = norm(lf, 'fro');
-  else
-    % normalize the leadfield by sum of squares of the elements of the leadfield matrix to the power "normalizeparam"
-    % this is the same as the Frobenius norm if normalizeparam is 0.5
-    nrm = sum(lf(:).^2)^normalizeparam;
-  end
-  if nrm>0
-    lf = lf ./ nrm;
-  end
-case 'column'
-  % normalize each column of the leadfield by its norm
-  for j=1:size(lf,2)
-    nrm = sum(lf(:,j).^2)^normalizeparam;
-    lf(:,j) = lf(:,j)./nrm;
-  end
+  case 'yes'
+    for ii=1:Ndipoles
+      tmplf = lf(:,(3*ii-2):(3*ii));
+      if normalizeparam==0.5
+        % normalize the leadfield by the Frobenius norm of the matrix
+        % this is the same as below in case normalizeparam is 0.5
+        nrm = norm(tmplf, 'fro');
+      else
+        % normalize the leadfield by sum of squares of the elements of the leadfield matrix to the power "normalizeparam"
+        % this is the same as the Frobenius norm if normalizeparam is 0.5
+        nrm = sum(tmplf(:).^2)^normalizeparam;
+      end
+      if nrm>0
+        tmplf = tmplf ./ nrm;
+      end
+      lf(:,(3*ii-2):(3*ii)) = tmplf;
+    end
+  case 'column'
+    % normalize each column of the leadfield by its norm
+    for ii=1:Ndipoles
+      tmplf = lf(:,(3*ii-2):(3*ii));
+      for j=1:size(tmplf,2)
+        nrm = sum(tmplf(:,j).^2)^normalizeparam;
+        tmplf(:,j) = tmplf(:,j)./nrm;
+      end
+      lf(:,(3*ii-2):(3*ii)) = tmplf;
+    end
 end
 
 % optionally apply a weight to the leadfield for each dipole location
