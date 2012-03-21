@@ -214,7 +214,7 @@ cfg = ft_checkconfig(cfg, 'renamedval',  {'method', 'coh_refchan',     'dics'});
 cfg = ft_checkconfig(cfg, 'renamedval',  {'method', 'coh_refdip',      'dics'});
 cfg = ft_checkconfig(cfg, 'renamedval',  {'method', 'dics_cohrefchan', 'dics'});
 cfg = ft_checkconfig(cfg, 'renamedval',  {'method', 'dics_cohrefdip',  'dics'});
-cfg = ft_checkconfig(cfg, 'forbidden',   {'parallel'});
+cfg = ft_checkconfig(cfg, 'forbidden',   {'parallel', 'trials'});
 
 % determine the type of input data
 if isfield(data, 'freq')

@@ -80,6 +80,8 @@ ft_preamble loadvar source
 % check if the input data is valid for this function
 source = ft_checkdata(source, 'datatype', 'source', 'feedback', 'yes');
 
+cfg = ft_checkconfig(cfg, 'forbidden',   {'trials'});
+
 % set the defaults
 cfg.transform        = ft_getopt(cfg, 'transform',        []);
 cfg.projectmom       = ft_getopt(cfg, 'projectmom',       'no');% if yes -> svdfft

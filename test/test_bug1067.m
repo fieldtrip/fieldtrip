@@ -63,14 +63,14 @@ for i=1:num_fncs
   end
   
   % find the not common options
-  s_opts = fieldnames(s_hash);
-  f_opts = fieldnames(f_hash);
+  old_s_opts = fieldnames(s_hash);
+  old_f_opts = fieldnames(f_hash);
   
   % options ft_source* uses but not ft_freq*
-  s_opts = s_opts(~ismember(s_opts, f_opts));
+  s_opts = old_s_opts(~ismember(old_s_opts, old_f_opts));
   
   % options ft_freq* uses but not ft_source*
-  f_opts = f_opts(~ismember(f_opts, s_opts));
+  f_opts = old_f_opts(~ismember(old_f_opts, old_s_opts));
   
   % output
   fprintf('\n');

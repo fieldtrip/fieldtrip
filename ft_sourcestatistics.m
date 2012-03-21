@@ -73,6 +73,8 @@ ft_preamble loadvar varargin
 
 if ~isfield(cfg, 'implementation'), cfg.implementation = 'old'; end
 
+cfg = ft_checkconfig(cfg, 'forbidden',   {'trials'});
+
 if strcmp(cfg.implementation, 'old'),
   
   %--------------------------------

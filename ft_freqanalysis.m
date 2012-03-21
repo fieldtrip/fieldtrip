@@ -231,6 +231,7 @@ cfg = ft_checkconfig(cfg, 'renamed',     {'sgncmb',   'channelcmb'});
 cfg = ft_checkconfig(cfg, 'required',    {'method'});
 cfg = ft_checkconfig(cfg, 'renamedval',  {'method', 'fft',    'mtmfft'});
 cfg = ft_checkconfig(cfg, 'renamedval',  {'method', 'convol', 'mtmconvol'});
+cfg = ft_checkconfig(cfg, 'forbidden',   {'latency'}); % see bug 1376 and 1076
 
 % NEW OR OLD - switch for selecting which function to call and when to do it
 % this will change when the development of specest proceeds
