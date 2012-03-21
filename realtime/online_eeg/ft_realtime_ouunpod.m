@@ -34,12 +34,12 @@ function ft_realtime_ouunpod(cfg)
 if ~isfield(cfg, 'dataformat'),       cfg.dataformat      = [];       end % default is detected automatically
 if ~isfield(cfg, 'headerformat'),     cfg.headerformat    = [];       end % default is detected automatically
 if ~isfield(cfg, 'eventformat'),      cfg.eventformat     = [];       end % default is detected automatically
-if ~isfield(cfg, 'blocksize'),        cfg.blocksize       = 0.05;     end % in seconds
+if ~isfield(cfg, 'blocksize'),        cfg.blocksize       = 0.05;     end % stepsize, in seconds
 if ~isfield(cfg, 'channel'),          cfg.channel         = 'all';    end
 if ~isfield(cfg, 'bufferdata'),       cfg.bufferdata      = 'last';   end % first or last
 if ~isfield(cfg, 'dataset'),          cfg.dataset         = 'buffer:\\localhost:1972'; end;
 if ~isfield(cfg, 'foilim'),           cfg.foilim          = [1 45];   end
-if ~isfield(cfg, 'blockmem'),         cfg.blockmem        = 40;       end % how many blocks in the past will be taking into calc./disp
+if ~isfield(cfg, 'windowsize'),       cfg.windowsize      = 2;        end % length of sliding window, in seconds
 if ~isfield(cfg, 'scale'),            cfg.scale           = 1;        end % can be used to fix the calibration
 if ~isfield(cfg, 'feedback'),         cfg.feedback        = 'no';     end % use neurofeedback with MIDI, yes or no
 
@@ -102,6 +102,8 @@ if nchan<2
   error('exactly two channels should be selected');
 end
 
+nhistory = 100;
+
 % determine the size of blocks to process
 blocksize = round(cfg.blocksize * hdr.Fs);
 
@@ -115,7 +117,7 @@ count = 0;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 left_thresh_ampl = -100;
-left_thresh_time = [cfg.blockmem*blocksize-blocksize*4 cfg.blockmem*blocksize];
+left_thresh_time = nan; % [cfg.blockmem*blocksize-blocksize*4 cfg.blockmem*blocksize];
 
 % FIXME these are hardcoded, but might be incompatible with the cfg and data settings
 right_freq = [40 45];
@@ -131,10 +133,8 @@ while true
   if ~ishandle(f1)
     close all;
     f1 = figure;
-    clear u1 u2 u3 u4 u5 u6;
-    clear p1 p2 p3 p4 p5 p6;
-    clear c1 c2;
-    set(f1, 'resizeFcn', 'clear u1 u2 u3 u4 u5 u6; clear p1 p2 p3 p4 p5 p6; clear c1 c2;')
+    set(f1, 'resizeFcn', 'clear u1 u2 u3 u4 u5 u6 p1 p2 p3 p4 p5 p6 c1 c2 b2');
+    clear u1 u2 u3 u4 u5 u6 p1 p2 p3 p4 p5 p6 c1 c2 b2
   end
   
   % determine number of samples available in buffer
@@ -143,11 +143,11 @@ while true
   % see whether new samples are available
   newsamples = (hdr.nSamples*hdr.nTrials-prevSample);
   
-  if newsamples>=blocksize
+  if newsamples>=blocksize && (hdr.nSamples*hdr.nTrials/hdr.Fs)>cfg.windowsize
     
     % determine the samples to process
     if strcmp(cfg.bufferdata, 'last')
-      begsample = hdr.nSamples*hdr.nTrials - blocksize*(cfg.blockmem) + 1;
+      begsample = hdr.nSamples*hdr.nTrials - round(cfg.windowsize*hdr.Fs) + 1;
       endsample = hdr.nSamples*hdr.nTrials;
     elseif strcmp(cfg.bufferdata, 'first')
       begsample = prevSample+1;
@@ -161,8 +161,6 @@ while true
     count = count + 1;
     fprintf('processing segment %d from sample %d to %d\n', count, begsample, endsample);
     
-    if count > cfg.blockmem % memory
-      
       % read the data segment from buffer
       dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', false);
       dat = cfg.scale * dat;
@@ -186,16 +184,41 @@ while true
         dat = ft_preproc_bandstopfilter(dat, hdr.Fs, [95 115], 4, 'but', 'twopass');
       end
       
-      for i=1:nchan
-        [spec ifreq] = ft_specest_mtmfft(dat(i, :), time, 'taper', 'dpss', 'tapsmofrq', 2, 'freqoi', cfg.foilim(1):cfg.foilim(2));
-        pow(i, :) = squeeze(mean(abs(spec)));
-        powmax(i) = max(max(pow(i, :)), powmax(i)*0.9); % this keeps a history
-        for ii = 1 : size(TFR, 3)-1
-          TFR(i, :, ii) = TFR(i, :, ii+1);
-        end
-        TFR(i, :, end) = pow(i, :);
+      [spec ntaper freqoi] = ft_specest_mtmfft(dat, time, 'taper', 'dpss', 'tapsmofrq', 2, 'freqoi', cfg.foilim(1):cfg.foilim(2));
+      pow = squeeze(mean(abs(spec.^2), 1)); % compute power, average over tapers
+      
+      if ~exist('TFR', 'var')
+        TFR = nan(length(chanindx), length(freqoi), nhistory);
       end
       
+      TFR(:,:,1:nhistory-1) = TFR(:,:,2:nhistory);
+      TFR(:,:,end) = pow;
+      
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      % translate channel 1 into a neurofeedback command
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      
+      % compute the average power in a frequency range
+      fbeg = nearest(freqoi, cfg.feedback1.foi(1));
+      fend = nearest(freqoi, cfg.feedback1.foi(2));
+      value1 = mean(pow(1, fbeg:fend));
+      % scale the value between 0 and 1
+      historicalmean = mean(nanmean(TFR(1,fbeg:fend,:),3),2);
+      historicalmin  = min (nanmin (TFR(1,fbeg:fend,:),3),2);
+      historicalmax  = max (nanmax (TFR(1,fbeg:fend,:),3),2);
+      % the value can be larger than expected from the history
+      value1 = (value - historicalmin) ./ (historicalmax - historicalmin);
+      
+      controlfunction(cfg.feedback1, value1);
+      
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      % translate channel 2 into a neurofeedback command
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      
+      if value2>threshold
+        outputfunction(cfg.feedback2);
+      end
+
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % make the GUI elements
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -292,7 +315,7 @@ while true
         
         if ~exist('b2')
           pos = [0.88 0.01 0.1 0.05];
-          b2 = uicontrol('style', 'pushbutton', 'units', 'normalized', 'callback', 'evalin(''caller'', ''b2clicked = true'')');
+          b2 = uicontrol('style', 'pushbutton', 'units', 'normalized', 'callback', 'evalin(''caller'', ''b2clicked = true;'')');
           set(b2, 'position', pos);
           set(b2, 'string', 'quit');
           set(b2, 'tag', 'b2');
@@ -301,8 +324,8 @@ while true
       end % try
       
       if b2clicked
+        close all
         return
-        b2clicked = false;
       end
       
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -319,7 +342,7 @@ while true
           axis([min(time) max(time) vaxis(1, 1) vaxis(1, 2)]);
           set(p1, 'XTickLabel', []);
           ylabel('amplitude (uV)');
-          xlabel(sprintf('time: %d seconds', cfg.blocksize*cfg.blockmem));
+          xlabel(sprintf('time: %d seconds', cfg.windowsize));
           grid on
           if strcmp(cfg.feedback, 'yes')
             ax = axis;
@@ -338,7 +361,7 @@ while true
           axis([min(time) max(time) vaxis(2, 1) vaxis(2, 2)]);
           set(p2, 'XTickLabel', []);
           ylabel('amplitude (uV)');
-          xlabel(sprintf('time: %d seconds', cfg.blocksize*cfg.blockmem));
+          xlabel(sprintf('time: %d seconds', cfg.windowsize));
           grid on
         end
         
@@ -346,7 +369,7 @@ while true
           p3 = subplot(3, 2, 3);
         else
           subplot(p3)
-          h3 = bar(1:length(ifreq), pow(1, :), 0.5);
+          h3 = bar(1:length(freqoi), pow(1, :), 0.5);
           % plot(pow(1).Frequencies, pow(1).Data);
           % bar(pow(1).Frequencies, pow(1).Data);
           axis([cfg.foilim(1) cfg.foilim(2) vaxis(3, 1) vaxis(3, 2)]);
@@ -361,7 +384,7 @@ while true
           p4 = subplot(3, 2, 4);
         else
           subplot(p4)
-          h4 = bar(1:length(ifreq), pow(2, :), 0.5);
+          h4 = bar(1:length(freqoi), pow(2, :), 0.5);
           % plot(pow(2).Frequencies, pow(2).Data);
           % bar(pow(2).Frequencies, pow(2).Data);
           ax = axis;
@@ -456,7 +479,6 @@ while true
       % force an update of the figure
       drawnow
       
-    end % if enough blocks
   end % if enough new samples
 end % while true
 
