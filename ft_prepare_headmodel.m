@@ -114,6 +114,7 @@ ft_preamble callinfo
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'required', 'method');
 cfg = ft_checkconfig(cfg, 'deprecated', 'geom');
+cfg = ft_checkconfig(cfg, 'renamed', {'geom','headshape'});
 
 % set the general defaults 
 cfg.hdmfile        = ft_getopt(cfg, 'hdmfile');
