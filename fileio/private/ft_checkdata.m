@@ -172,7 +172,7 @@ if issource && isvolume
 end
 
 % the ft_datatype_XXX functions ensures the consistency of the XXX datatype
-% and provides a detailled description of the dataformat and its history
+% and provides a detailed description of the dataformat and its history
 if     israw
   data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
 elseif isfreq
@@ -580,7 +580,9 @@ if issource || isvolume,
       data = setfield(data, sub1, tmp1);
     else
       tmp  = getfield(data, param{i});
-      tmp  = reshape(tmp, dim);
+      if prod(dim)==numel(tmp)
+        tmp  = reshape(tmp, dim);
+      end
       data = setfield(data, param{i}, tmp);
     end
   end
