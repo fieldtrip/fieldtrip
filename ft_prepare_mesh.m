@@ -73,8 +73,8 @@ ft_preamble trackconfig
 ft_preamble loadvar mri
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'forbidden', 'numcompartments', ...
-                                       'outputfile');
+cfg = ft_checkconfig(cfg, 'forbidden', {'numcompartments', ...
+                                       'outputfile'});
 
 % set the defaults
 if ~isfield(cfg, 'downsample'),      cfg.downsample = 1;         end
