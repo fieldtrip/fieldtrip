@@ -490,7 +490,7 @@ elseif basedonmrk
   xzpoint= warp_apply(mri.transform, cfg.landmark.xzpoint);
   
   % compute the homogenous transformation matrix describing the new coordinate system
-  [transform, coordsys] = headcoordinates(ac, pc, xzpoint, isrighthanded, 'spm');
+  [transform, coordsys] = headcoordinates(ac, pc, xzpoint, 'spm');
   
 else
   transform = [];
