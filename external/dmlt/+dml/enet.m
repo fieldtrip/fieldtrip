@@ -31,6 +31,8 @@ classdef enet < dml.method
       
    conv % plot of the convergence of the parameters sum(abs(beta-betaold));
    
+   df % degrees of freedom
+   
   end
   
   methods
@@ -85,6 +87,9 @@ classdef enet < dml.method
             obj.weights = [beta; beta0]';
             
           end
+          
+          idx = (obj.weights ~= 0); idx(end)=0;
+          obj.df = trace(X(:,idx)*inv(X(:,idx)'*X(:,idx) + obj.L2(idx,idx))*X(:,idx)');
           
         case 'binomial'
           
@@ -158,6 +163,43 @@ classdef enet < dml.method
       
     end
     
+    function K = laplacian(dims,s)
+      % return matrix Laplacian for a multidimensional array of size dims and strength s
+    
+      nfeatures = prod(dims);
+      
+      cdim = cumprod(dims);
+      tdim = [1 cdim(1:(end-1))];
+      
+      K = spalloc(nfeatures,nfeatures,nfeatures+nfeatures*ceil(2^length(dims)/2));
+      
+      for i=1:nfeatures
+        
+        for d=1:length(dims)
+          
+          % get neighbouring features in all dimensions
+          
+          % ignore the end boundary
+          if mod(ceil(i/tdim(d)),dims(d)) ~= 0
+            
+            nbr = i + tdim(d);
+            if nbr <= nfeatures
+              K(i,nbr) = -1;
+            end
+            
+          end
+          
+        end
+      end
+      
+      K = K + K';
+      
+      K(1:(nfeatures+1):numel(K)) = -sum(K,2);
+
+      K = s*K;
+      
+    end
+      
   end
   
 end

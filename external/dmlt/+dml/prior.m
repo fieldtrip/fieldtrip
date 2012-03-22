@@ -2,6 +2,10 @@ function [K,C,R,a] = prior(dims,strength,varargin)
 % PRIOR used to created smoothing and shrinkage priors.
 %
 %   DESCRIPTION
+%
+%   This helper function is currently only used by dml.blogreg. See
+%   dml.enet.laplacian for a related function.
+%
 %   input:
 %   dims = the dimensions [D1 ... DN] of the measured space (e.g., X x Y x Z x T)
 %   strength = n vector [I1 ... IN] specifying the strengths within each

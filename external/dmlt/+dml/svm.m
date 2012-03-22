@@ -29,6 +29,8 @@ classdef svm < dml.method
     
     distance = false; % return distance from decision boundary instead of class label
     
+    native = false; % uses native Bioinformatics toolbox SVM implementation if true
+    
   end
   
   methods
@@ -46,6 +48,11 @@ classdef svm < dml.method
         obj = dml.ndata('method',obj);
         obj = obj.train(X,Y);
         return;
+      end
+      
+      if obj.native
+        obj.Ktrain = svmtrain(X,Y);
+        return
       end
       
       if obj.restart || isempty(obj.dual)
@@ -76,6 +83,13 @@ classdef svm < dml.method
     end
     
     function Y = test(obj,X)
+      
+      if obj.native
+        C = svmclassify(obj.Ktrain,X);
+        Y = zeros(size(C,1),2);
+        Y(C + (0:2:(2*(size(C,1)-1)))')=1;
+        return
+      end
       
       if isempty(obj.Ktest)
         obj.Ktest = compKernel(X,obj.X,'linear');

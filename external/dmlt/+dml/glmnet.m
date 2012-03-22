@@ -41,6 +41,8 @@ classdef glmnet < dml.method
    performance % cross-validated decoding performance for elements on lambda path
    path % lambda path followed when estimating decoding performance
    
+   df % degrees of freedom
+   
   end
   
   methods
@@ -95,8 +97,6 @@ classdef glmnet < dml.method
           
           obj.weights = regress(Y,[X ones(size(X,1),1)]); % X \ Y
           
-          return
-          
         elseif obj.alpha == 0 && strcmp(obj.family,'gaussian')
           
           lambdas = [obj.lambda*ones(size(X,2),1); 0];
@@ -104,13 +104,9 @@ classdef glmnet < dml.method
           R = chol(X'*X + diag(lambdas));
           obj.weights = R\(R'\(X'*Y));
           
-          return
-          
         elseif obj.lambda == 0 && strcmp(obj.family,'binomial')
           
           obj.weights = -logist2(Y-1,[X ones(size(X,1),1)]);
-          
-          return
           
         elseif obj.lambda == 0 && strcmp(obj.family,'multinomial')
           
@@ -122,135 +118,144 @@ classdef glmnet < dml.method
           obj.weights = logistK(P',[X ones(size(X,1),1)]')';
           %obj.weights = mnrfit(X,P,'model','nominal','interactions','on');
           
-          return
-          
         end
         
-      end
-      
-      opts = glmnetSet;      
-      if ~isempty(obj.alpha), opts.alpha = obj.alpha; end
-      if ~isempty(obj.lambda), opts.lambda = obj.lambda; end
-      
-      if ~isscalar(obj.lambda) && ~isempty(obj.validator)
-        % find best lambda by using the cross-validator
+       else
         
-        % predetermine the lambda path for all folds
-        % otherwise we get different lambdas for different folds which
-        % makes everything hard to compare
-        opts.iter = 0;
-        res = glmnet(X,Y,obj.family,opts);
-        obj.lambda = res.lambda;
+        opts = glmnetSet;
+        if ~isempty(obj.alpha), opts.alpha = obj.alpha; end
+        if ~isempty(obj.lambda), opts.lambda = obj.lambda; end
         
-        if isempty(obj.validator.stat)
-          if strcmp(obj.family,'gaussian')
-            obj.validator.stat='-RMS';
+        if ~isscalar(obj.lambda) && ~isempty(obj.validator)
+          % find best lambda by using the cross-validator
+          
+          % predetermine the lambda path for all folds
+          % otherwise we get different lambdas for different folds which
+          % makes everything hard to compare
+          opts.iter = 0;
+          res = glmnet(X,Y,obj.family,opts);
+          obj.lambda = res.lambda;
+          
+          if isempty(obj.validator.stat)
+            if strcmp(obj.family,'gaussian')
+              obj.validator.stat='-RMS';
+            else
+              obj.validator.stat='accuracy';
+            end
+          end
+          
+          obj.validator.mva = obj;
+          obj.validator.mva.validator = [];
+          obj.validator = obj.validator.train(X,Y);
+          
+          % sometimes lambda is cut off by glmnet; this ensures the solutions exist
+          nsolutions = min(cellfun(@(x)(size(x,2)),obj.validator.result)) / nclasses;
+          
+          obj.performance = zeros(length(obj.validator.design),nsolutions);
+          
+          for j=1:nsolutions
+            
+            post = cellfun(@(x)(x(:,(j-1)*nclasses + (1:nclasses))),obj.validator.result,'UniformOutput',false);
+            
+            perf = dml.statistic(obj.validator.stat,cell2mat(obj.validator.design),cell2mat(post));
+            
+            if iscell(perf), perf = cell2mat(perf); end
+            
+            obj.performance(:,j) = perf;
+            
+          end
+          obj.path  = obj.lambda(1:nsolutions);
+          
+          % find best lambda; smallest lambda whose performance is within one standard
+          % error from the best performance (Hastie's one standard error rule)
+          %[a,b] = max(obj.performance,[],2);
+          if size(obj.performance,1)==1
+            [a,b] = max(obj.performance);
           else
-            obj.validator.stat='accuracy';
-          end
-        end
-        
-        obj.validator.mva = obj;
-        obj.validator.mva.validator = [];
-        obj.validator = obj.validator.train(X,Y);
-        
-        % sometimes lambda is cut off by glmnet; this ensures the solutions exist
-        nsolutions = min(cellfun(@(x)(size(x,2)),obj.validator.result)) / nclasses;
-        
-        obj.performance = zeros(length(obj.validator.design),nsolutions);
-        
-        for j=1:nsolutions
-          
-          post = cellfun(@(x)(x(:,(j-1)*nclasses + (1:nclasses))),obj.validator.result,'UniformOutput',false);
-          
-          perf = dml.statistic(obj.validator.stat,cell2mat(obj.validator.design),cell2mat(post));
-          
-          if iscell(perf), perf = cell2mat(perf); end
-          
-          obj.performance(:,j) = perf;
-          
-        end
-        obj.path  = obj.lambda(1:nsolutions);
-        
-        % find best lambda; smallest lambda whose performance is within one standard
-        % error from the best performance (Hastie's one standard error rule)
-        %[a,b] = max(obj.performance,[],2);
-        if size(obj.performance,1)==1
-          [a,b] = max(obj.performance);
-        else
-          mp = mean(obj.performance);
-          [maxp,midx] = max(mp);
-          ep = std(obj.performance) ./ size(obj.performance,1);
-          b = find(mp >= (maxp - ep(midx)),1,'first');
-          if isempty(b), b=1; end
-        end
-        
-        % create lambda path with the best lambda (mean(lbest)) at the end
-        % in order to ensure proper convergence to the correct solution
-        lbest = zeros(1,length(b));
-        lmax = zeros(1,length(b));
-        for j=1:length(b)
-          lbest(j) = obj.validator.mva{j}.lambda(b(j));
-          lmax(j) = obj.validator.mva{j}.lambda(1);
-        end
-        obj.lambda = mean(lbest);
-        opts.lambda = linspace(max(lmax),mean(lbest),50);
-        
-        % create unique path (1 element if lbest=lmax)
-        opts.lambda = sort(unique(opts.lambda),'descend');
-        
-        u = unique(Y);
-        
-        if length(u) == 1
-          % degenerate case
-          
-          if u==1
-            obj.weights = [zeros(size(X,2),1); -1];
-          else % u==2
-            obj.weights = [zeros(size(X,2),1); 1];
+            mp = mean(obj.performance);
+            [maxp,midx] = max(mp);
+            ep = std(obj.performance) ./ size(obj.performance,1);
+            b = find(mp >= (maxp - ep(midx)),1,'first');
+            if isempty(b), b=1; end
           end
           
-          if isempty(opts.lambda)
-            obj.weights = repmat(obj.weights,[1 opts.nlambda]);
+          % create lambda path with the best lambda (mean(lbest)) at the end
+          % in order to ensure proper convergence to the correct solution
+          lbest = zeros(1,length(b));
+          lmax = zeros(1,length(b));
+          for j=1:length(b)
+            lbest(j) = obj.validator.mva{j}.lambda(b(j));
+            lmax(j) = obj.validator.mva{j}.lambda(1);
+          end
+          obj.lambda = mean(lbest);
+          opts.lambda = linspace(max(lmax),mean(lbest),50);
+          
+          % create unique path (1 element if lbest=lmax)
+          opts.lambda = sort(unique(opts.lambda),'descend');
+          
+          u = unique(Y);
+          
+          if length(u) == 1
+            % degenerate case
+            
+            if u==1
+              obj.weights = [zeros(size(X,2),1); -1];
+            else % u==2
+              obj.weights = [zeros(size(X,2),1); 1];
+            end
+            
+            if isempty(opts.lambda)
+              obj.weights = repmat(obj.weights,[1 opts.nlambda]);
+            end
+            
+          else
+            
+            obj.weights = obj.estimate(X,Y,obj.family,opts);
+            
           end
           
-        else
-          
-         obj.weights = obj.estimate(X,Y,obj.family,opts);
-          
-        end
-        
-        if strcmp(obj.family,'multinomial')
-          obj.weights = obj.weights(:,:,end);
-        else
-          obj.weights = obj.weights(:,end);
-        end
-        obj.performance = mean(obj.performance,1);
-        
-      else % return result for specified lambda; no cross-validation
-          
-        if isscalar(obj.lambda)
-
-          obj.weights = obj.estimate(X,Y,obj.family,opts);
           if strcmp(obj.family,'multinomial')
-            if ndims(obj.weights)==3 && size(obj.weights,3)>1
-              obj.weights = obj.weights(:,:,end);
-            end
+            obj.weights = obj.weights(:,:,end);
           else
-            if ndims(obj.weights)==2 && size(obj.weights,2)>1
-              obj.weights = obj.weights(:,end);
-            end
+            obj.weights = obj.weights(:,end);
           end
+          obj.performance = mean(obj.performance,1);
           
-        else
+        else % return result for specified lambda; no cross-validation
           
-          [obj.weights,obj.path] = obj.estimate(X,Y,obj.family,opts);
-          obj.lambda = obj.path;
+          if isscalar(obj.lambda)
+            
+            obj.weights = obj.estimate(X,Y,obj.family,opts);
+            if strcmp(obj.family,'multinomial')
+              if ndims(obj.weights)==3 && size(obj.weights,3)>1
+                obj.weights = obj.weights(:,:,end);
+              end
+            else
+              if ndims(obj.weights)==2 && size(obj.weights,2)>1
+                obj.weights = obj.weights(:,end);
+              end
+            end
+            
+          else
+            
+            [obj.weights,obj.path] = obj.estimate(X,Y,obj.family,opts);
+            obj.lambda = obj.path;
+            
+          end         
           
         end
-                
+        
       end
-              
+      
+      % compute degrees of freedom for Gaussian case
+      if size(obj.weights,2)==1 && strcmp(obj.family,'gaussian')
+        
+        idx = (obj.weights ~= 0); idx(end)=0;
+        obj.df = trace(X(:,idx)*inv(X(:,idx)'*X(:,idx) + obj.lambda*(1-obj.alpha)*eye(sum(idx)))*X(:,idx)');
+
+      end
+
+               
     end
     
     function Y = test(obj,X)
