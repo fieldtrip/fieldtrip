@@ -574,7 +574,9 @@ if issource || isvolume,
       tmp1 = getfield(data, sub1);
       for j=1:numel(tmp1)
         tmp2 = getfield(tmp1(j), sub2);
-        tmp2 = reshape(tmp2, dim);
+        if prod(dim)==numel(tmp2)
+          tmp2 = reshape(tmp2, dim);
+        end
         tmp1(j) = setfield(tmp1(j), sub2, tmp2);
       end
       data = setfield(data, sub1, tmp1);
