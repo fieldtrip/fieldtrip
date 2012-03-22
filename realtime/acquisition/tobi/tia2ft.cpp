@@ -45,16 +45,13 @@ using namespace std;
 namespace po = boost::program_options;
 
 // Forward declarations
-int ft_put_data(int ft_buffer, int nchannels, int nsamples, 
-  const float *chan_samp);
+int ft_put_data(int ft_buffer, int nchannels, int nsamples, const float *chan_samp);
 int ft_put_hdr(int ft_buffer, int nchann, int fsample);
 
-bool connect_tia_client(tia::TiAClient &client, const string tia_serv_addr, 
-  int tia_serv_port);
+bool connect_tia_client(tia::TiAClient &client, const string tia_serv_addr, int tia_serv_port);
 void start_ft_buffer(int port);
-int sync_meta_info(tia::TiAClient &tia_client, int ft_buffer);
-int forward_packet(tia::DataPacket &packet, int ft_buffer);
-
+int  sync_meta_info(tia::TiAClient &tia_client, int ft_buffer);
+int  forward_packet(tia::DataPacket &packet, int ft_buffer);
 
 int main(int argc, char *argv[])
 {
