@@ -63,10 +63,10 @@ if strcmp(stype, 'old'),
   % original code
   % first do the non-trial fields
   [param]    = parameterselection('all', source);
-  trlparam   = strmatch('trial', param);
-  sel        = setdiff(1:length(param), trlparam);
-  param      = param(sel);
-  
+  %trlparam   = find(strcmp('trial', param));
+  %sel        = setdiff(1:length(param), trlparam);
+  %param      = param(sel);
+  param      = setdiff(param, {'trial' 'pos'});
   for j = 1:length(param)
     dat    = getsubfield(source, param{j});
     source = setsubfield(source, param{j}, dat(inside));
