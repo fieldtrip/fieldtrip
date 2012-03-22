@@ -24,6 +24,7 @@ function [cfg] = ft_databrowser(cfg, data)
 %
 % The following configuration options are supported:
 %   cfg.ylim                    = vertical scaling, can be 'maxmin', 'maxabs' or [ymin ymax] (default = 'maxabs')
+%   cfg.zlim                    = color scaling to apply to component topographies, 'minmax', 'maxabs' (default = 'maxmin') 
 %   cfg.blocksize               = duration in seconds for cutting the data up, only aplicable for continuous data
 %   cfg.trl                     = structure that defines the data segments of interest, only applicable for trial-based data
 %   cfg.continuous              = 'yes' or 'no' whether the data should be interpreted as continuous or trial-based
@@ -53,7 +54,9 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.gradscale               = number, scaling to apply to the MEG gradiometer channels prior to display (in addition to the cfg.megscale factor)
 %   cfg.magscale                = number, scaling to apply to the MEG magnetometer channels prior to display (in addition to the cfg.megscale factor)
 %   cfg.chanscale               = Nx1 vector with scaling factors, one per channel specified in cfg.channel
-%
+%   cfg.compscale               = string, 'local' or 'global', defines whether the colormap for the topographic scaling is 
+%                                  applied per topography or on all visualized components (default 'local')
+
 % The scaling to the EEG, EOG, ECG, EMG and MEG channels is optional and
 % can be used to bring the absolute numbers of the different channel types
 % in the same range (e.g. fT and uV). The channel types are determined from
@@ -146,6 +149,9 @@ if ~isfield(cfg, 'continuous'),      cfg.continuous = [];                 end % 
 if ~isfield(cfg, 'ploteventlabels'), cfg.ploteventlabels = 'type=value';  end
 if ~isfield(cfg, 'enablepreprocedit'), cfg.enablepreprocedit = 'no';      end
 
+
+cfg.zlim           = ft_getopt(cfg, 'zlim',          'maxmin');
+cfg.compscale      = ft_getopt(cfg, 'compscale',     'global');
 
 if ~isfield(cfg, 'viewmode')
   % butterfly, vertical, component
@@ -1413,19 +1419,50 @@ if strcmp(cfg.viewmode, 'component')
     chanx = laychan.pos(sel2,1);
     chany = laychan.pos(sel2,2);
     
+    if strcmp(cfg.compscale, 'global')
+       for i=1:length(chanindx) % loop through all components to get max and min
+         zmin(i) = min(opt.orgdata.topo(sel1,chanindx(i)));
+         zmax(i) = max(opt.orgdata.topo(sel1,chanindx(i)));
+       end
+       
+       if strcmp(cfg.zlim, 'maxmin')
+         zmin = min(zmin);
+         zmax = max(zmax);
+       elseif strcmp(cfg.zlim, 'maxabs')
+         zmax = max([abs(zmin) abs(zmax)]);
+         zmin = -zmax;
+       else
+         error('configuration option for component scaling could not be recognized');
+        end
+    end
+    
     for i=1:length(chanindx)
       % plot the topography of this component
       laysel = match_str(opt.laytime.label, opt.hdr.label(chanindx(i)));
       chanz = opt.orgdata.topo(sel1,chanindx(i));
-      chanz = chanz./max(abs(chanz));
       
+      if strcmp(cfg.compscale, 'local')
+        % compute scaling factors here
+        if strcmp(cfg.zlim, 'maxmin')
+         zmin = min(chanz);
+         zmax = max(chanz);
+       elseif strcmp(cfg.zlim, 'maxabs')
+         zmax = max(abs(chanz));
+         zmin = -zmax;
+        end
+      end
+      
+      % scaling
+      chanz = (chanz - zmin) ./  (zmax- zmin);
       ft_plot_topo(chanx, chany, chanz, 'mask', laychan.mask, 'interplim', 'mask', 'outline', laychan.outline, 'tag', 'topography', ...
         'hpos', laytopo.pos(laysel,1), 'vpos', laytopo.pos(laysel,2), 'width', laytopo.width(laysel), 'height', laytopo.height(laysel));
       
       axis equal
       drawnow
-    end
+    end    
     
+    caxis([0 1]);
+
   end % if redraw_topo
   
   set(gca, 'yTick', [])
