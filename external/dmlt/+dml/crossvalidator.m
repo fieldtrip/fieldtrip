@@ -169,7 +169,7 @@ classdef crossvalidator
           
         end
         
-        % return unique model instead of cell array in case of just one fold
+        % return unique model instead of cell array in case of one fold
         if length(obj.model)==1, obj.model = obj.model{1}; end
         
        
