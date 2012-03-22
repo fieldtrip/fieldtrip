@@ -1,5 +1,5 @@
 /* 
-  Copyright 2012, Donders institute of Cognitive Neuroimaging.
+  Copyright 2012, Donders Center for Cognitive Neuroimaging.
   Based on tia_clien_main.cpp, copyright 2010 Graz University of Technology.
   License: GPL or BSD.
 */
@@ -15,12 +15,14 @@
   TODO:
   [ ] add (consistent) error handling
   [V] consider removing thread
-  [ ] should we support UDP? -> I think not
+  [V] should we support UDP? -> I think not
   [ ] support "localhost" instead of 127.0.0.1
   [V] think of support for heterogeneous streams.
   [ ] ask Christian to read code.
   [ ] exit cleanly on ctrl-c.
   [ ] test in TOBI environment.
+  [ ] update README with CLI interface.
+  [ ] COPYING file for tia2ft, and in libs.
 */
 
 // STL
@@ -28,6 +30,7 @@
 
 // Boost
 #include <boost/asio.hpp>
+#include <boost/thread.hpp>
 #include <boost/program_options.hpp>
 
 // TiA
@@ -68,7 +71,7 @@ int main(int argc, char *argv[])
     ("verbose,v", 
       po::value<bool>(&verbose)->default_value(false)->zero_tokens(),
       "Print more info.")
-    ("tia-host", po::value<string>(&tia_host)->default_value("127.0.0.1"), 
+    ("tia-host", po::value<string>(&tia_host)->default_value("localhost"), 
       "Set host name of TiA server.")
     ("tia-port", po::value<int>(&tia_port)->default_value(9000), 
       "Set port of TiA server.")
@@ -76,7 +79,8 @@ int main(int argc, char *argv[])
       "Set host name of FieldTrip buffer server.")
     ("fieldtrip-port", po::value<int>(&ft_port)->default_value(1972), 
       "Set port of FieldTrip buffer server.")
-    ("serve-ft-buffer", po::value<bool>(&serve_ft_buffer)->default_value(false),
+    ("serve-ft-buffer", 
+      po::value<bool>(&serve_ft_buffer)->default_value(false)->zero_tokens(),
       "Start a new FieldTrip buffer instead of connecting to an existing one.")
     ;
 
@@ -96,6 +100,8 @@ int main(int argc, char *argv[])
 
   // Connect to TiA.
   tia::TiAClient tia_client(true);  // use new-style TiA implementation
+  if (tia_host == "localhost")
+    tia_host = "127.0.0.1";  // libtia does not recognize localhost.
   if (!connect_tia_client(tia_client, tia_host, tia_port)) {
     cerr << "Could not connect to TiA server. Closing." << endl;
     cout << desc << endl;
@@ -107,7 +113,11 @@ int main(int argc, char *argv[])
 
   // Connect to FT buffer, and start one if requested:
   if (serve_ft_buffer)
-    start_ft_buffer(1972);
+  {
+    boost::thread ft_buffer_thread(&start_ft_buffer, ft_port);
+    cout << "Started FieldTrip buffer on port " << ft_port << "." << endl;
+    // TODO: join?
+  }
 
   int ft_buffer = open_connection(ft_host.c_str(), ft_port);
   if(ft_buffer <= 0) {
@@ -162,7 +172,6 @@ bool connect_tia_client(tia::TiAClient &client, const string tia_serv_addr,
 
 /* Starts FieldTrip buffer server on this host. */
 void start_ft_buffer(int port) {
-  // TODO: start in separate thread
   host_t host;
   host.port = port;
   check_datatypes();  // sanity check for sizes of different data types.
@@ -221,6 +230,10 @@ int sync_meta_info(tia::TiAClient &tia_client, int ft_buffer) {
  * Support for heterogeneous data streams can be implemented by using a
  * sampling rate that an integer multiple of the modality's sampling rates, and
  * re-sampling the signals accordingly.
+ *
+ * Note that even if different signal streams have the same sampling rate, TiA
+ * does not guarantee that an equal amount of samples per signal stream is
+ * present in a data packet. 
  */
 int forward_packet(tia::DataPacket &packet, int ft_buffer)
 {
@@ -285,6 +298,7 @@ int ft_put_hdr(int ft_buffer, int nchann, int fsample)
 int ft_put_data(int ft_buffer, int nchannels, int nsamples, 
   const float *chan_samp)
 {
+  int status = 0;
   // Create descriptor of raw data for FT-buffer:
   datadef_t data_hdr = {0};
   data_hdr.nchans = nchannels;
@@ -308,13 +322,15 @@ int ft_put_data(int ft_buffer, int nchannels, int nsamples,
 
   message_t *response = NULL; 
   if (!clientrequest(ft_buffer, &req, &response))
-    return -1; // TODO: this does not free!
+    status = -1;
   if (response->def->command != PUT_OK)
-    return -2; // TODO: this does not free!
+    status = -2;
 
   free(req.buf);
   free(response->buf);
   free(response->def);
   free(response);
+
+  return status;
 }
 
