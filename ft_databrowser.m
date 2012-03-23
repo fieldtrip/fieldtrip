@@ -213,6 +213,7 @@ if hasdata
   
   if isfield(data, 'cfg') && ~isempty(ft_findcfg(data.cfg, 'origfs'))
     % don't use the events in case the data has been resampled
+    warning('the data has been resampled, not showing the events');
     event = [];
   elseif ~isempty(cfg.event)
     % use the events that the user passed in the configuration

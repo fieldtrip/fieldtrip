@@ -34,6 +34,10 @@ data = ft_checkdata(data, 'datatype', 'raw');
 % locate the event structure
 if (isfield(data, 'cfg'))
   event = ft_findcfg(data.cfg, 'event');
+  if ~isstruct(event)
+    % this happens if the cfg has been cleaned up with checksize in ft_checkconfig, it can then be 'empty - removed by ft_checkconfig'
+    event = [];
+  end
 else
   event = [];
 end
