@@ -15,8 +15,7 @@ function stat = statistics_crossvalidate(cfg, dat, design)
 %
 % Returns:
 %   stat.statistic    = the statistics to report
-%   stat.pvalue       = p-value for the specified significance test
-%   stat.model<n>     = the n-th model associated with this multivariate analysis
+%   stat.model        = the models associated with this multivariate analysis
 %
 
 % Copyright (c) 2007-2011, Marcel van Gerven, F.C. Donders Centre
@@ -59,12 +58,15 @@ end
 if ~isfield(cfg,'nfolds'), cfg.nfolds = 5; end
 
 cv = dml.crossvalidator('mva',cfg.mva,'type','nfold','folds',cfg.nfolds,'compact',true,'verbose',true);
-  
-if isfield(cfg, 'trainfolds')
-  cv.trainfolds = cfg.trainfolds;
+
+if any(isinf(dat(:)))
+  warning('Inf encountered; replacing by zeros');
+  dat(isinf(dat(:))) = 0;
 end
-if isfield(cfg, 'testfolds')
-  cv.testfolds = cfg.testfolds;
+
+if any(isnan(dat(:)))
+  warning('Nan encountered; replacing by zeros');
+  dat(isnan(dat(:))) = 0;
 end
 
 % perform everything!
@@ -83,7 +85,7 @@ fn = fieldnames(stat.model{1});
 for i=1:length(stat.model)
   
   for k=1:length(fn)
-    if prod(size(stat.model{i}.(fn{k})))==prod(cfg.dim)
+    if numel(stat.model{i}.(fn{k}))==prod(cfg.dim)
       stat.model{i}.(fn{k}) = squeeze(reshape(stat.model{i}.(fn{k}),cfg.dim));
     end
   end
