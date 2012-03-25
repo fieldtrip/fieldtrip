@@ -14,6 +14,8 @@ dataPre = ft_redefinetrial(cfg, dataFIC);
 cfg.toilim = [0.8 1.3];
 dataPost = ft_redefinetrial(cfg, dataFIC);
 
+dataAll = ft_appenddata([], dataPre, dataPost);
+
 %% Cross-spectral density
 
 cfg = [];
@@ -29,6 +31,13 @@ cfg.output    = 'powandcsd';
 cfg.tapsmofrq = 4;
 cfg.foilim    = [18 18];
 freqPost = ft_freqanalysis(cfg, dataPost);
+
+cfg = [];
+cfg.method    = 'mtmfft';
+cfg.output    = 'powandcsd';
+cfg.tapsmofrq = 4;
+cfg.foilim    = [18 18];
+freqAll = ft_freqanalysis(cfg, dataPost);
 
 %% Compute (or load) the forward model)
 
@@ -46,11 +55,12 @@ freqPost = ft_freqanalysis(cfg, dataPost);
 
 %% Prepare head model
 cfg = [];
-vol = ft_prepare_singleshell(cfg, segmentedmri);
+cfg.method = 'singleshell';
+vol = ft_prepare_headmodel(cfg, segmentedmri);
 
 %% Prepare leadfield
 cfg                 = [];
-cfg.grad            = freqPre.grad;
+cfg.grad            = freqAll.grad;
 cfg.vol             = vol;
 cfg.reducerank      = 2;
 cfg.channel         = {'MEG','-MLP31', '-MLO12'};
@@ -59,13 +69,17 @@ cfg.grid.resolution = 1;   % use a 3-D grid with a 1 cm resolution
 
 %% Source analysis
 cfg              = [];
-cfg.frequency    = 18;
 cfg.method       = 'dics';
-cfg.projectnoise = 'yes';
+cfg.frequency    = 18;
 cfg.grid         = grid;
 cfg.vol          = vol;
-cfg.lambda       = 0;
+cfg.dics.projectnoise = 'yes';
+cfg.dics.lambda       = '5%';
+cfg.dics.keepfilter   = 'yes';
+cfg.dics.realfilter   = 'yes';
+sourceAll = ft_sourceanalysis(cfg, freqAll);
 
+cfg.grid.filter = sourceAll.avg.filter;
 sourcePre  = ft_sourceanalysis(cfg, freqPre );
 sourcePost = ft_sourceanalysis(cfg, freqPost);
 
@@ -75,6 +89,7 @@ sourcePost = ft_sourceanalysis(cfg, freqPost);
 %% Plot results
 cfg            = [];
 cfg.downsample = 2;
+cfg.parameter  = 'avg.pow';
 sourcePostInt  = ft_sourceinterpolate(cfg, sourcePost , mri);
 
 cfg              = [];
@@ -90,6 +105,7 @@ sourceDiff.avg.pow = (sourcePost.avg.pow - sourcePre.avg.pow) ./ sourcePre.avg.p
 
 cfg            = [];
 cfg.downsample = 2;
+cfg.parameter  = 'avg.pow';
 sourceDiffInt  = ft_sourceinterpolate(cfg, sourceDiff , mri);
 
 
@@ -97,8 +113,8 @@ cfg = [];
 cfg.method        = 'slice';
 cfg.funparameter  = 'avg.pow';
 cfg.maskparameter = cfg.funparameter;
-cfg.funcolorlim   = [0.0 1.2];
-cfg.opacitylim    = [0.0 1.2];
+cfg.funcolorlim   = [-0.5 0.5];
+%cfg.opacitylim    = [-0.5 0.5];
 cfg.opacitymap    = 'rampup';
 figure
 ft_sourceplot(cfg, sourceDiffInt);
@@ -165,6 +181,7 @@ sourceNAI.avg.pow = sourcePost.avg.pow ./ sourcePost.avg.noise;
 
 cfg = [];
 cfg.downsample = 2;
+cfg.parameter  = 'avg.pow';
 sourceNAIInt = ft_sourceinterpolate(cfg, sourceNAI , mri);
 
 
