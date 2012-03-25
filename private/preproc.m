@@ -106,9 +106,6 @@ function [dat, label, time, cfg] = preproc(dat, label, time, cfg, begpadding, en
 % compute fsample
 fsample = 1./mean(diff(time));
 
-% compute offset, which is used later on to compute the full time-axis for padded data
-offset = time2offset(time,fsample);
-
 if nargin<5 || isempty(begpadding)
   begpadding = 0;
 end
@@ -276,13 +273,6 @@ if strcmp(cfg.detrend, 'yes')
   endsample = nsamples - endpadding;
   dat = ft_preproc_detrend(dat, begsample, endsample);
 end
-if strcmp(cfg.demean, 'yes') || nargout>2
-  % determine the complete time axis for the baseline correction
-  % but only construct it when really needed, since it takes up a large amount of memory
-  % the time axis should include the filter padding
-  nsamples = size(dat,2);
-  time = (offset - begpadding + (0:(nsamples-1)))/fsample;
-end
 if strcmp(cfg.demean, 'yes')
   if ischar(cfg.baselinewindow) && strcmp(cfg.baselinewindow, 'all')
     % the begin and endsample of the baseline period correspond to the complete data minus padding
@@ -319,13 +309,6 @@ if strcmp(cfg.detrend, 'yes')
   begsample = 1        + begpadding;
   endsample = nsamples - endpadding;
   dat = ft_preproc_detrend(dat, begsample, endsample);
-end
-if strcmp(cfg.demean, 'yes') || nargout>2
-  % determine the complete time axis for the baseline correction
-  % but only construct it when really needed, since it takes up a large amount of memory
-  % the time axis should include the filter padding
-  nsamples = size(dat,2);
-  time = (offset - begpadding + (0:(nsamples-1)))/fsample;
 end
 if strcmp(cfg.demean, 'yes')
   if ischar(cfg.baselinewindow) && strcmp(cfg.baselinewindow, 'all')

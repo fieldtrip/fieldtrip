@@ -185,7 +185,7 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble help
-ft_preamble distribute
+%ft_preamble distribute
 ft_preamble callinfo
 ft_preamble trackconfig
 ft_preamble loadvar data
@@ -471,9 +471,10 @@ else
       % non-zero padding is used for filtering and line noise removal
       nsamples = cfg.trl(i,2)-cfg.trl(i,1)+1;
       if nsamples>padding
-        % the trial is already longer than the total lenght requested
+        % the trial is already longer than the total length requested
         begsample  = cfg.trl(i,1);
         endsample  = cfg.trl(i,2);
+        offset     = cfg.trl(i,3);
         begpadding = 0;
         endpadding = 0;
       else
@@ -504,13 +505,15 @@ else
           endpadding = endpadding - (endsample - hdr.nSamples*hdr.nTrials);
           endsample  = hdr.nSamples*hdr.nTrials;
         end
+        offset = cfg.trl(i,3) - begpadding;
       end
 
       % read the raw data with padding on both sides of the trial
       dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', rawindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
-
+      tim = offset2time(offset, hdr.Fs, size(dat,2));
+      
       % do the preprocessing on the padded trial data and remove the padding after filtering
-      [cutdat{i}, label, time{i}, cfg] = preproc(dat, hdr.label(rawindx), offset2time(cfg.trl(i,3), hdr.Fs, size(dat,2)), cfg, begpadding, endpadding);
+      [cutdat{i}, label, time{i}, cfg] = preproc(dat, hdr.label(rawindx), tim, cfg, begpadding, endpadding);
 
       if isfield(cfg, 'export') && ~isempty(cfg.export)
         % write the processed data to an original manufacturer format file
