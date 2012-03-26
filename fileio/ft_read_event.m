@@ -1483,7 +1483,8 @@ switch eventformat
     event = read_bucn_nirsevent(filename);
     
   otherwise
-    error('unsupported event format (%s)', eventformat);
+    warning('unsupported event format (%s)', eventformat);
+    event = [];
 end
 
 if ~isempty(hdr) && hdr.nTrials>1 && (isempty(event) || ~any(strcmp({event.type}, 'trial')))

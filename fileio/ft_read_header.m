@@ -264,8 +264,8 @@ switch headerformat
   case {'gdf'}
     % this requires the biosig toolbox
     ft_hastoolbox('BIOSIG', 1);
-    % In the case that the gdf files are written by one of the FieldTrip 
-    % realtime applications, such as biosig2ft, the gdf recording can be 
+    % In the case that the gdf files are written by one of the FieldTrip
+    % realtime applications, such as biosig2ft, the gdf recording can be
     % split over multiple 1GB files. The sequence of files is then
     %   filename.gdf   <- this is the one that should be specified as the filename/dataset
     %   filename_1.gdf
@@ -719,7 +719,7 @@ switch headerformat
       else
         fieldname = xmlfiles(i).name(1:end-4);
         filename_xml  = fullfile(filename, xmlfiles(i).name);
-        orig.xml.(fieldname) = xml2struct(filename_xml);        
+        orig.xml.(fieldname) = xml2struct(filename_xml);
       end
     end
     warning('on', 'MATLAB:REGEXP:deprecated')
@@ -1597,6 +1597,9 @@ switch headerformat
     orig = read_bucn_nirshdr(filename);
     hdr  = rmfield(orig, 'time');
     hdr.orig = orig;
+
+  case 'neurosim'
+    hdr = read_neurosim_signals(filename);
     
   otherwise
     if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)

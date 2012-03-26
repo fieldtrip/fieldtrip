@@ -1,7 +1,7 @@
 function [hdr, dat] = read_neurosim_signals(filename)
 
 % READ_NEUROSIM_SIGNALS reads the "signals" file that is written by Jan
-% van der Eerden's NeuroSim software. 
+% van der Eerden's NeuroSim software.
 %
 % See also FT_READ_HEADER, FT_READ_DATA
 
@@ -29,5 +29,62 @@ if isdir(filename)
   filename = fullfile(filename, 'signals');
 end
 
-error('this implementation is not yet finished');
+needdat = (nargout>1);
+needdat = true; % otherwise it fails to determine the number of samples in the file correctly
 
+label = {};
+orig  = {};
+
+fid = fopen(filename, 'rb');
+
+% read the header
+line =  '#';
+while ~isempty(line)
+  % parse the content of the line, determine the label for each column
+  colid = sscanf(line, '# column %d:', 1);
+  if ~isempty(colid)
+    label{colid} = strtrim(line(find(line==':')+1:end));
+  end
+  
+  offset = ftell(fid); % remember the file pointer position
+  line   = fgetl(fid); % get the next line
+  if ~isempty(line) && line(1)~='#' && ~isempty(str2num(line))
+    % the data starts here, rewind the last line
+    fseek(fid, offset, 'bof');
+    line = [];
+  else
+    orig{end+1} = line;
+  end
+end
+
+if needdat
+  % read the complete data
+  dat = fscanf(fid, '%f', [length(label), inf]);
+else
+  % read only a small piece of data
+  % this allows the code further down to determine the sampling frequency
+  dat = fscanf(fid, '%f', [length(label), 10]);
+end
+
+fclose(fid);
+
+% get the time axis, this is needed to determine the sampling frequency
+time = dat(match_str(label, 'Time'), :);
+fsample = median(1./diff(time));
+
+% convert the header into fieldtrip style
+hdr             = [];
+hdr.label       = label(:);
+hdr.Fs          = fsample;
+hdr.nChans      = length(label);
+% represent it as a single continuous recording
+if needdat
+  hdr.nSamples    = length(time);
+else
+  hdr.nSamples    = inf; % the total duration of the file is not known
+end
+
+hdr.nSamplesPre = 0;
+hdr.nTrials     = 1;
+% also store the original ascii header details
+hdr.orig        = orig(:);

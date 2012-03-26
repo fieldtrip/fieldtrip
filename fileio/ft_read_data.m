@@ -991,6 +991,10 @@ switch dataformat
   case 'bucn_nirs'
     dat = read_bucn_nirsdata(filename, hdr, begsample, endsample, chanindx);
     
+  case 'neurosim'
+    [hdr, dat] = read_neurosim_signals(filename);
+    dat = dat(chanindx,begsample:endsample);
+
   otherwise
     if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
       dat = read_biosig_data(filename, hdr, begsample, endsample, chanindx);
