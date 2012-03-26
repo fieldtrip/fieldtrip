@@ -36,7 +36,7 @@ function hdr = load_nifti(niftifile,hdronly)
 %    $Date: 2011/03/02 00:04:12 $
 %    $Revision$
 %
-% Copyright © 2011 The General Hospital Corporation (Boston, MA) "MGH"
+% Copyright ?? 2011 The General Hospital Corporation (Boston, MA) "MGH"
 %
 % Terms and conditions for use, reproduction, distribution and contribution
 % are found in the 'FreeSurfer Software License Agreement' contained
@@ -66,7 +66,7 @@ if(strcmpi(ext,'.gz'))
 		   sum(int16(niftifile))) + round(cputime);
   ind = findstr(niftifile, '.');
   new_niftifile = sprintf('/tmp/tmp%d.nii', gzipped);
-  %fprintf('Uncompressing %s to %s\n',niftifile,new_niftifile);
+  fprintf('Uncompressing %s to %s\n',niftifile,new_niftifile);
   if(strcmp(computer,'MAC') || strcmp(computer,'MACI') || ismac)
     unix(sprintf('gunzip -c %s > %s', niftifile, new_niftifile));
   else
