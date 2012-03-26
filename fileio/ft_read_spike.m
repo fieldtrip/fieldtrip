@@ -54,6 +54,9 @@ function [spike] = ft_read_spike(filename, varargin)
 spikeformat = ft_getopt(varargin, 'spikeformat', ft_filetype(filename));
 
 switch spikeformat
+  case 'neurosim'
+    spike = read_neurosim_spikes(filename);
+
   case {'neuralynx_ncs' 'plexon_ddt'}
     % these files only contain continuous data
     error('file does not contain spike timestamps or waveforms');
