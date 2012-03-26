@@ -16,6 +16,13 @@ function hdr = load_nifti(niftifile,hdronly)
 % hdr.vox2ras is the vox2ras matrix based on sform (if valid), then
 % qform.
 %
+% Handles data structures with more than 32k cols by looking for
+% hdr.dim(2) = -1 in which case ncols = hdr.glmin. This is FreeSurfer
+% specific, for handling surfaces. When the total number of spatial
+% voxels equals 163842, then the volume is reshaped to
+% 163842x1x1xnframes. This is for handling the 7th order icosahedron
+% used by FS group analysis.
+%
 % See also: load_nifti_hdr.m
 %
 
@@ -26,20 +33,18 @@ function hdr = load_nifti(niftifile,hdronly)
 % Original Author: Doug Greve
 % CVS Revision Info:
 %    $Author: nicks $
-%    $Date: 2007/12/10 15:52:36 $
+%    $Date: 2011/03/02 00:04:12 $
 %    $Revision$
 %
-% Copyright (C) 2002-2007,
-% The General Hospital Corporation (Boston, MA). 
-% All rights reserved.
+% Copyright © 2011 The General Hospital Corporation (Boston, MA) "MGH"
 %
-% Distribution, usage and copying of this software is covered under the
-% terms found in the License Agreement file named 'COPYING' found in the
-% FreeSurfer source code root directory, and duplicated here:
-% https://surfer.nmr.mgh.harvard.edu/fswiki/FreeSurferOpenSourceLicense
+% Terms and conditions for use, reproduction, distribution and contribution
+% are found in the 'FreeSurfer Software License Agreement' contained
+% in the file 'LICENSE' found in the FreeSurfer distribution, and here:
 %
-% General inquiries: freesurfer@nmr.mgh.harvard.edu
-% Bug reports: analysis-bugs@nmr.mgh.harvard.edu
+% https://surfer.nmr.mgh.harvard.edu/fswiki/FreeSurferSoftwareLicense
+%
+% Reporting: freesurfer@nmr.mgh.harvard.edu
 %
 
 hdr = [];
@@ -62,7 +67,7 @@ if(strcmpi(ext,'.gz'))
   ind = findstr(niftifile, '.');
   new_niftifile = sprintf('/tmp/tmp%d.nii', gzipped);
   %fprintf('Uncompressing %s to %s\n',niftifile,new_niftifile);
-  if(strcmp(computer,'MAC') || strcmp(computer,'MACI'))
+  if(strcmp(computer,'MAC') || strcmp(computer,'MACI') || ismac)
     unix(sprintf('gunzip -c %s > %s', niftifile, new_niftifile));
   else
     unix(sprintf('zcat %s > %s', niftifile, new_niftifile)) ;
@@ -78,11 +83,28 @@ if(isempty(hdr))
   return; 
 end
 
+% Check for ico7
+nspatial = prod(hdr.dim(2:4));
+IsIco7 = 0;
+if(nspatial == 163842) IsIco7 = 1; end
+
 % If only header is desired, return now
 if(hdronly) 
   if(gzipped >=0) unix(sprintf('rm %s', niftifile)); end
+  if(IsIco7)
+    % Reshape
+    hdr.dim(2) = 163842;
+    hdr.dim(3) = 1;
+    hdr.dim(4) = 1;
+  end
   return; 
 end
+
+% Get total number of voxels
+dim = hdr.dim(2:end);
+ind0 = find(dim==0);
+dim(ind0) = 1;
+nvoxels = prod(dim);
 
 % Open to read the pixel data
 fp = fopen(niftifile,'r',hdr.endian);
@@ -112,18 +134,20 @@ if(gzipped >=0)
   unix(sprintf('rm %s', niftifile)); 
 end
 
-% Get total number of voxels
-dim = hdr.dim(2:end);
-ind0 = find(dim==0);
-dim(ind0) = 1;
-nvoxels = prod(dim);
-
 % Check that that many voxels were read in
 if(nitemsread ~= nvoxels) 
   fprintf('ERROR: %s, read in %d voxels, expected %d\n',...
 	  niftifile,nitemsread,nvoxels);
   hdr = [];
   return;
+end
+
+if(IsIco7)
+  %fprintf('load_nifti: ico7 reshaping\n');
+  hdr.dim(2) = 163842;
+  hdr.dim(3) = 1;
+  hdr.dim(4) = 1;
+  dim = hdr.dim(2:end);  
 end
 
 hdr.vol = reshape(hdr.vol, dim');
