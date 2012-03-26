@@ -4,6 +4,8 @@ function [h, T2] = ft_plot_slice(dat, varargin)
 %
 % Use as
 %   ft_plot_slice(dat, ...)
+% or
+%   ft_plot_ortho(dat, mask, ...)
 %
 % Additional options should be specified in key-value pairs and can be
 %   'transform'    = 4x4 homogeneous transformation matrix specifying the mapping from
@@ -15,9 +17,15 @@ function [h, T2] = ft_plot_slice(dat, varargin)
 %                    which will be plotted
 %   'resolution'   = number (default = 1)
 %   'datmask'      = 3D-matrix with the same size as the matrix dat, serving as opacitymap
-%   'interpmethod' = string specifying the method for the interpolation, see INTERPN (default = 'nearest')
+%                    if the second input argument to the function
+%                    contains a matrix, this will be used as the mask
+%   'opacitylim'   = 1x2 vector specifying the limits for opacity masking
+%   'interpmethod' = string specifying the method for the interpolation, 
+%                    see INTERPN (default = 'nearest')
 %   'style'        = string, 'flat' or '3D'
 %   'colormap'     = string, see COLORMAP
+%   'colorlim'     = 1x2 vector specifying the min and max for the
+%                     colorscale
 %   'interplim'
 %
 % See also FT_PLOT_ORTHO, FT_SOURCEPLOT
@@ -44,17 +52,37 @@ function [h, T2] = ft_plot_slice(dat, varargin)
 
 persistent previous_dim X Y Z;
 
+% parse first input argument(s). it is either
+% (dat, varargin)
+% (dat, msk, varargin)
+% (dat, [], varargin)
+if isempty(varargin{1}) || isnumeric(varargin{1})
+  M        = varargin{1};
+  varargin = varargin(2:end);
+end
+
 % get the optional input arguments
 transform    = ft_getopt(varargin, 'transform');
 loc          = ft_getopt(varargin, 'location');
 ori          = ft_getopt(varargin, 'orientation',  [0 0 1]);
 resolution   = ft_getopt(varargin, 'resolution',   1);
 mask         = ft_getopt(varargin, 'datmask');
+opacitylim   = ft_getopt(varargin, 'opacitylim');
 interpmethod = ft_getopt(varargin, 'interpmethod', 'nearest');
 cmap         = ft_getopt(varargin, 'colormap');
+clim         = ft_getopt(varargin, 'colorlim'); 
+doscale      = ft_getopt(varargin, 'doscale', true); % only scale when necessary (time consuming), i.e. when plotting as grayscale image & when the values are not between 0 and 1
+h            = ft_getopt(varargin, 'surfhandle', []);
+
+doscale = istrue(doscale);
 
 if ~isa(dat, 'double')
   dat = cast(dat, 'double');
+end
+
+if exist('M', 'var') && isempty(mask)
+  warning_once('using the mask from the input and not from the varargin list');
+  mask = M;clear M;
 end
 
 % norm normalise the ori vector
@@ -120,7 +148,7 @@ if dointerp
   corner_proj = nan(size(corner_head));
   for i=1:8
     corner = corner_head(i,:);
-    corner = corner - loc;
+    corner = corner - loc(:)';
     corner_x = dot(corner, x);
     corner_y = dot(corner, y);
     corner_z = 0;
@@ -175,9 +203,9 @@ else
   [x, y] = projplane(ori);
   T2     = [x(:) y(:) ori(:) loc(:); 0 0 0 1];
   
-  if all(ori==[1 0 0]), xplane = loc(1); yplane = 1:dim(2); zplane = 1:dim(3); end
-  if all(ori==[0 1 0]), xplane = 1:dim(1); yplane = loc(2); zplane = 1:dim(3); end
-  if all(ori==[0 0 1]), xplane = 1:dim(1); yplane = 1:dim(2); zplane = loc(3); end
+  if all(ori==[1 0 0]), xplane = loc(1);   yplane = 1:dim(2); zplane = 1:dim(3); end
+  if all(ori==[0 1 0]), xplane = 1:dim(1); yplane = loc(2); zplane = 1:dim(3);   end
+  if all(ori==[0 0 1]), xplane = 1:dim(1); yplane = 1:dim(2); zplane = loc(3);   end
   
   [Xi,Yi,Zi] = ndgrid(xplane, yplane, zplane);
   siz        = size(squeeze(Xi));
@@ -186,7 +214,7 @@ else
   Zi         = reshape(Zi, siz);
   V          = reshape(dat(xplane, yplane, zplane), siz);
   if domask,
-    Vmask    = mask(xplane, yplane, zplane);
+    Vmask    = reshape(mask(xplane, yplane, zplane), siz);
   end
   
 end
@@ -199,29 +227,44 @@ Zh   = reshape(posh(:,3), siz);
 
 if isempty(cmap),
   %treat as gray value: scale and convert to rgb
-  dmin = min(dat(:));
-  dmax = max(dat(:));
-  V    = (V-dmin)./(dmax-dmin);
+  if doscale
+    dmin = min(dat(:));
+    dmax = max(dat(:));
+    V    = (V-dmin)./(dmax-dmin);
+  end
   V(isnan(V)) = 0;
   clear dmin dmax;
   % convert anatomy into RGB values
   V = cat(3, V, V, V);
 end
 
-h      = surface(Xh, Yh, Zh, V);
+if isempty(h),
+  h = surface(Xh, Yh, Zh, V);
+else
+  set(h, 'Cdata', V);
+end
 
 set(h, 'linestyle', 'none');
 if domask,
   set(h, 'FaceAlpha', 'flat');
   set(h, 'AlphaDataMapping', 'scaled');
   set(h, 'AlphaData', Vmask);
+  if ~isempty(opacitylim)
+    alim(opacitylim)
+  end
 end
+
 if ~isempty(cmap)
   colormap(cmap);
 end
 
+if ~isempty(clim)
+  caxis(clim);
+end
+
 % store for future reference
-previous_dim = dim;
+previous_dim  = dim;
+previous_mask = mask;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
