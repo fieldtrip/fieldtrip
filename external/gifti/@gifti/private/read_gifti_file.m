@@ -66,12 +66,21 @@ end
 function s = gifti_LabelTable(t,uid)
 s = struct('name',{}, 'index',[]);
 c = children(t,uid);
+j = 0;
 for i=1:length(c)
     a = attributes(t,'get',c(i));
-    s(1).index(i) = str2double(a.val);
-    s(1).name{i}  = get(t,children(t,c(i)),'value');
+    if isa(a, 'cell')
+      for k=1:length(a)
+        j = j+1;
+        s(1).index(j) = str2double(a{k}.val);
+        s(1).name{j}  = get(t,children(t,c(i)),'value');
+      end
+    else
+      s(1).index(i) = str2double(a.val);
+      s(1).name{j}  = get(t,children(t,c(i)),'value');
+    end
 end
-
+    
 %==========================================================================
 function s = gifti_DataArray(t,uid,filename)
 s = struct(...
