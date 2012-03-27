@@ -275,6 +275,7 @@ if strcmp(cfg.detrend, 'yes')
 end
 if strcmp(cfg.demean, 'yes')
   if ischar(cfg.baselinewindow) && strcmp(cfg.baselinewindow, 'all')
+    nsamples     = size(dat,2);
     % the begin and endsample of the baseline period correspond to the complete data minus padding
     begsample = 1        + begpadding;
     endsample = nsamples - endpadding;
