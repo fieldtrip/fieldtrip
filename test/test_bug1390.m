@@ -10,3 +10,8 @@ load /home/common/matlab/fieldtrip/data/test/bug1390.mat
 %   ??? Error using ==> ft_timelockanalysis at 199
 %   data has variable trial lengths, you specified not to accept that !
 timelock = ft_timelockanalysis(cfg, data);
+
+% this is the follow up in comment 8
+load /home/common/matlab/fieldtrip/data/test/bug1390c8.mat
+timelock = ft_timelockanalysis(cfg, data);
+
