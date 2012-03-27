@@ -33,7 +33,7 @@ pnt   = cat(2, data{2:end});
 
 isfid = false(1,numel(label));
 for k = 1:numel(label)
-  if any(strcmp(label{k},{'Rcoil','Lcoil','nasion','left','right','lpa','rpa','nas'}))
+  if any(strcmp(label{k},{'Rcoil','Lcoil','nasion','left','right','lpa','rpa','nas','rc','lc'}))
     isfid(k) = true;
   end
 end
@@ -62,5 +62,11 @@ for k = 1:numel(label)
   end
   if any(strcmp(label{k}, {'right'}))
     label{k} = 'rpa';
+  end
+  if any(strcmp(label{k}, {'rc'}))
+    label{k} = 'Rcoil';
+  end
+  if any(strcmp(label{k}, {'lc'}))
+    label{k} = 'Lcoil';
   end
 end
