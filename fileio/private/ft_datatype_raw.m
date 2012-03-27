@@ -204,21 +204,41 @@ else
 end
 
 begtime   = zeros(1, length(data.time));
+endtime   = zeros(1, length(data.time));
 numsample = zeros(1, length(data.time));
 for i=1:length(data.time)
   begtime(i)   = data.time{i}(1);
+  endtime(i)   = data.time{i}(end);
   numsample(i) = length(data.time{i});
 end
 
+% compute the differences over trials and the tolerance
+tolerance     = 0.01*(1/fsample);
+begdifference = abs(begtime-begtime(1));
+enddifference = abs(endtime-endtime(1));
+
+% check whether begin and/or end are identical, or close to identical
+begidentical  = all(begdifference==0);
+endidentical  = all(enddifference==0);
+begsimilar    = all(begdifference < tolerance);
+endsimilar    = all(enddifference < tolerance);
+
 % Compute the offset of each trial relative to the first trial, and express
 % that in samples. Non-integer numbers indicate that there is a slight skew
-% in the time over trials.
+% in the time over trials. This works in case of variable length trials.
 offset = fsample * (begtime-begtime(1));
 skew   = abs(offset - round(offset));
 
+% try to determine all cases where a correction is needed
+% note that this does not yet address all possible cases where a fix might be needed
+needfix = false;
+needfix = needfix || ~begidentical && begsimilar;
+needfix = needfix || ~endidentical && endsimilar;
+needfix = needfix || ~all(skew==0) && all(skew<0.01);
+
 % if the skew is less than 1% it will be corrected
-if ~all(skew==0) && all(skew<0.01)
-  warning('correcting numerical inaccuracy of up to %g seconds in the time axes', max(skew)/fsample);
+if needfix
+  warning('correcting numerical inaccuracy in the time axes');
   for i=1:length(data.time)
     % reconstruct the time axis of each trial, using the begin latency of
     % the first trial and the integer offset in samples of each trial
