@@ -3,9 +3,9 @@ function data = ft_datatype_raw(data, varargin)
 % FT_DATATYPE_RAW describes the FieldTrip MATLAB structure for raw data
 %
 % The raw datatype represents sensor-level time-domain data typically
-% obtained after calling FT_DEFINETRIAL and FT_PREPROCESSING. It
-% contains one or multiple segments of data, each represenetd as 
-% Nchan X Ntime arrays.
+% obtained after calling FT_DEFINETRIAL and FT_PREPROCESSING. It contains
+% one or multiple segments of data, each represented as Nchan X Ntime
+% arrays.
 %
 % An example of a raw data structure with 151 MEG channels is
 %
@@ -106,83 +106,122 @@ switch version
     if ~isfield(data, 'fsample')
       data.fsample = 1/mean(diff(data.time{1}));
     end
-
+    
     if isfield(data, 'offset')
       data = rmfield(data, 'offset');
     end
-
+    
     if hassampleinfo && (~isfield(data, 'sampleinfo') || ~isfield(data, 'trialinfo'))
       % reconstruct it on the fly
       data = fixsampleinfo(data);
     end
-
+    
     % the trialdef field should be renamed into sampleinfo
     if isfield(data, 'trialdef')
       data.sampleinfo = data.trialdef;
       data = rmfield(data, 'trialdef');
     end
-
+    
   case '2010v2'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if ~isfield(data, 'fsample')
       data.fsample = 1/mean(diff(data.time{1}));
     end
-
+    
     if isfield(data, 'offset')
       data = rmfield(data, 'offset');
     end
-
+    
     if hassampleinfo && (~isfield(data, 'sampleinfo') || ~isfield(data, 'trialinfo'))
       % reconstruct it on the fly
       data = fixsampleinfo(data);
     end
-
+    
     % the trialdef field should be renamed into sampleinfo
     if isfield(data, 'trialdef')
       data.sampleinfo = data.trialdef;
       data = rmfield(data, 'trialdef');
     end
-
+    
   case {'2010v1' '2010'}
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if ~isfield(data, 'fsample')
       data.fsample = 1/mean(diff(data.time{1}));
     end
-
+    
     if isfield(data, 'offset')
       data = rmfield(data, 'offset');
     end
-
+    
     if ~isfield(data, 'trialdef') && hascfg
       % try to find it in the nested configuration history
       data.trialdef = ft_findcfg(data.cfg, 'trl');
     end
-
+    
   case '2007'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if ~isfield(data, 'fsample')
       data.fsample = 1/mean(diff(data.time{1}));
     end
-
+    
     if isfield(data, 'offset')
       data = rmfield(data, 'offset');
     end
-
+    
   case '2003'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if ~isfield(data, 'fsample')
       data.fsample = 1/mean(diff(data.time{1}));
     end
-
+    
     if ~isfield(data, 'offset')
       data.offset = zeros(length(data.time),1);
       for i=1:length(data.time);
         data.offset(i) = round(data.time{i}(1)*data.fsample);
       end
     end
-
+    
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     error('unsupported version "%s" for raw datatype', version);
 end
 
+
+% Numerical inaccuracies in the binary representations of floating point
+% values may accumulate. The following code corrects for small inaccuracies
+% in the time axes of the trials. See http://bugzilla.fcdonders.nl/show_bug.cgi?id=1390
+data = fixtimeaxes(data);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function data = fixtimeaxes(data)
+
+if ~isfield(data, 'fsample')
+  fsample = 1/mean(diff(data.time{1}));
+else
+  fsample = data.fsample;
+end
+
+begtime   = zeros(1, length(data.time));
+numsample = zeros(1, length(data.time));
+for i=1:length(data.time)
+  begtime(i)   = data.time{i}(1);
+  numsample(i) = length(data.time{i});
+end
+
+% Compute the offset of each trial relative to the first trial, and express
+% that in samples. Non-integer numbers indicate that there is a slight skew
+% in the time over trials.
+offset = fsample * (begtime-begtime(1));
+skew   = abs(offset - round(offset));
+
+% if the skew is less than 1% it will be corrected
+if ~all(skew==0) && all(skew<0.01)
+  warning('correcting numerical inaccuracy of up to %g seconds in the time axes', max(skew)/fsample);
+  for i=1:length(data.time)
+    % reconstruct the time axis of each trial, using the begin latency of
+    % the first trial and the integer offset in samples of each trial
+    data.time{i} = begtime(1) + ((1:numsample(i)) - 1 + round(offset(i)))/fsample;
+  end
+end
