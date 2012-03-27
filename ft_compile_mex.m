@@ -89,6 +89,7 @@ L = add_mex_source(L,'src','getpid');
 
 L = add_mex_source(L,'src','nanmean');
 L = add_mex_source(L,'src','nanstd');
+L = add_mex_source(L,'src','nanvar');
 L = add_mex_source(L,'src','nansum');
 L = add_mex_source(L,'src','nanstd');
 L = add_mex_source(L,'src','det2x2');
