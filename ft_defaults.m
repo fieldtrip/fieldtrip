@@ -46,8 +46,37 @@ if ~isfield(ft_default, 'checkconfig'),  ft_default.checkconfig  = 'loose';  end
 if ~isfield(ft_default, 'checksize'),    ft_default.checksize    = 1e5;      end % number in bytes, can be inf
 if ~isfield(ft_default, 'showcallinfo'), ft_default.showcallinfo = 'yes';    end % yes or no, this is used in ft_postamble_callinfo
 
-% some people mess up their path settings with addpath(genpath(...))which
-% results in different versions of SPM or other other toolboxes on the path
+% some people mess up their path settings and then have
+% different versions of certain toolboxes on the path
+checkMultipleToolbox('FieldTrip',           'ft_defaults');
+checkMultipleToolbox('mne',                 'fiff_copy_tree');
+checkMultipleToolbox('eeglab',              'eeglab2fieldtrip.m');
+checkMultipleToolbox('dipoli',              'write_tri.m');
+checkMultipleToolbox('eeprobe',             'read_eep_avr.mexa64');
+checkMultipleToolbox('yokogawa',            'GetMeg160ChannelInfoM.p');
+checkMultipleToolbox('simbio',              'sb_compile_vista');
+checkMultipleToolbox('fns',                 'fns_region_read.m');
+checkMultipleToolbox('bemcp',               'bem_Cii_cst');
+checkMultipleToolbox('bci2000',             'load_bcidat.m');
+checkMultipleToolbox('openmeeg',            'openmeeg_helper');
+checkMultipleToolbox('freesurfer',          'vox2ras_ksolve.m');
+checkMultipleToolbox('fastica',             'fastica');
+checkMultipleToolbox('besa',                'readBESAmul.m');
+checkMultipleToolbox('neuroshare',          'ns_GetAnalogData');
+checkMultipleToolbox('ctf',                 'setCTFDataBalance.m');
+checkMultipleToolbox('afni',                'WriteBrikHEAD.m');
+checkMultipleToolbox('gifti',               '@gifti/display');
+checkMultipleToolbox('sqdproject',          'sqdread');
+checkMultipleToolbox('xml4mat',             'xml2mat');
+checkMultipleToolbox('cca',                 'ccabss.m');
+checkMultipleToolbox('bsmart',              'armorf.m');
+checkMultipleToolbox('iso2mesh',            'iso2meshver');
+checkMultipleToolbox('bct',                 'degrees_und.m');
+checkMultipleToolbox('yokogawa_meg_reader', 'getYkgwHdrEvent.p');
+checkMultipleToolbox('biosig',              'sopen');
+
+% check for SPM last, which also includes a general warning about
+% addpath(genpath(...))
 list = which('spm', '-all');
 if length(list)>1
   [ws, warned] = warning_once('multiple versions of SPM on your path will confuse FieldTrip');
@@ -161,4 +190,22 @@ if ~isdeployed
     ft_hastoolbox('specest', 1, 1);
   end
   
+end
+
+end
+
+function checkMultipleToolbox(toolbox, keyfile)
+
+list = which(keyfile, '-all');
+if length(list)>1
+  [ws, warned] = warning_once(sprintf('multiple versions of %s on your path will confuse FieldTrip', toolbox));
+  
+  if warned % only throw the warning once
+    for i=1:length(list)
+      warning('one version of %s is found here: %s', toolbox, list{i});
+    end
+  end
+  
+end
+
 end
