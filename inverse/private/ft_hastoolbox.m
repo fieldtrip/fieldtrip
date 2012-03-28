@@ -77,7 +77,7 @@ url = {
   '4D-VERSION' 'contact Christian Wienbruch'
   'SIGNAL'     'see http://www.mathworks.com/products/signal'
   'OPTIM'      'see http://www.mathworks.com/products/optim'
-  'IMAGE'      'see http://www.mathworks.com/products/image'
+  'IMAGE'      'see http://www.mathworks.com/products/image'  % Mathworks refers to this as IMAGES
   'SPLINES'    'see http://www.mathworks.com/products/splines'
   'DISTCOMP'   'see http://www.mathworks.nl/products/parallel-computing/'
   'COMPILER'   'see http://www.mathworks.com/products/compiler'
@@ -266,6 +266,12 @@ switch toolbox
     status = exist('clustering_coef_bd', 'file') && exist('edge_betweenness_wei', 'file');
   case 'MYSQL'
     status = exist(['mysql.' mexext], 'file'); % this only consists of a single mex file
+  case 'ISO2MESH'
+    status = exist('vol2surf.m', 'file') && exist('qmeshcut.m', 'file');
+  case 'QSUB'
+    status = exist('qsubfeval.m', 'file') && exist('qsubcellfun.m', 'file');
+  case 'ENGINE'
+    status = exist('enginefeval.m', 'file') && exist('enginecellfun.m', 'file');
     
     % the following are not proper toolboxes, but only subdirectories in the fieldtrip toolbox
     % these are added in ft_defaults and are specified with unix-style forward slashes
@@ -293,8 +299,6 @@ switch toolbox
     status = ~isempty(regexp(unixpath(path), 'fieldtrip/template/neighbours', 'once'));
   case 'TEMPLATE/SOURCEMODEL'
     status = ~isempty(regexp(unixpath(path), 'fieldtrip/template/sourcemodel', 'once')); 
-  case 'ISO2MESH'
-    status = exist('vol2surf.m', 'file') && exist('qmeshcut.m', 'file');
   otherwise
     if ~silent, warning('cannot determine whether the %s toolbox is present', toolbox); end
     status = 0;
