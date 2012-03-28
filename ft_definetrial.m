@@ -138,17 +138,26 @@ if isfield(cfg, 'trl')
 elseif isfield(cfg, 'trialfun')
 
   % provide support for xxx and trialfun_xxx when the user specifies cfg.trialfun=xxx
-  if exist(cfg.trialfun, 'file')
+  if isa(cfg.trialfun, 'function_handle') || exist(cfg.trialfun, 'file')
     % evaluate this function, this is the default
   elseif exist(['trialfun_' cfg.trialfun], 'file')
     % prepend trialfun to the function name
     cfg.trialfun = ['trialfun_' cfg.trialfun];
   else
-    error('cannot locate the specified trialfun (%s)', cfg.trialfun)
+    if ischar(cfg.trialfun)
+      error('cannot locate the specified trialfun (%s)', cfg.trialfun)
+    else
+      error('cannot locate the specified trialfun (%s)', func2str(cfg.trialfun))
+    end
   end
-
+  
   % evaluate the user-defined function that gives back the trial definition
-  fprintf('evaluating trialfunction ''%s''\n', cfg.trialfun);
+  if ischar(cfg.trialfun)
+    fprintf('evaluating trialfunction ''%s''\n', cfg.trialfun);
+  else
+    fprintf('evaluating trialfunction ''%s''\n', func2str(cfg.trialfun));
+  end
+  
   % determine the number of outpout arguments of the user-supplied trial function
   try
     % the nargout function in Matlab 6.5 and older does not work on function handles
