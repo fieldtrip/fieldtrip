@@ -1,0 +1,129 @@
+    
+The BIOSIG-tools are part of a large free software project for 
+biomedical signal processing. 
+http;//biosig.sf.net/ is the project homepage. 
+
+All software is published under the free software license GPL.
+Read the LICENSE and http://www.fsf.org for more information. 
+
+Copyright (C) by Alois Schloegl <a.schloegl@ieee.org>
+
+
+
+
+
+=== Files  ===
+
+README		this file
+LICENSE		GPL license 
+INSTALL		how to install 
+
+
+DOC/* Documentation
+
+T100/* [Data Acquistion] 
+
+T200/* Data Formats
+T250/* Quality Control and Artifact Processing
+
+T300/* Signal Processing and Feature extraction
+
+T400/* Classification, Single Trial Analysis
+T450/* Statistics, False Discovery Rate
+T490/* Evaluation criteria
+
+T500/* Presentation, Output
+T501/* Visualization of EEG coupling
+
+T600/* Interactive Viewer and Scoring  
+
+
+
+References:
+===========
+-- general, overview
+
+Schlögl A., Brunner C.
+BioSig: A Free and Open Source Software Library for BCI Research,
+Computer, vol. 41, no. 10, pp. 44-50, October, 2008.
+
+Schlögl, A.; Vidaurre, C.; Hofer, E.; Wiener, T.; Brunner, C.; Scherer, R.; Chiarugi, F
+BIOSIG - Standardization and quality control in biomedical signal processing using the BioSig project.
+BIOSTEC - The International Joint Conference on Biomedical Engineering Systems and Technologies . (2008), S. 403 - 409 
+
+A. Schlögl, C. Brunner, R. Scherer, A. Glatz;
+BioSig - an open source software library for BCI research.
+(Eds.) G. Dornhege, J.R. Millan, T. Hinterberger, D.J. McFarland, K.-R. Müller;
+Towards Brain-Computer Interfacing, MIT Press, 2007, p.347-358.
+
+A. Schlögl, J. Kronegg, J.E. Huggins, S. G. Mason;
+Evaluation criteria in BCI research.
+(Eds.) G. Dornhege, J.R. Millan, T. Hinterberger, D.J. McFarland, K.-R.Müller;
+Towards Brain-Computer Interfacing, MIT Press, 2007, p.327-342
+
+A. Schlögl 
+GDF - A general dataformat for Biosignals. 
+http://arxiv.org/abs/cs.DB/0608052
+
+-- methods
+
+A. Schlögl, C. Keinrath, D. Zimmermann, R. Scherer, R. Leeb, G. Pfurtscheller.
+A fully automated correction method of EOG artifacts in EEG recordings.
+Clin.Neurophys. 2007 Jan;118(1):98-104. Epub 2006 Nov 7 
+
+A. Schlögl, G. Supp.
+Analyzing event-related EEG data with multivariate autoregressive parameters.
+(Eds.) C. Neuper and W. Klimesch, Progress in Brain Research: Event-related Dynamics of Brain Oscillations. Analysis of dynamics of brain oscillations: methodological advances. Elsevier.
+Progress in Brain Research 159, 2006, p. 135 - 147
+
+A. Schlögl
+Comparison of Multivariate Autoregressive Estimators.
+Signal processing (2006), p. 2426-9.
+
+A. Schlögl, C. Neuper, G. Pfurtscheller
+Estimating the mutual information of an EEG-based Brain-Computer-Interface.
+Biomedizinische Technik 47(1-2): 3-8, 2002 
+
+A. Schlögl, S.J. Roberts, G. Pfurtscheller,
+A criterion for adaptive autoregressive models
+Digest of the Papers of the 2000 World Congress on Medical Physics and Biomedical Engineering the Proceedings of the 22nd Annual International Conference of the IEEE Engineering in Medicine and Biology Society ; No 4784-79866, 2000.
+
+A. Schlögl, B. Kemp, T. Penzel, D. Kunz, S.-L. Himanen, A. Värri, G. Dorffner, G. Pfurtscheller.
+Quality Control of polysomnographic Sleep Data by Histogram and Entropy Analysis.
+Clin. Neurophysiol. 1999, Dec; 110(12): 2165 - 2170.
+
+-- applications:
+
+Scherer, R.; Lee, F. Y.; Schlögl, A.; Leeb, R.; Bischof, H.; Pfurtscheller, G.
+Towards Self-Paced Brain-Computer Communication: Navigation through Virtual Worlds.
+IEEE transactions on biomedical engineering 55 (2008) 2 , S. 675 - 682 
+
+Supp, G. .; Schlögl, A.; Trujillo-Barreto, N.; Müller, M. M.; Gruber, T
+Directed Cortical Information Flow during Human Object Recognition: Analyzing Induced EEG Gamma-Band Responses in Brains source Space.
+PLoS ONE [Elektronische Ressource] 2 (2007) 8, S. e684 - e684 
+
+Pfurtscheller G, Brunner C, Schlögl A, Lopes da Silva FH.
+Mu rhythm (de)synchronization and EEG single-trial classification of different motor imagery tasks.
+Neuroimage.2006 Jan 26; 
+
+Schlögl A, Lee FY, Bischof H, Pfurtscheller G
+Characterization of Four-Class Motor Imagery EEG Data for the BCI-Competition 2005.
+Journal of neural engineering 2 (2005) 4, S. L14-L22 
+
+Schlögl, A.; Chiarugi, F.; Cervesato, E.; Apostolopoulos, E.; Chronaki, C
+Two-Way Converter between the HL7 aECG and SCP-ECG Data Formats Using BioSig.
+Computers in Cardiology Conference ; 2007 (2007), S. 253 - 256 
+
+A. Schlögl, D. Flotzinger and G. Pfurtscheller (1997)
+Adaptive Autoregressive Modeling used for Single-trial EEG Classification
+Biomedizinische Technik 42: (1997), 162-167. 
+
+A. Schlögl, C. Neuper and G. Pfurtscheller (1997)
+Subject-specific EEG pattern during motor imagery
+Proceedings of the 19th Annual International Conference if the IEEE Engineering in Medicine and Biology Society , vol 19, pp.1530-1532, 1997.
+
+A. Schlögl, K. Lugger and G. Pfurtscheller (1997)
+Using Adaptive Autoregressive Parameters for a Brain-Computer-InterfaceExperiment,
+Proceedings of the 19th Annual International Conference if the IEEE Engineering in Medicine and Biology Society ,vol 19 , pp.1533-1535, 1997
+
+

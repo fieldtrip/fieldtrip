@@ -113,8 +113,7 @@ elseif strcmp(HDR.TYPE,'BDF'),
                         S = S(ix1+1:ix1+nr,:);
                         count = nr;
 
-                        if HDR.FLAG.OVERFLOWDETECTION && isfield(HDR,'BDF') && isfield(HDR.BDF,'Status') && isfield(HDR.BDF.Status,'Channel'),  
-                        	% BDF overflow detection is based on Status bit20
+                        if HDR.FLAG.OVERFLOWDETECTION,  % BDF overflow detection is based on Status bit20
 	                        K = HDR.BDF.Status.Channel;
         	                OVERFLOW = ~bitand(reshape(s(HDR.AS.bi(K)+1:HDR.AS.bi(K+1),:),HDR.AS.SPR(K)*nb,1),2^19);
         	                OVERFLOW = rs(OVERFLOW,HDR.AS.SPR(K),HDR.SPR);
@@ -136,8 +135,7 @@ elseif strcmp(HDR.TYPE,'BDF'),
                                                 s1(:,k) = NaN;
                                         end;
                                 end;
-	                        if HDR.FLAG.OVERFLOWDETECTION && isfield(HDR,'BDF') && isfield(HDR.BDF,'Status') && isfield(HDR.BDF.Status,'Channel'),  
-					% BDF overflow detection is based on Status bit20
+	                        if HDR.FLAG.OVERFLOWDETECTION,  % BDF overflow detection is based on Status bit20
 		                        K = HDR.BDF.Status.Channel;
                                         tmp = 2.^[0,8,16]*double(reshape(s(HDR.AS.bi(K)*3+1:HDR.AS.bi(K+1)*3,:),3,HDR.AS.SPR(K)*c/HDR.AS.bpb));
                                         OVERFLOW = rs(~bitand(tmp',2^19),HDR.AS.SPR(K),HDR.SPR);

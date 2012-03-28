@@ -1,0 +1,11 @@
+The directory fieldtrip/external/biosig contains a selection of the
+Biosig functions that are used by FielTrip functions. All BioSig
+functions that are not directly called by FieldTrip have been moved
+to the biosig/private directory to ensure that they do not interfere
+with normal MATLAB and FieldTrip operation.
+
+The version here corresponds to Biosig 2.61 and was downloaded on
+10 March 2012 from http://biosig.sourceforge.net.
+
+See the file COPYING for the Biosig copyrights.
+

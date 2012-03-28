@@ -548,7 +548,6 @@ end;
                                 HDR.AS.SPR=ones(HDR.NS,1);
                                 HDR.ErrNum=[1028,HDR.ErrNum];
                         end;
-
                 elseif (HDR.NS>0)
                         if (ftell(HDR.FILE.FID)~=256),
                                 error('position error');
@@ -609,17 +608,15 @@ end;
 			end;
                 end;
 
-                HDR.SPR = 1;
+                HDR.SPR=1;
 		if (HDR.NS>0)
 			if ~isfield(HDR,'THRESHOLD')
 	                        HDR.THRESHOLD  = [HDR.DigMin',HDR.DigMax'];       % automated overflow detection 
-	                        if (HDR.VERSION <= 0) && HDR.FLAG.OVERFLOWDETECTION,   % in case of EDF and OVERFLOWDETECTION
-					HHDR.FLAG.OVERFLOWDETECTION = 0;
-	                        	fprintf(2,'WARNING SOPEN(EDF): Automated Overflowdetection not supported for EDF and BDF data, because \n'); 
-					fprintf(2,'   Physical Max/Min values of EDF/BDF data are not necessarily defining the dynamic range.\n'); 
-	                        	fprintf(2,'   For more information see: http://dx.doi.org/10.1016/S1388-2457(99)00172-8 (A. Schloegl et al. Quality Control ... Clin. Neurophysiol. 1999, Dec; 110(12): 2165 - 2170).\n'); 
+	                        if (HDR.VERSION == 0) && HDR.FLAG.OVERFLOWDETECTION,   % in case of EDF and OVERFLOWDETECTION
+	                        	fprintf(2,'WARNING SOPEN(EDF): Physical Max/Min values of EDF data are not necessarily defining the dynamic range.\n'); 
+	                        	fprintf(2,'   Hence, OVERFLOWDETECTION might not work correctly. See also EEG2HIST and read \n'); 
+	                        	fprintf(2,'   http://dx.doi.org/10.1016/S1388-2457(99)00172-8 (A. Schlögl et al. Quality Control ... Clin. Neurophysiol. 1999, Dec; 110(12): 2165 - 2170).\n'); 
 	                        	fprintf(2,'   A copy is available here, too: http://pub.ist.ac.at/~schloegl/publications/neurophys1999_2165.pdf \n'); 
-					fprintf(2,' See also EEG2HIST: it''s a tool to identify the saturation thresholds.\n'); 
 				end;
 			end; 
 	                if any(HDR.PhysMax==HDR.PhysMin), HDR.ErrNum=[1029,HDR.ErrNum]; end;	
@@ -639,13 +636,10 @@ end;
 	                elseif (CHAN==0)
 	                	chan = 1:HDR.NS;
 	                	if strcmp(HDR.TYPE,'EDF')
-                                if strcmp(HDR.reserved1(1:4),'EDF+')
+	                        if strcmp(HDR.reserved1(1:4),'EDF+')
 	                        	tmp = strmatch('EDF Annotations',HDR.Label);
 		                        chan(tmp)=[];
 		                end; 
-		                elseif strcmp(HDR.TYPE,'BDF')
-	                        	tmp = strmatch('BDF Annotations',HDR.Label);
-		                        chan(tmp)=[];
 		                end;
 	                end;	
 	                for k=chan,
@@ -936,28 +930,39 @@ end;
                         % EDF+: 
                         tmp = strmatch('EDF Annotations',HDR.Label);
                         HDR.EDF.Annotations = tmp;
-                        if isempty(ReRefMx)
+                        if 0,isempty(ReRefMx)
                         	ReRefMx = sparse(1:HDR.NS,1:HDR.NS,1);
                         	ReRefMx(:,tmp) = [];
                         end;	
                         
                         status = fseek(HDR.FILE.FID,HDR.HeadLen+HDR.AS.bi(HDR.EDF.Annotations)*2,'bof');
                         t = fread(HDR.FILE.FID,inf,[int2str(HDR.AS.SPR(HDR.EDF.Annotations)*2),'*uchar=>uchar'],HDR.AS.bpb-HDR.AS.SPR(HDR.EDF.Annotations)*2);
-                        HDR.EDFplus.ANNONS = char(t');
+                        HDR.EDF.ANNONS = char(t');
                         
-
-                elseif strcmp(HDR.TYPE,'BDF') && (length(strmatch('BDF Annotations',HDR.Label))==1),
-                        % BDF+: 
-                        tmp = strmatch('BDF Annotations',HDR.Label);
-                        HDR.EDF.Annotations = tmp;
-                        if isempty(ReRefMx)
-                        	ReRefMx = sparse(1:HDR.NS,1:HDR.NS,1);
-                        	ReRefMx(:,tmp) = [];
-                        end;	
-                        
-                        status = fseek(HDR.FILE.FID,HDR.HeadLen+HDR.AS.bi(HDR.EDF.Annotations)*3,'bof');
-                        t = fread(HDR.FILE.FID,inf,[int2str(HDR.AS.SPR(HDR.EDF.Annotations)*3),'*uchar=>uchar'],HDR.AS.bpb-HDR.AS.SPR(HDR.EDF.Annotations)*3);
-                        HDR.EDFplus.ANNONS = char(t');
+                        N = 0; 
+                        onset = []; dur=[]; Desc = {};
+			[s,t] = strtok(HDR.EDF.ANNONS,0);
+    			while 0, ~isempty(s)
+    				N  = N + 1; 
+    				ix = find(s==20);
+    				[s1,s2] = strtok(s(1:ix(1)-1),21);
+    				s1;
+    				tmp = str2double(s1);
+    				onset(N,1) = tmp;
+   				tmp = str2double(s2(2:end));
+   				if  ~isempty(tmp)
+   					dur(N,1) = tmp; 	
+   				else 
+   					dur(N,1) = 0; 	
+   				end;
+    				Desc{N} = char(s(ix(1)+1:end-1));
+				[s,t] = strtok(t,0);
+	                        HDR.EVENT.TYP(N,1) = length(Desc{N});
+    			end;		
+                        HDR.EVENT.POS = round(onset * HDR.SampleRate);
+                        HDR.EVENT.DUR = dur * HDR.SampleRate;
+                        HDR.EVENT.CHN = zeros(N,1); 
+                        [HDR.EVENT.CodeDesc, CodeIndex, HDR.EVENT.TYP] = unique(Desc(1:N)');
 
 
                 elseif strcmp(HDR.TYPE,'EDF') && (length(strmatch('ANNOTATION',HDR.Label))==1),
@@ -1030,38 +1035,6 @@ end;
                         
                 end;
                 
-		if isfield(HDR,'EDFplus') && isfield(HDR.EDFplus,'ANNONS'),
-			%% decode EDF+/BDF+ annotations
-                        N = 0; 
-                        onset = []; dur=[]; Desc = {};
-			[s,t] = strtok(HDR.EDFplus.ANNONS,0);
-    			while ~isempty(s)
-    				N  = N + 1; 
-    				ix = find(s==20);
-    				[s1,s2] = strtok(s(1:ix(1)-1),21);
-    				s1;
-    				tmp = str2double(s1);
-    				onset(N,1) = tmp;
-   				tmp = str2double(s2(2:end));
-   				if  ~isempty(tmp)
-   					dur(N,1) = tmp; 	
-   				else 
-   					dur(N,1) = 0; 	
-   				end;
-    				Desc{N} = char(s(ix(1)+1:end-1));
-				[s,t] = strtok(t,0);
-	                        HDR.EVENT.TYP(N,1) = length(Desc{N});
-    			end;		
-                        HDR.EVENT.POS = onset * HDR.SampleRate;
-                        if any(HDR.EVENT.POS - ceil(HDR.EVENT.POS))
-                                warning('HDR.EVENT.POS is not integer')        
-                                %HDR.EVENT.POS = round(HDR.EVENT.POS); 
-                        end
-                        HDR.EVENT.DUR = dur * HDR.SampleRate;
-                        HDR.EVENT.CHN = zeros(N,1); 
-                        [HDR.EVENT.CodeDesc, CodeIndex, HDR.EVENT.TYP] = unique(Desc(1:N)');
-		end
-
                 status = fseek(HDR.FILE.FID, HDR.HeadLen, 'bof');
                 HDR.FILE.POS  = 0;
                 HDR.FILE.OPEN = 1;
@@ -2724,7 +2697,7 @@ elseif strcmp(HDR.TYPE,'ACQ'),
                 sz = fread(HDR.FILE.FID,1,'uint16');
                 HDR.AS.bpb = HDR.AS.bpb + HDR.AS.SPR(k)*sz; 
                 offset3 = offset3 + HDR.ACQ.BufLength(k) * sz;
-% ftell(HDR.FILE.FID),                
+ftell(HDR.FILE.FID),                
                 typ = fread(HDR.FILE.FID,1,'uint16');
                 if ~any(typ==[1,2])
                         fprintf(HDR.FILE.stderr,'Warning SOPEN (ACQ): invalid or unknonw data type in file %s.\n',HDR.FileName);
@@ -5397,8 +5370,8 @@ elseif strcmp(HDR.TYPE,'MIT')
 	                        for k0 = 1:7,
 	                                [tmp,z] = strtok(z);
 	                                if k0 == 1, 
-	                                        [tmp, tmp1] = strtok(tmp,'x:+');
-	                                        [tmp, status] = str2double(tmp);
+	                                        [tmp, tmp1] = strtok(tmp,'x:');
+	                                        [tmp, status] = str2double(tmp); 
 	                                        HDR.MIT.dformat(k,1) = tmp;
                                                 HDR.AS.SPR(k) = 1; 
 	                                        if isempty(tmp1)
@@ -5493,8 +5466,6 @@ elseif strcmp(HDR.TYPE,'MIT')
 			GDFTYP = repmat(NaN,HDR.NS,1);
 			GDFTYP(HDR.MIT.dformat==80) = 2;
 			GDFTYP(HDR.MIT.dformat==16) = 3;
-			GDFTYP(HDR.MIT.dformat==24) = 255+24;
-			GDFTYP(HDR.MIT.dformat==32) = 5;
 			GDFTYP(HDR.MIT.dformat==61) = 3;
 			GDFTYP(HDR.MIT.dformat==160)= 4;
 			GDFTYP(HDR.MIT.dformat==212)= 255+12;
@@ -6785,39 +6756,22 @@ elseif strncmp(HDR.TYPE,'MAT',3),
                 if isfield(tmp.EEG.chanlocs,'X')
 	                HDR.ELEC.XYZ    = [[tmp.EEG.chanlocs.X]',[tmp.EEG.chanlocs.Y]',[tmp.EEG.chanlocs.Z]'];
 	        end;        
-
-                if isfield(tmp.EEG.chanlocs,'labels') 
-	                HDR.Label       = tmp.EEG.chanlocs.labels;
-		else
-			HDR.Label = cellstr([repmat('#',HDR.NS,1),int2str([1:HDR.NS]')]);
-		end
-		HDR.PhysDimCode = repmat(4275,HDR.NS,1); 	% uV
-
+                HDR.Label       = tmp.EEG.chanlocs.labels;
                 if ischar(tmp.EEG.data) && exist(tmp.EEG.data,'file')
                         fid = fopen(tmp.EEG.data,'r','ieee-le');
                         HDR.data = fread(fid,[HDR.SPR*HDR.NS*HDR.NRec],'float32');
                         fclose(fid);
-			HDR.GDFTYP = 16;
                 elseif isnumeric(tmp.EEG.data)
                 	HDR.data = tmp.EEG.data';
-			HDR.GDFTYP = 17;
                 end;
-
-		if isfield(HDR,'data'),
+                if isfield(HDR,'data'),
                 	HDR.data = reshape(permute(reshape(HDR.data,[HDR.SPR,HDR.NS,HDR.NRec]),[1,3,2]),[HDR.SPR*HDR.NRec,HDR.NS]);
-			if isfield(HDR,'Label') && ~isempty(HDR.Label)
-	                        HDR.BDF.Status.Channel = strmatch('Status',HDR.Label,'exact');
-        	                if length(HDR.BDF.Status.Channel),
-		                	HDR.BDF.ANNONS = uint32(HDR.data(:,HDR.BDF.Status.Channel)); 
-				end;
+                        HDR.BDF.Status.Channel = strmatch('Status',HDR.Label,'exact');
+                        if length(HDR.BDF.Status.Channel),
+	                	HDR.BDF.ANNONS = uint32(HDR.data(:,HDR.BDF.Status.Channel)); 
 	                end;
 		end; 
-
-                if isfield(tmp.EEG,'event'),
-			HDR.EVENT.SampleRate = HDR.SampleRate; 
-			HDR.EVENT.POS = round([tmp.EEG.event.latency]');
-			[HDR.EVENT.CodeDesc, tmp, HDR.EVENT.TYP] = unique({tmp.EEG.event.type}');
-		elseif isfield(HDR,'BDF') && isfield(HDR.BDF,'ANNONS'),
+		if isfield(HDR.BDF,'ANNONS'),
 			HDR = bdf2biosig_events(HDR,FLAG.BDF.status2event); 	
 		else		
 	                % trial onset and offset event
@@ -6830,8 +6784,7 @@ elseif strncmp(HDR.TYPE,'MAT',3),
 	                        HDR.EVENT.POS = [HDR.EVENT.POS; [0:HDR.NRec-1]'*HDR.SPR - offset];      % timing of cue
 	                        HDR.EVENT.TYP = [HDR.EVENT.TYP; repmat(hex2dec('0301'), HDR.NRec,1)]; % this is a hack because info on true classlabels is not available
 	                end;
-                end;
-
+	        end;         
 		% HDR.debugging_info = tmp.EEG;
 	        HDR.TYPE = 'native'; 
 
