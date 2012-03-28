@@ -9,7 +9,7 @@ function opt = ft_checkopt(opt, key, allowedtype, allowedval)
 %   opt = ft_checkopt(opt, key, allowedtype, allowedval)
 %
 % For allowedtype you can specify a string or a cell-array with multiple
-% strings. All the default MATLAB types can be specified, which includes
+% strings. All the default MATLAB types can be specified, such as
 %   'double'
 %   'logical'
 %   'char'
@@ -32,13 +32,13 @@ function opt = ft_checkopt(opt, key, allowedtype, allowedval)
 % with multiple values.
 %
 % This function will give an error or it returns the input configuration
-% structure or cell-array without modifications. A match on any of the 
-% allowed types and any of the allowed values is sufficient to let this 
+% structure or cell-array without modifications. A match on any of the
+% allowed types and any of the allowed values is sufficient to let this
 % function pass.
 %
 % See also FT_GETOPT, FT_SETOPT
 
-% Copyright (C) 2011, Robert Oostenveld
+% Copyright (C) 2011-2012, Robert Oostenveld
 %
 % $Id$
 
@@ -96,11 +96,24 @@ for i=1:length(allowedtype)
   end
 end % for allowedtype
 
+% construct a string that describes the type of the input variable
+if isnumeric(val) && numel(val)==1
+  valtype = sprintf('%s scalar', class(val));
+elseif isnumeric(val) && numel(val)==length(val)
+  valtype = sprintf('%s vector', class(val));
+elseif isnumeric(val) && length(size(val))==2
+  valtype = sprintf('%s matrix', class(val));
+elseif isnumeric(val)
+  valtype = sprintf('%s array', class(val));
+else
+  valtype = class(val);
+end
+
 if ~ok
   if length(allowedtype)==1
-    error('the type of the option "%s" is invalid, it should be "%s" instead of "%s"', key, allowedtype{1}, class(val));
+    error('the type of the option "%s" is invalid, it should be "%s" instead of "%s"', key, allowedtype{1}, valtype);
   else
-    error('the type of the option "%s" is invalid, it should be any of %s instead of "%s"', key, printcell(allowedtype), class(val));
+    error('the type of the option "%s" is invalid, it should be any of %s instead of "%s"', key, printcell(allowedtype), valtype);
   end
 end
 
