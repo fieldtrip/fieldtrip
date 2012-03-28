@@ -51,11 +51,26 @@ if ~isfield(ft_default, 'showcallinfo'), ft_default.showcallinfo = 'yes';    end
 list = which('spm', '-all');
 if length(list)>1
   [ws, warned] = warning_once('multiple versions of SPM on your path will confuse FieldTrip');
+  
+  % use the presence of SPM versions as a proxy for the user probably
+  % having used addpath(genpath(<FT>))
+  ftSpmFound = 0;
+  ftPath = mfilename('fullpath');
+  ftPath = ftPath(1:end-numel(mfilename())); % get path, strip away 'ft_defaults'
+  
   if warned % only throw the warning once
     for i=1:length(list)
       warning('one version of SPM is found here: %s', list{i});
+      
+      if list{i}(1:numel(ftPath)) == ftPath
+        ftSpmFound = ftSpmFound + 1;
+        if (ftSpmFound > 1)
+          warning('You probably used addpath(genpath(<FieldTrip>)), this can lead to unexpected behaviour! You should only add FieldTrip''s root directory to your path.');
+        end
+      end
     end
   end
+  
 end
 
 if ~isdeployed 
