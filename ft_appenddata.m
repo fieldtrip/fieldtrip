@@ -252,7 +252,13 @@ elseif catlabel
     %  removetrialinfo = 1;
     %end
   end
-  
+
+  if ~isfield(data, 'fsample')
+    fsample = 1/mean(diff(data.time{1}));
+  else
+    fsample = data.fsample;
+  end
+
   for j=1:Ntrial
     %pre-allocate memory for this trial
     data.trial{j} = [data.trial{j}; zeros(sum(Nchan(2:end)), size(data.trial{j},2))];
@@ -260,9 +266,9 @@ elseif catlabel
     %fill this trial with data
     endchan = Nchan(1);
     %allow some jitter for irregular sample frequencies
-    TOL = 10*eps;
+    tolerance = 0.01*(1/fsample);
     for i=2:Ndata
-      if ~all(data.time{j}-varargin{i}.time{j}<TOL)
+      if ~all(data.time{j}-varargin{i}.time{j}<tolerance)
         error('there is a difference in the time axes of the input data');
       end
       begchan = endchan+1;
