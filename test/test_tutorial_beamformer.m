@@ -69,7 +69,9 @@ cfg.dics.projectnoise = 'yes';
 cfg.dics.lambda       = 0;
 
 sourcePost = ft_sourceanalysis(cfg, freqPost);
-% sourcePre  = ft_sourceanalysis(cfg, freqPre );
+
+% call ft_volumereslice so that figures appear correct side up
+mri = ft_volumereslice([], mri);
 
 % Plot the result
 cfg            = [];
