@@ -128,7 +128,7 @@ for i=1:length(L)
           mfname = [baseDir filesep L(i).dir filesep name '.' mexext];
           MF = dir(mfname);
       end
-      if numel(MF)==1 && datenum(SF.date) <= datenum(MF.date)
+      if numel(MF)==1 && SF.datenum <= MF.datenum
          fprintf(1,'Skipping up-to-date MEX file %s%s%s\n', L(i).dir, filesep, name);
          continue;
       end 

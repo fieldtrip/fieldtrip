@@ -111,6 +111,9 @@ C      CALL mexprintf(line//achar(10))
          call mexerrmsgtxt ('Nodes has to be an array with
      +three columns.')
       endif
+      if(ngriele .ne. nconduc) then
+         call mexerrmsgtxt ('Conductivities and elements do not fit.')
+      endif
       if((mconduc .ne. 6).and.(mconduc .ne. 1)) then
          call mexerrmsgtxt ('Conductivity has to be an array with
      +one or six columns.')
