@@ -1,0 +1,49 @@
+C Include-File zur IMELIB
+C
+C Variable Typ Art Dimension      Erklaerung
+C ----------------------------------------------------------------------
+C IFIKEN    I   V  MANFIP         Kennung fuer die Fortran-Units
+C                                 IFIKEN(IUNIT)=
+C                                 0 : auf IUNIT ist ein File offen
+C                                 1 : IUNIT ist durch FUNCTION IFREE fuer
+C                                     einen File reserviert
+C                                 2 : IUNIT ist frei
+C                                 3 : IUNIT darf NIEMALS benutzt werden
+C IFIMIP    I   P                 kleinste zulaessige Fortran-Unit
+C MANFIP    I   P                 hoechste zulaessige Fortran-Unit-Nummer
+C MAXREC    I   V                 Groesse eines Random-Access-Files. d.h.
+C                                 die maximale Anzahl der Records, in die
+C                                 gespeichert werden soll.
+C NTTAST    I   V                 Fortran-Unit
+C                                 - der Tastatur bei TAST=.T. oder
+C                                 - des Eingabe-Files bei TAST=.F.
+C NTTERM    I   V                 Fortran-Unit
+C                                 - des Terminals bei TERM=.T. oder
+C                                 - des Ausgabe-Files bei TERM=.F.
+C NTERRO    I   V                 Fortran-Unit fuer Fehlerausgabe
+C TAST      L   V                 .T. - Eingabe erfolgt durch Tastatur
+C                                 .F. - Eingabe erfolgt vom File NTTAST
+C TERM      L   V                 .T. - Ausgabe erfolgt aufs Terminal
+C                                 .F. - Ausgabe erfolgt auf File NTTERM
+C
+C
+      parameter(maxlen=200)
+      INTEGER IFIKEN (1000)
+C
+      LOGICAL TAST, TERM
+C
+      CHARACTER CABBRU*80,PATSEP*1
+C
+      COMMON /IMLIB1/ IFIKEN, MAXREC, NTTAST, NTTERM, NTERRO,
+     *                TAST,   TERM,   LABBRU, NTPROT, IFIMIP,
+     *                MANFIP, ISTIN,  ISTOUT, ISTERR, LENINT,
+     *                LENDBL, LENREA, LENCHA, NTHIST, IWHIST
+      COMMON /IMLIB2/ CABBRU, PATSEP
+C
+      parameter(lenvar=10)
+      parameter(maxvar=1000)
+      character*(maxlen) tvar(maxvar)
+      character*(lenvar) nvar(maxvar),txtalt
+      dimension ltvar(maxvar),lnvar(maxvar)
+      common /imlib3/ tvar,nvar,txtalt
+      common /imlib4/ ltvar,lnvar

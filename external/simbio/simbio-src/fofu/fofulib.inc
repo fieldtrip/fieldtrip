@@ -1,0 +1,198 @@
+!---->---1---------2---------3---------4---------5---------6---------7--<
+!
+!    NeuroFEM license:
+!    =================
+!    Copyright (c) 2007 by 
+!    Dr.Carsten Wolters, Dr.Alfred Anwander,  
+!    Prof.Dr.H.Buchner, Prof.Dr.G.Knoll, Dr.Adrian Rienaecker, 
+!    Rainer Beckmann. 
+!
+!    Permission is hereby granted, free of charge, to any person 
+!    obtaining a copy of the NeuroFEM software and associated 
+!    documentation files (the "Software"), to deal in the Software 
+!    without restrictions, including without limitations the rights to 
+!    use, copy, modify, merge, publish, distribute, sublicense, 
+!    and/or sell copies of the Software, and to permit persons to 
+!    whom the Software is furnished to do so, subject to the following 
+!    conditions:
+!
+!    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
+!    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES 
+!    OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
+!    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT 
+!    HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, 
+!    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+!    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE 
+!    OR OTHER DEALINGS IN THE SOFTWARE. THE ENTIRE RISK AS TO THE 
+!    QUALITY AND PERFORMANCE OF THE SOFTWARE IS WITH YOU.
+!
+!    The above copyright notice, permission and warranty notices 
+!    shall be included in all copies of the Software. A copyright 
+!    notice of the contributing authors and the above permission 
+!    and warranty notices shall be included in all source code 
+!    files of the Software. 
+!
+!---->---1---------2---------3---------4---------5---------6---------7--<
+C
+C             FILE: FOFULIB.INC
+C            AUTOR: HEINZ WALTERMANN
+C         REVISION: 1.0
+C LETZTE AENDERUNG: 01.06.1991
+C
+C#                                                                      NEU
+C
+C FOFULIB.INC:
+C ============
+C
+C **********************************
+C * K O M P L E T T   STANDARD F77 *
+C **********************************
+C
+C
+C INCLUDE-FILE FUER FOFULIB.F77
+C
+C MKNPEP                     MAXIMALE ANZAHL KNOTEN PRO ELEMENT
+C F     (MKNPEP)             FAKTOR FUER DIE BERUECKSICHTIGUNG VON 
+C                            KNOTEN BEI ELEMENTEN MIT VARIABLER KNOTEN-
+C                            ZAHL (0.0 KNOTEN NICHT DA, 1.0 KNOTEN DA)
+C MKNEL (10,3)               MAXIMALE ANZAHL DER KNOTEN DER ELEMENTE
+C                            MKNEL(I,J) GILT FUER DAS ELEMENT MIT DER
+C                            LAUFENDEN NUMMER I-1 UND DER LOKALEN 
+C                            DIMENSION J
+C LQZANF (10,3)              BEGINN DER QUAD. ZWPKTE. IN LOK. NUMERIERUNG
+C LQZEND (10,3)              ENDE   DER QUAD. ZWPKTE. IN LOK. NUMERIERUNG
+C DR1KOO (20,2)              LOKALE KOORDINATEN FUER DIE DIREKTE DREIECKSINTE-
+C                            GRATION NACH HAMMER AUS DHATT S.259 TABELLE 5.7
+C DR1WIC (20)                WICHTUNGEN ZU DR1KOO
+C DR2AJ  (15)                KONSTANTE AJ FUER DIE INTEGRATION VON DREIECKEN 
+C                            NACH GAUSS-RADAU AUS ZIENKIEWICZ S.154 TABELLE 8.2
+C DR2H   (15)                KONSTANTE H FUER DIE INTEGRATION VON DREIECKEN 
+C                            NACH GAUSS-RADAU AUS ZIENKIEWICZ S.154 TABELLE 8.2
+C DR2AI  (15)                KONSTANTE AI FUER DIE INTEGRATION VON DREIECKEN
+C                            NACH GAUSS-RADAU AUS ZIENKIEWICZ S.154 TABELLE 8.2
+C DR2AS  (15)                KONSTANTE AS FUER DIE INTEGRATION VON DREIECKEN
+C                            NACH GAUSS-RADAU AUS ZIENKIEWICZ S.154 TABELLE 8.2
+C VIEKOO (9,9)               LOKALE KOORDINATEN FUER GAUSS-QUADRATUR
+C VIEWIC (9,9)               WICHTUNGEN FUER GAUSS-QUADRATUR
+C TETKOO (10,3)              LOKALE KOORDINATEN FUER DIE INTEGRATION VON
+C                            TETRAEDERN NACH HAMMER AUS DHATT S.261 TABELLE 5.9
+C TETWIC (10)                WICHTUNGEN FUER TETKOO
+C DLKSTA (4)                 LOKALE KNOTEN-KOORDINATEN STAB
+C DLKDRE (2,9)               LOKALE KNOTEN-KOORDINATEN DREIECK
+C DLKVIE (2,12)              LOKALE KNOTEN-KOORDINATEN VIERECK
+C DLKTET (3,16)              LOKALE KNOTEN-KOORDINATEN TETRAEDER
+C DLKKEI (3,24)              LOKALE KNOTEN-KOORDINATEN KEIL
+C DLKQUA (3,32)              LOKALE KNOTEN-KOORDINATEN QUADER
+C LQKSTA (1)                 
+C LQKDRE (3)                 
+C LQKVIE (4)                 LQK...(I) IST DIE NUMMER DES QUADRATISCHEN
+C LQKTET (6)                 ZWISCHENPUNKTES, DER AUF DER GLEICHEN SEITE LIEGT
+C LQKKEI (9)                 WIE DER I-TE KUB. ZWISCHENPUNKT. I ZAEHL ERST
+C LQKQUA (12)                AB DEN KUB. PUNKTEN
+C DQKSTA (1)
+C DQKDRE (2,3)
+C DQKVIE (2,4)
+C DQKTET (3,6)               DELTA, UM DAS EIN QUADR. PUNKT VERSCHOBEN
+C DQKKEI (3,9)               WIRD, WENN AUF DER GLEICHEN SEITE EIN KUB.
+C DQKQUA (3,12)              PUNKT EINGEBAUT WIRD.
+C ADJ21,ADJ22                ADJUNKTEN DER JACOBISCHEN MATRIX 2D
+C ADJ31,ADJ32,ADJ33          ADJUNKTEN DER JACOBISCHEN MATRIX 3D
+C REDLIN                     .T.: LIN. ELEM. EINE ORD. TIEFER INTEGRIEREN
+C REDINT                     .T.: REDUZIERTE INTEGRATION FUER NORMALE ELEM.
+C IVOGAU (9)                 IVOGAU(I) IST DER RELATIV ZUM INTGRD I
+C                            NAECHSTNIEDRIGE INTEGRATIONSGRAD BEI
+C                            INTEGRATION NACH GAUSS
+C IVODRE (10)                IVODRE(I) IST DER RELATIV ZUM INTGRD I
+C                            NAECHSTNIEDRIGE INTEGRATIONSGRAD BEI
+C                            INTEGRATION VON DREIECKEN UND KEILEN
+C IVOTET (3)                 IVOTET(I) IST DER RELATIV ZUM INTGRD I
+C                            NAECHSTNIEDRIGE INTEGRATIONSGRAD BEI
+C                            INTEGRATION VON TETRAEDERN
+C
+C#
+C
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+C
+      DOUBLE PRECISION JAC11,JAC12,JAC13,    JACI11,JACI12,JACI13,
+     *                 JAC21,JAC22,JAC23,    JACI21,JACI22,JACI23,
+     *                 JAC31,JAC32,JAC33,    JACI31,JACI32,JACI33 
+C
+      PARAMETER (Z0   = 0.0D0)
+      PARAMETER (Z1D32= 1.0D0/32.0D0)
+      PARAMETER (Z1D16= 1.0D0/16.0D0)
+      PARAMETER (Z1D9 = 1.0D0/9.0D0)
+      PARAMETER (Z9D64= 9.0D0/64.0D0)
+      PARAMETER (Z1D8 = 0.125D0)
+      PARAMETER (Z0125= 0.125D0)
+      PARAMETER (Z16  = 1.0D0/6.0D0)
+      PARAMETER (Z2D9 = 2.0D0/9.0D0)
+      PARAMETER (Z025 = 0.25D0)
+      PARAMETER (Z1D4 = 0.25D0)
+      PARAMETER (Z9D32= 9.0D0/32.0D0)
+      PARAMETER (Z13  = 1.0D0/3.0D0)
+      PARAMETER (Z1D3 = 1.0D0/3.0D0)
+      PARAMETER (Z4D9 = 4.0D0/9.0D0)
+      PARAMETER (Z05  = 0.5D0)
+      PARAMETER (Z9D16= 9.0D0/16.0D0)
+      PARAMETER (Z23  = 2.0D0/3.0D0)
+      PARAMETER (Z2D3 = 2.0D0/3.0D0)
+      PARAMETER (Z8D9 = 8.0D0/9.0D0)
+      PARAMETER (Z1   = 1.0D0)
+      PARAMETER (Z9D8 = 9.0D0/8.0D0)
+      PARAMETER (Z11D9= 11.0D0/9.0D0)
+      PARAMETER (Z3D2 = 3.0D0/2.0D0)
+      PARAMETER (Z27D16= 27.0D0/16.0D0)
+      PARAMETER (Z2   = 2.0D0)
+      PARAMETER (Z19D9=19.0D0/9.0D0)
+      PARAMETER (Z9D4 = 9.0D0/4.0D0)
+      PARAMETER (Z26D9= 26.0D0/9.0D0)
+      PARAMETER (Z3   = 3.0D0)
+      PARAMETER (Z4   = 4.0D0)
+      PARAMETER (Z9D2 = 4.5D0)
+      PARAMETER (Z5   = 5.0D0)
+      PARAMETER (Z6   = 6.0D0)
+      PARAMETER (Z27D4= 27.0D0/4.0D0)
+      PARAMETER (Z8   = 8.0D0)
+      PARAMETER (Z9   = 9.0D0)
+      PARAMETER (Z10  = 10.0D0)
+      PARAMETER (Z12  = 12.0D0)
+      PARAMETER (Z27D2= 27.0D0/2.0D0)
+      PARAMETER (Z18  = 18.0D0)
+      PARAMETER (Z27  = 27.0D0)
+      PARAMETER (Z81  = 81.0D0)
+      PARAMETER (W1   =-1.0D0)
+      PARAMETER (W05  =-0.5D0)
+      PARAMETER (W13  =-1.0D0/3.0D0)
+      PARAMETER (W23  =-2.0D0/3.0D0)
+      PARAMETER (W16  =-1.0D0/6.0D0)
+C
+      PARAMETER (MKNPEP=32)
+C
+      LOGICAL REDLIN,REDINT
+C
+      DIMENSION
+     * F     (MKNPEP),MKNEL (10    ,3     )
+      DIMENSION
+     * DR1KOO(20, 2),DR1WIC(20   ),DR2AJ (15   ),DR2H  (15   ),
+     * DR2AI (15   ),DR2AS (15   ),VIEKOO( 9, 9),VIEWIC( 9, 9),
+     * TETKOO(10, 3),TETWIC(10   ),DLKSTA( 4   ),DLKDRE( 2, 9),
+     * DLKVIE( 2,12),DLKTET( 3,16),DLKKEI( 3,24),DLKQUA( 3,32),
+     * LQZANF(10, 3),LQZEND(10, 3),LQKSTA( 1   ),LQKDRE( 3   ),
+     * LQKVIE( 4   ),LQKTET( 6   ),LQKKEI( 9   ),LQKQUA(12   ),
+     * DQKSTA( 1   ),DQKDRE( 2, 3),DQKVIE( 2, 4),DQKTET( 3, 6),
+     * DQKKEI( 3, 9),DQKQUA( 3,12)
+      DIMENSION
+     * IVOGAU( 9),IVODRE(10),IVOTET( 3)
+C
+      COMMON/FOFUCO/
+     * F     ,DR1KOO,DR1WIC,DR2AJ ,DR2H  ,DR2AI ,DR2AS ,VIEKOO,VIEWIC,
+     * TETKOO,TETWIC,DLKSTA,DLKDRE,DLKVIE,DLKTET,DLKKEI,DLKQUA,DQKSTA,
+     * DQKDRE,DQKVIE,DQKTET,DQKKEI,DQKQUA,ADJ31 ,ADJ32 ,ADJ33 ,ADJ21 ,
+     * ADJ22 ,JAC11 ,JAC12 ,JAC13 ,JACI11,JACI12,JACI13,JAC21 ,JAC22 ,
+     * JAC23 ,JACI21,JACI22,JACI23,JAC31 ,JAC32 ,JAC33 ,JACI31,JACI32,
+     * JACI33, 
+     * REDLIN,REDINT,IVOGAU,IVODRE,IVOTET,MKNEL ,LQZANF,LQZEND,LQKSTA,
+     * LQKDRE,LQKVIE,LQKTET,LQKKEI,LQKQUA
+C
+      SAVE /FOFUCO/
+
