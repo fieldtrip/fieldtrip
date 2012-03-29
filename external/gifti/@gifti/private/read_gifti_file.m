@@ -23,7 +23,7 @@ if ~strcmp(get(t,root(t),'name'),'GIFTI')
     error('[GIFTI] %s is not a GIFTI 1.0 file.', filename);
 end
 attr = cell2mat(attributes(t,'get',root(t)));
-attr = cell2struct({attr.val},strrep({attr.key},':','_'),2);
+attr = cell2struct({attr.val},strrep({attr.key},':','___'),2);
 if ~all(ismember({'Version','NumberOfDataArrays'},fieldnames(attr)))
     error('[GIFTI] Missing mandatory attributes for GIFTI root element.');
 end
@@ -64,23 +64,29 @@ end
 
 %==========================================================================
 function s = gifti_LabelTable(t,uid)
-s = struct('name',{}, 'index',[]);
+s = struct('name',{}, 'key',[], 'rgba',[]);
 c = children(t,uid);
-j = 0;
 for i=1:length(c)
     a = attributes(t,'get',c(i));
-    if isa(a, 'cell')
-      for k=1:length(a)
-        j = j+1;
-        s(1).index(j) = str2double(a{k}.val);
-        s(1).name{j}  = get(t,children(t,c(i)),'value');
-      end
-    else
-      s(1).index(i) = str2double(a.val);
-      s(1).name{j}  = get(t,children(t,c(i)),'value');
+    s(1).rgba(i,1:4) = NaN;
+    for j=1:numel(a)
+        switch lower(a{j}.key)
+            case {'key','index'}
+                s(1).key(i)    = str2double(a{j}.val);
+            case 'red'
+                s(1).rgba(i,1) = str2double(a{j}.val);
+            case 'green'
+                s(1).rgba(i,2) = str2double(a{j}.val);
+            case 'blue'
+                s(1).rgba(i,3) = str2double(a{j}.val);
+            case 'alpha'
+                s(1).rgba(i,4) = str2double(a{j}.val);
+            otherwise
+        end
     end
+    s(1).name{i}  = get(t,children(t,c(i)),'value');
 end
-    
+
 %==========================================================================
 function s = gifti_DataArray(t,uid,filename)
 s = struct(...
@@ -99,10 +105,10 @@ for i=1:str2double(s(1).attributes.Dimensionality)
     s(1).attributes = rmfield(s(1).attributes,f);
 end
 s(1).attributes = rmfield(s(1).attributes,'Dimensionality');
-try
+if isfield(s(1).attributes,'ExternalFileName') && ...
+        ~isempty(s(1).attributes.ExternalFileName)
     s(1).attributes.ExternalFileName = fullfile(fileparts(filename),...
         s(1).attributes.ExternalFileName);
-catch
 end
     
 c = children(t,uid);
@@ -158,14 +164,23 @@ switch s.Encoding
         d = typecast(dunzip(sb(base64decode(get(t,children(t,uid),'value')))), tp.cast);
 
     case 'ExternalFileBinary'
-        fid = fopen(s.ExternalFileName,'r');
-        if fid == -1
-            error('[GIFTI] Unable to read binary file %s.',s.ExternalFileName);
+        [p,f,e] = fileparts(s.ExternalFileName);
+        if isempty(p)
+            s.ExternalFileName = fullfile(pwd,[f e]);
         end
-        fseek(fid,str2double(s.ExternalFileOffset),0);
-        d = sb(fread(fid,prod(s.Dim),['*' tp.class]));
-        fclose(fid);
-
+        if true
+            fid = fopen(s.ExternalFileName,'r');
+            if fid == -1
+                error('[GIFTI] Unable to read binary file %s.',s.ExternalFileName);
+            end
+            fseek(fid,str2double(s.ExternalFileOffset),0);
+            d = sb(fread(fid,prod(s.Dim),['*' tp.class]));
+            fclose(fid);
+        else
+            d = file_array(s.ExternalFileName, s.Dim, tp.class, ...
+                str2double(s.ExternalFileOffset),1,0,'ro');
+        end
+        
     otherwise
         error('[GIFTI] Unknown data encoding: %s.',s.Encoding);
 end
