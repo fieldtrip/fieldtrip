@@ -10,6 +10,8 @@ Related links:
   - http://www.bcistandards.org/
   - http://arxiv.org/pdf/1103.4717.pdf
 
+# License:
+http://www.softwarefreedom.org/resources/2007/gpl-non-gpl-collaboration.html
 
 # Overview
 The SigServer acquires and TiA then ships the stuff to the client(s). In the
