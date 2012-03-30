@@ -185,6 +185,10 @@ if isfield(input, 'type')
   % preferably the structure specifies its own type
   type = input.type;
   
+elseif input.nChans==1 && ~isempty(regexp(input.label{1}, '^csc'))
+  % this is a single channel header that was read from a Neuralynx file, might be fcdc_matbin or neuralynx_nsc
+  type = 'neuralynx';
+  
 elseif issubfield(input, 'orig.FileHeader') &&  issubfield(input, 'orig.VarHeader')
   % this is a complete header that was read from a Plexon *.nex file using read_plexon_nex
   type = 'plexon';
