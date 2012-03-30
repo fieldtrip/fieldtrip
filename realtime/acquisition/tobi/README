@@ -11,7 +11,15 @@ Related links:
   - http://arxiv.org/pdf/1103.4717.pdf
 
 # License:
-http://www.softwarefreedom.org/resources/2007/gpl-non-gpl-collaboration.html
+Tia2ft is dual-licensed wiht the GPL and BSD license.
+
+## Included:
+- Libtia: GNU lesser public general license (LGPL).
+- libbuffer: GPL and BSD dual license.
+- Ticpp: ??
+- Boost: ??
+- STL: ??
+
 
 # Overview
 The SigServer acquires and TiA then ships the stuff to the client(s). In the

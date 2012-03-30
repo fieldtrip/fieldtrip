@@ -4,13 +4,18 @@ LDFLAGS = \
 	-L../../buffer/src -lbuffer 
 
 CXXFLAGS_DEBUG = -g -O0
-CXXFLAGS = -c -Iinclude -I ../../buffer/src $(CXXFLAGS_DEBUG)
+CXXFLAGS = -c -Iinclude -I ../../buffer/src $(CXXFLAGS_DEBUG) -Wall
+CCFLAGS = -c -Iinclude -I ../../buffer/src -pedantic -Wall -std=c89
 
-tia2ft: tia2ft.o
+tia2ft: ft_buffer_helper.o tia2ft.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -o $@ $^
+
+%.o: %.c
+	$(CC) $(CCFLAGS) -o $@ $^
+
 
 .PHONY: clean run
 
