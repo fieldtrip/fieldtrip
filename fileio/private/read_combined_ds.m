@@ -57,15 +57,32 @@ if needhdr
 
   for i=1:nfiles
     fname{i} = fullfile(dirname, ls(i).name);
-    ftype{i} = ft_filetype(fname{i});
-    sel(i)   = any(strcmp(ftype{i}, supported));
-    [p, f, x] = fileparts(fname{i});
-    if filetype_check_extension(fname{i}, '.mat')
-      % select only the *.bin and not the *.mat of each pair
-      sel(i) = false;
-    end
   end
 
+  [p, f, x] = cellfun(@fileparts, fname, 'UniformOutput', 0);
+  ismat = strcmp(x, '.mat');
+  isbin = strcmp(x, '.bin');
+    
+  if all(ismat | isbin)
+    % the directory contains mat/bin pairs, and possibly an events.mat file
+    filepair = intersect(f(ismat), f(isbin));
+    unknown  = ~ismember(f, filepair);
+    % deselect the events.mat file
+    ismat(unknown) = false;
+    ftype(ismat)   = {'fcdc_matbin'};
+    ftype(isbin)   = {'fcdc_matbin'};
+    ftype(unknown) = {'unknown'};
+    sel = ismat;
+    
+  else
+    % the directory contains another selection of files that should be combined
+    % use ft_filetype to detect each type, note that this can be rather slow
+    for i=1:nfiles
+      ftype{i} = ft_filetype(fname{i});
+      sel(i)   = any(strcmp(ftype{i}, supported));
+    end
+  end
+  
   if ~any(sel)
     error('no supported files were found');
   end

@@ -94,8 +94,11 @@ if ~exist(filename, 'file') && ~strcmp(ft_filetype(filename), 'ctf_shm') && ~str
 end
 
 % get the options
-headerformat = ft_getopt(varargin, 'headerformat', ft_filetype(filename)); % the default is automatically detected
 retry        = ft_getopt(varargin, 'retry', false); % the default is not to retry reading the header
+headerformat = ft_getopt(varargin, 'headerformat', []);
+if isempty(headerformat)
+  headerformat = ft_filetype(filename); % the default is automatically detected, but only if not specified
+end
 
 % The checkUniqueLabels flag is used for the realtime buffer in case
 % it contains fMRI data. It prevents 1000000 voxel names to be checked
@@ -130,7 +133,7 @@ else
   
   % ensure that the headerfile and datafile are defined, which are sometimes different than the name of the dataset
   [filename, headerfile, datafile] = dataset2files(filename, headerformat);
-  if ~strcmp(filename, headerfile) && ~ft_filetype(filename, 'ctf_ds') && ~ft_filetype(filename, 'fcdc_buffer_offline')
+  if ~strcmp(filename, headerfile) && ~ft_filetype(filename, 'ctf_ds') && ~ft_filetype(filename, 'fcdc_buffer_offline') && ~ft_filetype(filename, 'fcdc_matbin')
     filename     = headerfile;                % this function should read the headerfile, not the dataset
     headerformat = ft_filetype(filename);     % update the filetype
   end
