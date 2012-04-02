@@ -616,7 +616,7 @@ if basedonmni
   % grid positions
   tmpcfg           = [];
   tmpcfg.nonlinear = 'no';
-  normalise        = ft_volumenormalise(cfg,mri);
+  normalise        = ft_volumenormalise(tmpcfg,mri);
   
   grid = [];
   grid.pos         = warp_apply(inv(normalise.cfg.final), mnigrid.pos);
