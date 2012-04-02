@@ -66,7 +66,7 @@ end
 if nargin<3 && all(size(M)==4)
   % no specific transformation mode has been selected
   % it looks like a homogenous transformation matrix
-  method = 'homogenous';
+  method = 'homogeneous';
 elseif nargin<3
   % the default method is 'nonlinear'
   method = 'nonlinear';
@@ -91,17 +91,17 @@ if any(strcmp(method, {'nonlinear', 'nonlin0', 'nonlin1', 'nonlin2', 'nonlin3', 
 
   if s(1)~=3
     error('invalid size of nonlinear transformation matrix');
-  elseif strcmp(method, 'nonlin0') & s(2)~=1
+  elseif strcmp(method, 'nonlin0') && s(2)~=1
     error('invalid size of nonlinear transformation matrix');
-  elseif strcmp(method, 'nonlin1') & s(2)~=4
+  elseif strcmp(method, 'nonlin1') && s(2)~=4
     error('invalid size of nonlinear transformation matrix');
-  elseif strcmp(method, 'nonlin2') & s(2)~=10
+  elseif strcmp(method, 'nonlin2') && s(2)~=10
     error('invalid size of nonlinear transformation matrix');
-  elseif strcmp(method, 'nonlin3') & s(2)~=20
+  elseif strcmp(method, 'nonlin3') && s(2)~=20
     error('invalid size of nonlinear transformation matrix');
-  elseif strcmp(method, 'nonlin4') & s(2)~=35
+  elseif strcmp(method, 'nonlin4') && s(2)~=35
     error('invalid size of nonlinear transformation matrix');
-  elseif strcmp(method, 'nonlin5') & s(2)~=56
+  elseif strcmp(method, 'nonlin5') && s(2)~=56
     error('invalid size of nonlinear transformation matrix');
   end
 
@@ -155,12 +155,12 @@ elseif strcmp(method, 'homogenous') || strcmp(method, 'homogeneous')
   warped = warped(1:3,:)';
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % using external function that returns a homogenous transformation matrix
+  % using external function that returns a homogeneous transformation matrix
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif exist(method, 'file')
   % get the homogenous transformation matrix
   H = feval(method, M);
-  warped = warp_apply(H, input, 'homogenous');
+  warped = warp_apply(H, input, 'homogeneous');
 
 else
   error('unrecognized transformation method');
