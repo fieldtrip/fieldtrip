@@ -22,11 +22,22 @@ directories.
 
 
 # Usage
+Without command line arguments, tia2ft attempts to connect to a TiA server and
+a FieldTrip buffer both served on the same computer. The following options are
+supported:
 
+  -h [ --help ]                     Show help message.
+  -v [ --verbose ]                  Print more info.
+  --tia-host arg (=localhost)       Set host name of TiA server.
+  --tia-port arg (=9000)            Set port of TiA server.
+  --fieldtrip-host arg (=localhost) Set host name of FieldTrip buffer server.
+  --fieldtrip-port arg (=1972)      Set port of FieldTrip buffer server.
+  --serve-ft-buffer                 Start a new FieldTrip buffer instead of 
+                                    connecting to an existing one.
 
 # Compiling
 
-# Linux
+## Linux
 To recompile tia2ft, a C++ compiler with the STL and Boost libraries is
 required.
 
@@ -35,14 +46,24 @@ To compile tia2ft, you can do the following:
 1. build libbuffer.a in /realtime/buffer/src by issuing "make",
 2. build tia2ft by issuing "make" in /realtime/acquisition/tobi/.
 
-
 Then, it can simply be run with:
   $ ./tia2ft.sh --serve-ft-buffer
 
+The shell script adds the TiA library to the search path, and starts the
+executable tia2ft.
+
+
+## Windows
+Compiling on windows is not yet supported.
+
+## OS X
+Compiling on OS X is not yet supported.
+
 
 # Testing tia2ft
-To test tia2ft, we can use the TOBI signal server to generate artificial
-signals. With the TOBI signal servers version 8ea1376, a TiA serving sine-waves can be started as follows:
+To test tia2ft, one can use the TOBI signal server to generate artificial
+signals. With the TOBI signal servers version 8ea1376, a TiA serving
+sine-waves can be started as follows:
 
   $ ./server.sh bin/server_config.xml
 
