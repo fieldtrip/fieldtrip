@@ -1,34 +1,36 @@
 # Overview
-The TOBI project defines a standardized interface called TiA (TOBI interface A)
-to transmit raw biosignals, supporting multirate and block-oriented
+The TOBI project defines a standardized interface called TiA (TOBI interface
+A) to transmit raw biosignals, supporting multi rate and block-oriented
 transmission of different kinds of signals from various acquisition devices
-(e.g., EEG, electrooculogram, near-infrared spectroscopy signals, etc.) at the
-same time [1].
+(e.g., EEG, EOG, near-infrared spectroscopy signals, etc.) at the same time
+[1].
 
 Interoperability between on streams provided with the TiA and the FieldTrip
 buffer is provided with tia2ft. Tia2ft can connect to a TiA server, and serve
-the incoming data trough a FieldTrip buffer, or optionally, push it to an
+the incoming data through a FieldTrip buffer, or optionally, push it to an
 external FieldTrip buffer (potentially run on a different device).
 
-Currently, only homogenous signal streams (i.e. with a single sampling rate)
-are supported.
+Note that only homogeneous signal streams (i.e. with a single sampling rate
+and block size) are supported at the moment.
 
 
-# License:
-Tia2ft is dual-licensed wiht the GPL and BSD license.
-
-- Libtia: GNU lesser public general license (LGPL).
-- libbuffer: GPL and BSD dual license.
-- Ticpp: ??
-- Boost: ??
-- STL: ??
+# License
+Tia2ft is available under the 3-clause BSD license (see LICENSE.txt). This
+license permits commercial use, and is compatible with the GPL license. The
+licences of the libraries used in tia2ft are available in their respective
+directories.
 
 
 # Usage
 
 
 # Compiling
-For compiling tia2ft, you can do the following:
+
+# Linux
+To recompile tia2ft, a C++ compiler with the STL and Boost libraries is
+required.
+
+To compile tia2ft, you can do the following:
 
 1. build libbuffer.a in /realtime/buffer/src by issuing "make",
 2. build tia2ft by issuing "make" in /realtime/acquisition/tobi/.

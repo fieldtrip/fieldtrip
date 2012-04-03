@@ -1,0 +1,6 @@
+TiA is dual-licenced under the LGPL version 3.0 and under the Graz University
+of Technology Commercial License Agreement provided with the Software or,
+alternatively, in accordance with the terms contained in a written agreement
+between you and Graz University of Technology.
+
+

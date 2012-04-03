@@ -11,4 +11,4 @@ ticpp  - http://code.google.com/p/ticpp
   tested in VC 6.0, VC 7.0, VC 7.1, VC 8.0, MinGW gcc 3.4.5, and in
   Linux GNU gcc 3+.
   
-
+boost - contains information on the boost libraries used.
