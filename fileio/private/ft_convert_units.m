@@ -20,7 +20,7 @@ function [obj] = ft_convert_units(obj, target)
 %
 % See FT_ESTIMATE_UNITS, FT_READ_VOL, FT_READ_SENS
 
-% Copyright (C) 2005-2008, Robert Oostenveld
+% Copyright (C) 2005-2012, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -51,13 +51,8 @@ if isfield(obj, 'unit') && ~isempty(obj.unit)
   unit = obj.unit;
 
 else
-  % try to estimate the units from the object
-  % Ergo: determine the units by looking at the size
-  if ft_senstype(obj, 'meg')
-    siz = norm(idrange(obj.chanpos));
-    unit = ft_estimate_units(siz);
-
-  elseif ft_senstype(obj, 'eeg')
+  % try to determine the units by looking at the size of the object
+  if isfield(obj, 'chanpos') && ~isempty(obj.chanpos)
     siz = norm(idrange(obj.chanpos));
     unit = ft_estimate_units(siz);
 
@@ -69,10 +64,6 @@ else
     siz = norm(idrange(obj.pos));
     unit = ft_estimate_units(siz);
   
-  elseif isfield(obj, 'chanpos') && ~isempty(obj.chanpos)
-    siz = norm(idrange(obj.chanpos));
-    unit = ft_estimate_units(siz);
-    
   elseif isfield(obj, 'transform') && ~isempty(obj.transform)
     % construct the corner points of the volume in voxel and in head coordinates
     [pos_voxel, pos_head] = cornerpoints(obj.dim, obj.transform);
@@ -83,9 +74,9 @@ else
     siz = norm(idrange(obj.fid.pnt));
     unit = ft_estimate_units(siz);
   
-  elseif ft_voltype(obj,'infinite')
-    unit = target;
+  elseif ft_voltype(obj, 'infinite')
     % there is nothing to do to convert the units
+    unit = target;
     
   elseif ft_voltype(obj,'singlesphere')
     siz = obj.r;
@@ -99,11 +90,7 @@ else
     siz = max(obj.r);
     unit = ft_estimate_units(siz);
     
-  elseif ft_voltype(obj,'nolte')
-    siz = norm(idrange(obj.bnd.pnt));
-    unit = ft_estimate_units(siz);
-    
-  elseif ft_voltype(obj,'bem') | ft_voltype(obj,'dipoli') | ft_voltype(obj,'bemcp') | ft_voltype(obj,'asa') | ft_voltype(obj,'openmeeg') 
+  elseif isfield(obj, 'bnd') && isstruct(obj.bnd) && isfield(obj.bnd(1), 'pnt') && ~isempty(obj.bnd(1).pnt)
     siz = norm(idrange(obj.bnd(1).pnt));
     unit = ft_estimate_units(siz);
     

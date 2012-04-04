@@ -115,7 +115,7 @@ end % detemine the correspondence to the desired type
 
 % remember the current input and output arguments, so that they can be
 % reused on a subsequent call in case the same input argument is given
-current_argout = {type};
+current_argout  = {type};
 previous_argin  = current_argin;
 previous_argout = current_argout;
 
