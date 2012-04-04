@@ -1001,7 +1001,11 @@ elseif isequal(cfg.method,'glassbrain')
   ft_sourceplot(tmpcfg, data);
 
 elseif isequal(cfg.method,'surface')
-
+  if issource
+    % add a transform field to the data
+    data.transform = pos2transform(data.pos);
+  end
+  
   % read the triangulated cortical surface from file
   tmp = load(cfg.surffile, 'bnd');
   surf = tmp.bnd;
