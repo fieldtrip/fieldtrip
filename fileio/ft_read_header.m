@@ -699,6 +699,13 @@ switch headerformat
   case 'egi_mff'
     orig = [];
     
+    if ~usejava('jvm')
+      error('the xml2struct requires MATLAB to be running with the Java virtual machine (JVM)');
+      % an alternative implementation which does not require the JVM but runs much slower is 
+      % available from http://www.mathworks.com/matlabcentral/fileexchange/6268-xml4mat-v2-0
+      % 
+    end
+    
     % get header info from .bin files
     binfiles = dir(fullfile(filename, 'signal*.bin'));
     if isempty(binfiles)
@@ -712,7 +719,6 @@ switch headerformat
     end
     
     % get hdr info from xml files
-    ft_hastoolbox('XML4MAT', 1, 0);
     warning('off', 'MATLAB:REGEXP:deprecated') % due to some small code xml2struct
     xmlfiles = dir( fullfile(filename, '*.xml'));
     disp('reading xml files to obtain header info...')
@@ -720,7 +726,7 @@ switch headerformat
       if strcmpi(xmlfiles(i).name(1:2), '._') % Mac sometimes creates this useless files, don't use them
       elseif strcmpi(xmlfiles(i).name(1:6), 'Events') % don't read in events here, can take a lot of time, and we can do that in ft_read_event
       else
-        fieldname = xmlfiles(i).name(1:end-4);
+        fieldname     = xmlfiles(i).name(1:end-4);
         filename_xml  = fullfile(filename, xmlfiles(i).name);
         orig.xml.(fieldname) = xml2struct(filename_xml);
       end

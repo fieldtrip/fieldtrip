@@ -610,7 +610,7 @@ switch dataformat
     dat = read_egis_data(filename, hdr, begtrial, endtrial, chanindx);
     dimord = 'chans_samples_trials';
     
-  case {'egi_sbin'}
+  case 'egi_sbin'
     if mod(hdr.orig.header_array(1),2)==0,
       %unsegmented data contains only 1 trial, don't read the whole file
       dat = read_sbin_data(filename, hdr, begsample, endsample, chanindx);
@@ -621,7 +621,8 @@ switch dataformat
     end
     dimord = 'chans_samples_trials';
     
-  case {'egi_mff'}
+  case 'egi_mff'
+    
     % check if requested data contains multiple epochs. If so, give error
     if isfield(hdr.orig.xml,'epoch') && length(hdr.orig.xml.epoch) > 1
       data_in_epoch = zeros(1,length(hdr.orig.xml.epoch));

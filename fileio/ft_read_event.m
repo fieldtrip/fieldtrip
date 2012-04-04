@@ -105,7 +105,11 @@ if iscell(filename)
 end
 
 % get the options
-eventformat      = ft_getopt(varargin, 'eventformat', ft_filetype(filename));
+eventformat      = ft_getopt(varargin, 'eventformat');
+if isempty(eventformat)
+  % only do the autodetection if the format was not specified
+  eventformat = ft_filetype(filename);
+end
 hdr              = ft_getopt(varargin, 'header');
 detectflank      = ft_getopt(varargin, 'detectflank', 'up');   % up, down or both
 trigshift        = ft_getopt(varargin, 'trigshift');           % default is assigned in subfunction
@@ -699,18 +703,25 @@ switch eventformat
     
   case 'egi_mff'
     if isempty(hdr)
-      hdr = ft_read_header(filename);
+      % use the corresponding code to read the header
+      hdr = ft_read_header(filename, 'headerformat', eventformat); 
+    end
+    
+    if ~usejava('jvm')
+      error('the xml2struct requires MATLAB to be running with the Java virtual machine (JVM)');
+      % an alternative implementation which does not require the JVM but runs much slower is 
+      % available from http://www.mathworks.com/matlabcentral/fileexchange/6268-xml4mat-v2-0
+      % 
     end
     
     % get event info from xml files
-    ft_hastoolbox('XML4MAT', 1, 0);
     warning('off', 'MATLAB:REGEXP:deprecated') % due to some small code xml2struct
     xmlfiles = dir( fullfile(filename, '*.xml'));
     disp('reading xml files to obtain event info... This might take a while if many events/triggers are present')
     for i = 1:numel(xmlfiles)
       if strcmpi(xmlfiles(i).name(1:6), 'Events')
-        fieldname = xmlfiles(i).name(1:end-4);
-        filename_xml  = fullfile(filename, xmlfiles(i).name);
+        fieldname       = xmlfiles(i).name(1:end-4);
+        filename_xml    = fullfile(filename, xmlfiles(i).name);
         xml.(fieldname) = xml2struct(filename_xml);
       end
     end
