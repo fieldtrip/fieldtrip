@@ -185,7 +185,7 @@ if isfield(input, 'type')
   % preferably the structure specifies its own type
   type = input.type;
   
-elseif isheader && input.nChans==1 && ~isempty(regexp(input.label{1}, '^csc'))
+elseif isfield(input, 'nChans') && input.nChans==1 && isfield(input, 'label') && ~isempty(regexp(input.label{1}, '^csc'))
   % this is a single channel header that was read from a Neuralynx file, might be fcdc_matbin or neuralynx_nsc
   type = 'neuralynx';
   
