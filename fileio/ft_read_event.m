@@ -800,6 +800,12 @@ switch eventformat
     end
     % pass the header along to speed it up, it will be read on the fly in case it is empty 
     event = read_mff_event(filename, hdr);
+    % clean up the fields in the event structure
+    fn = fieldnames(event);
+    fn = setdiff(fn, {'type', 'sample', 'value', 'offset', 'duration', 'timestamp'});
+    for i=1:length(fn)
+      event = rmfield(event, fn{i});
+    end
 
   case 'eyelink_asc'
     if isempty(hdr)
