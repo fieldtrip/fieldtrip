@@ -870,8 +870,15 @@ switch headerformat
   case 'egi_mff_v2'
     % ensure that the EGI toolbox is on the path
     ft_hastoolbox('egi_mff', 1);
+    if isunix && filename(1)~=filesep
+      % add the full path to the dataset directory
+      filename = fullfile(pwd, filename);
+    else
+      % FIXME I don't know how this is supposed to work on Windows computers
+      % with the drive letter in front of the path
+    end
     hdr = read_mff_header(filename);
-    
+      
   case 'fcdc_buffer'
     % read from a networked buffer for realtime analysis
     [host, port] = filetype_check_uri(filename);
