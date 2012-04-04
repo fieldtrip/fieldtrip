@@ -56,8 +56,12 @@ classdef permutation
       obj.outcome = zeros(1,obj.nperm+1);
       for i=1:obj.nperm
         
-        % ensure random permutation
-        RandStream.setGlobalStream(RandStream('mt19937ar','seed',sum(100*clock)));
+        % ensure random permutation with backward compatibility
+        try
+          RandStream.setGlobalStream(RandStream('mt19937ar','seed',sum(100*clock)));
+        catch
+          rand('twister',sum(100*clock));
+        end
         
         % create permuted data
         if ndata == 1

@@ -224,7 +224,11 @@ classdef crossvalidator
         function y = create_test_folds(Y)
           
           % use the same ordering for multiple datasets by reinitializing the random number generator
-          RandStream.setDefaultStream(RandStream('mt19937ar','seed',1));
+          try
+            RandStream.setDefaultStream(RandStream('mt19937ar','seed',1));
+          catch
+            rand('twister',1); randn('twister',1);
+          end
           
           y = cell(obj.folds,1);
           

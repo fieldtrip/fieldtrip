@@ -23,6 +23,9 @@ function s = statistic(stat,D,P)
 %                   circular data with angles specified in radians 
 %                   using fisher's correlation coefficient.
 %   'R2'          : squared correlation; explained variance in the linear regression case
+%   'expvar'      : explicit computation of explained variance: 
+%                   (var(y) - var(y-yhat)) / var(y)
+%                   1 = perfect prediction, <0 = worse than chance
 %   'identity'    : computes the proportion of trials that are identified correctly 
 %
 %   NOTE: notation '-x' with x one of the above is also allowed. This way
@@ -122,6 +125,10 @@ function s = statistic(stat,D,P)
         
         [a,b] = max(corr(P',D'));
         s = mean(b==1:size(P,1));
+        
+      case 'expvar'
+        
+        s = (var(D) - var(D-P)) ./ var(D);
         
       otherwise
         error('unknown statistic %s',stat);

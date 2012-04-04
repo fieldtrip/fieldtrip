@@ -2,11 +2,16 @@ classdef enet < dml.method
 %ENET native implementation of elastic net algorithm.
 %
 %   DESCRIPTION
-%   Elastic net linear and logistic regression
+%   Elastic net linear and logistic regression. Note that this algorithm
+%   allows for the GraphNet generalization that allows coupling between
+%   features.
 %
 %   REFERENCE
 %   Regularization paths for generalized linear models via coordinate descent 
 %   by Friedman et al.
+%
+%   Grosenick L, Klingenberg B, Knutson B. A family of interpretable
+%   multivariate models for regression and classification of whole-brain fMRI data. stanford.edu. 
 %
 %   EXAMPLE
 %   X = rand(10,20); Y = [1 1 1 1 1 2 2 2 2 2]';
