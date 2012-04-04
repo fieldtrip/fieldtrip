@@ -1,7 +1,7 @@
 function [dat,beta,x] = ft_preproc_polyremoval(dat, order, begsample, endsample)
 
 % FT_PREPROC_POLYREMOVAL removed an Nth order polynomal from the data
-% 
+%
 % Use as
 %   dat = ft_preproc_polyremoval(dat, order, begsample, endsample)
 % where
@@ -15,13 +15,13 @@ function [dat,beta,x] = ft_preproc_polyremoval(dat, order, begsample, endsample)
 %
 % For example
 %   ft_preproc_polyremoval(dat, 0)
-% removes the baseline by de-meaning the data and 
+% removes the mean value from each channel and
 %   ft_preproc_polyremoval(dat, 1)
 % removes the mean and the linear trend.
 %
 % See also FT_PREPROC_BASELINECORRECT, FT_PREPROC_DETREND
 
-% Copyright (C) 2008-2010, Robert Oostenveld
+% Copyright (C) 2008-2012, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -42,8 +42,10 @@ function [dat,beta,x] = ft_preproc_polyremoval(dat, order, begsample, endsample)
 % $Id: ft_preproc_polyremoval.m$
 
 % take the whole segment if begsample and endsample are not specified
-if nargin==2,
+if nargin<3
   begsample = 1;
+end
+if nargin<4
   endsample = size(dat,2);
 end
 
@@ -58,11 +60,9 @@ for i = 0:order
 end
 
 % estimate the contribution of the basis functions
-%a = dat(:,begsample:endsample)/x(:,begsample:endsample); <-this leads to
-%numerical issues, even in simple examples
+% beta = dat(:,begsample:endsample)/x(:,begsample:endsample); <-this leads to numerical issues, even in simple examples
 invxcov = inv(x(:,begsample:endsample)*x(:,begsample:endsample)');
-beta    = dat(:,begsample:endsample)*x(:,begsample:endsample)'*invxcov; 
+beta    = dat(:,begsample:endsample)*x(:,begsample:endsample)'*invxcov;
 
 % remove the estimated basis functions
 dat = dat - beta*x;
-

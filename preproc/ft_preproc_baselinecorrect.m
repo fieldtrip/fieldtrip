@@ -13,11 +13,9 @@ function [dat,baseline] = ft_preproc_baselinecorrect(dat, begsample, endsample)
 % If no begin and end sample are specified for the baseline estimate, it
 % will be estimated on the complete data.
 %
-% This function is a wrapper around FT_PREPROC_POLYREMOVAL.
-%
 % See also FT_PREPROC_POLYREMOVAL
 
-% Copyright (C) 1998-2008, Robert Oostenveld
+% Copyright (C) 1998-2012, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -40,11 +38,15 @@ function [dat,baseline] = ft_preproc_baselinecorrect(dat, begsample, endsample)
 % the beta returned by polyremoval should exactly be equal to the mean,
 % since we assume that polyremoval uses ones as its constant regressor
 
-if nargin < 2
-  [dat,baseline] = ft_preproc_polyremoval(dat,0);
-else
-  [dat,baseline] = ft_preproc_polyremoval(dat,0,begsample,endsample);
+% take the whole segment if begsample and endsample are not specified
+if nargin<2
+  begsample = 1;
 end
+if nargin<3
+  endsample = size(dat,2);
+end
+
+[dat,baseline] = ft_preproc_polyremoval(dat,0,begsample,endsample);
 
 % save this old code because it looks non-trivially optimized
 %
@@ -52,10 +54,10 @@ end
 % if isempty(hasbsxfun)
 %   hasbsxfun = exist('bsxfun', 'builtin')==5;
 % end
-% 
+%
 % % determine the size of the data
 % [Nchans, Nsamples] = size(dat);
-% 
+%
 % % determine the interval to use for baseline correction
 % if nargin<2 || isempty(begsample)
 %   begsample = 1;
@@ -63,13 +65,13 @@ end
 % if nargin<3 || isempty(endsample)
 %   endsample = Nsamples;
 % end
-% 
+%
 % % estimate the baseline and subtract it
 % baseline = mean(dat(:,begsample:endsample), 2);
-% 
+%
 % % ensure that the data is not represented as integer, otherwise "minus" fails
 % dat = double(dat);
-% 
+%
 % if hasbsxfun
 %   % it is even faster to do this
 %   dat = bsxfun(@minus,dat,baseline);
@@ -78,7 +80,7 @@ end
 %   % for chan=1:Nchans
 %   %  dat(chan,:) = dat(chan,:) - baseline(chan);
 %   % end
-%   
+%
 %   for sample=1:Nsamples
 %     dat(:,sample) = dat(:,sample) - baseline;
 %   end
