@@ -46,7 +46,7 @@ function [filt] = ft_preproc_dftfilter(dat, Fs, Fl)
 % $Id$
 
 % determine the size of the data
-[Nchans, Nsamples] = size(dat);
+[nchans, nsamples] = size(dat);
 
 % set the default filter frequency
 if nargin<3 || isempty(Fl)
@@ -54,19 +54,26 @@ if nargin<3 || isempty(Fl)
 end
 
 % determine the largest integer number of line-noise cycles that fits in the data
-sel = 1:round(floor(Nsamples * Fl/Fs) * Fs/Fl);
+sel = 1:round(floor(nsamples * Fl/Fs) * Fs/Fl);
 
 % temporarily remove mean to avoid leakage
-mdat = mean(dat(:,sel),2);
-dat  = dat - mdat(:,ones(1,Nsamples));
+meandat = mean(dat(:,sel),2);
+for i=1:nsamples
+  % demean the data
+  dat(:,i) = dat(:,i) - meandat;
+end
 
-% fit a sin and cos to the signal and subtract them
-time  = (0:Nsamples-1)/Fs;
-tmp  = exp(j*2*pi*Fl*time);                    % complex sin and cos
+% fit a sine and cosine to each channel in the data and subtract them
+time = (0:nsamples-1)/Fs;
+tmp  = exp(1i*2*pi*Fl*time);                   % complex sin and cos
 % ampl = 2*dat*tmp'/Nsamples;                  % estimated amplitude of complex sin and cos
 ampl = 2*dat(:,sel)*tmp(sel)'/length(sel);     % estimated amplitude of complex sin and cos on integer number of cycles
 est  = ampl*tmp;                               % estimated signal at this frequency
-%filt = dat - est;                              % subtract estimated signal
-filt = dat - est + mdat(:,ones(1,Nsamples));
+filt = dat - est;                              % subtract estimated signal
 filt = real(filt);
+
+for i=1:nsamples
+  % add the mean back to the filtered data
+  filt(:,i) = filt(:,i) + meandat;
+end
 

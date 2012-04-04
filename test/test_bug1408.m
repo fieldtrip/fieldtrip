@@ -1,6 +1,7 @@
 function test_bug1408
 
 % TEST test_bug1408
+% TEST ft_preprocessing preproc ft_preproc_bandpassfilter ft_preproc_bandstopfilter ft_preproc_dftfilter ft_preproc_highpassfilter ft_preproc_lowpassfilter
 
 nchans   = 200;
 nsamples = 1e6;
@@ -9,7 +10,7 @@ dat = rand(nchans,nsamples); datmean = rand(nchans,1);
 tic
 dat = dat - datmean(:,ones(1,nsamples));
 t(1) = toc
- 
+
 
 dat = rand(nchans,nsamples); datmean = rand(nchans,1);
 tic
@@ -70,3 +71,16 @@ cfg.polyremoval = 'yes';
 cfg.polyorder = 3;
 dataout = ft_preprocessing(cfg, data);
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+dat = rand(10,300)+ 30;
+Fs  = 1000;
+Fl  = 50;
+Flp = 10;
+Fhp = 70;
+Fbp = [40 70];
+
+filt = ft_preproc_bandpassfilter(dat,Fs,Fbp); assert(all(mean(filt,2)<1)); % the DC component should disappear
+filt = ft_preproc_bandstopfilter(dat,Fs,Fbp); assert(all(mean(filt,2)>0));
+filt = ft_preproc_dftfilter(dat,Fs,Fl);       assert(all(mean(filt,2)>0));
+filt = ft_preproc_highpassfilter(dat,Fs,Fhp); assert(all(mean(filt,2)<1)); % the DC component should disappear
+filt = ft_preproc_lowpassfilter(dat,Fs,Flp);  assert(all(mean(filt,2)>0));

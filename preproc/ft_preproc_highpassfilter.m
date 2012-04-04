@@ -46,6 +46,9 @@ function [filt] = ft_preproc_highpassfilter(dat,Fs,Fhp,N,type,dir)
 %
 % $Id$
 
+% determine the size of the data
+[nchans, nsamples] = size(dat);
+
 % set the default filter order later
 if nargin<4 || isempty(N)
     N = [];
@@ -102,5 +105,11 @@ switch type
     A = 1;
     B = firls(N,f,z); % requires Matlab signal processing toolbox
 end  
+
+meandat = mean(dat,2);
+for i=1:nsamples
+  % demean the data
+  dat(:,i) = dat(:,i) - meandat;
+end
 
 filt = filter_with_correction(B,A,dat,dir);
