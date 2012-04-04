@@ -349,7 +349,7 @@ switch eventformat
     % FIXME it would be nice to figure out how sopen/sread return events
     % for all possible fileformats that can be processed with biosig
     %
-    % This section of code is opaque with respect to the gdf file being a 
+    % This section of code is opaque with respect to the gdf file being a
     % single file or the first out of a sequence with postfix _1, _2, ...
     % because it uses private/read_trigger which again uses ft_read_data
     if isempty(hdr)
@@ -701,17 +701,23 @@ switch eventformat
       end
     end;
     
-  case 'egi_mff'
+  case {'egi_mff_v1' 'egi_mff'} % this is currently the default
+    % The following represents the code that was written by Ingrid, Robert
+    % and Giovanni to get started with the EGI mff dataset format. It might
+    % not support all details of the file formats.
+    % An alternative implementation has been provided by EGI, this is
+    % released as fieldtrip/external/egi_mff and referred further down in
+    % this function as 'egi_mff_v2'.
+    
     if isempty(hdr)
       % use the corresponding code to read the header
-      hdr = ft_read_header(filename, 'headerformat', eventformat); 
+      hdr = ft_read_header(filename, 'headerformat', eventformat);
     end
     
     if ~usejava('jvm')
       error('the xml2struct requires MATLAB to be running with the Java virtual machine (JVM)');
-      % an alternative implementation which does not require the JVM but runs much slower is 
+      % an alternative implementation which does not require the JVM but runs much slower is
       % available from http://www.mathworks.com/matlabcentral/fileexchange/6268-xml4mat-v2-0
-      % 
     end
     
     % get event info from xml files
@@ -782,7 +788,12 @@ switch eventformat
       end %iEvent
     end
     
-    
+  case 'egi_mff_v2'
+    % ensure that the EGI toolbox is on the path
+    ft_hastoolbox('egi_mff', 1);
+    % pass the header along to speed it up, it will be read on the fly in case it is empty 
+    event = read_mff_event(filename, hdr);
+
   case 'eyelink_asc'
     if isempty(hdr)
       hdr = ft_read_header(filename);
@@ -1449,7 +1460,7 @@ switch eventformat
   case {'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw'}
     % check that the required low-level toolbox is available
     if ~ft_hastoolbox('yokogawa', 0);
-        ft_hastoolbox('yokogawa_meg_reader', 1);
+      ft_hastoolbox('yokogawa_meg_reader', 1);
     end
     % the user should be able to specify the analog threshold
     % the user should be able to specify the trigger channels

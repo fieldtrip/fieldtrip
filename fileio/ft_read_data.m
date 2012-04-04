@@ -621,7 +621,13 @@ switch dataformat
     end
     dimord = 'chans_samples_trials';
     
-  case 'egi_mff'
+  case {'egi_mff_v1' 'egi_mff'} % this is currently the default
+    % The following represents the code that was written by Ingrid, Robert
+    % and Giovanni to get started with the EGI mff dataset format. It might
+    % not support all details of the file formats.
+    % An alternative implementation has been provided by EGI, this is
+    % released as fieldtrip/external/egi_mff and referred further down in
+    % this function as 'egi_mff_v2'.
     
     % check if requested data contains multiple epochs. If so, give error
     if isfield(hdr.orig.xml,'epoch') && length(hdr.orig.xml.epoch) > 1
@@ -637,12 +643,12 @@ switch dataformat
       end
     end
     
-    %read in data in different signals
+    % read in data in different signals
     binfiles = dir(fullfile(filename, 'signal*.bin'));
     if isempty(binfiles)
       error('FieldTrip:read_mff_header:nobin', ['could not find any signal.bin in ' filename_mff ])
     end
-    %determine which channels are in which signal
+    % determine which channels are in which signal
     for iSig = 1:length(hdr.orig.signal)
       if iSig == 1
         chan2sig_ind(1:hdr.orig.signal(iSig).blockhdr(1).nsignals(1)) = iSig;
@@ -689,8 +695,14 @@ switch dataformat
         dat{end} = dat{end}(:,begsel:endsel);
       end
     end
-    %concat signals
+    % concat signals
     dat = cat(1,dat{:});
+    
+  case 'egi_mff_v2'
+    % ensure that the EGI toolbox is on the path
+    ft_hastoolbox('egi_mff', 1);
+    % pass the header along to speed it up, it will be read on the fly in case it is empty 
+    dat = read_mff_data(filename, 'sample', begsample, endsample, chanindx, hdr);
     
   case 'micromed_trc'
     dat = read_micromed_trc(filename, begsample, endsample);
@@ -995,7 +1007,7 @@ switch dataformat
   case 'neurosim'
     [hdr, dat] = read_neurosim_signals(filename);
     dat = dat(chanindx,begsample:endsample);
-
+    
   otherwise
     if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
       dat = read_biosig_data(filename, hdr, begsample, endsample, chanindx);

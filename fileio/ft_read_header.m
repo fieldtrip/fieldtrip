@@ -696,14 +696,18 @@ switch headerformat
     hdr.orig.CateNames   = CateNames;
     hdr.orig.CatLengths  = CatLengths;
     
-  case 'egi_mff'
-    orig = [];
+  case {'egi_mff_v1' 'egi_mff'} % this is currently the default
+    % The following represents the code that was written by Ingrid, Robert
+    % and Giovanni to get started with the EGI mff dataset format. It might
+    % not support all details of the file formats.
+    % An alternative implementation has been provided by EGI, this is
+    % released as fieldtrip/external/egi_mff and referred further down in
+    % this function as 'egi_mff_v2'.
     
     if ~usejava('jvm')
       error('the xml2struct requires MATLAB to be running with the Java virtual machine (JVM)');
-      % an alternative implementation which does not require the JVM but runs much slower is 
+      % an alternative implementation which does not require the JVM but runs much slower is
       % available from http://www.mathworks.com/matlabcentral/fileexchange/6268-xml4mat-v2-0
-      % 
     end
     
     % get header info from .bin files
@@ -712,6 +716,7 @@ switch headerformat
       error('could not find any signal.bin in mff directory')
     end
     
+    orig = [];
     for iSig = 1:length(binfiles)
       signalname = binfiles(iSig).name;
       fullsignalname = fullfile(filename, signalname);
@@ -824,7 +829,7 @@ switch headerformat
           end
         end
       end
-    else %no xml.sensorLayout present
+    else % no xml.sensorLayout present
       warning('no sensorLayout found in xml files, creating channel labels on the fly')
       for iSig = 1:length(orig.signal)
         for iSens = 1:orig.signal(iSig).blockhdr(1).nsignals
@@ -861,6 +866,11 @@ switch headerformat
       orig.epochdef = epochdef;
     end
     hdr.orig      = orig;
+    
+  case 'egi_mff_v2'
+    % ensure that the EGI toolbox is on the path
+    ft_hastoolbox('egi_mff', 1);
+    hdr = read_mff_header(filename);
     
   case 'fcdc_buffer'
     % read from a networked buffer for realtime analysis
@@ -1606,7 +1616,7 @@ switch headerformat
     orig = read_bucn_nirshdr(filename);
     hdr  = rmfield(orig, 'time');
     hdr.orig = orig;
-
+    
   case 'neurosim'
     hdr = read_neurosim_signals(filename);
     
@@ -1727,4 +1737,3 @@ for i=1:length(hdr)
   end
 end
 hdr = tmp;
-
