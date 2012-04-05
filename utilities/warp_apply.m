@@ -157,11 +157,21 @@ elseif strcmp(method, 'homogenous') || strcmp(method, 'homogeneous')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % using external function that returns a homogeneous transformation matrix
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-elseif exist(method, 'file')
+elseif exist(method, 'file') && ~isa(M, 'struct')
   % get the homogenous transformation matrix
   H = feval(method, M);
   warped = warp_apply(H, input, 'homogeneous');
 
+elseif strcmp(method, 'sn2individual') && isa(M, 'struct')
+  % use SPM structure with parameters for an inverse warp
+  % from normalized space to individual, can be non-linear
+  warped = sn2individual(M, input);
+
+elseif strcmp(method, 'individual2sn') && isa(M, 'struct')
+  % use SPM structure with parameters for a warp from
+  % individual space to normalized space, can be non-linear
+  error('individual2sn is not yet implemented');
+  
 else
   error('unrecognized transformation method');
 end
