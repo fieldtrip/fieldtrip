@@ -44,8 +44,8 @@
         </listitem>
         <listitem>
              <!-- Include call to open your Web site, if any -->
-           <label>MLN Web Site</label>
-            <callback>web http://www.socsci.ru.nl/~marcelge -browser;</callback>
+           <label>DML Web Site</label>
+            <callback>web http://www.distrep.org -browser;</callback>
             <icon>./html/webicon.gif</icon>
         </listitem>
         <!-- Add listitems for other features of your toolbox... -->
