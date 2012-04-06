@@ -601,7 +601,7 @@ end
 % remember the dimension of the source data
 cfg.dim = dim;
 % remember which voxels are inside the brain
-cfg.inside = find(inside(:));
+cfg.inside = inside(:);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION for creating a design matrix
