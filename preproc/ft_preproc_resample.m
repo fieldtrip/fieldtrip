@@ -1,4 +1,4 @@
-function [dat, tim] = ft_preproc_resample(dat, Fold, Fnew, method)
+function [datout, tim] = ft_preproc_resample(dat, Fold, Fnew, method)
 
 % FT_PREPROC_RESAMPLE resamples all channels in the data matrix
 %
@@ -17,7 +17,7 @@ function [dat, tim] = ft_preproc_resample(dat, Fold, Fnew, method)
 %
 % See also PREPROC, FT_PREPROC_LOWPASSFILTER
 
-% Copyright (C) 2006-2010, Robert Oostenveld
+% Copyright (C) 2006-2012, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -37,8 +37,10 @@ function [dat, tim] = ft_preproc_resample(dat, Fold, Fnew, method)
 %
 % $Id$
 
+[nchans, nsamples] = size(dat);
+
 if nargout==2
-  tim = 1:size(dat,2);
+  tim = 1:size(dat,nsamples);
   tim = ft_preproc_resample(tim, Fold, Fnew, method);
 end
 
@@ -46,30 +48,38 @@ if Fold==Fnew
   return
 end
 
+typ = class(dat);
+
+% resample and decimate require double formatted input
+if ~strcmp(method, 'downsample') && ~strcmp(typ, 'double')
+  dat = cast(dat, 'double');
+end
+
 switch method
   case 'resample'
-    if ~isa(dat, 'double')
-      typ = class(dat);
-      dat = typecast(dat, 'double');
-      dat = resample(dat, Fnew, Fold);     % this requires a double array
-      dat = typecast(dat, typ);
-    else
-      dat = resample(dat, Fnew, Fold);
-    end
+    % the actual implementation resamples along columns
+    datout = resample(dat', Fnew, Fold)';
+    
   case 'decimate'
-    fac = round(Fold/Fnew);
-    if ~isa(dat, 'double')
-      typ = class(dat);
-      dat = typecast(dat, 'double');
-      dat = decimate(dat, fac);    % this requires a double array
-      dat = typecast(dat, typ);
-    else
-      dat = decimate(dat, fac);    % this requires a double array
+    fac         = round(Fold/Fnew);
+    % this only works one channel at the time
+    nresampled  = ceil(nsamples/fac);
+    datout      = zeros(nchans, nresampled);
+    for i=1:nchans
+      datout(i,:) = decimate(dat(i,:), fac);
     end
+    
   case 'downsample'
     fac = Fold/Fnew;
-    dat = downsample(dat, fac);
+    % the actual implementation resamples along columns
+    datout = downsample(dat', fac)';
+    
   otherwise
     error('unsupported resampling method');
+end
+
+if ~strcmp(method, 'downsample') && ~strcmp(typ, 'double')
+  % convert back into the original input format
+  datout = cast(datout, typ);
 end
 
