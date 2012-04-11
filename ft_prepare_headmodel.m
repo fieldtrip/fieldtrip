@@ -374,6 +374,8 @@ end
 
 
 % do the mesh extrapolation
+% check spm is on the path (fpr the smoothing part)
+ft_hastoolbox('spm8',1,0);
 for i =1:numel(tissue)
   if ~isnumeric(tissue(i))
     comp = tissue{i};
@@ -486,11 +488,12 @@ if isfield(mri, 'gray') || isfield(mri, 'white') || isfield(mri, 'csf')
     fprintf('including CSF in segmentation for brain compartment\n')
     mri.seg = mri.seg | (mri.csf>(cfg.threshold*max(mri.csf(:))));
   end
-  if ~strcmp(cfg.smooth, 'no'),
-    fprintf('smoothing the segmentation with a %d-pixel FWHM kernel\n',cfg.smooth);
-    mri.seg = double(mri.seg);
-    spm_smooth(mri.seg, mri.seg, cfg.smooth);
-  end
+  
+  %smoothing part
+  ft_hastoolbox('spm8',1,0)
+  input = double(mri.seg);
+  mri.seg = dosmoothing(input, cfg.smooth, '');
+
   % threshold for the last time
   mri.seg = (mri.seg>(cfg.threshold*max(mri.seg(:))));
 elseif isfield(mri, 'brain')
