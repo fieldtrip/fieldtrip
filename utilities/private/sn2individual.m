@@ -41,17 +41,4 @@ else
   
   T      = P.VF.mat*P.Affine;
   warped = warp_apply(T, xyz+xyztmp);
-  
-	%xyz2 = Mult(1:3,:)*[ xyz + xyztmp ; ones(1,size(xyz,2))];
-
 end;
-%warped = warp_apply(inv(spmparams.VG.mat),xyz2);
-%orig_coord = xyz2';
-%warped = xyz2;
-
-%xyz_o=nut_coordtfm(orig_coord,Vorig.mat*inv(Vnorminput.mat));
-
-
-
-
-

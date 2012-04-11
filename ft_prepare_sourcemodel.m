@@ -44,10 +44,15 @@ function [grid, cfg] = ft_prepare_sourcemodel(cfg, vol, sens)
 %
 % Configuration options for a warped MNI grid
 %   cfg.mri             = can be filename or MRI structure, containing the
-%                          individual anatomy
+%                         individual anatomy
 %   cfg.grid.warpmni    = 'yes'
 %   cfg.grid.resolution = number (e.g. 6) of the resolution of the
 %                         template MNI grid, defined in mm
+%   cfg.grid.template   = filename of a template grid (defined in MNI space),
+%                         either cfg.grid.resolution or cfg.grid.template needs
+%                         to be defined. If both are defined cfg.grid.template
+%                         prevails
+%   cfg.grid.nonlinear  = 'no' (or 'yes'), use non-linear normalization
 %   cfg.sourceunits     = 'auto'(in which case the sourceunits default to the unit in the
 %                          sensor description), or 'mm'/'cm'/'dm'/'m'
 %
@@ -224,8 +229,9 @@ if basedonvol
 end
 
 if basedonmni
-  cfg.sourceunits = ft_getopt(cfg,      'sourceunits', 'auto');
-  cfg.grid.tight  = ft_getopt(cfg.grid, 'tight', 'no');
+  cfg.sourceunits    = ft_getopt(cfg,      'sourceunits', 'auto');
+  cfg.grid.tight     = ft_getopt(cfg.grid, 'tight',       'no');
+  cfg.grid.nonlinear = ft_getopt(cfg.grid, 'nonlinear',   'no');
 end
 
 % these are mutually exclusive
@@ -583,12 +589,22 @@ if basedonvol
 end
 
 if basedonmni
+  if ~isfield(cfg.grid, 'template') && ~isfield(cfg.grid, 'resolution')
+      error('you either need to specify the filename of a template grid in cfg.grid.template, or a resolution in cfg.grid.resolution');
+  elseif isfield(cfg.grid, 'template')
+      % let the template filename prevail
+      fname = cfg.grid.template;
+  elseif isfield(cfg.grid, 'resolution')
+      % use one of the templates that are in Fieldtrip, this requires a
+      % resolution
+      fname = ['standard_grid3d',num2str(cfg.grid.resolution),'mm.mat'];
+  end
+    
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % check whether the mni template grid exists for the specified resolution
   % if not create it: FIXME (this needs to be done still)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  fname = ['standard_grid3d',num2str(cfg.grid.resolution),'mm.mat'];
-  if ~exist(fname)
+  if ~exist(fname, 'file')
     error('the MNI template grid based on the specified resolution does not yet exist');
   end
   
@@ -615,11 +631,16 @@ if basedonmni
   % spatial normalisation of mri and construction of subject specific dipole
   % grid positions
   tmpcfg           = [];
-  tmpcfg.nonlinear = 'no';
+  tmpcfg.nonlinear = cfg.grid.nonlinear;
   normalise        = ft_volumenormalise(tmpcfg,mri);
   
   grid = [];
-  grid.pos         = warp_apply(inv(normalise.cfg.final), mnigrid.pos);
+  if ~isfield(normalise, 'params') && ~isfield(normalise, 'initial')
+    fprintf('applying an inverse warp based on a linear transformation only\n');
+    grid.pos = warp_apply(inv(normalise.cfg.final), mnigrid.pos);
+  else
+    grid.pos = warp_apply(inv(normalise.initial), warp_apply(normalise.params, mnigrid.pos, 'sn2individual')); 
+  end
   grid.dim         = mnigrid.dim;
   grid.unit        = mnigrid.unit;
   grid.inside      = mnigrid.inside;
