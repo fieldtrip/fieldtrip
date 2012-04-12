@@ -1,4 +1,4 @@
-function test_bugK82
+function test_bug1082
 
 % TEST test_bug1082
 % TEST ft_prepare_vol_sens ft_prepare_headmodel ft_compute_leadfield ft_plot_topo3d
@@ -37,14 +37,14 @@ lf1 = ft_compute_leadfield(pos, sens1, vol1);
 
 tmpcfg = [];
 tmpcfg.conductivity = [1];  
-tmpcfg.method = 'bem_openmeeg';
+tmpcfg.method = 'openmeeg';
 vol2 = ft_prepare_headmodel(tmpcfg,bnd);
 [vol2, sens2] = ft_prepare_vol_sens(vol2, sens);
 lf2 = ft_compute_leadfield(pos, sens2, vol2);
 
 tmpcfg = [];
 tmpcfg.conductivity = [1];  
-tmpcfg.method = 'bem_dipoli';
+tmpcfg.method = 'dipoli';
 vol3 = ft_prepare_headmodel(tmpcfg,bnd);
 [vol3, sens3] = ft_prepare_vol_sens(vol3, sens);
 lf3 = ft_compute_leadfield(pos, sens3, vol3);
