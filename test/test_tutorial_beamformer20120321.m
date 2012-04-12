@@ -75,6 +75,7 @@ sourcePost = ft_sourceanalysis(cfg, freqPost);
 %% Plot results
 cfg            = [];
 cfg.downsample = 2;
+cfg.parameter  = 'avg.pow';
 sourcePostInt  = ft_sourceinterpolate(cfg, sourcePost , mri);
 
 cfg              = [];
@@ -90,6 +91,7 @@ sourceDiff.avg.pow = (sourcePost.avg.pow - sourcePre.avg.pow) ./ sourcePre.avg.p
 
 cfg            = [];
 cfg.downsample = 2;
+cfg.parameter  = 'avg.pow';
 sourceDiffInt  = ft_sourceinterpolate(cfg, sourceDiff , mri);
 
 
@@ -165,6 +167,7 @@ sourceNAI.avg.pow = sourcePost.avg.pow ./ sourcePost.avg.noise;
 
 cfg = [];
 cfg.downsample = 2;
+cfg.parameter  = 'avg.pow';
 sourceNAIInt = ft_sourceinterpolate(cfg, sourceNAI , mri);
 
 
