@@ -10,7 +10,7 @@ function opt = ft_setopt(opt, key, val)
 %
 % See also FT_GETOPT, FT_CHECKOPT
 
-% Copyright (C) 2011, Robert Oostenveld
+% Copyright (C) 2011-2012, Robert Oostenveld
 %
 % $Id$
 
@@ -29,10 +29,14 @@ elseif isa(opt, 'cell')
     opt{end+1} = val;
   elseif length(sel)==1
     % replace the current value
-    opt{sel+1} = val;
+    keyindex = 2*sel-1;
+    valindex = keyindex+1;
+    opt{valindex} = val;
   elseif length(sel)>1
     % first remove all occurences
-    opt([2*(sel-1)+1 2*sel]) = [];
+    keyindex = 2*sel-1;
+    valindex = keyindex+1;
+    opt([keyindex valindex]) = [];
     % then append it
     opt{end+1} = key;
     opt{end+1} = val;
