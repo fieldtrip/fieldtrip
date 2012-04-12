@@ -160,7 +160,7 @@ elseif ischar(input)
   % official toolbox have precedence.
   hasbesa = ft_hastoolbox('besa',1, 1);
 
-  type = filetype(input);
+  type = ft_filetype(input);
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   if strcmp(type, 'besa_avr') && hasbesa

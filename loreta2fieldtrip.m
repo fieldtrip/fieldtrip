@@ -45,14 +45,14 @@ timeframe = ft_getopt(varargin, 'timeframe'); % will be empty if not specified
 % start with an empty source structure
 source  =  [];
 
-if filetype(filename, 'loreta_slor')
+if ft_filetype(filename, 'loreta_slor')
   voxnumber    = 6239;
   lorind       = getfield(load('loreta_ind.mat'), 'ind_sloreta');
   source.dim   = size(lorind);
   source.xgrid =  -70:5:70;
   source.ygrid = -100:5:65;
   source.zgrid =  -45:5:70;
-elseif filetype(filename, 'loreta_lorb')
+elseif ft_filetype(filename, 'loreta_lorb')
   voxnumber    = 2394;
   lorind       = getfield(load('loreta_ind.mat'), 'ind_loreta');
   source.dim   = size(lorind);
