@@ -239,7 +239,9 @@ elseif ismeg
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       ft_hastoolbox('openmeeg', 1);
 
-      dsm = openmeeg_dsm(pos,vol);
+      % switch the non adaptive algorithm on
+      nonadaptive = false; %HACK : this is hardcoded at the moment
+      dsm = openmeeg_dsm(pos,vol,nonadaptive);
       [h2mm,s2mm]= openmeeg_megm(pos,vol,sens);
       
       if isfield(vol,'mat')
@@ -387,7 +389,9 @@ elseif iseeg
     
     case 'openmeeg'
       if ft_hastoolbox('openmeeg', 1);
-        dsm = openmeeg_dsm(pos,vol);
+        % switch the non adaptive algorithm on
+        nonadaptive = false; %HACK : this is hardcoded at the moment
+        dsm = openmeeg_dsm(pos,vol,nonadaptive);
         if isfield(vol,'mat')
           lf = vol.mat*dsm;
         else

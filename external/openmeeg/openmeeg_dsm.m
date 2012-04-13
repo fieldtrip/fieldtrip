@@ -1,10 +1,13 @@
-function [dsm] = openmeeg_dsm(pos, vol)
+function [dsm] = openmeeg_dsm(pos, vol, flag)
 
 % OPENMEEG_DSM computes the OpenMEEG DSM matrix
 %              i.e. Right hand side in the potential equation
 %
 % Use as
-%   [dsm] = openmeeg_dsm(vol, isolated)
+%   [dsm] = openmeeg_dsm(po, vol, flag)
+%
+% flag = 1 non adaptive algorithm: does not try to approximate the
+% potential in the neighborhodd of the leads, by locally refining the BEM surface
 
 % Copyright (C) 2009, Alexandre Gramfort
 % INRIA Odyssee Project Team
@@ -63,17 +66,23 @@ try
     efid = fopen(exefile, 'w');
     omp_num_threads = feature('numCores');
 
+    if flag
+      str = ' -DSMNA';
+    else
+      str = '';
+    end
+    
     if ~ispc
       fprintf(efid,'#!/usr/bin/env bash\n');
       fprintf(efid,['export OMP_NUM_THREADS=',num2str(omp_num_threads),'\n']);
       % the following implements Galerkin method and switch can be -DSM or -DSMNA
       % (non adaptive), see OMtrunk/src/assembleSourceMat.cpp, operators.cpp
-      fprintf(efid,['om_assemble -DSMNA ./',geomfile,' ./',condfile,' ./',dipfile,' ./',dsmfile,' 2>&1 > /dev/null\n']);
+      fprintf(efid,['om_assemble' str ' ./',geomfile,' ./',condfile,' ./',dipfile,' ./',dsmfile,' 2>&1 > /dev/null\n']);
     else
-      fprintf(efid,['om_assemble -DSMNA ./',geomfile,' ./',condfile,' ./',dipfile,' ./',dsmfile,'\n']);
+      fprintf(efid,['om_assemble' str ' ./',geomfile,' ./',condfile,' ./',dipfile,' ./',dsmfile,'\n']);
     end
+    
     fclose(efid);
-
     if ~ispc
       dos(sprintf('chmod +x %s', exefile));
     end
