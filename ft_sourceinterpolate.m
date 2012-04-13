@@ -222,14 +222,20 @@ elseif ~is2Dana && is2Dfun
     interp = setsubfield(interp, cfg.parameter{k}, tmp);
   end
   
+  % identify the inside voxels after interpolation
+  nzeros     = sum(interpmat~=0,2);
+  newinside  = find(nzeros~=0);
+  newoutside = find(nzeros==0);
+  
   % get the positions
   [x,y,z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
   pos     = warp_apply(anatomical.transform, [x(:) y(:) z(:)]);
   clear x y z
   
   interp.pos     = pos;
-  interp.inside  = find(anatomical.inside)';
-  interp.outside = setdiff(1:prod(dim), interp.inside(:)');
+  interp.dim     = dim;
+  interp.inside  = newinside(:)';
+  interp.outside = newoutside(:)';
   
 elseif is2Dana && ~is2Dfun
   % set default interpmethod for this situation
@@ -380,7 +386,7 @@ elseif ~is2Dana && ~is2Dfun
   % add the other parameters to the output
   interp.dim       = anatomical.dim;
   interp.transform = transform_ana; % the original coordinate system
-  if ~any(strcmp(cfg.parameter, 'anatomy'))
+  if ~any(strcmp(cfg.parameter, 'anatomy')) && isfield(anatomical, 'anatomy')
     % copy the anatomy into the functional data
     interp.anatomy   = anatomical.anatomy;
   end
