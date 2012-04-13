@@ -227,7 +227,7 @@ classdef crossvalidator
           try
             RandStream.setDefaultStream(RandStream('mt19937ar','seed',1));
           catch
-            rand('twister',1); randn('twister',1);
+            rand('twister',1); randn('state',1);
           end
           
           y = cell(obj.folds,1);
