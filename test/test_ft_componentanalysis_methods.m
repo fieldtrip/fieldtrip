@@ -1,6 +1,6 @@
-function test_ft_componentanalysis
+function test_ft_componentanalysis_methods
 
-% TEST test_ft_componentanalysis
+% TEST test_ft_componentanalysis_methods
 % TEST ft_componentanalysis, ft_rejectcomponent, ft_checkdata
 % TEST runica, fastica, sobi, jader, dss, parafac
 
