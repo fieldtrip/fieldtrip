@@ -53,7 +53,5 @@ vol.r = single_r;
 vol.o = single_o;
 vol.c = conductivity;
 vol.type = 'singlesphere';
-if isempty(unit)
-  vol   = ft_convert_units(vol);
-end
+vol      = ft_convert_units(vol); % ensure the object to have a unit
 
