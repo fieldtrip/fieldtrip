@@ -561,18 +561,18 @@ for k = 1:numel(conductivity)
   
   cfg=[];
   cfg.conductivity = [cond cond cond];
-  cfg.method = 'bem_cp';
+  cfg.method = 'bemcp';
   eegvol_bem_cp = ft_prepare_headmodel(cfg, geom);
   
   try
-    cfg.method = 'bem_dipoli';
+    cfg.method = 'dipoli';
     eegvol_bem_dipoli = ft_prepare_headmodel(cfg, geom);
   catch
     eegvol_bem_dipoli = [];
   end
   
   try
-    cfg.method = 'bem_openmeeg';
+    cfg.method = 'openmeeg';
     eegvol_bem_openmeeg = ft_prepare_headmodel(cfg, geom);
   catch
     eegvol_bem_openmeeg = [];
