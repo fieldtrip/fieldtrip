@@ -20,26 +20,34 @@ function vol = ft_headmodel_singlesphere(geometry, varargin)
 
 % get the optional arguments
 conductivity = ft_getopt(varargin, 'conductivity',1);
-unit = ft_getopt(varargin,'unit');
+unit         = ft_getopt(varargin,'unit');
 
 if length(conductivity)~=1
   error('the conductivity should be a single number')
 end
 
-if isfield(geometry,'pnt')
-  if numel(geometry)>1
-    error('no more than 1 shell at a time is allowed')
-  end
-  pnt = geometry.pnt;
-else
-  error('the input should be a boundary')
-end
-
 % start with an empty volume conductor
 vol = [];
 
+if ~isempty(unit)
+  % use the user-specified units for the output
+  vol.unit = geometry.unit;
+elseif isfield(geometry, 'unit')
+  % copy the geometrical units into he volume conductor
+  vol.unit = geometry.unit;
+end
+
+if isnumeric(geometry) && size(geometry,2)==3
+  % assume that it is a Nx3 array with vertices
+elseif isstruct(geometry) && isfield(geometry,'pnt') && numel(geometry)==1
+  % get the points from the triangulated surface
+  geometry = geometry.pnt;
+else
+  error('the input geometry should be a set of points or a single triangulated surface')
+end
+
 % fit a single sphere to all headshape points
-[single_o, single_r] = fitsphere(pnt);
+[single_o, single_r] = fitsphere(geometry);
 
 vol.r = single_r;
 vol.o = single_o;

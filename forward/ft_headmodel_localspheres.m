@@ -24,12 +24,13 @@ function vol = ft_headmodel_localspheres(geometry, grad, varargin)
 % See also FT_PREPARE_HEADMODEL, FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
 % get the additional inputs and set the defaults
-% headshape    = ft_getopt(varargin, 'headshape');
-feedback     = ft_getopt(varargin, 'feedback', true);
-radius       = ft_getopt(varargin, 'radius', 8.5);
-maxradius    = ft_getopt(varargin, 'maxradius', 20);
-baseline     = ft_getopt(varargin, 'baseline', 5);
-singlesphere = ft_getopt(varargin, 'singlesphere', 'no');
+% headshape     = ft_getopt(varargin, 'headshape');
+feedback      = ft_getopt(varargin, 'feedback', true);
+radius        = ft_getopt(varargin, 'radius', 8.5);
+maxradius     = ft_getopt(varargin, 'maxradius', 20);
+baseline      = ft_getopt(varargin, 'baseline', 5);
+singlesphere  = ft_getopt(varargin, 'singlesphere', 'no');
+unit          = ft_getopt(varargin,'unit');
 
 % convert from 'yes'/'no' string into boolean value
 feedback = istrue(feedback);
@@ -37,12 +38,24 @@ feedback = istrue(feedback);
 % start with an empty volume conductor
 vol = [];
 
-if isfield(geometry, 'unit')
+if ~isempty(unit)
+  % use the user-specified units for the output
+  vol.unit = geometry.unit;
+elseif isfield(geometry, 'unit')
   % copy the geometrical units into he volume conductor
   vol.unit = geometry.unit;
 end
 
-Nshape = size(geometry.pnt,1);
+if isnumeric(geometry) && size(geometry,2)==3
+  % assume that it is a Nx3 array with vertices
+elseif isstruct(geometry) && isfield(geometry,'pnt') && numel(geometry)==1
+  % get the points from the triangulated surface
+  geometry = geometry.pnt;
+else
+  error('the input geometry should be a set of points or a single triangulated surface')
+end
+
+Nshape = size(geometry,1);
 Nchan  = numel(grad.label);
 
 % set up an empty figure
@@ -64,7 +77,7 @@ if istrue(feedback)
 end
 
 % fit a single sphere to all headshape points
-[single_o, single_r] = fitsphere(geometry.pnt);
+[single_o, single_r] = fitsphere(geometry);
 fprintf('single sphere,   %5d surface points, center = [%4.1f %4.1f %4.1f], radius = %4.1f\n', Nshape, single_o(1), single_o(2), single_o(3), single_r);
 
 vol = [];
@@ -115,16 +128,16 @@ for chan=1:Nchan
   end
   
   % find the headshape points that are close to this channel
-  dist = sqrt(sum((geometry.pnt-repmat(thispnt,Nshape,1)).^2, 2));
+  dist = sqrt(sum((geometry-repmat(thispnt,Nshape,1)).^2, 2));
   shapesel = find(dist<radius);
   if feedback
-    ft_plot_mesh(geometry.pnt(shapesel,:), 'vertexcolor', 'g');
+    ft_plot_mesh(geometry(shapesel,:), 'vertexcolor', 'g');
     drawnow
   end
   
   % fit a sphere to these headshape points
   if length(shapesel)>10
-    [o, r] = fitsphere(geometry.pnt(shapesel,:));
+    [o, r] = fitsphere(geometry(shapesel,:));
     fprintf('channel = %s, %5d surface points, center = [%4.1f %4.1f %4.1f], radius = %4.1f\n', grad.label{chan}, length(shapesel), o(1), o(2), o(3), r);
   else
     fprintf('channel = %s, not enough surface points, using all points\n', grad.label{chan});
