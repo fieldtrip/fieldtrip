@@ -248,6 +248,9 @@ for trial=1:Ntrials
 end
 data.label = data.label(chansel);
 Nchans     = length(chansel);
+if Nchans==0
+  error('no channels were selected');
+end
 
 % default is to compute just as many components as there are channels in the data
 if strcmp(cfg.numcomponent, 'all')

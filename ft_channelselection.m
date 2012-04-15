@@ -193,6 +193,16 @@ switch ft_senstype(datachannel)
     labelmegmag = datachannel(megmag);
     labelmeggrad = datachannel(megax | megpl);
 
+  case {'ctf64'}
+    labelml   = datachannel(~cellfun(@isempty, regexp(datachannel, '^SL')));    % left    MEG channels
+    labelmr   = datachannel(~cellfun(@isempty, regexp(datachannel, '^SR')));    % right   MEG channels
+    labelmeg = cat(1, labelml, labelmr);
+    labelmref = [datachannel(strncmp('B'  , datachannel, 1));
+      datachannel(strncmp('G'  , datachannel, 1));
+      datachannel(strncmp('P'  , datachannel, 1));
+      datachannel(strncmp('Q'  , datachannel, 1));
+      datachannel(strncmp('R'  , datachannel, length('G'  )))];
+    
   case {'ctf', 'ctf275', 'ctf151', 'ctf275_planar', 'ctf151_planar'}
     % all CTF MEG channels start with "M"
     % all CTF reference channels start with B, G, P, Q or R
