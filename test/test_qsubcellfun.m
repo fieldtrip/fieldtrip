@@ -5,7 +5,7 @@ function test_qsubcellfun
 
 if isempty(which('qsubcellfun'))
   [p, f, x] = fileparts(which('ft_defaults'));
-  addpath(fullfile(p, 'peer'));
+  addpath(fullfile(p, 'qsub'));
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
