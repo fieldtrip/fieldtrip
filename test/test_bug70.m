@@ -516,9 +516,28 @@ cfg=[];
 cfg.vol = vol;
 cfg.grid.pos = [0 0 .5];
 cfg.elec = elec;
-out1 = ft_prepare_leadfield(cfg);
+lf  = ft_prepare_leadfield(cfg); % use the defaults
+cfg.reducerank  = 1;
+lf1 = ft_prepare_leadfield(cfg);
 cfg.reducerank  = 2;
-out2 = ft_prepare_leadfield(cfg);
+lf2 = ft_prepare_leadfield(cfg);
+cfg.reducerank  = 3;
+lf3 = ft_prepare_leadfield(cfg);
+
+assert(~isequal(lf1, lf2)); % these should be different
+assert(~isequal(lf1, lf3)); % these should be different
+assert(~isequal(lf2, lf3)); % these should be different
+assert( isequal(lf,  lf3)); % these should be identical, i.e. the default should be rank 3
+
+assert(size(lf,2)==3);
+assert(size(lf1,2)==3);
+assert(size(lf2,2)==3);
+assert(size(lf3,2)==3);
+
+assert(rank(lf)==3);
+assert(rank(lf1)==1);
+assert(rank(lf2)==2);
+assert(rank(lf3)==3);
 
 sprintf('the norm of the difference of the two solutions is: %f' , norm(out1.leadfield{1}-out2.leadfield{1}))
 
