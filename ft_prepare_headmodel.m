@@ -115,6 +115,8 @@ ft_preamble callinfo
 cfg = ft_checkconfig(cfg, 'required', 'method');
 cfg = ft_checkconfig(cfg, 'deprecated', 'geom');
 cfg = ft_checkconfig(cfg, 'renamed', {'geom','headshape'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'method','bem_openmeeg','openmeeg'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'method','bem_dipoli','dipoli'});
 
 % set the general defaults 
 cfg.hdmfile        = ft_getopt(cfg, 'hdmfile');

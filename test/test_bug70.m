@@ -1,9 +1,7 @@
 function test_bug70
 
 % TEST test_bug70
-% TEST 
-
-% $Id: $
+% TEST ft_prepare_headmodel ft_prepare_leadfield
 
 % this is the output of icosahedron162, including it like this
 % makes the test script independent of that function
@@ -500,7 +498,7 @@ bnd.tri = tri;
 
 cfg = [];
 cfg.geom = bnd;
-cfg.method = 'bem_openmeeg';
+cfg.method = 'openmeeg';
 vol = ft_prepare_headmodel(cfg);
 
 pnt = pnt .* 10; % convert to cm
@@ -518,9 +516,9 @@ cfg=[];
 cfg.vol = vol;
 cfg.grid.pos = [0 0 .5];
 cfg.elec = elec;
-out1 = ft_prepare_leadfield(cfg) 
+out1 = ft_prepare_leadfield(cfg);
 cfg.reducerank  = 2;
-out2 = ft_prepare_leadfield(cfg) 
+out2 = ft_prepare_leadfield(cfg);
 
 sprintf('the norm of the difference of the two solutions is: %f' , norm(out1.leadfield{1}-out2.leadfield{1}))
 
