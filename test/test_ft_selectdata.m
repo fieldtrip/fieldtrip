@@ -1,7 +1,7 @@
 function test_ft_selectdata
 
 % TEST test_ft_selectdata
-% TEST ft_selectdata ft_appendfreq
+% TEST ft_selectdata ft_selectdata_old ft_selectdata_new ft_appendfreq
 
 clear freq*
 
@@ -14,12 +14,15 @@ freq1.powspctrm = randn(2,10,5);
 
 cfg = [];
 cfg.parameter = 'powspctrm';
-freq2 = ft_appendfreq(cfg, freq1, freq1);
-freq2 = rmfield(freq2, 'cfg');
-freq2a = ft_selectdata(freq2, freq2);
+freq2  = ft_appendfreq(cfg, freq1, freq1);
+freq2  = rmfield(freq2, 'cfg');
+freq2a = ft_selectdata(freq1, freq1, 'param', 'powspctrm'); % this should append the power spectrum
 assert(isequal(freq2, freq2a));
+
 freq4a = ft_selectdata(freq2, freq2, 'param', 'powspctrm');
-assert(isequal(freq2, freq2a));
+assert(isequal(size(freq4a.powspctrm), [4 2 10 5]));
+
+clear freq*
 
 freq3.label = {'1' '2'};
 freq3.freq  = 1:10;
@@ -28,10 +31,7 @@ freq3.powspctrm = randn(2,10);
 
 cfg = [];
 cfg.parameter = 'powspctrm';
-freq4 = ft_appendfreq(cfg, freq3, freq3);
-freq4 = rmfield(freq4, 'cfg');
-freq4a = ft_selectdata(freq3, freq3);
+freq4  = ft_appendfreq(cfg, freq3, freq3);
+freq4  = rmfield(freq4, 'cfg');
+freq4a = ft_selectdata(freq3, freq3, 'param', 'powspctrm');  % this should append the power spectrum
 assert(isequal(freq4, freq4a));
-freq4a = ft_selectdata(freq3, freq3, 'param', 'powspctrm');
-assert(isequal(freq4, freq4a));
-
