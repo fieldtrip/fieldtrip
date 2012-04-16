@@ -591,7 +591,10 @@ while ~isequal(textline,-1)
     stringC=strvcat(stringC,C);
   end
   [unit,R]=strtok(R);
-  positionSet=intersect(strmatch(A,stringA),strmatch(C,stringC));
+  if isempty(A) & isempty(C) % This can happen on empty line after reading all the information, and would cause positionSet to be [1; 2; 3], problematic for loop below.
+    break;
+  end
+  positionSet=intersect(strmatch(A,stringA),strmatch(C,stringC)); % strmatch matches empty strings to everything.
   if isempty(positionSet) | ~strcmp(unit,unitString) | ~isempty(R)
     break;
   end
