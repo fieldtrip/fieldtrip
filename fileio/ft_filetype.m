@@ -90,7 +90,7 @@ if isequal(current_argin, previous_argin) && isequal(current_pwd, previous_pwd)
   return
 end
 
-if strcmp(class(filename), 'memmapfile'),
+if isa(filename, 'memmapfile')
   filename = filename.Filename;
 end
 
@@ -142,6 +142,7 @@ if isempty(filename)
   end
 end
 
+% the parts of the filename are used further down
 [p, f, x] = fileparts(filename);
 
 % prevent this test if the filename resembles an URI, i.e. like "scheme://"
@@ -586,7 +587,13 @@ elseif isdir(filename) && exist(fullfile(filename, 'header'), 'file') && exist(f
   content = 'FieldTrip buffer offline dataset';
   
 elseif isdir(filename) && exist(fullfile(filename, 'info.xml'), 'file') && exist(fullfile(filename, 'signal1.bin'), 'file')
-  % this is a directory representing a dataset: it contains multiple xml files and one or more signalN.bin files
+  % this is an OS X package directory representing a complete EEG dataset
+  % it contains a Content file, multiple xml files and one or more signalN.bin files
+  type = 'egi_mff';
+  manufacturer = 'Electrical Geodesics Incorporated';
+  content = 'raw EEG data';
+elseif ~isdir(filename) && filetype_check_extension(p, 'mff') && (strcmp(f, 'Contents') || filetype_check_extension(filename, 'xml') || filetype_check_extension(filename, 'bin') || filetype_check_extension(filename, 'plist') || filetype_check_extension(filename, 'bak'))
+  % the file that the user specified is one of the files in an mff package directory
   type = 'egi_mff';
   manufacturer = 'Electrical Geodesics Incorporated';
   content = 'raw EEG data';
