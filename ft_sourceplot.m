@@ -713,7 +713,7 @@ if isequal(cfg.method,'ortho')
     end
     
     if hasfreq && hastime,
-      str3 = sprintf('%.1f s, %.1f Hz', data.freq(qi(1)), data.time(qi(2)));
+      str3 = sprintf('%.1f s, %.1f Hz', data.time(qi(2)), data.freq(qi(1)));
     elseif ~hasfreq && hastime,
       str3 = sprintf('%.1f s', data.time(qi(1)));
     elseif hasfreq && ~hastime,
@@ -737,7 +737,7 @@ if isequal(cfg.method,'ortho')
       str4 = '';
     end
     
-    %fprintf('%s %s %s %s\n', str1, str2, str3, str4);
+    fprintf('%s %s %s %s\n', str1, str2, str3, str4);
 
     if hasatlas
       % determine the anatomical label of the current position
@@ -786,12 +786,14 @@ if isequal(cfg.method,'ortho')
         set(h3f,'Tag','ij','visible','off');
       end
       if hasmsk
-        ft_plot_ortho(fun(:,:,:,qi), msk(:,:,:,qi), 'transform', eye(4), 'location', ijk, ...
+        tmpqi = [qi 1];
+        ft_plot_ortho(fun(:,:,:,tmpqi(1),tmpqi(2)), msk(:,:,:,tmpqi(1),tmpqi(2)), 'transform', eye(4), 'location', ijk, ...
                            'style', 'subplot', 'parents', [h1f h2f h3f].*update, ...
                            'colormap', cfg.funcolormap, 'colorlim', [fcolmin fcolmax], ...
                            'opacitylim', [opacmin opacmax]);
       else
-        ft_plot_ortho(fun(:,:,:,qi), 'transform', eye(4), 'location', ijk, ...
+        tmpqi = [qi 1];
+        ft_plot_ortho(fun(:,:,:,tmpqi(1),tmpqi(2)), 'transform', eye(4), 'location', ijk, ...
                            'style', 'subplot', 'parents', [h1f h2f h3f].*update, ...
                            'colormap', cfg.funcolormap, 'colorlim', [fcolmin fcolmax]);
       end
@@ -813,18 +815,19 @@ if isequal(cfg.method,'ortho')
 %     
        
     if hasfreq && hastime && hasfun,
-      h=subplot(2,2,4);
+      subplot(2,2,4);
       %uimagesc(data.time, data.freq, squeeze(vols{2}(xi,yi,zi,:,:))');axis xy;
       tmpdat = double(squeeze(fun(xi,yi,zi,:,:)));
-      pcolor(double(data.time), double(data.freq), double(squeeze(vols{2}(xi,yi,zi,:,:))));
-      shading('interp');
+      %pcolor(double(data.time), double(data.freq), tmpdat);
+      imagesc(double(data.time), double(data.freq), tmpdat); axis xy;
+      %shading('interp');
       xlabel('time'); ylabel('freq');
-      try
-        caxis([-1 1].*max(abs(caxis)));
-      end
+%       try
+%         caxis([-1 1].*max(abs(caxis)));
+%       end
       set(gca,'tag','TF1');
-      colorbar;
-      %caxis([fcolmin fcolmax]);
+      caxis([fcolmin fcolmax]);
+      %colorbar;
       %set(gca, 'Visible', 'off');
     elseif hasfreq && hasfun,
       subplot(2,2,4);
@@ -897,18 +900,18 @@ if isequal(cfg.method,'ortho')
       if ~isempty(tag) && kk==0
         ijk = mean(get(gca,'currentpoint'));
         if strcmp(tag, 'ik')
-          xi  = round(ijk(1));
-          zi  = round(ijk(3));
+          xi  = round(ijk(1)-0.5); % clicking within a voxel generally means that that particular voxel needs to be displayed, hence the -0.5
+          zi  = round(ijk(3)-0.5);
         elseif strcmp(tag, 'ij')
-          xi  = round(ijk(1));
-          yi  = round(ijk(2));
+          xi  = round(ijk(1)-0.5);
+          yi  = round(ijk(2)-0.5);
         elseif strcmp(tag, 'jk')
-          yi  = round(ijk(2));
-          zi  = round(ijk(3));
+          yi  = round(ijk(2)-0.5);
+          zi  = round(ijk(3)-0.5);
         elseif strcmp(tag, 'TF1')
           % timefreq 
-          qi(1) = nearest(data.time, ijk(1));
-          qi(2) = nearest(data.freq, ijk(2));
+          qi(2) = nearest(data.time, ijk(1));
+          qi(1) = nearest(data.freq, ijk(2));
         elseif strcmp(tag, 'TF2')
           % freq only
           qi  = nearest(data.freq, ijk(1));
