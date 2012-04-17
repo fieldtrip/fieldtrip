@@ -4,7 +4,7 @@ function test_ft_progress
 % TEST ft_progress
 
 % testing parameters
-pause_delay = 0.1;
+pause_delay = 0.01;
 num_iterations = 42;
 
 ft_progress('init', 'etf',     'Please wait...');
