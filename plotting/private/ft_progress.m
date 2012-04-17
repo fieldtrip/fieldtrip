@@ -68,6 +68,9 @@ if nargin>1 && ischar(varargin{1}) && strcmp(varargin{1}, 'init')
   strlen = 0;
   % determine the type of feedback
   t = varargin{2};
+  if strcmp(t,'textcr') || strcmp(t,'textnl')
+    t = 'text';
+  end
   % determine the title of the dialog
   if nargin>2
     s = varargin{3};
