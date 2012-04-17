@@ -15,15 +15,15 @@ success = true;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % load single sphere volume conduction model
-load('/home/common/matlab/fieldtrip/data/test/vol/Subject01vol_singlesphere.mat', 'vol');
+load('/home/common/matlab/fieldtrip/data/test/latest/vol/Subject01vol_singlesphere.mat', 'vol');
 
 % load gradiometer information of an exemplary subject
-load('/home/common/matlab/fieldtrip/data/test/sens/ctf275.mat', 'grad');
+load('/home/common/matlab/fieldtrip/data/test/latest/sens/ctf275.mat', 'grad');
 grad_standard = grad; clear grad;
 
 % load the same gradiometer information treated with ft_headmovement (10
 % clusters)
-load('/home/common/matlab/fieldtrip/data/test/sens/ctf275_10clusters.mat', 'grad');
+load('/home/common/matlab/fieldtrip/data/test/latest/sens/ctf275_10clusters.mat', 'grad');
 grad_extended = grad; clear grad;
 
 %%%%%%%%%%%%%%%%%%%%%
