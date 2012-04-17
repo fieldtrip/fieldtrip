@@ -95,7 +95,7 @@ elseif nargin==1 && ischar(varargin{1}) && strcmp(varargin{1}, 'close')
   case 'gui'
     % close the waitbar dialog
     close(h);
-  case {'textcr', 'dial', 'textbar'}
+  case {'text', 'etf', 'dial', 'textbar'}
     % finish by going to the next line
     fprintf('\n');
   end
@@ -150,14 +150,14 @@ else
       
       % include the specified string
       strlentmp = fprintf(varargin{2:end});
-      strlentmp = strlentmp + fprintf(' - estimated time to finish is %d seconds\n', round(elapsed*(1-p)/(p-p0)));
+      strlentmp = strlentmp + fprintf(' - estimated time to finish is %d seconds', round(elapsed*(1-p)/(p-p0)));
       
       % record actual string length that was printed (subtracting all the
       % \b's)
       strlen = strlentmp - strlen;
     else
       % only print the estimated time to finish
-      strlentmp = fprintf([repmat(sprintf('\b'),[1 strlen]) ' - estimated time to finish is %d seconds\n'], round(elapsed*(1-p)/(p-p0)));
+      strlentmp = fprintf([repmat(sprintf('\b'),[1 strlen]) ' - estimated time to finish is %d seconds'], round(elapsed*(1-p)/(p-p0)));
       strlen = strlentmp - strlen;
     end
 
@@ -201,16 +201,14 @@ else
     end
 
   case 'text'
-    
     if nargin>1
       
-      % ensure all strings end with a newline
-      if length(varargin{2})>1 && all(varargin{2}((end-1):end) == '\r')
-        varargin{2}((end-1):end) = '\n';
-      elseif length(varargin{2})>1 && ~all(varargin{2}((end-1):end) == '\n')
-        varargin{2}((end+1):(end+2)) = '\n';
-      elseif length(varargin{2})<2
-        varargin{2}((end+1):(end+2)) = '\n';
+      % ensure the string does not end with a newline or carriage return
+      % either would break compatibility with a -nodesktop matlab
+      % environment
+      if length(varargin{2})>1 && (all(varargin{2}((end-1):end) == '\r')...
+          || all(varargin{2}((end-1):end) == '\n'))
+        varargin{2} = varargin{2}(1:end-2);
       end
       
       varargin{2} = [repmat(sprintf('\b'),[1 strlen]) varargin{2}];
@@ -223,8 +221,7 @@ else
 
 % the following options are unused in fieldtrip (as of April 17 2012), and seem
 % semantically incompatible with the implementation of the \b-ing, so I
-% think removal is appropriate. (I moved the add-newline functionality to
-% 'text').
+% think removal is appropriate.
 %
 %   case 'textnl'
 %     if nargin>1
