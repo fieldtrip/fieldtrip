@@ -103,6 +103,18 @@ ft_defaults
 ft_preamble help
 ft_preamble callinfo
 
+% make sure figure window titles are labeled appropriately, pass this onto
+% the actual plotting function
+% if we don't specify this, the window will be called 'ft_topoplotTFR',
+% which is confusing to the user
+cfg.funcname = mfilename;
+if nargin > 1
+  cfg.dataname = {inputname(2)};
+  for k = 3:nargin
+    cfg.dataname{end+1} = inputname(k);
+  end
+end
+
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'required', 'component');
 

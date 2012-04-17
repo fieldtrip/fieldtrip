@@ -482,8 +482,10 @@ else
 end
 if isfield(cfg,'dataname')
   dataname = cfg.dataname;
-else
+elseif nargin > 1
   dataname = inputname(2);
+else
+  dataname = cfg.inputfile;
 end
 set(gcf, 'Name', sprintf('%d: %s: %s (%s)', gcf, mfilename, dataname, chans));
 set(gcf, 'NumberTitle', 'off');
@@ -525,7 +527,7 @@ fprintf('selected cfg.ylim = [%f %f]\n', cfg.ylim(1), cfg.ylim(2));
 p = get(gcf, 'Position');
 f = figure;
 set(f, 'Position', p);
-ft_topoplotER(cfg, varargin{:});
+ft_topoplotTFR(cfg, varargin{:});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION which handles hot keys in the current plot

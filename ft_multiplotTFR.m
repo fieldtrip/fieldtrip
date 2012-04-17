@@ -618,12 +618,21 @@ if strcmp('yes',cfg.hotkeys)
 end
 
 % set the figure window title
-if isfield(cfg,'dataname')
-  dataname = cfg.dataname;
+
+if isfield(cfg,'funcname')
+  funcname = cfg.funcname;
 else
-  dataname = inputname(2);
+  funcname = mfilename;
 end
-set(gcf, 'Name', sprintf('%d: %s: %s', gcf, mfilename, dataname));
+if isfield(cfg,'dataname')
+    dataname = cfg.dataname;
+elseif nargin > 1
+  dataname = inputname(2);;
+else % data provided through cfg.inputfile
+  dataname = cfg.inputfile;
+end
+
+set(gcf, 'Name', sprintf('%d: %s: %s', gcf, funcname, dataname));
 set(gcf, 'NumberTitle', 'off');
 
 % Make the figure interactive:

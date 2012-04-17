@@ -550,11 +550,13 @@ else
 end
 if isfield(cfg, 'dataname')
   dataname = cfg.dataname;
-else
+elseif nargin > 1
   dataname = inputname(2);
   for k = 2:Ndata
     dataname = [dataname ', ' inputname(k+1)];
   end
+else
+  dataname = cfg.inputfile;
 end
 set(gcf, 'Name', sprintf('%d: %s: %s (%s)', gcf, mfilename, join_str(', ',dataname), chans));
 set(gcf, 'NumberTitle', 'off');

@@ -154,6 +154,12 @@ ft_preamble callinfo
 % if we don't specify this, the window will be called 'ft_topoplotTFR',
 % which is confusing to the user
 cfg.funcname = mfilename;
+if nargin > 1
+  cfg.dataname = {inputname(2)};
+  for k = 3:nargin
+    cfg.dataname{end+1} = inputname(k);
+  end
+end
 
 cfg = ft_topoplotTFR(cfg, varargin{:});
 
