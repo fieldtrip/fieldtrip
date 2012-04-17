@@ -275,9 +275,13 @@ end
 % this will improve the performance of some methods, esp. fastica
 scale = norm((data.trial{1}*data.trial{1}')./size(data.trial{1},2));
 scale = sqrt(scale);
-fprintf('scaling data with 1 over %f\n', scale);
-for trial=1:Ntrials
-  data.trial{trial} = data.trial{trial} ./ scale;
+if scale ~= 0
+  fprintf('scaling data with 1 over %f\n', scale);
+  for trial=1:Ntrials
+    data.trial{trial} = data.trial{trial} ./ scale;
+  end
+else
+  fprintf('no scaling applied, since factor is 0\n');
 end
 
 if strcmp(cfg.method, 'sobi')
