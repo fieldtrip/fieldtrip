@@ -268,7 +268,9 @@ end
 % can always be done because ft_multiplotER is the entry point into the
 % interactive stream, but will not be revisited
 for i=1:Ndata
-  varargin{i} = ft_selectdata(varargin{i}, 'channel', cfg.channel);
+  if isfield(varargin{i}, 'label')
+    varargin{i} = ft_selectdata(varargin{i}, 'channel', cfg.channel);
+  end
 end
 
 if isfield(varargin{1}, 'label') % && strcmp(cfg.interactive, 'no')
