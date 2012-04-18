@@ -1,6 +1,6 @@
-function [stat, cfg] = statistics_analytic(cfg, dat, design)
+function [stat, cfg] = ft_statistics_analytic(cfg, dat, design)
 
-% STATISTICS_ANALYTIC performs a parametric statistical test on the
+% FT_STATISTICS_ANALYTIC performs a parametric statistical test on the
 % data, based on a known (i.e. analytic) distribution of the test
 % statistic. This function should not be called directly, instead
 % you should call the function that is associated with the type of

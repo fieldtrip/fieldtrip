@@ -1,6 +1,6 @@
-function [stat, cfg] = statistics_stats(cfg, dat, design)
+function [stat, cfg] = ft_statistics_stats(cfg, dat, design)
 
-% STATISTICS_STATS performs a massive univariate statistical test using the
+% FT_STATISTICS_STATS performs a massive univariate statistical test using the
 % MATLAB statistics toolbox. This function should not be called directly,
 % instead you should call the function that is associated with the type of data
 % on which you want to perform the test.

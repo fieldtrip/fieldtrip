@@ -24,7 +24,7 @@ function [stat] = ft_timelockstatistics(cfg, varargin)
 %                    'crossvalidate' use crossvalidation to compute predictive performance
 %
 % The other cfg options depend on the method that you select. You
-% should read the help of the respective subfunction STATISTICS_XXX
+% should read the help of the respective subfunction FT_STATISTICS_XXX
 % for the corresponding configuration options and for a detailed
 % explanation of each method.
 %

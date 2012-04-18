@@ -1,6 +1,6 @@
-function [stat, cfg] = statistics_montecarlo(cfg, dat, design, varargin)
+function [stat, cfg] = ft_statistics_montecarlo(cfg, dat, design, varargin)
 
-% STATISTICS_MONTECARLO performs a nonparametric statistical test by calculating
+% FT_STATISTICS_MONTECARLO performs a nonparametric statistical test by calculating
 % Monte-Carlo estimates of the significance probabilities and/or critical values
 % from the permutation distribution. This function should not be called
 % directly, instead you should call the function that is associated with the

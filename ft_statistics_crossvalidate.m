@@ -1,6 +1,6 @@
-function stat = statistics_crossvalidate(cfg, dat, design)
+function stat = ft_statistics_crossvalidate(cfg, dat, design)
 
-% STATISTICS_CROSSVALIDATE performs cross-validation using a prespecified
+% FT_STATISTICS_CROSSVALIDATE performs cross-validation using a prespecified
 % multivariate analysis given by cfg.mva
 %
 % Use as

@@ -34,7 +34,7 @@ function [stat] = ft_freqstatistics(cfg, varargin)
 %                      especially cluster-permutation tutorial and the 'walkthrough' design-matrix section)
 %
 % The other cfg options depend on the method that you select. You
-% should read the help of the respective subfunction STATISTICS_XXX
+% should read the help of the respective subfunction FT_STATISTICS_XXX
 % for the corresponding configuration options and for a detailed
 % explanation of each method.
 %
@@ -270,8 +270,8 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % determine the function handle to the intermediate-level statistics function
-if exist(['statistics_' cfg.method], 'file')
-  statmethod = str2func(['statistics_' cfg.method]);
+if exist(['ft_statistics_' cfg.method], 'file')
+  statmethod = str2func(['ft_statistics_' cfg.method]);
 else
   error('could not find the corresponding function for cfg.method="%s"\n', cfg.method);
 end

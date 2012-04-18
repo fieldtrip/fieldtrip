@@ -5,20 +5,20 @@ function [stat, cfg] = statistics_wrapper(cfg, varargin)
 % matrix.
 %
 % The specific configuration options for selecting timelock, frequency
-% of source data are described in TIMELOCKSTATISTICS, FREQSTATISTICS and
-% SOURCESTATISTICS, respectively.
+% of source data are described in FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS and
+% FT_SOURCESTATISTICS, respectively.
 %
 % After selecting the data, control is passed on to a data-independent
 % statistical subfunction that computes test statistics plus their associated
 % significance probabilities and critical values under some null-hypothesis. The statistical
-% subfunction that is called is STATISTICS_xxx, where cfg.method='xxx'. At
+% subfunction that is called is FT_STATISTICS_xxx, where cfg.method='xxx'. At
 % this moment, we have implemented two statistical subfunctions:
-% STATISTICS_ANALYTIC, which calculates analytic significance probabilities and critical
-% values (exact or asymptotic), and STATISTICS_MONTECARLO, which calculates
+% FT_STATISTICS_ANALYTIC, which calculates analytic significance probabilities and critical
+% values (exact or asymptotic), and FT_STATISTICS_MONTECARLO, which calculates
 % Monte-Carlo approximations of the significance probabilities and critical values.
 %
 % The specific configuration options for the statistical test are
-% described in STATISTICS_xxx.
+% described in FT_STATISTICS_xxx.
 
 % This function depends on PREPARE_TIMEFREQ_DATA which has the following options:
 % cfg.avgoverchan
@@ -260,8 +260,8 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % determine the function handle to the intermediate-level statistics function
-if exist(['statistics_' cfg.method])
-  statmethod = str2func(['statistics_' cfg.method]);
+if exist(['ft_statistics_' cfg.method])
+  statmethod = str2func(['ft_statistics_' cfg.method]);
 else
   error(sprintf('could not find the corresponding function for cfg.method="%s"\n', cfg.method));
 end
@@ -284,7 +284,7 @@ design=cfg.design;
 cfg=rmfield(cfg,'design'); % to not confuse lower level functions with both cfg.design and design input
 
 % perform the statistical test 
-if strcmp(func2str(statmethod),'statistics_montecarlo') % because statistics_montecarlo (or to be precise, clusterstat) requires to know whether it is getting source data, 
+if strcmp(func2str(statmethod),'ft_statistics_montecarlo') % because ft_statistics_montecarlo (or to be precise, clusterstat) requires to know whether it is getting source data, 
                                                         % the following (ugly) work around is necessary                                             
   if num>1
     [stat, cfg] = statmethod(cfg, dat, design, 'issource',issource);
