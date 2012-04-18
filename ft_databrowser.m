@@ -757,10 +757,10 @@ elseif strcmp(cfg.selectmode, 'mark')
   artval = opt.artdata.trial{1}(opt.ftsel, begsel:endsel);
   artval = any(artval,1);
   if any(artval)
-    fprintf('there is overlap with the active artifact (%s), disable this artifact\n',opt.artdata.label{opt.ftsel});
+    fprintf('there is overlap with the active artifact (%s), disabling this artifact\n',opt.artdata.label{opt.ftsel});
     opt.artdata.trial{1}(opt.ftsel, begsel:endsel) = 0;
   else
-    fprintf('there is no overlap with the active artifact (%s), mark this as a new artifact\n',opt.artdata.label{opt.ftsel});
+    fprintf('there is no overlap with the active artifact (%s), marking this as a new artifact\n',opt.artdata.label{opt.ftsel});
     opt.artdata.trial{1}(opt.ftsel, begsel:endsel) = 1;
   end
   
@@ -966,7 +966,6 @@ switch key
     end
     % convert numeric array into cell-array with channel labels
     cfg.channel = opt.hdr.label(chansel);
-    disp(cfg.channel);
     setappdata(h, 'opt', opt);
     setappdata(h, 'cfg', cfg);
     redraw_cb(h, eventdata);
@@ -980,20 +979,17 @@ switch key
     end
     % convert numeric array into cell-array with channel labels
     cfg.channel = opt.hdr.label(chansel);
-    disp(cfg.channel);
     setappdata(h, 'opt', opt);
     setappdata(h, 'cfg', cfg);
     redraw_cb(h, eventdata);
   case 'shift+leftarrow'
     cfg.blocksize = cfg.blocksize*sqrt(2);
-    disp(cfg.blocksize);
     setappdata(h, 'opt', opt);
     setappdata(h, 'cfg', cfg);
     definetrial_cb(h, eventdata);
     redraw_cb(h, eventdata);
   case 'shift+rightarrow'
     cfg.blocksize = cfg.blocksize/sqrt(2);
-    disp(cfg.blocksize);
     setappdata(h, 'opt', opt);
     setappdata(h, 'cfg', cfg);
     definetrial_cb(h, eventdata);
@@ -1143,7 +1139,7 @@ cfg = getappdata(h, 'cfg');
 
 figure(h); % ensure that the calling figure is in the front
 
-fprintf('redrawing with viewmode %s\n', cfg.viewmode);
+%fprintf('redrawing with viewmode %s\n', cfg.viewmode);
 
 begsample = opt.trlvis(opt.trlop, 1);
 endsample = opt.trlvis(opt.trlop, 2);
@@ -1160,23 +1156,14 @@ else
 end
 
 if isempty(opt.orgdata)
-  fprintf('reading data... ');
   dat = ft_read_data(cfg.datafile, 'header', opt.hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat, 'headerformat', cfg.headerformat);
 else
-  fprintf('fetching data... ');
   dat = ft_fetch_data(opt.orgdata, 'header', opt.hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx);
 end
-fprintf('done\n');
-
-fprintf('fetching artifacts... ');
 art = ft_fetch_data(opt.artdata, 'begsample', begsample, 'endsample', endsample);
-fprintf('done\n');
 
 % apply preprocessing and determine the time axis
-fprintf('preprocessing data... ');
 [dat, lab, tim] = preproc(dat, opt.hdr.label(chanindx), offset2time(offset, opt.fsample, size(dat,2)), cfg.preproc);
-
-fprintf('done\n');
 
 opt.curdat.label      = lab;
 opt.curdat.time{1}    = tim;
@@ -1239,6 +1226,7 @@ else
   tmpcfg.channel = cfg.channel;
   tmpcfg.skipcomnt = 'yes';
   tmpcfg.skipscale = 'yes';
+  tmpcfg.showcallinfo = 'no';
   opt.laytime = ft_prepare_layout(tmpcfg, opt.orgdata);
 end
 
@@ -1268,7 +1256,7 @@ opt.vlim = cfg.ylim;
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-fprintf('plotting artifacts...\n');
+% fprintf('plotting artifacts...\n');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 delete(findobj(h,'tag', 'artifact'));
 
@@ -1284,7 +1272,7 @@ for j = ordervec
 end % for each of the artifact channels
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-fprintf('plotting events...\n');
+%fprintf('plotting events...\n');
 if strcmp(cfg.ploteventlabels , 'colorvalue') && ~isempty(opt.event)
   eventlabellegend = [];
   for iType = 1:length(opt.eventtypes)
@@ -1316,7 +1304,7 @@ for k=1:length(event)
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-fprintf('plotting data...\n');
+%fprintf('plotting data...\n');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 delete(findobj(h,'tag', 'timecourse'));
 delete(findobj(h,'tag', 'identify'));
@@ -1412,7 +1400,7 @@ if strcmp(cfg.viewmode, 'component')
     opt.chanindx = chanindx;
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    fprintf('plotting component topographies...\n');
+    % fprintf('plotting component topographies...\n');
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     delete(findobj(h,'tag', 'topography'));
     
@@ -1480,7 +1468,6 @@ end % plotting topographies
 title(sprintf('%s %d, time from %g to %g s', opt.trialname, opt.trlop, tim(1), tim(end)));
 xlabel('time');
 
-fprintf('done\n');
 
 setappdata(h, 'opt', opt);
 setappdata(h, 'cfg', cfg);
