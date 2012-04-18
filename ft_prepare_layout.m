@@ -1,6 +1,6 @@
 function [lay, cfg] = ft_prepare_layout(cfg, data)
 
-% FT_PREPARE_LAYOUT creates a 2-D layout of the channel locations. This layout
+% FT_PREPARE_LAYOUT loads or creates a 2-D layout of the channel locations. This layout
 % is required for plotting the topographical distribution of the potential
 % or field distribution, or for plotting timecourses in a topographical
 % arrangement.
@@ -9,12 +9,16 @@ function [lay, cfg] = ft_prepare_layout(cfg, data)
 %   lay = ft_prepare_layout(cfg, data)
 %
 % There are several ways in which a 2-D layout can be made: it can be read
-% directly from a *.lay file, it can be created based on 3-D electrode or
-% gradiometer positions in the configuration or in the data, or it can be
-% created based on the specification of an electrode of gradiometer file.
+% directly from a *.mat file containing a variable 'lay', it can be created
+% based on 3-D electrode or gradiometer positions in the configuration or 
+% in the data, or it can be created based on the specification of an electrode
+% or gradiometer file. Layouts can also come from an ASCII *.lay file, but
+% this type of layout is no longer recommended.
 %
-% You can specify either one of the following configuration options
-%   cfg.layout      filename containg the layout
+% You can specify any one of the following configuration options
+%   cfg.layout      filename containg the layout (.mat or .lay file)
+%                   can also be a layout structure, which is simply returned
+%                   as-is (see below for details)
 %   cfg.rotate      number, rotation around the z-axis in degrees (default = [], which means automatic)
 %   cfg.projection  string, 2D projection method can be 'stereographic', 'orthographic', 'polar', 'gnomic' or 'inverse' (default = 'polar')
 %   cfg.elec        structure with electrode positions, or
@@ -72,9 +76,6 @@ function [lay, cfg] = ft_prepare_layout(cfg, data)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
-
-% Undocumented option:
-% cfg.layout can contain a lay structure which is simply returned as is
 
 revision = '$Id$';
 
@@ -241,11 +242,22 @@ elseif isequal(cfg.layout, 'ordered')
   % try to generate layout from other configuration options
 elseif ischar(cfg.layout) && ft_filetype(cfg.layout, 'matlab')
   fprintf('reading layout from file %s\n', cfg.layout);
+  
+  if ~exist(cfg.layout, 'file')
+    error('the specified layout file %s was not found', cfg.layout);
+  end
   load(cfg.layout, 'lay');
 
 elseif ischar(cfg.layout) && ft_filetype(cfg.layout, 'layout')
-  fprintf('reading layout from file %s\n', cfg.layout);
-  lay = readlay(cfg.layout);
+  
+  if exist(cfg.layout, 'file')
+    fprintf('reading layout from file %s\n', cfg.layout);
+    lay = readlay(cfg.layout);
+  else
+    warning_once(sprintf('layout file %s was not found on your path, attempting to use a similarly named .mat file instead',cfg.layout));
+    cfg.layout = [cfg.layout(1:end-3) 'mat'];
+    lay = ft_prepare_layout(cfg);
+  end
 
 elseif ischar(cfg.layout) && ~ft_filetype(cfg.layout, 'layout')
   % assume that cfg.layout is an electrode file
