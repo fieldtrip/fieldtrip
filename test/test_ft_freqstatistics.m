@@ -3,7 +3,7 @@ function test_ft_freqstatistics
 % TEST test_ft_freqstatistics
 % TEST ft_freqstatistics, findcluster, clusterstat
 
-% copyright, Roemer, bug 1201
+% copyright, Roemer, bug 1201 (copyright? really? did I really put this in here? :P) - roevdmei
 %For the case of "freq_time"
 
 % make fake dataset
@@ -17,7 +17,7 @@ for idat = 1:10
   freq{idat}.cfg = [];
 end
 
-% do stats
+% do stats - montecarlo
 cfg = [];
 cfg.method      = 'montecarlo';
 cfg.statistic   = 'depsamplesT';
@@ -26,6 +26,17 @@ cfg.correctm    = 'cluster';
 cfg.clusterstatistic = 'maxsum';
 cfg.clusterthreshold = 'parametric';
 cfg.numrandomization = 500;
+cfg.design = [ones(1,5) ones(1,5).*2; 1:5 1:5;];
+cfg.ivar   = 1;
+cfg.uvar   = 2;
+stat = ft_freqstatistics(cfg,freq{:});
+
+
+% do stats - analytic
+cfg = [];
+cfg.method      = 'analytic';
+cfg.statistic   = 'depsamplesT';
+cfg.alpha       = 0.05; 
 cfg.design = [ones(1,5) ones(1,5).*2; 1:5 1:5;];
 cfg.ivar   = 1;
 cfg.uvar   = 2;
@@ -48,7 +59,7 @@ for idat = 1:10
   freq{idat}.cfg = [];
 end
 
-% do stats
+% do stats - montecarlo
 cfg = [];
 cfg.method      = 'montecarlo';
 cfg.statistic   = 'depsamplesT';
@@ -61,3 +72,16 @@ cfg.design = [ones(1,5) ones(1,5).*2; 1:5 1:5;];
 cfg.ivar   = 1;
 cfg.uvar   = 2;
 stat = ft_freqstatistics(cfg,freq{:});
+
+% do stats
+cfg = [];
+cfg.method      = 'analytic';
+cfg.statistic   = 'depsamplesT';
+cfg.alpha       = 0.05; 
+cfg.design = [ones(1,5) ones(1,5).*2; 1:5 1:5;];
+cfg.ivar   = 1;
+cfg.uvar   = 2;
+stat = ft_freqstatistics(cfg,freq{:});
+
+
+
