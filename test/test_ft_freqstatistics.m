@@ -1,7 +1,7 @@
 function test_ft_freqstatistics
 
 % TEST test_ft_freqstatistics
-% TEST ft_freqstatistics, findcluster, clusterstat
+% TEST ft_freqstatistics, findcluster, clusterstat, ft_statistics_montecarlo
 
 % copyright, Roemer, bug 1201 (copyright? really? did I really put this in here? :P) - roevdmei
 %For the case of "freq_time"
