@@ -269,6 +269,9 @@ end
 % interactive stream, but will not be revisited
 for i=1:Ndata
   if isfield(varargin{i}, 'label')
+    % only do the channel selection when it can actually be done,
+    % i.e. when the data are bivariate ft_selectdata will crash, moreover
+    % the bivariate case is handled below
     varargin{i} = ft_selectdata(varargin{i}, 'channel', cfg.channel);
   end
 end
