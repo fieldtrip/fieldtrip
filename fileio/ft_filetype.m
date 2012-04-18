@@ -162,8 +162,18 @@ end
 % start determining the filetype
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% this checks for a compressed file (of arbitrary type)
+if filetype_check_extension(filename, 'zip')...
+    || filetype_check_extension(filename, 'gz')...
+    || filetype_check_extension(filename,  'tgz')...
+    || filetype_check_extension(filename, 'tar')
+  
+  type         = 'compressed';
+  manufacturer = 'undefined';
+  content      = 'unknown, extract first';
+
 % these are some streams for asynchronous BCI
-if filetype_check_uri(filename, 'fifo')
+elseif filetype_check_uri(filename, 'fifo')
   type        = 'fcdc_fifo';
   manufacturer = 'Donders Centre for Cognitive Neuroimaging';
   content      = 'stream';
@@ -1006,7 +1016,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if strcmp(type, 'unknown')
-  warning('could not determine filetype of %s', filename);
+  warning_once(sprintf('could not determine filetype of %s', filename));
 end
 
 if ~isempty(desired)
