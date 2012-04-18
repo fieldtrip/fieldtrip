@@ -15,7 +15,6 @@ for idat = 1:10
   timelock{idat}.cfg = [];
 end
 
-
 % do stats - montecarlo
 cfg = [];
 neighbours(1).label = 'chan1';
@@ -48,5 +47,13 @@ cfg.ivar   = 1;
 cfg.uvar   = 2;
 stat = ft_timelockstatistics(cfg,timelock{:});
 
+
+% do stats - analytic
+cfg = [];
+cfg.method      = 'stats';
+cfg.statistic   = 'ttest';
+cfg.alpha       = 0.05; 
+cfg.design = [ones(1,10) ];
+stat = ft_timelockstatistics(cfg,timelock{:});
 
 

@@ -43,6 +43,18 @@ cfg.uvar   = 2;
 stat = ft_freqstatistics(cfg,freq{:});
 
 
+
+% do stats - stats
+cfg = [];
+cfg.method      = 'stats';
+cfg.statistic   = 'ttest';
+cfg.alpha       = 0.05; 
+cfg.design = [ones(1,10) ];
+stat = ft_freqstatistics(cfg,freq{:});
+
+
+
+
 %%***********************************
 %%***********************************
 %%***********************************
@@ -73,7 +85,7 @@ cfg.ivar   = 1;
 cfg.uvar   = 2;
 stat = ft_freqstatistics(cfg,freq{:});
 
-% do stats
+% do stats - analytic
 cfg = [];
 cfg.method      = 'analytic';
 cfg.statistic   = 'depsamplesT';
@@ -81,6 +93,16 @@ cfg.alpha       = 0.05;
 cfg.design = [ones(1,5) ones(1,5).*2; 1:5 1:5;];
 cfg.ivar   = 1;
 cfg.uvar   = 2;
+stat = ft_freqstatistics(cfg,freq{:});
+
+
+
+% do stats - stats
+cfg = [];
+cfg.method      = 'stats';
+cfg.statistic   = 'ttest';
+cfg.alpha       = 0.05; 
+cfg.design = [ones(1,10) ];
 stat = ft_freqstatistics(cfg,freq{:});
 
 
