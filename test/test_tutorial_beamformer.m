@@ -68,7 +68,9 @@ cfg.vol          = vol;
 cfg.dics.projectnoise = 'yes';
 cfg.dics.lambda       = 0;
 
-sourcePost = ft_sourceanalysis(cfg, freqPost);
+sourcePost_nocon = ft_sourceanalysis(cfg, freqPost);
+
+save sourcePost_nocon.mat sourcePost_nocon;
 
 % call ft_volumereslice so that figures appear correct side up
 mri = ft_volumereslice([], mri);
@@ -77,17 +79,17 @@ mri = ft_volumereslice([], mri);
 cfg            = [];
 cfg.downsample = 2;
 cfg.parameter  = 'avg.pow';
-sourcePostInt  = ft_sourceinterpolate(cfg, sourcePost , mri);
+sourcePostInt_nocon  = ft_sourceinterpolate(cfg, sourcePost_nocon , mri);
 
 cfg              = [];
 cfg.method       = 'slice';
 cfg.funparameter = 'avg.pow';
 figure
-ft_sourceplot(cfg,sourcePostInt);
+ft_sourceplot(cfg,sourcePostInt_nocon);
 
 %% Compute and plot Neural Activity Index
-sourceNAI = sourcePost;
-sourceNAI.avg.pow = sourcePost.avg.pow ./ sourcePost.avg.noise;
+sourceNAI = sourcePost_nocon;
+sourceNAI.avg.pow = sourcePost_nocon.avg.pow ./ sourcePost_nocon.avg.noise;
 
 cfg = [];
 cfg.downsample = 2;
@@ -162,10 +164,11 @@ cfg.dics.realfilter   = 'yes';
 sourceAll = ft_sourceanalysis(cfg, freqAll);
 
 cfg.grid.filter = sourceAll.avg.filter;
-sourcePre  = ft_sourceanalysis(cfg, freqPre );
-sourcePost = ft_sourceanalysis(cfg, freqPost);
+sourcePre_con  = ft_sourceanalysis(cfg, freqPre );
+sourcePost_con = ft_sourceanalysis(cfg, freqPost);
 
-save sourceCon sourcePre sourcePost
+save sourcePre_con sourcePre_con 
+save sourcePost_con sourcePost_con
 
 
 % %% Plot results
@@ -182,8 +185,8 @@ save sourceCon sourcePre sourcePost
 % 
 % %% Plot Condition contrast
 
-sourceDiff = sourcePost;
-sourceDiff.avg.pow = (sourcePost.avg.pow - sourcePre.avg.pow) ./ sourcePre.avg.pow;
+sourceDiff = sourcePost_con;
+sourceDiff.avg.pow = (sourcePost_con.avg.pow - sourcePre_con.avg.pow) ./ sourcePre_con.avg.pow;
 
 cfg            = [];
 cfg.downsample = 2;
