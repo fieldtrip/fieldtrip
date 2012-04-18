@@ -1,4 +1,6 @@
-function datanew = test_ft_preprocessing(datainfo, writeflag, version)
+function test_ft_preprocessing
+% Use function signature below for testing --- note that xUnit does not seem to support it.
+%function datanew = test_ft_preprocessing(datainfo, writeflag, version)
 
 % TEST test_ft_preprocessing
 % TEST ft_preprocessing test_datasets

@@ -1,3 +1,4 @@
+function test_bug1248
 for samp=[25 98 999]
   for fs=[235 943]
     data = [];

@@ -1,4 +1,4 @@
-% function test_bug670
+function test_bug670
 
 % TEST test_bug670
 % TEST ft_channelselection ft_channelcombination

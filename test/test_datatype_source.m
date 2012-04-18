@@ -1,4 +1,4 @@
-% function test_datatype_source
+function test_datatype_source
 
 % this function defines a bunch of 'ideal' source structures
 

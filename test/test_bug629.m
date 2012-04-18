@@ -1,4 +1,4 @@
-% function test_bug629
+function test_bug629
 
 % TEST test_bug629
 % TEST ft_read_header ft_read_data ft_read_event read_mff_header read_mff_data

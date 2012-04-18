@@ -1,3 +1,5 @@
+function test_bug1243
+
 load test_bug1243;
 figure
 for i=1:9
