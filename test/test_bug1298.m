@@ -27,7 +27,7 @@ cfg.method='lcmv';
 cfg.grid=grid;
 cfg.grid.leadfield=megsource1.leadfield;
 cfg.grid.filter=megsource1.avg.filter;
-cfg.keeptrials='yes';
+% cfg.keeptrials='yes';
 cfg.rawtrial='yes';
 megsource11=ft_sourceanalysis(cfg,megtlock);
 
