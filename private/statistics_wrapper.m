@@ -346,6 +346,19 @@ if issource
         tmp(varargin{1}.outside) = nan;
       end
       extradim = 1;
+    elseif isfield(varargin{1}, 'inside') && isfield(varargin{1}, 'freq') && isfield(varargin{1}, 'time') && numel(tmp)==length(varargin{1}.inside)*length(varargin{1}.freq)*length(varargin{1}.time)
+      % the statistic is a higher dimensional matrix (here as a function of freq) computed only on the
+      % inside voxels
+      newtmp = zeros(length(varargin{1}.inside)+length(varargin{1}.outside), length(varargin{1}.freq), length(varargin{1}.time));
+      if islogical(tmp)
+        newtmp(varargin{1}.inside, :, :)  = reshape(tmp, length(varargin{1}.inside), length(varargin{1}.freq), []);
+        newtmp(varargin{1}.outside, :, :) = false;
+      else
+        newtmp(varargin{1}.inside, :, :)  = reshape(tmp, length(varargin{1}.inside), length(varargin{1}.freq), []);
+        newtmp(varargin{1}.outside, :, :) = nan;
+      end
+      tmp = newtmp; clear newtmp;
+      extradim = length(varargin{1}.freq);
     elseif isfield(varargin{1}, 'inside') && isfield(varargin{1}, 'freq') && numel(tmp)==length(varargin{1}.inside)*length(varargin{1}.freq)
       % the statistic is a higher dimensional matrix (here as a function of freq) computed only on the
       % inside voxels
