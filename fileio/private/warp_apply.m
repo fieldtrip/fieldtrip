@@ -1,4 +1,4 @@
-function [warped] = warp_apply(M, input, method, tol);
+function [warped] = warp_apply(M, input, method, tol)
 
 % WARP_APPLY performs a 3D linear or nonlinear transformation on the input
 % coordinates, similar to those in AIR 3.08. You can find technical
@@ -66,7 +66,7 @@ end
 if nargin<3 && all(size(M)==4)
   % no specific transformation mode has been selected
   % it looks like a homogenous transformation matrix
-  method = 'homogenous';
+  method = 'homogeneous';
 elseif nargin<3
   % the default method is 'nonlinear'
   method = 'nonlinear';
@@ -91,17 +91,17 @@ if any(strcmp(method, {'nonlinear', 'nonlin0', 'nonlin1', 'nonlin2', 'nonlin3', 
 
   if s(1)~=3
     error('invalid size of nonlinear transformation matrix');
-  elseif strcmp(method, 'nonlin0') & s(2)~=1
+  elseif strcmp(method, 'nonlin0') && s(2)~=1
     error('invalid size of nonlinear transformation matrix');
-  elseif strcmp(method, 'nonlin1') & s(2)~=4
+  elseif strcmp(method, 'nonlin1') && s(2)~=4
     error('invalid size of nonlinear transformation matrix');
-  elseif strcmp(method, 'nonlin2') & s(2)~=10
+  elseif strcmp(method, 'nonlin2') && s(2)~=10
     error('invalid size of nonlinear transformation matrix');
-  elseif strcmp(method, 'nonlin3') & s(2)~=20
+  elseif strcmp(method, 'nonlin3') && s(2)~=20
     error('invalid size of nonlinear transformation matrix');
-  elseif strcmp(method, 'nonlin4') & s(2)~=35
+  elseif strcmp(method, 'nonlin4') && s(2)~=35
     error('invalid size of nonlinear transformation matrix');
-  elseif strcmp(method, 'nonlin5') & s(2)~=56
+  elseif strcmp(method, 'nonlin5') && s(2)~=56
     error('invalid size of nonlinear transformation matrix');
   end
 
@@ -151,17 +151,30 @@ elseif strcmp(method, 'homogenous') || strcmp(method, 'homogeneous')
       ];
   end
     
-  warped = M * [input'; ones(1, size(input, 1))];
-  warped = warped(1:3,:)';
-
+  %warped = M * [input'; ones(1, size(input, 1))];
+  %warped = warped(1:3,:)';
+  
+  % below achieves the same as lines 154-155
+  warped = [input ones(size(input, 1),1)]*M(1:3,:)';
+  
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % using external function that returns a homogenous transformation matrix
+  % using external function that returns a homogeneous transformation matrix
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-elseif exist(method, 'file')
+elseif exist(method, 'file') && ~isa(M, 'struct')
   % get the homogenous transformation matrix
   H = feval(method, M);
-  warped = warp_apply(H, input, 'homogenous');
+  warped = warp_apply(H, input, 'homogeneous');
 
+elseif strcmp(method, 'sn2individual') && isa(M, 'struct')
+  % use SPM structure with parameters for an inverse warp
+  % from normalized space to individual, can be non-linear
+  warped = sn2individual(M, input);
+
+elseif strcmp(method, 'individual2sn') && isa(M, 'struct')
+  % use SPM structure with parameters for a warp from
+  % individual space to normalized space, can be non-linear
+  error('individual2sn is not yet implemented');
+  
 else
   error('unrecognized transformation method');
 end
