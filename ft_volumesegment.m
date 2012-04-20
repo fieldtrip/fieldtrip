@@ -176,6 +176,8 @@ if ~iscell(cfg.output)
   cfg.output = {cfg.output};
 end
 
+cfgsmooth    = nan+zeros(numel(cfg.output),1);
+cfgthreshold = nan+zeros(numel(cfg.output),1);
 for k = 1:numel(cfg.output)
   % set defaults for the smoothing and thresholding if needed
   switch cfg.output{k}
