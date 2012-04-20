@@ -605,7 +605,7 @@ fprintf('selected cfg.xlim = [%f %f]\n', cfg.xlim(1), cfg.xlim(2));
 p = get(gcf, 'position');
 f = figure;
 set(f, 'position', p);
-ft_topoplotER(cfg, varargin{:});
+ft_topoplotTFR(cfg, varargin{:});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % subfunction which handles hot keys in the current plot
