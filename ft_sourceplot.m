@@ -673,6 +673,7 @@ if isequal(cfg.method,'ortho')
   update = [1 1 1];
   interactive_flag = 1; % it happens at least once
   feedbackmessage  = true;
+  maketransparent  = true;
   while(interactive_flag)
     interactive_flag = strcmp(cfg.interactive, 'yes');
 
@@ -760,88 +761,127 @@ if isequal(cfg.method,'ortho')
     end
     
     % create only once
-    if ~exist('h1a','var')
+    if ~exist('h1','var')
       % these will hold the anatomical data if present, along with labels
       % etc.
-      h1a = axes('position',[0.07 0.07+ysize(2)+0.05 xsize(1) ysize(1)]);
-      h2a = axes('position',[0.07+xsize(1)+0.05 0.07+ysize(2)+0.05 xsize(2) ysize(1)]);
-      h3a = axes('position',[0.07 0.07 xsize(1) ysize(2)]);
-      set(h1a,'Tag','ik','Visible',cfg.axis,'XAxisLocation','top');
-      set(h2a,'Tag','jk','Visible',cfg.axis,'XAxisLocation','top');
-      set(h3a,'Tag','ij','Visible',cfg.axis);
+      h1 = axes('position',[0.07 0.07+ysize(2)+0.05 xsize(1) ysize(1)]);
+      h2 = axes('position',[0.07+xsize(1)+0.05 0.07+ysize(2)+0.05 xsize(2) ysize(1)]);
+      h3 = axes('position',[0.07 0.07 xsize(1) ysize(2)]);
+      set(h1,'Tag','ik','Visible',cfg.axis,'XAxisLocation','top');
+      set(h2,'Tag','jk','Visible',cfg.axis,'XAxisLocation','top');
+      set(h3,'Tag','ij','Visible',cfg.axis);
       set(gcf, 'renderer', cfg.renderer); % ensure that this is done in interactive mode
     end
       
-    if hasana,
-      ft_plot_ortho(ana, 'transform', eye(4), 'location', ijk, 'style', 'subplot', 'parents', [h1a h2a h3a].*update, 'doscale', false);
+    if hasana && ~exist('anahandles', 'var'),
+      ft_plot_ortho(ana, 'transform', eye(4), 'location', ijk, 'style', 'subplot', 'parents', [h1 h2 h3].*update, 'doscale', false);
+      
+      anahandles = findobj(gcf, 'type', 'surface')';
+      parenttag  = get(cell2mat(get(anahandles,'parent')),'tag');
+      [i1,i2,i3] = intersect(parenttag, {'ik';'jk';'ij'});
+      anahandles = anahandles(i3(i2)); % seems like swapping the order      
+      anahandles = anahandles(:)';
+      set(anahandles, 'tag', 'ana');
+    elseif hasana
+      ft_plot_ortho(ana, 'transform', eye(4), 'location', ijk, 'style', 'subplot', 'surfhandle', anahandles.*update, 'doscale', false);
+      
+    else
+      anahandles = [];
     end
     if hasfun,
-      % create only once: these are different axes than the anatomy -> could be different resolution (to be implemented)
-      if ~exist('h1f','var')
-        h1f = axes('position',[0.07 0.07+ysize(2)+0.05 xsize(1) ysize(1)]);
-        h2f = axes('position',[0.07+xsize(1)+0.05 0.07+ysize(2)+0.05 xsize(2) ysize(1)]);
-        h3f = axes('position',[0.07 0.07 xsize(1) ysize(2)]);
-        set(h1f,'Tag','ik','visible','off');
-        set(h2f,'Tag','jk','visible','off');
-        set(h3f,'Tag','ij','visible','off');
-      end
-      if hasmsk
+      if hasmsk && ~exist('funhandles', 'var')
         tmpqi = [qi 1];
         ft_plot_ortho(fun(:,:,:,tmpqi(1),tmpqi(2)), msk(:,:,:,tmpqi(1),tmpqi(2)), 'transform', eye(4), 'location', ijk, ...
-                           'style', 'subplot', 'parents', [h1f h2f h3f].*update, ...
+                           'style', 'subplot', 'parents', [h1 h2 h3].*update, ...
                            'colormap', cfg.funcolormap, 'colorlim', [fcolmin fcolmax], ...
                            'opacitylim', [opacmin opacmax]);
-      else
+        
+        % after the first call, the handles to the functional surfaces
+        % exist. create a variable containing this, and sort according to
+        % the parents
+        funhandles = findobj(gcf, 'type', 'surface');
+        funtag     = get(funhandles, 'tag');
+        funhandles = funhandles(~strcmp('ana', funtag));
+        parenttag  = get(cell2mat(get(funhandles,'parent')),'tag');
+        [i1,i2,i3] = intersect(parenttag, {'ik';'jk';'ij'});
+        funhandles = funhandles(i3(i2)); % seems like swapping the order      
+        funhandles = funhandles(:)';
+        set(funhandles, 'tag', 'fun');
+        
+      elseif ~hasmsk && ~exist('funhandles', 'var')
         tmpqi = [qi 1];
         ft_plot_ortho(fun(:,:,:,tmpqi(1),tmpqi(2)), 'transform', eye(4), 'location', ijk, ...
-                           'style', 'subplot', 'parents', [h1f h2f h3f].*update, ...
+                           'style', 'subplot', 'parents', [h1 h2 h3].*update, ...
+                           'colormap', cfg.funcolormap, 'colorlim', [fcolmin fcolmax]);
+        
+        % after the first call, the handles to the functional surfaces
+        % exist. create a variable containing this, and sort according to
+        % the parents
+        funhandles = findobj(gcf, 'type', 'surface');
+        funtag     = get(funhandles, 'tag');
+        funhandles = funhandles(~strcmp('ana', funtag));
+        parenttag  = get(cell2mat(get(funhandles,'parent')),'tag');
+        [i1,i2,i3] = intersect(parenttag, {'ik';'jk';'ij'});
+        funhandles = funhandles(i3(i2)); % seems like swapping the order      
+        funhandles = funhandles(:)';
+        set(funhandles, 'tag', 'fun');
+        
+      elseif hasmsk
+        tmpqi = [qi 1];
+        ft_plot_ortho(fun(:,:,:,tmpqi(1),tmpqi(2)), msk(:,:,:,tmpqi(1),tmpqi(2)), 'transform', eye(4), 'location', ijk, ...
+                           'style', 'subplot', 'surfhandle', funhandles.*update, ...
+                           'colormap', cfg.funcolormap, 'colorlim', [fcolmin fcolmax], ...
+                           'opacitylim', [opacmin opacmax]);
+      elseif ~hasmsk
+        tmpqi = [qi 1];
+        ft_plot_ortho(fun(:,:,:,tmpqi(1),tmpqi(2)), 'transform', eye(4), 'location', ijk, ...
+                           'style', 'subplot', 'surfhandle', funhandles.*update, ...
                            'colormap', cfg.funcolormap, 'colorlim', [fcolmin fcolmax]);
       end
     end
-   
-    maketransparent = true;
+    set(h1,'Visible',cfg.axis);
+    set(h2,'Visible',cfg.axis);
+    set(h3,'Visible',cfg.axis);
+    
     if maketransparent && ~hasmsk && hasfun && hasana
-      set(findobj(get(h1f,'children'),'type','surface'),'facealpha',0.5);
-      set(findobj(get(h2f,'children'),'type','surface'),'facealpha',0.5);
-      set(findobj(get(h3f,'children'),'type','surface'),'facealpha',0.5);
+      set(funhandles(1),'facealpha',0.5);
+      set(funhandles(2),'facealpha',0.5);
+      set(funhandles(3),'facealpha',0.5);
       maketransparent = false;
     end
     
-%     if strcmp(cfg.crosshair, 'yes'),
-%       if update(1), set(gcf,'currentaxes',h1f); crosshair([xi zi]); end
-%       if update(2), set(gcf,'currentaxes',h2f); crosshair([yi zi]); end
-%       if update(3), set(gcf,'currentaxes',h3f); crosshair([xi yi]); end
-%     end
-%     
-       
+    if ~exist('crosshandles', 'var')
+      crosshandles{1} = crosshair([xi 0        zi], 'parent', h1);
+      crosshandles{2} = crosshair([dim(1)+1 yi zi], 'parent', h2);
+      crosshandles{3} = crosshair([xi yi dim(3)+1], 'parent', h3);
+    else
+      crosshair([xi 0        zi], 'handle', crosshandles{1});
+      crosshair([dim(1)+1 yi zi], 'handle', crosshandles{2});
+      crosshair([xi yi dim(3)+1], 'handle', crosshandles{3});
+    end
+    disp([xi yi zi])
+    
     if hasfreq && hastime && hasfun,
-      subplot(2,2,4);
-      %uimagesc(data.time, data.freq, squeeze(vols{2}(xi,yi,zi,:,:))');axis xy;
+      h4 = subplot(2,2,4);
       tmpdat = double(squeeze(fun(xi,yi,zi,:,:)));
-      %pcolor(double(data.time), double(data.freq), tmpdat);
-      imagesc(double(data.time), double(data.freq), tmpdat); axis xy;
-      %shading('interp');
+      uimagesc(double(data.time), double(data.freq), tmpdat); axis xy;
       xlabel('time'); ylabel('freq');
-%       try
-%         caxis([-1 1].*max(abs(caxis)));
-%       end
-      set(gca,'tag','TF1');
+      set(h4,'tag','TF1');
       caxis([fcolmin fcolmax]);
       %colorbar;
       %set(gca, 'Visible', 'off');
     elseif hasfreq && hasfun,
-      subplot(2,2,4);
+      h4 = subplot(2,2,4);
       plot(data.freq, squeeze(fun(xi,yi,zi,:))); xlabel('freq');
       axis([data.freq(1) data.freq(end) fcolmin fcolmax]);
-      set(gca,'tag','TF2');
+      set(h4,'tag','TF2');
     elseif hastime && hasfun,
-      subplot(2,2,4);
+      h4 = subplot(2,2,4);
       plot(data.time, squeeze(fun(xi,yi,zi,:))); xlabel('time');
-      axis([data.time(1) data.time(end) fcolmin fcolmax]);
-      set(gca,'tag','TF3');
+      set(h4,'tag','TF3','xlim',data.time([1 end]),'ylim',[fcolmin fcolmax],'layer','top');
     elseif strcmp(cfg.colorbar,  'yes') && ~exist('hc', 'var'),
       if hasfun
-        % vectorcolorbar = linspace(fcolmin, fcolmax,length(cfg.funcolormap));
+        % vectorcolorbar = linspace(fscolmin, fcolmax,length(cfg.funcolormap));
         % imagesc(vectorcolorbar,1,vectorcolorbar);colormap(cfg.funcolormap);
         % use a normal Matlab colorbar, attach it to the invisible 4th subplot
         try
@@ -859,7 +899,7 @@ if isequal(cfg.method,'ortho')
       end
     end
 
-    if ~(hasfreq || hastime) && ~exist('ht1')%,'var')
+    if ~(hasfreq || hastime) && ~exist('ht1')
       subplot('position',[0.07+xsize(1)+0.05 0.07 xsize(2) ysize(2)]);
       set(gca,'visible','off');
       ht1=text(0,0.6,str1);
@@ -900,14 +940,14 @@ if isequal(cfg.method,'ortho')
       if ~isempty(tag) && kk==0
         ijk = mean(get(gca,'currentpoint'));
         if strcmp(tag, 'ik')
-          xi  = round(ijk(1)-0.5); % clicking within a voxel generally means that that particular voxel needs to be displayed, hence the -0.5
-          zi  = round(ijk(3)-0.5);
+          xi  = round(ijk(1)); % clicking within a voxel generally means that that particular voxel needs to be displayed, hence the -0.5
+          zi  = round(ijk(3));
         elseif strcmp(tag, 'ij')
-          xi  = round(ijk(1)-0.5);
-          yi  = round(ijk(2)-0.5);
+          xi  = round(ijk(1));
+          yi  = round(ijk(2));
         elseif strcmp(tag, 'jk')
-          yi  = round(ijk(2)-0.5);
-          zi  = round(ijk(3)-0.5);
+          yi  = round(ijk(2));
+          zi  = round(ijk(3));
         elseif strcmp(tag, 'TF1')
           % timefreq 
           qi(2) = nearest(data.time, ijk(1));
@@ -947,10 +987,10 @@ if isequal(cfg.method,'ortho')
           elseif strcmp(tag,'ij') && (strcmp(key,'j') || key==28), xi = xi-1; update = [0 1 0];
           elseif strcmp(tag,'ij') && (strcmp(key,'k') || key==29), xi = xi+1; update = [0 1 0];
           elseif strcmp(tag,'ij') && (strcmp(key,'m') || key==31), yi = yi-1; update = [1 0 0];
-          elseif strcmp(tag,'jk') && (strcmp(key,'i') || key==30), zi = zi+1; update = [0 1 0];
+          elseif strcmp(tag,'jk') && (strcmp(key,'i') || key==30), zi = zi+1; update = [0 0 1];
           elseif strcmp(tag,'jk') && (strcmp(key,'j') || key==28), yi = yi-1; update = [1 0 0];
           elseif strcmp(tag,'jk') && (strcmp(key,'k') || key==29), yi = yi+1; update = [1 0 0];
-          elseif strcmp(tag,'jk') && (strcmp(key,'m') || key==31), zi = zi-1; update = [1 0 0];
+          elseif strcmp(tag,'jk') && (strcmp(key,'m') || key==31), zi = zi-1; update = [0 0 1];
           else
             % do nothing
           end;
@@ -1367,4 +1407,3 @@ end
 axis equal
 axis tight
 axis xy
-
