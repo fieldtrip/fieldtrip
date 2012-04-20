@@ -59,7 +59,7 @@ try
     om_save_full(pos,dipfile,'ascii');
 
     % handle squids file
-    om_save_full([sens.pnt,sens.ori],sqdfile,'ascii');
+    om_save_full([sens.chanpos,sens.chanori],sqdfile,'ascii');
 
     % Exe file
     efid = fopen(exefile, 'w');

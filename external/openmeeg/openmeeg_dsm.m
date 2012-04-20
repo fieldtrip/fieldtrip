@@ -69,7 +69,7 @@ try
     if flag
       str = ' -DSMNA';
     else
-      str = '';
+      str = ' -DSM';
     end
     
     if ~ispc
