@@ -471,7 +471,7 @@ if ~ischar(cfg.xlim) && length(cfg.xlim)>2
   for i=1:length(xlims)-1
     subplot(nxplot, nyplot, i);
     cfg.xlim = xlims(i:i+1);
-    ft_topoplotER(cfg, data);
+    ft_topoplotTFR(cfg, data);
   end
   return
 end
