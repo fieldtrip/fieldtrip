@@ -92,7 +92,7 @@ if isfield(mri, 'coordsys')
     otherwise
       xshift = 0;
       yshift = 0;
-      zshift = 0;
+      zshift = 15./cfg.resolution;
   end
 else
   xshift = 0;
