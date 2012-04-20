@@ -54,7 +54,7 @@ spmversion    = ft_getopt(varargin, 'spmversion', 'SPM8');
 
 switch dataformat
    
-  case {'analyze_img' 'analyze_hdr' 'analyze'}
+  case {'analyze_img' 'analyze_hdr' 'analyze' 'nifti_spm'}
 
     %analyze data, using SPM
     V = volumewrite_spm(filename, dat, transform, spmversion);
