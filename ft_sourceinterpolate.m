@@ -215,18 +215,20 @@ elseif ~is2Dana && is2Dfun
   end
   
   interpmat(~anatomical.inside(:), :) = 0;
-  for k = 1:numel(cfg.parameter)
-    tmp    = getsubfield(functional, cfg.parameter{k});
-    siz    = size(tmp);
-    tmp    = interpmat*tmp;
-    interp = setsubfield(interp, cfg.parameter{k}, tmp);
-  end
-  
+   
   % identify the inside voxels after interpolation
   nzeros     = sum(interpmat~=0,2);
   newinside  = find(nzeros~=0);
   newoutside = find(nzeros==0);
   
+  for k = 1:numel(cfg.parameter)
+    tmp    = getsubfield(functional, cfg.parameter{k});
+    siz    = size(tmp);
+    tmp    = interpmat*tmp;
+    tmp(newoutside,:) = nan;
+    interp = setsubfield(interp, cfg.parameter{k}, tmp);
+  end
+ 
   % get the positions
   [x,y,z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
   pos     = warp_apply(anatomical.transform, [x(:) y(:) z(:)]);
