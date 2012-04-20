@@ -48,7 +48,9 @@ function [grid, cfg] = ft_prepare_sourcemodel(cfg, vol, sens)
 %   cfg.grid.warpmni    = 'yes'
 %   cfg.grid.resolution = number (e.g. 6) of the resolution of the
 %                         template MNI grid, defined in mm
-%   cfg.grid.template   = filename of a template grid (defined in MNI space),
+%   cfg.grid.template   = specification of a template grid (grid
+%                         structure), or a
+%                         filename of a template grid (defined in MNI space),
 %                         either cfg.grid.resolution or cfg.grid.template needs
 %                         to be defined. If both are defined cfg.grid.template
 %                         prevails
@@ -604,7 +606,7 @@ if basedonmni
   % check whether the mni template grid exists for the specified resolution
   % if not create it: FIXME (this needs to be done still)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  if ~exist(fname, 'file')
+  if ischar(fname) && ~exist(fname, 'file')
     error('the MNI template grid based on the specified resolution does not yet exist');
   end
   
@@ -620,10 +622,14 @@ if basedonmni
     mri = ft_convert_units(mri);
   end
   
-  % load template grid
-  load(fname, 'grid');
-  mnigrid = grid;
-  clear grid;
+  % get template grid
+  if ischar(fname)
+    load(fname, 'grid');
+    mnigrid = grid;
+    clear grid;
+  else
+    mnigrid = cfg.grid.template;
+  end    
   
   % convert to the same units as the mri
   mnigrid = ft_convert_units(mnigrid, mri.unit);
