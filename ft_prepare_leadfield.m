@@ -171,7 +171,7 @@ if ft_voltype(vol, 'openmeeg')
   ndip = length(grid.inside);
   ok = false(1,ndip);
   batchsize = ndip;
-  
+
   while ~all(ok)
     % find the first one that is not yet done
     begdip = find(~ok, 1);
@@ -182,6 +182,7 @@ if ft_voltype(vol, 'openmeeg')
       lf = ft_compute_leadfield(grid.pos(grid.inside(batch),:), sens, vol, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam);
       ok(batch) = true;
     catch
+      ok(batch) = false;
       % the "catch me" syntax is broken on MATLAB74, this fixes it
       me = lasterror;
       if ~isempty(findstr(me.message, 'Output argument "dsm" (and maybe others) not assigned during call to'))
