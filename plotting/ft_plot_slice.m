@@ -207,7 +207,7 @@ else
   if all(ori==[0 1 0]), xplane = 1:dim(1); yplane = loc(2); zplane = 1:dim(3);   end
   if all(ori==[0 0 1]), xplane = 1:dim(1); yplane = 1:dim(2); zplane = loc(3);   end
   
-  [Xi,Yi,Zi] = ndgrid(xplane, yplane, zplane);
+  [Xi,Yi,Zi] = ndgrid(xplane-0.5, yplane-0.5, zplane-0.5); % coordinate is centre of the voxel, 1-based
   siz        = size(squeeze(Xi));
   Xi         = reshape(Xi, siz);
   Yi         = reshape(Yi, siz);
@@ -218,12 +218,6 @@ else
   end
   
 end
-
-% get positions of the plane in plotting space
-posh = warp_apply(transform, [Xi(:) Yi(:) Zi(:)], 'homogeneous', 1e-8);
-Xh   = reshape(posh(:,1), siz);
-Yh   = reshape(posh(:,2), siz);
-Zh   = reshape(posh(:,3), siz);
 
 if isempty(cmap),
   %treat as gray value: scale and convert to rgb
@@ -239,8 +233,16 @@ if isempty(cmap),
 end
 
 if isempty(h),
-  h = surface(Xh, Yh, Zh, V);
+  % get positions of the plane in plotting space
+  posh = warp_apply(transform, [Xi(:) Yi(:) Zi(:)], 'homogeneous', 1e-8);
+  Xh   = reshape(posh(:,1), siz);
+  Yh   = reshape(posh(:,2), siz);
+  Zh   = reshape(posh(:,3), siz);
+  
+  % create surface object
+  h    = surface(Xh, Yh, Zh, V);
 else
+  % update the colordata in the surface object
   set(h, 'Cdata', V);
 end
 
@@ -264,7 +266,6 @@ end
 
 % store for future reference
 previous_dim  = dim;
-previous_mask = mask;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

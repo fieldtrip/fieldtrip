@@ -11,6 +11,10 @@ function [hx, hy, hz] = ft_plot_ortho(dat, varargin)
 %   'style'        = string, 'subplot' or 'intersect' (default = 'subplot')
 %   'parents'      = (optional) 3-element vector containing the handles of
 %                      the axes for the subplots (when style = 'subplot')
+%   'surfhandle'   = (optional) 3-element vector containing the handles of 
+%                      the surfaces for each of the sublots (when style =
+%                      'subplot'). Parents and surfhandle are mutually
+%                      exclusive
 %   'transform'    = 4x4 homogeneous transformation matrix specifying the mapping from
 %                    voxel space to the coordinate system in which the data are plotted.
 %   'location'     = 1x3 vector specifying a point on the plane which will be plotted
@@ -62,7 +66,11 @@ end
 style     = ft_getopt(varargin(sellist), 'style',       'subplot');
 ori       = ft_getopt(varargin(sellist), 'orientation', eye(3));
 if strcmp(style, 'subplot')
-  parents = ft_getopt(varargin(sellist), 'parents');
+  parents    = ft_getopt(varargin(sellist), 'parents');
+  surfhandle = ft_getopt(varargin(sellist), 'surfhandle');
+  if ~isempty(surfhandle) && ~isempty(parents)
+    error('if specifying handles, you should either specify handles to the axes or to the surface objects, not both');
+  end
 end
 
 if ~isa(dat, 'double')
@@ -82,51 +90,63 @@ end
 switch style
   case 'subplot'
     
-    if isempty(parents)
+    if isempty(parents) && isempty(surfhandle)
       Hx = subplot(2,2,1);
       Hy = subplot(2,2,2);
       Hz = subplot(2,2,4);
-    else
+    elseif ~isempty(parents) && isempty(surfhandle)
       Hx = parents(1);
       Hy = parents(2);
       Hz = parents(3);
+    elseif isempty(parents) && ~isempty(surfhandle)
+      % determine the parents from the surface handle and use the
+      % surfhandle for efficient visualization (overwriting existing data)
+      if surfhandle(1), Hx = get(surfhandle(1), 'parent'); else Hx = 0; end
+      if surfhandle(2), Hy = get(surfhandle(2), 'parent'); else Hy = 0; end
+      if surfhandle(3), Hz = get(surfhandle(3), 'parent'); else Hz = 0; end
     end
     
-    nvar = numel(varargin);
-
-    if Hx
-      if ~isempty(findobj(Hx, 'type', 'surface'))
-        varargin{nvar+1} = 'surfhandle';
-        varargin{nvar+2} = findobj(Hx, 'type', 'surface');
+    if Hx,
+      if ~isempty(surfhandle) && surfhandle(1)
+        varargin(sellist) = ft_setopt(varargin(sellist), 'surfhandle', surfhandle(1));
       end
-      
       % swap the first 2 dimensions because of meshgrid vs ndgrid issues
       varargin{sel+1} = ori(2,:);
       set(gcf,'currentaxes',Hx);
       hx = ft_plot_slice(dat, varargin{:});
-      view([0 0]); axis tight;axis off
+      set(Hx, 'view', [0 0], 'xlim', [0.5 size(dat,1)-0.5], 'zlim', [0.5 size(dat,3)-0.5]); 
+      if isempty(parents),
+        % only change axis behavior if no parents are specified
+        axis off
+      end
     end
     
     if Hy,
-      if ~isempty(findobj(Hy, 'type', 'surface'))
-        varargin{nvar+1} = 'surfhandle';
-        varargin{nvar+2} = findobj(Hy, 'type', 'surface');
+      if ~isempty(surfhandle) && surfhandle(2)
+        varargin(sellist) = ft_setopt(varargin(sellist), 'surfhandle', surfhandle(2));
       end
       varargin{sel+1} = ori(1,:);
       set(gcf,'currentaxes',Hy);
       hy = ft_plot_slice(dat, varargin{:});
-      view([90 0]); axis tight;axis off
+      set(Hy, 'view', [90 0], 'ylim', [0.5 size(dat,2)-0.5], 'zlim', [0.5 size(dat,3)-0.5]);
+      if isempty(parents),
+        % only change axis behavior if no parents are specified
+        axis off
+      end
     end
     
     if Hz,
-      if ~isempty(findobj(Hz, 'type', 'surface'));
-        varargin{nvar+1} = 'surfhandle';
-        varargin{nvar+2} = findobj(Hz, 'type', 'surface');
+      if ~isempty(surfhandle) && surfhandle(3)
+        varargin(sellist) = ft_setopt(varargin(sellist), 'surfhandle', surfhandle(3));
       end
       varargin{sel+1} = ori(3,:);
       set(gcf,'currentaxes',Hz);
       hz = ft_plot_slice(dat, varargin{:});
-      view([0 90]); axis tight; axis off;
+      set(Hz, 'view', [0 90], 'xlim', [0.5 size(dat,1)-0.5], 'ylim', [0.5 size(dat,2)-0.5]);
+      if isempty(parents),
+        % only change axis behavior if no parents are specified
+        axis off
+      end
     end
     
   case 'intersect'
