@@ -201,7 +201,7 @@ else
 end
 
 % for convenience also compute power (over the three orientations) at each location and for each time
-dipout.pow = nan( size(dipout.mom,2), size(dat,2));
+dipout.pow = nan( size(dip.pos,1), size(dat,2));
 for i=dip.inside
   dipout.pow(i,:) = sum(dipout.mom{i}.^2, 1);
 end
