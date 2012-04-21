@@ -775,7 +775,12 @@ if approachMode == 2
 	w = w - myy * (EXGpow3 - Beta * w) / (3 - Beta);
 	% tanh
        case 20
-	hypTan = tanh(a1 * X' * w);
+    % #########################################################################
+    % Riccardo Navarra "Mod" 10 Feb 2010 (*)          (r.navarra@itab.unich.it)
+    % Rewritten matrix product to speed up on multicore CPU (fpica.m)
+    % #########################################################################
+	hypTan = tanh(a1 * (X' * w));
+    % #########################################################################
 	w = (X * hypTan - a1 * sum(1 - hypTan .^ 2)' * w) / numSamples;
        case 21
 	hypTan = tanh(a1 * X' * w);
