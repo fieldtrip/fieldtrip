@@ -31,29 +31,7 @@ function str = fixname(str)
 % FIXME this still fails in case the string would start with a digit, e.g. "99luftballons"
 
 str = lower(str);
-str(str=='-') = '_'; % fix dashes
-str(str==' ') = '_'; % fix spaces
-str(str=='/') = '_'; % fix forward slashes
-str(str=='\') = '_'; % fix backward slashes
-str(str=='!') = '_';
-str(str=='@') = '_';
-str(str=='#') = '_';
-str(str=='$') = '_';
-str(str=='%') = '_';
-str(str=='^') = '_';
-str(str=='&') = '_';
-str(str=='*') = '_';
-str(str=='(') = '_';
-str(str==')') = '_';
-str(str=='{') = '_';
-str(str=='}') = '_';
-str(str=='[') = '_';
-str(str==']') = '_';
-str(str=='<') = '_';
-str(str=='>') = '_';
-str(str=='?') = '_';
-str(str=='.') = '_';
-str(str=='~') = '_';
+str(regexp(str,'\W')) = '_';
 while(str(1) == '_'),   str = str(2:end); end;   % remove all underscore at the begin of the string
 while(str(end) == '_'), str = str(1:end-1); end; % remove all underscore at the end of the string
 
