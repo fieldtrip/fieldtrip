@@ -6,7 +6,12 @@ function test_bug1309
 % with different input types (vol,sens,etc.)
 
 ft_defaults;
-% artifically create timelock data
+
+% disable verbose output
+global ft_default;
+ft_default.feedback = 'no';
+
+% artificially create timelock data
 timelock_data.fsamepl = 500;
 timelock_data.dimord = 'chan_time';
 timelock_data.time = zeros(1, 500);

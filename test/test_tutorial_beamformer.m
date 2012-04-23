@@ -3,6 +3,10 @@ function test_tutorial_beamformer
 % TEST test_tutorial_beamformer
 % TEST ft_redefinetrial ft_freqanalysis ft_volumesegment ft_prepare_singleshell ft_sourceanalysis ft_prepare_leadfield ft_sourceinterpolate ft_sourceplot ft_volumenormalise
 
+% disable verbose output
+global ft_default;
+ft_default.feedback = 'no';
+
 load /home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/dataFIC.mat
 
 %% Preprocess timw windows of interest

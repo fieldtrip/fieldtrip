@@ -11,6 +11,10 @@ function test_ft_connectivityanalysis
 
 clear all;
 
+% disable verbose output
+global ft_default;
+ft_default.feedback = 'no';
+
 % first create some data
 %--------------------------------------------------------
 % make 3 channels with no direct link between 1 and 2

@@ -6,6 +6,10 @@ function test_ft_sourcemovie
 
 % the frequency and source analysis is based on the tutorials
 
+% disable verbose output
+global ft_default;
+ft_default.feedback = 'no';
+
 load /home/common/matlab/fieldtrip/data/ftp/tutorial/timefrequencyanalysis/dataFIC.mat
 load /home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat
 

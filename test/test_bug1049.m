@@ -4,6 +4,10 @@ function test_bug1049
 
 % this function creates a set of source-structures to be used for testing
 
+% disable verbose output
+global ft_default;
+ft_default.feedback = 'no';
+
 % get volume conductor model
 cd('/home/common/matlab/fieldtrip/data/test/original/meg/ctf151/Subject01.ds');
 vol = ft_read_vol('default.hdm');

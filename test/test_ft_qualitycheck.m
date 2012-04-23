@@ -2,6 +2,10 @@ function test_ft_qualitycheck
 
 % TEST test_ft_qualitycheck ft_qualitycheck
 
+% disable verbose output
+global ft_default;
+ft_default.feedback = 'no';
+
 pwdir = pwd;
 cd('/home/common/matlab/fieldtrip/data/test/original/meg/');
 

@@ -3,6 +3,10 @@ function test_bug472
 % TEST test_bug472
 % TEST buffer.mexa64 buffer.mexmaci buffer.mexw64 buffer.mexglx buffer.mexmaci64 buffer.mexmac buffer.mexw32
 
+% disable verbose output
+global ft_default;
+ft_default.feedback = 'no';
+
 % start without a buffer
 ft_destroy_buffer
 

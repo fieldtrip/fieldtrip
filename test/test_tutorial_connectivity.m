@@ -3,6 +3,10 @@ function test_tutorial_connectivity
 % TEST test_tutorial_connectivity
 % TEST ft_connectivityanalysis ft_connectivitysimulation ft_freqanalysis ft_connectivityplot ft_mvaranalysis
 
+% disable verbose output
+global ft_default;
+ft_default.feedback = 'no';
+
 % simulate data
 cfg             = [];
 cfg.ntrials     = 500;
