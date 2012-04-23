@@ -1,4 +1,4 @@
-%function test_bug1227
+function test_bug1227
 
 % TEST test_bug1227 ft_sourcewrite
 
