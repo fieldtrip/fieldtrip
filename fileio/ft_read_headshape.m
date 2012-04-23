@@ -215,17 +215,18 @@ switch fileformat
         
         fidN=1;
         pntN=1;
-        for i=1:nFid %loop over fiducials
-          %check this point is in head coordinates:
-          if hdr.orig.dig(i).coord_frame~=4 % 4 is MNE constant for head coordinates
-            error(['Digitiser point (' num2str(i) ') not stored in head coordinates!']);
+        for i=1:nFid % loop over fiducials
+          % check that this point is in head coordinates
+          % 0 is unknown
+          % 4 is fiducial system, i.e. head coordinates
+          if hdr.orig.dig(i).coord_frame~=4
+            warning(['Digitiser point (' num2str(i) ') not stored in head coordinates!']);
           end
           
-          
           switch hdr.orig.dig(i).kind % constants defined in MNE - see p.215 of MNE manual
-            case 1 % Cardinal point (nasion, LPA or RPA)
-              %get location of fiducial:
-              shape.fid.pnt(fidN,1:3) = hdr.orig.dig(i).r*100; %multiply by 100 to convert to cm
+            case 1 % Cardinal point (Nasion, LPA or RPA)
+              % get location of fiducial:
+              shape.fid.pnt(fidN,1:3) = hdr.orig.dig(i).r*100; % multiply by 100 to convert to cm
               switch hdr.orig.dig(i).ident
                 case 1 % LPA
                   shape.fid.label{fidN} = 'LPA';
@@ -234,7 +235,7 @@ switch fileformat
                 case 3 % RPA
                   shape.fid.label{fidN} = 'RPA';
                 otherwise
-                  error('Unidentified cardinal point in file!');
+                  error('Unidentified cardinal point in file');
               end
               fidN = fidN + 1;
               
