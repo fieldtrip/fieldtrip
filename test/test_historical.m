@@ -3,7 +3,7 @@ function test_historical
 % this function creates the datafiles for the historical fieldtrip versions
 
 % it should not run unattended
-% return
+return
 
 version = {
    '20111231'
