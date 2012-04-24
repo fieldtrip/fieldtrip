@@ -22,6 +22,10 @@ function [fcomp] = qsubcompile(fname, varargin)
 %                    like user_host_pid_batch.
 %   toolbox        = string or cell-array with strings, non-standard
 %                    Mathworks toolboxes to include (see below).
+%   executable     = string with the name of a previous compiled
+%                    executable to start, which usually takes the
+%                    form "run_xxx.sh". This implies that compilation
+%                    does not have to be done.
 %
 % When executing a single batch of jobs using QSUBCELLFUN, you can also
 % compile your function on the fly with the compile flag like this
@@ -46,6 +50,13 @@ function [fcomp] = qsubcompile(fname, varargin)
 %    % here goes the original content of your startup file
 %    % ...
 %   end
+%
+% If you want to execute the same function multiple times with
+% different input arguments, you only have to compile it once. The
+% name of the executable can be specified as input parameter, and the
+% specified function within the executable can be re-execured. An example
+% is specyfying the executable as run_fieldtrip.sh, which is a compiled
+% version of the complete fieldtrip toolbox.
 %
 % See also QSUBCELLFUN, QSUBFEVAL, MCC, ISDEPLOYED
 
@@ -76,9 +87,10 @@ function [fcomp] = qsubcompile(fname, varargin)
 % unique identifier that is used in the filename of the temporary mat files.
 
 % get the optional input arguments
-batch   = ft_getopt(varargin, 'batch',   getbatch());               % this is a number that is automatically incremented
-batchid = ft_getopt(varargin, 'batchid', generatebatchid(batch));   % this is a string like user_host_pid_batch
-toolbox = ft_getopt(varargin, 'toolbox', {});
+batch      = ft_getopt(varargin, 'batch',   getbatch());               % this is a number that is automatically incremented
+batchid    = ft_getopt(varargin, 'batchid', generatebatchid(batch));   % this is a string like user_host_pid_batch
+toolbox    = ft_getopt(varargin, 'toolbox', {});
+executable = ft_getopt(varargin, 'executable');
 
 if ischar(toolbox)
   % this should be a cell-array with strings
@@ -126,11 +138,27 @@ else
   toolboxopt = {};
 end
 
-fprintf('compiling %s into %s\n', fname, batchid);
-% try to compile into a stand-allone application
-% ensure that cellfun is included, it might be needed for stacked jobs
-mcc('-N', '-R', '-nodisplay', '-o', batchid, toolboxopt{:}, '-m', 'qsubexec', 'cellfun', fname, fdeps{:});
-fprintf('finished compiling\n');
+if ~isempty(executable)
+  % compilation is not needed, just wrap the user-specified executable and the function name
+  % into the output structure for use by qsubcellfun or qsubfexec
+  [p, f, x] = fileparts(executable);
+  if isempty(p) || p(1)~='/'
+    p = fullfile(pwd, p);
+  end
+  % precisely locate the executable, including the full path
+  executable = fullfile(p, [f x]);
+  if ~exist(executable, 'file')
+    error('executable "%s" does not exist', executable);
+  end
+  fprintf('using "%s"\n', executable);
+else
+  % try to compile into a stand-allone application
+  fprintf('compiling %s into %s\n', fname, batchid);
+  % ensure that cellfun is included, it might be needed for stacked jobs
+  mcc('-N', '-R', '-nodisplay', '-o', batchid, toolboxopt{:}, '-m', 'qsubexec', 'cellfun', fname, fdeps{:});
+  fprintf('finished compiling\n');
+  executable = fullfile(pwd, sprintf('run_%s.sh', batchid));
+end
 
 if ~hasreadme
   delete('./readme.txt');
@@ -140,9 +168,10 @@ if ~hasmcclog
   delete('./mccExcludedFiles.log');
 end
 
-% reemmber all details
+% remember all details
 fcomp.fname       = fname;
 fcomp.fdeps       = fdeps;
 fcomp.batch       = batch;
 fcomp.batchid     = batchid;
-fcomp.executable  = fullfile(pwd, sprintf('run_%s.sh', batchid));
+fcomp.executable  = executable;
+
