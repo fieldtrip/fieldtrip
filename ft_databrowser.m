@@ -420,7 +420,7 @@ artdata.fsample        = hdr.Fs;
 artdata.cfg.trl        = [1 datendsample 0];
 
 % determine amount of unique event types (for cfg.ploteventlabels)
-if ~isempty(event)
+if ~isempty(event) && isstruct(event)
   eventtypes = unique({event.type});
 else
   eventtypes = [];
@@ -1146,7 +1146,7 @@ endsample = opt.trlvis(opt.trlop, 2);
 offset    = opt.trlvis(opt.trlop, 3);
 chanindx  = match_str(opt.hdr.label, cfg.channel);
 
-if ~isempty(opt.event)
+if ~isempty(opt.event) && isstruct(opt.event)
   % select only the events in the current time window
   event     = opt.event;
   evtsample = [event(:).sample];
