@@ -59,6 +59,9 @@ if ~isempty(getenv('SGE_ROOT'))
   defaultbackend = 'sge';
 elseif ~isempty(getenv('TORQUEHOME'))
   defaultbackend = 'torque';
+elseif ~isempty(getenv('CONDOR_ARCH'))
+  % this has not been tested and I am not 100% sure that this is the right variable to probe
+  defaultbackend = 'condor';
 elseif ~isempty(getenv('SLURM_ENABLE'))
   defaultbackend = 'slurm';
 else
@@ -144,7 +147,6 @@ randomseed = rand(1)*double(intmax);
 options = {'pwd', curPwd, 'path', getcustompath, 'global', getglobal, 'diary', diary, 'memreq', memreq, 'timreq', timreq, 'randomseed', randomseed};
 
 inputfile    = fullfile(curPwd, sprintf('%s_input.mat', jobid));
-shellscript  = fullfile(curPwd, sprintf('%s.sh', jobid));
 matlabscript = fullfile(curPwd, sprintf('%s.m', jobid));
 
 % rename and save the variables
@@ -360,6 +362,33 @@ switch backend
       % cmdline = sprintf('nohup srun --job-name=%s %s --output=%s --error=%s %s -r "%s" & ', jobid, submitoptions, logout, logerr, matlabcmd, matlabscript);
       cmdline = sprintf('srun --job-name=%s %s --output=%s --error=%s %s -r "%s" ', jobid, submitoptions, logout, logerr, matlabcmd, matlabscript);
     end
+    
+  case 'condor'
+    % this is highly experimental and contains some first ideas following the discussion with Rhodri
+    
+    % create a condor submit script
+    submitfile = fullfile(curPwd, sprintf('%s.condor', jobid));
+    
+    % the Condor submit script should look something like this
+    fid = fopen(submitfile, 'wt');
+    fprintf(fid, '# Condor submit script\n');
+    fprintf(fid, '\n');
+    fprintf(fid, 'Executable     = %s\n', matlabcmd);
+    fprintf(fid, 'Arguments      = %s\n', matlabscript);
+    % the timreq and memrequ should be inserted here
+    fprintf(fid, 'Requirements   = Memory >= 32 && OpSys == "LINUX" && Arch =="INTEL"\n');
+    fprintf(fid, 'Rank           = Memory >= 64\n');
+    fprintf(fid, 'Image_Size     = 28 Meg\n');
+    fprintf(fid, '\n');
+    % these output files should match with the ones expected in qsubget
+    fprintf(fid, 'Error   = %s.err\n', jobid);
+    fprintf(fid, 'Output  = %s.out\n', jobid);
+    fprintf(fid, 'Log     = %s.log\n', jobid);
+    fprintf(fid, '\n');
+    fprintf(fid, 'Queue\n');
+    fclose(fid);
+    
+    cmdline = sprintf('condor_submit %s', submitfile);
     
   otherwise
     error('unsupported backend "%s"', backend);
