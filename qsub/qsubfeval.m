@@ -22,8 +22,10 @@ function [jobid, puttime] = qsubfeval(varargin)
 %   batch       = number, of the bach to which the job belongs. When called by QSUBCELLFUN
 %                 it will be a number that is automatically incremented over subsequent calls.
 %   batchid     = string that is used for the compiled application filename and to identify
-%                the jobs in the queue, the default is automatically determined and looks
-%                like user_host_pid_batch.
+%                 the jobs in the queue, the default is automatically determined and looks
+%                 like user_host_pid_batch.
+%   display     = 'yes' or 'no', whether the nodisplay option should be passed to MATLAB (default = 'no', meaning nodisplay)
+%   jvm         = 'yes' or 'no', whether the nojvm option should be passed to MATLAB (default = 'yes', meaning with jvm)
 %
 % See also QSUBCELLFUN, QSUBGET, FEVAL, DFEVAL, DFEVALASYNC
 
@@ -61,7 +63,7 @@ elseif ~isempty(getenv('SLURM_ENABLE'))
   defaultbackend = 'slurm';
 else
   % backend=local causes the job to be executed in this MATLAB by feval
-  % backend=system causes the job to be executed by system('matlab -r ...')
+  % backend=system causes the job to be executed on the same computer using system('matlab -r ...')
   defaultbackend = 'local';
 end
 
@@ -81,6 +83,8 @@ optbeg = optbeg | strcmp('memoverhead', strargin);
 optbeg = optbeg | strcmp('backend',     strargin);
 optbeg = optbeg | strcmp('queue',       strargin);
 optbeg = optbeg | strcmp('options',     strargin);
+optbeg = optbeg | strcmp('jvm',         strargin);
+optbeg = optbeg | strcmp('display',     strargin);
 optbeg = find(optbeg);
 optarg = varargin(optbeg:end);
 
@@ -99,6 +103,8 @@ memoverhead   = ft_getopt(optarg, 'memoverhead', 1024*1024*1024); % allow some o
 backend       = ft_getopt(optarg, 'backend', defaultbackend);     % can be torque, local, sge
 queue         = ft_getopt(optarg, 'queue', []);
 submitoptions = ft_getopt(optarg, 'options', []);
+display       = ft_getopt(optarg, 'display', 'no');
+jvm           = ft_getopt(optarg, 'jvm', 'yes');
 
 % skip the optional key-value arguments
 if ~isempty(optbeg)
@@ -206,7 +212,13 @@ if ~compile
   end
   
   % these options can be appended regardless of the version
-  matlabcmd = [matlabcmd ' -nosplash -nodisplay'];
+  matlabcmd = [matlabcmd ' -nosplash'];
+  if ~istrue(display)
+    matlabcmd = [matlabcmd ' -nodisplay'];
+  end
+  if ~istrue(jvm)
+    matlabcmd = [matlabcmd ' -nojvm'];
+  end
   
   % create the matlab script commands (one entry per line)
   matlabscript = [...
@@ -396,3 +408,4 @@ puttime = toc(stopwatch);
 
 % remember the input arguments to speed up subsequent calls
 previous_argin  = varargin;
+
