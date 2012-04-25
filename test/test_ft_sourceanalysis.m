@@ -1,7 +1,7 @@
 function test_ft_sourceanalysis(datainfo, writeflag, version)
 
 % TEST test_ft_sourceanalysis 
-% TEST ft_sourceanalysis test_datasets
+% TEST ft_sourceanalysis ref_datasets
 
 % writeflag determines whether the output should be saved to disk
 % version determines the output directory
@@ -15,7 +15,7 @@ function test_ft_sourceanalysis(datainfo, writeflag, version)
 % end
 
 if nargin<1
-  datainfo = test_datasets;
+  datainfo = ref_datasets;
 end
 if nargin<2
   writeflag = 0;

@@ -1,4 +1,4 @@
-function dataset = test_datasets
+function dataset = ref_datasets
 
 % We have collected a whole bunch of datasets in the original acquisition
 % systems file format that can be used for testing whether FT functions

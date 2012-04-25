@@ -25,7 +25,7 @@ version = {
 };
 
 writeflag = true;
-datainfo  = test_datasets;
+datainfo  = ref_datasets;
 datainfo = datainfo(10); % this is the ctf275 dataset
 
 for i=1:length(version)

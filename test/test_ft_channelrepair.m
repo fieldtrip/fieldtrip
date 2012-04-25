@@ -3,7 +3,7 @@ function test_ft_channelrepair
 % TEST test_ft_channelrepair
 % TEST ft_channelrepair ft_datatype_sens fixsens
 
-datainfo = test_datasets;
+datainfo = ref_datasets;
 
 % get an MEG and an EEG set (hard-coded
 eeginfo = datainfo(3);

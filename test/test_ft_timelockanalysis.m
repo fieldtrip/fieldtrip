@@ -1,13 +1,13 @@
 function test_ft_timelockanalysis(datainfo, writeflag, version)
 
 % TEST test_ft_timelockanalysis
-% ft_timelockanalysis test_datasets
+% ft_timelockanalysis ref_datasets
 
 % writeflag determines whether the output should be saved to disk
 % version determines the output directory
 
 if nargin<1
-  datainfo = test_datasets;
+  datainfo = ref_datasets;
 end
 if nargin<2
   writeflag = 0;

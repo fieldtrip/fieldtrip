@@ -3,13 +3,13 @@ function test_ft_preprocessing
 %function datanew = test_ft_preprocessing(datainfo, writeflag, version)
 
 % TEST test_ft_preprocessing
-% TEST ft_preprocessing test_datasets
+% TEST ft_preprocessing ref_datasets
 
 % writeflag determines whether the output should be saved to disk
 % version determines the output directory
 
 if nargin<1
-  datainfo = test_datasets;
+  datainfo = ref_datasets;
 end
 if nargin<2
   writeflag = 0;

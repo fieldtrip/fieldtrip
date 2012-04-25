@@ -1,7 +1,7 @@
 function test_ft_timelockanalysis_new(datainfo,writeflag)
 
 % TEST test_ft_timelockanalysis_new
-% ft_timelockanalysis_new ft_timelockanalysis test_datasets
+% ft_timelockanalysis_new ft_timelockanalysis ref_datasets
 
 % this is a function for testing ft_timelockanalysis_new, which is not official yet
 
@@ -12,7 +12,7 @@ if nargin<2
   writeflag = 0;
 end
 if nargin<1
-  datainfo = test_datasets;
+  datainfo = ref_datasets;
 end
 % for k = 1:numel(datainfo)
 for k = 1:10

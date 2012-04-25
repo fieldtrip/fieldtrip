@@ -1,13 +1,13 @@
 function test_ft_freqanalysis(datainfo, writeflag, version)
 
 % TEST test_ft_freqanalysis 
-% TEST ft_freqanalysis test_datasets
+% TEST ft_freqanalysis ref_datasets
 
 % writeflag determines whether the output should be saved to disk
 % version determines the output directory
 
 if nargin<1
-  datainfo = test_datasets;
+  datainfo = ref_datasets;
 end
 if nargin<2
   writeflag = 0;
