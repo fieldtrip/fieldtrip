@@ -529,12 +529,14 @@ xlim([xmin xmax]);
 ylim([ymin ymax]);
 
 % adjust mask box extents to ymin/ymax
-ptchs = findobj(gcf,'type','patch');
-for i = 1:length(ptchs)
-  YData = get(ptchs(i),'YData');
-  YData(YData == min(YData)) = ymin;
-  YData(YData == max(YData)) = ymax;
-  set(ptchs(i),'YData',YData);
+if ~isempty(cfg.maskparameter)
+  ptchs = findobj(gcf,'type','patch');
+  for i = 1:length(ptchs)
+    YData = get(ptchs(i),'YData');
+    YData(YData == min(YData)) = ymin;
+    YData(YData == max(YData)) = ymax;
+    set(ptchs(i),'YData',YData);
+  end
 end
 
 if strcmp('yes',cfg.hotkeys)
