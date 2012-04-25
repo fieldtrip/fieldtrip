@@ -16,7 +16,8 @@ function [source] = ft_sourcedescriptives(cfg, source)
 %   cfg.kurtosis         = 'yes' or 'no' (default = 'no')
 %   cfg.keeptrials       = 'yes' or 'no' (default = 'no')
 %   cfg.resolutionmatrix = 'yes' or 'no' (default = 'no')
-%   cfg.feedback         = 'no', 'text', 'textbar', 'gui' (default = 'text')
+%   cfg.feedback         = 'no', 'text', 'textbar', 'gui' (default =
+%   'text')
 %
 % The following option only applies to LCMV single-trial timecourses.
 %   cfg.fixedori         = 'within_trials' or 'over_trials' (default = 'over_trials')
@@ -96,6 +97,9 @@ cfg.fa               = ft_getopt(cfg, 'fa',               'no');
 cfg.kurtosis         = ft_getopt(cfg, 'kurtosis',         'no');
 cfg.keeptrials       = ft_getopt(cfg, 'keeptrials',       'no'); 
 cfg.keepcsd          = ft_getopt(cfg, 'keepcsd',          'no');
+cfg.keepmom          = ft_getopt(cfg, 'keepmom',          'yes');
+cfg.keepnoisecsd     = ft_getopt(cfg, 'keepnoisecsd',     'yes');
+cfg.keepnoisemom     = ft_getopt(cfg, 'keepnoisemom',     'yes');
 cfg.fwhm             = ft_getopt(cfg, 'fwhm',             'no');
 cfg.fwhmremovecenter = ft_getopt(cfg, 'fwhmremovecenter', 0);
 cfg.fixedori         = ft_getopt(cfg, 'fixedori',         'over_trials');
