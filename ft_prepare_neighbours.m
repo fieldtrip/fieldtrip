@@ -23,6 +23,7 @@ function [neighbours, cfg] = ft_prepare_neighbours(cfg, data)
 %   cfg.neighbourdist = number, maximum distance between neighbouring sensors (only for 'distance')
 %   cfg.template      = name of the template file, e.g. CTF275_neighb.mat
 %   cfg.layout        = filename of the layout, see FT_PREPARE_LAYOUT
+%   cfg.channel       = channels for which neighbours should be found
 %   cfg.elec          = structure with EEG electrode positions
 %   cfg.grad          = structure with MEG gradiometer positions
 %   cfg.elecfile      = filename containing EEG electrode positions
@@ -129,14 +130,6 @@ if strcmp(cfg.method, 'template')
   end
   load(cfg.template);
   fprintf('Successfully loaded neighbour structure from %s\n', cfg.template);
-  
-  % only select those channels that are in the data
-  if (hasdata)
-    neighb_chans = {neighbours(:).label};
-    chans = ft_channelselection(data.label, neighb_chans);
-    neighb_idx = ismember(neighb_chans, chans);
-    neighbours = neighbours(neighb_idx);
-  end
 else
   % get the the grad or elec if not present in the data
   if hasdata
@@ -190,10 +183,33 @@ end
 %   neighbours = fixneighbours(neighbours);
 % end
 
+% only select those channels that are in the data
+neighb_chans = {neighbours(:).label};
+if isfield(cfg, 'channel') && ~isempty(cfg.channel)
+  desired = cfg.channel;
+elseif (hasdata)
+  desired = data.label;
+else
+  desired = neighb_chans;
+end
+
+% in any case remove SCALE and COMNT
+desired = ft_channelselection({'all', '-SCALE', '-COMNT'}, desired);
+
+chans = ft_channelselection(desired, neighb_chans);
+neighb_idx = ismember(neighb_chans, chans);
+neighbours = neighbours(neighb_idx);
+  
 k = 0;
 for i=1:length(neighbours)
+  if isempty(neighbours(i).neighblabel)
+    warning('FIELDTRIP:NoNeighboursFound', 'no neighbours found for %s\n', neighbours(i).label);
+  else % only selected desired channels    
+    neighbours(i).neighblabel = ft_channelselection(desired, neighbours(i).neighblabel);
+  end
   k = k + length(neighbours(i).neighblabel);
 end
+
 if k==0, error('No neighbours were found!'); end;
 fprintf('there are on average %.1f neighbours per channel\n', k/length(neighbours));
 
