@@ -374,7 +374,7 @@ switch backend
     fprintf(fid, '# Condor submit script\n');
     fprintf(fid, '\n');
     fprintf(fid, 'Executable     = %s\n', matlabcmd);
-    fprintf(fid, 'Arguments      = %s\n', matlabscript);
+    fprintf(fid, 'Arguments      = -r "%s"\n', matlabscript);
     % the timreq and memrequ should be inserted here
     fprintf(fid, 'Requirements   = Memory >= 32 && OpSys == "LINUX" && Arch =="INTEL"\n');
     fprintf(fid, 'Rank           = Memory >= 64\n');
