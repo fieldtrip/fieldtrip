@@ -94,28 +94,20 @@ classdef permutation
     function p = statistic(obj)
       % return permutation test statistic; 
       
-      % normalize outcomes
-      poc = obj.outcome;
-      poc = poc - min(poc);
-      poc = poc ./ max(poc);
+      T = obj.outcome(end); % real outcome
+      S = sort(obj.outcome(1:(end-1))); % sampled outcomes
       
-      roc = poc(end); % real outcome
-      poc = poc(1:(end-1)); % predicted outcome
+      N = length(obj.outcome);
+      M = sum(S > T);
       
-      % set resolution for test statistic
-      T = 0:1e-4:1;
-      
-      % build up the cumulative distribution function
-      cdf = zeros(1,numel(T));
-      for t=1:numel(T)
-        cdf(t) = mean(poc <= T(t));
+      % compute proportion of permutation distribution greater than or
+      % equal to real statistic T
+      m0 = sum(S == T);
+      if m0
+        p = (M + m0/2)/N; % deal with values equal to T
+      else
+        p = (M + 1)/N;
       end
-      
-      % find last value that is smaller than real outcome
-      idx = find(roc > T,1,'last');
-      
-      % report its associated p-value
-      p = 1 - cdf(idx);
             
     end
     
