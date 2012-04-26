@@ -70,7 +70,7 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 % undirected connectivity metrics. In the situation where undirected
 % connectivity measures are linearly indexed, specifying 'inflow' or
 % 'outflow' can result in unexpected behavior.
-%  
+%
 % The layout defines how the channels are arranged and what the size of each
 % subplot is. You can specify the layout in a variety of ways:
 %  - you can provide a pre-computed layout structure (see prepare_layout)
@@ -91,7 +91,7 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 % corresponding to the input structure. For this particular function, the
 % data should be provided as a cell array.
 %
-% See also FT_MULTIPLOTTFR, FT_SINGLEPLOTER, FT_SINGLEPLOTTFR, FT_TOPOPLOTER, 
+% See also FT_MULTIPLOTTFR, FT_SINGLEPLOTER, FT_SINGLEPLOTTFR, FT_TOPOPLOTER,
 % FT_TOPOPLOTTFR, FT_PREPARE_LAYOUT
 
 % Undocumented local options:
@@ -293,9 +293,9 @@ if strcmp(dtype, 'timelock') && hasrpt,
       tmpmask = varargin{i}.(cfg.maskparameter);
     end
     varargin{i} = ft_timelockanalysis(tmpcfg, varargin{i});
-    % put back mask 
+    % put back mask
     if ~isempty(cfg.maskparameter)
-       varargin{i}.(cfg.maskparameter) = tmpmask;
+      varargin{i}.(cfg.maskparameter) = tmpmask;
     end
   end
   dimord        = varargin{1}.dimord;
@@ -542,7 +542,7 @@ for i=1:Ndata
   zdim = setdiff(1:ndims(dat), [ydim xdim]);
   % and permute
   dat = permute(dat, [zdim(:)' ydim xdim]);
-
+  
   xval = varargin{i}.(xparam);
   
   % Take subselection of channels, this only works
@@ -571,7 +571,8 @@ for i=1:Ndata
     error('labels in data and labels in layout do not match');
   end
   
-  datamatrix = dat(seldat, :);
+  % gather the data of multiple input arguments
+  datamatrix{i} = dat(seldat, :);
   
   % Select x and y coordinates and labels of the channels in the data
   layX = cfg.layout.pos(sellay,1);
@@ -592,23 +593,42 @@ for i=1:Ndata
     elseif isnumeric(GRAPHCOLOR); colorLabels = [colorLabels iname{i+1} '=' num2str(GRAPHCOLOR(i+1,:)) '\n'];
     end
   end
+end % for number of input data
+
+for m=1:length(layLabels)
+  % Plot ER
   
-  if ischar(GRAPHCOLOR);        color = GRAPHCOLOR(i+1);
-  elseif isnumeric(GRAPHCOLOR); color = GRAPHCOLOR(i+1,:);
+  if ischar(GRAPHCOLOR);        color = GRAPHCOLOR(2:end);
+  elseif isnumeric(GRAPHCOLOR); color = GRAPHCOLOR(2:end,:);
   end
   
-  for m=1:length(layLabels)
-    % Plot ER
-    plotWnd(xval, datamatrix(m,:),[xmin xmax],[ymin ymax], layX(m), layY(m), width(m), height(m), layLabels(m), cfg, color, cfg.linestyle{i}, maskmatrix(m,:),i); %FIXME shouldn't this be replaced with a call to ft_plot_vector?
-    
-    if i==1,
-      % Keep ER plot coordinates (at centre of ER plot), and channel labels (will be stored in the figure's UserData struct):
-      chanX(m) = X(m) + 0.5 * width(m);
-      chanY(m) = Y(m) + 0.5 * height(m);
-      chanLabels{m} = Lbl{m};
-    end
-  end %for m
-end %for i
+  mask = maskmatrix(m,:);
+  
+  for i=1:Ndata
+    yval(i,:) = datamatrix{i}(m,:);
+  end
+  
+  % Clip out of bounds y values:
+  yval(yval > ymax) = ymax;
+  yval(yval < ymin) = ymin;
+  
+  if strcmp(cfg.showlabels,'yes')
+    label = layLabels(m);
+  else
+    % don't show labels
+    label = [];
+  end
+  
+  ft_plot_vector(xval, yval, 'width', width(m), 'height', height(m), 'hpos', layX(m), 'vpos', layY(m), 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'color', color, 'style', cfg.linestyle{i}, 'linewidth', cfg.linewidth, 'axis', cfg.axes, 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'label', label, 'box', cfg.box);
+  
+  if i==1,
+    % Keep ER plot coordinates (at centre of ER plot), and channel labels (will be stored in the figure's UserData struct):
+    chanX(m) = X(m) + 0.5 * width(m);
+    chanY(m) = Y(m) + 0.5 * height(m);
+    chanLabels{m} = Lbl{m};
+  end
+end % for number of channels
+
 
 % Add the colors of the different datasets to the comment:
 cfg.comment = [cfg.comment colorLabels];
@@ -700,74 +720,6 @@ ft_plot_text( x1,y1,num2str(xlim(1),3),'rotation',90,'HorizontalAlignment','Righ
 ft_plot_text( x2,y1,num2str(xlim(2),3),'rotation',90,'HorizontalAlignment','Right','VerticalAlignment','middle','Fontsize',cfg.fontsize);
 ft_plot_text( x2,y1,num2str(ylim(1),3),'HorizontalAlignment','Left','VerticalAlignment','bottom','Fontsize',cfg.fontsize);
 ft_plot_text( x2,y2,num2str(ylim(2),3),'HorizontalAlignment','Left','VerticalAlignment','bottom','Fontsize',cfg.fontsize);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function plotWnd(x,y,xlim,ylim,xpos,ypos,width,height,label,cfg,color,style,mask,i)
-
-% Clip out of bounds y values:
-y(y > ylim(2)) = ylim(2);
-y(y < ylim(1)) = ylim(1);
-
-xs = xpos+width*(x-xlim(1))/(xlim(2)-xlim(1));
-ys = ypos+height*(y-ylim(1))/(ylim(2)-ylim(1));
-
-% Add boxes when masktyle is box, ft_plot_vector doesnt support boxes higher than ydata yet, so this code is left here
-if i<2 && ~isempty(mask) && strcmp(cfg.maskstyle, 'box') % i stops box from being plotted more than once
-  % determine how many boxes
-  mask = mask(:)';
-  mask = mask~=0;
-  mask = diff([0 mask 0]);
-  boxbeg = find(mask== 1);
-  boxend = find(mask==-1)-1;
-  
-  numbox = length(boxbeg);
-  for i = 1:numbox
-    xmaskmin = xpos+width*(x(boxbeg(i))-xlim(1))/(xlim(2)-xlim(1));
-    xmaskmax = xpos+width*(x(boxend(i))-xlim(1))/(xlim(2)-xlim(1));
-    %plot([xmaskmin xmaskmax xmaskmax xmaskmin xmaskmin],[ypos ypos ypos+height ypos+height ypos],'r');
-    hs = patch([xmaskmin xmaskmax xmaskmax xmaskmin xmaskmin],[ypos ypos ypos+height ypos+height ypos], [.6 .6 .6]);
-    set(hs, 'EdgeColor', 'none');
-  end
-end
-
-if isempty(mask) || (~isempty(mask) && strcmp(cfg.maskstyle,'box'))
-  ft_plot_vector(xs, ys, 'color', color, 'style', style, 'linewidth', cfg.linewidth);
-elseif ~isempty(mask) && ~strcmp(cfg.maskstyle,'box') % ft_plot_vector does not support boxes higher than ydata yet, so a separate option remains below
-  ft_plot_vector(xs, ys, 'color', color, 'style', style, 'linewidth', cfg.linewidth, 'highlight', mask, 'highlightstyle', cfg.maskstyle);
-end
-
-if strcmp(cfg.showlabels,'yes')
-  ft_plot_text(xpos,ypos+1.0*height,label,'Fontsize',cfg.fontsize);
-end
-
-% Draw x axis
-if strcmp(cfg.axes,'yes') || strcmp(cfg.axes, 'xy') || strcmp(cfg.axes,'x')
-  xs =  xpos+width*(xlim-xlim(1))/(xlim(2)-xlim(1));
-  if prod(ylim) < 0 % this is equivalent to including 0
-    ys =  ypos+height*([0 0]-ylim(1))/(ylim(2)-ylim(1));
-  else
-    ys = [ypos ypos];
-  end
-  ft_plot_vector(xs,ys,'color','k');
-end
-
-% Draw y axis
-if strcmp(cfg.axes,'yes') || strcmp(cfg.axes, 'xy') || strcmp(cfg.axes,'y')
-  if prod(xlim) < 0 % this is equivalent to including 0
-    xs =  xpos+width*([0 0]-xlim(1))/(xlim(2)-xlim(1));
-  else % if not, move the y-axis to the x-axis
-    xs =  [xpos xpos];
-  end
-  ys =  ypos+height*(ylim-ylim(1))/(ylim(2)-ylim(1));
-  ft_plot_vector(xs,ys,'color','k');
-end
-
-% Draw box around plot:
-if strcmp(cfg.box,'yes')
-  ft_plot_box([xpos xpos+width ypos ypos+height],'edgecolor','k');
-end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
