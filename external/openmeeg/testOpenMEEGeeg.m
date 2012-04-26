@@ -112,3 +112,4 @@ function [rdms,mags] = run_bem_computation(r,c,pos)
 
 end %  function
 
+end
