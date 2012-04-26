@@ -1,4 +1,4 @@
-function [varargout] = ft_plot_box(position, varargin);
+function [varargout] = ft_plot_box(position, varargin)
 
 % FT_PLOT_BOX plots the outline of a box that is specified by its lower
 % left and upper right corner
