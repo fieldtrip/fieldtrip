@@ -524,20 +524,20 @@ lf2 = ft_prepare_leadfield(cfg);
 cfg.reducerank  = 3;
 lf3 = ft_prepare_leadfield(cfg);
 
-assert(~isequal(lf1, lf2)); % these should be different
-assert(~isequal(lf1, lf3)); % these should be different
-assert(~isequal(lf2, lf3)); % these should be different
-assert( isequal(lf,  lf3)); % these should be identical, i.e. the default should be rank 3
+assert(~isequal(lf1.leadfield{1}, lf2.leadfield{1})); % these should be different
+assert(~isequal(lf1.leadfield{1}, lf3.leadfield{1})); % these should be different
+assert(~isequal(lf2.leadfield{1}, lf3.leadfield{1})); % these should be different
+assert( norm(lf.leadfield{1}-lf3.leadfield{1})<eps); % these should be identical, i.e. the default should be rank 3
 
-assert(size(lf,2)==3);
-assert(size(lf1,2)==3);
-assert(size(lf2,2)==3);
-assert(size(lf3,2)==3);
+assert(size(lf.leadfield{1},2)==3);
+assert(size(lf1.leadfield{1},2)==3);
+assert(size(lf2.leadfield{1},2)==3);
+assert(size(lf3.leadfield{1},2)==3);
 
-assert(rank(lf)==3);
-assert(rank(lf1)==1);
-assert(rank(lf2)==2);
-assert(rank(lf3)==3);
+assert(rank(lf.leadfield{1})==3);
+assert(rank(lf1.leadfield{1})==1);
+assert(rank(lf2.leadfield{1})==2);
+assert(rank(lf3.leadfield{1})==3);
 
-sprintf('the norm of the difference of the two solutions is: %f' , norm(out1.leadfield{1}-out2.leadfield{1}))
+sprintf('the norm of the difference of the two solutions is: %f' , norm(lf.leadfield{1}-lf3.leadfield{1}))
 
