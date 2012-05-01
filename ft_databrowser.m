@@ -1443,10 +1443,19 @@ if strcmp(cfg.viewmode, 'component')
       
       % scaling
       chanz = (chanz - zmin) ./  (zmax- zmin);
-      ft_plot_topo(chanx, chany, chanz, 'mask', laychan.mask, 'interplim', 'mask', 'outline', laychan.outline, 'tag', 'topography', ...
-        'hpos', laytopo.pos(laysel,1), 'vpos', laytopo.pos(laysel,2), 'width', laytopo.width(laysel), 'height', laytopo.height(laysel));
       
-      axis equal
+      % laychan is the actual topo layout, in pixel units for .mat files
+      % laytopo is a vertical layout determining where to plot each topo,
+      %   with one entry per component
+      
+      
+      ft_plot_topo(chanx, chany, chanz, 'mask', ...
+        laychan.mask, 'interplim', 'mask', 'outline', ...
+        laychan.outline, 'tag', 'topography', ...
+        'hpos', laytopo.pos(laysel,1), 'vpos', laytopo.pos(laysel,2),...
+        'width', laytopo.width(laysel), 'height', laytopo.height(laysel));
+      
+      %axis equal
       drawnow
     end    
     

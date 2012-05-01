@@ -54,8 +54,8 @@ ws = warning('on', 'MATLAB:divideByZero');
 % get the optional input arguments
 hpos          = ft_getopt(varargin, 'hpos',           0);
 vpos          = ft_getopt(varargin, 'vpos',           0);
-width         = ft_getopt(varargin, 'width',          1);
-height        = ft_getopt(varargin, 'height',         1);
+width         = ft_getopt(varargin, 'width',          []);
+height        = ft_getopt(varargin, 'height',         []);
 gridscale     = ft_getopt(varargin, 'gridscale',      67); % 67 in original
 shading       = ft_getopt(varargin, 'shading',        'flat');
 interplim     = ft_getopt(varargin, 'interplim',      'electrodes');
@@ -73,8 +73,41 @@ if ~holdflag
   hold on
 end
 
-chanX = chanX(:) * width  + hpos;
-chanY = chanY(:) * height + vpos;
+% layout units can be arbitrary (e.g. pixels for .mat files)
+% so we need to compute the right scaling factor
+% create a matrix with all coordinates
+% from positions, mask, and outline
+allCoords = [chanX chanY];
+if ~isempty(mask)
+  for k = 1:numel(mask)
+    allCoords = [allCoords; mask{k}];
+  end
+end
+if ~isempty(outline)
+  for k = 1:numel(outline)
+    allCoords = [allCoords; outline{k}];
+  end
+end
+  
+if isempty(width)
+  xScaling = 1;
+else
+  xScaling = width/(max(allCoords(:,1))-min(allCoords(:,1)));
+end
+
+if isempty(height)
+  yScaling = 1;
+else
+  yScaling = width/(max(allCoords(:,2))-min(allCoords(:,2)));
+end
+
+% correct hpos and vpos for the case when coordinates are not centered
+% around zero
+hpos = hpos - (min(allCoords(:,1))+max(allCoords(:,1)))/2*xScaling;
+vpos = vpos - (min(allCoords(:,2))+max(allCoords(:,2)))/2*yScaling;
+
+chanX = chanX(:) * xScaling + hpos;
+chanY = chanY(:) * yScaling + vpos;
 
 if strcmp(interplim, 'electrodes'),
   hlim = [min(chanX) max(chanX)];
@@ -83,8 +116,8 @@ elseif strcmp(interplim, 'mask') && ~isempty(mask),
   hlim = [inf -inf];
   vlim = [inf -inf];
   for i=1:length(mask)
-    hlim = [min([hlim(1); mask{i}(:,1)*width+hpos]) max([hlim(2); mask{i}(:,1)*width+hpos])];
-    vlim = [min([vlim(1); mask{i}(:,2)*width+vpos]) max([vlim(2); mask{i}(:,2)*width+vpos])];
+    hlim = [min([hlim(1); mask{i}(:,1)*xScaling+hpos]) max([hlim(2); mask{i}(:,1)*xScaling+hpos])];
+    vlim = [min([vlim(1); mask{i}(:,2)*yScaling+vpos]) max([vlim(2); mask{i}(:,2)*yScaling+vpos])];
   end
 else
   hlim = [min(chanX) max(chanX)];
@@ -125,8 +158,8 @@ elseif ~isempty(mask)
     % needs to be fixed (this fixme screws up things, then)
   end
   for i=1:length(mask)
-    mask{i}(:,1) = mask{i}(:,1)*width+hpos;
-    mask{i}(:,2) = mask{i}(:,2)*height+vpos;
+    mask{i}(:,1) = mask{i}(:,1)*xScaling+hpos;
+    mask{i}(:,2) = mask{i}(:,2)*yScaling+vpos;
     mask{i}(end+1,:) = mask{i}(1,:);                   % force them to be closed
     maskimage(inside_contour([Xi(:) Yi(:)], mask{i})) = true;
   end
@@ -163,9 +196,9 @@ end
 
 % plot the outline of the head, ears and nose
 for i=1:length(outline)
-  xval = outline{i}(:,1) * width  + hpos;
-  yval = outline{i}(:,2) * height + vpos;
-  ft_plot_vector(xval, yval, 'Color','k', 'LineWidth',2, 'tag', tag)
+  xval = outline{i}(:,1) * xScaling  + hpos;
+  yval = outline{i}(:,2) * yScaling + vpos;
+  ft_plot_vector(xval, yval, 'Color','k', 'LineWidth',2, 'tag', tag);
 end
 
 % Create isolines

@@ -71,6 +71,30 @@ if ~holdflag
   hold on
 end
 
+% layout units can be arbitrary (e.g. pixels for .mat files)
+% so we need to compute the right scaling factor and offset
+% create a matrix with all coordinates
+% from positions, mask, and outline
+allCoords = lay.pos;
+if ~isempty(lay.mask)
+  for k = 1:numel(lay.mask)
+    allCoords = [allCoords; lay.mask{k}];
+  end
+end
+if ~isempty(lay.outline)
+  for k = 1:numel(lay.outline)
+    allCoords = [allCoords; lay.outline{k}];
+  end
+end
+  
+xScaling = 1/(max(allCoords(:,1))-min(allCoords(:,1)));
+yScaling = 1/(max(allCoords(:,2))-min(allCoords(:,2)));
+
+% correct hpos and vpos for the case when coordinates are not centered
+% around zero
+hpos = hpos - (min(allCoords(:,1))+max(allCoords(:,1)))/2*xScaling;
+vpos = vpos - (min(allCoords(:,2))+max(allCoords(:,2)))/2*yScaling;
+
 X      = lay.pos(:,1) + hpos;
 Y      = lay.pos(:,2) + vpos;
 Width  = lay.width;
