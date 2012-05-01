@@ -75,7 +75,7 @@ end
 [B,A] = butter(cfg.order, cutoff, 'low');
 
 % define a subset of channels for reading
-cfg.channel = channelselection(cfg.channel, hdr.label);
+cfg.channel = ft_channelselection(cfg.channel, hdr.label);
 chanindx    = match_str(hdr.label, cfg.channel);
 nchan       = length(chanindx);
 if nchan==0
