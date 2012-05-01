@@ -113,7 +113,7 @@ inv_cov = pinv(all_cov + lambda * eye(size(all_cov)));
 noise_cov = noise * eye(size(all_cov));
 
 % start the scanning with the proper metric
-progress('init', feedback, 'scanning grid');
+ft_progress('init', feedback, 'scanning grid');
 
 % the angles are the same for all dipole locations
 all_angles = 0:pi/72:pi;
@@ -232,10 +232,10 @@ for diplop=1:size(dip.pos,1)
     dipout.mom{diplop} = SAMweights * dat;
   end
 
-  progress(diplop/size(dip.pos,1), 'scanning grid %d/%d\n', diplop, size(dip.pos,1));
+  ft_progress(diplop/size(dip.pos,1), 'scanning grid %d/%d\n', diplop, size(dip.pos,1));
 end % for each dipole position
 
-progress('close');
+ft_progress('close');
 
 % wrap it all up, prepare the complete output
 dipout.inside   = dip.originside;
