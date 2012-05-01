@@ -214,7 +214,10 @@ if hasrpt,
   if isfield(data, 'crsspctrm'),
     data = rmfield(data, 'crsspctrm'); 
   end
-  
+  % keep mask-parameter if it is set
+  if ~isempty(cfg.maskparameter)
+    tempmask = data.(cfg.maskparameter);
+  end
   tmpcfg           = [];
   tmpcfg.trials    = cfg.trials;
   tmpcfg.jackknife = 'no';
@@ -232,6 +235,10 @@ if hasrpt,
   else
     data = ft_freqdescriptives(tmpcfg, data);
   end
+  % put mask-parameter back if it is set
+  if ~isempty(cfg.maskparameter)
+    data.(cfg.maskparameter) = tempmask;
+  end
   dimord = data.dimord;
   dimtok = tokenize(dimord, '_');
 end % if hasrpt
@@ -244,7 +251,15 @@ ft_plot_lay(lay, 'box', false,'label','no','point','no');
 
 % Apply baseline correction:
 if ~strcmp(cfg.baseline, 'no')
+  % keep mask-parameter if it is set
+  if ~isempty(cfg.maskparameter)
+    tempmask = data.(cfg.maskparameter);
+  end
   data = ft_freqbaseline(cfg, data);
+  % put mask-parameter back if it is set
+  if ~isempty(cfg.maskparameter)
+    data.(cfg.maskparameter) = tempmask;
+  end
 end
 
 % Handle the bivariate case

@@ -167,6 +167,10 @@ if hasrpt,
   tmpcfg           = [];
   tmpcfg.trials    = cfg.trials;
   tmpcfg.jackknife = 'no';
+  % keep mask-parameter if it is set
+  if ~isempty(cfg.maskparameter)
+    tempmask = data.(cfg.maskparameter);
+  end
   if isfield(cfg, 'parameter') && ~strcmp(cfg.parameter,'powspctrm')
     % freqdesctiptives will only work on the powspctrm field
     % hence a temporary copy of the data is needed
@@ -180,6 +184,10 @@ if hasrpt,
     clear tempdata
   else
     data = ft_freqdescriptives(tmpcfg, data);
+  end
+  % put mask-parameter back if it is set
+  if ~isempty(cfg.maskparameter)
+    data.(cfg.maskparameter) = tempmask;
   end
   dimord = data.dimord;
   dimtok = tokenize(dimord, '_');
@@ -288,8 +296,17 @@ if (isfull || haslabelcmb) && shouldPlotCmb
 end %handle the bivariate data
 
 % Apply baseline correction:
+
 if ~strcmp(cfg.baseline, 'no')
+  % keep mask-parameter if it is set
+  if ~isempty(cfg.maskparameter)
+    tempmask = data.(cfg.maskparameter);
+  end
   data = ft_freqbaseline(cfg, data);
+  % put mask-parameter back if it is set
+  if ~isempty(cfg.maskparameter)
+    data.(cfg.maskparameter) = tempmask;
+  end
 end
 
 % Get physical x-axis range:
