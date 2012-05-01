@@ -103,7 +103,17 @@ if isempty(lay), lay = ft_prepare_layout(cfg, data); end;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % plot all details pertaining to the layout in one figure
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-figure
+figure;
+
+% set the figure window title
+funcname = mfilename();
+if nargin < 2
+  dataname = cfg.inputfile;
+else
+  dataname = inputname(2);
+end
+set(gcf, 'Name', sprintf('%d: %s: %s', gcf, funcname, join_str(', ',dataname)));
+set(gcf, 'NumberTitle', 'off');
 
 if isfield(cfg, 'image') && ~isempty(cfg.image)
   % start with the background image

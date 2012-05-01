@@ -477,6 +477,22 @@ h = figure;
 setappdata(h, 'opt', opt);
 setappdata(h, 'cfg', cfg);
 
+% set the figure window title
+funcname = mfilename();
+if nargin < 2
+  if isfield(cfg, 'dataset')
+    dataname = cfg.dataset;
+  elseif isfield(cfg, 'datafile')
+    dataname = cfg.datafile;
+  else
+    dataname = [];
+  end
+else
+  dataname = inputname(2);
+end
+set(gcf, 'Name', sprintf('%d: %s: %s', gcf, funcname, join_str(', ',dataname)));
+set(gcf, 'NumberTitle', 'off');
+
 % set zoom option to on
 % zoom(h,'on')
 % set(zoom(h),'actionPostCallback',@zoom_drawlabels_cb)

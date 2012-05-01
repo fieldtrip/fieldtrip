@@ -115,6 +115,16 @@ end
 hold on
 axis equal
 
+% set the figure window title
+funcname = mfilename();
+if nargin < 2
+  dataname = cfg.inputfile;
+else
+  dataname = inputname(2);
+end
+set(gcf, 'Name', sprintf('%d: %s: %s', gcf, funcname, join_str(', ',dataname)));
+set(gcf, 'NumberTitle', 'off');
+
 if isnan(cfg.arrowsize)
   % use the size of the figure to estimate a decent number
   siz = axis;
