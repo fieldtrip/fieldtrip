@@ -71,14 +71,8 @@ if isempty(ft_default)
   ft_default = struct;
 end
 
-% merge the input cfg with the fields from ft_default
-fieldsused = fieldnames(ft_default);
-for i=1:length(fieldsused)
-  fn = fieldsused{i};
-  if ~isfield(cfg, fn),
-    cfg.(fn) = ft_default.(fn);
-  end
-end
+% merge the default configuration with the input configuration
+cfg = mergeconfig(cfg, ft_default);
 
 renamed         = ft_getopt(varargin, 'renamed');
 renamedval      = ft_getopt(varargin, 'renamedval');
