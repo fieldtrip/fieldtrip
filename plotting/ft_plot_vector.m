@@ -85,7 +85,8 @@ highlight       = ft_getopt(varargin, 'highlight');
 highlightstyle  = ft_getopt(varargin, 'highlightstyle', 'box');
 markersize      = ft_getopt(varargin, 'markersize', 6);
 markerfacecolor = ft_getopt(varargin, 'markerfacecolor', 'none');
-tag            = ft_getopt(varargin, 'tag', '');
+tag             = ft_getopt(varargin, 'tag', '');
+parent          = ft_getopt(varargin, 'parent', []);
 
 % if any(size(vdat)==1)
 %   % ensure that it is a column vector
@@ -217,7 +218,7 @@ switch highlightstyle
     for i=1:length(begsample)
       begx = hdat(begsample(i));
       endx = hdat(endsample(i));
-      ft_plot_box([begx endx vpos-height/2 vpos+height/2], 'facecolor', [.6 .6 .6], 'edgecolor', 'none');
+      ft_plot_box([begx endx vpos-height/2 vpos+height/2], 'facecolor', [.6 .6 .6], 'edgecolor', 'none', 'parent', parent);
     end
     
   case 'thickness'
@@ -248,12 +249,19 @@ switch highlightstyle
         % plot each line with its own color
         h = plot(hdat, vdat(i,:), style, 'LineWidth', linewidth, 'Color', color(i), 'markersize', markersize, 'markerfacecolor', markerfacecolor);
       end
+      if ~isempty(parent)
+        set(h, 'Parent', parent);
+      end
       linecolor = get(h, 'color');
       linecolor = (linecolor * 0.2) + 0.8; % change saturation of color
       for j=1:length(begsample)
         hor = hdat(   begsample(j):endsample(j));
         ver = vdat(i, begsample(j):endsample(j));
-        plot(hor,ver,'color',linecolor);
+        h = plot(hor,ver,'color',linecolor);
+        
+        if ~isempty(parent)
+          set(h, 'Parent', parent);
+        end
       end
     end
     
@@ -272,6 +280,9 @@ switch highlightstyle
       Y = [vdatbeg(1,begsample(i)) vdat(1,begsample(i):endsample(i)) vdatend(1,endsample(i)) vdatend(2,endsample(i)) vdat(2,endsample(i):-1:begsample(i)) vdatbeg(2,begsample(i))];
       h = patch(X, Y, [.6 .6 .6]);
       set(h, 'linestyle', 'no');
+      if ~isempty(parent)
+        set(h, 'Parent', parent);
+      end
     end
     
   otherwise
@@ -295,6 +306,9 @@ switch highlightstyle
     else
       h = plot(hdat, vdat, style, 'LineWidth', linewidth, 'Color', color, 'markersize', markersize, 'markerfacecolor', markerfacecolor);
     end
+     if ~isempty(parent)
+       set(h, 'Parent', parent);
+     end
 end % switch highlightstyle
 
 
@@ -306,6 +320,10 @@ if ~isempty(label)
   h = text(boxposition(1), boxposition(4), label);
   if ~isempty(fontsize)
     set(h, 'Fontsize', fontsize);
+  end
+  
+  if ~isempty(parent)
+    set(h, 'Parent', parent);
   end
 end
 
@@ -376,6 +394,10 @@ end
 
 set(h,'tag',tag);
 
+if ~isempty(parent)
+  set(h, 'Parent', parent);
+end
+      
 % the (optional) output is the handle
 if nargout == 1;
   varargout{1} = h;

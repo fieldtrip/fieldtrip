@@ -1,4 +1,4 @@
-function [Zi, h] = ft_plot_topo(chanX, chanY, dat, varargin)
+function [Zi, h, handles] = ft_plot_topo(chanX, chanY, dat, varargin)
 
 % FT_PLOT_TOPO interpolates and plots the 2-D spatial topography of the
 % potential or field distribution over the head
@@ -17,6 +17,7 @@ function [Zi, h] = ft_plot_topo(chanX, chanY, dat, varargin)
 %   style         = can be 'surf', 'iso', 'isofill', 'surfiso'
 %   datmask       =
 %   tag           =
+%   parent        = handle which is set as the parent for all plots
 %
 % It is possible to plot the object in a local pseudo-axis (c.f. subplot), which is specfied as follows
 %   hpos        = horizontal position of the center of the local axes
@@ -66,6 +67,7 @@ isolines      = ft_getopt(varargin, 'isolines');
 datmask       = ft_getopt(varargin, 'datmask');
 mask          = ft_getopt(varargin, 'mask');
 outline       = ft_getopt(varargin, 'outline');
+parent        = ft_getopt(varargin, 'parent', []);
 
 % everything is added to the current figure
 holdflag = ishold;
@@ -198,7 +200,7 @@ end
 for i=1:length(outline)
   xval = outline{i}(:,1) * xScaling  + hpos;
   yval = outline{i}(:,2) * yScaling + vpos;
-  ft_plot_vector(xval, yval, 'Color','k', 'LineWidth',2, 'tag', tag);
+  ft_plot_vector(xval, yval, 'Color','k', 'LineWidth',2, 'tag', tag, 'parent', parent);
 end
 
 % Create isolines
@@ -206,6 +208,9 @@ if strcmp(style,'iso') || strcmp(style,'surfiso')
   if ~isempty(isolines)
     [cont, h] = contour(Xi,Yi,Zi,isolines,'k');
     set(h, 'tag', tag);
+    if ~isempty(parent)
+      set(h, 'Parent', parent);
+    end
   end
 end
 
@@ -215,7 +220,9 @@ if strcmp(style,'surf') || strcmp(style,'surfiso')
   deltay = yi(2)-yi(1); % length of grid entry
   h = surf(Xi-deltax/2,Yi-deltay/2,zeros(size(Zi)), Zi, 'EdgeColor', 'none', 'FaceColor', shading);
   set(h, 'tag', tag);
-  
+  if ~isempty(parent)
+    set(h, 'Parent', parent);
+  end
   %if exist('maskimagetmp')
   %  set(h, 'facealpha', 'flat');
   %  set(h, 'alphadatamapping', 'scaled');
@@ -227,6 +234,9 @@ end
 if strcmp(style,'isofill') && ~isempty(isolines)
   [cont,h] = contourf(Xi,Yi,Zi,isolines,'k'); 
   set(h, 'tag', tag);
+  if ~isempty(parent)
+    set(h, 'Parent', parent);
+  end
 end
 
 % remember the current input arguments, so that they can be
