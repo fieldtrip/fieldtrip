@@ -23,7 +23,7 @@ function [bnd] = ft_fetch_headshape(cfg, data)
 %
 % See also FT_PREPARE_VOL_SENS, FT_READ_VOL, FT_FETCH_VOL
 
-%$Id$
+% $Id: $
 
 % Copyright (C) 2012, Cristiano Micheli
 %
@@ -46,6 +46,10 @@ function [bnd] = ft_fetch_headshape(cfg, data)
 
 hdmfile   = ft_getopt(cfg,'hdmfile');
 headshape = ft_getopt(cfg,'headshape');
+if ischar(cfg.headshape)
+  hdmfile = headshape;
+end
+
 if nargin<2
   data = [];
 end

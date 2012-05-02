@@ -123,14 +123,8 @@ elseif basedonseg || basedonmri
   bnd = prepare_mesh_segmentation(cfg, mri);
   
 elseif basedonheadshape
-  if ischar(cfg.headshape)
-    fprintf(sprintf('reading headmodel from file ''%s''\n', cfg.headshape));
-    [bnd] = ft_read_headshape(cfg.headshape);
-  else
-    fprintf('using the head shape to construct a triangulated mesh\n');
-    bnd = prepare_mesh_headshape(cfg);
-  end
-  
+  bnd = ft_fetch_headshape(cfg);
+    
 elseif basedonvol
   fprintf('using the mesh specified in the input volume conductor\n');
   bnd = mri.bnd;
