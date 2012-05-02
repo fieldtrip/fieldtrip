@@ -123,8 +123,13 @@ elseif basedonseg || basedonmri
   bnd = prepare_mesh_segmentation(cfg, mri);
   
 elseif basedonheadshape
-  fprintf('using the head shape to construct a triangulated mesh\n');
-  bnd = prepare_mesh_headshape(cfg);
+  if ischar(cfg.headshape)
+    fprintf(sprintf('reading headmodel from file ''%s''\n', cfg.headshape));
+    [bnd] = ft_read_headshape(cfg.headshape);
+  else
+    fprintf('using the head shape to construct a triangulated mesh\n');
+    bnd = prepare_mesh_headshape(cfg);
+  end
   
 elseif basedonvol
   fprintf('using the mesh specified in the input volume conductor\n');
@@ -171,7 +176,9 @@ end
 % ensure that the vertices and triangles are double precision, otherwise the bemcp mex files will crash
 for i=1:length(bnd)
   bnd(i).pnt = double(bnd(i).pnt);
-  bnd(i).tri = double(bnd(i).tri);
+  if isfield(bnd(i),'tri')
+    bnd(i).tri = double(bnd(i).tri);
+  end
 end
 
 % do the general cleanup and bookkeeping at the end of the function
