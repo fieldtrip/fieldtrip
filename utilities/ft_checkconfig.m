@@ -62,14 +62,7 @@ function [cfg] = ft_checkconfig(cfg, varargin)
 %
 % $Id$
 
-if isempty(cfg)
-  cfg = struct; % ensure that it is an empty struct, not empty double
-end
-
 global ft_default
-if isempty(ft_default)
-  ft_default = struct;
-end
 
 % merge the default configuration with the input configuration
 cfg = mergeconfig(cfg, ft_default);
