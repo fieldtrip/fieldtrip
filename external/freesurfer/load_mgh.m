@@ -63,7 +63,7 @@ if (strcmpi(fname((strlen(fname)-3):strlen(fname)), '.MGZ') | ...
 		   sum(int16(fname))) + round(cputime);
   ind = findstr(fname, '.');
   new_fname = sprintf('/tmp/tmp%d.mgh', gzipped);
-  if(strcmp(computer,'MAC') || strcmp(computer,'MACI') || ismac)
+  if (ismac || strcmp(computer,'MAC') || strcmp(computer,'MACI') || strcmp(computer, 'MACI64'))
     unix(sprintf('gunzip -c %s > %s', fname, new_fname)) ;
   else
     unix(sprintf('zcat %s > %s', fname, new_fname)) ;
