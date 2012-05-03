@@ -11,9 +11,21 @@ function [mri] = ft_read_mri(filename, varargin)
 % the coordinates of each voxel (in xgrid/ygrid/zgrid) into head
 % coordinates.
 %
-% See also FT_READ_DATA, FT_READ_HEADER, FT_READ_EVENT
+% The following MRI file formats are supported
+%   CTF - VSM MedTech (*.svl, *.mri version 4 and 5)
+%   NIFTi (*.nii)
+%   Analyze (*.img, *.hdr)
+%   DICOM (*.dcm, *.ima)
+%   AFNI (*.head, *.brik)
+%   FreeSurfer (*.mgz, *.mgh)
+%   MINC (*.mnc)
+%   Neuromag - Elekta (*.fif)
+%   ANT - Advanced Neuro Technology (*.mri)
+%   Yokogawa (*.mrk, incomplete)
+%
+% See also FT_WRITE_MRI, FT_READ_DATA, FT_READ_HEADER, FT_READ_EVENT
 
-% Copyright (C) 2008-2010 Robert Oostenveld
+% Copyright (C) 2008-2012, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -34,7 +46,12 @@ function [mri] = ft_read_mri(filename, varargin)
 % $Id$
 
 % get the options
-mriformat = ft_getopt(varargin, 'format', ft_filetype(filename));
+mriformat = ft_getopt(varargin, 'format'); % FIXME this is inconsistent with ft_read_mri, which uses 'dataformat'
+
+if isempty(mriformat)
+  % only do the autodetection if the format was not specified
+  mriformat = ft_filetype(filename);
+end
 
 % test whether the file exists
 if ~exist(filename, 'file')

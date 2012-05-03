@@ -26,6 +26,8 @@ function [dat] = ft_read_data(filename, varargin)
 % matrix of size Nchans*Nsamples*Ntrials for epoched or trial-based
 % data when begtrial and endtrial are specified.
 %
+% The list of supported file formats can be found in FT_READ_HEADER.
+%
 % See also FT_READ_HEADER, FT_READ_EVENT, FT_WRITE_DATA, FT_WRITE_EVENT
 
 % Copyright (C) 2003-2012 Robert Oostenveld

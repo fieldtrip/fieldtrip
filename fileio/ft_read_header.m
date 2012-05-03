@@ -95,9 +95,11 @@ end
 
 % get the options
 retry        = ft_getopt(varargin, 'retry', false); % the default is not to retry reading the header
-headerformat = ft_getopt(varargin, 'headerformat', []);
+headerformat = ft_getopt(varargin, 'headerformat');
+
 if isempty(headerformat)
-  headerformat = ft_filetype(filename); % the default is automatically detected, but only if not specified
+  % only do the autodetection if the format was not specified
+  headerformat = ft_filetype(filename);
 end
 
 % The checkUniqueLabels flag is used for the realtime buffer in case
