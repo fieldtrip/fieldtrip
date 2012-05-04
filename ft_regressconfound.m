@@ -294,10 +294,9 @@ if isfield(cfg, 'Ftest') && ~isempty(cfg.Ftest)
 end
 
 % output handling
-if istimelock
+dataout       = datain;
   
-  % initialize output variable
-  dataout       = datain;
+if istimelock
   
   % put the clean data back into place
   dataout.trial = reshape(Yc, [nrpt, nchan, ntime]); clear Yc;
@@ -351,9 +350,6 @@ if istimelock
   clear beta dat;
   
 elseif isfreq
-  
-  % initialize output variable
-  dataout           = datain;
   
   % put the clean data back into place
   dataout.powspctrm = reshape(Yc, [nrpt, nchan, nfreq, ntime]); clear Yc;
@@ -409,10 +405,7 @@ elseif isfreq
   clear beta dat;
   
 elseif issource
-  
-  % initialize output variable
-  dataout       = datain;
-  
+
   % put the clean data back into place
   for i = 1:nrpt
     dataout.trial(1,i).pow = zeros(nvox,1);
