@@ -67,7 +67,7 @@ if(strcmpi(ext,'.gz'))
   ind = findstr(niftifile, '.');
   new_niftifile = sprintf('/tmp/tmp%d.nii', gzipped);
   fprintf('Uncompressing %s to %s\n',niftifile,new_niftifile);
-  if (ismac || strcmp(computer,'MAC') || strcmp(computer,'MACI') || strcmp(computer, 'MACI64))
+  if (ismac || strcmp(computer,'MAC') || strcmp(computer,'MACI') || strcmp(computer, 'MACI64'))
     unix(sprintf('gunzip -c %s > %s', niftifile, new_niftifile));
   else
     unix(sprintf('zcat %s > %s', niftifile, new_niftifile)) ;
