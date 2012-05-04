@@ -172,12 +172,12 @@ end
 % Therefore all have individual label sequences: Support in ft_senslabel 
 % is only partial.
 if ~isempty(label)
-    grad.label = label(grad_ind);
+    grad.label = label(grad_ind)';
 else
     % this is only backup, if something goes wrong above.
-    label = cell(grad_nr);
+    label = cell(grad_nr,1);
     for i=1:length(label)
-    label{i} = sprintf('AG%03d', i);
+    label{i,1} = sprintf('AG%03d', i);
     end
     grad.label = label;    
 end
