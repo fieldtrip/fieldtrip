@@ -203,7 +203,36 @@ end
 
 % estimate and remove the confounds
 fprintf('estimating the regression weights and removing the confounds \n');
-beta = regr\dat;                                                          % B = X\Y
+if isempty(find(isnan(dat))) % if there are no NaNs, process all at once
+  
+	beta = regr\dat;                                                        % B = X\Y
+  
+else % otherwise process per colum set as defined by the nan distribution 
+  
+  [u,i,j] = unique(~isnan(dat)','rows','first'); % find unique rows
+  uniquecolumns = u'; % unique column types
+  Nuniques = numel(i); % number of unique types
+  beta_temp = NaN(Nuniques, nconf, size(dat,2)); % declare empty variable  
+  for n = 1:Nuniques % for each unique type    
+    rowidx = find(uniquecolumns(:,n)==1); % row indices for unique type
+    colidx = find(j==n); % column indices for unique type    
+    if any(uniquecolumns(:,n)) % if vector contains a nonzero number
+       beta_temp(n,:,colidx) = regr(rowidx,:)\dat(rowidx,colidx);         % B = X\Y
+    end
+  end  
+  beta = squeeze(nansum(beta_temp,1)); % sum the betas
+  clear beta_temp;
+  
+%   % loop over the samples - slower than the above
+%   for i = 1:size(dat,2)
+%     tempdat = dat(:,i);
+%     nonnans = find(~isnan(tempdat));
+%     beta(:,i) = regr(nonnans,:)\tempdat(nonnans);
+%     clear tempdat nonnans;
+%   end
+
+end
+
 model = regr(:, cfg.reject) * beta(cfg.reject, :);                        % model = confounds * weights = X * X\Y
 Yc = dat - model;                                                         % Yclean = Y - X * X\Y
 
