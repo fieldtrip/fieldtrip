@@ -520,12 +520,13 @@ if ~isempty(weight)
   end
 end
 
-% add a comment about the output units (head model geometrical points and conductivity)
-if isfield(vol,'unit')
-  gunit = vol.unit;
-else
-  gunit = 'unknown';
-end
-cunit = sprintf('S/%s',gunit);
-str = sprintf('The input units are %s for points and %s for conductivity',gunit,cunit);
-warning_once(str);
+% display a comment about the output units (head model geometrical points and conductivity)
+% if isfield(vol,'unit')
+%   gunit = vol.unit;
+% else
+%   gunit = 'unknown';
+% end
+% cunit = sprintf('S/%s',gunit);
+% str = sprintf('The input units are %s for points and %s for conductivity',gunit,cunit);
+% warning_once(str);
+
