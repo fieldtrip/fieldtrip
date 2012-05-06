@@ -450,13 +450,15 @@ elseif iseeg
       tmplf{i} = lf(:,(3*i - 2) : (3 * i));
       % apply the correct montage to the leadfield
       tmplf{i} = sens.tra*tmplf{i};
-      lf = cat(2,tmplf{:});
     else
       tmplf = lf(:,(3*i - 2) : (3 * i));
       % compute average reference for EEG leadfield
       avg = mean(tmplf, 1);
       lf(:,(3*i - 2) : (3 * i)) = tmplf - repmat(avg, size(tmplf,1), 1);
     end
+  end
+  if isfield(sens,'tra')
+    lf = cat(2,tmplf{:});
   end
 end % iseeg or ismeg
 
