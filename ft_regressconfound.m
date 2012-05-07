@@ -15,7 +15,7 @@ function [data] = ft_regressconfound(cfg, datain)
 % FT_FREQANALYSIS, or FT_SOURCEANALYSIS respectively, with keeptrials = 'yes'
 %
 % The cfg argument is a structure that should contain
-%   cfg.confound    = matrix, [Ntrials X Nconfounds]
+%   cfg.confound    = matrix, [Ntrials X Nconfounds], may not contain NaNs
 %
 % The following configuration options are supported:
 %   cfg.reject      = vector, [1 X Nconfounds], listing the confounds that
@@ -83,6 +83,9 @@ cfg.outputfile = ft_getopt(cfg, 'outputfile', []);
 
 % confound specification
 regr      = ft_getopt(cfg, 'confound');  % there is no default value
+if ~isempty(find(isnan(regr)))
+  error('the confounds may not contain NaNs');
+end
 nconf     = size(regr,2);
 conflist  = 1:nconf;
 if ~isfield(cfg, 'reject') || strcmp(cfg.reject, 'all') % default
@@ -223,14 +226,6 @@ else % otherwise process per colum set as defined by the nan distribution
   beta = squeeze(nansum(beta_temp,1)); % sum the betas
   clear beta_temp;
   
-%   % loop over the samples - slower than the above
-%   for i = 1:size(dat,2)
-%     tempdat = dat(:,i);
-%     nonnans = find(~isnan(tempdat));
-%     beta(:,i) = regr(nonnans,:)\tempdat(nonnans);
-%     clear tempdat nonnans;
-%   end
-
 end
 
 model = regr(:, cfg.reject) * beta(cfg.reject, :);                        % model = confounds * weights = X * X\Y
