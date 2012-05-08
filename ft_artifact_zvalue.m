@@ -386,7 +386,8 @@ if strcmp(cfg.artfctdef.zvalue.interactive, 'yes')
   uicontrol('tag', 'group1', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'artifact','userdata', 'a')
   uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', 'shift+uparrow')
   uicontrol('tag', 'group3', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'keep trial',   'userdata', 'k')
-  uicontrol('tag', 'group3', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'reject trial', 'userdata', 'r')
+  uicontrol('tag', 'group3', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'reject part', 'userdata', 'r')
+  uicontrol('tag', 'group3', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'reject full', 'userdata', 'R')
   uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<<', 'userdata', 'shift+leftarrow')
   uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', 'leftarrow')
   uicontrol('tag', 'group1', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'trial', 'userdata', 't')
@@ -516,13 +517,35 @@ for trlop = find(opt.keep==-1 & opt.trialok==1)
   % if the user specifies that the trial is not OK
   % reject the whole trial if there is no extra-threshold data,
   % otherwise use the artifact as found by the thresholding
-  if opt.thresholdsum,
+  if opt.thresholdsum && opt.keep(trlop)==-1,
     % threshold the accumulated z-values
     artval{trlop} = opt.zsum{trlop}>opt.threshold;
-  else
+  elseif opt.keep(trlop)==-1
     % threshold the max z-values
     artval{trlop} = opt.zmax{trlop}>opt.threshold;
+  elseif opt.keep(trlop)==-2
+    artval{trlop}(:) = 1;
   end
+  % pad the artifacts
+  artbeg = find(diff([0 artval{trlop}])== 1);
+  artend = find(diff([artval{trlop} 0])==-1);
+  artbeg = artbeg - opt.artpadding;
+  artend = artend + opt.artpadding;
+  artbeg(artbeg<1) = 1;
+  artend(artend>length(artval{trlop})) = length(artval{trlop});
+  if ~isempty(artbeg)
+    for artlop=1:length(artbeg)
+      artval{trlop}(artbeg(artlop):artend(artlop)) = 1;
+    end
+  else
+    artval{trlop}(:) = 1;
+  end
+end
+
+for trlop = find(opt.keep==-2 & opt.trialok==0)
+  % if the user specifies the whole trial to be rejected define the whole
+  % segment to be bad
+  artval{trlop}(:) = 1;
   % pad the artifacts
   artbeg = find(diff([0 artval{trlop}])== 1);
   artend = find(diff([artval{trlop} 0])==-1);
@@ -699,7 +722,12 @@ switch key
     artval_cb(h);
     redraw_cb(h);
     opt = getappdata(h, 'opt');
-    
+  case 'R'
+    opt.keep(opt.trlop) = -2;
+    setappdata(h, 'opt', opt);
+    artval_cb(h);
+    redraw_cb(h);
+    opt = getappdata(h, 'opt');
   case 'control+control'
     % do nothing
   case 'shift+shift'
