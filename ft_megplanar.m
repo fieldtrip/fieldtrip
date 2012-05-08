@@ -250,7 +250,8 @@ else
   
   sens = ft_convert_units(data.grad);
   cfg.channel = ft_channelselection(cfg.channel, sens.label);
-  
+  cfg.channel = ft_channelselection(cfg.channel, data.label);
+
   cfg.neighbsel = channelconnectivity(cfg);
   
   % determine
@@ -268,6 +269,7 @@ else
   
   fprintf('minimum distance between neighbours is %6.2f %s\n', min(cfg.distance(cfg.distance~=0)), sens.unit);
   fprintf('maximum distance between gradiometers is %6.2f %s\n', max(cfg.distance(cfg.distance~=0)), sens.unit);
+  
   
   planarmontage = eval([fun '(cfg, data.grad)']);
   
