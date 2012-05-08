@@ -27,7 +27,7 @@ neighbsel = cfg.neighbsel;
 distance = cfg.distance;
 
 lab   = grad.label;
-tmp   = ft_channelselection('MEG', lab);
+tmp   = ft_channelselection(cfg.channel, lab);
 sel   = match_str(lab, tmp);
 pnt   = grad.chanpos(sel,:);
 ori   = grad.chanori(sel,:);
