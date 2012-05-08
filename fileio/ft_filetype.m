@@ -591,7 +591,7 @@ elseif isdir(filename) && most(filetype_check_extension({ls.name}, '.nte'))
   manufacturer = 'Neuralynx';
   content = 'spike timestamps';
   
-elseif isdir(filename) && exist(fullfile(filename, 'header'), 'file') && exist(fullfile(filename, 'events'), 'file')
+elseif isdir(p) && exist(fullfile(p, 'header'), 'file') && exist(fullfile(p, 'events'), 'file')
   type = 'fcdc_buffer_offline';
   manufacturer = 'Donders Centre for Cognitive Neuroimaging';
   content = 'FieldTrip buffer offline dataset';

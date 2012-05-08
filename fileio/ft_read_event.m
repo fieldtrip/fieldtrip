@@ -890,10 +890,10 @@ switch eventformat
   case 'fcdc_buffer_offline'
     [path, file, ext] = fileparts(filename);
     if isempty(hdr)
-      headerfile = fullfile(path, [file '/header']);
+       headerfile = fullfile(path, 'header'); 
       hdr = read_buffer_offline_header(headerfile);
     end
-    eventfile  = fullfile(path, [file '/events']);
+    eventfile = fullfile(path, 'events');
     event = read_buffer_offline_events(eventfile, hdr);
     
   case 'fcdc_matbin'
@@ -910,10 +910,10 @@ switch eventformat
     
     if ~exist(fifo,'file')
       warning('the FIFO %s does not exist; attempting to create it', fifo);
+    fid = fopen(fifo, 'r');
       system(sprintf('mkfifo -m 0666 %s',fifo));
     end
     
-    fid = fopen(fifo, 'r');
     msg = fread(fid, inf, 'uint8');
     fclose(fid);
     

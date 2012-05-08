@@ -87,8 +87,8 @@ while ~feof(FA);
   end
   indCol = find(s==':');
   if numel(indCol)>=1
-    ind = str2num(s(1:(indEq-1)));
-    name = s((indEq+1):end);
+    ind = str2num(s(1:(indCol-1)));
+    name = s((indCol+1):end);
     if ~isempty(ind) && ind>=1 && ind<=hdr.nChans
       hdr.label{ind} = name;
       nameFlag = 2;
