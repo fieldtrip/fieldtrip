@@ -513,7 +513,7 @@ for trlop = find(opt.keep==1 & opt.trialok==0)
   artval{trlop}(:) = 0;
 end
 
-for trlop = find(opt.keep==-1 & opt.trialok==1)
+for trlop = find(opt.keep<0 & opt.trialok==1)
   % if the user specifies that the trial is not OK
   % reject the whole trial if there is no extra-threshold data,
   % otherwise use the artifact as found by the thresholding
@@ -717,7 +717,10 @@ switch key
     redraw_cb(h);
     opt = getappdata(h, 'opt');
   case 'r'
-    opt.keep(opt.trlop) = -1;
+    % only of the trial contains a partial artifact
+    if opt.trialok(opt.trlop) == 0 
+      opt.keep(opt.trlop) = -1;
+    end
     setappdata(h, 'opt', opt);
     artval_cb(h);
     redraw_cb(h);
