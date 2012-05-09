@@ -15,7 +15,7 @@ cfg = [];
 cfg.confound = randn(20,3);
 cfg.model = 'yes';
 cfg.reject = [1:3];
-cfg.Ftest = {'1','2','3'};
+%cfg.Ftest = {'1','2','3'}; % this needs stat toolbox
 freq1_out = ft_regressconfound(cfg, freq1);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -31,7 +31,7 @@ cfg = [];
 cfg.confound = randn(20,3);
 cfg.model = 'yes';
 cfg.reject = [1:3];
-cfg.Ftest = {'1','2','3'};
+%cfg.Ftest = {'1','2','3'};
 freq2_out = ft_regressconfound(cfg, freq2);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -46,7 +46,7 @@ cfg = [];
 cfg.confound = randn(20,3);
 cfg.model = 'yes';
 cfg.reject = [1:3];
-cfg.Ftest = {'1','2','3'};
+%cfg.Ftest = {'1','2','3'};
 timelock_out = ft_regressconfound(cfg, timelock);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -64,7 +64,7 @@ cfg = [];
 cfg.confound = randn(20,3);
 cfg.model = 'yes';
 cfg.reject = [1:3];
-cfg.Ftest = {'1','2','3'};
+%cfg.Ftest = {'1','2','3'};
 source_out = ft_regressconfound(cfg, source);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -81,7 +81,7 @@ cfg = [];
 cfg.confound = randn(20,3);
 cfg.model = 'yes';
 cfg.reject = [1:3];
-cfg.Ftest = {'1','2','3'};
+%cfg.Ftest = {'1','2','3'};
 timelock2_out = ft_regressconfound(cfg, timelock2);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -100,7 +100,7 @@ cfg = [];
 cfg.confound = randn(20,3);
 cfg.model = 'yes';
 cfg.reject = [1:3];
-cfg.Ftest = {'1','2','3'};
+%cfg.Ftest = {'1','2','3'};
 source2_out = ft_regressconfound(cfg, source2);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
