@@ -18,8 +18,9 @@
       <div class="helptext"><pre><!--helptext -->  <span class="helptopic">statistic</span> test statistics.
  
     DESCRIPTION
-    Computes test statistic stat for a nsamples x nvars design matrix D and a
-    nsamples x nvars prediction matrix P. 
+    Computes test statistic stat (or multiple using a cell array) for a
+    nsamples x nvars design matrix D and a nsamples x nvars prediction
+    matrix P.
  
     Available statistics:
  
@@ -31,12 +32,17 @@
     'binomial'    : binomial test gives p value for significant
                     classification; takes uneven class distributions into
                     account
-    'MAD'         :  mean absolute deviation in degrees for angles specified
+    'MAD'         : mean absolute deviation in degrees for angles specified
                     in radians
     'RMS'         : root-mean-square error
     'tlin'        : t-linear statistic to measure goodness of fit for
                     circular data with angles specified in radians 
                     using fisher's correlation coefficient.
+    'R2'          : squared correlation; explained variance in the linear regression case
+    'expvar'      : explicit computation of explained variance: 
+                    (var(y) - var(y-yhat)) / var(y)
+                    1 = perfect prediction, &lt;0 = worse than chance
+    'identity'    : computes the proportion of trials that are identified correctly 
  
     NOTE: notation '-x' with x one of the above is also allowed. This way
     error measures such as 'MAD' can be used as a performance measure by

@@ -22,6 +22,28 @@
     particular crossvalidation on a multivariate analysis specified in the
     property mva.
  
+    One may use 'type' equal to:
+    - 'nfold' : n-fold cross-validation specified by 'folds' (default: 5)
+    - 'split' : data is split into train and test data; amount of training
+                data is given by 'proportion' (default: 0.75)
+    - 'loo'   : leave-one-out cross-validation
+   
+    Alternatively one can specify the cell-arrays 'trainfolds' and
+    'testfolds' to contain for each fold the trial indices that need to be
+    used. If one of these is specified then the other one is automatically
+    filled using the complement of the trials. If these cell-arrays are
+    non-empty then the settings above are ignored.
+ 
+    In order to balance the occurrence of different classes one may set
+    'resample' equal to true (default: false). Resample will upsample less
+    occurring classes during training and downsample often occurring
+    classes during testing.
+ 
+    In case of memory problems, use 'compact' equal to true (default:
+    false). This will not store the trained multivariate methods but just
+    the classification outcomes and the parameters that are returned by the
+    model function of the multivariate methods.
+ 
     EXAMPLE
     X = rand(10,20); Y = [1 1 1 1 1 2 2 2 2 2]';
     m = dml.crossvalidator('mva',dml.svm)

@@ -2,7 +2,7 @@
 
 DMLT is a Machine Learning toolbox written in Matlab and C. This toolbox is developed at the Donders Institute for Brain, Cognition and Behaviour and provides a general interface to support the integration of new statistical machine learning methods by writing high level wrappers. It allows complex methods to be built from simple building blocks and makes the use of cross-validation and permutation testing as easy as writing one line of Matlab code. The code requires at least Matlab distribution 7.6.0.324 (R2008a).
 
-Most functions in this toolbox are licensed under the GNU General Public License (GPL), see http://www.gnu.org for details. Unauthorised copying and distribution of functions that are not explicitely covered by the GPL is not allowed.
+Most functions in this toolbox are licensed under the GNU General Public License (GPL), see http://www.gnu.org for details. Unauthorised copying and distribution of functions that are not explicitely covered by the GPL is not allowed. This code comes without warranty of any kind.
 
 # Installation
 

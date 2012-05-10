@@ -19,7 +19,7 @@
  
     DESCRIPTION
     This class evaluates a binary classifier on all possible pairs of class
-    labels. Borda count is used as default combfun. Can be overridden.
+    labels. 
  
     EXAMPLE
     X = rand(15,20); Y = [1 1 1 1 1 2 2 2 2 2 3 3 3 3 3]';
@@ -64,7 +64,7 @@
          </tr>
          <tr class="summary-item">
             <td class="name"><a href="matlab:helpwin('dml.one_against_one.combfun')">combfun</a></td>
-            <td class="m-help">by default sums probabilities; can be overridden&nbsp;</td>
+            <td class="m-help">'majority' takes majority vote; 'borda' count sums outputs&nbsp;</td>
          </tr>
          <tr class="summary-item">
             <td class="name"><a href="matlab:helpwin('dml.one_against_one.indims')">indims</a></td>

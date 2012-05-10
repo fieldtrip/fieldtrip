@@ -7,13 +7,16 @@
 % * <corclas.html |dml.corclas|> - template matching correlation based classifier
 % * <crossvalidator.html |dml.crossvalidator|> - crossvalidation class
 % * <enet.html |dml.enet|> - native implementation of elastic net algorithm
+% * <filterer.html |dml.filterer|> - filtering approach to feature selection
 % * <glmnet.html |dml.glmnet|> - efficient elastic net algorithm
+% * <gp.html |dml.gp|> - Gaussian process
 % * <gridsearch.html |dml.gridsearch|> - grid search method
 % * <hmm.html |dml.hmm|> - Hidden Markov Model with discrete state and continu
 % * <lds.html |dml.lds|> - linear dynamical system
 % * <method.html |dml.method|> - abstract class for multivariate methods
 % * <naive.html |dml.naive|> - gaussian naive Bayes classifier
 % * <ndata.html |dml.ndata|> - wrapper class to make methods handle multiple datas
+% * <noutput.html |dml.noutput|> - wrapper class to make methods handle multiple outpu
 % * <one_against_one.html |dml.one_against_one|> - one-against-one binary classification
 % * <one_against_rest.html |dml.one_against_rest|> - one-against-rest binary classification
 % * <permutation.html |dml.permutation|> - permutation testing class

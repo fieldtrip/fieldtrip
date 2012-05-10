@@ -59,12 +59,12 @@
     spheres to test. The optimal subset of spheres will be determined using
     the specified crossvalidator:
  
-   mymask = true(10,10,10);
-   m = dml.searchlight('nspheres',[1 2 3 4 5],'step',2,'radius',2,'mask',mymask,'verbose',true,'stats',{'accuracy'});
-   m = m.train(X,Y); r = m.model;
+    mymask = true(10,10,10);
+    m = dml.searchlight('nspheres',[1 2 3 4 5],'step',2,'radius',2,'mask',mymask,'verbose',true,'stats',{'accuracy'});
+    m = m.train(X,Y); r = m.model;
  
-   Instead of using a cross-validator, one may also use a permutation
-   object to determine sphere performance:
+    Instead of using a cross-validator, one may also use a permutation
+    object to determine sphere performance:
  
     indims = [10 10 10];
     p = dml.permutation('stat','accuracy','validator',dml.crossvalidator('mva',dml.svm),'nperm',10,'verbose',true);
