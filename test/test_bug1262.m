@@ -4,7 +4,7 @@ function test_bug1262
 % TEST ft_read_header ft_read_data ft_read_event
 
 % Example data generated with sine example, saved with record.exe:
-dirname = 'test_bug1262/0001/';  
+dirname = 'data_bug1262/0001/';  
 
 hdr = ft_read_header(dirname);
 assert(hdr.nChans == 16);
