@@ -6,7 +6,7 @@ Most functions in this toolbox are licensed under the GNU General Public License
 
 # Installation
 
-The most recent version of DMLT can be downloaded as a zipfile at https://github.com/marcelge/DMLT/zipball/master
+The most recent version of DMLT can be downloaded as a zipfile at https://github.com/distrep/DMLT/zipball/master
 
 It is recommended though to use install DMLT by cloning the repository:
 
