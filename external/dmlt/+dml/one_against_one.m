@@ -171,7 +171,7 @@ classdef one_against_one < dml.method
       idx=1;
       for i=1:obj.nclasses
         for j=(i+1):obj.nclasses
-          mtd = obj.mva{idx}.methods{end};
+          mtd = obj.mva{idx}.method{end};
           m.model{idx} = mtd.model;
           m.pair{idx} = [i j];
           idx = idx + 1;
