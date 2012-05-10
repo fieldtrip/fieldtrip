@@ -21,6 +21,7 @@ classdef one_against_rest < dml.method
     nclasses % number of classes
     
     combfun = 'borda' % 'borda' borda count
+    
   end
   
   methods
@@ -141,7 +142,7 @@ classdef one_against_rest < dml.method
       
       m.model = cell(length(obj.mva),1);
       for idx=1:length(obj.mva)
-        mtd = obj.mva{idx}.mvmethods{end};
+        mtd = obj.mva{idx}.method{end};
         m.model{idx} = mtd.model;
       end
       
