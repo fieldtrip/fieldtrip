@@ -37,11 +37,11 @@ if isempty(find(strcmp(fields, 'sampleRemainder'), 1));
 end
 
 %%
-newEventList = javaObject('java.util.Vector')
+newEventList = javaObject('java.util.ArrayList')
 numEvents = size(events,2)
 for p = 1:numEvents
     if isempty(events(p).value)
-        event = javaObject('com.egi.services.mff.api.Event', true);
+        event = javaObject('com.egi.services.mff.api.Event');
         event.setCode(events(p).type);
         
         doDurationRemainder = false;
@@ -85,11 +85,30 @@ for p = 1:numEvents
 end
 
 % add events to event object
-newEventTrackObj = javaObject('com.egi.services.mff.api.EventTrack', true);
-newEventTrackObj.setEvents(newEventList);
-newEventTrackObj.setTrackType(trackType);
-newEventTrackObj.setName(trackName);
-newEventTrackObj = newEventTrackObj.marshal(newEventTrackObj, dstURI);
+
+delegate = javaObject('com.egi.services.mff.api.LocalMFFFactoryDelegate');
+factory = javaObject('com.egi.services.mff.api.MFFFactory', delegate);
+resourceVal = com.egi.services.mff.api.MFFResourceType.kMFF_RT_EventTrack;
+resourceType = javaObject('com.egi.services.mff.api.MFFResourceType', resourceVal);
+%    fprintf('%s %s\n', char(URI), char(resourceType));
+factory.createResourceAtURI(dstURI, resourceType);
+newEventTrackObj = factory.openResourceAtURI(dstURI, resourceType);
+if ~isempty(newEventTrackObj)
+    
+    newEventTrackObj.setEvents(newEventList);
+    newEventTrackObj.setTrackType(trackType);
+    newEventTrackObj.setName(trackName);
+    newEventTrackObj.saveResource();
+
+else
+    fprintf('Could not create event track.\n');
+end
+
+%newEventTrackObj = javaObject('com.egi.services.mff.api.EventTrack', true);
+%newEventTrackObj.setEvents(newEventList);
+%newEventTrackObj.setTrackType(trackType);
+%newEventTrackObj.setName(trackName);
+%newEventTrackObj = newEventTrackObj.marshal(newEventTrackObj, dstURI);
 
 function micros = samples2Micros(samples, sampRate)
 sampDuration = 1000000/sampRate;

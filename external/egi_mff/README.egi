@@ -1,0 +1,33 @@
+MFF API for Java/Matlab, C++ and Objective-C
+
+In this folder are all of the software components needed to access files that adhere to
+EGI's Metafile Format specification when writing in Java, Matlab, C++ and Objective-C.  This document summarizes where to look to find the needed resources for each language.
+
+Java/Matlab
+
+java/MFF-1.0.d0006.jar - the Jar file needed to write Java components or applications that read MFF files.
+
+docs/mff/java/MFF_Java_HTML/index.html - Java code documentation access.  These pages describe how to set up to use the jar file for use with Java or Matlab development and document the Java MFF API.
+
+C++
+
+lib/libmff_cpp.a - C++ MFF library.
+lib/libEGIBase.a - EGI Base library.
+lib/libsexp.a, lib/libSExpressions.a - s-expression libraries for EGIBase.
+lib/libtinyxml.a - TinyXML libraries for XML parsing
+
+docs/mff/cpp/MFF_CPP_HTML/index.html - C++ code documentation access.  These pages document the C++ MFF API.
+
+example/c++/example.cpp, Makefile - example of reading MFF files.  Note that to build this example, the current version of the Poco libraries.  These can be found at:
+
+http://pocoproject.org/
+
+Objective-C
+
+lib/libmff_objc.a - Objective-C MFF library.
+lib/libEGIBase.a - EGI Base library.
+lib/libsexp.a, lib/libSExpressions.a - s-expression libraries for EGIBase.
+lib/libtinyxml.a - TinyXML libraries for XML parsing
+
+docs/mff/objective-c/MFF_Objective-C_HTML/index.html - Objective-C code documentation access.  These pages document the Objective-C MFF API.
+
