@@ -258,7 +258,7 @@ if isfield(cfg, 'export') && ~isempty(cfg.export)
   end
 end
 
-hasdata = (nargin>1);
+hasdata = exist('data', 'var');
 if hasdata
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % do preprocessing of data that has already been read into memory
@@ -554,7 +554,7 @@ end % if hasdata
 ft_postamble trackconfig
 ft_postamble callinfo
 
-if nargin==2
+if hasdata
   ft_postamble previous data
 end
 
