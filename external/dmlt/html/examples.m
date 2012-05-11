@@ -10,13 +10,13 @@ load 69digits
 % regression allows for linear and logistic regression depending on the
 % 'family' parameter ('gaussian' or 'binomial'). Here, we deal with
 % logistic regression only and focus on classification. This toolbox
-% implements two versions of elastic net: dml.enet and dml.glmnet. The
-% former one is more general and implemented in Matlab. The latter one is
-% less general and calls external Fortran code, making it much faster. In
-% the following, we show how to use these two implementations on our
-% example data.
+% implements two versions of elastic net: dml.graphnet and dml.enet. The
+% former is more general than the standard elastic net and implemented in
+% Matlab. The latter is less general and calls external Fortran code,
+% making it much faster. In the following, we show how to use these two
+% implementations on our example data.
 %
-% dml.enet minimizes the sum squared error on the data plus a
+% dml.graphnet minimizes the sum squared error on the data plus a
 % regularization term of the form:
 %
 % $$L_1 ||\beta||_1 + \frac{1}{2} \beta' L_2 \beta$$
@@ -26,7 +26,7 @@ load 69digits
 % of regularization, with L1 giving sparse solutions and L2 giving smooth
 % solutions. For the moment, we fix L2 to a small constant (default is
 % 1e-6) and want to find the solution for L1=0.1.
-m = dml.enet('family','binomial','L1',0.1);
+m = dml.graphnet('family','binomial','L1',0.1);
 m = m.train(X,Y);
 %% 
 % The sparse solution is returned in the model.weights field:
@@ -38,10 +38,10 @@ bar(m.model.weights);
 % is unknown and one wants to find such a value. This is where the
 % gridsearch comes into play. We first generate a suitable regularization
 % path (values of L1) to follow using a helper function
-v = dml.enet.lambdapath(X,Y,'binomial',50,1e-2);
+v = dml.graphnet.lambdapath(X,Y,'binomial',50,1e-2);
 %%
 % and then we use it in a gridsearch
-m = dml.gridsearch('validator',dml.crossvalidator('type','split','stat','accuracy','mva',dml.enet('family','binomial','restart',false)),'vars','L1','vals',v);
+m = dml.gridsearch('validator',dml.crossvalidator('type','split','stat','accuracy','mva',dml.graphnet('family','binomial','restart',false)),'vars','L1','vals',v);
 tic; m = m.train(X,Y); toc
 %%
 % In order to see how performance changes as a function of L1, we can use
@@ -63,7 +63,7 @@ subplot(1,2,2); bar(m.model.weights);
 %
 % Furthermore, the cross-validation and determination of the regularization 
 % path is done automatically inside the model. We can call this code as follows:
-m = dml.glmnet;
+m = dml.enet;
 tic; m = m.train(X,Y); toc;
 close; bar(m.model.weights);
 %%
