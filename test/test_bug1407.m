@@ -12,7 +12,6 @@ datadir = fullfile(datadir, 'test');
 cd(datadir)
 
 dataset = {
-  'ATD256_3.ses.mff'
   'Long64ChannelWithEvents.mff'
   'NS1000sps.mff'
   'NS500Sine6Hz.mff'
@@ -29,6 +28,10 @@ for i=1:length(dataset)
   event = ft_read_event(dataset{i},  'headerformat', headerformat, 'eventformat', eventformat);
   assert(size(dat,1)==length(hdr.label));
   assert(size(dat,2)==hdr.nSamples*hdr.nTrials);
+  % keep all results to compare v1 and v2
+  v1_hdr{i} = hdr;
+  v1_dat{i} = dat;
+  v1_evt{i} = evt;
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -42,9 +45,12 @@ for i=1:length(dataset)
   event = ft_read_event(dataset{i},  'headerformat', headerformat, 'eventformat', eventformat);
   assert(size(dat,1)==length(hdr.label));
   assert(size(dat,2)==hdr.nSamples*hdr.nTrials);
+  % keep all results to compare v1 and v2
+  v2_hdr{i} = hdr;
+  v2_dat{i} = dat;
+  v2_evt{i} = evt;
 end
 
-% FIXME it would make sense to compare the v1 results to the v2 results. This requires 
-% keeping all the headers, data and events in a cell-array.
+% FIXME it would make sense to compare the v1 results to the v2 results. 
 
 
