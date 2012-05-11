@@ -15,23 +15,29 @@
          </tr>
       </table>
       <div class="title">dml.enet</div>
-      <div class="helptext"><pre><!--helptext --> <span class="helptopic">enet</span> native implementation of elastic net algorithm.
+      <div class="helptext"><pre><!--helptext -->  <span class="helptopic">enet</span> efficient elastic net algorithm.
  
     DESCRIPTION
-    Elastic net linear and logistic regression. Note that this algorithm
-    allows for the GraphNet generalization that allows coupling between
-    features.
+    Fast implementation of elastic net linear and logistic regression by
+    Friedman et al. Without arguments, this method automatically determines 
+    the lambda path and uses cross-validation to find the best lambda. The
+    parameter 'family' determines whether to use linear regression
+    (gaussian) or logistic regression (binomial or multinomial). The mixing
+    parameter alpha controls the influence of the 11 (alpha=1) and l2 regularizer
+    (alpha = 0).
  
     REFERENCE
     Regularization paths for generalized linear models via coordinate descent 
     by Friedman et al.
  
-    Grosenick L, Klingenberg B, Knutson B. A family of interpretable
-    multivariate models for regression and classification of whole-brain fMRI data. stanford.edu. 
- 
     EXAMPLE
     X = rand(10,20); Y = [1 1 1 1 1 2 2 2 2 2]';
-    m = dml.enet
+    m = dml.enet('family','binomial');
+    m = m.train(X,Y);
+    Z = m.test(X);
+ 
+    X = rand(15,20); Y = [1 1 1 1 1 2 2 2 2 2 3 3 3 3 3]'; X(1:5,:) = X(1:5,:)+1;
+    m = dml.enet('family','multinomial');
     m = m.train(X,Y);
     Z = m.test(X);
  
@@ -59,7 +65,7 @@
       <table class="summary-list">
          <tr class="summary-item">
             <td class="name"><a href="matlab:helpwin('dml.enet.enet')">enet</a></td>
-            <td class="m-help">native implementation of elastic net algorithm.&nbsp;</td>
+            <td class="m-help">efficient elastic net algorithm.&nbsp;</td>
          </tr>
       </table>
       <!--Properties-->
@@ -67,16 +73,8 @@
       </div>
       <table class="summary-list">
          <tr class="summary-item">
-            <td class="name"><a href="matlab:helpwin('dml.enet.L1')">L1</a></td>
-            <td class="m-help">lasso penalty&nbsp;</td>
-         </tr>
-         <tr class="summary-item">
-            <td class="name"><a href="matlab:helpwin('dml.enet.L2')">L2</a></td>
-            <td class="m-help">nfeatures x nfeatures ridge penalty    &nbsp;</td>
-         </tr>
-         <tr class="summary-item">
-            <td class="name"><a href="matlab:helpwin('dml.enet.conv')">conv</a></td>
-            <td class="m-help">plot of the convergence of the parameters sum(abs(beta-betaold));&nbsp;</td>
+            <td class="name"><a href="matlab:helpwin('dml.enet.alpha')">alpha</a></td>
+            <td class="m-help">glmnet mixing parameter&nbsp;</td>
          </tr>
          <tr class="summary-item">
             <td class="name"><a href="matlab:helpwin('dml.enet.df')">df</a></td>
@@ -91,16 +89,24 @@
             <td class="m-help">dimensions of the input data (excluding the trial dim and time dim in time series data)&nbsp;</td>
          </tr>
          <tr class="summary-item">
-            <td class="name"><a href="matlab:helpwin('dml.enet.maxiter')">maxiter</a></td>
-            <td class="m-help">maximum number of iterations for native elastic net&nbsp;</td>
+            <td class="name"><a href="matlab:helpwin('dml.enet.lambda')">lambda</a></td>
+            <td class="m-help">used lambda(s)&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="name"><a href="matlab:helpwin('dml.enet.path')">path</a></td>
+            <td class="m-help">lambda path followed when estimating decoding performance&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="name"><a href="matlab:helpwin('dml.enet.performance')">performance</a></td>
+            <td class="m-help">cross-validated decoding performance for elements on lambda path&nbsp;</td>
          </tr>
          <tr class="summary-item">
             <td class="name"><a href="matlab:helpwin('dml.enet.restart')">restart</a></td>
             <td class="m-help">when false, starts at the previously learned parameters; needed for online learning and grid search&nbsp;</td>
          </tr>
          <tr class="summary-item">
-            <td class="name"><a href="matlab:helpwin('dml.enet.tolerance')">tolerance</a></td>
-            <td class="m-help">tolerance in the error for native elastic net&nbsp;</td>
+            <td class="name"><a href="matlab:helpwin('dml.enet.validator')">validator</a></td>
+            <td class="m-help">cross-validator&nbsp;</td>
          </tr>
          <tr class="summary-item">
             <td class="name"><a href="matlab:helpwin('dml.enet.verbose')">verbose</a></td>
@@ -116,28 +122,12 @@
       </div>
       <table class="summary-list">
          <tr class="summary-item">
-            <td class="attributes">Static 
-               &nbsp;
-               
-            </td>
-            <td class="name"><a href="matlab:helpwin('dml.enet.lambdapath')">lambdapath</a></td>
-            <td class="m-help">&nbsp;</td>
-         </tr>
-         <tr class="summary-item">
-            <td class="attributes">Static 
-               &nbsp;
-               
-            </td>
-            <td class="name"><a href="matlab:helpwin('dml.enet.laplacian')">laplacian</a></td>
-            <td class="m-help">return matrix Laplacian for a multidimensional array of size dims and strength s&nbsp;</td>
-         </tr>
-         <tr class="summary-item">
             <td class="attributes">
                &nbsp;
                
             </td>
             <td class="name"><a href="matlab:helpwin('dml.enet.model')">model</a></td>
-            <td class="m-help">returns &nbsp;</td>
+            <td class="m-help">returns&nbsp;</td>
          </tr>
          <tr class="summary-item">
             <td class="attributes">

@@ -6,12 +6,12 @@
 % * <circreg.html |dml.circreg|> - circular regression method
 % * <corclas.html |dml.corclas|> - template matching correlation based classifier
 % * <crossvalidator.html |dml.crossvalidator|> - crossvalidation class
-% * <enet.html |dml.enet|> - native implementation of elastic net algorithm
+% * <enet.html |dml.enet|> - efficient elastic net algorithm
 % * <filterer.html |dml.filterer|> - filtering approach to feature selection
-% * <glmnet.html |dml.glmnet|> - efficient elastic net algorithm
 % * <gp.html |dml.gp|> - Gaussian process
+% * <graphnet.html |dml.graphnet|> - native implementation of graphnet algorithm
 % * <gridsearch.html |dml.gridsearch|> - grid search method
-% * <hmm.html |dml.hmm|> - Hidden Markov Model with discrete state and continu
+% * <hmm.html |dml.hmm|> - Hidden Markov model with continuous observations
 % * <lds.html |dml.lds|> - linear dynamical system
 % * <method.html |dml.method|> - abstract class for multivariate methods
 % * <naive.html |dml.naive|> - gaussian naive Bayes classifier

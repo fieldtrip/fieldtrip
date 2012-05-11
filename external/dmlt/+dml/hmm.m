@@ -1,5 +1,5 @@
 classdef hmm < dml.method
-% HMM Hidden Markov Model with discrete state and continuous observations.
+% HMM Hidden Markov model with continuous observations.
 % 
 % DESCRIPTION
 % input X is of size repetitions x features x timepoints
