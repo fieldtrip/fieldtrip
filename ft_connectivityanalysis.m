@@ -126,8 +126,6 @@ cfg.complex     = ft_getopt(cfg, 'complex',     'abs');
 cfg.jackknife   = ft_getopt(cfg, 'jackknife',   'no');
 cfg.removemean  = ft_getopt(cfg, 'removemean',  'yes');
 cfg.partchannel = ft_getopt(cfg, 'partchannel', '');
-cfg.conditional = ft_getopt(cfg, 'conditional', []);
-cfg.blockindx   = ft_getopt(cfg, 'blockindx',   {});
 cfg.inputfile   = ft_getopt(cfg, 'inputfile',   []);
 cfg.outputfile  = ft_getopt(cfg, 'outputfile',  []);
 cfg.parameter   = ft_getopt(cfg, 'parameter',   []);
@@ -265,6 +263,15 @@ switch cfg.method
     end
     outparam = [cfg.method, 'spctrm'];
   case {'granger'}
+    if ~isfield(cfg, 'granger')
+      cfg.granger = [];
+    end
+    cfg.granger.conditional = ft_getopt(cfg.granger, 'conditional', []);
+    cfg.granger.blockindx   = ft_getopt(cfg.granger, 'blockindx',   {});
+    if isfield(cfg, 'channelcmb'),
+      cfg.granger.channelcmb = cfg.channelcmb;
+      cfg = rmfield(cfg, 'channelcmb');
+    end
     data     = ft_checkdata(data, 'datatype', {'mvar' 'freqmvar' 'freq'});
     inparam  = {'transfer', 'noisecov', 'crsspctrm'};
     outparam = 'grangerspctrm';
@@ -286,6 +293,11 @@ switch cfg.method
     data     = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
     inparam  = 'crsspctrm';
     outparam = 'psispctrm';
+  case {'hipp'}
+    data     = ft_checkdata(data, 'datatype', 'source');
+    %inparam  = 'avg.mom';
+    inparam  = 'mom';
+    outparam = 'powcorrspctrm';
   case {'di'}
     %wat eigenlijk?
   otherwise
@@ -424,7 +436,7 @@ elseif hasrpt && dojack && ~(exist('debiaswpli', 'var') || exist('weightppc', 'v
   % compute leave-one-outs
   data    = ft_selectdata(data, 'jackknife', 'yes');
   hasjack = 1;
-elseif hasrpt && ~(exist('debiaswpli', 'var') || exist('weightppc', 'var'))
+elseif hasrpt && ~(exist('debiaswpli', 'var') || exist('weightppc', 'var') || strcmp(cfg.method, 'hipp'))
   % create dof variable
   if isfield(data, 'dof')
     dof = data.dof;
@@ -535,7 +547,7 @@ switch cfg.method
     
     if sum(ft_datatype(data, {'freq' 'freqmvar'})),
       
-      if isfield(data, 'labelcmb') && isempty(cfg.conditional),
+      if isfield(data, 'labelcmb') && isempty(cfg.granger.conditional),
         % multiple pairwise non-parametric transfer functions
         % linearly indexed
         
@@ -707,6 +719,14 @@ switch cfg.method
       'normalize', cfg.normalize, 'hasrpt', hasrpt,      'hasjack', hasjack};
     if exist('powindx', 'var'), optarg = cat(2, optarg, {'powindx', powindx}); end
     [datout, varout, nrpt] = ft_connectivity_psi(data.(inparam), optarg{:});
+    
+  case 'hipp'
+    % Joerg Hipp's power correlation method
+    
+    optarg   = {'refindx', cfg.refindx, 'tapvec', data.cumtapcnt};
+    [datout] = ft_connectivity_hipp(cat(2,data.mom{data.inside}).', optarg{:});
+    varout   = [];
+    nrpt     = numel(data.cumtapcnt);
     
   case 'di'
     % directionality index
