@@ -187,6 +187,20 @@ try
   dos(exefile);
   ama = loadama(amafile);
   vol = ama2vol(ama);
+  
+  % This is to maintain the vol.bnd convention (outward oriented), whereas
+  % in terms of further calculation it shuold not really matter.
+  % The calculation fo the head model is done with inward normals
+  % (sometimes flipped from the original input). This assures that the 
+  % outward oriented mesh is saved outward oriiented in the vol structure 
+  for i=1:numel(vol.bnd)
+    isinw = checknormals(vol.bnd(i));
+    fprintf('flipping the normals outwards, after head matrix calculation\n')
+    if isinw
+      vol.bnd(i).tri = fliplr(vol.bnd(i).tri);
+    end
+  end
+  
 catch
   warning('an error ocurred while running dipoli');
   disp(lasterr);
@@ -204,11 +218,12 @@ vol.type = 'dipoli';
 
 
 function ok = checknormals(bnd)
+% checks if the normals are inward oriented
 ok = 0;
 pnt = bnd.pnt;
 tri = bnd.tri;
 % translate to the center
-org = mean(pnt,1);
+org = median(pnt,1);
 pnt(:,1) = pnt(:,1) - org(1);
 pnt(:,2) = pnt(:,2) - org(2);
 pnt(:,3) = pnt(:,3) - org(3);
@@ -223,6 +238,6 @@ elseif w>0 && (abs(w)-4*pi)<1000*eps
   %   warning('your normals are inwards oriented\n')
   ok = 1;
 else
-  error('your surface probably is irregular')
-  ok = 0;
+  fprintf('attention: your surface probably is irregular!')
+  ok = 1;
 end
