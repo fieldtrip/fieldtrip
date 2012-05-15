@@ -127,6 +127,7 @@ isgrad   = (isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'c
 iselec   = isa(input, 'struct')  && isfield(input, 'label') && isfield(input, 'pnt')  && ~isfield(input, 'ori'); % old style
 iselec   = (isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'elecpos')) || iselec; % new style 
 islabel  = isa(input, 'cell')    && ~isempty(input) && isa(input{1}, 'char');
+isfreq   = isa(input, 'struct')  && (isfield(input, 'fourierspctrm') || isfield(input, 'powspctrm'));
 haslabel = isa(input, 'struct')  && isfield(input, 'label');
 
 if ~isdata && ~isheader
@@ -163,6 +164,8 @@ if isdata
     sens.label = input.label;
     islabel    = true;
   end
+elseif isfreq
+  type = 'unknown';
 elseif isheader
   if isfield(input, 'grad')
     sens   = input.grad;
