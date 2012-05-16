@@ -54,8 +54,8 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.gradscale               = number, scaling to apply to the MEG gradiometer channels prior to display (in addition to the cfg.megscale factor)
 %   cfg.magscale                = number, scaling to apply to the MEG magnetometer channels prior to display (in addition to the cfg.megscale factor)
 %   cfg.chanscale               = Nx1 vector with scaling factors, one per channel specified in cfg.channel
-%   cfg.compscale               = string, 'local' or 'global', defines whether the colormap for the topographic scaling is 
-%                                  applied per topography or on all visualized components (default 'local')
+%   cfg.compscale               = string, 'global' or 'local', defines whether the colormap for the topographic scaling is 
+%                                  applied per topography or on all visualized components (default 'global')
 
 % The scaling to the EEG, EOG, ECG, EMG and MEG channels is optional and
 % can be used to bring the absolute numbers of the different channel types
