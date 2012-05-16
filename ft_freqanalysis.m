@@ -444,13 +444,13 @@ else
     error('use either cfg.foi or cfg.foilim')
   elseif ~isempty(cfg.foilim)
     % get the full foi in the current foilim and set it too be used as foilim
-    fboilim = round(cfg.foilim ./ (data.fsample ./ (cfg.pad*data.fsample))) + 1;
+    fboilim = round(cfg.foilim .* cfg.pad) + 1;
     fboi    = fboilim(1):1:fboilim(2);
     cfg.foi = (fboi-1) ./ cfg.pad;
   else
     % correct foi if foilim was empty and try to correct t_ftimwin (by detecting whether there is a constant factor between foi and t_ftimwin: cyclenum)
     oldfoi = cfg.foi;
-    fboi   = round(cfg.foi ./ (data.fsample ./ (cfg.pad*data.fsample))) + 1;
+    fboi   = round(cfg.foi .* cfg.pad) + 1;
     cfg.foi    = (fboi-1) ./ cfg.pad; % boi - 1 because 0 Hz is included in fourier output
     if strcmp(cfg.correctt_ftimwin,'yes')
       cyclenum = oldfoi .* cfg.t_ftimwin;
