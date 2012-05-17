@@ -50,7 +50,7 @@ if iscell(filename)
     % try to read info regarding the sulcal pattern
     ft_hastoolbox('freesurfer', 1);
     try,
-      tmpsulc = read_curv([name,'.sulc']);
+      tmpsulc = read_curv(fullfile(path, [name,'.sulc']));
     catch
       tmpsulc = [];
     end
