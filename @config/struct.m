@@ -10,10 +10,12 @@ if nargin==1
   y = reshape(y, size(x));
   % recurse into the structure to convert sub-configs into sub-structures
   key = fieldnames(y);
-  for i=1:length(key)
-    val = y.(key{i});
-    if isa(val, 'config')
-      y = setfield(y, key{i}, struct(val));
+  for j=1:numel(y)
+    for i=1:length(key)
+      val = y(j).(key{i});
+      if isa(val, 'config')
+        y(j) = setfield(y(j), key{i}, struct(val));
+      end
     end
   end
 else
