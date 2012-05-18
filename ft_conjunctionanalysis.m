@@ -10,20 +10,17 @@ function [conjunction] = ft_conjunctionanalysis(cfg, varargin)
 % prior to conjunction is advised.
 %
 % Use as
-%   [stat] = ft_conjunctionanalysis(cfg, data1, data2, .., dataN)
-% where data comes from
-%   - ft_sourcestatistics post ft_sourceanalysis
-%     with or without ft_sourceinterpolate
-%   - ft_freqstatistics post ft_freqanalysis
-%   - ft_sourceanalysis
-%   - ft_freqanalysis
+%   [stat] = ft_conjunctionanalysis(cfg, stat1, stat2, .., statN)
+%
+% where the input data is the result from either FT_TIMELOCKSTATISTICS, 
+% FT_FREQSTATISTICS, or FT_SOURCESTATISTICS
 %
 % No configuration options are yet implemented.
 %
 % See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS, FT_SOURCESTATISTICS
 
 % Copyright (C) 2010-2012, Arjen Stolk
-
+%
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
 %
@@ -54,12 +51,17 @@ ndatasets = length(varargin);
 if ndatasets<2
   error('not enough input arguments; there should be at least two');
 end
+% check if the input data is valid for this function
+for i = 1:ndatasets
+  varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'timelock', 'freq', 'source'}, 'feedback', 'yes');
+end
 fprintf('performing conjunction analysis on %d input datasets \n', ndatasets);
 conjunction = [];
 
-% output check
-voxflag  = 0;
-sensflag = 0;
+% determine datatype
+isfreq     = ft_datatype(varargin{1}, 'freq');
+istimelock = ft_datatype(varargin{1}, 'timelock');
+issource   = ft_datatype(varargin{1}, 'source');
 
 % conjunction loop, in case ndatasets > 2
 for i = 1:ndatasets-1
@@ -74,8 +76,7 @@ for i = 1:ndatasets-1
   end
   
   %% SOURCE DATA
-  if isfield(data1, 'inside') % check
-    voxflag = 1;
+  if issource
     
     if isfield(data1, 'stat') % conjunction on t-values
       fprintf('minimum statistics on voxel T values \n');
@@ -131,14 +132,7 @@ for i = 1:ndatasets-1
   end % end of source level conjunction
   
   %% SENSOR DATA
-  if isfield(data1, 'dimord') && ...
-      (strcmp(data1.dimord, 'chan_freq') || ...
-      strcmp(data1.dimord, 'chan_freq_time') || ...
-      strcmp(data1.dimord, 'subj_chan_freq') || ...
-      strcmp(data1.dimord, 'subj_chan_freq_time') || ...
-      strcmp(data1.dimord, 'rpt_chan_freq') || ...
-      strcmp(data1.dimord, 'rpt_chan_freq_time')); % check
-    sensflag = 1;
+  if isfreq || istimelock
     
     if isfield(data1, 'stat') % conjunction on t-values
       fprintf('minimum statistics on sensor T values \n');
@@ -185,6 +179,20 @@ for i = 1:ndatasets-1
       
       conjunction = data1;
       conjunction.powspctrm = minimumstatistics(data1.powspctrm, data2.powspctrm);
+      
+    elseif isfield(data1, 'avg') % conjunction on mean signal amplitudes
+      fprintf('minimum statistics on mean sensor amplitudes \n');
+      
+      % equal size input check
+      if ~isequal(size(data1.avg), size(data2.avg))
+        error('the input arguments have different sizes');
+      end
+      
+      conjunction = data1;
+      conjunction.avg = minimumstatistics(data1.avg, data2.avg);
+      
+    elseif isfield(data1, 'trial')
+      fprintf('please first compute the averages with ft_timelockdescriptives/ft_freqdescriptives \n');
     else
       fprintf('this sensor level data does not fit conjunction analysis \n');
     end
@@ -194,7 +202,7 @@ for i = 1:ndatasets-1
 end % end of conjunction loop
 
 %% UNIDENTIFIED DATA
-if voxflag == 0 && sensflag == 0
+if istimelock == 0 && isfreq == 0 && issource == 0
   fprintf('this data is not appropriate for conjunction analysis\n');
   conjunction = [];
 end

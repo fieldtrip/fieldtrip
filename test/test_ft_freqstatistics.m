@@ -4,8 +4,8 @@ function test_ft_freqstatistics
 % TEST ft_freqstatistics, findcluster, clusterstat, ft_statistics_montecarlo
 
 % disable verbose output
-global ft_default;
-ft_default.feedback = 'no';
+% global ft_default;
+% ft_default.feedback = 'no';
 
 % copyright, Roemer, bug 1201 (copyright? really? did I really put this in here? :P) - roevdmei
 %For the case of "freq_time"
