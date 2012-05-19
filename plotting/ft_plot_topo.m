@@ -20,8 +20,8 @@ function [Zi, h, handles] = ft_plot_topo(chanX, chanY, dat, varargin)
 %   parent        = handle which is set as the parent for all plots
 %
 % It is possible to plot the object in a local pseudo-axis (c.f. subplot), which is specfied as follows
-%   hpos        = horizontal position of the center of the local axes
-%   vpos        = vertical position of the center of the local axes
+%   hpos        = horizontal position of the lower left corner of the local axes
+%   vpos        = vertical position of the lower left corner of the local axes
 %   width       = width of the local axes
 %   height      = height of the local axes
 %   hlim        = horizontal scaling limits within the local axes
@@ -90,23 +90,26 @@ if ~isempty(outline)
     allCoords = [allCoords; outline{k}];
   end
 end
-  
-if isempty(width)
+
+naturalWidth = (max(allCoords(:,1))-min(allCoords(:,1)));
+naturalHeight = (max(allCoords(:,2))-min(allCoords(:,2)));
+
+if isempty(width) && isempty(height)
   xScaling = 1;
-else
-  xScaling = width/(max(allCoords(:,1))-min(allCoords(:,1)));
-end
-
-if isempty(height)
   yScaling = 1;
+elseif isempty(width) && ~isempty(height)
+  % height specified, auto-compute width while maintaining aspect ratio
+  yScaling = height/naturalHeight;
+  xScaling = yScaling;
+elseif ~isempty(width) && isempty(height)
+  % width specified, auto-compute height while maintaining aspect ratio
+  xScaling = width/naturalWidth;
+  yScaling = xScaling;
 else
-  yScaling = width/(max(allCoords(:,2))-min(allCoords(:,2)));
+  % both width and height specified
+  xScaling = width/naturalWidth;
+  yScaling = height/naturalHeight;
 end
-
-% correct hpos and vpos for the case when coordinates are not centered
-% around zero
-hpos = hpos - (min(allCoords(:,1))+max(allCoords(:,1)))/2*xScaling;
-vpos = vpos - (min(allCoords(:,2))+max(allCoords(:,2)))/2*yScaling;
 
 chanX = chanX(:) * xScaling + hpos;
 chanY = chanY(:) * yScaling + vpos;
