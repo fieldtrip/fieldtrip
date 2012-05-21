@@ -236,7 +236,8 @@ if strcmp(info.cfg.viewmode, 'toggle') && (sum(info.chansel==0) > 0)
   plot(maxperchan_all(info.chansel==0), find(info.chansel==0), 'o');
   hold off;
 end
-abc = axis; axis([abc(1:2) 1 info.nchan]);
+abc = axis;
+axis([abc(1:2) 0 info.nchan]); % have to use 0 as lower limit because ylim([1 1]) (i.e. the single-channel case) is invalid
 set(info.axes(2),'ButtonDownFcn',@toggle_visual);  % needs to be here; call to axis resets this property
 ylabel('channel number');
 
