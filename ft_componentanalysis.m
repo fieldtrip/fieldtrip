@@ -233,6 +233,10 @@ cfg.csp = ft_getopt(cfg, 'csp', []);
 cfg.csp.numfilters = ft_getopt(cfg.csp, 'numfilters', 6);
 cfg.csp.classlabels = ft_getopt(cfg.csp, 'classlabels');
 
+% additional options, see BSSCCA for details
+cfg.bsscca       = ft_getopt(cfg,        'bsscca', []);
+cfg.bsscca.delay = ft_getopt(cfg.bsscca, 'delay', 1);
+
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
   fprintf('selecting %d trials\n', length(cfg.trials));
@@ -557,7 +561,7 @@ switch cfg.method
     % trial boundaries
     
     
-    unmixing = bsscca(data.trial,[1]);
+    unmixing = bsscca(data.trial,cfg.bsscca.delay);
     mixing   = [];
     
   case 'parafac'

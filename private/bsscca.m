@@ -65,15 +65,15 @@ else
 end
 
 [w,rho]  = eig(B\A);
-[~,ix]   = sort(diag(real(rho).^2),'descend');
+[~,ix]   = sort(diag(abs(rho).^2),'descend');
 w        = w(1:n,ix(2:2:end))';
 w        = w(1:n,1:n);
-rho      = real(rho(ix(2:2:end),ix(2:2:end))).^2;
+rho      = abs(rho(ix(2:2:2*n),ix(2:2:2*n))).^2;
 
 % normalise to unit norm
-for k= 1:size(w,1)
-  w(k,:) = w(k,:)./norm(w(k,:));
-end
+% for k= 1:size(w,1)
+%   w(k,:) = w(k,:)./norm(w(k,:));
+% end
 
 function [m] = cellmean(x, dim)
 
