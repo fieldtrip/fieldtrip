@@ -63,8 +63,15 @@ dtype = ft_datatype(data);
 % this will convert timelocked input data to a raw data representation if needed
 data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hassampleinfo', 'yes');
 
+% check whether it is CTF data
 if ~ft_senstype(data, 'ctf')
   error('synthetic gradients can only be computed for CTF data');
+end
+
+% check whether there are reference channels in the input data
+hasref = ~isempty(ft_channelselection('MEGREF', data.label));
+if ~hasref
+  error('ft_denoise_synthetic:nohasref', 'synthetic gradients can only be computed when the input data contains reference channels');
 end
 
 % select trials of interest
