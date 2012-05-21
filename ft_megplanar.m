@@ -249,6 +249,9 @@ else
   end
   
   sens = ft_convert_units(data.grad);
+  if ~isnan(any(sens.chanpos(:)))
+    error('The channel positions contain NaNs; this prohibits correct behavior of the function. Please replace the input channel definition with one that contains valid channel positions');
+  end
   cfg.channel = ft_channelselection(cfg.channel, sens.label);
   cfg.channel = ft_channelselection(cfg.channel, data.label);
 
