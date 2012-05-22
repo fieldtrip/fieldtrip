@@ -62,7 +62,7 @@ switch ft_senstype(sens)
     sens.tra = sens.tra(:,used);
     
     % compute distances from the center of the helmet
-    center = mean(sens.pnt(sel,:));
+    center = mean(sens.pnt);
     dist   = sqrt(sum((sens.pnt - repmat(center, size(sens.pnt, 1), 1)).^2, 2));
     
     % put the corresponding distances instead of non-zero tra entries
