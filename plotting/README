@@ -13,3 +13,38 @@ any later version). See the file COPYING for more details.
 Copyright (C) 2009, Donders Institute for Brain, Cognition and Behaviour, The Netherlands (DCCN)
 Copyright (C) 2009, Netherlands Institute for Neuroscience (NIN)
 
+
+Function overview
+=================
+
+The following functions are used for displaying data in 2-D
+  ft_plot_box.m
+  ft_plot_lay.m
+  ft_plot_line.m
+  ft_plot_text.m
+  ft_plot_topo.m
+  ft_plot_vector.m
+  ft_plot_matrix.m
+  ft_plot_montage.m
+  ft_plot_ortho.m (can also be used for 3-D display)
+  ft_plot_slice.m (can also be used for 3-D display)
+
+The following functions are used for displaying data in 3-D
+  ft_plot_dipole.m
+  ft_plot_headshape.m
+  ft_plot_topo3d.m
+  ft_plot_vol.m
+  ft_plot_mesh.m
+  ft_plot_sens.m
+
+The following functions are used for graphical user interaction
+  ft_uilayout.m
+  ft_select_box.m
+  ft_select_channel.m
+  ft_select_circle.m
+  ft_select_contour.m
+  ft_select_point.m
+  ft_select_point3d.m
+  ft_select_range.m
+  ft_select_voxel.m
+
