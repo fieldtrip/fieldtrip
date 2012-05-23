@@ -1,5 +1,5 @@
 /*
-  Copyright 2012, Donders Center for Cognitive Neuroimaging.
+  Copyright 2012, Donders Centre for Cognitive Neuroimaging.
   Based on tia_client_main.cpp, copyright 2010 Graz University of Technology.
   License: GPL or BSD.
 */
