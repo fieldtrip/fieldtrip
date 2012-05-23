@@ -102,7 +102,7 @@ elseif strcmp(mriformat, 'minc')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % USE FREESURFER CODE FOR THE READING OF NIFTI-FILES: THAT CODE ALSO
   % DEALS WITH 4D NIFTIs
- elseif strcmp(mriformat, 'nifti_spm')
+elseif strcmp(mriformat, 'nifti_spm')
    if ~(hasspm5 || hasspm8)
      fprintf('the SPM5 or SPM8 toolbox is required to read *.nii files\n');
      ft_hastoolbox('spm8',1);
@@ -166,13 +166,49 @@ elseif (strcmp(mriformat, 'afni_brik') || strcmp(mriformat, 'afni_head')) && has
 elseif strcmp(mriformat, 'neuromag_fif') && ft_hastoolbox('mne')
   % use the mne functions to read the Neuromag MRI
   hdr = fiff_read_mri(filename);
-  img = cat(3, hdr.slices.data);
+  img_t = cat(3, hdr.slices.data);
+  img = permute(img_t,[2 1 3]);
   hdr.slices = rmfield(hdr.slices, 'data'); % remove the image data to save memory
-  % hmm, which transformation matrix should I use?
+  
+  % information below is from MNE - fiff_define_constants.m
+  % coordinate system 4 - is the MEG head coordinate system (fiducials)
+  % coordinate system 5 - is the MRI coordinate system
+  % coordinate system 2001 - MRI voxel coordinates
+  % coordinate system 2002 - Surface RAS coordinates (is mainly vertical
+  %                                     shift, no rotation to 2001)
+  % MEG sensor positions come in system 4
+  % MRI comes in system 2001
+  
+  transform = eye(4);
+  if isfield(hdr, 'trans') && issubfield(hdr.trans, 'trans')
+    if (hdr.trans.from == 4) && (hdr.trans.to == 5)
+      transform = hdr.trans.trans;
+    else
+      warning('W: trans does not transform from 4 to 5.');
+      warning('W: Please check the MRI fif-file');
+    end
+  else
+    warning('W: trans structure is not defined.');
+    warning('W: Maybe coregistration is missing?');
+  end
   if isfield(hdr, 'voxel_trans') && issubfield(hdr.voxel_trans, 'trans')
-    transform = hdr.voxel_trans.trans;
-  elseif isfield(hdr, 'trans') && issubfield(hdr.trans, 'trans')
-    transform = hdr.trans.trans;
+    % centers the coordinate system
+    % and switches from mm to m
+    if (hdr.voxel_trans.from == 2001) && (hdr.voxel_trans.to == 5)
+      % matlab_shift compensates for the different index conventions
+      % between C and matlab
+      matlab_shift = [ 0 0 0 0.001; 0 0 0 -0.001; 0 0 0 0.001; 0 0 0 0];
+      % transform transforms from 2001 to 5 and further to 4
+      transform = transform\(hdr.voxel_trans.trans+matlab_shift);
+      coordsys  = 'neuromag';
+      mri.unit  = 'm';
+    else
+      warning('W: voxel_trans does not transform from 2001 to 5.');
+      warning('W: Please check the MRI fif-file');
+    end
+  else
+    warning('W: voxel_trans structure is not defined.');
+    warning('W: Please check the MRI fif-file');
   end
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
