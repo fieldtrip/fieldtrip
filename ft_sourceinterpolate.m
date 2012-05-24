@@ -137,7 +137,7 @@ if isfield(anatomical, 'transform') && isfield(anatomical, 'dim')
 elseif isfield(anatomical, 'pos') && isfield(anatomical, 'dim')
   % 3D regular grid
   is2Dana  = 0;
-elseif isfield(anatomical, 'pnt')
+elseif isfield(anatomical, 'pos') || isfield(anatomical, 'pnt')
   % anatomical data consists of a mesh, but no smudging possible
   is2Dana  = 1; 
 end
@@ -184,27 +184,37 @@ if dosmudge && is2Dana && is2Dfun
     interp = setsubfield(interp, cfg.parameter{k}, interpmat*getsubfield(functional, cfg.parameter{k}));
   end
   
-elseif is2Dana && is2Dfun
+% elseif is2Dana && is2Dfun
   
-  % 'interp_ungridded'
-  error('not yet implemented');
   
-elseif ~is2Dana && is2Dfun
+elseif (~is2Dana && is2Dfun) || (is2Dana && is2Dfun)
   % set default interpmethod for this situation
   cfg.interpmethod = ft_getopt(cfg, 'interpmethod', 'nearest');
   cfg.sphereradius = ft_getopt(cfg, 'sphereradius', 0.5);
   
   % interpolate onto a 3D volume, ensure that the anatomical is indeed a volume
-  anatomical = ft_checkdata(anatomical, 'datatype', 'volume', 'inside', 'logical', 'feedback', 'yes', 'hasunits', 'yes');
+  if ~is2Dana
+    anatomical = ft_checkdata(anatomical, 'datatype', 'volume', 'inside', 'logical', 'feedback', 'yes', 'hasunits', 'yes');
+  
+    % get voxel indices, convert to positions and use interp_ungridded
+    dim     = anatomical.dim;
+    [x,y,z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
+    pos     = warp_apply(anatomical.transform, [x(:) y(:) z(:)]);
+    clear x y z
+  else
+    anatomical = ft_checkdata(anatomical, 'hasunits', 'yes');
+    if isfield(anatomical, 'pos')
+      pos = anatomical.pos;
+    elseif isfield(anatomical, 'pnt')
+      pos = anatomical.pos;
+    else
+      error('the input data sould contain either a pos or pnt field');
+    end
+  end
   functional = ft_convert_units(functional, anatomical.unit);
   
-  % get voxel indices and use interp_ungridded
-  dim       = anatomical.dim;
-  [X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
-  
-  interpmat = interp_ungridded(functional.pos, warp_apply(anatomical.transform, [X(:) Y(:) Z(:)]), ...
+  interpmat = interp_ungridded(functional.pos, pos, ...
     'projmethod', cfg.interpmethod, 'sphereradius', cfg.sphereradius); %FIXME include other key-value pairs as well
-  clear X Y Z;
   
   interp = [];
   if isfield(functional, 'time')
@@ -223,19 +233,13 @@ elseif ~is2Dana && is2Dfun
   
   for k = 1:numel(cfg.parameter)
     tmp    = getsubfield(functional, cfg.parameter{k});
-    siz    = size(tmp);
     tmp    = interpmat*tmp;
     tmp(newoutside,:) = nan;
     interp = setsubfield(interp, cfg.parameter{k}, tmp);
   end
  
-  % get the positions
-  [x,y,z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
-  pos     = warp_apply(anatomical.transform, [x(:) y(:) z(:)]);
-  clear x y z
-  
   interp.pos     = pos;
-  interp.dim     = dim;
+  if ~is2Dana, interp.dim     = dim; end
   interp.inside  = newinside(:)';
   interp.outside = newoutside(:)';
   
