@@ -132,7 +132,7 @@ switch ft_senstype(sens)
       refori = zeros(nchan,3); % FIXME not sure whether this will work
       for i=1:nchan
         weight = abs(sens.tra(i,:));
-        weight = weight ./ norm(weight);
+        weight = weight ./ sum(weight);
         refpnt(i,:) = weight * sens.pnt;
         refori(i,:) = weight * sens.ori;
       end
@@ -251,7 +251,7 @@ switch ft_senstype(sens)
       ori = zeros(nchan,3); % FIXME not sure whether this will work
       for i=1:nchan
         weight = abs(sens.tra(i,:));
-        weight = weight ./ norm(weight);
+        weight = weight ./ sum(weight);
         pnt(i,:) = weight * sens.pnt;
         ori(i,:) = weight * sens.ori;
       end
