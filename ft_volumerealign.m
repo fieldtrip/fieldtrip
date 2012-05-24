@@ -201,6 +201,10 @@ switch cfg.method
         '      button\n',...
         '   b. identify it by pressing either n/l/r for fiducials, or a/p/z for\n',...
         '      anatomical landmarks\n',...
+        '   c. additional control point for the fiducials can be a point along the\n',...
+        '      positive z-axis, press z\n',...
+        '   d. additional control point for the landmarks can be a point along the\n',...
+        '      positive x-axis (to the participant''s right), press r\n',...
         '3. To change the display:\n',...
         '   a. press c or C on keyboard to show/hide crosshair\n',...
         '   b. press m or M on keyboard to show/hide marked positions\n',...
@@ -448,6 +452,7 @@ switch cfg.method
     cfg.landmark.ac     = antcomm;
     cfg.landmark.pc     = pstcomm;
     cfg.landmark.xzpoint = xzpoint;
+    cfg.landmark.rpoint  = rpa;
     
     if ~isempty(nas) && ~isempty(lpa) && ~isempty(rpa)
       basedonfid = 1;
@@ -488,10 +493,14 @@ elseif basedonmrk
   ac     = warp_apply(mri.transform, cfg.landmark.ac);
   pc     = warp_apply(mri.transform, cfg.landmark.pc);
   xzpoint= warp_apply(mri.transform, cfg.landmark.xzpoint);
-  
-  % compute the homogenous transformation matrix describing the new coordinate system
-  [transform, coordsys] = headcoordinates(ac, pc, xzpoint, 'spm');
-  
+  if isfield(cfg.landmark, 'rpoint') && ~isempty(cfg.landmark.rpoint)
+    rpnt_head = warp_apply(mri.transform, cfg.landmark.rpoint);
+    [transform, coordsys] = headcoordinates(ac, pc, xzpoint, rpnt_head, 'spm');
+  else
+    % compute the homogenous transformation matrix describing the new coordinate system
+    [transform, coordsys] = headcoordinates(ac, pc, xzpoint, 'spm');  
+  end
+ 
 else
   transform = [];
   
