@@ -10,6 +10,8 @@ function [h, flag] = headcoordinates(nas, lpa, rpa, extrapoint, flag)
 %
 % [h, coordsys] = headcoordinates(nas, lpa, rpa, extrapoint, flag)
 % 
+% [h, coordsys] = headcoordinates(nas, lpa, rpa, isrighthanded, flag)
+%
 % The optional flag determines how the direction of the axes and the
 % location of the origin will be specified
 %   according to CTF conventions:             flag = 'ctf' (default)
@@ -22,11 +24,17 @@ function [h, flag] = headcoordinates(nas, lpa, rpa, extrapoint, flag)
 %   according to Talairach conventions:       flag = 'tal'
 %   according to SPM conventions:             flag = 'spm'
 %
-% If the function is provided with 5 input arguments, the extrapoint will
-% be used as extra point to ensure correct orientation of the Z-axis (ctf,
-% 4d, yokogawa, itab, neuromag) or X-axis (tal, spm) NOT YET IMPLEMENTED.
-% This could result in the handedness of the transformation to be changed, but ensures
-% consistency with the handedness of the input coordinate system.
+% If the function is provided with 5 input arguments, the fourth argument
+% being a 3 element vector, this extrapoint will be assumed to have a
+% positive Z-coordinate, and will be used to ensure correct orientation of
+% the z-axis (ctf, 4d, yokogawa, itab, neuromag) or X-axis (tal, spm) NOT
+% YET IMPLEMENTED. This could result in the handedness of the
+% transformation to be changed, but ensures consistency with the handedness
+% of the input coordinate system.
+%
+% If the function is provided with 5 input arguments, the fourth argument
+% being a boolean, determines whether the output coordinate axes are
+% right-handed (true) or not (false).
 %
 % The CTF/4D/YOKOGAWA coordinate system defined as follows:
 %   the origin is exactly between lpa and rpa
@@ -82,11 +90,11 @@ function [h, flag] = headcoordinates(nas, lpa, rpa, extrapoint, flag)
 % check whether function call is old or new style
 if nargin<4
   flag       = 0;
-  extrapoint = [];
+  extrapoint = true;
 elseif nargin==4
   % old style
   flag       = extrapoint;
-  extrapoint = [];
+  extrapoint = true;
 elseif nargin==5
   % do nothing
 end
@@ -163,7 +171,7 @@ switch lower(flag)
     error('unrecognized headcoordinate system requested');
 end
 
-if ~isempty(extrapoint)
+if numel(extrapoint)==3
   dirq = extrapoint-origin;
   dirq = dirq/norm(dirq);
   if any(strcmp(lower(flag), {'als_ctf' 'ctf' 'bti' '4d' 'yokogawa' 'ras_itab' 'itab' 'neuromag'}))
@@ -172,9 +180,18 @@ if ~isempty(extrapoint)
       warning('the input coordinate system seems left-handed, flipping z-axis to keep the transformation matrix consistent');
       dirz = -dirz;
     end
+  elseif any(strcmp(lower(flag), {'ras_tal' 'tal' 'spm'}))
+    phi = dirq(:)'*dirx(:);
+    if sign(phi)<0
+      warning('the input coordinate system seems left-handed, flipping x-axis to keep the transformation matrix consistent');
+    end
   else
     warning('the extra input coordinate is not used');
   end
+elseif ~istrue(extrapoint)
+  % left-handed axes system is requested
+  warning('flipping the direction of the z-axis to create left-handed axes');
+  dirz = -dirz;
 end
 
 % compute the rotation matrix
