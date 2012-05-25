@@ -651,6 +651,7 @@ if basedonmni
   grid.unit        = mnigrid.unit;
   grid.inside      = mnigrid.inside;
   grid.outside     = mnigrid.outside;
+  grid.params      = normalise.params;
   
   % convert to the requested units
   grid             = ft_convert_units(grid, cfg.sourceunits);
