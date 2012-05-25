@@ -117,7 +117,7 @@ else
     end
 end
 
-if NEvent == 0, return; end
+
 
 %read the actual events
 if unsegmented
