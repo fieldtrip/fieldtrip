@@ -23,7 +23,8 @@ function [spike] = ft_read_spike(filename, varargin)
 %
 % The output spike structure usually contains
 %   spike.label     = 1xNchans cell-array, with channel labels
-%   spike.waveform  = 1xNchans cell-array, each element contains a matrix (Nsamples X Nspikes)
+%   spike.waveform  = 1xNchans cell-array, each element contains a matrix (Nleads x Nsamples X Nspikes)
+%   spike.waveformdimord = '{chan}_lead_time_spike'
 %   spike.timestamp = 1xNchans cell-array, each element contains a vector (1 X Nspikes)
 %   spike.unit      = 1xNchans cell-array, each element contains a vector (1 X Nspikes)
 % and is described in more detail in FT_DATATYPE_SPIKE
@@ -72,12 +73,13 @@ switch spikeformat
     % read only from one file
     S = read_mclust_t({filename});
     spike.hdr = H(:);
-    spike.timestamp = S;
     [p, f, x] = fileparts(filename);
     spike.label     = {f};  % use the filename as label for the spike channel
+    spike.timestamp = S;    
     spike.waveform  = {};   % this is unknown
     spike.unit      = {};   % this is unknown
-
+    spike.hdr       = H;
+    
   case 'neuralynx_nse'
     % single channel file, read all records
     nse = read_neuralynx_nse(filename);
@@ -137,9 +139,9 @@ switch spikeformat
     chan = 0;
 
     spike.label     = {};
+    spike.timestamp = {};
     spike.waveform  = {};
     spike.unit      = {};
-    spike.timestamp = {};
 
     for i=1:length(typ)
       if typ(i)==0
