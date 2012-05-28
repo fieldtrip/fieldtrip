@@ -1906,6 +1906,7 @@ end
 
 % create the associated labels and other aspects of data such as the header
 data.label = spike.label;
+data.fsample = fsample;
 if isfield(spike,'hdr'), data.hdr = spike.hdr; end
 if isfield(spike,'cfg'), data.cfg = spike.cfg; end
 
