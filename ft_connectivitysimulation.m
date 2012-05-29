@@ -121,7 +121,7 @@ switch cfg.method
   case {'linear_mix'}
     if ~isfield(cfg, 'bpfilter'), cfg.bpfilter = 'yes';   end
     if ~isfield(cfg, 'bpfreq'),   cfg.bpfreq   = [15 25]; end
-    if ~isfield(cfg, 'demean'),   cfg.dmean    = 'yes';   end
+    if ~isfield(cfg, 'demean'),   cfg.demean   = 'yes';   end
     if ~isfield(cfg, 'absnoise'), cfg.absnoise = 1;       end
     cfg = ft_checkconfig(cfg, 'required', {'mix' 'delay'});
   case {'mvnrnd'}
