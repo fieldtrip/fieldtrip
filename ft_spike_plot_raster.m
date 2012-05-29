@@ -6,38 +6,35 @@ function [cfg] = ft_spike_plot_raster(cfg, spike)
 % Use as
 %   ft_spike_plot_raster(cfg, spike)
 % 
-% The input spike data structure should be organised as the spike or the raw
-% datatype, obtained from FT_SPIKE_MAKETRIALS or FT_PREPROCESSING (in that case
-% conversion is done within the function).
+% The input spike data structure should be organised as the spike or the raw datatype
 %
 % Configuration options related to selection of spike channel and trials and latencies
 %   cfg.spikechannel     =  see FT_CHANNELSELECTION for details
 %   cfg.latency          =  [begin end]` in seconds, 'maxperiod' (default), 'minperiod',
 %                           'prestim' (all t<=0), or 'poststim' (all t>=0).
 %   cfg.linewidth        =  number indicating the width of the lines (default = 1);
-%   cfg.cmapneurons      =  'auto' (default), or nUnits-by-3 matrix, or cell array with
-%                           color strings (e.g., {'k' 'r' 'b'}). If 'auto', we are using a
-%                           private colormap that has good visibility on white background.
+%   cfg.cmapneurons      =  'auto' (default), or nUnits-by-3 matrix.
 %   cfg.spikelength      =  number >0 and <=1 indicating the length of the spike. If
 %                           cfg.spikelength = 1, then no space will be left between
 %                           subsequent rows representing trials (row-unit is 1).
+%   cfg.trialborders     =  'yes' or 'no'. If 'yes', borders of trials are plotted
 %
 % Configuration options related to additionally plotting the TOPDATA
 %   cfg.topdata          =  output structure from FT_SPIKE_PSTH
-%                           or FT_SPIKEDENSITY or FT_TIMELOCKANALYSIS. See those functions for more
-%                           info.
+%                           or FT_SPIKEDENSITY or FT_TIMELOCKANALYSIS. 
 %   cfg.topplotsize      =  number ranging from 0 to 1, indicating the proportion of the
 %                           rasterplot that the top plot will take (e.g., with 0.7 the top
 %                           plot will be 70% of the rasterplot in size). Default = 0.5.
 %   cfg.topplotfunc      =  'bar' (default) or 'line'.
+%   cfg.errorbars        = 'no', 'std', 'sem' (default), 'conf95%','var'
+%
+% General:
+%   cfg.interactive      = 'yes' (default) or 'no'. If 'yes', zooming and panning operate via callbacks.
 %
 % Outputs:
-%   hdl.top              =  handle of the plot of the topdata (psth or sdf)
-%   hdl.raster           =  handle for each individual spike.
-%   hdl.ax               =  axes handles: ax(1) the rasterplot and ax(2) the topplot.
-%   hdl.cfg
-
-% Copyright (C) 2010, Martin Vinck; F.C. Donders Centre for Neuroimaging; University of Amsterdam
+%   cfg containing the plot configurations
+%
+% Copyright (C) 2010-2012, Martin Vinck; F.C. Donders Centre for Neuroimaging; University of Amsterdam
 %
 % $Id$
 
@@ -62,17 +59,24 @@ cfg.spikelength  = ft_getopt(cfg,'spikelength', 0.9);
 cfg.topdata      = ft_getopt(cfg,'topdata', []);
 cfg.topplotsize  = ft_getopt(cfg,'topplotsize', 0.5);
 cfg.topplotfunc  = ft_getopt(cfg,'topplotfunc', 'bar');
+cfg.errorbars    = ft_getopt(cfg,'errorbars', 'sem');
+cfg.trialborders = ft_getopt(cfg,'trialborders','yes');
+cfg.interactive  = ft_getopt(cfg,'interactive','yes');
+
 
 % ensure that the options are valid
 cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});
 cfg = ft_checkopt(cfg,'latency', {'char', 'doublevector'});
 cfg = ft_checkopt(cfg,'trials', {'char', 'doublevector', 'logical'}); 
 cfg = ft_checkopt(cfg,'linewidth', 'doublescalar');
-cfg = ft_checkopt(cfg,'cmapneurons', {'char', 'double', 'cell'});
+cfg = ft_checkopt(cfg,'cmapneurons', {'char', 'double'});
 cfg = ft_checkopt(cfg,'spikelength', 'doublescalar');
 cfg = ft_checkopt(cfg,'topdata', {'struct', 'empty'});
 cfg = ft_checkopt(cfg,'topplotsize', 'doublescalar');
 cfg = ft_checkopt(cfg,'topplotfunc', 'char', {'bar', 'line'});
+cfg = ft_checkopt(cfg,'errorbars', 'char', {'sem', 'std', 'conf95%', 'no', 'var'});
+cfg = ft_checkopt(cfg,'trialborders', 'char', {'yes', 'no'});
+cfg = ft_checkopt(cfg,'interactive', 'char', {'yes', 'no'});
 
 % check which features should be present in the rasterplot and psth
 if ~isempty(cfg.topdata)
@@ -106,7 +110,6 @@ end
 if isempty(cfg.trials),
   errors('MATLAB:ft_spike_plot_raster:cfg:trials','No trials were selected in cfg.trials');
 end
-nTrials = length(cfg.trials);
 
 % determine the duration of each trial
 begTrialLatency = spike.trialtime(cfg.trials,1);
@@ -138,16 +141,12 @@ if (cfg.latency(2) > max(endTrialLatency)), cfg.latency(2) = max(endTrialLatency
   warning('MATLAB:ft_spike_plot_raster:cfg:latency:correctEnd',...
     'Correcting begin latency of averaging window');
 end
-trialDur = cfg.latency(2) - cfg.latency(1);
 
 % delete trials that are not in our window
 overlaps      = endTrialLatency>=cfg.latency(1) & begTrialLatency<=cfg.latency(2);
 trialSel      = overlaps(:);
 cfg.trials    = cfg.trials(trialSel); %update the trial selection
-if isempty(cfg.trials),
-  warning('MATLAB:ft_spike_plot_raster:cfg:trials','No trials were selected');
-end
-nTrials         = length(cfg.trials);
+if isempty(cfg.trials),warning('MATLAB:ft_spike_plot_raster:cfg:trials','No trials were selected');end
 
 % create the data that should be plotted
 [unitX,unitY] = deal(cell(1,nUnits));
@@ -161,14 +160,32 @@ for iUnit = 1:nUnits
   unitY{iUnit}   = spike.trial{unitIndx}(isInTrials(:) & latencySel(:));
 end
 
-if ~isscalar(cfg.spikelength) || cfg.spikelength<=0 || cfg.spikelength>1
+if cfg.spikelength<=0 || cfg.spikelength>1
   error('MATLAB:ft_spike_plot_raster:cfg:spikelength:unknownOption',...
     'cfg.spikelength should be a single number >0 and <=1. 1 row (1 trial) = 1');
 end
 
-if ~isscalar(cfg.topplotsize) || cfg.topplotsize<=0 || cfg.topplotsize>1
+if cfg.topplotsize<=0 || cfg.topplotsize>1
   error('MATLAB:ft_spike_plot_raster:cfg:topplotsize:unknownOption',...
     'cfg.topplotsize should be a single number >0 and <=1. 0.7 = 70%');
+end
+
+% plot the trial borders if desired
+if strcmp(cfg.trialborders,'yes')
+  begTrialLatency = begTrialLatency(overlaps(:));
+  endTrialLatency = endTrialLatency(overlaps(:));
+  X = endTrialLatency;
+  Y = cfg.trials;
+  Y = [Y(:);Y(end);Y(1);(Y(1))];
+  X = [X(:);cfg.latency(2);cfg.latency(2);endTrialLatency(1)];
+  f = fill(X,Y,'y');
+  set(f,'EdgeColor', [1 1 1]); 
+  X = begTrialLatency;
+  Y = cfg.trials;
+  Y = [Y(:);Y(end);Y(1);(Y(1))];
+  X = [X(:);cfg.latency(1);cfg.latency(1);begTrialLatency(1)];  
+  hold on, fill(X,Y,'y'), hold on
+  set(f,'EdgeColor', [1 1 1]);
 end
 
 % start plotting the rasterplot
@@ -183,11 +200,9 @@ for iUnit = 1:nUnits
   if strcmp(cfg.cmapneurons, 'auto'), cfg.cmapneurons = colormap_cgbprb(nUnits); end
   if isrealmat(cfg.cmapneurons) && all(size(cfg.cmapneurons) ./ [nUnits 3])
     color = cfg.cmapneurons(iUnit,:);
-  elseif iscell(cfg.cmapneurons) && length(cfg.cmapneurons)==nUnits
-    color = cfg.cmapneurons{iUnit};
   else
     error('MATLAB:ft_spike_plot_raster:cfg:cmapneurons:unknownOption',...
-      'cfg.cmapneurons should be nUnits-by-3 matrix or 1-by-nUnits cell or "auto"');
+      'cfg.cmapneurons should be nUnits-by-3 matrix or "auto"');
   end
   
   % create axes for the rasterplot, all go to the same position, so do this for unit 1
@@ -204,11 +219,12 @@ for iUnit = 1:nUnits
   end
   
   % make the raster plot and hold on for the next plots
-  rasterHdl = plot(x, y,'linewidth', cfg.linewidth,'Color', color);
+  plot(x, y,'linewidth', cfg.linewidth,'Color', color);
   set(ax(1),'NextPlot', 'add')
   set(ax(1),'Box', 'off')
 end
 
+  
 % create the labels for the first axes
 xlabel('time (sec)')
 ylabel('Trial Number')
@@ -246,8 +262,39 @@ if doTopData
     for iUnit = 1:nUnits
       set(avgHdl(iUnit),'Color',cfg.cmapneurons(iUnit,:));
     end
-  end
-  
+
+    if ~strcmp(cfg.errorbars,'no')
+      if ~isfield(topData,'var')  || ~isfield(topData,'dof')      
+        error('MATLAB:ft_spike_plot_psth:cfg:var',...
+          'cfg.topdata should contain field .var and .dof for errorbars');
+      end
+      df = topData.dof(binSel);
+      df = repmat(df(:)',[nUnits 1]);
+      if strcmp(cfg.errorbars, 'sem')
+        err = sqrt(topData.var(unitIndx,binSel)./df);
+      elseif strcmp(cfg.errorbars, 'std')
+        err = sqrt(topData.var(unitIndx,binSel));
+      elseif strcmp(cfg.errorbars, 'var')
+        err = topData.var(unitIndx,binSel);
+      elseif strcmp(cfg.errorbars, 'conf95%')
+        % use a try statement just in case the statistics toolbox doesn't work.
+        tCrit = tinv(0.975,df);
+        err = tCrit.*sqrt(topData.var(unitIndx,binSel)./df); % assuming normal distribution, SHOULD BE REPLACED BY STUDENTS-T!
+      end
+      err(~isfinite(err)) = NaN;
+      for iUnit = 1:nUnits
+        upb = y(iUnit,binSel) + err(iUnit,binSel);
+        lowb = y(iUnit,binSel) - err(iUnit,binSel);
+        sl   = ~isnan(upb);
+        t    = topData.time(binSel);
+        [X,Y] = polygonconf(t(sl),upb(sl)+0.0001,lowb(sl)-0.0001);
+        hold on
+        hd = plot(X,Y,'-');
+        set(hd,'Color', cfg.cmapneurons(iUnit,:));
+        hold on
+      end
+    end
+  end    
   % modify the axes
   set(ax(2),'YAxisLocation', 'right') % swap y axis location
   set(ax(2),'XTickLabel', {}) % remove ticks and labels for x axis
@@ -267,20 +314,17 @@ set(ax,'XLim', [cfg.latency])
 set(ax(1), 'YLim', [0.5 nTrialsOrig+0.5]); % number of trials
 set(ax,'TickDir','out') % put the tickmarks outside
 
-% collect the handles
-hdl.raster = rasterHdl;
-if doTopData,                 hdl.top = avgHdl;       end
-hdl.ax     = ax;
-
 % now link the axes, constrain zooming and keep ticks intact
 limX       = [cfg.latency];
 limY       = get(ax,'YLim');
 if ~iscell(limY), limY = {limY}; end
 
-% constrain the zooming and zoom psth together with the jpsth, remove ticklabels jpsth
-set(zoom,'ActionPostCallback',{@mypostcallback,ax,limX,limY});
-set(pan,'ActionPostCallback',{@mypostcallback,ax,limX,limY});
-hdl.cfg = cfg;
+% constrain the zooming and zoom psth together with the jpsth, remove
+% ticklabels jpsth
+if strcmp(cfg.interactive,'yes')
+  set(zoom,'ActionPostCallback',{@mypostcallback,ax,limX,limY});
+  set(pan,'ActionPostCallback',{@mypostcallback,ax,limX,limY});
+end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
@@ -306,18 +350,6 @@ xlim = get(ax(indx), 'XLim');
 if lim(1)>xlim(1), xlim(1) = lim(1); end
 if lim(2)<xlim(2), xlim(2) = lim(2); end
 set(ax,'XLim', xlim)
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [X,Y] = polygon(x,mn,sm,multiplier)
-if nargin < 4
-  multiplier = 1;
-end
-X = [x x(end:-1:1) x(1)];
-up = mn + multiplier*sm;
-down = mn - multiplier*sm;
-Y = [down up(end:-1:1) down(1)];
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -374,3 +406,14 @@ else
     colorspace = [colorspace;subColors];
   end
 end
+
+function [X,Y] = polygon(x,sm1,sm2,multiplier)
+
+x = x(:)';
+if nargin < 4
+    multiplier = 1;
+end
+X = [x x(end:-1:1) x(1)];
+up = sm1(:)';
+down = sm2(:)';
+Y = [down up(end:-1:1) down(1)];
