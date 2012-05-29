@@ -1,4 +1,4 @@
-function [realign] = ft_volumerealign(cfg, mri)
+function [realign, h] = ft_volumerealign(cfg, mri)
 
 % FT_VOLUMEREALIGN spatially aligns an anatomical MRI with head coordinates
 % based on external fiducials or anatomical landmarks. This function does
@@ -57,15 +57,23 @@ function [realign] = ft_volumerealign(cfg, mri)
 % When cfg.method = 'interactive', a user interface allows for the
 % specification of the fiducials or landmarks using the mouse, cursor keys
 % and keyboard. Using the n/l/r keys the fiducials can be specified, the
-% landmarks can be specified with a/p/z. When pressing q the 
+% landmarks can be specified with a/p/z. When pressing q the interactive
+% mode will stop and the transformation matrix is computed. This method
+% also supports the cfg-option:
+%  cfg.snapshot = 'no' ('yes'), making a snapshot of the image once a
+%    fiducial or landmark location is selected. For each of the
+%    fiducials/landmarks a new figure is created. The optional second
+%    output argument to the function will contain the handles to these
+%    figures.
 %
 % With the 'interactive' and 'fiducial' methods it is possible to define an
-% additional point, which should be a point on the positive side of the
-% xy-plane, i.e. with a positive z-coordinate in world coordinates. This
-% point will subsequently be used to check whether the input coordinate
-% system is left or right-handed, and the volume will be flipped to yield a
-% consistent right-handed coordinate system, both in the input and output
-% coordinate systems.
+% additional point (with the key 'z'), which should be a point on the
+% positive side of the xy-plane, i.e. with a positive z-coordinate in world
+% coordinates. This point will subsequently be used to check whether the
+% input coordinate system is left or right-handed. For the 'interactive'
+% and 'landmark' methods you can also specify an additional control point
+% (with the key 'r'), that should be a point with a positive coordinate on
+% the left-right axis.
 %
 % To facilitate data-handling and distributed computing with the
 % peer-to-peer module, this function has the following options:
@@ -122,6 +130,7 @@ cfg.parameter  = ft_getopt(cfg, 'parameter', 'anatomy');
 cfg.clim       = ft_getopt(cfg, 'clim',      []);
 cfg.inputfile  = ft_getopt(cfg, 'inputfile', '');
 cfg.outputfile = ft_getopt(cfg, 'outputfile', '');
+cfg.snapshot   = ft_getopt(cfg, 'snapshot',  false);
 
 if strcmp(cfg.method, '')
   if isempty(cfg.landmark) && isempty(cfg.fiducial)
@@ -145,6 +154,11 @@ end
 
 basedonmrk = strcmp(cfg.method, 'landmark');
 basedonfid = strcmp(cfg.method, 'fiducial');
+
+% these two have to be simultaneously true for a snapshot to be taken
+dosnapshot   = istrue(cfg.snapshot);
+takesnapshot = false;
+
 
 % select the parameter that should be displayed
 cfg.parameter = parameterselection(cfg.parameter, mri);
@@ -232,23 +246,42 @@ switch cfg.method
       markers = {markerpos markerlabel markercolor};
       [h1, h2, h3] = volplot(x, y, z, dat, [xc yc zc], cfg.clim, showcrosshair, updatepanel, handles, showmarkers, markers);
       drawnow;
+      if dosnapshot && takesnapshot
+        % create a new figure and draw right away, this will keep the old one on the screen
+        h(end+1) = figure;
+        h1 = subplot('position',[0.02 0.55 0.44 0.44]);%subplot(2,2,1);
+        h2 = subplot('position',[0.52 0.55 0.44 0.44]);%subplot(2,2,2);
+        h3 = subplot('position',[0.02 0.05 0.44 0.44]);%subplot(2,2,3);
+        handles = {h1 h2 h3};
+        [h1, h2, h3] = volplot(x, y, z, dat, [xc yc zc], cfg.clim, showcrosshair, updatepanel, handles, showmarkers, markers);
+        drawnow;
+      end
+      takesnapshot = false;
+      
       try, [d1, d2, key] = ginput(1); catch, key='q'; end
       switch key
         case 113 % 'q'
-          delete(h);
+          delete(h(end));
+          h = h(1:end-1);
           break;
         case 108 % 'l'
           lpa = [xc yc zc];
+          takesnapshot = true;
         case 114 % 'r'
           rpa = [xc yc zc];
+          takesnapshot = true;
         case 110 % 'n'
           nas = [xc yc zc];
+          takesnapshot = true;
         case 97  % 'a'
           antcomm = [xc yc zc];
+          takesnapshot = true;
         case 112 % 'p'
           pstcomm = [xc yc zc];
+          takesnapshot = true;
         case 122 % 'z'
           xzpoint = [xc yc zc];
+          takesnapshot = true;
         case 99  % 'c'
           showcrosshair = true;
         case 67  % 'C'
