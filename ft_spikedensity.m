@@ -263,8 +263,9 @@ for iTrial = 1:nTrials
     y([1:nLeftSamples end-nRightSamples+1:end]) = NaN; % assign NaN at borders
     
     if nargout==2
-      sdfdata.trial{iTrial}(iUnit,:) = y;
-      sdfdata.time{iTrial}(1,:)  = trialTime; % write back original time axis
+      sl = ~isnan(y);
+      sdfdata.trial{iTrial}(iUnit,:) = y(sl);
+      sdfdata.time{iTrial}(1,:)  = trialTime(sl); % write back original time axis
     end
     
     dofsel = ~isnan(y);%true(1,length(y));
