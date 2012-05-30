@@ -74,26 +74,28 @@ cfg.trl = double(cfg.trl);
 for iUnit = 1:nUnits
   ts = spike.timestamp{iUnit}(:);
   [ts,indx] = sort(double(ts)); % just sort for safety
-  ignoreWave = 0;
+  
+  % take care of the waveform and make [1 x Samples x Spikes] per default
+  ignoreWave = 1;
   if isfield(spike, 'waveform')
     % find the dimension where we have to select
     sz        = size(spike.waveform{iUnit});
     N         = length(ts);
-    if length(sz)==3
-      waveform = spike.waveform{iUnit}(:,:,indx);
-    elseif length(sz)==2 && sz(2)==N
-      waveform  = spike.waveform{iUnit}(:,indx);
-    elseif length(sz)==2 && sz(1)==N
-      waveform  = spike.waveform{iUnit}(indx,:)'; % first dim must be spikes
-      fprintf('forcing second dimension of .waveform to be spikes\n')
-    else
-      ignoreWave = 1;
-      fprintf('Number of waveforms does not match number of spikes\n')
+    if length(sz)==2
+      if length(N)==sz(2)
+        permord = [3 1 2];
+      elseif length(N)==sz(1)
+        permord = [3 2 1];
+      end
+      spike.waveform{iUnit} = permute(spike.waveform{iUnit}, permord);
     end
-  else
-    ignoreWave = 1;
+    if ~any(sz==N), 
+      ignoreWave = 1;
+    else
+      ignoreWave = 0;
+    end
   end
-  
+         
   % check if the events are overlapping or not
   events = double(cfg.trl(:,1:2))'; %2-by-nTrials now
   if ~issorted(events(:))
@@ -128,15 +130,13 @@ for iUnit = 1:nUnits
   spike.trial{iUnit}  = trialNum(:)';
   spike.trialtime     = time;
   if isfield(spike, 'waveform') && ~ignoreWave
-    if length(size(waveform))==3
-      spike.waveform{iUnit} = waveform(:,:,sel);
-    else
-      spike.waveform{iUnit} = waveform(:,sel);
-    end
+    spike.waveform{iUnit} = spike.waveform{iUnit}(:,:,sel);
+    spike.waveformdimord  = 'lead_samples_spikes';
   end
   ts = spike.timestamp{iUnit}(indx(sel));
   spike.timestamp{iUnit} = ts(:)';
 end
+spike.sampleinfo         = cfg.trl(:,1:2);
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig

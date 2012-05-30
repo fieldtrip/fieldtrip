@@ -210,6 +210,9 @@ if (strcmp(cfg.keeptrials,'yes'))
 else
   psth.dimord = 'chan_time';
 end
+if isfield(spike,'sampleinfo')
+  psth.sampleinfo = spike.sampleinfo(cfg.trials,:);
+end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
