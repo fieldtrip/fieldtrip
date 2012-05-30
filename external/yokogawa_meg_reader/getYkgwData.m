@@ -48,4 +48,4 @@
 %   1 : 2011.01.24 : Not apply averaged gain to reference channels if system id is 1000 later. 
 %   0 : 2010.06.24 : first release
 % 
-% Copyright (C) 2011 Yokogawa Electric Corporation, All Rights Reserved.
+% Copyright (C) 2010-2011 Yokogawa Electric Corporation, All Rights Reserved.

@@ -69,4 +69,4 @@
 %   1 : 2011.02.14 : 1st argument is modified from file ID to file path.
 %   0 : 2010.06.24 : first release
 % 
-% Copyright (C) 2011 Yokogawa Electric Corporation, All Rights Reserved.
+% Copyright (C) 2010-2011 Yokogawa Electric Corporation, All Rights Reserved.
