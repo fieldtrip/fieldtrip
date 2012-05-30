@@ -10,7 +10,12 @@ function [psth] = ft_spike_psth(cfg,spike)
 % within the function)
 %
 % Configurations:
-%   cfg.binsize          =  [binsize] in sec (default = 0.025 sec);
+%   cfg.binsize          =  [binsize] in sec or 'auto' (default). If
+%                          'auto', we estimate the optimal bin width using
+%                          Scott's formula (1979). The optimal bin width is
+%                          derived over all neurons; thus, this procedure
+%                          works best if the input contains only one neuron
+%                          at a time.
 %   cfg.outputunit       = 'rate' (default) or 'spike'. If 'rate', we convert
 %                          the output per trial to firing rates (spikes/sec).
 %                          If 'spike', we count the number spikes per trial.
@@ -34,8 +39,7 @@ function [psth] = ft_spike_psth(cfg,spike)
 %   cfg.keeptrials       = 'yes' or 'no' (default).
 %
 % Outputs:
-%   Psth is a structure similar to FT_TIMELOCKANALYSIS or
-%   FT_SPIKE_DENSITY with the fields
+%   Psth is a structure similar to FT_TIMELOCKANALYSIS or FT_SPIKE_DENSITY with the fields
 %     Psth.time        = center histogram bin points
 %	    Psth.fsample 		 = 1/binsize;
 %     Psth.avg         = contains average PSTH per unit
@@ -63,7 +67,7 @@ spike = ft_checkdata(spike,'datatype', 'spike', 'feedback', 'yes');
 
 % get the default options
 cfg.outputunit   = ft_getopt(cfg, 'outputunit','rate');
-cfg.binsize      = ft_getopt(cfg, 'binsize',0.025);
+cfg.binsize      = ft_getopt(cfg, 'binsize','auto');
 cfg.spikechannel = ft_getopt(cfg, 'spikechannel', 'all');
 cfg.trials       = ft_getopt(cfg, 'trials', 'all');
 cfg.latency      = ft_getopt(cfg,'latency','maxperiod');
@@ -72,7 +76,7 @@ cfg.keeptrials   = ft_getopt(cfg,'keeptrials', 'yes');
 
 % ensure that the options are valid
 cfg = ft_checkopt(cfg,'outputunit','char', {'rate', 'spikecount'});
-cfg = ft_checkopt(cfg,'binsize', 'doublescalar');
+cfg = ft_checkopt(cfg,'binsize', {'char', 'doublescalar'});
 cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});
 cfg = ft_checkopt(cfg,'latency', {'char', 'doublevector'});
 cfg = ft_checkopt(cfg,'trials', {'char', 'doublevector', 'logical'}); 
@@ -101,6 +105,20 @@ end
 
 % select the latencies, use the same modular function in all the scripts
 cfg = latencyselection(cfg,begTrialLatency,endTrialLatency);
+
+
+% compute the optimal bin width if desired
+binsize = [];
+if strcmp(cfg.binsize,'auto')
+  for iUnit = 1:nUnits
+    unitIndx       = spikesel(iUnit); % select the unit
+    spikesInWin    = spike.time{unitIndx}>=cfg.latency(1) & spike.time{unitIndx}<=cfg.latency(2); % get spikes in trial
+    sd             = nanstd(spike.time{unitIndx}(spikesInWin));
+    N              = sum(spikesInWin);
+    binsize(iUnit) = 3.49*sd*(N^(1/3));
+  end
+  cfg.binsize = nanmean((cfg.latency(2)-cfg.latency(1))./binsize);
+end
 
 % do some error checking on the binsize
 if cfg.binsize<=0 || cfg.binsize>(cfg.latency(2)-cfg.latency(1)),
