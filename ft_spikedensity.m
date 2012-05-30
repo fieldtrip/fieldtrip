@@ -54,8 +54,7 @@ function [sdf, sdfdata] = ft_spikedensity(cfg,data)
 %   - SDF is a structure similar to TIMELOCK (output from FT_TIMELOCKANALYSIS) and can be used
 %     in FT_TIMELOCKSTATISTICS for example.
 %   - SDFDATA is a raw DATA type structure that can be used itself in all
-%   functions that support
-%     raw data input (such as FT_TIMELOCKANALYSIS, FT_FREQANALYSIS).
+%   functions that support raw data input (such as FT_TIMELOCKANALYSIS, FT_FREQANALYSIS).
 
 % TODO: check that SDFDATA is indeed completely compatible!
 
@@ -265,7 +264,7 @@ for iTrial = 1:nTrials
     
     if nargout==2
       sdfdata.trial{iTrial}(iUnit,:) = y;
-      sdfdata.time{iTrial}(iUnit,:)  = trialTime; % write back original time axis
+      sdfdata.time{iTrial}(1,:)  = trialTime; % write back original time axis
     end
     
     dofsel = ~isnan(y);%true(1,length(y));
@@ -305,7 +304,7 @@ if (strcmp(cfg.keeptrials,'yes'))
 else
   sdf.dimord = 'chan_time';
 end
-
+  
 % create a new structure that is a standard raw data spike structure itself
 % this is returned as second output argument
 sdfdata.fsample              = fsample;
