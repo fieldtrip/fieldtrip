@@ -48,15 +48,14 @@ ft_preamble trackconfig
 data = ft_checkdata(data,'datatype', 'raw', 'feedback', 'yes');
 
 % these were supported in the past, but are not any more (for consistency with other spike functions)
-cfg = ft_checkconfig(cfg, 'forbidden', 'inputfile', ...
-                                       'outputfile');  % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1056
+cfg = ft_checkconfig(cfg, 'forbidden', {'inputfile', 'outputfile'});  
 
 %get the options
 cfg.timwin       = ft_getopt(cfg, 'timwin',[-0.1 0.1]);
 cfg.spikechannel = ft_getopt(cfg,'spikechannel', []);
 cfg.channel      = ft_getopt(cfg,'channel', 'all');
-cfg.keeptrials   = ft_checkopt(cfg,'keeptrials', 'char', {'yes', 'no'});
-cfg.feedback     = ft_checkopt(cfg,'feedback', 'yes');
+cfg.keeptrials   = ft_getopt(cfg,'keeptrials', 'yes');
+cfg.feedback     = ft_getopt(cfg,'feedback', 'yes');
 
 % ensure that the options are valid
 cfg = ft_checkopt(cfg,'timwin','doublevector');
