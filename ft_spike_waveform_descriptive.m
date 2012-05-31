@@ -38,6 +38,7 @@ function [wave,spike] = ft_spike_waveform_descriptive(cfg,spike)
 %
 %  Copyright (C) 2012, Martin Vinck & Thilo Womelsdorf
 %
+% $Id$
 
 revision = '$Id$';
 
