@@ -30,7 +30,7 @@ function spike = ft_datatype_spike(spike, varargin)
 % contains the waveforms for every unit and label as a cell-array. For
 % example, the content of this field may be
 %
-%         waveform:   {[32x993 double] [32x423 double] [32x3224 double]}
+%         waveform:   {[1x32x993 double] [1x32x423 double] [1x32x3224 double]}
 %
 % If the data has been organised to reflect the temporal structure of the
 % experiment (i.e. the trials), the SPIKE structure should contain a
@@ -59,12 +59,13 @@ function spike = ft_datatype_spike(spike, varargin)
 % SPIKE structure that represents the spikes of three units that were
 % observed in 100 trials:
 %
-%         label:      {'unit1'  'unit2'  'unit3'}
-%         timestamp:  {[1x504 double] [1x50 double] [1x101 double]}
-%         time:       {[1x504 double] [1x50 double] [1x101 double]}
-%         trial:      {[1x504 double] [1x50 double] [1x101 double]}
-%         trialtime:  [100x2 double]
-%         waveform:   {[32x504 double] [32x50 double] [32x101 double]}
+%         label:           {'unit1'  'unit2'  'unit3'}
+%         timestamp:       {[1x504 double] [1x50 double] [1x101 double]}
+%         time:            {[1x504 double] [1x50 double] [1x101 double]}
+%         trial:           {[1x504 double] [1x50 double] [1x101 double]}
+%         trialtime:       [100x2 double]
+%         waveform:        {[1x32x504 double] [1x32x50 double] [1x32x101 double]}
+%         waveformdimord: '{chan}_lead_time_spike'
 %         cfg
 %
 % For analysing the relation between the spikes and the local field
@@ -78,7 +79,8 @@ function spike = ft_datatype_spike(spike, varargin)
 %         time:           {[1x504 double] [1x50 double] [1x101 double]}
 %         trial:          {[1x504 double] [1x50 double] [1x101 double]}
 %         trialtime:      [100x2 double]
-%         waveform:       {[32x504 double] [32x50 double] [32x101 double]}
+%         waveform:       {[1x32x504 double] [1x32x50 double] [1x32x101 double]}
+%         waveformdimord: '{chan}_lead_time_spike'
 %         fourierspctrm:  {504x2x20, 50x2x20, 101x2x20}
 %         fourierspctrmdimord: '{chan}_spike_lfplabel_freq'
 %         lfplabel:       {'lfpchan1', 'lfpchan2'}
@@ -86,23 +88,27 @@ function spike = ft_datatype_spike(spike, varargin)
 %         cfg
 %
 % Required fields:
-%   - the combination label and timestamp, or
-%   - the combination label, time, trial and trialtime
+%   - the combination label and timestamp
 %
 % Optional fields:
-%   - waveform
+%   - unit
+%   - time, trial, trialtime
+%   - waveform, waveformdimord
 %   - fourierspctrm, fourierspctrmdimord, freq, lfplabel  (these are extra outputs from FT_SPIKETRIGGEREDSPECTRUM and FT_SPIKE_TRIGGEREDSPECTRUM)
 %   - hdr
 %   - cfg
 %
 % Deprecated fields:
-%   - <unknown>
+%   - origtime, origtrial
 %
 % Obsoleted fields:
 %   - <unknown>
 %
 % Revision history:
 %
+% (2012) Changed the dimensionality of the waveform to allow both
+% stereotrode and tetrode data to be represented.
+% 
 % (2011/latest) Defined a consistent spike data representation that can
 % also contain the Fourier spectrum and other fields. Use the xxxdimord
 % to indicate the dimensions of the field.
@@ -150,6 +156,7 @@ switch version
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     if isfield(spike,'origtrial') && isfield(spike,'origtime')
+      % this was the old spiketriggered spectrum output
       warning('The spike datatype format you are using is depreciated. Converting to newer spike format');
       spike.trial = {spike.origtrial};
       spike       = rmfield(spike,'origtrial');      
@@ -167,8 +174,47 @@ switch version
         spike.trialtime = [tsmin*ones(tmax,1) tsmax*ones(tmax,1)];
       end
       spike.lfplabel = spike.label; % in the old format, these were the lfp channels
-      spike.label    = {'unit1'};
+      try
+        spike.label    = spike.cfg.spikechannel;
+      catch
+        {'unit1'}; %default
+      end
       spike.fourierspctrmdimord = '{chan}_spike_lfplabel_freq';
+    end
+    
+    % fix the waveform dimensions
+    if isfield(spike,'waveform')
+      nUnits = length(spike.waveform);
+      hasdat = false(1,nUnits);
+      for iUnit = 1:nUnits
+        hasdat(iUnit) = ~isempty(spike.waveform{iUnit});
+      end
+      
+      if any(hasdat) %otherwise, ignore
+        if ~isfield(spike, 'waveformdimord')
+          spike.waveformdimord = '{chan}_lead_time_spike';
+        end
+        % fix the dimensions of the waveform dimord.
+        for iUnit = 1:nUnits
+          dim = size(spike.waveform{iUnit});
+          if length(dim)==2 && ~isempty(spike.waveform{iUnit})
+            nSpikes = length(spike.timestamp{iUnit}); % check what's the spike dimension from the timestamps            
+            spikedim = dim==nSpikes;
+            if isempty(spikedim)
+              error('waveforms contain data but number of waveforms does not match number of spikes');
+            end
+            if spikedim==1
+              spike.waveform{iUnit} = permute(spike.waveform{iUnit},[3 2 1]);
+            else
+              spike.waveform{iUnit} = permute(spike.waveform{iUnit},[3 1 2]);
+            end    
+            
+          end
+          
+        end
+        
+      end
+      
     end
     
   otherwise
