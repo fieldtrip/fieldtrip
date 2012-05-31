@@ -58,8 +58,7 @@ ft_preamble trackconfig
 data = ft_checkdata(data,'datatype', 'raw', 'feedback', 'yes');
 
 % these were supported in the past, but are not any more (for consistency with other spike functions)
-cfg = ft_checkconfig(cfg, 'forbidden', 'inputfile', ...
-                                       'outputfile');  % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1056
+cfg = ft_checkconfig(cfg, 'forbidden', {'inputfile', 'outputfile'});  
 
 %get the options
 cfg.timwin         = ft_getopt(cfg, 'timwin',[-0.1 0.1]);
@@ -67,15 +66,13 @@ cfg.spikechannel   = ft_getopt(cfg,'spikechannel', []);
 cfg.channel        = ft_getopt(cfg,'channel', 'all');
 cfg.feedback       = ft_getopt(cfg,'feedback', 'yes');
 cfg.method         = ft_getopt(cfg,'method', 'nan');
-cfg.outputexamples = ft_getopt(cfg,'outputexamples', 'no');
 
 % ensure that the options are valid
 cfg = ft_checkopt(cfg,'timwin','doublevector');
 cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});
 cfg = ft_checkopt(cfg,'channel', {'cell', 'char', 'double'});
 cfg = ft_checkopt(cfg,'feedback', 'char', {'yes', 'no'});
-cfg = ft_checkopt(cfg,'method', 'char', {'method', 'interp'});
-cfg = ft_checkopt(cfg,'outputexamples', 'char', {'yes', 'no'});
+cfg = ft_checkopt(cfg,'method', 'char');
 if strcmp(cfg.method, 'nan')
   cfg.interptoi = 0;
 else
@@ -125,11 +122,6 @@ interppad = round( cfg.interptoi*data.fsample);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % interpolate the LFP around the spikes
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% this is for storing the examples
-cnte = 0;
-spkexample = {};
-
 for i=1:ntrial
   spikesmp = find(data.trial{i}(spikesel,:));
   
@@ -163,25 +155,13 @@ for i=1:ntrial
       yi    = interp1(x,y,xall,cfg.method);
       
       % store the interpolated segment back in the data
-      data.trial{i}(chansel,xall) = yi;
-      
-      if strcmp(cfg.outputexamples, 'yes') && (cnte<100)
-        yall = data.trial{i}(chansel,xall);
-        cnte = cnte+1;
-        spkexample{cnte} = [ xall; yall; yi];
-        % plot(x,y,'r.',xall,yall,'bo',xall,yi,'g-d')
-      end
-      
+      data.trial{i}(chansel,xall) = yi;            
     end % if strcmp(cfg.method)
     
   end % for each spike in this trial
   ft_progress('close');
   
 end % for each trial
-
-if strcmp(cfg.outputexamples, 'yes')
-  data.spkexample = spkexample;
-end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the data has been modified on the fly, only update the configuration
