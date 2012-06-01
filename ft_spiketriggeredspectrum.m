@@ -7,7 +7,7 @@ function [sts] = ft_spiketriggeredspectrum(cfg, data)
 %   [sts] = ft_spiketriggeredspectrum(cfg, data)
 %
 % The input data should be organised in a structure as obtained from
-% the FT_APPENDSPIKE or FT_SPIKE_SPIKE2DATA function. The configuration should be according to
+% the FT_APPENDSPIKE. The configuration should be according to
 %
 %   cfg.timwin       = [begin end], time around each spike (default = [-0.1 0.1])
 %   cfg.foilim       = [begin end], frequency band of interest (default = [0 150])
@@ -22,8 +22,9 @@ function [sts] = ft_spiketriggeredspectrum(cfg, data)
 %   cfg.feedback     = 'no', 'text', 'textbar', 'gui' (default = 'no')
 %
 % If the triggered spike leads a spike in another channel, then the angle
-% of the Fourier spectrum of that other channel will be negative. NOTE that
-% this should be checked for consistency.
+% of the Fourier spectrum of that other channel will be negative. 
+% Earlier phases are in clockwise direction.
+% See FT_SPIKE_PHASELOCKSTAT to compute stats on STS
 
 % FIXME this function should be merged with ft_spike_triggeredspectrum
 %
