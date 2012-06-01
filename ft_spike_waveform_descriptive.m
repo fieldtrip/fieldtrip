@@ -143,6 +143,7 @@ for iUnit = 1:nUnits
   waves(:,:,toRemove) = [];    
   fprintf('Removing %d spikes from unit %s\n', length(toRemove), spike.label{spikeindx});
   [nLeads nSamples nSpikes] = size(waves);          
+  fprintf('Keeping %d spikes from unit %s\n', nSpikes, spike.label{spikeindx});
   
   % allign the waveforms automatically to the peak index
   % the same allignment must be done for the four leads of a trode
