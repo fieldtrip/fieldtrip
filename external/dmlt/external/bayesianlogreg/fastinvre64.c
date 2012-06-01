@@ -6,6 +6,9 @@
  * compile with mex -largeArrayDims fastinvre64.c
  *
  * Marcel van Gerven, 2009
+ *
+ * 01-06-2012: Memory leak fixed by Tomi Peltola
+ *
  */
 
 /* the gateway function */
@@ -32,23 +35,20 @@ void mexFunction( int nlhs, mxArray *plhs[],
   S = mxCreateSparse(n64,n64, nzS64, mxREAL);
   
   /* initialize the covariance matrix */
-	mxSetPr(S, mxCalloc(nzS64, sizeof(double)));  
   prS64 = mxGetPr(S);
     
   cirS = mxGetPr(prhs[1]);
-  irS64 = mxCalloc(nzS64, sizeof(mwIndex));  
+  irS64 = mxGetIr(S);
   for (k64=0;k64<nzS64;k64++) {
     irS64[k64] = (mwIndex)cirS[k64];
   }    
-  mxSetIr(S, irS64);  
 
    
   cjcS = mxGetPr(prhs[2]);
-  jcS64 = mxCalloc(n64+1, sizeof(mwIndex));  
+  jcS64 = mxGetJc(S);
   for (k64=0;k64<=n64;k64++) {
     jcS64[k64] = (mwIndex)(cjcS[k64]);
   }    
-  mxSetJc(S, jcS64);
 
   /* number of rows and columns in L */
   n64 = mxGetN(L);
