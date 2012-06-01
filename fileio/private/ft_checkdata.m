@@ -22,7 +22,7 @@ function [data] = ft_checkdata(data, varargin)
 %   ismeg              = yes, no
 %   hastrials          = yes, no
 %   hasunits           = yes, no
-%   hassampleinfo      = yes, no, ifmakessense
+%   hassampleinfo      = yes, no, ifmakessense (only applies to raw data)
 %   hascumtapcnt       = yes, no (only applies to freq data)
 %   hasdim             = yes, no
 %   hasdof             = yes, no
@@ -232,62 +232,74 @@ if ~isempty(dtype)
     for iCell = 1:length(dtype)
       if isequal(dtype(iCell), {'source'}) && isvolume
         data = volume2source(data);
+        data = ft_datatype_source(data);
         isvolume = 0;
         issource = 1;
         okflag = 1;
       elseif isequal(dtype(iCell), {'volume'}) && issource
         data = source2volume(data);
+        data = ft_datatype_volume(data);
         isvolume = 1;
         issource = 0;
         okflag = 1;
       elseif isequal(dtype(iCell), {'raw'}) && issource
         data = data2raw(data);
+        data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
         issource = 0;
         israw = 1;
         okflag = 1;
       elseif isequal(dtype(iCell), {'raw'}) && istimelock
         data = timelock2raw(data);
+        data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
         istimelock = 0;
         israw = 1;
         okflag = 1;
       elseif isequal(dtype(iCell), {'timelock'}) && israw
         data = raw2timelock(data);
+        data = ft_datatype_timelock(data);
         israw = 0;
         istimelock = 1;
         okflag = 1;
       elseif isequal(dtype(iCell), {'raw'}) && isfreq
         data = freq2raw(data);
+        data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
         isfreq = 0;
         israw = 1;
         okflag = 1;
       elseif isequal(dtype(iCell), {'raw'}) && iscomp
         data = comp2raw(data);
+        data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
         iscomp = 0;
         israw = 1;
         okflag = 1;
       elseif isequal(dtype(iCell), {'timelock'}) && iscomp
         data = comp2raw(data);
         data = raw2timelock(data);
+        data = ft_datatype_timelock(data);
         iscomp = 0;
         istimelock = 1;
         okflag = 1;
       elseif isequal(dtype(iCell), {'timelock'}) && ischan
         data = chan2timelock(data);
+        data = ft_datatype_timelock(data);
         ischan = 0;
         istimelock = 1;
         okflag = 1;
       elseif isequal(dtype(iCell), {'freq'}) && ischan
         data = chan2freq(data);
+        data = ft_datatype_freq(data);
         ischan = 0;
         isfreq = 1;
         okflag = 1;
       elseif isequal(dtype(iCell), {'spike'}) && israw
         data = raw2spike(data);
+        data = ft_datatype_spike(data);
         israw = 0;
         isspike = 1;
         okflag = 1;
       elseif isequal(dtype(iCell), {'raw'}) && isspike
         data = spike2raw(data,fsample);
+        data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
         isspike = 0;
         israw   = 1;
         okflag  = 1;                
@@ -602,10 +614,6 @@ if isequal(hastrials, 'yes')
   if ~okflag
     error('This function requires data with a ''trial'' field');
   end % if okflag
-end
-
-if isequal(hassampleinfo, 'yes') || isequal(hassampleinfo, 'ifmakessense')
-  data = fixsampleinfo(data);
 end
 
 if isequal(hasdim, 'yes') && ~isfield(data, 'dim')
