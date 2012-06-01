@@ -42,6 +42,7 @@ function [stat] = ft_spike_phaselockstat(cfg,sts)
 %   References:
 %   Vinck et al. (2010) Neuroimage
 %   Vinck et al. (2011) Journal of Computational Neuroscience
+%   Applications: Womelsdorf et al. (2012), PNAS
 
 %   Copyright (c) Martin Vinck (2011), University of Amsterdam.
 %
@@ -153,6 +154,7 @@ sts.fourierspctrm{unitsel} = sts.fourierspctrm{unitsel}(cfg.spikesel,chansel,fre
 sts.time{unitsel}          = sts.time{unitsel}(cfg.spikesel);
 sts.trial{unitsel}         = sts.trial{unitsel}(cfg.spikesel);
 
+% average the lfp channels (weighted or not)
 if strcmp(cfg.powweighted,'no')
   sts.fourierspctrm{unitsel} = sts.fourierspctrm{unitsel} ./ abs(sts.fourierspctrm{unitsel}); % normalize the angles
   if strcmp(cfg.chanavg,'yes')
@@ -171,7 +173,7 @@ else
   end
 end 
   
-% implement the new function
+% check the final set of trials present in the spikes
 trials = unique(sts.trial{unitsel});
 
 % loop init for PPC 2.0
@@ -181,10 +183,11 @@ nTrials = length(trials);
 for iTrial = 1:nTrials % compute the firing rate
     trialNum      = trials(iTrial);
     spikesInTrial = find(sts.trial{unitsel} == trialNum);
-    spcU           = sts.fourierspctrm{unitsel}(spikesInTrial,:,:);
+    spcU          = sts.fourierspctrm{unitsel}(spikesInTrial,:,:);
     spc           = spcU./abs(spcU);
     
-    % compute PPC 2.0
+    % compute PPC 2.0 according to Vinck et al. (2011) using summation per
+    % trial
     if ~isempty(spc)
       m = nanmean(spc,1); % no problem with NaN
       hasNum = ~isnan(m);
@@ -218,17 +221,17 @@ ang  = angularmean(sts.fourierspctrm{unitsel},1);
 stat.doftrial = dof;
 dof    = sum(~isnan(sts.fourierspctrm{unitsel}),1);
 
-stat.ppc0      = ppc0;
-stat.ppc1      = ppc1;
-stat.ppc2      = ppc2;
+stat.ppc0      = shiftdim(ppc0);
+stat.ppc1      = shiftdim(ppc1);
+stat.ppc2      = shiftdim(ppc2);
 stat.label     = sts.label(unitsel);
 stat.dofspike  = dof;    % also cross-unit purposes
-stat.ang       = ang;
-stat.ral       = ral;
-stat.plv       = resultantlength(sts.fourierspctrm{unitsel},1);
+stat.ang       = shiftdim(ang);
+stat.ral       = shiftdim(ral);
+stat.plv       = shiftdim(resultantlength(sts.fourierspctrm{unitsel},1));
 stat.freq      = sts.freq(freqindx);
 stat.lfplabel  = sts.lfplabel(chansel);
-stat.dimord    = '1_lfpchan_freq';
+stat.dimord    = 'lfpchan_freq';
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
@@ -253,7 +256,6 @@ function [P] = rayleightest(x,dim)
 %      float: double (both complex and real)
 %
 %   See also RESULTANTLENGTH
-%   Copyright 2008 Martin Vinck
 
 n = sum(~isnan(x),dim);
 R = resultantlength(x,dim);    
