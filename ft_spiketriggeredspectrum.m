@@ -25,6 +25,10 @@ function [sts] = ft_spiketriggeredspectrum(cfg, data)
 % of the Fourier spectrum of that other channel will be negative. 
 % Earlier phases are in clockwise direction.
 % See FT_SPIKE_PHASELOCKSTAT to compute stats on STS
+% See FT_SPIKETRIGGEREDINTERPOLATION to remove segments of LFP around
+% spikes
+% See FT_SPIKE_TRIGGEREDSPECTRUM for an alternative implementation
+% combining a DATA (raw; LFP) and SPIKE structure.
 
 % FIXME this function should be merged with ft_spike_triggeredspectrum
 %
