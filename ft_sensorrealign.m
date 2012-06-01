@@ -119,10 +119,7 @@ ft_preamble help
 ft_preamble callinfo
 ft_preamble trackconfig
 
-% this is used for feedback of the lower-level functions
-global fb
-
-% the interactive method uses a global variable to get the  data from the figure when it is closed
+% the interactive method uses a global variable to get the data from the figure when it is closed
 global norm
 
 % set the defaults
@@ -172,13 +169,6 @@ switch cfg.method
   case 'manual'          % manual positioning of the electrodes by clicking in a graphical user interface
     cfg = ft_checkconfig(cfg, 'required', 'headshape', 'forbidden', 'target');
 end % switch cfg.method
-
-if strcmp(cfg.feedback, 'yes')
-  % use the global fb field to tell the warping toolbox to print feedback
-  fb = 1;
-else
-  fb = 0;
-end
 
 % get the electrode definition that should be warped
 if nargin==1

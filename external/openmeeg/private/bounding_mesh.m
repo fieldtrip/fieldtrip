@@ -16,10 +16,8 @@ function [inside] = bounding_mesh(pos, pnt, tri);
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
-global fb;
-if isempty(fb)
-  fb = 0;
-end
+% this can be used for printing detailled user feedback
+fb = false;
 
 npos = size(pos, 1);
 npnt = size(pnt, 1);

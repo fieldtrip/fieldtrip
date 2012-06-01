@@ -48,11 +48,8 @@ function [numA, numB, indA, indB] = spikesort(numA, numB, varargin);
 %
 % $Id$
 
-% use global flag for debugging
-global fb
-if isempty(fb)
-  fb = 0;
-end
+% this can be used for printing detailled user feedback
+fb = false;
 
 % get the options
 presort = ft_getopt(varargin, 'presort');

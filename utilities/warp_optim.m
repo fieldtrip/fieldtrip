@@ -59,7 +59,8 @@ function [result, M] = warp_optim(input, target, method)
 %
 % $Id$
 
-global fb;
+% this can be used for printing detailled user feedback
+fb = false;
 
 if nargin<3
   method='traditional';

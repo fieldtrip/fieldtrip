@@ -27,10 +27,8 @@ function [nearest, distance] = find_nearest(pnt1, pnt2, npart, gridflag)
 %
 % $Id$
 
-global fb;
-if isempty(fb)
-  fb = 0;
-end
+% this can be used for printing detailled user feedback
+fb = false;
 
 if nargin<4
   gridflag = 0;
@@ -84,7 +82,9 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [nearest, distance] = find_nearest_partition(pnt1, pnt2, npart)
 
-global fb;
+% this can be used for printing detailled user feedback
+fb = false;
+
 if isempty(fb)
   fb = 0;
 end

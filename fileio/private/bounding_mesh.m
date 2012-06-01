@@ -32,10 +32,8 @@ function [inside] = bounding_mesh(pos, pnt, tri);
 %
 % $Id$
 
-global fb;
-if isempty(fb)
-  fb = 0;
-end
+% this can be used for printing detailled user feedback
+fb = false;
 
 npos = size(pos, 1);
 npnt = size(pnt, 1);

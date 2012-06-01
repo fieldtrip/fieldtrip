@@ -52,7 +52,8 @@ function [hc] = read_ctf_hc(filename);
 %
 % $Id$
 
-global fb
+% this can be used for printing detailled user feedback
+fb = false;
 
 hc.standard.nas = [0 0 0];
 hc.standard.lpa = [0 0 0];

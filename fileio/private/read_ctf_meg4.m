@@ -45,11 +45,8 @@ function [meg] = read_ctf_meg4(fname, hdr, begsample, endsample, chanindx)
 %
 % $Id$
 
-% use global flag for feedback
-global fb
-if isempty(fb)
-  fb = 0;
-end
+% this can be used for printing detailled user feedback
+fb = false;
 
 nsmp = hdr.nSamples;
 ntrl = hdr.nTrials;
