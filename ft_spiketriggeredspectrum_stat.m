@@ -217,6 +217,9 @@ if strcmp(cfg.timwin,'all')
       % loop init for PPC 2.0
       [S,SS,dof,dofSS] = deal(zeros(1,nChans,nFreqs));
       nTrials = length(trials);
+      if nTrials==1
+        warning('computing ppc1 or ppc2 can only be performed with more than 1 trial');
+      end
       for iTrial = 1:nTrials % compute the firing rate
           trialNum      = trials(iTrial);
           spikesInTrial = find(sts.trial == trialNum);
@@ -316,7 +319,9 @@ else % compute time-resolved spectra of statistic
           trials  = unique(sts.trial);
           nTrials = length(trials);
           [S,SS,dofS,dofSS] = deal(zeros(length(bins)-1,1));
- 
+          if nTrials==1
+             warning('computing ppc1 or ppc2 can only be performed with more than 1 trial');
+          end      
           % compute the new ppc versions
           for iTrial = 1:nTrials
             
