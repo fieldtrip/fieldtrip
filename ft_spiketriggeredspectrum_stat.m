@@ -1,17 +1,17 @@
-function [freq] = ft_spike_phaselockstat(cfg,sts)
+function [freq] = ft_spiketriggeredspectrum_stat(cfg,sts)
 
-% FT_SPIKE_PHASELOCKSTAT computes phase-locking statistics for spike-LFP
+% FT_SPIKETRIGGEREDSPECTRUM_STAT computes phase-locking statistics for spike-LFP
 % phases. These contain the PPC statistics published in Vinck et al. 2010
 % (Neuroimage) and Vinck et al. 2011 (Journal of Computational
 % Neuroscience).
 %
 % Use as:
-%   [STAT = FT_SPIKE_PHASELOCKSTAT(CFG,STS)
+%   [STAT = FT_SPIKETRIGGEREDSPECTRUM_STAT(CFG,STS)
 %
 % Inputs:
-%   STS should be a structure as obtained from from the FT_SPIKE_TRIGGEREDSPECTRUM or FT_SPIKETRIGGEREDSPECTRUM function. 
+%   STS should be a structure as obtained from from the FT_SPIKETRIGGEREDSPECTRUM function. 
 %
-% Configurations (CFG) related to calculation of phaselockingvalue
+% Configurations (cfg) 
 %
 % cfg.method  = string, indicating which statistic to compute. Can be:
 %     -'plv' : phase-locking value, computes the resultant length over spike
@@ -72,7 +72,7 @@ function [freq] = ft_spike_phaselockstat(cfg,sts)
 %     freq.(cfg.method)               =  nChan-by-nFreqs statistic
 %     freq.lfplabel                   =  nChans cell array with LFP labels
 %
-% freq can be plotted using FT_SINGLEPLOTTFR
+% freq can be plotted using ft_singleplotTFR or ft_multiplotTFR
 
 %   Copyright (c) Martin Vinck (2012)
 %
