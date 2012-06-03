@@ -72,6 +72,7 @@ function [freq] = ft_spike_phaselockstat(cfg,sts)
 %     freq.(cfg.method)               =  nChan-by-nFreqs statistic
 %     freq.lfplabel                   =  nChans cell array with LFP labels
 %
+% freq can be plotted using FT_SINGLEPLOTTFR
 
 %   Copyright (c) Martin Vinck (2012)
 %
