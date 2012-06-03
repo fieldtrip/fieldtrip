@@ -3,7 +3,7 @@ function test_ft_spiketriggeredspectrum()
 % TEST test_ft_spiketriggeredspectrum
 % ft_spiketriggeredspectrum
 
-%% create the data, in which spikes fall at known phases, and in which our spike times
+% create the data, in which spikes fall at known phases, and in which our spike times
 % fall precicely on the samples. In this case there is no phase error
 data = [];
 label{1} = 'lfp1';
@@ -58,7 +58,7 @@ data.trial = trial;
 data.cfg = cfg;
 data.hdr = struct([]);
 
-%%
+%
 
 % test with a simple data structure as the input
 cfg = [];
@@ -89,9 +89,7 @@ inTrial = freq2.trial{1}>0;
 phases1 = angle(freq2.fourierspctrm{1}(inTrial,1,foi));
 hold on
 plot(freq2.time{1}(inTrial),phases1,'ro-')
-pause
-close 
-%%
+%
 % test with a simple data structure as the input
 cfg = [];
 cfg.spikechannel = 3;
@@ -120,7 +118,7 @@ cfg.channel = data.label(1:2);
 tic
 freq3 = ft_spiketriggeredspectrum(cfg,data,Spike);
 toc
-%%
+%
 
 
 foi = nearest(freq2.freq,SINFREQ);
@@ -140,8 +138,4 @@ foi = nearest(freq3.freq,SINFREQ);
 inTrial = freq3.trial{1}>0;
 phases1 = angle(freq3.fourierspctrm{1}(inTrial,1,foi));
 plot(freq3.time{1}(inTrial),phases1,'gd-')
-
-pause
-close 
 % NOTE THAT THE PHASE USING THE TRUE TIMES IS MORE RELIABLE!
-%%
