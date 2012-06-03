@@ -66,12 +66,13 @@ function [freq] = ft_spiketriggeredspectrum_stat(cfg,sts)
 %                   'all' (default)
 %
 % Main outputs:
-%     freq.doftrial                   =  nTimepoints-by-nChan-by-nFreqs number of trials
-%     freq.dofspike                   =  nTimepoints-by-nChan-by-nFreqs number of spikes
-%     freq.label                      =  name of unit;
-%     freq.(cfg.method)               =  nChan-by-nFreqs statistic
-%     freq.lfplabel                   =  nChans cell array with LFP labels
-%
+%     freq.nspikes                    =  nChan-by-nFreqs-nTimepoints number
+%                                        of spikes used to compute stat
+%     freq.dimord                     = 'chan_freq_time'
+%     freq.label                      =  nChans cell array with LFP labels;
+%     freq.(cfg.method)               =  nChan-by-nFreqs-nTimepoints  statistic
+%     freq.freq                       =  1xnFreqs array of frequencies
+%     freq.nspikes                    =  number of spikes used to compute
 % freq can be plotted using ft_singleplotTFR or ft_multiplotTFR
 
 %   Copyright (c) Martin Vinck (2012)
