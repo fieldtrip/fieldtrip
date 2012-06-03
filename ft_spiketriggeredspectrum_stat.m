@@ -1,4 +1,4 @@
-function [freq] = ft_spiketriggeredspectrum_stat(cfg,sts)
+function [freq] = ft_spiketriggeredspectrum_stat(cfg,spike)
 
 % FT_SPIKETRIGGEREDSPECTRUM_STAT computes phase-locking statistics for spike-LFP
 % phases. These contain the PPC statistics published in Vinck et al. 2010
@@ -6,10 +6,10 @@ function [freq] = ft_spiketriggeredspectrum_stat(cfg,sts)
 % Neuroscience).
 %
 % Use as:
-%   [STAT = FT_SPIKETRIGGEREDSPECTRUM_STAT(CFG,STS)
+%   [STAT = FT_SPIKETRIGGEREDSPECTRUM_STAT(CFG,SPIKE)
 %
 % Inputs:
-%   STS should be a structure as obtained from from the FT_SPIKETRIGGEREDSPECTRUM function. 
+%   SPIKE should be a structure as obtained from from the FT_SPIKETRIGGEREDSPECTRUM function. 
 %
 % Configurations (cfg) 
 %
@@ -31,7 +31,7 @@ function [freq] = ft_spiketriggeredspectrum_stat(cfg,sts)
 %              spike count.
 %         
 % cfg.timwin  = double or 'all' (default)
-%   - doube: indicates we compute statistic with a
+%   - double: indicates we compute statistic with a
 %            sliding window of cfg.timwin, i.e. time-resolved analysis.
 %   - 'all': we compute statistic over all time-points,
 %            i.e. in non-time resolved fashion.
@@ -87,13 +87,13 @@ ft_preamble help
 ft_preamble callinfo
 ft_preamble trackconfig
 
-% check if the data is of sts format, and convert from old format if required
-sts = ft_checkdata(sts,'datatype', 'spike', 'feedback', 'yes');
+% check if the data is of spike format, and convert from old format if required
+spike = ft_checkdata(spike,'datatype', 'spike', 'feedback', 'yes');
 
 % get the options
 cfg.method         = ft_getopt(cfg,'method', 'ppc1');
 cfg.channel        = ft_getopt(cfg,'channel', 'all');
-cfg.spikechannel   = ft_getopt(cfg,'spikechannel', sts.label{1});
+cfg.spikechannel   = ft_getopt(cfg,'spikechannel', spike.label{1});
 cfg.latency        = ft_getopt(cfg,'latency', 'maxperiod');
 cfg.spikesel       = ft_getopt(cfg,'spikesel', 'all');
 cfg.chanavg        = ft_getopt(cfg,'chanavg', 'no');
@@ -117,11 +117,11 @@ cfg = ft_checkopt(cfg,'winstepsize', {'double'});
 cfg = ft_checkconfig(cfg,'allowed', {'method', 'channel', 'spikechannel', 'latency', 'spikesel', 'chanavg', 'foi', 'trials', 'timwin', 'winstepsize'});
 
 % collect channel information
-cfg.channel        = ft_channelselection(cfg.channel, sts.lfplabel);
-chansel            = match_str(sts.lfplabel, cfg.channel); 
+cfg.channel        = ft_channelselection(cfg.channel, spike.lfplabel);
+chansel            = match_str(spike.lfplabel, cfg.channel); 
 
 % get the spikechannels
-spikelabel       = sts.label;
+spikelabel       = spike.label;
 cfg.spikechannel = ft_channelselection(cfg.spikechannel, spikelabel);
 unitsel          = match_str(spikelabel, cfg.spikechannel);
 nspikesel        = length(unitsel); % number of spike channels
@@ -129,24 +129,24 @@ if nspikesel>1, error('only one unit should be selected for now'); end
 
 % collect frequency information
 if strcmp(cfg.foi, 'all'),  
-  cfg.foi           = sts.freq; 
-  freqindx          = 1:length(sts.freq);
+  cfg.foi           = spike.freq; 
+  freqindx          = 1:length(spike.freq);
 else
   freqindx  = zeros(1,length(foi));
   for iFreq = 1:length(cfg.foi)
-    freqindx(iFreq)         = nearest(sts.freq,cfg.foi(iFreq)); 
+    freqindx(iFreq)         = nearest(spike.freq,cfg.foi(iFreq)); 
   end
 end
 if length(freqindx)~=length(unique(freqindx)) 
   error('Please select every frequency only once, are you sure you selected in Hz?')
 end
 nFreqs     = length(freqindx);
-cfg.foi    = sts.freq(freqindx); % update the information again
+cfg.foi    = spike.freq(freqindx); % update the information again
 
 % create the spike selection 
-nSpikes = length(sts.trial{unitsel});
+nSpikes = length(spike.trial{unitsel});
 if strcmp(cfg.spikesel,'all'), 
-  cfg.spikesel = 1:length(sts.trial{unitsel});
+  cfg.spikesel = 1:length(spike.trial{unitsel});
 elseif islogical(cfg.spikesel)
   cfg.spikesel = find(cfg.spikesel);
 end
@@ -158,63 +158,63 @@ end
   
 % select on basis of latency
 if strcmp(cfg.latency, 'maxperiod'),
-   cfg.latency = [min(sts.trialtime(:)) max(sts.trialtime(:))];
+   cfg.latency = [min(spike.trialtime(:)) max(spike.trialtime(:))];
 elseif strcmp(cfg.latency,'prestim')
-   cfg.latency = [min(sts.trialtime(:)) 0];
+   cfg.latency = [min(spike.trialtime(:)) 0];
 elseif strcmp(cfg.latency,'poststim')
-   cfg.latency = [0 max(sts.trialtime(:))];
+   cfg.latency = [0 max(spike.trialtime(:))];
 elseif ~isrealvec(cfg.latency) && length(cfg.latency)~=2 
    error('cfg.latency should be "maxperiod", "prestim", "poststim" or 1-by-2 numerical vector');
 end
 if cfg.latency(1)>=cfg.latency(2), 
    error('cfg.latency should be a vector in ascending order, i.e., cfg.latency(2)>cfg.latency(1)');
 end
-inWindow = find(sts.time{unitsel}>=cfg.latency(1) & cfg.latency(2)>=sts.time{unitsel});
+inWindow = find(spike.time{unitsel}>=cfg.latency(1) & cfg.latency(2)>=spike.time{unitsel});
 
 % selection of the trials
-cfg        = trialselection(cfg,sts);
+cfg        = trialselection(cfg,spike);
 
-% do the final selection, and select on sts structure
-isintrial    = ismember(sts.trial{unitsel}, cfg.trials);
+% do the final selection, and select on spike structure
+isintrial    = ismember(spike.trial{unitsel}, cfg.trials);
 spikesel     = intersect(cfg.spikesel(:),inWindow(:));
 spikesel     = intersect(spikesel,find(isintrial));
 cfg.spikesel = spikesel; %intersect(spikesel(:),isNum(:));
 spikenum     = length(cfg.spikesel); % number of spikes that were finally selected
 if isempty(spikenum), warning('No spikes were selected after applying cfg.latency, cfg.spikesel and cfg.trials'); end
-sts.fourierspctrm = sts.fourierspctrm{unitsel}(cfg.spikesel,chansel,freqindx);
-sts.time          = sts.time{unitsel}(cfg.spikesel);
-sts.trial         = sts.trial{unitsel}(cfg.spikesel);
+spike.fourierspctrm = spike.fourierspctrm{unitsel}(cfg.spikesel,chansel,freqindx);
+spike.time          = spike.time{unitsel}(cfg.spikesel);
+spike.trial         = spike.trial{unitsel}(cfg.spikesel);
 
 % average the lfp channels (weighted, unweighted, or not)
 if strcmp(cfg.chanavg,'unweighted')
-  sts.fourierspctrm = sts.fourierspctrm ./ abs(sts.fourierspctrm); % normalize the angles before averaging   
-  sts.fourierspctrm = nanmean(sts.fourierspctrm,2); % now rep x 1 x freq
+  spike.fourierspctrm = spike.fourierspctrm ./ abs(spike.fourierspctrm); % normalize the angles before averaging   
+  spike.fourierspctrm = nanmean(spike.fourierspctrm,2); % now rep x 1 x freq
   nChans = 1;
 elseif strcmp(cfg.chanavg,'no')
   nChans = length(chansel);
 elseif strcmp(cfg.chanavg,'weighted')
-  sts.fourierspctrm = nanmean(sts.fourierspctrm,2); % now rep x 1 x freq
+  spike.fourierspctrm = nanmean(spike.fourierspctrm,2); % now rep x 1 x freq
   nChans = 1;
 end
 
 % normalize the spectrum first
-sts.fourierspctrm = sts.fourierspctrm ./ abs(sts.fourierspctrm); % normalize the angles before averaging   
+spike.fourierspctrm = spike.fourierspctrm ./ abs(spike.fourierspctrm); % normalize the angles before averaging   
 
 if strcmp(cfg.timwin,'all')
 
   switch cfg.method
     case 'ang'
-     out  = angularmean(sts.fourierspctrm);
+     out  = angularmean(spike.fourierspctrm);
     case 'plv'
-     out  = resultantlength(sts.fourierspctrm);
+     out  = resultantlength(spike.fourierspctrm);
     case 'ral'
-     out  = rayleightest(sts.fourierspctrm); % the rayleigh test
+     out  = rayleightest(spike.fourierspctrm); % the rayleigh test
     case 'ppc0'
-     out  = ppc(sts.fourierspctrm);
+     out  = ppc(spike.fourierspctrm);
     case {'ppc1', 'ppc2'}
       
       % check the final set of trials present in the spikes
-      trials = unique(sts.trial);
+      trials = unique(spike.trial);
 
       % loop init for PPC 2.0
       [S,SS,dof,dofSS] = deal(zeros(1,nChans,nFreqs));
@@ -224,12 +224,10 @@ if strcmp(cfg.timwin,'all')
       end
       for iTrial = 1:nTrials % compute the firing rate
           trialNum      = trials(iTrial);
-          spikesInTrial = find(sts.trial == trialNum);
-          spcU          = sts.fourierspctrm(spikesInTrial,:,:);
-          spc           = spcU./abs(spcU);
-
-          % compute PPC 2.0 according to Vinck et al. (2011) using summation per
-          % trial
+          spikesInTrial = find(spike.trial == trialNum);
+          spc           = spike.fourierspctrm(spikesInTrial,:,:);
+          
+          % compute PPC 1.0 and 2.0 according to Vinck et al. (2011) using summation per trial
           if strcmp(cfg.method,'ppc1')
             if ~isempty(spc)
               m = nanmean(spc,1); % no problem with NaN
@@ -239,7 +237,6 @@ if strcmp(cfg.timwin,'all')
               dof(hasNum) = dof(hasNum) + 1; % dof needs to be kept per frequency
             end
           elseif strcmp(cfg.method,'ppc2')
-            % compute PPC 1.0
             if ~isempty(spc)
                n      = sum(~isnan(spc),1);
                m      = nansum(spc,1); 
@@ -260,7 +257,7 @@ if strcmp(cfg.timwin,'all')
         out(hasTrl) = (S(hasTrl).*conj(S(hasTrl)) - SS(hasTrl))./(dof(hasTrl).*(dof(hasTrl)-1));
       end
   end
-  nSpikes = sum(~isnan(sts.fourierspctrm));
+  nSpikes = sum(~isnan(spike.fourierspctrm));
 else % compute time-resolved spectra of statistic
   
   % make the sampling axis for the window
@@ -276,8 +273,8 @@ else % compute time-resolved spectra of statistic
   for iChan = 1:nChans
     for iFreq = 1:nFreqs
   
-      spctra       = sts.fourierspctrm(:,iChan,iFreq); % values to accumulate
-      tm           = sts.time;
+      spctra       = spike.fourierspctrm(:,iChan,iFreq); % values to accumulate
+      tm           = spike.time;
       hasnan       = isnan(spctra);    
       [tm(hasnan), spctra(hasnan)]  = deal([]);
 
@@ -318,7 +315,7 @@ else % compute time-resolved spectra of statistic
           end
 
         case {'ppc1', 'ppc2'}
-          trials  = unique(sts.trial);
+          trials  = unique(spike.trial);
           nTrials = length(trials);
           [S,SS,dofS,dofSS] = deal(zeros(length(bins)-1,1));
           if nTrials==1
@@ -329,10 +326,10 @@ else % compute time-resolved spectra of statistic
             
              % select the spectra, time points, and trial numbers again
              trialNum      = trials(iTrial);
-             spikesInTrial = find(sts.trial == trialNum);
+             spikesInTrial = find(spike.trial == trialNum);
              if isempty(spikesInTrial), continue,end
-             spctraTrial  = sts.fourierspctrm(spikesInTrial,iChan,iFreq);       
-             tm           = sts.time;
+             spctraTrial  = spike.fourierspctrm(spikesInTrial,iChan,iFreq);       
+             tm           = spike.time;
              hasnan       = isnan(spctraTrial);    
              [tm(hasnan), spctraTrial(hasnan)]  = deal([]);
 
@@ -380,15 +377,15 @@ end
 outparam        = cfg.method;
 freq.(outparam) = permute(out,[2 3 1]);
 freq.nspikes    = permute(nSpikes,[2 3 1]);    % also cross-unit purposes
-freq.label      = sts.label(unitsel); 
-freq.freq       = sts.freq(freqindx);
-freq.label      = sts.lfplabel(chansel);
+freq.label      = spike.label(unitsel); 
+freq.freq       = spike.freq(freqindx);
+freq.label      = spike.lfplabel(chansel);
 freq.dimord     = 'chan_freq_time';
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
 ft_postamble callinfo
-ft_postamble previous sts
+ft_postamble previous spike
 ft_postamble history freq
 
 
