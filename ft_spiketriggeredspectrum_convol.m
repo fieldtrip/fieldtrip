@@ -70,9 +70,9 @@ function [Sts] = ft_spiketriggeredspectrum_convol(cfg, data, spike)
 
 % Copyright (C) 2008-2012, Martin Vinck
 %
-% $Id: ft_spike_triggeredspectrum.m 5219 2012-02-01 15:52:38Z roevdmei $
+% $Id$
 
-revision = '$Id: ft_spike_triggeredspectrum.m 5219 2012-02-01 15:52:38Z roevdmei $';
+revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults

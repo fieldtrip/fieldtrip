@@ -53,9 +53,9 @@ function [sts] = ft_spiketriggeredspectrum_fft(cfg, data)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: ft_spiketriggeredspectrum.m 5834 2012-06-01 06:42:10Z marvin $
+% $Id$
 
-revision = '$Id: ft_spiketriggeredspectrum.m 5834 2012-06-01 06:42:10Z marvin $';
+revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
