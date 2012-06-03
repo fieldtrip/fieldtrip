@@ -67,6 +67,7 @@ function [Sts] = ft_spiketriggeredspectrum_convol(cfg, data, spike)
 %   A phase shift in the counterclockwise direction corresponds to a phase
 %   shift towards later phases
 %
+% Output sts can be input to FT_SPIKETRIGGEREDSPECTRUM_STAT
 
 % Copyright (C) 2008-2012, Martin Vinck
 %

@@ -24,11 +24,11 @@ function [sts] = ft_spiketriggeredspectrum_fft(cfg, data)
 % If the triggered spike leads a spike in another channel, then the angle
 % of the Fourier spectrum of that other channel will be negative. 
 % Earlier phases are in clockwise direction.
-% See FT_SPIKE_PHASELOCKSTAT to compute stats on STS
 % See FT_SPIKETRIGGEREDINTERPOLATION to remove segments of LFP around
 % spikes
 % See FT_SPIKETRIGGEREDSPECTRUM_CONVOL for an alternative implementation
 % based on convolution
+% Output sts can be input to FT_SPIKETRIGGEREDSPECTRUM_STAT
 
 % This function uses a NaN-aware spectral estimation technique, which will
 % default to the standard Matlab FFT routine if no NaNs are present. The
