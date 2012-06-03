@@ -1,4 +1,4 @@
-function [stat] = ft_spike_phaselockstat(cfg,sts)
+function [freq] = ft_spike_phaselockstat(cfg,sts)
 
 % FT_SPIKE_PHASELOCKSTAT computes phase-locking statistics for spike-LFP
 % phases. These contain the PPC statistics published in Vinck et al. 2010
@@ -66,11 +66,11 @@ function [stat] = ft_spike_phaselockstat(cfg,sts)
 %                   'all' (default)
 %
 % Main outputs:
-%     stat.doftrial                   =  nTimepoints-by-nChan-by-nFreqs number of trials
-%     stat.dofspike                   =  nTimepoints-by-nChan-by-nFreqs number of spikes
-%     stat.label                      =  name of unit;
-%     stat.(cfg.method)               =  nChan-by-nFreqs statistic
-%     stat.lfplabel                   =  nChans cell array with LFP labels
+%     freq.doftrial                   =  nTimepoints-by-nChan-by-nFreqs number of trials
+%     freq.dofspike                   =  nTimepoints-by-nChan-by-nFreqs number of spikes
+%     freq.label                      =  name of unit;
+%     freq.(cfg.method)               =  nChan-by-nFreqs statistic
+%     freq.lfplabel                   =  nChans cell array with LFP labels
 %
 
 %   Copyright (c) Martin Vinck (2012)
@@ -266,7 +266,7 @@ else % compute time-resolved spectra of statistic
   N         = length(bins)-1; % number of bins
   wintime   = 0:cfg.winstepsize:cfg.timwin;
   win       = ones(1,length(wintime));
-  stat.time = (bins(2:end)+bins(1:end-1))/2;
+  freq.time = (bins(2:end)+bins(1:end-1))/2;
   if ~mod(length(win),2), win = [win 1]; end   % make sure the number of samples is uneven.
 
   out      = NaN(N,nChans,nFreqs);
@@ -376,18 +376,18 @@ end
 
 % collect the outputs
 outparam        = cfg.method;
-stat.(outparam) = out;
-stat.nspikes    = nSpikes;    % also cross-unit purposes
-stat.label      = sts.label(unitsel); 
-stat.freq       = sts.freq(freqindx);
-stat.lfplabel   = sts.lfplabel(chansel);
-stat.dimord     = 'time_lfpchan_freq';
+freq.(outparam) = permute(out,[2 3 1]);
+freq.nspikes    = permute(nSpikes,[2 3 1]);    % also cross-unit purposes
+freq.label      = sts.label(unitsel); 
+freq.freq       = sts.freq(freqindx);
+freq.label      = sts.lfplabel(chansel);
+freq.dimord     = 'chan_freq_time';
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
 ft_postamble callinfo
 ft_postamble previous sts
-ft_postamble history stat
+ft_postamble history freq
 
 
 function [P] = rayleightest(x)
