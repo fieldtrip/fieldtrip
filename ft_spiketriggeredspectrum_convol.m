@@ -342,7 +342,7 @@ switch cfg.taper
     if isempty(taper)
       error('%.3f Hz: datalength to short for specified smoothing\ndatalength: %.3f s, smoothing: %.3f Hz, minimum smoothing: %.3f Hz',...
         cfg.foi, timwinSamples/fsample,cfg.tapsmofrq,fsample/timwinSamples);
-    elseif size(tap,1) == 1
+    elseif size(taper,1) == 1
       warning('using only one taper for specified smoothing for %.2f Hz', cfg.foi)
     end
 
@@ -366,6 +366,11 @@ end
 % do some check on the taper size
 if size(taper,1)==numsmp, taper = taper'; end
 
+% normalize taper if there's 1 and all are positive
+if size(taper,1)==1 && all(taper>=0)
+  taper = numsmp*taper./sum(taper); % magnitude of cosine is now returned
+end
+
 %%%% fit linear regression for every datapoint: to remove mean and ramp of signal  
 sumKern = ones(1,timwinSamples);
 avgKern = sumKern./timwinSamples;
@@ -383,14 +388,26 @@ beta0 = conv2(dat(:),avgKern(:),'same') - beta1.*meanX; % beta0 = mean(dat) - be
 % y2 = cos(2*pi.*linspace(-(numsmp-1)/2,(numsmp-1)/2,1000).*f/numsmp); 
 % hold on, plot(linspace(-(numsmp-1)/2,(numsmp-1)/2,1000),y2,'r-')
 
+% correcting for phase rotation (as with multitapering)
+nTapers   = size(taper,1);  
+indN      = -(numsmp-1)/2:(numsmp-1)/2;
+spctrmRot = complex(zeros(1,1));
+for iTaper = 1:nTapers
+    coswav    =  taper(iTaper,:).*cos(2*pi*(findx-1)*indN/numsmp);
+    sinwav    =  taper(iTaper,:).*sin(2*pi*(findx-1)*indN/numsmp);
+    wavelet   = complex(coswav(:), sinwav(:));
+    cosSignal = cos(2*pi*(findx-1)*indN/numsmp);
+    spctrmRot = spctrmRot + sum(wavelet.*cosSignal(:));
+end
+phaseCor = angle(spctrmRot);
+
 %%%% compute the spectra
 nTapers = size(taper,1);  
 indN    = -(numsmp-1)/2:(numsmp-1)/2;
 spctrm = complex(zeros(length(dat),1));
 for iTaper = 1:nTapers
-    taper(iTaper,:) = numsmp.*taper(iTaper,:)./sum(taper(iTaper,:)); % sum equal to numsmp  
-    coswav  =  taper(iTaper,:).*cos(2*pi*(findx-1)*indN/numsmp);
-    sinwav  =  taper(iTaper,:).*sin(2*pi*(findx-1)*indN/numsmp);
+    coswav  = taper(iTaper,:).*cos(2*pi*(findx-1)*indN/numsmp);
+    sinwav  = taper(iTaper,:).*sin(2*pi*(findx-1)*indN/numsmp);
     wavelet = complex(coswav(:), sinwav(:));       
     fftRamp = sum(xKern.*coswav) + 1i*sum(xKern.*sinwav); % fft of ramp with dx/ds = 1 * taper 
     fftDC   = sum(ones(1,timwinSamples).*coswav) + 1i*sum(ones(1,timwinSamples).*sinwav);% fft of unit direct current * taper
@@ -398,6 +415,7 @@ for iTaper = 1:nTapers
                        % fft                       % mean            %linear ramp      % make magnitude invariant to window length                             
 end
 spctrm = spctrm./nTapers; % normalize by number of tapers
+spctrm = spctrm.*exp(-1i*phaseCor);
 
 % set the part of the spectrum without a valid phase to NaNs
 n = (timwinSamples-1)/2;
