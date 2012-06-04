@@ -155,6 +155,7 @@ else
           % don't provide a default in case the dimensions of the sensor array are unknown
           error('Sensor distance is measured in an unknown unit type');
         end
+        fprintf('using a distance threshold of %g\n', cfg.neighbourdist);
       end
       
       neighbours = compneighbstructfromgradelec(sens, cfg.neighbourdist);
