@@ -51,6 +51,16 @@ function [Sts] = ft_spiketriggeredspectrum_convol(cfg, data, spike)
 %                           saturates always returns the same phase at all
 %                           frequencies and should be ignored.
 %
+% Note: some adjustment of the frequencies can occur as the chosen time-window may not 
+% be appropriate for the chosen frequency.
+% For example, suppose that cfg.foi = 80, data.fsample = 1000, and
+% cfg.t_ftimwin = 0.625. The DFT frequencies in that case are 
+% linspace(0,1000,63) such that cfg.foi --> 80.645. In practice, this error
+% can only become large if the number of cycles per frequency is very
+% small and the frequency is high. For example, suppose that cfg.foi = 80
+% and cfg.t_ftimwin = 0.125. In that case cfg.foi-->83.33.
+% The error is smaller as data.fsample is larger.
+%
 % Outputs:
 %   Sts is a spike structure, containing new fields:
 %   Sts.fourierspctrm = 1 x nUnits cell array with dimord spike_lfplabel_freq
@@ -287,7 +297,7 @@ end
 
 % collect the results
 Sts.lfplabel          = data.label(chansel);
-Sts.freq              = nanmean(freqs,2);
+Sts.freq              = nanmean(freqs,2)';
 Sts.label             = spike.label(spikesel);
 for iUnit = 1:nspikesel
   Sts.fourierspctrm{iUnit}  = cat(1, spectrum{iUnit,:}); 
