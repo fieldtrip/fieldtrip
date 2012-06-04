@@ -57,6 +57,9 @@ if iscomp
 elseif isfreqmvar
   % freqmvar should conditionally go before freq, otherwise the returned ft_datatype will be freq in the case of frequency mvar data
   type = 'freqmvar';
+elseif isdip
+  % dip should conditionally go before timelock, otherwise the ft_datatype will be timelock
+  type = 'dip';
 elseif ismvar
   type = 'mvar';
 elseif israw
@@ -71,8 +74,6 @@ elseif isvolume
   type = 'volume';
 elseif issource
   type = 'source';
-elseif isdip
-  type = 'dip';
 elseif ischan
   % this results from avgovertime/avgoverfreq after timelockstatistics or freqstatistics
   type = 'chan';
