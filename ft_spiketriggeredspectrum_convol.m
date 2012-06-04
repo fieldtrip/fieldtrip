@@ -54,11 +54,11 @@ function [Sts] = ft_spiketriggeredspectrum_convol(cfg, data, spike)
 % Note: some adjustment of the frequencies can occur as the chosen time-window may not 
 % be appropriate for the chosen frequency.
 % For example, suppose that cfg.foi = 80, data.fsample = 1000, and
-% cfg.t_ftimwin = 0.625. The DFT frequencies in that case are 
+% cfg.t_ftimwin = 0.0625. The DFT frequencies in that case are 
 % linspace(0,1000,63) such that cfg.foi --> 80.645. In practice, this error
 % can only become large if the number of cycles per frequency is very
 % small and the frequency is high. For example, suppose that cfg.foi = 80
-% and cfg.t_ftimwin = 0.125. In that case cfg.foi-->83.33.
+% and cfg.t_ftimwin = 0.0125. In that case cfg.foi-->83.33.
 % The error is smaller as data.fsample is larger.
 %
 % Outputs:
