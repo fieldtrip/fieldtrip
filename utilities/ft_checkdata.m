@@ -1810,8 +1810,8 @@ for iUnit = 1:nUnits
   
   spike.label{iUnit}     = data.label{unitIndx};
   spike.waveform{iUnit}  = [];
-  spike.time{iUnit}      = spikeTimes;
-  spike.trial{iUnit}     = trialInds;
+  spike.time{iUnit}      = spikeTimes(:)';
+  spike.trial{iUnit}     = trialInds(:)';
   
   if iUnit==1, spike.trialtime             = trialTimes; end
 end
