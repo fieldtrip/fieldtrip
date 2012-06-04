@@ -9,15 +9,15 @@ function [freq] = ft_spiketriggeredspectrum_stat(cfg,spike)
 %   [STAT = FT_SPIKETRIGGEREDSPECTRUM_STAT(CFG,SPIKE)
 %
 % Inputs:
-%   SPIKE should be a structure as obtained from from the FT_SPIKETRIGGEREDSPECTRUM function. 
+%   SPIKE should be a structure as obtained from from the FT_SPIKETRIGGEREDSPECTRUM function.
 %
 % Configurations (cfg) 
 %
 % cfg.method  = string, indicating which statistic to compute. Can be:
 %     -'plv' : phase-locking value, computes the resultant length over spike
-%              phases. Is positively biased by sample size.
+%              phases. More spikes -> lower value (bias).
 %     -'ang' : computes the angular mean of the spike phases.
-%     -'ral' : computes the rayleigh statistic.
+%     -'ral' : computes the rayleigh p-value.
 %     -'ppc0': computes the pairwise-phase consistency across all available
 %              spike pairs (Vinck et al., 2010).
 %     -'ppc1': computes the pairwise-phase consistency across all available
@@ -42,22 +42,24 @@ function [freq] = ft_spiketriggeredspectrum_stat(cfg,spike)
 % cfg.channel      = Nx1 cell-array or numerical array with selection of
 %   channels (default = 'all'),See CHANNELSELECTION for details
 %
+% cfg.spikechannel = label of ONE unit, according to FT_CHANNELSELECTION
+%
 % cfg.spikesel     = 'all' (default) or numerical or logical selection of spikes.
 %
 % cfg.foi          = 'all' or numerical vector that specifies a subset of
-%   frequencies in Hz (and not in indices!).                                    
+%   frequencies in Hz, e.g. cfg.foi = spike.freq(1:10);                                    
 %
 % cfg.latency      = [beg end] in sec, or 'maxperiod',  'poststim' or
-%  'prestim'.  This determines the start and end of time-vector.
+%  'prestim'.  This determines the start and end of analysis window.
 %
-% cfg.spikechannel = label of ONE unit, according to FT_CHANNELSELECTION
-%
-% cfg.chanavg      = 'weighted', 'unweighted' (default) or 'no'.
+% cfg.avgoverchan  = 'weighted', 'unweighted' (default) or 'no'.
+%                  This regulates averaging of fourierspectra prior to
+%                  computing the statistic.
 %  - 'weighted'  : we average across channels by weighting by the LFP power.
 %                  This is identical to adding the raw LFP signals in time 
 %                  and then taking their FFT.
 %  - 'unweighted': we average across channels after normalizing for LFP power. 
-%                  This is identical to filtering LFP signals, normalizing 
+%                  This is identical to normalizing LFP signals for 
 %                  their power, averaging them, and then taking their FFT.
 %  - 'no'        : no weighting is performed, statistic is computed for
 %                  every LFP channel.
@@ -66,13 +68,15 @@ function [freq] = ft_spiketriggeredspectrum_stat(cfg,spike)
 %                   'all' (default)
 %
 % Main outputs:
-%     freq.nspikes                    =  nChan-by-nFreqs-nTimepoints number
+%     freq.nspikes                    =  nChancmb-by-nFreqs-nTimepoints number
 %                                        of spikes used to compute stat
 %     freq.dimord                     = 'chan_freq_time'
-%     freq.label                      =  nChans cell array with LFP labels;
-%     freq.(cfg.method)               =  nChan-by-nFreqs-nTimepoints  statistic
+%     freq.labelcmb                   =  nChancmbs cell array with spike vs
+%                                        LFP labels
+%     freq.(cfg.method)               =  nChancmb-by-nFreqs-nTimepoints  statistic
 %     freq.freq                       =  1xnFreqs array of frequencies
 %     freq.nspikes                    =  number of spikes used to compute
+%
 % freq can be plotted using ft_singleplotTFR or ft_multiplotTFR
 
 %   Copyright (c) Martin Vinck (2012)
@@ -96,7 +100,7 @@ cfg.channel        = ft_getopt(cfg,'channel', 'all');
 cfg.spikechannel   = ft_getopt(cfg,'spikechannel', spike.label{1});
 cfg.latency        = ft_getopt(cfg,'latency', 'maxperiod');
 cfg.spikesel       = ft_getopt(cfg,'spikesel', 'all');
-cfg.chanavg        = ft_getopt(cfg,'chanavg', 'no');
+cfg.avgoverchan    = ft_getopt(cfg,'avgoverchan', 'no');
 cfg.foi            = ft_getopt(cfg,'foi', 'all');
 cfg.trials         = ft_getopt(cfg,'trials', 'all');
 cfg.timwin         = ft_getopt(cfg,'timwin', 'all');
@@ -108,13 +112,13 @@ cfg = ft_checkopt(cfg,'foi',{'char', 'double'});
 cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});
 cfg = ft_checkopt(cfg,'channel', {'cell', 'char', 'double'});
 cfg = ft_checkopt(cfg,'spikesel', {'char', 'logical', 'double'});
-cfg = ft_checkopt(cfg,'chanavg', 'char', {'weighted', 'unweighted', 'no'});
+cfg = ft_checkopt(cfg,'avgoverchan', 'char', {'weighted', 'unweighted', 'no'});
 cfg = ft_checkopt(cfg,'latency', {'char', 'doublevector'});
 cfg = ft_checkopt(cfg,'trials', {'char', 'double', 'logical'}); 
 cfg = ft_checkopt(cfg,'timwin', {'double', 'char'}); 
 cfg = ft_checkopt(cfg,'winstepsize', {'double'}); 
 
-cfg = ft_checkconfig(cfg,'allowed', {'method', 'channel', 'spikechannel', 'latency', 'spikesel', 'chanavg', 'foi', 'trials', 'timwin', 'winstepsize'});
+cfg = ft_checkconfig(cfg,'allowed', {'method', 'channel', 'spikechannel', 'latency', 'spikesel', 'avgoverchan', 'foi', 'trials', 'timwin', 'winstepsize'});
 
 % collect channel information
 cfg.channel        = ft_channelselection(cfg.channel, spike.lfplabel);
@@ -129,7 +133,7 @@ if nspikesel>1, error('only one unit should be selected for now'); end
 
 % collect frequency information
 if strcmp(cfg.foi, 'all'),  
-  cfg.foi           = spike.freq; 
+  cfg.foi           = spike.freq(:)'; 
   freqindx          = 1:length(spike.freq);
 else
   freqindx  = zeros(1,length(foi));
@@ -178,7 +182,7 @@ cfg        = trialselection(cfg,spike);
 isintrial    = ismember(spike.trial{unitsel}, cfg.trials);
 spikesel     = intersect(cfg.spikesel(:),inWindow(:));
 spikesel     = intersect(spikesel,find(isintrial));
-cfg.spikesel = spikesel; %intersect(spikesel(:),isNum(:));
+cfg.spikesel = spikesel; 
 spikenum     = length(cfg.spikesel); % number of spikes that were finally selected
 if isempty(spikenum), warning('No spikes were selected after applying cfg.latency, cfg.spikesel and cfg.trials'); end
 spike.fourierspctrm = spike.fourierspctrm{unitsel}(cfg.spikesel,chansel,freqindx);
@@ -186,14 +190,17 @@ spike.time          = spike.time{unitsel}(cfg.spikesel);
 spike.trial         = spike.trial{unitsel}(cfg.spikesel);
 
 % average the lfp channels (weighted, unweighted, or not)
-if strcmp(cfg.chanavg,'unweighted')
+if strcmp(cfg.avgoverchan,'unweighted')
   spike.fourierspctrm = spike.fourierspctrm ./ abs(spike.fourierspctrm); % normalize the angles before averaging   
   spike.fourierspctrm = nanmean(spike.fourierspctrm,2); % now rep x 1 x freq
   nChans = 1;
-elseif strcmp(cfg.chanavg,'no')
+  outlabels = {'avgLFP'}; 
+elseif strcmp(cfg.avgoverchan,'no')
   nChans = length(chansel);
-elseif strcmp(cfg.chanavg,'weighted')
+  outlabels = cfg.channel;
+elseif strcmp(cfg.avgoverchan,'weighted')
   spike.fourierspctrm = nanmean(spike.fourierspctrm,2); % now rep x 1 x freq
+  outlabels = {'avgLFP'}; 
   nChans = 1;
 end
 
@@ -373,13 +380,16 @@ else % compute time-resolved spectra of statistic
   end
 end
 
-% collect the outputs
+% collect the outputs: in labelcmb representation
 outparam        = cfg.method;
 freq.(outparam) = permute(out,[2 3 1]);
 freq.nspikes    = permute(nSpikes,[2 3 1]);    % also cross-unit purposes
-freq.label      = spike.label(unitsel); 
+freq.labelcmb = cell(nChans,2);
+freq.labelcmb(1:nChans,1) = cfg.spikechannel;
+for iCmb = 1:nChans
+  freq.labelcmb{iCmb,2}   = outlabels{iCmb}; 
+end  
 freq.freq       = spike.freq(freqindx);
-freq.label      = spike.lfplabel(chansel);
 freq.dimord     = 'chan_freq_time';
 
 % do the general cleanup and bookkeeping at the end of the function
