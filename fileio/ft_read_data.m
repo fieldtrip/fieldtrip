@@ -64,10 +64,13 @@ begtrial      = ft_getopt(varargin, 'begtrial');
 endtrial      = ft_getopt(varargin, 'endtrial');
 chanindx      = ft_getopt(varargin, 'chanindx');
 checkboundary = ft_getopt(varargin, 'checkboundary');
-dataformat    = ft_getopt(varargin, 'dataformat', ft_filetype(filename));
 headerformat  = ft_getopt(varargin, 'headerformat');
 fallback      = ft_getopt(varargin, 'fallback');
 cache         = ft_getopt(varargin, 'cache', false);
+dataformat    = ft_getopt(varargin, 'dataformat');
+if isempty(dataformat)
+  dataformat = ft_filetype(filename);  % the default is automatically detected, but only if not specified
+end
 
 % test whether the file or directory exists
 if ~exist(filename, 'file') && ~strcmp(dataformat, 'ctf_shm') && ~strcmp(dataformat, 'fcdc_mysql') && ~strcmp(dataformat, 'fcdc_buffer')
