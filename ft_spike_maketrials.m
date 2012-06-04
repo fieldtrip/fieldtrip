@@ -172,5 +172,10 @@ else
       end
     end 
   end 
+  ft_postamble trackconfig
+  ft_postamble callinfo
+  ft_postamble previous spike
+  ft_postamble history spike
+end
 end
 
