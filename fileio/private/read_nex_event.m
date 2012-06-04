@@ -45,6 +45,7 @@ status = fseek(fid,hdr.varheader(mrkvarnum).offset,'bof');
 
 % read the time of the triggers
 dum = fread(fid,hdr.varheader(mrkvarnum).cnt,'int32');
+timestamp = dum;
 dum = dum ./(hdr.filheader.frequency./smpfrq);
 mrk.tim = round(dum);
 
@@ -57,11 +58,8 @@ status = fclose(fid);
 
 % translate into an FCDC event structure
 Nevent = length(mrk.tim);
-event = struct('sample', num2cell(mrk.tim), 'value', num2cell(mrk.val));
+event = struct('sample', num2cell(mrk.tim), 'value', num2cell(mrk.val), 'timestamp', num2cell(timestamp));
 for i=1:Nevent
-  % the code above with the struct and num2cell is much faster
-  % event(i).sample   = mrk.tim(i);
-  % event(i).value    = mrk.val(i);
   event(i).type     = hdr.varheader(mrkvarnum).nam;
   event(i).duration = 1;
   event(i).offset   = 0;
