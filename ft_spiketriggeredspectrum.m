@@ -45,13 +45,17 @@ function [sts] = ft_spiketriggeredspectrum(cfg, data, spike)
 % input.
 %
 % For configurations options see FT_SPIKETRIGGEREDSPECTRUM_CONVOL
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%   A phase of pi implies a phase on the LFP through. 
-%   A phase shift in the counterclockwise direction corresponds to a phase
-%   shift towards later phases relative to the LFP
+%
+%%%%%%%%%%%%%%%
+% A phase of zero corresponds to the spike being on the peak of the LFP
+% oscillation.
+% A phase of 180 degree corresponds to the spike being in the through of the
+% oscillation.
+% A phase of 45 degrees corresponds to the spike being just (before/after?) the
+% peak in the LFP.
 %
 % Output sts can be input to FT_SPIKETRIGGEREDSPECTRUM_STAT
-
+%
 % Copyright (C) 2012, Martin Vinck, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip

@@ -77,7 +77,7 @@ function [freq] = ft_spiketriggeredspectrum_stat(cfg,spike)
 %     freq.freq                       =  1xnFreqs array of frequencies
 %     freq.nspikes                    =  number of spikes used to compute
 %
-% freq can be plotted using ft_singleplotTFR or ft_multiplotTFR
+% Freq can be plotted using ft_singleplotTFR or ft_multiplotTFR
 
 %   Copyright (c) Martin Vinck (2012)
 %

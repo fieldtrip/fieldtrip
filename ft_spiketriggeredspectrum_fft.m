@@ -28,8 +28,15 @@ function [sts] = ft_spiketriggeredspectrum_fft(cfg, data)
 % spikes
 % See FT_SPIKETRIGGEREDSPECTRUM_CONVOL for an alternative implementation
 % based on convolution
+%
 % Output sts can be input to FT_SPIKETRIGGEREDSPECTRUM_STAT
-
+%
+% A phase of zero corresponds to the spike being on the peak of the LFP
+% oscillation.
+% A phase of 180 degree corresponds to the spike being in the through of the
+% oscillation.
+% A phase of 45 degrees corresponds to the spike being just (before/after?) the
+% peak in the LFP.
 % This function uses a NaN-aware spectral estimation technique, which will
 % default to the standard Matlab FFT routine if no NaNs are present. The
 % fft_along_rows subfunction below demonstrates the expected function
