@@ -324,8 +324,8 @@ end
 numsmp  = round(cfg.t_ftimwin .* fsample);
 numsmp(~mod(numsmp,2)) = numsmp(~mod(numsmp,2))+1; % make sure we always have uneven samples, since we want the spike in the middle
 faxis         = linspace(0,fsample,numsmp);
-indx          = nearest(faxis,cfg.foi);
-[cfg.foi,foi] = deal(faxis(indx)); % this is the actual frequency used, from the DFT formula
+findx         =  nearest(faxis,cfg.foi);
+[cfg.foi,foi] = deal(faxis(findx)); % this is the actual frequency used, from the DFT formula
 timwinSamples = numsmp;
 
 % Compute tapers per frequency, multiply with wavelets and compute their fft
@@ -358,8 +358,10 @@ switch cfg.taper
         error('taper option was not appropriate for taper');
       end
     end
-    taper = taper ./ norm(taper,'fro'); % make it explicit that the frobenius norm is being used
 end
+
+% do some check on the taper size
+if size(taper,1)==numsmp, taper = taper'; end
 
 %%%% fit linear regression for every datapoint: to remove mean and ramp of signal  
 sumKern = ones(1,timwinSamples);
@@ -372,19 +374,25 @@ sumX    = sum(xKern);
 beta1 = (conv2(dat(:),xKern(:),'same') - sumX.*conv2(dat(:),sumKern(:),'same')/timwinSamples ) ./ sum((xKern-meanX).^2);
 beta0 = conv2(dat(:),avgKern(:),'same') - beta1.*meanX; % beta0 = mean(dat) - beta1*mean(x)  
 
+% DFT formula: basefunctions: cos(2*pi*k*[0:numsmp-1]/numsmp) and sin(2*pi*k*[0:numsmp-1]/numsmp)
+% center the base functions such that the peak of the cos function is at the center. See:
+% f = findx-1; ax = -(numsmp-1)/2:(numsmp-1)/2; y = cos(2*pi.*ax.*f/numsmp);figure, plot(ax,y,'sr'); 
+% y2 = cos(2*pi.*linspace(-(numsmp-1)/2,(numsmp-1)/2,1000).*f/numsmp); 
+% hold on, plot(linspace(-(numsmp-1)/2,(numsmp-1)/2,1000),y2,'r-')
+
 %%%% compute the spectra
 nTapers = size(taper,1);  
-anglein  = ((-timwinSamples+1)/2 : (timwinSamples-1)/2) .*  ((2.*pi./fsample) .* cfg.foi); % ensure the angle is at zero in center
+indN    = -(numsmp-1)/2:(numsmp-1)/2;
 spctrm = complex(zeros(length(dat),1));
 for iTaper = 1:nTapers
-    coswav  =  taper(iTaper,:).*cos(anglein);
-    sinwav  =  taper(iTaper,:).*sin(anglein);
+    taper(iTaper,:) = numsmp.*taper(iTaper,:)./sum(taper(iTaper,:)); % sum equal to numsmp  
+    coswav  =  taper(iTaper,:).*cos(2*pi*(findx-1)*indN/numsmp);
+    sinwav  =  taper(iTaper,:).*sin(2*pi*(findx-1)*indN/numsmp);
     wavelet = complex(coswav(:), sinwav(:));       
     fftRamp = sum(xKern.*coswav) + 1i*sum(xKern.*sinwav); % fft of ramp with dx/ds = 1 * taper 
     fftDC   = sum(ones(1,timwinSamples).*coswav) + 1i*sum(ones(1,timwinSamples).*sinwav);% fft of unit direct current * taper
-    spctrm  = spctrm + conv2(dat(:),wavelet,'same') - (beta0*fftDC + beta1.*fftRamp);           
-                       % fft                       % mean            %
-                       % linear ramp                               
+    spctrm  = spctrm + (conv2(dat(:),wavelet,'same') - (beta0*fftDC + beta1.*fftRamp))/(numsmp/2);           
+                       % fft                       % mean            %linear ramp      % make magnitude invariant to window length                             
 end
 spctrm = spctrm./nTapers; % normalize by number of tapers
 
