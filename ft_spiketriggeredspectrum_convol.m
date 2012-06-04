@@ -81,6 +81,9 @@ function [Sts] = ft_spiketriggeredspectrum_convol(cfg, data, spike)
 % A phase of 45 degrees corresponds to the spike being just (before/after?) the
 % peak in the LFP.
 %
+% If multitapering is used, then the phase distortion induced by
+% multitapering is corrected for
+%
 % Output sts can be input to FT_SPIKETRIGGEREDSPECTRUM_STAT
 
 % Copyright (C) 2008-2012, Martin Vinck
