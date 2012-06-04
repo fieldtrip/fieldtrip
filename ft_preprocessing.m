@@ -76,7 +76,7 @@ function [data] = ft_preprocessing(cfg, data)
 %
 % Preprocessing options that you should only use for EEG data are
 %   cfg.reref         = 'no' or 'yes' (default = 'no')
-%   cfg.refchannel    = cell-array with new EEG reference channel(s)
+%   cfg.refchannel    = cell-array with new EEG reference channel(s), this can be 'all' for a common average reference
 %   cfg.implicitref   = 'label' or empty, add the implicit EEG reference as zeros (default = [])
 %   cfg.montage       = 'no' or a montage structure (default = 'no')
 %
