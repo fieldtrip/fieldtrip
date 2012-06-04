@@ -31,7 +31,8 @@ function [Sts] = ft_spiketriggeredspectrum_convol(cfg, data, spike)
 %                           plus-minus 4 Hz, i.e. a 8 Hz smoothing box.
 %     cfg.foi             = vector 1 x numfoi, frequencies of interest
 %     cfg.taper           = 'dpss', 'hanning' or many others, see WINDOW (default = 'dpss')
-%     cfg.t_ftimwin       = vector 1 x numfoi, length of time window (in seconds)
+%     cfg.t_ftimwin       = vector 1 x numfoi, length of time window (in
+%     seconds)
 %     cfg.taperopt        =  parameter that goes in WINDOW function (only
 %                           applies to windows like KAISER).
 %     cfg.spikechannel    = cell-array with selection of channels (default = 'all')
@@ -130,10 +131,6 @@ if isfield(cfg,'tapsmofrq')
   if length(cfg.tapsmofrq) ~= length(cfg.foi) || length(cfg.foi)~=length(cfg.t_ftimwin)
     error('lengths of cfg.tapsmofrq, cfg.foi and cfg_t_ftimwin should be equal and 1 x nFreqs')
   end
-end
-
-if ~all(abs(cfg.t_ftimwin.*cfg.foi-round(cfg.t_ftimwin.*cfg.foi))<0.01) % just to avoid rounding errors
-  error('cfg.t_ftimwin must be integer multiple of frequency period'); 
 end
 
 % get the spikechannels
@@ -326,10 +323,9 @@ if nargin<4
 end
 numsmp  = round(cfg.t_ftimwin .* fsample);
 numsmp(~mod(numsmp,2)) = numsmp(~mod(numsmp,2))+1; % make sure we always have uneven samples, since we want the spike in the middle
-nCycles = cfg.t_ftimwin.*cfg.foi;
-cfg.t_ftimwin = (numsmp-1) ./ fsample;
-cfg.foi       = nCycles./cfg.t_ftimwin; % correct for rounding error introduced by cfg.t_ftimwin .* fsample not being integer
-foi           = cfg.foi; % this is the actual frequency used, from the DFT formula
+faxis         = linspace(0,fsample,numsmp);
+indx          = nearest(faxis,cfg.foi);
+[cfg.foi,foi] = deal(faxis(indx)); % this is the actual frequency used, from the DFT formula
 timwinSamples = numsmp;
 
 % Compute tapers per frequency, multiply with wavelets and compute their fft
