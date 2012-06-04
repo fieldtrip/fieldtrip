@@ -168,7 +168,10 @@ elseif isfreq
   end % switch
   
 elseif issource
-  
+
+  % ensure that the source structure contains inside/outside specification
+  datain = ft_checkdata(datain, 'datatype', 'source', 'hasinside', 'yes');
+
   % descriptives
   nrpt    = size(datain.trial, 2);
   nvox    = size(datain.pos, 1);
