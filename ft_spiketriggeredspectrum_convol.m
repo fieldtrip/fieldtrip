@@ -78,7 +78,7 @@ function [Sts] = ft_spiketriggeredspectrum_convol(cfg, data, spike)
 % oscillation.
 % A phase of 180 degree corresponds to the spike being in the through of the
 % oscillation.
-% A phase of 45 degrees corresponds to the spike being just (before/after?) the
+% A phase of 45 degrees corresponds to the spike being just after the
 % peak in the LFP.
 %
 % If multitapering is used, then the phase distortion induced by

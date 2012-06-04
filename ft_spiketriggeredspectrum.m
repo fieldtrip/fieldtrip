@@ -51,7 +51,7 @@ function [sts] = ft_spiketriggeredspectrum(cfg, data, spike)
 % oscillation.
 % A phase of 180 degree corresponds to the spike being in the through of the
 % oscillation.
-% A phase of 45 degrees corresponds to the spike being just (before/after?) the
+% A phase of 45 degrees corresponds to the spike being just after the
 % peak in the LFP.
 %
 % Output sts can be input to FT_SPIKETRIGGEREDSPECTRUM_STAT

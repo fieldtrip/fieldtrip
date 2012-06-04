@@ -35,7 +35,7 @@ function [sts] = ft_spiketriggeredspectrum_fft(cfg, data)
 % oscillation.
 % A phase of 180 degree corresponds to the spike being in the through of the
 % oscillation.
-% A phase of 45 degrees corresponds to the spike being just (before/after?) the
+% A phase of 45 degrees corresponds to the spike being just after the
 % peak in the LFP.
 % This function uses a NaN-aware spectral estimation technique, which will
 % default to the standard Matlab FFT routine if no NaNs are present. The
