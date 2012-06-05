@@ -55,7 +55,7 @@ function [sts] = ft_spiketriggeredspectrum(cfg, data, spike)
 % peak in the LFP.
 %
 % Output sts can be input to FT_SPIKETRIGGEREDSPECTRUM_STAT
-%
+
 % Copyright (C) 2012, Martin Vinck, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
