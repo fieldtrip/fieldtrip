@@ -1662,29 +1662,47 @@ else
   
   begtime = cellfun(@min,data.time);
   endtime = cellfun(@max,data.time);
-  
+  % this part is just about the number of samples, not about the time-axis
   for i = 1:ntrial
-    mint    = min(eps, begtime(i));
-    maxt    = max(eps, endtime(i));
-    time = data.time{i};
+    time = data.time{i};    
+    mint    = min([ 0, begtime(i)]);    
+    maxt    = max([-max(abs(2*endtime)) * eps, endtime(i)]);
+    
     % extrapolate so that we get near 0
-    time =  interp1(time, time, mint:mean(diff(time)):maxt, 'linear', 'extrap');
-    ix(i) = sum(time<0); % number of samples pre-zero
-    iy(i) = sum(time>=0); % number of samples post-zer
+    if (mint==0)
+       tmptime =  -1*(fliplr(-maxt:mean(diff(time)):-mint));
+    else
+       tmptime =  mint:mean(diff(time)):maxt;
+     end
+    
+    ix(i) = sum(tmptime<0); % number of samples pre-zero
+    iy(i) = sum(tmptime>=0); % number of samples post-zero
+    
+    % account for strictly positive or negative time-axes by removing those
+    % elements that are near 0 but should not be in the time-axis
+    if ix(i)==0
+      ix(i) = 1-nearest(tmptime, begtime(i));
+    end
+    if iy(i)==0
+      iy(i) = nearest(tmptime, endtime(i))-length(tmptime);
+    end
   end  
   
   [mx,ix2] = max(ix);
   [my,iy2] = max(iy);
-  nsmp = mx+my; 
-
-  tmptime = linspace(min(begtime), max(endtime), nsmp);
+  nsmp = mx+my;
+  
+  % create temporary time-axis
+  time = linspace(min(begtime),  max(endtime), nsmp);
+  % remove any time-points before 0 iff not needed - see bug 1477
+  time(nearest(time, max(endtime))+1:end) = [];
   
   % concatenate all trials
-  tmptrial = zeros(ntrial, nchan, length(tmptime)) + nan;
+  tmptrial = zeros(ntrial, nchan, length(time)) + nan;
   
   for i=1:ntrial
-    begsmp(i) = nearest(tmptime, data.time{i}(1));
-    endsmp(i) = nearest(tmptime, data.time{i}(end));
+    begsmp(i) = nearest(time, data.time{i}(1));
+    endsmp(i) = nearest(time, data.time{i}(end));
     tmptrial(i,:,begsmp(i):endsmp(i)) = data.trial{i};
   end   
 
@@ -1700,7 +1718,7 @@ else
   % data.var     = reshape(nanvar (tmptrial, [], 1), nchan, length(tmptime))
   % data.dof     = reshape(sum(~isnan(tmptrial), 1), nchan, length(tmptime));
   data.trial   = tmptrial;
-  data.time    = tmptime;
+  data.time    = time;
   data.dimord = 'rpt_chan_time';
 end
 
