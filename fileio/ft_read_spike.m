@@ -216,7 +216,7 @@ end
 
 % add the waveform 
 if isfield(spike,'waveform')
-   spike.waveformdimord = '{chan}_lead_time_spike';        
+   spike.dimord = '{chan}_lead_time_spike';        
 end
 
   
