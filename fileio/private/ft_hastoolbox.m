@@ -114,6 +114,7 @@ url = {
   'MYSQL'      'see http://www.mathworks.com/matlabcentral/fileexchange/8663-mysql-database-connector'
   'ISO2MESH'   'see http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?Home or contact Qianqian Fang'
   'DATAHASH'   'see http://www.mathworks.com/matlabcentral/fileexchange/31272'
+  'SPIKE'      'see http://www.ru.nl/neuroimaging/fieldtrip'
   };
 
 if nargin<2
@@ -275,7 +276,9 @@ switch toolbox
     status = exist('enginefeval.m', 'file') && exist('enginecellfun.m', 'file');
   case 'DATAHASH'
     status = exist('DataHash.m', 'file');
-    
+  case 'DATAHASH'
+    status = exist('ft_spiketriggeredaverage.m', 'file') && exist('ft_spiketriggeredspectrum.m', 'file');
+
     % the following are not proper toolboxes, but only subdirectories in the fieldtrip toolbox
     % these are added in ft_defaults and are specified with unix-style forward slashes
   case 'COMPAT'
