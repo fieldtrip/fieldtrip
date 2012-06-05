@@ -809,11 +809,11 @@ switch dataformat
     end
     
     if strcmp(dataformat, 'ns_cnt')
-      tmp = loadcnt(filename, 'sample1', sample1, 'ldnsamples', ldnsamples, 'blockread', 1);
+      tmp = loadcnt(filename, 'sample1', sample1, 'ldnsamples', ldnsamples);
     elseif strcmp(dataformat, 'ns_cnt16')
-      tmp = loadcnt(filename, 'sample1', sample1, 'ldnsamples', ldnsamples, 'blockread', 1, 'dataformat', 'int16');
+      tmp = loadcnt(filename, 'sample1', sample1, 'ldnsamples', ldnsamples, 'dataformat', 'int16');
     elseif strcmp(dataformat, 'ns_cnt32')
-      tmp = loadcnt(filename, 'sample1', sample1, 'ldnsamples', ldnsamples, 'blockread', 1, 'dataformat', 'int32');
+      tmp = loadcnt(filename, 'sample1', sample1, 'ldnsamples', ldnsamples, 'dataformat', 'int32');
     end
     dat = tmp.data(chanindx,:);
     

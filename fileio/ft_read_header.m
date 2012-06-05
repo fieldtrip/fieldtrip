@@ -1421,11 +1421,11 @@ switch headerformat
     
   case {'ns_cnt' 'ns_cnt16', 'ns_cnt32'}
     if strcmp(headerformat, 'ns_cnt')
-      orig = loadcnt(filename, 'ldnsamples', 1);
+      orig = loadcnt(filename);
     elseif strcmp(headerformat, 'ns_cnt16')
-      orig = loadcnt(filename, 'ldnsamples', 1, 'dataformat', 'int16');
+      orig = loadcnt(filename, 'dataformat', 'int16');
     elseif strcmp(headerformat, 'ns_cnt32')
-      orig = loadcnt(filename, 'ldnsamples', 1, 'dataformat', 'int32');
+      orig = loadcnt(filename, 'dataformat', 'int32');
     end
     
     orig = rmfield(orig, {'data', 'ldnsamples'});
@@ -1433,7 +1433,7 @@ switch headerformat
     % do some reformatting/renaming of the header items
     hdr.Fs          = orig.header.rate;
     hdr.nChans      = orig.header.nchannels;
-    hdr.nSamples    = orig.header.numsamples;
+    hdr.nSamples    = orig.header.nums;
     hdr.nSamplesPre = 0;
     hdr.nTrials     = 1;
     for i=1:hdr.nChans
@@ -1441,18 +1441,7 @@ switch headerformat
     end
     % remember the original header details
     hdr.orig = orig;
-    
-    % FIELDTRIP BUGFIX #1412
-    % In some cases, the orig.header.numsamples = 0, and the output number of samples is wrong.
-    % In the previous version of loadcnt.m the orig.header.nums field was used (instead of numsamples), which was changed in r5380 to fix bug #1348.
-    % This bug (1348) was due to loadcnt.m being updated to the most recent version (from neuroscan), which removed the nums field in favor of using numsamples.
-    % Below is a workaround for when numsamples is incorrect (bug 1412). The reason is unknown (it looks like a neuroscan data-file specific bug).
-    % I re-added the nums field to loadcnt.m so that it can be used in ft_read_header.m.
-    % -roevdmei
-    if hdr.nSamples==0
-      hdr.nSamples = orig.header.nums;
-    end
-    
+
   case 'ns_eeg'
     orig = read_ns_hdr(filename);
     % do some reformatting/renaming of the header items
