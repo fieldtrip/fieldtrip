@@ -175,8 +175,8 @@ if ~isdeployed
   end
   
   try
-    % this can be used for distrubuted/parallel computing
-    ft_hastoolbox('peer', 1,1);
+    % this contains the functions for spike and spike-field analysis
+    ft_hastoolbox('spike', 1,1);
   end
   
   try
