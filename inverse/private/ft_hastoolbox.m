@@ -333,6 +333,18 @@ if autoadd>0 && ~status
     end
   end
   
+  % for contributed fieldtrip extensions
+  prefix = fullfile(fileparts(which('ft_defaults')), 'contrib');
+  if ~status
+    status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
+    licensefile = [lower(toolbox) '_license'];
+    if status && exist(licensefile, 'file')
+      % this will execute openmeeg_license and mne_license
+      % which display the license on screen for three seconds
+      feval(licensefile);
+    end
+  end
+  
   % for linux computers in the F.C. Donders Centre
   prefix = '/home/common/matlab';
   if ~status && (strcmp(computer, 'GLNX86') || strcmp(computer, 'GLNXA64'))
