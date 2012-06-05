@@ -30,18 +30,18 @@ cfg.timwin = 0.5;
 cfg.winstepsize = 0.001;
 cfg.method = 'ppc0';
 sts_tfr = ft_spiketriggeredspectrum_stat(cfg,sts);
-figure, imagesc(sts_tfr.time, sts_tfr.freq, squeeze(sts_tfr.ppc0(:,1,:))'), colorbar
+figure, imagesc(sts_tfr.time, sts_tfr.freq, squeeze(sts_tfr.ppc0(1,:,:))'), colorbar
 %
 cfg.method = 'ppc1';
 sts_tfr = ft_spiketriggeredspectrum_stat(cfg,sts);
 
-figure, imagesc(sts_tfr.time, sts_tfr.freq, squeeze(sts_tfr.ppc1(:,1,:))'), colorbar
+figure, imagesc(sts_tfr.time, sts_tfr.freq, squeeze(sts_tfr.ppc1(1,:,:))'), colorbar
 %
 cfg = [];
 cfg.method = 'ppc1';
 sts_tfr = ft_spiketriggeredspectrum_stat(cfg,sts);
 
-figure, plot(sts_tfr.freq, squeeze(sts_tfr.ppc1(:,1,:))'), colorbar
+figure, plot(sts_tfr.freq, squeeze(sts_tfr.ppc1(1,:,:))'), colorbar
 
 %%
 % now make a case where no phase locking should be present
@@ -77,4 +77,4 @@ cfg.winstepsize = 0.001;
 cfg.method = 'ppc0';
 sts_tfr = ft_spiketriggeredspectrum_stat(cfg,sts);
 
-figure, imagesc(sts_tfr.time, sts_tfr.freq, squeeze(sts_tfr.ppc0(:,1,:))'), colorbar
+figure, imagesc(sts_tfr.time, sts_tfr.freq, squeeze(sts_tfr.ppc0(1,:,:))'), colorbar
