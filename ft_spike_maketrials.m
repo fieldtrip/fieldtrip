@@ -117,6 +117,10 @@ if nargin==2
     spike.trial{iUnit}  = trialNum(:)';
     spike.trialtime     = time;
     if hasWave, spike.waveform{iUnit} = spike.waveform{iUnit}(:,:,sel); end
+    try spike.unit{iUnit} = spike.unit{iUnit}(sel); end
+    if isfield(spike,'fourierspctrm')
+      spike.fourierspctrm{iUnit} = spike.fourierspctrm{iUnit}(sel,:,:); 
+    end
     ts = spike.timestamp{iUnit}(indx(sel));
     spike.timestamp{iUnit} = ts(:)';
   end
@@ -149,28 +153,42 @@ else
     % determine the corresponding sample numbers for each timestamp
     ts = spike.timestamp{iUnit}(:);
     sample = double(ts-FirstTimeStamp)/double(TimeStampPerSample) + 1; % no rounding (compare ft_appendspike)
+    waveSel = [];
     for iTrial = 1:nTrials
       begsample = trl(iTrial,1);
       endsample = trl(iTrial,2);
       sel       = find((sample>=begsample) & (sample<=endsample));
       dSample   = sample(sel)-begsample;
       tTrial    = dSample/data.fsample + data.time{iTrial}(1);
-      sel       = tTrial<=data.time{iTrial}(end); % to avoid rounding errors
-      tTrial    = tTrial(sel);
+      sel2      = tTrial<=data.time{iTrial}(end); % to avoid rounding errors
+      tTrial    = tTrial(sel2);
       trialNum  = ones(1,length(tTrial))*iTrial;
-      
-      % gather the results
+                   
       spike.time{iUnit}         = [spike.time{iUnit} tTrial(:)'];
       spike.trial{iUnit}        = [spike.trial{iUnit} trialNum(:)'];
       if iUnit==1
         spike.trialtime(iTrial,:) = [data.time{iTrial}(1) data.time{iTrial}(end)];
       end
-      
+      finalsel = sel(sel2);
+      waveSel  = [waveSel; finalsel(:)];
       % construct the sample info based on timestamps
       try
         spike.sampleinfo = double(data.sampleinfo-1)*double(TimeStampPerSample) + double(FirstTimeStamp);
       end
     end 
+    % gather the results
+    if isfield(spike, 'waveform') && ~isempty(spike.waveform{iUnit})
+      spike.waveform{iUnit} = spike.waveform{iUnit}(:,:,waveSel);
+    end
+    try
+      spike.timestamp{iUnit} = spike.timestamp{iUnit}(waveSel);
+    end
+    try
+      spike.unit{iUnit}      = spike.unit{iUnit}(waveSel);
+    end
+    if isfield(spike,'fourierspctrm')
+      spike.fourierspctrm{iUnit} = spike.fourierspctrm{iUnit}(waveSel,:,:);
+    end
   end 
   ft_postamble trackconfig
   ft_postamble callinfo
