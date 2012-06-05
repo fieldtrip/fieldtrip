@@ -130,6 +130,7 @@ cfg.spikechannel = ft_channelselection(cfg.spikechannel, spikelabel);
 unitsel          = match_str(spikelabel, cfg.spikechannel);
 nspikesel        = length(unitsel); % number of spike channels
 if nspikesel>1, error('only one unit should be selected for now'); end
+if nspikesel==0, error('no unit was selected'); end
 
 % collect frequency information
 if strcmp(cfg.foi, 'all'),  
