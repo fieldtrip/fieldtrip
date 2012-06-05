@@ -8,6 +8,139 @@ function test_ft_checkdata
 % make some raw data with unequal time-axis, excluding 0
 data = [];
 data.label = {'1', '2'};
+
+for m=[eps exp(1) pi 1:20]
+  for n=.1:.1:m  
+    data.time{1} = -.5:(n/m):-.1;
+    data.time{2} = -.5:(n/m):-.1;
+    fsample = mean(diff(data.time{1}));
+    if fsample <= 0
+      continue;
+    end
+    for i=1:numel(data.time)
+      data.trial{i} = rand(size(data.label, 2), size(data.time{i}, 2));
+    end
+
+    tmp = ft_checkdata(data, 'datatype', 'timelock');
+    
+    if (mean(diff(tmp.time)) - fsample > 12e-17)
+      error('estimation of fsample does not match!')
+    end
+  end
+end
+
+for m=[eps exp(1) pi 1:20]
+  for n=.1:.1:m  
+    data.time{1} = .1:(n/m):.5;
+    data.time{2} = .1:(n/m):.5;
+    fsample = mean(diff(data.time{1}));
+    if fsample <= 0
+      continue;
+    end
+    for i=1:numel(data.time)
+      data.trial{i} = rand(size(data.label, 2), size(data.time{i}, 2));
+    end
+
+    tmp = ft_checkdata(data, 'datatype', 'timelock');
+    
+    if (mean(diff(tmp.time)) - fsample > 12e-17)
+      error('estimation of fsample does not match!')
+    end
+  end
+end
+
+% make some raw data with strange time-axis
+data = [];
+data.label = {'1', '2'};
+
+for m=[eps exp(1) pi 1:20]
+  for n=.1:.1:m
+    data.time{1} = [-(n.^2/m) -(n/m)];
+    data.time{2} = [-(n.^2/m) -(n/m)];
+    fsample = mean(diff(data.time{1}));
+    if fsample <= 0
+      continue;
+    end
+    for i=1:numel(data.time)
+      data.trial{i} = rand(size(data.label, 2), size(data.time{i}, 2));
+    end
+
+    tmp = ft_checkdata(data, 'datatype', 'timelock');
+    
+    if (mean(diff(tmp.time)) - fsample > 12e-17)
+      error('estimation of fsample does not match!')
+    end
+  end
+  for n=eps^1.1:eps^1.1:eps
+    data.time{1} = [-(n.^2/m) -(n/m)];
+    data.time{2} = [-(n.^2/m) -(n/m)];
+    fsample = mean(diff(data.time{1}));
+    if fsample <= 0
+      continue;
+    end
+    for i=1:numel(data.time)
+      data.trial{i} = rand(size(data.label, 2), size(data.time{i}, 2));
+    end
+
+    tmp = ft_checkdata(data, 'datatype', 'timelock');
+    
+    if (mean(diff(tmp.time)) - fsample > 12e-17)
+      error('estimation of fsample does not match!')
+    end
+  end
+end
+
+for m=[eps exp(1) pi 1:20]
+  for n=eps:1:m
+    data.time{1} = [-m -n];
+    data.time{2} = [-m -n];
+    fsample = mean(diff(data.time{1}));
+    if fsample <= 0
+      continue;
+    end
+    for i=1:numel(data.time)
+      data.trial{i} = rand(size(data.label, 2), size(data.time{i}, 2));
+    end
+
+    if (n==eps)
+      try
+        tmp = ft_checkdata(data, 'datatype', 'timelock');
+        if (mean(diff(tmp.time)) - fsample > 12e-17)
+          warning('estimation of fsample does not match, but we''re near eps!')
+        end
+      catch
+          warning('checkdata crashed, but we''re near eps!')
+      end
+    else
+      tmp = ft_checkdata(data, 'datatype', 'timelock');
+      if (mean(diff(tmp.time)) - fsample > 12e-17)
+        error('estimation of fsample does not match!')
+      end
+    end
+  end
+  for n=eps^1.1:eps^1.1:eps
+    data.time{1} = [-(n.^2/m) -(n/m)];
+    data.time{2} = [-(n.^2/m) -(n/m)];
+    fsample = mean(diff(data.time{1})); 
+    if fsample <= 0
+      continue;
+    end
+    for i=1:numel(data.time)
+      data.trial{i} = rand(size(data.label, 2), size(data.time{i}, 2));
+    end
+
+    tmp = ft_checkdata(data, 'datatype', 'timelock');
+    
+    if (mean(diff(tmp.time)) - fsample > 12e-17)
+      error('estimation of fsample does not match!')
+    end
+  end
+end
+
+
+% make some raw data with unequal time-axis, excluding 0
+data = [];
+data.label = {'1', '2'};
 data.time{1} = [-1.5 -1.28];
 data.time{2} = [2.68 2.9];
 
@@ -34,6 +167,40 @@ end
 tmp = ft_checkdata(data, 'datatype', 'timelock');
 
 if ~isequal(tmp.time, [-2:4])
+  error('time axis is wrong');
+end
+
+% make some raw data with unequal time-axis, strictly < 0
+% see bug 1477
+data = [];
+data.label = {'1', '2'};
+data.time{1} = [-5 -4];
+data.time{2} = [-3 -2];
+
+for i=1:numel(data.time)
+  data.trial{i} = rand(size(data.label, 2), size(data.time{i}, 2));
+end
+
+tmp = ft_checkdata(data, 'datatype', 'timelock');
+
+if ~isequal(tmp.time, [-5:-2])
+  error('time axis is wrong');
+end
+
+% make some raw data with unequal time-axis, strictly > 0
+% related to bug 1477
+data = [];
+data.label = {'1', '2'};
+data.time{1} = [4 5];
+data.time{2} = [2 3];
+
+for i=1:numel(data.time)
+  data.trial{i} = rand(size(data.label, 2), size(data.time{i}, 2));
+end
+
+tmp = ft_checkdata(data, 'datatype', 'timelock');
+
+if ~isequal(tmp.time, [2:5])
   error('time axis is wrong');
 end
 

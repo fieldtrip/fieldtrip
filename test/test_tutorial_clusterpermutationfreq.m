@@ -165,6 +165,7 @@ freqFIC_activation_planar_cmb.grad = dataFIC.grad;
 
 %% Permutation test
 cfg = [];
+cfg.channel          = {'MEG', '-MLP31', '-MLO12'};
 cfg.channel          = {'MEG'};
 cfg.latency          = [0.8 1.4];
 cfg.method           = 'montecarlo';
@@ -197,7 +198,7 @@ cfg.uvar     = 2;
 
 %% Plotting the results
 cfg = [];
-cfg.alpha  = 0.025;
+cfg.alpha  = 0.05;
 cfg.zparam = 'stat';
 cfg.zlim   = [-4 4];
 cfg.layout = 'CTF151s.lay';

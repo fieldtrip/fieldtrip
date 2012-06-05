@@ -96,6 +96,7 @@ cfg.foi        = 2:2:30;
 cfg.taper      = 'hanning';
 cfg.t_ftimwin  = ones(1,numel(cfg.foi)).*0.5;
 cfg.toi        = (250:50:750)./1000;
+cfg.polyremoval= 0;
 cfg.inputfile = fullfile(dataset.origdir,version,'raw',dataset.type,['preproc_',dataset.datatype]);
 if writeflag,
   cfg.outputfile = fullfile(dataset.origdir,version,'freq',dataset.type,['freq_mtmconvol_',postfix,dataset.datatype]);
@@ -160,6 +161,7 @@ cfg.output     = output;
 cfg.keeptrials = keeptrials;
 cfg.foilim     = [0 100];
 cfg.taper      = 'hanning';
+cfg.polyremoval= 0;
 cfg.inputfile  = fullfile(dataset.origdir,version,'raw',dataset.type,['preproc_',dataset.datatype]);
 if writeflag,
   cfg.outputfile = fullfile(dataset.origdir,version,'freq',dataset.type,['freq_mtmfft_',postfix,dataset.datatype]);
