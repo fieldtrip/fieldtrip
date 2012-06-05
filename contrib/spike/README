@@ -1,0 +1,21 @@
+This is the FieldTrip SPIKE toolbox. It contains functions that
+complement the FieldTrip toolbox and allow you to do spike and
+spike-field analysis, especially aimed at the analysis of animal
+electrophysiology data.
+
+The development of this spike toolbox was initiated at the FCDC/DCCN
+in Nijmegen by Robert Oostenveld and Thilo Womelsdorf, and subsequently
+has been carried over to Martin Vinck at the SILS in Amsterdam.
+
+For more information please visit http://fieldtrip.fcdonders.nl/tutorial/spike
+and http://fieldtrip.fcdonders.nl/tutorial/spikefield.
+
+The FieldTrip software is free but copyrighted software, distributed
+under the terms of the GNU General Public Licence as published by
+the Free Software Foundation (either version 2, or at your option
+any later version). See the file COPYING for more details.
+
+Copyright (C) 2008-2012, Donders Institute for Brain, Cognition and Behaviour, Radboud University Nijmegen, The Netherlands (DCCN, DCC, DCN)
+Copyright (C) 2010-2012, Swammerdam Institute for Life Sciences, University of Amsterdam (SILS)
+Copyright (C) 2003-2008, F.C. Donders Centre, Radboud University Nijmegen, The Netherlands (FCDC)
+
