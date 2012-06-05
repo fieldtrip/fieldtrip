@@ -477,12 +477,20 @@ if ~isempty(ckeckfilenames) && strcmp(ckeckfilenames, 'yes')
   end
   
   if ~isempty(cfg.dataset)
-    if strcmp(cfg.dataset, 'gui');
-      [f, p] = uigetfile('*.*', 'Select a file');
+    if strcmp(cfg.dataset, 'gui') || strcmp(cfg.dataset, 'uigetfile')
+      % display a graphical file selection dialog
+      [f, p] = uigetfile('*.*', 'Select a data file');
       if isequal(f, 0)
         error('User pressed cancel');
       else
         d = fullfile(p, f);
+      end
+      cfg.dataset = d;
+    elseif strcmp(cfg.dataset, 'uigetdir')
+      % display a graphical directory selection dialog
+      d = uigetdir('*.*', 'Select a data directory');
+      if isequal(d, 0)
+        error('User pressed cancel');
       end
       cfg.dataset = d;
     end
