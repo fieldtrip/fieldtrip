@@ -160,7 +160,7 @@ function [data] = ft_preprocessing(cfg, data)
 % cfg.refchannel, documented
 % cfg.reref, documented
 
-% Copyright (C) 2003-2007, Robert Oostenveld, SMI, FCDC
+% Copyright (C) 2003-2012, Robert Oostenveld, SMI, FCDC
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
