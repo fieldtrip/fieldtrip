@@ -55,7 +55,7 @@ function spike = ft_datatype_spike(spike, varargin)
 %
 %         trialtime:  [100x2 double]
 %
-% As an example, FT_SPIKE_REDEFINETRIALS could result in the following
+% As an example, FT_SPIKE_MAKETRIALS could result in the following
 % SPIKE structure that represents the spikes of three units that were
 % observed in 100 trials:
 %
@@ -64,6 +64,7 @@ function spike = ft_datatype_spike(spike, varargin)
 %         time:            {[1x504 double] [1x50 double] [1x101 double]}
 %         trial:           {[1x504 double] [1x50 double] [1x101 double]}
 %         trialtime:       [100x2 double]
+%         sampleinfo:      [100x2 double]
 %         waveform:        {[1x32x504 double] [1x32x50 double] [1x32x101 double]}
 %         waveformdimord: '{chan}_lead_time_spike'
 %         cfg
@@ -179,7 +180,7 @@ switch version
       catch
         {'unit1'}; %default
       end
-      spike.fourierspctrmdimord = '{chan}_spike_lfplabel_freq';
+      spike.dimord = '{chan}_spike_lfplabel_freq';
     end
     
     % fix the waveform dimensions
