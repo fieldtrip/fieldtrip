@@ -192,8 +192,8 @@ switch version
       end
       
       if any(hasdat) %otherwise, ignore
-        if ~isfield(spike, 'waveformdimord')
-          spike.waveformdimord = '{chan}_lead_time_spike';
+        if ~isfield(spike, 'dimord')
+          spike.dimord = '{chan}_lead_time_spike';
         end
         % fix the dimensions of the waveform dimord.
         for iUnit = 1:nUnits
