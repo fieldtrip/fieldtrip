@@ -308,7 +308,7 @@ for iUnit = 1:nspikesel
   Sts.time{iUnit}           = cat(1, spiketime{iUnit,:});
   Sts.trial{iUnit}          = cat(2, spiketrial{iUnit,:})';
 end
-Sts.fourierspctrmdimord = '{chan}_spike_lfpchan_freq';
+Sts.dimord = '{chan}_spike_lfpchan_freq';
 Sts.trialtime = spike.trialtime;
   
 % do the general cleanup and bookkeeping at the end of the function

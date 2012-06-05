@@ -244,19 +244,10 @@ end % for each trial
 sts.lfplabel       = data.label(chansel);
 sts.freq           = freqaxis(fbeg:fend);
 sts.dimord         = 'rpt_chan_freq';
-
-sts.fourierspctrm  = cat(1, spectrum{:});
-sts.time           = cat(2,spiketime{:})';  % this deviates from the standard output, but is included for reference
-sts.trial          = cat(2,spiketrial{:})'; % this deviates from the standard output, but is included for reference
-
-% select all trials that do not contain data in the first sample
-sel = isnan(sts.fourierspctrm(:,1,1));
-fprintf('removing %d trials from the output that do not contain data\n', sum(sel));
-% remove the selected trials from the output
-sts.fourierspctrm  = {sts.fourierspctrm(~sel,:,:)};
-sts.fourierspctrmdimord = '{chan}_spike_lfpchan_freq';
-sts.time       = {sts.time(~sel)};
-sts.trial      = {sts.trial(~sel)};
+sts.fourierspctrm  = {cat(1, spectrum{:})};
+sts.time           = {cat(2,spiketime{:})'};  % this deviates from the standard output, but is included for reference
+sts.trial          = {cat(2,spiketrial{:})'}; % this deviates from the standard output, but is included for reference
+sts.dimord = '{chan}_spike_lfpchan_freq';
 for i = 1:ntrial
   sts.trialtime(i,:) = [data.time{i}(1) data.time{i}(end)];
 end
