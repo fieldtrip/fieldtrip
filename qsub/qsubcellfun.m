@@ -1,8 +1,8 @@
 function varargout = qsubcellfun(fname, varargin)
 
 % QSUBCELLFUN applies a function to each element of a cell-array. The
-% function execution is done in parallel using the Torque, SGE or PBS
-% batch queue system.
+% function execution is done in parallel using the Torque, SGE, PBS or
+% SLURM batch queue system.
 %
 % Use as
 %   argout = qsubcellfun(fname, x1, x2, ...)

@@ -1,7 +1,7 @@
 function [jobid, puttime] = qsubfeval(varargin)
 
 % QSUBFEVAL evaluates the specified MATLAB function on the input arguments
-% using the Torque or SGE batch queue system.
+% using the Torque, SGE, PBS or SLURM batch queue system.
 %
 % Use as
 %   jobid  = qsubfeval(fname, arg1, arg2, ...)

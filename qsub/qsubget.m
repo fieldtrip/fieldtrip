@@ -1,6 +1,7 @@
 function varargout = qsubget(jobid, varargin)
 
-% QSUBGET get the output arguments after the remote job has been executed.
+% QSUBGET get the output arguments after the remote job has been executed
+% on the Torque, SGE, PBS or SLURM batch queue system.
 %
 % Use as
 %   jobid  = qsubfeval(fname, arg1, arg2, ...)

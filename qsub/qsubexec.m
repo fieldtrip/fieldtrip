@@ -1,8 +1,8 @@
 function [argout, optout] = qsubexec(jobid)
 
-% QSUBEXEC is a helper function to execute a job on the Torque or SGE batch
-% queue system. Normally you should not start this function yourself, but
-% rather use QSUBCELLFUN or QSUBFEVAL.
+% QSUBEXEC is a helper function to execute a job on the Torque, SGE, PBS
+% or SLURM batch queue system. Normally you should not start this function
+% yourself, but rather use QSUBCELLFUN or QSUBFEVAL.
 %
 % This function performs the following tasks
 % - load the function name, input arguments and further options from the input file
