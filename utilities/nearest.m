@@ -102,8 +102,8 @@ elseif val<minarray
   [dum, indx] = min(array);
   
 else
-  % return the first occurence of the nearest number
-  [dum, indx] = min(abs(array(:) - val));
+  % return the first occurence of the nearest number and implements a threshold to correct for errors due to numerical precision 
+  [dum, indx] = min(round(10^6.*(abs(array(:) - val)))./10^6); 
   
 end
 
