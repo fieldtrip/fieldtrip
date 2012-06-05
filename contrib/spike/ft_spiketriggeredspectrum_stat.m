@@ -284,13 +284,15 @@ else % compute time-resolved spectra of statistic
       spctra       = spike.fourierspctrm(:,iChan,iFreq); % values to accumulate
       tm           = spike.time;
       hasnan       = isnan(spctra);    
-      [tm(hasnan), spctra(hasnan)]  = deal([]);
+      tm(hasnan) = [];
+      spctra(hasnan) = [];
 
       % compute the degree of freedom per time bin and the index for every spike
       [dof, indx] = histc(tm, bins); % get the index per spike, and number per bin                          
       if isempty(dof), continue,end    
       toDel       = indx==length(bins) | indx==0; % delete those points that are equal to last output histc or don't fall in
-      [spctra(toDel),indx(toDel)] = deal([]);
+      spctra(toDel) = [];
+      indx(toDel)   = [];
       dof(end)    = []; % the last bin is a single point in time, so we delete it
 
       % compute the sum of spikes per window at every time point
@@ -339,7 +341,8 @@ else % compute time-resolved spectra of statistic
              spctraTrial  = spike.fourierspctrm(spikesInTrial,iChan,iFreq);       
              tm           = spike.time;
              hasnan       = isnan(spctraTrial);    
-             [tm(hasnan), spctraTrial(hasnan)]  = deal([]);
+             tm(hasnan) = [];
+             spctraTrial(hasnan) = [];
 
              % bin the spikes and delete spikes out of the selected time
              [dof, indx]     = histc(tm(spikesInTrial), bins); % get the index per spike, and number per bin                          
