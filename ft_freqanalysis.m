@@ -180,6 +180,7 @@ function [freq] = ft_freqanalysis(cfg, data)
 
 % Copyright (C) 2003-2006, F.C. Donders Centre, Pascal Fries
 % Copyright (C) 2004-2006, F.C. Donders Centre, Markus Siegel
+% Copyright (C) 2007-2012, DCCN, The FieldTrip team
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
