@@ -711,6 +711,11 @@ switch dataformat
       error('the EGI_MFF format requires that the java virtual machine is available, see http://fieldtrip.fcdonders.nl/getting_started/egi')
     end
     if ~(exist('com.egi.services.mff.api.MFFFactory', 'class')==8)
+      % try to add it on the fly to the dynamic classpath
+      javaclasspath(fullfile(fileparts(which('mff_getEEGFilename')), 'java', 'MFF-1.0.jar'))
+    end
+    if ~(exist('com.egi.services.mff.api.MFFFactory', 'class')==8)
+      % give an error if it still does not exist
       error('the EGI_MFF format requires the "MFF-x.y.jar" file to be on your classpath, see http://fieldtrip.fcdonders.nl/getting_started/egi')
     end
     
