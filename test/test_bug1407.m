@@ -7,8 +7,8 @@ function test_bug1407
 % TEST read_mff_header read_mff_data read_mff_event mff_getEEGFilename mff_getSummaryInfo mff_getObject mff_micros2Sample
 
 ft_hastoolbox('egi_mff', 1);
-datadir = fileparts(which('read_mff_header'));
-datadir = fullfile(datadir, 'test');
+
+datadir = '/home/common/matlab/fieldtrip/data/test/bug1407';
 cd(datadir)
 
 dataset = {
@@ -31,7 +31,7 @@ for i=1:length(dataset)
   % keep all results to compare v1 and v2
   v1_hdr{i} = hdr;
   v1_dat{i} = dat;
-  v1_evt{i} = evt;
+  v1_evt{i} = event;
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -48,9 +48,9 @@ for i=1:length(dataset)
   % keep all results to compare v1 and v2
   v2_hdr{i} = hdr;
   v2_dat{i} = dat;
-  v2_evt{i} = evt;
+  v2_evt{i} = event;
 end
 
-% FIXME it would make sense to compare the v1 results to the v2 results. 
+% FIXME it would make sense to compare the v1 results to the v2 results.
 
 
