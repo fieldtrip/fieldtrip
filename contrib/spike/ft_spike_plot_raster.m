@@ -10,34 +10,31 @@ function [cfg] = ft_spike_plot_raster(cfg, spike, timelock)
 %
 % The input spike data structure should be organized as the spike or the raw datatype
 % The optional input timelock should be organized as the timelock datatype,
-% e.g. the output from ft_spike_psth or ft_spikedensity, having the average
-% firing rate / spike count per time-point / time-bin.
+% e.g. the output from FT_SPIKE_PSTH or FT_SPIKEDENSITY, having the average
+% firing rate / spike count per time-point / time-bin. However, timelock
+% could also be the output from FT_TIMELOCKANALYSIS.
 %
-% Configuration options related to selection of spike channel and trials and latencies
+% Configuration options 
 %   cfg.spikechannel     =  see FT_CHANNELSELECTION for details
 %   cfg.latency          =  [begin end]` in seconds, 'maxperiod' (default), 'minperiod',
 %                           'prestim' (all t<=0), or 'poststim' (all t>=0).
 %   cfg.linewidth        =  number indicating the width of the lines (default = 1);
 %   cfg.cmapneurons      =  'auto' (default), or nUnits-by-3 matrix.
+%                           Controls coloring of spikes and psth/density
+%                           data if multiple cells are present.
 %   cfg.spikelength      =  number >0 and <=1 indicating the length of the spike. If
 %                           cfg.spikelength = 1, then no space will be left between
 %                           subsequent rows representing trials (row-unit is 1).
 %   cfg.trialborders     =  'yes' or 'no'. If 'yes', borders of trials are plotted
-%
-% Configuration options related to additionally plotting the TOPDATA
 %   cfg.topplotsize      =  number ranging from 0 to 1, indicating the proportion of the
 %                           rasterplot that the top plot will take (e.g., with 0.7 the top
 %                           plot will be 70% of the rasterplot in size). Default = 0.5.
 %   cfg.topplotfunc      =  'bar' (default) or 'line'.
 %   cfg.errorbars        = 'no', 'std', 'sem' (default), 'conf95%','var'
 %
-% General:
 %   cfg.interactive      = 'yes' (default) or 'no'. If 'yes', zooming and panning operate via callbacks.
 %
-% Outputs:
-%   cfg containing the plot configurations
-%
-% Copyright (C) 2010-2012, Martin Vinck; F.C. Donders Centre for Neuroimaging; University of Amsterdam
+% Copyright (C) 2010-2012, Martin Vinck
 %
 % $Id$
 
@@ -50,7 +47,7 @@ ft_preamble callinfo
 ft_preamble trackconfig
 
 % check if input spike structure is indeed a spike structure
-spike = ft_checkdata(spike,'datatype', 'spike', 'feedback', 'yes');
+spike = ft_checkdata(spike,'datatype', 'spike', 'feedback', 'yes'); % converts raw as well
 
 % get the default options
 cfg.spikechannel = ft_getopt(cfg, 'spikechannel', 'all');
@@ -79,10 +76,10 @@ cfg = ft_checkopt(cfg,'errorbars', 'char', {'sem', 'std', 'conf95%', 'no', 'var'
 cfg = ft_checkopt(cfg,'trialborders', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'interactive', 'char', {'yes', 'no'});
 
-% check which features should be present in the rasterplot and psth
+% check if a third input is present, and check if it's a timelock structure
 if nargin==3
   doTopData = true;
-  timelock = ft_checkdata(timelock,'datatype', 'timelock', 'feedback', 'yes');
+  timelock  = ft_checkdata(timelock,'datatype', 'timelock', 'feedback', 'yes');
 else
   doTopData = false;
 end
@@ -91,8 +88,7 @@ end
 cfg.spikechannel = ft_channelselection(cfg.spikechannel, spike.label);
 spikesel    = match_str(spike.label, cfg.spikechannel);
 nUnits   = length(spikesel); % number of spike channels
-if nUnits==0, error('MATLAB:ft_spike_plot_raster:cfg:spikechannel:noSpikeChanSelected',...
-    'No spikechannel selected by means of cfg.spikechannel');
+if nUnits==0, error('No spikechannel selected by means of cfg.spikechannel');
 end
 
 % get the number of trials or change DATA according to cfg.trials
@@ -103,11 +99,10 @@ elseif islogical(cfg.trials)
   cfg.trials = find(cfg.trials);
 end
 cfg.trials = sort(cfg.trials(:));
-if max(cfg.trials)>nTrialsOrig, error('MATLAB:ft_spike_plot_raster:cfg:trials:maxExceeded',...
-    'maximum trial number in cfg.trials should not exceed length of DATA.trial')
+if max(cfg.trials)>nTrialsOrig, error('maximum trial number in cfg.trials should not exceed length of spike.trial')
 end
 if isempty(cfg.trials),
-  errors('MATLAB:ft_spike_plot_raster:cfg:trials','No trials were selected in cfg.trials');
+  errors('No trials were selected in cfg.trials');
 end
 
 % determine the duration of each trial
@@ -124,28 +119,24 @@ elseif strcmp(cfg.latency,'prestim')
 elseif strcmp(cfg.latency,'poststim')
   cfg.latency = [0 max(endTrialLatency)];
 elseif ~isrealvec(cfg.latency)||length(cfg.latency)~=2
-  error('MATLAB:fieldtrip:spikerate:cfg:latency',...
-    'cfg.latency should be "max", "min", "prestim", "poststim" or 1-by-2 numerical vector');
+  error('cfg.latency should be "max", "min", "prestim", "poststim" or 1-by-2 numerical vector');
 end
 if cfg.latency(1)>cfg.latency(2),
-  error('MATLAB:ft_spike_plot_raster:cfg:latency:wrongOrder',...
-    'cfg.latency should be a vector in ascending order, i.e., cfg.latency(2)>cfg.latency(1)');
+  error('cfg.latency should be a vector in ascending order, i.e., cfg.latency(2)>cfg.latency(1)');
 end
 % check whether the time window fits with the data
 if (cfg.latency(1) < min(begTrialLatency)), cfg.latency(1) = min(begTrialLatency);
-  warning('MATLAB:ft_spike_plot_raster:cfg:latency:correctBeg',...
-    'Correcting begin latency of averaging window');
+  warning('Correcting begin latency of averaging window');
 end
 if (cfg.latency(2) > max(endTrialLatency)), cfg.latency(2) = max(endTrialLatency);
-  warning('MATLAB:ft_spike_plot_raster:cfg:latency:correctEnd',...
-    'Correcting begin latency of averaging window');
+  warning('Correcting begin latency of averaging window');
 end
 
 % delete trials that are not in our window
 overlaps      = endTrialLatency>=cfg.latency(1) & begTrialLatency<=cfg.latency(2);
 trialSel      = overlaps(:);
 cfg.trials    = cfg.trials(trialSel); %update the trial selection
-if isempty(cfg.trials),warning('MATLAB:ft_spike_plot_raster:cfg:trials','No trials were selected');end
+if isempty(cfg.trials),warning('No trials were selected');end
 
 % create the data that should be plotted
 [unitX,unitY] = deal(cell(1,nUnits));
@@ -160,13 +151,11 @@ for iUnit = 1:nUnits
 end
 
 if cfg.spikelength<=0 || cfg.spikelength>1
-  error('MATLAB:ft_spike_plot_raster:cfg:spikelength:unknownOption',...
-    'cfg.spikelength should be a single number >0 and <=1. 1 row (1 trial) = 1');
+  error('cfg.spikelength should be a single number >0 and <=1. 1 row (1 trial) = 1');
 end
 
 if cfg.topplotsize<=0 || cfg.topplotsize>1
-  error('MATLAB:ft_spike_plot_raster:cfg:topplotsize:unknownOption',...
-    'cfg.topplotsize should be a single number >0 and <=1. 0.7 = 70%');
+  error('cfg.topplotsize should be a single number >0 and <=1. 0.7 = 70%');
 end
 
 % plot the trial borders if desired
@@ -200,8 +189,7 @@ for iUnit = 1:nUnits
   if isrealmat(cfg.cmapneurons) && all(size(cfg.cmapneurons) ./ [nUnits 3])
     color = cfg.cmapneurons(iUnit,:);
   else
-    error('MATLAB:ft_spike_plot_raster:cfg:cmapneurons:unknownOption',...
-      'cfg.cmapneurons should be nUnits-by-3 matrix or "auto"');
+    error('cfg.cmapneurons should be nUnits-by-3 matrix or "auto"');
   end
   
   % create axes for the rasterplot, all go to the same position, so do this for unit 1
@@ -234,13 +222,12 @@ if doTopData
   
   % match on the basis of labels, and specify this in the documentary
   unitIndx = find(ismember(timelock.label,spike.label(spikesel)));
-  if sum(unitIndx)<nUnits, error('MATLAB:ft_spike_plot_raster:timelock:missingLabel',...
-      'timelock.label should contain all label of selected units');
-  end
+  if sum(unitIndx)<nUnits, error('timelock.label should contain all label of selected units'); end
   
   % select timepoints  and get the data to be plotted
   binSel = timelock.time>=cfg.latency(1) & timelock.time<=cfg.latency(2);
-  y      = timelock.avg(unitIndx,binSel);
+  dataY  = timelock.avg(unitIndx,binSel);
+  dataX  = timelock.time(binSel);
   
   % create the position for the topplot and axes with this position
   posTopPlot = [0 pos(4)*(1-cfg.topplotsize)  0 0] + pos.*[1 1 1 cfg.topplotsize];
@@ -249,23 +236,20 @@ if doTopData
   
   % make the bar or the line plot
   if strcmp(cfg.topplotfunc,'bar')
-    avgHdl  = feval(cfg.topplotfunc,timelock.time(binSel),y', 'Stack');
+    avgHdl  = feval(cfg.topplotfunc,dataX,dataY', 'stack');
     for iUnit = 1:nUnits
-      set(avgHdl(iUnit),'FaceColor',cfg.cmapneurons(iUnit,:),'EdgeColor', cfg.cmapneurons(iUnit,:));
+      set(avgHdl(iUnit),'FaceColor',cfg.cmapneurons(iUnit,:),'EdgeColor', cfg.cmapneurons(iUnit,:),'LineWidth', 3);
     end
     if strcmp(cfg.topplotfunc,'bar'),set(avgHdl,'BarWidth', 1); end
+    if ~strcmp(cfg.errorbars,'no'), warning('no error bars can be plotted when cfg.topplotfunc = "bar"'); end
   else
-    x = timelock.time(binSel);
-    x = repmat(x(:),1,nUnits); % it puts multiple neurons here? check>
-    avgHdl  = feval(cfg.topplotfunc,x,y');
+    avgHdl  = feval(cfg.topplotfunc,dataX,dataY');
     for iUnit = 1:nUnits
       set(avgHdl(iUnit),'Color',cfg.cmapneurons(iUnit,:));
     end
-
     if ~strcmp(cfg.errorbars,'no')
       if ~isfield(timelock,'var')  || ~isfield(timelock,'dof')      
-        error('MATLAB:ft_spike_plot_psth:cfg:var',...
-          'timelock should contain field .var and .dof for errorbars');
+        error('timelock should contain field .var and .dof for errorbars');
       end
       df = timelock.dof(binSel);
       df = repmat(df(:)',[nUnits 1]);
@@ -276,19 +260,17 @@ if doTopData
       elseif strcmp(cfg.errorbars, 'var')
         err = timelock.var(unitIndx,binSel);
       elseif strcmp(cfg.errorbars, 'conf95%')
-        % use a try statement just in case the statistics toolbox doesn't work.
         tCrit = tinv(0.975,df);
-        err = tCrit.*sqrt(timelock.var(unitIndx,binSel)./df); % assuming normal distribution, SHOULD BE REPLACED BY STUDENTS-T!
+        err = tCrit.*sqrt(timelock.var(unitIndx,binSel)./df); 
       end
       err(~isfinite(err)) = NaN;
       for iUnit = 1:nUnits
-        upb = y(iUnit,binSel) + err(iUnit,binSel);
-        lowb = y(iUnit,binSel) - err(iUnit,binSel);
+        upb = dataY(iUnit,:) + err(iUnit,:);
+        lowb = dataY(iUnit,:) - err(iUnit,:);
         sl   = ~isnan(upb);
-        t    = timelock.time(binSel);
-        [X,Y] = polygonconf(t(sl),upb(sl)+0.0001,lowb(sl)-0.0001);
+        [X,Y] = polygonconf(dataX(sl),upb(sl)+0.0001,lowb(sl)-0.0001);
         hold on
-        hd = plot(X,Y,'-');
+        hd = plot(X,Y,'--');
         set(hd,'Color', cfg.cmapneurons(iUnit,:));
         hold on
       end
