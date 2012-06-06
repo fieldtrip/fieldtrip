@@ -377,7 +377,7 @@ end
 %%%% fit linear regression for every datapoint: to remove mean and ramp of signal  
 sumKern = ones(1,timwinSamples);
 avgKern = sumKern./timwinSamples;
-xKern   = timwinSamples:-1:1; % because convolution goes the other way
+xKern   = timwinSamples:-1:1; % because of definition conv2 function
 meanX   = mean(xKern);
 sumX    = sum(xKern);
 

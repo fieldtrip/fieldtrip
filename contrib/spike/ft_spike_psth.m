@@ -90,8 +90,7 @@ cfg        = trialselection(cfg,spike);
 cfg.spikechannel = ft_channelselection(cfg.spikechannel, spike.label);
 spikesel    = match_str(spike.label, cfg.spikechannel);
 nUnits      = length(spikesel);
-if nUnits==0, error('ft:spike_psth:cfg:spikechannel:noSpikeChanSelected',...
-    'No spikechannel selected by means of cfg.spikechannel');
+if nUnits==0, error('No spikechannel selected by means of cfg.spikechannel');
 end
 
 % determine the duration of each trial - we assume N by 2, see error check before
@@ -99,13 +98,10 @@ begTrialLatency = spike.trialtime(cfg.trials,1); % remember: already selected on
 endTrialLatency = spike.trialtime(cfg.trials,2);
 trialDur 		= endTrialLatency - begTrialLatency;
 % while we could simply deselect trials with trialtime field messed up, this may detect bugs
-if any(trialDur<0), error('MATLAB:spike_psth:SPIKE.time:reversedOrder',...
-    'SPIKE.time(:,1) should preceed SPIKE.time(:,2), your SPIKE.time field is messed up');
-end
+if any(trialDur<0), error('SPIKE.trialtime(:,1) should preceed SPIKE.trialtime(:,2), your SPIKE.time field is messed up'); end
 
 % select the latencies, use the same modular function in all the scripts
 cfg = latencyselection(cfg,begTrialLatency,endTrialLatency);
-
 
 % compute the optimal bin width if desired
 binsize = [];

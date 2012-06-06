@@ -12,18 +12,22 @@ function [sdf, sdfdata] = ft_spikedensity(cfg,data)
 % not kept. See cfg.winfunc below for more information on the specific use.
 %
 % Inputs:
-%   DATA should be organised in a structure as obtained from the
-%   FT_APPENDSPIKE or FT_SPIKESTATION_SPIKE2DATA or T_PREPROCESSING
-%   function.
+%   DATA should be organised in a RAW structure with M-ary spike
+%   representations obtained from FT_APPENDSPIKE(CFG,DATA,SPIKE) or
+%   FT_CHECKDATA(SPIKE,'DATATYPE', 'SPIKE', 'FSAMPLE', FSAMPLE). If data is
+%   a SPIKE structure the sampling frequency cfg.fsample determines the
+%   binning of the spikes (default cfg.fsample = 1000).
 %
 % Configurations:
 %   cfg.timwin         = [begin end], time of the smoothing kernel (default = [-0.1 0.1])
-%                        If cfg.winfunc = @alphawin, cfg.timwin(1) will be set to 0.
+%                        If cfg.winfunc = @alphawin, cfg.timwin(1) will be
+%                        set to 0. Hence, it is possible to use asymmetric
+%                        kernels. Optimally, the number of samples is
+%                        uneven.
 %   cfg.outputunit     = 'rate' (default) or 'spikecount'. This determines the physical unit
 %                        of our spikedensityfunction, either in firing rate or in
 %                        spikecount.
 %   cfg.winfunc        = (a) string or function handle, type of window to convolve with (def = @gauss).
-%                            Options should be set with cfg.winfuncopt
 %                        - @gauss (default)
 %                        - @alphawin, given by win = x*exp(-x/timeconstant)
 %                        - For standard window functions in the signal processing toolbox see
@@ -34,7 +38,7 @@ function [sdf, sdfdata] = ft_spikedensity(cfg,data)
 %                        For cfg.winfunc = @gauss: the standard devision in seconds (default =
 %                                         1/4 of window duration in seconds)
 %                        For cfg.winfunc = @wname with @wname any standard window function
-%                                         see window opts in that function and add as cell array
+%                                          see window opts in that function and add as cell array
 %   cfg.latency        = [begin end] in seconds, 'maxperiod' (default), 'minperiod',
 %                        'prestim'(t>=0), or 'poststim' (t>=0).
 %   cfg.vartriallen    = 'yes' (default) or 'no'.
@@ -52,13 +56,11 @@ function [sdf, sdfdata] = ft_spikedensity(cfg,data)
 %                        (default = 1000);
 % Outputs:
 %   - SDF is a structure similar to TIMELOCK (output from FT_TIMELOCKANALYSIS) and can be used
-%     in FT_TIMELOCKSTATISTICS for example.
+%     in FT_TIMELOCKSTATISTICS for example and FT_SPIKE_PLOT_RASTER
 %   - SDFDATA is a raw DATA type structure that can be used itself in all
 %   functions that support raw data input (such as FT_TIMELOCKANALYSIS, FT_FREQANALYSIS).
 
-% TODO: check that SDFDATA is indeed completely compatible!
-
-% Copyright (C) 2010, Martin Vinck
+% Copyright (C) 2010-2012, Martin Vinck
 %
 % $Id$
 
@@ -94,16 +96,20 @@ cfg = ft_checkopt(cfg,'winfunc', {'char', 'function_handle', 'doublevector'});
 cfg = ft_checkopt(cfg,'winfuncopt', {'cell', 'double', 'empty'});
 cfg = ft_checkopt(cfg,'fsample', 'double');
 
+cfg = ft_checkconfig(cfg,'allowed', ...
+  {'outputunit', 'spikechannel', 'latency', 'trials', 'vartriallen', 'keeptrials', 'timwin', 'winfunc', 'winfuncopt', 'fsample'});
+
 % check input data structure
 data = ft_checkdata(data,'datatype', 'raw', 'feedback', 'yes', 'fsample', cfg.fsample);
 
 % select the units
+[spikechannel, eegchannel] = detectspikechan(data);
+if strcmp(cfg.spikechannel, 'all'), cfg.spikechannel = spikechannel; end
+if ~all(ismember(cfg.spikechannel,spikechannel)), warning('some selected spike channels appear eeg channels'); end
 cfg.channel = ft_channelselection(cfg.spikechannel, data.label);
 spikesel    = match_str(data.label, cfg.channel);
 nUnits      = length(spikesel); % number of spike channels
-if nUnits==0, error('MATLAB:spike:density:cfg:spikechannel:noSpikeChanSelected',...
-    'No spikechannel selected by means of cfg.spikechannel');
-end
+if nUnits==0, error('No spikechannel selected by means of cfg.spikechannel'); end
 
 % get the number of trials or change DATA according to cfg.trials
 if  strcmp(cfg.trials,'all')
@@ -112,11 +118,10 @@ elseif islogical(cfg.trials)
   cfg.trials = find(cfg.trials);
 end
 cfg.trials = sort(cfg.trials(:));
-if max(cfg.trials)>length(data.trial),error('MATLAB:spike:density:cfg:trials:maxExceeded',...
-    'maximum trial number in cfg.trials should not exceed length of DATA.trial')
+if max(cfg.trials)>length(data.trial),error('maximum trial number in cfg.trials should not exceed length of DATA.trial')
 end
 if isempty(cfg.trials),
-  errors('MATLAB:spike:density:cfg:trials','No trials were selected in cfg.trials');
+  errors('No trials were selected in cfg.trials');
 end
 
 % determine the duration of each trial
