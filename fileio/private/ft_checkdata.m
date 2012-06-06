@@ -1880,29 +1880,29 @@ data.trial(1:nTrials) = {[]};
 data.time(1:nTrials)  = {[]};
 for iTrial = 1:nTrials
   
-  timeAx   = spike.trialtime(iTrial,1):(1/fsample):spike.trialtime(iTrial,2);
+  % make bins: note that the spike.time is already within spike.trialtime
+  x = [spike.trialtime(iTrial,1):(1/fsample):spike.trialtime(iTrial,2)];
+  timeBins   = [x x(end)+1/fsample] - (0.5/fsample); 
+  time       = (spike.trialtime(iTrial,1):(1/fsample):spike.trialtime(iTrial,2));
   
   % convert to continuous
-  trialData = zeros(nUnits,length(timeAx));
+  trialData = zeros(nUnits,length(time));
   for iUnit = 1:nUnits
     
     % get the timestamps and only select those timestamps that are in the trial
     ts       = spike.time{iUnit};
     hasTrial = spike.trial{iUnit}==iTrial;
     ts       = ts(hasTrial);
-    
-    % get all the samples at once without using loops
-    sample   = nearest_nd(timeAx,ts); 
-    
-    % because we have duplicates, simply get our vector by using histc trick
-    [N] = histc(sample,1:length(timeAx));
-    
+   
+    [N] = histc(ts,timeBins); 
+    N(end) = [];
+        
     % store it in a matrix
     trialData(iUnit,:) = N;
   end
   
   data.trial{iTrial} = trialData;
-  data.time{iTrial} = timeAx;
+  data.time{iTrial}  = time;
   
 end
 
@@ -1911,86 +1911,6 @@ data.label = spike.label;
 data.fsample = fsample;
 if isfield(spike,'hdr'), data.hdr = spike.hdr; end
 if isfield(spike,'cfg'), data.cfg = spike.cfg; end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [indx] = nearest_nd(x,y)
-
-% NEAREST return the index of an n-d matrix to an n-d matrix.
-%
-% [indx] = nearest_nd(x, y)
-%
-% Inputs:
-%   X can be a n-d matrix of any size (scalar, vector, n-d matrix).
-%   Y can be an n-d matrix of any size (scalar, vector, n-d matrix).
-%
-% If Y is larger than any X, we return the last index that the maximum value of X occurred.
-% Otherwise, we return the first occurence of the nearest X.
-%
-% If Y contains NaNs, we return a NaN for every NaN in Y.
-%
-% Outputs:
-%   INDX is a vector of size Y and contains the indices of the values in X that are
-%   closest to the respective value of Y. INDX is a linear index, such that x(INDX) gives
-%   the nearest values of X to Y. To convert INDX to subscripts, see IND2SUB.
-%
-
-% Copyright, Martin Vinck, 2009.
-
-% store the sizes of x and y, this is used to reshape INDX later on
-szY = size(y);
-
-% vectorize both x and y
-x = x(:);
-y = y(:);
-
-% from now on we can treat X and Y as vectors
-nY = length(y);
-nX = length(x);
-hasNan = isnan(y); % indices with nans in y, indx(hasNaN) will be set to NaN later.
-
-if nX==1,
-  indx = ones(1,nY);  % only one x value, so nearest is always only element
-else
-  if nY==1 % in this case only one y value, so use the old NEAREST code
-    if y>max(x)
-      % return the last occurence of the nearest number
-      [dum, indx] = max(flipud(x));
-      indx = nX + 1 - indx;
-    else
-      % return the first occurence of the nearest number
-      [mindist, indx] = min(abs(x(:) - y));
-    end
-  else
-    if any(y>max(x))
-      % for these return the last occurence of every number as in NEAREST
-      indx = zeros(1,nY);
-      i = y>max(x);
-      [dum,indx] = max(flipud(x));
-      indx(i)       = nX + 1 - indx;
-      % for the rest return the first occurence of every number
-      x = x(:);
-      y = y(~i)';
-      xRep = x(:,ones(1,length(y)));
-      yRep = y(ones(nX,1),:);
-      [mindist,indx(~i)] = min(abs(xRep-yRep));
-    else
-      x = x(:);
-      y = y';
-      xRep = x(:,ones(1,nY));
-      yRep = y(ones(nX,1),:);
-      [mindist,indx] = min(abs(xRep-yRep));
-    end
-  end
-end
-% return a NaN in INDX for a NaN in Y
-indx(hasNan) = NaN;
-
-% reshape the indx back to the y format
-if (sum(szY>1)>1 || length(szY)>2) % in this case we are dealing with a matrix
-  indx = reshape(indx,[szY]);
-end
 
 
 
