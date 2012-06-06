@@ -139,8 +139,9 @@ end
 % demean, and blcwindow into baselinewindow. to avoid having to create an
 % svn external for ft_checkconfig in fieldtrip/private, do the check
 % manually
-if isfield(cfg, 'blc'),       cfg.demean         = cfg.blc;       cfg = rmfield(cfg, 'blc'); end
-if isfield(cfg, 'blcwindow'), cfg.baselinewindow = cfg.blcwindow; cfg = rmfield(cfg, 'blcwindow'); end
+ft_checkconfig(cfg, 'renamed', {'blc', 'demean'});
+ft_checkconfig(cfg, 'renamed', {'blcwindow', 'baselinewindow'});
+
 % set the defaults for the rereferencing options
 if ~isfield(cfg, 'reref'),        cfg.reref = 'no';             end
 if ~isfield(cfg, 'refchannel'),   cfg.refchannel = {};          end

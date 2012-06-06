@@ -65,7 +65,7 @@ function [cfg, varargout] = prepare_resampled_data(cfg, varargin);
 % $Id$
 
 % for backward compatibility with misspelled configuration option
-if isfield(cfg, 'jacknife'), cfg.jackknife = cfg.jacknife; cfg = rmfield(cfg, 'jacknife'); end
+ft_checkconfig(cfg, 'renamed', {'jacknife', 'jackknife'});
 
 % set the defaults
 if ~isfield(cfg, 'jackknife'),        cfg.jackknife        = 'no';  end
