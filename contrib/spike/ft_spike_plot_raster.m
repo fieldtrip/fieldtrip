@@ -82,7 +82,6 @@ cfg = ft_checkopt(cfg,'interactive', 'char', {'yes', 'no'});
 % check which features should be present in the rasterplot and psth
 if nargin==3
   doTopData = true;
-  timelock = cfg.topdata;
   timelock = ft_checkdata(timelock,'datatype', 'timelock', 'feedback', 'yes');
 else
   doTopData = false;
@@ -266,7 +265,7 @@ if doTopData
     if ~strcmp(cfg.errorbars,'no')
       if ~isfield(timelock,'var')  || ~isfield(timelock,'dof')      
         error('MATLAB:ft_spike_plot_psth:cfg:var',...
-          'cfg.topdata should contain field .var and .dof for errorbars');
+          'timelock should contain field .var and .dof for errorbars');
       end
       df = timelock.dof(binSel);
       df = repmat(df(:)',[nUnits 1]);
