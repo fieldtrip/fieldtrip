@@ -49,8 +49,8 @@ ws = warning('on', 'MATLAB:divideByZero');
 % get the optional input arguments
 hpos         = ft_getopt(varargin, 'hpos',         0);
 vpos         = ft_getopt(varargin, 'vpos',         0);
-width         = ft_getopt(varargin, 'width',          []);
-height        = ft_getopt(varargin, 'height',         []);
+width        = ft_getopt(varargin, 'width',          []);
+height       = ft_getopt(varargin, 'height',         []);
 point        = ft_getopt(varargin, 'point',        true);
 box          = ft_getopt(varargin, 'box',          true);
 label        = ft_getopt(varargin, 'label',        true);
@@ -130,7 +130,10 @@ if point
 end
 
 if label
-  text(X+labeloffset, Y+(labeloffset*1.5), Lbl,'fontsize',labelsize);
+  % the MATLAB text function fails if the position for the string is specified in single precision
+  X = double(X);
+  Y = double(Y);
+  text(X+labeloffset, Y+(labeloffset*1.5), Lbl ,'fontsize',labelsize);
 end
 
 if box
