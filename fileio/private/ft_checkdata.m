@@ -1835,48 +1835,24 @@ for iUnit = 1:nUnits
 end
 
 %%%%%%%%%% SUB FUNCTION %%%%%%%%%%
-function [spikeTimes spikeIndx] = getspiketimes(data,trial,unit)
-
-% GETSPIKETIMES extracts the spike times and spike samples from a continuous fieldtrip
-% DATA structure in a selected trial for a selected unit.
-%
-% Inputs:
-%   DATA is a contiuous fieldtrip data structure
-%
-%   TRIAL is a natural number indicating which trial is selected
-%   UNIT  is a natural number indicating which channel is selected
-%
-% Outputs:
-%   SPIKETIMES contains the spike times, sampled at frequency data.fsample;
-%   SPIKEINDX  contains the samples in data.trial{trial}(unit,:) at which we find the
-%   spikes.
+function [spikeTimes] = getspiketimes(data,trial,unit)
 
 spikeIndx       = logical(data.trial{trial}(unit,:));
 spikeCount      = data.trial{trial}(unit,spikeIndx);
 spikeTimes      = data.time{trial}(spikeIndx);
+if isempty(spikeTimes), return; end
 multiSpikes     = find(spikeCount>1);
 
-% preallocate the additional times that we get from the double spikes
-nMultiSpikes = sum(spikeCount(multiSpikes));
-[addTimes,addSamples] = deal(zeros(nMultiSpikes,1));
-
-binWidth            = 1/data.fsample; % the width of each bin
-halfBinWidth        = binWidth/2;
-
 % get the additional samples and spike times, we need only loop through the bins
-n = 1;
+[addSamples, addTimes]   = deal([]);
 for iBin = multiSpikes(:)' % looping over row vector
-  nSpikesInBin = spikeCount(iBin);
-  addTimes(n : n+nSpikesInBin-1)   = ones(1,nSpikesInBin)*spikeTimes(iBin);
-  addSamples(n : n+nSpikesInBin-1) = ones(1,nSpikesInBin)*spikeIndx(iBin);
-  n = n + nSpikesInBin;
+  addTimes     = [addTimes ones(1,spikeCount(iBin))*spikeTimes(iBin)];
+  addSamples   = [addSamples ones(1,spikeCount(iBin))*spikeIndx(iBin)];
 end
 
 % before adding these times, first remove the old ones
 spikeTimes(multiSpikes) = [];
-spikeIndx(multiSpikes)  = [];
 spikeTimes              = sort([spikeTimes(:); addTimes(:)]);
-spikeIndx               = sort([spikeIndx(:) ; addSamples(:)]);
 
 
 function [data] = spike2raw(spike,fsample)
