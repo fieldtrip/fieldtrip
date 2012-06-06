@@ -1,0 +1,9 @@
+
+The functions in this directory fieldtrip/multivariate (and all
+subdirectories) have moved to the directory fieldtrip/external/dmlt.
+
+Please update your path to point to the new directory instead of
+this one, e.g. by doing addpath(genpath('path_to_fieldtrip/external/dmlt')).
+
+See also http://mailman.science.ru.nl/pipermail/fieldtrip/2012-June/005246.html
+
