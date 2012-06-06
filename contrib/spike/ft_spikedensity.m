@@ -325,3 +325,25 @@ ft_postamble previous data
 ft_postamble history sdf
 ft_postamble history sdfdata
 
+
+function [spikelabel, eeglabel] = detectspikechan(data)
+
+maxRate = 1000; % default on what we still consider a neuronal signal
+
+% autodetect the spike channels
+ntrial = length(data.trial);
+nchans  = length(data.label);
+spikechan = zeros(nchans,1);
+for i=1:ntrial
+  for j=1:nchans
+    hasAllInts    = all(data.trial{i}(j,:) == round(data.trial{i}(j,:)));
+    hasAllPosInts = all(data.trial{i}(j,:)>=0);
+    fr            = sum(data.trial{i}(j,:)) ./ (data.time{i}(end)-data.time{i}(1));    
+    spikechan(j) = spikechan(j) + double(hasAllInts & hasAllPosInts & fr<=maxRate);
+  end
+end
+spikechan = (spikechan==ntrial);
+
+spikelabel = data.label(spikechan);
+eeglabel   = data.label(~spikechan);
+
