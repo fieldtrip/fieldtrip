@@ -22,7 +22,9 @@
 %
 % $Id$
 
-return; %JM added this because of unexpected behavior in FT-functions with optional input arguments (that are not defined
+% FIXME this fails if the calling function (e.g. ft_preprocessing)
+% is called with only a cfg and not with a second data argument, see
+% http://bugzilla.fcdonders.nl/show_bug.cgi?id=1250
 
 % determine the name of the calling FieldTrip function
 s = dbstack;

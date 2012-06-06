@@ -153,7 +153,6 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble help
-ft_preamble distribute
 ft_preamble callinfo
 ft_preamble trackconfig
 
