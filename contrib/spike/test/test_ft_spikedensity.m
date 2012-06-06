@@ -19,7 +19,7 @@ data.cfg.trl = [];
 
 %%
 cfgSdf.timwin        = [-0.02 0.02];
-cfgSdf.window        = 'gausswin';
+cfgSdf.winfunc        = 'gausswin';
 cfgSdf.latency       = [0 1];
 cfgSdf.keeptrials = 'yes';
 
@@ -43,7 +43,7 @@ end
 
 %%
 % do the same for rectwin and alphawin
-cfgSdf.window = 'rectwin';
+cfgSdf.winfunc = 'rectwin';
 
 tic
 [sdf sdfdata] = ft_spikedensity(cfgSdf,data);
@@ -62,7 +62,7 @@ end
 % note that the firing rate matches to 1000/41ms ~ 25 hz
 
 %% for alphawin
-cfgSdf.window = 'alphawin';
+cfgSdf.winfunc = 'alphawin';
 
 [sdf sdfdata] = ft_spikedensity(cfgSdf,data);
 nTrials = length(data.trial);
@@ -79,7 +79,7 @@ end
 %% now check if we use different timwinsif we see that back with a gaussian
 cfgSdf = [];
 cfgSdf.timwin = [0 0.02];
-cfgSdf.window = 'gausswin';
+cfgSdf.winfunc = 'gausswin';
 cfgSdf.correctborder= 'rescale';
 cfgSdf.latency = [0 1];
 
@@ -123,7 +123,7 @@ cfgSdf = [];
 cfgSdf.latency = 'minperiod'
 %cfgSdf.checkspikechan = 'no'
 cfgSdf.timwin = [-0.25 0.25]
-cfgSdf.window = 'rectwin'
+cfgSdf.winfunc = 'rectwin'
 [sdf sdfdata] = ft_spikedensity(cfgSdf,data); % warning here!
 figure, plot(sdf.time,sdf.avg)
 
@@ -131,7 +131,7 @@ figure, plot(sdf.time,sdf.avg)
 cfgSdf = [];
 cfgSdf.keeptrials = 'yes';
 cfgSdf.timwin = [-0.05 0.05];
-cfgSdf.window = 'rectwin';
+cfgSdf.winfunc = 'rectwin';
 cfgSdf.latency = 'maxperiod';
 cfgSdf.vartriallen = 'yes';
 [sdf sdfdata] = ft_spikedensity(cfgSdf,data);
@@ -155,7 +155,7 @@ figure, plot(sdf.time,sdf.avg)
 %% do not allow variable trial length
 cfgSdf = [];
 cfgSdf.timwin = [-0.05 0.05];
-cfgSdf.window = 'rectwin';
+cfgSdf.winfunc = 'rectwin';
 cfgSdf.latency = [0 1];
 cfgSdf.vartriallen = 'yes';
 sum(latencies(:,1)>0| latencies(:,2)<1)
@@ -164,7 +164,7 @@ figure, plot(sdf.time,sdf.avg)
 %% do not allow variable trial length
 cfgSdf = [];
 cfgSdf.timwin = [-0.02 0.02];
-cfgSdf.window = 'rectwin';
+cfgSdf.winfunc = 'rectwin';
 cfgSdf.latency = [0 1];
 cfgSdf.vartriallen = 'no';
 [sdf sdfdata] = ft_spikedensity(cfgSdf,data);
@@ -184,7 +184,7 @@ cfgSdf.latency = 'prestim'
 [sdf sdfdata] = ft_spikedensity(cfgSdf,data);
 cfgSdf = [];
 %%
-cfgSdf.window = 'gauss'
+cfgSdf.winfunc = 'gauss'
 [sdf sdfdata] = ft_spikedensity(cfgSdf,data);
 cfgSdf = [];
 
