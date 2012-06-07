@@ -280,7 +280,9 @@ end
 % this is returned as second output argument
 sdfdata.fsample              = fsample;
 sdfdata.label(1:nUnits)      = data.label(spikesel);
-sdfdata.hdr                  = data.hdr;
+try
+  sdfdata.hdr                  = data.hdr;
+end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
