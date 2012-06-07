@@ -78,27 +78,28 @@ cfg.keeptrials   = ft_getopt(cfg,'keeptrials', 'yes');
 cfg = ft_checkopt(cfg,'outputunit','char', {'rate', 'spikecount'});
 cfg = ft_checkopt(cfg,'binsize', {'char', 'doublescalar'});
 cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});
-cfg = ft_checkopt(cfg,'latency', {'char', 'doublevector'});
+cfg = ft_checkopt(cfg,'latency', {'char', 'ascendingdoublebivector'});
 cfg = ft_checkopt(cfg,'trials', {'char', 'doublevector', 'logical'}); 
 cfg = ft_checkopt(cfg,'vartriallen', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'keeptrials', 'char', {'yes', 'no'});
 
-% get the number of trials or change DATA according to cfg.trials
+cfg = ft_checkconfig(cfg,'allowed', {'outputunit', 'binsize', 'spikechannel', 'trials', 'latency', 'vartriallen', 'keeptrials'});
+
+% get the number of trials or convert to indices
 cfg        = trialselection(cfg,spike);
 
 % select the unit - this should be done with channelselection function
 cfg.spikechannel = ft_channelselection(cfg.spikechannel, spike.label);
 spikesel    = match_str(spike.label, cfg.spikechannel);
 nUnits      = length(spikesel);
-if nUnits==0, error('No spikechannel selected by means of cfg.spikechannel');
-end
+if nUnits==0, error('no spikechannel selected by means of cfg.spikechannel'); end
 
 % determine the duration of each trial - we assume N by 2, see error check before
 begTrialLatency = spike.trialtime(cfg.trials,1); % remember: already selected on trial here
 endTrialLatency = spike.trialtime(cfg.trials,2);
 trialDur 		= endTrialLatency - begTrialLatency;
 % while we could simply deselect trials with trialtime field messed up, this may detect bugs
-if any(trialDur<0), error('SPIKE.trialtime(:,1) should preceed SPIKE.trialtime(:,2), your SPIKE.time field is messed up'); end
+if any(trialDur<0), error('spike.trialtime(:,1) should preceed spike.trialtime(:,2), your spike.time field is messed up'); end
 
 % select the latencies, use the same modular function in all the scripts
 cfg = latencyselection(cfg,begTrialLatency,endTrialLatency);
