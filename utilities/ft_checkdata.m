@@ -1798,15 +1798,10 @@ function [spike] = raw2spike(data)
 % Copyright (C) 2010, Martin Vinck
 
 fprintf('converting raw data into spike data\n');
-% try to do the conversion
-nTrials 	= length(data.trial);
-s = 0;
-for iTrial = 1:nTrials
-  r = round(data.trial{iTrial})./data.trial{iTrial};
-  s = s + double(all((isnan(r) | r==1),2) & all(data.trial{iTrial}>=0,2));
-end
-spikesel = find(s==nTrials);
-nUnits   = length(spikesel);
+nTrials 	   = length(data.trial);
+[spikelabel] = detectspikechan(data);
+spikesel     = match_str(data.label, spikelabel);
+nUnits       = length(spikesel);
 if nUnits==0, error('cannot convert raw data to spike format since the raw data structure does not contain spike channels'), end
 
 trialTimes  = zeros(nTrials,2);
@@ -1833,6 +1828,29 @@ for iUnit = 1:nUnits
   
   if iUnit==1, spike.trialtime             = trialTimes; end
 end
+
+% sub function for detection channels
+function [spikelabel, eeglabel] = detectspikechan(data)
+
+maxRate = 2000; % default on what we still consider a neuronal signal: this firing rate should never be exceeded
+
+% autodetect the spike channels
+ntrial = length(data.trial);
+nchans  = length(data.label);
+spikechan = zeros(nchans,1);
+for i=1:ntrial
+  for j=1:nchans
+    hasAllInts    = all(isnan(data.trial{i}(j,:)) | data.trial{i}(j,:) == round(data.trial{i}(j,:)));
+    hasAllPosInts = all(isnan(data.trial{i}(j,:)) | data.trial{i}(j,:)>=0);
+    fr            = nansum(data.trial{i}(j,:)) ./ (data.time{i}(end)-data.time{i}(1));    
+    spikechan(j) = spikechan(j) + double(hasAllInts & hasAllPosInts & fr<=maxRate);
+  end
+end
+spikechan = (spikechan==ntrial);
+
+spikelabel = data.label(spikechan);
+eeglabel   = data.label(~spikechan);
+
 
 %%%%%%%%%% SUB FUNCTION %%%%%%%%%%
 function [spikeTimes] = getspiketimes(data,trial,unit)
