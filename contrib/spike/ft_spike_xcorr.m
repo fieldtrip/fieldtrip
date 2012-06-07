@@ -89,7 +89,7 @@ cfg.latency        = ft_getopt(cfg,'latency','maxperiod');
 cfg.keeptrials     = ft_getopt(cfg,'keeptrials', 'yes');
 cfg.method         = ft_getopt(cfg,'method', 'xcorr');
 cfg.channelcmb     = ft_getopt(cfg,'channelcmb', 'all');
-cfg.vartriallen    = ft_getopt(cfg,'vartriallen', 'no');
+cfg.vartriallen    = ft_getopt(cfg,'vartriallen', 'yes');
 cfg.biased         = ft_getopt(cfg,'biased', 'no');
 cfg.maxlag         = ft_getopt(cfg,'maxlag', 0.01);
 cfg.binsize        = ft_getopt(cfg,'binsize', 0.001);
@@ -174,8 +174,8 @@ fullDur       = trialDur>=(cfg.maxlag); % only trials which are larger than maxi
 overlaps      = endTrialLatency>(cfg.latency(1)+cfg.maxlag) & begTrialLatency<(cfg.latency(2)-cfg.maxlag);
 hasWindow     = ones(nTrials,1);
 if strcmp(cfg.vartriallen,'no') % only select trials that fully cover our latency window
-  startsLater    = single(begTrialLatency>single(cfg.latency(1)));
-  endsEarlier    = single(endTrialLatency<single(cfg.latency(2)));
+  startsLater    = single(begTrialLatency>=single(cfg.latency(1)));
+  endsEarlier    = single(endTrialLatency<=single(cfg.latency(2)));
   hasWindow      = ~(startsLater | endsEarlier); % check this in all other funcs
 end
 trialSel           = fullDur(:) & overlaps(:) & hasWindow(:);
