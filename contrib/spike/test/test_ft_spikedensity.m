@@ -20,7 +20,7 @@ data.cfg.trl = [];
 %%
 cfgSdf.timwin        = [-0.02 0.02];
 cfgSdf.winfunc        = 'gausswin';
-cfgSdf.latency       = [0 1];
+cfgSdf.latency       = [0 3];
 cfgSdf.keeptrials = 'yes';
 
 [sdf sdfdata] = ft_spikedensity(cfgSdf,data);
@@ -40,7 +40,8 @@ for iTrial = 1 : 5
     hold on
     plot(xx,yy,'r'), 
 end
-
+nanmean(sdf.avg) % expect 20 hz
+close all
 %%
 % do the same for rectwin and alphawin
 cfgSdf.winfunc = 'rectwin';
@@ -59,6 +60,8 @@ for iTrial = 1 : 5
     hold on
     plot(xx,yy,'r'), 
 end
+close all
+
 % note that the firing rate matches to 1000/41ms ~ 25 hz
 
 %% for alphawin
@@ -75,12 +78,12 @@ for iTrial = 1 : 5
     hold on
     plot(xx,yy,'r'), 
 end
+close all
 
 %% now check if we use different timwinsif we see that back with a gaussian
 cfgSdf = [];
 cfgSdf.timwin = [0 0.02];
 cfgSdf.winfunc = 'gausswin';
-cfgSdf.correctborder= 'rescale';
 cfgSdf.latency = [0 1];
 
 [sdf sdfdata] = ft_spikedensity(cfgSdf,data);
@@ -94,6 +97,7 @@ for iTrial = 1 : 5
     hold on
     plot(xx,yy,'r'), 
 end
+close all
 
 
 %% try if this function also works with different latencies as promised in the help
@@ -114,6 +118,7 @@ for iTrial = 1:nTrials
     data.trial(iTrial) = {round(R*rand(1,length(timeaxis)))};
     latencies(iTrial,:) = minmax(timeaxis);
 end
+close all
 
 data.label{1} = 'spk1';
 data.hdr = [];
@@ -149,8 +154,12 @@ for iTrial = 1 : 5
     hold on
     plot(xx,yy,'r'), 
 end
+close all
+
 %sdfdata.trial has maximum length if it fits the window, otherwise it has less length
 figure, plot(sdf.time,sdf.avg)
+pause(1)
+close all
 
 %% do not allow variable trial length
 cfgSdf = [];
@@ -170,6 +179,8 @@ cfgSdf.vartriallen = 'no';
 [sdf sdfdata] = ft_spikedensity(cfgSdf,data);
 latencies(sdf.cfg.trials,:)
 figure, plot(sdf.time,sdf.avg)
+pause(1)
+close all
 
 
 %% check all options one for one
