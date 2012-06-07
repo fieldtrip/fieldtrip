@@ -57,7 +57,7 @@ psth = ft_checkdata(psth, 'datatype', 'timelock', 'hastrials', 'yes', 'feedback'
 cfg.trials         = ft_getopt(cfg, 'trials', 'all');
 cfg.latency        = ft_getopt(cfg,'latency','maxperiod');
 cfg.keeptrials     = ft_getopt(cfg,'keeptrials', 'yes');
-cfg.shiftpredictor = ft_getopt(cfg,'shiftpredictor', 'no');
+cfg.shiftpredictor = ft_getopt(cfg,'method', 'jpsth');
 cfg.normalization  = ft_getopt(cfg,'normalization', 'no');
 cfg.channelcmb     = ft_getopt(cfg,'channelcmb', 'all');
 
@@ -65,7 +65,7 @@ cfg.channelcmb     = ft_getopt(cfg,'channelcmb', 'all');
 cfg = ft_checkopt(cfg,'latency', {'char', 'doublevector'});
 cfg = ft_checkopt(cfg,'trials', {'char', 'doublevector', 'logical'}); 
 cfg = ft_checkopt(cfg,'keeptrials', 'char', {'yes', 'no'});
-cfg = ft_checkopt(cfg,'shiftpredictor', 'char', {'yes', 'no'});
+cfg = ft_checkopt(cfg,'method', 'char', {'jpsth', 'shiftpredictor'});
 cfg = ft_checkopt(cfg,'normalization', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'channelcmb', {'char', 'cell'});
 
@@ -208,7 +208,7 @@ for iCmb = 1:nCmbs
     end
     
     % compute the shift predictor symmetrically, x21 to x12, and x22 to x11
-    if strcmp(cfg.shiftpredictor,'yes') && iTrial>1
+    if strcmp(cfg.method,'shiftpredictor') && iTrial>1
       
       % in case of shift predictor, compute the dof, is same for all cmbs
       if computeDofShift && iCmb==1 % otherwise we do not have nans
