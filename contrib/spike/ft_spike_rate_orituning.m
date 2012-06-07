@@ -1,17 +1,30 @@
-function [Stat] = ft_spike_rate_orituning(cfg,Tune)
+function [Stat] = ft_spike_rate_orituning(cfg,varargin)
 
 % FT_SPIKE_RATE_ORITUNING computes a model of the firing rate as a function
 % of orientation or direction.
 %
 % Use as
-%   [stat] = ft_spike_rate_tuning(cfg, tune)
+%   [stat] = ft_spike_rate_tuning(cfg, rate1,rate2,...rateN)
 %
-% Input tune should be the output from FT_SPIKE_RATE_CONDITION
+% Inputs rate should be the output from FT_SPIKE_RATE
+% Tip: put singel rate structures in cell array rate and write
+% stat = ft_spike_rate_tuning(cfg,rate{:});
 %
 % Configurations:
-%   cfg.stimuli  = should be an 1 x nConditions array of orientations or directions
+%   cfg.stimuli  = should be an 1 x nConditions array of orientations or
+%                  directions in radians
+%                  varargin{i} corresponds to cfg.stimuli(i)
 %   cfg.method   = model to apply, implemented are 'orientation' and 'direction'
+%
+% Outputs:
+%   Stat.ang       = mean angle of orientation / direction (1 x nUnits)
+%   Stat.osi       = orientation selectivity index (Womelsdorf et al., 2012,
+%                    PNAS), that is resultant length.
+%                    if cfg.method = 'orientation', then orientations are
+%                    first projected on the unit circle.
+%   Stat.di        = direction index, 1 - min/max response
 
+% FIXME: models for contrast etc.
 % Copyright (C) 2010, Martin Vinck
 %
 % $Id$
@@ -29,70 +42,70 @@ cfg = ft_checkconfig(cfg, 'required', {'stimuli', 'method'});
 cfg = ft_checkopt(cfg,'stimuli','doublevector');
 cfg = ft_checkopt(cfg,'method', 'char', {'orientation', 'direction'});
 
+if length(varargin)<2, error('can only compute ori tuning if multiple inputs are specified'); end 
+  
 % check whether trials were kept in the rate function
-if ~isfield(Tune, 'avg'), error('MATLAB:ft_spike_rate_tuning:noFieldTrial',...
-    'TUNE should contain the field avg');
-end
-stimuli = cfg.stimuli(:);
-nConditions = size(Tune.avg,1);
-if nConditions~=length(stimuli)
-  error('MATLAB:ft_spike_rate_tuning:cfg:designWrongLength',...
-    'Length of cfg.stimuli should match number of conditions in Tune.avg');
+for k = 1:length(varargin)
+  try
+    varargin{k} = rmfield(varargin{k}, 'trial');
+  end
 end
 
+Tune        = ft_appendtimelock([],varargin{:});
+Tune.avg    = Tune.trial;
+
 % get the unique stimuli and the number of directions, these should match
+stimuli     = cfg.stimuli(:);
+nConditions = length(varargin);
 nStimuli    = length(stimuli);
+if nConditions~=nStimuli, error('Length of cfg.stimuli should match number of data inputs'); end
+
 nUnits      = size(Tune.avg,2);
 
 % change the directions so it is a circular variable with range 2*pi
 if strcmp(cfg.method,'orientation')
   if (max(stimuli)-min(stimuli))>pi
-    error('MATLAB:ft_spike_rate_tuning:cfg.method',...
-      'If cfg.tuningtype is "orientation", CFG.STIMULI should have range of pi');
+    error('If cfg.tuningtype is "orientation", cfg.stimuli should have range of pi');
   end
-  stimuli = stimuli*2;
+  stimuli = stimuli*2; % convert to make it circular (see Womelsdorf et al. 2012, PNAS).
   
   if (max(stimuli)-min(stimuli))<0.5*pi
-    warning('MATLAB:ft_spike_rate_tuning:orientationsSmallRange',...
-      'Orientations have a range < 1/2 pi. Are you sure this is correct?');
+    warning('Orientations have a range < 1/2 pi. Are you sure this is correct?. Stats will be biased');
   end
   
   % compute the directionality index
-  Stat.directionIndex = 1 - min(Tune.avg)./max(Tune.avg);
+  Stat.di = 1 - min(Tune.avg)./max(Tune.avg);
   
   % transform the data into complex numbers to compute resultant length
   z = exp(1i*stimuli(:)*ones(1,nUnits));
   sumAvg = sum(Tune.avg);
   z = Tune.avg.*z./(sumAvg(ones(nStimuli,1),:));
-  Stat.resLen  = abs(sum(z));
+  Stat.osi  = abs(sum(z));
   
   % make preferred angle modulo 2pi, convert it back to range pi and convert to rad or deg
   prefAngle           = angle(nansum(z));
   prefAngle           = mod(prefAngle,2*pi);
-  Stat.prefAngle      = prefAngle/2;
+  Stat.ang      = prefAngle/2;
 elseif strcmp(cfg.method,'direction')
   if (max(stimuli)-min(stimuli))>2*pi
-    error('MATLAB:ft_spike_rate_tuning:directionsRangeTooLarge','%s\n%s',...
-      'Directions has a range > 2*pi. Are you sure this is radians and not degrees?',...);
-      'Please put the directions in a range of 2pi')
+    error('Directions has a range > 2*pi. Are you sure this is radians and not degrees?')
   end
   if (max(stimuli)-min(stimuli))<0.5*pi
-    warning('MATLAB:ft_spike_rate_tuning:directionsSmallRange',...
-      'Directions have a range < 1/2 pi. Are you sure this is correct?');
+    warning('Directions have a range < 1/2 pi. Are you sure this is correct?');
   end
   
   % compute the directionality index
-  Stat.directionIndex = 1 - min(Tune.avg)./max(Tune.avg);
+  Stat.di = 1 - min(Tune.avg)./max(Tune.avg);
   
   % transform the data into complex numbers to compute resultant length
   z = exp(1i*stimuli(:)*ones(1,nUnits));
   sumAvg = sum(Tune.avg);
   z = Tune.avg.*z./(sumAvg(ones(nStimuli,1),:));
-  Stat.resLen  = abs(sum(z));
+  Stat.osi  = abs(sum(z));
   
   % make preferred angle modulo 2pi, convert it back to range pi and convert to rad or deg
   prefAngle      = angle(nansum(z));
-  Stat.prefAngle = mod(prefAngle,2*pi);
+  Stat.ang = mod(prefAngle,2*pi);
 end
 
 Stat.label   = Tune.label;
