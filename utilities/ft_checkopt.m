@@ -23,6 +23,7 @@ function opt = ft_checkopt(opt, key, allowedtype, allowedval)
 %   'doublescalar'
 %   'doublevector'
 %   'doublebivector'
+%   'ascendingdoublebivector'
 %   'doublematrix'
 %   'numericscalar'
 %   'numericvector'
@@ -82,6 +83,8 @@ for i=1:length(allowedtype)
       ok = isa(val, 'double') && sum(size(val)>1)==1;
     case 'doublebivector'
       ok = isa(val,'double') && sum(size(val)>1)==1 && length(val)==2;
+    case 'ascendingdoublebivector'
+      ok = isa(val,'double') && sum(size(val)>1)==1 && length(val)==2 && val(2)>val(1);       
     case 'doublematrix'
       ok = isa(val, 'double') && sum(size(val)>1)>1;
     case 'numericscalar'
