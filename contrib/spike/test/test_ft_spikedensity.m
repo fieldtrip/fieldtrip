@@ -8,7 +8,8 @@ nSamples = 1001;
 R = 0.51;
 % create artificial data.
 for iTrial = 1:nTrials
-    data.trial(iTrial) = {round(R*rand(1,nSamples))};
+    data.trial{iTrial}(1,:) = round(R*rand(1,nSamples));
+    data.trial{iTrial}(2,:) = (R*rand(1,nSamples));
 end
 
 data.time(1:nTrials) = {linspace(0,1,nSamples)};
@@ -25,7 +26,8 @@ cfgSdf.keeptrials = 'yes';
 
 [sdf sdfdata] = ft_spikedensity(cfgSdf,data);
 %% show that we can also enter a spike input
-spike = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
+spike = ft_checkdata(data, 'datatype', 'spike', 'feedback', 'yes');
+%%
 [sdf2 sdfdata] = ft_spikedensity(cfgSdf,spike);
 
 any(sdf2.trial(:)-sdf.trial(:))>0
@@ -34,8 +36,8 @@ nTrials = length(data.trial);
 for iTrial = 1 : 5
     figure, plot(sdfdata.time{iTrial}, sdfdata.trial{iTrial}), hold on, 
 
-    spks = find(data.trial{iTrial});
-    xx = [data.time{iTrial}(spks); data.time{iTrial}(spks)];
+    spks = find(data.trial{iTrial}(1,:));
+    xx = [data.time{iTrial}(1,spks); data.time{iTrial}(1,spks)];
     yy = [ones(1,length(spks))*max(sdfdata.trial{iTrial});ones(1,length(spks))*min(sdfdata.trial{iTrial})];
     hold on
     plot(xx,yy,'r'), 
@@ -54,8 +56,8 @@ nTrials = length(data.trial);
 for iTrial = 1 : 5
     figure, plot(sdfdata.time{iTrial}, sdfdata.trial{iTrial}), hold on, 
 
-    spks = find(data.trial{iTrial});
-    xx = [data.time{iTrial}(spks); data.time{iTrial}(spks)];
+    spks = find(data.trial{iTrial}(1,:));
+    xx = [data.time{iTrial}(1,spks); data.time{iTrial}(1,spks)];
     yy = [ones(1,length(spks))*max(sdfdata.trial{iTrial});ones(1,length(spks))*min(sdfdata.trial{iTrial})];
     hold on
     plot(xx,yy,'r'), 
@@ -72,8 +74,8 @@ nTrials = length(data.trial);
 for iTrial = 1 : 5
     figure, plot(sdfdata.time{iTrial}, sdfdata.trial{iTrial}), hold on, 
 
-    spks = find(data.trial{iTrial});
-    xx = [data.time{iTrial}(spks); data.time{iTrial}(spks)];
+    spks = find(data.trial{iTrial}(1,:));
+    xx = [data.time{iTrial}(1,spks); data.time{iTrial}(1,spks)];
     yy = [ones(1,length(spks))*max(sdfdata.trial{iTrial});ones(1,length(spks))*min(sdfdata.trial{iTrial})];
     hold on
     plot(xx,yy,'r'), 
@@ -91,8 +93,8 @@ nTrials = length(data.trial);
 for iTrial = 1 : 5
     figure, plot(sdfdata.time{iTrial}, sdfdata.trial{iTrial}), hold on, 
 
-    spks = find(data.trial{iTrial});
-    xx = [data.time{iTrial}(spks); data.time{iTrial}(spks)];
+    spks = find(data.trial{iTrial}(1,:));
+    xx = [data.time{iTrial}(1,spks); data.time{iTrial}(1,spks)];
     yy = [ones(1,length(spks))*max(sdfdata.trial{iTrial});ones(1,length(spks))*min(sdfdata.trial{iTrial})];
     hold on
     plot(xx,yy,'r'), 
