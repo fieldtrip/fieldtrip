@@ -70,7 +70,11 @@ switch ft_senstype(sens)
     maxval = min(maxval, ones(size(maxval))); %a value > 1 sometimes leads to problems; this is an empirical fix
     dist = (abs(sens.tra)>0.7.*maxval).*repmat(dist', size(sens.tra, 1), 1);
     
-    % put nans instead of the zero entries
+    % for the occasional case where there are nans: -> 0's will be
+    % converted to inf anyhow
+    dist(isnan(dist)) = 0;
+    
+    % put infs instead of the zero entries
     dist(~dist) = inf;
     
     % use the matrix to find coils with minimal distance to the center,
