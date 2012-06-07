@@ -35,8 +35,23 @@ spike = ft_checkdata(data,'datatype', 'spike', 'feedback', 'yes');
 %%
 cfgRate = [];
 cfgRate.outputunit = 'spikecount';
-RateCnt = ft_spike_rate(cfgRate,spike);
+cfgRate.keeptrials = 'no';
+cfgRate.trials = 1:2:30;
+RateCnt1 = ft_spike_rate(cfgRate,spike);
+cfgRate.trials = 32:2:60;
+RateCnt2 = ft_spike_rate(cfgRate,spike);
+cfgRate.trials = 61:2:99;
+RateCnt3 = ft_spike_rate(cfgRate,spike);
 
+cfg.stimuli = [0 pi/8 pi/4];
+cfg.method = 'orientation';
+stat = ft_spike_rate_orituning(cfg,RateCnt1,RateCnt2,RateCnt3);
+%%
 
-RateCnt.avg
-figure, plot(RateCnt.trial(:,1))
+cfgRate = [];
+cfgRate.outputunit = 'spikecount';
+cfgRate.keeptrials = 'yes';
+cfgRate.trials = 1:5:30;
+RateCnt1 = ft_spike_rate(cfgRate,spike);
+disp('expect about 10 times the number of spikes as the trial number')
+[RateCnt1.cfg.trials(:) RateCnt1.trial]

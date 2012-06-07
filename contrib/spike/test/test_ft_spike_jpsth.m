@@ -100,13 +100,15 @@ cfgPsth.outputunit    = 'rate';
 psth = ft_spike_psth(cfgPsth,spike);
 %%
 cfg = [];
-cfg.shiftpredictor = 'yes';
+cfg.method = 'jpsth';
 tic,jpsth = ft_spike_jpsth(cfg,psth);toc
 size(jpsth.avg) % note how this is chan by chan not channelcmb
 %%
 figure
 cfg = [];
 cfg.interpolate = 'no'
+cfg.window = 'gausswin';
+cfg.winlen = 0.02
 cfg.channelcmb = jpsth.labelcmb(1,:);
 ft_spike_plot_jpsth(cfg,jpsth)
 %%
@@ -140,7 +142,7 @@ ft_spike_plot_jpsth(cfg,jpsth)
 
 %%
 cfg = [];
-cfg.shiftpredictor = 'yes';
+cfg.method = 'shiftpredictor';
 tic,jpsth = ft_spike_jpsth(cfg,psth);toc
 cfg = [];
 figure
@@ -169,7 +171,7 @@ min(jpsth.avg(:))
 %%
 cfg = [];
 cfg.normalization = 'yes';
-cfg.shiftpredictor = 'yes';
+cfg.method = 'shiftpredictor';
 tic,jpsth = ft_spike_jpsth(cfg,psth);toc
 cfg = [];
 
