@@ -22,12 +22,12 @@ function opt = ft_checkopt(opt, key, allowedtype, allowedval)
 % Furthermore, the following custom types can be specified
 %   'doublescalar'
 %   'doublevector'
+%   'doublebivector'
 %   'doublematrix'
 %   'numericscalar'
 %   'numericvector'
 %   'numericmatrix'
 %   'charcell'
-%   'doublebivector'
 %
 % For allowedval you can specify a single value or a cell-array
 % with multiple values.
