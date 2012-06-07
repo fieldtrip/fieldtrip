@@ -230,6 +230,8 @@ for iTrial = 1:nTrials
 
     % compute the xcorr if both are non-empty
     if ~isempty(ts1) && ~isempty(ts2)
+      ts1(:)
+      ts2(:)
       if indx(1)<=indx(2)
         [x]   = spike_crossx(ts1(:),ts2(:),cfg.binsize,nLags*2+1);
       else
@@ -269,8 +271,8 @@ for iTrial = 1:nTrials
         end
         if ~isempty(A) && ~isempty(B),
 
-          ts1(:)
-          ts2(:)
+          A(:)
+          B(:)
           if indx(1)<=indx(2)            
             [x]   = spike_crossx(A(:),B(:),cfg.binsize,nLags*2+1);
           else
