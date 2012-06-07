@@ -100,7 +100,11 @@ timeSel       = jpsth.time>=cfg.latency(1) & jpsth.time <= cfg.latency(2);
 sampleTime    = mean(diff(jpsth.time)); % get the binwidth
 
 % for convenience create a separate variable
-dens = squeeze(jpsth.avg(:,:,cmbindx(1,1),cmbindx(1,2))); % density
+if isfield(jpsth,'jpsth')
+  dens = squeeze(jpsth.jpsth(cmbindx(1,1),cmbindx(1,2),:,:)); % density
+else
+  dens = squeeze(jpsth.shiftpredictor(cmbindx(1,1),cmbindx(1,2),:,:)); % density
+end  
 
 % smooth the jpsth with a kernel if requested
 if ~strcmp(cfg.window,'no')
@@ -200,7 +204,7 @@ end
 
 % create the colorbar if requested
 if strcmp(cfg.colorbar,'yes')
-  caxis([min(dens(:)) max(dens(:))])
+  caxis([min(dens(:))-0.05 max(dens(:))+0.05])
   colormap(cfg.colormap);                  % create the colormap as the user wants
   H.colorbarHdl = colorbar;                % create a colorbar
   

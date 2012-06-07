@@ -1,4 +1,4 @@
-function [jpsth] = ft_spike_jpsth(cfg,psth)
+function [stat] = ft_spike_jpsth(cfg,psth)
 
 % FT_spike_JPSTH computes the joint peristimulus histograms for spiketrains
 % and a shift predictor (for example see Aertsen et al. 1989).
@@ -21,7 +21,7 @@ function [jpsth] = ft_spike_jpsth(cfg,psth)
 %
 % Configurations:
 %   cfg.method           = 'jpsth' or 'shiftpredictor'. If 'jpsth', we
-%                           output the normal jpsth. If 'shiftpredictor',
+%                           output the normal stat. If 'shiftpredictor',
 %                           we compute the jpsth after shuffling subsequent
 %                           trials.
 %   cfg.normalization    = 'no' (default), or 'yes'.  If requested (see cfg.normalization), the joint
@@ -123,201 +123,119 @@ chanSel = unique(cmbindx(:)); % this gets sorted ascending by default
 nChans  = length(chanSel);
 
 % preallocate avg in chan x chan format, this can take more memory, but its more intuitive
-if strcmp(cfg.keeptrials,'yes'), singleTrials = zeros(nTrials,nBins,nBins,nCmbs); end
-[avgJpsth,varJpsth] = deal(zeros(nBins,nBins,nChans,nChans));
-if strcmp(cfg.method,'shiftpredictor'),
-  [avgshiftpredictor,varshiftpredictor] = deal(zeros(nBins,nBins,nChans,nChans));
-end
-
-% compute the dof for the jpsth, recompute this since we selected trials.
-sumNum = sum(~isnan(psth.trial(:,1,:)));
-dof    = squeeze(sumNum)';
-dof1   = dof(ones(nBins,1),:);
-dof    = min(dof1,dof1'); % the actual dof is always given by the maximum of the 2
-
-% check if we have to compute dof while in the loop
-computeDofShift = any(dof(:)~=size(psth.trial,1)); %i.e, we have nans in psth?
-if computeDofShift
-  dofShift = zeros(nBins); % will compute this on the fly
-else
-  dofShift = 2*(nTrials-1);
-end
+if strcmp(cfg.keeptrials,'yes'), singleTrials = NaN(nTrials,nChans,nChans,nBins,nBins); end
+[out,varOut,dofOut] = deal(zeros(nChans,nChans,nBins,nBins));
 
 % compute the joint psth
 for iCmb = 1:nCmbs
-  indx1 = cmbindx(iCmb,1);
-  indx2 = cmbindx(iCmb,2);
-  [ss,s]  = deal(sparse(nBins,nBins));
-  
-  if strcmp(cfg.method,'shiftpredictor'), [ssShift,sShift]  = deal(s); end
-  
+  indxData1 = cmbindx(iCmb,1); % index for the data
+  indxData2 = cmbindx(iCmb,2);
+  indxOut1 = find(chanSel==indxData1); % this is in the order of the output
+  indxOut2 = find(chanSel==indxData2);
+    
+  [ss,s,df]  = deal(zeros(nBins,nBins));
+    
   % already compute the quantities to normalize the jpsth
   if strcmp(cfg.normalization,'yes')
-    meanX = squeeze(nanmean(psth.trial(:,indx1,:))); % psth can contain nans
-    repMeanX = meanX(:,ones(1,nBins));
-    meanH = squeeze(nanmean(psth.trial(:,indx2,:)))';
-    repMeanH = meanH(ones(nBins,1),:);
-    meanXH   = repMeanX.*repMeanH;
-    
-    % compute the product of variances
-    varX = squeeze(nanvar(psth.trial(:,indx1,:),1,1));
-    varH = squeeze(nanvar(psth.trial(:,indx2,:),1,1))';
-    
-    % var is numerically instable when var=0, check if diff is different from 0
-    % this way we can set the jpsth to correct value of 0 later
-    d = diff(psth.trial(:,indx1,:),[],1);
-    hasDiff = squeeze(any(d,1));
-    varX(~(hasDiff>0)) = 0;
-    d = diff(psth.trial(:,indx2,:),[],1);
-    hasDiff = squeeze(any(d,1));
-    varH(~(hasDiff>0)) = 0;
-    
-    repVarX = varX(:,ones(1,nBins));
-    repVarH = varH(ones(nBins,1),:);
-    varXH   = repVarX.*repVarH;    
+    mean1    = squeeze(nanmean(psth.trial(:,indxData1,:))); % psth can contain nans
+    mean2    = squeeze(nanmean(psth.trial(:,indxData2,:)))';
+    mean12   = mean1(:)*mean2(:)';    
+    diff1    = nansum(diff(squeeze(psth.trial(:,indxData1,:)),[],1),1); % this is just to avoid rounding errors, as var gives these
+    diff2    = nansum(diff(squeeze(psth.trial(:,indxData2,:)),[],1),1); % this is just to avoid rounding errors, as var gives these
+    var1     = squeeze(nanvar(psth.trial(:,indxData1,:),1,1));
+    var1(diff1==0) = 0;
+    var2(diff2==0) = 0;
+    var2     = squeeze(nanvar(psth.trial(:,indxData2,:),1,1))';
+    var12    = var1(:)*var2(:)';
+    var12(mean12==0) = 0;
   end
   
   for iTrial = 1:nTrials
+    psth1 = squeeze(psth.trial(iTrial,indxData1, :)); % first chan
+    psth2 = squeeze(psth.trial(iTrial,indxData2, :)); % second chan
+    isNum1 = double(~isnan(psth1));
+    isNum2 = double(~isnan(psth2));
     
-    x = squeeze(psth.trial(iTrial,indx1, :)); % first chan
-    h = squeeze(psth.trial(iTrial,indx2, :)); % second chan
+    switch cfg.method
+      case 'jpsth'        
     
-    % get the indices of the channels
-    indX = find(x>0).';
-    indH = find(h>0);
-    nX = length(indX);
-    nH = length(indH);
+        % compute the 2-D product with the matrix multiplication
+        jpsthTrial = psth1(:)*psth2(:)';
+        dofTrial   = isNum1(:)*isNum2(:)';
+                  
+        % compute the sum and the squared sum (for the variance)
+        s(dofTrial>0)  = s(dofTrial>0)  + jpsthTrial(dofTrial>0); 
+        ss(dofTrial>0) = ss(dofTrial>0) + jpsthTrial(dofTrial>0).^2;
+        df(dofTrial>0) = df(dofTrial>0) + dofTrial(dofTrial>0);
+        jpsthTrial(dofTrial==0) = NaN;
+        if strcmp(cfg.keeptrials,'yes'),
+          singleTrials(iTrial,indxOut1,indxOut2,:,:) = jpsthTrial; 
+          singleTrials(iTrial,indxOut2,indxOut1,:,:) = jpsthTrial';           
+        end
+         
+      case 'shiftpredictor'
+   
+        if iTrial>1
+          psth1Prev    = squeeze(psth.trial(iTrial-1,indxData1, :)); % first chan
+          psth2Prev    = squeeze(psth.trial(iTrial-1,indxData2, :)); % second chan          
+          isNum1Prev = double(~isnan(psth1Prev));
+          isNum2Prev = double(~isnan(psth2Prev));
     
-    if computeDofShift % otherwise we do not have nans
-      nanBins         = isnan(x)';
-      currentNan      = nanBins(ones(nBins,1),:);
-      currentTrialNan = currentNan | currentNan';
-    end
-    
-    % compute the shift predictor symmetrically, x21 to x12, and x22 to x11
-    if strcmp(cfg.method,'shiftpredictor') && iTrial>1
-      
-      % in case of shift predictor, compute the dof, is same for all cmbs
-      if computeDofShift && iCmb==1 % otherwise we do not have nans
-        nanBinsOld = nanBinsOld';
-        oldNan     = nanBinsOld(:,ones(1,nBins));
-        hasNum     = ~currentNan & ~oldNan;
-        dofShift   = dofShift + double(hasNum + hasNum.');
-      end
-      
-      % might occur in neighbouring trials
-      nX_old = length(indX_old);
-      nH_old = length(indH_old);
-      
-      % first from x21 to x12
-      repX = indX(ones(nH_old,1),:);
-      repX = repX(:);
-      repH = indH_old(:,ones(1,nX));
-      repH = repH(:);
-      vals = x(repX).*hOld(repH); % calculate the values for every bin
-      
-      % construct the psth matrix per trial and add to the sum
-      jpsthTrial = sparse(repX,repH,vals,length(x),length(h));
-      sShift  = sShift  + jpsthTrial; % now dof goes times 2
-      ssShift = ssShift + jpsthTrial.^2;
-      
-      % then from x22 to x11
-      repX = indX_old(ones(nH,1),:);
-      repX = repX(:);
-      repH = indH(:,ones(1,nX_old));
-      repH = repH(:);
-      vals = xOld(repX).*h(repH); % calculate the values for every bin
-      
-      % construct the psth matrix per trial,
-      jpsthTrial = sparse(repX,repH,vals,length(x),length(h));
-      sShift = sShift   + jpsthTrial; % now dof goes times 2
-      ssShift = ssShift + jpsthTrial.^2;
-    end
-    
-    if strcmp(cfg.method,'shiftpredictor')
-      indH_old = indH;
-      indX_old = indX;
-      xOld = x;
-      hOld = h;
-      if computeDofShift,  nanBinsOld = nanBins; end
-    end
-    
-    % replicate the indices matrices into two grids and vectorize again
-    repH = indH(:,ones(1,nX));
-    repH = repH(:);
-    repX = indX(ones(nH,1),:);
-    repX = repX(:);
-    vals = x(repX).*h(repH); % calculate the values for every bin
-    jpsthTrial = sparse(repX,repH,vals,length(x),length(h));  % construct the psth matrix per trial,
-    
-    % compute the sum and the squared sum (for the variance)
-    s  = s  + jpsthTrial;
-    ss = ss + jpsthTrial.^2;
-    if strcmp(cfg.keeptrials,'yes'),
-      if computeDofShift, jpsthTrial(currentTrialNan) = NaN; end % store as Nans in single trials.
-      singleTrials(iTrial,:,:,iCmb) = jpsthTrial;
+          jpsthTrial = nansum(cat(3,psth1(:)*psth2Prev(:)',psth1Prev(:)*psth2(:)'),3);
+          dofTrial   = nansum(cat(3,isNum1(:)*isNum2Prev(:)',isNum1Prev(:)*isNum2(:)'),3);
+                              
+          s(dofTrial>0)     = s(dofTrial>0)   + jpsthTrial(dofTrial>0); % now dof goes times 2
+          ss(dofTrial>0)    = ss(dofTrial>0)  + jpsthTrial(dofTrial>0).^2;         
+          df(dofTrial>0)    = df(dofTrial>0) + dofTrial(dofTrial>0);                  
+          jpsthTrial(dofTrial==0) = NaN;
+          jpsthTrial = jpsthTrial./dofTrial; % normalize for having two combinations
+        
+          if strcmp(cfg.keeptrials,'yes'),
+            singleTrials(iTrial,indxOut1,indxOut2,:,:) = jpsthTrial;
+            singleTrials(iTrial,indxOut2,indxOut1,:,:) = jpsthTrial';            
+          end          
+        end
     end
   end
   
-  % get the individual channel numbers (not in original data.label sense)
-  indx1 = find(chanSel==indx1);
-  indx2 = find(chanSel==indx2);
-  
-  % compute the raw average and the raw variance
-  m = s./dof; % still delete the 0 dof
+  % compute the mean and the variance of the output
+  m = s./df; % still delete the 0 dof
   if strcmp(cfg.normalization,'yes')
-    m = (m - meanXH) ./ sqrt(varXH);
-    m(meanXH==0) = 0; % with no spikes in joint bin there, jpsth should be 0
-    m(varXH==0)  = 0;
+    m = (m - mean12) ./ sqrt(var12);
+    m(mean12==0) = 0; % with no spikes in joint bin there, jpsth should be 0
+    m(var12==0)  = 0;
   end
-  m(dof==0) = NaN; % should we output nans were there was no data? what for psth?
+  m(df==0) = NaN; % no trials: must be a NaN
+
+  out(indxOut1,indxOut2,:,:)       = m;
+  out(indxOut2,indxOut1,:,:)       = m';
+
+  v = (ss - s.^2./df)./(df-1);
+  v(df<=1) = NaN;
+  varOut(indxOut1,indxOut2,:,:)    = v;
+  varOut(indxOut2,indxOut1,:,:)    = v';               
   
-  avgJpsth(:,:,indx1,indx2)       = m;
-  avgJpsth(:,:,indx2,indx1)       = m';
+  dofOut(indxOut1,indxOut2,:,:)    = df;
+  dofOut(indxOut2,indxOut1,:,:)    = df';
   
-  v = (ss - s.^2./dof)./(dof-1);
-  v(dof==0) = NaN;
-  varJpsth(:,:,indx1,indx2)       = v;
-  varJpsth(:,:,indx2,indx1)       = v';
-  
-  % compute the average and the variance for the shift predictor.
-  if strcmp(cfg.method,'shiftpredictor')
-    m = sShift ./ dofShift;
-    if strcmp(cfg.normalization,'yes')
-      m = (m - meanXH) ./ sqrt(varXH);
-      m(meanXH==0) = 0; % with no spikes in joint bin there, jpsth should be 0
-      m(varXH==0)  = 0;
-    end
-    m(dof==0) = NaN;
-    avgshiftpredictor(:,:,indx1,indx2)       = m;
-    avgshiftpredictor(:,:,indx2,indx1)       = m';
-    
-    v = (ssShift - sShift.^2./dofShift)./(dofShift-1);
-    v(dof==0) = NaN;
-    varshiftpredictor(:,:,indx1,indx2)       = v;
-    varshiftpredictor(:,:,indx2,indx1)       = v';
-  end
 end
 
 % collect the results
 if strcmp(cfg.method,'jpsth')
-  jpsth.avg      = avgJpsth;
-  jpsth.var      = varJpsth;
-  jpsth.dof      = dof;
+  stat.jpsth      = out;
 else
-  jpsth.avg       = avgshiftpredictor;
-  jpsth.var      = varshiftpredictor;
-  jpsth.dof      = dofShift;
+  stat.shiftpredictor = out;
 end
-jpsth.time     = psth.time;
-jpsth.label    = psth.label(chanSel); % keep this as reference for JPSTH.avg
-jpsth.labelcmb = psth.label(cmbindx); % keep this as reference which channel cmbs have values
-jpsth.psth     = psth.avg(chanSel,:);
+stat.var        = varOut;
+stat.dof        = df;
+stat.time       = psth.time;
+stat.psth       = psth.avg(chanSel,:);
+stat.label      = psth.label(chanSel); % keep this as reference for JPSTH.avg  
 if (strcmp(cfg.keeptrials,'yes'))
-  jpsth.trial = singleTrials;
-  jpsth.dimord = 'rpt_time_time_chan';
+  stat.trial = singleTrials;
+  stat.dimord = 'rpt_time_time_chan_chan';
 else
-  jpsth.dimord = 'time_time_chan_chan';
+  stat.dimord = 'time_time_chan_chan';
 end
 
 % do the general cleanup and bookkeeping at the end of the function
