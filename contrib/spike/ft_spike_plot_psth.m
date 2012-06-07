@@ -18,8 +18,9 @@ function [cfg] = ft_spike_plot_psth(cfg, psth)
 %   cfg.ylim             = [min max] or 'auto' (default)
 %                          If 'standard', we plot from 0 to 110% of maximum plotted value);
 % Outputs:
-%	  HDL.avg              = figure handle for the bar plot, psth average. Use SET and GET to access.
-%	  HDL.var              = figure handle for the error lines. Use GET and SET to access.
+%	  cfg.hdl.avg              = figure handle for the bar plot, psth average.
+%	  Use SET and GET to access.
+%	  cfg.hdl.var              = figure handle for the error lines. Use GET and SET to access.
 %
 % See also FT_SPIKE_PSTH
 
@@ -139,8 +140,8 @@ set(gca,'YLim', cfg.ylim, 'XLim', cfg.latency)
 set(gca,'TickDir','out', 'Box', 'off')
 
 % store the handles
-hdl.avg    = psthHdl;
-if ~strcmp(cfg.errorbars,'no'), hdl.error = psthSemHdl;  end
+cfg.hdl.avg    = psthHdl;
+if ~strcmp(cfg.errorbars,'no'), cfg.hdl.var = psthSemHdl;  end
 
 % as usual, make sure that panning and zooming does not distort the y limits
 set(zoom,'ActionPostCallback',{@mypostcallback,cfg.ylim,cfg.latency});
