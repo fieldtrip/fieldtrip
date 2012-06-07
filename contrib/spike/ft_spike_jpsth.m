@@ -54,15 +54,15 @@ ft_preamble trackconfig
 psth = ft_checkdata(psth, 'datatype', 'timelock', 'hastrials', 'yes', 'feedback', 'yes');
 
 % get the default options
-cfg.trials         = ft_getopt(cfg, 'trials', 'all');
+cfg.trials         = ft_getopt(cfg,'trials', 'all');
 cfg.latency        = ft_getopt(cfg,'latency','maxperiod');
 cfg.keeptrials     = ft_getopt(cfg,'keeptrials', 'yes');
-cfg.shiftpredictor = ft_getopt(cfg,'method', 'jpsth');
+cfg.method         = ft_getopt(cfg,'method', 'jpsth');
 cfg.normalization  = ft_getopt(cfg,'normalization', 'no');
 cfg.channelcmb     = ft_getopt(cfg,'channelcmb', 'all');
 
 % ensure that the options are valid
-cfg = ft_checkopt(cfg,'latency', {'char', 'doublevector'});
+cfg = ft_checkopt(cfg,'latency', {'char', 'ascenddoublebivector'});
 cfg = ft_checkopt(cfg,'trials', {'char', 'doublevector', 'logical'}); 
 cfg = ft_checkopt(cfg,'keeptrials', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'method', 'char', {'jpsth', 'shiftpredictor'});
@@ -86,30 +86,17 @@ if strcmp(cfg.latency,'maxperiod')
   cfg.latency = [minTime maxTime];
 elseif strcmp(cfg.latency,'poststim')
   cfg.latency = [0 maxTime];
-  if maxTime<=0, error('MATLAB:ft_spike_jpsth:cfg:latency',...
-      'cfg.latency = "poststim" only allowed if psth.time(end)>0')
-  end
+  if maxTime<=0, error('cfg.latency = "poststim" only allowed if psth.time(end)>0'); end
 elseif strcmp(cfg.latency,'prestim')
-  if minTime>=0, error('MATLAB:ft_spike_jpsth:cfg:latency',...
-      'cfg.latency = "prestim" only allowed if psth.time(1)<0')
-  end
+  if minTime>=0, error('cfg.latency = "prestim" only allowed if psth.time(1)<0'); end
   cfg.latency = [minTime 0]; %seems fishy, what if minTime > 0? CHECK OTHER FUNCS AS WELL
-elseif ~isrealvec(cfg.latency)||length(cfg.latency)~=2
-  error('MATLAB:ft_spike_jpsth:cfg:latency',...
-    'cfg.latency should be "max" or 1-by-2 numerical vector');
-end
-if cfg.latency(1)>=cfg.latency(2),
-  error('MATLAB:ft_spike_jpsth:cfg:latency:wrongOrder',...
-    'cfg.latency(2) should be greater than cfg.latency(1)')
 end
 % check whether the time window fits with the data
 if (cfg.latency(1) < minTime), cfg.latency(1) = minTime;
-  warning('MATLAB:ft_spike_jpsth:correctLatencyBeg',...
-    'Correcting begin latency of averaging window');
+  warning('Correcting begin latency of averaging window');
 end
 if (cfg.latency(2) > maxTime), cfg.latency(2) = maxTime;
-  warning('MATLAB:ft_spike_jpsth:correctLatencyEnd',...
-    'Correcting end latency of averaging window');
+  warning('Correcting end latency of averaging window');
 end
 
 % get the right indices in psth.time and select this part of the data
@@ -126,9 +113,7 @@ for k=1:size(cfg.channelcmb,1)
   cmbindx(k,2) = strmatch(cfg.channelcmb(k,2), psth.label, 'exact');
 end
 nCmbs 	   = size(cmbindx,1);
-if nCmbs==0, error('MATLAB:ft_spike_jpsth:cfg:channelcmb:noneSelected', ...
-    'No channel combination selected')
-end
+if nCmbs==0, error('No channel combination selected'); end
 
 % decompose into single channels
 chanSel = unique(cmbindx(:)); % this gets sorted ascending by default
@@ -137,7 +122,7 @@ nChans  = length(chanSel);
 % preallocate avg in chan x chan format, this can take more memory, but its more intuitive
 if strcmp(cfg.keeptrials,'yes'), singleTrials = zeros(nTrials,nBins,nBins,nCmbs); end
 [avgJpsth,varJpsth] = deal(zeros(nBins,nBins,nChans,nChans));
-if strcmp(cfg.shiftpredictor,'yes'),
+if strcmp(cfg.method,'shiftpredictor'),
   [avgshiftpredictor,varshiftpredictor] = deal(zeros(nBins,nBins,nChans,nChans));
 end
 
@@ -161,7 +146,7 @@ for iCmb = 1:nCmbs
   indx2 = cmbindx(iCmb,2);
   [ss,s]  = deal(sparse(nBins,nBins));
   
-  if strcmp(cfg.shiftpredictor,'yes'), [ssShift,sShift]  = deal(s); end
+  if strcmp(cfg.method,'shiftpredictor'), [ssShift,sShift]  = deal(s); end
   
   % already compute the quantities to normalize the jpsth
   if strcmp(cfg.normalization,'yes')
@@ -247,7 +232,7 @@ for iCmb = 1:nCmbs
       ssShift = ssShift + jpsthTrial.^2;
     end
     
-    if strcmp(cfg.shiftpredictor,'yes')
+    if strcmp(cfg.method,'shiftpredictor')
       indH_old = indH;
       indX_old = indX;
       xOld = x;
@@ -294,7 +279,7 @@ for iCmb = 1:nCmbs
   varJpsth(:,:,indx2,indx1)       = v';
   
   % compute the average and the variance for the shift predictor.
-  if strcmp(cfg.shiftpredictor,'yes')
+  if strcmp(cfg.method,'shiftpredictor')
     m = sShift ./ dofShift;
     if strcmp(cfg.normalization,'yes')
       m = (m - meanXH) ./ sqrt(varXH);
@@ -313,7 +298,7 @@ for iCmb = 1:nCmbs
 end
 
 % collect the results
-if strcmp(cfg.shiftpredictor,'no')
+if strcmp(cfg.method,'jpsth')
   jpsth.avg      = avgJpsth;
   jpsth.var      = varJpsth;
   jpsth.dof      = dof;
