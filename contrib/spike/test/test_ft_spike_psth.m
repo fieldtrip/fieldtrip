@@ -70,7 +70,8 @@ for iChan = 1:2
   ft_spike_plot_psth(cfgPlot,psthData)
 end
 figure, plot(time,gampdf(time/0.015,shapePar,scalePar)); % this gives the expected proportion of spikes
-
+pause(1)
+close
 %%
 cfgPlot = [];
 cfgPsth.outputunit    = 'spikecount';
@@ -108,6 +109,9 @@ for iBinsize = [0 0.001 0.005 0.1 0.5 1 2]
     disp('this should give an error')
   end
 end
+pause(1)
+close
+
 %% our script should work with variable trial lengths
 % create data with variable length at the start
 
@@ -186,6 +190,9 @@ figure
 cfgPlot = [];
 cfgPlot.spikechannel = 2;
 h = ft_spike_plot_psth(cfgPlot,psthSpike)
+pause(1)
+close
+
 %%
 % note that the average spike count did not change: this is because if a trial does not
 % count in, the dof is also 1 lower
@@ -200,6 +207,9 @@ h = ft_spike_plot_psth(cfgPlot,psthSpike)
 % have spikes
 A = [latencies squeeze(psthSpike.trial(:,2,:))];
 A = [[zeros(1,2) psthSpike.time]; A]
+pause(1)
+close
+
 %% now combine the trial selection with the latency selection
 cfgPsth = [];
 cfgPsth.trials = find(latencies(:,1)<psthSpike.time(20));
