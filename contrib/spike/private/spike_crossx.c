@@ -2,7 +2,7 @@
  * Cross-correlation function
  * MEX file
  * 
- * martin vinck 2010
+ * martin vinck 2010, adapted from Francesco Battaglia's crosscorr script
  *
  * input: t1, t2: two time series to cross correlate in seconds
  * Important: the timeseries should be sorted! 
@@ -42,12 +42,7 @@ void mexFunction(
   
   binSize = mxGetScalar(pointerInputs[2]);
   nBins   = (int)mxGetScalar(pointerInputs[3]);
-  
-  if ((nBins / 2) * 2 == nBins)
-  {
-    nBins++;
-  }
-  
+    
   /* create the pointer to the first output matrix */
   pointerOutputs[0] = mxCreateDoubleMatrix(nBins, 1, mxREAL);
   C                 = mxGetPr(pointerOutputs[0]);
