@@ -46,9 +46,11 @@ cfg.ylim         = ft_getopt(cfg,'ylim', 'auto');
 
 % ensure that the options are valid
 cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});
-cfg = ft_checkopt(cfg,'latency', {'char', 'doublevector'});
+cfg = ft_checkopt(cfg,'latency', {'char', 'ascendingdoublebivector'});
 cfg = ft_checkopt(cfg,'errorbars', 'char', {'sem', 'std', 'conf95%', 'no', 'var'});
-cfg = ft_checkopt(cfg,'ylim', {'char','double'});
+cfg = ft_checkopt(cfg,'ylim', {'char','ascendingdoublebivector'});
+
+cfg = ft_checkconfig(cfg,'allowed', {'spikechannel', 'latency', 'errorbars', 'ylim'});
 
 % select the latencies
 if ischar(cfg.latency)
@@ -59,38 +61,25 @@ if ischar(cfg.latency)
   elseif strcmp(cfg.latency, 'poststim')
     cfg.latency = [0 max(psth.time)];
   end
-elseif ~isnumeric(cfg.latency)||length(cfg.latency)~=2
-  error('MATLAB:ft_spike_plot_psth:cfg:latency',...
-    'cfg.latency should be "maxperiod", "prestim", "poststim" or 1-by-2 numerical vector');
-end
-
-if cfg.latency(1)>=cfg.latency(2), error('MATLAB:spike:plot_psth:incorrectLatencyWindow',...
-    'cfg.latency should be a vector in ascending order, i.e., cfg.latency(2)>cfg.latency(1)');
 end
 
 % check whether the time window fits with the data
 if cfg.latency(1) < min(psth.time), cfg.latency(1) = min(psth.time);
-  warning('MATLAB:ft_spike_plot_psth:incorrectLatencyWindow',...
-    'Correcting begin latency of averaging window');
+  warning('Correcting begin latency of averaging window');
 end
 if (cfg.latency(2) > max(psth.time)), cfg.latency(2) = max(psth.time);
-  warning('MATLAB:ft_spike_plot_psth:incorrectLatencyWindow',...
-    'Correcting begin latency of averaging window');
+  warning('Correcting begin latency of averaging window');
 end
 
 % get the spikechannels
 cfg.spikechannel = ft_channelselection(cfg.spikechannel, psth.label);
 spikesel    = match_str(psth.label, cfg.spikechannel);
 nUnits      = length(spikesel);
-if nUnits~=1, error('MATLAB:ft_spike_plot_psth:cfg:spikechannel:wrongInput',...
-    'You selected more or less than one spikechannel by means of cfg.spikechannel');
-end
+if nUnits~=1, error('You selected more or less than one spikechannel by means of cfg.spikechannel'); end
 
 % select the timepoints within the latencies
 timeSel = psth.time>=cfg.latency(1) & psth.time <= cfg.latency(2);
-if isempty(timeSel), error('MATLAB:ft_spike_plot_psth:cfg:latency',...
-    'no time points selected, please change cfg.latency or inspect input PSTH');
-end
+if isempty(timeSel), error('no time points selected, please change cfg.latency or inspect input PSTH');end
 
 % plot the average psth
 psthHdl = bar(psth.time(timeSel),psth.avg(spikesel,timeSel),'k');
@@ -99,15 +88,11 @@ set(psthHdl,'BarWidth', 1)
 % check if fields .dof and .var are correct given cfg.errorbars
 if ~strcmp(cfg.errorbars,'no')
   if ~isfield(psth,'var') || ~any(isfinite(psth.var(spikesel,:)))
-    error('MATLAB:ft_spike_plot_psth:cfg:var',...
-      'PSTH should contain field .var that contain numbers. If you do not want the variance',...
-      'please specify cfg.errorbars = "no"');
+    error('PSTH should contain field .var with numbers');
   end
   if ~ (strcmp(cfg.errorbars,'std') || strcmp(cfg.errorbars,'var'))
     if ~isfield(psth,'dof') || ~any(isfinite(psth.dof(spikesel,:)))
-      error('MATLAB:ft_spike_plot_psth:cfg:dof',...
-        'psth should contain field dof that contains numbers. Use cfg.errorbars = "no" if you do not',...
-        'want the variance plotted');
+      error('psth should contain field dof that contains numbers.'); 
     end
   end
 end
@@ -125,6 +110,8 @@ elseif strcmp(cfg.errorbars, 'conf95%')
   try
     tCrit = tinv(0.975,psth.dof(timeSel));
     err = tCrit.*sqrt(psth.var(spikesel,timeSel)./psth.dof(timeSel)); % assuming normal distribution, SHOULD BE REPLACED BY STUDENTS-T!
+  catch
+    err = 0;
   end
 else
   err = 0;
@@ -143,15 +130,11 @@ xlabel('bin centers (sec)')
 try
   ylabel(psth.cfg.outputunit)
 catch
-  ylabel('firing activity')
+  ylabel('firing intensity')
 end
 
 % set the axis
 if strcmp(cfg.ylim, 'auto'), cfg.ylim = [0 max(y(:))*1.1+eps]; end
-if ~isnumeric(cfg.ylim)||length(cfg.ylim)~=2 || cfg.ylim(2)<=cfg.ylim(1)
-  error('MATLAB:spike:plot_psth:cfg:ylim',...
-    'cfg.ylim should be "auto" or ascending order 1-by-2 vector in seconds');
-end
 set(gca,'YLim', cfg.ylim, 'XLim', cfg.latency)
 set(gca,'TickDir','out', 'Box', 'off')
 
