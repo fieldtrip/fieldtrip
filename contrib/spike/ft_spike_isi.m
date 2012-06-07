@@ -88,6 +88,12 @@ elseif strcmp(cfg.latency,'prestim')
 elseif strcmp(cfg.latency,'poststim')
   cfg.latency = [0 max(endTrialLatency)];
 end
+if (cfg.latency(1) < min(begTrialLatency)), cfg.latency(1) = min(begTrialLatency);
+  warning('Correcting begin latency of averaging window');
+end
+if (cfg.latency(2) > max(endTrialLatency)), cfg.latency(2) = max(endTrialLatency);
+  warning('Correcting end latency of averaging window');
+end
 
 % construct the isi bins, we let it run to maximum trial duration by default
 bins  = cfg.bins;
@@ -109,7 +115,8 @@ for iUnit = 1:nUnits
   spikesInTrials = ismember(spikeTrials, cfg.trials);
   spikesInWin    = spikeTimes>=cfg.latency(1)&spikeTimes<=cfg.latency(2);
   spikeTimes     = spikeTimes(spikesInTrials & spikesInWin);
-  
+  spikeTrials    = spikeTrials(spikesInTrials & spikesInWin);
+   
   % find the spikes that jumped to the next trial, replace them with NaNs
   trialJump = logical([1 diff(spikeTrials)]);
   isi = [NaN diff(spikeTimes)];
