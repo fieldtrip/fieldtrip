@@ -60,7 +60,7 @@ cfg.gammafit     = ft_getopt(cfg,'gammafit', 'yes');
 cfg = ft_checkopt(cfg,'outputunit','char', {'spikecount', 'proportion'});
 cfg = ft_checkopt(cfg,'bins', 'doublevector');
 cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});
-cfg = ft_checkopt(cfg,'latency', {'char', 'doublevector'});
+cfg = ft_checkopt(cfg,'latency', {'char', 'ascenddoublebivector'});
 cfg = ft_checkopt(cfg,'trials', {'char', 'doublevector', 'logical'}); 
 cfg = ft_checkopt(cfg,'keeptrials', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'gammafit', 'char', {'yes', 'no'});
@@ -77,9 +77,7 @@ nTrials    = length(cfg.trials);
 cfg.channel = ft_channelselection(cfg.spikechannel, spike.label);
 spikesel    = match_str(spike.label, cfg.channel);
 nUnits      = length(spikesel); % number of spike channels
-if nUnits==0, error('MATLAB:ft_spike_isihist:cfg:spikechannel:noSpikeChanSelected',...
-    'No spikechannel selected by means of cfg.spikechannel');
-end
+if nUnits==0, error('No spikechannel selected by means of cfg.spikechannel'); end
 
 % determine the duration of each trial
 begTrialLatency = spike.trialtime(cfg.trials,1);

@@ -46,9 +46,11 @@ function [psth] = ft_spike_psth(cfg,spike)
 %     Psth.trial       = contains PSTH per unit per trial
 %     Psth.var         = contains variance of PSTH per unit across trials
 %
-%   PSTH can be fed into FT_TIMELOCKSTATISTICS, into FT_SPIKE_PLOT_PSTH (for
-%   plotting the PSTH), into FT_SPIKE_JPSTH (calculating the joint psth), into
-%   FT_SPIKE_PLOT_RASTER as cfg.topdata, in which we plot it above a rasterplot.
+% Further processing:
+%   FT_SPIKE_PLOT_PSTH    :  plot only the PSTH, for a single neuron
+%   FT_TIMELOCKSTATISTICS : compute statistics on the PSTH
+%   FT_SPIKE_PLOT_RASTER  : plot PSTH with raster for one or more neurons
+%   FT_SPIKE_JPSTH        : compute the JPSTH
 
 %  Copyright (C) 2010, Martin Vinck
 %

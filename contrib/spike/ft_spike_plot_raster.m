@@ -16,7 +16,7 @@ function [cfg] = ft_spike_plot_raster(cfg, spike, timelock)
 %
 % Configuration options 
 %   cfg.spikechannel     =  see FT_CHANNELSELECTION for details
-%   cfg.latency          =  [begin end]` in seconds, 'maxperiod' (default), 'minperiod',
+%   cfg.latency          =  [begin end] in seconds, 'maxperiod' (default), 'minperiod',
 %                           'prestim' (all t<=0), or 'poststim' (all t>=0).
 %   cfg.linewidth        =  number indicating the width of the lines (default = 1);
 %   cfg.cmapneurons      =  'auto' (default), or nUnits-by-3 matrix.
@@ -34,6 +34,7 @@ function [cfg] = ft_spike_plot_raster(cfg, spike, timelock)
 %
 %   cfg.interactive      = 'yes' (default) or 'no'. If 'yes', zooming and panning operate via callbacks.
 %
+
 % Copyright (C) 2010-2012, Martin Vinck
 %
 % $Id$
@@ -50,8 +51,8 @@ ft_preamble trackconfig
 spike = ft_checkdata(spike,'datatype', 'spike', 'feedback', 'yes'); % converts raw as well
 
 % get the default options
-cfg.spikechannel = ft_getopt(cfg, 'spikechannel', 'all');
-cfg.trials       = ft_getopt(cfg, 'trials', 'all');
+cfg.spikechannel = ft_getopt(cfg,'spikechannel', 'all');
+cfg.trials       = ft_getopt(cfg,'trials', 'all');
 cfg.latency      = ft_getopt(cfg,'latency','maxperiod');
 cfg.linewidth    = ft_getopt(cfg,'linewidth', 1);
 cfg.cmapneurons  = ft_getopt(cfg,'cmapneurons', 'auto');
@@ -65,16 +66,19 @@ cfg.interactive  = ft_getopt(cfg,'interactive','yes');
 
 % ensure that the options are valid
 cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});
-cfg = ft_checkopt(cfg,'latency', {'char', 'doublevector'});
+cfg = ft_checkopt(cfg,'latency', {'char', 'ascendingdoublebivector'});
 cfg = ft_checkopt(cfg,'trials', {'char', 'doublevector', 'logical'}); 
 cfg = ft_checkopt(cfg,'linewidth', 'doublescalar');
-cfg = ft_checkopt(cfg,'cmapneurons', {'char', 'double'});
+cfg = ft_checkopt(cfg,'cmapneurons', {'char', 'doublematrix', 'doublevector'});
 cfg = ft_checkopt(cfg,'spikelength', 'doublescalar');
 cfg = ft_checkopt(cfg,'topplotsize', 'doublescalar');
 cfg = ft_checkopt(cfg,'topplotfunc', 'char', {'bar', 'line'});
 cfg = ft_checkopt(cfg,'errorbars', 'char', {'sem', 'std', 'conf95%', 'no', 'var'});
 cfg = ft_checkopt(cfg,'trialborders', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'interactive', 'char', {'yes', 'no'});
+
+cfg = ft_checkconfig(cfg,'allowed', ...
+  {'spikechannel', 'latency', 'trials', 'linewidth', 'cmapneurons', 'spikelength', 'topplotsize', 'topplotfunc', 'errorbars', 'trialborders', 'interactive'});
 
 % check if a third input is present, and check if it's a timelock structure
 if nargin==3
@@ -88,8 +92,7 @@ end
 cfg.spikechannel = ft_channelselection(cfg.spikechannel, spike.label);
 spikesel    = match_str(spike.label, cfg.spikechannel);
 nUnits   = length(spikesel); % number of spike channels
-if nUnits==0, error('No spikechannel selected by means of cfg.spikechannel');
-end
+if nUnits==0, error('No spikechannel selected by means of cfg.spikechannel'); end
 
 % get the number of trials or change DATA according to cfg.trials
 nTrialsOrig = size(spike.trialtime,1);
@@ -101,9 +104,7 @@ end
 cfg.trials = sort(cfg.trials(:));
 if max(cfg.trials)>nTrialsOrig, error('maximum trial number in cfg.trials should not exceed length of spike.trial')
 end
-if isempty(cfg.trials),
-  errors('No trials were selected in cfg.trials');
-end
+if isempty(cfg.trials), errors('No trials were selected in cfg.trials'); end
 
 % determine the duration of each trial
 begTrialLatency = spike.trialtime(cfg.trials,1);
@@ -118,11 +119,6 @@ elseif strcmp(cfg.latency,'prestim')
   cfg.latency = [min(begTrialLatency) 0];
 elseif strcmp(cfg.latency,'poststim')
   cfg.latency = [0 max(endTrialLatency)];
-elseif ~isrealvec(cfg.latency)||length(cfg.latency)~=2
-  error('cfg.latency should be "max", "min", "prestim", "poststim" or 1-by-2 numerical vector');
-end
-if cfg.latency(1)>cfg.latency(2),
-  error('cfg.latency should be a vector in ascending order, i.e., cfg.latency(2)>cfg.latency(1)');
 end
 % check whether the time window fits with the data
 if (cfg.latency(1) < min(begTrialLatency)), cfg.latency(1) = min(begTrialLatency);
@@ -150,13 +146,8 @@ for iUnit = 1:nUnits
   unitY{iUnit}   = spike.trial{unitIndx}(isInTrials(:) & latencySel(:));
 end
 
-if cfg.spikelength<=0 || cfg.spikelength>1
-  error('cfg.spikelength should be a single number >0 and <=1. 1 row (1 trial) = 1');
-end
-
-if cfg.topplotsize<=0 || cfg.topplotsize>1
-  error('cfg.topplotsize should be a single number >0 and <=1. 0.7 = 70%');
-end
+if (cfg.spikelength<=0 || cfg.spikelength>1), error('cfg.spikelength should be a single number >0 and <=1. 1 row (1 trial) = 1'); end
+if (cfg.topplotsize<=0 || cfg.topplotsize>1), error('cfg.topplotsize should be a single number >0 and <=1. 0.7 = 70%'); end
 
 % plot the trial borders if desired
 if strcmp(cfg.trialborders,'yes')
@@ -186,7 +177,7 @@ for iUnit = 1:nUnits
   
   % process the color information for the different units
   if strcmp(cfg.cmapneurons, 'auto'), cfg.cmapneurons = colormap_cgbprb(nUnits); end
-  if isrealmat(cfg.cmapneurons) && all(size(cfg.cmapneurons) ./ [nUnits 3])
+  if all(size(cfg.cmapneurons) ./ [nUnits 3])
     color = cfg.cmapneurons(iUnit,:);
   else
     error('cfg.cmapneurons should be nUnits-by-3 matrix or "auto"');
@@ -248,9 +239,7 @@ if doTopData
       set(avgHdl(iUnit),'Color',cfg.cmapneurons(iUnit,:));
     end
     if ~strcmp(cfg.errorbars,'no')
-      if ~isfield(timelock,'var')  || ~isfield(timelock,'dof')      
-        error('timelock should contain field .var and .dof for errorbars');
-      end
+      if ~isfield(timelock,'var')  || ~isfield(timelock,'dof'), error('timelock should contain field .var and .dof for errorbars'); end
       df = timelock.dof(binSel);
       df = repmat(df(:)',[nUnits 1]);
       if strcmp(cfg.errorbars, 'sem')
@@ -286,7 +275,8 @@ if doTopData
   try
     ylabel(timelock.cfg.outputunit)
   catch
-    ylabel('Firing Rate')
+    warning('unit of the y-axis is unknown'); 
+    ylabel('Signal intensity')
   end
 end
 

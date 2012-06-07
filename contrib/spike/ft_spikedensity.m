@@ -60,6 +60,12 @@ function [sdf, sdfdata] = ft_spikedensity(cfg,data)
 %     in FT_TIMELOCKSTATISTICS for example and FT_SPIKE_PLOT_RASTER
 %   - SDFDATA is a raw DATA type structure that can be used itself in all
 %   functions that support raw data input (such as FT_TIMELOCKANALYSIS, FT_FREQANALYSIS).
+%
+% Further processing:
+%   FT_TIMELOCKSTATISTICS:               Compute statistics on SDF
+%   FT_SPIKE_PLOT_RASTER:                Plot together with the raster plots
+%   FT_SINGLEPLOTER and FT_MULTIPLOTER : Plot spike-density alone
+%   All FieldTrip functions operating on RAW datatype (second output)
 
 % Copyright (C) 2010-2012, Martin Vinck
 %

@@ -19,8 +19,7 @@ function [cfg] = ft_spike_plot_psth(cfg, psth)
 %                          If 'standard', we plot from 0 to 110% of maximum plotted value);
 % Outputs:
 %	  cfg.hdl.avg              = figure handle for the bar plot, psth average.
-%	  Use SET and GET to access.
-%	  cfg.hdl.var              = figure handle for the error lines. Use GET and SET to access.
+%	  cfg.hdl.var              = figure handle for the error lines. 
 %
 % See also FT_SPIKE_PSTH
 
