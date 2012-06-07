@@ -99,7 +99,7 @@ begTrialLatency = spike.trialtime(cfg.trials,1); % remember: already selected on
 endTrialLatency = spike.trialtime(cfg.trials,2);
 trialDur 		= endTrialLatency - begTrialLatency;
 % while we could simply deselect trials with trialtime field messed up, this may detect bugs
-if any(trialDur<0), error('spike.trialtime(:,1) should preceed spike.trialtime(:,2), your spike.time field is messed up'); end
+if any(trialDur<0), error('spike.trialtime(:,1) should preceed spike.trialtime(:,2), your spike.trialtime field is messed up'); end
 
 % select the latencies, use the same modular function in all the scripts
 cfg = latencyselection(cfg,begTrialLatency,endTrialLatency);
@@ -119,8 +119,7 @@ end
 
 % do some error checking on the binsize
 if cfg.binsize<=0 || cfg.binsize>(cfg.latency(2)-cfg.latency(1)),
-  error('ft:spike_psth:cfg:binsize:wrongInput',...
-    'cfg.binsize should be greater than zero and not exceed the trialduration');
+  error('cfg.binsize should be greater than zero and not exceed the trialduration');
 end
 
 % end of trial should be late enough, beginning should be early enough
@@ -135,9 +134,7 @@ else
 end
 trialSel           = fullDur(:) & overlaps(:) & hasWindow(:);
 cfg.trials         = cfg.trials(trialSel); % note that endTrialLatency was of length cfg.trials
-if isempty(cfg.trials), % it should be explicitly tested that selecting no trial gives no error here
-  warning('ft:spike_psth:cfg:trials','No trials were selected after latency selection');
-end
+if isempty(cfg.trials), warning('No trials were selected after latency selection'); end
 nTrials         = length(cfg.trials);
 begTrialLatency = begTrialLatency(trialSel); % note that begTrialLatency was of length cfg.trials here
 endTrialLatency = endTrialLatency(trialSel);
@@ -229,28 +226,18 @@ elseif strcmp(cfg.latency,'prestim')
   cfg.latency = [min(begTrialLatency) 0];
 elseif strcmp(cfg.latency,'poststim')
   cfg.latency = [0 max(endTrialLatency)];
-elseif ~isrealvec(cfg.latency)||length(cfg.latency)~=2
-  error('ft:spike_psth:cfg:latency:unknownOption',...
-    'cfg.latency should be "maxperiod", "minperiod", "prestim", "poststim" or 1-by-2 numerical vector');
-end
-if cfg.latency(1)>=cfg.latency(2), % check if it is ordered vector
-  error('ft:spike_psth:cfg:latency:decreasingLatencyVector',...
-    'cfg.latency should be ascending vector, such that cfg.latency(2)>cfg.latency(1)');
 end
 % check whether the time window fits with the data
 if (cfg.latency(1) < min(begTrialLatency)), cfg.latency(1) = min(begTrialLatency);
-  warning('ft:spike_psth:cfg:latencyBegBeforeTrialBeg',...
-    'Correcting begin latency because it is before all trial beginnings');
+  warning('Correcting begin latency because it is before all trial beginnings');
 end
 if (cfg.latency(2) > max(endTrialLatency)), cfg.latency(2) = max(endTrialLatency);
-  warning('ft:spike_psth:cfg:latencyEndAfterTrialEnd',...
-    'Correcting end latency because it is after all trial ends');
+  warning('Correcting end latency because it is after all trial ends');
 end
 
-%%%
+
 function [cfg] = trialselection(cfg,spike)
 
-% get the number of trials or change DATA according to cfg.trials
 nTrials = size(spike.trialtime,1);
 if  strcmp(cfg.trials,'all')
   cfg.trials = 1:nTrials;
@@ -258,12 +245,8 @@ elseif islogical(cfg.trials)
   cfg.trials = find(cfg.trials);
 end
 cfg.trials = sort(cfg.trials(:));
-if max(cfg.trials)>nTrials, error('ft:spike_psth:cfg:trials:maxExceeded',...
-    'maximum trial number in cfg.trials should not exceed length of DATA.trial')
-end
-if isempty(cfg.trials), error('ft:spike_psth:cfg:trials:noneSelected',...
-    'No trials were selected by you, rien ne va plus');
-end
+if max(cfg.trials)>nTrials, error('maximum trial number in cfg.trials should not exceed number of rows of spike.trialtime'); end
+if isempty(cfg.trials), error('No trials were selected by you, rien ne va plus'); end
 
 
 
