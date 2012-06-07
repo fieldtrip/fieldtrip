@@ -3,11 +3,12 @@ function [stat] = ft_spike_xcorr(cfg,spike)
 % FT_SPIKE_XCORR computes the cross-correlation histogram and shift predictor.
 %
 % Use as
-%   [xcorr] = ft_spike_xcorr(cfg,data)
+%   [stat] = ft_spike_xcorr(cfg,data)
 %
 % The input SPIKE should be organised as the spike or the raw datatype, obtained from
 % FT_SPIKE_MAKETRIALS or FT_PREPROCESSING (in that case, conversion is done
-% within the function)
+% within the function). A mex file is located in /contrib/spike/private
+% which will be automatically mexed.
 %
 % Configurations options for xcorr general:
 %   cfg.maxlag           = number in seconds, indicating the maximum lag for the
@@ -18,16 +19,15 @@ function [stat] = ft_spike_xcorr(cfg,spike)
 %   cfg.method           = 'xcorr' or 'shiftpredictor'. If 'shiftpredictor'
 %                           we do not compute the normal cross-correlation
 %                           but shuffle the subsequent trials.
-%                          If two channels are independent, then the shift
-%                          predictor should give the same correlogram as the raw
-%                          correlogram calculated from the same trials.
-%                          Typically, the shift predictor is subtracted from the
-%                          correlogram.
-%   cfg.outputunit       = 'proportion' (value in each bin indicates proportion of occurence)
-%                          'center' (values are scaled to center value which is set to 1)
-%                          'raw' (default) unnormalized crosscorrelogram.
+%                           If two channels are independent, then the shift
+%                           predictor should give the same correlogram as the raw
+%                           correlogram calculated from the same trials.
+%                           Typically, the shift predictor is subtracted from the
+%                           correlogram.
+%   cfg.outputunit       = - 'proportion' (value in each bin indicates proportion of occurence)
+%                          - 'center' (values are scaled to center value which is set to 1)
+%                          - 'raw' (default) unnormalized crosscorrelogram.
 %   cfg.binsize          = [binsize] in sec (default = 0.001 sec).
-%
 %   cfg.channelcmb       = Mx2 cell-array with selection of channel pairs (default = {'all' 'all'}),
 %                          see FT_CHANNELCOMBINATION for details
 %   cfg.latency          = [begin end] in seconds, 'max' (default), 'min', 'prestim'(t<=0), or
@@ -37,13 +37,16 @@ function [stat] = ft_spike_xcorr(cfg,spike)
 %                          and the samples in every trial.
 %                          If 'no'  - only select those trials that fully cover the window as
 %                          specified by cfg.latency and discard those trials that do not.
+%                          if cfg.method = 'yes', then cfg.vartriallen
+%                          should be 'no' (otherwise, fewer coincidences
+%                          will occur because of non-overlapping windows)
 %   cfg.trials           = numeric selection of trials (default = 'all')
 %   cfg.keeptrials       = 'yes' or 'no' (default)
 %
-% A peak at a negative lag for X.xcorr(:,chan1,chan2) means that chan1 is
+% A peak at a negative lag for stat.xcorr(chan1,chan2,:) means that chan1 is
 % leading chan2. Thus, a negative lag represents a spike in the second
-% dimension of X.xcorr before the channel in the third dimension of
-% X.xcorr.
+% dimension of stat.xcorr before the channel in the third dimension of
+% stat.stat.
 %
 % Variable trial length is controlled by the option cfg.vartriallen. If
 % cfg.vartriallen = 'yes', all trials are selected that have a minimum
@@ -54,17 +57,16 @@ function [stat] = ft_spike_xcorr(cfg,spike)
 % otherwise we do not compute the shift predictor.
 %
 % Output:
-%    xcorr.xcorr            = (2*nlags+1)-by-nchans-by-nchans cross correlation histogram
+%    stat.xcorr            = nchans-by-nchans-by-(2*nlags+1) cross correlation histogram
 %   or 
-%    xcorr.shiftpredictor   = (2*nlags+1)-by-nchans-by-nchans shift predictor.
+%    stat.shiftpredictor   = nchans-by-nchans-by-(2*nlags+1) shift predictor.
+%  both with dimord 'chan_chan_time'
+%    stat.lags             = (2*nlags + 1) vector with lags in seconds.
 %
-%    xcorr.lags             = (2*nlags + 1) vector with lags in seconds.
-%
-%    xcorr.dimord
-%    xcorr.trial            = (2*nlags + 1)-by-ntrials-by-nchans-by-nchans with single
-%                            trials.
-%    xcorr.label            = corresponding labels to channels in xcorr.xcorr
-%    xcorr.cfg              = configurations used in this function.
+%    stat.trial            = ntrials-by-nchans-by-nchans-by-(2*nlags + 1) with single
+%                            trials and dimord 'rpt_chan_chan_time';
+%    stat.label            = corresponding labels to channels in stat.xcorr
+%    stat.cfg              = configurations used in this function.
 
 % Copyright (C) 2010-2012, Martin Vinck
 %
@@ -190,15 +192,16 @@ end
 nTrials   = length(cfg.trials); % only now reset nTrials
 
 % preallocate the sum and the single trials and the shift predictor
-s            = zeros(2*nLags + 1,nChans,nChans);
 keepTrials   = strcmp(cfg.keeptrials,'yes');
-if keepTrials,       singleTrials = zeros(2*nLags+1,nTrials,nChans,nChans);      end
-if doShiftPredictor, shiftSum     = zeros(2*nLags + 1,nChans,nChans);            end
+s     = zeros(nChans,nChans,2*nLags + 1); 
+singleTrials = zeros(nTrials,nChans,nChans,2*nLags+1);    
+if strcmp(cfg.method,'shiftpredictor'), singleTrials(1,:,:,:) = NaN; end
+
 for iTrial = 1:nTrials
   origTrial = cfg.trials(iTrial);
 
   for iCmb = 1:nCmbs
-    % take only the times that are in this trial
+    % take only the times that are in this trial and latency window
     indx  = cmbindx(iCmb,:);
     inTrial1 = spike.trial{indx(1)}==origTrial;
     inTrial2 = spike.trial{indx(2)}==origTrial;
@@ -207,92 +210,90 @@ for iTrial = 1:nTrials
     ts1 = sort(spike.time{indx(1)}(inTrial1(:) & inWindow1(:)));
     ts2 = sort(spike.time{indx(2)}(inTrial2(:) & inWindow2(:)));
     
-    % compute the xcorr if both are non-empty
-    if ~isempty(ts1) && ~isempty(ts2)
-      if indx(1)<=indx(2)
-        [x]   = spike_crossx(ts1(:),ts2(:),cfg.binsize,nLags*2+1);
-      else
-        [x]   = spike_crossx(ts2(:),ts1(:),cfg.binsize,nLags*2+1);
-      end
-
-      % sum the xcorr
-      s(:,indx(1),indx(2)) = s(:,indx(1),indx(2)) + x(:);
-      s(:,indx(2),indx(1)) = s(:,indx(2),indx(1)) + flipud(x(:));
-
-      % store individual trials if requested
-      if keepTrials
-        singleTrials(:,iTrial,indx(1),indx(2)) = x(:);
-        singleTrials(:,iTrial,indx(2),indx(1)) = flipud(x(:));
-      end
-    end
-
-    % compute the shift predictor
-    if doShiftPredictor && iTrial>1
-
-      % symmetric, get x21 to x12 and x22 to x11
-      inTrial1_old = spike.trial{indx(1)}==cfg.trials(iTrial-1);
-      ts1_old      = sort(spike.time{indx(1)}(inTrial1_old(:) & inWindow1(:)));
-      inTrial2_old = spike.trial{indx(2)}==cfg.trials(iTrial-1);
-      ts2_old      = sort(spike.time{indx(2)}(inTrial2_old(:) & inWindow2(:)));
-
-      % compute both combinations
-      for k = 1:2
-
-        % take chan from this and previous channel
-        if k==1
-          A = ts1;
-          B = ts2_old;
-        else
-          A = ts1_old;
-          B = ts2;
-        end
-        if ~isempty(A) && ~isempty(B),
-          if indx(1)<=indx(2)            
-            [x]   = spike_crossx(A(:),B(:),cfg.binsize,nLags*2+1);
+    switch cfg.method
+      case 'xcorr'
+        % compute the xcorr if both are non-empty
+        if ~isempty(ts1) && ~isempty(ts2)
+          if indx(1)<=indx(2)
+            [x]   = spike_crossx(ts1(:),ts2(:),cfg.binsize,nLags*2+1);
           else
-            [x]   = spike_crossx(A(:),B(:),cfg.binsize,nLags*2+1);
+            [x]   = spike_crossx(ts2(:),ts1(:),cfg.binsize,nLags*2+1);
           end
-          % compute the sum
-          shiftSum(:,indx(1),indx(2)) =  shiftSum(:,indx(1),indx(2)) + x(:);
-          shiftSum(:,indx(2),indx(1)) =  shiftSum(:,indx(2),indx(1)) + flipud(x(:));
+
+          % sum the xcorr
+          s(indx(1),indx(2),:) = s(indx(1),indx(2),:) + shiftdim(x(:),-2);
+          s(indx(2),indx(1),:) = s(indx(2),indx(1),:) + shiftdim(flipud(x(:)),-2);
+
+          % store individual trials if requested
+          if keepTrials
+            singleTrials(iTrial,indx(1),indx(2),:) = shiftdim(x(:),-3);
+            singleTrials(iTrial,indx(2),indx(1),:) = shiftdim(flipud(x(:)),-3);
+          end
         end
-      end
+      case 'shiftpredictor'
+        if iTrial>1
+          % symmetric, get x21 to x12 and x22 to x11
+          inTrial1_old = spike.trial{indx(1)}==cfg.trials(iTrial-1);
+          ts1_old      = sort(spike.time{indx(1)}(inTrial1_old(:) & inWindow1(:)));
+          inTrial2_old = spike.trial{indx(2)}==cfg.trials(iTrial-1);
+          ts2_old      = sort(spike.time{indx(2)}(inTrial2_old(:) & inWindow2(:)));
+
+          % compute both combinations
+          for k = 1:2
+
+            % take chan from this and previous channel
+            if k==1
+              A = ts1;
+              B = ts2_old;
+            else
+              A = ts1_old;
+              B = ts2;
+            end
+            if ~isempty(A) && ~isempty(B),
+              if indx(1)<=indx(2)            
+                [x]   = spike_crossx(A(:),B(:),cfg.binsize,nLags*2+1);
+              else
+                [x]   = spike_crossx(A(:),B(:),cfg.binsize,nLags*2+1);
+              end
+              % compute the sum
+              s(indx(1),indx(2),:) =  s(indx(1),indx(2),:) + shiftdim(x(:),-2);
+              s(indx(2),indx(1),:) =  s(indx(2),indx(1),:) + shiftdim(flipud(x(:)),-2);
+              if keepTrials
+                 singleTrials(iTrial,indx(1),indx(2),:) = shiftdim(x(:)/2,-3);
+                 singleTrials(iTrial,indx(2),indx(1),:) = shiftdim(flipud(x(:))/2,-3);
+              end              
+            end
+          end
+        end
     end % symmetric shift predictor loop
   end % combinations
 end % trial loop
 
 % multiply the shift sum by a factor so it has the same scale as raw 
 dofShiftPred = 2*(nTrials-1);
-if doShiftPredictor, shiftSum = shiftSum*nTrials/dofShiftPred; end
+if doShiftPredictor, s = s*nTrials/dofShiftPred; end
 switch cfg.outputunit
   case 'proportion'
-    if doShiftPredictor
-      sm       = sum(shiftSum);
-      shiftSum = shiftSum./sm(ones(nLags*2+1,1),:,:);
-    end
-    
-    sm       = sum(s);
-    s        = s./sm(ones(nLags*2+1,1),:,:);
+    sm = repmat(nansum(s,3),[1 1 nLags*2 + 1]);
+    s = s./sm;        
+    if keepTrials
+      singleTrials       = singleTrials./repmat(shiftdim(sm,-1),[nTrials 1 1 1]);
+    end            
   case 'center'
-    if doShiftPredictor
-      center  = shiftSum(nLags+1,:,:);
-      shiftSum = shiftSum./center(ones(nLags*2+1,1),:,:);
-    end
-    center   = sum(s);
-    s        = s./center(ones(nLags*2+1,1),:,:);
+      center   = repmat(s(:,:,nLags+1),[1 1 nLags*2 + 1]);
+      s        = s./center;
+      if keepTrials
+        singleTrials       = singleTrials./repmat(shiftdim(center,-1),[nTrials 1 1 1]);
+      end            
 end
 
 % return the results
-if strcmp(cfg.method,'xcorr')
-  stat.xcorr            = s;
-else
-  stat.shiftpredictor   = shiftSum;
-end
+stat.(cfg.method)      = s;
 stat.time              = lags;
-stat.dimord             = 'time_chan_chan'; 
+stat.dimord            = 'chan_chan_time'; 
 if keepTrials
-  stat.trial = singleTrials;
-  dimord     = 'trial_time_chan_chan';
+  stat.trial   = singleTrials;
+  stat.dimord  = 'trial_chan_chan_time';
 end
 stat.label       = spike.label(chansel);
 
