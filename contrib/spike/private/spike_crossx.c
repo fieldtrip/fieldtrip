@@ -65,16 +65,15 @@ void mexFunction(
       while(tY[yStartIndx] < lBound && yStartIndx < (nY-1))
         yStartIndx++;
       
-      if (tY[yStartIndx]>uBound)
+      if (tY[yStartIndx]>uBound || tY[yStartIndx]<lBound )
       {
         continue;
       }
-      
       for(jY = yStartIndx; jY < nY; jY++)
       {
         /* find the binnumber associated with the distance */
         d      = tY[jY] - t1;
-        binNum =  (int)((d - minLag)/binSize);
+        binNum =  (int)(floor((d - minLag)/binSize));              
         if (binNum<0)
         {
           binNum = 0;
