@@ -27,6 +27,7 @@ function opt = ft_checkopt(opt, key, allowedtype, allowedval)
 %   'numericvector'
 %   'numericmatrix'
 %   'charcell'
+%   'doublebivector'
 %
 % For allowedval you can specify a single value or a cell-array
 % with multiple values.
@@ -79,6 +80,8 @@ for i=1:length(allowedtype)
       ok = isa(val, 'double') && numel(val)==1;
     case 'doublevector'
       ok = isa(val, 'double') && sum(size(val)>1)==1;
+    case 'doublebivector'
+      ok = isa(val,'double') && sum(size(val)>1)==1 && length(val)==2;
     case 'doublematrix'
       ok = isa(val, 'double') && sum(size(val)>1)>1;
     case 'numericscalar'
