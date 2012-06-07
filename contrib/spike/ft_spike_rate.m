@@ -63,7 +63,7 @@ cfg.keeptrials   = ft_getopt(cfg,'keeptrials', 'yes');
 % ensure that the options are valid
 cfg = ft_checkopt(cfg,'outputunit','char', {'rate', 'spikecount'});
 cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});
-cfg = ft_checkopt(cfg,'latency', {'char', 'doublevector'});
+cfg = ft_checkopt(cfg,'latency', {'char', 'ascendingdoublebivector'});
 cfg = ft_checkopt(cfg,'trials', {'char', 'doublevector', 'logical'}); 
 cfg = ft_checkopt(cfg,'vartriallen', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'keeptrials', 'char', {'yes', 'no'});
@@ -72,9 +72,7 @@ cfg = ft_checkopt(cfg,'keeptrials', 'char', {'yes', 'no'});
 cfg.spikechannel = ft_channelselection(cfg.spikechannel, spike.label);
 spikesel    = match_str(spike.label, cfg.spikechannel);
 nUnits      = length(spikesel); % number of spike channels
-if nUnits==0, error('ft:spike_rate:cfg:spikechannel:noSpikeChanSelected',...
-    'No spikechannel selected by means of cfg.spikechannel');
-end
+if nUnits==0, error('No spikechannel selected by means of cfg.spikechannel'); end
 
 % get the number of trials
 cfg        = trialselection(cfg,spike);
@@ -104,9 +102,7 @@ cfg.trials         = cfg.trials(overlaps(:) & hasWindow(:));
 trialDur           = trialDur(overlaps(:) & hasWindow(:)); % select the durations, we will need this later
 nTrials            = length(cfg.trials);
 % issue an explicit error if nothing was selected, this is in general indicative of bug
-if isempty(cfg.trials), warning('ft:spike_rate:cfg:trials:noneSelected',...
-    'No trials were selected in the end, please give us something to analyse');
-end
+if isempty(cfg.trials), warning('No trials were selected in the end, please give us something to analyze'); end
 
 % preallocate before computing the psth
 keepTrials = strcmp(cfg.keeptrials,'yes');
@@ -117,7 +113,9 @@ for iUnit = 1:nUnits
   unitIndx   = spikesel(iUnit);
   ts         = spike.time{unitIndx}(:); % get the times
   latencySel = ts>=cfg.latency(1) & ts<=cfg.latency(2); % select timestamps within latency
-  trialNums  = spike.trial{unitIndx}(latencySel);% trial indices
+  latSel     = spike.trial{unitIndx}(latencySel);
+  trialSel   = ismember(spike.trial{unitIndx},cfg.trials);
+  trialNums  = spike.trial{unitIndx}(latSel(:) & trialSel(:));
   
   % use the fact that trial numbers are integers >=1 apart, so we can use histc
   trialBins   = sort([cfg.trials-0.5; cfg.trials+0.5]);
@@ -142,10 +140,11 @@ rate.var(dof<2)  = 0;
 % gather the rest of the results
 rate.dof       = dof;
 rate.label     = spike.label(spikesel);
-rate.dimord    = 'chan';
+rate.dimord    = 'chan_time';
+rate.time      = mean(cfg.latency);
 if (strcmp(cfg.keeptrials,'yes'))
   rate.trial = singleTrials;
-  rate.dimord = 'rpt_chan';
+  rate.dimord = 'rpt_chan_time';
 end
 
 % do the general cleanup and bookkeeping at the end of the function
