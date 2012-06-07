@@ -69,6 +69,9 @@ cfg = ft_checkopt(cfg,'method', 'char', {'jpsth', 'shiftpredictor'});
 cfg = ft_checkopt(cfg,'normalization', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'channelcmb', {'char', 'cell'});
 
+% reject configuration inputs that are not processed
+cfg = ft_checkconfig(cfg,'allowed', {'latency', 'trials', 'keeptrials', 'method', 'normalization', 'channelcmb'});
+
 % get the number of trials or change DATA according to cfg.trials
 if  strcmp(cfg.trials,'all')
   cfg.trials = 1:size(psth.trial,1);
@@ -171,8 +174,7 @@ for iCmb = 1:nCmbs
     
     repVarX = varX(:,ones(1,nBins));
     repVarH = varH(ones(nBins,1),:);
-    varXH   = repVarX.*repVarH;
-    
+    varXH   = repVarX.*repVarH;    
   end
   
   for iTrial = 1:nTrials

@@ -11,40 +11,25 @@ function [cfg] = ft_spike_plot_jpsth(cfg, jpsth)
 %   present as well.
 %
 % General configurations:
-%   cfg.channelcmb       = string or index of single channel combination to trigger on.
-%                          See SPIKESTATION_FT_SUB_CHANNELCOMBINATION for details.
-%   cfg.psth             = 'yes' (default) or 'no'. If 'yes', the psth histogram is down
-%                          the x and left from the y axis.
-%   cfg.axlim            = [begin end] in seconds or 'max' (default), 'prestim' or
-%                          'poststim';
-%   cfg.colorbar         = 'yes' (default) or 'no'
-%   cfg.colormap         =  N-by-3 colormap (see COLORMAP). or 'auto' (default,hot(256))
-%   cfg.interpolate      = 'yes' or 'no', determines whether we interpolate the density
-%                           plot
+%   cfg.channelcmb  = string or index of single channel combination to trigger on.
+%       See SPIKESTATION_FT_SUB_CHANNELCOMBINATION for details.
+%   cfg.psth        = 'yes' (default) or 'no'. Plot PSTH with JPSTH if 'yes';
+%   cfg.latency     = [begin end] in seconds or 'max' (default), 'prestim' or 'poststim';
+%   cfg.colorbar    = 'yes' (default) or 'no'
+%   cfg.colormap    =  N-by-3 colormap (see COLORMAP). or 'auto' (default,hot(256))
+%   cfg.interpolate = 'yes' or 'no', determines whether we interpolate density
+%   cfg.window      = 'string' or N-by-N matrix
+%     'no':           apply no smoothing
+%     ' gausswin'     use a Gaussian smooth function
+%     ' boxcar'       use a box-car to smooth
+%   cfg.gaussvar    =  variance  (default = 1/16 of window length in sec).
+%   cfg.winlen      =  cfg.window length in seconds (default = 5*binwidth).
+%     length of our window is 2*round*(cfg.winlen/binwidth)
+%     where binwidth is the binwidth of the jpsth (jpsth.time(2)-jpsth.time(1)).
 %
-% Configurations related to smoothing:
-%   cfg.smooth           = 'yes' or 'no' (default)
-%                           If 'yes', we overlay a smooth density plot calculated by
-%                           non-parametric symmetric kernel smoothing with cfg.kernel.
-%   cfg.kernel           = 'gausswin' or 'boxcar', or N-by-N matrix containing window
-%                           values with which we convolve the scatterplot that is binned
-%                           with resolution cfg.dt. N should be uneven, so it can be centered
-%                           at each point of the lattice.
-%                           'gausswin' is N-by-N multivariate gaussian, where the diagonal of the
-%                           covariance matrix is set by cfg.gaussvar.
-%                           'boxcar' is N-by-N rectangular window.
-%                           If cfg.kernel is numeric, it should be of size N-by-N.
-%   cfg.gaussvar         =  variance  (default = 1/16 of window length in sec).
-%   cfg.winlen           =  window length in seconds (default = 5*binwidth). The total
-%                           length of our window is 2*round*(cfg.winlen/binwidth)
-%                           where binwidth is the binwidth of the jpsth (jpsth.time(2) -
-%                           jpsth.time(1)).
-%
-% See also FT_SPIKE_JOINTPSTH, FT_SPIKE_PSTH, FT_SPIKE_XCORR
+% See also FT_SPIKE_JPSTH, FT_SPIKE_PSTH
 
-% FIXME here we should definitely think of making a matrix with the same
-% electrode somehow as the diagonal
-
+% FIXME: extend the windowing functions a bit
 % Copyright (C) 2010, Martin Vinck
 %
 % $Id$
@@ -58,28 +43,28 @@ ft_preamble callinfo
 ft_preamble trackconfig
 
 % get the default options
-cfg.channelcmb  = ft_getopt(cfg, 'channelcmb', 'all');
+cfg.channelcmb  = ft_getopt(cfg,'channelcmb', 'all');
 cfg.psth        = ft_getopt(cfg,'psth', 'yes');
 cfg.latency     = ft_getopt(cfg,'latency','maxperiod');
 cfg.colorbar    = ft_getopt(cfg,'colorbar', 'yes');
 cfg.colormap    = ft_getopt(cfg,'colormap', jet(256));
 cfg.interpolate = ft_getopt(cfg,'interpolate', 'no');
-cfg.smooth      = ft_getopt(cfg,'smooth', 'no');
-cfg.kernel      = ft_getopt(cfg,'kernel', 'mvgauss');
+cfg.window      = ft_getopt(cfg,'window', 'no');
 cfg.winlen      = ft_getopt(cfg,'winlen', 5*(mean(diff(jpsth.time))));
 cfg.gaussvar    = ft_getopt(cfg,'gaussvar', (cfg.winlen/4).^2);
 
 % ensure that the options are valid
 cfg = ft_checkopt(cfg,'channelcmb', {'char', 'cell'});
 cfg = ft_checkopt(cfg,'psth', 'char', {'yes', 'no'});
-cfg = ft_checkopt(cfg,'latency', {'char', 'doublevector'});
+cfg = ft_checkopt(cfg,'latency', {'char', 'ascenddoublebivector'});
 cfg = ft_checkopt(cfg,'colorbar', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'colormap','double');
 cfg = ft_checkopt(cfg,'interpolate', 'char', {'yes', 'no'});
-cfg = ft_checkopt(cfg,'smooth','char', {'yes','no'});
-cfg = ft_checkopt(cfg,'kernel', {'char', 'double'});
+cfg = ft_checkopt(cfg,'window','char', {'no', 'gausswin', 'boxcar'});
 cfg = ft_checkopt(cfg,'winlen', 'double');
 cfg = ft_checkopt(cfg,'gaussvar', 'double');
+
+cfg = ft_checkconfig(cfg,'allowed', {'channelcmb', 'psth', 'latency', 'colorbar', 'colormap', 'interpolate', 'window', 'winlen', 'gaussvar'});
 
 % determine the corresponding indices of the requested channel combinations
 cfg.channelcmb = ft_channelcombination(cfg.channelcmb, jpsth.label);
@@ -89,9 +74,7 @@ for k=1:size(cfg.channelcmb,1)
   cmbindx(k,2) = strmatch(cfg.channelcmb(k,2), jpsth.label, 'exact');
 end
 nCmbs 	   = size(cmbindx,1);
-if nCmbs~=1, error('MATLAB:spike:plot_jpsth:cfg:channelcmb:tooManySelected', ...
-    'Currently only supported for a single channel combination')
-end
+if nCmbs~=1, error('Currently only supported for a single channel combination'); end
 
 % select the time
 minTime     = jpsth.time(1);
@@ -102,55 +85,37 @@ elseif strcmp(cfg.latency,'poststim')
   cfg.latency = [0 maxTime];
 elseif strcmp(cfg.latency,'prestim')
   cfg.latency = [minTime 0];
-elseif ~isrealvec(cfg.latency)||length(cfg.latency)~=2
-  error('MATLAB:spike:plot_jpsth:cfg:latency',...
-    'cfg.latency should be "max" or 1-by-2 numerical vector');
 end
-if cfg.latency(1)>=cfg.latency(2),
-  error('MATLAB:spike:plot_jpsth:cfg:latency:wrongOrder',...
-    'cfg.latency(2) should be greater than cfg.latency(1)')
-end
+
 % check whether the time window fits with the data
 if (cfg.latency(1) < minTime), cfg.latency(1) = minTime;
-  warning('MATLAB:spike:plot_jpsth:correctLatencyBeg',...
-    'Correcting begin latency of averaging window');
+  warning('Correcting begin latency of averaging window');
 end
 if (cfg.latency(2) > maxTime), cfg.latency(2) = maxTime;
-  warning('MATLAB:spike:plot_jpsth:correctLatencyEnd',...
-    'Correcting end latency of averaging window');
+  warning('Correcting end latency of averaging window');
 end
 
 % get the samples of our window, and the binwidth of the JPSTH
-timeSel = jpsth.time>=cfg.latency(1) & jpsth.time <= cfg.latency(2);
+timeSel       = jpsth.time>=cfg.latency(1) & jpsth.time <= cfg.latency(2);
 sampleTime    = mean(diff(jpsth.time)); % get the binwidth
 
 % for convenience create a separate variable
 dens = squeeze(jpsth.avg(:,:,cmbindx(1,1),cmbindx(1,2))); % density
 
 % smooth the jpsth with a kernel if requested
-if strcmp(cfg.smooth,'yes')
+if ~strcmp(cfg.window,'no')
   
   % construct the kernel
   winTime       = [fliplr(0:-sampleTime:-cfg.winlen) sampleTime:sampleTime:cfg.winlen];
   winLen        = length(winTime);
-  if strcmp(cfg.kernel, 'mvgauss') % multivariate gaussian
+  if strcmp(cfg.window, 'gausswin') % multivariate gaussian
     A =  winTime'*ones(1,winLen);
     B = A';
     T = [A(:) B(:)]; % makes rows with each time combination on it
     covmat  = diag([cfg.gaussvar cfg.gaussvar]); % covariance matrix
     win    = mvnpdf(T,0,covmat); % multivariate gaussian function
-  elseif strcmp(cfg.kernel, 'boxcar')
+  elseif strcmp(cfg.window, 'boxcar')
     win    = ones(winLen);
-  elseif ~isrealmat(cfg.kernel)
-    error('MATLAB:spike:plot_jpsth:cfg:kernel:unknownOption',...
-      'cfg.kernel should be "gausswin", "boxcar" or numerical N-by-N matrix')
-  else
-    win    = cfg.kernel;
-    szWin  = size(cfg.kernel);
-    if  szWin(1)~=szWin(2)||~mod(szWin(1),2),
-      error('MATLAB:spike:plot_jpsth:cfg:kernel:wrongSize', ...
-        'cfg.kernel should be 2-dimensional, N-by-N matrix with N uneven')
-    end
   end
   
   % turn into discrete probabilities again (sum(p)=1);
@@ -158,10 +123,10 @@ if strcmp(cfg.smooth,'yes')
   win = reshape(win,[],winLen);
   
   % do 2-D convolution and rescale
-  dens  = conv2(dens,win,'same');
-  outputOnes = conv2(ones(size(dens)),win,'same'); % NOTE $$$ SHOULD BE IN RIGHT ROW/COLUMN!
-  rescale = 1./outputOnes;
-  dens  = dens.*rescale;
+  dens       = conv2(dens,win,'same');
+  outputOnes = conv2(ones(size(dens)),win,'same'); 
+  rescale    = 1./outputOnes;
+  dens       = dens.*rescale;
 end
 
 bins = jpsth.time;
