@@ -24,7 +24,11 @@ function [isih] = ft_spike_isi(cfg,spike)
 % Outputs:
 %   isih.avg             = nUnits-by-nBins interspike interval histogram
 %   isih.time            = bincenters corresponding to isih.avg
-%   isih.isi             = 1-by-nUnits cell with interval to next spike per spike.
+%   isih.isi             = 1-by-nUnits cell with interval to previous spike per spike.
+%                          For example isih.isi{1}(2) = 0.1 means that the
+%                          second spike fired was 0.1 s later than the
+%                          first. Note that jumps within trials or first
+%                          spikes within trials are given NaNs.
 %   isih.label           = 1-by-nUnits cell array with labels
 
 % Copyright (C) 2010, Martin Vinck

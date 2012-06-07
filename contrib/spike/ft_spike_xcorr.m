@@ -231,9 +231,9 @@ for iTrial = 1:nTrials
     % compute the xcorr if both are non-empty
     if ~isempty(ts1) && ~isempty(ts2)
       if indx(1)<=indx(2)
-        [x]   = spike_crossx(ts1,ts2,cfg.binsize,nLags*2);
+        [x]   = spike_crossx(ts1(:),ts2(:),cfg.binsize,nLags*2+1);
       else
-        [x]   = spike_crossx(ts2,ts1,cfg.binsize,nLags*2);
+        [x]   = spike_crossx(ts2(:),ts1(:),cfg.binsize,nLags*2+1);
       end
 
       % sum the xcorr
@@ -269,10 +269,12 @@ for iTrial = 1:nTrials
         end
         if ~isempty(A) && ~isempty(B),
 
-          if indx(1)<=indx(2)
-            [x]   = spike_crossx(ts1,ts2,cfg.binsize,nLags*2);
+          ts1(:)
+          ts2(:)
+          if indx(1)<=indx(2)            
+            [x]   = spike_crossx(A(:),B(:),cfg.binsize,nLags*2+1);
           else
-            [x]   = spike_crossx(ts2,ts1,cfg.binsize,nLags*2);
+            [x]   = spike_crossx(A(:),B(:),cfg.binsize,nLags*2+1);
           end
           % compute the sum
           shiftSum(:,indx(1),indx(2)) =  shiftSum(:,indx(1),indx(2)) + x(:);
