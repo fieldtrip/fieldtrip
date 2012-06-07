@@ -64,8 +64,7 @@ figure
 cfgRaster =[];
 cfgRaster.spikechannel = [1 2];
 cfgRaster.topplotsize = 0.2;
-cfgRaster.topdata = psthData;
-H = ft_spike_plot_raster(cfgRaster,spike);
+H = ft_spike_plot_raster(cfgRaster,spike, psthData);
 
 
 
