@@ -112,7 +112,7 @@ if strcmp(cfg.binsize,'auto')
     spikesInWin    = spike.time{unitIndx}>=cfg.latency(1) & spike.time{unitIndx}<=cfg.latency(2); % get spikes in trial
     sd             = nanstd(spike.time{unitIndx}(spikesInWin));
     N              = sum(spikesInWin);
-    binsize(iUnit) = 3.49*sd*(N^(1/3));
+    binsize(iUnit) = 3.49*sd./(N^(1/3));
   end
   cfg.binsize = nanmean((cfg.latency(2)-cfg.latency(1))./binsize);
 end
