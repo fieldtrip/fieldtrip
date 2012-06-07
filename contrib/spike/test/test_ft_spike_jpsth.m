@@ -109,11 +109,11 @@ cfg = [];
 cfg.interpolate = 'no'
 cfg.window = 'gausswin';
 cfg.winlen = 0.02
-cfg.channelcmb = jpsth.labelcmb(1,:);
+cfg.channelcmb = {jpsth.label{1},jpsth.label{2}};
 ft_spike_plot_jpsth(cfg,jpsth)
 %%
 figure
-cfg.channelcmb = jpsth.labelcmb(2,:);
+cfg.channelcmb = {jpsth.label{1},jpsth.label{3}};
 ft_spike_plot_jpsth(cfg,jpsth)
 % note the shift along the diagonal
 figure
@@ -149,9 +149,9 @@ figure
 cfg.channelcmb = {'chan5' 'chan2'};
 ft_spike_plot_jpsth(cfg,jpsth)
 % note the randomness around 0, shiftpredictor gives same result
-
+%%
 figure
-cfg.channelcmb = {'chan4' 'chan2'}
+cfg.channelcmb = {'chan1' 'chan2'}
 ft_spike_plot_jpsth(cfg,jpsth)
 
 
@@ -160,13 +160,19 @@ cfg = [];
 cfg.normalization = 'yes';
 tic,jpsth = ft_spike_jpsth(cfg,psth);toc
 cfg = [];
-for iCmb = 1:5
-figure
-cfg.channelcmb = jpsth.labelcmb(iCmb,:);
-ft_spike_plot_jpsth(cfg,jpsth)
+for iCmb1 = 1:7
+  for iCmb2 = iCmb1:8
+    figure
+    cfg.channelcmb = {jpsth.label{iCmb1},jpsth.label{iCmb2}};
+    ft_spike_plot_jpsth(cfg,jpsth)
+  end
 end
-max(jpsth.avg(:))
-min(jpsth.avg(:))
+figure
+cfg.channelcmb = {'chan8' 'chan9'};
+ft_spike_plot_jpsth(cfg,jpsth)
+
+nanmax(jpsth.jpsth(:))
+nanmin(jpsth.jpsth(:))
 % note how the normalized lies between -1 and 1
 %%
 cfg = [];
@@ -174,9 +180,17 @@ cfg.normalization = 'yes';
 cfg.method = 'shiftpredictor';
 tic,jpsth = ft_spike_jpsth(cfg,psth);toc
 cfg = [];
-
+%%
+for iCmb1 = 1:7
+  for iCmb2 = iCmb1:8
+    figure
+    cfg.channelcmb = {jpsth.label{iCmb1},jpsth.label{iCmb2}};
+    ft_spike_plot_jpsth(cfg,jpsth)
+  end
+end
+%%
 figure
-cfg.channelcmb = {'chan5' 'chan2'};
+cfg.channelcmb = {'chan8' 'chan9'};
 ft_spike_plot_jpsth(cfg,jpsth)
 
 figure
