@@ -3,6 +3,9 @@ function [trl, event] = trialfun_example1(cfg)
 % TRIALFUN_EXAMPLE1 is an example trial function. It searches for events
 % of type "trigger" and specifically for a trigger with value 7, followed
 % by a trigger with value 64.
+% 
+% You can use this example trial function as template for your own
+% conditial trial definitions.
 
 % read the header information and the events from the data
 % this should always be done using the generic read_header
