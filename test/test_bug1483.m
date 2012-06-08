@@ -20,14 +20,24 @@ freq.freq      = [1 2 3];
 freq.cumtapcnt = ones(5,1);
 
 % old style
-dataold = ft_selectdata(data, 'rpt', 2:4);
-freqold = ft_selectdata(freq, 'rpt', 2:4);
+dataold1 = ft_selectdata(data, 'rpt', 2:4);
+dataold2 = ft_selectdata(data, 'channel', data.label(1));
+
+freqold1 = ft_selectdata(freq, 'rpt', 2:4);
+freqold2 = ft_selectdata(freq, 'channel', freq.label(1));
+
 
 % new style
 cfg = [];
 cfg.trials = 2:4;
-datanew = ft_selectdata(cfg, data);
-freqnew = ft_selectdata(cfg, freq);
+datanew1 = ft_selectdata(cfg, data);
+freqnew1 = ft_selectdata(cfg, freq);
+
+cfg = [];
+cfg.channel = data.label(1);
+datanew2 = ft_selectdata(cfg, data);
+freqnew2 = ft_selectdata(cfg, freq);
+
 
 % BUG CONFIRMED
 

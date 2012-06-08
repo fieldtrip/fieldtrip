@@ -2,11 +2,39 @@ function [data] = selfromraw(data, varargin)
 
 % FIXME this function is not documented
 
-selrpt  = ft_getopt(varargin, 'rpt');
-selchan = ft_getopt(varargin, 'chan');
-seltim  = ft_getopt(varargin, 'latency');
+selrpt  = ft_getopt(varargin, 'rpt',  'all');
+selchan = ft_getopt(varargin, 'chan', 'all');
+seltim  = ft_getopt(varargin, 'latency', 'all');
 
-if ~isempty(selrpt)
+if ischar(selrpt)
+  if strcmp(selrpt, 'all')
+    selrpt = 1:numel(data.trial);
+  else
+    error('incorrect specification of requested repetitions');
+  end
+end
+
+if ischar(selchan)
+  if strcmp(selchan, 'all')
+    selchan = 1:numel(data.label);
+  else
+    error('incorrect specification of requested channels');
+  end
+elseif iscell(selchan)
+  selchan = match_str(data.label, ft_channelselection(selchan, data.label));
+end  
+
+if ischar(seltim)
+  if strcmp(seltim, 'all')
+    doseltim = false;
+  else
+    error('incorrect specification of requested latency');
+  end
+else
+  doseltim = true;
+end
+
+if numel(selrpt) ~= numel(data.trial)
   fprintf('selecting %d trials\n', numel(selrpt));
   data.trial  = data.trial(selrpt);
   data.time   = data.time(selrpt);
@@ -18,14 +46,14 @@ if ~isempty(selrpt)
 
 end
 
-if ~isempty(selchan)
+if numel(selchan) ~= numel(data.label)
   for k = 1:numel(data.trial)
     data.trial{k} = data.trial{k}(selchan, :);
   end
   data.label = data.label(selchan);
 end
 
-if ~isempty(seltim)
+if doseltim
   
   oktrial = true(numel(data.trial), 1);
   for k = 1:numel(data.trial)

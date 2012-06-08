@@ -34,171 +34,185 @@ ft_preamble help
 dtype = ft_datatype(varargin{1});
 for i=2:length(varargin)
   % ensure that all subsequent inputs are of the same type
-  ft_datatype(varargin{i}, dtype);
+  ok = ft_datatype(varargin{i}, dtype);
+  if ~ok, error('input data should be of the same datatype'); end
 end
 
-hastime   = isfield(varargin{1}, 'time');
-hasfreq   = isfield(varargin{1}, 'freq');
-hasdimord = ~all(cellfun(@isempty, regexp(fieldnames(varargin{1}), '.*dimord')));
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% PART 2:
-%   ensure that the cfg is fully contained in the data and consistent over all inputs
-%   get the selection along each of the dimensions
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-if isfield(cfg, 'parameter') && isfield(varargin{1}, [cfg.parameter 'dimord'])
-  dimord = [cfg.parameter 'dimord'];
-elseif isfield(varargin{1}, 'dimord')
-  dimord = varargin{1}.dimord;
-end
-
-dimtok = tokenize(dimord, '_');
-dimsiz = nan(size(dimtok));
-dimfields = {};
-for i=1:numel(dimtok)
-  % this switch-list is consistent with fixdimord
-  switch dimtok{i}
-    case 'time'
-      dimsiz(i) = length(varargin{1}.time);
-      dimfields{end+1} = 'time';
-    case 'freq'
-      dimsiz(i) = length(varargin{1}.freq);
-      dimfields{end+1} = 'freq';
-    case 'chan'
-      dimsiz(i) = length(varargin{1}.label);
-      dimfields{end+1} = 'label';
-    case 'chancmb'
-      dimsiz(i) = size(varargin{1}.labelcmb,1);
-      dimfields{end+1} = 'labelcmb';
-    case 'pos'
-      dimsiz(i) = size(varargin{1}.pos,1);
-      dimfields{end+1} = 'pos';
-    case 'comp'
-      dimsiz(i) = length(varargin{1}.label);
-      dimfields{end+1} = 'label';
-      
-    case 'subj'
-      error('FIXME');
-    case 'rpt'
-      error('FIXME');
-    case 'rpttap'
-      error('FIXME');
-    case 'refchan'
-      error('FIXME');
-    case 'voxel'
-      error('FIXME');
-    case 'ori'
-      error('FIXME');
-    otherwise
-      % try to guess the size from the corresponding field
-      if isfield(varargin{1}, dimtok{i})
-        siz = varargin{1}.(dimtok{i});
-        if length(siz)==2 && any(siz==1)
-          dimsiz(i) = prod(siz);
-        end
-      end
-  end % switch
-end % for dimtok
-
-fn  = fieldnames(varargin{1})';
-sel = false(size(fn));
-for i=1:numel(fn)
-  sel(i) = isequal(size(varargin{1}.(fn{i})), dimsiz);
-end
-
-% select the fields that represent the data
-datfields = fn(sel);
-
-switch dtype
-  % this switch-list is consistent with ft_datatype
+if strcmp(dtype, 'raw')
   
-  case 'timelock'
-    for i=1:numel(varargin)
-      % trim the selection to all inputs
-      [selchan, cfg] = getselection_chan(cfg, varargin{i});
-      [seltime, cfg] = getselection_time(cfg, varargin{i});
-    end % varargin
-    for i=1:numel(varargin)
-      % get the selection from all inputs
-      [selchan, cfg] = getselection_chan(cfg, varargin{i});
-      [seltime, cfg] = getselection_time(cfg, varargin{i});
-      if ~isnan(selchan)
-        varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'chan')), selchan, datfields);
-        varargin{i}.label = varargin{i}.label(selchan);
-      end
-      if ~isnan(seltime)
-        varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'time')), seltime, datfields);
-        varargin{i}.time  = varargin{i}.time(seltime);
-      end
-    end % varargin
+  % use selfromraw
+  cfg.channel = ft_getopt(cfg, 'channel', 'all');
+  cfg.latency = ft_getopt(cfg, 'latency', 'all');
+  cfg.trials  = ft_getopt(cfg, 'trials',  'all');
+  for i=1:length(varargin)
+    varargin{i} = selfromraw(varargin{i}, 'rpt', cfg.trials, 'chan', cfg.channel, 'latency', cfg.latency);
+  end
+  
+else
+  
+  hastime   = isfield(varargin{1}, 'time');
+  hasfreq   = isfield(varargin{1}, 'freq');
+  hasdimord = ~all(cellfun(@isempty, regexp(fieldnames(varargin{1}), '.*dimord')));
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % PART 2:
+  %   ensure that the cfg is fully contained in the data and consistent over all inputs
+  %   get the selection along each of the dimensions
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  
+  if isfield(cfg, 'parameter') && isfield(varargin{1}, [cfg.parameter 'dimord'])
+    dimord = [cfg.parameter 'dimord'];
+  elseif isfield(varargin{1}, 'dimord')
+    dimord = varargin{1}.dimord;
+  end
+  
+  dimtok = tokenize(dimord, '_');
+  dimsiz = nan(size(dimtok));
+  dimfields = {};
+  for i=1:numel(dimtok)
+    % this switch-list is consistent with fixdimord
+    switch dimtok{i}
+      case 'time'
+        dimsiz(i) = length(varargin{1}.time);
+        dimfields{end+1} = 'time';
+      case 'freq'
+        dimsiz(i) = length(varargin{1}.freq);
+        dimfields{end+1} = 'freq';
+      case 'chan'
+        dimsiz(i) = length(varargin{1}.label);
+        dimfields{end+1} = 'label';
+      case 'chancmb'
+        dimsiz(i) = size(varargin{1}.labelcmb,1);
+        dimfields{end+1} = 'labelcmb';
+      case 'pos'
+        dimsiz(i) = size(varargin{1}.pos,1);
+        dimfields{end+1} = 'pos';
+      case 'comp'
+        dimsiz(i) = length(varargin{1}.label);
+        dimfields{end+1} = 'label';
+        
+      case 'subj'
+        error('FIXME');
+      case 'rpt'
+        error('FIXME');
+      case 'rpttap'
+        error('FIXME');
+      case 'refchan'
+        error('FIXME');
+      case 'voxel'
+        error('FIXME');
+      case 'ori'
+        error('FIXME');
+      otherwise
+        % try to guess the size from the corresponding field
+        if isfield(varargin{1}, dimtok{i})
+          siz = varargin{1}.(dimtok{i});
+          if length(siz)==2 && any(siz==1)
+            dimsiz(i) = prod(siz);
+          end
+        end
+    end % switch
+  end % for dimtok
+  
+  fn  = fieldnames(varargin{1})';
+  sel = false(size(fn));
+  for i=1:numel(fn)
+    sel(i) = isequal(size(varargin{1}.(fn{i})), dimsiz);
+  end
+  
+  % select the fields that represent the data
+  datfields = fn(sel);
+  
+  switch dtype
+    % this switch-list is consistent with ft_datatype
     
-  case 'freq'
-    for i=1:numel(varargin)
-      % trim the selection to all inputs
-      [selchan, cfg] = getselection_chan(cfg, varargin{i});
-      [selfreq, cfg] = getselection_freq(cfg, varargin{i});
-      if hastime
+    case 'timelock'
+      for i=1:numel(varargin)
+        % trim the selection to all inputs
+        [selchan, cfg] = getselection_chan(cfg, varargin{i});
         [seltime, cfg] = getselection_time(cfg, varargin{i});
+      end % varargin
+      for i=1:numel(varargin)
+        % get the selection from all inputs
+        [selchan, cfg] = getselection_chan(cfg, varargin{i});
+        [seltime, cfg] = getselection_time(cfg, varargin{i});
+        if ~isnan(selchan)
+          varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'chan')), selchan, datfields);
+          varargin{i}.label = varargin{i}.label(selchan);
+        end
+        if ~isnan(seltime)
+          varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'time')), seltime, datfields);
+          varargin{i}.time  = varargin{i}.time(seltime);
+        end
+      end % varargin
+      
+    case 'freq'
+      for i=1:numel(varargin)
+        % trim the selection to all inputs
+        [selchan, cfg] = getselection_chan(cfg, varargin{i});
+        [selfreq, cfg] = getselection_freq(cfg, varargin{i});
+        if hastime
+          [seltime, cfg] = getselection_time(cfg, varargin{i});
+        end
+      end % varargin
+      keyboard
+      
+    case 'comp'
+      for i=1:numel(varargin)
+        % trim the selection to all inputs
+        [selchan, cfg] = getselection_chan(cfg, varargin{i});
+      end % varargin
+      keyboard
+      
+    case 'raw'
+      for i=1:numel(varargin)
+        % trim the selection to all inputs
+        [selchan, cfg] = getselection_chan(cfg, varargin{i});
+      end % varargin
+      keyboard
+      
+    case 'freqmvar'
+      error('FIXME');
+      
+    case 'mvar'
+      error('FIXME');
+      
+    case 'spike'
+      error('FIXME');
+      
+    case 'volume'
+      error('FIXME');
+      
+    case 'source'
+      error('FIXME');
+      
+    case 'dip'
+      error('FIXME');
+      
+    case 'chan'
+      % this results from avgovertime/avgoverfreq after timelockstatistics or freqstatistics
+      error('FIXME');
+      
+    otherwise
+      % try to get the selection based on the field name
+      seldim = cell(size(dimtok));
+      for j=1:numel(seldim)
+        seldim(j) = feval(['getselection_' dimtok{j}], cfg, varargin{i});
       end
-    end % varargin
-    keyboard
-    
-  case 'comp'
-    for i=1:numel(varargin)
-      % trim the selection to all inputs
-      [selchan, cfg] = getselection_chan(cfg, varargin{i});
-    end % varargin
-    keyboard
-    
-  case 'raw'
-    for i=1:numel(varargin)
-      % trim the selection to all inputs
-      [selchan, cfg] = getselection_chan(cfg, varargin{i});
-    end % varargin
-    keyboard
-    
-  case 'freqmvar'
-    error('FIXME');
-    
-  case 'mvar'
-    error('FIXME');
-    
-  case 'spike'
-    error('FIXME');
-    
-  case 'volume'
-    error('FIXME');
-    
-  case 'source'
-    error('FIXME');
-    
-  case 'dip'
-    error('FIXME');
-    
-  case 'chan'
-    % this results from avgovertime/avgoverfreq after timelockstatistics or freqstatistics
-    error('FIXME');
-    
-  otherwise
-    % try to get the selection based on the field name
-    seldim = cell(size(dimtok));
-    for j=1:numel(seldim)
-      seldim(j) = feval(['getselection_' dimtok{j}], cfg, varargin{i});
-    end
-end
-
-% remove all fields from the data that do not pertain to the selection
-for i=1:numel(varargin)
-  varargin{i} = keepfields(varargin{i}, [datfields dimfields {'cfg'}]);
+  end
+  
+  % remove all fields from the data that do not pertain to the selection
+  for i=1:numel(varargin)
+    varargin{i} = keepfields(varargin{i}, [datfields dimfields {'cfg'}]);
+  end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% PART 2:
+% PART 3:
 %   if desired, concatenate over repetitions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if nargin>2 && nargout==2
-  % concatenate all inptu data into a single structure
+  % concatenate all input data into a single structure
   error('FIXME');
 else
   % no reason to concatenate
