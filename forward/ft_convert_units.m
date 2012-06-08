@@ -177,16 +177,7 @@ obj.unit = target;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % IDRANGE interdecile range for more robust range estimation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function r = idrange(x, dim)
-  if nargin == 1
-    dim = [];
-  end
-
-  [x, perm, nshifts] = shiftdata(x, dim);        % reorder dims
-
+function r = idrange(x)
   sx = sort(x, 1);
-  ii = round(interp1([0, 1], [1, size(x, 1)], [.1, .9]));
-  vals = sx(ii, :);
-
-  vals = unshiftdata(vals, perm, nshifts);       % restore original dims
-  r = diff(vals, dim);                           % calculate actual range
+  ii = round(interp1([0, 1], [1, size(x, 1)], [.1, .9]));  % indices for 10 & 90 percentile
+  r = diff(sx(ii, :));
