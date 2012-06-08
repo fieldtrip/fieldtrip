@@ -113,9 +113,8 @@ for iUnit = 1:nUnits
   unitIndx   = spikesel(iUnit);
   ts         = spike.time{unitIndx}(:); % get the times
   latencySel = ts>=cfg.latency(1) & ts<=cfg.latency(2); % select timestamps within latency
-  latSel     = spike.trial{unitIndx}(latencySel);
   trialSel   = ismember(spike.trial{unitIndx},cfg.trials);
-  trialNums  = spike.trial{unitIndx}(latSel(:) & trialSel(:));
+  trialNums  = spike.trial{unitIndx}(latencySel(:) & trialSel(:));
   
   % use the fact that trial numbers are integers >=1 apart, so we can use histc
   trialBins   = sort([cfg.trials-0.5; cfg.trials+0.5]);
