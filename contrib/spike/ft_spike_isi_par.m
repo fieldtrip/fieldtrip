@@ -14,7 +14,6 @@ function [par] = ft_spike_isihist(cfg,spike)
 %   cfg.method  = string, one of
 %      'gamfit'      : returns [shape scale] for gamma distribution fit
 %      'coeffvar'    : coefficient of variation (sd / mean)
-%      'fanofactor' : var / mean
 %      'lv'          : Shinomoto's Local Variation measure (2009)
 %
 %   cfg.spikechannel     = string or index of single spike channel to trigger on (default = 'all')
@@ -56,7 +55,7 @@ cfg.method       = ft_getopt(cfg,'method', 'coeffvar');
 cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});
 cfg = ft_checkopt(cfg,'latency', {'char', 'ascenddoublebivector'});
 cfg = ft_checkopt(cfg,'trials', {'char', 'doublevector', 'logical'}); 
-cfg = ft_checkopt(cfg,'method', 'char', {'gamfit', 'coeffvar', 'fanofactor', 'lv'});
+cfg = ft_checkopt(cfg,'method', 'char', {'gamfit', 'coeffvar', 'lv'});
 
 % only allow the specified options
 cfg = ft_checkconfig(cfg,'allowed', {'spikechannel', 'latency', 'trials', 'method'});
@@ -112,8 +111,6 @@ for iUnit = 1:nUnits
   switch cfg.method
     case 'coeffvar'      
       out(iUnit) = nanstd(isi)./nanmean(isi);
-    case 'fanofactor' 
-      out(iUnit) = nanvar(isi)./nanmean(isi);
     case 'gamfit'
       data = isi(~isnan(isi));  % remove the nans from isiSpike
       if ~isempty(data)

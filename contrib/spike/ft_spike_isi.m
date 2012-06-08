@@ -142,7 +142,7 @@ if strcmp(cfg.keeptrials,'yes')
 end
 isih.time        = bins(1:end-1);
 isih.avg         = isihist;
-isih.dimord      = 'chan_bins';
+isih.dimord      = 'chan_time';
 isih.label       = spike.label(spikesel);
 
 % do the general cleanup and bookkeeping at the end of the function
