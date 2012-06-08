@@ -283,7 +283,7 @@ for i=1:ntrial
     endsampl = nearest(data.time{i}, latency(2));
     numsamples(i) = endsampl-begsampl+1;
     if (latency(1)<begsamplatency(i))
-      trlshift =round((begsamplatency(i)-latency(1))*data.fsample);
+      trlshift = floor((begsamplatency(i)-latency(1))*data.fsample);
     else
       trlshift = 0;
     end
@@ -295,7 +295,7 @@ for i=1:ntrial
     end
     dat = [zeros(nchan, trlshift) dat zeros(nchan,(maxwin-numsamples(i)-trlshift))];
     s  = s  + dat;            % compute the sum
-    ss = ss + dat.^2;         % compute the squared sum
+    ss = ss + dat.^2;         % compute the sum of squares
     % count the number of samples that went into the sum
     dof(windowsel) = dof(windowsel) + 1;
     usetrial = 1; % to indicate that this trial could be used
