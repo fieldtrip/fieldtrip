@@ -168,7 +168,7 @@ switch version
       end
       if ~isfield(spike, 'trialtime')
         % determine from the data itself
-        warning('Reconstructing the field trialtime from spike.origtime and spike.origtrial');
+        warning('Reconstructing the field trialtime from spike.origtime and spike.origtrial. This is not the original representation');        
         tmax  = nanmax(spike.trial{1});
         tsmin = nanmin(spike.time{1});
         tsmax = nanmax(spike.time{1});
@@ -178,9 +178,13 @@ switch version
       try
         spike.label    = spike.cfg.spikechannel;
       catch
-        {'unit1'}; %default
+        try
+          spike.label = spike.spikechannel;
+        catch
+          {'unit1'}; %default
+        end
       end
-      spike.dimord = '{chan}_spike_lfplabel_freq';
+      spike.dimord = '{chan}_spike_lfpchan_freq';
     end
     
     % fix the waveform dimensions
@@ -202,7 +206,7 @@ switch version
             nSpikes = length(spike.timestamp{iUnit}); % check what's the spike dimension from the timestamps            
             spikedim = dim==nSpikes;
             if isempty(spikedim)
-              error('waveforms contain data but number of waveforms does not match number of spikes');
+              error('waveforms contains data but number of waveforms does not match number of spikes');
             end
             if spikedim==1
               spike.waveform{iUnit} = permute(spike.waveform{iUnit},[3 2 1]);
@@ -218,6 +222,40 @@ switch version
       
     end
     
+    % ensure that we always deal with row vectors: for consistency of
+    % representation
+    if isfield(spike,'time')
+      for iUnit = 1:length(spike.time)
+        if size(spike.time{iUnit},2)==1
+          spike.time{iUnit} = spike.time{iUnit}(:)';
+        end
+      end
+    end
+    
+    if isfield(spike,'time')
+      for iUnit = 1:length(spike.trial)
+        if size(spike.trial{iUnit},2)==1
+          spike.trial{iUnit} = spike.trial{iUnit}(:)';
+        end
+      end
+    end
+        
+    if isfield(spike,'timestamp')
+      for iUnit = 1:length(spike.timestamp)
+        if size(spike.timestamp{iUnit},2)==1
+          spike.timestamp{iUnit} = spike.timestamp{iUnit}(:)';
+        end
+      end
+    end
+    
+     if isfield(spike,'unit')
+      for iUnit = 1:length(spike.unit)
+        if size(spike.unit{iUnit},2)==1
+          spike.unit{iUnit} = spike.unit{iUnit}(:)';
+        end
+      end
+    end
+        
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     error('unsupported version "%s" for spike datatype', version);
