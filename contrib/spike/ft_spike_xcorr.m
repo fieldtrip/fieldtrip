@@ -199,6 +199,10 @@ s     = zeros(nChans,nChans,2*nLags + 1);
 singleTrials = zeros(nTrials,nChans,nChans,2*nLags+1);    
 if strcmp(cfg.method,'shiftpredictor'), singleTrials(1,:,:,:) = NaN; end
 
+if ((cfg.latency(2)-cfg.latency(1))/cfg.maxlag)<2.5
+  warning('selected latency will cause highly variable xcorr at borders');
+end
+  
 for iTrial = 1:nTrials
   origTrial = cfg.trials(iTrial);
 
