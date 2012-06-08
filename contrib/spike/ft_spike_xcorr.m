@@ -13,7 +13,7 @@ function [stat] = ft_spike_xcorr(cfg,spike)
 % Configurations options for xcorr general:
 %   cfg.maxlag           = number in seconds, indicating the maximum lag for the
 %                          cross-correlation function in sec (default = 0.1 sec).
-%   cfg.biased           = 'yes' or 'no' (default). If 'no', we scale the
+%   cfg.debias           = 'yes' (default) or 'no'. If 'yes', we scale the
 %                          cross-correlogram by M/(M-abs(lags)), where M = 2*N -1 with N
 %                          the length of the data segment. 
 %   cfg.method           = 'xcorr' or 'shiftpredictor'. If 'shiftpredictor'
@@ -90,7 +90,7 @@ cfg.keeptrials     = ft_getopt(cfg,'keeptrials', 'yes');
 cfg.method         = ft_getopt(cfg,'method', 'xcorr');
 cfg.channelcmb     = ft_getopt(cfg,'channelcmb', 'all');
 cfg.vartriallen    = ft_getopt(cfg,'vartriallen', 'yes');
-cfg.biased         = ft_getopt(cfg,'biased', 'no');
+cfg.debias         = ft_getopt(cfg,'debias', 'yes');
 cfg.maxlag         = ft_getopt(cfg,'maxlag', 0.01);
 cfg.binsize        = ft_getopt(cfg,'binsize', 0.001);
 cfg.outputunit     = ft_getopt(cfg,'outputunit', 'proportion');
@@ -102,15 +102,14 @@ cfg = ft_checkopt(cfg,'keeptrials', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'method', 'char', {'xcorr', 'shiftpredictor'});
 cfg = ft_checkopt(cfg,'channelcmb', {'char', 'cell'});
 cfg = ft_checkopt(cfg,'vartriallen', 'char', {'no', 'yes'});
-cfg = ft_checkopt(cfg,'biased', 'char', {'yes', 'no'});
+cfg = ft_checkopt(cfg,'debias', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'maxlag', 'doublescalar');
 cfg = ft_checkopt(cfg,'binsize', 'doublescalar');
 cfg = ft_checkopt(cfg,'outputunit', 'char', {'proportion', 'center', 'raw'});
 
-cfg = ft_checkconfig(cfg,'allowed', {'latency', 'trials', 'keeptrials', 'method', 'channelcmb', 'vartriallen', 'biased', 'maxlag', 'binsize', 'outputunit'});
+cfg = ft_checkconfig(cfg,'allowed', {'latency', 'trials', 'keeptrials', 'method', 'channelcmb', 'vartriallen', 'debias', 'maxlag', 'binsize', 'outputunit'});
 
 doShiftPredictor  = strcmp(cfg.method,'shiftpredictor'); % shift predictor
-doBiased          = strcmp(cfg.biased,'yes'); % debiasing
 
 % determine the corresponding indices of the requested channel combinations
 cfg.channelcmb = ft_channelcombination(cfg.channelcmb, spike.label,true);
@@ -180,6 +179,9 @@ if strcmp(cfg.vartriallen,'no') % only select trials that fully cover our latenc
 end
 trialSel           = fullDur(:) & overlaps(:) & hasWindow(:);
 cfg.trials         = cfg.trials(trialSel);
+begTrialLatency    = begTrialLatency(trialSel);
+endTrialLatency    = endTrialLatency(trialSel);
+
 if isempty(cfg.trials), warning('No trials were selected'); end
 if length(cfg.trials)<2&&doShiftPredictor
   error('Shift predictor can only be calculated with more than 1 selected trial.');
@@ -219,7 +221,13 @@ for iTrial = 1:nTrials
           else
             [x]   = spike_crossx(ts2(:),ts1(:),cfg.binsize,nLags*2+1);
           end
-
+          if strcmp(cfg.debias,'yes')
+            lags = (-nLags:nLags)*cfg.binsize;
+            T    = nanmin([endTrialLatency(iTrial);cfg.latency(2)])-nanmax([begTrialLatency(iTrial);cfg.latency(1)]);
+            sc = (T./(T-abs(lags(:))));
+            sc = length(sc)*sc./sum(sc);
+            x  = x(:).*sc(:);
+          end
           % sum the xcorr
           s(indx(1),indx(2),:) = s(indx(1),indx(2),:) + shiftdim(x(:),-2);
           s(indx(2),indx(1),:) = s(indx(2),indx(1),:) + shiftdim(flipud(x(:)),-2);
@@ -255,6 +263,13 @@ for iTrial = 1:nTrials
               else
                 [x]   = spike_crossx(A(:),B(:),cfg.binsize,nLags*2+1);
               end
+              if strcmp(cfg.debias,'yes')
+                lags = (-nLags:nLags)*cfg.binsize;
+                T    = nanmin([endTrialLatency(iTrial);cfg.latency(2)])-nanmax([begTrialLatency(iTrial);cfg.latency(1)]);
+                sc = (T./(T-abs(lags(:))));
+                sc = length(sc)*sc./sum(sc);
+                x  = x(:).*sc(:);
+              end                     
               % compute the sum
               s(indx(1),indx(2),:) =  s(indx(1),indx(2),:) + shiftdim(x(:),-2);
               s(indx(2),indx(1),:) =  s(indx(2),indx(1),:) + shiftdim(flipud(x(:)),-2);
