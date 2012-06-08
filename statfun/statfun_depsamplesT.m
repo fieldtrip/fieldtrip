@@ -39,7 +39,6 @@ function [s, cfg] = statfun_depsamplesT(cfg, dat, design)
 %   cfg.uvar        = row number of design that contains the labels of the UOs (subjects or trials)
 %                        (default=2). The labels are assumed to be integers ranging from 1 to 
 %                        the number of UOs.
-%
 
 % Copyright (C) 2006, Eric Maris
 %
