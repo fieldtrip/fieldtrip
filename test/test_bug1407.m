@@ -51,6 +51,15 @@ for i=1:length(dataset)
   v2_evt{i} = event;
 end
 
-% FIXME it would make sense to compare the v1 results to the v2 results.
-
-
+% compare the v1 results to the v2 results
+for i=1:length(dataset)
+  fprintf('comparing v1 and v2 for dataset %d\n', i);
+  assert(isequal(v1_hdr{i}.Fs,          v2_hdr{i}.Fs)           , 'difference in hdr.Fs');
+  assert(isequal(v1_hdr{i}.nChans,      v2_hdr{i}.nChans)       , 'difference in hdr.nChans');
+  assert(isequal(v1_hdr{i}.nSamples,    v2_hdr{i}.nSamples)     , 'difference in hdr.nSamples');
+  assert(isequal(v1_hdr{i}.nSamplesPre, v2_hdr{i}.nSamplesPre)  , 'difference in hdr.nSamplesPre');
+  assert(isequal(v1_hdr{i}.nTrials,     v2_hdr{i}.nTrials)      , 'difference in hdr.nTrials');
+  assert(isequal(v1_hdr{i}.label,       v2_hdr{i}.label)        , 'difference in hdr.label'); % this fails in revision 5979
+  assert(isequal(v1_dat{i},  v2_dat{i})      , 'difference in data');
+  assert(isequal(v1_evt{i},  v2_evt{i})      , 'difference in events'); % this fails in revision 5979
+end
