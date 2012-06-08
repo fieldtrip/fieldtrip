@@ -1,7 +1,7 @@
 function [cfg] = ft_spike_plot_isireturn(cfg, isih)
 
 % FT_SPIKE_PLOT_ISIRETURN makes a return plot from ISIH structure. A return
-% plot (or Poincare plots) plots the isi to the next spike versus the isi
+% plot (also called Poincare plot) plots the isi to the next spike versus the isi
 % from the next spike to the second next spike, and thus gives insight in
 % the second order isi statistics. This func also plots the raw
 % isi-histogram on left and bottom and thereby give a rather complete
@@ -11,9 +11,8 @@ function [cfg] = ft_spike_plot_isireturn(cfg, isih)
 %   ft_spike_plot_isireturn(cfg, data) 
 %
 % Inputs:
-%   ISIH must be the output structure from FT_SPIKE_ISIH and contain the field
-%   ISIH.isi. If cfg.isihist = 'yes', the field ISIH.isih and ISIH.time must
-%   be present as well.
+%   ISIH must be the output structure from FT_SPIKE_ISI and contain the field
+%   ISIH.isi. 
 %
 % General configurations:
 %   cfg.spikechannel     = string or index of single spike channel to trigger on (default = 1)
@@ -21,28 +20,18 @@ function [cfg] = ft_spike_plot_isireturn(cfg, isih)
 %   cfg.density          = 'yes' or 'no', if 'yes', we will use color shading on top of
 %                          the individual datapoints to indicate the density.
 %   cfg.scatter          = 'yes' (default) or 'no'. If 'yes', we plot the individual values.
-%   
-% General configurations related to smoothing the scatterplot:
-%   cfg.smoothmethod     = 'kernel' (default) or 'hist'.
-%                           If 'kernel', we overlay a smooth density plot calculated by 
-%                           non-parametric kernel smoothing with cfg.kernel.
-%                           If 'hist', we overlay a 2-D histogram.
-%   cfg.dt               =  resolution of the 2-D histogram, or of the kernel plot. Since we 
+%   cfg.dt               =  resolution of the 2-D histogram, or of the kernel plot in seconds. Since we 
 %                           have to smooth for a finite number of values, cfg.dt determines
 %                           the resolution of our smooth density plot.
 %   cfg.colormap         = N-by-3 colormap (see COLORMAP). Default = hot(256);
-%   cfg.interpolate      = 'yes' or 'no', determines whether we interpolate the density
-%                           plot
-%
-% Specific configurations related to kernel smoothing of the scatterplot:
-%   cfg.kernel           = 'gausswin' or 'boxcar', or N-by-N matrix containing window
-%                           values with which we convolve the scatterplot that is binned
-%                           with resolution cfg.dt. N should be uneven, so it can be centered
-%                           at each point of the lattice.
+%   cfg.interpolate      = integer (default = 1), we perform interpolating
+%                          with extra number of spacings determined by
+%                          cfg.interpolate. For example cfg.interpolate = 5
+%                          means 5 times more dense axis.
+%   cfg.window           = 'no', 'gausswin' or 'boxcar'
 %                           'gausswin' is N-by-N multivariate gaussian, where the diagonal of the 
 %                           covariance matrix is set by cfg.gaussvar.
 %                           'boxcar' is N-by-N rectangular window.
-%                           If cfg.kernel is numeric, it should be of size N-by-N.
 %   cfg.gaussvar         =  variance  (default = 1/16 of window length in sec).
 %   cfg.winlen           =  window length in seconds (default = 5*cfg.dt). The total
 %                           length of our window is 2*round*(cfg.winlen/cfg.dt) +1;
@@ -63,40 +52,37 @@ ft_preamble trackconfig
 cfg.spikechannel = ft_getopt(cfg, 'spikechannel', isih.label{1});
 cfg.scatter      = ft_getopt(cfg, 'scatter', 'yes');
 cfg.density      = ft_getopt(cfg,'density', 'yes');
-cfg.colormap     = ft_getopt(cfg,'colormap', flipud(hot(300)));
-cfg.interpolate  = ft_getopt(cfg, 'interpolate', 'yes');
+cfg.colormap     = ft_getopt(cfg,'colormap', 'auto');
+cfg.interpolate  = ft_getopt(cfg, 'interpolate', 1);
 cfg.scattersize  = ft_getopt(cfg,'scattersize', 0.3);
-cfg.smoothmethod = ft_getopt(cfg,'smoothmethod', 'kernel');
 cfg.dt           = ft_getopt(cfg,'dt', 0.001);
-cfg.kernel       = ft_getopt(cfg,'kernel', 'mvgauss');
+cfg.window       = ft_getopt(cfg,'window', 'gausswin');
 cfg.winlen       = ft_getopt(cfg,'winlen', cfg.dt*5);
 cfg.gaussvar     = ft_getopt(cfg,'gaussvar', (cfg.winlen/4).^2);
 
 cfg = ft_checkopt(cfg, 'spikechannel', {'char', 'cell', 'double'});
 cfg = ft_checkopt(cfg, 'scatter','char', {'yes', 'no'});
 cfg = ft_checkopt(cfg, 'density', 'char', {'yes', 'no'});
-cfg = ft_checkopt(cfg, 'colormap', 'double');
-cfg = ft_checkopt(cfg, 'interpolate', 'char', {'yes', 'no'});
+cfg = ft_checkopt(cfg, 'colormap', {'double', 'char'});
+cfg = ft_checkopt(cfg, 'interpolate', 'doublescalar');
 cfg = ft_checkopt(cfg, 'scattersize', 'doublescalar');
-cfg = ft_checkopt(cfg, 'smoothmethod', 'char', {'kernel', 'hist'});
 cfg = ft_checkopt(cfg, 'dt', 'double');
-cfg = ft_checkopt(cfg, 'kernel',{'char', 'double'});
+cfg = ft_checkopt(cfg, 'window','char',{'no', 'gausswin', 'boxcar'});
 cfg = ft_checkopt(cfg, 'winlen', 'double');
 cfg = ft_checkopt(cfg, 'gaussvar', 'double');
+cfg.interpolate = round(cfg.interpolate);
 
 % check if all the required fields are there
-if ~all(isfield(isih,{'isi' 'label' 'time'}))
-    error('MATLAB:spike:plot_isireturn:cfg:spikechannel:missingFields',...
-          'input ISIH should contain the fields isi, label and time')
-end
+isih = ft_checkdata(isih,'datatype', 'timelock', 'feedback', 'yes');
+if ~isfield(isih,'isi'), error('input struct should contain the fields isi, label and time'), end
+
+cfg = ft_checkconfig(cfg,'allowed', {'spikechannel', 'scatter', 'density', 'colormap', 'interpolate', 'scattersize', 'dt', 'window', 'winlen', 'gaussvar'});
 
 % get the spikechannels: maybe replace this by one function with checking etc. in it
 cfg.spikechannel = ft_channelselection(cfg.spikechannel, isih.label);
 spikesel    = match_str(isih.label, cfg.spikechannel);
 nUnits      = length(spikesel); % number of spike channels
-if nUnits~=1, error('MATLAB:spike:plot_isireturn:cfg:spikechannel:notOneChan',...
-                    'Only one unit can be selected at a time'); 
-end  
+if nUnits~=1, error('Only one unit can be selected at a time'); end  
 isi = isih.isi{spikesel};
 	
 % create the axis 
@@ -124,32 +110,20 @@ if strcmp(cfg.density,'yes')
   indx2(rmv) = [];    
   dens = full(sparse(indx2,indx1,ones(1,length(indx1)),nbins,nbins));
     
-  if strcmp(cfg.smoothmethod,'kernel')
-    if cfg.winlen<cfg.dt, error('MATLAB:spike:plot_isireturn:cfg:dt:winlen',...
-      'please configure cfg.winlen such that cfg.winlen>=cfg.dt')
-    end
+  if ~strcmp(cfg.window,'no')
+    if cfg.winlen<cfg.dt, error('please configure cfg.winlen such that cfg.winlen>=cfg.dt'); end
     winTime       = [fliplr(0:-cfg.dt:-cfg.winlen) cfg.dt:cfg.dt:cfg.winlen];
     winLen        = length(winTime);            
-    if strcmp(cfg.kernel, 'mvgauss') % multivariate gaussian
+    if strcmp(cfg.window, 'gausswin') % multivariate gaussian
         A =  winTime'*ones(1,winLen);
         B = A';
         T = [A(:) B(:)]; % makes rows with each time combination on it
         covmat  = diag([cfg.gaussvar cfg.gaussvar]); % covariance matrix
         win    = mvnpdf(T,0,covmat); % multivariate gaussian function
-    elseif strcmp(cfg.kernel, 'boxcar')
+    elseif strcmp(cfg.window, 'boxcar')
         win    = ones(winLen);
-    elseif ~isrealmat(cfg.kernel)
-        error('MATLAB:spike:plot_isireturn:cfg:kernel:wrongInput',...
-          'cfg.kernel should be "gausswin", "boxcar" or numerical N-by-N matrix')
-    else 
-        win    = cfg.kernel;
-        szWin  = size(cfg.kernel);
-        if  szWin(1)~=szWin(2)||~mod(szWin(1),2), 
-            error('MATLAB:spike:spike_isireturnplot:cfg:kernel:wrongSize', ...
-            'cfg.kernel should be N-by-N matrix with N an uneven number')
-        end      
     end
-
+    
     % turn into discrete probabilities again (sum(p)=1);
     win = win./sum(win);
     win = reshape(win,[],length(winTime)); % reshape to matrix corresponding to grid again
@@ -162,18 +136,20 @@ if strcmp(cfg.density,'yes')
   end
 
   % create the surface
-  hdl.density = imagesc(bins,bins,dens);
-  if strcmp(cfg.interpolate,'yes')
-    	binAxis = linspace(min(bins)-0.5*(bins(2)-bins(1)), max(bins)+0.5*(bins(2)-bins(1)), 1000);
-        densInterp = interp2(bins(:), bins(:), dens, binAxis(:), binAxis(:)', 'spline');
-        hdl.density = imagesc(binAxis, binAxis, densInterp);
+  hdl.density = imagesc(bins+cfg.dt/2,bins+cfg.dt/2,dens);
+  if cfg.interpolate>1
+    binAxis = linspace(min(bins)-0.5*(bins(2)-bins(1)), max(bins)+0.5*(bins(2)-bins(1)), length(bins)*cfg.interpolate);
+    dens    = interp2(bins(:), bins(:), dens, binAxis(:), binAxis(:)', 'linear');
+    hdl.density = imagesc(binAxis, binAxis, dens);
   end
   if isrealmat(cfg.colormap) && size(cfg.colormap,2)==3
     colormap(cfg.colormap);
+  elseif strcmp(cfg.colormap, 'auto')
+    cfg.colormap = flipud(hot(600));
+    cfg.colormap = cfg.colormap(1:450,:);
   else
-    error('MATLAB:spike:plot_isireturn:cfg:colormap', ...
-    'cfg.colormap should be N-by-3 numerical matrix')
-  end
+    error('cfg.colormap should be N-by-3 numerical matrix')
+  end    
   view(ax(1),2); % use the top view
   grid(ax(1),'off')    
 end
@@ -213,7 +189,7 @@ set(ax(1), 'YTickLabel', {},'XTickLabel',{}, 'XTick',[],'YTick', []);
 set(ax,'Box', 'off','TickDir','out')
 set(ax(1),'XLim', [0 max(isih.time)],'YLim',[0 max(isih.time)]);
 
-limIsi = [0 max(isih.avg(:))*1.05];
+limIsi = [0 max(isih.avg(spikesel,:))*1.05];
 set(ax(2),'XLim', [0 max(isih.time)],'YLim',limIsi);
 set(ax(3),'YLim', [0 max(isih.time)],'XLim',limIsi);
 set(ax(2),'YAxisLocation', 'Right')
