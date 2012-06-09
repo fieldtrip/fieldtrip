@@ -38,9 +38,9 @@ function [wave,spike] = ft_spike_waveform(cfg,spike)
 %
 %  Copyright (C) 2012, Martin Vinck & Thilo Womelsdorf
 %
-% $Id: ft_spike_waveform.m 5886 2012-06-05 11:01:28Z roboos $
+% $Id$
 
-revision = '$Id: ft_spike_waveform_descriptive.m 5886 2012-06-05 11:01:28Z roboos $';
+revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults

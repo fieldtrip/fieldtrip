@@ -32,9 +32,9 @@ function [par] = ft_spike_isihist(cfg,spike)
 
 % Copyright (C) 2010, Martin Vinck
 %
-% $Id: ft_spike_isihist.m 5957 2012-06-07 09:12:26Z marvin $
+% $Id$
 
-revision = '$Id: ft_spike_isihist.m 5957 2012-06-07 09:12:26Z marvin $';
+revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
