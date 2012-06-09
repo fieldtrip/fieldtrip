@@ -188,8 +188,8 @@ if length(cfg.trials)<2&&doShiftPredictor
 end
 
 % if we allow variable trial lengths
-if strcmp(cfg.vartriallen,'yes') && doShiftPredictor && nTrials~=length(cfg.trials)
-  error('cfg.vartriallen = "yes" and shift predictor method are only possible when all trials contain the full window period');
+if strcmp(cfg.vartriallen,'yes') && doShiftPredictor && ~strcmp(cfg.outputunit,'proportion')
+  warning('using cfg.vartriallen = "yes" and shift predictor method: please use cfg.outputunit = "proportion"');
 end
 nTrials   = length(cfg.trials); % only now reset nTrials
 
@@ -320,5 +320,5 @@ stat.label       = spike.label(chansel);
 ft_postamble trackconfig
 ft_postamble callinfo
 ft_postamble previous spike
-ft_postamble history Xcorr
+ft_postamble history stat
 
