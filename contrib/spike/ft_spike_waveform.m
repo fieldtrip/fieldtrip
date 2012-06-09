@@ -1,13 +1,13 @@
-function [wave,spike] = ft_spike_waveform_descriptive(cfg,spike)
+function [wave,spike] = ft_spike_waveform(cfg,spike)
 
-% FT_SPIKE_WAVEFORM_DESCRIPTIVE computes descriptive parameters on
+% FT_SPIKE_WAVEFORM computes descriptive parameters on
 % waveform (mean and variance), and performs operations like reallignment, outlier rejection,
 % invertation, normalization and interpolation (see configurations).
 %
 % Use as
-%   [wave] = ft_spike_waveform_descriptive(cfg, spike)
+%   [wave] = ft_spike_waveform(cfg, spike)
 % Or
-%   [wave, spike] = ft_spike_waveform_descriptive(cfg, spike)
+%   [wave, spike] = ft_spike_waveform(cfg, spike)
 % The input SPIKE should be organised as the SPIKE datatype (see FT_DATATYPE_SPIKE)
 %
 % Configurations:
@@ -38,7 +38,7 @@ function [wave,spike] = ft_spike_waveform_descriptive(cfg,spike)
 %
 %  Copyright (C) 2012, Martin Vinck & Thilo Womelsdorf
 %
-% $Id: ft_spike_waveform_descriptive.m 5886 2012-06-05 11:01:28Z roboos $
+% $Id: ft_spike_waveform.m 5886 2012-06-05 11:01:28Z roboos $
 
 revision = '$Id: ft_spike_waveform_descriptive.m 5886 2012-06-05 11:01:28Z roboos $';
 
