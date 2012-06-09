@@ -123,7 +123,10 @@ chanSel = unique(cmbindx(:)); % this gets sorted ascending by default
 nChans  = length(chanSel);
 
 % preallocate avg in chan x chan format, this can take more memory, but its more intuitive
-if strcmp(cfg.keeptrials,'yes'), singleTrials = NaN(nTrials,nChans,nChans,nBins,nBins); end
+if strcmp(cfg.keeptrials,'yes'), 
+  singleTrials = NaN(nTrials,nChans,nChans,nBins,nBins); 
+  warning('storing single trials for jpsth is memory expensive, please check');
+end
 [out,varOut,dofOut] = deal(zeros(nChans,nChans,nBins,nBins));
 
 % compute the joint psth

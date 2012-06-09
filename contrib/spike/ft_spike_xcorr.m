@@ -195,17 +195,23 @@ nTrials   = length(cfg.trials); % only now reset nTrials
 
 % preallocate the sum and the single trials and the shift predictor
 keepTrials   = strcmp(cfg.keeptrials,'yes');
-s     = zeros(nChans,nChans,2*nLags + 1); 
-singleTrials = zeros(nTrials,nChans,nChans,2*nLags+1);    
+s     = zeros(nChans,nChans,2*nLags); 
+if keepTrials
+  warning('storing single trials for cross correlation is memory expensive, please check');
+  singleTrials = zeros(nTrials,nChans,nChans,2*nLags);    
+end
+
 if strcmp(cfg.method,'shiftpredictor'), singleTrials(1,:,:,:) = NaN; end
 
 if ((cfg.latency(2)-cfg.latency(1))/cfg.maxlag)<2.5
   warning('selected latency will cause highly variable xcorr at borders');
 end
-  
+doMex = 1;
+ft_progress('init', 'text',     'Please wait...');
 for iTrial = 1:nTrials
   origTrial = cfg.trials(iTrial);
-
+  ft_progress(iTrial/nTrials, 'Processing trial %d from %d', iTrial, nTrials);
+  
   for iCmb = 1:nCmbs
     % take only the times that are in this trial and latency window
     indx  = cmbindx(iCmb,:);
@@ -221,12 +227,35 @@ for iTrial = 1:nTrials
         % compute the xcorr if both are non-empty
         if ~isempty(ts1) && ~isempty(ts2)
           if indx(1)<=indx(2)
-            [x]   = spike_crossx(ts1(:),ts2(:),cfg.binsize,nLags*2+1);
+            if doMex==1
+              try
+                [x]   = spike_crossx(ts1(:),ts2(:),cfg.binsize,nLags*2+1);
+                x(end) = [];                
+              catch
+                warning('defaulting to algorithm in Matlab, this is slower');
+                doMex = 0;
+              end
+            end
+            if doMex==0
+              [x]   = spike_crossx_matlab(ts1(:),ts2(:),cfg.binsize,nLags*2+1);
+            end
           else
-            [x]   = spike_crossx(ts2(:),ts1(:),cfg.binsize,nLags*2+1);
+            if doMex==1
+              try
+                [x]   = spike_crossx(ts2(:),ts1(:),cfg.binsize,nLags*2+1);
+                x(end) = [];
+              catch
+                warning('defaulting to algorithm in Matlab, this is slower');
+                doMex = 0;
+              end
+            end
+            if doMex==0
+              [x]   = spike_crossx_matlab(ts2(:),ts1(:),cfg.binsize,nLags*2+1);
+            end
           end
           if strcmp(cfg.debias,'yes')
             lags = (-nLags:nLags)*cfg.binsize;
+            lags = (lags(2:end)+lags(1:end-1))/2;
             T    = nanmin([endTrialLatency(iTrial);cfg.latency(2)])-nanmax([begTrialLatency(iTrial);cfg.latency(1)]);
             sc = (T./(T-abs(lags(:))));
             sc = length(sc)*sc./sum(sc);
@@ -262,13 +291,36 @@ for iTrial = 1:nTrials
               B = ts2;
             end
             if ~isempty(A) && ~isempty(B),
-              if indx(1)<=indx(2)            
-                [x]   = spike_crossx(A(:),B(:),cfg.binsize,nLags*2+1);
+              if indx(1)<=indx(2)
+                if doMex==1
+                  try
+                    [x]   = spike_crossx(A(:),B(:),cfg.binsize,nLags*2+1);
+                    x(end) = [];                
+                  catch
+                    warning('defaulting to algorithm in Matlab, this is slower');
+                    doMex = 0;
+                  end
+                end
+                if doMex==0
+                  [x]   = spike_crossx_matlab(A(:),B(:),cfg.binsize,nLags*2+1);
+                end
               else
-                [x]   = spike_crossx(A(:),B(:),cfg.binsize,nLags*2+1);
+                if doMex==1
+                  try
+                    [x]   = spike_crossx(B(:),A(:),cfg.binsize,nLags*2+1);
+                    x(end) = [];                
+                  catch
+                    warning('defaulting to algorithm in Matlab, this is slower');
+                    doMex = 0;
+                  end
+                end
+                if doMex==0
+                  [x]   = spike_crossx_matlab(B(:),A(:),cfg.binsize,nLags*2+1);
+                end
               end
               if strcmp(cfg.debias,'yes')
                 lags = (-nLags:nLags)*cfg.binsize;
+                lags = (lags(2:end)+lags(1:end-1))/2;
                 T    = nanmin([endTrialLatency(iTrial);cfg.latency(2)])-nanmax([begTrialLatency(iTrial);cfg.latency(1)]);
                 sc = (T./(T-abs(lags(:))));
                 sc = length(sc)*sc./sum(sc);
@@ -287,19 +339,19 @@ for iTrial = 1:nTrials
     end % symmetric shift predictor loop
   end % combinations
 end % trial loop
-
+ft_progress('close')
 % multiply the shift sum by a factor so it has the same scale as raw 
 dofShiftPred = 2*(nTrials-1);
 if doShiftPredictor, s = s*nTrials/dofShiftPred; end
 switch cfg.outputunit
   case 'proportion'
-    sm = repmat(nansum(s,3),[1 1 nLags*2 + 1]);
+    sm = repmat(nansum(s,3),[1 1 nLags*2]);
     s = s./sm;        
     if keepTrials
       singleTrials       = singleTrials./repmat(shiftdim(sm,-1),[nTrials 1 1 1]);
     end            
   case 'center'
-      center   = repmat(s(:,:,nLags+1),[1 1 nLags*2 + 1]);
+      center   = repmat(s(:,:,nLags+1),[1 1 nLags*2]);
       s        = s./center;
       if keepTrials
         singleTrials       = singleTrials./repmat(shiftdim(center,-1),[nTrials 1 1 1]);
@@ -308,6 +360,8 @@ end
 
 % return the results
 stat.(cfg.method)      = s;
+lags = (-nLags:nLags)*cfg.binsize;
+lags = (lags(2:end)+lags(1:end-1))/2;             
 stat.time              = lags;
 stat.dimord            = 'chan_chan_time'; 
 if keepTrials
@@ -322,3 +376,51 @@ ft_postamble callinfo
 ft_postamble previous spike
 ft_postamble history stat
 
+function [C] = spike_crossx_matlab(tX,tY,binsize,nbins)
+
+minLag = - binsize * (nbins-1) / 2;
+j = 0:nbins-1;
+B = minLag + j * binsize;
+nX = length(tX); nY = length(tY);
+tX(tX<(tY(1)+minLag))   = [];
+tY(tY>(tX(end)-minLag)) = [];
+
+% compute all distances at once using a multiplication trick
+if (nX*nY)<2*10^7  % allow matrix to grow to about 150 MB, should always work
+  D = log(exp(-tX(:))*exp(tY(:)'));
+  D = D(:);
+  D(abs(D)>abs(minLag)) = [];
+  swap = 0;
+else  
+  % best to always start the for loop with the smallest of the 2
+  swap = 0;
+  if nX>nY
+      tmp  = tY;
+      tY   = tX;
+      tX   = tmp;
+      swap = 1;
+      nX = length(tX); 
+  end
+
+  % compute all the distances in a loop
+  D = [];
+  for iX = 0:(nX-1)
+    t1           = tX(iX+1);
+    lBound       = t1 + minLag; 
+    uBound       = t1 - minLag;
+    indx         = tY>=lBound & tY<=uBound;
+    if ~isempty(find(indx))
+      d            = tY(indx) - t1; 
+      D            = [D;d];
+    end
+  end
+end
+
+[C] = histc(D,B);
+C(end) = [];
+if isempty(C)
+    C = zeros(1,length(B)-1);
+end
+if swap
+    C = C(end:-1:1);
+end
