@@ -56,7 +56,7 @@ psth = ft_checkdata(psth, 'datatype', 'timelock', 'hastrials', 'yes', 'feedback'
 % get the default options
 cfg.trials         = ft_getopt(cfg,'trials', 'all');
 cfg.latency        = ft_getopt(cfg,'latency','maxperiod');
-cfg.keeptrials     = ft_getopt(cfg,'keeptrials', 'yes');
+cfg.keeptrials     = ft_getopt(cfg,'keeptrials', 'no');
 cfg.method         = ft_getopt(cfg,'method', 'jpsth');
 cfg.normalization  = ft_getopt(cfg,'normalization', 'no');
 cfg.channelcmb     = ft_getopt(cfg,'channelcmb', 'all');

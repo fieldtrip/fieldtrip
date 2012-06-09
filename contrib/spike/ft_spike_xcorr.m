@@ -86,7 +86,7 @@ spike = ft_checkdata(spike,'datatype', 'spike', 'feedback', 'yes');
 % get the default options
 cfg.trials         = ft_getopt(cfg,'trials', 'all');
 cfg.latency        = ft_getopt(cfg,'latency','maxperiod');
-cfg.keeptrials     = ft_getopt(cfg,'keeptrials', 'yes');
+cfg.keeptrials     = ft_getopt(cfg,'keeptrials', 'no');
 cfg.method         = ft_getopt(cfg,'method', 'xcorr');
 cfg.channelcmb     = ft_getopt(cfg,'channelcmb', 'all');
 cfg.vartriallen    = ft_getopt(cfg,'vartriallen', 'yes');
