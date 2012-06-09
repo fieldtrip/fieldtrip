@@ -194,6 +194,7 @@ if strcmp(cfg.rejectsaturation,'yes')
 end
   
 % compute the spectra
+ft_progress('init', 'text',     'Please wait...');
 for iTrial = 1:nTrials
   
   % select the spike times for a given trial and restrict to those overlapping with the EEG
@@ -254,7 +255,7 @@ for iTrial = 1:nTrials
     
     for iUnit = 1:nspikesel
       if iFreq==1
-        fprintf('processing trial %d of %d (%d spikes) for unit %s \n', iTrial, nTrials, nSpikes(iUnit), cfg.spikechannel{iUnit});        
+        ft_progress(iTrial/nTrials, 'Processing trial %d from %d', iTrial/nTrials);    
       end
       if nSpikes(iUnit)==0, continue,end
       spectrum{iUnit,iTrial}(:,:,iFreq) = spec(unitsmp{iUnit},:);
@@ -297,7 +298,7 @@ for iTrial = 1:nTrials
     end
   end
 end
-
+ft_progress('close');
 % collect the results
 Sts.lfplabel          = data.label(chansel);
 Sts.freq              = nanmean(freqs,2)';

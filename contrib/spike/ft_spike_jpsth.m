@@ -130,6 +130,7 @@ end
 [out,varOut,dofOut] = deal(zeros(nChans,nChans,nBins,nBins));
 
 % compute the joint psth
+ft_progress('init', 'text',     'Please wait...');
 for iCmb = 1:nCmbs
   indxData1 = cmbindx(iCmb,1); % index for the data
   indxData2 = cmbindx(iCmb,2);
@@ -154,6 +155,7 @@ for iCmb = 1:nCmbs
   end
   
   for iTrial = 1:nTrials
+    ft_progress(iTrial/nTrials, 'Processing trial %d from %d for combination %d out of %d', iTrial, nTrials, iCmb, nCms);    
     psth1 = squeeze(psth.trial(iTrial,indxData1, :)); % first chan
     psth2 = squeeze(psth.trial(iTrial,indxData2, :)); % second chan
     isNum1 = double(~isnan(psth1));
@@ -222,6 +224,7 @@ for iCmb = 1:nCmbs
   dofOut(indxOut2,indxOut1,:,:)    = df';
   
 end
+ft_progress('close')
 
 % collect the results
 if strcmp(cfg.method,'jpsth')
