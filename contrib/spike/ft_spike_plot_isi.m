@@ -33,22 +33,20 @@ ft_preamble callinfo
 ft_preamble trackconfig
 
 % get the default options
-cfg.spikechannel = ft_getopt(cfg, 'spikechannel', 'all');
+cfg.spikechannel = ft_getopt(cfg,'spikechannel', 'all');
 cfg.ylim         = ft_getopt(cfg,'ylim', 'auto');
 cfg.plotfit      = ft_getopt(cfg,'plotfit', 'no');
 
 % ensure that the options are valid
 cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});
-cfg = ft_checkopt(cfg,'ylim', {'char','double'});
+cfg = ft_checkopt(cfg,'ylim', {'char','ascendingdoublebivector'});
 cfg = ft_checkopt(cfg,'plotfit', 'char', {'yes', 'no'});
 
 % get the spikechannels
 cfg.channel = ft_channelselection(cfg.spikechannel, isih.label);
 spikesel    = match_str(isih.label, cfg.channel);
 nUnits      = length(spikesel); % number of spike channels
-if nUnits~=1, error('MATLAB:ft_spike_plot_isi:cfg:spikechannel:wrongInput',...
-    'One spikechannel should be selected by means of cfg.spikechannel');
-end
+if nUnits~=1, error('One spikechannel should be selected by means of cfg.spikechannel'); end
 
 % plot the average isih
 isiHdl = bar(isih.time,isih.avg(spikesel,:),'k');
@@ -56,14 +54,12 @@ set(isiHdl,'BarWidth', 1)
 
 if strcmp(cfg.plotfit,'yes')
   
-  if ~isfield(isih,'gammaShape') || ~isfield(isih,'gammaScale')
-    error('MATLAB:ft_spike_plot_isi:fitConflict',...
-      'ISIH.gammaShape and .gammaScale should be present when cfg.plotfit = yes');
-  end
+  if ~isfield(isih,'gamfit'), error('isih.gamfit should be present when cfg.plotfit = yes'); end
   
   % generate the probabilities according to the gamma model
-  pGamma = gampdf(isih.time, isih.gammaShape(spikesel), isih.gammaScale(spikesel));
-  pGamma = pGamma./sum(pGamma);
+  pGamma = gampdf(isih.time, isih.gamfit(spikesel,1), isih.gamfit(spikesel,2));
+  sel    = isfinite(pGamma);
+  pGamma = pGamma(sel)./sum(pGamma(sel));
   
   % scale the fit in the same way (total area is equal)
   sumIsih = sum(isih.avg(spikesel,:),2);
@@ -71,7 +67,7 @@ if strcmp(cfg.plotfit,'yes')
   
   % plot the fit
   hold on
-  fitHdl = plot(isih.time, pGamma,'r');
+  fitHdl = plot(isih.time(sel), pGamma,'r');
 else
   pGamma = 0;
 end
@@ -82,8 +78,10 @@ try
   elseif strcmp(isih.cfg.outputunit, 'spikecount')
     ylabel('spikecount')
   end
+catch
+  ylabel('intensity');
 end
-
+    
 xlabel('bin edges (sec)')
 
 % set the x axis
@@ -93,9 +91,6 @@ set(gca,'XLim', [min(isih.time) max(isih.time)])
 if strcmp(cfg.ylim, 'auto')
   y = [isih.avg(spikesel,:) pGamma];
   cfg.ylim = [0 max(y(:))*1.1+eps];
-elseif ~isrealvec(cfg.ylim)||length(cfg.ylim)~=2 || cfg.ylim(2)<cfg.ylim(1)
-  error('MATLAB:ft_spike_plot_isi:cfg:ylim',...
-    'cfg.ylim should be "auto" or ascending order 1-by-2 vector in seconds');
 end
 set(gca,'YLim', cfg.ylim)
 set(gca,'TickDir','out')

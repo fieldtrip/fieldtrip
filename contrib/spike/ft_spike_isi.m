@@ -21,6 +21,11 @@ function [isih] = ft_spike_isi(cfg,spike)
 %                          If 'prestim' or 'poststim', we use time to or from 0.
 %`  cfg.keeptrials       = 'yes' or 'no'. If 'yes', we keep the individual
 %                           isis between spikes and output as isih.isi
+%   cfg.param            = string, one of
+%      'gamfit'      : returns [shape scale] for gamma distribution fit
+%      'coeffvar'    : coefficient of variation (sd / mean)
+%      'lv'          : Shinomoto's Local Variation measure (2009)
+
 % Outputs:
 %   isih.avg             = nUnits-by-nBins interspike interval histogram
 %   isih.time            = bincenters corresponding to isih.avg
@@ -53,6 +58,7 @@ cfg.trials       = ft_getopt(cfg,'trials', 'all');
 cfg.latency      = ft_getopt(cfg,'latency','maxperiod');
 cfg.keeptrials   = ft_getopt(cfg,'keeptrials', 'yes');
 cfg.bins         = ft_getopt(cfg,'bins', 0:0.002:1);
+cfg.param        = ft_getopt(cfg,'param', 'coeffvar');
 
 % ensure that the options are valid
 cfg = ft_checkopt(cfg,'outputunit','char', {'spikecount', 'proportion'});
@@ -61,8 +67,9 @@ cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});
 cfg = ft_checkopt(cfg,'latency', {'char', 'ascenddoublebivector'});
 cfg = ft_checkopt(cfg,'trials', {'char', 'doublevector', 'logical'}); 
 cfg = ft_checkopt(cfg,'keeptrials', 'char', {'yes', 'no'});
+cfg = ft_checkopt(cfg,'param', 'char', {'gamfit', 'coeffvar', 'lv'});
 
-cfg = ft_checkconfig(cfg,'allowed', {'outputunit', 'bins', 'spikechannel', 'latency', 'trials', 'keeptrials'});
+cfg = ft_checkconfig(cfg,'allowed', {'param', 'outputunit', 'bins', 'spikechannel', 'latency', 'trials', 'keeptrials'});
 
 % get the number of trials or change DATA according to cfg.trials
 if  strcmp(cfg.trials,'all')
@@ -107,7 +114,7 @@ nBins = length(bins)-1;
 keepTrials = strcmp(cfg.keeptrials,'yes');
 if keepTrials, isiSpike = cell(1,nUnits); end  % contains the individual histogram spike times
 isihist  = zeros(nUnits,nBins+1); % isi histogram
-
+out = [];
 for iUnit = 1:nUnits
   unitIndx = spikesel(iUnit);
   
@@ -126,6 +133,24 @@ for iUnit = 1:nUnits
   isi = [NaN diff(spikeTimes)];
   isi(trialJump) = NaN;
   
+  switch cfg.param
+  case 'coeffvar'      
+    out(iUnit) = nanstd(isi)./nanmean(isi);
+  case 'gamfit'
+    data = isi(~isnan(isi));  % remove the nans from isiSpike
+    if ~isempty(data)
+      [out(iUnit,:)] = mle(data,'distribution', 'gamma'); % fit a gamma distribution
+    else
+      out(iUnit,:)   = [NaN NaN];
+    end
+  case 'lv'
+    dIsi     = isi(1:end-1) - isi(2:end);
+    sumIsi   = isi(1:end-1) + isi(2:end);
+    sl       = ~isnan(dIsi) & ~isnan(sumIsi); % remove if one has nan
+    df       = sum(sl) - 1;
+    out(iUnit) = (3/df)*sum((dIsi(sl)./sumIsi(sl)).^2);
+  end
+
   % convert and store the isi
   if keepTrials, isiSpike{iUnit} = isi; end
   isihist(iUnit,:)   = histc(isi,bins);
@@ -144,6 +169,8 @@ isih.time        = bins(1:end-1);
 isih.avg         = isihist;
 isih.dimord      = 'chan_time';
 isih.label       = spike.label(spikesel);
+param = cfg.param;
+isih.(param) = out;
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
