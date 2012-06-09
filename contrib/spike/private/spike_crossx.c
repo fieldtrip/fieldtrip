@@ -46,18 +46,21 @@ void mexFunction(
   /* create the pointer to the first output matrix */
   pointerOutputs[0] = mxCreateDoubleMatrix(nBins, 1, mxREAL);
   C                 = mxGetPr(pointerOutputs[0]);  
-  minLag = -binSize*(nBins/2);
+  minLag = -binSize*(nBins-1.0)/2.0;
               
   for(iBin = 0; iBin < nBins; iBin++)
   {  
-    bins[iBin] = minLag + iBin*binSize;
+    bins[iBin] = minLag + ((double)(iBin))*binSize;
   }
    
   /* compute the actual cross-correlations */
-  minLag = -nBins*binSize/2.0;
+  minLag = -(nBins-1)*binSize/2.0;
   yStartIndx = 0;
   for(iX=0; iX<nX; iX++)
   {
+      if (tX[iX]<(tY[yStartIndx]+minLag))
+        continue;
+      
       /* first determine where to start */
       t1 = tX[iX];
       lBound = t1 + minLag; 
@@ -78,7 +81,7 @@ void mexFunction(
         {
           binNum = 0;
         }                
-        if (binNum>(nBins-1))
+        if (binNum>(nBins-2))
         {
           break;
         }

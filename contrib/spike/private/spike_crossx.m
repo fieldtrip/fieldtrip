@@ -3,7 +3,7 @@ function [varargout] = spike_crossx(varargin)
 % FT_SPIKE_SUB_CROSSX computes cross-correlations between two
 % point-processes. 
 %
-% Use as [C,bins] = ft_spike_sub_crossx(t1,t2,binsize,bins)
+% Use as [C,bins] = ft_spike_sub_crossx(t1,t2,binsize,nbins)
 % 
 % Inputs:
 %   t1 and t2 are two sorted vectors containing spike-times
@@ -18,7 +18,7 @@ function [varargout] = spike_crossx(varargin)
 % missing on your platform, it will make an attempt to automatically 
 % compile it
  
-% remember the original working directory
+% Copyright (C) 2011-2012 Martin Vinck
 pwdir = pwd;
 
 % determine the name and full path of this function
@@ -27,24 +27,25 @@ mexsrc = [funname '.c'];
 [mexdir, mexname] = fileparts(funname);
 
 try
-% try to compile the mex file on the fly
-warning('trying to compile MEX file from %s', mexsrc);
-cd(mexdir);
-mex(mexsrc);
-cd(pwdir);
-success = true;
-
+  % try to compile the mex file on the fly
+  cd(mexdir);
+  mex(mexsrc);
+  cd(pwdir);
+  success = true;
 catch
-% compilation failed
-disp(lasterr);
-error('could not locate MEX file for %s', mexname);
-cd(pwdir);
-success = false;
+  % compilation failed
+  disp(lasterr);
+  if varargin{5}==1
+    warning('could not MEX file for %s', mexname);
+  end
+  cd(pwdir);
+  success = false;
 end
 
-if success
-% execute the mex file that was juist created
-funname = mfilename;
-funhandle = str2func(funname);
-[varargout{1:nargout}] = funhandle(varargin{:});
+if success 
+  % execute the mex file that was juist created
+  funname = mfilename;
+  funhandle = str2func(funname);
+  [varargout{1:nargout}] = funhandle(varargin{:});
 end
+ 
