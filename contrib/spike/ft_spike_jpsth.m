@@ -155,7 +155,7 @@ for iCmb = 1:nCmbs
   end
   
   for iTrial = 1:nTrials
-    ft_progress(iTrial/nTrials, 'Processing trial %d from %d for combination %d out of %d', iTrial, nTrials, iCmb, nCms);    
+    ft_progress(iTrial/nTrials, 'Processing trial %d from %d for combination %d out of %d', iTrial, nTrials, iCmb, nCmbs);    
     psth1 = squeeze(psth.trial(iTrial,indxData1, :)); % first chan
     psth2 = squeeze(psth.trial(iTrial,indxData2, :)); % second chan
     isNum1 = double(~isnan(psth1));
