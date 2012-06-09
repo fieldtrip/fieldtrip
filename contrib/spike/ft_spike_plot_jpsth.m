@@ -56,7 +56,7 @@ cfg.gaussvar    = ft_getopt(cfg,'gaussvar', (cfg.winlen/4).^2);
 % ensure that the options are valid
 cfg = ft_checkopt(cfg,'channelcmb', {'char', 'cell'});
 cfg = ft_checkopt(cfg,'psth', 'char', {'yes', 'no'});
-cfg = ft_checkopt(cfg,'latency', {'char', 'ascenddoublebivector'});
+cfg = ft_checkopt(cfg,'latency', {'char', 'ascendingdoublebivector'});
 cfg = ft_checkopt(cfg,'colorbar', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'colormap','double');
 cfg = ft_checkopt(cfg,'interpolate', 'char', {'yes', 'no'});

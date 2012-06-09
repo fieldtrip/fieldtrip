@@ -62,7 +62,7 @@ cfg.normalization  = ft_getopt(cfg,'normalization', 'no');
 cfg.channelcmb     = ft_getopt(cfg,'channelcmb', 'all');
 
 % ensure that the options are valid
-cfg = ft_checkopt(cfg,'latency', {'char', 'ascenddoublebivector'});
+cfg = ft_checkopt(cfg,'latency', {'char', 'ascendingdoublebivector'});
 cfg = ft_checkopt(cfg,'trials', {'char', 'doublevector', 'logical'}); 
 cfg = ft_checkopt(cfg,'keeptrials', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'method', 'char', {'jpsth', 'shiftpredictor'});
