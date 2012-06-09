@@ -207,7 +207,7 @@ end
 
 % normalize the spectrum first
 spike.fourierspctrm = spike.fourierspctrm ./ abs(spike.fourierspctrm); % normalize the angles before averaging   
-
+ft_progress('init', 'text',     'Please wait...');
 if strcmp(cfg.timwin,'all')
 
   switch cfg.method
@@ -234,7 +234,8 @@ if strcmp(cfg.timwin,'all')
           trialNum      = trials(iTrial);
           spikesInTrial = find(spike.trial == trialNum);
           spc           = spike.fourierspctrm(spikesInTrial,:,:);
-          
+
+          ft_progress(iTrial/nTrials, 'Processing trial %d from %d', iTrial/nTrials);              
           % compute PPC 1.0 and 2.0 according to Vinck et al. (2011) using summation per trial
           if strcmp(cfg.method,'ppc1')
             if ~isempty(spc)
@@ -333,7 +334,8 @@ else % compute time-resolved spectra of statistic
           end      
           % compute the new ppc versions
           for iTrial = 1:nTrials
-            
+
+            ft_progress(iTrial/nTrials, 'Processing trial %d from %d', iTrial/nTrials);                
              % select the spectra, time points, and trial numbers again
              trialNum      = trials(iTrial);
              spikesInTrial = find(spike.trial == trialNum);
@@ -383,6 +385,7 @@ else % compute time-resolved spectra of statistic
     end
   end
 end
+ft_progress('close');
 
 % collect the outputs: in labelcmb representation
 outparam        = cfg.method;
