@@ -235,7 +235,7 @@ if strcmp(cfg.timwin,'all')
           spikesInTrial = find(spike.trial == trialNum);
           spc           = spike.fourierspctrm(spikesInTrial,:,:);
 
-          ft_progress(iTrial/nTrials, 'Processing trial %d from %d', iTrial/nTrials);              
+          ft_progress(iTrial/nTrials, 'Processing trial %d from %d', iTrial, nTrials);              
           % compute PPC 1.0 and 2.0 according to Vinck et al. (2011) using summation per trial
           if strcmp(cfg.method,'ppc1')
             if ~isempty(spc)
@@ -335,7 +335,7 @@ else % compute time-resolved spectra of statistic
           % compute the new ppc versions
           for iTrial = 1:nTrials
 
-            ft_progress(iTrial/nTrials, 'Processing trial %d from %d', iTrial/nTrials);                
+            ft_progress(iTrial/nTrials, 'Processing trial %d from %d', iTrial, nTrials);                
              % select the spectra, time points, and trial numbers again
              trialNum      = trials(iTrial);
              spikesInTrial = find(spike.trial == trialNum);
