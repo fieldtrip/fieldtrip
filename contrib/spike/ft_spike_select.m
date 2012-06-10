@@ -48,13 +48,22 @@ cfg = ft_checkopt(cfg,'latency', {'char', 'ascendingdoublebivector'});
 cfg = ft_checkopt(cfg,'trials', {'char', 'doublevector', 'logical'}); 
 
 % select the desired channels
-cfg.spikechannel = ft_channelselection(cfg.spikechannel, spike.label);
-spikesel    = match_str(spike.label, cfg.spikechannel);
-nUnits      = length(spikesel);
+doAll = strcmp(cfg.spikechannel,'all');
+try
+  cfg.spikechannel = ft_channelselection(cfg.spikechannel, spike.label);
+catch
+  [I,J] = unique(spike.label, 'first');
+  label = spike.label(J);
+  cfg.spikechannel = ft_channelselection(cfg.spikechannel, label);
+end  
+spikesel         = match_str(spike.label, cfg.spikechannel);
+nUnits           = length(spikesel);
 if nUnits==0, error('no spikechannel selected by means of cfg.spikechannel');end
+doAllTrials = strcmp(cfg.trials,'all'); 
+doAllLatencies = strcmp(cfg.latency,'maxperiod'); 
 
 % select the desired channels
-if ~strcmp(cfg.spikechannel, 'all')
+if ~doAll
   fprintf('Selecting channels\n');
   try, spike.time = spike.time(spikesel); end
   try, spike.trial = spike.trial(spikesel); end
@@ -67,7 +76,9 @@ end
 
 % select the desired trials
 if ~isfield(spike,'trial') | ~isfield(spike,'trialtime') | ~isfield(spike,'time')
-  warning('spike structure does not contain trial, time or trialtime field, cannot select trials')
+  if ~doAllTrials
+    warning('spike structure does not contain trial, time or trialtime field, cannot select trials');
+  end
 else
   doSelection = ~strcmp(cfg.trials,'all');
   cfg  = trialselection(cfg,spike);  
@@ -92,7 +103,9 @@ end
 
 % select the desired latencies
 if ~isfield(spike, 'trialtime') || ~isfield(spike,'time') || ~isfield(spike,'trial')
-  warning('cannot select latencies as either .trialtime, .time or .trial is missing'); 
+  if ~doAllLatencies
+    warning('cannot select latencies as either .trialtime, .time or .trial is missing'); 
+  end
 else
   if ~strcmp(cfg.latency,'maxperiod') % otherwise, all spikes are selected
     fprintf('Selecting on latencies\n');
