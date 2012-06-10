@@ -69,9 +69,16 @@ if all(isspike)
   data = spike{1};
   for i=2:length(spike)
     data.label     = cat(2, data.label, spike{i}.label);
-    data.waveform  = cat(2, data.waveform, spike{i}.waveform);
-    data.timestamp = cat(2, data.timestamp, spike{i}.timestamp);
-    data.unit      = cat(2, data.unit, spike{i}.unit);
+    
+    % use a try construction in case a field is missing
+    try, data.waveform  = cat(2, data.waveform, spike{i}.waveform); end
+    try, data.timestamp = cat(2, data.timestamp, spike{i}.timestamp); end
+    try, data.unit      = cat(2, data.unit, spike{i}.unit); end
+    
+    % these are optional fields, so use a try construction.
+    try, data.time  = cat(2,data.time,spike{i}.time);    end
+    try, data.trial = cat(2, data.trial,spike{i}.trial); end  
+    try, data.fourierspctrm = cat(2,data.fourierspctrm,spike{i}.fourierspctrm); end
   end
   
 else
