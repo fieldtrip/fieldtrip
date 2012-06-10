@@ -255,7 +255,7 @@ for iTrial = 1:nTrials
     
     for iUnit = 1:nspikesel
       if iFreq==1
-        ft_progress(iTrial/nTrials, 'Processing trial %d from %d', iTrial/nTrials);    
+        ft_progress(iTrial/nTrials, 'Processing trial %d from %d', iTrial, nTrials);    
       end
       if nSpikes(iUnit)==0, continue,end
       spectrum{iUnit,iTrial}(:,:,iFreq) = spec(unitsmp{iUnit},:);

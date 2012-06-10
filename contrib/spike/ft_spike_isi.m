@@ -10,7 +10,8 @@ function [isih] = ft_spike_isi(cfg,spike)
 %
 % Configurations:
 %   cfg.outputunit       = 'spikecount' (default) or 'proportion' (sum of all bins = 1).
-%   cfg.spikechannel     = string or index of single spike channel to trigger on (default = 'all')
+%   cfg.spikechannel     = string or index of single spike channel to
+%   trigger on (default = 'all')
 %                          See FT_CHANNELSELECTION for details
 %   cfg.trials           = numeric selection of trials (default = 'all')
 %   cfg.bins             = vector of isi bins.
