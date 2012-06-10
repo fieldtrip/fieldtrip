@@ -192,11 +192,15 @@ if strcmp(cfg.rejectsaturation,'yes')
     maxChan(iChan) = mx;
   end
 end
-  
+
+fsample = data.fsample;
+
 % compute the spectra
 ft_progress('init', 'text',     'Please wait...');
 for iTrial = 1:nTrials
   
+  x = data.time{iTrial};      
+  timeBins   = [x x(end)+1/fsample] - (0.5/fsample);      
   % select the spike times for a given trial and restrict to those overlapping with the EEG
   for iUnit = 1:nspikesel
     unitindx = spikesel(iUnit);
@@ -204,14 +208,14 @@ for iTrial = 1:nTrials
     ts       = spike.time{unitindx}(hasTrial); % get the spike times for these spikes
     vld      = ts>=data.time{iTrial}(1) & ts<=data.time{iTrial}(end); % only select those spikes that fall in the trial window
     ts       = ts(vld); % timestamps for these spikes
-    unitsmp{iUnit} = zeros(1,length(ts));
-    for iSpike  = 1:length(ts) % changed this to cope with an sampling frequency that is not a constant but with some jitter
-      unitsmp{iUnit}(iSpike) = nearest(data.time{iTrial}, ts(iSpike));
-    end
-    unittime{iUnit}   = ts(:); % this is for storage in the output structure
+    %unitsmp{iUnit} = zeros(1,length(ts));
+    [ignore,I] = histc(ts,timeBins);      
+    I(I==0 | I==length(timeBins)) = [];
+    unitsmp{iUnit}  = I;
+    unittime{iUnit} = ts(:); % this is for storage in the output structure
     smptime = data.time{iTrial}(unitsmp{iUnit}); % times corresponding to samples
     unitshift{iUnit}    = ts(:) - smptime(:); % shift induced by shifting to sample times, important for high-frequency oscillations
-    nSpikes(iUnit)   = length(unitsmp{iUnit});
+    nSpikes(iUnit)      = length(unitsmp{iUnit});
   end
   if ~any(nSpikes),continue,end % continue to the next trial if this one does not contain valid spikes
   
@@ -417,6 +421,7 @@ for iTaper = 1:nTapers
     fftDC   = sum(ones(1,timwinSamples).*coswav) + 1i*sum(ones(1,timwinSamples).*sinwav);% fft of unit direct current * taper
     spctrm  = spctrm + (conv2(dat(:),wavelet,'same') - (beta0*fftDC + beta1.*fftRamp))/(numsmp/2);           
                        % fft                       % mean            %linear ramp      % make magnitude invariant to window length                             
+    %spctrm  = spctrm + (conv_fftbased(dat(:),wavelet) - (beta0*fftDC + beta1.*fftRamp))/(numsmp/2); %ALTERNATIVE IMPLEMENTATION, CAN BE TESTED                                         
 end
 spctrm = spctrm./nTapers; % normalize by number of tapers
 spctrm = spctrm.*exp(-1i*phaseCor);
@@ -451,4 +456,17 @@ spikechan = (spikechan==ntrial);
 spikelabel = data.label(spikechan);
 eeglabel   = data.label(~spikechan);
 
+% ALTERNATIVE FFT-BASED IMPLEMENTATION: LITTLE GAIN
+function c = conv_fftbased(a, b)
 
+P = numel(a);
+Q = numel(b);
+L = P + Q - 1;
+K = 2^nextpow2(L);
+
+c = ifft(fft(a, K) .* fft(b, K));
+c = c(1:L);
+toRm1 = [1:(Q-1)/2];
+toRm2 = [(1 + length(c) - (Q-1)/2) : length(c)];
+toRm  = [toRm1(:); toRm2(:)];
+c(toRm) = [];

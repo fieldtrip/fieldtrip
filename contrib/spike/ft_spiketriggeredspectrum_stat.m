@@ -209,7 +209,7 @@ end
 spike.fourierspctrm = spike.fourierspctrm ./ abs(spike.fourierspctrm); % normalize the angles before averaging   
 ft_progress('init', 'text',     'Please wait...');
 if strcmp(cfg.timwin,'all')
-
+  freq.time = 'all';
   switch cfg.method
     case 'ang'
      out  = angularmean(spike.fourierspctrm);
@@ -335,7 +335,7 @@ else % compute time-resolved spectra of statistic
           % compute the new ppc versions
           for iTrial = 1:nTrials
 
-            ft_progress(iTrial/nTrials, 'Processing trial %d from %d', iTrial, nTrials);                
+            ft_progress(iTrial/nTrials, 'Processing trial %d from %d for freq %d and chan %d', iTrial, nTrials, iFreq, iChan);                
              % select the spectra, time points, and trial numbers again
              trialNum      = trials(iTrial);
              spikesInTrial = find(spike.trial == trialNum);
@@ -397,7 +397,7 @@ for iCmb = 1:nChans
   freq.labelcmb{iCmb,2}   = outlabels{iCmb}; 
 end  
 freq.freq       = spike.freq(freqindx);
-freq.dimord     = 'chan_freq_time';
+freq.dimord     = 'chancmb_freq_time';
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
