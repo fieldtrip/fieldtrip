@@ -69,6 +69,10 @@ for i=1:num
       % remove unuseable characters from the variable name (key)
       key = key(key~=':');
       % assign the value to the header structure
+      indx =  strfind(key,'µs'); % avoid problems with this field in the new Neuralynx header      
+      if ~isempty(indx)
+        key(indx:indx+1) = 'ms';
+      end
       hdr = setfield(hdr, key, val);
     end
   end
