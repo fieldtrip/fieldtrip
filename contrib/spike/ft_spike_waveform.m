@@ -11,9 +11,12 @@ function [wave,spike] = ft_spike_waveform(cfg,spike)
 % The input SPIKE should be organised as the SPIKE datatype (see FT_DATATYPE_SPIKE)
 %
 % Configurations:
-%   cfg.rejectoutliers   = 'yes' (default) or 'no': takes away waveforms with too late peak, and no
+%   cfg.rejectonpeak     = 'yes' (default) or 'no': takes away waveforms with too late peak, and no
 %                           rising AP towards peak of other waveforms
-%   cfg.normalize        = 'yes' (default) or 'no': normalizes all waveforms
+%   cfg.rejectclippedspikes = 'yes' (default) or 'no': removes spikes that
+%                           saturated the voltage range. 
+%   cfg.normalize        = 'yes' (default) or 'no': normalizes all
+%   waveforms
 %                           to have peak-to-through amp of 2
 %   cfg.interp           = 'yes' (default) or 'no'. If 'yes', we interpolate
 %   cfg.interpfreq       = frequency of interp resampling. For example, 10
