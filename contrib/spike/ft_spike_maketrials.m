@@ -82,7 +82,7 @@ if nargin==2
     [ts,indx] = sort(double(ts)); % just sort for safety
 
     % take care of the waveform and make [1 x Samples x Spikes] per default
-    hasWave =  isfield(spike, 'waveform') && ~isempty(spike.waveform{iUnit});
+    hasWave =  isfield(spike, 'waveform') && ~isempty(spike.waveform) && ~isempty(spike.waveform{iUnit});
 
     % check if the events are overlapping or not
     events = double(cfg.trl(:,1:2))'; %2-by-nTrials now
