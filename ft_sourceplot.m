@@ -923,20 +923,21 @@ if isequal(cfg.method,'ortho')
 
       try
         kk = waitforbuttonpress;
+        if kk==0
+          % mouse press
+          key = '';
+        else
+          % key press get the value for the key
+          key = get(gcf, 'currentcharacter');
+        end
+        % determine in which subplot the user clicked
+        tag = get(gca, 'Tag');
       catch
         % this happens if the figure is closed
-        key='q';
+        key = 'q';
+        tag = '';
       end
 
-      if kk==0
-        % mouse press
-        key = '';
-      else
-        % key press get the value for the key
-        key = get(gcf, 'currentcharacter');
-      end
-      
-      tag = get(gca, 'Tag');
       if ~isempty(tag) && kk==0
         ijk = mean(get(gca,'currentpoint'));
         if strcmp(tag, 'ik')
@@ -966,6 +967,7 @@ if isequal(cfg.method,'ortho')
         % this happens if you press the apple key
         key = '';
       end
+      
       switch key
         case ''
           % do nothing
@@ -1284,8 +1286,11 @@ elseif isequal(cfg.method,'slice')
 
 end
 
-title(cfg.title);
-set(gcf, 'renderer', cfg.renderer);
+if ~isequal(key, 'q')
+  % don't add the title if the figure was closed, as that will open a new (empty) figure
+  title(cfg.title);
+  set(gcf, 'renderer', cfg.renderer);
+end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
