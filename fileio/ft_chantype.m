@@ -59,6 +59,7 @@ end
 isheader = isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'Fs');
 isgrad   = isa(input, 'struct') && isfield(input, 'pnt') && isfield(input, 'ori');
 isgrad   = (isa(input, 'struct') && isfield(input, 'coilpos')) || isgrad;
+isgrad   = (isa(input, 'struct') && isfield(input, 'chanpos')) || isgrad;
 islabel  = isa(input, 'cell')   && isa(input{1}, 'char');
 
 hdr   = input;
