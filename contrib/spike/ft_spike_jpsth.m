@@ -208,7 +208,7 @@ for iCmb = 1:nCmbs
   if strcmp(cfg.normalization,'yes')
     m = (m - mean12) ./ sqrt(var12);
     m(mean12==0) = 0; % with no spikes in joint bin there, jpsth should be 0
-    m(var12==0)  = 0;
+    m(var12==0)  = 0; % if variance is zero, we assume 0/0 = 0
   end
   m(df==0) = NaN; % no trials: must be a NaN
 

@@ -17,7 +17,10 @@ function [cfg] = ft_spike_plot_jpsth(cfg, jpsth)
 %   cfg.latency     = [begin end] in seconds or 'max' (default), 'prestim' or 'poststim';
 %   cfg.colorbar    = 'yes' (default) or 'no'
 %   cfg.colormap    =  N-by-3 colormap (see COLORMAP). or 'auto' (default,hot(256))
-%   cfg.interpolate = 'yes' or 'no', determines whether we interpolate density
+%   cfg.interpolate      = integer (default = 1), we perform interpolating
+%                          with extra number of spacings determined by
+%                          cfg.interpolate. For example cfg.interpolate = 5
+%                          means 5 times more dense axis.
 %   cfg.window      = 'string' or N-by-N matrix
 %     'no':           apply no smoothing
 %     ' gausswin'     use a Gaussian smooth function
@@ -48,7 +51,7 @@ cfg.psth        = ft_getopt(cfg,'psth', 'yes');
 cfg.latency     = ft_getopt(cfg,'latency','maxperiod');
 cfg.colorbar    = ft_getopt(cfg,'colorbar', 'yes');
 cfg.colormap    = ft_getopt(cfg,'colormap', jet(256));
-cfg.interpolate = ft_getopt(cfg,'interpolate', 'no');
+cfg.interpolate = ft_getopt(cfg,'interpolate', 1);
 cfg.window      = ft_getopt(cfg,'window', 'no');
 cfg.winlen      = ft_getopt(cfg,'winlen', 5*(mean(diff(jpsth.time))));
 cfg.gaussvar    = ft_getopt(cfg,'gaussvar', (cfg.winlen/4).^2);
@@ -59,7 +62,7 @@ cfg = ft_checkopt(cfg,'psth', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'latency', {'char', 'ascendingdoublebivector'});
 cfg = ft_checkopt(cfg,'colorbar', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'colormap','double');
-cfg = ft_checkopt(cfg,'interpolate', 'char', {'yes', 'no'});
+cfg = ft_checkopt(cfg,'interpolate', 'doublescalar');
 cfg = ft_checkopt(cfg,'window','char', {'no', 'gausswin', 'boxcar'});
 cfg = ft_checkopt(cfg,'winlen', 'double');
 cfg = ft_checkopt(cfg,'gaussvar', 'double');
@@ -75,6 +78,43 @@ for k=1:size(cfg.channelcmb,1)
 end
 nCmbs 	   = size(cmbindx,1);
 if nCmbs~=1, error('Currently only supported for a single channel combination'); end
+
+% for convenience create a separate variable
+if isfield(jpsth,'jpsth')
+  dens = squeeze(jpsth.jpsth(cmbindx(1,1),cmbindx(1,2),:,:)); % density
+else
+  dens = squeeze(jpsth.shiftpredictor(cmbindx(1,1),cmbindx(1,2),:,:)); % density
+end  
+
+% get rid of the NaNs at the borders
+isNaN = 1;
+k = 1;
+while isNaN
+  if any(isnan(jpsth.psth(cmbindx,k))), 
+    disp('deleting NaNs at the borders')
+    jpsth.psth(:,k) = [];
+    dens(k,:) = [];
+    dens(:,k) = [];
+    jpsth.time(k) = [];
+  else
+    isNaN = 0;
+  end
+end
+
+isNaN = 1;
+k = size(jpsth.psth,2);
+while isNaN
+  if any(isnan(jpsth.psth(cmbindx,k))), 
+    disp('deleting NaNs at the borders')
+    jpsth.psth(:,k) = [];
+    dens(k,:) = [];
+    dens(:,k) = [];
+    jpsth.time(k) = [];
+    k = size(jpsth.psth,2);    
+  else
+    isNaN = 0;
+  end
+end
 
 % select the time
 minTime     = jpsth.time(1);
@@ -97,14 +137,8 @@ end
 
 % get the samples of our window, and the binwidth of the JPSTH
 timeSel       = jpsth.time>=cfg.latency(1) & jpsth.time <= cfg.latency(2);
-sampleTime    = mean(diff(jpsth.time)); % get the binwidth
+sampleTime    = mean(diff(jpsth.time)); % get the binwidt
 
-% for convenience create a separate variable
-if isfield(jpsth,'jpsth')
-  dens = squeeze(jpsth.jpsth(cmbindx(1,1),cmbindx(1,2),:,:)); % density
-else
-  dens = squeeze(jpsth.shiftpredictor(cmbindx(1,1),cmbindx(1,2),:,:)); % density
-end  
 
 % smooth the jpsth with a kernel if requested
 if ~strcmp(cfg.window,'no')
@@ -137,8 +171,8 @@ bins = jpsth.time;
 ax(1) = newplot;  % create a new axis object
 origPos = get(ax(1), 'Position');
 pos     = origPos;
-if strcmp(cfg.interpolate,'yes')
-  binAxis = linspace(min(bins), max(bins), 1000); % CHANGE THIS
+if cfg.interpolate>1
+  binAxis = linspace(min(bins), max(bins), round(length(bins)*cfg.interpolate)); % CHANGE THIS
   densInterp = interp2(bins(:), bins(:), dens, binAxis(:), binAxis(:)', 'spline');
   jpsthHdl = imagesc(binAxis, binAxis, densInterp);
 else

@@ -253,6 +253,10 @@ for iTrial = 1:nTrials
               [x]   = spike_crossx_matlab(ts2(:),ts1(:),cfg.binsize,nLags*2+1);
             end
           end
+          
+          % remove the center peaks from the auto-correlogram
+          if indx(1)==indx(2), x(nLags:nLags+1) = 0; end
+          
           if strcmp(cfg.debias,'yes')
             lags = (-nLags:nLags)*cfg.binsize;
             lags = (lags(2:end)+lags(1:end-1))/2;
@@ -317,7 +321,10 @@ for iTrial = 1:nTrials
                 if doMex==0
                   [x]   = spike_crossx_matlab(B(:),A(:),cfg.binsize,nLags*2+1);
                 end
-              end
+              end              
+              % remove the center peaks from the auto-correlogram
+              if indx(1)==indx(2), x(nLags:nLags+1) = 0; end
+              
               if strcmp(cfg.debias,'yes')
                 lags = (-nLags:nLags)*cfg.binsize;
                 lags = (lags(2:end)+lags(1:end-1))/2;

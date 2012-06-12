@@ -18,17 +18,13 @@ function [wave,spike] = ft_spike_waveform(cfg,spike)
 %   cfg.normalize        = 'yes' (default) or 'no': normalizes all
 %   waveforms
 %                           to have peak-to-through amp of 2
-%   cfg.interp           = 'yes' (default) or 'no'. If 'yes', we interpolate
-%   cfg.interpfreq       = frequency of interp resampling. For example, 10
-%                          (default)
-%                          creates 10 subsamples per sample.
+%   cfg.interpolate      = double integer (default = 1). Increaes the
+%                          density of samples by a factor cfg.interpolate
 %   cfg.allign           = 'yes' (def). or 'no'. If 'yes', we allign all waves to
 %                          maximum
 %   cfg.fsample          = sampling frequency of waveform time-axis.
 %                          Obligatory field.
 %   cfg.spikechannel     = See FT_CHANNELSELECTION for details.
-%   cfg.keeptrials       = 'yes' or 'no' (default). If 'yes', we keep the
-%                          changed waveform in output
 %
 % Outputs:
 %  Wave.avg   = average waveform
@@ -56,31 +52,29 @@ cfg = ft_checkconfig(cfg, 'required', {'fsample'});
 
 % get the default options
 cfg.allign          = ft_getopt(cfg, 'allign','yes');
-cfg.interp          = ft_getopt(cfg, 'interp','yes');
-cfg.interpfreq      = ft_getopt(cfg, 'interpfreq',10);
+cfg.interpolate     = ft_getopt(cfg, 'interpolate', 1);
 cfg.spikechannel    = ft_getopt(cfg, 'spikechannel', 'all');
 cfg.rejectonpeak    = ft_getopt(cfg,'rejectonpeak', 'yes');
 cfg.rejectclippedspikes  = ft_getopt(cfg,'rejectclippedspikes', 'yes');
 cfg.normalize       = ft_getopt(cfg,'normalize', 'yes');
-cfg.keeptrials      = ft_getopt(cfg,'keeptrials', 'yes');
 
 % ensure that the options are valid
 cfg = ft_checkopt(cfg,'allign','char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'rejectclippedspikes','char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'rejectonpeak','char', {'yes', 'no'});
-cfg = ft_checkopt(cfg,'interp','char', {'yes', 'no'});
+cfg = ft_checkopt(cfg,'interpolate','doublescalar');
 cfg = ft_checkopt(cfg,'normalize','char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});
-cfg = ft_checkopt(cfg,'keeptrials', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'fsample', 'double');
+
+cfg = ft_checkconfig(cfg,'allowed', {'allign', 'rejectclippedspikes', 'rejectonpeak', 'interpolate', 'normalize', 'spikechannel', 'fsample'});
 
 spike = ft_checkdata(spike,'datatype', 'spike', 'feedback', 'yes');
 
 cfg.channel = ft_channelselection(cfg.spikechannel, spike.label);
 spikesel    = match_str(spike.label, cfg.channel);
 nUnits      = length(spikesel);
-if nUnits==0, error('No spikechannel selected by means of cfg.spikechannel'); 
-end
+if nUnits==0, error('No spikechannel selected by means of cfg.spikechannel'); end
 
 [mnWaveform, varWaveform, dofWaveform] = deal([]);
 for iUnit = 1:nUnits
@@ -173,8 +167,8 @@ for iUnit = 1:nUnits
   end
   
   % make it outlier sensitive by actually looking at the modus  
-  if strcmp(cfg.interp,'yes')
-     t2 = linspace(time(1), time(end), length(time)*cfg.interpfreq);
+  if cfg.interpolate > 1
+     t2 = linspace(time(1), time(end), round(length(time)*cfg.interpolate));
      Wn = zeros(nLeads,length(t2),nSpikes);
      warning off
      for k=1:nSpikes
@@ -208,10 +202,6 @@ for iUnit = 1:nUnits
   mnWaveform(iUnit,:,:)  = mn;
   varWaveform(iUnit,:,:) = sd.^2;
   dofWaveform(iUnit,:,:) = dof;
-  if strcmp(cfg.keeptrials,'yes')
-    wave.waveformdimord = '{chan}_lead_spike_time';
-    wave.waves{iUnit}   = waves;
-  end
   if nargout==2
     spike.waveform{spikeindx} = waves;
     spike.waveformtime = time;
