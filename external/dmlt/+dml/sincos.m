@@ -12,7 +12,7 @@ classdef sincos < dml.method
 
     properties        
         
-      regressor = dml.glmnet('family','gaussian','alpha',1);
+      regressor = dml.enet('family','gaussian','alpha',1);
         
       sinreg; % regressor applied to sine
       cosreg; % regressor applied to cosine
