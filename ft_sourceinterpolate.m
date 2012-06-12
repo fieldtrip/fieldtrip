@@ -298,6 +298,11 @@ elseif ~is2Dana && ~is2Dfun
   vol_name = {};
   vol_data = {};
   for i=1:length(cfg.parameter)
+    if ~issubfield(functional, cfg.parameter{i}) && issubfield(functional, ['avg.' cfg.parameter{i}])
+      % the data is located in the avg sub-structure
+      cfg.parameter{i} = ['avg.' cfg.parameter{i}];
+    end
+    
     if ~iscell(getsubfield(functional, cfg.parameter{i}))
       vol_name{end+1} = cfg.parameter{i};
       vol_data{end+1} = getsubfield(functional, cfg.parameter{i});
