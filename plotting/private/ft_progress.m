@@ -215,10 +215,15 @@ else
       end
       
       varargin{2} = [repmat(sprintf('\b'),[1 strlen]) varargin{2}];
+      if usejava('desktop')
+        % a newline is appropriate when using the desktop environment
+        varargin{2} = [varargin{2} '\n'];
+      end
+      
       strlentmp = fprintf(varargin{2:end});
       strlen = strlentmp - strlen;
     else
-      strlentmp = fprintf([repmat(sprintf('\b'),[1 strlen]) '%6.2f %%\n'], 100*varargin{1});
+      strlentmp = fprintf([repmat(sprintf('\b'),[1 strlen]) '%6.2f %%'], 100*varargin{1});
       strlen = strlentmp - strlen;
     end
 
