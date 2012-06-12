@@ -188,7 +188,7 @@ end
 minperlength = [max(begsamplatency) min(endsamplatency)];
 maxperlength = [min(begsamplatency) max(endsamplatency)];
 maxtrllength = round((max(endsamplatency)-min(begsamplatency))*data.fsample) + 1;       % in samples
-abstimvec    = (1:maxtrllength + min(offset) -1)./data.fsample;                         % in seconds
+abstimvec    = ((1:maxtrllength) + min(offset) -1)./data.fsample;                       % in seconds
 
 latency      = [];
 latency(1)   = maxperlength(1);
