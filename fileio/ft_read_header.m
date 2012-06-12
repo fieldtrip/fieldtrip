@@ -769,13 +769,17 @@ switch headerformat
     %-get channel labels, otherwise create them
     if isfield(orig.xml, 'sensorLayout') % asuming that signal1 is hdEEG sensornet, and channels are in xml file sensorLayout
       for iSens = 1:numel(orig.xml.sensorLayout.sensors)
-        if strcmp(orig.xml.sensorLayout.sensors(iSens).sensor.type, '0') %EEG chans
+        if ~isempty(orig.xml.sensorLayout.sensors(iSens).sensor.name) && ~(isstruct(orig.xml.sensorLayout.sensors(iSens).sensor.name) && numel(fieldnames(orig.xml.sensorLayout.sensors(iSens).sensor.name))==0)
+          % get the sensor name from the datafile
+          hdr.label{iSens} = orig.xml.sensorLayout.sensors(iSens).sensor.name;
+        elseif strcmp(orig.xml.sensorLayout.sensors(iSens).sensor.type, '0') % EEG chan
           % this should be consistent with ft_senslabel
           hdr.label{iSens} = ['E' num2str(orig.xml.sensorLayout.sensors(iSens).sensor.number)];
-        elseif strcmp(orig.xml.sensorLayout.sensors(iSens).sensor.type, '1') %REF;
-          hdr.label{iSens} = ['E' num2str(iSens)]; % to be consistent with other egi formats
+        elseif strcmp(orig.xml.sensorLayout.sensors(iSens).sensor.type, '1') % REF chan
+          % to be consistent with other egi formats
+          hdr.label{iSens} = ['E' num2str(iSens)]; 
         else
-          %non interesting channels like place holders and COM
+          % non interesting channels like place holders and COM
         end
       end
       %check if the amount of lables corresponds with nChannels in signal 1
@@ -801,7 +805,7 @@ switch headerformat
             hdr.label{nbEEGchan+iSens} = num2str(orig.xml.pnsSet.sensors(iSens).sensor.name);
           end
           if length(hdr.label) == orig.signal(2).blockhdr(1).nsignals + orig.signal(2).blockhdr(1).nsignals
-            %good
+            % good
           elseif length(hdr.label) < orig.signal(1).blockhdr(1).nsignals + orig.signal(2).blockhdr(1).nsignals
             warning('found less lables in xml.pnsSet than channels in signal 2, labeling with s2_unknownN instead')
             for iSens = length(hdr.label)+1 : orig.signal(1).blockhdr(1).nsignals + orig.signal(2).blockhdr(1).nsignals
@@ -867,7 +871,7 @@ switch headerformat
       end
       orig.epochdef = epochdef;
     end
-    hdr.orig      = orig;
+    hdr.orig = orig;
     
   case 'egi_mff_v2'
     % ensure that the EGI_MFF toolbox is on the path
