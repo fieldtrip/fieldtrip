@@ -222,12 +222,12 @@ for iTrial = 1:nTrials
   % set the saturated parts of the data to NaNs
   if strcmp(cfg.rejectsaturation,'yes')
     for iChan = 1:nchansel    
-      isSaturated = find(diff(data.trial{iTrial}(chansel,:))==0)+1;
-      remove      = data.trial{iTrial}(chansel,isSaturated)==maxChan(iChan) | data.trial{iTrial}(chansel,isSaturated)==minChan(iChan);
+      isSaturated = find(diff(data.trial{iTrial}(chansel(iChan),:))==0)+1;
+      remove      = data.trial{iTrial}(chansel(iChan),isSaturated)==maxChan(iChan) | data.trial{iTrial}(chansel(iChan),isSaturated)==minChan(iChan);
       remove      = isSaturated(remove);
-      data.trial{iTrial}(chansel,remove) = NaN;
+      data.trial{iTrial}(chansel(iChan),remove) = NaN;
       if ~isempty(remove)
-        fprintf('setting %d points from channel %s in trial %d to NaN\n', length(remove), cfg.channel(iChan), iTrial);
+        fprintf('setting %d points from channel %s in trial %d to NaN\n', length(remove), cfg.channel{iChan}, iTrial);
       end
     end
   end
@@ -246,7 +246,11 @@ for iTrial = 1:nTrials
       spectrum{iUnit,iTrial}(:,:,iFreq) = NaN;
       continue;
     end
-      
+    if nTrials==1
+       ft_progress(iFreq/nFreqs, 'Processing frequency %d from %d', iFreq, nFreqs);    
+    else
+       ft_progress(iTrial/nTrials, 'Processing trial %d from %d', iTrial, nTrials);    
+    end      
     spec = zeros(length(data.time{iTrial}),nchansel);
     for iChan = 1:nchansel
       if isfield(data,'hdr') && isfield(data.hdr,'Fs') 
@@ -258,9 +262,6 @@ for iTrial = 1:nTrials
     freqs(iFreq,iTrial) = foi;
     
     for iUnit = 1:nspikesel
-      if iFreq==1
-        ft_progress(iTrial/nTrials, 'Processing trial %d from %d', iTrial, nTrials);    
-      end
       if nSpikes(iUnit)==0, continue,end
       spectrum{iUnit,iTrial}(:,:,iFreq) = spec(unitsmp{iUnit},:);
       rephase   = ones(nSpikes(iUnit),1); 
