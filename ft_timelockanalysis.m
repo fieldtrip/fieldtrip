@@ -11,8 +11,8 @@ function [timelock] = ft_timelockanalysis(cfg, data)
 %   cfg.channel            = Nx1 cell-array with selection of channels (default = 'all'),
 %                            see FT_CHANNELSELECTION for details
 %   cfg.trials             = 'all' or a selection given as a 1xN vector (default = 'all')
-%   cfg.covariance         = 'no' or 'yes'
-%   cfg.covariancewindow   = [begin end]
+%   cfg.covariance         = 'no' or 'yes' (default = 'no')
+%   cfg.covariancewindow   = 'prestim', 'poststim', 'all' or [begin end] (default = 'all')
 %   cfg.keeptrials         = 'yes' or 'no', return individual trials or average (default = 'no')
 %   cfg.removemean         = 'no' or 'yes' for covariance computation (default = 'yes')
 %   cfg.vartrllength       = 0, 1 or 2 (see below)
@@ -175,6 +175,9 @@ nchan       = length(cfg.channel);  % number of channels
 numsamples  = zeros(ntrial,1);      % number of selected samples in each trial, is determined later
 
 % determine the duration of each trial
+begsamplatency = zeros(1,ntrial);
+endsamplatency = zeros(1,ntrial);
+offset         = zeros(1,ntrial);
 for i=1:ntrial
   begsamplatency(i) = min(data.time{i});
   endsamplatency(i) = max(data.time{i});
@@ -185,7 +188,7 @@ end
 minperlength = [max(begsamplatency) min(endsamplatency)];
 maxperlength = [min(begsamplatency) max(endsamplatency)];
 maxtrllength = round((max(endsamplatency)-min(begsamplatency))*data.fsample) + 1;       % in samples
-abstimvec    = ([1:maxtrllength] + min(offset) -1)./data.fsample;                  % in seconds
+abstimvec    = (1:maxtrllength + min(offset) -1)./data.fsample;                         % in seconds
 
 latency      = [];
 latency(1)   = maxperlength(1);
@@ -220,6 +223,8 @@ if strcmp(cfg.covariance, 'yes')
       cfg.covariancewindow = [latency(1) 0];
     case 'poststim'
       cfg.covariancewindow = [0 latency(2)];
+    case 'all'
+      cfg.covariancewindow = latency;
     case 'minperlength'
       error('cfg.covariancewindow = ''minperlength'' is not supported anymore');
     case 'maxperlength'
@@ -232,7 +237,7 @@ end
 
 % pre-allocate some memory space for the covariance matrices
 if strcmp(cfg.covariance, 'yes')
-  covsig = nan*zeros(ntrial, nchan, nchan);
+  covsig = zeros(ntrial, nchan, nchan); covsig(:) = nan;
   numcovsigsamples = zeros(ntrial,1);
 end
 
@@ -243,7 +248,7 @@ s        = zeros(nchan, maxwin);    % this will contain the sum
 ss       = zeros(nchan, maxwin);    % this will contain the squared sum
 dof      = zeros(1, maxwin);
 if (strcmp(cfg.keeptrials,'yes'))
-  singtrial = nan*zeros(ntrial, nchan, maxwin);
+  singtrial = zeros(ntrial, nchan, maxwin); singtrial(:) = nan;
 end
 
 ft_progress('init', cfg.feedback, 'averaging trials');
@@ -282,20 +287,19 @@ for i=1:ntrial
     begsampl = nearest(data.time{i}, latency(1));
     endsampl = nearest(data.time{i}, latency(2));
     numsamples(i) = endsampl-begsampl+1;
+    dat = data.trial{i}(chansel, begsampl:endsampl);
     if (latency(1)<begsamplatency(i))
       trlshift = floor((begsamplatency(i)-latency(1))*data.fsample);
     else
       trlshift = 0;
     end
     windowsel = (1:numsamples(i))+trlshift;
-    dat = data.trial{i}(chansel, begsampl:endsampl);
     if (strcmp(cfg.keeptrials,'yes'))
-      % do not add the padded zeros to the 3D array, but keep the NaNs there to indicate missing values
-      singtrial(i,:,:) = [nan*zeros(nchan, trlshift) dat nan*zeros(nchan,(maxwin-numsamples(i)-trlshift))];
+      % do not pad with zeros, but keep the NaNs to indicate missing values
+      singtrial(i,:,windowsel) = dat;
     end
-    dat = [zeros(nchan, trlshift) dat zeros(nchan,(maxwin-numsamples(i)-trlshift))];
-    s  = s  + dat;            % compute the sum
-    ss = ss + dat.^2;         % compute the sum of squares
+    s (:,windowsel) = s (:,windowsel) + dat;            % compute the sum
+    ss(:,windowsel) = ss(:,windowsel) + dat.^2;         % compute the sum of squares
     % count the number of samples that went into the sum
     dof(windowsel) = dof(windowsel) + 1;
     usetrial = 1; % to indicate that this trial could be used
