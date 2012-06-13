@@ -1,4 +1,4 @@
-function test_tutorial_beamformer
+function test_tutorial_beamformer(datadir)
 
 % TEST test_tutorial_beamformer
 % TEST ft_redefinetrial ft_freqanalysis ft_volumesegment ft_prepare_singleshell ft_sourceanalysis ft_prepare_leadfield ft_sourceinterpolate ft_sourceplot ft_volumenormalise
@@ -7,7 +7,21 @@ function test_tutorial_beamformer
 global ft_default;
 ft_default.feedback = 'no';
 
-load /home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/dataFIC.mat
+if nargin==0
+  if ispc
+    datadir = 'H:';
+  else
+    datadir = '/home';
+  end
+  
+  load(fullfile(datadir, 'common', 'matlab', 'fieldtrip', 'data', 'ftp', 'tutorial', 'beamformer', 'dataFIC.mat'));
+  mri = ft_read_mri(fullfile(datadir, 'common', 'matlab', 'fieldtrip', 'data', 'ftp', 'tutorial', 'beamformer' ,'Subject01.mri'));
+  
+else
+  load(fullfile(datadir, 'dataFIC.mat'));
+  mri = ft_read_mri(fullfile(datadir, 'Subject01.mri'));
+end
+
 
 %% Preprocess timw windows of interest
 
@@ -38,7 +52,6 @@ freqPost = ft_freqanalysis(cfg, dataPost);
 
 %try
   %if ~exist('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat', 'file')
-  mri = ft_read_mri('/home/common/matlab/fieldtrip/data/Subject01.mri');
   cfg = [];
   cfg.write        = 'no';
   cfg.coordsys     = 'ctf';
@@ -74,7 +87,7 @@ cfg.dics.lambda       = 0;
 
 sourcePost_nocon = ft_sourceanalysis(cfg, freqPost);
 
-save sourcePost_nocon.mat sourcePost_nocon;
+%save sourcePost_nocon.mat sourcePost_nocon;
 
 % call ft_volumereslice so that figures appear correct side up
 mri = ft_volumereslice([], mri);
@@ -171,8 +184,8 @@ cfg.grid.filter = sourceAll.avg.filter;
 sourcePre_con  = ft_sourceanalysis(cfg, freqPre );
 sourcePost_con = ft_sourceanalysis(cfg, freqPost);
 
-save sourcePre_con sourcePre_con 
-save sourcePost_con sourcePost_con
+%save sourcePre_con sourcePre_con 
+%save sourcePost_con sourcePost_con
 
 
 % %% Plot results
