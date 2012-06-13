@@ -14,15 +14,16 @@ if ischar(selrpt)
   end
 end
 
-if ischar(selchan)
-  if strcmp(selchan, 'all')
-    selchan = 1:numel(data.label);
-  else
-    error('incorrect specification of requested channels');
-  end
-elseif iscell(selchan)
-  selchan = match_str(data.label, ft_channelselection(selchan, data.label));
-end  
+if ischar(selchan) && strcmp(selchan, 'all')
+  selchan = 1:numel(data.label);
+else
+  selchan = ft_channelselection(selchan, data.label);
+  selchan = match_str(data.label, selchan);
+end
+
+if isempty(selchan)
+  error('no channels were selected');
+end
 
 if ischar(seltim)
   if strcmp(seltim, 'all')
