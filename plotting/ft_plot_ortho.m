@@ -56,9 +56,12 @@ function [hx, hy, hz] = ft_plot_ortho(dat, varargin)
 % (dat, varargin)
 % (dat, msk, varargin)
 % (dat, [], varargin)
+
 sellist = 1:numel(varargin);
-if isempty(varargin{1}) || isnumeric(varargin{1})
-  sellist(1) = [];
+if ~isempty(sellist)
+  if isempty(varargin{1}) || isnumeric(varargin{1})
+    sellist(1) = [];
+  end
 end
 
 % get the optional input arguments
