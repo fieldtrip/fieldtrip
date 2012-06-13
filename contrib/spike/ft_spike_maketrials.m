@@ -141,8 +141,8 @@ else
   nTrials = size(trl,1);
   
   try
-    FirstTimeStamp     = data.hdr.FirstTimeStamp;
-    TimeStampPerSample = data.hdr.TimeStampPerSample;
+    FirstTimeStamp     = double(data.hdr.FirstTimeStamp);
+    TimeStampPerSample = double(data.hdr.TimeStampPerSample);
   catch
     error('could not find the timestamp information in the continuous data');
   end
