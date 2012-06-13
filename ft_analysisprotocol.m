@@ -270,7 +270,11 @@ end
 
 % check all fields of the cfg to see if any of them have a sub-cfg that
 % would be appropriate to include as a branch
-fn = fieldnames(datacfg);
+if isempty(datacfg)
+  fn = {};
+else
+  fn = fieldnames(datacfg);
+end
 for i=1:length(fn)
   if isa(datacfg.(fn{i}), 'struct') && isfield(datacfg.(fn{i}), 'cfg')
     % increment the depth counter
