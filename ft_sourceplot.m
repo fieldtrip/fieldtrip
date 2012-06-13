@@ -585,6 +585,10 @@ elseif hasroi
   error('you can not have a roi without functional data')
 end
 
+%% start building the figure
+set(gcf, 'renderer', cfg.renderer);
+title(cfg.title);
+
 %%% set color and opacity mapping for this figure
 if hasfun
   cfg.funcolormap = colormap(cfg.funcolormap);
@@ -1284,12 +1288,6 @@ elseif isequal(cfg.method,'slice')
     end
   end
 
-end
-
-if ~isequal(key, 'q')
-  % don't add the title if the figure was closed, as that will open a new (empty) figure
-  title(cfg.title);
-  set(gcf, 'renderer', cfg.renderer);
 end
 
 % do the general cleanup and bookkeeping at the end of the function
