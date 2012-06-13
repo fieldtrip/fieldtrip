@@ -18,6 +18,8 @@ function [dataout] = ft_channelnormalise(cfg, data)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
+% See also FT_COMPONENTANALYSIS, FT_FREQBASELINE, FT_TIMELOCKBASELINE
+%
 % Copyright (C) 2010, Jan-Mathijs Schoffelen
 
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip

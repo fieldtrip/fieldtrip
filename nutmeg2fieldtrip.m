@@ -26,7 +26,7 @@ function [data, mri, grid]=nutmeg2fieldtrip(cfg,fileorstruct)
 %            (May be an array of source structures (source{1} etc))
 %            'grid' and 'mri' may be output as well if present in beam structure
 %
-% See alo FT_DATATYPE_SOURCE
+% See alo FT_DATATYPE_SOURCE, LORETA2FIELDTRIP, SPASS2FIELDTRIP, FIELDTRIP2SPSS
 
 % Copyright (C) 2011, Johanna Zumer
 %

@@ -10,6 +10,9 @@ function [source] = loreta2fieldtrip(filename, varargin)
 %
 % The following optional arguments are supported
 %   'timeframe'  =  integer number, which timepoint to read (default is to read all)
+% 
+% See also NUTMEG2FIELDTRIP, SPASS2FIELDTRIP, FIELDTRIP2SPSS,
+% FT_SOURCEANALYSIS, FT_SOURCEPLOT
 
 % This function depends on the loreta_ind.mat file
 

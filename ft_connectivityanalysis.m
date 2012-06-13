@@ -69,6 +69,8 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
+% See also FT_PREPROCESSING, FT_TIMELOCKANALYSIS, FT_FREQANALYSIS,
+% FT_MVARANALYSIS, FT_SOURCEANALYSIS, FT_NETWORKANALYSIS
 
 % Undocumented options:
 %   cfg.refindx     

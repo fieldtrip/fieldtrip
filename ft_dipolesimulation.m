@@ -33,6 +33,9 @@ function [simulated] = ft_dipolesimulation(cfg)
 % specifying an absolute or a relative noise level
 %   cfg.relnoise    = add noise with level relative to simulated signal
 %   cfg.absnoise    = add noise with absolute level
+%
+% See also FT_SOURCEANALYSIS, FT_SOURCESTATISTICS, FT_SOURCEPLOT,
+% FT_PREPARE_VOL_SENS
 
 % Undocumented local options
 % cfg.feedback

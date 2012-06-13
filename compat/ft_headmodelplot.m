@@ -54,6 +54,10 @@ function [cfg] = ft_headmodelplot(cfg, data)
 % If you specify this option the input data will be read from a *.mat
 % file on disk. This mat files should contain only a single variable named 'data',
 % corresponding to the input structure.
+%
+% See also FT_VOLUMEDOWNSAMPLE FT_VOLUMENORMALISE FT_VOLUMERESLICE
+% FT_VOLUMEWRITE FT_VOLUMELOOKUP FT_VOLUMEREALIGN, FT_VOLUMESEGMENT,
+% FT_SOURCEANALYSIS
 
 % Undocumented local options:
 % cfg.surface_facecolor

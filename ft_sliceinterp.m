@@ -80,6 +80,8 @@ function [outim]=ft_sliceinterp(cfg, ininterp)
 % 
 % The coordinates are not affected by any transformations used for displaying 
 % the data such as cfg.dim, cfg.rotate,cfg.flipdim or cfg.resample.
+%
+% See also FT_SOURCEANALYSIS, FT_VOLUMERESLICE
 
 % Copyright (C) 2004, Markus Siegel, markus.siegel@fcdonders.kun.nl
 %

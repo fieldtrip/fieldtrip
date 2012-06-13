@@ -32,6 +32,10 @@ function [vol, cfg] = ft_prepare_concentricspheres(cfg)
 %   cfg.headshape    = headshape;
 %   cfg.conductivity = [0.3300 1 0.0042 0.3300]
 %   [vol, cfg] = prepare_concentricspheres(cfg)
+%
+% See also FT_PREPARE_BEMMODEL, FT_PREPARE_LOCALSPHERES,
+% FT_PREPARE_SINGLESHELL, FT_PREPARE_LEADFIELD, FT_PREPARE_MESH,
+% FT_PREPARE_MESH_NEW
 
 % Copyright (C) 2009, Vladimir Litvak & Robert Oostenveld
 %

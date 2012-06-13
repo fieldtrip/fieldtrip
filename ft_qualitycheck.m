@@ -32,6 +32,8 @@ function [varargout] = ft_qualitycheck(cfg)
 %   cfg.saveplot  = 'yes' or 'no' to save the visualization (default = 'yes')
 %   cfg.linefreq  = scalar, frequency of power line (default = 50)
 %   cfg.plotunit  = the length of time to be plotted in one panel (default = 3600)
+%
+% See also FT_PREPROCESSING, FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT
 
 % Copyright (C) 2010-2011, Arjen Stolk, Bram Daams, Robert Oostenveld
 %

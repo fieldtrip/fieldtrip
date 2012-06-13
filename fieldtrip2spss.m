@@ -13,6 +13,8 @@ function fieldtrip2spss(filename, labels, data)
 %   - first case of data on line number: '2'
 %   - delimiter appearing between variables: 'tab'
 %
+% See also NUTMEG2FIELDTRIP, SPASS2FIELDTRIP, LORETA2FIELDTRIP
+
 % Copyright (C) 2011, Arjen Stolk
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip

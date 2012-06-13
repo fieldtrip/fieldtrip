@@ -52,6 +52,8 @@ function [script, details] = ft_analysisprotocol(cfg, datacfg)
 % Note that the nested cfg and cfg.previous in your data might not contain
 % all details that are required to reconstruct a complete and valid
 % analysis script.
+%
+% See also FT_PREPROCESSING,FT_TIMELOCKANALYSIS, FT_SOURCEANALYSIS, FT_FREQSTATISTICS
 
 % TODO the output of this function can perhaps be used as input for the wizard function
 

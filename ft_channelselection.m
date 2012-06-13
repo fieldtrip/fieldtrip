@@ -47,6 +47,9 @@ function [channel] = ft_channelselection(desired, datachannel)
 %
 % You can also exclude channels or channel groups using the following syntax
 %   {'all', '-POz', '-Fp1', -EOG'}
+%
+% See also FT_PREPROCESSING, FT_SENSLABEL, FT_MULTIPLOTER, FT_MULTIPLOTTFR,
+% FT_SINGLEPLOTER, FT_SINGLEPLOTTFR
 
 % Note that the order of channels that is returned should correspond with
 % the order of the channels in the data.

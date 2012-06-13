@@ -45,6 +45,10 @@ function [vol, cfg] = ft_prepare_localspheres(cfg, mri)
 % Undocumented local options:
 % cfg.spheremesh = number of points that is placed on the brain surface (default 4000)
 % cfg.maxradius
+%
+% See also FT_PREPARE_CONCENTRICSPHERES, FT_PREPARE_BEMMODEL,
+% FT_PREPARE_SINGLESHELL, FT_PREPARE_LEADFIELD, FT_PREPARE_MESH,
+% FT_PREPARE_MESH_NEW
 
 % Copyright (C) 2005-2006, Jan-Mathijs Schoffelen & Robert Oostenveld
 %

@@ -28,6 +28,8 @@ function [lfp, spike, stm, bhv] = spass2fieldtrip(dirname)
 %   ft_write_spike('jeb012a02_ch1.nex', spike, 'dataformat', 'plexon_nex', 'chanindx', 1)
 %   ft_write_spike('jeb012a02_ch2.nex', spike, 'dataformat', 'plexon_nex', 'chanindx', 2)
 %   ft_write_spike('jeb012a02_ch3.nex', spike, 'dataformat', 'plexon_nex', 'chanindx', 3)
+%
+% See also NUTMEG2FIELDTRIP, LORETA2FIELDTRIP, FIELDTRIP2SPSS
 
 % Copyright (C) 2007, Robert Oostenveld
 %

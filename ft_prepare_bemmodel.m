@@ -25,6 +25,10 @@ function [vol, cfg] = ft_prepare_bemmodel(cfg, mri)
 %   Oostendorp TF, van Oosterom A.
 %   Source parameter estimation in inhomogeneous volume conductors of arbitrary shape
 %   IEEE Trans Biomed Eng. 1989 Mar;36(3):382-91.
+%
+% See also FT_PREPARE_CONCENTRICSPHERES, FT_PREPARE_LOCALSPHERES,
+% FT_PREPARE_SINGLESHELL, FT_PREPARE_LEADFIELD, FT_PREPARE_MESH,
+% FT_PREPARE_MESH_NEW
 
 % Copyright (C) 2005-2009, Robert Oostenveld
 %

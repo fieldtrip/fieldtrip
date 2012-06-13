@@ -127,6 +127,9 @@ function [data] = ft_freqsimulation(cfg)
 %     2nd channel: sine wave with base frequency and phase, i.e. s1
 %     3rd channel: asymmetric signal
 %     4th channel: noise
+%
+% See also FT_FREQANALYSIS, FT_FREQDESCRIPTIVES, FT_FREQINTERPOLATION,
+% FT_MULTIPLOTTFR, FT_TOPOPLOTTFR, FT_SINGLEPLOTTFR
 
 % Copyright (C) 2007-2008, Ingrid Nieuwenhuis & Robert Oostenveld, F.C. Donders Centre
 %

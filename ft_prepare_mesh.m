@@ -42,6 +42,10 @@ function [bnd, cfg] = ft_prepare_mesh(cfg, mri)
 %   cfg.numvertices=[2000 1000 800];
 %   cfg.sourceunits=segment.unit;
 %   bnd = ft_prepare_mesh(cfg, segment);
+%
+% See also FT_PREPARE_CONCENTRICSPHERES, FT_PREPARE_LOCALSPHERES,
+% FT_PREPARE_SINGLESHELL, FT_PREPARE_LEADFIELD, FT_PREPARE_BEMMODEL,
+% FT_PREPARE_MESH_NEW
 
 % Copyrights (C) 2009, Cristiano Micheli & Robert Oostenveld
 %

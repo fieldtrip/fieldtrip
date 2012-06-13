@@ -23,7 +23,7 @@ function [downsample] = ft_volumedownsample(cfg, source)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% This function is used by FT_SOURCEINTERPOLATE, FT_VOLUMEWRITE and FT_VOLUMENORMALISE.
+% See also FT_SOURCEINTERPOLATE, FT_VOLUMEWRITE and FT_VOLUMENORMALISE.
 
 % Copyright (C) 2004, Robert Oostenveld
 %

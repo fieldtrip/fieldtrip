@@ -19,6 +19,8 @@ function [freq] = ft_freqinterpolate(cfg, freq)
 % file on disk and/or the output data will be written to a *.mat file. These mat
 % files should contain only a single variable, corresponding with the
 % input/output structure.
+%
+% See also FT_FREQANALYSIS, FT_FREQDESCRIPTIVES, FT_FREQSIMULATION
 
 % Copyright (C) 2009, Aldemar Torres Valderama
 %

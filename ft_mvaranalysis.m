@@ -64,6 +64,9 @@ function [mvardata] = ft_mvaranalysis(cfg, data)
 % file on disk and/or the output data will be written to a *.mat file. These mat
 % files should contain only a single variable, corresponding with the
 % input/output structure.
+%
+% See also FT_PREPROCESSING, FT_SOURCESTATISTICS, FT_FREQSTATISTICS,
+% FT_TIMELOCKSTATISTICS
 
 % Undocumented local options:
 %   cfg.keeptapers

@@ -61,6 +61,8 @@ function [scd] = ft_scalpcurrentdensity(cfg, data)
 %   B. Hjort; An on-line transformation of EEG scalp potentials into
 %   orthogonal source derivation. Electroencephalography and Clinical
 %   Neurophysiology 39:526-530, 1975.
+%
+% See also FT_PREPROCESSING, FT_TIMELOCKANALYSIS, FT_FREQNALYSIS, FT_TOPOPLOTER.
 
 % Copyright (C) 2004-2012, Robert Oostenveld
 %

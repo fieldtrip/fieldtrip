@@ -10,6 +10,8 @@ function [grad] = ft_headmovement(cfg)
 %   cfg.dataset      = string with the filename
 %   cfg.trl          = Nx3 matrix with the trial definition, see FT_DEFINETRIAL
 %   cfg.numclusters  = number of segments with constant headposition in which to split the data (default = 12)
+%
+% See also FT_REGRESSCONFOUND FT_REALTIME_HEADLOCALIZER
 
 % Copyright (C) 2008-2010, Jan-Mathijs Schoffelen
 %
