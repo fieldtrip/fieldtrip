@@ -3,6 +3,12 @@ function test_tutorial_connectivity
 % TEST test_tutorial_connectivity
 % TEST ft_connectivityanalysis ft_connectivitysimulation ft_freqanalysis ft_connectivityplot ft_mvaranalysis
 
+% This is the first section of the connectivity tutorial, which
+% starts with an MVAR model and then uses parametric and nonparametric 
+% spectral decomposition for coherence and granger
+
+% See also test_tutorial_connectivity2 and test_tutorial_connectivity3
+
 % disable verbose output
 global ft_default;
 ft_default.feedback = 'no';
@@ -27,6 +33,14 @@ cfg.noisecov      = [ 0.3    0    0 ;
   0    0  0.2];
 data              = ft_connectivitysimulation(cfg);
 
+figure
+plot(data.time{1}, data.trial{1}) 
+legend(data.label)
+xlabel('time (s)')
+
+cfg = [];
+cfg.viewmode = 'vertical';  % you can also specify 'butterfly'
+ft_databrowser(cfg, data);
 
 %% mvaranalysis
 cfg         = [];
