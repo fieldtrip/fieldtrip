@@ -17,11 +17,19 @@ data.time  = cell(1,nTrials);
 for k = 1:nTrials
   dat = randn(3, nSamples);
   dat(2,:) = ft_preproc_bandpassfilter(dat(2,:), 1000, [15 25]);
-  dat([1 3],:) = dat([1 3],:)./5; % do some scaling (does not matter what)
+  dat = (dat-repmat(mean(dat,2),[1 nSamples]))./repmat(std(dat,[],2),[1 nSamples]);
   data.trial{k} = mixing * dat;
   data.time{k}  = (0:nSamples-1)./fsample;
 end
 data.label = {'chan1' 'chan2'}';
+
+figure;plot(dat'+repmat([0 1 2],[nSamples 1]));
+title('original ''sources''');
+
+figure;plot((mixing*dat)'+repmat([0 1],[nSamples 1])); 
+axis([0 1000 -1 2]);
+set(findobj(gcf,'color',[0 0.5 0]), 'color', [1 0 0]);
+title('mixed ''sources''');
 
 %% do spectral analysis
 cfg = [];
@@ -30,6 +38,11 @@ cfg.output = 'fourier';
 cfg.foilim = [0 200];
 cfg.tapsmofrq = 5;
 freq = ft_freqanalysis(cfg, data);
+fd   = ft_freqdescriptives([], freq);
+
+figure;plot(fd.freq, fd.powspctrm);
+set(findobj(gcf,'color',[0 0.5 0]), 'color', [1 0 0]);
+title('powerpectrum');
 
 %% compute connectivity
 cfg = [];
@@ -41,6 +54,9 @@ c = ft_connectivityanalysis(cfg, freq);
 %% visualize
 cfg = [];
 cfg.parameter = 'grangerspctrm';
-figure;ft_connectivityplot(cfg, g);
+ft_connectivityplot(cfg, g);
+title('granger causality');
 cfg.parameter = 'cohspctrm';
-figure;ft_connectivityplot(cfg, c);
+ft_connectivityplot(cfg, c);
+title('coherence');
+
