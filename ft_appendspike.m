@@ -113,9 +113,13 @@ else
     
     % determine the corresponding sample numbers for each timestamp
     ts = spike.timestamp{i};
-    % timestamps can be uint64, hence explicitely convert to double at the right moment
-    sample = round(double(ts-FirstTimeStamp)/TimeStampPerSample + 1);
-    
+    % timestamps can be uint64, hence explicitely convert to double at the
+    % right moment
+    if strcmp(class(ts),class(FirstTimeStamp))
+      sample = round(double(ts-FirstTimeStamp)/TimeStampPerSample + 1);
+    else
+      sample = round(double(double(ts)-double(FirstTimeStamp))/TimeStampPerSample + 1);
+    end    
     fprintf('adding spike channel %s\n', spike.label{i});
     for j=1:size(trl,1)
       begsample = trl(j,1);
