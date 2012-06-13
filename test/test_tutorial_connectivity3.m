@@ -12,7 +12,7 @@ ft_default.feedback = 'no';
 ft_default.checkconfig = 'loose';
 
 % this is where the data should be located
-cd /Volumes/home/common/matlab/fieldtrip/data/ftp/tutorial/connectivity
+cd /home/common/matlab/fieldtrip/data/ftp/tutorial/connectivity
 
 load source
 
@@ -54,7 +54,7 @@ cfg.viewmode = 'vertical';  % you can also specify 'butterfly'
 ft_databrowser(cfg, sourcedata);
 
 %% construct a single virtual channel in the maximum power orientation
-timeseries = cat(2, virtual.trial{:});
+timeseries = cat(2, sourcedata.trial{:});
 
 [u, s, v] = svd(timeseries, 'econ');
 
