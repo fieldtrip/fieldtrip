@@ -264,12 +264,14 @@ end
 if ~isempty(find(info.chansel==0, 1))
   if isfield(info.data,'label')
     chanlabels = info.data.label(info.chansel==0);
-    badchantxt = chanlabels{1};
-    if length(chanlabels) > 1
-      for n=2:length(chanlabels)
-        badchantxt = [badchantxt ', ' chanlabels{n}];
+    badchantxt = '';
+      for i=find(info.chansel==0)
+        if ~isempty(badchantxt)
+          badchantxt = [badchantxt ', ' info.data.label{i} '(' num2str(i) ')'];
+        else
+          badchantxt = [info.data.label{i} '(' num2str(i) ')'];
+        end
       end
-    end
     set(info.badchantxt,'String',badchantxt,'FontAngle','normal');
   else
     set(info.badtrltxt,'String',num2str(find(info.chansel==0)),'FontAngle','normal');
