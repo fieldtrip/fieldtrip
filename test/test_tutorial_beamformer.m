@@ -19,6 +19,7 @@ if nargin==0
   
 else
   load(fullfile(datadir, 'dataFIC.mat'));
+  load(fullfile(datadir, 'segmentedmri.mat'));
   mri = ft_read_mri(fullfile(datadir, 'Subject01.mri'));
 end
 
