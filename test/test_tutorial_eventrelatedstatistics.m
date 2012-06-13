@@ -1,4 +1,4 @@
-function test_tutorial_eventrelatedstatistics
+function test_tutorial_eventrelatedstatistics(datadir)
 
 % TEST test_tutorial_eventrelatedstatistics
 % TEST ft_timelockanalysis ft_multiplotER ft_singleplotER ft_timelockstatistics
@@ -8,13 +8,18 @@ function test_tutorial_eventrelatedstatistics
 global ft_default;
 ft_default.feedback = 'no';
 
-if ispc
-  datadir = 'H:';
+if nargin==0
+  if ispc
+    datadir = 'H:';
+  else
+    datadir = '/home';
+  end
+  
+  load(fullfile(datadir, 'common', 'matlab', 'fieldtrip', 'data', 'ftp', 'tutorial', 'cluster_permutation_timelock', 'GA_ERF_orig.mat'));
 else
-  datadir = '/common';
+  load(fullfile(datadir, 'GA_ERF_orig.mat'));
 end
 
- load(fullfile(datadir, 'common', 'matlab', 'fieldtrip', 'data', 'ftp', 'tutorial', 'cluster_permutation_timelock', 'GA_ERF_orig.mat'));
 
  %% plotting the grand-average and the subject-averages
  cfg = [];
