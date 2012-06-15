@@ -762,6 +762,9 @@ if exist('powindx', 'var') && ~isempty(powindx),
         keepchn = powindx(:,1) ~= powindx(:,2);
         datout  = datout(keepchn,:,:,:,:);
         if ~isempty(varout),
+          if all(size(varout)==size(nrpt))
+            nrpt = nrpt(keepchn,:,:,:,:);
+          end
           varout = varout(keepchn,:,:,:,:);
         end
         data.labelcmb = data.labelcmb(keepchn,:);
