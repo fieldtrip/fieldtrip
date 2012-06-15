@@ -9,7 +9,8 @@ function [stat] = ft_spike_jpsth(cfg,psth)
 % gives (nTrials-1)*2 jpsth matrices for individual trials. Picking
 % consecutive trials and computing the shift predictor in a symmetric way
 % ensures that slow changes in the temporal structure do not affect the
-% shift predictor.
+% shift predictor (as opposed to shuffling the order of all trials for one
+% of the two channels).
 %
 % Use as
 %   [jpsth] = ft_spike_jpsth(cfg,psth)

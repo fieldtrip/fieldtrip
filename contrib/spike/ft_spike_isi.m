@@ -2,8 +2,8 @@ function [isih] = ft_spike_isi(cfg,spike)
 
 % FT_SPIKE_ISI computes the interspike interval histogram
 %
-% The input SPIKE should be organised as the spike or the raw datatype
-% (containing channels with binary or M-ary spike-trains).
+% The input SPIKE should be organized as the spike (output from FT_SPIKE_MAKETRIALS)
+% or the raw datatype (containing channels with binary spike-trains).
 %
 % Use as
 %   [isih] = ft_spike_isi(cfg, spike)
@@ -11,15 +11,16 @@ function [isih] = ft_spike_isi(cfg,spike)
 % Configurations:
 %   cfg.outputunit       = 'spikecount' (default) or 'proportion' (sum of all bins = 1).
 %   cfg.spikechannel     = string or index of single spike channel to
-%   trigger on (default = 'all')
-%                          See FT_CHANNELSELECTION for details
+%                          trigger on (default = 'all')
+%                          See FT_CHANNELSELECTION for details.
 %   cfg.trials           = numeric selection of trials (default = 'all')
-%   cfg.bins             = vector of isi bins.
+%   cfg.bins             = ascending vector of isi bins.
 %   cfg.latency          = [begin end] in seconds, 'max' (default), 'min', 'prestim'(t<=0), or
 %                          'poststim' (t>=0).
 %                          If 'max', we use all available latencies.
 %                          If 'min', we use only the time window contained by all trials.
-%                          If 'prestim' or 'poststim', we use time to or from 0.
+%                          If 'prestim' or 'poststim', we use time to or
+%                          from 0, respectively.
 %`  cfg.keeptrials       = 'yes' or 'no'. If 'yes', we keep the individual
 %                           isis between spikes and output as isih.isi
 %   cfg.param            = string, one of
@@ -29,7 +30,7 @@ function [isih] = ft_spike_isi(cfg,spike)
 
 % Outputs:
 %   isih.avg             = nUnits-by-nBins interspike interval histogram
-%   isih.time            = bincenters corresponding to isih.avg
+%   isih.time            = 1 x nBins bincenters corresponding to isih.avg
 %   isih.isi             = 1-by-nUnits cell with interval to previous spike per spike.
 %                          For example isih.isi{1}(2) = 0.1 means that the
 %                          second spike fired was 0.1 s later than the
@@ -37,7 +38,7 @@ function [isih] = ft_spike_isi(cfg,spike)
 %                          spikes within trials are given NaNs.
 %   isih.label           = 1-by-nUnits cell array with labels
 
-% Copyright (C) 2010, Martin Vinck
+% Copyright (C) 2010-2012, Martin Vinck
 %
 % $Id$
 
@@ -120,18 +121,18 @@ for iUnit = 1:nUnits
   unitIndx = spikesel(iUnit);
   
   % only select the spikes in the right latencies and trials
-  spikeTrials    = spike.trial{unitIndx}(:)';
-  spikeTimes     = spike.time{unitIndx}(:)';
+  spikeTrials    = spike.trial{unitIndx}(:)'; % ensure row vector
+  spikeTimes     = spike.time{unitIndx}(:)'; % ensure row vector
   
   % select only the spikes in the window and with the selected trials
-  spikesInTrials = ismember(spikeTrials, cfg.trials);
-  spikesInWin    = spikeTimes>=cfg.latency(1)&spikeTimes<=cfg.latency(2);
+  spikesInTrials = ismember(spikeTrials, cfg.trials); % row vec
+  spikesInWin    = spikeTimes>=cfg.latency(1)&spikeTimes<=cfg.latency(2); % row vec
   spikeTimes     = spikeTimes(spikesInTrials & spikesInWin);
   spikeTrials    = spikeTrials(spikesInTrials & spikesInWin);
    
   % find the spikes that jumped to the next trial, replace them with NaNs
-  trialJump = logical([1 diff(spikeTrials)]);
-  isi = [NaN diff(spikeTimes)];
+  trialJump = logical([1 diff(spikeTrials(:)')]);
+  isi = [NaN diff(spikeTimes(:)')];
   isi(trialJump) = NaN;
   
   switch cfg.param
