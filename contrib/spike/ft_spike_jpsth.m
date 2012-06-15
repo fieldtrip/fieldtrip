@@ -26,12 +26,8 @@ function [stat] = ft_spike_jpsth(cfg,psth)
 %                           we compute the jpsth after shuffling subsequent
 %                           trials.
 %   cfg.normalization    = 'no' (default), or 'yes'.  If requested (see cfg.normalization), the joint
-%                           psth is normalized as in van Aertsen et al. (1989), by
-%                           D(u,v)/sqrt(D(u,u)*D(v,v) w
-%                           here D(u,v) is the difference of the average jpsth with the predicted jpsth
-%                           (see ref. for details), giving a quantity between -1 and 1.
-%                           Since this method normalizes by the mean across all trials, it can be
-%                           confounded by latency drifs over trials.
+%                           psth is normalized as in van Aertsen et al.
+%                           (1989). 
 %   cfg.channelcmb       =  Mx2 cell-array with selection of channel pairs (default = {'all' 'all'}),
 %                           see FT_CHANNELCOMBINATION for details
 %   cfg.trials           = 'all' (default) or numerical or logical array of to be selected trials.
@@ -149,8 +145,8 @@ for iCmb = 1:nCmbs
     diff2    = nansum(diff(squeeze(psth.trial(:,indxData2,:)),[],1),1); % this is just to avoid rounding errors, as var gives these
     var1     = squeeze(nanvar(psth.trial(:,indxData1,:),1,1));
     var1(diff1==0) = 0;
-    var2(diff2==0) = 0;
     var2     = squeeze(nanvar(psth.trial(:,indxData2,:),1,1))';
+    var2(diff2==0) = 0;    
     var12    = var1(:)*var2(:)';
     var12(mean12==0) = 0;
   end

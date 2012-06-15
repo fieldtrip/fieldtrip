@@ -14,7 +14,7 @@ function [isih] = ft_spike_isi(cfg,spike)
 %                          trigger on (default = 'all')
 %                          See FT_CHANNELSELECTION for details.
 %   cfg.trials           = numeric selection of trials (default = 'all')
-%   cfg.bins             = ascending vector of isi bins.
+%   cfg.bins             = ascending vector of isi bin edges.
 %   cfg.latency          = [begin end] in seconds, 'max' (default), 'min', 'prestim'(t<=0), or
 %                          'poststim' (t>=0).
 %                          If 'max', we use all available latencies.
@@ -80,7 +80,6 @@ elseif islogical(cfg.trials)
   cfg.trials = find(cfg.trials);
 end
 cfg.trials = sort(cfg.trials);
-nTrials    = length(cfg.trials);
 
 cfg.channel = ft_channelselection(cfg.spikechannel, spike.label);
 spikesel    = match_str(spike.label, cfg.channel);
@@ -100,12 +99,6 @@ elseif strcmp(cfg.latency,'prestim')
   cfg.latency = [min(begTrialLatency) 0];
 elseif strcmp(cfg.latency,'poststim')
   cfg.latency = [0 max(endTrialLatency)];
-end
-if (cfg.latency(1) < min(begTrialLatency)), cfg.latency(1) = min(begTrialLatency);
-  warning('Correcting begin latency of averaging window');
-end
-if (cfg.latency(2) > max(endTrialLatency)), cfg.latency(2) = max(endTrialLatency);
-  warning('Correcting end latency of averaging window');
 end
 
 % construct the isi bins, we let it run to maximum trial duration by default

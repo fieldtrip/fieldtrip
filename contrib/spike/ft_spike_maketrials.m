@@ -71,21 +71,20 @@ if nargin==2
 
   % make sure that the cfg.trl indeed has three columns
   if size(cfg.trl,2)~=3,
-    error('TRL should contain 3 columns, 1st column start of trial, 2nd column end, 3rd offset')
+    error('cfg.trl should contain 3 columns, 1st column start of trial, 2nd column end, 3rd offset, in timestamp units')
   end
 
   % make a loop through the spike units and make the necessary conversions
   nTrials = size(cfg.trl,1);
   cfg.trl = double(cfg.trl);
   for iUnit = 1:nUnits
-    ts = spike.timestamp{iUnit}(:);
-    [ts,indx] = sort(double(ts)); % just sort for safety
+    ts = double(spike.timestamp{iUnit}(:));
 
     % take care of the waveform and make [1 x Samples x Spikes] per default
     hasWave =  isfield(spike, 'waveform') && ~isempty(spike.waveform) && ~isempty(spike.waveform{iUnit});
 
     % check if the events are overlapping or not
-    events = double(cfg.trl(:,1:2))'; %2-by-nTrials now
+    events = cfg.trl(:,1:2)'; %2-by-nTrials now
     if ~issorted(events(:))
       warning('Your trials are overlapping, trials will not be statistically independent');
     end
@@ -101,7 +100,7 @@ if nargin==2
       sel   = [sel; isVld(:)];
     end
 
-    % subtract the event (t=0) from the timestamps directly, this can be double or uint64
+    % subtract the event (t=0) from the timestamps directly
     if ~isempty(trialNum)
       ts  	 = ts(sel);
       dt = ts - cfg.trl(trialNum,1); % error if empty
@@ -109,7 +108,7 @@ if nargin==2
     else
       dt = [];
     end
-    trialDur = double(cfg.trl(:,2)-cfg.trl(:,1))/cfg.timestampspersecond;
+    trialDur = (cfg.trl(:,2)-cfg.trl(:,1))/cfg.timestampspersecond;
     time = [cfg.trl(:,3)/cfg.timestampspersecond (cfg.trl(:,3)/cfg.timestampspersecond + trialDur)]; % make the time-axis
 
     % gather the results
@@ -117,10 +116,8 @@ if nargin==2
     spike.trial{iUnit}  = trialNum(:)';
     spike.trialtime     = time;
     if hasWave, spike.waveform{iUnit} = spike.waveform{iUnit}(:,:,sel); end
-    try spike.unit{iUnit} = spike.unit{iUnit}(sel); end
-    if isfield(spike,'fourierspctrm')
-      spike.fourierspctrm{iUnit} = spike.fourierspctrm{iUnit}(sel,:,:); 
-    end
+    try spike.unit{iUnit} = spike.unit{iUnit}(sel); end      
+    try spike.fourierspctrm{iUnit} = spike.fourierspctrm{iUnit}(sel,:,:); end
     ts = spike.timestamp{iUnit}(indx(sel));
     spike.timestamp{iUnit} = ts(:)';
   end
@@ -133,11 +130,15 @@ if nargin==2
   ft_postamble history spike
 else
    
-  data = ft_checkdata(data,'type', 'raw');
-  trl = ft_findcfg(data.cfg, 'trl');
-  if isempty(trl);
-    error('could not find the trial information in the continuous data');
+  data = ft_checkdata(data,'type', 'raw', 'feedback', 'yes');
+  try
+    trl = double(ft_findcfg(data.cfg, 'trl'));
+  catch
+    try  
+      trl = double(data.sampleinfo);
+    end
   end
+  if isempty(trl), error('could not find the trial information in the continuous data'); end
   nTrials = size(trl,1);
   
   try
@@ -146,13 +147,15 @@ else
   catch
     error('could not find the timestamp information in the continuous data');
   end
+  spike.sampleinfo = double(trl(:,1:2)-1)*TimeStampPerSample + FirstTimeStamp;
+  
   [spike.time,spike.trial] = deal(cell(1,nUnits));
   spike.trialtime = zeros(nTrials,2);
   for iUnit = 1:nUnits
     
     % determine the corresponding sample numbers for each timestamp
-    ts = spike.timestamp{iUnit}(:);
-    sample = double(ts-FirstTimeStamp)/double(TimeStampPerSample) + 1; % no rounding (compare ft_appendspike)
+    ts = double(spike.timestamp{iUnit}(:));
+    sample = (ts-FirstTimeStamp)/TimeStampPerSample + 1; % no rounding (compare ft_appendspike)
     waveSel = [];
     for iTrial = 1:nTrials
       begsample = trl(iTrial,1);
@@ -160,40 +163,28 @@ else
       sel       = find((sample>=begsample) & (sample<=endsample));
       dSample   = sample(sel)-begsample;
       tTrial    = dSample/data.fsample + data.time{iTrial}(1);
-      sel2      = tTrial<=data.time{iTrial}(end); % to avoid rounding errors
-      tTrial    = tTrial(sel2);
       trialNum  = ones(1,length(tTrial))*iTrial;
                    
       spike.time{iUnit}         = [spike.time{iUnit} tTrial(:)'];
-      spike.trial{iUnit}        = [spike.trial{iUnit} trialNum(:)'];
-      if iUnit==1
-        spike.trialtime(iTrial,:) = [data.time{iTrial}(1) data.time{iTrial}(end)];
+      spike.trial{iUnit}        = [spike.trial{iUnit} trialNum];
+      if iUnit==1, 
+        spike.trialtime(iTrial,:) = [data.time{iTrial}(1) data.time{iTrial}(end)]; 
       end
-      finalsel = sel(sel2);
+      finalsel = sel;
       waveSel  = [waveSel; finalsel(:)];
       % construct the sample info based on timestamps
-      try
-        spike.sampleinfo = double(data.sampleinfo-1)*double(TimeStampPerSample) + double(FirstTimeStamp);
-      end
     end 
     % gather the results
-    if isfield(spike, 'waveform') && ~isempty(spike.waveform{iUnit})
-      spike.waveform{iUnit} = spike.waveform{iUnit}(:,:,waveSel);
-    end
-    try
-      spike.timestamp{iUnit} = spike.timestamp{iUnit}(waveSel);
-    end
-    try
-      spike.unit{iUnit}      = spike.unit{iUnit}(waveSel);
-    end
-    if isfield(spike,'fourierspctrm')
-      spike.fourierspctrm{iUnit} = spike.fourierspctrm{iUnit}(waveSel,:,:);
-    end
+    
+    try, spike.waveform{iUnit} = spike.waveform{iUnit}(:,:,waveSel); end
+    spike.timestamp{iUnit} = spike.timestamp{iUnit}(waveSel);
+    try, spike.unit{iUnit}      = spike.unit{iUnit}(waveSel); end
+    try, spike.fourierspctrm{iUnit} = spike.fourierspctrm{iUnit}(waveSel,:,:); end
   end 
   ft_postamble trackconfig
   ft_postamble callinfo
   ft_postamble previous spike
   ft_postamble history spike
 end
-end
+
 
