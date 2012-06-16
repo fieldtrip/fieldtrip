@@ -118,7 +118,7 @@ if nargin==2
     if hasWave, spike.waveform{iUnit} = spike.waveform{iUnit}(:,:,sel); end
     try spike.unit{iUnit} = spike.unit{iUnit}(sel); end      
     try spike.fourierspctrm{iUnit} = spike.fourierspctrm{iUnit}(sel,:,:); end
-    ts = spike.timestamp{iUnit}(indx(sel));
+    ts = spike.timestamp{iUnit}(sel);
     spike.timestamp{iUnit} = ts(:)';
   end
   spike.sampleinfo         = cfg.trl(:,1:2);
