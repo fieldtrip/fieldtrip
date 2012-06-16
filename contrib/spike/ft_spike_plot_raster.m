@@ -25,7 +25,8 @@ function [cfg] = ft_spike_plot_raster(cfg, spike, timelock)
 %   cfg.spikelength      =  number >0 and <=1 indicating the length of the spike. If
 %                           cfg.spikelength = 1, then no space will be left between
 %                           subsequent rows representing trials (row-unit is 1).
-%   cfg.trialborders     =  'yes' or 'no'. If 'yes', borders of trials are plotted
+%   cfg.trialborders     =  'yes' or 'no'. If 'yes', borders of trials are
+%   plotted
 %   cfg.topplotsize      =  number ranging from 0 to 1, indicating the proportion of the
 %                           rasterplot that the top plot will take (e.g., with 0.7 the top
 %                           plot will be 70% of the rasterplot in size). Default = 0.5.

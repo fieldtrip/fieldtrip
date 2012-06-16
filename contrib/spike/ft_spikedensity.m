@@ -163,7 +163,7 @@ sampleTime    = 1/fsample;
 nLeftSamples  = round(-cfg.timwin(1)/sampleTime);
 nRightSamples = round(cfg.timwin(2)/sampleTime);
 winTime       = -nLeftSamples*sampleTime : sampleTime : nRightSamples*sampleTime; % this is uneven if cfg.timwin symmetric
-cfg.timwin    = [winTime(1) winTime(2)];
+cfg.timwin    = [winTime(1) winTime(end)];
 nSamplesWin   = length(winTime);
 if nSamplesWin==1, warning('Number of samples in selected window is exactly one, so no smoothing applied'); end
 
