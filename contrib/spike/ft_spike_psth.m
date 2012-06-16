@@ -141,7 +141,7 @@ nTrials         = length(cfg.trials);
 begTrialLatency = begTrialLatency(trialSel); % note that begTrialLatency was of length cfg.trials here
 endTrialLatency = endTrialLatency(trialSel);
 
-% create the bins, this might harbour some inaccuracy if the latency window is not an
+% create the bins, this might give some inaccuracy if the latency window is not an
 % integer multiple; we start arbitrarily at cfg.latency(1)
 bins  = cfg.latency(1) : cfg.binsize : cfg.latency(end);
 nBins = length(bins);
@@ -159,8 +159,7 @@ else
   dof = ones(1,nBins-1)*nTrials; % if all exceed latency, then this is dof
 end
 
-% compute the peristimulus histogram, different algorithms per data type
-for iTrial = 1:nTrials % nTrials redefined on line 149, only the selected trials
+for iTrial = 1:nTrials 
   origTrial = cfg.trials(iTrial);
   if  ~ (allStartEarlier && allEndLater) % select bins and count dof + 1
     binSel = begTrialLatency(iTrial)<=bins(1:end-1) & endTrialLatency(iTrial)>=bins(2:end);
@@ -198,11 +197,11 @@ psth.avg       = s ./ dof;
 psth.var       = (ss - s.^2./dof)./(dof-1); % since sumPsth.^2 ./ dof = dof .* (sumPsth/dof).^2
 psth.dof       = dof; % combined with psth.var we can get SEM
 psth.fsample   = 1/(cfg.binsize);   % might be more compatible with feeding psth in other funcs
-psth.time      = bins(1:end-1) + 0.5*cfg.binsize; % use .time name
+psth.time      = bins(1:end-1) + 0.5*cfg.binsize; 
 psth.label     = spike.label(spikesel);
 if (strcmp(cfg.keeptrials,'yes'))
   psth.trial  = singleTrials;
-  psth.dimord = 'rpt_chan_time'; % perhaps we need two dimords here, what's the FT convention?
+  psth.dimord = 'rpt_chan_time';
 else
   psth.dimord = 'chan_time';
 end

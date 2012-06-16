@@ -197,7 +197,8 @@ for iUnit = 1:nUnits
   end
   
   % make the raster plot and hold on for the next plots
-  plot(x, y,'linewidth', cfg.linewidth,'Color', color);
+  rasterHdl = plot(x, y,'linewidth', cfg.linewidth,'Color', color);
+  cfg.hdl.raster = rasterHdl;
   set(ax(1),'NextPlot', 'add')
   set(ax(1),'Box', 'off')
 end
@@ -265,6 +266,7 @@ if doTopData
       end
     end
   end    
+  cfg.hdl.psth = avgHdl;
   % modify the axes
   set(ax(2),'YAxisLocation', 'right') % swap y axis location
   set(ax(2),'XTickLabel', {}) % remove ticks and labels for x axis

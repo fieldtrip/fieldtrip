@@ -5,8 +5,8 @@ function [rate] = ft_spike_rate(cfg,spike)
 % Use as
 %   [rate] = ft_spike_rate(cfg, spike)
 %
-% The input SPIKE should be organised as the spike or the raw datatype, obtained from
-% FT_SPIKE_MAKETRIALS or FT_PREPROCESSING (in that case, conversion is done
+% The input SPIKE should be organised as the spike or the (binary) raw datatype, obtained from
+% FT_SPIKE_MAKETRIALS or FT_APPENDSPIKE (in that case, conversion is done
 % within the function)
 %
 % Configurations:
@@ -29,13 +29,12 @@ function [rate] = ft_spike_rate(cfg,spike)
 %                          'poststim' (all t>=0).
 %   cfg.keeptrials       = 'yes' or 'no' (default).
 %
-% The outputs from spike are the following:
-%       - rate.trial:        nTrials x nUnits matrix containing the firing rate per unit
-%                            and trial
-%       - rate.avg:          nTrials array containing the average firing rate per unit
-%       - rate.var:          nTrials array containing the variance of firing rates per unit
-%       - rate.dof:          nTrials array containing the degree of freedom per unit
-%       - rate.label:        nUnits cell array containing the labels of the neuronal units%
+% The outputs from spike is a TIMELOCK structure (see FT_DATATYPE_TIMELOCK)
+%   rate.trial:        nTrials x nUnits matrix containing the firing rate per unit and trial
+%   rate.avg:          nTrials array containing the average firing rate per unit
+%   rate.var:          nTrials array containing the variance of firing rates per unit
+%   rate.dof:          nTrials array containing the degree of freedom per unit
+%   rate.label:        nUnits cell array containing the labels of the neuronal units%
 
 % Copyright (C) 2010, Martin Vinck
 %
@@ -53,6 +52,7 @@ ft_preamble trackconfig
 spike = ft_checkdata(spike,'datatype', 'spike', 'feedback', 'yes');
 
 % get the default options
+if isfield(cfg,'trials') && isempty(cfg.trials), error('no trials were selected'); end % empty should result in error, not in default
 cfg.outputunit   = ft_getopt(cfg, 'outputunit','rate');
 cfg.spikechannel = ft_getopt(cfg, 'spikechannel', 'all');
 cfg.trials       = ft_getopt(cfg, 'trials', 'all');
@@ -68,13 +68,16 @@ cfg = ft_checkopt(cfg,'trials', {'char', 'doublevector', 'logical'});
 cfg = ft_checkopt(cfg,'vartriallen', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'keeptrials', 'char', {'yes', 'no'});
 
+% check if the configuration inputs are valid
+cfg = ft_checkconfig(cfg,'allowed', {'outputunit', 'spikechannel', 'trials', 'latency', 'vartriallen', 'keeptrials'});
+
 % get the spikechannels
 cfg.spikechannel = ft_channelselection(cfg.spikechannel, spike.label);
 spikesel    = match_str(spike.label, cfg.spikechannel);
 nUnits      = length(spikesel); % number of spike channels
 if nUnits==0, error('No spikechannel selected by means of cfg.spikechannel'); end
 
-% get the number of trials
+% do the trial selection
 cfg        = trialselection(cfg,spike);
 nTrials    = length(cfg.trials); % actual number of trials we use
 
@@ -87,22 +90,21 @@ cfg = latencyselection(cfg,begTrialLatency,endTrialLatency);
 
 % check which trials will be used based on the latency
 overlaps      = endTrialLatency>(cfg.latency(1)) & begTrialLatency<(cfg.latency(2));
-hasWindow     = ones(nTrials,1);
+hasWindow     = true(nTrials,1);
 if strcmp(cfg.vartriallen,'no') % only select trials that fully cover our latency window
   startsLater    = begTrialLatency>cfg.latency(1);
   endsEarlier    = endTrialLatency<cfg.latency(2);
   hasWindow      = ~(startsLater | endsEarlier); % it should not start later or end earlier
   trialDur       = ones(nTrials,1)*(cfg.latency(2)-cfg.latency(1));
 elseif strcmp(cfg.vartriallen,'yes')
-  winBeg      = max([begTrialLatency(:) cfg.latency(1)*ones(nTrials,1)],[],2);
+  winBeg      = max([begTrialLatency(:) cfg.latency(1)*ones(nTrials,1)],[],2); 
   winEnd      = min([endTrialLatency(:) cfg.latency(2)*ones(nTrials,1)],[],2);
-  trialDur    = winEnd-winBeg;
+  trialDur    = winEnd-winBeg; % the effective trial duration  
 end
 cfg.trials         = cfg.trials(overlaps(:) & hasWindow(:));
 trialDur           = trialDur(overlaps(:) & hasWindow(:)); % select the durations, we will need this later
 nTrials            = length(cfg.trials);
-% issue an explicit error if nothing was selected, this is in general indicative of bug
-if isempty(cfg.trials), warning('No trials were selected in the end, please give us something to analyze'); end
+if isempty(cfg.trials), warning('No trials were selected in the end'); end
 
 % preallocate before computing the psth
 keepTrials = strcmp(cfg.keeptrials,'yes');
@@ -164,25 +166,7 @@ elseif strcmp(cfg.latency,'prestim')
   cfg.latency = [min(begTrialLatency) 0];
 elseif strcmp(cfg.latency,'poststim')
   cfg.latency = [0 max(endTrialLatency)];
-elseif ~isrealvec(cfg.latency)||length(cfg.latency)~=2
-  error('ft:spike_rate:cfg:latency',...
-    'cfg.latency should be "max", "min", "prestim", "poststim" or 1-by-2 numerical vector');
 end
-if cfg.latency(1)>cfg.latency(2), error('ft:spike_rate:incorrectLatencyWindow',...
-    'cfg.latency should be a vector in ascending order, i.e., cfg.latency(2)>cfg.latency(1)');
-end
-
-% check whether the time window fits with the data
-if (cfg.latency(1) < min(begTrialLatency)), cfg.latency(1) = min(begTrialLatency);
-  warning('ft:spike_rate:incorrectLatencyWindow','%s %2.2f',...
-    'Correcting begin latency of averaging window to ', cfg.latency(1));
-end
-if (cfg.latency(2) > max(endTrialLatency)), cfg.latency(2) = max(endTrialLatency);
-  warning('ft:spike_rate:incorrectLatencyWindow','%s %2.2f',...
-    'Correcting end latency of averaging window to ',cfg.latency(2));
-end
-
-%%%
 
 function [cfg] = trialselection(cfg,spike)
 
@@ -194,10 +178,6 @@ elseif islogical(cfg.trials)
   cfg.trials = find(cfg.trials);
 end
 cfg.trials = sort(cfg.trials(:));
-if max(cfg.trials)>nTrials, error('ft:spike_rate:cfg:trials:maxExceeded',...
-    'maximum trial number in cfg.trials should not exceed length of DATA.trial')
-end
-if isempty(cfg.trials), error('ft:spike_rate:cfg:trials:noneSelected',...
-    'No trials were selected by you, rien ne va plus');
-end
+if max(cfg.trials)>nTrials, error('maximum trial number in cfg.trials should not exceed size(spike.trialtime,1)'); end
+if isempty(cfg.trials), error('no trials were selected by you'); end
 

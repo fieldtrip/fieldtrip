@@ -12,32 +12,28 @@ function [sdf, sdfdata] = ft_spikedensity(cfg,data)
 % not kept. See cfg.winfunc below for more information on the specific use.
 %
 % Inputs:
-%   DATA should be organised in a RAW structure with M-ary spike
-%   representations obtained from FT_APPENDSPIKE(CFG,DATA,SPIKE) or
-%   FT_CHECKDATA(SPIKE,'DATATYPE', 'SPIKE', 'FSAMPLE', FSAMPLE). If data is
-%   a SPIKE structure the sampling frequency cfg.fsample determines the
-%   binning of the spikes (default cfg.fsample = 1000).
+%   DATA should be organised in a RAW structure with binary spike
+%   representations obtained from FT_APPENDSPIKE or FT_CHECKDATA, or
+%   a SPIKE structure.
 %
 % Configurations:
 %   cfg.timwin         = [begin end], time of the smoothing kernel (default = [-0.1 0.1])
 %                        If cfg.winfunc = @alphawin, cfg.timwin(1) will be
 %                        set to 0. Hence, it is possible to use asymmetric
-%                        kernels. Optimally, the number of samples is
-%                        uneven.
+%                        kernels. 
 %   cfg.outputunit     = 'rate' (default) or 'spikecount'. This determines the physical unit
-%                        of our spikedensityfunction, either in firing rate or in
-%                        spikecount.
-%   cfg.winfunc        = (a) string or function handle, type of window to convolve with (def = @gauss).
-%                        - @gauss (default)
-%                        - @alphawin, given by win = x*exp(-x/timeconstant)
+%                        of our spikedensityfunction, either in firing rate or in spikecount.
+%   cfg.winfunc        = (a) string or function handle, type of window to convolve with (def = 'gauss').
+%                        - 'gauss' (default)
+%                        - 'alphawin', given by win = x*exp(-x/timeconstant)
 %                        - For standard window functions in the signal processing toolbox see
 %                          WINDOW.
 %                        (b) vector of length nSamples, used directly as window
 %   cfg.winfuncopt     = options that go with cfg.winfunc
-%                        For cfg.winfunc = @alpha: the timeconstant in seconds (default = 0.005s)
-%                        For cfg.winfunc = @gauss: the standard devision in seconds (default =
+%                        For cfg.winfunc = 'alpha': the timeconstant in seconds (default = 0.005s)
+%                        For cfg.winfunc = 'gauss': the standard devision in seconds (default =
 %                                         1/4 of window duration in seconds)
-%                        For cfg.winfunc = @wname with @wname any standard window function
+%                        For cfg.winfunc = 'wname' with 'wname' any standard window function
 %                                          see window opts in that function and add as cell array
 %                        If cfg.winfunctopt = [], default opts are taken.
 %   cfg.latency        = [begin end] in seconds, 'maxperiod' (default), 'minperiod',
@@ -48,6 +44,7 @@ function [sdf, sdfdata] = ft_spikedensity(cfg,data)
 %                         the computation of the average and the variance.
 %                        'no'  - only select those trials that fully cover the window as
 %                         specified by cfg.latency.
+%   cfg.spikechannel   = see FT_CHANNELSELECTION for details
 %   cfg.trials         =  numeric or logical selection of trials (default = 'all')
 %   cfg.keeptrials     = 'yes' or 'no' (default). If 'yes', we store the trials in a matrix
 %                         in output SDF as well.
@@ -80,6 +77,7 @@ ft_preamble callinfo
 ft_preamble trackconfig
 
 % get the default options
+if isfield(cfg,'trials') && isempty(cfg.trials), error('no trials were selected'); end % empty should result in error, not in default
 cfg.outputunit   = ft_getopt(cfg,'outputunit','rate');
 cfg.timwin       = ft_getopt(cfg,'timwin',[-0.05 0.05]);
 cfg.trials       = ft_getopt(cfg,'trials', 'all');
@@ -102,6 +100,7 @@ cfg = ft_checkopt(cfg,'timwin', 'ascendingdoublebivector');
 cfg = ft_checkopt(cfg,'winfunc', {'char', 'function_handle', 'doublevector'});
 cfg = ft_checkopt(cfg,'winfuncopt', {'cell', 'double', 'empty'});
 cfg = ft_checkopt(cfg,'fsample', 'double');
+if strcmp(class(cfg.winfunc), 'function_handle'), cfg.winfunc = func2str(cfg.winfunc); end
 
 cfg = ft_checkconfig(cfg,'allowed', ...
   {'outputunit', 'spikechannel', 'latency', 'trials', 'vartriallen', 'keeptrials', 'timwin', 'winfunc', 'winfuncopt', 'fsample'});
@@ -109,14 +108,16 @@ cfg = ft_checkconfig(cfg,'allowed', ...
 % check input data structure
 data = ft_checkdata(data,'datatype', 'raw', 'feedback', 'yes', 'fsample', cfg.fsample);
 
-% select the units
-[spikechannel, eegchannel] = detectspikechan(data);
-if strcmp(cfg.spikechannel, 'all'), cfg.spikechannel = spikechannel; end
-if ~all(ismember(cfg.spikechannel,spikechannel)), warning('some selected spike channels appear eeg channels'); end
-cfg.channel = ft_channelselection(cfg.spikechannel, data.label);
-spikesel    = match_str(data.label, cfg.channel);
+[spikechannel] = detectspikechan(data);
+if strcmp(cfg.spikechannel, 'all'), 
+  cfg.spikechannel = spikechannel; 
+else
+  cfg.spikechannel = ft_channelselection(cfg.spikechannel, data.label);  
+  if ~all(ismember(cfg.spikechannel,spikechannel)), warning('some selected spike channels no not appear spike channels'); end        
+end
+spikesel    = match_str(data.label, cfg.spikechannel);
 nUnits      = length(spikesel); % number of spike channels
-if nUnits==0, error('No spikechannel selected by means of cfg.spikechannel'); end
+if nUnits==0, error('no spikechannel selected by means of cfg.spikechannel'); end
 
 % get the number of trials or change DATA according to cfg.trials
 if  strcmp(cfg.trials,'all')
@@ -125,8 +126,8 @@ elseif islogical(cfg.trials)
   cfg.trials = find(cfg.trials);
 end
 cfg.trials = sort(cfg.trials(:));
-if max(cfg.trials)>length(data.trial),error('maximum trial number in cfg.trials should not exceed length of DATA.trial'), end
-if isempty(cfg.trials), error('No trials were selected in cfg.trials'); end
+if max(cfg.trials)>length(data.trial),error('maximum trial number in cfg.trials should not exceed length of data.trial'), end
+if isempty(cfg.trials), error('no trials were selected in cfg.trials'); end
 
 % determine the duration of each trial
 begTrialLatency = cellfun(@min,data.time(cfg.trials));
@@ -143,10 +144,10 @@ elseif strcmp(cfg.latency,'poststim')
   cfg.latency = [0 max(endTrialLatency)];
 end
 if (cfg.latency(1) < min(begTrialLatency)), cfg.latency(1) = min(begTrialLatency);
-  warning('Correcting begin latency of averaging window');
+  warning('correcting begin latency of averaging window');
 end
 if (cfg.latency(2) > max(endTrialLatency)), cfg.latency(2) = max(endTrialLatency);
-  warning('Correcting end latency of averaging window');
+  warning('correcting end latency of averaging window');
 end
 
 % start processing the window information
@@ -155,58 +156,67 @@ if strcmp(cfg.winfunc,'alphawin') % now force start of window to be positive.
   cfg.timwin(1) = 0;
 end
 if cfg.timwin(1)>0 || cfg.timwin(2)<0, error('Please specify cfg.timwin(1)<=0 and cfg.timwin(2)>=0'); end
+
+% construct the window and the time axis of the window
 fsample       = data.fsample; 
 sampleTime    = 1/fsample;
-winTime       = [fliplr(0:-sampleTime:cfg.timwin(1)) (sampleTime):sampleTime:cfg.timwin(2)];
-nLeftSamples  = length(find(winTime<0));
-nRightSamples = length(find(winTime>0));
+nLeftSamples  = round(-cfg.timwin(1)/sampleTime);
+nRightSamples = round(cfg.timwin(2)/sampleTime);
+winTime       = -nLeftSamples*sampleTime : sampleTime : nRightSamples*sampleTime; % this is uneven if cfg.timwin symmetric
+cfg.timwin    = [winTime(1) winTime(2)];
 nSamplesWin   = length(winTime);
 if nSamplesWin==1, warning('Number of samples in selected window is exactly one, so no smoothing applied'); end
 
 % construct the window
+if ~iscell(cfg.winfuncopt), cfg.winfuncopt = {cfg.winfuncopt}; end
 if strcmp(cfg.winfunc,'gauss')
-  if  isempty(cfg.winfuncopt), cfg.winfuncopt{1} = 0.25*diff(cfg.timwin); end
+  if  isempty(cfg.winfuncopt{1}), cfg.winfuncopt{1} = 0.25*diff(cfg.timwin); end
   win = exp(-(winTime.^2)/(2*cfg.winfuncopt{1}^2)); % here we could compute the optimal SD
 elseif strcmp(cfg.winfunc,'alphawin')
-  if isempty(cfg.winfuncopt),  cfg.winfuncopt{1} = 0.005; end
+  if isempty(cfg.winfuncopt{1}),  cfg.winfuncopt{1} = 0.005; end
   win = winTime.*exp(-winTime/cfg.winfuncopt{1});
-elseif ischar(cfg.winfunc) || strcmp(class(cfg.winfunc),'function_handle')
-  if isempty(cfg.winfuncopt)
+elseif ischar(cfg.winfunc) 
+  if isempty(cfg.winfuncopt{1})
     win = feval(cfg.winfunc,nSamplesWin);
   else
     win = feval(cfg.winfunc,nSamplesWin, cfg.winfuncopt{:});
   end
 else % must be a double vector then
-  if length(cfg.winfunc)~=nSamplesWin, error('Number of entries of cfg.winfunc should be %d', nSamplesWin); end
+  if length(cfg.winfunc)~=nSamplesWin, error('Length of cfg.winfunc vector should be %d', nSamplesWin); end
 end
 win    = win(:).'./sum(win);    % normalize the window to 1
 winDur = max(winTime) - min(winTime); % duration of the window
-
-% check which trials will be used based on the latency
-% at this point cfg.trials has selected trials and begTrialLatency is accordingly
-overlaps      = endTrialLatency>=(cfg.latency(1)+winDur) & begTrialLatency<=(cfg.latency(2)-winDur);
-if strcmp(cfg.vartriallen,'no') % only select trials that fully cover our latency window
-  startsLater    = single(begTrialLatency>single(cfg.latency(1)));
-  endsEarlier    = single(endTrialLatency<single(cfg.latency(2)));
-  hasWindow      = ~(startsLater | endsEarlier); % it should not start later or end earlier
-else
-  hasWindow      = true(length(cfg.trials),1); % in case vartriallen = "yes"
-end
-trialSel          = overlaps(:) & hasWindow(:); % trials from cfg.trials we select further
-cfg.trials        = cfg.trials(trialSel);       % cut down further on cfg.trials
-begTrialLatency   = begTrialLatency(trialSel);  % on this variable as well
-nTrials           = length(cfg.trials);         % the actual number of trials we will use
-if isempty(cfg.trials),warning('no trials were selected, please check cfg.trials'), end
-
-% calculates the samples we are shifted wrt latency(1)
-samplesShift      = zeros(1,nTrials);
-sel               = (begTrialLatency-cfg.latency(1))>0; % otherwise 0 samples to be padded
-samplesShift(sel) = round(fsample*(begTrialLatency(sel)-cfg.latency(1)));
 
 % create the time axis for the spike density
 time           = cfg.latency(1):(1/fsample):cfg.latency(2);
 cfg.latency(2) = time(end);   % this is the used latency that should be stored in cfg again
 maxNumSamples  = length(time);
+
+% check which trials will be used based on the latency
+overlaps      = endTrialLatency>=(cfg.latency(1)+winDur) & begTrialLatency<=(cfg.latency(2)-winDur);
+if strcmp(cfg.vartriallen,'no') % only select trials that fully cover our latency window
+  hasWindow       = false(length(begTrialLatency),1);
+  for iTrial      = 1:length(begTrialLatency)
+    timeTrial     = data.time{cfg.trials(iTrial)};
+    nSamplesTrial = length(timeTrial);
+    hasLaterStart = (begTrialLatency(iTrial)-cfg.latency(1))>(0.5*sampleTime);    
+    hasEarlierEnd = (cfg.latency(2)-endTrialLatency(iTrial))>(0.5*sampleTime);
+    hasWindow(iTrial) = ~hasLaterStart & ~hasEarlierEnd & nSamplesTrial>=maxNumSamples;
+  end
+else
+  hasWindow      = true(length(cfg.trials),1);  % in case vartriallen = "yes"
+end
+trialSel          = overlaps(:) & hasWindow(:); % trials from cfg.trials we select further
+cfg.trials        = cfg.trials(trialSel);       % cut down further on cfg.trials
+begTrialLatency   = begTrialLatency(trialSel);  % on this variable as well
+endTrialLatency   = endTrialLatency(trialSel);  % on this variable as well
+nTrials           = length(cfg.trials);         % the actual number of trials we will use
+if isempty(cfg.trials),warning('no trials were selected, please check cfg.trials'), end
+
+% calculates the samples we are shifted wrt latency(1)
+samplesShift      = zeros(1,nTrials);
+sel               = (begTrialLatency-cfg.latency(1))>(0.5*sampleTime); % otherwise 0 samples to be padded
+samplesShift(sel) = round(fsample*(begTrialLatency(sel)-cfg.latency(1)));
 
 % preallocate the sum, squared sum and degrees of freedom
 [s,ss]   = deal(NaN(nUnits, maxNumSamples)); % sum and sum of squares
@@ -218,7 +228,9 @@ if nargout==2, [sdfdata.trial(1:nTrials) sdfdata.time(1:nTrials)] = deal({[]}); 
 for iTrial = 1:nTrials
   origTrial  = cfg.trials(iTrial);   % this is the original trial we use for DATA input
   timeAxis   = data.time{origTrial}; % get the time axis for this trial
-  sampleSel  = nearest(timeAxis, cfg.latency(1)) : nearest(timeAxis, cfg.latency(2));
+  begSample  = nearest(timeAxis, cfg.latency(1));
+  sampleSel  = begSample : (begSample + maxNumSamples - samplesShift(iTrial) - 1); 
+  sampleSel(sampleSel>length(timeAxis)) = []; % delete the indices that should not be there
   nSamples   = length(sampleSel);
   trialTime  = timeAxis(sampleSel);  % select the relevant portion of time
   
@@ -267,12 +279,11 @@ for iTrial = 1:nTrials
   data.trial{origTrial} = [];
   data.time{origTrial}  = [];
 end
-dofMat                   = dof;
 
 % give back a similar structure as timelockanalysis
-sdf.avg                  = s ./ dofMat;
-sdf.var                  = (ss - s.^2./dofMat)./(dofMat-1); % sumPsth.^2 ./ dof = dof .* (sumPsth/dof).^2
-sdf.dof                  = dofMat;
+sdf.avg                  = s ./ dof;
+sdf.var                  = (ss - s.^2./dof)./(dof-1); 
+sdf.dof                  = dof;
 sdf.time                 = time;
 sdf.label(1:nUnits)      = data.label(spikesel);
 if (strcmp(cfg.keeptrials,'yes'))
@@ -282,12 +293,11 @@ else
   sdf.dimord = 'chan_time';
 end
   
-% create a new structure that is a standard raw data spike structure itself
-% this is returned as second output argument
-sdfdata.fsample              = fsample;
-sdfdata.label(1:nUnits)      = data.label(spikesel);
-try
-  sdfdata.hdr                  = data.hdr;
+% create a new structure that is a standard raw data spike structure itself, this is returned as second output argument
+if nargout==2
+  sdfdata.fsample              = fsample;
+  sdfdata.label(1:nUnits)      = data.label(spikesel);
+  try, sdfdata.hdr                  = data.hdr; end
 end
 
 % do the general cleanup and bookkeeping at the end of the function
@@ -295,12 +305,12 @@ ft_postamble trackconfig
 ft_postamble callinfo
 ft_postamble previous data
 ft_postamble history sdf
-ft_postamble history sdfdata
+if nargout==2
+  ft_postamble history sdfdata
+end
 
 
 function [spikelabel, eeglabel] = detectspikechan(data)
-
-maxRate = 1000; % default on what we still consider a neuronal signal
 
 % autodetect the spike channels
 ntrial = length(data.trial);
@@ -310,8 +320,7 @@ for i=1:ntrial
   for j=1:nchans
     hasAllInts    = all(isnan(data.trial{i}(j,:)) | data.trial{i}(j,:) == round(data.trial{i}(j,:)));
     hasAllPosInts = all(isnan(data.trial{i}(j,:)) | data.trial{i}(j,:)>=0);
-    fr            = nansum(data.trial{i}(j,:)) ./ (data.time{i}(end)-data.time{i}(1));    
-    spikechan(j) = spikechan(j) + double(hasAllInts & hasAllPosInts & fr<=maxRate);
+    spikechan(j)  = spikechan(j) + double(hasAllInts & hasAllPosInts);
   end
 end
 spikechan = (spikechan==ntrial);

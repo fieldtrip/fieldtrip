@@ -143,14 +143,18 @@ end
 if nargin==2
   % autodetect the spikechannels and EEG channels
   [spikechannel, eegchannel] = detectspikechan(data);
-  if strcmp(cfg.spikechannel, 'all'), cfg.spikechannel = spikechannel; end
-  if strcmp(cfg.channel, 'all'),      cfg.channel = eegchannel; end
-  if ~all(ismember(cfg.spikechannel,spikechannel))
-    warning('some selected spike channels appear eeg channels');
+  if strcmp(cfg.spikechannel, 'all'), 
+    cfg.spikechannel = spikechannel; 
+  else
+    cfg.spikechannel = ft_channelselection(cfg.spikechannel, data.label);  
+    if ~all(ismember(cfg.spikechannel,spikechannel)), warning('some selected spike channels appear eeg channels'); end        
   end
-  if ~all(ismember(cfg.channel,eegchannel))
-    warning('some of the selected eeg channels appear spike channels');
-  end  
+  if strcmp(cfg.channel,'all')  
+    cfg.channel = eegchannel;
+  else
+    cfg.channel      = ft_channelselection(cfg.channel, data.label);  
+    if ~all(ismember(cfg.channel,eegchannel)), warning('some of the selected eeg channels appear spike channels'); end    
+  end    
   data_spk = ft_selectdata(data,'channel', cfg.spikechannel);
   data     = ft_selectdata(data,'channel', cfg.channel); % leave only LFP
   spike    = ft_checkdata(data_spk,'datatype', 'spike');
