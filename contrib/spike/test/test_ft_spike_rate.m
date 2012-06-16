@@ -35,9 +35,20 @@ spike = ft_checkdata(data,'datatype', 'spike', 'feedback', 'yes');
 %%
 cfgRate = [];
 cfgRate.outputunit = 'spikecount';
+cfgRate.keeptrials = 'yes';
+cfgRate.vartriallen = 'no';
+cfgRate.latency = [-10 20];
+RateCnt1 = ft_spike_rate(cfgRate,spike);
+
+%%
+cfgRate = [];
+cfgRate.outputunit = 'spikecount';
 cfgRate.keeptrials = 'no';
 cfgRate.trials = 1:2:30;
 RateCnt1 = ft_spike_rate(cfgRate,spike);
+
+
+
 cfgRate.trials = 32:2:60;
 RateCnt2 = ft_spike_rate(cfgRate,spike);
 cfgRate.trials = 61:2:99;

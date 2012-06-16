@@ -111,7 +111,25 @@ for iBinsize = [0 0.001 0.005 0.1 0.5 1 2]
 end
 pause(1)
 close
-
+%%
+for iBinsize = 1:2
+  if iBinsize ==1
+    cfgPsth.binsize = 'scott';
+  else
+    cfgPsth.binsize = 'sqrt';
+  end    
+  try
+  psthData = ft_spike_psth(cfgPsth,spike);
+  figure
+  cfgPlot.spikechannel = 1;
+  ft_spike_plot_psth(cfgPlot,psthData); 
+  catch
+    lasterr
+    disp('this should give an error')
+  end
+end
+pause
+close
 %% our script should work with variable trial lengths
 % create data with variable length at the start
 

@@ -102,15 +102,16 @@ psth = ft_spike_psth(cfgPsth,spike);
 cfg = [];
 cfg.method = 'jpsth';
 tic,jpsth = ft_spike_jpsth(cfg,psth);toc
-size(jpsth.avg) % note how this is chan by chan not channelcmb
 %%
 figure
 cfg = [];
-cfg.interpolate = 'no'
+cfg.interpolate = 4;
 cfg.window = 'gausswin';
 cfg.winlen = 0.02
 cfg.channelcmb = {jpsth.label{1},jpsth.label{2}};
 ft_spike_plot_jpsth(cfg,jpsth)
+pause(1)
+close all
 %%
 figure
 cfg.channelcmb = {jpsth.label{1},jpsth.label{3}};
@@ -125,6 +126,8 @@ figure
 cfg = [];
 cfg.channelcmb  = {'chan8' 'chan6'};
 ft_spike_plot_jpsth(cfg,jpsth)
+pause(1)
+close all
 
 %% test with the sdf
 cfg = [];
@@ -139,6 +142,9 @@ figure
 cfg = [];
 cfg.channelcmb = {'chan3' 'chan2'};
 ft_spike_plot_jpsth(cfg,jpsth)
+pause(1)
+close all
+
 
 %%
 cfg = [];
@@ -148,12 +154,17 @@ cfg = [];
 figure
 cfg.channelcmb = {'chan5' 'chan2'};
 ft_spike_plot_jpsth(cfg,jpsth)
+pause(1)
+close all
+
 % note the randomness around 0, shiftpredictor gives same result
 %%
 figure
-cfg.channelcmb = {'chan1' 'chan2'}
+cfg.channelcmb = {'chan3' 'chan2'};
 ft_spike_plot_jpsth(cfg,jpsth)
 
+pause(1)
+close all
 
  %% test the normalization option
 cfg = [];
@@ -168,11 +179,14 @@ for iCmb1 = 1:7
   end
 end
 figure
-cfg.channelcmb = {'chan8' 'chan9'};
+cfg.channelcmb = {'chan8', 'chan9'};
 ft_spike_plot_jpsth(cfg,jpsth)
 
 nanmax(jpsth.jpsth(:))
 nanmin(jpsth.jpsth(:))
+pause(1)
+close all
+
 % note how the normalized lies between -1 and 1
 %%
 cfg = [];
@@ -188,14 +202,19 @@ for iCmb1 = 1:7
     ft_spike_plot_jpsth(cfg,jpsth)
   end
 end
+pause(1)
+close all
+
 %%
 figure
-cfg.channelcmb = {'chan8' 'chan9'};
+cfg.channelcmb = {'chan8' ,'chan9'};
 ft_spike_plot_jpsth(cfg,jpsth)
 
 figure
-cfg.channelcmb = {'chan3' 'chan2'};
+cfg.channelcmb = {'chan3' ,'chan2'};
 ft_spike_plot_jpsth(cfg,jpsth)
+pause(1)
+close all
 
 % note how the normalized lies between -1 and 1
 
@@ -286,6 +305,8 @@ tic,jpsth = ft_spike_jpsth(cfg,psth);toc
 %% check whether plotting still works fine with nans
 figure
 cfg = [];
-cfg.channelcmb = jpsth.labelcmb(1,:);
+cfg.channelcmb = {jpsth.label{1},jpsth.label{2}};
 ft_spike_plot_jpsth(cfg,jpsth)
+pause(1)
+close all
 

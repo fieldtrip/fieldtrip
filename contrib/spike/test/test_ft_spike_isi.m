@@ -31,9 +31,6 @@ end
 cfgIsi = [];
 cfgIsi.keeptrials = 'yes';
 isih = ft_spike_isi(cfgIsi,spike);
-cfgPar = [];
-cfgPar.method = 'gamfit';
-par  = ft_spike_isi_par(cfgPar,spike);
 %%
 figure
 cfgIsi = [];
@@ -55,9 +52,8 @@ cfgIsi.spikechannel = 'all';
 isihS = ft_spike_isi(cfgIsi,spike);
 %%
 cfgRet = [];
-cfgRet.kernel = 'mvgauss';
-cfgRet.isimax = 0.2
-cfgRet.interpolate = 'no';
+cfgRet.window = 'gausswin'
+cfgRet.interpolate = 5
 cfgRet.scattersize = 1;
 cfgRet.density = 'yes'
 cfgRet.spikechannel = 1;

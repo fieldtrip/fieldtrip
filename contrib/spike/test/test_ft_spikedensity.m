@@ -15,6 +15,7 @@ end
 data.time(1:nTrials) = {linspace(0,1,nSamples)};
 data.fsample = 1000;
 data.label{1} = 'spk1';
+data.label{2} = 'eeg1';
 data.hdr = [];
 data.cfg.trl = [];
 
@@ -23,7 +24,7 @@ cfgSdf.timwin        = [-0.02 0.02];
 cfgSdf.winfunc        = 'gausswin';
 cfgSdf.latency       = [0 3];
 cfgSdf.keeptrials = 'yes';
-
+cfgSdf.spikechannel = 1
 [sdf sdfdata] = ft_spikedensity(cfgSdf,data);
 %% show that we can also enter a spike input
 spike = ft_checkdata(data, 'datatype', 'spike', 'feedback', 'yes');
@@ -165,8 +166,9 @@ close all
 
 %% do not allow variable trial length
 cfgSdf = [];
-cfgSdf.timwin = [-0.05 0.05];
+cfgSdf.timwin = [-0.001 0.001];
 cfgSdf.winfunc = 'rectwin';
+%cfgSdf.winfuncopt = 0.0;
 cfgSdf.latency = [0 1];
 cfgSdf.vartriallen = 'yes';
 sum(latencies(:,1)>0| latencies(:,2)<1)
