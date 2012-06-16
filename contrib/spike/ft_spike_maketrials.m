@@ -85,10 +85,9 @@ if nargin==2
 
     % check if the events are overlapping or not
     events = cfg.trl(:,1:2)'; %2-by-nTrials now
-    if ~issorted(events(:))
-      warning('Your trials are overlapping, trials will not be statistically independent');
-    end
-
+    if ~issorted(events(:)), warning('your trials are overlapping, trials will not be statistically independent'); end
+    if ~issorted(events,'rows'), error('the trials are not in sorted order'); end
+      
     % make the timestamps relative, use different algorithm when overlapping (fast & slow)
     trialNum = [];
     sel       = [];

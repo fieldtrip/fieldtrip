@@ -5,46 +5,52 @@ function [psth] = ft_spike_psth(cfg,spike)
 % Use as
 %   [psth] = ft_spike_psth(cfg, spike)
 %
-% The input SPIKE should be organised as the spike or the raw datatype, obtained from
-% FT_SPIKE_MAKETRIALS or FT_PREPROCESSING (in that case, conversion is done
-% within the function)
+% The input SPIKE should be organised as a) the spike datatype, obtained
+% from FT_SPIKE_MAKETRIALS b) the raw datatype, containing binary spike
+% trains, obtained from FT_APPENDSPIKE or FT_CHECKDATA. In this case the
+% raw datatype is converted to the spike datatype.
 %
 % Configurations:
-%   cfg.binsize          =  [binsize] in sec or 'auto' (default). If
-%                          'auto', we estimate the optimal bin width using
-%                          Scott's formula (1979). The optimal bin width is
+%   cfg.binsize          =  [binsize] in sec or string. 
+%                          If 'scott', we estimate the optimal bin width
+%                          using Scott's formula (1979). 
+%                          If 'sqrt', we take
+%                          the number of bins as the square root of the
+%                          number of observations. The optimal bin width is
 %                          derived over all neurons; thus, this procedure
 %                          works best if the input contains only one neuron
 %                          at a time.
-%   cfg.outputunit       = 'rate' (default) or 'spike'. If 'rate', we convert
-%                          the output per trial to firing rates (spikes/sec).
-%                          If 'spike', we count the number spikes per trial.
-%   cfg.spikechannel     = See FT_CHANNELSELECTION for details.
+%   cfg.outputunit       = 'rate' (default) or 'spikecount'. If 'rate', we
+%                          convert the output per trial to firing rates
+%                          (spikes/sec). If 'spikecount', we count the
+%                          number spikes per trial.
+%   cfg.spikechannel     = See FT_CHANNELSELECTION for details. 
 %   cfg.trials           = vector of indices (e.g., 1:2:10)
 %                          logical selection of trials (e.g., [1010101010])
 %                          'all' (default), selects all trials
 %   cfg.vartriallen      = 'yes' (default)
-%                          Accept variable trial lengths and use all available
-%                          trials and the samples in every trial. Missing values will be
-%                          ignored in the computation of the average and the variance and
-%                          stored as NaNs in the output PSTH.TRIAL.
-%                          'no'
-%                          Only select those trials that fully cover the window as specified
-%                          by cfg.latency and discard those trials that do not.
+%                          Accept variable trial lengths and use all
+%                          available trials and the samples in every trial.
+%                          Missing values will be ignored in the
+%                          computation of the average and the variance and
+%                          stored as NaNs in the output psth.trial. 'no'
+%                          Only select those trials that fully cover the
+%                          window as specified by cfg.latency and discard
+%                          those trials that do not.
 %   cfg.latency          = [begin end] in seconds
-%                          'maxperiod' (default), i.e., maximum period available
-%                          'minperiod', i.e., the minimal period all trials share
-%                          'prestim' (all t<=0)
-%                          'poststim' (all t>=0).
+%                          'maxperiod' (default), i.e., maximum period
+%                          available 'minperiod', i.e., the minimal period
+%                          all trials share 'prestim' (all t<=0) 'poststim'
+%                          (all t>=0).
 %   cfg.keeptrials       = 'yes' or 'no' (default).
 %
 % Outputs:
-%   Psth is a structure similar to FT_TIMELOCKANALYSIS or FT_SPIKE_DENSITY with the fields
+%   Psth is a timelock datatype (see FT_DATATYPE_TIMELOCK)
 %     Psth.time        = center histogram bin points
 %	    Psth.fsample 		 = 1/binsize;
-%     Psth.avg         = contains average PSTH per unit
-%     Psth.trial       = contains PSTH per unit per trial
-%     Psth.var         = contains variance of PSTH per unit across trials
+%     Psth.avg         = contains average PSTH per unit Psth.trial       =
+%     contains PSTH per unit per trial Psth.var         = contains variance
+%     of PSTH per unit across trials
 %
 % Further processing:
 %   FT_SPIKE_PLOT_PSTH    :  plot only the PSTH, for a single neuron
@@ -69,21 +75,21 @@ spike = ft_checkdata(spike,'datatype', 'spike', 'feedback', 'yes');
 
 % get the default options
 cfg.outputunit   = ft_getopt(cfg, 'outputunit','rate');
-cfg.binsize      = ft_getopt(cfg, 'binsize','auto');
+cfg.binsize      = ft_getopt(cfg, 'binsize','scott');
 cfg.spikechannel = ft_getopt(cfg, 'spikechannel', 'all');
 cfg.trials       = ft_getopt(cfg, 'trials', 'all');
-cfg.latency      = ft_getopt(cfg,'latency','maxperiod');
-cfg.vartriallen  = ft_getopt(cfg,'vartriallen', 'yes');
-cfg.keeptrials   = ft_getopt(cfg,'keeptrials', 'yes');
+cfg.latency      = ft_getopt(cfg, 'latency','maxperiod');
+cfg.vartriallen  = ft_getopt(cfg, 'vartriallen', 'yes');
+cfg.keeptrials   = ft_getopt(cfg, 'keeptrials', 'yes');
 
 % ensure that the options are valid
-cfg = ft_checkopt(cfg,'outputunit','char', {'rate', 'spikecount'});
-cfg = ft_checkopt(cfg,'binsize', {'char', 'doublescalar'});
-cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});
-cfg = ft_checkopt(cfg,'latency', {'char', 'ascendingdoublebivector'});
-cfg = ft_checkopt(cfg,'trials', {'char', 'doublevector', 'logical'}); 
-cfg = ft_checkopt(cfg,'vartriallen', 'char', {'yes', 'no'});
-cfg = ft_checkopt(cfg,'keeptrials', 'char', {'yes', 'no'});
+cfg = ft_checkopt(cfg,'outputunit',   'char',  {'rate', 'spikecount'});
+cfg = ft_checkopt(cfg,'binsize',     {'char',  'doublescalar'});
+cfg = ft_checkopt(cfg,'spikechannel',{'cell',  'char', 'double'});
+cfg = ft_checkopt(cfg,'latency',     {'char',  'ascendingdoublebivector'});
+cfg = ft_checkopt(cfg,'trials',      {'char',  'doublevector', 'logical'}); 
+cfg = ft_checkopt(cfg,'vartriallen' , 'char', {'yes', 'no'});
+cfg = ft_checkopt(cfg,'keeptrials'  , 'char', {'yes', 'no'});
 
 cfg = ft_checkconfig(cfg,'allowed', {'outputunit', 'binsize', 'spikechannel', 'trials', 'latency', 'vartriallen', 'keeptrials'});
 
@@ -100,21 +106,26 @@ if nUnits==0, error('no spikechannel selected by means of cfg.spikechannel'); en
 begTrialLatency = spike.trialtime(cfg.trials,1); % remember: already selected on trial here
 endTrialLatency = spike.trialtime(cfg.trials,2);
 trialDur 		= endTrialLatency - begTrialLatency;
-% while we could simply deselect trials with trialtime field messed up, this may detect bugs
-if any(trialDur<0), error('spike.trialtime(:,1) should preceed spike.trialtime(:,2), your spike.trialtime field is messed up'); end
 
 % select the latencies, use the same modular function in all the scripts
 cfg = latencyselection(cfg,begTrialLatency,endTrialLatency);
 
 % compute the optimal bin width if desired
-binsize = [];
-if strcmp(cfg.binsize,'auto')
+if ischar(cfg.binsize)
+  h = zeros(1,nUnits);
   for iUnit = 1:nUnits
     unitIndx       = spikesel(iUnit); % select the unit
     spikesInWin    = spike.time{unitIndx}>=cfg.latency(1) & spike.time{unitIndx}<=cfg.latency(2); % get spikes in trial
     sd             = nanstd(spike.time{unitIndx}(spikesInWin));
     N              = sum(spikesInWin);
-    h(iUnit) = 3.49*sd./(N^(1/3));
+    if strcmp(cfg.binsize,'scott')
+      h(iUnit) = 3.49*sd./(N^(1/3));
+    elseif strcmp(cfg.binsize,'sqrt')
+      k = ceil(sqrt(N));
+      h(iUnit) = (cfg.latency(2)-cfg.latency(1))/k;
+    else
+      error('unsupported option for cfg.binsize'); 
+    end
   end
   cfg.binsize = nanmean(h);
 end
@@ -128,8 +139,8 @@ end
 fullDur       = trialDur>=cfg.binsize; % trials which have full duration
 overlaps      = endTrialLatency>=(cfg.latency(1)+cfg.binsize) & begTrialLatency<=(cfg.latency(2)-cfg.binsize);
 if strcmp(cfg.vartriallen,'no') % only select trials that fully cover our latency window
-  startsLater    = single(begTrialLatency)>single(cfg.latency(1));
-  endsEarlier    = single(endTrialLatency)<single(cfg.latency(2));
+  startsLater    = single(begTrialLatency) > (single(cfg.latency(1))-0.000001); % last factor just for rounding errors
+  endsEarlier    = single(endTrialLatency) < (single(cfg.latency(2))+0.000001);
   hasWindow      = ~(startsLater | endsEarlier); % it should not start later or end earlier
 else
   hasWindow     = ones(1,length(cfg.trials));
@@ -141,8 +152,7 @@ nTrials         = length(cfg.trials);
 begTrialLatency = begTrialLatency(trialSel); % note that begTrialLatency was of length cfg.trials here
 endTrialLatency = endTrialLatency(trialSel);
 
-% create the bins, this might give some inaccuracy if the latency window is not an
-% integer multiple; we start arbitrarily at cfg.latency(1)
+% create the bins, we start arbitrarily at cfg.latency(1)
 bins  = cfg.latency(1) : cfg.binsize : cfg.latency(end);
 nBins = length(bins);
 
@@ -205,9 +215,7 @@ if (strcmp(cfg.keeptrials,'yes'))
 else
   psth.dimord = 'chan_time';
 end
-if isfield(spike,'sampleinfo')
-  psth.sampleinfo = spike.sampleinfo(cfg.trials,:);
-end
+if isfield(spike,'sampleinfo'), psth.sampleinfo = spike.sampleinfo(cfg.trials,:); end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig

@@ -2,15 +2,18 @@ function [isih] = ft_spike_isi(cfg,spike)
 
 % FT_SPIKE_ISI computes the interspike interval histogram
 %
-% The input SPIKE should be organized as the spike (output from FT_SPIKE_MAKETRIALS)
-% or the raw datatype (containing channels with binary spike-trains).
+% The input SPIKE should be organised as 
+% a) the spike datatype, obtained from FT_SPIKE_MAKETRIALS 
+% b) the raw datatype, containing binary spike trains, obtained from
+% FT_APPENDSPIKE or FT_CHECKDATA. In this case the raw datatype is
+% converted to the spike datatype.
 %
 % Use as
 %   [isih] = ft_spike_isi(cfg, spike)
 %
 % Configurations:
 %   cfg.outputunit       = 'spikecount' (default) or 'proportion' (sum of all bins = 1).
-%   cfg.spikechannel     = string or index of single spike channel to
+%   cfg.spikechannel     = string or index of spike channels to
 %                          trigger on (default = 'all')
 %                          See FT_CHANNELSELECTION for details.
 %   cfg.trials           = numeric selection of trials (default = 'all')
@@ -64,7 +67,7 @@ cfg.param        = ft_getopt(cfg,'param', 'coeffvar');
 
 % ensure that the options are valid
 cfg = ft_checkopt(cfg,'outputunit','char', {'spikecount', 'proportion'});
-cfg = ft_checkopt(cfg,'bins', 'doublevector');
+cfg = ft_checkopt(cfg,'bins', 'ascendingdoublevector');
 cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});
 cfg = ft_checkopt(cfg,'latency', {'char', 'ascendingdoublebivector'});
 cfg = ft_checkopt(cfg,'trials', {'char', 'doublevector', 'logical'}); 
@@ -101,7 +104,7 @@ elseif strcmp(cfg.latency,'poststim')
   cfg.latency = [0 max(endTrialLatency)];
 end
 
-% construct the isi bins, we let it run to maximum trial duration by default
+% construct the isi bins
 bins  = cfg.bins;
 nBins = length(bins)-1;
 
@@ -157,9 +160,7 @@ if strcmp(cfg.outputunit,'proportion'),
 end
 
 % gather the rest of the results
-if strcmp(cfg.keeptrials,'yes')
-  isih.isi       = isiSpike;
-end
+if strcmp(cfg.keeptrials,'yes'), isih.isi  = isiSpike; end
 isih.time        = bins(1:end-1);
 isih.avg         = isihist;
 isih.dimord      = 'chan_time';
