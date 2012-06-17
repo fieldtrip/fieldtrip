@@ -766,24 +766,28 @@ switch headerformat
     hdr.nSamples    = nSamples(1);
     hdr.nTrials     = 1;
     
-    %-get channel labels, otherwise create them
+    %-get channel labels for signal 1 (main net), otherwise create them
     if isfield(orig.xml, 'sensorLayout') % asuming that signal1 is hdEEG sensornet, and channels are in xml file sensorLayout
       for iSens = 1:numel(orig.xml.sensorLayout.sensors)
         if ~isempty(orig.xml.sensorLayout.sensors(iSens).sensor.name) && ~(isstruct(orig.xml.sensorLayout.sensors(iSens).sensor.name) && numel(fieldnames(orig.xml.sensorLayout.sensors(iSens).sensor.name))==0)
-          % get the sensor name from the datafile
-          hdr.label{iSens} = orig.xml.sensorLayout.sensors(iSens).sensor.name;
+          %only get name when channel is EEG (type 0), or REF (type 1),
+          %rest are non interesting channels like place holders and COM and should not be added.
+          if strcmp(orig.xml.sensorLayout.sensors(iSens).sensor.type, '0') || strcmp(orig.xml.sensorLayout.sensors(iSens).sensor.type, '1')
+            % get the sensor name from the datafile
+            hdr.label{iSens} = orig.xml.sensorLayout.sensors(iSens).sensor.name;
+          end
         elseif strcmp(orig.xml.sensorLayout.sensors(iSens).sensor.type, '0') % EEG chan
           % this should be consistent with ft_senslabel
           hdr.label{iSens} = ['E' num2str(orig.xml.sensorLayout.sensors(iSens).sensor.number)];
         elseif strcmp(orig.xml.sensorLayout.sensors(iSens).sensor.type, '1') % REF chan
-          % to be consistent with other egi formats
-          hdr.label{iSens} = ['E' num2str(iSens)]; 
+          % ingnie: I now choose REF as name for REF channel since our discussion see bug 1407. Arbitrary choice...
+          hdr.label{iSens} = ['REF' num2str(iSens)]; 
         else
           % non interesting channels like place holders and COM
         end
       end
       %check if the amount of lables corresponds with nChannels in signal 1
-      if length(hdr.label) == orig.signal(1).blockhdr(1).nsignals
+      if length(hdr.label) == nChans(1)
         %good
       elseif length(hdr.label) > orig.signal(1).blockhdr(1).nsignals
         warning('found more lables in xml.sensorLayout than channels in signal 1, thus can not use info in sensorLayout, creating labels on the fly')
