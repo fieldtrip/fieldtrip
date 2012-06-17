@@ -82,7 +82,7 @@ for i=1:length(allowedtype)
     case 'doublevector'
       ok = isa(val, 'double') && sum(size(val)>1)==1;
     case 'ascendingdoublevector'
-      ok = isa(val,'double') && all(val==sort(val));
+      ok = isa(val,'double') && issorted(val);
     case 'doublebivector'
       ok = isa(val,'double') && sum(size(val)>1)==1 && length(val)==2;
     case 'ascendingdoublebivector'
