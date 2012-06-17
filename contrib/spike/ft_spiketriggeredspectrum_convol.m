@@ -147,7 +147,7 @@ if nargin==2
     cfg.spikechannel = spikechannel; 
   else
     cfg.spikechannel = ft_channelselection(cfg.spikechannel, data.label);  
-    if ~all(ismember(cfg.spikechannel,spikechannel)), warning('some selected spike channels appear eeg channels'); end        
+    if ~all(ismember(cfg.spikechannel,spikechannel)), error('some selected spike channels appear eeg channels'); end        
   end
   if strcmp(cfg.channel,'all')  
     cfg.channel = eegchannel;
