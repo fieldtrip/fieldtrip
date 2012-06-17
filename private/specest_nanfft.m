@@ -180,7 +180,7 @@ switch datatype
     % use recursion to compute the nanfft for each channel
     y = zeros(size(dat));
     for k=1:nchan
-      y(k,:) = specest_nanfft(dat(k,:), 'basis', basis);
+      y(k,:) = specest_nanfft(dat(k,:), time, 'basis', basis);
     end
 
   otherwise
