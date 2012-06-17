@@ -2,7 +2,9 @@ function [data] = ft_spiketriggeredinterpolation(cfg, data)
 
 % FT_SPIKETRIGGEREDINTERPOLATION interpolates the data in the LFP channels
 % around the spikes that are detected in the spike channels, or replaces
-% the LFP around the spike with NaNs.
+% the LFP around the spike with NaNs. The purpose of this procedure is to
+% allow analysis of spikes and LFPs recorded from the same electrode, as
+% the spike energy would bleed in the LFP.
 %
 % Use as
 %   [data] = ft_spiketriggeredinterpolation(cfg, data)
@@ -13,7 +15,8 @@ function [data] = ft_spiketriggeredinterpolation(cfg, data)
 %   cfg.method       = string, The interpolation method can be 'nan',
 %                     'cubic', 'linear', 'nearest', spline', 'pchip'
 %                     (default = 'nan'). See INTERP1 for more details.
-%   cfg.timwin       = [begin end], time around each spike (default = [-0.001 0.002])
+%   cfg.timwin       = [begin end], duration of LFP segment around each spike (default =
+%                      [-0.005 0.005]) to be removed
 %   cfg.interptoi    = value, time in seconds used for interpolation, which
 %                      must be larger than timwin (default = 0.01)
 %   cfg.spikechannel = string, name of single spike channel to trigger on
@@ -61,24 +64,22 @@ data = ft_checkdata(data,'datatype', 'raw', 'feedback', 'yes');
 cfg = ft_checkconfig(cfg, 'forbidden', {'inputfile', 'outputfile'});  
 
 %get the options
-cfg.timwin         = ft_getopt(cfg, 'timwin',[-0.1 0.1]);
+cfg.timwin         = ft_getopt(cfg, 'timwin',[-0.005 0.005]);
 cfg.spikechannel   = ft_getopt(cfg,'spikechannel', []);
 cfg.channel        = ft_getopt(cfg,'channel', 'all');
 cfg.feedback       = ft_getopt(cfg,'feedback', 'yes');
 cfg.method         = ft_getopt(cfg,'method', 'nan');
+cfg.interptoi      = ft_getopt(cfg,'interptoi',0.2);
 
 % ensure that the options are valid
-cfg = ft_checkopt(cfg,'timwin','doublevector');
+cfg = ft_checkopt(cfg,'timwin','ascendingdoublebivector');
 cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});
 cfg = ft_checkopt(cfg,'channel', {'cell', 'char', 'double'});
 cfg = ft_checkopt(cfg,'feedback', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'method', 'char');
-if strcmp(cfg.method, 'nan')
-  cfg.interptoi = 0;
-else
-  cfg.interptoi = 0.010;
-end
-cfg = ft_checkopt(cfg,'interptoi', 'double');
+cfg = ft_checkopt(cfg,'interptoi', 'doublescalar');
+
+if strcmp(cfg.method, 'nan'), cfg.interptoi = 0; end
 
 % autodetect the spike channels
 ntrial = length(data.trial);
@@ -100,13 +101,8 @@ cfg.spikechannel = ft_channelselection(cfg.spikechannel, data.label);
 spikesel         = match_str(data.label, cfg.spikechannel);
 nspikesel        = length(cfg.spikechannel);    % number of spike channels
 
-if nspikesel==0
-  error('no spike channel selected');
-end
-
-if nspikesel>1
-  error('only supported for a single spike channel');
-end
+if nspikesel==0, error('no spike channel selected'); end
+if nspikesel>1, error('only supported for a single spike channel'); end
 
 if ~spikechan(spikesel)
   error('the selected spike channel seems to contain continuous data');
