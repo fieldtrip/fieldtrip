@@ -171,6 +171,7 @@ rephase   = sparse(diag(conj(spike_fft)));
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % compute the spectra
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ft_progress('init', 'text',     'Please wait...');
 for i=1:ntrial
   spikesmp = find(data.trial{i}(spikesel,:));
   spikecnt = data.trial{i}(spikesel,spikesmp);
@@ -197,13 +198,10 @@ for i=1:ntrial
   
   spiketime{i}  = data.time{i}(spikesmp);
   spiketrial{i} = i*ones(size(spikesmp));
-  fprintf('processing trial %d of %d (%d spikes)\n', i, ntrial, sum(spikecnt));
   
   spectrum{i} = zeros(length(spikesmp), nchansel, fend-fbeg+1);
-  
-  ft_progress('init', cfg.feedback, 'spectrally decomposing data around spikes');
+  ft_progress(i/ntrial, 'spectrally decomposing data for trial %d of %d, %d spikes', i, ntrial, length(spikesmp));  
   for j=1:length(spikesmp)
-    ft_progress(i/ntrial, 'spectrally decomposing data around spike %d of %d\n', j, length(spikesmp));
     begsmp = spikesmp(j) + begpad;
     endsmp = spikesmp(j) + endpad;
     
@@ -233,11 +231,10 @@ for i=1:ntrial
     % store the result for this spike in this trial
     spectrum{i}(j,:,:) = segment_fft;
     
-  end % for each spike in this trial
-  ft_progress('close');
-  
+  end % for each spike in this trial  
 end % for each trial
-
+ft_progress('close');
+  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % collect the results
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
