@@ -725,7 +725,11 @@ switch eventformat
     warning('off', 'MATLAB:REGEXP:deprecated') % due to some small code xml2struct
     xmlfiles = dir( fullfile(filename, '*.xml'));
     disp('reading xml files to obtain event info... This might take a while if many events/triggers are present')
-    xml=struct([]);
+    if isempty(xmlfiles)
+        xml=struct([]);
+    else
+        xml=[];
+    end;
     for i = 1:numel(xmlfiles)
       if strcmpi(xmlfiles(i).name(1:6), 'Events')
         fieldname       = xmlfiles(i).name(1:end-4);
