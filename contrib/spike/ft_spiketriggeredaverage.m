@@ -54,7 +54,7 @@ cfg = ft_checkconfig(cfg, 'forbidden', {'inputfile', 'outputfile'});
 cfg.timwin       = ft_getopt(cfg, 'timwin',[-0.1 0.1]);
 cfg.spikechannel = ft_getopt(cfg,'spikechannel', []);
 cfg.channel      = ft_getopt(cfg,'channel', 'all');
-cfg.keeptrials   = ft_getopt(cfg,'keeptrials', 'yes');
+cfg.keeptrials   = ft_getopt(cfg,'keeptrials', 'no');
 cfg.feedback     = ft_getopt(cfg,'feedback', 'yes');
 
 % ensure that the options are valid
@@ -63,6 +63,8 @@ cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});
 cfg = ft_checkopt(cfg,'channel', {'cell', 'char', 'double'});
 cfg = ft_checkopt(cfg,'keeptrials', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'feedback', 'char', {'yes', 'no'});
+
+cfg = ft_checkconfig(cfg,'allowed', {'timwin', 'spikechannel', 'channel', 'keeptrials', 'feedback'});
 
 % autodetect the spike channels
 ntrial = length(data.trial);
@@ -105,7 +107,7 @@ singletrial = cell(1,ntrial);
 spiketime   = cell(1,ntrial);
 spiketrial  = cell(1,ntrial);
 cumsum = zeros(nchansel, numsmp);
-cumcnt = 0;
+cumcnt = zeros(nchansel, numsmp);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % compute the average
@@ -163,13 +165,15 @@ for i=1:ntrial
       continue
     else
       segment = data.trial{i}(chansel,begsmp:endsmp);
+      segmentMean = repmat(nanmean(segment,2),1,numsmp); % nChan x Numsmp
+      segment     = segment - segmentMean; % LFP has average of zero now (no DC)         
     end
     if strcmp(cfg.keeptrials, 'yes')
       singletrial{i}(j,:,:) = segment;
     end
-    
-    cumsum = cumsum + spikecnt(j)*segment;
-    cumcnt = cumcnt + spikecnt(j);
+    hasnum = ~isnan(segment);
+    cumsum(hasnum) = cumsum(hasnum) + spikecnt(j)*segment(hasnum);
+    cumcnt(hasnum) = cumcnt(hasnum) + spikecnt(j);
     
   end % for each spike in this trial
   ft_progress('close');
@@ -189,15 +193,7 @@ if (strcmp(cfg.keeptrials, 'yes'))
   % concatenate all the single spike snippets
   timelock.trial     = cat(1, singletrial{:});
   timelock.origtime  = cat(2,spiketime{:})';  % this deviates from the standard output, but is included for reference
-  timelock.origtrial = cat(2,spiketrial{:})'; % this deviates from the standard output, but is included for reference
-  
-  % select all trials that do not contain data in the first sample
-  sel = isnan(timelock.trial(:,1,1));
-  fprintf('removing %d trials from the output that do not contain data\n', sum(sel));
-  % remove the selected trials from the output
-  timelock.trial       = timelock.trial(~sel,:,:);
-  timelock.origtime    = timelock.origtime(~sel);
-  timelock.origtrial   = timelock.origtrial(~sel);
+  timelock.origtrial = cat(2,spiketrial{:})'; % this deviates from the standard output, but is included for referenc  
 else
   timelock.dimord = 'chan_time';
 end
