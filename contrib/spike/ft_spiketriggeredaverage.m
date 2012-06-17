@@ -13,6 +13,7 @@ function [timelock] = ft_spiketriggeredaverage(cfg, data)
 %   cfg.spikechannel = string, name of single spike channel to trigger on
 %   cfg.channel      = Nx1 cell-array with selection of channels (default = 'all'),
 %                      see FT_CHANNELSELECTION for details
+%   cfg.latency 
 %   cfg.keeptrials   = 'yes' or 'no', return individual trials or average (default = 'no')
 %   cfg.feedback     = 'no', 'text', 'textbar', 'gui' (default = 'no')
 
@@ -56,6 +57,8 @@ cfg.spikechannel = ft_getopt(cfg,'spikechannel', []);
 cfg.channel      = ft_getopt(cfg,'channel', 'all');
 cfg.keeptrials   = ft_getopt(cfg,'keeptrials', 'no');
 cfg.feedback     = ft_getopt(cfg,'feedback', 'yes');
+cfg.trials       = ft_getopt(cfg,'trials', 'all');
+cfg.latency      = ft_getopt(cfg,'latency','maxperiod');
 
 % ensure that the options are valid
 cfg = ft_checkopt(cfg,'timwin','doublevector');
@@ -63,8 +66,10 @@ cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});
 cfg = ft_checkopt(cfg,'channel', {'cell', 'char', 'double'});
 cfg = ft_checkopt(cfg,'keeptrials', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'feedback', 'char', {'yes', 'no'});
+cfg = ft_checkopt(cfg,'latency', {'char', 'ascendingdoublebivector'});
+cfg = ft_checkopt(cfg,'trials', {'char', 'doublevector', 'logical'}); 
 
-cfg = ft_checkconfig(cfg,'allowed', {'timwin', 'spikechannel', 'channel', 'keeptrials', 'feedback'});
+cfg = ft_checkconfig(cfg,'allowed', {'timwin', 'spikechannel', 'channel', 'keeptrials', 'feedback', 'latency', 'trials'});
 
 % autodetect the spike channels
 ntrial = length(data.trial);
@@ -98,6 +103,41 @@ end
 if ~spikechan(spikesel)
   error('the selected spike channel seems to contain continuous data');
 end
+
+% get the number of trials or change DATA according to cfg.trials
+if  strcmp(cfg.trials,'all')
+  cfg.trials = 1:length(data.trial);
+elseif islogical(cfg.trials)
+  cfg.trials = find(cfg.trials);
+end
+cfg.trials = sort(cfg.trials(:));
+if max(cfg.trials)>length(data.trial),error('maximum trial number in cfg.trials should not exceed length of data.trial'), end
+if isempty(cfg.trials), error('no trials were selected in cfg.trials'); end
+
+% determine the duration of each trial
+begTrialLatency = cellfun(@min,data.time);
+endTrialLatency = cellfun(@max,data.time);
+
+% select the latencies
+if strcmp(cfg.latency,'minperiod')
+  cfg.latency = [max(begTrialLatency) min(endTrialLatency)];
+elseif strcmp(cfg.latency,'maxperiod')
+  cfg.latency = [min(begTrialLatency) max(endTrialLatency)];
+elseif strcmp(cfg.latency,'prestim')
+  cfg.latency = [min(begTrialLatency) 0];
+elseif strcmp(cfg.latency,'poststim')
+  cfg.latency = [0 max(endTrialLatency)];
+end
+if (cfg.latency(1) < min(begTrialLatency)), cfg.latency(1) = min(begTrialLatency);
+  warning('correcting begin latency of averaging window');
+end
+if (cfg.latency(2) > max(endTrialLatency)), cfg.latency(2) = max(endTrialLatency);
+  warning('correcting end latency of averaging window');
+end
+cfgSelect = [];
+cfgSelect.latency = cfg.latency;
+if length(cfg.trials)~=length(data.trial), cfgSelect.trials  = cfg.trials; end
+data = ft_selectdata(cfgSelect,data);
 
 begpad = round(cfg.timwin(1)*data.fsample);
 endpad = round(cfg.timwin(2)*data.fsample);
