@@ -18,6 +18,10 @@ function [cfg] = ft_spike_plot_raster(cfg, spike, timelock)
 %   cfg.spikechannel     =  see FT_CHANNELSELECTION for details
 %   cfg.latency          =  [begin end] in seconds, 'maxperiod' (default), 'minperiod',
 %                           'prestim' (all t<=0), or 'poststim' (all t>=0).
+%                           If a third input is present, we will use the
+%                           timelock.cfg.latency field to ensure that the
+%                           raster and the timelock data have the same
+%                           latency.
 %   cfg.linewidth        =  number indicating the width of the lines (default = 1);
 %   cfg.cmapneurons      =  'auto' (default), or nUnits-by-3 matrix.
 %                           Controls coloring of spikes and psth/density
@@ -85,6 +89,9 @@ cfg = ft_checkconfig(cfg,'allowed', ...
 if nargin==3
   doTopData = true;
   timelock  = ft_checkdata(timelock,'datatype', 'timelock', 'feedback', 'yes');
+  if isfield(timelock,'cfg') && isfield(timelock.cfg, 'latency')
+    cfg.latency = timelock.cfg.latency; 
+  end
 else
   doTopData = false;
 end
