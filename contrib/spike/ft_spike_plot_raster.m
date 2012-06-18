@@ -247,6 +247,7 @@ if doTopData
     for iUnit = 1:nUnits
       set(avgHdl(iUnit),'Color',cfg.cmapneurons(iUnit,:));
     end
+    mnmax = [nanmin(dataY(:))-eps nanmax(dataY(:))+eps];
     if ~strcmp(cfg.errorbars,'no')
       if ~isfield(timelock,'var')  || ~isfield(timelock,'dof'), error('timelock should contain field .var and .dof for errorbars'); end
       df = timelock.dof(binSel);
@@ -272,7 +273,22 @@ if doTopData
         set(hd,'Color', cfg.cmapneurons(iUnit,:));
         hold on
       end
+      mnmax = [nanmin(dataY(:) - err(:)) nanmax(dataY(:) + err(:))];
     end
+    ylim = mnmax;
+    d    = ylim(2)-ylim(1);
+    yl = ylim(1)-0.05*d;
+    if ylim(1)>0
+      if yl<0, yl = 0; end
+    end
+    ylim(1) = yl;
+
+    yl = ylim(2)+0.05*d;
+    if ylim(2)<0
+      if yl>0, yl = 0; end
+    end
+    ylim(2) = yl;
+    set(gca,'YLim', ylim)
   end    
   cfg.hdl.psth = avgHdl;
   % modify the axes
