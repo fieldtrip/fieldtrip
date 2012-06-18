@@ -124,7 +124,7 @@ for k = 1:nchan
       iy  = nchan - m + 1;
       % use the convention of the row-channel causing the column-channel
       tmp = reshape(dat(m,k,:), [nfreq 1]);
-      ft_plot_vector(tmp, 'width', 1, 'height', 1, 'hpos', ix.*1.2, 'vpos', iy.*1.2, 'hlim', data.freq([1 end]), 'vlim', cfg.zlim, 'box', 'yes', 'color', cfg.color(1));
+      ft_plot_vector(tmp, 'width', 1, 'height', 1, 'hpos', ix.*1.2, 'vpos', iy.*1.2, 'vlim', cfg.zlim, 'box', 'yes', 'color', cfg.color(1));
       if k==1,
         % first column, plot scale on y axis
         fontsize = 10;
