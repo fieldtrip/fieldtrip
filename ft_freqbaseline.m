@@ -8,7 +8,7 @@ function [freq] = ft_freqbaseline(cfg, freq)
 % should contain
 %   cfg.baseline     = [begin end] (default = 'no')
 %   cfg.baselinetype = 'absolute', 'relchange' or 'relative' (default = 'absolute')
-%   cfg.param        = field for which to apply baseline normalization, or
+%   cfg.parameter    = field for which to apply baseline normalization, or
 %                      cell array of strings to specify multiple fields to normalize
 %                      (default = 'powspctrm')
 %
@@ -52,21 +52,24 @@ ft_preamble loadvar freq
 % check if the input data is valid for this function
 freq = ft_checkdata(freq, 'datatype', 'freq', 'feedback', 'yes');
 
+% update configuration fieldnames
+cfg              = ft_checkconfig(cfg, 'renamed', {'param', 'parameter'});
+
 % set the defaults
 cfg.baseline     =  ft_getopt(cfg, 'baseline', 'no');
 cfg.baselinetype =  ft_getopt(cfg, 'baselinetype', 'absolute');
-cfg.param        =  ft_getopt(cfg, 'param', 'powspctrm');
+cfg.parameter    =  ft_getopt(cfg, 'parameter', 'powspctrm');
 cfg.inputfile    =  ft_getopt(cfg, 'inputfile', []);
 cfg.outputfile   =  ft_getopt(cfg, 'outputfile', []);
 
 % check validity of input options
 cfg =               ft_checkopt(cfg, 'baseline', {'char', 'doublevector'});
 cfg =               ft_checkopt(cfg, 'baselinetype', 'char', {'absolute', 'relative', 'relchange'});
-cfg =               ft_checkopt(cfg, 'param', {'char', 'charcell'});
+cfg =               ft_checkopt(cfg, 'parameter', {'char', 'charcell'});
 
-% make sure cfg.param is a cell array of strings
-if (~isa(cfg.param, 'cell'))
-  cfg.param = {cfg.param};
+% make sure cfg.parameter is a cell array of strings
+if (~isa(cfg.parameter, 'cell'))
+  cfg.parameter = {cfg.parameter};
 end
 
 % is input consistent?
@@ -84,8 +87,8 @@ elseif ischar(cfg.baseline) && strcmp(cfg.baseline, 'no')
 end
 
 % check if the field of interest is present in the data
-if (~all(isfield(freq, cfg.param)))
-  error('cfg.param should be a string or cell array of strings referring to (a) field(s) in the freq input structure')
+if (~all(isfield(freq, cfg.parameter)))
+  error('cfg.parameter should be a string or cell array of strings referring to (a) field(s) in the freq input structure')
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -110,8 +113,8 @@ if isfield(freq, 'trialinfo')
 end
 
 % loop over all fields that should be normalized
-for k = 1:numel(cfg.param)
-  par = cfg.param{k};
+for k = 1:numel(cfg.parameter)
+  par = cfg.parameter{k};
   
   if strcmp(freq.dimord, 'chan_freq_time')
     
