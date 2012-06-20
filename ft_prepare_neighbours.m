@@ -187,7 +187,11 @@ end
 % only select those channels that are in the data
 neighb_chans = {neighbours(:).label};
 if isfield(cfg, 'channel') && ~isempty(cfg.channel)
-  desired = cfg.channel;
+  if hasdata
+    desired = ft_channelselection(cfg.channel, data.label);
+  else
+    desired = ft_channelselection(cfg.channel, neighb_chans);
+  end
 elseif (hasdata)
   desired = data.label;
 else
