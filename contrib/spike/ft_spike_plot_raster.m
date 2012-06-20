@@ -267,7 +267,7 @@ if doTopData
         upb = dataY(iUnit,:) + err(iUnit,:);
         lowb = dataY(iUnit,:) - err(iUnit,:);
         sl   = ~isnan(upb);
-        [X,Y] = polygonconf(dataX(sl),upb(sl)+0.0001,lowb(sl)-0.0001);
+        [X,Y] = polygon(dataX(sl),upb(sl)+0.0001,lowb(sl)-0.0001);
         hold on
         hd = plot(X,Y,'--');
         set(hd,'Color', cfg.cmapneurons(iUnit,:));
