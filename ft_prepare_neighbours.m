@@ -197,8 +197,7 @@ end
 % in any case remove SCALE and COMNT
 desired = ft_channelselection({'all', '-SCALE', '-COMNT'}, desired);
 
-chans = ft_channelselection(desired, neighb_chans);
-neighb_idx = ismember(neighb_chans, chans);
+neighb_idx = ismember(neighb_chans, desired);
 neighbours = neighbours(neighb_idx);
   
 k = 0;
@@ -206,7 +205,7 @@ for i=1:length(neighbours)
   if isempty(neighbours(i).neighblabel)
     warning('FIELDTRIP:NoNeighboursFound', 'no neighbours found for %s\n', neighbours(i).label);
   else % only selected desired channels    
-    neighbours(i).neighblabel = ft_channelselection(desired, neighbours(i).neighblabel);
+    neighbours(i).neighblabel = neighbours(i).neighblabel(ismember(neighbours(i).neighblabel, desired));
   end
   k = k + length(neighbours(i).neighblabel);
 end
