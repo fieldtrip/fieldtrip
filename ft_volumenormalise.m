@@ -256,6 +256,7 @@ normalise.transform = V(1).mat;
 normalise.dim       = size(normalise.anatomy);
 normalise.params    = params;  % this holds the normalization parameters
 normalise.initial   = initial; % this holds the initial co-registration to approximately align with the template
+normalise.coordsys  = 'spm';
 
 if isfield(normalise, 'inside')
   % convert back to a logical volume
