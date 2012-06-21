@@ -4,8 +4,7 @@
 # Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
 
 # Use MinGW for compilation on Windows!
-CC = gcc
-CXX = g++
+$(warning Compilation appears to be broken... see bug #1532 on bugzilla.)
 
 PLATFORM = $(shell gcc -dumpmachine)
 

@@ -52,7 +52,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     plhs[0] = mxCreateDoubleScalar(NAN);
     return;
     }
-  else if (!mxIsNumeric(prhs[0]))
+  else if (mxGetClassID(prhs[0]) == mxLOGICAL_CLASS)
+  {
+   mexWarnMsgTxt("Casting logical array to int.");
+  }
+  if (!mxIsNumeric(prhs[0]))
     mexErrMsgTxt ("Input argument 1 should be numeric");
 
   /*figure out dimension info and number of elements*/
