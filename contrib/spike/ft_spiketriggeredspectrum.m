@@ -9,8 +9,8 @@ function [sts] = ft_spiketriggeredspectrum(cfg, data, spike)
 %   [sts] = ft_spiketriggeredspectrum(cfg, data, spike) 
 %
 % Configurations:
-%    cfg.method = 'fft' or 'convol'. If 'convol', FT_SPIKETRIGGEREDSPECTRUM_CONVOL is used
-%                 If 'fft', FT_SPIKETRIGGEREDSPECTRUM_FFT is used (the old
+%    cfg.method = 'mtmfft' or 'mtmconvol'. If 'mtmconvol', FT_SPIKETRIGGEREDSPECTRUM_CONVOL is used
+%                 If 'mtmfft', FT_SPIKETRIGGEREDSPECTRUM_FFT is used (the old
 %                 FT_SPIKETRIGGEREDSPECTRUM).
 %
 %%%%%%%%%%%%%%%
@@ -81,17 +81,20 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 
+cfg = ft_checkconfig(cfg, 'renamedval',  {'method', 'fft',    'mtmfft'});
+cfg = ft_checkconfig(cfg, 'renamedval',  {'method', 'convol', 'mtmconvol'});
+
 %get the options: default = 'fft' 
-cfg.method       = ft_getopt(cfg, 'method','fft');
+cfg.method       = ft_getopt(cfg, 'method','mtmfft');
 
 % ensure that the options are valid
-cfg = ft_checkopt(cfg,'method','char', {'fft', 'convol'});
+cfg = ft_checkopt(cfg,'method','char', {'mtmfft', 'mtmconvol'});
 
-if strcmp(cfg.method,'fft')
+if strcmp(cfg.method,'mtmfft')
   % should allow for spike input as well in the future
   cfg = rmfield(cfg,'method');
   sts = ft_spiketriggeredspectrum_fft(cfg,data);
-else
+elseif strcmp(cfg.method,'mtmconvol')
   cfg = rmfield(cfg,'method');    
   if nargin==3
     sts = ft_spiketriggeredspectrum_convol(cfg,data,spike);
