@@ -384,6 +384,8 @@ ft_postamble previous spike
 ft_postamble history stat
 
 function [C] = spike_crossx_matlab(tX,tY,binsize,nbins)
+tX = sort(tX(:));
+tY = sort(tY(:));
 
 minLag = - binsize * (nbins-1) / 2;
 j = 0:nbins-1;
@@ -405,37 +407,38 @@ if (nX*nY)<2*10^7  % allow matrix to grow to about 150 MB, should always work
   D = log(exp(-tX(:))*exp(tY(:)'));
   D = D(:);
   D(abs(D)>abs(minLag)) = [];
-  swap = 0;
+  [C] = histc(D,B);
+  C(end) = [];  
 else  
-  % best to always start the for loop with the smallest of the 2
-  swap = 0;
-  if nX>nY
-      tmp  = tY;
-      tY   = tX;
-      tX   = tmp;
-      swap = 1;
-      nX = length(tX); 
+  % break it down in pieces such that nX*nY<2*10*7
+  k   = 2;
+  nXs = round(nX/k);
+  while (nXs*nY)>=(2*10^7)
+    k = k+1;
+    nXs = round(nX/k);
   end
-
-  % compute all the distances in a loop
+  
+  % get the indices
+  steps = round(nX/k);
+  begs = [1:steps:steps*k];
+  ends = begs+(steps-1);
+  rm   = begs>nX;
+  begs(rm) = [];
+  ends(rm) = [];
+  ends(end) = nX;
+  nSteps    = length(begs);
+  
   D = [];
-  for iX = 0:(nX-1)
-    t1           = tX(iX+1);
-    lBound       = t1 + minLag; 
-    uBound       = t1 - minLag;
-    indx         = tY>=lBound & tY<=uBound;
-    if ~isempty(find(indx))
-      d            = tY(indx) - t1; 
-      D            = [D;d];
-    end
+  C = zeros(1,length(B));
+  for iStep = 1:nSteps
+    d = log(exp(-tX(begs(iStep):ends(iStep)))*exp(tY(:)'));
+    d = d(:);
+    d(abs(d)>abs(minLag)) = [];
+    C = C + histc(d,B)';    
   end
+  C(end) = [];
 end
 
-[C] = histc(D,B);
-C(end) = [];
 if isempty(C)
     C = zeros(1,length(B)-1);
-end
-if swap
-    C = C(end:-1:1);
 end
