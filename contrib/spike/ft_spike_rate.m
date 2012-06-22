@@ -92,8 +92,8 @@ cfg = latencyselection(cfg,begTrialLatency,endTrialLatency);
 overlaps      = endTrialLatency>(cfg.latency(1)) & begTrialLatency<(cfg.latency(2));
 hasWindow     = true(nTrials,1);
 if strcmp(cfg.vartriallen,'no') % only select trials that fully cover our latency window
-  startsLater    = begTrialLatency>cfg.latency(1);
-  endsEarlier    = endTrialLatency<cfg.latency(2);
+  startsLater    = begTrialLatency > (cfg.latency(1) + 0.0001);
+  endsEarlier    = endTrialLatency < (cfg.latency(2) - 0.0001);
   hasWindow      = ~(startsLater | endsEarlier); % it should not start later or end earlier
   trialDur       = ones(nTrials,1)*(cfg.latency(2)-cfg.latency(1));
 elseif strcmp(cfg.vartriallen,'yes')

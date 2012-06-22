@@ -173,8 +173,8 @@ fullDur       = trialDur>=(cfg.maxlag); % only trials which are larger than maxi
 overlaps      = endTrialLatency>(cfg.latency(1)+cfg.maxlag) & begTrialLatency<(cfg.latency(2)-cfg.maxlag);
 hasWindow     = ones(nTrials,1);
 if strcmp(cfg.vartriallen,'no') % only select trials that fully cover our latency window
-  startsLater    = single(begTrialLatency>=single(cfg.latency(1)));
-  endsEarlier    = single(endTrialLatency<=single(cfg.latency(2)));
+  startsLater    = single(begTrialLatency) > (single(cfg.latency(1)) + 0.5*cfg.binsize);
+  endsEarlier    = single(endTrialLatency) < (single(cfg.latency(2)) - 0.5*cfg.binsize);
   hasWindow      = ~(startsLater | endsEarlier); % check this in all other funcs
 end
 trialSel           = fullDur(:) & overlaps(:) & hasWindow(:);

@@ -20,10 +20,11 @@ function [psth] = ft_spike_psth(cfg,spike)
 %                          derived over all neurons; thus, this procedure
 %                          works best if the input contains only one neuron
 %                          at a time.
-%   cfg.outputunit       = 'rate' (default) or 'spikecount'. If 'rate', we
+%   cfg.outputunit       = 'rate' (default) or 'spikecount' or 'proportion'. If 'rate', we
 %                          convert the output per trial to firing rates
 %                          (spikes/sec). If 'spikecount', we count the
-%                          number spikes per trial.
+%                          number spikes per trial. If 'proportion', we
+%                          normalize the area under the PSTH to 1.
 %   cfg.spikechannel     = See FT_CHANNELSELECTION for details. 
 %   cfg.trials           = vector of indices (e.g., 1:2:10)
 %                          logical selection of trials (e.g., [1010101010])
@@ -139,8 +140,8 @@ end
 fullDur       = trialDur>=cfg.binsize; % trials which have full duration
 overlaps      = endTrialLatency>=(cfg.latency(1)+cfg.binsize) & begTrialLatency<=(cfg.latency(2)-cfg.binsize);
 if strcmp(cfg.vartriallen,'no') % only select trials that fully cover our latency window
-  startsLater    = single(begTrialLatency) > (single(cfg.latency(1))-0.000001); % last factor just for rounding errors
-  endsEarlier    = single(endTrialLatency) < (single(cfg.latency(2))+0.000001);
+  startsLater    = single(begTrialLatency) > (single(cfg.latency(1)) + 0.0001); % last factor just for rounding errors
+  endsEarlier    = single(endTrialLatency) < (single(cfg.latency(2)) - 0.0001);
   hasWindow      = ~(startsLater | endsEarlier); % it should not start later or end earlier
 else
   hasWindow     = ones(1,length(cfg.trials));
@@ -189,12 +190,16 @@ for iTrial = 1:nTrials
     if isempty(trialPsth), trialPsth = zeros(1,length(bins)); end
     
     % convert to firing rates if requested, with spikecount do nothing
-    if strcmp(cfg.outputunit,'rate'), trialPsth = trialPsth/cfg.binsize; end
+    if strcmp(cfg.outputunit,'rate'), 
+      trialPsth = trialPsth/cfg.binsize; 
+    elseif strcmp(cfg.outputunit,'proportion'), 
+      trialPsth = trialPsth./nansum(trialPsth); 
+    end
     
     % compute the sum and the sum of squares for the var and the mean on the fly
     s(iUnit,binSel)  = s(iUnit,binSel)   + trialPsth(binSel); % last bin is single value
     ss(iUnit,binSel) = ss(iUnit,binSel)  + trialPsth(binSel).^2;
-    
+        
     if strcmp(cfg.keeptrials,'yes'),
       singleTrials(iTrial,iUnit,binSel) = trialPsth(binSel);
     end
