@@ -230,7 +230,7 @@ for iTrial = 1:nTrials
             if doMex==1
               try
                 [x]   = spike_crossx_matlab(ts1(:),ts2(:),cfg.binsize,nLags*2+1);  % removed the mex file for now, until issue on windows is resolved
-                x(end) = [];                
+          %      x(end) = [];              NEEDS TO GO BACK WITH MEX FILE  
               catch
                 warning('defaulting to algorithm in Matlab, this is slower');
                 doMex = 0;
@@ -243,7 +243,7 @@ for iTrial = 1:nTrials
             if doMex==1
               try
                 [x]   = spike_crossx_matlab(ts2(:),ts1(:),cfg.binsize,nLags*2+1); % removed the mex file for now, until issue on windows is resolved
-                x(end) = [];
+                %x(end) = [];
               catch
                 warning('defaulting to algorithm in Matlab, this is slower');
                 doMex = 0;
@@ -299,7 +299,7 @@ for iTrial = 1:nTrials
                 if doMex==1
                   try
                     [x]   = spike_crossx_matlab(A(:),B(:),cfg.binsize,nLags*2+1);
-                    x(end) = [];                
+             %       x(end) = [];                
                   catch
                     warning('defaulting to algorithm in Matlab, this is slower');
                     doMex = 0;
@@ -312,7 +312,7 @@ for iTrial = 1:nTrials
                 if doMex==1
                   try
                     [x]   = spike_crossx_matlab(B(:),A(:),cfg.binsize,nLags*2+1);
-                    x(end) = [];                
+            %        x(end) = [];                
                   catch
                     warning('defaulting to algorithm in Matlab, this is slower');
                     doMex = 0;
@@ -388,13 +388,12 @@ function [C] = spike_crossx_matlab(tX,tY,binsize,nbins)
 minLag = - binsize * (nbins-1) / 2;
 j = 0:nbins-1;
 B = minLag + j * binsize;
-nX = length(tX); nY = length(tY);
-tX(tX<(tY(1)+minLag))   = [];
+tX(tX<(tY(1)+minLag) | tX>(tY(end)-minLag))   = [];
 if isempty(tX), 
   C = zeros(1,length(B)-1);
   return;
 end
-tY(tY>(tX(end)-minLag)) = [];
+tY(tY>(tX(end)-minLag) | tY<(tX(1)+minLag)) = [];
 if isempty(tY), 
   C = zeros(1,length(B)-1);
   return;
