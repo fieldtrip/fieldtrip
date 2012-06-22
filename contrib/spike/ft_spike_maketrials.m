@@ -1,4 +1,4 @@
-function [spike] = ft_spike_maketrials(cfg,spike, data)
+function [spike] = ft_spike_maketrials(cfg,spike)
 
 % FT_SPIKE_MAKETRIALS converts raw timestamps in a SPIKE structure to spike
 % times that are relative to an event trigger in an SPIKE structure. This
@@ -11,26 +11,31 @@ function [spike] = ft_spike_maketrials(cfg,spike, data)
 %
 % Use as
 %   [spike] = ft_spike_maketrials(cfg,spike)
-% or 
-%   [spike] = ft_spike_maketrials(cfg,spike, data)
 %
 % Inputs:
-%   - spike: The raw spike datatype, obtained from FT_READ_SPIKE
-% Optional input:
-%   - data: LFP data. 
-%     If third input is specified, we create trials based on the trial information present in the LFP. 
-%     In this case, data.hdr.FirstTimeStamp and data.hdr.TimeStampPerSample
-%     and data.sampleinfo or data.cfg.trl must be present.
+%     spike: The raw spike datatype, obtained from FT_READ_SPIKE
 %
-% Configurations (these do not have to be present if third data input is
-% supplied, but are obligatory otherwise.
+% Configurations:
 %
-%   cfg.trl  = is an nTrials-by-3 matrix
+%   cfg.trl  = is an nTrials-by-M matrix, with at least 3 columns:
 %     Every row contains start (col 1), end (col 2) and offset of the event
 %     trigger in the trial in timestamp units. For example, an offset of -1000 
 %     means that the trigger (t = 0 sec) occurred 1000 timestamps after the
 %     trial start.
-%                               
+%     If more columns are added than 3, these are used to construct the
+%     spike.trialinfo field having information about the trial.
+%
+%   cfg.trlunit = 'timestamps' (default) or 'samples'. 
+%     If 'samples', cfg.trl should 
+%     be specified in samples, and cfg.hdr = data.hdr should be specified
+%     If 'timestamps', cfg.timestampspersecond should be
+%     specified.
+%
+%   cfg.hdr     = struct, should be specified if cfg.trlunit = 'samples'.
+%     This should be specified as cfg.hdr = data.hdr where data.hdr
+%     contains the subfields data.hdr.Fs (sampling frequency of the LFP),
+%     data.hdr.FirstTimeStamp, and data.hdr.TimeStampPerSecond.
+%
 %   cfg.timestampspersecond = number of timestaps per second (for
 %     Neuralynx, 1000000 for example). This can be computed for example from
 %     the LFP hdr (cfg.timestampspersecond = data.hdr.Fs*data.hdr.TimeStampPerSecond)
@@ -43,7 +48,7 @@ function [spike] = ft_spike_maketrials(cfg,spike, data)
 %   spike.trialtime             = nTrials-by-2 matrix specifying the start and end of
 %                                 every trial in seconds.
 %   spike.trl                   = contains the original matrix of cfg.trl
-%   spike.sampleinfo            = beginning and end of trials in timestamps
+%   spike.trialinfo             = contains trial information
 
 % Copyright (C) 2010-2012, Martin Vinck
 %
@@ -60,33 +65,42 @@ ft_preamble trackconfig
 % check if input data is indeed spikeraw format
 spike = ft_checkdata(spike,'datatype', 'spike', 'feedback', 'yes');
 nUnits  = length(spike.label);
+
+% process the trlunit field
+cfg.trlunit = ft_getopt(cfg,'trlunit','timestamps');
+cfg = ft_checkopt(cfg,'trlunit', 'char', {'timestamps', 'samples'});
+
+% process the trl field, which is required
+cfg = ft_checkconfig(cfg, 'required', {'trl'});
+cfg = ft_checkopt(cfg,'trl', {'numericvector', 'numericmatrix'});
+if size(cfg.trl,2)<3,
+  error('cfg.trl should contain at least 3 columns, 1st column start of trial, 2nd column end, 3rd offset, in timestamp units')
+end
+cfg.trl = double(cfg.trl);
+events  = cfg.trl(:,1:2)'; %2-by-nTrials now
+if ~issorted(events(:)), warning('your trials are overlapping, trials will not be statistically independent'); end
+if ~issorted(events,'rows'), error('the trials are not in sorted order'); end
+
+% check if the inputs are congruent: hdr should not be there if unit is timestamps
+if strcmp(cfg.trlunit,'timestamps')
+  cfg = ft_checkconfig(cfg,'forbidden', 'hdr');
+  cfg = ft_checkconfig(cfg, 'required', {'timestampspersecond'});  
+else
+  cfg = ft_checkconfig(cfg, 'required', {'hdr'});      
+  if ~isfield(cfg.hdr, 'FirstTimeStamp'), error('cfg.hdr.FirstTimeStamp must be specified'); end
+  if ~isfield(cfg.hdr, 'TimeStampPerSample'), error('cfg.hdr.TimeStampPerSample must be specified'); end
+  if ~isfield(cfg.hdr, 'Fs'), error('cfg.hdr.Fs, the sampling frequency of the LFP must be specified'); end
+end
   
-if nargin==2
-  % ensure that the required options are present
-  cfg = ft_checkconfig(cfg, 'required', {'timestampspersecond', 'trl'});
-
-  % ensure that the options are valid
-  cfg = ft_checkopt(cfg,'timestampspersecond',{'doublescalar'});
-  cfg = ft_checkopt(cfg,'trl', {'numericvector', 'numericmatrix'});
-
-  % make sure that the cfg.trl indeed has three columns
-  if size(cfg.trl,2)~=3,
-    error('cfg.trl should contain 3 columns, 1st column start of trial, 2nd column end, 3rd offset, in timestamp units')
-  end
-
+if strcmp(cfg.trlunit,'timestamps')
+  
   % make a loop through the spike units and make the necessary conversions
   nTrials = size(cfg.trl,1);
-  cfg.trl = double(cfg.trl);
   for iUnit = 1:nUnits
     ts = double(spike.timestamp{iUnit}(:));
 
     % take care of the waveform and make [1 x Samples x Spikes] per default
     hasWave =  isfield(spike, 'waveform') && ~isempty(spike.waveform) && ~isempty(spike.waveform{iUnit});
-
-    % check if the events are overlapping or not
-    events = cfg.trl(:,1:2)'; %2-by-nTrials now
-    if ~issorted(events(:)), warning('your trials are overlapping, trials will not be statistically independent'); end
-    if ~issorted(events,'rows'), error('the trials are not in sorted order'); end
       
     % make the timestamps relative, use different algorithm when overlapping (fast & slow)
     trialNum = [];
@@ -120,34 +134,14 @@ if nargin==2
     ts = spike.timestamp{iUnit}(sel);
     spike.timestamp{iUnit} = ts(:)';
   end
-  spike.sampleinfo         = cfg.trl(:,1:2);
 
-  % do the general cleanup and bookkeeping at the end of the function
-  ft_postamble trackconfig
-  ft_postamble callinfo
-  ft_postamble previous spike
-  ft_postamble history spike
-else
+elseif strcmp(cfg.trlunit,'samples')
    
-  data = ft_checkdata(data,'type', 'raw', 'feedback', 'yes');
-  try
-    trl = double(ft_findcfg(data.cfg, 'trl'));
-  catch
-    try  
-      trl = double(data.sampleinfo);
-    end
-  end
-  if isempty(trl), error('could not find the trial information in the continuous data'); end
-  nTrials = size(trl,1);
-  
-  try
-    FirstTimeStamp     = double(data.hdr.FirstTimeStamp);
-    TimeStampPerSample = double(data.hdr.TimeStampPerSample);
-  catch
-    error('could not find the timestamp information in the continuous data');
-  end
-  spike.sampleinfo = double(trl(:,1:2)-1)*TimeStampPerSample + FirstTimeStamp;
-  
+  nTrials = size(cfg.trl,1);    
+  FirstTimeStamp     = double(cfg.hdr.FirstTimeStamp);
+  TimeStampPerSample = double(cfg.hdr.TimeStampPerSample);
+  Fs                 = double(cfg.hdr.Fs);
+      
   [spike.time,spike.trial] = deal(cell(1,nUnits));
   spike.trialtime = zeros(nTrials,2);
   for iUnit = 1:nUnits
@@ -157,33 +151,39 @@ else
     sample = (ts-FirstTimeStamp)/TimeStampPerSample + 1; % no rounding (compare ft_appendspike)
     waveSel = [];
     for iTrial = 1:nTrials
-      begsample = trl(iTrial,1);
-      endsample = trl(iTrial,2);
+      begsample = cfg.trl(iTrial,1);
+      endsample = cfg.trl(iTrial,2);
       sel       = find((sample>=begsample) & (sample<=endsample));
       dSample   = sample(sel)-begsample;
-      tTrial    = dSample/data.fsample + data.time{iTrial}(1);
+      offset    = cfg.trl(iTrial,3)/Fs;               
+      tTrial    = dSample/Fs + offset;
       trialNum  = ones(1,length(tTrial))*iTrial;
-                   
+      trialDur  = (cfg.trl(iTrial,2)-cfg.trl(iTrial,1))/Fs;
+      
       spike.time{iUnit}         = [spike.time{iUnit} tTrial(:)'];
       spike.trial{iUnit}        = [spike.trial{iUnit} trialNum];
       if iUnit==1, 
-        spike.trialtime(iTrial,:) = [data.time{iTrial}(1) data.time{iTrial}(end)]; 
+        spike.trialtime(iTrial,:) = [offset offset+trialDur]; 
       end
       finalsel = sel;
       waveSel  = [waveSel; finalsel(:)];
-      % construct the sample info based on timestamps
-    end 
-    % gather the results
+    end     
     
+    % select the other fields
     try, spike.waveform{iUnit} = spike.waveform{iUnit}(:,:,waveSel); end
     spike.timestamp{iUnit} = spike.timestamp{iUnit}(waveSel);
     try, spike.unit{iUnit}      = spike.unit{iUnit}(waveSel); end
     try, spike.fourierspctrm{iUnit} = spike.fourierspctrm{iUnit}(waveSel,:,:); end
   end 
-  ft_postamble trackconfig
-  ft_postamble callinfo
-  ft_postamble previous spike
-  ft_postamble history spike
 end
 
+if size(cfg.trl,2) > 3
+    spike.trialinfo        = cfg.trl(:,4:end);
+end
+
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+ft_postamble previous spike
+ft_postamble history spike
 
