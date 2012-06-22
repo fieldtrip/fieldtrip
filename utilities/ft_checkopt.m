@@ -22,8 +22,9 @@ function opt = ft_checkopt(opt, key, allowedtype, allowedval)
 % Furthermore, the following custom types can be specified
 %   'doublescalar'
 %   'doublevector'
-%   'doublebivector'
-%   'ascendingdoublebivector'
+%   'doublebivector'             i.e. [1 1] or [1 2]
+%   'ascendingdoublevector'      i.e. [1 2 3 4 5], but not [1 3 2 4 5]
+%   'ascendingdoublebivector'    i.e. [1 2], but not [2 1]
 %   'doublematrix'
 %   'numericscalar'
 %   'numericvector'
