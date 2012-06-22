@@ -229,7 +229,7 @@ for iTrial = 1:nTrials
           if indx(1)<=indx(2)
             if doMex==1
               try
-                [x]   = spike_crossx(ts1(:),ts2(:),cfg.binsize,nLags*2+1);
+                [x]   = spike_crossx_matlab(ts1(:),ts2(:),cfg.binsize,nLags*2+1);  % removed the mex file for now, until issue on windows is resolved
                 x(end) = [];                
               catch
                 warning('defaulting to algorithm in Matlab, this is slower');
@@ -242,7 +242,7 @@ for iTrial = 1:nTrials
           else
             if doMex==1
               try
-                [x]   = spike_crossx(ts2(:),ts1(:),cfg.binsize,nLags*2+1);
+                [x]   = spike_crossx_matlab(ts2(:),ts1(:),cfg.binsize,nLags*2+1); % removed the mex file for now, until issue on windows is resolved
                 x(end) = [];
               catch
                 warning('defaulting to algorithm in Matlab, this is slower');
@@ -298,7 +298,7 @@ for iTrial = 1:nTrials
               if indx(1)<=indx(2)
                 if doMex==1
                   try
-                    [x]   = spike_crossx(A(:),B(:),cfg.binsize,nLags*2+1);
+                    [x]   = spike_crossx_matlab(A(:),B(:),cfg.binsize,nLags*2+1);
                     x(end) = [];                
                   catch
                     warning('defaulting to algorithm in Matlab, this is slower');
@@ -311,7 +311,7 @@ for iTrial = 1:nTrials
               else
                 if doMex==1
                   try
-                    [x]   = spike_crossx(B(:),A(:),cfg.binsize,nLags*2+1);
+                    [x]   = spike_crossx_matlab(B(:),A(:),cfg.binsize,nLags*2+1);
                     x(end) = [];                
                   catch
                     warning('defaulting to algorithm in Matlab, this is slower');
@@ -390,7 +390,16 @@ j = 0:nbins-1;
 B = minLag + j * binsize;
 nX = length(tX); nY = length(tY);
 tX(tX<(tY(1)+minLag))   = [];
+if isempty(tX), 
+  C = zeros(1,length(B)-1);
+  return;
+end
 tY(tY>(tX(end)-minLag)) = [];
+if isempty(tY), 
+  C = zeros(1,length(B)-1);
+  return;
+end
+nX = length(tX); nY = length(tY);
 
 % compute all distances at once using a multiplication trick
 if (nX*nY)<2*10^7  % allow matrix to grow to about 150 MB, should always work
