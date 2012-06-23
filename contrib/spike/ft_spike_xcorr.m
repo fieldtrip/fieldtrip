@@ -227,31 +227,9 @@ for iTrial = 1:nTrials
         % compute the xcorr if both are non-empty
         if ~isempty(ts1) && ~isempty(ts2)
           if indx(1)<=indx(2)
-            if doMex==1
-              try
-                [x]   = spike_crossx_matlab(ts1(:),ts2(:),cfg.binsize,nLags*2+1);  % removed the mex file for now, until issue on windows is resolved
-          %      x(end) = [];              NEEDS TO GO BACK WITH MEX FILE  
-              catch
-                warning('defaulting to algorithm in Matlab, this is slower');
-                doMex = 0;
-              end
-            end
-            if doMex==0
-              [x]   = spike_crossx_matlab(ts1(:),ts2(:),cfg.binsize,nLags*2+1);
-            end
+            [x]   = spike_crossx_matlab(ts1(:),ts2(:),cfg.binsize,nLags*2+1);  % removed the mex file for now, until issue on windows is resolved
           else
-            if doMex==1
-              try
-                [x]   = spike_crossx_matlab(ts2(:),ts1(:),cfg.binsize,nLags*2+1); % removed the mex file for now, until issue on windows is resolved
-                %x(end) = [];
-              catch
-                warning('defaulting to algorithm in Matlab, this is slower');
-                doMex = 0;
-              end
-            end
-            if doMex==0
-              [x]   = spike_crossx_matlab(ts2(:),ts1(:),cfg.binsize,nLags*2+1);
-            end
+            [x]   = spike_crossx_matlab(ts2(:),ts1(:),cfg.binsize,nLags*2+1); % removed the mex file for now, until issue on windows is resolved
           end
           
           % remove the center peaks from the auto-correlogram
@@ -296,31 +274,9 @@ for iTrial = 1:nTrials
             end
             if ~isempty(A) && ~isempty(B),
               if indx(1)<=indx(2)
-                if doMex==1
-                  try
-                    [x]   = spike_crossx_matlab(A(:),B(:),cfg.binsize,nLags*2+1);
-             %       x(end) = [];                
-                  catch
-                    warning('defaulting to algorithm in Matlab, this is slower');
-                    doMex = 0;
-                  end
-                end
-                if doMex==0
-                  [x]   = spike_crossx_matlab(A(:),B(:),cfg.binsize,nLags*2+1);
-                end
+                 [x]   = spike_crossx_matlab(A(:),B(:),cfg.binsize,nLags*2+1);
               else
-                if doMex==1
-                  try
-                    [x]   = spike_crossx_matlab(B(:),A(:),cfg.binsize,nLags*2+1);
-            %        x(end) = [];                
-                  catch
-                    warning('defaulting to algorithm in Matlab, this is slower');
-                    doMex = 0;
-                  end
-                end
-                if doMex==0
-                  [x]   = spike_crossx_matlab(B(:),A(:),cfg.binsize,nLags*2+1);
-                end
+                 [x]   = spike_crossx_matlab(B(:),A(:),cfg.binsize,nLags*2+1);
               end              
               % remove the center peaks from the auto-correlogram
               if indx(1)==indx(2), x(nLags:nLags+1) = 0; end
