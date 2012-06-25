@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 	
-	// last parameter is timeout in 1/10 of a second
+	/* last parameter is timeout in 1/10 of a second */
 	if (!serialSetParameters(&SP, 57600, 8, 0, 1, 1)) {
 		fprintf(stderr, "Could not modify serial port parameters\n");
 		return 1;

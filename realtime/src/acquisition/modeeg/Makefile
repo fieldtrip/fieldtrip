@@ -6,49 +6,58 @@
 # Use MinGW for compilation on Windows!
 
 PLATFORM = $(shell gcc -dumpmachine)
-CPPDIR   = ../../buffer/cpp
+FIELDTRIP = ../../../..
+FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
+CPPDIR  = $(FTBUFFER)/cpp
 
-LDFLAGS = -lpthread ../../buffer/src/socketserver.o ../../buffer/src/libbuffer.a -ldl 
-INCPATH = -I../../buffer/src -I. -I$(CPPDIR)
-SUFFIX = 
+#defaults, might be over-written further down
+CFLAGS = -I$(FTBUFFER)/src -I. -I$(CPPDIR)
+CFLAGS += $(INCPATH) -Wunused -Wall -pedantic -O3 -g 
+CXXFLAGS = $(CFLAGS)
+LDFLAGS = -L$(FTBUFFER)/src
+LDLIBS = -lbuffer
+
+# TODO: make proper library of C++ framework.
+CPPOBJ = $(patsubst %,$(CPPDIR)/%,\
+	SignalConfiguration.o GdfWriter.o FtConnection.o StringServer.o)
 
 ifeq "$(PLATFORM)" "mingw32"
-   LDFLAGS = pthreadGC2.dll ../../buffer/src/socketserver.o ../../buffer/src/libbuffer.a -LC:/msys/1.0/local/lib -lws2_32 -lwinmm 
-   INCPATH = -I../../buffer/src -I. -I$(CPPDIR) -I../../buffer/pthreads-win32/include
-   SUFFIX = .exe
+	BINDIR = $(FIELDTRIP)/realtime/bin/win32
+	EXTENSION = .exe
+	CXXFLAGS += -I$(FTBUFFER)/pthreads-win32/include
+	
+	# LDFLAGS += -L$(BINDIR) does not seem to work for DLLs. Hence:
+	LDLIBS += $(CPPOBJ) -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll
+	
+	# Make clean target work on windows:
+	fixpath = $(subst /,\,$1)
+	RM = del
 endif
 
 ifeq "$(PLATFORM)" "i686-apple-darwin10"
-   LDFLAGS = -lpthread ../../buffer/src/socketserver.o ../../buffer/src/libbuffer.a -ldl 
-   INCPATH = -I../../buffer/src -I. -I$(CPPDIR)
-   SUFFIX = .maci64
+	LDFLAGS += -lpthread socketserver.o -ldl 
+	BINDIR = $(FIELDTRIP)/realtime/bin/maci64
 endif
 
-CFLAGS = $(INCPATH) -Wunused -Wall -pedantic -O3 -g
+ifeq "$(PLATFORM)" "x86_64-linux-gnu"
+	LDLIBS += -lpthread -ldl -lstdc++ $(CPPOBJ)
+	BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
+endif
 
-all: modeeg2ft$(SUFFIX)  modeeg2ft_2chn$(SUFFIX) setupbluesmirf$(SUFFIX)
+ifndef BINDIR
+$(warning Unsupported platform: $(PLATFORM) :/.)
+endif
 
-serial.o: serial.c
-	gcc -c serial.c -I.
+TARGETS = $(patsubst %,$(BINDIR)/%$(EXTENSION), \
+	modeeg2ft modeeg2ft_2chn modeeg_setupbluesmirf)
+
+all: $(TARGETS)
 	
-modeeg2ft.o: modeeg2ft.cc
-	g++ -c modeeg2ft.cc $(CFLAGS)
-	
-modeeg2ft$(SUFFIX): modeeg2ft.o serial.o
-	g++ -o $@ $^ $(CPPDIR)/SignalConfiguration.o $(CPPDIR)/GdfWriter.o $(CPPDIR)/FtConnection.o $(CPPDIR)/StringServer.o $(LDFLAGS) 
+$(BINDIR)/%$(EXTENSION): %.o
+	$(CXX) -o $@ $^ $(LDFLAGS) $(LDLIBS)
 
-modeeg2ft_2chn.o: modeeg2ft_2chn.cc
-	g++ -c modeeg2ft_2chn.cc $(CFLAGS)
-	
-modeeg2ft_2chn$(SUFFIX): modeeg2ft_2chn.o serial.o
-	g++ -o $@ $^ $(LDFLAGS) $(CFLAGS) $(CPPDIR)/GdfWriter.cc
-
-setupbluesmirf$(SUFFIX): setupbluesmirf.c serial.o
-	gcc -o $@ $^ -I.
+$(TARGETS): serial.o
+$(BINDIR)/modeeg_setupbluesmirf$(EXTENSION): LDLIBS=
 
 clean:
-	rm -f *.o
-	rm -f modeeg2ft$(SUFFIX)
-	rm -f modeeg2ft_2chn$(SUFFIX)
-	rm -f setupbluesmirf$(SUFFIX)
-
+	$(RM) *.o $(call fixpath, $(TARGETS))
