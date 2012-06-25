@@ -7,30 +7,41 @@
 # On other platforms, make sure you have PortAudio installed.
 
 PLATFORM = $(shell gcc -dumpmachine)
-CPPDIR  = ../../buffer/cpp
+FIELDTRIP = ../../../..
+FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
+CPPDIR  = $(FTBUFFER)/cpp
+PORTAUDIO = ../../external/portaudio
+
+#defaults, might be over-written further down
+INCPATH = -I$(PORTAUDIO) -I$(FTBUFFER)/src -I$(CPPDIR) -I. 
+LDFLAGS = -L$(FTBUFFER)/src
+CFLAGS = $(INCPATH) -Wunused -Wall -pedantic -O3
+CXXFLAGS = $(CFLAGS)
+
+# TODO: make proper library of C++ framework.
+CPPOBJ = $(patsubst %,$(CPPDIR)/%,\
+	SignalConfiguration.o GdfWriter.o FtConnection.o StringServer.o)
 
 ifeq "$(PLATFORM)" "mingw32"
-   LDFLAGS = pthreadGC2.dll portaudio.dll ../../buffer/src/libbuffer.a -lws2_32
-   INCPATH = -I. -I../../buffer/src -I$(CPPDIR) -I../../buffer/pthreads-win32/include -Ipa_include
-   SUFFIX = .exe
-   RM = del
+	fixpath = $(subst /,\,$1)
+	BINDIR = $(FIELDTRIP)/realtime/bin/win32
+
+	# LDFLAGS += -L$(BINDIR) does not seem to work for DLLs. Hence:
+	LDLIBS += $(CPPOBJ) -lbuffer -lws2_32 $(BINDIR)/pthreadGC2.dll \
+		$(BINDIR)/PortAudio.dll 
+	EXTENSION = .exe
+	RM = del
+	CP = copy /Y
 else 
-   LDFLAGS = -lpthread -lportaudio ../../buffer/src/libbuffer.a -ldl 
-   INCPATH =  -I.  -I../../buffer/src -I$(CPPDIR)
-   SUFFIX = 
-   RM = rm -f
+$(warning Untested platform... )
 endif
 
-CFLAGS = $(INCPATH) -Wunused -Wall -pedantic -O3 -g
-CPPOBJS = $(CPPDIR)/GdfWriter.o $(CPPDIR)/SignalConfiguration.o $(CPPDIR)/FtConnection.o $(CPPDIR)/StringServer.o
+TARGETS = $(patsubst %,$(BINDIR)/%$(EXTENSION), audio2ft)
 
-all: audio2ft$(SUFFIX)
+all: $(TARGETS)
 
-audio2ft.o: audio2ft.cc 
-	g++ -c $^ $(CFLAGS) 
-
-audio2ft$(SUFFIX): audio2ft.o 
-	g++ -o $@ $^ $(CFLAGS) $(CPPOBJS) $(LDFLAGS)
+$(BINDIR)/%$(EXTENSION): %.cc
+	$(CXX) $(CFLAGS) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
 clean:
-	$(RM) *.o
+	$(RM) *.o $(call fixpath, $(TARGETS))
