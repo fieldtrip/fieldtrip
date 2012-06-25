@@ -14,15 +14,15 @@ SUFFIX =
 RM = rm -f
 
 ifeq "$(PLATFORM)" "mingw32"
-   LDFLAGS = ../pthreads-win32/lib/pthreadGC2.dll ../src/libbuffer.a -LC:/msys/1.0/local/lib -lws2_32 -lwinmm 
-   INCPATH = -I../src -I. -I../pthreads-win32/include
+   LDFLAGS = ../../external/pthreads-win32/lib/pthreadGC2.dll ../src/libbuffer.a -LC:/msys/1.0/local/lib -lws2_32 -lwinmm 
+   INCPATH = -I../src -I. -I../../external/pthreads-win32/include
    SUFFIX = .exe
    RM = del
 endif
 
 ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
-   LDFLAGS = ../pthreads-win64/lib/pthreadGC2-w64.dll ../src/libbuffer.a -LC:/msys/1.0/local/lib -lws2_32 -lwinmm 
-   INCPATH = -I../src -I. -I../pthreads-win64/include
+   LDFLAGS = ../../external/pthreads-win64/lib/pthreadGC2-w64.dll ../src/libbuffer.a -LC:/msys/1.0/local/lib -lws2_32 -lwinmm 
+   INCPATH = -I../src -I. -I../../external/pthreads-win64/include
    SUFFIX = .exe
    RM = del
 endif

@@ -23,7 +23,7 @@ CXXFLAGS += -I$(FTBUFFER)/src -I. -I$(CPPDIR)
 ifeq "$(PLATFORM)" "mingw32"
 	BINDIR = $(FIELDTRIP)/realtime/bin/win32
 	EXTENSION = .exe
-	CXXFLAGS += -I$(FTBUFFER)/pthreads-win32/include
+	CXXFLAGS += -I$(FIELDTRIP)/realtime/src/external/pthreads-win32/include
 	# LDFLAGS += -L$(BINDIR) does not seem to work for DLLs. Hence:
 	LDLIBS += -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll
 

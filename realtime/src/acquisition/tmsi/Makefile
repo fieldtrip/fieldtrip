@@ -15,7 +15,7 @@ CPPOBJ = $(patsubst %,$(CPPDIR)/%,\
 
 #defaults, might be over-written further down
 LDFLAGS = -L$(FTBUFFER)/src
-lDLIBS = -lbuffer $(CPPOBJ)
+LDLIBS = -lbuffer $(CPPOBJ)
 CFLAGS = -I$(FTBUFFER)/src -I. -I$(CPPDIR) -Wunused -Wall -pedantic -O3 -g 
 CXXFLAGS = $(CFLAGS)
 
@@ -23,8 +23,7 @@ CXXFLAGS = $(CFLAGS)
 ifeq "$(PLATFORM)" "mingw32"
 	BINDIR = $(FIELDTRIP)/realtime/bin/win32
 	EXTENSION = .exe
-	CXXFLAGS += -I$(FTBUFFER)/pthreads-win32/include
-	LDFLAGS += -L$(FTBUFFER)/pthreads-win32
+	CXXFLAGS += -I$(FIELDTRIP)/realtime/src/external/pthreads-win32/include
 	# LDFLAGS += -L$(BINDIR) does not seem to work for DLLs. Hence:
 	LDLIBS += -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll
 

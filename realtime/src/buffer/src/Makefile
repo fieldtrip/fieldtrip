@@ -26,8 +26,8 @@ endif
 
 ifeq "$(PLATFORM)" "mingw32"
     # override the defaults
-	INCPATH	 = -I. -I../pthreads-win32/include
-	LIBPATH  = -L. -L../pthreads-win32/lib
+	INCPATH	 = -I. -I../../external/pthreads-win32/include
+	LIBPATH  = -L. -L../../external/pthreads-win32/lib
 	LIBS 	 = -lbuffer -lm -lpthreadGC2
 	CFLAGS	 = $(INCPATH) -Wunused -pedantic -Wall -O0 -g
 	RM       = del
@@ -35,8 +35,8 @@ endif
 
 ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
     # override the defaults
-	INCPATH	 = -I. -I../pthreads-win64/include
-	LIBPATH  = -L. -L../pthreads-win64/lib
+	INCPATH	 = -I. -I../../external/pthreads-win64/include
+	LIBPATH  = -L. -L../../external/pthreads-win64/lib
 	LIBS 	 = -lbuffer -lm -lpthread
 	CFLAGS	 = $(INCPATH) -Wunused -pedantic -Wall -O0 -g 
 	RM       = del
