@@ -2,31 +2,50 @@
 # Donders Institute for Donders Institute for Brain, Cognition and Behaviour,
 # Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
 # Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
-
+#
 # Use MinGW for compilation on Windows!
-
-# Put the EMOTIV SDK header files into the subdirectory "include", or modify the FLAGS below
-# The MinGW compiler will directly link against edk.dll, so you'll need to copy that file,
-# as well as edk_utils.dll to the same directory as emotiv2ft.[cc/exe]
+#
+# To recompile, please download the Emotiv EDK, and update the EDKPATH variable
+# below.
 
 PLATFORM = $(shell gcc -dumpmachine)
+FTPATH = ../../../..
+FTBUFFER = $(FTPATH)/realtime/src/buffer
+
+EDKPATH = C:\Program\ Files\ (x86)\Emotiv\ Education\ Edition\ SDK_v1.0.0.5-PREMIUM\doc\examples
+
+CXXFLAGS = -I$(FTBUFFER)/src -I$(FTBUFFER)/cpp -Wunused -Wall
+LDFLAGS = -L$(FTBUFFER)/src 
+LDLIBS = -lbuffer
+
+# TODO: make proper library of C++ framework.
+CPPOBJ = $(patsubst %,$(FTBUFFER)/cpp/%,\
+	SignalConfiguration.o GdfWriter.o FtConnection.o StringServer.o)
 
 ifeq "$(PLATFORM)" "mingw32"
-CPPDIR  = ../../buffer/cpp
-LDFLAGS = pthreadGC2.dll ../../buffer/src/libbuffer.a -lws2_32 -lwinmm edk.dll
-INCPATH = -I../../buffer/src -I$(CPPDIR) -I../../buffer/pthreads-win32/include -I. -Iinclude
-SUFFIX = .exe
+	BINDIR = $(FTPATH)/realtime/bin/win32
+	
+	CXXFLAGS += -I$(EDKPATH)/include
+	LDFLAGS += -L$(EDKPATH)/lib
+	LDLIBS += $(CPPOBJ) -lws2_32 -lwinmm $(BINDIR)/edk.dll $(BINDIR)/pthreadGC2.dll 
+	EXTENSION = .exe
+	
+	# Make clean target work on windows:
+	fixpath = $(subst /,\,$1)
+	RM = del
+	CP = copy /Y
 endif
 
-CFLAGS = $(INCPATH) -Wunused -Wall -pedantic -O3 -g
+ifndef BINDIR
+$(warning Unsupported plaform: $(PLATFORM) :/.)
+endif
 
-CPPOBJS = $(CPPDIR)/SignalConfiguration.o $(CPPDIR)/GdfWriter.o $(CPPDIR)/FtConnection.o $(CPPDIR)/StringServer.o
+TARGETS = $(BINDIR)/emotiv2ft$(EXTENSION)
 
-all: emotiv2ft$(SUFFIX)
-	
-emotiv2ft.o: emotiv2ft.cc
-	g++ -c emotiv2ft.cc $(CFLAGS)
-	
-emotiv2ft$(SUFFIX): emotiv2ft.o ../../buffer/src/socketserver.o $(CPPOBJS)
-	g++ -o $@ $^ $(LDFLAGS)
+all: $(TARGETS)
 
+$(BINDIR)/%$(EXTENSION): %.cc
+	$(CXX) -o $@ $^ $(CPPOBJS) $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
+
+clean:
+	$(RM) *.o $(call fixpath, $(TARGETS))
