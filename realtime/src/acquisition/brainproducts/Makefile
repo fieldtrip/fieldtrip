@@ -32,6 +32,11 @@ ifeq "$(PLATFORM)" "i686-apple-darwin10"
 	fixpath = $1
 endif
 
+ifeq "$(PLATFORM)" "x86_64-redhat-linux"
+	BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
+	fixpath = $1
+endif
+
 ifndef BINDIR
 $(error Unsupported plaform: $(PLATFORM) :/.)
 endif

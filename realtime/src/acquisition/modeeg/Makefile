@@ -16,7 +16,7 @@ CPPOBJ = $(patsubst %,$(CPPDIR)/%,\
 
 #defaults, might be over-written further down
 CFLAGS = -I$(FTBUFFER)/src -I. -I$(CPPDIR)
-CFLAGS += $(INCPATH) -Wunused -Wall -pedantic -O3 -g 
+CFLAGS += -Wunused -Wall -pedantic -O3 -g 
 CXXFLAGS = $(CFLAGS)
 LDFLAGS = -L$(FTBUFFER)/src
 LDLIBS = -lbuffer $(CPPOBJ)
@@ -41,7 +41,12 @@ ifeq "$(PLATFORM)" "i686-apple-darwin10"
 endif
 
 ifeq "$(PLATFORM)" "x86_64-linux-gnu"
-	LDLIBS += -lpthread -ldl -lstdc++ $(CPPOBJ)
+	LDLIBS += -lpthread -ldl -lstdc++ 
+	BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
+endif
+
+ifeq "$(PLATFORM)" "x86_64-redhat-linux"
+	LDLIBS += -lpthread -ldl -lstdc++
 	BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
 endif
 

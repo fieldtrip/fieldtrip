@@ -4,7 +4,7 @@ FTBUFFER = $(FTPATH)/realtime/src/buffer
 
 CFLAGS = -I$(FTBUFFER)/src -Wunused -Wall
 LDFLAGS = -L$(FTBUFFER)/src 
-LDLIBS = -lbuffer -lncurses -lpthread
+LDLIBS = -lbuffer -lncurses -lpthread -lm
 
 ifneq "$(PLATFORM)" "x86_32-linux-gnu"
 $(warning For the DCCN, please compile for 32-bit linux.)
@@ -17,7 +17,10 @@ endif
 
 ifeq "$(PLATFORM)" "x86_64-linux-gnu"
 	BINDIR = $(FTPATH)/realtime/bin/glnxa64
-	EXTENSION = 
+endif
+
+ifeq "$(PLATFORM)" "x86_64-redhat-linux"
+	BINDIR = $(FTPATH)/realtime/bin/glnxa64
 endif
 
 ifndef BINDIR

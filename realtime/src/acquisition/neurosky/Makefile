@@ -40,12 +40,17 @@ ifeq "$(PLATFORM)" "i686-apple-darwin10"
 endif
 
 ifeq "$(PLATFORM)" "x86_64-linux-gnu"
-	LDLIBS += $(CPPOBJ) -lpthread -lbuffer -ldl 
+	LDLIBS += -lpthread -ldl 
+	BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
+endif
+
+ifeq "$(PLATFORM)" "x86_64-redhat-linux"
+	LDLIBS += -lpthread -ldl 
 	BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
 endif
 
 ifndef BINDIR
-$(warning Unsupported platform: $(PLATFORM) :/.)
+$(error Unsupported platform: $(PLATFORM) :/.)
 endif
 
 TARGETS = $(BINDIR)/thinkgear2ft$(EXTENSION)
