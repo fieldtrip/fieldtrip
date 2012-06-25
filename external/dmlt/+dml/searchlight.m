@@ -370,31 +370,38 @@ classdef searchlight < dml.method
     
     function m = model(obj)
       % return performance mapped back to original space
+      % we return all quantities specified in the stats field
       
-      s = obj.spheres;
-      v = obj.value(:,1);
+      for j=1:length(obj.stats)
       
-      bmask = ~all(obj.mask(:));
-      msk = find(obj.mask);
-      
-      m = zeros(obj.indims);
-      n = zeros(obj.indims);
-      for c=1:length(s)
-                
-        if bmask
-          sidx = msk(s{c});
-        else
-          sidx = s{c};
+        s = obj.spheres;
+        v = obj.value(:,j);
+        
+        bmask = ~all(obj.mask(:));
+        msk = find(obj.mask);
+        
+        mt = zeros(obj.indims);
+        n = zeros(obj.indims);
+        for c=1:length(s)
+          
+          if bmask
+            sidx = msk(s{c});
+          else
+            sidx = s{c};
+          end
+          
+          mt(sidx) = mt(sidx) + v(c);
+          n(sidx) = n(sidx) + 1;
+          
         end
         
-        m(sidx) = m(sidx) + v(c);
-        n(sidx) = n(sidx) + 1;
+        nidx = n(:)~=0;
+        mt(nidx) = mt(nidx) ./ n(nidx);
+        mt(n(:)==0) = nan;
+        
+        m.(obj.stats{j}) = mt;
         
       end
-      
-      nidx = n(:)~=0;
-      m(nidx) = m(nidx) ./ n(nidx);
-      m(n(:)==0) = nan;
       
     end
     
