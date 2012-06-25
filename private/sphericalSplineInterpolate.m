@@ -16,14 +16,15 @@ function [W,Gss,Gds,Hds]=sphericalSplineInterpolate(src,dest,lambda,order,type,t
 %  W      - [M x N] linear mapping matrix between old and new co-ords
 %
 % Based upon the paper: Perrin89
+% Code&Copyright: Jason Farquhar (jadref@gmail.com)
 if ( nargin < 3 || isempty(lambda) ) lambda=1e-5; end;
 if ( nargin < 4 || isempty(order) ) order=4; end;
 if ( nargin < 5 || isempty(type)) type='spline'; end;
 if ( nargin < 6 || isempty(tol) ) tol=eps; end;
 
-% map the positions onto the sphere
-src   = repop(src,'./',sqrt(sum(src.^2)));
-dest  = repop(dest,'./',sqrt(sum(dest.^2)));
+% map the positions onto the sphere (not using repop, by JMH)
+src  = src ./repmat(sqrt(sum(src.^2)),  size(src, 1), 1);  % src   = repop(src,'./',sqrt(sum(src.^2)));
+dest = dest./repmat(sqrt(sum(dest.^2)), size(dest, 1), 1); % dest  = repop(dest,'./',sqrt(sum(dest.^2)));
 
 %calculate the cosine of the angle between the new and old electrodes. If
 %the vectors are on top of each other, the result is 1, if they are
