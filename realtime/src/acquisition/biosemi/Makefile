@@ -6,39 +6,50 @@
 # Use MinGW for compilation on Windows!
 
 PLATFORM = $(shell gcc -dumpmachine)
+FIELDTRIP = ../../../..
+FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
+CPPDIR  = $(FTBUFFER)/cpp
 
 #defaults, might be over-written further down
-CPPDIR  = ../../buffer/cpp
-LDFLAGS = -lpthread ../../buffer/src/libbuffer.a -ldl 
-INCPATH = -I../../buffer/src -I. -I$(CPPDIR)
-SUFFIX = 
+LDFLAGS = -L$(FTBUFFER)/src
+CXXFLAGS = -Wunused -Wall -pedantic -O3 -g
+CXXFLAGS += -I$(FTBUFFER)/src -I. -I$(CPPDIR) 
 
 ifeq "$(PLATFORM)" "mingw32"
-   LDFLAGS = pthreadGC2.dll ../../buffer/src/libbuffer.a -LC:/msys/1.0/local/lib -lws2_32 -lwinmm 
-   INCPATH = -I../../buffer/src -I. -I$(CPPDIR) -I../../buffer/pthreads-win32/include
-   SUFFIX = .exe
+
+	BINDIR = $(FIELDTRIP)/realtime/bin/win32
+	CXXFLAGS += -I$(FTBUFFER)/pthreads-win32/include
+	LDFLAGS += -LC:/msys/1.0/local/lib
+	# LDFLAGS += -L$(BINDIR) does not seem to work for DLLs. Hence:
+	LDLIBS += $(CPPOBJ) -lbuffer -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll
+	EXTENSION = .exe
+	
+	# Make clean target work on windows:
+	fixpath = $(subst /,\,$1)
+	RM = del
+	CP = copy /Y
 endif
 
-CFLAGS = $(INCPATH) -Wunused -Wall -pedantic -O3 -g $(FLAGS)
-LDFLAGS += $(FLAGS)
+ifeq "$(PLATFORM)" "x86_64-redhat-linux"
+	LDFLAGS += -L$(FTBUFFER)/src
+	LDLIBS += -lbuffer -lpthread -ldl
+	BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
+	EXTENSION = 
+endif
 
+ifndef BINDIR
+$(warning Unsupported plaform: $(PLATFORM) :/.)
+endif
+
+# TODO: make proper library of C++ framework.
 CPPOBJS = $(CPPDIR)/SignalConfiguration.o $(CPPDIR)/GdfWriter.o $(CPPDIR)/FtConnection.o $(CPPDIR)/StringServer.o
 
-all: biosemi2ft$(SUFFIX) fakebiosemi2ft$(SUFFIX)
+TARGETS = $(BINDIR)/biosemi2ft$(EXTENSION)
+
+all: $(TARGETS)
 	
-biosemi2ft.o: biosemi2ft.cc
-	g++ -c biosemi2ft.cc $(CFLAGS)
+$(BINDIR)/biosemi2ft$(EXTENSION): biosemi2ft.o BioSemiClient.o 
+	$(CXX) -o $@ $^ $(CPPOBJS) $(LDFLAGS) $(LDLIBS)
 
-BioSemiClient.o: BioSemiClient.cc BioSemiClient.h
-	g++ -c BioSemiClient.cc $(CFLAGS)
-	
-FakeBioSemiClient.o: FakeBioSemiClient.cc BioSemiClient.h
-	g++ -c FakeBioSemiClient.cc $(CFLAGS)
-
-#TODO: For now we compile and pull in the C++ modules during linking
-#Think about having a separate library like libbuffer
-biosemi2ft$(SUFFIX): biosemi2ft.o BioSemiClient.o 
-	g++ -o $@ $^ $(CPPOBJS) $(LDFLAGS)
-
-fakebiosemi2ft$(SUFFIX): biosemi2ft.o FakeBioSemiClient.o 
-	g++ -o $@ $^ $(CPPOBJS) $(LDFLAGS)
+clean:
+	$(RM) *.o $(call fixpath, $(TARGETS))
