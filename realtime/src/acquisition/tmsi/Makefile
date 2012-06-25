@@ -9,14 +9,16 @@ FIELDTRIP = ../../../..
 FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
 CPPDIR  = $(FTBUFFER)/cpp
 
-#defaults, might be over-written further down
-LDFLAGS = -L$(FTBUFFER)/src
-CFLAGS = -I$(FTBUFFER)/src -I. -I$(CPPDIR) -Wunused -Wall -pedantic -O3 -g 
-CXXFLAGS = $(CFLAGS)
-
 # TODO: make proper library of C++ framework.
 CPPOBJ = $(patsubst %,$(CPPDIR)/%,\
 	SignalConfiguration.o GdfWriter.o FtConnection.o StringServer.o)
+
+#defaults, might be over-written further down
+LDFLAGS = -L$(FTBUFFER)/src
+lDLIBS = -lbuffer $(CPPOBJ)
+CFLAGS = -I$(FTBUFFER)/src -I. -I$(CPPDIR) -Wunused -Wall -pedantic -O3 -g 
+CXXFLAGS = $(CFLAGS)
+
 
 ifeq "$(PLATFORM)" "mingw32"
 	BINDIR = $(FIELDTRIP)/realtime/bin/win32
@@ -24,14 +26,15 @@ ifeq "$(PLATFORM)" "mingw32"
 	CXXFLAGS += -I$(FTBUFFER)/pthreads-win32/include
 	LDFLAGS += -L$(FTBUFFER)/pthreads-win32
 	# LDFLAGS += -L$(BINDIR) does not seem to work for DLLs. Hence:
-	LDLIBS += $(CPPOBJ) -lbuffer -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll
+	LDLIBS += -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll
 
 	# Make clean target work on windows:
 	fixpath = $(subst /,\,$1)
 	RM = del
 endif
+
 ifndef BINDIR
-$(warning Unsupported platform: $(PLATFORM) :/.)
+$(error Unsupported platform: $(PLATFORM) :/.)
 endif
 
 

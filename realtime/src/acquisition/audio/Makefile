@@ -35,7 +35,7 @@ ifeq "$(PLATFORM)" "mingw32"
 endif
 
 ifndef BINDIR
-$(warning Unsupported platform: $(PLATFORM) :/.)
+$(error Unsupported platform: $(PLATFORM) :/.)
 endif
 
 TARGETS = $(patsubst %,$(BINDIR)/%$(EXTENSION), audio2ft)

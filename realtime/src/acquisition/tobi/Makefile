@@ -10,7 +10,6 @@ LDFLAGS = -L$(FTBUFFER)/src
 CFLAGS = -c $(INCPATH) -Wunused -Wall -pedantic -O3
 CXXFLAGS = $(CFLAGS)
 
-
 ifeq "$(PLATFORM)" "x86_64-linux-gnu"
 	LDFLAGS += -Llib/tia/amd64 -Llib/ticpp/linux 
 	LDLIBS += -lpthread -lboost_thread -lboost_system -lboost_program_options\
@@ -19,7 +18,7 @@ ifeq "$(PLATFORM)" "x86_64-linux-gnu"
 endif
 
 ifndef BINDIR
-$(warning Unsupported platform: $(PLATFORM) :/.)
+$(error Unsupported platform: $(PLATFORM) :/.)
 endif
 
 LOCAL_TARGETS = $(patsubst %,%$(EXTENSION), tia2ft)

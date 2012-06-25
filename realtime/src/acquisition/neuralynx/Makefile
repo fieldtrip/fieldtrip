@@ -21,7 +21,8 @@ ifeq "$(PLATFORM)" "mingw32"
 	CXXFLAGS += -I$(FTBUFFER)/pthreads-win32/include
 	
 	# LDFLAGS += -L$(BINDIR) does not seem to work for DLLs. Hence:
-	LDLIBS += -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll $(BINDIR)/MatlabNetComClient.dll
+	LDLIBS += -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll \
+		$(BINDIR)/MatlabNetComClient.dll
 	
 	# Make clean target work on windows:
 	fixpath = $(subst /,\,$1)
@@ -29,7 +30,7 @@ ifeq "$(PLATFORM)" "mingw32"
 endif
 
 ifndef BINDIR
-$(warning Unsupported platform: $(PLATFORM) :/.)
+$(error Unsupported platform: $(PLATFORM) :/.)
 endif
 
 

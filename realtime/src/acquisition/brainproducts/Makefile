@@ -14,27 +14,26 @@ CFLAGS = -Wunused -Wall -pedantic
 CFLAGS += -I$(FTBUFFER)/src -I. 
 LDFLAGS = -L$(FTBUFFER)/src
 LDLIBS = -lbuffer -lpthread
-TARGET = $(FTPATH)/realtime/bin/glnxa64/rda2ft
-
 
 ifeq "$(PLATFORM)" "mingw32"
 	fixpath = $(subst /,\,$1)
 	BINDIR = $(FIELDTRIP)/realtime/bin/win32
+	EXTENSION = .exe
+
 	CFLAGS += -I$(FTBUFFER)/pthreads-win32/include
-	LDFLAGS += -LC:/msys/1.0/local/lib
 	# LDFLAGS += -L$(BINDIR) does not seem to work for DLLs. Hence:
 	LDLIBS += -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll
-	EXTENSION = .exe
 	RM = del
-	CP = copy /Y
 endif
 
 ifeq "$(PLATFORM)" "i686-apple-darwin10"
- TARGET = $(FTPATH)/realtime/bin/maca64/rda2ft
+	BINDIR = $(FIELDTRIP)/realtime/bin/maci
+	EXTENSION = .maci
+	fixpath = $1
 endif
 
 ifndef BINDIR
-$(warning Unsupported plaform: $(PLATFORM) :/.)
+$(error Unsupported plaform: $(PLATFORM) :/.)
 endif
 
 TARGETS = $(BINDIR)/rda2ft$(EXTENSION)

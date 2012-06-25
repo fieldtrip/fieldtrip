@@ -28,7 +28,8 @@ ifeq "$(PLATFORM)" "mingw32"
 	
 	CXXFLAGS += -I$(EDKPATH)/include
 	LDFLAGS += -L$(EDKPATH)/lib
-	LDLIBS += $(CPPOBJ) -lws2_32 -lwinmm $(BINDIR)/edk.dll $(BINDIR)/pthreadGC2.dll 
+	LDLIBS += $(CPPOBJ) -lws2_32 -lwinmm $(BINDIR)/edk.dll \
+		$(BINDIR)/pthreadGC2.dll 
 	
 	# Make clean target work on windows:
 	fixpath = $(subst /,\,$1)
@@ -36,7 +37,7 @@ ifeq "$(PLATFORM)" "mingw32"
 endif
 
 ifndef BINDIR
-$(warning Unsupported platform: $(PLATFORM) :/.)
+$(error Unsupported platform: $(PLATFORM) :/.)
 endif
 
 TARGETS = $(BINDIR)/emotiv2ft$(EXTENSION)
