@@ -4,16 +4,41 @@
 # Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
 
 # Use MinGW for compilation on Windows!
-CC = gcc
-CXX = g++
+PLATFORM = $(shell gcc -dumpmachine)
+FIELDTRIP = ../../../..
+FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
+CPPDIR  = $(FTBUFFER)/cpp
 
-LDFLAGS = pthreadGC2.dll ../../buffer/src/libbuffer.a -lws2_32 
-CXXFLAGS = -I../../buffer/src -I../../buffer/cpp -I. -Wunused -Wall -pedantic -O3 -I../../buffer/pthreads-win32/include
+CXXFLAGS = -Wunused -Wall -pedantic -O3
+CXXFLAGS += -I$(FTBUFFER)/src -I$(CPPDIR) -I.
+LDFLAGS = -L$(FTBUFFER)/src
+LDLIBS = -lbuffer
 
-all: nlx2ft.exe
+
+ifeq "$(PLATFORM)" "mingw32"
+	BINDIR = $(FIELDTRIP)/realtime/bin/win32
+	EXTENSION = .exe
+	CXXFLAGS += -I$(FTBUFFER)/pthreads-win32/include
 	
-nlx2ft.o: nlx2ft.cc
-	g++ -c nlx2ft.cc $(CXXFLAGS)
+	# LDFLAGS += -L$(BINDIR) does not seem to work for DLLs. Hence:
+	LDLIBS += -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll $(BINDIR)/MatlabNetComClient.dll
 	
-nlx2ft.exe: nlx2ft.o
-	g++ -o nlx2ft.exe nlx2ft.o $(LDFLAGS) MatlabNetComClient.dll
+	# Make clean target work on windows:
+	fixpath = $(subst /,\,$1)
+	RM = del
+endif
+
+ifndef BINDIR
+$(warning Unsupported platform: $(PLATFORM) :/.)
+endif
+
+
+TARGETS = $(BINDIR)/nlx2ft$(EXTENSION)
+
+all: $(TARGETS)
+
+$(BINDIR)/%$(EXTENSION): %.o
+	$(CXX) -o $@ $^ $(LDFLAGS) $(LDLIBS)
+
+clean:
+	$(RM) *.o $(call fixpath, $(TARGETS))
