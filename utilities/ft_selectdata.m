@@ -15,7 +15,7 @@ function [varargout] = ft_selectdata(varargin)
 % or as
 %  [data] = ft_selectdata_new(cfg, data, ...)
 %
-% See also FT_SELCTDATA_OLD, FT_SELECTDATA_NEW
+% See also FT_SELECTDATA_OLD, FT_SELECTDATA_NEW
 
 % Copyright (C) 2009-2011, Jan-Mathijs Schoffelen, Robert Oostenveld
 %
