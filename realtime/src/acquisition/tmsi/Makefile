@@ -4,33 +4,47 @@
 # Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
 
 # Use MinGW for compilation on Windows!
-
 PLATFORM = $(shell gcc -dumpmachine)
-CPPDIR  = ../../buffer/cpp
+FIELDTRIP = ../../../..
+FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
+CPPDIR  = $(FTBUFFER)/cpp
+
+#defaults, might be over-written further down
+LDFLAGS = -L$(FTBUFFER)/src
+CFLAGS = -I$(FTBUFFER)/src -I. -I$(CPPDIR) -Wunused -Wall -pedantic -O3 -g 
+CXXFLAGS = $(CFLAGS)
+
+# TODO: make proper library of C++ framework.
+CPPOBJ = $(patsubst %,$(CPPDIR)/%,\
+	SignalConfiguration.o GdfWriter.o FtConnection.o StringServer.o)
 
 ifeq "$(PLATFORM)" "mingw32"
-   LDFLAGS = pthreadGC2.dll ../../buffer/src/libbuffer.a -lws2_32
-   INCPATH = -I. -I../../buffer/src -I$(CPPDIR) -I../../buffer/pthreads-win32/include
-   SUFFIX = .exe
-else 
-   LDFLAGS = -lpthread ../../buffer/src/libbuffer.a -ldl 
-   INCPATH =  -I.  -I../../buffer/src -I$(CPPDIR)
-   SUFFIX = 
+	BINDIR = $(FIELDTRIP)/realtime/bin/win32
+	EXTENSION = .exe
+	CXXFLAGS += -I$(FTBUFFER)/pthreads-win32/include
+	LDFLAGS += -L$(FTBUFFER)/pthreads-win32
+	# LDFLAGS += -L$(BINDIR) does not seem to work for DLLs. Hence:
+	LDLIBS += $(CPPOBJ) -lbuffer -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll
+
+	# Make clean target work on windows:
+	fixpath = $(subst /,\,$1)
+	RM = del
+endif
+ifndef BINDIR
+$(warning Unsupported platform: $(PLATFORM) :/.)
 endif
 
-CFLAGS = $(INCPATH) -Wunused -Wall -pedantic -O3 -g
 
-all: tmsidriver$(SUFFIX) tmsi2ft$(SUFFIX)
+TARGETS = $(patsubst %,$(BINDIR)/%$(EXTENSION), tmsidriver tmsi2ft)
 
-tmsidriver.o: tmsidriver.cpp 
-	g++ -c $^ $(CFLAGS)
+all: $(TARGETS)
 
-	
-tmsidriver$(SUFFIX): tmsidriver.o RTDevice.o Feature.o
-	g++ -o $@ $^ $(LDFLAGS) 
-	
-tmsi2ft$(SUFFIX): tmsi2ft.cpp  RTDevice.o Feature.o ../../buffer/src/socketserver.o
-	g++ -o $@ $^ $(CFLAGS) $(CPPDIR)/GdfWriter.cc $(CPPDIR)/SignalConfiguration.cc $(CPPDIR)/FtConnection.cc $(CPPDIR)/StringServer.cc $(LDFLAGS)
+$(BINDIR)/%$(EXTENSION): %.o
+	$(CXX) -o $@ $^ $(LDFLAGS) $(LDLIBS)
+
+$(BINDIR)/tmsidriver$(EXTENSION): Feature.o RTDevice.o
+$(BINDIR)/tmsi2ft$(EXTENSION): RTDevice.o
+RTDevice.o: RTDevice.cpp RTDevice.h Sadio.h
 
 clean:
-	del *.o
+	$(RM) *.o $(call fixpath, $(TARGETS))
