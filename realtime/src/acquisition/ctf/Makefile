@@ -1,30 +1,38 @@
-CC=gcc
-CFLAGS=-I. -Wall
-LFLAGS=-lncurses
-DEPS = AcqBuffer.h
+PLATFORM = $(shell gcc -dumpmachine)
+FTPATH = ../../../..
+FTBUFFER = $(FTPATH)/realtime/src/buffer
 
-all: AcqBuffer acq2ft acq2ftx fake_meg check_shm acq2ftx_fake acq2ft_fake
+CFLAGS = -I$(FTBUFFER)/src -Wunused -Wall
+LDFLAGS = -L$(FTBUFFER)/src 
+LDLIBS = -lbuffer -lncurses -lpthread
 
-%.o: %.c $(DEPS)
-	$(CC) -c -o $@ $< $(CFLAGS)
+ifneq "$(PLATFORM)" "x86_32-linux-gnu"
+$(warning For the DCCN, please compile on 32-bit linux. You are using an untested platform.)
+endif
 
-AcqBuffer: AcqBuffer.o
-	gcc -o $@ $^ $(CFLAGS) $(LFLAGS)
+ifeq "$(PLATFORM)" "x86_64-linux-gnu"
+	BINDIR = $(FTPATH)/realtime/bin/glnxa64
+	EXTENSION = 
+endif
 
-acq2ft: acq2ft.c 
-	gcc -o acq2ft acq2ft.c  -I../../buffer/src -Wall ../../buffer/src/libbuffer.a  -lpthread
+TARGETS = $(patsubst %,$(BINDIR)/%$(EXTENSION),\
+	AcqBuffer acq2ft acq2ftx fake_meg check_shm acq2ftx_fake acq2ft_fake)
 
-acq2ft_fake: acq2ft.c 
-	gcc -o acq2ft_fake acq2ft.c  -DFAKE_MEG -I../../buffer/src -Wall ../../buffer/src/libbuffer.a  -lpthread
+all: $(TARGETS)
 
-acq2ftx: acq2ftx.c 
-	gcc -o acq2ftx acq2ftx.c  -I../../buffer/src -Wall ../../buffer/src/libbuffer.a  -lpthread -lm
+$(BINDIR)/%$(EXTENSION): %.c
+	$(CC) $< $(CFLAGS) $(LDFLAGS) $(LDLIBS) -o $@
+
+$(BINDIR)/AcqBuffer$(EXTENSION): AcqBuffer.c AcqBuffer.h
+
+$(BINDIR)/acq2ftx$(EXTENSION): LDLIBS += -lm
+
+$(BINDIR)/acq2ft_fake$(EXTENSION): acq2ft.c
+	$(CC) $^ $(CFLAGS) -DFAKE_MEG $(LDFLAGS) $(LDLIBS) -o $@
 	
-acq2ftx_fake: acq2ftx.c 
-	gcc -o acq2ftx_fake acq2ftx.c  -DFAKE_MEG -I../../buffer/src -Wall ../../buffer/src/libbuffer.a  -lpthread -lm
-	
-fake_meg: fake_meg.c
-	gcc -o fake_meg fake_meg.c -I. -Wall
+$(BINDIR)/acq2ftx_fake$(EXTENSION): acq2ftx.c
+	$(CC) $^ $(CFLAGS) -DFAKE_MEG $(LDFLAGS) $(LDLIBS) -lm -o $@
 
-check_shm: check_shm.c
-	gcc -o check_shm check_shm.c -I. -Wall
+clean:
+	rm -f *.o
+	rm -f $(TARGETS)

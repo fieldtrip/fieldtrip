@@ -16,7 +16,7 @@
 #include <unistd.h>  /* only for usleep */
 #include "AcqBuffer.h"
 
-//#define ACQ_MSGQ_SIZE 20
+/*#define ACQ_MSGQ_SIZE 20*/
 #define SHOWPACKET 20
 #define MINFREE 30                  /* number of records to keep free, 30 seems to be enough up to 12kHz */
 #define PERMISSION 0666             /* for the shared memory */
@@ -89,8 +89,8 @@ int main(int argc, char *argv[]) {
 
   display_start();
   display_print("initializing\n");
-  // clear_all_except_setup();
-  // clear_all();
+  /* clear_all_except_setup();
+   clear_all();*/
 
   display_refresh();
 
@@ -206,10 +206,12 @@ int main(int argc, char *argv[]) {
     display_print("shm size     = %d\n", shmsize);
     display_print("shm key      = %#x\n", shmkey);
     display_print("pause        = %d\n", pause);
-    if (setupIndex>=0)
+    if (setupIndex>=0) {
       display_print("dataset      = %s @ %d\n", (char *)packet[setupIndex].data, setupIndex);
-    else
+    }
+    else {
       display_print("dataset      = <unknown>\n");
+    }
     display_print("\n");
 
     display_print("countSetup   = %d\n", countSetup);
@@ -226,15 +228,17 @@ int main(int argc, char *argv[]) {
 
     display_print("min(sampleNumber) = %d @ %d\n", minSampleValue, minSampleIndex);
     display_print("max(sampleNumber) = %d @ %d\n", maxSampleValue, maxSampleIndex);
-    // display_print("min(messageId)    = %d @ %d\n", minMessageValue, minMessageIndex);
-    // display_print("max(messageId)    = %d @ %d\n", maxMessageValue, maxMessageIndex);
+    /* display_print("min(messageId)    = %d @ %d\n", minMessageValue, minMessageIndex);
+    display_print("max(messageId)    = %d @ %d\n", maxMessageValue, maxMessageIndex);*/
     display_print("max(countCleared) = %d\n", maxCountCleared);
     display_print("\n");
 
-    if (maxSampleIndex>=0)
+    if (maxSampleIndex>=0) {
       display_print("current trial = %d @ %d\n", maxSampleValue/packet[maxSampleIndex].numSamples, maxSampleIndex);
-    else
+    }
+    else {
       display_print("current trial = <unknown>\n");
+    }
     display_print("\n");
 
     display_print("numRealChan  = %d\n", numRealChan);
@@ -323,10 +327,11 @@ int main(int argc, char *argv[]) {
       countCancel  = 0;
     }
 
-    // if ((MINFREE-countInvalid)>1 && pause) {
-    //   pause/=(MINFREE-countInvalid);
-    //   display_print("decreasing pause to %d\n", pause);
-    // }
+    /* if ((MINFREE-countInvalid)>1 && pause) {
+      pause/=(MINFREE-countInvalid);
+      display_print("decreasing pause to %d\n", pause);
+    }
+    */
 
     while (countInvalid<MINFREE && countData)
       /* make more empty packets available */
@@ -337,9 +342,10 @@ int main(int argc, char *argv[]) {
         countCleared++;
         countInvalid++;
         countData--;
-        // NOTE: don't clear the packet, since Matlab might be reading from it
-        // display_print("clearing packet %d\n", setupIndex);
-        // clear_packet(setupIndex);
+        /* NOTE: don't clear the packet, since Matlab might be reading from it
+        display_print("clearing packet %d\n", setupIndex);
+        clear_packet(setupIndex);
+        */
         packet[setupIndex].message_type = ACQ_MSGQ_INVALID;
         setupIndex     = minSampleIndex;
         minSampleIndex = wrapnumpacket(minSampleIndex+1); /* the next is probably now the oldest */
@@ -358,8 +364,9 @@ int main(int argc, char *argv[]) {
       /* moving the setup one packet at a time may look inefficient, but this only happens at the start of online acquisition */
       display_print("moving setup from %d to %d\n", setupIndex, wrapnumpacket(setupIndex+1));
       memcpy(&packet[wrapnumpacket(setupIndex+1)], &packet[setupIndex], sizeof(ACQ_MessagePacketType));
-      // NOTE: don't clear the packet, since Matlab might be reading from it
-      // clear_packet(setupIndex);
+      /* NOTE: don't clear the packet, since Matlab might be reading from it
+      clear_packet(setupIndex);
+      */
       packet[setupIndex].message_type = ACQ_MSGQ_INVALID;
       countCleared++;
       setupIndex = wrapnumpacket(setupIndex+1);
@@ -407,7 +414,7 @@ void write_data(int i, int j) {
   packet[i].numSamples   = 1;
   packet[i].numChannels  = 1;
   memset(packet[i].data, 0, DATASIZE*sizeof(int));
-  packet[i].data[0] = j;  // write something to identify the packet
+  packet[i].data[0] = j;  /* write something to identify the packet */
 }
 
 void clear_packet(int i) {
@@ -434,7 +441,7 @@ void clear_all_except_setup(void) {
       /* keep the dataset name intact but clear the rest (including the trigger details) */
       ptr = (char *)packet[i].data;
       while (ptr[j]) j++;
-      // while (j<(DATASIZE*sizeof(int))) {ptr[j]=0; j++;};
+      /* while (j<(DATASIZE*sizeof(int))) {ptr[j]=0; j++;}; */
       while (j<((DATASIZE-9012)*sizeof(int))) {ptr[j]=0; j++;};
       j+=12*sizeof(int);
       while (j<(DATASIZE)*sizeof(int)) {ptr[j]=0; j++;};
