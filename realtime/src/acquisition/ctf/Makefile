@@ -6,7 +6,7 @@ CFLAGS = -I$(FTBUFFER)/src -Wunused -Wall
 LDFLAGS = -L$(FTBUFFER)/src 
 LDLIBS = -lbuffer -lncurses -lpthread -lm
 
-ifneq "$(PLATFORM)" "x86_32-linux-gnu"
+ifneq "$(PLATFORM)" "i386-redhat-linux"
 $(warning For the DCCN, please compile for 32-bit linux.)
 endif
 
@@ -21,6 +21,10 @@ endif
 
 ifeq "$(PLATFORM)" "x86_64-redhat-linux"
 	BINDIR = $(FTPATH)/realtime/bin/glnxa64
+endif
+
+ifeq "$(PLATFORM)" "i386-redhat-linux"
+	BINDIR = $(FTPATH)/realtime/bin/glnx86
 endif
 
 ifndef BINDIR
