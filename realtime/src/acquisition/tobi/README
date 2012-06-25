@@ -1,0 +1,24 @@
+This implements a TiA client that connects to a server as defined in:
+
+  IEEE Trans Biomed Eng. 2012 Mar;59(3):852-9. Epub 2011 Dec 21.
+  Proposing a standardized protocol for raw biosignal transmission.
+  Breitwieser C, Daly I, Neuper C, Müller-Putz GR.
+
+Related links:
+  - http://www.ncbi.nlm.nih.gov/pubmed/22194230
+  - http://dx.doi.org/10.1109/TBME.2011.2174637
+  - http://www.bcistandards.org/
+  - http://arxiv.org/pdf/1103.4717.pdf
+
+
+# Overview
+The SigServer acquires and TiA then ships the stuff to the client(s). In the
+future, the SignalServer will also be able to save data and in combination with
+TiD (event distribution interface) to dispatch and store the events with the
+data.
+
+# Testing tia2ft with artificial signals
+
+Start a signal server:
+
+  $ ./server.sh bin/server_config.xml
