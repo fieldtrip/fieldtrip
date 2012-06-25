@@ -16,18 +16,16 @@ CXXFLAGS = -Wunused -Wall -pedantic -O3 -g
 CXXFLAGS += -I$(FTBUFFER)/src -I. -I$(CPPDIR) 
 
 ifeq "$(PLATFORM)" "mingw32"
-
 	BINDIR = $(FIELDTRIP)/realtime/bin/win32
+	EXTENSION = .exe
 	CXXFLAGS += -I$(FTBUFFER)/pthreads-win32/include
 	LDFLAGS += -LC:/msys/1.0/local/lib
 	# LDFLAGS += -L$(BINDIR) does not seem to work for DLLs. Hence:
 	LDLIBS += $(CPPOBJ) -lbuffer -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll
-	EXTENSION = .exe
-	
+
 	# Make clean target work on windows:
 	fixpath = $(subst /,\,$1)
 	RM = del
-	CP = copy /Y
 endif
 
 ifeq "$(PLATFORM)" "x86_64-redhat-linux"
@@ -38,7 +36,7 @@ ifeq "$(PLATFORM)" "x86_64-redhat-linux"
 endif
 
 ifndef BINDIR
-$(warning Unsupported plaform: $(PLATFORM) :/.)
+$(warning Unsupported platform: $(PLATFORM) :/.)
 endif
 
 # TODO: make proper library of C++ framework.

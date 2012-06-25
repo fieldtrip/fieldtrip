@@ -24,20 +24,19 @@ CPPOBJ = $(patsubst %,$(FTBUFFER)/cpp/%,\
 
 ifeq "$(PLATFORM)" "mingw32"
 	BINDIR = $(FTPATH)/realtime/bin/win32
+	EXTENSION = .exe
 	
 	CXXFLAGS += -I$(EDKPATH)/include
 	LDFLAGS += -L$(EDKPATH)/lib
 	LDLIBS += $(CPPOBJ) -lws2_32 -lwinmm $(BINDIR)/edk.dll $(BINDIR)/pthreadGC2.dll 
-	EXTENSION = .exe
 	
 	# Make clean target work on windows:
 	fixpath = $(subst /,\,$1)
 	RM = del
-	CP = copy /Y
 endif
 
 ifndef BINDIR
-$(warning Unsupported plaform: $(PLATFORM) :/.)
+$(warning Unsupported platform: $(PLATFORM) :/.)
 endif
 
 TARGETS = $(BINDIR)/emotiv2ft$(EXTENSION)

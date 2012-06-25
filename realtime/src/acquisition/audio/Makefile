@@ -23,17 +23,19 @@ CPPOBJ = $(patsubst %,$(CPPDIR)/%,\
 	SignalConfiguration.o GdfWriter.o FtConnection.o StringServer.o)
 
 ifeq "$(PLATFORM)" "mingw32"
-	fixpath = $(subst /,\,$1)
 	BINDIR = $(FIELDTRIP)/realtime/bin/win32
+	EXTENSION = .exe
+	fixpath = $(subst /,\,$1)
 
 	# LDFLAGS += -L$(BINDIR) does not seem to work for DLLs. Hence:
 	LDLIBS += $(CPPOBJ) -lbuffer -lws2_32 $(BINDIR)/pthreadGC2.dll \
 		$(BINDIR)/PortAudio.dll 
-	EXTENSION = .exe
+
 	RM = del
-	CP = copy /Y
-else 
-$(warning Untested platform... )
+endif
+
+ifndef BINDIR
+$(warning Unsupported platform: $(PLATFORM) :/.)
 endif
 
 TARGETS = $(patsubst %,$(BINDIR)/%$(EXTENSION), audio2ft)
