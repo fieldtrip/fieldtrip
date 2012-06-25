@@ -6,27 +6,52 @@
 # Use MinGW for compilation on Windows!
 
 PLATFORM = $(shell gcc -dumpmachine)
-CPPDIR   = ../../buffer/cpp
+FIELDTRIP = ../../../..
+FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
+CPPDIR  = $(FTBUFFER)/cpp
+
+#defaults, might be over-written further down
+CFLAGS = -Wunused -Wall -pedantic -O3 -g -I.
+CXXFLAGS = $(CFLAGS) -I$(FTBUFFER)/src -I$(CPPDIR)
+LDFLAGS = -L$(FTBUFFER)/src
+LDLIBS = -lbuffer
+
+# TODO: make proper library of C++ framework.
+CPPOBJ = $(patsubst %,$(CPPDIR)/%,\
+	SignalConfiguration.o GdfWriter.o FtConnection.o StringServer.o)
 
 ifeq "$(PLATFORM)" "mingw32"
-   LDFLAGS = ../../buffer/pthreads-win32/lib/pthreadGC2.dll ../../buffer/src/libbuffer.a -LC:/msys/1.0/local/lib -lws2_32 -lwinmm 
-   INCPATH = -I../../buffer/src -I. -I$(CPPDIR) -I../../buffer/pthreads-win32/include
-   SUFFIX = .exe
-else 
-   LDFLAGS = -lpthread ../../buffer/src/libbuffer.a -ldl 
-   INCPATH = -I../../buffer/src -I. -I$(CPPDIR)
-   SUFFIX = 
+	BINDIR = $(FIELDTRIP)/realtime/bin/win32
+	EXTENSION = .exe
+	
+	CXXFLAGS += -I$(FTBUFFER)/pthreads-win32/include
+	# LDFLAGS += -L$(BINDIR) does not seem to work for DLLs. Hence:
+	LDLIBS += $(CPPOBJ) -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll
+	
+	# Make clean target work on windows:
+	fixpath = $(subst /,\,$1)
+	RM = del
 endif
 
-CFLAGS = $(INCPATH) -Wunused -Wall -pedantic -O3 -g
+ifeq "$(PLATFORM)" "x86_64-linux-gnu"
+	LDLIBS += $(CPPOBJ) -lpthread -lbuffer -ldl 
+	BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
+endif
 
-all: thinkgear2ft$(SUFFIX) 
+ifndef BINDIR
+$(warning Unsupported platform: $(PLATFORM) :/.)
+endif
 
-serial.o: serial.c
-	gcc -c serial.c -I.
-	
-thinkgear2ft.o: thinkgear2ft.cc
-	g++ -c thinkgear2ft.cc $(CFLAGS)
-	
-thinkgear2ft$(SUFFIX): thinkgear2ft.o serial.o
-	g++ -o $@ $^ $(CFLAGS) $(CPPDIR)/SignalConfiguration.cc $(CPPDIR)/GdfWriter.o $(CPPDIR)/FtConnection.o $(CPPDIR)/StringServer.o $(LDFLAGS)
+TARGETS = $(BINDIR)/thinkgear2ft$(EXTENSION)
+
+all: $(TARGETS)
+
+thinkgear2ft$(EXTENSION): thinkgear2ft.cc serial.o
+
+$(BINDIR)/%$(EXTENSION): %.o
+	$(CXX) -o $@ $^ $(LDFLAGS) $(LDLIBS)
+
+$(TARGETS): serial.o
+
+clean:
+	$(RM) *.o $(call fixpath, $(TARGETS))
