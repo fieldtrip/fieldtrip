@@ -16,7 +16,14 @@ function [W,Gss,Gds,Hds]=sphericalSplineInterpolate(src,dest,lambda,order,type,t
 %  W      - [M x N] linear mapping matrix between old and new co-ords
 %
 % Based upon the paper: Perrin89
-% Code&Copyright: Jason Farquhar (jadref@gmail.com)
+
+% Copyright 2009-     by Jason D.R. Farquhar (jdrf@zepler.org)
+% Permission is granted for anyone to copy, use, or modify this
+% software and accompanying documents, provided this copyright
+% notice is retained, and note is made of any changes that have been
+% made. This software and documents are distributed without any
+% warranty, express or implied. 
+
 if ( nargin < 3 || isempty(lambda) ) lambda=1e-5; end;
 if ( nargin < 4 || isempty(order) ) order=4; end;
 if ( nargin < 5 || isempty(type)) type='spline'; end;
