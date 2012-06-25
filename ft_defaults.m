@@ -49,7 +49,8 @@ if ~isfield(ft_default, 'showcallinfo'), ft_default.showcallinfo = 'yes';    end
 % Ensure that the path containing ft_defaults (i.e. the fieldtrip toolbox
 % itself) is on the path. This allows people to do "cd path_to_fieldtrip; ft_defaults"
 ftPath = fileparts(mfilename('fullpath')); % get path, strip away 'ft_defaults'
-if isempty(regexp(path, [ftPath ':|' ftPath '$'], 'once'))
+ftPath = strrep(ftPath, '\', '\\');
+if isempty(regexp(path, [ftPath pathsep '|' ftPath '$'], 'once'))
   warning('FieldTrip is not yet on your MATLAB path, adding %s', ftPath);
   addpath(ftPath);
 end
