@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -e -u
 MAKE="make $1"
 PLATFORM=`uname`
 
@@ -10,6 +10,10 @@ echo Building buffer and ODM...
 echo Building acquisition software...
 if [[ $PLATFORM == 'Linux' ]]; then
   BLACKLIST='audio emotiv neuralynx siemens tmsi tobi'
+fi
+
+if [[ $PLATFORM == 'Darwin' ]]; then
+  BLACKLIST='audio emotiv neuralynx siemens neuromag tmsi tobi'
 fi
 
 #for ac in `ls acquisition`; do
