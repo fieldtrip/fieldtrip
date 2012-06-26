@@ -590,6 +590,11 @@ elseif isdir(filename) && most(filetype_check_extension({ls.name}, '.nte'))
   type = 'neuralynx_ds';
   manufacturer = 'Neuralynx';
   content = 'spike timestamps';
+elseif isdir(filename) && most(filetype_check_extension({ls.name}, '.ntt'))
+  % a directory containing tetrode recordings in Neuralynx format
+  type = 'neuralynx_ds';
+  manufacturer = 'Neuralynx';
+  content = 'tetrode recordings ';
   
 elseif isdir(p) && exist(fullfile(p, 'header'), 'file') && exist(fullfile(p, 'events'), 'file')
   type = 'fcdc_buffer_offline';
@@ -602,7 +607,7 @@ elseif isdir(filename) && exist(fullfile(filename, 'info.xml'), 'file') && exist
   type = 'egi_mff';
   manufacturer = 'Electrical Geodesics Incorporated';
   content = 'raw EEG data';
-elseif ~isdir(filename) && filetype_check_extension(p, 'mff') && (strcmp(f, 'Contents') || filetype_check_extension(filename, 'xml') || filetype_check_extension(filename, 'bin') || filetype_check_extension(filename, 'plist') || filetype_check_extension(filename, 'bak'))
+elseif ~isdir(filename) && isdir(p) && exist(fullfile(p, 'info.xml'), 'file') && exist(fullfile(p, 'signal1.bin'), 'file')
   % the file that the user specified is one of the files in an mff package directory
   type = 'egi_mff';
   manufacturer = 'Electrical Geodesics Incorporated';
