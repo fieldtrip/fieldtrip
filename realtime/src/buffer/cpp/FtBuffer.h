@@ -532,8 +532,6 @@ class FtSampleBlock {
 	void *getMatrix(int numChannels, int numSamples) {
 		unsigned int newSize = sizeof(datadef_t) + numChannels*numSamples*wordsize;
 		
-		if (newSize <= sizeof(datadef_t)) return NULL;
-		
 		if (newSize > sizeAlloc) {
 			if (ddef!=NULL) free(ddef);
 			ddef = (datadef_t *) malloc(newSize);

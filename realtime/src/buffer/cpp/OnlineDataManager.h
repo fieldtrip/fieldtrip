@@ -612,7 +612,7 @@ class OnlineDataManager : public StringRequestHandler {
 	
 		Ts *dest = (Ts *) sampleBlock->getMatrix(nStream, numThisTime);
 			
-		if (lpFilter != 0) {
+		if (lpFilter) {
 			for (int j=0;j<nThisBlock;j++) {
 				To *src = pBlock + nStatus + j*stride;
 				for (int i=0;i<nStream;i++) {
@@ -641,11 +641,14 @@ class OnlineDataManager : public StringRequestHandler {
 				if (--skipSamples < 0) skipSamples = deci-1;
 			}
 		}
-		err = clientrequest(ftSocket, sampleBlock->asRequest(), resp.in());
-		if (err || !resp.checkPut()) {
-			fprintf(stderr, "Could not write samples to FieldTrip buffer.\n");
-			return false;
-		}
+
+    if (numThisTime > 0) { // only send packet if there is actual data.
+      err = clientrequest(ftSocket, sampleBlock->asRequest(), resp.in());
+      if (err || !resp.checkPut()) {
+        fprintf(stderr, "Could not write samples to FieldTrip buffer.\n");
+        return false;
+      }
+    }
 		return true;
 	}
 	
