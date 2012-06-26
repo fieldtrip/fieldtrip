@@ -18,6 +18,17 @@ dataset = {
   };
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% test to see whether the file format can be detected in case the mff prefix has been removed
+dir1 = fullfile(datadir, 'NS1000sps.mff');
+dir2 = fullfile(datadir, 'NS1000sps');
+assert(isequal(ft_filetype(dir1), ft_filetype(dir2)));
+
+dir1 = fullfile(datadir, 'NS1000sps.mff', 'info.xml');
+dir2 = fullfile(datadir, 'NS1000sps',     'info.xml');
+assert(isequal(ft_filetype(dir1), ft_filetype(dir2)));
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 headerformat = 'egi_mff_v1';
 dataformat   = 'egi_mff_v1';
 eventformat  = 'egi_mff_v1';
@@ -63,3 +74,7 @@ for i=1:length(dataset)
   assert(isequal(v1_dat{i},  v2_dat{i})      , 'difference in data');
   assert(isequal(v1_evt{i},  v2_evt{i})      , 'difference in events'); % this fails in revision 5979
 end
+
+
+
+
