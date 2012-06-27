@@ -132,18 +132,22 @@ if needhdr
     hdr.nTrials = filehdr(1).nTrials;
   end
 
-  if isfield(filehdr, 'TimeStampPerSample') && any(diff([filehdr.TimeStampPerSample]))
-    error('different TimeStampPerSample per file not supported');
-  else
-    hdr.TimeStampPerSample = filehdr(1).TimeStampPerSample;
+  if isfield(filehdr, 'TimeStampPerSample')
+    if any(diff([filehdr.TimeStampPerSample]))
+      error('different TimeStampPerSample per file not supported');
+    else
+      hdr.TimeStampPerSample = filehdr(1).TimeStampPerSample;
+    end
   end
-
-  if isfield(filehdr, 'FirstTimeStamp') && any(diff([filehdr.FirstTimeStamp]))
-    error('different FirstTimeStamp per file not supported');
-  else
-    hdr.FirstTimeStamp = filehdr(1).FirstTimeStamp;
+  
+  if isfield(filehdr, 'FirstTimeStamp')
+    if any(diff([filehdr.FirstTimeStamp]))
+      error('different FirstTimeStamp per file not supported');
+    else
+      hdr.FirstTimeStamp = filehdr(1).FirstTimeStamp;
+    end
   end
-
+  
   % remember the original header details
   hdr.orig.header = filehdr;
   hdr.orig.fname  = fname;
