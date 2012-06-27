@@ -11,6 +11,8 @@ function filt = filter_with_correction(B,A,dat,dir)
 %                'onepass'         forward filter only
 %                'onepass-reverse' reverse filter only, i.e. backward in time
 %                'twopass'         zero-phase forward and reverse filter (default)
+%                'twopass-reverse' zero-phase reverse and forward filter
+%                'twopass-average' average of the twopass and the twopass-reverse
 %
 % Note that a one- or two-pass filter has consequences for the
 % strength of the filter, i.e. a two-pass filter with the same filter
@@ -50,8 +52,8 @@ dcGain = sum(B)/sum(A);
 
 switch dir
   case 'onepass'
-	offset = dat(:,1);
-	dat = dat - repmat(offset,1,N);
+    offset = dat(:,1);
+    dat = dat - repmat(offset,1,N);
     filt = filter(B, A, dat')' + repmat(dcGain*offset, 1, N);
   case 'onepass-reverse'
   	offset = dat(:,end);
@@ -59,8 +61,16 @@ switch dir
     filt = filter(B, A, dat')';
     filt = fliplr(filt) + repmat(dcGain*offset, 1, N);
   case 'twopass'
-	% filtfilt does the correction for us
+  	% filtfilt does the correction for us
     filt = filtfilt(B, A, dat')';
+  case 'twopass-reverse'
+  	% filtfilt does the correction for us
+    filt = fliplr(filtfilt(B, A, fliplr(dat)')');
+  case 'twopass-average'
+    % take the average from the twopass and the twopass-reverse
+    filt1 = filtfilt(B, A, dat')';
+    filt2 = fliplr(filtfilt(B, A, fliplr(dat)')');
+    filt  = (filt1 + filt2)/2;
   otherwise
     error('unsupported filter direction "%s"', dir);
 end
