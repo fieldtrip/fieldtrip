@@ -26,6 +26,7 @@ order = [];    % default
 type  = 'but'; % default
 
 figure; plot(ft_preproc_bandpassfilter(dat, Fs, Fbp, order, type, 'twopass'))
+figure; plot(ft_preproc_bandpassfilter(dat, Fs, Fbp, order, type, 'twopass-average'))
 figure; plot(ft_preproc_bandstopfilter(dat, Fs, Fbp, order, type, 'twopass'))
 figure; plot(ft_preproc_lowpassfilter (dat, Fs, Fbp, order, type, 'twopass'))
 figure; plot(ft_preproc_highpassfilter(dat, Fs, Fbp, order, type, 'twopass'))
@@ -68,3 +69,11 @@ assert(all(abs(begflt - fliplr(endflt))<tolerance));
 
 figure; plot([begflt; endflt]'); legend('begspike', 'endspike')
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+begflt = ft_preproc_bandpassfilter(begspike, Fs, Fbp, order, type, 'twopass-average');
+endflt = ft_preproc_bandpassfilter(endspike, Fs, Fbp, order, type, 'twopass-average');
+assert(all(abs(begflt - fliplr(endflt))<tolerance));
+
+figure; plot([begflt; endflt]'); legend('begspike', 'endspike')
