@@ -61,4 +61,6 @@ switch dir
   case 'twopass'
 	% filtfilt does the correction for us
     filt = filtfilt(B, A, dat')';
+  otherwise
+    error('unsupported filter direction "%s"', dir);
 end

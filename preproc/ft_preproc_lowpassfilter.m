@@ -2,7 +2,7 @@ function [filt] = ft_preproc_lowpassfilter(dat,Fs,Flp,N,type,dir)
 
 % FT_PREPROC_LOWPASSFILTER applies a low-pass filter to the data and thereby
 % removes all high frequency components in the data
-% 
+%
 % Use as
 %   [filt] = ft_preproc_lowpassfilter(dat, Fsample, Flp, N, type, dir)
 % where
@@ -13,7 +13,7 @@ function [filt] = ft_preproc_lowpassfilter(dat,Fs,Flp,N,type,dir)
 %              frequency band and data length (fir/firls)
 %   type       optional filter type, can be
 %                'but' Butterworth IIR filter (default)
-%                'fir' FIR filter using Matlab fir1 function 
+%                'fir' FIR filter using Matlab fir1 function
 %                'firls' FIR filter using Matlab firls function (requires Matlab Signal Processing Toolbox)
 %   dir        optional filter direction, can be
 %                'onepass'         forward filter only
@@ -51,7 +51,7 @@ function [filt] = ft_preproc_lowpassfilter(dat,Fs,Flp,N,type,dir)
 
 % set the default filter order later
 if nargin<4 || isempty(N)
-    N = [];
+  N = [];
 end
 
 % set the default filter type
@@ -89,7 +89,6 @@ switch type
     if N > floor( (size(dat,2) - 1) / 3)
       N=floor(size(dat,2)/3) - 1;
     end
-    
     f = 0:0.001:1;
     if rem(length(f),2)~=0
       f(end)=[];
@@ -104,7 +103,9 @@ switch type
     z(pos1:pos2) = 1;
     A = 1;
     B = firls(N,f,z); % requires Matlab signal processing toolbox
-end  
+  otherwise
+    error('unsupported filter type "%s"', type);
+end
 
 meandat = mean(dat,2);
 for i=1:nsamples

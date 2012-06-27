@@ -90,7 +90,6 @@ switch type
     if N > floor( (size(dat,2) - 1) / 3)
       N=floor(size(dat,2)/3) - 1;
     end
-    
     f = 0:0.001:1;
     if rem(length(f),2)~=0
       f(end)=[];
@@ -98,7 +97,7 @@ switch type
     z = zeros(1,length(f));
     if(isfinite(min(Fbp)))
       [val,pos1] = min(abs(Fs*f/2 - min(Fbp)));
-    else 
+    else
       [val,pos2] = min(abs(Fs*f/2 - max(Fbp)));
       pos1=pos2;
     end
@@ -110,6 +109,8 @@ switch type
     z(pos1:pos2) = 1;
     A = 1;
     B = firls(N,f,z); % requires Matlab signal processing toolbox
+  otherwise
+    error('unsupported filter type "%s"', type);
 end
 
 meandat = mean(dat,2);
