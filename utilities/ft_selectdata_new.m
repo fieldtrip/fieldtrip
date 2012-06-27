@@ -44,11 +44,17 @@ if strcmp(dtype, 'raw')
   cfg.channel = ft_getopt(cfg, 'channel', 'all');
   cfg.latency = ft_getopt(cfg, 'latency', 'all');
   cfg.trials  = ft_getopt(cfg, 'trials',  'all');
+  
   for i=1:length(varargin)
     varargin{i} = selfromraw(varargin{i}, 'rpt', cfg.trials, 'chan', cfg.channel, 'latency', cfg.latency);
   end
   
 else
+  
+  cfg.trials  = ft_getopt(cfg, 'trials',  'all');
+  if length(varargin)>1 && ~isequal(cfg.trials, 'all')
+    error('it is ambiguous to a subselection of trials while concatenating data')
+  end
   
   hastime   = isfield(varargin{1}, 'time');
   hasfreq   = isfield(varargin{1}, 'freq');
@@ -68,51 +74,80 @@ else
   
   dimtok = tokenize(dimord, '_');
   dimsiz = nan(size(dimtok));
-  dimfields = {};
+  dimfields = cell(size(dimtok));
   for i=1:numel(dimtok)
     % this switch-list is consistent with fixdimord
     switch dimtok{i}
       case 'time'
         dimsiz(i) = length(varargin{1}.time);
-        dimfields{end+1} = 'time';
+        dimfields{i} = 'time';
       case 'freq'
         dimsiz(i) = length(varargin{1}.freq);
-        dimfields{end+1} = 'freq';
+        dimfields{i} = 'freq';
       case 'chan'
         dimsiz(i) = length(varargin{1}.label);
-        dimfields{end+1} = 'label';
+        dimfields{i} = 'label';
       case 'chancmb'
         dimsiz(i) = size(varargin{1}.labelcmb,1);
-        dimfields{end+1} = 'labelcmb';
+        dimfields{i} = 'labelcmb';
       case 'pos'
         dimsiz(i) = size(varargin{1}.pos,1);
-        dimfields{end+1} = 'pos';
+        dimfields{i} = 'pos';
       case 'comp'
         dimsiz(i) = length(varargin{1}.label);
-        dimfields{end+1} = 'label';
+        dimfields{i} = 'label';
         
       case 'subj'
-        error('FIXME');
+        % the number of elements along this dimension is implicit
+        dimsiz(i) = nan;
+        dimfields{i} = 'implicit';
       case 'rpt'
-        error('FIXME');
+        % the number of elements along this dimension is implicit
+        dimsiz(i) = nan;
+        dimfields{i} = 'implicit';
       case 'rpttap'
-        error('FIXME');
+        % the number of elements along this dimension is implicit
+        dimsiz(i) = nan;
+        dimfields{i} = 'implicit';
+        
       case 'refchan'
         error('FIXME');
       case 'voxel'
         error('FIXME');
       case 'ori'
         error('FIXME');
+        
       otherwise
         % try to guess the size from the corresponding field
         if isfield(varargin{1}, dimtok{i})
           siz = varargin{1}.(dimtok{i});
           if length(siz)==2 && any(siz==1)
             dimsiz(i) = prod(siz);
+            dimfields{i} = dimtok{i};
           end
         end
     end % switch
   end % for dimtok
+  
+  % deal with the data dimensions whose size is only implicitly represented
+  if any(strcmp(dimfields, 'implicit'))
+    fn  = fieldnames(varargin{1})';
+    sel = false(size(fn));
+    for i=1:numel(fn)
+      if isequalwithoutnans(size(varargin{1}.(fn{i})), dimsiz)
+        warning('using the "%s" field to determine the size along the unknown dimensions', fn{i});
+        % update the size of all dimensions
+        dimsiz = size(varargin{1}.(fn{i}));
+        % update the fieldname of each dimension
+        dimfields(strcmp(dimfields, 'implicit')) = dimtok(strcmp(dimfields, 'implicit'));
+        break
+      end
+    end
+    if any(strcmp(dimfields, 'implicit'))
+      % it failed
+      error('could not determine the size of the implicit "%s" dimension', dimfields{strcmp(dimfields, 'implicit')});
+    end
+  end
   
   fn  = fieldnames(varargin{1})';
   sel = false(size(fn));
@@ -131,11 +166,13 @@ else
         % trim the selection to all inputs
         [selchan, cfg] = getselection_chan(cfg, varargin{i});
         [seltime, cfg] = getselection_time(cfg, varargin{i});
+        [selrpt,  cfg] = getselection_rpt (cfg, varargin{i}, 'datfields', datfields);
       end % varargin
       for i=1:numel(varargin)
         % get the selection from all inputs
         [selchan, cfg] = getselection_chan(cfg, varargin{i});
         [seltime, cfg] = getselection_time(cfg, varargin{i});
+        [selrpt,  cfg] = getselection_rpt (cfg, varargin{i});
         if ~isnan(selchan)
           varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'chan')), selchan, datfields);
           varargin{i}.label = varargin{i}.label(selchan);
@@ -143,6 +180,12 @@ else
         if ~isnan(seltime)
           varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'time')), seltime, datfields);
           varargin{i}.time  = varargin{i}.time(seltime);
+        end
+        if ~isnan(selrpt)
+          keyboard
+          varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'rpt')), selrpt, datfields);
+          varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'rpt')), selrpt, datfields);
+          varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'rpt')), selrpt, datfields);
         end
       end % varargin
       
@@ -236,30 +279,30 @@ end % function keepfields
 
 function [data] = makeselection(data, seldim, selindx, datfields)
 
-  if numel(seldim) > 1
-    for k = 1:numel(seldim)
-      data = makeselection(data, seldim(k), selindx, datfields);
-    end
+if numel(seldim) > 1
+  for k = 1:numel(seldim)
+    data = makeselection(data, seldim(k), selindx, datfields);
   end
+end
 
-  for i=1:numel(datfields)
-    switch seldim
-      case 1
-        data.(datfields{i}) = data.(datfields{i})(selindx,:,:,:,:,:);
-      case 2
-        data.(datfields{i}) = data.(datfields{i})(:,selindx,:,:,:,:);
-      case 3
-        data.(datfields{i}) = data.(datfields{i})(:,:,selindx,:,:,:);
-      case 4
-        data.(datfields{i}) = data.(datfields{i})(:,:,:,selindx,:,:);
-      case 5
-        data.(datfields{i}) = data.(datfields{i})(:,:,:,:,selindx,:);
-      case 6
-        data.(datfields{i}) = data.(datfields{i})(:,:,:,:,:,selindx);
-      otherwise
-        error('unsupported dimension (%d) for making a selection for %s', seldim, datfields{i});
-    end % switch
-  end % for datfields
+for i=1:numel(datfields)
+  switch seldim
+    case 1
+      data.(datfields{i}) = data.(datfields{i})(selindx,:,:,:,:,:);
+    case 2
+      data.(datfields{i}) = data.(datfields{i})(:,selindx,:,:,:,:);
+    case 3
+      data.(datfields{i}) = data.(datfields{i})(:,:,selindx,:,:,:);
+    case 4
+      data.(datfields{i}) = data.(datfields{i})(:,:,:,selindx,:,:);
+    case 5
+      data.(datfields{i}) = data.(datfields{i})(:,:,:,:,selindx,:);
+    case 6
+      data.(datfields{i}) = data.(datfields{i})(:,:,:,:,:,selindx);
+    otherwise
+      error('unsupported dimension (%d) for making a selection for %s', seldim, datfields{i});
+  end % switch
+end % for datfields
 
 end % function makeselection
 
@@ -423,22 +466,54 @@ end
 
 end % function getselection_freq
 
-function [rptindx, cfg] = getselection_rpt(cfg, data)
+function [rptindx, cfg] = getselection_rpt(cfg, data, varargin)
 % this should deal with cfg.trials
+datfields = ft_getopt(varargin, 'datfields');
 
-% this return value specifies that no selection was specified
-rptindx = nan;
-
-error('FIXME');
+if isfield(cfg, 'trials') && ~isequal(cfg.trials, 'all') && ~isempty(datfields)
+  
+  dimtok = tokenize(data.dimord, '_');
+  rptdim = [];
+  
+  if isempty(rptdim)
+    rptdim = find(strcmp(dimtok, 'rpt'));
+  end
+  if isempty(rptdim)
+    rptdim = find(strcmp(dimtok, 'rpttap'));
+  end
+  if isempty(rptdim)
+    rptdim = find(strcmp(dimtok, 'subj'));
+  end
+  
+  if isempty(rptdim)
+    % this return value specifies that no selection was specified
+    rptindx = nan;
+    return
+  else
+    rptsiz  = size(data.(datfields{1}), rptdim);
+    rptindx = ft_getopt(cfg, 'trials');
+    rptindx = unique(sort(rptindx));
+    if rptindx(1)<1
+      error('cannot select rpt/subj/rpttap smaller than 1');
+    elseif rptindx(end)>rptsiz
+      error('cannot select rpt/subj/rpttap larger than the number of repetitions in the data');
+    end
+    cfg.trials = rptindx;
+    return
+  end
+  
+else
+  rptindx = nan;
+end % if isfield cfg.trials
 
 end % function getselection_rpt
 
-function [subjindx, cfg] = getselection_subj(cfg, data)
-% this should deal with cfg.trials
 
-% this return value specifies that no selection was specified
-subjindx = nan;
-
-error('FIXME');
-
-end % function getselection_subj
+function ok = isequalwithoutnans(a, b)
+if numel(a)~=numel(b)
+  ok = false;
+else
+  c = ~isnan(a(:)) & ~isnan(b(:));
+  ok = isequal(a(c), b(c));
+end
+end % function isequalwithoutnans
