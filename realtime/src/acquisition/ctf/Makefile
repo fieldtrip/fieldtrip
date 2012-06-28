@@ -12,7 +12,6 @@ endif
 
 ifeq "$(PLATFORM)" "i686-apple-darwin10"
 	BINDIR = $(FTPATH)/realtime/bin/maci
-	EXTENSION = .maci
 endif
 
 ifeq "$(PLATFORM)" "x86_64-linux-gnu"

@@ -35,7 +35,6 @@ endif
 
 ifeq "$(PLATFORM)" "i686-apple-darwin10"
 	BINDIR = $(FIELDTRIP)/realtime/bin/maci
-	EXTENSION = .maci
 	fixpath = $1
 endif
 

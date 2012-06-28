@@ -34,7 +34,6 @@ endif
 
 ifeq "$(PLATFORM)" "i686-apple-darwin10"
 	BINDIR = $(FIELDTRIP)/realtime/bin/maci
-	EXTENSION = .maci
 	LDLIBS += -lpthread
 	fixpath = $1
 endif
@@ -43,7 +42,6 @@ ifeq "$(PLATFORM)" "x86_64-redhat-linux"
 	LDFLAGS += -L$(FTBUFFER)/src
 	LDLIBS += -lbuffer -lpthread -ldl
 	BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
-	EXTENSION = 
 endif
 
 ifndef BINDIR
