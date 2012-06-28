@@ -238,7 +238,7 @@ needfix = needfix || ~all(skew==0) && all(skew<0.01);
 
 % if the skew is less than 1% it will be corrected
 if needfix
-  warning('correcting numerical inaccuracy in the time axes');
+  warning_once('correcting numerical inaccuracy in the time axes');
   for i=1:length(data.time)
     % reconstruct the time axis of each trial, using the begin latency of
     % the first trial and the integer offset in samples of each trial
