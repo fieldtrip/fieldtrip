@@ -70,6 +70,16 @@ else
   defaultbackend = 'local';
 end
 
+if ~isempty(regexp(getenv('HOSTNAME'), '^dccn-c', 'once')) || ~isempty(regexp(getenv('HOSTNAME'), '^mentat', 'once'))
+  % At the DCCN we want the distributed MATLAB jobs to be queued in the
+  % "matlab" queue. This routes them to specific multi-core machines and
+  % reduces the number of licenses that can be claimed at once.
+  defaultqueue = 'matlab';
+else
+  % let the queueing system decide
+  defaultqueue = [];
+end
+
 % convert the input arguments into something that strmatch can work with
 strargin = varargin;
 strargin(~cellfun(@ischar, strargin)) = {''};
@@ -104,7 +114,7 @@ batchid       = ft_getopt(optarg, 'batchid');
 timoverhead   = ft_getopt(optarg, 'timoverhead', 180);            % allow some overhead to start up the MATLAB executable
 memoverhead   = ft_getopt(optarg, 'memoverhead', 1024*1024*1024); % allow some overhead for the MATLAB executable in memory
 backend       = ft_getopt(optarg, 'backend', defaultbackend);     % can be torque, local, sge
-queue         = ft_getopt(optarg, 'queue', []);
+queue         = ft_getopt(optarg, 'queue', defaultqueue);
 submitoptions = ft_getopt(optarg, 'options', []);
 display       = ft_getopt(optarg, 'display', 'no');
 jvm           = ft_getopt(optarg, 'jvm', 'yes');
