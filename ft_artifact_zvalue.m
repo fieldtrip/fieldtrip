@@ -142,7 +142,7 @@ if nargin > 1
   % data given as input
   isfetch = 1;
   hdr  = ft_fetch_header(data);
-  data = ft_checkdata(data, 'datatype', 'raw', 'hassampleopt', 'yes');
+  data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
 elseif nargin == 1
   % only cfg given
   isfetch = 0;
