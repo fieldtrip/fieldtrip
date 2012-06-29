@@ -1098,7 +1098,7 @@ switch headerformat
     % give this warning only once
     warning('creating fake channel names');
     for i=1:hdr.nChans
-      hdr.label{i} = sprintf('%3d', i);
+      hdr.label{i} = sprintf('%d', i);
     end
     % this should be a column vector
     hdr.label = hdr.label(:);
