@@ -26,9 +26,11 @@ function [data] = ft_channelrepair(cfg, data)
 % This will include channels that are missing in your in the neighbour-
 % definition.
 %
-% You should define sensor positions as defined by FT_FETCH_SENS, but sens
-% definitions in the cfg will be preferred over sens definition from the
-% data
+% The EEG or MEG sensor positions can be present in the data or can be specified as
+%   cfg.elec          = structure with electrode positions, see FT_DATATYPE_SENS
+%   cfg.grad          = structure with gradiometer definition, see FT_DATATYPE_SENS
+%   cfg.elecfile      = name of file containing the electrode positions, see FT_READ_SENS
+%   cfg.gradfile      = name of file containing the gradiometer definition, see FT_READ_SENS
 %
 % To facilitate data-handling and distributed computing with the peer-to-peer
 % module, this function has the following options:

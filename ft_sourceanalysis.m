@@ -68,10 +68,6 @@ function [source] = ft_sourceanalysis(cfg, data, baseline)
 %   cfg.numrandomization   = number, e.g. 500
 %   cfg.numpermutation     = number, e.g. 500 or 'all'
 %
-% You should specify the volume conductor model, see FT_FETCH_VOL.
-%
-% If the sensor information is obtained using FT_FETCH_SENS.
-%
 % If you have not specified a grid with pre-computed leadfields,
 % the leadfield for each grid location will be computed on the fly.
 % In that case you can modify the leadfields by reducing the rank
@@ -98,6 +94,15 @@ function [source] = ft_sourceanalysis(cfg, data, baseline)
 %   cfg.keepmom       = 'no' or 'yes'
 %   cfg.feedback      = 'no', 'text', 'textbar', 'gui' (default = 'text')
 %
+% The volume conduction model of the head should be specified as
+%   cfg.vol           = structure with volume conduction model, see FT_PREPARE_HEADMODEL
+%   cfg.hdmfile       = name of file containing the volume conduction model, see FT_READ_VOL
+%
+% The EEG or MEG sensor positions can be present in the data or can be specified as
+%   cfg.elec          = structure with electrode positions, see FT_DATATYPE_SENS
+%   cfg.grad          = structure with gradiometer definition, see FT_DATATYPE_SENS
+%   cfg.elecfile      = name of file containing the electrode positions, see FT_READ_SENS
+%   cfg.gradfile      = name of file containing the gradiometer definition, see FT_READ_SENS
 %
 % To facilitate data-handling and distributed computing with the peer-to-peer
 % module, this function has the following options:

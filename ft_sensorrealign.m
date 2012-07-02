@@ -63,9 +63,11 @@ function [elec_realigned] = ft_sensorrealign(cfg, elec_original)
 %                        between electrode labels are case sensitive (default = 'yes')
 %   cfg.feedback       = 'yes' or 'no' (default = 'no')
 %
-% The electrodes or the gradiometers that will be realigned can be
-% specified in the second input argument, or optionally as specified in the
-% cfg. See FT_FETCH_SENS.
+% The EEG or MEG sensor positions can be present in the second input argument or can be specified as
+%   cfg.elec          = structure with electrode positions, see FT_DATATYPE_SENS
+%   cfg.grad          = structure with gradiometer definition, see FT_DATATYPE_SENS
+%   cfg.elecfile      = name of file containing the electrode positions, see FT_READ_SENS
+%   cfg.gradfile      = name of file containing the gradiometer definition, see FT_READ_SENS
 %
 % To realign the sensors using the fiducials, the target has to contain the
 % three template fiducials, e.g.
@@ -88,8 +90,7 @@ function [elec_realigned] = ft_sensorrealign(cfg, elec_original)
 %                        single triangulated boundary, or a Nx3 matrix with surface
 %                        points
 %
-% See also FT_READ_SENS, FT_VOLUMEREALIGN, FT_INTERACTIVEREALIGN,
-% FT_FETCH_SENS
+% See also FT_READ_SENS, FT_VOLUMEREALIGN, FT_INTERACTIVEREALIGN
 
 % Copyright (C) 2005-2011, Robert Oostenveld
 %

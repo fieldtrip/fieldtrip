@@ -24,15 +24,13 @@ function [neighbours, cfg] = ft_prepare_neighbours(cfg, data)
 %   cfg.template      = name of the template file, e.g. CTF275_neighb.mat
 %   cfg.layout        = filename of the layout, see FT_PREPARE_LAYOUT
 %   cfg.channel       = channels for which neighbours should be found
-%   cfg.elec          = structure with EEG electrode positions
-%   cfg.grad          = structure with MEG gradiometer positions
-%   cfg.elecfile      = filename containing EEG electrode positions
-%   cfg.gradfile      = filename containing MEG gradiometer positions
 %   cfg.feedback      = 'yes' or 'no' (default = 'no')
 %
-% The following data fields may also be used by FT_PREPARE_NEIGHBOURS:
-%   data.elec     = structure with EEG electrode positions
-%   data.grad     = structure with MEG gradiometer positions
+% The EEG or MEG sensor positions can be present in the data or can be specified as
+%   cfg.elec          = structure with electrode positions, see FT_DATATYPE_SENS
+%   cfg.grad          = structure with gradiometer definition, see FT_DATATYPE_SENS
+%   cfg.elecfile      = name of file containing the electrode positions, see FT_READ_SENS
+%   cfg.gradfile      = name of file containing the gradiometer definition, see FT_READ_SENS
 %
 % The output is an array of structures with the "neighbours" which is
 % structured like this:
@@ -45,7 +43,7 @@ function [neighbours, cfg] = ft_prepare_neighbours(cfg, data)
 %        etc.
 % Note that a channel is not considered to be a neighbour of itself.
 %
-% See also FT_NEIGHBOURPLOT, FT_FETCH_SENS
+% See also FT_NEIGHBOURPLOT
 
 % Copyright (C) 2006-2011, Eric Maris, Jorn M. Horschig, Robert Oostenveld
 %

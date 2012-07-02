@@ -22,9 +22,6 @@ function [source] = ft_dipolefitting(cfg, data)
 %   cfg.nonlinear   = 'yes' or 'no', perform nonlinear search for optimal
 %                     dipole parameters (default = 'yes')
 %
-% You should specify the volume conductor model, see FT_FETCH_VOL, and the 
-% sensor information, see FT_FETCH_SENS.
-%
 % If you start with a grid search, you should specify the grid locations at
 % which a test dipole will be placed. The positions of the dipoles can be
 % specified as a regular 3-D grid that is aligned with the axes of the head
@@ -70,6 +67,12 @@ function [source] = ft_dipolefitting(cfg, data)
 %   cfg.dipfit.display  = level of display, can be 'off', 'iter', 'notify' or 'final' (default = 'iter')
 %   cfg.dipfit.optimfun = function to use, can be 'fminsearch' or 'fminunc' (default is determined automatic)
 %   cfg.dipfit.maxiter  = maximum number of function evaluations allowed (default depends on the optimfun)
+%
+% The EEG or MEG sensor positions can be present in the data or can be specified as
+%   cfg.elec          = structure with electrode positions, see FT_DATATYPE_SENS
+%   cfg.grad          = structure with gradiometer definition, see FT_DATATYPE_SENS
+%   cfg.elecfile      = name of file containing the electrode positions, see FT_READ_SENS
+%   cfg.gradfile      = name of file containing the gradiometer definition, see FT_READ_SENS
 %
 % To facilitate data-handling and distributed computing with the peer-to-peer
 % module, this function has the following options:

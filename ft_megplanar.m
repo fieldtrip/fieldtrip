@@ -26,11 +26,6 @@ function [data] = ft_megplanar(cfg, data)
 % the head and of a source model. The 'sourceproject' method is not supported for
 % frequency domain data.
 %
-% A head model must be specified, see FT_FETCH_VOL, or alternatively 
-% manually using
-%   cfg.vol.r       = radius of sphere
-%   cfg.vol.o       = [x, y, z] position of origin
-%
 % A dipole layer representing the brain surface must be specified with
 %   cfg.inwardshift = depth of the source layer relative to the head model surface (default = 2.5, which is adequate for a skin-based head model)
 %   cfg.spheremesh  = number of dipoles in the source layer (default = 642)
@@ -40,6 +35,10 @@ function [data] = ft_megplanar(cfg, data)
 %                     points
 % If no headshape is specified, the dipole layer will be based on the inner compartment
 % of the volume conduction model.
+%
+% The volume conduction model of the head should be specified as
+%   cfg.vol           = structure with volume conduction model, see FT_PREPARE_HEADMODEL
+%   cfg.hdmfile       = name of file containing the volume conduction model, see FT_READ_VOL
 %
 % The following cfg fields are optional:
 %   cfg.feedback

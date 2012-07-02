@@ -55,8 +55,9 @@ function [norm] = ft_electroderealign(cfg)
 %                        between electrode labels are case sensitive (default = 'yes')
 %   cfg.feedback       = 'yes' or 'no' (default = 'no')
 %
-% The electrode set that will be realigned is specified in the cfg, see
-% FT_FETCH_SENS.
+% The EEG sensor positions can be present in the data or can be specified as
+%   cfg.elec          = structure with electrode positions, see FT_DATATYPE_SENS
+%   cfg.elecfile      = name of file containing the electrode positions, see FT_READ_SENS
 %
 % If you want to align the electrodes to a single template electrode set
 % or to multiple electrode sets (which will be averaged), you should

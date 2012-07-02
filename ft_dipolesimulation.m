@@ -6,14 +6,6 @@ function [simulated] = ft_dipolesimulation(cfg)
 % Use as
 %   data = ft_dipolesimulation(cfg)
 %
-% You should specify the volume conductor model as defined by FT_FETCH_VOL
-% If the sensor information is not contained in the data itself you should
-% also specify the sensor information, see FT_FETCH_SENS
-%
-% optionally
-%   cfg.channel    = Nx1 cell-array with selection of channels (default = 'all'),
-%                    see FT_CHANNELSELECTION for details
-%
 % The dipoles position and orientation have to be specified with
 %   cfg.dip.pos     = [Rx Ry Rz] (size Nx3)
 %   cfg.dip.mom     = [Qx Qy Qz] (size 3xN)
@@ -33,6 +25,20 @@ function [simulated] = ft_dipolesimulation(cfg)
 % specifying an absolute or a relative noise level
 %   cfg.relnoise    = add noise with level relative to simulated signal
 %   cfg.absnoise    = add noise with absolute level
+%
+% Optional input arguments are
+%   cfg.channel    = Nx1 cell-array with selection of channels (default = 'all'),
+%                    see FT_CHANNELSELECTION for details
+%
+% The volume conduction model of the head should be specified as
+%   cfg.vol           = structure with volume conduction model, see FT_PREPARE_HEADMODEL
+%   cfg.hdmfile       = name of file containing the volume conduction model, see FT_READ_VOL
+%
+% The EEG or MEG sensor positions should be specified as
+%   cfg.elec          = structure with electrode positions, see FT_DATATYPE_SENS
+%   cfg.grad          = structure with gradiometer definition, see FT_DATATYPE_SENS
+%   cfg.elecfile      = name of file containing the electrode positions, see FT_READ_SENS
+%   cfg.gradfile      = name of file containing the gradiometer definition, see FT_READ_SENS
 %
 % See also FT_SOURCEANALYSIS, FT_SOURCESTATISTICS, FT_SOURCEPLOT,
 % FT_PREPARE_VOL_SENS
