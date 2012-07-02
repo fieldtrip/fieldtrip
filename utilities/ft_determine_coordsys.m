@@ -177,7 +177,12 @@ switch dtype
     view([110 36]);
     
   case 'source'
-    ft_plot_mesh(data, 'edgecolor','none', 'facecolor', [0.6 0.8 0.6], 'facealpha', 0.6);
+    if isfield(data, 'inside') && ~isfield(data, 'tri')
+      % only plot the source locations that are inside the volume conduction model
+      ft_plot_mesh(data.pos(data.inside, :));
+    else
+      ft_plot_mesh(data, 'edgecolor','none', 'facecolor', [0.6 0.8 0.6], 'facealpha', 0.6);
+    end
     camlight;
     
   case 'dip'
