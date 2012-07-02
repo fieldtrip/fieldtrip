@@ -33,8 +33,14 @@ ifeq "$(PLATFORM)" "mingw32"
 endif
 
 ifeq "$(PLATFORM)" "i686-apple-darwin10"
+	# Currently, only 32 bit is supported since the 64 bit drivers don't seem to
+	# work. This means that for correct compilation of biosemi2ft, also libbuffer
+	# and ODM need to be (manually) recompiled and linked with '-m32' flag in the
+	# CFLAGS and LDFLAGS.
 	BINDIR = $(FIELDTRIP)/realtime/bin/maci
-	LDLIBS += -lpthread
+	CFLAGS += -m32
+	CXXFLAGS += -m32
+	LDLIBS += -lpthread -m32
 	fixpath = $1
 endif
 

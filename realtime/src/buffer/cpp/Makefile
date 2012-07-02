@@ -8,27 +8,28 @@
 PLATFORM = $(shell gcc -dumpmachine)
 
 #defaults, might be over-written further down
-LDFLAGS = -lpthread ../src/libbuffer.a -ldl 
+LDFLAGS += -L../src
+LDFLAGS += -lpthread -lbuffer -ldl 
 INCPATH = -I../src -I. 
-SUFFIX = 
 RM = rm -f
 
 ifeq "$(PLATFORM)" "mingw32"
-   LDFLAGS = ../../external/pthreads-win32/lib/pthreadGC2.dll ../src/libbuffer.a -LC:/msys/1.0/local/lib -lws2_32 -lwinmm 
-   INCPATH = -I../src -I. -I../../external/pthreads-win32/include
-   SUFFIX = .exe
-   RM = del
+	LDFLAGS += ../../external/pthreads-win32/lib/pthreadGC2.dll \
+		-LC:/msys/1.0/local/lib -lws2_32 -lwinmm 
+	INCPATH += -I../../external/pthreads-win32/include
+	SUFFIX = .exe
+	RM = del
 endif
 
 ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
-   LDFLAGS = ../../external/pthreads-win64/lib/pthreadGC2-w64.dll ../src/libbuffer.a -LC:/msys/1.0/local/lib -lws2_32 -lwinmm 
-   INCPATH = -I../src -I. -I../../external/pthreads-win64/include
-   SUFFIX = .exe
-   RM = del
+	LDFLAGS += ../../external/pthreads-win64/lib/pthreadGC2-w64.dll \
+		LC:/msys/1.0/local/lib -lws2_32 -lwinmm 
+	INCPATH += -I../../external/pthreads-win64/include
+	SUFFIX = .exe
+	RM = del
 endif
 
-CFLAGS = $(INCPATH) -Wunused -Wall -pedantic -O3 -g $(FLAGS)
-LDFLAGS += $(FLAGS)
+CFLAGS += $(INCPATH) -Wunused -Wall -pedantic -O3
 
 all: odmTest$(SUFFIX)
 

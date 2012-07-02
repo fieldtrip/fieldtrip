@@ -10,42 +10,32 @@ CC = gcc
 PLATFORM = $(shell gcc -dumpmachine)
 
 # default
-INCPATH	 = -I.
-LIBPATH  = -L.
-LIBS 	 = -lbuffer -lm -lpthread
-CFLAGS	 = $(INCPATH) -Wunused -Wall -pedantic -O0 -fPIC -g
+INCPATH = -I.
+LIBPATH = -L.
+LIBS = -lbuffer -lm -lpthread
+CFLAGS += $(INCPATH) -Wunused -Wall -pedantic -O0 -fPIC -g
+CXXFLAGS += $(INCPATH) -Wunused -Wall -pedantic -O0 -fPIC -g
 
 ifeq "$(PLATFORM)" "i686-apple-darwin10"
-    # override the defaults
-	INCPATH	 = -I.
-	LIBPATH  = -L.
-	LIBS 	 = -lbuffer -lm -lpthread
-	CFLAGS	 = $(INCPATH) -Wunused -Wall -pedantic -O0 -fPIC -g
-	RM       = rm -f
+	RM = rm -f
 endif
 
 ifeq "$(PLATFORM)" "mingw32"
-    # override the defaults
-	INCPATH	 = -I. -I../../external/pthreads-win32/include
-	LIBPATH  = -L. -L../../external/pthreads-win32/lib
-	LIBS 	 = -lbuffer -lm -lpthreadGC2
-	CFLAGS	 = $(INCPATH) -Wunused -pedantic -Wall -O0 -g
-	RM       = del
+	INCPATH	+= -I. -I../../external/pthreads-win32/include
+	LIBPATH += -L. -L../../external/pthreads-win32/lib
+	LIBS += -lpthreadGC2
+	RM = del
 endif
 
 ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
-    # override the defaults
-	INCPATH	 = -I. -I../../external/pthreads-win64/include
-	LIBPATH  = -L. -L../../external/pthreads-win64/lib
-	LIBS 	 = -lbuffer -lm -lpthread
-	CFLAGS	 = $(INCPATH) -Wunused -pedantic -Wall -O0 -g 
+	INCPATH	+= -I. -I../../external/pthreads-win64/include
+	LIBPATH += -L. -L../../external/pthreads-win64/lib
 	RM       = del
 endif
 
 BINDIR	 = .
-CXXFLAGS = $(INCPATH) -Wunused -pedantic -O0
 
-##############################################################################
+#---
 
 all: libbuffer.a
 
