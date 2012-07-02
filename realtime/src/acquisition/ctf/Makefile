@@ -10,10 +10,6 @@ ifneq "$(PLATFORM)" "i386-redhat-linux"
 $(warning For the DCCN, please compile for 32-bit linux.)
 endif
 
-ifeq "$(PLATFORM)" "i686-apple-darwin10"
-	BINDIR = $(FTPATH)/realtime/bin/maci
-endif
-
 ifeq "$(PLATFORM)" "x86_64-linux-gnu"
 	BINDIR = $(FTPATH)/realtime/bin/glnxa64
 endif

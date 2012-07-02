@@ -13,7 +13,7 @@ if [[ $PLATFORM == 'Linux' ]]; then
 fi
 
 if [[ $PLATFORM == 'Darwin' ]]; then
-  BLACKLIST='audio emotiv neuralynx siemens neuromag tmsi tobi'
+  BLACKLIST='audio emotiv neuralynx siemens neuromag tmsi tobi ctf'
 fi
 
 #for ac in `ls acquisition`; do

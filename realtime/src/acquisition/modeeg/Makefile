@@ -36,7 +36,10 @@ ifeq "$(PLATFORM)" "mingw32"
 endif
 
 ifeq "$(PLATFORM)" "i686-apple-darwin10"
-	BINDIR = $(FIELDTRIP)/realtime/bin/maci
+	BINDIR = $(FIELDTRIP)/realtime/bin/maci64
+	CFLAGS += -m64
+	CXXFLAGS += -m64
+	LDFLAGS += -m64
 endif
 
 ifeq "$(PLATFORM)" "x86_64-linux-gnu"
