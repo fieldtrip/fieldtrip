@@ -90,13 +90,7 @@ ft_preamble loadvar volume
 % the handling of the default cfg options is done further down
 % the checking of the input data is done further down
 
-cfg.maskparameter      = ft_getopt(cfg,'maskparameter');
-cfg.roi                = ft_getopt(cfg,'roi');
-cfg.inputcoord         = ft_getopt(cfg,'inputcoord');
-cfg.atlas              = ft_getopt(cfg,'atlas');
-cfg.round2nearestvoxel = ft_getopt(cfg,'round2nearestvoxel');
-cfg.box                = ft_getopt(cfg,'box');
-cfg.maxqueryrange      = ft_getopt(cfg,'maxqueryrange');
+cfg.maxqueryrange      = ft_getopt(cfg,'maxqueryrange', 1);
 
 roi2mask   = 0;
 mask2label = 0;
@@ -112,22 +106,37 @@ if roi2mask
   % only for volume data
   volume = ft_checkdata(volume, 'datatype', 'volume');
 
-  % set the defaults
-  if ~isfield(cfg, 'round2nearestvoxel'),  cfg.round2nearestvoxel = 'no';  end
-
-  if iscell(cfg.roi) || ischar(cfg.roi)
-    ft_checkconfig(cfg, 'forbidden', {'sphere' 'box'}, ...
-                        'required',  {'atlas' 'inputcoord'});
-    isatlas = 1;
-    ispoi = 0;
-  elseif isnumeric(cfg.roi)
-    ft_checkconfig(cfg, 'forbidden', {'atlas' 'inputcoord'});
-    isatlas = 0;
-    ispoi = 1;
-  else
+  cfg.round2nearestvoxel = ft_getopt(cfg, 'round2nearestvoxel', 'no');
+  
+  isatlas = iscell(cfg.roi) || ischar(cfg.roi);
+  ispoi   = isnumeric(cfg.roi);
+  if isatlas+ispoi ~= 1
     error('do not understand cfg.roi')
   end
+  
+  if isatlas
+    ft_checkconfig(cfg, 'forbidden', {'sphere' 'box'}, ...
+                        'required',  {'atlas' 'inputcoord'});  
+  elseif ispoi
+    ft_checkconfig(cfg, 'forbidden', {'atlas' 'inputcoord'});
+    if isempty(ft_getopt(cfg, 'sphere')) && isempty(ft_getopt(cfg, 'box'))
+      % either needs to be there
+      error('either specify cfg.sphere or cfg.box')
+    end  
+  end
+  
+elseif mask2label
+  % convert to source representation (easier to work with)
+  volume = ft_checkdata(volume, 'datatype', 'source');
+  ft_checkconfig(cfg, 'required', {'atlas' 'inputcoord'});
+  
+  if isempty(intersect(cfg.maxqueryrange, [1 3 5]))
+    error('incorrect query range, should be one of [1 3 5]');
+  end
+end
 
+
+if roi2mask
   % determine location of each anatomical voxel in its own voxel coordinates
   dim = volume.dim;
   i = 1:dim(1);
@@ -197,7 +206,7 @@ if roi2mask
 
   elseif ispoi
 
-    if strcmp(cfg.round2nearestvoxel, 'yes')
+    if istrue(cfg.round2nearestvoxel)
       for i=1:size(cfg.roi,1)
         cfg.roi(i,:) = poi2voi(cfg.roi(i,:), xyz);
       end
@@ -219,8 +228,6 @@ if roi2mask
           (xyz(2,:) <= (cfg.roi(i,2) + cfg.box(i,2)./2) & xyz(2,:) >= (cfg.roi(i,2) - cfg.box(i,2)./2)) & ...
           (xyz(3,:) <= (cfg.roi(i,3) + cfg.box(i,3)./2) & xyz(3,:) >= (cfg.roi(i,3) - cfg.box(i,3)./2));
       end
-    else
-      error('either specify cfg.sphere or cfg.box')
     end
   end
 
@@ -229,17 +236,6 @@ if roi2mask
   output = mask;
 
 elseif mask2label
-  % convert to source representation (easier to work with)
-  volume = ft_checkdata(volume, 'datatype', 'source');
-  ft_checkconfig(cfg, 'required', {'atlas' 'inputcoord'});
-
-  % set defaults
-  if ~isfield(cfg, 'maxqueryrange'),  cfg.maxqueryrange = 1;  end
-
-  if isempty(intersect(cfg.maxqueryrange, [1 3 5]))
-    error('incorrect query range, should be one of [1 3 5]');
-  end
-
   atlas = ft_prepare_atlas(cfg.atlas);
   sel = find(volume.(cfg.maskparameter)(:));
   labels.name = atlas.descr.name;
