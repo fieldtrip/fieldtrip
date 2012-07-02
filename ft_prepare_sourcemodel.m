@@ -79,7 +79,8 @@ function [grid, cfg] = ft_prepare_sourcemodel(cfg, vol, sens)
 %                      single triangulated boundary, or a Nx3 matrix with surface
 %                      points
 %
-% See also FT_PREPARE_LEADFIELD, FT_SOURCEANALYSIS, FT_DIPOLEFITTING, FT_MEGREALIGN
+% See also FT_PREPARE_LEADFIELD, FT_PREPARE_HEADMODEL, FT_SOURCEANALYSIS,
+% FT_DIPOLEFITTING, FT_MEGREALIGN
 
 % Searching through the code, it seems that the following cfg fields are being used
 % cfg.grid

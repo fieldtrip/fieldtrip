@@ -46,7 +46,8 @@ function [grid, cfg] = ft_prepare_leadfield(cfg, data)
 % file on disk. This mat files should contain only a single variable named 'data',
 % corresponding to the input structure.
 %
-% See also FT_SOURCEANALYSIS
+% See also FT_SOURCEANALYSIS, FT_DIPOLEFITTING, FT_PREPARE_HEADMODEL,
+% FT_PREPARE_SOURCEMODEL
 
 % Undocumented local options:
 % cfg.feedback

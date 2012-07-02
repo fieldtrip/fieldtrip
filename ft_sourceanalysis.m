@@ -108,7 +108,8 @@ function [source] = ft_sourceanalysis(cfg, data, baseline)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_SOURCEDESCRIPTIVES, FT_SOURCESTATISTICS, FT_PREPARE_LEADFIELD
+% See also FT_SOURCEDESCRIPTIVES, FT_SOURCESTATISTICS, FT_PREPARE_LEADFIELD,
+% FT_PREPARE_HEADMODEL, FT_PREPARE_SOURCEMODEL
 
 % Undocumented local options:
 % cfg.numcomponents

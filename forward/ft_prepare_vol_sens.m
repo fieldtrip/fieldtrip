@@ -35,9 +35,10 @@ function [vol, sens] = ft_prepare_vol_sens(vol, sens, varargin)
 % order returned by this function corresponds to the order in the 'channel'
 % option, or if not specified, to the order in the input sensor array.
 %
-% See also FT_READ_VOL, FT_READ_SENS, FT_TRANSFORM_VOL, FT_TRANSFORM_SENS, FT_COMPUTE_LEADFIELD
+% See also FT_COMPUTE_LEADFIELD, FT_READ_VOL, FT_READ_SENS, FT_TRANSFORM_VOL,
+% FT_TRANSFORM_SENS
 
-% Copyright (C) 2004-2009, Robert Oostenveld
+% Copyright (C) 2004-2012, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.

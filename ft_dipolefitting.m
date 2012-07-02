@@ -80,7 +80,7 @@ function [source] = ft_dipolefitting(cfg, data)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_SOURCEANALYSIS, FT_PREPARE_LEADFIELD, FT_FETCH_SENS
+% See also FT_SOURCEANALYSIS, FT_PREPARE_LEADFIELD, FT_PREPARE_HEADMODEL
 
 % TODO change the output format, more suitable would be something like:
 % dip.label
