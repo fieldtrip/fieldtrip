@@ -14,12 +14,11 @@ function [grid, cfg] = ft_prepare_sourcemodel(cfg, vol, sens)
 %   - regular 3D grid with explicit specification
 %   - regular 3D grid with specification of the resolution
 %   - regular 3D grid, based on segmented MRI, restricted to gray matter
-%   - regular 3D grid, based on a warped template grid, based on the MNI
-%       brain
-%   - surface grid based on brain surface from volume conductor
-%   - surface grid based on head surface from external file
-%   - using user-supplied grid positions, which can be regular or irregular
+%   - regular 3D grid, based on a warped template grid, based on the MNI brain
+%   - surface grid based on the brain surface from the volume conduction model
+%   - surface grid based on the head surface from an external file
 %   - cortical sheet that was created in MNE or Freesurfer
+%   - using user-supplied grid positions, which can be regular or irregular
 % The approach that will be used depends on the configuration options that
 % you specify.
 %
@@ -154,15 +153,15 @@ if isfield(cfg.grid, 'resolution') && isfield(cfg.grid, 'zgrid') && ~ischar(cfg.
   error('You cannot specify cfg.grid.resolution and an explicit cfg.grid.zgrid simultaneously');
 end
 
-% a grid can be constructed based on a number of ways
-basedongrid   = isfield(cfg.grid, 'xgrid') && ~ischar(cfg.grid.xgrid);  % regular 3D grid with explicit specification
-basedonpos    = isfield(cfg.grid, 'pos');                               % using user-supplied grid positions, which can be regular or irregular
-basedonshape  = isfield(cfg, 'headshape') && ~isempty(cfg.headshape);   % surface grid based on inward shifted head surface from external file
+% a source model can be constructed in a number of ways
+basedongrid   = isfield(cfg.grid, 'xgrid') && ~ischar(cfg.grid.xgrid);                              % regular 3D grid with explicit specification
+basedonpos    = isfield(cfg.grid, 'pos');                                                           % using user-supplied grid positions, which can be regular or irregular
+basedonshape  = isfield(cfg, 'headshape') && ~isempty(cfg.headshape);                               % surface grid based on inward shifted head surface from external file
 basedonmri    = isfield(cfg, 'mri') && ~(isfield(cfg.grid, 'warpmni') && istrue(cfg.grid.warpmni)); % regular 3D grid, based on segmented MRI, restricted to gray matter
 basedonmni    = isfield(cfg, 'mri') && (isfield(cfg.grid, 'warpmni') && istrue(cfg.grid.warpmni));  % regular 3D grid, based on warped MNI template
-basedonvol    = false;                                                  % surface grid based on inward shifted brain surface from volume conductor
+basedonvol    = false;                                                                              % surface grid based on inward shifted brain surface from volume conductor
 basedoncortex = isfield(cfg, 'headshape') && (iscell(cfg.headshape) || ft_filetype(cfg.headshape, 'neuromag_fif') || ft_filetype(cfg.headshape, 'freesurfer_triangle_binary')); % cortical sheet from MNE or Freesurfer, also in case of multiple files/hemispheres
-basedonauto   = isfield(cfg.grid, 'resolution') && ~basedonmri && ~basedonmni; % regular 3D grid with specification of the resolution
+basedonauto   = isfield(cfg.grid, 'resolution') && ~basedonmri && ~basedonmni;                      % regular 3D grid with specification of the resolution
 
 if basedonshape && basedoncortex
   % treating it as cortical sheet has preference
