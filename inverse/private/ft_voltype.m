@@ -9,21 +9,21 @@ function [type] = ft_voltype(vol, desired)
 % to get a boolean value.
 %
 % For EEG the following volume conduction models are recognized
-%  singlesphere       analytical single sphere model
-%  concentricspheres  analytical concentric sphere model with up to 4 spheres
-%  halfspace          infinite homogenous medium on one side, vacuum on the other
-%  openmeeg           boundary element method, based on the OpenMEEG software
-%  bemcp              boundary element method, based on the implementation from Christophe Phillips
-%  dipoli             boundary element method, based on the implementation from Thom Oostendorp
-%  asa                boundary element method, based on the (commercial) ASA software
-%  simbio             finite element method, based on the SimBio software
-%  fns                finite difference method, based on the FNS software
+%   singlesphere       analytical single sphere model
+%   concentricspheres  analytical concentric sphere model with up to 4 spheres
+%   halfspace          infinite homogenous medium on one side, vacuum on the other
+%   openmeeg           boundary element method, based on the OpenMEEG software
+%   bemcp              boundary element method, based on the implementation from Christophe Phillips
+%   dipoli             boundary element method, based on the implementation from Thom Oostendorp
+%   asa                boundary element method, based on the (commercial) ASA software
+%   simbio             finite element method, based on the SimBio software
+%   fns                finite difference method, based on the FNS software
 %
 % and for MEG the following volume conduction models are recognized
-%  singlesphere       analytical single sphere model
-%  multisphere        local spheres model for MEG, one sphere per channel
-%  singleshell        realisically shaped single shell approximation, based on the implementation from Guido Nolte
-%  infinite           magnetic dipole in an infinite vacuum
+%   singlesphere       analytical single sphere model
+%   multisphere        local spheres model for MEG, one sphere per channel
+%   singleshell        realisically shaped single shell approximation, based on the implementation from Guido Nolte
+%   infinite           magnetic dipole in an infinite vacuum
 %
 % See also FT_COMPUTE_LEADFIELD, FT_READ_VOL, FT_HEADMODEL_BEMCP,
 % FT_HEADMODEL_ASA, FT_HEADMODEL_DIPOLI, FT_HEADMODEL_SIMBIO,
