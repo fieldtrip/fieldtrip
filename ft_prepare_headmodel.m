@@ -31,10 +31,11 @@ function [vol, cfg] = ft_prepare_headmodel(cfg, data)
 %   infinite
 %
 % Use as
-%   vol = ft_prepare_headmodel(cfg)
-%   vol = ft_prepare_headmodel(cfg, vol)
-%   vol = ft_prepare_headmodel(cfg, bnd)
-%   vol = ft_prepare_headmodel(cfg, elec)
+%   vol = ft_prepare_headmodel(cfg)       or
+%   vol = ft_prepare_headmodel(cfg, bnd)  with the output of FT_PREPARE_MESH
+%   vol = ft_prepare_headmodel(cfg, seg)  with the output of FT_VOLUMESEGMENT
+%   vol = ft_prepare_headmodel(cfg, elec) with the output of FT_READ_SENS
+%   vol = ft_prepare_headmodel(cfg, vol)  with an externally crafted volume conduction model
 %
 % In general the input to this function is a geometrical description of the
 % shape of the head and a description of the electrical conductivity. The
@@ -64,10 +65,6 @@ function [vol, cfg] = ft_prepare_headmodel(cfg, data)
 %     cfg.maxradius         (optional)
 %     cfg.baseline          (optional)
 %
-% HALFSPACE
-%     cfg.point
-%     cfg.submethod         (optional)
-%
 % SIMBIO, FNS
 %     cfg.tissue
 %     cfg.tissueval
@@ -75,6 +72,10 @@ function [vol, cfg] = ft_prepare_headmodel(cfg, data)
 %     cfg.sens
 %     cfg.transform
 %     cfg.unit
+%
+% HALFSPACE
+%     cfg.point
+%     cfg.submethod         (optional)
 %
 % INFINITE_SLAB
 %     cfg.samplepoint
