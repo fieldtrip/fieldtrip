@@ -56,6 +56,8 @@ unit  = data.unit;
 if strcmp(dtype, 'unknown')
   if isfield(data, 'fid') || (isfield(data, 'tri') && isfield(data, 'pnt'))
     dtype = 'headshape';
+  elseif isfield(data, 'tet') && isfield(data, 'pnt')
+    dtype = 'mesh';
   elseif ~strcmp(ft_voltype(data), 'unknown')
     dtype = 'headmodel';
   elseif ~strcmp(ft_senstype(data), 'unknown')
@@ -186,6 +188,10 @@ switch dtype
     ft_plot_headshape(data);
     camlight;
     
+  case 'mesh'
+    ft_plot_mesh(data);
+    camlight;
+
   case 'headmodel'
     ft_plot_vol(data);
     camlight;
@@ -244,7 +250,7 @@ text(xdat(2,1),ydat(2,1),zdat(2,1),labelx{2},'color','y','fontsize',15,'linewidt
 text(xdat(2,2),ydat(2,2),zdat(2,2),labely{2},'color','y','fontsize',15,'linewidth',2);
 text(xdat(2,3),ydat(2,3),zdat(2,3),labelz{2},'color','y','fontsize',15,'linewidth',2);
 
-if dointeractive,
+if istrue(dointeractive),
   
   if ~isfield(data, 'coordsys') || isempty(data.coordsys)
     % default is yes
