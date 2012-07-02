@@ -16,7 +16,8 @@ function [hs] = ft_plot_mesh(bnd, varargin)
 %     'edgecolor'   = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r'
 %     'faceindex'   = true or false
 %     'vertexindex' = true or false
-%     'facealpha'   = transparency, between 0 and 1
+%     'facealpha'   = transparency, between 0 and 1 (default = 1)
+%     'edgealpha'   = transparency, between 0 and 1 (default = 1)
 %
 % If you don't want the faces or vertices to be plotted, you should
 % specify the color as 'none'.
@@ -31,6 +32,7 @@ function [hs] = ft_plot_mesh(bnd, varargin)
 % See also TRIMESH
 
 % Copyright (C) 2009, Cristiano Micheli
+% Copyright (C) 2012, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -69,6 +71,7 @@ faceindex   = ft_getopt(varargin, 'faceindex',   false);
 vertexindex = ft_getopt(varargin, 'vertexindex', false);
 vertexsize  = ft_getopt(varargin, 'vertexsize',  10);
 facealpha   = ft_getopt(varargin, 'facealpha',   1);
+edgealpha   = ft_getopt(varargin, 'edgealpha',   1);
 tag         = ft_getopt(varargin, 'tag',         '');
 
 haspnt = isfield(bnd, 'pnt'); % vertices
@@ -144,8 +147,14 @@ end
 if size(pnt,1)==numel(facealpha)
   set(hs, 'FaceVertexAlphaData', facealpha);
   set(hs, 'FaceAlpha', 'interp');
-elseif ~isempty(pnt) && numel(facealpha)==1
+elseif ~isempty(pnt) && numel(facealpha)==1 && facealpha~=1
+  % the default is 1, so that does not have to be set
   set(hs, 'FaceAlpha', facealpha);
+end
+
+if edgealpha~=1
+  % the default is 1, so that does not have to be set
+  set(hs, 'EdgeAlpha', edgealpha);
 end
 
 if faceindex
