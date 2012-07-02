@@ -9,7 +9,7 @@ PLATFORM = $(shell gcc -dumpmachine)
 
 #defaults, might be over-written further down
 LDFLAGS += -L../src
-LDFLAGS += -lpthread -lbuffer -ldl 
+LDFLAGS += -lpthread -lbuffer
 INCPATH = -I../src -I. 
 RM = rm -f
 
@@ -27,6 +27,14 @@ ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
 	INCPATH += -I../../external/pthreads-win64/include
 	SUFFIX = .exe
 	RM = del
+endif
+
+ifeq "$(PLATFORM)" "i686-apple-darwin10"
+	LDFLAGS += -ldl
+endif
+
+ifeq "$(PLATFORM)" "x86_64-redhat-linux"
+	LDFLAGS += -ldl
 endif
 
 CFLAGS += $(INCPATH) -Wunused -Wall -pedantic -O3
