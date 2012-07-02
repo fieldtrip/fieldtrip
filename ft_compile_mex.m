@@ -67,8 +67,6 @@ L = add_mex_source(L,'realtime/acquisition/siemens', 'sap2matlab',[],[],'siemens
 L = add_mex_source(L,'src','ft_getopt');
 L = add_mex_source(L,'src','read_16bit');
 L = add_mex_source(L,'src','read_24bit');
-L = add_mex_source(L,'src','mxSerialize');
-L = add_mex_source(L,'src','mxDeserialize');
 L = add_mex_source(L,'src','read_ctf_shm', {'GLNX86'});  % only compile on GLNX86
 L = add_mex_source(L,'src','write_ctf_shm', {'GLNX86'}); % only compile on GLNX86
 
@@ -96,6 +94,10 @@ L = add_mex_source(L,'src','det2x2');
 L = add_mex_source(L,'src','inv2x2');
 L = add_mex_source(L,'src','mtimes2x2');
 L = add_mex_source(L,'src','sandwich2x2');
+
+L = add_mex_source(L,'src','mxSerialize');
+L = add_mex_source(L,'src','mxDeserialize');
+L = add_mex_source(L,'src','CalcMD5');
 
 oldDir = pwd;
 [baseDir, myName] = fileparts(mfilename('fullpath'));
