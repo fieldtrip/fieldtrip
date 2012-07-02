@@ -35,7 +35,7 @@ function [vol, cfg] = ft_prepare_headmodel(cfg, data)
 %   vol = ft_prepare_headmodel(cfg, vol)
 %   vol = ft_prepare_headmodel(cfg, bnd)
 %   vol = ft_prepare_headmodel(cfg, elec)
-% 
+%
 % In general the input to this function is a geometrical description of the
 % shape of the head and a description of the electrical conductivity. The
 % second input argument (vol or bnd) can be a surface mesh that was
@@ -47,35 +47,35 @@ function [vol, cfg] = ft_prepare_headmodel(cfg, data)
 %     cfg.method            string that specifies the forward solution, see below
 %     cfg.conductivity      a number or a vector containing the conductivities
 %                           of the compartments
-% 
-% Additionally, the specific methods each have their specific configuration 
+%
+% Additionally, the specific methods each have their specific configuration
 % options that are listed below.
-% 
+%
 % BEMCP, DIPOLI, OPENMEEG
 %     cfg.isolatedsource    (optional)
-% 
+%
 % CONCENTRICSPHERES
 %     cfg.fitind            (optional)
-% 
+%
 % LOCALSPHERES
-%     cfg.grad   
+%     cfg.grad
 %     cfg.feedback          (optional)
 %     cfg.radius            (optional)
 %     cfg.maxradius         (optional)
 %     cfg.baseline          (optional)
-% 
+%
 % HALFSPACE
-%     cfg.point     
+%     cfg.point
 %     cfg.submethod         (optional)
-%     
+%
 % SIMBIO, FNS
-%     cfg.tissue      
-%     cfg.tissueval 
-%     cfg.tissuecond  
-%     cfg.sens      
-%     cfg.transform   
-%     cfg.unit      
-% 
+%     cfg.tissue
+%     cfg.tissueval
+%     cfg.tissuecond
+%     cfg.sens
+%     cfg.transform
+%     cfg.unit
+%
 % INFINITE_SLAB
 %     cfg.samplepoint
 %     cfg.conductivity
@@ -118,7 +118,7 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'method','bem_openmeeg','openmeeg'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'method','bem_dipoli','dipoli'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'method','bem_cp','bemcp'});
 
-% set the general defaults 
+% set the general defaults
 cfg.hdmfile        = ft_getopt(cfg, 'hdmfile');
 cfg.headshape      = ft_getopt(cfg, 'headshape');
 cfg.unit           = ft_getopt(cfg, 'unit');
@@ -135,25 +135,25 @@ cfg.numvertices    = ft_getopt(cfg, 'numvertices');
 cfg.isolatedsource = ft_getopt(cfg, 'isolatedsource');
 cfg.fitind         = ft_getopt(cfg, 'fitind'); % concentricspheres
 cfg.point          = ft_getopt(cfg, 'point'); % halfspace
-cfg.submethod      = ft_getopt(cfg, 'submethod'); 
+cfg.submethod      = ft_getopt(cfg, 'submethod');
 cfg.grad           = ft_getopt(cfg, 'grad'); % localspheres
-cfg.feedback       = ft_getopt(cfg, 'feedback'); 
+cfg.feedback       = ft_getopt(cfg, 'feedback');
 cfg.radius         = ft_getopt(cfg, 'radius');
 cfg.maxradius      = ft_getopt(cfg, 'maxradius');
 cfg.baseline       = ft_getopt(cfg, 'baseline');
 cfg.singlesphere   = ft_getopt(cfg, 'singlesphere');
-cfg.tissueval      = ft_getopt(cfg, 'tissueval'); % FEM 
-cfg.tissuecond     = ft_getopt(cfg, 'tissuecond'); 
-cfg.transform      = ft_getopt(cfg, 'transform'); 
+cfg.tissueval      = ft_getopt(cfg, 'tissueval'); % FEM
+cfg.tissuecond     = ft_getopt(cfg, 'tissuecond');
+cfg.transform      = ft_getopt(cfg, 'transform');
 
-if nargin>1, 
-  data = ft_checkdata(data); 
+if nargin>1,
+  data = ft_checkdata(data);
 else
   data = [];
 end
 
 % new way of getting sens structure:
-%cfg.sens           = ft_getopt(cfg, 'sens'); 
+%cfg.sens           = ft_getopt(cfg, 'sens');
 try
   cfg.sens = ft_fetch_sens(cfg, data);
 catch
@@ -183,20 +183,20 @@ elseif needbnd && ~hasdata
   geometry = ft_fetch_headshape(cfg);
 elseif needvolume && hasvolume
   fprintf('using the specified geometrical description\n');
-  geometry = data;  
+  geometry = data;
 elseif hasvolume && needbnd
   fprintf('computing the geometrical description from the segmented MRI\n');
   if issegmentation(data,cfg);
     % construct a surface-based geometry from the segmented compartments
-    % (can be multiple shells)   
-    if isempty(cfg.tissue) 
+    % (can be multiple shells)
+    if isempty(cfg.tissue)
       if strcmp(cfg.method,'singleshell') || strcmp(cfg.method,'singlesphere')
-        geometry = prepare_singleshell(cfg,data);    
+        geometry = prepare_singleshell(cfg,data);
       else
-         % tries to infer which fields in the segmentations are the segmented compartments
+        % tries to infer which fields in the segmentations are the segmented compartments
         [dum,tissue] = issegmentation(data,cfg);
         % ...and then tessellates all!
-        geometry = prepare_shells(cfg,data); 
+        geometry = prepare_shells(cfg,data);
       end
     end
   else
@@ -220,7 +220,7 @@ switch cfg.method
       funname = 'ft_headmodel_bem_openmeeg';
     end
     vol = feval(funname, geometry,'conductivity',cfg.conductivity,'isolatedsource',cfg.isolatedsource);
-  
+    
   case 'concentricspheres'
     vol = ft_headmodel_concentricspheres(geometry,'conductivity',cfg.conductivity,'fitind',cfg.fitind);
     
@@ -262,21 +262,21 @@ switch cfg.method
       funname = 'ft_headmodel_fdm_fns';
     end
     vol = feval(funname,geometry,'tissue',cfg.tissue,'tissueval',cfg.tissueval, ...
-                               'tissuecond',cfg.tissuecond,'sens',cfg.sens, ...
-                               'transform',cfg.transform,'unit',cfg.unit); 
-
+      'tissuecond',cfg.tissuecond,'sens',cfg.sens, ...
+      'transform',cfg.transform,'unit',cfg.unit);
+    
   case 'slab_monopole'
     % geometry is composed by a structarray of 2 elements, each containing
     % 'pnt' field
     if numel(geometry)==2
-      geom1 = geometry(1); 
+      geom1 = geometry(1);
       geom2 = geometry(2);
       P     = cfg.point;
       vol = ft_headmodel_slab(geom1,geom2,P,'sourcemodel','monopole','conductivity',cfg.conductivity);
     else
       error('geometry should be described by exactly 2 sets of points')
     end
-
+    
   otherwise
     error('unsupported method "%s"', cfg.method);
 end
@@ -287,9 +287,11 @@ vol = ft_convert_units(vol);
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
 ft_postamble callinfo
+ft_postamble previous data
 ft_postamble history vol
 
 %FIXME: the next section is supposed to be partially transferred to other functions (e.g. ft_surface...)
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % volumetric/mesh functions (either seg2seg or seg2mesh)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -318,18 +320,18 @@ function bnd          = prepare_shells(cfg,mri)
 % Calculates the surfaces of each compartment from a segmentation or from
 % an MRI volume structure to be segmented. As such the input always
 % contains volumetric information.
-% 
+%
 % The segmentation can be of two different types:
-% - a raw segmentation: given as a 3D data matrix 
+% - a raw segmentation: given as a 3D data matrix
 %   Requires the cfg.tissue option to be a set of numbers (intensity value of the
 %   compartments)
-% 
+%
 % - a mri segmentation: given as a mri volume with the segmented compartments as fields
 %   Requires the cfg.tissue option to be a set of strings (the names of the
 %   fields of actual input structure)
-% 
+%
 % Required options:
-% 
+%
 % cfg.tissue                  the tissue number/string
 % cfg.numvertices             the desired number of vertices
 
@@ -339,7 +341,7 @@ function bnd          = prepare_shells(cfg,mri)
 tissue      = ft_getopt(cfg,'tissue');
 unit        = ft_getopt(cfg, 'unit', 'cm');
 smoothseg   = ft_getopt(cfg, 'smooth',      5);
-threshseg   = ft_getopt(cfg, 'threshold',   0.5); 
+threshseg   = ft_getopt(cfg, 'threshold',   0.5);
 numvertices = ft_getopt(cfg, 'numvertices', 3000);
 
 % check options consistency
@@ -355,7 +357,7 @@ if ntissues>1
     smoothseg(1:ntissues) = smoothseg(1);
   elseif numel(smoothseg)~=ntissues
     error('tissues and smooth parameter do not match')
-  end  
+  end
   if numel(threshseg)==1
     threshseg(1:ntissues) = threshseg(1);
   elseif numel(threshseg)~=ntissues
@@ -367,7 +369,7 @@ else % only one tissue, choose the first parameter
   threshseg   = threshseg(1);
 end
 
-% convert the surface points into the input or MRI units 
+% convert the surface points into the input or MRI units
 if ~isempty(cfg.unit)&&isfield(mri,'unit')
   scale = get_scale(cfg.unit,mri.unit);
 else
@@ -397,13 +399,13 @@ end
 
 function bnd          = dotriangulate(seg, nvert, str)
 % Triangulates a volume, and creates a boundary out of it
-% by projecting rays from the center of the 3D matrix 
+% by projecting rays from the center of the 3D matrix
 
 % str is just a placeholder for messages
 dim = size(seg);
 [mrix, mriy, mriz] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
 
-% make local variable seg logical 
+% make local variable seg logical
 seg = logical(seg);
 
 % construct the triangulations of the boundaries from the segmented MRI
@@ -411,7 +413,7 @@ fprintf('triangulating the boundary of compartment %s\n', str);
 ori(1) = mean(mrix(seg(:)));
 ori(2) = mean(mriy(seg(:)));
 ori(3) = mean(mriz(seg(:)));
-[pnt, tri] = triangulate_seg(seg, nvert, ori); 
+[pnt, tri] = triangulate_seg(seg, nvert, ori);
 
 % output
 bnd.pnt = pnt;
@@ -422,11 +424,11 @@ function [output]     = threshold(input, thresh, str)
 
 if thresh>0 && thresh<1
   fprintf('thresholding %s at a relative threshold of %0.3f\n', str, thresh);
-
+  
   % mask by taking the negative of the brain, thus ensuring
-  % that no holes are within the compartment and do a two-pass 
+  % that no holes are within the compartment and do a two-pass
   % approach to eliminate potential vitamin E capsules etc.
-
+  
   output   = double(input>(thresh*max(input(:))));
   [tmp, N] = spm_bwlabel(output, 6);
   for k = 1:N
@@ -444,13 +446,13 @@ end
 
 function [output]     = fill(input, str)
 fprintf('filling %s\n', str);
-  output = input;
-  dim = size(input);
-  for i=1:dim(2)
-    slice=squeeze(input(:,i,:));
-    im = imfill(slice,8,'holes');
-    output(:,i,:) = im;
-  end
+output = input;
+dim = size(input);
+for i=1:dim(2)
+  slice=squeeze(input(:,i,:));
+  im = imfill(slice,8,'holes');
+  output(:,i,:) = im;
+end
 
 function [output]     = dosmoothing(input, fwhm, str)
 if fwhm>0
@@ -467,7 +469,7 @@ function bnd = prepare_singleshell(cfg,mri)
 % 'singleshell'
 cfg.unit           = ft_getopt(cfg, 'unit', 'cm');
 cfg.smooth         = ft_getopt(cfg, 'smooth',      5);
-cfg.threshold      = ft_getopt(cfg, 'threshold',   0.5); 
+cfg.threshold      = ft_getopt(cfg, 'threshold',   0.5);
 cfg.numvertices    = ft_getopt(cfg, 'numvertices', 3000);
 
 if ~isfield(mri, 'unit'), mri = ft_convert_units(mri); end
@@ -495,7 +497,7 @@ if isfield(mri, 'gray') || isfield(mri, 'white') || isfield(mri, 'csf')
   ft_hastoolbox('spm8',1,0)
   input = double(mri.seg);
   mri.seg = dosmoothing(input, cfg.smooth, '');
-
+  
   % threshold for the last time
   mri.seg = (mri.seg>(cfg.threshold*max(mri.seg(:))));
 elseif isfield(mri, 'brain')
@@ -519,7 +521,7 @@ pnt(:,4) = 1;
 pnt = (mri.transform * (pnt'))';
 pnt = pnt(:,1:3);
 
-% convert the surface points into the input or MRI units 
+% convert the surface points into the input or MRI units
 if ~isempty(cfg.unit)&&isfield(mri,'unit')
   scale = get_scale(cfg.unit,mri.unit);
 else
@@ -589,7 +591,7 @@ function bnd = prepare_mesh_headshape(cfg)
 % $Id$
 
 % get the surface describing the head shape
-if isstruct(cfg.headshape) && isfield(cfg.headshape, 'pnt') 
+if isstruct(cfg.headshape) && isfield(cfg.headshape, 'pnt')
   % use the headshape surface specified in the configuration
   headshape = cfg.headshape;
 elseif isstruct(cfg.headshape) &&  isfield(cfg.headshape, 'bnd')
@@ -663,22 +665,22 @@ function [pnt, tri]   = mysphere(N)
 % that are nicely distributed over the sphere. The vertices are aligned
 % along equally spaced horizontal contours according to an algorithm of
 % Dave Russel.
-% 
+%
 % Use as
 %  [pnt, tri] = msphere(M)
 %
 % See also SPHERE, NSPHERE, ICOSAHEDRON, REFINE
-% Copyright (C) 1994, Dave Rusin 
+% Copyright (C) 1994, Dave Rusin
 
 storeM    = [];
 storelen  = [];
 increaseM = 0;
 while (1)
-
+  
   % put a single vertex at the top
   phi = [0];
   th  = [0];
-
+  
   M = round((pi/4)*sqrt(N)) + increaseM;
   for k=1:M
     newphi = (k/M)*pi;
@@ -692,11 +694,11 @@ while (1)
       end
     end
   end
-
+  
   % put a single vertex at the bottom
   phi(end+1) = [pi];
   th(end+1)  = [0];
-
+  
   % store this vertex packing
   storeM(end+1).th  = th;
   storeM(end  ).phi = phi;
@@ -800,10 +802,10 @@ XYZmm = ts.XYZmm;
 % smoothing iterations
 %--------------------------------------------------------------------------
 for j=1:N
-
+  
   XYZmm_o = zeros(3,ts.nr(1)) ;
   XYZmm_o2 = zeros(3,ts.nr(1)) ;
-
+  
   for i=1:ts.nr(1)
     ln = find(M_con(:,i));
     d_i = sqrt(sum((XYZmm(:,ln)-XYZmm(:,i)*ones(1,length(ln))).^2));
@@ -811,7 +813,7 @@ for j=1:N
     XYZmm_o(:,i) = XYZmm(:,i) + ...
       lam * sum((XYZmm(:,ln)-XYZmm(:,i)*ones(1,length(ln))).*(ones(3,1)*w_i),2);
   end
-
+  
   for i=1:ts.nr(1)
     ln = find(M_con(:,i));
     d_i = sqrt(sum((XYZmm(:,ln)-XYZmm(:,i)*ones(1,length(ln))).^2));
@@ -819,9 +821,9 @@ for j=1:N
     XYZmm_o2(:,i) = XYZmm_o(:,i) + ...
       mu * sum((XYZmm_o(:,ln)-XYZmm_o(:,i)*ones(1,length(ln))).*(ones(3,1)*w_i),2);
   end
-
+  
   XYZmm = XYZmm_o2;
-
+  
 end
 
 % collect output results
@@ -833,16 +835,16 @@ tri1 = tri;
 if 0
   % this is some test/demo code
   [pnt, tri] = icosahedron162;
-
+  
   scale = 1+0.3*randn(size(pnt,1),1);
   pnt = pnt .* [scale scale scale];
-
+  
   figure
   triplot(pnt, tri, [], 'faces')
   triplot(pnt, tri, [], 'edges')
-
+  
   [pnt, tri] = fairsurface(pnt, tri, 10);
-
+  
   figure
   triplot(pnt, tri, [], 'faces')
   triplot(pnt, tri, [], 'edges')
