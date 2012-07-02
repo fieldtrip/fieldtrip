@@ -14,14 +14,23 @@ function vol = ft_datatype_headmodel(vol, varargin)
 % conduction model should specify its type, and that preferably it should
 % specify the geometrical units in which it is expressed (e.g. mm, cm or m).
 %
-% An example of an EEG volume conduction model with 4 councentric spheres is
-% shown here:
+% An example of an EEG volume conduction model with 4 councentric spheres is:
 %
 % vol =
 %        r: [86 88 94 100]
+%        c: [0.33 1.00 0.042 0.33] 
 %        o: [0 0 0]
 %     type: 'concentric'
 %     unit: 'mm'
+% 
+% An example of an MEG volume conduction model with a single sphere fitted to
+% the scalp with its center 4 cm above the line connecting the ears is:
+%
+% vol =
+%        r: [12]
+%        o: [0 0 4]
+%     type: 'singlesphere'
+%     unit: 'cm'
 %
 % For each of the methods XXX for the volume conduction model, a corresponding
 % function FT_HEADMODEL_XXX exists that contains all specific details and
