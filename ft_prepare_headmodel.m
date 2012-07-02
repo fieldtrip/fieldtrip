@@ -81,7 +81,7 @@ function [vol, cfg] = ft_prepare_headmodel(cfg, data)
 %     cfg.samplepoint
 %     cfg.conductivity
 %
-% See also FT_PREPARE_MESH, FT_VOLUMESEGMENT, FT_VOLUMEREALIGN, FT_FETCH_SENS
+% See also FT_PREPARE_MESH, FT_VOLUMESEGMENT, FT_VOLUMEREALIGN, FT_READ_SENS
 
 % Copyright (C) 2011, Cristiano Micheli, Jan-Mathijs Schoffelen
 %
