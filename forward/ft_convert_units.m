@@ -86,7 +86,7 @@ else
     siz = median(obj.r);
     unit = ft_estimate_units(siz);
     
-  elseif ft_voltype(obj,'concentric')
+  elseif ft_voltype(obj,'concentricspheres')
     siz = max(obj.r);
     unit = ft_estimate_units(siz);
     

@@ -10,7 +10,7 @@ function vol = ft_headmodel_bemcp(geom, varargin)
 % MATLAB code, hence the name "bemcp".
 %
 % Use as
-%   vol = ft_headmodel_bem_cp(geom, ...)
+%   vol = ft_headmodel_bemcp(geom, ...)
 %
 % See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 

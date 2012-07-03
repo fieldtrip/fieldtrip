@@ -1,10 +1,10 @@
-function vol = ft_headmodel_fdm_fns(seg,varargin)
+function vol = ft_headmodel_fns(seg,varargin)
 
-% FT_HEADMODEL_FDM_FNS creates the volume conduction structure to be used 
+% FT_HEADMODEL_FNS creates the volume conduction structure to be used 
 % in the FNS forward solver.
 %
 % Use as
-%   vol = ft_headmodel_fdm_fns(varargin)
+%   vol = ft_headmodel_fns(varargin)
 %
 % Optional input arguments should be specified in key-value pairs and can
 % include

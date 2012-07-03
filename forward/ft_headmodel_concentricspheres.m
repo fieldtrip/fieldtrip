@@ -102,10 +102,10 @@ for i = 1:numel(geometry)
   vol.r(i) = mean(dist);
 end
 
-% specify the center of the spheres
-vol.o    = single_o;
-vol.c    = conductivity;
-vol.type = 'concentric';
+
+vol.type = 'concentricspheres';
+vol.o    = single_o;              % specify the center of the spheres
+vol.c    = conductivity;          % specify the conductivity of the spheres
 vol      = ft_convert_units(vol); % ensure the object to have a unit
 
 % sort the spheres from the smallest to the largest ('insidefirst' order)

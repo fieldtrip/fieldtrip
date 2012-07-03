@@ -1,25 +1,25 @@
-function vol = ft_headmodel_fem_simbio(seg,varargin)
-% FT_HEADMODEL_FEM_SIMBIO reads a volume conduction model from a Vista .v
-% file
-%
+function vol = ft_headmodel_simbio(seg,varargin)
+
+% FT_HEADMODEL_SIMBIO reads a volume conduction model from a Vista *.v file
 %
 % Use as
-%   vol = ft_headmodel_fem_simbio(seg)
+%   vol = ft_headmodel_simbio(seg)
 %
-% See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD, TEST_HEADMODEL_SIMBIO
+% See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
 % Copyright (C) 2011, Cristiano Micheli
+
 ft_hastoolbox('simbio', 1);
 
 wfmethod     = ft_getopt(varargin, 'wfmethod', 'cubes'); % wireframe method (default: cubes)
-transform    = ft_getopt(varargin, 'transform', []);  % contains the tr. matrix from voxels to head coordinates
-unit         = ft_getopt(varargin, 'unit', 'mm');     % contains the units of the transformation matrix (mm, cm, ...)
-tissue       = ft_getopt(varargin, 'tissue', []);     % contains the labels of the tissues
-tissueval    = ft_getopt(varargin, 'tissueval', []);  % contains the tissue values (an integer for each compartment)
-tissuecond   = ft_getopt(varargin, 'tissuecond', []); % contains the tissue conductivities
+transform    = ft_getopt(varargin, 'transform', []);     % contains the tr. matrix from voxels to head coordinates
+unit         = ft_getopt(varargin, 'unit', 'mm');        % contains the units of the transformation matrix (mm, cm, ...)
+tissue       = ft_getopt(varargin, 'tissue', []);        % contains the labels of the tissues
+tissueval    = ft_getopt(varargin, 'tissueval', []);     % contains the tissue values (an integer for each compartment)
+tissuecond   = ft_getopt(varargin, 'tissuecond', []);    % contains the tissue conductivities
 tissueweight = ft_getopt(varargin, 'tissueweight', ones(1,numel(tissueval))); % contains the weigths for vgrid (how dense the wireframe of each tissue conpartment should be done)
-deepelec     = istrue(ft_getopt(varargin, 'deepelec', 'no'));% used in the case of deep voxel solution
-% bnd          = ft_getopt(varargin, 'bnd', []);        % used in the case the solution has to be calculated on a triangulated surface (typically the scalp)
+deepelec     = istrue(ft_getopt(varargin, 'deepelec', 'no'));                 % used in the case of deep voxel solution
+% bnd          = ft_getopt(varargin, 'bnd', []);         % used in the case the solution has to be calculated on a triangulated surface (typically the scalp)
 sens         = ft_getopt(varargin, 'sens', []);
 geomfile     = ft_getopt(varargin, 'geomfile', []);
 

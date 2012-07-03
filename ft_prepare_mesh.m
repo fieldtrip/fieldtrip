@@ -148,7 +148,7 @@ elseif basedonsphere
   end
   
   switch ft_voltype(vol)
-    case {'singlesphere' 'concentric'}
+    case {'singlesphere' 'concentricspheres'}
       vol.r = sort(vol.r);
       bnd = [];
       for i=1:length(vol.r)

@@ -1,4 +1,4 @@
-function vol = ft_headmodel_bem_asa(filename)
+function vol = ft_headmodel_asa(filename)
 
 % FT_HEADMODEL_ASA reads a volume conduction model from an ASA *.vol
 % file

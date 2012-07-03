@@ -60,7 +60,7 @@ vertexindex = istrue(vertexindex); % yes=view the vertex number
 
 % prepare a single or multiple triangulated boundaries
 switch ft_voltype(vol)
-  case {'singlesphere' 'concentric'}
+  case {'singlesphere' 'concentricspheres'}
     vol.r = sort(vol.r);
     bnd = [];
     for i=1:length(vol.r)

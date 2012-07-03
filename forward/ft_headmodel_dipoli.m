@@ -1,4 +1,4 @@
-function vol = ft_headmodel_bem_dipoli(geom, varargin)
+function vol = ft_headmodel_dipoli(geom, varargin)
 
 % FT_HEADMODEL_DIPOLI creates a volume conduction model of the head
 % using the boundary element method (BEM) for EEG. This function takes

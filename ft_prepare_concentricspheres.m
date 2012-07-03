@@ -152,7 +152,7 @@ else
   error('incorrect specification of cfg.conductivity');
 end
 
-vol.type = 'concentric';
+vol.type = 'concentricspheres';
 
 % ensure that the geometrical units are specified
 vol = ft_convert_units(vol);

@@ -40,7 +40,7 @@ function [inside] = ft_inside_vol(pos, vol)
 switch ft_voltype(vol)
 
   % single-sphere or multiple concentric spheres
-  case {'singlesphere' 'concentric'}
+  case {'singlesphere' 'concentricspheres'}
     if ~isfield(vol, 'source')
       % locate the innermost compartment and remember it
       [dum, vol.source] = min(vol.r);

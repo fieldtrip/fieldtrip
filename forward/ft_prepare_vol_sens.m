@@ -66,6 +66,9 @@ order   = ft_getopt(varargin, 'order', 10);             % order of expansion for
 % ensure that the sensor description is up-to-date (Aug 2011)
 sens = ft_datatype_sens(sens);
 
+% ensure that the volume conduction description is up-to-date (Jul 2012)
+vol = ft_datatype_headmodel(vol);
+
 % determine whether the input contains EEG or MEG sensors
 iseeg = ft_senstype(sens, 'eeg');
 ismeg = ft_senstype(sens, 'meg');
@@ -145,7 +148,7 @@ elseif ismeg
     case 'singlesphere'
       % nothing to do
 
-    case 'concentric'
+    case 'concentricspheres'
       % nothing to do
 
     case 'neuromag'
@@ -378,7 +381,7 @@ elseif iseeg
       end
       sens.elecpos = pnt;
       
-    case {'singlesphere', 'concentric'}
+    case {'singlesphere', 'concentricspheres'}
       % ensure that the electrodes ly on the skin surface
       radius = max(vol.r);
       pnt    = sens.elecpos;

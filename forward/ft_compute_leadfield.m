@@ -336,7 +336,7 @@ elseif iseeg
         q1 = [0 0 1] ; lf(:,3) = multisphere(Nspheres, radii, sigma, r, rq, q1);
       end
 
-    case {'singlesphere', 'concentric'}
+    case {'singlesphere', 'concentricspheres'}
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % EEG spherical volume conductor model
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
