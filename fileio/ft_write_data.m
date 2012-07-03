@@ -58,11 +58,16 @@ if isempty(db_blob)
 end
 
 % get the options
-dataformat    = ft_getopt(varargin, 'dataformat', ft_filetype(filename));
 append        = ft_getopt(varargin, 'append', false);
 nbits         = ft_getopt(varargin, 'nbits'); % for riff_wave
 chanindx      = ft_getopt(varargin, 'chanindx');
 hdr           = ft_getopt(varargin, 'header');
+dataformat    = ft_getopt(varargin, 'dataformat');
+
+if isempty(dataformat)
+  % only do the autodetection if the format was not specified
+  dataformat = ft_filetype(filename);
+end
 
 % determine the data size
 [nchans, nsamples] = size(dat);
