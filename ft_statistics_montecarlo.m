@@ -58,6 +58,7 @@ function [stat, cfg] = ft_statistics_montecarlo(cfg, dat, design, varargin)
 %                         'depsamplesF'       dependent samples F-statistic,
 %                         'depsamplesregrT'   dependent samples regression coefficient T-statistic,
 %                         'actvsblT'          activation versus baseline T-statistic.
+% or you can specify your own low-level statistical function.
 %
 % You can also use a custom statistic of your choise that is sensitive
 % to the expected effect in the data. You can implement the statistic
