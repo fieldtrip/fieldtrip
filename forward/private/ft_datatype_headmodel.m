@@ -69,7 +69,7 @@ switch version
     
     if isfield(vol, 'type')
       if strcmp(vol.type, 'concentric')
-        vol.type = 'concentricspheres';
+        vol.type = 'concentric';
       elseif strcmp(vol.type, 'bem_cp')
         vol.type = 'bemcp';
       elseif strcmp(vol.type, 'bem_dipoli')
