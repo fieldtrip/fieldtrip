@@ -100,7 +100,7 @@ elseif isfield(vol, 'r') && isfield(vol, 'o') && size(vol.r,1)==size(vol.o,1) &&
   type = 'multisphere';
   
 elseif isfield(vol, 'r') && numel(vol.r)>=2 && ~isfield(vol, 'label')
-  type = 'concentric';
+  type = 'concentricspheres';
   
 elseif isfield(vol, 'bnd') && strcmp(type, {'dipoli', 'asa', 'bemcp', 'openmeeg'})
   type = any(strcmp(type, {'dipoli', 'asa', 'bemcp', 'openmeeg'}));

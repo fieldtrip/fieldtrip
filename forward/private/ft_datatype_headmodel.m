@@ -14,13 +14,13 @@ function vol = ft_datatype_headmodel(vol, varargin)
 % conduction model should specify its type, and that preferably it should
 % specify the geometrical units in which it is expressed (e.g. mm, cm or m).
 %
-% An example of an EEG volume conduction model with 4 councentric spheres is:
+% An example of an EEG volume conduction model with 4 concentric spheres is:
 %
 % vol =
 %        r: [86 88 94 100]
 %        c: [0.33 1.00 0.042 0.33] 
 %        o: [0 0 0]
-%     type: 'concentric'
+%     type: 'concentricspheres'
 %     unit: 'mm'
 % 
 % An example of an MEG volume conduction model with a single sphere fitted to
@@ -36,6 +36,26 @@ function vol = ft_datatype_headmodel(vol, varargin)
 % function FT_HEADMODEL_XXX exists that contains all specific details and
 % references to literature that describes the implementation.
 %
+% Required fields:
+%   - type
+%
+% Optional fields:
+%   - unit
+%
+% Deprecated fields:
+%   - inner_skull_surface, source_surface, skin_surface, source, skin
+%
+% Obsoleted fields:
+%   - <none specified>
+%
+% Revision history:
+%
+% (2012/latest) use consistent names for the volume conductor type
+% in the structure, the documentation and for the actual implementation,
+% e.g. bem_openmeeg -> openmeeg, fem_simbio -> simbio, concentric ->
+% concentricspheres. Deprecated the fields that indicate the index of
+% the innermost and outermost surfaces.
+%
 % See also FT_DATATYPE, FT_DATATYPE_COMP, FT_DATATYPE_DIP, FT_DATATYPE_FREQ,
 % FT_DATATYPE_MVAR, FT_DATATYPE_RAW, FT_DATATYPE_SOURCE, FT_DATATYPE_SPIKE,
 % FT_DATATYPE_TIMELOCK, FT_DATATYPE_VOLUME
@@ -48,7 +68,7 @@ function vol = ft_datatype_headmodel(vol, varargin)
 version = ft_getopt(varargin, 'version', 'latest');
 
 if strcmp(version, 'latest')
-  version = '2011v2';
+  version = '2012';
 end
 
 if isempty(vol)
@@ -57,19 +77,17 @@ end
 
 switch version
   
-  case '2011v2'
-    if isfield(vol, 'skin_surface')
-      vol.skin = vol.skin_surface;
-      vol = rmfield(vol, 'skin_surface');
-    end
-    if isfield(vol, 'source_surface')
-      vol.source = vol.source_surface;
-      vol = rmfield(vol, 'source_surface');
-    end
-    
+  case '2012'
+    % the following will be determined on the fly in ft_prepare_vol_sens
+    if isfield(vol, 'skin_surface'),        vol = rmfield(vol, 'skin_surface');        end
+    if isfield(vol, 'source_surface'),      vol = rmfield(vol, 'source_surface');      end
+    if isfield(vol, 'inner_skull_surface'), vol = rmfield(vol, 'inner_skull_surface'); end
+    if isfield(vol, 'skin'),                vol = rmfield(vol, 'skin');                end
+    if isfield(vol, 'source'),              vol = rmfield(vol, 'source');              end
+
     if isfield(vol, 'type')
       if strcmp(vol.type, 'concentric')
-        vol.type = 'concentric';
+        vol.type = 'concentricspheres';
       elseif strcmp(vol.type, 'bem_cp')
         vol.type = 'bemcp';
       elseif strcmp(vol.type, 'bem_dipoli')
