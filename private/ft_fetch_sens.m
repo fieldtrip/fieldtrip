@@ -120,6 +120,9 @@ elseif haselecfile
   sens.chanpos = dum.chanpos;
   sens.elecpos = dum.elecpos;
   sens.label   = dum.label;
+  if isfield(dum,'unit')
+    sens.unit = dum.unit;
+  end
 elseif hascfgelec
   display('using electrodes specified in the configuration\n');
   sens = cfg.elec;
@@ -132,6 +135,9 @@ elseif hascfgelec
   if haselectra
     sens.tra = dum.tra;
   end
+  if isfield(dum,'unit')
+    sens.unit = dum.unit;
+  end
 elseif hasdataelec
   display('using electrodes specified in the data\n');
   sens = data.elec;
@@ -141,6 +147,9 @@ elseif hasdataelec
   sens.chanpos = dum.chanpos;
   sens.elecpos = dum.elecpos;
   sens.label   = dum.label;
+  if isfield(dum,'unit')
+    sens.unit = dum.unit;
+  end
 elseif haslayout
   display('Using the 2-D layout to determine the sensor position\n');
   lay = ft_prepare_layout(cfg);
