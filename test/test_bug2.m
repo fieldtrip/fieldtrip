@@ -1,0 +1,42 @@
+function test_bug2
+
+% TEST test_bug2
+% TEST ft_freqanalysis ft_megplanar 
+
+load /home/common/matlab/fieldtrip/data/ftp/tutorial/eventrelatedaveraging/dataFC_LP.mat
+
+cfg = [];
+cfg.trials = 1:5;
+data = ft_preprocessing(cfg, dataFC_LP);
+clear dataFC_LP
+
+cfg = [];
+cfg.method = 'mtmfft';
+cfg.foilim = [1 50];
+cfg.taper = 'hanning';
+cfg.output = 'fourier';
+freq1 = ft_freqanalysis(cfg, data);
+
+cfg = [];
+cfg.method = 'mtmfft';
+cfg.foilim = [1 50];
+cfg.taper = 'dpss';
+cfg.tapsmofrq = 5;
+cfg.output = 'fourier';
+freq2 = ft_freqanalysis(cfg, data);
+
+cfg = [];
+cfg.method = 'mtmconvol';
+cfg.foi = 1:10;
+cfg.taper = 'hanning';
+cfg.t_ftimwin = ones(1,10);
+cfg.toi = 0:0.1:1;
+cfg.output = 'fourier';
+freq3 = ft_freqanalysis(cfg, data);
+
+% convert to planar representation
+cfg = [];
+dataP  = ft_megplanar(cfg, data);
+freq1P = ft_megplanar(cfg, freq1);
+freq2P = ft_megplanar(cfg, freq2);
+%
