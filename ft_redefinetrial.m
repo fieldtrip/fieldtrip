@@ -85,16 +85,16 @@ ft_preamble loadvar data
 % ft_checkdata is done further down
 
 % set the defaults
-if ~isfield(cfg, 'offset'),     cfg.offset = [];      end
-if ~isfield(cfg, 'toilim'),     cfg.toilim = [];      end
-if ~isfield(cfg, 'begsample'),  cfg.begsample = [];   end
-if ~isfield(cfg, 'endsample'),  cfg.endsample = [];   end
-if ~isfield(cfg, 'minlength'),  cfg.minlength = [];   end
-if ~isfield(cfg, 'trials'),     cfg.trials = 'all';   end
-if ~isfield(cfg, 'feedback'),   cfg.feedback = 'yes'; end
-if ~isfield(cfg, 'trl'),        cfg.trl =  [];        end
-if ~isfield(cfg, 'length'),     cfg.length = [];      end
-if ~isfield(cfg, 'overlap'),    cfg.overlap = 0;      end
+cfg.offset    = ft_getopt(cfg, 'offset',    []);
+cfg.toilim    = ft_getopt(cfg, 'toilim',    []);
+cfg.begsample = ft_getopt(cfg, 'begsample', []);
+cfg.endsample = ft_getopt(cfg, 'endsample', []);
+cfg.minlength = ft_getopt(cfg, 'minlength', []);
+cfg.trials    = ft_getopt(cfg, 'trials',    []);
+cfg.feedback  = ft_getopt(cfg, 'feedback',  'yes');
+cfg.trl       = ft_getopt(cfg, 'trl',       []);
+cfg.length    = ft_getopt(cfg, 'length',    []);
+cfg.overlap   = ft_getopt(cfg, 'overlap',   0);
 
 % store original datatype
 dtype = ft_datatype(data);
@@ -266,6 +266,11 @@ elseif ~isempty(cfg.trl)
   if isfield(dataold, 'sampleinfo')
     % adjust the trial definition
     data.sampleinfo  = trl(:, 1:2);
+  end
+  if ~remove && ~isfield(data, 'trialinfo') && size(trl,2)>3
+    data.trialinfo = trl(:,4:end);
+  elseif ~remove && isfield(data, 'trialinfo') && size(trl,2)>3
+    warning('the input trl-matrix contains more than 3 columns, but the data already has a trialinfo-field. Keeping the trialinfo from the data');
   end
   
 elseif ~isempty(cfg.length)
