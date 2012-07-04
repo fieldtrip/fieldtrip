@@ -1,0 +1,24 @@
+function test_bug1425
+
+% TEST test_bug1425
+% TEST ft_connectivityanalysis
+% TEST ft_connectivity_corr
+
+% the bug pertains to a non-specific error when trying to do coherence computation on single trial data
+
+% reproduce the issue
+data = [];
+data.trial{1} = randn(3,100);
+data.time{1}  = (0:99)./100;
+data.label    = {'chan01';'chan02';'chan03'};
+
+cfg = [];
+cfg.method = 'mtmfft';
+cfg.output = 'fourier';
+cfg.taper  = 'hanning';
+freq = ft_freqanalysis(cfg, data);
+
+cfg = [];
+cfg.method = 'coh';
+cfg.channelcmb = {'chan01' 'chan02'};
+coh = ft_connectivityanalysis(cfg, freq);
