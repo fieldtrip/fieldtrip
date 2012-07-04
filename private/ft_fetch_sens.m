@@ -1,4 +1,5 @@
 function [sens] = ft_fetch_sens(cfg, data)
+
 % FT_FETCH_SENS mimics the behaviour of FT_READ_SENS, but for a FieldTrip
 % data structure or a FieldTrip configuration instead of a file on disk.
 %
@@ -16,18 +17,15 @@ function [sens] = ft_fetch_sens(cfg, data)
 %  (4) in a layout file, see FT_PREPARE_LAYOUT
 %
 % Allowed configuration or data fields:
-%  .gradfile      = sensor definition file to be read for MEG data
-%  .elecfile      = sensor definition file to be read for EEG data
-%  .grad          = sensor definition from MEG data
-%  .elec          = sensor definition from EEG data
+%   gradfile      = sensor definition file to be read for MEG data
+%   elecfile      = sensor definition file to be read for EEG data
+%   grad          = sensor definition from MEG data
+%   elec          = sensor definition from EEG data
 % 
 % Allowed configuration fields:
-%  .layout        = reference to a layout, see FT_PREPARE_LAYOUT
+%   layout        = reference to a layout, see FT_PREPARE_LAYOUT
 %
-%
-%
-%
-% See also FT_READ_SENS, FT_PREPARE_LAYOUT, FT_FETCH_HEADER, FT_FETCH_EVENT, FT_FETCH_DATA
+% See also FT_READ_SENS, FT_PREPARE_LAYOUT, FT_FETCH_DATA
 
 % Copyright (C) 2011, Jörn M. Horschig
 %
@@ -47,6 +45,7 @@ function [sens] = ft_fetch_sens(cfg, data)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
+% $Id$
 
 % check input arguments
 if nargin > 1 && ~isempty(data)

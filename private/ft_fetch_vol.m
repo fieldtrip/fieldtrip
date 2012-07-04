@@ -1,9 +1,10 @@
 function [vol] = ft_fetch_vol(cfg, data)
-% FT_FETCH_VOL reads volumetric definitions from a FieldTrip
+
+% FT_FETCH_VOL mimics the behaviour of FT_READ_VOL, but for a FieldTrip
 % data structure or a FieldTrip configuration instead of a file on disk.
 %
 % Use as
-%   [vol] = ft_fetch_sens(cfg, data)
+%   [vol] = ft_fetch_vol(cfg, data)
 %
 % Either of the two input arguments may be empty.
 %
@@ -19,8 +20,7 @@ function [vol] = ft_fetch_vol(cfg, data)
 %   cfg.vol           = structure with volume conduction model
 %   data.vol          = structure with volume conduction model
 %
-%
-% See also FT_PREPARE_VOL_SENS, FT_READ_VOL
+% See also FT_READ_VOL, FT_FETCH_DATA
 
 % Copyright (C) 2011, Jörn M. Horschig
 %
@@ -40,6 +40,7 @@ function [vol] = ft_fetch_vol(cfg, data)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
+% $Id$
 
 % check input arguments
 if nargin > 1 && ~isempty(data)
@@ -59,7 +60,6 @@ cfg = ft_checkconfig(cfg);
 hashdmfile = isfield(cfg, 'hdmfile');
 hascfgvol  = isfield(cfg, 'vol');
 hasdatavol = isfield(data, 'vol');
-
 
 if (hashdmfile + hascfgvol + hasdatavol) > 1
   display = @warning;
