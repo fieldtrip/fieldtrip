@@ -10,7 +10,7 @@ ft_default.feedback = 'no';
 if ispc
   datadir = 'H:';
 else
-  datadir = '/common';
+  datadir = '/home';
 end
 
 %% Reading the FIC data
