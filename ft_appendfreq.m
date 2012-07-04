@@ -1,13 +1,33 @@
 function [freq] = ft_appendfreq(cfg, varargin)
 
 % FT_APPENDFREQ concatenates multiple frequency or time-frequency data
-% structures that have been processed seperately. If the input data
+% structures that have been processed separately. If the input data
 % structures contain different channels, it will be concatenated along the
 % channel direction. If the channels are identical in the input data
 % structures, the data will be concatenated along the repetition dimension.
 %
 % Use as
-%   combined = ft_appendfreq(cfg, freq1, freq2, ...)
+%  combined = ft_appendfreq(cfg, freq1, freq2, ...)
+%
+%  cfg.parameter  = String. Specifies the name of the field to concatenate.
+%                   For example, to concatenate freq1.powspctrm,
+%                   freq2.powspecrum etc, use cft.parameter = 'powspctrm'.
+%
+% The configuration can optionally contain
+%  cfg.appenddim  = String. The dimension to concatenate over (default:
+%                   'auto').
+%  cfg.tolerance  = Double. Tolerance determines how different the units of
+%                   frequency structures are allowed to be to be considered
+%                   compatible (default: 1e-5).
+%
+% To facilitate data-handling and distributed computing with the peer-to-peer
+% module, this function has the following options:
+%   cfg.inputfile   =  ...
+%   cfg.outputfile  =  ...
+% If you specify one of these (or both) the input data will be read from a
+% *.mat file on disk and/or the output data will be written to a *.mat file.
+% These mat files should contain only a single variable, corresponding with
+% the input/output structure.
 %
 % See also FT_FREQANALYSIS, FT_APPENDDATA, FT_APPENDTIMELOCK, FT_APPENDSOURCE
 
