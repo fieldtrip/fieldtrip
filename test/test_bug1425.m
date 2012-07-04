@@ -22,3 +22,5 @@ cfg = [];
 cfg.method = 'coh';
 cfg.channelcmb = {'chan01' 'chan02'};
 coh = ft_connectivityanalysis(cfg, freq);
+
+% issue has been reproduced. It can be tracked down to ft_checkdata (fixcsd) where the singleton first dimension is not removed, leading to an incorrect dimensionality of the numeric data with respect to the dimord
