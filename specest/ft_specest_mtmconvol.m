@@ -23,7 +23,7 @@ function [spectrum,ntaper,freqoi,timeoi] = ft_specest_mtmconvol(dat, time, varar
 %   dimord    = 'tap_chan_freq_time' (default) or 'chan_time_freqtap' for
 %                memory efficiency
 %   verbose   = output progress to console (0 or 1, default 1)
-%   taperopt  = parameter to use for window (see WINDOW) 
+%   taperop   = additional taper options to be used in the WINDOW function, see WINDOW
 %   polyorder = number, the order of the polynomial to fitted to and removed from the data
 %                  prior to the fourier transform (default = 0 -> remove DC-component)
 %
@@ -161,7 +161,11 @@ for ifreqoi = 1:nfreqoi
       
     otherwise
       % create a single taper according to the window specification as a replacement for the DPSS (Slepian) sequence
-      tap = window(taper, timwinsample(ifreqoi),tapopt)';
+      if isempty(tapopt) % some windowing functions don't support nargin>1, and window.m doesn't check it
+        tap = window(taper, timwinsample(ifreqoi))';
+      else
+        tap = window(taper, timwinsample(ifreqoi),tapopt)';
+      end
       tap = tap ./ norm(tap,'fro'); % make it explicit that the frobenius norm is being used
   end
   
