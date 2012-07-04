@@ -1015,7 +1015,7 @@ switch headerformat
         % no labels generated (fMRI etc)
         checkUniqueLabels = false; % no need to check these
       case 1
-        % hase generated fake channels
+        % has generated fake channels
         % give this warning only once
         warning_once('creating fake channel names');
         checkUniqueLabels = false; % no need to check these
@@ -1648,6 +1648,21 @@ switch headerformat
     end
 end % switch headerformat
 
+
+% Sometimes, the not all labels are correctly filled in by low-level reading
+% functions. See for example bug #1572. 
+% First, make sure that there are enough (potentially empty) labels:
+if numel(hdr.label) < hdr.nChans
+  warning('low-level reading function did not supply enough channel labels');
+  hdr.label{hdr.nChans} = []; 
+end
+
+% Now, replace all empty labels with new name:
+if any(cellfun(@isempty, hdr.label))
+  warning('channel labels should not be empty, creating unique labels');
+  hdr.label = fix_empty(hdr.label);
+end
+
 if checkUniqueLabels
   if length(hdr.label)~=length(unique(hdr.label))
     % all channels must have unique names
@@ -1663,7 +1678,7 @@ if checkUniqueLabels
   end
 end
 
-% ensure taht it is a column array
+% ensure that it is a column array
 hdr.label = hdr.label(:);
 
 % as of November 2011, the header is supposed to include the channel type
@@ -1757,3 +1772,12 @@ for i=1:length(hdr)
   end
 end
 hdr = tmp;
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION to fill in empty labels
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function labels = fix_empty(labels)
+for i = find(cellfun(@isempty, labels));
+  labels{i} = sprintf('%d', i); 
+end
