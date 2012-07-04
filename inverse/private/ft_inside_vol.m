@@ -55,7 +55,7 @@ switch ft_voltype(vol)
     % positive if outside, negative if inside
     inside   = distance<0;
 
-    % localspheres volume conductor model
+    % multiple overlapping sphere volume conductor model
   case 'localspheres'
 
     % nspheres = size(vol.r,1);
@@ -89,7 +89,7 @@ switch ft_voltype(vol)
     end
     inside  = inside>0;
 
-    % realistic BEM volume conductor model
+    % model with a realistic shape described by a triangulated boundary
   case {'bem', 'dipoli', 'bemcp', 'asa', 'nolte', 'neuromag'}
     if ~isfield(vol, 'source')
       % locate the innermost compartment and remember it
@@ -108,4 +108,4 @@ end
 
 % ensure that these are column vectors
 inside(find(isnan(inside(:)))) = 0;
-inside  = logical(inside(:));
+inside = logical(inside(:));
