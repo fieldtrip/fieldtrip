@@ -718,13 +718,13 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'sparsewithpow')
     flag = 0;
   else
     nrpt = 1;
-    flag = 1;
   end
   if ~isempty(strmatch('freq',  dimtok)), nfrq=length(data.freq);      else nfrq = 1; end
   if ~isempty(strmatch('time',  dimtok)), ntim=length(data.time);      else ntim = 1; end
   
   fastflag = all(data.cumtapcnt(:)==data.cumtapcnt(1));
-
+  flag     = nrpt==1; % needed to truncate the singleton dimension upfront
+  
   %create auto-spectra
   nchan     = length(data.label);
   if fastflag
@@ -801,11 +801,11 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'sparse')
     flag = 0;
   else
     nrpt = 1;
-    flag = 1;
   end
   if ~isempty(strmatch('freq',  dimtok)), nfrq=length(data.freq); else nfrq = 1; end
   if ~isempty(strmatch('time',  dimtok)), ntim=length(data.time); else ntim = 1; end
   
+  flag      = nrpt==1; % flag needed to squeeze first dimension if singleton
   ncmb      = size(channelcmb,1);
   cmbindx   = zeros(ncmb,2);
   labelcmb  = cell(ncmb,2);
