@@ -36,8 +36,8 @@ function [interp] = ft_sourceinterpolate(cfg, functional, anatomical)
 % at the locations at which the anatomical data are defined. For
 % example, if the anatomical data was volumetric, the output data is
 % a volume-structure, containing the resliced source and the anatomical
-% volume that can be plotted together, using FT_SOURCEPLOT or
-% FT_SLICEINTERP, or that can be written to file using FT_SOURCEWRITE.
+% volume that can be plotted together, using FT_SOURCEPLOT or, or that can
+% be written to file using FT_SOURCEWRITE.
 %
 % Use as
 %   [interp] = ft_sourceinterpolate(cfg, source, anatomy)
@@ -50,13 +50,14 @@ function [interp] = ft_sourceinterpolate(cfg, functional, anatomical)
 %           3D grid created with FT_PREPARE_SOURCEMODEL. 
 % and cfg is a structure with any of the following fields
 %   cfg.parameter     = string (or cell-array) of the parameter(s) to be interpolated
-%   cfg.interpmethod  = 'linear', 'cubic', 'nearest' or 'spline' when
-%                       interpolating two 3D volumes onto each other
-%                       (default = 'linear')
-%   cfg.interpmethod  = 'nearest', 'sphere_avg' or 'smudge' when
-%                       interpolating a point cloud onto a 3D volume, a
-%                       3D volume onto a point cloud, or a point cloud
-%                       with another point cloud (default = 'nearest')
+%   cfg.interpmethod  = when interpolating two 3D volumes onto each
+%                       other: 'linear', 'cubic', 'nearest' or 'spline'
+%                       (default = 'linear') 
+%                       when interpolating a point
+%                       cloud onto a 3D volume, a 3D volume onto a point
+%                       cloud, or a point cloud with another point cloud:
+%                       'nearest', 'sphere_avg' or 'smudge' (default =
+%                       'nearest')
 %   cfg.downsample    = integer number (default = 1, i.e. no downsampling)
 %
 % To facilitate data-handling and distributed computing with the peer-to-peer
