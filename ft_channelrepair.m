@@ -84,11 +84,11 @@ cfg.method         = ft_getopt(cfg, 'method',         'nearest');
 cfg.lambda         = ft_getopt(cfg, 'lambda',         []); % subfunction will handle this
 cfg.order          = ft_getopt(cfg, 'order',          []); % subfunction will handle this
 
-% check if the input data is valid for this function
-data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
-
 % store original datatype
 dtype = ft_datatype(data);
+
+% check if the input data is valid for this function
+data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
 
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
@@ -285,6 +285,13 @@ elseif strcmp(cfg.method, 'spline') || strcmp(cfg.method, 'slap')
   repair = sphericalSplineInterpolate(sens.chanpos(goodchanindcs,:)',sens.chanpos', cfg.lambda, cfg.order, cfg.method);
   fprintf(' done!\n');
   
+  % only use the rows corresponding to the channels that actually need
+  % interpolating
+  repair(goodchanindcs,:) = 0;
+  for k = 1:numel(goodchanindcs)
+    repair(goodchanindcs(k), k) = 1;
+  end
+    
   % store the realigned data in a new structure
   interp.fsample = data.fsample;
   interp.time    = data.time;
