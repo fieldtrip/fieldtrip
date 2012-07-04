@@ -387,7 +387,13 @@ else
   
   % ensure that channelselection and selection of channelcombinations is
   % perfomed consistently
-  cfg.channel = ft_channelselection(cfg.channel, data.label);
+  cfg.channel = ft_channelselection(desired, data.label);
+
+  if isempty(cfg.channel)
+    error('no channels were selected');
+  end
+        
+    
   if isfield(cfg, 'channelcmb')
     cfg.channelcmb = ft_channelcombination(cfg.channelcmb, data.label);
     % check whether there are channels in channelcmb that are not in cfg.channel
