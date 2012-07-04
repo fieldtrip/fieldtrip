@@ -128,6 +128,7 @@ else
         end
     end % switch
   end % for dimtok
+  dimfields{end+1} = 'dimord'; % also keep the dimord
   
   % deal with the data dimensions whose size is only implicitly represented
   if any(strcmp(dimfields, 'implicit'))
