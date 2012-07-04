@@ -25,7 +25,7 @@ gain = lf * UnitMDip';
 %     [junk, gain] = ComputeLeads(surface, forward_resource, origin, [], 0); 
 % else
 %     % multi sphere forward calculation
-%     % disp(sprintf('\n\n USING MULTISPHERES\n\n'))
+%     % disp(sprintf('\n\n USING LOCALSPHERES\n\n'))
 %     gain = Compute_leads_Multi_fastM(forward_resource, surface.positions, surface.vert_normals, forward_resource.startsensor);
 % end
 
