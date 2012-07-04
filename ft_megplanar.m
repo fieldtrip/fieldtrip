@@ -162,7 +162,7 @@ if strcmp(cfg.planarmethod, 'sourceproject')
   Ntrials = length(data.trial);
   
   % FT_PREPARE_VOL_SENS will match the data labels, the gradiometer labels and the
-  % volume model labels (in case of a multisphere model) and result in a gradiometer
+  % volume model labels (in case of a localspheres model) and result in a gradiometer
   % definition that only contains the gradiometers that are present in the data.
   [vol, axial.grad, cfg] = prepare_headmodel(cfg, data);
   
@@ -198,7 +198,7 @@ if strcmp(cfg.planarmethod, 'sourceproject')
   lfold = ft_compute_leadfield(pos, axial.grad, vol);
   
   % construct the planar gradient definition and compute its forward model
-  % this will not work for a multisphere model, compute_leadfield will catch
+  % this will not work for a localspheres model, compute_leadfield will catch
   % the error
   planar.grad = constructplanargrad([], axial.grad);
   lfnew = ft_compute_leadfield(pos, planar.grad, vol);

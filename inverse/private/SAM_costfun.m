@@ -1,13 +1,15 @@
 function inv_pseudo_Z = SAM_costfun(angle, position, tanu, tanv, lf, covariance, inv_covariance, noise_covariance);
         
-% costfunction for non-linear beamformer. Use this cost-function to find the optimum orientation (in the tangential plane formed by tanu and tanv) of the targetvoxel
-% maximizes the pseudo_Z (i.e. minimises the inverse of pseudo_Z)
+% costfunction for non-linear beamformer. Use this cost-function to
+% find the optimum orientation (in the tangential plane formed by
+% tanu and tanv) of the targetvoxel maximizes the pseudo_Z (i.e.
+% minimises the inverse of pseudo_Z)
 %
 % positions in mm in CTF co-ordinate system
 %
-% AH, 05april 2005: if origin = [], then the multisphere headmodel will be used for the forward calculations. The multisphere porigins should be 
-% given in forward_resource (in mm in CTF co-ordinates)
-
+% AH, 05april 2005: if origin = [], then the localspheres headmodel
+% will be used for the forward calculations. The localspheres origins
+% should be given in forward_resource (in mm in CTF co-ordinates)
 
 MDip = settang(angle, tanu, tanv);
 MagDip = sqrt(dot(MDip,MDip));

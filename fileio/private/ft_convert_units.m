@@ -82,7 +82,7 @@ else
     siz = obj.r;
     unit = ft_estimate_units(siz);
     
-  elseif ft_voltype(obj,'multisphere')
+  elseif ft_voltype(obj,'localspheres')
     siz = median(obj.r);
     unit = ft_estimate_units(siz);
     

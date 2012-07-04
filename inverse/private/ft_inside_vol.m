@@ -55,8 +55,8 @@ switch ft_voltype(vol)
     % positive if outside, negative if inside
     inside   = distance<0;
 
-    % multi-sphere volume conductor model
-  case 'multisphere'
+    % localspheres volume conductor model
+  case 'localspheres'
 
     % nspheres = size(vol.r,1);
     % ndipoles = size(pos,1);

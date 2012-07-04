@@ -85,9 +85,13 @@ switch version
     if isfield(vol, 'skin'),                vol = rmfield(vol, 'skin');                end
     if isfield(vol, 'source'),              vol = rmfield(vol, 'source');              end
 
+    % ensure a consistent naming of the volume conduction model types
+    % these should match with the FT_HEADMODEL_XXX functions
     if isfield(vol, 'type')
       if strcmp(vol.type, 'concentric')
         vol.type = 'concentricspheres';
+      elseif strcmp(vol.type, 'multisphere')
+        vol.type = 'localspheres';
       elseif strcmp(vol.type, 'bem_cp')
         vol.type = 'bemcp';
       elseif strcmp(vol.type, 'bem_dipoli')
@@ -103,7 +107,7 @@ switch version
       elseif strcmp(vol.type, 'bem')
         error('not able to convert the original ''bem'' volume type, try using vol.type=''dipoli''');
       elseif strcmp(vol.type, 'avo')
-        error('This format is not supported anymore');
+        error('this format is not supported anymore');
       end
     end
     

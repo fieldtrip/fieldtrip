@@ -45,7 +45,7 @@ function [vol, cfg] = ft_prepare_headmodel(cfg, data)
 %
 % and for MEG the following methods are available:
 %   singlesphere       analytical single sphere model
-%   multisphere        local spheres model for MEG, one sphere per channel
+%   localspheres       local spheres model for MEG, one sphere per channel
 %   singleshell        realisically shaped single shell approximation, based on the implementation from Guido Nolte
 %   infinite           magnetic dipole in an infinite vacuum
 %

@@ -131,7 +131,7 @@ else
   tri = [];
 end
 
-if haspnt
+if haspnt && ~isempty(pnt)
   hs = patch('Vertices', pnt, 'Faces', tri);
   set(hs, 'FaceColor', facecolor);
   set(hs, 'EdgeColor', edgecolor);

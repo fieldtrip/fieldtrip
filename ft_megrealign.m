@@ -187,7 +187,7 @@ template.grad = grad;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % FT_PREPARE_VOL_SENS will match the data labels, the gradiometer labels and the
-% volume model labels (in case of a multisphere model) and result in a gradiometer
+% volume model labels (in case of a localspheres model) and result in a gradiometer
 % definition that only contains the gradiometers that are present in the data.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

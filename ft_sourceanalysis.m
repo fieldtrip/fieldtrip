@@ -326,7 +326,7 @@ end
 
 % It might be that the number of channels in the data, the number of
 % channels in the electrode/gradiometer definition and the number of
-% channels in the multisphere volume conduction model are different.
+% channels in the localspheres volume conduction model are different.
 % Hence a subset of the data channels will be used.
 Nchans = length(cfg.channel);
 

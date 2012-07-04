@@ -157,7 +157,7 @@ elseif basedonsphere
         bnd(i).pnt(:,3) = pnt(:,3)*vol.r(i) + vol.o(3);
         bnd(i).tri = tri;
       end
-    case 'multisphere'
+    case 'localspheres'
       bnd = [];
       for i=1:length(vol.label)
         bnd(i).pnt(:,1) = pnt(:,1)*vol.r(i) + vol.o(i,1);

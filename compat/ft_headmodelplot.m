@@ -177,13 +177,13 @@ else
 end
 
 % determine the type of input data
-ismeg          = ft_senstype(sens, 'meg');
-iseeg          = ft_senstype(sens, 'eeg');
-isbem          = isfield(vol, 'bnd');
-issphere       = isfield(vol, 'r');
-ismultisphere  = isfield(vol, 'r') && length(vol.r)>4;
-issinglesphere = isfield(vol, 'r') && length(vol.r)==1;
-isconcentric   = isfield(vol, 'r') && length(vol.r)<=4 && ~issinglesphere;
+ismeg           = ft_senstype(sens, 'meg');
+iseeg           = ft_senstype(sens, 'eeg');
+isbem           = isfield(vol, 'bnd');
+issphere        = isfield(vol, 'r');
+islocalspheres  = isfield(vol, 'r') && length(vol.r)>4;
+issinglesphere  = isfield(vol, 'r') && length(vol.r)==1;
+isconcentric    = isfield(vol, 'r') && length(vol.r)<=4 && ~issinglesphere;
 
 if ismeg
   % sensors describe MEG data, set the corresponding defaults
@@ -450,10 +450,10 @@ elseif ismeg
     end
   end % plotheadsurface
   
-  if strcmp(cfg.plotlines, 'yes') && ismultisphere
+  if strcmp(cfg.plotlines, 'yes') && islocalspheres
     % first determine the indices of the relevant gradiometers.
     [sel_g, sel_v] = match_str(chan.label, vol.label);
-    % create head-surface points from multisphere head-model.
+    % create head-surface points from localspheres head-model.
     dir     = chan.pnt(sel_g,:) - vol.o(sel_v,:);
     dist    = sqrt(sum(dir.*dir,2));
     pnt0    = repmat((vol.r(sel_v)./dist),1,3).*dir + vol.o(sel_v,:);

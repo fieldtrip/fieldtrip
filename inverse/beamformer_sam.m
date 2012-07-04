@@ -54,7 +54,7 @@ if isempty(meansphereorigin)
   switch ft_voltype(vol)
     case 'singlesphere'
       meansphereorigin = vol.o;
-    case 'multisphere'
+    case 'localspheres'
       meansphereorigin = mean(vol.o, 1);
     otherwise
       error('unsupported voltype for determining the mean sphere origin')

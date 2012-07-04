@@ -157,7 +157,7 @@ for chan=1:Nchan
   vol.label{chan} = grad.label{chan};
 end % for all channels
 
-vol.type = 'multisphere';
+vol.type = 'localspheres';
 vol      = ft_convert_units(vol); % ensure the object to have a unit
 
 

@@ -160,9 +160,9 @@ elseif ismeg
         lf = sens.tra * lf;
       end
 
-    case 'multisphere'
+    case 'localspheres'
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-      % MEG multi-sphere volume conductor model
+      % MEG multiple overlapping sphere volume conductor model
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       ncoils = length(sens.coilpos);
 
@@ -293,7 +293,8 @@ elseif iseeg
     case 'multisphere'
       % Based on the approximation of the potential due to a single dipole in
       % a multishell sphere by three dipoles in a homogeneous sphere, code
-      % contributed by Punita Christopher
+      % contributed by Punita Christopher. Note that this one should not get
+      % confused with the MEG localspheres model.
 
       Nelec = size(sens.elecpos,1);
       Nspheres = length(vol.r);

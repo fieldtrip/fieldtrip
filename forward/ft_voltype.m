@@ -21,7 +21,7 @@ function [type] = ft_voltype(vol, desired)
 %
 % and for MEG the following volume conduction models are recognized
 %   singlesphere       analytical single sphere model
-%   multisphere        local spheres model for MEG, one sphere per channel
+%   localspheres       local spheres model for MEG, one sphere per channel
 %   singleshell        realisically shaped single shell approximation, based on the implementation from Guido Nolte
 %   infinite           magnetic dipole in an infinite vacuum
 %
@@ -92,12 +92,12 @@ elseif isfield(vol, 'r') && numel(vol.r)==1 && ~isfield(vol, 'label')
 elseif isfield(vol, 'r') && isfield(vol, 'o') && isfield(vol, 'label')
   % this is before the spheres have been assigned to the coils
   % and every sphere is still associated with a channel
-  type = 'multisphere';
+  type = 'localspheres';
   
 elseif isfield(vol, 'r') && isfield(vol, 'o') && size(vol.r,1)==size(vol.o,1) && size(vol.r,1)>4
   % this is after the spheres have been assigned to the coils
   % note that this one is easy to confuse with the concentric one
-  type = 'multisphere';
+  type = 'localspheres';
   
 elseif isfield(vol, 'r') && numel(vol.r)>=2 && ~isfield(vol, 'label')
   type = 'concentricspheres';
