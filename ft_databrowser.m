@@ -285,10 +285,13 @@ else
   
   % construct trl-matrix for data from file on disk
   trlorg = zeros(Ntrials,3);
-  for k = 1:Ntrials
-    trlorg(k,[1 2]) = [1 hdr.nSamples] + [hdr.nSamples hdr.nSamples] .* (k-1);
+  if strcmp(cfg.continuous, 'yes')
+    trlorg(1, [1 2]) = [1 hdr.nSamples*hdr.nTrials];
+  else
+    for k = 1:Ntrials
+      trlorg(k,[1 2]) = [1 hdr.nSamples] + [hdr.nSamples hdr.nSamples] .* (k-1);
+    end
   end
-  
 end % if hasdata
 
 % FIXME make a check for the consistency of cfg.continous, cfg.blocksize, cfg.trl and the data header
