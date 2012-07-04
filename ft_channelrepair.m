@@ -269,8 +269,24 @@ elseif strcmp(cfg.method, 'spline') || strcmp(cfg.method, 'slap')
   sens.label    = sens.label(sensidx);
   sens.chanpos  = sens.chanpos(sensidx, :);
   
-  missidx = find(ismember(sens.label, cfg.missingchannel));
+  fprintf('Checking spherical fit... ');  
+  [c, r] = fitsphere(sens.chanpos);  
+  d = sens.chanpos - repmat(c, numel(sensidx), 1);    
+  d = sqrt(sum(d.^2, 2));
+  d = mean(abs(d) / r);   
+  if abs(d-1) > 0.1
+    warning('Bad spherical fit (residual: %.2f%%). The interpolation will be inaccurate.', 100*(d-1));    
+  elseif abs(d-1) < 0.01
+    fprintf('perfect spherical fit (residual: %.1f%%)\n', 100*(d-1));
+  else
+    fprintf('good spherical fit (residual: %.1f%%)\n', 100*(d-1));
+  end
   
+  if strcmp(cfg.method, 'slap') 
+    warning('''slap'' method is not fully supported - be careful in interpreting your results');
+  end
+  % move missing channels to the end
+  missidx = find(ismember(sens.label, cfg.missingchannel));  
   sens.label(end+1:end+numel(missidx))      = sens.label(missidx);
   sens.label(missidx)                       = [];
   sens.chanpos(end+1:end+numel(missidx), :) = sens.chanpos(missidx, :);
@@ -325,7 +341,7 @@ elseif strcmp(cfg.method, 'spline') || strcmp(cfg.method, 'slap')
     interp.label{end+1} = cfg.missingchannel{chan};
   end
   fprintf('\n');
-
+  
 else
   help ft_channelrepair
   error('unknown method for interpolation - see help above for valid methods');
