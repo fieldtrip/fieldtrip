@@ -59,10 +59,10 @@ if numel(val)==2
   end
   indx(1) = sel(1);
   indx(2) = sel(end);  
-  if indx(1)>1 && abs(array(indx(1)-1)-val(1))<intervaltol
+  if indx(1)>1 && abs(array(indx(1)-1)-val(1))<=intervaltol
     indx(1)=indx(1)-1;
   end
-  if indx(2)<length(array) && abs(array(indx(2)+1)-val(2))<intervaltol
+  if indx(2)<length(array) && abs(array(indx(2)+1)-val(2))<=intervaltol
     indx(2)=indx(2)+1;
   end
   return
