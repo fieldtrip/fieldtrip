@@ -42,3 +42,30 @@ try
   error('this should have returned an error');
 end
 
+% new functionality of 'val' being a [minval maxval] input pair
+
+assert(all(nearest(.1:.1:1.0,[.1 .3])==[1 3]))
+assert(all(nearest(.1:.1:1.0,[.11 .3])==[2 3]))
+assert(all(nearest(.1:.1:1.0,[.1 .29])==[1 2]))
+assert(all(nearest(.1:.1:1.0,[0 .3])==[1 3]))
+assert(all(nearest(.1:.1:1.0,[.11 .29])==[2 2]))
+assert(all(nearest(.1:.1:1.0,[-inf 1])==[1 10]))
+assert(all(nearest(.1:.1:1.0,[.79 inf])==[8 10]))
+assert(all(nearest(.1:.1:1.0,[.8 10])==[8 10]))
+assert(all(nearest(.1:.1:1.0,[-2 8])==[1 10]))
+assert(all(nearest(.1:.1:1.0,[.79 .99])==[8 9]))
+assert(all(nearest(.001:.001:.01,[.002 .003])==[2 3]))
+assert(all(nearest(.001:.001:.1,[0 1])==[1 100]))
+
+try
+  nearest(.1:.1:1.0,[3 8]);
+catch me
+  if ~strcmp(me.message,'The limits you selected are outside the range available in the data')
+    error('wrong error message in nearest')
+  end
+end
+
+
+
+
+
