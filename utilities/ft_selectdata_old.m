@@ -523,8 +523,10 @@ if selecttoi && ~israw,
   if length(seltoi)==1, seltoi(2) = seltoi; end;
   if numel(seltoi)==2,
     % treat seltoi as lower limit and upper limit
-    seltoi = nearest(data.time, seltoi(1)):nearest(data.time, seltoi(2));
-    % seltoi = find(data.time>=seltoi(1) & data.time<=seltoi(2));
+    toitmp=nearest(data.time,[seltoi(1) seltoi(2)]);
+    seltoi=toitmp(1):toitmp(2);
+%     seltoi = nearest(data.time, seltoi(1)):nearest(data.time, seltoi(2));
+%     seltoi = find(data.time>=seltoi(1) & data.time<=seltoi(2));
   else
     % treat seltoi as a list of timepoints
     tmptoi = zeros(1,numel(seltoi));
