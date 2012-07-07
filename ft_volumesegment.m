@@ -94,7 +94,7 @@ function [segment] = ft_volumesegment(cfg, mri)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_READ_MRI FT_DETERMINE_COORDSYS
+% See also FT_READ_MRI, FT_DETERMINE_COORDSYS, FT_PREPARE_HEADMODEL
 
 % undocumented options
 %   cfg.keepintermediate = 'yes' or 'no'
