@@ -416,30 +416,28 @@ if isfield(cfg, 'frequency')
   end
   
   % deal with numeric selection
-  for i=1:numel(varargin)
-    if numel(cfg.latency)==1
-      % this single value should be within the time axis of each input data structure
-      fbin = nearest(data.freq, cfg.frequency, true, true);
-      cfg.frequency = data.freq(fbin);
-      freqindx = fbin;
-    elseif numel(cfg.frequency)==2
-      % the [min max] range can be specifed with +inf or -inf, but should
-      % at least partially overlap with the freq axis of the input data
-      minfreq = min(data.freq);
-      maxfreq = max(data.freq);
-      if all(cfg.frequency<minfreq) || all(cfg.frequency>maxfreq)
-        error('the selected range falls outside the time axis in the data');
-      end
-      fbeg = nearest(data.freq, cfg.latency(1), false, false);
-      fend = nearest(data.freq, cfg.latency(2), false, false);
-      cfg.latency = data.freq([fbeg fend]);
-      freqindx = fbeg:fend;
-    elseif size(cfg.frequency,2)==2
-      % this may be used for specification of the computation, not for data selection
-    else
-      error('incorrect specification of cfg.frequency');
+  if numel(cfg.frequency)==1
+    % this single value should be within the time axis of each input data structure
+    fbin = nearest(data.freq, cfg.frequency, true, true);
+    cfg.frequency = data.freq(fbin);
+    freqindx = fbin;
+  elseif numel(cfg.frequency)==2
+    % the [min max] range can be specifed with +inf or -inf, but should
+    % at least partially overlap with the freq axis of the input data
+    minfreq = min(data.freq);
+    maxfreq = max(data.freq);
+    if all(cfg.frequency<minfreq) || all(cfg.frequency>maxfreq)
+      error('the selected range falls outside the time axis in the data');
     end
-  end % for varargin
+    fbeg = nearest(data.freq, cfg.latency(1), false, false);
+    fend = nearest(data.freq, cfg.latency(2), false, false);
+    cfg.frequency = data.freq([fbeg fend]);
+    freqindx = fbeg:fend;
+  elseif size(cfg.frequency,2)==2
+    % this may be used for specification of the computation, not for data selection
+  else
+    error('incorrect specification of cfg.frequency');
+  end
 end % if cfg.frequency
 
 if isfield(cfg, 'foilim')
