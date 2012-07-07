@@ -39,6 +39,11 @@ ifeq "$(PLATFORM)" "x86_64-redhat-linux"
 	fixpath = $1
 endif
 
+ifeq "$(PLATFORM)" "arm-linux-gnueabi"
+	BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi
+	fixpath = $1
+endif
+
 ifndef BINDIR
 $(error Unsupported plaform: $(PLATFORM) :/.)
 endif

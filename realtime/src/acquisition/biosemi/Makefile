@@ -50,6 +50,15 @@ ifeq "$(PLATFORM)" "x86_64-redhat-linux"
 	BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
 endif
 
+ifeq "$(PLATFORM)" "arm-linux-gnueabi"
+	# This is Debian 6.0.5 running on the Raspberry Pi. I have not yet been
+	# able to test whether the binary actually works, that requires having
+	# the amplifier hooked up to the R-Pi.
+	LDFLAGS += -L$(FTBUFFER)/src
+	LDLIBS += -lbuffer -lpthread -ldl
+	BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi
+endif
+
 ifndef BINDIR
 $(warning Unsupported platform: $(PLATFORM) :/.)
 endif

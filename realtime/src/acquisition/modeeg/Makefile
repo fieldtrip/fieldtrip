@@ -52,6 +52,11 @@ ifeq "$(PLATFORM)" "x86_64-redhat-linux"
 	BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
 endif
 
+ifeq "$(PLATFORM)" "arm-linux-gnueabi"
+	LDLIBS += -lpthread -ldl -lstdc++
+	BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi
+endif
+
 ifndef BINDIR
 $(error Unsupported platform: $(PLATFORM) :/.)
 endif
