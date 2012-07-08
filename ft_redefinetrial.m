@@ -211,7 +211,6 @@ elseif ~isempty(cfg.trl)
   hdr = ft_fetch_header(dataold);
 
   trl = cfg.trl;
-  remove = 0;
   
   % start with a completely new data structure
   data          = [];
@@ -232,7 +231,11 @@ elseif ~isempty(cfg.trl)
     if isempty(iTrlorig)
       error('some sample indices [%d %d] specified in cfg.trl are not present in the data', begsample, endsample);
     end
-   
+    if numel(iTrlorig)>2
+      % this explicit check is done since July 2012
+      error('some of the new trials need to be constructed from more than one input trial. This is not supported.');
+    end
+    
     % used to speed up ft_fetch_data
     if iTrl==1,
       tmpdata = dataold;
@@ -246,30 +249,25 @@ elseif ~isempty(cfg.trl)
     data.time{iTrl}  = offset2time(offset, dataold.fsample, trllength);
     
     % ensure correct handling of trialinfo
-    if isfield(dataold, 'sampleinfo'),
-      if numel(iTrlorig)==1 && isfield(dataold, 'trialinfo'),
-        data.trialinfo(iTrl,:) = dataold.trialinfo(iTrlorig,:);
-      elseif isfield(dataold, 'trialinfo'),
-        remove = 1;
-      end
+    if isfield(dataold, 'trialinfo'),
+      data.trialinfo(iTrl,:) = dataold.trialinfo(iTrlorig,:);
     end
-  end
+  end %for iTrl
+  
+  % add the necessary fields to the output
   if isfield(dataold, 'grad')
     data.grad      = dataold.grad;
   end
   if isfield(dataold, 'elec')
     data.elec      = dataold.elec;
   end
-  if remove && isfield(data, 'trialinfo')
-    data = rmfield(data, 'trialinfo');
-  end
   if isfield(dataold, 'sampleinfo')
     % adjust the trial definition
     data.sampleinfo  = trl(:, 1:2);
   end
-  if ~remove && ~isfield(data, 'trialinfo') && size(trl,2)>3
+  if ~isfield(data, 'trialinfo') && size(trl,2)>3
     data.trialinfo = trl(:,4:end);
-  elseif ~remove && isfield(data, 'trialinfo') && size(trl,2)>3
+  elseif isfield(data, 'trialinfo') && size(trl,2)>3
     warning('the input trl-matrix contains more than 3 columns, but the data already has a trialinfo-field. Keeping the trialinfo from the data');
   end
   

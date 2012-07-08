@@ -29,11 +29,11 @@ cfg.length = 0.2;
 data5      = ft_redefinetrial(cfg, data);
 assert(numel(data5.trial)==50 && all(data5.trialinfo(1:5)==1));
 
-% here the trialinfo should be removed
-cfg        = [];
-cfg.trl    = [1 600 0];
-data6      = ft_redefinetrial(cfg, data);
-assert(~isfield(data6, 'trialinfo'));
+% this should give an error
+% cfg        = [];
+% cfg.trl    = [1 600 0];
+% data6      = ft_redefinetrial(cfg, data);
+% assert(~isfield(data6, 'trialinfo'));
 
 % here the trialinfo should be added
 data = rmfield(data, 'trialinfo');
