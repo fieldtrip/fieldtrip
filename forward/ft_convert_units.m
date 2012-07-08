@@ -94,6 +94,11 @@ else
     siz = norm(idrange(obj.bnd(1).pnt));
     unit = ft_estimate_units(siz);
     
+  elseif isfield(obj, 'nas') && isfield(obj, 'lpa') && isfield(obj, 'rpa')
+    pnt = [obj.nas; obj.lpa; obj.rpa];
+    siz = norm(idrange(pnt));
+    unit = ft_estimate_units(siz);
+    
   else
     error('cannot determine geometrical units');
     
