@@ -50,7 +50,7 @@ function [h, T2] = ft_plot_slice(dat, varargin)
 %
 % $Id$
 
-persistent previous_dim X Y Z;
+persistent previous_dim X Y Z
 
 % parse first input argument(s). it is either
 % (dat, varargin)
@@ -82,7 +82,7 @@ end
 
 if exist('M', 'var') && isempty(mask)
   warning_once('using the mask from the input and not from the varargin list');
-  mask = M;clear M;
+  mask = M; clear M;
 end
 
 % norm normalise the ori vector
@@ -106,11 +106,11 @@ if isempty(transform)
   transform = eye(4);
 end
 
-% check whether mask is ok
+% check whether the mask is ok
 domask = ~isempty(mask);
-if domask,
-  if ~all(dim==size(mask)),
-    error('the mask data should have the same dimensionality as the functional data');
+if domask
+  if ~isequal(size(dat), size(mask))
+    error('the mask data should have the same dimensions as the functional data');
   end
 end
 
