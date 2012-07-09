@@ -304,6 +304,7 @@ end
 ax = [min(corner_head) max(corner_head)];
 axis(ax([1 4 2 5 3 6])); % reorder into [xmin xmax ymin ymaz zmin zmax]
 axis equal
+axis vis3d
 
 % store for future reference
 previous_dim  = dim;
