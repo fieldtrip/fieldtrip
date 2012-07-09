@@ -617,11 +617,12 @@ if basedonmni
     mri = cfg.mri;
   end
   
-  % ensure the mri to have units
-  if ~isfield(mri, 'unit')
-    mri = ft_convert_units(mri);
-  end
-  
+  % ensure the mri to have mm units
+  %if ~isfield(mri, 'unit')
+  %  mri = ft_convert_units(mri);
+  %end
+  mri = ft_convert_units(mri, 'mm');  
+
   % get template grid
   if ischar(fname)
     load(fname, 'grid');
