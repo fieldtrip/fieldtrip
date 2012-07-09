@@ -300,6 +300,11 @@ if ~isempty(clim)
   caxis(clim);
 end
 
+% update the axes to ensure that the whole volume fits
+ax = [min(corner_head) max(corner_head)];
+axis(ax([1 4 2 5 3 6])); % reorder into [xmin xmax ymin ymaz zmin zmax]
+axis equal
+
 % store for future reference
 previous_dim  = dim;
 
