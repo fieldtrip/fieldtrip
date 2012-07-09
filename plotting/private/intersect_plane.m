@@ -2,20 +2,16 @@ function [X, Y, Z] = intersect_plane(pnt, dhk, v1, v2, v3)
 
 % INTERSECT_PLANE intersection between a triangulated surface and a plane
 % it returns the coordinates of the vertices which form a contour
-%
-% [X, Y, Z] = intersect_plane(pnt, dhk, v1, v2, v3)
-%
-% the intersecting plane is spanned by the vertices v1, v2, v3
 
-% Copyright (C) 2002, Robert Oostenveld
+% % Use as
+%   [X, Y, Z] = intersect_plane(pnt, dhk, v1, v2, v3)
 %
-% $Log: intersect_plane.m,v $
-% Revision 1.3  2003/03/11 15:35:20  roberto
-% converted all files from DOS to UNIX
+% where the intersecting plane is spanned by the vertices v1, v2, v3
+% and the return values are each Nx2 for the N line segments.
+
+% Copyright (C) 2002-2012, Robert Oostenveld
 %
-% Revision 1.2  2003/03/04 21:46:19  roberto
-% added CVS log entry and synchronized all copyright labels
-%
+% $Id$
 
 npnt = size(pnt,1);
 ndhk = size(dhk,1);

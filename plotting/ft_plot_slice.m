@@ -14,21 +14,22 @@ function [h, T2] = ft_plot_slice(dat, varargin)
 %                    the coordinates are expressed in the coordinate system in which the
 %                    data will be plotted. location defines the origin of the plane
 %   'orientation'  = 1x3 vector specifying the direction orthogonal through the plane
-%                    which will be plotted
+%                    which will be plotted (default = [0 0 1])
 %   'resolution'   = number (default = 1)
-%   'datmask'      = 3D-matrix with the same size as the matrix dat, serving as opacitymap
-%                    if the second input argument to the function
-%                    contains a matrix, this will be used as the mask
+%   'datmask'      = 3D-matrix with the same size as the data matrix, serving as opacitymap
+%                    If the second input argument to the function contains a matrix, this
+%                    will be used as the mask
 %   'opacitylim'   = 1x2 vector specifying the limits for opacity masking
-%   'interpmethod' = string specifying the method for the interpolation, 
-%                    see INTERPN (default = 'nearest')
+%   'interpmethod' = string specifying the method for the interpolation, see INTERPN (default = 'nearest')
 %   'style'        = string, 'flat' or '3D'
 %   'colormap'     = string, see COLORMAP
-%   'colorlim'     = 1x2 vector specifying the min and max for the
-%                     colorscale
-%   'interplim'
+%   'colorlim'     = 1x2 vector specifying the min and max for the colorscale
 %
 % See also FT_PLOT_ORTHO, FT_SOURCEPLOT
+
+% undocumented
+%   'intersectmesh'  = triangulated mesh through which the intersection of the plane will be plotted (e.g. cortical sheet)
+%   'intersectcolor' = color for the intersection
 
 % Copyrights (C) 2010, Jan-Mathijs Schoffelen
 %
@@ -64,16 +65,22 @@ end
 % get the optional input arguments
 transform    = ft_getopt(varargin, 'transform');
 loc          = ft_getopt(varargin, 'location');
-ori          = ft_getopt(varargin, 'orientation',  [0 0 1]);
-resolution   = ft_getopt(varargin, 'resolution',   1);
+ori          = ft_getopt(varargin, 'orientation', [0 0 1]);
+resolution   = ft_getopt(varargin, 'resolution', 1);
 mask         = ft_getopt(varargin, 'datmask');
 opacitylim   = ft_getopt(varargin, 'opacitylim');
 interpmethod = ft_getopt(varargin, 'interpmethod', 'nearest');
 cmap         = ft_getopt(varargin, 'colormap');
-clim         = ft_getopt(varargin, 'colorlim'); 
+clim         = ft_getopt(varargin, 'colorlim');
 doscale      = ft_getopt(varargin, 'doscale', true); % only scale when necessary (time consuming), i.e. when plotting as grayscale image & when the values are not between 0 and 1
 h            = ft_getopt(varargin, 'surfhandle', []);
 
+mesh                = ft_getopt(varargin, 'intersectmesh');
+intersectcolor      = ft_getopt(varargin, 'intersectcolor', 'y');
+intersectlinewidth  = ft_getopt(varargin, 'intersectlinewidth', 2);
+intersectlinestyle  = ft_getopt(varargin, 'intersectlinestyle');
+
+% convert from yes/no/true/false/0/1 into a proper boolean
 doscale = istrue(doscale);
 
 if ~isa(dat, 'double')
@@ -89,7 +96,7 @@ end
 ori = ori./sqrt(sum(ori.^2));
 
 % dimensionality of the input data
-dim          = size(dat);
+dim = size(dat);
 if isempty(previous_dim),
   previous_dim = [0 0 0];
 end
@@ -104,6 +111,19 @@ end
 % set the transformation matrix if empty
 if isempty(transform)
   transform = eye(4);
+end
+
+% check whether the mesh is ok
+dointersect = ~isempty(mesh);
+if dointersect
+  if isfield(mesh, 'pos')
+    % use pos instead of pnt
+    mesh.pnt = mesh.pos;
+    mesh = rmfield(mesh, 'pos');
+  end
+  if ~isfield(mesh, 'pnt') || ~isfield(mesh, 'tri')
+    error('the triangulated mesh should be a structure with pnt and tri');
+  end
 end
 
 % check whether the mask is ok
@@ -147,30 +167,24 @@ if dointerp
   % project the corner points onto the projection plane
   corner_proj = nan(size(corner_head));
   for i=1:8
-    corner = corner_head(i,:);
-    corner = corner - loc(:)';
+    corner   = corner_head(i, :);
+    corner   = corner - loc(:)';
     corner_x = dot(corner, x);
     corner_y = dot(corner, y);
     corner_z = 0;
-    corner_proj(i,:) = [corner_x corner_y corner_z];
+    corner_proj(i, :) = [corner_x corner_y corner_z];
   end
   
   % determine a tight grid of points in the projection plane
-  xplane = floor(min(corner_proj(:,1))):resolution:ceil(max(corner_proj(:,1)));
-  yplane = floor(min(corner_proj(:,2))):resolution:ceil(max(corner_proj(:,2)));
+  xplane = floor(min(corner_proj(:, 1))):resolution:ceil(max(corner_proj(:, 1)));
+  yplane = floor(min(corner_proj(:, 2))):resolution:ceil(max(corner_proj(:, 2)));
   zplane = 0;
   
-  [X2,Y2,Z2] = ndgrid(xplane, yplane, zplane); %2D cartesian grid of projection plane in plane voxels
+  [X2, Y2, Z2] = ndgrid(xplane, yplane, zplane); %2D cartesian grid of projection plane in plane voxels
   siz        = size(squeeze(X2));
   pos        = [X2(:) Y2(:) Z2(:)]; clear X2 Y2 Z2;
   
-  % get the transformation matrix from plotting space to voxel space
-  T1 = inv(transform);
-  
-  % get the transformation matrix to get the projection plane at the right location and orientation into plotting space.
-  T2  = [x(:) y(:) ori(:) loc(:); 0 0 0 1];
-  
-  if 0
+  if false
     % this is for debugging
     ft_plot_mesh(warp_apply(T2, pos))
     ft_plot_mesh(corner_head)
@@ -181,21 +195,28 @@ if dointerp
     zlabel('z')
   end
   
+  % get the transformation matrix from plotting space to voxel space
+  % T1 = inv(transform);
+  
+  % get the transformation matrix to get the projection plane at the right location and orientation into plotting space
+  T2  = [x(:) y(:) ori(:) loc(:); 0 0 0 1];
+  
   % get the transformation matrix from projection plane to voxel space
-  M = T1*T2;
+  % M = T1*T2;
+  M = transform\T2;
   
   % get the positions of the pixels of the desires plane in voxel space
   pos = warp_apply(M, pos);
   
-  Xi         = reshape(pos(:,1), siz);
-  Yi         = reshape(pos(:,2), siz);
-  Zi         = reshape(pos(:,3), siz);
-  V          = interpn(X,Y,Z,dat,Xi,Yi,Zi,interpmethod);
-  [V,Xi,Yi,Zi] = tight(V,Xi,Yi,Zi);
-  siz        = size(Xi);
+  Xi              = reshape(pos(:, 1), siz);
+  Yi              = reshape(pos(:, 2), siz);
+  Zi              = reshape(pos(:, 3), siz);
+  V               = interpn(X, Y, Z, dat, Xi, Yi, Zi, interpmethod);
+  [V, Xi, Yi, Zi] = tight(V, Xi, Yi, Zi);
+  siz             = size(Xi);
   
   if domask,
-    Vmask    = tight(interpn(X,Y,Z,mask,Xi,Yi,Zi,interpmethod));
+    Vmask = tight(interpn(X, Y, Z, mask, Xi, Yi, Zi, interpmethod));
   end
   
 else
@@ -204,10 +225,10 @@ else
   T2     = [x(:) y(:) ori(:) loc(:); 0 0 0 1];
   
   if all(ori==[1 0 0]), xplane = loc(1);   yplane = 1:dim(2); zplane = 1:dim(3); end
-  if all(ori==[0 1 0]), xplane = 1:dim(1); yplane = loc(2); zplane = 1:dim(3);   end
+  if all(ori==[0 1 0]), xplane = 1:dim(1); yplane = loc(2);   zplane = 1:dim(3); end
   if all(ori==[0 0 1]), xplane = 1:dim(1); yplane = 1:dim(2); zplane = loc(3);   end
   
-  [Xi,Yi,Zi] = ndgrid(xplane-0.5, yplane-0.5, zplane-0.5); % coordinate is centre of the voxel, 1-based
+  [Xi, Yi, Zi] = ndgrid(xplane-0.5, yplane-0.5, zplane-0.5); % coordinate is centre of the voxel, 1-based
   siz        = size(squeeze(Xi));
   Xi         = reshape(Xi, siz);
   Yi         = reshape(Yi, siz);
@@ -220,14 +241,14 @@ else
 end
 
 if isempty(cmap),
-  %treat as gray value: scale and convert to rgb
+  % treat as gray value: scale and convert to rgb
   if doscale
     dmin = min(dat(:));
     dmax = max(dat(:));
     V    = (V-dmin)./(dmax-dmin);
+    clear dmin dmax
   end
   V(isnan(V)) = 0;
-  clear dmin dmax;
   % convert anatomy into RGB values
   V = cat(3, V, V, V);
 end
@@ -235,10 +256,9 @@ end
 if isempty(h),
   % get positions of the plane in plotting space
   posh = warp_apply(transform, [Xi(:) Yi(:) Zi(:)], 'homogeneous', 1e-8);
-  Xh   = reshape(posh(:,1), siz);
-  Yh   = reshape(posh(:,2), siz);
-  Zh   = reshape(posh(:,3), siz);
-  
+  Xh   = reshape(posh(:, 1), siz);
+  Yh   = reshape(posh(:, 2), siz);
+  Zh   = reshape(posh(:, 3), siz);
   % create surface object
   h    = surface(Xh, Yh, Zh, V);
 else
@@ -247,6 +267,7 @@ else
 end
 
 set(h, 'linestyle', 'none');
+
 if domask,
   set(h, 'FaceAlpha', 'flat');
   set(h, 'AlphaDataMapping', 'scaled');
@@ -254,6 +275,21 @@ if domask,
   if ~isempty(opacitylim)
     alim(opacitylim)
   end
+end
+
+if dointersect
+  % determine three points on the plane
+  inplane = eye(3) - (eye(3) * ori') * ori;
+  v1 = loc + inplane(1,:);
+  v2 = loc + inplane(2,:);
+  v3 = loc + inplane(3,:);
+  [xmesh, ymesh, zmesh] = intersect_plane(mesh.pnt, mesh.tri, v1, v2, v3);
+  
+  % draw each individual line segment of the intersection
+  p = patch(xmesh', ymesh', zmesh', nan(1, size(xmesh,1)));
+  if ~isempty(intersectcolor),     set(p, 'EdgeColor', intersectcolor); end
+  if ~isempty(intersectlinewidth), set(p, 'LineWidth', intersectlinewidth); end
+  if ~isempty(intersectlinestyle), set(p, 'LineStyle', intersectlinestyle); end
 end
 
 if ~isempty(cmap)
@@ -271,18 +307,18 @@ previous_dim  = dim;
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [x, y] = projplane(z)
-[u,s,v] = svd([eye(3) z(:)]);
-x = u(:,2)';
-y = u(:,3)';
+[u, s, v] = svd([eye(3) z(:)]);
+x = u(:, 2)';
+y = u(:, 3)';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [V,Xi,Yi,Zi] = tight(V,Xi,Yi,Zi)
+function [V, Xi, Yi, Zi] = tight(V, Xi, Yi, Zi)
 % cut off the nans at the edges
-x = sum(~isfinite(V),1)<size(V,1);
-y = sum(~isfinite(V),2)<size(V,2);
-V = V(y,x);
-if nargin>1, Xi = Xi(y,x); end
-if nargin>2, Yi = Yi(y,x); end
-if nargin>3, Zi = Zi(y,x); end
+x = sum(~isfinite(V), 1)<size(V, 1);
+y = sum(~isfinite(V), 2)<size(V, 2);
+V = V(y, x);
+if nargin>1, Xi = Xi(y, x); end
+if nargin>2, Yi = Yi(y, x); end
+if nargin>3, Zi = Zi(y, x); end
