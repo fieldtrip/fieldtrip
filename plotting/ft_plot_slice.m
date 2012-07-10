@@ -147,6 +147,9 @@ dointerp = dointerp || ~(resolution==round(resolution));
 st = dbstack;
 if ~dointerp && numel(st)>1 && strcmp(st(2).name, 'ft_plot_montage'), dointerp = true; end
 
+% determine the corner points of the volume in voxel and in plotting space
+[corner_vox, corner_head] = cornerpoints(dim, transform);
+  
 if dointerp
   %--------cut a slice using interpn
   
@@ -157,10 +160,7 @@ if dointerp
   else
     [X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
   end
-  
-  % determine the corner points of the volume in voxel and in plotting space
-  [corner_vox, corner_head] = cornerpoints(dim, transform);
-  
+    
   % define 'x' and 'y' axis in projection plane, the definition of x and y is more or less arbitrary
   [x, y] = projplane(ori); % z = ori
   
