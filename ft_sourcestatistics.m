@@ -17,10 +17,6 @@ function [stat] = ft_sourcestatistics(cfg, varargin)
 %                    'montecarlo'    uses a non-parametric randomization test to get a Monte-Carlo estimate of the probability,
 %                    'analytic'      uses a parametric test that results in analytic probability,
 %                    'stats'         (soon deprecated) uses a parametric test from the Matlab statistics toolbox,
-%                    'parametric'    uses the Matlab statistics toolbox (very similar to 'stats'),
-%                    'randomization' uses randomization of the data prior to source reconstruction,
-%                    'randcluster'   uses randomization of the data prior to source reconstruction 
-%                                    in combination with spatial clusters.
 %
 % You can restrict the statistical analysis to regions of interest (ROIs)
 % or to the average value inside ROIs using the following options:
@@ -39,6 +35,11 @@ function [stat] = ft_sourcestatistics(cfg, varargin)
 %
 % See also FT_SOURCEANALYSIS, FT_SOURCEDESCRIPTIVES, FT_SOURCEGRANDAVERAGE
 
+% Deprecated cfg.method options:
+%                    'parametric'    uses the Matlab statistics toolbox (very similar to 'stats'),
+%                    'randomization' uses randomization of the data prior to source reconstruction,
+%                    'randcluster'   uses randomization of the data prior to source reconstruction 
+%                                    in combination with spatial clusters.
 % Copyright (C) 2005-2008, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
@@ -91,12 +92,15 @@ if strcmp(cfg.implementation, 'old'),
   
   if strcmp(cfg.method, 'parametric')
     % use the source-specific statistical subfunction
+    error('This cfg.method option is deprecated');
     stat = sourcestatistics_parametric(cfg, varargin{:});
   elseif strcmp(cfg.method, 'randomization')
     % use the source-specific statistical subfunction
+    error('This cfg.method option is deprecated');
     stat = sourcestatistics_randomization(cfg, varargin{:});
   elseif strcmp(cfg.method, 'randcluster')
     % use the source-specific statistical subfunction
+    error('This cfg.method option is deprecated');
     stat = sourcestatistics_randcluster(cfg, varargin{:});
   else
     [stat, cfg] = statistics_wrapper(cfg, varargin{:});
