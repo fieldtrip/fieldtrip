@@ -1778,6 +1778,6 @@ hdr = tmp;
 % SUBFUNCTION to fill in empty labels
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function labels = fix_empty(labels)
-for i = find(cellfun(@isempty, labels));
+for i = find(cellfun(@isempty, {labels{:}}));
   labels{i} = sprintf('%d', i); 
 end
