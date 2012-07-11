@@ -38,6 +38,8 @@ for i=2:length(varargin)
   if ~ok, error('input data should be of the same datatype'); end
 end
 
+cfg=ft_checkconfig(cfg,'renamed',{'toilim' 'latency'});
+
 if strcmp(dtype, 'raw')
   
   % use selfromraw
@@ -327,8 +329,7 @@ end % function getselection_chan
 function [timeindx, cfg] = getselection_time(cfg, data)
 % possible specifications are
 % cfg.latency = value     -> can be 'all'
-% cfg.latency = [beg end] -> this is less common, preferred is to use toilim
-% cfg.toilim  = [beg end]
+% cfg.latency = [beg end]
 
 assert(isfield(data, 'time'), 'the input data should have a time axis');
 
@@ -369,23 +370,7 @@ if isfield(cfg, 'latency')
   end
 end % if cfg.latency
 
-if isfield(cfg, 'toilim')
-  if numel(cfg.toilim)==2
-    % the [min max] range can be specifed with +inf or -inf, but should
-    % at least partially overlap with the time axis of the input data
-    mintime = min(data.time);
-    maxtime = max(data.time);
-    if all(cfg.toilim<mintime) || all(cfg.toilim>maxtime)
-      error('the selected time range falls outside the time axis in the data');
-    end
-    tbin = nan(1,2);
-    tbin(1) = nearest(data.time, cfg.toilim(1), false, false);
-    tbin(2) = nearest(data.time, cfg.toilim(2), false, false);
-    cfg.toilim = data.time(tbin);
-  else
-    error('incorrect specification of cfg.toilim');
-  end
-end % cfg.toilim
+% % Note: cfg.toilim handling removed as it was renamed to cfg.latency
 
 if isequal(timeindx, 1:length(data.time))
   % the cfg was updated, but no selection is needed for the data
