@@ -76,7 +76,7 @@ doscale      = ft_getopt(varargin, 'doscale', true); % only scale when necessary
 h            = ft_getopt(varargin, 'surfhandle', []);
 
 mesh                = ft_getopt(varargin, 'intersectmesh');
-intersectcolor      = ft_getopt(varargin, 'intersectcolor', 'y');
+intersectcolor      = ft_getopt(varargin, 'intersectcolor', 'yrgbmyrgbm');
 intersectlinewidth  = ft_getopt(varargin, 'intersectlinewidth', 2);
 intersectlinestyle  = ft_getopt(varargin, 'intersectlinestyle');
 
@@ -115,14 +115,20 @@ end
 
 % check whether the mesh is ok
 dointersect = ~isempty(mesh);
+if ~iscell(mesh)
+  mesh = {mesh};
+end
+
 if dointersect
-  if isfield(mesh, 'pos')
-    % use pos instead of pnt
-    mesh.pnt = mesh.pos;
-    mesh = rmfield(mesh, 'pos');
-  end
-  if ~isfield(mesh, 'pnt') || ~isfield(mesh, 'tri')
-    error('the triangulated mesh should be a structure with pnt and tri');
+  for k = 1:numel(mesh)
+    if isfield(mesh{k}, 'pos')
+      % use pos instead of pnt
+      mesh{k}.pnt = mesh{k}.pos;
+      mesh{k} = rmfield(mesh{k}, 'pos');
+    end
+    if ~isfield(mesh{k}, 'pnt') || ~isfield(mesh{k}, 'tri')
+      error('the triangulated mesh should be a structure with pnt and tri');
+    end
   end
 end
 
@@ -283,13 +289,18 @@ if dointersect
   v1 = loc + inplane(1,:);
   v2 = loc + inplane(2,:);
   v3 = loc + inplane(3,:);
-  [xmesh, ymesh, zmesh] = intersect_plane(mesh.pnt, mesh.tri, v1, v2, v3);
   
-  % draw each individual line segment of the intersection
-  p = patch(xmesh', ymesh', zmesh', nan(1, size(xmesh,1)));
-  if ~isempty(intersectcolor),     set(p, 'EdgeColor', intersectcolor); end
-  if ~isempty(intersectlinewidth), set(p, 'LineWidth', intersectlinewidth); end
-  if ~isempty(intersectlinestyle), set(p, 'LineStyle', intersectlinestyle); end
+  for k = 1:numel(mesh)
+    [xmesh, ymesh, zmesh] = intersect_plane(mesh{k}.pnt, mesh{k}.tri, v1, v2, v3);
+    
+    % draw each individual line segment of the intersection
+    if ~isempty(xmesh), 
+      p(k) = patch(xmesh', ymesh', zmesh', nan(1, size(xmesh,1)));
+      if ~isempty(intersectcolor),     set(p(k), 'EdgeColor', intersectcolor(k)); end
+      if ~isempty(intersectlinewidth), set(p(k), 'LineWidth', intersectlinewidth); end
+      if ~isempty(intersectlinestyle), set(p(k), 'LineStyle', intersectlinestyle); end
+  end
+  end
 end
 
 if ~isempty(cmap)
