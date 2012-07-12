@@ -12,7 +12,12 @@ PUSHD buffer\cpp
 %MAKE% || goto FAILED
 POPD
 
-:: Blacklisting seems more trouble than it is worth... so inspect output of make.
+ECHO Building utilities
+PUSHD utilities\buffer || goto FAILED
+%MAKE%
+POPD
+
+:: Blacklisting seems more trouble than it is worth... so keep an eye on the output of make.
 FOR /D %%G IN ("acquisition\*") DO (
   ECHO Building %%G...
   PUSHD %%G
@@ -21,9 +26,10 @@ FOR /D %%G IN ("acquisition\*") DO (
   )
 
 ECHO Compilation of acquisition software complete.
+
 goto EOF
 :failed
-ECHO Building of libraries failed :/
+ECHO Building of libraries or utilities failed :/
 POPD
 
 :EOF

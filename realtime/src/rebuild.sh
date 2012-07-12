@@ -28,5 +28,5 @@ done
 
 
 echo Building utilities...
-(cd utlities/buffer && $MAKE)
+(cd utilities/buffer && $MAKE)
 # TODO: add more utilities
