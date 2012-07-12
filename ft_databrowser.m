@@ -330,7 +330,10 @@ if ischar(cfg.ylim)
   maxval = max(dat(:));
   switch cfg.ylim
     case 'maxabs'
-      cfg.ylim = [-max(abs([minval maxval])) max(abs([minval maxval]))];
+      maxabs   = max(abs([minval maxval]));
+      scalefac = 10^(fix(log10(maxabs)));
+      maxabs   = (round(maxabs / scalefac * 100) / 100) * scalefac;
+      cfg.ylim = [-maxabs maxabs];
     case 'maxmin'
       cfg.ylim = [minval maxval];
     otherwise
