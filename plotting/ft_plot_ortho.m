@@ -117,7 +117,7 @@ switch style
       varargin{sel+1} = ori(2,:);
       set(gcf,'currentaxes',Hx);
       hx = ft_plot_slice(dat, varargin{:});
-      set(Hx, 'view', [0 0], 'xlim', [0.5 size(dat,1)-0.5], 'zlim', [0.5 size(dat,3)-0.5]); 
+      set(Hx, 'view', [0 0]);%, 'xlim', [0.5 size(dat,1)-0.5], 'zlim', [0.5 size(dat,3)-0.5]); 
       if isempty(parents),
         % only change axis behavior if no parents are specified
         axis off
@@ -131,7 +131,7 @@ switch style
       varargin{sel+1} = ori(1,:);
       set(gcf,'currentaxes',Hy);
       hy = ft_plot_slice(dat, varargin{:});
-      set(Hy, 'view', [90 0], 'ylim', [0.5 size(dat,2)-0.5], 'zlim', [0.5 size(dat,3)-0.5]);
+      set(Hy, 'view', [90 0]);%, 'ylim', [0.5 size(dat,2)-0.5], 'zlim', [0.5 size(dat,3)-0.5]);
       if isempty(parents),
         % only change axis behavior if no parents are specified
         axis off
@@ -145,7 +145,7 @@ switch style
       varargin{sel+1} = ori(3,:);
       set(gcf,'currentaxes',Hz);
       hz = ft_plot_slice(dat, varargin{:});
-      set(Hz, 'view', [0 90], 'xlim', [0.5 size(dat,1)-0.5], 'ylim', [0.5 size(dat,2)-0.5]);
+      set(Hz, 'view', [0 90]);%, 'xlim', [0.5 size(dat,1)-0.5], 'ylim', [0.5 size(dat,2)-0.5]);
       if isempty(parents),
         % only change axis behavior if no parents are specified
         axis off
