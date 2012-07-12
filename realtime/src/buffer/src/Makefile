@@ -37,7 +37,7 @@ BINDIR	 = .
 
 #---
 
-all: libbuffer.a
+all: libbuffer.a rdaserver.o
 
 libbuffer.a: tcpserver.o tcpsocket.o tcprequest.o clientrequest.o dmarequest.o cleanup.o util.o printstruct.o swapbytes.o extern.o endianutil.o socketserver.o
 	 ar rv $@ $^

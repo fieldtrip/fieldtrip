@@ -26,4 +26,7 @@ for ac in `ls -d acquisition/*/`; do
   fi
 done
 
-# TODO: add utilities
+
+echo Building utilities...
+(cd utlities/buffer && $MAKE)
+# TODO: add more utilities
