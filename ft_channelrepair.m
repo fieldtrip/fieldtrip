@@ -44,7 +44,7 @@ function [data] = ft_channelrepair(cfg, data)
 % See also FT_MEGREALIGN, FT_MEGPLANAR, FT_NEIGHBOURSELECTION
 
 % Copyright (C) 2004-2009, Robert Oostenveld
-% Copyright (C) 2012,      Jörn M. Horschig, Jason Farquhar
+% Copyright (C) 2012,      J?rn M. Horschig, Jason Farquhar
 
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -107,6 +107,11 @@ catch
   sens = ft_fetch_sens(cfg, data);
 end
 
+% check if any of the channel positions contains NaNs; this happens when
+% component data are backprojected to the sensor level
+if any(isnan(sens.chanpos(:)))
+  error('The channel positions contain NaNs; this prohibits correct behavior of the function. Please replace the input channel definition with one that contains valid channel positions');
+end
 
 channels = ft_channelselection(cfg.badchannel, data.label);
 % get selection of channels that are missing
