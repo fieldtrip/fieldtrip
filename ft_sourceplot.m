@@ -874,7 +874,7 @@ if isequal(cfg.method,'ortho')
       caxis([fcolmin fcolmax]);
       %colorbar;
       %set(gca, 'Visible', 'off');
-    elseif hasfreq && hasfun,
+    elseif hasfreq && numel(data.freq)>1 && hasfun,
       h4 = subplot(2,2,4);
       plot(data.freq, squeeze(fun(xi,yi,zi,:))); xlabel('freq');
       axis([data.freq(1) data.freq(end) fcolmin fcolmax]);
