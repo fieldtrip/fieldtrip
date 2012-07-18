@@ -314,9 +314,15 @@ end
 % update the axes to ensure that the whole volume fits
 ax = [min(corner_head) max(corner_head)];
 axis(ax([1 4 2 5 3 6])); % reorder into [xmin xmax ymin ymaz zmin zmax]
-axis equal
-axis vis3d
-
+st = dbstack;
+if numel(st)>1,
+  % ft_plot_slice has been called from another function
+  % assume the axis settings to be handled there
+else
+  axis equal
+  axis vis3d
+end
+  
 % store for future reference
 previous_dim  = dim;
 
