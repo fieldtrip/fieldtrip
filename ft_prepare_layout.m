@@ -782,7 +782,12 @@ else
     d(:, tmpsel) = inf;
   end
   
-  mindist = min(d(d>100*eps));
+  % take mindist as the median of the first quartile of closest channel pairs with non-zero distance
+  mindist = min(d); % get closest neighbour for all channels
+  mindist = sort(mindist(mindist>1e-6),'ascend');
+  mindist = mindist(1:round(numel(label)/4)); 
+  mindist = median(mindist);
+   
   X = prj(:,1);
   Y = prj(:,2);
   Width  = ones(size(X)) * mindist * 0.8;
