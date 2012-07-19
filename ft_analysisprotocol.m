@@ -493,6 +493,11 @@ for k = 1:numel(cfg.showinfo)
   end
 end
 
+% dublicate backslashes to escape tex interpreter (in case of windows filenames)
+label = strrep(label, '\', '\\');
+label = strrep(label, '{\\bf', '{\bf'); % undo for bold formatting
+
+
 % escape underscores
 label = strrep(label, '_', '\_');
 
