@@ -56,6 +56,7 @@ function [hx, hy, hz] = ft_plot_ortho(dat, varargin)
 % (dat, varargin)
 % (dat, msk, varargin)
 % (dat, [], varargin)
+% this is done in ft_plot_slice
 
 sellist = 1:numel(varargin);
 if ~isempty(sellist)
@@ -81,7 +82,8 @@ if ~isa(dat, 'double')
 end
 
 % determine the orientation key-value pair
-keys = varargin(1:2:end);
+keys = varargin(sellist(1:2:end));
+
 sel  = find(strcmp('orientation', keys));
 if isempty(sel)
   % add orientation key-value pair if it does not exist
