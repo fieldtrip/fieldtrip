@@ -261,7 +261,7 @@ else
   statfull.stat = statobs;
 end
 time_eval = cputime - time_pre;
-fprintf('estimated time per randomization is %d seconds\n', round(time_eval));
+fprintf('estimated time per randomization is %.2f seconds\n', time_eval);
 
 % pre-allocate some memory
 if strcmp(cfg.correctm, 'cluster')
