@@ -263,10 +263,10 @@ end
 grid = [];
 
 % get the volume conduction model
-vol = ft_fetch_vol(cfg, data);
+vol = ft_fetch_vol(cfg);
 
 % get the gradiometer or electrode definition
-sens = ft_fetch_sens(cfg, data);
+sens = ft_fetch_sens(cfg);
 
 % ensure cfg.sourceunits to have a value and/or enforce the units in the sensors
 % to conform to this value
