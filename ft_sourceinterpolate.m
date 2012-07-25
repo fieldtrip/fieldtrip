@@ -475,7 +475,7 @@ av  = zeros(size(ax));
 ft_progress('init', feedback, 'interpolating');
 while (1)
   ft_progress(sel(1)/num, 'interpolating %.1f%%\n', 100*sel(1)/num);
-  if sel(end)>num
+  if sel(end)>=num
     sel = sel(1):num;
     lastblock = 1;
   end
