@@ -374,6 +374,14 @@ else
   grid = ft_prepare_sourcemodel(tmpcfg);
 end
 
+if isfield(cfg.grid, 'filter')
+  if numel(cfg.grid.filter) == size(grid.pos, 1)
+    grid.filter = cfg.grid.filter;
+  else
+    warning_once('ignoring predefined filter as it does not match the grid''s dimension');
+  end
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % do frequency domain source reconstruction
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -814,6 +822,7 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne', 'loreta', 'rv
     tmpdip = beamformer_lcmv(grid, sens, vol, tmpdat, squeeze(mean(Cy,1)), optarg{:});
     tmpmom = tmpdip.mom{tmpdip.inside(1)};
     sizmom = size(tmpmom);
+
     for i=1:length(tmpdip.inside)
       indx = tmpdip.inside(i);
       tmpdip.mom{indx} = permute(reshape(tmpdip.mom{indx}, [sizmom(1) siz(3) siz(1)]), [3 1 2]);
@@ -826,12 +835,18 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne', 'loreta', 'rv
       dip(i).inside  = tmpdip.inside;
       dip(i).outside = tmpdip.outside;
       dip(i).mom     = cell(1,size(tmpdip.pos,1));
+      if isfield(tmpdip, 'ori')
+        dip(i).ori   = cell(1,size(tmpdip.pos,1));
+      end
       dip(i).cov     = cell(1,size(tmpdip.pos,1));
       dip(i).pow     = zeros(size(tmpdip.pos,1),1)*nan;
       for ii=1:length(tmpdip.inside)
         indx             = tmpdip.inside(ii);
         tmpmom           = reshape(tmpdip.mom{indx}(i,:,:),[sizmom(1) siz(3)]);
         dip(i).mom{indx} = tmpmom;
+        if isfield(tmpdip, 'ori')
+          dip(i).ori{indx} = tmpdip.ori{indx};
+        end
        
         % the following recovers the single trial power and covariance, but
         % importantly the latency over which the power is defined is the
