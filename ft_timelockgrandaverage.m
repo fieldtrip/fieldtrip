@@ -15,6 +15,9 @@ function [grandavg] = ft_timelockgrandaverage(cfg, varargin)
 %  cfg.latency        = [begin end] in seconds or 'all' (default = 'all')
 %  cfg.keepindividual = 'yes' or 'no' (default = 'no')
 %  cfg.normalizevar   = 'N' or 'N-1' (default = 'N-1')
+%  cfg.parameter      = string or cell-array of strings indicating which
+%                        parameter(s) to average. default is set to
+%                        'avg', if it is present in the data.
 %
 % To facilitate data-handling and distributed computing with the peer-to-peer
 % module, this function has the following options:
@@ -59,116 +62,153 @@ ft_preamble loadvar varargin
 
 % return immediately after distributed execution
 if ~isempty(ft_getopt(cfg, 'distribute'))
-  return
+    return
 end
 
 % check if the input data is valid for this function
 for i=1:length(varargin)
-  varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'timelock', 'feedback', 'no');
+    varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'timelock', 'feedback', 'no');
 end
 
 % set the defaults
-if ~isfield(cfg, 'channel'),        cfg.channel        = 'all'; end
-if ~isfield(cfg, 'keepindividual'), cfg.keepindividual = 'no';  end
-if ~isfield(cfg, 'latency'),        cfg.latency        = 'all'; end
-if ~isfield(cfg, 'normalizevar'),   cfg.normalizevar   = 'N-1'; end
+cfg.inputfile      = ft_getopt(cfg, 'inputfile',  []);
+cfg.outputfile     = ft_getopt(cfg, 'outputfile', []);
+cfg.keepindividual = ft_getopt(cfg, 'keepindividual', 'no');
+cfg.channel        = ft_getopt(cfg, 'channel',    'all');
+cfg.latency        = ft_getopt(cfg, 'latency',    'all');
+cfg.normalizevar   = ft_getopt(cfg, 'normalizevar', 'N-1');
+cfg.parameter      = ft_getopt(cfg, 'parameter',  'avg');
 
-% varargin{1} ... varargin{end} contain the individual ERFs
-Nsubj = length(varargin);
+if ischar(cfg.parameter)
+    cfg.parameter = {cfg.parameter};
+end
 
+% FIXME: ft_timelockgrandaverage either has .avg or .individual for output,
+% and therefore yet supports only 1 input parameter
+if numel(cfg.parameter) > 1
+    fprintf('yet supporting 1 parameter, choosing the first parameter: %s\n', cfg.parameter{1});
+    temp = cfg.parameter{1}; % remove the other parameters
+    cfg = rmfield(cfg, 'parameter');
+    cfg.parameter{1} = temp;
+end
+
+Nsubj    = length(varargin);
+dimord   = varargin{1}.dimord;
+hastime  = ~isempty(strfind(varargin{1}.dimord, 'time'));
+hasrpt   = ~isempty(strfind(varargin{1}.dimord, 'rpt'));
+
+% check whether the input data is suitable
+if hasrpt
+    error('the input data of each subject should be an average, use FT_TIMELOCKANALYSIS first');
+end
+
+if ischar(cfg.latency) && strcmp(cfg.latency, 'all')
+    tbeg = min(varargin{1}.time);
+    tend = max(varargin{1}.time);
+else
+    tbeg = cfg.latency(1);
+    tend = cfg.latency(2);
+end
+
+% determine which channels, and latencies are available for all inputs
+for i=1:Nsubj
+    cfg.channel = ft_channelselection(cfg.channel, varargin{i}.label);
+    if hastime
+        tbeg = max(tbeg, varargin{i}.time(1  ));
+        tend = min(tend, varargin{i}.time(end));
+    end
+end
+cfg.latency = [tbeg tend];
+
+% select the data in all inputs
+for k=1:numel(cfg.parameter)
+    for i=1:Nsubj
+        if ~isfield(varargin{i}, cfg.parameter{k})
+            error('the field %s is not present in data structure %d', cfg.parameter{k}, i);
+        end
+        chansel = match_str(varargin{i}.label, cfg.channel);
+        varargin{i}.label = varargin{i}.label(chansel);
+        if hastime
+            timesel = nearest(varargin{i}.time, cfg.latency(1)):nearest(varargin{i}.time, cfg.latency(2));
+            varargin{i}.time = varargin{i}.time(timesel);
+        end
+        % select the overlapping samples in the data matrix
+        switch dimord
+            case 'chan'
+                varargin{i}.(cfg.parameter{k}) = varargin{i}.(cfg.parameter{k})(chansel);
+            case 'chan_time'
+                varargin{i}.(cfg.parameter{k}) = varargin{i}.(cfg.parameter{k})(chansel,timesel);
+            case {'rpt_chan' 'rpttap_chan' 'subj_chan'}
+                varargin{i}.(cfg.parameter{k}) = varargin{i}.(cfg.parameter{k})(:,chansel);
+            case {'rpt_chan_time' 'rpttap_chan_time' 'subj_chan_time'}
+                varargin{i}.(cfg.parameter{k}) = varargin{i}.(cfg.parameter{k})(:,chansel,timesel);
+            otherwise
+                error('unsupported dimord');
+        end
+    end % for i = subject
+end % for k = parameter
+
+% determine the size of the data to be averaged
+dim = cell(1,numel(cfg.parameter));
+for k=1:numel(cfg.parameter)
+    dim{k} = size(varargin{1}.(cfg.parameter{k}));
+end
+
+% give some feedback on the screen
+if strcmp(cfg.keepindividual, 'no')
+    for k=1:numel(cfg.parameter)
+        fprintf('computing average %s over %d subjects\n', cfg.parameter{k}, Nsubj);
+    end
+else
+    for k=1:numel(cfg.parameter)
+        fprintf('not computing average, but keeping individual %s for %d subjects\n', cfg.parameter{k}, Nsubj);
+    end
+end
+
+% allocate memory to hold the data and collect it
+for k=1:numel(cfg.parameter)
+    avgmat = zeros([Nsubj, dim{k}]);
+    for s=1:Nsubj
+        avgmat(s, :, :) = varargin{s}.(cfg.parameter{k});
+    end
+    if strcmp(cfg.keepindividual, 'no')
+        % average across subject dimension
+        ResultGrandavg = mean(avgmat, 1);
+        grandavg.avg = reshape(ResultGrandavg, [dim{k}]);  % Nchan x Nsamples
+        switch cfg.normalizevar
+            case 'N-1'
+                sdflag = 0;
+            case 'N'
+                sdflag = 1;
+        end
+        ResultVar = std(avgmat, sdflag, 1).^2;
+        grandavg.var = reshape(ResultVar, [dim{k}]);  % Nchan x Nsamples
+    elseif strcmp(cfg.keepindividual, 'yes')
+        grandavg.individual = avgmat;         % Nsubj x Nchan x Nsamples
+    end
+    % grandavg.(cfg.parameter{k}) = tmp; % not yet supported; now
+    % implemented as individual vs. avg field
+end
+
+% collect the output data
+grandavg.label = varargin{1}.label;
+if isfield(varargin{1}, 'time')
+    % remember the time axis
+    grandavg.time = varargin{1}.time;
+end
+if isfield(varargin{1}, 'labelcmb')
+    grandavg.labelcmb = varargin{1}.labelcmb;
+end
 if isfield(varargin{1}, 'grad')
-  warning('discarding gradiometer position information because it cannot be averaged');
+    warning('discarding gradiometer information because it cannot be averaged');
 end
 if isfield(varargin{1}, 'elec')
-  warning('discarding electrode position information because it cannot be averaged');
+    warning('discarding electrode information because it cannot be averaged');
 end
-
-% replace string latency selection by a timerange based on the range of all subjects
-if ischar(cfg.latency) && strcmp(cfg.latency, 'all')
-  cfg.latency = [];
-  cfg.latency(1) = min(varargin{1}.time);
-  cfg.latency(2) = max(varargin{1}.time);
-  for s=2:Nsubj
-    % reset min/max latency (for variable trial length over subjects)
-    if min(varargin{s}.time) > cfg.latency(1)
-      cfg.latency(1) = min(varargin{s}.time);
-    end
-    if max(varargin{s}.time) < cfg.latency(2)
-      cfg.latency(2) = max(varargin{s}.time);
-    end
-  end
-end
-
-%select time window
-idxs = nearest(varargin{1}.time, min(cfg.latency));
-idxe = nearest(varargin{1}.time, max(cfg.latency));
-% shift start and end index in case of flipped time axis
-% (potentially introduced for response time locked data)
-if idxe < idxs
-  ResultsTimeSelectCases = idxe:idxs;
-else
-  ResultsTimeSelectCases = idxs:idxe;
-end
-ResultsNTimePoints = length(ResultsTimeSelectCases);
-ResultsTime = varargin{1}.time(ResultsTimeSelectCases);
-
-%update cfg structure with time that was finally used
-cfg.latency = [ResultsTime(1), ResultsTime(end)];
-
-%determine which channels are available for all subjects
-for i=1:Nsubj
-  cfg.channel = ft_channelselection(cfg.channel, varargin{i}.label);
-end
-ResultNChannels = size(cfg.channel, 1);
-
-%reduce dataset to intersection of desired and available channels
-for i=1:Nsubj
-  % select channel indices in this average, sorted according to configuration
-  [dum, chansel]    = match_str(cfg.channel, varargin{i}.label);
-  varargin{i}.avg   = varargin{i}.avg(chansel,:);
-  varargin{i}.label = varargin{i}.label(chansel);
-  try, varargin{i}.trial = varargin{i}.trial(chansel,:,:); end
-end
-
-%preallocate
-avgmat = zeros(Nsubj, ResultNChannels, ResultsNTimePoints);
-%fill matrix, may be done more effectively with deal command
-for s = 1:Nsubj
-  avgmat(s, :, :) = varargin{s}.avg(:, ResultsTimeSelectCases);
-end
-
-if strcmp(cfg.keepindividual, 'no')
-  %average across subject dimension
-  ResultGrandavg = mean(avgmat, 1);
-  ResultGrandavg = reshape(ResultGrandavg, [ResultNChannels, ResultsNTimePoints]);
-
-  %compute variance across subject dimension
-  %this looks awkward (std.^2) but is fast due to built in functions
-  switch cfg.normalizevar
-    case 'N-1'
-      sdflag = 0;
-    case 'N'
-      sdflag = 1;
-  end
-  ResultVar = std(avgmat, sdflag, 1).^2;
-  ResultVar = reshape(ResultVar, [ResultNChannels, ResultsNTimePoints]);
-else
-  % do nothing
-end
-
-% collect the results
-grandavg           = [];
-grandavg.label     = cfg.channel;       % cell-array
-grandavg.time      = ResultsTime;       % 1 x Nsamples
-
-%keep individual means?
 if strcmp(cfg.keepindividual, 'yes')
-  grandavg.individual = avgmat;         % Nsubj x Nchan x Nsamples
-  grandavg.dimord = 'subj_chan_time';
-else
-  grandavg.avg    = ResultGrandavg;     % Nchan x Nsamples
-  grandavg.var    = ResultVar;          % Nchan x Nsamples
-  grandavg.dimord = 'chan_time';
+    grandavg.dimord = ['subj_',varargin{1}.dimord];
+elseif strcmp(cfg.keepindividual, 'no')
+    grandavg.dimord = varargin{1}.dimord;
 end
 
 % do the general cleanup and bookkeeping at the end of the function
@@ -177,4 +217,3 @@ ft_postamble callinfo
 ft_postamble previous varargin
 ft_postamble history grandavg
 ft_postamble savevar grandavg
-
