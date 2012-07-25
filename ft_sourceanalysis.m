@@ -626,7 +626,8 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne', 'loreta', 'rv
         data.cov(i,:,:) = eye(Nchans);
       end
     end
-    hascovariance = 0;
+    hascovariance = 0;    
+    warn_once('No covariance matrix found - will assume identity covariance matrix (mininum-norm solution)');
   end
   
   if strcmp(cfg.method, 'pcc')
