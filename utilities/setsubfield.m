@@ -10,6 +10,9 @@ function [s] = setsubfield(s, f, v);
 % or as
 %   s = setsubfield(s, 'fieldname.subfieldname', value)
 %
+% where nested is a logical, false denoting that setsubfield will create
+% s.subfieldname instead of s.fieldname.subfieldname
+%
 % See also SETFIELD, GETSUBFIELD, ISSUBFIELD
 
 % Copyright (C) 2005, Robert Oostenveld
@@ -42,5 +45,8 @@ while (1)
   if isempty(f)
     break
   end
+  
 end
+
 s = setfield(s, t{:}, v);
+  
