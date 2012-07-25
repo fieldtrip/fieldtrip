@@ -30,6 +30,9 @@ function [s] = getsubfield(s, f);
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
+if iscell(f)
+  f = f{1};
+end
 
 if ~ischar(f)
   error('incorrect input argument for fieldname');
