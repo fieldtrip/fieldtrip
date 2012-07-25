@@ -16,16 +16,17 @@ int main(int argc, char *argv[]) {
     /* verify that all datatypes have the expected syze in bytes */
     check_datatypes();
 
-	if (argc>2) {
-		//sprintf(host.name, argv[1]);
-		host.port = atoi(argv[2]);
+	sprintf(host.name, DEFAULT_HOSTNAME);
+	if (argc>1) {
+		host.port = atoi(argv[1]);
 	}
 	else {
-		//sprintf(host.name, DEFAULT_HOSTNAME);
+	    printf("Using default port, recommended usage 'demo_buffer [port]'. \n");
 		host.port = DEFAULT_PORT;
 	}
 
 	/* start the buffer */
+	printf("Starting FieldTrip buffer on port %d... \n", host.port);
 	tcpserver((void *)(&host));
 
 	return 0;
