@@ -56,6 +56,15 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.chanscale               = Nx1 vector with scaling factors, one per channel specified in cfg.channel
 %   cfg.compscale               = string, 'global' or 'local', defines whether the colormap for the topographic scaling is 
 %                                  applied per topography or on all visualized components (default 'global')
+%
+% In case of component viewmode, a layout is required. If no layout is
+% give, an attempt is made to construct one from the sensor definition.
+% EEG or MEG sensor positions can be present in the data or can be specified as
+%   cfg.elec          = structure with electrode positions, see FT_DATATYPE_SENS
+%   cfg.grad          = structure with gradiometer definition, see FT_DATATYPE_SENS
+%   cfg.elecfile      = name of file containing the electrode positions, see FT_READ_SENS
+%   cfg.gradfile      = name of file containing the gradiometer definition, see FT_READ_SENS
+%
 
 % The scaling to the EEG, EOG, ECG, EMG and MEG channels is optional and
 % can be used to bring the absolute numbers of the different channel types
@@ -193,10 +202,15 @@ if strcmp(cfg.viewmode, 'component')
   % read or create the layout that will be used for the topoplots
   tmpcfg = [];
   tmpcfg.layout = cfg.layout;
-  if isfield(data, 'grad')
-    tmpcfg.grad = data.grad;
-  elseif isfield(data, 'elec')
-    tmpcfg.elec = data.elec;
+  if isempty(cfg.layout)
+    warning('No layout specified - will try to construct one using sensor positions');
+    if ft_dataype(data, 'meg')
+      tmpcfg.grad = ft_fetch_sens(cfg, data);
+    elseif ft_dataype(data, 'eeg')
+      tmpcfg.elec = ft_fetch_sens(cfg, data);
+    else
+      error('cannot infer sensor type');
+    end
   end
   cfg.layout = ft_prepare_layout(tmpcfg);
 end

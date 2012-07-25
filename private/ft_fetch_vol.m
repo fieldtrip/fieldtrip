@@ -45,13 +45,8 @@ function [vol] = ft_fetch_vol(cfg, data)
 % check input arguments
 if nargin > 1 && ~isempty(data)
   data = ft_checkdata(data);
-  % determine the type of data
-  iseeg = ft_senstype(data, 'eeg');
-  ismeg = ft_senstype(data, 'meg');
 else
   data = struct; % initialize as empty struct
-  iseeg = true;  % may be eeg
-  ismeg = true;  % may be meg
 end
 
 cfg = ft_checkconfig(cfg);
@@ -69,8 +64,7 @@ else
   display = @fprintf;
 end
 
-% get the head model definition
-% get the volume conduction model
+% get the head model definition/volume conduction model
 if isfield(cfg, 'hdmfile')
   display('reading headmodel from file ''%s''\n', cfg.hdmfile);
   vol = ft_read_vol(cfg.hdmfile);

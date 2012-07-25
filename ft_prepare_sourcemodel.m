@@ -67,10 +67,19 @@ function [grid, cfg] = ft_prepare_sourcemodel(cfg, vol, sens)
 % Configuration options for reading a cortical sheet from file
 %   cfg.headshape     = string, should be a *.fif file
 %
+% The EEG or MEG sensor positions can be present in the data or can be specified as
+%   cfg.elec          = structure with electrode positions, see FT_DATATYPE_SENS
+%   cfg.grad          = structure with gradiometer definition, see FT_DATATYPE_SENS
+%   cfg.elecfile      = name of file containing the electrode positions, see FT_READ_SENS
+%   cfg.gradfile      = name of file containing the gradiometer definition, see FT_READ_SENS
+%
+% The headmodel or volume conduction model can be specified as
+%   cfg.hdmfile       = string, file containing the volume conduction model, see FT_READ_SENS
+% or alternatively
+%   cfg.vol           = structure with volume conduction model
+%   data.vol          = structure with volume conduction model
+%
 % Other configuration options
-%   cfg.vol          = volume conduction model
-%   cfg.grad         = gradiometer definition
-%   cfg.elec         = electrode definition
 %   cfg.grid.tight   = 'yes' or 'no' (default is automatic)
 %   cfg.inwardshift  = depth of the bounding layer for the source space, relative to the head model surface (default = 0)
 %   cfg.symmetry     = 'x', 'y' or 'z' symmetry for two dipoles, can be empty (default = [])
@@ -253,25 +262,11 @@ end
 % start with an empty grid
 grid = [];
 
-% copy the volume conductor and sensor array out of the cfg
-if isfield(cfg, 'vol')
-  vol = cfg.vol;
-else
-  vol = [];
-end
+% get the volume conduction model
+vol = ft_fetch_vol(cfg, data);
 
-% these are mutually exclusive
-if isfield(cfg, 'grad')
-  sens = cfg.grad;
-elseif isfield(cfg, 'elec')
-  sens = cfg.elec;
-else
-  sens = [];
-end
-
-% ensure that the sensor description is up-to-date, for backward compatibility Oct 2011
-% FIXME see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1055
-sens = ft_datatype_sens(sens);
+% get the gradiometer or electrode definition
+sens = ft_fetch_sens(cfg, data);
 
 % ensure cfg.sourceunits to have a value and/or enforce the units in the sensors
 % to conform to this value
