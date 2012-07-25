@@ -212,6 +212,7 @@ cfg.grid.resolution = 1;
 source        = ft_sourceanalysis(cfg, freq);
 
 mri = ft_read_mri('SubjectCMC.mri');
+mri = ft_volumereslice([], mri);
 
 cfg            = [];
 cfg.parameter  = 'coh';
