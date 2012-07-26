@@ -1,25 +1,33 @@
 function [dipout] = minimumnormestimate(dip, grad, vol, dat, varargin)
 
-% MINIMUMNORMESTIMATE computes a linear estimate of the current 
-% in a distributed source model  
+% MINIMUMNORMESTIMATE computes a linear estimate of the current in a
+% distributed source model
 % 
-% Use as 
+% Use as
 %   [dipout] = minimumnormestimate(dip, grad, vol, dat, ...)
 %
 % Optional input arguments should come in key-value pairs and can include
-%  'noisecov'         = Nchan x Nchan matrix with noise covariance
-%  'sourcecov'        = Nsource x Nsource matrix with source covariance (can be empty, the default will then be identity)
-%  'lambda'           = scalar, regularisation parameter (can be empty, it will then be estimated from snr)
-%  'snr'              = scalar, signal to noise ratio
-%  'reducerank'       = reduce the leadfield rank, can be 'no' or a number (e.g. 2)
-%  'normalize'        = normalize the leadfield
-%  'normalizeparam'   = parameter for depth normalization (default = 0.5)
-%  'keepfilter'       = 'no' or 'yes', keep the spatial filter in the
-%                       output
+%   'noisecov'         = Nchan x Nchan matrix with noise covariance
+%   'sourcecov'        = Nsource x Nsource matrix with source covariance
+%                        (can be empty, the default will then be identity)
+%   'lambda'           = scalar, regularisation parameter (can be empty, 
+%                        it will then be estimated from snr) 
+%  'snr'               = scalar, signal to noise ratio
+%  'reducerank'        = reduce the leadfield rank, can be 'no' or a number
+%                        (e.g. 2) 
+%  'normalize'         = normalize the leadfield
+%  'normalizeparam'    = parameter for depth normalization (default = 0.5)
+%  'keepfilter'        = 'no' or 'yes', keep the spatial filter in the
+%                        output
+%  'prewhiten'         = 'no' or 'yes', prewhiten the leadfield matrix with
+%                        the noise covariance matrix C.
+%  'scalesourcecov'    = 'no' or 'yes', scale the source covariance matrix R
+%                        such that trace(leadfield*R*leadfield')/trace(C)=1
 %
-% Note that leadfield normalization (depth regularisation) should be
-% done by scaling the leadfields outside this function, e.g. in
-% prepare_leadfield.
+% Note that leadfield normalization (depth regularisation) should be done
+% by scaling the leadfields outside this function, e.g. in
+% prepare_leadfield. Note also that with precomputed leadfields the
+% normalization parameters will not have an effect
 %
 % This implements
 % * Dale AM, Liu AK, Fischl B, Buckner RL, Belliveau JW, Lewine JD,
@@ -42,7 +50,7 @@ function [dipout] = minimumnormestimate(dip, grad, vol, dat, varargin)
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % ensure that these are row-vectors
-dip.inside = dip.inside(:)';
+dip.inside  = dip.inside(:)';
 dip.outside = dip.outside(:)';
 
 % get the optional inputs for the MNE method according to Dale et al 2000, and Liu et al. 2002
@@ -58,6 +66,8 @@ normalizeparam = ft_getopt(varargin, 'normalizeparam');
 keepfilter     = istrue(ft_getopt(varargin, 'keepfilter', false));
 dowhiten       = istrue(ft_getopt(varargin, 'prewhiten',  false));
 doscale        = istrue(ft_getopt(varargin, 'scalesourcecov', false));
+hasleadfield   = isfield(dip, 'leadfield');
+hasfilter      = isfield(dip, 'filter');
 
 if isempty(lambda) && isempty(snr) && ~isfield(dip, 'filter')
   error('either lambda or snr should be specified');
@@ -69,30 +79,34 @@ if ~isempty(snr) && doscale
   error('scaling of the source covariance in combination with a specified snr parameter is not allowed');
 end
 
-if ~isfield(dip, 'filter')
-  
-  % compute the leadfields if needed
-  if ~isfield(dip, 'leadfield')
-    fprintf('computing forward model\n');
-    if isfield(dip, 'mom')
-      for i=dip.inside
-        % compute the leadfield for a fixed dipole orientation
-        dip.leadfield{i} = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,i);
-      end
-    else
-      for i=dip.inside
-        % compute the leadfield
-        dip.leadfield{i} = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
-      end
-    end
-    for i=dip.outside
-      dip.leadfield{i} = nan;
+% compute leadfield
+if hasfilter
+  % it does not matter whether the leadfield is there or not, it will not be used
+  fprintf('using pre-computed spatial filter: some of the specified options will not have an effect\n');
+elseif hasleadfield
+  % using the computed leadfields
+  fprintf('using pre-computed leadfields: some of the specified options will not have an effect\n');
+else
+  fprintf('computing forward model\n');
+  if isfield(dip, 'mom')
+    for i=dip.inside
+      % compute the leadfield for a fixed dipole orientation
+      dip.leadfield{i} = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,i);
     end
   else
-    fprintf('using specified forward model\n');
+    for i=dip.inside
+      % compute the leadfield
+      dip.leadfield{i} = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
+    end
   end
-  
-  Nchan = length(grad.label);
+  for i=dip.outside
+    dip.leadfield{i} = nan;
+  end
+end
+
+% compute the spatial filter
+if ~hasfilter
+  Nchan = size(dip.leadfield{dip.inside(1)},1);
   
   % count the number of leadfield components for each source
   Nsource = 0;
@@ -111,8 +125,8 @@ if ~isfield(dip, 'filter')
   end
   
   fprintf('computing MNE source reconstruction, this may take some time...\n');
-  % compute the inverse o the forward model, this is where prior information
-  % on source and noise covariance would be usefull
+  % compute the inverse of the forward model, this is where prior information
+  % on source and noise covariance would be useful
   if isempty(noisecov)
     % use an unregularised minimum norm solution, i.e. using the Moore-Penrose pseudoinverse
     warning('computing a unregularised minimum norm solution. This typically does not work due to numerical accuracy problems');
@@ -188,10 +202,10 @@ if ~isfield(dip, 'filter')
     n = n + size(dip.leadfield{i}, 2);
   end
   dipout.mom(dip.outside) = {nan};
-else
+
+elseif hasfilter
   
-  % if the filter has been pre computed
-  fprintf('using pre-computed spatial filters\n');
+  % use the spatial filters from the data
   dipout.mom = cell(size(dip.pos,1),1);
   for i=dip.inside
     dipout.mom{i} = dip.filter{i} * dat;
@@ -211,32 +225,42 @@ dipout.pos     = dip.pos;
 dipout.inside  = dip.inside;
 dipout.outside = dip.outside;
 
-if (keepfilter || ~isempty(noisecov)) && ~isfield(dip, 'filter')
+% deal with keepfilter option
+if keepfilter && ~hasfilter
+  % spatial filters have been computed, store them in the output
   % re-assign spatial filter to conventional 1 cell per dipole location
   n = 1;
-  for i=dip.inside
+  for i=dip.inside(:)'
     cbeg = n;
     cend = n + size(dip.leadfield{i}, 2) - 1;
-    
-    if keepfilter
-      dipout.filter{i} = w(cbeg:cend,:);
-    end
-    
-    if ~isempty(noisecov)
-      dipout.noisecov{i} = w(cbeg:cend,:)*noisecov*w(cbeg:cend,:)';
-    end
-    
-    n = n + size(dip.leadfield{i}, 2);
+    dipout.filter{i} = w(cbeg:cend,:);
+    n    = n + size(dip.leadfield{i}, 2);
   end
+  dipout.filter(dip.outside)  = {nan};
   
-  if keepfilter,         dipout.filter(dip.outside)  = {nan}; end
-  if ~isempty(noisecov), dipout.noisecov(dip.outside) = {nan}; end
-elseif isfield(dip, 'filter')
+elseif keepfilter
   dipout.filter = dip.filter;
-  if ~isempty(noisecov)
-    for i=dip.inside
-      dipout.noisecov{i} = dipout.filter{i}*noisecov*dipout.filter{i}';
-    end
-    dipout.noisecov(dip.outside) = {nan};
+end
+
+% deal with noise covariance
+if ~isempty(noisecov) && ~hasfilter
+  
+  % compute estimate of the projected noise
+  n = 1;
+  for i=dip.inside(:)'
+    cbeg = n;
+    cend = n + size(dip.leadfield{i}, 2) - 1;
+    dipout.noisecov{i} = w(cbeg:cend,:)*noisecov*w(cbeg:cend,:)';
+    n    = n + size(dip.leadfield{i}, 2);
   end
+  dipout.noisecov(dip.outside) = {nan};
+
+elseif ~isempty(noisecov)
+  
+  % compute estimate of the projected noise
+  for i=dip.inside(:)'
+    dipout.noisecov{i} = dipout.filter{i}*noisecov*dipout.filter{i}';
+  end
+  dipout.noisecov(dip.outside) = {nan};
+
 end
