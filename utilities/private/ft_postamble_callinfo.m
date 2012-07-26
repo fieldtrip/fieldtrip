@@ -54,7 +54,13 @@ if istrue(ft_getopt(cfg, 'showcallinfo', 'yes'))
   % print some feedback on screen, this is meant to educate the user about
   % the requirements of certain computations and to use that knowledge in
   % distributed computing
-  fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', stack.name, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
+  if ispc()
+    % don't print memory usage info under Windows; this does not work (yet)
+    fprintf('the call to "%s" took %d seconds\n', stack.name, round(cfg.callinfo.proctime));
+  else
+    fprintf('the call to "%s" took %d seconds and required the additional allocation of an estimated %d MB\n', stack.name, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
+  end
+  
 end
 
 clear stack

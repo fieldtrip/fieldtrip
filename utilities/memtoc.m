@@ -47,6 +47,6 @@ else
 end
 
 if ~nargout
-  fprintf('Estimated memory use is %.03f MB\n', memused/(1024^2));
+  fprintf('Estimated extra memory allocation required is %.03f MB\n', memused/(1024^2));
   clear memused
 end
