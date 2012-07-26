@@ -34,7 +34,7 @@ if nargin<5
   chanindx = [];
 end
 
-if isequal(chanindx, 1:hdr.NumberOfChannels);
+if isequal(chanindx(:)', 1:hdr.NumberOfChannels);
   % read all channels
   chanindx = [];
 end
@@ -64,9 +64,13 @@ if strcmpi(hdr.DataFormat, 'binary') && strcmpi(hdr.DataOrientation, 'multiplexe
     fseek(fid, hdr.NumberOfChannels*2*(begsample-1), 'cof');
     dat = fread(fid, [hdr.NumberOfChannels, (endsample-begsample+1)], sampletype);
     % compute real microvolts using the calibration factor (resolution)
-    calib = diag(hdr.resolution);
-    % using a sparse multiplication speeds it up
-    dat = full(sparse(calib) * dat);
+    % calib = diag(hdr.resolution);
+    % % using a sparse multiplication speeds it up
+    % dat = full(sparse(calib) * dat);
+    calib = reshape(hdr.resolution,[],1);
+    for k = 1:size(dat,2)
+      dat(:,k) = calib.*dat(:,k);
+    end
     
   else
     % read only the selected channels
@@ -76,9 +80,14 @@ if strcmpi(hdr.DataFormat, 'binary') && strcmpi(hdr.DataOrientation, 'multiplexe
       dat(chan,:) = fread(fid, [1, (endsample-begsample+1)], sampletype, (hdr.NumberOfChannels-1)*samplesize);
     end
     % compute real microvolts using the calibration factor (resolution)
-    calib = diag(hdr.resolution(chanindx));
-    % using a sparse multiplication speeds it up
-    dat = full(sparse(calib) * dat);
+    % calib = diag(hdr.resolution(chanindx));
+    % % using a sparse multiplication speeds it up
+    % dat = full(sparse(calib) * dat);
+    calib = reshape(hdr.resolution(chanindx),[],1);
+    for k = 1:size(dat,2)
+      dat(:,k) = calib.*dat(:,k);
+    end
+    
     % don't do the channel selection again at the end of the function
     chanindx = [];
   end
