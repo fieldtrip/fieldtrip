@@ -100,6 +100,9 @@ hasrpt   = ~isempty(strfind(varargin{1}.dimord, 'rpt'));
 % check whether the input data is suitable
 if hasrpt
     fprintf('ignoring the single-subject repetition dimension\n');
+    if strcmp(cfg.parameter, 'trial')
+        error('not supporting averaging over the repetition dimension');
+    end
 end
 
 if ischar(cfg.latency) && strcmp(cfg.latency, 'all')
