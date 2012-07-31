@@ -86,7 +86,7 @@ end
 % FIXME: ft_timelockgrandaverage either has .avg or .individual for output,
 % and therefore yet supports only 1 input parameter
 if numel(cfg.parameter) > 1
-    fprintf('yet supporting 1 parameter, choosing the first parameter: %s\n', cfg.parameter{1});
+    fprintf('supporting 1 parameter, choosing the first parameter: %s\n', cfg.parameter{1});
     temp = cfg.parameter{1}; % remove the other parameters
     cfg = rmfield(cfg, 'parameter');
     cfg.parameter{1} = temp;
@@ -99,7 +99,7 @@ hasrpt   = ~isempty(strfind(varargin{1}.dimord, 'rpt'));
 
 % check whether the input data is suitable
 if hasrpt
-    error('the input data of each subject should be an average, use FT_TIMELOCKANALYSIS first');
+    fprintf('ignoring the single-subject repetition dimension\n');
 end
 
 if ischar(cfg.latency) && strcmp(cfg.latency, 'all')
@@ -138,10 +138,12 @@ for k=1:numel(cfg.parameter)
                 varargin{i}.(cfg.parameter{k}) = varargin{i}.(cfg.parameter{k})(chansel);
             case 'chan_time'
                 varargin{i}.(cfg.parameter{k}) = varargin{i}.(cfg.parameter{k})(chansel,timesel);
-            case {'rpt_chan' 'rpttap_chan' 'subj_chan'}
-                varargin{i}.(cfg.parameter{k}) = varargin{i}.(cfg.parameter{k})(:,chansel);
-            case {'rpt_chan_time' 'rpttap_chan_time' 'subj_chan_time'}
-                varargin{i}.(cfg.parameter{k}) = varargin{i}.(cfg.parameter{k})(:,chansel,timesel);
+            case {'rpt_chan' 'subj_chan'}
+                varargin{i}.(cfg.parameter{k}) = varargin{i}.(cfg.parameter{k})(chansel);
+                varargin{i}.dimord = 'chan';  
+            case {'rpt_chan_time' 'subj_chan_time'}
+                varargin{i}.(cfg.parameter{k}) = varargin{i}.(cfg.parameter{k})(chansel,timesel);
+                varargin{i}.dimord = 'chan_time';
             otherwise
                 error('unsupported dimord');
         end
@@ -182,7 +184,7 @@ for k=1:numel(cfg.parameter)
                 sdflag = 1;
         end
         ResultVar = std(avgmat, sdflag, 1).^2;
-        grandavg.var = reshape(ResultVar, [dim{k}]);  % Nchan x Nsamples
+        grandavg.var = reshape(ResultVar, [dim{k}]);  % Nchanof each subjeof each subject should be an average, use FT_TIMELOCKANALYSIS firsct should be an average, use FT_TIMELOCKANALYSIS firs x Nsamples
     elseif strcmp(cfg.keepindividual, 'yes')
         grandavg.individual = avgmat;         % Nsubj x Nchan x Nsamples
     end
