@@ -704,8 +704,7 @@ else
   begsamples = datbegsample:smppertrl:datendsample;
   endsamples = datbegsample+smppertrl-1:smppertrl:datendsample;
   if numel(endsamples)<numel(begsamples)
-    %endsamples(end+1) = datendsample;
-    endsamples(end+1) = begsamples(end)+smppertrl-1;
+    endsamples(end+1) = datendsample;
   end
   trlvis = [];
   trlvis(:,1) = begsamples';
