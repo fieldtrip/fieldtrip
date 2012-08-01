@@ -159,6 +159,10 @@ if ~isfield(cfg, 'ploteventlabels'), cfg.ploteventlabels = 'type=value';  end
 if ~isfield(cfg, 'enablepreprocedit'), cfg.enablepreprocedit = 'no';      end
 
 
+if ~isfield(cfg, 'develscalefix'), cfg.develscalefix = 'no';      end
+
+
+
 cfg.zlim           = ft_getopt(cfg, 'zlim',          'maxmin');
 cfg.compscale      = ft_getopt(cfg, 'compscale',     'global');
 
@@ -353,6 +357,10 @@ if ischar(cfg.ylim)
     otherwise
       error('unsupported value for cfg.ylim');
   end % switch ylim
+  % zoom in a bit when viemode is vertical
+  if strcmp(cfg.viewmode,'vertical') && strcmp(cfg.develscalefix,'yes')
+    cfg.ylim = cfg.ylim/10;
+  end
 end
 
 % determine coloring of channels
