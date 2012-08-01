@@ -25,7 +25,7 @@ function [cfg] = ft_databrowser(cfg, data)
 % The following configuration options are supported:
 %   cfg.ylim                    = vertical scaling, can be 'maxmin', 'maxabs' or [ymin ymax] (default = 'maxabs')
 %   cfg.zlim                    = color scaling to apply to component topographies, 'minmax', 'maxabs' (default = 'maxmin') 
-%   cfg.blocksize               = duration in seconds for cutting the data up, only aplicable for continuous data
+%   cfg.blocksize               = duration in seconds for cutting the data up
 %   cfg.trl                     = structure that defines the data segments of interest, only applicable for trial-based data
 %   cfg.continuous              = 'yes' or 'no' whether the data should be interpreted as continuous or trial-based
 %   cfg.channel                 = cell-array with channel labels, see FT_CHANNELSELECTION
@@ -137,7 +137,7 @@ if ~isfield(cfg, 'ylim'),            cfg.ylim = 'maxabs';                 end
 if ~isfield(cfg, 'artfctdef'),       cfg.artfctdef = struct;              end
 if ~isfield(cfg, 'selectfeature'),   cfg.selectfeature = 'visual';        end % string or cell-array
 if ~isfield(cfg, 'selectmode'),      cfg.selectmode = 'mark';             end
-if ~isfield(cfg, 'blocksize'),       cfg.blocksize = 1;                   end % only for segmenting continuous data, i.e. one long trial
+if ~isfield(cfg, 'blocksize'),       cfg.blocksize = [];                  end % now used for both continuous and non-continuous data, defaulting done below
 if ~isfield(cfg, 'preproc'),         cfg.preproc = [];                    end % see preproc for options
 if ~isfield(cfg, 'selfun'),          cfg.selfun = 'browse_multiplotER';   end
 if ~isfield(cfg, 'selcfg'),          cfg.selcfg = [];                     end
@@ -314,6 +314,13 @@ else
     end
   end
 end % if hasdata
+if strcmp(cfg.continuous,'no') && isempty(cfg.blocksize)
+  cfg.blocksize = (trlorg(1,2) - trlorg(1,1)+1) ./ hdr.Fs;
+elseif strcmp(cfg.continuous,'yes') && isempty(cfg.blocksize)
+  cfg.blocksize = 1;
+end
+
+
 
 % FIXME make a check for the consistency of cfg.continous, cfg.blocksize, cfg.trl and the data header
 
@@ -494,7 +501,8 @@ opt.chanindx    = [];         % this is used to check whether the component topo
 opt.eventtypes  = eventtypes;
 opt.eventtypescolors = [0 0 0; 1 0 0; 0 0 1; 0 1 0; 1 0 1; 0.5 0.5 0.5; 0 1 1; 1 1 0];
 opt.eventtypecolorlabels = {'black', 'red', 'blue', 'green', 'cyan', 'grey', 'light blue', 'yellow'};
-opt.nanpaddata  = [];
+opt.nanpaddata  = []; % this is used to allow horizontal scaling to be constant (when looking at last segment continous data, or when looking at segmented/zoomed-out non-continous data)
+opt.trllock     = []; % this is used when zooming into trial based data
 
 % determine labelling of channels
 if strcmp(cfg.plotlabels, 'yes')
@@ -551,13 +559,8 @@ uicontrol('tag', 'group1a', 'parent', h, 'units', 'normalized', 'style', 'pushbu
 uicontrol('tag', 'group2a', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '-', 'userdata', 'shift+leftarrow')
 uicontrol('tag', 'group2a', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '+', 'userdata', 'shift+rightarrow')
 
-if strcmp(cfg.continuous, 'no')
-  ft_uilayout(h, 'tag', 'group1a', 'visible', 'off', 'retag', 'group1');
-  ft_uilayout(h, 'tag', 'group2a', 'visible', 'off', 'retag', 'group2');
-else
-  ft_uilayout(h, 'tag', 'group1a', 'visible', 'on', 'retag', 'group1');
-  ft_uilayout(h, 'tag', 'group2a', 'visible', 'on', 'retag', 'group2');
-end
+ft_uilayout(h, 'tag', 'group1a', 'visible', 'on', 'retag', 'group1');
+ft_uilayout(h, 'tag', 'group2a', 'visible', 'on', 'retag', 'group2');
 
 uicontrol('tag', 'group1', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'vertical', 'userdata', 'v')
 uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '-', 'userdata', 'shift+downarrow')
@@ -686,8 +689,83 @@ function definetrial_cb(h, eventdata)
 opt = getappdata(h, 'opt');
 cfg = getappdata(h, 'cfg');
 if strcmp(cfg.continuous, 'no')
-  % keep the original trial definition for visualisation
-  opt.trlvis = opt.trlorg;
+
+  % when zooming in, lock the trial! one can only go to the next trial when horizontal scaling doesn't segment the data - from ft-meeting: this might be relaxed later on - roevdmei
+  if isempty(opt.trllock)
+    opt.trllock = opt.trlop;
+  end
+  locktrllen = ((opt.trlorg(opt.trllock,2)-opt.trlorg(opt.trllock,1)+1) ./ opt.fsample);
+  % if cfg.blocksize is close to the length of the locked trial, set it to that
+  if (abs(locktrllen-cfg.blocksize) / locktrllen) < 0.1
+    cfg.blocksize = locktrllen;
+  end
+    
+  %%%%%%%%%
+  % trial is locked, change subdivision of trial
+  if cfg.blocksize < locktrllen
+    % lock the trial if it wasn't locked (and thus trlop refers to the actual trial)
+    if isempty(opt.trllock)
+      opt.trllock = trlop;
+    end
+    % save current position if already
+    if isfield(opt, 'trlvis')
+      thissegbeg = opt.trlvis(opt.trlop,1);
+    end
+    datbegsample = min(opt.trlorg(opt.trllock,1));
+    datendsample = max(opt.trlorg(opt.trllock,2));
+    smppertrl  = round(opt.fsample * cfg.blocksize);
+    begsamples = datbegsample:smppertrl:datendsample;
+    endsamples = datbegsample+smppertrl-1:smppertrl:datendsample;
+    offset     = (((1:numel(begsamples))-1)*smppertrl) + opt.trlorg(opt.trllock,3);
+    if numel(endsamples)<numel(begsamples)
+      endsamples(end+1) = datendsample;
+    end
+    trlvis = [];
+    trlvis(:,1) = begsamples';
+    trlvis(:,2) = endsamples';
+    trlvis(:,3) = offset;
+    % determine length of each trial, and determine the offset with the current requested zoom-level
+    trllen   = (trlvis(:,2) - trlvis(:,1)+1);
+    sizediff = smppertrl - trllen;
+    opt.nanpaddata = sizediff;
+    
+    if isfield(opt, 'trlvis')
+      % update the current trial counter and try to keep the current sample the same
+      opt.trlop   = nearest(begsamples, thissegbeg);
+    end
+    % update trialname
+    opt.trialname = 'trialsegment'; 
+    % update button
+    set(findobj(get(h,'children'),'string','trial'),'string',opt.trialname);
+    %%%%%%%%%
+    
+
+    %%%%%%%%%
+    % trial is not locked, go to original trial division and zoom out
+  elseif cfg.blocksize >= locktrllen
+    trlvis = opt.trlorg;
+    % set current trlop to locked trial if it was locked before
+    if ~isempty(opt.trllock)
+      opt.trlop = opt.trllock;
+    end
+    smppertrl  = round(opt.fsample * cfg.blocksize);
+    % determine length of each trial, and determine the offset with the current requested zoom-level
+    trllen   = (trlvis(:,2) - trlvis(:,1)+1);
+    sizediff = smppertrl - trllen;
+    opt.nanpaddata = sizediff;
+    
+    % update trialname
+    opt.trialname = 'trial';
+    % update button
+    set(findobj(get(h,'children'),'string','trialsegment'),'string',opt.trialname);
+    
+    % release trial lock
+    opt.trllock = [];
+    %%%%%%%%%
+  end
+  
+  % save trlvis
+  opt.trlvis  = trlvis;
 else
   % construct a trial definition for visualisation
   if isfield(opt, 'trlvis')
@@ -734,10 +812,8 @@ else
   
   % NaN-padding when horizontal scaling is bigger than the data
   % two possible situations, 1) zoomed out so far that all data is one segment, or 2) multiple segments but last segment is smaller than the rest
-  sizediff = smppertrl-(endsamples(end)-begsamples(end)+1);
-  if sizediff>0
-    opt.nanpaddata = sizediff;
-  end
+  sizediff = smppertrl-(endsamples-begsamples+1);
+  opt.nanpaddata = sizediff;
 end % if continuous
 setappdata(h, 'opt', opt);
 setappdata(h, 'cfg', cfg);
@@ -784,7 +860,7 @@ begsample = opt.trlvis(opt.trlop,1);
 endsample = opt.trlvis(opt.trlop,2);
 offset    = opt.trlvis(opt.trlop,3);
 % determine the selection
-if strcmp(opt.trialname, 'trial')
+if strcmp(opt.trialname, 'trial') || strcmp(opt.trialname, 'trialsegment')
   % this is appropriate when the offset is defined according to a
   % different trigger in each trial, which is usually the case in trial data
   begsel = round(range(1)*opt.fsample+begsample-offset-1);
@@ -1221,9 +1297,10 @@ art = ft_fetch_data(opt.artdata, 'begsample', begsample, 'endsample', endsample)
 [dat, lab, tim] = preproc(dat, opt.hdr.label(chanindx), offset2time(offset, opt.fsample, size(dat,2)), cfg.preproc);
 
 % add NaNs to data for plotting purposes. NaNs will be added when requested horizontal scaling is longer than the data.
-if ~isempty(opt.nanpaddata) && opt.trlop==size(opt.trlvis,1)
-  dat = [dat NaN(numel(lab), opt.nanpaddata)];
-  tim = [tim linspace(tim(end),tim(end)+opt.nanpaddata*mean(diff(tim)),opt.nanpaddata)];  % possible machine precision error here
+nsamplepad = opt.nanpaddata(opt.trlop);
+if nsamplepad>0
+  dat = [dat NaN(numel(lab), opt.nanpaddata(opt.trlop))];
+  tim = [tim linspace(tim(end),tim(end)+nsamplepad*mean(diff(tim)),nsamplepad)];  % possible machine precision error here
 end
 opt.curdat.label      = lab;
 opt.curdat.time{1}    = tim;
@@ -1439,8 +1516,8 @@ end % if strcmp viewmode
 
 nticks = 11;
 xTickLabel = cellstr(num2str( linspace(tim(1), tim(end), nticks)' , '%1.2f'))';
-if ~isempty(opt.nanpaddata) && opt.trlop==size(opt.trlvis,1)
-  nlabindat = sum(linspace(tim(1), tim(end), nticks) < tim(end-opt.nanpaddata));
+if nsamplepad>0
+  nlabindat = sum(linspace(tim(1), tim(end), nticks) < tim(end-nsamplepad));
   xTickLabel(nlabindat+1:end) = repmat({' '},[1 nticks-nlabindat]);
 end
 set(gca, 'xTick', linspace(ax(1), ax(2), nticks))
@@ -1539,7 +1616,18 @@ if strcmp(cfg.viewmode, 'component')
   
 end % plotting topographies
 
-title(sprintf('%s %d, time from %g to %g s', opt.trialname, opt.trlop, tim(1), tim(end)));
+startim = tim(1);
+if nsamplepad>0
+  endtim = tim(end-nsamplepad);
+else
+  endtim = tim(end);
+end
+
+if ~strcmp(opt.trialname,'trialsegment')
+  title(sprintf('%s %d/%d, time from %g to %g s', opt.trialname, opt.trlop, size(opt.trlvis,1), startim, endtim));
+else
+  title(sprintf('trial %d/%d: segment: %d/%d , time from %g to %g s', opt.trllock, size(opt.trlorg,1), opt.trlop, size(opt.trlvis,1), startim, endtim));
+end
 xlabel('time');
 
 
