@@ -224,6 +224,9 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if hasdata
+  % save whether data came from a timelock structure
+  istimelock = strcmp(ft_datatype(data),'timelock');
+  
   % check if the input data is valid for this function
   data = ft_checkdata(data, 'datatype', {'raw', 'comp'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
   % fetch the header from the data structure in memory
@@ -246,7 +249,7 @@ if hasdata
   Nchans  = length(chansel);
   
   if isempty(cfg.continuous)
-    if length(data.trial) == 1
+    if length(data.trial) == 1 && ~istimelock
       cfg.continuous = 'yes';
     else
       cfg.continuous = 'no';
@@ -701,7 +704,8 @@ else
   begsamples = datbegsample:smppertrl:datendsample;
   endsamples = datbegsample+smppertrl-1:smppertrl:datendsample;
   if numel(endsamples)<numel(begsamples)
-    endsamples(end+1) = datendsample;
+    %endsamples(end+1) = datendsample;
+    endsamples(end+1) = begsamples(end)+smppertrl-1;
   end
   trlvis = [];
   trlvis(:,1) = begsamples';
