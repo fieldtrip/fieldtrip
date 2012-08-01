@@ -37,6 +37,7 @@ hdr           = ft_getopt(varargin, 'header');
 begsample     = ft_getopt(varargin, 'begsample');
 endsample     = ft_getopt(varargin, 'endsample');
 chanindx      = ft_getopt(varargin, 'chanindx');
+allowoverlap  = ft_getopt(varargin, 'allowoverlap');
     
 if isempty(hdr)
   hdr = ft_fetch_header(data);
@@ -128,7 +129,9 @@ if trlnum>1,
       if any(count==0)
         warning('not all requested samples are present in the data, filling with NaNs');
       elseif any(count>1)
-        error('some of the requested samples occur twice in the data');
+        if ~allowoverlap
+          error('some of the requested samples occur twice in the data');
+        end
       end
 
       % construct the output data array
