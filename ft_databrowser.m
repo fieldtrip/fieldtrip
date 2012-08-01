@@ -494,6 +494,7 @@ opt.chanindx    = [];         % this is used to check whether the component topo
 opt.eventtypes  = eventtypes;
 opt.eventtypescolors = [0 0 0; 1 0 0; 0 0 1; 0 1 0; 1 0 1; 0.5 0.5 0.5; 0 1 1; 1 1 0];
 opt.eventtypecolorlabels = {'black', 'red', 'blue', 'green', 'cyan', 'grey', 'light blue', 'yellow'};
+opt.nanpaddata  = [];
 
 % determine labelling of channels
 if strcmp(cfg.plotlabels, 'yes')
@@ -730,6 +731,13 @@ else
     opt.trlop   = nearest(begsamples, thissample);
   end
   opt.trlvis  = trlvis;
+  
+  % NaN-padding when horizontal scaling is bigger than the data
+  % two possible situations, 1) zoomed out so far that all data is one segment, or 2) multiple segments but last segment is smaller than the rest
+  sizediff = smppertrl-(endsamples(end)-begsamples(end)+1);
+  if sizediff>0
+    opt.nanpaddata = sizediff;
+  end
 end % if continuous
 setappdata(h, 'opt', opt);
 setappdata(h, 'cfg', cfg);
@@ -1212,6 +1220,11 @@ art = ft_fetch_data(opt.artdata, 'begsample', begsample, 'endsample', endsample)
 % apply preprocessing and determine the time axis
 [dat, lab, tim] = preproc(dat, opt.hdr.label(chanindx), offset2time(offset, opt.fsample, size(dat,2)), cfg.preproc);
 
+% add NaNs to data for plotting purposes. NaNs will be added when requested horizontal scaling is longer than the data.
+if ~isempty(opt.nanpaddata) && opt.trlop==size(opt.trlvis,1)
+  dat = [dat NaN(numel(lab), opt.nanpaddata)];
+  tim = [tim linspace(tim(end),tim(end)+opt.nanpaddata*mean(diff(tim)),opt.nanpaddata)];  % possible machine precision error here
+end
 opt.curdat.label      = lab;
 opt.curdat.time{1}    = tim;
 opt.curdat.trial{1}   = dat;
@@ -1426,6 +1439,10 @@ end % if strcmp viewmode
 
 nticks = 11;
 xTickLabel = cellstr(num2str( linspace(tim(1), tim(end), nticks)' , '%1.2f'))';
+if ~isempty(opt.nanpaddata) && opt.trlop==size(opt.trlvis,1)
+  nlabindat = sum(linspace(tim(1), tim(end), nticks) < tim(end-opt.nanpaddata));
+  xTickLabel(nlabindat+1:end) = repmat({' '},[1 nticks-nlabindat]);
+end
 set(gca, 'xTick', linspace(ax(1), ax(2), nticks))
 set(gca, 'xTickLabel', xTickLabel)
 
