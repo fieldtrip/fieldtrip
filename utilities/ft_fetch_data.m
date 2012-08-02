@@ -131,6 +131,8 @@ if trlnum>1,
       elseif any(count>1)
         if ~allowoverlap
           error('some of the requested samples occur twice in the data');
+        else
+          warnign('samples present in multiple trials, using only the last occurence of each sample')
         end
       end
 
