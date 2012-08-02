@@ -504,6 +504,11 @@ opt.eventtypecolorlabels = {'black', 'red', 'blue', 'green', 'cyan', 'grey', 'li
 opt.nanpaddata  = []; % this is used to allow horizontal scaling to be constant (when looking at last segment continous data, or when looking at segmented/zoomed-out non-continous data)
 opt.trllock     = []; % this is used when zooming into trial based data
 
+% save original layout when viewmode = component
+if strcmp(cfg.viewmode,'component')
+  opt.layorg    = cfg.layout;
+end
+
 % determine labelling of channels
 if strcmp(cfg.plotlabels, 'yes')
   opt.plotLabelFlag = 1;
@@ -1526,9 +1531,7 @@ set(gca, 'xTickLabel', xTickLabel)
 if strcmp(cfg.viewmode, 'component')
   
   % determine the position of each of the original channels for the topgraphy
-  tmpcfg = [];
-  tmpcfg.layout = cfg.layout;
-  laychan = ft_prepare_layout(tmpcfg, opt.orgdata);
+  laychan = opt.layorg;
   
   % determine the position of each of the topographies
   laytopo.pos(:,1)  = opt.laytime.pos(:,1) - opt.laytime.width/2 - opt.laytime.height*2;
