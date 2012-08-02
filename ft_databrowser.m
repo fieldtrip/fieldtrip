@@ -1534,8 +1534,8 @@ if strcmp(cfg.viewmode, 'component')
   laychan = opt.layorg;
   
   % determine the position of each of the topographies
-  laytopo.pos(:,1)  = opt.laytime.pos(:,1) - opt.laytime.width/2 - opt.laytime.height*2;
-  laytopo.pos(:,2)  = opt.laytime.pos(:,2);
+  laytopo.pos(:,1)  = opt.laytime.pos(:,1) - opt.laytime.width/2 - opt.laytime.height;
+  laytopo.pos(:,2)  = opt.laytime.pos(:,2) + opt.laytime.height/2;
   laytopo.width     = opt.laytime.height;
   laytopo.height    = opt.laytime.height;
   laytopo.label     = opt.laytime.label;
@@ -1610,7 +1610,7 @@ if strcmp(cfg.viewmode, 'component')
   
   set(gca, 'yTick', [])
   
-  ax(1) = min(laytopo.pos(:,1) - laytopo.width/2);
+  ax(1) = min(laytopo.pos(:,1) - laytopo.width);
   ax(2) = max(opt.laytime.pos(:,1) + opt.laytime.width/2);
   ax(3) = min(opt.laytime.pos(:,2) - opt.laytime.height/2);
   ax(4) = max(opt.laytime.pos(:,2) + opt.laytime.height/2);
