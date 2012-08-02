@@ -687,8 +687,6 @@ if ~isempty(label)
     % the reading has already been done and varargin contains the data
     cfg = rmfield(cfg, 'inputfile');
   end
-  %cfg.xlim = 'maxmin';
-  cfg.ylim = 'maxmin';
   cfg.channel = label;
   
   % make sure ft_singleplotTFR does not apply a baseline correction again
