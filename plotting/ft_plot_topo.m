@@ -111,6 +111,9 @@ else
   yScaling = height/naturalHeight;
 end
 
+% keep original channel positions
+chanXorg = chanX;
+chanYorg = chanY;
 chanX = chanX(:) * xScaling + hpos;
 chanY = chanY(:) * yScaling + vpos;
 
@@ -141,7 +144,8 @@ end
 
 
 % try to speed up the preparation of the mask on subsequent calls
-current_argin = {chanX, chanY, gridscale, mask, datmask};
+%current_argin = {chanX, chanY, gridscale, mask, datmask}; % old: to be plotted channel positions must be the same
+current_argin = {chanXorg, chanYorg, gridscale, mask, datmask}; % new: unscaled channel positions must be the same over calls
 if isequal(current_argin, previous_argin)
   % don't construct the binary image, but reuse it from the previous call
   maskimage = previous_maskimage;
