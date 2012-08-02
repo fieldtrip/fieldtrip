@@ -1601,7 +1601,7 @@ if strcmp(cfg.viewmode, 'component')
         'width', laytopo.width(laysel), 'height', laytopo.height(laysel));
       
       %axis equal
-      drawnow
+      %drawnow
     end    
     
     caxis([0 1]);
