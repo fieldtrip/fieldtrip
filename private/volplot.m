@@ -171,13 +171,25 @@ if strcmp(sel, 'interactive')
 elseif strcmp(sel, 'montage')
   % make plot of x-y slices for all z values
   maxval = max(dat(:));
-  for z=1:size(dat,3)
-    % convert to 4D image for montage display
-    % transpose to correct for x-y axis change in Matlab image function
-    img(:,:,1,z) = transpose(dat(:,:,z));
+%  for z=1:size(dat,3)
+%    % convert to 4D image for montage display
+%    % transpose to correct for x-y axis change in Matlab image function
+%    img(:,:,1,z) = transpose(dat(:,:,z));
+%  end
+%  montage(img);
+%  axis xy
+
+  % this works if java fails
+  siz    = size(dat);
+  ndiv   = [ceil(sqrt(siz(3))) floor(sqrt(siz(3)))];
+  map    = zeros(siz(2)*ndiv(2),siz(1)*ndiv(1));
+  for k=1:siz(3)
+    [nx,ny] = ind2sub(ndiv,k);
+    map(siz(2)*(ny-1)+1:siz(2)*ny,siz(1)*(nx-1)+1:siz(1)*nx) = dat(:,:,k)';
   end
-  montage(img);
-  axis xy
+  imagesc(map);axis xy;axis equal;axis off;
+  caxis([cmin cmax]);
+  colormap jet
 
 elseif strcmp(sel, 'sumproject')
   % make plot of integrated-value projection along the thee orthogonal directions
