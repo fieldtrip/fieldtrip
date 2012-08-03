@@ -851,13 +851,13 @@ if 0
   bnd = [];
   [bnd.pnt, bnd.tri] = icosahedron162;
   
-  scale = 1+0.3*randn(size(pnt,1),1);
-  pnt = pnt .* [scale scale scale];
+  scale = 1+0.3*randn(size(bnd.pnt,1),1);
+  bnd.pnt = bnd.pnt .* [scale scale scale];
   
   figure
   ft_plot_mesh(bnd)
   
-  [bnd.pnt, bnd.tri] = fairsurface(pnt, tri, 10);
+  [bnd.pnt, bnd.tri] = fairsurface(bnd.pnt, bnd.tri, 10);
   
   figure
   ft_plot_mesh(bnd)
