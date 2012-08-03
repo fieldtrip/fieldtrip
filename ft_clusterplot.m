@@ -100,7 +100,7 @@ if ~isfield(cfg,'highlightsizeseries'),    cfg.highlightsizeseries = [6 6 6 6 6]
 if ~isfield(cfg,'hllinewidthseries'),      cfg.hllinewidthseries = [1 1 1 1 1];                 end;
 if ~isfield(cfg,'highlightcolorpos'),      cfg.highlightcolorpos = [0 0 0];                     end;
 if ~isfield(cfg,'highlightcolorneg'),      cfg.highlightcolorneg = [0 0 0];                     end;
-if ~isfield(cfg,'parameter'),              cfg.parameter = 'parameter';                         end;
+if ~isfield(cfg,'parameter'),              cfg.parameter = 'stat';                              end;
 if ~isfield(cfg,'saveaspng'),              cfg.saveaspng = 'no';                                end;
 
 % error if cfg.highlightseries is not a cell, for possible confusion with cfg-options
