@@ -344,7 +344,10 @@ if strcmp(cfg.feedback, 'yes')
   plot3(pnt2(:,1), pnt2(:,2), pnt2(:,3), 'g.') % template positions
   line(X,Y,Z, 'color', 'black');
   axis equal; axis vis3d
-  triplot(pnt1, tri1, p1);
+  bnd1 = [];
+  bnd1.pnt = pnt1;
+  bnd1.tri = tri1;
+  ft_plot_mesh(bnd1,'vertexcolor',p1,'edgecolor','none')
   title('RMS, before realignment')
   view(-90, 90)
   
@@ -355,7 +358,10 @@ if strcmp(cfg.feedback, 'yes')
   plot3(pnt2(:,1), pnt2(:,2), pnt2(:,3), 'g.') % template positions
   line(X,Y,Z, 'color', 'black');
   axis equal; axis vis3d
-  triplot(pnt2, tri2, p2);
+  bnd2 = [];
+  bnd2.pnt = pnt2;
+  bnd2.tri = tri2;
+  ft_plot_mesh(bnd2,'vertexcolor',p2,'edgecolor','none')
   title('RMS, after realignment')
   view(-90, 90)
 end
