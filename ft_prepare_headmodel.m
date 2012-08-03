@@ -848,18 +848,17 @@ tri1 = tri;
 
 if 0
   % this is some test/demo code
-  [pnt, tri] = icosahedron162;
+  bnd = [];
+  [bnd.pnt, bnd.tri] = icosahedron162;
   
   scale = 1+0.3*randn(size(pnt,1),1);
   pnt = pnt .* [scale scale scale];
   
   figure
-  triplot(pnt, tri, [], 'faces')
-  triplot(pnt, tri, [], 'edges')
+  ft_plot_mesh(bnd)
   
-  [pnt, tri] = fairsurface(pnt, tri, 10);
+  [bnd.pnt, bnd.tri] = fairsurface(pnt, tri, 10);
   
   figure
-  triplot(pnt, tri, [], 'faces')
-  triplot(pnt, tri, [], 'edges')
+  ft_plot_mesh(bnd)
 end
