@@ -141,11 +141,6 @@ elseif isfield(cfg, 'trialfun')
     
   if isempty(cfg.trialfun)
     error('the specified trialfun was not found');
-  end
-  
-  % evaluate the user-defined function that gives back the trial definition
-  if ischar(cfg.trialfun)
-    fprintf('evaluating trialfunction ''%s''\n', cfg.trialfun);
   else
     fprintf('evaluating trialfunction ''%s''\n', func2str(cfg.trialfun));
   end

@@ -464,6 +464,14 @@ else
   eventtypes = [];
 end
 
+% determine the function called when selecting data, if applicable
+if strcmp(cfg.selectmode, 'eval')
+  cfg.selfun = ft_getuserfun(cfg.selfun, 'browse');
+  if isempty(cfg.selfun)
+    error('the function specified by cfg.selfun could not be found');
+  end
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % set up the data structures used in the GUI
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
