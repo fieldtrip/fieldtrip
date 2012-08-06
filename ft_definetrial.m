@@ -22,7 +22,7 @@ function [cfg] = ft_definetrial(cfg)
 % the trial function) which returns "trl". The user can specify the
 % name of his/her custom trial function that is tailored to the
 % experimental paradigm, or use the default trial function
-% TRIALFUN_GENERAL.
+% FT_TRIALFUN_GENERAL.
 %
 % The trial definition "trl" is an Nx3 matrix, N is the number of trials.
 % The first column contains the sample-indices of the begin of each trial 
@@ -46,7 +46,7 @@ function [cfg] = ft_definetrial(cfg)
 % pieces of data according to this information.
 %
 % Simple trial definitions (e.g. based on a single trigger) are supported
-% by TRIALFUN_GENERAL, which is the default trial function. This function
+% by FT_TRIALFUN_GENERAL, which is the default trial function. This function
 % supports the following options
 %   cfg.trialdef.eventtype  = 'string'
 %   cfg.trialdef.eventvalue = number, string or list with numbers or strings
@@ -76,7 +76,7 @@ function [cfg] = ft_definetrial(cfg)
 % function to get the event information from your data file.
 %
 % See also FT_PREPROCESSING, FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT,
-% TRIALFUN_GENERAL, TRIALFUN_EXAMPLE1, TRIALFUN_EXAMPLE2
+% FT_TRIALFUN_GENERAL, FT_TRIALFUN_EXAMPLE1, FT_TRIALFUN_EXAMPLE2
 
 % Undocumented local options:
 % cfg.datafile
@@ -137,27 +137,10 @@ if isfield(cfg, 'trl')
 
 elseif isfield(cfg, 'trialfun')
 
-  % provide support for xxx, trialfun_xxx, and ft_trialfun_xxx (in that order)
-  % when the user specifies cfg.trialfun=xxx
-  if isa(cfg.trialfun, 'function_handle') || isfunction(cfg.trialfun)
-    % treat function name as-is, this is the default
+  cfg.trialfun = ft_getuserfun(cfg.trialfun, 'trialfun');
     
-  elseif isfunction(['trialfun_' cfg.trialfun]) && ~iscompatwrapper(['trialfun_' cfg.trialfun])
-    
-    % prepend trialfun to the function name
-    cfg.trialfun = ['trialfun_' cfg.trialfun];
-    
-  elseif isfunction(['ft_trialfun_' cfg.trialfun])
-    
-    % prepend ft_trialfun to the function name
-    cfg.trialfun = ['ft_trialfun_' cfg.trialfun];
-    
-  else
-    if ischar(cfg.trialfun)
-      error('cannot locate the specified trialfun (%s)', cfg.trialfun)
-    else
-      error('cannot locate the specified trialfun (%s)', func2str(cfg.trialfun))
-    end
+  if isempty(cfg.trialfun)
+    error('the specified trialfun was not found');
   end
   
   % evaluate the user-defined function that gives back the trial definition
