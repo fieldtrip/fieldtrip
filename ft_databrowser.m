@@ -1146,7 +1146,12 @@ switch key
     cleanup_cb(h);
   case 't'
     % select the trial to display
-    response = inputdlg(sprintf('%s to display', opt.trialname), 'specify', 1, {num2str(opt.trlop)});
+    if ~strcmp(opt.trialname,'trialsegment')
+      str = sprintf('%s to display (current trial = %d/%d)', opt.trialname, opt.trlop, size(opt.trlvis,1));
+    else
+      str = sprintf('segment to display (current segment = %d/%d)', opt.trlop, size(opt.trlvis,1));
+    end  
+    response = inputdlg(str, 'specify', 1, {num2str(opt.trlop)});
     if ~isempty(response)
       opt.trlop = str2double(response);
       opt.trlop = min(opt.trlop, size(opt.trlvis,1)); % should not be larger than the number of trials
