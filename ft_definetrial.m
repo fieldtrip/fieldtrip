@@ -11,7 +11,7 @@ function [cfg] = ft_definetrial(cfg)
 %   [cfg] = ft_definetrial(cfg)
 % where the configuration structure should contain either
 %   cfg.trialdef   = structure with details of trial definition, see below
-%   cfg.trialfun   = function name, see below (default = 'trialfun_general')
+%   cfg.trialfun   = function name, see below (default = 'ft_trialfun_general')
 % and also
 %   cfg.dataset    = pathname to dataset from which to read the events
 % 
@@ -119,17 +119,17 @@ if ~isfield(cfg, 'trl') && (~isfield(cfg, 'trialfun') || isempty(cfg.trialfun))
   % there used to be other system specific trialfuns in previous versions
   % of fieldtrip, but they are deprecated and not included in recent
   % versions any more
-  cfg.trialfun = 'trialfun_general';
-  warning('no trialfun was specified, using trialfun_general');
+  cfg.trialfun = 'ft_trialfun_general';
+  warning('no trialfun was specified, using ft_trialfun_general');
 end
 
 % create the trial definition for this dataset and condition
 if isfield(cfg, 'trl')
   % the trial definition is already part of the configuration
-  fprintf('retaining exist trial definition\n');
+  fprintf('retaining existing trial definition\n');
   trl = cfg.trl;
   if isfield(cfg, 'event')
-    fprintf('retaining exist event information\n');
+    fprintf('retaining existing event information\n');
     event = cfg.event;
   else
     event = [];
@@ -137,12 +137,21 @@ if isfield(cfg, 'trl')
 
 elseif isfield(cfg, 'trialfun')
 
-  % provide support for xxx and trialfun_xxx when the user specifies cfg.trialfun=xxx
-  if isa(cfg.trialfun, 'function_handle') || exist(cfg.trialfun, 'file')
-    % evaluate this function, this is the default
-  elseif exist(['trialfun_' cfg.trialfun], 'file')
+  % provide support for xxx, trialfun_xxx, and ft_trialfun_xxx (in that order)
+  % when the user specifies cfg.trialfun=xxx
+  if isa(cfg.trialfun, 'function_handle') || isfunction(cfg.trialfun)
+    % treat function name as-is, this is the default
+    
+  elseif isfunction(['trialfun_' cfg.trialfun]) && ~iscompatwrapper(['trialfun_' cfg.trialfun])
+    
     % prepend trialfun to the function name
     cfg.trialfun = ['trialfun_' cfg.trialfun];
+    
+  elseif isfunction(['ft_trialfun_' cfg.trialfun])
+    
+    % prepend ft_trialfun to the function name
+    cfg.trialfun = ['ft_trialfun_' cfg.trialfun];
+    
   else
     if ischar(cfg.trialfun)
       error('cannot locate the specified trialfun (%s)', cfg.trialfun)
