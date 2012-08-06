@@ -1,6 +1,6 @@
-function [trl, event] = trialfun_trial(cfg)
+function [trl, event] = ft_trialfun_trial(cfg)
 
-% TRIALFUN_TRIAL creates a trial definition that corresponds to the
+% FT_TRIALFUN_TRIAL creates a trial definition that corresponds to the
 % events that are returned by FT_READ_EVENT with type='trial'
 %
 % See also FT_DEFINETRIAL, FT_PREPROCESSING

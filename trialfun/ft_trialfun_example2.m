@@ -1,6 +1,6 @@
-function [dat] = trialfun_example2(cfg)
+function [dat] = ft_trialfun_example2(cfg)
  
-% TRIALFUN_EXAMPLE2 is an example trial function that detects muscle
+% FT_TRIALFUN_EXAMPLE2 is an example trial function that detects muscle
 % activity in an EMG channel and defines variable length trials from the
 % EMG onset up to the EMG offset.
 %

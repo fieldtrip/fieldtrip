@@ -1,6 +1,6 @@
-function trl = trialfun_realtime(cfg)
+function trl = ft_trialfun_realtime(cfg)
 
-% TRIALFUN_REALTIME can be used to segment a continuous stream of
+% FT_TRIALFUN_REALTIME can be used to segment a continuous stream of
 % data in real-time. Trials are defined as [begsample endsample offset
 % condition]
 % 

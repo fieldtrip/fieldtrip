@@ -1,6 +1,6 @@
-function [trl] = trialfun_twoclass_classification(cfg)
+function [trl] = ft_trialfun_twoclass_classification(cfg)
 
-% TRIALFUN_TWOCLASS_CLASSIFICATION
+% FT_TRIALFUN_TWOCLASS_CLASSIFICATION
 %
 % This trial function can be used to train and test a real-time
 % classifier in offline and online mode. It selects pieces of data
