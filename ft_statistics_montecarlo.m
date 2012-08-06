@@ -169,15 +169,13 @@ if ischar(cfg.ivar) && strcmp(cfg.ivar, 'all')
   cfg.ivar = 1:size(design,1);
 end
 
-% determine the function handle to the low-level statistics function
-if exist(['statistics_' cfg.statistic])
-  statfun = str2func(['statistics_' cfg.statistic]);
-elseif exist(['statfun_' cfg.statistic])
-  statfun = str2func(['statfun_' cfg.statistic]);
+% fetch function handle to the low-level statistics function
+statfun = ft_getuserfun(cfg.statistic, 'statfun');
+if isempty(statfun)
+  error('could not locate the appropriate statistics function');
 else
-  error(sprintf('could not find the statistics function "%s"\n', ['statfun_' cfg.statistic]));
+  fprintf('using "%s" for the single-sample statistics\n', func2str(statfun));
 end
-fprintf('using "%s" for the single-sample statistics\n', func2str(statfun));
 
 % initialize the random number generator.
 if strcmp(cfg.randomseed, 'no')

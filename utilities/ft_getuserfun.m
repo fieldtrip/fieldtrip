@@ -1,6 +1,7 @@
 function func = ft_getuserfun(func, prefix)
 % FT_GETUSERFUN will search the Matlab path for a function with the
-% appropriate name, and return its name. Considered are, in this order:
+% appropriate name, and return a function handle to the function.
+% Considered are, in this order:
 %  - the name itself, i.e. you get exactly the same func back as you put in;
 %  - the name with the specified prefix;
 %  - the name with 'ft_' and the specified prefix.
@@ -11,9 +12,7 @@ function func = ft_getuserfun(func, prefix)
 %
 % func can be a function handle, in which case it is returned as-is.
 %
-% The returned function is guaranteed to be a callable Matlab function, and
-% is not a FieldTrip compatibility wrapper. If no such function is found,
-% the empty array [] will be returned.
+% If no appropriate function is found, the empty array [] will be returned.
 
 % Copyright (C) 2012, Eelke Spaak
 %
@@ -35,13 +34,16 @@ function func = ft_getuserfun(func, prefix)
 %
 % $Id$
 
-if isa(func, 'function_handle') || isfunction(func)
+if isa(func, 'function_handle')
   % treat function (or function name) as-is, this is the default
+elseif isfunction(func)
+  func = str2func(func);
 elseif isfunction([prefix '_' func]) && ~iscompatwrapper([prefix '_' func])
-  func = [prefix '_' func];
+  func = str2func([prefix '_' func]);
 elseif isfunction(['ft_' prefix '_' func])
-  func = ['ft_' prefix '_' func];
+  func = str2func(['ft_' prefix '_' func]);
 else
-  warning(['the specified function ''' func ''' could not be found']);
+  warning(['no function by the name ''' func ''', ''' prefix '_' func...
+    ''', or ''ft_' prefix '_' func ''' could not be found']);
   func = [];
 end
