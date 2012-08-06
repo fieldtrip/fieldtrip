@@ -1,6 +1,6 @@
-function [s,cfg] = statfun_depsamplesF(cfg, dat, design)
+function [s,cfg] = ft_statfun_depsamplesF(cfg, dat, design)
 
-% STATFUN_depsamplesF calculates the dependent samples F-statistic 
+% FT_STATFUN_depsamplesF calculates the dependent samples F-statistic 
 % on the biological data in dat (the dependent variable), using the information on 
 % the independent variable (iv) in design.
 %

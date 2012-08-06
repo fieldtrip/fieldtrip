@@ -1,6 +1,6 @@
-function [s, cfg] = statfun_indepsamplesT(cfg, dat, design)
+function [s, cfg] = ft_statfun_indepsamplesT(cfg, dat, design)
 
-% STATFUN_indepsamplesT calculates the independent samples T-statistic 
+% FT_STATFUN_indepsamplesT calculates the independent samples T-statistic 
 % on the biological data in dat (the dependent variable), using the information on 
 % the independent variable (iv) in design.
 %

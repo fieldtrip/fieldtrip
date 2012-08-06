@@ -1,6 +1,6 @@
-function [stat] = statfun_mean(cfg, dat, design)
+function [stat] = ft_statfun_mean(cfg, dat, design)
 
-% STATFUN_mean computes the mean over all replications for each of
+% FT_STATFUN_mean computes the mean over all replications for each of
 % the observations (i.e. channel-time-frequency points or voxels).
 %
 % This function does not depend on the experimental design and cannot

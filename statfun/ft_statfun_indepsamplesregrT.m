@@ -1,6 +1,6 @@
-function [s,cfg] = statfun_indepsamplesregrT(cfg, dat, design)
+function [s,cfg] = ft_statfun_indepsamplesregrT(cfg, dat, design)
 
-% STATFUN_indepsamplesregrT calculates independent samples regression
+% FT_STATFUN_indepsamplesregrT calculates independent samples regression
 % coefficient T-statistics on the biological data in dat (the dependent
 % variable), using the information on the independent variable
 % (predictor) in design.

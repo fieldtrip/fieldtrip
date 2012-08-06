@@ -1,6 +1,6 @@
-function [s] = statfun_diff_itc(cfg, dat, design)
+function [s] = ft_statfun_diff_itc(cfg, dat, design)
 
-% STATFUN_diff_itc computes the difference in the inter-trial
+% FT_STATFUN_diff_itc computes the difference in the inter-trial
 % coherence (ITC) between two conditions. The input data for this test
 % should consist of complex-values spectral estimates, e.g. computed
 % using FT_FREQANALYSIS with method=mtmfft, wavelet or mtmconvcol.

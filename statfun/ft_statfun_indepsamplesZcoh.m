@@ -1,6 +1,6 @@
-function [s, cfg] = statfun_indepsamplesZcoh(cfg, dat, design)
+function [s, cfg] = ft_statfun_indepsamplesZcoh(cfg, dat, design)
 
-% STATFUN_indepsamplesZcoh calculates the independent samples coherence Z-statistic 
+% FT_STATFUN_indepsamplesZcoh calculates the independent samples coherence Z-statistic 
 % on the biological data in dat (the dependent variable), using the information on 
 % the independent variable (iv) in design.
 %
