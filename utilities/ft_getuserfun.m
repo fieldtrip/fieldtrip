@@ -35,7 +35,7 @@ function func = ft_getuserfun(func, prefix)
 % $Id$
 
 if isa(func, 'function_handle')
-  % treat function (or function name) as-is, this is the default
+  % treat function handle as-is
 elseif isfunction(func)
   func = str2func(func);
 elseif isfunction([prefix '_' func]) && ~iscompatwrapper([prefix '_' func])
