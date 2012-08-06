@@ -1424,24 +1424,36 @@ if strcmp(cfg.ploteventlabels , 'colorvalue') && ~isempty(opt.event)
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 delete(findobj(h,'tag', 'event'));
-
-for k=1:length(event)
+% save stuff to able to shift event labels downwards when they occur at the same time-point
+eventcol = cell(1,numel(event));
+eventstr = cell(1,numel(event));
+eventtim = NaN(1,numel(event));
+% gather event info and plot lines 
+for ievent = 1:numel(event) 
   try
     if strcmp(cfg.ploteventlabels , 'type=value')
-      eventstr = sprintf('%s=%s', event(k).type, num2str(event(k).value)); % value can be both number and string
-      eventcol = 'k';
+      eventstr{ievent} = sprintf('%s = %s', event(ievent).type, num2str(event(ievent).value)); % value can be both number and string
+      eventcol{ievent} = 'k';
     elseif strcmp(cfg.ploteventlabels , 'colorvalue')
-      eventcol = opt.eventtypescolors(match_str(opt.eventtypes, event(k).type),:);
-      eventstr = sprintf('%s', num2str(event(k).value)); % value can be both number and string
+      eventcol{ievent} = opt.eventtypescolors(match_str(opt.eventtypes, event(ievent).type),:);
+      eventstr{ievent} = sprintf('%s', num2str(event(ievent).value)); % value can be both number and string
     end
   catch
-    eventstr = 'unknown';
-    eventcol = 'k';
+    eventstr{ievent} = 'unknown';
+    eventcol{ievent} = 'k';
   end
-  eventtim = (event(k).sample-begsample)/opt.fsample + opt.hlim(1);
-  ft_plot_line([eventtim eventtim], [-1 1], 'tag', 'event', 'color', eventcol, ...
+  eventtim(ievent) = (event(ievent).sample-begsample)/opt.fsample + opt.hlim(1);
+  ft_plot_line([eventtim(ievent) eventtim(ievent)], [-1 1], 'tag', 'event', 'color', eventcol{ievent}, ...
     'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1]);
-  ft_plot_text(eventtim, 0.9, eventstr, 'tag', 'event', 'Color', eventcol, ...
+end
+% count the consecutive occurrence of each time point
+concount = NaN(1,numel(event));
+for ievent = 1:numel(event)
+  concount(ievent) = sum(eventtim(ievent)==eventtim(1:ievent-1));
+end
+% plot labels
+for ievent = 1:numel(event)
+  ft_plot_text(eventtim(ievent), 0.9-concount(ievent)*.06, eventstr{ievent}, 'tag', 'event', 'Color', eventcol{ievent}, ...
     'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1]);
 end
 
@@ -1615,8 +1627,6 @@ if strcmp(cfg.viewmode, 'component')
   ax(3) = min(opt.laytime.pos(:,2) - opt.laytime.height/2);
   ax(4) = max(opt.laytime.pos(:,2) + opt.laytime.height/2);
   axis(ax)
-  
-  
 end % plotting topographies
 
 startim = tim(1);
@@ -1633,6 +1643,8 @@ else
 end
 xlabel('time');
 
+% possibly adds some responsiveness if the 'thing' is clogged
+drawnow
 
 setappdata(h, 'opt', opt);
 setappdata(h, 'cfg', cfg);
