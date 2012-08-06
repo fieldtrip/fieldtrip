@@ -1437,7 +1437,11 @@ eventtim = NaN(1,numel(event));
 for ievent = 1:numel(event) 
   try
     if strcmp(cfg.ploteventlabels , 'type=value')
-      eventstr{ievent} = sprintf('%s = %s', event(ievent).type, num2str(event(ievent).value)); % value can be both number and string
+      if isempty(event(ievent).value)
+        eventstr{ievent} = '';
+      else
+        eventstr{ievent} = sprintf('%s = %s', event(ievent).type, num2str(event(ievent).value)); % value can be both number and string
+      end
       eventcol{ievent} = 'k';
     elseif strcmp(cfg.ploteventlabels , 'colorvalue')
       eventcol{ievent} = opt.eventtypescolors(match_str(opt.eventtypes, event(ievent).type),:);
