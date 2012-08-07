@@ -287,8 +287,10 @@ cfg.highlightfontsize = ft_getopt(cfg, 'highlightfontsize', 8);
 cfg.labeloffset       = ft_getopt(cfg, 'labeloffset',       0.005);
 cfg.maskparameter     = ft_getopt(cfg, 'maskparameter',     []);
 cfg.component         = ft_getopt(cfg, 'component',         []);
-cfg.directionality        = ft_getopt(cfg, 'directionality',        []);
+cfg.directionality    = ft_getopt(cfg, 'directionality',    []);
 cfg.channel           = ft_getopt(cfg, 'channel',           'all');
+cfg.figurename        = ft_getopt(cfg, 'figurename',        []);
+
 
 % compatibility for previous highlighting option
 if isnumeric(cfg.highlight)
@@ -971,8 +973,15 @@ else % data provided through cfg.inputfile
   dataname = cfg.inputfile;
 end
 
-set(gcf, 'Name', sprintf('%d: %s: %s', gcf, funcname, join_str(', ',dataname)));
-set(gcf, 'NumberTitle', 'off');
+if isempty(cfg.figurename)
+  set(gcf, 'Name', sprintf('%d: %s: %s', gcf, funcname, join_str(', ',dataname)));
+  set(gcf, 'NumberTitle', 'off');
+else
+  set(gcf, 'name', cfg.figurename);
+  set(gcf, 'NumberTitle', 'off');
+end
+
+
 
 axis off
 hold off

@@ -144,6 +144,8 @@ cfg.linewidth       = ft_getopt(cfg, 'linewidth',    0.5);
 cfg.maskstyle       = ft_getopt(cfg, 'maskstyle',    'box');
 cfg.channel         = ft_getopt(cfg, 'channel',      'all');
 cfg.directionality  = ft_getopt(cfg, 'directionality',   []);
+cfg.figurename      = ft_getopt(cfg, 'figurename',       []);
+
 
 Ndata = numel(varargin);
 
@@ -560,8 +562,13 @@ elseif nargin > 1
 else
   dataname = cfg.inputfile;
 end
-set(gcf, 'Name', sprintf('%d: %s: %s (%s)', gcf, mfilename, join_str(', ',dataname), chans));
-set(gcf, 'NumberTitle', 'off');
+if isempty(cfg.figurename)
+  set(gcf, 'Name', sprintf('%d: %s: %s (%s)', gcf, mfilename, join_str(', ',dataname), chans));
+  set(gcf, 'NumberTitle', 'off');
+else
+  set(gcf, 'name', cfg.figurename);
+  set(gcf, 'NumberTitle', 'off');
+end
 
 % make the figure interactive
 if strcmp(cfg.interactive, 'yes')

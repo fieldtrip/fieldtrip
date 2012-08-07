@@ -172,6 +172,7 @@ cfg.maskparameter  = ft_getopt(cfg, 'maskparameter',   []);
 cfg.maskstyle      = ft_getopt(cfg, 'maskstyle',       'opacity');
 cfg.directionality = ft_getopt(cfg, 'directionality',  '');
 cfg.channel        = ft_getopt(cfg, 'channel',         'all');
+cfg.figurename     = ft_getopt(cfg, 'figurename',      []);
 if ~isfield(cfg,'box')             
   if ~isempty(cfg.maskparameter)
     cfg.box = 'yes';
@@ -612,9 +613,13 @@ elseif nargin > 1
 else % data provided through cfg.inputfile
   dataname = cfg.inputfile;
 end
-set(gcf, 'Name', sprintf('%d: %s: %s', gcf, funcname, dataname));
-set(gcf, 'NumberTitle', 'off');
-
+if isempty(cfg.figurename)
+  set(gcf, 'Name', sprintf('%d: %s: %s', gcf, funcname, dataname));
+  set(gcf, 'NumberTitle', 'off');
+else
+  set(gcf, 'name', cfg.figurename);
+  set(gcf, 'NumberTitle', 'off');
+end
 
 % Make the figure interactive:
 if strcmp(cfg.interactive, 'yes')
