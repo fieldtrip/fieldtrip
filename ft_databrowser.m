@@ -105,7 +105,7 @@ function [cfg] = ft_databrowser(cfg, data)
 % $Id$
 
 % Undocumented options
-% cfg.enablepreprocedit = 'yes'/'no' - roevdmei
+% 
 
 % FIXME these should be removed
 % FIXME document these
@@ -139,7 +139,7 @@ if ~isfield(cfg, 'selectfeature'),   cfg.selectfeature = 'visual';        end % 
 if ~isfield(cfg, 'selectmode'),      cfg.selectmode = 'mark';             end
 if ~isfield(cfg, 'blocksize'),       cfg.blocksize = [];                  end % now used for both continuous and non-continuous data, defaulting done below
 if ~isfield(cfg, 'preproc'),         cfg.preproc = [];                    end % see preproc for options
-if ~isfield(cfg, 'selfun'),          cfg.selfun = 'browse_multiplotER';   end
+if ~isfield(cfg, 'selfun'),          cfg.selfun = [];                     end
 if ~isfield(cfg, 'selcfg'),          cfg.selcfg = [];                     end
 if ~isfield(cfg, 'colorgroups'),     cfg.colorgroups = 'sequential';      end
 if ~isfield(cfg, 'channelcolormap'), cfg.channelcolormap = [0.75 0 0;0 0 1;0 1 0;0.44 0.19 0.63;0 0.13 0.38;0.5 0.5 0.5;1 0.75 0;1 0 0;0.89 0.42 0.04;0.85 0.59 0.58;0.57 0.82 0.31;0 0.69 0.94;1 0 0.4;0 0.69 0.31;0 0.44 0.75];   end
@@ -156,15 +156,10 @@ if ~isfield(cfg, 'plotlabels'),      cfg.plotlabels = 'yes';              end
 if ~isfield(cfg, 'event'),           cfg.event = [];                      end % this only exists for backward compatibility and should not be documented
 if ~isfield(cfg, 'continuous'),      cfg.continuous = [];                 end % the default is set further down in the code, conditional on the input data
 if ~isfield(cfg, 'ploteventlabels'), cfg.ploteventlabels = 'type=value';  end
-if ~isfield(cfg, 'enablepreprocedit'), cfg.enablepreprocedit = 'no';      end
-
-
-if ~isfield(cfg, 'develscalefix'), cfg.develscalefix = 'no';      end
-
-
-
 cfg.zlim           = ft_getopt(cfg, 'zlim',          'maxmin');
 cfg.compscale      = ft_getopt(cfg, 'compscale',     'global');
+
+
 
 if ~isfield(cfg, 'viewmode')
   % butterfly, vertical, component
@@ -202,20 +197,25 @@ if ~isfield(cfg, 'channel'),
   end
 end
 
+
 if strcmp(cfg.viewmode, 'component')
   % read or create the layout that will be used for the topoplots
   tmpcfg = [];
   tmpcfg.layout = cfg.layout;
   if isempty(cfg.layout)
     warning('No layout specified - will try to construct one using sensor positions');
-    if ft_dataype(data, 'meg')
+    if ft_datatype(data, 'meg')
       tmpcfg.grad = ft_fetch_sens(cfg, data);
-    elseif ft_dataype(data, 'eeg')
+    elseif ft_datatype(data, 'eeg')
       tmpcfg.elec = ft_fetch_sens(cfg, data);
     else
       error('cannot infer sensor type');
     end
   end
+  cfg.layout = ft_prepare_layout(tmpcfg);
+elseif ~isempty(cfg.layout)
+  tmpcfg = [];
+  tmpcfg.layout = cfg.layout;
   cfg.layout = ft_prepare_layout(tmpcfg);
 end
 
@@ -368,7 +368,7 @@ if ischar(cfg.ylim)
       error('unsupported value for cfg.ylim');
   end % switch ylim
   % zoom in a bit when viemode is vertical
-  if strcmp(cfg.viewmode,'vertical') && strcmp(cfg.develscalefix,'yes')
+  if strcmp(cfg.viewmode,'vertical')
     cfg.ylim = cfg.ylim/10;
   end
 end
@@ -464,13 +464,56 @@ else
   eventtypes = [];
 end
 
-% determine the function called when selecting data, if applicable
-if strcmp(cfg.selectmode, 'eval')
-  cfg.selfun = ft_getuserfun(cfg.selfun, 'browse');
-  if isempty(cfg.selfun)
-    error('the function specified by cfg.selfun could not be found');
-  end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% set up default browsefuns
+% use two cfg sections
+% cfg.selfun - labels that are presented in rightclick menu, and is appended using ft_getuserfun(..., 'browse') later on to create a function handle
+% cfg.selcfg - cfgs for functions to be executed
+browsefun    = [];
+browsefuncfg = [];
+% simplefft
+browsefun{1} = 'simpleFFT';
+tmpcfg = [];
+tmpcfg.chancolors = chancolors;
+browsefuncfg{1} = tmpcfg;
+% multiplotER
+browsefun{2} = 'multiplotER';
+tmpcfg = [];
+tmpcfg.layout = cfg.layout;
+browsefuncfg{2} = tmpcfg;
+% topoplotER
+browsefun{3} = 'topoplotER';
+tmpcfg = [];
+tmpcfg.layout = cfg.layout;
+browsefuncfg{3} = tmpcfg;
+% topoplotVAR
+browsefun{4} = 'topoplotVAR';
+tmpcfg = [];
+tmpcfg.layout = cfg.layout;
+browsefuncfg{4} = tmpcfg;
+% movieplotER
+browsefun{5} = 'movieplotER';
+tmpcfg = [];
+tmpcfg.layout = cfg.layout;
+tmpcfg.interactive = 'yes';
+browsefuncfg{5} = tmpcfg;
+
+
+% add browsefuns to user-specified browsefuns
+if ~iscell(cfg.selfun) && ~isempty(cfg.selfun)
+  cfg.selfun = {cfg.selfun};
+  cfg.selfun = [cfg.selfun browsefun];
+  % do the same for the cfgs
+  cfg.selcfg = {cfg.selcfg}; % assume the cfg isnt a cell
+  cfg.selcfg = [cfg.selcfg browsefuncfg];
+else
+  cfg.selfun = browsefun;
+  cfg.selcfg = browsefuncfg;
 end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % set up the data structures used in the GUI
@@ -555,9 +598,10 @@ set(gcf, 'NumberTitle', 'off');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 set(h, 'KeyPressFcn',           @keyboard_cb);
-set(h, 'WindowButtonDownFcn',   {@ft_select_range, 'multiple', false, 'xrange', true, 'yrange', false, 'clear', true, 'callback', {@select_range_cb, h}, 'event', 'WindowButtonDownFcn'});
-set(h, 'WindowButtonUpFcn',     {@ft_select_range, 'multiple', false, 'xrange', true, 'yrange', false, 'clear', true, 'callback', {@select_range_cb, h}, 'event', 'WindowButtonUpFcn'});
-set(h, 'WindowButtonMotionFcn', {@ft_select_range, 'multiple', false, 'xrange', true, 'yrange', false, 'clear', true, 'callback', {@select_range_cb, h}, 'event', 'WindowButtonMotionFcn'});
+set(h, 'WindowButtonDownFcn',   {@ft_select_range, 'multiple', false, 'xrange', true, 'yrange', false, 'clear', true, 'contextmenu', cfg.selfun, 'callback', {@select_range_cb, h}, 'event', 'WindowButtonDownFcn'});
+set(h, 'WindowButtonUpFcn',     {@ft_select_range, 'multiple', false, 'xrange', true, 'yrange', false, 'clear', true, 'contextmenu', cfg.selfun, 'callback', {@select_range_cb, h}, 'event', 'WindowButtonUpFcn'});
+set(h, 'WindowButtonMotionFcn', {@ft_select_range, 'multiple', false, 'xrange', true, 'yrange', false, 'clear', true, 'contextmenu', cfg.selfun, 'callback', {@select_range_cb, h}, 'event', 'WindowButtonMotionFcn'});
+
 
 % make the user interface elements for the data view
 uicontrol('tag', 'group1', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', opt.trialname, 'userdata', 't')
@@ -591,10 +635,9 @@ if strcmp(cfg.viewmode, 'butterfly')
   uicontrol('tag', 'group3', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'identify', 'userdata', 'i', 'position', [0.91, 0.1, 0.08, 0.05], 'backgroundcolor', [1 1 1])
 end
 
-% implement devel 'edit preproc'-button
-if strcmp(cfg.enablepreprocedit,'yes')
-  uicontrol('tag', 'preproccfg', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string','preproc cfg','position', [0.91, 0.55 - ((iArt-1)*0.09), 0.08, 0.04],'callback',@preproc_cfg1_cb)
-end
+% 'edit preproc'-button
+uicontrol('tag', 'preproccfg', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string','preproc cfg','position', [0.91, 0.55 - ((iArt-1)*0.09), 0.08, 0.04],'callback',@preproc_cfg1_cb)
+
 
 
 ft_uilayout(h, 'tag', 'group1', 'width', 0.10, 'height', 0.05);
@@ -857,9 +900,10 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function select_range_cb(range, h) %range 1X4 in sec relative to current trial
+function select_range_cb(range, h, varargin) %range 1X4 in sec relative to current trial
 opt = getappdata(h, 'opt');
 cfg = getappdata(h, 'cfg');
+cmenulab = varargin;
 
 % the range should be in the displayed box
 range(1) = max(opt.hpos-opt.width/2, range(1));
@@ -888,15 +932,9 @@ end
 begsel = max(begsample, begsel);
 endsel = min(endsample, endsel);
 
-
-if strcmp(cfg.selectmode, 'disp')
-  % FIXME this is on
-  %   otherwise
-  %     error('unknown cfg.viewmode "%s"', cfg.viewmode);
-  % end % switchly for debugging
-  disp([begsel endsel])
-  
-elseif strcmp(cfg.selectmode, 'mark')
+% mark or execute selfun
+if isempty(cmenulab)
+    
   % mark or unmark artifacts
   artval = opt.artdata.trial{1}(opt.ftsel, begsel:endsel);
   artval = any(artval,1);
@@ -907,8 +945,17 @@ elseif strcmp(cfg.selectmode, 'mark')
     fprintf('there is no overlap with the active artifact (%s), marking this as a new artifact\n',opt.artdata.label{opt.ftsel});
     opt.artdata.trial{1}(opt.ftsel, begsel:endsel) = 1;
   end
+ 
+ % redraw only when marking (so the focus doesn't go back to the databrowser after calling selfuns
+  setappdata(h, 'opt', opt);
+  setappdata(h, 'cfg', cfg);
+  redraw_cb(h);
   
-elseif strcmp(cfg.selectmode, 'eval')
+else % execute selfun
+  % get index into cfgs
+  cmenulab = cmenulab{1}; 
+  selfunind = strcmp(cfg.selfun, cmenulab);
+  
   % cut out the requested data segment
   seldata.label    = opt.curdat.label;
   seldata.time{1}  = offset2time(offset+begsel-begsample, opt.fsample, endsel-begsel+1);
@@ -916,15 +963,19 @@ elseif strcmp(cfg.selectmode, 'eval')
   seldata.fsample  = opt.fsample;
   seldata.cfg.trl  = [begsel endsel offset];
   
-  feval(cfg.selfun, cfg.selcfg, seldata);
-  
-else
-  error('unknown value for cfg.selectmode');
+  % prepare input
+  funhandle = ft_getuserfun(cmenulab,'browse');
+  funcfg = cfg.selcfg{selfunind};
+  % get windowname and give as input (can be used for the other functions as well, not implemented yet)
+  if ~strcmp(opt.trialname,'trialsegment')
+    str = sprintf('%s %d/%d, time from %g to %g s', opt.trialname, opt.trlop, size(opt.trlvis,1), seldata.time{1}(1), seldata.time{1}(end));
+  else
+    str = sprintf('trial %d/%d: segment: %d/%d , time from %g to %g s', opt.trllock, size(opt.trlorg,1), opt.trlop, size(opt.trlvis,1), seldata.time{1}(1), seldata.time{1}(end));
+  end
+  funcfg.figurename = [cmenulab ': ' str];
+  feval(funhandle, funcfg, seldata);
 end
 
-setappdata(h, 'opt', opt);
-setappdata(h, 'cfg', cfg);
-redraw_cb(h);
 end % function
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1654,10 +1705,12 @@ else
 end
 
 if ~strcmp(opt.trialname,'trialsegment')
-  title(sprintf('%s %d/%d, time from %g to %g s', opt.trialname, opt.trlop, size(opt.trlvis,1), startim, endtim));
+  str = sprintf('%s %d/%d, time from %g to %g s', opt.trialname, opt.trlop, size(opt.trlvis,1), startim, endtim);
 else
-  title(sprintf('trial %d/%d: segment: %d/%d , time from %g to %g s', opt.trllock, size(opt.trlorg,1), opt.trlop, size(opt.trlvis,1), startim, endtim));
+  str = sprintf('trial %d/%d: segment: %d/%d , time from %g to %g s', opt.trllock, size(opt.trlorg,1), opt.trlop, size(opt.trlvis,1), startim, endtim);
 end
+title(str);
+
 xlabel('time');
 
 % possibly adds some responsiveness if the 'thing' is clogged

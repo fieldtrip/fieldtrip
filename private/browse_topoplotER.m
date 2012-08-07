@@ -1,9 +1,9 @@
 function browse_topoplotER(cfg, data)
 
-% BROWSE_TOPOPLOTER is a simple helper function for FT_DATBROWSER and shows
+% BROWSE_TOPOPLOTER is a simple helper function for FT_DATABROWSER and shows
 % the average topography of the selected data.
 %
-% See also BROWSE_MOVIEPLOTER, BROWSE_TOPOPLOTER, BROWSE_MULTIPLOTER, BROWSE_TOPOPLOTVAR
+% See also BROWSE_MOVIEPLOTER, BROWSE_TOPOPLOTER, BROWSE_MULTIPLOTER, BROWSE_TOPOPLOTVAR, BROWSE_SIMPLEFFT
 
 % Copyright (C) 2009, Robert Oostenveld
 
