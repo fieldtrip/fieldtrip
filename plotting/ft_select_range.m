@@ -106,24 +106,35 @@ if pointonly && multiple
 end
 
 % setup contextmenu
-if ~isempty(contextmenu) && isempty(get(handle,'uicontextmenu'))
-  hcmenu = uicontextmenu;
-  hcmenuopt = NaN(1,numel(contextmenu));
-  for icmenu = 1:numel(contextmenu)
-    hcmenuopt(icmenu) = uimenu(hcmenu, 'label', contextmenu{icmenu}, 'callback', {@evalContextCallback, callback{:}, []}); % empty matrix is placeholder, will be updated to userdata.range
+if ~isempty(contextmenu)
+  if isempty(get(handle,'uicontextmenu'))
+    hcmenu = uicontextmenu;
+    hcmenuopt = nan(1,numel(contextmenu));
+    for icmenu = 1:numel(contextmenu)
+      hcmenuopt(icmenu) = uimenu(hcmenu, 'label', contextmenu{icmenu}, 'callback', {@evalcontextcallback, callback{:}, []}); % empty matrix is placeholder, will be updated to userdata.range
+    end
   end
-  % associate context menu with "most" objects in the fig, do if for lines/patches/text explicitly, as they can be deeply nested and are very likely to be in the fig and clicked upon
+  if ~exist('hcmenuopt','var')
+    hcmenuopt = get(get(handle,'uicontextmenu'),'children'); % uimenu handles, used for switchen on/off and updating
+  end
+  
+  % setting associations for all clickable objects
+  % this out to be pretty fast, if this is still to slow in some cases, the code below has to be reused
+  if ~exist('hcmenu','var')
+    hcmenu = get(handle,'uicontextmenu');
+  end
+  set(findobj(handle,'hittest','on'), 'uicontextmenu',hcmenu);
+  % to be used if above is too slow
   % associations only done once. this might be an issue in some cases, cause when a redraw is performed in the original figure (e.g. databrowser), a specific assocations are lost (lines/patches/text)
-  set(get(handle,'children'),'uicontextmenu',hcmenu);
-  set(findobj(handle,'type','text'), 'uicontextmenu',hcmenu);
-  set(findobj(handle,'type','patch'),'uicontextmenu',hcmenu);
-  set(findobj(handle,'type','line'), 'uicontextmenu',hcmenu); % FIXME: add other often used object types that ft_select_range is called upon
-elseif ~isempty(contextmenu) && exist('hcmenuopt','var')
-  hcmenuopt = get(get(handle,'uicontextmenu'),'children'); % uimenu handles, used for switchen on/off and updating
+  %   set(get(handle,'children'),'uicontextmenu',hcmenu);
+  %   set(findobj(handle,'type','text'), 'uicontextmenu',hcmenu);
+  %   set(findobj(handle,'type','patch'),'uicontextmenu',hcmenu);
+  %   set(findobj(handle,'type','line'), 'uicontextmenu',hcmenu); % fixme: add other often used object types that ft_select_range is called upon
 end
 
 % get last-used-mouse-button
 lastmousebttn = get(gcf,'selectiontype');
+
 
 switch lower(event)
   
@@ -139,6 +150,9 @@ switch lower(event)
             userData.range = [];
             userData.box   = [];
             set(handle, 'Pointer', 'crosshair');
+            if ~isempty(contextmenu) && ~pointonly
+              set(hcmenuopt,'enable','off')
+            end
           end
           
         else
@@ -165,7 +179,7 @@ switch lower(event)
   case lower('WindowButtonUpFcn')
     switch lastmousebttn
       case 'normal' % left click
-        
+
         if selecting
           % select the other corner of the box
           userData.range(end,2) = p(1);
@@ -263,11 +277,13 @@ end % switch event
 % put the modified selections back into the figure
 if ishandle(handle)
   setappdata(handle, 'select_range_m', userData);
-  if ishandle(userData.box)
-    if all(isnan([get(userData.box,'ydata') get(userData.box,'xdata')])) && ~pointonly
-      set(hcmenuopt,'enable','off')
-    else
-      set(hcmenuopt,'enable','on')
+  if ~isempty(contextmenu)
+    if ishandle(userData.box)
+      if all(isnan([get(userData.box,'ydata') get(userData.box,'xdata')])) && ~pointonly
+        set(hcmenuopt,'enable','off')
+      else
+        set(hcmenuopt,'enable','on')
+      end
     end
   end
 end
