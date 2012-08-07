@@ -125,7 +125,7 @@ hasdata = (nargin>1);
 hascomp = hasdata && ft_datatype(data, 'comp');
 
 % for backward compatibility
-cfg = ft_checkconfig(cfg, 'unused', {'comps', 'inputfile', 'outputfile'});
+cfg = ft_checkconfig(cfg, 'unused', {'comps', 'inputfile', 'outputfile', 'selectmode'});
 cfg = ft_checkconfig(cfg, 'renamed', {'zscale', 'ylim'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'ylim', 'auto', 'maxabs'});
 
