@@ -31,7 +31,7 @@ freqoi     = (freqboi-1) ./ (nsample * (1/fsample));
 xaxis = freqoi;
 
 % make figure window for fft
-ffth = figure('name',['simplefft: ' cfg.figurename],'numbertitle','off','units','normalized');
+ffth = figure('name',cfg.figurename,'numbertitle','off','units','normalized');
 % set button
 butth = uicontrol('tag', 'simplefft_l2', 'parent', ffth, 'units', 'normalized', 'style', 'togglebutton', 'string','log of power','position', [0.87, 0.6 , 0.12, 0.10],  'value',1,'callback',{@draw_simple_fft_cb});
 uicontrol('tag', 'simplefft_l2_chansel', 'parent', ffth, 'units', 'normalized', 'style', 'pushbutton', 'string','select channels','position', [0.87, 0.45 , 0.12, 0.10],'callback',{@selectchan_fft_cb});

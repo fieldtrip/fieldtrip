@@ -710,13 +710,12 @@ if nargout
     cfg.artfctdef.(opt.artdata.label{i}).artifact = convert_event(opt.artdata.trial{1}(i,:), 'artifact');
   end
   
-  if strcmp(cfg.enablepreprocedit,'yes')
-    % add the updated preproc to the output
-    try
-      browsecfg = getappdata(h, 'cfg');
-      cfg.preproc = browsecfg.preproc;
-    end
+  % add the updated preproc to the output
+  try
+    browsecfg = getappdata(h, 'cfg');
+    cfg.preproc = browsecfg.preproc;
   end
+
 
   % do the general cleanup and bookkeeping at the end of the function
   ft_postamble trackconfig
@@ -1001,6 +1000,7 @@ code    = [sep descrip sep code];
 
 % make figure displaying the edit box
 pph = figure;
+axis off
 % add save button
 uicontrol('tag', 'preproccfg_l2', 'parent', pph, 'units', 'normalized', 'style', 'pushbutton', 'string','save and close','position', [0.81, 0.6 , 0.18, 0.10],'callback',@preproc_cfg2_cb);
 % add edit box
