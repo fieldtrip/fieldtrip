@@ -351,6 +351,8 @@ userData = getappdata(parent, 'select_range_m');
 if ishandle(userData.box)
   if any(~isnan([get(userData.box,'ydata') get(userData.box,'xdata')]))
     delete(userData.box(ishandle(userData.box)));
+    userData.range = [];
+    userData.box   = [];
     set(parent, 'Pointer', 'crosshair');
     setappdata(parent, 'select_range_m', userData);
   end
