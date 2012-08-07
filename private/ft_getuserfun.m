@@ -36,7 +36,7 @@ function func = ft_getuserfun(func, prefix)
 
 if isa(func, 'function_handle')
   % treat function handle as-is
-elseif isfunction(func)
+elseif isfunction(func) && ~iscompatwrapper(func)
   func = str2func(func);
 elseif isfunction([prefix '_' func]) && ~iscompatwrapper([prefix '_' func])
   func = str2func([prefix '_' func]);
