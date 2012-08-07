@@ -4,7 +4,21 @@ function ft_select_range(handle, eventdata, varargin)
 % in a figure. It allows the user to select a horizontal or a vertical
 % range, or one or multiple boxes.
 %
-% Example
+% Context menus are shown as the labels presented in the input. When activated,
+% the callback function is called, with as additional input argument the label of
+% the selection option.
+%
+% Input arguments:
+%   event       = string, event used as hook.
+%   callback    = function handle, or cell-array containing function handle and additional inputarguments
+%   contextmenu = cell-array containing labels shown in right-click menu
+%   multiple    = boolean, allowing multiple selection boxes or not
+%   xrange      = boolean, xrange variable or not
+%   yrange      = boolean, yrange variable or not
+%   clear       =
+%
+%
+% Example use:
 %   x = randn(10,1);
 %   y = randn(10,1);
 %   figure; plot(x, y, '.');
@@ -50,6 +64,7 @@ contextmenu = ft_getopt(varargin, 'contextmenu'); % this will be displayed follo
 multiple  = istrue(multiple);
 xrange    = istrue(xrange);
 yrange    = istrue(yrange);
+clear     = istrue(clear);
 
 p = handle;
 while ~isequal(p, 0)
@@ -90,81 +105,116 @@ if pointonly && multiple
   multiple = false;
 end
 
+% setup contextmenu
+if ~isempty(contextmenu) && isempty(get(handle,'uicontextmenu'))
+  hcmenu = uicontextmenu;
+  hcmenuopt = NaN(1,numel(contextmenu));
+  for icmenu = 1:numel(contextmenu)
+    hcmenuopt(icmenu) = uimenu(hcmenu, 'label', contextmenu{icmenu}, 'callback', {@evalContextCallback, callback{:}, []}); % empty matrix is placeholder, will be updated to userdata.range
+  end
+  % associate context menu with "most" objects in the fig, do if for lines/patches/text explicitly, as they can be deeply nested and are very likely to be in the fig and clicked upon
+  % associations only done once. this might be an issue in some cases, cause when a redraw is performed in the original figure (e.g. databrowser), a specific assocations are lost (lines/patches/text)
+  set(get(handle,'children'),'uicontextmenu',hcmenu);
+  set(findobj(handle,'type','text'), 'uicontextmenu',hcmenu);
+  set(findobj(handle,'type','patch'),'uicontextmenu',hcmenu);
+  set(findobj(handle,'type','line'), 'uicontextmenu',hcmenu); % FIXME: add other often used object types that ft_select_range is called upon
+elseif ~isempty(contextmenu) && exist('hcmenuopt','var')
+  hcmenuopt = get(get(handle,'uicontextmenu'),'children'); % uimenu handles, used for switchen on/off and updating
+end
+
+% get last-used-mouse-button
+lastmousebttn = get(gcf,'selectiontype');
+
 switch lower(event)
+  
   case lower('WindowButtonDownFcn')
-    if inSelection(p, userData.range)
-      % the user has clicked in one of the existing selections
-      evalCallback(callback, userData.range);
-      if clear
-        delete(userData.box(ishandle(userData.box)));
-        userData.range = [];
-        userData.box   = [];
-        set(handle, 'Pointer', 'crosshair');
-      end
-      
-    else
-      if ~multiple
-        % start with a new selection
-        delete(userData.box(ishandle(userData.box)));
-        userData.range = [];
-        userData.box   = [];
-      end
-      
-      % add a new selection range
-      userData.range(end+1,1:4) = nan;
-      userData.range(end,1) = p(1);
-      userData.range(end,3) = p(2);
-      
-      % add a new selection box
-      xData = [nan nan nan nan nan];
-      yData = [nan nan nan nan nan];
-      userData.box(end+1) = line(xData, yData);
+    switch lastmousebttn
+      case 'normal' % left click
+        
+        if inSelection(p, userData.range)
+          % the user has clicked in one of the existing selections
+          evalCallback(callback, userData.range);
+          if clear
+            delete(userData.box(ishandle(userData.box)));
+            userData.range = [];
+            userData.box   = [];
+            set(handle, 'Pointer', 'crosshair');
+          end
+          
+        else
+          if ~multiple
+            % start with a new selection
+            delete(userData.box(ishandle(userData.box)));
+            userData.range = [];
+            userData.box   = [];
+          end
+          
+          % add a new selection range
+          userData.range(end+1,1:4) = nan;
+          userData.range(end,1) = p(1);
+          userData.range(end,3) = p(2);
+          
+          % add a new selection box
+          xData = [nan nan nan nan nan];
+          yData = [nan nan nan nan nan];
+          userData.box(end+1) = line(xData, yData);
+        end
     end
+    
     
   case lower('WindowButtonUpFcn')
-    if selecting
-      % select the other corner of the box
-      userData.range(end,2) = p(1);
-      userData.range(end,4) = p(2);
+    switch lastmousebttn
+      case 'normal' % left click
+        
+        if selecting
+          % select the other corner of the box
+          userData.range(end,2) = p(1);
+          userData.range(end,4) = p(2);
+        end
+        
+        if multiple && ~isempty(userData.range) && ~diff(userData.range(end,1:2)) && ~diff(userData.range(end,3:4))
+          % start with a new selection
+          delete(userData.box(ishandle(userData.box)));
+          userData.range = [];
+          userData.box   = [];
+        end
+        
+        if ~isempty(userData.range)
+          % ensure that the selection is sane
+          if diff(userData.range(end,1:2))<0
+            userData.range(end,1:2) = userData.range(end,[2 1]);
+          end
+          if diff(userData.range(end,3:4))<0
+            userData.range(end,3:4) = userData.range(end,[4 3]);
+          end
+          if pointonly
+            % only select a single point
+            userData.range(end,2) = userData.range(end,1);
+            userData.range(end,4) = userData.range(end,3);
+          elseif ~xrange
+            % only select along the y-axis
+            userData.range(end,1:2) = [-inf inf];
+          elseif ~yrange
+            % only select along the x-axis
+            userData.range(end,3:4) = [-inf inf];
+          end
+          % update contextmenu callbacks
+          if ~isempty(contextmenu)
+            updateContextCallback(hcmenuopt, callback, userData.range)
+          end
+        end
+        
+        if pointonly && ~multiple
+          evalCallback(callback, userData.range);
+          if clear
+            delete(userData.box(ishandle(userData.box)));
+            userData.range = [];
+            userData.box   = [];
+            set(handle, 'Pointer', 'crosshair');
+          end
+        end
     end
     
-    if multiple && ~isempty(userData.range) && ~diff(userData.range(end,1:2)) && ~diff(userData.range(end,3:4))
-      % start with a new selection
-      delete(userData.box(ishandle(userData.box)));
-      userData.range = [];
-      userData.box   = [];
-    end
-    
-    if ~isempty(userData.range)
-      % ensure that the selection is sane
-      if diff(userData.range(end,1:2))<0
-        userData.range(end,1:2) = userData.range(end,[2 1]);
-      end
-      if diff(userData.range(end,3:4))<0
-        userData.range(end,3:4) = userData.range(end,[4 3]);
-      end
-      if pointonly
-        % only select a single point
-        userData.range(end,2) = userData.range(end,1);
-        userData.range(end,4) = userData.range(end,3);
-      elseif ~xrange
-        % only select along the y-axis
-        userData.range(end,1:2) = [-inf inf];
-      elseif ~yrange
-        % only select along the x-axis
-        userData.range(end,3:4) = [-inf inf];
-      end
-    end
-    
-    if pointonly && ~multiple
-      evalCallback(callback, userData.range);
-      if clear
-        delete(userData.box(ishandle(userData.box)));
-        userData.range = [];
-        userData.box   = [];
-        set(handle, 'Pointer', 'crosshair');
-      end
-    end
     
   case lower('WindowButtonMotionFcn')
     if selecting && ~pointonly
@@ -203,15 +253,25 @@ switch lower(event)
       end
     end
     
+    
   otherwise
     error('unexpected event "%s"', event);
     
 end % switch event
 
+
 % put the modified selections back into the figure
 if ishandle(handle)
   setappdata(handle, 'select_range_m', userData);
+  if ishandle(userData.box)
+    if all(isnan([get(userData.box,'ydata') get(userData.box,'xdata')])) && ~pointonly
+      set(hcmenuopt,'enable','off')
+    else
+      set(hcmenuopt,'enable','on')
+    end
+  end
 end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -223,6 +283,7 @@ else
   retval = (p(1)>=range(:,1) & p(1)<=range(:,2) & p(2)>=range(:,3) & p(2)<=range(:,4));
   retval = any(retval);
 end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -240,4 +301,58 @@ if ~isempty(callback)
     feval(funhandle, val);
   end
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function updateContextCallback(hcmenuopt, callback, val)
+if ~isempty(callback)
+  if isa(callback, 'cell')
+    % the callback specifies a function and additional arguments
+    funhandle = callback(1);
+    funargs   = callback(2:end);
+    callback  = [funhandle, {val}, funargs];
+  else
+    % the callback only specifies a function
+    funhandle = callback;
+    callback  = [funhandle, {val}];
+  end
+  for icmenu = 1:numel(hcmenuopt)
+    set(hcmenuopt(icmenu),'callback',{@evalContextCallback, callback{:}})
+  end
+end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function evalContextCallback(hcmenuopt, eventdata, varargin)
+
+% delete selection box if present
+% get parent (uimenu -> uicontextmenu -> parent)
+parent = get(get(hcmenuopt,'parent'),'parent'); % fixme: isn't the parent handle always input provided in the callback?
+userData = getappdata(parent, 'select_range_m');
+if ishandle(userData.box)
+  if any(~isnan([get(userData.box,'ydata') get(userData.box,'xdata')]))
+    delete(userData.box(ishandle(userData.box)));
+    set(parent, 'Pointer', 'crosshair');
+    setappdata(parent, 'select_range_m', userData);
+  end
+end
+
+% get contextmenu name
+cmenulab = get(hcmenuopt,'label');
+if numel(varargin)>1
+  % the callback specifies a function and additional arguments
+  funhandle = varargin{1};
+  funargs   = varargin(2:end);
+  feval(funhandle, funargs{:}, cmenulab);
+else
+  % the callback only specifies a function
+  funhandle = varargin{1};
+  feval(funhandle, val, cmenulab);
+end
+
+
+
 
