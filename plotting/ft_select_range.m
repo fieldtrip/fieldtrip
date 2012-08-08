@@ -10,7 +10,7 @@ function ft_select_range(handle, eventdata, varargin)
 %
 % Input arguments:
 %   event       = string, event used as hook.
-%   callback    = function handle, or cell-array containing function handle and additional inputarguments
+%   callback    = function handle or cell-array containing function handle and additional input arguments
 %   contextmenu = cell-array containing labels shown in right-click menu
 %   multiple    = boolean, allowing multiple selection boxes or not
 %   xrange      = boolean, xrange variable or not
@@ -23,15 +23,22 @@ function ft_select_range(handle, eventdata, varargin)
 %   y = randn(10,1);
 %   figure; plot(x, y, '.');
 %
-%   set(gcf, 'WindowButtonDownFcn',   {@ft_select_range, 'multiple', true, 'callback', @disp, 'event', 'WindowButtonDownFcn'});
-%   set(gcf, 'WindowButtonUpFcn',     {@ft_select_range, 'multiple', true, 'callback', @disp, 'event', 'WindowButtonUpFcn'});
-%   set(gcf, 'WindowButtonMotionFcn', {@ft_select_range, 'multiple', true, 'callback', @disp, 'event', 'WindowButtonMotionFcn'});
+% The following example allows multiple horizontal and vertical selections to be made
+%   set(gcf, 'WindowButtonDownFcn',   {@ft_select_range, 'event', 'WindowButtonDownFcn',   'multiple', true, 'callback', @disp});
+%   set(gcf, 'WindowButtonMotionFcn', {@ft_select_range, 'event', 'WindowButtonMotionFcn', 'multiple', true, 'callback', @disp});
+%   set(gcf, 'WindowButtonUpFcn',     {@ft_select_range, 'event', 'WindowButtonUpFcn',     'multiple', true, 'callback', @disp});
 %
-%   set(gcf, 'WindowButtonDownFcn',   {@ft_select_range, 'multiple', false, 'xrange', false, 'yrange', false, 'callback', @disp, 'event', 'WindowButtonDownFcn'});
-%   set(gcf, 'WindowButtonUpFcn',     {@ft_select_range, 'multiple', false, 'xrange', false, 'yrange', false, 'callback', @disp, 'event', 'WindowButtonUpFcn'});
-%   set(gcf, 'WindowButtonMotionFcn', {@ft_select_range, 'multiple', false, 'xrange', false, 'yrange', false, 'callback', @disp, 'event', 'WindowButtonMotionFcn'});
+% The following example allows a single horizontal selection to be made
+%   set(gcf, 'WindowButtonDownFcn',   {@ft_select_range, 'event', 'WindowButtonDownFcn',   'multiple', false, 'xrange', true, 'yrange', false, 'callback', @disp});
+%   set(gcf, 'WindowButtonMotionFcn', {@ft_select_range, 'event', 'WindowButtonMotionFcn', 'multiple', false, 'xrange', true, 'yrange', false, 'callback', @disp});
+%   set(gcf, 'WindowButtonUpFcn',     {@ft_select_range, 'event', 'WindowButtonUpFcn',     'multiple', false, 'xrange', true, 'yrange', false, 'callback', @disp});
+%
+% The following example allows a single point to be selected
+%   set(gcf, 'WindowButtonDownFcn',   {@ft_select_range, 'event', 'WindowButtonDownFcn',   'multiple', false, 'xrange', false, 'yrange', false, 'callback', @disp});
+%   set(gcf, 'WindowButtonMotionFcn', {@ft_select_range, 'event', 'WindowButtonMotionFcn', 'multiple', false, 'xrange', false, 'yrange', false, 'callback', @disp});
+%   set(gcf, 'WindowButtonUpFcn',     {@ft_select_range, 'event', 'WindowButtonUpFcn',     'multiple', false, 'xrange', false, 'yrange', false, 'callback', @disp});
 
-% Copyright (C) 2009, Robert Oostenveld
+% Copyright (C) 2009-2012, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -337,7 +344,6 @@ if ~isempty(callback)
     set(hcmenuopt(icmenu),'callback',{@evalContextCallback, callback{:}})
   end
 end
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

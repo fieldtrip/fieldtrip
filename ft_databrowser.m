@@ -933,7 +933,8 @@ endsel = min(endsample, endsel);
 
 % mark or execute selfun
 if isempty(cmenulab)
-    
+  % the left button was clicked INSIDE a selected range, update the artifact definition
+  
   % mark or unmark artifacts
   artval = opt.artdata.trial{1}(opt.ftsel, begsel:endsel);
   artval = any(artval,1);
@@ -944,15 +945,18 @@ if isempty(cmenulab)
     fprintf('there is no overlap with the active artifact (%s), marking this as a new artifact\n',opt.artdata.label{opt.ftsel});
     opt.artdata.trial{1}(opt.ftsel, begsel:endsel) = 1;
   end
- 
- % redraw only when marking (so the focus doesn't go back to the databrowser after calling selfuns
+  
+  % redraw only when marking (so the focus doesn't go back to the databrowser after calling selfuns
   setappdata(h, 'opt', opt);
   setappdata(h, 'cfg', cfg);
   redraw_cb(h);
   
-else % execute selfun
+else
+  % the right button was used to activate the context menu and the user made a selection from that menu
+  % execute the corresponding function
+  
   % get index into cfgs
-  cmenulab = cmenulab{1}; 
+  cmenulab = cmenulab{1};
   selfunind = strcmp(cfg.selfun, cmenulab);
   
   % cut out the requested data segment
