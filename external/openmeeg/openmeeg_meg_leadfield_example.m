@@ -72,20 +72,20 @@ lf_openmeeg = grid.leadfield{1};
 
 % choose MEG Nolte
 clear cfg;
-cfg.method = 'nolte';
+cfg.method = 'singleshell';
 cfg.grid.pos = pos;
 cfg.grad = sens;
-vol1.type = 'nolte';
+vol1.type = 'singleshell';
 [vol1,sens] = ft_prepare_vol_sens(vol1, sens);
 cfg.vol = vol1;
 cfg.reducerank = 'no';
 grid = ft_prepare_leadfield(cfg);
-lf_nolte = grid.leadfield{1};
+lf_singleshell = grid.leadfield{1};
 
 %% Plot both OpenMEEG and analytic leadfield for visual inspection
 figure
 hold on
 plot(lf_openmeeg(:,1),'bx-','linewidth',2)
-plot(lf_nolte(:,1),'r--','linewidth',2)
+plot(lf_singleshell(:,1),'r--','linewidth',2)
 hold off
 legend({'OpenMEEG' 'Nolte'})
