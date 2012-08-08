@@ -28,7 +28,8 @@ distance = cfg.distance;
 
 lab   = grad.label;
 tmp   = ft_channelselection(cfg.channel, lab);
-sel   = match_str(lab, tmp);
+[tmp, sel] = match_str(cfg.channel, lab(match_str(lab, tmp)));
+% sel   = match_str(lab, tmp);
 pnt   = grad.chanpos(sel,:);
 ori   = grad.chanori(sel,:);
 lab   = lab(sel);
