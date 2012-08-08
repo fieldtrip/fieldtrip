@@ -53,6 +53,8 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.megscale                = number, scaling to apply to the MEG channels prior to display
 %   cfg.gradscale               = number, scaling to apply to the MEG gradiometer channels prior to display (in addition to the cfg.megscale factor)
 %   cfg.magscale                = number, scaling to apply to the MEG magnetometer channels prior to display (in addition to the cfg.megscale factor)
+%   cfg.mychanscale             = number, scaling to apply to the channels specified in cfg.mychan
+%   cfg.mychan                  = Nx1 cell-array with selection of channels
 %   cfg.chanscale               = Nx1 vector with scaling factors, one per channel specified in cfg.channel
 %   cfg.compscale               = string, 'global' or 'local', defines whether the colormap for the topographic scaling is 
 %                                  applied per topography or on all visualized components (default 'global')
@@ -151,6 +153,7 @@ if ~isfield(cfg, 'megscale'),        cfg.megscale = [];                   end
 if ~isfield(cfg, 'magscale'),        cfg.magscale = [];                   end
 if ~isfield(cfg, 'gradscale'),       cfg.gradscale = [];                  end
 if ~isfield(cfg, 'chanscale'),       cfg.chanscale = [];                  end
+if ~isfield(cfg, 'mychanscale'),     cfg.mychanscale = [];                end
 if ~isfield(cfg, 'layout'),          cfg.layout = [];                     end
 if ~isfield(cfg, 'plotlabels'),      cfg.plotlabels = 'yes';              end
 if ~isfield(cfg, 'event'),           cfg.event = [];                      end % this only exists for backward compatibility and should not be documented
@@ -182,7 +185,11 @@ if ~isempty(cfg.chanscale)
   if size(cfg.chanscale,2) > size(cfg.chanscale,1)
     cfg.chanscale = cfg.chanscale';
   end
-  
+end
+
+if ~isempty(cfg.mychanscale) && ~isfield(cfg,'mychan')
+  warning('ignoring cfg.mychanscale; no channels specified in cfg.mychan');
+  cfg.mychanscale = [];
 end
 
 if ~isfield(cfg, 'channel'),
@@ -1414,6 +1421,10 @@ end
 if ~isempty(cfg.chanscale)
   chansel = match_str(lab, ft_channelselection(cfg.channel, lab));
   dat(chansel,:) = dat(chansel,:) .* repmat(cfg.chanscale,1,size(dat,2));
+end
+if ~isempty(cfg.mychanscale)
+  chansel = match_str(lab, ft_channelselection(cfg.mychan, lab));
+  dat(chansel,:) = dat(chansel,:) .* cfg.mychanscale;
 end
 
 % to assure current feature is plotted on top
