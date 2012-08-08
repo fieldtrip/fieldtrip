@@ -259,7 +259,7 @@ elseif ismeg
       vol.r = vol.r(selcoil);
       vol.o = vol.o(selcoil,:);
 
-    case 'nolte'
+    case 'singleshell'
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % if the forward model is computed using the code from Guido Nolte, we
       % have to initialize the volume model using the gradiometer coil

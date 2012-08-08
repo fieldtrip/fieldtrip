@@ -90,6 +90,8 @@ switch version
     if isfield(vol, 'type')
       if strcmp(vol.type, 'concentric')
         vol.type = 'concentricspheres';
+      elseif strcmp(vol.type, 'nolte')
+        vol.type = 'singleshell';
       elseif strcmp(vol.type, 'multisphere')
         vol.type = 'localspheres';
       elseif strcmp(vol.type, 'bem_cp')

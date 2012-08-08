@@ -29,9 +29,12 @@ else
   error('the input should be a boundary')
 end
 
+% represent the geometry in a headmodel strucure
+% the computational parameters will be added later on by ft_prepare_vol_sens
 vol      = [];
 vol.bnd  = geometry;
-vol.type = 'nolte';
+vol.type = 'singleshell';
 if ~isfield(vol, 'unit')
   vol = ft_convert_units(vol);
 end
+

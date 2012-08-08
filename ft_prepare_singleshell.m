@@ -95,7 +95,7 @@ else
   vol.bnd = ft_prepare_mesh(cfg);
 end
 
-vol.type = 'nolte';
+vol.type = 'singleshell';
 
 % ensure that the geometrical units are specified
 vol = ft_convert_units(vol);

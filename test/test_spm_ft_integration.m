@@ -118,7 +118,7 @@ ft_compute_leadfield([30 30 30], sens, vol);
 %% MEG single shell
 vol = [];
 vol.bnd = tess_iskull;
-vol.type = 'nolte';
+vol.type = 'singleshell';
 vol = ft_convert_units(vol, 'mm');
 
 clf

@@ -90,7 +90,7 @@ switch ft_voltype(vol)
     inside  = inside>0;
 
     % model with a realistic shape described by a triangulated boundary
-  case {'bem', 'dipoli', 'bemcp', 'asa', 'nolte', 'neuromag'}
+  case {'bem', 'dipoli', 'bemcp', 'asa', 'singleshell', 'neuromag'}
     if ~isfield(vol, 'source')
       % locate the innermost compartment and remember it
       vol.source = find_innermost_boundary(vol.bnd);

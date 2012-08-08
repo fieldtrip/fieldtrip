@@ -156,7 +156,7 @@ elseif ft_voltype(vol, 'localspheres')
   tri = projecttri(pnt);
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-elseif ft_voltype(vol, 'bem') ||  ft_voltype(vol, 'nolte')
+elseif ft_voltype(vol, 'bem') ||  ft_voltype(vol, 'singleshell')
   % volume conduction model with triangulated boundaries
   switch surface
     case 'skin'

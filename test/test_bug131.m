@@ -17,7 +17,7 @@ vol.type = 'singlesphere';
 vol2.bnd.pnt = pnt.*8;
 vol2.bnd.tri = tri;
 vol2.unit = 'm';
-vol2.type = 'nolte';
+vol2.type = 'singleshell';
 
 % create sensor array
 nrm = normals(pnt,tri,'vertex');

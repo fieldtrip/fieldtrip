@@ -212,7 +212,7 @@ elseif ismeg
       % select only those channels from the forward model that are part of the gradiometer definition
       lf = lf(vol.chansel,:);
 
-    case 'nolte'
+    case 'singleshell'
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % use code from Guido Nolte for the forward computation
       % this requires that "meg_ini" is initialized, which is done in PREPARE_VOL_SENS
