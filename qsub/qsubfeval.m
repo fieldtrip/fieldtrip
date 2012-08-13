@@ -301,19 +301,19 @@ switch backend
     end
     
     if ~isempty(queue)
-      submitoptions = [submitoptions sprintf('-q %s ', queue)];
+      submitoptions = [submitoptions sprintf(' -q %s ', queue)];
     end
     
     if ~isempty(timreq) && ~isnan(timreq) && ~isinf(timreq)
-      submitoptions = [submitoptions sprintf('-l walltime=%d ', timreq+timoverhead)];
+      submitoptions = [submitoptions sprintf(' -l walltime=%d ', timreq+timoverhead)];
     end
     
     if ~isempty(memreq) && ~isnan(memreq) && ~isinf(memreq)
       % mem is the real memory, vmem is the virtual, pmem and pvmem relate to the memory per process in case of an MPI job with multiple processes
-      submitoptions = [submitoptions sprintf('-l mem=%.0f ',   memreq+memoverhead)];
-      %   submitoptions = [submitoptions sprintf('-l vmem=%.0f ',  memreq+memoverhead)];
-      %   submitoptions = [submitoptions sprintf('-l pmem=%.0f ',  memreq+memoverhead)];
-      %   submitoptions = [submitoptions sprintf('-l pvmem=%.0f ', memreq+memoverhead)];
+      submitoptions = [submitoptions sprintf(' -l mem=%.0f ',   memreq+memoverhead)];
+      %   submitoptions = [submitoptions sprintf(' -l vmem=%.0f ',  memreq+memoverhead)];
+      %   submitoptions = [submitoptions sprintf(' -l pmem=%.0f ',  memreq+memoverhead)];
+      %   submitoptions = [submitoptions sprintf(' -l pvmem=%.0f ', memreq+memoverhead)];
     end
     
     % In the command below both stderr and stout are redirected to /dev/null,
@@ -342,7 +342,7 @@ switch backend
     
     if ~isempty(queue)
       % with slurm queues are "partitions"
-      submitoptions = [submitoptions sprintf('--partition=%s ', queue)];
+      submitoptions = [submitoptions sprintf(' --partition=%s ', queue)];
     end
     
     if ~isempty(timreq) && ~isnan(timreq) && ~isinf(timreq)
