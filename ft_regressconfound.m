@@ -26,7 +26,7 @@ function [data] = ft_regressconfound(cfg, datain)
 %                     on the regression weights to the output (default = 'no')
 %   cfg.model       = string, 'yes' or 'no', whether to add the model to
 %                     the output (default = 'no')
-%   cfg.Ftest       = string array, {N X Nconfounds}, to F-test whether
+%   cfg.ftest       = string array, {N X Nconfounds}, to F-test whether
 %                     the full model explains more variance than reduced models
 %                     (e.g. {'1 2'; '3 4'; '5'} where iteratively the added value of
 %                     regressors 1 and 2, and then 3 and 4, etc., are tested)
@@ -75,7 +75,7 @@ ft_preamble loadvar datain
 datain = ft_checkdata(datain, 'datatype', {'timelock', 'freq', 'source'}, 'feedback', 'yes', 'hastrials', 'yes');
 
 % ensure that the required options are present
-cfg = ft_checkconfig(cfg, 'required', {'confound'});
+cfg = ft_checkconfig(cfg, 'required', {'confound'}, 'renamed', {'Ftest','ftest'});
 
 % set the defaults
 cfg.inputfile  = ft_getopt(cfg, 'inputfile',  []);
@@ -251,16 +251,16 @@ if isfield(cfg, 'statistics') && strcmp(cfg.statistics, 'yes')
 end
 
 % reduced models analyses
-if isfield(cfg, 'Ftest') && ~isempty(cfg.Ftest)
+if isfield(cfg, 'ftest') && ~isempty(cfg.ftest)
   
   dfe        = nrpt - nconf;                                              % degrees of freedom
   err        = dat - regr * beta;                                         % err = Y - X * B
   tmse       = sum((err).^2)/dfe;                                         % mean squared error
   
-  for iter = 1:numel(cfg.Ftest)
+  for iter = 1:numel(cfg.ftest)
     
     % regressors to test if they explain additional variance
-    r          = str2num(cfg.Ftest{iter});
+    r          = str2num(cfg.ftest{iter});
     fprintf('F-testing explained additional variance of regressors %s \n', num2str(r));
     % regressors in reduced design (that is the original design)
     ri         = ~ismember(1:size(regr,2),r);
@@ -337,9 +337,9 @@ if istimelock
   end
   
   % reduced models analyses
-  if isfield(cfg, 'Ftest') && ~isempty(cfg.Ftest)
-    dataout.Fvar   = reshape(F, [numel(cfg.Ftest), nchan, ntime]);
-    dataout.pvar   = reshape(p, [numel(cfg.Ftest), nchan, ntime]);
+  if isfield(cfg, 'ftest') && ~isempty(cfg.ftest)
+    dataout.fvar   = reshape(F, [numel(cfg.ftest), nchan, ntime]);
+    dataout.pvar   = reshape(p, [numel(cfg.ftest), nchan, ntime]);
     clear F p;
   end
   
@@ -392,9 +392,9 @@ elseif isfreq
   end
   
   % reduced models analyses
-  if isfield(cfg, 'Ftest') && ~isempty(cfg.Ftest)
-    dataout.Fvar   = reshape(F, [numel(cfg.Ftest), nchan, nfreq, ntime]);
-    dataout.pvar   = reshape(p, [numel(cfg.Ftest), nchan, nfreq, ntime]);
+  if isfield(cfg, 'ftest') && ~isempty(cfg.ftest)
+    dataout.fvar   = reshape(F, [numel(cfg.ftest), nchan, nfreq, ntime]);
+    dataout.pvar   = reshape(p, [numel(cfg.ftest), nchan, nfreq, ntime]);
     clear F p;
   end
   
