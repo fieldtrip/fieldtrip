@@ -8,7 +8,9 @@ function bnd = prepare_mesh_segmentation(cfg, mri)
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
-if ~isfield(cfg, 'spmversion'), cfg.spmversion = 'spm8'; end
+% get the default options
+cfg.spmversion  = ft_getopt(cfg, 'spmversion', 'spm8');
+cfg.sourceunits = ft_getopt(cfg, 'sourceunits', mri.unit); % use the MRI units as default 
 
 % smooth functional parameters, excluding anatomy and inside
 if isfield(cfg, 'smooth') && ~strcmp(cfg.smooth, 'no'),
@@ -25,11 +27,28 @@ cfg = ft_checkconfig(cfg, 'forbidden', 'numcompartments');
 
 % FIXME: this part needs reorganization
 %if ~isfield(mri, 'tissue') && any(ismember(fieldnames(mri), {'gray' 'brain' 'scalp'})) && (~isfield(cfg,'tissue') || length(cfg.tissue)==1), cfg.tissue = 1; end
-if ~isfield(mri, 'seg') && isempty(cfg.tissue), cfg.tissue = 1; end %FIXME Please make some decent code here
 if ~isfield(cfg, 'threshold'), cfg.threshold = 0; end
 if ~isfield(mri, 'unit'), mri = ft_convert_units(mri); end
-  
-fprintf('using the segmented MRI\n');
+
+if ischar(cfg.tissue)
+  % convert the char into a cell-array
+  cfg.tissue = {cfg.tissue};
+end
+
+if iscell(cfg.tissue)
+  mri.seg = zeros(mri.dim);
+  % pick the selected tissues from the segmentation structure
+  for i=1:length(cfg.tissue)
+    fprintf('using the %s segmentation\n', cfg.tissue{i});
+    mri.seg = mri.seg + mri.(cfg.tissue{i});
+    value(i) = length(cfg.tissue) - i + 1;
+  end % for
+  % continue with the tissue value rather than the cell-array with strings
+  cfg.tissue = value;
+else
+  fprintf('using the segmented MRI\n');
+end % if
+
 
 if ~isfield(mri, 'seg') && isequal(cfg.tissue, 1)
   
