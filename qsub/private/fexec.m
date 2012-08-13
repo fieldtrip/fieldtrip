@@ -85,12 +85,16 @@ try
       % in older Matlab versions it worked like this
       rand ('seed', option_randomseed);
       randn('seed', option_randomseed);
-    else
+    elseif matlabversion('2008b', '2011b')
       % this is according to http://www.mathworks.com/help/techdoc/math/bsn94u0-1.html
       % and is needed to avoid a warning about Using 'seed' to set RAND's internal state causes RAND, RANDI, and RANDN to use legacy random number generators.
       s = RandStream('mcg16807', 'Seed', option_randomseed);
-      % s = RandStream('mt19937ar','Seed', option_randomseed);
       RandStream.setDefaultStream(s);
+    elseif matlabversion('2012a', inf)
+      % version 2012a gives a warning that RandStream.setDefaultStream will be removed in the future
+      % and that RandStream.setGlobalStream should be used instead
+      s = RandStream('mcg16807', 'Seed', option_randomseed);
+      RandStream.setGlobalStream(s);
     end
   end
   
@@ -167,7 +171,7 @@ try
   fprintf('executing job took %f seconds and %d bytes\n', timused, memused);
   
   % collect the output options
-  optout = {'timused', timused, 'memused', memused, 'lastwarn', lastwarn, 'lasterr', '', 'diary', diarystring, 'release', version('-release')};
+  optout = {'timused', timused, 'memused', memused, 'lastwarn', lastwarn, 'lasterr', '', 'diary', diarystring, 'release', version('-release'), 'pwd', pwd, 'path', path};
   
 catch
   % the "catch me" syntax is broken on MATLAB74, this fixes it
@@ -186,7 +190,7 @@ catch
   
   % the output options will include the error
   % note that the error cannot be sent as object, but has to be sent as struct
-  optout = {'lastwarn', lastwarn, 'lasterr', struct(feval_error), 'diary', diarystring};
+  optout = {'lastwarn', lastwarn, 'lasterr', struct(feval_error), 'diary', diarystring, 'release', version('-release'), 'pwd', pwd, 'path', path};
   
   % an error was detected while executing the job
   warning('an error was detected during job execution');
