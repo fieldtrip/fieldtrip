@@ -100,7 +100,7 @@ function [data] = ft_preprocessing(cfg, data)
 % See also FT_DEFINETRIAL, FT_REDEFINETRIAL, FT_APPENDDATA, FT_APPENDSPIKE
 
 % Guidelines for use in an analysis pipeline: 
-% after FT_PREPROCESSING you will have raw data represented as a single 
+% After FT_PREPROCESSING you will have raw data represented as a single 
 % continuous segment or as multiple data segments that often correspond to 
 % trials in an experiment.
 % This usually serves as input for one of the following functions:
