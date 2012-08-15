@@ -29,7 +29,8 @@ function [shape] = ft_read_headshape(filename, varargin)
 %
 % $Id$
 
-% check the input: if filename is a cell-array, call ft_read_headshape recursively and combine the outputs
+% Check the input, if filename is a cell-array, call ft_read_headshape recursively and combine the outputs.
+% This is used to read the left and right hemisphere of a Freesurfer cortical segmentation.
 if iscell(filename)
   for i=1:numel(filename)
     tmpshape = ft_read_headshape(filename{i}, varargin{:});
@@ -80,13 +81,19 @@ if iscell(filename)
 end
 
 % get the options
-fileformat  = ft_getopt(varargin,'format',  ft_filetype(filename));
-coordinates = ft_getopt(varargin,'coordinates', 'head');
-unit        = ft_getopt(varargin,'unit', 'cm');
+fileformat  = ft_getopt(varargin, 'format');
+coordinates = ft_getopt(varargin, 'coordinates', 'head'); % the alternative for CTF coil positions is dewar
+unit        = ft_getopt(varargin, 'unit'); % the default for yokogawa is cm, see below
+
+if isempty(fileformat)
+  % only do the autodetection if the format was not specified
+  fileformat = ft_filetype(filename);
+end
 
 % test whether the file exists
-if ~strcmp(fileformat,'tetgen') && ~exist(filename)
-  error(sprintf('file ''%s'' does not exist', filename));
+% FIXME why is this check not done for tetgen?
+if ~strcmp(fileformat, 'tetgen') && ~exist(filename)
+  error('file ''%s'' does not exist', filename);
 end
 
 % start with an empty structure
@@ -142,7 +149,7 @@ switch fileformat
     % I'm making some assumptions here
     % which I'm not sure will work on all 4D systems
     
-    %fid = fid(1:3, :);
+    % fid = fid(1:3, :);
     
     [junk, NZ] = max(fid(1:3,1));
     [junk, L]  = max(fid(1:3,2));
@@ -295,7 +302,7 @@ switch fileformat
       error('no coil information found in Yokogawa file');
     end
     
-    % Convert to the units of the grad.
+    % convert to the units of the grad, the desired default for yokogawa is centimeter.
     shape = ft_convert_units(shape, 'cm');
     
   case 'yokogawa_coregis'
@@ -378,7 +385,7 @@ switch fileformat
     [shape.fid.pnt, shape.pnt, shape.fid.label] = read_polhemus_fil(filename, 0);
     
   case 'polhemus_pos'
-    [shape.fid.pnt, shape.pnt, shape.fid.label] = read_ctf_pos(filename);      
+    [shape.fid.pnt, shape.pnt, shape.fid.label] = read_ctf_pos(filename);
     
   case 'spmeeg_mat'
     tmp = load(filename);
@@ -472,7 +479,7 @@ switch fileformat
     shape.tet = IMPORT.data(:,2:5);
     IMPORT = importdata([filename '.1.node'],' ',1);
     shape.pnt = IMPORT.data(:,2:4);
-  
+    
   otherwise
     % try reading it from an electrode of volume conduction model file
     success = false;
@@ -525,4 +532,4 @@ if isfield(shape, 'fid') && isfield(shape.fid, 'label')
 end
 
 % this will add the units to the head shape
-shape = ft_convert_units(shape);
+shape = ft_convert_units(shape, unit);
