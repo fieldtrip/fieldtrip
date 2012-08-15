@@ -15,7 +15,7 @@ function [data] = ft_checkdata(data, varargin)
 %
 % Optional input arguments should be specified as key-value pairs and can include
 %   feedback           = yes, no
-%   datatype           = raw, freq, timelock, comp, spike, source, volume, dip
+%   datatype           = raw, freq, timelock, comp, spike, source, volume, segmentation, dip
 %   dimord             = any combination of time, freq, chan, refchan, rpt, subj, chancmb, rpttap, pos
 %   senstype           = ctf151, ctf275, ctf151_planar, ctf275_planar, neuromag122, neuromag306, bti148, bti248, bti248_planar, magnetometer, electrode
 %   inside             = logical, index
@@ -28,6 +28,7 @@ function [data] = ft_checkdata(data, varargin)
 %   hasdof             = yes, no
 %   cmbrepresentation  = sparse, full (applies to covariance and cross-spectral density)
 %   fsample            = sampling frequency to use to go from SPIKE to RAW representation
+%   segmentationstyle  = indexed, cumulative, exclusive
 %
 % For some options you can specify multiple values, e.g.
 %   [data] = ft_checkdata(data, 'senstype', {'ctf151', 'ctf275'}), e.g. in megrealign
@@ -98,6 +99,7 @@ channelcmb           = ft_getopt(varargin, 'channelcmb');
 sourcedimord         = ft_getopt(varargin, 'sourcedimord');
 sourcerepresentation = ft_getopt(varargin, 'sourcerepresentation');
 fsample              = ft_getopt(varargin, 'fsample');
+segmentationstyle    = ft_getopt(varargin, 'segmentationstyle');
 
 % check whether people are using deprecated stuff
 depHastrialdef = ft_getopt(varargin, 'hastrialdef');
@@ -111,17 +113,18 @@ end
 
 % determine the type of input data
 % this can be raw, freq, timelock, comp, spike, source, volume, dip
-israw      = ft_datatype(data, 'raw');
-isfreq     = ft_datatype(data, 'freq');
-istimelock = ft_datatype(data, 'timelock');
-iscomp     = ft_datatype(data, 'comp');
-isspike    = ft_datatype(data, 'spike');
-isvolume   = ft_datatype(data, 'volume');
-issource   = ft_datatype(data, 'source');
-isdip      = ft_datatype(data, 'dip');
-ismvar     = ft_datatype(data, 'mvar');
-isfreqmvar = ft_datatype(data, 'freqmvar');
-ischan     = ft_datatype(data, 'chan');
+israw           = ft_datatype(data, 'raw');
+isfreq          = ft_datatype(data, 'freq');
+istimelock      = ft_datatype(data, 'timelock');
+iscomp          = ft_datatype(data, 'comp');
+isspike         = ft_datatype(data, 'spike');
+isvolume        = ft_datatype(data, 'volume');
+issegmentation  = ft_datatype(data, 'segmentation');
+issource        = ft_datatype(data, 'source');
+isdip           = ft_datatype(data, 'dip');
+ismvar          = ft_datatype(data, 'mvar');
+isfreqmvar      = ft_datatype(data, 'freqmvar');
+ischan          = ft_datatype(data, 'chan');
 
 % FIXME use the istrue function on ismeg and hasxxx options
 
@@ -185,6 +188,8 @@ elseif isspike
   data = ft_datatype_spike(data);
 elseif isvolume
   data = ft_datatype_volume(data);
+elseif issegmentation
+  data = ft_datatype_segmentation(data, 'segmentationstyle', segmentationstyle);
 elseif issource
   data = ft_datatype_source(data);
 elseif isdip
