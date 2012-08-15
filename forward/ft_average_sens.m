@@ -184,7 +184,7 @@ switch nfid
         error('all fiducials should have the same labels for averaging');
       end
       
-      tra1 = headcoordinates(sens(i).pnt(ind1, :), sens(i).pnt(ind2, :), sens(i).pnt(ind3, :));
+      tra1 = headcoordinates(sens(i).chanpos(ind1, :), sens(i).chanpos(ind2, :), sens(i).chanpos(ind3, :));
       
       cfiducials = ft_transform_headshape(tra1, fiducials(i));
       
