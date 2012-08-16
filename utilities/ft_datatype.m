@@ -34,17 +34,17 @@ function [type, dimord] = ft_datatype(data, desired)
 % $Id$
 
 % determine the type of input data, this can be raw, freq, timelock, comp, spike, source, volume, dip
-israw           =  isfield(data, 'label') && isfield(data, 'time') && isa(data.time, 'cell') && isfield(data, 'trial') && isa(data.trial, 'cell') && ~isfield(data,'trialtime');
-isfreq          = (isfield(data, 'label') || isfield(data, 'labelcmb')) && isfield(data, 'freq') && ~isfield(data,'trialtime') && ~isfield(data,'origtrial'); %&& (isfield(data, 'powspctrm') || isfield(data, 'crsspctrm') || isfield(data, 'cohspctrm') || isfield(data, 'fourierspctrm') || isfield(data, 'powcovspctrm'));
-istimelock      =  isfield(data, 'label') && isfield(data, 'time') && ~isfield(data, 'freq') && ~isfield(data,'trialtime'); %&& ((isfield(data, 'avg') && isnumeric(data.avg)) || (isfield(data, 'trial') && isnumeric(data.trial) || (isfield(data, 'cov') && isnumeric(data.cov))));
-iscomp          =  isfield(data, 'label') && isfield(data, 'topo') || isfield(data, 'topolabel');
-isvolume        =  isfield(data, 'transform') && isfield(data, 'dim');
-issource        =  isfield(data, 'pos');
-isdip           =  isfield(data, 'dip');
-ismvar          =  isfield(data, 'dimord') && ~isempty(strfind(data.dimord, 'lag'));
-isfreqmvar      =  isfield(data, 'freq') && isfield(data, 'transfer');
-ischan          =  isfield(data, 'dimord') && strcmp(data.dimord, 'chan') && ~isfield(data, 'time') && ~isfield(data, 'freq'); 
-issegmentation  = false; % FIXME
+israw      =  isfield(data, 'label') && isfield(data, 'time') && isa(data.time, 'cell') && isfield(data, 'trial') && isa(data.trial, 'cell') && ~isfield(data,'trialtime');
+isfreq     = (isfield(data, 'label') || isfield(data, 'labelcmb')) && isfield(data, 'freq') && ~isfield(data,'trialtime') && ~isfield(data,'origtrial'); %&& (isfield(data, 'powspctrm') || isfield(data, 'crsspctrm') || isfield(data, 'cohspctrm') || isfield(data, 'fourierspctrm') || isfield(data, 'powcovspctrm'));
+istimelock =  isfield(data, 'label') && isfield(data, 'time') && ~isfield(data, 'freq') && ~isfield(data,'trialtime'); %&& ((isfield(data, 'avg') && isnumeric(data.avg)) || (isfield(data, 'trial') && isnumeric(data.trial) || (isfield(data, 'cov') && isnumeric(data.cov))));
+iscomp     =  isfield(data, 'label') && isfield(data, 'topo') || isfield(data, 'topolabel');
+isvolume   =  isfield(data, 'transform') && isfield(data, 'dim');
+issource   =  isfield(data, 'pos');
+isdip      =  isfield(data, 'dip');
+ismvar     =  isfield(data, 'dimord') && ~isempty(strfind(data.dimord, 'lag'));
+isfreqmvar =  isfield(data, 'freq') && isfield(data, 'transfer');
+ischan     =  isfield(data, 'dimord') && strcmp(data.dimord, 'chan') && ~isfield(data, 'time') && ~isfield(data, 'freq'); 
+issegment  = false; % FIXME
 
 % check if isspike:
 spk_hastimestamp  = isfield(data,'label') && isfield(data, 'timestamp') && isa(data.timestamp, 'cell');
@@ -74,9 +74,9 @@ elseif isspike
   type = 'spike';
 elseif isvolume
   type = 'volume';
-  % elseif issegmentation
+  % elseif issegment
   %  % a segmentation is a volume, but in general vice versa
-  %  type = 'segmentation'; % FIXME
+  %  type = 'segment'; % FIXME
 elseif issource
   type = 'source';
 elseif ischan
