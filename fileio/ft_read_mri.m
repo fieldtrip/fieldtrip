@@ -59,12 +59,13 @@ if ~exist(filename, 'file')
 end
 
 % test for the presence of some external functions from other toolboxes
-hasmri  = ft_hastoolbox('mri');     % from Darren Weber, see http://eeg.sourceforge.net/
-hasspm2 = ft_hastoolbox('SPM2');    % see http://www.fil.ion.ucl.ac.uk/spm/
-hasspm5 = ft_hastoolbox('SPM5');    % see http://www.fil.ion.ucl.ac.uk/spm/
-hasspm8 = ft_hastoolbox('SPM8');    % see http://www.fil.ion.ucl.ac.uk/spm/
-hasspm  = (hasspm2 || hasspm5 || hasspm8);
-hasafni = ft_hastoolbox('afni');    % see http://afni.nimh.nih.gov/
+hasmri   = ft_hastoolbox('mri');     % from Darren Weber, see http://eeg.sourceforge.net/
+hasspm2  = ft_hastoolbox('SPM2');    % see http://www.fil.ion.ucl.ac.uk/spm/
+hasspm5  = ft_hastoolbox('SPM5');    % see http://www.fil.ion.ucl.ac.uk/spm/
+hasspm8  = ft_hastoolbox('SPM8');    % see http://www.fil.ion.ucl.ac.uk/spm/
+hasspm12 = ft_hastoolbox('SPM12');    % see http://www.fil.ion.ucl.ac.uk/spm/
+hasspm   = (hasspm2 || hasspm5 || hasspm8 || hasspm12);
+hasafni  = ft_hastoolbox('afni');    % see http://afni.nimh.nih.gov/
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if strcmp(mriformat, 'ctf_mri')
@@ -103,8 +104,8 @@ elseif strcmp(mriformat, 'minc')
   % USE FREESURFER CODE FOR THE READING OF NIFTI-FILES: THAT CODE ALSO
   % DEALS WITH 4D NIFTIs
 elseif strcmp(mriformat, 'nifti_spm')
-   if ~(hasspm5 || hasspm8)
-     fprintf('the SPM5 or SPM8 toolbox is required to read *.nii files\n');
+   if ~(hasspm5 || hasspm8 || hasspm12)
+     fprintf('the SPM5 or newer toolbox is required to read *.nii files\n');
      ft_hastoolbox('spm8',1);
    end
    % use the functions from SPM
