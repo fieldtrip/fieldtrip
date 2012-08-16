@@ -47,15 +47,15 @@ function [segment] = ft_volumesegment(cfg, mri)
 %                       expressed. (default = 'mm')
 %
 % Example use:
-%
-%   segment = ft_volumesegment([], mri) will segment the anatomy and will output
-%               the segmentation result as 3 probabilistic masks in 
-%               segment.gray/.white/.csf
+%   cfg        = [];
+%   segment    = ft_volumesegment(cfg, mri) will segment the anatomy and will output
+%                  the segmentation result as 3 probabilistic masks in 
+%                  segment.gray, white and csf.
 %
 %   cfg.output = 'skullstrip';
-%   segment    = ft_volumesegment(cfg, mri) will generate a skullstripped anatomy
+%   segment    = ft_volumesegment(cfg, mri) will generate a skull-stripped anatomy
 %                  based on a brainmask generated from the probabilistic
-%                  tissue maps. The skull-stripped anatomy is be stored in
+%                  tissue maps. The skull-stripped anatomy is stored in
 %                  the field segment.anatomy.
 %
 %
@@ -99,6 +99,8 @@ function [segment] = ft_volumesegment(cfg, mri)
 % undocumented options
 %   cfg.keepintermediate = 'yes' or 'no'
 
+% Copyright (C) 2007-2012, Jan-Mathijs Schoffelen, Robert Oostenveld
+%
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
 %

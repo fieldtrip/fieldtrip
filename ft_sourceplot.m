@@ -9,8 +9,18 @@ function [cfg] = ft_sourceplot(cfg, data)
 % Use as
 %   ft_sourceplot(cfg, data)
 % where the input data can contain an anatomical MRI, functional source
-% reconstruction results and statistical data, which all have to be
-% interpolated on the same 3-d grid.
+% reconstruction results and/or statistical data. If both anatomical and
+% functional/statistical data is provided as input, they should be
+% represented or interpolated on the same same 3-D grid, e.g. using
+% FT_SOURCEINTERPOLATE.
+%
+% The slice and ortho visualization plot the data in the input data voxel
+% arrangement, i.e. the three ortho views are the 1st, 2nd and 3rd
+% dimension of the 3-D data matrix, not of the head coordinate system. The
+% specification of the coordinate for slice intersection is specified in
+% head coordinates, i.e. relative to the fiducials and in mm or cm. If you
+% want the visualisation to be consistent with the head coordinate system,
+% you can reslice the data using FT_VOLUMERESLICE.
 %
 % The configuration should contain:
 %   cfg.method        = 'slice',   plots the data on a number of slices in the same plane
@@ -77,8 +87,8 @@ function [cfg] = ft_sourceplot(cfg, data)
 %                        'center' of the brain
 %                        [x y z], coordinates in voxels or head, see cfg.locationcoordinates
 %   cfg.locationcoordinates = coordinate system used in cfg.location, 'head' or 'voxel' (default = 'head')
-%                              'head', headcoordinates from anatomical MRI
-%                              'voxel', voxelcoordinates
+%                              'head', headcoordinates as mm or cm 
+%                              'voxel', voxelcoordinates as indices
 %   cfg.crosshair     = 'yes' or 'no' (default = 'yes')
 %   cfg.axis          = 'on' or 'off' (default = 'on')
 %   cfg.interactive   = 'yes' or 'no' (default = 'no')
@@ -100,23 +110,20 @@ function [cfg] = ft_sourceplot(cfg, data)
 %                         SPM anatomical template in MNI coordinates
 %   cfg.surfinflated   = string, file that contains the inflated surface (default = [])
 %   cfg.surfdownsample = number (default = 1, i.e. no downsampling)
-%   cfg.projmethod     = projection method, how functional volume data is
-%   projected onto surface
+%   cfg.projmethod     = projection method, how functional volume data is projected onto surface
 %                        'nearest', 'project', 'sphere_avg', 'sphere_weighteddistance'
 %   cfg.projvec        = vector (in mm) to allow different projections that
-%   are combined with the method specified in cfg.projcomb
-%   cfg.projcomb       = 'mean', 'max', method to combine the different
-% projections
-%   cfg.projweight     = vector of weights for the different projections
-%   (default: 1)
-%   cfg.projthresh      = implements thresholding on the surface level
-%   (cfg.projthresh = 0.7 means 70% of maximum)
+%                        are combined with the method specified in cfg.projcomb
+%   cfg.projcomb       = 'mean', 'max', method to combine the different projections
+%   cfg.projweight     = vector of weights for the different projections (default = 1)
+%   cfg.projthresh     = implements thresholding on the surface level
+%   (cfg.projthresh    = 0.7 means 70% of maximum)
 %   cfg.sphereradius   = maximum distance from each voxel to the surface to be
 %                        included in the sphere projection methods, expressed in mm
 %   cfg.distmat        = precomputed distance matrix (default = [])
 %   cfg.camlight       = 'yes' or 'no' (default = 'yes')
 %   cfg.renderer       = 'painters', 'zbuffer',' opengl' or 'none' (default = 'opengl')
-%                        When using opacity the OpenGL renderer is required.
+%                        note that when using opacity the OpenGL renderer is required.
 %
 % To facilitate data-handling and distributed computing with the peer-to-peer
 % module, this function has the following option:
@@ -126,7 +133,7 @@ function [cfg] = ft_sourceplot(cfg, data)
 % corresponding to the input structure.
 %
 % See also FT_SOURCEANALYSIS, FT_SOURCEGRANDAVERAGE, FT_SOURCESTATISTICS,
-%  FT_VOLUMELOOKUP, FT_PREPARE_ATLAS
+% FT_VOLUMELOOKUP, FT_PREPARE_ATLAS, FT_READ_MRI
 
 % TODO have to be built in:
 %   cfg.marker        = [Nx3] array defining N marker positions to display (orig: from sliceinterp)
@@ -139,7 +146,7 @@ function [cfg] = ft_sourceplot(cfg, data)
 %   surface also optimal when inside present
 %   come up with a good glass brain projection
 
-% Copyright (C) 2007-2008, Robert Oostenveld, Ingrid Nieuwenhuis
+% Copyright (C) 2007-2012, Robert Oostenveld, Ingrid Nieuwenhuis
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
