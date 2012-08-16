@@ -269,8 +269,14 @@ switch lower(event)
       % update the cursor
       if inSelection(p, userData.range)
         set(handle, 'Pointer', 'hand');
+        if ~isempty(contextmenu)
+          set(hcmenuopt,'enable','on')
+        end
       else
         set(handle, 'Pointer', 'crosshair');
+        if ~isempty(contextmenu)
+          set(hcmenuopt,'enable','off')
+        end
       end
     end
     
@@ -284,15 +290,6 @@ end % switch event
 % put the modified selections back into the figure
 if ishandle(handle)
   setappdata(handle, 'select_range_m', userData);
-  if ~isempty(contextmenu)
-    if ishandle(userData.box)
-      if all(isnan([get(userData.box,'ydata') get(userData.box,'xdata')])) && ~pointonly
-        set(hcmenuopt,'enable','off')
-      else
-        set(hcmenuopt,'enable','on')
-      end
-    end
-  end
 end
 
 
