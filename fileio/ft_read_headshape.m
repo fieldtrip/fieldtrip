@@ -531,5 +531,9 @@ if isfield(shape, 'fid') && isfield(shape.fid, 'label')
   shape.fid.label = shape.fid.label(:);
 end
 
-% this will add the units to the head shape
-shape = ft_convert_units(shape, unit);
+% this will add the units to the head shape and optionally convert
+if ~isempty(unit)
+  shape = ft_convert_units(shape, unit);
+else
+  shape = ft_convert_units(shape);
+end
