@@ -2,7 +2,12 @@ function [mri] = align_itab2spm(mri)
 
 % ALIGN_ITAB2SPM performs an approximate alignment of the anatomical volume
 % from ITAB towards SPM coordinates. Only the homogenous transformation matrix
-% is modified.
+% is modified and the coordsys-field is updated.
+
+%--------------------------------------------------------------------------
+% do a first round of approximate coregistration using the predefined voxel
+% locations of the fiducials and landmarks in the template T1 image from
+% SPM
 
 spmvox2spmhead = [
      2     0     0   -92
@@ -27,8 +32,44 @@ spmhead_Rpa_canal    = spmvox2spmhead * spmvox_Rpa_canal ;
 itabvox2itabhead  = mri.transform;
 spmhead2itabhead  = headcoordinates(spmhead_Nas(1:3), spmhead_Lpa_canal(1:3), spmhead_Rpa_canal(1:3), 'itab');
 
-itabvox2spmhead =  inv(spmhead2itabhead) * itabvox2itabhead;
+%itabvox2spmhead =  inv(spmhead2itabhead) * itabvox2itabhead;
+itabvox2spmhead  =  spmhead2itabhead \ itabvox2itabhead;
 
-% change the transformation matrix, such that it returns SPM head coordinates
+% change the transformation matrix, such that it returns approximate SPM head coordinates
 mri.transform = itabvox2spmhead;
 mri.coordsys  = 'spm';
+
+% do a second round of affine registration (rigid body) to get improved
+% alignment with spm coordinate system. this is needed because there may be
+% different conventions defining LPA and RPA.
+switch spm('ver')
+  case 'SPM8'
+    template = fullfile(spm('Dir'),'templates','T1.nii');
+  case 'SPM2'
+    template = fullfile(spm('Dir'),'templates','T1.mnc');
+  otherwise
+    error('unsupported spm-version');    
+end
+mri2 = ft_read_mri(template);
+
+tname1 = [tempname, '.img'];
+tname2 = [tempname, '.img'];
+V1 = ft_write_mri(tname1, mri.anatomy,  'transform', mri.transform,  'spmversion', spm('ver'));
+V2 = ft_write_mri(tname2, mri2.anatomy, 'transform', mri2.transform, 'spmversion', spm('ver'));
+
+flags.regtype = 'rigid';
+[M, scale]    = spm_affreg(V1,V2,flags);
+
+% some juggling around with the transformation matrices
+itabvox2spmhead2  = M \ V1.mat;
+spmhead2itabhead2 = itabvox2itabhead / itabvox2spmhead2;
+
+% append the transformation matrices to the output
+mri.transform     = itabvox2spmhead2;
+mri.vox2headOrig  = itabvox2itabhead;
+mri.vox2head      = itabvox2spmhead2;
+mri.head2headOrig = spmhead2itabhead2;
+
+% delete the temporary files
+delete(tname1);
+delete(tname2);
