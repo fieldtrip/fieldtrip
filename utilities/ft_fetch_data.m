@@ -125,9 +125,11 @@ if trlnum>1,
       trialnum  = trialnum(begsample:endsample);
       samplenum = samplenum(begsample:endsample);
 
-      % check if all samples are present and are not present twice or more 
+      % check if all samples are present and are not present twice or more
       if any(count==0)
         warning('not all requested samples are present in the data, filling with NaNs');
+        % prealloc with NaNs
+        dat = NaN(numel(chanindx),endsample-begsample+1);
       elseif any(count>1)
         if ~allowoverlap
           error('some of the requested samples occur twice in the data');
@@ -149,6 +151,8 @@ if trlnum>1,
       % the following piece of code achieves the same as the commented code above,
       % but much smaller. rather than looping over samples it loops over the blocks
       % of samples defined by the original trials
+
+      
       utrl = unique(trialnum);
       utrl(~isfinite(utrl)) = 0;
       utrl(utrl==0) = [];
