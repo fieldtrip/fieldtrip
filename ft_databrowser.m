@@ -378,6 +378,10 @@ if ischar(cfg.ylim)
   if strcmp(cfg.viewmode,'vertical')
     cfg.ylim = cfg.ylim/10;
   end
+else
+  if (numel(cfg.ylim) ~= 2) || ~isnumeric(cfg.ylim)
+    error('cfg.ylim needs to be a 1x2 vector [ymin ymax], describing the upper and lower limits')
+  end
 end
 
 % determine coloring of channels
