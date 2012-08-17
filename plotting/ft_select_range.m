@@ -4,10 +4,15 @@ function ft_select_range(handle, eventdata, varargin)
 % in a figure. It allows the user to select a horizontal or a vertical
 % range, or one or multiple boxes.
 %
+% The callback function (and it's arguments) specified in callback is called 
+% on a left-click inside a selection, or using the right-click context-menu. 
+% The callback function will have as its first-to-last input argument the range of
+% all selections. The last input argument is either empty, or, when using the context
+% menu, a label of the item clicked.
 % Context menus are shown as the labels presented in the input. When activated,
-% the callback function is called, with as additional input argument the label of
+% the callback function is called, with the last input argument being the label of
 % the selection option.
-%
+% 
 % Input arguments:
 %   event       = string, event used as hook.
 %   callback    = function handle or cell-array containing function handle and additional input arguments
@@ -309,12 +314,15 @@ end
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function evalCallback(callback, val)
+% no context menu item was clicked, set to empty
+cmenulab = [];
+
 if ~isempty(callback)
   if isa(callback, 'cell')
     % the callback specifies a function and additional arguments
     funhandle = callback{1};
     funargs   = callback(2:end);
-    feval(funhandle, val, funargs{:});
+    feval(funhandle, funargs{:}, val, cmenulab);
   else
     % the callback only specifies a function
     funhandle = callback;
@@ -329,13 +337,13 @@ function updateContextCallback(hcmenuopt, callback, val)
 if ~isempty(callback)
   if isa(callback, 'cell')
     % the callback specifies a function and additional arguments
-    funhandle = callback(1);
+    funhandle = callback{1};
     funargs   = callback(2:end);
-    callback  = [funhandle, {val}, funargs];
+    callback  = {funhandle, funargs{:}, val};
   else
     % the callback only specifies a function
     funhandle = callback;
-    callback  = [funhandle, {val}];
+    callback  = {funhandle, val};
   end
   for icmenu = 1:numel(hcmenuopt)
     set(hcmenuopt(icmenu),'callback',{@evalContextCallback, callback{:}})

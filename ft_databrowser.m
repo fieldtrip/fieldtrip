@@ -909,10 +909,9 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function select_range_cb(range, h, varargin) %range 1X4 in sec relative to current trial
+function select_range_cb(h, range, cmenulab) %range 1X4 in sec relative to current trial
 opt = getappdata(h, 'opt');
 cfg = getappdata(h, 'cfg');
-cmenulab = varargin;
 
 % the range should be in the displayed box
 range(1) = max(opt.hpos-opt.width/2, range(1));
@@ -961,7 +960,6 @@ else
   % execute the corresponding function
   
   % get index into cfgs
-  cmenulab = cmenulab{1};
   selfunind = strcmp(cfg.selfun, cmenulab);
   
   % cut out the requested data segment

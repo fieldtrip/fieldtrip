@@ -124,7 +124,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION to assist in the selection of multiple channels
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function select_channel_multiple(range, callback)
+function select_channel_multiple(callback,range,cmenulab) % last input is context menu label, see ft_select_range
 
 info   = guidata(gcf);
 x      = info.x(:);
