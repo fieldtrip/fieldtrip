@@ -4,7 +4,11 @@ function [cfg] = ft_databrowser(cfg, data)
 % were detected by artifact functions (see FT_ARTIFACT_xxx functions where
 % xxx is the type of artifact) are marked. Additionally data pieces can be
 % marked and unmarked as artifact by manual selection. The output cfg
-% contains the updated specification of the artifacts.
+% contains the updated specification of the artifacts. When visually selection
+% data, a right-click will bring up a context-menu containing functions to be 
+% executed on the selected data. You can use your own function using cfg.selfun
+% and cfg.selcfg. You can use multiple functions by giving the names/cfgs as a
+% cell-array.
 %
 % Use as
 %   cfg = ft_databrowser(cfg)
@@ -43,9 +47,9 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.colorgroups             = 'sequential' 'allblack' 'labelcharx' (x = xth character in label), 'chantype' or
 %                                  vector with length(data/hdr.label) defining groups (default = 'sequential')
 %   cfg.channelcolormap         = COLORMAP (default = customized lines map with 15 colors)
-%   cfg.selfun                  = string, name of function which is evaluated if selectmode is set to 'eval'.
-%                                  The selected data and the selcfg are passed on to this function.
-%   cfg.selcfg                  = configuration options for selfun
+%   cfg.selfun                  = string, name of function which is evaluated using the right-click context menu
+%                                  The selected data and cfg.selcfg are passed on to this function.
+%   cfg.selcfg                  = configuration options for function in cfg.selfun
 %   cfg.eegscale                = number, scaling to apply to the EEG channels prior to display
 %   cfg.eogscale                = number, scaling to apply to the EOG channels prior to display
 %   cfg.ecgscale                = number, scaling to apply to the ECG channels prior to display
@@ -141,8 +145,8 @@ if ~isfield(cfg, 'selectfeature'),   cfg.selectfeature = 'visual';        end % 
 if ~isfield(cfg, 'selectmode'),      cfg.selectmode = 'mark';             end
 if ~isfield(cfg, 'blocksize'),       cfg.blocksize = [];                  end % now used for both continuous and non-continuous data, defaulting done below
 if ~isfield(cfg, 'preproc'),         cfg.preproc = [];                    end % see preproc for options
-if ~isfield(cfg, 'selfun'),          cfg.selfun = [];                     end
-if ~isfield(cfg, 'selcfg'),          cfg.selcfg = [];                     end
+if ~isfield(cfg, 'selfun'),          cfg.selfun = [];                     end % default functions: 'simpleFFT','multiplotER','topoplotER','topoplotVAR','movieplotER' 
+if ~isfield(cfg, 'selcfg'),          cfg.selcfg = [];                     end % defaulting done below, requires layouts/etc to be processed
 if ~isfield(cfg, 'colorgroups'),     cfg.colorgroups = 'sequential';      end
 if ~isfield(cfg, 'channelcolormap'), cfg.channelcolormap = [0.75 0 0;0 0 1;0 1 0;0.44 0.19 0.63;0 0.13 0.38;0.5 0.5 0.5;1 0.75 0;1 0 0;0.89 0.42 0.04;0.85 0.59 0.58;0.57 0.82 0.31;0 0.69 0.94;1 0 0.4;0 0.69 0.31;0 0.44 0.75];   end
 if ~isfield(cfg, 'eegscale'),        cfg.eegscale = [];                   end
@@ -161,6 +165,7 @@ if ~isfield(cfg, 'continuous'),      cfg.continuous = [];                 end % 
 if ~isfield(cfg, 'ploteventlabels'), cfg.ploteventlabels = 'type=value';  end
 cfg.zlim           = ft_getopt(cfg, 'zlim',          'maxmin');
 cfg.compscale      = ft_getopt(cfg, 'compscale',     'global');
+
 
 
 
@@ -481,50 +486,50 @@ end
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% set up default browsefuns
+% set up default defselfuns
 % use two cfg sections
 % cfg.selfun - labels that are presented in rightclick menu, and is appended using ft_getuserfun(..., 'browse') later on to create a function handle
 % cfg.selcfg - cfgs for functions to be executed
-browsefun    = [];
-browsefuncfg = [];
+defselfun = [];
+defselcfg = [];
 % simplefft
-browsefun{1} = 'simpleFFT';
+defselfun{1} = 'simpleFFT';
 tmpcfg = [];
 tmpcfg.chancolors = chancolors;
-browsefuncfg{1} = tmpcfg;
+defselcfg{1}  = tmpcfg;
 % multiplotER
-browsefun{2} = 'multiplotER';
+defselfun{2}  = 'multiplotER';
 tmpcfg = [];
 tmpcfg.layout = cfg.layout;
-browsefuncfg{2} = tmpcfg;
+defselcfg{2}  = tmpcfg;
 % topoplotER
-browsefun{3} = 'topoplotER';
+defselfun{3}  = 'topoplotER';
 tmpcfg = [];
 tmpcfg.layout = cfg.layout;
-browsefuncfg{3} = tmpcfg;
+defselcfg{3}  = tmpcfg;
 % topoplotVAR
-browsefun{4} = 'topoplotVAR';
+defselfun{4}  = 'topoplotVAR';
 tmpcfg = [];
 tmpcfg.layout = cfg.layout;
-browsefuncfg{4} = tmpcfg;
+defselcfg{4}  = tmpcfg;
 % movieplotER
-browsefun{5} = 'movieplotER';
+defselfun{5}  = 'movieplotER';
 tmpcfg = [];
 tmpcfg.layout = cfg.layout;
 tmpcfg.interactive = 'yes';
-browsefuncfg{5} = tmpcfg;
+defselcfg{5}  = tmpcfg;
 
 
-% add browsefuns to user-specified browsefuns
+% add defselfuns to user-specified defselfuns
 if ~iscell(cfg.selfun) && ~isempty(cfg.selfun)
   cfg.selfun = {cfg.selfun};
-  cfg.selfun = [cfg.selfun browsefun];
+  cfg.selfun = [cfg.selfun defselfun];
   % do the same for the cfgs
   cfg.selcfg = {cfg.selcfg}; % assume the cfg isnt a cell
-  cfg.selcfg = [cfg.selcfg browsefuncfg];
+  cfg.selcfg = [cfg.selcfg defselcfg];
 else
-  cfg.selfun = browsefun;
-  cfg.selcfg = browsefuncfg;
+  cfg.selfun = defselfun;
+  cfg.selcfg = defselcfg;
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -884,7 +889,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function help_cb(h, eventdata)
 fprintf('------------------------------------------------------------------------------------\n')
-fprintf('You can use the following buttons in the data viewer\n')
+fprintf('You can use the following keyboard buttons in the databrowser\n')
 fprintf('1-9                : select artifact type 1-9\n');
 fprintf('shift 1-9          : select previous artifact of type 1-9\n');
 fprintf('                     (does not work with numpad keys)\n');

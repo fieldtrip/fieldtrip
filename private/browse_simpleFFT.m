@@ -33,7 +33,7 @@ xaxis = freqoi;
 % make figure window for fft
 ffth = figure('name',cfg.figurename,'numbertitle','off','units','normalized');
 % set button
-butth = uicontrol('tag', 'simplefft_l2', 'parent', ffth, 'units', 'normalized', 'style', 'togglebutton', 'string','log of power','position', [0.87, 0.6 , 0.12, 0.10],  'value',1,'callback',{@draw_simple_fft_cb});
+butth = uicontrol('tag', 'simplefft_l2', 'parent', ffth, 'units', 'normalized', 'style', 'togglebutton', 'string','log10 of power','position', [0.87, 0.6 , 0.12, 0.10],  'value',1,'callback',{@draw_simple_fft_cb});
 uicontrol('tag', 'simplefft_l2_chansel', 'parent', ffth, 'units', 'normalized', 'style', 'pushbutton', 'string','select channels','position', [0.87, 0.45 , 0.12, 0.10],'callback',{@selectchan_fft_cb});
 
 % put dat in fig (sparse)
@@ -75,12 +75,12 @@ fftopt = getappdata(ffth, 'fftopt');
 % clear axis (for switching)
 cla
 
-% switch log or nonlog
+% switch log10 or nonlog10
 if togglestate == 0
   dat = fftopt.fftdat;
   set(h,'backgroundColor',[0.8 0.8 0.8])
 elseif togglestate == 1
-  dat = log(fftopt.fftdat);
+  dat = log10(fftopt.fftdat);
   set(h,'backgroundColor','g')
 end
 
@@ -94,17 +94,17 @@ for ichan = 1:size(dat,1)
   color = chancolors(ichan,:);
   ft_plot_vector(fftopt.xaxis, dat(ichan,:), 'box', false, 'color', color)
 end
-ylabel('log(power)')
+ylabel('log10(power)')
 xlabel('frequency (hz)')
 yrange = abs(max(max(dat)) - min(min(dat)));
 axis([fftopt.xaxis(1) fftopt.xaxis(end) (min(min(dat)) - yrange.*.1) (max(max(dat)) + yrange*.1)]) 
 
-% switch log or nonlog
+% switch log10 or nonlog10
 if togglestate == 0
   ylabel('power')
   axis([fftopt.xaxis(1) fftopt.xaxis(end) 0 (max(max(dat)) + yrange*.1)]) 
 elseif togglestate == 1
-  ylabel('log(power)')
+  ylabel('log10(power)')
   axis([fftopt.xaxis(1) fftopt.xaxis(end) (min(min(dat)) - yrange.*.1) (max(max(dat)) + yrange*.1)]) 
 end
 set(gca,'Position', [0.13 0.11 0.725 0.815])
