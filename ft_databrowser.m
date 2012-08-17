@@ -256,10 +256,14 @@ if hasdata
   Nchans  = length(chansel);
   
   if isempty(cfg.continuous)
-    if length(data.trial) == 1 && ~istimelock
+    if numel(data.trial) == 1 && ~istimelock
       cfg.continuous = 'yes';
     else
       cfg.continuous = 'no';
+    end
+  else
+    if strcmp(cfg.continuous, 'yes') && (numel(data.trial) > 1)
+      warning('interpreting trial-based data as continous, time-axis is no longer appropriate. t(0) now corresponds to the first sample of the first trial, and t(end) to the last sample of the last trial')
     end
   end
   
@@ -545,9 +549,9 @@ else
   opt.orgdata   = [];      % this means that it will look in cfg.dataset
 end
 if strcmp(cfg.continuous, 'yes')
-  opt.trialname = 'segment';  % this will be shown in the figure title
+  opt.trialviewtype = 'segment';  
 else
-  opt.trialname = 'trial';    % this will be shown in the figure title
+  opt.trialviewtype = 'trial';   
 end
 opt.artdata     = artdata;
 opt.hdr         = hdr;
@@ -615,7 +619,7 @@ set(h, 'WindowButtonMotionFcn', {@ft_select_range, 'multiple', false, 'xrange', 
 
 
 % make the user interface elements for the data view
-uicontrol('tag', 'group1', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', opt.trialname, 'userdata', 't')
+uicontrol('tag', 'group1', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', opt.trialviewtype, 'userdata', 't')
 uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', 'leftarrow')
 uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', 'rightarrow')
 
@@ -779,10 +783,10 @@ if strcmp(cfg.continuous, 'no')
     end
     datbegsample = min(opt.trlorg(opt.trllock,1));
     datendsample = max(opt.trlorg(opt.trllock,2));
-    smppertrl  = round(opt.fsample * cfg.blocksize);
-    begsamples = datbegsample:smppertrl:datendsample;
-    endsamples = datbegsample+smppertrl-1:smppertrl:datendsample;
-    offset     = (((1:numel(begsamples))-1)*smppertrl) + opt.trlorg(opt.trllock,3);
+    smpperseg  = round(opt.fsample * cfg.blocksize);
+    begsamples = datbegsample:smpperseg:datendsample;
+    endsamples = datbegsample+smpperseg-1:smpperseg:datendsample;
+    offset     = (((1:numel(begsamples))-1)*smpperseg) + opt.trlorg(opt.trllock,3);
     if numel(endsamples)<numel(begsamples)
       endsamples(end+1) = datendsample;
     end
@@ -792,17 +796,17 @@ if strcmp(cfg.continuous, 'no')
     trlvis(:,3) = offset;
     % determine length of each trial, and determine the offset with the current requested zoom-level
     trllen   = (trlvis(:,2) - trlvis(:,1)+1);
-    sizediff = smppertrl - trllen;
+    sizediff = smpperseg - trllen;
     opt.nanpaddata = sizediff;
     
     if isfield(opt, 'trlvis')
       % update the current trial counter and try to keep the current sample the same
       opt.trlop   = nearest(begsamples, thissegbeg);
     end
-    % update trialname
-    opt.trialname = 'trialsegment'; 
+    % update trialviewtype
+    opt.trialviewtype = 'trialsegment'; 
     % update button
-    set(findobj(get(h,'children'),'string','trial'),'string',opt.trialname);
+    set(findobj(get(h,'children'),'string','trial'),'string','segment');
     %%%%%%%%%
     
 
@@ -814,16 +818,16 @@ if strcmp(cfg.continuous, 'no')
     if ~isempty(opt.trllock)
       opt.trlop = opt.trllock;
     end
-    smppertrl  = round(opt.fsample * cfg.blocksize);
+    smpperseg  = round(opt.fsample * cfg.blocksize);
     % determine length of each trial, and determine the offset with the current requested zoom-level
     trllen   = (trlvis(:,2) - trlvis(:,1)+1);
-    sizediff = smppertrl - trllen;
+    sizediff = smpperseg - trllen;
     opt.nanpaddata = sizediff;
     
-    % update trialname
-    opt.trialname = 'trial';
+    % update trialviewtype
+    opt.trialviewtype = 'trial';
     % update button
-    set(findobj(get(h,'children'),'string','trialsegment'),'string',opt.trialname);
+    set(findobj(get(h,'children'),'string','trialsegment'),'string',opt.trialviewtype);
     
     % release trial lock
     opt.trllock = [];
@@ -834,51 +838,41 @@ if strcmp(cfg.continuous, 'no')
   opt.trlvis  = trlvis;
 else
   % construct a trial definition for visualisation
-  if isfield(opt, 'trlvis')
+  if isfield(opt, 'trlvis') % if present, remember where we were
     thistrlbeg = opt.trlvis(opt.trlop,1);
-    thistrlend = opt.trlvis(opt.trlop,2);
-    % remember a representative sample of the current trial
-    % thissample = round((thistrlbeg+thistrlend)/2);
-    thissample = thistrlbeg;
   end
   % look at cfg.blocksize and make opt.trl accordingly
-  % if original data contains more than one trial, it will fail in ft_fetch_data
   datbegsample = min(opt.trlorg(:,1));
   datendsample = max(opt.trlorg(:,2));
-  smppertrl  = round(opt.fsample * cfg.blocksize);
-  begsamples = datbegsample:smppertrl:datendsample;
-  endsamples = datbegsample+smppertrl-1:smppertrl:datendsample;
+  smpperseg  = round(opt.fsample * cfg.blocksize);
+  begsamples = datbegsample:smpperseg:datendsample;
+  endsamples = datbegsample+smpperseg-1:smpperseg:datendsample;
   if numel(endsamples)<numel(begsamples)
     endsamples(end+1) = datendsample;
   end
   trlvis = [];
   trlvis(:,1) = begsamples';
   trlvis(:,2) = endsamples';
-  
-  % The following was here originally:
-  %if size(opt.trlorg,1) > 1 || isempty(opt.orgdata)
-    % offset is now (re)defined that 1st sample is time 0
-    %trlvis(:,3) = begsamples-1;
-  %else
-    % offset according to original time axis
-    %trlvis(:,3) = opt.trlorg(3) + begsamples - opt.trlorg(1);
-  %end
-  % I removed it and added
-  trlvis(:,3) = begsamples - 1;
-  % instead, which solves bug 1160. (eelspa, 16-nov-2011)
-  % Added this comment because I was not sure what the purpose of the
-  % original code was.
-  
+  % compute the offset. In case if opt.trlorg has multiple trials, the first sample is t=0, otherwise use the offset in opt.trlorg
+  if size(opt.trlorg,1)==1
+    offset = begsamples - repmat(begsamples(1),[1 numel(begsamples)]); % offset for all segments compared to the first
+    offset = offset + opt.trlorg(1,3);
+    trlvis(:,3) = offset;
+  else 
+    offset = begsamples - repmat(begsamples(1),[1 numel(begsamples)]);
+    trlvis(:,3) = offset;
+  end
+ 
   if isfield(opt, 'trlvis')
     % update the current trial counter and try to keep the current sample the same
     % opt.trlop   = nearest(round((begsamples+endsamples)/2), thissample);
-    opt.trlop   = nearest(begsamples, thissample);
+    opt.trlop   = nearest(begsamples, thistrlbeg);
   end
   opt.trlvis  = trlvis;
   
   % NaN-padding when horizontal scaling is bigger than the data
   % two possible situations, 1) zoomed out so far that all data is one segment, or 2) multiple segments but last segment is smaller than the rest
-  sizediff = smppertrl-(endsamples-begsamples+1);
+  sizediff = smpperseg-(endsamples-begsamples+1);
   opt.nanpaddata = sizediff;
 end % if continuous
 setappdata(h, 'opt', opt);
@@ -926,18 +920,13 @@ range = range * (opt.hlim(2) - opt.hlim(1)) + opt.hlim(1);   % 0 becomes hlim(1)
 begsample = opt.trlvis(opt.trlop,1);
 endsample = opt.trlvis(opt.trlop,2);
 offset    = opt.trlvis(opt.trlop,3);
+
 % determine the selection
-if strcmp(opt.trialname, 'trial') || strcmp(opt.trialname, 'trialsegment')
-  % this is appropriate when the offset is defined according to a
-  % different trigger in each trial, which is usually the case in trial data
-  begsel = round(range(1)*opt.fsample+begsample-offset-1);
-  endsel = round(range(2)*opt.fsample+begsample-offset);
-elseif strcmp(opt.trialname, 'segment')
-  % this is appropriate when the offset is defined according to
-  % one trigger, which is always the case in segment data [I think ingnie]
-  begsel = round(range(1)*opt.fsample+1);
-  endsel = round(range(2)*opt.fsample+1);
-end
+begsel = round(range(1)*opt.fsample+begsample-offset-1);
+endsel = round(range(2)*opt.fsample+begsample-offset);
+% artifact selection is now always based on begsample/endsample/offset
+% -roevdmei
+
 % the selection should always be confined to the current trial
 begsel = max(begsample, begsel);
 endsel = min(endsample, endsel);
@@ -981,8 +970,8 @@ else
   funhandle = ft_getuserfun(cmenulab,'browse');
   funcfg = cfg.selcfg{selfunind};
   % get windowname and give as input (can be used for the other functions as well, not implemented yet)
-  if ~strcmp(opt.trialname,'trialsegment')
-    str = sprintf('%s %d/%d, time from %g to %g s', opt.trialname, opt.trlop, size(opt.trlvis,1), seldata.time{1}(1), seldata.time{1}(end));
+  if ~strcmp(opt.trialviewtype,'trialsegment')
+    str = sprintf('%s %d/%d, time from %g to %g s', opt.trialviewtype, opt.trlop, size(opt.trlvis,1), seldata.time{1}(1), seldata.time{1}(end));
   else
     str = sprintf('trial %d/%d: segment: %d/%d , time from %g to %g s', opt.trllock, size(opt.trlorg,1), opt.trlop, size(opt.trlvis,1), seldata.time{1}(1), seldata.time{1}(end));
   end
@@ -1220,8 +1209,8 @@ switch key
     cleanup_cb(h);
   case 't'
     % select the trial to display
-    if ~strcmp(opt.trialname,'trialsegment')
-      str = sprintf('%s to display (current trial = %d/%d)', opt.trialname, opt.trlop, size(opt.trlvis,1));
+    if ~strcmp(opt.trialviewtype,'trialsegment')
+      str = sprintf('%s to display (current trial = %d/%d)', opt.trialviewtype, opt.trlop, size(opt.trlvis,1));
     else
       str = sprintf('segment to display (current segment = %d/%d)', opt.trlop, size(opt.trlvis,1));
     end  
@@ -1723,8 +1712,8 @@ else
   endtim = tim(end);
 end
 
-if ~strcmp(opt.trialname,'trialsegment')
-  str = sprintf('%s %d/%d, time from %g to %g s', opt.trialname, opt.trlop, size(opt.trlvis,1), startim, endtim);
+if ~strcmp(opt.trialviewtype,'trialsegment')
+  str = sprintf('%s %d/%d, time from %g to %g s', opt.trialviewtype, opt.trlop, size(opt.trlvis,1), startim, endtim);
 else
   str = sprintf('trial %d/%d: segment: %d/%d , time from %g to %g s', opt.trllock, size(opt.trlorg,1), opt.trlop, size(opt.trlvis,1), startim, endtim);
 end
