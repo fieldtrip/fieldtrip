@@ -21,21 +21,20 @@ function ft_realtime_headlocalizer(cfg)
 %   cfg.dataformat    = string, default is determined automatic
 %   cfg.headerformat  = string, default is determined automatic
 %   cfg.eventformat   = string, default is determined automatic
-%
-% To stop the realtime function, you have to press Ctrl-C
 
-% Copyright (C) 2008-2010, Robert Oostenveld, Arjen Stolk, Ana Todorovic, Stefan Klanke
+
+% Copyright (C) 2008-2012, Robert Oostenveld, Arjen Stolk, Ana Todorovic, Stefan Klanke
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
-
-if ~isfield(cfg, 'template'),       cfg.template = [];                   end
-if ~isfield(cfg, 'blocksize'),      cfg.blocksize = 1;                   end % in seconds
-if ~isfield(cfg, 'bufferdata'),     cfg.bufferdata = 'last';             end % first or last
-if ~isfield(cfg, 'dataset'),        cfg.dataset = 'buffer://odin:1972';  end % location of the buffer/dataset
-% distance from fiducial coordinate that makes the localizer turn green or orange
-if ~isfield(cfg, 'accuracy_green'),       cfg.accuracy_green = .15;      end
-if ~isfield(cfg, 'accuracy_orange'),      cfg.accuracy_orange = .3;      end
+% defaults
+ft_defaults
+cfg.template        = ft_getopt(cfg, 'template',         []); % template dataset containing the references
+cfg.blocksize       = ft_getopt(cfg, 'blocksize',         1); % in seconds
+cfg.bufferdata      = ft_getopt(cfg, 'bufferdata',   'last'); % first (replay) or last (real-time)
+cfg.dataset         = ft_getopt(cfg, 'dataset', 'buffer://odin:1972'); % location of the buffer/dataset
+cfg.accuracy_green  = ft_getopt(cfg, 'accuracy_green',  .15); % green when within this distance from reference
+cfg.accuracy_orange = ft_getopt(cfg, 'accuracy_orange',  .3); % orange when within this distance from reference
 
 % translate dataset into datafile+headerfile
 cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
@@ -43,25 +42,27 @@ cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
 % read the template coil positions
 if ~isempty(cfg.template)
     template = ft_read_headshape(cfg.template, 'coordinates', 'dewar');
+    reference(1,:) = [template.fid.pnt(1,1), template.fid.pnt(1,2), template.fid.pnt(1,3)]; % nasion
+    reference(2,:) = [template.fid.pnt(2,1), template.fid.pnt(2,2), template.fid.pnt(2,3)];
+    reference(3,:) = [template.fid.pnt(3,1), template.fid.pnt(3,2), template.fid.pnt(3,3)];
 else
-    template = [];
+    reference = [];
 end
 
 % ensure that the persistent variables related to caching are cleared
 clear ft_read_header
+
 % start by reading the header from the realtime buffer
 hdr = ft_read_header(cfg.headerfile, 'cache', true);
+
+% MEG sensors in CTF dewar space
+sens = headcoordinates2ctfdewar(hdr.orig.hc.dewar(:,1)', hdr.orig.hc.dewar(:,2)', hdr.orig.hc.dewar(:,3)', hdr.grad);
 
 % define a subset of channels for reading, only "headloc" type channels are relevant
 if strcmp(cfg.dataset, 'buffer://odin:1972');
     chanindx = 1:9; % odin buffer specific
 else
-    chanindx = strmatch('headloc', ft_chantype(hdr));
-    % this is a mere hack for the Donders MEG system, I assume a bug in
-    % chantype - Jörn
-    if isempty(chanindx) 
-        chanindx = strmatch('HLC', hdr.label);
-    end
+    [~, chanindx] = match_str('headloc', ft_chantype(hdr));
 end
 
 if isempty(chanindx)
@@ -70,15 +71,25 @@ end
 
 % determine the size of blocks to process
 blocksize = round(cfg.blocksize * hdr.Fs);
-
 prevSample  = 0;
 count       = 0;
-UpdatedReference = [];
+
+% initiate figure
+hMainFig = figure;
+set(hMainFig, 'UserData', 1); % initialize the flag variable
+set(hMainFig, 'KeyPressFcn', {@key_sub});
+
+% insert gui variables
+info           = [];
+info.cfg       = cfg;
+info.reference = reference;
+info.sens      = sens;
+guidata(hMainFig, info);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this is the general BCI loop where realtime incoming data is handled
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-while true
+while (get(hMainFig, 'UserData') == 1) % while the flag is one, the loop continues
     
     % determine number of samples available in buffer
     hdr = ft_read_header(cfg.headerfile, 'cache', true);
@@ -116,23 +127,31 @@ while true
         data.label    = hdr.label(chanindx);
         data.hdr      = hdr;
         data.fsample  = hdr.Fs;
-                
-        x1i = strmatch('HLC0011', data.label);
-        y1i = strmatch('HLC0012', data.label);
-        z1i = strmatch('HLC0013', data.label);
-        x2i = strmatch('HLC0021', data.label);
-        y2i = strmatch('HLC0022', data.label);
-        z2i = strmatch('HLC0023', data.label);
-        x3i = strmatch('HLC0031', data.label);
-        y3i = strmatch('HLC0032', data.label);
-        z3i = strmatch('HLC0033', data.label);
+        clear dat;
         
-        % convert from meter to cm
-        coil1 = data.trial{1}([x1i y1i z1i],:) * 100;
-        coil2 = data.trial{1}([x2i y2i z2i],:) * 100;
-        coil3 = data.trial{1}([x3i y3i z3i],:) * 100;
+        % assign the channels to the resp. coil coordinates
+        [~, x1] = match_str('HLC0011', data.label);
+        [~, y1] = match_str('HLC0012', data.label);
+        [~, z1] = match_str('HLC0013', data.label);
+        [~, x2] = match_str('HLC0021', data.label);
+        [~, y2] = match_str('HLC0022', data.label);
+        [~, z2] = match_str('HLC0023', data.label);
+        [~, x3] = match_str('HLC0031', data.label);
+        [~, y3] = match_str('HLC0032', data.label);
+        [~, z3] = match_str('HLC0033', data.label);
         
-        figure(1);
+        % get gui variables
+        info = guidata(hMainFig);
+        
+        % convert from meter to cm and assign to the resp. coil
+        info.coil1 = data.trial{1}([x1 y1 z1],:) * 100;
+        info.coil2 = data.trial{1}([x2 y2 z2],:) * 100;
+        info.coil3 = data.trial{1}([x3 y3 z3],:) * 100;      
+        
+        % store gui variables
+        guidata(hMainFig, info);
+        
+        % DRAW LEFT PANEL - BACK VIEW
         a = subplot(1,2,1);
         h = get(a, 'children');
         hold on;
@@ -142,213 +161,29 @@ while true
             delete(h);
         end
         
-        if ~isempty(template)
-            % plot the three fiducial positions from the template
-            % headcoordinate file
-            plot3(template.fid.pnt(1,1), template.fid.pnt(1,2), template.fid.pnt(1,3), 'k^', 'MarkerSize',27,'LineWidth',2);
-            plot3(template.fid.pnt(2,1), template.fid.pnt(2,2), template.fid.pnt(2,3), 'ko', 'MarkerSize',27,'LineWidth',2);
-            plot3(template.fid.pnt(3,1), template.fid.pnt(3,2), template.fid.pnt(3,3), 'ko', 'MarkerSize',27,'LineWidth',2);
-        end
-        
-        % 'u' keypress updates the reference coordinates
-        keypress = get(1,'CurrentCharacter');
-        if keypress == 'u'
-            fprintf('>>> Updating reference coordinates <<< \n')
-            
-            % update the reference positions
-            UpdatedReference(1,1) = coil1(1,end);
-            UpdatedReference(1,2) = coil1(2,end);
-            UpdatedReference(1,3) = coil1(3,end);
-            UpdatedReference(2,1) = coil2(1,end);
-            UpdatedReference(2,2) = coil2(2,end);
-            UpdatedReference(2,3) = coil2(3,end);
-            UpdatedReference(3,1) = coil3(1,end);
-            UpdatedReference(3,2) = coil3(2,end);
-            UpdatedReference(3,3) = coil3(3,end);
- 
-            template = []; % switch off input template
-            set(1,'CurrentCharacter','o'); % update switch
-        end
-        
-        if ~isempty(UpdatedReference)
-            % plot the updated reference
-            plot3(UpdatedReference(1,1),UpdatedReference(1,2),UpdatedReference(1,3), 'k^', 'LineWidth',2,'MarkerSize',27) % nasion
-            plot3(UpdatedReference(2,1),UpdatedReference(2,2),UpdatedReference(2,3), 'ko', 'LineWidth',2,'MarkerSize',27) % right ear
-            plot3(UpdatedReference(3,1),UpdatedReference(3,2),UpdatedReference(3,3), 'ko', 'LineWidth',2,'MarkerSize',27) % left ear
-        end
-        
-        % plot the coil positons
-        plot3(coil1(1,:),coil1(2,:),coil1(3,:), 'k^', 'LineWidth',1,'MarkerSize',3) % nasion
-        plot3(coil2(1,:),coil2(2,:),coil2(3,:), 'ko', 'LineWidth',1,'MarkerSize',3) % right ear
-        plot3(coil3(1,:),coil3(2,:),coil3(3,:), 'ko', 'LineWidth',1,'MarkerSize',3) % left ear
-        
-        % compute Center of Mass
-        com(1) = (coil2(1,end) + coil3(1,end)) / 2;
-        com(2) = (coil2(2,end) + coil3(2,end)) / 2;
-        com(3) = (coil2(3,end) + coil3(3,end)) / 2;
-        
-        % create two vectors from the vertices: nasion, CoM, P (which has nasion_x and _y and CoM_z)
-        v1 = [coil1(1,end) - com(1), coil1(2,end) - com(2), coil1(3,end) - com(3)];
-        v2 = [coil1(1,end) - com(1), coil1(2,end) - com(2), com(3) - com(3)];
-        % find the angle
-        theta = acos(dot(v1,v2)/(norm(v1)*norm(v2)));
-        % convert it to degrees
-        angle_nasion_sagittal = (theta * (180/pi));
-        
-        % check for nasion position
-        if ~isempty(UpdatedReference)
-            if abs(UpdatedReference(1,1))-cfg.accuracy_green < abs(coil1(1,end)) && abs(coil1(1,end)) < abs(UpdatedReference(1,1))+cfg.accuracy_green ...
-                    && abs(UpdatedReference(1,2))-cfg.accuracy_green < abs(coil1(2,end)) && abs(coil1(2,end)) < abs(UpdatedReference(1,2))+cfg.accuracy_green ...
-                    && abs(UpdatedReference(1,3))-cfg.accuracy_green < abs(coil1(3,end)) && abs(coil1(3,end)) < abs(UpdatedReference(1,3))+cfg.accuracy_green
-                plot3(coil1(1,end),coil1(2,end),coil1(3,end),'g^', 'MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
-                head1 = true;
-            elseif abs(UpdatedReference(1,1))-cfg.accuracy_orange < abs(coil1(1,end)) && abs(coil1(1,end)) < abs(UpdatedReference(1,1))+cfg.accuracy_orange ...
-                    && abs(UpdatedReference(1,2))-cfg.accuracy_orange < abs(coil1(2,end)) && abs(coil1(2,end)) < abs(UpdatedReference(1,2))+cfg.accuracy_orange ...
-                    && abs(UpdatedReference(1,3))-cfg.accuracy_orange < abs(coil1(3,end)) && abs(coil1(3,end)) < abs(UpdatedReference(1,3))+cfg.accuracy_orange
-                plot3(coil1(1,end),coil1(2,end),coil1(3,end),'y^', 'MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
-                head1 = false;
-            else % when not in correct position
-                plot3(coil1(1,end),coil1(2,end), coil1(3,end),'r^', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
-                head1 = false;
-            end          
-        elseif ~isempty(template)
-            if abs(template.fid.pnt(1,1))-cfg.accuracy_green < abs(coil1(1,end)) && abs(coil1(1,end)) < abs(template.fid.pnt(1,1))+cfg.accuracy_green ...
-                    && abs(template.fid.pnt(1,2))-cfg.accuracy_green < abs(coil1(2,end)) && abs(coil1(2,end)) < abs(template.fid.pnt(1,2))+cfg.accuracy_green ...
-                    && abs(template.fid.pnt(1,3))-cfg.accuracy_green < abs(coil1(3,end)) && abs(coil1(3,end)) < abs(template.fid.pnt(1,3))+cfg.accuracy_green
-                plot3(coil1(1,end),coil1(2,end),coil1(3,end),'g^', 'MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
-                head1 = true;
-            elseif abs(template.fid.pnt(1,1))-cfg.accuracy_orange < abs(coil1(1,end)) && abs(coil1(1,end)) < abs(template.fid.pnt(1,1))+cfg.accuracy_orange ...
-                    && abs(template.fid.pnt(1,2))-cfg.accuracy_orange < abs(coil1(2,end)) && abs(coil1(2,end)) < abs(template.fid.pnt(1,2))+cfg.accuracy_orange ...
-                    && abs(template.fid.pnt(1,3))-cfg.accuracy_orange < abs(coil1(3,end)) && abs(coil1(3,end)) < abs(template.fid.pnt(1,3))+cfg.accuracy_orange
-                plot3(coil1(1,end),coil1(2,end),coil1(3,end),'y^', 'MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
-                head1 = false;
-            else % when not in correct position
-                plot3(coil1(1,end),coil1(2,end), coil1(3,end),'r^', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
-                head1 = false;
-            end
-        else
-            plot3(coil1(1,end),coil1(2,end), coil1(3,end),'r^', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
-            head1 = false;
-        end
-        
-        % check for left ear position
-        if ~isempty(UpdatedReference)
-            if abs(UpdatedReference(2,1))-cfg.accuracy_green < abs(coil2(1,end)) && abs(coil2(1,end)) < abs(UpdatedReference(2,1))+cfg.accuracy_green ...
-                    && abs(UpdatedReference(2,2))-cfg.accuracy_green < abs(coil2(2,end)) && abs(coil2(2,end)) < abs(UpdatedReference(2,2))+cfg.accuracy_green ...
-                    && abs(UpdatedReference(2,3))-cfg.accuracy_green < abs(coil2(3,end)) && abs(coil2(3,end)) < abs(UpdatedReference(2,3))+cfg.accuracy_green
-                plot3(coil2(1,end),coil2(2,end),coil2(3,end),'go', 'MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
-                head2 = true;
-            elseif abs(UpdatedReference(2,1))-cfg.accuracy_orange < abs(coil2(1,end)) && abs(coil2(1,end)) < abs(UpdatedReference(2,1))+cfg.accuracy_orange ...
-                    && abs(UpdatedReference(2,2))-cfg.accuracy_orange < abs(coil2(2,end)) && abs(coil2(2,end)) < abs(UpdatedReference(2,2))+cfg.accuracy_orange ...
-                    && abs(UpdatedReference(2,3))-cfg.accuracy_orange < abs(coil2(3,end)) && abs(coil2(3,end)) < abs(UpdatedReference(2,3))+cfg.accuracy_orange
-                plot3(coil2(1,end),coil2(2,end),coil2(3,end),'yo', 'MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
-                head2 = false;
-            else % when not in correct position
-                plot3(coil2(1,end),coil2(2,end), coil2(3,end),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
-                head2 = false;
-            end
-        elseif ~isempty(template)
-            if abs(template.fid.pnt(2,1))-cfg.accuracy_green < abs(coil2(1,end)) && abs(coil2(1,end)) < abs(template.fid.pnt(2,1))+cfg.accuracy_green ...
-                    && abs(template.fid.pnt(2,2))-cfg.accuracy_green < abs(coil2(2,end)) && abs(coil2(2,end)) < abs(template.fid.pnt(2,2))+cfg.accuracy_green ...
-                    && abs(template.fid.pnt(2,3))-cfg.accuracy_green < abs(coil2(3,end)) && abs(coil2(3,end)) < abs(template.fid.pnt(2,3))+cfg.accuracy_green
-                plot3(coil2(1,end),coil2(2,end),coil2(3,end),'go', 'MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
-                head2 = true;
-            elseif abs(template.fid.pnt(2,1))-cfg.accuracy_orange < abs(coil2(1,end)) && abs(coil2(1,end)) < abs(template.fid.pnt(2,1))+cfg.accuracy_orange ...
-                    && abs(template.fid.pnt(2,2))-cfg.accuracy_orange < abs(coil2(2,end)) && abs(coil2(2,end)) < abs(template.fid.pnt(2,2))+cfg.accuracy_orange ...
-                    && abs(template.fid.pnt(2,3))-cfg.accuracy_orange < abs(coil2(3,end)) && abs(coil2(3,end)) < abs(template.fid.pnt(2,3))+cfg.accuracy_orange
-                plot3(coil2(1,end),coil2(2,end),coil2(3,end),'yo', 'MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
-                head2 = false;
-            else % when not in correct position
-                plot3(coil2(1,end),coil2(2,end), coil2(3,end),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
-                head2 = false;
-            end
-        else
-            plot3(coil2(1,end),coil2(2,end), coil2(3,end),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
-            head2 = false;
-        end
-        
-        % check for right ear position
-        if ~isempty(UpdatedReference)
-            if abs(UpdatedReference(3,1))-cfg.accuracy_green < abs(coil3(1,end)) && abs(coil3(1,end)) < abs(UpdatedReference(3,1))+cfg.accuracy_green  ...
-                    && abs(UpdatedReference(3,2))-cfg.accuracy_green  < abs(coil3(2,end)) && abs(coil3(2,end)) < abs(UpdatedReference(3,2))+cfg.accuracy_green  ...
-                    && abs(UpdatedReference(3,3))-cfg.accuracy_green  < abs(coil3(3,end)) && abs(coil3(3,end)) < abs(UpdatedReference(3,3))+cfg.accuracy_green
-                plot3(coil3(1,end),coil3(2,end),coil3(3,end),'go', 'MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
-                head3 = true;
-            elseif abs(UpdatedReference(3,1))-cfg.accuracy_orange < abs(coil3(1,end)) && abs(coil3(1,end)) < abs(UpdatedReference(3,1))+cfg.accuracy_orange ...
-                    && abs(UpdatedReference(3,2))-cfg.accuracy_orange < abs(coil3(2,end)) && abs(coil3(2,end)) < abs(UpdatedReference(3,2))+cfg.accuracy_orange ...
-                    && abs(UpdatedReference(3,3))-cfg.accuracy_orange < abs(coil3(3,end)) && abs(coil3(3,end)) < abs(UpdatedReference(3,3))+cfg.accuracy_orange
-                plot3(coil3(1,end),coil3(2,end),coil3(3,end),'yo', 'MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
-                head3 = false;
-            else % when not in correct position
-                plot3(coil3(1,end),coil3(2,end), coil3(3,end),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
-                head3 = false;
-            end
-        elseif ~isempty(template)
-            if abs(template.fid.pnt(3,1))-cfg.accuracy_green < abs(coil3(1,end)) && abs(coil3(1,end)) < abs(template.fid.pnt(3,1))+cfg.accuracy_green  ...
-                    && abs(template.fid.pnt(3,2))-cfg.accuracy_green  < abs(coil3(2,end)) && abs(coil3(2,end)) < abs(template.fid.pnt(3,2))+cfg.accuracy_green  ...
-                    && abs(template.fid.pnt(3,3))-cfg.accuracy_green  < abs(coil3(3,end)) && abs(coil3(3,end)) < abs(template.fid.pnt(3,3))+cfg.accuracy_green
-                plot3(coil3(1,end),coil3(2,end),coil3(3,end),'go', 'MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
-                head3 = true;
-            elseif abs(template.fid.pnt(3,1))-cfg.accuracy_orange < abs(coil3(1,end)) && abs(coil3(1,end)) < abs(template.fid.pnt(3,1))+cfg.accuracy_orange ...
-                    && abs(template.fid.pnt(3,2))-cfg.accuracy_orange < abs(coil3(2,end)) && abs(coil3(2,end)) < abs(template.fid.pnt(3,2))+cfg.accuracy_orange ...
-                    && abs(template.fid.pnt(3,3))-cfg.accuracy_orange < abs(coil3(3,end)) && abs(coil3(3,end)) < abs(template.fid.pnt(3,3))+cfg.accuracy_orange
-                plot3(coil3(1,end),coil3(2,end),coil3(3,end),'yo', 'MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
-                head3 = false;
-            else % when not in correct position
-                plot3(coil3(1,end),coil3(2,end), coil3(3,end),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
-                head3 = false;
-            end
-        else
-            plot3(coil3(1,end),coil3(2,end), coil3(3,end),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
-            head3 = false;
-        end
-        
-        % draw 3d head
-        cc = circumcenter(coil1,coil2,coil3);
-        x_radius = sqrt((coil2(1,end) - cc(1))^2 + (coil2(2,end) - cc(2))^2);
-        y_radius = sqrt((coil3(1,end) - cc(1))^2 + (coil3(2,end) - cc(2))^2);
-        [xe, ye, ze] = ellipsoid(cc(1),cc(2),cc(3),x_radius,y_radius,11);
-        hh = surfl(xe, ye, ze);
-        shading interp
-        if head1 == true && head2 == true && head3 == true
-            colormap cool
-        else
-            colormap hot
-        end
-        alpha(.15)
-        
-        % plot text
-        if ~isempty(template)
-            text(-8,8,template.fid.pnt(2,3),'Left','FontSize',15);
-            text(6,-6,template.fid.pnt(3,3),'Right','FontSize',15);
-        end
+        % draw the color-coded head and distances from the references
+        draw_sub(hMainFig);
         
         % show the update key
-        str = sprintf('Press U to update the reference coordinates');
+        str = sprintf('Press "u" to update the reference coordinates \n Press "s" to toggle on/off sensors/dewar display \n Press "q" to stop the application \n');
         title(str);
         
         if isempty(h)
             % only done once
             grid on
-            if angle_nasion_sagittal > 45
-                az = -45;
-                el = -90;
-            else
-                az = -45;
-                el = 0;
-            end
             xlabel('x (cm)');
             ylabel('y (cm)');
             zlabel('z (cm)');
-            set(gca, 'xtick', -30:2.0:30)
-            set(gca, 'ytick', -30:2.0:30)
-            set(gca, 'ztick', -60:2.0:0) % note the different scaling
-            view(az, el)
+            set(gca, 'xtick', -20:2:20)
+            set(gca, 'ytick', -20:2:20)
+            set(gca, 'ztick', -50:2:0) % note the different scaling
+            view(-45, 90)
             % axis square
             axis vis3d
             axis manual
         end
         
+        % DRAW RIGHT PANEL - TOP VIEW
         b = subplot(1,2,2);
         i = get(b, 'children');
         hold on;
@@ -358,150 +193,25 @@ while true
             delete(i);
         end
         
-        if ~isempty(template)
-            % plot the three fiducial positions from the template headcoordinate file
-            plot3(template.fid.pnt(1,1), template.fid.pnt(1,2), template.fid.pnt(1,3), 'k^', 'MarkerSize',27,'LineWidth',2);
-            plot3(template.fid.pnt(2,1), template.fid.pnt(2,2), template.fid.pnt(2,3), 'ko', 'MarkerSize',27,'LineWidth',2);
-            plot3(template.fid.pnt(3,1), template.fid.pnt(3,2), template.fid.pnt(3,3), 'ko', 'MarkerSize',27,'LineWidth',2);
-        end
-        
-        if ~isempty(UpdatedReference)
-            % plot the updated reference
-            plot3(UpdatedReference(1,1),UpdatedReference(1,2),UpdatedReference(1,3), 'k^', 'LineWidth',2,'MarkerSize',27) % nasion
-            plot3(UpdatedReference(2,1),UpdatedReference(2,2),UpdatedReference(2,3), 'ko', 'LineWidth',2,'MarkerSize',27) % right ear
-            plot3(UpdatedReference(3,1),UpdatedReference(3,2),UpdatedReference(3,3), 'ko', 'LineWidth',2,'MarkerSize',27) % left ear
-        end
-        
-        % plot the coil positons
-        plot3(coil1(1,:),coil1(2,:),coil1(3,:), 'k^', 'LineWidth',1,'MarkerSize',3) % nasion
-        plot3(coil2(1,:),coil2(2,:),coil2(3,:), 'ko', 'LineWidth',1,'MarkerSize',3) % right ear
-        plot3(coil3(1,:),coil3(2,:),coil3(3,:), 'ko', 'LineWidth',1,'MarkerSize',3) % left ear
-        
-        % check for nasion position
-        if ~isempty(UpdatedReference)
-            if abs(UpdatedReference(1,1))-cfg.accuracy_green < abs(coil1(1,end)) && abs(coil1(1,end)) < abs(UpdatedReference(1,1))+cfg.accuracy_green ...
-                    && abs(UpdatedReference(1,2))-cfg.accuracy_green < abs(coil1(2,end)) && abs(coil1(2,end)) < abs(UpdatedReference(1,2))+cfg.accuracy_green ...
-                    && abs(UpdatedReference(1,3))-cfg.accuracy_green < abs(coil1(3,end)) && abs(coil1(3,end)) < abs(UpdatedReference(1,3))+cfg.accuracy_green
-                plot3(coil1(1,end),coil1(2,end),coil1(3,end),'g^', 'MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
-            elseif abs(UpdatedReference(1,1))-cfg.accuracy_orange < abs(coil1(1,end)) && abs(coil1(1,end)) < abs(UpdatedReference(1,1))+cfg.accuracy_orange ...
-                    && abs(UpdatedReference(1,2))-cfg.accuracy_orange < abs(coil1(2,end)) && abs(coil1(2,end)) < abs(UpdatedReference(1,2))+cfg.accuracy_orange ...
-                    && abs(UpdatedReference(1,3))-cfg.accuracy_orange < abs(coil1(3,end)) && abs(coil1(3,end)) < abs(UpdatedReference(1,3))+cfg.accuracy_orange
-                plot3(coil1(1,end),coil1(2,end),coil1(3,end),'y^', 'MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
-            else % when not in correct position
-                plot3(coil1(1,end),coil1(2,end), coil1(3,end),'r^', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
-            end           
-        elseif ~isempty(template)
-            if abs(template.fid.pnt(1,1))-cfg.accuracy_green < abs(coil1(1,end)) && abs(coil1(1,end)) < abs(template.fid.pnt(1,1))+cfg.accuracy_green ...
-                    && abs(template.fid.pnt(1,2))-cfg.accuracy_green < abs(coil1(2,end)) && abs(coil1(2,end)) < abs(template.fid.pnt(1,2))+cfg.accuracy_green ...
-                    && abs(template.fid.pnt(1,3))-cfg.accuracy_green < abs(coil1(3,end)) && abs(coil1(3,end)) < abs(template.fid.pnt(1,3))+cfg.accuracy_green
-                plot3(coil1(1,end),coil1(2,end),coil1(3,end),'g^', 'MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
-            elseif abs(template.fid.pnt(1,1))-cfg.accuracy_orange < abs(coil1(1,end)) && abs(coil1(1,end)) < abs(template.fid.pnt(1,1))+cfg.accuracy_orange ...
-                    && abs(template.fid.pnt(1,2))-cfg.accuracy_orange < abs(coil1(2,end)) && abs(coil1(2,end)) < abs(template.fid.pnt(1,2))+cfg.accuracy_orange ...
-                    && abs(template.fid.pnt(1,3))-cfg.accuracy_orange < abs(coil1(3,end)) && abs(coil1(3,end)) < abs(template.fid.pnt(1,3))+cfg.accuracy_orange
-                plot3(coil1(1,end),coil1(2,end),coil1(3,end),'y^', 'MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
-            else % when not in correct position
-                plot3(coil1(1,end),coil1(2,end), coil1(3,end),'r^', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
-            end
-        else
-            plot3(coil1(1,end),coil1(2,end), coil1(3,end),'r^', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
-        end
-        
-        % check for left ear position
-        if ~isempty(UpdatedReference)
-            if abs(UpdatedReference(2,1))-cfg.accuracy_green < abs(coil2(1,end)) && abs(coil2(1,end)) < abs(UpdatedReference(2,1))+cfg.accuracy_green ...
-                    && abs(UpdatedReference(2,2))-cfg.accuracy_green < abs(coil2(2,end)) && abs(coil2(2,end)) < abs(UpdatedReference(2,2))+cfg.accuracy_green ...
-                    && abs(UpdatedReference(2,3))-cfg.accuracy_green < abs(coil2(3,end)) && abs(coil2(3,end)) < abs(UpdatedReference(2,3))+cfg.accuracy_green
-                plot3(coil2(1,end),coil2(2,end),coil2(3,end),'go', 'MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
-            elseif abs(UpdatedReference(2,1))-cfg.accuracy_orange < abs(coil2(1,end)) && abs(coil2(1,end)) < abs(UpdatedReference(2,1))+cfg.accuracy_orange ...
-                    && abs(UpdatedReference(2,2))-cfg.accuracy_orange < abs(coil2(2,end)) && abs(coil2(2,end)) < abs(UpdatedReference(2,2))+cfg.accuracy_orange ...
-                    && abs(UpdatedReference(2,3))-cfg.accuracy_orange < abs(coil2(3,end)) && abs(coil2(3,end)) < abs(UpdatedReference(2,3))+cfg.accuracy_orange
-                plot3(coil2(1,end),coil2(2,end),coil2(3,end),'yo', 'MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
-            else % when not in correct position
-                plot3(coil2(1,end),coil2(2,end), coil2(3,end),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
-            end
-        elseif ~isempty(template)
-            if abs(template.fid.pnt(2,1))-cfg.accuracy_green < abs(coil2(1,end)) && abs(coil2(1,end)) < abs(template.fid.pnt(2,1))+cfg.accuracy_green ...
-                    && abs(template.fid.pnt(2,2))-cfg.accuracy_green < abs(coil2(2,end)) && abs(coil2(2,end)) < abs(template.fid.pnt(2,2))+cfg.accuracy_green ...
-                    && abs(template.fid.pnt(2,3))-cfg.accuracy_green < abs(coil2(3,end)) && abs(coil2(3,end)) < abs(template.fid.pnt(2,3))+cfg.accuracy_green
-                plot3(coil2(1,end),coil2(2,end),coil2(3,end),'go', 'MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
-            elseif abs(template.fid.pnt(2,1))-cfg.accuracy_orange < abs(coil2(1,end)) && abs(coil2(1,end)) < abs(template.fid.pnt(2,1))+cfg.accuracy_orange ...
-                    && abs(template.fid.pnt(2,2))-cfg.accuracy_orange < abs(coil2(2,end)) && abs(coil2(2,end)) < abs(template.fid.pnt(2,2))+cfg.accuracy_orange ...
-                    && abs(template.fid.pnt(2,3))-cfg.accuracy_orange < abs(coil2(3,end)) && abs(coil2(3,end)) < abs(template.fid.pnt(2,3))+cfg.accuracy_orange
-                plot3(coil2(1,end),coil2(2,end),coil2(3,end),'yo', 'MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
-            else % when not in correct position
-                plot3(coil2(1,end),coil2(2,end), coil2(3,end),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
-            end
-        else
-            plot3(coil2(1,end),coil2(2,end), coil2(3,end),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
-        end
-        
-        % check for right ear position
-        if ~isempty(UpdatedReference)
-            if abs(UpdatedReference(3,1))-cfg.accuracy_green < abs(coil3(1,end)) && abs(coil3(1,end)) < abs(UpdatedReference(3,1))+cfg.accuracy_green  ...
-                    && abs(UpdatedReference(3,2))-cfg.accuracy_green  < abs(coil3(2,end)) && abs(coil3(2,end)) < abs(UpdatedReference(3,2))+cfg.accuracy_green  ...
-                    && abs(UpdatedReference(3,3))-cfg.accuracy_green  < abs(coil3(3,end)) && abs(coil3(3,end)) < abs(UpdatedReference(3,3))+cfg.accuracy_green
-                plot3(coil3(1,end),coil3(2,end),coil3(3,end),'go', 'MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
-            elseif abs(UpdatedReference(3,1))-cfg.accuracy_orange < abs(coil3(1,end)) && abs(coil3(1,end)) < abs(UpdatedReference(3,1))+cfg.accuracy_orange ...
-                    && abs(UpdatedReference(3,2))-cfg.accuracy_orange < abs(coil3(2,end)) && abs(coil3(2,end)) < abs(UpdatedReference(3,2))+cfg.accuracy_orange ...
-                    && abs(UpdatedReference(3,3))-cfg.accuracy_orange < abs(coil3(3,end)) && abs(coil3(3,end)) < abs(UpdatedReference(3,3))+cfg.accuracy_orange
-                plot3(coil3(1,end),coil3(2,end),coil3(3,end),'yo', 'MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
-            else % when not in correct position
-                plot3(coil3(1,end),coil3(2,end), coil3(3,end),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
-            end
-        elseif ~isempty(template)
-            if abs(template.fid.pnt(3,1))-cfg.accuracy_green < abs(coil3(1,end)) && abs(coil3(1,end)) < abs(template.fid.pnt(3,1))+cfg.accuracy_green  ...
-                    && abs(template.fid.pnt(3,2))-cfg.accuracy_green  < abs(coil3(2,end)) && abs(coil3(2,end)) < abs(template.fid.pnt(3,2))+cfg.accuracy_green  ...
-                    && abs(template.fid.pnt(3,3))-cfg.accuracy_green  < abs(coil3(3,end)) && abs(coil3(3,end)) < abs(template.fid.pnt(3,3))+cfg.accuracy_green
-                plot3(coil3(1,end),coil3(2,end),coil3(3,end),'go', 'MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
-            elseif abs(template.fid.pnt(3,1))-cfg.accuracy_orange < abs(coil3(1,end)) && abs(coil3(1,end)) < abs(template.fid.pnt(3,1))+cfg.accuracy_orange ...
-                    && abs(template.fid.pnt(3,2))-cfg.accuracy_orange < abs(coil3(2,end)) && abs(coil3(2,end)) < abs(template.fid.pnt(3,2))+cfg.accuracy_orange ...
-                    && abs(template.fid.pnt(3,3))-cfg.accuracy_orange < abs(coil3(3,end)) && abs(coil3(3,end)) < abs(template.fid.pnt(3,3))+cfg.accuracy_orange
-                plot3(coil3(1,end),coil3(2,end),coil3(3,end),'yo', 'MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
-            else % when not in correct position
-                plot3(coil3(1,end),coil3(2,end), coil3(3,end),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
-            end
-        else
-            plot3(coil3(1,end),coil3(2,end), coil3(3,end),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
-        end
-        
-        % plot head
-        ih = surfl(xe, ye, ze);
-        shading interp
-        if head1 == true && head2 == true && head3 == true
-            colormap cool
-        else
-            colormap hot
-        end
-        alpha(.15)
-        
-        % plot text
-        if ~isempty(template)
-            text(-8,8,template.fid.pnt(2,3),'Left','FontSize',15);
-            text(6,-6,template.fid.pnt(3,3),'Right','FontSize',15);
-        end
+        % draw the color-coded head and distances from the references
+        draw_sub(hMainFig);
         
         % show current timesample
-        str = sprintf('Press CTRL+C to stop, time = %d s\n', round(mean(data.time{1})));
+        str = sprintf('Runtime = %d s\n', round(mean(data.time{1})));
+        clear data;
         title(str);
         fprintf(str);
         
         if isempty(i)
             % only done once
             grid on
-            if angle_nasion_sagittal > 45
-                az = -45;
-                el = 0;
-            else
-                az = -45;
-                el = 90;
-            end
             xlabel('x (cm)');
             ylabel('y (cm)');
             zlabel('z (cm)');
-            set(gca, 'xtick', -30:2.0:30)
-            set(gca, 'ytick', -30:2.0:30)
-            set(gca, 'ztick', -60:2.0:0) % note the different scaling
-            view(az, el)
+            set(gca, 'xtick', -20:2:20)
+            set(gca, 'ytick', -20:2:20)
+            set(gca, 'ztick', -50:2:0) % note the different scaling
+            view(-45, 0)
             % axis square
             axis vis3d
             axis square
@@ -512,11 +222,56 @@ while true
         
     end % if enough new samples
 end % while true
+close(hMainFig); % close the figure
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION compute the circumcenter(x,y,z) of the 3D triangle (3 coils)
+% SUBFUNCTION which transform the positions from headcoordinate to dewar space
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [cc] = circumcenter(coil1,coil2,coil3)
+function t_grad = headcoordinates2ctfdewar(nas, lpa, rpa, grad) % based on headcoordinates.m
+
+% compute the origin and direction of the coordinate axes in MRI coordinates
+origin = (lpa+rpa)/2;
+dirx = nas-origin;
+dirx = dirx/norm(dirx);
+dirz = cross(dirx,lpa-rpa);
+dirz = dirz/norm(dirz);
+diry = cross(dirz,dirx);
+
+% compute the rotation matrix
+rot = eye(4);
+rot(1:3,1:3) = inv(eye(3) / [dirx; diry; dirz]);
+
+% compute the translation matrix
+tra = eye(4);
+tra(1:4,4)   = [-origin(:); 1];
+
+% compute the full homogeneous transformation matrix from these two
+h = rot * tra;
+
+% we do not want to plot the REF sensors
+chansel = match_str(grad.chantype,'meggrad');
+grad.chanpos  = grad.chanpos(chansel,:);
+grad.chanori  = grad.chanori(chansel,:);
+grad.chantype = grad.chantype(chansel,:);
+grad.label    = grad.label(chansel,:);
+
+% apply the inverse transformation matrix on data
+t_grad = grad;
+t_grad.chanpos = warp_apply(inv(h), grad.chanpos, 'homogenous');
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION that does the timing
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [time] = offset2time(offset, fsample, nsamples)
+
+offset   = double(offset);
+nsamples = double(nsamples);
+time = (offset + (0:(nsamples-1)))/fsample;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION which computes the circumcenter(x,y,z) of the 3D triangle (3 coils)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [cc] = circumcenter(coil1, coil2, coil3)
 
 % use coordinates relative to point `a' of the triangle
 xba = coil2(1,end) - coil1(1,end);
@@ -547,10 +302,144 @@ cc(1) = xcirca + coil1(1,end);
 cc(2) = ycirca + coil1(2,end);
 cc(3) = zcirca + coil1(3,end);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [time] = offset2time(offset, fsample, nsamples)
-offset   = double(offset);
-nsamples = double(nsamples);
-time = (offset + (0:(nsamples-1)))/fsample;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION which draws the color-coded head and distances to the reference
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function draw_sub(handle)
+
+% get the info
+info      = guidata(handle);
+
+if strcmp(get(handle,'Tag'), 'On')
+    % plot the sensors
+    hold on; ft_plot_sens(info.sens);
+end
+
+% plot the three reference fiducial positions
+if ~isempty(info.reference)
+    plot3(info.reference(1,1), info.reference(1,2), info.reference(1,3), 'k^', 'MarkerSize', 27, 'LineWidth', 2);
+    plot3(info.reference(2,1), info.reference(2,2), info.reference(2,3), 'ko', 'MarkerSize', 27, 'LineWidth', 2);
+    plot3(info.reference(3,1), info.reference(3,2), info.reference(3,3), 'ko', 'MarkerSize', 27, 'LineWidth', 2);
+    
+    text(-8,8, info.reference(2,3), 'Left', 'FontSize', 15);
+    text(6,-6, info.reference(3,3), 'Right', 'FontSize', 15);
+end
+
+% plot the coil position traces
+plot3(info.coil1(1,:), info.coil1(2,:), info.coil1(3,:), 'k^', 'LineWidth', 1,'MarkerSize', 3) % nasion
+plot3(info.coil2(1,:), info.coil2(2,:), info.coil2(3,:), 'ko', 'LineWidth', 1,'MarkerSize', 3)
+plot3(info.coil3(1,:), info.coil3(2,:), info.coil3(3,:), 'ko', 'LineWidth', 1,'MarkerSize', 3)
+
+% draw nasion position
+if ~isempty(info.reference)
+    if abs(info.reference(1,1))-info.cfg.accuracy_green < abs(info.coil1(1,end)) && abs(info.coil1(1,end)) < abs(info.reference(1,1))+info.cfg.accuracy_green ...
+            && abs(info.reference(1,2))-info.cfg.accuracy_green < abs(info.coil1(2,end)) && abs(info.coil1(2,end)) < abs(info.reference(1,2))+info.cfg.accuracy_green ...
+            && abs(info.reference(1,3))-info.cfg.accuracy_green < abs(info.coil1(3,end)) && abs(info.coil1(3,end)) < abs(info.reference(1,3))+info.cfg.accuracy_green
+        plot3(info.coil1(1,end),info.coil1(2,end),info.coil1(3,end),'g^', 'MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
+        head1 = true;
+    elseif abs(info.reference(1,1))-info.cfg.accuracy_orange < abs(info.coil1(1,end)) && abs(info.coil1(1,end)) < abs(info.reference(1,1))+info.cfg.accuracy_orange ...
+            && abs(info.reference(1,2))-info.cfg.accuracy_orange < abs(info.coil1(2,end)) && abs(info.coil1(2,end)) < abs(info.reference(1,2))+info.cfg.accuracy_orange ...
+            && abs(info.reference(1,3))-info.cfg.accuracy_orange < abs(info.coil1(3,end)) && abs(info.coil1(3,end)) < abs(info.reference(1,3))+info.cfg.accuracy_orange
+        plot3(info.coil1(1,end),info.coil1(2,end),info.coil1(3,end),'y^', 'MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
+        head1 = false;
+    else % when not in correct position
+        plot3(info.coil1(1,end),info.coil1(2,end), info.coil1(3,end),'r^', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
+        head1 = false;
+    end
+else
+    plot3(info.coil1(1,end),info.coil1(2,end), info.coil1(3,end),'r^', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
+    head1 = false;
+end
+
+% draw left ear position
+if ~isempty(info.reference)
+    if abs(info.reference(2,1))-info.cfg.accuracy_green < abs(info.coil2(1,end)) && abs(info.coil2(1,end)) < abs(info.reference(2,1))+info.cfg.accuracy_green ...
+            && abs(info.reference(2,2))-info.cfg.accuracy_green < abs(info.coil2(2,end)) && abs(info.coil2(2,end)) < abs(info.reference(2,2))+info.cfg.accuracy_green ...
+            && abs(info.reference(2,3))-info.cfg.accuracy_green < abs(info.coil2(3,end)) && abs(info.coil2(3,end)) < abs(info.reference(2,3))+info.cfg.accuracy_green
+        plot3(info.coil2(1,end),info.coil2(2,end),info.coil2(3,end),'go', 'MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
+        head2 = true;
+    elseif abs(info.reference(2,1))-info.cfg.accuracy_orange < abs(info.coil2(1,end)) && abs(info.coil2(1,end)) < abs(info.reference(2,1))+info.cfg.accuracy_orange ...
+            && abs(info.reference(2,2))-info.cfg.accuracy_orange < abs(info.coil2(2,end)) && abs(info.coil2(2,end)) < abs(info.reference(2,2))+info.cfg.accuracy_orange ...
+            && abs(info.reference(2,3))-info.cfg.accuracy_orange < abs(info.coil2(3,end)) && abs(info.coil2(3,end)) < abs(info.reference(2,3))+info.cfg.accuracy_orange
+        plot3(info.coil2(1,end),info.coil2(2,end),info.coil2(3,end),'yo', 'MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
+        head2 = false;
+    else % when not in correct position
+        plot3(info.coil2(1,end),info.coil2(2,end), info.coil2(3,end),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
+        head2 = false;
+    end
+else
+    plot3(info.coil2(1,end),info.coil2(2,end), info.coil2(3,end),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
+    head2 = false;
+end
+
+% draw right ear position
+if ~isempty(info.reference)
+    if abs(info.reference(3,1))-info.cfg.accuracy_green < abs(info.coil3(1,end)) && abs(info.coil3(1,end)) < abs(info.reference(3,1))+info.cfg.accuracy_green  ...
+            && abs(info.reference(3,2))-info.cfg.accuracy_green  < abs(info.coil3(2,end)) && abs(info.coil3(2,end)) < abs(info.reference(3,2))+info.cfg.accuracy_green  ...
+            && abs(info.reference(3,3))-info.cfg.accuracy_green  < abs(info.coil3(3,end)) && abs(info.coil3(3,end)) < abs(info.reference(3,3))+info.cfg.accuracy_green
+        plot3(info.coil3(1,end),info.coil3(2,end),info.coil3(3,end),'go', 'MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
+        head3 = true;
+    elseif abs(info.reference(3,1))-info.cfg.accuracy_orange < abs(info.coil3(1,end)) && abs(info.coil3(1,end)) < abs(info.reference(3,1))+info.cfg.accuracy_orange ...
+            && abs(info.reference(3,2))-info.cfg.accuracy_orange < abs(info.coil3(2,end)) && abs(info.coil3(2,end)) < abs(info.reference(3,2))+info.cfg.accuracy_orange ...
+            && abs(info.reference(3,3))-info.cfg.accuracy_orange < abs(info.coil3(3,end)) && abs(info.coil3(3,end)) < abs(info.reference(3,3))+info.cfg.accuracy_orange
+        plot3(info.coil3(1,end),info.coil3(2,end),info.coil3(3,end),'yo', 'MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
+        head3 = false;
+    else % when not in correct position
+        plot3(info.coil3(1,end),info.coil3(2,end), info.coil3(3,end),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
+        head3 = false;
+    end
+else
+    plot3(info.coil3(1,end),info.coil3(2,end), info.coil3(3,end),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
+    head3 = false;
+end
+
+% draw 3d head
+cc = circumcenter(info.coil1,info.coil2,info.coil3);
+x_radius = sqrt((info.coil2(1,end) - cc(1))^2 + (info.coil2(2,end) - cc(2))^2);
+y_radius = sqrt((info.coil3(1,end) - cc(1))^2 + (info.coil3(2,end) - cc(2))^2);
+[xe, ye, ze] = ellipsoid(cc(1),cc(2),cc(3),x_radius,y_radius,11);
+hh = surfl(xe, ye, ze);
+shading interp
+if head1 == true && head2 == true && head3 == true
+    colormap cool
+else
+    colormap hot
+end
+alpha(.15)
+
+% put the info back
+guidata(handle, info);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION which handles hot keys in the current plot
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function key_sub(handle, eventdata)
+
+% get the info
+info = guidata(handle);
+
+switch eventdata.Key
+    case 'u'
+        % update the info.reference positions
+        fprintf('updating reference coordinates \n')
+        info.reference(1,:) = info.coil1(:,end); % nasion
+        info.reference(2,:) = info.coil2(:,end); % right ear
+        info.reference(3,:) = info.coil3(:,end); % left ear
+    case 's'
+        % display the sensors/dewar
+        if isempty(get(1,'Tag'))
+            fprintf('displaying sensors/dewar \n')
+            set(handle,'Tag', 'On'); % toggle on
+        elseif strcmp(get(1,'Tag'), 'On')
+            set(handle,'Tag', ''); % toggle off
+        end
+    case 'q'
+        % stop the application
+        fprintf('stopping the application \n')
+        set(handle, 'UserData', 0); % stop the while loop
+    otherwise
+        fprintf('no command executed \n')
+end
+
+% put the info back
+guidata(handle, info);
