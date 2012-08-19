@@ -1,9 +1,9 @@
 function [output] = ft_connectivity_csd2transfer(freq, varargin)
 
-% CSD2TRANSFER computes the transfer-function from frequency domain data
-% using the Wilson-Burg algorithm. The transfer function can be used for
-% the computation of directional measures of connectivity, such as granger
-% causality, partial directed coherence, or directed transfer functions
+% FT_CONNECTIVITY_CSD2TRANSFER computes the transfer-function from frequency
+% domain data using the Wilson-Burg algorithm. The transfer function can be
+% used for the computation of directional measures of connectivity, such as
+% granger causality, partial directed coherence, or directed transfer functions
 %
 % Use as
 %   [output] = ft_connectivity_csd2transfer(freq, varargin)
