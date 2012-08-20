@@ -76,20 +76,94 @@ count       = 0;
 
 % initiate figure
 hMainFig = figure;
-set(hMainFig, 'UserData', 1); % initialize the flag variable
 set(hMainFig, 'KeyPressFcn', {@key_sub});
 
+hUpdateButton = uicontrol(...
+    'Parent', hMainFig,...
+    'Style', 'pushbutton',...
+    'String', 'Update',...
+    'Units', 'normalized',...
+    'Position', [.1 .13 .15 .075],...
+    'FontSize', 12,...
+    'Callback', {@update_ButtonDownFcn});
+
+hQuitButton = uicontrol(...
+    'Parent', hMainFig,...
+    'Style', 'pushbutton',...
+    'String', 'Quit',...
+    'Units', 'normalized',...
+    'Position', [.1 .05 .15 .075],...
+    'FontSize', 12,...
+    'Value', 1,... % the while loop flag variable
+    'Callback', {@quit_ButtonDownFcn});
+
+hCoilCheckBox = uicontrol(...
+    'Parent', hMainFig,...
+    'Style', 'checkbox',...
+    'String', 'Coils',...
+    'Units', 'normalized',...
+    'Position', [.3 .15 .15 .05],...
+    'FontSize', 8,...
+    'Value', 1,...
+    'Callback', {@coil_CheckBox});
+
+hHeadCheckBox = uicontrol(...
+    'Parent', hMainFig,...
+    'Style', 'checkbox',...
+    'String', 'Head',...
+    'Units', 'normalized',...
+    'Position', [.3 .1 .15 .05],...
+    'FontSize', 8,...
+    'Value', 1,...
+    'Callback', {@head_CheckBox});
+
+hSensorCheckBox = uicontrol(...
+    'Parent', hMainFig,...
+    'Style', 'checkbox',...
+    'String', 'Sensors',...
+    'Units', 'normalized',...
+    'Position', [.3 .05 .15 .05],...
+    'FontSize', 8,...
+    'Value', 0,...
+    'Callback', {@sensor_CheckBox});
+
+hViewRadioButton1 = uicontrol(...
+    'Parent', hMainFig,...
+    'Style', 'radiobutton',...
+    'String', 'Front view',...
+    'Units', 'normalized',...
+    'Position', [.6 .75 .15 .05],...
+    'FontSize', 8,...
+    'Value', 0,... % by default switch off
+    'Callback', {@view_RadioButton1});
+
+hViewRadioButton2 = uicontrol(...
+    'Parent', hMainFig,...
+    'Style', 'radiobutton',...
+    'String', 'Back view',...
+    'Units', 'normalized',...
+    'Position', [.75 .75 .15 .05],...
+    'FontSize', 8,...
+    'Value', 1,... % by default switch on
+    'Callback', {@view_RadioButton2});
+
 % insert gui variables
-info           = [];
-info.cfg       = cfg;
-info.reference = reference;
-info.sens      = sens;
+info                    = [];
+info.cfg                = cfg;
+info.reference          = reference;
+info.sens               = sens;
+info.hQuitButton        = hQuitButton;
+info.hCoilCheckBox      = hCoilCheckBox;
+info.hHeadCheckBox      = hHeadCheckBox;
+info.hSensorCheckBox    = hSensorCheckBox;
+info.hViewRadioButton1  = hViewRadioButton1;
+info.hViewRadioButton2  = hViewRadioButton2;
 guidata(hMainFig, info);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this is the general BCI loop where realtime incoming data is handled
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-while (get(hMainFig, 'UserData') == 1) % while the flag is one, the loop continues
+while (get(info.hQuitButton, 'Value') == 1) % while the flag is one, the loop continues
     
     % determine number of samples available in buffer
     hdr = ft_read_header(cfg.headerfile, 'cache', true);
@@ -146,7 +220,7 @@ while (get(hMainFig, 'UserData') == 1) % while the flag is one, the loop continu
         % convert from meter to cm and assign to the resp. coil
         info.coil1 = data.trial{1}([x1 y1 z1],:) * 100;
         info.coil2 = data.trial{1}([x2 y2 z2],:) * 100;
-        info.coil3 = data.trial{1}([x3 y3 z3],:) * 100;      
+        info.coil3 = data.trial{1}([x3 y3 z3],:) * 100;
         
         % store gui variables
         guidata(hMainFig, info);
@@ -164,8 +238,8 @@ while (get(hMainFig, 'UserData') == 1) % while the flag is one, the loop continu
         % draw the color-coded head and distances from the references
         draw_sub(hMainFig);
         
-        % show the update key
-        str = sprintf('Press "u" to update the reference coordinates \n Press "s" to toggle on/off sensors/dewar display \n Press "q" to stop the application \n');
+         % show current timesample
+        str = sprintf('Runtime = %d s\n', round(mean(data.time{1}))); clear data;
         title(str);
         
         if isempty(h)
@@ -196,12 +270,12 @@ while (get(hMainFig, 'UserData') == 1) % while the flag is one, the loop continu
         % draw the color-coded head and distances from the references
         draw_sub(hMainFig);
         
-        % show current timesample
-        str = sprintf('Runtime = %d s\n', round(mean(data.time{1})));
-        clear data;
-        title(str);
-        fprintf(str);
-        
+        if get(info.hViewRadioButton2,'Value') == 1
+            view(-45, 0)
+        elseif get(info.hViewRadioButton2,'Value') == 0
+            view(135, 0)
+        end
+                
         if isempty(i)
             % only done once
             grid on
@@ -211,7 +285,7 @@ while (get(hMainFig, 'UserData') == 1) % while the flag is one, the loop continu
             set(gca, 'xtick', -20:2:20)
             set(gca, 'ytick', -20:2:20)
             set(gca, 'ztick', -50:2:0) % note the different scaling
-            view(-45, 0)
+            
             % axis square
             axis vis3d
             axis square
@@ -310,7 +384,7 @@ function draw_sub(handle)
 % get the info
 info      = guidata(handle);
 
-if strcmp(get(handle,'Tag'), 'On')
+if get(info.hSensorCheckBox, 'Value')
     % plot the sensors
     hold on; ft_plot_sens(info.sens);
 end
@@ -325,87 +399,93 @@ if ~isempty(info.reference)
     text(6,-6, info.reference(3,3), 'Right', 'FontSize', 15);
 end
 
-% plot the coil position traces
-plot3(info.coil1(1,:), info.coil1(2,:), info.coil1(3,:), 'k^', 'LineWidth', 1,'MarkerSize', 3) % nasion
-plot3(info.coil2(1,:), info.coil2(2,:), info.coil2(3,:), 'ko', 'LineWidth', 1,'MarkerSize', 3)
-plot3(info.coil3(1,:), info.coil3(2,:), info.coil3(3,:), 'ko', 'LineWidth', 1,'MarkerSize', 3)
-
-% draw nasion position
-if ~isempty(info.reference)
-    if abs(info.reference(1,1))-info.cfg.accuracy_green < abs(info.coil1(1,end)) && abs(info.coil1(1,end)) < abs(info.reference(1,1))+info.cfg.accuracy_green ...
-            && abs(info.reference(1,2))-info.cfg.accuracy_green < abs(info.coil1(2,end)) && abs(info.coil1(2,end)) < abs(info.reference(1,2))+info.cfg.accuracy_green ...
-            && abs(info.reference(1,3))-info.cfg.accuracy_green < abs(info.coil1(3,end)) && abs(info.coil1(3,end)) < abs(info.reference(1,3))+info.cfg.accuracy_green
-        plot3(info.coil1(1,end),info.coil1(2,end),info.coil1(3,end),'g^', 'MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
-        head1 = true;
-    elseif abs(info.reference(1,1))-info.cfg.accuracy_orange < abs(info.coil1(1,end)) && abs(info.coil1(1,end)) < abs(info.reference(1,1))+info.cfg.accuracy_orange ...
-            && abs(info.reference(1,2))-info.cfg.accuracy_orange < abs(info.coil1(2,end)) && abs(info.coil1(2,end)) < abs(info.reference(1,2))+info.cfg.accuracy_orange ...
-            && abs(info.reference(1,3))-info.cfg.accuracy_orange < abs(info.coil1(3,end)) && abs(info.coil1(3,end)) < abs(info.reference(1,3))+info.cfg.accuracy_orange
-        plot3(info.coil1(1,end),info.coil1(2,end),info.coil1(3,end),'y^', 'MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
-        head1 = false;
-    else % when not in correct position
+if get(info.hCoilCheckBox, 'Value')
+    % plot the coil position traces
+    plot3(info.coil1(1,:), info.coil1(2,:), info.coil1(3,:), 'k^', 'LineWidth', 1,'MarkerSize', 3) % nasion
+    plot3(info.coil2(1,:), info.coil2(2,:), info.coil2(3,:), 'ko', 'LineWidth', 1,'MarkerSize', 3)
+    plot3(info.coil3(1,:), info.coil3(2,:), info.coil3(3,:), 'ko', 'LineWidth', 1,'MarkerSize', 3)
+    
+    % draw nasion position
+    if ~isempty(info.reference)
+        if abs(info.reference(1,1))-info.cfg.accuracy_green < abs(info.coil1(1,end)) && abs(info.coil1(1,end)) < abs(info.reference(1,1))+info.cfg.accuracy_green ...
+                && abs(info.reference(1,2))-info.cfg.accuracy_green < abs(info.coil1(2,end)) && abs(info.coil1(2,end)) < abs(info.reference(1,2))+info.cfg.accuracy_green ...
+                && abs(info.reference(1,3))-info.cfg.accuracy_green < abs(info.coil1(3,end)) && abs(info.coil1(3,end)) < abs(info.reference(1,3))+info.cfg.accuracy_green
+            plot3(info.coil1(1,end),info.coil1(2,end),info.coil1(3,end),'g^', 'MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
+            head1 = true;
+        elseif abs(info.reference(1,1))-info.cfg.accuracy_orange < abs(info.coil1(1,end)) && abs(info.coil1(1,end)) < abs(info.reference(1,1))+info.cfg.accuracy_orange ...
+                && abs(info.reference(1,2))-info.cfg.accuracy_orange < abs(info.coil1(2,end)) && abs(info.coil1(2,end)) < abs(info.reference(1,2))+info.cfg.accuracy_orange ...
+                && abs(info.reference(1,3))-info.cfg.accuracy_orange < abs(info.coil1(3,end)) && abs(info.coil1(3,end)) < abs(info.reference(1,3))+info.cfg.accuracy_orange
+            plot3(info.coil1(1,end),info.coil1(2,end),info.coil1(3,end),'y^', 'MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
+            head1 = false;
+        else % when not in correct position
+            plot3(info.coil1(1,end),info.coil1(2,end), info.coil1(3,end),'r^', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
+            head1 = false;
+        end
+    else
         plot3(info.coil1(1,end),info.coil1(2,end), info.coil1(3,end),'r^', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
         head1 = false;
     end
-else
-    plot3(info.coil1(1,end),info.coil1(2,end), info.coil1(3,end),'r^', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
-    head1 = false;
-end
-
-% draw left ear position
-if ~isempty(info.reference)
-    if abs(info.reference(2,1))-info.cfg.accuracy_green < abs(info.coil2(1,end)) && abs(info.coil2(1,end)) < abs(info.reference(2,1))+info.cfg.accuracy_green ...
-            && abs(info.reference(2,2))-info.cfg.accuracy_green < abs(info.coil2(2,end)) && abs(info.coil2(2,end)) < abs(info.reference(2,2))+info.cfg.accuracy_green ...
-            && abs(info.reference(2,3))-info.cfg.accuracy_green < abs(info.coil2(3,end)) && abs(info.coil2(3,end)) < abs(info.reference(2,3))+info.cfg.accuracy_green
-        plot3(info.coil2(1,end),info.coil2(2,end),info.coil2(3,end),'go', 'MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
-        head2 = true;
-    elseif abs(info.reference(2,1))-info.cfg.accuracy_orange < abs(info.coil2(1,end)) && abs(info.coil2(1,end)) < abs(info.reference(2,1))+info.cfg.accuracy_orange ...
-            && abs(info.reference(2,2))-info.cfg.accuracy_orange < abs(info.coil2(2,end)) && abs(info.coil2(2,end)) < abs(info.reference(2,2))+info.cfg.accuracy_orange ...
-            && abs(info.reference(2,3))-info.cfg.accuracy_orange < abs(info.coil2(3,end)) && abs(info.coil2(3,end)) < abs(info.reference(2,3))+info.cfg.accuracy_orange
-        plot3(info.coil2(1,end),info.coil2(2,end),info.coil2(3,end),'yo', 'MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
-        head2 = false;
-    else % when not in correct position
+    
+    % draw left ear position
+    if ~isempty(info.reference)
+        if abs(info.reference(2,1))-info.cfg.accuracy_green < abs(info.coil2(1,end)) && abs(info.coil2(1,end)) < abs(info.reference(2,1))+info.cfg.accuracy_green ...
+                && abs(info.reference(2,2))-info.cfg.accuracy_green < abs(info.coil2(2,end)) && abs(info.coil2(2,end)) < abs(info.reference(2,2))+info.cfg.accuracy_green ...
+                && abs(info.reference(2,3))-info.cfg.accuracy_green < abs(info.coil2(3,end)) && abs(info.coil2(3,end)) < abs(info.reference(2,3))+info.cfg.accuracy_green
+            plot3(info.coil2(1,end),info.coil2(2,end),info.coil2(3,end),'go', 'MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
+            head2 = true;
+        elseif abs(info.reference(2,1))-info.cfg.accuracy_orange < abs(info.coil2(1,end)) && abs(info.coil2(1,end)) < abs(info.reference(2,1))+info.cfg.accuracy_orange ...
+                && abs(info.reference(2,2))-info.cfg.accuracy_orange < abs(info.coil2(2,end)) && abs(info.coil2(2,end)) < abs(info.reference(2,2))+info.cfg.accuracy_orange ...
+                && abs(info.reference(2,3))-info.cfg.accuracy_orange < abs(info.coil2(3,end)) && abs(info.coil2(3,end)) < abs(info.reference(2,3))+info.cfg.accuracy_orange
+            plot3(info.coil2(1,end),info.coil2(2,end),info.coil2(3,end),'yo', 'MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
+            head2 = false;
+        else % when not in correct position
+            plot3(info.coil2(1,end),info.coil2(2,end), info.coil2(3,end),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
+            head2 = false;
+        end
+    else
         plot3(info.coil2(1,end),info.coil2(2,end), info.coil2(3,end),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
         head2 = false;
     end
-else
-    plot3(info.coil2(1,end),info.coil2(2,end), info.coil2(3,end),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
-    head2 = false;
-end
-
-% draw right ear position
-if ~isempty(info.reference)
-    if abs(info.reference(3,1))-info.cfg.accuracy_green < abs(info.coil3(1,end)) && abs(info.coil3(1,end)) < abs(info.reference(3,1))+info.cfg.accuracy_green  ...
-            && abs(info.reference(3,2))-info.cfg.accuracy_green  < abs(info.coil3(2,end)) && abs(info.coil3(2,end)) < abs(info.reference(3,2))+info.cfg.accuracy_green  ...
-            && abs(info.reference(3,3))-info.cfg.accuracy_green  < abs(info.coil3(3,end)) && abs(info.coil3(3,end)) < abs(info.reference(3,3))+info.cfg.accuracy_green
-        plot3(info.coil3(1,end),info.coil3(2,end),info.coil3(3,end),'go', 'MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
-        head3 = true;
-    elseif abs(info.reference(3,1))-info.cfg.accuracy_orange < abs(info.coil3(1,end)) && abs(info.coil3(1,end)) < abs(info.reference(3,1))+info.cfg.accuracy_orange ...
-            && abs(info.reference(3,2))-info.cfg.accuracy_orange < abs(info.coil3(2,end)) && abs(info.coil3(2,end)) < abs(info.reference(3,2))+info.cfg.accuracy_orange ...
-            && abs(info.reference(3,3))-info.cfg.accuracy_orange < abs(info.coil3(3,end)) && abs(info.coil3(3,end)) < abs(info.reference(3,3))+info.cfg.accuracy_orange
-        plot3(info.coil3(1,end),info.coil3(2,end),info.coil3(3,end),'yo', 'MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
-        head3 = false;
-    else % when not in correct position
+    
+    % draw right ear position
+    if ~isempty(info.reference)
+        if abs(info.reference(3,1))-info.cfg.accuracy_green < abs(info.coil3(1,end)) && abs(info.coil3(1,end)) < abs(info.reference(3,1))+info.cfg.accuracy_green  ...
+                && abs(info.reference(3,2))-info.cfg.accuracy_green  < abs(info.coil3(2,end)) && abs(info.coil3(2,end)) < abs(info.reference(3,2))+info.cfg.accuracy_green  ...
+                && abs(info.reference(3,3))-info.cfg.accuracy_green  < abs(info.coil3(3,end)) && abs(info.coil3(3,end)) < abs(info.reference(3,3))+info.cfg.accuracy_green
+            plot3(info.coil3(1,end),info.coil3(2,end),info.coil3(3,end),'go', 'MarkerFaceColor',[.5 1 .5],'MarkerSize',25)
+            head3 = true;
+        elseif abs(info.reference(3,1))-info.cfg.accuracy_orange < abs(info.coil3(1,end)) && abs(info.coil3(1,end)) < abs(info.reference(3,1))+info.cfg.accuracy_orange ...
+                && abs(info.reference(3,2))-info.cfg.accuracy_orange < abs(info.coil3(2,end)) && abs(info.coil3(2,end)) < abs(info.reference(3,2))+info.cfg.accuracy_orange ...
+                && abs(info.reference(3,3))-info.cfg.accuracy_orange < abs(info.coil3(3,end)) && abs(info.coil3(3,end)) < abs(info.reference(3,3))+info.cfg.accuracy_orange
+            plot3(info.coil3(1,end),info.coil3(2,end),info.coil3(3,end),'yo', 'MarkerFaceColor',[1 .5 0],'MarkerEdgeColor',[1 .5 0],'MarkerSize',25)
+            head3 = false;
+        else % when not in correct position
+            plot3(info.coil3(1,end),info.coil3(2,end), info.coil3(3,end),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
+            head3 = false;
+        end
+    else
         plot3(info.coil3(1,end),info.coil3(2,end), info.coil3(3,end),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
         head3 = false;
     end
-else
-    plot3(info.coil3(1,end),info.coil3(2,end), info.coil3(3,end),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
-    head3 = false;
 end
 
-% draw 3d head
-cc = circumcenter(info.coil1,info.coil2,info.coil3);
-x_radius = sqrt((info.coil2(1,end) - cc(1))^2 + (info.coil2(2,end) - cc(2))^2);
-y_radius = sqrt((info.coil3(1,end) - cc(1))^2 + (info.coil3(2,end) - cc(2))^2);
-[xe, ye, ze] = ellipsoid(cc(1),cc(2),cc(3),x_radius,y_radius,11);
-hh = surfl(xe, ye, ze);
-shading interp
-if head1 == true && head2 == true && head3 == true
-    colormap cool
-else
-    colormap hot
+if get(info.hHeadCheckBox, 'Value')
+    % draw 3d head
+    cc = circumcenter(info.coil1,info.coil2,info.coil3);
+    x_radius = sqrt((info.coil2(1,end) - cc(1))^2 + (info.coil2(2,end) - cc(2))^2);
+    y_radius = sqrt((info.coil3(1,end) - cc(1))^2 + (info.coil3(2,end) - cc(2))^2);
+    [xe, ye, ze] = ellipsoid(cc(1),cc(2),cc(3),x_radius,y_radius,11);
+    hh = surfl(xe, ye, ze);
+    shading interp
+    if get(info.hCoilCheckBox, 'Value') % this only works if 'coils' are updated
+        if head1 == true && head2 == true && head3 == true
+            colormap cool
+        else
+            colormap hot
+        end
+    end
+    alpha(.15)
 end
-alpha(.15)
 
 % put the info back
 guidata(handle, info);
@@ -425,20 +505,108 @@ switch eventdata.Key
         info.reference(1,:) = info.coil1(:,end); % nasion
         info.reference(2,:) = info.coil2(:,end); % right ear
         info.reference(3,:) = info.coil3(:,end); % left ear
-    case 's'
-        % display the sensors/dewar
-        if isempty(get(1,'Tag'))
-            fprintf('displaying sensors/dewar \n')
-            set(handle,'Tag', 'On'); % toggle on
-        elseif strcmp(get(1,'Tag'), 'On')
-            set(handle,'Tag', ''); % toggle off
-        end
     case 'q'
         % stop the application
         fprintf('stopping the application \n')
-        set(handle, 'UserData', 0); % stop the while loop
+        set(info.hQuitButton, 'Value', 0); % stop the while loop
+    case 'c'
+        % display the sensors/dewar
+        if get(info.hCoilCheckBox,'Value') == 0;
+            fprintf('displaying coils \n')
+            set(info.hCoilCheckBox, 'Value', 1); % toggle on
+        elseif get(info.hCoilCheckBox,'Value') == 1;
+            set(info.hCoilCheckBox, 'Value', 0); % toggle off
+        end
+    case 'h'
+        % display the sensors/dewar
+        if get(info.hHeadCheckBox,'Value') == 0;
+            fprintf('displaying head \n')
+            set(info.hHeadCheckBox, 'Value', 1); % toggle on
+        elseif get(info.hHeadCheckBox,'Value') == 1;
+            set(info.hHeadCheckBox, 'Value', 0); % toggle off
+        end
+    case 's'
+        % display the sensors/dewar
+        if get(info.hSensorCheckBox,'Value') == 0;
+            fprintf('displaying sensors/dewar \n')
+            set(info.hSensorCheckBox, 'Value', 1); % toggle on
+        elseif get(info.hSensorCheckBox,'Value') == 1;
+            set(info.hSensorCheckBox, 'Value', 0); % toggle off
+        end
     otherwise
         fprintf('no command executed \n')
+end
+
+% put the info back
+guidata(handle, info);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTIONs which handle button presses
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function update_ButtonDownFcn(handle, eventdata)
+
+% get the info
+info = guidata(handle);
+
+% update the info.reference positions
+fprintf('updating reference coordinates \n')
+info.reference(1,:) = info.coil1(:,end); % nasion
+info.reference(2,:) = info.coil2(:,end); % right ear
+info.reference(3,:) = info.coil3(:,end); % left ear
+
+% put the info back
+guidata(handle, info);
+
+function quit_ButtonDownFcn(handle, eventdata)
+
+% get the info
+info = guidata(handle);
+
+% stop the application
+fprintf('stopping the application \n')
+set(info.hQuitButton, 'Value', 0); % stop the while loop
+
+% put the info back
+guidata(handle, info);
+
+function coil_CheckBox(hObject, eventdata)
+% toggle coils display
+
+function head_CheckBox(hObject, eventdata)
+% toggle head display
+
+function sensor_CheckBox(hObject, eventdata)
+% toggle sensors display
+
+function view_RadioButton1(handle, eventdata)
+
+% get the info
+info = guidata(handle);
+
+% toggle front view - in combination with view_RadioButton2
+if get(info.hViewRadioButton1,'Value') == 1;
+    set(info.hViewRadioButton2, 'Value', 0); % toggle off radiobutton 2
+    set(info.hViewRadioButton1, 'Value', 1); % toggle on radiobutton 1
+elseif get(info.hViewRadioButton1,'Value') == 0;
+    set(info.hViewRadioButton2, 'Value', 1); % toggle on radiobutton 2
+    set(info.hViewRadioButton1, 'Value', 0); % toggle off radiobutton 1
+end
+
+% put the info back
+guidata(handle, info);
+
+function view_RadioButton2(handle, eventdata)
+
+% get the info
+info = guidata(handle);
+
+% toggle back view - in combination with view_RadioButton1
+if get(info.hViewRadioButton2,'Value') == 1;
+    set(info.hViewRadioButton1, 'Value', 0); % toggle off radiobutton 1
+    set(info.hViewRadioButton2, 'Value', 1); % toggle on radiobutton 2
+elseif get(info.hViewRadioButton2,'Value') == 0;
+    set(info.hViewRadioButton1, 'Value', 1); % toggle on radiobutton 1
+    set(info.hViewRadioButton2, 'Value', 0); % toggle off radiobutton 2
 end
 
 % put the info back
