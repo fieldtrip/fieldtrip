@@ -70,10 +70,11 @@ else
   defaultbackend = 'local';
 end
 
-if ~isempty(regexp(getenv('HOSTNAME'), '^dccn-c', 'once')) || ~isempty(regexp(getenv('HOSTNAME'), '^mentat', 'once'))
+hostname = gethostname();
+if ~isempty(regexp(hostname, '^dccn-c', 'once')) || ~isempty(regexp(hostname, '^mentat', 'once'))
   % At the DCCN we want the distributed MATLAB jobs to be queued in the
   % "matlab" queue. This routes them to specific multi-core machines and
-  % reduces the number of licenses that can be claimed at once.
+  % limits the number of licenses that can be claimed at once.
   defaultqueue = 'matlab';
 else
   % let the queueing system decide
