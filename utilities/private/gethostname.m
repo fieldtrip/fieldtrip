@@ -1,28 +1,37 @@
 function host = gethostname()
 
+% HOSTNAME
+%
+% Use as
+%   str = hostname;
+
+% Copyright 2011, Eelke Spaak
+
 % this is to speed up subsequent calls
-% the hostname will not change over multiple calls
 persistent previous_argout
 if ~isempty(previous_argout)
   host = previous_argout;
-  return;
+  return
 end
 
 if (ispc())
-  host = getenv('COMPUTERNAME');
-else
+  host = getenv('ComputerName');
+elseif (isunix())
   host = getenv('HOSTNAME');
+  % the HOSTNAME variable is not guaranteed to be set
   if isempty(host)
     [status, host] = system('hostname -s');
+    % remove the ^n from the end of the line
+    host = deblank(host);
   end
 end
 
-% remove trailing whitespace and blank lines
-host = strtrim(host);
+host = strtok(host, '.'); % dots in filenames are not allowed by matlab
 
 if (isempty(host))
-  host = 'unknown';
+  host = 'unknownhost';
 end
 
 % remember for subsequent calls
 previous_argout = host;
+
