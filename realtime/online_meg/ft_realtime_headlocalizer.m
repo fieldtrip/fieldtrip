@@ -241,21 +241,8 @@ while (get(info.hQuitButton, 'Value') == 1) % while the flag is one, the loop co
          % show current timesample
         str = sprintf('Runtime = %d s\n', round(mean(data.time{1}))); clear data;
         title(str);
-        
-        if isempty(h)
-            % only done once
-            grid on
-            xlabel('x (cm)');
-            ylabel('y (cm)');
-            zlabel('z (cm)');
-            set(gca, 'xtick', -20:2:20)
-            set(gca, 'ytick', -20:2:20)
-            set(gca, 'ztick', -50:2:0) % note the different scaling
-            view(-45, 90)
-            % axis square
-            axis vis3d
-            axis manual
-        end
+ 
+        view(-45, 90)
         
         % DRAW RIGHT PANEL - TOP VIEW
         b = subplot(1,2,2);
@@ -275,22 +262,7 @@ while (get(info.hQuitButton, 'Value') == 1) % while the flag is one, the loop co
         elseif get(info.hViewRadioButton2,'Value') == 0
             view(135, 0)
         end
-                
-        if isempty(i)
-            % only done once
-            grid on
-            xlabel('x (cm)');
-            ylabel('y (cm)');
-            zlabel('z (cm)');
-            set(gca, 'xtick', -20:2:20)
-            set(gca, 'ytick', -20:2:20)
-            set(gca, 'ztick', -50:2:0) % note the different scaling
-            
-            % axis square
-            axis vis3d
-            axis square
-        end
-        
+                        
         % force Matlab to update the figure
         drawnow
         
@@ -486,6 +458,16 @@ if get(info.hHeadCheckBox, 'Value')
     end
     alpha(.15)
 end
+
+% axis
+grid on
+xlabel('x (cm)');
+ylabel('y (cm)');
+zlabel('z (cm)');
+set(gca, 'xtick', -14:2:14)
+set(gca, 'ytick', -14:2:14)
+set(gca, 'ztick', -40:2:-10) % note the different scaling
+axis square
 
 % put the info back
 guidata(handle, info);
