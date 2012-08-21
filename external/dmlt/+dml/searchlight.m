@@ -31,7 +31,7 @@ classdef searchlight < dml.method
 %   m = m.train(X(:,find(mymask(:))),Y); r = m.model;
 %
 %   We may also specify a different, irregular, neighbourhood structure
-%   in conjunction with the input dimanions or a particular mask:
+%   in conjunction with the input dimensions or a particular mask:
 %
 %   mymask = true(10,10,10); mymask(:,:,1:5) = false;
 %   nb = sparse(1000,1000); prm = randperm(1e6); nb(prm(1:1000)) = 1; nb = (nb + nb') ~= 0;
@@ -112,7 +112,7 @@ classdef searchlight < dml.method
         obj.mask = true(obj.indims);
       end
       
-      if (iscell(X) && size(X{1},2) ~= nnz(obj.mask)) || (~iscell(X) && size(X,2) ~= nnz(obj.mask))
+      if ~obj.exclude && ((iscell(X) && size(X{1},2) ~= nnz(obj.mask)) || (~iscell(X) && size(X,2) ~= nnz(obj.mask)))
           error('number of features should match nonzero elements in mask');
       end
       obj.indims = size(obj.mask);
