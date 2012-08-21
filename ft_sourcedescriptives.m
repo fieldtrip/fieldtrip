@@ -10,14 +10,18 @@ function [source] = ft_sourcedescriptives(cfg, source)
 % result from a beamformer source estimation. The configuration can contain
 %   cfg.cohmethod        = 'regular', 'lambda1', 'canonical'
 %   cfg.powmethod        = 'regular', 'lambda1', 'trace', 'none'
-%   cfg.supmethod        = string
+%   cfg.supmethod        = 'chan_dip', 'chan', 'dip', 'none' (default)
 %   cfg.projectmom       = 'yes' or 'no' (default = 'no')
 %   cfg.eta              = 'yes' or 'no' (default = 'no')
 %   cfg.kurtosis         = 'yes' or 'no' (default = 'no')
 %   cfg.keeptrials       = 'yes' or 'no' (default = 'no')
+%   cfg.keepcsd          = 'yes' or 'no' (default = 'no')
+%   cfg.keepnoisecsd     = 'yes' or 'no' (default = 'no')
+%   cfg.keepmom          = 'yes' or 'no' (default = 'yes')
+%   cfg.keepnoisemom     = 'yes' or 'no' (default = 'yes')
 %   cfg.resolutionmatrix = 'yes' or 'no' (default = 'no')
-%   cfg.feedback         = 'no', 'text', 'textbar', 'gui' (default =
-%   'text')
+%   cfg.feedback         = 'no', 'text' (default), 'textbar', 'gui' 
+%
 %
 % The following option only applies to LCMV single-trial timecourses.
 %   cfg.fixedori         = 'within_trials' or 'over_trials' (default = 'over_trials')
@@ -98,7 +102,7 @@ cfg.kurtosis         = ft_getopt(cfg, 'kurtosis',         'no');
 cfg.keeptrials       = ft_getopt(cfg, 'keeptrials',       'no'); 
 cfg.keepcsd          = ft_getopt(cfg, 'keepcsd',          'no');
 cfg.keepmom          = ft_getopt(cfg, 'keepmom',          'yes');
-cfg.keepnoisecsd     = ft_getopt(cfg, 'keepnoisecsd',     'yes');
+cfg.keepnoisecsd     = ft_getopt(cfg, 'keepnoisecsd',     'no');
 cfg.keepnoisemom     = ft_getopt(cfg, 'keepnoisemom',     'yes');
 cfg.fwhm             = ft_getopt(cfg, 'fwhm',             'no');
 cfg.fwhmremovecenter = ft_getopt(cfg, 'fwhmremovecenter', 0);
@@ -365,6 +369,7 @@ if ispccdata
     if strcmp(cfg.keepcsd, 'no')
       source.trial = rmfield(source.trial, 'csd');
     end
+
   else
     % do the processing of the average CSD matrix
     for diplop = 1:length(source.inside)
@@ -488,10 +493,10 @@ if ispccdata
     if strcmp(cfg.keepcsd, 'no')
       source.avg = rmfield(source.avg, 'csd');
     end
-    if strcmp(cfg.keepcsd, 'no') && isnoise
+    if strcmp(cfg.keepnoisecsd, 'no') && isnoise
       source.avg = rmfield(source.avg, 'noisecsd');
     end
-    
+       
   end
 
 elseif ismneavg
