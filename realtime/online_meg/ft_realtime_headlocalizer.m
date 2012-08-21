@@ -56,7 +56,11 @@ clear ft_read_header
 hdr = ft_read_header(cfg.headerfile, 'cache', true);
 
 % MEG sensors in CTF dewar space
-sens = headcoordinates2ctfdewar(hdr.orig.hc.dewar(:,1)', hdr.orig.hc.dewar(:,2)', hdr.orig.hc.dewar(:,3)', hdr.grad);
+try
+    sens = headcoordinates2ctfdewar(hdr.orig.hc.dewar(:,1)', hdr.orig.hc.dewar(:,2)', hdr.orig.hc.dewar(:,3)', hdr.grad);
+catch
+    sens = [];
+end
 
 % define a subset of channels for reading, only "headloc" type channels are relevant
 if strcmp(cfg.dataset, 'buffer://odin:1972');
