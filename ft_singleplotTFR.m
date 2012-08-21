@@ -533,7 +533,7 @@ function select_topoplotTFR(cfg, varargin)
 % first to last callback-input of ft_select_range is range
 % last callback-input of ft_select_range is contextmenu label, if used
 range = varargin{end-1}; 
-varargin = varargin{1:end-2}; % remove range and last
+varargin = varargin(1:end-2); % remove range and last
 
 if isfield(cfg, 'inputfile')
   % the reading has already been done and varargin contains the data

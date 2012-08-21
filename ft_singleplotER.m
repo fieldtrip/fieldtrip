@@ -602,9 +602,8 @@ function select_topoplotER(cfg, varargin)
 % first to last callback-input of ft_select_range is range
 % last callback-input of ft_select_range is contextmenu label, if used
 range = varargin{end-1}; 
-varargin = varargin{1:end-2}; % remove range and last
+varargin = varargin(1:end-2); % remove range and last
 
-fprintf('DUS\n\n');
 cfg.comment = 'auto';
 cfg.xlim = range(1:2);
 if isfield(cfg, 'inputfile')
