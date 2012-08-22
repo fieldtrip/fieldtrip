@@ -1085,8 +1085,8 @@ elseif requestsamples && strcmp(dimord, 'chans_samples_trials')
   dat = dat(:,begselection2:endselection2);
 end
 
-if strcmp(dataformat, 'bci2000_dat')
-  % caching for BCI2000 is handled in the main section and in read_header
+if strcmp(dataformat, 'bci2000_dat') || strcmp(dataformat, 'eyelink_asc') || strcmp(dataformat, 'gtec_mat')
+  % caching for these formats is handled in the main section and in read_header
 else
   % implement caching in a data independent way
   if cache && requestsamples
