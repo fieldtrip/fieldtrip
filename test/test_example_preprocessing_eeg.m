@@ -99,7 +99,6 @@ cfg.method   = 'summary';
 cfg.layout   = lay;       % allows for plotting
 cfg.channels = [1:60];    % do not show EOG channels
 data_clean   = ft_rejectvisual(cfg, data);
-end
 
 cfg          = [];
 cfg.viewmode = 'vertical';
@@ -126,4 +125,5 @@ cfg = [];
 cfg.layout = lay;
 cfg.interactive = 'yes';
 ft_multiplotER(cfg, difference)
+end
 
