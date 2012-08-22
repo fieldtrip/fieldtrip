@@ -36,19 +36,24 @@ spmhead2itabhead  = headcoordinates(spmhead_Nas(1:3), spmhead_Lpa_canal(1:3), sp
 itabvox2spmhead  =  spmhead2itabhead \ itabvox2itabhead;
 
 % change the transformation matrix, such that it returns approximate SPM head coordinates
-mri.transform = itabvox2spmhead;
-mri.coordsys  = 'spm';
+mri.transform     = itabvox2spmhead;
+mri.vox2headOrig  = itabvox2itabhead;
+mri.vox2head      = itabvox2spmhead;
+mri.head2headOrig = spmhead2itabhead;
+mri.coordsys      = 'spm';
 
-% do a second round of affine registration (rigid body) to get improved
+% Do a second round of affine registration (rigid body) to get improved
 % alignment with spm coordinate system. this is needed because there may be
-% different conventions defining LPA and RPA.
+% different conventions defining LPA and RPA. The affine registration may
+% fail however, e.g. if the initial alignment is not close enough. In that
+% case SPM will throw an error
 switch spm('ver')
   case 'SPM8'
     template = fullfile(spm('Dir'),'templates','T1.nii');
   case 'SPM2'
     template = fullfile(spm('Dir'),'templates','T1.mnc');
   otherwise
-    error('unsupported spm-version');    
+    error('unsupported spm-version');
 end
 mri2 = ft_read_mri(template);
 
@@ -64,12 +69,17 @@ flags.regtype = 'rigid';
 itabvox2spmhead2  = M \ V1.mat;
 spmhead2itabhead2 = itabvox2itabhead / itabvox2spmhead2;
 
-% append the transformation matrices to the output
+% update the transformation matrix
 mri.transform     = itabvox2spmhead2;
+
+% this one is unchanged
 mri.vox2headOrig  = itabvox2itabhead;
+
+% these are new
 mri.vox2head      = itabvox2spmhead2;
 mri.head2headOrig = spmhead2itabhead2;
 
 % delete the temporary files
 delete(tname1);
 delete(tname2);
+

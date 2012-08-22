@@ -146,6 +146,9 @@ tmpcfg = [];
 tmpcfg.parameter = 'anatomy';
 reslice = ft_sourceinterpolate(tmpcfg, mri, reslice);
 
+% convert any non-finite values to 0 to avoid problems later on
+reslice.anatomy(~isfinite(reslice.anatomy)) = 0;
+
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
 ft_postamble callinfo

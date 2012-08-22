@@ -27,6 +27,15 @@ function volume = ft_datatype_volume(volume, varargin)
 %   - none
 %
 % Revision history:
+% (2012b) Ensure that the anatomy-field (if present) does not contain
+% infinite values.
+%
+% (2012) A placeholder 2012 version was created that ensured the axes
+% of the coordinate system to be right-handed. This actually never 
+% has made it to the default version. An executive decision regarding
+% this has not been made as far as I (JM) am aware, and probably it's
+% a more principled approach to keep the handedness free, so don't mess
+% with it here. However, keep this snippet of code for reference.
 %
 % (2011) The dimord field was deprecated and we agreed that volume
 % data should be 3-dimensional and not N-dimensional with arbitary
@@ -65,7 +74,7 @@ function volume = ft_datatype_volume(volume, varargin)
 version = ft_getopt(varargin, 'version', 'latest');
 
 if strcmp(version, 'latest')
-  version = '2011';
+  version = '2012b';
 end
 
 if isempty(volume)
@@ -83,6 +92,28 @@ if isfield(volume, 'time'),      volume = rmfield(volume, 'time');      end
 if isfield(volume, 'latency'),   volume = rmfield(volume, 'latency');   end
 
 switch version
+  case '2012b'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if isfield(volume, 'dimord')
+      volume = rmfield(volume, 'dimord')
+    end
+
+    if isfield(volume, 'anatomy')
+      volume.anatomy(~isfinite(volume.anatomy)) = 0;
+    end
+  case '2012'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % THIS ONE DOES NOT SEEM TO HAVE EVER BEEN USED. HOWEVER, KEEP IT FOR DOCUMENTATION
+    % PURPOSES
+   
+    if isfield(volume, 'dimord')
+      volume = rmfield(volume, 'dimord');
+    end
+    
+    % ensure the axes system in the transformation matrix to be
+    % right-handed
+    volume = volumeflip(volume, 'right');
+    
   case '2011'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if isfield(volume, 'dimord')
@@ -102,6 +133,6 @@ switch version
 
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    error('unsupported version "%s" for freq datatype', version);
+    error('unsupported version "%s" for volume datatype', version);
 end
 
