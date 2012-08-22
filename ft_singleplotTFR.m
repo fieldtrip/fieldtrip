@@ -14,9 +14,10 @@ function [cfg] = ft_singleplotTFR(cfg, data)
 %   cfg.maskparameter = field in the data to be used for masking of data
 %                       (not possible for mean over multiple channels, or when input contains multiple subjects
 %                       or trials)
-%   cfg.maskstyle     = style used to mask nans, 'opacity' or 'saturation' (default = 'opacity')
+%   cfg.maskstyle     = style used to masking, 'opacity' or 'saturation' (default = 'opacity')
 %                       use 'saturation' when saving to vector-format (like *.eps) to avoid all sorts of image-problems
 %   cfg.maskalpha     = alpha value used for masking areas dictated by cfg.maskparameter (0 - 1, default = 1)
+%   cfg.masknans      = 'yes' or 'no' (default = 'yes')
 %   cfg.xlim          = 'maxmin' or [xmin xmax] (default = 'maxmin')
 %   cfg.ylim          = 'maxmin' or [ymin ymax] (default = 'maxmin')
 %   cfg.zlim          = 'maxmin','maxabs' or [zmin zmax] (default = 'maxmin')
@@ -35,7 +36,6 @@ function [cfg] = ft_singleplotTFR(cfg, data)
 %                       interactive plot when a selected area is clicked. Multiple areas
 %                       can be selected by holding down the SHIFT key.
 %   cfg.renderer      = 'painters', 'zbuffer',' opengl' or 'none' (default = [])
-%   cfg.masknans      = 'yes' or 'no' (default = 'yes')
 %   cfg.directionality = '', 'inflow' or 'outflow' specifies for
 %                       connectivity measures whether the inflow into a
 %                       node, or the outflow from a node is plotted. The
