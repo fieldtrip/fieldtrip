@@ -7,12 +7,11 @@ function test_bug1665
 % MRI contains NaNs
 
 load('/home/common/matlab/fieldtrip/data/test/bug1665/segmentedS2.mat');
+struct_reslice = ft_checkdata(struct_reslice, 'datatype', 'volume');
 
 cd('/home/common/matlab/fieldtrip/utilities/private');
 %cd('/home/language/jansch/matlab/fieldtrip/utilities/private');
 output = align_ctf2spm(struct_reslice);
 
-% if this field is present in the output, it means that the second 
-% coregistration step has been successful
-assert(isfield(output, 'head2headOrigOld'));
-
+struct_reslice.coordsys = 'itab';
+output = align_itab2spm(struct_reslice);
