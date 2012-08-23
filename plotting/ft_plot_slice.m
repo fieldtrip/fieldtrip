@@ -57,7 +57,7 @@ persistent previous_dim X Y Z
 % (dat, varargin)
 % (dat, msk, varargin)
 % (dat, [], varargin)
-if isempty(varargin{1}) || isnumeric(varargin{1})
+if numel(varargin)>0 && (isempty(varargin{1}) || isnumeric(varargin{1}))
   M        = varargin{1};
   varargin = varargin(2:end);
 end
