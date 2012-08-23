@@ -1,9 +1,9 @@
-function dataset = ref_datasets
+function datasets = ref_datasets
 
 % We have collected a whole bunch of datasets in the original acquisition
 % systems file format that can be used for testing whether FT functions
 % work properly for other types of data and not only for MEG data
-% that was recorded on our ctf275 system.  These test datasets (files,
+% that was recorded on our ctf275 system.  These test datasetss (files,
 % directories) are located on a shared network disk and are organized
 % in a structure according to PATH/TYPE/DATATYPE/datafile or directory
 % 
@@ -19,100 +19,100 @@ elseif ispc
 end
 
 % eeg dataformats
-dataset(1).origdir  = origdir; 
-dataset(1).type     = 'eeg';
-dataset(1).datatype = 'bdf';
-dataset(1).filename = 'Newtest17-256.bdf';
+datasets(1).origdir  = origdir; 
+datasets(1).type     = 'eeg';
+datasets(1).datatype = 'bdf';
+datasets(1).filename = 'Newtest17-256.bdf';
 
-dataset(end+1).origdir  = origdir; 
-dataset(end).type     = 'eeg';
-dataset(end).datatype = 'brainvision';
-dataset(end).filename = 'Mischa.vhdr';
+datasets(end+1).origdir  = origdir; 
+datasets(end).type     = 'eeg';
+datasets(end).datatype = 'brainvision';
+datasets(end).filename = 'Mischa.vhdr';
 
-dataset(end+1).origdir  = origdir; 
-dataset(end).type     = 'eeg';
-dataset(end).datatype = 'edf';
-dataset(end).filename = '0601_s.edf';
+datasets(end+1).origdir  = origdir; 
+datasets(end).type     = 'eeg';
+datasets(end).datatype = 'edf';
+datasets(end).filename = '0601_s.edf';
 
-dataset(end+1).origdir  = origdir; 
-dataset(end).type     = 'eeg';
-dataset(end).datatype = 'neuroscan16';
-dataset(end).filename = '0500.cnt';
+datasets(end+1).origdir  = origdir; 
+datasets(end).type     = 'eeg';
+datasets(end).datatype = 'neuroscan16';
+datasets(end).filename = '0500.cnt';
 
-dataset(end+1).origdir  = origdir; 
-dataset(end).type     = 'eeg';
-dataset(end).datatype = 'neuroscan32';
-dataset(end).filename = 'Subject1_MP.cnt';
+datasets(end+1).origdir  = origdir; 
+datasets(end).type     = 'eeg';
+datasets(end).datatype = 'neuroscan32';
+datasets(end).filename = 'Subject1_MP.cnt';
 
 % meg dataformats
-dataset(end+1).origdir  = origdir; 
-dataset(end).type     = 'meg';
-dataset(end).datatype = 'bti148';
-dataset(end).filename = 'c,rfhp0.1Hz.m4d';
+datasets(end+1).origdir  = origdir; 
+datasets(end).type     = 'meg';
+datasets(end).datatype = 'bti148';
+datasets(end).filename = 'c,rfhp0.1Hz.m4d';
 
-dataset(end+1).origdir  = origdir; 
-dataset(end).type     = 'meg';
-dataset(end).datatype = 'bti248';
-dataset(end).filename = 'e,rfDC';
+datasets(end+1).origdir  = origdir; 
+datasets(end).type     = 'meg';
+datasets(end).datatype = 'bti248';
+datasets(end).filename = 'e,rfDC';
 
-dataset(end+1).origdir  = origdir;
-dataset(end).type     = 'meg';
-dataset(end).datatype = 'bti248grad';
-dataset(end).filename = 'e,rfhp1.0Hz,COH';
+datasets(end+1).origdir  = origdir;
+datasets(end).type     = 'meg';
+datasets(end).datatype = 'bti248grad';
+datasets(end).filename = 'e,rfhp1.0Hz,COH';
 
-dataset(end+1).origdir  = origdir; 
-dataset(end).type     = 'meg';
-dataset(end).datatype = 'ctf151';
-dataset(end).filename = 'Subject01.ds';
+datasets(end+1).origdir  = origdir; 
+datasets(end).type     = 'meg';
+datasets(end).datatype = 'ctf151';
+datasets(end).filename = 'Subject01.ds';
 
-dataset(end+1).origdir  = origdir; 
-dataset(end).type     = 'meg';
-dataset(end).datatype = 'ctf275';
-dataset(end).filename = 'A0132_Aud-Obj-Recognition_20051115_02.ds';
+datasets(end+1).origdir  = origdir; 
+datasets(end).type     = 'meg';
+datasets(end).datatype = 'ctf275';
+datasets(end).filename = 'A0132_Aud-Obj-Recognition_20051115_02.ds';
 
-dataset(end+1).origdir  = origdir; 
-dataset(end).type     = 'meg';
-dataset(end).datatype = 'ctf64';
-dataset(end).filename = 'Wat123r1raw.ds';
-dataset(end).dataformat = 'ctf_old';
+datasets(end+1).origdir  = origdir; 
+datasets(end).type     = 'meg';
+datasets(end).datatype = 'ctf64';
+datasets(end).filename = 'Wat123r1raw.ds';
+datasets(end).dataformat = 'ctf_old';
 
-dataset(end+1).origdir  = origdir; 
-dataset(end).type     = 'meg';
-dataset(end).datatype = 'itab153';
-dataset(end).filename = 'srgcst85_0105.raw';
+datasets(end+1).origdir  = origdir; 
+datasets(end).type     = 'meg';
+datasets(end).datatype = 'itab153';
+datasets(end).filename = 'srgcst85_0105.raw';
 
-dataset(end+1).origdir  = origdir; 
-dataset(end).type     = 'meg';
-dataset(end).datatype = 'itab28';
-dataset(end).filename = 'gibb0101.raw';
+datasets(end+1).origdir  = origdir; 
+datasets(end).type     = 'meg';
+datasets(end).datatype = 'itab28';
+datasets(end).filename = 'gibb0101.raw';
 
-dataset(end+1).origdir  = origdir; 
-dataset(end).type     = 'meg';
-dataset(end).datatype = 'itab28_old';
-dataset(end).filename = 'gibb0101.raw';
+datasets(end+1).origdir  = origdir; 
+datasets(end).type     = 'meg';
+datasets(end).datatype = 'itab28_old';
+datasets(end).filename = 'gibb0101.raw';
 
-dataset(end+1).origdir  = origdir; 
-dataset(end).type     = 'meg';
-dataset(end).datatype = 'neuromag122';
-dataset(end).filename = 'jg_single_01raw.fif';
+datasets(end+1).origdir  = origdir; 
+datasets(end).type     = 'meg';
+datasets(end).datatype = 'neuromag122';
+datasets(end).filename = 'jg_single_01raw.fif';
 
-dataset(end+1).origdir  = origdir; 
-dataset(end).type     = 'meg';
-dataset(end).datatype = 'neuromag306';
-dataset(end).filename = 'raw.fif';
+datasets(end+1).origdir  = origdir; 
+datasets(end).type     = 'meg';
+datasets(end).datatype = 'neuromag306';
+datasets(end).filename = 'raw.fif';
 
-dataset(end+1).origdir  = origdir; 
-dataset(end).type     = 'meg';
-dataset(end).datatype = 'yokogawa160';
-dataset(end).filename = 'Continuous1.con';
+datasets(end+1).origdir  = origdir; 
+datasets(end).type     = 'meg';
+datasets(end).datatype = 'yokogawa160';
+datasets(end).filename = 'Continuous1.con';
 
 % lfp dataformats
-% dataset(end+1).origdir  = origdir; 
-% dataset(end).type     = 'lfp';
-% dataset(end).datatype = 'neuralynx';
-% dataset(end).filename = '2005-2-10_12-11-19';
+% datasets(end+1).origdir  = origdir; 
+% datasets(end).type     = 'lfp';
+% datasets(end).datatype = 'neuralynx';
+% datasets(end).filename = '2005-2-10_12-11-19';
 
-dataset(end+1).origdir  = origdir; 
-dataset(end).type     = 'lfp';
-dataset(end).datatype = 'plexon';
-dataset(end).filename = 'p213parall.nex';
+datasets(end+1).origdir  = origdir; 
+datasets(end).type     = 'lfp';
+datasets(end).datatype = 'plexon';
+datasets(end).filename = 'p213parall.nex';
