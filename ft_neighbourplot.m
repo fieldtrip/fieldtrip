@@ -21,11 +21,14 @@ function [cfg] = ft_neighbourplot(cfg, data)
 %   cfg.elecfile      = filename containing EEG electrode positions
 %   cfg.gradfile      = filename containing MEG gradiometer positions
 %
-% If cfg.neighbours is not defined or empty, this function will call
+% If cfg.neighbours is not defined, this function will call
 % FT_PREPARE_NEIGHBOURS to determine the channel neighbours. The
 % following data fields may also be used by FT_PREPARE_NEIGHBOURS
 %   data.elec     = structure with EEG electrode positions
 %   data.grad     = structure with MEG gradiometer positions
+% If cfg.neighbours is empty, no neighbouring sensors are assumed. 
+%
+% Use cfg.enableedit to create or extend your own neighbourtemplate
 %
 % See also FT_PREPARE_NEIGHBOURS, FT_PREPARE_LAYOUT
 
@@ -80,8 +83,21 @@ if hasdata
 else
   sens = ft_fetch_sens(cfg);
 end
+% insert sensors that are not in neighbourhood structure
+if isempty(cfg.neighbours)
+  nsel = 1:numel(sens.label);
+else
+  nsel = find(~ismember(sens.label, {cfg.neighbours.label}));
+end
+
+for i=1:numel(nsel)
+  cfg.neighbours(end+1).label = sens.label{nsel(i)};
+  cfg.neighbours(end).neighblabel = {};
+end
+
 [tmp, sel] = match_str(sens.label, {cfg.neighbours.label});
 cfg.neighbours = cfg.neighbours(sel);
+
 % give some graphical feedback
 if all(sens.chanpos(:,3)==0)
   % the sensor positions are already projected on a 2D plane
@@ -94,6 +110,7 @@ hf = figure;
 axis equal
 axis off
 hold on;
+hl = [];
 for i=1:length(cfg.neighbours)
   this = cfg.neighbours(i);
   
@@ -120,6 +137,7 @@ for i=1:length(cfg.neighbours)
 end
 
 % this is for putting the channels on top of the connections
+hs = [];
 for i=1:length(cfg.neighbours)
   this = cfg.neighbours(i);
   sel1 = match_str(sens.label, this.label);
@@ -173,6 +191,12 @@ if istrue(cfg.enableedit)
 end
 hf   = getparent(hf);
 delete(hf);
+
+% in any case remove SCALE and COMNT
+desired = ft_channelselection({'all', '-SCALE', '-COMNT'}, {cfg.neighbours.label});
+
+neighb_idx = ismember({cfg.neighbours.label}, desired);
+cfg.neighbours = cfg.neighbours(neighb_idx);
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
