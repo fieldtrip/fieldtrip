@@ -63,7 +63,11 @@ if nargin>1 && all(cellfun(@isnumeric, varargin(1:2)) | cellfun(@islogical, vara
 else
   % the function was called like plot(y, ...)
   vdat = varargin{1};
-  hdat = 1:size(vdat,1);
+  if iscolumn(vdat),
+    hdat = 1:size(vdat,1);
+  else
+    hdat = 1:size(vdat,2);
+  end
   varargin = varargin(2:end);
 end
 
@@ -229,7 +233,16 @@ switch highlightstyle
       for i=1:length(begsample)
         hor = hdat(   begsample(i):endsample(i));
         ver = vdat(j, begsample(i):endsample(i));
-        plot(hor,ver,'linewidth',4*linewidth,'linestyle','-','Color', color(j)); % changed 3* to 4*, as 3* appeared to have no effect
+        if isempty(color)
+          plot(hor,ver,'linewidth',4*linewidth,'linestyle','-'); % changed 3* to 4*, as 3* appeared to have no effect
+        elseif ischar(color) && size(color,1)==1
+          % plot all lines with the same color
+          plot(hor,ver,'linewidth',4*linewidth,'linestyle','-','Color', color); % changed 3* to 4*, as 3* appeared to have no effect
+        else
+          % plot each line with its own color
+          plot(hor,ver,'linewidth',4*linewidth,'linestyle','-','Color', color(j)); % changed 3* to 4*, as 3* appeared to have no effect
+        end
+        
       end
     end
     
