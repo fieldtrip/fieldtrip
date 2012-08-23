@@ -179,7 +179,7 @@ hasdata    = ~isempty(data);
 hasvolume  = ft_datatype(data, 'volume');
 needvolcnd = strcmp(cfg.method,'asa'); % only for ASA
 needvolume = strcmp(cfg.method,'fns') || strcmp(cfg.method,'simbio'); % only for FNS & SIMBIO
-needbnd    = ~needvolcnd && ~needvolume; % all other methods
+needbnd    = ~needvolcnd && ~needvolume && ~strcmp(cfg.method, 'infinite'); % all other methods apart from infinite, as far as I can tell
 
 % new way of getting headmodel structure:
 geometry = [];
@@ -211,7 +211,7 @@ elseif hasvolume && needbnd
   else
     error('The input data should already contain at least one field with a segmented volume');
   end
-else
+elseif ~strcmp(cfg.method, 'infinite')
   error('Not able to find or build a geometrical description for the head');
 end
 
@@ -296,7 +296,9 @@ switch cfg.method
 end
 
 % ensure that the geometrical units are specified
-vol = ft_convert_units(vol);
+if ~ft_voltype(vol, 'infinite'),
+  vol = ft_convert_units(vol);
+end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
