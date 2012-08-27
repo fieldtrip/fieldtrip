@@ -64,7 +64,7 @@ classdef sopls < dml.method
 
     method = 'sopls' % 'pls' (non-sparse), 'opls' (non-sparse orthonormal), 'sopls' (sparse opls)
     
-    regularizer =  dml.glmnet('family','gaussian','verbose',true); % default regularizer
+    regularizer =  dml.enet('family','gaussian','verbose',true); % default regularizer
          
   end
 
