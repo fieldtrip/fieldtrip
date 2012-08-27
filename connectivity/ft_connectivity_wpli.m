@@ -96,7 +96,7 @@ if dojack && n>2 % n needs to be larger than 2 to get a meaningful variance
     leave1outssq = leave1outssq + tmp.^2; % added this for nan support                              
   end  
   % compute the sem here 
-  n = nansum(~isnan(input),1); % this is the actual df when nans are found in the input matrix
+  n = sum(~isnan(input),1); % this is the actual df when nans are found in the input matrix
   v = (n-1).^2.*(leave1outssq - (leave1outsum.^2)./n)./(n - 1); % 11.5 efron, sqrt and 1/n done in ft_connectivityanalysis
   v = reshape(v,siz(2:end)); % remove the first singular dimension   
   n = reshape(n,siz(2:end));  
