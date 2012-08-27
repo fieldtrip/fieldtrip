@@ -60,6 +60,7 @@ end
 
 div    = [ceil(sqrt(nslice)) ceil(sqrt(nslice))];
 optarg = varargin;
+corners = [inf -inf inf -inf inf -inf]; % get the corners for the axis specification
 for k = 1:nslice
   
   % define 'x' and 'y' axis in projection plane, the definition of x and y is more or less arbitrary
@@ -91,12 +92,21 @@ for k = 1:nslice
   ztmp = reshape(pos(:,3), siz);
   
   % add some offset in the x and y directions to create the montage
-  offset(1) = ix*(slicesize(1)-1);
-  offset(2) = iy*(slicesize(2)-1); 
+  offset(1) = iy*(slicesize(1)-1);
+  offset(2) = ix*(slicesize(2)-1); 
+  
+  % update the specification of the corners of the montage plot
+  c1 = offset(1) + min(xtmp(:));
+  c2 = offset(1) + max(xtmp(:));
+  c3 = offset(2) + min(ytmp(:));
+  c4 = offset(2) + max(ytmp(:));
+  c5 = min(ztmp(:));
+  c6 = max(ztmp(:));
+  corners = [min(corners(1),c1) max(corners(2),c2) min(corners(3),c3) max(corners(4),c4) min(corners(5),c5) max(corners(6),c6)];
   
   % update the positions
-  set(h(k), 'xdata', offset(1) + ytmp);
-  set(h(k), 'ydata', offset(2) + xtmp);
+  set(h(k), 'ydata', offset(1) + xtmp);
+  set(h(k), 'xdata', offset(2) + ytmp);
   set(h(k), 'zdata',         0 * ztmp);
   
   if dointersect,
@@ -116,8 +126,8 @@ for k = 1:nslice
       ztmp = reshape(pos(:,3), siz2);
   
       % update the positions
-      set(p(kk), 'xdata', offset(1) + ytmp);
-      set(p(kk), 'ydata', offset(2) + xtmp);
+      set(p(kk), 'ydata', offset(1) + xtmp);
+      set(p(kk), 'xdata', offset(2) + ytmp);
       set(p(kk), 'zdata',         0 * ztmp);
     end
     pprevious = [pprevious(:);p(:)];
@@ -129,6 +139,7 @@ set(gca, 'zlim', [0 1]);
 %axis equal;
 axis off;
 view([0 90]);
+axis(corners([3 4 1 2]));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
