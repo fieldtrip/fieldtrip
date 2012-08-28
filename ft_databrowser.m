@@ -993,15 +993,17 @@ cfg = getappdata(parent, 'cfg');
 
 % parse cfg.preproc
 if ~isempty(cfg.preproc)
-  code = printstruct('cfg', cfg.preproc);
+  tmpcfg = cfg.preproc;
+  cfg = [];
+  cfg.preproc = tmpcfg;
+  code = printstruct('cfg', cfg);
 else
   code = [];
 end
 
 % add descriptive lines
-nl      = sprintf('\n');
-sep     = sprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
-descrip = sprintf('%% Add/change config options for preprocessing\n%% (similar to in the script editor)\n');
+sep     = sprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
+descrip = sprintf('%% Add/change cfg options for on-the-fly preprocessing\n%% Use as cfg.preproc.xxx\n');
 code    = [sep descrip sep code];
 
 
@@ -1010,11 +1012,12 @@ pph = figure;
 axis off
 % add save button
 uicontrol('tag', 'preproccfg_l2', 'parent', pph, 'units', 'normalized', 'style', 'pushbutton', 'string','save and close','position', [0.81, 0.6 , 0.18, 0.10],'callback',@preproc_cfg2_cb);
+
 % add edit box
 ppeh = uicontrol('style', 'edit');
 set(pph, 'toolBar', 'none')
 set(pph, 'menuBar', 'none')
-set(pph, 'Name', 'cfg editor')
+set(pph, 'Name', 'cfg.preproc editor')
 set(pph, 'NumberTitle', 'off')
 set(ppeh, 'Units', 'normalized');
 set(ppeh, 'Position', [0 0 .8 1]);
@@ -1038,28 +1041,44 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function preproc_cfg2_cb(h,eventdata)
 parent = get(h,'parent');
+superparent = getappdata(parent,'superparent');
 ppeh   = getappdata(parent,'ppeh');
 code = get(ppeh, 'string');
 
 % remove descriptive lines (so they don't display on command line)
-code = code(4:end,:);
+code = cellstr(code(5:end,:));
+% get rid of empty lines and white space
+remind = [];
+for iline = 1:numel(code)
+  code{iline} = strtrim(code{iline});
+  if isempty(code{iline})
+    remind = [remind iline];
+  end
+end
+code(remind) = [];
 
-% eval the code
-for iline = 1:size(code,1)
-  eval([code(iline,:) ';']);
+if ~isempty(code)
+  ispreproccfg = strncmp(code,'cfg.preproc.',12);
+  if ~all(ispreproccfg)
+    errordlg('cfg-options must be specified as cfg.preproc.xxx','cfg.preproc editor','modal')
+  end
+  % eval the code
+  for icomm = 1:numel(code)
+    eval([code{icomm} ';']);
+  end
+  
+  % check for cfg and output into the original appdata-window
+  if ~exist('cfg','var')
+    cfg = [];
+    cfg.preproc = [];
+  end
+  maincfg = getappdata(superparent,'cfg');
+  maincfg.preproc = cfg.preproc;
+  setappdata(superparent,'cfg',maincfg)
 end
 
-% check for cfg and output into the original appdata-window
-if ~exist('cfg','var')
-  cfg = [];
-end
-superparent = getappdata(parent,'superparent');
-maincfg = getappdata(superparent,'cfg');
-maincfg.preproc = cfg;
-setappdata(superparent,'cfg',maincfg)
 close(parent)
 redraw_cb(superparent)
-uiresume(superparent)
 end
 
 
