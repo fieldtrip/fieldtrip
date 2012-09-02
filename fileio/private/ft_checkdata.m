@@ -153,7 +153,11 @@ if ~isequal(feedback, 'no')
     fprintf('the input is volume data with dimensions [%d %d %d]\n', data.dim(1), data.dim(2), data.dim(3));
   elseif issource
     nsource = size(data.pos, 1);
-    fprintf('the input is source data with %d positions\n', nsource);
+    if isfield(data, 'dim')
+      fprintf('the input is source data with %d positions on a [%d %d %d] grid\n', nsource, data.dim(1), data.dim(2), data.dim(3));
+    else
+      fprintf('the input is source data with %d positions\n', nsource);
+    end
   elseif isdip
     fprintf('the input is dipole data\n');
   elseif ismvar
