@@ -33,7 +33,7 @@ pnt   = cat(2, data{2:end});
 
 isfid = false(1,numel(label));
 for k = 1:numel(label)
-  if any(strcmp(label{k},{'Rcoil','Lcoil','nasion','left','right','lpa','rpa','nas','rc','lc'}))
+  if any(strcmpi(label{k},{'Rcoil','Lcoil','nasion','left','right','lpa','rpa','nas','rc','lc'}))
     isfid(k) = true;
   end
 end
@@ -54,19 +54,19 @@ label = newlabel;
 
 % rename the fiducials into lpa/rpa/nasion
 for k = 1:numel(label)
-  if any(strcmp(label{k}, {'nasion' 'nose' 'nz'}))
+  if any(strcmpi(label{k}, {'nasion' 'nose' 'nz'}))
     label{k} = 'nas';
   end
-  if any(strcmp(label{k}, {'left'}))
+  if any(strcmpi(label{k}, {'left'}))
     label{k} = 'lpa';
   end
-  if any(strcmp(label{k}, {'right'}))
+  if any(strcmpi(label{k}, {'right'}))
     label{k} = 'rpa';
   end
-  if any(strcmp(label{k}, {'rc'}))
+  if any(strcmpi(label{k}, {'rc'}))
     label{k} = 'Rcoil';
   end
-  if any(strcmp(label{k}, {'lc'}))
+  if any(strcmpi(label{k}, {'lc'}))
     label{k} = 'Lcoil';
   end
 end
