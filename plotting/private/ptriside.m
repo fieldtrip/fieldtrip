@@ -1,12 +1,13 @@
-function [side] = ptriside(v1, v2, v3, r, tolerance);
+function [side] = ptriside(v1, v2, v3, r, tolerance)
 
-% PTRISIDE determines the side of a plane on which a point lies
-% it returns 0 if the point lies on the plane
+% PTRISIDE determines the side of a plane on which a set of points lie. it
+% returns 0 for the points that lie on the plane
 %
 % [side] = ptriside(v1, v2, v3, r)
 % 
-% the side of point r is determined relative to the plane spanned
-% by vertices v1, v2 and v3
+% the side of points r is determined relative to the plane spanned by
+% vertices v1, v2 and v3. v1,v2 and v3 should be 1x3 vectors. r should be a
+% Nx3 matrix
 
 % Copyright (C) 2002, Robert Oostenveld
 %
@@ -22,27 +23,33 @@ if nargin<5
   tolerance = 100*eps;
 end
 
-a = r  - v1;
+n = size(r,1);
+a = r  - ones(n,1)*v1;
 b = v2 - v1;
 c = v3 - v1;
 d = crossproduct(b, c);
 val = dotproduct(a, d);
-if val>tolerance
-  side=1;
-elseif val<-tolerance
-  side=-1;
-else
-  side=0;
-end
 
-function c = crossproduct(a, b);
+side = zeros(n, 1);
+side(val >  tolerance) =  1;
+side(val < -tolerance) = -1;
+
+%if val>tolerance
+%  side=1;
+%elseif val<-tolerance
+%  side=-1;
+%else
+%  side=0;
+%end
 
 % subfunction without overhead to speed up
+function c = crossproduct(a, b)
+
 c(1) = a(2)*b(3)-a(3)*b(2);
 c(2) = a(3)*b(1)-a(1)*b(3);
 c(3) = a(1)*b(2)-a(2)*b(1);
 
-function d = dotproduct(a, b);
+% subfunction without overhead to speed up, input a can be a matrix
+function d = dotproduct(a, b)
 
-% subfunction without overhead to speed up
-d = a(1)*b(1)+a(2)*b(2)+a(3)*b(3);
+d = a(:,1)*b(1)+a(:,2)*b(2)+a(:,3)*b(3);
