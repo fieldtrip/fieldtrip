@@ -25,8 +25,8 @@ end
 a = r  - v1;
 b = v2 - v1;
 c = v3 - v1;
-d = cross(b, c);
-val = dot(a, d);
+d = crossproduct(b, c);
+val = dotproduct(a, d);
 if val>tolerance
   side=1;
 elseif val<-tolerance
@@ -35,3 +35,14 @@ else
   side=0;
 end
 
+function c = crossproduct(a, b);
+
+% subfunction without overhead to speed up
+c(1) = a(2)*b(3)-a(3)*b(2);
+c(2) = a(3)*b(1)-a(1)*b(3);
+c(3) = a(1)*b(2)-a(2)*b(1);
+
+function d = dotproduct(a, b);
+
+% subfunction without overhead to speed up
+d = a(1)*b(1)+a(2)*b(2)+a(3)*b(3);
