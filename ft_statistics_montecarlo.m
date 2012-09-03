@@ -18,16 +18,16 @@ function [stat, cfg] = ft_statistics_montecarlo(cfg, dat, design, varargin)
 %
 % The configuration options that can be specified are:
 %   cfg.numrandomization = number of randomizations, can be 'all'
-%   cfg.correctm         = apply multiple-comparison correction, 'no', 'max', cluster', 'bonferoni', 'holms', 'fdr' (default = 'no')
-%   cfg.alpha            = number, a critical value for rejecting the null-hypothesis per tail (default = 0.05)
-%   cfg.tail             = -1, 1 or 0 (default = 0)
-%   cfg.correcttail      = correct p-values or alpha-values when doing a two-sided test, 'alpha','prob' or 'no' (default = 'no')
+%   cfg.correctm         = string, apply multiple-comparison correction, 'no', 'max', cluster', 'bonferoni', 'holms', 'fdr' (default = 'no')
+%   cfg.alpha            = number, critical value for rejecting the null-hypothesis per tail (default = 0.05)
+%   cfg.tail             = number, -1, 1 or 0 (default = 0)
+%   cfg.correcttail      = string, correct p-values or alpha-values when doing a two-sided test, 'alpha','prob' or 'no' (default = 'no')
 %   cfg.ivar             = number or list with indices, independent variable(s)
 %   cfg.uvar             = number or list with indices, unit variable(s)
 %   cfg.wvar             = number or list with indices, within-cell variable(s)
 %   cfg.cvar             = number or list with indices, control variable(s)
-%   cfg.feedback         = 'gui', 'text', 'textbar' or 'no' (default = 'text')
-%   cfg.randomseed       = 'yes', 'no' or a number (default = 'yes')
+%   cfg.feedback         = string, 'gui', 'text', 'textbar' or 'no' (default = 'text')
+%   cfg.randomseed       = string, 'yes', 'no' or a number (default = 'yes')
 %
 % If you use a cluster-based statistic, you can specify the following
 % options that determine how the single-sample or single-voxel

@@ -18,9 +18,9 @@ function [stat, cfg] = ft_statistics_stats(cfg, dat, design)
 %  This function uses the Matlab statistics toolbox to perform various
 %  statistical tests on timelock, frequency or source data. Supported
 %  configuration options are
-%   cfg.alpha     = 0.05
-%   cfg.tail      = 0, -1 or 1
-%   cfg.feedback  = 'no', 'text', 'textbar', 'gui'
+%   cfg.alpha     = number, critical value for rejecting the null-hypothesis (default = 0.05)
+%   cfg.tail      = number, -1, 1 or 0 (default = 0)
+%   cfg.feedback  = string, 'gui', 'text', 'textbar' or 'no' (default = 'textbar')
 %   cfg.method    = 'stats'
 %   cfg.statistic = 'ttest'        test against a mean of zero
 %                   'ttest2'         compare the mean in two conditions
