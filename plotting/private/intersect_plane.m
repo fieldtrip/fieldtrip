@@ -1,4 +1,4 @@
-function [X, Y, Z] = intersect_plane(pnt, dhk, v1, v2, v3)
+function [X, Y, Z, pnt1, dhk1, pnt2, dhk2] = intersect_plane(pnt, dhk, v1, v2, v3)
 
 % INTERSECT_PLANE intersection between a triangulated surface and a plane
 % it returns the coordinates of the vertices which form a contour
@@ -15,10 +15,11 @@ function [X, Y, Z] = intersect_plane(pnt, dhk, v1, v2, v3)
 
 npnt = size(pnt,1);
 ndhk = size(dhk,1);
-side = zeros(npnt,1);
-for i=1:npnt
-  side(i) = ptriside(v1, v2, v3, pnt(i,:));
-end
+% side = zeros(npnt,1);
+% for i=1:npnt
+%   side(i) = ptriside(v1, v2, v3, pnt(i,:));
+% end
+side = ptriside(v1, v2, v3, pnt);
 
 % find the triangles which have vertices on both sides of the plane
 indx = find(abs(sum(side(dhk),2))~=3);
@@ -32,6 +33,7 @@ for i=1:length(indx)
   l2 = pnt(cur(2),:);
   l3 = pnt(cur(3),:);
   if tmp(1)==tmp(2)
+    % plane intersects two sides of the triangle
     cnt1(i,:) = ltrisect(v1, v2, v3, l3, l1);
     cnt2(i,:) = ltrisect(v1, v2, v3, l3, l2);
   elseif tmp(1)==tmp(3)
@@ -41,6 +43,7 @@ for i=1:length(indx)
     cnt1(i,:) = ltrisect(v1, v2, v3, l1, l2);
     cnt2(i,:) = ltrisect(v1, v2, v3, l1, l3);
   elseif tmp(1)==0 && tmp(2)==0
+    % two vertices of the triangle lie on the plane
     cnt1(i,:) = l1;
     cnt2(i,:) = l2;
   elseif tmp(1)==0 && tmp(3)==0
@@ -50,6 +53,7 @@ for i=1:length(indx)
     cnt1(i,:) = l2;
     cnt2(i,:) = l3;
   elseif tmp(1)==0 && tmp(2)~=tmp(3)
+    % one vertex of the triangle lies on the plane
     cnt1(i,:) = l1;
     cnt2(i,:) = ltrisect(v1, v2, v3, l2, l3);
   elseif tmp(2)==0 && tmp(3)~=tmp(1)
@@ -74,3 +78,26 @@ X = [cnt1(:,1) cnt2(:,1)];
 Y = [cnt1(:,2) cnt2(:,2)];
 Z = [cnt1(:,3) cnt2(:,3)];
 
+if nargout>3
+  % also output the two meshes on either side of the plane
+  indx1 = find(side==1);
+  pnt1  = pnt(indx1,:);
+  sel1  = sum(ismember(dhk, indx1), 2)==3;
+  dhk1  = dhk(sel1,:);
+  dhk1  = tri_reindex(dhk1);
+  
+  indx2 = find(side==-1);
+  pnt2  = pnt(indx2,:);
+  sel2  = sum(ismember(dhk, indx2), 2)==3;
+  dhk2  = dhk(sel2,:);
+  dhk2  = tri_reindex(dhk2);
+end
+
+function [newtri] = tri_reindex(tri)
+
+%this function reindexes tri such that they run from 1:number of unique vertices
+
+newtri       = tri;
+[srt, indx]  = sort(tri(:));
+tmp          = cumsum(double(diff([0;srt])>0));
+newtri(indx) = tmp;
