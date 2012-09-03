@@ -19,7 +19,7 @@ function [stat, cfg] = ft_statistics_montecarlo(cfg, dat, design, varargin)
 % The configuration options that can be specified are:
 %   cfg.numrandomization = number of randomizations, can be 'all'
 %   cfg.correctm         = apply multiple-comparison correction, 'no', 'max', cluster', 'bonferoni', 'holms', 'fdr' (default = 'no')
-%   cfg.alpha            = critical value for rejecting the null-hypothesis per tail (default = 0.05)
+%   cfg.alpha            = number, a critical value for rejecting the null-hypothesis per tail (default = 0.05)
 %   cfg.tail             = -1, 1 or 0 (default = 0)
 %   cfg.correcttail      = correct p-values or alpha-values when doing a two-sided test, 'alpha','prob' or 'no' (default = 'no')
 %   cfg.ivar             = number or list with indices, independent variable(s)
