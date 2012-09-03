@@ -128,7 +128,7 @@ end
 
   
 if ~isempty(cfg.maskparameter) && ischar(cfg.maskparameter)
-  opt.mask = (getsubfield(data, cfg.maskparameter))~=0;
+  opt.mask = double(getsubfield(data, cfg.maskparameter)~=0);
 else
   opt.mask =ones(size(opt.dat));
 end
@@ -164,9 +164,11 @@ set(opt.timer, 'timerfcn', {@cb_timer, opt.handles.figure}, 'period', 0.1, 'exec
 if opt.issource
   if isfield(data, 'sulc')
     vdat = data.sulc;
-    vdat = vdat-min(vdat)+1;
-    vdat = vdat./max(vdat);
-    vdat = 0.8.*repmat(vdat,[1 3]);
+    vdat(vdat>0.5) = 0.5;
+    vdat(vdat<-0.5)= -0.5;
+    vdat = vdat-min(vdat);
+    vdat = 0.35.*(vdat./max(vdat))+0.3;
+    vdat = repmat(vdat,[1 3]);
     mesh = ft_plot_mesh(data, 'edgecolor', 'none', 'vertexcolor', vdat);
   else
     mesh = ft_plot_mesh(data, 'edgecolor', 'none', 'facecolor', [0.5 0.5 0.5]);
@@ -174,7 +176,10 @@ if opt.issource
   lighting gouraud
   set(mesh, 'Parent', opt.handles.axes.movie);
   % mesh = ft_plot_mesh(source, 'edgecolor', 'none', 'vertexcolor', 0*opt.dat(:,1,1), 'facealpha', 0*opt.mask(:,1,1));
-  opt.handles.mesh = ft_plot_mesh(data, 'edgecolor', 'none', 'vertexcolor', opt.mask(:,1,1).*opt.dat(:,1,1));
+  opt.handles.mesh = ft_plot_mesh(data, 'edgecolor', 'none', 'vertexcolor', opt.dat(:,1,1));
+  set(opt.handles.mesh, 'AlphaDataMapping', 'scaled');
+  set(opt.handles.mesh, 'FaceAlpha', 'interp');
+  set(opt.handles.mesh, 'FaceVertexAlphaData', opt.mask(:,1,1));
   lighting gouraud
   cam1 = camlight('left');
   set(cam1, 'Parent', opt.handles.axes.movie);
@@ -543,7 +548,8 @@ function updateMovie(opt, valx, valy)
 if ~opt.issource
   set(opt.handles.grid, 'cdata',  griddata(opt.chanx, opt.chany, opt.mask(:,valx,valy).*opt.dat(:,valx,valy), opt.xdata, opt.nanmask.*opt.ydata, 'v4'));
 else
-  set(opt.handles.mesh, 'FaceVertexCData',  squeeze(opt.mask(:,valx,valy).*opt.dat(:,valx,valy)));
+  set(opt.handles.mesh, 'FaceVertexCData',  squeeze(opt.dat(:,valx,valy)));
+  set(opt.handles.mesh, 'FaceVertexAlphaData', squeeze(opt.mask(:,valx,valy)));
 end
 
 end
