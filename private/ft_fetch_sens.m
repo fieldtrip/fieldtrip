@@ -165,7 +165,7 @@ elseif isdatasens
   display('The data input might already be a sensor description.\n');
   sens = data;
 else
-  error('no electrodes or gradiometers specified, see help above');
+  error('no electrodes or gradiometers specified.');
 end
 
 % ensure that the sensor description is up-to-date
