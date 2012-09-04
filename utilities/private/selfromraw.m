@@ -71,8 +71,10 @@ if doseltim
       endLatency = numel(ok) - find(ok,1,'last');
       
       % update sampleinfo to reflect this
-      data.sampleinfo(k,1) = data.sampleinfo(k,1) + beginLatency;
-      data.sampleinfo(k,2) = data.sampleinfo(k,2) - endLatency;
+      if isfield(data, 'sampleinfo')
+        data.sampleinfo(k,1) = data.sampleinfo(k,1) + beginLatency;
+        data.sampleinfo(k,2) = data.sampleinfo(k,2) - endLatency;
+      end
       
     else
       
