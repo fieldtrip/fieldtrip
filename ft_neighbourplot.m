@@ -61,7 +61,7 @@ ft_preamble trackconfig
 hasdata = nargin>1;
 if hasdata, data = ft_checkdata(data); end
 
-cfg.enabledit = ft_getopt(cfg, 'enableedit', 'no');
+cfg.enableedit = ft_getopt(cfg, 'enableedit', 'no');
 
 if isfield(cfg, 'neighbours')
   cfg.neighbours = cfg.neighbours;
