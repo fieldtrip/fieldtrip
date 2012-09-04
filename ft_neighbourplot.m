@@ -188,10 +188,10 @@ if istrue(cfg.enableedit)
     userdata = get(hf, 'UserData');
   end
   cfg = userdata.cfg;
-end
-hf   = getparent(hf);
-delete(hf);
 
+  hf   = getparent(hf);
+  delete(hf);
+end
 % in any case remove SCALE and COMNT
 desired = ft_channelselection({'all', '-SCALE', '-COMNT'}, {cfg.neighbours.label});
 
