@@ -138,14 +138,20 @@ end
 
 % compute SCD for each trial
 if strcmp(cfg.method, 'spline')
+  
+  ft_progress('init', 'text');
+  
   for trlop=1:Ntrials
     % do not compute interpolation, but only one value at [0 0 1]
     % this also gives L1, the laplacian of the original data in which we
     % are interested here
-    fprintf('computing SCD for trial %d\n', trlop);
+    
+    ft_progress(trlop/Ntrials, 'computing SCD for trial %d of %d', trlop, Ntrials);
     [V2, L2, L1] = splint(elec.chanpos, data.trial{trlop}, [0 0 1]);
     scd.trial{trlop} = L1;
   end
+  
+  ft_progress('close');
   
 elseif strcmp(cfg.method, 'finite')
   % the finite difference approach requires a triangulation
@@ -199,9 +205,9 @@ if strcmp(cfg.method, 'spline') || strcmp(cfg.method, 'finite')
     % is in SI units (MKS).
     scd.trial{trlop} = cfg.conductivity * -1 * scd.trial{trlop};
   end
-  fprintf('output surface laplacian is in V/m^2');
+  fprintf('output surface laplacian is in V/m^2\n');
 else
-  fprintf('output Hjorth filtered potential is in uV');
+  fprintf('output Hjorth filtered potential is in uV\n');
 end
 
 % collect the results
