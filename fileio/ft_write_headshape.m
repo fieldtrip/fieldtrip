@@ -27,6 +27,8 @@ function ft_write_headshape(filename, bnd, varargin)
 %   'vista'
 %   'tetgen'
 %   'gifti'
+%   'stl'       STereoLithography file format (often supported by
+%               CAD/generic 3D mesh editing programs)
 %
 % See also FT_READ_HEADSHAPE
 
