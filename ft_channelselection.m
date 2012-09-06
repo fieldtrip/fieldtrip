@@ -37,7 +37,7 @@ function [channel] = ft_channelselection(desired, datachannel)
 % Other channel groups are
 %   'EEG1010'    with approximately 90 electrodes
 %   'EEG1005'    with approximately 350 electrodes
-%   'EEGCHWILLA' for Dorothee Chwilla's electrode caps (used at the NICI)
+%   'EEGCHWILLA' for Dorothee Chwilla's electrode caps (used at the DCC)
 %   'EEGBHAM'    for the 128 channel EEG system used in Birmingham
 %   'EEGREF'     for mastoid and ear electrodes (M1, M2, LM, RM, A1, A2)
 %   'MZ'         for MEG zenith
