@@ -33,6 +33,11 @@ function [spectrum,ntaper,freqoi,timeoi] = ft_specest_mtmconvol(dat, time, varar
 %
 % $Id$
 
+% these are for speeding up computation of tapers on subsequent calls
+persistent previous_argin previous_wltspctrm
+
+
+
 % get the optional input arguments
 taper     = ft_getopt(varargin, 'taper', 'dpss');
 pad       = ft_getopt(varargin, 'pad');
@@ -121,98 +126,107 @@ end
 % set number of samples per time-window (timwin is in seconds)
 timwinsample = round(timwin .* fsample);
 
-% Compute tapers per frequency, multiply with wavelets and compute their fft
-wltspctrm = cell(nfreqoi,1);
-ntaper    = zeros(nfreqoi,1);
-for ifreqoi = 1:nfreqoi
-  switch taper
-    case 'dpss'
-      % create a sequence of DPSS tapers, ensure that the input arguments are double precision
-      tap = double_dpss(timwinsample(ifreqoi), timwinsample(ifreqoi) .* (tapsmofrq(ifreqoi) ./ fsample))';
-      % remove the last taper because the last slepian taper is always messy
-      tap = tap(1:(end-1), :);
-      
-      % give error/warning about number of tapers
-      if isempty(tap)
-        error('%.3f Hz: datalength to short for specified smoothing\ndatalength: %.3f s, smoothing: %.3f Hz, minimum smoothing: %.3f Hz',freqoi(ifreqoi), timwinsample(ifreqoi)/fsample,tapsmofrq(ifreqoi),fsample/timwinsample(ifreqoi));
-      elseif size(tap,1) == 1
-        disp([num2str(freqoi(ifreqoi)) ' Hz: WARNING: using only one taper for specified smoothing'])
+
+% determine whether tapers need to be recomputed
+current_argin = {time, postpad, taper, timwinsample, tapsmofrq, freqoi, timeoi, tapopt}; % reasoning: if time and postpad are equal, it's the same length trial, if the rest is equal then the requested output is equal
+if isequal(current_argin, previous_argin)
+  % don't recompute tapers
+  wltspctrm = previous_wltspctrm;
+  ntaper    = cellfun(@size,wltspctrm,repmat({1},[1 nfreqoi])');
+else
+  % recompute tapers per frequency, multiply with wavelets and compute their fft
+  wltspctrm = cell(nfreqoi,1);
+  ntaper    = zeros(nfreqoi,1);
+  for ifreqoi = 1:nfreqoi
+    switch taper
+      case 'dpss'
+        % create a sequence of DPSS tapers, ensure that the input arguments are double precision
+        tap = double_dpss(timwinsample(ifreqoi), timwinsample(ifreqoi) .* (tapsmofrq(ifreqoi) ./ fsample))';
+        % remove the last taper because the last slepian taper is always messy
+        tap = tap(1:(end-1), :);
+        
+        % give error/warning about number of tapers
+        if isempty(tap)
+          error('%.3f Hz: datalength to short for specified smoothing\ndatalength: %.3f s, smoothing: %.3f Hz, minimum smoothing: %.3f Hz',freqoi(ifreqoi), timwinsample(ifreqoi)/fsample,tapsmofrq(ifreqoi),fsample/timwinsample(ifreqoi));
+        elseif size(tap,1) == 1
+          disp([num2str(freqoi(ifreqoi)) ' Hz: WARNING: using only one taper for specified smoothing'])
+        end
+        
+      case 'sine'
+        % create and remove the last taper
+        tap = sine_taper(timwinsample(ifreqoi), timwinsample(ifreqoi) .* (tapsmofrq(ifreqoi) ./ fsample))';
+        tap = tap(1:(end-1), :);
+        
+      case 'sine_old'
+        % to provide compatibility with the tapers being scaled (which was default
+        % behavior prior to 29apr2011) yet this gave different magnitude of power
+        % when comparing with slepian multi tapers
+        tap = sine_taper_scaled(timwinsample(ifreqoi), timwinsample(ifreqoi) .* (tapsmofrq(ifreqoi) ./ fsample))';
+        tap = tap(1:(end-1), :); % remove the last taper
+        
+      case 'alpha'
+        tap = alpha_taper(timwinsample(ifreqoi), freqoi(ifreqoi)./ fsample)';
+        tap = tap./norm(tap)';
+        
+      case 'hanning'
+        tap = hanning(timwinsample(ifreqoi))';
+        tap = tap./norm(tap, 'fro');
+        
+      otherwise
+        % create a single taper according to the window specification as a replacement for the DPSS (Slepian) sequence
+        if isempty(tapopt) % some windowing functions don't support nargin>1, and window.m doesn't check it
+          tap = window(taper, timwinsample(ifreqoi))';
+        else
+          tap = window(taper, timwinsample(ifreqoi),tapopt)';
+        end
+        tap = tap ./ norm(tap,'fro'); % make it explicit that the frobenius norm is being used
+    end
+    
+    % set number of tapers
+    ntaper(ifreqoi) = size(tap,1);
+    
+    % Wavelet construction
+    tappad   = ceil(endnsample ./ 2) - floor(timwinsample(ifreqoi) ./ 2);
+    prezero  = zeros(1,tappad);
+    postzero = zeros(1,round(endnsample) - ((tappad-1) + timwinsample(ifreqoi))-1);
+    
+    % phase consistency: cos must always be 1  and sin must always be centered in upgoing flank, so the centre of the wavelet (untapered) has angle = 0
+    anglein  = (-(timwinsample(ifreqoi)-1)/2 : (timwinsample(ifreqoi)-1)/2)'   .*  ((2.*pi./fsample) .* freqoi(ifreqoi));
+    wltspctrm{ifreqoi} = complex(zeros(size(tap,1),round(endnsample)));
+    
+    for itap = 1:ntaper(ifreqoi)
+      try % this try loop tries to fit the wavelet into wltspctrm, when its length is smaller than ndatsample, the rest is 'filled' with zeros because of above code
+        % if a wavelet is longer than ndatsample, it doesn't fit and it is kept at zeros, which is translated to NaN's in the output
+        % construct the complex wavelet
+        coswav  = horzcat(prezero, tap(itap,:) .* cos(anglein)', postzero);
+        sinwav  = horzcat(prezero, tap(itap,:) .* sin(anglein)', postzero);
+        wavelet = complex(coswav, sinwav);
+        % store the fft of the complex wavelet
+        wltspctrm{ifreqoi}(itap,:) = fft(wavelet,[],2);
+        
+        %       % debug plotting
+        %       figure('name',['taper #' num2str(itap) ' @ ' num2str(freqoi(ifreqoi)) 'Hz' ],'NumberTitle','off');
+        %       subplot(2,1,1);
+        %       hold on;
+        %       plot(real(wavelet));
+        %       plot(imag(wavelet),'color','r');
+        %       legend('real','imag');
+        %       tline = length(wavelet)/2;
+        %       if mod(tline,2)==0
+        %         line([tline tline],[-max(abs(wavelet)) max(abs(wavelet))],'color','g','linestyle','--')
+        %       else
+        %         line([ceil(tline) ceil(tline)],[-max(abs(wavelet)) max(abs(wavelet))],'color','g','linestyle','--');
+        %         line([floor(tline) floor(tline)],[-max(abs(wavelet)) max(abs(wavelet))],'color','g','linestyle','--');
+        %       end;
+        %       subplot(2,1,2);
+        %       plot(angle(wavelet),'color','g');
+        %       if mod(tline,2)==0,
+        %         line([tline tline],[-pi pi],'color','r','linestyle','--')
+        %       else
+        %         line([ceil(tline) ceil(tline)],[-pi pi],'color','r','linestyle','--')
+        %         line([floor(tline) floor(tline)],[-pi pi],'color','r','linestyle','--')
+        %       end
       end
-      
-    case 'sine'
-      % create and remove the last taper
-      tap = sine_taper(timwinsample(ifreqoi), timwinsample(ifreqoi) .* (tapsmofrq(ifreqoi) ./ fsample))'; 
-      tap = tap(1:(end-1), :);
-      
-    case 'sine_old'
-      % to provide compatibility with the tapers being scaled (which was default 
-      % behavior prior to 29apr2011) yet this gave different magnitude of power 
-      % when comparing with slepian multi tapers
-      tap = sine_taper_scaled(timwinsample(ifreqoi), timwinsample(ifreqoi) .* (tapsmofrq(ifreqoi) ./ fsample))';
-      tap = tap(1:(end-1), :); % remove the last taper
-  
-    case 'alpha'
-      tap = alpha_taper(timwinsample(ifreqoi), freqoi(ifreqoi)./ fsample)';
-      tap = tap./norm(tap)';
-      
-    case 'hanning'
-      tap = hanning(timwinsample(ifreqoi))';
-      tap = tap./norm(tap, 'fro');
-      
-    otherwise
-      % create a single taper according to the window specification as a replacement for the DPSS (Slepian) sequence
-      if isempty(tapopt) % some windowing functions don't support nargin>1, and window.m doesn't check it
-        tap = window(taper, timwinsample(ifreqoi))';
-      else
-        tap = window(taper, timwinsample(ifreqoi),tapopt)';
-      end
-      tap = tap ./ norm(tap,'fro'); % make it explicit that the frobenius norm is being used
-  end
-  
-  % set number of tapers
-  ntaper(ifreqoi) = size(tap,1);
-  
-  % Wavelet construction
-  tappad   = ceil(endnsample ./ 2) - floor(timwinsample(ifreqoi) ./ 2);
-  prezero  = zeros(1,tappad);
-  postzero = zeros(1,round(endnsample) - ((tappad-1) + timwinsample(ifreqoi))-1);
-  
-  % phase consistency: cos must always be 1  and sin must always be centered in upgoing flank, so the centre of the wavelet (untapered) has angle = 0
-  anglein  = (-(timwinsample(ifreqoi)-1)/2 : (timwinsample(ifreqoi)-1)/2)'   .*  ((2.*pi./fsample) .* freqoi(ifreqoi));
-  wltspctrm{ifreqoi} = complex(zeros(size(tap,1),round(endnsample)));
-  
-  for itap = 1:ntaper(ifreqoi)
-    try % this try loop tries to fit the wavelet into wltspctrm, when its length is smaller than ndatsample, the rest is 'filled' with zeros because of above code
-      % if a wavelet is longer than ndatsample, it doesn't fit and it is kept at zeros, which is translated to NaN's in the output
-      % construct the complex wavelet
-      coswav  = horzcat(prezero, tap(itap,:) .* cos(anglein)', postzero);
-      sinwav  = horzcat(prezero, tap(itap,:) .* sin(anglein)', postzero);
-      wavelet = complex(coswav, sinwav);
-      % store the fft of the complex wavelet
-      wltspctrm{ifreqoi}(itap,:) = fft(wavelet,[],2);
-      
-      %       % debug plotting
-      %       figure('name',['taper #' num2str(itap) ' @ ' num2str(freqoi(ifreqoi)) 'Hz' ],'NumberTitle','off');
-      %       subplot(2,1,1);
-      %       hold on;
-      %       plot(real(wavelet));
-      %       plot(imag(wavelet),'color','r');
-      %       legend('real','imag');
-      %       tline = length(wavelet)/2;
-      %       if mod(tline,2)==0
-      %         line([tline tline],[-max(abs(wavelet)) max(abs(wavelet))],'color','g','linestyle','--')
-      %       else
-      %         line([ceil(tline) ceil(tline)],[-max(abs(wavelet)) max(abs(wavelet))],'color','g','linestyle','--');
-      %         line([floor(tline) floor(tline)],[-max(abs(wavelet)) max(abs(wavelet))],'color','g','linestyle','--');
-      %       end;
-      %       subplot(2,1,2);
-      %       plot(angle(wavelet),'color','g');
-      %       if mod(tline,2)==0,
-      %         line([tline tline],[-pi pi],'color','r','linestyle','--')
-      %       else
-      %         line([ceil(tline) ceil(tline)],[-pi pi],'color','r','linestyle','--')
-      %         line([floor(tline) floor(tline)],[-pi pi],'color','r','linestyle','--')
-      %       end
     end
   end
 end
@@ -258,7 +272,7 @@ switch dimord
     
   case 'chan_time_freqtap' % memory efficient representation
     % create tapfreqind
-    freqtapind = [];
+    freqtapind = cell(1,nfreqoi);
     tempntaper = [0; cumsum(ntaper(:))];
     for ifreqoi = 1:nfreqoi
       freqtapind{ifreqoi} = tempntaper(ifreqoi)+1:tempntaper(ifreqoi+1);
@@ -291,6 +305,15 @@ switch dimord
       end
     end % for nfreqoi
 end % switch dimord
+
+
+% remember the current input arguments, so that they can be
+% reused on a subsequent call in case the same input argument is given
+previous_argin     = current_argin;
+previous_wltspctrm = wltspctrm;
+
+
+
 
 % % below code does the exact same as above, but without the trick of converting to cell-arrays for speed increases. however, when there is a huge variability in number of tapers per freqoi
 % % than this approach can benefit from the fact that the array can be precreated containing nans
