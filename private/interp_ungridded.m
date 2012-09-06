@@ -115,16 +115,11 @@ if isempty(distmat)
       if isempty(triout),
         error('the ''smudge'' method needs a triangle definition');
       end
-      datin = ismember(pntout, pntin);
-      datin = sum(datin,2)==3;
+      [datin, loc] = ismember(pntout, pntin, 'rows');
       [datout, S1] = smudge(datin, triout, 6); %FIXME 6 is number of iterations, improve here
     
-      %S2  = spalloc(npntout, npntin, npntin);
       sel = find(datin);
-      %for k = 1:npntin
-      %  S2(sel(k), k) = 1;
-      %end
-      S2  = sparse(sel(:), (1:npntin0)', ones(npntin,1), npntout, npntin);
+      S2  = sparse(sel(:), loc(datin), ones(npntin,1), npntout, npntin);
       distmat = S1 * S2;
     
     otherwise
