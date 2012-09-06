@@ -93,7 +93,7 @@ elseif strcmp(freqoi,'all') % if input was 'all'
 end
 nfreqboi = length(freqboi);
 nfreqoi  = length(freqoi);
-if numel(tapsmofrq)~=1 && (numel(tapsmofrq)~=nfreqoi)
+if strcmp(taper, 'dpss') && numel(tapsmofrq)~=1 && (numel(tapsmofrq)~=nfreqoi)
   error('tapsmofrq needs to contain a smoothing parameter for every frequency when requesting variable number of slepian tapers')
 end
 
