@@ -92,6 +92,11 @@ if any(size(channel) == 0)
   return
 end
 
+if ~iscell(datachannel)
+  % ensure that a single input argument like 'all' also works
+  datachannel = {datachannel};
+end
+
 if isnumeric(channel)
   % remove channels tha fall outside the range
   channel = channel(channel>=1 & channel<=numel(datachannel));
@@ -102,12 +107,8 @@ end
 
 if ~iscell(channel)
   % ensure that a single input argument like 'all' also works
+  % the case of a vector with channel indices has already been dealt with
   channel = {channel};
-end
-
-if ~iscell(datachannel)
-  % ensure that a single input argument like 'all' also works
-  datachannel = {datachannel};
 end
 
 % ensure that both inputs are column vectors
