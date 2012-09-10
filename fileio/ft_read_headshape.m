@@ -84,10 +84,15 @@ end
 fileformat  = ft_getopt(varargin, 'format');
 coordinates = ft_getopt(varargin, 'coordinates', 'head'); % the alternative for CTF coil positions is dewar
 unit        = ft_getopt(varargin, 'unit'); % the default for yokogawa is cm, see below
+annotationfile = ft_getopt(varargin, 'annotationfile');
 
 if isempty(fileformat)
   % only do the autodetection if the format was not specified
   fileformat = ft_filetype(filename);
+end
+
+if ~isempty(annotationfile) && ~strcmp(fileformat, 'mne_source')
+  error('at present extracting annotation information only works in conjunction with mne_source files');
 end
 
 % test whether the file exists
@@ -193,6 +198,31 @@ switch fileformat
     ft_hastoolbox('mne', 1);
     
     src = mne_read_source_spaces(filename, 1);
+    
+    if ~isempty(annotationfile)
+      if numel(annotationfile)~=2
+        error('two annotationfiles expected, one for each hemisphere');
+      end
+      for k = 1:numel(annotationfile)
+        [v{k}, label{k}, c(k)] = read_annotation(annotationfile{k}, 1);
+      end
+      
+      % match the annotations with the src structures
+      if src(1).np == numel(label{1}) && src(2).np == numel(label{2})
+        src(1).labelindx = label{1};
+        src(2).labelindx = label{2};
+      elseif src(1).np == numel(label{2}) && src(1).np == numel(label{1})
+        src(1).labelindx = label{2};
+        src(2).labelindx = label{1};
+      else
+        warning('incompatible annotation with triangulations, not using annotation information');
+      end
+      if ~isequal(c(1),c(2))
+        error('the annotation tables differ, expecting equal tables for the hemispheres');
+      end
+      c = c(1);
+    end
+
     shape = [];
     % only keep the points that are in use
     inuse1 = src(1).inuse==1;
@@ -212,6 +242,19 @@ switch fileformat
     shape.orig.pnt = [src(1).rr; src(2).rr];
     shape.orig.tri = [src(1).tris; src(2).tris + src(1).np];
     shape.orig.inuse = [src(1).inuse src(2).inuse]';
+    if isfield(src(1), 'labelindx')
+      shape.orig.labelindx = [src(1).labelindx;src(2).labelindx];
+      shape.labelindx      = [src(1).labelindx(inuse1); src(2).labelindx(inuse2)];
+      ulabelindx = unique(c.table(:,5));
+      for k = 1:c.numEntries
+        % the values are really high (apart from the 0), so I guess it's safe to start
+        % numbering from 1
+        shape.orig.labelindx(shape.orig.labelindx==ulabelindx(k)) = k;
+        shape.labelindx(shape.labelindx==ulabelindx(k)) = k;
+      end
+      shape.label = c.struct_names;
+      shape.annotation = c.orig_tab; % to be able to recover which one
+    end
     
   case {'neuromag_mne', 'neuromag_fif'}
     % read the headshape and fiducials from an MNE file
