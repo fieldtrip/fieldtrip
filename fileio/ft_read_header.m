@@ -38,12 +38,14 @@ function [hdr] = ft_read_header(filename, varargin)
 %   BTi - 4D Neuroimaging (*.m4d, *.pdf, *.xyz)
 %   Yokogawa (*.ave, *.con, *.raw)
 %   NetMEG (*.nc)
+%   ITAB - Chieti (*.mhd)
 %
 % The following EEG dataformats are supported
 %   ANT - Advanced Neuro Technology, EEProbe (*.avr, *.eeg, *.cnt)
 %   Biosemi (*.bdf)
+%   BCI2000 (*.dat)
 %   CED - Cambridge Electronic Design (*. smr)
-%   Electrical Geodesics, Inc. (*.egis, *.ave, *.gave, *.ses, *.raw, *.sbin, MFF fileformat)
+%   EGI - Electrical Geodesics, Inc. (*.egis, *.ave, *.gave, *.ses, *.raw, *.sbin, *.mff)
 %   Megis/BESA (*.avr, *.swf)
 %   NeuroScan (*.eeg, *.cnt, *.avg)
 %   Nexstim (*.nxe)
@@ -746,6 +748,7 @@ switch headerformat
     nChans = zeros(length(orig.signal),1);
     nSamples = zeros(length(orig.signal),1);
     for iSig = 1:length(orig.signal)
+q
       Fs(iSig)      = orig.signal(iSig).blockhdr(1).fsample(1);
       nChans(iSig)  = orig.signal(iSig).blockhdr(1).nsignals;
       % the number of samples per block can be different
@@ -997,7 +1000,6 @@ switch headerformat
         end
       end
     end
-    
     
     hdr.orig.bufsize = orig.bufsize;
     
