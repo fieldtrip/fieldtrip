@@ -69,6 +69,11 @@ mask          = ft_getopt(varargin, 'mask');
 outline       = ft_getopt(varargin, 'outline');
 parent        = ft_getopt(varargin, 'parent', []);
 
+% check for nans in the data, these should be dealt with by the caller
+if any(isnan(dat))
+  warning('the data passed to ft_plot_topo contains NaNs, the interpolation will have unexpected results. NaNs should be dealt with by the caller function.');
+end
+
 % everything is added to the current figure
 holdflag = ishold;
 if ~holdflag
