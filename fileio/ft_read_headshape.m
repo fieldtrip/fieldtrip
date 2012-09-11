@@ -200,6 +200,7 @@ switch fileformat
     src = mne_read_source_spaces(filename, 1);
     
     if ~isempty(annotationfile)
+      ft_hastoolbox('freesurfer', 1);
       if numel(annotationfile)~=2
         error('two annotationfiles expected, one for each hemisphere');
       end
@@ -245,15 +246,18 @@ switch fileformat
     if isfield(src(1), 'labelindx')
       shape.orig.labelindx = [src(1).labelindx;src(2).labelindx];
       shape.labelindx      = [src(1).labelindx(inuse1); src(2).labelindx(inuse2)];
-      ulabelindx = unique(c.table(:,5));
-      for k = 1:c.numEntries
-        % the values are really high (apart from the 0), so I guess it's safe to start
-        % numbering from 1
-        shape.orig.labelindx(shape.orig.labelindx==ulabelindx(k)) = k;
-        shape.labelindx(shape.labelindx==ulabelindx(k)) = k;
-      end
+%      ulabelindx = unique(c.table(:,5));
+%       for k = 1:c.numEntries
+%         % the values are really high (apart from the 0), so I guess it's safe to start
+%         % numbering from 1
+%         shape.orig.labelindx(shape.orig.labelindx==ulabelindx(k)) = k;
+%         shape.labelindx(shape.labelindx==ulabelindx(k)) = k;
+%       end
+% FIXME the above screws up the interpretation of the labels, because the
+% color table is not sorted
       shape.label = c.struct_names;
       shape.annotation = c.orig_tab; % to be able to recover which one
+      shape.ctable = c.table;
     end
     
   case {'neuromag_mne', 'neuromag_fif'}
