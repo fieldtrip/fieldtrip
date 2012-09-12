@@ -127,7 +127,7 @@ switch lower(flag)
     dirz = cross(dirx,lpa-rpa);
     dirz = dirz/norm(dirz);
     diry = cross(dirz,dirx);
-  case 'als_asa'
+  case {'als_asa' 'asa'}
     % follow ASA convention
     dirz = cross(nas-rpa, lpa-rpa);
     diry = lpa-rpa;
