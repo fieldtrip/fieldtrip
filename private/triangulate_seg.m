@@ -1,4 +1,4 @@
-function [pnt, tri] = triangulate_seg(seg, npnt, ori);
+function [pnt, tri] = triangulate_seg(seg, npnt, ori)
 
 % TRIANGULATE_SEG constructs a triangulation of the outer surface of a
 % segmented volume. It starts at the center of the volume and projects the
@@ -38,6 +38,20 @@ if nargin<3
   ori(1) = dim(1)/2;
   ori(2) = dim(2)/2;
   ori(3) = dim(3)/2;
+end
+
+% ensure that the seg consists of only one blob, if not throw a warning and
+% use the biggest
+ft_hastoolbox('SPM8', 1);
+[lab, num] = spm_bwlabel(double(seg), 26);
+if num>1,
+  warning('the segmented volume consists of more than one compartment, using only the biggest one for the segmentation');
+  
+  for k = 1:num
+    n(k) = sum(lab(:)==k);
+  end
+  [m,ix] = max(n);
+  seg(lab~=ix) = false;
 end
 
 % start with a unit sphere with evenly distributed vertices
