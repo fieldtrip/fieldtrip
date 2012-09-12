@@ -39,7 +39,7 @@ taper     = ft_getopt(varargin, 'taper'); if isempty(taper), error('You must spe
 pad       = ft_getopt(varargin, 'pad');
 freqoi    = ft_getopt(varargin, 'freqoi', 'all');
 tapsmofrq = ft_getopt(varargin, 'tapsmofrq');
-dimord    = ft_getopt(varargin, 'dimord', 'tap_chan_freq_time');
+dimord    = ft_getopt(varargin, 'dimord', 'tap_chan_freq');
 fbopt     = ft_getopt(varargin, 'feedback');
 verbose   = ft_getopt(varargin, 'verbose', true);
 polyorder = ft_getopt(varargin, 'polyorder', 0);
@@ -246,7 +246,8 @@ else % variable number of slepian tapers requested
             dum = dum .* exp(-1i*angletransform);
           end
           dum = dum .* sqrt(2 ./ endnsample);
-          spectrum(itap,:,ifreqoi) = dum;
+          currtapind = itap + ((ifreqoi-1) * max(ntaper));
+          spectrum(currtapind,:,ifreqoi) = dum;
         end
       end % for nfreqoi
       
