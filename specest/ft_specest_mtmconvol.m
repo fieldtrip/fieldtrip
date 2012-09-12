@@ -23,7 +23,7 @@ function [spectrum,ntaper,freqoi,timeoi] = ft_specest_mtmconvol(dat, time, varar
 %   dimord    = 'tap_chan_freq_time' (default) or 'chan_time_freqtap' for
 %                memory efficiency
 %   verbose   = output progress to console (0 or 1, default 1)
-%   taperop   = additional taper options to be used in the WINDOW function, see WINDOW
+%   taperopt  = additional taper options to be used in the WINDOW function, see WINDOW
 %   polyorder = number, the order of the polynomial to fitted to and removed from the data
 %                  prior to the fourier transform (default = 0 -> remove DC-component)
 %
