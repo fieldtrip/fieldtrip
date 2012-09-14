@@ -211,31 +211,37 @@ if isfield(cfg, 'unmixing') && isfield(cfg, 'topolabel')
   cfg                 = tmpcfg;
 end
 
-% additional options, see FASTICA for details
-cfg.fastica = ft_getopt(cfg, 'fastica', []);
-
-% additional options, see RUNICA for details
-cfg.runica       = ft_getopt(cfg,        'runica',  []);
-cfg.runica.lrate = ft_getopt(cfg.runica, 'lrate',   0.001);
-
-% additional options, see BINICA for details
-cfg.binica       = ft_getopt(cfg,        'binica',  []);
-cfg.binica.lrate = ft_getopt(cfg.binica, 'lrate',   0.001);
-
-% additional options, see DSS for details
-cfg.dss               = ft_getopt(cfg,          'dss',      []);
-cfg.dss.denf          = ft_getopt(cfg.dss,      'denf',     []);
-cfg.dss.denf.function = ft_getopt(cfg.dss.denf, 'function', 'denoise_fica_tanh');
-cfg.dss.denf.params   = ft_getopt(cfg.dss.denf, 'params',   []);
-
-% additional options, see CSP for details
-cfg.csp = ft_getopt(cfg, 'csp', []);
-cfg.csp.numfilters = ft_getopt(cfg.csp, 'numfilters', 6);
-cfg.csp.classlabels = ft_getopt(cfg.csp, 'classlabels');
-
-% additional options, see BSSCCA for details
-cfg.bsscca       = ft_getopt(cfg,        'bsscca', []);
-cfg.bsscca.delay = ft_getopt(cfg.bsscca, 'delay', 1);
+% add the options for the specified methods to the configuration, only if needed
+switch cfg.method
+case 'fastica'
+  % additional options, see FASTICA for details
+  cfg.fastica = ft_getopt(cfg, 'fastica', []);
+case 'runica'
+  % additional options, see RUNICA for details
+  cfg.runica       = ft_getopt(cfg,        'runica',  []);
+  cfg.runica.lrate = ft_getopt(cfg.runica, 'lrate',   0.001);
+case 'binica'
+  % additional options, see BINICA for details
+  cfg.binica       = ft_getopt(cfg,        'binica',  []);
+  cfg.binica.lrate = ft_getopt(cfg.binica, 'lrate',   0.001);
+case {'dss' 'dss2'} % JM at present has his own dss, that can deal with cell-array input, specify as dds2
+  % additional options, see DSS for details
+  cfg.dss               = ft_getopt(cfg,          'dss',      []);
+  cfg.dss.denf          = ft_getopt(cfg.dss,      'denf',     []);
+  cfg.dss.denf.function = ft_getopt(cfg.dss.denf, 'function', 'denoise_fica_tanh');
+  cfg.dss.denf.params   = ft_getopt(cfg.dss.denf, 'params',   []);
+case 'csp'
+  % additional options, see CSP for details
+  cfg.csp = ft_getopt(cfg, 'csp', []);
+  cfg.csp.numfilters = ft_getopt(cfg.csp, 'numfilters', 6);
+  cfg.csp.classlabels = ft_getopt(cfg.csp, 'classlabels');
+case 'bsscca'
+  % additional options, see BSSCCA for details
+  cfg.bsscca       = ft_getopt(cfg,        'bsscca', []);
+  cfg.bsscca.delay = ft_getopt(cfg.bsscca, 'delay', 1);
+otherwise
+  % do nothing
+end
 
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
@@ -325,7 +331,7 @@ elseif strcmp(cfg.method, 'csp')
   fprintf('concatenated data matrix size for class 1 is %dx%d\n', size(dat1,1), size(dat1,2));
   fprintf('concatenated data matrix size for class 2 is %dx%d\n', size(dat2,1), size(dat2,2));
   
-elseif (~strcmp(cfg.method, 'predetermined unmixing matrix') && ~strcmp(cfg.method, 'bsscca'))
+elseif (~strcmp(cfg.method, 'predetermined unmixing matrix') && ~strcmp(cfg.method, 'bsscca')) && ~strcmp(cfg.method, 'dss2')
   
   % concatenate all the data into a 2D matrix unless we already have an
   % unmixing matrix
@@ -480,11 +486,48 @@ switch cfg.method
     %weights = state.W;
     %sphere  = state.V;
     
-    mixing = state.A;
+    mixing   = state.A;
     unmixing = state.B;
     
     % remember the updated configuration details
     cfg.dss.denf      = state.denf;
+    cfg.dss.orthof    = state.orthof;
+    cfg.dss.preprocf  = state.preprocf;
+    cfg.dss.stopf     = state.stopf;
+    cfg.dss.W         = state.W;
+    cfg.dss.V         = state.V;
+    cfg.numcomponent  = state.sdim;
+    
+  case 'dss2'
+    % check whether the required low-level toolboxes are installed
+    % see http://www.cis.hut.fi/projects/dss
+    %ft_hastoolbox('dss2', 1);
+    
+    params         = struct(cfg.dss);
+    params.denf.h  = str2func(cfg.dss.denf.function);
+    if ~ischar(cfg.numcomponent)
+      params.sdim = cfg.numcomponent;
+    end
+    % create the state
+    state   = dss_create_state(data.trial, params);
+    % increase the amount of information that is displayed on screen
+    state.verbose = 3;
+    % start the decomposition
+    % state   = dss(state);  % this is for the DSS toolbox version 0.6 beta
+    state   = denss(state);  % this is for the DSS toolbox version 1.0
+    %weights = state.W;
+    %sphere  = state.V;
+    
+    mixing   = state.A;
+    unmixing = state.B;
+    
+    % remember the updated configuration details
+    cfg.dss.denf      = state.denf;
+    cfg.dss.orthof    = state.orthof;
+    cfg.dss.preprocf  = state.preprocf;
+    cfg.dss.stopf     = state.stopf;
+    cfg.dss.W         = state.W;
+    cfg.dss.V         = state.V;
     cfg.numcomponent  = state.sdim;
     
   case 'sobi'
@@ -561,8 +604,9 @@ switch cfg.method
     % trial boundaries
     
     
-    unmixing = bsscca(data.trial,cfg.bsscca.delay);
-    mixing   = [];
+    [unmixing, rho] = bsscca(data.trial,cfg.bsscca.delay);
+    mixing          = [];
+    %unmixing        = diag(rho);
     
   case 'parafac'
     error('parafac is not supported anymore in ft_componentanalysis');
