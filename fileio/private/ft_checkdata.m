@@ -1922,7 +1922,11 @@ for iTrial = 1:nTrials
     ts       = ts(hasTrial);
    
     [N] = histc(ts,timeBins); 
-    N(end) = [];
+    if isempty(N)
+        N  =  zeros(1,length(timeBins)-1);
+    else
+        N(end) = [];
+    end
         
     % store it in a matrix
     trialData(iUnit,:) = N;
