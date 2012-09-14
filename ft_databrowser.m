@@ -1302,7 +1302,7 @@ switch key
       channb = match_str(opt.curdat.label,channame);
       fprintf('channel name: %s\n',channame);
       redraw_cb(h, eventdata);
-      ft_plot_text(pos, 0.9, channame, 'FontSize', 16, 'tag', 'identify');
+      ft_plot_text(pos, 0.9, channame, 'FontSize', 16, 'tag', 'identify','interpreter','none');
       if ~ishold
         hold on
         ft_plot_vector(opt.curdat.time{1}, opt.curdat.trial{1}(channb,:), 'box', false, 'tag', 'identify', ...
@@ -1552,7 +1552,7 @@ end
 % plot labels
 for ievent = 1:numel(event)
   ft_plot_text(eventtim(ievent), 0.9-concount(ievent)*.06, eventstr{ievent}, 'tag', 'event', 'Color', eventcol{ievent}, ...
-    'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1]);
+    'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1],'interpreter','none');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1595,7 +1595,7 @@ elseif any(strcmp(cfg.viewmode, {'vertical' 'component'}))
     if ~isempty(datsel) && ~isempty(laysel)
       
       if opt.plotLabelFlag == 1 || (opt.plotLabelFlag == 2 && mod(i,10)==0)
-        ft_plot_text(labelx(laysel), labely(laysel), opt.hdr.label(chanindx(i)), 'tag', 'timecourse', 'HorizontalAlignment', 'right');
+        ft_plot_text(labelx(laysel), labely(laysel), opt.hdr.label(chanindx(i)), 'tag', 'timecourse', 'HorizontalAlignment', 'right','interpreter','none');
       end
       
       ft_plot_vector(tim, dat(datsel, :), 'box', false, 'color', color, 'tag', 'timecourse', ...
