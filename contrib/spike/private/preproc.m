@@ -185,6 +185,7 @@ if ~isfield(cfg, 'standardize'),  cfg.standardize = 'no';       end
 if ~isfield(cfg, 'denoise'),      cfg.denoise = '';             end
 if ~isfield(cfg, 'subspace'),     cfg.subspace = [];            end
 if ~isfield(cfg, 'custom'),       cfg.custom = '';              end
+if ~isfield(cfg, 'resample'),     cfg.resample = '';            end
 
 % test whether the Matlab signal processing toolbox is available
 if strcmp(cfg.medianfilter, 'yes') && ~ft_hastoolbox('signal')
@@ -344,15 +345,9 @@ if isnumeric(cfg.boxcar)
     % the kernel should have an odd number of samples
     numsmp = numsmp+1;
   end
-  kernel = ones(1,numsmp) ./ numsmp;
-  %begsmp = (numsmp-1)/2 + 1;
-  %endsmp = (numsmp-1)/2 + size(dat,2);
-  %for i=1:size(dat,1)
-  %  tmp = conv(dat(i,:), kernel);
-  %  % remove the kernel padding at the edges
-  %  dat(i,:) = tmp(begsmp:endsmp);
-  %end
-  dat = convn(dat, kernel, 'same');
+  % kernel = ones(1,numsmp) ./ numsmp;
+  % dat    = convn(dat, kernel, 'same');
+  dat = ft_preproc_smooth(dat, numsmp); % better edge behaviour
 end
 if isnumeric(cfg.conv)
   kernel = (cfg.conv(:)'./sum(cfg.conv));
@@ -375,7 +370,24 @@ if ~isempty(cfg.subspace),
   dat = ft_preproc_subspace(dat, cfg.subspace);
 end
 if ~isempty(cfg.custom),
-  dat = feval(cfg.custom.funhandle, dat, cfg.custom.varargin);
+  if ~isfield(cfg.custom, 'nargout')
+    cfg.custom.nargout = 1;
+  end
+  if cfg.custom.nargout==1
+    dat = feval(cfg.custom.funhandle, dat, cfg.custom.varargin);
+  elseif cfg.custom.nargout==2
+    [dat, time] = feval(cfg.custom.funhandle, dat, cfg.custom.varargin);
+  end
+end
+if strcmp(cfg.resample, 'yes')
+  if ~isfield(cfg, 'resamplefs')
+    cfg.resamplefs = fsample./2;
+  end
+  if ~isfield(cfg, 'resamplemethod')
+    cfg.resamplemethod = 'resample';
+  end
+  [dat               ] = ft_preproc_resample(dat,  fsample, cfg.resamplefs, cfg.resamplemethod); 
+  [time, dum, fsample] = ft_preproc_resample(time, fsample, cfg.resamplefs, cfg.resamplemethod);
 end
 if ~isempty(cfg.precision)
   % convert the data to another numeric precision, i.e. double, single or int32
