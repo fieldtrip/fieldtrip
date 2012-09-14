@@ -224,7 +224,9 @@ switch version
               error('waveforms contains data but number of waveforms does not match number of spikes');
             end
             if sum(leaddim)~=1 | sum(sampdim)~=1, continue,end % in this case we do not know what to do                        
-            spike.waveform{iUnit} = permute(spike.waveform{iUnit}, [find(leaddim) find(sampdim) find(spikedim)]);
+            if find(spikedim)~=3 & find(leaddim)~=1 & find(sampdim)~=2
+                spike.waveform{iUnit} = permute(spike.waveform{iUnit}, [find(leaddim) find(sampdim) find(spikedim)]);
+            end
           end                        
         end
         
