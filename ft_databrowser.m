@@ -40,10 +40,6 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.viewmode                = string, 'butterfly', 'vertical', 'component' for visualizing components e.g. from an ICA (default is 'butterfly')
 %   cfg.artfctdef.xxx.artifact  = Nx2 matrix with artifact segments see FT_ARTIFACT_xxx functions
 %   cfg.selectfeature           = string, name of feature to be selected/added (default = 'visual')
-%   cfg.selectmode              = string, what to do with a selection, can be 'mark', or 'eval' (default = 'mark')
-%                                 'mark': artfctdef field is updated, 'eval': the function defined in
-%                                 cfg.selfun is evaluated f.i. browse_movieplotER calls movieplotER which makes
-%                                 a movie of the selected data
 %   cfg.colorgroups             = 'sequential' 'allblack' 'labelcharx' (x = xth character in label), 'chantype' or
 %                                  vector with length(data/hdr.label) defining groups (default = 'sequential')
 %   cfg.channelcolormap         = COLORMAP (default = customized lines map with 15 colors)
