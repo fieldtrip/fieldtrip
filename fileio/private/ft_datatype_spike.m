@@ -214,8 +214,18 @@ switch version
               spike.waveform{iUnit} = permute(spike.waveform{iUnit},[3 1 2]);
             end    
             
-          end
-          
+          elseif length(dim)==3 && ~isempty(spike.waveform{iUnit})
+            nSpikes = length(spike.timestamp{iUnit}); % check what's the spike dimension from the timestamps                                      
+            spikedim = dim==nSpikes;
+            % determine from the remaining dimensions which is the lead
+            leaddim  = dim<6 & dim~=nSpikes;
+            sampdim  = dim>=6 & dim~=nSpikes;
+            if isempty(spikedim)
+              error('waveforms contains data but number of waveforms does not match number of spikes');
+            end
+            if sum(leaddim)~=1 | sum(sampdim)~=1, continue,end % in this case we do not know what to do                        
+            spike.waveform{iUnit} = permute(spike.waveform{iUnit}, [find(leaddim) find(sampdim) find(spikedim)]);
+          end                        
         end
         
       end
