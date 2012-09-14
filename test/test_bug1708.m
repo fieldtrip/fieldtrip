@@ -15,3 +15,5 @@ data = ft_denoise_synthetic(cfg, data);
 
 assert(all(isfinite(data.grad.coilori(:))));
 assert(all(isfinite(data.grad.coilpos(:))));
+assert(all(isfinite(data.grad.chanori(:))));
+assert(all(isfinite(data.grad.chanpos(:))));
