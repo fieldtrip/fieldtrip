@@ -11,10 +11,10 @@ CXXFLAGS = $(CFLAGS)
 LDFLAGS = -L$(FTBUFFER)/src
 
 ifeq "$(PLATFORM)" "x86_64-linux-gnu"
-	LDFLAGS += -Llib/tia/amd64 -Llib/ticpp/linux 
+	BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
+	LDFLAGS += -L$(BINDIR) -Llib/ticpp/linux 
 	LDLIBS += -lbuffer -lpthread -lboost_thread -lboost_system -lboost_program_options\
 		-ltia -lticpp_64 
-	BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
 endif
 
 ifndef BINDIR
