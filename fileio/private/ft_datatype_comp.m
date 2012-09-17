@@ -21,8 +21,8 @@ function comp = ft_datatype_comp(comp, varargin)
 %           cfg: [1x1 struct]
 %
 % The only difference to the raw data structure is that the comp structure
-% contains the additional fields topo and topolabel. See FT_DATATYPE_RAW for
-% further details.
+% contains the additional fields unmixing, topo and topolabel. See
+% FT_DATATYPE_RAW for further details.
 %
 % Required fields:
 %   - time, trial, label, topo, unmixing
