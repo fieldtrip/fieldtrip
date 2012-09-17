@@ -1,12 +1,29 @@
-function [pnt, tri] = triangulate_seg(seg, npnt, ori)
+function [pnt, tri] = triangulate_seg(seg, npnt, origin)
 
 % TRIANGULATE_SEG constructs a triangulation of the outer surface of a
 % segmented volume. It starts at the center of the volume and projects the
 % vertices of an evenly triangulated sphere onto the outer surface. The
-% resulting surface is star-shaped from the center of the volume.
+% resulting surface is star-shaped from the origin of the sphere.
 %
 % Use as
-%   [pnt, tri] = triangulate_seg(seg, npnt)
+%   [pnt, tri] = triangulate_seg(seg, npnt, origin)
+%
+% Input arguments:
+%  seg    = 3D-matrix (boolean) containing segmented volume. If not boolean
+%           seg = seg(~=0);
+%  npnt   = requested number of vertices
+%  origin = 1x3 vector specifying the location of the origin of the sphere
+%           in voxel indices. This argument is optional. If undefined, the 
+%           origin of the sphere will be in the centre of the volume. 
+%
+% Output arguments:
+%  pnt = Nx3 matrix of vertex locations
+%  tri = Mx3 matrix of triangles
+% 
+% Seg will be checked for holes, and filled if necessary. Also, seg will be
+% checked to consist of a single boolean blob. If not, only the outer surface
+% of the largest will be triangulated. SPM is used for both the filling and
+% checking for multiple blobs.
 %
 % See also KSPHERE
 
@@ -30,19 +47,36 @@ function [pnt, tri] = triangulate_seg(seg, npnt, ori)
 %
 % $Id$
 
+% impose it to be boolean
 seg = (seg~=0);
 dim = size(seg);
 len = ceil(sqrt(sum(dim.^2))/2);
 
+% define the origin if it is not provided in the input arguments
 if nargin<3
-  ori(1) = dim(1)/2;
-  ori(2) = dim(2)/2;
-  ori(3) = dim(3)/2;
+  origin(1) = dim(1)/2;
+  origin(2) = dim(2)/2;
+  origin(3) = dim(3)/2;
 end
 
-% ensure that the seg consists of only one blob, if not throw a warning and
-% use the biggest
+% ensure that the seg consists of only one filled blob.
+% if not filled: throw a warning and fill
+% if more than one blob: throw a warning and use the biggest
 ft_hastoolbox('SPM8', 1);
+
+% look for holes
+[lab, num] = spm_bwlabel(double(seg==0), 26);
+if num>1
+  warning('the segmented volume contains holes, filling them up');
+
+  % keep the largest 'hole' on the outside (assume the first voxel to be outside
+  nholes = num;
+  for k = setdiff(1:nholes, lab(1))
+    seg(lab==k) = true;
+  end
+end
+
+% look for >1 blob
 [lab, num] = spm_bwlabel(double(seg), 26);
 if num>1,
   warning('the segmented volume consists of more than one compartment, using only the biggest one for the segmentation');
@@ -60,13 +94,13 @@ end
 for i=1:npnt
   % construct a sampled line from the center of the volume outward into the direction of the vertex
   lin = (0:0.5:len)' * pnt(i,:);
-  lin(:,1) = lin(:,1) + ori(1);
-  lin(:,2) = lin(:,2) + ori(2);
-  lin(:,3) = lin(:,3) + ori(3);
+  lin(:,1) = lin(:,1) + origin(1);
+  lin(:,2) = lin(:,2) + origin(2);
+  lin(:,3) = lin(:,3) + origin(3);
   % round the sampled line towards the nearest voxel indices, which allows
   % a quick nearest-neighbour interpolation/lookup
   lin = round(lin);
-  % exclude indices that do not ly within the volume
+  % exclude indices that do not lie within the volume
   sel = lin(:,1)<1 | lin(:,1)>dim(1) | ...
         lin(:,2)<1 | lin(:,2)>dim(2) | ...
         lin(:,3)<1 | lin(:,3)>dim(3);
@@ -92,9 +126,9 @@ for i=1:npnt
 end
 
 % undo the shift of the origin from where the projection is done
-% pnt(:,1) = pnt(:,1) - ori(1);
-% pnt(:,2) = pnt(:,2) - ori(2);
-% pnt(:,3) = pnt(:,3) - ori(3);
+% pnt(:,1) = pnt(:,1) - origin(1);
+% pnt(:,2) = pnt(:,2) - origin(2);
+% pnt(:,3) = pnt(:,3) - origin(3);
 
 % fast unconditional re-implementation of the standard Matlab function
 function [s] = sub2ind(dim, i, j, k)
