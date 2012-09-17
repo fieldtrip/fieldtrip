@@ -1,17 +1,22 @@
-function [brain, skull, scalp] = validate_seg(brain, skull, scalp)
+function [tissue1, tissue2, tissue3] = validate_seg(tissue1, tissue2, tissue3)
 
-% VALIDATE_SEG ensures that the segmentation represents three tissue types
-% that are overlapping rather than exclusive.
+% VALIDATE_SEG ensures that the segmentation represents tissue types in a cumulative than exclusive 
+% manner. 
 %
 % Use as
-%   [brain, skull, scalp] = validate_segmentation(brain, skull, scalp)
-% where the skull and scalp input (and output) arguments are optional.
+%   [tissue1, tissue2, tissue3] = validate_segmentation(tissue1, tissue2, tissue3)
+% where the second two input (and output) arguments are optional. In case of more than one input 
+% argument the tissue-types should follow eachother from inside towards outside (e.g. tissue1 = brain,
+% tissue2 = skull, tissue = scalp). 
 %
-% The output will consist of three overlapping boolean segmentations. If
-% the input is invalid and cannot be converted to overlapping
-% segmentations, this function will give an error.
+% The output will consist of one or more boolean segmentations without empty spaces inside. 
+% In such way, more than one tissue-types will be represented in an overlapping manner. If
+% the input is invalid and cannot be converted to overlapping segmentations, this function will give
+% an error.
 %
-% See also TRIANGULATE_SEG
+% This function makes use of functions from the Matlab Signal Processing Toolbox.
+%
+% See also TRIANGULATE_SEG, PREPARE_MESH_SEGMENTATION
 
 % Copyright (C) 2012, Robert Oostenveld
 %
@@ -39,93 +44,121 @@ function [brain, skull, scalp] = validate_seg(brain, skull, scalp)
 
 % FIXME ensure that there is no air in the brain
 
+
 if false
   % this is an overlapping example
-  brain = [0 0 0 0 0 1 1 1 0 0 0 0];
-  skull = [0 0 0 1 1 1 1 1 1 0 0 0];
-  scalp = [0 0 1 1 1 1 1 1 1 1 0 0];
+  tissue1 = [0 0 0 0 0 1 1 1 0 0 0 0];
+  tissue2 = [0 0 0 1 1 1 1 1 1 0 0 0];
+  tissue3 = [0 0 1 1 1 1 1 1 1 1 0 0];
   
   % this is an exclusive example
-  brain = [0 0 0 0 0 1 1 0 0 0 0 0];
-  skull = [0 0 0 1 1 0 0 1 1 0 0 0];
-  scalp = [0 0 1 0 0 0 0 0 0 1 0 0];
+  tissue1 = [0 0 0 0 0 1 1 0 0 0 0 0];
+  tissue2 = [0 0 0 1 1 0 0 1 1 0 0 0];
+  tissue3 = [0 0 1 0 0 0 0 0 0 1 0 0];
   
   % this is an invalid/inconsistent example
-  brain = [0 0 0 1 0 0 0 0 0 0 0 0];
-  skull = [0 0 0 1 1 0 0 0 0 0 0 0];
-  scalp = [0 0 0 0 0 0 1 0 0 0 0 0];
+  tissue1 = [0 0 0 1 0 0 0 0 0 0 0 0];
+  tissue2 = [0 0 0 1 1 0 0 0 0 0 0 0];
+  tissue3 = [0 0 0 0 0 0 1 0 0 0 0 0];
 end
 
-if nargin<2
-  % this default applies to an overlapping description
-  skull = brain;
-end
+
+ if nargin<2
+   % this default applies to an overlapping description
+   tissue2 = tissue1;
+ end
 
 if nargin<3
   % this default applies to an overlapping description
-  scalp = skull;
+  tissue3 = tissue2;
 end
 
 
-if ~isequal(size(brain), size(skull))
+
+if ~isequal(size(tissue1), size(tissue2))
   error('inconsistent size of segmentations')
   
-elseif ~isequal(size(brain), size(scalp))
+elseif ~isequal(size(tissue1), size(tissue3))
   error('inconsistent size of segmentations')
   
-elseif ~isa(brain, 'logical') && ~all(brain(:)==0 | brain(:)==1)
-  error('the brain is not a binary segmentation');
+elseif ~isa(tissue1, 'logical') && ~all(tissue1(:)==0 | tissue1(:)==1)
+  error('the first tissue is not a binary segmentation');
   
-elseif ~isa(skull, 'logical') && ~all(skull(:)==0 | skull(:)==1)
-  error('the skull is not a binary segmentation');
+elseif ~isa(tissue2, 'logical') && ~all(tissue2(:)==0 | tissue2(:)==1)
+  error('the second tissue is not a binary segmentation');
   
-elseif ~isa(scalp, 'logical') && ~all(scalp(:)==0 | scalp(:)==1)
-  error('the scalp is not a binary segmentation');
+elseif ~isa(tissue3, 'logical') && ~all(tissue3(:)==0 | tissue3(:)==1)
+  error('the third tissue is not a binary segmentation');
   
-elseif ~any(brain(:)&skull(:)) && ~any(skull(:)&scalp(:)) && ~any(scalp(:)&brain(:))
+end
+
+% ensure that the first tissue is filled 
+tissue1 = imfill(tissue1,'holes');  
+
+if (~any(tissue1(:)&tissue2(:)))||(~any(tissue2(:)&tissue3(:)))||(~any(tissue3(:)&tissue1(:)))  
   % the segmentation is described as exclusive, i.e. there is no overlap
-  
+  % or it is a mixed representation
+ 
+
   % check for air inside the combination of tissue types
-  air = ~imfill(brain|skull|scalp, 'holes');
+  air = ~imfill(tissue1|tissue2|tissue3, 'holes');
   
-  if ~all(brain(:)|skull(:)|scalp(:)|air(:))
-    error('there are voxels which are not brain, skull, scalp or air')
+  if ~all(tissue1(:)|tissue2(:)|tissue3(:)|air(:))
+    error('there are voxels which do not belong to any tissue or air')
   end
   
-  % convert them into an overlapping segmentation
-  brain = brain;
-  skull = skull | brain;
-  scalp = scalp | skull | brain;
   
+  % convert them into an overlapping segmentation
+  tissue1 = tissue1;
+  tissue2 = tissue2 | tissue1;
+  tissue3 = tissue3 | tissue2 | tissue1;
+
+
 end
 
 % the segmentation is described as overlapping
 % this is suitable for detecting boundaries
 
-if any(brain(:)&~skull(:))
-  error('there is brain outside the skull')
+if nargin > 1
+  if any(tissue1(:)&~tissue2(:))
+    error('the first tissue outside of the second')
+  end
+
+  if any(tissue2(:)&~tissue3(:))
+    error('the second tissue is outside of the third')
+  end
+
+  if any(tissue1(:)&~tissue3(:))
+    error('there is first tissue is outside the third')
+  end
+  
+  if ~any(tissue2(:)&~tissue1(:))
+      error('the first two tissues are not different')
+  end
+  
 end
 
-if any(skull(:)&~scalp(:))
-  error('there is skull outside the scalp')
-end
+if nargin > 2
+  if ~any(tissue3(:)&~tissue2(:))
+      error('the last two tissues are not different')
+  end
+end  
 
-if any(brain(:)&~scalp(:))
-  error('there is brain outside the scalp')
-end
-
-holes = imfill(brain, 'holes') & ~brain;
+holes = imfill(tissue1, 'holes') & ~tissue1;
 if any(holes(:))
-  error('there are holes in the brain');
+  error('there are holes in the first tissue');
 end
 
-holes = imfill(skull, 'holes') & ~skull;
-if any(holes(:))
-  error('there are holes in the skull');
-end
+if nargin > 1
+ holes = imfill(tissue2, 'holes') & ~tissue2;
+ if any(holes(:))
+  error('there are holes in the second tissue');
+ end
 
-holes = imfill(scalp, 'holes') & ~scalp;
-if any(holes(:))
-  error('there are holes in the scalp');
+
+ holes = imfill(tissue3, 'holes') & ~tissue3;
+ if any(holes(:))
+  error('there are holes in the third tissue');
+ end
 end
 
