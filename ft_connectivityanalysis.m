@@ -16,19 +16,20 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %
 % The configuration structure has to contain
 %   cfg.method  =  string, can be
+%     'amplcorr',  amplitude correlation, support for freq and source data
 %     'coh',       coherence, support for freq, freqmvar and source data.
 %                  For partial coherence also specify cfg.partchannel
 %     'csd',       cross-spectral density matrix, can also calculate partial
 %                  csds - if cfg.partchannel is specified, support for freq
 %                  and freqmvar data
-%     'plv',       phase-locking value, support for freq and freqmvar data
-%     'powcorr',   power correlation, support for freq and source data
-%     'amplcorr',  amplitude correlation, support for freq and source data
-%     'granger',   granger causality, support for freq and freqmvar data
 %     'dtf',       directed transfer function, support for freq and
 %                  freqmvar data 
+%     'granger',   granger causality, support for freq and freqmvar data
 %     'pdc',       partial directed coherence, support for freq and 
 %                  freqmvar data
+%     'plv',       phase-locking value, support for freq and freqmvar data
+%     'powcorr',   power correlation, support for freq and source data
+%     'ppc'        pairwise phase consistency 
 %     'psi',       phaseslope index, support for freq and freqmvar data
 %     'wpli',      weighted phase lag index (signed one,
 %                  still have to take absolute value to get indication of
@@ -36,7 +37,6 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %                  bias. Use wpli_debiased to avoid this.
 %     'wpli_debiased'  debiased weighted phase lag index
 %                  (estimates squared wpli)
-%     'ppc'        pairwise phase consistency 
 %     'wppc'       weighted pairwise phase consistency
 %
 % Additional configuration options are
@@ -77,6 +77,8 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %   cfg.conditional  
 %   cfg.blockindx    
 %   cfg.jackknife    
+%   cfg.method    = 'powcorr_ortho'
+%   cfg.method    = 'mi';
 
 % Methods to be implemented
 %
@@ -87,6 +89,7 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %
 % Copyright (C) 2009, Jan-Mathijs Schoffelen, Andre Bastos, Martin Vinck, Robert Oostenveld
 % Copyright (C) 2010-2011, Jan-Mathijs Schoffelen, Martin Vinck
+% Copyright (C) 2012, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -265,6 +268,8 @@ switch cfg.method
     end
     outparam = [cfg.method, 'spctrm'];
   case {'granger'}
+    
+    % create subcfg for the spectral factorization
     if ~isfield(cfg, 'granger')
       cfg.granger = [];
     end
@@ -295,11 +300,29 @@ switch cfg.method
     data     = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
     inparam  = 'crsspctrm';
     outparam = 'psispctrm';
-  case {'hipp'}
+  case {'powcorr_ortho'}
     data     = ft_checkdata(data, 'datatype', 'source');
     %inparam  = 'avg.mom';
     inparam  = 'mom';
     outparam = 'powcorrspctrm';
+  case {'mi'}
+    % create the subcfg for the mutual information
+    if ~isfield(cfg, 'mi'), cfg.mi = []; end
+    cfg.mi.numbin  = ft_getopt(cfg.mi, 'numbin', 10);
+     
+    % what are the input requirements?
+    data     = ft_checkdata(data, 'datatype', {'timelock' 'freq' 'source'});
+    dtype    = ft_datatype(data);
+    if strcmp(dtype, 'timelock')
+      inparam = 'trial';
+      hasrpt  = (isfield(data, 'dimord') && ~isempty(strfind(data.dimord, 'rpt')));
+    elseif strcmp(dtype, 'freq')
+      inparam = 'something';
+    else
+      inparam = 'something else';
+    end
+    needrpt  = true;
+    outparam = 'mi';
   case {'di'}
     %wat eigenlijk?
   otherwise
@@ -438,7 +461,7 @@ elseif hasrpt && dojack && ~(exist('debiaswpli', 'var') || exist('weightppc', 'v
   % compute leave-one-outs
   data    = ft_selectdata(data, 'jackknife', 'yes');
   hasjack = 1;
-elseif hasrpt && ~(exist('debiaswpli', 'var') || exist('weightppc', 'var') || strcmp(cfg.method, 'hipp'))
+elseif hasrpt && ~(exist('debiaswpli', 'var') || exist('weightppc', 'var') || strcmp(cfg.method, 'hipp'))% || needrpt)
   % create dof variable
   if isfield(data, 'dof')
     dof = data.dof;
@@ -730,6 +753,30 @@ switch cfg.method
     varout   = [];
     nrpt     = numel(data.cumtapcnt);
     
+  case 'mi'
+    % mutual information using the information breakdown toolbox
+    % presence of the toolbox is checked in the low-level function
+    
+    if strcmp(dtype, 'timelock')
+      dat = data.(inparam);
+      dat = reshape(permute(dat, [2 3 1]), [size(dat,2) size(dat,1)*size(dat,3)]);
+    
+      data        = rmfield(data, 'time');
+      data.dimord = 'chan_chan';
+    elseif strcmp(dtype, 'freq')
+      error('not yet implemented');
+    elseif strcmp(dtype, 'source')
+      % for the time being work with mom
+      %dat = cat(2, data.mom{data.inside}).';
+      dat = cat(1, data.mom{data.inside});
+      %dat = abs(dat);
+    end
+    optarg   = {'numbin', cfg.mi.numbin, 'refindx', cfg.refindx};
+    [datout] = ft_connectivity_mutualinformation(dat, optarg{:});
+    varout   = [];
+    nrpt     = [];
+    
+    
   case 'di'
     % directionality index
   otherwise
@@ -813,6 +860,28 @@ switch dtype
     if ~isempty(varout),
       stat.([outparam,'sem']) = (varout./nrpt).^0.5;
     end
+  case 'timelock'
+    stat = [];
+    if isfield(data, 'label'),
+      stat.label = data.label;
+    end
+    if isfield(data, 'labelcmb'),
+      stat.labelcmb = data.labelcmb;
+    end
+    
+    tok = tokenize(data.dimord, '_');
+    dimord = '';
+    for k = 1:numel(tok)
+      if isempty(strfind(tok{k}, 'rpt'))
+        dimord = [dimord, '_', tok{k}];
+      end
+    end
+    stat.dimord = dimord(2:end);
+    stat.(outparam) = datout;
+    if ~isempty(varout),
+      stat.([outparam,'sem']) = (varout./nrpt).^0.5;
+    end
+  
   case 'source'
     stat         = [];
     stat.pos     = data.pos;
