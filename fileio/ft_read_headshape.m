@@ -7,6 +7,34 @@ function [shape] = ft_read_headshape(filename, varargin)
 % Use as
 %   [shape] = ft_read_headshape(filename)
 %
+% Optional input arguments should be specified as key-value pairs and
+% should include
+%   format		= string, see below
+%   coordinates = string, e.g. 'head' or 'dewar' (CTF)
+%   unit        = string, e.g. 'cm'
+%
+% Supported input formats are
+%   'ctf_*'
+%   '4d_*'
+%   'itab_asc'
+%   'neuromag_*'
+%   'mne_source'
+%   'yokogawa_*'
+%   'polhemus_*'
+%   'spmeeg_mat'
+%   'matlab'
+%   'freesurfer_*'
+%   'stl'          STereoLithography file format (often supported by
+%                  CAD/generic 3D mesh editing programs)
+%   'off'
+%   'mne_*'        MNE surface description in ascii format ('mne_tri')
+%                  or MNE source grid in ascii format, described as 3D
+%                  points ('mne_pos')
+%   'netmeg'
+%   'vista'
+%   'tet'
+%   'tetgen'
+%
 % See also FT_READ_VOL, FT_READ_SENS, FT_WRITE_HEADSHAPE
 
 % Copyright (C) 2008-2010 Robert Oostenveld
