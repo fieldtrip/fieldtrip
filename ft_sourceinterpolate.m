@@ -245,8 +245,16 @@ elseif (~is2Dana && is2Dfun) || (is2Dana && is2Dfun)
   interp.outside = newoutside(:)';
   
 elseif is2Dana && ~is2Dfun
+  % ensure the functional data to be in double precision
+  functional = ft_struct2double(functional);
+  
+  % ensure to keep the fields if these exist (will be lost in ft_checkdata)
+  if isfield(functional, 'time'), time = functional.time; end
+  if isfield(functional, 'freq'), freq = functional.freq; end
+  
   % set default interpmethod for this situation
   cfg.interpmethod = ft_getopt(cfg, 'interpmethod', 'nearest');
+  cfg.sphereradius = ft_getopt(cfg, 'sphereradius', []);
   
   % interpolate the 3D volume onto the anatomy
   anatomical = ft_convert_units(anatomical);
@@ -261,11 +269,14 @@ elseif is2Dana && ~is2Dfun
     'projmethod', cfg.interpmethod, 'sphereradius', cfg.sphereradius);
   clear X Y Z;
   
-  interp = [];
+  interp           = [];
   interp.pos       = anatomical.pnt;
   interp.inside    = (1:size(anatomical.pnt,1))';
   interp.outside   = [];
   if isfield(anatomical, 'tri'), interp.tri = anatomical.tri; end
+  
+  if exist('time', 'var'), interp.time = time; end
+  if exist('freq', 'var'), interp.freq = freq; end
   
   for k = 1:numel(cfg.parameter)
     tmp    = getsubfield(functional, cfg.parameter{k});
