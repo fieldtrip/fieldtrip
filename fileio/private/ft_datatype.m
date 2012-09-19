@@ -6,14 +6,14 @@ function [type, dimord] = ft_datatype(data, desired)
 %
 % Use as
 %   [type, dimord] = ft_datatype(data)
-%   [type, dimord] = ft_datatype(data, desired)
+%   [status]       = ft_datatype(data, desired)
 %
-% See also FT_CHANTYPE, FT_FILETYPE, FT_SENSTYPE, FT_VOLTYPE, FT_DATATYPE_COMP,
-% FT_DATATYPE_DIP, FT_DATATYPE_FREQ, FT_DATATYPE_MVAR, FT_DATATYPE_RAW,
-% FT_DATATYPE_SOURCE, FT_DATATYPE_SPIKE, FT_DATATYPE_TIMELOCK,
-% FT_DATATYPE_VOLUME
+% See also FT_DATATYPE_COMP FT_DATATYPE_FREQ FT_DATATYPE_MVAR
+% FT_DATATYPE_SEGMENTATION FT_DATATYPE_PARCELLATION FT_DATATYPE_SOURCE
+% FT_DATATYPE_TIMELOCK FT_DATATYPE_DIP FT_DATATYPE_HEADMODEL
+% FT_DATATYPE_RAW FT_DATATYPE_SENS FT_DATATYPE_SPIKE FT_DATATYPE_VOLUME
 
-% Copyright (C) 2008-2011, Robert Oostenveld
+% Copyright (C) 2008-2012, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
