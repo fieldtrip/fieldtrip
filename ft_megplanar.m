@@ -254,6 +254,11 @@ else
   cfg.channel = ft_channelselection(cfg.channel, sens.label);
   cfg.channel = ft_channelselection(cfg.channel, data.label);
 
+  % ensure channel order according to cfg.channel (there might be one check
+  % too much in here somewhere or in the subfunctions, but I don't care.
+  % Better one too much than one too little - JMH @ 09/19/12
+  [neighbsel] = match_str({cfg.neighbours.label}, cfg.channel);
+  cfg.neighbours = cfg.neighbours(neighbsel);
   cfg.neighbsel = channelconnectivity(cfg);
   
   % determine

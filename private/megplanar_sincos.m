@@ -23,17 +23,20 @@ function montage = megplanar_sincos(cfg, grad)
 %
 % $Id$
 
-neighbsel = cfg.neighbsel;
-distance = cfg.distance;
-
 lab   = grad.label;
-tmp   = ft_channelselection(cfg.channel, lab);
-[tmp, sel] = match_str(cfg.channel, lab(match_str(lab, tmp)));
+% ensure correct order
+% cfg.channel       = ft_channelselection(cfg.channel, lab);
+[chansel, labsel] = match_str(cfg.channel, lab);
+lab               = lab(labsel);
+
+% we need to ensure that this one is in cfg.channel order - this is done in
+% ft_megplanar!
+neighbsel         = cfg.neighbsel(chansel);
+
 % sel   = match_str(lab, tmp);
-pnt   = grad.chanpos(sel,:);
-ori   = grad.chanori(sel,:);
-lab   = lab(sel);
-Ngrad = length(lab);
+pnt   = grad.chanpos(labsel,:);
+ori   = grad.chanori(labsel,:);
+Ngrad = numel(labsel);
 
 gradH = zeros(Ngrad, Ngrad);
 gradV = zeros(Ngrad, Ngrad);
