@@ -58,6 +58,7 @@ end
 % it should have a selection of two channels or channelgroups in each row
 if size(channelcmb,1)==2 && size(channelcmb,2)~=2
   warning('transposing channelcombination matrix');
+  channelcmb = channelcmb';
 end
 
 % this will hold the output
