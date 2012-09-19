@@ -446,7 +446,7 @@ switch headerformat
         warning('cannot read balancing coefficients for G3BR');
       end
     end
-    if any(~cellfun(@isempty,strfind(coeftype, 'G1AR')))
+    if any(~cellfun(@isempty,strfind(coeftype, 'G3AR')))
       try
         [alphaMEG,MEGlist,Refindex] = getCTFBalanceCoefs(orig, 'G3AR', 'T');
         orig.BalanceCoefs.G3AR.alphaMEG  = alphaMEG;
