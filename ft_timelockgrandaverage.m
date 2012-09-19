@@ -113,18 +113,20 @@ else
     tend = cfg.latency(2);
 end
 
-% determine which channels, and latencies are available for all inputs
-for i=1:Nsubj
-    cfg.channel = ft_channelselection(cfg.channel, varargin{i}.label);
-    if hastime
-        tbeg = max(tbeg, varargin{i}.time(1  ));
-        tend = min(tend, varargin{i}.time(end));
-    end
-end
-cfg.latency = [tbeg tend];
-
 % select the data in all inputs
 for k=1:numel(cfg.parameter)
+    
+    % determine which channels, and latencies are available for all inputs
+    for i=1:Nsubj
+        cfg.channel = ft_channelselection(cfg.channel, varargin{i}.label);
+        if hastime
+            tbeg = max(tbeg, varargin{i}.time(1  ));
+            tend = min(tend, varargin{i}.time(end));
+        end
+    end
+    cfg.latency = [tbeg tend];
+    
+    % pick the selections
     for i=1:Nsubj
         if ~isfield(varargin{i}, cfg.parameter{k})
             error('the field %s is not present in data structure %d', cfg.parameter{k}, i);
@@ -143,7 +145,7 @@ for k=1:numel(cfg.parameter)
                 varargin{i}.(cfg.parameter{k}) = varargin{i}.(cfg.parameter{k})(chansel,timesel);
             case {'rpt_chan' 'subj_chan'}
                 varargin{i}.(cfg.parameter{k}) = varargin{i}.(cfg.parameter{k})(chansel);
-                varargin{i}.dimord = 'chan';  
+                varargin{i}.dimord = 'chan';
             case {'rpt_chan_time' 'subj_chan_time'}
                 varargin{i}.(cfg.parameter{k}) = varargin{i}.(cfg.parameter{k})(chansel,timesel);
                 varargin{i}.dimord = 'chan_time';
