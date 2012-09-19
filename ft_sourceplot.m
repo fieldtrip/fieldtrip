@@ -308,10 +308,14 @@ dim = data.dim;
 
 hasatlas = ~isempty(cfg.atlas);
 if hasatlas
-  % initialize the atlas
-  [p, f, x] = fileparts(cfg.atlas);
-  fprintf(['reading ', f,' atlas coordinates and labels\n']);
-  atlas = ft_prepare_atlas(cfg);
+  if ischar(cfg.atlas)
+    % initialize the atlas
+    [p, f, x] = fileparts(cfg.atlas);
+    fprintf(['reading ', f,' atlas coordinates and labels\n']);
+    atlas = ft_prepare_atlas(cfg);
+  else
+    atlas = cfg.atlas;
+  end
 end
 
 hasroi = ~isempty(cfg.roi);
@@ -755,9 +759,9 @@ if isequal(cfg.method,'ortho')
       % determine the anatomical label of the current position
       lab = atlas_lookup(atlas, (xyz(1:3)), 'inputcoord', data.coordsys, 'queryrange', cfg.queryrange);
       if isempty(lab)
-        fprintf([f,' labels: not found\n']);
+        fprintf(['atlas labels: not found\n']);
       else
-        fprintf([f,' labels: '])
+        fprintf(['atlas labels: '])
         fprintf('%s', lab{1});
         for i=2:length(lab)
           fprintf(', %s', lab{i});
