@@ -27,7 +27,7 @@ end
 % the following results in the error
 cfg = [];
 cfg.tissue = {'brain', 'skull', 'scalp'};
-cfg.numvertices = [1000 2000 3000];
+cfg.numvertices = [3000 2000 1000];
 bnd = ft_prepare_mesh(cfg, seg2);
 
 figure

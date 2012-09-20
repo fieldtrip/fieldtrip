@@ -13,13 +13,13 @@ function [pnt, tri] = triangulate_seg(seg, npnt, origin)
 %           seg = seg(~=0);
 %  npnt   = requested number of vertices
 %  origin = 1x3 vector specifying the location of the origin of the sphere
-%           in voxel indices. This argument is optional. If undefined, the 
-%           origin of the sphere will be in the centre of the volume. 
+%           in voxel indices. This argument is optional. If undefined, the
+%           origin of the sphere will be in the centre of the volume.
 %
 % Output arguments:
 %  pnt = Nx3 matrix of vertex locations
 %  tri = Mx3 matrix of triangles
-% 
+%
 % Seg will be checked for holes, and filled if necessary. Also, seg will be
 % checked to consist of a single boolean blob. If not, only the outer surface
 % of the largest will be triangulated. SPM is used for both the filling and
@@ -27,7 +27,7 @@ function [pnt, tri] = triangulate_seg(seg, npnt, origin)
 %
 % See also KSPHERE
 
-% Copyright (C) 2005, Robert Oostenveld
+% Copyright (C) 2005-2012, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -72,7 +72,7 @@ ft_hastoolbox('SPM8', 1);
 [lab, num] = spm_bwlabel(double(seg==0), 26);
 if num>1
   warning('the segmented volume contains holes, filling them up');
-
+  
   % keep the largest 'hole' on the outside (assume the first voxel to be outside
   nholes = num;
   for k = setdiff(1:nholes, lab(1))
@@ -95,6 +95,8 @@ end
 % start with a unit sphere with evenly distributed vertices
 [pnt, tri] = ksphere(npnt);
 
+ishollow = false;
+
 for i=1:npnt
   % construct a sampled line from the center of the volume outward into the direction of the vertex
   lin = (0:0.5:len)' * pnt(i,:);
@@ -110,23 +112,29 @@ for i=1:npnt
         lin(:,3)<1 | lin(:,3)>dim(3);
   lin = lin(~sel,:);
   sel = sub2ind(dim, lin(:,1), lin(:,2), lin(:,3));
+  
   % interpolate the segmented volume along the sampled line
   int = seg(sel);
-  % find the last sample along the line that is part of the segmentation
-  try
-    % for matlab 7 and higher
-    sel = find(int, 1, 'last');
-  catch
-    % for older matlab versions
-    sel = find(int);
-    sel = sel(end);
-  end
-  % this is a problem if sel is empty.  If so, use the edge of the volume
-  if ~isempty(sel),
-      pnt(i,:) = lin(sel,:);
+  
+  % the value along the line is expected to be 1 at first and then drop to 0
+  % anything else suggests that the segmentation is hollow
+  ishollow = any(diff(int)==1);
+  
+  % find the last sample along the line that is inside the segmentation
+  sel = find(int, 1, 'last');
+  % this is a problem if sel is empty. If so, use the edge of the volume
+  if ~isempty(sel)
+    % take the last point inside and average with the first point outside
+    pnt(i,:) = lin(sel,:);
   else
-      pnt(i,:) = lin(end,:);
+    % take the edge
+    pnt(i,:) = lin(end,:);
   end
+end
+
+if ishollow
+  % this should not have hapened, especially not after filling the holes
+  warning('the segmentation is not star-shaped, please check the surface mesh');
 end
 
 % undo the shift of the origin from where the projection is done
