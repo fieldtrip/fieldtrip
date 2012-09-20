@@ -76,39 +76,51 @@ cfg.outputfile = ft_getopt(cfg, 'outputfile', []);
 cfg.xrange     = ft_getopt(cfg, 'xrange', []);
 cfg.yrange     = ft_getopt(cfg, 'yrange', []);
 cfg.zrange     = ft_getopt(cfg, 'zrange', []);
+cfg.dim        = ft_getopt(cfg, 'dim', []); % alternatively use ceil(mri.dim./cfg.resolution)
 
 if isfield(mri, 'coordsys')
-  % use some prior knowledge to optimize the location of the bounding box
-  % with respect to the origin of the coordinate system
-  switch mri.coordsys
-    case {'ctf' '4d' 'bti'}
-      xshift = 30./cfg.resolution;
-      yshift = 0;
-      zshift = 40./cfg.resolution;
-    case {'itab' 'neuromag'}
-      xshift = 0;
-      yshift = 30./cfg.resolution;
-      zshift = 40./cfg.resolution;
-    otherwise
-      xshift = 0;
-      yshift = 0;
-      zshift = 15./cfg.resolution;
-  end
-else
-  xshift = 0;
-  yshift = 0;
-  zshift = 0;
+    % use some prior knowledge to optimize the location of the bounding box
+    % with respect to the origin of the coordinate system
+    switch mri.coordsys
+        case {'ctf' '4d' 'bti'}
+            xshift = 30./cfg.resolution;
+            yshift = 0;
+            zshift = 40./cfg.resolution;
+        case {'itab' 'neuromag'}
+            xshift = 0;
+            yshift = 30./cfg.resolution;
+            zshift = 40./cfg.resolution;
+        otherwise
+            xshift = 0;
+            yshift = 0;
+            zshift = 15./cfg.resolution;
+    end
+else % if no coordsys is present
+    xshift = 0;
+    yshift = 0;
+    zshift = 0;
 end
 
-cfg.dim = ft_getopt(cfg, 'dim',    ceil(mri.dim./cfg.resolution));
-if isempty(cfg.xrange),
-  cfg.xrange = [-cfg.dim(1)/2+0.5 cfg.dim(1)/2-0.5] * cfg.resolution + xshift;
+if ~isempty(cfg.dim)
+    xrange = [-cfg.dim(1)/2+0.5 cfg.dim(1)/2-0.5] * cfg.resolution + xshift;
+    yrange = [-cfg.dim(2)/2+0.5 cfg.dim(2)/2-0.5] * cfg.resolution + yshift;
+    zrange = [-cfg.dim(3)/2+0.5 cfg.dim(3)/2-0.5] * cfg.resolution + zshift;
+else % if no cfg.dim is specified, use defaults
+    range = [-127.5 127.5] * cfg.resolution; % 255 mm^3 bounding box, assuming human brain
+    xrange = range + xshift;
+    yrange = range + yshift;
+    zrange = range + zshift;
 end
-if isempty(cfg.yrange),
-  cfg.yrange = [-cfg.dim(2)/2+0.5 cfg.dim(2)/2-0.5] * cfg.resolution + yshift;
+
+% if ranges have not been specified by the user
+if isempty(cfg.xrange)
+    cfg.xrange = xrange;
 end
-if isempty(cfg.zrange),
-  cfg.zrange = [-cfg.dim(3)/2+0.5 cfg.dim(3)/2-0.5] * cfg.resolution + zshift;
+if isempty(cfg.yrange)
+    cfg.yrange = yrange;
+end
+if isempty(cfg.zrange)
+    cfg.zrange = zrange;
 end
 
 if ~isequal(cfg.downsample, 1)
