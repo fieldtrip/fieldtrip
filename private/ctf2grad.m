@@ -209,7 +209,8 @@ if isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
   % sofar the gradiometer definition was the ideal, non-balenced one
   if isfield(grad, 'balance') && ~strcmp(grad.balance.current, 'none')
     % apply the current balancing parameters to the gradiometer definition
-    grad = ft_apply_montage(grad, getfield(grad.balance, grad.balance.current));
+    %grad = ft_apply_montage(grad, getfield(grad.balance, grad.balance.current));
+    grad = ft_apply_montage(grad, getfield(grad.balance, grad.balance.current), 'keepunused', 'yes');
   end
 
 
