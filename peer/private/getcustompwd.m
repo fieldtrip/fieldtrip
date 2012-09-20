@@ -17,7 +17,7 @@ end
 % don't use the present directory if it contains the peer code
 % it will confuse the slave with a potentially different mex file
 if strcmp(pwd, fileparts(mfilename('fullpath')))
-  warning_once(sprintf('the peer slave will not change directory to %s', t));    
+  warning_once(sprintf('will not change directory to %s', t));    
   p = [];
 else
   p = t;
