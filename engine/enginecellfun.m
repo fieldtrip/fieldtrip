@@ -93,6 +93,11 @@ end
 if numargout<0
   % the nargout function returns -1 in case of a variable number of output arguments
   numargout = 1;
+elseif numargout>nargout
+  % the number of output arguments is constrained by the users' call to this function
+  numargout = nargout;
+elseif nargout>numargout
+  error('Too many output arguments.');
 end
 
 % check the input arguments
@@ -191,7 +196,7 @@ while ~all(submitted) || ~all(collected)
     end
     
     % submit the job for execution
-    [curjobid curputtime] = enginefeval(fname, argin{:}, 'diary', diary);
+    [curjobid curputtime] = enginefeval(fname, argin{:}, 'diary', diary, 'nargout', numargout);
     
     if ~isempty(curjobid)
       % fprintf('submitted job %d\n', submit);
@@ -215,7 +220,6 @@ while ~all(submitted) || ~all(collected)
     
   end % while not all engines are busy
   
-
   if sum(collected)>prevnumcollected || sum(isbusy)~=prevnumbusy
     % give an update of the progress
     fprintf('submitted %d/%d, collected %d/%d, busy %d, speedup %.1f\n', sum(submitted), numel(submitted), sum(collected), numel(collected), sum(isbusy), nansum(timused(collected))/toc(stopwatch));
@@ -233,7 +237,7 @@ while ~all(submitted) || ~all(collected)
     
     % figure out to which job this engines result belong
     collect = find(jobid == pool{ready});
-   
+    
     % collect the output arguments
     ws = warning('Off','Backtrace');
     [argout, options] = engineget(pool{ready}, 'output', 'cell', 'diary', diary, 'StopOnError', StopOnError);

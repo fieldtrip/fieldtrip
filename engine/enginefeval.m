@@ -37,12 +37,14 @@ strargin(~cellfun(@ischar, strargin)) = {''};
 optbeg = false(size(strargin));
 optbeg = optbeg | strcmp('diary',   strargin);
 optbeg = optbeg | strcmp('batch',   strargin);
+optbeg = optbeg | strcmp('nargout', strargin);
 optbeg = find(optbeg, 1, 'first');
 optarg = varargin(optbeg:end);
 
 % get the optional input arguments
-diary = ft_getopt(optarg, 'diary', []);
-batch = ft_getopt(optarg, 'batch', 1);
+diary     = ft_getopt(optarg, 'diary', []);
+batch     = ft_getopt(optarg, 'batch', 1);
+numargout = ft_getopt(optarg, 'nargout', []);
 
 % skip the optional key-value arguments
 if ~isempty(optbeg)
@@ -87,7 +89,7 @@ randomseed = rand(1)*double(intmax);
 
 % pass some options that influence the remote execution
 % options = {'pwd', curPwd, 'path', getcustompath, 'global', getglobal, 'diary', diary, 'memreq', memreq, 'timreq', timreq, 'randomseed', randomseed};
-options = {'pwd', getcustompwd, 'path', getcustompath, 'global', getglobal, 'diary', diary, 'randomseed', randomseed, 'engine', enghandle};
+options = {'pwd', getcustompwd, 'path', getcustompath, 'global', getglobal, 'diary', diary, 'randomseed', randomseed, 'engine', enghandle, 'nargout', numargout};
 
 % create the matlab script commands (one entry per line)
 matlabscript = [...

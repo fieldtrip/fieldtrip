@@ -35,6 +35,10 @@ diaryfile = '';
 argout = {};
 optout = {};
 
+% clear the previous warning and error messages
+lastwarn('');
+lasterr('');
+
 % there are many reasons why the execution may fail, hence the elaborate try-catch
 try
   
@@ -103,28 +107,36 @@ try
     error('Not a valid M-file (%s).', fname);
   end
   
-  % it can be difficult to determine the number of output arguments
-  try
-    if (isequal(fname, 'cellfun') || isequal(fname, @cellfun))
-      numargout = nargout(argin{1});
-    else
-      numargout = nargout(fname);
+  % this controls the amount of data that has to be sent back, furthermore the
+  % function internal operations and its output can depend on the number of
+  % output arguments
+  numargout = ft_getopt(optin, 'nargout');
+  
+  if isempty(numargout)
+    % it can be difficult to determine the number of output arguments
+    try
+      if (isequal(fname, 'cellfun') || isequal(fname, @cellfun))
+        numargout = nargout(argin{1});
+      else
+        numargout = nargout(fname);
+      end
+    catch
+      % the "catch me" syntax is broken on MATLAB74, this fixes it
+      nargout_error = lasterror;
+      if strcmp(nargout_error.identifier, 'MATLAB:narginout:doesNotApply')
+        % e.g. in case of nargin('plus')
+        numargout = 1;
+      else
+        rethrow(nargout_error);
+      end
     end
-  catch
-    % the "catch me" syntax is broken on MATLAB74, this fixes it
-    nargout_error = lasterror;
-    if strcmp(nargout_error.identifier, 'MATLAB:narginout:doesNotApply')
-      % e.g. in case of nargin('plus')
-      numargout = 1;
-    else
-      rethrow(nargout_error);
-    end
-  end
+  end % determine number of output arguments
   
   if numargout<0
     % the nargout function returns -1 in case of a variable number of output arguments
     numargout = 1;
   end
+  
   
   % start measuring the time and memory requirements
   memprofile on
@@ -226,6 +238,3 @@ if ~isempty(masterid) || ~isempty(timallow) || ~isempty(memallow)
   watchdog(0,0,0); % this is required to unlock it from memory
 end
 
-% clear the previous warning and error messages
-lastwarn('');
-lasterr('');
