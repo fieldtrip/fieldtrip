@@ -23,6 +23,8 @@ function montage = megplanar_sincos(cfg, grad)
 %
 % $Id$
 
+
+error('sorry, this function does temporarily not work properly... jm.horschig@donders.ru.nl - tel: 68493')
 lab   = grad.label;
 % ensure correct order
 % cfg.channel       = ft_channelselection(cfg.channel, lab);
@@ -31,7 +33,7 @@ lab               = lab(labsel);
 
 % we need to ensure that this one is in cfg.channel order - this is done in
 % ft_megplanar!
-neighbsel         = cfg.neighbsel(chansel);
+neighbsel         = cfg.neighbsel(chansel, chansel);
 
 % sel   = match_str(lab, tmp);
 pnt   = grad.chanpos(labsel,:);
