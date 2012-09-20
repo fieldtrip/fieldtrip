@@ -1,5 +1,7 @@
 function [c] = ft_connectivity_amplcorr_ortho(mom, varargin)
 
+% Copyright (C) 2012 Jan-Mathijs Schoffelen
+
 refindx = ft_getopt(varargin, 'refindx', 'all');
 tapvec  = ft_getopt(varargin, 'tapvec',  ones(1,size(mom,2)));
 
