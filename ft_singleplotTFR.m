@@ -425,7 +425,7 @@ if ~isempty(cfg.maskparameter)
   end
 end
 siz        = size(dat);
-datamatrix = reshape(mean(dat, 1), siz(2:end));
+datamatrix = reshape(mean(dat, 1), [siz(2:end) 1]);
 xvector    = data.(xparam)(xmin:xmax);
 yvector    = data.(yparam)(ymin:ymax);
 
