@@ -174,7 +174,7 @@ fltpadding    = round(cfg.artfctdef.zvalue.fltpadding*hdr.Fs);
 artpadding    = round(cfg.artfctdef.zvalue.artpadding*hdr.Fs);
 trl(:,1)      = trl(:,1) - trlpadding;       % pad the trial with some samples, in order to detect
 trl(:,2)      = trl(:,2) + trlpadding;       % artifacts at the edges of the relevant trials.
-trl(:,3)      = nan;                         % the offset is not correct any more
+trl(:,3)      = trl(:,3) - trlpadding;       % the offset is not correct any more - bullshit, can ofcourse be adjusted as well, grtz: JMH @ Sep 20 2012
 trllength     = trl(:,2) - trl(:,1) + 1;     % length of each trial
 numtrl        = size(trl,1);
 cfg.artfctdef.zvalue.trl = trl;              % remember where we are going to look for artifacts
@@ -799,6 +799,8 @@ if isempty(get(opt.h1, 'children'))
       yval = opt.zmax{k};
     end
     plot(opt.h1, xval, yval, 'linestyle', '-', 'color', 'b', 'displayname', 'data');
+    xlabel('samples');
+    ylabel('z-value');
   end
 end
 h1children = get(opt.h1, 'children');
@@ -816,7 +818,7 @@ if isempty(boxhandle)
   plot(opt.h1, xval, yval, 'linestyle', '-', 'color', 'm', 'linewidth', 2, 'displayname', 'highlight');
 else
   % update it
-  xval = trl(opt.trlop,1):trl(opt.trlop,2);
+  xval = ((trl(opt.trlop,1):trl(opt.trlop,2))-trl(opt.trlop,1)+trl(opt.trlop,3))./opt.hdr.Fs;
   if opt.thresholdsum,
     yval = opt.zsum{opt.trlop};
   else
@@ -831,7 +833,7 @@ thrhandle = findall(h1children, 'displayname', 'reddata');
 if isempty(thrhandle)
   % they have to be drawn
   for k = 1:opt.numtrl
-    xval = opt.trl(k,1):opt.trl(k,2);
+    xval = trl(k,1):trl(k,2);
     if opt.thresholdsum,
       yval = opt.zsum{k};
     else
@@ -842,11 +844,10 @@ if isempty(thrhandle)
     plot(opt.h1, xval, yval, 'linestyle', '-', 'color', [1 0 0], 'displayname', 'reddata');
   end
   hline(opt.threshold, 'color', 'r', 'linestyle', ':', 'displayname', 'threshline');
-  ylabel('zscore');
 elseif ~isempty(thrhandle) && opt.updatethreshold
   % they can be updated
   for k = 1:opt.numtrl
-    xval = opt.trl(k,1):opt.trl(k,2);
+    xval = ((trl(k,1):trl(k,2))-trl(k,1)+trl(k,3))./opt.hdr.Fs;
     if opt.thresholdsum,
       yval = opt.zsum{k};
     else
@@ -862,7 +863,7 @@ end
 
 %--------------------------------------------------
 % get trial specific x-axis values and padding info
-xval = trl(trlop,1):trl(trlop,2);
+xval = ((trl(opt.trlop,1):trl(opt.trlop,2))-trl(opt.trlop,1)+trl(opt.trlop,3))./opt.hdr.Fs;
 if trlpadsmp>0
   sel    = trlpadsmp:(size(data,2)-trlpadsmp);
   selpad = 1:size(data,2); 
@@ -877,12 +878,13 @@ if isempty(get(opt.h2, 'children'))
   % do the plotting
   plot(xval(selpad), data(selpad), 'color', [0.5 0.5 1], 'displayname', 'line1');
   plot(xval(sel),    data(sel),    'color', [0 0 1],     'displayname', 'line2');
-  vline(xval(  1)+trlpadsmp-1,     'color', [0 0 0],     'displayname', 'vline1');
-  vline(xval(end)-trlpadsmp,       'color', [0 0 0],     'displayname', 'vline2');
+  vline(xval(  1)+(trlpadsmp-1/opt.hdr.Fs),     'color', [0 0 0],     'displayname', 'vline1');
+  vline(xval(end)-(trlpadsmp/opt.hdr.Fs),       'color', [0 0 0],     'displayname', 'vline2');
   data(~artval) = nan;
   plot(xval, data, 'r-', 'displayname', 'line3');
-  xlabel('samples');
+  xlabel('time(s)');
   ylabel('uV or Tesla');
+  axis tight;
   title(str);
 else
   % update in the existing handles
@@ -915,12 +917,13 @@ if isempty(get(opt.h3, 'children'))
   plot(xval(selpad), zval(selpad), 'color', [0.5 0.5 1], 'displayname', 'line1b');
   plot(xval(sel),    zval(sel),    'color', [0 0 1],     'displayname', 'line2b');
   hline(opt.threshold, 'color', 'r', 'linestyle', ':', 'displayname', 'threshline');
-  vline(xval(  1)+trlpadsmp-1,     'color', [0 0 0],     'displayname', 'vline1b');
-  vline(xval(end)-trlpadsmp,       'color', [0 0 0],     'displayname', 'vline2b');
+  vline(xval(  1)+(trlpadsmp-1/opt.hdr.Fs),     'color', [0 0 0],     'displayname', 'vline1b');
+  vline(xval(end)-(trlpadsmp/opt.hdr.Fs),       'color', [0 0 0],     'displayname', 'vline2b');
   zval(~artval) = nan;
   plot(xval, zval, 'r-', 'displayname', 'line3b');
-  xlabel('samples');
-  ylabel('zscore');
+  xlabel('time(s)');
+  ylabel('z-value');
+  axis tight;
 else
   % update in the existing handles
   h3children = get(opt.h3, 'children');
