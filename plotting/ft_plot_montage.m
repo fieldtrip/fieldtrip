@@ -1,14 +1,58 @@
 function ft_plot_montage(dat, varargin)
 
-% FT_PLOT_MONTAGE
+% FT_PLOT_MONTAGE makes a montage of a 3-D array by selecting slices at
+% regular distances and combining them in one large 2-D image.
+%
+% Use as
+%   ft_plot_montage(dat, ...)
+% where dat is a 3-D array.
+% 
+% Additional options should be specified in key-value pairs and can be
+%     'transform'     = 4x4 homogeneous transformation matrix specifying the mapping from
+%                       voxel space to the coordinate system in which the data are plotted.
+%     'location'      = 1x3 vector specifying a point on the plane which will be plotted
+%                       the coordinates are expressed in the coordinate system in which the
+%                       data will be plotted. location defines the origin of the plane
+%     'orientation'   = 1x3 vector specifying the direction orthogonal through the plane
+%                       which will be plotted (default = [0 0 1])
+%     'srange'        = 
+%     'slicesize'     = 
+%     'nslice'        = 
+% 
+% See also FT_PLOT_ORTHO, FT_PLOT_SLICE, FT_SOURCEPLOT
 
+% undocumented, these are passed on to FT_PLOT_SLICE
+%   'intersectmesh'  = triangulated mesh through which the intersection of the plane will be plotted (e.g. cortical sheet)
+%   'intersectcolor' = color for the intersection
+
+% Copyrights (C) 2012, Jan-Mathijs Schoffelen
+%
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
+
+transform = ft_getopt(varargin, 'transform', eye(4));
 loc       = ft_getopt(varargin, 'location');
 ori       = ft_getopt(varargin, 'orientation');
 srange    = ft_getopt(varargin, 'slicerange');
 slicesize = ft_getopt(varargin, 'slicesize');
 nslice    = ft_getopt(varargin, 'nslice');
-transform = ft_getopt(varargin, 'transform', eye(4));
 
+% the intersectmesh and intersectcolor options are passed on to FT_PLOT_SLICE
 dointersect = ~isempty(ft_getopt(varargin, 'intersectmesh'));
 
 % set the location if empty
@@ -73,7 +117,7 @@ for k = 1:nslice
   optarg = ft_setopt(optarg, 'orientation', ori(k,:));
   ix     = mod(k-1, div(1));
   iy     = floor((k-1)/div(1));
-  h(k)   = ft_plot_slice(dat, optarg{:});
+  h(k)   = ft_plot_slice(dat, optarg{:}); % FIXME is it safe to pass all optinoal inputs?
   
   xtmp = get(h(k), 'xdata');
   ytmp = get(h(k), 'ydata');

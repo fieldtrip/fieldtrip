@@ -4,8 +4,8 @@ function [h, T2] = ft_plot_slice(dat, varargin)
 %
 % Use as
 %   ft_plot_slice(dat, ...)
-% or
 %   ft_plot_ortho(dat, mask, ...)
+% where dat and mask are equal-sized 3-D arrays.
 %
 % Additional options should be specified in key-value pairs and can be
 %   'transform'    = 4x4 homogeneous transformation matrix specifying the mapping from
@@ -25,7 +25,7 @@ function [h, T2] = ft_plot_slice(dat, varargin)
 %   'colormap'     = string, see COLORMAP
 %   'colorlim'     = 1x2 vector specifying the min and max for the colorscale
 %
-% See also FT_PLOT_ORTHO, FT_SOURCEPLOT
+% See also FT_PLOT_ORTHO, FT_PLOT_MONTAGE, FT_SOURCEPLOT
 
 % undocumented
 %   'intersectmesh'  = triangulated mesh through which the intersection of the plane will be plotted (e.g. cortical sheet)

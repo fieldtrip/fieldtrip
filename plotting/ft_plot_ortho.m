@@ -30,7 +30,7 @@ function [hx, hy, hz] = ft_plot_ortho(dat, varargin)
 %   'colormap'     = string, see COLORMAP
 %   'interplim'
 %
-% See also FT_PLOT_SLICE, FT_SOURCEPLOT
+% See also FT_PLOT_SLICE, FT_PLOT_MONTAGE, FT_SOURCEPLOT
 
 % Copyrights (C) 2010, Jan-Mathijs Schoffelen
 %
