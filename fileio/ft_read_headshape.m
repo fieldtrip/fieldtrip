@@ -204,6 +204,9 @@ switch fileformat
   case 'gifti'
     ft_hastoolbox('gifti', 1);
     g = gifti(filename);
+    if ~isfield(g, 'vertices')
+      error('%s does not contain a tesselated surface', filename);
+    end
     shape.pnt = warp_apply(g.mat, g.vertices);
     shape.tri = g.faces;
     if isfield(g, 'cdata')

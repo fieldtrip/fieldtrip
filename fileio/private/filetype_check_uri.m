@@ -88,8 +88,13 @@ else
       % buffer://<host>:<port>
       tok = tokenize(filename(10:end), ':');
       varargout{1} = tok{1};
-      varargout{2} = str2num(tok{2});
-
+      if numel(tok)>1
+        varargout{2} = str2num(tok{2});
+      else
+        % use the default value
+        varargout{2} = 1972;
+      end
+      
     case 'tcp'
       % tcp://<host>:<port>
       tok = tokenize(filename(7:end), ':');

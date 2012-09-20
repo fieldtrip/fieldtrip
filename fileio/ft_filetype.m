@@ -1004,6 +1004,15 @@ elseif filetype_check_extension(filename, '.gii') && filetype_check_header(filen
   type = 'gifti';
   manufacturer = 'Neuroimaging Informatics Technology Initiative';
   content = 'tesselated surface description';
+elseif filetype_check_extension(filename, '.foci') && filetype_check_header(filename, '<?xml')
+  type = 'caret_foci';
+  manufacturer = 'Caret and ConnectomeWB';
+elseif filetype_check_extension(filename, '.border') && filetype_check_header(filename, '<?xml')
+  type = 'caret_border';
+  manufacturer = 'Caret and ConnectomeWB';
+elseif filetype_check_extension(filename, '.spec') && filetype_check_header(filename, '<?xml')
+  type = 'caret_spec';
+  manufacturer = 'Caret and ConnectomeWB';
 elseif filetype_check_extension(filename, '.v')
   type = 'vista'; 
   manufacturer = 'University of British Columbia, Canada, http://www.cs.ubc.ca/nest/lci/vista/vista.html';
