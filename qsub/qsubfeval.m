@@ -99,6 +99,7 @@ optbeg = optbeg | strcmp('queue',       strargin);
 optbeg = optbeg | strcmp('options',     strargin);
 optbeg = optbeg | strcmp('jvm',         strargin);
 optbeg = optbeg | strcmp('display',     strargin);
+optbeg = optbeg | strcmp('nargout',     strargin);
 optbeg = find(optbeg);
 optarg = varargin(optbeg:end);
 
@@ -119,6 +120,7 @@ queue         = ft_getopt(optarg, 'queue', defaultqueue);
 submitoptions = ft_getopt(optarg, 'options', []);
 display       = ft_getopt(optarg, 'display', 'no');
 jvm           = ft_getopt(optarg, 'jvm', 'yes');
+numargout     = ft_getopt(optarg, 'nargout', []);
 
 % skip the optional key-value arguments
 if ~isempty(optbeg)
@@ -155,7 +157,7 @@ curPwd = getcustompwd();
 randomseed = rand(1)*double(intmax);
 
 % pass some options that influence the remote execution
-options = {'pwd', curPwd, 'path', getcustompath, 'global', getglobal, 'diary', diary, 'memreq', memreq, 'timreq', timreq, 'randomseed', randomseed};
+options = {'pwd', curPwd, 'path', getcustompath, 'global', getglobal, 'diary', diary, 'memreq', memreq, 'timreq', timreq, 'randomseed', randomseed, 'nargout', numargout};
 
 inputfile    = fullfile(curPwd, sprintf('%s_input.mat', jobid));
 matlabscript = fullfile(curPwd, sprintf('%s.m', jobid));

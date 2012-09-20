@@ -141,6 +141,11 @@ end
 if numargout<0
   % the nargout function returns -1 in case of a variable number of output arguments
   numargout = 1;
+elseif numargout>nargout
+  % the number of output arguments is constrained by the users' call to this function
+  numargout = nargout;
+elseif nargout>numargout
+  error('Too many output arguments.');
 end
 
 % check the input arguments
@@ -245,7 +250,7 @@ while ~all(submitted) || ~all(collected)
     % submit the job for execution
     ws = warning('off', 'FieldTrip:peer:noSlaveAvailable');
     % peerfeval will give a warning if the submission timed out
-    [curjobid curputtime] = peerfeval(fname, argin{:}, 'timeout', 5, 'memreq', memreq, 'timreq', timreq, 'diary', diary);
+    [curjobid curputtime] = peerfeval(fname, argin{:}, 'timeout', 5, 'memreq', memreq, 'timreq', timreq, 'diary', diary, 'nargout', numargout);
     warning(ws);
 
     if ~isempty(curjobid)

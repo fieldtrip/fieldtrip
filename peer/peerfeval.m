@@ -85,17 +85,19 @@ optbeg = optbeg | strcmp('cpureq',  strargin);
 optbeg = optbeg | strcmp('timreq',  strargin);
 optbeg = optbeg | strcmp('hostid',  strargin);
 optbeg = optbeg | strcmp('diary',   strargin);
+optbeg = optbeg | strcmp('nargout', strargin);
 optbeg = find(optbeg);
 optarg = varargin(optbeg:end);
 
 % get the optional input arguments
-timeout = ft_getopt(optarg, 'timeout', inf);
-sleep   = ft_getopt(optarg, 'sleep',   0.05);
-memreq  = ft_getopt(optarg, 'memreq',  0);
-cpureq  = ft_getopt(optarg, 'cpureq',  0);
-timreq  = ft_getopt(optarg, 'timreq',  0);
-hostid  = ft_getopt(optarg, 'hostid',  []);
-diary   = ft_getopt(optarg, 'diary',   []);
+timeout   = ft_getopt(optarg, 'timeout', inf);
+sleep     = ft_getopt(optarg, 'sleep',   0.05);
+memreq    = ft_getopt(optarg, 'memreq',  0);
+cpureq    = ft_getopt(optarg, 'cpureq',  0);
+timreq    = ft_getopt(optarg, 'timreq',  0);
+hostid    = ft_getopt(optarg, 'hostid',  []);
+diary     = ft_getopt(optarg, 'diary',   []);
+numargout = ft_getopt(optarg, 'nargout', []);
 
 % skip the optional key-value arguments
 if ~isempty(optbeg)
@@ -122,7 +124,7 @@ puttime = [];
 randomseed = rand(1)*double(intmax);
 
 % pass some options that influence the remote execution
-options = {'pwd', getcustompwd, 'path', getcustompath, 'global', getglobal, 'diary', diary, 'memreq', memreq, 'cpureq', cpureq, 'timreq', timreq, 'randomseed', randomseed};
+options = {'pwd', getcustompwd, 'path', getcustompath, 'global', getglobal, 'diary', diary, 'memreq', memreq, 'cpureq', cpureq, 'timreq', timreq, 'randomseed', randomseed, 'nargout', numargout};
 
 % status = 0 means zombie mode, don't accept anything
 % status = 1 means master mode, accept everything

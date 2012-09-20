@@ -193,6 +193,11 @@ end
 if numargout<0
   % the nargout function returns -1 in case of a variable number of output arguments
   numargout = 1;
+elseif numargout>nargout
+  % the number of output arguments is constrained by the users' call to this function
+  numargout = nargout;
+elseif nargout>numargout
+  error('Too many output arguments.');
 end
 
 if stack>1
@@ -299,10 +304,10 @@ for submit=1:numjob
   % submit the job
   if ~isempty(fcomp)
     % use the compiled version
-    [curjobid curputtime] = qsubfeval(fcomp, argin{:}, 'memreq', memreq, 'timreq', timreq, 'diary', diary, 'batch', batch, 'batchid', batchid, 'backend', backend, 'options', submitoptions, 'queue', queue, 'display', display, 'jvm', jvm);
+    [curjobid curputtime] = qsubfeval(fcomp, argin{:}, 'memreq', memreq, 'timreq', timreq, 'diary', diary, 'batch', batch, 'batchid', batchid, 'backend', backend, 'options', submitoptions, 'queue', queue, 'display', display, 'jvm', jvm, 'nargout', numargout);
   else
     % use the non-compiled version
-    [curjobid curputtime] = qsubfeval(fname, argin{:}, 'memreq', memreq, 'timreq', timreq, 'diary', diary, 'batch', batch, 'batchid', batchid, 'backend', backend, 'options', submitoptions, 'queue', queue, 'display', display, 'jvm', jvm);
+    [curjobid curputtime] = qsubfeval(fname, argin{:}, 'memreq', memreq, 'timreq', timreq, 'diary', diary, 'batch', batch, 'batchid', batchid, 'backend', backend, 'options', submitoptions, 'queue', queue, 'display', display, 'jvm', jvm, 'nargout', numargout);
   end
   
   % fprintf('submitted job %d\n', submit);
