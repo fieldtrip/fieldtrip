@@ -52,6 +52,10 @@ seg = (seg~=0);
 dim = size(seg);
 len = ceil(sqrt(sum(dim.^2))/2);
 
+if ~any(seg(:))
+  error('the segmentation is empty')
+end
+
 % define the origin if it is not provided in the input arguments
 if nargin<3
   origin(1) = dim(1)/2;

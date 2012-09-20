@@ -1,0 +1,35 @@
+function test_bug1651
+
+% TEST test_bug1651
+% TEST ft_prepare_mesh ft_datatype_segmentation
+
+readfromdisk = true;
+
+if readfromdisk
+  % the segmentation takes quite some time
+  % furthermore we want to ensure that we have the old-stype segmentation
+  load('test_bug1651.mat');
+else
+  % this is the original code to create the segmentation
+  % create a 3 layered segmentation
+  mri = ft_read_mri('Subject01.mri');
+  
+  % this speeds up the subsequent stuff
+  cfg = [];
+  cfg.downsample = 2;
+  mri = ft_volumedownsample(cfg, mri);
+  
+  cfg = [];
+  cfg.output = {'brain', 'scalp', 'skull'};
+  seg2 = ft_volumesegment(cfg, mri);
+end
+
+% the following results in the error
+cfg = [];
+cfg.tissue = {'brain', 'skull', 'scalp'};
+cfg.numvertices = [1000 2000 3000];
+bnd = ft_prepare_mesh(cfg, seg2);
+
+figure
+ft_plot_mesh(bnd)
+alpha 0.1

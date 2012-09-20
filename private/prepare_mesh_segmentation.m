@@ -40,7 +40,7 @@ if iscell(cfg.tissue)
   % pick the selected tissues from the segmentation structure
   for i=1:length(cfg.tissue)
     fprintf('using the %s segmentation\n', cfg.tissue{i});
-    mri.seg = mri.seg + mri.(cfg.tissue{i});
+    mri.seg = mri.seg + imfill(mri.(cfg.tissue{i}), 'holes');
     value(i) = length(cfg.tissue) - i + 1;
   end % for
   % continue with the tissue value rather than the cell-array with strings
@@ -87,6 +87,9 @@ end
 % construct the triangulations of the boundaries from the segmented MRI
 for i=1:length(cfg.tissue)
   fprintf('triangulating the boundary of compartment %d\n', i);
+  if ~any(mri.seg(:)==cfg.tissue(i))
+    error('tissue value %d is not present in the segmentation', cfg.tissue(i));
+  end
   seg = imfill((mri.seg==cfg.tissue(i)), 'holes');
   ori(1) = mean(mrix(seg(:)));
   ori(2) = mean(mriy(seg(:)));

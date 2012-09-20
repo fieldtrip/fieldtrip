@@ -31,8 +31,8 @@ function [hs] = ft_plot_mesh(bnd, varargin)
 %
 % See also TRIMESH
 
-% Copyright (C) 2009, Cristiano Micheli
 % Copyright (C) 2012, Robert Oostenveld
+% Copyright (C) 2009, Cristiano Micheli
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -61,6 +61,15 @@ if ~isstruct(bnd) && isnumeric(bnd) && size(bnd,2)==3
 elseif isfield(bnd, 'pos')
   % the input seems to be a set of points from ft_prepare_sourcemodel or ft_dipolefitting
   bnd.pnt = bnd.pos;
+end
+
+% the input is a structure, but might also be a struct-array
+if numel(bnd)>1
+  % plot each of the boundaries
+  for i=1:numel(bnd)
+    ft_plot_mesh(bnd(i), varargin{:})
+  end
+  return
 end
 
 % get the optional input arguments
