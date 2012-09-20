@@ -261,12 +261,12 @@ if isfield(data, 'grad')
   
   % find the other channels that are present in the data
   sel_other = setdiff(1:length(data.grad.label), [sel_dH(:)' sel_dV(:)']);
-  
+%   
   lab_other = data.grad.label(sel_other);
   lab_comb  = planar(sel_comb,3);
  
-  sel      = [sel_comb(:);sel_other(:)];
-  newlabel = [lab_comb;data.grad.label(sel_other(:))];
+  sel      = [sel_dH(:);sel_other(:)];
+  newlabel = [lab_comb;lab_other];
   
   newgrad.chanpos = data.grad.chanpos(sel,:);
   newgrad.chanori = data.grad.chanori(sel,:);
