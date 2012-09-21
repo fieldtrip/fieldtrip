@@ -761,6 +761,13 @@ sens.chanpos = warp_apply(rotate([0 0 rz]), sens.chanpos, 'homogenous');
 pnt   = sens.chanpos;
 label = sens.label;
 
+% check whether many channels occupy identical positions, this makes it
+% impossible to automatically construct an appropriate layout
+% (cutoff is 20% of channels being in the same place as another 20%)
+if size(unique(pnt,'rows'),1) / size(pnt,1) < 0.8
+  error('many channels occupy identical positions, therefore we cannot generate a layout automatically from the provided sensor configuration structure; please specify e.g. a pre-generated template layout instead');
+end
+
 if strcmpi(style, '3d')
   lay.pos   = pnt;
   lay.label = label;
