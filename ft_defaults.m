@@ -84,6 +84,7 @@ checkMultipleToolbox('iso2mesh',            'iso2meshver.m');
 checkMultipleToolbox('bct',                 'degrees_und.m');
 checkMultipleToolbox('yokogawa_meg_reader', 'getYkgwHdrEvent.p');
 checkMultipleToolbox('biosig',              'sopen.m');
+checkMultipleToolbox('icasso',              'icassoEst.m');
 
 % check for different SPM versions, which also includes a general warning about addpath(genpath(...))
 list = which('spm', '-all');
