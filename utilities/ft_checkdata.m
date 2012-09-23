@@ -1827,7 +1827,8 @@ for iUnit = 1:nUnits
     trialInds            = [trialInds; ones(nSpikes,1)*iTrial];
     
     % get the begs and ends of trials
-    if iUnit==1, trialTimes(iTrial,:) = data.time{iTrial}([1 end]); end
+    hasNum = find(~isnan(data.time{iTrial}));
+    if iUnit==1, trialTimes(iTrial,:) = data.time{iTrial}([hasNum(1) hasNum(end)]); end
   end
   
   spike.label{iUnit}     = data.label{unitIndx};
