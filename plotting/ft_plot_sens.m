@@ -8,9 +8,10 @@ function hs = ft_plot_sens(sens, varargin)
 % or PREPARE_VOL_SENS.
 %
 % Optional input arguments should come in key-value pairs and can include
-%   'style'    plotting style for the points representing the channels, see plot3 (default = 'k.')
-%   'coil'     true/false, plot each individual coil or the channelposition (default = false)
-%   'label'    show the label, can be 'off', 'label', 'number' (default = 'off')
+%   style    = plotting style for the points representing the channels, see plot3 (default = 'k.')
+%   coil     = true/false, plot each individual coil or the channelposition (default = false)
+%   label    = show the label, can be 'off', 'label', 'number' (default = 'off')
+%   chantype = string or cell-array with strings, for example {'meg', 'megref'} (default is all)
 %
 % Example
 %   sens = ft_read_sens('Subject01.ds');
@@ -42,9 +43,45 @@ ws = warning('on', 'MATLAB:divideByZero');
 sens = ft_datatype_sens(sens);
 
 % get the optional input arguments
-style = ft_getopt(varargin, 'style',  'k.');
-coil  = ft_getopt(varargin, 'coil',   false);
-label = ft_getopt(varargin, 'label',  'off');
+style    = ft_getopt(varargin, 'style',  'k.');
+coil     = ft_getopt(varargin, 'coil',   false);
+label    = ft_getopt(varargin, 'label',  'off');
+chantype = ft_getopt(varargin, 'chantype');
+
+% select a subset of channels to be plotted
+if ~isempty(chantype)
+  
+  if ischar(chantype)
+    chantype = {chantype};
+  end
+  chansel = match_str(sens.chantype, chantype);
+  
+  % remove the balancing from the sensor definition, e.g. 3rd order gradients, PCA-cleaned data or ICA projections
+  sens = undobalancing(sens);
+  
+  % remove the channels that are not selected
+  sens.chanpos = sens.chanpos(chansel,:);
+  sens.label   = sens.label(chansel);
+  
+  % remove the magnetometer and gradiometer coils that are not in one of the selected channels
+  if isfield(sens, 'tra') && isfield(sens, 'coilpos')
+    sens.tra     = sens.tra(chansel,:);
+    coilsel      = any(sens.tra~=0,1);
+    sens.coilpos = sens.coilpos(coilsel,:);
+    sens.coilori = sens.coilori(coilsel,:);
+    sens.tra     = sens.tra(:,coilsel);
+  end
+  
+  % FIXME note that I have not tested this on any complicated electrode definitions
+  % remove the electrodes that are not in one of the selected channels
+  if isfield(sens, 'tra') && isfield(sens, 'elecpos')
+    sens.tra     = sens.tra(chansel,:);
+    elecsel      = any(sens.tra~=0,1);
+    sens.elecpos = sens.elecpos(elecsel,:);
+    sens.tra     = sens.tra(:,elecsel);
+  end
+  
+end % selecting channels and coils
 
 % everything is added to the current figure
 holdflag = ishold;
