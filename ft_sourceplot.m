@@ -777,8 +777,8 @@ if isequal(cfg.method,'ortho')
     
     % create only once
     if ~exist('h1','var')
-      % these will hold the anatomical data if present, along with labels
-      % etc.
+      clf
+      % these will hold the anatomical data if present, along with labels etc.
       h1 = axes('position',[0.07 0.07+ysize(2)+0.05 xsize(1) ysize(1)]);
       h2 = axes('position',[0.07+xsize(1)+0.05 0.07+ysize(2)+0.05 xsize(2) ysize(1)]);
       h3 = axes('position',[0.07 0.07 xsize(1) ysize(2)]);
