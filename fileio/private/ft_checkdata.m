@@ -28,7 +28,7 @@ function [data] = ft_checkdata(data, varargin)
 %   hasdof             = yes, no
 %   cmbrepresentation  = sparse, full (applies to covariance and cross-spectral density)
 %   fsample            = sampling frequency to use to go from SPIKE to RAW representation
-%   segmentationstyle  = indexed, cumulative, exclusive
+%   segmentationstyle  = indexed, probabilistic
 %
 % For some options you can specify multiple values, e.g.
 %   [data] = ft_checkdata(data, 'senstype', {'ctf151', 'ctf275'}), e.g. in megrealign
