@@ -761,18 +761,19 @@ sens.chanpos = warp_apply(rotate([0 0 rz]), sens.chanpos, 'homogenous');
 pnt   = sens.chanpos;
 label = sens.label;
 
-% check whether many channels occupy identical positions, this makes it
-% impossible to automatically construct an appropriate layout
-% (cutoff is 20% of channels being in the same place as another 20%)
-if size(unique(pnt,'rows'),1) / size(pnt,1) < 0.8
-  error('many channels occupy identical positions, therefore we cannot generate a layout automatically from the provided sensor configuration structure; please specify e.g. a pre-generated template layout instead');
-end
-
 if strcmpi(style, '3d')
   lay.pos   = pnt;
   lay.label = label;
 else
   prj = elproj(pnt, method);
+  
+  % check whether many channels occupy identical positions, if so shift
+  % them around
+  if size(unique(prj,'rows'),1) / size(prj,1) < 0.8
+    warning_once('the specified sensor configuration has many overlapping channels, creating a layout by shifting them around (use a template layout for better control over the positioning)');
+    prj = shiftxy(prj', 0.2)';
+  end
+  
   d = dist(prj');
   d(find(eye(size(d)))) = inf;
   
@@ -804,4 +805,45 @@ else
   lay.height = Height;
   lay.label  = label;
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+% shift 2D positions around so that the minimum distance between any pair
+% is mindist
+%
+% Credit for this code goes to Laurence Hunt at UCL.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function xy = shiftxy(xy,mindist)
+
+x = xy(1,:);
+y = xy(2,:);
+
+l=1;
+i=1; %filler
+mindist = mindist/0.999; % limits the number of loops
+while (~isempty(i) && l<50)
+    xdiff = repmat(x,length(x),1) - repmat(x',1,length(x));
+    ydiff = repmat(y,length(y),1) - repmat(y',1,length(y));
+    xydist= sqrt(xdiff.^2 + ydiff.^2); %euclidean distance between all sensor pairs
+
+    [i,j] = find(xydist<mindist*0.999);
+    rm=(i<=j); i(rm)=[]; j(rm)=[]; %only look at i>j
+
+    for m = 1:length(i);
+        if (xydist(i(m),j(m)) == 0)
+            diffvec = [mindist./sqrt(2) mindist./sqrt(2)];
+        else
+            xydiff = [xdiff(i(m),j(m)) ydiff(i(m),j(m))];
+            diffvec = xydiff.*mindist./xydist(i(m),j(m)) - xydiff;
+        end
+        x(i(m)) = x(i(m)) - diffvec(1)/2;
+        y(i(m)) = y(i(m)) - diffvec(2)/2;
+        x(j(m)) = x(j(m)) + diffvec(1)/2;
+        y(j(m)) = y(j(m)) + diffvec(2)/2;
+    end
+    l = l+1;
+end
+
+xy = [x; y];
 
