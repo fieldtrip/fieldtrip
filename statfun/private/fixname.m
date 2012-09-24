@@ -1,6 +1,6 @@
 function str = fixname(str)
 
-% FIXNAME changes all inappropriate characters in a sting into '_' 
+% FIXNAME changes all inappropriate characters in a sting into '_'
 % such that it can be used as a filename or as a structure field name. If
 % the string begins with a numeric digit, an 'x' is prepended.
 %
@@ -35,7 +35,7 @@ str(regexp(str,'\W')) = '_';
 while(str(1) == '_'),   str = str(2:end); end;   % remove all underscore at the begin of the string
 while(str(end) == '_'), str = str(1:end-1); end; % remove all underscore at the end of the string
 
-if ~isempty(str2num(str(1)))
-  % string begins with a digit, prepend an 'x'
+if ~isempty(str2num(str(1))) && ~isequal(str(1), 'i')
+  % the string begins with a digit, prepend an 'x'
   str = ['x' str];
 end
