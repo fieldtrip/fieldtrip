@@ -29,6 +29,7 @@ function [data] = ft_checkdata(data, varargin)
 %   cmbrepresentation  = sparse, full (applies to covariance and cross-spectral density)
 %   fsample            = sampling frequency to use to go from SPIKE to RAW representation
 %   segmentationstyle  = indexed, probabilistic
+%   hasbrainmask       = yes, no (only applies to segmentation data)
 %
 % For some options you can specify multiple values, e.g.
 %   [data] = ft_checkdata(data, 'senstype', {'ctf151', 'ctf275'}), e.g. in megrealign
@@ -100,6 +101,7 @@ sourcedimord         = ft_getopt(varargin, 'sourcedimord');
 sourcerepresentation = ft_getopt(varargin, 'sourcerepresentation');
 fsample              = ft_getopt(varargin, 'fsample');
 segmentationstyle    = ft_getopt(varargin, 'segmentationstyle');
+hasbrainmask         = ft_getopt(varargin, 'hasbrainmask');
 
 % check whether people are using deprecated stuff
 depHastrialdef = ft_getopt(varargin, 'hastrialdef');
@@ -193,7 +195,7 @@ elseif isspike
 elseif isvolume
   data = ft_datatype_volume(data);
 elseif issegmentation
-  data = ft_datatype_segmentation(data, 'segmentationstyle', segmentationstyle);
+  data = ft_datatype_segmentation(data, 'segmentationstyle', segmentationstyle, 'hasbrainmask', hasbrainmask);
 elseif issource
   data = ft_datatype_source(data);
 elseif isdip

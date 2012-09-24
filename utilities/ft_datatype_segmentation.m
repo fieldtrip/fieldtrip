@@ -51,11 +51,11 @@ function segmentation = ft_datatype_segmentation(segmentation, varargin)
 
 % get the optional input arguments, which should be specified as key-value pairs
 version           = ft_getopt(varargin, 'version', 'latest');
-segmentationstyle = ft_getopt(varargin, 'segmentationstyle'); % can be indexed or probabilistic
-hasbrain          = ft_getopt(varargin, 'hasbrain', 'no');    % no means that it is not required, if present it won't be removed
+segmentationstyle = ft_getopt(varargin, 'segmentationstyle');   % can be indexed or probabilistic
+hasbrainmask      = ft_getopt(varargin, 'hasbrainmask', 'no');  % no means that it is not required, if present it won't be removed
 
 % convert from string into boolean
-hasbrain = istrue(hasbrain);
+hasbrainmask = istrue(hasbrainmask);
 
 if strcmp(version, 'latest')
   segversion = '2012';
@@ -241,7 +241,7 @@ switch segversion
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % add the brainmask if requested
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    if hasbrain
+    if hasbrainmask
       if indexed
         fn = fieldnames(segmentation);
         sel = false(size(fn));
@@ -294,7 +294,7 @@ switch segversion
           segmentation.brain = brain;
         end
       end
-    end % if hasbrain
+    end % if hasbrainmask
     
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
