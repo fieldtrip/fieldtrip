@@ -69,16 +69,7 @@ end
 ft_hastoolbox('SPM8', 1);
 
 % look for holes
-[lab, num] = spm_bwlabel(double(seg==0), 26);
-if num>1
-  warning('the segmented volume contains holes, filling them up');
-  
-  % keep the largest 'hole' on the outside (assume the first voxel to be outside
-  nholes = num;
-  for k = setdiff(1:nholes, lab(1))
-    seg(lab==k) = true;
-  end
-end
+seg = volumefillholes(seg);
 
 % look for >1 blob
 [lab, num] = spm_bwlabel(double(seg), 26);
