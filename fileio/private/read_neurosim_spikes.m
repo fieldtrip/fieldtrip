@@ -83,9 +83,9 @@ fclose(fid);
 % spike.unit      = {numeric(:,2)'};
 
 % it is more convenient to represent each neuron in its own channel
-number = unique(numeric(:,2)');
-spike.label = cell(length(number), 1);
-spike.timestamp = cell(length(number), 1);
+number          = unique(numeric(:,2)');
+spike.label     = cell(1, length(number), 1);
+spike.timestamp = cell(1, length(number), 1);
 for i=1:length(number)
   sel = numeric(:,2)==number(i);
   spike.label{i}     = sprintf('%d', number(i));

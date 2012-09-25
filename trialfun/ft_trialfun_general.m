@@ -33,7 +33,7 @@ if isfield(cfg.trialdef, 'triallength') && isempty(cfg.trialdef.triallength  ), 
 if isfield(cfg.trialdef, 'ntrials')     && isempty(cfg.trialdef.ntrials      ), cfg.trialdef = rmfield(cfg.trialdef, 'ntrials'    ); end
 
 if isfield(cfg.trialdef, 'triallength')
-  % reading all segments from a continuous fie is incompatible with any other option
+  % reading all segments from a continuous file is incompatible with any other option
   try, cfg.trialdef = rmfield(cfg.trialdef, 'eventvalue'); end
   try, cfg.trialdef = rmfield(cfg.trialdef, 'prestim'   ); end
   try, cfg.trialdef = rmfield(cfg.trialdef, 'poststim'  ); end

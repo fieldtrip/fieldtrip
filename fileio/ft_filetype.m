@@ -329,7 +329,10 @@ elseif isdir(filename) && exist(fullfile(filename, 'signals'), 'file') && exist(
    type = 'neurosim';
    manufacturer = 'Jan van der Eerden (DCCN)';
    content = 'simulated spikes and continuous signals';
-  
+elseif isempty(x) && (strcmp(filename,'signals') || strcmp(filename,'spikes')) % file does not have an extension and is called signals or spikes
+   type = 'neurosim';
+   manufacturer = 'Jan van der Eerden (DCCN)';
+   content = 'simulated spikes and continuous signals'; 
 
   % known 4D/BTI file types
 elseif filetype_check_extension(filename, '.pdf') && filetype_check_header(filename, 'E|lk') % I am not sure whether this header always applies
