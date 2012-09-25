@@ -1,13 +1,11 @@
 % UPDATE generates html help files for all classes and updates funct.html
 
-d = pwd;
+d = '/Users/marcelge/Code/DMLT/html';
+cd(d);
 
 % read implemented methods
 
 D = dir('../+dml/*.m');
-if isempty(D)
-  error('update should be called from within the toolbox html directory');
-end
 
 % write method help
 
@@ -26,14 +24,15 @@ for i=1:length(D)
   nme = D(i).name(1:(end-2));
   s = help2html(['dml.' nme]);  
   fname = fullfile(d,[nme '.html']);
-  if ~exist(fname)
-    fprintf('added %s.html\n',nme);
-  end  
+  bf = exist(fname);
   fid = fopen(fname,'w');
   fprintf(fid,'%s',s);
   fclose(fid);
-  if ~exist(fname)
-    system(sprintf('git add %s/%s.html',fullfile(d),nme));
+  if ~bf
+    fprintf('added %s.html\n',nme);
+    cd(d);
+    system(sprintf('git add %s.html',d,nme));
+    cd(ds);
   end
 end
 
