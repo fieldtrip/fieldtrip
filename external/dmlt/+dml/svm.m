@@ -11,7 +11,6 @@ classdef svm < dml.method
 %   Z = m.test(X);
 %
 %   DEVELOPER
-%   Marcel van Gerven (m.vangerven@donders.ru.nl)
 %   Jason Farquhar (j.farquhar@donders.ru.nl)
 
   properties
