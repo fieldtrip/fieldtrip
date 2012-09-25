@@ -68,9 +68,9 @@ if ~isempty(hdr) & (hdr.dime.dim(5)>1 | V.n>1),
 		end;
 	end;
 
-	if finite(hdr.dime.funused1) & hdr.dime.funused1,
+	if isfinite(hdr.dime.funused1) & hdr.dime.funused1,
 		scal  = hdr.dime.funused1;
-		if finite(hdr.dime.funused2),
+		if isfinite(hdr.dime.funused2),
 			dcoff = hdr.dime.funused2;
 		else,
 			dcoff = 0;

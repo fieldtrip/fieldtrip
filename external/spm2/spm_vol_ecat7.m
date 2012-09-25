@@ -19,7 +19,7 @@ if nargin==1,
 	required = '1010001';
 elseif ischar(required),
 else,
-	if finite(required),
+	if isfinite(required),
 		required = sprintf('%.7x',16842752+required);
 	else,
 		required = 'all';
