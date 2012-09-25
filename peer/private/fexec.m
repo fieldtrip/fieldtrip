@@ -150,7 +150,11 @@ try
   
   % evaluate the function and get the output arguments
   argout = cell(1, numargout);
-  [argout{:}] = feval(fname, argin{:});
+  if numargout>0
+    [argout{:}] = feval(fname, argin{:});
+  else
+    feval(fname, argin{:});
+  end
   
   if usediary && exist(diaryfile, 'file')
     % close the diary and read the contents
