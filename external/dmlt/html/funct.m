@@ -8,6 +8,7 @@
 % * <crossvalidator.html |dml.crossvalidator|> - crossvalidation class
 % * <enet.html |dml.enet|> - efficient elastic net algorithm
 % * <filterer.html |dml.filterer|> - filtering approach to feature selection
+% * <garrote.html |dml.garrote|> - variational garrote
 % * <gp.html |dml.gp|> - Gaussian process
 % * <graphnet.html |dml.graphnet|> - native implementation of graphnet algorithm
 % * <gridsearch.html |dml.gridsearch|> - grid search method

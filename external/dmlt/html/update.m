@@ -28,10 +28,13 @@ for i=1:length(D)
   fname = fullfile(d,[nme '.html']);
   if ~exist(fname)
     fprintf('added %s.html\n',nme);
-  end
+  end  
   fid = fopen(fname,'w');
   fprintf(fid,'%s',s);
   fclose(fid);
+  if ~exist(fname)
+    system(sprintf('git add %s/%s.html',fullfile(d),nme));
+  end
 end
 
 % write funct.m

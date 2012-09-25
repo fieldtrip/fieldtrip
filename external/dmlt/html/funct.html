@@ -6,64 +6,57 @@
    <!--
 This HTML was auto-generated from MATLAB code.
 To make changes, update the MATLAB code and republish this document.
-      --><title>DML Toolbox Functions</title><meta name="generator" content="MATLAB 7.13"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2012-05-11"><meta name="DC.source" content="funct.m"><style type="text/css">
+      --><title>DML Toolbox Functions</title><meta name="generator" content="MATLAB 7.14"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2012-09-25"><meta name="DC.source" content="funct.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
 
-body {
-  background-color: white;
-  margin:10px;
-}
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
 
-h1 {
-  color: #990000; 
-  font-size: x-large;
-}
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
 
-h2 {
-  color: #990000;
-  font-size: medium;
-}
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
 
-/* Make the text shrink to fit narrow windows, but not stretch too far in 
-wide windows. */ 
-p,h1,h2,div.content div {
-  max-width: 600px;
-  /* Hack for IE6 */
-  width: auto !important; width: 600px;
-}
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img { margin-bottom:0px; } 
 
-pre.codeinput {
-  background: #EEEEEE;
-  padding: 10px;
-}
-@media print {
-  pre.codeinput {word-wrap:break-word; width:100%;}
-} 
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
 
-span.keyword {color: #0000FF}
-span.comment {color: #228B22}
-span.string {color: #A020F0}
-span.untermstring {color: #B20000}
-span.syscmd {color: #B28C00}
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
 
-pre.codeoutput {
-  color: #666666;
-  padding: 10px;
-}
+pre, tt, code { font-size:12px; }
+pre { margin:0px 0px 20px; }
+pre.error { color:red; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
 
-pre.error {
-  color: red;
-}
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
 
-p.footer {
-  text-align: right;
-  font-size: xx-small;
-  font-weight: lighter;
-  font-style: italic;
-  color: gray;
-}
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
 
-  </style></head><body><div class="content"><h1>DML Toolbox Functions</h1><div><ul><li><a href="analysis.html"><tt>dml.analysis</tt></a> - multivariate analysis class</li><li><a href="blogreg.html"><tt>dml.blogreg</tt></a> - Bayesian logistic regression</li><li><a href="bootstrap.html"><tt>dml.bootstrap</tt></a> - bootstrapping to determine parameter relevance</li><li><a href="circreg.html"><tt>dml.circreg</tt></a> - circular regression method</li><li><a href="corclas.html"><tt>dml.corclas</tt></a> - template matching correlation based classifier</li><li><a href="crossvalidator.html"><tt>dml.crossvalidator</tt></a> - crossvalidation class</li><li><a href="enet.html"><tt>dml.enet</tt></a> - efficient elastic net algorithm</li><li><a href="filterer.html"><tt>dml.filterer</tt></a> - filtering approach to feature selection</li><li><a href="gp.html"><tt>dml.gp</tt></a> - Gaussian process</li><li><a href="graphnet.html"><tt>dml.graphnet</tt></a> - native implementation of graphnet algorithm</li><li><a href="gridsearch.html"><tt>dml.gridsearch</tt></a> - grid search method</li><li><a href="hmm.html"><tt>dml.hmm</tt></a> - Hidden Markov model with continuous observations</li><li><a href="lds.html"><tt>dml.lds</tt></a> - linear dynamical system</li><li><a href="method.html"><tt>dml.method</tt></a> - abstract class for multivariate methods</li><li><a href="naive.html"><tt>dml.naive</tt></a> - gaussian naive Bayes classifier</li><li><a href="ndata.html"><tt>dml.ndata</tt></a> - wrapper class to make methods handle multiple datas</li><li><a href="noutput.html"><tt>dml.noutput</tt></a> - wrapper class to make methods handle multiple outpu</li><li><a href="one_against_one.html"><tt>dml.one_against_one</tt></a> - one-against-one binary classification</li><li><a href="one_against_rest.html"><tt>dml.one_against_rest</tt></a> - one-against-rest binary classification</li><li><a href="permutation.html"><tt>dml.permutation</tt></a> - permutation testing class</li><li><a href="prior.html"><tt>dml.prior</tt></a> - used to created smoothing and shrinkage priors</li><li><a href="searchlight.html"><tt>dml.searchlight</tt></a> - searchlight analysis</li><li><a href="sincos.html"><tt>dml.sincos</tt></a> - circular regression by decomposing into sine and co</li><li><a href="slda.html"><tt>dml.slda</tt></a> - shrinkage linear discriminant analysis</li><li><a href="sopls.html"><tt>dml.sopls</tt></a> - sparse orthonormalized partial least squares</li><li><a href="standardizer.html"><tt>dml.standardizer</tt></a> - takes zscores</li><li><a href="statistic.html"><tt>dml.statistic</tt></a> - test statistics</li><li><a href="svm.html"><tt>dml.svm</tt></a> - support vector machine</li><li><a href="whiten.html"><tt>dml.whiten</tt></a> - whitens the data</li></ul></div><p class="footer"><br>
-      Published with MATLAB&reg; 7.13<br></p></div><!--
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+
+  </style></head><body><div class="content"><h1>DML Toolbox Functions</h1><div><ul><li><a href="analysis.html"><tt>dml.analysis</tt></a> - multivariate analysis class</li><li><a href="blogreg.html"><tt>dml.blogreg</tt></a> - Bayesian logistic regression</li><li><a href="bootstrap.html"><tt>dml.bootstrap</tt></a> - bootstrapping to determine parameter relevance</li><li><a href="circreg.html"><tt>dml.circreg</tt></a> - circular regression method</li><li><a href="corclas.html"><tt>dml.corclas</tt></a> - template matching correlation based classifier</li><li><a href="crossvalidator.html"><tt>dml.crossvalidator</tt></a> - crossvalidation class</li><li><a href="enet.html"><tt>dml.enet</tt></a> - efficient elastic net algorithm</li><li><a href="filterer.html"><tt>dml.filterer</tt></a> - filtering approach to feature selection</li><li><a href="garrote.html"><tt>dml.garrote</tt></a> - variational garrote</li><li><a href="gp.html"><tt>dml.gp</tt></a> - Gaussian process</li><li><a href="graphnet.html"><tt>dml.graphnet</tt></a> - native implementation of graphnet algorithm</li><li><a href="gridsearch.html"><tt>dml.gridsearch</tt></a> - grid search method</li><li><a href="hmm.html"><tt>dml.hmm</tt></a> - Hidden Markov model with continuous observations</li><li><a href="lds.html"><tt>dml.lds</tt></a> - linear dynamical system</li><li><a href="method.html"><tt>dml.method</tt></a> - abstract class for multivariate methods</li><li><a href="naive.html"><tt>dml.naive</tt></a> - gaussian naive Bayes classifier</li><li><a href="ndata.html"><tt>dml.ndata</tt></a> - wrapper class to make methods handle multiple datas</li><li><a href="noutput.html"><tt>dml.noutput</tt></a> - wrapper class to make methods handle multiple outpu</li><li><a href="one_against_one.html"><tt>dml.one_against_one</tt></a> - one-against-one binary classification</li><li><a href="one_against_rest.html"><tt>dml.one_against_rest</tt></a> - one-against-rest binary classification</li><li><a href="permutation.html"><tt>dml.permutation</tt></a> - permutation testing class</li><li><a href="prior.html"><tt>dml.prior</tt></a> - used to created smoothing and shrinkage priors</li><li><a href="searchlight.html"><tt>dml.searchlight</tt></a> - searchlight analysis</li><li><a href="sincos.html"><tt>dml.sincos</tt></a> - circular regression by decomposing into sine and co</li><li><a href="slda.html"><tt>dml.slda</tt></a> - shrinkage linear discriminant analysis</li><li><a href="sopls.html"><tt>dml.sopls</tt></a> - sparse orthonormalized partial least squares</li><li><a href="standardizer.html"><tt>dml.standardizer</tt></a> - takes zscores</li><li><a href="statistic.html"><tt>dml.statistic</tt></a> - test statistics</li><li><a href="svm.html"><tt>dml.svm</tt></a> - support vector machine</li><li><a href="whiten.html"><tt>dml.whiten</tt></a> - whitens the data</li></ul></div><p class="footer"><br>
+      Published with MATLAB&reg; 7.14<br></p></div><!--
 ##### SOURCE BEGIN #####
 %% DML Toolbox Functions
 %
@@ -75,6 +68,7 @@ p.footer {
 % * <crossvalidator.html |dml.crossvalidator|> - crossvalidation class
 % * <enet.html |dml.enet|> - efficient elastic net algorithm
 % * <filterer.html |dml.filterer|> - filtering approach to feature selection
+% * <garrote.html |dml.garrote|> - variational garrote
 % * <gp.html |dml.gp|> - Gaussian process
 % * <graphnet.html |dml.graphnet|> - native implementation of graphnet algorithm
 % * <gridsearch.html |dml.gridsearch|> - grid search method
