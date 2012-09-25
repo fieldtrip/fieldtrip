@@ -599,10 +599,12 @@ if basedonmni
   elseif isfield(cfg.grid, 'template')
       % let the template filename prevail
       fname = cfg.grid.template;
-  elseif isfield(cfg.grid, 'resolution')
+  elseif isfield(cfg.grid, 'resolution') && cfg.grid.resolution==round(cfg.grid.resolution)
       % use one of the templates that are in Fieldtrip, this requires a
       % resolution
       fname = ['standard_grid3d',num2str(cfg.grid.resolution),'mm.mat'];
+  elseif isfield(cfg.grid, 'resolution') && cfg.grid.resolution~=round(cfg.grid.resolution)
+      fname = ['standard_grid3d',num2str(floor(cfg.grid.resolution)),'point',num2str(10*(cfg.grid.resolution-floor(cfg.grid.resolution))),'mm.mat'];
   end
     
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
