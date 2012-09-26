@@ -174,7 +174,16 @@ fltpadding    = round(cfg.artfctdef.zvalue.fltpadding*hdr.Fs);
 artpadding    = round(cfg.artfctdef.zvalue.artpadding*hdr.Fs);
 trl(:,1)      = trl(:,1) - trlpadding;       % pad the trial with some samples, in order to detect
 trl(:,2)      = trl(:,2) + trlpadding;       % artifacts at the edges of the relevant trials.
-trl(:,3)      = trl(:,3) - trlpadding;       % the offset is not correct any more - bullshit, can ofcourse be adjusted as well, grtz: JMH @ Sep 20 2012
+if ndims(trl) == 3
+  trl(:,3)      = trl(:,3) - trlpadding;     % the offset can ofcourse be adjusted as well
+else  
+  % reconstruct offset
+  for tr=1:numel(data.trial)
+    % account for 0 might not be in data.time
+    t0         = interp1(data.time{tr}, 1:numel(data.time{tr}), 0, 'linear', 'extrap');
+    trl(tr, 3) = -t0+1 - trlpadding;
+  end
+end
 trllength     = trl(:,2) - trl(:,1) + 1;     % length of each trial
 numtrl        = size(trl,1);
 cfg.artfctdef.zvalue.trl = trl;              % remember where we are going to look for artifacts
@@ -344,6 +353,7 @@ opt.thresholdsum = thresholdsum;
 opt.trialok      = true(1,opt.numtrl); % OK by means of objective criterion
 opt.keep         = zeros(1,opt.numtrl); % OK overruled by user +1 to keep, -1 to reject, start all zeros for callback to work
 opt.trl          = trl;
+opt.time         = data.time;
 opt.trlop        = 1;
 opt.updatethreshold = true;
 opt.zmax         = zmax;
@@ -692,7 +702,7 @@ switch key
     response = inputdlg(sprintf('trial to display'), 'specify', 1, {num2str(opt.trlop)});
     if ~isempty(response)
       opt.trlop = str2double(response);
-      opt.trlop = min(opt.trlop, size(opt.numtrl,1)); % should not be larger than the number of trials
+      opt.trlop = min(opt.trlop, opt.numtrl); % should not be larger than the number of trials
       opt.trlop = max(opt.trlop, 1); % should not be smaller than 1
       setappdata(h, 'opt', opt);
       redraw_cb(h, eventdata);
@@ -818,7 +828,7 @@ if isempty(boxhandle)
   plot(opt.h1, xval, yval, 'linestyle', '-', 'color', 'm', 'linewidth', 2, 'displayname', 'highlight');
 else
   % update it
-  xval = ((trl(opt.trlop,1):trl(opt.trlop,2))-trl(opt.trlop,1)+trl(opt.trlop,3))./opt.hdr.Fs;
+  xval = trl(opt.trlop,1):trl(opt.trlop,2);
   if opt.thresholdsum,
     yval = opt.zsum{opt.trlop};
   else
@@ -847,7 +857,7 @@ if isempty(thrhandle)
 elseif ~isempty(thrhandle) && opt.updatethreshold
   % they can be updated
   for k = 1:opt.numtrl
-    xval = ((trl(k,1):trl(k,2))-trl(k,1)+trl(k,3))./opt.hdr.Fs;
+    xval = trl(k,1):trl(k,2);
     if opt.thresholdsum,
       yval = opt.zsum{k};
     else
@@ -900,14 +910,15 @@ else
   set(findall(h2children, 'displayname', 'line3'),  'XData', xval);
   set(findall(h2children, 'displayname', 'line3'),  'YData', data);
   abc2 = axis(opt.h2);
-  set(findall(h2children, 'displayname', 'vline1'), 'XData', [1 1]*xval(  1)+trlpadsmp-1);
+  set(findall(h2children, 'displayname', 'vline1'), 'XData', [1 1]*xval(  1)+(trlpadsmp-1/opt.hdr.Fs));
   set(findall(h2children, 'displayname', 'vline1'), 'YData', abc2(3:4));
-  set(findall(h2children, 'displayname', 'vline2'), 'XData', [1 1]*xval(end)-trlpadsmp  );
+  set(findall(h2children, 'displayname', 'vline2'), 'XData', [1 1]*xval(end)-(trlpadsmp/opt.hdr.Fs));
   set(findall(h2children, 'displayname', 'vline2'), 'YData', abc2(3:4));
   set(findall(h2children, 'displayname', 'vline1'), 'visible', 'on');
   set(findall(h2children, 'displayname', 'vline2'), 'visible', 'on');
   str = sprintf('trial %3d, channel %s', opt.trlop, hdr.label{sgnind});
   title(str);
+  axis tight;
 end
 
 % plot z-values in lower subplot
@@ -939,12 +950,13 @@ else
   set(findall(h3children, 'displayname', 'threshline'), 'YData', [1 1].*opt.threshold);
   set(findall(h3children, 'displayname', 'threshline'), 'XData', xval([1 end]));  
   abc = axis(opt.h3);
-  set(findall(h3children, 'displayname', 'vline1b'), 'XData', [1 1]*xval(  1)+trlpadsmp-1);
+  set(findall(h3children, 'displayname', 'vline1b'), 'XData', [1 1]*xval(  1)+(trlpadsmp-1/opt.hdr.Fs));
   set(findall(h3children, 'displayname', 'vline1b'), 'YData', abc(3:4));
-  set(findall(h3children, 'displayname', 'vline2b'), 'XData', [1 1]*xval(end)-trlpadsmp  );
+  set(findall(h3children, 'displayname', 'vline2b'), 'XData', [1 1]*xval(end)-(trlpadsmp/opt.hdr.Fs));
   set(findall(h3children, 'displayname', 'vline2b'), 'YData', abc(3:4));
   set(findall(h3children, 'displayname', 'vline1b'), 'visible', 'on');
   set(findall(h3children, 'displayname', 'vline2b'), 'visible', 'on');
+  axis tight;
 end
 
 setappdata(h, 'opt', opt);
