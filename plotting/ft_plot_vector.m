@@ -325,6 +325,8 @@ switch highlightstyle
       for i=1:(length(vdat)-1)
         h = plot(hdat(i:i+1), vdat(i:i+1), style, 'LineWidth', linewidth, 'Color', mean(color([i i+1],:),1), 'markersize', markersize, 'markerfacecolor', markerfacecolor);
       end
+    else
+      h = plot(hdat, vdat, style, 'LineWidth', linewidth, 'Color', color, 'markersize', markersize, 'markerfacecolor', markerfacecolor);
     end
      if ~isempty(parent)
        set(h, 'Parent', parent);
