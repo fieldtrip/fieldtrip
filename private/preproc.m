@@ -357,7 +357,7 @@ if isnumeric(cfg.conv)
   dat = convn(dat, kernel, 'same');
 end
 if strcmp(cfg.derivative, 'yes'),
-  dat = ft_preproc_derivative(dat, 1, 'end');
+  dat = ft_preproc_derivative(dat, 1);
 end
 if strcmp(cfg.absdiff, 'yes'),
   % this implements abs(diff(data), which is required for jump detection
