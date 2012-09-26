@@ -33,6 +33,14 @@ function [varargout] = ft_plot_vector(varargin)
 % Example use
 %   ft_plot_vector(randn(1,100), 'width', 1, 'height', 1, 'hpos', 0, 'vpos', 0)
 
+% FIXME if the color is Nx3, it plots the line segments with gradual
+% colors, this needs to be cleaned up and improved. At the moment it
+% happens around line 324.
+%
+% Example
+%   colormap hot; rgb = colormap; rgb = interp1(1:64, rgb, linspace(1,64,100));
+%   ft_plot_vector(1:100, 'color', rgb);
+
 % Copyrights (C) 2009-2012, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
@@ -203,9 +211,6 @@ end
 % then shift to the new vertical position
 vdat = vdat + vpos;
 
-
-
-
 if ~isempty(highlight) && ~islogical(highlight)
   if ~all(highlight==0 | highlight==1)
     % only warn if really different from 0/1
@@ -316,8 +321,10 @@ switch highlightstyle
       for i=1:size(vdat,1)
         h = plot(hdat, vdat(i,:), style, 'LineWidth', linewidth, 'Color', color(i), 'markersize', markersize, 'markerfacecolor', markerfacecolor);
       end
-    else
-      h = plot(hdat, vdat, style, 'LineWidth', linewidth, 'Color', color, 'markersize', markersize, 'markerfacecolor', markerfacecolor);
+    elseif isnumeric(color) && length(color)==length(vdat)
+      for i=1:(length(vdat)-1)
+        h = plot(hdat(i:i+1), vdat(i:i+1), style, 'LineWidth', linewidth, 'Color', mean(color([i i+1],:),1), 'markersize', markersize, 'markerfacecolor', markerfacecolor);
+      end
     end
      if ~isempty(parent)
        set(h, 'Parent', parent);
