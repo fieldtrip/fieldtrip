@@ -223,7 +223,7 @@ case 'icasso'
   cfg.icasso        = ft_getopt(cfg,        'icasso', []);
   cfg.icasso.mode   = ft_getopt(cfg.icasso, 'mode',   'both');
   cfg.icasso.Niter  = ft_getopt(cfg.icasso, 'Niter',  15);
-  cfg.icasso.method = 'fastica'; % as of yet only this one is supported
+  cfg.icasso.method = ft_getopt(cfg.icasso, 'method', 'fastica');
   
   cfg.fastica       = ft_getopt(cfg, 'fastica', []);
 case 'fastica'
@@ -374,14 +374,42 @@ switch cfg.method
     if strcmp(cfg.icasso.method, 'fastica')
       ft_hastoolbox('fastica', 1); 
       cfg.fastica.numOfIC = cfg.numcomponent;  
+    
+      optarg = ft_cfg2keyval(cfg.(cfg.icasso.method));
+      sR     = icassoEst(cfg.icasso.mode, dat, cfg.icasso.Niter, optarg{:});
     else
       error('only ''fastica'' is supported as method for icasso');
+     
+      % FIXME the code below does not work yet 
+      % prewhiten using fastica
+      [whitedat, A, B] = fastica(dat, 'only', 'white', 'lastEig', cfg.icasso.Npca);
+      tmpdata          = rmfield(data, 'trial');
+      tmpdata.trial{1} = whitedat;
+      tmpdata.time     = {1:size(whitedat,2)};
+      tmpdata.label    = data.label(1:size(whitedat,1));
+      sR.whiteningMatrix   = A;
+      sR.dewhiteningMatrix = B;
+      
+      % recurse into ft_componentanalysis
+      tmpcfg = rmfield(cfg, 'icasso');
+      tmpcfg.method = cfg.icasso.method;
+
+      sR.W = cell(cfg.icasso.Niter, 1);
+      sR.A = cell(cfg.icasso.Niter, 1);
+      sR.index = zeros(0,2);
+      for k = 1:cfg.icasso.Niter
+        tmp = ft_componentanalysis(tmpcfg, tmpdata);
+        sR.W{k} = tmp.unmixing;
+        sR.A{k} = tmp.topo;
+        sR.index  = cat(1, sR.index, [ones(size(tmp.topo,2),1) (1:size(tmp.topo,2))']);
+      end
+      sR.signal = dat;
+      sR.mode   = cfg.icasso.mode;
+      sR.rdim   = size(tmp.topo,2);
     end
 
-    optarg = ft_cfg2keyval(cfg.(cfg.icasso.method));
-    sR     = icassoEst(cfg.icasso.mode, dat, cfg.icasso.Niter, optarg{:});
     sR     = icassoExp(sR);
-    [Iq, mixing, unmixing] = icassoShow(sR);    
+    [Iq, mixing, unmixing, dat] = icassoShow(sR);    
 
     cfg.icasso.Iq = Iq;
     cfg.icasso.sR = rmfield(sR, 'signal');
