@@ -45,6 +45,9 @@ function [mri] = ft_read_mri(filename, varargin)
 %
 % $Id$
 
+% optionally get the data from the URL and make a temporary local copy
+filename = fetch_url(filename);
+
 % get the options
 mriformat = ft_getopt(varargin, 'format'); % FIXME this is inconsistent with ft_read_mri, which uses 'dataformat'
 

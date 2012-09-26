@@ -57,6 +57,9 @@ function [shape] = ft_read_headshape(filename, varargin)
 %
 % $Id$
 
+% optionally get the data from the URL and make a temporary local copy
+filename = fetch_url(filename);
+
 % Check the input, if filename is a cell-array, call ft_read_headshape recursively and combine the outputs.
 % This is used to read the left and right hemisphere of a Freesurfer cortical segmentation.
 if iscell(filename)

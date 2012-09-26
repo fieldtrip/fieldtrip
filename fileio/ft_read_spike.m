@@ -51,6 +51,9 @@ function [spike] = ft_read_spike(filename, varargin)
 %
 % $Id$
 
+% optionally get the data from the URL and make a temporary local copy
+filename = fetch_url(filename);
+
 % get the options
 spikeformat = ft_getopt(varargin, 'spikeformat', ft_filetype(filename));
 

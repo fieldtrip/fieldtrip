@@ -60,6 +60,9 @@ function [sens] = ft_read_sens(filename, varargin)
 %
 % $Id$
 
+% optionally get the data from the URL and make a temporary local copy
+filename = fetch_url(filename);
+
 % test whether the file exists
 if ~exist(filename, 'file')
   error('file ''%s'' does not exist', filename);

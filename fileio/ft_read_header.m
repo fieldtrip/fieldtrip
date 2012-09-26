@@ -91,6 +91,9 @@ if isempty(db_blob)
   db_blob = false;
 end
 
+% optionally get the data from the URL and make a temporary local copy
+filename = fetch_url(filename);
+
 % test whether the file or directory exists
 if ~exist(filename, 'file') && ~strcmp(ft_filetype(filename), 'ctf_shm') && ~strcmp(ft_filetype(filename), 'fcdc_mysql') && ~strcmp(ft_filetype(filename), 'fcdc_buffer')
   error('FILEIO:InvalidFileName', 'file or directory ''%s'' does not exist', filename);

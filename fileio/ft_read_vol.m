@@ -35,6 +35,9 @@ function [vol] = ft_read_vol(filename, varargin)
 %
 % $Id$
 
+% optionally get the data from the URL and make a temporary local copy
+filename = fetch_url(filename);
+
 % test whether the file exists
 if ~exist(filename)
   error(sprintf('file ''%s'' does not exist', filename));

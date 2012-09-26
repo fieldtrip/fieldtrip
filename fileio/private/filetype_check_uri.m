@@ -2,6 +2,9 @@ function varargout = filetype_check_uri(filename, ftyp)
 
 % FILETYPE_CHECK_URI
 %
+% Use as
+%    status = filetype_check_uri(filename, type)
+%
 % Supported URIs are
 %   buffer://<host>:<port>
 %   fifo://<filename>
@@ -12,6 +15,8 @@ function varargout = filetype_check_uri(filename, ftyp)
 %   shm://<filename>
 %   tcp://<host>:<port>
 %   udp://<host>:<port>
+%   ftp://<user>@<host>/path
+%   sftp://<user>@<host>/path
 %
 % The URI schemes supproted by these function are not the official schemes.
 % See the documentation included inside this function for more details.
@@ -155,6 +160,23 @@ else
         varargout{2} = opt;
       end
 
+    case 'ftp'
+      % the schema for FTP looks like ftp://[username@]hostname[:port]/filename[?options]
+      % FIXME it is not really obvious how to deal with a relative or absolute pathspec
+      tok0 = tokenize(filename(7:end), '/');
+      tok1 = tokenize(tok0{1}, '@');
+      varargout{1} = tok1{1};
+      varargout{2} = tok1{2};
+      varargout{3} = filename((7+1+length(tok0{1})):end);
+      
+    case 'sftp'
+      % the schema for SFTP looks like sftp://[username@]hostname[:port]/filename[?options]
+      % FIXME it is not really obvious how to deal with a relative or absolute pathspec
+      tok0 = tokenize(filename(8:end), '/');
+      tok1 = tokenize(tok0{1}, '@');
+      varargout{1} = tok1{1};
+      varargout{2} = tok1{2};
+      varargout{3} = filename((8+1+length(tok0{1})):end);
 
     otherwise
       error('unsupported scheme in URI')

@@ -52,9 +52,13 @@ function [dat] = ft_read_data(filename, varargin)
 
 persistent cachedata     % for caching
 persistent db_blob       % for fcdc_mysql
+
 if isempty(db_blob)
   db_blob = 0;
 end
+
+% optionally get the data from the URL and make a temporary local copy
+filename = fetch_url(filename);
 
 % get the optional input arguments
 hdr           = ft_getopt(varargin, 'header');

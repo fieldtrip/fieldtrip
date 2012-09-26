@@ -38,6 +38,9 @@ function atlas = ft_read_atlas(filename, varargin)
 % $Id$
 
 
+% optionally get the data from the URL and make a temporary local copy
+filename = fetch_url(filename);
+
 [p, f, x] = fileparts(filename);
 
 if strcmp(f, 'TTatlas+tlrc')
