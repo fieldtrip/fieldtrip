@@ -58,7 +58,7 @@ freq3.stat  = randn(2,10,5);
 stat = ft_conjunctionanalysis([], freq1, freq2, freq3);
 
 % source data
-source1.dim = [50 1];
+%source1.dim = [50 1];
 source1.inside = [1:25];
 source1.outside = [26:50];
 source1.pos = randn(50,3);
