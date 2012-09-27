@@ -147,6 +147,8 @@ switch ft_senstype(sens)
       ori(sel,:) = refori;
     end
     
+    sens = sensorig;
+    
   case {'ctf151_planar', 'ctf275_planar', 'bti148_planar', 'bti248_planar', 'itab153_planar', 'yokogawa160_planar', 'yokogawa64_planar'}
     % create a list with planar channel names
     chan = {};
