@@ -288,10 +288,8 @@ else
     elseif any(ismember(ft_senslabel('ctfref'), sens.label))
       type = 'ctf'; % it might be 151 or 275 channels
     elseif isfield(sens, 'pnt') && isfield(sens, 'ori') && numel(sens.label)==size(sens.pnt,1)
-      warning_once('could be Yokogawa system');
       type = 'magnetometer';
     else
-      warning_once('could be Yokogawa system');
       type = 'meg';
     end
     
