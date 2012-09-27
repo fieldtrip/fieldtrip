@@ -107,7 +107,7 @@ else
   end % recognized type of volume conduction model or sensor array
 end % determine input units
 
-if nargin<2
+if nargin<2 || isempty(target)
   % just remember the units in the output and return
   obj.unit = unit;
   return
