@@ -203,7 +203,7 @@ else
     cachedata.time    = {};
     cachedata.trial   = {};
     cachedata.cfg     = [];
-    cachedata.cfg.trl = zeros(0,3);
+    cachedata.sampleinfo = zeros(0,2);
   elseif cache && ~isempty(cachedata)
     % try to fetch the requested segment from the cache
     try
@@ -1096,7 +1096,7 @@ else
   if cache && requestsamples
     % add the new segment to the cache
     % FIMXE the cache size should be limited
-    cachedata.cfg.trl(end+1,:) = [begsample endsample 0];
+    cachedata.sampleinfo(end+1,:) = [begsample endsample];
     cachedata.trial{end+1} = dat;
     cachedata.time{end+1} = (1:size(dat,2))/cachedata.fsample;
   end
