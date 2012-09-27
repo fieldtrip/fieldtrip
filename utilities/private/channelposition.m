@@ -278,6 +278,12 @@ if n>1 && size(lab, 1)>1 % this is to prevent confusion when lab happens to be a
   ori = repmat(ori, n, 1);
 end
 
+% ensure that ther order is the same is in sens
+[sel1, sel2] = match_str(sens.label, lab);
+lab = lab(sel2);
+pnt = pnt(sel2, :);
+ori = ori(sel2, :);
+
 % ensure that it is a row vector
 lab = lab(:);
 
