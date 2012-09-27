@@ -59,6 +59,9 @@ function [hdr] = ft_read_header(filename, varargin)
 %   CED - Cambridge Electronic Design (*.smr)
 %   MPI - Max Planck Institute (*.dap)
 %
+% The following NIRS dataformats are supported
+%   BUCN (*.txt)
+%
 % See also FT_READ_DATA, FT_READ_EVENT, FT_WRITE_DATA, FT_WRITE_EVENT,
 % FT_CHANTYPE, FT_CHANUNIT
 
