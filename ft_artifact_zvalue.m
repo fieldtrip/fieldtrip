@@ -896,12 +896,11 @@ if isempty(get(opt.h2, 'children'))
   plot(xval, data, 'r-', 'displayname', 'line3');
   xlabel('time(s)');
   ylabel('uV or Tesla');
-  axis tight;
+  xlim([xval(1) xval(end)]);
   title(str);
 else
   % update in the existing handles
   h2children = get(opt.h2, 'children');
-  
   set(findall(h2children, 'displayname', 'vline1'), 'visible', 'off');
   set(findall(h2children, 'displayname', 'vline2'), 'visible', 'off');
   set(findall(h2children, 'displayname', 'line1'), 'XData', xval(selpad));
@@ -920,7 +919,7 @@ else
   set(findall(h2children, 'displayname', 'vline2'), 'visible', 'on');
   str = sprintf('trial %3d, channel %s', opt.trlop, hdr.label{sgnind});
   title(str);
-  axis tight;
+  xlim([xval(1) xval(end)]);
 end
 
 % plot z-values in lower subplot
@@ -936,7 +935,7 @@ if isempty(get(opt.h3, 'children'))
   plot(xval, zval, 'r-', 'displayname', 'line3b');
   xlabel('time(s)');
   ylabel('z-value');
-  axis tight;
+  xlim([xval(1) xval(end)]);
 else
   % update in the existing handles
   h3children = get(opt.h3, 'children');
@@ -958,7 +957,7 @@ else
   set(findall(h3children, 'displayname', 'vline2b'), 'YData', abc(3:4));
   set(findall(h3children, 'displayname', 'vline1b'), 'visible', 'on');
   set(findall(h3children, 'displayname', 'vline2b'), 'visible', 'on');
-  axis tight;
+  xlim([xval(1) xval(end)]);
 end
 
 setappdata(h, 'opt', opt);
