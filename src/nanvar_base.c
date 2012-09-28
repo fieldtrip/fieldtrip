@@ -7,17 +7,30 @@
 #define nanstat_template(TYPE, INTERMEDIATE_TYPE)\
 double fname(nanstat, TYPE)(int n, TYPE *x0, mwSize stride) \
 {\
-  int i; INTERMEDIATE_TYPE result = 0;\
+  /* Compute mean first: */\
+  int i; INTERMEDIATE_TYPE result = 0, c=0, mean=0;\
   for (i = 0; i < n; ++i) {\
-    if (!isnan(x0[i * stride]))\
+    if (!isnan(x0[i * stride])){\
       result += x0[i * stride];\
+      c += 1;\
+    }\
   }\
-  return result;\
+  mean = result / c;\
+  \
+  /* Compute variance: */\
+  result = 0; \
+  for (i = 0; i < n; ++i) {\
+    if (!isnan(x0[i * stride])){\
+      result += pow(x0[i * stride] - mean, 2);\
+    }\
+  }\
+  if (c == 0) return nan();\
+  return result / c;\
 }
 
 nanstat_template(float, float); /* Note that the calculations are performed with
                                   limited precision as well to be fully
-                                  compatible with MATLABs nansum. */
+                                  compatible with MATLABs nanmean. */
 
 nanstat_template(double, double);
 nanstat_template(int8_T, double); nanstat_template(uint8_T, double);

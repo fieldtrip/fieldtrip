@@ -30,10 +30,9 @@ X{end+1} = -inf;
 
 for i = 1:length(X)
   x = X{i};
-  class(x), class(nansum(x)), class(sum(x))
-  fprintf('norm = %.3g', norm(nansum(x) - sum(x)));
+  i, x
   assertEqual(nansum(x), sum(x));
-  %assertEqual(nanmean(x), mean(x));
+  assertEqual(nanmean(x), mean(x));
   
 %   if (length(strmatch(class(x), {'uint8', 'int64'})) > 0)
 %     fprintf('Skipping type %s for nanvar & nanstd\n', class(x));
