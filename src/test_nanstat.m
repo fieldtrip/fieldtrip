@@ -6,15 +6,6 @@ function test_suite = test_nanstat
 
 initTestSuite;  % for xUnit
 
-function setup
-fprintf('Extending path...\n');
-addpath ../src
-
-function teardown
-fprintf('Cleaning up path...\n');
-rmpath ../src
-
-
 function test_datatypes
 % test different data types
 X = {};
@@ -30,7 +21,6 @@ X{end+1} = -inf;
 
 for i = 1:length(X)
   x = X{i};
-  i, x
   assertEqual(nansum(x), sum(x));
   assertEqual(nanmean(x), mean(x));
   

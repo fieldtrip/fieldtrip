@@ -16,8 +16,8 @@ double fname(nanstat, TYPE)(int n, TYPE *x0, mwSize stride) \
 }
 
 nanstat_template(float, float); /* Note that the calculations are performed with
-                                  limited precision as well to be fully
-                                  compatible with MATLABs nansum. */
+                                   limited precision as well to be fully
+                                   compatible with MATLABs nansum. */
 
 nanstat_template(double, double);
 nanstat_template(int8_T, double); nanstat_template(uint8_T, double);

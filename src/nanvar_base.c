@@ -25,7 +25,7 @@ double fname(nanstat, TYPE)(int n, TYPE *x0, mwSize stride) \
     }\
   }\
   if (c == 0) return nan();\
-  return result / c;\
+  return result; /* No normalisation by c is performed! */\
 }
 
 nanstat_template(float, float); /* Note that the calculations are performed with

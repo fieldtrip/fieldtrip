@@ -187,5 +187,4 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
   mxFree(index);
   mxFree(size_Y);
-  /* TODO: aren't we forgetting anything? */
 }
