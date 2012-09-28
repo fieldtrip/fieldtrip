@@ -5,6 +5,7 @@
 #include <assert.h>
 #include "compiler.h"
 
+/* Below are some legacy defines. I am not sure if they are necessary. */
 #if defined (COMPILER_MSVC)
 #include <math.h>
 #define isnan _isnan
@@ -24,16 +25,16 @@
 
 mwSize stride(int dim, int shape_len, const mwSize *shape)
 {
-  if (dim == shape_len - 1) return 1;
-  if (dim < shape_len - 1)
-    return shape[shape_len - 1] * stride(dim, shape_len - 1, shape);
-  return -1; /* something odd happened */
+  int i, s = 1;
+  for (i = 1; i <= dim; i++)
+    s *= shape[i];
+  return s;
 }
 
 void offset_to_index(mwSize offset, int ndim, const mwSize *shape, 
   mwSize *index)
 {
-  int i = 0;
+  int i;
   for (i = 0; i < ndim; ++i) {
     index[i] = offset % stride(i, ndim, shape);
     offset -= offset / stride(i, ndim, shape);
@@ -115,6 +116,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   index = (mwSize *) mxMalloc(ndim(X) * sizeof(mwSize));
   stride_x = stride(squash_dim, ndim(X), size(X));
 
+  printf("Stride = %d\n", stride_x);
+  assert(stride > 0);
+
   {
     double *dest = mxGetData(Y);
     double *src = mxGetData(X);
@@ -124,7 +128,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
      * C/Fortran confusion. MATLAB uses FORTRAN order. */
 
     for (i = 0; i < mxGetNumberOfElements(Y); ++i) {
-
       offset_to_index(i, ndim(Y), size(Y), index);
 
       printf("i = %d. index=[", i);
