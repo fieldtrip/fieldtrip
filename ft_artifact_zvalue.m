@@ -174,15 +174,18 @@ fltpadding    = round(cfg.artfctdef.zvalue.fltpadding*hdr.Fs);
 artpadding    = round(cfg.artfctdef.zvalue.artpadding*hdr.Fs);
 trl(:,1)      = trl(:,1) - trlpadding;       % pad the trial with some samples, in order to detect
 trl(:,2)      = trl(:,2) + trlpadding;       % artifacts at the edges of the relevant trials.
-if ndims(trl) == 3
+if size(trl, 2) >= 3
   trl(:,3)      = trl(:,3) - trlpadding;     % the offset can ofcourse be adjusted as well
-else  
+elseif isfetch  
   % reconstruct offset
-  for tr=1:numel(data.trial)
+  for tr=1:size(trl, 1)
     % account for 0 might not be in data.time
     t0         = interp1(data.time{tr}, 1:numel(data.time{tr}), 0, 'linear', 'extrap');
     trl(tr, 3) = -t0+1 - trlpadding;
   end
+else
+    % assuming that the trial starts at t=0s
+    trl(:, 3) = trl(:, 1);
 end
 trllength     = trl(:,2) - trl(:,1) + 1;     % length of each trial
 numtrl        = size(trl,1);
@@ -353,7 +356,6 @@ opt.thresholdsum = thresholdsum;
 opt.trialok      = true(1,opt.numtrl); % OK by means of objective criterion
 opt.keep         = zeros(1,opt.numtrl); % OK overruled by user +1 to keep, -1 to reject, start all zeros for callback to work
 opt.trl          = trl;
-opt.time         = data.time;
 opt.trlop        = 1;
 opt.updatethreshold = true;
 opt.zmax         = zmax;
