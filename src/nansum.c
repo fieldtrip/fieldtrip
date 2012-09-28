@@ -5,7 +5,8 @@
 #include <assert.h>
 #include "compiler.h"
 
-/* Microsoft doesn't define isnan, but has an _isnan instead. We simply do: */
+/* Microsoft doesn't define isnan, but has an _isnan instead. Since it appears
+ * to be buggy, we simply do: */
 #define isnan(x) !(x == x)
 
 /* Shortcuts: */
@@ -18,8 +19,9 @@
 mwSize stride(int dim, int shape_len, const mwSize *shape)
 {
   int i, s = 1;
-  for (i = 0; i < dim; i++)
+  for (i = 0; i < dim; i++) {
     s *= shape[i];
+  }
   return s;
 }
 
@@ -48,8 +50,8 @@ mwSize index_to_offset(int ndim, mwSize *index, const mwSize *shape)
 }
 
 /* What is C a horrible language. To hoops we have to get through to make this
- * work for different data types...
- * Since overloading does not work, we generate type-specific functions: */
+ * work for different data types... Since overloading does not work, we
+ * generate type-specific functions: */
 #define fname(name, suffix) name ## _ ## suffix
 #define nansum_template(TYPE, INTERMEDIATE_TYPE)\
 double fname(nansum, TYPE)(int n, TYPE *x0, mwSize stride) \
@@ -71,6 +73,7 @@ nansum_template(int8_T, double); nansum_template(uint8_T, double);
 nansum_template(int16_T, double); nansum_template(uint16_T, double);
 nansum_template(int32_T, double); nansum_template(uint32_T, double);
 nansum_template(int64_T, double); nansum_template(uint64_T, double);
+
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
@@ -106,56 +109,46 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     default:
       mexErrMsgTxt("Too many input arguments!");
   }
-  printf("Found squash_dim = %d.\n", squash_dim);
 
   /* Create output array Y: */
   size_Y = mxMalloc(ndim(X) * sizeof(size_Y));
   memcpy(size_Y, size(X), ndim(X) * sizeof(size_Y));
   size_Y[squash_dim] = 1; 
 
-  classid = mxGetClassID(X);  /* copy class ID from X */
+  classid = mxGetClassID(X);  /* Copy class ID from X. */
   
-  if (mxGetClassID(X) == mxSINGLE_CLASS) {
+  if (classid == mxSINGLE_CLASS) {
     /* Return single-precision if input is single precision. */
     Y = plhs[0] = mxCreateNumericArray(
       ndim(X), size_Y, mxSINGLE_CLASS, mxGetImagData(X) != NULL);
   }
   else {
+    /* By default, use double precision. */
     Y = plhs[0] = mxCreateNumericArray(
       ndim(X), size_Y, mxDOUBLE_CLASS, mxGetImagData(X) != NULL);
   }
 
-  /*
-  for(i = ndim(Y); i-- > 0;) {
-    printf("i=%d, size(Y)[i] = %d\n", i, size(Y)[i]);
-  }
-  */
-
-  /* Store calls to stat function with offset and stride in Y: */
+  /* Prepare variables for linear indexing: */
   index = (mwSize *) mxMalloc(ndim(X) * sizeof(mwSize));
   stride_x = stride(squash_dim, ndim(X), size(X));
       
+  /* MATLAB's nansum supports out-of-range dims to operate on. */
   /* Find the number of elements in our squashed dimension: */
-  if(squash_dim >= ndim(X)) {
-    /* MATLAB's nansum supports out-of-range dims to operate on. */
+  if(squash_dim >= ndim(X))
     squash_len = 1; 
-  }
-  else {
+  else
     squash_len = size(X)[squash_dim];
-  }
 
   {
     void *src = mxGetData(X), *src_imag = mxGetImagData(X);
     double *dest = mxGetData(Y), *dest_imag = mxGetImagData(Y);
 
-    printf("src_i = %p, dest_i = %p\n", src_imag, dest_imag);
-
     for (i = 0; i < mxGetNumberOfElements(Y); ++i) {
       /* For each element in the output array, do: */
 
-      /* Transform the element number in an index in Y. */
+      /* Transform the element number in an index in Y, */
       offset_to_index(i, ndim(Y), size(Y), index);
-      /* And map this index back to an offset in X: */
+      /* and map this index back to an offset in X: */
       j = index_to_offset(ndim(X), index, size(X));
       
       switch (classid) {
@@ -193,16 +186,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
           break;
 
         case mxSINGLE_CLASS:
-          {
-            float *d = (float *) dest;
-            float *d_i = (float *) dest_imag;
-            float v = 0;
-
-            d[i] = nansum_float(squash_len, (float *) src + j, stride_x);
-            if (src_imag) {
-              d_i[i] = (float) nansum_float(
-                squash_len, (float *) src_imag + j, stride_x);
-            }
+          ((float *) dest)[i] = (float) nansum_float(
+            squash_len, (float *) src + j, stride_x);
+          if (src_imag) {
+            ((float *) dest_imag)[i] = (float) nansum_float(
+              squash_len, (float *) src_imag + j, stride_x);
           }
           break;
 
