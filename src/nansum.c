@@ -5,19 +5,8 @@
 #include <assert.h>
 #include "compiler.h"
 
-/* Below are some legacy defines. I am not sure if they are necessary. */
-#if defined (COMPILER_MSVC)
-#include <math.h>
-#define isnan _isnan
-#define INFINITY (HUGE_VAL+HUGE_VAL)
-#define NAN (INFINITY - INFINITY)
-#elif defined(COMPILER_LCC)
-#include <math.h>
-#define INFINITY (DBL_MAX+DBL_MAX)
-#define NAN (INFINITY - INFINITY)
-#else
-#include <math.h>
-#endif
+/* Microsoft doesn't define isnan, but has an _isnan instead. We simply do: */
+#define isnan(x) !(x == x)
 
 /* Shortcuts: */
 #define size(x) mxGetDimensions(x)
@@ -63,12 +52,13 @@ mwSize index_to_offset(int ndim, mwSize *index, const mwSize *shape)
  * Since overloading does not work, we generate type-specific functions: */
 #define fname(name, suffix) name ## _ ## suffix
 #define nansum_template(TYPE)\
-double fname(nansum, TYPE)(int n, TYPE *x0, mwSize stride) \
+double fname(nansum, TYPE)(int n, TYPE *x0, mwSize stride)\
 {\
-  int i; double result = 0;\
-  for (i = 0; i < n; ++i)\
-    if (!isnan(x0[i * stride]))\
-      result += x0[i * stride];\
+  int i; double value, result = 0;\
+  for (i = 0; i < n; ++i) {\
+    value = (double) x0[i * stride];\
+    if (!isnan(value)) result += value;\
+  }\
   return result;\
 }
 
@@ -96,7 +86,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     case 1: /* No dimension is given. Find first non-singleton dimension: */
       squash_dim = ndim(X);
       for(i = ndim(X); i-- > 0;) {
-        printf("i=%d, size(X)[i] = %d\n", i, size(X)[i]);
         if(size(X)[i] > 1)
           squash_dim = i;
       }
@@ -122,26 +111,28 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   size_Y[squash_dim] = 1; 
 
   classid = mxGetClassID(X);  /* copy class ID from X */
-  printf("classid = %d\n.", classid);
   
   Y = plhs[0] = mxCreateNumericArray(
     ndim(X), size_Y, mxDOUBLE_CLASS, mxGetImagData(X) != NULL);
 
+  /*
   for(i = ndim(Y); i-- > 0;) {
     printf("i=%d, size(Y)[i] = %d\n", i, size(Y)[i]);
   }
+  */
 
   /* Store calls to stat function with offset and stride in Y: */
   index = (mwSize *) mxMalloc(ndim(X) * sizeof(mwSize));
   stride_x = stride(squash_dim, ndim(X), size(X));
       
   /* Find the number of elements in our squashed dimension: */
-  if(squash_dim >= ndim(X))
+  if(squash_dim >= ndim(X)) {
     /* MATLAB's nansum supports out-of-range dims to operate on. */
     squash_len = 1; 
-  else
+  }
+  else {
     squash_len = size(X)[squash_dim];
-  printf("working with %d elements, %d apart in X...\n", squash_len, stride_x);
+  }
 
   /* TODO: handle complex matrices. Why are they not denoted by the class ID?
    * Stupid MATLAB. */
@@ -156,7 +147,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       offset_to_index(i, ndim(Y), size(Y), index);
       /* And map this index back to an offset in X: */
       j = index_to_offset(ndim(X), index, size(X));
-
       
       switch (classid) {
         /* Oh, the fucking horror of dumb, statically typed languages... */
