@@ -1,73 +1,23 @@
-% nanvar() - var, not considering NaN values
+% NANVAR provides a replacement for MATLAB's nanvar that is almost
+% compatible.
 %
-% Usage: same as var()
-% Note: all nanXXX.m functionalities are implemented through mex-files that 
-% are more memory-efficient. The code in the MATLAB mfile is not necessarily
-% identical to that in the mex-file.
+% For usage see VAR. Note that the weight-vector is not supported. If you
+% need it, please file a ticket at our bugtracker.
 
-% Author: Arnaud Delorme, CNL / Salk Institute, Sept 2003
+function Y = nanvar(X, dim)
 
-%123456789012345678901234567890123456789012345678901234567890123456789012
-
-% Copyright (C) 2003 Arnaud Delorme, Salk Institute, arno@salk.edu
-%
-% This program is free software; you can redistribute it and/or modify
-% it under the terms of the GNU General Public License as published by
-% the Free Software Foundation; either version 2 of the License, or
-% (at your option) any later version.
-%
-% This program is distributed in the hope that it will be useful,
-% but WITHOUT ANY WARRANTY; without even the implied warranty of
-% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-% GNU General Public License for more details.
-%
-% You should have received a copy of the GNU General Public License
-% along with this program; if not, write to the Free Software
-% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
-% for the documentation and details.
-%
-%    FieldTrip is free software: you can redistribute it and/or modify
-%    it under the terms of the GNU General Public License as published by
-%    the Free Software Foundation, either version 3 of the License, or
-%    (at your option) any later version.
-%
-%    FieldTrip is distributed in the hope that it will be useful,
-%    but WITHOUT ANY WARRANTY; without even the implied warranty of
-%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-%    GNU General Public License for more details.
-%
-%    You should have received a copy of the GNU General Public License
-%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
-%
-% $Id$
-
-function out = nanvar(in, varargin)
-   
-if nargin < 1
-  help nanvar;
-  return;
+switch nargin
+  case 1
+    % MATLAB's var normalizes by n-1 when no dim is given. Adjust output
+    % accordingly:
+    Y = nanvar_base(X);
+    n = nannumel(X);
+    Y = Y ./ (n-1);
+  case 2
+    % In this case, the default of normalizing by n is expected.
+    Y = nanvar_base(X, dim);    
+    n = nannumel(X);
+    Y = Y ./ n;
+  otherwise
+    error ('Too many input arguments!')
 end
-if nargin == 1, flag = 0; end
-if nargin <  3,
-  dim = find(size(in)>1,1,'first');  
-end
-if nargin == 2, flag = varargin{1}; end
-if nargin == 3,
-  flag = varargin{1};
-  dim  = varargin{2};
-end
-if isempty(flag), flag = 0; end
-
-nans = find(isnan(in));
-in(nans) = 0;
-   
-nonnans = ones(size(in));
-nonnans(nans) = 0;
-nonnans = sum(nonnans, dim);
-nononnans = find(nonnans==0);
-nonnans(nononnans) = 1;
-   
-out = (sum(in.^2, dim)-sum(in, dim).^2./nonnans)./(nonnans-abs(flag-1));
-out(nononnans) = NaN;
