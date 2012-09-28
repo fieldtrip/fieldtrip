@@ -51,30 +51,33 @@ mwSize index_to_offset(int ndim, mwSize *index, const mwSize *shape)
   return offset;
 }
 
-double sum(int n, double *x0, mwSize stride) 
-{
-  int i;
-  double result = 0;
-
-  printf("in sum with n=%d, x0=%p, stride=%d. ", n, x0, stride);
-  for (i = 0; i < n; ++i) {
-    printf("%f ", x0[i * stride]);
-    if (!isnan(x0[i * stride]))
-      result += x0[i * stride];
-  }
-  printf("result=%f\n", result);
-  return result;
+/* What is C a horrible language. To hoops we have to get through to make this
+ * work with different types...
+ * Since overloading does not work, generate type-specific functions: */
+#define fname(name, suffix) name ## _ ## suffix
+#define nansum_template(TYPE)\
+double fname(nansum, TYPE)(int n, TYPE *x0, mwSize stride) \
+{\
+  int i; double result = 0;\
+  for (i = 0; i < n; ++i)\
+    if (!isnan(x0[i * stride]))\
+      result += x0[i * stride];\
+  return result;\
 }
+
+nansum_template(int8_T); nansum_template(uint8_T);
+nansum_template(int16_T); nansum_template(uint16_T);
+nansum_template(int32_T); nansum_template(uint32_T);
+nansum_template(int64_T); nansum_template(uint64_T);
+nansum_template(float);
+nansum_template(double);
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
   const mxArray *X = prhs[0], *Y = plhs[0];
-  const mwSize *dims;
   mwSize *index, *size_X, *size_Y, stride_x;
   mwIndex j;
-  mwIndex indx;
-  int i, numdims, squash_dim;
-  int numelin, numelout, x0, x1, y1;
+  int i, squash_dim, squash_len;
   mxClassID classid;
 
   /* Check and handle input */
@@ -93,9 +96,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       break;
 
     case 2: 
-      squash_dim = mxGetScalar(prhs[1]);
-      if(squash_dim <= 0 || squash_dim > ndim(X))
+      squash_dim = (int) mxGetScalar(prhs[1]);
+      if(squash_dim <= 0) {
+        /* Note that squash_dim > ndim(X) is allowed! */
         mexErrMsgTxt("Invalid value for dimension (argument 2)!");
+      }
       squash_dim -= 1; /* convert form MATLAB to C indexing */
       break;
 
@@ -110,10 +115,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   size_Y[squash_dim] = 1; 
 
   classid = mxGetClassID(X);  /* copy class ID from X */
+  printf("classid = %d\n.", classid);
   
   Y = plhs[0] = mxCreateNumericArray(
-    ndim(X), size_Y, classid, mxGetImagData(X) != NULL);
-  assert(Y == plhs[0]); 
+    ndim(X), size_Y, mxDOUBLE_CLASS, mxGetImagData(X) != NULL);
 
 
   for(i = ndim(Y); i-- > 0;) {
@@ -123,35 +128,89 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   /* Store calls to stat function with offset and stride in Y: */
   index = (mwSize *) mxMalloc(ndim(X) * sizeof(mwSize));
   stride_x = stride(squash_dim, ndim(X), size(X));
+      
+  /* Find the number of elements in our squashed dimension: */
+  if(squash_dim >= ndim(X))
+    /* MATLAB's nansum supports out-of-range dims to operate on. */
+    squash_len = 1; 
+  else
+    squash_len = size(X)[squash_dim];
+
+  /* TODO: handle complex matrices. Why are they not denoted by the class ID?
+   * Stupid MATLAB. */
 
   {
+    void *src = mxGetData(X);
     double *dest = mxGetData(Y);
-    double *src = mxGetData(X);
-    printf("&X = %p.\n", src);
-
-    /* FIXME: something is wrong in calculation of offset & stride, probably
-     * C/Fortran confusion. MATLAB uses FORTRAN order. */
 
     for (i = 0; i < mxGetNumberOfElements(Y); ++i) {
       /* For each element in the output array, do: */
 
-      /* Transform the element number in an index: */
+      /* Transform the element number in an index in Y. */
       offset_to_index(i, ndim(Y), size(Y), index);
-
-      printf("i = %d. index=[", i);
-      for (j = 0; j < ndim(Y); ++j) printf("%d ", index[j]);
-      printf("]", i);
-
+      /* And map this index back to an offset in X: */
       j = index_to_offset(ndim(X), index, size(X));
 
-      printf(", j = %d. ", j);
-
-      dest[i] = sum(size(X)[squash_dim], src + j, stride_x);
       
-      printf("\n");
+      switch (classid) {
+        /* Oh, the fucking horror of a dumb, statically typed languages... */
+        case mxINT8_CLASS:
+          dest[i] = nansum_int8_T(n, (int8_T *) src + j, stride_x);
+          break;
+
+        case mxUINT8_CLASS:
+          dest[i] = nansum_uint8_T(n, (uint8_T *) src + j, stride_x);
+          break;
+
+        case mxINT16_CLASS:
+          dest[i] = nansum_int16_T(n, (int16_T *) src + j, stride_x);
+          break;
+
+        case mxUINT16_CLASS:
+          dest[i] = nansum_uint16_T(n, (uint16_T *) src + j, stride_x);
+          break;
+
+        case mxINT32_CLASS:
+          dest[i] = nansum_int32_T(n, (int32_T *) src + j, stride_x);
+          break;
+
+        case mxUINT32_CLASS:
+          dest[i] = nansum_uint32_T(n, (uint32_T *) src + j, stride_x);
+          break;
+
+        case mxINT64_CLASS:
+          dest[i] = nansum_int64_T(n, (int64_T *) src + j, stride_x);
+          break;
+
+        case mxUINT64_CLASS:
+          dest[i] = nansum_uint64_T(n, (uint64_T *) src + j, stride_x);
+          break;
+
+        case mxSINGLE_CLASS:
+          dest[i] = nansum_float(n, (float *) src + j, stride_x);
+          break;
+
+        case mxDOUBLE_CLASS:
+          dest[i] = nansum_double(n, (double *) src + j, stride_x);
+          break;
+
+        case mxLOGICAL_CLASS:
+          mexWarnMsgTxt("The byte layout of logical arrays is not documented. Guessing.");
+          dest[i] = nansum_uint8_T(n, (uint8_T *) src + j, stride_x);
+          break;
+
+        case mxCHAR_CLASS:
+          mexWarnMsgTxt("The byte layout of char arrays is not documented. Guessing.");
+          dest[i] = nansum_uint16_T(n, (uint16_T *) src + j, stride_x);
+          break;
+
+        default:
+          mexErrMsgTxt("Unsupported type!");
+      }
     }
   }
 
   mxFree(index);
   mxFree(size_Y);
+  /* TODO: aren't we forgetting anything? */
 }
