@@ -33,7 +33,7 @@ function [type, dimord] = ft_datatype(data, desired)
 %
 % $Id$
 
-% determine the type of input data, this can be raw, freq, timelock, comp, spike, source, volume, dip
+% determine the type of input data, this can be raw, freq, timelock, comp, spike, source, volume, dip, segmentation, parcellation
 israw          =  isfield(data, 'label') && isfield(data, 'time') && isa(data.time, 'cell') && isfield(data, 'trial') && isa(data.trial, 'cell') && ~isfield(data,'trialtime');
 isfreq         = (isfield(data, 'label') || isfield(data, 'labelcmb')) && isfield(data, 'freq') && ~isfield(data,'trialtime') && ~isfield(data,'origtrial'); %&& (isfield(data, 'powspctrm') || isfield(data, 'crsspctrm') || isfield(data, 'cohspctrm') || isfield(data, 'fourierspctrm') || isfield(data, 'powcovspctrm'));
 istimelock     =  isfield(data, 'label') && isfield(data, 'time') && ~isfield(data, 'freq') && ~isfield(data,'trialtime'); %&& ((isfield(data, 'avg') && isnumeric(data.avg)) || (isfield(data, 'trial') && isnumeric(data.trial) || (isfield(data, 'cov') && isnumeric(data.cov))));
@@ -43,41 +43,45 @@ issource       =  isfield(data, 'pos');
 isdip          =  isfield(data, 'dip');
 ismvar         =  isfield(data, 'dimord') && ~isempty(strfind(data.dimord, 'lag'));
 isfreqmvar     =  isfield(data, 'freq') && isfield(data, 'transfer');
-ischan         =  isfield(data, 'dimord') && strcmp(data.dimord, 'chan') && ~isfield(data, 'time') && ~isfield(data, 'freq'); 
-issegmentation = false; % FIXME
-isparcellation = false; % FIXME
+ischan         =  isfield(data, 'dimord') && strcmp(data.dimord, 'chan') && ~isfield(data, 'time') && ~isfield(data, 'freq');
+issegmentation = check_segmentation(data);
+isparcellation = check_parcellation(data);
 
-% check if isspike:
+% check if it is a spike structure
 spk_hastimestamp  = isfield(data,'label') && isfield(data, 'timestamp') && isa(data.timestamp, 'cell');
 spk_hastrials     = isfield(data,'label') && isfield(data, 'time') && isa(data.time, 'cell') && isfield(data, 'trial') && isa(data.trial, 'cell') && isfield(data, 'trialtime') && isa(data.trialtime, 'numeric');
-spk_hasorig       = isfield(data,'origtrial') && isfield(data,'origtime'); %% for compatibility
+spk_hasorig       = isfield(data,'origtrial') && isfield(data,'origtime'); % for compatibility
 isspike           = isfield(data, 'label') && (spk_hastimestamp || spk_hastrials || spk_hasorig);
 
 if iscomp
-  % a comp data structure is a raw data structure, but in general not vice versa
   % comp should conditionally go before raw, otherwise the returned ft_datatype will be raw
-  type = 'comp';  
+  type = 'comp';
+elseif israw
+  type = 'raw';
 elseif isfreqmvar
   % freqmvar should conditionally go before freq, otherwise the returned ft_datatype will be freq in the case of frequency mvar data
   type = 'freqmvar';
+elseif isfreq
+  type = 'freq';
+elseif ismvar
+  type = 'mvar';
 elseif isdip
   % dip should conditionally go before timelock, otherwise the ft_datatype will be timelock
   type = 'dip';
-elseif ismvar
-  type = 'mvar';
-elseif israw
-  type = 'raw';
-elseif isfreq
-  type = 'freq';
 elseif istimelock
   type = 'timelock';
 elseif isspike
   type = 'spike';
+elseif issegmentation
+  % a segmentation data structure is a volume data structure, but in general not vice versa
+  % segmentation should conditionally go before volume, otherwise the returned ft_datatype will be volume
+  type = 'segmentation';
 elseif isvolume
   type = 'volume';
-  % elseif issegment
-  %  % a segmentation is a volume, but in general vice versa
-  %  type = 'segment'; % FIXME
+elseif isparcellation
+  % a parcellation data structure is a source data structure, but in general not vice versa
+  % parcellation should conditionally go before source, otherwise the returned ft_datatype will be source
+  type = 'parcellation';
 elseif issource
   type = 'source';
 elseif ischan
@@ -102,3 +106,57 @@ if nargout>1
   end
 end
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [res] = check_segmentation(volume)
+res = false;
+
+if ~isfield(volume, 'dim')
+  return
+end
+
+if isfield(volume, 'pos')
+  return
+end
+
+if any(isfield(volume, {'seg', 'csf', 'white', 'gray', 'skull', 'scalp', 'brain'}))
+  res = true;
+  return
+end
+
+fn = fieldnames(volume);
+for i=1:length(fn)
+  if isfield(volume, [fn{i} 'label'])
+    res = true;
+    return
+  end
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [res] = check_parcellation(source)
+res = false;
+
+if isfield(source, 'dim')
+  return
+end
+
+if ~isfield(source, 'pos')
+  return
+end
+
+if any(isfield(source, {'seg', 'csf', 'white', 'gray', 'skull', 'scalp', 'brain'}))
+  res = true;
+  return
+end
+
+fn = fieldnames(source);
+for i=1:length(fn)
+  if isfield(source, [fn{i} 'label'])
+    res = true;
+    return
+  end
+end
