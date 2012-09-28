@@ -47,7 +47,7 @@ function [bnd, cfg] = ft_prepare_mesh(cfg, mri)
 %   bnd = ft_prepare_mesh(cfg, headmodel)
 % but more consistent would be to specify a volume conduction model with
 %   cfg.vol           = structure with volume conduction model, see FT_PREPARE_HEADMODEL
-%   cfg.hdmfile       = name of file containing the volume conduction model, see FT_READ_VOL
+%   cfg.headshape     = name of file containing the volume conduction model, see FT_READ_VOL
 
 % Copyrights (C) 2009-2012, Cristiano Micheli & Robert Oostenveld
 %
@@ -166,6 +166,9 @@ elseif basedonmri && iscell(cfg.tissue) && all(isfield(mri, cfg.tissue))
   fprintf('using the segmentation approach\n');
   bnd = prepare_mesh_segmentation(cfg, mri);
   
+elseif basedonmri
+  error('Unsegmented MRI only allowed in combination with cfg.interactive=yes')
+
 elseif basedonheadshape
   fprintf('using the head shape to construct a triangulated mesh\n');
   bnd = prepare_mesh_headshape(cfg);
