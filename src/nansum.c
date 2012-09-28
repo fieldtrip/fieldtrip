@@ -51,23 +51,26 @@ mwSize index_to_offset(int ndim, mwSize *index, const mwSize *shape)
  * work for different data types...
  * Since overloading does not work, we generate type-specific functions: */
 #define fname(name, suffix) name ## _ ## suffix
-#define nansum_template(TYPE)\
-double fname(nansum, TYPE)(int n, TYPE *x0, mwSize stride)\
+#define nansum_template(TYPE, INTERMEDIATE_TYPE)\
+double fname(nansum, TYPE)(int n, TYPE *x0, mwSize stride) \
 {\
-  int i; double value, result = 0;\
+  int i; INTERMEDIATE_TYPE result = 0;\
   for (i = 0; i < n; ++i) {\
-    value = (double) x0[i * stride];\
-    if (!isnan(value)) result += value;\
+    if (!isnan(x0[i * stride]))\
+      result += x0[i * stride];\
   }\
   return result;\
 }
 
-nansum_template(int8_T); nansum_template(uint8_T);
-nansum_template(int16_T); nansum_template(uint16_T);
-nansum_template(int32_T); nansum_template(uint32_T);
-nansum_template(int64_T); nansum_template(uint64_T);
-nansum_template(float);
-nansum_template(double);
+nansum_template(float, float); /* Note that the calculations are performed with
+                                  limited precision as well to be fully
+                                  compatible with MATLABs nansum. */
+
+nansum_template(double, double);
+nansum_template(int8_T, double); nansum_template(uint8_T, double);
+nansum_template(int16_T, double); nansum_template(uint16_T, double);
+nansum_template(int32_T, double); nansum_template(uint32_T, double);
+nansum_template(int64_T, double); nansum_template(uint64_T, double);
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
@@ -112,8 +115,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
   classid = mxGetClassID(X);  /* copy class ID from X */
   
-  Y = plhs[0] = mxCreateNumericArray(
-    ndim(X), size_Y, mxDOUBLE_CLASS, mxGetImagData(X) != NULL);
+  if (mxGetClassID(X) == mxSINGLE_CLASS) {
+    /* Return single-precision if input is single precision. */
+    Y = plhs[0] = mxCreateNumericArray(
+      ndim(X), size_Y, mxSINGLE_CLASS, mxGetImagData(X) != NULL);
+  }
+  else {
+    Y = plhs[0] = mxCreateNumericArray(
+      ndim(X), size_Y, mxDOUBLE_CLASS, mxGetImagData(X) != NULL);
+  }
 
   /*
   for(i = ndim(Y); i-- > 0;) {
@@ -134,11 +144,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     squash_len = size(X)[squash_dim];
   }
 
-  /* TODO: handle complex matrices. Why are they not denoted by the class ID?
-   * Stupid MATLAB. */
   {
-    void *src = mxGetData(X);
-    double *dest = mxGetData(Y);
+    void *src = mxGetData(X), *src_imag = mxGetImagData(X);
+    double *dest = mxGetData(Y), *dest_imag = mxGetImagData(Y);
+
+    printf("src_i = %p, dest_i = %p\n", src_imag, dest_imag);
 
     for (i = 0; i < mxGetNumberOfElements(Y); ++i) {
       /* For each element in the output array, do: */
@@ -183,11 +193,24 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
           break;
 
         case mxSINGLE_CLASS:
-          dest[i] = nansum_float(squash_len, (float *) src + j, stride_x);
+          {
+            float *d = (float *) dest;
+            float *d_i = (float *) dest_imag;
+            float v = 0;
+
+            d[i] = nansum_float(squash_len, (float *) src + j, stride_x);
+            if (src_imag) {
+              d_i[i] = (float) nansum_float(
+                squash_len, (float *) src_imag + j, stride_x);
+            }
+          }
           break;
 
         case mxDOUBLE_CLASS:
           dest[i] = nansum_double(squash_len, (double *) src + j, stride_x);
+          if (src_imag) {
+            dest_imag[i] = nansum_double(squash_len, (double *) src_imag + j,                 stride_x);
+          }
           break;
 
         case mxLOGICAL_CLASS:

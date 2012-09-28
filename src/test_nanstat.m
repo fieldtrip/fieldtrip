@@ -22,15 +22,16 @@ X{end+1} = [true, true, false];
 X{end+1} = 'a string';
 X{end+1} = uint8(1:25);
 %X{end+1} = int64(1:25);    % matlab 2010a can't sum 64bit ints :/
-X{end+1} = fft(rand(10));  % test complex numbers
+X{end+1} = complex(rand(10), rand(10));  % test complex numbers
+X{end+1} = cast(X{end}, 'single');  % test single precision complex numbers
 X{end+1} = 0;
 X{end+1} = inf;
 X{end+1} = -inf;
 
 for i = 1:length(X)
   x = X{i};
-  fprintf('\nRound %d -----------------------\n', i);
-  class(x), x
+  class(x), class(nansum(x)), class(sum(x))
+  fprintf('norm = %.3g', norm(nansum(x) - sum(x)));
   assertEqual(nansum(x), sum(x));
   %assertEqual(nanmean(x), mean(x));
   
