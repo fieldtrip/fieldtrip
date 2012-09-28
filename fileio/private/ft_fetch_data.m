@@ -176,12 +176,13 @@ else
   if endsample>trl(2) || begsample<trl(1)
     %         warning('not all requested samples are present in the data, filling with NaNs');
   end
+
   
   % get the indices
   begindx  = begsample - trl(1) + 1;
   endindx  = endsample - trl(1) + 1;
   
-  tmptrl = trl - [trl(1) trl(1)]+1;
+  tmptrl = trl([1 2]) - [trl(1) trl(1)]+1; % ignore offset in case it's present
   dat = nan(numel(chanindx), endsample-begsample+1);
   
   
