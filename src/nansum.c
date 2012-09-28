@@ -26,7 +26,7 @@
 mwSize stride(int dim, int shape_len, const mwSize *shape)
 {
   int i, s = 1;
-  for (i = 1; i <= dim; i++)
+  for (i = 0; i < dim; i++)
     s *= shape[i];
   return s;
 }
@@ -34,10 +34,11 @@ mwSize stride(int dim, int shape_len, const mwSize *shape)
 void offset_to_index(mwSize offset, int ndim, const mwSize *shape, 
   mwSize *index)
 {
-  int i;
-  for (i = 0; i < ndim; ++i) {
-    index[i] = offset % stride(i, ndim, shape);
-    offset -= offset / stride(i, ndim, shape);
+  int i, s;
+  for (i = ndim; i-- > 0;) {
+    s = stride(i, ndim, shape);
+    index[i] = offset / s;
+    offset -= index[i] * s;
   }
 }
 
@@ -83,8 +84,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       break;
 
     case 1: /* No dimension is given. Find first non-singleton dimension: */
-      squash_dim = 0;
+      squash_dim = ndim(X);
       for(i = ndim(X); i-- > 0;) {
+        printf("i=%d, size(X)[i] = %d\n", i, size(X)[i]);
         if(size(X)[i] > 1)
           squash_dim = i;
       }
@@ -100,6 +102,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     default:
       mexErrMsgTxt("Too many input arguments!");
   }
+  printf("Found squash_dim = %d.\n", squash_dim);
 
   /* Create output array Y: */
   size_Y = mxMalloc(ndim(X) * sizeof(size_Y));
@@ -112,12 +115,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     ndim(X), size_Y, classid, mxGetImagData(X) != NULL);
   assert(Y == plhs[0]); 
 
+
+  for(i = ndim(Y); i-- > 0;) {
+    printf("i=%d, size(Y)[i] = %d\n", i, size(Y)[i]);
+  }
+
   /* Store calls to stat function with offset and stride in Y: */
   index = (mwSize *) mxMalloc(ndim(X) * sizeof(mwSize));
   stride_x = stride(squash_dim, ndim(X), size(X));
-
-  printf("Stride = %d\n", stride_x);
-  assert(stride > 0);
 
   {
     double *dest = mxGetData(Y);
@@ -128,6 +133,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
      * C/Fortran confusion. MATLAB uses FORTRAN order. */
 
     for (i = 0; i < mxGetNumberOfElements(Y); ++i) {
+      /* For each element in the output array, do: */
+
+      /* Transform the element number in an index: */
       offset_to_index(i, ndim(Y), size(Y), index);
 
       printf("i = %d. index=[", i);
@@ -139,6 +147,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       printf(", j = %d. ", j);
 
       dest[i] = sum(size(X)[squash_dim], src + j, stride_x);
+      
+      printf("\n");
     }
   }
 
