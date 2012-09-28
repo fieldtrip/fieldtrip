@@ -35,7 +35,7 @@ function [warped] = warp_apply(M, input, method, tol)
 % If any other method is selected, it is assumed that it specifies
 % the name of an auxiliary function that will, when given the input
 % parameter vector M, return an 4x4 homogenous transformation
-% matrix. Supplied functions in teh warping toolbox are translate,
+% matrix. Supplied functions in the warping toolbox are translate,
 % rotate, scale, rigidbody, globalrescale, traditional, affine,
 % perspective.
 
