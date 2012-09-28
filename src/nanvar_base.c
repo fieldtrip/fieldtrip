@@ -24,7 +24,7 @@ double fname(nanstat, TYPE)(int n, TYPE *x0, mwSize stride) \
       result += pow(x0[i * stride] - mean, 2);\
     }\
   }\
-  if (c == 0) return nan();\
+  if (c == 0) return NAN;\
   return result; /* No normalisation by c is performed! */\
 }
 

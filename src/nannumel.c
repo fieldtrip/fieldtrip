@@ -16,7 +16,7 @@ double fname(nanstat, TYPE)(int n, TYPE *x0, mwSize stride) \
 }
 
 nanstat_template(float);
-nanstat_template(double, double);
+nanstat_template(double);
 nanstat_template(int8_T); nanstat_template(uint8_T);
 nanstat_template(int16_T); nanstat_template(uint16_T);
 nanstat_template(int32_T); nanstat_template(uint32_T);
