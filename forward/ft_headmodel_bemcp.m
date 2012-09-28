@@ -24,6 +24,14 @@ if isfield(geom,'bnd')
   geom = geom.bnd;
 end
 
+% ensure that the vertices and triangles are double precision, otherwise the bemcp mex files will crash
+for i=1:length(geom)
+  geom(i).pnt = double(geom(i).pnt);
+  if isfield(geom(i),'tri')
+    geom(i).tri = double(geom(i).tri);
+  end
+end
+
 % start with an empty volume conductor
 vol = [];
 vol.bnd = geom;

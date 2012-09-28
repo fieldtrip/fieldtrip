@@ -2,7 +2,7 @@ function bnd = prepare_mesh_segmentation(cfg, mri)
 
 % PREPARE_MESH_SEGMENTATION
 %
-% See also PREPARE_MESH_MANUAL,PREPARE_MESH_HEADSHAPE
+% See also PREPARE_MESH_MANUAL, PREPARE_MESH_HEADSHAPE
 
 % Copyrights (C) 2009, Robert Oostenveld
 %
@@ -10,131 +10,67 @@ function bnd = prepare_mesh_segmentation(cfg, mri)
 
 % get the default options
 cfg.spmversion  = ft_getopt(cfg, 'spmversion', 'spm8');
-cfg.sourceunits = ft_getopt(cfg, 'sourceunits', mri.unit); % use the MRI units as default 
+cfg.numvertices = ft_getopt(cfg, 'numvertices');
+cfg.tissue      = ft_getopt(cfg, 'tissue');
 
-% smooth functional parameters, excluding anatomy and inside
-if isfield(cfg, 'smooth') && ~strcmp(cfg.smooth, 'no'),
-  % check that SPM is on the path, try to add the preferred version
-  if strcmpi(cfg.spmversion, 'spm2'),
-    ft_hastoolbox('SPM2',1);
-  elseif strcmpi(cfg.spmversion, 'spm8'),
-    ft_hastoolbox('SPM8',1);
-  end
-end
-
-% some initial checks
-cfg = ft_checkconfig(cfg, 'forbidden', 'numcompartments');
-
-% FIXME: this part needs reorganization
-%if ~isfield(mri, 'tissue') && any(ismember(fieldnames(mri), {'gray' 'brain' 'scalp'})) && (~isfield(cfg,'tissue') || length(cfg.tissue)==1), cfg.tissue = 1; end
-if ~isfield(cfg, 'threshold'), cfg.threshold = 0; end
-if ~isfield(mri, 'unit'), mri = ft_convert_units(mri); end
-
-if ischar(cfg.tissue)
-  % convert the char into a cell-array
-  cfg.tissue = {cfg.tissue};
+% check that SPM is on the path, try to add the preferred version
+if strcmpi(cfg.spmversion, 'spm2'),
+  ft_hastoolbox('SPM2',1);
+elseif strcmpi(cfg.spmversion, 'spm8'),
+  ft_hastoolbox('SPM8',1);
 end
 
 if iscell(cfg.tissue)
-  mri.seg = zeros(mri.dim);
-  % pick the selected tissues from the segmentation structure
-  for i=1:length(cfg.tissue)
-    fprintf('using the %s segmentation\n', cfg.tissue{i});
-    mri.seg = mri.seg + imfill(mri.(cfg.tissue{i}), 'holes');
-    value(i) = length(cfg.tissue) - i + 1;
-  end % for
-  % continue with the tissue value rather than the cell-array with strings
-  cfg.tissue = value;
-else
-  fprintf('using the segmented MRI\n');
-end % if
-
-
-if ~isfield(mri, 'seg') && isequal(cfg.tissue, 1)
-  
-  if isfield(mri, 'gray') || isfield(mri, 'white') || isfield(mri, 'csf')
-    % construct the single image segmentation from the three probabilistic
-    % tissue segmentations for csf, white and gray matter
-    mri.seg = zeros(size(mri.gray ));
-    if isfield(mri, 'gray')
-      fprintf('including gray matter in segmentation for brain compartment\n')
-      mri.seg = mri.seg | (mri.gray>(cfg.threshold*max(mri.gray(:))));
-    end
-    if isfield(mri, 'white')
-      fprintf('including white matter in segmentation for brain compartment\n')
-      mri.seg = mri.seg | (mri.white>(cfg.threshold*max(mri.white(:))));
-    end
-    if isfield(mri, 'csf')
-      fprintf('including CSF in segmentation for brain compartment\n')
-      mri.seg = mri.seg | (mri.csf>(cfg.threshold*max(mri.csf(:))));
-    end
-    if ~strcmp(cfg.smooth, 'no'),
-      fprintf('smoothing the segmentation with a %d-pixel FWHM kernel\n',cfg.smooth);
-      mri.seg = double(mri.seg);
-      spm_smooth(mri.seg, mri.seg, cfg.smooth);
-    end
-    % threshold for the last time
-    mri.seg = (mri.seg>(cfg.threshold*max(mri.seg(:))));
-  elseif isfield(mri, 'brain')
-    mri.seg = mri.brain;
-  elseif isfield(mri, 'scalp')
-    mri.seg = mri.scalp;
+  % the code below assumes that it is a probabilistic representation
+  if any(strcmp(cfg.tissue, 'brain'))
+    mri = ft_datatype_segmentation(mri, 'segmentationstyle', 'probabilistic', 'hasbrain', 'yes');
+  else
+    mri = ft_datatype_segmentation(mri, 'segmentationstyle', 'probabilistic');
   end
+else
+  % the code below assumes that it is an indexed representation
+  mri = ft_datatype_segmentation(mri, 'segmentationstyle', 'indexed');
 end
 
-[mrix, mriy, mriz] = ndgrid(1:size(mri.seg,1), 1:size(mri.seg,2), 1:size(mri.seg,3));
-
-% construct the triangulations of the boundaries from the segmented MRI
-for i=1:length(cfg.tissue)
-  fprintf('triangulating the boundary of compartment %d\n', i);
-  if ~any(mri.seg(:)==cfg.tissue(i))
-    error('tissue value %d is not present in the segmentation', cfg.tissue(i));
+% do the mesh extraction
+for i =1:numel(cfg.tissue)
+  if iscell(cfg.tissue)
+    % this assumes that it is a probabilistic representation
+    % for example {'brain', 'skull', scalp'}
+    seg = mri.(cfg.tissue{i});
+    tissue = cfg.tissue{i};
+  else
+    % this assumes that it is an indexed representation
+    % for example [3 2 1]
+    seg = (mri.seg==cfg.tissue(i));
+    if isfield(mri, 'seglabel')
+      tissue = mri.seglabel{cfg.tissue(i)};
+    else
+      tissue = sprintf('tissue %d', i);
+    end
   end
-  seg = imfill((mri.seg==cfg.tissue(i)), 'holes');
+  fprintf('triangulating the outer boundary of compartment %d (%s) with %d vertices\n', i, tissue, cfg.numvertices(i));
+  
+  % in principle it is possible to do volumesmooth and volumethreshold, but
+  % the user is expected to prepare his segmentation outside this function
+  % seg = volumesmooth(seg, nan, nan);
+  
+  % ensure that the segmentation is binary and that there is a single contiguous region
+  % FIXME is this still needed when it is already binary?
+  seg = volumethreshold(seg, 0.5, tissue);
+  
+  % the function that generates the mesh will fail if there is a hole in the middle
+  % FIXME is this still needed when it is already binary?
+  seg = volumefillholes(seg);
+  
+  [mrix, mriy, mriz] = ndgrid(1:mri.dim(1), 1:mri.dim(2), 1:mri.dim(3));
   ori(1) = mean(mrix(seg(:)));
   ori(2) = mean(mriy(seg(:)));
   ori(3) = mean(mriz(seg(:)));
   [pnt, tri] = triangulate_seg(seg, cfg.numvertices(i), ori);
-  % FIXME: corrects the original tri because is weird
-  %tri = projecttri(pnt);
-  % apply the coordinate transformation from voxel to head coordinates
-  pnt(:,4) = 1;
-  pnt = (mri.transform * (pnt'))';
-  pnt = pnt(:,1:3);
   
-  % convert the MRI surface points into the same units as the source/gradiometer
-  scale = 1;
-  switch cfg.sourceunits
-    case 'mm'
-      scale = scale * 1000;
-    case 'cm'
-      scale = scale * 100;
-    case 'dm'
-      scale = scale * 10;
-    case 'm'
-      scale = scale * 1;
-    otherwise
-      error('unknown physical dimension in cfg.sourceunits');
-  end
-  switch mri.unit
-    case 'mm'
-      scale = scale / 1000;
-    case 'cm'
-      scale = scale / 100;
-    case 'dm'
-      scale = scale / 10;
-    case 'm'
-      scale = scale / 1;
-    otherwise
-      error('unknown physical dimension in mri.unit');
-  end
-  if scale~=1
-    fprintf('converting MRI surface points from %s into %s\n', cfg.sourceunits, mri.unit);
-    pnt = pnt* scale;
-  end
-  
-  bnd(i).pnt = pnt;
+  bnd(i).pnt = warp_apply(mri.transform, pnt);
   bnd(i).tri = tri;
-  fprintf(['segmentation compartment %d of ' num2str(length(cfg.tissue)) ' completed\n'],i);
+  bnd(i).unit = mri.unit;
+  
 end
-

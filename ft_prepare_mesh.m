@@ -8,14 +8,14 @@ function [bnd, cfg] = ft_prepare_mesh(cfg, mri)
 % related to mri and are expressed in world coordinates.
 %
 % Use as
-%   bnd = ft_prepare_mesh(cfg, mri)
+%   bnd = ft_prepare_mesh(cfg, volume)
+%   bnd = ft_prepare_mesh(cfg, segmentation)
 %
 % Configuration options:
 %   cfg.interactive     = 'no' (default) or 'yes' (manual interaction)
-%   cfg.tissue          = list with segmentation values corresponding with each compartment
-%   cfg.numvertices     = vector, length equal cfg.tissue.  e.g. [2000 1000 800];
-%   cfg.downsample      = integer (1,2, ...) defines the level of refinement of the mri data
-%   cfg.sourceunits     = e.g. 'mm'
+%   cfg.tissue          = cell-array with tissue types or numeric vector with integer values
+%   cfg.numvertices     = numeric vector, should have same number of elements as cfg.tissue
+%   cfg.downsample      = integer number (default = 1, i.e. no downsampling), see FT_VOLUMEDOWNSAMPLE
 %   cfg.headshape       = (optional) a filename containing headshape, a Nx3 matrix with surface
 %                         points, or a structure with a single or multiple boundaries
 %
@@ -28,26 +28,28 @@ function [bnd, cfg] = ft_prepare_mesh(cfg, mri)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% Example use:
-%   mri=ft_read_mri('Subject01.mri');
-%   cfg=[];
-%   cfg.output={'scalp', 'skull', 'brain'};
-%   segment=ft_volumesegment(cfg, mri);
-%   scalp=(segment.scalp)&~(segment.skull | segment.brain);
-%   skull=2*(segment.skull);
-%   brain=3*(segment.brain);
-%   segment.seg=scalp+skull+brain;
-%   cfg=[];
-%   cfg.tissue=[1 2 3];
-%   cfg.numvertices=[2000 1000 800];
-%   cfg.sourceunits=segment.unit;
-%   bnd = ft_prepare_mesh(cfg, segment);
+% Example
+%   mri             = ft_read_mri('Subject01.mri');
+%                   
+%   cfg             = [];
+%   cfg.output      = {'scalp', 'skull', 'brain'};
+%   segmentation    = ft_volumesegment(cfg, mri);
+% 
+%   cfg             = [];
+%   cfg.tissue      = {'scalp', 'skull', 'brain'};
+%   cfg.numvertices = [800, 1600, 2400];
+%   bnd             = ft_prepare_mesh(cfg, segmentation);
 %
-% See also FT_PREPARE_CONCENTRICSPHERES, FT_PREPARE_LOCALSPHERES,
-% FT_PREPARE_SINGLESHELL, FT_PREPARE_LEADFIELD, FT_PREPARE_BEMMODEL,
-% FT_PREPARE_MESH_NEW
+% See also FT_VOLUMESEGMENT, FT_PREPARE_HEADMODEL, FT_PLOT_MESH
 
-% Copyrights (C) 2009, Cristiano Micheli & Robert Oostenveld
+% Undocumented functionality: at this moment it allows for either
+%   bnd = ft_prepare_mesh(cfg)             or
+%   bnd = ft_prepare_mesh(cfg, headmodel)
+% but more consistent would be to specify a volume conduction model with
+%   cfg.vol           = structure with volume conduction model, see FT_PREPARE_HEADMODEL
+%   cfg.hdmfile       = name of file containing the volume conduction model, see FT_READ_VOL
+
+% Copyrights (C) 2009-2012, Cristiano Micheli & Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -77,79 +79,110 @@ ft_preamble trackconfig
 ft_preamble loadvar mri
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'forbidden', {'numcompartments', ...
-                                       'outputfile'});
+cfg = ft_checkconfig(cfg, 'forbidden', {'numcompartments', 'outputfile', 'sourceunits', 'mriunits'});
 
-% set the defaults
-if ~isfield(cfg, 'downsample'),      cfg.downsample = 1;         end
-if ~isfield(cfg, 'tissue'),          cfg.tissue = [];            end
-if ~isfield(cfg, 'numvertices'),     cfg.numvertices = [];       end
-if ~isfield(cfg, 'interactive'),     cfg.interactive = 'no';     end
+% get the defaults
+cfg.headshape    = ft_getopt(cfg, 'headshape');         % input option
+cfg.interactive  = ft_getopt(cfg, 'interactive', 'no'); % to interact with the volume
+cfg.tissue       = ft_getopt(cfg, 'tissue');            % to perform the meshing on a specific tissue
+cfg.numvertices  = ft_getopt(cfg, 'numvertices');       % resolution of the mesh
+cfg.downsample   = ft_getopt(cfg, 'downsample', 1);
 
 if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
   % convert the nested config-object back into a normal structure
   cfg.headshape = struct(cfg.headshape);
 end
 
-if ~exist('mri', 'var')
-  mri = [];
+if ischar(cfg.tissue)
+  % it should either be something like {'brain', 'skull', 'scalp'}, or something like [1 2 3]
+  cfg.tissue = {cfg.tissue};
 end
 
-if ~isfield(cfg,'headshape') || isempty(cfg.headshape)
-  basedonseg        = isfield(mri, 'transform') && any(isfield(mri, {'seg', 'csf', 'white', 'gray'}));
-  basedonmri        = isfield(mri, 'transform') && ~basedonseg && any(isfield(mri, {'brain' 'scalp'}));
-  basedonvol        = isfield(mri, 'bnd');
-  basedonsphere     = isfield(mri, 'r') && isfield(mri, 'o');
-  basedonheadshape  = 0;
-elseif isfield(cfg,'headshape') && ~isempty(cfg.headshape)
-  basedonseg        = 0;
-  basedonmri        = 0;
-  basedonvol        = 0;
-  basedonsphere     = 0;
-  basedonheadshape  = 1;
+
+% here we cannot use nargin, because the data might have been loaded from cfg.inputfile
+hasdata = exist('mri', 'var');
+
+if ~hasdata
+  mri = [];
+elseif ~ft_voltype(mri, 'unknown')
+  % The input appears to be a headmodel. This is deprecated, but at this
+  % moment (2012-09-28) we decided not to break the old functionality yet.
 else
-  error('inconsistent configuration, cfg.headshape should not be used in combination with an mri input')
+  mri = ft_checkdata(mri, 'datatype', {'volume', 'segmentation'});
+end
+
+if hasdata
+  % try to estimate the units, these will also be assigned to the output meshes
+  mri = ft_convert_units(mri);
+end
+
+if hasdata
+  % determine the type of input data
+  basedonmri        = ft_datatype(mri, 'volume');
+  basedonseg        = ft_datatype(mri, 'segmentation');
+  basedonheadshape  = 0;
+  basedonbnd        = isfield(mri, 'bnd');
+  basedonsphere     = all(isfield(mri, {'r', 'o'}));
+elseif isfield(cfg,'headshape') && ~isempty(cfg.headshape)
+  % in absence of input data
+  basedonmri       = false;
+  basedonseg       = false;
+  basedonheadshape = true;
+  basedonbnd       = false;
+  basedonsphere    = false;
+else
+  error('inconsistent configuration and input data');
 end
 
 if basedonseg || basedonmri
+  cfg = ft_checkconfig(cfg, 'required', {'tissue', 'numvertices'});
+  if numel(cfg.tissue)>1 && numel(cfg.numvertices)==1
+    cfg.numvertices = repmat(cfg.numvertices, size(cfg.tissue));
+  elseif numel(cfg.tissue)~=numel(cfg.numvertices)
+    error('you should specify the number of vertices for each tissue type');
+  end
+end
+
+if (basedonseg || basedonmri) && cfg.downsample~=1
   % optionally downsample the anatomical MRI and/or the tissue segmentation
   tmpcfg = [];
   tmpcfg.downsample = cfg.downsample;
   mri = ft_volumedownsample(tmpcfg, mri);
 end
 
-if strcmp(cfg.interactive, 'yes')
+if (basedonmri || basedonseg) && istrue(cfg.interactive)
+  % this only makes sense with a (segmented) MRI as input
   fprintf('using the manual approach\n');
   bnd = prepare_mesh_manual(cfg, mri);
   
-elseif basedonseg || basedonmri
+elseif basedonseg
+  fprintf('using the segmentation approach\n');
+  bnd = prepare_mesh_segmentation(cfg, mri);
+  
+elseif basedonmri && iscell(cfg.tissue) && all(isfield(mri, cfg.tissue))
+  % the input is not detected as segmentation, but it does have all fields
+  % that the user requests to have triangulated, so assume that it is a
+  % segmentation after all
   fprintf('using the segmentation approach\n');
   bnd = prepare_mesh_segmentation(cfg, mri);
   
 elseif basedonheadshape
-  bnd = ft_fetch_headshape(cfg);
-    
-elseif basedonvol
+  fprintf('using the head shape to construct a triangulated mesh\n');
+  bnd = prepare_mesh_headshape(cfg);
+  
+elseif basedonbnd
   fprintf('using the mesh specified in the input volume conductor\n');
   bnd = mri.bnd;
   
 elseif basedonsphere
+  fprintf('triangulating the sphere in the volume conductor\n');
   vol = mri;
-  
-  if isempty(cfg.numvertices)
-    fprintf('using the mesh specified by icosaedron162\n');
-    [pnt,tri] = icosahedron162;
-  elseif any(cfg.numvertices==[42 162 642 2562])
-    sprintf('using the mesh specified by icosaedron%d\n',cfg.numvertices);
-    eval(['[pnt,tri] = icosahedron' num2str(cfg.numvertices) ';']);
-  else
-    [pnt, tri] = msphere(cfg.numvertices);
-    sprintf('using the mesh specified by msphere with %d vertices\n',size(pnt,1));
-  end
+
+  [pnt, tri] = makesphere(cfg.numvertices);
+    
   
   switch ft_voltype(vol)
     case {'singlesphere' 'concentricspheres'}
-      vol.r = sort(vol.r);
       bnd = [];
       for i=1:length(vol.r)
         bnd(i).pnt(:,1) = pnt(:,1)*vol.r(i) + vol.o(1);
@@ -158,6 +191,7 @@ elseif basedonsphere
         bnd(i).tri = tri;
       end
     case 'localspheres'
+      % FIXME this should be replaced by an outline of the head, see private/headsurface
       bnd = [];
       for i=1:length(vol.label)
         bnd(i).pnt(:,1) = pnt(:,1)*vol.r(i) + vol.o(i,1);
@@ -171,11 +205,10 @@ else
   error('unsupported cfg.method and/or input')
 end
 
-% ensure that the vertices and triangles are double precision, otherwise the bemcp mex files will crash
-for i=1:length(bnd)
-  bnd(i).pnt = double(bnd(i).pnt);
-  if isfield(bnd(i),'tri')
-    bnd(i).tri = double(bnd(i).tri);
+% copy the geometrical units from the input to the output
+if ~isfield(bnd, 'unit') && hasdata
+  for i=1:numel(bnd)
+    bnd(i).unit = mri.unit;
   end
 end
 
@@ -183,3 +216,27 @@ end
 ft_postamble trackconfig
 ft_postamble callinfo
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% HELPER FUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [pnt, tri] = makesphere(numvertices)
+
+if isempty(numvertices)
+  [pnt,tri] = icosahedron162;
+  fprintf('using the mesh specified by icosaedron162\n');
+elseif numvertices==42
+  [pnt,tri] = icosahedron42;
+  fprintf('using the mesh specified by icosaedron%d\n',size(pnt,1));
+elseif numvertices==162
+  [pnt,tri] = icosahedron162;
+  fprintf('using the mesh specified by icosaedron%d\n',size(pnt,1));
+elseif numvertices==642
+  [pnt,tri] = icosahedron642;
+  fprintf('using the mesh specified by icosaedron%d\n',size(pnt,1));
+elseif numvertices==2562
+  [pnt,tri] = icosahedron2562;
+  fprintf('using the mesh specified by icosaedron%d\n',size(pnt,1));
+else
+  [pnt, tri] = msphere(numvertices);
+  fprintf('using the mesh specified by msphere with %d vertices\n',size(pnt,1));
+end

@@ -15,6 +15,7 @@ function [obj] = ft_convert_units(obj, target)
 %   volume conductor definition
 %   dipole grid definition
 %   anatomical mri
+%   segmented mri
 %
 % Possible target units are 'm', 'dm', 'cm ' or 'mm'. If no target units
 % are specified, this function will only determine the native geometrical

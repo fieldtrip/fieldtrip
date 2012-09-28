@@ -52,10 +52,10 @@ function segmentation = ft_datatype_segmentation(segmentation, varargin)
 % get the optional input arguments, which should be specified as key-value pairs
 version           = ft_getopt(varargin, 'version', 'latest');
 segmentationstyle = ft_getopt(varargin, 'segmentationstyle');   % can be indexed or probabilistic
-hasbrainmask      = ft_getopt(varargin, 'hasbrainmask', 'no');  % no means that it is not required, if present it won't be removed
+hasbrain          = ft_getopt(varargin, 'hasbrain', 'no');      % no means that it is not required, if present it won't be removed
 
 % convert from string into boolean
-hasbrainmask = istrue(hasbrainmask);
+hasbrain = istrue(hasbrain);
 
 if strcmp(version, 'latest')
   segversion = '2012';
@@ -92,6 +92,9 @@ switch segversion
       if numel(segmentation.(fn{i}))~=prod(segmentation.dim)
         % this does not look like a segmentation
         continue
+      elseif strcmp(fn{i}, 'anatomy')
+        % this should not be interpreted as segmentation, also not when it is a uint8 or uint16 representation
+        continue
       else
         if isfield(segmentation, [fn{i} 'label'])
           % the xxxlabel field exists, which only makes sense for an indexed representation
@@ -100,7 +103,8 @@ switch segversion
         else
           % this looks like a segmentation
           tmp = segmentation.(fn{i});
-          tmp = tmp(:);
+          tmp = tmp(:);            % convert to vector
+          tmp = tmp(~isnan(tmp));  % remove NaN values
           probabilistic(i) =  islogical(tmp) || all(tmp>=-0.001 & tmp<=1.001); % allow some roundoff error
           indexed(i)       = ~islogical(tmp) && all(abs(tmp - round(tmp))<1000*eps);
           
@@ -139,7 +143,7 @@ switch segversion
         if ~isfield(segmentation, [fn{i} 'label'])
           indexlabel = {};
           for j=1:length(indexval)
-            indexlabel{indexval(j)} = sprintf('tissue%d', indexval(j));
+            indexlabel{indexval(j)} = sprintf('tissue %d', indexval(j));
           end
           segmentation.([fn{i} 'label']) = indexlabel;
         end
@@ -239,9 +243,9 @@ switch segversion
     end % converting between probabilistic and indexed
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % add the brainmask if requested
+    % add the brain if requested
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    if hasbrainmask
+    if hasbrain
       if indexed
         fn = fieldnames(segmentation);
         sel = false(size(fn));
@@ -267,11 +271,11 @@ switch segversion
             csf   = seg==find(strcmp(seglabel, 'csf'));
             brain = gray + white + csf;
             clear gray white csf seg
-            brain = volumesmooth(brain,    smooth,    'brainmask');
-            brain = volumethreshold(brain, threshold, 'brainmask');
+            brain = volumesmooth(brain,    smooth,    'brain');
+            brain = volumethreshold(brain, threshold, 'brain');
             % store it in the output
             segmentation.brain = brain;
-          end % try to construct the brainmask
+          end % try to construct the brain
         end
         
         
@@ -288,13 +292,13 @@ switch segversion
           csf   = segmentation.csf;
           brain = gray + white + csf;
           clear gray white csf
-          brain = volumesmooth(brain,    smooth,    'brainmask');
-          brain = volumethreshold(brain, threshold, 'brainmask');
+          brain = volumesmooth(brain,    smooth,    'brain');
+          brain = volumethreshold(brain, threshold, 'brain');
           % store it in the output
           segmentation.brain = brain;
         end
       end
-    end % if hasbrainmask
+    end % if hasbrain
     
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
