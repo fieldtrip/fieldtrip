@@ -1,4 +1,4 @@
-% function test_bug1556
+function test_bug1556
 
 % TEST test_bug1556
 % TEST statfun_depsamplesF
