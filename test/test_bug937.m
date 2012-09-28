@@ -67,7 +67,7 @@ mri.dim = size(bkgrnd);
 cfg = [];
 cfg.tissue      = {'sphere1' 'sphere2' 'sphere3'};
 cfg.numvertices = 1000;
-bnd = ft_prepare_mesh_new(cfg,mri);
+bnd = ft_prepare_mesh(cfg,mri);
 figure,ft_plot_mesh(bnd(1),'edgecolor','k','facecolor','none')
 ft_plot_mesh(bnd(2),'edgecolor','g','facecolor','none')
 ft_plot_mesh(bnd(3),'edgecolor','r','facecolor','none')
@@ -76,14 +76,8 @@ ft_plot_mesh(bnd(3),'edgecolor','r','facecolor','none')
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % based on raw segmentation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-cfg = [];
-cfg.tissue      = [1 2 3];
-cfg.numvertices = 1000;
-bnd = ft_prepare_mesh_new(cfg,bkgrnd);
-figure,ft_plot_mesh(bnd(1),'edgecolor','k','facecolor','none')
-ft_plot_mesh(bnd(2),'edgecolor','g','facecolor','none')
-ft_plot_mesh(bnd(3),'edgecolor','r','facecolor','none')
-% figure,ft_plot_mesh(bnd(3),'edgecolor','k','facecolor','w'),camlight
+% see test_bug1646.m
+% this input no longer supported
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % based on headshape, can be a file name, 
@@ -98,7 +92,7 @@ end
 cfg = [];
 cfg.headshape   = hsh;
 cfg.numvertices = 1000;
-bnd = ft_prepare_mesh_new(cfg);
+bnd = ft_prepare_mesh(cfg);
 figure,ft_plot_mesh(bnd(1),'edgecolor','k','facecolor','none')
 ft_plot_mesh(bnd(2),'edgecolor','g','facecolor','none')
 ft_plot_mesh(bnd(3),'edgecolor','r','facecolor','none')
@@ -108,7 +102,7 @@ for i=1:3
   cfg = [];
   cfg.headshape   = svol(i).bnd.pnt;
   cfg.numvertices = 1000;
-  bnd(i) = ft_prepare_mesh_new(cfg);
+  bnd(i) = ft_prepare_mesh(cfg);
 end
 figure,ft_plot_mesh(bnd(1),'edgecolor','k','facecolor','none')
 ft_plot_mesh(bnd(2),'edgecolor','g','facecolor','none')
@@ -117,15 +111,17 @@ ft_plot_mesh(bnd(3),'edgecolor','r','facecolor','none')
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % based on vol
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-vol = svol;
-vol = rmfield(vol,'o');
-vol = rmfield(vol,'r');
-cfg = [];
-cfg.numvertices = 1000;
-bnd = ft_prepare_mesh_new(cfg,vol);
-figure,ft_plot_mesh(bnd(1),'edgecolor','k','facecolor','none')
-ft_plot_mesh(bnd(2),'edgecolor','g','facecolor','none')
-ft_plot_mesh(bnd(3),'edgecolor','r','facecolor','none')
+if 0 % FIXME (see bug notes)
+  vol = svol;
+  vol = rmfield(vol,'o');
+  vol = rmfield(vol,'r');
+  cfg = [];
+  cfg.numvertices = 1000;
+  bnd = ft_prepare_mesh(cfg,vol);
+  figure,ft_plot_mesh(bnd(1),'edgecolor','k','facecolor','none')
+  ft_plot_mesh(bnd(2),'edgecolor','g','facecolor','none')
+  ft_plot_mesh(bnd(3),'edgecolor','r','facecolor','none')
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % based on sphere
@@ -136,7 +132,7 @@ for i=1:3
   sph.r(i)   = svol(i).r;
   sph.o(i,:) = svol(i).o;
 end
-bnd = ft_prepare_mesh_new(cfg,sph);
+bnd = ft_prepare_mesh(cfg,sph);
 figure,ft_plot_mesh(bnd(1),'edgecolor','k','facecolor','none')
 ft_plot_mesh(bnd(2),'edgecolor','g','facecolor','none')
 ft_plot_mesh(bnd(3),'edgecolor','r','facecolor','none')
@@ -144,11 +140,11 @@ ft_plot_mesh(bnd(3),'edgecolor','r','facecolor','none')
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % based on interactive
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% call three times to loop over compartments
-mri = [];
-mri.anatomy = bkgrnd;
-mri.transform = eye(4);
-mri.dim = size(bkgrnd);
-cfg = [];
-cfg.interactive = 'yes';
-bnd = ft_prepare_mesh(cfg,mri);
+% Can't test cfg.interactive='yes' in a test script.
+% mri = [];
+% mri.anatomy = bkgrnd;
+% mri.transform = eye(4);
+% mri.dim = size(bkgrnd);
+% cfg = [];
+% cfg.interactive = 'yes';
+% bnd = ft_prepare_mesh(cfg,mri);
