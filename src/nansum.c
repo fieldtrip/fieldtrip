@@ -2,6 +2,7 @@
 #include <mex.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 #include "compiler.h"
 
 #if defined (COMPILER_MSVC)
@@ -17,205 +18,127 @@
 #include <math.h>
 #endif
 
-void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+/* Shortcuts: */
+#define size(x) mxGetDimensions(x)
+#define ndim(x) mxGetNumberOfDimensions(x)
+
+mwSize stride(int dim, int shape_len, const mwSize *shape)
 {
-  /*declare variables*/
-  const mwSize *dims;
-  mwSize *dimsout;
-  mwIndex indx;
-  int i, numdims, dim;
-  int numelin, numelout, x0, x1, y1;
-  mxClassID classid;
-  double *inputr_p,  *inputi_p,  *output1r_p,  *output1i_p;
-  float  *inputr_ps, *inputi_ps, *output1r_ps, *output1i_ps;
+  if (dim == shape_len - 1) return 1;
+  if (dim < shape_len - 1)
+    return shape[shape_len - 1] * stride(dim, shape_len - 1, shape);
+  return -1; /* something odd happened */
+}
 
-  /*figure out the classid*/
-  classid = mxGetClassID(prhs[0]);
-
-  /*check inputs*/
-  if(nrhs>2)
-    mexErrMsgTxt("Too many input arguments");
-  else if(nrhs==2) {
-    if(mxGetM(prhs[1])!=1 || mxGetN(prhs[1])!=1)
-      mexErrMsgTxt("Invalid dimension for input argument 2");
-    if(mxGetScalar(prhs[1])<=0)
-      mexErrMsgTxt("Invalid value for input argument 2");
-  }
-  /*if (nrhs==1)*/
-  /*figure out the first non-singleton dimension below*/
-  else if(nrhs<1)
-    return;
-
-  if(mxIsEmpty(prhs[0])) {
-    plhs[0] = mxCreateDoubleScalar(NAN);
-    return;
-    }
-  else if (mxGetClassID(prhs[0]) == mxLOGICAL_CLASS) {
-   mexWarnMsgTxt("Casting logical array to int.");
-  }
-  if (!mxIsNumeric(prhs[0]))
-    mexErrMsgTxt ("Input argument 1 should be numeric");
-
-  /*figure out dimension info and number of elements*/
-  dims    = mxGetDimensions(prhs[0]);
-  numdims = mxGetNumberOfDimensions(prhs[0]);
-  numelin = mxGetNumberOfElements(prhs[0]);
-
-  if(nrhs==2) {
-    dim = mxGetScalar(prhs[1]) - 1;
-  } else if(nrhs==1)
-    /*figure out the averaging dimension when only 1 input argument is given*/
-  {
-    dim = 0;
-    for(i=0; i<numdims; i++) {
-      if(dims[i]>1) {
-        dim = i;
-        break;
-      }
-    }
-  }
-
-
-  /*helper variable needed to kick out the last dimension, if this is the averaging dimension*/
-  x0 = 0;
-  if(numdims==dim+1) {
-    x0 = -1;
-  }
-
-  /*create the vector which contains the dimensionality of the output*/
-  dimsout = mxMalloc((numdims+x0) * sizeof(mwSize));
-  for(i=0; i<numdims+x0; i++) {
-    dimsout[i] = dims[i];
-  }
-
-  /*make the dimension over which the averaging is done singleton in the output*/
-  if(numdims>dim+1) {
-    dimsout[dim] = 1;
-  }
-
-  /*compute the number of output elements*/
-  if(numdims>=dim+1) {
-    numelout = numelin / dims[dim];
-  } else {
-    numelout = numelin;
-  }
-
-  /*compute helper variables x1 and y1 needed for the indexing*/
-  if(dim+1>numdims)
-    /*this essentially means that no averaging is done*/
-  {
-    x1 = numelin;
-    y1 = numelin;
-  } else {
-    x1 = 1;
-    for(i=0; i<numdims+x0; i++) {
-      if(i==dim)
-        break;
-
-      x1 = x1 * dims[i];
-    }
-    y1 = x1 * dims[dim];
-  }
-
-  if(classid==mxDOUBLE_CLASS) {
-    /*associate inputs*/
-    inputr_p = mxGetData(prhs[0]);
-    inputi_p = mxGetImagData(prhs[0]);
-
-    /*assign the outputs*/
-    if(inputi_p == NULL) {
-      plhs[0]    = mxCreateNumericArray((numdims+x0), dimsout, classid, mxREAL);
-      output1r_p = mxGetData(plhs[0]);
-    } else {
-      plhs[0]    = mxCreateNumericArray((numdims+x0), dimsout, classid, mxCOMPLEX);
-      output1r_p = mxGetData(plhs[0]);
-      output1i_p = mxGetImagData(plhs[0]);
-    }
-
-    if(inputi_p == NULL) {
-      /*compute running sum*/
-      for(i=0; i<numelin; i++) {
-        if(!isnan(inputr_p[i])) {
-          indx             = i%x1 + (i/y1) * x1;
-          output1r_p[indx] = output1r_p[indx] + inputr_p[i];
-        } else if(dim+1>numdims)
-          output1r_p[i] = inputr_p[i];
-
-      }
-
-    } else
-      /*handle the complex valued case separately*/
-    {
-      /*compute running sum*/
-      for(i=0; i<numelin; i++) {
-        if(!isnan(inputr_p[i]) && !isnan(inputi_p[i])) {
-          indx             = i%x1 + (i/y1) * x1;
-          output1r_p[indx] = output1r_p[indx] + inputr_p[i];
-          output1i_p[indx] = output1i_p[indx] + inputi_p[i];
-        } else if(dim+1>numdims) {
-          output1r_p[i] = inputr_p[i];
-          output1i_p[i] = inputi_p[i];
-        }
-      }
-
-    }
-
-    /*free memory*/
-    mxFree(dimsout);
-
-    return;
-  }
-
-  else if(classid==mxSINGLE_CLASS) {
-    /*associate inputs*/
-    inputr_ps = mxGetData(prhs[0]);
-    inputi_ps = mxGetImagData(prhs[0]);
-
-    /*assign the outputs*/
-    if(inputi_ps == NULL) {
-      plhs[0]     = mxCreateNumericArray((numdims+x0), dimsout, classid, mxREAL);
-      output1r_ps = mxGetData(plhs[0]);
-    } else {
-      plhs[0]     = mxCreateNumericArray((numdims+x0), dimsout, classid, mxCOMPLEX);
-      output1r_ps = mxGetData(plhs[0]);
-      output1i_ps = mxGetImagData(plhs[0]);
-    }
-
-    if(inputi_ps == NULL) {
-      /*compute running sum*/
-      for(i=0; i<numelin; i++) {
-        if(!isnan(inputr_ps[i])) {
-          indx              = i%x1 + (i/y1) * x1;
-          output1r_ps[indx] = output1r_ps[indx] + inputr_ps[i];
-        } else if(dim+1>numdims)
-          output1r_ps[i] = inputr_ps[i];
-      }
-    }
-
-    else
-      /*handle the complex valued case separately*/
-    {
-      /*compute running sum*/
-      for(i=0; i<numelin; i++) {
-        if(!isnan(inputr_ps[i]) && !isnan(inputi_ps[i])) {
-          indx              = i%x1 + (i/y1) * x1;
-          output1r_ps[indx] = output1r_ps[indx] + inputr_ps[i];
-          output1i_ps[indx] = output1i_ps[indx] + inputi_ps[i];
-        } else if(dim+1>numdims) {
-          output1r_ps[i] = inputr_ps[i];
-          output1i_ps[i] = inputi_ps[i];
-        }
-      }
-    }
-
-    /*free memory*/
-    mxFree(dimsout);
-
-    return;
-  } else {
-    mexErrMsgTxt("The input data matrix should be floating point numbers either of double or single precision");
-    return;
+void offset_to_index(mwSize offset, int ndim, const mwSize *shape, 
+  mwSize *index)
+{
+  int i = 0;
+  for (i = 0; i < ndim; ++i) {
+    index[i] = offset % stride(i, ndim, shape);
+    offset -= offset / stride(i, ndim, shape);
   }
 }
 
+mwSize index_to_offset(int ndim, mwSize *index, const mwSize *shape)
+{
+  int i = 0;
+  mwSize offset = 0;
+  for (i = 0; i < ndim; ++i)
+    offset += stride(i, ndim, shape) * index[i];
+  return offset;
+}
 
+double sum(int n, double *x0, mwSize stride) 
+{
+  int i;
+  double result = 0;
+
+  printf("in sum with n=%d, x0=%p, stride=%d. ", n, x0, stride);
+  for (i = 0; i < n; ++i) {
+    printf("%f ", x0[i * stride]);
+    if (!isnan(x0[i * stride]))
+      result += x0[i * stride];
+  }
+  printf("result=%f\n", result);
+  return result;
+}
+
+void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+{
+  const mxArray *X = prhs[0], *Y = plhs[0];
+  const mwSize *dims;
+  mwSize *index, *size_X, *size_Y, stride_x;
+  mwIndex j;
+  mwIndex indx;
+  int i, numdims, squash_dim;
+  int numelin, numelout, x0, x1, y1;
+  mxClassID classid;
+
+  /* Check and handle input */
+  switch(nrhs) {
+    case 0: 
+      mexErrMsgTxt("Too few input arguments!");
+      break;
+
+    case 1: /* No dimension is given. Find first non-singleton dimension: */
+      squash_dim = 0;
+      for(i = ndim(X); i-- > 0;) {
+        if(size(X)[i] > 1)
+          squash_dim = i;
+      }
+      break;
+
+    case 2: 
+      squash_dim = mxGetScalar(prhs[1]);
+      if(squash_dim <= 0 || squash_dim > ndim(X))
+        mexErrMsgTxt("Invalid value for dimension (argument 2)!");
+      squash_dim -= 1; /* convert form MATLAB to C indexing */
+      break;
+
+    default:
+      mexErrMsgTxt("Too many input arguments!");
+  }
+
+  /* Create output array Y: */
+  size_Y = mxMalloc(ndim(X) * sizeof(size_Y));
+  memcpy(size_Y, size(X), ndim(X) * sizeof(size_Y));
+  size_Y[squash_dim] = 1; 
+
+  classid = mxGetClassID(X);  /* copy class ID from X */
+  
+  Y = plhs[0] = mxCreateNumericArray(
+    ndim(X), size_Y, classid, mxGetImagData(X) != NULL);
+  assert(Y == plhs[0]); 
+
+  /* Store calls to stat function with offset and stride in Y: */
+  index = (mwSize *) mxMalloc(ndim(X) * sizeof(mwSize));
+  stride_x = stride(squash_dim, ndim(X), size(X));
+
+  {
+    double *dest = mxGetData(Y);
+    double *src = mxGetData(X);
+    printf("&X = %p.\n", src);
+
+    /* FIXME: something is wrong in calculation of offset & stride, probably
+     * C/Fortran confusion. MATLAB uses FORTRAN order. */
+
+    for (i = 0; i < mxGetNumberOfElements(Y); ++i) {
+
+      offset_to_index(i, ndim(Y), size(Y), index);
+
+      printf("i = %d. index=[", i);
+      for (j = 0; j < ndim(Y); ++j) printf("%d ", index[j]);
+      printf("]", i);
+
+      j = index_to_offset(ndim(X), index, size(X));
+
+      printf(", j = %d. ", j);
+
+      dest[i] = sum(size(X)[squash_dim], src + j, stride_x);
+    }
+  }
+
+  mxFree(index);
+  mxFree(size_Y);
+}
