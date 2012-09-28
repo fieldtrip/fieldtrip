@@ -1,15 +1,15 @@
-function parcelation = ft_datatype_parcelation(parcelation, varagin)
+function parcellation = ft_datatype_parcellation(parcellation, varagin)
 
-% FT_DATATYPE_PARCELATION describes the FieldTrip MATLAB structure for
-% parcelated cortical surface-based data and atlases.
+% FT_DATATYPE_PARCELLATION describes the FieldTrip MATLAB structure for
+% parcellated cortical surface-based data and atlases.
 %
-% A parcelation describes the tissue types for each of the surface
-% elements. Parcelations are often, but not always labeled. A parcelatoin
+% A parcellation describes the tissue types for each of the surface
+% elements. Parcellations are often, but not always labeled. A parcellatoin
 % can be used to estimate the activity from MEG data in a known region of
-% interest. A surface-based atlas is basically a very detailled parcelation
+% interest. A surface-based atlas is basically a very detailled parcellation
 % with anatomical labels for each tissue type.
 %
-% An example of a surface based Brodmann parcelation looks like this
+% An example of a surface based Brodmann parcellation looks like this
 %
 %              pos: [8192x3]         vertices of the cortical sheet
 %              tri: [16382x3]        triangles of te cortical sheet
@@ -18,6 +18,6 @@ function parcelation = ft_datatype_parcelation(parcelation, varagin)
 %         brodmann: [8192x1 uint8]   values from 1 to N, the value 0 means unknown
 %    brodmannlabel: {Nx1 cell}
 %
-% The only difference to the source data structure is that the parcelatoin
+% The only difference to the source data structure is that the parcellation
 % structure contains the additional fields XXX. See FT_DATATYPE_SOURCE for
 % further details.
