@@ -26,4 +26,5 @@ output   = double(tmp~=find(n==max(n))); clear tmp;
 for k = 1:N
   m(k,1) = sum(tmp(:)==k);
 end
-output   = double(tmp~=find(m==max(m))); clear tmp;
+% select the tissue that has the most voxels belonging to it
+output = (tmp~=find(m==max(m)));
