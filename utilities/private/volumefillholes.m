@@ -1,5 +1,15 @@
 function [output] = volumefillholes(input, along)
 
+% VOLUMEFILLHOLES is a helper function for segmentations
+%
+% See also VOLUMETHRESHOLD, VOLUMESMOOTH
+
+% check for any version of SPM
+if ~ft_hastoolbox('spm')
+  % add SPM8 to the path
+  ft_hastoolbox('spm8', 1);
+end
+
 if nargin<2
   inflate = false(size(input)+2);                   % grow the edges along each dimension
   inflate(2:end-1, 2:end-1, 2:end-1) = (input~=0);  % insert the original volume
