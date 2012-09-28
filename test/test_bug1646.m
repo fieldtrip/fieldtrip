@@ -1,4 +1,4 @@
-% function test_bug1646
+function test_bug1646
 
 % TEST test_bug1646
 % TEST ft_prepare_mesh ft_datatype_segmentation
@@ -140,6 +140,35 @@ cfg.numvertices = 642;
 cfg.tissue = 'brain';
 bnd = ft_prepare_mesh(cfg, seg6);
 assert(isequal(bnd(1).unit, seg6.unit));
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% addressing further issues raised in bug1646, on cfg.tissue
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% If the input is an indexed representation and  cfg.tissue is equal to
+% setdiff(unique(mri.seg(:)),0) then there is no problem.
+
+% seg5 is indexed segmentation
+cfg=[];
+cfg.tissue=setdiff(unique(seg5.seg(:)),0);
+cfg.numvertices=1000;
+bnd = ft_prepare_mesh(cfg, seg5);
+
+% "If the input is an indexed representation and cfg.tissue is empty, then
+% cfg.tissue should be set to unique(mri.seg(:))"
+
+cfg=[];
+cfg.numvertices=[1000 1000 1000];
+cfg.tissue=[];
+bnd = ft_prepare_mesh(cfg, seg5);
+
+cfg=[];
+cfg.numvertices=[1000];
+cfg.tissue=[];
+bnd = ft_prepare_mesh(cfg, seg5);
+
+% "If the input is a tpm representation then cfg.tissue should be a string
+% pointing to the field."
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

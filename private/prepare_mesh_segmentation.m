@@ -20,6 +20,23 @@ elseif strcmpi(cfg.spmversion, 'spm8'),
   ft_hastoolbox('SPM8',1);
 end
 
+if isempty(cfg.tissue)
+  mri = ft_datatype_segmentation(mri, 'segmentationstyle', 'indexed');
+  fn = fieldnames(mri);
+  for i=1:numel(fn),if numel(mri.(fn{i}))==prod(mri.dim), segfield=fn{i};end;end
+  cfg.tissue=setdiff(unique(mri.(segfield)(:)),0);
+end
+
+if ischar(cfg.tissue)
+  % it should either be something like {'brain', 'skull', 'scalp'}, or something like [1 2 3]
+  cfg.tissue = {cfg.tissue};
+end
+if numel(cfg.tissue)>1 && numel(cfg.numvertices)==1
+  cfg.numvertices = repmat(cfg.numvertices, size(cfg.tissue));
+elseif numel(cfg.tissue)~=numel(cfg.numvertices)
+  error('you should specify the number of vertices for each tissue type');
+end
+
 if iscell(cfg.tissue)
   % the code below assumes that it is a probabilistic representation
   if any(strcmp(cfg.tissue, 'brain'))

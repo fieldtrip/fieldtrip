@@ -84,7 +84,7 @@ cfg = ft_checkconfig(cfg, 'forbidden', {'numcompartments', 'outputfile', 'source
 % get the defaults
 cfg.headshape    = ft_getopt(cfg, 'headshape');         % input option
 cfg.interactive  = ft_getopt(cfg, 'interactive', 'no'); % to interact with the volume
-cfg.tissue       = ft_getopt(cfg, 'tissue');            % to perform the meshing on a specific tissue
+% cfg.tissue       = ft_getopt(cfg, 'tissue');            % to perform the meshing on a specific tissue
 cfg.numvertices  = ft_getopt(cfg, 'numvertices');       % resolution of the mesh
 cfg.downsample   = ft_getopt(cfg, 'downsample', 1);
 
@@ -93,10 +93,6 @@ if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
   cfg.headshape = struct(cfg.headshape);
 end
 
-if ischar(cfg.tissue)
-  % it should either be something like {'brain', 'skull', 'scalp'}, or something like [1 2 3]
-  cfg.tissue = {cfg.tissue};
-end
 
 
 % here we cannot use nargin, because the data might have been loaded from cfg.inputfile
@@ -136,11 +132,6 @@ end
 
 if basedonseg || basedonmri
   cfg = ft_checkconfig(cfg, 'required', {'tissue', 'numvertices'});
-  if numel(cfg.tissue)>1 && numel(cfg.numvertices)==1
-    cfg.numvertices = repmat(cfg.numvertices, size(cfg.tissue));
-  elseif numel(cfg.tissue)~=numel(cfg.numvertices)
-    error('you should specify the number of vertices for each tissue type');
-  end
 end
 
 if (basedonseg || basedonmri) && cfg.downsample~=1
