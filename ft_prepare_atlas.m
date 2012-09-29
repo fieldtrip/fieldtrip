@@ -566,7 +566,7 @@ if useafni
     };
   
 elseif usewfu
-  atlas = ft_read_mri(cfg.atlas); % /home/... works, ~/.... does not work
+  atlas = ft_read_mri(cfg.atlas);
   atlas.brick0 = atlas.anatomy(:,:,:);
   atlas = rmfield(atlas, 'anatomy');
   atlas.coord = 'mni';

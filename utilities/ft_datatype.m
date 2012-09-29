@@ -148,9 +148,17 @@ if ~isfield(source, 'pos')
   return
 end
 
-if any(isfield(source, {'seg', 'csf', 'white', 'gray', 'skull', 'scalp', 'brain'}))
+fn = fieldnames(source);
+fb = false(size(fn)); 
+npos = size(source.pos,1);
+for i=1:numel(fn)
+  % for each of the fields check whether it might be a logical array with the size of the number of sources
+  tmp = source.(fn{i});
+  fb(i) = numel(tmp)==npos && islogical(tmp);
+end
+if sum(fb)>1
+  % the presence of multiple logical arrays suggests it is a parcellation
   res = true;
-  return
 end
 
 fn = fieldnames(source);

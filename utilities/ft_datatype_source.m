@@ -1,9 +1,8 @@
 function source = ft_datatype_source(source, varargin)
 
-% FT_DATATYPE_SOURCE describes the FieldTrip MATLAB structure for source data
-%
-% The source datatype represents source-level data typically obtained after
-% calling FT_SOURCEANALYSIS.
+% FT_DATATYPE_SOURCE describes the FieldTrip MATLAB structure for data that is
+% represented at the source level. This is typically obtained with a beamformer of
+% minimum-norm source reconstruction using FT_SOURCEANALYSIS.
 %
 % An example of a source structure obtained after performing DICS (a frequency
 % domain beamformer scanning method) is shown here

@@ -101,10 +101,11 @@ switch version
     if isfield(volume, 'anatomy')
       volume.anatomy(~isfinite(volume.anatomy)) = 0;
     end
+    
   case '2012'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % THIS ONE DOES NOT SEEM TO HAVE EVER BEEN USED. HOWEVER, KEEP IT FOR DOCUMENTATION
-    % PURPOSES
+    % THIS ONE DOES NOT SEEM TO HAVE EVER BEEN USED 
+    % HOWEVER, KEEP IT FOR DOCUMENTATION PURPOSES
    
     if isfield(volume, 'dimord')
       volume = rmfield(volume, 'dimord');
