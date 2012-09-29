@@ -76,7 +76,7 @@ if ~isfield(data, 'dimord')
     df = fn(sel);
     
     if isempty(df)
-      if ft_datatype(data, 'source')
+      if ft_datatype(data, 'source') || ft_datatype(data, 'parcellation')
         % it is old-style source data -> this is ok
         % ft_checkdata will convert it to new-style
         return

@@ -15,7 +15,7 @@ function [data] = ft_checkdata(data, varargin)
 %
 % Optional input arguments should be specified as key-value pairs and can include
 %   feedback           = yes, no
-%   datatype           = raw, freq, timelock, comp, spike, source, volume, segmentation, dip, parcellation
+%   datatype           = raw, freq, timelock, comp, spike, source,  dip, volume, segmentation, parcellation
 %   dimord             = any combination of time, freq, chan, refchan, rpt, subj, chancmb, rpttap, pos
 %   senstype           = ctf151, ctf275, ctf151_planar, ctf275_planar, neuromag122, neuromag306, bti148, bti248, bti248_planar, magnetometer, electrode
 %   inside             = logical, index
@@ -28,14 +28,15 @@ function [data] = ft_checkdata(data, varargin)
 %   hasdof             = yes, no
 %   cmbrepresentation  = sparse, full (applies to covariance and cross-spectral density)
 %   fsample            = sampling frequency to use to go from SPIKE to RAW representation
-%   segmentationstyle  = indexed, probabilistic (applies to segmentation and parcellation)
+%   segmentationstyle  = indexed, probabilistic (only applies to segmentation)
+%   parcellationstyle  = indexed, probabilistic (only applies to parcellation)
 %   hasbrain           = yes, no (only applies to segmentation)
 %
 % For some options you can specify multiple values, e.g.
 %   [data] = ft_checkdata(data, 'senstype', {'ctf151', 'ctf275'}), e.g. in megrealign
 %   [data] = ft_checkdata(data, 'datatype', {'timelock', 'freq'}), e.g. in sourceanalysis
 
-% Copyright (C) 2007-2009, Robert Oostenveld
+% Copyright (C) 2007-2012, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -100,7 +101,8 @@ channelcmb           = ft_getopt(varargin, 'channelcmb');
 sourcedimord         = ft_getopt(varargin, 'sourcedimord');
 sourcerepresentation = ft_getopt(varargin, 'sourcerepresentation');
 fsample              = ft_getopt(varargin, 'fsample');
-segmentationstyle    = ft_getopt(varargin, 'segmentationstyle');
+segmentationstyle    = ft_getopt(varargin, 'segmentationstyle'); % this will be passed on to the corresponding ft_datatype_xxx function
+parcellationstyle    = ft_getopt(varargin, 'parcellationstyle'); % this will be passed on to the corresponding ft_datatype_xxx function
 hasbrain             = ft_getopt(varargin, 'hasbrain');
 
 % check whether people are using deprecated stuff
@@ -198,7 +200,7 @@ elseif isvolume
 elseif issegmentation
   data = ft_datatype_segmentation(data, 'segmentationstyle', segmentationstyle, 'hasbrain', hasbrain);
 elseif isparcellation
-  data = ft_datatype_parcellation(data, 'segmentationstyle', segmentationstyle);
+  data = ft_datatype_parcellation(data, 'parcellationstyle', parcellationstyle);
 elseif issource
   data = ft_datatype_source(data);
 elseif isdip
