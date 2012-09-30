@@ -31,7 +31,7 @@ for i=1:length(D)
   if ~bf
     fprintf('added %s.html\n',nme);
     cd(d);
-    system(sprintf('git add %s.html',d,nme));
+    system(sprintf('git add %s.html',nme));
     cd(ds);
   end
 end
