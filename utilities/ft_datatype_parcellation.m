@@ -78,6 +78,8 @@ function parcellation = ft_datatype_parcellation(parcellation, varargin)
 %
 % $Id: ft_checkdata.m 6575 2012-09-28 10:54:59Z roboos $
 
+try
+
 % get the optional input arguments, which should be specified as key-value pairs
 version           = ft_getopt(varargin, 'version', 'latest');
 parcellationstyle = ft_getopt(varargin, 'parcellationstyle');   % can be indexed or probabilistic
@@ -155,3 +157,8 @@ parcellation = ft_datatype_source(parcellation, 'version', sourceversion);
 % the fields that are specific for the parcellation and add them later again.
 % At this moment ft_datatype_volume nicely passes all fields, so there is no
 % special handling of the parcellation fields needed.
+
+catch
+  % this is a temporary fix for http://bugzilla.fcdonders.nl/show_bug.cgi?id=1755
+end
+
