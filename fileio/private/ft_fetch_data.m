@@ -28,21 +28,23 @@ function [dat] = ft_fetch_data(data, varargin)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
-    
+
 % check whether input is data
 data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
-    
+
 % get the options
 hdr           = ft_getopt(varargin, 'header');
 begsample     = ft_getopt(varargin, 'begsample');
 endsample     = ft_getopt(varargin, 'endsample');
 chanindx      = ft_getopt(varargin, 'chanindx');
-allowoverlap  = ft_getopt(varargin, 'allowoverlap');
-    
+allowoverlap  = ft_getopt(varargin, 'allowoverlap', false);
+
+allowoverlap = istrue(allowoverlap);
+
 if isempty(hdr)
   hdr = ft_fetch_header(data);
 end
-    
+
 if isempty(begsample) || isempty(endsample)
   error('begsample and endsample must be specified');
 end
@@ -53,14 +55,14 @@ end
 
 % get trial definition according to original data file
 if isfield(data, 'sampleinfo')
-  trl    = data.sampleinfo;
+  trl = data.sampleinfo;
 else
   error('data does not contain a consistent trial definition, fetching data is not possible');
 end
 trlnum = length(data.trial);
 
 if trlnum>1,
-  % original implementation 
+  % original implementation
   
   trllen = zeros(trlnum,1);
   for trllop=1:trlnum
@@ -81,7 +83,7 @@ if trlnum>1,
   end
   
   % these are for bookkeeping
-  maxsample = max([trl(:,2); endsample]); 
+  maxsample = max([trl(:,2); endsample]);
   count     = zeros(1, maxsample, 'int32');
   trialnum  = zeros(1, maxsample, 'int32');
   samplenum = zeros(1, maxsample, 'int32');
@@ -91,92 +93,75 @@ if trlnum>1,
     trlbeg = trl(trllop,1);
     trlend = trl(trllop,2);
     if trlbeg>endsample || trlend<begsample
-      % this piece of data is not interesting because it falls outside the requested range
-      % skip it to speed up the indexing of the trial and sample numbers
-      continue
+      % skip this piece, it is not interesting because the requested range falls completely outside
+    else
+      % make vector with 0= no sample of old data, 1= one sample of old data, 2= two samples of old data, etc
+      count(trlbeg:trlend) = count(trlbeg:trlend) + 1;
+      % make vector with 1's if samples belong to trial 1, 2's if samples belong to trial 2 etc. overlap/ no data --> Nan
+      trialnum(trlbeg:trlend) = trllop;
+      % make samplenum vector with samplenrs for each sample in the old trials
+      samplenum(trlbeg:trlend) = 1:trllen(trllop);
     end
-    if trlbeg <= begsample && trlend >= endsample 
-        % all data is in this trial!
-        % get the indices of the current trial and break the loop
-        trlidx = trllop;
-        begindx = begsample - trl(trlidx) + 1;
-        endindx = endsample - trl(trlidx) + 1;         
-        break;
-    end
-    % make vector with 0= no sample of old data, 1= one sample of old data, 2= two samples of old data, etc
-    count(trlbeg:trlend) = count(trlbeg:trlend) + 1;
-    % make vector with 1's if samples belong to trial 1, 2's if samples belong to trial 2 etc. overlap/ no data --> Nan
-    trialnum(trlbeg:trlend) = trllop;
-    % make samplenum vector with samplenrs for each sample in the old trials
-    samplenum(trlbeg:trlend) = 1:trllen(trllop);
   end
   
-  if exist('trlidx', 'var') && exist('begindx', 'var') && exist('endindx', 'var')
-    % fetch the data and return
-    dat = data.trial{trlidx}(chanindx,begindx:endindx);
-    clear count trialnum samplenum;
-  else
-      % overlap --> NaN
-      %trialnum(count>1)  = NaN;
-      %samplenum(count>1) = NaN;
-
-      % make a subselection for the desired samples
-      count     = count(begsample:endsample);
-      trialnum  = trialnum(begsample:endsample);
-      samplenum = samplenum(begsample:endsample);
-
-      % check if all samples are present and are not present twice or more
-      if any(count==0)
-%         warning('not all requested samples are present in the data, filling with NaNs');
-        % prealloc with NaNs
-        dat = NaN(numel(chanindx),endsample-begsample+1);
-      elseif any(count>1)
-        if ~allowoverlap
-          error('some of the requested samples occur twice in the data');
-        else
-          warnign('samples present in multiple trials, using only the last occurence of each sample')
-        end
-      end
-
-      % construct the output data array
-      %dat = nan(length(chanindx), length(samplenum));
-      %for smplop=1:length(samplenum)
-      %  if samplenum(smplop)==0
-      %   dat(:, smplop) = nan; 
-      %  else
-      %   dat(:, smplop) = data.trial{trialnum(smplop)}(chanindx,samplenum(smplop)); 
-      %  end
-      %end
-
-      % the following piece of code achieves the same as the commented code above,
-      % but much smaller. rather than looping over samples it loops over the blocks
-      % of samples defined by the original trials
-
-      
-      utrl = unique(trialnum);
-      utrl(~isfinite(utrl)) = 0;
-      utrl(utrl==0) = [];
-      if length(utrl)==1,
-        ok   = trialnum==utrl;
-        smps = samplenum(ok);
-        dat(:,ok) = data.trial{utrl}(chanindx,smps);
-      else
-        for xlop=1:length(utrl)
-          ok   = trialnum==utrl(xlop);
-          smps = samplenum(ok);
-          dat(:,ok) = data.trial{utrl(xlop)}(chanindx,smps);
-        end
-      end
+  % overlap --> NaN
+  % trialnum(count>1)  = NaN;
+  % samplenum(count>1) = NaN;
+  
+  % make a subselection for the desired samples
+  count     = count(begsample:endsample);
+  trialnum  = trialnum(begsample:endsample);
+  samplenum = samplenum(begsample:endsample);
+  
+  % check if all samples are present and are not present twice or more
+  if any(count==0)
+    % warning('not all requested samples are present in the data, filling with NaNs');
+    % prealloc with NaNs
+    dat = NaN(numel(chanindx),endsample-begsample+1);
+  elseif any(count>1)
+    if ~allowoverlap
+      error('some of the requested samples occur twice in the data');
+    else
+      warning('samples present in multiple trials, using only the last occurence of each sample')
+    end
   end
+  
+  % construct the output data array
+  % dat = nan(length(chanindx), length(samplenum));
+  % for smplop=1:length(samplenum)
+  %   if samplenum(smplop)==0
+  %    dat(:, smplop) = nan;
+  %   else
+  %    dat(:, smplop) = data.trial{trialnum(smplop)}(chanindx,samplenum(smplop));
+  %   end
+  % end
+  
+  % the following piece of code achieves the same as the commented code above,
+  % but much smaller. rather than looping over samples it loops over the blocks
+  % of samples defined by the original trials
+  
+  utrl = unique(trialnum);
+  utrl(~isfinite(utrl)) = 0;
+  utrl(utrl==0) = [];
+  if length(utrl)==1,
+    ok   = trialnum==utrl;
+    smps = samplenum(ok);
+    dat(:,ok) = data.trial{utrl}(chanindx,smps);
+  else
+    for xlop=1:length(utrl)
+      ok   = trialnum==utrl(xlop);
+      smps = samplenum(ok);
+      dat(:,ok) = data.trial{utrl(xlop)}(chanindx,smps);
+    end
+  end
+  
 else
-  % only 1 trial present in the input data, so it's quite simple
-  % and can be done fast
+  % only one trial is present in the input data, so it's quite simple and can be done much faster
   
   % check whether the requested samples are present in the input
   if endsample>trl(2) || begsample<trl(1)
-    %         warning('not all requested samples are present in the data, filling with NaNs');
+    % warning('not all requested samples are present in the data, filling with NaNs');
   end
-
   
   % get the indices
   begindx  = begsample - trl(1) + 1;
@@ -185,18 +170,19 @@ else
   tmptrl = trl([1 2]) - [trl(1) trl(1)]+1; % ignore offset in case it's present
   dat = nan(numel(chanindx), endsample-begsample+1);
   
-  
   datbegindx = max(1,                     trl(1)-begsample+1);
   datendindx = min(endsample-begsample+1, trl(2)-begsample+1);
   
   if begsample >= trl(1) && begsample <= trl(2)
     if endsample >= trl(1) && endsample <= trl(2)
-      dat(:,datbegindx:datendindx) = data.trial{1}(chanindx,begindx:endindx); 
+      dat(:,datbegindx:datendindx) = data.trial{1}(chanindx,begindx:endindx);
     else
-      dat(:, datbegindx:datendindx) = data.trial{1}(chanindx,begindx:tmptrl(2)); 
+      dat(:, datbegindx:datendindx) = data.trial{1}(chanindx,begindx:tmptrl(2));
     end
-  elseif endsample >= trl(1) && endsample <= trl(2)   
-      dat(:, datbegindx:datendindx) = data.trial{1}(chanindx,tmptrl(1):endindx); 
-  end  
-end
+  elseif endsample >= trl(1) && endsample <= trl(2)
+    dat(:, datbegindx:datendindx) = data.trial{1}(chanindx,tmptrl(1):endindx);
+  end
+  
+end % if trlnum is multiple or one
+
 
