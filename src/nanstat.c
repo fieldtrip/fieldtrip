@@ -1,6 +1,6 @@
 #include "nanstat.h"
 
-#define log(x) ()  /* Disable logging for now. */
+#define log() /* Disable logging for now. */
 
 /* Helper function to find linearized distance between elements on a given
  * dimension of a multidimensional array. Lower indices are close in memory
