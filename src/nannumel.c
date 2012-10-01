@@ -1,4 +1,4 @@
-#include "nanstat.h"
+#include "nanaccum.h"
 
 /* What is C a horrible language. To hoops we have to get through to make this
  * work for different data types... Since overloading does not work, we
@@ -22,4 +22,4 @@ nanstat_template(int16_T); nanstat_template(uint16_T);
 nanstat_template(int32_T); nanstat_template(uint32_T);
 nanstat_template(int64_T); nanstat_template(uint64_T);
 
-#include "nanstat.c" /* takes care of generic nan-handling of arrays :D. */
+#include "nanaccum.c" /* takes care of generic nan-handling of arrays :D. */
