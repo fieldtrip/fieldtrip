@@ -94,6 +94,12 @@ assertElementsAlmostEqual(nanmean(X, 2), [1, 4, 4]');
 assertElementsAlmostEqual(nanmean(X, 3), X);
 assertElementsAlmostEqual(nanmean(X * NaN), [NaN, NaN, NaN])
 
+% Test higher order dimensions:
+X = randn(2, 3, 5, 7);
+for dim = 1:4
+  assertElementsAlmostEqual(nanmean(X, dim), mean(X, dim));
+end
+
 
 function test_nanvar
 X = magic(3);

@@ -1,5 +1,7 @@
 #include "nanstat.h"
 
+#define log(x) ()  /* Disable logging for now. */
+
 /* Helper function to find linearized distance between elements on a given
  * dimension of a multidimensional array. Lower indices are close in memory
  * (column-major or FORTRAN/MATLAB order: */
@@ -71,6 +73,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     default:
       mexErrMsgTxt("Too many input arguments!");
   }
+  log("Handled input. Squashing C-dim %d.\n", squash_dim);
 
   /* Create output array Y: */
   size_Y = mxMalloc(ndim(X) * sizeof(size_Y));
@@ -90,9 +93,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       ndim(X), size_Y, mxDOUBLE_CLASS, mxGetImagData(X) != NULL);
   }
 
+  log("Created output array.\n");
+
   /* Prepare variables for linear indexing: */
   index = (mwSize *) mxMalloc(ndim(X) * sizeof(mwSize));
   stride_x = stride(squash_dim, ndim(X), size(X));
+
+  log("stride_x = %d.\n", stride_x);
       
   /* MATLAB's nansum supports out-of-range dims to operate on. */
   /* Find the number of elements in our squashed dimension: */
@@ -101,6 +108,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   else
     squash_len = size(X)[squash_dim];
 
+  log("squash len = %d.\n", squash_len);
   {
     void *src = mxGetData(X), *src_imag = mxGetImagData(X);
     double *dest = mxGetData(Y), *dest_imag = mxGetImagData(Y);
@@ -108,10 +116,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     for (i = 0; i < mxGetNumberOfElements(Y); ++i) {
       /* For each element in the output array, do: */
 
-      /* Transform the element number in an index in Y, */
-      offset_to_index(i, ndim(Y), size(Y), index);
-      /* and map this index back to an offset in X: */
+      /* Transform the element number in an index in Y. Please not that size()
+       * uses mxGetNumberOfDimensions(), which *ignores trailing singleton
+       * dimensions*. In that case, this elegant conversion does not work
+       * anymore. But, since we know that ndim(Y) == ndim(X), we use that
+       * instead:*/
+      offset_to_index(i, ndim(X), size(Y), index);
+
+      /* And map this index back to an offset in X: */
       j = index_to_offset(ndim(X), index, size(X));
+      log("i=%d, starting at index %d...\n", i, j);
       
       switch (classid) {
         /* Oh, the fucking horror of dumb, statically typed languages... */
@@ -185,6 +199,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
   }
 
-  mxFree(index);
-  mxFree(size_Y);
+  if(index) mxFree(index);
+  if(size_Y) mxFree(size_Y);
 }
