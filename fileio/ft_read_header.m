@@ -755,7 +755,6 @@ switch headerformat
     nChans = zeros(length(orig.signal),1);
     nSamples = zeros(length(orig.signal),1);
     for iSig = 1:length(orig.signal)
-q
       Fs(iSig)      = orig.signal(iSig).blockhdr(1).fsample(1);
       nChans(iSig)  = orig.signal(iSig).blockhdr(1).nsignals;
       % the number of samples per block can be different
