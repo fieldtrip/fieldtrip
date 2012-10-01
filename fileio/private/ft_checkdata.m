@@ -37,6 +37,7 @@ function [data] = ft_checkdata(data, varargin)
 %   [data] = ft_checkdata(data, 'datatype', {'timelock', 'freq'}), e.g. in sourceanalysis
 
 % Copyright (C) 2007-2012, Robert Oostenveld
+% Copyright (C) 2010-2012, Martin Vinck
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -1814,15 +1815,14 @@ data.time   = 0;
 % convert between datatypes
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [spike] = raw2spike(data)
-
-% Copyright (C) 2010, Martin Vinck
-
 fprintf('converting raw data into spike data\n');
-nTrials 	   = length(data.trial);
+nTrials 	 = length(data.trial);
 [spikelabel] = detectspikechan(data);
 spikesel     = match_str(data.label, spikelabel);
 nUnits       = length(spikesel);
-if nUnits==0, error('cannot convert raw data to spike format since the raw data structure does not contain spike channels'), end
+if nUnits==0
+   error('cannot convert raw data to spike format since the raw data structure does not contain spike channels');
+end
 
 trialTimes  = zeros(nTrials,2);
 for iUnit = 1:nUnits
@@ -1876,40 +1876,31 @@ eeglabel   = data.label(~spikechan);
 
 %%%%%%%%%% SUB FUNCTION %%%%%%%%%%
 function [spikeTimes] = getspiketimes(data,trial,unit)
-
 spikeIndx       = logical(data.trial{trial}(unit,:));
 spikeCount      = data.trial{trial}(unit,spikeIndx);
 spikeTimes      = data.time{trial}(spikeIndx);
 if isempty(spikeTimes), return; end
 multiSpikes     = find(spikeCount>1);
-
 % get the additional samples and spike times, we need only loop through the bins
 [addSamples, addTimes]   = deal([]);
 for iBin = multiSpikes(:)' % looping over row vector
   addTimes     = [addTimes ones(1,spikeCount(iBin))*spikeTimes(iBin)];
   addSamples   = [addSamples ones(1,spikeCount(iBin))*spikeIndx(iBin)];
 end
-
 % before adding these times, first remove the old ones
 spikeTimes(multiSpikes) = [];
 spikeTimes              = sort([spikeTimes(:); addTimes(:)]);
 
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% convert between datatypes
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [data] = spike2raw(spike,fsample)
 
-% SPIKE2RAW converts a point representation SPIKE
-% structure to a continuous representation DATA structure.
-%
-% Use as
-%   [data] = ft_spike2raw(spike,fsample)
-%
-% Inputs:
-%   Data is a standard RAW structure.
-%
-%   fsample is the sampling rate for the continuous representation in RAW
-%
-
-% Copyright (C) 2010, Martin Vinck
+if nargin<2 || isempty(fsample) 
+   timeDiff=abs(diff(sort([spike.time{:}])));
+   fsample=1/min(timeDiff(timeDiff>0));
+   warning('Desired sampling rate for spike data not specified, automatically resampled to %f', fsample);
+end
 
 % get some sizes
 nUnits  = length(spike.label);
