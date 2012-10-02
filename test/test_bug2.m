@@ -34,9 +34,16 @@ cfg.toi = 0:0.1:1;
 cfg.output = 'fourier';
 freq3 = ft_freqanalysis(cfg, data);
 
+% compared to the time when the bug was initially filed, ft_megplanar has been
+% updated and now requires an explicit specification of cfg.neighbours
+cfg = [];
+cfg.method = 'template';
+neighbours = ft_prepare_neighbours(cfg, data);
+
 % convert to planar representation
 cfg = [];
+cfg.neighbours = neighbours;
 dataP  = ft_megplanar(cfg, data);
 freq1P = ft_megplanar(cfg, freq1);
 freq2P = ft_megplanar(cfg, freq2);
-%
+
