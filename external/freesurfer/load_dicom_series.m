@@ -75,7 +75,7 @@ nth = 1;
 fprintf('INFO: searching files for dicom, series %d\n',seriesno);
 tic;
 for n = 1:nfiles
-  if(n==1 | rem(n,20)==0) fprintf('n = %4d, t = %g\n',n,toc); end
+  %if(n==1 | rem(n,20)==0) fprintf('n = %4d, t = %g\n',n,toc); end
   pathname = sprintf('%s/%s',dcmdir,flist(n).name);
   [isdcm dcminfo] = isdicomfile(pathname);
   if(isdcm)

@@ -5,4 +5,13 @@ FieldTrip and the files as they are created by Freesurfer.
 
 The current files are taken from version 4.5.0 (64 bit). Comparing against version 4.3.0 (32 bit) yielded no differences of relevance.
 
-isdicomfile, load_dicom_fl, load_dicom_series load_nifti, load_mgh and read_annotation are taken from version 5.1
+The following files are copied from freesurfer version 5.1:
+isdicomfile.m
+load_dicom_fl.m
+load_dicom_series.m
+load_nifti.m
+load_mgh.m
+read_annotation.m
+Simple_surface_labels2009.txt
+colortable_desikan_killiany.txt
+colortable_BA.txt
