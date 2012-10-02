@@ -1003,10 +1003,6 @@ elseif filetype_check_header(filename, 26)
   type = 'nimh_cortex';
   manufacturer = 'NIMH Laboratory of Neuropsychology, http://www.cortex.salk.edu';
   content = 'events and eye channels';
-elseif filetype_check_extension(filename, '.gii') && filetype_check_header(filename, '<?xml')
-  type = 'gifti';
-  manufacturer = 'Neuroimaging Informatics Technology Initiative';
-  content = 'tesselated surface description';
 elseif filetype_check_extension(filename, '.foci') && filetype_check_header(filename, '<?xml')
   type = 'caret_foci';
   manufacturer = 'Caret and ConnectomeWB';
@@ -1016,6 +1012,28 @@ elseif filetype_check_extension(filename, '.border') && filetype_check_header(fi
 elseif filetype_check_extension(filename, '.spec') && filetype_check_header(filename, '<?xml')
   type = 'caret_spec';
   manufacturer = 'Caret and ConnectomeWB';
+elseif filetype_check_extension(filename, '.gii') && ~isempty(strfind(filename, '.coord.')) && filetype_check_header(filename, '<?xml')
+  type = 'caret_coord';
+  manufacturer = 'Caret and ConnectomeWB';
+elseif filetype_check_extension(filename, '.gii') && ~isempty(strfind(filename, '.topo.')) && filetype_check_header(filename, '<?xml')
+  type = 'caret_topo';
+  manufacturer = 'Caret and ConnectomeWB';
+elseif filetype_check_extension(filename, '.gii') && ~isempty(strfind(filename, '.surf.')) && filetype_check_header(filename, '<?xml')
+  type = 'caret_surf';
+  manufacturer = 'Caret and ConnectomeWB';
+elseif filetype_check_extension(filename, '.gii') && ~isempty(strfind(filename, '.label.')) && filetype_check_header(filename, '<?xml')
+  type = 'caret_label';
+  manufacturer = 'Caret and ConnectomeWB';
+elseif filetype_check_extension(filename, '.gii') && ~isempty(strfind(filename, '.func.')) && filetype_check_header(filename, '<?xml')
+  type = 'caret_func';
+  manufacturer = 'Caret and ConnectomeWB';
+elseif filetype_check_extension(filename, '.gii') && ~isempty(strfind(filename, '.shape.')) && filetype_check_header(filename, '<?xml')
+  type = 'caret_shape';
+  manufacturer = 'Caret and ConnectomeWB';
+elseif filetype_check_extension(filename, '.gii') && filetype_check_header(filename, '<?xml')
+  type = 'gifti';
+  manufacturer = 'Neuroimaging Informatics Technology Initiative';
+  content = 'tesselated surface description';
 elseif filetype_check_extension(filename, '.v')
   type = 'vista'; 
   manufacturer = 'University of British Columbia, Canada, http://www.cs.ubc.ca/nest/lci/vista/vista.html';
