@@ -38,7 +38,7 @@ for i=2:length(varargin)
   if ~ok, error('input data should be of the same datatype'); end
 end
 
-cfg=ft_checkconfig(cfg,'renamed',{'toilim' 'latency'});
+cfg = ft_checkconfig(cfg, 'renamed', {'toilim' 'latency'});
 
 if strcmp(dtype, 'raw')
   
@@ -61,6 +61,11 @@ else
   hastime   = isfield(varargin{1}, 'time');
   hasfreq   = isfield(varargin{1}, 'freq');
   hasdimord = ~all(cellfun(@isempty, regexp(fieldnames(varargin{1}), '.*dimord')));
+  
+  avgoverchan = istrue(ft_getopt(cfg, 'avgoverchan', false));
+  avgoverfreq = istrue(ft_getopt(cfg, 'avgoverfreq', false));
+  avgovertime = istrue(ft_getopt(cfg, 'avgovertime', false));
+  avgoverrpt  = istrue(ft_getopt(cfg, 'avgoverrpt',  false));
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % PART 2:
@@ -171,26 +176,26 @@ else
         [seltime, cfg] = getselection_time(cfg, varargin{i});
         [selrpt,  cfg] = getselection_rpt (cfg, varargin{i}, 'datfields', datfields);
       end % varargin
+      
       for i=1:numel(varargin)
         % get the selection from all inputs
         [selchan, cfg] = getselection_chan(cfg, varargin{i});
         [seltime, cfg] = getselection_time(cfg, varargin{i});
-        [selrpt,  cfg] = getselection_rpt (cfg, varargin{i});
-        if ~isnan(selchan)
-          varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'chan')), selchan, datfields);
-          varargin{i}.label = varargin{i}.label(selchan);
-        end
-        if ~isnan(seltime)
-          varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'time')), seltime, datfields);
-          varargin{i}.time  = varargin{i}.time(seltime);
-        end
-        if ~isnan(selrpt)
-          keyboard
-          varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'rpt')), selrpt, datfields);
-          varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'rpt')), selrpt, datfields);
-          varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'rpt')), selrpt, datfields);
+        [selrpt,  cfg] = getselection_rpt (cfg, varargin{i}, 'datfields', datfields);
+        
+        varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'chan')), selchan, avgoverchan, datfields);
+        varargin{i} = makeselection_chan(varargin{i}, selchan, avgoverchan); % update the label field
+        
+        varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'time')), seltime, avgovertime, datfields);
+        varargin{i} = makeselection_time(varargin{i}, seltime, avgovertime); % update the time field
+        
+        if ~any(isnan(selrpt))
+          % FIXME could also be subject
+          varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'rpt')), selrpt, avgoverrpt, datfields);
         end
       end % varargin
+      
+      
       
     case 'freq'
       for i=1:numel(varargin)
@@ -201,7 +206,32 @@ else
           [seltime, cfg] = getselection_time(cfg, varargin{i});
         end
       end % varargin
-      keyboard
+      
+      for i=1:numel(varargin)
+        % get the selection from all inputs
+        [selchan, cfg] = getselection_chan(cfg, varargin{i});
+        [selfreq, cfg] = getselection_freq(cfg, varargin{i});
+        [selrpt,  cfg] = getselection_rpt (cfg, varargin{i});
+        if hastime
+          [seltime, cfg] = getselection_time(cfg, varargin{i});
+        end
+        
+        varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'chan')), selchan, avgoverchan, datfields);
+        varargin{i} = makeselection_chan(varargin{i}, selchan, avgoverchan); % update the label field
+        
+        varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'freq')), selfreq, avgoverfreq, datfields);
+        varargin{i} = makeselection_freq(varargin{i}, selfreq, avgoverfreq); % update the freq field
+        
+        if ~any(isnan(selrpt))
+          % FIXME could also be rpttap
+          varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'rpt')), selfreq, avgoverrpt, datfields);
+        end
+        
+        if hastime
+          varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'time')), seltime, avgovertime, datfields);
+          varargin{i} = makeselection_time(varargin{i}, seltime, avgovertime); % update the time field
+        end
+      end % varargin
       
     case 'comp'
       for i=1:numel(varargin)
@@ -245,13 +275,30 @@ else
       for j=1:numel(seldim)
         seldim(j) = feval(['getselection_' dimtok{j}], cfg, varargin{i});
       end
-  end
+  end % switch dtype
   
+  % update the dimord
+  if avgovertime
+    dimtok = setdiff(dimtok, 'time');
+  end
+  if avgoverfreq
+    dimtok = setdiff(dimtok, 'freq');
+  end
+  if avgoverrpt
+    % FIXME could also be rpttap or subject
+    dimtok = setdiff(dimtok, 'rpt');
+  end
+  for i=1:numel(varargin)
+    varargin{i}.dimord = sprintf('%s_', dimtok{:});
+    varargin{i}.dimord = varargin{i}.dimord(1:end-1);  % remove the last '_'
+  end
+
   % remove all fields from the data that do not pertain to the selection
   for i=1:numel(varargin)
-    varargin{i} = keepfields(varargin{i}, [datfields dimfields {'cfg'}]);
+    varargin{i} = keepfields(varargin{i}, [datfields dimfields {'cfg' 'grad'}]);
   end
-end
+  
+end % if raw or something else
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % PART 3:
@@ -272,7 +319,6 @@ end % function ft_selectdata
 % SUBFUNCTIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [data] = keepfields(data, fn)
-
 fn = setdiff(fieldnames(data), fn);
 for i=1:numel(fn)
   data = rmfield(data, fn{i});
@@ -280,7 +326,7 @@ end
 
 end % function keepfields
 
-function [data] = makeselection(data, seldim, selindx, datfields)
+function data = makeselection(data, seldim, selindx, avgoverdim, datfields)
 
 if numel(seldim) > 1
   for k = 1:numel(seldim)
@@ -289,25 +335,60 @@ if numel(seldim) > 1
 end
 
 for i=1:numel(datfields)
-  switch seldim
-    case 1
-      data.(datfields{i}) = data.(datfields{i})(selindx,:,:,:,:,:);
-    case 2
-      data.(datfields{i}) = data.(datfields{i})(:,selindx,:,:,:,:);
-    case 3
-      data.(datfields{i}) = data.(datfields{i})(:,:,selindx,:,:,:);
-    case 4
-      data.(datfields{i}) = data.(datfields{i})(:,:,:,selindx,:,:);
-    case 5
-      data.(datfields{i}) = data.(datfields{i})(:,:,:,:,selindx,:);
-    case 6
-      data.(datfields{i}) = data.(datfields{i})(:,:,:,:,:,selindx);
-    otherwise
-      error('unsupported dimension (%d) for making a selection for %s', seldim, datfields{i});
-  end % switch
+  if ~isnan(selindx)
+    % the value NaN indicates that it is not needed to make a selection, rather take all values
+    switch seldim
+      case 1
+        data.(datfields{i}) = data.(datfields{i})(selindx,:,:,:,:,:);
+      case 2
+        data.(datfields{i}) = data.(datfields{i})(:,selindx,:,:,:,:);
+      case 3
+        data.(datfields{i}) = data.(datfields{i})(:,:,selindx,:,:,:);
+      case 4
+        data.(datfields{i}) = data.(datfields{i})(:,:,:,selindx,:,:);
+      case 5
+        data.(datfields{i}) = data.(datfields{i})(:,:,:,:,selindx,:);
+      case 6
+        data.(datfields{i}) = data.(datfields{i})(:,:,:,:,:,selindx);
+      otherwise
+        error('unsupported dimension (%d) for making a selection for %s', seldim, datfields{i});
+    end % switch
+  end
+  if avgoverdim
+    data.(datfields{i}) = mean(data.(datfields{i}), seldim);
+  end
 end % for datfields
 
+
 end % function makeselection
+
+function data = makeselection_chan(data, selchan, avgoverchan)
+if avgoverchan && all(isnan(selchan))
+  data.label = sprintf('%s+', data.label{:});        % concatenate all channel labels
+  data.label = data.label(1:end-1);                  % remove the last '+'
+elseif avgoverchan && ~any(isnan(selchan))
+  data.label = sprintf('%s+', data.label{selchan});  % concatenate all channel labels
+  data.label = data.label(1:end-1);                  % remove the last '+'
+elseif ~isnan(selchan)
+  data.label = data.label(selchan);
+end
+end % function makeselection_chan
+
+function data = makeselection_freq(data, selfreq, avgoverfreq)
+if avgoverfreq
+  data = rmfield(data, 'freq');
+elseif ~isnan(selfreq)
+  data.freq  = data.time(selfreq);
+end
+end % function makeselection_freq
+
+function data = makeselection_time(data, seltime, avgovertime)
+if avgovertime
+  data = rmfield(data, 'time');
+elseif ~isnan(seltime)
+  data.time  = data.time(seltime);
+end
+end % function makeselection_time
 
 function [chanindx, cfg] = getselection_chan(cfg, data)
 
@@ -414,8 +495,8 @@ if isfield(cfg, 'frequency')
     if all(cfg.frequency<minfreq) || all(cfg.frequency>maxfreq)
       error('the selected range falls outside the time axis in the data');
     end
-    fbeg = nearest(data.freq, cfg.latency(1), false, false);
-    fend = nearest(data.freq, cfg.latency(2), false, false);
+    fbeg = nearest(data.freq, cfg.frequency(1), false, false);
+    fend = nearest(data.freq, cfg.frequency(2), false, false);
     cfg.frequency = data.freq([fbeg fend]);
     freqindx = fbeg:fend;
   elseif size(cfg.frequency,2)==2
@@ -426,7 +507,7 @@ if isfield(cfg, 'frequency')
 end % if cfg.frequency
 
 if isfield(cfg, 'foilim')
-  if numel(cfg.foilim)==2
+  if ~ischar(cfg.foilim) && numel(cfg.foilim)==2
     % the [min max] range can be specifed with +inf or -inf, but should
     % at least partially overlap with the time axis of the input data
     minfreq = min(data.freq);
@@ -491,7 +572,6 @@ else
 end % if isfield cfg.trials
 
 end % function getselection_rpt
-
 
 function ok = isequalwithoutnans(a, b)
 if numel(a)~=numel(b)
