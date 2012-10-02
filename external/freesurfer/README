@@ -12,6 +12,7 @@ load_dicom_series.m
 load_nifti.m
 load_mgh.m
 read_annotation.m
+read_fscolorlut.m
 Simple_surface_labels2009.txt
 colortable_desikan_killiany.txt
 colortable_BA.txt
