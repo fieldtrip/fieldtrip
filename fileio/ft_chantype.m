@@ -228,7 +228,7 @@ elseif ft_senstype(input, 'ctf') && isgrad
   % in principle it is possible to look at the number of coils, but here the channels are identified based on their name
   sel = myregexp('^M[ZLR][A-Z][0-9][0-9]$', grad.label);
   type(sel) = {'meggrad'};            % normal gradiometer channels
-  sel = myregexp('^B[GPR][0-9]$', grad.label);
+  sel = myregexp('^B[GPQR][0-9]$', grad.label);
   type(sel) = {'refmag'};             % reference magnetometers
   sel = myregexp('^[GPQR][0-9][0-9]$', grad.label);
   type(sel) = {'refgrad'};            % reference gradiometers
