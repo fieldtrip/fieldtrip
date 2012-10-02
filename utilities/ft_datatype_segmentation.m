@@ -161,9 +161,9 @@ switch segversion
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     if probabilistic
-      fixsegmentation(segmentation, fn, 'probabilistic');
+      segmentation = fixsegmentation(segmentation, fn, 'probabilistic');
     elseif indexed
-      fixsegmentation(segmentation, fn, 'indexed');
+      segmentation = fixsegmentation(segmentation, fn, 'indexed');
     end
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
