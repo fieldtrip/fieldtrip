@@ -122,9 +122,9 @@ switch parcelversion
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     if probabilistic
-      fixsegmentation(parcellation, fn, 'probabilistic');
+      parcellation = fixsegmentation(parcellation, fn, 'probabilistic');
     elseif indexed
-      fixsegmentation(parcellation, fn, 'indexed');
+      parcellation = fixsegmentation(parcellation, fn, 'indexed');
     end
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
