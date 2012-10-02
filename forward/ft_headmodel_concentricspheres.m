@@ -28,17 +28,18 @@ function vol = ft_headmodel_concentricspheres(geometry, varargin)
 % get the optional input arguments
 conductivity = ft_getopt(varargin, 'conductivity');
 fitind       = ft_getopt(varargin, 'fitind', 'all');
-unit         = ft_getopt(varargin,'unit');
+unit         = ft_getopt(varargin, 'unit');
 
 % start with an empty volume conductor
 vol = [];
 
 if ~isempty(unit)
   % use the user-specified units for the output
-  vol.unit = geometry.unit;
+  vol.unit = unit;
 elseif isfield(geometry, 'unit')
   % copy the geometrical units into he volume conductor
-  vol.unit = geometry.unit;
+  % assume that in case of multiple meshes that they have the same units
+  vol.unit = geometry(1).unit; 
 end
 
 if isnumeric(geometry) && size(geometry,2)==3
