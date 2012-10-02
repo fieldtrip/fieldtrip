@@ -54,14 +54,22 @@ for i =1:numel(cfg.tissue)
   if iscell(cfg.tissue)
     % this assumes that it is a probabilistic representation
     % for example {'brain', 'skull', scalp'}
-    seg = mri.(cfg.tissue{i});
+    try
+      seg = mri.(cfg.tissue{i});
+    catch
+      error('Please specify cfg.tissue to correspond to tissue types in the segmented MRI')
+    end
     tissue = cfg.tissue{i};
   else
     % this assumes that it is an indexed representation
     % for example [3 2 1]
     seg = (mri.seg==cfg.tissue(i));
     if isfield(mri, 'seglabel')
-      tissue = mri.seglabel{cfg.tissue(i)};
+      try
+        tissue = mri.seglabel{cfg.tissue(i)};
+      catch
+        error('Please specify cfg.tissue to correspond to (the name or number of) tissue types in the segmented MRI')
+      end
     else
       tissue = sprintf('tissue %d', i);
     end

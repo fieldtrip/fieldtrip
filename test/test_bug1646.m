@@ -163,13 +163,71 @@ cfg.tissue=[];
 bnd = ft_prepare_mesh(cfg, seg5);
 
 cfg=[];
-cfg.numvertices=[1000];
+cfg.numvertices=[1000 1000 1000];
+bnd = ft_prepare_mesh(cfg, seg5);
+
+cfg=[];
+cfg.numvertices=[1000]; % should still be converted to vector Nx3 since seg5 has 3 indices
 cfg.tissue=[];
 bnd = ft_prepare_mesh(cfg, seg5);
 
 % "If the input is a tpm representation then cfg.tissue should be a string
 % pointing to the field."
+% Both seg1 and seg2 are tpm, but only seg2 has 'brain'.
 
+cfg=[];
+cfg.numvertices=[800];
+cfg.tissue='brain'; %this is exception in that .brain DNE in seg1
+bnd = ft_prepare_mesh(cfg, seg1);
+
+try
+  cfg=[];
+  cfg.numvertices=[800];
+  cfg.tissue='randomfieldname';
+  bnd = ft_prepare_mesh(cfg, seg1);
+  success=true;
+catch
+  success=false;
+end
+if success
+  error('randomfieldname should not work for tpm type')
+end
+
+try
+  cfg=[];
+  cfg.numvertices=[800];
+  cfg.tissue='csf'; %this is exception in that .brain DNE in seg1
+  bnd = ft_prepare_mesh(cfg, seg2);
+  success=true;
+catch
+  success=false;
+end
+if success
+  error('randomfieldname should not work for tpm type')
+end
+
+cfg=[];
+cfg.numvertices=[800];
+cfg.tissue=1;
+bnd = ft_prepare_mesh(cfg, seg1);
+
+cfg=[];
+cfg.numvertices=[800];
+cfg.tissue=1;
+bnd = ft_prepare_mesh(cfg, seg2);
+
+try
+  cfg=[];
+  cfg.numvertices=[800];
+  cfg.tissue=4;
+  bnd = ft_prepare_mesh(cfg, seg2);
+  success=true;
+catch
+  success=false;
+end
+if success
+  error('too large of index for cfg.tissue should not work for tpm type')
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this shares the test data with bug 1651
@@ -177,7 +235,7 @@ bnd = ft_prepare_mesh(cfg, seg5);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear all
-load('test_bug1651.mat');
+load('/home/common/matlab/fieldtrip/data/test/test_bug1651.mat');
 
 cfg = [];
 cfg.tissue = {'brain', 'skull', 'scalp'};
@@ -194,7 +252,7 @@ bnd = ft_prepare_mesh(cfg, seg2);
 % http://bugzilla.fcdonders.nl/show_bug.cgi?id=937
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-load('test_bug937.mat');
+load('/home/common/matlab/fieldtrip/data/test/test_bug937.mat');
 
 mri = [];
 mri.anatomy = bkgrnd;

@@ -131,6 +131,7 @@ else
 end
 
 if basedonseg || basedonmri
+  cfg.tissue=ft_getopt(cfg,'tissue');
   cfg = ft_checkconfig(cfg, 'required', {'tissue', 'numvertices'});
 end
 
