@@ -56,7 +56,14 @@ timelock2a = ft_selectdata(cfg, timelock2);
 assert(isequal(size(timelock2a.trial), [3 1 5]));
 
 cfg = [];
-cfg.trials = 1;
+cfg.trials = [1 2];
 timelock2b = ft_selectdata(cfg, timelock2);
-assert(isequal(size(timelock2b.trial), [2 5]));
+assert(isequal(size(timelock2b.trial), [2 2 5]));
 
+% The one that follows is a degenerate case. By selecting only one trial,
+% the output is not really trial-based any more, but still contains one trial.
+cfg = [];
+cfg.trials = 1;
+timelock2c = ft_selectdata(cfg, timelock2);
+assert(isequal(size(timelock2c.trial), [1 2 5]));
+% assert(isequal(size(timelock2c.trial), [2 5]));
