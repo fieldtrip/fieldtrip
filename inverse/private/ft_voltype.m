@@ -102,8 +102,8 @@ elseif isfield(vol, 'r') && isfield(vol, 'o') && size(vol.r,1)==size(vol.o,1) &&
 elseif isfield(vol, 'r') && numel(vol.r)>=2 && ~isfield(vol, 'label')
   type = 'concentricspheres';
   
-elseif isfield(vol, 'bnd') && isfield(vol, 'type') && strcmp(type, {'dipoli', 'asa', 'bemcp', 'openmeeg'})
-  type = any(strcmp(type, {'dipoli', 'asa', 'bemcp', 'openmeeg'}));
+elseif isfield(vol, 'bnd') && isfield(vol, 'mat')
+  type = 'bem'; % it could be dipoli, asa, bemcp or openmeeg
   
 elseif isempty(vol)
   type = 'infinite';
@@ -117,7 +117,7 @@ if ~isempty(desired)
   % return a boolean flag
   switch desired
     case 'bem'
-      type = any(strcmp(type, {'dipoli', 'asa', 'bemcp', 'openmeeg'}));
+      type = any(strcmp(type, {'bem', 'dipoli', 'asa', 'bemcp', 'openmeeg'}));
     otherwise
       type = any(strcmp(type, desired));
   end % switch desired
