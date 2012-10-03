@@ -12,23 +12,23 @@ X = {};
 X{end+1} = [true, true, false];
 X{end+1} = 'a string';
 X{end+1} = uint8(1:25);
-%X{end+1} = int64(1:25);    % matlab 2010a can't sum 64bit ints :/
+%X{end+1} = int64(1:25);    % MATLAB 2010a can't sum 64bit ints :/
 X{end+1} = complex(rand(10), rand(10));  % test complex numbers
 X{end+1} = cast(X{end}, 'single');  % test single precision complex numbers
 X{end+1} = 0;
-X{end+1} = inf;
+X{end+1} = inf;  
 X{end+1} = -inf;
+X{end+1} = [1 2 inf]; % FIXME: what is expected here?
 
 for i = 1:length(X)
   x = X{i};
-  x, i
   assertEqual(nansum(x), sum(x));
   assertEqual(nanmean(x), mean(x));
   
   if (length(strmatch(class(x), {'uint8', 'int64'})) > 0)
     fprintf('Skipping type %s for nanvar & nanstd\n', class(x));
   else
-    if isinf(x)
+    if any(isinf(x))
       % Special case since at least MATLAB Version 7.11.0.584 (R2010b)
       % seems give different results regular variants of the nan
       % statistics:
