@@ -46,12 +46,14 @@ function atlas = ft_read_atlas(filename, varargin)
 % $Id$
 
 % deal with multiple filenames
-if isa(filename, 'cell') && numel(filename)==2
-  filenamemesh = filename{2};
-  filename     = filename{1};
-else
-  error('with multiple filenames, only 2 files are allowed');
-end
+if isa(filename, 'cell')
+  if numel(filename)==2
+    filenamemesh = filename{2};
+    filename     = filename{1};
+  else
+    error('with multiple filenames, only 2 files are allowed');
+  end % if precisely two input files
+end % iscell
 
 % optionally get the data from the URL and make a temporary local copy
 filename = fetch_url(filename);
