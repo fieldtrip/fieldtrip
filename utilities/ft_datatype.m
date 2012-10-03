@@ -153,10 +153,6 @@ end
 function [res] = check_parcellation(source)
 res = false;
 
-if isfield(source, 'dim')
-  return
-end
-
 if ~isfield(source, 'pos')
   return
 end
