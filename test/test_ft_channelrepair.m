@@ -129,7 +129,7 @@ ft_databrowser(cfg, data_eeg_interp_spline);
 % check for each trial whether the value for channel 25 is in between its 
 % neighbours (it's now the last channel), and equals data_eeg_repaired
 cfg.neighbours = [19 20 24 26];
-for tr=1:numel(data_eeg_interp.trial)
+for tr=1:numel(data_eeg_interp_spline.trial)
   %
   % spline interpolation does not yield to an average of all channels!
   %
@@ -139,7 +139,7 @@ for tr=1:numel(data_eeg_interp.trial)
   %    all(tmp > data_eeg_interp.trial{tr}(cfg.neighbours, :))
   %  error(['The average is not in between its channel neighbours at for trial ' num2str(tr)]);
   %else
-   if ~all(data_eeg_interp_spline.trial{tr}(end, :) == data_eeg_repaired_spline.trial{tr}(25, :))
+   if ~all(abs(data_eeg_interp_spline.trial{tr}(end, :) - data_eeg_repaired_spline.trial{tr}(25, :)) < 10*eps) % i.e. nearly ==0
     error('The reconstruction of the same channel differs when being treated as a missing channel compared to a bad channel');
   else
     fprintf('trial %i is fine\n', tr);
