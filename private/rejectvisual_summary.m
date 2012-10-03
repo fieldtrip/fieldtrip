@@ -340,15 +340,16 @@ end
 toggle = chans;
 try
   info.chansel(toggle) = ~info.chansel(toggle);
+  % if levels data from channel being toggled was calculated from another
+  % metric, recalculate the metric
+  if info.metric_chansel(toggle) == 0
+    compute_metric(h)
+  end
 catch
   update_log(info.output_box,sprintf('ERROR: Channel value too large!'));
 end
 guidata(h, info);
-% if levels data from channel being toggled was calculated from another
-% metric, recalculate the metric
-if info.metric_chansel(toggle) == 0
-  compute_metric(h)
-end
+
 uiresume;
 
 function toggle_visual(h, eventdata)
