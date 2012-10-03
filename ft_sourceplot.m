@@ -181,9 +181,9 @@ if ischar(data)
 end
 
 % check if the input data is valid for this function
-data     = ft_checkdata(data, 'datatype', {'volume' 'source'}, 'feedback', 'yes');
-issource = ft_datatype(data, 'source');
-isvolume = ft_datatype(data, 'volume');
+data     = ft_checkdata(data, 'datatype', {'volume' 'source', 'segmentation', 'parcellation'}, 'feedback', 'yes');
+issource = ft_datatype(data, 'source') || ft_datatype(data, 'parcellation');
+isvolume = ft_datatype(data, 'volume') || ft_datatype(data, 'segmentation');
 if issource && ~isfield(data, 'dim')
   error('the input data needs to be defined on a regular 3D grid');
 end
