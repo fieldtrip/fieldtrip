@@ -920,6 +920,11 @@ elseif filetype_check_extension(filename, '.curv') && filetype_check_header(file
   type = 'freesurfer_curv_new';
   manufacturer = 'FreeSurfer';
   content = 'surface description';
+elseif filetype_check_extension(filename, '.annot')
+  % Freesurfer annotation file
+  type = 'freesurfer_annot';
+  manufacturer = 'FreeSurfer';
+  content = 'parcellation annotation';
 elseif filetype_check_extension(filename, '.txt') && numel(strfind(filename,'_nrs_')) == 1
   % This may be improved by looking into the file, rather than assuming the
   % filename has "_nrs_" somewhere. Also, distinction by the different file
