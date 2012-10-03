@@ -1,6 +1,6 @@
 function [w,rho] = bsscca(X, delay)
 
-% BSSCCA computes the mixing matrix based on the canonical correlation between a signal and its lagged-one copy. It implements the algorithm described in [1]
+% BSSCCA computes the unmixing matrix based on the canonical correlation between a signal and its lagged-one copy. It implements the algorithm described in [1]
 %
 % DeClercq et al 2006, IEEE Biomed Eng 2583.
 
@@ -21,14 +21,15 @@ if isa(X, 'cell')
   C = cellcovshift(X,[0 delay],2,0);
   m = size(C,1)-n;
   
-  A = C;
-  B = C;
+  XY  = C(1:n, (n+1):end); % cross terms XY
+  XX = C(1:n, 1:n); % auto terms X;
+  YY = C((n+1):end, (n+1):end); % auto terms Y
+  YX = C((n+1):end, 1:n);
+  %A(1:n,1:n) = 0;
+  %A((n+1):end,(n+1):end) = 0;
   
-  A(1:n,1:n) = 0;
-  A((n+1):end,(n+1):end) = 0;
-  
-  B(1:n,(n+1):end) = 0;
-  B((n+1):end,1:n) = 0;
+  %B(1:n,(n+1):end) = 0;
+  %B((n+1):end,1:n) = 0;
   
 else
   % input is a single data matrix assumed to be a continuous stretch 
@@ -50,8 +51,8 @@ else
     
   end
   
-  XY = X(:,delay+(1:m))*Xlag';
-  XX = X(:,delay+(1:m))*X(:,delay+(1:m))';
+  XY = X(:,delay+(1:(m-delay)))*Xlag';
+  XX = X(:,delay+(1:(m-delay)))*X(:,delay+(1:(m-delay)))';
   YY = Xlag*Xlag';
   
   %XY = (X(:,2:end)-mX*m)*(X(:,1:end-1)-mX2*m)';
@@ -64,16 +65,36 @@ else
   %B((n+1):end,(n+1):end) = (X(:,1:end-1)-mX2*m)*(X(:,1:end-1)-mX2*m)';
 end
 
-[w,rho]  = eig(B\A);
-[~,ix]   = sort(diag(abs(rho).^2),'descend');
-w        = w(1:n,ix(2:2:end))';
-w        = w(1:n,1:n);
-rho      = abs(rho(ix(2:2:2*n),ix(2:2:2*n))).^2;
+%if cond(B)>1e8
+%  s        = svd(B);
+%  [w,rho]  = eig((B+eye(size(B,1))*s(1)*0.00000001)\A);
+%else
+%  [w,rho]  = eig(B\A);
+%end
+if cond(XX)>1e8
+  s = svd(XX);
+  XX = XX+eye(size(XX,1))*s(1)*0.00000001;
+end
+if cond(YY)>1e8
+  s  = svd(YY);
+  YY = YY+eye(size(YY,1))*s(1)*0.00000001;
+end 
+[wx,rho] = eig((XX\XY)*(YY\YX));
+rho      = sqrt(real(diag(rho)));
+[~,ix]   = sort(rho, 'descend');
+rho      = rho(ix);
+wx        = wx(:,ix);
+w         = wx';
+
+%[~,ix]   = sort(diag(abs(rho).^2),'descend');
+%w        = w(1:n,ix(2:2:end))';
+%w        = w(1:n,1:n);
+%rho      = abs(rho(ix(2:2:2*n),ix(2:2:2*n))).^2;
 
 % normalise to unit norm
-% for k= 1:size(w,1)
-%   w(k,:) = w(k,:)./norm(w(k,:));
-% end
+%for k= 1:size(w,1)
+%  w(k,:) = w(k,:)./norm(w(k,:));
+%end
 
 function [m] = cellmean(x, dim)
 
