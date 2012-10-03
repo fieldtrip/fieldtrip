@@ -114,6 +114,14 @@ assertElementsAlmostEqual(nanvar(X, 1), [.25, 4, NaN]);
 % higher dims throw error
 assertElementsAlmostEqual(nanvar(X * NaN), [NaN, NaN, NaN]);
 
+% Test different call signatures & var compatibility
+X = randn(2, 3, 5, 7);
+for dim = 1:4
+  assertElementsAlmostEqual(nanvar(X, 0, dim), var(X, 0, dim));
+  assertElementsAlmostEqual(nanvar(X, 1, dim), var(X, 1, dim));
+  assertElementsAlmostEqual(nanvar(X, [], dim), var(X, [], dim));
+  warning('Also test vector for w!');
+end
 
 function test_nanstd
 X = magic(3);
@@ -126,3 +134,12 @@ X([1 6:9]) = repmat(NaN,1,5);
 assertElementsAlmostEqual(nanstd(X), sqrt(nanvar(X)));
 assertElementsAlmostEqual(nanstd(X, 1), sqrt(nanvar(X, 1)));
 assertElementsAlmostEqual(nanstd(X * NaN, 1), sqrt(nanvar(X * NaN, 1)));
+
+% Test different call signatures & std compatibility
+X = randn(2, 3, 5, 7);
+for dim = 1:4
+  assertElementsAlmostEqual(nanstd(X, 0, dim), std(X, 0, dim));
+  assertElementsAlmostEqual(nanstd(X, 1, dim), std(X, 1, dim));
+  assertElementsAlmostEqual(nanstd(X, [], dim), std(X, [], dim));
+  warning('Also test vector for w!');
+end
