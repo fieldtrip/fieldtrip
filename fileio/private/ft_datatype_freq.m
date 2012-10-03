@@ -47,7 +47,7 @@ function freq = ft_datatype_freq(freq, varargin)
 % from now on the crsspctrm can also be represented as Nchan * Nchan.
 %
 % (2006) The fourierspctrm field was added as alternative to powspctrm and
-% crsspctrm.
+% crsspctrm. The fields foi and toi were renamed to freq and time.
 %
 % (2003v2) The fields sgn and sgncmb were renamed into label and labelcmb.
 %
@@ -107,7 +107,19 @@ switch version
     if isfield(freq, 'elec')
       freq.elec = ft_datatype_sens(freq.elec);
     end
-  
+ 
+    if isfield(freq, 'foi') && ~isfield(freq, 'freq')
+      % this was still the case in early 2006
+      freq.freq = freq.foi;
+      freq = rmfield(freq, 'foi');
+    end
+
+    if isfield(freq, 'toi') && ~isfield(freq, 'time')
+      % this was still the case in early 2006
+      freq.time = freq.toi;
+      freq = rmfield(freq, 'toi');
+    end
+
   case '2008'
     % there are no known conversions for backward or forward compatibility support
 

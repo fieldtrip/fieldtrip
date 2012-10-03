@@ -47,6 +47,11 @@ ischan         =  isfield(data, 'dimord') && strcmp(data.dimord, 'chan') && ~isf
 issegmentation = check_segmentation(data);
 isparcellation = check_parcellation(data);
 
+if ~isfreq
+  % this applies to a ferq structure from 2003 up to early 2006
+  isfreq = all(isfield(data, {'foi', 'label', 'dimord'})) && ~isempty(strfind(data.dimord, 'frq'));
+end
+
 % check if it is a spike structure
 spk_hastimestamp  = isfield(data,'label') && isfield(data, 'timestamp') && isa(data.timestamp, 'cell');
 spk_hastrials     = isfield(data,'label') && isfield(data, 'time') && isa(data.time, 'cell') && isfield(data, 'trial') && isa(data.trial, 'cell') && isfield(data, 'trialtime') && isa(data.trialtime, 'numeric');
@@ -93,8 +98,16 @@ end
 
 if nargin>1
   % return a boolean value
-  type = strcmp(type, desired);
-  return;
+  switch desired
+    case 'raw'
+      type = any(strcmp(type, {'raw', 'comp'}));
+    case 'volume'
+      type = any(strcmp(type, {'volume', 'segmentation'}));
+    case 'source'
+      type = any(strcmp(type, {'source', 'parcellation'}));
+    otherwise
+      type = strcmp(type, desired);
+  end % switch
 end
 
 if nargout>1
@@ -149,7 +162,7 @@ if ~isfield(source, 'pos')
 end
 
 fn = fieldnames(source);
-fb = false(size(fn)); 
+fb = false(size(fn));
 npos = size(source.pos,1);
 for i=1:numel(fn)
   % for each of the fields check whether it might be a logical array with the size of the number of sources
