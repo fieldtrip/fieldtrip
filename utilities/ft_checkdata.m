@@ -154,16 +154,30 @@ if ~isequal(feedback, 'no')
     fprintf('the input is component data with %d components and %d original channels\n', ncomp, nchan);
   elseif isspike
     nchan  = length(data.label);
-    fprintf('the input is spike data with %d channels\n',nchan);
+    fprintf('the input is spike data with %d channels\n', nchan);
   elseif isvolume
-    fprintf('the input is volume data with dimensions [%d %d %d]\n', data.dim(1), data.dim(2), data.dim(3));
+    if issegmentation
+      subtype = 'segmented volume';
+    else
+      subtype = 'volume';
+    end
+    fprintf('the input is %s data with dimensions [%d %d %d]\n', subtype, data.dim(1), data.dim(2), data.dim(3));
+    clear subtype
   elseif issource
     nsource = size(data.pos, 1);
-    if isfield(data, 'dim')
-      fprintf('the input is source data with %d positions on a [%d %d %d] grid\n', nsource, data.dim(1), data.dim(2), data.dim(3));
+    if isparcellation
+      subtype = 'parcellated source';
     else
-      fprintf('the input is source data with %d positions\n', nsource);
+      subtype = 'source';
     end
+    if isfield(data, 'dim')
+      fprintf('the input is %s data with %d positions on a [%d %d %d] grid\n', subtype, nsource, data.dim(1), data.dim(2), data.dim(3));
+    elseif isfield(data, 'tri')
+      fprintf('the input is %s data with %d vertex positions and %d triangles\n', subtype, nsource, size(data.tri, 1));
+    else
+      fprintf('the input is %s data with %d positions\n', subtype, nsource);
+    end
+    clear subtype
   elseif isdip
     fprintf('the input is dipole data\n');
   elseif ismvar
@@ -186,21 +200,21 @@ end
 
 % the ft_datatype_XXX functions ensures the consistency of the XXX datatype
 % and provides a detailed description of the dataformat and its history
-if     israw
-  data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
-elseif isfreq
+if isfreq
   data = ft_datatype_freq(data);
 elseif istimelock
   data = ft_datatype_timelock(data);
-elseif iscomp
-  data = ft_datatype_comp(data);
 elseif isspike
   data = ft_datatype_spike(data);
+elseif iscomp % this should go before israw
+  data = ft_datatype_comp(data);
+elseif israw
+  data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
+elseif issegmentation % this should go before isvolume
+  data = ft_datatype_segmentation(data, 'segmentationstyle', segmentationstyle, 'hasbrain', hasbrain);
 elseif isvolume
   data = ft_datatype_volume(data);
-elseif issegmentation
-  data = ft_datatype_segmentation(data, 'segmentationstyle', segmentationstyle, 'hasbrain', hasbrain);
-elseif isparcellation
+elseif isparcellation % this should go before issource
   data = ft_datatype_parcellation(data, 'parcellationstyle', parcellationstyle);
 elseif issource
   data = ft_datatype_source(data);
@@ -1821,7 +1835,7 @@ nTrials 	 = length(data.trial);
 spikesel     = match_str(data.label, spikelabel);
 nUnits       = length(spikesel);
 if nUnits==0
-   error('cannot convert raw data to spike format since the raw data structure does not contain spike channels');
+  error('cannot convert raw data to spike format since the raw data structure does not contain spike channels');
 end
 
 trialTimes  = zeros(nTrials,2);
@@ -1850,7 +1864,9 @@ for iUnit = 1:nUnits
   if iUnit==1, spike.trialtime             = trialTimes; end
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % sub function for detection channels
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [spikelabel, eeglabel] = detectspikechan(data)
 
 maxRate = 2000; % default on what we still consider a neuronal signal: this firing rate should never be exceeded
@@ -1873,9 +1889,10 @@ spikechan = (spikechan==ntrial);
 spikelabel = data.label(spikechan);
 eeglabel   = data.label(~spikechan);
 
-
-%%%%%%%%%% SUB FUNCTION %%%%%%%%%%
-function [spikeTimes] = getspiketimes(data,trial,unit)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [spikeTimes] = getspiketimes(data, trial, unit)
 spikeIndx       = logical(data.trial{trial}(unit,:));
 spikeCount      = data.trial{trial}(unit,spikeIndx);
 spikeTimes      = data.time{trial}(spikeIndx);
@@ -1894,12 +1911,12 @@ spikeTimes              = sort([spikeTimes(:); addTimes(:)]);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % convert between datatypes
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [data] = spike2raw(spike,fsample)
+function [data] = spike2raw(spike, fsample)
 
-if nargin<2 || isempty(fsample) 
-   timeDiff=abs(diff(sort([spike.time{:}])));
-   fsample=1/min(timeDiff(timeDiff>0));
-   warning('Desired sampling rate for spike data not specified, automatically resampled to %f', fsample);
+if nargin<2 || isempty(fsample)
+  timeDiff = abs(diff(sort([spike.time{:}])));
+  fsample  = 1/min(timeDiff(timeDiff>0));
+  warning('Desired sampling rate for spike data not specified, automatically resampled to %f', fsample);
 end
 
 % get some sizes
@@ -1925,9 +1942,9 @@ for iTrial = 1:nTrials
     hasTrial = spike.trial{iUnit}==iTrial;
     ts       = ts(hasTrial);
     
-    [N] = histc(ts,timeBins);
+    N = histc(ts,timeBins);
     if isempty(N)
-      N  =  zeros(1,length(timeBins)-1);
+      N = zeros(1,length(timeBins)-1);
     else
       N(end) = [];
     end
@@ -1946,6 +1963,3 @@ data.label = spike.label;
 data.fsample = fsample;
 if isfield(spike,'hdr'), data.hdr = spike.hdr; end
 if isfield(spike,'cfg'), data.cfg = spike.cfg; end
-
-
-
