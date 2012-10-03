@@ -9,7 +9,15 @@ function atlas = ft_read_atlas(filename, varargin)
 %
 % Use as
 %   atlas = ft_read_atlas(filename, ...)
-% where the output atlas will be represented as structure according to
+%   atlas = ft_read_atlas({filenamelabels, filenamemesh}, ...)
+%
+% For individual surface based atlases two filenames are needed:
+%   Filenamelabels points to the file that contains information with respect to
+%     the parcels' labels. 
+%   Filenamemesh points to the file that defines the mesh on which the 
+%     parcellation is defined.
+%
+% The output atlas will be represented as structure according to
 % FT_DATATYPE_SEGMENTATION or FT_DATATYPE_PARCELLATION.
 %
 % The "lines" and the "colorcube" colormaps are useful for plotting the
@@ -37,6 +45,13 @@ function atlas = ft_read_atlas(filename, varargin)
 %
 % $Id$
 
+% deal with multiple filenames
+if isa(filename, 'cell') && numel(filename)==2
+  filenamemesh = filename{2};
+  filename     = filename{1};
+else
+  error('with multiple filenames, only 2 files are allowed');
+end
 
 % optionally get the data from the URL and make a temporary local copy
 filename = fetch_url(filename);
@@ -552,6 +567,70 @@ switch atlasformat
     atlas.brick0      = new_brick0;
     atlas.brick0label = label;
     
+  case {'freesurfer_a2009s' 'freesurfer_aparc' 'freesurfer_ba'}
+    % ensure freesurfer on the path and get the info how to get from value to label
+    ft_hastoolbox('freesurfer', 1);
+    
+    if strcmp(atlasformat, 'freesurfer_a2009s')
+      lookuptable = 'Simple_surface_labels2009.txt';
+      parcelfield = 'a2009s';
+    elseif strcmp(atlasformat, 'freesurfer_aparc')
+      lookuptable = 'colortable_desikan_killiany.txt';
+      parcelfield = 'aparc';
+    elseif strcmp(atlasformat, 'freesurfer_ba')
+      lookuptable = 'colortable_BA.txt';
+      parcelfield = 'BA';
+    else
+      error('unknown freesurfer parcellation method requested');
+    end
+
+    [index, label, rgb] = read_fscolorlut(lookuptable);
+    label = cellstr(label);
+    rgb   = rgb(:,1) + rgb(:,2)*256 + rgb(:,3)*256*256;
+
+    % read in the file
+    switch ft_filetype(filename)
+    case 'caret_label'
+      p = gifti(filename); 
+      p = p.cdata;
+    case 'freesurfer_annot'
+      [v, p, c] = read_annotation(filename);
+    otherwise
+      error('unsupported fileformat for parcel file');
+    end
+ 
+    % read in the mesh
+    switch ft_filetype(filenamemesh)
+    case {'caret_surf' 'gifti'} 
+      tmp = gifti(filenamemesh);
+      bnd.pnt = warp_apply(tmp.mat, tmp.vertices);
+      bnd.tri = tmp.faces;
+    case 'freesurfer_triangle_binary'
+      [pnt, tri] = read_surf(filenamemesh);
+      bnd.pnt    = pnt;
+      bnd.tri    = tri;
+    otherwise
+      error('unsupported fileformat for surface mesh');
+    end
+ 
+    % check the number of vertices
+    if size(bnd.pnt,1) ~= numel(p)
+      error('the number of vertices in the mesh does not match the number of elements in the parcellation');
+    end
+    
+    % reindex the parcels
+    newp = zeros(size(p));
+    for k = 1:numel(label)
+      newp(p==rgb(k)) = index(k);
+    end
+     
+    atlas       = [];
+    atlas.pos   = bnd.pnt;
+    atlas.tri   = bnd.tri;
+    atlas.(parcelfield)            = newp;
+    atlas.([parcelfield, 'label']) = label(2:end);
+    atlas       = ft_convert_units(atlas); 
+
   otherwise
     error('unsupported atlas format %s', atlasformat);
 end % case
