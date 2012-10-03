@@ -4,12 +4,5 @@
 % For usage see STD. Note that the three-argument call with FLAG is not 
 % supported.
 
-function Y = nanstd(X, dim)
-switch nargin
-  case 1
-    Y = sqrt(nanvar(X));
-  case 2
-    Y = sqrt(nanvar(X, dim));
-  otherwise
-    error('Too many input arguments!');
-end
+function Y = nanstd(varargin)
+Y = sqrt(nanvar(varargin{:}));
