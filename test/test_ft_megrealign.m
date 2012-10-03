@@ -4,13 +4,13 @@ function test_ft_megrealign
 % TEST ft_megrealign ft_neighbourselection ft_transform_geometry
 
 datainfo = ref_datasets;
-sel      = match_str({datainfo.datatype}',{'bti148' 'bti248' 'ctf151' 'ctf275' 'itab153' 'yokogawa160'}');
+sel      = match_str({datainfo.datatype},{'bti148' 'bti248' 'ctf151' 'ctf275' 'itab153' 'yokogawa160'}');
 datainfo = datainfo(sel);
 
 % as of yet, the code does not explicitly test anything, it just checks
 % whether all runs through smoothly
 for k = 1:numel(datainfo)
-  fname = fullfile(datainfo(k).origdir,'latest/raw',datainfo(k).type,'preproc_',datainfo(k).datatype);
+  fname = fullfile(datainfo(k).origdir,'latest/raw',datainfo(k).type,['preproc_',datainfo(k).datatype]);
   load(fname);
   
   cfg = [];
