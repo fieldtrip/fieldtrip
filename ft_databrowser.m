@@ -40,6 +40,7 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.viewmode                = string, 'butterfly', 'vertical', 'component' for visualizing components e.g. from an ICA (default is 'butterfly')
 %   cfg.artfctdef.xxx.artifact  = Nx2 matrix with artifact segments see FT_ARTIFACT_xxx functions
 %   cfg.selectfeature           = string, name of feature to be selected/added (default = 'visual')
+%   cfg.selectmode              = 'markartifact', 'markpeakevent', 'marktroughevent' (default = 'markartifact')
 %   cfg.colorgroups             = 'sequential' 'allblack' 'labelcharx' (x = xth character in label), 'chantype' or
 %                                  vector with length(data/hdr.label) defining groups (default = 'sequential')
 %   cfg.channelcolormap         = COLORMAP (default = customized lines map with 15 colors)
@@ -127,9 +128,10 @@ hasdata = (nargin>1);
 hascomp = hasdata && ft_datatype(data, 'comp');
 
 % for backward compatibility
-cfg = ft_checkconfig(cfg, 'unused', {'comps', 'inputfile', 'outputfile', 'selectmode'});
+cfg = ft_checkconfig(cfg, 'unused', {'comps', 'inputfile', 'outputfile'});
 cfg = ft_checkconfig(cfg, 'renamed', {'zscale', 'ylim'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'ylim', 'auto', 'maxabs'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'selectmode', 'mark', 'markartifact'});
 
 % ensure that the preproc specific options are located in the cfg.preproc substructure
 cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'});
@@ -138,7 +140,7 @@ cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'});
 if ~isfield(cfg, 'ylim'),            cfg.ylim = 'maxabs';                 end
 if ~isfield(cfg, 'artfctdef'),       cfg.artfctdef = struct;              end
 if ~isfield(cfg, 'selectfeature'),   cfg.selectfeature = 'visual';        end % string or cell-array
-if ~isfield(cfg, 'selectmode'),      cfg.selectmode = 'mark';             end
+if ~isfield(cfg, 'selectmode'),      cfg.selectmode = 'markartifact';     end
 if ~isfield(cfg, 'blocksize'),       cfg.blocksize = [];                  end % now used for both continuous and non-continuous data, defaulting done below
 if ~isfield(cfg, 'preproc'),         cfg.preproc = [];                    end % see preproc for options
 if ~isfield(cfg, 'selfun'),          cfg.selfun = [];                     end % default functions: 'simpleFFT','multiplotER','topoplotER','topoplotVAR','movieplotER' 
@@ -732,6 +734,8 @@ if nargout
     cfg.preproc = browsecfg.preproc;
   end
 
+  % add the update event to the output cfg
+  cfg.event = opt.event;
 
   % do the general cleanup and bookkeeping at the end of the function
   ft_postamble trackconfig
@@ -933,23 +937,81 @@ endsel = min(endsample, endsel);
 
 % mark or execute selfun
 if isempty(cmenulab)
-  % the left button was clicked INSIDE a selected range, update the artifact definition
+  % the left button was clicked INSIDE a selected range, update the artifact definition or event
   
-  % mark or unmark artifacts
-  artval = opt.artdata.trial{1}(opt.ftsel, begsel:endsel);
-  artval = any(artval,1);
-  if any(artval)
-    fprintf('there is overlap with the active artifact (%s), disabling this artifact\n',opt.artdata.label{opt.ftsel});
-    opt.artdata.trial{1}(opt.ftsel, begsel:endsel) = 0;
-  else
-    fprintf('there is no overlap with the active artifact (%s), marking this as a new artifact\n',opt.artdata.label{opt.ftsel});
-    opt.artdata.trial{1}(opt.ftsel, begsel:endsel) = 1;
-  end
+  if strcmp(cfg.selectmode, 'markartifact')
+    % mark or unmark artifacts
+    artval = opt.artdata.trial{1}(opt.ftsel, begsel:endsel);
+    artval = any(artval,1);
+    if any(artval)
+      fprintf('there is overlap with the active artifact (%s), disabling this artifact\n',opt.artdata.label{opt.ftsel});
+      opt.artdata.trial{1}(opt.ftsel, begsel:endsel) = 0;
+    else
+      fprintf('there is no overlap with the active artifact (%s), marking this as a new artifact\n',opt.artdata.label{opt.ftsel});
+      opt.artdata.trial{1}(opt.ftsel, begsel:endsel) = 1;
+    end
   
   % redraw only when marking (so the focus doesn't go back to the databrowser after calling selfuns
   setappdata(h, 'opt', opt);
   setappdata(h, 'cfg', cfg);
   redraw_cb(h);
+  elseif strcmp(cfg.selectmode, 'markpeakevent') || strcmp(cfg.selectmode, 'marktroughevent')
+    %mark or unmark events, marking at peak/trough of window
+    if any(intersect(begsel:endsel, [opt.event.sample]))
+      fprintf('there is overlap with one or more event(s), disabling this/these event(s)\n');
+      ind_rem = intersect(begsel:endsel, [opt.event.sample]);
+      for iRemove = 1:length(ind_rem)
+        opt.event([opt.event.sample]==ind_rem(iRemove)) = [];
+      end
+    else
+      fprintf('there is no overlap with any event, adding an event to the peak/trough value\n');
+      % check if only 1 chan, other wise not clear max in which channel. %
+      % ingnie: would be cool to add the option to select the channel when multiple channels
+      if size(opt.curdat.trial{1},1) > 1
+        error('cfg.selectmode = ''markpeakevent'' and ''marktroughevent'' only supported with 1 channel in the data')
+      end
+      if strcmp(cfg.selectmode, 'markpeakevent')
+        [dum ind_minmax] = max(opt.curdat.trial{1}(begsel-begsample+1:endsel-begsample+1));
+        val = 'peak';
+      elseif strcmp(cfg.selectmode, 'marktroughevent')
+        [dum ind_minmax] = min(opt.curdat.trial{1}(begsel-begsample+1:endsel-begsample+1));
+        val = 'trough';
+      end
+      samp_minmax = begsel + ind_minmax - 1;
+      event_new.type     = 'ft_databrowser_manual';
+      event_new.sample   = samp_minmax;
+      event_new.value    = val;
+      event_new.duration = 1;
+      event_new.offset   = 0;
+      % add new event to end opt.event
+      % check if events are in order now
+      if  min(diff([opt.event.sample]))>0
+        % add new event in line with old ones
+        nearest_event = nearest([opt.event.sample], samp_minmax);
+        if opt.event(nearest_event).sample > samp_minmax
+          %place new event before nearest
+          ind_event = nearest_event -1;
+        else
+          %place new event after nearest
+          ind_event = nearest_event +1;
+        end
+        if ind_event == 0
+          ind_event = 1;
+        end
+        event_lastpart = opt.event(ind_event:end);
+        opt.event(ind_event) = event_new;
+        opt.event(ind_event+1:end+1) = event_lastpart;
+      else
+        %just add to end
+        opt.event(end+1) = event_new;
+      end
+      clear event_new ind_event event_lastpart val dum ind_minmax      
+    end
+    % redraw only when marking (so the focus doesn't go back to the databrowser after calling selfuns
+    setappdata(h, 'opt', opt);
+    setappdata(h, 'cfg', cfg);
+    redraw_cb(h);
+  end
   
 else
   % the right button was used to activate the context menu and the user made a selection from that menu
