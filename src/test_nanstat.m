@@ -21,6 +21,7 @@ X{end+1} = -inf;
 
 for i = 1:length(X)
   x = X{i};
+  x, i
   assertEqual(nansum(x), sum(x));
   assertEqual(nanmean(x), mean(x));
   
@@ -34,9 +35,10 @@ for i = 1:length(X)
       assertEqual(nanvar(x), 0);
       assertEqual(nanstd(x), 0);
     else
-      %fprintf('Testing type %s for nanvar & nanstd\n', class(x));
-      assertEqual(nanvar(x), var(x));
-      assertEqual(nanstd(x), std(x));  
+      fprintf('Testing type %s for nanvar & nanstd\n', class(x));
+      nanvar(x) - var(x)
+      assertElementsAlmostEqual(nanvar(x), var(x));
+      assertElementsAlmostEqual(nanstd(x), std(x));  
     end
   end
 end

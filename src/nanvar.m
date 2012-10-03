@@ -6,10 +6,6 @@
 
 function Y = nanvar(X, w, dim)
 
-if ~isreal(X)
-  error('Correct handling of complex input is not implemented.');
-end
-
 switch nargin
   case 1
     % VAR(x)
@@ -43,6 +39,11 @@ end
 
 if numel(w) ~= 1
   error('Weighting vector w is not implemented! Please file a bug.');
+end
+
+if ~isreal(X)
+  Y = real(Y) + imag(Y);
+  n = real(n);
 end
 
 if w == 1
