@@ -24,21 +24,21 @@ for i = 1:length(X)
   assertEqual(nansum(x), sum(x));
   assertEqual(nanmean(x), mean(x));
   
-%   if (length(strmatch(class(x), {'uint8', 'int64'})) > 0)
-%     fprintf('Skipping type %s for nanvar & nanstd\n', class(x));
-%   else
-%     if isinf(x)
-%       % Special case since at least MATLAB Version 7.11.0.584 (R2010b)
-%       % seems give different results regular variants of the nan
-%       % statistics:
-%       assertEqual(nanvar(x), 0);
-%       assertEqual(nanstd(x), 0);
-%     else
-%       %fprintf('Testing type %s for nanvar & nanstd\n', class(x));
-%       assertEqual(nanvar(x), var(x));
-%       assertEqual(nanstd(x), std(x));  
-%     end
-%   end
+  if (length(strmatch(class(x), {'uint8', 'int64'})) > 0)
+    fprintf('Skipping type %s for nanvar & nanstd\n', class(x));
+  else
+    if isinf(x)
+      % Special case since at least MATLAB Version 7.11.0.584 (R2010b)
+      % seems give different results regular variants of the nan
+      % statistics:
+      assertEqual(nanvar(x), 0);
+      assertEqual(nanstd(x), 0);
+    else
+      %fprintf('Testing type %s for nanvar & nanstd\n', class(x));
+      assertEqual(nanvar(x), var(x));
+      assertEqual(nanstd(x), std(x));  
+    end
+  end
 end
 
 

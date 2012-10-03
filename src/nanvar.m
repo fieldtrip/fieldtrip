@@ -6,6 +6,10 @@
 
 function Y = nanvar(X, w, dim)
 
+if ~isreal(X)
+  error('Correct handling of complex input is not implemented.');
+end
+
 switch nargin
   case 1
     % VAR(x)
