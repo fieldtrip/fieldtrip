@@ -35,13 +35,14 @@ switch nargin
     error ('Too many input arguments!')
 end
 
-% Handle normalization
+% Handle different forms of normalization:
 if numel(w) == 0
   warning('Emulating undocumented behaviour (w=[]). Please use w=0 instead.');
   w = 0;
 end
+
 if numel(w) ~= 1
-  error('Not implemented!');
+  error('Weighting vector w is not implemented! Please file a bug.');
 end
 
 if w == 1
@@ -49,5 +50,5 @@ if w == 1
 end
 
 if w == 0
-  Y = Y ./ max(1, (n - 1));
+  Y = Y ./ max(1, (n - 1));  % don't divide by zero!
 end
