@@ -87,6 +87,7 @@ t_singlesphere_meg = rmfield(singlesphere_meg,'type');
 assert(ft_voltype(t_bemcp, 'bem'));
 assert(ft_voltype(t_dipoli, 'bem'));
 assert(~ft_voltype(t_singleshell, 'bem'));
+assert(ft_voltype(t_singleshell,'singleshell'))
 % the following ones can still be detected properly
 assert(ft_voltype(t_concentricspheres, 'concentricspheres'))
 assert(ft_voltype(t_localspheres, 'localspheres'))

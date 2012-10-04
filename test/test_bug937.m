@@ -1,29 +1,35 @@
 function test_bug937
 
 % TEST test_bug937
-% TEST ft_prepare_mesh ft_prepare_mesh_new
+% TEST ft_prepare_mesh ft_voltype ft_plot_mesh
+
+
+csvol.o = [0,0,0];
+csvol.r = [10 50 60];
+assert(ft_voltype(csvol,'concentricspheres'))
+
+ssvol.o = [0,0,0];
+ssvol.r = [60];
+assert(ft_voltype(ssvol,'singlesphere'))
 
 [pnt, tri] = icosahedron162;
+svol.bnd(1).pnt = 10*pnt;
+svol.bnd(1).tri = tri;
+svol.bnd(2).pnt = 50*pnt;
+svol.bnd(2).tri = tri;
+svol.bnd(3).pnt = 60*pnt;
+svol.bnd(3).tri = tri;
+assert(ft_voltype(svol,'unknown'))
 
-% radiuses and origins are defined in mm
-svol(1).o = [0,0,0];
-svol(1).r = 10;
-svol(1).bnd.pnt = svol(1).r*pnt;
-svol(1).bnd.tri = tri;
+tcfg=[];
+tcfg.headshape=svol.bnd;
+svolcs=ft_prepare_concentricspheres(tcfg);
+assert(ft_voltype(svolcs,'concentricspheres'))
 
-svol(2).o = [0,0,0];
-svol(2).r = 50;
-svol(2).bnd.pnt = svol(2).r*pnt;
-svol(2).bnd.tri = tri;
-
-svol(3).o = [0,0,0];
-svol(3).r = 60;
-svol(3).bnd.pnt = svol(3).r*pnt;
-svol(3).bnd.tri = tri;
 
 % To generate a volume of 3 concentric spheres (works if number of voxels is odd)
 % use this code:
-% 
+%
 % addpath /home/common/matlab/fieldtrip_private/
 % res = 1; % in mm
 % for i=3:-1:1
@@ -36,18 +42,18 @@ svol(3).bnd.tri = tri;
 %   [inside] = bounding_mesh(pos, svol(i).bnd.pnt, svol(i).bnd.tri);
 %   l = length(xgrid)
 %   c = 76; sel = (l-1)./2; % in voxel
-%   tmp = reshape(inside,[l l l]); 
+%   tmp = reshape(inside,[l l l]);
 %   tmp2(c-sel:c+sel,c-sel:c+sel,c-sel:c+sel) = tmp;
 %   MR{i} = tmp2;
 % end
 % bkgrnd = zeros(151,151,151);
 % bkgrnd = MR{1}+MR{2}+MR{3};
 
-fprintf('Loading a volume with a number N = %d of compartments ... ', numel(svol))
+% fprintf('Loading a volume with a number N = %d of compartments ... ', numel(svol))
 load('test_bug937.mat');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% start the different methods 
+% start the different methods
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Both volumetric inputs and meshes can generate more than one mesh at a
 % time. This means that the processing of an input with 3 compartments will have to call the
@@ -56,7 +62,7 @@ load('test_bug937.mat');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % based on mri segmentation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% convert into a compatible structure 
+% convert into a compatible structure
 mri = [];
 mri.anatomy = bkgrnd;
 mri.sphere1 = bkgrnd==1;
@@ -80,17 +86,18 @@ ft_plot_mesh(bnd(3),'edgecolor','r','facecolor','none')
 % this input no longer supported
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% based on headshape, can be a file name, 
+% based on headshape, can be a file name,
 %  or a set of points/boundaries (like here)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % convert in a compatible bnd structure
 % set of boundaries
 clear hsh
 for i=1:3
-  hsh(i) = svol(i).bnd;
+  hsh(i) = svol.bnd(i);
 end
 cfg = [];
 cfg.headshape   = hsh;
+% cfg.headshape   = svol;
 cfg.numvertices = 1000;
 bnd = ft_prepare_mesh(cfg);
 figure,ft_plot_mesh(bnd(1),'edgecolor','k','facecolor','none')
@@ -100,7 +107,7 @@ ft_plot_mesh(bnd(3),'edgecolor','r','facecolor','none')
 % set of points
 for i=1:3
   cfg = [];
-  cfg.headshape   = svol(i).bnd.pnt;
+  cfg.headshape   = svol.bnd(i).pnt;
   cfg.numvertices = 1000;
   bnd(i) = ft_prepare_mesh(cfg);
 end
@@ -111,31 +118,31 @@ ft_plot_mesh(bnd(3),'edgecolor','r','facecolor','none')
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % based on vol
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if 0 % FIXME (see bug notes)
-  vol = svol;
-  vol = rmfield(vol,'o');
-  vol = rmfield(vol,'r');
+try
   cfg = [];
   cfg.numvertices = 1000;
-  bnd = ft_prepare_mesh(cfg,vol);
-  figure,ft_plot_mesh(bnd(1),'edgecolor','k','facecolor','none')
-  ft_plot_mesh(bnd(2),'edgecolor','g','facecolor','none')
-  ft_plot_mesh(bnd(3),'edgecolor','r','facecolor','none')
+  bnd = ft_prepare_mesh(cfg,svol);
+  success=true;
+catch
+  success=false;
 end
+if success,error('this svol should not work here');end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% based on sphere
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% convert in a compatible sph structure
-sph = [];
-for i=1:3
-  sph.r(i)   = svol(i).r;
-  sph.o(i,:) = svol(i).o;
-end
-bnd = ft_prepare_mesh(cfg,sph);
+cfg = [];
+cfg.numvertices = 1000;
+% convert in a compatible sphere structure
+bnd = ft_prepare_mesh(cfg,csvol);
 figure,ft_plot_mesh(bnd(1),'edgecolor','k','facecolor','none')
 ft_plot_mesh(bnd(2),'edgecolor','g','facecolor','none')
 ft_plot_mesh(bnd(3),'edgecolor','r','facecolor','none')
+bnd = ft_prepare_mesh(cfg,svolcs);
+figure,ft_plot_mesh(bnd(1),'edgecolor','k','facecolor','none')
+ft_plot_mesh(bnd(2),'edgecolor','g','facecolor','none')
+ft_plot_mesh(bnd(3),'edgecolor','r','facecolor','none')
+% convert in a compatible sphere structure
+bnd = ft_prepare_mesh(cfg,ssvol);
+figure,ft_plot_mesh(bnd,'edgecolor','k','facecolor','none')
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % based on interactive
