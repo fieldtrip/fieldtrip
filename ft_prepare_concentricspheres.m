@@ -69,10 +69,10 @@ ft_preamble callinfo
 cfg = ft_checkconfig(cfg, 'forbidden', 'nonlinear');
 
 % set the defaults
-if ~isfield(cfg, 'fitind'),        cfg.fitind = 'all';                            end
-if ~isfield(cfg, 'feedback'),      cfg.feedback = 'yes';                          end
-if ~isfield(cfg, 'conductivity'),  cfg.conductivity = [1 1/80 1] * 0.33;          end
-if ~isfield(cfg, 'numvertices'),   cfg.numvertices = 'same';                      end
+if ~isfield(cfg, 'fitind'),        cfg.fitind = 'all';             end
+if ~isfield(cfg, 'feedback'),      cfg.feedback = 'yes';           end
+if ~isfield(cfg, 'conductivity'),  cfg.conductivity = [];          end % this should be specified by the user
+if ~isfield(cfg, 'numvertices'),   cfg.numvertices = 'same';       end
 
 if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
   % convert the nested config-object back into a normal structure
@@ -82,8 +82,7 @@ end
 % get the surface describing the head shape
 headshape = prepare_mesh_headshape(cfg);
 
-if isempty(cfg.conductivity)
-elseif numel(cfg.conductivity)~=numel(headshape)
+if numel(cfg.conductivity)~=numel(headshape)
   error('a conductivity value should be specified for each compartment');
 end
 

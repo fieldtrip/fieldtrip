@@ -22,7 +22,7 @@ for i=1:size(pnt,1)
 end
 
 arg(1).name = 'conductivity';
-arg(1).value = {[], 1, 0.33, 0.1};
+arg(1).value = {1, 0.33, 0.1};
 
 optarg = constructalloptions(arg);
 % random shuffle the configurations
@@ -34,28 +34,21 @@ for i=1:size(optarg,1)
   
   % new way - low level: singlesphere
   vol{1} = ft_headmodel_singlesphere(geom.bnd(1),arg{:});
-  vol{1} = rmfield(vol{1},'unit');
-  vol{1} = rmfield(vol{1},'type');
   
   % old way - low level: concentricspheres
   tmpcfg = keyval2cfg(arg{:});
   tmpcfg.headshape = geom.bnd(1);
   vol{2} = ft_prepare_concentricspheres(tmpcfg);
-  vol{2} = rmfield(vol{2},'unit');
-  vol{2} = rmfield(vol{2},'type');
   
   % new way - high level: singlesphere
   tmpcfg = keyval2cfg(arg{:});
   tmpcfg.method = 'singlesphere';
   vol{3} = ft_prepare_headmodel(tmpcfg,geom.bnd(1));
-  vol{3} = rmfield(vol{3},'unit');
-  vol{3} = rmfield(vol{3},'type');
   
   % new way - high level: concentricspheres:
   tmpcfg = keyval2cfg(arg{:});
   tmpcfg.method = 'concentricspheres';
   vol{4} = ft_prepare_headmodel(tmpcfg,geom.bnd(1));
-  vol{4} = rmfield(vol{4},'type');
   
   % compute the leadfields for a comparison
   [vol{1}, elec] = ft_prepare_vol_sens(vol{1}, elec);
