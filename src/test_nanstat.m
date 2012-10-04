@@ -31,9 +31,7 @@ for i = 1:length(X)
     if any(isinf(x))
       % Special case since at least MATLAB Version 7.11.0.584 (R2010b)
       % seems give different results regular variants of the nan
-      % statistics:
-      assertEqual(nanvar(x), 0);
-      assertEqual(nanstd(x), 0);
+      % statistics. Results seem rather arbitrary, so we don't emulate. Skipping.
     else
       fprintf('Testing type %s for nanvar & nanstd\n', class(x));
       nanvar(x) - var(x)
