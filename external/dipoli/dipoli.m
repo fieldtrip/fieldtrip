@@ -24,7 +24,7 @@ function [vol] = dipoli(vol, isolated)
 
 %$Id$
 
-warning('DIPOLI is deprecated, please use FT_PREPARE_HEADMODEL with cfg.method = ''bem_dipoli'' instead.')
+warning('DIPOLI is deprecated, please use FT_PREPARE_HEADMODEL with cfg.method = ''dipoli'' instead.')
 
 % find the location of the binary
 str = which('dipoli.m');
