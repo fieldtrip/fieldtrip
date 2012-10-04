@@ -16,12 +16,15 @@ vol = ft_headmodel_asa(hdmfile);
 figure
 ft_plot_vol(vol, 'facecolor', 'none')
 
-if 0
+if true
   % read some standard electrode positions
   sens = ft_read_sens(elcfile);
 else
   % create a random set of electrodes
-  pnt = randn(200,3)*100;
+  pnt = randn(200,3);
+  for i=1:200
+    pnt(i,:) = pnt(i,:) ./ norm(pnt(i,:))
+  end
   sel = find(pnt(:,3)>0);
   sens = [];
   sens.elecpos = pnt(sel,:) * 100;
