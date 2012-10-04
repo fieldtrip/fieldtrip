@@ -21,7 +21,6 @@ function [vol, cfg] = ft_prepare_singleshell(cfg, mri)
 %
 % The following options are relevant if you use a segmented MRI
 %   cfg.smooth      = 'no' or the FWHM of the gaussian kernel in voxels (default = 5)
-%   cfg.sourceunits = 'mm' or 'cm' (default is 'cm')
 %   cfg.threshold   = 0.5, relative to the maximum value in the segmentation
 %
 % To facilitate data-handling and distributed computing with the peer-to-peer
@@ -43,7 +42,7 @@ function [vol, cfg] = ft_prepare_singleshell(cfg, mri)
 % TODO the spheremesh option should be renamed consistently with other mesh generation cfgs
 % TODO shape should contain pnt as subfield and not be equal to pnt (for consistency with other use of shape)
 
-% Copyright (C) 2006-2007, Robert Oostenveld
+% Copyright (C) 2006-2012, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -78,16 +77,11 @@ cfg = ft_checkconfig(cfg, 'deprecated', 'mriunits');
 
 % set the defaults
 if ~isfield(cfg, 'smooth');        cfg.smooth = 5;          end % in voxels
-if ~isfield(cfg, 'sourceunits'),   cfg.sourceunits = 'cm';  end
 if ~isfield(cfg, 'threshold'),     cfg.threshold = 0.5;     end % relative
 if ~isfield(cfg, 'numvertices'),   cfg.numvertices = [];    end % approximate number of vertices in sphere
 
 % the data is specified as input variable or input file
 hasmri = exist('mri', 'var');
-
-if hasmri && isempty(cfg.numvertices)
-  cfg.numvertices = 3000;
-end
 
 if hasmri
   vol.bnd = ft_prepare_mesh(cfg, mri);
