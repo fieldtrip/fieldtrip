@@ -113,7 +113,7 @@ switch version
       end
     end
     
-    if any(strcmp(vol.type, {'concentricspheres', 'singlesphere'}))
+    if isfield(vol, 'type') && any(strcmp(vol.type, {'concentricspheres', 'singlesphere'}))
       if strcmp(vol, 'cond') && ~strcmp(vol, 'c')
         vol.c = vol.cond;
         vol = rmfield(vol, 'cond');
