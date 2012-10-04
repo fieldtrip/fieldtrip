@@ -1,4 +1,7 @@
-function test_headmodel_concentricspheres_new_old
+function test_headmodel_singleshell_new_old
+
+% TEST test_headmodel_singleshell_new_old
+% TEST ft_headmodel_singleshell ft_prepare_headmodel ft_headmodel_singleshell
 
 % generate a unit sphere
 [pnt, tri] = icosahedron162;
@@ -12,16 +15,19 @@ geom.bnd(2).tri = tri;
 geom.bnd(3).pnt = pnt * 80;
 geom.bnd(3).tri = tri;
 
-arg(1).name = 'conductivity';
-arg(2).name = 'isolatedsource';
+grad.coilpos = pnt * 120;
+grad.coilori = pnt;
+grad.chanpos = pnt * 120;
+grad.chanori = pnt;
+grad.tra = eye(size(pnt,1));
+for i=1:size(pnt,1)
+  grad.label{i} = sprintf('%d', i);
+end
 
-arg(1).value = {[], [1 1/20 1], [0.33 0.125 0.33], [1 1 1], [0.1 0.1 0.1]};
-arg(2).value = {'yes' , 'no'};
+arg(1).name = 'conductivity';
+arg(1).value = {[], 0.10, 0.33, 1.00};
 
 optarg = constructalloptions(arg);
-% random shuffle the configurations
-optarg = optarg(randperm(size(optarg,1)), :);
-
 
 for i=1:size(optarg,1)
   
@@ -29,32 +35,33 @@ for i=1:size(optarg,1)
   
   % new way - low level:
   vol{1} = ft_headmodel_singleshell(geom.bnd(1),arg{:});
-  vol{1} = rmfield(vol{1},'unit');
-
+  
   % old way:
   tmpcfg = keyval2cfg(arg{:});
   tmpcfg.headshape = geom.bnd(1);
   vol{2} = ft_prepare_singleshell(tmpcfg);
-
+  
   % new way - high level:
   tmpcfg = keyval2cfg(arg{:});
   tmpcfg.method = 'singleshell';
   vol{3} = ft_prepare_headmodel(tmpcfg,geom.bnd(1));
-  vol{3} = rmfield(vol{3},'unit');
   
-  % compare the volume conductor structures
+  % compute the leadfields for a comparison
+  [vol{1}, grad] = ft_prepare_vol_sens(vol{1}, grad);
+  [vol{2}, grad] = ft_prepare_vol_sens(vol{2}, grad);
+  [vol{3}, grad] = ft_prepare_vol_sens(vol{3}, grad);
+  lf{1} = ft_compute_leadfield([0 10 60], grad, vol{1});
+  lf{2} = ft_compute_leadfield([0 10 60], grad, vol{2});
+  lf{3} = ft_compute_leadfield([0 10 60], grad, vol{3});
+  
+  % compare the leadfields in all possible combinations
   comb = nchoosek(1:numel(vol),2);
-  
-  for i=1:size(comb,1)
-    chk = comb(i,:);
-    try
-      if ~isequal(vol{chk(1)},vol{chk(2)})
-        str = sprintf('combination %d %d not successful\n',chk(1),chk(2));
-        error(str)
-      end
-    catch me
-      fprintf(me.message)
+  for j=1:size(comb,1)
+    chk = comb(j,:);
+    err = norm(lf{chk(1)} - lf{chk(2)}) / norm(lf{chk(1)});
+    if err>0.001
+      error('combination %d %d not successful\n',chk(1),chk(2));
     end
   end
-
+  
 end
