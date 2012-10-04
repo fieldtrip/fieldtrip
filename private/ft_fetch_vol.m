@@ -59,12 +59,11 @@ hasdatavol = isfield(data, 'vol');
 if (hashdmfile + hascfgvol + hasdatavol) > 1
   display = @warning;
   fprintf('Your data and configuration allow for multiple headmodel definitions.\n');
-  keyboard
 else
   display = @fprintf;
 end
 
-% get the head model definition/volume conduction model
+% get the headmodel definition/volume conduction model
 if isfield(cfg, 'hdmfile')
   display('reading headmodel from file ''%s''\n', cfg.hdmfile);
   vol = ft_read_vol(cfg.hdmfile);
@@ -77,3 +76,6 @@ elseif isfield(data, 'vol')
 else
   error('no headmodel specified');
 end
+
+% ensure that the headmodel description is up-to-date
+vol = ft_datatype_headmodel(vol);

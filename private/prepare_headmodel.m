@@ -18,7 +18,7 @@ function [vol, sens, cfg] = prepare_headmodel(cfg, data)
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Copyright (C) 2004-2009, Robert Oostenveld
+% Copyright (C) 2004-2012, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -39,8 +39,9 @@ function [vol, sens, cfg] = prepare_headmodel(cfg, data)
 % $Id$
 
 % set the defaults
-if ~isfield(cfg, 'channel'), cfg.channel = 'all';   end
-if ~isfield(cfg, 'order'),   cfg.order = 10;        end % order of expansion for Nolte method; 10 should be enough for real applications; in simulations it makes sense to go higher
+if ~isfield(cfg, 'channel'),      cfg.channel = 'all';   end
+if ~isfield(cfg, 'order'),        cfg.order = 10;        end % order of expansion for Nolte method; 10 should be enough for real applications; in simulations it makes sense to go higher
+if ~isfield(cfg, 'sourceunits'),  cfg.sourceunits = [];  end % if needed, the default is set below
 
 if nargin<2
   data = [];
@@ -51,6 +52,15 @@ vol = ft_fetch_vol(cfg, data);
 
 % get the gradiometer or electrode definition
 sens = ft_fetch_sens(cfg, data);
+
+% ensure that the units are the same, if not, use cm as the default
+if ~strcmp(vol.unit, sens.unit) || ~strcmp(vol.unit, cfg.sourceunits)
+  if isempty(cfg.sourceunits)
+    cfg.sourceunits = 'cm';
+  end
+  vol  = ft_convert_units(vol, cfg.sourceunits);
+  sens = ft_convert_units(sens, cfg.sourceunits);
+end 
 
 if isfield(data, 'topolabel')
   % the data reflects a componentanalysis, where the topographic and the

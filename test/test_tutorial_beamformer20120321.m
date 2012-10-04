@@ -1,4 +1,4 @@
-function test_tutorial_beamformer
+function test_tutorial_beamformer20120321
 
 % TEST test_tutorial_beamformer
 % TEST ft_redefinetrial ft_freqanalysis ft_volumesegment ft_prepare_singleshell ft_sourceanalysis ft_prepare_leadfield ft_sourceinterpolate ft_sourceplot ft_volumenormalise
@@ -36,17 +36,17 @@ freqPost = ft_freqanalysis(cfg, dataPost);
 
 %% Compute (or load) the forward model)
 
-%try
-  %if ~exist('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat', 'file')
-  mri = ft_read_mri('/home/common/matlab/fieldtrip/data/Subject01.mri');
+mri = ft_read_mri('/home/common/matlab/fieldtrip/data/Subject01.mri');
+if ~exist('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat', 'file')
+  % segment the anatomical MRI
   cfg = [];
   cfg.write        = 'no';
   cfg.coordsys     = 'ctf';
   [segmentedmri] = ft_volumesegment(cfg, mri);
-%catch
-%  mri = ft_read_mri('/home/common/matlab/fieldtrip/data/Subject01.mri');
-%  load('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat')
-%end
+else
+  % use the segmented MRI that is available
+  load('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat')
+end
 
 %% Prepare head model
 cfg = [];

@@ -131,7 +131,8 @@ if ~isfield(cfg, 'sel50p'),           cfg.sel50p     = 'no';          end
 if ~isfield(cfg, 'feedback'),         cfg.feedback   = 'text';        end
 if ~isfield(cfg, 'mollify'),          cfg.mollify    = 'no';          end
 if ~isfield(cfg, 'patchsvd'),         cfg.patchsvd   = 'no';          end
-% if ~isfield(cfg, 'reducerank'),     cfg.reducerank = 'no';          end  % the default for this depends on EEG/MEG and is set below
+% if ~isfield(cfg, 'reducerank'),     cfg.reducerank = 'no';          end % the default for this depends on EEG/MEG and is set below
+% if ~isfield(cfg, 'sourceunits'),     cfg.sourceunits = [];          end % the default for this is set inside prepare_headmodel
 
 % put the low-level options pertaining to the dipole grid in their own field
 cfg = ft_checkconfig(cfg, 'createsubcfg',  {'grid'});
