@@ -18,11 +18,11 @@ function vol = ft_datatype_headmodel(vol, varargin)
 %
 % vol =
 %        r: [86 88 94 100]
-%        c: [0.33 1.00 0.042 0.33] 
+%        c: [0.33 1.00 0.042 0.33]
 %        o: [0 0 0]
 %     type: 'concentricspheres'
 %     unit: 'mm'
-% 
+%
 % An example of an MEG volume conduction model with a single sphere fitted to
 % the scalp with its center 4 cm above the line connecting the ears is:
 %
@@ -84,7 +84,7 @@ switch version
     if isfield(vol, 'inner_skull_surface'), vol = rmfield(vol, 'inner_skull_surface'); end
     if isfield(vol, 'skin'),                vol = rmfield(vol, 'skin');                end
     if isfield(vol, 'source'),              vol = rmfield(vol, 'source');              end
-
+    
     % ensure a consistent naming of the volume conduction model types
     % these should match with the FT_HEADMODEL_XXX functions
     if isfield(vol, 'type')
@@ -110,6 +110,17 @@ switch version
         error('not able to convert the original ''bem'' volume type, try using vol.type=''dipoli''');
       elseif strcmp(vol.type, 'avo')
         error('this format is not supported anymore');
+      end
+    end
+    
+    if any(strcmp(vol.type, {'concentricspheres', 'singlesphere'}))
+      if strcmp(vol, 'cond') && ~strcmp(vol, 'c')
+        vol.c = vol.cond;
+        vol = rmfield(vol, 'cond');
+      elseif strcmp(vol, 'cond') && strcmp(vol, 'c') && isequal(vol.cond, vol.c)
+        vol = rmfield(vol, 'cond');
+      elseif strcmp(vol, 'cond') && strcmp(vol, 'c') && ~isequal(vol.cond, vol.c)
+        error('inconsistent specification of conductive properties for %s model', vol.type);
       end
     end
     
