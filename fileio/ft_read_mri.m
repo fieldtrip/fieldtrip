@@ -58,15 +58,15 @@ end
 
 % test whether the file exists
 if ~exist(filename, 'file')
-  error(sprintf('file ''%s'' does not exist', filename));
+  error('file ''%s'' does not exist', filename);
 end
 
 % test for the presence of some external functions from other toolboxes
 hasmri   = ft_hastoolbox('mri');     % from Darren Weber, see http://eeg.sourceforge.net/
-hasspm2  = ft_hastoolbox('SPM2');    % see http://www.fil.ion.ucl.ac.uk/spm/
-hasspm5  = ft_hastoolbox('SPM5');    % see http://www.fil.ion.ucl.ac.uk/spm/
-hasspm8  = ft_hastoolbox('SPM8');    % see http://www.fil.ion.ucl.ac.uk/spm/
-hasspm12 = ft_hastoolbox('SPM12');    % see http://www.fil.ion.ucl.ac.uk/spm/
+hasspm2  = ft_hastoolbox('spm2');    % see http://www.fil.ion.ucl.ac.uk/spm/
+hasspm5  = ft_hastoolbox('spm5');    % see http://www.fil.ion.ucl.ac.uk/spm/
+hasspm8  = ft_hastoolbox('spm8');    % see http://www.fil.ion.ucl.ac.uk/spm/
+hasspm12 = ft_hastoolbox('spm12');   % see http://www.fil.ion.ucl.ac.uk/spm/
 hasspm   = (hasspm2 || hasspm5 || hasspm8 || hasspm12);
 hasafni  = ft_hastoolbox('afni');    % see http://afni.nimh.nih.gov/
 
