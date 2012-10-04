@@ -15,7 +15,7 @@ geom.bnd(2).tri = tri;
 geom.bnd(3).pnt = pnt * 80;
 geom.bnd(3).tri = tri;
 
-vol = ft_headmodel_bem_openmeeg(geom, 'conductivity', [1 1/20 1]);
+vol = ft_headmodel_openmeeg(geom, 'conductivity', [1 1/20 1]);
 
 % create a set of electrodes
 sel = find(pnt(:,3)>0);
@@ -74,7 +74,7 @@ geom = [];
 geom.bnd(1).pnt = pnt * 100;
 geom.bnd(1).tri = tri;
 
-vol = ft_headmodel_bem_openmeeg(geom, 'conductivity', [1/80]);
+vol = ft_headmodel_openmeeg(geom, 'conductivity', [1/80]);
 
 % project the electrodes on the volume conduction model
 [vol, sens] = ft_prepare_vol_sens(vol, sens);
