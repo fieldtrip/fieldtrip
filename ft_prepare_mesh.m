@@ -131,7 +131,10 @@ else
 end
 
 if basedonseg || basedonmri
-  cfg.tissue=ft_getopt(cfg,'tissue');
+  if all(isfield(mri, {'gray', 'white', 'csf'}))
+    cfg.tissue      = ft_getopt(cfg, 'tissue', 'brain');
+    cfg.numvertices = ft_getopt(cfg, 'numvertices', 3000);
+  end
   cfg = ft_checkconfig(cfg, 'required', {'tissue', 'numvertices'});
 end
 
