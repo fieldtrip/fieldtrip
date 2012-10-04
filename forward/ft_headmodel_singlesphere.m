@@ -19,8 +19,8 @@ function vol = ft_headmodel_singlesphere(geometry, varargin)
 % FIXME document the EEG case
 
 % get the optional arguments
-conductivity = ft_getopt(varargin, 'conductivity',1);
-unit         = ft_getopt(varargin,'unit');
+conductivity = ft_getopt(varargin, 'conductivity', 1);
+unit         = ft_getopt(varargin, 'unit');
 
 if length(conductivity)~=1
   error('the conductivity should be a single number')
