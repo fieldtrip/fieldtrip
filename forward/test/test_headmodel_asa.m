@@ -9,10 +9,10 @@ function test_headmodel_asa
 % see ftp://ftp.fcdonders.nl/pub/fieldtrip/standard_BEM.zip
 % although that zip file does not contain the original file ASA formats
 
-hdmfile = 'volume/standard.vol';
-elcfile = 'elec/standard_1020.elc';
+hdmfile = '/home/common/matlab/fieldtrip/template/headmodel/standard_bem.mat';
+elcfile = '/home/common/matlab/fieldtrip/template/electrode/standard_1020.elc';
 
-vol = ft_headmodel_bem_asa(hdmfile);
+vol = ft_headmodel_asa(hdmfile);
 figure
 ft_plot_vol(vol, 'facecolor', 'none')
 
@@ -25,6 +25,7 @@ else
   sel = find(pnt(:,3)>0);
   sens = [];
   sens.elecpos = pnt(sel,:) * 100;
+  sens.chanpos = pnt(sel,:) * 100;
   for i=1:length(sel)
     sens.label{i} = sprintf('chan%03d', i);
   end
