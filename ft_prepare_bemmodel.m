@@ -109,11 +109,13 @@ if ~isfield(vol,'cond')
   end
 end
 
-% construct the geometry of the BEM boundaries
-if nargin==1
-  vol.bnd = ft_prepare_mesh(cfg);
-else
-  vol.bnd = ft_prepare_mesh(cfg, mri);
+if ~isfield(vol, 'bnd')
+  % construct the geometry of the BEM boundaries
+  if nargin==1
+    vol.bnd = ft_prepare_mesh(cfg);
+  else
+    vol.bnd = ft_prepare_mesh(cfg, mri);
+  end
 end
 
 vol.source = find_innermost_boundary(vol.bnd);
@@ -136,8 +138,6 @@ elseif isempty(cfg.isolatedsource) && Ncompartment==1
 elseif ~islogical(isolatedsource)
   error('cfg.isolatedsource should be true or false');
 end
-
-
 
 if cfg.isolatedsource
   fprintf('using compartment %d for the isolated source approach\n', vol.source);
