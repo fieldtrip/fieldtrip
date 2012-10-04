@@ -105,6 +105,12 @@ elseif isfield(vol, 'r') && numel(vol.r)>=2 && ~isfield(vol, 'label')
 elseif isfield(vol, 'bnd') && isfield(vol, 'mat')
   type = 'bem'; % it could be dipoli, asa, bemcp or openmeeg
   
+elseif isfield(vol, 'bnd') && isfield(vol, 'forwpar')
+  type = 'singleshell';
+  
+elseif isfield(vol, 'bnd') && numel(vol.bnd)==1
+  type = 'singleshell'; 
+  
 elseif isempty(vol)
   type = 'infinite';
   
@@ -121,7 +127,7 @@ if ~isempty(desired)
     otherwise
       type = any(strcmp(type, desired));
   end % switch desired
-end % detemine the correspondence to the desired type
+end % determine the correspondence to the desired type
 
 % remember the current input and output arguments, so that they can be
 % reused on a subsequent call in case the same input argument is given
