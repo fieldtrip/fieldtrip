@@ -69,11 +69,9 @@ for i=1:size(optarg,1)
   
   % compare the leadfields in all possible combinations
   comb = nchoosek(1:numel(vol),2);
-  
-  for i=1:size(comb,1)
-    chk = comb(i,:);
+  for j=1:size(comb,1)
+    chk = comb(j,:);
     err = norm(lf{chk(1)} - lf{chk(2)}) / norm(lf{chk(1)});
-    
     if err>0.001
       error('combination %d %d not successful\n',chk(1),chk(2));
     end

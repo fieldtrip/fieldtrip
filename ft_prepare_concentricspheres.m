@@ -82,8 +82,9 @@ end
 % get the surface describing the head shape
 headshape = prepare_mesh_headshape(cfg);
 
-if isempty(cfg.conductivity) || numel(cfg.conductivity)~=numel(headshape)
-  cfg.conductivity = ones(1,numel(headshape));
+if isempty(cfg.conductivity)
+elseif numel(cfg.conductivity)~=numel(headshape)
+  error('a conductivity value should be specified for each compartment');
 end
 
 if strcmp(cfg.fitind, 'all')

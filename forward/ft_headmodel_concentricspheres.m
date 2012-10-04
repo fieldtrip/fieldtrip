@@ -57,27 +57,8 @@ end
 % determine the number of compartments
 numboundaries = numel(geometry);
 
-if isempty(conductivity)
-  warning('No conductivity is declared, Assuming standard values\n')
-  if numboundaries == 1
-    conductivity = 1;
-  elseif numboundaries == 3
-    % skin/skull/brain
-    conductivity = [1 1/80 1] * 0.33;
-  elseif numboundaries == 4
-    %FIXME: check for better default values here
-    % skin / outer skull / inner skull / brain
-    conductivity = [1 1/80 1 1] * 0.33;
-  else
-    error('Conductivity values are required!')
-  end
-end
-
 if numel(conductivity)~=numboundaries
   error('a conductivity value should be specified for each compartment');
-else
-  % assign the conductivity of each compartment
-  vol.cond = conductivity;
 end
 
 % concatenate the vertices of all surfaces

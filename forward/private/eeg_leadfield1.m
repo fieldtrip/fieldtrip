@@ -1,4 +1,4 @@
-function [lf, lforig] = eeg_leadfield1(R, elc, vol);
+function lf = eeg_leadfield1(R, elc, vol)
 
 % EEG_LEADFIELD1 electric leadfield for a dipole in a single sphere
 %
