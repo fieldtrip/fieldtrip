@@ -17,13 +17,11 @@ success = true;
 % get the data which is needed
 
 % read in the gradiometer information
-cd('/home/common/matlab/fieldtrip/data/');
-hdr  = ft_read_header('Subject01.ds');
+hdr  = ft_read_header('/home/common/matlab/fieldtrip/data/Subject01.ds');
 grad = hdr.grad;
 
 % read in the segmented mri
-cd('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer');
-load segmentedmri
+load('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat');
 mri = segmentedmri; clear segmentedmri;
 
 % specify the file for the headshape
