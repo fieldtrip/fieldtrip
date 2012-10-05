@@ -44,7 +44,7 @@ newdata = ft_channelrepair(cfg, data);
 if ispc
     home_dir = 'H:';
 else    
-    home_dir = 'home';cd /home/common/matlab/fieldtrip/data/test/
+    home_dir = '/home';
 end
 main_dir = fullfile(home_dir, 'common', 'matlab', 'fieldtrip', 'data', 'test');
 bug_data = 'bug941.mat';
@@ -139,7 +139,7 @@ for tr=1:numel(data_eeg_interp_spline.trial)
   %    all(tmp > data_eeg_interp.trial{tr}(cfg.neighbours, :))
   %  error(['The average is not in between its channel neighbours at for trial ' num2str(tr)]);
   %else
-   if ~all(abs(data_eeg_interp_spline.trial{tr}(end, :) - data_eeg_repaired_spline.trial{tr}(25, :)) < 10*eps) % i.e. nearly ==0
+   if ~mean(abs(data_eeg_interp_spline.trial{tr}(end, :) - data_eeg_repaired_spline.trial{tr}(25, :))) < 10*eps % i.e. nearly ==0
     error('The reconstruction of the same channel differs when being treated as a missing channel compared to a bad channel');
   else
     fprintf('trial %i is fine\n', tr);
