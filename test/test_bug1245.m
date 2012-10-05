@@ -11,4 +11,5 @@ function test_bug1245
 % plotting
 
 load test_bug1245
+data.avg = [];
 figure;ft_multiplotER(cfg, data);
