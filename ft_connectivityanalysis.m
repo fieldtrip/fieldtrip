@@ -314,7 +314,11 @@ switch cfg.method
     data     = ft_checkdata(data, 'datatype', {'timelock' 'freq' 'source'});
     dtype    = ft_datatype(data);
     if strcmp(dtype, 'timelock')
-      inparam = 'trial';
+      if ~isfield(data, 'trial')
+        inparam = 'avg';
+      else
+        inparam = 'trial';
+      end
       hasrpt  = (isfield(data, 'dimord') && ~isempty(strfind(data.dimord, 'rpt')));
     elseif strcmp(dtype, 'freq')
       inparam = 'something';
@@ -570,7 +574,7 @@ switch cfg.method
   case 'granger'
     % granger causality
     
-    if sum(ft_datatype(data, {'freq' 'freqmvar'})),
+    if ft_datatype(data, 'freq') || ft_datatype(data, 'freqmvar'),
       
       if isfield(data, 'labelcmb') && isempty(cfg.granger.conditional),
         % multiple pairwise non-parametric transfer functions
