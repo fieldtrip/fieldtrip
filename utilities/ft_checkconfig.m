@@ -423,7 +423,6 @@ if ~isempty(createsubcfg)
           'block'
           'blockindx'
           'channelcmb'
-          'feedback'
           'numiteration'
           'tol'
           'sfmethod'
