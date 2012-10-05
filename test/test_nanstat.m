@@ -6,7 +6,15 @@ function test_suite = test_nanstat
 
 initTestSuite;  % for xUnit
 
+function setup
+addpath('../src');
+
+function teardown
+rmpath('../src');
+
 function test_datatypes
+which nanmean  % allow debugging of path issues.
+
 % test different data types
 X = {};
 X{end+1} = [true, true, false];
@@ -29,12 +37,12 @@ for i = 1:length(X)
     fprintf('Skipping type %s for nanvar & nanstd\n', class(x));
   else
     if any(isinf(x))
-      % Special case since at least MATLAB Version 7.11.0.584 (R2010b)
+      % Special case, since at least MATLAB Version 7.11.0.584 (R2010b)
       % seems give different results regular variants of the nan
-      % statistics. Results seem rather arbitrary, so we don't emulate. Skipping.
+      % statistics. Results seem rather arbitrary, so we don't emulate. 
+      % Skipping.
     else
       fprintf('Testing type %s for nanvar & nanstd\n', class(x));
-      nanvar(x) - var(x)
       assertElementsAlmostEqual(nanvar(x), var(x));
       assertElementsAlmostEqual(nanstd(x), std(x));  
     end
