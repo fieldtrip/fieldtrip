@@ -1,4 +1,4 @@
-% function test_bug1770
+function test_bug1770
 
 % TEST test_bug1770
 % TEST read_neuralynx_dma read_neuralynx_ncs
@@ -33,3 +33,11 @@ plot(ch1As, 'b.');
 plot(ch1Bs, 'r.');
 
 % sofar there seems no reason for concern w.r.t. the reading function
+% let us look at the filter kernel and the delay
+
+hA = fft(ch1As);
+hA = fft(ch1As);
+H = hA./hB;
+figure
+plot(ifft(H));
+
