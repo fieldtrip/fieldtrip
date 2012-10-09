@@ -901,6 +901,7 @@ fprintf('shift arrow-up     : increase vertical scaling\n');
 fprintf('shift arrow-down   : decrease vertical scaling\n');
 fprintf('shift arrow-left   : increase horizontal scaling\n');
 fprintf('shift arrow-down   : decrease horizontal scaling\n');
+fprintf('s                  : toggles between cfg.selectmode options\n');
 fprintf('q                  : quit\n');
 fprintf('------------------------------------------------------------------------------------\n')
 fprintf('\n')
@@ -1375,6 +1376,20 @@ switch key
     else
       warning('only supported with cfg.viewmode=''butterfly''');
     end
+  case 's'
+    % toggle between selectmode options: switch from 'markartifact', to 'markpeakevent' to 'marktroughevent' and back with on screen feedback
+    curstate = find(strcmp(cfg.selectmode, {'markartifact', 'markpeakevent', 'marktroughevent'}));
+    if curstate == 1
+      cfg.selectmode = 'markpeakevent';
+    elseif curstate == 2
+      cfg.selectmode = 'marktroughevent';
+    elseif curstate == 3
+      cfg.selectmode = 'markartifact';
+    end
+    fprintf('switching to selectmode = %s\n',cfg.selectmode);
+    setappdata(h, 'opt', opt);
+    setappdata(h, 'cfg', cfg);
+    redraw_cb(h, eventdata);
   case 'control+control'
     % do nothing
   case 'shift+shift'
