@@ -354,8 +354,7 @@ elseif strcmp(cfg.method, 'csp')
   fprintf('concatenated data matrix size for class 1 is %dx%d\n', size(dat1,1), size(dat1,2));
   fprintf('concatenated data matrix size for class 2 is %dx%d\n', size(dat2,1), size(dat2,2));
   
-elseif (~strcmp(cfg.method, 'predetermined unmixing matrix') && strcmp(cfg.cellmode, 'yes')
-  
+elseif ~strcmp(cfg.method, 'predetermined unmixing matrix') && strcmp(cfg.cellmode, 'no')
   % concatenate all the data into a 2D matrix unless we already have an
   % unmixing matrix or unless the user request it otherwise
   fprintf('concatenating data');
