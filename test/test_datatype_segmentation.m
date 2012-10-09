@@ -1,4 +1,4 @@
-% function test_datatype_segmentation
+function test_datatype_segmentation
 
 % TEST test_datatype_segmentation
 % TEST ft_datatype_segmentation ft_datatype

@@ -1,3 +1,6 @@
+function test_bug1754
+% Note: new tests were added when bug #1754 was fixed. This script is now
+% reduntant, and can be removed.
 load test_bug1754
 
 cfg = [];

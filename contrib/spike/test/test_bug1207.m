@@ -1,4 +1,4 @@
-% test_bug1207.m
+function test_bug1207
 
 % TT5.ntt in this directory
 % TT5_1.t in this directory

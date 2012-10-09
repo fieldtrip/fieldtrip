@@ -1,4 +1,4 @@
-% function test_datatype_parcellation
+function test_datatype_parcellation
 
 % TEST test_datatype_parcellation
 % TEST ft_datatype_parcellation ft_datatype

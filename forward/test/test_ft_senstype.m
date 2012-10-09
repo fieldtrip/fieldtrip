@@ -1,4 +1,4 @@
-function [type, fname] = test_ft_senstype
+function test_ft_senstype
 
 % TEST test_ft_senstype
 % TEST ft_senstype
