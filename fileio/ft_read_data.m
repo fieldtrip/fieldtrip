@@ -77,7 +77,7 @@ if isempty(dataformat)
 end
 
 % test whether the file or directory exists
-if ~exist(filename, 'file') && ~strcmp(dataformat, 'ctf_shm') && ~strcmp(dataformat, 'fcdc_mysql') && ~strcmp(dataformat, 'fcdc_buffer')
+if ~strcmp(dataformat, 'fcdc_buffer') && ~strcmp(dataformat, 'ctf_shm') && ~strcmp(dataformat, 'fcdc_mysql') && ~exist(filename, 'file')
   error('FILEIO:InvalidFileName', 'file or directory ''%s'' does not exist', filename);
 end
 
