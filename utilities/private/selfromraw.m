@@ -52,6 +52,14 @@ if numel(selchan) ~= numel(data.label)
     data.trial{k} = data.trial{k}(selchan, :);
   end
   data.label = data.label(selchan);
+
+  % also account for mixing and unmixing matrix
+  if isfield(data, 'topo')
+    data.topo = data.topo(:, selchan);
+  end
+  if isfield(data, 'unmixing')
+    data.unmixing = data.unmixing(selchan, :);
+  end
 end
 
 if doseltim
