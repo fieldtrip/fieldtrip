@@ -17,7 +17,7 @@ else
   home = '/home';
 end
 
-dataset = fullfile(home, 'common', 'matlab', 'fieldtrip', 'data', 'test', 'data_bug1571', '20101230_1010.cnt');
+dataset = fullfile(home, 'common', 'matlab', 'fieldtrip', 'data', 'test', 'bug1571', '20101230_1010.cnt');
 
  cfg                     = [];
  cfg.channel      = {'EEG'};
