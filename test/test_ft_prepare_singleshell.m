@@ -40,8 +40,11 @@ vol1b       = ft_prepare_singleshell(cfg, mri);
 % the following needs to be done to be able to make the comparison
 vol1 = rmfield(vol1, 'cfg');
 vol1b = rmfield(vol1b,'cfg');
+vol1bu=ft_convert_units(vol1b,vol1.unit);
 
-success     = success && isequal(vol1, vol1b);
+% note: e.g.  vol1.bnd.pnt(5,:) is different than vol1bu.bnd.pnt(5,:)
+
+success     = success && isequal(vol1, vol1bu);
 if ~success
   error('ft_prepare_singleshell and ft_prepare_headmodel gave different outputs');
 end
