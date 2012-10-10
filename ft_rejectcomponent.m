@@ -164,6 +164,7 @@ montage.tra      = tra;
 montage.labelorg = labelorg;
 montage.labelnew = labelnew;
 data             = ft_apply_montage(data, montage, 'keepunused', keepunused, 'feedback', cfg.feedback);
+
 if isfield(data, 'grad') || (isfield(data, 'elec') && isfield(data.elec, 'tra')),
   if isfield(data, 'grad')
     sensfield = 'grad';
@@ -173,29 +174,35 @@ if isfield(data, 'grad') || (isfield(data, 'elec') && isfield(data.elec, 'tra'))
   % keepunused = 'yes' is required to get back e.g. reference or otherwise
   % unused sensors in the sensor description. the unused components need to
   % be removed in a second step
-  tmp = ft_apply_montage(data.(sensfield), montage, 'keepunused', 'yes', 'balancename', 'invcomp', 'feedback', cfg.feedback);
+  sens = ft_apply_montage(data.(sensfield), montage, 'keepunused', 'yes', 'balancename', 'invcomp', 'feedback', cfg.feedback);
   
   % there could have been sequential subspace projections, so the
   % invcomp-field may have been renamed into invcompX. If this it the case,
   % take the one with the highest suffix
   invcompfield = 'invcomp';
-  if ~isfield(tmp.balance, 'invcomp')
+  if ~isfield(sens.balance, 'invcomp')
     for k = 10:-1:1
-      if isfield(tmp.balance, ['invcomp',num2str(k)])
+      if isfield(sens.balance, ['invcomp',num2str(k)])
         invcompfield = [invcompfield,num2str(k)];
         break;
       end
     end
   end
   
+  % remove the unused channels from the grad/elec
+  [junk, remove]    = match_str(comp.label, sens.label);
+  sens.tra(remove,:) = [];
+  sens.label(remove) = [];
+  sens.chanpos(remove,:) = [];
+  if isfield(sens, 'chanori')
+    sens.chanori(remove,:) = [];
+  end
+  
   % remove the unused components from the balancing and from the tra
-  [junk, remove]    = match_str(comp.label, tmp.label);
-  tmp.tra(remove,:) = [];
-  tmp.label(remove) = [];
-  [junk, remove]    = match_str(comp.label, tmp.balance.(invcompfield).labelnew);
-  tmp.balance.(invcompfield).tra(remove, :)   = [];
-  tmp.balance.(invcompfield).labelnew(remove) = [];
-  data.(sensfield)  = tmp;
+  [junk, remove]    = match_str(comp.label, sens.balance.(invcompfield).labelnew);
+  sens.balance.(invcompfield).tra(remove, :)   = [];
+  sens.balance.(invcompfield).labelnew(remove) = [];
+  data.(sensfield)  = sens;
   %data.(sensfield)  = ft_apply_montage(data.(sensfield), montage, 'keepunused', 'no', 'balancename', 'invcomp');
 else
   %warning('the gradiometer description does not match the data anymore');
