@@ -10,17 +10,17 @@ data = [];
 data.label = {'1', '2'};
 
 for m=[eps exp(1) pi 1:20]
-  for n=.1:.1:m  
+  for n=.1:.1:m
     data.time{1} = -.5:(n/m):-.1;
     data.time{2} = -.5:(n/m):-.1;
     fsample = mean(diff(data.time{1}));
-    if fsample <= 0
+    if fsample <= 0 || isnan(fsample)
       continue;
     end
     for i=1:numel(data.time)
       data.trial{i} = rand(size(data.label, 2), size(data.time{i}, 2));
     end
-
+    
     tmp = ft_checkdata(data, 'datatype', 'timelock');
     
     if (mean(diff(tmp.time)) - fsample > 12e-17)
@@ -30,17 +30,17 @@ for m=[eps exp(1) pi 1:20]
 end
 
 for m=[eps exp(1) pi 1:20]
-  for n=.1:.1:m  
+  for n=.1:.1:m
     data.time{1} = .1:(n/m):.5;
     data.time{2} = .1:(n/m):.5;
     fsample = mean(diff(data.time{1}));
-    if fsample <= 0
+    if fsample <= 0 || isnan(fsample)
       continue;
     end
     for i=1:numel(data.time)
       data.trial{i} = rand(size(data.label, 2), size(data.time{i}, 2));
     end
-
+    
     tmp = ft_checkdata(data, 'datatype', 'timelock');
     
     if (mean(diff(tmp.time)) - fsample > 12e-17)
@@ -58,13 +58,13 @@ for m=[eps exp(1) pi 1:20]
     data.time{1} = [-(n.^2/m) -(n/m)];
     data.time{2} = [-(n.^2/m) -(n/m)];
     fsample = mean(diff(data.time{1}));
-    if fsample <= 0
+    if fsample <= 0 || isnan(fsample)
       continue;
     end
     for i=1:numel(data.time)
       data.trial{i} = rand(size(data.label, 2), size(data.time{i}, 2));
     end
-
+    
     tmp = ft_checkdata(data, 'datatype', 'timelock');
     
     if (mean(diff(tmp.time)) - fsample > 12e-17)
@@ -75,13 +75,13 @@ for m=[eps exp(1) pi 1:20]
     data.time{1} = [-(n.^2/m) -(n/m)];
     data.time{2} = [-(n.^2/m) -(n/m)];
     fsample = mean(diff(data.time{1}));
-    if fsample <= 0
+    if fsample <= 0 || isnan(fsample)
       continue;
     end
     for i=1:numel(data.time)
       data.trial{i} = rand(size(data.label, 2), size(data.time{i}, 2));
     end
-
+    
     tmp = ft_checkdata(data, 'datatype', 'timelock');
     
     if (mean(diff(tmp.time)) - fsample > 12e-17)
@@ -95,13 +95,13 @@ for m=[eps exp(1) pi 1:20]
     data.time{1} = [-m -n];
     data.time{2} = [-m -n];
     fsample = mean(diff(data.time{1}));
-    if fsample <= 0
+    if fsample <= 0 || isnan(fsample)
       continue;
     end
     for i=1:numel(data.time)
       data.trial{i} = rand(size(data.label, 2), size(data.time{i}, 2));
     end
-
+    
     if (n==eps)
       try
         tmp = ft_checkdata(data, 'datatype', 'timelock');
@@ -109,7 +109,7 @@ for m=[eps exp(1) pi 1:20]
           warning('estimation of fsample does not match, but we''re near eps!')
         end
       catch
-          warning('checkdata crashed, but we''re near eps!')
+        warning('checkdata crashed, but we''re near eps!')
       end
     else
       tmp = ft_checkdata(data, 'datatype', 'timelock');
@@ -121,14 +121,14 @@ for m=[eps exp(1) pi 1:20]
   for n=eps^1.1:eps^1.1:eps
     data.time{1} = [-(n.^2/m) -(n/m)];
     data.time{2} = [-(n.^2/m) -(n/m)];
-    fsample = mean(diff(data.time{1})); 
-    if fsample <= 0
+    fsample = mean(diff(data.time{1}));
+    if fsample <= 0 || isnan(fsample)
       continue;
     end
     for i=1:numel(data.time)
       data.trial{i} = rand(size(data.label, 2), size(data.time{i}, 2));
     end
-
+    
     tmp = ft_checkdata(data, 'datatype', 'timelock');
     
     if (mean(diff(tmp.time)) - fsample > 12e-17)
@@ -206,22 +206,22 @@ end
 
 % make some raw data with unequal time-axis, including 0, with some jitter
 
-  success = 0;
-  attempts = 5; % this might not work if the RNG sucks
- while ~success
+success = 0;
+attempts = 5; % this might not work if the RNG sucks
+while ~success
   try
     data = [];
-  data.label = {'1', '2'};
-  data.time{1} = -.5:.25:1;
-  data.time{2} = -.25:.25:.25;
-  data.time{3} = .25:.25:1;
-  data.time{4} = -.5:.25:-.25;
-
-  for i=1:numel(data.time)
-    data.time{i} = data.time{i} + (rand-0.5)/1000;
-    data.trial{i} = rand(size(data.label, 2), size(data.time{i}, 2));
-  end
-  tmp = ft_checkdata(data, 'datatype', 'timelock');
+    data.label = {'1', '2'};
+    data.time{1} = -.5:.25:1;
+    data.time{2} = -.25:.25:.25;
+    data.time{3} = .25:.25:1;
+    data.time{4} = -.5:.25:-.25;
+    
+    for i=1:numel(data.time)
+      data.time{i} = data.time{i} + (rand-0.5)/1000;
+      data.trial{i} = rand(size(data.label, 2), size(data.time{i}, 2));
+    end
+    tmp = ft_checkdata(data, 'datatype', 'timelock');
     success = 1;
   end
 end
@@ -295,26 +295,26 @@ end
 
 
 function sanityCheck(tmp)
-  % sanity checks
-  if ~isequal(size(tmp.sampleinfo), [4,2])
-    error('sampleinfo is wrong');
-  end
+% sanity checks
+if ~isequal(size(tmp.sampleinfo), [4,2])
+  error('sampleinfo is wrong');
+end
 
-  if ~isequal(tmp.time, [-.5:.25:1]) && ...
+if ~isequal(tmp.time, [-.5:.25:1]) && ...
     ~isequal(tmp.time, [-.5:.25:1]+ 0.6) && ...
     ~isequal(tmp.time, [-.5:.25:1]- 1.1) &&  ...
     ~isequal(tmp.time, [-.5:.25:1]./ 10^-12) && ...
     ~isequal(tmp.time, [-.5:.25:1].* 10^-12)
-    error('time axis is wrong');
-  end
+  error('time axis is wrong');
+end
 
-  % check individual trials
-  % note that we handle two channels here
-  if any(isnan(tmp.trial(1, :))) ...
-     || any(isnan(tmp.trial(2, 3:8)))  || any(~isnan(tmp.trial(2, [1 2 9:14]))) ...
-     || any(isnan(tmp.trial(3, 7:14))) || any(~isnan(tmp.trial(3, [1:6]))) ...
-     || any(isnan(tmp.trial(4, 1:4)))  || any(~isnan(tmp.trial(4, [5:14])))
-     error('nans are misplaced in .trial');
-  end
+% check individual trials
+% note that we handle two channels here
+if any(isnan(tmp.trial(1, :))) ...
+    || any(isnan(tmp.trial(2, 3:8)))  || any(~isnan(tmp.trial(2, [1 2 9:14]))) ...
+    || any(isnan(tmp.trial(3, 7:14))) || any(~isnan(tmp.trial(3, [1:6]))) ...
+    || any(isnan(tmp.trial(4, 1:4)))  || any(~isnan(tmp.trial(4, [5:14])))
+  error('nans are misplaced in .trial');
+end
 end
 

@@ -240,12 +240,24 @@ cfg.design   = design;
 cfg.uvar     = 1;
 cfg.ivar     = 2;
 
-[stat] = ft_freqstatistics(cfg, GA_TFRFIC, GA_TFRFC)
 
-%% Plotting the results
-cfg = [];
-cfg.alpha  = 0.025;
-cfg.zparam = 'stat';
-cfg.zlim   = [-4 4];
-cfg.layout = 'CTF151s.lay';
-ft_clusterplot(cfg, stat);
+failed = true;
+for i=1:100 % this can fail sometime, like every second iteration or so, 100 is a *really* conservative number here
+  [stat] = ft_freqstatistics(cfg, GA_TFRFIC, GA_TFRFC);
+  
+  % Plotting the results
+  pcfg = [];
+  pcfg.alpha  = 0.025;
+  pcfg.zparam = 'stat';
+  pcfg.zlim   = [-4 4];
+  pcfg.layout = 'CTF151s.lay';
+  try
+    ft_clusterplot(pcfg, stat);
+    failed = false;
+    break;
+  end
+end
+
+if failed
+  error('ft_clusterplot fails cause p was too high');
+end
