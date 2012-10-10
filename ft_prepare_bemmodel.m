@@ -16,7 +16,7 @@ function [vol, cfg] = ft_prepare_bemmodel(cfg, mri)
 %   cfg.conductivity   = [Cskin_surface Couter_skull_surface Cinner_skull_surface]
 %   cfg.hdmfile        = string, file containing the volume conduction model (can be empty)
 %   cfg.isolatedsource = compartment number, or 0
-%   cfg.method         = 'dipoli', 'openmeeg', 'brainstorm' or 'bemcp'
+%   cfg.method         = 'dipoli', 'openmeeg', or 'bemcp'
 %
 % Although the example configuration uses 3 compartments, you can use
 % an arbitrary number of compartments.
@@ -65,7 +65,7 @@ if ~isfield(cfg, 'tissue'),         cfg.tissue = [8 12 14];                  end
 if ~isfield(cfg, 'numvertices'),    cfg.numvertices = [1 2 3] * 500;         end
 if ~isfield(cfg, 'hdmfile'),        cfg.hdmfile = [];                        end
 if ~isfield(cfg, 'isolatedsource'), cfg.isolatedsource = [];                 end
-if ~isfield(cfg, 'method'),         cfg.method = 'dipoli';                   end % dipoli, openmeeg, bemcp, brainstorm
+if ~isfield(cfg, 'method'),         cfg.method = 'dipoli';                   end % dipoli, openmeeg, bemcp
 
 % start with an empty volume conductor
 try
@@ -305,13 +305,6 @@ elseif strcmp(cfg.method, 'openmeeg')
       vol.type = 'openmeeg';
     end
   end
-  
-elseif strcmp(cfg.method, 'brainstorm')
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % this uses an implementation from the BrainStorm toolbox
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  ft_hastoolbox('brainstorm', 1);
-  error('not yet implemented');
   
 else
   error('unsupported method');
