@@ -1,4 +1,4 @@
-% function test_bug1725
+function test_bug1725
 
 % TEST test_bug1725
 % TEST ft_read_atlas ft_prepare_atlas
