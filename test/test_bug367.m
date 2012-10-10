@@ -9,14 +9,13 @@ function test_bug367
 % the two example files with the 151 and 275 channel CTF specifications are available from
 % ftp://ftp.fcdonders.nl/pub/fieldtrip/example/megrealign
 
-cd /home/common/matlab/fieldtrip/data/test/bug367
-
-grad151 = ft_read_sens('ctf151.mat');
-grad275 = ft_read_sens('ctf275.mat');
+grad151 = ft_read_sens('/home/common/matlab/fieldtrip/data/test/bug367/ctf151.mat');
+grad275 = ft_read_sens('/home/common/matlab/fieldtrip/data/test/bug367/ctf275.mat');
 
 vol = [];
 vol.r = 12;
 vol.o = [0 0 4];
+vol.unit = 'cm';
 
 % in this example the dipole is carefully positioned on the same depth as
 % where the dipole layer for the interpolation will be located. The center
