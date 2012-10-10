@@ -38,7 +38,7 @@ test_cfg_options;
 function [tlck] = timelockanalysis10trials(dataset, writeflag)
 
 cfg        = [];
-cfg.inputfile  = fullfile(dataset.origdir,'latest/raw',dataset.type,'preproc_',dataset.datatype);
+cfg.inputfile  = fullfile(dataset.origdir,'latest/raw',dataset.type,['preproc_',dataset.datatype]);
 if writeflag
   cfg.outputfile = fullfile(dataset.origdir,'latest/timelock',dataset.type,'timelock_',dataset.datatype);
 end
