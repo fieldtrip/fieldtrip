@@ -1,4 +1,4 @@
-function test_ft_spike_jpsth()
+function test_ft_spike_xcorr()
 
 % TEST test_ft_spike_xcorr
 % ft_spike_xcorr
@@ -62,6 +62,7 @@ spike = ft_checkdata(data,'datatype', 'spike', 'feedback', 'yes');
 % we should find a broad peak now, but also shift predictor with broad peak
 cfg = [];
 cfg.maxlag   = 0.2;
+cfg.keeptrials='yes';
 X = ft_spike_xcorr(cfg,spike);
 sum(X.xcorr) % adds up to one, correct
 figure, plot(X.time,squeeze(X.xcorr(1,2,:))) % should give sharp peak at neg
