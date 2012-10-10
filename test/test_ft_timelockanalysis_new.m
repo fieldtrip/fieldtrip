@@ -8,6 +8,13 @@ function test_ft_timelockanalysis_new(datainfo,writeflag)
 % the optional writeflag determines whether the output should be saved to
 % disk
 
+%% 
+% This function is testing a new ft_timelockanalysis_new which is something
+% Johanna is working on and not in SVN yet.
+return;
+
+%%
+
 if nargin<2
   writeflag = 0;
 end
