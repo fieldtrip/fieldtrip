@@ -10,7 +10,7 @@ cfg = [];
 cfg.method = 'asa';
 cfg.hdmfile = filename;
 vol1 = ft_prepare_headmodel(cfg);
-vol2 = ft_headmodel_bem_asa(filename);
+vol2 = ft_headmodel_asa(filename);
 vol1 = rmfield(vol1,'cfg');
 if ~isequal(vol1,vol2)
   error('test failed!')
@@ -23,7 +23,7 @@ cfg.method = 'dipoli';
 vol1 = ft_prepare_headmodel(cfg,bnd);
 vol1 = rmfield(vol1,'cfg');
 vol1 = rmfield(vol1,'unit');
-vol2 = ft_headmodel_bem_dipoli(bnd);
+vol2 = ft_headmodel_dipoli(bnd);
 if ~isequal(vol1,vol2)
   error('test failed!')
 end
