@@ -226,15 +226,28 @@ cfg.design(2,1:2*Nsub)  = [1:Nsub 1:Nsub];
 cfg.ivar                = 1; % the 1st row in cfg.design contains the independent variable
 cfg.uvar                = 2; % the 2nd row in cfg.design contains the subject number
  
-stat = ft_timelockstatistics(cfg,GA_FIC,GA_FC)
 
-% make a plot
-cfg = [];
-cfg.highlightsymbolseries = ['*','*','.','.','.'];
-cfg.layout = 'CTF151.lay';
-cfg.contournum = 0;
-cfg.markersymbol = '.';
-cfg.parameter = 'stat';
-cfg.alpha = 0.05;
-cfg.zlim = [-5 5];
-ft_clusterplot(cfg,stat);
+failed = true;
+for i=1:100 % this can fail sometime, like every second iteration or so, 100 is a *really* conservative number here
+  stat = ft_timelockstatistics(cfg,GA_FIC,GA_FC);
+  
+  % make a plot
+  pcfg = [];
+  pcfg.highlightsymbolseries = ['*','*','.','.','.'];
+  pcfg.layout = 'CTF151.lay';
+  pcfg.contournum = 0;
+  pcfg.markersymbol = '.';
+  pcfg.parameter = 'stat';
+  pcfg.alpha = 0.05;
+  pcfg.zlim = [-5 5];
+  try
+    ft_clusterplot(pcfg,stat);
+    failed = false;
+    break;
+  end
+end
+
+
+if failed
+  error('ft_clusterplot fails cause p was too high');
+end
