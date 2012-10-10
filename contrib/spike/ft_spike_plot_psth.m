@@ -134,11 +134,12 @@ catch
 end
 
 % set the axis
+if strcmp(cfg.ylim, 'auto'), cfg.ylim = [0 max(y(:))*1.1+eps]; end
 if cfg.ylim(2)<max(y(:))
   warning('correcting cfg.ylim(2) as it clips the data'); 
   cfg.ylim(2) = max(y(:))*1.1+eps; 
 end
-if strcmp(cfg.ylim, 'auto'), cfg.ylim = [0 max(y(:))*1.1+eps]; end
+
 set(gca,'YLim', cfg.ylim, 'XLim', cfg.latency)
 set(gca,'TickDir','out', 'Box', 'off')
 
