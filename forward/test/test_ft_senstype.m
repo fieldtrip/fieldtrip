@@ -8,32 +8,35 @@ function test_ft_senstype
 
 cnt = 0;
 
-cd('/home/common/matlab/fieldtrip/data/test/raw/');
-cd('eeg');
-d = dir('*.mat');
+if isunix
+  maindir = '/home/common/matlab/fieldtrip/data/test/latest/raw/';
+elseif ispc
+  maindir = 'H:/common/matlab/fieldtrip/data/test/latest/raw/';
+end
+  
+subdir = 'eeg';
+d = dir(fullfile(maindir, subdir, '*.mat'));
 for k = 1:numel(d)
   cnt = cnt+1;
-  load(d(k).name);
+  load(fullfile(maindir, subdir, d(k).name));
   fname{cnt} = d(k).name;
   type{cnt}  = ft_senstype(data);
 end
 
-cd('/home/common/matlab/fieldtrip/data/test/raw/');
-cd('meg');
-d = dir('*.mat');
+subdir = 'meg';
+d = dir(fullfile(maindir, subdir, '*.mat'));
 for k = 1:numel(d)
   cnt = cnt+1;
-  load(d(k).name);
+  load(fullfile(maindir, subdir, d(k).name));
   fname{cnt} = d(k).name;
   type{cnt}  = ft_senstype(data);
 end
 
-cd('/home/common/matlab/fieldtrip/data/test/raw/');
-cd('lfp');
-d = dir('*.mat');
+subdir = 'lfp';
+d = dir(fullfile(maindir, subdir, '*.mat'));
 for k = 1:numel(d)
   cnt = cnt+1;
-  load(d(k).name);
+  load(fullfile(maindir, subdir, d(k).name));
   fname{cnt} = d(k).name;
   type{cnt}  = ft_senstype(data);
 end
