@@ -140,6 +140,7 @@ for tr=1:numel(data_eeg_interp_spline.trial)
   %  error(['The average is not in between its channel neighbours at for trial ' num2str(tr)]);
   %else
    if ~mean(abs(data_eeg_interp_spline.trial{tr}(end, :) - data_eeg_repaired_spline.trial{tr}(25, :))) < 10*eps % i.e. nearly ==0
+    disp(['mean error is: ' num2str(mean(abs(data_eeg_interp_spline.trial{tr}(end, :) - data_eeg_repaired_spline.trial{tr}(25, :))))]); 
     error('The reconstruction of the same channel differs when being treated as a missing channel compared to a bad channel');
   else
     fprintf('trial %i is fine\n', tr);
