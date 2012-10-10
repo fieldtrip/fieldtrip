@@ -13,6 +13,6 @@ setno = 1;
 nave = -1;
 dSPM = true;
 lambda2 = 1/9;
-
+ft_hastoolbox('mne', 1);
 [res] = mne_ex_compute_inverse(fname_data,setno,fname_inv,nave,lambda2,dSPM);
 

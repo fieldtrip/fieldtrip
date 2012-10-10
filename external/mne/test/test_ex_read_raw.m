@@ -7,6 +7,7 @@ fname = [pathstr filesep 'data' filesep 'test_raw.fif'];
 from = 50;
 to = 55;
 in_samples = false;
+ft_hastoolbox('mne', 1);
 [data, times] = mne_ex_read_raw(fname, from, to, in_samples);
 
 assert(size(data, 2) == length(times))

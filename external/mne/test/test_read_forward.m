@@ -5,6 +5,6 @@ data_path = getenv('MNE_SAMPLE_DATASET_PATH');
 if isempty(data_path)
     error('MNE_SAMPLE_DATASET_PATH environment variable no set.')
 end
-
+ft_hastoolbox('mne', 1);
 fname = [data_path filesep 'MEG' filesep 'sample' filesep 'sample_audvis-meg-eeg-oct-6-fwd.fif'];
 fwd = mne_read_forward_solution(fname);
