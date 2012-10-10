@@ -629,7 +629,7 @@ switch cfg.method
   case 'instantaneous_causality'
     % instantaneous ft_connectivity between the series, requires the same elements as granger
     
-    if sum(ft_datatype(data, {'freq' 'freqmvar'})),
+    if ft_datatype(data, 'freq') || ft_datatype(data, 'freqmvar'),
       
       if isfield(data, 'labelcmb') && isempty(cfg.conditional),
         % linearly indexed channel pairs
@@ -665,7 +665,7 @@ switch cfg.method
     
   case 'total_interdependence'
     %total interdependence
-    if sum(ft_datatype(data, {'freq' 'freqmvar'})),
+    if ft_datatype(data, 'freq') || ft_datatype(data, 'freqmvar'),
       
       if isfield(data, 'labelcmb') && isempty(cfg.conditional),
         % multiple pairwise non-parametric transfer functions
