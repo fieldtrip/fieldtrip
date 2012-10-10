@@ -991,22 +991,19 @@ if isempty(cmenulab)
         nearest_event = nearest([opt.event.sample], samp_minmax);
         if opt.event(nearest_event).sample > samp_minmax
           %place new event before nearest
-          ind_event = nearest_event -1;
+          ind_event_new = nearest_event;
         else
           %place new event after nearest
-          ind_event = nearest_event +1;
+          ind_event_new = nearest_event +1;
         end
-        if ind_event == 0
-          ind_event = 1;
-        end
-        event_lastpart = opt.event(ind_event:end);
-        opt.event(ind_event) = event_new;
-        opt.event(ind_event+1:end+1) = event_lastpart;
+        event_lastpart = opt.event(ind_event_new:end);
+        opt.event(ind_event_new) = event_new;
+        opt.event(ind_event_new+1:end+1) = event_lastpart;
       else
         %just add to end
         opt.event(end+1) = event_new;
       end
-      clear event_new ind_event event_lastpart val dum ind_minmax      
+      clear event_new ind_event_new event_lastpart val dum ind_minmax      
     end
     % redraw only when marking (so the focus doesn't go back to the databrowser after calling selfuns
     setappdata(h, 'opt', opt);
