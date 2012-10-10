@@ -47,7 +47,7 @@ t(6) = toc
 
 [minval, minindx] = min(t);
 if minindx~=6
-  error('unexpected winner of the speed test');
+  warning('unexpected winner of the speed test');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
