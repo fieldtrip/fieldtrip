@@ -223,11 +223,11 @@ elseif isdir(filename) && ~isempty(dir(fullfile(filename, '*.res4'))) && ~isempt
   type = 'ctf_ds';
   manufacturer = 'CTF';
   content = 'MEG dataset';
-elseif filetype_check_extension(filename, '.res4') && (filetype_check_header(filename, 'MEG41RS') || filetype_check_header(filename, 'MEG42RS') || filetype_check_header(filename, 'MEG4RES'))
+elseif filetype_check_extension(filename, '.res4') && (filetype_check_header(filename, 'MEG41RS') || filetype_check_header(filename, 'MEG42RS') || filetype_check_header(filename, 'MEG4RES') || filetype_check_header(filename, 'MEG3RES')) %'MEG3RES' pertains to ctf64.ds
   type = 'ctf_res4';
   manufacturer = 'CTF';
   content = 'MEG/EEG header information';
-elseif filetype_check_extension(filename, '.meg4') && filetype_check_header(filename, 'MEG41CP')
+elseif filetype_check_extension(filename, '.meg4') && (filetype_check_header(filename, 'MEG41CP') || filetype_check_header(filename, 'MEG4CPT')) %'MEG4CPT' pertains to ctf64.ds
   type = 'ctf_meg4';
   manufacturer = 'CTF';
   content = 'MEG/EEG';
