@@ -36,7 +36,7 @@ plot(ch1Bs, 'r.');
 % let us look at the filter kernel and the delay
 
 hA = fft(ch1As);
-hA = fft(ch1As);
+hB = fft(ch1Bs);
 H = hA./hB;
 figure
 plot(ifft(H));
