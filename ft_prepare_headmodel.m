@@ -236,7 +236,6 @@ switch cfg.method
   case 'halfspace'
     cfg.point     = ft_getopt(cfg, 'point',     []);
     cfg.submethod = ft_getopt(cfg, 'submethod', []);
-    cfg.conductivity = ft_getopt(cfg, 'conductivity',   []);
     vol = ft_headmodel_halfspace(geometry, cfg.point, 'conductivity',cfg.conductivity,'submethod',cfg.submethod);
     
   case 'infinite'
@@ -254,7 +253,6 @@ switch cfg.method
     vol = ft_headmodel_singleshell(geometry);
     
   case 'singlesphere'
-    cfg.conductivity   = ft_getopt(cfg, 'conductivity',   []);
     if isempty(geometry) && ~isempty(cfg.hdmfile)
       geometry = ft_read_headshape(cfg.hdmfile);
     elseif isempty(geometry)

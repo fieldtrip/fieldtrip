@@ -33,9 +33,7 @@ function [vol, cfg] = ft_prepare_concentricspheres(cfg)
 %   cfg.conductivity = [0.3300 1 0.0042 0.3300]
 %   [vol, cfg] = prepare_concentricspheres(cfg)
 %
-% See also FT_PREPARE_BEMMODEL, FT_PREPARE_LOCALSPHERES,
-% FT_PREPARE_SINGLESHELL, FT_PREPARE_LEADFIELD, FT_PREPARE_MESH,
-% FT_PREPARE_MESH_NEW
+% See also FT_PREPARE_MESH, FT_PREPARE_HEADMODEL, FT_PREPARE_LEADFIELD
 
 % Copyright (C) 2009, Vladimir Litvak & Robert Oostenveld
 %
@@ -82,8 +80,17 @@ end
 % get the surface describing the head shape
 headshape = prepare_mesh_headshape(cfg);
 
-if numel(cfg.conductivity)~=numel(headshape)
-  error('a conductivity value should be specified for each compartment');
+if isempty(cfg.conductivity)
+  if numel(headshape)==1
+    warning('using default conductivity values');
+    cfg.conductivity = 1;
+  elseif numel(headshape)==3
+    warning('using default conductivity values');
+    cfg.conductivity = [1 1/80 1]*0.33;
+  else
+    % for a 2 or 4 sphere model the order of the compartments is potentially ambiguous, hence no default should be supplied
+    error('a conductivity value should be specified for each compartment');
+  end
 end
 
 if strcmp(cfg.fitind, 'all')
