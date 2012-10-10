@@ -10,7 +10,7 @@ function test_bug1029
 filename = '/home/common/matlab/fieldtrip/template/headmodel/skin/standard_skin_1222.vol';
 vol = ft_read_vol(filename);
 
-vol = ft_headmodel_bem_asa(filename);
+vol = ft_headmodel_asa(filename);
 
 cfg = [];
 cfg.method = 'asa';
@@ -41,5 +41,5 @@ vol = ft_prepare_headmodel(cfg);
 %%%%%%%%%%%%%%%%
 % DIPOLI
 %%%%%%%%%%%%%%%%
-vol = ft_headmodel_bem_dipoli(geom, 'conductivity', [1 1/20 1]);
+vol = ft_headmodel_dipoli(geom, 'conductivity', [1 1/20 1]);
 
