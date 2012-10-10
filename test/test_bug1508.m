@@ -18,4 +18,13 @@ cfg.method  = 'mtmfft';
 cfg.channel = {'chan4'};
 cfg.output  = 'pow';
 cfg.taper   = 'hanning';
-freq = ft_freqanalysis(cfg, data);
+
+try
+  freq = ft_freqanalysis(cfg, data);
+catch err
+  if strcmp(err.message,'no channels were selected')
+    % error is expected handling 
+  else
+    error('test doesn''t result in expected error message')
+  end
+end
