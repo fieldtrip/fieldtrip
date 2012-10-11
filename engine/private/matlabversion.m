@@ -19,7 +19,8 @@ function [inInterval] = matlabversion(min, max)
 %
 % See also VERSION, VER, VERLESSTHAN
 
-% Copyright (C) 2006, Robert Oostenveld; 2010, Eelke Spaak
+% Copyright (C) 2006, Robert Oostenveld
+% Copyright (C) 2010, Eelke Spaak
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
