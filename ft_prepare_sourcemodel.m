@@ -644,6 +644,7 @@ if basedonmni
   % grid positions
   tmpcfg           = [];
   tmpcfg.nonlinear = cfg.grid.nonlinear;
+  if isfield(cfg.grid, 'templatemri'), tmpcfg.template = cfg.grid.templatemri; end
   normalise        = ft_volumenormalise(tmpcfg,mri);
   
   grid = [];
@@ -653,14 +654,14 @@ if basedonmni
   else
     grid.pos = warp_apply(inv(normalise.initial), warp_apply(normalise.params, mnigrid.pos, 'sn2individual')); 
   end
-  grid.dim         = mnigrid.dim;
-  grid.unit        = mnigrid.unit;
-  grid.inside      = mnigrid.inside;
-  grid.outside     = mnigrid.outside;
-  grid.params      = normalise.params;
+  grid.dim     = mnigrid.dim;
+  grid.unit    = mnigrid.unit;
+  grid.inside  = mnigrid.inside;
+  grid.outside = mnigrid.outside;
+  grid.params  = normalise.params;
   
   % convert to the requested units
-  grid             = ft_convert_units(grid, cfg.sourceunits);
+  grid         = ft_convert_units(grid, cfg.sourceunits);
   
 end
 
@@ -670,16 +671,16 @@ if ~isfield(grid, 'inside') && ~isfield(grid, 'outside')
   if ft_voltype(vol, 'infinite') || ft_voltype(vol, 'infinite_monopole')
     % an empty vol in combination with gradiometers indicates a magnetic dipole
     % in an infinite vacuum, i.e. all dipoles can be considered to be inside
-    grid.inside = 1:size(grid.pos,1);
+    grid.inside  = 1:size(grid.pos,1);
     grid.outside = [];
-    outside = zeros(1,size(grid.pos,1));
+    outside      = zeros(1,size(grid.pos,1));
     grid.outside = find(outside);
     grid.inside  = find(~outside);
   elseif ft_voltype(vol, 'halfspace') || ft_voltype(vol, 'halfspace_monopole')
-    grid.inside = 1:size(grid.pos,1);
+    grid.inside  = 1:size(grid.pos,1);
     grid.outside = [];
     outside = zeros(1,size(grid.pos,1));
-    for i =1:size(grid.pos,1);
+    for i = 1:size(grid.pos,1);
       invacuum = false;
       dip1 = grid.pos(i,:);
       % condition of dipoles/monopoles falling in the non conductive halfspace
