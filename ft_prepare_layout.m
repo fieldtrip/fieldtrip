@@ -88,7 +88,7 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble help
-ft_preamble callinfo
+ft_preamble provenance
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % basic check/initialization of input arguments
@@ -705,7 +705,7 @@ elseif ~isempty(cfg.output) && strcmpi(cfg.style, '3d')
 end
 
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble callinfo
+ft_postamble provenance
 ft_postamble previous data
 ft_postamble history lay
 

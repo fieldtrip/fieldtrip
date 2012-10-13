@@ -101,7 +101,7 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble help
-ft_preamble callinfo
+ft_preamble provenance
 
 % make sure figure window titles are labeled appropriately, pass this onto
 % the actual plotting function
@@ -152,6 +152,6 @@ cfg.showcallinfo = 'no';
 cfg.showcallinfo = 'yes';
 
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble callinfo
+ft_postamble provenance
 ft_postamble previous varargin
 

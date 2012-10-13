@@ -25,8 +25,24 @@
 
 global ft_default
 
+% the following section deals with tracking the information about the output data structures
+% the corresponding section for the input data structures is in ft_postamble_loadvar
+
+if isfield(cfg, 'trackdatainfo') && istrue(cfg.trackdatainfo)
+  % track the information about the output data structures
+  if isequal(ft_default.postamble, {'varargout'})
+    for i=1:length(varargout)
+      % store the hash for each output argument
+      cfg.datainfo.output{i} = hashvar(varargout{i});
+    end
+  else
+    for i=1:length(ft_default.postamble)
+      cfg.datainfo.output{i} = eval(sprintf('hashvar(%s)', ft_default.postamble{i}));
+    end
+  end
+end
+
 for tmpindx=1:length(ft_default.postamble)
   eval(sprintf('try, %s.cfg = cfg; end', ft_default.postamble{tmpindx}));
 end
 clear tmpindx
-

@@ -1,8 +1,13 @@
-% FT_POSTAMBLE_CALLINFO is a helper script that reports the time and memory
-% that was used by the calling function and that stores this information
-% together with user name, MATLAB version and some other stuff in the
-% output cfg structure. This should be used together with FT_PREAMBLE_CALLINFO,
-% which records the time and memory at the start of the function.
+% FT_POSTAMBLE_PROVENANCE is a helper script that reports the time and memory that was
+% used by the calling function and that stores this information together with user
+% name, MATLAB version and other provenance information in the output cfg structure.
+% This should be used together with FT_PREAMBLE_PROVENANCE, which records the time and
+% memory at the start of the function.
+%
+% Another aspects of provenance relates to uniquely identifying the input and the
+% output data. The code that deals with tracking the information about the input data
+% structures is found in ft_preamble_loadvar. The code that deals with tracking the
+% information about the output data structures is found in ft_preamble_history.
 
 % Copyright (C) 2011-2012, Robert Oostenveld, DCCN
 %
@@ -24,19 +29,28 @@
 %
 % $Id$
 
+if isfield(cfg, 'trackcallinfo') && ~istrue(cfg.trackcallinfo)
+  % do not track the call information
+  return
+end
+
 stack = dbstack('-completenames');
 % stack(1) is this script
 % stack(2) is the calling ft_postamble function
 % stack(3) is the main FieldTrip function that we are interested in
 stack = stack(3);
 
-% add information about the Matlab version used to the configuration
-cfg.callinfo.matlab = version();
+% add information about the FieldTrip and MATLAB version used to the configuration
+cfg.callinfo.fieldtrip = ft_version();
+cfg.callinfo.matlab    = version();
 
-% add information about the function call to the configuration
-cfg.callinfo.proctime = toc(ftFuncTimer);
-cfg.callinfo.procmem  = memtoc(ftFuncMem);
-cfg.callinfo.calltime = ftFuncClock;
+% the proctime, procmem and calltime rely on three cryptical variables that were
+% created and added to the function workspace by the ft_preamble_callinfo script.
+cfg.callinfo.proctime = toc(ftohDiW7th_FuncTimer);
+cfg.callinfo.procmem  = memtoc(ftohDiW7th_FuncMem);
+cfg.callinfo.calltime = ftohDiW7th_FuncClock;
+
+% add information about the execution environment to the configuration
 cfg.callinfo.user     = getusername();
 cfg.callinfo.hostname = gethostname();
 cfg.callinfo.pwd      = pwd;
@@ -60,7 +74,10 @@ if istrue(ft_getopt(cfg, 'showcallinfo', 'yes'))
   else
     fprintf('the call to "%s" took %d seconds and required the additional allocation of an estimated %d MB\n', stack.name, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
   end
-  
 end
 
+clear ftohDiW7th_FuncTimer
+clear ftohDiW7th_FuncMem
+clear ftohDiW7th_FuncClock
 clear stack
+

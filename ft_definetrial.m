@@ -110,7 +110,7 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble help
-ft_preamble callinfo
+ft_preamble provenance
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'dataset2files', {'yes'});
@@ -179,5 +179,5 @@ fprintf('created %d trials\n', size(trl,1));
 cfg.trl = trl;
 
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble callinfo
+ft_postamble provenance
 

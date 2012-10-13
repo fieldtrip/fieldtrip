@@ -1,4 +1,4 @@
-function [script, details] = ft_analysisprotocol(cfg, datacfg)
+function [script, details] = ft_analysisprotocol(cfg, data)
 
 % FT_ANALYSISPROTOCOL tries to reconstruct the complete analysis protocol that
 % was used to create an arbitrary FieldTrip data structure. It will create
@@ -91,14 +91,14 @@ if ~isfield(cfg, 'showcallinfo'), cfg.showcallinfo = 'no';   end
 % do the general setup of the function
 ft_defaults
 ft_preamble help
-ft_preamble callinfo
+ft_preamble provenance
 ft_preamble trackconfig
 
 % set the defaults
-if ~isfield(cfg, 'filename'),    cfg.filename    = [];   end
-if ~isfield(cfg, 'showinfo'),    cfg.showinfo    = {'functionname'};   end
-if ~isfield(cfg, 'keepremoved'), cfg.keepremoved = 'no'; end
-if ~isfield(cfg, 'feedback'),    cfg.feedback = 'yes';   end
+if ~isfield(cfg, 'filename'),    cfg.filename    = [];                end
+if ~isfield(cfg, 'showinfo'),    cfg.showinfo    = {'functionname'};  end
+if ~isfield(cfg, 'keepremoved'), cfg.keepremoved = 'no';              end
+if ~isfield(cfg, 'feedback'),    cfg.feedback    = 'yes';             end
 
 if ~isfield(cfg, 'remove')
   % this is the default list of configuration elements to be removed. These
@@ -128,10 +128,17 @@ end
 
 if strcmp(cfg.showinfo, 'all')
   cfg.showinfo = {
-    'functionname', 'revision', 'matlabversion',...
-    'computername', 'username', 'calltime', 'timeused',...
-    'memused', 'workingdir', 'scriptpath'...
-  };
+    'functionname'
+    'revision'
+    'matlabversion'
+    'computername'
+    'username'
+    'calltime'
+    'timeused'
+    'memused'
+    'workingdir'
+    'scriptpath'
+    };
 end
 
 if ~isfield(cfg, 'showinfo')
@@ -140,17 +147,19 @@ elseif ~iscell(cfg.showinfo)
   cfg.showinfo = {cfg.showinfo};
 end
 
-feedbackgui  = strcmp(cfg.feedback, 'gui') || strcmp(cfg.feedback, 'yes');
-feedbacktext = strcmp(cfg.feedback, 'text') || strcmp(cfg.feedback, 'yes') || strcmp(cfg.feedback, 'verbose');
+feedbackgui     = strcmp(cfg.feedback, 'gui')  || strcmp(cfg.feedback, 'yes');
+feedbacktext    = strcmp(cfg.feedback, 'text') || strcmp(cfg.feedback, 'yes') || strcmp(cfg.feedback, 'verbose');
 feedbackverbose = strcmp(cfg.feedback, 'verbose');
 
 % we are only interested in the cfg-part of the data
-if isfield(datacfg, 'cfg')
-  datacfg = datacfg.cfg;
+if isfield(data, 'cfg')
+  datacfg = data.cfg;
+else
+  datacfg = data;
 end
 
 % set up the persistent variables
-if isempty(depth),  depth = 1; end
+if isempty(depth),  depth  = 1; end
 if isempty(branch), branch = 1; end
 
 if depth==1 && branch==1 && feedbacktext
@@ -236,7 +245,7 @@ extraBranchesFound = 0;
 
 prev   = parent;
 parent = [branch depth]; % this will be used in the recursive call
-  
+
 if isfield(datacfg, 'previous')
   
   if isstruct(datacfg.previous)
@@ -258,7 +267,7 @@ if isfield(datacfg, 'previous')
     for i=1:length(datacfg.previous(:))
       % increment the depth counter
       depth = depth + 1;
-
+      
       % increment the branch counter
       branch = branch + extraBranchesFound;
       extraBranchesFound = 1;
@@ -398,7 +407,7 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
-ft_postamble callinfo
+ft_postamble provenance
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

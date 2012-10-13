@@ -77,7 +77,7 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble help
-% ft_preamble callinfo is not needed because just a call to ft_artifact_zvalue
+% ft_preamble provenance is not needed because just a call to ft_artifact_zvalue
 % ft_preamble loadvar data is not needed because ft_artifact_zvalue will do this
 
 % check if the input cfg is valid for this function

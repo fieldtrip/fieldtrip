@@ -70,7 +70,7 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble help
-ft_preamble callinfo
+ft_preamble provenance
 ft_preamble trackconfig
 ft_preamble loadvar interp
 
@@ -295,7 +295,7 @@ ft_postamble trackconfig
 cfg.spmparams = params;
 cfg.final     = final;
 
-ft_postamble callinfo
+ft_postamble provenance
 ft_postamble previous interp
 ft_postamble history normalise
 ft_postamble savevar normalise

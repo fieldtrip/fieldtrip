@@ -61,7 +61,7 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble help
-ft_preamble callinfo
+ft_preamble provenance
 ft_preamble loadvar data
 
 % check if the input cfg is valid for this function
@@ -183,6 +183,6 @@ cfg.artfctdef.clip.trl      = trl;
 cfg.artfctdef.clip.artifact = artifact;
 
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble callinfo
+ft_postamble provenance
 ft_postamble previous data
 

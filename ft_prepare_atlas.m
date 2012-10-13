@@ -42,7 +42,7 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble help
-ft_preamble callinfo
+ft_preamble provenance
 
 if ischar(cfg)
   % prior to 7 December 2011, this function was called with the filename as input
@@ -630,5 +630,5 @@ elseif usewfu
 end
 
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble callinfo
+ft_postamble provenance
 ft_postamble history atlas

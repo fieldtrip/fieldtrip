@@ -60,7 +60,7 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble help
-ft_preamble callinfo
+ft_preamble provenance
 
 % check if the input data is valid for this function
 data = ft_checkdata(data, 'datatype', 'timelock');
@@ -73,6 +73,6 @@ cfg = ft_movieplotTFR(cfg, data);
 
 % do the general cleanup and bookkeeping at the end of the function
 % this will replace the ft_movieplotTFR callinfo with that of ft_movieplotER
-ft_postamble callinfo
+ft_postamble provenance
 ft_postamble previous data
 

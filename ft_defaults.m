@@ -19,7 +19,7 @@ function ft_defaults
 % Note that this should be a function and not a script, otherwise the
 % ft_hastoolbox function appears not be found in fieldtrip/private.
 
-% Copyright (C) 2009-2011, Robert Oostenveld
+% Copyright (C) 2009-2012, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -39,12 +39,18 @@ function ft_defaults
 %
 % $Id$
 
-% set the global defaults, the ft_checkconfig function will copy these into the local configurations
+% set the defaults in a global variable, ft_checkconfig will copy these over into the local configuration
+% note that ft_getopt might not be available on the path at this moment
 global ft_default
-if ~isfield(ft_default, 'trackconfig'),  ft_default.trackconfig  = 'off';    end % cleanup, report, off
-if ~isfield(ft_default, 'checkconfig'),  ft_default.checkconfig  = 'loose';  end % pedantic, loose, silent
-if ~isfield(ft_default, 'checksize'),    ft_default.checksize    = 1e5;      end % number in bytes, can be inf
-if ~isfield(ft_default, 'showcallinfo'), ft_default.showcallinfo = 'yes';    end % yes or no, this is used in ft_postamble_callinfo
+if ~isfield(ft_default, 'trackconfig'),    ft_default.trackconfig    = 'off';    end % cleanup, report, off
+if ~isfield(ft_default, 'checkconfig'),    ft_default.checkconfig    = 'loose';  end % pedantic, loose, silent
+if ~isfield(ft_default, 'checksize'),      ft_default.checksize      = 1e5;      end % number in bytes, can be inf
+if ~isfield(ft_default, 'showcallinfo'),   ft_default.showcallinfo   = 'yes';    end % yes or no, this is used in ft_postamble_provenance
+
+% these options allow to disable parts of the provenance
+if ~isfield(ft_default, 'trackcallinfo'),  ft_default.trackcallinfo  = 'yes';    end % yes or no
+if ~isfield(ft_default, 'trackdatainfo'),  ft_default.trackdatainfo  = 'no';     end % yes or no, this is still under development
+if ~isfield(ft_default, 'trackparaminfo'), ft_default.trackparaminfo = 'no';     end % yes or no, this is still under development
 
 % Ensure that the path containing ft_defaults (i.e. the fieldtrip toolbox
 % itself) is on the path. This allows people to do "cd path_to_fieldtrip; ft_defaults"
@@ -109,14 +115,14 @@ if length(list)>1
   end
 end
 
-if ~isdeployed 
-
+if ~isdeployed
+  
   if isempty(which('ft_hastoolbox'))
     % the fieldtrip/utilities directory contains the ft_hastoolbox function
     % which is required for the remainder of this script
     addpath(fullfile(fileparts(which('ft_defaults')), 'utilities'));
-  end  
-
+  end
+  
   try
     % this directory contains the backward compatibility wrappers for the ft_xxx function name change
     ft_hastoolbox('compat', 3, 1); % not required
@@ -199,7 +205,7 @@ if ~isdeployed
   
 end
 
-end
+end % function ft_default
 
 function checkMultipleToolbox(toolbox, keyfile)
 
@@ -215,4 +221,4 @@ if length(list)>1
   
 end
 
-end
+end % function checkMultipleToolbox

@@ -41,7 +41,7 @@ function ft_preamble(cmd, varargin)
 %#function ft_preamble_help
 %#function ft_preamble_distribute
 %#function ft_preamble_trackconfig
-%#function ft_preamble_callinfo
+%#function ft_preamble_provenance
 %#function ft_preamble_loadvar
 %#function ft_preamble_randomseed
 

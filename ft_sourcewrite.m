@@ -29,7 +29,7 @@ revision = '$Id$';
 
 ft_defaults                 
 ft_preamble help           
-ft_preamble callinfo        
+ft_preamble provenance        
 ft_preamble trackconfig     
 ft_preamble loadvar source
 
@@ -74,4 +74,4 @@ else
 end
 
 ft_postamble trackconfig      
-ft_postamble callinfo        
+ft_postamble provenance        
