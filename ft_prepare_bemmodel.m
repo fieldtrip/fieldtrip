@@ -1,32 +1,9 @@
 function [vol, cfg] = ft_prepare_bemmodel(cfg, mri)
 
-% FT_PREPARE_BEMMODEL constructs triangulations of the boundaries between
-% multiple segmented tissue types in an anatomical MRI and subsequently
-% computes the BEM system matrix.
+% FT_PREPARE_BEMMODEL  is deprecated, please use FT_PREPARE_HEADMODEL and
+% FT_PREPARE_MESH
 %
-% Use as
-%   [vol] = ft_prepare_bemmodel(cfg, mri), or
-%   [vol] = ft_prepare_bemmodel(cfg, seg), or
-%   [vol] = ft_prepare_bemmodel(cfg, vol), or
-%   [vol] = ft_prepare_bemmodel(cfg)
-%
-% The configuration can contain
-%   cfg.tissue         = [1 2 3], segmentation value of each tissue type
-%   cfg.numvertices    = [Nskin_surface Nouter_skull_surface Ninner_skull_surface]
-%   cfg.conductivity   = [Cskin_surface Couter_skull_surface Cinner_skull_surface]
-%   cfg.hdmfile        = string, file containing the volume conduction model (can be empty)
-%   cfg.isolatedsource = compartment number, or 0
-%   cfg.method         = 'dipoli', 'openmeeg', or 'bemcp'
-%
-% Although the example configuration uses 3 compartments, you can use
-% an arbitrary number of compartments.
-%
-% This function implements
-%   Oostendorp TF, van Oosterom A.
-%   Source parameter estimation in inhomogeneous volume conductors of arbitrary shape
-%   IEEE Trans Biomed Eng. 1989 Mar;36(3):382-91.
-%
-% See also FT_PREPARE_MESH, FT_PREPARE_HEADMODEL, FT_PREPARE_LEADFIELD
+% See also FT_PREPARE_HEADMODEL
 
 % Copyright (C) 2005-2009, Robert Oostenveld
 %
@@ -48,7 +25,7 @@ function [vol, cfg] = ft_prepare_bemmodel(cfg, mri)
 %
 % $Id$
 
-warning('FT_PREPARE_BEMMODEL is deprecated, please use FT_PREPARE_HEADMODEL with cfg.method = ''dipoli/openmeeg/bemcp ...'' instead.')
+warning('FT_PREPARE_BEMMODEL is deprecated, please use FT_PREPARE_HEADMODEL with cfg.method = ''dipoli/openmeeg/bemcp'' instead.')
 
 revision = '$Id$';
 

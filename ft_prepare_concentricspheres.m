@@ -1,39 +1,9 @@
 function [vol, cfg] = ft_prepare_concentricspheres(cfg)
 
-% FT_PREPARE_CONCENTRICSPHERES creates a EEG volume conductor model with
-% multiple concentric spheres.
+% FT_PREPARE_CONCENTRICSPHERES is deprecated, please use FT_PREPARE_HEADMODEL and
+% FT_PREPARE_MESH
 %
-% Use as
-%   vol = ft_prepare_concentricspheres(cfg)
-%
-% The input configuration should contain
-%   cfg.headshape     = a filename containing headshape, a Nx3 matrix with surface 
-%                       points, or a structure with a single or multiple boundaries
-%   cfg.conductivity  = conductivity values for the model (default = [0.3300 1 0.0042 0.3300])
-%   cfg.fitind        = indices of shapes to use for fitting the center (default = 'all')
-%   cfg.nonlinear     = 'yes' or 'no' (default = 'yes')
-%   cfg.feedback      = 'yes' or 'no' (default = 'yes')
-%
-% Example:
-%
-%   % first create 4 surfaces that represent the inner_skull_surface, csf, outer_skull_surface and skin_surface
-%   radius = [86 88 92 100];
-%   headshape = [];
-%   for i=1:4
-%     pnt = randn(100,3);
-%     for j=1:size(pnt,1)
-%       pnt(j,:) = pnt(j,:) ./ norm(pnt(j,:));
-%     end
-%     headshape(i).pnt = radius(i) .* pnt + 0.1*randn(size(pnt));
-%   end
-%
-%   % then construct a volume conduction model of the head by fitting 4 concentric spheres
-%   cfg = [];
-%   cfg.headshape    = headshape;
-%   cfg.conductivity = [0.3300 1 0.0042 0.3300]
-%   [vol, cfg] = prepare_concentricspheres(cfg)
-%
-% See also FT_PREPARE_MESH, FT_PREPARE_HEADMODEL, FT_PREPARE_LEADFIELD
+% See also FT_PREPARE_HEADMODEL
 
 % Copyright (C) 2009, Vladimir Litvak & Robert Oostenveld
 %
@@ -54,6 +24,8 @@ function [vol, cfg] = ft_prepare_concentricspheres(cfg)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
+
+warning('FT_PREPARE_CONCENTRICSPHERES is deprecated, please use FT_PREPARE_HEADMODEL with cfg.method = ''concentricspheres'' instead.')
 
 revision = '$Id$';
 

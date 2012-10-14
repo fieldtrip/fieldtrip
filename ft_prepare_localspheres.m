@@ -1,54 +1,9 @@
 function [vol, cfg] = ft_prepare_localspheres(cfg, mri)
 
-% FT_PREPARE_LOCALSPHERES creates a MEG volume conductor model with a sphere
-% for every sensor. You can also use it to create a single sphere
-% model that is fitted to the MRI or to the head shape points.
+% FT_PREPARE_LOCALSPHERES is deprecated, please use FT_PREPARE_HEADMODEL and
+% FT_PREPARE_MESH
 %
-% Use as
-%   vol = ft_prepare_localspheres(cfg, seg), or
-%   vol = ft_prepare_localspheres(cfg, mri), or
-%   vol = ft_prepare_localspheres(cfg)
-%
-% The input configuration should contain
-%   cfg.grad         = structure with gradiometer definition, or
-%   cfg.gradfile     = filename containing gradiometer definition
-%   cfg.radius       = number, which points to select for each channel (default = 7 cm)
-%   cfg.baseline     = number, baseline of axial/planar gradiometer (default = 5 cm)
-%   cfg.feedback     = 'yes' or 'no' (default = 'yes')
-%   cfg.singlesphere = 'yes' or 'no', fit only a single sphere (default = 'no')
-%   cfg.headshape    = a filename containing headshape, a structure containing a
-%                      single triangulated boundary, or a Nx3 matrix with surface
-%                      points
-%
-% The following options are relevant if you use a segmented MRI
-%   cfg.smooth      = 'no' or the FWHM of the gaussian kernel in voxels (default = 'no')
-%   cfg.sourceunits = 'mm' or 'cm' (default = 'cm')
-%   cfg.threshold   = 0.5, relative to the maximum value in the segmentation
-%
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
-%   cfg.inputfile   =  ...
-%   cfg.outputfile  =  ...
-% If you specify one of these (or both) the input data will be read from a *.mat
-% file on disk and/or the output data will be written to a *.mat file. These mat
-% files should contain only a single variable, corresponding with the
-% input/output structure.
-%
-% This function implements
-%   Huang MX, Mosher JC, Leahy RM.
-%   A sensor-weighted overlapping-sphere head model and exhaustive head model comparison for MEG
-%   Phys Med Biol. 1999 Feb;44(2):423-40
-
-% TODO cfg.spheremesh  should be renamed consistently with other mesh generation cfgs
-% TODO shape should contain pnt as subfield and not be equal to pnt (for consistency with other use of shape)
-%
-% Undocumented local options:
-% cfg.spheremesh = number of points that is placed on the brain surface (default 4000)
-% cfg.maxradius
-%
-% See also FT_PREPARE_CONCENTRICSPHERES, FT_PREPARE_BEMMODEL,
-% FT_PREPARE_SINGLESHELL, FT_PREPARE_LEADFIELD, FT_PREPARE_MESH,
-% FT_PREPARE_MESH_NEW
+% See also FT_PREPARE_HEADMODEL
 
 % Copyright (C) 2005-2006, Jan-Mathijs Schoffelen & Robert Oostenveld
 %
@@ -69,6 +24,8 @@ function [vol, cfg] = ft_prepare_localspheres(cfg, mri)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
+
+warning('FT_PREPARE_CONCENTRICSPHERES is deprecated, please use FT_PREPARE_HEADMODEL with cfg.method = ''localspheres'' instead.')
 
 revision = '$Id$';
 

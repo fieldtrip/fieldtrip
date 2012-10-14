@@ -15,10 +15,9 @@ function [vol, cfg] = ft_prepare_headmodel(cfg, data)
 %
 % Use as
 %   vol = ft_prepare_headmodel(cfg)       or
-%   vol = ft_prepare_headmodel(cfg, bnd)  with the output of FT_PREPARE_MESH
+%   vol = ft_prepare_headmodel(cfg, bnd)  with the output of FT_PREPARE_MESH or FT_READ_HEADSHAPE
 %   vol = ft_prepare_headmodel(cfg, seg)  with the output of FT_VOLUMESEGMENT
 %   vol = ft_prepare_headmodel(cfg, elec) with the output of FT_READ_SENS
-%   vol = ft_prepare_headmodel(cfg, vol)  with the output of FT_READ_VOL
 %
 % In general the input to this function is a geometrical description of the
 % shape of the head and a description of the electrical conductivity. The
@@ -43,12 +42,11 @@ function [vol, cfg] = ft_prepare_headmodel(cfg, data)
 %   infinite           electric dipole in an infinite homogenous medium
 %   halfspace          infinite homogenous medium on one side, vacuum on the other
 %
-% and for MEG the following methods are available:
+% For MEG the following methods are available:
 %   singlesphere       analytical single sphere model
 %   localspheres       local spheres model for MEG, one sphere per channel
 %   singleshell        realisically shaped single shell approximation, based on the implementation from Guido Nolte
 %   infinite           magnetic dipole in an infinite vacuum
-%
 %
 % Additionally, each specific method has its specific configuration options
 % which are listed below.
@@ -82,8 +80,7 @@ function [vol, cfg] = ft_prepare_headmodel(cfg, data)
 % low-level function which is called FT_HEADMODEL_XXX where XXX is the method 
 % of choise.
 %
-% See also FT_PREPARE_LEADFIELD, FT_PREPARE_SOURCEMODEL, FT_PREPARE_MESH,
-% FT_VOLUMESEGMENT, FT_VOLUMEREALIGN, FT_READ_VOL, FT_READ_SENS,
+% See also FT_PREPARE_SOURCEMODEL, FT_PREPARE_LEADFIELD, FT_PREPARE_MESH,
 % FT_HEADMODEL_BEMCP, FT_HEADMODEL_ASA, FT_HEADMODEL_DIPOLI,
 % FT_HEADMODEL_SIMBIO, FT_HEADMODEL_FNS, FT_HEADMODEL_HALFSPACE,
 % FT_HEADMODEL_INFINITE, FT_HEADMODEL_OPENMEEG, FT_HEADMODEL_SINGLESPHERE,
