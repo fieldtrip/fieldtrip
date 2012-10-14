@@ -120,20 +120,17 @@ if ~isempty(optbeg)
   varargin = varargin(1:(optbeg-1));
 end
 
-if isa(fname, 'function_handle')
-  % convert the function handle back into a string (e.g. @plus should be 'plus')
-  fname = func2str(fname);
-  fcomp = [];
-elseif isstruct(fname)
+if isstruct(fname)
   % the function has been compiled by qsubcompile
   fcomp = fname;
+  % continue with the original function name
   fname = fcomp.fname;
 else
   fcomp = [];
 end
 
 % there are potentially errors to catch from the which() function
-if isempty(which(fname))
+if ischar(fname) && isempty(which(fname))
   error('Not a valid M-file (%s).', fname);
 end
 
@@ -228,16 +225,20 @@ if stack>1
   partition     = floor((0:numjob-1)/stack)+1;
   numpartition  = partition(end);
   
-  stackargin        = cell(1,numargin+3); % include the fname, uniformoutput, false
+  stackargin = cell(1,numargin+3); % include the fname, uniformoutput, false
   if istrue(compile)
-    stackargin{1}     = repmat({str2func(fcomp)},1,numpartition);  % fcomp
+    stackargin{1} = repmat({fcomp}, 1, numpartition);
   else
-    stackargin{1}     = repmat({str2func(fname)},1,numpartition);  % fname
+    stackargin{1} = repmat({fname}, 1, numpartition);
+  end
+  if ischar(stackargin{1}{1})
+    % it should contain function handles, not strings
+    stackargin{1} = cellfun(@str2func, stackargin{1});
   end
   stackargin{end-1} = repmat({'uniformoutput'},1,numpartition);  % uniformoutput
   stackargin{end}   = repmat({false},1,numpartition);            % false
   
-  % reorganise the original input into the stacked format
+  % reorganize the original input into the stacked format
   for i=1:numargin
     tmp = cell(1,numpartition);
     for j=1:numpartition

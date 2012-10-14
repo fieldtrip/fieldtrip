@@ -46,8 +46,8 @@ try
     error('input argument should be a cell-array');
   end
   
-  if ~ischar(argin{1})
-    error('input argument #1 should be a string');
+  if ~ischar(argin{1}) && ~isa(argin{1}, 'function_handle')
+    error('input argument #1 should be a string or a function handle');
   end
   
   fname = argin{1};
@@ -103,7 +103,7 @@ try
   end
   
   % there are potentially errors to catch from the which() function
-  if isempty(which(fname))
+  if ischar(fname) && isempty(which(fname))
     error('Not a valid M-file (%s).', fname);
   end
   
@@ -227,7 +227,9 @@ end % try-catch
 % end
 
 % clear the function and any persistent variables in it
-clear(fname);
+if ischar(fname)
+  clear(fname);
+end
 
 % close all files and figures
 fclose all;

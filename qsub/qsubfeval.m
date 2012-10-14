@@ -130,10 +130,7 @@ end
 % determine whether the function has been compiled
 compile = isstruct(varargin{1});
 
-if isa(varargin{1}, 'function_handle')
-  % convert the function handle back into a string (e.g. @plus should be 'plus')
-  varargin{1} = func2str(varargin{1});
-elseif isa(varargin{1}, 'struct')
+if isa(varargin{1}, 'struct')
   % the function has been compited by qsubcompile
   compiledfun = varargin{1}.executable;
   % continue with the original function name
@@ -142,7 +139,7 @@ end
 
 if ~isempty(previous_argin) && ~isequal(varargin{1}, previous_argin{1})
   % this can be skipped if the previous call used the same function
-  if isempty(which(varargin{1}))
+  if ischar(varargin{1}) && isempty(which(varargin{1}))
     error('Not a valid M-file (%s).', varargin{1});
   end
 end
