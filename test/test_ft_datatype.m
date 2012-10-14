@@ -3,6 +3,8 @@ function test_ft_datatype
 % TEST test_ft_datatype
 % TEST ft_datatype ft_datatype_comp ft_datatype_mvar ft_datatype_source ft_datatype_dip ft_datatype_parcellation ft_datatype_spike ft_datatype_freq ft_datatype_raw ft_datatype_timelock ft_datatype_headmodel ft_datatype_segmentation ft_datatype_volume ft_datatype ft_datatype_sens
 
+% the style of this test script is also used in test_ft_analysisprotcol
+
 dirlist = {
   '/home/common/matlab/fieldtrip/data/test/latest'
   '/home/common/matlab/fieldtrip/data/test/20111231'
@@ -78,106 +80,9 @@ for j=1:length(dirlist)
         warning('not testing %s', filelist{i});
         % do nothing
     end % switch
+
   end % for filelist
 end % for dirlist
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-function [list, numdirs, numfiles] = hcp_dirlist(basedir, recursive)
-
-if nargin<2
-  recursive = true;
-end
-
-if ~isdir(basedir)
-  error('directory "%s" does not exist', basedir)
-end
-
-list = dir(basedir);
-
-% remove all non-directories and hidden directories
-list = list([list.isdir]);
-hidden = false(size(list));
-for i=1:length(list)
-  hidden(i) = list(i).name(1)=='.';
-end
-list = list(~hidden);
-
-% convert to cell-array
-list = {list.name};
-list = list(:);
-for i=1:length(list)
-  list{i} = fullfile(basedir, list{i});
-end
-
-list = sort(list);
-numdirs = nan(size(list));
-numfiles = nan(size(list));
-
-for i=1:length(list)
-  content = dir(list{i});
-  numdirs(i) = sum([content.isdir]) - 2;
-  numfiles(i) = length(content) - numdirs(i) - 2;
-end
-
-if recursive
-  sub_list = cell(size(list));
-  sub_numdirs = cell(size(list));
-  sub_numfiles = cell(size(list));
-  for i=1:length(list)
-    [sub_list{i}, sub_numdirs{i}, sub_numfiles{i}] = hcp_dirlist(list{i}, recursive);
-  end
-  list = cat(1, list, sub_list{:});
-  numdirs = cat(1, numdirs, sub_numdirs{:});
-  numfiles = cat(1, numfiles, sub_numfiles{:});
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-function list = hcp_filelist(basedir)
-
-dirlist = hcp_dirlist(basedir, true);
-dirlist{end+1} = basedir;
-list = {};
-
-for i=1:length(dirlist)
-  f = dir(dirlist{i});
-  f = f(~[f.isdir]);
-  f = {f.name};
-  for j=1:length(f)
-    f{j} = fullfile(dirlist{i}, f{j});
-  end
-  list = cat(1, list, f(:));
-end
-
-list = sort(list);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-function value = loadvar(filename, varname)
-
-if nargin<2
-  fprintf('reading variable from file ''%s''\n', filename);
-else
-  fprintf('reading ''%s'' from file ''%s''\n', varname, filename);
-end
-
-var = whos('-file', filename);
-
-if length(var)==1
-  filecontent = load(filename); % read the one variable in the file, regardless of how it is called
-  value = filecontent.(var.name);
-  clear filecontent
-else
-  filecontent = load(filename, varname);
-  value = filecontent.(varname); % read the variable named according to the input specification
-  clear filecontent
-end
 
