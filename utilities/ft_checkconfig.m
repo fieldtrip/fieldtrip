@@ -195,6 +195,9 @@ if ~isempty(allowed)
     'checkconfig'
     'checksize'
     'showcallinfo'
+    'trackcallinfo'
+    'trackdatainfo'
+    'trackparaminfo'
     });
   fieldsused = fieldnames(cfg);
   [c, i] = setdiff(fieldsused, allowed);
