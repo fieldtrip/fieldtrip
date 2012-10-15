@@ -4,7 +4,9 @@ function test_bug1742
 % TEST qsubcellfun fexec
 
 % this initially failed due to bug 1742
-ftroot = which('ft_preprocessing');
+tmp = which('ft_preprocessing');
+[ftroot,n,e] = fileparts(tmp);
+
 addpath([ftroot,filesep,'qsub']);
 qsubcellfun(@rand, {1, 2, 3}, 'memreq', 1e9, 'timreq', 600, 'backend', 'system');
 % whereas this worked
