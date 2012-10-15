@@ -70,9 +70,9 @@ y = data2.powspctrm;
 
 [p, anovatab, stats_f] = anova1([x, y], []);
 [h, p, ci, stats_t2] = ttest2(x, y);
-[h, p, ci, stats_tp] = ttest(x-y);
+[h, p, ci, stats_t] = ttest(x-y);
 
-if abs(stats_t.tstat^2/anovatab{2,5} - 1) > 0.001
+if abs(stats_t2.tstat^2/anovatab{2,5} - 1) > 0.001
   error('t^2 is unequal to F');
 end
 
