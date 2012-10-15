@@ -41,7 +41,11 @@ stack = dbstack('-completenames');
 stack = stack(3);
 
 % add information about the FieldTrip and MATLAB version used to the configuration
-cfg.callinfo.fieldtrip = ft_version();
+try
+  cfg.callinfo.fieldtrip = ft_version();
+catch
+  cfg.callinfo.fieldtrip = 'unknown';
+end
 cfg.callinfo.matlab    = version();
 
 % the proctime, procmem and calltime rely on three cryptical variables that were
