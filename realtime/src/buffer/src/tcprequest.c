@@ -20,6 +20,7 @@ int tcprequest(int server, const message_t *request, message_t **response_ptr) {
 	/* this will hold the response */
 	message_t *response;
 	response      = (message_t*)malloc(sizeof(message_t));
+    /* FIXME: response can be NULL. */
 	response->def = (messagedef_t*)malloc(sizeof(messagedef_t));
 	response->buf = NULL;
 	/* the response should be passed to the calling function, where it should be freed */
@@ -33,6 +34,7 @@ int tcprequest(int server, const message_t *request, message_t **response_ptr) {
 	if (request->def->bufsize == 0 || (request->def+1) == (messagedef_t *) request->buf) {
 		if ((n = bufwrite(server, request->def, total)) != total) {
 			fprintf(stderr, "write size = %d, should be %d\n", n, total);
+      /* FIXME: n and total are unsigned, %d indicates signed ints. */
 			goto cleanup;
 		}
 	}
@@ -47,6 +49,7 @@ int tcprequest(int server, const message_t *request, message_t **response_ptr) {
 		
 		if ((n = bufwrite(server, merged, total)) != total) {
 			fprintf(stderr, "write size = %d, should be %d\n", n, total);
+      /* FIXME: n and total are unsigned, %d indicates signed ints. */
 			goto cleanup;
 		}
 	}
@@ -55,8 +58,10 @@ int tcprequest(int server, const message_t *request, message_t **response_ptr) {
 	*/
     else {		
 		/* send the request to the server, first the message definition */
+    /* FIXME: bufwrite expects unsigned int, gets size_t. Similar for return. */
 		if ((n = bufwrite(server, request->def, sizeof(messagedef_t)))!=sizeof(messagedef_t)) {
 			fprintf(stderr, "write size = %d, should be %d\n", n, sizeof(messagedef_t));
+      /* FIXME: n is unsigned, %d indicates signed ints. */
 			goto cleanup;
 		}
 

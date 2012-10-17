@@ -4,7 +4,7 @@
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
  *
  */
-#include <buffer.h>
+#include "buffer.h"
 
 
 /* TODO: see if these can be optimized using compiler intrinsics etc. */

@@ -10,12 +10,12 @@
 #include "buffer.h"
 
 /* this is used for debugging */
-int verbose = 0;
+int verbose = 0; /* FIXME: make static. */
 
 void cleanup_socket(int *arg) {
 	if (verbose>0) fprintf(stderr, "cleanup_socket: s = %d\n", *arg);
 	if ((*arg)>0) {
-		close_connection(*arg);
+		close_connection(*arg); /* FIXME: check return type. */
     }
     *arg = 0;
 	return;
@@ -27,7 +27,7 @@ void cleanup_message(void **arg) {
 	if (message) {
 		FREE(message->def);
 		FREE(message->buf);
-		FREE(message);
+		FREE(message); /* FIXME: freed message is still reachable arg! */
 	}
 	return;
 }
@@ -38,7 +38,7 @@ void cleanup_header(void **arg) {
 	if (header) {
 		FREE(header->def);
 		FREE(header->buf);
-		FREE(header);
+		FREE(header); /* FIXME: freed header is still reachable from arg! */
 	}
 	return;
 }
@@ -49,7 +49,7 @@ void cleanup_data(void **arg) {
 	if (data) {
 		FREE(data->def);
 		FREE(data->buf);
-		FREE(data);
+		FREE(data); /* FIXME: freed data is still reachable from arg! */
 	}
 	return;
 }
@@ -60,7 +60,7 @@ void cleanup_event(void **arg) {
 	if (event) {
 		FREE(event->def);
 		FREE(event->buf);
-		FREE(event);
+		FREE(event); /* FIXME: freed event is still reachable from arg! */
 	}
 	return;
 }
@@ -68,7 +68,7 @@ void cleanup_event(void **arg) {
 void cleanup_buf(void **arg) {
 	if (verbose>0) fprintf(stderr, "cleanup_buf()\n");
 	if (*arg) {
-		FREE(*arg);
+		FREE(*arg); /* FIXME: freed *arg still reachable! */
 	}
 	return;
 }

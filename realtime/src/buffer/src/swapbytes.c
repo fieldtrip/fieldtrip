@@ -9,7 +9,7 @@ int bigendian(void) {
 	} TestUnion;
 	char c = 'a';
 	for(i=0; i<4; i++)
-		TestUnion.Array[i] = c++;
+		TestUnion.Array[i] = c++; /* FIXME: ++ on non-numeric type. */
 	if (TestUnion.Chars == 0x61626364)
 		return 1;
 	else

@@ -77,7 +77,8 @@ void print_buf(void *buf, int bufsize) {
 		fprintf(stderr, " NULL");
 	else
 		for (i=0; i<bufsize; i++)
-			fprintf(stderr, " %02x", ((unsigned char*)buf)[i]);
+			fprintf(stderr, " %02x", ((unsigned char*)buf)[i]); 
+        /* FIXME: fprint expects uint. */
 	fprintf(stderr, "\n");
 }
 
