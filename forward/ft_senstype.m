@@ -8,6 +8,7 @@ function [type] = ft_senstype(input, desired)
 %   [flag] = ft_senstype(sens, desired)
 %
 % The output type can be any of the following
+%   'ctf64'
 %   'ctf151'
 %   'ctf151_planar'
 %   'ctf275'
@@ -427,9 +428,9 @@ if ~isempty(desired)
     case 'egi'
       type = any(strcmp(type, {'egi64' 'egi128' 'egi256'}));
     case 'meg'
-      type = any(strcmp(type, {'meg' 'magnetometer' 'ctf' 'bti' 'ctf151' 'ctf275' 'ctf151_planar' 'ctf275_planar' 'neuromag122' 'neuromag306' 'bti148' 'bti148_planar' 'bti248' 'bti248_planar' 'yokogawa160' 'yokogawa160_planar' 'yokogawa64' 'yokogawa64_planar' 'yokogawa440' 'yokogawa440_planar' 'itab' 'itab153' 'itab153_planar'}));
+      type = any(strcmp(type, {'meg' 'magnetometer' 'ctf' 'bti' 'ctf64' 'ctf151' 'ctf275' 'ctf151_planar' 'ctf275_planar' 'neuromag122' 'neuromag306' 'bti148' 'bti148_planar' 'bti248' 'bti248_planar' 'yokogawa160' 'yokogawa160_planar' 'yokogawa64' 'yokogawa64_planar' 'yokogawa440' 'yokogawa440_planar' 'itab' 'itab153' 'itab153_planar'}));
     case 'ctf'
-      type = any(strcmp(type, {'ctf' 'ctf151' 'ctf275' 'ctf151_planar' 'ctf275_planar'}));
+      type = any(strcmp(type, {'ctf' 'ctf64' 'ctf151' 'ctf275' 'ctf151_planar' 'ctf275_planar'}));
     case 'bti'
       type = any(strcmp(type, {'bti' 'bti148' 'bti148_planar' 'bti248' 'bti248_planar'}));
     case 'neuromag'
@@ -440,7 +441,7 @@ if ~isempty(desired)
       type = any(strcmp(type, {'itab' 'itab153' 'itab153_planar'}));
     case 'meg_axial'
       % note that neuromag306 is mixed planar and axial
-      type = any(strcmp(type, {'magnetometer' 'neuromag306' 'ctf151' 'ctf275' 'bti148' 'bti248' 'yokogawa160' 'yokogawa64' 'yokogawa440'}));
+      type = any(strcmp(type, {'magnetometer' 'neuromag306' 'ctf64' 'ctf151' 'ctf275' 'bti148' 'bti248' 'yokogawa160' 'yokogawa64' 'yokogawa440'}));
     case 'meg_planar'
       % note that neuromag306 is mixed planar and axial
       type = any(strcmp(type, {'neuromag122' 'neuromag306' 'ctf151_planar' 'ctf275_planar' 'bti148_planar' 'bti248_planar' 'yokogawa160_planar' 'yokogawa64_planar' 'yokogawa440_planar'}));
