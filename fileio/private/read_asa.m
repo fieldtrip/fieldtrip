@@ -22,7 +22,7 @@ function [val] = read_asa(filename, elem, format, number, token)
 % token is optional to specifiy a character that separates the values from
 % anything not wanted.
 
-% Copyright (C) 2002, Robert Oostenveld
+% Copyright (C) 2002-2012, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -92,6 +92,9 @@ if strcmp(format, '%s')
   if number==1
     % interpret the data as a single string, create char-array
     val = detoken(strtrim(data), token);
+    if val(1)=='='
+      val = val(2:end); % remove the trailing =
+    end
     fclose(fid);
     return
   end
