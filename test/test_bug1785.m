@@ -1,0 +1,21 @@
+function test_bug1785
+
+% TEST test_bug1785
+% TEST ft_read_sens read_asa_elc read_asa
+
+cd /home/common/matlab/fieldtrip/data/test/bug1785
+
+filename = {
+  'standard_1020.elc'
+  'sphere_1020.elc'
+  'waveguard64.elc'
+  'EEG_Configuration_CP10040_Pilot13_Aug01_2012.txt'
+  };
+
+elec1 = ft_read_sens(filename{1}, 'fileformat', 'asa_elc');
+elec2 = ft_read_sens(filename{2}, 'fileformat', 'asa_elc');
+elec3 = ft_read_sens(filename{3}, 'fileformat', 'asa_elc');
+
+% this is still known NOT to work, see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1785#c1
+% elec4 = ft_read_sens(filename{4}, 'fileformat', 'asa_elc');
+
