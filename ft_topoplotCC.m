@@ -9,8 +9,8 @@ function [cfg] = ft_topoplotCC(cfg, freq)
 %   cfg.feedback    = string (default = 'textbar')
 %   cfg.layout      = specification of the layout, see FT_PREPARE_LAYOUT
 %   cfg.foi         = the frequency of interest which is to be plotted (default is the first frequency bin)
-%   cfg.widthparam  = string, parameter to be used to control the line width
-%   cfg.alphaparam  = string, parameter to be used to control the opacity
+%   cfg.widthparam  = string, parameter to be used to control the line width (see below)
+%   cfg.alphaparam  = string, parameter to be used to control the opacity (see below)
 %   cfg.colorparam  = string, parameter to be used to control the line color
 %
 % The widthparam should be indicated in pixels, e.g. usefull numbers are 1
@@ -21,10 +21,12 @@ function [cfg] = ft_topoplotCC(cfg, freq)
 %
 % The default is to plot the connections as lines, but you can also use
 % bidirectional arrows:
-%    cfg.arrowhead    = none, stop, start, both (default = 'none')
-%    cfg.arrowsize    = size of the arrow head (default = automatic)
-%    cfg.arrowoffset  = amount that the arrow is shifted to the side (default = automatic)
-%    cfg.arrowlength  = amount by which the length is reduced (default = 0.8)
+%    cfg.arrowhead    = string, 'none', 'stop', 'start', 'both' (default = 'none')
+%    cfg.arrowsize    = scalar, size of the arrow head in figure units, 
+%                       i.e. the same units as the layout (default is automatically determined)
+%    cfg.arrowoffset  = scalar, amount that the arrow is shifted to the side in figure units, 
+%                       i.e. the same units as the layout (default is automatically determined)
+%    cfg.arrowlength  = scalar, amount by which the length is reduced relative to the complete line (default = 0.8)
 %
 % To facilitate data-handling and distributed computing with the peer-to-peer
 % module, this function has the following option:
@@ -78,7 +80,7 @@ if ~isfield(cfg, 'newfigure'),  cfg.newfigure = 'yes';        end
 
 if ~isfield(cfg, 'arrowhead'),   cfg.arrowhead = 'none';       end % none, stop, start, both
 if ~isfield(cfg, 'arrowsize'),   cfg.arrowsize = nan;          end % length of the arrow head, should be in in figure units, i.e. the same units as the layout
-if ~isfield(cfg, 'arrowoffset'), cfg.arrowoffset = nan;        end % absolute, should be in in figure units, i.e. the same units as the layout
+if ~isfield(cfg, 'arrowoffset'), cfg.arrowoffset = nan;        end % absolute, should be in figure units, i.e. the same units as the layout
 if ~isfield(cfg, 'arrowlength'), cfg.arrowlength = 0.8;        end % relative to the complete line
 
 lay = ft_prepare_layout(cfg, freq);
