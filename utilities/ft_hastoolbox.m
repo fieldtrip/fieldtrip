@@ -117,6 +117,7 @@ url = {
   'IBTB'       'see http://www.ibtb.org'
   'SPIKE'      'see http://www.ru.nl/neuroimaging/fieldtrip'
   'ICASSO'     'see http://www.cis.hut.fi/projects/ica/icasso'
+  'XUNIT'      'see http://www.mathworks.com/matlabcentral/fileexchange/22846-matlab-xunit-test-framework'
   };
 
 if nargin<2
@@ -284,10 +285,14 @@ switch toolbox
     status = exist('make_ibtb.m', 'file') && exist('binr.m', 'file');
   case 'ICASSO'
     status = exist('icassoEst.m', 'file');
+  case 'XUNIT'
+    status = exist('initTestSuite.m', 'file') && exist('runtests.m', 'file');
+
   case 'SPIKE'
     status = exist('ft_spiketriggeredaverage.m', 'file') && exist('ft_spiketriggeredspectrum.m', 'file');
-    % the following are not proper toolboxes, but only subdirectories in the fieldtrip toolbox
-    % these are added in ft_defaults and are specified with unix-style forward slashes
+
+  % the following are not proper toolboxes, but only subdirectories in the fieldtrip toolbox
+  % these are added in ft_defaults and are specified with unix-style forward slashes
   case 'COMPAT'
     status = ~isempty(regexp(unixpath(path), 'fieldtrip/compat',              'once'));
   case 'UTILITIES/COMPAT'
@@ -353,21 +358,21 @@ if autoadd>0 && ~status
     end
   end
   
-  % for linux computers in the F.C. Donders Centre
+  % for linux computers in the Donders Centre for Cognitive Neuroimaging
   prefix = '/home/common/matlab';
-  if ~status && (strcmp(computer, 'GLNX86') || strcmp(computer, 'GLNXA64'))
+  if ~status && isunix
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
   end
   
-  % for windows computers in the F.C. Donders Centre
+  % for windows computers in the Donders Centre for Cognitive Neuroimaging
   prefix = 'h:\common\matlab';
-  if ~status && (strcmp(computer, 'PCWIN') || strcmp(computer, 'PCWIN64'))
+  if ~status && ispc
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
   end
   
-  % use the matlab subdirectory in your homedirectory, this works on unix and mac
-  prefix = [getenv('HOME') '/matlab'];
-  if ~status
+  % use the matlab subdirectory in your homedirectory, this works on linux and mac
+  prefix = fullfile(getenv('HOME'), 'matlab');
+  if ~status && isdir(prefix)
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
   end
   
