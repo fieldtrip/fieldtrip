@@ -3,6 +3,10 @@ function test_qsubcellfun3
 % TEST test_qsubcellfun3
 % TEST qsubcellfun qsubfeval qsubget
 
+if isempty(which('qsubcellfun'))
+  [p, f, x] = fileparts(which('ft_defaults'));
+  addpath(fullfile(p, 'qsub'));
+end
 
 result1 = cellfun(@subfunction, {1, 2, 3}, 'UniformOutput', false);
 
