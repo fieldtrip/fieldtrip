@@ -643,34 +643,41 @@ if (s.bytes <= max_size)
   return;
 end
 
-ignorefields = {'checksize', 'trl', 'trlold', 'event', 'artifact', 'artfctdef', 'previous'}; % these fields should never be removed!
-norecursion = {'event'}; % these fields should not be handled recursively
+ignorefields = {'checksize', 'trl', 'trlold', 'event', 'artifact', 'artfctdef', 'previous'}; % these fields should never be removed
+norecursion  = {'event'}; % these fields should not be handled recursively
 
 fieldsorig = fieldnames(cfg);
 for i=1:numel(fieldsorig)
-  for k=1:numel(cfg)
-    if (~isstruct(cfg(k).(fieldsorig{i})) && ~any(strcmp(fieldsorig{i}, ignorefields)))...
-        || any(strcmp(fieldsorig{i}, norecursion))
-      % find large fields and remove them from the cfg, skip fields that should be ignored
-      temp = cfg(k).(fieldsorig{i});
-      s = whos('temp');
-      if s.bytes>max_size
-        cfg(k).(fieldsorig{i}) = 'empty - this was cleared by checkconfig';
-      end
-      %%% cfg(k).(fieldsorig{i})=s.bytes; % remember the size of each field for debugging purposes
-    elseif isstruct(cfg(k).(fieldsorig{i}));
-      % run recursively on subfields that are structs
-      cfg(k).(fieldsorig{i}) = checksizefun(cfg(k).(fieldsorig{i}), max_size);
-    elseif iscell(cfg(k).(fieldsorig{i})) && strcmp(fieldsorig{i}, 'previous')
-      % run recursively on 'previous' fields that are cells
+  for k=1:numel(cfg)  % process each structure in a struct-array
+
+    if any(strcmp(fieldsorig{i}, ignorefields))
+      % keep this field, regardless of its size
+      continue
+      
+    elseif iscell(cfg(k).(fieldsorig{i}))
+      % run recursively on each struct element that is contained in the cell-array
       for j=1:numel(cfg(k).(fieldsorig{i}))
         if isstruct(cfg(k).(fieldsorig{i}){j})
           cfg(k).(fieldsorig{i}){j} = checksizefun(cfg(k).(fieldsorig{i}){j}, max_size);
         end
       end
+      
+    elseif isstruct(cfg(k).(fieldsorig{i})) && ~any(strcmp(fieldsorig{i}, norecursion))
+      % run recursively on a struct field
+      cfg(k).(fieldsorig{i}) = checksizefun(cfg(k).(fieldsorig{i}), max_size);
+      
+    else
+      % determine the size of the field and remove it if too large
+      temp = cfg(k).(fieldsorig{i});
+      s = whos('temp');
+      if s.bytes>max_size
+        cfg(k).(fieldsorig{i}) = 'empty - this was cleared by checkconfig';
+      end
+      clear temp
+      
     end
-  end
-end
+  end % for numel(cfg)
+end % for each of the fieldsorig
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION converts a cell array of structure arrays into a structure array
