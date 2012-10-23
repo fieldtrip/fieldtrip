@@ -48,10 +48,10 @@ function [psth] = ft_spike_psth(cfg,spike)
 % Outputs:
 %   Psth is a timelock datatype (see FT_DATATYPE_TIMELOCK)
 %     Psth.time        = center histogram bin points
-%	    Psth.fsample 		 = 1/binsize;
-%     Psth.avg         = contains average PSTH per unit Psth.trial       =
-%     contains PSTH per unit per trial Psth.var         = contains variance
-%     of PSTH per unit across trials
+%	  Psth.fsample     = 1/binsize;
+%     Psth.avg         = contains average PSTH per unit 
+%     Psth.trial       = contains PSTH per unit per trial 
+%     Psth.var         = contains variance of PSTH per unit across trials
 %
 % Further processing:
 %   FT_SPIKE_PLOT_PSTH    :  plot only the PSTH, for a single neuron
