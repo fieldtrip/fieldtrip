@@ -208,9 +208,10 @@ end
 if ~isempty(highlight)
   switch highlightstyle
     case 'opacity'
+      % get the same scaling for 'highlight' then what we will get for cdata
+      h = uimagesc(hdat, vdat, highlight);
+      highlight = get(h, 'CData');
       h = uimagesc(hdat, vdat, cdat, clim);
-      
-      set(h,'CData',cdat); % quick fix
       
       set(h,'tag',tag);
       set(h,'AlphaData',highlight);
