@@ -116,8 +116,12 @@ elseif haselecfile
   % only keep positions and labels in case of EEG electrodes
   dum  = sens;
   sens = [];
+  if isfield(dum,'chanpos')
   sens.chanpos = dum.chanpos;
+  end
+  if isfield(dum,'elecpos')
   sens.elecpos = dum.elecpos;
+  end
   sens.label   = dum.label;
   if isfield(dum,'unit')
     sens.unit = dum.unit;
@@ -128,8 +132,12 @@ elseif hascfgelec
   % only keep positions and labels in case of EEG electrodes
   dum  = sens;
   sens = [];
+  if isfield(dum,'chanpos')
   sens.chanpos = dum.chanpos;
+  end
+  if isfield(dum,'elecpos')
   sens.elecpos = dum.elecpos;
+  end
   sens.label   = dum.label;
   if haselectra
     sens.tra = dum.tra;
@@ -143,8 +151,12 @@ elseif hasdataelec
   % only keep positions and labels in case of EEG electrodes
   dum  = sens;
   sens = [];
+  if isfield(dum,'chanpos')
   sens.chanpos = dum.chanpos;
+  end
+  if isfield(dum,'elecpos')
   sens.elecpos = dum.elecpos;
+  end
   sens.label   = dum.label;
   if isfield(dum,'unit')
     sens.unit = dum.unit;
