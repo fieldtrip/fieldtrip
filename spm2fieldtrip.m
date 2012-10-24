@@ -46,6 +46,10 @@ end
 %   data.sampleinfo(i,2) = D.indsample(i) + D.nsamples;
 % end
 
+% create empty cfg-structure in order for the ft_postamble to work. It is
+% of no further consequence
+cfg = [];
+
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble callinfo
 ft_postamble history data
