@@ -9,12 +9,11 @@ function test_bug1407
 ft_hastoolbox('egi_mff', 1);
 
 datadir = '/home/common/matlab/fieldtrip/data/test/bug1407';
-cd(datadir)
 
 dataset = {
-  'Long64ChannelWithEvents.mff'
-  'NS1000sps.mff'
-  'NS500Sine6Hz.mff'
+  fullfile(datadir, 'Long64ChannelWithEvents.mff')
+  fullfile(datadir, 'NS1000sps.mff')
+  fullfile(datadir, 'NS500Sine6Hz.mff')
   };
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
