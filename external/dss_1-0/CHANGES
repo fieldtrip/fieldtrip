@@ -1,0 +1,46 @@
+Changes in 1-0:
+
+- zero meaning is done in pre_sphere.m and pre_sphere_symm.m, original
+  means are returned and put in state.Xmeans
+- denoise_avg.m denoising function is added
+- mixing matrix (A) and unmixing matrix (B) added to the state
+- demos added in the demos directory
+
+Changes in beta-6:
+
+- help text updated in dss_create_state
+- renaming and re-organizing sphering and result matrices
+- sphering checks if data is already sphered and sets sphering to identity
+- structure of denoise_avg simplified
+
+
+Changes in beta-5:
+
+- function for initializing denoising function to state structure
+  (dss_set_desnoising.m)
+- predictive gamma function for symmetric approach
+- FastICA denoising functions renamed to 'denoise_fica_...'
+- iteration reporting function for convergence (report_iteration.m)
+- initial guess for W and S
+- license -> GPL
+- 'whitening' -> 'sphering'
+- GUI-interrupt removed
+- sphering separated from dss_create_state. (dss_preprocess.m)
+- space-interrupt with java
+
+
+Changes in beta-4:
+
+- 'constant' -> 'scalar'
+- parameter query for ortho functions
+- parameter query for preprocess functions
+- find_peaks inside denoise_avg gets parameters with separate struct parameter
+- source dim reduction -> inside preprocess function
+- dss_core_pca W=E' -fix
+- fixed parameter order in filter denoising functions
+- retrieve eigenvalues from pca-dss (state.D)
+- fixed deflation quasi-ortho
+- misc/create_signals no longer depends on external functions
+- global beta function
+- copyright texts
+- global_beta defined for denoising functions
