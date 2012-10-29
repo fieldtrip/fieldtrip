@@ -118,6 +118,7 @@ url = {
   'SPIKE'      'see http://www.ru.nl/neuroimaging/fieldtrip'
   'ICASSO'     'see http://www.cis.hut.fi/projects/ica/icasso'
   'XUNIT'      'see http://www.mathworks.com/matlabcentral/fileexchange/22846-matlab-xunit-test-framework'
+  'PLEXON'     'available from http://www.plexon.com/assets/downloads/sdk/ReadingPLXandDDTfilesinMatlab-mexw.zip'
   };
 
 if nargin<2
@@ -287,6 +288,8 @@ switch toolbox
     status = exist('icassoEst.m', 'file');
   case 'XUNIT'
     status = exist('initTestSuite.m', 'file') && exist('runtests.m', 'file');
+  case 'PLEXON'
+    status = exist('plx_adchan_gains.m', 'file') && exist('mexPlex');
 
   case 'SPIKE'
     status = exist('ft_spiketriggeredaverage.m', 'file') && exist('ft_spiketriggeredspectrum.m', 'file');
