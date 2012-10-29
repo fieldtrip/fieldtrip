@@ -15,7 +15,7 @@ ft_default.feedback = 'no';
 timelock_data.fsamepl = 500;
 timelock_data.dimord = 'chan_time';
 timelock_data.time = zeros(1, 500);
-timelock_data.avg = zeros(31, 500);
+timelock_data.avg = randn(31, 500);
 for i = 1:31
     timelock_data.label{i} = sprintf('label%d', i);
 end
