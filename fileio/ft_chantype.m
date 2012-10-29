@@ -183,11 +183,32 @@ elseif ft_senstype(input, 'neuromag')
   end
 
 elseif ft_senstype(input, 'ctf') && isheader
-  % meg channels are 5, refmag 0, refgrad 1, adcs 18, trigger 11, eeg 9
-  if isfield(hdr, 'orig') && isfield(hdr.orig, 'sensType')
-    origSensType = hdr.orig.sensType;
-  elseif isfield(hdr, 'orig') && isfield(hdr.orig, 'res4')
-    origSensType =  [hdr.orig.res4.senres.sensorTypeIndex];
+  % According to one source of information meg channels are 5, refmag 0,
+  % refgrad 1, adcs 18, trigger 11, eeg 9.
+  % 
+  % According to another source of information it is as follows
+  %     refMagnetometers: 0
+  %      refGradiometers: 1
+  %             meg_sens: 5
+  %             eeg_sens: 9
+  %                  adc: 10
+  %             stim_ref: 11
+  %           video_time: 12
+  %                  sam: 15
+  %     virtual_channels: 16
+  %             sclk_ref: 17
+  
+  if isfield(hdr, 'orig')
+    if isfield(hdr.orig, 'sensType') && isfield(hdr.orig, 'Chan')
+      % the header was read using the open-source matlab code that originates from CTF and that was modified by the FCDC
+      origSensType = hdr.orig.sensType;
+    elseif isfield(hdr.orig, 'res4') && isfield(hdr.orig.res4, 'senres')
+      % the header was read using the CTF p-files, i.e. readCTFds
+      origSensType =  [hdr.orig.res4.senres.sensorTypeIndex];
+    elseif isfield(hdr.orig, 'sensor') && isfield(hdr.orig.sensor, 'info')
+      % the header was read using the CTF importer from the NIH and Daren Weber
+      origSensType = [hdr.orig.sensor.info.index];
+    end
   else
     warning('could not determine channel type from the CTF header');
     origSensType = [];
