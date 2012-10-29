@@ -62,7 +62,7 @@ isgrad     = (hdr.channel_info(:,2)==handles.AxialGradioMeter | ...
 %              hdr.channel_info(:,2)==handles.RefferenceMagnetoMeter
 isgrad_handles = hdr.channel_info(isgrad,2);
 ismag      = (isgrad_handles(:)==handles.MagnetoMeter | isgrad_handles(:)==handles.RefferenceMagnetoMeter);
-grad.pnt   = hdr.channel_info(isgrad,3:5)*100;    % cm
+grad.coilpos   = hdr.channel_info(isgrad,3:5)*100;    % cm
 grad.unit  = 'cm';
 
 % Get orientation of the 1st coil
@@ -72,7 +72,7 @@ ori_1st = ...
   [sin(ori_1st(:,1)/180*pi).*cos(ori_1st(:,2)/180*pi) ...
   sin(ori_1st(:,1)/180*pi).*sin(ori_1st(:,2)/180*pi) ...
   cos(ori_1st(:,1)/180*pi)];
-grad.ori = ori_1st;
+grad.coilori = ori_1st;
 
 % Get orientation from the 1st to 2nd coil for gradiometer
 ori_1st_to_2nd   = hdr.channel_info(find(isgrad),[8 9]);
@@ -88,23 +88,23 @@ baseline = hdr.channel_info(isgrad,size(hdr.channel_info,2));
 info = hdr.channel_info(isgrad,2); 
 for i=1:sum(isgrad)
   if (info(i) == handles.AxialGradioMeter || info(i) == handles.RefferenceAxialGradioMeter )
-    grad.pnt(i+sum(isgrad),:) = [grad.pnt(i,:)+ori_1st(i,:)*baseline(i)*100];
-    grad.ori(i+sum(isgrad),:) = -ori_1st(i,:);
+    grad.coilpos(i+sum(isgrad),:) = [grad.coilpos(i,:)+ori_1st(i,:)*baseline(i)*100];
+    grad.coilori(i+sum(isgrad),:) = -ori_1st(i,:);
   elseif (info(i) == handles.PlannerGradioMeter || info(i) == handles.RefferencePlannerGradioMeter)
-    grad.pnt(i+sum(isgrad),:) = [grad.pnt(i,:)+ori_1st_to_2nd(i,:)*baseline(i)*100];
-    grad.ori(i+sum(isgrad),:) = -ori_1st(i,:);
+    grad.coilpos(i+sum(isgrad),:) = [grad.coilpos(i,:)+ori_1st_to_2nd(i,:)*baseline(i)*100];
+    grad.coilori(i+sum(isgrad),:) = -ori_1st(i,:);
   else
-    grad.pnt(i+sum(isgrad),:) = [0 0 0];
-    grad.ori(i+sum(isgrad),:) = [0 0 0];  
+    grad.coilpos(i+sum(isgrad),:) = [0 0 0];
+    grad.coilori(i+sum(isgrad),:) = [0 0 0];  
   end
 end
 
 % Define the pair of 1st and 2nd coils for each gradiometer
-grad.tra = repmat(diag(ones(1,size(grad.pnt,1)/2),0),1,2);
+grad.tra = repmat(diag(ones(1,size(grad.coilpos,1)/2),0),1,2);
 
 % for mangetometers change tra as there is no second coil
 if any(ismag)
-    sz_pnt = size(grad.pnt,1)/2;
+    sz_pnt = size(grad.coilpos,1)/2;
     % create logical variable
     not_2nd_coil = ([diag(zeros(sz_pnt),0)' ismag']~=0);
     grad.tra(ismag,not_2nd_coil) = 0;

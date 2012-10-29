@@ -82,8 +82,8 @@ nSensors = nPlaGrad + nMag;
 nCoils = nPlaGrad*2 + nMag;
 
 % intialise grad structure
-grad.pnt   = zeros(nCoils,3);
-grad.ori   = zeros(nCoils,3);
+grad.coilpos   = zeros(nCoils,3);
+grad.coilori   = zeros(nCoils,3);
 grad.tra   = zeros(nSensors,nCoils);
 grad.unit  = 'cm';
 grad.label = cell(nSensors,1);
@@ -103,10 +103,10 @@ for n = 1:orig.nchan
     t = orig.chs(n).coil_trans;
     
     % TC 2011 09 24 I have changed the coil definition, the original was
-    % grad.pnt(kCoil,:) = 100*(t(1:3,4)); % multiply by 100 to get cm
-    grad.pnt(kCoil,:) = 100*(t(1:3,4)+0.0003*t(1:3,3)); % multiply by 100 to get cm
+    % grad.coilpos(kCoil,:) = 100*(t(1:3,4)); % multiply by 100 to get cm
+    grad.coilpos(kCoil,:) = 100*(t(1:3,4)+0.0003*t(1:3,3)); % multiply by 100 to get cm
     
-    grad.ori(kCoil,:) = t(1:3,3);
+    grad.coilori(kCoil,:) = t(1:3,3);
     grad.tra(k,kCoil) = 1;
     kCoil = kCoil+1;
     grad.label{k} = deblank(orig.ch_names{n});
@@ -115,18 +115,18 @@ for n = 1:orig.nchan
     t = orig.chs(n).coil_trans;
     
     % TC 2011 09 24 I have changed the coil definition, the original was
-    % grad.pnt(kCoil,:) = 100*(0.0000*t(1:3,3)+t(1:3,4)-0.0084*t(1:3,1)); % multiply with 100 to get cm
-    grad.pnt(kCoil,:) = 100*(0.0003*t(1:3,3)+t(1:3,4)-0.0084*t(1:3,1)); % multiply with 100 to get cm
+    % grad.coilpos(kCoil,:) = 100*(0.0000*t(1:3,3)+t(1:3,4)-0.0084*t(1:3,1)); % multiply with 100 to get cm
+    grad.coilpos(kCoil,:) = 100*(0.0003*t(1:3,3)+t(1:3,4)-0.0084*t(1:3,1)); % multiply with 100 to get cm
     
-    grad.ori(kCoil,:) = t(1:3,3);
+    grad.coilori(kCoil,:) = t(1:3,3);
     grad.tra(k,kCoil) = -1;
     kCoil = kCoil+1;
     
     % TC 2011 09 24 I have changed the coil definition, the original was
-    % grad.pnt(kCoil,:) = 100*(0.0000*t(1:3,3)+t(1:3,4)+0.0084*t(1:3,1));
-    grad.pnt(kCoil,:) = 100*(0.0003*t(1:3,3)+t(1:3,4)+0.0084*t(1:3,1));
+    % grad.coilpos(kCoil,:) = 100*(0.0000*t(1:3,3)+t(1:3,4)+0.0084*t(1:3,1));
+    grad.coilpos(kCoil,:) = 100*(0.0003*t(1:3,3)+t(1:3,4)+0.0084*t(1:3,1));
     
-    grad.ori(kCoil,:) = t(1:3,3);
+    grad.coilori(kCoil,:) = t(1:3,3);
     grad.tra(k,kCoil) = 1;
     kCoil = kCoil+1;
     grad.label{k} = deblank(orig.ch_names{n});

@@ -47,8 +47,8 @@ end
 
 % start with empty gradiometer
 grad = [];
-grad.pnt  = [];
-grad.ori  = [];
+grad.coilpos  = [];
+grad.coilori  = [];
 grad.tra  = [];
 grad.unit = 'cm'; % the res4 file always represents it in centimeter
 
@@ -83,8 +83,8 @@ if isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
   coilcount = coilcount + sum([hdr.res4.senres(selMEG).numCoils]);
   chancount = numMEG + numREF;
   % preallocate the memory
-  grad.pnt = zeros(coilcount, 3);         % this will hold the position of each coil
-  grad.ori = zeros(coilcount, 3);         % this will hold the orientation of each coil
+  grad.coilpos = zeros(coilcount, 3);         % this will hold the position of each coil
+  grad.coilori = zeros(coilcount, 3);         % this will hold the orientation of each coil
   grad.tra = zeros(chancount, coilcount); % this describes how each coil contributes to each channel
 
   % combine the bottom and top coil of each MEG channel
@@ -102,10 +102,10 @@ if isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
       error('unexpected number of coils in MEG channel');
     end
     % add the coils of this channel to the gradiometer array
-    grad.pnt(i       ,:) = pos(1,:);
-    grad.pnt(i+numMEG,:) = pos(2,:);
-    grad.ori(i       ,:) = ori(1,:) .* -sign(hdr.res4.senres(n).properGain);
-    grad.ori(i+numMEG,:) = ori(2,:) .* -sign(hdr.res4.senres(n).properGain);
+    grad.coilpos(i       ,:) = pos(1,:);
+    grad.coilpos(i+numMEG,:) = pos(2,:);
+    grad.coilori(i       ,:) = ori(1,:) .* -sign(hdr.res4.senres(n).properGain);
+    grad.coilori(i+numMEG,:) = ori(2,:) .* -sign(hdr.res4.senres(n).properGain);
     grad.tra(i,i       ) = 1;
     grad.tra(i,i+numMEG) = 1;
   end
@@ -131,8 +131,8 @@ if isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
     chancount = chancount+1;
     for j=1:numcoils
       coilcount = coilcount+1;
-      grad.pnt(coilcount, :)         = pos(j,:);
-      grad.ori(coilcount, :)         = ori(j,:) .* -sign(hdr.res4.senres(n).properGain);
+      grad.coilpos(coilcount, :)         = pos(j,:);
+      grad.coilori(coilcount, :)         = ori(j,:) .* -sign(hdr.res4.senres(n).properGain);
       grad.tra(chancount, coilcount) = 1;
     end
   end
@@ -243,14 +243,14 @@ elseif isfield(hdr, 'sensType') && isfield(hdr, 'Chan')
       error('unexpected number of coils in MEG channel');
     end
     % add the coils of this channel to the gradiometer array
-    grad.pnt(i       ,:) = pos(1,:);
-    grad.pnt(i+numMEG,:) = pos(2,:);
-    grad.ori(i       ,:) = ori(1,:) .* -sign(hdr.gainV(n));
-    grad.ori(i+numMEG,:) = ori(2,:) .* -sign(hdr.gainV(n));
+    grad.coilpos(i       ,:) = pos(1,:);
+    grad.coilpos(i+numMEG,:) = pos(2,:);
+    grad.coilori(i       ,:) = ori(1,:) .* -sign(hdr.gainV(n));
+    grad.coilori(i+numMEG,:) = ori(2,:) .* -sign(hdr.gainV(n));
     grad.tra(i,i       ) = 1;
     grad.tra(i,i+numMEG) = 1;
   end
-  numMEGcoils = size(grad.pnt, 1);
+  numMEGcoils = size(grad.coilpos, 1);
   
   % combine the coils of each reference channel
   for i=1:numREF
@@ -267,8 +267,8 @@ elseif isfield(hdr, 'sensType') && isfield(hdr, 'Chan')
     numcoils = sum(sum(pos.^2, 2)~=0);
     % add the coils of this channel to the gradiometer array
     for j=1:numcoils
-      grad.pnt(numMEGcoils+i, :)     = pos(j,:);
-      grad.ori(numMEGcoils+i, :)     = ori(j,:) .* -sign(hdr.gainV(n));
+      grad.coilpos(numMEGcoils+i, :)     = pos(j,:);
+      grad.coilori(numMEGcoils+i, :)     = ori(j,:) .* -sign(hdr.gainV(n));
       grad.tra(numMEG+i, numMEGcoils+i) = 1;
     end
   end
@@ -310,8 +310,8 @@ elseif isfield(hdr, 'sensor') && isfield(hdr.sensor, 'info')
     end
 
     % add this channels coil positions and orientations
-    grad.pnt = [grad.pnt; pnt];
-    grad.ori = [grad.ori; ori];
+    grad.coilpos = [grad.coilpos; pnt];
+    grad.coilori = [grad.coilori; ori];
     grad.label{i} = hdr.sensor.info(sel(i)).label;
 
     % determine the contribution of each coil to each channel's output signal
@@ -337,8 +337,8 @@ elseif isfield(hdr, 'sensor') && isfield(hdr.sensor, 'info')
   if all(numcoils==2)
     bot = 1:2:sum(numcoils);
     top = 2:2:sum(numcoils);
-    grad.pnt = grad.pnt([bot top], :);
-    grad.ori = grad.ori([bot top], :);
+    grad.coilpos = grad.coilpos([bot top], :);
+    grad.coilori = grad.coilori([bot top], :);
     grad.tra = grad.tra(:, [bot top]);
   end
 

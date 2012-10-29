@@ -39,26 +39,26 @@ try
   [TY,NA] = chaninfo('type');
   nCoils = sum(TY+1); % number of coils
   nSensors = length(TY); % number of sensors
-  grad.pnt = zeros(nCoils,3);
-  grad.ori = zeros(nCoils,3);
+  grad.coilpos = zeros(nCoils,3);
+  grad.coilori = zeros(nCoils,3);
   grad.tra = zeros(nSensors,nCoils);
   grad.unit = 'cm';
   % define coils
   kCoil = 1;
   for k = 1:nSensors,
     if (TY(k)==0), % magnetometer
-      grad.pnt(kCoil,:) = 100*(t{k}(1:3,4));
-      grad.ori(kCoil,:) = t{k}(1:3,3);
+      grad.coilpos(kCoil,:) = 100*(t{k}(1:3,4));
+      grad.coilori(kCoil,:) = t{k}(1:3,3);
       grad.tra(k,kCoil) = 1;
       kCoil = kCoil+1;
       grad.label{k} = deblank(s(k,:));
     elseif (TY(k)==1), % planar gradiometer
-      grad.pnt(kCoil,:) = 100*(t{k}(1:3,4)-0.008*t{k}(1:3,1)); % multiply with 100 to get cm
-      grad.ori(kCoil,:) = t{k}(1:3,3);
+      grad.coilpos(kCoil,:) = 100*(t{k}(1:3,4)-0.008*t{k}(1:3,1)); % multiply with 100 to get cm
+      grad.coilori(kCoil,:) = t{k}(1:3,3);
       grad.tra(k,kCoil) = -1;
       kCoil = kCoil+1;
-      grad.pnt(kCoil,:) = 100*(t{k}(1:3,4)+0.008*t{k}(1:3,1));
-      grad.ori(kCoil,:) = t{k}(1:3,3);
+      grad.coilpos(kCoil,:) = 100*(t{k}(1:3,4)+0.008*t{k}(1:3,1));
+      grad.coilori(kCoil,:) = t{k}(1:3,3);
       grad.tra(k,kCoil) = 1;
       kCoil = kCoil+1;
       grad.label{k} = deblank(s(k,:));

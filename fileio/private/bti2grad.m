@@ -42,14 +42,14 @@ if isfield(hdr, 'Meg_pos'),
   
   grad      = [];
   grad.unit = 'm';
-  grad.pnt  = hdr.Meg_pos;
-  grad.ori  = hdr.Meg_dir;
-  for i=1:size(grad.pnt,1)
+  grad.coilpos  = hdr.Meg_pos;
+  grad.coilori  = hdr.Meg_dir;
+  for i=1:size(grad.coilpos,1)
     % grad.label{i} = sprintf('MEG%03d', i);
     grad.label{i} = sprintf('A%d', i); % according to BTi convention
   end
   grad.label = grad.label(:);
-  grad.tra   = eye(size(grad.pnt,1));
+  grad.tra   = eye(size(grad.coilpos,1));
   
 elseif isfield(hdr, 'config'),
   % hdr has been derived from read_4d_hdr
@@ -89,8 +89,8 @@ elseif isfield(hdr, 'config'),
   
   % start with empty gradiometer structure
   grad       = [];
-  grad.pnt   = zeros(totalcoils, 3);
-  grad.ori   = zeros(totalcoils, 3);
+  grad.coilpos   = zeros(totalcoils, 3);
+  grad.coilori   = zeros(totalcoils, 3);
   grad.tra   = zeros(numALL, totalcoils);
   grad.label = cell(numALL,1);
   % specify the geometrical units for the channel and coil positions
@@ -108,7 +108,7 @@ elseif isfield(hdr, 'config'),
     % add the coils of this channel to the gradiometer array
     grad.tra(i, cnt+1:cnt+numcoils(n)) = 1;
     % check the orientation of the individual coils in the case of a gradiometer
-    % and adjust such that the grad.tra and grad.ori are consistent
+    % and adjust such that the grad.tra and grad.coilori are consistent
     if numcoils(n) > 1,
       c   = ori*ori';
       s   = c./sqrt(diag(c)*diag(c)');
@@ -116,8 +116,8 @@ elseif isfield(hdr, 'config'),
     end
     for k=1:numcoils(n)
       cnt = cnt+1;
-      grad.pnt(cnt,   :) = pos(k,:);
-      grad.ori(cnt,   :) = ori(k,:);
+      grad.coilpos(cnt,   :) = pos(k,:);
+      grad.coilori(cnt,   :) = ori(k,:);
     end
     grad.label(i)          = name(n);
   end
@@ -136,7 +136,7 @@ elseif isfield(hdr, 'config'),
     % I think this depends on the orientation of the coils: if they point in opposite directions it's OK
     % check ori by determining the cosine of the angle between the orientations, this should be -1
     % check the orientation of the individual coils in the case of a gradiometer
-    % and adjust such that the grad.tra and grad.ori are consistent
+    % and adjust such that the grad.tra and grad.coilori are consistent
     if numcoils(n) > 1,
       c   = ori*ori';
       s   = c./sqrt(diag(c)*diag(c)');
@@ -144,8 +144,8 @@ elseif isfield(hdr, 'config'),
     end
     for k=1:numcoils(n)
       cnt                = cnt+1;
-      grad.pnt(cnt,   :) = pos(k,:);
-      grad.ori(cnt,   :) = ori(k,:);
+      grad.coilpos(cnt,   :) = pos(k,:);
+      grad.coilori(cnt,   :) = ori(k,:);
     end
     grad.label(numMEG+i) = {hdr.config.channel_data(n).name};
   end

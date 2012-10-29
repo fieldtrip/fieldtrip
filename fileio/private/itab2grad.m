@@ -39,8 +39,8 @@ for i=1:640
     grad.label{chan} = header_info.ch(i).label; 
     for j=1:header_info.ch(i).ncoils
       coil = coil+1;
-      grad.pnt(coil,:) = header_info.ch(i).position(j).r_s;
-      grad.ori(coil,:) = header_info.ch(i).position(j).u_s;
+      grad.coilpos(coil,:) = header_info.ch(i).position(j).r_s;
+      grad.coilori(coil,:) = header_info.ch(i).position(j).u_s;
       grad.tra(chan,coil) = header_info.ch(i).wgt(j);
     end    
   else
