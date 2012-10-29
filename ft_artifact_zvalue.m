@@ -263,12 +263,12 @@ for trlop = 1:numtrl
       sumval = zeros(size(dat{1},1), 1);
       sumsqr = zeros(size(dat{1},1), 1);
       numsmp = zeros(size(dat{1},1), 1);
-      numsgn = size(dat,1);
+      numsgn = size(dat{1},1);
     elseif trlop==1 && pertrial
       sumval = zeros(size(dat{1},1), numtrl);
       sumsqr = zeros(size(dat{1},1), numtrl);
       numsmp = zeros(size(dat{1},1), numtrl);
-      numsgn = size(dat,1);
+      numsgn = size(dat{1},1);
     end
     
     if ~pertrial
