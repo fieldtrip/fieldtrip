@@ -260,27 +260,27 @@ for trlop = 1:numtrl
     dat{trlop} = preproc(dat{trlop}, cfg.artfctdef.zvalue.channel, offset2time(0, hdr.Fs, size(dat{trlop},2)), cfg.artfctdef.zvalue, fltpadding, fltpadding);
     
     if trlop==1 && ~pertrial
-      sumval = zeros(size(dat,1), 1);
-      sumsqr = zeros(size(dat,1), 1);
-      numsmp = zeros(size(dat,1), 1);
+      sumval = zeros(size(dat{1},1), 1);
+      sumsqr = zeros(size(dat{1},1), 1);
+      numsmp = zeros(size(dat{1},1), 1);
       numsgn = size(dat,1);
     elseif trlop==1 && pertrial
-      sumval = zeros(size(dat,1), numtrl);
-      sumsqr = zeros(size(dat,1), numtrl);
-      numsmp = zeros(size(dat,1), numtrl);
+      sumval = zeros(size(dat{1},1), numtrl);
+      sumsqr = zeros(size(dat{1},1), numtrl);
+      numsmp = zeros(size(dat{1},1), numtrl);
       numsgn = size(dat,1);
     end
     
     if ~pertrial
       % accumulate the sum and the sum-of-squares
-      sumval = sumval + sum(dat,2);
-      sumsqr = sumsqr + sum(dat.^2,2);
-      numsmp = numsmp + size(dat,2);
+      sumval = sumval + sum(dat{trlop},2);
+      sumsqr = sumsqr + sum(dat{trlop}.^2,2);
+      numsmp = numsmp + size(dat{trlop},2);
     else
       % store per trial the sum and the sum-of-squares
-      sumval(:,trlop) = sum(dat,2);
-      sumsqr(:,trlop) = sum(dat.^2,2);
-      numsmp(:,trlop) = size(dat,2);
+      sumval(:,trlop) = sum(dat{trlop},2);
+      sumsqr(:,trlop) = sum(dat{trlop}.^2,2);
+      numsmp(:,trlop) = size(dat{trlop},2);
     end
   end
 end % for trlop
