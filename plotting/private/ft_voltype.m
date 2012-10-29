@@ -55,9 +55,6 @@ function [type] = ft_voltype(vol, desired)
 % these are for remembering the type on subsequent calls with the same input arguments
 persistent previous_argin previous_argout
 
-% the following function call takes care of backward compatibility
-vol = ft_datatype_headmodel(vol);
-
 if iscell(vol) && numel(vol)<4
   % this might represent combined EEG, ECoG and/or MEG
   type = cell(size(vol));
@@ -111,7 +108,8 @@ elseif isfield(vol, 'bnd') && isfield(vol, 'forwpar')
 elseif isfield(vol, 'bnd') && numel(vol.bnd)==1
   type = 'singleshell'; 
   
-elseif isempty(vol)
+elseif isempty(vol) || isequal(fieldnames(vol), {'unit'})
+  % it is empty, or only contains a specification of geometrical units
   type = 'infinite';
   
 else
