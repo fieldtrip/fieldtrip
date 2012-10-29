@@ -124,11 +124,13 @@ switch version
       end
     end
     
+    % ensure that the geometrical units are specified
+    if ~isfield(vol, 'unit')
+      vol = ft_convert_units(vol);
+    end
+    
   otherwise
     error('converting to version "%s" is not supported', version);
 end
 
-% ensure that the geometrical units are specified
-if ~ft_voltype(vol, 'infinite'),
-  vol = ft_convert_units(vol);
-end
+
