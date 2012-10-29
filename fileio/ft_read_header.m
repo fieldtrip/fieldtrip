@@ -402,6 +402,11 @@ switch headerformat
     % check the presence of the required low-level toolbox
     ft_hastoolbox('ctf', 1);
     orig             = readCTFds(filename);
+    if isempty(orig)
+      % this is to deal with data from the 64 channel system and the error
+      % readCTFds: .meg4 file header=MEG4CPT   Valid header options:  MEG41CP  MEG42CP
+      error('could not read CTF with this implementation, please try again with the ''ctf_old'' file format');
+    end
     hdr.Fs           = orig.res4.sample_rate;
     hdr.nChans       = orig.res4.no_channels;
     hdr.nSamples     = orig.res4.no_samples;
@@ -512,7 +517,7 @@ switch headerformat
     % check that the required low-level toolbos ix available
     ft_hastoolbox('eegsf', 1);
     % read it using the CTF importer from the NIH and Daren Weber
-    orig = ctf_read_res4(filename, 0);
+    orig = ctf_read_res4(fileparts(filename), 0);
     % convert the header into a structure that FieldTrip understands
     hdr              = [];
     hdr.Fs           = orig.setup.sample_rate;
@@ -537,7 +542,6 @@ switch headerformat
     hdr.orig = orig;
     
   case 'ctf_shm'
-    % contact Robert Oostenveld if you are interested in real-time acquisition on the CTF system
     % read the header information from shared memory
     hdr = read_shm_header(filename);
     
@@ -1703,9 +1707,11 @@ if ~isfield(hdr, 'chanunit')
 end % for
 
 % ensure that the output grad/elec is according to the latest definition
+% allow both elec and sens to be present
 if isfield(hdr, 'grad')
   hdr.grad = ft_datatype_sens(hdr.grad);
-elseif isfield(hdr, 'elec')
+end
+if isfield(hdr, 'elec')
   hdr.elec = ft_datatype_sens(hdr.elec);
 end
 
