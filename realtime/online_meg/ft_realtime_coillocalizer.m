@@ -1,7 +1,7 @@
 function ft_realtime_coillocalizer(cfg)
 
-% FT_REALTIME_COILLOCALIZER is a realtime application for online
-% tracking of MEG localizer coils.
+% FT_REALTIME_COILLOCALIZER is a realtime application for online tracking
+% of MEG localizer coils.
 %
 % Use as
 %   ft_realtime_coillocalizer(cfg)
@@ -43,7 +43,7 @@ function ft_realtime_coillocalizer(cfg)
 %
 % To stop this realtime function, you have to press Ctrl-C
 
-% Copyright (C) 2011, Robert Oostenveld
+% Copyright (C) 2011-2012, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -138,7 +138,7 @@ figure
 
 % set an initial guess for each of the dipole/coil positions
 for i=1:ncoil
-  dip(i).pos = mean(sens.pnt,1); % somewhere in the middle of the helmet
+  dip(i).pos = mean(sens.coilpos,1); % somewhere in the middle of the helmet
   dip(i).mom = [0 0 0]';
 end
 
@@ -147,7 +147,7 @@ if strcmp(cfg.jumptoeof, 'yes')
 else
   prevSample  = 0;
 end
-count       = 0;
+count = 0;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this is the general BCI loop where realtime incoming data is handled
