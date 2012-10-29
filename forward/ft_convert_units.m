@@ -78,8 +78,8 @@ else
     unit = ft_estimate_units(siz);
   
   elseif ft_voltype(obj, 'infinite')
-    % there is nothing to do to convert the units
-    unit = target;
+    % this is an infinite medium volume conductor, which does not care about units
+    unit = 'm';
     
   elseif ft_voltype(obj,'singlesphere')
     siz = obj.r;
