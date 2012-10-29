@@ -495,7 +495,7 @@ switch dataformat
     % check that the required low-level toolbox is available
     ft_hastoolbox('eegsf', 1);
     % read it using the CTF importer from the NIH and Darren Weber
-    tmp = ctf_read_meg4(filename, hdr.orig, chanindx, 'all', begtrial:endtrial);
+    tmp = ctf_read_meg4(fileparts(datafile), hdr.orig, chanindx, 'all', begtrial:endtrial);
     dat = cat(3, tmp.data{:});
     % the data is shaped in a 3-D array
     dimord = 'samples_chans_trials';

@@ -517,7 +517,7 @@ switch headerformat
     % check that the required low-level toolbos ix available
     ft_hastoolbox('eegsf', 1);
     % read it using the CTF importer from the NIH and Daren Weber
-    orig = ctf_read_res4(fileparts(filename), 0);
+    orig = ctf_read_res4(fileparts(headerfile), 0);
     % convert the header into a structure that FieldTrip understands
     hdr              = [];
     hdr.Fs           = orig.setup.sample_rate;
