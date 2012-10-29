@@ -151,9 +151,9 @@ switch version
       end
     end
     
-%     if ~isfield(sens, 'unit')
-%       sens = ft_convert_units(sens);
-%     end
+    if ~isfield(sens, 'unit')
+      sens = ft_convert_units(sens);
+    end
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   otherwise

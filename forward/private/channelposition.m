@@ -1,16 +1,16 @@
 function [pnt, ori, lab] = channelposition(sens, varargin)
 
-% CHANNELPOSITION
+% CHANNELPOSITION computes the channel positions and orientations from the
+% coils or electrodes
 %
 % Use as
 %   [pos, ori, lab] = channelposition(sens, ...)
-% where sens is a '2010' or older version electrode or gradiometer
-% array and the optional input arguments should be specified as key
-% value pairs.
+% where sens is an electrode or gradiometer array and the optional input
+% arguments should be specified as key value pairs.
 %
 % See also FT_DATATYPE_SENS
 
-% Copyright (C) 2009-2011, Robert Oostenveld & Vladimir Litvak
+% Copyright (C) 2009-2012, Robert Oostenveld & Vladimir Litvak
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -38,9 +38,21 @@ getref = ft_getopt(varargin, 'channel', false);
 % remove the balancing from the sensor definition, e.g. 3rd order gradients, PCA-cleaned data or ICA projections
 sens = undobalancing(sens);
 
-if ~isfield(sens, 'ori')
-  % treat all sensor arrays similar, i.e. as gradiometer systems
-  sens.ori = nan(size(sens.pnt));
+% keep it backward compatible with sensor definitions prior to 2011v1 (see ft_datatype_sens), which have pnt/ori instead of coilpos/coilori.
+if isfield(sens, 'ori')
+  sens.coilori = sens.ori;
+  sens = rmfield(sens, 'ori');
+end
+if isfield(sens, 'pnt')
+  sens.coilpos = sens.pnt;
+  sens = rmfield(sens, 'pnt');
+end
+
+% treat all sensor arrays similar, i.e. as gradiometer systems
+if     ~isfield(sens, 'coilori') && isfield(sens, 'coilpos')
+  sens.coilori = nan(size(sens.coilpos));
+elseif ~isfield(sens, 'coilori') && isfield(sens, 'elecpos')
+  sens.coilori = nan(size(sens.elecpos));
 end
 
 switch ft_senstype(sens)
@@ -57,13 +69,13 @@ switch ft_senstype(sens)
     
     % subsequently remove the unused coils
     used = any(abs(sens.tra)>0.0001, 1);  % allow a little bit of rounding-off error
-    sens.pnt = sens.pnt(used,:);
-    sens.ori = sens.ori(used,:);
-    sens.tra = sens.tra(:,used);
+    sens.coilpos = sens.coilpos(used,:);
+    sens.coilori = sens.coilori(used,:);
+    sens.tra     = sens.tra(:,used);
     
     % compute distances from the center of the helmet
-    center = mean(sens.pnt);
-    dist   = sqrt(sum((sens.pnt - repmat(center, size(sens.pnt, 1), 1)).^2, 2));
+    center = mean(sens.coilpos);
+    dist   = sqrt(sum((sens.coilpos - repmat(center, size(sens.coilpos, 1), 1)).^2, 2));
     
     % put the corresponding distances instead of non-zero tra entries
     maxval = repmat(max(abs(sens.tra),[],2), [1 size(sens.tra,2)]);
@@ -112,8 +124,8 @@ switch ft_senstype(sens)
     [junk, ind] = min(dist, [], 2);
     
     lab(sel)   = sens.label;
-    pnt(sel,:) = sens.pnt(ind, :);
-    ori(sel,:) = sens.ori(ind, :);
+    pnt(sel,:) = sens.coilpos(ind, :);
+    ori(sel,:) = sens.coilori(ind, :);
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % then do the references if needed
@@ -127,8 +139,8 @@ switch ft_senstype(sens)
       
       % subsequently remove the unused coils
       used = any(abs(sens.tra)>0.0001, 1);  % allow a little bit of rounding-off error
-      sens.pnt = sens.pnt(used,:);
-      sens.ori = sens.ori(used,:);
+      sens.coilpos = sens.coilpos(used,:);
+      sens.coilori = sens.coilori(used,:);
       sens.tra = sens.tra(:,used);
       
       [nchan, ncoil] = size(sens.tra);
@@ -137,8 +149,8 @@ switch ft_senstype(sens)
       for i=1:nchan
         weight = abs(sens.tra(i,:));
         weight = weight ./ sum(weight);
-        refpnt(i,:) = weight * sens.pnt;
-        refori(i,:) = weight * sens.ori;
+        refpnt(i,:) = weight * sens.coilpos;
+        refori(i,:) = weight * sens.coilori;
       end
       reflab = sens.label;
       
@@ -168,11 +180,11 @@ switch ft_senstype(sens)
       if length(sel)==2
         ind = [ind; i];
         lab(i,:) = {ch1, ch2};
-        meanpnt1 = mean(sens.pnt(abs(sens.tra(sel(1),:))>0.5, :), 1);
-        meanpnt2 = mean(sens.pnt(abs(sens.tra(sel(2),:))>0.5, :), 1);
+        meanpnt1 = mean(sens.coilpos(abs(sens.tra(sel(1),:))>0.5, :), 1);
+        meanpnt2 = mean(sens.coilpos(abs(sens.tra(sel(2),:))>0.5, :), 1);
         pnt(i,:) = mean([meanpnt1; meanpnt2], 1);
-        meanori1 = mean(sens.ori(abs(sens.tra(sel(1),:))>0.5, :), 1);
-        meanori2 = mean(sens.ori(abs(sens.tra(sel(2),:))>0.5, :), 1);
+        meanori1 = mean(sens.coilori(abs(sens.tra(sel(1),:))>0.5, :), 1);
+        meanori2 = mean(sens.coilori(abs(sens.tra(sel(2),:))>0.5, :), 1);
         ori(i,:) = mean([meanori1; meanori2], 1);
       end
     end
@@ -199,11 +211,11 @@ switch ft_senstype(sens)
       if (length(sel)==2)
         ind = [ind; i];
         lab(i,:) = {ch1, ch2};
-        meanpnt1 = mean(sens.pnt(abs(sens.tra(sel(1),:))>0.5,:), 1);
-        meanpnt2 = mean(sens.pnt(abs(sens.tra(sel(2),:))>0.5,:), 1);
+        meanpnt1 = mean(sens.coilpos(abs(sens.tra(sel(1),:))>0.5,:), 1);
+        meanpnt2 = mean(sens.coilpos(abs(sens.tra(sel(2),:))>0.5,:), 1);
         pnt(i,:) = mean([meanpnt1; meanpnt2], 1);
-        meanori1 = mean(sens.ori(abs(sens.tra(sel(1),:))>0.5,:), 1);
-        meanori2 = mean(sens.ori(abs(sens.tra(sel(2),:))>0.5,:), 1);
+        meanori1 = mean(sens.coilori(abs(sens.tra(sel(1),:))>0.5,:), 1);
+        meanori2 = mean(sens.coilori(abs(sens.tra(sel(2),:))>0.5,:), 1);
         ori(i,:) = mean([meanori1; meanori2], 1);
       end
     end
@@ -235,8 +247,8 @@ switch ft_senstype(sens)
         meanpnt  = [];
         meanori  = [];
         for j = 1:length(sel1)
-          meanpnt  = [meanpnt; mean(sens.pnt(abs(sens.tra(sel1(j),:))>0.5,:), 1)];
-          meanori  = [meanori; mean(sens.ori(abs(sens.tra(sel1(j),:))>0.5,:), 1)];
+          meanpnt  = [meanpnt; mean(sens.coilpos(abs(sens.tra(sel1(j),:))>0.5,:), 1)];
+          meanori  = [meanori; mean(sens.coilori(abs(sens.tra(sel1(j),:))>0.5,:), 1)];
         end
         pnt(i,:) = mean(meanpnt, 1);
         ori(i,:) = mean(meanori, 1);
@@ -258,16 +270,16 @@ switch ft_senstype(sens)
       for i=1:nchan
         weight = abs(sens.tra(i,:));
         weight = weight ./ sum(weight);
-        pnt(i,:) = weight * sens.pnt;
-        ori(i,:) = weight * sens.ori;
+        pnt(i,:) = weight * sens.coilpos;
+        ori(i,:) = weight * sens.coilori;
       end
       lab = sens.label;
       
     else
       % there is one sensor per channel, which means that the channel position
       % is identical to the sensor position
-      pnt = sens.pnt;
-      ori = sens.ori;
+      pnt = sens.coilpos;
+      ori = sens.coilori;
       lab = sens.label;
     end
     
