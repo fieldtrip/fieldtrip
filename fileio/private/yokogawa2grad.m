@@ -2,7 +2,7 @@ function grad = yokogawa2grad(hdr)
 
 % YOKOGAWA2GRAD converts the position and weights of all coils that
 % compromise a gradiometer system into a structure that can be used
-% by FieldTrip.
+% by FieldTrip. This implementation uses the old "yokogawa" toolbox.
 %
 % See also CTF2GRAD, BTI2GRAD, FIF2GRAD, MNE2GRAD, ITAB2GRAD,
 % FT_READ_SENS, FT_READ_HEADER
@@ -126,13 +126,13 @@ else
     end
     grad.label = label(isgrad);    
 end
-grad.unit  = 'cm';
+grad.unit = 'cm';
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this defines some usefull constants
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function handles = definehandles;
+function handles = definehandles
 handles.output = [];
 handles.sqd_load_flag = false;
 handles.mri_load_flag = false;

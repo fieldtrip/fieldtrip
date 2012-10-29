@@ -2,11 +2,13 @@ function grad = yokogawa2grad_new(hdr)
 
 % YOKOGAWA2GRAD_NEW converts the position and weights of all coils that
 % compromise a gradiometer system into a structure that can be used
-% by FieldTrip.
+% by FieldTrip. This implementation uses the new "yokogawa_meg_reader" 
+% toolbox.
 %
 % See also FT_READ_HEADER, CTF2GRAD, BTI2GRAD, FIF2GRAD, YOKOGAWA2GRAD
 
-% Copyright (C) 2005-2008, Robert Oostenveld and 2010, Tilmann Sander-Thoemmes
+% Copyright (C) 2005-2012, Robert Oostenveld 
+% Copyright (C) 2010, Tilmann Sander-Thoemmes
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -181,7 +183,7 @@ else
     end
     grad.label = label;    
 end
-grad.unit  = 'cm';
+grad.unit = 'cm';
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
