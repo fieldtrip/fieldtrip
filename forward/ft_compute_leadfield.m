@@ -31,6 +31,7 @@ function [lf] = ft_compute_leadfield(pos, sens, vol, varargin)
 %   'normalize'       = 'no', 'yes' or 'column'
 %   'normalizeparam'  = parameter for depth normalization (default = 0.5)
 %   'weight'          = number or 1xN vector, weight for each dipole position (default = 1)
+%   'unit'            = string, can be 'arbitrary' or 'si' (default = 'arbitrary')
 %
 % The leadfield weight may be used to specify a (normalized)
 % corresponding surface area for each dipole, e.g. when the dipoles
@@ -91,10 +92,11 @@ if iscell(sens) && iscell(vol) && numel(sens)==numel(vol)
 end
 
 % get the optional input arguments
-reducerank = ft_getopt(varargin, 'reducerank', 'no');
-normalize = ft_getopt(varargin, 'normalize' , 'no');
-normalizeparam = ft_getopt(varargin, 'normalizeparam', 0.5);
-weight = ft_getopt(varargin, 'weight');
+reducerank      = ft_getopt(varargin, 'reducerank', 'no');
+normalize       = ft_getopt(varargin, 'normalize' , 'no');
+normalizeparam  = ft_getopt(varargin, 'normalizeparam', 0.5);
+weight          = ft_getopt(varargin, 'weight');
+unit            = ft_getopt(varargin, 'unit', 'arbitrary'); % arbitrary or si
 
 if ~isstruct(sens) && size(sens, 2)==3
   % definition of electrode positions only, restructure it
@@ -117,6 +119,21 @@ end
 
 if isfield(vol, 'unit') && isfield(sens, 'unit') && ~strcmp(vol.unit, sens.unit)
   error('inconsistency in the units of the volume conductor and the sensor array');
+end
+
+if strcmp(unit, 'si')
+  % convert the input objects into standard international units, the alternative is arbitrary
+  grid.pos  = pos;
+  grid.unit = sens.unit; % assume the same units for the dipole position as for the vol and sens
+  grid = ft_convert_units(grid, 'm');
+  sens = ft_convert_units(sens, 'm');
+  vol  = ft_convert_units(vol , 'm');
+  pos  = grid.pos;
+  clear grid
+  % the previous dealt with geometrical units, but not with the possibility of fT or uV
+  if ~all(strcmp(sens.chanunit, 'T/m') | strcmp(sens.chanunit, 'T') | strcmp(sens.chanunit, 'V'))
+    error('failed to convert the sensor array into SI units');
+  end
 end
 
 if ismeg && iseeg
