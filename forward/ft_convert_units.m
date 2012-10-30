@@ -121,29 +121,8 @@ end
 % give some information about the conversion
 fprintf('converting units from ''%s'' to ''%s''\n', unit, target)
 
-if strcmp(unit, 'm')
-  unit2meter = 1;
-elseif strcmp(unit, 'dm')
-  unit2meter = 0.1;
-elseif strcmp(unit, 'cm')
-  unit2meter = 0.01;
-elseif strcmp(unit, 'mm')
-  unit2meter = 0.001;
-end
-
-% determine the unit-of-dimension of the output object
-if strcmp(target, 'm')
-  meter2target = 1;
-elseif strcmp(target, 'dm')
-  meter2target = 10;
-elseif strcmp(target, 'cm')
-  meter2target = 100;
-elseif strcmp(target, 'mm')
-  meter2target = 1000;
-end
-
-% combine the units into one scaling factor
-scale = unit2meter * meter2target;
+% compue the scaling factor from the input units to the desired ones
+scale = scalingfactor(unit, target);
 
 % volume conductor model
 if isfield(obj, 'r'), obj.r = scale * obj.r; end
