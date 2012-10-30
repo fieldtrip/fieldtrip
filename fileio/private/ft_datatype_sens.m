@@ -86,12 +86,17 @@ if isempty(sens)
   return;
 end
 
-% there are many cases which deal with either eeg or meg
-isgrad = ft_senstype(sens, 'meg');
-
 switch version
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case '2011v2'
+    
+    % this speeds up subsequent calls to ft_senstype
+    if ~isfield(sens, 'type')
+      sens.type = ft_senstype(sens);
+    end
+    
+    % there are many cases which deal with either eeg or meg
+    isgrad = ft_senstype(sens, 'meg');
     
     if isfield(sens, 'pnt') || isfield(sens, 'ori')
       if isgrad
