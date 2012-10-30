@@ -576,18 +576,283 @@ switch atlasformat
     if strcmp(atlasformat, 'freesurfer_a2009s')
       lookuptable = 'Simple_surface_labels2009.txt';
       parcelfield = 'a2009s';
+   
+      index = (0:75)';
+
+      label = {'Unknown'
+               'G_and_S_frontomargin'
+               'G_and_S_occipital_inf'
+               'G_and_S_paracentral'
+               'G_and_S_subcentral'
+               'G_and_S_transv_frontopol'
+               'G_and_S_cingul-Ant'
+               'G_and_S_cingul-Mid-Ant'
+               'G_and_S_cingul-Mid-Post'
+               'G_cingul-Post-dorsal'
+               'G_cingul-Post-ventral'
+               'G_cuneus'
+               'G_front_inf-Opercular'
+               'G_front_inf-Orbital'
+               'G_front_inf-Triangul'
+               'G_front_middle'
+               'G_front_sup'
+               'G_Ins_lg_and_S_cent_ins'
+               'G_insular_short'
+               'G_occipital_middle'
+               'G_occipital_sup'
+               'G_oc-temp_lat-fusifor'
+               'G_oc-temp_med-Lingual'
+               'G_oc-temp_med-Parahip'
+               'G_orbital'
+               'G_pariet_inf-Angular'
+               'G_pariet_inf-Supramar'
+               'G_parietal_sup'
+               'G_postcentral'
+               'G_precentral'
+               'G_precuneus'
+               'G_rectus'
+               'G_subcallosal'
+               'G_temp_sup-G_T_transv'
+               'G_temp_sup-Lateral'
+               'G_temp_sup-Plan_polar'
+               'G_temp_sup-Plan_tempo'
+               'G_temporal_inf'
+               'G_temporal_middle'
+               'Lat_Fis-ant-Horizont'
+               'Lat_Fis-ant-Vertical'
+               'Lat_Fis-post'
+               'Medial_wall'
+               'Pole_occipital'
+               'Pole_temporal'
+               'S_calcarine'
+               'S_central'
+               'S_cingul-Marginalis'
+               'S_circular_insula_ant'
+               'S_circular_insula_inf'
+               'S_circular_insula_sup'
+               'S_collat_transv_ant'
+               'S_collat_transv_post'
+               'S_front_inf'
+               'S_front_middle'
+               'S_front_sup'
+               'S_interm_prim-Jensen'
+               'S_intrapariet_and_P_trans'
+               'S_oc_middle_and_Lunatus'
+               'S_oc_sup_and_transversal'
+               'S_occipital_ant'
+               'S_oc-temp_lat'
+               'S_oc-temp_med_and_Lingual'
+               'S_orbital_lateral'
+               'S_orbital_med-olfact'
+               'S_orbital-H_Shaped'
+               'S_parieto_occipital'
+               'S_pericallosal'
+               'S_postcentral'
+               'S_precentral-inf-part'
+               'S_precentral-sup-part'
+               'S_suborbital'
+               'S_subparietal'
+               'S_temporal_inf'
+               'S_temporal_sup'
+               'S_temporal_transverse'};
+
+      rgb   = [  0   0   0
+                23 220  60
+                23  60 180
+                63 100  60
+                63  20 220
+                13   0 250
+                26  60   0
+                26  60  75
+                26  60 150
+                25  60 250
+                60  25  25
+               180  20  20
+               220  20 100
+               140  60  60
+               180 220 140
+               140 100 180
+               180  20 140
+                23  10  10
+               225 140 140
+               180  60 180
+                20 220  60
+                60  20 140
+               220 180 140
+                65 100  20
+               220  60  20
+                20  60 220
+               100 100  60
+               220 180 220
+                20 180 140
+                60 140 180
+                25  20 140
+                20  60 100
+                60 220  20
+                60  60 220
+               220  60 220
+                65 220  60
+                25 140  20
+               220 220 100
+               180  60  60
+                61  20 220
+                61  20  60
+                61  60 100
+                25  25  25
+               140  20  60
+               220 180  20
+                63 180 180
+               221  20  10
+               221  20 100
+               221  60 140
+               221  20 220
+                61 220 220
+               100 200 200
+                10 200 200
+               221 220  20
+               141  20 100
+                61 220 100
+               141  60  20
+               143  20 220
+               101  60 220
+                21  20 140
+                61  20 180
+               221 140  20
+               141 100 220
+               221 100  20
+               181 200  20
+               101  20  20
+               101 100 180
+               181 220  20
+                21 140 200
+                21  20 240
+                21  20 200
+                21  20  60
+               101  60  60
+                21 180 180
+               223 220  60
+               221  60  60];
+      
     elseif strcmp(atlasformat, 'freesurfer_aparc')
       lookuptable = 'colortable_desikan_killiany.txt';
       parcelfield = 'aparc';
+      
+      index = (0:35)';
+
+      label = {'unknown'
+               'bankssts'
+               'caudalanteriorcingulate'
+               'caudalmiddlefrontal'
+               'corpuscallosum'
+               'cuneus'
+               'entorhinal'
+               'fusiform'
+               'inferiorparietal'
+               'inferiortemporal'
+               'isthmuscingulate'
+               'lateraloccipital'
+               'lateralorbitofrontal'
+               'lingual'
+               'medialorbitofrontal'
+               'middletemporal'
+               'parahippocampal'
+               'paracentral'
+               'parsopercularis'
+               'parsorbitalis'
+               'parstriangularis'
+               'pericalcarine'
+               'postcentral'
+               'posteriorcingulate'
+               'precentral'
+               'precuneus'
+               'rostralanteriorcingulate'
+               'rostralmiddlefrontal'
+               'superiorfrontal'
+               'superiorparietal'
+               'superiortemporal'
+               'supramarginal'
+               'frontalpole'
+               'temporalpole'
+               'transversetemporal'
+               'insula'};
+
+      rgb   = [ 25   5  25
+                25 100  40
+               125 100 160
+               100  25   0
+               120  70  50
+               220  20 100
+               220  20  10
+               180 220 140
+               220  60 220
+               180  40 120
+               140  20 140
+                20  30 140
+                35  75  50
+               225 140 140
+               200  35  75
+               160 100  50
+                20 220  60
+                60 220  60
+               220 180 140
+                20 100  50
+               220  60  20
+               120 100  60
+               220  20  20
+               220 180 220
+                60  20 220
+               160 140 180
+                80  20 140
+                75  50 125
+                20 220 160
+                20 180 140
+               140 220 220
+                80 160  20
+               100   0 100
+                70  20 170
+               150 150 200
+               255 192  32];
+
     elseif strcmp(atlasformat, 'freesurfer_ba')
       lookuptable = 'colortable_BA.txt';
       parcelfield = 'BA';
+    
+      index = (0:12)';
+      
+      label = {'unknown'
+               'BA1' 
+               'BA2'
+               'BA3a'
+               'BA3b'
+               'BA4a'
+               'BA4p'
+               'BA6'
+               'BA44'
+               'BA45'
+               'V1'
+               'V2'
+               'MT'};
+      
+      rgb   = [25  5   25 
+               0   92  23 
+               131 148 255
+               0   0   255
+               255 102 51 
+               196 255 20 
+               255 51  204
+               1   38  153
+               153 0   38 
+               115 153 0  
+               153 15  0  
+               0   214 129
+               155 0   153];
+
     else
       error('unknown freesurfer parcellation method requested');
     end
 
-    [index, label, rgb] = read_fscolorlut(lookuptable);
-    label = cellstr(label);
+    %[index, label, rgb] = read_fscolorlut(lookuptable);
+    %label = cellstr(label);
     rgb   = rgb(:,1) + rgb(:,2)*256 + rgb(:,3)*256*256;
 
     % read in the file
