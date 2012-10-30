@@ -10,6 +10,7 @@ function factor = scalingfactor(old, new)
 %   scalingfactor('m', 'cm')          % returns 100
 %   scalingfactor('V', 'uV')          % returns 1000
 %   scalingfactor('T/cm', 'fT/m')     % returns 10^15 divided by 10^-2, which is 10^17
+%   scalingfactor('cm^2', 'mm^2')     % returns 100
 %
 % The following fundamental units are supported
 %   metre       m   length  l (a lowercase L), x, r L
@@ -68,8 +69,6 @@ function factor = scalingfactor(old, new)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
-
-% convert the old and new to SI units
 
 m   = 1;
 g   = 0.001; % rather than representing kg, here g gets represented, the k is added further down
