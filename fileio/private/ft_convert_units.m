@@ -118,11 +118,11 @@ elseif strcmp(unit, target)
   return
 end
 
-% give some information about the conversion
-fprintf('converting units from ''%s'' to ''%s''\n', unit, target)
-
 % compue the scaling factor from the input units to the desired ones
 scale = scalingfactor(unit, target);
+
+% give some information about the conversion
+fprintf('converting units from ''%s'' to ''%s''\n', unit, target)
 
 % volume conductor model
 if isfield(obj, 'r'), obj.r = scale * obj.r; end
@@ -139,6 +139,26 @@ if isfield(obj, 'pnt'),     obj.pnt     = scale * obj.pnt; end
 if isfield(obj, 'chanpos'), obj.chanpos = scale * obj.chanpos; end
 if isfield(obj, 'coilpos'), obj.coilpos = scale * obj.coilpos; end
 if isfield(obj, 'elecpos'), obj.elecpos = scale * obj.elecpos; end
+
+%% THE FOLLOWING IS STILL EXPERIMENTAL CODE AND HENCE DISABLED
+if false
+  % gradiometer array that combines multiple coils in one channel
+  if isfield(obj, 'tra') && isfield(obj, 'chanunit')
+    % find the gradiometer channels that are expressed as unit of field strength divided by unit of distance, e.g. T/cm
+    for i=1:length(obj.chanunit)
+      tok = tokenize(obj.chanunit{i}, '/');
+      if length(tok)==1
+        % assume that it is T or so
+      elseif length(tok)==2
+        % assume that it is T/cm or so
+        obj.tra(i,:)    = obj.tra(i,:) / scale;
+        obj.chanunit{i} = [tok{1} '/' target];
+      else
+        error('unexpected units %s', obj.chanunit{i});
+      end
+    end % for
+  end % if
+end
 
 % fiducials
 if isfield(obj, 'fid') && isfield(obj.fid, 'pnt'), obj.fid.pnt = scale * obj.fid.pnt; end
