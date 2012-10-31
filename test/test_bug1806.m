@@ -1,7 +1,7 @@
-% function test_bug1806
+function test_bug1806
 
 % TEST test_bug1806
-% TEST ft_componentanalysis ft_megplanar ft_megrealign
+% TEST ft_componentanalysis ft_rejectcomponent ft_megplanar ft_combineplanar ft_megrealign ft_datatype_sens
 
 ctf151 = load('/home/common/matlab/fieldtrip/data/test/latest/sens/ctf151.mat');
 ctf275 = load('/home/common/matlab/fieldtrip/data/test/latest/sens/ctf275.mat');
