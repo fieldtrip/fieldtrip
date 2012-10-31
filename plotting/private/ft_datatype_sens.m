@@ -90,7 +90,9 @@ switch version
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case '2011v2'
     
-    % this speeds up subsequent calls to ft_senstype
+    % This speeds up subsequent calls to ft_senstype and channelposition.
+    % However, if it is not more precise than MEG or EEG, don't keep it in
+    % the output (see further down).
     if ~isfield(sens, 'type')
       sens.type = ft_senstype(sens);
     end
@@ -158,6 +160,12 @@ switch version
     
     if ~isfield(sens, 'unit')
       sens = ft_convert_units(sens);
+    end
+    
+    if any(strcmp(sens.type, {'meg', 'eeg', 'magnetometer', 'electrode'}))
+      % this is not sufficiently informative, so better remove it
+      % see also http://bugzilla.fcdonders.nl/show_bug.cgi?id=1806
+      sens = rmfield(sens, 'type');
     end
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
