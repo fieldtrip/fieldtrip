@@ -1,4 +1,4 @@
-function [grad] = bti2grad(hdr, balanceflag)
+function [grad, elec] = bti2grad(hdr, balanceflag)
 
 % BTI2GRAD converts a 4D header to a gradiometer structure that can be
 % understood by FieldTrip and Robert Oostenveld's low-level forward and
@@ -8,6 +8,11 @@ function [grad] = bti2grad(hdr, balanceflag)
 % Use as:
 %   [hdr]  = read_4d_hdr(filename)
 %   [grad] = bti2grad(hdr)
+%
+% or
+%
+%   [hdr]  = read_4d_hdr(filename)
+%   [grad, elec] = bti2grad(hdr)
 %
 % This function only computes the hardware magnetometer definition
 % for the 4D system. This function is based on ctf2grad and Gavin
@@ -40,6 +45,7 @@ function [grad] = bti2grad(hdr, balanceflag)
 if isfield(hdr, 'Meg_pos'),
   warning('using outdated code. this does not necessarily lead to correct output');
   
+  elec      = [];
   grad      = [];
   grad.unit = 'm';
   grad.coilpos  = hdr.Meg_pos;
@@ -204,9 +210,27 @@ elseif isfield(hdr, 'config'),
       fprintf('not applying digital weights in the gradiometer balancing matrix\n');
     end
   end
-    
+  
+  % check whether there is a specification of the positions of
+  % EEG-electrodes
+  haseegpos = false;
+  for k = 1:numel(hdr.user_block_data)
+    if strcmp(hdr.user_block_data{k}.hdr.type, 'b_eeg_elec_locs')
+      haseegpos = true;
+      userblock = k;
+      break;
+    end
+  end
+  if haseegpos
+    elec.pnt   = hdr.user_block_data{userblock}.pnt;
+    elec.label = hdr.user_block_data{userblock}.label;
+  else
+    elec = [];
+  end
+  
 elseif isfield(hdr, 'grad'),
   % hdr has been derived in read_bti_m4d and grad is already there
   % this happens for 148 channel data
   grad = hdr.grad;
+  elec = [];
 end

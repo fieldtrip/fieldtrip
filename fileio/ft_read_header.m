@@ -191,7 +191,11 @@ switch headerformat
     hdr.nTrials     = orig.header_data.TotalEpochs;
     %hdr.label       = {orig.channel_data(:).chan_label}';
     hdr.label       = orig.Channel;
-    hdr.grad        = bti2grad(orig);
+    [hdr.grad, elec] = bti2grad(orig);
+    if ~isempty(elec),
+      hdr.elec = elec;
+    end
+    
     % remember original header details
     hdr.orig        = orig;
     
@@ -203,7 +207,11 @@ switch headerformat
     hdr.nSamplesPre = round(orig.FirstLatency*orig.SampleFrequency);
     hdr.nTrials     = orig.TotalEpochs;
     hdr.label       = orig.ChannelOrder(:);
-    hdr.grad        = bti2grad(orig);
+    [hdr.grad, elec] = bti2grad(orig);
+    if ~isempty(elec),
+      hdr.elec = elec;
+    end
+    
     % remember original header details
     hdr.orig        = orig;
     

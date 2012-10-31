@@ -360,7 +360,7 @@ for ub = 1:header.config_data.total_user_blocks
     xfm = zeros(4,4);
     for k = 1:size(tmp,1)
       xfm(k) = typecast(tmp(k,:), 'double');
-      if abs(xfm(k))<1e-10 | abs(xfm(k))>1e10, xfm(k) = typecast(fliplr(tmp(k,:)), 'double');end
+      if abs(xfm(k))<1e-10 || abs(xfm(k))>1e10, xfm(k) = typecast(fliplr(tmp(k,:)), 'double');end
     end
     fseek(fid, tmpfp, 'bof'); %FIXME try to find out why this looks so strange
   elseif strcmp(type(type>0), 'b_eeg_elec_locs'),
@@ -369,14 +369,15 @@ for ub = 1:header.config_data.total_user_blocks
     Npoints = user_space_size./40;
     for k = 1:Npoints
       tmp      = fread(fid, 16, 'uchar');
-      tmplabel = char(tmp(tmp>0)');
-      if strmatch('Coil', tmplabel), 
-        label{k} = tmplabel(1:5);
-      elseif ismember(tmplabel(1), {'L' 'R' 'C' 'N' 'I'}),
-        label{k} = tmplabel(1);
-      else
-        label{k} = '';
-      end
+      tmplabel = char(tmp(tmp>47)');
+      %if strmatch('Coil', tmplabel), 
+      %  label{k} = tmplabel(1:5);
+      %elseif ismember(tmplabel(1), {'L' 'R' 'C' 'N' 'I'}),
+      %  label{k} = tmplabel(1);
+      %else
+      %  label{k} = '';
+      %end
+      label{k} = tmplabel;
       tmp      = fread(fid, 3, 'double');
       pnt(k,:) = tmp(:)';
     end
