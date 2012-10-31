@@ -72,6 +72,7 @@ if nargin<1
 end
 
 [ftpath, ~] = fileparts(mfilename('fullpath'));
+ftpath = ftpath(1:end-10); % strip away '/utilities'
 signaturefile = fullfile(ftpath, 'signature.md5');
 remotesignature = 'http://fieldtrip.fcdonders.nl/signature.md5';
 repository = 'http://fieldtrip.googlecode.com/svn/trunk/';
