@@ -176,6 +176,11 @@ for i=1:Ntemplate
     template(i) = ft_read_sens(cfg.template{i});
   elseif isstruct(cfg.template{i}) && isfield(cfg.template{i}, 'coilpos') && isfield(cfg.template{i}, 'coilori') && isfield(cfg.template{i}, 'tra'),
     template(i) = cfg.template{i};
+  elseif isstruct(cfg.template{i}) && isfield(cfg.template{i}, 'pnt') && isfield(cfg.template{i}, 'ori') && isfield(cfg.template{i}, 'tra'),
+    % it seems to be a pre-2011v1 type gradiometer structure, update it
+    template(i) = ft_datatype_sens(cfg.template{i});
+  else
+    error('unrecognized template input');
   end
 end
 

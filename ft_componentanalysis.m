@@ -732,6 +732,12 @@ if isfield(data, 'grad') || (isfield(data, 'elec') && isfield(data.elec, 'tra'))
   montage.labelnew = comp.label;
   montage.tra      = unmixing;
   comp.(sensfield) = ft_apply_montage(data.(sensfield), montage, 'balancename', 'comp', 'keepunused', 'yes');
+  % The output sensor array cannot simply be interpreted as the input
+  % sensor array, hence the type should be removed to allow autodetection
+  % See also http://bugzilla.fcdonders.nl/show_bug.cgi?id=1806
+  if isfield(comp.(sensfield), 'type')
+    comp.(sensfield) = rmfield(comp.(sensfield), 'type');
+  end
 end
 
 % copy the sampleinfo into the output
