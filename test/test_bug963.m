@@ -63,8 +63,56 @@ for i=1:length(dataset)
   assert(isequal(reference.grad,     grad), sprintf('failed for %s', filename));
   assert(isequal(reference.hdr.grad, grad), sprintf('failed for %s', filename));
   
+  allhdr{i}  = hdr;
   allgrad{i} = grad;
   
 end % for all datasets
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% it is important that all missing information can be added automatically
+% since people might have old grad structures in *.mat files on disk
+
+for i=1:length(dataset)
+  
+  grad1  = allgrad{i};
+  
+  grad2 = grad1;
+  try
+    grad2 = rmfield(grad2, 'type');
+  end
+  grad2.type = ft_senstype(grad2);
+  assert(~any(strcmp(grad2.type, {'unknown', 'meg'})));
+  
+  grad3 = grad1;
+  try
+    grad3 = rmfield(grad3, 'chantype');
+  end
+  grad3.chantype = ft_chantype(grad3);
+  % assert(mean(strcmp('unknown', grad3.chantype))<0.3);
+  
+  grad4 = grad1;
+  try
+    grad4 = rmfield(grad4, 'chanunit');
+  end
+  grad4.chanunit = ft_chanunit(grad4);
+  % assert(mean(strcmp('unknown', grad4.chanunit))<0.3);
+  
+  grad5 = grad1;
+  try
+    grad5 = rmfield(grad5, 'type');
+  end
+  try
+    grad5 = rmfield(grad5, 'chantype');
+  end
+  try
+    grad5 = rmfield(grad5, 'chanunit');
+  end
+  grad5 = ft_datatype_sens(grad5);
+  assert(~any(strcmp(grad5.type, {'unknown', 'meg'})));
+  assert(mean(strcmp('unknown', grad5.chantype))<0.3);
+  assert(mean(strcmp('unknown', grad5.chanunit))<0.3);
+
+end
 
 
