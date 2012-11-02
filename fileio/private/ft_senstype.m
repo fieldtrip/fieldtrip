@@ -340,6 +340,8 @@ else
       type = 'bti248_planar';
     elseif (mean(ismember(ft_senslabel('bti148_planar'), sens.label)) > 0.8)
       type = 'bti148_planar';
+    elseif (mean(ismember(ft_senslabel('itab28'),        sens.label)) > 0.8)
+      type = 'itab28';
     elseif (mean(ismember(ft_senslabel('itab153'),       sens.label)) > 0.8)
       type = 'itab153';
     elseif (mean(ismember(ft_senslabel('itab153_planar'), sens.label)) > 0.8)
@@ -440,7 +442,7 @@ if ~isempty(desired)
     case 'yokogawa'
       type = any(strcmp(type, {'yokogawa160' 'yokogawa160_planar' 'yokogawa64' 'yokogawa64_planar' 'yokogawa440' 'yokogawa440_planar'}));
     case 'itab'
-      type = any(strcmp(type, {'itab' 'itab153' 'itab153_planar'}));
+      type = any(strcmp(type, {'itab' 'itab28' 'itab153' 'itab153_planar'}));
     case 'meg_axial'
       % note that neuromag306 is mixed planar and axial
       type = any(strcmp(type, {'magnetometer' 'neuromag306' 'ctf64' 'ctf151' 'ctf275' 'bti148' 'bti248' 'bti248grad' 'yokogawa160' 'yokogawa64' 'yokogawa440'}));
