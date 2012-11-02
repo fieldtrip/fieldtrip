@@ -220,6 +220,17 @@ if ~(isequal(skullstr5.anatomy,skullstr3.anatomy))
     error('old and new way of specifying smooth and threshold should give the same output');
 end
 
+clear skullstr3;
+
+cfg=[];
+cfg.threshold=0.1;
+cfg.smooth = 6;
+cfg.output= {'skullstrip' 'brain'};
+skullstr6=ft_volumesegment(cfg,tpm);
+
+if ~(isequal(skullstr5.anatomy,skullstr6.anatomy))
+    error('specifying output only with skullstrip or with other output should give the same output');
+end
 
 clear all;
 
