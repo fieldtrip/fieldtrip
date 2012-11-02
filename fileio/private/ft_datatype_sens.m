@@ -130,7 +130,7 @@ switch version
       end
     end
     
-    if ~isfield(sens, 'chantype')
+    if ~isfield(sens, 'chantype') || all(strcmp(sens.chantype, 'unknown'))
       if isgrad
         sens.chantype = ft_chantype(sens);
       else
@@ -138,23 +138,11 @@ switch version
       end
     end
     
-    if ~isfield(sens, 'chanunit') && ~ft_senstype(sens, 'unknown')
-      if ft_senstype(sens, 'ctf')
-        sens.chanunit = repmat({'T'}, size(sens.label));
-      elseif ft_senstype(sens, 'bti')
-        % FIXME
-        sens.chanunit = repmat({'unknown'}, size(sens.label));
-      elseif ft_senstype(sens, 'neuromag')
-        % FIXME
-        sens.chanunit = repmat({'unknown'}, size(sens.label));
-      elseif ft_senstype(sens, 'itab')
-        % FIXME
-        sens.chanunit = repmat({'unknown'}, size(sens.label));
-      elseif ft_senstype(sens, 'yokogawa')
-        % FIXME
-        sens.chanunit = repmat({'unknown'}, size(sens.label));
+    if ~isfield(sens, 'chanunit') || all(strcmp(sens.chanunit, 'unknown'))
+      if isgrad
+        sens.chanunit = ft_chanunit(sens);
       else
-        % FIXME for EEG or other MEG systems we have not yet figured out how to deal with this
+        % FIXME for EEG we have not yet figured out how to deal with this
       end
     end
     
