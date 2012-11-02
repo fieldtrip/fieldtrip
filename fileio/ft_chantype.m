@@ -449,6 +449,10 @@ elseif ft_senstype(input, 'itab') && isgrad
   % the channels have to be identified based on their name alone
   sel = myregexp('^MAG_[0-9][0-9][0-9]$', label);
   type(sel) = {'megmag'};
+  sel = myregexp('^MAG_[0-9][0-9]$', label); % for the itab28 system
+  type(sel) = {'megmag'};
+  sel = myregexp('^MAG_[0-9]$', label); % for the itab28 system
+  type(sel) = {'megmag'};
   sel = myregexp('^REF_[0-9][0-9][0-9]$', label);
   type(sel) = {'megref'};
   sel = myregexp('^AUX.*$', label);

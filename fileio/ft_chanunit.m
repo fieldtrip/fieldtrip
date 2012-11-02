@@ -64,8 +64,6 @@ else
   
   % look at the type of the channels, these are obtained from FT_CHANTYPE
   if ft_senstype(hdr, 'neuromag')
-    chanunit(strcmp('analog trigger',   hdr.chantype)) = {'unknown'};
-    chanunit(strcmp('digital trigger',  hdr.chantype)) = {'unknown'};
     chanunit(strcmp('eeg',              hdr.chantype)) = {'uV'};
     chanunit(strcmp('emg',              hdr.chantype)) = {'uV'};
     chanunit(strcmp('eog',              hdr.chantype)) = {'uV'};
@@ -73,11 +71,27 @@ else
     chanunit(strcmp('megmag',           hdr.chantype)) = {'T'};
     chanunit(strcmp('megplanar',        hdr.chantype)) = {'T/cm'};
     
-%   elseif ft_senstype(hdr, 'ctf')
-%     error('not yet implemented');
-%     
-%   elseif ft_senstype(hdr, '4d')
-%     error('not yet implemented');
+  elseif ft_senstype(hdr, 'ctf')
+    chanunit(strcmp('eeg',              hdr.chantype)) = {'uV'};
+    chanunit(strcmp('emg',              hdr.chantype)) = {'uV'};
+    chanunit(strcmp('eog',              hdr.chantype)) = {'uV'};
+    chanunit(strcmp('ecg',              hdr.chantype)) = {'uV'};
+    chanunit(strcmp('megmag',           hdr.chantype)) = {'T'}; % I don't think any CTF systems like this exist
+    chanunit(strcmp('meggrad',          hdr.chantype)) = {'T'};
+    chanunit(strcmp('refmag',           hdr.chantype)) = {'T'};
+    chanunit(strcmp('refgrad',          hdr.chantype)) = {'T'};
+    
+  elseif ft_senstype(hdr, 'yokogawa')
+    chanunit(strcmp('meggrad',          hdr.chantype)) = {'unknown'}; % FIXME don't know whether it is T or T/m
+    chanunit(strcmp('gegplanar',        hdr.chantype)) = {'unknown'}; % FIXME don't know whether it is T or T/m
+    
+  elseif ft_senstype(hdr, 'bti')
+    chanunit(strcmp('meg',                 hdr.chantype)) = {'T'}; % this was the channel type until approx. 2 November 2012, see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1807
+    chanunit(strcmp('megmag',              hdr.chantype)) = {'T'}; % for most 4D/BTi systems
+    chanunit(strcmp('meggrad',             hdr.chantype)) = {'unknown'}; % FIXME don't know whether it is T or T/m
+    
+  elseif ft_senstype(hdr, 'itab')
+    chanunit(strcmp('megmag',              hdr.chantype)) = {'T'};
     
   else
     chanunit = cell(size(hdr.label));
