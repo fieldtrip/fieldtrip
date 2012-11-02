@@ -515,8 +515,9 @@ if any(strcmp(outp, 'brain')) || any(strcmp(outp, 'skull')) || any(strcmp(outp,'
             brain_ss = cast(brain, class(segment.anatomy));
             segment.anatomy = segment.anatomy.*brain_ss;
             clear brain_ss;
+            removefields = intersect(removefields, {'gray' 'white' 'csf'});
             if numel(outp) == 1
-                removefields  = intersect(removefields, {'gray' 'white' 'csf'});
+               
                 break
             end
         end
