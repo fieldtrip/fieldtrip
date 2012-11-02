@@ -33,6 +33,7 @@ function label = ft_senslabel(type)
 %   'neuromag122alt'
 %   'neuromag306'
 %   'neuromag306alt'
+%   'itab28'
 %   'itab153'
 %   'itab153_planar'
 %   'yokogawa9'
@@ -2767,6 +2768,30 @@ switch type
       label{i} = sprintf('E%d', i);
     end
     
+  case 'itab28'
+    label = {
+      'MAG_1'
+      'MAG_2'
+      'MAG_3'
+      'MAG_5'
+      'MAG_7'
+      'MAG_8'
+      'MAG_9'
+      'MAG_11'
+      'MAG_12'
+      'MAG_13'
+      'MAG_15'
+      'MAG_17'
+      'MAG_18'
+      'MAG_21'
+      'MAG_22'
+      'MAG_23'
+      'MAG_25'
+      'MAG_26'
+      'MAG_27'
+      'MAG_28'
+      };
+
   case 'itab153'
     label        = cell(153,1);
     for i=1:153
