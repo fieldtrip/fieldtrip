@@ -257,6 +257,8 @@ else
       type = 'bti248_planar';
     elseif (mean(ismember(ft_senslabel('bti148_planar'), sens.label)) > 0.8)
       type = 'bti148_planar';
+    elseif (mean(ismember(ft_senslabel('itab28'),        sens.label)) > 0.8)
+      type = 'itab28';
     elseif (mean(ismember(ft_senslabel('itab153'),       sens.label)) > 0.8)
       type = 'itab153';
     elseif (mean(ismember(ft_senslabel('itab153_planar'), sens.label)) > 0.8)

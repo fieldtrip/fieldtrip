@@ -47,7 +47,7 @@ function label = ft_senslabel(type)
 %
 % See also FT_SENSTYPE, FT_CHANNELSELECTION
 
-% Copyright (C) 2007-2011, Robert Oostenveld
+% Copyright (C) 2007-2012, Robert Oostenveld
 % Copyright (C) 2008, Vladimir Litvak
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
