@@ -249,6 +249,8 @@ elseif ft_senstype(input, 'ctf') && isgrad
   % in principle it is possible to look at the number of coils, but here the channels are identified based on their name
   sel = myregexp('^M[ZLR][A-Z][0-9][0-9]$', grad.label);
   type(sel) = {'meggrad'};            % normal gradiometer channels
+  sel = myregexp('^S[LR][0-9][0-9]$', grad.label);
+  type(sel) = {'meggrad'};            % normal gradiometer channels in the 64 channel CTF system
   sel = myregexp('^B[GPQR][0-9]$', grad.label);
   type(sel) = {'refmag'};             % reference magnetometers
   sel = myregexp('^[GPQR][0-9][0-9]$', grad.label);
@@ -258,6 +260,8 @@ elseif ft_senstype(input, 'ctf') && islabel
   % the channels have to be identified based on their name alone
   sel = myregexp('^M[ZLR][A-Z][0-9][0-9]$', label);
   type(sel) = {'meggrad'};                % normal gradiometer channels
+  sel = myregexp('^S[LR][0-9][0-9]$', label);
+  type(sel) = {'meggrad'};            % normal gradiometer channels in the 64 channel CTF system
   sel = myregexp('^B[GPR][0-9]$', label);
   type(sel) = {'refmag'};             % reference magnetometers
   sel = myregexp('^[GPQR][0-9][0-9]$', label);
