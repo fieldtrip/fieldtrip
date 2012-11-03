@@ -153,7 +153,7 @@ switch fileformat
   % hence uses the standard fieldtrip/fileio read_header function
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-  case {'ctf_ds', 'ctf_res4', 'neuromag_fif', '4d', '4d_pdf', '4d_m4d', '4d_xyz', 'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw', 'itab_raw' 'itab_mhd', 'netmeg'}
+  case {'ctf_ds', 'ctf_res4', 'ctf_old', 'neuromag_fif', '4d', '4d_pdf', '4d_m4d', '4d_xyz', 'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw', 'itab_raw' 'itab_mhd', 'netmeg'}
     hdr = ft_read_header(filename, 'headerformat', fileformat);
     sens = hdr.grad;
     
@@ -242,16 +242,15 @@ switch fileformat
 end
 
 % ensure that the sensor description is up-to-date
+% this will also add the units to the sensor array if missing
 sens = ft_datatype_sens(sens);
 
 if ft_senstype(sens, 'eeg')
   % only keep positions and labels in case of EEG electrodes
+  % FIXME what is removed here?
   dum  = sens;
   sens = [];
   sens.chanpos = dum.chanpos;
   sens.elecpos = dum.elecpos;
   sens.label   = dum.label;
 end
-
-% this will add the units to the sensor array
-sens = ft_convert_units(sens);
