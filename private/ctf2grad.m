@@ -12,7 +12,7 @@ function [grad] = ctf2grad(hdr, dewar)
 % undocumented option: it will return the gradiometer information in dewar
 % coordinates if second argument is present and non-zero
 
-% Copyright (C) 2004, Robert Oostenveld
+% Copyright (C) 2004-2012, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -85,7 +85,7 @@ if isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
   % preallocate the memory
   grad.coilpos = zeros(coilcount, 3);         % this will hold the position of each coil
   grad.coilori = zeros(coilcount, 3);         % this will hold the orientation of each coil
-  grad.tra = zeros(chancount, coilcount); % this describes how each coil contributes to each channel
+  grad.tra     = zeros(chancount, coilcount); % this describes how each coil contributes to each channel
 
   % combine the bottom and top coil of each MEG channel
   for i=1:numMEG
