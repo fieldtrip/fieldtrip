@@ -70,6 +70,14 @@ end % for all datasets
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% also do a quick sanity check on the tutorial data
+
+dataset = '/home/common/matlab/fieldtrip/data/Subject01.ds';
+hdr1 = ft_read_header(dataset, 'headerformat', 'ctf_ds');
+hdr2 = ft_read_header(dataset, 'headerformat', 'read_ctf_res4');
+hdr3 = ft_read_header(dataset, 'headerformat', 'ctf_read_res4');
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % it is important that all missing information can be added automatically
 % since people might have old grad structures in *.mat files on disk
 
