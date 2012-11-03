@@ -50,7 +50,7 @@ end
 for i=1:Ndipoles
   r = pnt - ones(Npnt,1) * rd((1:3) + 3*(i-1));
   R = (4*pi*cond) * (sum(r' .^2 ) .^ 1.5)';
-  if any(R)==0
+  if any(R==0)
     warning('dipole lies on boundary of volume model');
   end
   lf(:,(1:3) + 3*(i-1)) = r ./ [R R R];
