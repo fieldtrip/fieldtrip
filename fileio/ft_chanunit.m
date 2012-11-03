@@ -64,18 +64,18 @@ else
   
   % look at the type of the channels, these are obtained from FT_CHANTYPE
   if ft_senstype(hdr, 'neuromag')
-    chanunit(strcmp('eeg',              hdr.chantype)) = {'uV'};
-    chanunit(strcmp('emg',              hdr.chantype)) = {'uV'};
-    chanunit(strcmp('eog',              hdr.chantype)) = {'uV'};
-    chanunit(strcmp('ecg',              hdr.chantype)) = {'uV'};
+    chanunit(strcmp('eeg',              hdr.chantype)) = {'unknown'}; % FIXME
+    chanunit(strcmp('emg',              hdr.chantype)) = {'unknown'}; % FIXME
+    chanunit(strcmp('eog',              hdr.chantype)) = {'unknown'}; % FIXME
+    chanunit(strcmp('ecg',              hdr.chantype)) = {'unknown'}; % FIXME
     chanunit(strcmp('megmag',           hdr.chantype)) = {'T'};
     chanunit(strcmp('megplanar',        hdr.chantype)) = {'T/cm'};
     
   elseif ft_senstype(hdr, 'ctf')
-    chanunit(strcmp('eeg',              hdr.chantype)) = {'uV'};
-    chanunit(strcmp('emg',              hdr.chantype)) = {'uV'};
-    chanunit(strcmp('eog',              hdr.chantype)) = {'uV'};
-    chanunit(strcmp('ecg',              hdr.chantype)) = {'uV'};
+    chanunit(strcmp('eeg',              hdr.chantype)) = {'unknown'}; % FIXME
+    chanunit(strcmp('emg',              hdr.chantype)) = {'unknown'}; % FIXME
+    chanunit(strcmp('eog',              hdr.chantype)) = {'unknown'}; % FIXME
+    chanunit(strcmp('ecg',              hdr.chantype)) = {'unknown'}; % FIXME
     chanunit(strcmp('megmag',           hdr.chantype)) = {'T'}; % I don't think any CTF systems like this exist
     chanunit(strcmp('meggrad',          hdr.chantype)) = {'T'};
     chanunit(strcmp('refmag',           hdr.chantype)) = {'T'};
