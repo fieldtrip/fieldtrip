@@ -26,10 +26,14 @@ function vol = ft_headmodel_concentricspheres(geometry, varargin)
 % See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
 % get the optional input arguments
-conductivity = ft_getopt(varargin, 'conductivity');
+conductivity = ft_getopt(varargin, 'conductivity', [1 1/80 1]*0.33); % see below
 fitind       = ft_getopt(varargin, 'fitind', 'all');
 unit         = ft_getopt(varargin, 'unit');
 
+% The condictivity default applies to a 3-sphere model. Providing defaults
+% for a 4-sphere model are not so easy because the user might have
+% specified the geometry scalp-skull-csf-brain or the other way around.
+ 
 % start with an empty volume conductor
 vol = [];
 
