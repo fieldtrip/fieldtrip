@@ -1,4 +1,4 @@
-function chanunit = ft_chanunit(hdr, desired)
+function chanunit = ft_chanunit(input, desired)
 
 % FT_CHANUNIT is a helper function that tries to determine the physical
 % units of each channel. In case the type of channel is not detected, it
@@ -44,65 +44,115 @@ function chanunit = ft_chanunit(hdr, desired)
 %
 % $Id$
 
-if isfield(hdr, 'chanunit')
-  if ~isequal(size(hdr.chanunit), size(hdr.label))
-    error('the size of hdr.chanunit is inconsistent with hdr.label');
-  else
-    % return the already assigned channel types
-    chanunit = hdr.chanunit;
+
+% determine the type of input, this is handled similarly as in FT_CHANTYPE
+isheader =  isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'Fs');
+isgrad   =  isa(input, 'struct') && isfield(input, 'pnt') && isfield(input, 'ori');
+isgrad   = (isa(input, 'struct') && isfield(input, 'coilpos')) || isgrad;
+isgrad   = (isa(input, 'struct') && isfield(input, 'chanpos')) || isgrad;
+islabel  =  isa(input, 'cell')   && isa(input{1}, 'char');
+
+hdr   = input;
+grad  = input;
+label = input;
+
+if isheader
+  numchan = length(hdr.label);
+  if isfield(hdr, 'grad')
+    grad  = hdr.grad;
+  end
+  label = hdr.label;
+elseif isgrad
+  label   = grad.label;
+  numchan = length(label);
+elseif islabel
+  numchan = length(label);
+else
+  error('the input that was provided to this function cannot be deciphered');
+end
+
+% start with unknown unit for all channels
+chanunit = repmat({'unknown'}, size(input.label));
+
+if ft_senstype(input, 'unknown')
+  % don't bother doing all subsequent checks to determine the type of sensor array
+  
+elseif ft_senstype(input, 'neuromag') && isheader && issubfield(input, 'orig.chs')
+  for i = 1:hdr.nChans % make a cell array of units for each channel
+    switch hdr.orig.chs(i).unit
+      case 201 % defined as constants by MNE, see p. 217 of MNE manual
+        input.chanunit{i} = 'T/m';
+      case 112
+        input.chanunit{i} = 'T';
+      case 107
+        input.chanunit{i} = 'V';
+      case 202
+        input.chanunit{i} = 'Am';
+      otherwise
+        input.chanunit{i} = 'unknown';
+    end
   end
   
-else
-  % start with 'unknown' for all channels
-  chanunit = repmat({'unknown'}, size(hdr.label));
+elseif ft_senstype(input, 'neuromag') && isfield(input, 'chantype') && isgrad
+  % look at the type of the channels
+  chanunit(strcmp('eeg',              grad.chantype)) = {'unknown'}; % FIXME
+  chanunit(strcmp('emg',              grad.chantype)) = {'unknown'}; % FIXME
+  chanunit(strcmp('eog',              grad.chantype)) = {'unknown'}; % FIXME
+  chanunit(strcmp('ecg',              grad.chantype)) = {'unknown'}; % FIXME
+  chanunit(strcmp('megmag',           grad.chantype)) = {'T'};
   
-  % note that these unit assignments assume that the data has not yet been
-  % converted into other units. These units are consistent with the default
-  % output of ft_read_data.
-  
-  % FIXME I have not validated the channel units below
-  
-  % look at the type of the channels, these are obtained from FT_CHANTYPE
-  if ft_senstype(hdr, 'neuromag')
-    chanunit(strcmp('eeg',              hdr.chantype)) = {'unknown'}; % FIXME
-    chanunit(strcmp('emg',              hdr.chantype)) = {'unknown'}; % FIXME
-    chanunit(strcmp('eog',              hdr.chantype)) = {'unknown'}; % FIXME
-    chanunit(strcmp('ecg',              hdr.chantype)) = {'unknown'}; % FIXME
-    chanunit(strcmp('megmag',           hdr.chantype)) = {'T'};
-    chanunit(strcmp('megplanar',        hdr.chantype)) = {'T/cm'};
-    
-  elseif ft_senstype(hdr, 'ctf')
-    chanunit(strcmp('eeg',              hdr.chantype)) = {'unknown'}; % FIXME
-    chanunit(strcmp('emg',              hdr.chantype)) = {'unknown'}; % FIXME
-    chanunit(strcmp('eog',              hdr.chantype)) = {'unknown'}; % FIXME
-    chanunit(strcmp('ecg',              hdr.chantype)) = {'unknown'}; % FIXME
-    chanunit(strcmp('megmag',           hdr.chantype)) = {'T'}; % I don't think any CTF systems like this exist
-    chanunit(strcmp('meggrad',          hdr.chantype)) = {'T'};
-    chanunit(strcmp('refmag',           hdr.chantype)) = {'T'};
-    chanunit(strcmp('refgrad',          hdr.chantype)) = {'T'};
-    
-  elseif ft_senstype(hdr, 'yokogawa')
-    chanunit(strcmp('meggrad',          hdr.chantype)) = {'unknown'}; % FIXME don't know whether it is T or T/m
-    chanunit(strcmp('gegplanar',        hdr.chantype)) = {'unknown'}; % FIXME don't know whether it is T or T/m
-    
-  elseif ft_senstype(hdr, 'bti')
-    chanunit(strcmp('meg',                 hdr.chantype)) = {'T'}; % this was the channel type until approx. 2 November 2012, see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1807
-    chanunit(strcmp('megmag',              hdr.chantype)) = {'T'}; % for most 4D/BTi systems
-    chanunit(strcmp('meggrad',             hdr.chantype)) = {'unknown'}; % FIXME don't know whether it is T or T/m
-    
-  elseif ft_senstype(hdr, 'itab')
-    chanunit(strcmp('megmag',              hdr.chantype)) = {'T'};
-    
+  if all(sum(abs(input.tra),2)==1 | sum(abs(input.tra),2)==2)
+    % it is not scaled with distance
+    chanunit(strcmp('megplanar',        grad.chantype)) = {'T'};
   else
-    chanunit = cell(size(hdr.label));
-    for i=1:length(chanunit)
-      chanunit{i} = 'unknown';
+    % it is scaled with distance
+    if isfield(input, 'unit')
+      assumption = sprintf('T/%s', input.unit);
+      chanunit(strcmp('megplanar',        input.chantype)) = {assumption};
+      warning('assuming that planar channel units are %s, consistent with the geometrical units', assumption);
+    else
+      % the channel units remain unknown
     end
-  end % if senstype
+  end
   
-end % if isfield
+elseif ft_senstype(input, 'neuromag') && isfield(input, 'chantype')
+  % determine the units only based on the channel name and type
+  chanunit(strcmp('eeg',              input.chantype)) = {'unknown'}; % FIXME
+  chanunit(strcmp('emg',              input.chantype)) = {'unknown'}; % FIXME
+  chanunit(strcmp('eog',              input.chantype)) = {'unknown'}; % FIXME
+  chanunit(strcmp('ecg',              input.chantype)) = {'unknown'}; % FIXME
+  chanunit(strcmp('megmag',           input.chantype)) = {'T'};
+  if isfield(input, 'unit')
+    assumption = sprintf('T/%s', input.unit);
+    chanunit(strcmp('megplanar',        input.chantype)) = {assumption};
+    warning('assuming that planar channel units are %s, consistent with the geometrical units', assumption);
+  else
+    % the channel units remain unknown
+  end
+  
+elseif ft_senstype(input, 'ctf') && isfield(input, 'chantype')
+  chanunit(strcmp('eeg',              input.chantype)) = {'unknown'}; % FIXME
+  chanunit(strcmp('emg',              input.chantype)) = {'unknown'}; % FIXME
+  chanunit(strcmp('eog',              input.chantype)) = {'unknown'}; % FIXME
+  chanunit(strcmp('ecg',              input.chantype)) = {'unknown'}; % FIXME
+  chanunit(strcmp('meggrad',          input.chantype)) = {'T'};
+  chanunit(strcmp('refmag',           input.chantype)) = {'T'};
+  chanunit(strcmp('refgrad',          input.chantype)) = {'T'};
+  
+elseif ft_senstype(input, 'yokogawa') && isfield(input, 'chantype')
+  chanunit(strcmp('meggrad',          input.chantype)) = {'unknown'}; % FIXME don't know whether it is T or T/m
+  chanunit(strcmp('gegplanar',        input.chantype)) = {'unknown'}; % FIXME don't know whether it is T or T/m
+  
+elseif ft_senstype(input, 'bti') && isfield(input, 'chantype')
+  chanunit(strcmp('meg',                 input.chantype)) = {'T'}; % this was the channel type until approx. 2 November 2012, see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1807
+  chanunit(strcmp('megmag',              input.chantype)) = {'T'}; % for most 4D/BTi systems
+  chanunit(strcmp('meggrad',             input.chantype)) = {'unknown'}; % FIXME don't know whether it is T or T/m
+  
+elseif ft_senstype(input, 'itab') && isfield(input, 'chantype')
+  chanunit(strcmp('megmag',              input.chantype)) = {'T'};
+  
+end % if senstype
 
 if nargin>1
   chanunit = strcmp(desired, chanunit);
 end
-
