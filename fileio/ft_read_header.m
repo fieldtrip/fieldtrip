@@ -1268,15 +1268,15 @@ switch headerformat
     for i = 1:hdr.nChans % make a cell array of units for each channel
       switch orig.chs(i).unit
         case 201 % defined as constants by MNE, see p. 217 of MNE manual
-          hdr.unit{i} = 'T/m';
+          hdr.chanunit{i} = 'T/m';
         case 112
-          hdr.unit{i} = 'T';
+          hdr.chanunit{i} = 'T';
         case 107
-          hdr.unit{i} = 'V';
+          hdr.chanunit{i} = 'V';
         case 202
-          hdr.unit{i} = 'Am';
+          hdr.chanunit{i} = 'Am';
         otherwise
-          hdr.unit{i} = 'unknown';
+          hdr.chanunit{i} = 'unknown';
       end
     end
     
