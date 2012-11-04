@@ -99,7 +99,7 @@ k = 1;
 % ever be the case but acts as a safety net...
 
 for n = 1:orig.nchan
-  if (orig.chs(n).coil_type==3022 | orig.chs(n).coil_type==3023 | orig.chs(n).coil_type==3024) % magnetometer
+  if (orig.chs(n).coil_type==3022 || orig.chs(n).coil_type==3023 || orig.chs(n).coil_type==3024) % magnetometer
     t = orig.chs(n).coil_trans;
     
     % TC 2011 09 24 I have changed the coil definition, the original was
@@ -111,7 +111,7 @@ for n = 1:orig.nchan
     kCoil = kCoil+1;
     grad.label{k} = deblank(orig.ch_names{n});
     k = k+1;
-  elseif (orig.chs(n).coil_type==3012 | orig.chs(n).coil_type==3013 | orig.chs(n).coil_type==3014 | orig.chs(n).coil_type==2) % planar gradiometer
+  elseif (orig.chs(n).coil_type==3012 || orig.chs(n).coil_type==3013 || orig.chs(n).coil_type==3014 || orig.chs(n).coil_type==2) % planar gradiometer
     t = orig.chs(n).coil_trans;
     
     % TC 2011 09 24 I have changed the coil definition, the original was
