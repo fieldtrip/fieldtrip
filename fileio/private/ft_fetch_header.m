@@ -61,7 +61,14 @@ hdr.nTrials     = 1;
 
 % fill in hdr.grad or hdr.elec
 if isfield(data, 'grad')
-  hdr.grad=data.grad;
+  hdr.grad=data.grad;  
 elseif isfield(data, 'elec')
   hdr.elec=data.elec;
 end
+
+%in data has been appended, the grad might be lost but inside of hdr
+%there should be the grad
+if ~isfield(hdr,'grad') && isfield(data, 'hdr')
+    hdr.grad=data.hdr.grad;
+end
+    
