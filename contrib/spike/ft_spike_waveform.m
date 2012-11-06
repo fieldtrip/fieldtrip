@@ -1,7 +1,7 @@
 function [wave,spike] = ft_spike_waveform(cfg,spike)
 
 % FT_SPIKE_WAVEFORM computes descriptive parameters on
-% waveform (mean and variance), and performs operations like reallignment, outlier rejection,
+% waveform (mean and variance), and performs operations like realignment, outlier rejection,
 % invertation, normalization and interpolation (see configurations).
 %
 % Use as
@@ -20,7 +20,7 @@ function [wave,spike] = ft_spike_waveform(cfg,spike)
 %                           to have peak-to-through amp of 2
 %   cfg.interpolate      = double integer (default = 1). Increaes the
 %                          density of samples by a factor cfg.interpolate
-%   cfg.allign           = 'yes' (def). or 'no'. If 'yes', we allign all waves to
+%   cfg.align           = 'yes' (def). or 'no'. If 'yes', we align all waves to
 %                          maximum
 %   cfg.fsample          = sampling frequency of waveform time-axis.
 %                          Obligatory field.
@@ -51,7 +51,7 @@ ft_preamble trackconfig
 cfg = ft_checkconfig(cfg, 'required', {'fsample'});
 
 % get the default options
-cfg.allign          = ft_getopt(cfg, 'allign','yes');
+cfg.align          = ft_getopt(cfg, 'align','yes');
 cfg.interpolate     = ft_getopt(cfg, 'interpolate', 1);
 cfg.spikechannel    = ft_getopt(cfg, 'spikechannel', 'all');
 cfg.rejectonpeak    = ft_getopt(cfg,'rejectonpeak', 'yes');
@@ -59,7 +59,7 @@ cfg.rejectclippedspikes  = ft_getopt(cfg,'rejectclippedspikes', 'yes');
 cfg.normalize       = ft_getopt(cfg,'normalize', 'yes');
 
 % ensure that the options are valid
-cfg = ft_checkopt(cfg,'allign','char', {'yes', 'no'});
+cfg = ft_checkopt(cfg,'align','char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'rejectclippedspikes','char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'rejectonpeak','char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'interpolate','doublescalar');
@@ -67,7 +67,7 @@ cfg = ft_checkopt(cfg,'normalize','char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});
 cfg = ft_checkopt(cfg,'fsample', 'double');
 
-cfg = ft_checkconfig(cfg,'allowed', {'allign', 'rejectclippedspikes', 'rejectonpeak', 'interpolate', 'normalize', 'spikechannel', 'fsample'});
+cfg = ft_checkconfig(cfg,'allowed', {'align', 'rejectclippedspikes', 'rejectonpeak', 'interpolate', 'normalize', 'spikechannel', 'fsample'});
 
 spike = ft_checkdata(spike,'datatype', 'spike', 'feedback', 'yes');
 
@@ -142,11 +142,11 @@ for iUnit = 1:nUnits
   [nLeads nSamples nSpikes] = size(waves);          
   fprintf('Keeping %d spikes from unit %s\n', nSpikes, spike.label{spikeindx});
   
-  % allign the waveforms automatically to the peak index
-  % the same allignment must be done for the four leads of a trode
-  if strcmp(cfg.allign,'yes')
+  % align the waveforms automatically to the peak index
+  % the same alignment must be done for the four leads of a trode
+  if strcmp(cfg.align,'yes')
     if strcmp(cfg.rejectonpeak,'no')
-      warning('alligning without rejecting outliers is dangerous');
+      warning('aligning without rejecting outliers is dangerous');
     end
     mnWave             = nanmean(waves,1);
     [ignore,alignIndx] = nanmax(mnWave(:,:,:),[],2); % maximum across units
