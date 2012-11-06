@@ -1492,7 +1492,8 @@ if ~isempty(cfg.emgscale)
   dat(chansel,:) = dat(chansel,:) .* cfg.emgscale;
 end
 if ~isempty(cfg.megscale)
-  chansel = match_str(lab, ft_channelselection('MEG', lab));
+  type = opt.hdr.grad.type;
+  chansel = match_str(lab, ft_channelselection('MEG', lab, type));
   dat(chansel,:) = dat(chansel,:) .* cfg.megscale;
 end
 if ~isempty(cfg.magscale)
