@@ -1,4 +1,4 @@
-function [sel1, sel2] = match_str(a, b);
+function [sel1, sel2] = match_str(a, b)
 
 % MATCH_STR looks for matching labels in two listst of strings
 % and returns the indices into both the 1st and 2nd list of the matches.
@@ -9,7 +9,7 @@ function [sel1, sel2] = match_str(a, b);
 % The strings can be stored as a char matrix or as an vertical array of
 % cells, the matching is done for each row.
 
-% Copyright (C) 2000, Robert Oostenveld
+% Copyright (C) 2000-2012, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -43,13 +43,15 @@ end
 
 % regardless of what optimizations are implemented, the code should remain
 % functionally compatible to the original, which is
+% sel1 = [];
+% sel2 = [];
 % for i=1:length(a)
 %   for j=1:length(b)
 %     if strcmp(a(i),b(j))
-%       sel1 = [sel1; i];
-%       sel2 = [sel2; j];
-%     end
-%   end
+%        sel1 = [sel1; i];
+%        sel2 = [sel2; j];
+%      end
+%    end
 % end
 
 % ensure that both are column vectors
@@ -58,11 +60,25 @@ b = b(:);
 Na = numel(a);
 Nb = numel(b);
 
+% According to the original implementation empty numeric elements are
+% allowed, but are not returned as match. This is different to empty string
+% elements, which are returned as match.
+% See also http://bugzilla.fcdonders.nl/show_bug.cgi?id=1808
+empty_a = cellfun(@isnumeric, a) & cellfun(@isempty, a);
+empty_b = cellfun(@isnumeric, b) & cellfun(@isempty, b);
+% the following allows the unqiue function to operate normally
+a(empty_a) = {''};
+b(empty_b) = {''};
+
 % replace all unique strings by a unique number and use the fact that
 % numeric comparisons are much faster than string comparisons
 [dum1, dum2, c] = unique([a; b]);
 a = c(1:Na);
 b = c((Na+1):end);
+
+% empty numeric elements should never be returned as a match
+a(empty_a) = nan;
+b(empty_b) = nan;
 
 sel1 = [];
 sel2 = [];
