@@ -33,7 +33,7 @@ end
 
 % Handle different forms of normalization:
 if numel(w) == 0
-  warning('Emulating undocumented behaviour (w=[]). Please use w=0 instead.');
+  % empty weights vector defaults to 0
   w = 0;
 end
 
