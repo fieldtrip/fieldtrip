@@ -20,7 +20,7 @@ function [wave,spike] = ft_spike_waveform(cfg,spike)
 %                           to have peak-to-through amp of 2
 %   cfg.interpolate      = double integer (default = 1). Increaes the
 %                          density of samples by a factor cfg.interpolate
-%   cfg.align           = 'yes' (def). or 'no'. If 'yes', we align all waves to
+%   cfg.align            = 'yes' (def). or 'no'. If 'yes', we align all waves to
 %                          maximum
 %   cfg.fsample          = sampling frequency of waveform time-axis.
 %                          Obligatory field.
@@ -49,6 +49,10 @@ ft_preamble trackconfig
 
 % ensure that the required options are present
 cfg = ft_checkconfig(cfg, 'required', {'fsample'});
+
+% support the typo in this cfg option that was present in older versions of this function
+% see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1814
+cfg = ft_checkconfig(cfg, 'renamed', {'allign', 'align'});
 
 % get the default options
 cfg.align          = ft_getopt(cfg, 'align','yes');
@@ -233,3 +237,4 @@ ft_postamble trackconfig
 ft_postamble callinfo
 ft_postamble previous spike
 ft_postamble history spike wave
+
