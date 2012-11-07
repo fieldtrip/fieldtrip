@@ -59,16 +59,15 @@ hdr.nSamples    = max(trl(:,2));
 hdr.nSamplesPre = 0;
 hdr.nTrials     = 1;
 
-% fill in hdr.grad or hdr.elec
+% retrieve the gradiometer and/or electrode information
 if isfield(data, 'grad')
-  hdr.grad=data.grad;  
-elseif isfield(data, 'elec')
-  hdr.elec=data.elec;
+  hdr.grad = data.grad;  
+elseif isfield(data, 'hdr') && isfield(data.hdr, 'grad')
+  hdr.grad = data.hdr.grad;  
 end
-
-%in data has been appended, the grad might be lost but inside of hdr
-%there should be the grad
-if ~isfield(hdr,'grad') && isfield(data, 'hdr')
-    hdr.grad=data.hdr.grad;
+if isfield(data, 'elec')
+  hdr.elec = data.elec;
+elseif isfield(data, 'hdr') && isfield(data.hdr, 'elec')
+  hdr.elec = data.hdr.elec;  
 end
     
