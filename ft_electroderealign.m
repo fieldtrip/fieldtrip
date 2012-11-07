@@ -171,9 +171,9 @@ if usetemplate
   clear tmp
   for i=1:Ntemplate
     tmp(i) = ft_convert_units(template(i), elec.unit); % ensure that the units are consistent with the electrodes
-    tmp(i) = ft_datatype_sens(tmp(i)); % ensure up-to-date sensor descriptions (Oct 2011)
+    tmp2(i) = ft_datatype_sens(tmp(i)); % ensure up-to-date sensor descriptions (Oct 2011)
   end
-  template = tmp;
+  template = tmp2;
 end
 
 if useheadshape
