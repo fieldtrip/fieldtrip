@@ -3,6 +3,7 @@ function [ws warned] = warning_once(varargin)
 % Use as one of the following
 %   warning_once(string)
 %   warning_once(string, timeout)
+%   warning_once(id, string)
 %   warning_once(id, string, timeout)
 % where timeout should be inf if you don't want to see the warning ever
 % again. The default timeout value is 60 seconds.
@@ -57,18 +58,37 @@ if isstruct(varargin{1})
   return;
 end
 
+% put the arguments we will pass to warning() in this cell array
+warningArgs = {};
+
 if nargin==3
-  msgid = varargin{1};
-  msgstr = varargin{2};
+  % calling syntax (id, msg, timeout)
+  
+  warningArgs = varargin(1:2);
   timeout = varargin{3};
-elseif nargin==2
-  msgstr= ''; % this becomes irrelevant
-  msgid = varargin{1}; % this becomes the real msgstr
+  fname = [warningArgs{1} '_' warningArgs{2}];
+  
+elseif nargin==2 && isnumeric(varargin{2})
+  % calling syntax (msg, timeout)
+  
+  warningArgs = varargin(1);
   timeout = varargin{2};
+  fname = warningArgs{1};
+  
+elseif nargin==2 && ~isnumeric(varargin{2})
+  % calling syntax (id, msg)
+  
+  warningArgs = varargin(1:2);
+  timeout = 60;
+  fname = [warningArgs{1} '_' warningArgs{2}];
+  
 elseif nargin==1
-  msgstr= ''; % this becomes irrelevant
-  msgid = varargin{1}; % this becomes the real msgstr
+  % calling syntax (msg)
+  
+  warningArgs = varargin(1);
   timeout = 60; % default timeout in seconds
+  fname = [warningArgs{1}];
+  
 end
 
 if isempty(timeout)
@@ -83,28 +103,26 @@ if isempty(previous)
 end
 
 now = toc(stopwatch); % measure time since first function call
-fname = fixname([msgid '_' msgstr]); % make a nice string that is allowed as structure fieldname, copy the subfunction from  ft_hastoolbox
-fname = decomma(fname);
+fname = decomma(fixname(fname)); % make a nice string that is allowed as structure fieldname
 
 if length(fname) > 63 % MATLAB max name
   fname = fname(1:63);
 end
 
-if isfield(previous, fname) && now>previous.(fname).timeout
-  % it has timed out, give the warning again
-  ws = warning(msgid, msgstr);
+if ~isfield(previous, fname) || ...
+    (isfield(previous, fname) && now>previous.(fname).timeout)
+  
+  % warning never given before or timed out
+  ws = warning(warningArgs{:});
   previous.(fname).timeout = now+timeout;
   previous.(fname).ws = ws;
   warned = true;
-elseif ~isfield(previous, fname)
-  % the warning has not been issued before
-  ws = warning(msgid, msgstr);
-  previous.(fname).timeout = now+timeout;
-  previous.(fname).ws = ws;
-  warned = true;
+
 else
+  
   % the warning has been issued before, but has not timed out yet
   ws = previous.(fname).ws;
+  
 end
 
 end % function
