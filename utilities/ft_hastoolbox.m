@@ -37,18 +37,18 @@ function [status] = ft_hastoolbox(toolbox, autoadd, silent)
 
 % this function is called many times in FieldTrip and associated toolboxes
 % use efficient handling if the same toolbox has been investigated before
-persistent previous previouspath
-
-if ~isequal(previouspath, path)
-  previous = [];
-end
-
-if isempty(previous)
-  previous = struct;
-elseif isfield(previous, fixname(toolbox))
-  status = previous.(fixname(toolbox));
-  return
-end
+% persistent previous previouspath
+% 
+% if ~isequal(previouspath, path)
+%   previous = [];
+% end
+% 
+% if isempty(previous)
+%   previous = struct;
+% elseif isfield(previous, fixname(toolbox))
+%   status = previous.(fixname(toolbox));
+%   return
+% end
 
 % this points the user to the website where he/she can download the toolbox
 url = {
@@ -84,7 +84,15 @@ url = {
   'FASTICA'    'see http://www.cis.hut.fi/projects/ica/fastica'
   'BRAINSTORM' 'see http://neuroimage.ucs.edu/brainstorm'
   'FILEIO'     'see http://www.ru.nl/neuroimaging/fieldtrip'
-  'FORWINV'    'see http://www.ru.nl/neuroimaging/fieldtrip'
+  'PREPROC'    'see http://www.ru.nl/neuroimaging/fieldtrip'
+  'FORWARD'    'see http://www.ru.nl/neuroimaging/fieldtrip'
+  'INVERSE'    'see http://www.ru.nl/neuroimaging/fieldtrip'
+  'SPECEST'    'see http://www.ru.nl/neuroimaging/fieldtrip'
+  'REALTIME'   'see http://www.ru.nl/neuroimaging/fieldtrip'
+  'PLOTTING'   'see http://www.ru.nl/neuroimaging/fieldtrip'
+  'SPIKE'      'see http://www.ru.nl/neuroimaging/fieldtrip'
+  'CONNECTIVITY' 'see http://www.ru.nl/neuroimaging/fieldtrip'
+  'PEER'       'see http://www.ru.nl/neuroimaging/fieldtrip'
   'PLOTTING'   'see http://www.ru.nl/neuroimaging/fieldtrip'
   'DENOISE'    'see http://lumiere.ens.fr/Audition/adc/meg, or contact Alain de Cheveigne'
   'BCI2000'    'see http://bci2000.org'
@@ -110,12 +118,10 @@ url = {
   'EGI_MFF'    'see http://www.egi.com/ or contact either Phan Luu or Colin Davey at EGI'
   'TOOLBOX_GRAPH' 'see http://www.mathworks.com/matlabcentral/fileexchange/5355-toolbox-graph or contact Gabriel Peyre'
   'NETCDF'     'see http://www.mathworks.com/matlabcentral/fileexchange/15177'
-  'BCT'        'see http://www.brain-connectivity-toolbox.net/'
   'MYSQL'      'see http://www.mathworks.com/matlabcentral/fileexchange/8663-mysql-database-connector'
   'ISO2MESH'   'see http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?Home or contact Qianqian Fang'
   'DATAHASH'   'see http://www.mathworks.com/matlabcentral/fileexchange/31272'
   'IBTB'       'see http://www.ibtb.org'
-  'SPIKE'      'see http://www.ru.nl/neuroimaging/fieldtrip'
   'ICASSO'     'see http://www.cis.hut.fi/projects/ica/icasso'
   'XUNIT'      'see http://www.mathworks.com/matlabcentral/fileexchange/22846-matlab-xunit-test-framework'
   'PLEXON'     'available from http://www.plexon.com/assets/downloads/sdk/ReadingPLXandDDTfilesinMatlab-mexw.zip'
@@ -133,6 +139,8 @@ end
 
 % determine whether the toolbox is installed
 toolbox = upper(toolbox);
+% set fieldtrip trunk path, used for determining ft-subdirs are on path
+fttrunkpath = unixpath(fileparts(which('ft_defaults')));
 switch toolbox
   case 'AFNI'
     status = (exist('BrikLoad') && exist('BrikInfo'));
@@ -208,10 +216,6 @@ switch toolbox
     status  = exist('fpica', 'file');
   case 'BRAINSTORM'
     status  = exist('bem_xfer');
-  case 'FILEIO'
-    status  = (exist('ft_read_header', 'file') && exist('ft_read_data', 'file') && exist('ft_read_event', 'file') && exist('ft_read_sens', 'file'));
-  case 'FORMWARD'
-    status  = (exist('ft_compute_leadfield', 'file') && exist('ft_prepare_vol_sens', 'file'));
   case 'DENOISE'
     status  = (exist('tsr', 'file') && exist('sns', 'file'));
   case 'CTF'
@@ -230,18 +234,12 @@ switch toolbox
     status  = (exist('bem_Cij_cog', 'file') && exist('bem_Cij_lin', 'file') && exist('bem_Cij_cst', 'file'));
   case 'OPENMEEG'
     status = exist('om_save_tri.m', 'file');
-  case 'PLOTTING'
-    status  = (exist('ft_plot_topo', 'file') && exist('ft_plot_mesh', 'file') && exist('ft_plot_matrix', 'file'));
   case 'PRTOOLS'
     status  = (exist('prversion', 'file') && exist('dataset', 'file') && exist('svc', 'file'));
   case 'ITAB'
     status  = (exist('lcReadHeader', 'file') && exist('lcReadData', 'file'));
   case 'BSMART'
     status  = exist('bsmart');
-  case 'PEER'
-    status  = exist('peerslave', 'file') && exist('peermaster', 'file');
-  case 'CONNECTIVITY'
-    status  = exist('ft_connectivity_corr', 'file') && exist('ft_connectivity_granger', 'file');
   case 'FREESURFER'
     status  = exist('MRIread', 'file') && exist('vox2ras_0to1', 'file');
   case 'FNS'
@@ -290,36 +288,61 @@ switch toolbox
     status = exist('initTestSuite.m', 'file') && exist('runtests.m', 'file');
   case 'PLEXON'
     status = exist('plx_adchan_gains.m', 'file') && exist('mexPlex');
-
+    
+    % the following are fieldtrip modules/toolboxes
+  case 'FILEIO'
+    status  = (exist('ft_read_header', 'file') && exist('ft_read_data', 'file') && exist('ft_read_event', 'file') && exist('ft_read_sens', 'file'));
+  case 'FORWARD'
+    status  = (exist('ft_compute_leadfield', 'file') && exist('ft_prepare_vol_sens', 'file'));
+  case 'PLOTTING'
+    status  = (exist('ft_plot_topo', 'file') && exist('ft_plot_mesh', 'file') && exist('ft_plot_matrix', 'file'));
+  case 'PEER'
+    status  = exist('peerslave', 'file') && exist('peermaster', 'file');
+  case 'CONNECTIVITY'
+    status  = exist('ft_connectivity_corr', 'file') && exist('ft_connectivity_granger', 'file');
   case 'SPIKE'
     status = exist('ft_spiketriggeredaverage.m', 'file') && exist('ft_spiketriggeredspectrum.m', 'file');
-
+    
+    % these were missing, added them using the below style, see bug 1804 - roevdmei
+  case 'INVERSE'
+    status = ~isempty(regexp(unixpath(path), [fttrunkpath '/inverse'],             'once'));  % INVERSE is not added above, consider doing it there -roevdmei
+  case 'REALTIME'
+    status = ~isempty(regexp(unixpath(path), [fttrunkpath '/realtime'],            'once'));  % REALTIME is not added above, consider doing it there -roevdmei
+  case 'SPECEST'
+    status = ~isempty(regexp(unixpath(path), [fttrunkpath '/specest'],             'once'));  % SPECEST is not added above, consider doing it there -roevdmei
+  case 'PREPROC'
+    status = ~isempty(regexp(unixpath(path), [fttrunkpath '/preproc'],             'once')); % PREPROC is not added above, consider doing it there -roevdmei
+    
   % the following are not proper toolboxes, but only subdirectories in the fieldtrip toolbox
   % these are added in ft_defaults and are specified with unix-style forward slashes
   case 'COMPAT'
-    status = ~isempty(regexp(unixpath(path), 'fieldtrip/compat',              'once'));
+    status = ~isempty(regexp(unixpath(path), [fttrunkpath '/compat'],              'once'));
+  case 'STATFUN'
+    status = ~isempty(regexp(unixpath(path), [fttrunkpath '/statfun'],             'once'));
+  case 'TRIALFUN'
+    status = ~isempty(regexp(unixpath(path), [fttrunkpath '/trialfun'],            'once'));
   case 'UTILITIES/COMPAT'
-    status = ~isempty(regexp(unixpath(path), 'fieldtrip/utilities/compat',    'once'));
+    status = ~isempty(regexp(unixpath(path), [fttrunkpath '/utilities/compat'],    'once'));
   case 'FILEIO/COMPAT'
-    status = ~isempty(regexp(unixpath(path), 'fieldtrip/fileio/compat',       'once'));
+    status = ~isempty(regexp(unixpath(path), [fttrunkpath '/fileio/compat'],       'once'));
   case 'PREPROC/COMPAT'
-    status = ~isempty(regexp(unixpath(path), 'fieldtrip/preproc/compat',      'once'));
+    status = ~isempty(regexp(unixpath(path), [fttrunkpath '/preproc/compat'],      'once'));
   case 'FORWARD/COMPAT'
-    status = ~isempty(regexp(unixpath(path), 'fieldtrip/forward/compat',      'once'));
+    status = ~isempty(regexp(unixpath(path), [fttrunkpath '/forward/compat'],      'once'));
   case 'PLOTTING/COMPAT'
-    status = ~isempty(regexp(unixpath(path), 'fieldtrip/plotting/compat',     'once'));
+    status = ~isempty(regexp(unixpath(path), [fttrunkpath '/plotting/compat'],     'once'));
   case 'TEMPLATE/LAYOUT'
-    status = ~isempty(regexp(unixpath(path), 'fieldtrip/template/layout',     'once'));
+    status = ~isempty(regexp(unixpath(path), [fttrunkpath '/template/layout'],     'once'));
   case 'TEMPLATE/ANATOMY'
-    status = ~isempty(regexp(unixpath(path), 'fieldtrip/template/anatomy',    'once'));
+    status = ~isempty(regexp(unixpath(path), [fttrunkpath '/template/anatomy'],    'once'));
   case 'TEMPLATE/HEADMODEL'
-    status = ~isempty(regexp(unixpath(path), 'fieldtrip/template/headmodel',  'once'));
+    status = ~isempty(regexp(unixpath(path), [fttrunkpath '/template/headmodel'],  'once'));
   case 'TEMPLATE/ELECTRODE'
-    status = ~isempty(regexp(unixpath(path), 'fieldtrip/template/electrode',  'once'));
+    status = ~isempty(regexp(unixpath(path), [fttrunkpath '/template/electrode'],  'once'));
   case 'TEMPLATE/NEIGHBOURS'
-    status = ~isempty(regexp(unixpath(path), 'fieldtrip/template/neighbours', 'once'));
+    status = ~isempty(regexp(unixpath(path), [fttrunkpath '/template/neighbours'], 'once'));
   case 'TEMPLATE/SOURCEMODEL'
-    status = ~isempty(regexp(unixpath(path), 'fieldtrip/template/sourcemodel', 'once')); 
+    status = ~isempty(regexp(unixpath(path), [fttrunkpath '/template/sourcemodel'], 'once')); 
   otherwise
     if ~silent, warning('cannot determine whether the %s toolbox is present', toolbox); end
     status = 0;
