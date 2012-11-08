@@ -268,8 +268,6 @@ switch toolbox
     status = exist('toolbox_graph');
   case 'NETCDF'
     status = exist('netcdf');
-  case 'BCT'
-    status = exist('clustering_coef_bd', 'file') && exist('edge_betweenness_wei', 'file');
   case 'MYSQL'
     status = exist(['mysql.' mexext], 'file'); % this only consists of a single mex file
   case 'ISO2MESH'
