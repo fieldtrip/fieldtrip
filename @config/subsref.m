@@ -23,12 +23,11 @@ else
 end
 
 
-
+% TEST CODE
 % function varargout = subsref(x, index, inc)
 % % SUBSREF Return the value of a specified field in a config objects and increment its reference counter.
 % 
 % y = [];
-% nargout
 % if nargin<3
 %   inc = true;
 % end
@@ -57,4 +56,3 @@ end
 %     y{1} = subsref(subsref(x, index(1)), index(2:end));
 % end
 % varargout = y;
-% nargout
