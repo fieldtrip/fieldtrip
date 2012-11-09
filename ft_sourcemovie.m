@@ -166,6 +166,7 @@ opt.yval    = 0;
 opt.dat     = fun;
 opt.mask    = mask;
 opt.pos     = source.pos;
+opt.tri     = source.tri;
 opt.vindx   = source.inside(:);
 opt.speed   = 1;
 opt.record  = 0;
@@ -465,19 +466,15 @@ if strcmp(get(get(h, 'currentaxes'), 'tag'), 'timecourse')
 %   set(opt.sliderx, 'value') = pos(1);
 %   
 elseif strcmp(get(get(h, 'currentaxes'), 'tag'), 'mesh')
-  % get the current point
-  pos = get(opt.hx, 'currentpoint');
+  % get the current point, which is defined as the intersection through the
+  % axis-box (in 3D)
+  pos       = get(opt.hx, 'currentpoint');
   
-  % get the view angle
-  v   = get(opt.hx, 'view');
-  [pos2(1),pos2(2),pos2(3)] = sph2cart(v(1),v(2),1);
+  % get the intersection with the mesh
+  [ipos, d] = intersect_line(opt.pos, opt.tri, pos(1,:), pos(2,:));
+  [md, ix]  = min(abs(d));
   
-  % get the point with the smallest positive angle to the view vector
-  phi    = pos2*pos';
-  [~,ix] = max(phi);
-  pos    = pos(ix,:);
-  
-  dpos      = opt.pos - pos(ones(size(opt.pos,1),1),:);
+  dpos      = opt.pos - ipos(ix*ones(size(opt.pos,1),1),:);
   opt.vindx = nearest(sum(dpos.^2,2),0);
   
 end
