@@ -14,6 +14,9 @@
 #elif defined (__MINGW32__)
 #define COMPILER_MINGW
 
+#elif defined (__LCC__)
+#define COMPILER_LCC
+
 #endif
 
 #endif /* COMPILER_H */
