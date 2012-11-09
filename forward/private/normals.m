@@ -45,12 +45,18 @@ pnt(:,2) = pnt(:,2)-mean(pnt(:,2),1);
 pnt(:,3) = pnt(:,3)-mean(pnt(:,3),1);
 
 % compute triangle normals
-nrm_dhk = zeros(ndhk, 3);
-for i=1:ndhk
-  v2 = pnt(dhk(i,2),:) - pnt(dhk(i,1),:);
-  v3 = pnt(dhk(i,3),:) - pnt(dhk(i,1),:);
-  nrm_dhk(i,:) = cross(v2, v3);
-end
+% nrm_dhk = zeros(ndhk, 3);
+% for i=1:ndhk
+%   v2 = pnt(dhk(i,2),:) - pnt(dhk(i,1),:);
+%   v3 = pnt(dhk(i,3),:) - pnt(dhk(i,1),:);
+%   nrm_dhk(i,:) = cross(v2, v3);
+% end
+
+% vectorized version of the previous part
+v2 = pnt(dhk(:,2),:) - pnt(dhk(:,1),:);
+v3 = pnt(dhk(:,3),:) - pnt(dhk(:,1),:);
+nrm_dhk = cross(v2, v3);
+
 
 if strcmp(opt, 'vertex')
   % compute vertex normals
@@ -70,5 +76,5 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % fast cross product to replace the Matlab standard version
 function [c] = cross(a,b)
-c = [a(2)*b(3)-a(3)*b(2) a(3)*b(1)-a(1)*b(3) a(1)*b(2)-a(2)*b(1)];
+c = [a(:,2).*b(:,3)-a(:,3).*b(:,2) a(:,3).*b(:,1)-a(:,1).*b(:,3) a(:,1).*b(:,2)-a(:,2).*b(:,1)];
 
