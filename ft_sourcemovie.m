@@ -157,257 +157,283 @@ if isempty(olim)
   cfg.alim = olim;
 end
 
-h = gcf;
-pos = get(gcf, 'position');
-set(h, 'toolbar', 'figure');
-
-% add the GUI elements for changing the speed
-p = uicontrol('style', 'text');
-set(p, 'position', [20 50 50 20]);
-set(p, 'string', 'speed')
-button_slower = uicontrol('style', 'pushbutton');
-set(button_slower, 'position', [75 50 20 20]);
-set(button_slower, 'string', '-')
-set(button_slower, 'Callback', @cb_speed);
-button_faster = uicontrol('style', 'pushbutton');
-set(button_faster, 'position', [100 50 20 20]);
-set(button_faster, 'string', '+')
-set(button_faster, 'Callback', @cb_speed);
-
-% add the GUI elements for changing the color limits
-p = uicontrol('style', 'text');
-set(p, 'position', [20 72 50 20]);
-set(p, 'string', 'zlim')
-button_slower = uicontrol('style', 'pushbutton');
-set(button_slower, 'position', [75 72 20 20]);
-set(button_slower, 'string', '-')
-set(button_slower, 'Callback', @cb_zlim);
-button_faster = uicontrol('style', 'pushbutton');
-set(button_faster, 'position', [100 72 20 20]);
-set(button_faster, 'string', '+')
-set(button_faster, 'Callback', @cb_zlim);
-
-% add the GUI elements for changing the opacity limits
-p = uicontrol('style', 'text');
-set(p, 'position', [20 94 50 20]);
-set(p, 'string', 'alim')
-button_slower = uicontrol('style', 'pushbutton');
-set(button_slower, 'position', [75 94 20 20]);
-set(button_slower, 'string', '-')
-set(button_slower, 'Callback', @cb_alim);
-button_faster = uicontrol('style', 'pushbutton');
-set(button_faster, 'position', [100 94 20 20]);
-set(button_faster, 'string', '+')
-set(button_faster, 'Callback', @cb_alim);
-
-sx = uicontrol('style', 'slider');
-set(sx, 'position', [20 25 pos(3)-160 20]);
-% note that "sx" is needed further down
-
-sy = uicontrol('style', 'slider');
-set(sy, 'position', [20 2 pos(3)-160 20]);
-% note that "sy" is needed further down
-
-p = uicontrol('style', 'pushbutton');
-set(p, 'position', [20 116 50 20]);
-set(p, 'string', 'play')
-% note that "p" is needed further down
-
-m = uicontrol('style', 'pushbutton');
-set(m, 'position', [20 138 50 20]);
-set(m, 'string', 'record');
-
-q = uicontrol('style', 'pushbutton');
-set(q, 'position', [20 160 50 20]);
-set(q, 'string', 'quit');
-
-hx = uicontrol('style', 'text');
-set(hx, 'position', [pos(3)-140 25 120 20]);
-set(hx, 'string', sprintf('%s = ', cfg.xparam));
-set(hx, 'horizontalalignment', 'left');
-
-hy = uicontrol('style', 'text');
-set(hy, 'position', [pos(3)-140 2 120 20]);
-set(hy, 'string', sprintf('%s = ', cfg.yparam));
-set(hy, 'horizontalalignment', 'left');
-
-if ~hasyparam
-  set(hy, 'Visible', 'off')
-  set(sy, 'Visible', 'off')
-end
-
-t = timer;
-set(t, 'timerfcn', {@cb_timer, h}, 'period', 0.1, 'executionmode', 'fixedSpacing');
-
 % collect the data and the options to be used in the figure
 opt.cfg     = cfg;
 opt.xparam  = xparam;
 opt.yparam  = yparam;
+opt.xval    = 0;
+opt.yval    = 0;
 opt.dat     = fun;
 opt.mask    = mask;
+opt.pos     = source.pos;
+opt.vindx   = source.inside(:);
 opt.speed   = 1;
 opt.record  = 0;
+opt.threshold = 0;
 opt.frame   = 0;
 opt.cleanup = false;
 
+% get a handle to a figure
+h  = gcf;
+set(h, 'color', [1 1 1]);
+set(h, 'toolbar', 'figure');
+set(h, 'visible', 'on');
+set(h, 'CloseRequestFcn', @cb_quitbutton);
+set(h, 'position', [100 200 700 500]);
+set(h, 'windowbuttondownfcn', @cb_getposition); 
+
+% get timer object
+t = timer;
+set(t, 'timerfcn', {@cb_timer, h}, 'period', 0.1, 'executionmode', 'fixedSpacing');
+
+% make the user interface elements
+cambutton    = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'light', 'userdata', 'C');
+playbutton   = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'play',   'userdata', 'p');
+recordbutton = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'record', 'userdata', 'r');
+quitbutton   = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'quit',   'userdata', 'q');
+
+thrmin   = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', 'downarrow');
+thr      = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'threshold', 'userdata', 't');
+thrplus  = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', 'uparrow');
+spdmin   = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', 'shift+downarrow');
+spd      = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'speed','userdata', 's');
+spdplus  = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', 'shift+uparrow');
+climmin  = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', 'leftarrow');
+clim     = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'colorlim', 'userdata', 'z');
+climplus = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', 'rightarrow');
+sliderx  = uicontrol('parent', h, 'units', 'normalized', 'style', 'slider',     'string', sprintf('%s = ', cfg.xparam));
+stringx  = uicontrol('parent', h, 'units', 'normalized', 'style', 'text');
+slidery  = uicontrol('parent', h, 'units', 'normalized', 'style', 'slider',     'string', sprintf('%s = ', cfg.yparam));
+stringy  = uicontrol('parent', h, 'units', 'normalized', 'style', 'text');
+stringz  = uicontrol('parent', h, 'units', 'normalized', 'style', 'text');
+
+set(cambutton,    'position', [0.095 0.28 0.09 0.05], 'callback', @cb_keyboard);
+set(quitbutton,   'position', [0.005 0.28 0.09 0.05], 'callback', @cb_keyboard);
+set(playbutton,   'position', [0.005 0.22 0.09 0.05], 'callback', @cb_keyboard);
+set(recordbutton, 'position', [0.095 0.22 0.09 0.05], 'callback', @cb_keyboard);
+set(thrmin,       'position', [0.005 0.16 0.03 0.05], 'callback', @cb_keyboard);
+set(thr,          'position', [0.035 0.16 0.12 0.05], 'callback', @cb_keyboard);
+set(thrplus,      'position', [0.155 0.16 0.03 0.05], 'callback', @cb_keyboard);
+set(climmin,      'position', [0.005 0.10 0.03 0.05], 'callback', @cb_keyboard);
+set(clim,         'position', [0.035 0.10 0.12 0.05], 'callback', @cb_keyboard);
+set(climplus,     'position', [0.155 0.10 0.03 0.05], 'callback', @cb_keyboard);
+set(spdmin,       'position', [0.005 0.04 0.03 0.05], 'callback', @cb_keyboard);
+set(spd,          'position', [0.035 0.04 0.12 0.05], 'callback', @cb_keyboard);
+set(spdplus,      'position', [0.155 0.04 0.03 0.05], 'callback', @cb_keyboard);
+set(sliderx,      'position', [0.01 0.4 0.26 0.03], 'callback',  @cb_slider);%[0.200 0.04  0.78 0.03], 'callback', @cb_slider);
+set(slidery,      'position', [0.200 0.005 0.78 0.03], 'callback', @cb_slider);
+set(stringx,      'position', [0.800 0.93 0.18 0.03]);
+set(stringy,      'position', [0.800 0.90 0.18 0.03]);
+set(stringz,      'position', [0.650 0.96 0.33 0.03]);
+
+set(stringx, 'string', sprintf('%s = ', cfg.xparam));
+set(stringy, 'string', sprintf('%s = ', cfg.yparam));
+set(stringz, 'string', sprintf('position = '));
+set(stringx, 'horizontalalignment', 'right', 'backgroundcolor', [1 1 1]);
+set(stringy, 'horizontalalignment', 'right', 'backgroundcolor', [1 1 1]);
+set(stringz, 'horizontalalignment', 'right', 'backgroundcolor', [1 1 1]);
+
+% create axes object to contain the mesh
+hx = axes;
+set(hx, 'position', [0.4 0.08 0.6 0.8]);
+set(hx, 'tag', 'mesh');
 if isfield(source, 'sulc')
   vdat = source.sulc;
   vdat = vdat-min(vdat)+1;
   vdat = vdat./max(vdat);
   vdat = 0.8.*repmat(vdat,[1 3]);
-  ft_plot_mesh(source, 'edgecolor', 'none', 'vertexcolor', vdat);
+  hs1 = ft_plot_mesh(source, 'edgecolor', 'none', 'vertexcolor', vdat);
 else
-  ft_plot_mesh(source, 'edgecolor', 'none', 'facecolor', [0.5 0.5 0.5]);
+  hs1 = ft_plot_mesh(source, 'edgecolor', 'none', 'facecolor', [0.5 0.5 0.5]);
 end
 lighting gouraud
-set(gca, 'Position', [0.2 0.2 0.7 0.7]);
-
 hs = ft_plot_mesh(source, 'edgecolor', 'none', 'vertexcolor', 0*opt.dat(:,1,1), 'facealpha', 0*opt.mask(:,1,1));
 lighting gouraud
 cam1 = camlight('left');
 cam2 = camlight('right');
-
 caxis(cfg.zlim);
 alim(cfg.alim);
 
+% create axis object to contain a time course
+hy = axes;
+set(hy, 'position', [0.02 0.5 0.3 0.35]);
+set(hy, 'yaxislocation', 'right');
 
-% remember the varous handles
-opt.h   = h;
-opt.hs  = hs;
-opt.p   = p;
+if ~hasyparam
+  tline = plot(opt.xparam, mean(opt.dat(opt.vindx,:))); hold on;
+  abc = axis;
+  axis([opt.xparam(1) opt.xparam(end) abc(3:4)]);
+  vline = plot(opt.xparam(1)*[1 1], abc(3:4), 'r');
+else
+  error('not yet implemented');  
+end
+set(hy, 'tag', 'timecourse');
+
+% remember the various handles
+opt.h   = h;  % handle to the figure
+opt.hs  = hs; % handle to the mesh
+opt.hx  = hx; % handle to the axes containing the mesh
+opt.hy  = hy; % handle to the axes containing the timecourse
+opt.cam = [cam1 cam2]; % handles to the light objects
+opt.vline = vline; % handle to the line in the ERF plot
+opt.tline = tline; % handle to the ERF
+opt.playbutton   = playbutton; % handle to the playbutton
+opt.recordbutton = recordbutton; % handle to the recordbutton
+opt.quitbutton   = quitbutton; % handle to the quitbutton
+
+%opt.p   = p;
 opt.t   = t;
-opt.hx  = hx;
-opt.hy  = hy;
-opt.sx  = sx;
-opt.sy  = sy;
+%opt.hx  = hx;
+%opt.hy  = hy;
+opt.sliderx  = sliderx;
+opt.slidery  = slidery;
+opt.stringx  = stringx;
+opt.stringy  = stringy;
+opt.stringz  = stringz;
 
-% add all optional information to the figure, so that the callbacks can access and modify it
-guidata(h, opt);
+if ~hasyparam
+  set(opt.slidery, 'visible', 'off');
+  set(opt.stringy, 'visible', 'off');
+end
 
-% from now it is safe to hand over the control to the callback function
-set(sx, 'Callback', @cb_slider);
-set(sy, 'Callback', @cb_slider);
-set(p,  'Callback', @cb_playbutton);
-set(m,  'Callback', @cb_recordbutton);
-set(q,  'Callback', @cb_quit);
+setappdata(h, 'opt', opt);
+
+while opt.cleanup==0
+  uiwait(h);
+  opt = getappdata(h, 'opt');
+end
+stop(opt.t);
 
 if nargout
-  % wait until the user interface is closed
-  %set(h, 'CloseRequestFcn', @cb_quit);
-  
-  while ishandle(h)
-    uiwait(h);
-    opt = guidata(h);
-    if opt.cleanup
-      if isfield(opt, 'movie')
-        M = opt.movie;
-      else
-        M = [];
-      end
-      delete(h);
-    end
-  end
-  
-  
-  % do the general cleanup and bookkeeping at the end of the function
-  ft_postamble trackconfig
-  ft_postamble provenance
-  ft_postamble previous source
+  M = opt.movie;
+end
 
-end % if nargout
+delete(h);
 
-
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble trackconfig
+ft_postamble callinfo
+ft_postamble previous source
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_slider(h, eventdata)
-opt = guidata(h);
-valx = get(opt.sx, 'value');
+
+persistent previous_valx previous_valy previous_vindx
+
+if isempty(previous_valx)
+  previous_valx = 0;
+end
+if isempty(previous_valy)
+  previous_valy = 0;
+end
+
+h    = getparent(h);
+opt  = getappdata(h, 'opt');
+valx = get(opt.sliderx, 'value');
 valx = round(valx*(size(opt.dat,2)-1))+1;
 valx = min(valx, size(opt.dat,2));
 valx = max(valx, 1);
 
-valy = get(opt.sy, 'value');
+valy = get(opt.slidery, 'value');
 valy = round(valy*(size(opt.dat,3)-1))+1;
 valy = min(valy, size(opt.dat,3));
 valy = max(valy, 1);
 
-%text(0, 0, sprintf('%s = %f\n', opt.cfg.xparam, opt.tim(val)));
-set(opt.hx, 'string', sprintf('%s = %f\n', opt.cfg.xparam, opt.xparam(valx)));
-set(opt.hy, 'string', sprintf('%s = %f\n', opt.cfg.yparam, opt.yparam(valy)));
-set(opt.hs, 'FaceVertexCData', squeeze(opt.dat(:,valx,valy)));
-set(opt.hs, 'FaceVertexAlphaData', squeeze(opt.mask(:,valx,valy)));
+mask = squeeze(opt.mask(:,valx,valy));
+mask(opt.dat(:,valx,valy)<opt.threshold) = 0;
+
+% update stuff
+if previous_valx~=valx || previous_valy~=valy
+  % update strings
+  set(opt.stringx, 'string', sprintf('%s = %3.3f\n', opt.cfg.xparam, opt.xparam(valx)));
+  set(opt.stringy, 'string', sprintf('%s = %3.3f\n', opt.cfg.yparam, opt.yparam(valy)));
+  
+  % update data in mesh
+  set(opt.hs, 'FaceVertexCData',     squeeze(opt.dat(:,valx,valy)));
+  set(opt.hs, 'FaceVertexAlphaData', mask);
+
+  set(opt.vline, 'xdata', [1 1]*opt.xparam(valx));
+end
+
+% update ERF-plot
+set(opt.hy,    'ylim',   opt.cfg.zlim);
+set(opt.vline, 'ydata',  opt.cfg.zlim);
+if ~(numel(previous_vindx)==numel(opt.vindx) && all(previous_vindx==opt.vindx))
+  tmp = mean(opt.dat(opt.vindx,:,valy),1);
+  set(opt.tline, 'ydata', tmp);
+  %set(opt.hy,    'ylim',  [min(tmp(:)) max(tmp(:))]);
+  %set(opt.vline, 'ydata', [min(tmp(:)) max(tmp(:))]);
+   
+  set(opt.hy,    'yaxislocation', 'right');
+  set(opt.stringz, 'string', sprintf('position = [%2.1f, %2.1f, %2.1f]', opt.pos(opt.vindx,:)));
+end
 
 if opt.record
   opt.frame = opt.frame + 1;
   opt.movie(opt.frame) = getframe(opt.h);
-  guidata(h, opt);
 end
+setappdata(h, 'opt', opt);
+
+previous_valx = valx;
+previous_valy = valy;
+previous_vindx = opt.vindx;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_playbutton(h, eventdata)
-if ~ishandle(h)
-  return
+
+opt = getappdata(h, 'opt');
+if strcmp(get(opt.playbutton, 'string'), 'pause')
+  stop(opt.t);
+  set(opt.playbutton, 'string', 'play');
+else
+  start(opt.t);
+  set(opt.playbutton, 'string', 'pause');
 end
-opt = guidata(h);
-switch get(h, 'string')
-  case 'play'
-    set(h, 'string', 'stop');
-    start(opt.t);
-  case 'stop'
-    set(h, 'string', 'play');
-    stop(opt.t);
-end
-uiresume;
+setappdata(h, 'opt', opt);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_quitbutton(h, eventdata)
+
+opt = getappdata(h, 'opt');
+opt.cleanup = 1;
+setappdata(h, 'opt', opt);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_recordbutton(h, eventdata)
-if ~ishandle(h)
-  return
-end
-opt = guidata(h);
-switch get(h, 'string')
-  case 'record'
-    set(h, 'string', 'stop');
-    opt.record = 1;
-  case 'stop'
-    set(h, 'string', 'record');
-    opt.record = 0;
-end
-guidata(h, opt);
-uiresume;
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_quit(h, eventdata)
-opt = guidata(h);
-opt.cleanup = 1;
-guidata(h, opt);
-uiresume;
+opt = getappdata(h, 'opt');
+if strcmp(get(opt.recordbutton, 'string'), 'stop')
+  opt.record = 0;
+  set(opt.recordbutton, 'string', 'record');
+else
+  opt.record = 1;
+  set(opt.recordbutton, 'string', 'stop');
+end
+setappdata(h, 'opt', opt);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_timer(obj, info, h)
-if ~ishandle(h)
-  return
-end
-opt = guidata(h);
+
+opt   = getappdata(h, 'opt');
 delta = opt.speed/size(opt.dat,2);
-val = get(opt.sx, 'value');
+val = get(opt.sliderx, 'value');
 val = val + delta;
 if val>1
   val = val-1;
 end
-set(opt.sx, 'value', val);
+set(opt.sliderx, 'value', val);
+setappdata(h, 'opt', opt);
 cb_slider(h);
-uiresume;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -426,38 +452,166 @@ end % switch
 guidata(h, opt);
 uiresume;
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_zlim(h, eventdata)
-if ~ishandle(h)
-  return
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_getposition(h, eventdata)
+
+h   = getparent(h);
+opt = getappdata(h, 'opt');
+if strcmp(get(get(h, 'currentaxes'), 'tag'), 'timecourse')
+  % get the current point
+%   pos = get(opt.hy, 'currentpoint');
+%   set(opt.sliderx, 'value') = pos(1);
+%   
+elseif strcmp(get(get(h, 'currentaxes'), 'tag'), 'mesh')
+  % get the current point
+  pos = get(opt.hx, 'currentpoint');
+  
+  % get the view angle
+  v   = get(opt.hx, 'view');
+  [pos2(1),pos2(2),pos2(3)] = sph2cart(v(1),v(2),1);
+  
+  % get the point with the smallest positive angle to the view vector
+  phi    = pos2*pos';
+  [~,ix] = max(phi);
+  pos    = pos(ix,:);
+  
+  dpos      = opt.pos - pos(ones(size(opt.pos,1),1),:);
+  opt.vindx = nearest(sum(dpos.^2,2),0);
+  
 end
-opt = guidata(h);
-switch get(h, 'String')
-  case '+'
-    caxis(caxis*sqrt(2));
-  case '-'
-    caxis(caxis/sqrt(2));
-end % switch
-guidata(h, opt);
+setappdata(h, 'opt', opt);
+cb_slider(h);
 uiresume;
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_speed(h, eventdata)
-if ~ishandle(h)
-  return
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_keyboard(h, eventdata)
+
+if isempty(eventdata)
+  % determine the key that corresponds to the uicontrol element that was activated
+  key = get(h, 'userdata');
+else
+  % determine the key that was pressed on the keyboard
+  key = parseKeyboardEvent(eventdata);
 end
-opt = guidata(h);
-switch get(h, 'String')
-  case '+'
+% get focus back to figure
+if ~strcmp(get(h, 'type'), 'figure')
+    set(h, 'enable', 'off');
+    drawnow;
+    set(h, 'enable', 'on');
+end
+  
+h = getparent(h);
+opt = getappdata(h, 'opt');
+
+switch key
+  case 'leftarrow' % change colorlim
+    opt.cfg.zlim(2) = (opt.cfg.zlim(2)-opt.cfg.zlim(1))./sqrt(2);
+    setappdata(h, 'opt', opt);
+    caxis(opt.cfg.zlim);
+  case 'rightarrow' % change colorlim
+    opt.cfg.zlim(2) = max(opt.cfg.zlim(2).*sqrt(2), opt.cfg.zlim(1));
+    setappdata(h, 'opt', opt);
+    caxis(opt.cfg.zlim);
+  
+  case 'shift+leftarrow'
+    
+  case 'shift+rightarrow'
+  
+  case 'uparrow' % enhance threshold
+    opt.threshold = opt.threshold+0.01.*max(opt.dat(:));
+    setappdata(h, 'opt', opt);
+  case 'downarrow' % lower threshold
+    opt.threshold = opt.threshold-0.01.*max(opt.dat(:));
+    setappdata(h, 'opt', opt);
+  case 'shift+uparrow' % change speed
     opt.speed = opt.speed*sqrt(2);
-  case '-'
+    setappdata(h, 'opt', opt);
+  case 'shift+downarrow'
     opt.speed = opt.speed/sqrt(2);
     opt.speed = max(opt.speed, 1); % should not be smaller than 1
-end % switch
-guidata(h, opt);
-uiresume;
+    setappdata(h, 'opt', opt);
+  case 'ctrl+uparrow' % change channel
+  case 'C' % update camera position
+    camlight(opt.cam(1), 'left');
+    camlight(opt.cam(2), 'right');
+  case 'p'
+    cb_playbutton(h);
+  case 'q'
+    cb_quitbutton(h);
+  case 'r'
+    cb_recordbutton(h);
+  case 's'
+    % select the speed
+    response = inputdlg('speed', 'specify', 1, {num2str(opt.speed)});
+    if ~isempty(response)
+      opt.speed = str2double(response);
+      setappdata(h, 'opt', opt);
+    end
+  case 't'
+    % select the threshold
+    response = inputdlg('threshold', 'specify', 1, {num2str(opt.threshold)});
+    if ~isempty(response)
+      opt.threshold = str2double(response);
+      setappdata(h, 'opt', opt);
+    end
+  case 'z'
+    % select the threshold
+    response = inputdlg('colorlim', 'specify', 1, {num2str(opt.cfg.zlim(2))});
+    if ~isempty(response)
+      opt.cfg.zlim(2) = str2double(response);
+      setappdata(h, 'opt', opt);
+    end
+  case 'control+control'
+    % do nothing
+  case 'shift+shift'
+    % do nothing
+  case 'alt+alt'
+    % do nothing
+  otherwise
+    setappdata(h, 'opt', opt);
+    cb_help(h);
+end
+cb_slider(h);
+uiresume(h);
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function h = getparent(h)
+p = h;
+while p~=0
+  h = p;
+  p = get(h, 'parent');
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function key = parseKeyboardEvent(eventdata)
+
+key = eventdata.Key;
+
+% handle possible numpad events (different for Windows and UNIX systems)
+% NOTE: shift+numpad number does not work on UNIX, since the shift
+% modifier is always sent for numpad events
+if isunix()
+  shiftInd = match_str(eventdata.Modifier, 'shift');
+  if ~isnan(str2double(eventdata.Character)) && ~isempty(shiftInd)
+    % now we now it was a numpad keystroke (numeric character sent AND
+    % shift modifier present)
+    key = eventdata.Character;
+    eventdata.Modifier(shiftInd) = []; % strip the shift modifier
+  end
+elseif ispc()
+  if strfind(eventdata.Key, 'numpad')
+    key = eventdata.Character;
+  end
+end
+
+if ~isempty(eventdata.Modifier)
+  key = [eventdata.Modifier{1} '+' key];
+end
