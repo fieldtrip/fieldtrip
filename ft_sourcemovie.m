@@ -1,4 +1,4 @@
-function [cfg, M] = ft_sourcemovie(cfg, source)
+function [cfg, M] = ft_sourcemovie(cfg, source, source2)
 
 % FT_SOURCEMOVIE displays the source reconstruction on a cortical mesh
 % and allows the user to scroll through time with a movie
@@ -77,6 +77,7 @@ cfg.yparam        = yparam;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 fun = getsubfield(source, funparameter); % might be avg.pow
+if nargin>2, fun2 = getsubfield(source2, funparameter); end
 if size(source.pos)~=size(fun,1)
   error('inconsistent number of vertices in the cortical mesh');
 end
@@ -136,6 +137,7 @@ end
 xparam  = xparam(xbeg:xend);
 yparam  = yparam(ybeg:yend);
 fun     = fun(:,xbeg:xend,ybeg:yend);
+if nargin>2, fun2 = fun2(:,xbeg:xend,ybeg:yend); end
 mask    = mask(:,xbeg:xend,ybeg:yend);
 clear xbeg xend ybeg yend
 
@@ -173,6 +175,12 @@ opt.record  = 0;
 opt.threshold = 0;
 opt.frame   = 0;
 opt.cleanup = false;
+
+% add functional data of optional third input to the opt structure
+% FIXME here we should first check whether the meshes correspond!
+if nargin>2
+  opt.dat2 = fun2;
+end
 
 % get a handle to a figure
 h  = gcf;
@@ -265,6 +273,11 @@ if ~hasyparam
   abc = axis;
   axis([opt.xparam(1) opt.xparam(end) abc(3:4)]);
   vline = plot(opt.xparam(1)*[1 1], abc(3:4), 'r');
+  
+  if nargin>2
+    tline2 = plot(opt.xparam, mean(opt.dat2(opt.vindx,:)), 'r'); hold on;
+  end
+  
 else
   error('not yet implemented');  
 end
@@ -278,6 +291,7 @@ opt.hy  = hy; % handle to the axes containing the timecourse
 opt.cam = [cam1 cam2]; % handles to the light objects
 opt.vline = vline; % handle to the line in the ERF plot
 opt.tline = tline; % handle to the ERF
+if nargin>2, opt.tline2 = tline2; end
 opt.playbutton   = playbutton; % handle to the playbutton
 opt.recordbutton = recordbutton; % handle to the recordbutton
 opt.quitbutton   = quitbutton; % handle to the quitbutton
@@ -366,7 +380,12 @@ if ~(numel(previous_vindx)==numel(opt.vindx) && all(previous_vindx==opt.vindx))
   set(opt.tline, 'ydata', tmp);
   %set(opt.hy,    'ylim',  [min(tmp(:)) max(tmp(:))]);
   %set(opt.vline, 'ydata', [min(tmp(:)) max(tmp(:))]);
-   
+  
+  if isfield(opt, 'dat2')
+    tmp = mean(opt.dat2(opt.vindx,:,valy),1);
+    set(opt.tline2, 'ydata', tmp);
+  end
+  
   set(opt.hy,    'yaxislocation', 'right');
   set(opt.stringz, 'string', sprintf('position = [%2.1f, %2.1f, %2.1f]', opt.pos(opt.vindx,:)));
 end
