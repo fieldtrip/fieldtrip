@@ -29,7 +29,16 @@ else
   % use recursion to find the subfield that is being indexed
   if ~isfield(x, index(1).subs)
     % the subfield does not exists, create a new config subfield
-    x  = subsasgn(x, index(1), config());
+    switch index(2).type
+      case '.'
+        x  = subsasgn(x, index(1), config());
+      case '()'
+        x  = subsasgn(x, index(1), []);
+      case '{}'
+        x  = subsasgn(x, index(1), {});
+      otherwise
+        error('Incorrect contents reference');
+    end
   end
   y1 = subsref(x, index(1), false);
   y2 = subsasgn(y1, index(2:end), val);
