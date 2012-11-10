@@ -21,7 +21,6 @@
  */
 
 #include "mex.h"
-#include "matrix.h"
 #include "compiler.h"
 
 #if defined (COMPILER_LCC)
