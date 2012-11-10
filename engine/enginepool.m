@@ -85,7 +85,7 @@ switch cmd
     if nargin>2
       matlabcmd = varargin{3};
     else
-      matlabcmd = getpref('engine', 'matlabcmd', 'matlab -singleCompThread -nodesktop -nosplash');
+      matlabcmd = [fullfile(matlabroot,'bin','matlab') ' -singleCompThread -nodesktop -nosplash'];
     end
     
     % start the engines
