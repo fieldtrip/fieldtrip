@@ -1,4 +1,4 @@
-function [obj] = ft_convert_coordsys(obj, target)
+function [obj] = ft_convert_coordsys(obj, target, opt)
 
 % FT_CONVERT_COORDSYS changes the coordinate system of the input object to
 % the specified coordinate system. The coordinate system of the input
@@ -53,6 +53,12 @@ if ~isfield(obj, 'coordsys') || isempty(obj.coordsys)
   obj = ft_determine_coordsys(obj, 'interactive', 'yes');
 end
 
+% set default behavior to use an approximate alignment, followed by a call
+% to spm_normalise for a better quality alignment
+if nargin<3
+  opt = 2;
+end
+
 if nargin>1 && ~strcmpi(target, obj.coordsys)
   % convert to the desired coordinate system
   switch target
@@ -60,7 +66,7 @@ if nargin>1 && ~strcmpi(target, obj.coordsys)
       switch obj.coordsys
         case {'ctf' 'bti' '4d'}
           fprintf('Converting the coordinate system from %s to %s\n', obj.coordsys, target);
-          obj = align_ctf2spm(obj);
+          obj = align_ctf2spm(obj, opt);
         case {'itab' 'neuromag'}
           fprintf('Converting the coordinate system from %s to %s\n', obj.coordsys, target);
           obj = align_itab2spm(obj);

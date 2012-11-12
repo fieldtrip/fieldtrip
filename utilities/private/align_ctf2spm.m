@@ -1,8 +1,22 @@
-function [mri] = align_ctf2spm(mri)
+function [mri] = align_ctf2spm(mri, opt)
 
 % ALIGN_CTF2SPM performs an approximate alignment of the anatomical volume
 % from CTF towards SPM coordinates. Only the homogeneous transformation matrix
 % is modified and the coordsys-field is updated.
+%
+% Use as
+%   mri = align_ctf2spm(mri)
+%   mri = align_ctf2spm(mri, opt)
+%
+% Where mri is a FieldTrip MRI-structure, and opt an optional argument
+% specifying how the registration is done.
+%   opt = 0: only an approximate coregistration
+%   opt = 1: an approximate coregistration, followed by spm_affreg
+%   opt = 2 (default): an approximate coregistration, followed by spm_normalise
+
+if nargin<2
+  opt = 2;
+end
 
 %--------------------------------------------------------------------------
 % do a first round of approximate coregistration using the predefined voxel
@@ -47,38 +61,83 @@ mri.coordsys      = 'spm';
 % different conventions defining LPA and RPA. The affine registration may
 % fail however, e.g. if the initial alignment is not close enough. In that
 % case SPM will throw an error
-switch spm('ver')
-  case 'SPM8'
-    template = fullfile(spm('Dir'),'templates','T1.nii');
-  case 'SPM2'
-    template = fullfile(spm('Dir'),'templates','T1.mnc');
-  otherwise
-    error('unsupported spm-version');
+if opt==1
+  % use spm_affreg
+  
+  switch spm('ver')
+    case 'SPM8'
+      template = fullfile(spm('Dir'),'templates','T1.nii');
+    case 'SPM2'
+      template = fullfile(spm('Dir'),'templates','T1.mnc');
+    otherwise
+      error('unsupported spm-version');
+  end
+  mri2 = ft_read_mri(template);
+  
+  tname1 = [tempname, '.img'];
+  tname2 = [tempname, '.img'];
+  V1 = ft_write_mri(tname1, mri.anatomy,  'transform', mri.transform,  'spmversion', spm('ver'));
+  V2 = ft_write_mri(tname2, mri2.anatomy, 'transform', mri2.transform, 'spmversion', spm('ver'));
+  
+  % the below, using just spm_affreg does not work robustly enough in some
+  % cases
+  flags.regtype = 'rigid';
+  [M, scale]    = spm_affreg(V1,V2,flags);
+  
+  % some juggling around with the transformation matrices
+  ctfvox2spmhead2  = M \ V1.mat;
+  spmhead2ctfhead2 = ctfvox2ctfhead / ctfvox2spmhead2;
+   
+  % update the transformation matrix
+  mri.transform     = ctfvox2spmhead2;
+  
+  % this one is unchanged
+  mri.vox2headOrig  = ctfvox2ctfhead;
+  
+  % these are new
+  mri.vox2head      = ctfvox2spmhead2;
+  mri.head2headOrig = spmhead2ctfhead2;
+  
+  % delete the temporary files
+  delete(tname1);
+  delete(tname2);
+  
+elseif opt==2
+  % use spm_normalise
+  
+  switch spm('ver')
+    case 'SPM8'
+      template = fullfile(spm('Dir'),'templates','T1.nii');
+    case 'SPM2'
+      template = fullfile(spm('Dir'),'templates','T1.mnc');
+    otherwise
+      error('unsupported spm-version');
+  end
+  mri2 = ft_read_mri(template);
+  
+  tname1 = [tempname, '.img'];
+  tname2 = [tempname, '.img'];
+  V1 = ft_write_mri(tname1, mri.anatomy,  'transform', mri.transform,  'spmversion', spm('ver'));
+  V2 = ft_write_mri(tname2, mri2.anatomy, 'transform', mri2.transform, 'spmversion', spm('ver'));
+  
+  flags.nits       = 0; %set number of non-linear iterations to zero
+  flags.regtype    = 'rigid';
+  params           = spm_normalise(V2,V1,[],[],[],flags);
+  spmhead2ctfhead2 = spmhead2ctfhead*V1.mat*params.Affine/V2.mat;
+  ctfvox2spmhead2  = spmhead2ctfhead2\ctfvox2ctfhead;
+  
+  % update the transformation matrix
+  mri.transform     = ctfvox2spmhead2;
+  
+  % this one is unchanged
+  mri.vox2headOrig  = ctfvox2ctfhead;
+  
+  % these are new
+  mri.vox2head      = ctfvox2spmhead2;
+  mri.head2headOrig = spmhead2ctfhead2;
+  
+  % delete the temporary files
+  delete(tname1);
+  delete(tname2);
 end
-mri2 = ft_read_mri(template);
 
-tname1 = [tempname, '.img'];
-tname2 = [tempname, '.img'];
-V1 = ft_write_mri(tname1, mri.anatomy,  'transform', mri.transform,  'spmversion', spm('ver'));
-V2 = ft_write_mri(tname2, mri2.anatomy, 'transform', mri2.transform, 'spmversion', spm('ver'));
-
-flags.regtype = 'rigid';
-[M, scale]    = spm_affreg(V1,V2,flags);
-
-% some juggling around with the transformation matrices
-ctfvox2spmhead2  = M \ V1.mat;
-spmhead2ctfhead2 = ctfvox2ctfhead / ctfvox2spmhead2;
-
-% update the transformation matrix
-mri.transform     = ctfvox2spmhead2;
-
-% this one is unchanged
-mri.vox2headOrig  = ctfvox2ctfhead;
-
-% these are new
-mri.vox2head      = ctfvox2spmhead2;
-mri.head2headOrig = spmhead2ctfhead2;
-
-% delete the temporary files
-delete(tname1);
-delete(tname2);
