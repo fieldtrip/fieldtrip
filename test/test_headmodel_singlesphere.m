@@ -47,7 +47,7 @@ for i=1:length(pnt)
 end
 
 geom = [];
-geom.pnt = pnt;
+geom.pnt = pnt * 100;
 vol = ft_headmodel_singlesphere(geom, 'conductivity', [0.42]);
 
 % generate a unit sphere
