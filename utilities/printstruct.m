@@ -76,6 +76,9 @@ if isstruct(val)
         case 'struct'
           line = printstruct([name '.' fn{i}], fv);
           str  = [str line];
+        case 'function_handle'
+          printstr([name '.' fn{i}], func2str(fv));
+          str  = [str line];    
         otherwise
           error('unsupported');
       end
