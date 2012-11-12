@@ -92,9 +92,6 @@ dip.inside  = 1:size(dip.pos,1);
 dip.outside = [];
 
 isrankdeficient = (rank(all_cov)<size(all_cov,1));
-if isrankdeficient && ~isfield(dip, 'filter')
-  warning('covariance matrix is rank deficient')
-end
 
 % estimate the noise power, which is further assumed to be equal and uncorrelated over channels
 if isrankdeficient
