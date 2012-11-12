@@ -27,7 +27,15 @@ while isfield(sens, 'balance') && isfield(sens.balance, 'current') && ~strcmp(se
       % FIXME check whether this is robust
     end
 
+    if strcmp(sens.balance.current, 'planar')
+      if isfield(sens, 'type') && ~isempty(strfind(sens.type, '_planar'))
+        % remove the planar postfox from the sensor type
+        sens.type = sens.type(1:(end-7));
+      end
+    end
+    
     sens = ft_apply_montage(sens, sens.balance.(sens.balance.current), 'inverse', 'yes', 'keepunused', 'yes');
+    
   else
     warning('cannot undo %s balancing\n', sens.balance.current);
     break

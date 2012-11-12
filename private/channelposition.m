@@ -35,7 +35,7 @@ function [pnt, ori, lab] = channelposition(sens, varargin)
 % get the optional input arguments
 getref = ft_getopt(varargin, 'channel', false);
 
-% remove the balancing from the sensor definition, e.g. 3rd order gradients, PCA-cleaned data or ICA projections
+% remove the balancing from the sensor definition, e.g. planar gradients, 3rd-order gradients, PCA-cleaned data or ICA projections
 sens = undobalancing(sens);
 
 % keep it backward compatible with sensor definitions prior to 2011v1 (see ft_datatype_sens), which have pnt/ori instead of coilpos/coilori.
