@@ -541,8 +541,16 @@ switch fileformat
     else
       error('unknown elements format')
     end
-    shape.index = labels;
-    
+    % representation of data is compatible with ft_datatype_parcellation
+    shape.tissue = zeros(size(labels));
+    numlabels = size(unique(labels),1);
+    shape.tissuelabel = {};
+    for i = 1:numlabels
+        ulabel = unique(labels);
+        shape.tissue(labels == ulabel(i)) = i;
+        shape.tissuelabel{i} = num2str(ulabel(i));
+    end
+            
   case 'tet'
     % the toolbox from Gabriel Peyre has a function for this
     ft_hastoolbox('toolbox_graph', 1);
@@ -560,6 +568,10 @@ switch fileformat
     shape.tet = IMPORT.data(:,2:5);
     IMPORT = importdata([filename '.1.node'],' ',1);
     shape.pnt = IMPORT.data(:,2:4);
+    
+    % add label (see above at vista)
+    % shape.tissue 
+    % shape.tissuelabel
     
   otherwise
     % try reading it from an electrode of volume conduction model file
