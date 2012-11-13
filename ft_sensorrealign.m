@@ -535,8 +535,8 @@ switch cfg.method
       elec_realigned = ft_transform_sens(feval(cfg.warp, norm.m), elec_original);
     catch
       % the previous section will fail for nonlinear transformations
-      elec_realigned.label = elec_original.label;
-      elec_realigned.pnt   = warp_apply(norm.m, elec_original.pnt, cfg.warp);
+      elec_realigned.label   = elec_original.label;
+      elec_realigned.chanpos = warp_apply(norm.m, elec_original.chanpos, cfg.warp);
     end
     % remember the transformation
     elec_realigned.(cfg.warp) = norm.m;
