@@ -153,7 +153,7 @@ end
 function [res] = check_parcellation(source)
 res = false;
 
-if ~isfield(source, 'pos')
+if ~isfield(source, 'pos') 
   return
 end
 
@@ -168,6 +168,33 @@ end
 if sum(fb)>1
   % the presence of multiple logical arrays suggests it is a parcellation
   res = true;
+end
+
+if res == false      % check if source has more D elements
+    check = 0;
+    for i = 1: length(fn)
+        fname = fn{i};
+        switch fname
+            case 'tri'
+                npos = size(source.tri,1);
+                check = 1;
+            case 'hex'
+                npos = size(source.hex,1);
+                check = 1;
+            case 'tet'
+                npos = size(source.tet,1);
+                check = 1;
+        end
+    end
+    if check == 1   % check if elements are labelled
+        for i=1:numel(fn)
+            tmp = source.(fn{i});
+            fb(i) = numel(tmp)==npos && islogical(tmp);
+        end
+        if sum(fb)>1
+            res = true;
+        end
+    end
 end
 
 fn = fieldnames(source);
