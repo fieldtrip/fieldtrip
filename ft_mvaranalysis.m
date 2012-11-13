@@ -418,9 +418,9 @@ elseif ~dobvar && keeprpt,
 elseif ~dobvar
   mvardata.dimord = 'chan_chan_lag';
   mvardata.label  = label;
-  siz    = size(coeffs);
+  siz    = [size(coeffs) 1];
   coeffs = reshape(coeffs, siz(2:end));
-  siz    = size(noisecov);
+  siz    = [size(noisecov) 1];
   noisecov = reshape(noisecov, siz(2:end));
 elseif dobvar
   mvardata.dimord = 'chancmb_lag';
