@@ -100,7 +100,17 @@ switch parcelversion
   case '2012'
     % determine whether the style of the input fields is probabilistic or indexed
     fn = fieldnames(parcellation);
-    [indexed, probabilistic] = determine_segmentationstyle(parcellation, fn, size(parcellation.pos,1));
+   
+    if ~any(strcmp('pos',fn))
+        if any(strcmp('pnt', fn))
+            parcellation.pos = parcellation.pnt;
+            parcellation = rmfield(parcellation, 'pnt');
+            fn = fieldnames(parcellation);
+        end
+    end
+    
+    dim = size(parcellation.pos,1);
+    [indexed, probabilistic] = determine_segmentationstyle(parcellation, fn, dim);
     
     if any(probabilistic) && any(indexed)
       warning('cannot work with a mixed representation, removing tissue probability maps');
@@ -116,7 +126,36 @@ switch parcelversion
       fn = fn(indexed);
       indexed = true; probabilistic = false;
     end
+    
+    if ~any(probabilistic) && ~any(indexed)  % allow for tissue labels of elements
+        for i = 1:length(fn)
+            fname = fn{i};
+            switch fname
+                case 'tri'
+                    dim = size(parcellation.tri,1);
+                case 'hex'
+                    dim = size(parcellation.hex,1);
+                case 'tet'
+                    dim = size(parcellation.tet,1);
+            end
+        end
+        [indexed, probabilistic] = determine_segmentationstyle(parcellation, fn, dim);
         
+        if any(probabilistic) && any(indexed)
+            warning('cannot work with a mixed representation, removing tissue probability maps');
+            sel = find(probabilistic);
+            parcellation       = rmfield(parcellation, fn(sel));
+            probabilistic(sel) = false;
+        end
+        
+        if any(probabilistic)
+            fn = fn(probabilistic);
+            probabilistic = true; indexed = false;
+        elseif any(indexed)
+            fn = fn(indexed);
+            indexed = true; probabilistic = false;
+        end
+    end
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % ensure that the parcellation is internally consistent
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -132,12 +171,12 @@ switch parcelversion
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     if probabilistic && strcmp(parcellationstyle, 'indexed')
-      parcellation  = convert_segmentationstyle(parcellation, fn, [size(parcellation.pos,1) 1], 'indexed');
+      parcellation  = convert_segmentationstyle(parcellation, fn, [dim 1], 'indexed');
       indexed       = true;
       probabilistic = false;
       clear fn % to avoid any potential confusion
     elseif indexed && strcmp(parcellationstyle, 'probabilistic')
-      parcellation  = convert_segmentationstyle(parcellation, fn, [size(parcellation.pos,1) 1], 'probabilistic');
+      parcellation  = convert_segmentationstyle(parcellation, fn, [dim 1], 'probabilistic');
       probabilistic = true;
       indexed       = false;
       clear fn % to avoid any potential confusion
