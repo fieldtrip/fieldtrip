@@ -186,12 +186,10 @@ assert(isequal(bnd,bnd1),'Triangulated mesh is different from default.')
 % hexahedral-mesh
 cfg=[];
 cfg.tissue = {'seg1' 'seg2' 'seg3'};
-cfg.numvertices = [3000 2000 1000];
+cfg.numvertices = 5000;
 cfg.type = 'hex';                      
 bnd2 = ft_prepare_mesh(cfg,example); 
  
-assert(size(bnd2,2) == 3, 'Number of layers is different from 3.')
-assert(cfg.numvertices(1) == size(bnd2(1).pnt,1) && cfg.numvertices(2) == size(bnd2(2).pnt,1) && cfg.numvertices(3) == size(bnd2(3).pnt,1), 'Number of points is not equal to required');
 assert(isfield(bnd2,'pnt') || isfield(bnd2,'hex') || isfield(bnd2,'unit'), 'Missing field(s) in mesh structure');
 assert(~(isfield(bnd2,'tri')),'Triangles in hexahedral mesh.')
 assert(~(isfield(bnd2,'tet')),'Tetrahedron in hexahedral mesh.')
@@ -202,12 +200,10 @@ ft_plot_mesh(bnd2, 'facealpha', 0.3);
 %tetrahedral-mesh
 cfg=[];
 cfg.tissue = {'seg1' 'seg2' 'seg3'};
-cfg.numvertices = [3000 2000 1000];
+cfg.numvertices = 5000;
 cfg.type = 'tet';                      
 bnd3 = ft_prepare_mesh(cfg,example); 
 
-assert(size(bnd3,2) == 3, 'Number of layers is different from 3.')
-assert(cfg.numvertices(1) == size(bnd3(1).pnt,1) && cfg.numvertices(2) == size(bnd3(2).pnt,1) && cfg.numvertices(3) == size(bnd3(3).pnt,1), 'Number of points is not equal to required');
 assert(isfield(bnd3,'pnt') || isfield(bnd3,'tet') || isfield(bnd3,'unit'), 'Missing field(s) in mesh structure');
 assert(~(isfield(bnd3,'tri')),'Triangles in hexahedral mesh.')
 assert(~(isfield(bnd3,'hex')),'Hexagonals in tetrahedral mesh.')
