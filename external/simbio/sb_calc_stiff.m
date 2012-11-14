@@ -1,50 +1,71 @@
-function [stiff diinsy cols sysmat] = sb_calc_stiff(node,elem,cond);
-if(~(size(node,2)==3))
-    if(size(node,1)==3)
-        node = node';
-        warning('Dimension of wf.vol.nd should be #nodes x 3!')
+function [stiff diinsy cols sysmat] = sb_calc_stiff(vol);
+if(~(size(vol.pos,2)==3))
+    if(size(vol.pos,1)==3)
+        node = vol.pos';
+        warning('Dimension of vol.pos should be #nodes x 3!')
     else
-        error('wf.vol.nd has wrong dimension!')
+        error('vol.pos has wrong dimension!')
     end
-end
-nn = size(node,1);
-nn = int32(nn);
-%node = [node(:,1);node(:,2);node(:,3)];
-if(min(elem(:))==0)
-    elem = elem + 1;
-    warning('Numbering of nodes must start at 1 (Fortran numbering)!')
-elseif (~min(min(elem))<0)
-    error('No negative indices for cell definition allowed!')
-end
-if((size(elem,1)==4)|(size(elem,1)==8))
-    mele = size(elem,1);
-elseif((size(elem,2)==4)|(size(elem,2)==8))
-    elem = elem';
-    mele = size(elem,1);
-    warning('Dimension of wf.vol.el should be (#nodes per ele) x #elem!')
 else
-    error('wf.vol.el has wrong dimension!')
+    node = vol.pos;
 end
-if(mele==4)
-    elem = [elem; zeros(4,size(elem,2))];
-elseif(~(mele==8))
-    error('Invalid number of nodes per element!')
-end
-if(~((size(cond,2)==1|size(cond,2)==6)&(size(cond,1)==size(elem,2))))
-    if((size(cond,1)==1|size(cond,1)==6)&(size(cond,2)==size(elem,2)))
-        cond = cond';
-        warning('Dimension of wf.vol.cond should be #elem x #aniso!')
+npnt = size(node,1);
+npnt = int32(npnt);
+
+if isfield(vol,'tet')
+    if size(vol.tet,1) == 4
+        mele = size(vol.tet,1);
+        elem = vol.tet;
+    elseif size(vol.tet,2) == 4
+        mele = size(vol.tet,2);
+        elem = vol.tet';
     else
-        error('wf.vol.cond has wrong dimension!')
+        error('vol.tet has wrong dimensions!')
+    end
+    elem = [elem; zeros(4,size(elem,2))];
+elseif isfield(vol,'hex')
+    if size(vol.hex,1) == 8
+        mele = size(vol.hex,1);
+        elem = vol.hex;
+    elseif size(vol.hex,2) == 8
+        mele = size(vol.hex,2);
+        elem = vol.hex';
+    else
+        error('vol.hex has wrong dimensions!')
+    end
+else
+    error('Could not find connectivity information!')
+end
+
+if min(min(elem(1:mele,:))) == 0
+    elem = elem + 1;
+    warning('Numbering of nodes in vol.tet/vol.hex must start at 1 (Fortran numbering)!')
+elseif min(min(elem(1:mele,:))) < 0
+    error('No negative indices for conectivity information allowed!')
+end
+    
+if isfield(vol,'cond') && isfield(vol,'tissue') && isfield(vol,'tissuelabel')
+    if length(vol.tissuelabel) <= length(vol.cond)
+         if length(vol.tissue) == size(elem,2)
+             cond = zeros(size(elem,2),1);
+             numlabels = length(vol.tissuelabel);
+             for i=1:numlabels
+                 cond(vol.tissue == i) = vol.cond(i);
+             end
+        else
+            error('Dimensions of vol.tet/vol.hex and vol.tissue do not fit!');
+        end
+    else
+        error('Dimensions of vol.cond and entries of vol.tissuelabel do not fit!');
     end
 end
-%check für cond einfügen!
+
 mele = int32(mele);
 elem = int32(elem);
 [diinsy,cols,sysmat] = calc_stiff_matrix_val(node,elem,cond,mele);
-nn = double(nn);
+npnt = double(npnt);
 diinsy = double(diinsy);
 cols = double(cols);
 rows = sb_sparse_to_mat(diinsy);
-stiff = sparse(rows,cols,sysmat,nn,nn,length(sysmat));
+stiff = sparse(rows,cols,sysmat,npnt,npnt,length(sysmat));
 end
