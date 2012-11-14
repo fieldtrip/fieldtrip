@@ -147,7 +147,7 @@ end
 % when there is a lot of movement to begin with).
 pertrial = strcmp(cfg.artfctdef.zvalue.method, 'trial');
 if pertrial
-  if isfield(cfg.artfctdef.zvalue, 'ntrial') && cfg.artfctdef.zvalue>0
+  if isfield(cfg.artfctdef.zvalue, 'ntrial') && cfg.artfctdef.zvalue.ntrial>0
     pertrial = cfg.artfctdef.zvalue.ntrial;
   else
     error('you should specify cfg.artfctdef.zvalue.ntrial, and it should be > 0');
