@@ -245,9 +245,9 @@ switch toolbox
   case 'FNS'
     status  = exist('elecsfwd', 'file');
   case 'SIMBIO'
-    status  = exist('ipm_linux_opt', 'file') && exist('sb_write_dip.m','file');
+    status  = exist('calc_stiff_matrix_val', 'file') && exist('sb_transfer', 'file');
   case 'VGRID'
-    if ~ft_hastoolbox('simbio')
+    if ~ft_hastoolbox('simbio', 1)
       error('you need to install simbio too!')
     end
     prefix = fileparts(which('sb_write_dip.m'));
