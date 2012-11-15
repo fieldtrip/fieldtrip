@@ -1,8 +1,0 @@
-rm -f /u/adrian/prog/lib/bin/liblapack_dbx.a
-xlf -w -g -c - *.f
-ar rcv /u/adrian/prog/lib/bin/liblapack_dbx.a *.o
-rm -f *.o
-rm -f /u/adrian/prog/lib/bin/liblapack.a
-xlf -w -O -P -c - *.f
-ar rcv /u/adrian/prog/lib/bin/liblapack.a *.o
-rm -f *.o
