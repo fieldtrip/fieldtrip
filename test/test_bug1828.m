@@ -1,4 +1,4 @@
-function [err0,err1,err2] = test_bug1828
+function test_bug1828
 
 % TEST test_bug1828
 % TEST ft_convert_coordsys
@@ -38,4 +38,3 @@ err2 = sqrt(sum((acvox-acvox2).^2));
 assert(err2<err1);
 assert(err2<err0);
 
-  

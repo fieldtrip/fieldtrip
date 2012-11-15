@@ -1,4 +1,4 @@
-% function test_leadfield_units
+function test_leadfield_units
 
 % TEST test_leadfield_units
 % TEST ft_compute_leadfield FT_PREPARE_VOL_SENS
