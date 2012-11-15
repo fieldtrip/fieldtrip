@@ -104,6 +104,13 @@ if isfield(vol, 'unit') && isfield(sens, 'unit') && ~strcmp(vol.unit, sens.unit)
   error('inconsistency in the units of the volume conductor and the sensor array');
 end
 
+switch ft_voltype(vol)
+  case 'simbio'
+    ft_hastoolbox('simbio', 1);
+  case 'openmeeg'
+    ft_hastoolbox('openmeeg', 1);
+end
+
 if ismeg && iseeg
   % this is something that could be implemented relatively easily
   error('simultaneous EEG and MEG not yet supported');
@@ -281,8 +288,11 @@ elseif ismeg
       end
 
     case 'openmeeg'
-        % nothing ?
+      error('MEG not yet supported with openmeeg');  
         
+    case 'simbio'
+      error('MEG not yet supported with simbio');  
+      
     otherwise
       error('unsupported volume conductor model for MEG');
   end
@@ -479,6 +489,7 @@ elseif iseeg
         % replace the original electrode positions by the projected positions
         sens.elecpos = prj;         
       end
+      vol.transfer = sb_transfer(vol,sens);
       
     otherwise
       error('unsupported volume conductor model for EEG');
