@@ -62,7 +62,15 @@ end
 
 mele = int32(mele);
 elem = int32(elem);
-[diinsy,cols,sysmat] = calc_stiff_matrix_val(node,elem,cond,mele);
+try
+    [diinsy,cols,sysmat] = calc_stiff_matrix_val(node,elem,cond,mele);
+catch err
+    if ispc && strcmp(err.identifier,'MATLAB:invalidMEXFile')
+        error('Error executing mex-file. Microsoft Visual C++ 2008 Redistributables and Intel Visual Fortran Redistributables are required.')
+    else
+        rethrow(err)
+    end
+end
 npnt = double(npnt);
 diinsy = double(diinsy);
 cols = double(cols);
