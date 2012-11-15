@@ -451,6 +451,7 @@ elseif iseeg
       lf = eeg_slab_monopole(pos, sens.elecpos, vol);
       
     case 'simbio'
+      ft_hastoolbox('simbio', 1);
       % note that the electrode information is contained in the vol structure (thanks to ft_prepare_vol_sens)
       lf = leadfield_simbio(pos, vol);
       
