@@ -1,8 +1,0 @@
-mex -c -I/data2/svn/SimBio/trunk/toolbox/simulator/fem calc_stiff_matrix.F -fortran
-mex calc_stiff_matrix.o -L/data2/svn/fieldtrip/trunk/external/simbio/lib -lneurofem_ft -lime_ft -fortran /usr/lib/x86_64-linux-gnu/gcc/x86_64-linux-gnu/4.4/libgfortran.so
-
-mex -c solver.F
-mex solver.o -L/data2/svn/fieldtrip/trunk/external/simbio/lib -lneurofem_ft -lime_ft -fortran /usr/lib/x86_64-linux-gnu/gcc/x86_64-linux-gnu/4.4/libgfortran.so
-
-mex -c bndcon.F
-mex bndcon.o -L/data2/svn/fieldtrip/trunk/external/simbio/lib -lneurofem_ft -lime_ft -fortran /usr/lib/x86_64-linux-gnu/gcc/x86_64-linux-gnu/4.4/libgfortran.so
