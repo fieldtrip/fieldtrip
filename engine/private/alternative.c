@@ -25,7 +25,7 @@
 #include "engine.h"
 #include "platform.h"
 
-#define DEBUG_PRINT(string, ...) /* {mexPrintf(string, ## __VA_ARGS__);} */
+#define DEBUG_PRINT(string, ...) {mexPrintf(string, ## __VA_ARGS__);}
 #define FREE(x)                  {if (x) {free(x); x=NULL;}}
 #define TRUE            1
 #define FALSE           0
@@ -177,7 +177,7 @@ void engineThread(void *argin)
 				retval          = 0;
 				status[thisId]  = ENGINE_BUSY;
 				thisCommand     = command[thisId];
-				DEBUG_PRINT("Engine thread executing %d in %d\n", thisCommand, thisId);
+				DEBUG_PRINT("Engine thread executing %d in %d (%d)\n", thisCommand, thisId, ep);
 
 				if (thisCommand==ENGINE_CLOSE) {
 						/* close the engine belonging to this thread and exit the thread */
@@ -211,7 +211,7 @@ void engineThread(void *argin)
 						strncpy(str, mxArrayToString(ptr1), STRLEN);
 						MUTEX_UNLOCK(&mutex_start[thisId]); /* return to the main loop */
 						COND_SIGNAL(&cond_finish[thisId]);
-						DEBUG_PRINT("Starting evaluation of '%s' on %d\n", str, ep);
+						DEBUG_PRINT("Starting evaluation of '%s' (%d)\n", str, ep);
 						retval = engEvalString(ep, str);
 						DEBUG_PRINT("Finished evaluation\n");
 						DEBUG_PRINT("retval = %d\n", retval);
@@ -350,7 +350,7 @@ void mexFunction(int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[])
 				MUTEX_UNLOCK(&mutex_start[engine]);
 
 				MUTEX_LOCK(&mutex_finish[engine]);
-				DEBUG_PRINT("signalling thread for ENGINE_PUT\n");
+				DEBUG_PRINT("Signalling thread for ENGINE_PUT\n");
 				COND_SIGNAL(&cond_start[engine]);
 				COND_WAIT(&cond_finish[engine], &mutex_finish[engine]);
 				retval = 0;
@@ -389,7 +389,7 @@ void mexFunction(int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[])
 				MUTEX_UNLOCK(&mutex_start[engine]);
 
 				MUTEX_LOCK(&mutex_finish[engine]);
-				DEBUG_PRINT("signalling thread for ENGINE_GET\n");
+				DEBUG_PRINT("Signalling start for ENGINE_GET\n");
 				COND_SIGNAL(&cond_start[engine]);
 				COND_WAIT(&cond_finish[engine], &mutex_finish[engine]);
 				plhs[0] = (mxArray *)ptr2;
@@ -428,7 +428,7 @@ void mexFunction(int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[])
 				MUTEX_UNLOCK(&mutex_start[engine]);
 
 				MUTEX_LOCK(&mutex_finish[engine]);
-				DEBUG_PRINT("signalling thread for ENGINE_EVAL\n");
+				DEBUG_PRINT("Signalling start for ENGINE_EVAL\n");
 				COND_SIGNAL(&cond_start[engine]);
 				COND_WAIT(&cond_finish[engine], &mutex_finish[engine]);
 				retval = 0;
