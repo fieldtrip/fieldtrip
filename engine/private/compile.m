@@ -3,7 +3,7 @@
 
 switch mexext
   case {'mexmaci64' 'mexmaci' 'mexa64' 'mexglx'}
-    mex engine.c -leng
+    mex -DUSE_PTHREADS alternative.c -leng -output engine
     mex ft_getopt.c
     
   case 'mexw64'
@@ -12,7 +12,8 @@ switch mexext
     mex ft_getopt.c
     
   case 'mexw32'
-    mex -I.\pthreads-win32\include -L.\pthreads-win32\lib\x86 engine.c -leng -lpthreadVC2
+    % mex -I.\pthreads-win32\include -L.\pthreads-win32\lib\x86 engine.c -leng -lpthreadVC2
+    mex alternative.c -leng -output engine
     mex ft_getopt.c
     
   otherwise

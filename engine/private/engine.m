@@ -5,8 +5,8 @@
 % Use as
 %   status = engine('open', poolsize, startcmd)
 %   status = engine('close')
-%   status = engine('eval',   matlabcmd, block)
 %   status = engine('isbusy', num)
+%   status = engine('eval',   num, cmd)
 %   status = engine('put',    num, name, value)
 %   value  = engine('get',    num, name)
 %   value  = engine('poolsize')
