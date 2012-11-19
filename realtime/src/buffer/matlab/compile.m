@@ -29,10 +29,10 @@ if ispc
 	% or you can add your own compiler flags.
 	
 	if strcmp(computer,'PCWIN64')
-		extra_cflags = '-I../pthreads-win64/include';	
+		extra_cflags = '-I../../external/pthreads-win64/include';	
 		amd64 = true;
 	else
-		extra_cflags = '-I../pthreads-win32/include';
+		extra_cflags = '-I../../external/pthreads-win32/include';
 		amd64 = false;
 	end
 	suffix = 'obj';
@@ -45,17 +45,17 @@ if ispc
 	end
 	switch upper(cc)
 		case 'BCB'
-			ldflags = '-L../pthreads-win32/lib -lpthreadVC2.bcb';
+			ldflags = '-L../../external/pthreads-win32/lib -lpthreadVC2.bcb';
 		case 'BCC55'
-			ldflags = '-L../pthreads-win32/lib -lpthreadVC2_bcc55';
+			ldflags = '-L../../external/pthreads-win32/lib -lpthreadVC2_bcc55';
 		case 'MINGW'
 			% For MinGW/Gnumex, it seems to be easier to just directly refer to the archives, since
 			% the MEX tools expect libraries to end with .lib, whereas MinGW uses the .a suffix.
 			if amd64
-				ldflags = '../pthreads-win64/lib/libpthread.a';
+				ldflags = '../../external/pthreads-win64/lib/libpthread.a';
 				ws2lib = 'C:/mingw64/x86_64-w64-mingw32/lib/libws2_32.a';
 			else
-				ldflags = '../pthreads-win32/lib/libpthreadGC2.a';
+				ldflags = '../../external/pthreads-win32/lib/libpthreadGC2.a';
 				ws2lib = 'C:/mingw/lib/libws2_32.a';
 			end
 			if nargin<2
@@ -75,12 +75,12 @@ if ispc
 			ldflags = [ldflags ' ' ws2lib];
 		case 'VC'
 			if amd64
-				ldflags = '-L../pthreads-win64/lib -lpthreadVC2 ws2_32.lib';			
+				ldflags = '-L../../external/pthreads-win64/lib -lpthreadVC2 ws2_32.lib';			
 			else
-				ldflags = '-L../pthreads-win32/lib -lpthreadVC2 ws2_32.lib ';
+				ldflags = '-L../../external/pthreads-win32/lib -lpthreadVC2 ws2_32.lib ';
 			end
 		case 'LCC'
-			ldflags = '-L../pthreads-win32/lib  -lpthreadGC2_lcc';			
+			ldflags = '-L../../external/pthreads-win32/lib  -lpthreadGC2_lcc';			
 			ldflags = [ldflags ' "' matlabroot '\sys\lcc\lib\wsock32.lib"'];
 			%ldflags = [ldflags ' "' matlabroot '\sys\lcc\lib\kernel32.lib"'];
 		otherwise
