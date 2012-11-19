@@ -57,6 +57,9 @@ assert(isfield(seg,cfg.output{i}), 'Required tissue-type is missing from segment
 assert(isequal(size(getfield(seg,cfg.output{i})),seg.dim),'Tissue does not have the same dimensions as dim.');
 end
 
+assert(isfield(seg,'cfg'),'cfg is missing from segmentation'); 
 
-assert(isfield(seg,'cfg'),'cfg is missing from segmentation');                      
+% check if other methods of segmentations are still working
+
+test_ft_volumesegment;
 
