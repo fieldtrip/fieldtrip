@@ -127,8 +127,7 @@ if ~isempty(annotationfile) && ~strcmp(fileformat, 'mne_source')
 end
 
 % test whether the file exists
-% FIXME why is this check not done for tetgen?
-if ~strcmp(fileformat, 'tetgen') && ~exist(filename)
+if ~exist(filename)
   error('file ''%s'' does not exist', filename);
 end
 
@@ -562,19 +561,28 @@ switch fileformat
     
   case 'tetgen_ele'
     % reads in the tetgen format and rearranges according to FT conventions
-    % tetgen files also return a 'faces' field (not used here)
-    shape = rmfield(shape,'fid');
+    % tetgen files also return a 'faces' field, which is not used here
     [p, f, x] = fileparts(filename);
     filename = fullfile(p, f); % without the extension
     IMPORT = importdata([filename '.ele'],' ',1);
     shape.tet = IMPORT.data(:,2:5);
+    if size(IMPORT.data,2)==6
+      labels = IMPORT.data(:,6);
+      % representation of tissue type is compatible with ft_datatype_parcellation
+      numlabels = size(unique(labels),1);
+      ulabel    = unique(labels);
+      shape.tissue      = zeros(size(labels));
+      shape.tissuelabel = {};
+      for i = 1:numlabels
+        shape.tissue(labels == ulabel(i)) = i;
+        shape.tissuelabel{i} = num2str(ulabel(i));
+      end
+    end
     IMPORT = importdata([filename '.node'],' ',1);
     shape.pnt = IMPORT.data(:,2:4);
-    
-    % add label (see above at vista)
-    % shape.tissue 
-    % shape.tissuelabel
-    
+    % the fiducials don't apply to this format
+    shape = rmfield(shape,'fid');
+
   otherwise
     % try reading it from an electrode of volume conduction model file
     success = false;
