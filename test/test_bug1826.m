@@ -9,6 +9,7 @@ return
 
 cd /home/common/matlab/fieldtrip/data/test/bug1826
 
+
 subjectT1  = 'T1.nii.gz';
 subjectT2  = 'T2.nii.gz';
 subjectDTi = 'DTI.nii';
@@ -17,9 +18,9 @@ T1  = ft_read_mri(subjectT1);
 T2  = ft_read_mri(subjectT2);
 DTi = ft_read_mri(subjectDTi);
 
-figure; ft_plot_ortho(T1); title('T1 before aligning')
-figure; ft_plot_ortho(T2); title('T2 before aligning')
-figure; ft_plot_ortho(DTi);title('DTi before aligning')
+figure; ft_sourceplot([],T1); title('T1 before aligning')
+figure; ft_sourceplot([],T2); title('T2 before aligning')
+figure; ft_sourceplot([],DTi);title('DTi before aligning')
 
 % they are now in memory, which would be the normal starting point in a
 % fieldtrip analysis pipeline
@@ -31,7 +32,7 @@ figure; ft_plot_ortho(DTi);title('DTi before aligning')
 
 % they are now again in memory, but realigned to each other. This is where
 % a normal fieldtrip analysis pipeline would continue.
-figure; ft_plot_ortho(T1); title('T1 after aligning')
-figure; ft_plot_ortho(T2); title('T2 after aligning')
-figure; ft_plot_ortho(DTi);title('DTi after aligning')
+figure; ft_sourceplot([],T1); title('T1 after aligning')
+figure; ft_sourceplot([],T2); title('T2 after aligning')
+figure; ft_sourceplot([],DTi);title('DTi after aligning')
 
