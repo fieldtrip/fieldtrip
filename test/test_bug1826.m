@@ -6,9 +6,12 @@ return
 % TEST test_bug1826
 % TEST ft_read_mri ft_write_mri ft_volumerealign
 
-subjectT1  = 'name_to_T1.nii';
-subjectT2  = 'name_to_T2.nii';
-subjectDTi = 'name_to_DTi.nii';
+
+cd /home/common/matlab/fieldtrip/data/test/bug1826
+
+subjectT1  = 'T1.nii.gz';
+subjectT2  = 'T2.nii.gz';
+subjectDTi = 'DTI.nii';
 
 T1  = ft_read_mri(subjectT1);
 T2  = ft_read_mri(subjectT2);
