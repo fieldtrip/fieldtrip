@@ -9,10 +9,18 @@ return
 % TEST test_bug1816
 % TEST ft_read_mri ft_volumesegment
 
+if ispc
+    datadir = 'H:';
+else
+    datadir = '/home';
+end
+
+mri=ft_read_mri(strcat(datadir,'/common/matlab/fieldtrip/data/Subject01.mri'));
+
 % read in aligned images
-subjectT1  = 'name_to_T1.nii';              % change path to image
-subjectT2  = 'name_to_T2.nii';
-subjectDTi = 'name_to_DTi.nii';
+subjectT1  = strcat(datadir,'/common/matlab/fieldtrip/data/test/bug1826/T1.nii.gz');             % change path to image
+subjectT2  = strcat(datadir,'/common/matlab/fieldtrip/data/test/bug1826/T2_T1Space_trilinear.nii.gz');   
+subjectDTi = strcat(datadir,'/common/matlab/fieldtrip/data/test/bug1826/DTI_T1Space.nii.gz');
 
 T1  = ft_read_mri(subjectT1);
 T2  = ft_read_mri(subjectT2);
@@ -59,7 +67,7 @@ end
 
 assert(isfield(seg,'cfg'),'cfg is missing from segmentation'); 
 
-% check if other methods of segmentations are still working
+% check if other methods of segmentation are still working
 
 test_ft_volumesegment;
 
