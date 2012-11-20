@@ -33,7 +33,7 @@ function [shape] = ft_read_headshape(filename, varargin)
 %   'netmeg'
 %   'vista'
 %   'tet'
-%   'tetgen'
+%   'tetgen_ele'
 %
 % See also FT_READ_VOL, FT_READ_SENS, FT_WRITE_HEADSHAPE
 
@@ -560,13 +560,15 @@ switch fileformat
     shape.pnt = vertex';
     shape.tet = face';
     
-  case 'tetgen'
+  case 'tetgen_ele'
     % reads in the tetgen format and rearranges according to FT conventions
     % tetgen files also return a 'faces' field (not used here)
     shape = rmfield(shape,'fid');
-    IMPORT = importdata([filename '.1.ele'],' ',1);
+    [p, f, x] = fileparts(filename);
+    filename = fullfile(p, f); % without the extension
+    IMPORT = importdata([filename '.ele'],' ',1);
     shape.tet = IMPORT.data(:,2:5);
-    IMPORT = importdata([filename '.1.node'],' ',1);
+    IMPORT = importdata([filename '.node'],' ',1);
     shape.pnt = IMPORT.data(:,2:4);
     
     % add label (see above at vista)
