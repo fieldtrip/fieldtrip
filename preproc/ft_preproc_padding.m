@@ -1,13 +1,20 @@
-function [dat] = ft_preproc_padding(dat, padtype, padlength)
+function [dat] = ft_preproc_padding(dat, padtype, prepadlength, postpadlength)
 % FT_PREPROC_PADDING performs padding on the data, i.e. adds or removes 
 % samples to/from the data matrix.
 %
 % Use as
 %   [dat] = ft_preproc_padding(dat, padtype, padlength)
+% or as
+%   [dat] = ft_preproc_padding(dat, padtype, prepadlength, postpadlength)
 % where
-%   dat         data matrix (Nchan1 X Ntime)
-%   padtype     'zero', 'edge', 'mirror' or 'remove'
-%   padlength   scalar, number of samples that will be padded 
+%   dat           data matrix (Nchan x Ntime)
+%   padtype       'zero', 'mean', 'localmean', 'edge', 'mirror' or 'remove'
+%   padlength     scalar, number of samples that will be padded 
+%   prepadlength  scalar, number of samples that will be padded before the data
+%   postpadlength scalar, number of samples that will be padded after the data
+%
+% If padlength is used instead of prepadlength and postpadlength, padding
+% will be symmetrical (i.e. padlength = prepadlength = postpadlength)
 %
 % 
 % See also FT_PREPROCESSING
@@ -31,38 +38,68 @@ function [dat] = ft_preproc_padding(dat, padtype, padlength)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 
 
+if nargin < 4
+  postpadlength = prepadlength;
+end
+
 nchans = size(dat, 1);
 nsamples = size(dat, 2);
 
 switch(padtype)  
   case 'remove'
-    dat = dat(:, padlength+1:end-padlength);
+    dat = dat(:, prepadlength+1:end-postpadlength);
     return;
   case 'mirror'
-    padbeg = 1:padlength;
-    padend = 1:padlength;
+    padbeg = 1:prepadlength;
+    padend = 1:postpadlength;
+    
+    % predata padding
     begsample = 1;
     endsample = 0;
-    while padlength > begsample % this will be a linear piecewise function consisting of two pieces taking turns
-      endsample                                 = begsample + min(padlength-endsample, nsamples-1);
-      padend(begsample:endsample-1)             = fliplr(mod(0:(endsample-begsample-1), nsamples)+10-endsample+begsample);
+    while prepadlength > begsample % this will be a linear piecewise function consisting of two pieces taking turns
+      endsample                                 = begsample + min(prepadlength-endsample, nsamples-1);
       padbeg(end-endsample+2:end-begsample+1)   = fliplr(mod(0:(endsample-begsample-1), nsamples)+2);
       begsample = endsample-1;
       
-      if padlength > begsample
-        endsample                               = begsample + min(padlength-endsample+1, nsamples-1);
-        padend(begsample:endsample)             = mod(0:(endsample-begsample), nsamples)+1;
-        padbeg(end-endsample+1:end-begsample+1) = mod(0:(endsample-begsample), nsamples)+10-endsample+begsample;
+      if prepadlength > begsample
+        endsample                               = begsample + min(prepadlength-endsample+1, nsamples-1);
+        padbeg(end-endsample+1:end-begsample+1) = mod(0:(endsample-begsample), nsamples)+nsamples-endsample+begsample;
         begsample = endsample+1;
       end
-    end    
-    dat = [dat(:, padbeg) dat dat(:, padend)];
+    end
+    
+    % postdata padding
+    begsample = 1;
+    endsample = 0;
+    while padlength > begsample % this will be a linear piecewise function consisting of two pieces taking turns
+      endsample                                 = begsample + min(postpadlength-endsample, nsamples-1);
+      padend(begsample:endsample-1)             = fliplr(mod(0:(endsample-begsample-1), nsamples)+nsamples-endsample+begsample);
+      begsample = endsample-1;
+      
+      if postpadlength > begsample
+        endsample                               = begsample + min(postpadlength-endsample+1, nsamples-1);
+        padend(begsample:endsample)             = mod(0:(endsample-begsample), nsamples)+1;
+        begsample = endsample+1;
+      end
+    end
+    
+    dat       = [dat(:, padbeg) dat dat(:, padend)];
     return;
   case 'edge'
-    dat = [dat(:,1)*ones(nchans,n) dat dat(:,end)*ones(nchans,n)];
+    dat       = [dat(:,1)*ones(1,prepadlength) dat dat(:,end)*ones(1,postpadlength)];
+    return;
+  case 'mean'
+    mu        = mean(dat, 2);
+    dat       = [mu*ones(1,prepadlength) dat mu*ones(1,postpadlength)];
+  case 'localmean'
+    prepad    = min(prepadlength, floor(size(dat, 1)/2));
+    edgeleft  = mean(dat(:, 1:prepad), 2);
+    postpad   = min(prepadlength, floor(size(dat, 1)/2));
+    edgeright = mean(dat(:, 1+end-postpad:end), 2);
+    dat       = [edgeleft*ones(1,prepadlength) dat edgeright*ones(1,postpadlength)];
     return;
   case 'zero'
-    dat = [zeros(nchans,n) dat zeros(nchans,n)];
+    dat       = [zeros(nchans,prepadlength) dat zeros(nchans,postpadlength)];
     return;
   otherwise
     error('unknown padding option');
