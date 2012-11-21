@@ -85,10 +85,11 @@ tag         = ft_getopt(varargin, 'tag',         '');
 
 haspnt = isfield(bnd, 'pnt'); % vertices
 hastri = isfield(bnd, 'tri'); % triangles   as a Mx3 matrix with vertex indices
-hastet = isfield(bnd, 'tet'); % tetraeders  as a Mx4 matrix with vertex indices
+hastet = isfield(bnd, 'tet'); % tetraheders as a Mx4 matrix with vertex indices
+hashex = isfield(bnd, 'hex'); % hexaheders  as a Mx8 matrix with vertex indices
 
 if isempty(vertexcolor)
-  if haspnt && hastri
+  if haspnt && (hastri || hastet || hashex)
     vertexcolor='none';
   else
     vertexcolor='k';
@@ -126,16 +127,33 @@ end
 
 pnt = bnd.pnt;
 
-if hastet && hastri
-  error('cannot deal with simultaneous triangles and tetraeders')
-elseif hastri
+if hastri+hastet+hashex>1
+  error('cannot deal with simultaneous triangles, tetraheders and/or hexaheders')
+end
+  
+if hastri
   tri = bnd.tri;
 elseif hastet
-  % represent the tetraeders as teh four triangles
-  tri = [bnd.tet(:,[1 2 3]); bnd.tet(:,[2 3 4]); bnd.tet(:,[3 4 1]); bnd.tet(:,[4 1 2])];
+  % represent the tetraeders as the four triangles
+  tri = [   
+    bnd.tet(:,[1 2 3]);
+    bnd.tet(:,[2 3 4]);
+    bnd.tet(:,[3 4 1]);
+    bnd.tet(:,[4 1 2])];
   % or according to SimBio:  (1 2 3), (2 4 3), (4 1 3), (1 4 2)
   % there are shared triangles betwene neighbouring tetraeders, remove these
   tri = unique(tri, 'rows');
+elseif hashex
+  % represent the hexaheders as a collection of 6 patches
+  % FIXME this is only a guess on the vertex order
+  tri = [
+    bnd.hex(:,[1 2 3 4]);
+    bnd.hex(:,[5 6 7 8]);
+    bnd.hex(:,[1 2 6 5]);
+    bnd.hex(:,[2 3 7 6]);
+    bnd.hex(:,[3 4 8 7]);
+    bnd.hex(:,[4 1 5 8]);
+    ];
 else
   tri = [];
 end
