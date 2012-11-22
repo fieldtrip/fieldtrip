@@ -243,7 +243,7 @@ else % variable number of slepian tapers requested
           dum = dum(:,freqboi(ifreqoi));
           % phase-shift according to above angles
           if timedelay ~= 0
-            dum = dum .* exp(-1i*angletransform);
+            dum = dum .* exp(-1i*angletransform(:,ifreqoi));
           end
           dum = dum .* sqrt(2 ./ endnsample);
           currtapind = itap + ((ifreqoi-1) * max(ntaper));
@@ -275,7 +275,7 @@ else % variable number of slepian tapers requested
           dum = dum(:,freqboi(ifreqoi));
           % phase-shift according to above angles
           if timedelay ~= 0
-            dum = dum .* exp(-1i*angletransform);
+            dum = dum .* exp(-1i*angletransform(:,ifreqoi));
           end
           dum = dum .* sqrt(2 ./ endnsample);
           spectrum(:,freqtapind{ifreqoi}(itap)) = dum;
