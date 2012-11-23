@@ -24,9 +24,9 @@ function [shape] = ft_read_headshape(filename, varargin)
 %   'spmeeg_mat'
 %   'matlab'
 %   'freesurfer_*'
-%   'stl'          STereoLithography file format (often supported by
-%                  CAD/generic 3D mesh editing programs)
 %   'off'
+%   'stl'          STereoLithography file format, for use with CAD and generic 3D mesh editing programs
+%   'vtk'          Visualization ToolKit file format, for use with paraview
 %   'mne_*'        MNE surface description in ascii format ('mne_tri')
 %                  or MNE source grid in ascii format, described as 3D
 %                  points ('mne_pos')
@@ -37,7 +37,7 @@ function [shape] = ft_read_headshape(filename, varargin)
 %
 % See also FT_READ_VOL, FT_READ_SENS, FT_WRITE_HEADSHAPE
 
-% Copyright (C) 2008-2010 Robert Oostenveld
+% Copyright (C) 2008-2012 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -508,6 +508,11 @@ switch fileformat
     shape.pnt = pnt;
     shape.tri = tri;
     
+  case 'stl'
+    [pnt, tri] = read_vtk(filename);
+    shape.pnt = pnt;
+    shape.tri = tri;
+
   case 'off'
     [pnt, plc] = read_off(filename);
     shape.pnt  = pnt;
