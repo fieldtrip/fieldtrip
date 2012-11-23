@@ -38,7 +38,7 @@ persistent previous_argin previous_tap
 % get the optional input arguments
 taper     = ft_getopt(varargin, 'taper'); if isempty(taper), error('You must specify a taper'); end
 pad       = ft_getopt(varargin, 'pad');
-pad       = ft_getopt(varargin, 'padtype', 'zero');
+padtype   = ft_getopt(varargin, 'padtype', 'zero');
 freqoi    = ft_getopt(varargin, 'freqoi', 'all');
 tapsmofrq = ft_getopt(varargin, 'tapsmofrq');
 dimord    = ft_getopt(varargin, 'dimord', 'tap_chan_freq');
@@ -273,7 +273,7 @@ else % variable number of slepian tapers requested
           fprintf([str, '\n']);
         end
         for itap = 1:ntaper(ifreqoi)
-          dum = transpose(fft(transpose(ft_preproc_padding(dat .* repmat(tap{ifreqoi}(itap,:),[nchan, 1]),[nchan, 1]), padtype, 0, postpad)))); % double explicit transpose to speedup fft
+          dum = transpose(fft(transpose(ft_preproc_padding(dat .* repmat(tap{ifreqoi}(itap,:),[nchan, 1]),[nchan, 1]), padtype, 0, postpad))); % double explicit transpose to speedup fft
           dum = dum(:,freqboi(ifreqoi));
           % phase-shift according to above angles
           if timedelay ~= 0
