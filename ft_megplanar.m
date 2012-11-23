@@ -270,12 +270,12 @@ else
   for i=1:size(cfg.neighbsel,1)
     j=find(cfg.neighbsel(i, :));
     d = sqrt(sum((sens.chanpos(j,:) - repmat(sens.chanpos(i, :), numel(j), 1)).^2, 2));
-    cfg.distance(i,j) = d;
-    cfg.distance(j,i) = d;
+    distance(i,j) = d;
+    distance(j,i) = d;
   end
   
-  fprintf('minimum distance between neighbours is %6.2f %s\n', min(cfg.distance(cfg.distance~=0)), sens.unit);
-  fprintf('maximum distance between gradiometers is %6.2f %s\n', max(cfg.distance(cfg.distance~=0)), sens.unit);
+  fprintf('minimum distance between neighbours is %6.2f %s\n', min(distance(distance~=0)), sens.unit);
+  fprintf('maximum distance between gradiometers is %6.2f %s\n', max(distance(distance~=0)), sens.unit);
   
   
   planarmontage = eval([fun '(cfg, data.grad)']);
