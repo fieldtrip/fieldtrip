@@ -6,7 +6,7 @@ function write_vtk(fn, pnt, dhk)
 % Use as
 %   write_vtk(filename, pnt, dhk)
 %
-% See also READ_VTK
+% See also READ_VTK, WRITE_PLY
 
 % Copyright (C) 2002, Robert Oostenveld
 %

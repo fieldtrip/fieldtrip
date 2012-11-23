@@ -28,7 +28,8 @@ function ft_write_headshape(filename, bnd, varargin)
 %   'tetgen'
 %   'gifti'
 %   'stl'       STereoLithography file format, for use with CAD and generic 3D mesh editing programs
-%   'vtk'       Visualization ToolKit file format, for use with paraview
+%   'vtk'       Visualization ToolKit file format, for use with Paraview
+%   'ply'       Stanford Polygon file format, for use with Paraview or Meshlab
 %
 % See also FT_READ_HEADSHAPE
 
@@ -119,7 +120,18 @@ switch fileformat
     elseif isfield(bnd, 'hex')
       write_vtk(filename, bnd.pnt, bnd.hex);
     end
-    
+
+  case 'ply'
+    [p, f, x] = fileparts(filename);
+    filename = fullfile(p, [f, '.ply']); % ensure it has the right extension
+    if isfield(bnd, 'tri')
+      write_ply(filename, bnd.pnt, bnd.tri);
+    elseif isfield(bnd, 'tet')
+      write_ply(filename, bnd.pnt, bnd.tet);
+    elseif isfield(bnd, 'hex')
+      write_ply(filename, bnd.pnt, bnd.hex);
+    end
+
   case 'stl'
     nrm = normals(bnd.pnt, bnd.tri, 'triangle');
     write_stl(filename, bnd.pnt, bnd.tri, nrm);
