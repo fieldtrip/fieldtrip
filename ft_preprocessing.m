@@ -348,7 +348,7 @@ if hasdata
       end
     end
           
-    data.trial{i} = ft_preproc_padding(data.trial{i}, padtype, begpadding, endpadding);
+    data.trial{i} = ft_preproc_padding(data.trial{i}, cfg.padtype, begpadding, endpadding);
         
     % do the preprocessing on the selected channels
     [dataout.trial{i}, dataout.label, dataout.time{i}, cfg] = preproc(data.trial{i}(rawindx,:), data.label(rawindx), data.time{i}, cfg, begpadding, endpadding);

@@ -42,6 +42,10 @@ if nargin < 4
   postpadlength = prepadlength;
 end
 
+if prepadlength == 0 && postpadlength == 0
+  return;
+end
+
 nchans = size(dat, 1);
 nsamples = size(dat, 2);
 
