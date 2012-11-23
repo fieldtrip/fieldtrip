@@ -238,7 +238,7 @@ switch dimord
         
   case 'tap_chan_freq_time' % default
     % compute fft, major speed increases are possible here, depending on which matlab is being used whether or not it helps, which mainly focuses on orientation of the to be fft'd matrix
-    datspectrum = transpose(fft(transpose(ft_preproc_padding(dat, padtype, padlength)))); % double explicit transpose to speedup fft
+    datspectrum = transpose(fft(transpose(ft_preproc_padding(dat, padtype, 0, postpad)))); % double explicit transpose to speedup fft
     spectrum = cell(max(ntaper), nfreqoi);
     for ifreqoi = 1:nfreqoi
       str = sprintf('frequency %d (%.2f Hz), %d tapers', ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
@@ -281,7 +281,7 @@ switch dimord
     end
     
     % start fft'ing
-    datspectrum = transpose(fft(transpose(ft_preproc_padding(dat, padtype, padlength)))); % double explicit transpose to speedup fft
+    datspectrum = transpose(fft(transpose(ft_preproc_padding(dat, padtype, 0, postpad)))); % double explicit transpose to speedup fft
     spectrum = complex(zeros([nchan ntimeboi sum(ntaper)]));
     for ifreqoi = 1:nfreqoi
       str = sprintf('frequency %d (%.2f Hz), %d tapers', ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
