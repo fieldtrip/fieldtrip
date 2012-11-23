@@ -45,7 +45,7 @@ elseif min(min(elem(1:mele,:))) < 0
 end
     
 if isfield(vol,'cond') && isfield(vol,'tissue') && isfield(vol,'tissuelabel')
-    if length(vol.tissuelabel) <= length(vol.cond)
+    if length(vol.tissuelabel) != length(vol.cond)
          if length(vol.tissue) == size(elem,2)
              cond = zeros(size(elem,2),1);
              numlabels = length(vol.tissuelabel);
