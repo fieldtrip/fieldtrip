@@ -42,7 +42,7 @@ persistent previous_argin previous_wltspctrm
 % get the optional input arguments
 taper     = ft_getopt(varargin, 'taper', 'dpss');
 pad       = ft_getopt(varargin, 'pad');
-padtype   = ft_getopt(varargin, 'padtype');
+padtype   = ft_getopt(varargin, 'padtype', 'zero');
 timeoi    = ft_getopt(varargin, 'timeoi', 'all');
 timwin    = ft_getopt(varargin, 'timwin');
 freqoi    = ft_getopt(varargin, 'freqoi', 'all');
