@@ -12,9 +12,7 @@ function [datsmooth] = ft_preproc_smooth(dat, n)
 
 % deal with padding
 pad       = ceil(n/2);
-edgeleft  = mean(dat(:,1:pad),2);
-edgeright = mean(dat(:,(end+1-pad):end),2);
-dat       = [edgeleft*ones(1,pad) dat edgeright*ones(1,pad)];
+dat       = ft_preproc_padding(dat, 'localmean', pad);
 
 % create smoothing kernel
 krn       = ones(1,n)/n;
@@ -23,5 +21,5 @@ krn       = ones(1,n)/n;
 datsmooth = convn(dat, krn, 'same');
 
 % cut the eges
-datsmooth = datsmooth(:,(pad+1):(end-pad));
+datsmooth = ft_preproc_padding(datsmooth, 'remove', pad);
 

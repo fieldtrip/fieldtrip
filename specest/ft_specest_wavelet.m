@@ -15,6 +15,7 @@ function [spectrum,freqoi,timeoi] = ft_specest_wavelet(dat, time, varargin)
 %
 % Optional arguments should be specified in key-value pairs and can include:
 %   pad        = number, total length of data after zero padding (in seconds)
+%   padtype   = string, indicating type of padding to be used (see ft_preproc_padding, default: zero)
 %   freqoi     = vector, containing frequencies of interest
 %   timeoi     = vector, containing time points of interest (in seconds)
 %   width      = number or vector, width of the wavelet, determines the temporal and spectral resolution
@@ -35,6 +36,7 @@ timeoi    = ft_getopt(varargin, 'timeoi', 'all');
 width     = ft_getopt(varargin, 'width', 7);
 gwidth    = ft_getopt(varargin, 'gwidth', 3);
 pad       = ft_getopt(varargin, 'pad');
+padtype   = ft_getopt(varargin, 'padtype', 'zero');
 polyorder = ft_getopt(varargin, 'polyorder', 0);
 fbopt     = ft_getopt(varargin, 'feedback');
 verbose   = ft_getopt(varargin, 'verbose', true);
@@ -64,7 +66,7 @@ end
 if isempty(pad) % if no padding is specified padding is equal to current data length
   pad = dattime;
 end
-postpad = zeros(1,round((pad - dattime) * fsample));
+postpad    = round((pad - dattime) * fsample);
 endnsample = round(pad * fsample);  % total number of samples of padded data
 endtime    = pad;            % total time in seconds of padded data
 
@@ -154,7 +156,7 @@ end
 
 % Compute fft
 spectrum = complex(nan(nchan,nfreqoi,ntimeboi),nan(nchan,nfreqoi,ntimeboi));
-datspectrum = transpose(fft(transpose([dat repmat(postpad,[nchan, 1])]))); % double explicit transpose to speedup fft
+datspectrum = transpose(fft(transpose(ft_preproc_padding(dat, padtype, 0, postpad)))); % double explicit transpose to speedup fft
 for ifreqoi = 1:nfreqoi
   str = sprintf('frequency %d (%.2f Hz)', ifreqoi,freqoi(ifreqoi));
   [st, cws] = dbstack;

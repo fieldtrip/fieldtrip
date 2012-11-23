@@ -20,6 +20,8 @@ function [data] = ft_preprocessing(cfg, data)
 %   cfg.dataset      = string with the filename
 %   cfg.trl          = Nx3 matrix with the trial definition, see FT_DEFINETRIAL
 %   cfg.padding      = length to which the trials are padded for filtering (default = 0)
+%   cfg.padtype      = string, type of padding (default: 'data' padding or
+%                      'mirror', depending on feasibility)
 %   cfg.continuous   = 'yes' or 'no' whether the file contains continuous data
 %                      (default is determined automatic)
 %
@@ -230,6 +232,8 @@ if ~isfield(cfg, 'reref'),        cfg.reref = 'no';             end
 if ~isfield(cfg, 'refchannel'),   cfg.refchannel = {};          end
 if ~isfield(cfg, 'implicitref'),  cfg.implicitref = [];         end
 
+cfg.padtype = ft_getopt(cfg, 'padtype', 'data');
+
 % support for the following options was removed on 20 August 2004 in Revision 1.46
 if isfield(cfg, 'emgchannel'), error('EMG specific preprocessing is not supported any more'); end
 if isfield(cfg, 'emghpfreq'),  error('EMG specific preprocessing is not supported any more'); end
@@ -270,8 +274,27 @@ if hasdata
   cfg = ft_checkconfig(cfg, 'forbidden',   {'trl', 'dataset', 'datafile', 'headerfile'});
 
   if cfg.padding>0
-    error('cfg.padding should be zero, since filter padding is only possible while reading the data from file');
-  end
+    if strcmp(cfg.dftfilter, 'yes') || ...
+        strcmp(cfg.lpfilter, 'yes') || ...
+        strcmp(cfg.hpfilter, 'yes') || ...
+        strcmp(cfg.bpfilter, 'yes') || ...
+        strcmp(cfg.bsfilter, 'yes') || ...
+        strcmp(cfg.medianfilter, 'yes')
+      padding = round(cfg.padding * data.Fs);
+      if strcmp(cfg.padtype, 'data')
+        warning_once('datapadding not possible with in-memory data - padding will be performed by data mirroring');
+        cfg.padtype = 'mirror';
+      end
+    else
+      % no filtering will be done, hence no padding is neccessary
+      padding = 0;
+    end
+    % update the configuration (in seconds) for external reference
+    cfg.padding = padding / data.Fs;
+  else
+    % no padding was requested
+    padding = 0;
+  end  
 
   % set the defaults
   if ~isfield(cfg, 'trials'), cfg.trials = 'all'; end
@@ -301,8 +324,35 @@ if hasdata
   dataout.time  = cell(1, ntrl);
   for i=1:ntrl
     ft_progress(i/ntrl, 'preprocessing trial %d from %d\n', i, ntrl);
+    nsamples = numel(data.time{i});
+    
+    % pad data by mirroring
+    if nsamples>padding
+      % the trial is already longer than the total length requested
+      begpadding = 0;
+      endpadding = 0;
+    else
+      switch cfg.paddir
+        case 'both'
+          % begpadding+nsamples+endpadding = total length of data
+          begpadding = ceil((padding-nsamples)/2);
+          endpadding = floor((padding-nsamples)/2);
+        case 'left'
+          begpadding = padding-nsamples;
+          endpadding = 0;
+        case 'right'
+          begpadding = 0;
+          endpadding = padding-nsamples;
+        otherwise
+          error('unsupported requested direction of padding');
+      end
+    end
+          
+    data.trial{i} = ft_preproc_padding(data.trial{i}, padtype, begpadding, endpadding);
+        
     % do the preprocessing on the selected channels
-    [dataout.trial{i}, dataout.label, dataout.time{i}, cfg] = preproc(data.trial{i}(rawindx,:), data.label(rawindx), data.time{i}, cfg);
+    [dataout.trial{i}, dataout.label, dataout.time{i}, cfg] = preproc(data.trial{i}(rawindx,:), data.label(rawindx), data.time{i}, cfg, begpadding, endpadding);
+    
   end % for all trials
   
   if isfield(dataout, 'grad') && isfield(cfg, 'montage') && ~strcmp(cfg.montage, 'no') && isstruct(cfg.montage)
@@ -462,8 +512,13 @@ else
     rawindx = rawloop{j};
 
     fprintf('processing channel { %s}\n', sprintf('''%s'' ', hdr.label{rawindx}));
-
+    
+    % initialize cell arrays
+    cutdat = cell(1, ntrl);
+    time   = cell(1, ntrl);
+    
     ft_progress('init', cfg.feedback, 'reading and preprocessing');
+    
     for i=1:ntrl
       ft_progress(i/ntrl, 'reading and preprocessing trial %d from %d\n', i, ntrl);
       % non-zero padding is used for filtering and line noise removal
@@ -491,25 +546,31 @@ else
           error('unsupported requested direction of padding');
         end
         
-        begsample  = cfg.trl(i,1) - begpadding;
-        endsample  = cfg.trl(i,2) + endpadding;
-        if begsample<1
-          warning('cannot apply enough padding at begin of file');
-          begpadding = begpadding - (1 - begsample);
-          begsample  = 1;
+        if strcmp(cfg.padding, 'data');
+          begsample  = cfg.trl(i,1) - begpadding;
+          endsample  = cfg.trl(i,2) + endpadding;
+          if begsample<1
+            warning('cannot apply enough padding at begin of file');
+            begpadding = begpadding - (1 - begsample);
+            begsample  = 1;
+          end
+          if endsample>(hdr.nSamples*hdr.nTrials)
+            warning('cannot apply enough padding at end of file');
+            endpadding = endpadding - (endsample - hdr.nSamples*hdr.nTrials);
+            endsample  = hdr.nSamples*hdr.nTrials;
+          end
+          offset = cfg.trl(i,3) - begpadding;
         end
-        if endsample>(hdr.nSamples*hdr.nTrials)
-          warning('cannot apply enough padding at end of file');
-          endpadding = endpadding - (endsample - hdr.nSamples*hdr.nTrials);
-          endsample  = hdr.nSamples*hdr.nTrials;
-        end
-        offset = cfg.trl(i,3) - begpadding;
       end
 
       % read the raw data with padding on both sides of the trial
       dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', rawindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
       tim = offset2time(offset, hdr.Fs, size(dat,2));
       
+      if ~strcmp(cfg.padtype, 'data')
+        dat = ft_preproc_padding(dat, padtype, begpadding, endpadding);
+      end
+        
       % do the preprocessing on the padded trial data and remove the padding after filtering
       [cutdat{i}, label, time{i}, cfg] = preproc(dat, hdr.label(rawindx), tim, cfg, begpadding, endpadding);
 

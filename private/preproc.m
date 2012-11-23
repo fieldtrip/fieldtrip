@@ -247,7 +247,7 @@ end
 
 if any(any(isnan(dat)))
   % filtering is not possible for at least a selection of the data
-  warning('data contains NaNs, no filtering applied');
+  warning_once('data contains NaNs, no filtering applied');
   return;
 end
 
@@ -398,9 +398,9 @@ end
 % remove the filter padding and do the preprocessing on the remaining trial data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if begpadding~=0 || endpadding~=0
-  dat = dat(:, (1+begpadding):(end-endpadding));
+  dat = ft_preproc_padding(dat, 'remove', begpladding, endpadding);
   if strcmp(cfg.demean, 'yes') || nargout>2
-    time = time((1+begpadding):(end-endpadding));
+    time = ft_preproc_padding(time, 'remove', begpladding, endpadding);
   end
 end
 

@@ -15,6 +15,7 @@ function [spectrum,ntaper,freqoi] = ft_specest_mtmfft(dat, time, varargin)
 % Optional arguments should be specified in key-value pairs and can include:
 %   taper      = 'dpss', 'hanning' or many others, see WINDOW (default = 'dpss')
 %   pad        = number, total length of data after zero padding (in seconds)
+%   padtype    = string, indicating type of padding to be used (see ft_preproc_padding, default: zero)
 %   freqoi     = vector, containing frequencies of interest
 %   tapsmofrq  = the amount of spectral smoothing through multi-tapering. Note: 4 Hz smoothing means plus-minus 4 Hz, i.e. a 8 Hz smoothing box
 %   dimord     = 'tap_chan_freq_time' (default) or 'chan_time_freqtap' for memory efficiency (only when use variable number slepian tapers)
@@ -37,6 +38,7 @@ persistent previous_argin previous_tap
 % get the optional input arguments
 taper     = ft_getopt(varargin, 'taper'); if isempty(taper), error('You must specify a taper'); end
 pad       = ft_getopt(varargin, 'pad');
+pad       = ft_getopt(varargin, 'padtype', 'zero');
 freqoi    = ft_getopt(varargin, 'freqoi', 'all');
 tapsmofrq = ft_getopt(varargin, 'tapsmofrq');
 dimord    = ft_getopt(varargin, 'dimord', 'tap_chan_freq');
@@ -75,7 +77,7 @@ end
 if isempty(pad) % if no padding is specified padding is equal to current data length
   pad = dattime;
 end
-postpad    = zeros(1,ceil((pad - dattime) * fsample));
+postpad    = ceil((pad - dattime) * fsample);
 endnsample = round(pad * fsample);  % total number of samples of padded data
 endtime    = pad;                   % total time in seconds of padded data
 
@@ -210,7 +212,7 @@ if ~(strcmp(taper,'dpss') && numel(tapsmofrq)>1) % ariable number of slepian tap
   end
   spectrum = cell(ntaper(1),1);
   for itap = 1:ntaper(1)
-    dum = transpose(fft(transpose([dat .* repmat(tap(itap,:),[nchan, 1]) repmat(postpad,[nchan, 1])]))); % double explicit transpose to speedup fft
+    dum = transpose(fft(transpose(ft_preproc_padding(dat .* repmat(tap(itap,:),[nchan, 1]), padtype, 0, postpad)))); % double explicit transpose to speedup fft    
     dum = dum(:,freqboi);
     % phase-shift according to above angles
     if timedelay ~= 0
@@ -239,7 +241,7 @@ else % variable number of slepian tapers requested
           fprintf([str, '\n']);
         end
         for itap = 1:ntaper(ifreqoi)
-          dum = transpose(fft(transpose([dat .* repmat(tap{ifreqoi}(itap,:),[nchan, 1]) repmat(postpad,[nchan, 1])]))); % double explicit transpose to speedup fft
+          dum = transpose(fft(transpose(ft_preproc_padding(dat .* repmat(tap{ifreqoi}(itap,:),[nchan, 1]), padtype, 0, postpad)))); % double explicit transpose to speedup fft          
           dum = dum(:,freqboi(ifreqoi));
           % phase-shift according to above angles
           if timedelay ~= 0
@@ -271,7 +273,7 @@ else % variable number of slepian tapers requested
           fprintf([str, '\n']);
         end
         for itap = 1:ntaper(ifreqoi)
-          dum = transpose(fft(transpose([dat .* repmat(tap{ifreqoi}(itap,:),[nchan, 1]) repmat(postpad,[nchan, 1])]))); % double explicit transpose to speedup fft
+          dum = transpose(fft(transpose(ft_preproc_padding(dat .* repmat(tap{ifreqoi}(itap,:),[nchan, 1]),[nchan, 1]), padtype, 0, postpad)))); % double explicit transpose to speedup fft
           dum = dum(:,freqboi(ifreqoi));
           % phase-shift according to above angles
           if timedelay ~= 0
