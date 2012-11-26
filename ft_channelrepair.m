@@ -276,7 +276,7 @@ elseif strcmp(cfg.method, 'spline') || strcmp(cfg.method, 'slap')
   
   fprintf('Checking spherical fit... ');  
   [c, r] = fitsphere(sens.chanpos);  
-  d = sens.chanpos - repmat(c, numel(sensidx), 1);    
+  d = sens.chanpos - repmat(c, numel(find(sensidx)), 1);    
   d = sqrt(sum(d.^2, 2));
   d = mean(abs(d) / r);   
   if abs(d-1) > 0.1
