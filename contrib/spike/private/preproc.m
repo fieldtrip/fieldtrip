@@ -398,9 +398,9 @@ end
 % remove the filter padding and do the preprocessing on the remaining trial data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if begpadding~=0 || endpadding~=0
-  dat = ft_preproc_padding(dat, 'remove', begpladding, endpadding);
+  dat = ft_preproc_padding(dat, 'remove', begpadding, endpadding);
   if strcmp(cfg.demean, 'yes') || nargout>2
-    time = ft_preproc_padding(time, 'remove', begpladding, endpadding);
+    time = ft_preproc_padding(time, 'remove', begpadding, endpadding);
   end
 end
 
