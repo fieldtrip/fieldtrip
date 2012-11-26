@@ -405,6 +405,10 @@ switch dtype
     end
 end
 
+if isfield(cfg, 'parameter') && ~isfield(data, cfg.parameter)
+  error('cfg.parameter=%s is not present in data structure', cfg.parameter);
+end
+
 % user specified own fields, but no yparam (which is not asked in help)
 if exist('xparam', 'var') && isfield(cfg, 'parameter') && ~exist('yparam', 'var')
   yparam = '';
