@@ -211,10 +211,10 @@ while (1) {
         /* evaluate the string on the remote engine */
         memset(str, 0, STRLEN);
         strncpy(str, mxArrayToString(ptr1), STRLEN);
+        COND_SIGNAL(&cond_finish[thisId]);
         DEBUG_PRINT("Starting evaluation of '%s')\n", str);
         retval = engEvalString(ep, str);
         DEBUG_PRINT("Finished evaluation, retval = %d\n", retval);
-        COND_SIGNAL(&cond_finish[thisId]);
     }
     else if (thisCommand==ENGINE_INFO) {
         /* give some information about the engine */
@@ -285,22 +285,22 @@ void mexFunction(int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[])
         
         if (poolsize > MAX_THREADS)
             mexErrMsgTxt("The poolsize is too large\n");
-        
-        for (engine=0; engine<poolsize; engine++) {
-            MUTEX_LOCK(&mutex_finish[engine]);
-#if USE_PTHREADS
-retval = pthread_create(&threadid[engine], NULL, (void *) engineThread, (void *) engine);
-#else
-threadid[engine] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) engineThread, (void *) (engine), 0, NULL);
-retval = (threadid[engine]==NULL);
-#endif
-COND_WAIT(&cond_finish[engine], &mutex_finish[engine]);
-DEBUG_PRINT("The engine thread finished\n");
-MUTEX_UNLOCK(&mutex_finish[engine]);
 
-DEBUG_PRINT("Started engine %d, retval = %d\n", engine+1, retval);
-if (retval)
-    break;
+		for (engine=0; engine<poolsize; engine++) {
+			MUTEX_LOCK(&mutex_finish[engine]);
+#if USE_PTHREADS
+			retval = pthread_create(&threadid[engine], NULL, (void *) engineThread, (void *) engine);
+#else
+			threadid[engine] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) engineThread, (void *) (engine), 0, NULL);
+			retval = (threadid[engine]==NULL);
+#endif
+			COND_WAIT(&cond_finish[engine], &mutex_finish[engine]);
+			DEBUG_PRINT("The engine thread finished\n");
+			MUTEX_UNLOCK(&mutex_finish[engine]);
+
+			DEBUG_PRINT("Started engine %d, retval = %d\n", engine+1, retval);
+			if (retval)
+			    break;
         };
         
         if (retval) {
@@ -310,12 +310,6 @@ if (retval)
         else {
             DEBUG_PRINT("Succeeded in starting engine threads\n");
         }
-    }
-    /****************************************************************************/
-    else if (strcmp(str, "close") == 0) {
-        /* engine close */
-        
-        exitFun();	/* this cleans up all engines */
     }
     /****************************************************************************/
     else if (strcmp(str, "put") == 0) {
@@ -335,18 +329,16 @@ if (retval)
         if (!mxIsChar(prhs[2]))
             mexErrMsgTxt("Argument #3 should be a string");
         
-        MUTEX_LOCK(&mutex_start[engine]);
+        MUTEX_LOCK(&mutex_finish[engine]);
         if (status[engine]!=ENGINE_IDLE) {
-            MUTEX_UNLOCK(&mutex_start[engine]);
-            mexErrMsgTxt("The specified engine is not initialized or busy");
+            MUTEX_UNLOCK(&mutex_finish[engine]);
+            mexErrMsgTxt("The specified engine is not available");
         }
         
         ptr1 = (void *)prhs[2]; /* name */
         ptr2 = (void *)prhs[3]; /* value */
         command[engine] = ENGINE_PUT;
-        MUTEX_UNLOCK(&mutex_start[engine]);
         
-        MUTEX_LOCK(&mutex_finish[engine]);
         DEBUG_PRINT("Signalling thread for ENGINE_PUT\n");
         COND_SIGNAL(&cond_start[engine]);
         COND_WAIT(&cond_finish[engine], &mutex_finish[engine]);
@@ -372,17 +364,15 @@ if (retval)
             mexErrMsgTxt("Invalid engine number");
         engine--; /* switch from MATLAB to C indexing */
         
-        MUTEX_LOCK(&mutex_start[engine]);
+        MUTEX_LOCK(&mutex_finish[engine]);
         if (status[engine]!=ENGINE_IDLE) {
-            MUTEX_UNLOCK(&mutex_start[engine]);
-            mexErrMsgTxt("The specified engine is not initialized or busy");
+            MUTEX_UNLOCK(&mutex_finish[engine]);
+            mexErrMsgTxt("The specified engine is not available");
         }
         
         ptr1 = (void *)prhs[2]; /* name */
         command[engine] = ENGINE_GET;
-        MUTEX_UNLOCK(&mutex_start[engine]);
         
-        MUTEX_LOCK(&mutex_finish[engine]);
         DEBUG_PRINT("Signalling start for ENGINE_GET\n");
         COND_SIGNAL(&cond_start[engine]);
         COND_WAIT(&cond_finish[engine], &mutex_finish[engine]);
@@ -410,22 +400,41 @@ if (retval)
             mexErrMsgTxt("Invalid engine number");
         engine--; /* switch from MATLAB to C indexing */
         
-        MUTEX_LOCK(&mutex_start[engine]);
+        MUTEX_LOCK(&mutex_finish[engine]);
         if (status[engine]!=ENGINE_IDLE) {
-            MUTEX_UNLOCK(&mutex_start[engine]);
-            mexErrMsgTxt("The specified engine is not initialized or busy");
+            MUTEX_UNLOCK(&mutex_finish[engine]);
+            mexErrMsgTxt("The specified engine is not available");
         }
         
         ptr1 = (void *)prhs[2]; /* command */
         command[engine] = ENGINE_EVAL;
-        MUTEX_UNLOCK(&mutex_start[engine]);
         
-        MUTEX_LOCK(&mutex_finish[engine]);
         DEBUG_PRINT("Signalling start for ENGINE_EVAL\n");
         COND_SIGNAL(&cond_start[engine]);
         COND_WAIT(&cond_finish[engine], &mutex_finish[engine]);
-        DEBUG_PRINT("The engine thread finished\n");
+        DEBUG_PRINT("The engine thread returned control\n");
         MUTEX_UNLOCK(&mutex_finish[engine]);
+    }
+    /****************************************************************************/
+    else if (strcmp(str, "info") == 0) {
+        /* engine info */
+        
+        for (engine=0; engine<poolsize; engine++) {
+            
+            MUTEX_LOCK(&mutex_finish[engine]);
+            if (status[engine]!=ENGINE_IDLE) {
+                MUTEX_UNLOCK(&mutex_finish[engine]);
+                mexErrMsgTxt("The specified engine is not available");
+            }
+            
+            command[engine] = ENGINE_INFO;
+            
+            DEBUG_PRINT("Signalling start for ENGINE_INFO\n");
+            COND_SIGNAL(&cond_start[engine]);
+            COND_WAIT(&cond_finish[engine], &mutex_finish[engine]);
+            DEBUG_PRINT("The engine thread finished\n");
+            MUTEX_UNLOCK(&mutex_finish[engine]);
+        }
     }
     /****************************************************************************/
     else if (strcmp(str, "isbusy") == 0) {
@@ -442,10 +451,8 @@ if (retval)
             mexErrMsgTxt("Invalid engine number");
         engine--; /* switch from MATLAB to C indexing */
         
-        MUTEX_LOCK(&mutex_start[engine]);
         plhs[0] = mxCreateDoubleMatrix(1, 1, mxREAL);
         mxGetPr(plhs[0])[0] = (status[engine] == ENGINE_BUSY);
-        MUTEX_UNLOCK(&mutex_start[engine]);
     }
     /****************************************************************************/
     else if (strcmp(str, "poolsize") == 0) {
@@ -455,27 +462,10 @@ if (retval)
         mxGetPr(plhs[0])[0] = poolsize;
     }
     /****************************************************************************/
-    else if (strcmp(str, "info") == 0) {
-        /* engine info */
+    else if (strcmp(str, "close") == 0) {
+        /* engine close */
         
-        for (engine=0; engine<poolsize; engine++) {
-            
-            MUTEX_LOCK(&mutex_start[engine]);
-            if (status[engine]!=ENGINE_IDLE) {
-                MUTEX_UNLOCK(&mutex_start[engine]);
-                mexErrMsgTxt("The specified engine is not initialized or busy");
-            }
-            
-            command[engine] = ENGINE_INFO;
-            MUTEX_UNLOCK(&mutex_start[engine]);
-            
-            MUTEX_LOCK(&mutex_finish[engine]);
-            DEBUG_PRINT("Signalling start for ENGINE_INFO\n");
-            COND_SIGNAL(&cond_start[engine]);
-            COND_WAIT(&cond_finish[engine], &mutex_finish[engine]);
-            DEBUG_PRINT("The engine thread finished\n");
-            MUTEX_UNLOCK(&mutex_finish[engine]);
-        }
+        exitFun();	/* this cleans up all engines */
     }
     /****************************************************************************/
     else {
