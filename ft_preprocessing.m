@@ -546,27 +546,33 @@ else
           error('unsupported requested direction of padding');
         end
         
-        if strcmp(cfg.padding, 'data');
+        if strcmp(cfg.padtype, 'data');
           begsample  = cfg.trl(i,1) - begpadding;
-          endsample  = cfg.trl(i,2) + endpadding;
-          if begsample<1
-            warning('cannot apply enough padding at begin of file');
-            begpadding = begpadding - (1 - begsample);
-            begsample  = 1;
-          end
-          if endsample>(hdr.nSamples*hdr.nTrials)
-            warning('cannot apply enough padding at end of file');
-            endpadding = endpadding - (endsample - hdr.nSamples*hdr.nTrials);
-            endsample  = hdr.nSamples*hdr.nTrials;
-          end
-          offset = cfg.trl(i,3) - begpadding;
+          endsample  = cfg.trl(i,2) + endpadding;   
+        else
+          % padding will be done below
+          begsample  = cfg.trl(i,1);
+          endsample  = cfg.trl(i,2);
         end
+        if begsample<1
+          warning('cannot apply enough padding at begin of file');
+          begpadding = begpadding - (1 - begsample);
+          begsample  = 1;           
+        end
+        if endsample>(hdr.nSamples*hdr.nTrials)
+          warning('cannot apply enough padding at end of file');
+          endpadding = endpadding - (endsample - hdr.nSamples*hdr.nTrials);
+          endsample  = hdr.nSamples*hdr.nTrials;
+        end
+        offset     = cfg.trl(i,3) - begpadding;
       end
 
-      % read the raw data with padding on both sides of the trial
+      % read the raw data with padding on both sides of the trial - this
+      % includes datapadding
       dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', rawindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
       tim = offset2time(offset, hdr.Fs, size(dat,2));
       
+      % pad in case of no datapadding
       if ~strcmp(cfg.padtype, 'data')
         dat = ft_preproc_padding(dat, padtype, begpadding, endpadding);
       end
