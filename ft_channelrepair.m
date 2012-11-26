@@ -19,18 +19,21 @@ function [data] = ft_channelrepair(cfg, data)
 %   cfg.lambda         = regularisation parameter for smoothing (only 'sphere' and 'slap', default = 1e-5)
 %   cfg.order          = order of the polynomial interpolation (only 'sphere' and 'slap', default = 4)
 %
-% For reconstructing channels that are absent in your data, please define
-% your neighbours by setting cfg.method='template' and call
-% FT_PREPARE_NEIGHBOURS *without* the data argument:
+% For reconstructing channels that are absent in your data using the 
+% 'nearest' method, please define your neighbours by setting 
+%   cfg.method='template' 
+% and call FT_PREPARE_NEIGHBOURS *without* the data argument:
 %   cfg.neighbours = ft_prepare_neighbours(cfg);
 % This will include channels that are missing in your in the neighbour-
-% definition.
+% definition. 
 %
 % The EEG or MEG sensor positions can be present in the data or can be specified as
 %   cfg.elec          = structure with electrode positions, see FT_DATATYPE_SENS
 %   cfg.grad          = structure with gradiometer definition, see FT_DATATYPE_SENS
 %   cfg.elecfile      = name of file containing the electrode positions, see FT_READ_SENS
 %   cfg.gradfile      = name of file containing the gradiometer definition, see FT_READ_SENS
+% Missing sensors *need* to be present in the elec/grad structure, else 
+% an interpolation is impossible.
 %
 % To facilitate data-handling and distributed computing with the peer-to-peer
 % module, this function has the following options:
@@ -73,9 +76,6 @@ ft_preamble provenance
 ft_preamble trackconfig
 ft_preamble loadvar data
 
-% check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'required', {'neighbours'});
-
 % set the default configuration
 cfg.badchannel     = ft_getopt(cfg, 'badchannel',     {});
 cfg.missingchannel = ft_getopt(cfg, 'missingchannel', {});
@@ -83,6 +83,11 @@ cfg.trials         = ft_getopt(cfg, 'trials',         'all');
 cfg.method         = ft_getopt(cfg, 'method',         'nearest');
 cfg.lambda         = ft_getopt(cfg, 'lambda',         []); % subfunction will handle this
 cfg.order          = ft_getopt(cfg, 'order',          []); % subfunction will handle this
+
+% check if the input cfg is valid for this function
+if strcmp(cfg.method, 'nearest');
+  cfg = ft_checkconfig(cfg, 'required', {'neighbours'});
+end
 
 % store original datatype
 dtype = ft_datatype(data);
@@ -265,7 +270,7 @@ elseif strcmp(cfg.method, 'spline') || strcmp(cfg.method, 'slap')
   warning('make sure that your sensor coordinates are in spherical coordinates');
   
   if ~isempty(cfg.badchannel) || ~isempty(cfg.missingchannel)
-    fprintf('Spherical spline and surface Laplacian interpolation will treat bad and missing channels the same. Missing channels will be concatenated.\n');
+    fprintf('Spherical spline and surface Laplacian interpolation will treat bad and missing channels the same. Missing channels will be concatenated at the end of your data structure.\n');
   end
   % subselect only those sensors that are in the data or in badchannel or
   % missingchannel
@@ -280,7 +285,7 @@ elseif strcmp(cfg.method, 'spline') || strcmp(cfg.method, 'slap')
   d = sqrt(sum(d.^2, 2));
   d = mean(abs(d) / r);   
   if abs(d-1) > 0.1
-    warning('Bad spherical fit (residual: %.2f%%). The interpolation will be inaccurate.', 100*(d-1));    
+    warning('bad spherical fit (residual: %.2f%%). The interpolation will be inaccurate.', 100*(d-1));    
   elseif abs(d-1) < 0.01
     fprintf('perfect spherical fit (residual: %.1f%%)\n', 100*(d-1));
   else
@@ -297,28 +302,36 @@ elseif strcmp(cfg.method, 'spline') || strcmp(cfg.method, 'slap')
   sens.chanpos(end+1:end+numel(missidx), :) = sens.chanpos(missidx, :);
   sens.chanpos(missidx, :)                  = [];
   
-  % move missing channels to the end
-  % select good channels
+  % select good channels only for interpolation
   [goodchanlabels,goodchanindcs] = setdiff(sens.label,badchannels);
-  goodchanindcs = sort(goodchanindcs); % undo automatical sorting by setdiff
-  dataidx       = ismember(data.label, sens.label(goodchanindcs)); % needed for actual interpolation
+  allchans = false;
+  if isempty(goodchanindcs)
+    goodchanindcs = 1:numel(sens.label);
+    allchans = true;
+    warning('No good channels found - interpolating based on all channels');
+  end
+  % undo automatical sorting by setdiff
+  goodchanindcs      = sort(goodchanindcs); 
+  % only take good channels that are in data (and remember how they are sorted)
+  [dataidx, sensidx] = ismember(data.label, sens.label(goodchanindcs)); 
 
   % interpolate
   fprintf('computing weight matrix...');
-  repair = sphericalSplineInterpolate(sens.chanpos(goodchanindcs,:)',sens.chanpos', cfg.lambda, cfg.order, cfg.method);
+  repair = sphericalSplineInterpolate(sens.chanpos(goodchanindcs(sensidx),:)',sens.chanpos', cfg.lambda, cfg.order, cfg.method);
   fprintf(' done!\n');
   
-  % only use the rows corresponding to the channels that actually need
-  % interpolating
-  repair(goodchanindcs,:) = 0;
-  for k = 1:numel(goodchanindcs)
-    repair(goodchanindcs(k), k) = 1;
-  end
+  if ~allchans
+    % only use the rows corresponding to the channels that actually need interpolation
+    repair(goodchanindcs(sensidx),:) = 0;
+    for k = 1:numel(sensidx)
+      repair(goodchanindcs(sensidx(k)), goodchanindcs(sensidx(k))) = 1;
+    end
+  end % else all rows need to be interpolated
     
   % store the realigned data in a new structure
   interp.fsample = data.fsample;
   interp.time    = data.time;
-  interp.label   = data.label;
+  interp.label   = data.label(dataidx);
   if iseeg
     interp.elec  = sens;
   else
@@ -342,9 +355,8 @@ elseif strcmp(cfg.method, 'spline') || strcmp(cfg.method, 'slap')
     fprintf('.');
     interp.trial{i} = repair * data.trial{i}(dataidx, :);
   end
-  for chan=1:numel(cfg.missingchannel)
-    interp.label{end+1} = cfg.missingchannel{chan};
-  end
+  missidx = find(ismember(sens.label, cfg.missingchannel));  
+  interp.label(end+1:end+numel(missidx)) = sens.label(missidx);
   fprintf('\n');
   
 else
