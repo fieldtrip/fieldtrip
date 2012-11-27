@@ -1021,12 +1021,6 @@ switch headerformat
     
     hdr.orig.bufsize = orig.bufsize;
     
-    % As of November 2011 the header should also contain the channel type
-    % (e.g. meg, eeg, trigger) and the channel units (e.g. uV, fT).
-    % For the FieldTrip buffer these have not been implemented yet,
-    % therefore we have to return 'unknown' for both.
-    hdr.chantype = repmat('unknown', size(hdr.label));
-    hdr.chanunit = repmat('unknown', size(hdr.label));
     
   case 'fcdc_buffer_offline'
     [hdr, nameFlag] = read_buffer_offline_header(headerfile);
@@ -1263,21 +1257,6 @@ switch headerformat
       end
     catch
       disp(lasterr);
-    end
-    
-    for i = 1:hdr.nChans % make a cell array of units for each channel
-      switch orig.chs(i).unit
-        case 201 % defined as constants by MNE, see p. 217 of MNE manual
-          hdr.chanunit{i} = 'T/m';
-        case 112
-          hdr.chanunit{i} = 'T';
-        case 107
-          hdr.chanunit{i} = 'V';
-        case 202
-          hdr.chanunit{i} = 'Am';
-        otherwise
-          hdr.chanunit{i} = 'unknown';
-      end
     end
     
     iscontinuous  = 0;
