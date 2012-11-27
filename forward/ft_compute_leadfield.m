@@ -297,9 +297,6 @@ elseif ismeg
         lf = sens.tra * lf;
       end
       
-    case 'simbio'
-      error('Not yet implemented for MEG');
-      
     otherwise
       error('unsupported volume conductor model for MEG');
   end % switch voltype for MEG
@@ -456,8 +453,14 @@ elseif iseeg
       lf = leadfield_simbio(pos, vol);
       
     case 'fns'
+      % note that the electrode information is contained in the vol structure
       % tolerance = 1e-8;
       lf = leadfield_fns(pos, vol);
+
+    case 'interpolate'
+      % note that the electrode information is contained within the vol structure
+      lf = leadfield_interpolate(pos, vol);
+      
     otherwise
       error('unsupported volume conductor model for EEG');
   end % switch voltype for EEG

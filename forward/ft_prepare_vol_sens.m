@@ -491,6 +491,10 @@ elseif iseeg
       end
       vol.transfer = sb_transfer(vol,sens);
       
+    case 'interpolate'
+      % FIXME this still needs to be implemented
+      keyboard
+      
     otherwise
       error('unsupported volume conductor model for EEG');
   end
