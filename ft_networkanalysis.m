@@ -22,7 +22,11 @@ function [stat] = ft_networkanalysis(cfg, data)
 %                   for which the graph measure will be computed.
 %
 % Supported methods are:
-%   assortatitivity, betweenness, clustering_coef, degrees
+%   assortatitivity
+%   betweenness
+%   clustering_coef
+%   degrees
+%   transitivity
 %
 % To facilitate data-handling and distributed computing with the
 % peer-to-peer module, this function has the following options:
@@ -92,22 +96,33 @@ for k = 1:size(input,3)
     end
   end
 end
+if isbinary
+  fprintf('input graph is binary\n');
+else
+  fprintf('input graph is weighted\n');
+end
 
 % check for directed or not
 isdirected = true;
 for k = 1:size(input,3)
   for m = 1:size(input,4)
     tmp = input(:,:,k,m);
-    isdirected = all(all(tmp==tmp.'));
+    isdirected = ~all(all(tmp==tmp.'));
     if ~isdirected,
       break;
     end
   end
 end
+if isdirected
+  fprintf('input graph is directed\n');
+else
+  fprintf('input graph is undirected\n');
+end
 
+fprintf('computing %s\n', cfg.method);
 % allocate memory
 switch cfg.method
-  case {'assortativity' 'density'}
+  case {'assortativity' 'density'  'transitivity'}
     % 1 value per connection matrix
     outsiz = [size(input) 1];
     outsiz(1:2) = [];
@@ -151,7 +166,9 @@ for k = 1:size(input, 3)
           output(:,k,m) = betweenness_wei(input(:,:,k,m));
         end
       case 'breadthdist'
+        error('not yet implemented');
       case 'charpath'
+        error('not yet implemented');
       case 'clustering_coef'
         if isbinary && isdirected
           output(:,k,m) = clustering_coef_bd(input(:,:,k,m));
@@ -172,11 +189,27 @@ for k = 1:size(input, 3)
           output(:,k,m) = degrees_und(input(:,:,k,m));
         end
       case 'density'
+        error('not yet implemented');
       case 'distance'
+        error('not yet implemented');
       case 'edge_betweenness'
+        error('not yet implemented');
       case 'efficiency'
+        error('not yet implemented');
       case 'modularity'
+        error('not yet implemented');
       case 'participation_coef'
+        error('not yet implemented');
+      case 'transitivity'
+        if isbinary && isdirected
+          output(k,m) = transitivity_bd(input(:,:,k,m));
+        elseif isbinary && ~isdirected
+          output(k,m) = transitivity_bu(input(:,:,k,m));
+        elseif ~isbinary && isdirected
+          output(k,m) = transitivity_wd(input(:,:,k,m));
+        elseif ~isbinary && ~isdirected
+          output(k,m) = transitivity_wu(input(:,:,k,m));
+        end
       otherwise
         error('unsupported connectivity metric %s requested');
     end
