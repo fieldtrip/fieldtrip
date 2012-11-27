@@ -4,13 +4,14 @@ function factor = scalingfactor(old, new)
 %
 % Use as
 %   factor = scalingfactor(old, new)
-% where old and new are strings with the units.
+% where old and new are strings that specify the units.
 %
 % For example
 %   scalingfactor('m', 'cm')          % returns 100
 %   scalingfactor('V', 'uV')          % returns 1000
 %   scalingfactor('T/cm', 'fT/m')     % returns 10^15 divided by 10^-2, which is 10^17
 %   scalingfactor('cm^2', 'mm^2')     % returns 100
+%   scalingfactor('1/ms', 'Hz')       % returns 1000
 %
 % The following fundamental units are supported
 %   metre       m   length  l (a lowercase L), x, r L
@@ -70,14 +71,100 @@ function factor = scalingfactor(old, new)
 %
 % $Id$
 
+persistent previous_old previous_new previous_factor
+
+if isequal(old, previous_old) && isequal(new, previous_new)
+  factor = previous_factor;
+  return
+end
+
+if isequal(old, new)
+  % this applies regardless of the units
+  factor = 1;
+  return
+end
+
+unit = {'m' 'g' 's' 'A' 'K' 'mol' 'cd' 'Hz' 'rad' 'sr' 'N' 'Pa' 'J' 'C' 'V' 'F' 'S' 'Wb' 'T' 'H' 'lm' 'lx' 'Bq' 'Gy' 'Sv' 'kat'};
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% the following section pertains to checking that units are compatible
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% each of the fundamental units is represented by a prime number
+m   = 2;
+kg  = 3; g = 3; % besides representing kg, also represent g to facilitate the processing further down
+s   = 5;
+A   = 7;
+K   = 11;
+mol = 13;
+cd  = 17;
+
+% each of the derives units is represented by a product and/or ratio of prime numbers
+Hz  = 1/s;
+rad = nan; % this is dimensionless, cannot be converted
+sr  = nan; % this is dimensionless, cannot be converted
+N   = kg*m/s^2;
+Pa  = N/m^2;
+J   = N*m;
+C   = s*A;
+V   = J/C;
+F   = C/V;
+S   = A/V;
+Wb  = J/A;
+T   = Wb/m^2;
+H   = V*s/A;
+lm  = cd*sr;
+lx  = lm/m^2;
+Bq  = 1/s;
+Gy  = J/kg;
+Sv  = J/kg;
+kat = mol/s;
+
+% deal with all possible prefixes
+for i=1:length(unit)
+  eval(sprintf('d%s = %s;', unit{i}, unit{i}));
+  eval(sprintf('c%s = %s;', unit{i}, unit{i}));
+  eval(sprintf('m%s = %s;', unit{i}, unit{i}));
+  eval(sprintf('u%s = %s;', unit{i}, unit{i})); % note that u is used for micro
+  eval(sprintf('n%s = %s;', unit{i}, unit{i}));
+  eval(sprintf('p%s = %s;', unit{i}, unit{i}));
+  eval(sprintf('f%s = %s;', unit{i}, unit{i}));
+  eval(sprintf('a%s = %s;', unit{i}, unit{i}));
+  eval(sprintf('z%s = %s;', unit{i}, unit{i}));
+  eval(sprintf('y%s = %s;', unit{i}, unit{i}));
+  
+  eval(sprintf('da%s = %s;', unit{i}, unit{i}));
+  eval(sprintf('h%s  = %s;', unit{i}, unit{i}));
+  eval(sprintf('k%s  = %s;', unit{i}, unit{i}));
+  eval(sprintf('M%s  = %s;', unit{i}, unit{i}));
+  eval(sprintf('G%s  = %s;', unit{i}, unit{i}));
+  eval(sprintf('T%s  = %s;', unit{i}, unit{i}));
+  eval(sprintf('P%s  = %s;', unit{i}, unit{i}));
+  eval(sprintf('E%s  = %s;', unit{i}, unit{i}));
+  eval(sprintf('Z%s  = %s;', unit{i}, unit{i}));
+  eval(sprintf('Y%s  = %s;', unit{i}, unit{i}));
+end
+
+eval(sprintf('oldunit = %s;', old));
+eval(sprintf('newunit = %s;', new));
+if ~isequal(oldunit, newunit)
+  error('cannot convert %s to %s', old, new);
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% the following pertains to determining the scaling factor
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% fundamental units
 m   = 1;
-g   = 0.001; % rather than representing kg, here g gets represented, the k is added further down
+kg  = 1; g = 0.001; % besides representing kg, also represent g to facilitate the processing further down
 s   = 1;
 A   = 1;
 K   = 1;
 mol = 1;
 cd  = 1;
 
+% derived units
 Hz  = 1;
 rad = 1;
 sr  = 1;
@@ -98,9 +185,7 @@ Gy  = 1;
 Sv  = 1;
 kat = 1;
 
-unit = {'m' 'g' 's' 'A' 'K' 'mol' 'cd' 'Hz' 'rad' 'sr' 'N' 'Pa' 'J' 'C' 'V' 'F' 'S' 'Wb' 'T' 'H' 'lm' 'lx' 'Bq' 'Gy' 'Sv' 'kat'};
-
-% deal with the possible prefixes
+% deal with all possible prefixes
 for i=1:length(unit)
   eval(sprintf('d%s = 1e-1  * %s;', unit{i}, unit{i}));
   eval(sprintf('c%s = 1e-2  * %s;', unit{i}, unit{i}));
@@ -129,3 +214,8 @@ eval(sprintf('old2si = %s;', old));
 eval(sprintf('new2si = %s;', new));
 
 factor = old2si/new2si;
+
+% remember the input args and the result, this will speed up the next call if the input is the same
+previous_old    = old;
+previous_new    = new;
+previous_factor = factor;
