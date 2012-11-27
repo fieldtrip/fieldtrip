@@ -130,12 +130,12 @@ pnt = bnd.pnt;
 if hastri+hastet+hashex>1
   error('cannot deal with simultaneous triangles, tetraheders and/or hexaheders')
 end
-  
+
 if hastri
   tri = bnd.tri;
 elseif hastet
   % represent the tetraeders as the four triangles
-  tri = [   
+  tri = [
     bnd.tet(:,[1 2 3]);
     bnd.tet(:,[2 3 4]);
     bnd.tet(:,[3 4 1]);
@@ -165,8 +165,12 @@ if haspnt && ~isempty(pnt)
   set(hs, 'tag', tag);
 end
 
-% if vertexcolor is an array with number of elements equal to the number of vertices
-if size(pnt,1)==numel(vertexcolor) || size(pnt,1)==size(vertexcolor,1)
+% the vertexcolor can be specified either as a color for each point that will be drawn, or as a value at each vertex
+% if there are triangles, the vertexcolor is used for linear interpolation over the patches
+vertexpotential = ~isempty(tri) && ~ischar(vertexcolor) && (size(pnt,1)==numel(vertexcolor) || size(pnt,1)==size(vertexcolor,1));
+
+if vertexpotential
+  % vertexcolor is an array with number of elements equal to the number of vertices
   set(hs, 'FaceVertexCData', vertexcolor, 'FaceColor', 'interp');
 end
 
@@ -196,30 +200,81 @@ if faceindex
   end
 end
 
-if ~isequal(vertexcolor, 'none') && ~(size(pnt,1)==numel(vertexcolor)) && ~(size(pnt,1)==size(vertexcolor,1))
-  if size(pnt, 2)==2
-    hs = plot(pnt(:,1), pnt(:,2), 'k.');
-  else
-    hs = plot3(pnt(:,1), pnt(:,2), pnt(:,3), 'k.');
-  end
-  if ~isempty(vertexcolor)
-    try
-      set(hs, 'Marker','.','MarkerEdgeColor', vertexcolor,'MarkerSize', vertexsize);
-    catch
-      error('Unknown color')
+if ~isequal(vertexcolor, 'none') && ~vertexpotential
+  % plot the vertices as points
+  
+  if isempty(vertexcolor)
+    % use black for all points
+    if size(pnt,2)==2
+      hs = plot(pnt(:,1), pnt(:,2), 'k.');
+    else
+      hs = plot3(pnt(:,1), pnt(:,2), pnt(:,3), 'k.');
     end
-  end
-  if vertexindex
-    % plot the vertex indices (numbers) at each node
-    for node_indx=1:size(pnt,1)
-      str = sprintf('%d', node_indx);
-      if size(pnt, 2)==2
-        h   = text(pnt(node_indx, 1), pnt(node_indx, 2), str, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle');
-      else
-        h   = text(pnt(node_indx, 1), pnt(node_indx, 2), pnt(node_indx, 3), str, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle');
+    set(hs, 'MarkerSize', vertexsize);
+    
+  elseif ischar(vertexcolor) && numel(vertexcolor)==1
+    % one color for all points
+    if size(pnt,2)==2
+      hs = plot(pnt(:,1), pnt(:,2), [vertexcolor '.']);
+    else
+      hs = plot3(pnt(:,1), pnt(:,2), pnt(:,3), [vertexcolor '.']);
+    end
+    set(hs, 'MarkerSize', vertexsize);
+    
+  elseif ischar(vertexcolor) && numel(vertexcolor)==size(pnt,1)
+    % one color for each point
+    if size(pnt,2)==2
+      for i=1:size(pnt,1)
+        hs = plot(pnt(i,1), pnt(i,2), [vertexcolor(i) '.']);
+        set(hs, 'MarkerSize', vertexsize);
       end
-      hs  = [hs; h];
+    else
+      for i=1:size(pnt,1)
+        hs = plot3(pnt(i,1), pnt(i,2), pnt(i,3), [vertexcolor(i) '.']);
+        set(hs, 'MarkerSize', vertexsize);
+      end
     end
+    
+  elseif ~ischar(vertexcolor) && size(vertexcolor,1)==1
+    % one RGB color for all points
+    if size(pnt,2)==2
+      hs = plot(pnt(:,1), pnt(:,2), '.');
+      set(hs, 'MarkerSize', vertexsize, 'MarkerEdgeColor', vertexcolor);
+    else
+      hs = plot3(pnt(:,1), pnt(:,2), pnt(:,3), '.');
+      set(hs, 'MarkerSize', vertexsize, 'MarkerEdgeColor', vertexcolor);
+    end
+    
+  elseif ~ischar(vertexcolor) && size(vertexcolor,1)==size(pnt,1)
+    % one RGB color for each point
+    if size(pnt,2)==2
+      for i=1:size(pnt,1)
+        hs = plot(pnt(i,1), pnt(i,2), '.');
+        set(hs, 'MarkerSize', vertexsize, 'MarkerEdgeColor', vertexcolor(i,:));
+      end
+    else
+      for i=1:size(pnt,1)
+        hs = plot3(pnt(i,1), pnt(i,2), pnt(i,3), '.');
+        set(hs, 'MarkerSize', vertexsize, 'MarkerEdgeColor', vertexcolor(i,:));
+      end
+    end
+    
+  else
+    error('Unknown color specification for the vertices');
+  end
+  
+end % plotting the vertices as points
+
+if vertexindex
+  % plot the vertex indices (numbers) at each node
+  for node_indx=1:size(pnt,1)
+    str = sprintf('%d', node_indx);
+    if size(pnt, 2)==2
+      h = text(pnt(node_indx, 1), pnt(node_indx, 2), str, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle');
+    else
+      h = text(pnt(node_indx, 1), pnt(node_indx, 2), pnt(node_indx, 3), str, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle');
+    end
+    hs = [hs; h];
   end
 end
 
@@ -234,4 +289,4 @@ if ~holdflag
   hold off
 end
 
-warning(ws); %revert to original state
+warning(ws); % revert to original state
