@@ -109,7 +109,7 @@ end
 switch cfg.method
   case {'assortativity' 'density'}
     % 1 value per connection matrix
-    outsiz = size(input);
+    outsiz = [size(input) 1];
     outsiz(1:2) = [];
     output = zeros(outsiz);
     if strcmp(data.dimord(1:3), 'pos')
