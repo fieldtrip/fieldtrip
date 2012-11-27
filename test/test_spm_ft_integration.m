@@ -1,8 +1,13 @@
 function test_spm_ft_integration
 
+% TEST test_spm_ft_integration
+% TEST ft_prepare_layout ft_prepare_headmodel ft_compute_leadfield ft_prepare_vol_sens
+
 load test_SPM_ft_integration
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Layouts
+
 cfg = [];
 cfg.elec   = elec;
 cfg.rotate = 0;
@@ -20,11 +25,14 @@ cfg.rotate = 0;
 cfg.grad = grad;
 cfg.showcallinfo = 'no';
 lay = ft_prepare_layout(cfg);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Forward models
+
 figure;
-cfg                        = [];
-cfg.feedback               = 'yes';
-cfg.showcallinfo           = 'no';
+cfg              = [];
+cfg.feedback     = 'yes';
+cfg.showcallinfo = 'no';
 cfg.headshape(1) = tess_scalp;
 cfg.headshape(2) = tess_oskull;
 cfg.headshape(3) = tess_iskull;
@@ -39,7 +47,6 @@ cfg.headshape(4).pnt = pnt(sel, :);
 cfg.headshape(4).tri = convhulln(pnt(sel, :));
 
 cfg.method = 'concentricspheres';
-
 vol  = ft_prepare_headmodel(cfg);
 
 clf
@@ -52,7 +59,9 @@ clf
 ft_compute_leadfield([30 30 30], sens, vol);
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% EEG BEMCP
+
 vol = [];
 vol.cond   = [0.3300 0.0041 0.3300];
 vol.source = 1; % index of source compartment
@@ -78,6 +87,8 @@ clf
 
 [vol, sens] = ft_prepare_vol_sens(vol, elec);
 ft_compute_leadfield([30 30 30], sens, vol);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% MEG single sphere
 
 cfg                        = [];
@@ -115,7 +126,10 @@ clf
 
 [vol, sens] = ft_prepare_vol_sens(vol, grad);
 ft_compute_leadfield([30 30 30], sens, vol);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% MEG single shell
+
 vol = [];
 vol.bnd = tess_iskull;
 vol.type = 'singleshell';
