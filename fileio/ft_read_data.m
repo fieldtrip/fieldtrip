@@ -15,6 +15,7 @@ function [dat] = ft_read_data(filename, varargin)
 %   'begtrial'       first trial to read, mutually exclusive with begsample+endsample
 %   'endtrial'       last trial to read, mutually exclusive with begsample+endsample
 %   'chanindx'       list with channel indices to read
+%   'chanunit'       cell-array with strings, the desired unit of each channel
 %   'checkboundary'  boolean, whether to check for reading segments over a trial boundary
 %   'cache'          boolean, whether to use caching for multiple reads
 %   'dataformat'     string
@@ -72,6 +73,8 @@ headerformat  = ft_getopt(varargin, 'headerformat');
 fallback      = ft_getopt(varargin, 'fallback');
 cache         = ft_getopt(varargin, 'cache', false);
 dataformat    = ft_getopt(varargin, 'dataformat');
+chanunit      = ft_getopt(varargin, 'chanunit');
+
 if isempty(dataformat)
   dataformat = ft_filetype(filename);  % the default is automatically detected, but only if not specified
 end
@@ -1061,6 +1064,31 @@ switch dimord
   otherwise
     error('unexpected dimord');
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% convert the channel data to the desired units
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if ~isempty(chanunit)
+  if length(chanunit)~=length(chanindx)
+    error('the number of channel units is inconsistent with the number of channels');
+  end
+  
+  % determine the scaling factor for each channel
+  scaling = cellfun(@scalingfactor, hdr.chanunit(chanindx), chanunit);
+  
+  switch dimord
+    case 'chans_samples'
+      for i=1:length(scaling)
+        dat(i,:) = scaling(i) .* dat(i,:);
+      end
+    case'chans_samples_trials';
+      for i=1:length(scaling)
+        dat(i,:,:) = scaling(i) .* dat(i,:,:);
+      end
+    otherwise
+      error('unexpected dimord');
+  end % switch
+end % if
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % convert between 3-D trial based and 2-D continuous output
