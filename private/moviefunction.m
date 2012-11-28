@@ -33,8 +33,9 @@ end
 cfg.xlim            = ft_getopt(cfg, 'xlim', 'maxmin');
 cfg.ylim            = ft_getopt(cfg, 'ylim', 'maxmin');
 cfg.zlim            = ft_getopt(cfg, 'zlim', 'maxmin');
-cfg.xparam          = 'time';
-if isfield(data, 'freq')
+cfg.xparam          = ft_getopt(cfg, 'xparam', 'time');
+cfg.yparam          = ft_getopt(cfg, 'yparam', '[]');
+if isempty(cfg.yparam ) && isfield(data, 'freq')
   cfg.yparam        = 'freq';
 else
   cfg.yparam        = [];
@@ -812,6 +813,9 @@ function adjust_colorbar(opt)
 % adjust colorbar
 upper = get(opt.handles.lines.upperColor, 'YData');
 lower = get(opt.handles.lines.lowerColor, 'YData');
+if any(round(upper)==0) || any(round(lower)==0)
+  return;
+end
 maps = get(opt.handles.menu.colormap, 'String');
 cmap = colormap(opt.handles.axes.movie, maps{get(opt.handles.menu.colormap, 'Value')});
 cmap(round(lower(1)):round(upper(1)), :) = repmat(cmap(round(lower(1)), :), 1+round(upper(1))-round(lower(1)), 1);
