@@ -6,6 +6,9 @@ function test_ft_sourcemovie
 
 % the frequency and source analysis is based on the tutorials
 
+% NOT FINISHED YET, SEE BELOW
+return
+
 % disable verbose output
 global ft_default;
 ft_default.feedback = 'no';
@@ -64,6 +67,7 @@ clear cfg             % this one is very large
 % interpolate the coarse functional data onto the individuals anatomy
 cfg             = [];
 cfg.downsample  = 4;
+cfg.parameter   = 'avg.pow';
 memreq          = 500*1024^2;  % requires ~250 MB
 timreq          = 24;          % requires ~8 seconds
 sourceInt       = qsubcellfun(@ft_sourceinterpolate, repmat({cfg},nfreq,ntime), source, repmat({mri},nfreq,ntime), 'memreq', memreq, 'timreq', timreq);
