@@ -67,19 +67,18 @@ grad  = input;
 label = input;
 
 if isheader
+  label  = hdr.label;
   numchan = length(hdr.label);
   if isfield(hdr, 'grad')
-    grad  = hdr.grad;
+      grad         = hdr.grad;
+      % ensure that the grad.label order matches the hdr.label order
+      [i1, i2]     = match_str(label, grad.label);
+      grad.label   = grad.label(i2);                        % reorder the channel labels
+      tmptra       = zeros(numel(label), size(grad.tra,2)); % FIXME why not size(grad.tra)?
+      tmptra(i1,:) = grad.tra(i2,:);                        % reorder the rows from the tra matrix
+      grad.tra     = tmptra;
   end
-  label = hdr.label;
   
-  % ensure that the label order in the grad matches the label order in the
-  % label list
-  [i1,i2] = match_str(label, grad.label);
-  tmptra  = zeros(numel(label), size(grad.tra,2));
-  grad.label = grad.label(i2);
-  tmptra(i1,:) = grad.tra(i2,:);
-  grad.tra   = tmptra;
 elseif isgrad
   label   = grad.label;
   numchan = length(label);
