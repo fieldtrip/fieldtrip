@@ -29,6 +29,28 @@ if opt.issource+opt.isfreq+opt.istimelock ~= 1
   error('data cannot be definitely deteced as frequency, timelock or source data');
 end
 
+if opt.issource
+  % transfer anatomical information to opt
+  if isfield(data, 'sulc')
+    opt.anatomy.sulc = data.sulc;
+  end
+  
+  if isfield(data, 'tri')
+    opt.anatomy.tri = data.tri;
+  else
+    error('source.tri missing, this function requires a triangulated cortical sheet as source model');
+  end
+  
+  if isfield(data, 'pnt')
+    opt.anatomy.pnt = data.pnt;
+  elseif isfield(data, 'pos')
+    opt.anatomy.pos = data.pos;
+  else
+    error('source.pos or source.pnt is missing');
+  end
+  
+end
+
 % set the defaults
 cfg.xlim            = ft_getopt(cfg, 'xlim', 'maxmin');
 cfg.ylim            = ft_getopt(cfg, 'ylim', 'maxmin');
@@ -56,19 +78,19 @@ cfg.moviefreq       = ft_getopt(cfg, 'moviefreq', []);
 cfg.movietime       = ft_getopt(cfg, 'movietime', []);
 cfg.movierpt        = ft_getopt(cfg, 'movierpt', 1);
 cfg.interactive     = ft_getopt(cfg, 'interactive', 'yes');
-dointeractive       = istrue(cfg.interactive);
+opt.record          = ~istrue(cfg.interactive);
 
 % read or create the layout that will be used for plotting:
 if isfield(cfg, 'layout')
-  layout = ft_prepare_layout(cfg);
+  opt.layout = ft_prepare_layout(cfg);
   % select the channels in the data that match with the layout:
-  [seldat, sellay] = match_str(data.label, layout.label);
+  [seldat, sellay] = match_str(data.label, opt.layout.label);
   if isempty(seldat)
     error('labels in data and labels in layout do not match');
   end
   % get the x and y coordinates and labels of the channels in the data
-  opt.chanx = layout.pos(sellay,1);
-  opt.chany = layout.pos(sellay,2);
+  opt.chanx = opt.layout.pos(sellay,1);
+  opt.chany = opt.layout.pos(sellay,2);
 else
   if ~opt.issource
     error('you need to specify a layout in case of freq or timelock data');
@@ -105,8 +127,8 @@ if isfield(data,'dimord')
     error('input data does not have the correct format of N x time (x freq)');
   end
   % and permute
-  opt.dat = permute(opt.dat, [opt.zdim(:)' opt.xdim opt.ydim]);  
-     
+  opt.dat = permute(opt.dat, [opt.zdim(:)' opt.xdim opt.ydim]);
+  
 end
 
 if opt.issource
@@ -116,7 +138,7 @@ if opt.issource
   
   if ~isfield(data, 'tri')
     error('source.tri missing, this function requires a triangulated cortical sheet as source model');
-  end  
+  end
   
 end
 
@@ -127,7 +149,7 @@ else
   opt.ydim = [];
 end
 
-  
+
 if ~isempty(cfg.maskparameter) && ischar(cfg.maskparameter)
   opt.mask = double(getsubfield(data, cfg.maskparameter)~=0);
 else
@@ -161,44 +183,7 @@ set(opt.handles.label.xparam, 'String', opt.xparam);
 opt.timer = timer;
 set(opt.timer, 'timerfcn', {@cb_timer, opt.handles.figure}, 'period', 0.1, 'executionmode', 'fixedSpacing');
 
-
-if opt.issource
-  if isfield(data, 'sulc')
-    vdat = data.sulc;
-    vdat(vdat>0.5) = 0.5;
-    vdat(vdat<-0.5)= -0.5;
-    vdat = vdat-min(vdat);
-    vdat = 0.35.*(vdat./max(vdat))+0.3;
-    vdat = repmat(vdat,[1 3]);
-    mesh = ft_plot_mesh(data, 'edgecolor', 'none', 'vertexcolor', vdat);
-  else
-    mesh = ft_plot_mesh(data, 'edgecolor', 'none', 'facecolor', [0.5 0.5 0.5]);
-  end
-  lighting gouraud
-  set(mesh, 'Parent', opt.handles.axes.movie);
-  % mesh = ft_plot_mesh(source, 'edgecolor', 'none', 'vertexcolor', 0*opt.dat(:,1,1), 'facealpha', 0*opt.mask(:,1,1));
-  opt.handles.mesh = ft_plot_mesh(data, 'edgecolor', 'none', 'vertexcolor', opt.dat(:,1,1));
-  set(opt.handles.mesh, 'AlphaDataMapping', 'scaled');
-  set(opt.handles.mesh, 'FaceAlpha', 'interp');
-  set(opt.handles.mesh, 'FaceVertexAlphaData', opt.mask(:,1,1));
-  lighting gouraud
-  cam1 = camlight('left');
-  set(cam1, 'Parent', opt.handles.axes.movie);
-  cam2 = camlight('right');
-  set(cam2, 'Parent', opt.handles.axes.movie);
-  set(opt.handles.mesh, 'Parent', opt.handles.axes.movie);
-%   cameratoolbar(opt.handles.figure, 'Show');
-else
-  axes(opt.handles.axes.movie)
-  [dum, opt.handles.grid] = ft_plot_topo(opt.chanx, opt.chany, zeros(numel(opt.chanx),1), 'mask', layout.mask, 'outline', layout.outline, 'interpmethod', 'v4', 'interplim', 'mask', 'parent', opt.handles.axes.movie);
- % set(opt.handles.grid, 'Parent', opt.handles.axes.movie);
- opt.xdata   = get(opt.handles.grid, 'xdata');
- opt.ydata   = get(opt.handles.grid, 'ydata');
- opt.nanmask = 1-get(opt.handles.grid, 'cdata');
-  if (gcf~=opt.handles.figure)
-    close gcf; % sometimes there is a new window that opens up
-  end
-end
+opt = prepareBrainplot(opt);
 
 opt.speed = 1;
 guidata(opt.handles.figure, opt);
@@ -208,9 +193,15 @@ cb_slider(opt.handles.figure);
 %uicontrol(opt.handles.colorbar);
 cb_colorbar(opt.handles.figure);
 
+
+if opt.record
+  start(opt.timer);
 end
 
-%% **************************************************************
+end
+
+%%
+%  **************************************************************
 %  ********************* CREATE GUI *****************************
 %  **************************************************************
 function opt = createGUI(opt)
@@ -273,7 +264,7 @@ opt.handles.axes.multi = axes(...
   'ZColor',get(0,'defaultaxesZColor'),...
   'ButtonDownFcn',@(hObject,eventdata)test_movieplot_export('multiAxes_ButtonDownFcn',hObject,eventdata,guidata(hObject)),...
   'Tag','multiAxes',...
-   'HandleVisibility', 'on', ...
+  'HandleVisibility', 'on', ...
   'UserData',[]);
 
 % axes for switching to singleplot viewmode
@@ -289,7 +280,7 @@ opt.handles.axes.single = axes(...
   'YColor',get(0,'defaultaxesYColor'),...
   'ZColor',get(0,'defaultaxesZColor'),...
   'Tag','singleAxes',...
-   'HandleVisibility', 'on', ...
+  'HandleVisibility', 'on', ...
   'UserData',[]);
 
 % main control panel
@@ -312,7 +303,7 @@ opt.handles.button.play = uicontrol(...
 opt.handles.button.record = uicontrol(...
   'Parent',opt.handles.panel.control,...
   'Units','normalized',...
-  'Callback',@(hObject,eventdata)test_movieplot_export('recordButton_Callback',hObject,eventdata,guidata(hObject)),...
+  'Callback',@cb_recordbutton, ...
   'Position',[0.551864801864802 0.457831325301205 0.321678321678322 0.530120481927711],...
   'String','Record',...
   'Tag','recordButton');
@@ -556,7 +547,7 @@ end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
+% CALLBACK FUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_speed(h, eventdata)
 if ~ishandle(h)
@@ -572,13 +563,13 @@ if abs(val-opt.AVG_SPEED) < 0.08
   val = opt.AVG_SPEED;
   set(opt.handles.slider.speed, 'value', 0.5);
 end
-  
+
 opt.speed = val;
 
 if val >=100
   set(opt.handles.label.speed, 'String', ['Speed ' num2str(opt.speed, '%.1f'), 'x'])
 elseif val >= 10
-  set(opt.handles.label.speed, 'String', ['Speed ' num2str(opt.speed, '%.2f'), 'x'])  
+  set(opt.handles.label.speed, 'String', ['Speed ' num2str(opt.speed, '%.2f'), 'x'])
 else
   set(opt.handles.label.speed, 'String', ['Speed ' num2str(opt.speed, '%.3f'), 'x'])
 end
@@ -587,9 +578,8 @@ guidata(h, opt);
 uiresume;
 end
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
+% CALLBACK FUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_timer(obj, info, h)
 if ~ishandle(h)
@@ -599,14 +589,54 @@ opt = guidata(h);
 delta = opt.speed/size(opt.dat,opt.xdim);
 val = get(opt.handles.slider.xparam, 'value');
 val = val + delta;
+
+if opt.record
+  if val>1
+    % stop recording
+    stop(opt.timer);
+    % save movie
+    if isfield(opt, 'framesfile') && ~isempty(opt.framesfile)
+      save(opt.framesfile, 'F');
+    end
+    % play movie
+    if ~isfield(opt, 'framespersec')
+      opt.framespersec = 4;
+      opt.movierpt = 3;
+    end
+    
+    
+    % reset again
+    val = 0;    
+    set(opt.handles.slider.xparam, 'value', val);
+    cb_slider(h);
+    cb_recordbutton(opt.handles.button.record);
+    
+    movie(opt.F, opt.movierpt, opt.framespersec);
+    guidata(h, opt);
+    
+    return;
+  end
+end
+
 if val>1
-  val = val-1;
+    val = val-1;  
 end
 set(opt.handles.slider.xparam, 'value', val);
 cb_slider(h);
+
+if opt.record
+  if ~isfield(opt, 'F') % init F
+    opt.F(1) = getframe(opt.handles.figure);
+  else
+    opt.F(end+1) = getframe(opt.handles.figure);
+  end
+  guidata(h, opt);
 end
+
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
+% CALLBACK FUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_slider(h, eventdata)
 opt = guidata(h);
@@ -631,7 +661,7 @@ updateMovie(opt, valx, valy);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
+% CALLBACK FUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_playbutton(h, eventdata)
 if ~ishandle(h)
@@ -649,9 +679,84 @@ end
 uiresume;
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% CALLBACK FUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_recordbutton(h, eventdata)
+if ~ishandle(h)
+  return
+end
+
+opt = guidata(h);
+opt.record = ~opt.record; % switch state
+if isfield(opt, 'F')
+  opt = rmfield(opt, 'F');
+end
+
+if opt.record
+  % FIXME open new window to play in there, so that frame getting works
+  set(h, 'string', 'Stop');
+  start(opt.timer);
+else
+  % FIXME set handle back to old window
+  set(h, 'string', 'Record');
+  stop(opt.timer);
+end
+guidata(h, opt);
+
+
+% 
+% % This function should open a new window, plot in there, extract every
+% % frame, store the movie in opt and return again
+% 
+% % this is not needed, no new window is needed
+% %scrsz = get(0, 'ScreenSize');
+% %f = figure('Position',[1 1 scrsz(3) scrsz(4)]);
+% 
+% % FIXME disable buttons (apart from RECORD) when recording
+% % if record is pressed, stop recording and immediately return
+% 
+% % adapted from ft_movieplotTFR
+% 
+% % frequency/time selection
+% if ~isempty(opt.yvalues) && any(~isnan(yvalues))
+%   if ~isempty(cfg.movietime)
+%     indx = cfg.movietime;
+%     for iFrame = 1:floor(size(opt.dat, opt.xdim)/cfg.samperframe)
+%       indy = ((iFrame-1)*cfg.samperframe+1):iFrame*cfg.samperframe;
+%       updateMovie(opt, indx, indy);
+%       F(iFrame) = getframe;
+%     end
+%   elseif ~isempty(cfg.moviefreq)
+%     indy = cfg.moviefreq;
+%     for iFrame = 1:floor(size(opt.dat, opt.ydim)/cfg.samperframe)
+%       indx = ((iFrame-1)*cfg.samperframe+1):iFrame*cfg.samperframe;
+%       updateMovie(opt, indx, indy);
+%       F(iFrame) = getframe;
+%     end
+%   else
+%     error('Either moviefreq or movietime should contain a bin number')
+%   end
+% else
+%   for iFrame = 1:floor(size(opt.dat, opt.xdim)/cfg.samperframe)
+%     indx = ((iFrame-1)*cfg.samperframe+1):iFrame*cfg.samperframe;
+%     updateMovie(opt, indx, 1);
+%     F(iFrame) = getframe;
+%   end
+% end
+% 
+% % save movie
+% if ~isempty(cfg.framesfile)
+%   save(cfg.framesfile, 'F');
+% end
+% % play movie
+% movie(F, cfg.movierpt, cfg.framespersec);
+
+uiresume;
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
+% CALLBACK FUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_colormap(h, eventdata)
 maps = get(h, 'String');
@@ -660,7 +765,7 @@ val = get(h, 'Value');
 while ~strcmp(get(h, 'Tag'), 'mainFigure')
   h = get(h, 'Parent');
 end
-  
+
 opt =  guidata(h);
 
 cmap = colormap(opt.handles.axes.movie, maps{val});
@@ -673,12 +778,12 @@ end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
+% CALLBACK FUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_colorbar(h, eventdata)
 if strcmp(get(h, 'Tag'), 'mainFigure') % this is the init call
   incr = false;
-  decr = false;  
+  decr = false;
 else
   incr = strcmp(get(h, 'String'), '+');
   decr = strcmp(get(h, 'String'), '-');
@@ -688,8 +793,6 @@ else
   end
 end
 
-
-  
 opt =  guidata(h);
 [zmin zmax] = caxis(opt.handles.axes.movie);
 yLim = get(opt.handles.colorbar, 'YLim');
@@ -713,7 +816,7 @@ elseif decr
     zmin = zmin - mean(diff(yTick));
   else
     zmax = zmax - mean(diff(yTick));
-  end  
+  end
 elseif get(opt.handles.checkbox.auto, 'Value') % if automatic
   set(opt.handles.lines.upperColor, 'Visible', 'off');
   set(opt.handles.lines.lowerColor, 'Visible', 'off');
@@ -756,7 +859,7 @@ if (gcf~=opt.handles.figure)
   close gcf; % sometimes there is a new window that opens up
 end
 
-caxis(opt.handles.axes.movie, [zmin zmax]);  
+caxis(opt.handles.axes.movie, [zmin zmax]);
 yTick = linspace(zmin, zmax, yLim(end));
 % truncate intelligently/-ish
 yTick = yTick(get(opt.handles.colorbar, 'YTick'));
@@ -764,9 +867,8 @@ yTick = num2str(yTick', 5);
 set(opt.handles.colorbar, 'YTickLabel', yTick, 'FontSize', 8);
 end
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
+% CALLBACK FUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_startDrag(h, eventdata)
 f = get(h, 'Parent');
@@ -780,8 +882,8 @@ if strfind(get(h, 'Tag'), 'Color')>0
   opt.handles.current.axes = opt.handles.colorbar;
   opt.handles.current.color = true;
 else
-   disp('Figure out if it works for xparam and yparam');
-   keyboard
+  disp('Figure out if it works for xparam and yparam');
+  keyboard
 end
 
 set(f, 'WindowButtonMotionFcn', @cb_dragLine);
@@ -796,11 +898,11 @@ yLim = get(opt.handles.colorbar, 'YLim');
 
 % upper (lower) bar must not below (above) lower (upper) bar
 if ~(opt.handles.current.line == opt.handles.lines.upperColor && ...
-  (any(pt(3)*[1 1]<get(opt.handles.lines.lowerColor, 'YData')) || ...
-  yLim(end) <= pt(3))) ...
-  && ~(opt.handles.current.line == opt.handles.lines.lowerColor && ...
+    (any(pt(3)*[1 1]<get(opt.handles.lines.lowerColor, 'YData')) || ...
+    yLim(end) <= pt(3))) ...
+    && ~(opt.handles.current.line == opt.handles.lines.lowerColor && ...
     (any(pt(3)*[1 1]>get(opt.handles.lines.upperColor, 'YData')) || ...
-    yLim(1) >= pt(3)))  
+    yLim(1) >= pt(3)))
   set(opt.handles.current.line, 'YData', pt(3)*[1 1]);
 end
 
@@ -808,7 +910,9 @@ adjust_colorbar(opt);
 
 end
 
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function adjust_colorbar(opt)
 % adjust colorbar
 upper = get(opt.handles.lines.upperColor, 'YData');
@@ -827,4 +931,48 @@ while ~strcmp(get(h, 'Tag'), 'mainFigure')
   h = get(h, 'Parent');
 end
 set(h, 'WindowButtonMotionFcn', '');
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function opt = prepareBrainplot(opt)
+if opt.issource
+  if isfield(opt, 'sulc')
+    vdat = opt.sulc;
+    vdat(vdat>0.5) = 0.5;
+    vdat(vdat<-0.5)= -0.5;
+    vdat = vdat-min(vdat);
+    vdat = 0.35.*(vdat./max(vdat))+0.3;
+    vdat = repmat(vdat,[1 3]);
+    mesh = ft_plot_mesh(opt.anatomy, 'edgecolor', 'none', 'vertexcolor', vdat);
+  else
+    mesh = ft_plot_mesh(opt.anatomy, 'edgecolor', 'none', 'facecolor', [0.5 0.5 0.5]);
+  end
+  lighting gouraud
+  set(mesh, 'Parent', opt.handles.axes.movie);
+  % mesh = ft_plot_mesh(source, 'edgecolor', 'none', 'vertexcolor', 0*opt.dat(:,1,1), 'facealpha', 0*opt.mask(:,1,1));
+  opt.handles.mesh = ft_plot_mesh(opt.anatomy, 'edgecolor', 'none', 'vertexcolor', opt.dat(:,1,1));
+  set(opt.handles.mesh, 'AlphaDataMapping', 'scaled');
+  set(opt.handles.mesh, 'FaceAlpha', 'interp');
+  set(opt.handles.mesh, 'FaceVertexAlphaData', opt.mask(:,1,1));
+  lighting gouraud
+  cam1 = camlight('left');
+  set(cam1, 'Parent', opt.handles.axes.movie);
+  cam2 = camlight('right');
+  set(cam2, 'Parent', opt.handles.axes.movie);
+  set(opt.handles.mesh, 'Parent', opt.handles.axes.movie);
+  %   cameratoolbar(opt.handles.figure, 'Show');
+else
+  axes(opt.handles.axes.movie)
+  [dum, opt.handles.grid] = ft_plot_topo(opt.layout.pos(sellay,1), opt.layout.pos(sellay,2), zeros(numel(sellay),1), 'mask', opt.layout.mask, 'outline', opt.layout.outline, 'interpmethod', 'v4', 'interplim', 'mask', 'parent', opt.handles.axes.movie);
+  %[dum, opt.handles.grid] = ft_plot_topo(layout.pos(sellay,1), layout.pos(sellay,2), zeros(numel(sellay),1), 'mask',layout.mask,  'outline', layout.outline, 'interpmethod', 'v4', 'interplim', 'mask', 'parent', opt.handles.axes.movie);
+  % set(opt.handles.grid, 'Parent', opt.handles.axes.movie);
+  opt.xdata   = get(opt.handles.grid, 'xdata');
+  opt.ydata   = get(opt.handles.grid, 'ydata');
+  opt.nanmask = 1-get(opt.handles.grid, 'cdata');
+  if (gcf~=opt.handles.figure)
+    close gcf; % sometimes there is a new window that opens up
+  end
+end
 end
