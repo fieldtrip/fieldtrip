@@ -27,7 +27,7 @@ for k = 1:numel(datainfo)
   load(fname);
   datanew = rmfield(datanew, 'cfg'); % these are per construction different if writeflag = 0;
   freq    = rmfield(freq,    'cfg');
-  assert(isequal(freq, datanew));
+  assert(identical(freq, datanew),'reltol',eps*1000);
 end
 
 for k = 1:numel(datainfo)
@@ -41,7 +41,7 @@ for k = 1:numel(datainfo)
   load(fname);
   datanew = rmfield(datanew, 'cfg'); % these are per construction different if writeflag = 0;
   freq    = rmfield(freq,    'cfg');
-  assert(isequalwithequalnans(freq, datanew));
+  assert(identical(freq, datanew),'reltol',eps*1000);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
