@@ -52,8 +52,8 @@ if ~isfield(ft_default, 'trackcallinfo'),  ft_default.trackcallinfo  = 'yes';   
 if ~isfield(ft_default, 'trackdatainfo'),  ft_default.trackdatainfo  = 'no';     end % yes or no, this is still under development
 if ~isfield(ft_default, 'trackparaminfo'), ft_default.trackparaminfo = 'no';     end % yes or no, this is still under development
 
-% Ensure that the path containing ft_defaults (i.e. the fieldtrip toolbox
-% itself) is on the path. This allows people to do "cd path_to_fieldtrip; ft_defaults"
+% Ensure that the path containing ft_defaults is on the path.
+% This allows people to do "cd path_to_fieldtrip; ft_defaults"
 ftPath = fileparts(mfilename('fullpath')); % get path, strip away 'ft_defaults'
 ftPath = strrep(ftPath, '\', '\\');
 if isempty(regexp(path, [ftPath pathsep '|' ftPath '$'], 'once'))
@@ -65,6 +65,7 @@ end
 % different versions of certain toolboxes on the path.
 % The following will issue a warning
 checkMultipleToolbox('FieldTrip',           'ft_defaults.m');
+checkMultipleToolbox('spm',                 'spm.m');
 checkMultipleToolbox('mne',                 'fiff_copy_tree.m');
 checkMultipleToolbox('eeglab',              'eeglab2fieldtrip.m');
 checkMultipleToolbox('dipoli',              'write_tri.m');
@@ -91,29 +92,6 @@ checkMultipleToolbox('bct',                 'degrees_und.m');
 checkMultipleToolbox('yokogawa_meg_reader', 'getYkgwHdrEvent.p');
 checkMultipleToolbox('biosig',              'sopen.m');
 checkMultipleToolbox('icasso',              'icassoEst.m');
-
-% check for different SPM versions, which also includes a general warning about addpath(genpath(...))
-list = which('spm', '-all');
-if length(list)>1
-  [ws, warned] = warning_once('multiple versions of SPM on your path will confuse FieldTrip');
-  
-  % use the presence of SPM versions as a proxy for the user probably
-  % having used addpath(genpath(<FT>))
-  ftSpmFound = 0;
-  
-  if warned % only throw the warning once
-    for i=1:length(list)
-      warning('one version of SPM is found here: %s', list{i});
-      
-      if list{i}(1:numel(ftPath)) == ftPath
-        ftSpmFound = ftSpmFound + 1;
-        if (ftSpmFound > 1)
-          warning('You probably used addpath(genpath(''path_to_fieldtrip'')), this can lead to unexpected behaviour. See http://fieldtrip.fcdonders.nl/faq/should_i_add_fieldtrip_with_all_subdirectories_to_my_matlab_path');
-        end
-      end
-    end
-  end
-end
 
 if ~isdeployed
   
@@ -207,18 +185,18 @@ end
 
 end % function ft_default
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function checkMultipleToolbox(toolbox, keyfile)
-
 list = which(keyfile, '-all');
 if length(list)>1
-  [ws, warned] = warning_once(sprintf('multiple versions of %s on your path will confuse FieldTrip', toolbox));
-  
+  [ws, warned] = warning_once(sprintf('Multiple versions of %s on your path will confuse FieldTrip', toolbox));
   if warned % only throw the warning once
     for i=1:length(list)
       warning('one version of %s is found here: %s', toolbox, list{i});
     end
   end
-  
+  warning_once('You probably used addpath(genpath(''path_to_fieldtrip'')), this can lead to unexpected behaviour. See http://fieldtrip.fcdonders.nl/faq/should_i_add_fieldtrip_with_all_subdirectories_to_my_matlab_path');
 end
-
 end % function checkMultipleToolbox
