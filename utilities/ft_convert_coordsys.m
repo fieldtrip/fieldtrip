@@ -69,7 +69,7 @@ if nargin>1 && ~strcmpi(target, obj.coordsys)
           obj = align_ctf2spm(obj, opt);
         case {'itab' 'neuromag'}
           fprintf('Converting the coordinate system from %s to %s\n', obj.coordsys, target);
-          obj = align_itab2spm(obj);
+          obj = align_itab2spm(obj, opt);
         otherwise
       end %switch obj.coordsys
     otherwise
