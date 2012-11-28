@@ -228,5 +228,5 @@ switch str
   case '-logabs' 
     c = -log(1 - abs(c).^2);
   otherwise
-    error('complex = ''%s'' not supported', cmplx);
+    error('complex = ''%s'' not supported', str);
 end

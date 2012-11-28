@@ -137,27 +137,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the actual computations start here
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if strcmp(sfmethod, 'multivariate') && isempty(block) && nrpt>1,
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % multiple repetitions, loop over repetitions
-  % multivariate decomposition
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  
-  H = zeros(siz) + 1i.*zeros(siz);
-  S = zeros(siz) + 1i.*zeros(siz);
-  Z = zeros([siz(1:3) siz(end)]);
-  for k = 1:nrpt
-    for m = 1:ntim
-      tmp = reshape(freq.crsspctrm(k,:,:,:,m), siz(2:end-1));
-      [Htmp, Ztmp, Stmp] = sfactorization_wilson(tmp, freq.freq, ...
-                                                   numiteration, tol, fb);
-      H(k,:,:,:,m) = Htmp;
-      Z(k,:,:,m)   = Ztmp;
-      S(k,:,:,:,m) = Stmp;
-    end 
-  end
-  
-elseif strcmp(sfmethod, 'multivariate') && isempty(block),
+if strcmp(sfmethod, 'multivariate') && nrpt==1 && isempty(block),
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % standard code
   % multivariate decomposition
@@ -202,11 +182,107 @@ elseif strcmp(sfmethod, 'multivariate') && isempty(block),
     Z(:,:,m)   = Ztmp;
     S(:,:,:,m) = Stmp;
   end
-elseif strcmp(sfmethod, 'bivariate') && nrpt>1,
-  % error 
-  error('single trial estimates and linear combination indexing is not implemented');
   
-elseif nrpt>1 && ~isempty(block),
+elseif strcmp(sfmethod, 'multivariate') && nrpt==1 && ~isempty(block),
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % blockwise multivariate stuff
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  
+  if ntim>1,
+    error('blockwise factorization of tfrs is not yet possible');
+  end
+  
+  %reorder the channel order such that the blocks are ordered
+  nblocks = unique(blockindx{2});
+  for k = 1:numel(nblocks)
+    %b{k} = cfg.blockindx{2}(find(cfg.blockindx{2}==nblocks(k)));
+    b{k} = find(blockindx{2}==nblocks(k));
+  end
+  indx = cat(1,b{:});
+  freq.crsspctrm = freq.crsspctrm(indx, indx, :);
+  freq.label     = freq.label(indx);
+  bindx          = blockindx{2}(indx);
+
+  for k = 1:numel(block)
+    sel  = find(ismember(bindx, block{k}));
+    Stmp = freq.crsspctrm(sel,sel,:);
+    
+    % do PCA to avoid zigzags due to numerical issues
+    dopca = 1;
+    if dopca
+      dat     = sum(Stmp,3);
+      [u,s,v] = svd(real(dat));
+      for m = 1:size(Stmp,3)
+        Stmp(:,:,m) = u'*Stmp(:,:,m)*u;
+      end
+    end
+    
+    [Htmp, Ztmp, Stmp] = sfactorization_wilson(Stmp, freq.freq, ...
+                                                 numiteration, tol, fb);  
+    
+    % undo PCA
+    if dopca
+      for m = 1:size(Stmp,3)
+        Htmp(:,:,m) = u*Htmp(:,:,m)*u';
+        Stmp(:,:,m) = u*Stmp(:,:,m)*u';
+      end
+      Ztmp = u*Ztmp*u';
+    end
+                                               
+    siz  = [size(Htmp) 1]; siz = [siz(1)*siz(2) siz(3:end)];
+    Htmp = reshape(Htmp, siz);
+    siz  = [size(Ztmp) 1]; siz = [siz(1)*siz(2) siz(3:end)];
+    Ztmp = reshape(Ztmp, siz);
+    siz  = [size(Stmp) 1]; siz = [siz(1)*siz(2) siz(3:end)];
+    Stmp = reshape(Stmp, siz);
+    
+    tmpindx = [];
+    cmbtmp  = cell(siz(1), 2);
+    [tmpindx(:,1), tmpindx(:,2)] = ind2sub(sqrt(siz(1))*[1 1],1:siz(1));
+    for kk = 1:size(cmbtmp,1)
+      cmbtmp{kk,1} = [freq.label{sel(tmpindx(kk,1))},'[',cat(2,freq.label{sel}),']'];
+      cmbtmp{kk,2} = [freq.label{sel(tmpindx(kk,2))},'[',cat(2,freq.label{sel}),']'];
+    end
+    
+    %concatenate
+    if k == 1,
+      H = Htmp;
+      Z = Ztmp;
+      S = Stmp;
+      labelcmb = cmbtmp;
+    else
+      H = cat(1,H,Htmp);
+      Z = cat(1,Z,Ztmp);
+      S = cat(1,S,Stmp);
+      labelcmb = cat(1,labelcmb,cmbtmp);
+    end 
+  end
+  
+  if strcmp(freq.dimord(1:9), 'chan_chan'),
+    freq.dimord = ['chancmb_',freq.dimord(10:end)];
+  end
+  
+elseif strcmp(sfmethod, 'multivariate') && nrpt>1 && isempty(block),
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % multiple repetitions, loop over repetitions
+  % multivariate decomposition
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  
+  H = zeros(siz) + 1i.*zeros(siz);
+  S = zeros(siz) + 1i.*zeros(siz);
+  Z = zeros([siz(1:3) siz(end)]);
+  for k = 1:nrpt
+    for m = 1:ntim
+      tmp = reshape(freq.crsspctrm(k,:,:,:,m), siz(2:end-1));
+      [Htmp, Ztmp, Stmp] = sfactorization_wilson(tmp, freq.freq, ...
+                                                   numiteration, tol, fb);
+      H(k,:,:,:,m) = Htmp;
+      Z(k,:,:,m)   = Ztmp;
+      S(k,:,:,:,m) = Stmp;
+    end 
+  end
+ 
+elseif strcmp(sfmethod, 'multivariate') && nrpt>1 && ~isempty(block),
   % error 
   error('single trial estimates and blockwise factorisation is not yet implemented');
   
@@ -298,84 +374,11 @@ elseif strcmp(sfmethod, 'bivariate')
     labelcmb{indx(4),1} = [channelcmb{k,2},'[',channelcmb{k,1},channelcmb{k,2},']'];
     labelcmb{indx(4),2} = [channelcmb{k,2},'[',channelcmb{k,1},channelcmb{k,2},']'];
   end
-elseif ~isempty(block)
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % blockwise multivariate stuff
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
-  if ntim>1,
-    error('blockwise factorization of tfrs is not yet possible');
-  end
-  
-  %reorder the channel order such that the blocks are ordered
-  nblocks = unique(blockindx{2});
-  for k = 1:numel(nblocks)
-    %b{k} = cfg.blockindx{2}(find(cfg.blockindx{2}==nblocks(k)));
-    b{k} = find(blockindx{2}==nblocks(k));
-  end
-  indx = cat(1,b{:});
-  freq.crsspctrm = freq.crsspctrm(indx, indx, :);
-  freq.label     = freq.label(indx);
-  bindx          = blockindx{2}(indx);
+elseif strcmp(sfmethod, 'bivariate') && nrpt>1,
+  % error 
+  error('single trial estimates and linear combination indexing is not implemented');
 
-  for k = 1:numel(block)
-    sel  = find(ismember(bindx, block{k}));
-    Stmp = freq.crsspctrm(sel,sel,:);
-    
-    % do PCA to avoid zigzags due to numerical issues
-    dopca = 1;
-    if dopca
-      dat     = sum(Stmp,3);
-      [u,s,v] = svd(real(dat));
-      for m = 1:size(Stmp,3)
-        Stmp(:,:,m) = u'*Stmp(:,:,m)*u;
-      end
-    end
-    
-    [Htmp, Ztmp, Stmp] = sfactorization_wilson(Stmp, freq.freq, ...
-                                                 numiteration, tol, fb);  
-    
-    % undo PCA
-    if dopca
-      for m = 1:size(Stmp,3)
-        Htmp(:,:,m) = u*Htmp(:,:,m)*u';
-        Stmp(:,:,m) = u*Stmp(:,:,m)*u';
-      end
-      Ztmp = u*Ztmp*u';
-    end
-                                               
-    siz  = [size(Htmp) 1]; siz = [siz(1)*siz(2) siz(3:end)];
-    Htmp = reshape(Htmp, siz);
-    siz  = [size(Ztmp) 1]; siz = [siz(1)*siz(2) siz(3:end)];
-    Ztmp = reshape(Ztmp, siz);
-    siz  = [size(Stmp) 1]; siz = [siz(1)*siz(2) siz(3:end)];
-    Stmp = reshape(Stmp, siz);
-    
-    tmpindx = [];
-    cmbtmp  = cell(siz(1), 2);
-    [tmpindx(:,1), tmpindx(:,2)] = ind2sub(sqrt(siz(1))*[1 1],1:siz(1));
-    for kk = 1:size(cmbtmp,1)
-      cmbtmp{kk,1} = [freq.label{sel(tmpindx(kk,1))},'[',cat(2,freq.label{sel}),']'];
-      cmbtmp{kk,2} = [freq.label{sel(tmpindx(kk,2))},'[',cat(2,freq.label{sel}),']'];
-    end
-    
-    %concatenate
-    if k == 1,
-      H = Htmp;
-      Z = Ztmp;
-      S = Stmp;
-      labelcmb = cmbtmp;
-    else
-      H = cat(1,H,Htmp);
-      Z = cat(1,Z,Ztmp);
-      S = cat(1,S,Stmp);
-      labelcmb = cat(1,labelcmb,cmbtmp);
-    end 
-  end
-  
-  if strcmp(freq.dimord(1:9), 'chan_chan'),
-    freq.dimord = ['chancmb_',freq.dimord(10:end)];
-  end
 end
 
 % create output
