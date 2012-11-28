@@ -72,6 +72,14 @@ if isheader
     grad  = hdr.grad;
   end
   label = hdr.label;
+  
+  % ensure that the label order in the grad matches the label order in the
+  % label list
+  [i1,i2] = match_str(label, grad.label);
+  tmptra  = zeros(numel(label), size(grad.tra,2));
+  grad.label = grad.label(i2);
+  tmptra(i1,:) = grad.tra(i2,:);
+  grad.tra   = tmptra;
 elseif isgrad
   label   = grad.label;
   numchan = length(label);
@@ -100,7 +108,7 @@ elseif ft_senstype(input, 'neuromag') && isheader
     for sel=find(hdr.orig.channames.KI(:)==3)'
       type{sel} = 'digital trigger';
     end
-    % determinge the MEG channel subtype
+    % determine the MEG channel subtype
     selmeg=find(hdr.orig.channames.KI(:)==1)';
     for i=1:length(selmeg)
       if hdr.orig.chaninfo.TY(i)==0
@@ -289,7 +297,7 @@ elseif ft_senstype(input, 'bti')
   type(strncmp('G', label, 1)) = {'refgrad'};
   
   if isfield(grad, 'tra')
-    selchan = find(strcmp('mag', type));
+    selchan = find(strcmp('meg', type));
     for k = 1:length(selchan)
       ncoils = length(find(grad.tra(selchan(k),:)==1));
       if ncoils==1,
@@ -298,6 +306,7 @@ elseif ft_senstype(input, 'bti')
         type{selchan(k)} = 'meggrad';
       end
     end
+    
   end
   
   % This is to allow setting additional channel types based on the names

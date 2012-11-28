@@ -222,11 +222,44 @@ elseif isfield(hdr, 'config'),
     end
   end
   if haseegpos
-    elec.pnt   = hdr.user_block_data{userblock}.pnt;
-    elec.label = hdr.user_block_data{userblock}.label;
+    % now we need to match the labels in the label field of the specified
+    % user block with the labels in the header. a discrepancy can exist 
+    % because of the messy file structure. also, we need to remove the 
+    % coils, and the LRNCI 'channels', as well as the one called 'reserved'
+    % also remove the position which has all 0
+    label = hdr.user_block_data{userblock}.label;
+    pnt   = hdr.user_block_data{userblock}.pnt;
+    
+    label(sum(pnt==0,2)==3) = [];
+    pnt(sum(pnt==0,2)==3,:) = [];
+
+    pnt(strncmpi('coil',label,4),:) = [];
+    label(strncmpi('coil',label,4)) = [];
+
+    pnt(ismember(label,{'L','R','N','C','I'}),:) = [];
+    label(ismember(label,{'L','R','N','C','I'})) = []; 
+    
+    if ~isempty(label)  
+      elec.pnt   = pnt;
+      elec.label = label;
+    else
+      elec = [];
+    end
   else
     elec = [];
   end
+  
+  % add the chantype
+  type  = ft_chantype(grad);
+  ngrad = sum(strcmp('meggrad',type));
+  nmag  = sum(strcmp('megmag', type));
+    
+  if ngrad>nmag
+    grad.type = [ft_senstype(grad) 'grad'];
+  else
+    grad.type = ft_senstype(grad);
+  end
+  grad.chantype = type;
   
 elseif isfield(hdr, 'grad'),
   % hdr has been derived in read_bti_m4d and grad is already there
