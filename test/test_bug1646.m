@@ -235,7 +235,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear all
-load('/home/common/matlab/fieldtrip/data/test/test_bug1651.mat');
+load('/home/common/matlab/fieldtrip/data/test/bug1651.mat');
 
 cfg = [];
 cfg.tissue = {'brain', 'skull', 'scalp'};
@@ -252,7 +252,7 @@ bnd = ft_prepare_mesh(cfg, seg2);
 % http://bugzilla.fcdonders.nl/show_bug.cgi?id=937
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-load('/home/common/matlab/fieldtrip/data/test/test_bug937.mat');
+load('/home/common/matlab/fieldtrip/data/test/bug937.mat');
 
 mri = [];
 mri.anatomy = bkgrnd;

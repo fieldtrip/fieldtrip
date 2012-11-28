@@ -50,7 +50,7 @@ assert(ft_voltype(svolcs,'concentricspheres'))
 % bkgrnd = MR{1}+MR{2}+MR{3};
 
 % fprintf('Loading a volume with a number N = %d of compartments ... ', numel(svol))
-load('test_bug937.mat');
+load('bug937.mat');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % start the different methods
