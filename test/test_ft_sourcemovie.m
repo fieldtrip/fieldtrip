@@ -10,6 +10,9 @@ function test_ft_sourcemovie
 global ft_default;
 ft_default.feedback = 'no';
 
+% qsub is necessary, add fieldtrip/qsub to path
+addpath('/home/common/matlab/fieldtrip/qsub/')
+
 load /home/common/matlab/fieldtrip/data/ftp/tutorial/timefrequencyanalysis/dataFIC.mat
 load /home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat
 
