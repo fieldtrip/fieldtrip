@@ -141,8 +141,8 @@ switch seldim
     else
       tmpsel = sel;
     end
-    if isfield(data, 'cumtapcnt'), data.cumtapcnt = data.cumtapcnt(tmpsel); end
-    if isfield(data, 'cumsumcnt'), data.cumsumcnt = data.cumsumcnt(tmpsel); end
+    if isfield(data, 'cumtapcnt'), data.cumtapcnt = data.cumtapcnt(tmpsel,:); end
+    if isfield(data, 'cumsumcnt'), data.cumsumcnt = data.cumsumcnt(tmpsel,:); end
     
     % also try to adjust the trialinfo in the data
     if isfield(data, 'trialinfo')
