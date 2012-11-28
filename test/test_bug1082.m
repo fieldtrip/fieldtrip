@@ -3,6 +3,9 @@ function test_bug1082
 % TEST test_bug1082
 % TEST ft_prepare_vol_sens ft_prepare_headmodel ft_compute_leadfield ft_plot_topo3d
 
+fprintf('***  DIAGNOSTICAL INFORMATION ***\n');
+fprintf('test script is running on host: %s\n', gethostname());
+
 % generate a unit sphere
 [pnt, tri] = icosahedron162;
 
