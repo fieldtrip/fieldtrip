@@ -196,9 +196,9 @@ else
   sens = [];
 end
 
-if isfield(input, 'type')
+if isfield(sens, 'type')
   % preferably the structure specifies its own type
-  type = input.type;
+  type = sens.type;
   
 elseif isfield(input, 'nChans') && input.nChans==1 && isfield(input, 'label') && ~isempty(regexp(input.label{1}, '^csc', 'once'))
   % this is a single channel header that was read from a Neuralynx file, might be fcdc_matbin or neuralynx_nsc
@@ -460,9 +460,7 @@ end % detemine the correspondence to the desired type
 % remember the current input and output arguments, so that they can be
 % reused on a subsequent call in case the same input argument is given
 current_argout = {type};
-if isempty(previous_argin)
-  previous_argin  = current_argin;
-  previous_argout = current_argout;
-end
+previous_argin  = current_argin;
+previous_argout = current_argout;
 
 return % ft_senstype main()
