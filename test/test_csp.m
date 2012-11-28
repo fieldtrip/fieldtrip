@@ -9,6 +9,8 @@ function test_suite = test_csp
 %     the abnormal components in the clinical EEG. Electroencephalography and
 %     Clinical Neurophysiology, 79(6):440--447, December 1991.
 
+% add xunit to path
+ft_hastoolbox('xunit',1);
 initTestSuite;  % for xUnit
 
 function test_csp_integration

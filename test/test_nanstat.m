@@ -4,6 +4,8 @@ function test_suite = test_nanstat
 % Test conformance of FieldTrip's nansum, nanmean, nanvar & nanstd
 % functions with MATLABs versions in the statistics toolbox.
 
+% add xunit to path
+ft_hastoolbox('xunit',1);
 initTestSuite;  % for xUnit
 
 function setup

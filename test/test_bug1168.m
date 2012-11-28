@@ -3,6 +3,8 @@ function test_suite = test_bug1168
 % TEST test_bug1168
 % TEST ft_multiplotTFR
 
+% add xunit to path
+ft_hastoolbox('xunit',1);
 initTestSuite;  % for xUnit
 
 

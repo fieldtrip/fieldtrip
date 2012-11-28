@@ -2,6 +2,8 @@ function test_suite = test_bug1618
 % TEST test_bug1618
 %
 
+% add xunit to path
+ft_hastoolbox('xunit',1);
 initTestSuite;  % for xUnit
 
 function test_no_nan
