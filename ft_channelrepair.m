@@ -313,7 +313,7 @@ elseif strcmp(cfg.method, 'spline') || strcmp(cfg.method, 'slap')
   % undo automatical sorting by setdiff
   goodchanindcs      = sort(goodchanindcs); 
   % only take good channels that are in data (and remember how they are sorted)
-  [dataidx, sensidx] = ismember(data.label, sens.label(goodchanindcs)); 
+  [dataidx, sensidx] = match_str(data.label, sens.label(goodchanindcs)); 
 
   % interpolate
   fprintf('computing weight matrix...');
@@ -324,14 +324,15 @@ elseif strcmp(cfg.method, 'spline') || strcmp(cfg.method, 'slap')
     % only use the rows corresponding to the channels that actually need interpolation
     repair(goodchanindcs(sensidx),:) = 0;
     for k = 1:numel(sensidx)
-      repair(goodchanindcs(sensidx(k)), goodchanindcs(sensidx(k))) = 1;
+      i = strcmp(sens.label(goodchanindcs(sensidx(k))), sens.label(goodchanindcs(sensidx)));
+      repair(goodchanindcs(sensidx(k)), i) = 1;
     end
   end % else all rows need to be interpolated
     
   % store the realigned data in a new structure
   interp.fsample = data.fsample;
   interp.time    = data.time;
-  interp.label   = data.label(dataidx);
+  interp.label   = sens.label;
   if iseeg
     interp.elec  = sens;
   else
@@ -355,8 +356,6 @@ elseif strcmp(cfg.method, 'spline') || strcmp(cfg.method, 'slap')
     fprintf('.');
     interp.trial{i} = repair * data.trial{i}(dataidx, :);
   end
-  missidx = find(ismember(sens.label, cfg.missingchannel));  
-  interp.label(end+1:end+numel(missidx)) = sens.label(missidx);
   fprintf('\n');
   
 else
