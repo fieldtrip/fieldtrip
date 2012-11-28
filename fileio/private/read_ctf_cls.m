@@ -23,7 +23,7 @@ function [condNumbers,condLabels] = read_ctf_cls(fname)
 % $Id$
 
 condNumbers = [];
-% condLabels = [];
+condLabels = {};
 
 fid = fopen(fname,'r');
 
