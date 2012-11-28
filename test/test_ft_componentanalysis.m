@@ -27,7 +27,11 @@ for k = 1:numel(datainfo)
   
   datanew = rmfield(datanew, 'cfg'); % these are per construction different if writeflag = 0;
   data    = rmfield(data,    'cfg');
-  assert(identical(data, datanew,'reltol',eps*1000));
+  [ok,msg] = identical(data, datanew,'abstol',1e-7);
+  if ~ok
+    disp(msg);
+    error('there were differences between reference and new data, see above for details');
+  end
 end
 
 function [comp] = componentanalysis(dataset, writeflag, version)
