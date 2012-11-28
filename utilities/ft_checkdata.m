@@ -605,7 +605,7 @@ if issource || isvolume,
   
   % these fields should not be reshaped
   exclude = {'cfg' 'fwhm' 'leadfield' 'q' 'rough' 'pos'};
-  if ~strcmp(inside, 'logical')
+  if ~isempty(inside) && ~strcmp(inside, 'logical')
     % also exclude the inside/outside from being reshaped
     exclude = cat(2, exclude, {'inside' 'outside'});
   end
