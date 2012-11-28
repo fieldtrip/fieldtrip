@@ -106,13 +106,14 @@ datasets(end).type     = 'meg';
 datasets(end).datatype = 'yokogawa160';
 datasets(end).filename = 'Continuous1.con';
 
-% lfp dataformats
-% datasets(end+1).origdir  = origdir; 
-% datasets(end).type     = 'lfp';
-% datasets(end).datatype = 'neuralynx';
-% datasets(end).filename = '2005-2-10_12-11-19';
-
+% lfp dataformats 
 datasets(end+1).origdir  = origdir; 
 datasets(end).type     = 'lfp';
-datasets(end).datatype = 'plexon';
-datasets(end).filename = 'p213parall.nex';
+datasets(end).datatype = 'neuralynx';
+datasets(end).filename = '2005-2-10_11-57-40';
+
+% first trial has lot's of NaNs in raw data
+% datasets(end+1).origdir  = origdir; 
+% datasets(end).type     = 'lfp';
+% datasets(end).datatype = 'plexon';
+% datasets(end).filename = 'p213parall.nex';
