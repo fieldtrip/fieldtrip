@@ -1,4 +1,4 @@
-function [pnt, dhk] = icosahedron();
+function [pnt, dhk] = icosahedron162()
 
 % ICOSAHEDRON162 creates a 2-fold refined icosahedron
 
