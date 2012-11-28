@@ -773,7 +773,7 @@ elseif filetype_check_extension(filename, '.raw.mhd')
   type = 'itab_mhd';
   manufacturer = 'Chieti ITAB';
   content = 'MEG header data, including sensor positions';
-elseif filetype_check_extension(filename, '.asc')
+elseif filetype_check_extension(filename, '.asc') && ~filetype_check_header(filename, '**')
   type = 'itab_asc';
   manufacturer = 'Chieti ITAB';
   content = 'headshape digitization file';
