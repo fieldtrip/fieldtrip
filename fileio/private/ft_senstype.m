@@ -199,7 +199,6 @@ end
 if isfield(sens, 'type')
   % preferably the structure specifies its own type
   type = sens.type;
-  
 elseif isfield(input, 'nChans') && input.nChans==1 && isfield(input, 'label') && ~isempty(regexp(input.label{1}, '^csc', 'once'))
   % this is a single channel header that was read from a Neuralynx file, might be fcdc_matbin or neuralynx_nsc
   type = 'neuralynx';
@@ -235,7 +234,9 @@ else
   % start with unknown, then try to determine the proper type by looking at the labels
   type = 'unknown';
   
-  if isgrad
+  if isgrad && isfield(sens, 'type')
+    type = sens.type;
+  elseif isgrad
     % probably this is MEG, determine the type of magnetometer/gradiometer system
     % note that the order here is important: first check whether it matches a 275 channel system, then a 151 channel system, since the 151 channels are a subset of the 275
     if     (mean(ismember(ft_senslabel('ctf275'),        sens.label)) > 0.8)
