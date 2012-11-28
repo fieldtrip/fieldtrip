@@ -58,6 +58,10 @@ spk_hastrials     = isfield(data,'label') && isfield(data, 'time') && isa(data.t
 spk_hasorig       = isfield(data,'origtrial') && isfield(data,'origtime'); % for compatibility
 isspike           = isfield(data, 'label') && (spk_hastimestamp || spk_hastrials || spk_hasorig);
 
+% check if it is a sensor array
+isgrad = isfield(data, 'label') && isfield(data, 'coilpos') && isfield(data, 'chanpos') && isfield(data, 'coilori');
+iselec = isfield(data, 'label') && isfield(data, 'elecpos') && isfield(data, 'chanpos');
+
 if iscomp
   % comp should conditionally go before raw, otherwise the returned ft_datatype will be raw
   type = 'comp';
@@ -92,6 +96,10 @@ elseif issource
 elseif ischan
   % this results from avgovertime/avgoverfreq after timelockstatistics or freqstatistics
   type = 'chan';
+elseif iselec
+  type = 'elec';
+elseif isgrad
+  type = 'grad';
 else
   type = 'unknown';
 end
@@ -105,6 +113,8 @@ if nargin>1
       type = any(strcmp(type, {'volume', 'segmentation'}));
     case 'source'
       type = any(strcmp(type, {'source', 'parcellation'}));
+    case 'sens'
+      type = any(strcmp(type, {'elec', 'grad'}));
     otherwise
       type = strcmp(type, desired);
   end % switch
@@ -153,7 +163,7 @@ end
 function [res] = check_parcellation(source)
 res = false;
 
-if ~isfield(source, 'pos') 
+if ~isfield(source, 'pos')
   return
 end
 
@@ -171,30 +181,30 @@ if sum(fb)>1
 end
 
 if res == false      % check if source has more D elements
-    check = 0;
-    for i = 1: length(fn)
-        fname = fn{i};
-        switch fname
-            case 'tri'
-                npos = size(source.tri,1);
-                check = 1;
-            case 'hex'
-                npos = size(source.hex,1);
-                check = 1;
-            case 'tet'
-                npos = size(source.tet,1);
-                check = 1;
-        end
+  check = 0;
+  for i = 1: length(fn)
+    fname = fn{i};
+    switch fname
+      case 'tri'
+        npos = size(source.tri,1);
+        check = 1;
+      case 'hex'
+        npos = size(source.hex,1);
+        check = 1;
+      case 'tet'
+        npos = size(source.tet,1);
+        check = 1;
     end
-    if check == 1   % check if elements are labelled
-        for i=1:numel(fn)
-            tmp = source.(fn{i});
-            fb(i) = numel(tmp)==npos && islogical(tmp);
-        end
-        if sum(fb)>1
-            res = true;
-        end
+  end
+  if check == 1   % check if elements are labelled
+    for i=1:numel(fn)
+      tmp = source.(fn{i});
+      fb(i) = numel(tmp)==npos && islogical(tmp);
     end
+    if sum(fb)>1
+      res = true;
+    end
+  end
 end
 
 fn = fieldnames(source);
