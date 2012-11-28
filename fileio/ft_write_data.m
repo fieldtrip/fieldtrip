@@ -1,7 +1,7 @@
 function ft_write_data(filename, dat, varargin)
 
-% FT_WRITE_DATA exports electrophysiological data to a file. The input data is
-% assumed to be scaled in microVolt.
+% FT_WRITE_DATA exports electrophysiological data such as EEG to a file.
+% The input data is assumed to be scaled in microVolt.
 %
 % Use as
 %   ft_write_data(filename, dat, ...)
@@ -30,7 +30,7 @@ function ft_write_data(filename, dat, varargin)
 %
 % See also FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT, FT_WRITE_EVENT
 
-% Copyright (C) 2007-2011 Robert Oostenveld
+% Copyright (C) 2007-2012 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -69,12 +69,18 @@ if isempty(dataformat)
   dataformat = ft_filetype(filename);
 end
 
+% convert 'yes' or 'no' string into boolean
+append = istrue(append);
+
 % determine the data size
 [nchans, nsamples] = size(dat);
 
 switch dataformat
-   
+  
   case 'empty'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % just pretend that we are writing the data, this is only for debugging
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     [numC, numS] = size(dat);
     fprintf(1,'Pretending to write %i samples from %i channes...\n',numS,numC);
     % Insert a small delay to make this more realitic for testing purposes
@@ -99,7 +105,6 @@ switch dataformat
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % network transparent buffer
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
     if ~isempty(chanindx)
       % assume that the header corresponds to the original multichannel
       % file and that the data represents a subset of channels
@@ -152,11 +157,11 @@ switch dataformat
         if isa(hdr.siemensap, 'uint8')
           packet.siemensap = hdr.siemensap;
         else
-%          try
-%            packet.siemensap = matlab2sap(hdr.siemensap);
-%          catch
-            warning 'Ignoring field "siemensap"';
-%          end
+          %          try
+          %            packet.siemensap = matlab2sap(hdr.siemensap);
+          %          catch
+          warning 'Ignoring field "siemensap"';
+          %          end
         end
       end
       if isfield(hdr,'nifti_1')
@@ -529,7 +534,6 @@ switch dataformat
     
     if 0
       % the following code snippet can be used for testing
-      nex2 = [];
       [nex2.var, nex2.hdr] = read_plexon_nex(filename, 'channel', 1);
     end
     
@@ -608,6 +612,9 @@ switch dataformat
     end
     
   case 'gdf'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % multiple channel GDF file
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if append
       error('appending data is not yet supported for this data format');
     end
@@ -620,6 +627,9 @@ switch dataformat
     write_gdf(filename, hdr, dat);
     
   case 'edf'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % multiple channel European Data Format file
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if append
       error('appending data is not yet supported for this data format');
     end
@@ -629,9 +639,8 @@ switch dataformat
       hdr.label  = hdr.label(chanindx);
       hdr.nChans = length(chanindx);
     end
-    write_edf(filename, hdr, dat);    
+    write_edf(filename, hdr, dat);
     
   otherwise
     error('unsupported data format');
 end % switch dataformat
-

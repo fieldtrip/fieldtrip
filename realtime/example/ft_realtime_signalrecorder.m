@@ -31,15 +31,15 @@ function ft_realtime_signalrecorder(cfg)
 % when the function _starts_. It causes all data acquired prior to
 % starting the realtime function to be skipped.
 %
-% cfg.bufferdata=last causes the realtime function to jump to the last
+% cfg.bufferdata='last' causes the realtime function to jump to the last
 % available data while _running_. If the realtime loop is not fast enough,
 % it causes some data to be dropped.
 %
 % If you want to skip all data that was acquired before you start the
 % RT function, but don't want to miss any data that was acquired while
 % the realtime function is started, then you should use jumptoeof=yes and
-% bufferdata=first. If you want to analyse data from a file, then you
-% should use jumptoeof=no and bufferdata=first.
+% bufferdata='first'. If you want to analyse data from a file, then you
+% should use cfg.jumptoeof='no' and cfg.bufferdata='first'.
 %
 % To stop this realtime function, you will have have to press Ctrl-C.
 
@@ -81,6 +81,7 @@ end
 
 % make a copy of the header that will be passed to the writing function, update with the channel selection
 writehdr          = hdr;
+writehdr.nChans   = length(chanindx);
 writehdr.label    = writehdr.label(chanindx);
 writehdr.chantype = writehdr.chantype(chanindx);
 writehdr.chanunit = writehdr.chanunit(chanindx);
@@ -146,4 +147,3 @@ while true
     
   end % if enough new samples
 end % while true
-
