@@ -8,7 +8,7 @@ readfromdisk = true;
 if readfromdisk
   % the segmentation takes quite some time
   % furthermore we want to ensure that we have the old-stype segmentation
-  load('bug1651.mat');
+  load('/home/common/matlab/fieldtrip/data/test/bug1651.mat');
 else
   % this is the original code to create the segmentation
   % create a 3 layered segmentation
