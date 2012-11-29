@@ -16,150 +16,128 @@
  *
  */
 
-#include <pthread.h>
+#include "mex.h"
+#include "engine.h"
+#include "platform.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 
-#include "mex.h"
-#include "engine.h"
-#include "platform.h"
-
-typedef struct {
-  Engine         *ep;
-  pthread_t       tid;
-  int             busy;
-  char           *cmd;
-  int             retval;
-}               engine_t;
+#ifdef USE_PTHREADS
+#include <pthread.h>
+#else
+#include <windows.h>
+#endif
 
 #define STRLEN 256
 #define FREE(x) {if (x) {free(x); x=NULL;}}
 
-pthread_mutex_t enginemutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t  busycondition = PTHREAD_COND_INITIALIZER;
+/**************************************************************************************************/
+#ifdef USE_PTHREADS
+pthread_mutex_t enginemutex   = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t  busycond      = PTHREAD_COND_INITIALIZER;
+#define ENGINEMUTEX_LOCK        pthread_mutex_lock(&enginemutex)
+#define ENGINEMUTEX_UNLOCK      pthread_mutex_unlock(&enginemutex)
+#define BUSYCOND_WAIT           pthread_cond_wait(&busycond, &enginemutex)
+#define BUSYCOND_RELEASE        pthread_cond_signal(&busycond)
+#define THREAD_EXIT             pthread_exit(NULL);
 
-engine_t       *enginepool = NULL;
-unsigned int    poolsize = 0;
+#else
+CRITICAL_SECTION enginemutex;
+#define ENGINEMUTEX_LOCK   EnterCriticalSection(&enginemutex)
+#define ENGINEMUTEX_UNLOCK LeaveCriticalSection(&enginemutex)
+#define BUSYCOND_WAIT
+#define BUSYCOND_RELEASE
+#define THREAD_EXIT
+
+#endif
+/**************************************************************************************************/
+
+Engine         *engine = NULL;
 unsigned int    initialized = 0;
 
 /* this is called the first time that the mex-file is loaded */
-  void 
-initFun(void)
-{
+void initFun(void) {
   if (!initialized) {
-    pthread_mutex_lock(&enginemutex);
+    ENGINEMUTEX_LOCK;
     initialized = 1;
-    FREE(enginepool);
-    poolsize = 0;
-    pthread_mutex_unlock(&enginemutex);
+    ENGINEMUTEX_UNLOCK;
     mexPrintf("engine init()\n");
   }
   return;
 }
 
 /* this function is called upon unloading of the mex-file */
-  void 
-exitFun(void)
-{
-  pthread_mutex_lock(&enginemutex);
-  while (poolsize) {
-    mexPrintf("closing engine %d\n", poolsize);
-    if (enginepool[poolsize - 1].busy)
-      mexWarnMsgTxt("Closing busy engine");
-    if (enginepool[poolsize - 1].ep != NULL)
-      engClose(enginepool[poolsize - 1].ep);
-    poolsize--;
-    mexUnlock();
-  }
-  FREE(enginepool);
+void exitFun(void) {
+  ENGINEMUTEX_LOCK;
   initialized = 0;
-  pthread_mutex_unlock(&enginemutex);
+  ENGINEMUTEX_UNLOCK;
+  mexPrintf("engine exit()\n");
   return;
 }
 
 /* this function will be started as a seperate thread */
-  void 
-evalString(void *argin)
-{
-  engine_t       *engine;
-  Engine         *ep;
-  char            cmd[STRLEN];
-  int             retval;
-
+void evalString(void *argin) {
+  int   retval;
+  char *cmd;
+  
   mexPrintf("Starting thread\n");
-
-  engine = (engine_t *) argin;
-  pthread_mutex_lock(&enginemutex);
-  if (engine[0].busy) {
-    pthread_mutex_unlock(&enginemutex);
-    pthread_exit(NULL);
-    mexErrMsgTxt("The specified engine is already busy");
+  ENGINEMUTEX_LOCK;
+  
+  cmd = (char *) argin;
+  
+  if (engine!=0) {
+    mexPrintf("Executing command \"%s\" on %d\n", cmd, engine);
+    retval = engEvalString(engine, cmd);
+    mexPrintf("Finished executing command, retval = %d\n", retval);
   }
-  engine[0].busy = 1;
-  ep = engine[0].ep;
-  strncpy(cmd, engine[0].cmd, STRLEN - 1);
-  pthread_mutex_unlock(&enginemutex);
-
-  mexPrintf("Signalling condition\n");
-  pthread_cond_signal(&busycondition);
-
-  mexPrintf("Executing command on %d\n", ep);
-  retval = engEvalString(ep, cmd);
-  mexPrintf("Finished executing command\n");
-
-  pthread_mutex_lock(&enginemutex);
-  engine[0].retval = retval;
-  engine[0].busy = 0;
-#ifndef PLATFORM_WINDOWS
-  engine[0].tid = (pthread_t) NULL;
-#endif
-  FREE(engine[0].cmd);
-  pthread_mutex_unlock(&enginemutex);
-
+  
+  ENGINEMUTEX_UNLOCK;
+  
   mexPrintf("Finished thread\n");
-  pthread_exit(NULL);
+  THREAD_EXIT;
   return;
 }
 
-  void 
-mexFunction(int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[])
-{
+void mexFunction(int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) {
   char            command[STRLEN];
   char            matlabcmd[STRLEN];
+  char            cmd[STRLEN];
   char           *ptr;
-  int             retval, block, num, i, status;
-
-  initFun();
+  int             poolsize, retval, block, num, i, status;
+  #ifndef USE_PTHREADS
+          HANDLE TName;
+  InitializeCriticalSection(&enginemutex);
+  #endif
+          
+          initFun();
   mexAtExit(exitFun);
-
+  
   /* the first argument is always the command string */
   if (nrhs < 1)
     mexErrMsgTxt("invalid number of input arguments");
-
+  
   if (!mxIsChar(prhs[0]))
     mexErrMsgTxt("invalid input argument #1");
   if (mxGetString(prhs[0], command, STRLEN - 1))
     mexErrMsgTxt("invalid input argument #1");
-
+  
   /* convert to lower case */
   ptr = command;
   while (*ptr) {
     *ptr = tolower(*ptr);
     ptr++;
   }
-
+  
   /****************************************************************************/
   if (strcmp(command, "open") == 0) {
     /* engine open num cmd */
-
-    if (enginepool != NULL)
-      mexErrMsgTxt("There are already engines running");
-
+    
     if (nrhs < 2)
       mexErrMsgTxt("Invalid number of input arguments");
-
+    
     if (nrhs > 1) {
       if (!mxIsNumeric(prhs[1]))
         mexErrMsgTxt("Invalid input argument #2, should be numeric");
@@ -172,38 +150,15 @@ mexFunction(int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[])
     } else {
       sprintf(matlabcmd, "matlab");
     }
-
+    
     if (poolsize < 1)
       mexErrMsgTxt("The number of engines in the pool should be positive");
-
-    pthread_mutex_lock(&enginemutex);
-    enginepool = (engine_t *) malloc(poolsize * sizeof(engine_t));
-    status = 1;
-    for (i = 0; i < poolsize; i++) {
-#ifdef PLATFORM_WINDOWS
-      enginepool[i].ep = engOpenSingleUse(NULL, NULL, &retval);	/* returns NULL on
-                                                                 * failure */
-      /*
-       * In the future, it would be nice to use
-       * engSetVisible and engOutputBuffer
-       */
-#else
-      enginepool[i].ep = engOpen(matlabcmd);	/* returns NULL on
-                                               * failure */
-      enginepool[i].tid = NULL;
-#endif
-      enginepool[i].busy = 0;
-      enginepool[i].retval = 0;
-      enginepool[i].cmd = NULL;
-      if (enginepool[i].ep == NULL) {
-        status = 0;
-        break;
-      } else {
-        mexLock();
-      }
-    }
-    pthread_mutex_unlock(&enginemutex);
-    if (!status) {
+    
+    ENGINEMUTEX_LOCK;
+    engine = engOpenSingleUse(NULL, NULL, &retval);	/* returns NULL on failure */
+    ENGINEMUTEX_UNLOCK;
+    
+    if (!engine) {
       exitFun();	/* this cleans up all engines */
       mexErrMsgTxt("failed to open MATLAB engine");
     }
@@ -211,110 +166,93 @@ mexFunction(int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[])
   /****************************************************************************/
   else if (strcmp(command, "close") == 0) {
     /* engine close */
-
+    
     exitFun();
-
+    
     retval = 0;
     plhs[0] = mxCreateDoubleMatrix(1, 1, mxREAL);
     mxGetPr(plhs[0])[0] = retval;
-
+    
   }
   /****************************************************************************/
   else if (strcmp(command, "put") == 0) {
     /* engine put num name val */
-
+    
     if (nrhs != 4)
       mexErrMsgTxt("Exactly four input arguments needed");
-
+    
     if (!mxIsNumeric(prhs[1]))
       mexErrMsgTxt("Argument #2 should be numeric");
     num = mxGetScalar(prhs[1]);
-
+    
     if (num < 1 || num > poolsize)
       mexErrMsgTxt("Invalid engine number");
-
+    
     if (!mxIsChar(prhs[2]))
       mexErrMsgTxt("Argument #3 should be a string");
-
-    pthread_mutex_lock(&enginemutex);
-
-    if (enginepool[num - 1].busy) {
-      pthread_mutex_unlock(&enginemutex);
-      mexErrMsgTxt("The specified engine is busy");
-    }
-    retval = engPutVariable(enginepool[num - 1].ep, mxArrayToString(prhs[2]), prhs[3]);
-
+    
+    ENGINEMUTEX_LOCK;
+    
+    retval = engPutVariable(engine, mxArrayToString(prhs[2]), prhs[3]);
+    
     plhs[0] = mxCreateDoubleMatrix(1, 1, mxREAL);
     mxGetPr(plhs[0])[0] = retval;
-
-    pthread_mutex_unlock(&enginemutex);
+    
+    ENGINEMUTEX_UNLOCK;
   }
   /****************************************************************************/
   else if (strcmp(command, "get") == 0) {
     /* engine get num name */
-
+    
     if (nrhs != 3)
       mexErrMsgTxt("Exactly three input arguments needed");
-
+    
     if (!mxIsNumeric(prhs[1]))
       mexErrMsgTxt("Argument #2 should be numeric");
-
+    
     if (!mxIsChar(prhs[2]))
       mexErrMsgTxt("Argument #3 should be a string");
-
+    
     num = mxGetScalar(prhs[1]);
-
-    if (num < 1 || num > poolsize)
-      mexErrMsgTxt("Invalid engine number");
-
-    pthread_mutex_lock(&enginemutex);
-
-    if (enginepool[num - 1].busy) {
-      pthread_mutex_unlock(&enginemutex);
-      mexErrMsgTxt("The specified engine is busy");
-    }
-    plhs[0] = engGetVariable(enginepool[num - 1].ep, mxArrayToString(prhs[2]));
-
-    pthread_mutex_unlock(&enginemutex);
-
+    
+    ENGINEMUTEX_LOCK;
+    
+    plhs[0] = engGetVariable(engine, mxArrayToString(prhs[2]));
+    
+    ENGINEMUTEX_UNLOCK;
+    
   }
   /****************************************************************************/
   else if (strcmp(command, "isbusy") == 0) {
     /* engine isbusy num */
-
+    
     if (nrhs != 2)
       mexErrMsgTxt("Exactly two input arguments needed");
-
+    
     if (!mxIsNumeric(prhs[1]))
       mexErrMsgTxt("Argument #2 should be numeric");
     num = mxGetScalar(prhs[1]);
-
-    if (num < 1 || num > poolsize)
-      mexErrMsgTxt("Invalid engine number");
-
-    pthread_mutex_lock(&enginemutex);
-    retval = enginepool[num - 1].busy;
-
+    
+    ENGINEMUTEX_LOCK;
     plhs[0] = mxCreateDoubleMatrix(1, 1, mxREAL);
-    mxGetPr(plhs[0])[0] = retval;
-
-    pthread_mutex_unlock(&enginemutex);
+    mxGetPr(plhs[0])[0] = 1;
+    ENGINEMUTEX_UNLOCK;
   }
   /****************************************************************************/
   else if (strcmp(command, "eval") == 0) {
     /* engine eval num str block */
-
+    
     if (nrhs < 3)
       mexErrMsgTxt("At least three input arguments needed");
-
+    
     if (!mxIsNumeric(prhs[1]))
       mexErrMsgTxt("Argument #2 should be numeric");
     num = mxGetScalar(prhs[1]);
-
+    
     if (!mxIsChar(prhs[2]))
       mexErrMsgTxt("Invalid input argument #3, should be a string");
-    mxGetString(prhs[2], matlabcmd, STRLEN - 1);
-
+    mxGetString(prhs[2], cmd, STRLEN - 1);
+    
     if (nrhs > 3) {
       if (!mxIsNumeric(prhs[3]))
         mexErrMsgTxt("Invalid input argument #4, should be numeric");
@@ -322,60 +260,55 @@ mexFunction(int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[])
     } else {
       block = 0;
     }
-
-    if (num < 1 || num > poolsize)
-      mexErrMsgTxt("Invalid engine number");
-
-    pthread_mutex_lock(&enginemutex);
-
-    if (enginepool[num - 1].busy) {
-      pthread_mutex_unlock(&enginemutex);
-      mexErrMsgTxt("The specified engine is already busy");
-    }
+    
+    ENGINEMUTEX_LOCK;
+    
     if (!block) {
-      enginepool[num - 1].cmd = malloc(STRLEN);
-      strncpy(enginepool[num - 1].cmd, matlabcmd, STRLEN - 1);
+      
+#ifdef USE_PTHREADS
       retval = pthread_create(&(enginepool[num - 1].tid), NULL, (void *) &evalString, (void *) (enginepool + num - 1));
-      /* wait for the thread to become busy */
-      mexPrintf("Waiting for condition\n");
-      pthread_cond_wait(&busycondition, &enginemutex);
-    } else {
-      retval = engEvalString(enginepool[num - 1].ep, matlabcmd);
-    }
+#else
+      TName = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) evalString, (void *) (cmd), 0, NULL);
+#endif
 
+    } else {
+      retval = engEvalString(engine, cmd);
+    }
+    mexPrintf("Finished executing command, retval = %d\n", retval);
+    ENGINEMUTEX_UNLOCK;
+    
+    WaitForSingleObject(TName, INFINITE);
+    
+    /* wait for the thread to become busy */
+    mexPrintf("Waiting for engine to become busy\n");
+    BUSYCOND_WAIT;
+    mexPrintf("The engine has become busy\n");
+    
     plhs[0] = mxCreateDoubleMatrix(1, 1, mxREAL);
     mxGetPr(plhs[0])[0] = retval;
-
-    pthread_mutex_unlock(&enginemutex);
   }
   /****************************************************************************/
   else if (strcmp(command, "poolsize") == 0) {
     /* engine poolsize */
-
-    pthread_mutex_lock(&enginemutex);
+    
+    ENGINEMUTEX_LOCK;
     plhs[0] = mxCreateDoubleMatrix(1, 1, mxREAL);
-    mxGetPr(plhs[0])[0] = poolsize;
-    pthread_mutex_unlock(&enginemutex);
+    mxGetPr(plhs[0])[0] = (engine!=0);
+    ENGINEMUTEX_UNLOCK;
   }
   /****************************************************************************/
   else if (strcmp(command, "info") == 0) {
     /* engine info */
-
-    pthread_mutex_lock(&enginemutex);
-    for (i = 0; i < poolsize; i++) {
-      mexPrintf("engine[%d].ep     = %d\n", i + 1, enginepool[i].ep);
-      mexPrintf("engine[%d].tid    = %d\n", i + 1, enginepool[i].tid);
-      mexPrintf("engine[%d].busy   = %d\n", i + 1, enginepool[i].busy);
-      mexPrintf("engine[%d].cmd    = '%s'\n", i + 1, enginepool[i].cmd);
-      mexPrintf("engine[%d].retval = %d\n", i + 1, enginepool[i].retval);
-    }
-    pthread_mutex_unlock(&enginemutex);
+    
+    ENGINEMUTEX_LOCK;
+    mexPrintf("engine = %d\n",   engine);
+    ENGINEMUTEX_UNLOCK;
   }
   /****************************************************************************/
   else {
     mexErrMsgTxt("unknown command");
     return;
   }
-
+  
   return;
 }
