@@ -22,20 +22,30 @@ cfg.parameter    = 'avg';
 
 cfg.operation = 'log10';
 tmp = ft_math(cfg, timelock1);
+assert(isfield(tmp, cfg.param), 'the output parameter is missing');
+assert(isfield(tmp, 'dimord'), 'the output dimord is missing');
 
 cfg.value = pi;
 
 cfg.operation = 'add';
 tmp = ft_math(cfg, timelock1);
+assert(isfield(tmp, cfg.param), 'the output parameter is missing');
+assert(isfield(tmp, 'dimord'), 'the output dimord is missing');
 
 cfg.operation = 'subtract';
 tmp = ft_math(cfg, timelock1);
+assert(isfield(tmp, cfg.param), 'the output parameter is missing');
+assert(isfield(tmp, 'dimord'), 'the output dimord is missing');
 
 cfg.operation = 'multiply';
 tmp = ft_math(cfg, timelock1);
+assert(isfield(tmp, cfg.param), 'the output parameter is missing');
+assert(isfield(tmp, 'dimord'), 'the output dimord is missing');
 
 cfg.operation = 'divide';
 tmp = ft_math(cfg, timelock1);
+assert(isfield(tmp, cfg.param), 'the output parameter is missing');
+assert(isfield(tmp, 'dimord'), 'the output dimord is missing');
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -48,15 +58,23 @@ cfg.parameter    = 'avg';
 
 cfg.operation = 'add';
 tmp = ft_math(cfg, timelock1, timelock2);
+assert(isfield(tmp, cfg.param), 'the output parameter is missing');
+assert(isfield(tmp, 'dimord'), 'the output dimord is missing');
 
 cfg.operation = 'subtract';
 tmp = ft_math(cfg, timelock1, timelock2);
+assert(isfield(tmp, cfg.param), 'the output parameter is missing');
+assert(isfield(tmp, 'dimord'), 'the output dimord is missing');
 
 cfg.operation = 'multiply';
 tmp = ft_math(cfg, timelock1, timelock2);
+assert(isfield(tmp, cfg.param), 'the output parameter is missing');
+assert(isfield(tmp, 'dimord'), 'the output dimord is missing');
 
 cfg.operation = 'divide';
 tmp = ft_math(cfg, timelock1, timelock2);
+assert(isfield(tmp, cfg.param), 'the output parameter is missing');
+assert(isfield(tmp, 'dimord'), 'the output dimord is missing');
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -69,9 +87,11 @@ cfg.parameter    = 'avg';
 
 cfg.operation = 'add';
 tmp = ft_math(cfg, timelock1, timelock2, timelock1, timelock2);
+assert(isfield(tmp, cfg.param), 'the output parameter is missing');
+assert(isfield(tmp, 'dimord'), 'the output dimord is missing');
 
 cfg.operation = 'multiply';
 tmp = ft_math(cfg, timelock1, timelock2, timelock1, timelock2);
-
-
+assert(isfield(tmp, cfg.param), 'the output parameter is missing');
+assert(isfield(tmp, 'dimord'), 'the output dimord is missing');
 

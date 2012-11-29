@@ -164,6 +164,7 @@ end % one or multiple input data structures
 
 % store the result of the operation in the output structure
 data.(cfg.parameter) = tmp;
+data.dimord = dimord;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % deal with the output
