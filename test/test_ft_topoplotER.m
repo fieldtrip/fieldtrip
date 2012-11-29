@@ -88,7 +88,7 @@ figure;ft_topoplotER(cfg, coh);drawnow % FIXME this causes a crash when a new re
 % FIXME it also crashes when more than one ref is selected
 
 %create connectivity-data with sparse linear indexing
-cfgc2.channelcmb = [repmat(freq2.label(5),[numel(freq2.label)-1 1]) freq2.label([1:4 6:end])'];
+cfgc2.channelcmb = [repmat(freq2.label(5),[numel(freq2.label)-1 1]) freq2.label([1:4 6:end])];
 coh2  = ft_connectivityanalysis(cfgc2, freq2);
 
 %plot
@@ -103,7 +103,7 @@ coh3   = ft_connectivityanalysis(cfgc2, freq2);
 figure;ft_topoplotER(cfg, coh3);drawnow
 
 %create connectivity-data with even sparser linear indexing
-cfgc2.channelcmb = [repmat(freq2.label(5),[10 1]) freq2.label(21:30)';repmat(freq2.label(10),[10 1]) freq2.label(21:30)'];
+cfgc2.channelcmb = [repmat(freq2.label(5),[10 1]) freq2.label(21:30);repmat(freq2.label(10),[10 1]) freq2.label(21:30)];
 coh4 = ft_connectivityanalysis(cfgc2, freq2);
 
 %plot: this breaks
