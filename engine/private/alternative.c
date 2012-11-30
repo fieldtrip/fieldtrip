@@ -38,11 +38,11 @@
 #ifdef USE_PTHREADS
 #include <pthread.h>
 
-pthread_t       threadid    [MAX_THREADS];
-pthread_mutex_t mutex_start [MAX_THREADS];
-pthread_mutex_t mutex_finish[MAX_THREADS];
-pthread_cond_t  cond_start	[MAX_THREADS];
-pthread_cond_t  cond_finish	[MAX_THREADS];
+pthread_t                 threadid    [MAX_THREADS];
+pthread_mutex_t           mutex_start [MAX_THREADS];
+pthread_mutex_t           mutex_finish[MAX_THREADS];
+pthread_cond_t            cond_start	[MAX_THREADS];
+pthread_cond_t            cond_finish	[MAX_THREADS];
 #define MUTEX_INIT(x,y)   pthread_mutex_init(x, y)
 #define MUTEX_LOCK(x)     pthread_mutex_lock(x)
 #define MUTEX_UNLOCK(x)   pthread_mutex_unlock(x)
@@ -57,11 +57,11 @@ pthread_cond_t  cond_finish	[MAX_THREADS];
 #else
 #include <windows.h>
 
-HANDLE              threadid    [MAX_THREADS];
-CRITICAL_SECTION    mutex_start [MAX_THREADS];
-CRITICAL_SECTION    mutex_finish[MAX_THREADS];
-CONDITION_VARIABLE  cond_start	[MAX_THREADS];
-CONDITION_VARIABLE  cond_finish	[MAX_THREADS];
+HANDLE                    threadid    [MAX_THREADS];
+CRITICAL_SECTION          mutex_start [MAX_THREADS];
+CRITICAL_SECTION          mutex_finish[MAX_THREADS];
+CONDITION_VARIABLE        cond_start	[MAX_THREADS];
+CONDITION_VARIABLE        cond_finish	[MAX_THREADS];
 #define MUTEX_INIT(x,y)   InitializeCriticalSection(x)
 #define MUTEX_LOCK(x)     EnterCriticalSection(x)
 #define MUTEX_UNLOCK(x)   LeaveCriticalSection(x)
@@ -73,8 +73,8 @@ CONDITION_VARIABLE  cond_finish	[MAX_THREADS];
 #define THREAD_JOIN(x)    WaitForSingleObject(x, INFINITE)
 #define THREAD_EXIT(x)
 
-#define  sleep(x)  (Sleep((x)*1000)) /* in seconds      */
-#define usleep(x)  (Sleep((x)/1000)) /* in microseconds */
+#define  sleep(x)         (Sleep((x)*1000)) /* in seconds      */
+#define usleep(x)         (Sleep((x)/1000)) /* in microseconds */
 
 #endif
 /************************************************************************/
@@ -82,6 +82,7 @@ CONDITION_VARIABLE  cond_finish	[MAX_THREADS];
 /* these are used in start and finish */
 #define ENGINE_IDLE     1
 #define ENGINE_BUSY     2
+#define ENGINE_INVALID  3
 /* these are used in start */
 #define ENGINE_INFO     10
 #define ENGINE_PUT      11
@@ -105,8 +106,8 @@ void initFun(void)
 		if (initialized==FALSE) {
 				DEBUG_PRINT("Init\n");
 				for (engine=0; engine<MAX_THREADS; engine++) {
-						start [engine] = ENGINE_IDLE;
-						finish[engine] = ENGINE_IDLE;
+						start [engine] = ENGINE_INVALID;
+						finish[engine] = ENGINE_INVALID;
 						MUTEX_INIT(&mutex_start[engine], NULL);
 						MUTEX_INIT(&mutex_finish[engine], NULL);
 						COND_INIT(&cond_start[engine], NULL);
@@ -132,8 +133,8 @@ void exitFun(void)
 						THREAD_JOIN(threadid[engine]);
 				}
 				for (engine=0; engine<MAX_THREADS; engine++) {
-						start [engine] = ENGINE_IDLE;
-						finish[engine] = ENGINE_IDLE;
+						start [engine] = ENGINE_INVALID;
+						finish[engine] = ENGINE_INVALID;
 						MUTEX_DESTROY(&mutex_start[engine]);
 						MUTEX_DESTROY(&mutex_finish[engine]);
 						COND_DESTROY(&cond_start[engine]);
@@ -152,7 +153,8 @@ void engineThread(void *argin)
 {
 		Engine         *ep = NULL;
 		char            str[STRLEN];
-		int             engine, operation, retval;
+		unsigned int    engine;
+    int             operation, retval;
 
 		if (!mexIsLocked()) {
 				DEBUG_PRINT("Locking mex file\n");
@@ -167,13 +169,23 @@ void engineThread(void *argin)
 		/* start the MATLAB engine, this thread will remain responsible for it */
 #ifdef PLATFORM_WINDOWS
 		ep = engOpenSingleUse(NULL, NULL, &retval);
+    if (ep)
+      engSetVisible(ep, 0);
 #else
 		ep = engOpen(matlabcmd);
-		retval = (ep!=NULL);
 #endif
 
 		COND_SIGNAL(&cond_finish[engine]);
 
+    if (!ep) {
+      /* failed to start the engine */
+      MUTEX_LOCK(&mutex_finish[engine]);
+      finish[engine] = ENGINE_INVALID;
+      MUTEX_UNLOCK(&mutex_finish[engine]);
+      THREAD_EXIT(NULL);
+      return;
+    }
+    
 		while (1) {
 				DEBUG_PRINT("Entering while loop in engine thread %d\n", engine);
 
@@ -244,7 +256,8 @@ void mexFunction(int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[])
 {
 		char            str[STRLEN];
 		char           *ptr;
-		int             retval, engine;
+		int             retval;
+    unsigned int    engine;
 
 		initFun();
 		mexAtExit(exitFun);
@@ -315,7 +328,7 @@ void mexFunction(int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[])
 
 						DEBUG_PRINT("Started engine %d, retval = %d\n", engine+1, retval);
 						if (retval)
-								break;
+								break; /* a problem was detected in starting the threads, don't continue */
 				};
 
 				if (retval) {
@@ -515,7 +528,7 @@ void mexFunction(int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[])
 				engine--; /* switch from MATLAB to C indexing */
 
 				MUTEX_LOCK(&mutex_finish[engine]);
-                retval = (finish[engine]==ENGINE_IDLE);
+        retval = (finish[engine]==ENGINE_IDLE);
 				MUTEX_UNLOCK(&mutex_finish[engine]);
 
 				plhs[0] = mxCreateDoubleMatrix(1, 1, mxREAL);
