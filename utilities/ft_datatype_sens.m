@@ -156,6 +156,14 @@ switch version
       sens = rmfield(sens, 'type');
     end
     
+    if size(sens.chanpos,1)~=length(sens.label) || ...
+       isfield(sens, 'tra') && size(sens.tra,1)~=length(sens.label) || ...
+       isfield(sens, 'tra') && isfield(sens, 'elecpos') && size(sens.tra,2)~=size(sens.elecpos,1) || ...
+       isfield(sens, 'tra') && isfield(sens, 'coilpos') && size(sens.tra,2)~=size(sens.coilpos,1) || ...
+       isfield(sens, 'tra') && isfield(sens, 'coilori') && size(sens.tra,2)~=size(sens.coilori,1)
+     error('inconsistent number of channels in sensor description');
+    end
+    
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   otherwise
     error('converting to version %s is not supported', version);
