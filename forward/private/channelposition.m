@@ -56,8 +56,8 @@ elseif ~isfield(sens, 'coilori') && isfield(sens, 'elecpos')
 end
 
 switch ft_senstype(sens)
-  case {'ctf151', 'ctf275' 'bti148', 'bti248', 'itab153', 'yokogawa160', 'yokogawa64'}
-    % the following code is for all axial gradiometer systems or magnetometer systems
+  case {'ctf64', 'ctf151', 'ctf275' 'bti148', 'bti248', 'bti248grad', 'itab28', 'itab153', 'yokogawa64', 'yokogawa160'}
+    % the following code applies to systems with only axial gradiometers or magnetometers
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%
     % do the MEG sensors first
@@ -161,7 +161,7 @@ switch ft_senstype(sens)
     
     sens = sensorig;
     
-  case {'ctf151_planar', 'ctf275_planar', 'bti148_planar', 'bti248_planar', 'itab153_planar', 'yokogawa160_planar', 'yokogawa64_planar'}
+  case {'ctf64_planar', 'ctf151_planar', 'ctf275_planar', 'bti148_planar', 'bti248_planar', 'bti248grad_planar', 'itab28_planar', 'itab153_planar', 'yokogawa64_planar', 'yokogawa160_planar'}
     % create a list with planar channel names
     chan = {};
     for i=1:length(sens.label)
