@@ -113,6 +113,11 @@ switch version
       end
     end
     
+    if isfield(vol, 'type') && strcmp(vol.type, 'infinite')
+      % ensure that the sensor description is up to date
+      vol.sens = ft_datatype_sens(vol.sens);
+    end
+    
     if isfield(vol, 'type') && any(strcmp(vol.type, {'concentricspheres', 'singlesphere'}))
       if strcmp(vol, 'cond') && ~strcmp(vol, 'c')
         vol.c = vol.cond;

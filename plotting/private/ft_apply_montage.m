@@ -37,7 +37,7 @@ function [sens] = ft_apply_montage(sens, montage, varargin)
 %
 % See also FT_READ_SENS, FT_TRANSFORM_SENS
 
-% Copyright (C) 2008-2011, Robert Oostenveld
+% Copyright (C) 2008-2012, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -67,6 +67,10 @@ bname      = ft_getopt(varargin, 'balancename', '');
 if isfield(sens, 'labelorg') && isfield(sens, 'labelnew')
   % the input data structure is also a montage, i.e. apply the montages sequentially
   sens.label = sens.labelnew;
+end
+
+if ~all(isfield(montage, {'tra', 'labelorg', 'labelnew'}))
+  error('the second input argument does not correspond to a montage');
 end
 
 % check the consistency of the montage
