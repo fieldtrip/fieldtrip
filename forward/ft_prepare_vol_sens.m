@@ -114,10 +114,10 @@ end
 if ismeg && iseeg
   % this is something that could be implemented relatively easily
   error('simultaneous EEG and MEG not yet supported');
-
+  
 elseif ~ismeg && ~iseeg
   error('the input does not look like EEG, nor like MEG');
-
+  
 elseif ismeg
   
   % keep a copy of the original sensor array, this is needed for the MEG localspheres model
@@ -132,11 +132,11 @@ elseif ismeg
     end
     sens.tra = eye(Nchans, Ncoils);
   end
-
+  
   % select the desired channels from the gradiometer array
   % order them according to the users specification
   [selchan, selsens] = match_str(channel, sens.label);
-
+  
   % first only modify the linear combination of coils into channels
   sens.chanpos = sens.chanpos(selsens,:);
   sens.chanori = sens.chanori(selsens,:);
@@ -147,17 +147,17 @@ elseif ismeg
   sens.coilpos = sens.coilpos(selcoil,:);
   sens.coilori = sens.coilori(selcoil,:);
   sens.tra     = sens.tra(:,selcoil);
-
+  
   switch ft_voltype(vol)
     case {'infinite' 'infinite_monopole'}
       % nothing to do
-
+      
     case 'singlesphere'
       % nothing to do
-
+      
     case 'concentricspheres'
       % nothing to do
-
+      
     case 'neuromag'
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % if the forward model is computed using the external Neuromag toolbox,
@@ -166,16 +166,16 @@ elseif ismeg
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       [selchan, selsens] = match_str(channel, sens.label);
       vol.chansel = selsens;
-
+      
     case 'localspheres'
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % If the volume conduction model consists of multiple spheres then we
       % have to match the channels in the gradiometer array and the volume
       % conduction model.
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+      
       % use the original sensor array instead of the one with a subset of
-      % channels, because we need the complete mapping of coils to channels 
+      % channels, because we need the complete mapping of coils to channels
       sens = sens_orig;
       
       % remove the coils that do not contribute to any channel output
@@ -184,7 +184,7 @@ elseif ismeg
       sens.coilpos = sens.coilpos(selcoil,:);
       sens.coilori = sens.coilori(selcoil,:);
       sens.tra     = sens.tra(:,selcoil);
-
+      
       % the initial localspheres volume conductor has a local sphere per
       % channel, whereas it should have a local sphere for each coil
       if size(vol.r,1)==size(sens.coilpos,1) && ~isfield(vol, 'label')
@@ -204,7 +204,7 @@ elseif ismeg
         end
         return
       end
-
+      
       % the CTF way of representing the headmodel is one-sphere-per-channel
       % whereas the FieldTrip way of doing the forward computation is one-sphere-per-coil
       Nchans   = size(sens.tra,1);
@@ -231,9 +231,9 @@ elseif ismeg
           vol.o(end+1,:)   = singlesphere.o;
         end
       end
-
+      
       localspheres = [];
-      % for each coil in the MEG helmet, determine the corresponding channel and from that the corresponding local sphere 
+      % for each coil in the MEG helmet, determine the corresponding channel and from that the corresponding local sphere
       for i=1:Ncoils
         coilindex = find(sens.tra(:,i)~=0); % to which channel does this coil belong
         if length(coilindex)>1
@@ -241,7 +241,7 @@ elseif ismeg
           % which happens if the sensor array represents a synthetic higher-order gradient.
           [dum, coilindex] = max(abs(sens.tra(:,i)));
         end
-
+        
         coillabel = sens.label{coilindex};                    % what is the label of this channel
         chanindex = strmatch(coillabel, vol.label, 'exact');  % what is the index of this channel in the list of local spheres
         localspheres.r(i,:) = vol.r(chanindex);
@@ -265,45 +265,45 @@ elseif ismeg
       % make the same selection of coils in the localspheres model
       vol.r = vol.r(selcoil);
       vol.o = vol.o(selcoil,:);
-
+      
     case 'singleshell'
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % if the forward model is computed using the code from Guido Nolte, we
       % have to initialize the volume model using the gradiometer coil
       % locations
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+      
       % compute the surface normals for each vertex point
       if ~isfield(vol.bnd, 'nrm')
         fprintf('computing surface normals\n');
         vol.bnd.nrm = normals(vol.bnd.pnt, vol.bnd.tri);
       end
-
+      
       % estimate center and radius
       [center,radius] = fitsphere(vol.bnd.pnt);
-
+      
       % initialize the forward calculation (only if gradiometer coils are available)
       if size(sens.coilpos,1)>0
         vol.forwpar = meg_ini([vol.bnd.pnt vol.bnd.nrm], center', order, [sens.coilpos sens.coilori]);
       end
-
+      
     case 'openmeeg'
-      error('MEG not yet supported with openmeeg');  
-        
+      error('MEG not yet supported with openmeeg');
+      
     case 'simbio'
-      error('MEG not yet supported with simbio');  
+      error('MEG not yet supported with simbio');
       
     otherwise
       error('unsupported volume conductor model for MEG');
   end
-
+  
 elseif iseeg
-
+  
   % select the desired channels from the electrode array
   % order them according to the users specification
   [selchan, selsens] = match_str(channel, sens.label);
   Nchans = length(sens.label);
-
+  
   if isfield(sens, 'tra')
     % first only modify the linear combination of electrodes into channels
     sens.chanpos = sens.chanpos(selsens,:);
@@ -320,18 +320,10 @@ elseif iseeg
     sens.label   = sens.label(selsens);
   end
   
-  % create a 2D projection and triangulation
-  try 
-    sens.prj   = elproj(sens.elecpos);
-    sens.tri   = delaunay(sens.prj(:,1), sens.prj(:,2));
-  catch
-    warning('2D projection not done')
-  end
-  
   switch ft_voltype(vol)
     case {'infinite' 'infinite_monopole'}
       % nothing to do
-
+      
     case {'halfspace', 'halfspace_monopole'}
       % electrodes' all-to-all distances
       numel = size(sens.elecpos,1);
@@ -357,7 +349,7 @@ elseif iseeg
         end
       end
       sens.elecpos = pnt;
-
+      
     case {'slab_monopole'}
       % electrodes' all-to-all distances
       numel  = size(sens.elecpos,1);
@@ -385,7 +377,7 @@ elseif iseeg
           else
             % project point on nearest plane
             Ppr = pointproj(P,[vol.pnt2 vol.ori2]);
-            pnt(i,:) = Ppr;            
+            pnt(i,:) = Ppr;
           end
         end
       end
@@ -413,12 +405,12 @@ elseif iseeg
         pnt(:,3) = pnt(:,3) + vol.o(3);
       end
       sens.elecpos = pnt;
-
+      
     case {'bem', 'dipoli', 'asa', 'bemcp', 'openmeeg'}
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % do postprocessing of volume and electrodes in case of BEM model
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+      
       % project the electrodes on the skin and determine the bilinear interpolation matrix
       if ~isfield(vol, 'tra')
         % determine boundary corresponding with skin and inner_skull_surface
@@ -440,7 +432,7 @@ elseif iseeg
           
           % replace the original electrode positions by the projected positions
           sens.elecpos = prj;
-
+          
           if size(vol.mat,1)==size(vol.bnd(vol.skin_surface).pnt,1)
             % construct the transfer from only the skin vertices towards electrodes
             interp = tra;
@@ -455,13 +447,13 @@ elseif iseeg
               end
             end
           end
-
+          
           % incorporate the linear interpolation matrix and the system matrix into one matrix
           % this speeds up the subsequent repeated leadfield computations
           fprintf('combining electrode transfer and system matrix\n');
           if strcmp(ft_voltype(vol), 'openmeeg')
             nb_points_external_surface = size(vol.bnd(vol.skin_surface).pnt,1);
-            vol.mat = vol.mat((end-nb_points_external_surface+1):end,:);            
+            vol.mat = vol.mat((end-nb_points_external_surface+1):end,:);
             vol.mat = interp(:,1:nb_points_external_surface) * vol.mat;
           else
             % convert to sparse matrix to speed up the subsequent multiplication
@@ -479,36 +471,132 @@ elseif iseeg
         [el, prj] = project_elec(sens.elecpos, vol.bnd.pnt, vol.bnd.tri);
         sens.tra = transfer_elec(vol.bnd.pnt, vol.bnd.tri, el);
         % replace the original electrode positions by the projected positions
-        sens.elecpos = prj;        
+        sens.elecpos = prj;
       end
-
+      
     case 'simbio'
       if isfield(vol,'bnd')
         [el, prj] = project_elec(sens.elecpos, vol.bnd.pnt, vol.bnd.tri);
         sens.tra = transfer_elec(vol.bnd.pnt, vol.bnd.tri, el);
         % replace the original electrode positions by the projected positions
-        sens.elecpos = prj;         
+        sens.elecpos = prj;
       end
       vol.transfer = sb_transfer(vol,sens);
       
     case 'interpolate'
-      % FIXME this still needs to be implemented
-      keyboard
+      
+      if ~isfield(sens, 'tra') && isequal(sens.chanpos, sens.elecpos)
+        sens.tra = eye(size(sens.chanpos,1));
+      end
+      
+      if ~isfield(vol.sens, 'tra') && isequal(vol.sens.chanpos, vol.sens.elecpos)
+        vol.sens.tra = eye(size(vol.sens.chanpos,1));
+      end
+      
+      % the channel positions can be nan, for example for a bipolar montage
+      match = isequal(sens.label, vol.sens.label)    & ...
+        isequalwithequalnans(sens.tra, vol.sens.tra) & ...
+        isequal(sens.elecpos, vol.sens.elecpos)      & ...
+        isequalwithequalnans(sens.chanpos, vol.sens.chanpos);
+      
+      if match
+        % the input sensor array matches precisely with the forward model
+        % no further interpolation is needed
+        
+      else
+        % interpolate the channels in the forward model to the desired channels
+        warning('interpolating the leadfield on the desired channel');
+        
+        % create a 2D projection and triangulation
+        pnt = vol.sens.elecpos;
+        prj = elproj(pnt);
+        tri = delaunay(prj(:,1), prj(:,2));
+        
+        % project the electrodes on the triangulation and compute the
+        % bilinear interpolation from the original to the new electrodes
+        [el, prj] = project_elec(sens.elecpos, pnt, tri);
+        tra = transfer_elec(pnt, tri, el);
+        
+        % define the spaces and the number of elements that they comprise
+        n1 = length(vol.sens.label);    % computed channels
+        n2 = size(vol.sens.elecpos,1);  % computed electrode positions
+        n3 = size(sens.elecpos,1);      % desired electrode positions
+        n4 = length(sens.label);        % desired channels
+        
+        % this is the montage for getting the the desired channels from the desired electrode positions
+        make4from3.labelorg = cell(n3,1);
+        make4from3.labelnew = sens.label;
+        make4from3.tra      = sens.tra;
+        for i=1:n3
+          make4from3.labelorg{i} = sprintf('p3_%d', i);
+        end
+        
+        % this is the montage for getting the computed channels from the computed electrode positions
+        make1from2.labelorg = cell(n2,1);
+        make1from2.labelnew = vol.sens.label;
+        make1from2.tra      = vol.sens.tra;
+        for i=1:n2
+          make1from2.labelorg{i} = sprintf('2to1_%d', i);
+        end
+        
+        % this is the montage that maps the computed electrode positions to the desired positions
+        make3from2.labelorg = make1from2.labelorg; % the computed electrodes
+        make3from2.labelnew = make4from3.labelorg; % the desired electrodes
+        make3from2.tra      = tra;
+        
+        % the following should be read as a sequence of left-hand multiplications
+        % we need           make4from1
+        % we can make it as make4from3 * make3from2 * make2from1
+        % or as             make4from3 * make3from2 * inv(make1from2)
+        
+        make4from1.tra      = make4from3.tra * make3from2.tra / make1from2.tra;
+        make4from1.labelorg = make1from2.labelnew;
+        make4from1.labelnew = make4from3.labelnew;
+        
+        sens = ft_apply_montage(vol.sens, make4from1, 'keepunused', 'no');
+        
+        % also update the volume conductor
+        ft_hastoolbox('spm8', 1);
+        
+        chan = cell(1,n1);
+        for i=1:n1
+          chan{i} = nifti(vol.filename{i});
+        end
+        
+        basename = tempname;
+        
+        filename = cell(1,n4);
+        for i=1:n4 % each of the new channels
+          dat = zeros([vol.dim 3]);
+          for j=1:n1  % each of the old channels
+            weight = make4from1.tra(i,j);
+            if weight
+              dat = dat + weight * chan{i}.dat(:,:,:,:);
+            end
+          end
+          filename{i} = sprintf('%s_%s.nii', basename, sens.label{i});
+          fprintf('writing single channel leadfield to %s\n', filename{i})
+          ft_write_mri(filename{i}, dat, 'transform', vol.transform);
+        end
+        % update the volume conductor
+        vol.sens     = sens;
+        vol.filename = filename;
+      end % if recomputing interpolation
       
     otherwise
       error('unsupported volume conductor model for EEG');
   end
-
+  
   % FIXME this needs careful thought to ensure that the average referencing which is now done here and there, and that the linear interpolation in case of BEM are all dealt with consistently
   % % always ensure that there is a linear transfer matrix for
   % % rereferencing the EEG potential
   % if ~isfield(sens, 'tra');
   %   sens.tra = eye(length(sens.label));
   % end
-
+  
 end % if iseeg or ismeg
 
-if isfield(sens, 'tra') 
+if isfield(sens, 'tra')
   if issparse(sens.tra) && size(sens.tra, 1)==1
     % this multiplication would result in a sparse leadfield, which is not what we want
     % the effect can be demonstrated as sparse(1)*rand(1,10), see also http://bugzilla.fcdonders.nl/show_bug.cgi?id=1169#c7

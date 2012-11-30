@@ -29,15 +29,21 @@ grid = ft_checkdata(grid, 'datatype', 'volume', 'inside', 'index');
 
 nchan = length(sens.label);
 
+[p, f, x] = fileparts(filename);
+filename = fullfile(p, f); % without the extension
+
 if size(grid.leadfield{grid.inside(1)},1)~=nchan
   error('the number of channels does not match');
 end
 
 vol = [];
-vol.sens      = sens;
+vol.type      = 'interpolate';
 vol.dim       = grid.dim;
 vol.transform = grid.transform;
-vol.type      = 'interpolate';
+vol.inside    = grid.inside;
+vol.sens      = sens;
+vol.filename  = cell(size(sens.label));
+
 if isfield(grid, 'unit')
   % get the units from the dipole grid
   vol.unit = grid.unit;
@@ -58,7 +64,7 @@ for i=1:nchan
   end
   lf = cat(4, lfx, lfy, lfz);
   vol.filename{i} = sprintf('%s_%s.nii', filename, sens.label{i});
-  fprintf('writing single electrode leadfield to %s\n', vol.filename{i})
+  fprintf('writing single channel leadfield to %s\n', vol.filename{i})
   ft_write_mri(vol.filename{i}, lf);
 end
 
