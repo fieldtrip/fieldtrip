@@ -125,8 +125,16 @@ if ~holdflag
   hold on
 end
 
-pnt = bnd.pnt;
-
+if isfield(bnd, 'pnt')
+  % this is assumed to reflect 3-D vertices
+  pnt = bnd.pnt;
+elseif isfield(bnd, 'prj')
+  % this happens sometimes if the 3-D vertices are projected to a 2-D plane
+  pnt = bnd.prj;
+else
+  error('no vertices found');
+end
+  
 if hastri+hastet+hashex>1
   error('cannot deal with simultaneous triangles, tetraheders and/or hexaheders')
 end
