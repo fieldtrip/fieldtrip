@@ -1637,7 +1637,8 @@ switch headerformat
     hdr.orig = orig;
     
   case 'neurosim'
-    hdr = read_neurosim_signals(filename);
+      headerOnly=1;
+    hdr = read_neurosim_spikes(filename,headerOnly);
     
   otherwise
     if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)

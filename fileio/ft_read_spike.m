@@ -20,6 +20,7 @@ function [spike] = ft_read_spike(filename, varargin)
 %   'plexon_nex'
 %   'plexon_plx'
 %   'neuroshare'
+%   'neurosim'
 %
 % The output spike structure usually contains
 %   spike.label     = 1xNchans cell-array, with channel labels
