@@ -35,7 +35,7 @@ classdef enet < dml.method
    family = 'gaussian' % gaussian, binomial, or multinomial
    
    lambda;      % used lambda(s)
-   alpha = 1;   % glmnet mixing parameter
+   alpha = 0.5;   % glmnet mixing parameter
    validator = dml.crossvalidator; % cross-validator
 
    performance % cross-validated decoding performance for elements on lambda path
@@ -118,6 +118,23 @@ classdef enet < dml.method
           obj.weights = logistK(P',[X ones(size(X,1),1)]')';
           %obj.weights = mnrfit(X,P,'model','nominal','interactions','on');
           
+        else
+          
+            opts = glmnetSet;
+            if ~isempty(obj.alpha), opts.alpha = obj.alpha; end
+            if ~isempty(obj.lambda), opts.lambda = obj.lambda; end
+          
+            obj.weights = obj.estimate(X,Y,obj.family,opts);
+            if strcmp(obj.family,'multinomial')
+              if ndims(obj.weights)==3 && size(obj.weights,3)>1
+                obj.weights = obj.weights(:,:,end);
+              end
+            else
+              if ndims(obj.weights)==2 && size(obj.weights,2)>1
+                obj.weights = obj.weights(:,end);
+              end
+            end
+            
         end
         
        else
