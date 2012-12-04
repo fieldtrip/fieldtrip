@@ -33,10 +33,7 @@ warning('using nearest neighbour at grid position %d, location [%f %f %f]\n', in
 
 lf = nan(length(vol.sens.label), 3);
 for i=1:length(vol.sens.label)
-  % FIXME mapping them into memory here is inefficient, the mapped
-  % representation should rather be passed from ft_prepare_vol_sens
-  chan = nifti(vol.filename{i});
-  lf(i,:) = squeeze(chan.dat(i1, i2, i3, :));
-  clear chan
+  % the leadfield nifti files have been mapped into memory by FT_PREPARE_VOL_SENS
+  lf(i,:) = squeeze(vol.chan{i}.dat(i1, i2, i3, :));
 end
 

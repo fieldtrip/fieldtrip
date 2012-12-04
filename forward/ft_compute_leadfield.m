@@ -460,26 +460,29 @@ elseif iseeg
     case 'interpolate'
       % note that the electrode information is contained within the vol structure
       lf = leadfield_interpolate(pos, vol);
+      % the leadfield is already correctly referenced, i.e. it represents the
+      % channel values rather than the electrode values. Prevent that the
+      % referencing is done once more.
+      sens.tra = speye(length(vol.filename));
       
     otherwise
       error('unsupported volume conductor model for EEG');
+      
   end % switch voltype for EEG
   
-  for i=1:Ndipoles
-    if isfield(sens, 'tra')
-      tmplf{i} = lf(:, (3*i - 2) : (3 * i));
-      % apply the correct montage to the leadfield
-      tmplf{i} = sens.tra*tmplf{i};
-    else
-      tmplf = lf(:, (3*i - 2) : (3 * i));
-      % compute average reference for EEG leadfield
-      avg = mean(tmplf, 1);
-      lf(:, (3*i - 2) : (3 * i)) = tmplf - repmat(avg, size(tmplf, 1), 1);
+  % the forward model potential is computed on the electrodes relative to
+  % an unknown reference, not on the channels. Therefore the data has to be
+  % explicitly referenced here.
+  if isfield(sens, 'tra')
+    % apply the correct montage to the leadfield
+    lf = sens.tra*lf;
+  else
+    % compute average reference for EEG leadfield
+    for i=1:size(lf,2)
+      lf(:,i) = lf(:,i) - mean(lf(:,i));
     end
   end
-  if isfield(sens, 'tra')
-    lf = cat(2, tmplf{:});
-  end
+  
 end % iseeg or ismeg
 
 % optionally apply leadfield rank reduction

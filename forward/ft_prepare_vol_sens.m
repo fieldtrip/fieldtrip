@@ -502,86 +502,20 @@ elseif iseeg
       if match
         % the input sensor array matches precisely with the forward model
         % no further interpolation is needed
-        
       else
         % interpolate the channels in the forward model to the desired channels
-        warning('interpolating the leadfield on the desired channel');
-        
-        % create a 2D projection and triangulation
-        pnt = vol.sens.elecpos;
-        prj = elproj(pnt);
-        tri = delaunay(prj(:,1), prj(:,2));
-        
-        % project the electrodes on the triangulation and compute the
-        % bilinear interpolation from the original to the new electrodes
-        [el, prj] = project_elec(sens.elecpos, pnt, tri);
-        tra = transfer_elec(pnt, tri, el);
-        
-        % define the spaces and the number of elements that they comprise
-        n1 = length(vol.sens.label);    % computed channels
-        n2 = size(vol.sens.elecpos,1);  % computed electrode positions
-        n3 = size(sens.elecpos,1);      % desired electrode positions
-        n4 = length(sens.label);        % desired channels
-        
-        % this is the montage for getting the the desired channels from the desired electrode positions
-        make4from3.labelorg = cell(n3,1);
-        make4from3.labelnew = sens.label;
-        make4from3.tra      = sens.tra;
-        for i=1:n3
-          make4from3.labelorg{i} = sprintf('p3_%d', i);
-        end
-        
-        % this is the montage for getting the computed channels from the computed electrode positions
-        make1from2.labelorg = cell(n2,1);
-        make1from2.labelnew = vol.sens.label;
-        make1from2.tra      = vol.sens.tra;
-        for i=1:n2
-          make1from2.labelorg{i} = sprintf('2to1_%d', i);
-        end
-        
-        % this is the montage that maps the computed electrode positions to the desired positions
-        make3from2.labelorg = make1from2.labelorg; % the computed electrodes
-        make3from2.labelnew = make4from3.labelorg; % the desired electrodes
-        make3from2.tra      = tra;
-        
-        % the following should be read as a sequence of left-hand multiplications
-        % we need           make4from1
-        % we can make it as make4from3 * make3from2 * make2from1
-        % or as             make4from3 * make3from2 * inv(make1from2)
-        
-        make4from1.tra      = make4from3.tra * make3from2.tra / make1from2.tra;
-        make4from1.labelorg = make1from2.labelnew;
-        make4from1.labelnew = make4from3.labelnew;
-        
-        sens = ft_apply_montage(vol.sens, make4from1, 'keepunused', 'no');
-        
-        % also update the volume conductor
-        ft_hastoolbox('spm8', 1);
-        
-        chan = cell(1,n1);
-        for i=1:n1
-          chan{i} = nifti(vol.filename{i});
-        end
-        
-        basename = tempname;
-        
-        filename = cell(1,n4);
-        for i=1:n4 % each of the new channels
-          dat = zeros([vol.dim 3]);
-          for j=1:n1  % each of the old channels
-            weight = make4from1.tra(i,j);
-            if weight
-              dat = dat + weight * chan{i}.dat(:,:,:,:);
-            end
-          end
-          filename{i} = sprintf('%s_%s.nii', basename, sens.label{i});
-          fprintf('writing single channel leadfield to %s\n', filename{i})
-          ft_write_mri(filename{i}, dat, 'transform', vol.transform);
-        end
-        % update the volume conductor
-        vol.sens     = sens;
-        vol.filename = filename;
+        filename = tempname;
+        vol  = ft_headmodel_interpolate(filename, sens, vol);
+        % update the sensor array with the one from the volume conductor
+        sens = vol.sens;
       end % if recomputing interpolation
+
+      % for the leadfield computations the @nifti object is used to map the image data into memory
+      ft_hastoolbox('spm8', 1);
+      for i=1:length(vol.sens.label)
+        % map each of the leadfield files into memory
+        vol.chan{i} = nifti(vol.filename{i});
+      end
       
     otherwise
       error('unsupported volume conductor model for EEG');
