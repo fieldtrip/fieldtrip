@@ -21,12 +21,12 @@ spike2 = ft_read_spike('/home/common/matlab/fieldtrip/data/test/neurosim'); %sho
 
 
 cfg              = [];
-cfg.spikechannel = {'1', '51'}; % select one inhibitory and one excitatory neuron
+cfg.spikechannel = [1, 51]; % select one inhibitory and one excitatory neuron
 spike = ft_spike_select(cfg, spike2);
 
 
 
-%% waverform-based cleaning; not useful, or avaiable with neurosim data
+%% waverform-based cleaning; not useful, or available with neurosim data
 % cfg             = [];
 % cfg.fsample     = 40000;
 % cfg.interpolate = 1; % keep the density of samples as is
@@ -60,7 +60,7 @@ cfg = ft_definetrial(cfg);
 
 
 cfg.trlunit='samples'; %ft_trialfun_general gives us samles, not timestamps
-cfg.hdr = ft_read_header(cfg.datafile);
+cfg.hdr = spike.hdr; %using 'samples' requires the header information.
 spikeTrials = ft_spike_maketrials(cfg,spike); 
 
 
@@ -126,7 +126,7 @@ figure, ft_spike_plot_raster(cfg,spikeTrials, sdf)
 
  
 cfg              = [];
-cfg.spikechannel = {'1', '2', '51', '52'}; % select two inhibitory and two excitatory neurons
+cfg.spikechannel = [1, 2, 51, 52]; % select two inhibitory and two excitatory neurons
 spike = ft_spike_select(cfg, spike2);
  
 cfg          = []; 
