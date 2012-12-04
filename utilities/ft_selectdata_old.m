@@ -614,7 +614,7 @@ elseif istlck,
   if selectchan, data = seloverdim(data, 'chan', selchan, fb); end
   if selectfoi,  data = seloverdim(data, 'freq', selfoi,  fb); end
   if selecttoi,  data = seloverdim(data, 'time', seltoi,  fb); end
-  if isfield(data,'trial') && size(data.trial,3)~=size(data.avg,2)
+  if isfield(data,'trial') && isfield(data,'avg') && size(data.trial,3)~=size(data.avg,2)
     warning('Warning: .avg, .var, .dof and .cov not updated. Please use ft_selectdata_new for this to work correctly on .trial timelock data.');
   end
   % average over dimensions
