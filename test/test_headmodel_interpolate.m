@@ -3,8 +3,9 @@
 % TEST test_headmodel_interpolate
 % TEST icosahedron162 ft_voltype ft_headmodel_interpolate ft_prepare_vol_sens ft_compute_leadfield leadfield_interpolate
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % create a set of electrodes nicely covering the upper half of a sphere
-[pnt, tri] = icosahedron162;
+[pnt, tri] = icosahedron642;
 pnt = pnt .* 10; % convert to cm
 sel = find(pnt(:,3)>0);
 elec1 = [];
@@ -29,6 +30,7 @@ elec1 = ft_datatype_sens(elec1);
 elec2 = ft_datatype_sens(elec2);
 
 % create another set of electrodes representing a bipolar montage
+bipolar = [];
 bipolar.labelorg = elec1.label;
 bipolar.tra = zeros(length(elec1.label)-1, length(elec1.label));
 for i=1:(length(bipolar.labelorg)-1)
@@ -44,6 +46,18 @@ for i=1:length(elec4.label)
   elec4.label{i} = sprintf('chan%d', i);
 end
 
+% create another bipolar set of channels that is incompatible with the previous one
+bipolar = [];
+bipolar.labelorg = elec1.label;
+bipolar.tra      = zeros(10, length(elec1.label));
+for i=1:(10)
+  bipolar.labelnew{i} = sprintf('%s-%s', bipolar.labelorg{i}, bipolar.labelorg{i+2});
+  bipolar.tra(i,i  ) = +1;
+  bipolar.tra(i,i+2) = -1;
+end
+elec5 = ft_apply_montage(elec1, bipolar);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % construct a singlesphere volume conduction model
 volA   = [];
 volA.c = 1;
@@ -58,17 +72,17 @@ leadfield = ft_prepare_leadfield(cfg);
 
 % remember one position
 pos1 = leadfield.pos(leadfield.inside(1),:);
+
 lf1  = leadfield.leadfield{leadfield.inside(1)};
 
-filename = tempname;
-
 % the following call generates the volume conduction model and writes all files to disk
+filename = tempname;
 ft_headmodel_interpolate(filename, elec1, leadfield);
 
 % the next day you would start by reading it from disk
 volB = ft_read_vol([filename '.mat']); % this is a mat file containing the "vol" structure
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % use the same electrodes
 [volAA, elecAA] = ft_prepare_vol_sens(volA, elec1);
 [volBB, elecBB] = ft_prepare_vol_sens(volB, elec1);
@@ -76,10 +90,13 @@ volB = ft_read_vol([filename '.mat']); % this is a mat file containing the "vol"
 % compare the leadfields
 lfa = ft_compute_leadfield(pos1, elecAA, volAA); % the original
 lfb = ft_compute_leadfield(pos1, elecBB, volBB); % the interpolation
+
 assert(identical(lf1, lfb, 'reltol', 1e-4), 'the leadfields are different');
 assert(identical(lfa, lfb, 'reltol', 1e-4), 'the leadfields are different');
+assert(all(mean(lfa, 1)<eps), 'the leadfield is not average referenced');
+assert(all(mean(lfb, 1)<eps), 'the leadfield is not average referenced');
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % use a subset of electrodes
 [volAA, elecAA] = ft_prepare_vol_sens(volA, elec1, 'channel', elec1.label(1:10));
 [volBB, elecBB] = ft_prepare_vol_sens(volB, elec1, 'channel', elec1.label(1:10));
@@ -87,10 +104,12 @@ assert(identical(lfa, lfb, 'reltol', 1e-4), 'the leadfields are different');
 % compare the leadfields
 lfa = ft_compute_leadfield(pos1, elecAA, volAA); % the original
 lfb = ft_compute_leadfield(pos1, elecBB, volBB); % the interpolation
-assert(identical(lf1, lfb, 'reltol', 1e-4), 'the leadfields are different');
-assert(identical(lfa, lfb, 'reltol', 1e-4), 'the leadfields are different');
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+assert(identical(lfa, lfb, 'reltol', 1e-4), 'the leadfields are different');
+assert(all(mean(lfa, 1)<eps), 'the leadfield is not average referenced');
+assert(all(mean(lfb, 1)<eps), 'the leadfield is not average referenced');
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % use the same electrodes with with different names
 [volAA, elecAA] = ft_prepare_vol_sens(volA, elec4);
 [volBB, elecBB] = ft_prepare_vol_sens(volB, elec4);
@@ -98,10 +117,12 @@ assert(identical(lfa, lfb, 'reltol', 1e-4), 'the leadfields are different');
 % compare the leadfields
 lfa = ft_compute_leadfield(pos1, elecAA, volAA); % the original
 lfb = ft_compute_leadfield(pos1, elecBB, volBB); % the interpolation
-assert(identical(lf1, lfb, 'reltol', 1e-4), 'the leadfields are different');
-assert(identical(lfa, lfb, 'reltol', 1e-4), 'the leadfields are different');
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+assert(identical(lfa, lfb, 'reltol', 1e-4), 'the leadfields are different');
+assert(all(mean(lfa, 1)<eps), 'the leadfield is not average referenced');
+assert(all(mean(lfb, 1)<eps), 'the leadfield is not average referenced');
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % use electrodes with a different placement
 [volAA, elecAA] = ft_prepare_vol_sens(volA, elec2);
 [volBB, elecBB] = ft_prepare_vol_sens(volB, elec2);
@@ -109,10 +130,12 @@ assert(identical(lfa, lfb, 'reltol', 1e-4), 'the leadfields are different');
 % compare the leadfields
 lfa = ft_compute_leadfield(pos1, elecAA, volAA); % the original
 lfb = ft_compute_leadfield(pos1, elecBB, volBB); % the interpolation
-assert(identical(lf1, lfb, 'reltol', 1e-4), 'the leadfields are different');
-assert(identical(lfa, lfb, 'reltol', 1e-4), 'the leadfields are different');
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+assert(identical(lfa, lfb, 'reltol', 1e-4), 'the leadfields are different');
+assert(all(mean(lfa, 1)<eps), 'the leadfield is not average referenced');
+assert(all(mean(lfb, 1)<eps), 'the leadfield is not average referenced');
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % use a bipolar electrode montage
 [volAA, elecAA] = ft_prepare_vol_sens(volA, elec3);
 [volBB, elecBB] = ft_prepare_vol_sens(volB, elec3);
@@ -120,5 +143,7 @@ assert(identical(lfa, lfb, 'reltol', 1e-4), 'the leadfields are different');
 % compare the leadfields
 lfa = ft_compute_leadfield(pos1, elecAA, volAA); % the original
 lfb = ft_compute_leadfield(pos1, elecBB, volBB); % the interpolation
-assert(identical(lf1, lfb, 'reltol', 1e-4), 'the leadfields are different');
+
 assert(identical(lfa, lfb, 'reltol', 1e-4), 'the leadfields are different');
+assert(~all(mean(lfa, 1)<eps), 'the leadfield is average referenced');
+assert(~all(mean(lfb, 1)<eps), 'the leadfield is average referenced');
