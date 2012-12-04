@@ -1,14 +1,14 @@
-function [ok, message] = identical(a, b, varargin)
+function [ok, message] = identical2(a, b, varargin)
 
-% IDENTICAL compares two input variables and returns true or false
+% IDENTICAL compares two input variables and returns 1/0
 % and a message containing the details on the observed difference.
-% 
+%
 % Use as
 %   [ok, message] = identical(a, b)
 %   [ok, message] = identical(a, b, ...)
 %
 % This works for all possible input variables a and b, like
-% numerical arrays, string arrays, cell arrays, structures 
+% numerical arrays, string arrays, cell arrays, structures
 % and nested data types.
 %
 % Optional input arguments come in key-value pairs, supported are
@@ -21,7 +21,7 @@ function [ok, message] = identical(a, b, varargin)
 % $Id$
 
 if nargin==3
-  % for backward compatibility  
+  % for backward compatibility
   depth = varargin{1};
 else
   depth = keyval('depth', varargin);
@@ -59,62 +59,72 @@ knowntypes = {
   'uint16'          % 16-bit unsigned integer array
   'int32'           % 32-bit signed integer array
   'uint32'          % 32-bit unsigned integer array
-};
+  };
 
 for type=knowntypes(:)'
-  if isa(a, type{:}) & ~isa(b, type{:})
-    message{end+1} = sprintf('different data type at %s', location);
+  if isa(a, type{:}) && ~isa(b, type{:})
+    message{end+1} = sprintf('different data type in %s', location);
     return
   end
+end
+
+if isempty(location)
+  location = 'array';
 end
 
 if isa(a, 'numeric') || isa(a, 'char') || isa(a, 'logical')
   % perform numerical comparison
   if length(size(a))~=length(size(b))
-    message{end+1} = sprintf('different number of dimensions at %s', location);
+    message{end+1} = sprintf('different number of dimensions in %s', location);
     return;
   end
   if any(size(a)~=size(b))
-    message{end+1} = sprintf('different size at %s', location);
+    message{end+1} = sprintf('different size in %s', location);
     return;
   end
   if ~all(isnan(a(:)) == isnan(b(:)))
-    message{end+1} = sprintf('different occurence of NaNs at %s', location);
+    message{end+1} = sprintf('different occurence of NaNs in %s', location);
     return;
   end
   % replace the NaNs, since we cannot compare them numerically
-  a = a(find(~isnan(a(:))));
-  b = b(find(~isnan(b(:))));
+  a = a(~isnan(a(:)));
+  b = b(~isnan(b(:)));
   % continue with numerical comparison
   if ischar(a) && any(a~=b)
-    message{end+1} = sprintf('different string at %s: %s ~= %s', location, a, b);
+    message{end+1} = sprintf('different string in %s: %s ~= %s', location, a, b);
   else
     % use the desired tolerance
-    abstol = keyval('abstol', varargin{:});
-    reltol = keyval('reltol', varargin{:});
+    reltol     = keyval('reltol', varargin{:});       % any value, relative to the mean
+    abstol     = keyval('abstol', varargin{:});       % any value
+    relnormtol = keyval('relnormtol', varargin{:});   % the matrix norm, relative to the mean norm
+    absnormtol = keyval('absnormtol', varargin{:});   % the matrix norm
     if ~isempty(abstol) && any(abs(a-b)>abstol)
-      message{end+1} = sprintf('different values at %s', location);
+      message{end+1} = sprintf('different values in %s', location);
     elseif ~isempty(reltol) && any((abs(a-b)./(0.5*(a+b)))>reltol)
-      message{end+1} = sprintf('different values at %s', location);
+      message{end+1} = sprintf('different values in %s', location);
     elseif isempty(abstol) && isempty(reltol) && any(a~=b)
-      message{end+1} = sprintf('different values at %s', location);
+      message{end+1} = sprintf('different values in %s', location);
+    elseif ~isempty(relnormtol) && (norm(a-b)/(0.5*(norm(a)+norm(b)))>relnormtol)
+      message{end+1} = sprintf('different values in %s', location);
+    elseif ~isempty(absnormtol) && norm(a-b)>absnormtol
+      message{end+1} = sprintf('different values in %s', location);
     end
   end
-
-elseif isa(a, 'struct') & all(size(a)==1)
+  
+elseif isa(a, 'struct') && all(size(a)==1)
   % perform recursive comparison of all fields of the structure
   fna = fieldnames(a);
   fnb = fieldnames(b);
   if ~all(ismember(fna, fnb))
-    tmp = fna(find(~ismember(fna, fnb)));
+    tmp = fna(~ismember(fna, fnb));
     for i=1:length(tmp)
-      message{end+1} = sprintf('field missing in the 2nd argument at %s: {%s}', location, tmp{i});
+      message{end+1} = sprintf('field missing in the 2nd argument in %s: {%s}', location, tmp{i});
     end
   end
   if ~all(ismember(fnb, fna))
-    tmp = fnb(find(~ismember(fnb, fna)));
+    tmp = fnb(~ismember(fnb, fna));
     for i=1:length(tmp)
-      message{end+1} = sprintf('field missing in the 1st argument at %s: {%s}', location, tmp{i});
+      message{end+1} = sprintf('field missing in the 1st argument in %s: {%s}', location, tmp{i});
     end
   end
   fna = intersect(fna, fnb);
@@ -127,11 +137,11 @@ elseif isa(a, 'struct') & all(size(a)==1)
       [message] = do_work(ra, rb, depth-1, [location '.' fn], message, varargin{:});
     end
   end
-
-elseif isa(a, 'struct') & ~all(size(a)==1)
-  % perform recursive comparison of all array elements 
+  
+elseif isa(a, 'struct') && ~all(size(a)==1)
+  % perform recursive comparison of all array elements
   if any(size(a)~=size(b))
-    message{end+1} = sprintf('different size of struct-array at %s', location);
+    message{end+1} = sprintf('different size of struct-array in %s', location);
     return;
   end
   siz = size(a);
@@ -144,11 +154,11 @@ elseif isa(a, 'struct') & ~all(size(a)==1)
     tmp = sprintf('%s(%s)', location, my_ind2sub(siz, i));
     [message] = do_work(ra, rb, depth-1, tmp, message, varargin{:});
   end
-
+  
 elseif isa(a, 'cell')
-  % perform recursive comparison of all array elements 
+  % perform recursive comparison of all array elements
   if any(size(a)~=size(b))
-    message{end+1} = sprintf('different size of cell-array at %s', location);
+    message{end+1} = sprintf('different size of cell-array in %s', location);
     return;
   end
   siz = size(a);
@@ -171,11 +181,10 @@ k = [1 cumprod(siz(1:end-1))];
 ndx = ndx - 1;
 for i = n:-1:1,
   tmp(i) = floor(ndx/k(i))+1;
-  ndx = rem(ndx,k(i));  
+  ndx = rem(ndx,k(i));
 end
 str = '';
 for i=1:n
   str = [str ',' num2str(tmp(i))];
 end
 str = str(2:end);
-
