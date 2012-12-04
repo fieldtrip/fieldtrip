@@ -30,11 +30,11 @@ function [bnd, cfg] = ft_prepare_mesh(cfg, mri)
 %
 % Example
 %   mri             = ft_read_mri('Subject01.mri');
-%                   
+%
 %   cfg             = [];
 %   cfg.output      = {'scalp', 'skull', 'brain'};
 %   segmentation    = ft_volumesegment(cfg, mri);
-% 
+%
 %   cfg             = [];
 %   cfg.tissue      = {'scalp', 'skull', 'brain'};
 %   cfg.numvertices = [800, 1600, 2400];
@@ -130,7 +130,27 @@ else
   error('inconsistent configuration and input data');
 end
 
-if basedonseg || basedonmri
+if isfield(cfg, 'method') && strcmp(cfg.method, 'hexahedral')
+  % the MRI is assumed to contain a segmentation, call the helper function
+  bnd = prepare_mesh_hexahedral(cfg, mri); %should go fieldtrip/private
+  % ensure that non of the other options gets executed
+  basedonmri       = false;
+  basedonseg       = false;
+  basedonheadshape = false;
+  basedonbnd       = false;
+  basedonsphere    = false;
+  
+elseif isfield(cfg, 'method') && strcmp(cfg.method, 'tetrahedral')
+  % the MRI is assumed to contain a segmentation, call the helper function
+  bnd = prepare_mesh_tetrahedral(cfg, mri);
+  % ensure that non of the other options gets executed
+  basedonmri       = false;
+  basedonseg       = false;
+  basedonheadshape = false;
+  basedonbnd       = false;
+  basedonsphere    = false;
+  
+elseif basedonseg || basedonmri
   if all(isfield(mri, {'gray', 'white', 'csf'}))
     cfg.tissue      = ft_getopt(cfg, 'tissue', 'brain');
     cfg.numvertices = ft_getopt(cfg, 'numvertices', 3000);
@@ -153,6 +173,7 @@ if (basedonmri || basedonseg) && istrue(cfg.interactive)
   bnd = prepare_mesh_manual(cfg, mri);
   
 elseif basedonseg
+  % FIXME this should be renamed to prepare_mesh_triangulation
   fprintf('using the segmentation approach\n');
   bnd = prepare_mesh_segmentation(cfg, mri);
   
@@ -165,7 +186,7 @@ elseif basedonmri && iscell(cfg.tissue) && all(isfield(mri, cfg.tissue))
   
 elseif basedonmri
   error('Unsegmented MRI only allowed in combination with cfg.interactive=yes')
-
+  
 elseif basedonheadshape
   fprintf('using the head shape to construct a triangulated mesh\n');
   bnd = prepare_mesh_headshape(cfg);
@@ -177,9 +198,9 @@ elseif basedonbnd
 elseif basedonsphere
   fprintf('triangulating the sphere in the volume conductor\n');
   vol = mri;
-
+  
   [pnt, tri] = makesphere(cfg.numvertices);
-    
+  
   
   switch ft_voltype(vol)
     case {'singlesphere' 'concentricspheres'}
@@ -201,6 +222,10 @@ elseif basedonsphere
       end
   end
   
+elseif isfield(cfg, 'method') && strcmp(cfg.method, 'hexahedral')
+  % do nothing
+elseif isfield(cfg, 'method') && strcmp(cfg.method, 'tetrahedral')
+  % do nothing
 else
   error('unsupported cfg.method and/or input')
 end
