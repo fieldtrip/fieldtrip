@@ -149,11 +149,10 @@ elseif hastet
     bnd.tet(:,[3 4 1]);
     bnd.tet(:,[4 1 2])];
   % or according to SimBio:  (1 2 3), (2 4 3), (4 1 3), (1 4 2)
-  % there are shared triangles betwene neighbouring tetraeders, remove these
+  % there are shared triangles between neighbouring tetraeders, remove these
   tri = unique(tri, 'rows');
 elseif hashex
   % represent the hexaheders as a collection of 6 patches
-  % FIXME this is only a guess on the vertex order
   tri = [
     bnd.hex(:,[1 2 3 4]);
     bnd.hex(:,[5 6 7 8]);
@@ -162,6 +161,8 @@ elseif hashex
     bnd.hex(:,[3 4 8 7]);
     bnd.hex(:,[4 1 5 8]);
     ];
+  % there are shared faces between neighbouring hexaheders, remove these
+  tri = unique(tri, 'rows');
 else
   tri = [];
 end
