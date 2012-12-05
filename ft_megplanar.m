@@ -207,7 +207,7 @@ if strcmp(cfg.planarmethod, 'sourceproject')
   transform = lfnew * prunedinv(lfold, cfg.pruneratio);
   
   planarmontage = [];
-  planarmontage.tra = transform;
+  planarmontage.tra      = transform;
   planarmontage.labelorg = axial.grad.label;
   planarmontage.labelnew = planar.grad.label;
   

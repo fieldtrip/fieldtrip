@@ -261,7 +261,6 @@ if isfield(data, 'grad')
   
   % find the other channels that are present in the data
   sel_other = setdiff(1:length(data.grad.label), [sel_dH(:)' sel_dV(:)']);
-%   
   lab_other = data.grad.label(sel_other);
   lab_comb  = planar(sel_comb,3);
  
