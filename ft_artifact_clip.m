@@ -15,11 +15,13 @@ function [cfg, artifact] = ft_artifact_clip(cfg, data)
 %   [cfg, artifact] = ft_artifact_clip(cfg, data)
 %
 % In both cases the configuration should also contain
-%   cfg.artfctdef.clip.channel  = Nx1 cell-array with selection of channels, see FT_CHANNELSELECTION for details
-%   cfg.artfctdef.clip.pretim   = 0.000;  pre-artifact rejection-interval in seconds
-%   cfg.artfctdef.clip.psttim   = 0.000;  post-artifact rejection-interval in seconds
-%   cfg.artfctdef.clip.thresh   = 0.010;  minimum duration in seconds of a datasegment with consecutive identical samples to be considered as 'clipped'
-%   cfg.continuous              = 'yes' or 'no' whether the file contains continuous data
+%   cfg.artfctdef.clip.channel       = Nx1 cell-array with selection of channels, see FT_CHANNELSELECTION for details
+%   cfg.artfctdef.clip.pretim        = 0.000;  pre-artifact rejection-interval in seconds
+%   cfg.artfctdef.clip.psttim        = 0.000;  post-artifact rejection-interval in seconds
+%   cfg.artfctdef.clip.timethreshold = number, minimum duration in seconds of a datasegment with consecutive identical samples to be considered as 'clipped'
+%   cfg.artfctdef.clip.amplthreshold = number, minimum amplitude difference in consecutive samples to be considered as 'clipped' (default = 0)
+%                                      string, percent of the amplitude range considered as 'clipped' (i.e. '1%')
+%   cfg.continuous                   = 'yes' or 'no' whether the file contains continuous data
 %
 % The output argument "artifact" is a Nx2 matrix comparable to the
 % "trl" matrix of FT_DEFINETRIAL. The first column of which specifying the
@@ -69,14 +71,15 @@ cfg = ft_checkconfig(cfg, 'renamed',    {'datatype', 'continuous'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
 
 % set default rejection parameters for clip artifacts if necessary.
-if ~isfield(cfg,'artfctdef'),               cfg.artfctdef               = [];              end;
-if ~isfield(cfg.artfctdef,'clip'),          cfg.artfctdef.clip          = [];              end;
-if ~isfield(cfg.artfctdef.clip,'channel'),  cfg.artfctdef.clip.channel  = 'all';           end;
-if ~isfield(cfg.artfctdef.clip,'thresh'),   cfg.artfctdef.clip.thresh   = 0.010;           end;
-if ~isfield(cfg.artfctdef.clip,'pretim'),   cfg.artfctdef.clip.pretim   = 0.000;           end;
-if ~isfield(cfg.artfctdef.clip,'psttim'),   cfg.artfctdef.clip.psttim   = 0.000;           end;
-if ~isfield(cfg, 'headerformat'),           cfg.headerformat            = [];              end;
-if ~isfield(cfg, 'dataformat'),             cfg.dataformat              = [];              end;
+if ~isfield(cfg,'artfctdef'),                    cfg.artfctdef                    = [];    end;
+if ~isfield(cfg.artfctdef,'clip'),               cfg.artfctdef.clip               = [];    end;
+if ~isfield(cfg.artfctdef.clip,'channel'),       cfg.artfctdef.clip.channel       = 'all'; end;
+if ~isfield(cfg.artfctdef.clip,'timethreshold'), cfg.artfctdef.clip.timethreshold = 0.010; end;
+if ~isfield(cfg.artfctdef.clip,'amplthreshold'), cfg.artfctdef.clip.amplthreshold = 0.000; end;
+if ~isfield(cfg.artfctdef.clip,'pretim'),        cfg.artfctdef.clip.pretim        = 0.000; end;
+if ~isfield(cfg.artfctdef.clip,'psttim'),        cfg.artfctdef.clip.psttim        = 0.000; end;
+if ~isfield(cfg, 'headerformat'),                cfg.headerformat                 = [];    end;
+if ~isfield(cfg, 'dataformat'),                  cfg.dataformat                   = [];    end;
 
 % for backward compatibility
 if isfield(cfg.artfctdef.clip,'sgn')
@@ -138,11 +141,25 @@ for trlop=1:ntrl
   if size(trl,2)>=3
     time = offset2time(trl(trlop,3), hdr.Fs, size(dat,2));
   elseif hasdata
-    time = data.time{trlop};
+      time = data.time{trlop};
   end
   datflt = preproc(dat, label, time, artfctdef);
-  % detect all samples that have the same value as the previous sample
-  identical = (datflt(:,1:(end-1)) == datflt(:,2:end));
+  
+  %check if cfg.artfctdef.clip.amplthreshold is an string indicating percentage (e.g. '10%')
+  if ~isempty(cfg.artfctdef.clip.amplthreshold) && ischar(cfg.artfctdef.clip.amplthreshold) && cfg.artfctdef.clip.amplthreshold(end)=='%'
+      ratio = sscanf(cfg.artfctdef.clip.amplthreshold, '%f%%');
+      ratio = ratio/100;
+      identical = abs(datflt(:,1:(end-1))-datflt(:,2:end));
+      r = range(identical,2);
+      for sgnlop=1:length(sgnindx);
+          identical(sgnlop,:) = (identical(sgnlop,:)/r(sgnlop))*100;
+      end
+      identical = identical <= ratio;
+  else
+      % detect all samples that have the same value as the previous sample
+      identical = abs(datflt(:,1:(end-1))-datflt(:,2:end))<=cfg.artfctdef.clip.amplthreshold;
+  end
+
   % ensure that the number of samples does not change
   identical = [identical zeros(nsgn,1)];
   
@@ -160,7 +177,7 @@ for trlop=1:ntrl
   
   % detect whether there are intervals in which the number of consecutive
   % identical samples is larger than the threshold
-  thresh = (clip>=artfctdef.thresh*hdr.Fs);
+  thresh = (clip>=artfctdef.timethreshold*hdr.Fs);
   
   % remember the thresholded parts as artifacts
   artup = find(diff([0 thresh])== 1) + trl(trlop,1) - 1;
