@@ -196,7 +196,17 @@ else
   sens = [];
 end
 
-if isfield(sens, 'type')
+if exist('sens')
+  if isfield(sens,'type')
+    istypefield = 1;
+  else
+    istypefield = 0;
+  end
+else
+  istypefield = 0;
+end
+
+if istypefield
   % preferably the structure specifies its own type
   type = sens.type;
 elseif isfield(input, 'nChans') && input.nChans==1 && isfield(input, 'label') && ~isempty(regexp(input.label{1}, '^csc', 'once'))
