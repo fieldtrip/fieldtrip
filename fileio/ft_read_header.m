@@ -945,11 +945,21 @@ switch headerformat
         cachechunk = decode_res4(orig.ctf_res4);
       end
       hdr.orig = cachechunk;
-      % copy over some of the header details
-      hdr.label     = hdr.orig.label;
-      hdr.chantype  = hdr.orig.chantype;
-      hdr.chanunit  = hdr.orig.chanunit;
-      hdr.grad      = hdr.orig.grad;
+      if isfield(orig, 'channel_names')
+          % get the same selection of channels from the two chunks
+          [selbuf, selres4] = match_str(orig.channel_names, cachechunk.label);
+          if length(selres4)<length(orig.channel_names)
+              error('the res4 chunk did not contain all channels')
+          end
+          % copy some of the channel details
+          hdr.label     = cachechunk.label(selres4);
+          hdr.chantype  = cachechunk.chantype(selres4);
+          hdr.chanunit  = cachechunk.chanunit(selres4);
+          % add the channel names chunk as well
+          hdr.orig.channel_names = orig.channel_names;
+      end
+      % copy the gradiometer details
+      hdr.grad = hdr.orig.grad;
       % add the raw chunk as well
       hdr.orig.ctf_res4 = orig.ctf_res4;
     end
