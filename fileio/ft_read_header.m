@@ -87,7 +87,8 @@ function [hdr] = ft_read_header(filename, varargin)
 
 % TODO channel renaming should be made a general option (see bham_bdf)
 
-persistent cacheheader        % for caching
+persistent cacheheader        % for caching the full header
+persistent cachechunk         % for caching the res4 chunk when doing realtime analysis on the CTF scanner
 persistent db_blob            % for fcdc_mysql
 
 if isempty(db_blob)
@@ -126,7 +127,6 @@ if strcmp(headerformat, 'fcdc_buffer')
   % the cache and fallback option should always be false for realtime processing
   cache    = false;
   fallback = false;
-  
   
 else
   checkUniqueLabels = true;
@@ -938,55 +938,19 @@ switch headerformat
     hdr.nTrials     = 1;  % since continuous
     hdr.orig        = []; % this will contain the chunks (if present)
     
-    % add the contents of attached .res4 file to the .orig field similar to offline data
+    % add the contents of attached RES4 chunk after decoding to Matlab structure
     if isfield(orig, 'ctf_res4')
-      if 0
-        % using  READ_CTF_RES4 -- this does not produce a proper .grad structure
-        % TODO: remove this code, and possibly read_ctf_res4 as well
-        tmp_name = tempname;
-        F = fopen(tmp_name, 'wb');
-        fwrite(F, orig.ctf_res4, 'uint8');
-        fclose(F);
-        R4F = read_ctf_res4(tmp_name);
-        delete(tmp_name);
-      else
-        % using FT_READ_HEADER recursively, and then readCTFds in the second call
-        % this will also call ctf2grad and yield correct gradiometer information
-        tmp_name = tempname;
-        [dirname, fname] = fileparts(tmp_name);
-        res4fn = [tmp_name '.ds/' fname '.res4'];
-        meg4fn = [tmp_name '.ds/' fname '.meg4'];
-        dsname = [tmp_name '.ds'];
-        
-        mkdir(dsname);
-        
-        F = fopen(res4fn, 'wb');
-        fwrite(F, orig.ctf_res4, 'uint8');
-        fclose(F);
-        
-        F = fopen(meg4fn, 'wb');
-        fwrite(F, 'MEG42CP');
-        fclose(F);
-        
-        %R4F = read_ctf_res4(tmp_name);
-        R4F = ft_read_header(dsname);
-        
-        delete(res4fn);
-        delete(meg4fn);
-        rmdir(dsname);
+      if isempty(cachechunk)
+        % this only needs to be decoded once
+        cachechunk = decode_res4(orig.ctf_res4);
       end
-      
-      % copy over the labels
-      hdr.label = R4F.label;
-      if isfield(R4F,'orig')
-        % copy over the 'original' header
-        hdr.orig = R4F.orig;
-      end
-      % copy over the gradiometer definition
-      if isfield(R4F,'grad')
-        hdr.grad = R4F.grad;
-      end
-      % retain the raw ctf_res4 chunk as well
+      hdr.orig = cachechunk;
+      % copy over some of the header details
+      hdr.label     = hdr.orig.label;
+      hdr.chantype  = hdr.orig.chantype;
+      hdr.chanunit  = hdr.orig.chanunit;
+      hdr.grad      = hdr.orig.grad;
+      % add the raw chunk as well
       hdr.orig.ctf_res4 = orig.ctf_res4;
     end
     
