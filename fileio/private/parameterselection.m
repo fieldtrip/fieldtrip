@@ -82,7 +82,7 @@ for i=1:length(param)
   if issubfield(data, param{i})
     % the field is present, check whether the dimension is correct
     dim = size(getsubfield(data, param{i}));
-    if isfield(data, 'dim') && isequal(dim(:), data.dim(:))
+    if isfield(data, 'dim') && isequal(dim(1:3)', data.dim(:))
       select{end+1} = param{i}; 
     elseif isfield(data, 'dim') && prod(dim)==prod(data.dim)
       select{end+1} = param{i}; 
