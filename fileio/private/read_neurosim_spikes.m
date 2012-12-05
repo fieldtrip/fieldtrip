@@ -85,6 +85,7 @@ while ~isempty(line)
     if ~isempty(line) && line(1)~='#'
         % the data starts here, rewind the last line
         line = [];
+        fseek(fid, offset, 'bof');
     else
         orig{end+1} = line;
     end
