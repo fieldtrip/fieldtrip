@@ -1,7 +1,7 @@
 function test_bug1826
 
 % at this moment the test script does not yet work, but we don't want the automatic regression testing to flag it as failure
-return;
+%return;
 % Uses the linear tranformation algorithms of FSL to register a T2 image
 % and DTI image to T1 space. It also rotates the gradient direction vectors
 % .bvec with the rotational part of the transformation matrix.
@@ -16,18 +16,18 @@ return;
 
 %%
 %clear all;
-subjectT1 = '~/meeting_simbio/test_bug1826_data/test_bug1826_data/T1.nii.gz';
-subjectT2 = '~/meeting_simbio/test_bug1826_data/test_bug1826_data/T2.nii.gz';
-subjectDTI = '~/meeting_simbio/test_bug1826_data/test_bug1826_data/DTI.nii';
+subjectT1  = '/home/common/matlab/fieldtrip/data/test/bug1826/T1.nii.gz';%'~/meeting_simbio/test_bug1826_data/test_bug1826_data/T1.nii.gz';
+subjectT2  = '/home/common/matlab/fieldtrip/data/test/bug1826/T2.nii.gz';%'~/meeting_simbio/test_bug1826_data/test_bug1826_data/T2.nii.gz';
+subjectDTI = '/home/common/matlab/fieldtrip/data/test/bug1826/DTI.nii';%'~/meeting_simbio/test_bug1826_data/test_bug1826_data/DTI.nii';
 
-
-T1 = ft_read_mri(subjectT1);
-T2 = ft_read_mri(subjectT2);
+% load in the data
+T1  = ft_read_mri(subjectT1);
+T2  = ft_read_mri(subjectT2);
 DTI = ft_read_mri(subjectDTI);
 
-%figure; ft_plot_ortho(T1.anatomy); title('T1 before aligning')
-%figure; ft_plot_ortho(T2.anatomy); title('T2 before aligning')
-%figure; ft_plot_ortho(DTI.anatomy(:,:,:,1));title('DTI before aligning')
+figure; ft_plot_ortho(T1.anatomy); title('T1 before aligning')
+figure; ft_plot_ortho(T2.anatomy); title('T2 before aligning')
+figure; ft_plot_ortho(DTI.anatomy(:,:,:,1));title('DTI before aligning')
 
 % they are now in memory, which would be the normal `starting point in a
 % fieldtrip analysis pipeline
@@ -36,6 +36,40 @@ DTI = ft_read_mri(subjectDTI);
 % step 1) write them to disk, perhaps using ft_write_mri
 % step 2) call external code, e.g. FSL (using a system call) or SPM
 % step 3) read the results from disk
+
+% define the cfg for ft_volumerealign
+cfg          = [];
+cfg.method   = 'volume';
+cfg.fsl.path = '/opt/fsl/bin'; % '/opt/fsl_5.0/bin'; % fsl_5.0 only works on high mentats due to libraries
+cfg.fsl.dof  = 6; % rigid body
+
+interpmethods = {'nearestneighbours', 'sinc', 'trilinear'};
+costfuns      = {'mutualinfo', 'corratio', 'normcorr', 'normmi', 'leastsq'};
+
+% FIXME: not all combinations of interpmethods and cost functions make
+% sense! Between modality considerations etc
+
+%T2->T1
+for k = 1:numel(interpmethods)
+  for m = 1:numel(costfuns)
+    cfg.fsl.interpmethod = interpmethods{k};
+    cfg.fsl.costfun      = costfuns{m};
+    T2aligned{k,m}       = ft_volumerealign(cfg, T2, T1);
+  end
+end
+
+cfg.fsl.dof = 12;
+
+%DTI->T1
+for k = 1:numel(interpmethods)
+  for m = 1:numel(costfuns)
+    cfg.fsl.interpmethod = interpmethods{k};
+    cfg.fsl.costfun      = costfuns{m};
+    DTIaligned{k,m}      = ft_volumerealign(cfg, DTI, T1);
+  end
+end
+
+
 
 %% FSL parameters
 

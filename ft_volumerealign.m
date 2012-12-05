@@ -1,4 +1,4 @@
-function [realign, h] = ft_volumerealign(cfg, mri)
+function [realign, h] = ft_volumerealign(cfg, mri, target)
 
 % FT_VOLUMEREALIGN spatially aligns an anatomical MRI with head coordinates
 % based on external fiducials or anatomical landmarks. This function does
@@ -13,16 +13,18 @@ function [realign, h] = ft_volumerealign(cfg, mri)
 %
 % Use as
 %   [mri] = ft_volumerealign(cfg, mri)
+%   [mri] = ft_volumerealign(cfg, mri, target);
 % where the input mri should be a single anatomical or functional MRI
 % volume that was for example read with FT_READ_MRI.
 %
 % The configuration can contain the following options
 %   cfg.method         = different methods for aligning the volume
-%                        'interactive', 'fiducial', 'landmark' (see below)
+%                        'interactive', 'fiducial', 'landmark', 'headshape'
+%                        'volume' (see below)
 %   cfg.coordsys       = 'ctf' (default when specifying cfg.method =
-%                         'interactive' or 'fiducial') or 'spm' (default 
+%                         'interactive' or 'fiducial') or 'spm' (default
 %                         when specifying cfg.method = 'landmark').
-%                         Specifies the coordinate system of the head. This
+%                         Specifies the output coordinate system of the head. This
 %                         string specifies the origin and the axes of the
 %                         coordinate system. supported coordinate systems
 %                         are: 'ctf', '4d', 'yokogawa', 'neuromag', 'itab'
@@ -33,7 +35,7 @@ function [realign, h] = ft_volumerealign(cfg, mri)
 %                         visualization
 %
 % When cfg.method = 'fiducial', the following cfg-option is required:
-%   cfg.fiducial.nas  = [i j k], position of nasion 
+%   cfg.fiducial.nas  = [i j k], position of nasion
 %   cfg.fiducial.lpa  = [i j k], position of LPA
 %   cfg.fiducial.rpa  = [i j k], position of RPA
 %   cfg.fiducial.zpoint = [i j k], a point on the positive z-axis. This is
@@ -65,6 +67,25 @@ function [realign, h] = ft_volumerealign(cfg, mri)
 %    fiducials/landmarks a new figure is created. The optional second
 %    output argument to the function will contain the handles to these
 %    figures.
+%
+% When cfg.method = 'headshape', the following cfg-option is required:
+%  cfg.headshape = string pointing to a file describing a headshape, that
+%    can be loaded with ft_read_headshape, or a fieldtrip-structure describing
+%    a headshape
+% 
+% When cfg.method = 'volume', a third input argument is required. The input volume is
+% coregistered to this target volume, using fsl's flirt program. This
+% assumes fsl to be installed. Options pertaining to the behavior of fsl
+% should be defined in the subcfg cfg.fsl:
+%   cfg.fsl.path    = string, specifying the path to fsl
+%   cfg.fsl.costfun = string, specifying the cost-function used for
+%                     coregistration 
+%   cfg.fsl.interpmethod = string, specifying the interpolation method
+%                     ('trilinear', 'nearestneighbour', 'sinc')
+%   cfg.fsl.dof     = scalar, specifying the number of parameters for the
+%                     affine transformation
+%   cfg.fsl.reslice = string, specifying whether the output image will be
+%                     resliced conform the target image (default = 'yes') 
 %
 % With the 'interactive' and 'fiducial' methods it is possible to define an
 % additional point (with the key 'z'), which should be a point on the
@@ -159,13 +180,29 @@ basedonfid = strcmp(cfg.method, 'fiducial');
 dosnapshot   = istrue(cfg.snapshot);
 takesnapshot = false;
 
-
 % select the parameter that should be displayed
 cfg.parameter = parameterselection(cfg.parameter, mri);
-if iscell(cfg.parameter)
+if iscell(cfg.parameter) && ~isempty(cfg.parameter)
   cfg.parameter = cfg.parameter{1};
+elseif iscell(cfg.parameter) && isempty(cfg.parameter)
+  % cfg.parameter has been cleared by parameterselection due to a
+  % dimensionality mismatch. Most probable cause here is the fact that a 4D
+  % volume (e.g. DTI data) is in the input. This needs to be patched in a
+  % more structural way at some point, but for the time being we'll use a
+  % workaround here.
+  
+  % assume anatomy to be the parameter of interest
+  siz = size(mri.anatomy);
+  if all(siz(1:3)==mri.dim) && numel(siz)==4,
+    % it's OK
+    cfg.parameter= 'anatomy';
+  else
+    error('there''s an unexpected dimension mismatch');
+  end
 end
 
+transform = [];
+coordsys  = [];
 switch cfg.method
   case 'fiducial'
     % do nothing
@@ -179,7 +216,7 @@ switch cfg.method
     h2 = subplot('position',[0.52 0.55 0.44 0.44]);%subplot(2,2,2);
     h3 = subplot('position',[0.02 0.05 0.44 0.44]);%subplot(2,2,3);
     handles = {h1 h2 h3};
-  
+    
     showcrosshair = true;
     showmarkers   = 1;
     dat = mri.(cfg.parameter);
@@ -201,33 +238,33 @@ switch cfg.method
     markerpos   = zeros(0,3);
     markerlabel = {};
     markercolor = {};
-
+    
     fprintf(strcat(...
-        '1. To change the slice viewed in one plane, either:\n',...
-        '   a. click (left mouse) in the image on a different plane. Eg, to view a more\n',...
-        '      superior slice in the horizontal plane, click on a superior position in the\n',...
-        '      coronal plane, or\n',...
-        '   b. use the arrow keys to increase or decrease the slice number by one\n',...
-        '2. To mark a fiducial position or anatomical landmark, do BOTH:\n',...
-        '   (this can be done multiple times, until you are satisfied with the positions.\n',...
-        '    for each type of point, the most recent selection is stored.)\n',...
-        '   a. select the position by clicking on it in any slice with the left mouse\n',...
-        '      button\n',...
-        '   b. identify it by pressing either n/l/r for fiducials, or a/p/z for\n',...
-        '      anatomical landmarks\n',...
-        '   c. additional control point for the fiducials can be a point along the\n',...
-        '      positive z-axis, press z\n',...
-        '   d. additional control point for the landmarks can be a point along the\n',...
-        '      positive x-axis (to the participant''s right), press r\n',...
-        '3. To change the display:\n',...
-        '   a. press c or C on keyboard to show/hide crosshair\n',...
-        '   b. press m or M on keyboard to show/hide marked positions\n',...
-        '4. To finalize markers and quit interactive mode, press q on keyboard\n'));
-        
-        %'3. To unmark or remark a location\n',...
-        %'   a. click with the middle mouse button to unmark last position\n',...
-        %'   b. select new position with right mouse button and identify it using the\n',...
-        %'      keyboard\n',...
+      '1. To change the slice viewed in one plane, either:\n',...
+      '   a. click (left mouse) in the image on a different plane. Eg, to view a more\n',...
+      '      superior slice in the horizontal plane, click on a superior position in the\n',...
+      '      coronal plane, or\n',...
+      '   b. use the arrow keys to increase or decrease the slice number by one\n',...
+      '2. To mark a fiducial position or anatomical landmark, do BOTH:\n',...
+      '   (this can be done multiple times, until you are satisfied with the positions.\n',...
+      '    for each type of point, the most recent selection is stored.)\n',...
+      '   a. select the position by clicking on it in any slice with the left mouse\n',...
+      '      button\n',...
+      '   b. identify it by pressing either n/l/r for fiducials, or a/p/z for\n',...
+      '      anatomical landmarks\n',...
+      '   c. additional control point for the fiducials can be a point along the\n',...
+      '      positive z-axis, press z\n',...
+      '   d. additional control point for the landmarks can be a point along the\n',...
+      '      positive x-axis (to the participant''s right), press r\n',...
+      '3. To change the display:\n',...
+      '   a. press c or C on keyboard to show/hide crosshair\n',...
+      '   b. press m or M on keyboard to show/hide marked positions\n',...
+      '4. To finalize markers and quit interactive mode, press q on keyboard\n'));
+    
+    %'3. To unmark or remark a location\n',...
+    %'   a. click with the middle mouse button to unmark last position\n',...
+    %'   b. select new position with right mouse button and identify it using the\n',...
+    %'      keyboard\n',...
     while true % break when 'q' is pressed
       %       fprintf('click with the left mouse button to reslice the display to a new position\n');
       %       fprintf('click with the right mouse button to mark a position\n');
@@ -498,6 +535,112 @@ switch cfg.method
       basedonmrk = 1;
     end
     
+  case 'headshape'
+    if ischar(cfg.headshape)
+      shape = ft_read_headshape(cfg.headshape);
+    else
+      shape = cfg.headshape;
+    end
+    shape = ft_convert_units(shape, 'mm');
+    
+    % extract skull surface from image
+    tmpcfg        = [];
+    tmpcfg.output = 'scalp';
+    seg           = ft_volumesegment(tmpcfg, mri);
+    scpvox = scalp3(seg.scalp); % scalp3 is a helper function that relies on functions from the image processing toolbox
+    scpvox = scpvox(1:20:end,:);
+    
+    % get the points in head space
+    scp = warp_apply(mri.transform, scpvox);
+    
+    % weight the points with z-coordinate more than the rest. These are the
+    % likely points that belong to the nose and eye rims
+    weights = ones(size(shape.pnt,1),1);
+    weights(shape.pnt(:,3)<0) = 100; % this value seems to work
+    
+    % construct the coregistration matrix
+    [R, t, corr, D, data2] = icp2(scp', shape.pnt', 20, [], weights); % icp2 is a helper function implementing the iterative closest point algorithm
+    transform              = inv([R t;0 0 0 1]);
+    
+    % warp the extracted scalp points to the new positions
+    scpnew                 = warp_apply(transform*mri.transform, scpvox);
+    
+    % create headshape structure for mri-based surface point cloud
+    shapemri.pnt      = scpnew;
+    shapemri.unit     = 'mm';
+    shapemri.coordsys = 'bti';
+    
+    % coordsys is the same as input mri
+    coordsys = mri.coordsys;
+    
+    
+    %     mrifid.pnt   = warp_apply(transform*mri.transform, [fiducials.nas;fiducials.lpa;fiducials.rpa]);
+    %     mrifid.label = {'NZinteractive';'Linteractive';'Rinteractive'};
+    %     shapemri.fid = mrifid;
+    
+    
+    % update the cfg
+    cfg.headshape    = shape;
+    cfg.headshapemri = shapemri;
+    
+    % touch it to survive trackconfig
+    cfg.headshapemri;
+    
+  case 'volume'
+    if ~isfield(cfg, 'fsl'), cfg.fsl = []; end
+    cfg.fsl.path         = ft_getopt(cfg.fsl, 'path',    '');
+    cfg.fsl.costfun      = ft_getopt(cfg.fsl, 'costfun', 'mutualinfo');
+    cfg.fsl.interpmethod = ft_getopt(cfg.fsl, 'interpmethod', 'trilinear');
+    cfg.fsl.dof          = ft_getopt(cfg.fsl, 'dof',     6);
+    cfg.fsl.reslice      = ft_getopt(cfg.fsl, 'reslice', 'yes');
+   
+    % write the input and target to a temporary file
+    % and create some additional temporary file names to contain the output
+    tmpname1 = tempname;
+    tmpname2 = tempname;
+    tmpname3 = tempname;
+    tmpname4 = tempname;
+    
+    tmpcfg = [];
+    tmpcfg.parameter = 'anatomy';
+    tmpcfg.filename  = tmpname1;
+    tmpcfg.filetype  = 'nifti';
+    fprintf('writing the input volume to a temporary file: %s\n', tmpname1);
+    ft_volumewrite(tmpcfg, mri);
+    tmpcfg.filename  = tmpname2;
+    fprintf('writing the  target volume to a temporary file: %s\n', tmpname2);
+    ft_volumewrite(tmpcfg, target);
+    
+    % create the command to call flirt
+    fprintf('using flirt for the coregistration\n');
+    str = sprintf('%s/flirt -in %s -ref %s -out %s -omat %s -bins 256 -cost %s -searchrx -180 180 -searchry -180 180 -searchrz -180 180 -dof %s -interp %s',...
+          cfg.fsl.path, tmpname1, tmpname2, tmpname3, tmpname4, cfg.fsl.costfun, num2str(cfg.fsl.dof), cfg.fsl.interpmethod);
+    if isempty(cfg.fsl.path), str = str(2:end); end % remove the first filesep, assume path to flirt to be known
+        
+    % system call
+    system(str);
+    
+    % process the output
+    if ~istrue(cfg.fsl.reslice)
+      % get the transformation that corresponds to the coregistration and
+    else
+      % get the updated anatomy
+      mrinew        = ft_read_mri([tmpname3, '.nii.gz']);
+      mri.anatomy   = mrinew.anatomy;
+      mri.transform = mrinew.transform;
+      mri.dim       = mrinew.dim;
+      
+      transform = eye(4);
+      if isfield(target, 'coordsys')
+        coordsys = target.coordsys;
+      else
+        coordsys = 'unknown';
+      end
+    end
+    delete([tmpname1,'.nii']);
+    delete([tmpname2,'.nii']);
+    delete([tmpname3,'.nii.gz']);
+    delete(tmpname4);
   otherwise
     error('unsupported method');
 end
@@ -531,11 +674,11 @@ elseif basedonmrk
     [transform, coordsys] = headcoordinates(ac, pc, xzpoint, rpnt_head, 'spm');
   else
     % compute the homogenous transformation matrix describing the new coordinate system
-    [transform, coordsys] = headcoordinates(ac, pc, xzpoint, 'spm');  
+    [transform, coordsys] = headcoordinates(ac, pc, xzpoint, 'spm');
   end
- 
+  
 else
-  transform = [];
+  % something else has created a transform and coordsys
   
 end % if basedonXXX
 
@@ -551,8 +694,8 @@ else
   warning('no coordinate system realignment has been done');
 end
 
-if exist('pnt', 'var')
-  realign.pnt = pnt;
+if exist('pnt', 'var') && ~isempty(pnt)
+  realign.marker = pnt;
 end
 
 % do the general cleanup and bookkeeping at the end of the function
@@ -671,3 +814,192 @@ end
 colormap gray
 
 h = gca;
+
+function scp=scalp3(mri)
+
+dim = size(mri);
+% se  = strel([0,1,0;1,1,1;0,1,0]);
+scp = mri;
+% 
+% scp2=permute(scp,[1,3,2]);
+% scp3=permute(scp,[3,2,1]);
+% erode
+% fprintf('eroding image\n');
+% for i=1:2
+%   scp=imerode(scp,se);
+%   scp2=imerode(scp2,se);
+%   scp3=imerode(scp3,se);
+%   scp=scp+permute(scp2,[1,3,2])+permute(scp3,[3,2,1]);
+%   scp=(scp>2);
+%   scp2=permute(scp,[1,3,2]);
+%   scp3=permute(scp,[3,2,1]);
+% end
+% % dilate
+% fprintf('dilating image\n');
+% for i=1:2
+%   scp=imdilate(scp,se);
+%   scp2=imdilate(scp2,se);
+%   scp3=imdilate(scp3,se);
+%   scp=scp+permute(scp2,[1,3,2])+permute(scp3,[3,2,1]);
+%   scp=(scp>2);
+%   scp2=permute(scp,[1,3,2]);
+%   scp3=permute(scp,[3,2,1]);
+% end
+
+% detect edges
+fprintf('detecting the edges\n');
+mri=zeros(dim);
+for image=1:dim(3)
+  for row=1:dim(1)
+    ind=find(scp(row,:,image));
+    maxind=max(ind);
+    minind=min(ind);
+    mri(row,minind,image)=1;
+    mri(row,maxind,image)=1;
+  end
+end
+for image=1:dim(3)
+  for column=1:dim(2)
+    ind=find(scp(:,column,image));
+    maxind=max(ind);
+    minind=min(ind);
+    mri(minind,column,image)=1;
+    mri(maxind,column,image)=1;
+  end
+end
+for image=1:dim(2)
+  for row=1:dim(1)
+    ind=find(scp(row,image,:));
+    maxind=max(ind);
+    minind=min(ind);
+    mri(row,image,minind)=1;
+    mri(row,image,maxind)=1;
+  end
+end
+
+% convert to voxel indices
+scp  = find(mri);
+[scp(:,1), scp(:,2), scp(:,3)] = ind2sub(dim, scp);
+scp=unique(scp,'rows');
+
+function [R, t, corr, error, data2] = icp2(data1, data2, res, tri, weights)
+
+% [R, t, corr, error, data2] = icp2(data1, data2, res, tri)
+%
+% This is an implementation of the Iterative Closest Point (ICP) algorithm.
+% The function takes two data sets and registers data2 with data1. It is
+% assumed that data1 and data2 are in approximation registration. The code
+% iterates till no more correspondences can be found.
+%
+% This is a modified version (12 April, 2005). It is more accurate and has
+% less chances of getting stuck in a local minimum as opposed to my earlier
+% version icp.m
+%
+% Arguments: data1 - 3 x n matrix of the x, y and z coordinates of data set 1
+%            data2 - 3 x m matrix of the x, y and z coordinates of data set 2
+%            res   - the tolerance distance for establishing closest point
+%                     correspondences. Normally set equal to the resolution
+%                     of data1
+%            tri   - optional argument. obtained by tri = delaunayn(data1');
+%
+% Returns: R - 3 x 3 accumulative rotation matrix used to register data2
+%          t - 3 x 1 accumulative translation vector used to register data2
+%          corr - p x 3 matrix of the index no.s of the corresponding points of
+%                 data1 and data2 and their corresponding Euclidean distance
+%          error - the mean error between the corresponding points of data1
+%                  and data2 (normalized with res)
+%          data2 - 3 x m matrix of the registered data2
+%
+%
+% Copyright : This code is written by Ajmal Saeed Mian {ajmal@csse.uwa.edu.au}
+%              Computer Science, The University of Western Australia. The code
+%              may be used, modified and distributed for research purposes with
+%              acknowledgement of the author and inclusion of this copyright information.
+
+maxIter = 500;
+c1 = 0;
+c2 = 1;
+R = eye(3);
+t = zeros(3,1);
+if nargin < 4 || isempty(tri)
+    tri = delaunayn(data1');
+end
+n = 0;
+while c2 ~= c1
+  c1 = c2;
+  [corr, D] = dsearchn(data1', tri, data2');
+  corr(:,2:3)     = [(1 : length(corr))' D];
+  corr(D>2*res,:) = [];
+  
+  corr = -sortrows(-corr,3);
+  corr = sortrows(corr,1);
+  [B, Bi, Bj] = unique(corr(:,1));
+  corr = corr(Bi,:);
+  
+  [R1, t1] = reg(data1, data2, corr, weights);
+  data2 = R1*data2;
+  data2 = [data2(1,:)+t1(1); data2(2,:)+t1(2); data2(3,:)+t1(3)];
+  R = R1*R;
+  t = R1*t + t1;
+  c2 = length(corr);
+  n = n + 1;
+  if n > maxIter
+    break;
+  end
+end
+
+e1 = 1000001;
+e2 = 1000000;
+n = 0;
+noChangeCount = 0;
+while noChangeCount < 10
+  e1 = e2;
+  [corr, D] = dsearchn(data1', tri, data2');
+  corr(:,2:3) = [(1:length(corr))' D];
+  corr(D>2*res,:) = [];
+  
+  corr = -sortrows(-corr,3);
+  corr = sortrows(corr,1);
+  [B, Bi, Bj] = unique(corr(:,1));
+  corr = corr(Bi,:);
+  
+  [R1 t1] = reg(data1, data2, corr, weights);
+  data2 = R1*data2;
+  data2 = [data2(1,:)+t1(1); data2(2,:)+t1(2); data2(3,:)+t1(3)];
+  R = R1*R;
+  t = R1*t + t1;
+  e2 = sum(corr(:,3))/(length(corr)*res);
+  
+  n = n + 1;
+  if n > maxIter
+    break;
+  end
+  if abs(e2-e1)<res/10000
+    noChangeCount = noChangeCount + 1;
+  end
+end
+error = min(e1,e2);
+
+%-----------------------------------------------------------------
+function [R1, t1] = reg(data1, data2, corr, weights)
+
+n = length(corr);
+if nargin<4
+  weights = ones(n,1);
+end
+M = data1(:,corr(:,1));
+mm = mean(M,2);
+S = data2(:,corr(:,2));%*sparse(diag(weights(corr(:,2))));
+ms = mean(S,2);
+Sshifted = [S(1,:)-ms(1); S(2,:)-ms(2); S(3,:)-ms(3)];
+Mshifted = [M(1,:)-mm(1); M(2,:)-mm(2); M(3,:)-mm(3)];
+K = Sshifted*sparse(diag(weights(corr(:,2))))*Mshifted';
+K = K/n;
+[U A V] = svd(K);
+R1 = V*U';
+if det(R1)<0
+  B = eye(3);
+  B(3,3) = det(V*U');
+  R1 = V*B*U';
+end
+t1 = mm - R1*ms;
