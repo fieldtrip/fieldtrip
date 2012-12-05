@@ -62,12 +62,7 @@ catch
 end
 
 % define a subset of channels for reading, only "headloc" type channels are relevant
-if strcmp(cfg.dataset, 'buffer://odin:1972');
-    chanindx = 1:9; % odin buffer specific
-else
-    [~, chanindx] = match_str('headloc', ft_chantype(hdr));
-end
-
+[~, chanindx] = match_str('headloc', hdr.chantype);
 if isempty(chanindx)
     error('the data does not seem to have headlocalization channels');
 end
@@ -233,6 +228,7 @@ grad.chanpos  = grad.chanpos(chansel,:);
 grad.chanori  = grad.chanori(chansel,:);
 grad.chantype = grad.chantype(chansel,:);
 grad.label    = grad.label(chansel,:);
+grad.tra      = grad.tra(chansel,:);
 
 % apply the inverse transformation matrix on data
 t_grad = grad;
