@@ -1,4 +1,4 @@
-function sb_write_materials(filename,values,labels,weights)
+function sb_write_materials(filename,values,labels,resolution)
 %
 % sb_write_materials writes a .mat file (read by the simbio-vgrid mesher)
 % in which each tissue compartment is assigned to an integer value 
@@ -20,8 +20,8 @@ elseif nargin<3 & length(values)~=3
   error('You should specify the labels for models with more (or less) than 3 compartments')
 end
 
-if isempty(weights)
-  weights = ones(1,length(values));
+if isempty(resolution)
+  resolution = 1;
 end
 
 % open the file and write the header
@@ -29,7 +29,7 @@ try
   fid = fopen(filename, 'w');
   fprintf(fid,'%s\n','material bg 1 0 0   2   1.0');
   for i=1:numel(values)
-    fprintf(fid,'%s%s %d %d %d %d %0.1f\n','material ',labels{i},1,values(i),values(i),1,weights(i));
+    fprintf(fid,'%s%s %d %d %d %d %0.1f\n','material ',labels{i},resolution,values(i),values(i),1,1);
   end
   fclose(fid);
 catch
