@@ -1,11 +1,11 @@
 function [planar] = constructplanargrad(cfg, grad)
 
-% AXIAL2PLANAR constructs a planar gradiometer array from an axial gradiometer
-% definition. This can be used to compute the planar field gradient for a 
-% known (estimated) source configuration.
+% CONSTRUCTPLANARGRAD constructs a planar gradiometer array from an axial gradiometer
+% definition. This can be used to compute the planar field gradient for a known
+% (estimated) source configuration.
 % 
 % Use as
-%   [planar_grad] = constructplanargrad(cfg, grad)
+%   [grad_planar] = constructplanargrad(cfg, grad_axial)
 %
 % Where cfg contains the following configuration details
 %   cfg.baseline_axial   = number (default is 5)
@@ -92,6 +92,9 @@ for chan=1:Nchan
   hi_negy(chan,:) = lo_negy(chan,:) + cfg.baseline_axial * this_z;
 end
 
+% start with an empty planar gradiometer definition
+planar = [];
+
 if strcmp(cfg.planaraxial, 'yes')
   % combine all the 8 coils into a single sensor
   planar.coilpos = [
@@ -161,8 +164,8 @@ end
 
 planar.label = planar.label(:);
 planar.tra   = planar.tra / cfg.baseline_planar;
-planar.chanpos = grad.chanpos;
-planar.chanori = grad.chanori;
+planar.chanpos = [grad.chanpos; grad.chanpos];
+planar.chanori = [grad.chanori; grad.chanori];
 
 try
   planar.unit  = grad.unit;
