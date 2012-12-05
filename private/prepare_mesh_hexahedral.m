@@ -104,8 +104,7 @@ write_vista_vol(size(seg), seg, MRfile);
 
 % write the materials file (assign tissue values to the elements of the FEM grid)
 % see tutorial http://www.rheinahrcampus.de/~medsim/vgrid/manual.html
-weight(1:numel(cfg.tissue)) = 1.;
-sb_write_materials(materialsfile,[1:numel(cfg.tissue)],tissue,weight);
+sb_write_materials(materialsfile,[1:numel(cfg.tissue)],tissue,cfg.resolution);
 
 % determin vgrid path
 str = which('vgrid');
