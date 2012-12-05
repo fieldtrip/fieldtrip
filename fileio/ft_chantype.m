@@ -217,7 +217,9 @@ elseif ft_senstype(input, 'ctf') && isheader
   %                  sam: 15
   %     virtual_channels: 16
   %             sclk_ref: 17
-  
+
+  % start with an empty one
+  origSensType = [];
   if isfield(hdr, 'orig')
     if isfield(hdr.orig, 'sensType') && isfield(hdr.orig, 'Chan')
       % the header was read using the open-source matlab code that originates from CTF and that was modified by the FCDC
@@ -229,9 +231,10 @@ elseif ft_senstype(input, 'ctf') && isheader
       % the header was read using the CTF importer from the NIH and Daren Weber
       origSensType = [hdr.orig.sensor.info.index];
     end
-  else
+  end
+  
+  if isempty(origSensType)
     warning('could not determine channel type from the CTF header');
-    origSensType = [];
   end
   
   for sel=find(origSensType(:)==5)'

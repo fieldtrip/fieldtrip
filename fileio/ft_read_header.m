@@ -934,9 +934,9 @@ switch headerformat
     hdr.Fs          = orig.fsample;
     hdr.nChans      = orig.nchans;
     hdr.nSamples    = orig.nsamples;
-    hdr.nSamplesPre = 0; % since continuous
-    hdr.nTrials     = 1; % since continuous
-    hdr.orig        = []; % add chunks if present
+    hdr.nSamplesPre = 0;  % since continuous
+    hdr.nTrials     = 1;  % since continuous
+    hdr.orig        = []; % this will contain the chunks (if present)
     
     % add the contents of attached .res4 file to the .orig field similar to offline data
     if isfield(orig, 'ctf_res4')
@@ -978,12 +978,15 @@ switch headerformat
       
       % copy over the labels
       hdr.label = R4F.label;
-      % copy over the 'original' header
-      hdr.orig = R4F;
+      if isfield(R4F,'orig')
+        % copy over the 'original' header
+        hdr.orig = R4F.orig;
+      end
+      % copy over the gradiometer definition
       if isfield(R4F,'grad')
         hdr.grad = R4F.grad;
       end
-      % add the raw chunk as well
+      % retain the raw ctf_res4 chunk as well
       hdr.orig.ctf_res4 = orig.ctf_res4;
     end
     
