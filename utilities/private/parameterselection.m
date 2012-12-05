@@ -85,7 +85,9 @@ for i=1:length(param)
     if isfield(data, 'dim') && isequal(dim(:), data.dim(:))
       select{end+1} = param{i}; 
     elseif isfield(data, 'dim') && prod(dim)==prod(data.dim)
-      select{end+1} = param{i}; 
+      select{end+1} = param{i};
+    elseif isfield(data, 'dim') && numel(dim)==3 && isequal(dim(1:3)', data.dim(:))
+      select{end+1} = param{i};
     elseif isfield(data, 'pos') && (prod(dim)==size(data.pos, 1) || dim(1)==size(data.pos,1))
       select{end+1} = param{i}; 
     elseif isfield(data, 'dimord') && (isfield(data, 'pos') || isfield(data, 'transform')),
@@ -108,10 +110,6 @@ for i=1:length(param)
         select{end+1} = param{i};
       end
     end
-  elseif isfield(data, 'dim') && numel(dim)==3 && isequal(dim(1:3)', data.dim(:))
-    select{end+1} = param{i};
-  else
-    % don't select the parameter
   end
 end
 
