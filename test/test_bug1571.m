@@ -61,7 +61,7 @@ data.fsample = fsample;
 data.label = {'1', '2', '3'};
 nchans = numel(data.label);
 real_fsample = 512.01;
-data.time{1} = 0:1/real_fsample:100*fsample;
+data.time{1} = 0:1/real_fsample:100;
 data.trial{1} = rand(nchans, numel(data.time{1}));
 
 cfg                     = [];
@@ -69,6 +69,8 @@ cfg.continuous          = 'yes';
 cfg.dftfilter           = 'yes';
 filteredData  = ft_preprocessing(cfg, data);
 
-assert(0~=sum(data.trial{1}(:)-filteredData.trial{1}(:)))
+assert(~isequal(data.trial{1}, filteredData.trial{1}(:)))
+
+fprintf('done.\n');
 
 
