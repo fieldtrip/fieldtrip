@@ -29,7 +29,7 @@ else
   fwrite(F, 'MEG42CP');
   fclose(F);
   
-  R4F = ft_read_header(dsname);
+  R4F = ft_read_header(dsname, 'coordsys', 'dewar');
   
   delete(res4fn);
   delete(meg4fn);

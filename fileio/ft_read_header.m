@@ -181,7 +181,7 @@ if cache && exist(headerfile, 'file') && ~isempty(cacheheader)
 end % if cache
 
 % the support for head/dewar coordinates is still limited
-if strcmp(coordsys, 'dewar') && ~any(strcmp(headerformat, {'ctf_ds', 'ctf_meg4', 'ctf_res4'}))
+if strcmp(coordsys, 'dewar') && ~any(strcmp(headerformat, {'fcdc_buffer', 'ctf_ds', 'ctf_meg4', 'ctf_res4'}))
   error('dewar coordinates are sofar only supported for CTF data');
 end
   
@@ -951,7 +951,9 @@ switch headerformat
         % this only needs to be decoded once
         cachechunk = decode_res4(orig.ctf_res4);
       end
-      hdr.orig = cachechunk;
+      % copy the gradiometer details
+      hdr.grad = cachechunk.grad;
+      hdr.orig = cachechunk.orig;
       if isfield(orig, 'channel_names')
           % get the same selection of channels from the two chunks
           [selbuf, selres4] = match_str(orig.channel_names, cachechunk.label);
@@ -965,8 +967,6 @@ switch headerformat
           % add the channel names chunk as well
           hdr.orig.channel_names = orig.channel_names;
       end
-      % copy the gradiometer details
-      hdr.grad = hdr.orig.grad;
       % add the raw chunk as well
       hdr.orig.ctf_res4 = orig.ctf_res4;
     end

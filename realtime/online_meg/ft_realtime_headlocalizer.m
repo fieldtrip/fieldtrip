@@ -94,7 +94,7 @@ info = guidata(hMainFig);
 while (get(info.hQuitButton, 'Value') == 1) % while the flag is one, the loop continues
     
     % determine number of samples available in buffer
-    hdr = ft_read_header(cfg.headerfile, 'cache', true);
+    hdr = ft_read_header(cfg.headerfile, 'cache', true, 'coordsys', 'dewar');
     
     % see whether new samples are available
     newsamples = (hdr.nSamples*hdr.nTrials-prevSample);
