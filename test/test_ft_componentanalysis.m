@@ -27,7 +27,26 @@ for k = 1:numel(datainfo)
   
   datanew = rmfield(datanew, 'cfg'); % these are per construction different if writeflag = 0;
   data    = rmfield(data,    'cfg');
-  [ok,msg] = identical(data, datanew,'abstol',1e-7);
+  
+  % if data is rank-deficient, the last columns of the mixing/unmixing
+  % matrices are arbitrary, and should thus not be compared
+  rankDiff = size(data.trial{1},1) - rank(data.trial{1});
+  if rankDiff == size(data.trial{1},1)
+    % massive rank deficiency (i.e., identical data in all channels)
+    % best to just not test the mixing matrices at all, just surrogate test
+    % data
+    data = rmfield(data, 'topo');
+    data = rmfield(data, 'unmixing');
+    datanew = rmfield(datanew, 'topo');
+    datanew = rmfield(datanew, 'unmixing');
+  elseif rankDiff > 0
+    data.topo(:,end-rankDiff:end) = 0;
+    data.unmixing(end-rankDiff:end,:) = 0;
+    datanew.topo(:,end-rankDiff:end) = 0;
+    datanew.unmixing(end-rankDiff:end,:) = 0;
+  end
+  
+  [ok,msg] = identical(data, datanew,'abstol',1e-7,'diffabs',1);
   if ~ok
     disp(msg);
     error('there were differences between reference and new data, see above for details');

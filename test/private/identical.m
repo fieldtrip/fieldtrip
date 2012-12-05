@@ -15,6 +15,9 @@ function [ok, message] = identical2(a, b, varargin)
 %   'depth'      number, for nested structures
 %   'abstol'     number, absolute tolerance for numerical comparison
 %   'reltol'     number, relative tolerance for numerical comparison
+%   'diffabs'    boolean, check difference between absolute values for
+%                numericals (useful for e.g. mixing matrices which have
+%                arbitrary signs)
 
 % Copyright (C) 2004-2012, Robert Oostenveld & Markus Siegel
 %
@@ -98,6 +101,13 @@ if isa(a, 'numeric') || isa(a, 'char') || isa(a, 'logical')
     abstol     = keyval('abstol', varargin{:});       % any value
     relnormtol = keyval('relnormtol', varargin{:});   % the matrix norm, relative to the mean norm
     absnormtol = keyval('absnormtol', varargin{:});   % the matrix norm
+    diffabs = keyval('diffabs', varargin{:});
+    
+    if ~isempty(diffabs) && diffabs
+      a = abs(a);
+      b = abs(b);
+    end
+    
     if ~isempty(abstol) && any(abs(a-b)>abstol)
       message{end+1} = sprintf('different values in %s', location);
     elseif ~isempty(reltol) && any((abs(a-b)./(0.5*(a+b)))>reltol)
