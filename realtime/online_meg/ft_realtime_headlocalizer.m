@@ -52,11 +52,11 @@ end
 clear ft_read_header
 
 % start by reading the header from the realtime buffer
-hdr = ft_read_header(cfg.headerfile, 'cache', true);
+hdr = ft_read_header(cfg.headerfile, 'cache', true, 'coordsys', 'dewar');
 
 % MEG sensors in CTF dewar space
 try
-    sens = headcoordinates2ctfdewar(hdr.orig.hc.dewar(:,1)', hdr.orig.hc.dewar(:,2)', hdr.orig.hc.dewar(:,3)', hdr.grad);
+    sens = grad2meggrad(hdr.grad);
 catch
     sens = [];
 end
@@ -199,28 +199,9 @@ end % while true
 close(hMainFig); % close the figure
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION which transform the positions from headcoordinate to dewar space
+% SUBFUNCTION which removes the references from the grad
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function t_grad = headcoordinates2ctfdewar(nas, lpa, rpa, grad) % based on headcoordinates.m
-
-% compute the origin and direction of the coordinate axes in MRI coordinates
-origin = (lpa+rpa)/2;
-dirx = nas-origin;
-dirx = dirx/norm(dirx);
-dirz = cross(dirx,lpa-rpa);
-dirz = dirz/norm(dirz);
-diry = cross(dirz,dirx);
-
-% compute the rotation matrix
-rot = eye(4);
-rot(1:3,1:3) = inv(eye(3) / [dirx; diry; dirz]);
-
-% compute the translation matrix
-tra = eye(4);
-tra(1:4,4)   = [-origin(:); 1];
-
-% compute the full homogeneous transformation matrix from these two
-h = rot * tra;
+function t_grad = grad2meggrad(grad)
 
 % we do not want to plot the REF sensors
 chansel = match_str(grad.chantype,'meggrad');
@@ -232,7 +213,6 @@ grad.tra      = grad.tra(chansel,:);
 
 % apply the inverse transformation matrix on data
 t_grad = grad;
-t_grad.chanpos = warp_apply(inv(h), grad.chanpos, 'homogenous');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that initiates the figure
