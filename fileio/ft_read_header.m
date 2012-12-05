@@ -10,6 +10,7 @@ function [hdr] = ft_read_header(filename, varargin)
 % Additional options should be specified in key-value pairs and can be
 %   'headerformat'   string
 %   'fallback'       can be empty or 'biosig' (default = [])
+%   'coordsys'       string, 'head' or 'dewar' (default = 'head')
 %
 % This returns a header structure with the following elements
 %   hdr.Fs                  sampling frequency
@@ -106,6 +107,7 @@ end
 % get the options
 retry        = ft_getopt(varargin, 'retry', false); % the default is not to retry reading the header
 headerformat = ft_getopt(varargin, 'headerformat');
+coordsys     = ft_getopt(varargin, 'coordsys', 'head'); % this is used for CTF, it can be head or dewar
 
 if isempty(headerformat)
   % only do the autodetection if the format was not specified
@@ -178,6 +180,11 @@ if cache && exist(headerfile, 'file') && ~isempty(cacheheader)
   end % if the details correspond
 end % if cache
 
+% the support for head/dewar coordinates is still limited
+if strcmp(coordsys, 'dewar') && ~any(strcmp(headerformat, {'ctf_ds', 'ctf_meg4', 'ctf_res4'}))
+  error('dewar coordinates are sofar only supported for CTF data');
+end
+  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % read the data with the low-level reading function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -479,7 +486,7 @@ switch headerformat
     end
     % add a gradiometer structure for forward and inverse modelling
     try
-      hdr.grad = ctf2grad(orig);
+      hdr.grad = ctf2grad(orig, strcmp(coordsys, 'dewar'));
     catch
       % this fails if the res4 file is not correctly closed, e.g. during realtime processing
       tmp = lasterror;
