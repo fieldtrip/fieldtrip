@@ -1,33 +1,32 @@
 function [data] = ft_megplanar(cfg, data)
 
-% FT_MEGPLANAR computes planar MEG gradients gradients for raw data
-% obtained from FT_PREPROCESSING or an average ERF that was computed using
-% FT_TIMELOCKANALYSIS. It can also convert frequency-domain data that was
-% computed using FT_FREQANALYSIS, as long as it contains the complex-valued
-% fourierspcrm and not only the powspctrm.
+% FT_MEGPLANAR computes planar MEG gradients gradients for raw data or average
+% event-related field data. It can also convert frequency-domain data that was computed
+% using FT_FREQANALYSIS, as long as it contains the complex-valued fourierspcrm and not
+% only the powspctrm.
 %
 % Use as
 %    [interp] = ft_megplanar(cfg, data)
+% where the input data corresponds to the output from FT_PREPROCESSING,
+% FT_TIMELOCKANALYSIS or FT_FREQANALYSIS (with output='fourierspcrm').
 %
 % The configuration should contain
-%   cfg.planarmethod   = 'orig' | 'sincos' | 'fitplane' | 'sourceproject'
-%   cfg.channel        =  Nx1 cell-array with selection of channels (default = 'MEG'),
-%                         see FT_CHANNELSELECTION for details
+%   cfg.planarmethod   = string, can be 'sincos', 'orig', 'fitplane', 'sourceproject' (default = 'sincos')
+%   cfg.channel        =  Nx1 cell-array with selection of channels (default = 'MEG'), see FT_CHANNELSELECTION for details
 %   cfg.trials         = 'all' or a selection given as a 1xN vector (default = 'all')
 %
-% The methods orig, sincos and fitplane are all based on a neighbourhood
-% interpolation. For these methods you need to specify
+% The methods orig, sincos and fitplane are all based on a neighbourhood interpolation.
+% For these methods you need to specify
 %   cfg.neighbours     = neighbourhood structure, see FT_PREPARE_NEIGHBOURS
 %
-% In the 'sourceproject' method a minumum current estimate is done using a
-% large number of dipoles that are placed in the upper layer of the brain
-% surface, followed by a forward computation towards a planar gradiometer
-% array. This requires the specification of a volume conduction model of
-% the head and of a source model. The 'sourceproject' method is not supported for
-% frequency domain data.
+% In the 'sourceproject' method a minumum current estimate is done using a large number
+% of dipoles that are placed in the upper layer of the brain surface, followed by a
+% forward computation towards a planar gradiometer array. This requires the
+% specification of a volume conduction model of the head and of a source model. The
+% 'sourceproject' method is not supported for frequency domain data.
 %
 % A dipole layer representing the brain surface must be specified with
-%   cfg.inwardshift = depth of the source layer relative to the head model surface (default = 2.5, which is adequate for a skin-based head model)
+%   cfg.inwardshift = depth of the source layer relative to the head model surface (default = 2.5 cm, which is appropriate for a skin-based head model)
 %   cfg.spheremesh  = number of dipoles in the source layer (default = 642)
 %   cfg.pruneratio  = for singular values, default is 1e-3
 %   cfg.headshape   = a filename containing headshape, a structure containing a
@@ -98,14 +97,12 @@ ft_preamble provenance
 ft_preamble trackconfig
 ft_preamble loadvar data
 
-% check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'required', {'neighbours'});
-
+% store the original input representation of the data, this is used later on to convert it back
 isfreq = ft_datatype(data, 'freq');
 israw  = ft_datatype(data, 'raw');
 istlck = ft_datatype(data, 'timelock');  % this will be temporary converted into raw
 
-% check if the input data is valid for this function
+% check if the input data is valid for this function, this converts the data if needed
 data = ft_checkdata(data, 'datatype', {'raw' 'freq'}, 'feedback', 'yes', 'hassampleinfo', 'yes', 'ismeg', 'yes', 'senstype', {'ctf151', 'ctf275', 'bti148', 'bti248', 'itab153', 'yokogawa160', 'yokogawa64'});
 
 if istlck
@@ -125,7 +122,12 @@ cfg.planarmethod = ft_getopt(cfg, 'planarmethod', 'sincos');
 cfg.inputfile    = ft_getopt(cfg, 'inputfile',    []);
 cfg.outputfile   = ft_getopt(cfg, 'outputfile',   []);
 cfg.feedback     = ft_getopt(cfg, 'feedback',     'text');
- 
+
+% check if the input cfg is valid for this function
+if ~strcmp(cfg.planarmethod, 'sourceproject')
+  cfg = ft_checkconfig(cfg, 'required', {'neighbours'});
+end
+
 if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
   % convert the nested config-object back into a normal structure
   cfg.headshape = struct(cfg.headshape);
@@ -147,10 +149,10 @@ if strcmp(cfg.planarmethod, 'sourceproject')
   % and compute forward again with the axial gradiometer array replaced by
   % a planar one.
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+  
   % method specific configuration options
   cfg.headshape   = ft_getopt(cfg, 'headshape',   []);
-  cfg.inwardshift = ft_getopt(cfg, 'inwardshift', 2.5);
+  cfg.inwardshift = ft_getopt(cfg, 'inwardshift', 2.5); % this number assumes that all other inputs are in cm
   cfg.pruneratio  = ft_getopt(cfg, 'pruneratio',  1e-3);
   cfg.spheremesh  = ft_getopt(cfg, 'spheremesh',  642);
   
@@ -215,7 +217,7 @@ if strcmp(cfg.planarmethod, 'sourceproject')
   interp  = ft_apply_montage(data, planarmontage, 'keepunused', 'yes');
   % also apply the linear transformation to the gradiometer definition
   interp.grad = ft_apply_montage(data.grad, planarmontage, 'balancename', 'planar', 'keepunused', 'yes');
-
+  
   % ensure there is a type string describing the gradiometer definition
   if ~isfield(interp.grad, 'type')
     % put the original gradiometer type in (will get _planar appended)
@@ -255,7 +257,7 @@ else
   end
   cfg.channel = ft_channelselection(cfg.channel, sens.label);
   cfg.channel = ft_channelselection(cfg.channel, data.label);
-
+  
   % ensure channel order according to cfg.channel (there might be one check
   % too much in here somewhere or in the subfunctions, but I don't care.
   % Better one too much than one too little - JMH @ 09/19/12
@@ -278,12 +280,11 @@ else
   
   fprintf('minimum distance between neighbours is %6.2f %s\n', min(distance(distance~=0)), sens.unit);
   fprintf('maximum distance between gradiometers is %6.2f %s\n', max(distance(distance~=0)), sens.unit);
-  
-  
+    
   planarmontage = eval([fun '(cfg, data.grad)']);
   
   % apply the linear transformation to the data
-  interp  = ft_apply_montage(data, planarmontage, 'keepunused', 'yes', 'feedback', cfg.feedback);
+  interp = ft_apply_montage(data, planarmontage, 'keepunused', 'yes', 'feedback', cfg.feedback);
   
   % also apply the linear transformation to the gradiometer definition
   interp.grad = ft_apply_montage(data.grad, planarmontage, 'balancename', 'planar', 'keepunused', 'yes');
