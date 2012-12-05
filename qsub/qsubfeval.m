@@ -330,7 +330,7 @@ switch backend
     end
     
     % pass the command to qsub with all requirements
-    cmdline = sprintf('echo "%s" | qsub -N %s %s -d %s -o %s -e %s', cmdline, jobid, submitoptions, curPwd, curPwd, curPwd);
+    cmdline = sprintf('echo "%s" | qsub -N %s %s -d "%s" -o "%s" -e "%s"', cmdline, jobid, submitoptions, curPwd, curPwd, curPwd);
     
   case 'slurm'
     % this is for Simple Linux Utility for Resource Management
