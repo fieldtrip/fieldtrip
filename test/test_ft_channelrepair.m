@@ -97,15 +97,16 @@ end
 % again make use of bug941 data
 % load data
 
-% treat as a bad channel
-cfg = [];
+% treat as a bad channelcfg = [];
 cfg.badchannel = {'25'};
 cfg.neighbours = neighbours;
 cfg.method     = 'spline';
 data_eeg_repaired_spline = ft_channelrepair(cfg,data_eeg_clean);
 
+
 cfg = [];
 cfg.channel = {'19','20','24','25','26'};
+cfg.continous = 'no';
 ft_databrowser(cfg, data_eeg_repaired_spline);
 
 % treat as a missing channel
@@ -139,8 +140,11 @@ for tr=1:numel(data_eeg_interp_spline.trial)
   %    all(tmp > data_eeg_interp.trial{tr}(cfg.neighbours, :))
   %  error(['The average is not in between its channel neighbours at for trial ' num2str(tr)]);
   %else
-   if ~mean(abs(data_eeg_interp_spline.trial{tr}(end, :) - data_eeg_repaired_spline.trial{tr}(25, :))) < 10e6*eps % i.e. nearly ==0
-    disp(['mean error is: ' num2str(mean(abs(data_eeg_interp_spline.trial{tr}(end, :) - data_eeg_repaired_spline.trial{tr}(25, :))))]); 
+  %meandiff = min(median(abs(data_eeg_interp_spline.trial{tr}(25:end, :) - data_eeg_repaired_spline.trial{tr}(25:end, :))));
+  a = data_eeg_interp_spline.trial{tr}(end, :);
+  b = data_eeg_repaired_spline.trial{tr}(25, :);
+  if ~identical(a, b, 'reltol', 0.001) % 0.1% i.e. nearly ==0
+    disp(['relative difference is: ' num2str(max(abs(a-b)./(0.5*(a+b))))]); 
     error('The reconstruction of the same channel differs when being treated as a missing channel compared to a bad channel');
   else
     fprintf('trial %i is fine\n', tr);
