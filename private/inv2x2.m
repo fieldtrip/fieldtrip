@@ -1,7 +1,27 @@
 function [d] = inv2x2(x)
 
-%computes inverse of matrix x, using explicit analytic definition if
-%size(x,1) < 4, otherwise use matlab inv-function
+% INV2X2 computes inverse of matrix x, using explicit analytic definition
+% if size(x,1) < 4, otherwise use matlab inv-function
+
+% Copyright (C) 2012, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
+%
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
 
 siz = size(x);
 if all(siz(1:2)==2),
@@ -18,5 +38,5 @@ elseif numel(siz)==2,
   d = inv(x);
 else
   error('cannot compute slicewise inverse');
-  %write for loop for the higher dimensions, using normal inv
+  % write for loop for the higher dimensions, using normal inv
 end
