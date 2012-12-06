@@ -59,7 +59,7 @@ filename = fetch_url(filename);
 spikeformat = ft_getopt(varargin, 'spikeformat', ft_filetype(filename));
 
 switch spikeformat
-  case 'neurosim'
+  case {'neurosim spikes' 'neurosim dir'}
     spike = read_neurosim_spikes(filename);
 
   case {'neuralynx_ncs' 'plexon_ddt'}
