@@ -324,15 +324,23 @@ elseif filetype_check_extension(filename, '.hsp')
   type = 'yokogawa_hsp';
   manufacturer = 'Yokogawa';
   
-  % this has to go before the 4D detection
+  % Neurosim files; this has to go before the 4D detection
+elseif ~isdir(filename) && (strcmp(f,'spikes') || filetype_check_header(filename,'#  Spike information'))
+    type = 'neurosim spikes';
+    manufacturer = 'Jan van der Eerden (DCCN)';
+    content = 'simulated spikes';
+elseif ~isdir(filename) && (strcmp(f,'evolution') || filetype_check_header(filename,'#  Voltages'))
+    type = 'neurosim evolution';
+    manufacturer = 'Jan van der Eerden (DCCN)';
+    content = 'simulated membrane voltages and currents';
+elseif ~isdir(filename) && (strcmp(f,'signals') || filetype_check_header(filename,'#  Internal',2))
+    type = 'neurosim signals';
+    manufacturer = 'Jan van der Eerden (DCCN)';
+    content = 'simulated network signals';
 elseif isdir(filename) && exist(fullfile(filename, 'signals'), 'file') && exist(fullfile(filename, 'spikes'), 'file')
-  type = 'neurosim';
-  manufacturer = 'Jan van der Eerden (DCCN)';
-  content = 'simulated spikes and continuous signals';
-elseif isempty(x) && (strcmp(filename,'signals') || strcmp(filename,'spikes')) % file does not have an extension and is called signals or spikes
-  type = 'neurosim';
-  manufacturer = 'Jan van der Eerden (DCCN)';
-  content = 'simulated spikes and continuous signals';
+    type = 'neurosim dir';
+    manufacturer = 'Jan van der Eerden (DCCN)';
+    content = 'simulated spikes and continuous signals';
   
   % known 4D/BTI file types
 elseif filetype_check_extension(filename, '.pdf') && filetype_check_header(filename, 'E|lk') % I am not sure whether this header always applies

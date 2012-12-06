@@ -1620,9 +1620,15 @@ switch headerformat
     hdr  = rmfield(orig, 'time');
     hdr.orig = orig;
     
-  case 'neurosim'
-      headerOnly=1;
+  case 'neurosim spikes'
+    headerOnly=1;
     hdr = read_neurosim_spikes(filename,headerOnly);
+    
+  case 'neurosim evolution'
+    hdr = read_neurosim_evolution(filename);
+    
+  case 'neurosim signals'
+    hdr = read_neurosim_signals(filename);
     
   otherwise
     if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)

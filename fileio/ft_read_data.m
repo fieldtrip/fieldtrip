@@ -131,7 +131,7 @@ if isempty(chanindx)
   chanindx = 1:hdr.nChans;
 end
 
-% read untill the end of the file if the endsample is "inf"
+% read until the end of the file if the endsample is "inf"
 if any(isinf(endsample)) && any(endsample>0)
   endsample = hdr.nSamples*hdr.nTrials;
 end
@@ -1026,10 +1026,14 @@ switch dataformat
   case 'bucn_nirs'
     dat = read_bucn_nirsdata(filename, hdr, begsample, endsample, chanindx);
     
-  case 'neurosim'
+  case 'neurosim signals'
     [hdr, dat] = read_neurosim_signals(filename);
     dat = dat(chanindx,begsample:endsample);
     
+  case 'neurosim evolution'  
+     [hdr, dat] = read_neurosim_evolution(filename);
+     dat = dat(chanindx,begsample:endsample);
+     
   otherwise
     if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
       dat = read_biosig_data(filename, hdr, begsample, endsample, chanindx);

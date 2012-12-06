@@ -96,8 +96,9 @@ spike.hdr.orig=orig;
 spike.hdr.nChans=length(label);
 spike.hdr.nSamplesPre        = 0;
 spike.hdr.nTrials            = 1;
-spike.hdr.chantype = cell(length(label),1);
+[spike.hdr.chantype spike.hdr.chanunit] = deal(cell(length(label),1));
 spike.hdr.chantype(:) = {'spike (neurosim)'};
+spike.hdr.chanunit(:) = {'unknown'};
 
 if ~headerOnly %if only the header is requested, reading in the data is not needed
 % done with the header; read in all data, 
