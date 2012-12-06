@@ -94,12 +94,12 @@ function segmentation = ft_datatype_segmentation(segmentation, varargin)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: ft_checkdata.m 6575 2012-09-28 10:54:59Z roboos $
+% $Id$
 
 % get the optional input arguments, which should be specified as key-value pairs
 version           = ft_getopt(varargin, 'version', 'latest');
-segmentationstyle = ft_getopt(varargin, 'segmentationstyle');   % can be indexed or probabilistic
-hasbrain          = ft_getopt(varargin, 'hasbrain', 'no');      % no means that it is not required, if present it won't be removed
+segmentationstyle = ft_getopt(varargin, 'segmentationstyle');  % can be indexed or probabilistic
+hasbrain          = ft_getopt(varargin, 'hasbrain', 'no');     % no means that it is not required, if present it won't be removed
 
 % convert from string into boolean
 hasbrain = istrue(hasbrain);

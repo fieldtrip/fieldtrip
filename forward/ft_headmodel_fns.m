@@ -1,17 +1,18 @@
-function vol = ft_headmodel_fns(seg,varargin)
+function vol = ft_headmodel_fns(seg, varargin)
 
 % FT_HEADMODEL_FNS creates the volume conduction structure to be used 
 % in the FNS forward solver.
 %
 % Use as
-%   vol = ft_headmodel_fns(varargin)
+%   vol = ft_headmodel_fns(seg, ...)
 %
-% Optional input arguments should be specified in key-value pairs and can
-% include
+% Optional input arguments should be specified in key-value pairs and
+% can include
 %   conductivity     = matrix C [9XN tissue types]
 %
-% The conductivity matrix C is stored in a 9xN table, where N is the number of tissues and a 
-% 3x3 tensor conductivity matrix is stored in each row in column oriented format
+% The conductivity matrix C is stored in a 9xN table, where N is the
+% number of tissues and a 3x3 tensor conductivity matrix is stored
+% in each row in column oriented format.
 % 
 % Standard default values for conductivity matrix C are derived from 
 % Saleheen HI, Ng KT. New finite difference formulations for general
@@ -24,6 +25,24 @@ function vol = ft_headmodel_fns(seg,varargin)
 % See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
 % Copyright (C) 2011, Cristiano Micheli and Hung Dang
+%
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
 
 ft_hastoolbox('fns', 1);
 

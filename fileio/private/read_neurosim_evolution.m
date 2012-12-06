@@ -1,14 +1,14 @@
 function [hdr, dat] = read_neurosim_evolution(filename, varargin)
 
-% READ_NEUROSIM_EVOLUTION reads the "evolution" file that is
-% written by Jan van der Eerden's NeuroSim software. When a directory is
-% used as input, the default filename 'evolution' is read.
+% READ_NEUROSIM_EVOLUTION reads the "evolution" file that is written
+% by Jan van der Eerden's NeuroSim software. When a directory is used
+% as input, the default filename 'evolution' is read.
 %
-% options:
-% Vonly: 0 or 1, only give the membrane potentials as output
-% headerOnly: 0 or 1, only read the header information (skip the data),
-% automatically set to 1 if nargout==1;
-% 
+% Use as
+%   [hdr, dat] = read_neurosim_evolution(filename, ...)
+% where additional options should come in key-value pairs and can include
+%   Vonly       = 0 or 1, only give the membrane potentials as output
+%   headerOnly  = 0 or 1, only read the header information (skip the data), automatically set to 1 if nargout==1
 % 
 % See also FT_READ_HEADER, FT_READ_DATA
 
@@ -30,7 +30,7 @@ function [hdr, dat] = read_neurosim_evolution(filename, varargin)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: read_neurosim_signals.m 5531 2012-03-26 10:50:46Z roboos $
+% $Id$
 
 if isdir(filename)
   filename = fullfile(filename, 'evolution');
@@ -42,7 +42,6 @@ headerOnly      = ft_getopt(varargin, 'headerOnly',0);
 if nargout<2 % make sure that when only one output is requested the header is returned
     headerOnly=true;
 end
-
 
 label = {};
 orig  = {};
@@ -97,7 +96,6 @@ end
 
 fclose(fid);
 
-
 % only extract V_membrane if wanted
 if Vonly
     matchLab=regexp(label,'V of (\S+) neuron','start');
@@ -114,7 +112,6 @@ if Vonly
         label{n}=[num2str(n) label{n}(regexp(label{n},': V'):end)];
     end
 end
-
 
 % convert the header into fieldtrip style
 hdr.label       = label(:);

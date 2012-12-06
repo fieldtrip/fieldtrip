@@ -1,6 +1,6 @@
 function ft_realtime_fmriviewer(cfg)
 
-% FT_REALTIME_FMRIVIEWER
+% FT_REALTIME_FMRIVIEWER allows for realtime visualization of the fMRI data stream
 %
 % Use as
 %   ft_realtime_fmriviewer(cfg)
@@ -16,6 +16,26 @@ function ft_realtime_fmriviewer(cfg)
 %   cfg.dataformat    = string, default is determined automatic
 %   cfg.headerformat  = string, default is determined automatic
 %   cfg.eventformat   = string, default is determined automatic
+
+% Copyright (C) 2012, Stefan Klanke
+%
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
 
 if ~isfield(cfg, 'headerfile'),    	cfg.headerfile = 'buffer://localhost:1972'; end
 if ~isfield(cfg, 'datafile'),      	cfg.datafile = cfg.headerfile; end
@@ -53,7 +73,6 @@ else
   numSlices = 1;
 end
   
-
 % open the figure and set the colormap
 h = figure;
 colormap(gray);
@@ -116,7 +135,6 @@ while true
     Vn = Vn(2:end-1,2:end-1,2:end-1);
     size(Vn)
     S = reshape(Vn, [width height*numSlices]);
-
     
     imagesc(S(:,:)',[0 2048]);
     
@@ -126,3 +144,4 @@ while true
     pause(0.01);
   end % if enough new samples
 end % while true
+

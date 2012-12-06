@@ -5,8 +5,7 @@ function [vol] = ft_fetch_vol(cfg, data)
 %
 % Use as
 %   [vol] = ft_fetch_vol(cfg, data)
-%
-% Either of the two input arguments may be empty.
+% where either of the two input arguments may be empty.
 %
 % The volume conductor definitions are specified in the configuration or
 % data. The sensor configuration can be passed into this function in three ways:

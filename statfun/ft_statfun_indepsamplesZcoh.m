@@ -1,6 +1,6 @@
 function [s, cfg] = ft_statfun_indepsamplesZcoh(cfg, dat, design)
 
-% FT_STATFUN_indepsamplesZcoh calculates the independent samples coherence Z-statistic 
+% FT_STATFUN_INDEPSAMPLESCOHZ calculates the independent samples coherence Z-statistic 
 % on the biological data in dat (the dependent variable), using the information on 
 % the independent variable (iv) in design.
 %
@@ -8,8 +8,9 @@ function [s, cfg] = ft_statfun_indepsamplesZcoh(cfg, dat, design)
 %   [stat] = ft_timelockstatistics(cfg, timelock1, timelock2, ...)
 %   [stat] = ft_freqstatistics(cfg, freq1, freq2, ...)
 %   [stat] = ft_sourcestatistics(cfg, source1, source2, ...)
-% with the following configuration option:
+% with the following configuration option
 %   cfg.statistic = 'indepsamplesZcoh'
+%
 % see FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS for details.
 %
 % For low-level use, the external interface of this function has to be
@@ -44,10 +45,28 @@ function [s, cfg] = ft_statfun_indepsamplesZcoh(cfg, dat, design)
 %              quantile (1-cfg.alpha) (with cfg.tail=1).
 %
 % Design specification:
-%   cfg.ivar        = column number of the design that contains the labels of the conditions that must be 
-%                     compared (default=1). The labels are the numbers 1 and 2.
+%   cfg.ivar = column number of the design that contains the labels of the conditions that must be 
+%              compared (default=1). The labels are the numbers 1 and 2.
 
 % Copyright (C) 2006, Eric Maris
+%
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
 
 % set the defaults
 if ~isfield(cfg, 'computestat'),       cfg.computestat='yes';     end;

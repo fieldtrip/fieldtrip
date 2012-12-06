@@ -76,11 +76,11 @@ function parcellation = ft_datatype_parcellation(parcellation, varargin)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: ft_checkdata.m 6575 2012-09-28 10:54:59Z roboos $
+% $Id$
 
 % get the optional input arguments, which should be specified as key-value pairs
 version           = ft_getopt(varargin, 'version', 'latest');
-parcellationstyle = ft_getopt(varargin, 'parcellationstyle');   % can be indexed or probabilistic
+parcellationstyle = ft_getopt(varargin, 'parcellationstyle');  % can be indexed or probabilistic
 
 if strcmp(version, 'latest')
   parcelversion = '2012';

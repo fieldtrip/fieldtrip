@@ -1,6 +1,7 @@
 function [dat] = ft_preproc_padding(dat, padtype, prepadlength, postpadlength)
-% FT_PREPROC_PADDING performs padding on the data, i.e. adds or removes 
-% samples to/from the data matrix.
+
+% FT_PREPROC_PADDING performs padding on the data, i.e. adds or removes samples
+% to or from the data matrix.
 %
 % Use as
 %   [dat] = ft_preproc_padding(dat, padtype, padlength)
@@ -15,7 +16,6 @@ function [dat] = ft_preproc_padding(dat, padtype, prepadlength, postpadlength)
 %
 % If padlength is used instead of prepadlength and postpadlength, padding
 % will be symmetrical (i.e. padlength = prepadlength = postpadlength)
-%
 % 
 % See also FT_PREPROCESSING
 
@@ -36,7 +36,8 @@ function [dat] = ft_preproc_padding(dat, padtype, prepadlength, postpadlength)
 %
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
-
+%
+% $Id$
 
 if nargin < 4
   postpadlength = prepadlength;
@@ -110,3 +111,4 @@ switch(padtype)
 end
 
 end
+

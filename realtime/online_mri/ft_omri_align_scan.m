@@ -1,4 +1,5 @@
 function [model, mat_r, mat_a, Va] = ft_omri_align_scan(model, Vo)
+
 % function [model, mat_r, mat_a, Va] = ft_omri_align_scan(model, Vo)
 %
 % Estimate 6-DOF motion parameters and align volume Vo with reference model.
@@ -13,7 +14,6 @@ function [model, mat_r, mat_a, Va] = ft_omri_align_scan(model, Vo)
 % mat_r - parameters of 6-dof transformation in homogenous matrix form
 %         transformation from world coordinates of Vo to world coordinates of reference
 % mat_a - pixel to world coordinate matrix of Vo (absolute "position" of Vo)
-
 
 % Basic code taken from SPM8, adapted for online use 2010, S.Klanke
 

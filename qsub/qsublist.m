@@ -38,6 +38,8 @@ function qsublist(cmd, jobid, pbsid)
 %
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/
+%
+% $Id$
 % -----------------------------------------------------------------------
 
 persistent list_jobid list_pbsid

@@ -23,7 +23,7 @@ function [bnd] = ft_fetch_headshape(cfg, data)
 %
 % See also FT_PREPARE_VOL_SENS, FT_READ_VOL, FT_FETCH_VOL
 
-% $Id: $
+% $Id$
 
 % Copyright (C) 2012, Cristiano Micheli
 %

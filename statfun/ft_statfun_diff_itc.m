@@ -1,7 +1,7 @@
 function [s] = ft_statfun_diff_itc(cfg, dat, design)
 
-% FT_STATFUN_diff_itc computes the difference in the inter-trial
-% coherence (ITC) between two conditions. The input data for this test
+% FT_STATFUN_DIFF_ITC computes the difference in the inter-trial
+% coherence between two conditions. The input data for this test
 % should consist of complex-values spectral estimates, e.g. computed
 % using FT_FREQANALYSIS with method=mtmfft, wavelet or mtmconvcol.
 %
@@ -27,6 +27,24 @@ function [s] = ft_statfun_diff_itc(cfg, dat, design)
 % See FT_FREQSTATISTICS and STATISTICS_MONTECARLO for more details
 
 % Copyright (C) 2008, Robert Oostenveld
+%
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
 
 % set the defaults
 if ~isfield(cfg, 'complex'), cfg.complex = 'diffabs';   end

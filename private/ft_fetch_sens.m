@@ -5,8 +5,7 @@ function [sens] = ft_fetch_sens(cfg, data)
 %
 % Use as
 %   [sens] = ft_fetch_sens(cfg, data)
-%
-% Either of the two input arguments may be empty.
+% where either of the two input arguments may be empty.
 %
 % The positions of the sensors are specified in a gradiometer or electrode configuration or
 % from a layout. The sensor configuration can be passed into this function in four ways:

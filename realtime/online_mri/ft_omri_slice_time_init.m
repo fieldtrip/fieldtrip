@@ -1,10 +1,29 @@
 function STM = ft_omri_slice_time_init(X0, TR, deltaT);
+
 % function STM = ft_omri_slice_time_init(X0, TR, deltaT);
 %
 % Initialize simple slice time correction structure.
 % The algorithm will use plain linear interpolation.
 
-% 2010 S.Klanke
+% Copyright (C) 2010, Stefan Klanke
+%
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
 
 STM.dims = size(X0)
 if nargin == 3

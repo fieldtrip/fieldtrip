@@ -1,4 +1,5 @@
 function ft_realtime_dicomroxy(cfg)
+
 % FT_REALTIME_DICOMPROXY simulates an fMRI acquisition system by reading a series
 % of DICOM files from disk, and streaming them to a FieldTrip buffer.
 %
@@ -16,6 +17,24 @@ function ft_realtime_dicomroxy(cfg)
 % This function requires functions from SPM, so make sure you have set up your path correctly.
 
 % Copyright (C) 2010, Stefan Klanke
+%
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
 
 % set the defaults
 if isempty(cfg) | ~isfield(cfg, 'target') | ~isfield(cfg.target, 'datafile')

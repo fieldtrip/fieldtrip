@@ -25,6 +25,26 @@
 % This function returns the number of jobs that were collected and for
 % which the callback function was called.
 
+% Copyright (C) 2012, Eelke Spaak
+%
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
+
 maxnum = ft_getopt(varargin, 'maxnum', Inf);
 filter = ft_getopt(varargin, 'filter', [generatesesionid '.*']);
 sleep  = ft_getopt(varargin, 'sleep', 0);
@@ -37,8 +57,7 @@ else
   error('filter should either be a regexp string or cell array of exact-match strings');
 end
 
-% keep track of which job IDs we have already recognized and fired the
-% callback for
+% keep track of which job IDs we have already recognized and fired the callback for
 foundJobs = [];
 
 curPwd = getcustompwd();

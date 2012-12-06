@@ -58,9 +58,26 @@ function cmd = ft_realtime_asynchronous(cfg)
 % To stop the realtime function, you have to press Ctrl-C
 
 % Copyright (C) 2010, Marcel van Gerven, Robert Oostenveld
+%
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
 
 % set the default configuration options
-
 if ~isfield(cfg, 'bcifun'),         cfg.bcifun = @bcifun_latidx; end % example function computes lateralization index
 if ~isfield(cfg, 'nsamples'),       cfg.nsamples = inf;          end % number of samples to process
 if ~isfield(cfg, 'blocksize'),      cfg.blocksize = 1;           end % in seconds
@@ -178,3 +195,4 @@ while cfg.count < cfg.nsamples
     
   end % if enough new samples
 end % while true
+

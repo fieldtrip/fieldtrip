@@ -21,7 +21,7 @@ function [retval] = getbatch
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: ft_checkopt.m 6107 2012-06-22 07:54:39Z roboos $
+% $Id$
 
 persistent batch
 if isempty(batch)

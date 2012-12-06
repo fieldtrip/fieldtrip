@@ -1,9 +1,28 @@
 function [z] = sandwich2x2(x, y)
 
-% compute x*y*x' provided y = hermitian
-% and dimensionatity is 2x2xN
+% SANDWICH2X2 compute x*y*x' provided y is Hermitian and dimensionality is 2x2xN
 
-%FIXME build in check for hermitianity
+% Copyright (C) 2012, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
+%
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
+
+% FIXME build in check for hermitianity
 z     = complex(zeros(size(x)));
 xconj = conj(x);
 xabs2 = abs(x).^2;
@@ -31,3 +50,4 @@ z(2,2,:,:) = xabs2(2,1,:,:) .* y(1,1,:,:) + ...
 %
 %a1*abs(b1)^2 + a2*(b1'*b2) + a2'*(b1*b2') + a3*abs(b2)^2    a1*b1*b3'    + a2*b2*b3'   + a2'*b1*b4'   + a3*b2*b4'
 %a1*b1'*b3    + a2*b1'*b4   + a2'*b2'*b3   + a3*b2'*b4       a1*abs(b3)^2 + a2*(b3'*b4) + a2'*(b3*b4') + a3*abs(b4)^2
+

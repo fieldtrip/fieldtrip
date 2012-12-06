@@ -17,11 +17,11 @@ function [stat] = ft_networkanalysis(cfg, data)
 %
 % The configuration structure has to contain
 %   cfg.method    = string, specifying the graph measure that will be
-%                   computed. See below for a list of supported measures. 
+%                   computed. See below for the list of supported measures. 
 %   cfg.parameter = string specifying the bivariate parameter in the data 
 %                   for which the graph measure will be computed.
 %
-% Supported methods are:
+% Supported methods are
 %   assortatitivity
 %   betweenness
 %   clustering_coef
@@ -56,9 +56,9 @@ function [stat] = ft_networkanalysis(cfg, data)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: ft_connectivityanalysis.m 4812 2011-11-25 13:32:07Z jansch $
+% $Id$
 
-revision = '$Id: ft_networkanalysis.m $';
+revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults

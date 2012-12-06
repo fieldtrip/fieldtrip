@@ -1,16 +1,18 @@
 function fieldtrip2fiff(filename, data)
 
-% FIELDTRIP2FIFF saves a fieldtrip data structure as a fiff-file, in order
-% to be useable by the Neuromag software, or in MNE suite
+% FIELDTRIP2FIFF saves a FieldTrip raw data structure as a fiff-file,
+% in order to be useable by the Neuromag software, or in the MNE suite
+% software.
 %
 % Use as
-%  fieldtrip2fiff(filename, data)
-% 
-% where filename is the name of the output file, and data is a fieldtrip
-% raw data structure, or a timelock structure.
+%   fieldtrip2fiff(filename, data)
+% where filename is the name of the output file, and data is a raw
+% data structure as obtained from FT_PREPROCESSING, or a timelock
+% structure obtained from FT_TIMELOCKANALYSIS.
 %
+% See also FT_DATATYPE_RAW, FT_DATATYPE_TIMELOCK
 
-% Copyright (C) 2012 Jan-Mathijs Schoffelen
+% Copyright (C) 2012, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -28,9 +30,9 @@ function fieldtrip2fiff(filename, data)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: ft_fieldtrip2fiff.m 5187 2012-01-31 08:42:56Z jansch $
+% $Id$
 
-revision = '$Id: ft_fieldtrip2fiff.m 5187 2012-01-31 08:42:56Z jansch $';
+revision = '$Id$';
 
 ft_defaults                 % this ensures that the path is correct and that the ft_defaults global variable is available
 ft_preamble help            % this will show the function help if nargin==0 and return an error

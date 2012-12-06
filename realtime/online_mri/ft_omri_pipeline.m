@@ -1,22 +1,37 @@
 function ft_omri_pipeline(cfg)
-% function ft_omri_pipeline(cfg)
-%
-% fMRI pre-processing pipeline
-% Make sure you have SPM8 on your path.
+
+% FT_OMRI_PIPELINE implements an online fMRI pre-processing pipeline
 %
 % Configuration options are
-%  cfg.input      - FieldTrip buffer containing raw scans (default 'buffer://localhost:1972')
-%  cfg.output     - where to write processed scans to     (default 'buffer://localhost:1973')
-%  cfg.numDummy   - how many scans to ignore initially    (default 0)
-%  cfg.smoothFWHM - kernel width in mm (Full Width Half Maximum) for smoothing (default = 0 => no smoothing)
-%  cfg.correctMotion 	- flag indicating whether to correct motion artifacts (default = 1 = yes)
-%  cfg.correctSliceTime - flag indicating whether to correct slice timing (default = 1 = yes)
+%   cfg.input            - FieldTrip buffer containing raw scans (default 'buffer://localhost:1972')
+%   cfg.output           - where to write processed scans to     (default 'buffer://localhost:1973')
+%   cfg.numDummy         - how many scans to ignore initially    (default 0)
+%   cfg.smoothFWHM       - kernel width in mm (Full Width Half Maximum) for smoothing (default = 0 => no smoothing)
+%   cfg.correctMotion 	 - flag indicating whether to correct motion artifacts (default = 1 = yes)
+%   cfg.correctSliceTime - flag indicating whether to correct slice timing (default = 1 = yes)
+
+% Copyright (C) 2010, Stefan Klanke
 %
-% (C) 2010 Stefan Klanke
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
 
-
-%ft_defaults
-%addpath('/home/common/matlab/spm8');
+ft_defaults
+ft_hastoolbox('spm8', 1);
 
 if nargin < 1
 	cfg = [];

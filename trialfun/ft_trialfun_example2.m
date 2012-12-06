@@ -16,7 +16,7 @@ function [dat] = ft_trialfun_example2(cfg)
 % this trial function. You should change these parameters if neccessary.
 %
 % See also FT_DEFINETRIAL, FT_PREPROCESSING
- 
+
 % read the header and determine the channel number corresponding with the EMG
 hdr         = ft_read_header(cfg.headerfile);
 chanindx    = strmatch('EMGlft', hdr.label);

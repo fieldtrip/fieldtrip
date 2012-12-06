@@ -1,7 +1,7 @@
 function [dipout] = minimumnormestimate(dip, grad, vol, dat, varargin)
 
 % MINIMUMNORMESTIMATE computes a linear estimate of the current in a
-% distributed source model
+% distributed source model.
 % 
 % Use as
 %   [dipout] = minimumnormestimate(dip, grad, vol, dat, ...)
@@ -27,7 +27,7 @@ function [dipout] = minimumnormestimate(dip, grad, vol, dat, varargin)
 % Note that leadfield normalization (depth regularisation) should be done
 % by scaling the leadfields outside this function, e.g. in
 % prepare_leadfield. Note also that with precomputed leadfields the
-% normalization parameters will not have an effect
+% normalization parameters will not have an effect.
 %
 % This implements
 % * Dale AM, Liu AK, Fischl B, Buckner RL, Belliveau JW, Lewine JD,
@@ -46,8 +46,24 @@ function [dipout] = minimumnormestimate(dip, grad, vol, dat, varargin)
 % - keepleadfield
 
 % Copyright (C) 2004-2008, Robert Oostenveld
-% 
-% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
+%
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
 
 % ensure that these are row-vectors
 dip.inside  = dip.inside(:)';

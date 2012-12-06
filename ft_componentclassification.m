@@ -1,16 +1,16 @@
 function comprefcorr = ft_componentclassification(cfg, comp, refdata)
 
-% FT_COMPONENTCLASSIFICATION does a classification on the spatiotemporal
+% FT_COMPONENTCLASSIFICATION performs a classification of the spatiotemporal
 % components
 %
 % Use as
-%  outdata = ft_componentclassification(cfg, comp) 
+%   compclass = ft_componentclassification(cfg, comp) 
 % where comp is the output of FT_COMPONENTANALYSIS and cfg is a       
 % configuration structure that should contain 
 %
-%  cfg.option1    = value, explain the value here (default = something)
-%  cfg.option2    = value, describe the value here and if needed
-%                   continue here to allow automatic parsing of the help
+%   cfg.option1    = value, explain the value here (default = something)
+%   cfg.option2    = value, describe the value here and if needed
+%                    continue here to allow automatic parsing of the help
 %
 % The configuration can optionally contain
 %   cfg.option3   = value, explain it here (default is automatic)
@@ -24,14 +24,29 @@ function comprefcorr = ft_componentclassification(cfg, comp, refdata)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_COMPONENTANALYSIS, FT_COMPONENTPLOT
+% See also FT_COMPONENTANALYSIS, FT_TOPOPLOTIC
 
 % Copyright (C) 2011, Jan-Mathijs Schoffelen
 %
-% Here comes the Revision tag, which is auto-updated by the version control system
-% $Id: ft_examplefunction.m 4096 2011-09-03 15:49:40Z roboos $
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
 
-ft_defaults;
+ft_defaults
 
 % record start time and total processing time
 ftFuncTimer = tic();
@@ -53,13 +68,13 @@ cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
 cfg = ft_checkconfig(cfg, 'required', 'method');
 
 % ensure that the options are valid
-%cfg = ft_checkopt(cfg, 'vartrllen', 'double', {0, 1, 2});
-%cfg = ft_checkopt(cfg, 'method', 'char', {'mtm', 'convol'});
+% cfg = ft_checkopt(cfg, 'vartrllen', 'double', {0, 1, 2});
+% cfg = ft_checkopt(cfg, 'method', 'char', {'mtm', 'convol'});
 
 % get the options
 cfg.inputfile  = ft_getopt(cfg, 'inputfile', '');
 cfg.outputfile = ft_getopt(cfg, 'outputfile', '');
-method    = ft_getopt(cfg, 'method');        % there is no default
+method         = ft_getopt(cfg, 'method'); % there is no default
 
 hasdata = (nargin>1);
 if ~isempty(cfg.inputfile)
@@ -70,7 +85,6 @@ if ~isempty(cfg.inputfile)
     comp = loadvar(cfg.inputfile, 'data');
   end
 end
-
 
 if strcmp(method, 'template_timeseries') && nargin<=2
   error('for the method ''template_timeseries'' the input to this function should contain the reference time series as a separate input');
@@ -122,12 +136,15 @@ switch method
     comprefcorr = comprefcov(1:Ncomp,(Ncomp+1):end)./sqrt(diag(comprefcov(1:Ncomp,1:Ncomp))*diag(comprefcov((Ncomp+1):end,(Ncomp+1):end))');
     
   case 'template_topography'
-   
+    error('unknown method of classification');    
   case '1/f'
+    error('unknown method of classification');    
   case 'kurtosis'
+    error('unknown method of classification');    
   case 'whiteness'
-   
+    error('unknown method of classification');    
   case 'something else'
+    error('unknown method of classification');    
   otherwise
     error('unknown method of classification');    
 end
@@ -145,7 +162,7 @@ cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
 
 % add the version details of this function call to the configuration
 cfg.version.name = mfilename('fullpath'); % this is helpful for debugging
-cfg.version.id   = '$Id: ft_examplefunction.m 4096 2011-09-03 15:49:40Z roboos $'; % this will be auto-updated by the revision control system
+cfg.version.id   = '$Id$'; % this will be auto-updated by the revision control system
 
 % add information about the Matlab version used to the configuration
 cfg.callinfo.matlab = version();

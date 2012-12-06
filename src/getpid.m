@@ -24,7 +24,7 @@ function pid = getpid()
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: getpid.m 6746 2012-10-11 19:10:06Z roboos $
+% $Id$
 
 % this is to speed up subsequent calls
 persistent previous_argout

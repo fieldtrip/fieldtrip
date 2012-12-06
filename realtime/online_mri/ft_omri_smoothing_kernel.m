@@ -1,7 +1,8 @@
 function [kernX, kernY, kernZ, offsets] = ft_omri_smoothing_kernel(FWHM, voxdims)
+
 % function [kernX, kernY, kernZ, offsets] = ft_omri_smoothing_kernel(FWHM, voxdims)
 
-% copy-pasted from SPM8
+% Copied from SPM8
 
 if numel(FWHM) == 1
 	s = FWHM*ones(1,3);

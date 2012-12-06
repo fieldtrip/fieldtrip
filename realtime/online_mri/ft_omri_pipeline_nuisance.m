@@ -1,26 +1,41 @@
 function ft_omri_pipeline_nuisance(cfg)
-% function ft_omri_pipeline_nuisance(cfg)
-%
-% fMRI pre-processing pipeline, including motion correction, slice time correction,
-% smoothing, and regressing out nuisance regressors (constant, linear trend, motion
-% estimates).
-% Make sure you have SPM8 on your path.
-%
+
+% FT_OMRI_PIPELINE_NUISANCE implements an online fMRI pre-processing pipeline, including
+% motion correction, slice time correction, smoothing, and regressing out nuisance
+% regressors (constant, linear trend, motion estimates).
+% 
 % Configuration options are
-%  cfg.input      - FieldTrip buffer containing raw scans (default 'buffer://localhost:1972')
-%  cfg.output     - where to write processed scans to     (default 'buffer://localhost:1973')
-%  cfg.numDummy   - how many scans to ignore initially    (default 4)
-%  cfg.smoothFWHM - kernel width in mm (Full Width Half Maximum) for smoothing (default = 8)
-%  cfg.whichEcho  - which echo to process for multi-echo sequences (default = 1)
-%  cfg.correctMotion 	- flag indicating whether to correct motion artifacts (default = 1 = yes)
-%  cfg.correctSliceTime - flag indicating whether to correct slice timing (default = 1 = yes)
-%  cfg.numRegr    - number of nuisance regressors (1=constant term, 2=const+linear,5=const,linear+translation)
+%   cfg.input            - FieldTrip buffer containing raw scans (default 'buffer://localhost:1972')
+%   cfg.output           = where to write processed scans to     (default 'buffer://localhost:1973')
+%   cfg.numDummy         = how many scans to ignore initially    (default 4)
+%   cfg.smoothFWHM       = kernel width in mm (Full Width Half Maximum) for smoothing (default = 8)
+%   cfg.whichEcho        = which echo to process for multi-echo sequences (default = 1)
+%   cfg.correctMotion 	 = flag indicating whether to correct motion artifacts (default = 1 = yes)
+%   cfg.correctSliceTime = flag indicating whether to correct slice timing (default = 1 = yes)
+%   cfg.numRegr          = number of nuisance regressors (1=constant term, 2=const+linear,5=const,linear+translation)
+
+% Copyright (C) 2010, Stefan Klanke
 %
-% (C) 2010 Stefan Klanke
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
 
-
-%ft_defaults
-%addpath('/home/common/matlab/spm8');
+ft_defaults
+ft_hastoolbox('spm8', 1);
 
 if nargin < 1
 	cfg = [];

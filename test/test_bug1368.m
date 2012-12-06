@@ -1,11 +1,10 @@
 function test_bug1368
+
 % TEST test_bug1368
 % TEST 
 
 fprintf('***  DIAGNOSTICAL INFORMATION ***\n');
 fprintf('test script is running on host: %s\n', gethostname());
-
-% $Id$  
 
 pnt = [
   0         0    1.0000

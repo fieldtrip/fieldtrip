@@ -1,17 +1,33 @@
 function cmd = bcifun_latidx(cfg,data)
+
 % BCIFUN_LATIDX extracts alpha power, computes the alpha lateralization index 
 % and sends a command to an external device
 %
-% this function computes the lateralization index:
-%
-% log A / B
-%
-% for the average alpha power in right channels A and the average alpha
-% power in left channels B. In a covert attention experiment we expect
+% This function computes the lateralization index log(A/B) for the
+% average alpha power in right channels A and the average alpha power
+% in left channels B. In a covert attention experiment we expect
 % higher values for attention to the right visual hemifield and lower
 % values for attention to the left visual hemifield.
-%
+
 % Copyright (C) 2009, Marcel van Gerven
+%
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
 
 persistent idx;
 persistent alis;

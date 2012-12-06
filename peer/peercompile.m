@@ -31,6 +31,8 @@ function peercompile(cc)
 %
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/
+%
+% $Id$
 % -----------------------------------------------------------------------
 
 % You can tweak this a bit for setting platform-independent options, e.g for optimisation

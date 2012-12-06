@@ -28,7 +28,7 @@ function [lf] = eeg_halfspace_monopole(rd, elc, vol)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: $
+% $Id$
 
 siz = size(rd);
 if any(siz==1)

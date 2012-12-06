@@ -1,6 +1,6 @@
 function [s,cfg] = ft_statfun_indepsamplesregrT(cfg, dat, design)
 
-% FT_STATFUN_indepsamplesregrT calculates independent samples regression
+% FT_STATFUN_INDEPSAMPLESREGRT calculates independent samples regression
 % coefficient T-statistics on the biological data in dat (the dependent
 % variable), using the information on the independent variable
 % (predictor) in design.
@@ -35,9 +35,27 @@ function [s,cfg] = ft_statfun_indepsamplesregrT(cfg, dat, design)
 %              quantile (1-cfg.alpha) (with cfg.tail=1).
 %
 % Design specification:
-%   cfg.ivar        = row number of the design that contains the independent variable (default=1)
+%   cfg.ivar = row number of the design that contains the independent variable (default=1)
 
 % Copyright (C) 2006, Eric Maris
+%
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
 
 % set defaults
 if ~isfield(cfg, 'computestat'),       cfg.computestat='yes';     end;
