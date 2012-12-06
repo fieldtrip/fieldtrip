@@ -16,7 +16,7 @@ function test_tutorial_spike_Neurosim
 % TEST ft_spike_isi ft_spike_plot_isireturn ft_spike_psth ft_spikedensity
 % TEST ft_spike_plot_raster ft_spike_xcorr
 
-spike2 = ft_read_spike('/home/common/matlab/fieldtrip/data/test/neurosim'); %should be the folder containing 'signals' and 'spikes'
+spike2 = ft_read_spike('/home/common/matlab/fieldtrip/data/test/neurosim/spikes'); %should be the folder containing 'signals' and 'spikes'
 
 
 
@@ -54,7 +54,7 @@ spike = ft_spike_select(cfg, spike2);
 
 cfg          = []; 
 cfg.trialdef.triallength = 0.5; %duration in seconds (can also be 1 or Inf)
-cfg.datafile = '/home/common/matlab/fieldtrip/data/test/neurosim'; %should be the directory containing both 'spikes' and 'signals'
+cfg.datafile = '/home/common/matlab/fieldtrip/data/test/neurosim/spikes'; %should be the directory containing both 'spikes' and 'signals'
 cfg.trialfun = 'ft_trialfun_general';
 cfg = ft_definetrial(cfg);
 
@@ -131,7 +131,7 @@ spike = ft_spike_select(cfg, spike2);
  
 cfg          = []; 
 cfg.trialdef.triallength = 0.5; %duration in seconds (can also be 1 or Inf)
-cfg.datafile = '/home/common/matlab/fieldtrip/data/test/neurosim'; %should be the directory containing both 'spikes' and 'signals'
+cfg.datafile = '/home/common/matlab/fieldtrip/data/test/neurosim/spikes'; %should be the directory containing both 'spikes' and 'signals'
 cfg.trialfun = 'ft_trialfun_general';
 cfg = ft_definetrial(cfg);
 
