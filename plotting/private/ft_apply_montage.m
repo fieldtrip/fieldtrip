@@ -234,7 +234,7 @@ switch inputtype
     
     % keep track of the order of the balancing and which one is the current one
     if strcmp(inverse, 'yes')
-      if isfield(input, 'balance')% && isfield(sens.balance, 'previous')
+      if isfield(sens, 'balance')% && isfield(sens.balance, 'previous')
         if isfield(sens.balance, 'previous') && numel(sens.balance.previous)>=1
           sens.balance.current  = sens.balance.previous{1};
           sens.balance.previous = sens.balance.previous(2:end);
