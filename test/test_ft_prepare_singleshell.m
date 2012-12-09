@@ -42,7 +42,9 @@ vol1 = rmfield(vol1, 'cfg');
 vol1b = rmfield(vol1b,'cfg');
 vol1bu=ft_convert_units(vol1b,vol1.unit);
 
-% note: e.g.  vol1.bnd.pnt(5,:) is different than vol1bu.bnd.pnt(5,:)
+% Reason for dashboard failure:
+% e.g.  vol1.bnd.pnt(5,:) is different than vol1bu.bnd.pnt(5,:)
+% e.g.  vol1.bnd.pnt(8,:) is different than vol1bu.bnd.pnt(8,:)
 
 success     = success && isequal(vol1, vol1bu);
 if ~success
