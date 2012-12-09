@@ -20,6 +20,12 @@ elseif strcmpi(cfg.spmversion, 'spm8'),
   ft_hastoolbox('SPM8',1);
 end
 
+% special exceptional case first
+if isempty(cfg.tissue) && numel(cfg.numvertices)==1 && isfield(mri,'white') && isfield(mri,'gray') && isfield(mri,'csf')
+  mri=ft_datatype_segmentation(mri, 'segmentationstyle', 'probabilistic', 'hasbrain', 'yes');
+  cfg.tissue='brain';
+end
+
 if isempty(cfg.tissue)
   mri = ft_datatype_segmentation(mri, 'segmentationstyle', 'indexed');
   fn = fieldnames(mri);
