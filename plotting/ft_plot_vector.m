@@ -71,7 +71,7 @@ if nargin>1 && all(cellfun(@isnumeric, varargin(1:2)) | cellfun(@islogical, vara
 else
   % the function was called like plot(y, ...)
   vdat = varargin{1};
-  if iscolumn(vdat),
+  if size(vdat, 1) > 1
     hdat = 1:size(vdat,1);
   else
     hdat = 1:size(vdat,2);
