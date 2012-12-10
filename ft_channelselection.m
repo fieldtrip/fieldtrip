@@ -250,7 +250,7 @@ switch casetype
     labelmzo  = datachannel(strncmp('MZO', datachannel, length('MZO')));
     labelmzp  = datachannel(strncmp('MZP', datachannel, length('MZP')));
 
-  case {'bti', 'bti248', 'bti148', 'bti248_planar', 'bti148_planar'}
+  case {'bti', 'bti248', 'bti248grad', 'bti148', 'bti248_planar', 'bti148_planar'}
     % all 4D-BTi MEG channels start with "A"
     % all 4D-BTi reference channels start with M or G
     labelmeg = datachannel(strncmp('A'  , datachannel, 1));
