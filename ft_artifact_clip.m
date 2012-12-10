@@ -68,6 +68,7 @@ ft_preamble loadvar data
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed',    {'datatype', 'continuous'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'artfctdef.clip.thresh', 'artfctdef.clip.timethreshold'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
 
 % set default rejection parameters for clip artifacts if necessary.

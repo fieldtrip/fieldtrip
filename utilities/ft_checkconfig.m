@@ -111,16 +111,15 @@ end
 % rename old to new options, give warning
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isempty(renamed)
-  fieldsused = fieldnames(cfg);
-  if any(strcmp(renamed{1}, fieldsused))
-    cfg = setfield(cfg, renamed{2}, (getfield(cfg, renamed{1})));
-    cfg = rmfield(cfg, renamed{1});
+  if issubfield(cfg, renamed{1})
+    cfg = setsubfield(cfg, renamed{2}, (getsubfield(cfg, renamed{1})));
+    cfg = rmsubfield(cfg, renamed{1});
     if silent
       % don't mention it
     elseif loose
       warning('use cfg.%s instead of cfg.%s', renamed{2}, renamed{1});
     elseif pedantic
-      error(sprintf('use cfg.%s instead of cfg.%s', renamed{2}, renamed{1}));
+      error('use cfg.%s instead of cfg.%s', renamed{2}, renamed{1});
     end
   end
 end
@@ -128,15 +127,15 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % rename old to new value, give warning
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if ~isempty(renamedval) && isfield(cfg, renamedval{1})
-  if strcmpi(getfield(cfg, renamedval{1}), renamedval{2})
-    cfg = setfield(cfg, renamedval{1}, renamedval{3});
+if ~isempty(renamedval) && issubfield(cfg, renamedval{1})
+  if strcmpi(getsubfield(cfg, renamedval{1}), renamedval{2})
+    cfg = setsubfield(cfg, renamedval{1}, renamedval{3});
     if silent
       % don't mention it
     elseif loose
       warning('use cfg.%s=''%s'' instead of cfg.%s=''%s''', renamedval{1}, renamedval{3}, renamedval{1}, renamedval{2});
     elseif pedantic
-      error(sprintf('use cfg.%s=''%s'' instead of cfg.%s=''%s''', renamedval{1}, renamedval{3}, renamedval{1}, renamedval{2}));
+      error('use cfg.%s=''%s'' instead of cfg.%s=''%s''', renamedval{1}, renamedval{3}, renamedval{1}, renamedval{2});
     end
   end
 end
@@ -148,7 +147,7 @@ if ~isempty(required)
   fieldsused = fieldnames(cfg);
   [c, ia, ib] = setxor(required, fieldsused);
   if ~isempty(ia)
-    error(sprintf('The field cfg.%s is required\n', required{ia}));
+    error('The field cfg.%s is required\n', required{ia});
   end
 end
 
@@ -163,7 +162,7 @@ if ~isempty(deprecated)
     elseif loose
       warning('The option cfg.%s is deprecated, support is no longer guaranteed\n', deprecated{ismember(deprecated, fieldsused)});
     elseif pedantic
-      error(sprintf('The option cfg.%s is not longer supported\n', deprecated{ismember(deprecated, fieldsused)}));
+      error('The option cfg.%s is not longer supported\n', deprecated{ismember(deprecated, fieldsused)});
     end
   end
 end
@@ -180,7 +179,7 @@ if ~isempty(unused)
     elseif loose
       warning('The field cfg.%s is unused, it will be removed from your configuration\n', unused{ismember(unused, fieldsused)});
     elseif pedantic
-      error(sprintf('The field cfg.%s is unused\n', unused{ismember(unused, fieldsused)}));
+      error('The field cfg.%s is unused\n', unused{ismember(unused, fieldsused)});
     end
   end
 end
@@ -202,7 +201,7 @@ if ~isempty(allowed)
   fieldsused = fieldnames(cfg);
   [c, i] = setdiff(fieldsused, allowed);
   if ~isempty(c)
-    error(sprintf('The field cfg.%s is not allowed\n', c{1}));
+    error('The field cfg.%s is not allowed\n', c{1});
   end
 end
 
@@ -218,7 +217,7 @@ if ~isempty(forbidden)
     elseif loose
       warning('The field cfg.%s is forbidden, it will be removed from your configuration\n', forbidden{ismember(forbidden, fieldsused)});
     elseif pedantic
-      error(sprintf('The field cfg.%s is forbidden\n', forbidden{ismember(forbidden, fieldsused)}));
+      error('The field cfg.%s is forbidden\n', forbidden{ismember(forbidden, fieldsused)});
     end
   end
 end
