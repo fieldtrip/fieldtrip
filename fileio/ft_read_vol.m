@@ -82,5 +82,6 @@ switch fileformat
     error('unknown fileformat for volume conductor model');
 end
 
-% this will add the units to the volume conductor model
-vol = ft_convert_units(vol);
+% this will ensure that the structure is up to date, e.g. that the type is correct and that it has units
+vol = ft_datatype_headmodel(vol);
+
