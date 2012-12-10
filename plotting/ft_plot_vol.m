@@ -42,6 +42,9 @@ function ft_plot_vol(vol, varargin)
 
 ws = warning('on', 'MATLAB:divideByZero');
 
+% ensure that the volume conduction model description is up-to-date (Dec 2012)
+vol = ft_datatype_vol(vol);
+
 % get the optional input arguments
 faceindex   = ft_getopt(varargin, 'faceindex',   'none');
 vertexindex = ft_getopt(varargin, 'vertexindex', 'none');
