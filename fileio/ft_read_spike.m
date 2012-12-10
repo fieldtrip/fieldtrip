@@ -55,6 +55,10 @@ function [spike] = ft_read_spike(filename, varargin)
 % optionally get the data from the URL and make a temporary local copy
 filename = fetch_url(filename);
 
+if ~exist(filename,'file')
+    error('File or directory does not exist')
+end
+
 % get the options
 spikeformat = ft_getopt(varargin, 'spikeformat', ft_filetype(filename));
 
