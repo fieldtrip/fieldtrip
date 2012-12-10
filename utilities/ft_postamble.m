@@ -38,6 +38,7 @@ function ft_postamble(cmd, varargin)
 % the following section ensures that these scripts are included as
 % dependencies when using the MATLAB compiler
 %
+%#function ft_postamble_debug
 %#function ft_postamble_trackconfig
 %#function ft_postamble_provenance
 %#function ft_postamble_previous
