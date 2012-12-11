@@ -140,12 +140,14 @@ for k = 1:nslice
   offset(2) = ix*(slicesize(2)-1); 
   
   % update the specification of the corners of the montage plot
-  c1 = offset(1) + min(xtmp(:));
-  c2 = offset(1) + max(xtmp(:));
-  c3 = offset(2) + min(ytmp(:));
-  c4 = offset(2) + max(ytmp(:));
-  c5 = min(ztmp(:));
-  c6 = max(ztmp(:));
+  if ~isempty(xtmp)
+    c1 = offset(1) + min(xtmp(:));
+    c2 = offset(1) + max(xtmp(:));
+    c3 = offset(2) + min(ytmp(:));
+    c4 = offset(2) + max(ytmp(:));
+    c5 = min(ztmp(:));
+    c6 = max(ztmp(:));
+  end
   corners = [min(corners(1),c1) max(corners(2),c2) min(corners(3),c3) max(corners(4),c4) min(corners(5),c5) max(corners(6),c6)];
   
   % update the positions
