@@ -90,12 +90,6 @@ if isequal(current_argin, previous_argin) && isequal(current_pwd, previous_pwd)
   return
 end
 
-% check whether nowarning has been flagged.
-% this is flagged used below: any(ft_filetype({ls.name}, 'neuralynx_ds','nowarning',true))
-% without this flag, ft_filetype would give a warning for every file in the
-% directory it cannot determine the filetype of.
-nowarning = ft_getopt(varargin,'nowarning',0);
-
 if isa(filename, 'memmapfile')
   filename = filename.Filename;
 end
@@ -123,9 +117,9 @@ if iscell(filename)
       continue
     else
       if iscell(type)
-        type{i} = ft_filetype(filename{i}, desired,'nowarning',nowarning);
+        type{i} = ft_filetype(filename{i}, desired);
       else
-        type(i) = ft_filetype(filename{i}, desired,'nowarning',nowarning);
+        type(i) = ft_filetype(filename{i}, desired);
       end
     end
   end
@@ -633,7 +627,7 @@ elseif ~isdir(filename) && isdir(p) && exist(fullfile(p, 'info.xml'), 'file') &&
   content = 'raw EEG data';
   
   % these are formally not Neuralynx file formats, but at the FCDC we use them together with Neuralynx
-elseif isdir(filename) && any(ft_filetype({ls.name}, 'neuralynx_ds','nowarning',true))
+elseif isdir(filename) && any(ft_filetype({ls.name}, 'neuralynx_ds'))
   % a downsampled Neuralynx DMA file can be split into three seperate lfp/mua/spike directories
   % treat them as one combined dataset
   type = 'neuralynx_cds';
@@ -1109,7 +1103,7 @@ end
 % finished determining the filetype
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if strcmp(type, 'unknown') && ~nowarning
+if strcmp(type, 'unknown')
   warning_once(sprintf('could not determine filetype of %s', filename));
 end
 
