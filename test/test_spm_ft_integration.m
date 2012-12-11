@@ -1,4 +1,4 @@
-function test_spm_ft_integration
+% function test_spm_ft_integration
 
 % TEST test_spm_ft_integration
 % TEST ft_prepare_layout ft_prepare_headmodel ft_compute_leadfield ft_prepare_vol_sens
@@ -96,7 +96,7 @@ cfg.feedback               = 'yes';
 cfg.showcallinfo           = 'no';
 cfg.grad                   = grad;
 cfg.headshape              = tess_scalp;
-cfg.method                 = 'singlesphere';
+cfg.method                 = 'nolte';
 vol                        = ft_prepare_headmodel(cfg);
 
 clf
