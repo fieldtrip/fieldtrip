@@ -123,6 +123,7 @@ cfg = ft_checkconfig(cfg, 'renamed', {'geom','headshape'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'method','bem_openmeeg','openmeeg'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'method','bem_dipoli','dipoli'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'method','bem_cp','bemcp'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'method','nolte','singleshell'});
 
 % set the general defaults
 cfg.hdmfile        = ft_getopt(cfg, 'hdmfile');
