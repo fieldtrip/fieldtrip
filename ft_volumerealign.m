@@ -83,7 +83,8 @@ function [realign, h] = ft_volumerealign(cfg, mri, target)
 %   cfg.fsl.interpmethod = string, specifying the interpolation method
 %                     ('trilinear', 'nearestneighbour', 'sinc')
 %   cfg.fsl.dof     = scalar, specifying the number of parameters for the
-%                     affine transformation
+%                     affine transformation. 6 (rigid body), 7 (global
+%                     rescale), 9 (traditional) or 12.
 %   cfg.fsl.reslice = string, specifying whether the output image will be
 %                     resliced conform the target image (default = 'yes') 
 %
@@ -546,12 +547,14 @@ switch cfg.method
     % extract skull surface from image
     tmpcfg        = [];
     tmpcfg.output = 'scalp';
+    tmpcfg.smooth = 2;
     seg           = ft_volumesegment(tmpcfg, mri);
-    scpvox = scalp3(seg.scalp); % scalp3 is a helper function that relies on functions from the image processing toolbox
-    scpvox = scpvox(1:20:end,:);
     
-    % get the points in head space
-    scp = warp_apply(mri.transform, scpvox);
+    cfg             = [];
+    cfg.method      = 'singleshell';
+    cfg.numvertices = 20000;
+    scalp           = ft_prepare_headmodel(cfg, seg);
+    scalp           = ft_convert_units(scalp, 'mm');
     
     % weight the points with z-coordinate more than the rest. These are the
     % likely points that belong to the nose and eye rims
@@ -559,20 +562,19 @@ switch cfg.method
     weights(shape.pnt(:,3)<0) = 100; % this value seems to work
     
     % construct the coregistration matrix
-    [R, t, corr, D, data2] = icp2(scp', shape.pnt', 20, [], weights); % icp2 is a helper function implementing the iterative closest point algorithm
+    [R, t, corr, D, data2] = icp2(scalp.bnd.pnt', shape.pnt', 20, [], weights); % icp2 is a helper function implementing the iterative closest point algorithm
     transform              = inv([R t;0 0 0 1]);
     
     % warp the extracted scalp points to the new positions
-    scpnew                 = warp_apply(transform*mri.transform, scpvox);
+    scalp.bnd.pnt          = warp_apply(transform, scalp.bnd.pnt);
     
     % create headshape structure for mri-based surface point cloud
-    shapemri.pnt      = scpnew;
-    shapemri.unit     = 'mm';
-    shapemri.coordsys = 'bti';
+    if isfield(mri, 'coordsys')
+      scalp.coordsys = mri.coordsys;
+    end
     
     % coordsys is the same as input mri
     coordsys = mri.coordsys;
-    
     
     %     mrifid.pnt   = warp_apply(transform*mri.transform, [fiducials.nas;fiducials.lpa;fiducials.rpa]);
     %     mrifid.label = {'NZinteractive';'Linteractive';'Rinteractive'};
@@ -581,7 +583,7 @@ switch cfg.method
     
     % update the cfg
     cfg.headshape    = shape;
-    cfg.headshapemri = shapemri;
+    cfg.headshapemri = scalp;
     
     % touch it to survive trackconfig
     cfg.headshapemri;
@@ -605,10 +607,10 @@ switch cfg.method
     tmpcfg.parameter = 'anatomy';
     tmpcfg.filename  = tmpname1;
     tmpcfg.filetype  = 'nifti';
-    fprintf('writing the input volume to a temporary file: %s\n', tmpname1);
+    fprintf('writing the input volume to a temporary file: %s\n', [tmpname1,'.nii']);
     ft_volumewrite(tmpcfg, mri);
     tmpcfg.filename  = tmpname2;
-    fprintf('writing the  target volume to a temporary file: %s\n', tmpname2);
+    fprintf('writing the  target volume to a temporary file: %s\n', [tmpname2,'.nii']);
     ft_volumewrite(tmpcfg, target);
     
     % create the command to call flirt
@@ -623,6 +625,28 @@ switch cfg.method
     % process the output
     if ~istrue(cfg.fsl.reslice)
       % get the transformation that corresponds to the coregistration and
+      % reconstruct the mapping from the target's world coordinate system
+      % to the input's voxel coordinate system
+      
+      fid = fopen(tmpname4);
+      tmp = textscan(fid, '%f');
+      fclose(fid);
+      
+      % this transforms from input voxels to target voxels
+      vox2vox = reshape(tmp{1},4,4)';
+      
+      % very not sure about this (e.g. is vox2vox really doing what I think
+      % it is doing? should I care about 0 and 1 based conventions?)
+      % changing handedness?
+      mri.transform = target.transform*vox2vox;
+      
+      transform = eye(4);
+      if isfield(target, 'coordsys')
+        coordsys = target.coordsys;
+      else
+        coordsys = 'unknown';
+      end
+      
     else
       % get the updated anatomy
       mrinew        = ft_read_mri([tmpname3, '.nii.gz']);
@@ -814,73 +838,6 @@ end
 colormap gray
 
 h = gca;
-
-function scp=scalp3(mri)
-
-dim = size(mri);
-% se  = strel([0,1,0;1,1,1;0,1,0]);
-scp = mri;
-% 
-% scp2=permute(scp,[1,3,2]);
-% scp3=permute(scp,[3,2,1]);
-% erode
-% fprintf('eroding image\n');
-% for i=1:2
-%   scp=imerode(scp,se);
-%   scp2=imerode(scp2,se);
-%   scp3=imerode(scp3,se);
-%   scp=scp+permute(scp2,[1,3,2])+permute(scp3,[3,2,1]);
-%   scp=(scp>2);
-%   scp2=permute(scp,[1,3,2]);
-%   scp3=permute(scp,[3,2,1]);
-% end
-% % dilate
-% fprintf('dilating image\n');
-% for i=1:2
-%   scp=imdilate(scp,se);
-%   scp2=imdilate(scp2,se);
-%   scp3=imdilate(scp3,se);
-%   scp=scp+permute(scp2,[1,3,2])+permute(scp3,[3,2,1]);
-%   scp=(scp>2);
-%   scp2=permute(scp,[1,3,2]);
-%   scp3=permute(scp,[3,2,1]);
-% end
-
-% detect edges
-fprintf('detecting the edges\n');
-mri=zeros(dim);
-for image=1:dim(3)
-  for row=1:dim(1)
-    ind=find(scp(row,:,image));
-    maxind=max(ind);
-    minind=min(ind);
-    mri(row,minind,image)=1;
-    mri(row,maxind,image)=1;
-  end
-end
-for image=1:dim(3)
-  for column=1:dim(2)
-    ind=find(scp(:,column,image));
-    maxind=max(ind);
-    minind=min(ind);
-    mri(minind,column,image)=1;
-    mri(maxind,column,image)=1;
-  end
-end
-for image=1:dim(2)
-  for row=1:dim(1)
-    ind=find(scp(row,image,:));
-    maxind=max(ind);
-    minind=min(ind);
-    mri(row,image,minind)=1;
-    mri(row,image,maxind)=1;
-  end
-end
-
-% convert to voxel indices
-scp  = find(mri);
-[scp(:,1), scp(:,2), scp(:,3)] = ind2sub(dim, scp);
-scp=unique(scp,'rows');
 
 function [R, t, corr, error, data2] = icp2(data1, data2, res, tri, weights)
 
