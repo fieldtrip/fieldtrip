@@ -6,5 +6,5 @@ load test_bug1759;
 tmp{1} = tra*dat;
 tmp{2} = sparse(tra)*dat;
 
-mean(abs((tmp{1}(:)-tmp{2}(:))))
+assert(identical(tmp{1}, tmp{2}, 'reltol', 0.0001));
 end
