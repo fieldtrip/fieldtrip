@@ -48,9 +48,9 @@ cfg.ylim         = ft_getopt(cfg,'ylim', 'auto');
 cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});
 cfg = ft_checkopt(cfg,'latency', {'char', 'ascendingdoublebivector'});
 cfg = ft_checkopt(cfg,'errorbars', 'char', {'sem', 'std', 'conf95%', 'no', 'var'});
-cfg = ft_checkopt(cfg,'ylim', {'char','ascendingdoublebivector'});
+cfg = ft_checkopt(cfg,'ylim', {'char', 'ascendingdoublebivector'});
 
-cfg = ft_checkconfig(cfg,'allowed', {'spikechannel', 'latency', 'errorbars', 'ylim'});
+cfg = ft_checkconfig(cfg, 'allowed', {'debug', 'spikechannel', 'latency', 'errorbars', 'ylim'});
 
 % select the latencies
 if ischar(cfg.latency)

@@ -116,21 +116,21 @@ cfg.channel        = ft_getopt(cfg,'channel', 'all');
 cfg.rejectsaturation  = ft_getopt(cfg,'rejectsaturation', 'yes');
 
 % ensure that the options are valid
-cfg = ft_checkopt(cfg,'taper',{'char', 'function_handle'});
-cfg = ft_checkopt(cfg,'borderspikes','char',{'yes', 'no'});
-cfg = ft_checkopt(cfg,'t_ftimwin',{'doublevector', 'doublescalar'});
-cfg = ft_checkopt(cfg,'foi',{'doublevector', 'doublescalar'});
-cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});
-cfg = ft_checkopt(cfg,'channel', {'cell', 'char', 'double'});
-cfg = ft_checkopt(cfg,'taperopt', {'double','empty'});
-cfg = ft_checkopt(cfg,'rejectsaturation','char', {'yes', 'no'});
+cfg = ft_checkopt(cfg, 'taper',{'char', 'function_handle'});
+cfg = ft_checkopt(cfg, 'borderspikes','char',{'yes', 'no'});
+cfg = ft_checkopt(cfg, 't_ftimwin',{'doublevector', 'doublescalar'});
+cfg = ft_checkopt(cfg, 'foi',{'doublevector', 'doublescalar'});
+cfg = ft_checkopt(cfg, 'spikechannel',{'cell', 'char', 'double'});
+cfg = ft_checkopt(cfg, 'channel', {'cell', 'char', 'double'});
+cfg = ft_checkopt(cfg, 'taperopt', {'double','empty'});
+cfg = ft_checkopt(cfg, 'rejectsaturation','char', {'yes', 'no'});
 
 if  isequal(cfg.taper, 'dpss')
   cfg = ft_checkconfig(cfg, 'required', {'tapsmofrq'});
   cfg = ft_checkopt(cfg,'tapsmofrq',{'doublevector', 'doublescalar'});
 end
 
-cfg = ft_checkconfig(cfg,'allowed', {'taper', 'borderspikes', 't_ftimwin', 'foi', 'spikechannel', 'channel', 'taperopt', 'rejectsaturation','tapsmofrq'});
+cfg = ft_checkconfig(cfg, 'allowed', {'debug', 'taper', 'borderspikes', 't_ftimwin', 'foi', 'spikechannel', 'channel', 'taperopt', 'rejectsaturation','tapsmofrq'});
 
 % length of tapsmofrq, foi and t_ftimwin should all be matched
 if isfield(cfg,'tapsmofrq')

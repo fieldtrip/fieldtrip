@@ -55,25 +55,25 @@ cfg = ft_checkconfig(cfg, 'required', {'fsample'});
 cfg = ft_checkconfig(cfg, 'renamed', {'allign', 'align'});
 
 % get the default options
-cfg.align          = ft_getopt(cfg, 'align','yes');
-cfg.interpolate     = ft_getopt(cfg, 'interpolate', 1);
-cfg.spikechannel    = ft_getopt(cfg, 'spikechannel', 'all');
-cfg.rejectonpeak    = ft_getopt(cfg,'rejectonpeak', 'yes');
-cfg.rejectclippedspikes  = ft_getopt(cfg,'rejectclippedspikes', 'yes');
-cfg.normalize       = ft_getopt(cfg,'normalize', 'yes');
+cfg.align               = ft_getopt(cfg, 'align','yes');
+cfg.interpolate         = ft_getopt(cfg, 'interpolate', 1);
+cfg.spikechannel        = ft_getopt(cfg, 'spikechannel', 'all');
+cfg.rejectonpeak        = ft_getopt(cfg,'rejectonpeak', 'yes');
+cfg.rejectclippedspikes = ft_getopt(cfg,'rejectclippedspikes', 'yes');
+cfg.normalize           = ft_getopt(cfg,'normalize', 'yes');
 
 % ensure that the options are valid
-cfg = ft_checkopt(cfg,'align','char', {'yes', 'no'});
-cfg = ft_checkopt(cfg,'rejectclippedspikes','char', {'yes', 'no'});
-cfg = ft_checkopt(cfg,'rejectonpeak','char', {'yes', 'no'});
-cfg = ft_checkopt(cfg,'interpolate','doublescalar');
-cfg = ft_checkopt(cfg,'normalize','char', {'yes', 'no'});
-cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});
-cfg = ft_checkopt(cfg,'fsample', 'double');
+cfg = ft_checkopt(cfg, 'align','char', {'yes', 'no'});
+cfg = ft_checkopt(cfg, 'rejectclippedspikes','char', {'yes', 'no'});
+cfg = ft_checkopt(cfg, 'rejectonpeak','char', {'yes', 'no'});
+cfg = ft_checkopt(cfg, 'interpolate','doublescalar');
+cfg = ft_checkopt(cfg, 'normalize','char', {'yes', 'no'});
+cfg = ft_checkopt(cfg, 'spikechannel',{'cell', 'char', 'double'});
+cfg = ft_checkopt(cfg, 'fsample', 'double');
 
-cfg = ft_checkconfig(cfg,'allowed', {'align', 'rejectclippedspikes', 'rejectonpeak', 'interpolate', 'normalize', 'spikechannel', 'fsample'});
+cfg = ft_checkconfig(cfg, 'allowed', {'debug', 'align', 'rejectclippedspikes', 'rejectonpeak', 'interpolate', 'normalize', 'spikechannel', 'fsample'});
 
-spike = ft_checkdata(spike,'datatype', 'spike', 'feedback', 'yes');
+spike = ft_checkdata(spike, 'datatype', 'spike', 'feedback', 'yes');
 
 cfg.channel = ft_channelselection(cfg.spikechannel, spike.label);
 spikesel    = match_str(spike.label, cfg.channel);

@@ -90,23 +90,22 @@ cfg.winfuncopt   = ft_getopt(cfg,'winfuncopt', []);
 cfg.fsample      = ft_getopt(cfg,'fsample', 1000);
 
 % ensure that the options are valid
-cfg = ft_checkopt(cfg,'outputunit','char', {'rate', 'spikecount'});
-cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});
-cfg = ft_checkopt(cfg,'latency', {'char', 'ascendingdoublebivector'});
-cfg = ft_checkopt(cfg,'trials', {'char', 'doublevector', 'logical'}); 
-cfg = ft_checkopt(cfg,'vartriallen', 'char', {'yes', 'no'});
-cfg = ft_checkopt(cfg,'keeptrials', 'char', {'yes', 'no'});
-cfg = ft_checkopt(cfg,'timwin', 'ascendingdoublebivector');
-cfg = ft_checkopt(cfg,'winfunc', {'char', 'function_handle', 'doublevector'});
-cfg = ft_checkopt(cfg,'winfuncopt', {'cell', 'double', 'empty'});
-cfg = ft_checkopt(cfg,'fsample', 'double');
+cfg = ft_checkopt(cfg, 'outputunit','char', {'rate', 'spikecount'});
+cfg = ft_checkopt(cfg, 'spikechannel',{'cell', 'char', 'double'});
+cfg = ft_checkopt(cfg, 'latency', {'char', 'ascendingdoublebivector'});
+cfg = ft_checkopt(cfg, 'trials', {'char', 'doublevector', 'logical'}); 
+cfg = ft_checkopt(cfg, 'vartriallen', 'char', {'yes', 'no'});
+cfg = ft_checkopt(cfg, 'keeptrials', 'char', {'yes', 'no'});
+cfg = ft_checkopt(cfg, 'timwin', 'ascendingdoublebivector');
+cfg = ft_checkopt(cfg, 'winfunc', {'char', 'function_handle', 'doublevector'});
+cfg = ft_checkopt(cfg, 'winfuncopt', {'cell', 'double', 'empty'});
+cfg = ft_checkopt(cfg, 'fsample', 'double');
 if strcmp(class(cfg.winfunc), 'function_handle'), cfg.winfunc = func2str(cfg.winfunc); end
 
-cfg = ft_checkconfig(cfg,'allowed', ...
-  {'outputunit', 'spikechannel', 'latency', 'trials', 'vartriallen', 'keeptrials', 'timwin', 'winfunc', 'winfuncopt', 'fsample'});
+cfg = ft_checkconfig(cfg, 'allowed', {'debug', 'outputunit', 'spikechannel', 'latency', 'trials', 'vartriallen', 'keeptrials', 'timwin', 'winfunc', 'winfuncopt', 'fsample'});
 
 % check input data structure
-data = ft_checkdata(data,'datatype', 'raw', 'feedback', 'yes', 'fsample', cfg.fsample);
+data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'fsample', cfg.fsample);
 
 [spikechannel] = detectspikechan(data);
 if strcmp(cfg.spikechannel, 'all'), 

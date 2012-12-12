@@ -61,15 +61,15 @@ cfg.trials       = ft_getopt(cfg,'trials', 'all');
 cfg.latency      = ft_getopt(cfg,'latency','maxperiod');
 
 % ensure that the options are valid
-cfg = ft_checkopt(cfg,'timwin','doublevector');
-cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});
-cfg = ft_checkopt(cfg,'channel', {'cell', 'char', 'double'});
-cfg = ft_checkopt(cfg,'keeptrials', 'char', {'yes', 'no'});
-cfg = ft_checkopt(cfg,'feedback', 'char', {'yes', 'no'});
-cfg = ft_checkopt(cfg,'latency', {'char', 'ascendingdoublebivector'});
-cfg = ft_checkopt(cfg,'trials', {'char', 'doublevector', 'logical'}); 
+cfg = ft_checkopt(cfg, 'timwin','doublevector');
+cfg = ft_checkopt(cfg, 'spikechannel',{'cell', 'char', 'double'});
+cfg = ft_checkopt(cfg, 'channel', {'cell', 'char', 'double'});
+cfg = ft_checkopt(cfg, 'keeptrials', 'char', {'yes', 'no'});
+cfg = ft_checkopt(cfg, 'feedback', 'char', {'yes', 'no'});
+cfg = ft_checkopt(cfg, 'latency', {'char', 'ascendingdoublebivector'});
+cfg = ft_checkopt(cfg, 'trials', {'char', 'doublevector', 'logical'}); 
 
-cfg = ft_checkconfig(cfg,'allowed', {'timwin', 'spikechannel', 'channel', 'keeptrials', 'feedback', 'latency', 'trials'});
+cfg = ft_checkconfig(cfg, 'allowed', {'debug', 'timwin', 'spikechannel', 'channel', 'keeptrials', 'feedback', 'latency', 'trials'});
 
 % autodetect the spike channels
 ntrial = length(data.trial);

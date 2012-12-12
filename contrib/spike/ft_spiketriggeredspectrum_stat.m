@@ -6,7 +6,7 @@ function [freq] = ft_spiketriggeredspectrum_stat(cfg,spike)
 % Neuroscience).
 %
 % Use as:
-%   [STAT = FT_SPIKETRIGGEREDSPECTRUM_STAT(CFG,SPIKE)
+%   [stat] = ft_spiketriggeredspectrum_stat(cfg, spike)
 %
 % Inputs:
 %   SPIKE should be a structure as obtained from from the FT_SPIKETRIGGEREDSPECTRUM function.
@@ -95,30 +95,30 @@ ft_preamble trackconfig
 spike = ft_checkdata(spike,'datatype', 'spike', 'feedback', 'yes');
 
 % get the options
-cfg.method         = ft_getopt(cfg,'method', 'ppc1');
-cfg.channel        = ft_getopt(cfg,'channel', 'all');
-cfg.spikechannel   = ft_getopt(cfg,'spikechannel', spike.label{1});
-cfg.latency        = ft_getopt(cfg,'latency', 'maxperiod');
-cfg.spikesel       = ft_getopt(cfg,'spikesel', 'all');
-cfg.avgoverchan    = ft_getopt(cfg,'avgoverchan', 'no');
-cfg.foi            = ft_getopt(cfg,'foi', 'all');
-cfg.trials         = ft_getopt(cfg,'trials', 'all');
-cfg.timwin         = ft_getopt(cfg,'timwin', 'all');
-cfg.winstepsize    = ft_getopt(cfg,'winstepsize', 0.01);
+cfg.method         = ft_getopt(cfg, 'method', 'ppc1');
+cfg.channel        = ft_getopt(cfg, 'channel', 'all');
+cfg.spikechannel   = ft_getopt(cfg, 'spikechannel', spike.label{1});
+cfg.latency        = ft_getopt(cfg, 'latency', 'maxperiod');
+cfg.spikesel       = ft_getopt(cfg, 'spikesel', 'all');
+cfg.avgoverchan    = ft_getopt(cfg, 'avgoverchan', 'no');
+cfg.foi            = ft_getopt(cfg, 'foi', 'all');
+cfg.trials         = ft_getopt(cfg, 'trials', 'all');
+cfg.timwin         = ft_getopt(cfg, 'timwin', 'all');
+cfg.winstepsize    = ft_getopt(cfg, 'winstepsize', 0.01);
 
 % ensure that the options are valid
-cfg = ft_checkopt(cfg,'method', 'char', {'ppc0', 'ppc1', 'ppc2', 'ang', 'ral', 'plv'});
-cfg = ft_checkopt(cfg,'foi',{'char', 'double'});
-cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});
-cfg = ft_checkopt(cfg,'channel', {'cell', 'char', 'double'});
-cfg = ft_checkopt(cfg,'spikesel', {'char', 'logical', 'double'});
-cfg = ft_checkopt(cfg,'avgoverchan', 'char', {'weighted', 'unweighted', 'no'});
-cfg = ft_checkopt(cfg,'latency', {'char', 'doublevector'});
-cfg = ft_checkopt(cfg,'trials', {'char', 'double', 'logical'}); 
-cfg = ft_checkopt(cfg,'timwin', {'double', 'char'}); 
-cfg = ft_checkopt(cfg,'winstepsize', {'double'}); 
+cfg = ft_checkopt(cfg, 'method', 'char', {'ppc0', 'ppc1', 'ppc2', 'ang', 'ral', 'plv'});
+cfg = ft_checkopt(cfg, 'foi',{'char', 'double'});
+cfg = ft_checkopt(cfg, 'spikechannel',{'cell', 'char', 'double'});
+cfg = ft_checkopt(cfg, 'channel', {'cell', 'char', 'double'});
+cfg = ft_checkopt(cfg, 'spikesel', {'char', 'logical', 'double'});
+cfg = ft_checkopt(cfg, 'avgoverchan', 'char', {'weighted', 'unweighted', 'no'});
+cfg = ft_checkopt(cfg, 'latency', {'char', 'doublevector'});
+cfg = ft_checkopt(cfg, 'trials', {'char', 'double', 'logical'}); 
+cfg = ft_checkopt(cfg, 'timwin', {'double', 'char'}); 
+cfg = ft_checkopt(cfg, 'winstepsize', {'double'}); 
 
-cfg = ft_checkconfig(cfg,'allowed', {'method', 'channel', 'spikechannel', 'latency', 'spikesel', 'avgoverchan', 'foi', 'trials', 'timwin', 'winstepsize'});
+cfg = ft_checkconfig(cfg, 'allowed', {'debug', 'method', 'channel', 'spikechannel', 'latency', 'spikesel', 'avgoverchan', 'foi', 'trials', 'timwin', 'winstepsize'});
 
 % collect channel information
 cfg.channel        = ft_channelselection(cfg.channel, spike.lfplabel);
@@ -437,7 +437,7 @@ function [cfg] = trialselection(cfg,spike)
 
 % get the number of trials or change DATA according to cfg.trials
 nTrials = size(spike.trialtime,1);
-if  strcmp(cfg.trials,'all')
+if  strcmp(cfg.trials, 'all')
   cfg.trials = 1:nTrials;
 elseif islogical(cfg.trials)
   cfg.trials = find(cfg.trials);

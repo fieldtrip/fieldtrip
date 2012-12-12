@@ -92,7 +92,7 @@ cfg = ft_checkopt(cfg,'trials',      {'char',  'doublevector', 'logical'});
 cfg = ft_checkopt(cfg,'vartriallen' , 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'keeptrials'  , 'char', {'yes', 'no'});
 
-cfg = ft_checkconfig(cfg,'allowed', {'outputunit', 'binsize', 'spikechannel', 'trials', 'latency', 'vartriallen', 'keeptrials'});
+cfg = ft_checkconfig(cfg, 'allowed', {'debug', 'outputunit', 'binsize', 'spikechannel', 'trials', 'latency', 'vartriallen', 'keeptrials'});
 
 % get the number of trials or convert to indices
 cfg        = trialselection(cfg,spike);

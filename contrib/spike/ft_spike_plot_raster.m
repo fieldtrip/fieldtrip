@@ -68,7 +68,6 @@ cfg.errorbars    = ft_getopt(cfg,'errorbars', 'sem');
 cfg.trialborders = ft_getopt(cfg,'trialborders','yes');
 cfg.interactive  = ft_getopt(cfg,'interactive','yes');
 
-
 % ensure that the options are valid
 cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});
 cfg = ft_checkopt(cfg,'latency', {'char', 'ascendingdoublebivector'});
@@ -82,8 +81,7 @@ cfg = ft_checkopt(cfg,'errorbars', 'char', {'sem', 'std', 'conf95%', 'no', 'var'
 cfg = ft_checkopt(cfg,'trialborders', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'interactive', 'char', {'yes', 'no'});
 
-cfg = ft_checkconfig(cfg,'allowed', ...
-  {'spikechannel', 'latency', 'trials', 'linewidth', 'cmapneurons', 'spikelength', 'topplotsize', 'topplotfunc', 'errorbars', 'trialborders', 'interactive'});
+cfg = ft_checkconfig(cfg, 'allowed', {'debug', 'spikechannel', 'latency', 'trials', 'linewidth', 'cmapneurons', 'spikelength', 'topplotsize', 'topplotfunc', 'errorbars', 'trialborders', 'interactive'});
 
 % check if a third input is present, and check if it's a timelock structure
 if nargin==3

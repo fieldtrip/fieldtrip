@@ -96,20 +96,20 @@ cfg.binsize        = ft_getopt(cfg,'binsize', 0.001);
 cfg.outputunit     = ft_getopt(cfg,'outputunit', 'proportion');
 
 % ensure that the options are valid
-cfg = ft_checkopt(cfg,'latency', {'char', 'ascendingdoublebivector'});
-cfg = ft_checkopt(cfg,'trials', {'char', 'doublevector', 'logical'}); 
-cfg = ft_checkopt(cfg,'keeptrials', 'char', {'yes', 'no'});
-cfg = ft_checkopt(cfg,'method', 'char', {'xcorr', 'shiftpredictor'});
-cfg = ft_checkopt(cfg,'channelcmb', {'char', 'cell'});
-cfg = ft_checkopt(cfg,'vartriallen', 'char', {'no', 'yes'});
-cfg = ft_checkopt(cfg,'debias', 'char', {'yes', 'no'});
-cfg = ft_checkopt(cfg,'maxlag', 'doublescalar');
-cfg = ft_checkopt(cfg,'binsize', 'doublescalar');
-cfg = ft_checkopt(cfg,'outputunit', 'char', {'proportion', 'center', 'raw'});
+cfg = ft_checkopt(cfg, 'latency', {'char', 'ascendingdoublebivector'});
+cfg = ft_checkopt(cfg, 'trials', {'char', 'doublevector', 'logical'}); 
+cfg = ft_checkopt(cfg, 'keeptrials', 'char', {'yes', 'no'});
+cfg = ft_checkopt(cfg, 'method', 'char', {'xcorr', 'shiftpredictor'});
+cfg = ft_checkopt(cfg, 'channelcmb', {'char', 'cell'});
+cfg = ft_checkopt(cfg, 'vartriallen', 'char', {'no', 'yes'});
+cfg = ft_checkopt(cfg, 'debias', 'char', {'yes', 'no'});
+cfg = ft_checkopt(cfg, 'maxlag', 'doublescalar');
+cfg = ft_checkopt(cfg, 'binsize', 'doublescalar');
+cfg = ft_checkopt(cfg, 'outputunit', 'char', {'proportion', 'center', 'raw'});
 
-cfg = ft_checkconfig(cfg,'allowed', {'latency', 'trials', 'keeptrials', 'method', 'channelcmb', 'vartriallen', 'debias', 'maxlag', 'binsize', 'outputunit'});
+cfg = ft_checkconfig(cfg, 'allowed', {'debug', 'latency', 'trials', 'keeptrials', 'method', 'channelcmb', 'vartriallen', 'debias', 'maxlag', 'binsize', 'outputunit'});
 
-doShiftPredictor  = strcmp(cfg.method,'shiftpredictor'); % shift predictor
+doShiftPredictor  = strcmp(cfg.method, 'shiftpredictor'); % shift predictor
 
 % determine the corresponding indices of the requested channel combinations
 cfg.channelcmb = ft_channelcombination(cfg.channelcmb, spike.label,true);
