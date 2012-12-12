@@ -41,7 +41,16 @@ function ft_defaults
 
 % set the defaults in a global variable, ft_checkconfig will copy these over into the local configuration
 % note that ft_getopt might not be available on the path at this moment
-global ft_default
+global ft_default ft_defaultinit
+
+% track whether we have executed ft_defaults already
+% note that we should not use ft_default itself directly, because the user
+% might have set stuff in that struct already before ft_defaults() is
+% called for the first time
+if ft_defaultinit
+  return;
+end
+
 if ~isfield(ft_default, 'trackconfig'),    ft_default.trackconfig    = 'off';    end % cleanup, report, off
 if ~isfield(ft_default, 'checkconfig'),    ft_default.checkconfig    = 'loose';  end % pedantic, loose, silent
 if ~isfield(ft_default, 'checksize'),      ft_default.checksize      = 1e5;      end % number in bytes, can be inf
@@ -183,6 +192,8 @@ if ~isdeployed
   end
   
 end
+
+ft_defaultinit = 1;
 
 end % function ft_default
 
