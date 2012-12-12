@@ -1097,6 +1097,10 @@ elseif filetype_check_extension(filename, '.nc')
   type = 'netmeg';
   manufacturer = 'Center for Biomedical Research Excellence (COBRE), see http://cobre.mrn.org/megsim/tools/netMEG/netMEG.html';
   content = 'MEG data';
+elseif filetype_check_extension(filename, 'trk')
+  type = 'trackvis_trk';
+  manufacturer = 'Martinos Center for Biomedical Imaging, see http://www.trackvis.org';
+  content = 'fiber tracking data from diffusion MR imaging';
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
