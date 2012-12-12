@@ -4,7 +4,7 @@ function test_bug1404
 % TEST ft_read_header ft_read_data ft_read_spike
 
 % this is only available on the DCCN mentat cluster
-dataset = '/opt/neurosim/Examples/AlphaColumns/dense_smalltest';
+dataset = '/opt/neurosim/Examples/AlphaColumns/dense_smalltest/spikes';
 
 hdr = ft_read_header(dataset);
 
