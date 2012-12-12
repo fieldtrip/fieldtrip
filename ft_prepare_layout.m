@@ -95,9 +95,10 @@ ft_preamble provenance
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if nargin<2
   data = [];
-else
-  data = ft_checkdata(data);
 end
+% ft_checkdata used to be called here in case data nargin>1, I moved this
+% down to the branches of the big if-else-tree where data was actually
+% used. speedup ~500ms (ES, dec2012)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % set default configuration options
@@ -182,6 +183,7 @@ elseif isequal(cfg.layout, 'butterfly')
 elseif isequal(cfg.layout, 'vertical')
   if nargin>1 && ~isempty(data)
     % look at the data to determine the overlapping channels
+    data = ft_checkdata(data);
     cfg.channel = ft_channelselection(data.label, cfg.channel); % with this order order of channels stays the same
     [dum chanindx] = match_str(cfg.channel, data.label); % order of channels according to cfg specified by user
     nchan       = length(data.label(chanindx));
@@ -208,6 +210,7 @@ elseif isequal(cfg.layout, 'vertical')
 elseif isequal(cfg.layout, 'ordered')
   if nargin>1 && ~isempty(data)
     % look at the data to determine the overlapping channels
+    data = ft_checkdata(data);
     cfg.channel = ft_channelselection(cfg.channel, data.label);
     chanindx    = match_str(data.label, cfg.channel);
     nchan       = length(data.label(chanindx));
@@ -281,6 +284,7 @@ elseif ~isempty(cfg.elec) && isstruct(cfg.elec)
 
 elseif isfield(data, 'elec') && isstruct(data.elec)  
   fprintf('creating layout from data.elec\n');
+  data = ft_checkdata(data);
   lay = sens2lay(data.elec, cfg.rotate, cfg.projection, cfg.style, cfg.overlap);
 
 elseif ischar(cfg.gradfile)
@@ -293,6 +297,7 @@ elseif ~isempty(cfg.grad) && isstruct(cfg.grad)
 
 elseif isfield(data, 'grad') && isstruct(data.grad)
   fprintf('creating layout from data.grad\n');
+  data = ft_checkdata(data);
   lay = sens2lay(data.grad, cfg.rotate, cfg.projection, cfg.style, cfg.overlap);
 
 elseif ~isempty(cfg.image) && isempty(cfg.layout)
