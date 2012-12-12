@@ -102,7 +102,7 @@ cfg = ft_checkopt(cfg, 'winfuncopt', {'cell', 'double', 'empty'});
 cfg = ft_checkopt(cfg, 'fsample', 'double');
 if strcmp(class(cfg.winfunc), 'function_handle'), cfg.winfunc = func2str(cfg.winfunc); end
 
-cfg = ft_checkconfig(cfg, 'allowed', {'debug', 'outputunit', 'spikechannel', 'latency', 'trials', 'vartriallen', 'keeptrials', 'timwin', 'winfunc', 'winfuncopt', 'fsample'});
+cfg = ft_checkconfig(cfg, 'allowed', {'outputunit', 'spikechannel', 'latency', 'trials', 'vartriallen', 'keeptrials', 'timwin', 'winfunc', 'winfuncopt', 'fsample'});
 
 % check input data structure
 data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'fsample', cfg.fsample);

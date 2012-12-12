@@ -118,7 +118,7 @@ cfg = ft_checkopt(cfg, 'trials', {'char', 'double', 'logical'});
 cfg = ft_checkopt(cfg, 'timwin', {'double', 'char'}); 
 cfg = ft_checkopt(cfg, 'winstepsize', {'double'}); 
 
-cfg = ft_checkconfig(cfg, 'allowed', {'debug', 'method', 'channel', 'spikechannel', 'latency', 'spikesel', 'avgoverchan', 'foi', 'trials', 'timwin', 'winstepsize'});
+cfg = ft_checkconfig(cfg, 'allowed', {'method', 'channel', 'spikechannel', 'latency', 'spikesel', 'avgoverchan', 'foi', 'trials', 'timwin', 'winstepsize'});
 
 % collect channel information
 cfg.channel        = ft_channelselection(cfg.channel, spike.lfplabel);

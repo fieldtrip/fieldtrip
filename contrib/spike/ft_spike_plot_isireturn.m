@@ -76,7 +76,7 @@ cfg.interpolate = round(cfg.interpolate);
 isih = ft_checkdata(isih,'datatype', 'timelock', 'feedback', 'yes');
 if ~isfield(isih,'isi'), error('input struct should contain the fields isi, label and time'), end
 
-cfg = ft_checkconfig(cfg, 'allowed', {'debug', 'spikechannel', 'scatter', 'density', 'colormap', 'interpolate', 'scattersize', 'dt', 'window', 'winlen', 'gaussvar'});
+cfg = ft_checkconfig(cfg, 'allowed', {'spikechannel', 'scatter', 'density', 'colormap', 'interpolate', 'scattersize', 'dt', 'window', 'winlen', 'gaussvar'});
 
 % get the spikechannels: maybe replace this by one function with checking etc. in it
 cfg.spikechannel = ft_channelselection(cfg.spikechannel, isih.label);
