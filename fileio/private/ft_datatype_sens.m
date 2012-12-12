@@ -18,7 +18,7 @@ function [sens] = ft_datatype_sens(sens, varargin)
 %    sens.label    = Mx1 cell-array with channel labels
 %    sens.chanpos  = Mx3 matrix with channel positions
 %    sens.tra      = MxN matrix to combine electrodes into channels
-%    sens.elecpos  = Nx3 matrix with coil positions
+%    sens.elecpos  = Nx3 matrix with electrode positions
 % In case sens.tra is not present in the EEG sensor array, the channels
 % are assumed to be average referenced.
 %
@@ -100,20 +100,14 @@ switch version
     % there are many cases which deal with either eeg or meg
     isgrad = ft_senstype(sens, 'meg');
     
-    if isfield(sens, 'pnt') || isfield(sens, 'ori')
+    if isfield(sens, 'pnt')
       if isgrad
         % sensor description is a MEG sensor-array, containing oriented coils
-        [chanpos, chanori, chanlab] = channelposition(sens, 'channel', 'all');
-        sens.coilori = sens.ori; sens = rmfield(sens, 'ori');
         sens.coilpos = sens.pnt; sens = rmfield(sens, 'pnt');
-        sens.chanpos = chanpos;
-        sens.chanori = chanori;
+        sens.coilori = sens.ori; sens = rmfield(sens, 'ori');
       else
         % sensor description is something else, EEG/ECoG etc
-        % note that chanori will be all NaNs
-        [chanpos, chanori, chanlab] = channelposition(sens, 'channel', 'all');
-        sens.elecpos = chanpos; sens = rmfield(sens, 'pnt');
-        sens.chanpos = chanpos;
+        sens.elecpos = sens.pnt; sens = rmfield(sens, 'pnt');
       end
     end
     
@@ -121,12 +115,24 @@ switch version
       if isgrad
         % sensor description is a MEG sensor-array, containing oriented coils
         [chanpos, chanori, lab] = channelposition(sens, 'channel', 'all');
-        sens.chanpos = chanpos;
-        sens.chanori = chanori;
+        if isequal(sens.label, lab)
+          sens.chanpos = chanpos;
+          sens.chanori = chanori;
+        else
+          warning('cannot determine channel positions and orientations');
+          sens.chanpos = nan(length(sens.label), 3);
+          sens.chanori = nan(length(sens.label), 3);
+        end
       else
         % sensor description is something else, EEG/ECoG etc
-        [chanpos, lab] = channelposition(sens, 'channel', 'all');
-        sens.chanpos   = chanpos;
+        % note that chanori will be all NaNs
+        [chanpos, chanori, lab] = channelposition(sens, 'channel', 'all');
+        if isequal(sens.label, lab)
+          sens.chanpos = chanpos;
+        else
+          warning('cannot determine channel positions');
+          sens.chanpos = nan(length(sens.label), 3);
+        end
       end
     end
     
@@ -157,11 +163,13 @@ switch version
     end
     
     if size(sens.chanpos,1)~=length(sens.label) || ...
-       isfield(sens, 'tra') && size(sens.tra,1)~=length(sens.label) || ...
-       isfield(sens, 'tra') && isfield(sens, 'elecpos') && size(sens.tra,2)~=size(sens.elecpos,1) || ...
-       isfield(sens, 'tra') && isfield(sens, 'coilpos') && size(sens.tra,2)~=size(sens.coilpos,1) || ...
-       isfield(sens, 'tra') && isfield(sens, 'coilori') && size(sens.tra,2)~=size(sens.coilori,1)
-     error('inconsistent number of channels in sensor description');
+        isfield(sens, 'tra') && size(sens.tra,1)~=length(sens.label) || ...
+        isfield(sens, 'tra') && isfield(sens, 'elecpos') && size(sens.tra,2)~=size(sens.elecpos,1) || ...
+        isfield(sens, 'tra') && isfield(sens, 'coilpos') && size(sens.tra,2)~=size(sens.coilpos,1) || ...
+        isfield(sens, 'tra') && isfield(sens, 'coilori') && size(sens.tra,2)~=size(sens.coilori,1) || ...
+        isfield(sens, 'chanpos') && size(sens.chanpos,1)~=length(sens.label) || ...
+        isfield(sens, 'chanori') && size(sens.chanori,1)~=length(sens.label) 
+      error('inconsistent number of channels in sensor description');
     end
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
