@@ -8,7 +8,11 @@ function test_bug1407
 
 ft_hastoolbox('egi_mff', 1);
 
-datadir = '/home/common/matlab/fieldtrip/data/test/bug1407';
+if ispc
+  datadir = 'H:/common/matlab/fieldtrip/data/test/bug1407';
+else
+  datadir = '/home/common/matlab/fieldtrip/data/test/bug1407';
+end
 
 dataset = {
   fullfile(datadir, 'Long64ChannelWithEvents.mff')

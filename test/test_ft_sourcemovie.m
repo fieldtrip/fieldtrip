@@ -19,7 +19,7 @@ addpath('/home/common/matlab/fieldtrip/qsub/')
 load /home/common/matlab/fieldtrip/data/ftp/tutorial/timefrequencyanalysis/dataFIC.mat
 load /home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat
 
-mri = ft_read_mri('/home/common/matlab/fieldtrip/data/Subject01.mri');
+mri = ft_read_mri(fullfile(homedir, 'common', 'matlab', 'fieldtrip', 'data', 'Subject01.mri'));
 
 cfg              = [];
 cfg.output       = 'powandcsd';

@@ -152,7 +152,7 @@ ft_topoplotER(cfg,avgFIC)
 colorbar
 subplot(122)
 cfg.zlim = 'maxabs';
-cfg.layout = 'CTF151.lay';
+% cfg.layout = 'CTF151.lay';
 ft_topoplotER(cfg,avgFICplanarComb)
 
 fprintf('compare with http://fieldtrip.fcdonders.nl/tutorial/eventrelatedaveraging#plot_the_results_planar_gradients\n');

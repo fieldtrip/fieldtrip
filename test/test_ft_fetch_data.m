@@ -33,13 +33,16 @@ end
 
 fprintf('avg. #samples: %.2f +/- %.2f\n', mean(cachedata.sampleinfo(:, 2) - cachedata.sampleinfo(:, 1)), std(cachedata.sampleinfo(:, 2) - cachedata.sampleinfo(:, 1)));
 maxsamples = endsample + 1000;
+% profile clear;
+% profile on;
 tic
 for i = 1:100
   begsample = ceil(rand*maxsamples);
-  endsample = begsample+ceil(rand*fsample);
+  endsample = begsample+ceil(4*rand*fsample);
   tmp = ft_fetch_data(cachedata, 'begsample', begsample', 'endsample', endsample);
 end
 toc
+% profile report;
 
 
 %% check with only one trial
