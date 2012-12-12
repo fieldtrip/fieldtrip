@@ -1,7 +1,7 @@
 function test_bug932
 
 % TEST test_bug932
-% TEST ft_freqstatistics ft_selectdata ft_appendfreq
+% TEST ft_freqstatistics ft_selectdata ft_appendfreq ft_datatype_freq ft_datatype_sens
 
 cd /home/common/matlab/fieldtrip/data/test/bug932
 
