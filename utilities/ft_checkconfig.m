@@ -197,6 +197,7 @@ if ~isempty(allowed)
     'trackcallinfo'
     'trackdatainfo'
     'trackparaminfo'
+    'debug'
     });
   fieldsused = fieldnames(cfg);
   [c, i] = setdiff(fieldsused, allowed);
