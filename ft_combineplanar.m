@@ -267,8 +267,8 @@ if isfield(data, 'grad')
   sel      = [sel_dH(:);sel_other(:)];
   newlabel = [lab_comb;lab_other];
   
-  newgrad.chanpos = data.grad.chanpos(sel,:);
-  newgrad.chanori = data.grad.chanori(sel,:);
+  newgrad.chanpos  = data.grad.chanpos(sel,:);
+  newgrad.chanori  = data.grad.chanori(sel,:);
   newgrad.chantype = data.grad.chantype(sel);
   newgrad.chanunit = data.grad.chanunit(sel);
   newgrad.label    = newlabel;

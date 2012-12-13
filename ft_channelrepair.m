@@ -272,12 +272,14 @@ elseif strcmp(cfg.method, 'spline') || strcmp(cfg.method, 'slap')
   if ~isempty(cfg.badchannel) || ~isempty(cfg.missingchannel)
     fprintf('Spherical spline and surface Laplacian interpolation will treat bad and missing channels the same. Missing channels will be concatenated at the end of your data structure.\n');
   end
-  % subselect only those sensors that are in the data or in badchannel or
-  % missingchannel
+  % subselect only those sensors that are in the data or in badchannel or missingchannel
   badchannels   = union(cfg.badchannel, cfg.missingchannel);
   sensidx       = ismember(sens.label, union(data.label, badchannels));  
   sens.label    = sens.label(sensidx);
   sens.chanpos  = sens.chanpos(sensidx, :);
+  try, sens.chanori   = sens.chanori(sensidx, :); end
+  try, sens.chantype  = sens.chantype(sensidx, :); end
+  try, sens.chanunit  = sens.chanunit(sensidx, :); end
   
   fprintf('Checking spherical fit... ');  
   [c, r] = fitsphere(sens.chanpos);  

@@ -138,10 +138,12 @@ elseif ismeg
   [selchan, selsens] = match_str(channel, sens.label);
   
   % first only modify the linear combination of coils into channels
-  sens.chanpos = sens.chanpos(selsens,:);
-  sens.chanori = sens.chanori(selsens,:);
-  sens.label   = sens.label(selsens);
-  sens.tra     = sens.tra(selsens,:);
+  try, sens.chantype = sens.chantype(selsens,:); end
+  try, sens.chanunit = sens.chanunit(selsens,:); end
+  sens.chanpos  = sens.chanpos(selsens,:);
+  sens.chanori  = sens.chanori(selsens,:);
+  sens.label    = sens.label(selsens);
+  sens.tra      = sens.tra(selsens,:);
   % subsequently remove the coils that do not contribute to any channel output
   selcoil      = any(sens.tra~=0,1);
   sens.coilpos = sens.coilpos(selcoil,:);
@@ -254,7 +256,10 @@ elseif ismeg
       [selchan, selsens] = match_str(channel, sens.label);
       
       % first only modify the linear combination of coils into channels
+      try, sens.chantype = sens.chantype(selsens,:); end
+      try, sens.chanunit = sens.chanunit(selsens,:); end
       sens.chanpos = sens.chanpos(selsens,:);
+      sens.chanori = sens.chanori(selsens,:);
       sens.label   = sens.label(selsens);
       sens.tra     = sens.tra(selsens,:);
       % subsequently remove the coils that do not contribute to any sensor output
