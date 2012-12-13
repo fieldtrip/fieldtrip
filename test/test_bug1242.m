@@ -3,7 +3,7 @@ function test_bug1242
 % TEST test_bug1242
 % TEST ft_databrowser
 
-load test_bug1242;
+load /home/common/matlab/fieldtrip/data/test/bug1242.mat
 
 cfg = [];
 cfg.viewmode = 'butterfly';
