@@ -117,8 +117,7 @@ end
 
 current_argin = {input, desired};
 if isequal(current_argin, previous_argin)
-  % don't do the type detection again, but return the previous values from
-  % cache
+  % don't do the type detection again, but return the previous output from cache 
   type = previous_argout{1};
   return
 end
