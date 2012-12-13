@@ -12,3 +12,6 @@ if ispc
   executable = [executable '.exe'];
 end
 
+if ~exist(executable, 'file')
+  error('the vgrid executable is not available for your platform, it was expected to be located at %s', executable);
+end
