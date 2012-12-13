@@ -156,7 +156,7 @@ switch version
       sens = ft_convert_units(sens);
     end
     
-    if any(strcmp(sens.type, {'meg', 'eeg', 'magnetometer', 'electrode'}))
+    if any(strcmp(sens.type, {'meg', 'eeg', 'magnetometer', 'electrode', 'unknown'}))
       % this is not sufficiently informative, so better remove it
       % see also http://bugzilla.fcdonders.nl/show_bug.cgi?id=1806
       sens = rmfield(sens, 'type');
