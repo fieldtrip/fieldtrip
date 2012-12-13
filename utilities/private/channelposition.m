@@ -275,12 +275,18 @@ switch ft_senstype(sens)
       end
       lab = sens.label;
       
-    else
-      % there is one sensor per channel, which means that the channel position
-      % is identical to the sensor position
+    elseif isfield(sens, 'coilpos')
+      % there is one sensor per channel, which means that the channel position is identical to the sensor position
       pnt = sens.coilpos;
       ori = sens.coilori;
       lab = sens.label;
+    
+    elseif isfield(sens, 'elecpos')
+      % there is one sensor per channel, which means that the channel position is identical to the sensor position
+      pnt = sens.elecpos;
+      ori = nan(size(sens.elecpos));
+      lab = sens.label;
+
     end
     
 end % switch senstype
