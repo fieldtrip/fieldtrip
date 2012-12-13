@@ -106,6 +106,11 @@ switch format
       headerfile = filename;
       datafile   = filename;
     end
+  case 'neurosim_ds'
+    % this is the directory
+    filename = fullfile(filename, 'signals'); % this is the only one we care about for the continuous signals
+    headerfile = filename;
+    datafile   = filename;
   otherwise
     % convert filename into filenames, assume that the header and data are the same
     datafile   = filename;
