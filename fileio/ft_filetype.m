@@ -326,19 +326,19 @@ elseif filetype_check_extension(filename, '.hsp')
   
   % Neurosim files; this has to go before the 4D detection
 elseif ~isdir(filename) && (strcmp(f,'spikes') || filetype_check_header(filename,'#  Spike information'))
-    type = 'neurosim spikes';
+    type = 'neurosim_spikes';
     manufacturer = 'Jan van der Eerden (DCCN)';
     content = 'simulated spikes';
 elseif ~isdir(filename) && (strcmp(f,'evolution') || filetype_check_header(filename,'#  Voltages'))
-    type = 'neurosim evolution';
+    type = 'neurosim_evolution';
     manufacturer = 'Jan van der Eerden (DCCN)';
     content = 'simulated membrane voltages and currents';
 elseif ~isdir(filename) && (strcmp(f,'signals') || filetype_check_header(filename,'#  Internal',2))
-    type = 'neurosim signals';
+    type = 'neurosim_signals';
     manufacturer = 'Jan van der Eerden (DCCN)';
     content = 'simulated network signals';
 elseif isdir(filename) && exist(fullfile(filename, 'signals'), 'file') && exist(fullfile(filename, 'spikes'), 'file')
-    type = 'neurosim dir';
+    type = 'neurosim_ds';
     manufacturer = 'Jan van der Eerden (DCCN)';
     content = 'simulated spikes and continuous signals';
   
@@ -627,7 +627,7 @@ elseif ~isdir(filename) && isdir(p) && exist(fullfile(p, 'info.xml'), 'file') &&
   content = 'raw EEG data';
   
   % these are formally not Neuralynx file formats, but at the FCDC we use them together with Neuralynx
-elseif isdir(filename) && any(ft_filetype({ls.name}, 'neuralynx_ds'))
+elseif isdir(filename) && filetype_check_neuralynx_cds(filename)
   % a downsampled Neuralynx DMA file can be split into three seperate lfp/mua/spike directories
   % treat them as one combined dataset
   type = 'neuralynx_cds';
@@ -1215,6 +1215,37 @@ else
   d = dir;
 end
 res = ~isempty(strmatch(filename,{d.name},'exact'));
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION that checks whether the directory is neuralynx_cds
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function res = filetype_check_neuralynx_cds(filename)
+
+res=false;
+files=dir(filename);
+dirlist=files([files.isdir]);
+
+% 1) check for a subdirectory with extension .lfp, .mua or .spike
+haslfp   = any(filetype_check_extension({dirlist.name}, 'lfp'));
+hasmua   = any(filetype_check_extension({dirlist.name}, 'mua'));
+hasspike = any(filetype_check_extension({dirlist.name}, 'spike'));
+
+% 2) check for each of the subdirs being a neuralynx_ds
+if haslfp || hasmua || hasspike
+  sel=find(filetype_check_extension({dirlist.name}, 'lfp')+...
+    filetype_check_extension({dirlist.name}, 'mua')+...
+    filetype_check_extension({dirlist.name}, 'spike'));
+  
+  neuralynxdirs=cell(1,length(sel));
+  
+  for n=1:length(sel)
+    neuralynxdirs{n}=fullfile(filename, dirlist(sel(n)).name);
+  end
+  
+  res=any(ft_filetype(neuralynxdirs, 'neuralynx_ds'));
+end
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that checks whether the file contains only ascii characters

@@ -1620,14 +1620,10 @@ switch headerformat
     hdr  = rmfield(orig, 'time');
     hdr.orig = orig;
     
-  case 'neurosim spikes'
-    headerOnly=1;
-    hdr = read_neurosim_spikes(filename,headerOnly);
-    
-  case 'neurosim evolution'
+  case 'neurosim_evolution'
     hdr = read_neurosim_evolution(filename);
     
-  case 'neurosim signals'
+  case {'neurosim_ds' 'neurosim_signals'}
     hdr = read_neurosim_signals(filename);
     
   otherwise

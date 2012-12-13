@@ -20,7 +20,7 @@ function [spike] = ft_read_spike(filename, varargin)
 %   'plexon_nex'
 %   'plexon_plx'
 %   'neuroshare'
-%   'neurosim'
+%   'neurosim_spikes'
 %
 % The output spike structure usually contains
 %   spike.label     = 1xNchans cell-array, with channel labels
@@ -63,7 +63,7 @@ end
 spikeformat = ft_getopt(varargin, 'spikeformat', ft_filetype(filename));
 
 switch spikeformat
-  case {'neurosim spikes' 'neurosim dir'}
+  case {'neurosim_spikes' 'neurosim_ds'}
     spike = read_neurosim_spikes(filename);
 
   case {'neuralynx_ncs' 'plexon_ddt'}
@@ -219,7 +219,7 @@ switch spikeformat
     end
 
   otherwise
-    error('unsupported data format');
+    error(['unsupported data format (' spikeformat ')']);
 end
 
 % add the waveform 

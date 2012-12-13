@@ -43,11 +43,8 @@ if isdir(filename)
     filename = fullfile(filename, 'spikes');
 end
 
-% check if only the header was requested (used by FT_READ_HEADER)
-if exist('headerOnly','var')
-    headerOnly=logical(headerOnly);
-else
-    headerOnly=false;
+if nargin<2
+  headerOnly = false;
 end
 
 fid = fopen(filename, 'rb');

@@ -1026,11 +1026,11 @@ switch dataformat
   case 'bucn_nirs'
     dat = read_bucn_nirsdata(filename, hdr, begsample, endsample, chanindx);
     
-  case 'neurosim signals'
+  case {'neurosim_ds' 'neurosim_signals'}
     [hdr, dat] = read_neurosim_signals(filename);
     dat = dat(chanindx,begsample:endsample);
     
-  case 'neurosim evolution'  
+  case 'neurosim_evolution'  
      [hdr, dat] = read_neurosim_evolution(filename);
      dat = dat(chanindx,begsample:endsample);
      
