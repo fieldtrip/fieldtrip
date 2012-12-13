@@ -1,0 +1,79 @@
+#!/bin/sh
+
+#******************************************************************************
+# (c) 2002   CCRLE
+#
+#  shell script to run the test suite for VGrid
+#
+#  18.06.2002 GBe
+#
+#******************************************************************************
+
+ntests=5
+echo ">>> VGrid test-suite for `whoami` , `date` on `hostname`"; echo ""
+
+rm -f test_suite.log 2>&1 >/dev/null
+echo ">>> VGrid test-suite for `whoami` , `date` on `hostname`" > test_suite.log
+
+echo ">>> TEST 1 of $ntests"
+echo "
+>>> TEST 1 of $ntests
+" >> test_suite.log
+make check2x2x2  >>test_suite.log 2>>test_suite.log
+if [ $? -eq 0 ]
+  then
+  echo "passed"
+else
+  echo "failed"
+fi
+
+echo ">>> TEST 2 of $ntests"
+echo "
+>>> TEST 2 of $ntests
+" >> test_suite.log
+make check4x4x4 >>test_suite.log 2>>test_suite.log
+if [ $? -eq 0 ]
+  then
+  echo "passed"
+else
+  echo "failed"
+fi
+
+echo ">>> TEST 3 of $ntests"
+echo "
+>>> TEST 3 of $ntests
+" >> test_suite.log
+make check4x4x4-min2 >>test_suite.log 2>>test_suite.log
+if [ $? -eq 0 ]
+  then
+  echo "passed"
+else
+  echo "failed"
+fi
+
+
+echo ">>> TEST 4 of $ntests"
+echo "
+>>> TEST 4 of $ntests
+" >> test_suite.log
+make check-mt-two-halves >>test_suite.log 2>>test_suite.log
+if [ $? -eq 0 ]
+  then
+  echo "passed"
+else
+  echo "failed"
+fi
+
+echo ">>> TEST 5 of $ntests"
+echo "
+>>> TEST 5 of $ntests
+" >> test_suite.log
+make check-mt-oblique2d >>test_suite.log 2>>test_suite.log
+if [ $? -eq 0 ]
+  then
+  echo "passed"
+else
+  echo "failed"
+fi
+
+echo ""; echo ">>> output in test_suite.log"; echo ""

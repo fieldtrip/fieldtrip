@@ -1,0 +1,505 @@
+ --- VGrid --- 
+WARNING: vgrid: setting elem to tetra5 for marching tets!
+ element type = 1 
+min_maxdim = 1, max_maxdim = 1
+Voxel 44 occurs 75 	 times (60.000000 %)
+Voxel 88 occurs 50 	 times (40.000000 %)
+Materials specified in file :
+voxel 	 internal no.: 0 	 maxdim: 1 	 voxel range: [44, 44] 	 meshing type: default
+voxel 	 internal no.: 1 	 maxdim: 1 	 voxel range: [88, 88] 	 meshing type: default
+generating cells ...  nx=5 ny=5 nz=5
+subsampling cells ...  ... done subsampling cells
+Number of octree cells: 125
+ dim 1: 125 cells
+Number of octree nodes: 216
+octnodes:
+z = 0
+y = 0	:1 1 1 1 1 1 
+y = 1	:1 1 1 1 1 1 
+y = 2	:1 1 1 1 1 1 
+y = 3	:1 1 1 1 1 1 
+y = 4	:1 1 1 1 1 1 
+y = 5	:1 1 1 1 1 1 
+
+z = 1
+y = 0	:1 1 1 1 1 1 
+y = 1	:1 1 1 1 1 1 
+y = 2	:1 1 1 1 1 1 
+y = 3	:1 1 1 1 1 1 
+y = 4	:1 1 1 1 1 1 
+y = 5	:1 1 1 1 1 1 
+
+z = 2
+y = 0	:1 1 1 1 1 1 
+y = 1	:1 1 1 1 1 1 
+y = 2	:1 1 1 1 1 1 
+y = 3	:1 1 1 1 1 1 
+y = 4	:1 1 1 1 1 1 
+y = 5	:1 1 1 1 1 1 
+
+z = 3
+y = 0	:1 1 1 1 1 1 
+y = 1	:1 1 1 1 1 1 
+y = 2	:1 1 1 1 1 1 
+y = 3	:1 1 1 1 1 1 
+y = 4	:1 1 1 1 1 1 
+y = 5	:1 1 1 1 1 1 
+
+z = 4
+y = 0	:1 1 1 1 1 1 
+y = 1	:1 1 1 1 1 1 
+y = 2	:1 1 1 1 1 1 
+y = 3	:1 1 1 1 1 1 
+y = 4	:1 1 1 1 1 1 
+y = 5	:1 1 1 1 1 1 
+
+z = 5
+y = 0	:1 1 1 1 1 1 
+y = 1	:1 1 1 1 1 1 
+y = 2	:1 1 1 1 1 1 
+y = 3	:1 1 1 1 1 1 
+y = 4	:1 1 1 1 1 1 
+y = 5	:1 1 1 1 1 1 
+
+
+ done generating cells
+generating grid ...   (5 slices)
+tesselateCell:  ox=0 oy=0 oz=0 
+adding vertex 1 (0.000000,0.000000,0.000000)
+adding vertex 2 (1.000000,0.000000,0.000000)
+adding vertex 3 (0.000000,1.000000,0.000000)
+adding vertex 4 (1.000000,1.000000,0.000000)
+adding vertex 5 (0.000000,0.000000,1.000000)
+adding vertex 6 (1.000000,0.000000,1.000000)
+adding vertex 7 (0.000000,1.000000,1.000000)
+adding vertex 8 (1.000000,1.000000,1.000000)
+tesselateCell:  ox=1 oy=0 oz=0 
+adding vertex 9 (2.000000,0.000000,0.000000)
+adding vertex 10 (2.000000,1.000000,0.000000)
+adding vertex 11 (2.000000,0.000000,1.000000)
+adding vertex 12 (2.000000,1.000000,1.000000)
+tesselateCell:  ox=2 oy=0 oz=0 
+adding vertex 13 (3.000000,0.000000,0.000000)
+adding vertex 14 (3.000000,1.000000,0.000000)
+adding vertex 15 (3.000000,0.000000,1.000000)
+adding vertex 16 (3.000000,1.000000,1.000000)
+tesselateCell:  ox=3 oy=0 oz=0 
+adding vertex 17 (4.000000,0.000000,0.000000)
+adding vertex 18 (4.000000,1.000000,0.000000)
+adding vertex 19 (4.000000,0.000000,1.000000)
+adding vertex 20 (4.000000,1.000000,1.000000)
+tesselateCell:  ox=4 oy=0 oz=0 
+adding vertex 21 (5.000000,0.000000,0.000000)
+adding vertex 22 (5.000000,1.000000,0.000000)
+adding vertex 23 (5.000000,0.000000,1.000000)
+adding vertex 24 (5.000000,1.000000,1.000000)
+tesselateCell:  ox=0 oy=1 oz=0 
+adding vertex 25 (0.000000,2.000000,0.000000)
+adding vertex 26 (1.000000,2.000000,0.000000)
+adding vertex 27 (0.000000,2.000000,1.000000)
+adding vertex 28 (1.000000,2.000000,1.000000)
+tesselateCell:  ox=1 oy=1 oz=0 
+adding vertex 29 (2.000000,2.000000,0.000000)
+adding vertex 30 (2.000000,2.000000,1.000000)
+tesselateCell:  ox=2 oy=1 oz=0 
+adding vertex 31 (3.000000,2.000000,0.000000)
+adding vertex 32 (3.000000,2.000000,1.000000)
+tesselateCell:  ox=3 oy=1 oz=0 
+adding vertex 33 (4.000000,2.000000,0.000000)
+adding vertex 34 (4.000000,2.000000,1.000000)
+tesselateCell:  ox=4 oy=1 oz=0 
+adding vertex 35 (5.000000,2.000000,0.000000)
+adding vertex 36 (5.000000,2.000000,1.000000)
+tesselateCell:  ox=0 oy=2 oz=0 
+adding vertex 37 (0.000000,3.000000,0.000000)
+adding vertex 38 (1.000000,3.000000,0.000000)
+adding vertex 39 (0.000000,3.000000,1.000000)
+adding vertex 40 (1.000000,3.000000,1.000000)
+tesselateCell:  ox=1 oy=2 oz=0 
+adding vertex 41 (2.000000,3.000000,0.000000)
+adding vertex 42 (2.000000,3.000000,1.000000)
+tesselateCell:  ox=2 oy=2 oz=0 
+adding vertex 43 (3.000000,3.000000,0.000000)
+adding vertex 44 (3.000000,3.000000,1.000000)
+tesselateCell:  ox=3 oy=2 oz=0 
+adding vertex 45 (4.000000,3.000000,0.000000)
+adding vertex 46 (4.000000,3.000000,1.000000)
+tesselateCell:  ox=4 oy=2 oz=0 
+adding vertex 47 (5.000000,3.000000,0.000000)
+adding vertex 48 (5.000000,3.000000,1.000000)
+tesselateCell:  ox=0 oy=3 oz=0 
+adding vertex 49 (0.000000,4.000000,0.000000)
+adding vertex 50 (1.000000,4.000000,0.000000)
+adding vertex 51 (0.000000,4.000000,1.000000)
+adding vertex 52 (1.000000,4.000000,1.000000)
+tesselateCell:  ox=1 oy=3 oz=0 
+adding vertex 53 (2.000000,4.000000,0.000000)
+adding vertex 54 (2.000000,4.000000,1.000000)
+tesselateCell:  ox=2 oy=3 oz=0 
+adding vertex 55 (3.000000,4.000000,0.000000)
+adding vertex 56 (3.000000,4.000000,1.000000)
+tesselateCell:  ox=3 oy=3 oz=0 
+adding vertex 57 (4.000000,4.000000,0.000000)
+adding vertex 58 (4.000000,4.000000,1.000000)
+tesselateCell:  ox=4 oy=3 oz=0 
+adding vertex 59 (5.000000,4.000000,0.000000)
+adding vertex 60 (5.000000,4.000000,1.000000)
+tesselateCell:  ox=0 oy=4 oz=0 
+adding vertex 61 (0.000000,5.000000,0.000000)
+adding vertex 62 (1.000000,5.000000,0.000000)
+adding vertex 63 (0.000000,5.000000,1.000000)
+adding vertex 64 (1.000000,5.000000,1.000000)
+tesselateCell:  ox=1 oy=4 oz=0 
+adding vertex 65 (2.000000,5.000000,0.000000)
+adding vertex 66 (2.000000,5.000000,1.000000)
+tesselateCell:  ox=2 oy=4 oz=0 
+adding vertex 67 (3.000000,5.000000,0.000000)
+adding vertex 68 (3.000000,5.000000,1.000000)
+tesselateCell:  ox=3 oy=4 oz=0 
+adding vertex 69 (4.000000,5.000000,0.000000)
+adding vertex 70 (4.000000,5.000000,1.000000)
+tesselateCell:  ox=4 oy=4 oz=0 
+adding vertex 71 (5.000000,5.000000,0.000000)
+adding vertex 72 (5.000000,5.000000,1.000000)
+tesselateCell:  ox=0 oy=0 oz=1 
+adding vertex 73 (0.000000,0.000000,2.000000)
+adding vertex 74 (1.000000,0.000000,2.000000)
+adding vertex 75 (0.000000,1.000000,2.000000)
+adding vertex 76 (1.000000,1.000000,2.000000)
+tesselateCell:  ox=1 oy=0 oz=1 
+adding vertex 77 (2.000000,0.000000,2.000000)
+adding vertex 78 (2.000000,1.000000,2.000000)
+tesselateCell:  ox=2 oy=0 oz=1 
+adding vertex 79 (3.000000,0.000000,2.000000)
+adding vertex 80 (3.000000,1.000000,2.000000)
+tesselateCell:  ox=3 oy=0 oz=1 
+adding vertex 81 (4.000000,0.000000,2.000000)
+adding vertex 82 (4.000000,1.000000,2.000000)
+tesselateCell:  ox=4 oy=0 oz=1 
+adding vertex 83 (5.000000,0.000000,2.000000)
+adding vertex 84 (5.000000,1.000000,2.000000)
+tesselateCell:  ox=0 oy=1 oz=1 
+adding vertex 85 (0.000000,2.000000,2.000000)
+adding vertex 86 (1.000000,2.000000,2.000000)
+tesselateCell:  ox=1 oy=1 oz=1 
+adding vertex 87 (2.000000,2.000000,2.000000)
+tesselateCell:  ox=2 oy=1 oz=1 
+adding vertex 88 (3.000000,2.000000,2.000000)
+tesselateCell:  ox=3 oy=1 oz=1 
+adding vertex 89 (4.000000,2.000000,2.000000)
+tesselateCell:  ox=4 oy=1 oz=1 
+adding vertex 90 (5.000000,2.000000,2.000000)
+tesselateCell:  ox=0 oy=2 oz=1 
+adding vertex 91 (0.000000,3.000000,2.000000)
+adding vertex 92 (1.000000,3.000000,2.000000)
+tesselateCell:  ox=1 oy=2 oz=1 
+adding vertex 93 (2.000000,3.000000,2.000000)
+tesselateCell:  ox=2 oy=2 oz=1 
+adding vertex 94 (3.000000,3.000000,2.000000)
+tesselateCell:  ox=3 oy=2 oz=1 
+adding vertex 95 (4.000000,3.000000,2.000000)
+tesselateCell:  ox=4 oy=2 oz=1 
+adding vertex 96 (5.000000,3.000000,2.000000)
+tesselateCell:  ox=0 oy=3 oz=1 
+adding vertex 97 (0.000000,4.000000,2.000000)
+adding vertex 98 (1.000000,4.000000,2.000000)
+tesselateCell:  ox=1 oy=3 oz=1 
+adding vertex 99 (2.000000,4.000000,2.000000)
+tesselateCell:  ox=2 oy=3 oz=1 
+adding vertex 100 (3.000000,4.000000,2.000000)
+tesselateCell:  ox=3 oy=3 oz=1 
+adding vertex 101 (4.000000,4.000000,2.000000)
+tesselateCell:  ox=4 oy=3 oz=1 
+adding vertex 102 (5.000000,4.000000,2.000000)
+tesselateCell:  ox=0 oy=4 oz=1 
+adding vertex 103 (0.000000,5.000000,2.000000)
+adding vertex 104 (1.000000,5.000000,2.000000)
+tesselateCell:  ox=1 oy=4 oz=1 
+adding vertex 105 (2.000000,5.000000,2.000000)
+tesselateCell:  ox=2 oy=4 oz=1 
+adding vertex 106 (3.000000,5.000000,2.000000)
+tesselateCell:  ox=3 oy=4 oz=1 
+adding vertex 107 (4.000000,5.000000,2.000000)
+tesselateCell:  ox=4 oy=4 oz=1 
+adding vertex 108 (5.000000,5.000000,2.000000)
+tesselateCell:  ox=0 oy=0 oz=2 
+adding vertex 109 (0.000000,0.000000,3.000000)
+adding vertex 110 (1.000000,0.000000,3.000000)
+adding vertex 111 (0.000000,1.000000,3.000000)
+adding vertex 112 (1.000000,1.000000,3.000000)
+tesselateCell:  ox=1 oy=0 oz=2 
+adding vertex 113 (2.000000,0.000000,3.000000)
+adding vertex 114 (2.000000,1.000000,3.000000)
+tesselateCell:  ox=2 oy=0 oz=2 
+adding vertex 115 (3.000000,0.000000,3.000000)
+adding vertex 116 (3.000000,1.000000,3.000000)
+tesselateCell:  ox=3 oy=0 oz=2 
+adding vertex 117 (4.000000,0.000000,3.000000)
+adding vertex 118 (4.000000,1.000000,3.000000)
+tesselateCell:  ox=4 oy=0 oz=2 
+adding vertex 119 (5.000000,0.000000,3.000000)
+adding vertex 120 (5.000000,1.000000,3.000000)
+tesselateCell:  ox=0 oy=1 oz=2 
+adding vertex 121 (0.000000,2.000000,3.000000)
+adding vertex 122 (1.000000,2.000000,3.000000)
+tesselateCell:  ox=1 oy=1 oz=2 
+adding vertex 123 (2.000000,2.000000,3.000000)
+tesselateCell:  ox=2 oy=1 oz=2 
+adding vertex 124 (3.000000,2.000000,3.000000)
+tesselateCell:  ox=3 oy=1 oz=2 
+adding vertex 125 (4.000000,2.000000,3.000000)
+tesselateCell:  ox=4 oy=1 oz=2 
+adding vertex 126 (5.000000,2.000000,3.000000)
+tesselateCell:  ox=0 oy=2 oz=2 
+adding vertex 127 (0.000000,3.000000,3.000000)
+adding vertex 128 (1.000000,3.000000,3.000000)
+tesselateCell:  ox=1 oy=2 oz=2 
+adding vertex 129 (2.000000,3.000000,3.000000)
+tesselateCell:  ox=2 oy=2 oz=2 
+adding vertex 130 (3.000000,3.000000,3.000000)
+tesselateCell:  ox=3 oy=2 oz=2 
+adding vertex 131 (4.000000,3.000000,3.000000)
+tesselateCell:  ox=4 oy=2 oz=2 
+adding vertex 132 (5.000000,3.000000,3.000000)
+tesselateCell:  ox=0 oy=3 oz=2 
+adding vertex 133 (0.000000,4.000000,3.000000)
+adding vertex 134 (1.000000,4.000000,3.000000)
+tesselateCell:  ox=1 oy=3 oz=2 
+adding vertex 135 (2.000000,4.000000,3.000000)
+tesselateCell:  ox=2 oy=3 oz=2 
+adding vertex 136 (3.000000,4.000000,3.000000)
+tesselateCell:  ox=3 oy=3 oz=2 
+adding vertex 137 (4.000000,4.000000,3.000000)
+tesselateCell:  ox=4 oy=3 oz=2 
+adding vertex 138 (5.000000,4.000000,3.000000)
+tesselateCell:  ox=0 oy=4 oz=2 
+adding vertex 139 (0.000000,5.000000,3.000000)
+adding vertex 140 (1.000000,5.000000,3.000000)
+tesselateCell:  ox=1 oy=4 oz=2 
+adding vertex 141 (2.000000,5.000000,3.000000)
+tesselateCell:  ox=2 oy=4 oz=2 
+adding vertex 142 (3.000000,5.000000,3.000000)
+tesselateCell:  ox=3 oy=4 oz=2 
+adding vertex 143 (4.000000,5.000000,3.000000)
+tesselateCell:  ox=4 oy=4 oz=2 
+adding vertex 144 (5.000000,5.000000,3.000000)
+tesselateCell:  ox=0 oy=0 oz=3 
+adding vertex 145 (0.000000,0.000000,4.000000)
+adding vertex 146 (1.000000,0.000000,4.000000)
+adding vertex 147 (0.000000,1.000000,4.000000)
+adding vertex 148 (1.000000,1.000000,4.000000)
+tesselateCell:  ox=1 oy=0 oz=3 
+adding vertex 149 (2.000000,0.000000,4.000000)
+adding vertex 150 (2.000000,1.000000,4.000000)
+tesselateCell:  ox=2 oy=0 oz=3 
+adding vertex 151 (3.000000,0.000000,4.000000)
+adding vertex 152 (3.000000,1.000000,4.000000)
+tesselateCell:  ox=3 oy=0 oz=3 
+adding vertex 153 (4.000000,0.000000,4.000000)
+adding vertex 154 (4.000000,1.000000,4.000000)
+tesselateCell:  ox=4 oy=0 oz=3 
+adding vertex 155 (5.000000,0.000000,4.000000)
+adding vertex 156 (5.000000,1.000000,4.000000)
+tesselateCell:  ox=0 oy=1 oz=3 
+adding vertex 157 (0.000000,2.000000,4.000000)
+adding vertex 158 (1.000000,2.000000,4.000000)
+tesselateCell:  ox=1 oy=1 oz=3 
+adding vertex 159 (2.000000,2.000000,4.000000)
+tesselateCell:  ox=2 oy=1 oz=3 
+adding vertex 160 (3.000000,2.000000,4.000000)
+tesselateCell:  ox=3 oy=1 oz=3 
+adding vertex 161 (4.000000,2.000000,4.000000)
+tesselateCell:  ox=4 oy=1 oz=3 
+adding vertex 162 (5.000000,2.000000,4.000000)
+tesselateCell:  ox=0 oy=2 oz=3 
+adding vertex 163 (0.000000,3.000000,4.000000)
+adding vertex 164 (1.000000,3.000000,4.000000)
+tesselateCell:  ox=1 oy=2 oz=3 
+adding vertex 165 (2.000000,3.000000,4.000000)
+tesselateCell:  ox=2 oy=2 oz=3 
+adding vertex 166 (3.000000,3.000000,4.000000)
+tesselateCell:  ox=3 oy=2 oz=3 
+adding vertex 167 (4.000000,3.000000,4.000000)
+tesselateCell:  ox=4 oy=2 oz=3 
+adding vertex 168 (5.000000,3.000000,4.000000)
+tesselateCell:  ox=0 oy=3 oz=3 
+adding vertex 169 (0.000000,4.000000,4.000000)
+adding vertex 170 (1.000000,4.000000,4.000000)
+tesselateCell:  ox=1 oy=3 oz=3 
+adding vertex 171 (2.000000,4.000000,4.000000)
+tesselateCell:  ox=2 oy=3 oz=3 
+adding vertex 172 (3.000000,4.000000,4.000000)
+tesselateCell:  ox=3 oy=3 oz=3 
+adding vertex 173 (4.000000,4.000000,4.000000)
+tesselateCell:  ox=4 oy=3 oz=3 
+adding vertex 174 (5.000000,4.000000,4.000000)
+tesselateCell:  ox=0 oy=4 oz=3 
+adding vertex 175 (0.000000,5.000000,4.000000)
+adding vertex 176 (1.000000,5.000000,4.000000)
+tesselateCell:  ox=1 oy=4 oz=3 
+adding vertex 177 (2.000000,5.000000,4.000000)
+tesselateCell:  ox=2 oy=4 oz=3 
+adding vertex 178 (3.000000,5.000000,4.000000)
+tesselateCell:  ox=3 oy=4 oz=3 
+adding vertex 179 (4.000000,5.000000,4.000000)
+tesselateCell:  ox=4 oy=4 oz=3 
+adding vertex 180 (5.000000,5.000000,4.000000)
+tesselateCell:  ox=0 oy=0 oz=4 
+adding vertex 181 (0.000000,0.000000,5.000000)
+adding vertex 182 (1.000000,0.000000,5.000000)
+adding vertex 183 (0.000000,1.000000,5.000000)
+adding vertex 184 (1.000000,1.000000,5.000000)
+tesselateCell:  ox=1 oy=0 oz=4 
+adding vertex 185 (2.000000,0.000000,5.000000)
+adding vertex 186 (2.000000,1.000000,5.000000)
+tesselateCell:  ox=2 oy=0 oz=4 
+adding vertex 187 (3.000000,0.000000,5.000000)
+adding vertex 188 (3.000000,1.000000,5.000000)
+tesselateCell:  ox=3 oy=0 oz=4 
+adding vertex 189 (4.000000,0.000000,5.000000)
+adding vertex 190 (4.000000,1.000000,5.000000)
+tesselateCell:  ox=4 oy=0 oz=4 
+adding vertex 191 (5.000000,0.000000,5.000000)
+adding vertex 192 (5.000000,1.000000,5.000000)
+tesselateCell:  ox=0 oy=1 oz=4 
+adding vertex 193 (0.000000,2.000000,5.000000)
+adding vertex 194 (1.000000,2.000000,5.000000)
+tesselateCell:  ox=1 oy=1 oz=4 
+adding vertex 195 (2.000000,2.000000,5.000000)
+tesselateCell:  ox=2 oy=1 oz=4 
+adding vertex 196 (3.000000,2.000000,5.000000)
+tesselateCell:  ox=3 oy=1 oz=4 
+adding vertex 197 (4.000000,2.000000,5.000000)
+tesselateCell:  ox=4 oy=1 oz=4 
+adding vertex 198 (5.000000,2.000000,5.000000)
+tesselateCell:  ox=0 oy=2 oz=4 
+adding vertex 199 (0.000000,3.000000,5.000000)
+adding vertex 200 (1.000000,3.000000,5.000000)
+tesselateCell:  ox=1 oy=2 oz=4 
+adding vertex 201 (2.000000,3.000000,5.000000)
+tesselateCell:  ox=2 oy=2 oz=4 
+adding vertex 202 (3.000000,3.000000,5.000000)
+tesselateCell:  ox=3 oy=2 oz=4 
+adding vertex 203 (4.000000,3.000000,5.000000)
+tesselateCell:  ox=4 oy=2 oz=4 
+adding vertex 204 (5.000000,3.000000,5.000000)
+tesselateCell:  ox=0 oy=3 oz=4 
+adding vertex 205 (0.000000,4.000000,5.000000)
+adding vertex 206 (1.000000,4.000000,5.000000)
+tesselateCell:  ox=1 oy=3 oz=4 
+adding vertex 207 (2.000000,4.000000,5.000000)
+tesselateCell:  ox=2 oy=3 oz=4 
+adding vertex 208 (3.000000,4.000000,5.000000)
+tesselateCell:  ox=3 oy=3 oz=4 
+adding vertex 209 (4.000000,4.000000,5.000000)
+tesselateCell:  ox=4 oy=3 oz=4 
+adding vertex 210 (5.000000,4.000000,5.000000)
+tesselateCell:  ox=0 oy=4 oz=4 
+adding vertex 211 (0.000000,5.000000,5.000000)
+adding vertex 212 (1.000000,5.000000,5.000000)
+tesselateCell:  ox=1 oy=4 oz=4 
+adding vertex 213 (2.000000,5.000000,5.000000)
+tesselateCell:  ox=2 oy=4 oz=4 
+adding vertex 214 (3.000000,5.000000,5.000000)
+tesselateCell:  ox=3 oy=4 oz=4 
+adding vertex 215 (4.000000,5.000000,5.000000)
+tesselateCell:  ox=4 oy=4 oz=4 
+adding vertex 216 (5.000000,5.000000,5.000000)
+
+ ... done generating grid.
+marching tets ...
+interpolateOnVertices  ...
+done interpolateOnVertices.
+Vertex values:
+z=0
+1.00 0.00 -1.00 -1.00 -1.00 -1.00 
+1.00 0.50 -0.50 -1.00 -1.00 -1.00 
+1.00 1.00 0.50 -0.50 -1.00 -1.00 
+1.00 1.00 1.00 0.50 -0.50 -1.00 
+1.00 1.00 1.00 1.00 0.50 0.00 
+1.00 1.00 1.00 1.00 1.00 1.00 
+z=1
+1.00 0.00 -1.00 -1.00 -1.00 -1.00 
+1.00 0.50 -0.50 -1.00 -1.00 -1.00 
+1.00 1.00 0.50 -0.50 -1.00 -1.00 
+1.00 1.00 1.00 0.50 -0.50 -1.00 
+1.00 1.00 1.00 1.00 0.50 0.00 
+1.00 1.00 1.00 1.00 1.00 1.00 
+z=2
+1.00 0.00 -1.00 -1.00 -1.00 -1.00 
+1.00 0.50 -0.50 -1.00 -1.00 -1.00 
+1.00 1.00 0.50 -0.50 -1.00 -1.00 
+1.00 1.00 1.00 0.50 -0.50 -1.00 
+1.00 1.00 1.00 1.00 0.50 0.00 
+1.00 1.00 1.00 1.00 1.00 1.00 
+z=3
+1.00 0.00 -1.00 -1.00 -1.00 -1.00 
+1.00 0.50 -0.50 -1.00 -1.00 -1.00 
+1.00 1.00 0.50 -0.50 -1.00 -1.00 
+1.00 1.00 1.00 0.50 -0.50 -1.00 
+1.00 1.00 1.00 1.00 0.50 0.00 
+1.00 1.00 1.00 1.00 1.00 1.00 
+z=4
+1.00 0.00 -1.00 -1.00 -1.00 -1.00 
+1.00 0.50 -0.50 -1.00 -1.00 -1.00 
+1.00 1.00 0.50 -0.50 -1.00 -1.00 
+1.00 1.00 1.00 0.50 -0.50 -1.00 
+1.00 1.00 1.00 1.00 0.50 0.00 
+1.00 1.00 1.00 1.00 1.00 1.00 
+z=5
+1.00 0.00 -1.00 -1.00 -1.00 -1.00 
+1.00 0.50 -0.50 -1.00 -1.00 -1.00 
+1.00 1.00 0.50 -0.50 -1.00 -1.00 
+1.00 1.00 1.00 0.50 -0.50 -1.00 
+1.00 1.00 1.00 1.00 0.50 0.00 
+1.00 1.00 1.00 1.00 1.00 1.00 
+done marching tets.
+Generating primitives ...
+done generating primitives.
+smoothing boundary ...
+done smoothing boundary.
+final grid contains 303 vertices and 1055 primitives.
+saving grid ...
+WriteMaterialPid ...
+WriteMaterialPid: histogram:
+ Material No. 0 ("voxel", id 0): 605 elements
+ Material No. 1 ("voxel", id 1): 450 elements
+ Total number: 1055 elements
+Set attributes   ...
+WriteTagImage    ...
+WriteForceImage  ...
+WriteSourceNodes ...
+WriteInitialPart ...
+Attributes of vertices graph:
+ name = <>
+ name = <patient>
+ name = <date>
+ name = <convention>
+ name = <voxel>
+ name = <component_interp>
+ name = <partition(s)>
+ name = <image>
+ name = <forceimage>
+ name = <srcnodes>
+ name = <partnode>
+Attributes of primitives graph:
+ name = <>
+ name = <matprops>
+ name = <component_interp>
+ name = <primitive_interp>
+ name = <implicit_links>
+ name = <partelem>
+vertices  ->lastUsed  =303
+vertices  ->size      =366
+vertices  ->nnodes    =366
+countNodes(vertices)  =303
+primitives  ->lastUsed  =1055
+primitives  ->size      =1234
+primitives  ->nnodes    =1234
+countNodes(primitives)  =1055
+ entering vtoa ... 
+ 303 nodes ... 
+ 1055 elements ... 
+ ... done vtoa 
+... done saving grid
+ --- done VGrid  --- 

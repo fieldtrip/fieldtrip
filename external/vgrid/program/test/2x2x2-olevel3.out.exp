@@ -1,0 +1,117 @@
+ --- VGrid --- 
+ element type = cube 
+WARNING: gridGenerator: Changing grid generation to 'tetra5' 
+min_maxdim = 1, max_maxdim = 2
+Voxel 1 occurs 7 	 times (87.500000 %)
+Voxel 2 occurs 1 	 times (12.500000 %)
+Materials specified in file :
+voxel 	 internal no.: 0 	 maxdim: 2 	 voxel range: [1, 1] 	 meshing type: default
+voxel 	 internal no.: 1 	 maxdim: 2 	 voxel range: [2, 2] 	 meshing type: default
+generating cells ...  nx=2 ny=2 nz=2
+subsampling cells ...  ... done subsampling cells
+Number of octree cells: 8
+ dim 1: 8 cells
+Number of octree nodes: 27
+octnodes:
+z = 0
+y = 0	:1 1 1 
+y = 1	:1 1 1 
+y = 2	:1 1 1 
+
+z = 1
+y = 0	:1 1 1 
+y = 1	:1 1 1 
+y = 2	:1 1 1 
+
+z = 2
+y = 0	:1 1 1 
+y = 1	:1 1 1 
+y = 2	:1 1 1 
+
+
+ done generating cells
+generating grid ...   (2 slices)
+tesselateCell:  ox=0 oy=0 oz=0 
+adding vertex 1 (0.000000,0.000000,0.000000)
+adding vertex 2 (1.000000,0.000000,0.000000)
+adding vertex 3 (0.000000,1.000000,0.000000)
+adding vertex 4 (1.000000,1.000000,0.000000)
+adding vertex 5 (0.000000,0.000000,1.000000)
+adding vertex 6 (1.000000,0.000000,1.000000)
+adding vertex 7 (0.000000,1.000000,1.000000)
+adding vertex 8 (1.000000,1.000000,1.000000)
+tesselateCell:  ox=1 oy=0 oz=0 
+adding vertex 9 (2.000000,0.000000,0.000000)
+adding vertex 10 (2.000000,1.000000,0.000000)
+adding vertex 11 (2.000000,0.000000,1.000000)
+adding vertex 12 (2.000000,1.000000,1.000000)
+tesselateCell:  ox=0 oy=1 oz=0 
+adding vertex 13 (0.000000,2.000000,0.000000)
+adding vertex 14 (1.000000,2.000000,0.000000)
+adding vertex 15 (0.000000,2.000000,1.000000)
+adding vertex 16 (1.000000,2.000000,1.000000)
+tesselateCell:  ox=1 oy=1 oz=0 
+adding vertex 17 (2.000000,2.000000,0.000000)
+adding vertex 18 (2.000000,2.000000,1.000000)
+tesselateCell:  ox=0 oy=0 oz=1 
+adding vertex 19 (0.000000,0.000000,2.000000)
+adding vertex 20 (1.000000,0.000000,2.000000)
+adding vertex 21 (0.000000,1.000000,2.000000)
+adding vertex 22 (1.000000,1.000000,2.000000)
+tesselateCell:  ox=1 oy=0 oz=1 
+adding vertex 23 (2.000000,0.000000,2.000000)
+adding vertex 24 (2.000000,1.000000,2.000000)
+tesselateCell:  ox=0 oy=1 oz=1 
+adding vertex 25 (0.000000,2.000000,2.000000)
+adding vertex 26 (1.000000,2.000000,2.000000)
+tesselateCell:  ox=1 oy=1 oz=1 
+adding vertex 27 (2.000000,2.000000,2.000000)
+
+ ... done generating grid.
+Generating primitives ...
+done generating primitives.
+final grid contains 27 vertices and 40 primitives.
+saving grid ...
+WriteMaterialPid ...
+WriteMaterialPid: histogram:
+ Material No. 0 ("voxel", id 0): 35 elements
+ Material No. 1 ("voxel", id 1): 5 elements
+ Total number: 40 elements
+Set attributes   ...
+WriteTagImage    ...
+WriteForceImage  ...
+WriteSourceNodes ...
+WriteInitialPart ...
+Attributes of vertices graph:
+ name = <>
+ name = <patient>
+ name = <date>
+ name = <convention>
+ name = <voxel>
+ name = <component_interp>
+ name = <partition(s)>
+ name = <image>
+ name = <forceimage>
+ name = <srcnodes>
+ name = <partnode>
+Attributes of primitives graph:
+ name = <>
+ name = <matprops>
+ name = <component_interp>
+ name = <primitive_interp>
+ name = <implicit_links>
+ name = <partelem>
+vertices  ->lastUsed  =27
+vertices  ->size      =33
+vertices  ->nnodes    =33
+countNodes(vertices)  =27
+primitives  ->lastUsed  =40
+primitives  ->size      =49
+primitives  ->nnodes    =49
+countNodes(primitives)  =40
+ entering vtoa ... 
+ 27 nodes ... 
+ 40 elements ... 
+ ... done vtoa 
+... done saving grid
+ --- done VGrid  --- 
