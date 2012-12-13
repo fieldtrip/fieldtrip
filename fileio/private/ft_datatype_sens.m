@@ -115,7 +115,7 @@ switch version
       if isgrad
         % sensor description is a MEG sensor-array, containing oriented coils
         [chanpos, chanori, lab] = channelposition(sens, 'channel', 'all');
-        if isequal(sens.label, lab)
+        if isequal(sens.label(:), lab(:))
           sens.chanpos = chanpos;
           sens.chanori = chanori;
         else
@@ -127,7 +127,7 @@ switch version
         % sensor description is something else, EEG/ECoG etc
         % note that chanori will be all NaNs
         [chanpos, chanori, lab] = channelposition(sens, 'channel', 'all');
-        if isequal(sens.label, lab)
+        if isequal(sens.label(:), lab(:))
           sens.chanpos = chanpos;
         else
           warning('cannot determine channel positions');
