@@ -41,13 +41,14 @@ function ft_defaults
 
 % set the defaults in a global variable, ft_checkconfig will copy these over into the local configuration
 % note that ft_getopt might not be available on the path at this moment
-global ft_default ft_defaultinit
+global ft_default 
+persistent initialized
 
 % track whether we have executed ft_defaults already
 % note that we should not use ft_default itself directly, because the user
 % might have set stuff in that struct already before ft_defaults() is
 % called for the first time
-if ft_defaultinit
+if initialized
   return;
 end
 
@@ -193,7 +194,8 @@ if ~isdeployed
   
 end
 
-ft_defaultinit = 1;
+% remember that the function has executed in a persistent variable
+initialized = true;
 
 end % function ft_default
 
