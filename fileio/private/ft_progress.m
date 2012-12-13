@@ -58,6 +58,7 @@ persistent h        % the handle of the dialog (in case of type=gui)
 persistent a        % the angle in degrees, for dial or textbar
 persistent s        % the string containing the title
 persistent strlen   % the length of the previously printed string, used to remove it by \b
+persistent tprev    % the time of previous invocation, used to restrict number of updates
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if nargin>1 && ischar(varargin{1}) && strcmp(varargin{1}, 'init')
@@ -66,6 +67,8 @@ if nargin>1 && ischar(varargin{1}) && strcmp(varargin{1}, 'init')
   h = 0;
   c = 0;
   strlen = 0;
+  tprev = tic();
+  
   % determine the type of feedback
   t = varargin{2};
   if strcmp(t,'textcr') || strcmp(t,'textnl')
@@ -111,10 +114,19 @@ elseif nargin==1 && ischar(varargin{1}) && strcmp(varargin{1}, 'close')
   t0 = [];
   p0 = [];
   strlen = 0;
+  tprev = [];
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 else
+  
+  % make sure we don't update more than once every 100ms, significant
+  % performance hit otherwise in certain conditions
+  if toc(tprev) < 0.1
+    return;
+  end
+  tprev = tic();
+  
   if strcmp(t, 'dial')
     % display should always be updated for the dial
     % continue;
