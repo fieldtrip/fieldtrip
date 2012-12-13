@@ -34,39 +34,11 @@ if isfield(cfg, 'trackcallinfo') && ~istrue(cfg.trackcallinfo)
   return
 end
 
-stack = dbstack('-completenames');
-% stack(1) is this script
-% stack(2) is the calling ft_postamble function
-% stack(3) is the main FieldTrip function that we are interested in
-stack = stack(3);
-
-% add information about the FieldTrip and MATLAB version used to the configuration
-try
-  cfg.callinfo.fieldtrip = ft_version();
-catch
-  cfg.callinfo.fieldtrip = 'unknown';
-end
-cfg.callinfo.matlab    = version();
-
 % the proctime, procmem and calltime rely on three cryptical variables that were
 % created and added to the function workspace by the ft_preamble_callinfo script.
 cfg.callinfo.proctime = toc(ftohDiW7th_FuncTimer);
 cfg.callinfo.procmem  = memtoc(ftohDiW7th_FuncMem);
 cfg.callinfo.calltime = ftohDiW7th_FuncClock;
-
-% add information about the execution environment to the configuration
-cfg.callinfo.user     = getusername();
-cfg.callinfo.hostname = gethostname();
-cfg.callinfo.pwd      = pwd;
-
-% add information about the function filename and revision to the configuration
-cfg.version.name = stack.file;
-% the revision number is maintained by SVN in the revision variable in the calling function
-if ~exist('revision', 'var')
-  cfg.version.id   = 'unknown';
-else
-  cfg.version.id   = revision;
-end
 
 if istrue(ft_getopt(cfg, 'showcallinfo', 'yes'))
   % print some feedback on screen, this is meant to educate the user about
