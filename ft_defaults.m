@@ -44,14 +44,6 @@ function ft_defaults
 global ft_default 
 persistent initialized
 
-% track whether we have executed ft_defaults already
-% note that we should not use ft_default itself directly, because the user
-% might have set stuff in that struct already before ft_defaults() is
-% called for the first time
-if initialized
-  return;
-end
-
 if ~isfield(ft_default, 'trackconfig'),    ft_default.trackconfig    = 'off';    end % cleanup, report, off
 if ~isfield(ft_default, 'checkconfig'),    ft_default.checkconfig    = 'loose';  end % pedantic, loose, silent
 if ~isfield(ft_default, 'checksize'),      ft_default.checksize      = 1e5;      end % number in bytes, can be inf
@@ -62,6 +54,13 @@ if ~isfield(ft_default, 'debug'),          ft_default.debug          = 'no';    
 if ~isfield(ft_default, 'trackcallinfo'),  ft_default.trackcallinfo  = 'yes';    end % yes or no
 if ~isfield(ft_default, 'trackdatainfo'),  ft_default.trackdatainfo  = 'no';     end % yes or no, this is still under development
 if ~isfield(ft_default, 'trackparaminfo'), ft_default.trackparaminfo = 'no';     end % yes or no, this is still under development
+
+% track whether we have executed ft_defaults already. Note that we should
+% not use ft_default itself directly, because the user might have set stuff
+% in that struct already before ft_defaults is called for the first time.
+if initialized
+  return;
+end
 
 % Ensure that the path containing ft_defaults is on the path.
 % This allows people to do "cd path_to_fieldtrip; ft_defaults"
