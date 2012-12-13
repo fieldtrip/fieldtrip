@@ -10,14 +10,20 @@
 % these variables are shared by the three debug handlers
 global Ce9dei2ZOo_debug Ce9dei2ZOo_funname Ce9dei2ZOo_argin 
 
-Ce9dei2ZOo_debug   = 'no';
-Ce9dei2ZOo_funname = [];
-Ce9dei2ZOo_argin   = [];
+if ~isempty(Ce9dei2ZOo_debug)
+  % the debugging handler is already set by a higher-level function
+  return
+end
 
 if ~isfield(cfg, 'debug')
   % do not provide extra debugging facilities
   return
 end
+
+% reset the global variables used to handle the debugging
+Ce9dei2ZOo_debug   = [];
+Ce9dei2ZOo_funname = [];
+Ce9dei2ZOo_argin   = [];
 
 % reset the last error and warning
 lasterr('');
@@ -43,7 +49,7 @@ switch cfg.debug
   case 'save'
     Ce9dei2ZOo_debug = 'save';
     debugCleanup; % call it once
-    Ce9dei2ZOo_debug = 'none';
+    Ce9dei2ZOo_debug = [];
     
   case 'saveonerror'
     Ce9dei2ZOo_debug = 'saveonerror';
@@ -52,7 +58,7 @@ switch cfg.debug
   case 'display'
     Ce9dei2ZOo_debug = 'display';
     debugCleanup; % call it once
-    Ce9dei2ZOo_debug = 'none';
+    Ce9dei2ZOo_debug = [];
     
   case 'displayonerror'
     Ce9dei2ZOo_debug = 'displayonerror';
