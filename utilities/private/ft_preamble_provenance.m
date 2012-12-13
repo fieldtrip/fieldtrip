@@ -60,6 +60,8 @@ cfg.callinfo.pwd      = pwd;
 
 % add information about the function filename and revision to the configuration
 cfg.version.name = stack.file;
+clear stack
+
 % the revision number is maintained by SVN in the revision variable in the calling function
 if ~exist('revision', 'var')
   cfg.version.id   = 'unknown';
