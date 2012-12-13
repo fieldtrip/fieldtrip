@@ -1,5 +1,14 @@
-function [varargout] = vgrid(varargin)
+function executable = vgrid
 
-% this is implemented as a mex file
+% VGRID is a helper m-file to locate the binary executable
 
-error('The vgrid exe file is missing');
+f = mfilename('fullpath');
+[p, f, x] = fileparts(f);
+
+% construct the full path to the binary executable
+executable = fullfile(p, 'bin', lower(computer), 'vgrid');
+
+if ispc
+  executable = [executable '.exe'];
+end
+
