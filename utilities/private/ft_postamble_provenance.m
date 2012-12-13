@@ -34,6 +34,11 @@ if isfield(cfg, 'trackcallinfo') && ~istrue(cfg.trackcallinfo)
   return
 end
 
+stack = dbstack('-completenames');
+% stack(1) is this script
+% stack(2) is the calling ft_postamble function
+% stack(3) is the main FieldTrip function that we are interested in
+stack = stack(3);
 % the proctime, procmem and calltime rely on three cryptical variables that were
 % created and added to the function workspace by the ft_preamble_callinfo script.
 cfg.callinfo.proctime = toc(ftohDiW7th_FuncTimer);
@@ -44,12 +49,21 @@ if istrue(ft_getopt(cfg, 'showcallinfo', 'yes'))
   % print some feedback on screen, this is meant to educate the user about
   % the requirements of certain computations and to use that knowledge in
   % distributed computing
+  
+  stack = dbstack('-completenames');
+  % stack(1) is this script
+  % stack(2) is the calling ft_postamble function
+  % stack(3) is the main FieldTrip function that we are interested in
+  stack = stack(3);
+  
   if ispc()
     % don't print memory usage info under Windows; this does not work (yet)
     fprintf('the call to "%s" took %d seconds\n', stack.name, round(cfg.callinfo.proctime));
   else
     fprintf('the call to "%s" took %d seconds and required the additional allocation of an estimated %d MB\n', stack.name, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
   end
+  
+  clear stack
 end
 
 clear ftohDiW7th_FuncTimer
