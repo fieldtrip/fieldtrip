@@ -6,6 +6,6 @@
 global Ce9dei2ZOo_debug Ce9dei2ZOo_funname Ce9dei2ZOo_argin 
 
 % clean up the global variables
-Ce9dei2ZOo_debug   = [];
+Ce9dei2ZOo_debug   = 'no';
 Ce9dei2ZOo_funname = [];
 Ce9dei2ZOo_argin   = [];

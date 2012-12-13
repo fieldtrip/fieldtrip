@@ -10,7 +10,7 @@
 % these variables are shared by the three debug handlers
 global Ce9dei2ZOo_debug Ce9dei2ZOo_funname Ce9dei2ZOo_argin 
 
-if ~isempty(Ce9dei2ZOo_debug)
+if ~isempty(Ce9dei2ZOo_debug) && ~isequal(Ce9dei2ZOo_debug, 'no')
   % the debugging handler is already set by a higher-level function
   return
 end
@@ -21,7 +21,7 @@ if ~isfield(cfg, 'debug')
 end
 
 % reset the global variables used to handle the debugging
-Ce9dei2ZOo_debug   = [];
+Ce9dei2ZOo_debug   = 'no';
 Ce9dei2ZOo_funname = [];
 Ce9dei2ZOo_argin   = [];
 
@@ -49,20 +49,22 @@ switch cfg.debug
   case 'save'
     Ce9dei2ZOo_debug = 'save';
     debugCleanup; % call it once
-    Ce9dei2ZOo_debug = [];
+    Ce9dei2ZOo_debug = 'no';
     
   case 'saveonerror'
-    Ce9dei2ZOo_debug = 'saveonerror';
-    onCleanup(@debugCleanup);
+    Ce9dei2ZOo_debug  = 'saveonerror';
+    % when the Ce9dei2ZOo_handle gets deleted, the debugCleanup function will be executed
+    Ce9dei2ZOo_handle = onCleanup(@debugCleanup); 
     
   case 'display'
     Ce9dei2ZOo_debug = 'display';
     debugCleanup; % call it once
-    Ce9dei2ZOo_debug = [];
+    Ce9dei2ZOo_debug = 'no';
     
   case 'displayonerror'
-    Ce9dei2ZOo_debug = 'displayonerror';
-    onCleanup(@debugCleanup);
+    Ce9dei2ZOo_debug  = 'displayonerror';
+    % when the Ce9dei2ZOo_handle gets deleted, the debugCleanup function will be executed
+    Ce9dei2ZOo_handle = onCleanup(@debugCleanup);
     
   otherwise
     % do nothing

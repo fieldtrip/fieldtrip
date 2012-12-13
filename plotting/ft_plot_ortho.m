@@ -176,8 +176,9 @@ switch style
     end
     
   otherwise
+    error('unsupported style %s', style);
     
-end
+end % switch style
 
 % if strcmp(interactive, 'yes')
 %   flag = 1;

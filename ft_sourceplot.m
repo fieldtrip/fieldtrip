@@ -690,6 +690,7 @@ if isequal(cfg.method,'ortho')
   interactive_flag = 1; % it happens at least once
   feedbackmessage  = true;
   maketransparent  = true;
+  
   while(interactive_flag)
     interactive_flag = strcmp(cfg.interactive, 'yes');
 
@@ -1381,7 +1382,6 @@ if hasana; ana = vols2D{1}'; end;
 if hasfun && ~doimage; fun = vols2D{2}'; end;
 if hasfun && doimage;  fun = permute(vols2D{2},[2 1 3]); end;
 if hasmsk; msk = vols2D{3}'; end;
-
 
 if hasana
   % scale anatomy between 0 and 1

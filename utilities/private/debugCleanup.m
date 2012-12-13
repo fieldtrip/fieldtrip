@@ -12,10 +12,10 @@ funname = Ce9dei2ZOo_funname;
 for i=1:length(Ce9dei2ZOo_argin)
   eval(sprintf('%s = Ce9dei2ZOo_argin(%d).value;', Ce9dei2ZOo_argin(i).name, i));
 end
+
 last_err     = lasterr;
 last_error   = lasterror;
 last_warning = lastwarn;
-
 
 switch Ce9dei2ZOo_debug
   
@@ -64,6 +64,6 @@ switch Ce9dei2ZOo_debug
 end % switch
 
 % clean up the global variables
-Ce9dei2ZOo_debug   = [];
+Ce9dei2ZOo_debug   = 'no';
 Ce9dei2ZOo_funname = [];
 Ce9dei2ZOo_argin   = [];
