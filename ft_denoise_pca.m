@@ -68,6 +68,7 @@ ft_defaults
 ft_preamble help
 ft_preamble provenance
 ft_preamble trackconfig
+ft_preamble debug
 
 % check if the input data is valid for this function
 for i=1:length(varargin)
@@ -288,6 +289,7 @@ else
 end
 
 % do the general cleanup and bookkeeping at the end of the function
+ft_postamble debug
 ft_postamble trackconfig
 ft_postamble provenance
 ft_postamble previous varargin

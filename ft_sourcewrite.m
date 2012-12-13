@@ -31,6 +31,7 @@ ft_defaults
 ft_preamble help           
 ft_preamble provenance        
 ft_preamble trackconfig     
+ft_preamble debug
 ft_preamble loadvar source
 
 source = ft_checkdata(source, 'datatype', 'source', 'feedback', 'yes');
@@ -73,5 +74,6 @@ else
   error('the input data does not look like a 2D sheet, nor as a 3D regular volume');
 end
 
+ft_postamble debug
 ft_postamble trackconfig      
 ft_postamble provenance        

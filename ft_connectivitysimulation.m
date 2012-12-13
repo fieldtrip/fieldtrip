@@ -108,6 +108,7 @@ ft_defaults
 ft_preamble help
 ft_preamble provenance
 ft_preamble trackconfig
+ft_preamble debug
 
 % check input configuration for the generally applicable options
 cfg = ft_checkconfig(cfg, 'required', {'nsignal' 'ntrials' 'triallength' 'fsample' 'method'});
@@ -271,6 +272,7 @@ simulated.fsample = cfg.fsample;
 simulated.label   = label;
 
 % do the general cleanup and bookkeeping at the end of the function
+ft_postamble debug
 ft_postamble trackconfig
 ft_postamble provenance
 ft_postamble history simulated

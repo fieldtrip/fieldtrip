@@ -111,6 +111,7 @@ ft_defaults
 ft_preamble help
 ft_preamble provenance
 ft_preamble trackconfig
+ft_preamble debug
 
 % text output
 disp('Close the figure to output new sensor positions');
@@ -491,6 +492,7 @@ if isfield(orig, 'label')
 end
 
 % do the general cleanup and bookkeeping at the end of the function
+ft_postamble debug
 ft_postamble trackconfig
 ft_postamble provenance
 ft_postamble history norm

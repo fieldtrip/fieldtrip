@@ -51,6 +51,7 @@ ft_defaults                 % this ensures that the path is correct and that the
 ft_preamble help            % this will show the function help if nargin==0 and return an error
 ft_preamble provenance      % this records the time and memory usage at teh beginning of the function
 ft_preamble trackconfig     % this converts the cfg structure in a config object, which tracks the cfg options that are being used
+ft_preamble debug
 ft_preamble loadvar datain  % this reads the input data in case the user specified the cfg.inputfile option
 
 % ensure that the input data is valid for this function, this will also do
@@ -158,6 +159,7 @@ end
 % deal with the output
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+ft_postamble debug
 ft_postamble trackconfig      % this converts the config object back into a struct and can report on the unused fields
 ft_postamble provenance       % this records the time and memory at the end of the function, prints them on screen and adds this information together with the function name and matlab version etc. to the output cfg
 ft_postamble previous data    % this copies the datain.cfg structure into the cfg.previous field. You can also use it for multiple inputs, or for "varargin"

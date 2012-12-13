@@ -57,6 +57,7 @@ ft_defaults
 ft_preamble help
 ft_preamble provenance
 ft_preamble trackconfig
+ft_preamble debug
 
 hasdata = nargin>1;
 if hasdata, data = ft_checkdata(data); end
@@ -199,6 +200,7 @@ neighb_idx = ismember({cfg.neighbours.label}, desired);
 cfg.neighbours = cfg.neighbours(neighb_idx);
 
 % do the general cleanup and bookkeeping at the end of the function
+ft_postamble debug
 ft_postamble trackconfig
 ft_postamble provenance
 ft_postamble previous data

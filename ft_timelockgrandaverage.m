@@ -58,6 +58,7 @@ ft_defaults
 ft_preamble help
 ft_preamble provenance
 ft_preamble trackconfig
+ft_preamble debug
 ft_preamble loadvar varargin
 
 % return immediately after distributed execution
@@ -219,6 +220,7 @@ elseif strcmp(cfg.keepindividual, 'no')
 end
 
 % do the general cleanup and bookkeeping at the end of the function
+ft_postamble debug
 ft_postamble trackconfig
 ft_postamble provenance
 ft_postamble previous varargin

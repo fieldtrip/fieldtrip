@@ -62,6 +62,7 @@ ft_defaults
 ft_preamble help
 ft_preamble provenance
 ft_preamble trackconfig
+ft_preamble debug
 
 % set the defaults
 cfg.analyze   = ft_getopt(cfg, 'analyze',   'yes');
@@ -323,6 +324,7 @@ if strcmp(cfg.visualize, 'yes')
 end % end of visualization
 
 % do the general cleanup and bookkeeping at the end of the function
+ft_postamble debug
 ft_postamble trackconfig
 ft_postamble provenance
 ft_postamble history timelock   % add the input cfg to multiple outputs

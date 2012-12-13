@@ -49,6 +49,7 @@ ft_defaults
 ft_preamble help
 ft_preamble provenance
 ft_preamble trackconfig
+ft_preamble debug
 ft_preamble loadvar freq
 
 % check if the input data is valid for this function
@@ -89,6 +90,7 @@ for i = 1:size(cfg.foilim,1)
 end % for each frequency range
 
 % do the general cleanup and bookkeeping at the end of the function
+ft_postamble debug
 ft_postamble trackconfig
 ft_postamble provenance
 ft_postamble previous freq

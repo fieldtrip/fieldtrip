@@ -48,6 +48,7 @@ ft_defaults
 ft_preamble help
 ft_preamble provenance
 ft_preamble trackconfig
+ft_preamble debug
 
 % nargin check
 if length(varargin)~=2
@@ -130,6 +131,7 @@ end
 fprintf('performing %s comparison \n', cfg.comparisontype);
 
 % do the general cleanup and bookkeeping at the end of the function
+ft_postamble debug
 ft_postamble trackconfig
 ft_postamble provenance
 

@@ -119,6 +119,7 @@ ft_defaults
 ft_preamble help
 ft_preamble provenance
 ft_preamble trackconfig
+ft_preamble debug
 
 % the interactive method uses a global variable to get the data from the figure when it is closed
 global norm
@@ -555,6 +556,7 @@ switch cfg.method
 end
 
 % do the general cleanup and bookkeeping at the end of the function
+ft_postamble debug
 ft_postamble trackconfig
 ft_postamble provenance
 ft_postamble previous elec_original

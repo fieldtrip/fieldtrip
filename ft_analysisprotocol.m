@@ -93,6 +93,7 @@ ft_defaults
 ft_preamble help
 ft_preamble provenance
 ft_preamble trackconfig
+ft_preamble debug
 
 % set the defaults
 if ~isfield(cfg, 'filename'),    cfg.filename    = [];                end
@@ -406,6 +407,7 @@ else
 end
 
 % do the general cleanup and bookkeeping at the end of the function
+ft_postamble debug
 ft_postamble trackconfig
 ft_postamble provenance
 

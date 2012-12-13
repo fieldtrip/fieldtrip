@@ -123,6 +123,7 @@ ft_defaults
 ft_preamble help
 ft_preamble provenance
 ft_preamble trackconfig
+ft_preamble debug
 
 hasdata = (nargin>1);
 hascomp = hasdata && ft_datatype(data, 'comp');
@@ -738,6 +739,7 @@ if nargout
   cfg.event = opt.event;
 
   % do the general cleanup and bookkeeping at the end of the function
+  ft_postamble debug
   ft_postamble trackconfig
   ft_postamble provenance
   ft_postamble previous data

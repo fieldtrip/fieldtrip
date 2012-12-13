@@ -44,6 +44,7 @@ ft_defaults
 ft_preamble help
 ft_preamble provenance
 ft_preamble trackconfig
+ft_preamble debug
 ft_preamble loadvar varargin
 
 % input check
@@ -208,6 +209,7 @@ if istimelock == 0 && isfreq == 0 && issource == 0
 end
 
 % do the general cleanup and bookkeeping at the end of the function
+ft_postamble debug
 ft_postamble trackconfig
 ft_postamble provenance
 ft_postamble previous varargin
