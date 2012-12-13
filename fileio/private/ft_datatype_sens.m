@@ -75,6 +75,15 @@ function [sens] = ft_datatype_sens(sens, varargin)
 %
 % $Id$
 
+% these are for remembering the type on subsequent calls with the same input arguments
+persistent previous_argin previous_argout
+
+current_argin = [{sens} varargin];
+if isequal(current_argin, previous_argin)
+  % don't do the whole cheking again, but return the previous output from cache 
+  sens = previous_argout{1};
+end
+
 % get the optional input arguments, which should be specified as key-value pairs
 version = ft_getopt(varargin, 'version', 'latest');
 
@@ -98,10 +107,10 @@ switch version
     end
     
     % there are many cases which deal with either eeg or meg
-    isgrad = ft_senstype(sens, 'meg');
+    ismeg = ft_senstype(sens, 'meg');
     
     if isfield(sens, 'pnt')
-      if isgrad
+      if ismeg
         % sensor description is a MEG sensor-array, containing oriented coils
         sens.coilpos = sens.pnt; sens = rmfield(sens, 'pnt');
         sens.coilori = sens.ori; sens = rmfield(sens, 'ori');
@@ -112,7 +121,7 @@ switch version
     end
     
     if ~isfield(sens, 'chanpos')
-      if isgrad
+      if ismeg
         % sensor description is a MEG sensor-array, containing oriented coils
         [chanpos, chanori, lab] = channelposition(sens, 'channel', 'all');
         if isequal(sens.label(:), lab(:))
@@ -137,7 +146,7 @@ switch version
     end
     
     if ~isfield(sens, 'chantype') || all(strcmp(sens.chantype, 'unknown'))
-      if isgrad
+      if ismeg
         sens.chantype = ft_chantype(sens);
       else
         % FIXME for EEG we have not yet figured out how to deal with this
@@ -145,7 +154,7 @@ switch version
     end
     
     if ~isfield(sens, 'chanunit') || all(strcmp(sens.chanunit, 'unknown'))
-      if isgrad
+      if ismeg
         sens.chanunit = ft_chanunit(sens);
       else
         % FIXME for EEG we have not yet figured out how to deal with this
@@ -180,6 +189,13 @@ end % switch
 
 % this makes the display with the "disp" command look better
 sens = sortfieldnames(sens);
+
+% remember the current input and output arguments, so that they can be
+% reused on a subsequent call in case the same input argument is given
+current_argout = {sens};
+previous_argin  = current_argin;
+previous_argout = current_argout;
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
