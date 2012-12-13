@@ -247,11 +247,7 @@ switch toolbox
   case 'SIMBIO'
     status  = exist('calc_stiff_matrix_val', 'file') && exist('sb_transfer', 'file');
   case 'VGRID'
-    if ~ft_hastoolbox('simbio', 1)
-      error('you need to install simbio too!')
-    end
-    prefix = fileparts(which('sb_write_dip.m'));
-    status = exist([prefix '/vgrid1.3.1/program/vgrid'], 'file');
+    status  = exist('vgrid.m', 'file');
   case 'GIFTI'
     status  = exist('gifti', 'file');
   case 'XML4MAT'
