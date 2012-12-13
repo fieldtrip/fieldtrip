@@ -4,8 +4,11 @@ function test_bug1404
 % TEST ft_read_header ft_read_data ft_read_spike
 
 % this is only available on the DCCN mentat cluster
-dataset = '/opt/neurosim/Examples/AlphaColumns/dense_smalltest/spikes';
+dataset = '/home/common/matlab/fieldtrip/data/test/original/neurosim/signals';
+hdr = ft_read_header(dataset);
 
+% this should also work
+dataset = '/home/common/matlab/fieldtrip/data/test/original/neurosim';
 hdr = ft_read_header(dataset);
 
 cfg = [];
