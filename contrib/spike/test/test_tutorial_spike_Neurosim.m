@@ -21,7 +21,7 @@ spike2 = ft_read_spike('/home/common/matlab/fieldtrip/data/test/original/neurosi
 
 
 cfg              = [];
-cfg.spikechannel = [1, 51]; % select one inhibitory and one excitatory neuron
+cfg.spikechannel = [1, 4]; % select one inhibitory and one excitatory neuron
 spike = ft_spike_select(cfg, spike2);
 
 
@@ -126,7 +126,7 @@ figure, ft_spike_plot_raster(cfg,spikeTrials, sdf)
 
  
 cfg              = [];
-cfg.spikechannel = [1, 2, 51, 52]; % select two inhibitory and two excitatory neurons
+cfg.spikechannel = [1, 2, 4, 5]; % select two inhibitory and two excitatory neurons
 spike = ft_spike_select(cfg, spike2);
  
 cfg          = []; 

@@ -59,6 +59,8 @@ function [hdr] = ft_read_header(filename, varargin)
 %   Plextor (*.nex, *.plx, *.ddt)
 %   CED - Cambridge Electronic Design (*.smr)
 %   MPI - Max Planck Institute (*.dap)
+%   neurosim_spikes
+%   neurosim_signals, Neurosim_ds
 %
 % The following NIRS dataformats are supported
 %   BUCN (*.txt)
@@ -1377,6 +1379,16 @@ switch headerformat
     % remember the original header details
     hdr.orig = orig;
     
+  case 'neurosim_evolution'
+    hdr = read_neurosim_evolution(filename);
+    
+  case {'neurosim_ds' 'neurosim_signals'}
+    hdr = read_neurosim_signals(filename);
+    
+  case 'neurosim_spikes'
+    headerOnly=true;
+    hdr= read_neurosim_spikes(filename,headerOnly);
+    
   case 'nimh_cortex'
     cortex = read_nimh_cortex(filename, 'epp', 'no', 'eog', 'no');
     % look at the first trial to determine whether it contains data in the EPP and EOG channels
@@ -1619,12 +1631,6 @@ switch headerformat
     orig = read_bucn_nirshdr(filename);
     hdr  = rmfield(orig, 'time');
     hdr.orig = orig;
-    
-  case 'neurosim_evolution'
-    hdr = read_neurosim_evolution(filename);
-    
-  case {'neurosim_ds' 'neurosim_signals'}
-    hdr = read_neurosim_signals(filename);
     
   otherwise
     if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)

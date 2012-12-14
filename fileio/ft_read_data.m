@@ -1034,6 +1034,23 @@ switch dataformat
      [hdr, dat] = read_neurosim_evolution(filename);
      dat = dat(chanindx,begsample:endsample);
      
+  case 'neurosim_spikes'
+    warning('reading neurosim spikes as continuous data, for better memory efficiency use spike structure provided by ft_read_spike instead');
+    spike = ft_read_spike(filename);
+    cfg          = [];
+    cfg.trialdef.triallength = inf;
+    cfg.trialfun = 'ft_trialfun_general';
+    cfg.trlunit='samples'; %ft_trialfun_general gives us samples, not timestamps
+    
+    cfg.datafile=filename;
+    cfg.hdr = ft_read_header(cfg.datafile);
+    warning('off','FT:no_event')
+    cfg = ft_definetrial(cfg);
+    warning('on','FT:no_event')
+    spiketrl = ft_spike_maketrials(cfg,spike);
+    
+    dat=ft_checkdata(spiketrl,'datatype', 'raw', 'fsample', spiketrl.hdr.Fs);
+    dat=dat.trial{1};
   otherwise
     if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
       dat = read_biosig_data(filename, hdr, begsample, endsample, chanindx);
