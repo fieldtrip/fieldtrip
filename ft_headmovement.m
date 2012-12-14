@@ -11,6 +11,9 @@ function [grad] = ft_headmovement(cfg)
 %   cfg.trl          = Nx3 matrix with the trial definition, see FT_DEFINETRIAL
 %   cfg.numclusters  = number of segments with constant headposition in which to split the data (default = 12)
 %
+% This method and related methods are described by Stolk et al., Online and 
+% offline tools for head movement compensation in MEG. NeuroImage, 2012.
+%
 % See also FT_REGRESSCONFOUND FT_REALTIME_HEADLOCALIZER
 
 % Copyright (C) 2008-2010, Jan-Mathijs Schoffelen

@@ -31,6 +31,9 @@ function [data] = ft_regressconfound(cfg, datain)
 %                     (e.g. {'1 2'; '3 4'; '5'} where iteratively the added value of
 %                     regressors 1 and 2, and then 3 and 4, etc., are tested)
 %
+% This method is described by Stolk et al., Online and offline tools for head 
+% movement compensation in MEG. NeuroImage, 2012.
+%
 % To facilitate data-handling and distributed computing with the peer-to-peer
 % module, this function has the following options:
 %   cfg.inputfile   =  ...
@@ -42,7 +45,7 @@ function [data] = ft_regressconfound(cfg, datain)
 %
 % See also FT_REJECTCOMPONENT, FT_REJECTARTIFACT
 
-% Copyrights (C) 2011, Arjen Stolk, Robert Oostenveld, Lennart Verhagen
+% Copyright (C) 2011, Arjen Stolk, Robert Oostenveld, Lennart Verhagen
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.

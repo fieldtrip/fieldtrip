@@ -59,7 +59,9 @@ function [data] = ft_megrealign(cfg, data)
 %
 % This implements the method described by T.R. Knosche, Transformation
 % of whole-head MEG recordings between different sensor positions.
-% Biomed Tech (Berl). 2002 Mar;47(3):59-62.
+% Biomed Tech (Berl). 2002 Mar;47(3):59-62. For more information and
+% related methods, see Stolk et al., Online and offline tools for head 
+% movement compensation in MEG. NeuroImage, 2012.
 %
 % To facilitate data-handling and distributed computing with the peer-to-peer
 % module, this function has the following options:

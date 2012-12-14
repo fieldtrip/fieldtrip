@@ -14,15 +14,17 @@ function ft_realtime_headlocalizer(cfg)
 %
 % The source of the data is configured as
 %   cfg.dataset       = string, default is 'buffer://odin:1972'
-% or alternatively to obtain more low-level control as
 %   cfg.datafile      = string
 %   cfg.headerfile    = string
 %   cfg.eventfile     = string
 %   cfg.dataformat    = string, default is determined automatic
 %   cfg.headerformat  = string, default is determined automatic
 %   cfg.eventformat   = string, default is determined automatic
+%
+% This method is described by Stolk et al., Online and offline tools for head 
+% movement compensation in MEG. NeuroImage, 2012.
 
-% Copyright (C) 2008-2012, Robert Oostenveld, Arjen Stolk, Ana Todorovic, Stefan Klanke
+% Copyright (C) 2008-2012,  Arjen Stolk & Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
