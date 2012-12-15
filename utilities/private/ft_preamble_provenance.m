@@ -34,9 +34,19 @@
 % function workspace, which is why they should have cryptical names to prevent any
 % variable name clashes.
 
+% the name of the variables are passed in the preamble field
+global ft_default
+
 if isfield(cfg, 'trackcallinfo') && ~istrue(cfg.trackcallinfo)
   % do not track the call information
   return
+end
+
+% compute the MD5 hash of each of the input arguments
+if isequal(ft_default.preamble, {'varargin'})
+  cfg.callinfo.inputhash = cellfun(@CalcMD5, cellfun(@mxSerialize, varargin, 'UniformOutput', false), 'UniformOutput', false);
+else
+  cfg.callinfo.inputhash = cellfun(@CalcMD5, cellfun(@mxSerialize, cellfun(@eval, ft_default.preamble, 'UniformOutput', false), 'UniformOutput', false), 'UniformOutput', false);
 end
 
 stack = dbstack('-completenames');
@@ -52,11 +62,13 @@ catch
   cfg.callinfo.fieldtrip = 'unknown';
 end
 cfg.callinfo.matlab    = version();
+cfg.callinfo.computer  = lower(computer); % for example maci64, glnx86, ...
 
 % add information about the execution environment to the configuration
-cfg.callinfo.user     = getusername();
 cfg.callinfo.hostname = gethostname();
+cfg.callinfo.user     = getusername();
 cfg.callinfo.pwd      = pwd;
+cfg.callinfo.calltime = clock();
 
 % add information about the function filename and revision to the configuration
 cfg.version.name = stack.file;
@@ -70,6 +82,5 @@ else
 end
 
 ftohDiW7th_FuncTimer = tic();
-ftohDiW7th_FuncClock = clock();
 ftohDiW7th_FuncMem   = memtic();
 

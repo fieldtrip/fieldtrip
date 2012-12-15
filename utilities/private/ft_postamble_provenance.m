@@ -29,6 +29,9 @@
 %
 % $Id$
 
+% the name of the variables are passed in the preamble field
+global ft_default
+
 if isfield(cfg, 'trackcallinfo') && ~istrue(cfg.trackcallinfo)
   % do not track the call information
   return
@@ -39,11 +42,11 @@ stack = dbstack('-completenames');
 % stack(2) is the calling ft_postamble function
 % stack(3) is the main FieldTrip function that we are interested in
 stack = stack(3);
+
 % the proctime, procmem and calltime rely on three cryptical variables that were
 % created and added to the function workspace by the ft_preamble_callinfo script.
 cfg.callinfo.proctime = toc(ftohDiW7th_FuncTimer);
 cfg.callinfo.procmem  = memtoc(ftohDiW7th_FuncMem);
-cfg.callinfo.calltime = ftohDiW7th_FuncClock;
 
 if istrue(ft_getopt(cfg, 'showcallinfo', 'yes'))
   % print some feedback on screen, this is meant to educate the user about
@@ -66,8 +69,14 @@ if istrue(ft_getopt(cfg, 'showcallinfo', 'yes'))
   clear stack
 end
 
+% compute the MD5 hash of each of the output arguments
+if isequal(ft_default.postamble, {'varargout'})
+  cfg.callinfo.outputhash = cellfun(@CalcMD5, cellfun(@mxSerialize, varargout, 'UniformOutput', false), 'UniformOutput', false);
+else
+  cfg.callinfo.outputhash = cellfun(@CalcMD5, cellfun(@mxSerialize, cellfun(@eval, ft_default.postamble, 'UniformOutput', false), 'UniformOutput', false), 'UniformOutput', false);
+end
+
 clear ftohDiW7th_FuncTimer
 clear ftohDiW7th_FuncMem
-clear ftohDiW7th_FuncClock
 clear stack
 

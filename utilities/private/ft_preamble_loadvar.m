@@ -28,11 +28,11 @@
 %
 % $Id$
 
+% the name of the variables are passed in the preamble field
+global ft_default
+
 % use an anonymous function
 assign = @(var, val) assignin('caller', var, val);
-
-% the name of the variable is passed in the preamble field
-global ft_default
 
 if isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
   
