@@ -136,10 +136,10 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble help
-ft_preamble provenance
 ft_preamble trackconfig
 ft_preamble debug
-ft_preamble loadvar varargin
+ft_preamble loadvar    varargin
+ft_preamble provenance varargin
 
 for i=1:length(varargin)
   varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'timelock', 'freq'});
