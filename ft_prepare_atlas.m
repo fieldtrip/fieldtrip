@@ -39,16 +39,17 @@ function [atlas, cfg] = ft_prepare_atlas(cfg)
 
 revision = '$Id$';
 
-% do the general setup of the function
-ft_defaults
-ft_preamble help
-ft_preamble provenance
-
 if ischar(cfg)
   % prior to 7 December 2011, this function was called with the filename as input
   % for consistency with other fieldtrip functions, it is now in a cfg field
   cfg.atlas = cfg;
 end
+
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble debug
+ft_preamble provenance
 
 useafni = 0;
 usewfu  = 0;
@@ -630,5 +631,6 @@ elseif usewfu
 end
 
 % do the general cleanup and bookkeeping at the end of the function
+ft_postamble debug
 ft_postamble provenance
 ft_postamble history atlas
