@@ -122,7 +122,7 @@ else
   
   % make sure we don't update more than once every 100ms, significant
   % performance hit otherwise in certain conditions
-  if toc(tprev) < 0.1
+  if ~isempty(tprev) && toc(tprev) < 0.1
     return;
   end
   tprev = tic();
