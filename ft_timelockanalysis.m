@@ -1,9 +1,10 @@
 function [timelock] = ft_timelockanalysis(cfg, data)
 
-% FT_TIMELOCKANALYSIS performs timelocked analysis such as averaging
-% and covariance computation
+% FT_TIMELOCKANALYSIS computes the timelocked average ERP/ERF and 
+% computes the covariance matrix
 %
-% [timelock] = ft_timelockanalysis(cfg, data)
+% Use as
+%   [timelock] = ft_timelockanalysis(cfg, data)
 %
 % The data should be organised in a structure as obtained from the
 % FT_PREPROCESSING function. The configuration should be according to
@@ -120,10 +121,10 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble help
-ft_preamble provenance
 ft_preamble trackconfig
 ft_preamble debug
-ft_preamble loadvar data
+ft_preamble loadvar    data
+ft_preamble provenance data
 
 % return immediately after distributed execution
 if ~isempty(ft_getopt(cfg, 'distribute'))
@@ -395,10 +396,10 @@ if isfield(data, 'trialinfo') && strcmp(cfg.keeptrials, 'yes')
 end
 
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous data
-ft_postamble history timelock
-ft_postamble savevar timelock
+ft_postamble previous   data
+ft_postamble provenance timelock
+ft_postamble history    timelock
+ft_postamble savevar    timelock
+ft_postamble debug
 
