@@ -1,4 +1,9 @@
 function x = sb_solve(sysmat,vecb);
+
+% SB_SOLVE
+%
+% $Id$
+
 %scalen
 disp('Scaling stiffnes matrix...')
 dkond = 1./(sqrt(diag(sysmat)));

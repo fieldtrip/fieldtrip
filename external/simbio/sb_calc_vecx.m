@@ -1,4 +1,9 @@
 function vecx = sb_calc_vecx(stiff,vecb,ref);
+
+% SB_CALC_VECX
+%
+% $Id$
+
 vecdi = zeros(size(stiff,1),1);
 vecdi(ref) = 1;
 vecva = zeros(size(stiff,1),1);

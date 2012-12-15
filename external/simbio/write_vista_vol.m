@@ -1,5 +1,6 @@
 function write_vista_vol(dim,seg,filename)
-% A substitute matlab version for the file write_vista_vol.cpp
+
+% WRITE_VISTA_VOL is substitute matlab version for the mex file write_vista_vol.cpp
 % 
 % This matlab version might not contain all the features of the cpp file
 % and is provided only in case the source .cpp file does not compile.
@@ -8,6 +9,8 @@ function write_vista_vol(dim,seg,filename)
 % dim = size(seg)   dimensions of the volume
 % seg               volume, a set of images (like MR or CT)
 % filename          the name to be saved (with extension .v)
+%
+% $Id$
 
 % number of points
 N = prod(dim);
@@ -17,10 +20,8 @@ nrows   = size(seg,2);
 ncolumns= size(seg,1);
 VFileDelimiter = '\f\n';
 
-
 % write header
 try
-  
   fid = fopen(filename,'w');
   fprintf(fid,['V-data 2 {\n']);
   fprintf(fid,['	image: image {\n']);

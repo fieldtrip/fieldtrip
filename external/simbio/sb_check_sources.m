@@ -1,5 +1,6 @@
-function [gridout cfg] = sb_check_sources(cfg, vol, gridin)
-% Copyright (C) 2012, Felix Lucka, Johannes Vorwerk
+function [gridout, cfg] = sb_check_sources(cfg, vol, gridin)
+
+% SB_CHECK_SOURCES
 %
 % Input: cfg, FE mesh, grid positions
 % Output: valid grid positions
@@ -9,8 +10,10 @@ function [gridout cfg] = sb_check_sources(cfg, vol, gridin)
 %
 % cfg.corr = 'delete' to delete invalid source positions, otherwise only a
 % warning will be given
-
-
+%
+% Copyright (C) 2012, Felix Lucka, Johannes Vorwerk
+%
+% $Id$
 
 cfg.sourcelabel = ft_getopt(cfg,'sourcelabel');
 cfg.corr = ft_getopt(cfg, 'corr');

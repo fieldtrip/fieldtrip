@@ -1,10 +1,16 @@
 function loads = sb_calc_ven_loads(pos,dir,ven_nd,node);
+
+% SB_CALC_VEN_LOADS
+%
+% $Id$
+
 %aref setzen
 aref = 20;
 %lambda setzen
 lambda = 10e-6;
 %r setzen
 r = 1;
+
 loads = zeros(size(pos,1),size(ven_nd,2));
 for i=1:size(pos,1);
     x = bsxfun(@minus,node(ven_nd(i,ven_nd(i,:)~=0),:),pos(i,:))./aref;

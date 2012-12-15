@@ -1,6 +1,6 @@
 function sb_write_materials(filename,values,labels,resolution)
 %
-% sb_write_materials writes a .mat file (read by the simbio-vgrid mesher)
+% SB_WRITE_MATERIALS writes a .mat file (read by the simbio-vgrid mesher)
 % in which each tissue compartment is assigned to an integer value 
 %
 % Use as
@@ -10,6 +10,8 @@ function sb_write_materials(filename,values,labels,resolution)
 %   values are the integer values assigned to the different compartments
 %   labels is a cell with the labels descibing the comartments (default: {'scalp' 'skull' 'brain'})
 %   weights are the weights assigned to the different compartments (default: [1.0 1.0 1.0])
+%
+% $Id$
 
 % Copyright (C) 2011, Cristiano Micheli
 

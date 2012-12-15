@@ -1,10 +1,12 @@
-function [nodes,elements,labels] = read_vista_mesh(filename)
+function [varargout] = read_vista_mesh(varargin)
 
-% Reads a vista format mesh using correspondently named compiled mex file.
+% READ_VISTA_MESH is implemented as mex file
 %
 % Use as
 %   [nodes,elements,labels] = read_vista_mesh(filename);
 % where
 %   filename = the name of the Vista mesh (with extension .v)
+%
+% $Id$
 
 error('The mex file %s is missing', [mfilename '.' mexext]);

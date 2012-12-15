@@ -1,4 +1,9 @@
 function [stiff,rhs] = sb_set_bndcon(stiff,rhs,dirinode,dirival)
+
+% SB_SET_BNDCON
+%
+% $Id$
+
 dia = diag(stiff);
 stiff = stiff - diag(dia);
 [indexi indexj s] = find(stiff);

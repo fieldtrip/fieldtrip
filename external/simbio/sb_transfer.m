@@ -1,18 +1,29 @@
-function [transfer] = sb_transfer(vol,sens);
-%INPUT:
-%vol.wf.nd,vol.wf.el: nodes and elements of head grid (nodes in mm)
-%vol.wf.field: vector assigning a conductivity to teach element (in S/mm)
-%elc: vector containing the electrode positions (in mm)
-%OUTPUT: vol.transfer: transfer matrix
+function [transfer] = sb_transfer(vol,sens)
+
+% SB_TRANSFER
+% 
+% INPUT:
+% vol.wf.nd,vol.wf.el: nodes and elements of head grid (nodes in mm)
+% vol.wf.field: vector assigning a conductivity to teach element (in S/mm)
+% elc: vector containing the electrode positions (in mm)
+% 
+% OUTPUT:
+% vol.transfer: transfer matrix
+%
+% $Id$
+
 %--------------------------------------------------------------------------
 %TODO: tissuecond: vector with the conductivities of the respective labels,
 %right now not used
+%--------------------------------------------------------------------------
 %TODO: automated setting of conductivities?
 %disp('Setting conductivities...')
 %vol.wf.field = sb_set_cond(vol.wf.labels,tissuecond); %gucken, wo tissuecond herkommt...
 %--------------------------------------------------------------------------
 %TODO: this probably needs to be expanded so that the node is a surface
 %node if no ECoG-flag is set - solution: find a surface first...
+%--------------------------------------------------------------------------
+
 disp('Find electrode positions...')
 vol.elecnodes = sb_find_elec(vol,sens);
 %calculate transfermatrix

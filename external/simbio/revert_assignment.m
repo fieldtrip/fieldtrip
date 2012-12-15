@@ -1,4 +1,8 @@
-function [node_ele_assignment]   = revert_assignment(elements,sparse_flag)
+function [node_ele_assignment] = revert_assignment(elements,sparse_flag)
+
+% REVERT_ASSIGNMENT
+%
+% $Id$
     
 N_nodes = max(max(elements));
 N_elements = max(size(elements));

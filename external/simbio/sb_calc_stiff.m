@@ -1,4 +1,9 @@
-function [stiff diinsy cols sysmat] = sb_calc_stiff(vol);
+function [stiff diinsy cols sysmat] = sb_calc_stiff(vol)
+
+% SB_CALC_STIFF
+%
+% $Id$
+
 if(~(size(vol.pos,2)==3))
     if(size(vol.pos,1)==3)
         node = vol.pos';
@@ -45,7 +50,7 @@ elseif min(min(elem(1:mele,:))) < 0
 end
     
 if isfield(vol,'cond') && isfield(vol,'tissue') && isfield(vol,'tissuelabel')
-    if length(vol.tissuelabel) != length(vol.cond)
+    if length(vol.tissuelabel) == length(vol.cond)
          if length(vol.tissue) == size(elem,2)
              cond = zeros(size(elem,2),1);
              numlabels = length(vol.tissuelabel);
@@ -53,7 +58,7 @@ if isfield(vol,'cond') && isfield(vol,'tissue') && isfield(vol,'tissuelabel')
                  cond(vol.tissue == i) = vol.cond(i);
              end
         else
-            error('Dimensions of vol.tet/vol.hex and vol.tissue do not fit!');
+            error('Dimensions of vol.tet or vol.hex and vol.tissue do not fit!');
         end
     else
         error('Dimensions of vol.cond and entries of vol.tissuelabel do not fit!');

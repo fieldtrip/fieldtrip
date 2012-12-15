@@ -1,4 +1,9 @@
 function rhs = sb_rhs_venant(pos,dir,vol);
+
+% SB_RHS_VENANT
+%
+% $Id$
+
 %find node closest to source position
 next_nd = sb_get_next_nd(pos,vol.pos);
 %find nodes neighbouring closest node
