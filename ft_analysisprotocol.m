@@ -133,6 +133,7 @@ if strcmp(cfg.showinfo, 'all')
     'revision'
     'matlabversion'
     'computername'
+    'architecture'
     'username'
     'calltime'
     'timeused'
@@ -420,12 +421,8 @@ if isempty(element.name)
   return
 end
 
-%  cfg.showinfo   = string or cell array of strings, information to display
-%                   in the gui boxes, can be any combination of
-%                   'functionname', 'revision', 'matlabversion',
-%                   'computername', 'username', 'calltime', 'timeused',
-%                   'memused', 'workingdir', 'scriptdir' (default =
-%                   'functionname', only display function name)
+% cfg.showinfo is a string or a cell-array of strings that instructs which information
+% to display in the gui boxes
 
 % create the text information to display
 label = {};
@@ -458,6 +455,13 @@ for k = 1:numel(cfg.showinfo)
         label{end+1} = ['Computer name: ' element.cfg.callinfo.hostname];
       else
         label{end+1} = '<hostname unknown>';
+      end
+      
+    case 'architecture'
+      if isfield(element.cfg, 'callinfo') && isfield(element.cfg.callinfo, 'hostname')
+        label{end+1} = ['Architecture: ' element.cfg.callinfo.computer];
+      else
+        label{end+1} = '<architecture unknown>';
       end
       
     case 'username'
@@ -507,7 +511,6 @@ end
 % dublicate backslashes to escape tex interpreter (in case of windows filenames)
 label = strrep(label, '\', '\\');
 label = strrep(label, '{\\bf', '{\bf'); % undo for bold formatting
-
 
 % escape underscores
 label = strrep(label, '_', '\_');
