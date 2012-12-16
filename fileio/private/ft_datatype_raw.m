@@ -75,7 +75,33 @@ function data = ft_datatype_raw(data, varargin)
 version       = ft_getopt(varargin, 'version', 'latest');
 hassampleinfo = ft_getopt(varargin, 'hassampleinfo', true);
 
-% convert from yes/no into true/false
+if isequal(hassampleinfo, 'ifmakessense')
+  hassampleinfo = 'yes';
+  if isfield(data, 'sampleinfo') && size(data.sampleinfo,1)~=numel(data.trial)
+    % it does not make sense, so don't keep it
+    hassampleinfo = 'no';
+  end
+  if isfield(data, 'trialinfo') && size(data.trialinfo,1)~=numel(data.trial)
+    % it does not make sense, so don't keep it
+    hassampleinfo = 'no';
+  end
+  if isfield(data, 'sampleinfo')
+    numsmp = data.sampleinfo(:,2)-data.sampleinfo(:,1)+1;
+    for i=1:length(data.trial)
+      if size(data.trial{i},2)~=numsmp(i);
+        % it does not make sense, so don't keep it
+        hassampleinfo = 'no';
+        break;
+      end
+    end
+  end
+  if strcmp(hassampleinfo, 'no')
+    % the actual removal will be done further down
+    warning('removing inconsistent sampleinfo');
+  end
+end
+
+% convert it into true/false
 hassampleinfo = istrue(hassampleinfo);
 
 if strcmp(version, 'latest')
@@ -111,15 +137,22 @@ switch version
       data = rmfield(data, 'offset');
     end
     
-    if hassampleinfo && (~isfield(data, 'sampleinfo') || ~isfield(data, 'trialinfo'))
-      % reconstruct it on the fly
-      data = fixsampleinfo(data);
-    end
-    
     % the trialdef field should be renamed into sampleinfo
     if isfield(data, 'trialdef')
       data.sampleinfo = data.trialdef;
       data = rmfield(data, 'trialdef');
+    end
+    
+    if hassampleinfo && (~isfield(data, 'sampleinfo') || ~isfield(data, 'trialinfo'))
+      % try to reconstruct sampleinfo and trialinfo
+      data = fixsampleinfo(data);
+    end
+    
+    if ~hassampleinfo && isfield(data, 'sampleinfo')
+      data = rmfield(data, 'sampleinfo');
+    end
+    if ~hassampleinfo && isfield(data, 'trialinfo')
+      data = rmfield(data, 'trialinfo');
     end
     
   case '2010v2'
@@ -132,15 +165,22 @@ switch version
       data = rmfield(data, 'offset');
     end
     
-    if hassampleinfo && (~isfield(data, 'sampleinfo') || ~isfield(data, 'trialinfo'))
-      % reconstruct it on the fly
-      data = fixsampleinfo(data);
-    end
-    
     % the trialdef field should be renamed into sampleinfo
     if isfield(data, 'trialdef')
       data.sampleinfo = data.trialdef;
       data = rmfield(data, 'trialdef');
+    end
+    
+    if hassampleinfo && (~isfield(data, 'sampleinfo') || ~isfield(data, 'trialinfo'))
+      % try to reconstruct sampleinfo and trialinfo
+      data = fixsampleinfo(data);
+    end
+    
+    if ~hassampleinfo && isfield(data, 'sampleinfo')
+      data = rmfield(data, 'sampleinfo');
+    end
+    if ~hassampleinfo && isfield(data, 'trialinfo')
+      data = rmfield(data, 'trialinfo');
     end
     
   case {'2010v1' '2010'}
