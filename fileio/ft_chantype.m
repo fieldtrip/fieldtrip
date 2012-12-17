@@ -298,17 +298,23 @@ elseif ft_senstype(input, 'bti')
   type(strncmp('M', label, 1)) = {'refmag'};
   type(strncmp('G', label, 1)) = {'refgrad'};
   
-  if isfield(grad, 'tra')
-    selchan = find(strcmp('meg', type));
+  if isgrad && isfield(grad, 'tra')
+    gradtype = repmat({'unknown'}, size(grad.label));
+    gradtype(strncmp('A', grad.label, 1)) = {'meg'};
+    gradtype(strncmp('M', grad.label, 1)) = {'refmag'};
+    gradtype(strncmp('G', grad.label, 1)) = {'refgrad'};
+    % look at the number of coils of the meg channels
+    selchan = find(strcmp('meg', gradtype));
     for k = 1:length(selchan)
       ncoils = length(find(grad.tra(selchan(k),:)==1));
       if ncoils==1,
-        type{selchan(k)} = 'megmag';
+        gradtype{selchan(k)} = 'megmag';
       elseif ncoils==2,
-        type{selchan(k)} = 'meggrad';
+        gradtype{selchan(k)} = 'meggrad';
       end
     end
-    
+    [selchan, selgrad] = match_str(label, grad.label);
+    type(selchan) = gradtype(selgrad);
   end
   
   % This is to allow setting additional channel types based on the names
