@@ -71,11 +71,18 @@ while ~success && (timeout == 0 || toc(stopwatch)<timeout)
   logerr       = fullfile(curPwd, sprintf('%s.e*', jobid)); % note the wildcard in the file name
   
   % the STDERR output log file should be empty, otherwise it indicates an error
-  tmp = dir(logerr);
-  if ~isempty(tmp) && tmp.bytes>0
-    % show the error that was printed on STDERR
-    type(fullfile(curPwd, tmp.name));
-    error('the batch queue system returned an error for job %s, now aborting', jobid);
+  direrr = dir(logerr);
+  if ~isempty(direrr) && direrr.bytes>0
+    if ~exist(outputfile, 'file')
+      % the STDERR file is not empty and the output file was not created
+      % something is wrong, repeat the error that was printed on STDERR
+      type(fullfile(curPwd, direrr.name));
+      error('the batch queue system returned an error for job %s, now aborting', jobid);
+    else
+      % the STDERR file is not empty but the output file looks OK
+      % something might be wrong, show the error that was printed on STDERR
+      type(fullfile(curPwd, direrr.name));
+    end
   end
   
   % the stdout and stderr log files are the last ones created
