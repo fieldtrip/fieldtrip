@@ -69,16 +69,14 @@ label = input;
 if isheader
   label  = hdr.label;
   numchan = length(hdr.label);
-  if isfield(hdr, 'grad')
-      grad         = hdr.grad;
-      % ensure that the grad.label order matches the hdr.label order
-      [i1, i2]     = match_str(label, grad.label);
-      grad.label   = grad.label(i2);                        % reorder the channel labels
-      tmptra       = zeros(numel(label), size(grad.tra,2)); % FIXME why not size(grad.tra)?
-      tmptra(i1,:) = grad.tra(i2,:);                        % reorder the rows from the tra matrix
-      grad.tra     = tmptra;
+  if isfield(hdr, 'grad') 
+    grad         = hdr.grad;
+    [i1, i2]     = match_str(label, grad.label);          % ensure that the grad.label order matches the hdr.label order
+    grad.label   = grad.label(i2);                        % reorder the channel labels
+    if isfield(hdr.grad, 'tra')
+      grad.tra     = grad.tra(i2,:);                      % reorder the rows from the tra matrix
+    end
   end
-  
 elseif isgrad
   label   = grad.label;
   numchan = length(label);
@@ -196,11 +194,13 @@ elseif ft_senstype(input, 'neuromag122')
   
 elseif ft_senstype(input, 'neuromag306') && isgrad
   % there should be 204 planar gradiometers and 102 axial magnetometers
-  tmp = sum(abs(grad.tra),2);
-  sel = (tmp==median(tmp));
-  type(sel) = {'megplanar'};
-  sel = (tmp~=median(tmp));
-  type(sel) = {'megmag'};
+  if isfield(grad, 'tra')
+    tmp = sum(abs(grad.tra),2);
+    sel = (tmp==median(tmp));
+    type(sel) = {'megplanar'};
+    sel = (tmp~=median(tmp));
+    type(sel) = {'megmag'};
+  end
   
 elseif ft_senstype(input, 'ctf') && isheader
   % According to one source of information meg channels are 5, refmag 0,
@@ -217,7 +217,7 @@ elseif ft_senstype(input, 'ctf') && isheader
   %                  sam: 15
   %     virtual_channels: 16
   %             sclk_ref: 17
-
+  
   % start with an empty one
   origSensType = [];
   if isfield(hdr, 'orig')

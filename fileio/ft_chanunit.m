@@ -93,7 +93,7 @@ elseif ft_senstype(input, 'neuromag') && isheader && issubfield(input, 'orig.chs
     end
   end
   
-elseif ft_senstype(input, 'neuromag') && isfield(input, 'chantype') && isgrad
+elseif ft_senstype(input, 'neuromag') && isfield(input, 'chantype') && isgrad 
   % look at the type of the channels
   chanunit(strcmp('eeg',              grad.chantype)) = {'unknown'}; % FIXME
   chanunit(strcmp('emg',              grad.chantype)) = {'unknown'}; % FIXME
@@ -101,20 +101,22 @@ elseif ft_senstype(input, 'neuromag') && isfield(input, 'chantype') && isgrad
   chanunit(strcmp('ecg',              grad.chantype)) = {'unknown'}; % FIXME
   chanunit(strcmp('megmag',           grad.chantype)) = {'T'};
   
-  if all(sum(abs(input.tra),2)==1 | sum(abs(input.tra),2)==2)
-    % it is not scaled with distance
-    chanunit(strcmp('megplanar',        grad.chantype)) = {'T'};
-  else
-    % it is scaled with distance
-    if isfield(input, 'unit')
-      assumption = sprintf('T/%s', input.unit);
-      chanunit(strcmp('megplanar',        input.chantype)) = {assumption};
-      warning('assuming that planar channel units are %s, consistent with the geometrical units', assumption);
+  if isfield(grad, 'tra')
+    if all(sum(abs(input.tra),2)==1 | sum(abs(input.tra),2)==2)
+      % it is not scaled with distance
+      chanunit(strcmp('megplanar',        grad.chantype)) = {'T'};
     else
-      % the channel units remain unknown
+      % it is scaled with distance
+      if isfield(input, 'unit')
+        assumption = sprintf('T/%s', input.unit);
+        chanunit(strcmp('megplanar',        input.chantype)) = {assumption};
+        warning('assuming that planar channel units are %s, consistent with the geometrical units', assumption);
+      else
+        % the channel units remain unknown
+      end
     end
   end
-  
+
 elseif ft_senstype(input, 'neuromag') && isfield(input, 'chantype')
   % determine the units only based on the channel name and type
   chanunit(strcmp('eeg',              input.chantype)) = {'unknown'}; % FIXME
