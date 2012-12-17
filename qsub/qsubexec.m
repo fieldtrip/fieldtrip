@@ -53,14 +53,18 @@ try
   [lastmsg, lastid] = lastwarn;
   
   if isequal(lastid, 'MATLAB:dispatcher:UnresolvedFunctionHandle')
-    % it might be a private function
+    % argin{1} or argin{2} might be a private function
     whichfunction = ft_getopt(tmp.optin, 'whichfunction');
     if ~isempty(whichfunction) && exist(whichfunction, 'file')
       warning('assuming %s as full function name', whichfunction);
       oldpwd = pwd;
       [fundir, funname] = fileparts(whichfunction);
       cd(fundir)
-      tmp.argin{1} = str2func(funname);
+      if isequal(tmp.argin{1}, @cellfun) || isequal(tmp.argin{1}, 'cellfun')
+        tmp.argin{2} = str2func(funname);
+      else
+        tmp.argin{1} = str2func(funname);
+      end
       cd(oldpwd);
     end
   end

@@ -242,6 +242,10 @@ if stack>1
     optarg{end+1} = 'UniformOutput';
     optarg{end+1} = UniformOutput;
   end
+  if ~any(strcmpi(optarg, 'whichfunction'))
+    optarg{end+1} = 'whichfunction';
+    optarg{end+1} = whichfunction;
+  end
   
   % update these settings for the recursive call
   optarg{find(strcmpi(optarg, 'timreq'))+1}        = timreq*stack;
