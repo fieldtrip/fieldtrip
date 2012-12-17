@@ -73,15 +73,12 @@ function data = ft_datatype_raw(data, varargin)
 
 % get the optional input arguments, which should be specified as key-value pairs
 version       = ft_getopt(varargin, 'version', 'latest');
-hassampleinfo = ft_getopt(varargin, 'hassampleinfo', true);
+hassampleinfo = ft_getopt(varargin, 'hassampleinfo', 'ifmakessense'); % can be yes/no/ifmakessense
+hastrialinfo  = ft_getopt(varargin, 'hastrialinfo',  'ifmakessense'); % can be yes/no/ifmakessense
 
 if isequal(hassampleinfo, 'ifmakessense')
   hassampleinfo = 'yes';
   if isfield(data, 'sampleinfo') && size(data.sampleinfo,1)~=numel(data.trial)
-    % it does not make sense, so don't keep it
-    hassampleinfo = 'no';
-  end
-  if isfield(data, 'trialinfo') && size(data.trialinfo,1)~=numel(data.trial)
     % it does not make sense, so don't keep it
     hassampleinfo = 'no';
   end
@@ -101,8 +98,21 @@ if isequal(hassampleinfo, 'ifmakessense')
   end
 end
 
+if isequal(hastrialinfo, 'ifmakessense')
+  hastrialinfo = 'yes';
+  if isfield(data, 'trialinfo') && size(data.trialinfo,1)~=numel(data.trial)
+    % it does not make sense, so don't keep it
+    hastrialinfo = 'no';
+  end
+  if strcmp(hastrialinfo, 'no')
+    % the actual removal will be done further down
+    warning('removing inconsistent sampleinfo');
+  end
+end
+
 % convert it into true/false
 hassampleinfo = istrue(hassampleinfo);
+hastrialinfo  = istrue(hastrialinfo);
 
 if strcmp(version, 'latest')
   version = '2011';
@@ -143,15 +153,16 @@ switch version
       data = rmfield(data, 'trialdef');
     end
     
-    if hassampleinfo && (~isfield(data, 'sampleinfo') || ~isfield(data, 'trialinfo'))
-      % try to reconstruct sampleinfo and trialinfo
+    if (hassampleinfo && ~isfield(data, 'sampleinfo')) || (hastrialinfo && ~isfield(data, 'trialinfo'))
+      % try to reconstruct the sampleinfo and trialinfo
       data = fixsampleinfo(data);
     end
     
     if ~hassampleinfo && isfield(data, 'sampleinfo')
       data = rmfield(data, 'sampleinfo');
     end
-    if ~hassampleinfo && isfield(data, 'trialinfo')
+    
+    if ~hastrialinfo && isfield(data, 'trialinfo')
       data = rmfield(data, 'trialinfo');
     end
     
@@ -171,15 +182,16 @@ switch version
       data = rmfield(data, 'trialdef');
     end
     
-    if hassampleinfo && (~isfield(data, 'sampleinfo') || ~isfield(data, 'trialinfo'))
-      % try to reconstruct sampleinfo and trialinfo
+    if (hassampleinfo && ~isfield(data, 'sampleinfo')) || (hastrialinfo && ~isfield(data, 'trialinfo'))
+      % try to reconstruct the sampleinfo and trialinfo
       data = fixsampleinfo(data);
     end
     
     if ~hassampleinfo && isfield(data, 'sampleinfo')
       data = rmfield(data, 'sampleinfo');
     end
-    if ~hassampleinfo && isfield(data, 'trialinfo')
+    
+    if ~hastrialinfo && isfield(data, 'trialinfo')
       data = rmfield(data, 'trialinfo');
     end
     
