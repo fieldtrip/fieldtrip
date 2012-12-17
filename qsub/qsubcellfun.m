@@ -107,15 +107,16 @@ StopOnError   = ft_getopt(optarg, 'StopOnError',   true    );
 diary         = ft_getopt(optarg, 'diary',         'error' ); % 'always', 'never', 'warning', 'error'
 timreq        = ft_getopt(optarg, 'timreq');
 memreq        = ft_getopt(optarg, 'memreq');
-stack         = ft_getopt(optarg, 'stack',   'auto');   % 'auto' or a number
-compile       = ft_getopt(optarg, 'compile', 'no');     % can be 'auto', 'yes' or 'no'
-backend       = ft_getopt(optarg, 'backend', []);       % this will be dealt with in qsubfeval
+stack         = ft_getopt(optarg, 'stack',   'auto'); % 'auto' or a number
+compile       = ft_getopt(optarg, 'compile', 'no');   % can be 'auto', 'yes' or 'no'
+backend       = ft_getopt(optarg, 'backend', []);     % this will be dealt with in qsubfeval
 queue         = ft_getopt(optarg, 'queue', []);
 submitoptions = ft_getopt(optarg, 'options', []);
 batch         = ft_getopt(optarg, 'batch',   getbatch());               % this is a number that is automatically incremented
 batchid       = ft_getopt(optarg, 'batchid', generatebatchid(batch));   % this is a string like user_host_pid_batch
 display       = ft_getopt(optarg, 'display', 'no');
 jvm           = ft_getopt(optarg, 'jvm', 'yes');
+whichfunction = ft_getopt(optarg, 'whichfunction');   % the complete filename to the function, including path
 
 % skip the optional key-value arguments
 if ~isempty(optbeg)
@@ -131,9 +132,33 @@ else
   fcomp = [];
 end
 
+% determine which function it is
+if isempty(whichfunction)
+  if ischar(fname)
+    whichfunction = which(fname);
+  elseif isa(fname, 'function_handle')
+    whichfunction = which(func2str(fname));
+  end
+end
+
+% if the first attempt failed, it might be due a function that is private to the calling function
+if isempty(whichfunction)
+  s = dbstack('-completenames');
+  s = s(2); % qsubcellfun is the first, the calling function is the second
+  if ischar(fname)
+    whichfunction = which(fullfile(fileparts(s.file), 'private', fname));
+  elseif isa(fname, 'function_handle')
+    whichfunction = which(fullfile(fileparts(s.file), 'private', func2str(fname)));
+  end
+  if ~isempty(whichfunction)
+    warning('assuming %s as full function name', whichfunction);
+  end
+  clear s
+end
+
 % there are potentially errors to catch from the which() function
-if ischar(fname) && isempty(which(fname))
-  error('Not a valid M-file (%s).', fname);
+if isempty(whichfunction)
+  error('Not a valid M-file (%s).', func2str(fname));
 end
 
 % determine the number of input arguments and the number of jobs
@@ -274,7 +299,7 @@ end
 % auto compilation will be attempted if the total batch takes more than 30 minutes
 if strcmp(compile, 'yes') || (strcmp(compile, 'auto') && (numjob*timreq/3600)>0.5)
   try
-    % try to compile into a stand-allone application
+    % try to compile into a stand-allone applicationA
     fcomp = qsubcompile(fname, 'batch', batch, 'batchid', batchid);
   catch
     if strcmp(compile, 'yes')
@@ -307,10 +332,10 @@ for submit=1:numjob
   % submit the job
   if ~isempty(fcomp)
     % use the compiled version
-    [curjobid curputtime] = qsubfeval(fcomp, argin{:}, 'memreq', memreq, 'timreq', timreq, 'diary', diary, 'batch', batch, 'batchid', batchid, 'backend', backend, 'options', submitoptions, 'queue', queue, 'display', display, 'jvm', jvm, 'nargout', numargout);
+    [curjobid curputtime] = qsubfeval(fcomp, argin{:}, 'memreq', memreq, 'timreq', timreq, 'diary', diary, 'batch', batch, 'batchid', batchid, 'backend', backend, 'options', submitoptions, 'queue', queue, 'display', display, 'jvm', jvm, 'nargout', numargout, 'whichfunction', whichfunction);
   else
     % use the non-compiled version
-    [curjobid curputtime] = qsubfeval(fname, argin{:}, 'memreq', memreq, 'timreq', timreq, 'diary', diary, 'batch', batch, 'batchid', batchid, 'backend', backend, 'options', submitoptions, 'queue', queue, 'display', display, 'jvm', jvm, 'nargout', numargout);
+    [curjobid curputtime] = qsubfeval(fname, argin{:}, 'memreq', memreq, 'timreq', timreq, 'diary', diary, 'batch', batch, 'batchid', batchid, 'backend', backend, 'options', submitoptions, 'queue', queue, 'display', display, 'jvm', jvm, 'nargout', numargout, 'whichfunction', whichfunction);
   end
   
   % fprintf('submitted job %d\n', submit);

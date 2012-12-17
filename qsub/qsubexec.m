@@ -38,7 +38,6 @@ function [argout, optout] = qsubexec(jobid)
 % -----------------------------------------------------------------------
 
 try
-  
   [p, jobid] = fileparts(jobid);
   if isempty(p)
     p = pwd();
@@ -47,7 +46,25 @@ try
   inputfile  = fullfile(p, sprintf('%s_input.mat',   jobid));
   outputfile = fullfile(p, sprintf('%s_output.mat_', jobid));
   
+  % the input file contains a function handle
+  % catch the warning if the function handle is not recognized
+  lastwarn('');
   tmp = load(inputfile);
+  [lastmsg, lastid] = lastwarn;
+  
+  if isequal(lastid, 'MATLAB:dispatcher:UnresolvedFunctionHandle')
+    % it might be a private function
+    whichfunction = ft_getopt(tmp.optin, 'whichfunction');
+    if ~isempty(whichfunction) && exist(whichfunction, 'file')
+      warning('assuming %s as full function name', whichfunction);
+      oldpwd = pwd;
+      [fundir, funname] = fileparts(whichfunction);
+      cd(fundir)
+      tmp.argin{1} = str2func(funname);
+      cd(oldpwd);
+    end
+  end
+  
   delete(inputfile);
   
   argin = tmp.argin; % this includes the function name and the input arguments

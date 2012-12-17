@@ -89,19 +89,20 @@ strargin(~cellfun(@ischar, strargin)) = {''};
 
 % locate the begin of the optional key-value arguments
 optbeg = false(size(strargin));
-optbeg = optbeg | strcmp('memreq',      strargin);
-optbeg = optbeg | strcmp('timreq',      strargin);
-optbeg = optbeg | strcmp('diary',       strargin);
-optbeg = optbeg | strcmp('batch',       strargin);
-optbeg = optbeg | strcmp('batchid',     strargin);
-optbeg = optbeg | strcmp('timoverhead', strargin);
-optbeg = optbeg | strcmp('memoverhead', strargin);
-optbeg = optbeg | strcmp('backend',     strargin);
-optbeg = optbeg | strcmp('queue',       strargin);
-optbeg = optbeg | strcmp('options',     strargin);
-optbeg = optbeg | strcmp('jvm',         strargin);
-optbeg = optbeg | strcmp('display',     strargin);
-optbeg = optbeg | strcmp('nargout',     strargin);
+optbeg = optbeg | strcmp('memreq',        strargin);
+optbeg = optbeg | strcmp('timreq',        strargin);
+optbeg = optbeg | strcmp('diary',         strargin);
+optbeg = optbeg | strcmp('batch',         strargin);
+optbeg = optbeg | strcmp('batchid',       strargin);
+optbeg = optbeg | strcmp('timoverhead',   strargin);
+optbeg = optbeg | strcmp('memoverhead',   strargin);
+optbeg = optbeg | strcmp('backend',       strargin);
+optbeg = optbeg | strcmp('queue',         strargin);
+optbeg = optbeg | strcmp('options',       strargin);
+optbeg = optbeg | strcmp('jvm',           strargin);
+optbeg = optbeg | strcmp('display',       strargin);
+optbeg = optbeg | strcmp('nargout',       strargin);
+optbeg = optbeg | strcmp('whichfunction', strargin);
 optbeg = find(optbeg);
 optarg = varargin(optbeg:end);
 
@@ -123,6 +124,7 @@ submitoptions = ft_getopt(optarg, 'options', []);
 display       = ft_getopt(optarg, 'display', 'no');
 jvm           = ft_getopt(optarg, 'jvm', 'yes');
 numargout     = ft_getopt(optarg, 'nargout', []);
+whichfunction = ft_getopt(optarg, 'whichfunction');    % the complete filename to the function, including path
 
 % skip the optional key-value arguments
 if ~isempty(optbeg)
@@ -156,7 +158,7 @@ curPwd = getcustompwd();
 randomseed = rand(1)*double(intmax);
 
 % pass some options that influence the remote execution
-options = {'pwd', curPwd, 'path', getcustompath, 'global', getglobal, 'diary', diary, 'memreq', memreq, 'timreq', timreq, 'randomseed', randomseed, 'nargout', numargout};
+options = {'pwd', curPwd, 'path', getcustompath, 'global', getglobal, 'diary', diary, 'memreq', memreq, 'timreq', timreq, 'randomseed', randomseed, 'nargout', numargout, 'whichfunction', whichfunction};
 
 inputfile    = fullfile(curPwd, sprintf('%s_input.mat', jobid));
 matlabscript = fullfile(curPwd, sprintf('%s.m', jobid));
