@@ -1527,7 +1527,7 @@ switch eventformat
     event = read_bucn_nirsevent(filename);
     
   otherwise
-    warning('unsupported event format (%s)', eventformat);
+    warning('FieldTrip:ft_read_event:unsupported_event_format','unsupported event format (%s)', eventformat);
     event = [];
 end
 

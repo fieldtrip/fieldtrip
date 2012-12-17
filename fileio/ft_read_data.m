@@ -1035,7 +1035,7 @@ switch dataformat
      dat = dat(chanindx,begsample:endsample);
      
   case 'neurosim_spikes'
-    warning('reading neurosim spikes as continuous data, for better memory efficiency use spike structure provided by ft_read_spike instead');
+    warning('Reading Neurosim spikes as continuous data, for better memory efficiency use spike structure provided by ft_read_spike instead.');
     spike = ft_read_spike(filename);
     cfg          = [];
     cfg.trialdef.triallength = inf;
@@ -1044,9 +1044,9 @@ switch dataformat
     
     cfg.datafile=filename;
     cfg.hdr = ft_read_header(cfg.datafile);
-    warning('off','FT:no_event')
+    warning('off','FieldTrip:ft_read_event:unsupported_event_format')
     cfg = ft_definetrial(cfg);
-    warning('on','FT:no_event')
+    warning('on','FieldTrip:ft_read_event:unsupported_event_format')
     spiketrl = ft_spike_maketrials(cfg,spike);
     
     dat=ft_checkdata(spiketrl,'datatype', 'raw', 'fsample', spiketrl.hdr.Fs);
