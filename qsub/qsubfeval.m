@@ -240,7 +240,7 @@ if ~compile
     sprintf('addpath(''%s'');', fileparts(mfilename('fullpath'))),...
     sprintf('qsubexec(''%s'');', fullfile(pwd, jobid)),...
     sprintf('exit')];
-  
+
 end % if ~compile
 
 % set the job requirements according to the users specification
@@ -329,6 +329,11 @@ switch backend
     else
       % create the shell commands to execute matlab
       cmdline = sprintf('%s -r \\"%s\\"', matlabcmd, matlabscript);
+    end
+    
+    if any(curPwd==' ')
+      % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1898
+      error('you cannot execute jobs from within a directory that has a space in its name');
     end
     
     % pass the command to qsub with all requirements
