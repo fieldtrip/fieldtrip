@@ -8,12 +8,17 @@ function vol = ft_headmodel_fns(seg, varargin)
 %
 % Optional input arguments should be specified in key-value pairs and
 % can include
-%   conductivity     = matrix C [9XN tissue types]
+%   tissuecond       = matrix C [9XN tissue types]; where N is the number of 
+%                      tissues and a 3x3 tensor conductivity matrix is stored
+%                      in each column.
+%   tissue           = see fns_contable_write
+%   tissueval        = match tissues of segmentation input
+%   transform        = 4x4 transformation matrix (default eye(4))
+%   units            = string (default 'cm')
+%   sens             = sensor information (for which ft_datatype(sens,'sens')==1)
+%   deepelec         = used in the case of deep voxel solution
+%   tolerance        = scalar (default 1e-8)
 %
-% The conductivity matrix C is stored in a 9xN table, where N is the
-% number of tissues and a 3x3 tensor conductivity matrix is stored
-% in each row in column oriented format.
-% 
 % Standard default values for conductivity matrix C are derived from 
 % Saleheen HI, Ng KT. New finite difference formulations for general
 % inhomogeneous anisotropic bioelectric problems. IEEE Trans Biomed Eng.
