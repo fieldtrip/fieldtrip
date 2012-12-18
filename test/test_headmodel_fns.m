@@ -28,10 +28,8 @@ svol(3).bnd.pnt = svol(3).r*pnt;
 svol(3).bnd.tri = tri;
 
 % load the correspondent volumetric matrix
-fprintf('Loading a volume with a number N = %d of compartments ... \n', numel(svol))
-prefix = fileparts(which('ft_defaults'));
-folder = fullfile(prefix,'/forward/test/spheres.mat');
-tmp = load(folder, 'bkgrnd');
+fprintf('Loading a volume with a number N = %d of compartments ... \n', numel(svol));
+tmp = load('spheres.mat');
 bkgrnd = tmp.bkgrnd;
 
 % generate volume's external surface (mm)
