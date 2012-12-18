@@ -5,8 +5,8 @@ function test_bug1850
 %
 % http://bugzilla.fcdonders.nl/show_bug.cgi?id=1850
 
+load /home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf275.mat;
 
-load test_bug1850; % load some CTF data
 cfg=[];
 cfg.method='template';
 cfg.template='CTF275_neighb.mat';
