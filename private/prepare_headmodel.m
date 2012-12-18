@@ -53,14 +53,20 @@ vol = ft_fetch_vol(cfg, data);
 % get the gradiometer or electrode definition
 sens = ft_fetch_sens(cfg, data);
 
-% ensure that the units are the same, if not, use cm as the default
-if ~strcmp(vol.unit, sens.unit) || ~strcmp(vol.unit, cfg.sourceunits)
-  if isempty(cfg.sourceunits)
+% ensure that the units are the same
+if isempty(cfg.sourceunits)
+  if ~strcmp(vol.unit, sens.unit)
     cfg.sourceunits = 'cm';
+    vol  = ft_convert_units(vol, cfg.sourceunits);
+    sens = ft_convert_units(sens, cfg.sourceunits);
+  else
+    % they are the same, nothing to change
   end
+else
+  % change them to the desired units
   vol  = ft_convert_units(vol, cfg.sourceunits);
   sens = ft_convert_units(sens, cfg.sourceunits);
-end 
+end
 
 if isfield(data, 'topolabel')
   % the data reflects a componentanalysis, where the topographic and the
