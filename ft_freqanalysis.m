@@ -417,11 +417,9 @@ else
   nchan      = size(chanind,1);
   if csdflg
     % determine the corresponding indices of all channel combinations
-    chancmbind = zeros(size(cfg.channelcmb));
-    for k=1:size(cfg.channelcmb,1)
-      chancmbind(k,1) = strmatch(cfg.channelcmb(k,1), data.label, 'exact');
-      chancmbind(k,2) = strmatch(cfg.channelcmb(k,2), data.label, 'exact');
-    end
+    [dummy,chancmbind(:,1)] = match_str(cfg.channelcmb(:,1), data.label);
+    [dummy,chancmbind(:,2)] = match_str(cfg.channelcmb(:,2), data.label);
+
     nchancmb   = size(chancmbind,1);
     chanind    = unique([chanind(:); chancmbind(:)]);
     nchan      = length(chanind);
