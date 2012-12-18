@@ -8,6 +8,9 @@ load('/home/common/matlab/fieldtrip/data/test/bug1828');
 
 acvox = [89 135 125]; % voxel that is identified as ~ AC, i.e. the origin of the coordinate system
 
+% make sure a version of SPM is on the path
+ft_hastoolbox('SPM8',1);
+
 mri0 = ft_convert_coordsys(mri, 'spm', 0);
 mri1 = ft_convert_coordsys(mri, 'spm', 1);
 mri2 = ft_convert_coordsys(mri, 'spm', 2);
