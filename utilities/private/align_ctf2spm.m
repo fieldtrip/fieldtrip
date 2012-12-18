@@ -1,4 +1,4 @@
-function [mri] = align_ctf2spm(mri, opt)
+function [mri] = align_ctf2spm(mri, opt, template)
 
 % ALIGN_CTF2SPM performs an approximate alignment of the anatomical volume
 % from CTF towards SPM coordinates. Only the homogeneous transformation matrix
@@ -7,12 +7,17 @@ function [mri] = align_ctf2spm(mri, opt)
 % Use as
 %   mri = align_ctf2spm(mri)
 %   mri = align_ctf2spm(mri, opt)
+%   mri = align_ctf2spm(mri, opt, template)
 %
 % Where mri is a FieldTrip MRI-structure, and opt an optional argument
 % specifying how the registration is done.
 %   opt = 0: only an approximate coregistration
 %   opt = 1: an approximate coregistration, followed by spm_affreg
 %   opt = 2 (default): an approximate coregistration, followed by spm_normalise
+%
+% When opt = 1 or 2, an optional template filename can be specified, which
+% denotes the filename of the target volume. this option is required when
+% running in deployed mode
 
 if nargin<2
   opt = 2;
@@ -66,9 +71,17 @@ if opt==1
   
   switch spm('ver')
     case 'SPM8'
-      template = fullfile(spm('Dir'),'templates','T1.nii');
+      if isdeployed
+        if nargin<3, error('you need to specify a template filename when in deployed mode and using opt==2'); end
+      else
+        template = fullfile(spm('Dir'),'templates','T1.nii');
+      end
     case 'SPM2'
-      template = fullfile(spm('Dir'),'templates','T1.mnc');
+      if isdeployed
+        if nargin<3, error('you need to specify a template filename when in deployed mode and using opt==2'); end    
+      else
+        template = fullfile(spm('Dir'),'templates','T1.mnc');
+      end
     otherwise
       error('unsupported spm-version');
   end
@@ -107,9 +120,17 @@ elseif opt==2
   
   switch spm('ver')
     case 'SPM8'
-      template = fullfile(spm('Dir'),'templates','T1.nii');
+      if isdeployed
+        if nargin<3, error('you need to specify a template filename when in deployed mode and using opt==2'); end
+      else
+        template = fullfile(spm('Dir'),'templates','T1.nii');
+      end
     case 'SPM2'
-      template = fullfile(spm('Dir'),'templates','T1.mnc');
+      if isdeployed
+        if nargin<3, error('you need to specify a template filename when in deployed mode and using opt==2'); end    
+      else
+        template = fullfile(spm('Dir'),'templates','T1.mnc');
+      end
     otherwise
       error('unsupported spm-version');
   end

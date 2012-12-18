@@ -119,13 +119,22 @@ if ~isfield(interp, 'unit'),     interp.unit     = cfg.units;    end
 if ~isfield(interp, 'coordsys'), interp.coordsys = cfg.coordsys; end
 interp  = ft_convert_units(interp,    'mm');
 orig    = interp.transform;
-interp  = ft_convert_coordsys(interp, 'spm');
+if isdeployed
+  interp = ft_convert_coordsys(interp, 'spm', 2, cfg.template); 
+else
+  interp = ft_convert_coordsys(interp, 'spm');
+end
 initial = interp.transform / orig;
 
-if ~isfield(cfg, 'template'),
-  spmpath = spm('dir');
-  if strcmpi(cfg.spmversion, 'spm8'), cfg.template = [spmpath,filesep,'templates',filesep,'T1.nii']; end
-  if strcmpi(cfg.spmversion, 'spm2'), cfg.template = [spmpath,filesep,'templates',filesep,'T1.mnc']; end
+if isdeployed
+  % in deployed mode, fieldtrip cannot use the template in the release version, because these are not compiled
+  cfg = ft_checkconfig(cfg, 'required', 'template');
+else
+  if ~isfield(cfg, 'template'),
+    spmpath = spm('dir');
+    if strcmpi(cfg.spmversion, 'spm8'), cfg.template = [spmpath,filesep,'templates',filesep,'T1.nii']; end
+    if strcmpi(cfg.spmversion, 'spm2'), cfg.template = [spmpath,filesep,'templates',filesep,'T1.mnc']; end
+  end
 end
 
 if strcmp(cfg.keepinside, 'yes')
