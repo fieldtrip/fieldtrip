@@ -1,32 +1,34 @@
-function test_suite = test_nanstat
-% TEST nansum nanmean nanvar nanstd
-%
-% Test conformance of FieldTrip's nansum, nanmean, nanvar & nanstd
+function test_nanstat
+
+% TEST test_nanstat nansum nanmean nanstd nanvar nanvar_base
+
+% Test the conformance of FieldTrip's nansum, nanmean, nanvar and nanstd
 % functions with MATLABs versions in the statistics toolbox.
 
-% add xunit to path
-ft_hastoolbox('xunit',1);
-initTestSuite;  % for xUnit
+% this includes assertVectorsAlmostEqual etcetera
+ft_hastoolbox('xunit', 1);
 
-function setup
-addpath('../src');
-
-function teardown
-rmpath('../src');
-
-function test_datatypes
-which nanmean  % allow debugging of path issues.
+p = which('ft_defaults');
+cd(fullfile(fileparts(p), 'src'));
 
 % test different data types
 X = {};
 X{end+1} = [true, true, false];
 X{end+1} = 'a string';
+X{end+1} = single(1:25);
+X{end+1} = double(1:25);
+X{end+1} = int8(1:25);
 X{end+1} = uint8(1:25);
-%X{end+1} = int64(1:25);    % MATLAB 2010a can't sum 64bit ints :/
-X{end+1} = complex(rand(10), rand(10));  % test complex numbers
-X{end+1} = cast(X{end}, 'single');  % test single precision complex numbers
+X{end+1} = int16(1:25);
+X{end+1} = uint16(1:25);
+X{end+1} = int32(1:25);
+X{end+1} = uint32(1:25);
+%X{end+1} = int64(1:25);                  % MATLAB 2010a and older can't sum 64bit ints :/
+%X{end+1} = uint64(1:25);                 % MATLAB 2010a and older can't sum 64bit ints :/
+X{end+1} = complex(rand(10), rand(10));   % test double precision complex numbers
+X{end+1} = cast(X{end}, 'single');        % test single precision complex numbers
 X{end+1} = 0;
-X{end+1} = inf;  
+X{end+1} = inf;
 X{end+1} = -inf;
 X{end+1} = [1 2 inf]; % FIXME: what is expected here?
 
@@ -35,24 +37,22 @@ for i = 1:length(X)
   assertEqual(nansum(x), sum(x));
   assertEqual(nanmean(x), mean(x));
   
-  if (length(strmatch(class(x), {'uint8', 'int64'})) > 0)
+  if isinteger(x)
     fprintf('Skipping type %s for nanvar & nanstd\n', class(x));
+    % MATLAB Version 2011b does not support var and std for integer input
+    % types.
+  elseif any(isinf(x))
+    fprintf('Skipping nanvar & nanstd for inf\n');
+    % Special case, since at least MATLAB Version 7.11.0.584 (R2010b) seems
+    % give different results regular variants of the nan statistics.
+    % Results seem rather arbitrary, so we don't emulate. Skipping.
   else
-    if any(isinf(x))
-      % Special case, since at least MATLAB Version 7.11.0.584 (R2010b)
-      % seems give different results regular variants of the nan
-      % statistics. Results seem rather arbitrary, so we don't emulate. 
-      % Skipping.
-    else
-      fprintf('Testing type %s for nanvar & nanstd\n', class(x));
-      assertElementsAlmostEqual(nanvar(x), var(x));
-      assertElementsAlmostEqual(nanstd(x), std(x));  
-    end
+    fprintf('Testing type %s for nanvar & nanstd\n', class(x));
+    assertElementsAlmostEqual(nanvar(x), var(x));
+    assertElementsAlmostEqual(nanstd(x), std(x));
   end
 end
 
-
-function test_variance_precision
 % test for inaccuracy caused by running estimates
 signal = rand(1000, 1);
 
@@ -60,15 +60,11 @@ for offset = logspace(8, 20, 4)
   x = signal + offset;
   sig2_true = var(x);  % note that var also suffers from numerical imprecision.
   sig2 = nanvar(x);
-  fprintf('Adding offset %.2g: var()=%.4f, nanvar()=%.4f.\n', ...
-    offset, sig2_true, sig2);
-  assert(abs(sig2 - sig2_true) < eps, sprintf(...
-    ['Numerical imprecision detected in nanvar: '...
-    '%.4g != %.4g at offset %.2g.'], sig2, sig2_true, offset));
+  fprintf('Adding offset %.2g: var()=%.4f, nanvar()=%.4f.\n', offset, sig2_true, sig2);
+  assert(abs(sig2 - sig2_true) < eps, sprintf('Numerical imprecision detected in nanvar: %.4g != %.4g at offset %.2g.', sig2, sig2_true, offset));
 end
 
-
-function test_nansum
+% test nansum
 X = magic(3);
 X([1 6:9]) = repmat(NaN,1,5);
 % X =
@@ -76,11 +72,9 @@ X([1 6:9]) = repmat(NaN,1,5);
 %      3     5   NaN
 %      4   NaN   NaN
 
-
 assert(nansum([1, 2, NaN, 3]) == 6);  % vector -> scalar
 assertElementsAlmostEqual(nansum(X), [7, 6, 0]);
-assertElementsAlmostEqual(nansum(reshape(X, [1 3 3])), ...
-  reshape([7, 6, 0], [1 1 3]));
+assertElementsAlmostEqual(nansum(reshape(X, [1 3 3])), reshape([7, 6, 0], [1 1 3]));
 assertElementsAlmostEqual(nansum(X, 1), [7, 6, 0]);
 assertElementsAlmostEqual(nansum(X, 2), [1, 8, 4]');
 
@@ -88,8 +82,7 @@ Y = nansum(X, 3); % same size, but nans -> 0.
 assertElementsAlmostEqual(Y(isnan(X)), [0, 0, 0, 0, 0]');
 assertElementsAlmostEqual(Y(~isnan(X)), X(~isnan(X)));
 
-
-function test_nanmean
+% test nanmean
 % Extended example from nanmean documentation:
 X = magic(3);
 X([1 6:9]) = repmat(NaN,1,5);
@@ -110,8 +103,7 @@ for dim = 1:4
   assertElementsAlmostEqual(nanmean(X, dim), mean(X, dim));
 end
 
-
-function test_nanvar
+% test nanvar
 X = magic(3);
 X([1 6:9]) = repmat(NaN,1,5);
 % X =
@@ -133,7 +125,7 @@ for dim = 1:4
   warning('Also test vector for w!');
 end
 
-function test_nanstd
+% test nanstd
 X = magic(3);
 X([1 6:9]) = repmat(NaN,1,5);
 % X =
@@ -148,8 +140,8 @@ assertElementsAlmostEqual(nanstd(X * NaN, 1), sqrt(nanvar(X * NaN, 1)));
 % Test different call signatures & std compatibility
 X = randn(2, 3, 5, 7);
 for dim = 1:4
-  assertElementsAlmostEqual(nanstd(X, 0, dim), std(X, 0, dim));
-  assertElementsAlmostEqual(nanstd(X, 1, dim), std(X, 1, dim));
+  assertElementsAlmostEqual(nanstd(X, 0, dim),  std(X, 0, dim));
+  assertElementsAlmostEqual(nanstd(X, 1, dim),  std(X, 1, dim));
   assertElementsAlmostEqual(nanstd(X, [], dim), std(X, [], dim));
   warning('Also test vector for w!');
 end
