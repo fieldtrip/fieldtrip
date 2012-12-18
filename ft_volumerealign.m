@@ -549,6 +549,9 @@ switch cfg.method
     tmpcfg        = [];
     tmpcfg.output = 'scalp';
     tmpcfg.smooth = 2;
+    if isfield(cfg, 'template')
+     tmpcfg.template = cfg.template;
+    end
     seg           = ft_volumesegment(tmpcfg, mri);
     
     cfg             = [];
