@@ -3,6 +3,8 @@ function test_bug1791
 % TEST test_bug1791
 % TEST ft_removetmsartifact ft_artifact_tmspulse
 
+load /home/common/matlab/fieldtrip/data/test/bug1791/data.mat;
+
 cfg = [];
 cfg.method = 'twopassfilter';
 cfg.latency = 0.008/2;
