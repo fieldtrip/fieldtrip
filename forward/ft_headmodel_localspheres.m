@@ -46,11 +46,8 @@ function vol = ft_headmodel_localspheres(geometry, grad, varargin)
 % get the additional inputs and set the defaults
 % headshape     = ft_getopt(varargin, 'headshape');
 feedback      = ft_getopt(varargin, 'feedback', true);
-radius        = ft_getopt(varargin, 'radius', 8.5);
-maxradius     = ft_getopt(varargin, 'maxradius', 20);
-baseline      = ft_getopt(varargin, 'baseline', 5);
 singlesphere  = ft_getopt(varargin, 'singlesphere', 'no');
-unit          = ft_getopt(varargin,'unit');
+unit          = ft_getopt(varargin, 'unit');
 
 % convert from 'yes'/'no' string into boolean value
 feedback = istrue(feedback);
@@ -60,11 +57,17 @@ vol = [];
 
 if ~isempty(unit)
   % use the user-specified units for the output
-  vol.unit = geometry.unit;
+  vol.unit = unit;
 elseif isfield(geometry, 'unit')
   % copy the geometrical units into he volume conductor
   vol.unit = geometry.unit;
 end
+geometry = ft_convert_units(geometry,vol.unit);
+
+radius    = ft_getopt(varargin, 'radius',    scalingfactor('cm', geometry.unit) * 8.5);
+maxradius = ft_getopt(varargin, 'maxradius', scalingfactor('cm', geometry.unit) * 20);
+baseline  = ft_getopt(varargin, 'baseline',  scalingfactor('cm', geometry.unit) * 5);
+
 
 if isnumeric(geometry) && size(geometry,2)==3
   % assume that it is a Nx3 array with vertices
