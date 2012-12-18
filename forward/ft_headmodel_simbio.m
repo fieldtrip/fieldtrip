@@ -67,16 +67,16 @@ else
 end
 
 if ~isfield(geom,'tissuelabel')
-        numlabels = size(unique(geom.tissue),1);
-    vol.tissuelabel = {};
-            ulabel = unique(labels);
-    for i = 1:numlabels
-        shape.tissuelabel{i} = num2str(ulabel(i));
-    end
+  numlabels = size(unique(geom.tissue),1);
+  vol.tissuelabel = {};
+  ulabel = unique(labels);
+  for i = 1:numlabels
+    vol.tissuelabel{i} = num2str(ulabel(i));
+  end
 else
-    vol.tissuelabel = geom.tissuelabel;
+  vol.tissuelabel = geom.tissuelabel;
 end
-    
+
 vol.stiff = sb_calc_stiff(vol);
 vol.type = 'simbio';
 
