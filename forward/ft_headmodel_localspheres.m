@@ -44,23 +44,10 @@ function vol = ft_headmodel_localspheres(geometry, grad, varargin)
 % $Id$
 
 % get the additional inputs and set the defaults
-% headshape     = ft_getopt(varargin, 'headshape');
 unit          = ft_getopt(varargin, 'unit');
 feedback      = ft_getopt(varargin, 'feedback', true);
 singlesphere  = ft_getopt(varargin, 'singlesphere', 'no');
-
-if isempty(unit)
-  geometry = ft_convert_units(geometry);  % ensure that the geometry has units
-  unit     = geometry.unit;               % also use these units for the volume conductor
-else
-  % convert the input geometry to the desired units
-  geometry = ft_convert_units(geometry, unit);
-end
-
-% ensure that all defaults have the same user-defined units
-radius    = ft_getopt(varargin, 'radius',    scalingfactor('cm', unit) * 8.5);
-maxradius = ft_getopt(varargin, 'maxradius', scalingfactor('cm', unit) * 20);
-baseline  = ft_getopt(varargin, 'baseline',  scalingfactor('cm', unit) * 5);
+% there are some more defaults further down that depend on the units
 
 % convert from 'yes'/'no' string into boolean value
 feedback = istrue(feedback);
@@ -68,8 +55,17 @@ feedback = istrue(feedback);
 % start with an empty volume conductor
 vol = [];
 
-% copy the geometrical units into he volume conductor
-vol.unit = geometry.unit;
+if ~isempty(unit)
+  vol.unit = unit;                       % use the user-specified units for the output
+elseif isfield(geometry, 'unit')
+  geometry = ft_convert_units(geometry); % ensure that it has units, estimate them if needed
+  vol.unit = geometry.unit;              % copy the geometrical units into the volume conductor
+end
+
+% ensure that all defaults have the same user-defined units
+radius    = ft_getopt(varargin, 'radius',    scalingfactor('cm', vol.unit) * 8.5);
+maxradius = ft_getopt(varargin, 'maxradius', scalingfactor('cm', vol.unit) * 20);
+baseline  = ft_getopt(varargin, 'baseline',  scalingfactor('cm', vol.unit) * 5);
 
 if isnumeric(geometry) && size(geometry,2)==3
   % assume that it is a Nx3 array with vertices
@@ -183,6 +179,5 @@ for chan=1:Nchan
 end % for all channels
 
 vol.type = 'localspheres';
-vol.unit = unit;
-
+vol      = ft_convert_units(vol); % ensure the object to have a unit
 

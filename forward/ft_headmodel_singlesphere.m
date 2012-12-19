@@ -50,11 +50,10 @@ end
 vol = [];
 
 if ~isempty(unit)
-  % use the user-specified units for the output
-  vol.unit = geometry.unit;
+  vol.unit = unit;                       % use the user-specified units for the output
 elseif isfield(geometry, 'unit')
-  % copy the geometrical units into he volume conductor
-  vol.unit = geometry.unit;
+  geometry = ft_convert_units(geometry); % ensure that it has units, estimate them if needed
+  vol.unit = geometry.unit;              % copy the geometrical units into the volume conductor
 end
 
 if isnumeric(geometry) && size(geometry,2)==3
