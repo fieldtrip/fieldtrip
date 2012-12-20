@@ -369,7 +369,11 @@ for ub = 1:header.config_data.total_user_blocks
     Npoints = user_space_size./40;
     for k = 1:Npoints
       tmp      = fread(fid, 16, 'uchar');
-      tmplabel = char(tmp(tmp>47 & tmp<128)'); %stick to plain ASCII
+      %tmplabel = char(tmp(tmp>47 & tmp<128)'); %stick to plain ASCII
+      
+      % store up until the first space
+      tmplabel = char(tmp(1:max(1,(find(tmp==0,1,'first')-1)))'); %stick to plain ASCII
+      
       %if strmatch('Coil', tmplabel), 
       %  label{k} = tmplabel(1:5);
       %elseif ismember(tmplabel(1), {'L' 'R' 'C' 'N' 'I'}),
@@ -509,7 +513,8 @@ header.header_data.EventCodes     = 0;%no obvious field to take this from
 if isfield(header, 'channel_data'),
   header.ChannelGain        = double([header.config.channel_data([header.channel_data.chan_no]).gain]');
   header.ChannelUnitsPerBit = double([header.config.channel_data([header.channel_data.chan_no]).units_per_bit]');
-  header.Channel            = {header.config.channel_data([header.channel_data.chan_no]).name}';
+  %header.Channel            = {header.config.channel_data([header.channel_data.chan_no]).name}';
+  header.Channel            = {header.channel_data.chan_label}';
   header.Format             = header.header_data.Format;
 end
 
