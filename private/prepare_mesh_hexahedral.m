@@ -93,6 +93,7 @@ MRfile        = [tname '_in.v'];
 meshfile      = [tname '_out.v'];
 materialsfile = [tname '.mtr'];
 
+ft_hastoolbox('simbio', 1);
 % write the segmented volume in a Vista format .v file
 write_vista_vol(size(seg), seg, MRfile);
 
