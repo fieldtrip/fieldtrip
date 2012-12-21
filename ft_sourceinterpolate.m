@@ -259,16 +259,17 @@ elseif is2Dana && ~is2Dfun
   
   % interpolate the 3D volume onto the anatomy
   anatomical = ft_convert_units(anatomical);
-  functional = ft_checkdata(functional, 'datatype', 'volume', 'inside', 'logical', 'feedback', 'yes', 'hasunits', 'yes');
+  %functional = ft_checkdata(functional, 'datatype', 'volume', 'inside', 'logical', 'feedback', 'yes', 'hasunits', 'yes');
   functional = ft_convert_units(functional, anatomical.unit);
   
   % get voxel indices and use interp_ungridded
   dim       = functional.dim;
-  [X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
+  %[X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
   
-  interpmat  = interp_ungridded([X(:) Y(:) Z(:)], warp_apply(inv(functional.transform), anatomical.pnt), ...,
-    'projmethod', cfg.interpmethod, 'sphereradius', cfg.sphereradius);
-  clear X Y Z;
+  %interpmat  = interp_ungridded([X(:) Y(:) Z(:)], warp_apply(inv(functional.transform), anatomical.pnt), ...,
+  %  'projmethod', cfg.interpmethod, 'sphereradius', cfg.sphereradius);
+  %clear X Y Z;
+  interpmat = interp_ungridded(functional.pos, anatomical.pnt, 'projmethod', cfg.interpmethod, 'sphereradius', cfg.sphereradius, 'inside', functional.inside);
   
   interp           = [];
   interp.pos       = anatomical.pnt;
