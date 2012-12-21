@@ -1,4 +1,4 @@
-% function test_spm_ft_integration
+function test_spm_ft_integration
 
 % TEST test_spm_ft_integration
 % TEST ft_prepare_layout ft_prepare_headmodel ft_compute_leadfield ft_prepare_vol_sens
