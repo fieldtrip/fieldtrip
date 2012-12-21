@@ -5,13 +5,12 @@ function [shape] = ft_read_headshape(filename, varargin)
 % fiducials can for example be used for coregistration.
 %
 % Use as
-%   [shape] = ft_read_headshape(filename)
+%   [shape] = ft_read_headshape(filename, ...)
 %
-% Optional input arguments should be specified as key-value pairs and
-% should include
-%   format		= string, see below
-%   coordinates = string, e.g. 'head' or 'dewar' (CTF)
-%   unit        = string, e.g. 'cm'
+% Additional options should be specified in key-value pairs and can be
+%   'format'		  = string, see below
+%   'coordinates' = string, e.g. 'head' or 'dewar' (CTF)
+%   'unit'        = string, e.g. 'cm'
 %
 % Supported input formats are
 %   'ctf_*'
@@ -256,7 +255,7 @@ switch fileformat
       end
       c = c(1);
     end
-
+    
     shape = [];
     % only keep the points that are in use
     inuse1 = src(1).inuse==1;
@@ -279,15 +278,15 @@ switch fileformat
     if isfield(src(1), 'labelindx')
       shape.orig.labelindx = [src(1).labelindx;src(2).labelindx];
       shape.labelindx      = [src(1).labelindx(inuse1); src(2).labelindx(inuse2)];
-%      ulabelindx = unique(c.table(:,5));
-%       for k = 1:c.numEntries
-%         % the values are really high (apart from the 0), so I guess it's safe to start
-%         % numbering from 1
-%         shape.orig.labelindx(shape.orig.labelindx==ulabelindx(k)) = k;
-%         shape.labelindx(shape.labelindx==ulabelindx(k)) = k;
-%       end
-% FIXME the above screws up the interpretation of the labels, because the
-% color table is not sorted
+      %      ulabelindx = unique(c.table(:,5));
+      %       for k = 1:c.numEntries
+      %         % the values are really high (apart from the 0), so I guess it's safe to start
+      %         % numbering from 1
+      %         shape.orig.labelindx(shape.orig.labelindx==ulabelindx(k)) = k;
+      %         shape.labelindx(shape.labelindx==ulabelindx(k)) = k;
+      %       end
+      % FIXME the above screws up the interpretation of the labels, because the
+      % color table is not sorted
       shape.label = c.struct_names;
       shape.annotation = c.orig_tab; % to be able to recover which one
       shape.ctable = c.table;
@@ -512,7 +511,7 @@ switch fileformat
     [pnt, tri] = read_vtk(filename);
     shape.pnt = pnt;
     shape.tri = tri;
-
+    
   case 'off'
     [pnt, plc] = read_off(filename);
     shape.pnt  = pnt;
@@ -550,11 +549,11 @@ switch fileformat
     numlabels = size(unique(labels),1);
     shape.tissuelabel = {};
     for i = 1:numlabels
-        ulabel = unique(labels);
-        shape.tissue(labels == ulabel(i)) = i;
-        shape.tissuelabel{i} = num2str(ulabel(i));
+      ulabel = unique(labels);
+      shape.tissue(labels == ulabel(i)) = i;
+      shape.tissuelabel{i} = num2str(ulabel(i));
     end
-            
+    
   case 'tet'
     % the toolbox from Gabriel Peyre has a function for this
     ft_hastoolbox('toolbox_graph', 1);
@@ -587,7 +586,7 @@ switch fileformat
     shape.pnt = IMPORT.data(:,2:4);
     % the fiducials don't apply to this format
     shape = rmfield(shape,'fid');
-
+    
   otherwise
     % try reading it from an electrode of volume conduction model file
     success = false;
