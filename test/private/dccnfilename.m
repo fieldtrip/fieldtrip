@@ -1,12 +1,16 @@
 function file = dccnfilename(filename)
 
-% DCCNFILENAME applies correct OS path formatting to any given dccn home
-% path. 
-% The function assumes that on a Windows machine the dccn home
-% network drive is mapped to H:. The function basically converts between
-% H:\ and /home and uses the appropriate file seperator depending on the
-% OS.
+% DCCNFILENAME updates the full path specificaion to a file for all files
+% on DCCN home central storage.
 %
+% Use as
+%  filename = dccnfilename(filename)
+%
+% The function assumes that on a Windows machine the DCCN home network
+% drive is mapped to H:. The function basically converts between H:\ and
+% /home and uses the appropriate file seperator depending on the operating
+% system.
+
 % Copyright (C) 2012, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
@@ -27,12 +31,12 @@ function file = dccnfilename(filename)
 %
 % $Id$
 
-if IsWindows
+if ispc
   file = strrep(filename,'/home','H:');
   file = strrep(file,'/','\');
 else
   file = strrep(filename,'H:','/home');
   file = strrep(file,'\','/');
-end;
+end
 
 end
