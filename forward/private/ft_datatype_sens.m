@@ -125,23 +125,27 @@ switch version
       if ismeg
         % sensor description is a MEG sensor-array, containing oriented coils
         [chanpos, chanori, lab] = channelposition(sens, 'channel', 'all');
-        if isequal(sens.label(:), lab(:))
-          sens.chanpos = chanpos;
-          sens.chanori = chanori;
-        else
-          warning('cannot determine channel positions and orientations');
-          sens.chanpos = nan(length(sens.label), 3);
-          sens.chanori = nan(length(sens.label), 3);
+        % the channel order can be different in the two representations
+        [selsens, selpos] = match_str(sens.label, lab);
+        sens.chanpos = nan(length(sens.label), 3);
+        sens.chanori = nan(length(sens.label), 3);
+        % insert the determined position/orientation on the appropriate rows
+        sens.chanpos(selsens,:) = chanpos(selpos,:);
+        sens.chanori(selsens,:) = chanori(selpos,:);
+        if length(selsens)~=length(sens.label)
+          warning('cannot determine the position and orientation for all channels');
         end
       else
         % sensor description is something else, EEG/ECoG etc
         % note that chanori will be all NaNs
         [chanpos, chanori, lab] = channelposition(sens, 'channel', 'all');
-        if isequal(sens.label(:), lab(:))
-          sens.chanpos = chanpos;
-        else
-          warning('cannot determine channel positions');
-          sens.chanpos = nan(length(sens.label), 3);
+        % the channel order can be different in the two representations
+        [selsens, selpos] = match_str(sens.label, lab);
+        sens.chanpos = nan(length(sens.label), 3);
+        % insert the determined position/orientation on the appropriate rows
+        sens.chanpos(selsens,:) = chanpos(selpos,:);
+        if length(selsens)~=length(sens.label)
+          warning('cannot determine the position and orientation for all channels');
         end
       end
     end
