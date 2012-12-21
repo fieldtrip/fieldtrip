@@ -26,6 +26,7 @@ function [sens] = ft_datatype_sens(sens, varargin)
 %    sens.type     = string with the MEG or EEG acquisition system, see FT_SENSTYPE
 %    sens.chantype = Mx1 cell-array with the type of the channel, see FT_CHANTYPE
 %    sens.chanunit = Mx1 cell-array with the units of the channel signal, e.g. 'T', 'fT' or 'fT/cm'
+%    sens.fid      = structure with fiducial information
 %
 % Revision history:
 %
