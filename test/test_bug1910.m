@@ -10,3 +10,4 @@ gradnew = ft_datatype_sens(grad);
 
 disp(gradnew);
 
+assert(all(~isnan(gradnew.chanpos(:))))
