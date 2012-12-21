@@ -72,16 +72,16 @@ end
 fileformat = ft_getopt(varargin, 'fileformat', ft_filetype(filename));
 
 switch fileformat
-
+  
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % read the content from various files that contain EEG electrode positions
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case 'asa_elc'
     sens = read_asa_elc(filename);
-  
+    
   case 'polhemus_pos'
     sens = read_brainvision_pos(filename);
-
+    
   case 'besa_elp'
     % the code below does not yet work
     error('unknown fileformat for electrodes or gradiometers');
@@ -90,7 +90,7 @@ switch fileformat
     % the ascii file contains: type, label, angle, angle
     tmp = textscan(fid, '%s%s%f%f');
     fclose(fid);
-
+    
     sel = strcmpi(tmp{1}, 'EEG');  % type can be EEG or POS
     sens.label = tmp{2}(sel);
     az = tmp{3}(sel) * pi/180;
@@ -139,7 +139,7 @@ switch fileformat
         sens.label{i} = sprintf('%03d', i);
       end
     end
-
+    
   case 'besa_sfp'
     fid        = fopen(filename);
     tmp        = textscan(fid, ' %[^ \t]%n%n%n');
@@ -147,12 +147,12 @@ switch fileformat
     sens.label   = tmp{1};
     sens.chanpos = [tmp{2:4}];
     sens.elecpos = sens.chanpos;
-   
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % gradiometer information is always stored in the header of the MEG dataset
-  % hence uses the standard fieldtrip/fileio read_header function
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % gradiometer information is always stored in the header of the MEG dataset
+    % hence uses the standard fieldtrip/fileio read_header function
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
   case {'ctf_ds', 'ctf_res4', 'ctf_old', 'neuromag_fif', '4d', '4d_pdf', '4d_m4d', '4d_xyz', 'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw', 'itab_raw' 'itab_mhd', 'netmeg'}
     hdr = ft_read_header(filename, 'headerformat', fileformat);
     sens = hdr.grad;
@@ -161,12 +161,12 @@ switch fileformat
     % the file can contain both, force reading the gradiometer info
     hdr = ft_read_header(filename,'headerformat','neuromag_mne');
     sens = hdr.grad;
-
+    
   case 'neuromag_mne_elec'
     % the file can contain both, force reading the electrode info
     hdr = ft_read_header(filename,'headerformat','neuromag_mne');
-    sens = hdr.elec;    
-
+    sens = hdr.elec;
+    
   case 'neuromag_mne'
     % the file can contain both, try to be smart in determining what to return
     hdr = ft_read_header(filename,'headerformat','neuromag_mne');
@@ -180,39 +180,39 @@ switch fileformat
     else
       error('cannot find electrode or gradiometer information');
     end
-
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % This is for EEG formats where electrode positions can be stored with the data
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % This is for EEG formats where electrode positions can be stored with the data
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
   case {'spmeeg_mat', 'eeglab_set'}
     hdr = ft_read_header(filename);
     
     if isfield(hdr, 'grad')
-         sens = hdr.grad;
+      sens = hdr.grad;
     elseif isfield(hdr, 'elec')
-        sens = hdr.elec;
+      sens = hdr.elec;
     else
-        error('no electrodes or gradiometers found in the file')
+      error('no electrodes or gradiometers found in the file')
     end
-      
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % these are created at the FIL in London with a polhemus tracker
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % these are created at the FIL in London with a polhemus tracker
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
   case 'polhemus_fil'
     [sens.fid, sens.pnt] = read_polhemus_fil(filename, 0);
-
+    
     % the file does not have channel labels in it
     warning('no channel names in polhemus file, using numbers instead');
     for i=1:size(sens.pnt, 1)
       sens.label{i} = sprintf('%03d', i);
     end
-
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % matlab files can contain either electrodes or gradiometers
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % matlab files can contain either electrodes or gradiometers
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
   case 'matlab'
     matfile = filename;   % this solves a problem with the matlab compiler v3
     ws = warning('off', 'MATLAB:load:variableNotFound');
@@ -233,10 +233,31 @@ switch fileformat
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % these are created by a Zebris tracker, at CRC in Liege at least.
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+    
   case 'zebris_sfp'
     [sens.fid, sens.chanpos, sens.fid_label, sens.label] = read_zebris(filename, 0);
-
+    
+  case '4d_el_ascii'
+    fid = fopen(filename, 'rt');
+    c = textscan(fid, '%s%s%f%f%f');
+    l = c{:,1}; % label
+    s = c{:,2}; % status, it can be 'Collected' or empty
+    x = c{:,3};
+    y = c{:,4};
+    z = c{:,5};
+    % shift the columns with one where the status is not specified
+    sel = isnan(z);
+    z(sel) = y(sel);
+    y(sel) = x(sel);
+    x(sel) = str2double(s(sel));
+    s(sel) = {''};
+    fclose(fid);
+    % return all positions, including the ones that do not correspond to
+    % electrodes per see, such as the fiducials and localizer coils
+    sens          = [];
+    sens.label    = l;
+    sens.elecpos  = [x y z];
+    
   otherwise
     error('unknown fileformat for electrodes or gradiometers');
 end

@@ -367,6 +367,10 @@ elseif length(filename)>=4 && ~isempty(strfind(filename,',rf'))
   type = '4d';
   manufacturer = '4D/BTi';
   content = '';
+elseif filetype_check_extension(filename, '.el.ascii') && filetype_check_ascii(filename, 20) % assume that there are at least 20 bytes in the file, the example one has 4277 bytes
+  type = '4d_el_ascii';
+  manufacturer = '4D/BTi';
+  content = 'electrode positions';
 elseif length(f)<=4 && filetype_check_dir(p, 'config')%&& ~isempty(p) && exist(fullfile(p,'config'), 'file') %&& exist(fullfile(p,'hs_file'), 'file')
   % this could be a 4D file with non-standard/processed name
   % it will be detected as a 4D file when there is a config file in the
