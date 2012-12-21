@@ -72,7 +72,6 @@ end
 fileformat = ft_getopt(varargin, 'fileformat', ft_filetype(filename));
 
 switch fileformat
-  
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % read the content from various files that contain EEG electrode positions
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -83,14 +82,12 @@ switch fileformat
     sens = read_brainvision_pos(filename);
     
   case 'besa_elp'
-    % the code below does not yet work
     error('unknown fileformat for electrodes or gradiometers');
-    
+    % the code below does not yet work
     fid = fopen(filename);
     % the ascii file contains: type, label, angle, angle
     tmp = textscan(fid, '%s%s%f%f');
     fclose(fid);
-    
     sel = strcmpi(tmp{1}, 'EEG');  % type can be EEG or POS
     sens.label = tmp{2}(sel);
     az = tmp{3}(sel) * pi/180;
@@ -141,19 +138,16 @@ switch fileformat
     end
     
   case 'besa_sfp'
-    fid        = fopen(filename);
-    tmp        = textscan(fid, ' %[^ \t]%n%n%n');
+    fid = fopen(filename);
+    tmp = textscan(fid, ' %[^ \t]%n%n%n');
     fclose(fid);
     sens.label   = tmp{1};
     sens.chanpos = [tmp{2:4}];
     sens.elecpos = sens.chanpos;
     
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  case {'ctf_ds', 'ctf_res4', 'ctf_old', 'neuromag_fif', '4d', '4d_pdf', '4d_m4d', '4d_xyz', 'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw', 'itab_raw' 'itab_mhd', 'netmeg'}
     % gradiometer information is always stored in the header of the MEG dataset
     % hence uses the standard fieldtrip/fileio read_header function
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
-  case {'ctf_ds', 'ctf_res4', 'ctf_old', 'neuromag_fif', '4d', '4d_pdf', '4d_m4d', '4d_xyz', 'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw', 'itab_raw' 'itab_mhd', 'netmeg'}
     hdr = ft_read_header(filename, 'headerformat', fileformat);
     sens = hdr.grad;
     
@@ -181,13 +175,9 @@ switch fileformat
       error('cannot find electrode or gradiometer information');
     end
     
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % This is for EEG formats where electrode positions can be stored with the data
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
   case {'spmeeg_mat', 'eeglab_set'}
+    % this is for EEG formats where electrode positions can be stored with the data
     hdr = ft_read_header(filename);
-    
     if isfield(hdr, 'grad')
       sens = hdr.grad;
     elseif isfield(hdr, 'elec')
@@ -196,24 +186,17 @@ switch fileformat
       error('no electrodes or gradiometers found in the file')
     end
     
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % these are created at the FIL in London with a polhemus tracker
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
   case 'polhemus_fil'
+    % these are created at the FIL in London with a polhemus tracker
     [sens.fid, sens.pnt] = read_polhemus_fil(filename, 0);
-    
     % the file does not have channel labels in it
     warning('no channel names in polhemus file, using numbers instead');
     for i=1:size(sens.pnt, 1)
       sens.label{i} = sprintf('%03d', i);
     end
     
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % matlab files can contain either electrodes or gradiometers
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
   case 'matlab'
+    % matlab files can contain either electrodes or gradiometers
     matfile = filename;   % this solves a problem with the matlab compiler v3
     ws = warning('off', 'MATLAB:load:variableNotFound');
     tmp = load(matfile, 'elec', 'grad', 'sens', 'elc');
@@ -230,12 +213,12 @@ switch fileformat
       error('no electrodes or gradiometers found in Matlab file');
     end
     
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % these are created by a Zebris tracker, at CRC in Liege at least.
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
   case 'zebris_sfp'
-    [sens.fid, sens.chanpos, sens.fid_label, sens.label] = read_zebris(filename, 0);
+    % these are created by a Zebris tracker, at CRC in Liege at least.
+    [sens.fid.pnt, sens.chanpos, sens.fid.label, sens.label] = read_zebris(filename, 0);
+    % convert to columns
+    sens.label = sens.label(:);
+    sens.fid.label = sens.fid.label(:);
     
   case '4d_el_ascii'
     fid = fopen(filename, 'rt');
@@ -252,26 +235,27 @@ switch fileformat
     x(sel) = str2double(s(sel));
     s(sel) = {''};
     fclose(fid);
-    % return all positions, including the ones that do not correspond to
-    % electrodes per see, such as the fiducials and localizer coils
-    sens          = [];
-    sens.label    = l;
-    sens.elecpos  = [x y z];
+    if false
+      % return all positions, including the ones that do not correspond to
+      % electrodes per see, such as the fiducials and localizer coils
+      sens          = [];
+      sens.label    = l;
+      sens.elecpos  = [x y z];
+    else
+      % split the electrodes and fiducials
+      % this is consistent with zebris_sfp and with the output of ft_read_headshape
+      sens            = [];
+      sens.label      = l(~sel);
+      sens.elecpos    = [x(~sel) y(~sel) z(~sel)];
+      sens.fid.label  = l(sel);
+      sens.fid.pnt    = [x(sel) y(sel) z(sel)];
+    end
     
   otherwise
     error('unknown fileformat for electrodes or gradiometers');
 end
 
 % ensure that the sensor description is up-to-date
-% this will also add the units to the sensor array if missing
+% this will also add chantype and units to the sensor array if missing
 sens = ft_datatype_sens(sens);
 
-if ft_senstype(sens, 'eeg')
-  % only keep positions and labels in case of EEG electrodes
-  % FIXME what is removed here?
-  dum  = sens;
-  sens = [];
-  sens.chanpos = dum.chanpos;
-  sens.elecpos = dum.elecpos;
-  sens.label   = dum.label;
-end
