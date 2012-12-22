@@ -12,8 +12,16 @@ Compilation on 64-bit OS X 10.6.8 was done with
   ./configure --prefix=/opt --enable-matlab --enable-shared=no
   make
 
-Compilation on 64-bit Linux CentOS release 6.2 was done with
+Compilation on 64-bit Linux CentOS release 6.2 (Final) was done with
   export MATLAB=/opt/matlab2011b/
   make distclear
   ./configure --prefix=/opt --enable-matlab --enable-shared=no CFLAGS=-fPIC
   make
+
+Compilation on 32-bit Red Hat Enterprise Linux WS release 3 (Taroon Update 4)
+was done with
+  export MATLAB=/opt/matlab75/
+  make distclear
+  ./configure --prefix=/opt --enable-matlab --enable-shared=no CFLAGS=-fPIC
+  make
+
