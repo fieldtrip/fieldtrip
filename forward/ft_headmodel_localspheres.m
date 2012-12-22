@@ -57,7 +57,7 @@ vol = [];
 
 if ~isempty(unit)
   vol.unit = unit;                       % use the user-specified units for the output
-elseif isfield(geometry, 'unit')
+else
   geometry = ft_convert_units(geometry); % ensure that it has units, estimate them if needed
   vol.unit = geometry.unit;              % copy the geometrical units into the volume conductor
 end

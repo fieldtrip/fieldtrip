@@ -54,12 +54,10 @@ unit         = ft_getopt(varargin, 'unit');
 vol = [];
 
 if ~isempty(unit)
-  % use the user-specified units for the output
-  vol.unit = unit;
-elseif isfield(geometry, 'unit')
-  % copy the geometrical units into he volume conductor
-  % assume that in case of multiple meshes that they have the same units
-  vol.unit = geometry(1).unit;
+  vol.unit = unit;                       % use the user-specified units for the output
+else
+  geometry = ft_convert_units(geometry); % ensure that it has units, estimate them if needed
+  vol.unit = geometry(1).unit;           % copy the geometrical units into the volume conductor
 end
 
 if isnumeric(geometry) && size(geometry,2)==3
@@ -129,4 +127,3 @@ end
 for i=1:numel(geometry)
   fprintf('concentric sphere %d: radius = %.1f, conductivity = %f\n', i, vol.r(i), vol.c(i));
 end
-
