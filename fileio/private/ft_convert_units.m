@@ -48,6 +48,19 @@ function [obj] = ft_convert_units(obj, target)
 %   2) determine the requested scaling factor to obtain the output units
 %   3) try to apply the scaling to the known geometrical elements in the input object
 
+if isstruct(obj) && numel(obj)>1
+  % deal with a structure array
+  for i=1:numel(obj)
+    if nargin>1
+      tmp(i) = ft_convert_units(obj(i), target);
+    else
+      tmp(i) = ft_convert_units(obj(i));
+    end
+  end
+  obj = tmp;
+  return
+end
+
 % determine the unit-of-dimension of the input object
 if isfield(obj, 'unit') && ~isempty(obj.unit)
   % use the units specified in the object
