@@ -1,0 +1,51 @@
+ADDENDUM TO LIBEEP LGPL LICENSE
+Copyright (C) 2009 ANT www.ant-neuro.com
+
+Everyone is permitted to copy and distribute verbatim copies of this 
+license addendum document, but changing it is not allowed.
+
+
+LIBEEP License Addendum.
+
+
+1. License.  The LIBEEP Library (the "Library") is licensed under 
+GNU Lesser General Public License as published by the Free Software 
+Foundation, version 3 of the License. 
+
+
+2. Relinking Exemption.  You may distribute a combined work using a 
+statically linked, unmodified copy of the Library under terms of your 
+choice, without the relinking requirement stipulated under the GNU Lesser 
+Public License, subject to the following conditions:  
+
+a) This static relinking exemption covers only the LIBEEP. Other libraries 
+which the LIBEEP may need are covered by their own respective licenses. 
+
+b) Modification of the configure scripts, makefiles, or installation tools 
+of the LIBEEP to support a specific platform does not constitute creating a 
+modified copy based on the Library. 
+
+c) Programs or binaries statically linked with the Library must be identified 
+as such by including, in the Documentation or by other means (for example in 
+the About Box or Online Help), the following statement:
+
+"This software uses the LIBEEP Library (http://libeep.sourceforge.net)."
+
+
+d) Subclassing from Objects or Widgets supplied by the Library involves no 
+modifications to the source code of the Library itself, and does not 
+constitute creating a modified copy based on the Library.
+
+
+3. This LIBEEP License Addendum does not automatically apply to derivative 
+works. When making derivative works based on the LIBEEP Library, this license 
+addendum ceases to apply, and code will revert to the simple GNU Lesser 
+General Public License. The Relinking Exemption only applies to unmodified 
+versions of the Library.  
+
+
+4. If you do not accept or are unable to meet the conditions under (2), you 
+may continue to distribute the combined work under the original GNU Lesser 
+General Public License.
+
+END OF ADDENDUM
