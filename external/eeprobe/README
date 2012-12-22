@@ -3,3 +3,17 @@ which is available from http://libeep.sourceforge.net/
 
 Please contact ANT in case the importer does not work for your
 combination of Matlab and operating system.
+
+---------------------------------------------------------------------------
+
+Compilation on 64-bit OS X 10.6.8 was done with 
+  export MATLAB=/Applications/MATLAB_R2011b.app/
+  make distclean
+  ./configure --prefix=/opt --enable-matlab --enable-shared=no
+  make
+
+Compilation on 64-bit Linux CentOS release 6.2 was done with
+  export MATLAB=/opt/matlab2011b/
+  make distclear
+  ./configure --prefix=/opt --enable-matlab --enable-shared=no CFLAGS=-fPIC
+  make
