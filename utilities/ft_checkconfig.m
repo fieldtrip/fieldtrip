@@ -557,7 +557,7 @@ if ~isempty(trackconfig)
           key = fieldnames(cfg);
           key = key(:)';
           
-          ignorefields = {'checksize', 'trl', 'trlold', 'event', 'artifact', 'artfctdef', 'previous'}; % these fields should never be removed!
+          ignorefields = {'checksize', 'trl', 'trlold', 'event', 'artifact', 'artfctdef', 'previous', 'debug'}; % these fields should never be removed!
           skipsel      = match_str(key, ignorefields);
           key(skipsel) = [];
           

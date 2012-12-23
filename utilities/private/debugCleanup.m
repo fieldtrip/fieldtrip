@@ -1,7 +1,7 @@
 function debugCleanup
 
 % DEBUGCLEANUP is a cleanup function that is being used by FT_PREAMBLE_DEBUG. It is
-% called when a high-level FieldTrip function exits, either normally or in error.
+% called when a high-level FieldTrip function exits, either after finishing successfully or after detecting an error.
 %
 % See also FT_PREAMBLE_DEBUG, FT_POSTAMBLE_DEBUG
 
@@ -19,10 +19,12 @@ last_warning = lastwarn;
 
 switch Ce9dei2ZOo_debug
   
-  case {'saveonerror' 'save'}
+  case {'saveonerror' 'save' 'saveonsuccess'}
+    fprintf('-----------------------------------------------------------------------\n');
     if strcmp(Ce9dei2ZOo_debug, 'saveonerror')
-      fprintf('-----------------------------------------------------------------------\n');
       fprintf('An error was detected while executing %s\n', Ce9dei2ZOo_funname);
+    elseif strcmp(Ce9dei2ZOo_debug, 'saveonsuccess')
+      fprintf('Execution of %s finished successfully\n', Ce9dei2ZOo_funname);
     end
     filename = fullfile(tempdir, [funname '_' datestr(now, 30) '.mat']);
     variables = cat(2, {'funname', 'last_err', 'last_error', 'last_warning'}, {Ce9dei2ZOo_argin.name});
@@ -33,14 +35,14 @@ switch Ce9dei2ZOo_debug
       % it might fail because the disk is full
       fprintf('error while saving debug information to %s\n', filename);
     end
-    if strcmp(Ce9dei2ZOo_debug, 'saveonerror')
-      fprintf('-----------------------------------------------------------------------\n');
-    end
+    fprintf('-----------------------------------------------------------------------\n');
     
-  case {'displayonerror' 'display'}
+  case {'displayonerror' 'display' 'displayonsuccess'}
+    fprintf('-----------------------------------------------------------------------\n');
     if strcmp(Ce9dei2ZOo_debug, 'displayonerror')
-      fprintf('-----------------------------------------------------------------------\n');
       fprintf('An error was detected while executing %s with\n', Ce9dei2ZOo_funname);
+    elseif strcmp(Ce9dei2ZOo_debug, 'displayonsuccess')
+      fprintf('Execution of %s finished successfully\n', Ce9dei2ZOo_funname);
     end
     fprintf('\n');
     for i=1:length(Ce9dei2ZOo_argin)
@@ -54,9 +56,7 @@ switch Ce9dei2ZOo_debug
           disp(Ce9dei2ZOo_argin(i).value);
       end % switch class
     end
-    if strcmp(Ce9dei2ZOo_debug, 'displayonerror')
-      fprintf('-----------------------------------------------------------------------\n');
-    end
+    fprintf('-----------------------------------------------------------------------\n');
     
   otherwise
     % do nothing

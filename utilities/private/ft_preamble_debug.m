@@ -56,6 +56,11 @@ switch cfg.debug
     % when the Ce9dei2ZOo_handle gets deleted, the debugCleanup function will be executed
     Ce9dei2ZOo_handle = onCleanup(@debugCleanup); 
     
+  case 'saveonsuccess'
+    Ce9dei2ZOo_debug  = 'saveonsuccess';
+    % when the Ce9dei2ZOo_handle gets deleted, the debugCleanup function will be executed
+    Ce9dei2ZOo_handle = onCleanup(@debugCleanup);
+    
   case 'display'
     Ce9dei2ZOo_debug = 'display';
     debugCleanup; % call it once
@@ -63,6 +68,11 @@ switch cfg.debug
     
   case 'displayonerror'
     Ce9dei2ZOo_debug  = 'displayonerror';
+    % when the Ce9dei2ZOo_handle gets deleted, the debugCleanup function will be executed
+    Ce9dei2ZOo_handle = onCleanup(@debugCleanup);
+    
+  case 'displayonsuccess'
+    Ce9dei2ZOo_debug  = 'displayonsuccess';
     % when the Ce9dei2ZOo_handle gets deleted, the debugCleanup function will be executed
     Ce9dei2ZOo_handle = onCleanup(@debugCleanup);
     
