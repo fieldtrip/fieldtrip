@@ -52,6 +52,17 @@ singlesphere  = ft_getopt(varargin, 'singlesphere', 'no');
 % convert from 'yes'/'no' string into boolean value
 feedback = istrue(feedback);
 
+if isnumeric(geometry) && size(geometry,2)==3
+  % assume that it is a Nx3 array with vertices
+  % convert it to a structure, this is needed to determine the units further down
+  geometry = struct('pnt', geometry);
+elseif isstruct(geometry) && isfield(geometry,'bnd')
+  % take the triangulated surfaces from the input structure
+  geometry = geometry.bnd;
+elseif ~(isstruct(geometry) && isfield(geometry,'pnt'))
+  error('the input geometry should be a set of points or a single triangulated surface')
+end
+
 % start with an empty volume conductor
 vol = [];
 
@@ -67,14 +78,8 @@ radius    = ft_getopt(varargin, 'radius',    scalingfactor('cm', vol.unit) * 8.5
 maxradius = ft_getopt(varargin, 'maxradius', scalingfactor('cm', vol.unit) * 20);
 baseline  = ft_getopt(varargin, 'baseline',  scalingfactor('cm', vol.unit) * 5);
 
-if isnumeric(geometry) && size(geometry,2)==3
-  % assume that it is a Nx3 array with vertices
-elseif isstruct(geometry) && isfield(geometry,'pnt') && numel(geometry)==1
-  % get the points from the triangulated surface
-  geometry = geometry.pnt;
-else
-  error('the input geometry should be a set of points or a single triangulated surface')
-end
+% get the points from the triangulated surface
+geometry = geometry.pnt;
 
 Nshape = size(geometry,1);
 Nchan  = numel(grad.label);

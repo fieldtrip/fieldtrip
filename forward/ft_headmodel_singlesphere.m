@@ -46,6 +46,17 @@ if length(conductivity)~=1
   error('the conductivity should be a single number')
 end
 
+if isnumeric(geometry) && size(geometry,2)==3
+  % assume that it is a Nx3 array with vertices
+  % convert it to a structure, this is needed to determine the units further down
+  geometry = struct('pnt', geometry);
+elseif isstruct(geometry) && isfield(geometry,'bnd')
+  % take the triangulated surfaces from the input structure
+  geometry = geometry.bnd;
+elseif ~(isstruct(geometry) && isfield(geometry,'pnt'))
+  error('the input geometry should be a set of points or a single triangulated surface')
+end
+
 % start with an empty volume conductor
 vol = [];
 
@@ -56,14 +67,8 @@ else
   vol.unit = geometry.unit;              % copy the geometrical units into the volume conductor
 end
 
-if isnumeric(geometry) && size(geometry,2)==3
-  % assume that it is a Nx3 array with vertices
-elseif isstruct(geometry) && isfield(geometry,'pnt') && numel(geometry)==1
-  % get the points from the triangulated surface
-  geometry = geometry.pnt;
-else
-  error('the input geometry should be a set of points or a single triangulated surface')
-end
+% get the points from the triangulated surface
+geometry = geometry.pnt;
 
 % fit a single sphere to all headshape points
 [single_o, single_r] = fitsphere(geometry);

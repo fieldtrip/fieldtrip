@@ -50,6 +50,17 @@ conductivity = ft_getopt(varargin, 'conductivity'); % default is determined belo
 fitind       = ft_getopt(varargin, 'fitind', 'all');
 unit         = ft_getopt(varargin, 'unit');
 
+if isnumeric(geometry) && size(geometry,2)==3
+  % assume that it is a Nx3 array with vertices
+  % convert it to a structure, this is needed to determine the units further down
+  geometry = struct('pnt', geometry);
+elseif isstruct(geometry) && isfield(geometry,'bnd')
+  % take the triangulated surfaces from the input structure
+  geometry = geometry.bnd;
+elseif ~(isstruct(geometry) && isfield(geometry,'pnt'))
+  error('the input geometry should be a set of points or a single triangulated surface')
+end
+
 % start with an empty volume conductor
 vol = [];
 
@@ -58,14 +69,6 @@ if ~isempty(unit)
 else
   geometry = ft_convert_units(geometry); % ensure that it has units, estimate them if needed
   vol.unit = geometry(1).unit;           % copy the geometrical units into the volume conductor
-end
-
-if isnumeric(geometry) && size(geometry,2)==3
-  % assume that it is a Nx3 array with vertices
-  geometry.pnt = geometry;
-elseif isstruct(geometry) && isfield(geometry,'bnd')
-  % take the triangulated surface
-  geometry = geometry.bnd;
 end
 
 if isequal(fitind, 'all')
