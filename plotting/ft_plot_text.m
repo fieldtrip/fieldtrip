@@ -110,6 +110,10 @@ else
   
 end % shortcut
 
+% it fails on single inputs
+X = double(X);
+Y = double(Y);
+
 h = text(X, Y, str);
 set(h, 'HorizontalAlignment', HorizontalAlignment);
 set(h, 'Color', Color);
