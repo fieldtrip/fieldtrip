@@ -319,7 +319,9 @@ if basedonauto
   grid.dim   = [length(grid.xgrid) length(grid.ygrid) length(grid.zgrid)];
   [X, Y, Z]  = ndgrid(grid.xgrid, grid.ygrid, grid.zgrid);
   grid.pos   = [X(:) Y(:) Z(:)];
-  grid.unit  = sens.unit;
+  if isfield(sens, 'unit')
+    grid.unit = sens.unit;
+  end
 end
 
 if basedongrid
@@ -333,7 +335,6 @@ if basedongrid
   grid.dim   = [length(grid.xgrid) length(grid.ygrid) length(grid.zgrid)];
   [X, Y, Z]  = ndgrid(grid.xgrid, grid.ygrid, grid.zgrid);
   grid.pos   = [X(:) Y(:) Z(:)];
-  %FIXME how to determine grid.unit here?
 end
 
 if basedonpos
@@ -414,33 +415,6 @@ if basedonmri
     mri = ft_convert_units(mri);
   end
   
-  % convert the source/functional data into the same units as the anatomical MRI
-  scale = 1;
-  switch cfg.sourceunits
-    case 'mm'
-      scale = scale / 1000;
-    case 'cm'
-      scale = scale / 100;
-    case 'dm'
-      scale = scale / 10;
-    case 'm'
-      scale = scale / 1;
-    otherwise
-      error('unknown physical dimension in cfg.sourceunits');
-  end
-  switch mri.unit
-    case 'mm'
-      scale = scale * 1000;
-    case 'cm'
-      scale = scale * 100;
-    case 'dm'
-      scale = scale * 10;
-    case 'm'
-      scale = scale * 1;
-    otherwise
-      error('unknown physical dimension in mri.unit');
-  end
-  
   if ~isfield(cfg.grid, 'resolution')
     switch cfg.sourceunits
       case 'mm'
@@ -477,6 +451,9 @@ if basedonmri
   else
     error('you must specify cfg.threshold for cortex segmentation');
   end
+  
+  % convert the source/functional data into the same units as the anatomical MRI
+  scale = scalingfactor(cfg.sourceunits, mri.unit);
   
   ind                 = find(head(:));
   fprintf('%d from %d voxels in the segmentation are marked as cortex (%.0f%%)\n', length(ind), prod(size(head)), 100*length(ind)/prod(size(head)));
@@ -546,7 +523,6 @@ if basedoncortex
   end
   grid.pos = shape.pnt;
   grid.tri = shape.tri;
-  grid     = ft_convert_units(grid, cfg.sourceunits);
 end
 
 if basedonshape
@@ -580,7 +556,9 @@ if basedonshape
   grid.tri     = headshape.tri;
   grid.inside  = 1:size(grid.pos,1);
   grid.outside = [];
-  if isfield(headshape, 'unit'), grid.unit = headshape.unit; end
+  if isfield(headshape, 'unit')
+    grid.unit = headshape.unit;
+  end
 end
 
 if basedonvol
@@ -596,18 +574,18 @@ end
 
 if basedonmni
   if ~isfield(cfg.grid, 'template') && ~isfield(cfg.grid, 'resolution')
-      error('you either need to specify the filename of a template grid in cfg.grid.template, or a resolution in cfg.grid.resolution');
+    error('you either need to specify the filename of a template grid in cfg.grid.template, or a resolution in cfg.grid.resolution');
   elseif isfield(cfg.grid, 'template')
-      % let the template filename prevail
-      fname = cfg.grid.template;
+    % let the template filename prevail
+    fname = cfg.grid.template;
   elseif isfield(cfg.grid, 'resolution') && cfg.grid.resolution==round(cfg.grid.resolution)
-      % use one of the templates that are in Fieldtrip, this requires a
-      % resolution
-      fname = ['standard_grid3d',num2str(cfg.grid.resolution),'mm.mat'];
+    % use one of the templates that are in Fieldtrip, this requires a
+    % resolution
+    fname = ['standard_grid3d',num2str(cfg.grid.resolution),'mm.mat'];
   elseif isfield(cfg.grid, 'resolution') && cfg.grid.resolution~=round(cfg.grid.resolution)
-      fname = ['standard_grid3d',num2str(floor(cfg.grid.resolution)),'point',num2str(10*(cfg.grid.resolution-floor(cfg.grid.resolution))),'mm.mat'];
+    fname = ['standard_grid3d',num2str(floor(cfg.grid.resolution)),'point',num2str(10*(cfg.grid.resolution-floor(cfg.grid.resolution))),'mm.mat'];
   end
-    
+  
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % check whether the mni template grid exists for the specified resolution
   % if not create it: FIXME (this needs to be done still)
@@ -624,11 +602,8 @@ if basedonmni
   end
   
   % ensure the mri to have mm units
-  %if ~isfield(mri, 'unit')
-  %  mri = ft_convert_units(mri);
-  %end
-  mri = ft_convert_units(mri, 'mm');  
-
+  mri = ft_convert_units(mri, 'mm');
+  
   % get template grid
   if ischar(fname)
     load(fname, 'grid');
@@ -636,13 +611,12 @@ if basedonmni
     clear grid;
   else
     mnigrid = cfg.grid.template;
-  end    
+  end
   
   % convert to the same units as the mri
   mnigrid = ft_convert_units(mnigrid, mri.unit);
   
-  % spatial normalisation of mri and construction of subject specific dipole
-  % grid positions
+  % spatial normalisation of mri and construction of subject specific dipole grid positions
   tmpcfg           = [];
   tmpcfg.nonlinear = cfg.grid.nonlinear;
   if isfield(cfg.grid, 'templatemri'), tmpcfg.template = cfg.grid.templatemri; end
@@ -653,7 +627,7 @@ if basedonmni
     fprintf('applying an inverse warp based on a linear transformation only\n');
     grid.pos = warp_apply(inv(normalise.cfg.final), mnigrid.pos);
   else
-    grid.pos = warp_apply(inv(normalise.initial), warp_apply(normalise.params, mnigrid.pos, 'sn2individual')); 
+    grid.pos = warp_apply(inv(normalise.initial), warp_apply(normalise.params, mnigrid.pos, 'sn2individual'));
   end
   grid.dim     = mnigrid.dim;
   grid.unit    = mnigrid.unit;
@@ -664,6 +638,15 @@ if basedonmni
   % convert to the requested units
   grid         = ft_convert_units(grid, cfg.sourceunits);
   
+end
+
+if isfield(sens, 'unit')
+  grid.unit  = sens.unit;
+elseif isfield(vol, 'unit')
+  grid.unit  = vol.unit;
+else
+  % estimate them based on the spatial extent of the grid positions
+  grid = ft_convert_units(grid);
 end
 
 % FIXME use inside_vol instead of this replication of code
