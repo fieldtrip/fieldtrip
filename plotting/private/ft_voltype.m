@@ -110,7 +110,7 @@ elseif isfield(vol, 'bnd') && isfield(vol, 'forwpar')
 elseif isfield(vol, 'bnd') && numel(vol.bnd)==1
   type = 'singleshell'; 
   
-elseif isempty(vol) || isequal(fieldnames(vol), {'unit'})
+elseif isempty(vol) || (isstruct(vol) && isequal(fieldnames(vol), {'unit'}))
   % it is empty, or only contains a specification of geometrical units
   type = 'infinite';
   
