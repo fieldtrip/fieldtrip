@@ -77,19 +77,23 @@ chanunit = repmat({'unknown'}, size(input.label));
 if ft_senstype(input, 'unknown')
   % don't bother doing all subsequent checks to determine the type of sensor array
   
+elseif ft_senstype(input, 'eeg') && isheader
+  % until now in all stand-alone EEG systems examined the data was in uV
+  chanunit(strcmp('eeg',              input.chantype)) = {'uV'};
+  
 elseif ft_senstype(input, 'neuromag') && isheader && issubfield(input, 'orig.chs')
   for i = 1:numchan % make a cell array of units for each channel
     switch hdr.orig.chs(i).unit
       case 201 % defined as constants by MNE, see p. 217 of MNE manual
-        input.chanunit{i} = 'T/m';
+        chanunit{i} = 'T/m';
       case 112
-        input.chanunit{i} = 'T';
+        chanunit{i} = 'T';
       case 107
-        input.chanunit{i} = 'V';
+        chanunit{i} = 'V';
       case 202
-        input.chanunit{i} = 'Am';
+        chanunit{i} = 'Am';
       otherwise
-        input.chanunit{i} = 'unknown';
+        chanunit{i} = 'unknown';
     end
   end
   
@@ -143,11 +147,12 @@ elseif ft_senstype(input, 'ctf') && isfield(input, 'chantype')
   
 elseif ft_senstype(input, 'yokogawa') && isfield(input, 'chantype')
   chanunit(strcmp('meggrad',          input.chantype)) = {'unknown'}; % FIXME don't know whether it is T or T/m
-  chanunit(strcmp('gegplanar',        input.chantype)) = {'unknown'}; % FIXME don't know whether it is T or T/m
+  chanunit(strcmp('megplanar',        input.chantype)) = {'unknown'}; % FIXME don't know whether it is T or T/m
   
 elseif ft_senstype(input, 'bti') && isfield(input, 'chantype')
   chanunit(strcmp('meg',                 input.chantype)) = {'T'}; % this was the channel type until approx. 2 November 2012, see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1807
   chanunit(strcmp('megmag',              input.chantype)) = {'T'}; % for most 4D/BTi systems
+  chanunit(strcmp('eeg',                 input.chantype)) = {'V'}; % seems to be true for the example I have (VL)
   chanunit(strcmp('meggrad',             input.chantype)) = {'unknown'}; % FIXME don't know whether it is T or T/m
   
 elseif ft_senstype(input, 'itab') && isfield(input, 'chantype')
