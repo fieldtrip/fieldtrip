@@ -57,7 +57,7 @@ if isstruct(val)
     % print it as a named structure
     fn = fieldnames(val);
     for i=1:length(fn)
-      fv = val(fn{i});
+      fv = val.(fn{i});
       switch class(fv)
         case 'char'
           % line = sprintf('%s = ''%s'';\n', fn{i}, fv);
