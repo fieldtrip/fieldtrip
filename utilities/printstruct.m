@@ -1,15 +1,15 @@
 function str = printstruct(name, val)
 
-% PRINTSTRUCT converts a Matlab structure to text which can be
-% interpreted by Matlab, resulting in the original structure.
+% PRINTSTRUCT converts a Matlab structure to text which can be interpreted by MATLAB,
+% resulting in the original structure.
 %
 % Use as
 %   str = printstruct(val)
-% or 
+% or
 %   str = printstruct(name, val)
-% where "val" is any MATLAB variable, e.g. a scalar, vector, matrix,
-% structure, or cell-array. Optionally you can also pass the name of the
-% variable.
+% where "val" is any MATLAB variable, e.g. a scalar, vector, matrix, structure, or
+% cell-array. If you pass the name of the variable, the output is a piece of MATLAB code
+% that you can execute, i.e. an ASCII serialized representation of the variable.
 %
 % Example
 %   a.field1 = 1;
@@ -57,7 +57,7 @@ if isstruct(val)
     % print it as a named structure
     fn = fieldnames(val);
     for i=1:length(fn)
-      fv = getfield(val, fn{i});
+      fv = val(fn{i});
       switch class(fv)
         case 'char'
           % line = sprintf('%s = ''%s'';\n', fn{i}, fv);
@@ -78,7 +78,7 @@ if isstruct(val)
           str  = [str line];
         case 'function_handle'
           printstr([name '.' fn{i}], func2str(fv));
-          str  = [str line];    
+          str  = [str line];
         otherwise
           error('unsupported');
       end
@@ -114,7 +114,7 @@ end
 for i=2:prod(siz)
   if ~strcmp(typ{i}, typ{1})
     warning('different elements in cell array');
-    return
+    % return
   end
 end
 if all(size(val)==1)
@@ -123,12 +123,13 @@ else
   str = sprintf('%s = {\n', name);
   for i=1:siz(1)
     dum = '';
-    for j=1:siz(2)
-      dum = [dum ' ' printval(val{i,j}) ','];
+    for j=1:(siz(2)-1)
+      dum = [dum ' ' printval(val{i,j}) ',']; % add the element with a comma
     end
+    dum = [dum ' ' printval(val{i,siz(2)})]; % add the last one without comma
     str = sprintf('%s%s\n', str, dum);
   end
-  str = sprintf('%s};\n', str(1:end-2)); % remove the last comma and space
+  str = sprintf('%s};\n', str);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -155,13 +156,15 @@ end
 function str = printstr(name, val)
 str = [];
 siz = size(val);
-if siz(1)~=1
+if siz(1)>1
   str = sprintf('%s = \n', name);
   for i=1:siz(1)
     str = [str sprintf('  %s\n', printval(val(i,:)))];
   end
-else
+elseif siz(1)==1
   str = sprintf('%s = %s;\n', name, printval(val));
+else
+  str = sprintf('%s = '''';\n', name);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -171,9 +174,11 @@ siz = size(val);
 switch class(val)
   case 'char'
     str = sprintf('''%s''', val);
-
+    
   case {'single' 'double'}
-    if all(siz==1)
+    if all(siz==0)
+      str = '[]';
+    elseif all(siz==1)
       str = sprintf('%g', val);
     elseif length(siz)==2
       for i=1:siz(1);
@@ -197,7 +202,22 @@ switch class(val)
       error('multidimensional arrays are not supported');
     end
     
+  case 'logical'
+    if val
+      str = 'true';
+    else
+      str = 'false';
+    end
+    
+  case 'function_handle'
+    str = sprintf('@%s', func2str(val));
+    
   case 'struct'
+    warning('cannot print structure at this level');
+    str = '''FIXME''';
+    
+  otherwise
+    warning('cannot print unknown object at this level');
     str = '''FIXME''';
 end
 
