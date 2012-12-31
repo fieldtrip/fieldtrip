@@ -73,8 +73,15 @@ function factor = scalingfactor(old, new)
 
 persistent previous_old previous_new previous_factor
 
-if isequal(old, previous_old) && isequal(new, previous_new)
-  factor = previous_factor;
+if isempty(previous_old)
+  previous_old = {};
+  previous_new = {};
+  previous_factor = [];
+end
+
+cachehit = strcmp(old, previous_old) & strcmp(new, previous_new);
+if any(cachehit)
+  factor = previous_factor(cachehit);
   return
 end
 
@@ -216,6 +223,6 @@ eval(sprintf('new2si = %s;', new));
 factor = old2si/new2si;
 
 % remember the input args and the result, this will speed up the next call if the input is the same
-previous_old    = old;
-previous_new    = new;
-previous_factor = factor;
+previous_old{end+1}    = old;
+previous_new{end+1}    = new;
+previous_factor(end+1) = factor;
