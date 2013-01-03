@@ -495,16 +495,23 @@ if any(strcmp(outp, 'brain')) || any(strcmp(outp, 'skull')) || any(strcmp(outp,'
       if dothres_scalp, anatomy = volumethreshold(anatomy,  cfg.scalpthreshold, 'anatomy');
       else fprintf('no threshold applied on anatomy for scalp segmentation\n')
       end
-      anatomy = volumefillholes(anatomy, 2); % FIXME why along the second dimension?
       
-      scalpmask = anatomy>0;
-      clear anatomy;
+      % fill the slices along each dimension (because using a single one is
+      % just arbitrary, and behavior depends on how the voxeldata is in the
+      % volume.
+      a1 = volumefillholes(anatomy, 1);
+      a2 = volumefillholes(anatomy, 2);
+      a3 = volumefillholes(anatomy, 3);
+      
+      %anatomy = volumefillholes(anatomy, 2); % FIXME why along the second dimension?
+      %scalpmask = anatomy>0;
+      scalpmask = a1 | a2 | a3;
+      clear anatomy a1 a2 a3;
       
       % output: scalp (cummulative) (if this is the only requested
       % output)
-      if numel(outp) ==1
+      if numel(outp)==1
         segment.scalp = scalpmask;
-        
         break
       end
     end
@@ -528,8 +535,7 @@ if any(strcmp(outp, 'brain')) || any(strcmp(outp, 'skull')) || any(strcmp(outp,'
       segment.anatomy = segment.anatomy.*brain_ss;
       clear brain_ss;
       removefields = intersect(removefields, {'gray' 'white' 'csf'});
-      if numel(outp) == 1
-        
+      if numel(outp)==1
         break
       end
     end
@@ -537,12 +543,11 @@ if any(strcmp(outp, 'brain')) || any(strcmp(outp, 'skull')) || any(strcmp(outp,'
     brainmask = brain>0;
     clear brain;
     
-    
     % output: brain
     if any(strcmp(outp,'brain'))
       segment.brain = brainmask;
       
-      if numel(outp) ==1
+      if numel(outp)==1
         break
       end
     end
@@ -555,13 +560,12 @@ if any(strcmp(outp, 'brain')) || any(strcmp(outp, 'skull')) || any(strcmp(outp,'
       skullmask = braindil & ~brainmask;
       if any(strcmp(outp, 'skull'))
         segment.skull = skullmask;
-        if numel(outp) == 1
+        if numel(outp)==1
           break
         end
       end
       clear braindil;
-      
-      
+            
       % output: scalp (exclusive type)
       if numel(outp) > 1 && any(strcmp('scalp',outp))
         scalpmask(brainmask>0)=0;
