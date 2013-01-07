@@ -24,8 +24,12 @@ function [stat] = ft_networkanalysis(cfg, data)
 % Supported methods are
 %   assortatitivity
 %   betweenness
+%   charpath
 %   clustering_coef
 %   degrees
+%   density
+%   distance
+%   edge_betweenness
 %   transitivity
 %
 % To facilitate data-handling and distributed computing with the
@@ -86,6 +90,11 @@ end
 % multiplications on boolean matrices
 input = double(data.(cfg.parameter));
 
+% some metrics explicitly require a certain parameter
+if strcmp(cfg.method, 'charpath') && ~strcmp(cfg.parameter, 'distance')
+  error('characteristic path length can only be computed on distance matrices');
+end
+
 % check for binary or not
 isbinary = true;
 for k = 1:size(input,3)
@@ -122,8 +131,9 @@ end
 
 fprintf('computing %s\n', cfg.method);
 % allocate memory
+needlabel = true;
 switch cfg.method
-  case {'assortativity' 'density'  'transitivity'}
+  case {'assortativity' 'charpath' 'density'  'transitivity'}
     % 1 value per connection matrix
     outsiz = [size(input) 1];
     outsiz(1:2) = [];
@@ -133,9 +143,10 @@ switch cfg.method
     elseif strcmp(data.dimord(1:4), 'chan')
       dimord = data.dimord(11:end);
     end
+    needlabel = false;
   case {'betweenness' 'clustering_coef' 'degrees'}
     % 1 value per node
-    outsiz = size(input);
+    outsiz = [size(input) 1];
     outsiz(1) = [];
     output = zeros(outsiz);
     if strcmp(data.dimord(1:3), 'pos')
@@ -143,6 +154,11 @@ switch cfg.method
     elseif strcmp(data.dimord(1:4), 'chan')
       dimord = data.dimord(6:end);
     end
+  case {'distance' 'edge_betweennness'}
+    % 1 value per node pair
+    outsiz = [size(input) 1];
+    output = zeros(outsiz);
+    dimord = data.dimord;
 end
 
 binarywarning = 'weights are not taken into account and graph is converted to binary values by thresholding';
@@ -169,7 +185,9 @@ for k = 1:size(input, 3)
       case 'breadthdist'
         error('not yet implemented');
       case 'charpath'
-        error('not yet implemented');
+        % this needs the distance matrix as input, this is dealt with
+        % above
+        output(:,k) = charpath(input(:,:,k,m))';
       case 'clustering_coef'
         if isbinary && isdirected
           output(:,k,m) = clustering_coef_bd(input(:,:,k,m));
@@ -185,16 +203,30 @@ for k = 1:size(input, 3)
         
         if isdirected
           [in, out, output(:,k,m)] = degrees_dir(input(:,:,k,m));
-          % fixme do something here
+          % FIXME do something here
         elseif ~isdirected
           output(:,k,m) = degrees_und(input(:,:,k,m));
         end
       case 'density'
-        error('not yet implemented');
+        if ~isbinary, warning_once(binarywarning); end
+      
+        if isdirected
+          output(k,m) = density_dir(input(:,:,k,m));
+        elseif ~isdirected
+          output(k,m) = density_und(input(:,:,k,m));
+        end
       case 'distance'
-        error('not yet implemented');
+        if isbinary
+          output(:,:,k,m) = distance_bin(input(:,:,k,m));
+        elseif ~isbinary
+          output(:,:,k,m) = distance_wei(input(:,:,k,m));
+        end
       case 'edge_betweenness'
-        error('not yet implemented');
+        if isbinary
+          output(:,:,k,m) = edge_betweenness_bin(input(:,:,k,m));
+        elseif ~isbinary
+          output(:,:,k,m) = edge_betweenness_wei(input(:,:,k,m));
+        end
       case 'efficiency'
         error('not yet implemented');
       case 'modularity'
@@ -225,7 +257,7 @@ end % for k
 stat              = [];
 stat.(cfg.method) = output;
 stat.dimord       = dimord;
-if isfield(data, 'label'),  stat.label  = data.label;  end
+if isfield(data, 'label') && needlabel,  stat.label  = data.label;  end
 if isfield(data, 'freq'),   stat.freq   = data.freq;   end
 if isfield(data, 'time'),   stat.time   = data.time;   end
 if isfield(data, 'grad'),   stat.grad   = data.grad;   end
