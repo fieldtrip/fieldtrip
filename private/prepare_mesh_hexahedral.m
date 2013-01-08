@@ -118,10 +118,14 @@ stopwatch = tic;
 system(shfile);
 fprintf('elapsed time: %d seconds\n', toc(stopwatch));
 
-% FIXME: think about adding a translation due to conversion between indices and vertices' world coordinates
 
 % read the mesh points
 [mesh.pnt,mesh.hex,labels] = read_vista_mesh(meshfile);
+
+% converting position of meshpoints to the head coordinate system
+
+mesh.pnt = warp_apply(mri.transform,mesh.pnt,'homogeneous');
+
 
 mesh.tissue = zeros(size(labels));
 numlabels = size(unique(labels),1);
