@@ -60,7 +60,7 @@
 
 #define PTW32_LEVEL_MAX 3
 
-#if ( defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 200112 )  || !defined(PTW32_LEVEL)
+#if !defined(PTW32_LEVEL)
 #define PTW32_LEVEL PTW32_LEVEL_MAX
 /* Include everything */
 #endif
@@ -80,7 +80,11 @@
 #  ifdef PTW32_BUILD
 #    define PTW32_DLLPORT __declspec (dllexport)
 #  else
-#    define PTW32_DLLPORT __declspec (dllimport)
+#  	 ifdef __LCC__
+#      define PTW32_DLLPORT __cdecl
+#    else
+#      define PTW32_DLLPORT __declspec (dllimport)
+#    endif
 #  endif
 #else
 #  define PTW32_DLLPORT
@@ -114,28 +118,14 @@
 #endif /* PTW32_LEVEL >= PTW32_LEVEL_MAX */
 
 #if defined(__MINGW32__) || defined(_UWIN)
-# if PTW32_LEVEL >= PTW32_LEVEL_MAX
+#if PTW32_LEVEL >= PTW32_LEVEL_MAX
 /* For pid_t */
 #  include <sys/types.h>
 /* Required by Unix 98 */
 #  include <time.h>
-# else
-#  define __PTW_DEFINE_PID_T
-# endif
+#endif /* PTW32_LEVEL >= PTW32_LEVEL_MAX */
 #else
-# define  __PTW_DEFINE_PID_T
-#endif
-
-#if defined(__PTW_DEFINE_PID_T)
-# ifndef _PID_T_
-#  ifndef _WIN64
-   typedef int pid_t;
-#  else
-   typedef long long pid_t;
-#  endif
-#  define _PID_T_
-# endif
-# undef __PTW_DEFINE_PID_T
+typedef int pid_t;
 #endif
 
 /* Thread scheduling policies */
