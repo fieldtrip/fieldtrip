@@ -508,6 +508,10 @@ if any(strcmp(outp, 'brain')) || any(strcmp(outp, 'skull')) || any(strcmp(outp,'
       scalpmask = a1 | a2 | a3;
       clear anatomy a1 a2 a3;
       
+      % threshold again to remove little parts outside of head
+      
+      scalpmask=volumethreshold(scalpmask);
+      
       % output: scalp (cummulative) (if this is the only requested
       % output)
       if numel(outp)==1
