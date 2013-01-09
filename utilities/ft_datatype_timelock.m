@@ -22,7 +22,7 @@ function timelock = ft_datatype_timelock(timelock, varargin)
 %   - label, dimord, time
 %
 % Optional fields:
-%   - var, dof, grad, elec, cfg
+%   - var, dof, cov, trial, grad, elec, cfg
 %
 % Deprecated fields:
 %   - <none>
