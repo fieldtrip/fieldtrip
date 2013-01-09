@@ -1,0 +1,102 @@
+
+type = string-attribute
+name = HISTORY_NOTE
+count = 232
+'[rwcox@hurin.nimh.nih.gov: Mon Aug 20 08:48:02 2001] 3dbucket -prefix TTatlas uu3+tlrc uu5+tlrc\n[rwcox@hurin.nimh.nih.gov: Mon Aug 20 08:48:50 2001] Talairach Daemon database provided by Jack Lancaster and Peter Fox of RIC-UTHSCSA~
+
+type = string-attribute
+name = TYPESTRING
+count = 15
+'3DIM_HEAD_FUNC~
+
+type = string-attribute
+name = IDCODE_STRING
+count = 16
+'GPL_iouxanPiBUS~
+
+type = string-attribute
+name = IDCODE_DATE
+count = 25
+'Mon Aug 20 08:48:02 2001~
+
+type = string-attribute
+name = IDCODE_ANAT_PARENT
+count = 16
+'MCW_OYJRIKDHKMV~
+
+type = integer-attribute
+name = SCENE_DATA
+count = 8
+ 2 11 1 -999 -999
+ -999 -999 -999
+
+type = string-attribute
+name = LABEL_1
+count = 5
+'zyxt~
+
+type = string-attribute
+name = LABEL_2
+count = 5
+'zyxt~
+
+type = string-attribute
+name = DATASET_NAME
+count = 5
+'zyxt~
+
+type = integer-attribute
+name = ORIENT_SPECIFIC
+count = 3
+ 0 3 4
+
+type  = float-attribute
+name  = ORIGIN
+count = 3
+            -80            -80            -55
+
+type  = float-attribute
+name  = DELTA
+count = 3
+              1              1              1
+
+type  = float-attribute
+name  = BRICK_STATS
+count = 4
+              0             77              0            151
+
+type = integer-attribute
+name = DATASET_RANK
+count = 8
+ 3 2 0 0 0
+ 0 0 0
+
+type = integer-attribute
+name = DATASET_DIMENSIONS
+count = 5
+ 161 191 141 0 0
+
+type = integer-attribute
+name = BRICK_TYPES
+count = 2
+ 0 0
+
+type  = float-attribute
+name  = BRICK_FLOAT_FACS
+count = 2
+              0              0
+
+type = string-attribute
+name = BRICK_LABS
+count = 14
+'uu3[0]~uu5[0]~
+
+type = string-attribute
+name = BRICK_KEYWORDS
+count = 88
+'uu3+tlrc[0] ; TTatlas+tlrc[0] ; uu3+tlrc[0]~uu5+tlrc[0] ; TTatlas+tlrc[1] ; uu5+tlrc[0]~
+
+type = string-attribute
+name = BYTEORDER_STRING
+count = 10
+'LSB_FIRST~
