@@ -37,4 +37,12 @@ if nargin<2 || isempty(order)
   error('the order of the median filter is not specified');
 end
 
+% deal with padding
+pad = ceil(order/2);
+dat = ft_preproc_padding(dat, 'localmean', pad);
+
+% filter
 dat = medfilt1(dat, order, [], 2);
+
+% cut the eges
+dat = ft_preproc_padding(dat, 'remove', pad);
