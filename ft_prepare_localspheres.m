@@ -25,7 +25,7 @@ function [vol, cfg] = ft_prepare_localspheres(cfg, mri)
 %
 % $Id$
 
-warning('FT_PREPARE_CONCENTRICSPHERES is deprecated, please use FT_PREPARE_HEADMODEL with cfg.method = ''localspheres'' instead.')
+warning('FT_PREPARE_LOCALSPHERES is deprecated, please use FT_PREPARE_HEADMODEL with cfg.method = ''localspheres'' instead.')
 
 revision = '$Id$';
 
