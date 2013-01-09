@@ -135,8 +135,8 @@ cfg.latency = [tbeg tend];
 
 % pick the selections
 for i=1:Nsubj
-  if ~isfield(varargin{i}, cfg.parameter{1})
-    error('the field %s is not present in data structure %d', cfg.parameter{1}, i);
+  if ~isfield(varargin{i}, cfg.parameter)
+    error('the field %s is not present in data structure %d', cfg.parameter, i);
   end
   chansel = match_str(varargin{i}.label, cfg.channel);
   varargin{i}.label = varargin{i}.label(chansel);
@@ -163,7 +163,7 @@ end % for i = subject
 
 % determine the size of the data to be averaged
 %dim = cell(1,numel(cfg.parameter));
-dim{1} = size(varargin{1}.(cfg.parameter{1}));
+dim{1} = size(varargin{1}.(cfg.parameter));
 
 % give some feedback on the screen
 if strcmp(cfg.keepindividual, 'no')
