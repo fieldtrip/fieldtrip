@@ -100,7 +100,7 @@ figure; imagesc(example.seg(:,:,50));
 cfg=[];
 cfg.tissue = {'seg'};
 cfg.numvertices = 3000;
-cfg.method = 'hex';          % option for hexahedral mesh generation
+cfg.method = 'hexahedral';          % option for hexahedral mesh generation
 hexmesh = ft_prepare_mesh(cfg,example);
 
 % check mesh
@@ -112,7 +112,7 @@ assert(ft_datatype(parcellation,'parcellation'),'the conversion to a parcellatio
 cfg=[];
 cfg.tissue = {'seg'};
 cfg.numvertices = 3000;
-cfg.method = 'tet';          % option for hexahedral mesh generation
+cfg.method = 'tetrahedral';          % option for tetrahedral mesh generation
 tetmesh = ft_prepare_mesh(cfg,example);
 
 % check mesh
