@@ -291,7 +291,8 @@ if ~isempty(dtype)
         israw = 1;
         okflag = 1;
       elseif isequal(dtype(iCell), {'timelock'}) && iscomp % this should go before israw
-        data = comp2timelock(data);
+        data = comp2raw(data);
+        data = raw2timelock(data);
         data = ft_datatype_timelock(data);
         iscomp = 0;
         israw = 0;
@@ -310,17 +311,11 @@ if ~isempty(dtype)
         israw = 1;
         okflag = 1;
       elseif isequal(dtype(iCell), {'raw'}) && iscomp
+        % this is never executed, because when iscomp==true, then also israw==true
         data = comp2raw(data);
         data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
         iscomp = 0;
         israw = 1;
-        okflag = 1;
-      elseif isequal(dtype(iCell), {'timelock'}) && iscomp
-        data = comp2raw(data);
-        data = raw2timelock(data);
-        data = ft_datatype_timelock(data);
-        iscomp = 0;
-        istimelock = 1;
         okflag = 1;
       elseif isequal(dtype(iCell), {'timelock'}) && ischan
         data = chan2timelock(data);
@@ -1578,9 +1573,10 @@ end
 % convert between datatypes
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function data = comp2raw(data)
-% just remove the component topographies
-data = rmfield(data, 'topo');
-data = rmfield(data, 'topolabel');
+% remove the fields that are specific to the comp representation
+fn = fieldnames(data);
+fn = intersect(fn, {'topo' 'topolabel' 'unmixing'});
+data = rmfield(data, fn);  
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % convert between datatypes
@@ -1686,16 +1682,6 @@ nsmp = cellfun('size',data.time,2);
 seln = find(nsmp>1,1, 'first');
 
 if isfield(freq, 'trialinfo'), data.trialinfo = freq.trialinfo; end;
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% convert between datatypes
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [data] = comp2timelock(data)
-fn = fieldnames(data);
-fn = intersect(fn, {'topo' 'topolabel' 'unmixing'});
-data = rmfield(data, fn);  % remove the fields that are specific to the comp representation
-data = raw2timelock(data); % just convert it as raw data
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
