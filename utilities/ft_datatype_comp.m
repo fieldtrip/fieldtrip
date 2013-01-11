@@ -67,7 +67,9 @@ function comp = ft_datatype_comp(comp, varargin)
 % $Id$
 
 % get the optional input arguments, which should be specified as key-value pairs
-version = ft_getopt(varargin, 'version', 'latest');
+version       = ft_getopt(varargin, 'version', 'latest');
+hassampleinfo = ft_getopt(varargin, 'hassampleinfo', []); % the default is determined in ft_datatype_raw
+hastrialinfo  = ft_getopt(varargin, 'hastrialinfo', []);  % the default is determined in ft_datatype_raw
 
 if strcmp(version, 'latest')
   compversion = '2011';
@@ -113,7 +115,7 @@ end
 rawdata = comp;
 rawdata = rmfield(rawdata, 'topo');
 rawdata = rmfield(rawdata, 'topolabel');
-rawdata = ft_datatype_raw(rawdata, 'version', rawversion);
+rawdata = ft_datatype_raw(rawdata, 'version', rawversion, 'hassampleinfo', hassampleinfo, 'hastrialinfo', hastrialinfo);
 
 % add the component specific fields again
 rawdata.unmixing  = comp.unmixing;
