@@ -154,7 +154,7 @@ st = dbstack;
 if ~dointerp && numel(st)>1 && strcmp(st(2).name, 'ft_plot_montage'), dointerp = true; end
 
 % determine the corner points of the volume in voxel and in plotting space
-[corner_vox, corner_head] = cornerpoints(dim, transform);
+[corner_vox, corner_head] = cornerpoints(dim+1, transform);
   
 if dointerp
   %--------cut a slice using interpn
@@ -230,18 +230,21 @@ else
   [x, y] = projplane(ori);
   T2     = [x(:) y(:) ori(:) loc(:); 0 0 0 1];
   
-  if all(ori==[1 0 0]), xplane = loc(1);   yplane = 1:dim(2); zplane = 1:dim(3); end
-  if all(ori==[0 1 0]), xplane = 1:dim(1); yplane = loc(2);   zplane = 1:dim(3); end
-  if all(ori==[0 0 1]), xplane = 1:dim(1); yplane = 1:dim(2); zplane = loc(3);   end
+  % the '+1' and '-0.5' are needed due to the difference between handling
+  % of image and surf. Surf color data is defined in the center of each
+  % square, hence needs axes and coordinate adjustment
+  if all(ori==[1 0 0]), xplane = loc(1);   yplane = 1:(dim(2)+1); zplane = 1:(dim(3)+1); end
+  if all(ori==[0 1 0]), xplane = 1:(dim(1)+1); yplane = loc(2);   zplane = 1:(dim(3)+1); end
+  if all(ori==[0 0 1]), xplane = 1:(dim(1)+1); yplane = 1:(dim(2)+1); zplane = loc(3);   end
   
   [Xi, Yi, Zi] = ndgrid(xplane-0.5, yplane-0.5, zplane-0.5); % coordinate is centre of the voxel, 1-based
-  siz        = size(squeeze(Xi));
-  Xi         = reshape(Xi, siz);
-  Yi         = reshape(Yi, siz);
-  Zi         = reshape(Zi, siz);
-  V          = reshape(dat(xplane, yplane, zplane), siz);
+  siz        = size(squeeze(Xi))-1;
+  Xi         = reshape(Xi, siz+1); if numel(xplane)==1, xplane = xplane([1 1]); end;
+  Yi         = reshape(Yi, siz+1); if numel(yplane)==1, yplane = yplane([1 1]); end;
+  Zi         = reshape(Zi, siz+1); if numel(zplane)==1, zplane = zplane([1 1]); end;
+  V          = reshape(dat(xplane(1:end-1), yplane(1:end-1), zplane(1:end-1)), siz);
   if domask,
-    Vmask    = reshape(mask(xplane, yplane, zplane), siz);
+    Vmask    = reshape(mask(xplane(1:end-1), yplane(1:end-1), zplane(1:end-1)), siz);
   end
   
 end
@@ -262,9 +265,9 @@ end
 if isempty(h),
   % get positions of the plane in plotting space
   posh = warp_apply(transform, [Xi(:) Yi(:) Zi(:)], 'homogeneous', 1e-8);
-  Xh   = reshape(posh(:, 1), siz);
-  Yh   = reshape(posh(:, 2), siz);
-  Zh   = reshape(posh(:, 3), siz);
+  Xh   = reshape(posh(:, 1), siz+1);
+  Yh   = reshape(posh(:, 2), siz+1);
+  Zh   = reshape(posh(:, 3), siz+1);
   % create surface object
   h    = surface(Xh, Yh, Zh, V);
 else
@@ -313,7 +316,7 @@ end
 
 % update the axes to ensure that the whole volume fits
 ax = [min(corner_head) max(corner_head)];
-axis(ax([1 4 2 5 3 6])); % reorder into [xmin xmax ymin ymaz zmin zmax]
+axis(ax([1 4 2 5 3 6])-0.5); % reorder into [xmin xmax ymin ymaz zmin zmax]
 st = dbstack;
 if numel(st)>1,
   % ft_plot_slice has been called from another function
