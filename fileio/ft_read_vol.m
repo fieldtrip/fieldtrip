@@ -10,12 +10,12 @@ function [vol] = ft_read_vol(filename, varargin)
 % Additional options should be specified in key-value pairs and can be
 %   'fileformat'   string
 %
-% The volume conduction model is represented as a structure, and its
-% contents depend on the type of model.
+% The volume conduction model is represented as a structure with fields
+% that depend on the type of model.
 %
 % See also FT_TRANSFORM_VOL, FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
-% Copyright (C) 2008-2010 Robert Oostenveld
+% Copyright (C) 2008-2013 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -65,19 +65,6 @@ switch fileformat
     ama = loadama(filename);
     vol = ama2vol(ama);
 
-  case 'neuromag_fif'
-    % do not read the volume into Matlab, but use external Neuromag toolbox
-    vol.type     = 'neuromag';
-    vol.filename = filename;
-    vol.chansel  = [];  % this is defined later based on the channels present in the data
-    % initialize the Neuromag toolbox, this requires a gradfile and hdmfile
-    fprintf('using Neuromag volume conductor from %s\n', filename);
-    fprintf('using Neuromag gradiometer definition from %s\n', cfg.gradfile);
-    megmodel('head', cfg.gradfile, filename);
-    % read the triangulated boundary from the neuromag BEM model
-    [vol.bnd.pnt, vol.bnd.tri, vol.bnd.nrm] = loadtri(vol.filename);
-    vol.bnd.pnt = vol.bnd.pnt*100;  % convert to cm
-    
   otherwise
     error('unknown fileformat for volume conductor model');
 end
