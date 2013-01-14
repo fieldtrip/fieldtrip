@@ -67,8 +67,8 @@ else
   isolatedsource = istrue(isolatedsource);
 end
 
-% impose the 'insidefirst' nesting of the compartments
-order = surface_nesting(vol.bnd, 'insidefirst');
+% determine the desired nesting of the compartments
+order = surface_nesting(vol.bnd, 'outsidefirst');
 
 % rearrange boundaries and conductivities
 if numel(vol.bnd)>1

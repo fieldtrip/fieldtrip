@@ -63,8 +63,8 @@ if numboundaries~=3
   error('this only works for three surfaces');
 end
 
-% impose the 'outsidefirst' nesting of the compartments
-order = surface_nesting(vol.bnd, 'outsidefirst');
+% determine the desired nesting of the compartments
+order = surface_nesting(vol.bnd, 'insidefirst');
 
 % rearrange boundaries and conductivities
 if numel(vol.bnd)>1
