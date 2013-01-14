@@ -225,6 +225,21 @@ if dointerp
     Vmask = tight(interpn(X, Y, Z, mask, Xi, Yi, Zi, interpmethod));
   end
   
+  if ~isempty(Xi)
+    % now adjust the Xi, Yi and Zi, to allow for the surface object
+    % convention, where the data point value is defined in the center of each
+    % square, i.e. the number of elements in each of the dimensions of Xi, Yi
+    % Zi should be 1 more than the functional data, and they should be displaced
+    % by half a voxel distance
+    dx2 = mean(diff(Xi,[],2),2); dx1 = mean(diff(Xi,[],1),1);
+    dy2 = mean(diff(Yi,[],2),2); dy1 = mean(diff(Yi,[],1),1);
+    dz2 = mean(diff(Zi,[],2),2); dz1 = mean(diff(Zi,[],1),1);
+    
+    Xi  = [Xi-0.5*dx2*ones(1,siz(2)) Xi(:,end)+0.5*dx2; Xi(end,:)+0.5*dx1 Xi(end,end)+0.5*(dx1(end)+dx2(end))];
+    Yi  = [Yi-0.5*dy2*ones(1,siz(2)) Yi(:,end)+0.5*dy2; Yi(end,:)+0.5*dy1 Yi(end,end)+0.5*(dy1(end)+dy2(end))];
+    Zi  = [Zi-0.5*dz2*ones(1,siz(2)) Zi(:,end)+0.5*dz2; Zi(end,:)+0.5*dz1 Zi(end,end)+0.5*(dz1(end)+dz2(end))];
+  end
+  
 else
   %-------cut a slice without interpolation
   [x, y] = projplane(ori);
@@ -265,9 +280,16 @@ end
 if isempty(h),
   % get positions of the plane in plotting space
   posh = warp_apply(transform, [Xi(:) Yi(:) Zi(:)], 'homogeneous', 1e-8);
-  Xh   = reshape(posh(:, 1), siz+1);
-  Yh   = reshape(posh(:, 2), siz+1);
-  Zh   = reshape(posh(:, 3), siz+1);
+  if ~isempty(posh)
+    Xh   = reshape(posh(:, 1), siz+1);
+    Yh   = reshape(posh(:, 2), siz+1);
+    Zh   = reshape(posh(:, 3), siz+1);
+  else
+    % emulate old behavior, that allowed empty data to be plotted
+    Xh   = [];
+    Yh   = [];
+    Zh   = [];
+  end
   % create surface object
   h    = surface(Xh, Yh, Zh, V);
 else
