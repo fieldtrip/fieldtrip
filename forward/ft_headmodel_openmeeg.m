@@ -55,22 +55,6 @@ vol.bnd = geom;
 % determine the number of compartments
 numboundaries = length(vol.bnd);
 
-if isempty(conductivity)
-  warning('No conductivity is declared, Assuming standard values\n')
-  if numboundaries == 1
-    conductivity = 1;
-  elseif numboundaries == 3
-    % skin/skull/brain
-    conductivity = [1 1/80 1] * 0.33;
-  elseif numboundaries == 4
-    %FIXME: check for better default values here
-    % skin / outer skull / inner skull / brain    
-    conductivity = [1 1/80 1 1] * 0.33;    
-  else
-    error('Conductivity values are required!')
-  end
-end
-
 if isempty(isolatedsource)
   if numboundaries>1
     % the isolated source compartment is by default the most inner one
@@ -83,15 +67,6 @@ else
   isolatedsource = istrue(isolatedsource);
 end
 
-if ~isfield(vol, 'cond')
-  if numel(conductivity)~=numboundaries
-    error('a conductivity value should be specified for each compartment');
-  else
-    % assign the conductivity of each compartment
-    vol.cond = conductivity;
-  end
-end
-
 % impose the 'insidefirst' nesting of the compartments
 order = surface_nesting(vol.bnd, 'insidefirst');
 
@@ -102,7 +77,24 @@ if numel(vol.bnd)>1
   fprintf('\n');
   % update the order of the compartments
   vol.bnd          = vol.bnd(order);
-  vol.cond         = vol.cond(order);
+end
+
+if isempty(conductivity)
+  warning('No conductivity is declared, Assuming standard values\n')
+  if numboundaries == 1
+    conductivity = 1;
+  elseif numboundaries == 3
+    % skin/skull/brain
+    conductivity = [1 1/80 1] * 0.33;
+  else
+    error('Conductivity values are required for 2 shells. More than 3 shells not allowed')
+  end
+  vol.cond = conductivity;
+else
+  if numel(conductivity)~=numboundaries
+    error('a conductivity value should be specified for each compartment');
+  end
+  vol.cond = conductivity(order);
 end
 
 vol.skin_surface   = 1;
@@ -123,10 +115,6 @@ end
 
 % check that the binaries are ok
 om_checkombin;
-
-if vol.skin_surface ~= 1
-  error('the first compartment should be the skin, the last the source');
-end
 
 % store the current path and change folder to the temporary one
 tmpfolder = cd;
