@@ -639,6 +639,23 @@ switch cfg.method
       % this transforms from input voxels to target voxels
       vox2vox = reshape(tmp{1},4,4)';
       
+      if det(target.transform(1:3,1:3))>0
+        % flirt apparently flips along the x-dim if the det < 0
+        % if images are not radiological, the x-axis is flipped, see:
+        %  https://www.jiscmail.ac.uk/cgi-bin/webadmin?A2=ind0810&L=FSL&P=185638
+        %  https://www.jiscmail.ac.uk/cgi-bin/webadmin?A2=ind0903&L=FSL&P=R93775
+
+        % flip back
+        flipmat = eye(4); flipmat(1,1) = -1; flipmat(1,4) = target.dim(1)-1; 
+        vox2vox = flipmat*vox2vox;
+      end
+      if det(mri.transform(1:3,1:3))>0
+        % flirt apparently flips along the x-dim if the det < 0
+        % flip back
+        flipmat = eye(4); flipmat(1,1) = -1; flipmat(1,4) = mri.dim(1)-1; 
+        vox2vox = vox2vox*flipmat;
+      end
+      
       % very not sure about this (e.g. is vox2vox really doing what I think
       % it is doing? should I care about 0 and 1 based conventions?)
       % changing handedness?
