@@ -417,6 +417,13 @@ switch dataformat
       'channels',chanindx);
     dat = cell2mat(tmp.data');
     
+  case {'deymed_ini' 'deymed_dat'}
+    % the data is stored in a binary *.dat file
+    if isempty(hdr)
+      hdr.orig = [];
+    end
+    dat = read_deymed_dat(datafile, hdr.orig, begsample, endsample);
+    
   case 'gtec_mat'
     if isfield(hdr, 'orig')
       % these are remembered in the hdr.orig field for fast reading of subsequent segments

@@ -106,6 +106,16 @@ switch format
       headerfile = filename;
       datafile   = filename;
     end
+  case {'deymed_dat' 'deymed_ini'}
+    [p, f, x] = fileparts(filename);
+    headerfile = fullfile(p, [f '.ini']);
+    if ~exist(headerfile, 'file')
+      headerfile = fullfile(p, [f '.Ini']);
+    end
+    datafile = fullfile(p, [f '.dat']);
+    if ~exist(datafile, 'file')
+      datafile = fullfile(p, [f '.Dat']);
+    end
   case 'neurosim_ds'
     % this is the directory
     filename = fullfile(filename, 'signals'); % this is the only one we care about for the continuous signals

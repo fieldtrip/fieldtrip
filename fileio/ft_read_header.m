@@ -580,6 +580,19 @@ switch headerformat
     
     % add the original header details
     hdr.orig  = orig;
+
+  case {'deymed_ini' 'deymed_dat'}
+    % the header is stored in a *.ini file
+    orig            = read_deymed_ini(headerfile);
+    hdr             = [];
+    hdr.Fs          = orig.Fs;
+    hdr.nChans      = orig.nChans;
+    hdr.nSamples    = orig.nSamples;
+    hdr.nSamplesPre = 0;
+    hdr.nTrials     = 1;
+    hdr.label       = orig.label(:);
+    hdr.orig        = orig; % remember the original details
+
   case 'edf'
     % this reader is largely similar to the bdf reader
     hdr = read_edf(filename);

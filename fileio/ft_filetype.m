@@ -813,7 +813,17 @@ elseif filetype_check_extension(filename, '.tev')
   type = 'tdt_tev';
   manufacturer = 'Tucker-Davis-Technology';
   content = 'electrophysiological data';
-  
+
+elseif (filetype_check_extension(filename, '.dat') ||  filetype_check_extension(filename, '.Dat')) && (exist(fullfile(p, [f '.ini']), 'file') || exist(fullfile(p, [f '.Ini']), 'file'))
+  % this should go before curry_dat
+  type = 'deymed_dat';
+  manufacturer = 'Deymed';
+  content = 'raw eeg data';
+elseif (filetype_check_extension(filename, '.ini') ||  filetype_check_extension(filename, '.Ini')) && (exist(fullfile(p, [f '.dat']), 'file') || exist(fullfile(p, [f '.Dat']), 'file'))
+  type = 'deymed_ini';
+  manufacturer = 'Deymed';
+  content = 'eeg header information';
+
   % known Curry V4 file types
 elseif filetype_check_extension(filename, '.dap')
   type = 'curry_dap';   % FIXME, can also be MPI Frankfurt electrophysiological data
