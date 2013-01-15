@@ -4,18 +4,19 @@
 # (C) Lauri Parkkonen and Gustavo Sudre, 2010
 
 DACQ_PLATFORM := $(shell uname)
+
 ifeq ($(DACQ_PLATFORM), Linux)
-# The Elekta Linux acquisition system is always a 64-bit system 
-ARCH            = x86_64-pc-linux-gnu
-CFLAGS_PLATFORM = -I ./include/dacq_rel5up
-LIBS_PLATFORM   = -ldacq_rel5up
+	# The Elekta Linux acquisition system is always a 64-bit system 
+	ARCH            = x86_64-pc-linux-gnu
+	CFLAGS_PLATFORM = -I ./include/dacq_rel5up
+	LIBS_PLATFORM   = -ldacq_rel5up
 else ifeq ($(DACQ_PLATFORM), HP-UX)
-# The Elekta HP-UX acquisition system shall be HP-UX 11.11 
-ARCH            = hppa2.0-hp-hpux11.11
-CFLAGS_PLATFORM = -D_HPUX_SOURCE -DDACQ_OLD_CONNECTION_SCHEME -I ./include/dacq_rel5up
-LIBS_PLATFORM   = -ldacq_rel4
+	# The Elekta HP-UX acquisition system shall be HP-UX 11.11 
+	ARCH            = hppa2.0-hp-hpux11.11
+	CFLAGS_PLATFORM = -D_HPUX_SOURCE -DDACQ_OLD_CONNECTION_SCHEME -I ./include/dacq_rel5up
+	LIBS_PLATFORM   = -ldacq_rel4
 else
-$(error Unsupported platform. Compilation and linking only on Linux or HP-UX)
+	$(error Unsupported platform. Compilation and linking only on Linux or HP-UX)
 endif
 
 CC       = gcc
@@ -28,13 +29,14 @@ LDFLAGS  = -L ../../buffer/src -L ./lib/$(ARCH)
 USERLIBS = -lbuffer $(LIBS_PLATFORM) -ldacqcomm -lfiff -lerr-2.1
 SYSLIBS  = -lpthread -lm
 
+##############################################################################
 all : $(OBJECTS) ../../buffer/src/libbuffer.a
 	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJECTS) $(USERLIBS) $(SYSLIBS) -o $(PROGRAM)
 
-*.o : *.c
+*.o: *.c
 	$(CC) $(CFLAGS) $(INCLUDES) -c $^ 
 
-clean :
+clean:
 	rm -f $(OBJECTS) $(PROGRAM)
 
 

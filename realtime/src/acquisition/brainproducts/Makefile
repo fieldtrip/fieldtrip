@@ -9,7 +9,7 @@ PLATFORM = $(shell gcc -dumpmachine)
 FIELDTRIP = ../../../..
 FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
 
-#defaults, might be over-written further down
+# defaults, might be overwritten further down
 CFLAGS = -Wunused -Wall -pedantic
 CFLAGS += -I$(FTBUFFER)/src -I. 
 LDFLAGS = -L$(FTBUFFER)/src

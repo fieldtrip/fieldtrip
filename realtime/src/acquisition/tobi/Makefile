@@ -4,7 +4,7 @@ PLATFORM = $(shell gcc -dumpmachine)
 FIELDTRIP = ../../../..
 FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
 
-#defaults, might be over-written further down
+# defaults, might be overwritten further down
 CFLAGS = -I$(FTBUFFER)/src -I. -Iinclude
 CFLAGS += -Wunused -Wall -pedantic -O3
 CXXFLAGS = $(CFLAGS)
@@ -13,8 +13,7 @@ LDFLAGS = -L$(FTBUFFER)/src
 ifeq "$(PLATFORM)" "x86_64-linux-gnu"
 	BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
 	LDFLAGS += -L$(BINDIR) -Llib/ticpp/linux 
-	LDLIBS += -lbuffer -lpthread -lboost_thread -lboost_system -lboost_program_options\
-		-ltia -lticpp_64 
+	LDLIBS += -lbuffer -lpthread -lboost_thread -lboost_system -lboost_program_options -ltia -lticpp_64 
 endif
 
 ifndef BINDIR
@@ -23,6 +22,7 @@ endif
 
 TARGETS = $(patsubst %,$(BINDIR)/%, tia2ft)
 
+##############################################################################
 all: $(TARGETS)
 
 $(BINDIR)/%$(EXTENSION): %.o

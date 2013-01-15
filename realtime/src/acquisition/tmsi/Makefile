@@ -4,21 +4,21 @@
 # Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
 
 # Use MinGW for compilation on Windows!
+
 PLATFORM = $(shell gcc -dumpmachine)
 FIELDTRIP = ../../../..
 FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
 CPPDIR  = $(FTBUFFER)/cpp
 
-# TODO: make proper library of C++ framework.
+# better would be to make a proper library of the C++ framework
 CPPOBJ = $(patsubst %,$(CPPDIR)/%,\
 	SignalConfiguration.o GdfWriter.o FtConnection.o StringServer.o)
 
-#defaults, might be over-written further down
+# defaults, might be overwritten further down
 LDFLAGS = -L$(FTBUFFER)/src
 LDLIBS = -lbuffer $(CPPOBJ)
 CFLAGS = -I$(FTBUFFER)/src -I. -I$(CPPDIR) -Wunused -Wall -pedantic -O3 -g 
 CXXFLAGS = $(CFLAGS)
-
 
 ifeq "$(PLATFORM)" "mingw32"
 	BINDIR = $(FIELDTRIP)/realtime/bin/win32
@@ -26,8 +26,7 @@ ifeq "$(PLATFORM)" "mingw32"
 	CXXFLAGS += -I$(FIELDTRIP)/realtime/src/external/pthreads-win32/include
 	# LDFLAGS += -L$(BINDIR) does not seem to work for DLLs. Hence:
 	LDLIBS += -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll
-
-	# Make clean target work on windows:
+	# make clean target work on windows:
 	fixpath = $(subst /,\,$1)
 	RM = del
 endif
@@ -36,16 +35,18 @@ ifndef BINDIR
 $(error Unsupported platform: $(PLATFORM) :/.)
 endif
 
-
 TARGETS = $(patsubst %,$(BINDIR)/%$(EXTENSION), tmsidriver tmsi2ft)
 
+##############################################################################
 all: $(TARGETS)
 
 $(BINDIR)/%$(EXTENSION): %.o
 	$(CXX) -o $@ $^ $(LDFLAGS) $(LDLIBS)
 
 $(BINDIR)/tmsidriver$(EXTENSION): Feature.o RTDevice.o
+
 $(BINDIR)/tmsi2ft$(EXTENSION): RTDevice.o
+
 RTDevice.o: RTDevice.cpp RTDevice.h Sadio.h
 
 clean:

@@ -10,11 +10,11 @@ FIELDTRIP = ../../../..
 FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
 CPPDIR  = $(FTBUFFER)/cpp
 
-# TODO: make proper library of C++ framework.
+# better would be to make a proper library of the C++ framework
 CPPOBJS = $(CPPDIR)/SignalConfiguration.o $(CPPDIR)/GdfWriter.o \
 	$(CPPDIR)/FtConnection.o $(CPPDIR)/StringServer.o
 
-#defaults, might be over-written further down
+# defaults, might be overwritten further down
 LDFLAGS = -L$(FTBUFFER)/src
 LDLIBS = -lbuffer $(CPPOBJS)
 CXXFLAGS = -Wunused -Wall -pedantic -O3 -g
@@ -26,8 +26,7 @@ ifeq "$(PLATFORM)" "mingw32"
 	CXXFLAGS += -I$(FIELDTRIP)/realtime/src/external/pthreads-win32/include
 	# LDFLAGS += -L$(BINDIR) does not seem to work for DLLs. Hence:
 	LDLIBS += -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll
-
-	# Make clean target work on windows:
+	# make clean target work on windows:
 	fixpath = $(subst /,\,$1)
 	RM = del
 endif

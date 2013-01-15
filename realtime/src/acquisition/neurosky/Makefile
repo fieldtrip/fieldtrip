@@ -8,13 +8,13 @@
 PLATFORM = $(shell gcc -dumpmachine)
 FIELDTRIP = ../../../..
 FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
-CPPDIR  = $(FTBUFFER)/cpp
+CPPDIR = $(FTBUFFER)/cpp
 
-# TODO: make proper library of C++ framework.
+# better would be to make a proper library of the C++ framework
 CPPOBJ = $(patsubst %,$(CPPDIR)/%,\
 	SignalConfiguration.o GdfWriter.o FtConnection.o StringServer.o)
 
-#defaults, might be over-written further down
+# defaults, might be overwritten further down
 CFLAGS = -Wunused -Wall -pedantic -O3 -g -I.
 CXXFLAGS = $(CFLAGS) -I$(FTBUFFER)/src -I$(CPPDIR)
 LDFLAGS = -L$(FTBUFFER)/src

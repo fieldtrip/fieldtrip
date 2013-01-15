@@ -9,6 +9,15 @@ $(warning Compiliation appears to be broken. See bug 1532 on bugzilla.)
 
 PLATFORM = $(shell $(CC) -dumpmachine)
 
+# defaults, might be overwritten further down
+CXXFLAGS = $(FLFLAGS) -I../../buffer/src -I../../buffer/cpp -I. -Wunused -Wall -pedantic
+LDFLAGS = -lpthread ../../buffer/src/libbuffer.a
+FLFLAGS = `fltk-config --cxxflags`
+LDFL = `fltk-config --ldflags`
+LDGL = `fltk-config --ldflags --use-gl`
+EXTENSION = 
+WINONLY = 
+
 ifeq "$(PLATFORM)" "mingw32"
    LDFLAGS = pthreadGC2.dll ../../buffer/src/libbuffer.a -LC:/msys/1.0/local/lib -lws2_32 -lwinmm 
    FLFLAGS = -IC:/msys/1.0/local/include 
@@ -17,17 +26,7 @@ ifeq "$(PLATFORM)" "mingw32"
    EXTENSION = .exe
    WINONLY = gui_streamer.exe pixeldata_to_remote_buffer.exe 
    CFLAGS  = -I../../buffer/src -I../../buffer/pthreads-win32/include -I. -Wunused -Wall -pedantic
-else
-   LDFLAGS = -lpthread ../../buffer/src/libbuffer.a
-   FLFLAGS = `fltk-config --cxxflags`
-   LDFL = `fltk-config --ldflags`
-   LDGL = `fltk-config --ldflags --use-gl`
-   EXTENSION = 
-   WINONLY = 
 endif
-
-$(CXX)FLAGS = $(FLFLAGS) -I../../buffer/src -I../../buffer/cpp -I. -Wunused -Wall -pedantic
- 
 
 all: nii_to_buffer$(EXTENSION) opengl_client$(EXTENSION) gui_buffer_client$(EXTENSION) $(WINONLY)
 
