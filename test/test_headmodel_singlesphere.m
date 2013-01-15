@@ -1,44 +1,15 @@
 function test_headmodel_singlesphere
 
 % TEST test_headmodel_singlesphere
-% TEST ft_prepare_vol_sens ft_compute_leadfield ft_prepare_headmodel ft_headmodel_singlesphere
+% TEST ft_prepare_vol_sens ft_compute_leadfield ft_headmodel_singlesphere
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% first part serves to test basic functionality i.e. is a sphere produced
+if ispc
+    datadir = 'H:';
+else
+    datadir = '/home';
+end
 
-% function to test ft_headmodel_singlesphere. this function is called by
-% ft_prepare_headmodel
-
-% the function should work either on an input (segmented) mri, or it should
-% have a description of the geometry in the input, or it should have a
-% hdmfile (string) that specifies which file to read
-
-% read in the segmented mri
-cd('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer');
-load segmentedmri
-mri = segmentedmri; clear segmentedmri;
-
-hdmfile = '/home/common/matlab/fieldtrip/data/Subject01.shape';
-shape   = ft_read_headshape(hdmfile);
-
-cfg         = [];
-cfg.method  = 'singlesphere';
-vol1        = ft_prepare_headmodel(cfg, mri);
-
-cfg         = [];
-cfg.method  = 'singlesphere';
-cfg.hdmfile = hdmfile;
-vol2        = ft_prepare_headmodel(cfg);
-
-cfg         = [];
-cfg.method  = 'singlesphere';
-cfg.geom    = shape;
-vol3        = ft_prepare_headmodel(cfg);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% the second part generates leadfields
-
-addpath('/home/common/matlab/fieldtrip_private'); % in order to find icosahedron
+cd(strcat(datadir,'/common/matlab/fieldtrip/private')); % in order to find icosahedron
 
 % generate some random points and scale to a unit sphere
 pnt = randn(100,3);
@@ -61,6 +32,7 @@ for i=1:length(sel)
   sens.label{i} = sprintf('chan%03d', i);
 end
 
+sens = ft_convert_units(sens, vol.unit); 
 % project the electrodes on the volume conduction model
 [vol, sens] = ft_prepare_vol_sens(vol, sens);
 
