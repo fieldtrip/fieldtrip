@@ -1,3 +1,7 @@
+function test_bug1573
+
+% TEST ft_read_mri ft_volumnrealign ft_sourceinterpolate
+
 template = '/home/common/matlab/spm8/canonical/single_subj_T1.nii';
 template_mri=ft_read_mri(template);
 
