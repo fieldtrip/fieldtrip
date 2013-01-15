@@ -7,6 +7,9 @@
 # On other platforms, make sure you have PortAudio installed.
 
 PLATFORM = $(shell gcc -dumpmachine)
+UNAME   = $(shell uname)
+MACHINE = $(shell uname -m)
+
 FIELDTRIP = ../../../..
 FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
 CPPDIR  = $(FTBUFFER)/cpp
@@ -24,7 +27,7 @@ CPPOBJ = $(patsubst %,$(CPPDIR)/%,\
 
 ifeq "$(PLATFORM)" "mingw32"
 	BINDIR = $(FIELDTRIP)/realtime/bin/win32
-	EXTENSION = .exe
+	SUFFIX = .exe
 	fixpath = $(subst /,\,$1)
 	# LDFLAGS += -L$(BINDIR) does not seem to work for DLLs. Hence:
 	LDLIBS += $(CPPOBJ) -lbuffer -lws2_32 $(BINDIR)/pthreadGC2.dll $(BINDIR)/PortAudio.dll 
@@ -35,12 +38,12 @@ ifndef BINDIR
 $(error Unsupported platform: $(PLATFORM) :/.)
 endif
 
-TARGETS = $(BINDIR)/audio2ft$(EXTENSION)
+TARGETS = $(BINDIR)/audio2ft$(SUFFIX)
 
 ##############################################################################
 all: $(TARGETS)
 
-$(BINDIR)/%$(EXTENSION): %.cc
+$(BINDIR)/%$(SUFFIX): %.cc
 	$(CXX) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(LDLIBS)
 
 clean:

@@ -47,14 +47,20 @@ ifeq "$(UNAME)" "Darwin"
     fixpath = $1
     ifeq "$(MACHINE)" "i386"
         BINDIR = $(FIELDTRIP)/realtime/bin/maci
+        CFLAGS += -m32
+        CXXFLAGS += -m32
+        LDFLAGS += -m32
     endif
     ifeq "$(MACHINE)" "x86_64"
         BINDIR = $(FIELDTRIP)/realtime/bin/maci64
+        CFLAGS += -m64
+        CXXFLAGS += -m64
+        LDFLAGS += -m64
     endif
 endif
 
 ifndef BINDIR
-$(warning Unsupported platform $(PLATFORM) :/.)
+$(error Unsupported platform: $(PLATFORM) :/.)
 endif
 
 # demo_buffer_tia does not work.

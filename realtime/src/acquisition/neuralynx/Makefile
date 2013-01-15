@@ -6,6 +6,9 @@
 # Use MinGW for compilation on Windows!
 
 PLATFORM = $(shell gcc -dumpmachine)
+UNAME   = $(shell uname)
+MACHINE = $(shell uname -m)
+
 FIELDTRIP = ../../../..
 FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
 CPPDIR = $(FTBUFFER)/cpp
@@ -17,7 +20,7 @@ LDLIBS = -lbuffer
 
 ifeq "$(PLATFORM)" "mingw32"
 	BINDIR = $(FIELDTRIP)/realtime/bin/win32
-	EXTENSION = .exe
+	SUFFIX = .exe
 	CXXFLAGS += -I$(FIELDTRIP)/realtime/src/external/pthreads-win32/include
 	# LDFLAGS += -L$(BINDIR) does not seem to work for DLLs. Hence:
 	LDLIBS += -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll $(BINDIR)/MatlabNetComClient.dll
@@ -30,12 +33,12 @@ ifndef BINDIR
 $(error Unsupported platform: $(PLATFORM) :/.)
 endif
 
-TARGETS = $(BINDIR)/nlx2ft$(EXTENSION)
+TARGETS = $(BINDIR)/nlx2ft$(SUFFIX)
 
 ##############################################################################
 all: $(TARGETS)
 
-$(BINDIR)/%$(EXTENSION): %.o
+$(BINDIR)/%$(SUFFIX): %.o
 	$(CXX) -o $@ $^ $(LDFLAGS) $(LDLIBS)
 
 clean:

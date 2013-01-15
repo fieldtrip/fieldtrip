@@ -40,14 +40,20 @@ endif
 ifeq "$(UNAME)" "Darwin"
     ifeq "$(MACHINE)" "i386"
         BINDIR = $(FIELDTRIP)/realtime/bin/maci
+        CFLAGS += -m32
+        CXXFLAGS += -m32
+        LDFLAGS += -m32
     endif
     ifeq "$(MACHINE)" "x86_64"
         BINDIR = $(FIELDTRIP)/realtime/bin/maci64
+        CFLAGS += -m64
+        CXXFLAGS += -m64
+        LDFLAGS += -m64
     endif
 endif
 
 ifndef BINDIR
-$(warning Unsupported platform $(PLATFORM) :/.)
+$(error Unsupported platform: $(PLATFORM) :/.)
 endif
 
 TARGETS = $(BINDIR)/serial_event$(SUFFIX)
@@ -56,13 +62,13 @@ TARGETS = $(BINDIR)/serial_event$(SUFFIX)
 all: $(TARGETS)
 
 serial.o: serial.c serial.h
-	gcc -c serial.c -I.
+	$(CC) $(CFLAGS) -c serial.c -I.
 		
 serial_event.o: serial_event.c serial.h
-	gcc -c serial_event.c $(CFLAGS)
+	$(CC) $(CFLAGS) -c serial_event.c $(CFLAGS)
 	
 $(BINDIR)/serial_event$(SUFFIX): serial_event.o serial.o
-	gcc -o $@ serial_event.o serial.o $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ serial_event.o serial.o $(LDFLAGS)
 
 clean:
 	$(RM) *.o $(call fixpath, $(TARGETS))

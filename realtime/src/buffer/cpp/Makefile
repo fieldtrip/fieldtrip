@@ -6,39 +6,50 @@
 # Use MinGW for compilation on Windows!
 
 PLATFORM = $(shell gcc -dumpmachine)
+UNAME = $(shell uname)
+MACHINE = $(shell uname -m)
 
-#defaults, might be over-written further down
+# defaults, might be overwritten further down
 LDFLAGS += -L../src
 LDFLAGS += -lpthread -lbuffer
 INCPATH = -I../src -I. 
-RM = rm -f
+SUFFIX =
 
 ifeq "$(PLATFORM)" "mingw32"
-	LDFLAGS += ../../external/pthreads-win32/lib/pthreadGC2.dll \
-		-LC:/msys/1.0/local/lib -lws2_32 -lwinmm 
+	LDFLAGS += ../../external/pthreads-win32/lib/pthreadGC2.dll -LC:/msys/1.0/local/lib -lws2_32 -lwinmm 
 	INCPATH += -I../../external/pthreads-win32/include
 	SUFFIX = .exe
 	RM = del
 endif
 
 ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
-	LDFLAGS += ../../external/pthreads-win64/lib/pthreadGC2-w64.dll \
-		LC:/msys/1.0/local/lib -lws2_32 -lwinmm 
+	LDFLAGS += ../../external/pthreads-win64/lib/pthreadGC2-w64.dll -LC:/msys/1.0/local/lib -lws2_32 -lwinmm 
 	INCPATH += -I../../external/pthreads-win64/include
-	SUFFIX = .exe
+	SUFFIX = _64.exe
 	RM = del
 endif
 
-ifeq "$(PLATFORM)" "i686-apple-darwin10"
+ifeq "$(UNAME)" "Linux"
 	LDFLAGS += -ldl
 endif
 
-ifeq "$(PLATFORM)" "x86_64-redhat-linux"
+ifeq "$(UNAME)" "Darwin"
 	LDFLAGS += -ldl
+    ifeq "$(MACHINE)" "i386"
+        CFLAGS += -m32
+        CXXFLAGS += -m32
+        LDFLAGS += -m32
+    endif
+    ifeq "$(MACHINE)" "x86_64"
+        CFLAGS += -m64
+        CXXFLAGS += -m64
+        LDFLAGS += -m64
+    endif
 endif
 
 CFLAGS += $(INCPATH) -Wunused -Wall -pedantic -O3
 
+##############################################################################
 all: odmTest$(SUFFIX)
 
 FtConnection.o: FtConnection.cc FtBuffer.h

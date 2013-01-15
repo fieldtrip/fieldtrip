@@ -6,6 +6,9 @@
 # Use MinGW for compilation on Windows!
 
 PLATFORM = $(shell gcc -dumpmachine)
+UNAME   = $(shell uname)
+MACHINE = $(shell uname -m)
+
 FIELDTRIP = ../../../..
 FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
 CPPDIR  = $(FTBUFFER)/cpp
@@ -22,7 +25,7 @@ CXXFLAGS = $(CFLAGS)
 
 ifeq "$(PLATFORM)" "mingw32"
 	BINDIR = $(FIELDTRIP)/realtime/bin/win32
-	EXTENSION = .exe
+	SUFFIX = .exe
 	CXXFLAGS += -I$(FIELDTRIP)/realtime/src/external/pthreads-win32/include
 	# LDFLAGS += -L$(BINDIR) does not seem to work for DLLs. Hence:
 	LDLIBS += -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll
@@ -35,17 +38,17 @@ ifndef BINDIR
 $(error Unsupported platform: $(PLATFORM) :/.)
 endif
 
-TARGETS = $(patsubst %,$(BINDIR)/%$(EXTENSION), tmsidriver tmsi2ft)
+TARGETS = $(patsubst %,$(BINDIR)/%$(SUFFIX), tmsidriver tmsi2ft)
 
 ##############################################################################
 all: $(TARGETS)
 
-$(BINDIR)/%$(EXTENSION): %.o
+$(BINDIR)/%$(SUFFIX): %.o
 	$(CXX) -o $@ $^ $(LDFLAGS) $(LDLIBS)
 
-$(BINDIR)/tmsidriver$(EXTENSION): Feature.o RTDevice.o
+$(BINDIR)/tmsidriver$(SUFFIX): Feature.o RTDevice.o
 
-$(BINDIR)/tmsi2ft$(EXTENSION): RTDevice.o
+$(BINDIR)/tmsi2ft$(SUFFIX): RTDevice.o
 
 RTDevice.o: RTDevice.cpp RTDevice.h Sadio.h
 

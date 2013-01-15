@@ -7,7 +7,9 @@
 
 $(warning Compiliation appears to be broken. See bug 1532 on bugzilla.)
 
-PLATFORM = $(shell $(CC) -dumpmachine)
+PLATFORM = $(shell gcc -dumpmachine)
+UNAME   = $(shell uname)
+MACHINE = $(shell uname -m)
 
 # defaults, might be overwritten further down
 CXXFLAGS = $(FLFLAGS) -I../../buffer/src -I../../buffer/cpp -I. -Wunused -Wall -pedantic
@@ -15,7 +17,7 @@ LDFLAGS = -lpthread ../../buffer/src/libbuffer.a
 FLFLAGS = `fltk-config --cxxflags`
 LDFL = `fltk-config --ldflags`
 LDGL = `fltk-config --ldflags --use-gl`
-EXTENSION = 
+SUFFIX = 
 WINONLY = 
 
 ifeq "$(PLATFORM)" "mingw32"
@@ -23,12 +25,12 @@ ifeq "$(PLATFORM)" "mingw32"
    FLFLAGS = -IC:/msys/1.0/local/include 
    LDFL = -mno-cygwin -lfltk -lole32 -luuid -lcomctl32 -lgdi32 -lwsock32
    LDGL = -lfltk_gl -lopengl32 -lglu32 $(LDFL)
-   EXTENSION = .exe
+   SUFFIX = .exe
    WINONLY = gui_streamer.exe pixeldata_to_remote_buffer.exe 
    CFLAGS  = -I../../buffer/src -I../../buffer/pthreads-win32/include -I. -Wunused -Wall -pedantic
 endif
 
-all: nii_to_buffer$(EXTENSION) opengl_client$(EXTENSION) gui_buffer_client$(EXTENSION) $(WINONLY)
+all: nii_to_buffer$(SUFFIX) opengl_client$(SUFFIX) gui_buffer_client$(SUFFIX) $(WINONLY)
 
 ###############################################################################
 # Platform-independent C libraries / utilities
@@ -45,8 +47,8 @@ unixtime.o: unixtime.c unixtime.h
 gui_buffer_client.o: gui_buffer_client.cc siemensap.h
 	$(CXX) -c gui_buffer_client.cc $($(CXX)FLAGS)
 	
-gui_buffer_client$(EXTENSION): gui_buffer_client.o siemensap.o 
-	$(CXX) -o gui_buffer_client$(EXTENSION) gui_buffer_client.o siemensap.o $(LDFLAGS) $(LDFL)
+gui_buffer_client$(SUFFIX): gui_buffer_client.o siemensap.o 
+	$(CXX) -o gui_buffer_client$(SUFFIX) gui_buffer_client.o siemensap.o $(LDFLAGS) $(LDFL)
 
 opengl_client.o: opengl_client.cc siemensap.h
 	$(CXX) -c opengl_client.cc $($(CXX)FLAGS)
@@ -54,20 +56,20 @@ opengl_client.o: opengl_client.cc siemensap.h
 Brain3dWindow.o: Brain3dWindow.cc Brain3dWindow.h
 	$(CXX) -c Brain3dWindow.cc $($(CXX)FLAGS)
 	
-opengl_client$(EXTENSION): opengl_client.o siemensap.o Brain3dWindow.o
-	$(CXX) -o opengl_client$(EXTENSION) opengl_client.o siemensap.o Brain3dWindow.o $(LDFLAGS) $(LDGL)
+opengl_client$(SUFFIX): opengl_client.o siemensap.o Brain3dWindow.o
+	$(CXX) -o opengl_client$(SUFFIX) opengl_client.o siemensap.o Brain3dWindow.o $(LDFLAGS) $(LDGL)
 	
 nii_to_buffer.o: nii_to_buffer.cc
 	$(CXX) -c nii_to_buffer.cc $($(CXX)FLAGS)
 
-nii_to_buffer$(EXTENSION): nii_to_buffer.o
-	$(CXX) -o nii_to_buffer$(EXTENSION) nii_to_buffer.o $(LDFLAGS)
+nii_to_buffer$(SUFFIX): nii_to_buffer.o
+	$(CXX) -o nii_to_buffer$(SUFFIX) nii_to_buffer.o $(LDFLAGS)
 	
 save_as_nifti.o: save_as_nifti.c
 	$(CC) -c save_as_nifti.c $(CFLAGS)
 	
-save_as_nifti$(EXTENSION): save_as_nifti.o ../../buffer/src/socketserver.o
-	$(CC) -o save_as_nifti$(EXTENSION) save_as_nifti.o ../../buffer/src/socketserver.o $(LDFLAGS)
+save_as_nifti$(SUFFIX): save_as_nifti.o ../../buffer/src/socketserver.o
+	$(CC) -o save_as_nifti$(SUFFIX) save_as_nifti.o ../../buffer/src/socketserver.o $(LDFLAGS)
 
 ###############################################################################
 # Windows specific components / acquisition software

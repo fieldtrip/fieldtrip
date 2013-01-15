@@ -25,13 +25,27 @@ LDLIBS = -lbuffer $(CPPOBJ)
 
 ifeq "$(PLATFORM)" "mingw32"
 	BINDIR = $(FIELDTRIP)/realtime/bin/win32
-	EXTENSION = .exe
+	SUFFIX = .exe
 	CXXFLAGS += -I$(FIELDTRIP)/realtime/src/external/pthreads-win32/include
 	# LDFLAGS += -L$(BINDIR) does not seem to work for DLLs. Hence:
 	LDLIBS += -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll
 	# make clean target work on windows:
 	fixpath = $(subst /,\,$1)
 	RM = del
+endif
+
+ifeq "$(UNAME)" "Linux"
+	LDLIBS += -lpthread -ldl 
+	fixpath = $1
+	ifeq "$(MACHINE)" "i686"
+		BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
+	endif
+	ifeq "$(MACHINE)" "x86_64"
+		BINDIR = $(FIELDTRIP)/realtime/bin/glnx86
+	endif
+	ifeq "$(MACHINE)" "armv6l"
+		BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi
+	endif
 endif
 
 ifeq "$(UNAME)" "Darwin"
@@ -51,31 +65,17 @@ ifeq "$(UNAME)" "Darwin"
 	endif
 endif
 
-ifeq "$(UNAME)" "Linux"
-	LDLIBS += -lpthread -ldl 
-	fixpath = $1
-	ifeq "$(MACHINE)" "i686"
-		BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
-	endif
-	ifeq "$(MACHINE)" "x86_64"
-		BINDIR = $(FIELDTRIP)/realtime/bin/glnx86
-	endif
-	ifeq "$(MACHINE)" "armv6l"
-		BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi
-	endif
-endif
-
 
 ifndef BINDIR
 $(error Unsupported platform: $(PLATFORM) :/.)
 endif
 
-TARGETS = $(BINDIR)/thinkgear2ft$(EXTENSION)
+TARGETS = $(BINDIR)/thinkgear2ft$(SUFFIX)
 
 ##############################################################################
 all: $(TARGETS)
 
-$(BINDIR)/%$(EXTENSION): %.o serial.o
+$(BINDIR)/%$(SUFFIX): %.o serial.o
 	$(CXX) -o $@ $^ $(LDFLAGS) $(LDLIBS)
 
 clean:

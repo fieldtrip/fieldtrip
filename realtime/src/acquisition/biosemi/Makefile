@@ -6,6 +6,9 @@
 # Use MinGW for compilation on Windows!
 
 PLATFORM = $(shell gcc -dumpmachine)
+UNAME   = $(shell uname)
+MACHINE = $(shell uname -m)
+
 FIELDTRIP = ../../../..
 FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
 CPPDIR  = $(FTBUFFER)/cpp
@@ -22,25 +25,13 @@ CXXFLAGS += -I$(FTBUFFER)/src -I. -I$(CPPDIR)
 
 ifeq "$(PLATFORM)" "mingw32"
 	BINDIR = $(FIELDTRIP)/realtime/bin/win32
-	EXTENSION = .exe
+	SUFFIX = .exe
 	CXXFLAGS += -I$(FIELDTRIP)/realtime/src/external/pthreads-win32/include
 	# LDFLAGS += -L$(BINDIR) does not seem to work for DLLs. Hence:
 	LDLIBS += -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll
 	# make clean target work on windows:
 	fixpath = $(subst /,\,$1)
 	RM = del
-endif
-
-ifeq "$(PLATFORM)" "i686-apple-darwin10"
-	# Currently, only 32 bit is supported since the 64 bit drivers don't seem to
-	# work. This means that for correct compilation of biosemi2ft, also libbuffer
-	# and ODM need to be (manually) recompiled and linked with '-m32' flag in the
-	# CFLAGS and LDFLAGS.
-	BINDIR = $(FIELDTRIP)/realtime/bin/maci
-	CFLAGS += -m32
-	CXXFLAGS += -m32
-	LDLIBS += -lpthread -m32
-	fixpath = $1
 endif
 
 ifeq "$(PLATFORM)" "x86_64-redhat-linux"
@@ -58,15 +49,37 @@ ifeq "$(PLATFORM)" "arm-linux-gnueabi"
 	BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi
 endif
 
-ifndef BINDIR
-$(warning Unsupported platform: $(PLATFORM) :/.)
+# Currently, only 32 bit OS X is supported since the 64 bit drivers don't seem to
+# work. This means that for correct compilation of biosemi2ft, also libbuffer
+# and ODM need to be (manually) recompiled and linked with '-m32' flag in the
+# CFLAGS and LDFLAGS.
+ifeq "$(UNAME)" "Darwin"
+    LDLIBS += -lpthread
+    fixpath = $1
+    ifeq "$(MACHINE)" "i386"
+        BINDIR = $(FIELDTRIP)/realtime/bin/maci
+        CFLAGS += -m32
+        CXXFLAGS += -m32
+        LDFLAGS += -m32
+    endif
+    ifeq "$(MACHINE)" "x86_64"
+        BINDIR = $(FIELDTRIP)/realtime/bin/maci64
+        CFLAGS += -m64
+        CXXFLAGS += -m64
+        LDFLAGS += -m64
+    endif
 endif
 
-TARGETS = $(BINDIR)/biosemi2ft$(EXTENSION)
+ifndef BINDIR
+$(error Unsupported platform: $(PLATFORM) :/.)
+endif
 
+TARGETS = $(BINDIR)/biosemi2ft$(SUFFIX)
+
+##############################################################################
 all: $(TARGETS)
 	
-$(BINDIR)/biosemi2ft$(EXTENSION): biosemi2ft.o BioSemiClient.o 
+$(BINDIR)/biosemi2ft$(SUFFIX): biosemi2ft.o BioSemiClient.o 
 	$(CXX) -o $@ $^ $(LDFLAGS) $(LDLIBS)
 
 clean:

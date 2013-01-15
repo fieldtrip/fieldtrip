@@ -31,17 +31,16 @@ ifndef BINDIR
 $(error Unsupported platform: $(PLATFORM) :/.)
 endif
 
-
-TARGETS = $(patsubst %,$(BINDIR)/ctf_%$(EXTENSION),\
+TARGETS = $(patsubst %,$(BINDIR)/ctf_%$(SUFFIX),\
 	AcqBuffer acq2ft acq2ftx fake_meg check_shm acq2ftx_fake acq2ft_fake)
 
 ##############################################################################
 all: $(TARGETS)
 
-$(BINDIR)/ctf_%$(EXTENSION): %.o
+$(BINDIR)/ctf_%$(SUFFIX): %.o
 	$(CC) -o $@ $^ $(LDFLAGS) $(LDLIBS)
 
-$(BINDIR)/acq2ftx$(EXTENSION): LDLIBS += -lm
+$(BINDIR)/acq2ftx$(SUFFIX): LDLIBS += -lm
 
 %_fake.o: %.c
 	$(CC) $^ $(CFLAGS) -DFAKE_MEG -c -o $@

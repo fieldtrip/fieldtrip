@@ -20,7 +20,7 @@ LDLIBS = -lbuffer -lpthread
 
 ifeq "$(PLATFORM)" "mingw32"
 	BINDIR = $(FIELDTRIP)/realtime/bin/win32
-	EXTENSION = .exe
+	SUFFIX = .exe
 	CFLAGS += -I$(FIELDTRIP)/realtime/src/external/pthreads-win32/include
 	# LDFLAGS += -L$(BINDIR) does not seem to work for DLLs. Hence:
 	LDLIBS += -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll
@@ -62,11 +62,11 @@ ifndef BINDIR
 $(error Unsupported plaform: $(PLATFORM) :/.)
 endif
 
-TARGETS = $(BINDIR)/rda2ft$(EXTENSION)
+TARGETS = $(BINDIR)/rda2ft$(SUFFIX)
 
 all: $(TARGETS)
 	
-$(BINDIR)/rda2ft$(EXTENSION): rda2ft.c
+$(BINDIR)/rda2ft$(SUFFIX): rda2ft.c
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LDLIBS)
 
 clean:

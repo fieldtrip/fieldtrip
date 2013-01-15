@@ -35,6 +35,20 @@ ifeq "$(PLATFORM)" "mingw32"
 	RM = del
 endif
 
+ifeq "$(UNAME)" "Linux"
+	$LDLIBS += -ldl -lstdc++
+	fixpath = $1
+	ifeq "$(MACHINE)" "i686"
+		BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
+	endif
+	ifeq "$(MACHINE)" "x86_64"
+		BINDIR = $(FIELDTRIP)/realtime/bin/glnx86
+	endif
+	ifeq "$(MACHINE)" "armv6l"
+		BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi
+	endif
+endif
+
 ifeq "$(UNAME)" "Darwin"
 	fixpath = $1
 	ifeq "$(MACHINE)" "i386"
@@ -48,20 +62,6 @@ ifeq "$(UNAME)" "Darwin"
 		CFLAGS += -m64
 		CXXFLAGS += -m64
 		LDFLAGS += -m64
-	endif
-endif
-
-ifeq "$(UNAME)" "Linux"
-	$LDLIBS += -lpthread -ldl -lstdc++
-	fixpath = $1
-	ifeq "$(MACHINE)" "i686"
-		BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
-	endif
-	ifeq "$(MACHINE)" "x86_64"
-		BINDIR = $(FIELDTRIP)/realtime/bin/glnx86
-	endif
-	ifeq "$(MACHINE)" "armv6l"
-		BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi
 	endif
 endif
 

@@ -39,14 +39,20 @@ endif
 ifeq "$(UNAME)" "Darwin"
     ifeq "$(MACHINE)" "i386"
         BINDIR = $(FIELDTRIP)/realtime/bin/maci
+        CFLAGS += -m32
+        CXXFLAGS += -m32
+        LDFLAGS += -m32
     endif
     ifeq "$(MACHINE)" "x86_64"
         BINDIR = $(FIELDTRIP)/realtime/bin/maci64
+        CFLAGS += -m64
+        CXXFLAGS += -m64
+        LDFLAGS += -m64
     endif
 endif
 
 ifndef BINDIR
-$(warning Unsupported platform $(PLATFORM) :/.)
+$(error Unsupported platform: $(PLATFORM) :/.)
 endif
 
 TARGETS = $(BINDIR)/playback$(SUFFIX) $(BINDIR)/recording$(SUFFIX)
@@ -55,19 +61,19 @@ TARGETS = $(BINDIR)/playback$(SUFFIX) $(BINDIR)/recording$(SUFFIX)
 all: $(TARGETS)
 
 playback.o: playback.c
-	gcc -c playback.c $(CFLAGS)
+	$(CC) -c playback.c $(CFLAGS)
 	
 recording.o: recording.c
-	gcc -c $^ $(CFLAGS)
+	$(CC) -c $^ $(CFLAGS)
 	
 ft_offline.o: ft_offline.c
-	gcc -c $^ $(CFLAGS)
+	$(CC) -c $^ $(CFLAGS)
 			
 $(BINDIR)/playback$(SUFFIX): playback.o
-	gcc -o $@ $^ $(LDFLAGS)
+	$(CC) -o $@ $^ $(LDFLAGS)
 		
 $(BINDIR)/recording$(SUFFIX): recording.o ft_offline.o ../../buffer/src/socketserver.o
-	gcc -o $@ $^ $(LDFLAGS)	
+	$(CC) -o $@ $^ $(LDFLAGS)	
 
 clean:
 	$(RM) *.o $(call fixpath, $(TARGETS))

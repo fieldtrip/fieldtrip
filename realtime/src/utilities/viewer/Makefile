@@ -15,8 +15,6 @@ FIELDTRIP = ../../../..
 FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
 
 # defaults, might be overwritten further down
-CC = gcc
-CXX = g++
 CXXFLAGS = $(FLFLAGS) -I../../buffer/src -I../../buffer/cpp -I. -Wunused -Wall -pedantic
 LDFLAGS = -lpthread ../../buffer/src/libbuffer.a
 FLFLAGS = $(shell fltk-config --cxxflags)
@@ -47,14 +45,20 @@ endif
 ifeq "$(UNAME)" "Darwin"
     ifeq "$(MACHINE)" "i386"
         BINDIR = $(FIELDTRIP)/realtime/bin/maci
+        CFLAGS += -m32
+        CXXFLAGS += -m32
+        LDFLAGS += -m32
     endif
     ifeq "$(MACHINE)" "x86_64"
         BINDIR = $(FIELDTRIP)/realtime/bin/maci64
+        CFLAGS += -m64
+        CXXFLAGS += -m64
+        LDFLAGS += -m64
     endif
 endif
 
 ifndef BINDIR
-$(warning Unsupported platform $(PLATFORM) :/.)
+$(error Unsupported platform: $(PLATFORM) :/.)
 endif
 
 TARGETS = $(BINDIR)/bufferViewer$(SUFFIX)
