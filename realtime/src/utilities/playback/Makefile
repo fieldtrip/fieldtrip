@@ -6,7 +6,14 @@
 # Use MinGW for compilation on Windows!
 
 PLATFORM = $(shell gcc -dumpmachine)
+UNAME   = $(shell uname)
+MACHINE = $(shell uname -m)
 
+FIELDTRIP = ../../../..
+FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
+
+# defaults, might be overwritten further down
+CFLAGS = $(INCPATH) -Wunused -Wall -pedantic -g
 LDFLAGS = -lpthread ../../buffer/src/libbuffer.a
 INCPATH = -I../../buffer/src -I. 
 SUFFIX = 
@@ -17,9 +24,35 @@ ifeq "$(PLATFORM)" "mingw32"
    SUFFIX = .exe
 endif
 
-CFLAGS = $(INCPATH) -Wunused -Wall -pedantic -g
+ifeq "$(UNAME)" "Linux"
+    ifeq "$(MACHINE)" "i686"
+        BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
+    endif
+    ifeq "$(MACHINE)" "x86_64"
+        BINDIR = $(FIELDTRIP)/realtime/bin/glnx86
+    endif
+    ifeq "$(MACHINE)" "armv6l"
+        BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi
+    endif
+endif
 
-all: playback$(SUFFIX) recording$(SUFFIX)
+ifeq "$(UNAME)" "Darwin"
+    ifeq "$(MACHINE)" "i386"
+        BINDIR = $(FIELDTRIP)/realtime/bin/maci
+    endif
+    ifeq "$(MACHINE)" "x86_64"
+        BINDIR = $(FIELDTRIP)/realtime/bin/maci64
+    endif
+endif
+
+ifndef BINDIR
+$(warning Unsupported platform $(PLATFORM) :/.)
+endif
+
+TARGETS = $(BINDIR)/playback$(SUFFIX) $(BINDIR)/recording$(SUFFIX)
+
+###############################################################################
+all: $(TARGETS)
 
 playback.o: playback.c
 	gcc -c playback.c $(CFLAGS)
@@ -30,11 +63,11 @@ recording.o: recording.c
 ft_offline.o: ft_offline.c
 	gcc -c $^ $(CFLAGS)
 			
-playback$(SUFFIX): playback.o
+$(BINDIR)/playback$(SUFFIX): playback.o
 	gcc -o $@ $^ $(LDFLAGS)
 		
-recording$(SUFFIX): recording.o ft_offline.o ../../buffer/src/socketserver.o
+$(BINDIR)/recording$(SUFFIX): recording.o ft_offline.o ../../buffer/src/socketserver.o
 	gcc -o $@ $^ $(LDFLAGS)	
 
 clean:
-	rm *.o
+	$(RM) *.o $(call fixpath, $(TARGETS))
