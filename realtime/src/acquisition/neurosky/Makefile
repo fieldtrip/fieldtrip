@@ -6,6 +6,9 @@
 # Use MinGW for compilation on Windows!
 
 PLATFORM = $(shell gcc -dumpmachine)
+UNAME  = $(shell uname)
+MACHINE = $(shell uname -m)
+
 FIELDTRIP = ../../../..
 FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
 CPPDIR = $(FTBUFFER)/cpp
@@ -23,38 +26,45 @@ LDLIBS = -lbuffer $(CPPOBJ)
 ifeq "$(PLATFORM)" "mingw32"
 	BINDIR = $(FIELDTRIP)/realtime/bin/win32
 	EXTENSION = .exe
-	
 	CXXFLAGS += -I$(FIELDTRIP)/realtime/src/external/pthreads-win32/include
 	# LDFLAGS += -L$(BINDIR) does not seem to work for DLLs. Hence:
 	LDLIBS += -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll
-	
-	# Make clean target work on windows:
+	# make clean target work on windows:
 	fixpath = $(subst /,\,$1)
 	RM = del
 endif
 
-ifeq "$(PLATFORM)" "i686-apple-darwin10"
-	BINDIR = $(FIELDTRIP)/realtime/bin/maci64
-	CFLAGS += -m64
-	CXXFLAGS += -m64
-	LDFLAGS += -m64
+ifeq "$(UNAME)" "Darwin"
+	LDLIBS += -lpthread
 	fixpath = $1
+	ifeq "$(MACHINE)" "i386"
+		BINDIR = $(FIELDTRIP)/realtime/bin/maci
+		CFLAGS += -m32
+		CXXFLAGS += -m32
+		LDFLAGS += -m32
+	endif
+	ifeq "$(MACHINE)" "x86_64"
+		BINDIR = $(FIELDTRIP)/realtime/bin/maci64
+		CFLAGS += -m64
+		CXXFLAGS += -m64
+		LDFLAGS += -m64
+	endif
 endif
 
-ifeq "$(PLATFORM)" "x86_64-linux-gnu"
+ifeq "$(UNAME)" "Linux"
 	LDLIBS += -lpthread -ldl 
-	BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
+	fixpath = $1
+	ifeq "$(MACHINE)" "i686"
+		BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
+	endif
+	ifeq "$(MACHINE)" "x86_64"
+		BINDIR = $(FIELDTRIP)/realtime/bin/glnx86
+	endif
+	ifeq "$(MACHINE)" "armv6l"
+		BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi
+	endif
 endif
 
-ifeq "$(PLATFORM)" "x86_64-redhat-linux"
-	LDLIBS += -lpthread -ldl 
-	BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
-endif
-
-ifeq "$(PLATFORM)" "arm-linux-gnueabi"
-	LDLIBS += -lpthread -ldl 
-	BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi
-endif
 
 ifndef BINDIR
 $(error Unsupported platform: $(PLATFORM) :/.)
@@ -62,14 +72,11 @@ endif
 
 TARGETS = $(BINDIR)/thinkgear2ft$(EXTENSION)
 
+##############################################################################
 all: $(TARGETS)
 
-thinkgear2ft$(EXTENSION): thinkgear2ft.cc serial.o
-
-$(BINDIR)/%$(EXTENSION): %.o
+$(BINDIR)/%$(EXTENSION): %.o serial.o
 	$(CXX) -o $@ $^ $(LDFLAGS) $(LDLIBS)
-
-$(TARGETS): serial.o
 
 clean:
 	$(RM) *.o $(call fixpath, $(TARGETS))

@@ -6,9 +6,12 @@
 # Use MinGW for compilation on Windows!
 
 PLATFORM = $(shell gcc -dumpmachine)
+UNAME = $(shell uname)
+MACHINE = $(shell uname -m)
+
 FIELDTRIP = ../../../..
 FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
-CPPDIR  = $(FTBUFFER)/cpp
+CPPDIR = $(FTBUFFER)/cpp
 
 # better would be to make a proper library of the C++ framework
 CPPOBJ = $(patsubst %,$(CPPDIR)/%,\
@@ -19,58 +22,64 @@ CFLAGS = -I$(FTBUFFER)/src -I. -I$(CPPDIR)
 CFLAGS += -Wunused -Wall -pedantic -O3 -g 
 CXXFLAGS = $(CFLAGS)
 LDFLAGS = -L$(FTBUFFER)/src
-LDLIBS = -lbuffer $(CPPOBJ)
-
+LDLIBS = -lbuffer -lpthread $(CPPOBJ)
 
 ifeq "$(PLATFORM)" "mingw32"
 	BINDIR = $(FIELDTRIP)/realtime/bin/win32
-	EXTENSION = .exe
+	SUFFIX = .exe
 	CXXFLAGS += -I$(FIELDTRIP)/realtime/src/external/pthreads-win32/include
-	
 	# LDFLAGS += -L$(BINDIR) does not seem to work for DLLs. Hence:
 	LDLIBS += -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll
-	
-	# Make clean target work on windows:
+	# make clean target work on windows:
 	fixpath = $(subst /,\,$1)
 	RM = del
 endif
 
-ifeq "$(PLATFORM)" "i686-apple-darwin10"
-	BINDIR = $(FIELDTRIP)/realtime/bin/maci64
-	CFLAGS += -m64
-	CXXFLAGS += -m64
-	LDFLAGS += -m64
+ifeq "$(UNAME)" "Darwin"
+	fixpath = $1
+	ifeq "$(MACHINE)" "i386"
+		BINDIR = $(FIELDTRIP)/realtime/bin/maci
+		CFLAGS += -m32
+		CXXFLAGS += -m32
+		LDFLAGS += -m32
+	endif
+	ifeq "$(MACHINE)" "x86_64"
+		BINDIR = $(FIELDTRIP)/realtime/bin/maci64
+		CFLAGS += -m64
+		CXXFLAGS += -m64
+		LDFLAGS += -m64
+	endif
 endif
 
-ifeq "$(PLATFORM)" "x86_64-linux-gnu"
-	LDLIBS += -lpthread -ldl -lstdc++ 
-	BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
-endif
-
-ifeq "$(PLATFORM)" "x86_64-redhat-linux"
-	LDLIBS += -lpthread -ldl -lstdc++
-	BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
-endif
-
-ifeq "$(PLATFORM)" "arm-linux-gnueabi"
-	LDLIBS += -lpthread -ldl -lstdc++
-	BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi
+ifeq "$(UNAME)" "Linux"
+	$LDLIBS += -lpthread -ldl -lstdc++
+	fixpath = $1
+	ifeq "$(MACHINE)" "i686"
+		BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
+	endif
+	ifeq "$(MACHINE)" "x86_64"
+		BINDIR = $(FIELDTRIP)/realtime/bin/glnx86
+	endif
+	ifeq "$(MACHINE)" "armv6l"
+		BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi
+	endif
 endif
 
 ifndef BINDIR
 $(error Unsupported platform: $(PLATFORM) :/.)
 endif
 
-TARGETS = $(patsubst %,$(BINDIR)/%$(EXTENSION), \
-	modeeg2ft modeeg2ft_2chn modeeg_setupbluesmirf)
+TARGETS = $(patsubst %,$(BINDIR)/%$(SUFFIX), modeeg2ft modeeg2ft_2chn modeeg_setupbluesmirf)
 
+##############################################################################
 all: $(TARGETS)
-	
-$(BINDIR)/%$(EXTENSION): %.o
-	$(CXX) -o $@ $^ $(LDFLAGS) $(LDLIBS)
 
 $(TARGETS): serial.o
-$(BINDIR)/modeeg_setupbluesmirf$(EXTENSION): LDLIBS=
+
+$(BINDIR)/%$(SUFFIX): %.o
+	$(CXX) -o $@ $^ $(LDFLAGS) $(LDLIBS)
+
+$(BINDIR)/modeeg_setupbluesmirf$(SUFFIX): LDLIBS=
 
 clean:
 	$(RM) *.o $(call fixpath, $(TARGETS))

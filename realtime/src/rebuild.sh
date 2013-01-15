@@ -2,7 +2,12 @@
 set -e -u
 
 MAKE="make $1"
-PLATFORM=`uname`
+PLATFORM=`gcc -dumpmachine`
+UNAME=`uname`
+MACHINE=`uname -m`
+
+echo $UNAME
+echo $MACHINE
 
 function contains() {
     # helper function to determine whether a bash array contains a certain element
@@ -19,11 +24,15 @@ function contains() {
     return 1
 }
 
-if [ "$PLATFORM"=="Linux" ]; then
-  BLACKLIST=(audio emotiv neuralynx siemens tmsi tobi)
+if [ "$UNAME" = "Linux" ]; then
+  if [ "$MACHINE" = "armv6l" ]; then
+    BLACKLIST=(audio biosemi ctf emotiv neuralynx neuromag siemens tmsi tobi)
+  else
+    BLACKLIST=(audio emotiv neuralynx siemens tmsi tobi)
+  fi
 fi
 
-if [ "$PLATFORM"=="Darwin" ]; then
+if [ "$UNAME" = "Darwin" ]; then
   BLACKLIST=(audio emotiv neuralynx siemens neuromag tmsi tobi ctf)
 fi
 
