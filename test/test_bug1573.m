@@ -13,9 +13,9 @@ cfg.fiducial.rpa=[3 49 11];
 mri=ft_volumerealign(cfg,template_mri);
 
 %%
-
-load('gava_sourcenorm/grandAVG_SourceDiff_OHNEdysphagie__beta.mat');
 return
+% these files johzum has but are not on svn.
+load('gava_sourcenorm/grandAVG_SourceDiff_OHNEdysphagie__beta.mat');
 % below requires too much memory
 
 cfg=[];
