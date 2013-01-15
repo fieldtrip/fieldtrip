@@ -500,9 +500,8 @@ bnd.pnt = pnt;
 bnd.tri = tri;
 
 cfg = [];
-cfg.geom = bnd;
 cfg.method = 'openmeeg';
-vol = ft_prepare_headmodel(cfg);
+vol = ft_prepare_headmodel(cfg, bnd);
 
 pnt = pnt .* 10; % convert to cm
 sel = find(pnt(:,3)>0);

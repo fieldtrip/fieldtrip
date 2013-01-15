@@ -63,6 +63,10 @@ elseif ~(isstruct(geometry) && isfield(geometry,'pnt'))
   error('the input geometry should be a set of points or a single triangulated surface')
 end
 
+if isstruct(geometry) && numel(geometry)>1
+  error('There must be only 1 geometry given as input');
+end
+
 % start with an empty volume conductor
 vol = [];
 
@@ -72,6 +76,7 @@ else
   geometry = ft_convert_units(geometry); % ensure that it has units, estimate them if needed
   vol.unit = geometry.unit;              % copy the geometrical units into the volume conductor
 end
+grad = ft_convert_units(grad, vol.unit);
 
 % ensure that all defaults have the same user-defined units
 radius    = ft_getopt(varargin, 'radius',    scalingfactor('cm', vol.unit) * 8.5);

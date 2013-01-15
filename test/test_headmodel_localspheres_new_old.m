@@ -25,7 +25,7 @@ cfg         = [];
 cfg.method  = 'localspheres';
 cfg.grad    = grad;
 cfg.singlesphere = 'yes';
-cfg.hdmfile = hdmfile;
+cfg.headshape = hdmfile;
 vol{1}      = ft_prepare_headmodel(cfg);
 
 % old way
@@ -82,7 +82,7 @@ clear vol lf
 cfg         = [];
 cfg.method  = 'localspheres';
 cfg.grad    = grad;
-cfg.hdmfile = hdmfile;
+cfg.headshape = hdmfile;
 vol{1}      = ft_prepare_headmodel(cfg);
 vol{1} = rmfield(vol{1},'unit');
 

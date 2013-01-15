@@ -79,7 +79,7 @@ elec = ft_convert_units(ft_read_sens(elcfile));
 try
   cfg=[];
   cfg.method='random';
-  vol111=ft_prepare_headmodel_new(cfg,segmentedmri);
+  vol111=ft_prepare_headmodel(cfg,segmentedmri);
   success=true;
 catch
   success=false;
@@ -93,13 +93,13 @@ end
 cfg=[];
 cfg.hdmfile='/home/common/matlab/fieldtrip/data/test/original/headmodel/asa/standard.vol';
 cfg.method='asa';
-vol11=ft_prepare_headmodel_new(cfg);
+vol11=ft_prepare_headmodel(cfg);
 
 cfg=[];
 cfg.method='asa';
 cfg.hdmfile=hdmfile;
 try % we need hdmfile for asa
-  vol11=ft_prepare_headmodel_new(cfg);
+  vol11=ft_prepare_headmodel(cfg);
   success = true;
 catch
   success=false;
@@ -115,7 +115,7 @@ for ii=1:numel(method)
   cfg.method=method{ii};
   
   try
-    vol21=ft_prepare_headmodel_new(cfg);
+    vol21=ft_prepare_headmodel(cfg);
     success = true;
   catch
     success=false;
@@ -123,7 +123,7 @@ for ii=1:numel(method)
   if success, error('21');end
   
   try
-    vol22=ft_prepare_headmodel_new(cfg,shape);
+    vol22=ft_prepare_headmodel(cfg,shape);
     success = true;
   catch
     success=false;
@@ -131,32 +131,32 @@ for ii=1:numel(method)
   if success, error('22');end
   
   try
-    vol23=ft_prepare_headmodel_new(cfg,shapevol);
+    vol23=ft_prepare_headmodel(cfg,shapevol);
     success = true;
   catch
     success=false;
   end
   if success, error('23');end
   
-  vol24=ft_prepare_headmodel_new(cfg,csbnd);
+  vol24=ft_prepare_headmodel(cfg,csbnd);
   switch method{ii}
     case 'bemcp'
       try
-        vol25=ft_prepare_headmodel_new(cfg,ssbnd);
+        vol25=ft_prepare_headmodel(cfg,ssbnd);
         success = true;
       catch
         success=false;
       end
       if success, error('25');end
       try
-        vol26=ft_prepare_headmodel_new(cfg,cs4bnd);
+        vol26=ft_prepare_headmodel(cfg,cs4bnd);
         success = true;
       catch
         success=false;
       end
       if success, error('26');end
       try
-        vol27=ft_prepare_headmodel_new(cfg,segmentedmri);
+        vol27=ft_prepare_headmodel(cfg,segmentedmri);
         success = true;
       catch
         success=false;
@@ -164,23 +164,23 @@ for ii=1:numel(method)
       % segmentedmari has white/gray/csf which becomes brain, but only 1 shell.
       if success, error('27');end
     case 'dipoli'
-      vol25=ft_prepare_headmodel_new(cfg,ssbnd);
-      vol26=ft_prepare_headmodel_new(cfg,cs4bnd);
-      vol27=ft_prepare_headmodel_new(cfg,segmentedmri);
+      vol25=ft_prepare_headmodel(cfg,ssbnd);
+      vol26=ft_prepare_headmodel(cfg,cs4bnd);
+      vol27=ft_prepare_headmodel(cfg,segmentedmri);
     case 'openmeeg'
-      vol25=ft_prepare_headmodel_new(cfg,ssbnd);
+      vol25=ft_prepare_headmodel(cfg,ssbnd);
       try
-        vol26=ft_prepare_headmodel_new(cfg,cs4bnd);
+        vol26=ft_prepare_headmodel(cfg,cs4bnd);
         success = true;
       catch
         success=false;
       end
       if success, error('26');end
-      vol27=ft_prepare_headmodel_new(cfg,segmentedmri);
+      vol27=ft_prepare_headmodel(cfg,segmentedmri);
   end
   % this should run with just 'brain' output
-  vol28=ft_prepare_headmodel_new(cfg,seg2);
-  vol29=ft_prepare_headmodel_new(cfg,seg5);
+  vol28=ft_prepare_headmodel(cfg,seg2);
+  vol29=ft_prepare_headmodel(cfg,seg5);
   
   
 end
@@ -192,7 +192,7 @@ cfg=[];
 cfg.method='concentricspheres';
 try
   cfg.hdmfile=hdmfile;
-  vol31=ft_prepare_headmodel_new(cfg);
+  vol31=ft_prepare_headmodel(cfg);
   success=true;
 catch
   success=false;
@@ -202,7 +202,7 @@ cfg=[];
 cfg.method='concentricspheres';
 % try
 cfg.headshape=shape;
-vol32=ft_prepare_headmodel_new(cfg);
+vol32=ft_prepare_headmodel(cfg);
 % catch
 %   % FIXME
 %   warning('this is correct to fail now, but should work in future');
@@ -211,12 +211,12 @@ cfg=[];
 cfg.method='concentricspheres';
 % try
 cfg.headshape=shape.pnt;
-vol33=ft_prepare_headmodel_new(cfg);
+vol33=ft_prepare_headmodel(cfg);
 cfg=[];
 cfg.method='concentricspheres';
 % try
 cfg.headshape=shapefile;
-vol34=ft_prepare_headmodel_new(cfg);
+vol34=ft_prepare_headmodel(cfg);
 % catch
 %   % FIXME
 %   warning('this is correct to fail now, but should work in future');
@@ -230,17 +230,17 @@ cfg.method='concentricspheres';
 cfg=[];
 cfg.method='concentricspheres';
 % cfg.conductivity=[.33];
-vol35=ft_prepare_headmodel_new(cfg,csbnd);
-vol36=ft_prepare_headmodel_new(cfg,ssbnd);
-vol37=ft_prepare_headmodel_new(cfg,cs4bnd);
+vol35=ft_prepare_headmodel(cfg,csbnd);
+vol36=ft_prepare_headmodel(cfg,ssbnd);
+vol37=ft_prepare_headmodel(cfg,cs4bnd);
 
-vol38=ft_prepare_headmodel_new(cfg,seg2);
-vol39=ft_prepare_headmodel_new(cfg,seg5);
-vol310=ft_prepare_headmodel_new(cfg,segmentedmri);
+vol38=ft_prepare_headmodel(cfg,seg2);
+vol39=ft_prepare_headmodel(cfg,seg5);
+vol310=ft_prepare_headmodel(cfg,segmentedmri);
 
-vol311=ft_prepare_headmodel_new(cfg,grad);
+vol311=ft_prepare_headmodel(cfg,grad);
 
-vol312=ft_prepare_headmodel_new(cfg,elec);
+vol312=ft_prepare_headmodel(cfg,elec);
 
 
 
@@ -253,14 +253,14 @@ pnt=randn(100,3);
 pnt(:,1:2)=pnt(:,1:2)*10;
 plane.pnt=pnt;
 try
-  vol41=ft_prepare_headmodel_new(cfg,plane);
+  vol41=ft_prepare_headmodel(cfg,plane);
   success=true;
 catch
   success=false;
 end
 if success, error('41');end
 cfg.point=[0 0 -10];
-vol42=ft_prepare_headmodel_new(cfg,plane);
+vol42=ft_prepare_headmodel(cfg,plane);
 
 
 
@@ -270,13 +270,13 @@ vol42=ft_prepare_headmodel_new(cfg,plane);
 % ft_headmodel_infinite();
 cfg=[];
 cfg.method='infinite';
-vol51=ft_prepare_headmodel_new(cfg);
+vol51=ft_prepare_headmodel(cfg);
 
 %% localspheres
 cfg         = [];
 cfg.method  = 'localspheres';
 try
-  vol61        = ft_prepare_headmodel_new(cfg,shape);
+  vol61        = ft_prepare_headmodel(cfg,shape);
   success = true;
 catch
   success=false;
@@ -286,19 +286,19 @@ if success, error('61: grad is required for localspheres');end
 cfg         = [];
 cfg.method  = 'localspheres';
 cfg.grad    = grad;
-vol62        = ft_prepare_headmodel_new(cfg,shape);
-vol63        = ft_prepare_headmodel_new(cfg,ssbnd);
+vol62        = ft_prepare_headmodel(cfg,shape);
+vol63        = ft_prepare_headmodel(cfg,ssbnd);
 try
-  vol64        = ft_prepare_headmodel_new(cfg,csbnd);
+  vol64        = ft_prepare_headmodel(cfg,csbnd);
   success = true;
 catch
   success=false;
 end
 if success, error('64');end
 
-vol65        = ft_prepare_headmodel_new(cfg, segmentedmri);
+vol65        = ft_prepare_headmodel(cfg, segmentedmri);
 try
-  vol66=ft_prepare_headmodel_new(cfg,elec);
+  vol66=ft_prepare_headmodel(cfg,elec);
   success = true;
 catch
   success=false;
@@ -314,10 +314,10 @@ end
 if success
   error('this should fail with unsegmented MRI input');
 end
-vol67=ft_prepare_headmodel_new(cfg,seg2);
+vol67=ft_prepare_headmodel(cfg,seg2);
 
 try % this should not work since it has 3 seg values and not specified which to use
-  vol68=ft_prepare_headmodel_new(cfg,seg5);
+  vol68=ft_prepare_headmodel(cfg,seg5);
   success = true;
 catch
   success=false;
@@ -325,27 +325,27 @@ end
 if success, error('68');end
 
 cfg.tissue=3;
-vol69=ft_prepare_headmodel_new(cfg,seg5);
+vol69=ft_prepare_headmodel(cfg,seg5);
 
 
 %% singleshell
 
 cfg=[];
 cfg.method = 'singleshell';
-vol71 = ft_prepare_headmodel_new(cfg,shape);
-vol72 = ft_prepare_headmodel_new(cfg,ssbnd);
+vol71 = ft_prepare_headmodel(cfg,shape);
+vol72 = ft_prepare_headmodel(cfg,ssbnd);
 try
-  vol73=ft_prepare_headmodel_new(cfg,csbnd);
+  vol73=ft_prepare_headmodel(cfg,csbnd);
   success=1;
 catch
   success=0;
 end
 if success==1,error('73');end
 
-vol74=ft_prepare_headmodel_new(cfg,segmentedmri);
+vol74=ft_prepare_headmodel(cfg,segmentedmri);
 
 try
-  vol75=ft_prepare_headmodel_new(cfg,elec);
+  vol75=ft_prepare_headmodel(cfg,elec);
   success = true;
 catch
   success=false;
@@ -362,10 +362,10 @@ if success
   error('76: this should fail with unsegmented MRI input');
 end
 
-vol77=ft_prepare_headmodel_new(cfg,seg2);
+vol77=ft_prepare_headmodel(cfg,seg2);
 
 try % this should not work since it has 3 seg values and not specified which to use
-  vol78=ft_prepare_headmodel_new(cfg,seg5);
+  vol78=ft_prepare_headmodel(cfg,seg5);
   success = true;
 catch
   success=false;
@@ -374,7 +374,7 @@ if success, error('78');end
 
 try
   cfg.elec=elec;
-  vol79=ft_prepare_headmodel_new(cfg);
+  vol79=ft_prepare_headmodel(cfg);
   success = true;
 catch
   success=false;
@@ -384,7 +384,7 @@ if success, error('79');end
 cfg=[];
 cfg.method = 'singleshell';
 cfg.tissue=3;
-vol710=ft_prepare_headmodel_new(cfg,seg5);
+vol710=ft_prepare_headmodel(cfg,seg5);
 
 
 %% singlesphere
@@ -392,31 +392,31 @@ vol710=ft_prepare_headmodel_new(cfg,seg5);
 cfg=[];
 cfg.method='singlesphere';
 try
-  vol81=ft_prepare_headmodel_new(cfg);
+  vol81=ft_prepare_headmodel(cfg);
   success=true;
 catch
   success=false;
 end
 if success, error('81');end
 
-vol82=ft_prepare_headmodel_new(cfg,ssbnd);
-vol83 = ft_prepare_headmodel_new(cfg,shape);
+vol82=ft_prepare_headmodel(cfg,ssbnd);
+vol83 = ft_prepare_headmodel(cfg,shape);
 
 try
-  vol84=ft_prepare_headmodel_new(cfg,csbnd);
+  vol84=ft_prepare_headmodel(cfg,csbnd);
   success=1;
 catch
   success=0;
 end
 if success==1,error('84');end
 
-vol85=ft_prepare_headmodel_new(cfg,segmentedmri);
-vol86=ft_prepare_headmodel_new(cfg,seg2);
-vol87=ft_prepare_headmodel_new(cfg,elec);
+vol85=ft_prepare_headmodel(cfg,segmentedmri);
+vol86=ft_prepare_headmodel(cfg,seg2);
+vol87=ft_prepare_headmodel(cfg,elec);
 
 try
 cfg.elec=elec;
-vol88=ft_prepare_headmodel_new(cfg);
+vol88=ft_prepare_headmodel(cfg);
   success = true;
 catch
   success=false;
@@ -424,7 +424,7 @@ end
 if success, error('88');end
 
 try % this should not work since it has 3 seg values and not specified which to use
-  vol89=ft_prepare_headmodel_new(cfg,seg5);
+  vol89=ft_prepare_headmodel(cfg,seg5);
   success = true;
 catch
   success=false;
@@ -434,22 +434,22 @@ if success, error('89');end
 cfg=[];
 cfg.method='singlesphere';
 cfg.tissue=3;
-vol810=ft_prepare_headmodel_new(cfg,seg5);
+vol810=ft_prepare_headmodel(cfg,seg5);
 
 cfg=[];
 cfg.method='singlesphere';
 cfg.headshape=shapefile;
-vol811=ft_prepare_headmodel_new(cfg);
+vol811=ft_prepare_headmodel(cfg);
 
 cfg=[];
 cfg.method='singlesphere';
 cfg.headshape=shape;
-vol812=ft_prepare_headmodel_new(cfg);
+vol812=ft_prepare_headmodel(cfg);
 
 cfg=[];
 cfg.method='singlesphere';
 cfg.headshape=shape.pnt;
-vol813=ft_prepare_headmodel_new(cfg);
+vol813=ft_prepare_headmodel(cfg);
 
 
 %% simbio, fns

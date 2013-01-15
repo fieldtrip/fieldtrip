@@ -517,32 +517,30 @@ grad.unit = 'cm';
 bnd.pnt = pnt;
 bnd.tri = tri;
 
+bndpnt.pnt = pnt;
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % test with different lead fields
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % first generate the head models
 cfg=[];
-cfg.geom.pnt = pnt;
 cfg.conductivity = 1;
 cfg.method = 'singlesphere';
-eegvol_singlesphere = ft_prepare_headmodel(cfg);
+eegvol_singlesphere = ft_prepare_headmodel(cfg, bndpnt);
 
 cfg=[];
-cfg.geom(1) = bnd;
 cfg.method = 'openmeeg';
-eegvol_bem_openmeeg = ft_prepare_headmodel(cfg);
+eegvol_bem_openmeeg = ft_prepare_headmodel(cfg, bnd);
 
 cfg=[];
-cfg.geom(1) = bnd;
 cfg.method = 'dipoli';
-eegvol_bem_dipoli = ft_prepare_headmodel(cfg);
+eegvol_bem_dipoli = ft_prepare_headmodel(cfg, bnd);
 
 cfg=[];
-cfg.geom.pnt = pnt;
 cfg.conductivity = 1;
 cfg.grad = grad;
 cfg.method = 'localspheres';
-megvol_localspheres = ft_prepare_headmodel(cfg);
+megvol_localspheres = ft_prepare_headmodel(cfg, bndpnt);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ..then the lead fields for EEG

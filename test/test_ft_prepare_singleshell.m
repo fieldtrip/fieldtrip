@@ -54,8 +54,9 @@ end
 % with a filename in the input
 cfg         = [];
 cfg.method  = 'singleshell';
-cfg.hdmfile = hdmfile;
-vol2        = ft_prepare_headmodel(cfg);
+% cfg.headshape = hdmfile;
+% vol2        = ft_prepare_headmodel(cfg);
+vol2        = ft_prepare_headmodel(cfg, shape);
 
 cfg         = [];
 cfg.headshape = hdmfile;
@@ -65,9 +66,16 @@ vol2b       = ft_prepare_singleshell(cfg);
 vol2 = rmfield(vol2, 'cfg');
 vol2b = rmfield(vol2b,'cfg');
 
+% note from johzum: not sure if vol2 and vol2b should be equal, since the
+% old way (vol2b) calls ft_prepare_mesh which creates .tri whereas the new 
+% version (vol2) does not have this.  Perhaps only vol2.bnd.pnt should be 
+% compared with vol2b.bnd.pnt?
 success     = success && isequal(vol2, vol2b);
+success     = success && isequal(vol2.bnd.pnt, vol2b.bnd.pnt);
+% Note from johzum: the above line also fails. The values are not near each
+% other at all, and it's not a units or machine precision issue.
 if ~success
-  %error('ft_prepare_singleshell and ft_prepare_headmodel gave different outputs');
+  error('ft_prepare_singleshell and ft_prepare_headmodel gave different outputs');
 end
 
 % with a point cloud in the input

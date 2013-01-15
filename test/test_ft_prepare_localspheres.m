@@ -22,7 +22,9 @@ grad = hdr.grad;
 
 % read in the segmented mri
 load('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat');
-mri = segmentedmri; clear segmentedmri;
+
+% for consistency with assumed cm input to old ft_prepare_localspheres
+segmentedmri = ft_convert_units(segmentedmri,'cm');
 
 % specify the file for the headshape
 hdmfile  = '/home/common/matlab/fieldtrip/data/Subject01.shape';
@@ -37,14 +39,15 @@ shape = ft_read_headshape(hdmfile);
 cfg         = [];
 cfg.method  = 'localspheres';
 cfg.grad    = grad;
-vol1        = ft_prepare_headmodel(cfg, mri);
+vol1        = ft_prepare_headmodel(cfg, segmentedmri);
 % the following needs to be done to be able to make the comparison
-vol1 = rmfield(vol1, 'unit');
+vol1 = rmfield(vol1, 'cfg');
 
 cfg         = [];
 cfg.grad    = grad;
-vol1b       = ft_prepare_localspheres(cfg, mri);
-success     = success && isequal(vol1, vol1b);
+vol1b       = ft_prepare_localspheres(cfg, segmentedmri);
+vol1b = rmfield(vol1b, 'cfg');
+success     = success && isequalwithequalnans(vol1, vol1b);
 if ~success
   error('ft_prepare_localspheres and ft_prepare_headmodel gave different outputs');
 end
@@ -53,16 +56,17 @@ end
 cfg         = [];
 cfg.method  = 'localspheres';
 cfg.grad    = grad;
-cfg.hdmfile = hdmfile;
+cfg.headshape = hdmfile;
 vol2        = ft_prepare_headmodel(cfg);
 % the following needs to be done to be able to make the comparison
-vol2        = rmfield(vol2, 'unit');
+vol2        = rmfield(vol2, 'cfg');
 
 cfg         = [];
 cfg.grad    = grad;
 cfg.headshape = hdmfile;
 vol2b       = ft_prepare_localspheres(cfg);
-success     = success && isequal(vol2, vol2b);
+vol2b       = rmfield(vol2b, 'cfg');
+success     = success && isequalwithequalnans(vol2, vol2b);
 if ~success
   error('ft_prepare_localspheres and ft_prepare_headmodel gave different outputs');
 end
@@ -71,16 +75,16 @@ end
 cfg         = [];
 cfg.method  = 'localspheres';
 cfg.grad    = grad;
-cfg.geom    = shape;
-vol3        = ft_prepare_headmodel(cfg);
+vol3        = ft_prepare_headmodel(cfg,shape);
 % the following needs to be done to be able to make the comparison
-vol3        = rmfield(vol3, 'unit');
+vol3        = rmfield(vol3, 'cfg');
 
 cfg         = [];
 cfg.headshape = shape;
 cfg.grad    = grad;
 vol3b       = ft_prepare_localspheres(cfg);
-success     = success && isequal(vol3, vol3b);
+vol3b       = rmfield(vol3b, 'cfg');
+success     = success && isequalwithequalnans(vol3, vol3b);
 if ~success
   error('ft_prepare_localspheres and ft_prepare_headmodel gave different outputs');
 end

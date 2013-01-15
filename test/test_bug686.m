@@ -62,15 +62,15 @@ eegvol_concentricspheres.c = repmat(eegvol_concentricspheres.c, 1, 4);
 bnd.pnt = pnt;
 bnd.tri = tri;
 
+geom(1) = bnd;
+geom(2) = bnd;
+geom(3) = bnd;
+geom(2).pnt = geom(2).pnt*0.9;
+geom(3).pnt = geom(3).pnt*0.8;
 cfg=[];
-cfg.geom(1) = bnd;
-cfg.geom(2) = bnd;
-cfg.geom(3) = bnd;
-cfg.geom(2).pnt = cfg.geom(2).pnt*0.9;
-cfg.geom(3).pnt = cfg.geom(3).pnt*0.8;
 cfg.conductivity = [1 1 1];
-cfg.method = 'bem_cp';
-eegvol_bem_cp = ft_prepare_headmodel(cfg);
+cfg.method = 'bemcp';
+eegvol_bem_cp = ft_prepare_headmodel(cfg, geom);
 
 % some of the fwd solutions require the external toolbox, not always
 % downloaded
@@ -130,22 +130,24 @@ end
 % for some of them I cannot test with a sphere
 % cfg.method = 'infinite'
 
+geom = [];
+geom.pnt = pnt;
+
 cfg = [];
 
 % FIXME this uses an undocumented option of ft_prepare_headmodel, which is due to change in the future
-cfg.geom.pnt = pnt;
 cfg.conductivity = 1;
 
 cfg.method = 'singlesphere';
-megvol_singlesphere = ft_prepare_headmodel(cfg);
+megvol_singlesphere = ft_prepare_headmodel(cfg, geom);
 
 cfg.grad = grad_cm;
 cfg.method = 'localspheres';
-megvol_localspheres = ft_prepare_headmodel(cfg);
+megvol_localspheres = ft_prepare_headmodel(cfg, geom);
 
-cfg.geom.tri = tri;
+geom.tri = tri;
 cfg.method = 'singleshell';
-megvol_singleshell = ft_prepare_headmodel(cfg);
+megvol_singleshell = ft_prepare_headmodel(cfg, geom);
 
 % construct them for the different geometrical units
 megvol_singlesphere_m  = ft_convert_units(megvol_singlesphere, 'm');

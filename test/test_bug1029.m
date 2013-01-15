@@ -34,9 +34,8 @@ vol = ft_headmodel_bemcp(geom, 'conductivity', [1 1/80 1]);
 
 cfg=[];
 cfg.method = 'bemcp';
-cfg.geom = geom;
 cfg.conductivity = [1 1/80 1];
-vol = ft_prepare_headmodel(cfg);
+vol = ft_prepare_headmodel(cfg, geom);
 
 %%%%%%%%%%%%%%%%
 % DIPOLI

@@ -9,6 +9,9 @@ function test_bug1042
 pnt = pnt .* 10; % convert to cm
 sel = find(pnt(:,3)>0);
 
+bnd.pnt = pnt;
+bnd.unit = 'cm';
+
 elec.pnt = pnt(sel,:);
 for i=1:length(sel)
   elec.label{i} = sprintf('electrode%d', i);
@@ -51,10 +54,10 @@ for k = 1:numel(conductivity)
   cfg.conductivity = cond;
   
   cfg.method = 'singlesphere';
-  eegvol_singlesphere = ft_prepare_headmodel(cfg, pnt);
+  eegvol_singlesphere = ft_prepare_headmodel(cfg, bnd);
   
   cfg.method = 'concentricspheres';
-  eegvol_concentricspheres = ft_prepare_headmodel(cfg, pnt);
+  eegvol_concentricspheres = ft_prepare_headmodel(cfg, bnd);
   % HACK otherwise it will call eeg_leadfield1 instead of eeg_leadfield4
   eegvol_concentricspheres.r = repmat(eegvol_concentricspheres.r, 1, 4);
   eegvol_concentricspheres.c = repmat(eegvol_concentricspheres.c, 1, 4);
@@ -137,11 +140,11 @@ for k = 1:numel(conductivity)
   cfg.conductivity = cond;
   
   cfg.method = 'singlesphere';
-  megvol_singlesphere = ft_prepare_headmodel(cfg, pnt);
+  megvol_singlesphere = ft_prepare_headmodel(cfg, bnd);
   
   cfg.grad = grad_cm;
   cfg.method = 'localspheres';
-  megvol_localspheres = ft_prepare_headmodel(cfg, pnt);
+  megvol_localspheres = ft_prepare_headmodel(cfg, bnd);
 
   geom = [];
   geom.pnt = pnt;
