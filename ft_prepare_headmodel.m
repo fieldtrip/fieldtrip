@@ -329,7 +329,7 @@ switch cfg.method
     
   case {'simbio'}
 
-    if input_sens || isfield(data,'pos') % if mesh has already gone through ft_datatype_parcellation
+    if input_sens || isfield(data,'pos') || input_mesh 
       geometry=data; % more serious checks of validity of the mesh occur inside ft_headmodel_simbio
     else
       error('You must provide a mesh with tetrahedral or hexahedral elements, where each element has a scalar or tensor conductivity');
