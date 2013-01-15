@@ -1,32 +1,57 @@
 #!/bin/bash
 set -e -u
+
 MAKE="make $1"
 PLATFORM=`uname`
+
+function contains() {
+    # helper function to determine whether a bash array contains a certain element
+    # http://stackoverflow.com/questions/3685970/bash-check-if-an-array-contains-a-value
+    local n=$#
+    local value=${!n}
+    for ((i=1;i < $#;i++)) {
+        if [ "${!i}" == "${value}" ]; then
+            echo "y"
+            return 0
+        fi
+    }
+    echo "n"
+    return 1
+}
+
+if [ "$PLATFORM"=="Linux" ]; then
+  BLACKLIST=(audio emotiv neuralynx siemens tmsi tobi)
+fi
+
+if [ "$PLATFORM"=="Darwin" ]; then
+  BLACKLIST=(audio emotiv neuralynx siemens neuromag tmsi tobi ctf)
+fi
 
 echo Building buffer and ODM...
 (cd buffer/src && $MAKE)
 (cd buffer/cpp && $MAKE)
 
-echo Building acquisition software...
-if [ "$PLATFORM"=="Linux" ]; then
-  BLACKLIST='audio emotiv neuralynx siemens tmsi tobi'
-fi
-
-if [ "$PLATFORM"=="Darwin" ]; then
-  BLACKLIST='audio emotiv neuralynx siemens neuromag tmsi tobi ctf'
-fi
-
-#for ac in `ls acquisition`; do
+echo Building acquisition...
 for ac in `ls -d acquisition/*/`; do
-  if [ "$BLACKLIST"== *`basename $ac`* ]; then
-    echo \'$ac\' is blacklisted for this platform.
+  SHORTNAME=`basename $ac`
+  echo $SHORTNAME
+  if [ $(contains ${BLACKLIST[@]} ${SHORTNAME}) == "y" ] ; then
+    echo \'$SHORTNAME\' is blacklisted for this platform.
   else
     echo Building \'$ac\'...
     (cd $ac && $MAKE)
   fi
 done
 
-
 echo Building utilities...
-(cd utilities/buffer && $MAKE)
-# TODO: add more utilities
+for ac in `ls -d utilities/*/`; do
+  SHORTNAME=`basename $ac`
+  echo $SHORTNAME
+  if [ $(contains ${BLACKLIST[@]} ${SHORTNAME}) == "y" ] ; then
+    echo \'$SHORTNAME\' is blacklisted for this platform.
+  else
+    echo Building \'$ac\'...
+    (cd $ac && $MAKE)
+  fi
+done
+
