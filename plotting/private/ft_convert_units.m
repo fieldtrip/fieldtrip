@@ -195,6 +195,10 @@ obj.unit = target;
 % IDRANGE interdecile range for more robust range estimation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function r = idrange(x)
-  sx = sort(x, 1);
-  ii = round(interp1([0, 1], [1, size(x, 1)], [.1, .9]));  % indices for 10 & 90 percentile
+  keeprow=true(size(x,1),1);
+  for l=1:size(x,2)
+    keeprow = keeprow & isfinite(x(:,l));
+  end
+  sx = sort(x(keeprow,:), 1);
+  ii = round(interp1([0, 1], [1, size(x(keeprow,:), 1)], [.1, .9]));  % indices for 10 & 90 percentile
   r = diff(sx(ii, :));
