@@ -15,16 +15,13 @@ FIELDTRIP = ../../../..
 FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
 
 # defaults, might be overwritten further down
-LDFLAGS = -lpthread ../../buffer/src/libbuffer.a
-CXXFLAGS = $(FLFLAGS) -I../../buffer/src -I../../buffer/cpp -I. -Wunused -Wall -pedantic
-FLFLAGS = `fltk-config --cxxflags`
-LDFL = `fltk-config --ldflags`
+LDFLAGS = `fltk-config --ldflags` -lpthread ../../buffer/src/libbuffer.a
+CXXFLAGS = `fltk-config --cxxflags` -I../../buffer/src -I../../buffer/cpp -I. -Wunused -Wall -pedantic
 SUFFIX = 
 
 ifeq "$(PLATFORM)" "mingw32"
-   LDFLAGS = pthreadGC2.dll ../../buffer/src/libbuffer.a -LC:/msys/1.0/local/lib -lws2_32 -lwinmm  -mwindows
-   FLFLAGS = -IC:/msys/1.0/local/include -mwindows
-   LDFL = -mno-cygwin -lfltk -lole32 -luuid -lcomctl32 -lgdi32 -lwsock32
+   LDFLAGS = pthreadGC2.dll ../../buffer/src/libbuffer.a -LC:/msys/1.0/local/lib -lws2_32 -lwinmm -mwindows -mno-cygwin -lfltk -lole32 -luuid -lcomctl32 -lgdi32 -lwsock32
+   CXXFLAGS = -IC:/msys/1.0/local/include -mwindows
    SUFFIX = .exe
 endif
 
@@ -65,10 +62,10 @@ TARGETS = $(BINDIR)/sine2ft$(SUFFIX)
 all: $(TARGETS)
 
 sine2ft.o: sine2ft.cc
-	g++ -c sine2ft.cc $(CXXFLAGS)
+	$(CXX) -c sine2ft.cc $(CXXFLAGS)
 
 $(BINDIR)/sine2ft$(SUFFIX): sine2ft.o
-	g++ -o $@ sine2ft.o $(LDFLAGS) $(LDFL)
+	$(CXX) -o $@ sine2ft.o $(LDFLAGS) $(LDLIBS)
 
 clean:
 	$(RM) *.o $(call fixpath, $(TARGETS))
