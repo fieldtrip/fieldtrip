@@ -6,7 +6,7 @@
 # Use MinGW for compilation on Windows!
 
 PLATFORM = $(shell gcc -dumpmachine)
-UNAME  = $(shell uname)
+UNAME = $(shell uname)
 MACHINE = $(shell uname -m)
 
 FIELDTRIP = ../../../..
@@ -38,10 +38,10 @@ ifeq "$(UNAME)" "Linux"
 	LDLIBS += -lpthread -ldl 
 	fixpath = $1
 	ifeq "$(MACHINE)" "i686"
-		BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
+		BINDIR = $(FIELDTRIP)/realtime/bin/glnx86
 	endif
 	ifeq "$(MACHINE)" "x86_64"
-		BINDIR = $(FIELDTRIP)/realtime/bin/glnx86
+		BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
 	endif
 	ifeq "$(MACHINE)" "armv6l"
 		BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi

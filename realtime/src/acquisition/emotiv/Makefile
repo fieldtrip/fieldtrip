@@ -7,7 +7,7 @@
 # To recompile, please download the Emotiv EDK, and update the EDKPATH variable below.
 
 PLATFORM = $(shell gcc -dumpmachine)
-UNAME   = $(shell uname)
+UNAME = $(shell uname)
 MACHINE = $(shell uname -m)
 
 FIELDTRIP = ../../../..

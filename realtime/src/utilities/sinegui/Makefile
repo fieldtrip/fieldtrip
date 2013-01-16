@@ -2,13 +2,13 @@
 # Donders Institute for Donders Institute for Brain, Cognition and Behaviour,
 # Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
 # Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
-#
+
 # Use MinGW for compilation on Windows!
 # This Makefile assumes that FLTK has been installed to a place where the compiler can find it.
 # On Windows, this location is C:/msys/1.0/local -- change this if need be
 
 PLATFORM = $(shell gcc -dumpmachine)
-UNAME   = $(shell uname)
+UNAME = $(shell uname)
 MACHINE = $(shell uname -m)
 
 FIELDTRIP = ../../../..
@@ -27,10 +27,10 @@ endif
 
 ifeq "$(UNAME)" "Linux"
     ifeq "$(MACHINE)" "i686"
-        BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
+        BINDIR = $(FIELDTRIP)/realtime/bin/glnx86
     endif
     ifeq "$(MACHINE)" "x86_64"
-        BINDIR = $(FIELDTRIP)/realtime/bin/glnx86
+        BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
     endif
     ifeq "$(MACHINE)" "armv6l"
         BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi

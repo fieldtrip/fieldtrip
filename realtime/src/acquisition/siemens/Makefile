@@ -8,7 +8,7 @@
 $(warning Compiliation appears to be broken. See bug 1532 on bugzilla.)
 
 PLATFORM = $(shell gcc -dumpmachine)
-UNAME   = $(shell uname)
+UNAME = $(shell uname)
 MACHINE = $(shell uname -m)
 
 # defaults, might be overwritten further down

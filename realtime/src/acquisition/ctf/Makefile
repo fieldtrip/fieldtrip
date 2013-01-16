@@ -4,6 +4,9 @@
 # Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
 
 PLATFORM = $(shell gcc -dumpmachine)
+UNAME = $(shell uname)
+MACHINE = $(shell uname -m)
+
 FIELDTRIP = ../../../..
 FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
 
@@ -11,20 +14,35 @@ CFLAGS = -I$(FTBUFFER)/src -Wunused -Wall
 LDFLAGS = -L$(FTBUFFER)/src 
 LDLIBS = -lbuffer -lncurses -lpthread -lm
 
+ifeq "$(UNAME)" "Linux"
+	ifeq "$(MACHINE)" "i686"
+		BINDIR = $(FIELDTRIP)/realtime/bin/glnx86
+	endif
+	ifeq "$(MACHINE)" "x86_64"
+		BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
+	endif
+	ifeq "$(MACHINE)" "armv6l"
+		BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi
+	endif
+endif
+
+ifeq "$(UNAME)" "Darwin"
+	ifeq "$(MACHINE)" "i386"
+		BINDIR = $(FIELDTRIP)/realtime/bin/maci
+		CFLAGS += -m32
+		CXXFLAGS += -m32
+		LDFLAGS += -m32
+	endif
+	ifeq "$(MACHINE)" "x86_64"
+		BINDIR = $(FIELDTRIP)/realtime/bin/maci64
+		CFLAGS += -m64
+		CXXFLAGS += -m64
+		LDFLAGS += -m64
+	endif
+endif
+
 ifneq "$(PLATFORM)" "i386-redhat-linux"
 $(warning For the DCCN, please compile for 32-bit linux.)
-endif
-
-ifeq "$(PLATFORM)" "x86_64-linux-gnu"
-	BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
-endif
-
-ifeq "$(PLATFORM)" "x86_64-redhat-linux"
-	BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
-endif
-
-ifeq "$(PLATFORM)" "i386-redhat-linux"
-	BINDIR = $(FIELDTRIP)/realtime/bin/glnx86
 endif
 
 ifndef BINDIR

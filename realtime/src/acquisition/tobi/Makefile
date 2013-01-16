@@ -6,7 +6,7 @@
 # Use MinGW for compilation on Windows!
 
 PLATFORM = $(shell gcc -dumpmachine)
-UNAME   = $(shell uname)
+UNAME = $(shell uname)
 MACHINE = $(shell uname -m)
 
 FIELDTRIP = ../../../..
@@ -18,10 +18,12 @@ CFLAGS += -Wunused -Wall -pedantic -O3
 CXXFLAGS = $(CFLAGS)
 LDFLAGS = -L$(FTBUFFER)/src
 
-ifeq "$(PLATFORM)" "x86_64-linux-gnu"
-	BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
-	LDFLAGS += -L$(BINDIR) -Llib/ticpp/linux 
-	LDLIBS += -lbuffer -lpthread -lboost_thread -lboost_system -lboost_program_options -ltia -lticpp_64 
+ifeq "$(UNAME)" "Linux"
+    ifeq "$(MACHINE)" "x86_64"
+		BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
+		LDFLAGS += -L$(BINDIR) -Llib/ticpp/linux 
+		LDLIBS += -lbuffer -lpthread -lboost_thread -lboost_system -lboost_program_options -ltia -lticpp_64 
+    endif
 endif
 
 ifndef BINDIR

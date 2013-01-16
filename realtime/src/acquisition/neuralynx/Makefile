@@ -6,7 +6,7 @@
 # Use MinGW for compilation on Windows!
 
 PLATFORM = $(shell gcc -dumpmachine)
-UNAME   = $(shell uname)
+UNAME = $(shell uname)
 MACHINE = $(shell uname -m)
 
 FIELDTRIP = ../../../..
