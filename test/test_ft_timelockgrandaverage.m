@@ -55,3 +55,32 @@ grandavg3 = ft_timelockgrandaverage(cfg, timelock1, timelock2);
 
 cfg.keepindividual = 'yes';
 grandavg4 = ft_timelockgrandaverage(cfg, timelock1, timelock2);
+
+
+% the following code checks the functionality of the cfg.method = 'within'
+data = [];
+data.trial = cat(2,repmat({[1 1]},[1 4]),repmat({[2 2]},[1 3]),repmat({[3 3]},[1 2]));
+data.time  = repmat({[1 2]},[1 9]);
+data.label = {'chan01'};
+data.fsample = 1;
+
+tlck = ft_timelockanalysis([], data);
+
+cfg = [];
+cfg.trials = 1:4;
+tlck1 = ft_timelockanalysis(cfg, data);
+cfg.trials = 5:7;
+tlck2 = ft_timelockanalysis(cfg, data);
+cfg.trials = 8:9;
+tlck3 = ft_timelockanalysis(cfg, data);
+
+cfg = [];
+cfg.method = 'within';
+cfg.normalizevar = 'N-1';
+tlckall = ft_timelockgrandaverage(cfg, tlck1, tlck2, tlck3);
+
+tlck    = rmfield(tlck, 'cfg');
+tlckall = rmfield(tlckall, 'cfg');
+
+assert(identical(tlck, tlckall));
+
