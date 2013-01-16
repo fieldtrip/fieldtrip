@@ -48,9 +48,15 @@ if nargin<4 || isempty(endsample)
 end
 
 fid = fopen(datafile, 'rb', 'ieee-le');
-offset = 512;                       % for the general header
-offset = offset + hdr.nChans*1024;  % for the channel headers
-offset = offset + (begsample-1)*2*hdr.nChans;
+offset = 512;                                 % for the general header
+offset = offset + hdr.nChans*1024;            % for the channel headers
+offset = offset + (begsample-1)*2*hdr.nChans; % for the begin sample
 fseek(fid, offset, 'cof');
 dat = fread(fid, [hdr.nChans (endsample-begsample+1)], 'int16');
 fclose(fid);
+
+% calibrate to convert integers to uV
+dat = dat*hdr.calib;
+
+
+

@@ -51,6 +51,10 @@ if dummy~=4
   warning('deviant header format detected');
 end
 
+% A numerical comparison between a deymed dat file and a BESA-exported edf version of the
+% same file showed a calibration difference of 1/4. So this might be a calibration value.
+hdr.calib = 1/dummy;
+
 hdr.label = {};
 for i=1:hdr.nChans
   str = fread(fid, [1, 6], 'uint8=>char');
@@ -68,6 +72,6 @@ try
   hdr.ini.patient.id        = inifile(headerfile, 'read', {'Pacient', '', 'ID'});
   hdr.ini.patient.lastname  = inifile(headerfile, 'read', {'Pacient', '', 'Prijmeni'});
   hdr.ini.patient.firstname = inifile(headerfile, 'read', {'Pacient', '', 'Jmeno'});
-  hdr.ini.record.user       = inifile(headerfile, 'read', {'Record', '', 'AcqUser'});
-  hdr.ini.record.type       = inifile(headerfile, 'read', {'Record', '', 'Type'});
+  hdr.ini.record.user       = inifile(headerfile, 'read', {'Record',  '', 'AcqUser'});
+  hdr.ini.record.type       = inifile(headerfile, 'read', {'Record',  '', 'Type'});
 end
