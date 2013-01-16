@@ -1,7 +1,5 @@
 function test_ft_prepare_headmodel
 
-return;
-
 % TEST test_ft_prepare_headmodel
 % TEST ft_headmodel_localspheres ft_prepare_localspheres
 
