@@ -37,8 +37,6 @@ if ~exist(datafile, 'file')
   datafile = fullfile(p, [f '.Dat']);
 end
 
-
-
 fid = fopen(datafile, 'rb');
 hdr.id        = fread(fid, [1, 12], 'uint8=>char');
 hdr.lastname  = fread(fid, [1, 12], 'uint8=>char');
@@ -47,7 +45,12 @@ hdr.date      = fread(fid, [1, 12], 'uint8=>char');
 hdr.time      = fread(fid, [1, 12], 'uint8=>char');
 hdr.Fs        = fread(fid, [1, 1],  'int16');
 hdr.nChans    = fread(fid, [1, 1],  'int8');
+
 dummy         = fread(fid, [1, 1],  'int8'); % this is 4 in the example file
+if dummy~=4
+  warning('deviant header format detected');
+end
+
 hdr.label = {};
 for i=1:hdr.nChans
   str = fread(fid, [1, 6], 'uint8=>char');
@@ -58,7 +61,7 @@ fclose(fid);
 
 % determine the number of samples
 d = dir(datafile);
-hdr.nSamples = (d.bytes-512)/(2*hdr.nChans);
+hdr.nSamples = (d.bytes-512-1024*hdr.nChans)/(2*hdr.nChans);
 
 % also store some details from the ini file
 try

@@ -48,7 +48,9 @@ if nargin<4 || isempty(endsample)
 end
 
 fid = fopen(datafile, 'rb', 'ieee-le');
-offset = (begsample-1)*2*hdr.nChans;
-fseek(fid, 512+offset, 'cof');
+offset = 512;                       % for the general header
+offset = offset + hdr.nChans*1024;  % for the channel headers
+offset = offset + (begsample-1)*2*hdr.nChans;
+fseek(fid, offset, 'cof');
 dat = fread(fid, [hdr.nChans (endsample-begsample+1)], 'int16');
 fclose(fid);
