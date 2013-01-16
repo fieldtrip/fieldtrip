@@ -66,7 +66,8 @@ while ishdr==1
     if strfind(lower(line),'end time')
         dum= regexp(line, 'time\s+(\d+.\d+E[+-]\d+)', 'tokens');
         hdr.LastTimeStamp = str2double(dum{1}{1});
-        hdr.nSamples=int64((hdr.LastTimeStamp-hdr.FirstTimeStamp-0.1)/dt+1);
+        hdr.nSamples=int64((hdr.LastTimeStamp-hdr.FirstTimeStamp)/dt+1);
+
     end
     % parse the content of the line, determine the label for each column
     colid = sscanf(line, '# column %d:', 1);
@@ -92,6 +93,7 @@ if ~headerOnly
   % read the complete data
   dat = fscanf(fid, '%f', [length(label), inf]);    
   hdr.nSamples    = length(dat(timelab, :)); %overwrites the value written in the header with the actual number of samples found
+  hdr.LastTimeStamp = dat(1,end);
 end
 
 fclose(fid);
