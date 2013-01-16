@@ -77,7 +77,7 @@ forbidden       = ft_getopt(varargin, 'forbidden');
 renamedval      = ft_getopt(varargin, 'renamedval');
 allowedval      = ft_getopt(varargin, 'allowedval');
 createsubcfg    = ft_getopt(varargin, 'createsubcfg');
-ckeckfilenames  = ft_getopt(varargin, 'dataset2files');
+checkfilenames  = ft_getopt(varargin, 'dataset2files');
 checksize       = ft_getopt(varargin, 'checksize', 'off');
 trackconfig     = ft_getopt(varargin, 'trackconfig');
 
@@ -461,11 +461,11 @@ end
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% ckeckfilenames, i.e. dataset2files
+% checkfilenames, i.e. dataset2files
 %
 % Converts cfg.dataset into cfg.headerfile and cfg.datafile if neccessary.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if ~isempty(ckeckfilenames) && strcmp(ckeckfilenames, 'yes')
+if ~isempty(checkfilenames) && strcmp(checkfilenames, 'yes')
   
   % start with empty fields if they are not present
   if ~isfield(cfg, 'dataset')
