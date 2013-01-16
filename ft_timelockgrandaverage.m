@@ -194,21 +194,22 @@ else % ~strcmp(cfg.keepindividual, 'yes')
       avgmat(s, :, :) = varargin{s}.(cfg.parameter).*varargin{s}.dof;
       avgdof(s, :, :) = varargin{s}.dof;
       if min(varargin{s}.dof(:))>1 % otherwise the variance is not valid
-        avgvar(s, :, :) = varargin{s}.var .* (varargin{s}.dof-1); % reversing the last div in ft_timelockanalysis
+        avgvar(s, :, :) = (varargin{s}.(cfg.parameter).^2).*varargin{s}.dof;
+        % avgvar(s, :, :) = varargin{s}.var .* (varargin{s}.dof-1); % reversing the last div in ft_timelockanalysis
       else
         avgvar(s, :, :) = zeros([dim{1}]); % shall we remove the .var field from the structure under these conditions ?
       end
     end
   end
   % average across subject dimension
-  ResultDOF      = squeeze(sum(avgdof, 1));
-  grandavg.avg   = squeeze(sum(avgmat, 1))./ResultDOF; % computes both means (plain and weighted)
+  ResultDOF      = reshape(sum(avgdof, 1), dim{1});
+  grandavg.avg   = reshape(sum(avgmat, 1), dim{1})./ResultDOF; % computes both means (plain and weighted)
   % Nchan x Nsamples, skips the singleton
-  if strcmp(cfg.method, 'across')
-    ResultVar      = squeeze(sum(avgvar,1))-grandavg.avg.^2./ResultDOF;
-  else  % cfg.method = 'within'
-    ResultVar      = squeeze(sum(avgvar,1)); % subtraction of means was done for each block already
-  end
+  %if strcmp(cfg.method, 'across')
+  ResultVar      = reshape(sum(avgvar,1), dim{1})-reshape(sum(avgmat,1), dim{1}).^2./ResultDOF;
+  %else  % cfg.method = 'within'
+    %ResultVar      = squeeze(sum(avgvar,1)); % subtraction of means was done for each block already
+  %end
   switch cfg.normalizevar
     case 'N-1'
       ResultVar = ResultVar./(ResultDOF-1);
