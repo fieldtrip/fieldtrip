@@ -122,7 +122,7 @@ spike.timestamp=cell(1,length(number));
 
 for n=1:length(number)
     % write labels ([number]: [neuron type] in [network])
-    spike.label{n}=strrep(label{n},'neuron ','');
+    spike.label{n}=strrep(label{number(n)},'neuron ','');
     % select spike times belonging to the neuron
     sel=idx==n;
     spike.timestamp{n}=dat{1}(sel)';

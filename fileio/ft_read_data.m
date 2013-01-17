@@ -1035,10 +1035,18 @@ switch dataformat
     
   case {'neurosim_ds' 'neurosim_signals'}
     [hdr, dat] = read_neurosim_signals(filename);
+    if endsample>size(dat,2)
+      warning('Simulation was not completed, reading in part of the data')
+      endsample=size(dat,2);
+    end
     dat = dat(chanindx,begsample:endsample);
     
   case 'neurosim_evolution'  
      [hdr, dat] = read_neurosim_evolution(filename);
+     if endsample>size(dat,2)
+      warning('Simulation was not completed, reading in part of the data')
+      endsample=size(dat,2);
+    end
      dat = dat(chanindx,begsample:endsample);
      
   case 'neurosim_spikes'
