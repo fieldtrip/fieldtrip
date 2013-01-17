@@ -1,4 +1,4 @@
-function comprefcorr = ft_componentclassification(cfg, comp, refdata)
+function compclass = ft_componentclassification(cfg, comp, refdata)
 
 % FT_COMPONENTCLASSIFICATION performs a classification of the spatiotemporal
 % components
@@ -46,12 +46,16 @@ function comprefcorr = ft_componentclassification(cfg, comp, refdata)
 %
 % $Id$
 
-ft_defaults
+revision = '$Id$';
 
-% record start time and total processing time
-ftFuncTimer = tic();
-ftFuncClock = clock();
-ftFuncMem   = memtic();
+% do the general setup of the function
+ft_defaults
+ft_preamble help
+ft_preamble provenance
+ft_preamble randomseed
+ft_preamble trackconfig
+ft_preamble debug
+ft_preamble loadvar comp
 
 % ensure that the input data is valiud for this function, this will also do 
 % backward-compatibility conversions of old data that for example was 
@@ -61,37 +65,21 @@ if nargin>2
   refdata = ft_checkdata(refdata, 'datatype', 'raw', 'feedback', 'yes');
 end
 
-% check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'trackconfig', 'on');
-
 % ensure that the required options are present
 cfg = ft_checkconfig(cfg, 'required', 'method');
 
-% ensure that the options are valid
-% cfg = ft_checkopt(cfg, 'vartrllen', 'double', {0, 1, 2});
-% cfg = ft_checkopt(cfg, 'method', 'char', {'mtm', 'convol'});
-
-% get the options
-cfg.inputfile  = ft_getopt(cfg, 'inputfile', '');
-cfg.outputfile = ft_getopt(cfg, 'outputfile', '');
-method         = ft_getopt(cfg, 'method'); % there is no default
-
-hasdata = (nargin>1);
-if ~isempty(cfg.inputfile)
-  % the input data should be read from file
-  if hasdata
-    error('cfg.inputfile should not be used in conjunction with giving input data to this function');
-  else
-    comp = loadvar(cfg.inputfile, 'data');
-  end
-end
+method  = ft_getopt(cfg, 'method'); % there is no default
 
 if strcmp(method, 'template_timeseries') && nargin<=2
   error('for the method ''template_timeseries'' the input to this function should contain the reference time series as a separate input');
 end
-  
+
+% copy the input to the output
+compclass = comp;
+
 switch method
   case 'template_spectrum'
+    error('not supported yet')
     cfg                   = ft_checkconfig(cfg,          'required', 'template');
     cfg.template          = ft_checkconfig(cfg.template, 'required', 'spectrum');
     cfg.template.spectrum = ft_checkconfig(cfg.template.spectrum, 'required', {'freq' 'powspctrm'});
@@ -117,6 +105,7 @@ switch method
     x=1;
     
   case 'template_timeseries'
+    error('not supported yet')
     % check whether the inputs are compatible
     ok = true;
     for k = 1:numel(comp.trial)
@@ -140,7 +129,24 @@ switch method
   case '1/f'
     error('unknown method of classification');    
   case 'kurtosis'
-    error('unknown method of classification');    
+  
+    mx         = cellmean(comp.trial, 2);
+    comp.trial = cellvecadd(comp.trial, -mx);
+  
+    m4 = zeros(numel(comp.label),1);
+    m2 = zeros(numel(comp.label),1);
+    n  = 0;
+    for k = 1:numel(comp.trial)
+      m4 = m4 + sum(comp.trial{k}.^4,2);
+      m2 = m2 + sum(comp.trial{k}.^2,2);
+      n  = n  + size(comp.trial{k},2);
+    end
+    m4    = m4./n;
+    m2    = m2./n;
+    kurt  = m4./m2.^2;
+    
+    compclass.kurt = kurt;
+    
   case 'whiteness'
     error('unknown method of classification');    
   case 'something else'
@@ -153,39 +159,14 @@ end
 % deal with the output
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% accessing this field here is needed for the configuration tracking
-% by accessing it once, it will not be removed from the output cfg
-cfg.outputfile;
-
-% get the output cfg
-cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
-
-% add the version details of this function call to the configuration
-cfg.version.name = mfilename('fullpath'); % this is helpful for debugging
-cfg.version.id   = '$Id$'; % this will be auto-updated by the revision control system
-
-% add information about the Matlab version used to the configuration
-cfg.callinfo.matlab = version();
-  
-% add information about the function call to the configuration
-cfg.callinfo.proctime = toc(ftFuncTimer);
-cfg.callinfo.procmem  = memtoc(ftFuncMem);
-cfg.callinfo.calltime = ftFuncClock;
-cfg.callinfo.user = getusername(); % this is helpful for debugging
-fprintf('the call to "%s" took %d seconds and an estimated %d MB\n', mfilename, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
-
-if hasdata && isfield(comp, 'cfg')
-  % remember the configuration details of the input data
-  cfg.previous = comp.cfg;
-end
-
-% remember the exact configuration details in the output
-dataout.cfg = cfg;
-
-% the output data should be saved to a MATLAB file
-if ~isempty(cfg.outputfile)
-  savevar(cfg.outputfile, 'data', dataout); % use the variable name "data" in the output file
-end
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble debug
+ft_postamble trackconfig
+ft_postamble provenance
+ft_postamble randomseed
+ft_postamble previous comp
+ft_postamble history compclass
+ft_postamble savevar compclass
 
 %-----cellcov
 function [c] = cellcov(x, y, dim, flag)
