@@ -82,18 +82,24 @@ vertexsize  = ft_getopt(varargin, 'vertexsize',  10);
 facealpha   = ft_getopt(varargin, 'facealpha',   1);
 edgealpha   = ft_getopt(varargin, 'edgealpha',   1);
 tag         = ft_getopt(varargin, 'tag',         '');
-surfaceonly = ft_getopt(varargin, 'surfaceonly',  false);
+edgeonly    = ft_getopt(varargin, 'edgeonly',  false);
 
-haspnt = isfield(bnd, 'pnt'); % vertices
-hastri = isfield(bnd, 'tri'); % triangles   as a Mx3 matrix with vertex indices
-hastet = isfield(bnd, 'tet'); % tetraheders as a Mx4 matrix with vertex indices
-hashex = isfield(bnd, 'hex'); % hexaheders  as a Mx8 matrix with vertex indices
+if edgeonly
+  bnd = mesh2edge(bnd);
+end
+
+haspnt  = isfield(bnd, 'pnt');  % vertices
+hastri  = isfield(bnd, 'tri');  % triangles   as a Mx3 matrix with vertex indices
+hastet  = isfield(bnd, 'tet');  % tetraheders as a Mx4 matrix with vertex indices
+hashex  = isfield(bnd, 'hex');  % hexaheders  as a Mx8 matrix with vertex indices
+hasline = isfield(bnd, 'line'); % line segments in 3-D
+haspoly = isfield(bnd, 'poly'); % polynomial surfaces in 3-D
 
 if isempty(vertexcolor)
-  if haspnt && (hastri || hastet || hashex)
-    vertexcolor='none';
+  if haspnt && (hastri || hastet || hashex || hasline || haspoly)
+    vertexcolor ='none';
   else
-    vertexcolor='k';
+    vertexcolor ='k';
   end
 end
 
@@ -135,17 +141,16 @@ elseif isfield(bnd, 'prj')
 else
   error('no vertices found');
 end
-  
-if hastri+hastet+hashex>1
-  error('cannot deal with simultaneous triangles, tetraheders and/or hexaheders')
-end
 
-if surfaceonly
-  bnd = mesh2edge(bnd);
+if hastri+hastet+hashex+hasline+haspoly>1
+  error('cannot deal with simultaneous triangles, tetraheders and/or hexaheders')
 end
 
 if hastri
   tri = bnd.tri;
+elseif haspoly
+  % these are treated just like triangles
+  tri = bnd.poly;
 elseif hastet
   % represent the tetraeders as the four triangles
   tri = [
@@ -172,8 +177,20 @@ else
   tri = [];
 end
 
+if hasline
+  line = bnd.line;
+else
+  line = [];
+end
+
 if haspnt && ~isempty(pnt)
-  hs = patch('Vertices', pnt, 'Faces', tri);
+  if ~isempty(tri)
+    hs = patch('Vertices', pnt, 'Faces', tri);
+  elseif ~isempty(line)
+    hs = patch('Vertices', pnt, 'Faces', line);
+  else
+    hs = patch('Vertices', pnt);
+  end
   set(hs, 'FaceColor', facecolor);
   set(hs, 'EdgeColor', edgecolor);
   set(hs, 'tag', tag);

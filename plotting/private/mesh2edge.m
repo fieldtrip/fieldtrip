@@ -58,20 +58,26 @@ end % isfield(bnd)
 % keep the original as "edge" and the sorted one as "sedge"
 sedge = sort(edge, 2);
 
-% find the edges that only occur once
-[c, ia, ic] = unique(sedge, 'rows');
-sel = false(size(ic));
-for k=1:length(ic)
-  sel(k) = sum(ic==k)==1;
+% find the edges that are not shared -> count the number of occurences
+n = size(sedge,1);
+occurences = ones(n,1);
+for i=1:n
+  for j=(i+1):n
+    if all(sedge(i,:)==sedge(j,:))
+      occurences(i) = occurences(i)+1;
+      occurences(j) = occurences(j)+1;
+    end
+  end
 end
+
 % make the selection in the original, not the sorted version of the edges
 % otherwise the orientation of the edges might get flipped
-edge = edge(sel,:);
+edge = edge(occurences==1,:);
 
 % the naming of the output edges depends on what they represent
 newbnd.pnt  = bnd.pnt;
 if isfield(bnd, 'tri')
-  newbnd.edge = edge;
+  newbnd.line = edge;
 elseif isfield(bnd, 'tet')
   newbnd.tri = edge;
 elseif isfield(bnd, 'hex')
