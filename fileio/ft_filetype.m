@@ -274,6 +274,16 @@ elseif filetype_check_extension(filename, '.trc') && filetype_check_header(filen
   manufacturer = 'Micromed';
   content = 'Electrophysiological data';
   
+  % known BabySQUID file types, these should go before Neuromag
+elseif filetype_check_extension(filename, '.fif') && exist(fullfile(p, [f '.eve']), 'file')
+  type = 'babysquid_fif';
+  manufacturer = 'Tristan Technologies';
+  content = 'MEG data';
+elseif filetype_check_extension(filename, '.eve') && exist(fullfile(p, [f '.fif']), 'file')
+  type = 'babysquid_eve';
+  manufacturer = 'Tristan Technologies';
+  content = 'MEG data';
+  
   % known Neuromag file types
 elseif filetype_check_extension(filename, '.fif')
   type = 'neuromag_fif';
@@ -326,21 +336,21 @@ elseif filetype_check_extension(filename, '.hsp')
   
   % Neurosim files; this has to go before the 4D detection
 elseif ~isdir(filename) && (strcmp(f,'spikes') || filetype_check_header(filename,'#  Spike information'))
-    type = 'neurosim_spikes';
-    manufacturer = 'Jan van der Eerden (DCCN)';
-    content = 'simulated spikes';
+  type = 'neurosim_spikes';
+  manufacturer = 'Jan van der Eerden (DCCN)';
+  content = 'simulated spikes';
 elseif ~isdir(filename) && (strcmp(f,'evolution') || filetype_check_header(filename,'#  Voltages'))
-    type = 'neurosim_evolution';
-    manufacturer = 'Jan van der Eerden (DCCN)';
-    content = 'simulated membrane voltages and currents';
+  type = 'neurosim_evolution';
+  manufacturer = 'Jan van der Eerden (DCCN)';
+  content = 'simulated membrane voltages and currents';
 elseif ~isdir(filename) && (strcmp(f,'signals') || filetype_check_header(filename,'#  Internal',2))
-    type = 'neurosim_signals';
-    manufacturer = 'Jan van der Eerden (DCCN)';
-    content = 'simulated network signals';
+  type = 'neurosim_signals';
+  manufacturer = 'Jan van der Eerden (DCCN)';
+  content = 'simulated network signals';
 elseif isdir(filename) && exist(fullfile(filename, 'signals'), 'file') && exist(fullfile(filename, 'spikes'), 'file')
-    type = 'neurosim_ds';
-    manufacturer = 'Jan van der Eerden (DCCN)';
-    content = 'simulated spikes and continuous signals';
+  type = 'neurosim_ds';
+  manufacturer = 'Jan van der Eerden (DCCN)';
+  content = 'simulated spikes and continuous signals';
   
   % known 4D/BTI file types
 elseif filetype_check_extension(filename, '.pdf') && filetype_check_header(filename, 'E|lk') % I am not sure whether this header always applies
@@ -813,7 +823,7 @@ elseif filetype_check_extension(filename, '.tev')
   type = 'tdt_tev';
   manufacturer = 'Tucker-Davis-Technology';
   content = 'electrophysiological data';
-
+  
 elseif (filetype_check_extension(filename, '.dat') ||  filetype_check_extension(filename, '.Dat')) && (exist(fullfile(p, [f '.ini']), 'file') || exist(fullfile(p, [f '.Ini']), 'file'))
   % this should go before curry_dat
   type = 'deymed_dat';
@@ -823,7 +833,7 @@ elseif (filetype_check_extension(filename, '.ini') ||  filetype_check_extension(
   type = 'deymed_ini';
   manufacturer = 'Deymed';
   content = 'eeg header information';
-
+  
   % known Curry V4 file types
 elseif filetype_check_extension(filename, '.dap')
   type = 'curry_dap';   % FIXME, can also be MPI Frankfurt electrophysiological data
@@ -954,7 +964,7 @@ elseif filetype_check_extension(filename, '.txt') && numel(strfind(filename,'_nr
   type = 'bucn_nirs';
   manufacturer = 'BUCN';
   content = 'ascii formatted nirs data';
-
+  
   % known TETGEN file types, see http://tetgen.berlios.de/fformats.html
 elseif any(filetype_check_extension(filename, {'.node' '.poly' '.smesh' '.ele' '.face' '.edge' '.vol' '.var' '.neigh'})) && exist(fullfile(p, [f '.node']), 'file') && filetype_check_ascii(fullfile(p, [f '.node']), 100) && exist(fullfile(p, [f '.poly']), 'file')
   type = 'tetgen_poly';
@@ -992,7 +1002,7 @@ elseif any(filetype_check_extension(filename, {'.node' '.poly' '.smesh' '.ele' '
   type = 'tetgen_node';
   manufacturer = 'TetGen, see http://tetgen.berlios.de';
   content = 'geometrical data desribed with only nodes';
-
+  
   % some other known file types
 elseif length(filename)>4 && exist([filename(1:(end-4)) '.mat'], 'file') && exist([filename(1:(end-4)) '.bin'], 'file')
   % this is a self-defined FCDC data format, consisting of two files
@@ -1258,8 +1268,6 @@ if haslfp || hasmua || hasspike
   
   res=any(ft_filetype(neuralynxdirs, 'neuralynx_ds'));
 end
-
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that checks whether the file contains only ascii characters

@@ -1077,6 +1077,15 @@ switch eventformat
       event(i).offset   = 0;                      % expressed in samples
       event(i).duration = hdr.nSamples;           % expressed in samples
     end
+
+  case {'babysquid_fif' 'babysquid_eve'}
+    if strcmp(eventformat, 'babysquid_fif')
+      [p, f, x] = fileparts(filename);
+      filename = fullfile(p, [f '.eve']);
+    end
+    [smp, tim, val, val4] = read_babysquid_eve(filename);
+    % to be implemented, see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1914
+    keyboard
     
   case {'neuromag_fif' 'neuromag_mne' 'neuromag_mex'}
     if strcmp(eventformat, 'neuromag_fif')

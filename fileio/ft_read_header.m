@@ -1239,7 +1239,7 @@ switch headerformat
   case 'nexstim_nxe'
     hdr = read_nexstim_nxe(filename);
     
-  case {'neuromag_fif' 'neuromag_mne'}
+  case {'neuromag_fif' 'neuromag_mne' 'babysquid_fif'}
     % check that the required low-level toolbox is available
     ft_hastoolbox('mne', 1);
     
