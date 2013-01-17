@@ -54,18 +54,19 @@ elseif isfield(bnd, 'hex')
   
 end % isfield(bnd)
 
-% make them point in the same direction
-edge = sort(edge, 2);
+% make them all point in the same direction
+% keep the original as "edge" and the sorted one as "sedge"
+sedge = sort(edge, 2);
 
 % find the edges that only occur once
-[c, ia, ic] = unique(edge, 'rows');
+[c, ia, ic] = unique(sedge, 'rows');
 sel = false(size(ic));
 for k=1:length(ic)
   sel(k) = sum(ic==k)==1;
 end
+% make the selection in the original, not the sorted version of the edges
+% otherwise the orientation of the edges might get flipped
 edge = edge(sel,:);
-
-% FIXME it would be better to remove all vertices that are not part of an edge
 
 % the naming of the output edges depends on what they represent
 newbnd.pnt  = bnd.pnt;
