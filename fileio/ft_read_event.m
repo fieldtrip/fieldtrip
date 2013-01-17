@@ -1080,12 +1080,22 @@ switch eventformat
 
   case {'babysquid_fif' 'babysquid_eve'}
     if strcmp(eventformat, 'babysquid_fif')
+      % ensure that we are reading the *.eve file
       [p, f, x] = fileparts(filename);
       filename = fullfile(p, [f '.eve']);
     end
-    [smp, tim, val, val4] = read_babysquid_eve(filename);
-    % to be implemented, see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1914
-    keyboard
+    % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1914 for details
+    [smp, tim, val, typ] = read_babysquid_eve(filename);
+    if ~isempty(smp)
+      smp     = num2cell(smp);
+      val     = num2cell(val);
+      typ     = cellfun(@num2str, num2cell(typ), 'UniformOutput', false);
+      offset  = num2cell(zeros(size(smp)));
+      % convert to a structure array
+      event = struct('type', typ, 'value', val, 'sample', smp, 'offset', offset);
+    else
+      event = [];
+    end
     
   case {'neuromag_fif' 'neuromag_mne' 'neuromag_mex'}
     if strcmp(eventformat, 'neuromag_fif')
