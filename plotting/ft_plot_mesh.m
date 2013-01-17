@@ -29,9 +29,9 @@ function [hs] = ft_plot_mesh(bnd, varargin)
 %   ft_plot_mesh(bnd, 'facecolor', 'skin', 'edgecolor', 'none')
 %   camlight
 %
-% See also TRIMESH
+% See also TRIMESH, PATCH
 
-% Copyright (C) 2012, Robert Oostenveld
+% Copyright (C) 2009-2012, Robert Oostenveld
 % Copyright (C) 2009, Cristiano Micheli
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
@@ -82,6 +82,7 @@ vertexsize  = ft_getopt(varargin, 'vertexsize',  10);
 facealpha   = ft_getopt(varargin, 'facealpha',   1);
 edgealpha   = ft_getopt(varargin, 'edgealpha',   1);
 tag         = ft_getopt(varargin, 'tag',         '');
+surfaceonly = ft_getopt(varargin, 'surfaceonly',  false);
 
 haspnt = isfield(bnd, 'pnt'); % vertices
 hastri = isfield(bnd, 'tri'); % triangles   as a Mx3 matrix with vertex indices
@@ -137,6 +138,10 @@ end
   
 if hastri+hastet+hashex>1
   error('cannot deal with simultaneous triangles, tetraheders and/or hexaheders')
+end
+
+if surfaceonly
+  bnd = mesh2edge(bnd);
 end
 
 if hastri
