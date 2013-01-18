@@ -522,6 +522,10 @@ switch dataformat
     dat = read_eeglabdata(filename, 'header', hdr, 'begtrial', begtrial, 'endtrial', endtrial, 'chanindx', chanindx);
     dimord = 'chans_samples_trials';
     
+  case 'eeglab_erp'
+    dat = read_erplabdata(filename, 'header', hdr, 'begtrial', begtrial, 'endtrial', endtrial, 'chanindx', chanindx);
+    dimord = 'chans_samples_trials';
+    
   case 'spmeeg_mat'
     dat = read_spmeeg_data(filename, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx);
     
