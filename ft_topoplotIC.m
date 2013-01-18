@@ -132,21 +132,21 @@ cfg.layout = ft_prepare_layout(cfg, varargin{:});
 cfg.showcallinfo = 'no';
 
 % allow multiplotting
-  nplots = numel(selcomp);
-  if nplots>1
-    nyplot = ceil(sqrt(nplots));
-    nxplot = ceil(nplots./nyplot);
-    for i = 1:length(selcomp)
-      subplot(nxplot, nyplot, i);
-      cfg.component = selcomp(i);
-      ft_topoplotTFR(cfg, varargin{:});
-      title(['component ' num2str(selcomp(i))]);
-    end
-  else
-    cfg.component = selcomp;
+nplots = numel(selcomp);
+if nplots>1
+  nyplot = ceil(sqrt(nplots));
+  nxplot = ceil(nplots./nyplot);
+  for i = 1:length(selcomp)
+    subplot(nxplot, nyplot, i);
+    cfg.component = selcomp(i);
     ft_topoplotTFR(cfg, varargin{:});
-    title(['component ' num2str(selcomp)]);
+    title(['component ' num2str(selcomp(i))]);
   end
+else
+  cfg.component = selcomp;
+  ft_topoplotTFR(cfg, varargin{:});
+  title(['component ' num2str(selcomp)]);
+end
 
 % show the callinfo for all components together
 cfg.showcallinfo = 'yes';
