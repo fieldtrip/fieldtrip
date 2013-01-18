@@ -571,6 +571,12 @@ switch eventformat
     end
     event = read_eeglabevent(filename, 'header', hdr);
     
+  case 'eeglab_erp'
+    if isempty(hdr)
+      hdr = ft_read_header(filename);
+    end
+    event = read_erplabevent(filename, 'header', hdr);
+
   case 'spmeeg_mat'
     if isempty(hdr)
       hdr = ft_read_header(filename);
