@@ -50,7 +50,7 @@ oldevent = hdr.orig.event;    % these are in EEGLAB format
 
 missingFieldFlag=false;
 
-if ~isfield(oldevent,'code') && ~isfield(oldevent,'value')
+if ~isfield(oldevent,'code') && ~isfield(oldevent,'value')  && ~isfield(oldevent,'setname')
     disp('Warning: No ''value'' field in the events structure.');
     missingFieldFlag=true;
 end;
@@ -61,10 +61,12 @@ if ~isfield(oldevent,'type')
 end;
 
 if missingFieldFlag
-    disp('EEGlab data files should have both a ''value'' field');
-    disp('to denote the generic type of event, as in ''trigger'', and a ''type'' field');
-    disp('to denote the nature of this generic event, as in the condition of the experiment.');
-    disp('Note also that this is the reverse of the FieldTrip convention.');    
+    if ~isfield(oldevent,'setname') %accommodate Widmann's pop_grandaverage function
+        disp('EEGlab data files should have both a ''value'' field');
+        disp('to denote the generic type of event, as in ''trigger'', and a ''type'' field');
+        disp('to denote the nature of this generic event, as in the condition of the experiment.');
+        disp('Note also that this is the reverse of the FieldTrip convention.');
+    end;
 end;
 
 for index = 1:length(oldevent)
@@ -112,7 +114,11 @@ if hdr.nTrials>1
   for i=1:hdr.nTrials
     event(end+1).type     = 'trial';
     event(end  ).sample   = (i-1)*hdr.nSamples + 1;
-    event(end  ).value    = [];
+    if isfield(oldevent,'setname') && (length(oldevent) == hdr.nTrials)
+        event(end  ).value    = oldevent(i).setname; %accommodate Widmann's pop_grandaverage function
+    else
+        event(end  ).value    = [];
+    end;
     event(end  ).offset   = -hdr.nSamplesPre;
     event(end  ).duration =  hdr.nSamples;
   end
