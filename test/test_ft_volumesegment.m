@@ -3,9 +3,11 @@ function test_ft_volumesegment
 % TEST test_ft_volumesegment
 % TEST ft_volumesegment  ft_read_mri
 
+% initial version by Lilla Magyari 2012
+
 clear all
 
-% read in an mri from which the segmentation will be created
+% read in an mri 
 
 mri=ft_read_mri('/home/common/matlab/fieldtrip/data/test/latest/mri/nifti/single_subj_T1.nii');
 
@@ -81,6 +83,22 @@ end
 
 clear brain;
 clear brain2;
+
+%% output: gray, white, csf, skull and scalp
+
+cfg=[];
+cfg.output={'gray' 'white' 'csf' 'skull' 'scalp'};
+seg3=ft_volumesegment(cfg,tpm);
+
+if ~(isfield(seg3,'skull')) || ~(isfield(seg3,'scalp')) || ~(isfield(seg3,'gray')) || ~(isfield(seg3,'white')) || ~(isfield(seg3,'csf')) 
+    error('segmentation is missing a field');
+elseif isfield(seg3,'anatomy') || isfield(seg3,'tpm') || isfield(seg3,'brain')
+    error('inconsistent segmentation structure');
+end
+
+assert(islogical(seg3.gray) & islogical(seg3.white) & islogical(seg3.csf),'Output is not a binary representation.')
+clear seg3;
+
 %% output: scalp
 cfg=[];
 cfg.output='scalp';
@@ -231,6 +249,14 @@ skullstr6=ft_volumesegment(cfg,tpm);
 if ~(isequal(skullstr5.anatomy,skullstr6.anatomy))
     error('specifying output only with skullstrip or with other output should give the same output');
 end
+
+%% output: skullstrip & brain (for the MNE pipeline)
+
+cfg=[];
+cfg.output={'skullstrip' 'brain'};
+skullstr=ft_volumesegment(cfg,tpm);
+
+assert(isfield(skullstr,'anatomy') & isfield(skullstr,'brain'),'skullstrip segmentation is missing anatomy');
 
 clear all;
 
