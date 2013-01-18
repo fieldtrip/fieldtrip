@@ -614,6 +614,9 @@ switch headerformat
   case 'eeglab_set'
     hdr = read_eeglabheader(filename);
     
+  case 'eeglab_erp'
+    hdr = read_erplabheader(filename);
+    
   case 'eyelink_asc'
     asc = read_eyelink_asc(filename);
     hdr.nChans              = size(asc.dat,1);
