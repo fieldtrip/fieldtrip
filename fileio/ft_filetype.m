@@ -1070,6 +1070,10 @@ elseif filetype_check_extension(filename, '.set')
   type = 'eeglab_set';
   manufacturer = 'Swartz Center for Computational Neuroscience, San Diego, USA';
   content = 'electrophysiological data';
+elseif filetype_check_extension(filename, '.erp')
+  type = 'eeglab_erp';
+  manufacturer = 'Swartz Center for Computational Neuroscience, San Diego, USA';
+  content = 'electrophysiological data';
 elseif filetype_check_extension(filename, '.t') && filetype_check_header(filename, '%%BEGINHEADER')
   type = 'mclust_t';
   manufacturer = 'MClust';
