@@ -47,9 +47,6 @@ function [segment] = ft_volumesegment(cfg, mri)
 % The desired segmentation output is specified with cfg.output as a string or cell-array of strings
 % and can contain
 %   'tpm'         - tissue probability map for csf, white and gray matter
-%   'gray'        - binary representation of the gray matter
-%   'white'       - binary representation of the white matter
-%   'csf'         - binary representation of the csf
 %   'brain'       - binary representation of the brain (including csf, white and gray matter)
 %   'skull'       - binary representation of the skull
 %   'scalp'       - binary representation of the scalp
@@ -65,15 +62,9 @@ function [segment] = ft_volumesegment(cfg, mri)
 %                brainmask generated from the probabilistic tissue maps. The skull-stripped anatomy
 %                is stored in the field segment.anatomy.
 %
-%
 %   cfg.output = {'brain' 'scalp' 'skull'};
 %   segment    = ft_volumesegment(cfg, mri) will produce a volume with 3 binary masks, representing
 %                the brain surface, scalp surface, and skull which do not overlap.
-%
-%   cfg.output = {'white' 'gray' 'csf' 'skull' 'scalp'};
-%   segment    = ft_volumesegment(cfg, mri) will produce a volume with 5 binary masks, representing
-%                the tissue-types of white, gray matter, csf, skull and scalp. The representations do
-%                not overlap.
 %
 %   cfg.output = {'scalp'};
 %   segment    = ft_volumesegment(cfg, mri) will produce a volume with a binary mask (based on the
