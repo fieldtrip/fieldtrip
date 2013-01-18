@@ -134,14 +134,14 @@ cfg.showcallinfo = 'no';
 % allow multiplotting
   nplots = numel(selcomp);
   if nplots>1
-  nyplot = ceil(sqrt(nplots));
-  nxplot = ceil(nplots./nyplot);
-  for i = 1:length(selcomp)
-    subplot(nxplot, nyplot, i);
-    cfg.component = selcomp(i);
-    ft_topoplotTFR(cfg, varargin{:});
-    title(['component ' num2str(selcomp(i))]);
-  end
+    nyplot = ceil(sqrt(nplots));
+    nxplot = ceil(nplots./nyplot);
+    for i = 1:length(selcomp)
+      subplot(nxplot, nyplot, i);
+      cfg.component = selcomp(i);
+      ft_topoplotTFR(cfg, varargin{:});
+      title(['component ' num2str(selcomp(i))]);
+    end
   else
     cfg.component = selcomp;
     ft_topoplotTFR(cfg, varargin{:});
