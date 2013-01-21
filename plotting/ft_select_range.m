@@ -20,7 +20,7 @@ function ft_select_range(handle, eventdata, varargin)
 %   multiple    = boolean, allowing multiple selection boxes or not
 %   xrange      = boolean, xrange variable or not
 %   yrange      = boolean, yrange variable or not
-%   clear       =
+%   clear       = boolean
 %
 %
 % Example use:
@@ -120,7 +120,7 @@ end
 % setup contextmenu
 if ~isempty(contextmenu)
   if isempty(get(handle,'uicontextmenu'))
-    hcmenu = uicontextmenu;
+    hcmenu    = uicontextmenu;
     hcmenuopt = nan(1,numel(contextmenu));
     for icmenu = 1:numel(contextmenu)
       hcmenuopt(icmenu) = uimenu(hcmenu, 'label', contextmenu{icmenu}, 'callback', {@evalcontextcallback, callback{:}, []}); % empty matrix is placeholder, will be updated to userdata.range
