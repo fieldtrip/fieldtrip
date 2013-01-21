@@ -73,6 +73,7 @@ if ~isfield(cfg, 'filename'),    cfg.filename    = [];                end
 if ~isfield(cfg, 'showinfo'),    cfg.showinfo    = {'functionname'};  end
 if ~isfield(cfg, 'keepremoved'), cfg.keepremoved = 'no';              end
 if ~isfield(cfg, 'feedback'),    cfg.feedback    = 'yes';             end
+if ~isfield(cfg, 'prune'),       cfg.prune       = 'yes';             end
 
 if ~isfield(cfg, 'remove')
   % this is the default list of configuration elements to be removed. These
@@ -139,41 +140,61 @@ for i=1:length(pipeline)
 end
 pipeline = tmp;
 
-% prune the double occurences
-% [dummy, indx] = unique({pipeline.this});
-% info = info(sort(indx));
+if strcmp(cfg.prune, 'yes')
+  % prune the double occurences
+  [dummy, indx] = unique({pipeline.this});
+  pipeline = pipeline(sort(indx));
+end
 
 % start at the end of the tree and determine the level of each of the parents
-level = 1;
-sel = find(~ismember({pipeline.this}, [pipeline.parent]));
-pipeline(sel).level = level;
-this = pipeline(sel).parent;
-while ~isempty(this)
-  level = level+1;
-  next  = {};
-  for i=1:length(this)
-    sel = find(strcmp(this{i}, {pipeline.this}));
-    for j=sel
-      pipeline(j).level = level;
-      next = [next pipeline(j).parent];
-    end
-  end
-  this = next;
-  clear next
+hasparent = false(size(pipeline));
+haschild  = false(size(pipeline));
+for i=1:length(pipeline)
+  hasparent(i) = ~isempty(pipeline(i).parent) || ~isempty(pipeline(i).parentcfg);
+  haschild(i)  = any(strcmp(pipeline(i).this, [pipeline.parent pipeline.parentcfg]));
+end
+
+% construct a matrix with all pipeline steps
+width  = zeros(size(pipeline));
+height = zeros(size(pipeline));
+level  = 1;
+% the items without children start at height 1
+sel = find(~haschild);
+while ~isempty(sel)
+  height(sel) = level;
+  % find the parents of the items at this level
+  sel = match_str({pipeline.this}, [pipeline(sel).parent pipeline(sel).parentcfg]);
+  % the parents should be at least one level higher
+  height(sel) = level + 1;
+  % continue with the next level
+  level = level + 1;
+end
+for i=1:max(height)
+  sel = find(height==i);
+  width(sel) = 1:length(sel);
+end
+for i=1:length(pipeline)
+  pipeline(i).position = [height(i) width(i)];
 end
 
 % sort according to a decreasing level, i.e. the last pipeline(i) at the end
-% [dummy, indx] = sort(-[pipeline.level]);
-% info = info(indx);
+[dummy, indx] = sortrows(-[height(:) width(:)]);
+pipeline = pipeline(indx);
 
 plotflowchart(cfg, pipeline);
 
+if ~isempty(cfg.filename)
+  exportmatlabscript(cfg, pipeline);
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION for recursive walking along the cfg.previous.previous info
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function info = walktree(cfg)
 
+this = getnode(cfg);
+
+% parse all previous steps
 if isfield(cfg, 'previous') && ~isempty(cfg.previous) && iscell(cfg.previous)
   previous = cellfun(@walktree, cfg.previous, 'UniformOutput', false);
   if iscell(previous{1})
@@ -186,20 +207,29 @@ elseif isfield(cfg, 'previous') && ~isempty(cfg.previous)
 else
   previous = {};
 end
-this = getnode(cfg);
-info = cat(1, previous, {this});
 
+% parse the side branches, e.g. cfg.vol and cfg.layout
+fn = fieldnames(cfg);
+branch = {};
+for i=1:numel(fn)
+  if isstruct(cfg.(fn{i})) && isfield(cfg.(fn{i}), 'cfg')
+    branch = [branch walktree(cfg.(fn{i}).cfg)];
+    this.parentcfg{end+1} = branch{end}.this;
+  end
+end
+
+info = [previous {this} branch];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION for gathering the information about each pipeline(i)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function node = getnode(cfg)
-[p, f, x]     = myfileparts(getvalue(cfg, 'version.name'));
-node.cfg      = cfg;
-node.name     = f;
-node.id       = getvalue(cfg, 'version.id');
-node.level    = 0; % this will be determined once the info is complete
-node.this     = CalcMD5(mxSerialize(cfg));
+[p, f, x]      = myfileparts(getvalue(cfg, 'version.name'));
+node.cfg       = cfg;
+node.name      = f;
+node.id        = getvalue(cfg, 'version.id');
+node.this      = CalcMD5(mxSerialize(cfg));
+node.parentcfg = {}; % this will be assigned by walktree if needed
 if isfield(cfg, 'previous') && ~isempty(cfg.previous) && iscell(cfg.previous)
   node.parent   = cellfun(@CalcMD5, cellfun(@mxSerialize, cfg.previous, 'UniformOutput', false), 'UniformOutput', false);
 elseif isfield(cfg, 'previous') && ~isempty(cfg.previous) && isstruct(cfg.previous)
@@ -231,33 +261,54 @@ else
 end
 [p, f, x] = fileparts(filename);
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function varargout = button(h, eventdata, handles, varargin)
+pos = get(get(gcbo, 'CurrentAxes'), 'CurrentPoint');
+x = pos(1,1);
+y = pos(1,2);
+pipeline = guidata(h);
+
+for i=1:numel(pipeline)
+  if (x >= pipeline(i).x(1) && x <= pipeline(i).x(2) && y >= pipeline(i).y(1) && y <= pipeline(i).y(3))
+    cfg = pipeline(i).cfg;
+    if isfield(cfg, 'previous')
+      cfg = rmfield(cfg, 'previous');
+    end
+    script = printstruct('cfg', cfg);
+    uidisplaytext(script, pipeline(i).name);
+    break;
+  end
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function plotflowchart(cfg, pipeline)
 
-% make a cell-array representing the layout of all elements
-height = max([pipeline.level]);
-layout = cell(height, numel(pipeline));
-
+layout = cell(numel(pipeline));
 for i=1:length(pipeline)
-  % determine the vertical and horizontal position
-  v = pipeline(i).level;
-  h = find(cellfun(@isempty, layout(v,:)), 1, 'first');
+  % get the vertical and horizontal position in integer values
+  % high numbers are towards the begin, low numbers are towards the end of the pipeline
+  v = pipeline(i).position(1);
+  h = pipeline(i).position(2);
   layout{v,h} = pipeline(i).this;
-  pipeline(i).position = [h v];
 end
 
 % remove the empty columns
-width = max(sum(~cellfun(@isempty, layout),2));
-layout = layout(:,1:width);
+maxheight = max(sum(~cellfun(@isempty, layout),1));
+maxwidth  = max(sum(~cellfun(@isempty, layout),2));
+layout    = layout(1:maxheight,1:maxwidth);
 
 fig = figure;
 hold on
 axis manual; % the axis should not change during the contruction of the arrows, otherwise the arrowheads will be distorted
 set(gca,'Units','normalized'); % use normalized units
 set(gcf, 'ToolBar', 'none');
+axis([0 1 0 1])
+axis off;
+axis tight;
 
 for i=1:numel(pipeline)
   
@@ -344,7 +395,7 @@ for i=1:numel(pipeline)
           label{end+1} = '<script path unknown>';
         end
     end
-  end
+  end % for numel(showinfo)
   
   % dublicate backslashes to escape tex interpreter (in case of windows filenames)
   label = strrep(label, '\', '\\');
@@ -359,17 +410,16 @@ for i=1:numel(pipeline)
   end
   
   % compute width and height of each box, note that axis Units are set to Normalized
-  boxsize = 1./[width+1 height+1];
+  boxsize = 1./[maxwidth+1 maxheight+1];
   
   % create the 4 corners for our patch, close the patch by returning to the start point
   x = ([0 1 1 0 0]-0.5) .* boxsize(1);
   y = ([0 0 1 1 0]-0.5) .* boxsize(2);
   
   % position the patch
-  % [location(2), location(1)] = ind2sub([height, width], find(strcmp(layout(:), analysis.this), 1, 'first'));
-  location = pipeline(i).position;
-  location(1) = (location(1)-0.5)/width;
-  location(2) = (location(2)-0.5)/height;
+  location    = pipeline(i).position([2 1]);
+  location(1) = (location(1)-0.5)/maxwidth;
+  location(2) = (location(2)-0.5)/maxheight;
   
   % the location specifies the center of the patch
   x = x + location(1);
@@ -404,42 +454,107 @@ for i=1:numel(pipeline)
   end
   
   % draw an arrow if appropriate
-  for j=1:length(pipeline(i).parent)
-    [parentlocation(2), parentlocation(1)] = ind2sub([height, width], find(strcmp(layout(:), pipeline(i).parent{j}), 1, 'first'));
+  n1 = length(pipeline(i).parentcfg);
+  n2 = length(pipeline(i).parent);
+  n = n1+n2;
+  for j=1:n1
+    [parentlocation(2), parentlocation(1)] = ind2sub([maxheight, maxwidth], find(strcmp(layout(:), pipeline(i).parentcfg{j}), 1, 'first'));
     % parentlocation = info(find(strcmp({pipeline.this}, analysis.parent{j}), 1, 'first')).position;
-    parentlocation(1) = (parentlocation(1)-0.5)/width;
-    parentlocation(2) = (parentlocation(2)-0.5)/height;
+    parentlocation(1) = (parentlocation(1)-0.5)/maxwidth;
+    parentlocation(2) = (parentlocation(2)-0.5)/maxheight;
     base = parentlocation + [0 -0.5].*boxsize;
-    tip  = location       + [0  0.5].*boxsize;
-    arrow(base, tip, 'length', 8);
+    if n>1
+      % distribute the inputs evenly over the box
+      rel = 2*(j-1)/(n-1)-1; % relative location between -1.0 and 1.0
+      rel = rel*(n-1)/(n+3); % compress the relative location
+      tip = location + [0 0.5].*boxsize + [rel 0].*boxsize/2;
+    else
+      % put it in the centre
+      tip  = location + [0 0.5].*boxsize;
+    end
+    arrow(base, tip, 'length', 8, 'lineWidth', 1, 'lineStyle', ':');
+  end
+  for j=1:n2
+    [parentlocation(2), parentlocation(1)] = ind2sub([maxheight, maxwidth], find(strcmp(layout(:), pipeline(i).parent{j}), 1, 'first'));
+    % parentlocation = info(find(strcmp({pipeline.this}, analysis.parent{j}), 1, 'first')).position;
+    parentlocation(1) = (parentlocation(1)-0.5)/maxwidth;
+    parentlocation(2) = (parentlocation(2)-0.5)/maxheight;
+    base = parentlocation + [0 -0.5].*boxsize;
+    if n>1
+      % distribute the inputs evenly over the box
+      rel = 2*(j+n1-1)/(n-1)-1; % relative location between -1.0 and 1.0
+      rel = rel*(n-1)/(n+3); % compress the relative location
+      tip = location + [0 0.5].*boxsize + [rel 0].*boxsize/2;
+    else
+      % put it in the centre
+      tip  = location + [0 0.5].*boxsize;
+    end
+    arrow(base, tip, 'length', 8, 'lineWidth', 1);
   end
   
-end % for length(info)
+  
+end % for numel(info)
 
-axis([0 1 0 1])
-axis off;
-axis tight;
 set(fig, 'WindowButtonUpFcn', @button);
-set(fig, 'KeyPressFcn', @key);
+% set(fig, 'KeyPressFcn', @key);
+
+% add a menu to the figure
+% ftmenu = uicontextmenu; set(gcf, 'uicontextmenu', ftmenu)
+ftmenu  = uimenu(fig, 'Label', 'FieldTrip');
+ftmenu1 = uimenu(ftmenu, 'Label', 'Save pipeline');
+ftmenu2 = uimenu(ftmenu, 'Label', 'Share pipeline');
+uimenu(ftmenu, 'Label', 'About',  'Separator', 'on', 'Callback', @menu_about);
+uimenu(ftmenu1, 'Label', 'Save as MATLAB script');
+uimenu(ftmenu1, 'Label', 'Save as PSOM pipeline');
+uimenu(ftmenu1, 'Label', 'Save as HTML page');
+uimenu(ftmenu2, 'Label', 'Share within DCCN');
+uimenu(ftmenu2, 'Label', 'Share on PasteBin.com');
+uimenu(ftmenu2, 'Label', 'Share on MyExperiment.org');
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function varargout = button(h, eventdata, handles, varargin)
-pos = get(get(gcbo, 'CurrentAxes'), 'CurrentPoint');
-x = pos(1,1);
-y = pos(1,2);
-pipeline = guidata(h);
+function exportmatlabscript(cfg, pipeline)
 
-for i=1:numel(pipeline)
-  if (x >= pipeline(i).x(1) && x <= pipeline(i).x(2) && y >= pipeline(i).y(1) && y <= pipeline(i).y(3))
-    cfg = pipeline(i).cfg;
-    if isfield(cfg, 'previous')
-      cfg = rmfield(cfg, 'previous');
-    end
-    script = printstruct('cfg', cfg);
-    uidisplaytext(script, pipeline(i).name);
-    break;
+varname = {};
+varhash = {};
+
+for i=1:length(pipeline)
+  varname{end+1} = sprintf('variable_%d_%d', pipeline(i).position(1), pipeline(i).position(2));
+  varhash{end+1} = pipeline(i).this;
+end
+
+for i=1:length(pipeline)
+  pipeline(i).inputvar  = {};
+  pipeline(i).outputvar = varname{strcmp(varhash, pipeline(i).this)};
+  for j=1:length(pipeline(i).parent)
+    pipeline(i).inputvar{j} = varname{strcmp(varhash, pipeline(i).parent{j})};
   end
 end
+
+sep    = sprintf('\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n');
+script = sep;
+for i=1:length(pipeline)
+  thiscfg = pipeline(i).cfg;
+  if isfield(thiscfg, 'previous')
+    thiscfg = rmfield(thiscfg, 'previous');
+  end
+  cfgstr    = printstruct('cfg', thiscfg);
+  if ~isempty(pipeline(i).inputvar)
+    inputvar = sprintf(', %s', pipeline(i).inputvar{:});
+  else
+    inputvar = '';
+  end
+  cmd       = sprintf('\n%s = %s(cfg%s);', pipeline(i).outputvar, pipeline(i).name, inputvar);
+  script    = cat(2, script, cfgstr, cmd, sep);
+end
+
+[p, f, x] = fileparts(cfg.filename);
+filename = fullfile(p, [f '.m']);
+% write the complete script to file
+fprintf('exporting MATLAB script to file ''%s''\n', filename);
+fid = fopen(filename, 'wb');
+fprintf(fid, '%s', script);
+fclose(fid);
+
