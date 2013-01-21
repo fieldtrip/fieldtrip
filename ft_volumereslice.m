@@ -36,7 +36,7 @@ function [reslice] = ft_volumereslice(cfg, mri)
 % Undocumented local options:
 %   cfg.downsample
 
-% Copyright (C) 2010-2011, Robert Oostenveld & Jan-Mathijs Schoffelen
+% Copyright (C) 2010-2013, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -67,7 +67,11 @@ ft_preamble debug
 ft_preamble loadvar mri
 
 % check if the input data is valid for this function and ensure that the structures correctly describes a volume
-mri = ft_checkdata(mri, 'datatype', 'volume', 'inside', 'logical', 'feedback', 'yes', 'hasunits', 'yes');
+if isfield(mri, 'inside')
+  mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes', 'hasunits', 'yes', 'inside', 'logical');
+else
+  mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes', 'hasunits', 'yes');
+end
 
 % set the defaults
 cfg.resolution = ft_getopt(cfg, 'resolution', 1);
@@ -80,48 +84,48 @@ cfg.zrange     = ft_getopt(cfg, 'zrange', []);
 cfg.dim        = ft_getopt(cfg, 'dim', []); % alternatively use ceil(mri.dim./cfg.resolution)
 
 if isfield(mri, 'coordsys')
-    % use some prior knowledge to optimize the location of the bounding box
-    % with respect to the origin of the coordinate system
-    switch mri.coordsys
-        case {'ctf' '4d' 'bti'}
-            xshift = 30./cfg.resolution;
-            yshift = 0;
-            zshift = 40./cfg.resolution;
-        case {'itab' 'neuromag'}
-            xshift = 0;
-            yshift = 30./cfg.resolution;
-            zshift = 40./cfg.resolution;
-        otherwise
-            xshift = 0;
-            yshift = 0;
-            zshift = 15./cfg.resolution;
-    end
+  % use some prior knowledge to optimize the location of the bounding box
+  % with respect to the origin of the coordinate system
+  switch mri.coordsys
+    case {'ctf' '4d' 'bti'}
+      xshift = 30./cfg.resolution;
+      yshift = 0;
+      zshift = 40./cfg.resolution;
+    case {'itab' 'neuromag'}
+      xshift = 0;
+      yshift = 30./cfg.resolution;
+      zshift = 40./cfg.resolution;
+    otherwise
+      xshift = 0;
+      yshift = 0;
+      zshift = 15./cfg.resolution;
+  end
 else % if no coordsys is present
-    xshift = 0;
-    yshift = 0;
-    zshift = 0;
+  xshift = 0;
+  yshift = 0;
+  zshift = 0;
 end
 
 if ~isempty(cfg.dim)
-    xrange = [-cfg.dim(1)/2+0.5 cfg.dim(1)/2-0.5] * cfg.resolution + xshift;
-    yrange = [-cfg.dim(2)/2+0.5 cfg.dim(2)/2-0.5] * cfg.resolution + yshift;
-    zrange = [-cfg.dim(3)/2+0.5 cfg.dim(3)/2-0.5] * cfg.resolution + zshift;
+  xrange = [-cfg.dim(1)/2+0.5 cfg.dim(1)/2-0.5] * cfg.resolution + xshift;
+  yrange = [-cfg.dim(2)/2+0.5 cfg.dim(2)/2-0.5] * cfg.resolution + yshift;
+  zrange = [-cfg.dim(3)/2+0.5 cfg.dim(3)/2-0.5] * cfg.resolution + zshift;
 else % if no cfg.dim is specified, use defaults
-    range = [-127.5 127.5] * cfg.resolution; % 255 mm^3 bounding box, assuming human brain
-    xrange = range + xshift;
-    yrange = range + yshift;
-    zrange = range + zshift;
+  range = [-127.5 127.5] * cfg.resolution; % 255 mm^3 bounding box, assuming human brain
+  xrange = range + xshift;
+  yrange = range + yshift;
+  zrange = range + zshift;
 end
 
 % if ranges have not been specified by the user
 if isempty(cfg.xrange)
-    cfg.xrange = xrange;
+  cfg.xrange = xrange;
 end
 if isempty(cfg.yrange)
-    cfg.yrange = yrange;
+  cfg.yrange = yrange;
 end
 if isempty(cfg.zrange)
-    cfg.zrange = zrange;
+  cfg.zrange = zrange;
 end
 
 if ~isequal(cfg.downsample, 1)
@@ -153,11 +157,15 @@ end
 
 fprintf('reslicing from [%d %d %d] to [%d %d %d]\n', mri.dim(1), mri.dim(2), mri.dim(3), reslice.dim(1), reslice.dim(2), reslice.dim(3));
 
-% the actual work is being done by ft_sourceinterpolate, which interpolates the real mri volume 
+% the actual work is being done by ft_sourceinterpolate, which interpolates the real mri volume
 % on the resolution that is defined for the resliced volume
 tmpcfg = [];
 tmpcfg.parameter = 'anatomy';
 reslice = ft_sourceinterpolate(tmpcfg, mri, reslice);
+
+% remove fields that were not present in the input, this applies specifically to
+% the 'inside' field that may have been added by ft_sourceinterpolate
+reslice = rmfield(reslice, setdiff(fieldnames(reslice), fieldnames(mri)));
 
 % convert any non-finite values to 0 to avoid problems later on
 reslice.anatomy(~isfinite(reslice.anatomy)) = 0;
