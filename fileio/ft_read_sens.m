@@ -188,7 +188,7 @@ switch fileformat
     
   case 'polhemus_fil'
     % these are created at the FIL in London with a polhemus tracker
-    [sens.fid, sens.pnt] = read_polhemus_fil(filename, 0);
+    [sens.fid.pnt, sens.pnt, sens.fid.label] = read_polhemus_fil(filename, 0);
     % the file does not have channel labels in it
     warning('no channel names in polhemus file, using numbers instead');
     for i=1:size(sens.pnt, 1)
