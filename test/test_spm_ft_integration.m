@@ -25,6 +25,9 @@ cfg.rotate = 0;
 cfg.grad = grad;
 cfg.showcallinfo = 'no';
 lay = ft_prepare_layout(cfg);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Coregistration
+ft_transform_sens(M1, elec1)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Forward models
