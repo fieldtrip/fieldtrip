@@ -50,6 +50,9 @@ ifeq "$(UNAME)" "Darwin"
         CXXFLAGS += -m64
         LDFLAGS += -m64
     endif
+    ifeq "$(MACHINE)" "Power Macintosh"
+        BINDIR = $(FIELDTRIP)/realtime/bin/mac
+    endif
 endif
 
 ifndef BINDIR

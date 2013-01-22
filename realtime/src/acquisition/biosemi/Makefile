@@ -55,10 +55,10 @@ ifeq "$(UNAME)" "Linux"
 endif
 
 ifeq "$(UNAME)" "Darwin"
-	# Currently, only 32 bit OS X is supported since the 64 bit drivers don't seem to
-	# work. This means that for correct compilation of biosemi2ft, also libbuffer
-	# and ODM need to be (manually) recompiled and linked with '-m32' flag in the
-	# CFLAGS and LDFLAGS.
+    # Currently, only 32 bit OS X is supported since the 64 bit drivers don't seem to
+    # work. This means that for correct compilation of biosemi2ft, also libbuffer
+    # and ODM need to be (manually) recompiled and linked with '-m32' flag in the
+    # CFLAGS and LDFLAGS.
     LDLIBS += -lpthread
     fixpath = $1
     ifeq "$(MACHINE)" "i386"
