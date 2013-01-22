@@ -44,12 +44,12 @@ elseif isfield(bnd, 'tet')
 elseif isfield(bnd, 'hex')
   % make a list of all "squares" that form the cube/hexaheder
   % FIXME should be checked, this is impossible without a drawing
-  square1 = bnd.tet(:, [1 2 3 4]);
-  square2 = bnd.tet(:, [5 6 7 8]);
-  square3 = bnd.tet(:, [1 2 6 5]);
-  square4 = bnd.tet(:, [2 3 7 6]);
-  square5 = bnd.tet(:, [3 4 8 7]);
-  square6 = bnd.tet(:, [4 1 5 8]);
+  square1 = bnd.hex(:, [1 2 3 4]);
+  square2 = bnd.hex(:, [5 6 7 8]);
+  square3 = bnd.hex(:, [1 2 6 5]);
+  square4 = bnd.hex(:, [2 3 7 6]);
+  square5 = bnd.hex(:, [3 4 8 7]);
+  square6 = bnd.hex(:, [4 1 5 8]);
   edge = cat(1, square1, square2, square3, square4, square5, square6);
   
 end % isfield(bnd)
