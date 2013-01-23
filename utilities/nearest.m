@@ -70,7 +70,6 @@ end
 
 mbscalar(val);
 
-
 if nargin<3 || isempty(insideflag)
   insideflag = false;
 end
@@ -125,8 +124,16 @@ elseif val<minarray
   [dum, indx] = min(array);
   
 else
-  % return the first occurence of the nearest number and implements a threshold to correct for errors due to numerical precision 
-  [dum, indx] = min(round(10^6.*(abs(array(:) - val)))./10^6); 
+  % implements a threshold to correct for errors due to numerical precision
+  % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=498 and http://bugzilla.fcdonders.nl/show_bug.cgi?id=1943
+  if maxarray==minarray
+    precision = 1;
+  else
+    precision = (maxarray-minarray) / 10^6;
+  end
+  
+  % return the first occurence of the nearest number
+  [dum, indx] = min(round((abs(array(:) - val)./precision)).*precision);
   
 end
 
