@@ -1,4 +1,6 @@
+function test_fairsurface
 
+ft_defaults
 
 hdmfile  = '/home/common/matlab/fieldtrip/data/Subject01.shape';
 shape = ft_read_headshape(hdmfile);
@@ -21,5 +23,7 @@ geometry2=ft_prepare_mesh(tmpcfg);
 %     pnt: [2634x3 double]
 %     tri: [5204x3 double]
 % but note that several geometry2.pnt are NaN    
-length(find(isnan(geometry2.pnt(:))))
-
+if length(find(isnan(geometry2.pnt(:))))>0
+  error
+end
+ 
