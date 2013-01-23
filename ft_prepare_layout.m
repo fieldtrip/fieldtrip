@@ -52,7 +52,6 @@ function [lay, cfg] = ft_prepare_layout(cfg, data)
 %   lay.pos     = Nx2 matrix with channel positions
 %   lay.width   = Nx1 vector with the width of each box for multiplotting
 %   lay.height  = Nx1 matrix with the height of each box for multiplotting
-%   lay.height  = Nx1 matrix with the height of each box for multiplotting
 %   lay.mask    = optional cell-array with line segments that determine the area for topographic interpolation
 %   lay.outline = optional cell-array with line segments that represent the head, nose, ears, sulci or other anatomical features
 %
@@ -708,6 +707,10 @@ elseif ~isempty(cfg.output) && strcmpi(cfg.style, '3d')
   % a 3D layout the width and height are currently set to NaN
   error('writing a 3D layout to an output file is not supported');
 end
+
+% ensure proper format of some of label (see bug 1909 -roevdmei)
+lay.label  = lay.label(:);
+
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble provenance
