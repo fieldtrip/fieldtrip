@@ -54,25 +54,29 @@ elseif isfield(bnd, 'hex')
   
 end % isfield(bnd)
 
-% make them all point in the same direction
+% soort all polygons in the same direction
 % keep the original as "edge" and the sorted one as "sedge"
 sedge = sort(edge, 2);
 
-% find the edges that are not shared -> count the number of occurences
-n = size(sedge,1);
-occurences = ones(n,1);
-for i=1:n
-  for j=(i+1):n
-    if all(sedge(i,:)==sedge(j,:))
-      occurences(i) = occurences(i)+1;
-      occurences(j) = occurences(j)+1;
-    end
-  end
-end
+% % find the edges that are not shared -> count the number of occurences
+% n = size(sedge,1);
+% occurences = ones(n,1);
+% for i=1:n
+%   for j=(i+1):n
+%     if all(sedge(i,:)==sedge(j,:))
+%       occurences(i) = occurences(i)+1;
+%       occurences(j) = occurences(j)+1;
+%     end
+%   end
+% end
+%
+% % make the selection in the original, not the sorted version of the edges
+% % otherwise the orientation of the edges might get flipped
+% edge = edge(occurences==1,:);
 
-% make the selection in the original, not the sorted version of the edges
-% otherwise the orientation of the edges might get flipped
-edge = edge(occurences==1,:);
+% find the edges that are not shared
+indx = findsingleoccurringrows(sedge);
+edge = edge(indx, :);
 
 % the naming of the output edges depends on what they represent
 newbnd.pnt  = bnd.pnt;
@@ -83,3 +87,16 @@ elseif isfield(bnd, 'tet')
 elseif isfield(bnd, 'hex')
   newbnd.poly = edge;
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION, see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1833#c12
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function indx = findsingleoccurringrows(X)
+[X, indx] = sortrows(X);
+sel  = any(diff([X(1,:)-1; X],1),2) & any(diff([X; X(end,:)+1],1),2);
+indx = indx(sel);
+
+function indx = finduniquerows(X)
+[X, indx] = sortrows(X);
+sel  = any(diff([X(1,:)-1; X],1),2);
+indx = indx(sel);
