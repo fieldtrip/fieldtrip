@@ -249,30 +249,46 @@ elseif isequal(cfg.layout, 'ordered')
   lay.pos(end+1,:) = [x y];
 
   % try to generate layout from other configuration options
-elseif ischar(cfg.layout) && ft_filetype(cfg.layout, 'matlab')
-  fprintf('reading layout from file %s\n', cfg.layout);
+elseif ischar(cfg.layout)
   
-  if ~exist(cfg.layout, 'file')
-    error('the specified layout file %s was not found', cfg.layout);
-  end
-  load(cfg.layout, 'lay');
-
-elseif ischar(cfg.layout) && ft_filetype(cfg.layout, 'layout')
+  % layout file name specified
   
-  if exist(cfg.layout, 'file')
+  if isempty(strfind(cfg.layout, '.'))
+    
+    cfg.layout = [cfg.layout '.mat'];
+    if exist(cfg.layout, 'file')
+      fprintf('layout file without .mat (or .lay) extension specified, appending .mat\n');
+      lay = ft_prepare_layout(cfg);
+    else
+      cfg.layout = [cfg.layout(1:end-3) 'lay'];
+      lay = ft_prepare_layout(cfg);
+    end
+    
+  elseif ft_filetype(cfg.layout, 'matlab')
+    
     fprintf('reading layout from file %s\n', cfg.layout);
-    lay = readlay(cfg.layout);
-  else
-    warning_once(sprintf('layout file %s was not found on your path, attempting to use a similarly named .mat file instead',cfg.layout));
-    cfg.layout = [cfg.layout(1:end-3) 'mat'];
-    lay = ft_prepare_layout(cfg);
+    if ~exist(cfg.layout, 'file')
+      error('the specified layout file %s was not found', cfg.layout);
+    end
+    load(cfg.layout, 'lay');
+
+  elseif ft_filetype(cfg.layout, 'layout')
+
+    if exist(cfg.layout, 'file')
+      fprintf('reading layout from file %s\n', cfg.layout);
+      lay = readlay(cfg.layout);
+    else
+      warning_once(sprintf('layout file %s was not found on your path, attempting to use a similarly named .mat file instead',cfg.layout));
+      cfg.layout = [cfg.layout(1:end-3) 'mat'];
+      lay = ft_prepare_layout(cfg);
+    end
+
+  elseif ~ft_filetype(cfg.layout, 'layout')
+    % assume that cfg.layout is an electrode file
+    fprintf('creating layout from electrode file %s\n', cfg.layout);
+    lay = sens2lay(ft_read_sens(cfg.layout), cfg.rotate, cfg.projection, cfg.style, cfg.overlap);
   end
-
-elseif ischar(cfg.layout) && ~ft_filetype(cfg.layout, 'layout')
-  % assume that cfg.layout is an electrode file
-  fprintf('creating layout from electrode file %s\n', cfg.layout);
-  lay = sens2lay(ft_read_sens(cfg.layout), cfg.rotate, cfg.projection, cfg.style, cfg.overlap);
-
+  
 elseif ischar(cfg.elecfile)
   fprintf('creating layout from electrode file %s\n', cfg.elecfile);
   lay = sens2lay(ft_read_sens(cfg.elecfile), cfg.rotate, cfg.projection, cfg.style, cfg.overlap);
