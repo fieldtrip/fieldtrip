@@ -70,7 +70,6 @@ end
 cfg = ft_checkconfig(cfg, 'required', 'parameter');
 
 % set the defaults
-cfg.outputfile = ft_getopt(cfg, 'outputfile', []);
 cfg.appenddim  = ft_getopt(cfg, 'appenddim',  'auto');
 cfg.tolerance  = ft_getopt(cfg, 'tolerance',  1e-5);
 
@@ -135,7 +134,6 @@ switch cfg.appenddim
         end
       end
       
-      if ~isempty(tmpcfg.inputfile), tmpcfg = rmfield(tmpcfg, 'inputfile'); end;
       freq = ft_appendfreq(tmpcfg, varargin{:});
       return;
     end % determining the dimension for appending
@@ -164,7 +162,6 @@ switch cfg.appenddim
         tmpcfg.appenddim = 'freq';
       end
     end
-    if ~isempty(tmpcfg.inputfile), tmpcfg = rmfield(tmpcfg, 'inputfile'); end;
     freq = ft_appendfreq(tmpcfg, varargin{:});
     return;
     
