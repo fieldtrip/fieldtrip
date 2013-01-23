@@ -186,8 +186,10 @@ if ~isdeployed
   
   try
     % this contains specific code and examples for realtime processing
-    ft_hastoolbox('realtime', 3, 1);                    % not required
-    ft_hastoolbox('realtime/acquisition/matlab', 3, 1); % not required
+    ft_hastoolbox('realtime/example', 3, 1);    % not required
+    ft_hastoolbox('realtime/online_mri', 3, 1); % not required
+    ft_hastoolbox('realtime/online_meg', 3, 1); % not required
+    ft_hastoolbox('realtime/online_eeg', 3, 1); % not required
   end
   
   try
