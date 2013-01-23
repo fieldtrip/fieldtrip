@@ -1,4 +1,4 @@
-function [lfp, spike, stm, bhv] = spass2fieldtrip(dirname)
+function [lfp, spike, stm, bhv] = spass2fieldtrip(dirname, varargin)
 
 % SPASS2FIELDTRIP reads data from a set of SPASS data files and converts
 % the contents into data structures that FieldTrip understands. Note that
@@ -7,6 +7,9 @@ function [lfp, spike, stm, bhv] = spass2fieldtrip(dirname)
 %
 % Use as
 %   [lfp, spike, stm, bhv] = spass2fieldtrip(dirname)
+% Optionally you can specify the sample rate as key-value pairs
+%  'fsample_ana' - default 1000
+%  'fsample_swa' - default 32000
 %
 % The specified directory should contain the SPASS files, and the files should have
 % the same name as the directory.
@@ -42,8 +45,8 @@ ft_defaults
 ft_preamble help
 ft_preamble callinfo
 
-fsample_ana = 1000;
-fsample_swa = 32000;
+fsample_ana = ft_getopt(varargin, 'fsample_ana', 1000); 
+fsample_swa = ft_getopt(varargin, 'fsample_swa', 32000); 
 
 anafile = fullfile(dirname, [dirname '.ana']);
 swafile = fullfile(dirname, [dirname '.swa']);
