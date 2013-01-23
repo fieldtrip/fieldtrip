@@ -26,7 +26,7 @@ comp = ft_componentanalysis(cfg, data);
 % visualize
 cfg = [];
 cfg.component = 1:20;
-cfg.layout = 'CTF151s.lay';
+cfg.layout = 'CTF151.lay';
 cfg.viewmode = 'component';
 ft_databrowser(cfg, comp);
 

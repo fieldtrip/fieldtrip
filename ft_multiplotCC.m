@@ -52,7 +52,7 @@ data = ft_checkdata(data);
 cfg = ft_checkconfig(cfg, 'renamed',	 {'zparam', 'parameter'});
 cfg = ft_checkconfig(cfg, 'deprecated',  {'xparam'});
 
-% if ~isfield(cfg, 'layout'),    cfg.layout = 'CTF151s.lay';        end;
+% if ~isfield(cfg, 'layout'),    cfg.layout = 'CTF151.lay';        end;
 if ~isfield(cfg, 'xparam'),      cfg.xparam = 'foi';                end;
 if ~isfield(cfg, 'xlim'),        cfg.xlim   = 'all';                end;
 if ~isfield(cfg, 'parameter'),   cfg.parameter = 'avg.icohspctrm';  end;

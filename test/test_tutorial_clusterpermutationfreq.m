@@ -120,7 +120,7 @@ cfg = [];
 cfg.alpha  = 0.025;
 cfg.zparam = 'raweffect';
 cfg.zlim   = [-1e-27 1e-27];
-cfg.layout = 'CTF151s.lay';
+cfg.layout = 'CTF151.lay';
 ft_clusterplot(cfg, stat);
 
 
@@ -201,7 +201,7 @@ cfg = [];
 cfg.alpha  = 0.05;
 cfg.zparam = 'stat';
 cfg.zlim   = [-4 4];
-cfg.layout = 'CTF151s.lay';
+cfg.layout = 'CTF151.lay';
 ft_clusterplot(cfg, stat);
 
 %% Within subjects experiment
@@ -250,7 +250,7 @@ for i=1:100 % this can fail sometime, like every second iteration or so, 100 is 
   pcfg.alpha  = 0.025;
   pcfg.zparam = 'stat';
   pcfg.zlim   = [-4 4];
-  pcfg.layout = 'CTF151s.lay';
+  pcfg.layout = 'CTF151.lay';
   try
     ft_clusterplot(pcfg, stat);
     failed = false;
