@@ -115,7 +115,9 @@ if strcmp(cfg.method, 'template')
     cfg.template = [strtok(cfg.layout, '.') '_neighb.mat'];
   end
   % adjust filename
-  cfg.template = lower(cfg.template);  
+  if ~exist(cfg.template, 'file')
+    cfg.template = lower(cfg.template);  
+  end
   % add necessary extensions
   if numel(cfg.template) < 4 || ~isequal(cfg.template(end-3:end), '.mat')
     if numel(cfg.template) < 7 || ~isequal(cfg.template(end-6:end), '_neighb')

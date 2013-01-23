@@ -34,7 +34,8 @@ function [stat] = ft_networkanalysis(cfg, data)
 %
 % To facilitate data-handling and distributed computing with the
 % peer-to-peer module, this function has the following options:
-%   cfg.inputfile   =  ... cfg.outputfile  =  ...
+%   cfg.inputfile   =  ... 
+% 	cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a
 % *.mat file on disk and/or the output data will be written to a *.mat
 % file. These mat files should contain only a single variable,
@@ -73,10 +74,6 @@ ft_preamble debug
 ft_preamble loadvar data
 
 cfg = ft_checkconfig(cfg, 'required', {'method' 'parameter'});
-
-% set the defaults
-cfg.inputfile   = ft_getopt(cfg, 'inputfile',   []);
-cfg.outputfile  = ft_getopt(cfg, 'outputfile',  []);
 
 % ensure that the bct-toolbox is on the path
 ft_hastoolbox('BCT', 1);

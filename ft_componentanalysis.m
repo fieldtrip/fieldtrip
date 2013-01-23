@@ -180,8 +180,6 @@ cfg.demean          = ft_getopt(cfg, 'demean',       'yes');
 cfg.trials          = ft_getopt(cfg, 'trials',       'all');
 cfg.channel         = ft_getopt(cfg, 'channel',      'all');
 cfg.numcomponent    = ft_getopt(cfg, 'numcomponent', 'all');
-cfg.inputfile       = ft_getopt(cfg, 'inputfile',    []);
-cfg.outputfile      = ft_getopt(cfg, 'outputfile',   []);
 cfg.normalisesphere = ft_getopt(cfg, 'normalisesphere', 'yes');
 cfg.cellmode        = ft_getopt(cfg, 'cellmode',     'no');
 

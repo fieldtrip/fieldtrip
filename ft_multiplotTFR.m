@@ -441,10 +441,10 @@ if ~isempty(cfg.maskparameter)
     mask = nanmean(nanmean(nanmean(mask, meandir), 4), 3);
   elseif haslabelcmb && cfg.maskalpha == 1
     mask = mask(sellab, ymin:ymax, xmin:xmax);
-    mask = nanmean(nanmean(mask, 3), 2);
+    %mask = nanmean(nanmean(mask, 3), 2);
   elseif cfg.maskalpha == 1
     mask = mask(sellab, ymin:ymax, xmin:xmax);
-    mask = nanmean(nanmean(mask, 3), 2);
+    %mask = nanmean(nanmean(mask, 3), 2);
   elseif isfull && cfg.maskalpha ~= 1
     maskl = mask(sel1, sel2, ymin:ymax, xmin:xmax); %% check this for full representation
     mask = zeros(size(maskl));

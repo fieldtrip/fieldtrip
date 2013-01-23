@@ -70,7 +70,6 @@ end
 cfg = ft_checkconfig(cfg, 'required', 'parameter');
 
 % set the defaults
-cfg.inputfile  = ft_getopt(cfg, 'inputfile',  []);
 cfg.outputfile = ft_getopt(cfg, 'outputfile', []);
 cfg.appenddim  = ft_getopt(cfg, 'appenddim',  'auto');
 cfg.tolerance  = ft_getopt(cfg, 'tolerance',  1e-5);

@@ -81,10 +81,6 @@ datain = ft_checkdata(datain, 'datatype', {'timelock', 'freq', 'source'}, 'feedb
 % ensure that the required options are present
 cfg = ft_checkconfig(cfg, 'required', {'confound'}, 'renamed', {'Ftest','ftest'});
 
-% set the defaults
-cfg.inputfile  = ft_getopt(cfg, 'inputfile',  []);
-cfg.outputfile = ft_getopt(cfg, 'outputfile', []);
-
 % confound specification
 regr      = ft_getopt(cfg, 'confound');  % there is no default value
 if ~isempty(find(isnan(regr)))

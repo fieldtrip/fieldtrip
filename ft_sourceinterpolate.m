@@ -124,8 +124,6 @@ cfg = ft_checkconfig(cfg, 'required',   'parameter');
 cfg.downsample = ft_getopt(cfg, 'downsample', 1);
 cfg.voxelcoord = ft_getopt(cfg, 'voxelcoord', 'yes');
 cfg.feedback   = ft_getopt(cfg, 'feedback',   'text');
-cfg.inputfile  = ft_getopt(cfg, 'inputfile',  []);
-cfg.outputfile = ft_getopt(cfg, 'outputfile', []);
 % cfg.interpmethod depends on how the interpolation should be done and will
 % be specified below
 

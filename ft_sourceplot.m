@@ -512,6 +512,20 @@ else
 end
 % handle mask
 if hasmsk
+  % reshape to match fun
+  if isfield(data, 'time') && isfield(data, 'freq'),
+    %data contains timefrequency representation
+    msk     = reshape(msk, [dim numel(data.freq) numel(data.time)]);
+  elseif isfield(data, 'time')
+    %data contains evoked field
+    msk     = reshape(msk, [dim numel(data.time)]);
+  elseif isfield(data, 'freq')
+    %data contains frequency spectra
+    msk     = reshape(msk, [dim numel(data.freq)]);
+  else
+    msk     = reshape(msk, dim);
+  end
+    
   % determine scaling and opacitymap
   mskmin = min(msk(:));
   mskmax = max(msk(:));

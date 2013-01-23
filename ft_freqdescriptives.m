@@ -98,8 +98,6 @@ cfg.channel    = ft_getopt(cfg, 'channel',   'all');
 cfg.foilim     = ft_getopt(cfg, 'foilim',    'all');
 cfg.toilim     = ft_getopt(cfg, 'toilim',    'all');
 cfg.keeptrials = ft_getopt(cfg, 'keeptrials', 'no');
-cfg.inputfile  = ft_getopt(cfg, 'inputfile',  []);
-cfg.outputfile = ft_getopt(cfg, 'outputfile', []);
 
 % check if the input data is valid for this function
 freq = ft_checkdata(freq, 'datatype', {'freq', 'freqmvar'}, 'feedback', 'yes');

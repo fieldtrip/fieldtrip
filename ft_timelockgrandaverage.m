@@ -85,8 +85,6 @@ for i=1:length(varargin)
 end
 
 % set the defaults
-cfg.inputfile      = ft_getopt(cfg, 'inputfile',  []);
-cfg.outputfile     = ft_getopt(cfg, 'outputfile', []);
 cfg.keepindividual = ft_getopt(cfg, 'keepindividual', 'no');
 cfg.channel        = ft_getopt(cfg, 'channel',    'all');
 cfg.latency        = ft_getopt(cfg, 'latency',    'all');

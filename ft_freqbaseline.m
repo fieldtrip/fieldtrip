@@ -60,8 +60,6 @@ cfg              = ft_checkconfig(cfg, 'renamed', {'param', 'parameter'});
 cfg.baseline     =  ft_getopt(cfg, 'baseline', 'no');
 cfg.baselinetype =  ft_getopt(cfg, 'baselinetype', 'absolute');
 cfg.parameter    =  ft_getopt(cfg, 'parameter', 'powspctrm');
-cfg.inputfile    =  ft_getopt(cfg, 'inputfile', []);
-cfg.outputfile   =  ft_getopt(cfg, 'outputfile', []);
 
 % check validity of input options
 cfg =               ft_checkopt(cfg, 'baseline', {'char', 'doublevector'});

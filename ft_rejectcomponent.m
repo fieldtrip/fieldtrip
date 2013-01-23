@@ -64,8 +64,6 @@ ft_preamble loadvar comp data
 
 % set defaults
 cfg.component  = ft_getopt(cfg, 'component',  []);
-cfg.inputfile  = ft_getopt(cfg, 'inputfile',  []);
-cfg.outputfile = ft_getopt(cfg, 'outputfile', []);
 cfg.demean     = ft_getopt(cfg, 'demean',    'yes');
 cfg.feedback   = ft_getopt(cfg, 'feedback',  'text');
 

@@ -76,8 +76,6 @@ end
 % set the defaults
 cfg.resolution = ft_getopt(cfg, 'resolution', 1);
 cfg.downsample = ft_getopt(cfg, 'downsample', 1);
-cfg.inputfile  = ft_getopt(cfg, 'inputfile',  []);
-cfg.outputfile = ft_getopt(cfg, 'outputfile', []);
 cfg.xrange     = ft_getopt(cfg, 'xrange', []);
 cfg.yrange     = ft_getopt(cfg, 'yrange', []);
 cfg.zrange     = ft_getopt(cfg, 'zrange', []);

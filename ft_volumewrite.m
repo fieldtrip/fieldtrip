@@ -105,7 +105,6 @@ cfg.downsample   = ft_getopt(cfg, 'downsample',   1);
 cfg.markorigin   = ft_getopt(cfg, 'markorigin',   'no');
 cfg.markfiducial = ft_getopt(cfg, 'markfiducial', 'no');
 cfg.markcorner   = ft_getopt(cfg, 'markcorner',   'no');
-cfg.inputfile    = ft_getopt(cfg, 'inputfile',    []);
 cfg.scaling      = ft_getopt(cfg, 'scaling',      'no');
 
 if any(strmatch(cfg.datatype, {'int8', 'int16', 'int32'}))

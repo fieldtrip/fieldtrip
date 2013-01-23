@@ -151,8 +151,6 @@ cfg.fiducial   = ft_getopt(cfg, 'fiducial',  []);
 cfg.landmark   = ft_getopt(cfg, 'landmark',  []);
 cfg.parameter  = ft_getopt(cfg, 'parameter', 'anatomy');
 cfg.clim       = ft_getopt(cfg, 'clim',      []);
-cfg.inputfile  = ft_getopt(cfg, 'inputfile', '');
-cfg.outputfile = ft_getopt(cfg, 'outputfile', '');
 cfg.snapshot   = ft_getopt(cfg, 'snapshot',  false);
 
 if strcmp(cfg.method, '')

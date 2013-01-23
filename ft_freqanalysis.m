@@ -211,8 +211,6 @@ ft_preamble debug
 ft_preamble loadvar data
 
 % defaults for optional input/ouputfile and feedback
-cfg.inputfile  = ft_getopt(cfg, 'inputfile',  []);
-cfg.outputfile = ft_getopt(cfg, 'outputfile', []);
 cfg.feedback   = ft_getopt(cfg, 'feedback',   'text');
 cfg.inputlock  = ft_getopt(cfg, 'inputlock',  []);  % this can be used as mutex when doing peercellfun or another distributed computation
 cfg.outputlock = ft_getopt(cfg, 'outputlock', []);  % this can be used as mutex when doing peercellfun or another distributed computation

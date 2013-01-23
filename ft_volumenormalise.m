@@ -97,8 +97,6 @@ cfg.coordsys         = ft_getopt(cfg, 'coordsys',         '');
 cfg.units            = ft_getopt(cfg, 'units',            'mm');
 cfg.nonlinear        = ft_getopt(cfg, 'nonlinear',        'yes');
 cfg.smooth           = ft_getopt(cfg, 'smooth',           'no');
-cfg.inputfile        = ft_getopt(cfg, 'inputfile',        []);
-cfg.outputfile       = ft_getopt(cfg, 'outputfile',       []);
 
 % check if the required spm is in your path:
 if strcmpi(cfg.spmversion, 'spm2'),
