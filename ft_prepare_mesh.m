@@ -235,7 +235,9 @@ end
 if ~isfield(bnd, 'unit') && hasdata
   for i=1:numel(bnd)
     bnd(i).unit = mri.unit;
-  end
+  end  
+elseif ~isfield(bnd, 'unit')
+  bnd = ft_convert_units(bnd);
 end
 
 % do the general cleanup and bookkeeping at the end of the function
