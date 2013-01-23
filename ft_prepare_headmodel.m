@@ -322,6 +322,11 @@ switch cfg.method
         end
         vol = ft_headmodel_localspheres(geometry,cfg.grad,'feedback',cfg.feedback,'radius',cfg.radius,'maxradius',cfg.maxradius,'baseline',cfg.baseline,'singlesphere',cfg.singlesphere);
       case 'singleshell'
+        if ~isfield(geometry, 'tri')
+          tmpcfg             = []; 
+          tmpcfg.headshape   = geometry;
+          geometry=ft_prepare_mesh(tmpcfg);
+        end
         vol = ft_headmodel_singleshell(geometry);
       case 'singlesphere'
         vol = ft_headmodel_singlesphere(geometry,'conductivity',cfg.conductivity,'unit',cfg.unit);
