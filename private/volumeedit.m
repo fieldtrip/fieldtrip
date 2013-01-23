@@ -1,4 +1,4 @@
-function [dataout] = volumeedit(data)
+function [dataout] = volumeedit(data, varargin)
 
 % VOLUMEEDIT allows for editing of a (booleanized) volume, in order to
 % remove unwanted voxels. Interaction proceeds with the keyboard and the
@@ -25,6 +25,9 @@ function [dataout] = volumeedit(data)
 % $Id:$
 
 revision = '$Id: ft_sourceplot.m 7192 2012-12-13 22:32:56Z roboos $';
+
+datain = data;
+data   = data~=0;
 
 dim  = size(data);
 
@@ -59,9 +62,9 @@ h2 = axes('position',[0.07+xsize(1)+0.05 0.07+ysize(2)+0.05 xsize(2) ysize(1)]);
 h3 = axes('position',[0.07 0.07 xsize(1) ysize(2)]);
 
 % slice handles
-hs1 = imagesc(squeeze(data(xi,:,:)),'parent',h1); colormap gray; 
-hs2 = imagesc(data(:,:,zi)',        'parent',h2); colormap gray; 
-hs3 = imagesc(squeeze(data(:,yi,:)),'parent',h3);colormap gray; 
+hs1 = imagesc(squeeze(data(xi,:,:)),'parent',h1); colormap gray;
+hs2 = imagesc(data(:,:,zi)',        'parent',h2); colormap gray;
+hs3 = imagesc(squeeze(data(:,yi,:)),'parent',h3); colormap gray;
 set(h1, 'tag', 'jk', 'clim', [0 1]);
 set(h2, 'tag', 'ji', 'clim', [0 1]);
 set(h3, 'tag', 'ik', 'clim', [0 1]);
@@ -71,16 +74,22 @@ hch1 = crosshair([zi yi], 'parent', h1, 'color', 'y');
 hch2 = crosshair([xi yi], 'parent', h2, 'color', 'y');
 hch3 = crosshair([zi xi], 'parent', h3, 'color', 'y');
 
+% erasercontour
+he1(1,:) = line(zi-3.5+[0 0 7 7 0],yi-3.5+[0 7 7 0 0],'color','r','parent',h1); 
+he2(1,:) = line(xi-3.5+[0 0 7 7 0],yi-3.5+[0 7 7 0 0],'color','r','parent',h2);
+he3(1,:) = line(zi-3.5+[0 0 7 7 0],xi-3.5+[0 7 7 0 0],'color','r','parent',h3);
+
 % create structure to be passed to gui
 opt.data          = data~=0;
 opt.handlesaxes   = [h1 h2 h3];
 opt.handlescross  = [hch1(:)';hch2(:)';hch3(:)'];
 opt.handlesslice  = [hs1 hs2 hs3];
+opt.handleseraser = [he1(:)';he2(:)';he3(:)'];
 opt.ijk           = [xi yi zi];
 opt.dim           = dim;
 opt.quit          = 0;
 opt.mask          = true(dim);
-opt.radius        = 7;
+opt.radius        = 3;
 
 setappdata(h, 'opt', opt);
 cb_redraw(h);
@@ -92,7 +101,7 @@ end
 opt = getappdata(h, 'opt');
 delete(h);
 
-dataout = data;
+dataout = datain;
 dataout(opt.mask==0) = 0;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -157,10 +166,12 @@ switch key
     % select the radius of the eraser box
     response = inputdlg(sprintf('radius of eraser box (in voxels)'), 'specify', 1, {num2str(opt.radius)});
     if ~isempty(response)
-      opt.radius = round(str2double(response));
+      response   = str2double(tokenize(response{1},' '));
+      opt.radius = round(response);
       opt.radius = min(opt.radius, 100);
       opt.radius = max(opt.radius, 1);
       setappdata(h, 'opt', opt);
+      cb_erasercontour(h);
     end
   case 'control+control'
     % do nothing
@@ -182,17 +193,38 @@ function cb_eraser(h, eventdata)
 h   = getparent(h);
 opt = getappdata(h, 'opt');
 
-n  = floor(opt.radius./2);
+n  = opt.radius;
 if numel(n)==1, n = [n n n]; end
 
-xi = opt.ijk(1)+(-n:n);
-yi = opt.ijk(2)+(-n:n);
-zi = opt.ijk(3)+(-n:n);
+xi = opt.ijk(1)+(-n(1):n(1));
+yi = opt.ijk(2)+(-n(2):n(2));
+zi = opt.ijk(3)+(-n(3):n(3));
 
 opt.mask(xi,yi,zi) = false;
 opt.data = opt.data & opt.mask;
 
 setappdata(h, 'opt', opt);
+uiresume(h);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_erasercontour(h, eventdata)
+
+h   = getparent(h);
+opt = getappdata(h, 'opt');
+
+ijk = opt.ijk;
+n   = opt.radius*2+1;
+if numel(n)==1, n = [n n n]; end
+
+set(opt.handleseraser(1),'xdata',ijk(3)-n(3)/2+[0 0 n(3) n(3) 0]);
+set(opt.handleseraser(1),'ydata',ijk(2)-n(2)/2+[0 n(2) n(2) 0 0]);
+set(opt.handleseraser(2),'xdata',ijk(1)-n(1)/2+[0 0 n(1) n(1) 0]);
+set(opt.handleseraser(2),'ydata',ijk(2)-n(2)/2+[0 n(2) n(2) 0 0]);
+set(opt.handleseraser(3),'xdata',ijk(3)-n(3)/2+[0 0 n(3) n(3) 0]);
+set(opt.handleseraser(3),'ydata',ijk(1)-n(1)/2+[0 n(1) n(1) 0 0]);
+
 uiresume(h);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -221,6 +253,8 @@ crosshair([zi yi], 'handle', opt.handlescross(1,:));
 crosshair([xi yi], 'handle', opt.handlescross(2,:));
 crosshair([zi xi], 'handle', opt.handlescross(3,:));
 
+cb_erasercontour(h);
+
 set(h, 'currentaxes', curr_ax);
 
 setappdata(h, 'opt', opt);
@@ -243,6 +277,7 @@ switch seltype
     % just update to new position, nothing else to be done here
     cb_redraw(h);
   case 'alt'
+    cb_eraser(h);
     set(h, 'windowbuttonmotionfcn', @cb_tracemouse);
     opt = getappdata(h, 'opt');
     cb_redraw(h);
@@ -276,12 +311,12 @@ h   = getparent(h);
 cb_getposition(h);
 opt = getappdata(h, 'opt');
 
-n  = floor(opt.radius./2);
+n  = opt.radius;
 if numel(n)==1, n = [n n n]; end
 
-xi = opt.ijk(1)+(-n:n); xi(xi>opt.dim(1)) = []; xi(xi<1) = [];
-yi = opt.ijk(2)+(-n:n); yi(yi>opt.dim(2)) = []; yi(yi<1) = [];
-zi = opt.ijk(3)+(-n:n); zi(zi>opt.dim(3)) = []; zi(zi<1) = [];
+xi = opt.ijk(1)+(-n(1):n(1)); xi(xi>opt.dim(1)) = []; xi(xi<1) = [];
+yi = opt.ijk(2)+(-n(2):n(2)); yi(yi>opt.dim(2)) = []; yi(yi<1) = [];
+zi = opt.ijk(3)+(-n(3):n(3)); zi(zi>opt.dim(3)) = []; zi(zi<1) = [];
 
 opt.mask(xi,yi,zi) = 0;
 opt.data = opt.data & opt.mask;
