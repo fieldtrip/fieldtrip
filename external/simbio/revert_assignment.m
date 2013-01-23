@@ -7,7 +7,7 @@ function [node_ele_assignment] = revert_assignment(elements,sparse_flag)
 N_nodes = max(max(elements));
 N_elements = max(size(elements));
 [sort_elements_vec, sort_ind] = sort(elements(:));
-[~, m, ~] = unique(sort_elements_vec,'last');
+[dummy, m, dummy] = unique(sort_elements_vec,'last');
 occurence = diff([0;m]);
 
 node_ele_assignment = zeros(max(occurence),N_nodes);

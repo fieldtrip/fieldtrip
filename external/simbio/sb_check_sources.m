@@ -95,7 +95,7 @@ nmov = 0;
 time = clock;
 timing = zeros(nsource,1);
 for i=1:nsource
-    [~,near_node_ind] = min(sum(bsxfun(@minus,vol.pnt,gridin(i,:)).^2,2));
+    [dummy,near_node_ind] = min(sum(bsxfun(@minus,vol.pnt,gridin(i,:)).^2,2));
     if(pos_nodes_log_ind(near_node_ind))
         gridout(i,:) = gridin(i,:);
     elseif strcmp(cfg.corr,'delete')

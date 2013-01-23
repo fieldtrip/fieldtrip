@@ -653,13 +653,13 @@ if isequal(cfg.method,'ortho')
     if isempty(cfg.funparameter)
       error('cfg.location is min, but no functional parameter specified');
     end
-    [~, minindx] = min(fun(:));
+    [dummy, minindx] = min(fun(:));
     [xi, yi, zi] = ind2sub(dim, minindx);
   elseif ischar(loc) && strcmp(loc, 'max')
     if isempty(cfg.funparameter)
       error('cfg.location is max, but no functional parameter specified');
     end
-    [~, maxindx] = max(fun(:));
+    [dummy, maxindx] = max(fun(:));
     [xi, yi, zi] = ind2sub(dim, maxindx);
   elseif ischar(loc) && strcmp(loc, 'center')
     xi = round(dim(1)/2);

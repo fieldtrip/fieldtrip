@@ -28,7 +28,7 @@ dirlist = {
 for j=1:length(dirlist)
   filelist = hcp_filelist(dirlist{j});
   
-  [~, ~, x] = cellfun(@fileparts, filelist, 'uniformoutput', false);
+  [dummy, dummy, x] = cellfun(@fileparts, filelist, 'uniformoutput', false);
   sel = strcmp(x, '.mat');
   filelist = filelist(sel);
   clear p f x

@@ -3,7 +3,7 @@ function test_ft_read_sens
 % TEST test_ft_read_sens
 % TEST ft_read_sens
 
-[~,ftpath] = ft_version();
+[dummy,ftpath] = ft_version();
 addpath([ftpath '/test']);
 datainfo = ref_datasets;
 

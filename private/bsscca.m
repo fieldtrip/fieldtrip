@@ -81,12 +81,12 @@ if cond(YY)>1e8
 end 
 [wx,rho] = eig((XX\XY)*(YY\YX));
 rho      = sqrt(real(diag(rho)));
-[~,ix]   = sort(rho, 'descend');
+[dummy,ix]   = sort(rho, 'descend');
 rho      = rho(ix);
 wx        = wx(:,ix);
 w         = wx';
 
-%[~,ix]   = sort(diag(abs(rho).^2),'descend');
+%[dummy,ix]   = sort(diag(abs(rho).^2),'descend');
 %w        = w(1:n,ix(2:2:end))';
 %w        = w(1:n,1:n);
 %rho      = abs(rho(ix(2:2:2*n),ix(2:2:2*n))).^2;

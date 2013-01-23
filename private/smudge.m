@@ -70,7 +70,7 @@ tmp   = diff([0;vecy(:,1)])>0;
 nix   = diff(find([tmp;1]==1));
 nix(end+1:numel(uval)) = 1;
 
-[~,i1,i2] = unique(vecx(:,2));
+[dummy,i1,i2] = unique(vecx(:,2));
 val  = 1./nix(i2);
 
 S = sparse(vecx(:,2),vecx(:,1),val,npnt,npnt);

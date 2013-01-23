@@ -502,7 +502,7 @@ function [remoteDeleted, remoteNew, remoteChanges,...
 
   % only remote additions have not yet been determined, do so now
   remoteNew = false(size(remFiles));
-  [~,inds] = setdiff(remFiles, locFiles);
+  [dummy,inds] = setdiff(remFiles, locFiles);
   remoteNew(inds) = 1;
       
 end

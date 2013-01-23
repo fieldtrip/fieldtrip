@@ -3,7 +3,7 @@ function test_ft_read_header
 % TEST test_ft_read_header
 % TEST ft_read_header
 
-[~,ftpath] = ft_version();
+[dummy,ftpath] = ft_version();
 addpath([ftpath '/test']);
 datainfo = ref_datasets;
 datainfo = datainfo(1:17); % lfp does not yet work because of the data
