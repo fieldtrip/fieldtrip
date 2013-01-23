@@ -159,7 +159,7 @@ switch spikeformat
         chan = chan + 1;
         spike.label{chan}     = deblank(hdr.VarHeader(i).Name);
         spike.waveform{chan}  = zeros(0, nspike);
-        spike.unit{chan}      = nan*ones(1,nspike);
+        spike.unit{chan}      = nan(1,nspike);
         spike.timestamp{chan} = nex.ts;
       elseif typ(i)==3
         % neurons, timestamps and waveforms
@@ -168,7 +168,7 @@ switch spikeformat
         nspike = length(nex.ts);
         spike.label{chan}     = deblank(hdr.VarHeader(i).Name);
         spike.waveform{chan}  = permute(nex.dat,[3 1 2]);
-        spike.unit{chan}      = nan*ones(1,nspike);
+        spike.unit{chan}      = nan(1,nspike);
         spike.timestamp{chan} = nex.ts;
       end
     end

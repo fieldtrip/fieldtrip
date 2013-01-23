@@ -164,7 +164,7 @@ if isfreq
         Nfrq   = length(fbin);
         Ntim   = size(data.fourierspctrm,4);
         %fourier= complex(zeros(Nrpt,Nsgn,Nfrq,Ntim),zeros(Nrpt,Nsgn,Nfrq,Ntim));
-        fourier= zeros(Nrpt,Nsgn,Nfrq,Ntim)+nan;
+        fourier= nan(Nrpt,Nsgn,Nfrq,Ntim);
         ft_progress('init', cfg.feedback, 'computing the svd');
         for j = 1:Nsgn
           ft_progress(j/Nsgn, 'computing the svd of signal %d/%d\n', j, Nsgn);

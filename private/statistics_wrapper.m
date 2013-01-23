@@ -505,7 +505,7 @@ dim     = [varargin{1}.dim Ntime];
 dat     = zeros(Ninside*Ntime, Nsource);
 for i=1:Nsource
   % collect the 4D data of this input argument
-  tmp = nan*zeros(Ninside, Ntime);
+  tmp = nan(Ninside, Ntime);
   for j=1:Ninside
     k = varargin{1}.inside(j);
     tmp(j,:) = reshape(varargin{i}.avg.mom{k}, 1, dim(4));

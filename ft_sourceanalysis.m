@@ -470,15 +470,15 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc'}))
   end
   
   % fill these with NaNs, so that I dont have to treat them separately
-  if isempty(Cr), Cr = nan*zeros(Ntrials, Nchans, 1); end
-  if isempty(Pr), Pr = nan*zeros(Ntrials, 1, 1); end
+  if isempty(Cr), Cr = nan(Ntrials, Nchans, 1); end
+  if isempty(Pr), Pr = nan(Ntrials, 1, 1); end
   
   if nargin>2
     % repeat the conversion for the baseline condition
     [bCf, bCr, bPr, Nbaseline, cfg] = prepare_freq_matrices(cfg, baseline);
     % fill these with NaNs, so that I dont have to treat them separately
-    if isempty(bCr), bCr = nan*zeros(Nbaseline, Nchans, 1); end
-    if isempty(bPr), bPr = nan*zeros(Nbaseline, 1, 1); end
+    if isempty(bCr), bCr = nan(Nbaseline, Nchans, 1); end
+    if isempty(bPr), bPr = nan(Nbaseline, 1, 1); end
     % rename the active condition for convenience
     aCf = Cf;
     aCr = Cr;
@@ -840,7 +840,7 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne', 'loreta', 'rv
         dip(i).ori   = cell(1,size(tmpdip.pos,1));
       end
       dip(i).cov     = cell(1,size(tmpdip.pos,1));
-      dip(i).pow     = zeros(size(tmpdip.pos,1),1)*nan;
+      dip(i).pow     = nan(size(tmpdip.pos,1),1);
       for ii=1:length(tmpdip.inside)
         indx             = tmpdip.inside(ii);
         tmpmom           = reshape(tmpdip.mom{indx}(i,:,:),[sizmom(1) siz(3)]);

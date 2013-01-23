@@ -160,7 +160,7 @@ if strcmp(stype, 'old'),
       tmp(inside)  = dat;
       %tmp(outside) = nan;
     else
-      tmp         = zeros(1,Nfull) + nan;
+      tmp         = nan(1,Nfull);
       tmp(inside) = dat;   
     end
     source = setsubfield(source, param{j}, tmp);
@@ -182,7 +182,7 @@ if strcmp(stype, 'old'),
           tmp(inside)  = dat;
           %tmp(outside) = nan;
         else
-          tmp         = zeros(1,Nfull) + nan;
+          tmp         = nan(1,Nfull);
           tmp(inside) = dat;   
         end
         tmpsource = setsubfield(tmpsource, tmpparam{k}, tmp);
@@ -205,7 +205,7 @@ if strcmp(stype, 'old'),
           tmp(inside)  = dat;
           %tmp(outside) = nan;
         else
-          tmp         = zeros(1,Nfull) + nan;
+          tmp         = nan(1,Nfull);
           tmp(inside) = dat;   
         end
         tmpsource = setsubfield(tmpsource, tmpparam{k}, tmp);
@@ -228,7 +228,7 @@ if strcmp(stype, 'old'),
           tmp(inside)  = dat;
           %tmp(outside) = nan;
         else
-          tmp         = zeros(1,Nfull) + nan;
+          tmp         = nan(1,Nfull);
           tmp(inside) = dat;   
         end
         tmpsource = setsubfield(tmpsource, tmpparam{k}, tmp);
@@ -245,7 +245,7 @@ if strcmp(stype, 'old'),
     m = size(d, 1);
     n = size(d, 2);
     if m==Nsparse && n==Nsparse
-      tmp = nan*zeros(Nfull,Nfull);
+      tmp = nan(Nfull,Nfull);
       tmp(inside,inside) = d;
       source = setfield(source, fn{i}, tmp);
     end
@@ -278,16 +278,16 @@ elseif strcmp(stype, 'new')
         indx = find(size(source.(fn{i}))==Nsparse);
         if all(indx==1),
           tmpsiz = [size(source.(fn{i})) 1];
-          tmp    = zeros([Nfull tmpsiz(2:end)]) + nan;
+          tmp    = nan([Nfull tmpsiz(2:end)]);
           tmp(inside,:,:,:,:) = source.(fn{i});
         elseif all(indx==2),
           tmpsiz = [size(source.(fn{i})) 1];
-          tmp    = zeros([tmpsiz(1) Nfull tmpsiz(3:end)]) + nan;
+          tmp    = nan([tmpsiz(1) Nfull tmpsiz(3:end)]);
           tmp(:,inside,:,:,:) = source.(fn{i});
         elseif all(indx==[1 2]),
           % bivariate matrix
           tmpsiz = [size(source.(fn{i})) 1];
-          tmp    = zeros([Nfull Nfull tmpsiz(3:end)]) + nan;
+          tmp    = nan([Nfull Nfull tmpsiz(3:end)]);
           tmp(inside,inside,:,:,:) = source.(fn{i});
         else
           warning('sparse to full conversion failed for field %s\n', fn{i});

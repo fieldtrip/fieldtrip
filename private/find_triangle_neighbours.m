@@ -31,7 +31,7 @@ ndhk = size(dhk,1);
 
 % each triangle has maximally three neighbours, assuming that the 
 % surface mesh is not degenerate
-nb = nan * ones(size(dhk));
+nb = nan(size(dhk));
 
 % for i=1:ndhk
 %   for j=setdiff(1:ndhk, i)

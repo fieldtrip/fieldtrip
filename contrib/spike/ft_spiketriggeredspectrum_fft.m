@@ -206,9 +206,9 @@ for i=1:ntrial
     endsmp = spikesmp(j) + endpad;
     
     if (begsmp<1)
-      segment = nan*zeros(nchansel, numsmp);
+      segment = nan(nchansel, numsmp);
     elseif endsmp>size(data.trial{i},2)
-      segment = nan*zeros(nchansel, numsmp);
+      segment = nan(nchansel, numsmp);
     else
       segment = data.trial{i}(chansel,begsmp:endsmp);
     end

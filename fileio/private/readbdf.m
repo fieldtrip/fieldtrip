@@ -51,7 +51,7 @@ if nargin<3 Mode=0; end;
 EDF=DAT.Head; 
 RecLen=max(EDF.SPR);
 
-S=NaN*zeros(RecLen,EDF.NS);
+S=nan(RecLen,EDF.NS);
 DAT.Record=zeros(length(Records)*RecLen,EDF.NS);
 DAT.Valid=uint8(zeros(1,length(Records)*RecLen));
 DAT.Idx=Records(:)';

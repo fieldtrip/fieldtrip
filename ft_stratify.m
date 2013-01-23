@@ -159,10 +159,10 @@ if strcmp(cfg.method, 'histogram'),
       
       for binlop = 1:length(numok)
         if numok(binlop)>0,
-          tmpmatmin    = zeros(ncond,nummax(binlop))+nan;
-          tmpmatmax    = zeros(ncond,nummax(binlop))+nan;
-          tmpmatminind = zeros(ncond,nummax(binlop))+nan;
-          tmpmatmaxind = zeros(ncond,nummax(binlop))+nan;
+          tmpmatmin    = nan(ncond,nummax(binlop));
+          tmpmatmax    = nan(ncond,nummax(binlop));
+          tmpmatminind = nan(ncond,nummax(binlop));
+          tmpmatmaxind = nan(ncond,nummax(binlop));
           for cndlop = 1:ncond
             tmpsel          = find(b{cndlop}==binlop);
             tmpdat          = input{cndlop}(tmpsel);
@@ -240,7 +240,7 @@ if strcmp(cfg.method, 'histogram'),
               %tmpmat  = [ones(nrow,numok(binlop)-1) eye(nrow)];
               %tmpmat  = tmpmat(:,randperm(size(tmpmat,2)));
               if cndlop~=minind{binlop}(refind),
-                m      = nan+zeros(1,100);
+                m      = nan(1,100);
                 for rndlop = 1:100
                   if rndlop<=12 || sum(diff(m(rndlop-11:rndlop-1))==0)<10,
                     dif = abs(sum(pntmat.*tmpmat,2)./numok(binlop));

@@ -400,29 +400,29 @@ if ispccdata
     end
 
     % initialize the variables
-    source.avg.pow           = nan*zeros(Ndipole, 1);
-    if ~isempty(refdipsel),  source.avg.refdippow     = nan*zeros(Ndipole, 1); end
-    if ~isempty(refchansel), source.avg.refchanpow    = nan*zeros(Ndipole, 1); end
-    if ~isempty(supdipsel),  source.avg.supdippow     = nan*zeros(Ndipole, 1); end
-    if ~isempty(supchansel), source.avg.supchanpow    = nan*zeros(Ndipole, 1); end
+    source.avg.pow           = nan(Ndipole, 1);
+    if ~isempty(refdipsel),  source.avg.refdippow     = nan(Ndipole, 1); end
+    if ~isempty(refchansel), source.avg.refchanpow    = nan(Ndipole, 1); end
+    if ~isempty(supdipsel),  source.avg.supdippow     = nan(Ndipole, 1); end
+    if ~isempty(supchansel), source.avg.supchanpow    = nan(Ndipole, 1); end
     if isnoise
-      source.avg.noise         = nan*zeros(Ndipole, 1);
-      if ~isempty(refdipsel),  source.avg.refdipnoise     = nan*zeros(Ndipole, 1); end
-      if ~isempty(refchansel), source.avg.refchannoise    = nan*zeros(Ndipole, 1); end
-      if ~isempty(supdipsel),  source.avg.supdipnoise     = nan*zeros(Ndipole, 1); end
-      if ~isempty(supchansel), source.avg.supchannoise    = nan*zeros(Ndipole, 1); end
+      source.avg.noise         = nan(Ndipole, 1);
+      if ~isempty(refdipsel),  source.avg.refdipnoise     = nan(Ndipole, 1); end
+      if ~isempty(refchansel), source.avg.refchannoise    = nan(Ndipole, 1); end
+      if ~isempty(supdipsel),  source.avg.supdipnoise     = nan(Ndipole, 1); end
+      if ~isempty(supchansel), source.avg.supchannoise    = nan(Ndipole, 1); end
     end % if isnoise
-    if ~isempty(refsel),       source.avg.coh           = nan*zeros(Ndipole, 1); end
+    if ~isempty(refsel),       source.avg.coh           = nan(Ndipole, 1); end
     if strcmp(cfg.eta, 'yes'),
-      source.avg.eta           = nan*zeros(Ndipole, 1); 
+      source.avg.eta           = nan(Ndipole, 1); 
       source.avg.ori             = cell(1, Ndipole);
     end
     if strcmp(cfg.eta, 'yes') && ~isempty(refsel), 
-      source.avg.etacsd = nan*zeros(Ndipole, 1);
+      source.avg.etacsd = nan(Ndipole, 1);
       source.avg.ucsd   = cell(1, Ndipole);
     end
     if strcmp(cfg.fa, 'yes'),
-      source.avg.fa = nan*zeros(Ndipole, 1);
+      source.avg.fa = nan(Ndipole, 1);
     end
 
     for diplop = 1:length(source.inside)
@@ -578,7 +578,7 @@ elseif ismneavg
 
   if strcmp(cfg.kurtosis, 'yes')
     fprintf('computing kurtosis based on dipole timecourse\n');
-    source.avg.k2 = nan*zeros(size(source.pos,1),1);
+    source.avg.k2 = nan(size(source.pos,1),1);
     for diplop=1:length(source.inside)
       mom = source.avg.mom{source.inside(diplop)};
       if length(mom)~=prod(size(mom))
@@ -606,7 +606,7 @@ elseif islcmvavg
 
   if ~strcmp(cfg.powmethod, 'none')
     fprintf('recomputing power based on dipole timecourse\n')
-    source.avg.pow = nan*zeros(size(source.pos,1),1);
+    source.avg.pow = nan(size(source.pos,1),1);
     for diplop=1:length(source.inside)
       mom = source.avg.mom{source.inside(diplop)};
       cov = mom * mom';
@@ -616,7 +616,7 @@ elseif islcmvavg
 
   if strcmp(cfg.kurtosis, 'yes')
     fprintf('computing kurtosis based on dipole timecourse\n');
-    source.avg.k2 = nan*zeros(size(source.pos,1),1);
+    source.avg.k2 = nan(size(source.pos,1),1);
     for diplop=1:length(source.inside)
       mom = source.avg.mom{source.inside(diplop)};
       if length(mom)~=prod(size(mom))
@@ -687,7 +687,7 @@ elseif islcmvtrl
   if strcmp(cfg.kurtosis, 'yes')
     fprintf('computing kurtosis based on dipole timecourse\n');
     for trllop=1:ntrial
-      source.trial(trllop).k2 = nan*zeros(size(source.pos,1),1);
+      source.trial(trllop).k2 = nan(size(source.pos,1),1);
       for diplop=1:length(source.inside)
         mom = source.trial(trllop).mom{source.inside(diplop)};
         if length(mom)~=prod(size(mom))
@@ -818,16 +818,16 @@ if strcmp(source.method, 'jackknife') || strcmp(source.method, 'bootstrap') || s
     sumdip.mom = cell(size(dip(1).mom));
     sqrdip.mom = cell(size(dip(1).mom));
     for i=1:length(dip(1).mom)
-      sumdip.mom{i} = nan*zeros(size(dip(1).mom{i}));
-      sqrdip.mom{i} = nan*zeros(size(dip(1).mom{i}));
+      sumdip.mom{i} = nan(size(dip(1).mom{i}));
+      sqrdip.mom{i} = nan(size(dip(1).mom{i}));
     end
   end
   if isfield(dip(1), 'csd')
     sumdip.csd = cell(size(dip(1).csd));
     sqrdip.csd = cell(size(dip(1).csd));
     for i=1:length(dip(1).csd)
-      sumdip.csd{i} = nan*zeros(size(dip(1).csd{i}));
-      sqrdip.csd{i} = nan*zeros(size(dip(1).csd{i}));
+      sumdip.csd{i} = nan(size(dip(1).csd{i}));
+      sqrdip.csd{i} = nan(size(dip(1).csd{i}));
     end
   end
 
@@ -961,7 +961,7 @@ if strcmp(cfg.resolutionmatrix, 'yes')
   ft_progress('close');
   % multiply the filters and leadfields to obtain the resolution matrix
   % see equation 1 and 2 in De Peralta-Menendez RG, Gonzalez-Andino SL: A critical analysis of linear inverse solutions to the neuroelectromagnetic inverse problem. IEEE Transactions on Biomedical Engineering 45: 440-448, 1998.
-  source.resolution = nan*zeros(Ndipole, Ndipole);
+  source.resolution = nan(Ndipole, Ndipole);
   source.resolution(source.inside, source.inside) = allfilter*allleadfield;
 end
 

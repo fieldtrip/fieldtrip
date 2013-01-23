@@ -22,7 +22,7 @@ if hastim,
   else
     Ntrl = size(freq.powspctrm,1);
   end
-  cumtapcnt = nan + zeros(Ntrl, Nfrq, Ntim);    
+  cumtapcnt = nan(Ntrl, Nfrq, Ntim);    
   for j = 1:Nfrq
     for k = 1:Ntim
       if isfield(freq, 'fourierspctrm'), 

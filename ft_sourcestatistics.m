@@ -409,10 +409,10 @@ elseif strcmp(cfg.implementation, 'new')
         end
       else
         if hasfreq,
-          tmp2 = zeros(prod(varargin{1}.dim),nfreq,ntime)+nan;
+          tmp2 = nan(prod(varargin{1}.dim),nfreq,ntime);
           tmp2(varargin{1}.inside,  1:nfreq, 1:ntime) = reshape(tmp, [ntmp/(nfreq*ntime) nfreq ntime]);
         else
-          tmp2 = zeros(prod(varargin{1}.dim),nfreq,ntime)+nan;
+          tmp2 = nan(prod(varargin{1}.dim),nfreq,ntime);
           tmp2(varargin{1}.inside,  1:nfreq, 1:ntime) = reshape(tmp, [ntmp/ntime ntime]);
         end
       end

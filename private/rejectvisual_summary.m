@@ -195,7 +195,7 @@ update_log(info.output_box,'Done.');
 % off when calculated, so know when to recalculate.
 info.metric_chansel = info.chansel;
 % % reinsert the data for the selected channels
-% dum = nan*zeros(info.nchan, info.ntrl);
+% dum = nan(info.nchan, info.ntrl);
 % dum(info.chansel,:) = level;
 % origlevel = dum;
 % clear dum

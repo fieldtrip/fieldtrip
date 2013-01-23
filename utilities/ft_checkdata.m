@@ -1427,7 +1427,7 @@ elseif strcmp(current, 'old') && strcmp(type, 'new'),
   
   if isfield(output, 'ori')
     % convert cell-array ori into matrix
-    ori = zeros(3,npos) + nan;
+    ori = nan(3,npos);
     try,
       ori(:,output.inside) = cat(2, output.ori{output.inside});
     catch
@@ -1738,7 +1738,7 @@ else
   time(nearest(time, max(endtime))+1:end) = [];
   
   % concatenate all trials
-  tmptrial = zeros(ntrial, nchan, length(time)) + nan;
+  tmptrial = nan(ntrial, nchan, length(time));
   
   for i=1:ntrial
     begsmp(i) = nearest(time, data.time{i}(1));

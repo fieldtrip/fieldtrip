@@ -186,7 +186,7 @@ for i=1:ntrial
       error('overlapping spikes not supported with cfg.keeptrials=yes');
     end
     % initialize the memory for this trial
-    singletrial{i} = nan*zeros(length(spikesmp), nchansel, numsmp);
+    singletrial{i} = nan(length(spikesmp), nchansel, numsmp);
   end
   
   ft_progress('init', cfg.feedback, 'averaging spikes');

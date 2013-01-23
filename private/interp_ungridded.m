@@ -83,9 +83,9 @@ if isempty(distmat)
       maxnpnt = double(npntout*ceil(4/3*pi*(sphereradius/max(dimres))^3)); % initial estimate of nonzero entries
       maxnpnt = min(maxnpnt, npntout*npntin);
       %ft_progress('init', 'none', 'computing distance matrix');
-      val = nan+zeros(maxnpnt, 1);
-      indx1 = nan+zeros(maxnpnt, 1);
-      indx2 = nan+zeros(maxnpnt, 1);
+      val = nan(maxnpnt, 1);
+      indx1 = nan(maxnpnt, 1);
+      indx2 = nan(maxnpnt, 1);
       cnt = 1;
       for j = 1:npntout
         %ft_progress(j/npntout);

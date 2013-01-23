@@ -457,7 +457,7 @@ nsmp  = size(datacells{1}, 2);
 nrpt  = numel(trials);
 
 %---initialize
-datamatrix = zeros(nchan, nsmp*nrpt + nnans*(nrpt-1)) + nan;
+datamatrix = nan(nchan, nsmp*nrpt + nnans*(nrpt-1));
 
 %---fill the matrix
 for k = 1:nrpt

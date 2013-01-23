@@ -110,7 +110,7 @@ if isfield(freq, 'powspctrm') && isfield(freq, 'crsspctrm')
   % this complex rearrangement of channel indices transforms the CSDs into a square matrix
   if strcmp(freq.dimord, 'chan_freq')
     % FIXME this fails in case dimord=rpt_chan_freq and only 1 trial
-    Cf = complex(nan*zeros(Nchans,Nchans));
+    Cf = complex(nan(Nchans,Nchans));
     % first use the complex conjugate for all reversed signal combinations
     Cf(find(crsspctrmindx)) = freq.crsspctrm(crsspctrmindx(find(crsspctrmindx)), fbin);
     Cf = ctranspose(Cf);
@@ -119,8 +119,8 @@ if isfield(freq, 'powspctrm') && isfield(freq, 'crsspctrm')
     % put the power on the diagonal
     Cf(find(eye(Nchans))) = freq.powspctrm(powspctrmindx, fbin);
   else
-    Cf  = complex(nan*zeros(Ntrials,Nchans,Nchans));
-    tmp = complex(nan*zeros(Nchans,Nchans));
+    Cf  = complex(nan(Ntrials,Nchans,Nchans));
+    tmp = complex(nan(Nchans,Nchans));
     for trial=1:Ntrials
       % first use the complex conjugate for all signal combinations reversed
       tmp(find(crsspctrmindx)) = freq.crsspctrm(trial, crsspctrmindx(find(crsspctrmindx)), fbin);
