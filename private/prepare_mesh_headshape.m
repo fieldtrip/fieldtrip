@@ -238,7 +238,11 @@ for j=1:N
   for i=1:ts.nr(1)
     ln = find(M_con(:,i));
     d_i = sqrt(sum((XYZmm(:,ln)-XYZmm(:,i)*ones(1,length(ln))).^2));
-    w_i = d_i/sum(d_i);
+    if sum(d_i)==0
+      w_i = zeros(size(d_i));
+    else
+      w_i = d_i/sum(d_i);
+    end
     XYZmm_o(:,i) = XYZmm(:,i) + ...
       lam * sum((XYZmm(:,ln)-XYZmm(:,i)*ones(1,length(ln))).*(ones(3,1)*w_i),2);
   end
@@ -246,7 +250,11 @@ for j=1:N
   for i=1:ts.nr(1)
     ln = find(M_con(:,i));
     d_i = sqrt(sum((XYZmm(:,ln)-XYZmm(:,i)*ones(1,length(ln))).^2));
-    w_i = d_i/sum(d_i);
+    if sum(d_i)==0
+      w_i = zeros(size(d_i));
+    else
+      w_i = d_i/sum(d_i);
+    end
     XYZmm_o2(:,i) = XYZmm_o(:,i) + ...
       mu * sum((XYZmm_o(:,ln)-XYZmm_o(:,i)*ones(1,length(ln))).*(ones(3,1)*w_i),2);
   end
