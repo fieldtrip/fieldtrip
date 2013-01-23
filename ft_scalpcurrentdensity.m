@@ -124,7 +124,9 @@ elec = ft_fetch_sens(cfg, data);
 tmp  = elec;
 elec = [];
 elec.chanpos = tmp.chanpos;
-elec.elecpos = tmp.elecpos;
+if isfield(tmp, 'elecpos')
+  elec.elecpos = tmp.elecpos;
+end
 elec.label   = tmp.label;
 
 % find matching electrode positions and channels in the data
