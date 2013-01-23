@@ -70,9 +70,10 @@ grid = ft_prepare_leadfield(cfg);
 lf_openmeeg = grid.leadfield{1};
 
 %% Plot result
-figure; triplot(pnt, tri, lf_openmeeg(:,1), 'surface');
-figure; triplot(pnt, tri, lf_openmeeg(:,2), 'surface');
-figure; triplot(pnt, tri, lf_openmeeg(:,3), 'surface');
+bnd = struct('pnt', pnt, 'tri', tri);
+figure; ft_plot_mesh(bnd, 'vertexcolor', lf_openmeeg(:,1))
+figure; ft_plot_mesh(bnd, 'vertexcolor', lf_openmeeg(:,2))
+figure; ft_plot_mesh(bnd, 'vertexcolor', lf_openmeeg(:,3))
 
 %% Compute the analytic leadfield
 
