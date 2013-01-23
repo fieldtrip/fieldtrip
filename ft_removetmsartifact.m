@@ -105,7 +105,7 @@ switch cfg.method
   
   case 'twopassfilter'
     for i=1:numtrl
-      tmssample = nearest(data.time{i}, cfg.pulseonset(i));
+      tmssample = nearest(data.time{i}, cfg.pulseonset{i});
       
       % get the part of the data that is left and right of the TMS pulse artifact
       dat1 = data.trial{i}(:,1:tmssample);
