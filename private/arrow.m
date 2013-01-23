@@ -266,7 +266,7 @@ if ~isempty(ends) & ischar(ends),
     endsorig = ends;
     [m,n] = size(ends);
     col = lower([ends(:,1:min(3,n)) ones(m,max(0,3-n))*' ']);
-    ends = nanones(m,1);
+    ends = nan(m,1);
     oo = ones(1,m);
     ii=find(all(col'==['non']'*oo)'); if ~isempty(ii), ends(ii)=ones(length(ii),1)*0; end;
     ii=find(all(col'==['sto']'*oo)'); if ~isempty(ii), ends(ii)=ones(length(ii),1)*1; end;
@@ -353,7 +353,7 @@ end;
 if ~isempty(start),
     [m,n] = size(start);
     if (n==2),
-        start = [start nanones(m,1)];
+        start = [start nan(m,1)];
     elseif (n~=3),
         error([upper(mfilename) ' requires 2- or 3-element Start points.']);
     end;
@@ -361,7 +361,7 @@ end;
 if ~isempty(stop),
     [m,n] = size(stop);
     if (n==2),
-        stop = [stop nanones(m,1)];
+        stop = [stop nan(m,1)];
     elseif (n~=3),
         error([upper(mfilename) ' requires 2- or 3-element Stop points.']);
     end;
@@ -369,7 +369,7 @@ end;
 if ~isempty(crossdir),
     [m,n] = size(crossdir);
     if (n<3),
-        crossdir = [crossdir nanones(m,3-n)];
+        crossdir = [crossdir nan(m,3-n)];
     elseif (n~=3),
         if (all(imag(crossdir(:))==0)),
             error([upper(mfilename) ' requires 2- or 3-element CrossDir vectors.']);
@@ -1224,7 +1224,7 @@ function out = arrow_demo
     [m,n] = size(z);
     m = floor(m/2);
     n = floor(n/2);
-    z(1:m,1:n) = nanones(m,n);
+    z(1:m,1:n) = nan(m,n);
     
     % graph it
     clf('reset');
