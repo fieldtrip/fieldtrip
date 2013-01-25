@@ -146,3 +146,9 @@ clf
 
 [vol, sens] = ft_prepare_vol_sens(vol, grad);
 ft_compute_leadfield([30 30 30], sens, vol);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Test for uniform frequency axis in the output of mtmconvol
+[spectrum,ntaper,freqoi,timeoi] = ft_specest_mtmconvol(randn(1, 1651), linspace(-0.5000, 1, 1651), ...
+    'taper', 'sine', 'timeoi',  -0.3:0.05:0.75, 'freqoi', 1:48,...
+    'timwin', repmat(0.4, 1, 48), 'tapsmofrq', 2*ones(1, 48), 'verbose', 0);
+assert(length(unique(diff(freqoi)))==1)
