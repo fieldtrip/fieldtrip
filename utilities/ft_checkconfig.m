@@ -430,6 +430,7 @@ if ~isempty(createsubcfg)
           'tol'
           'sfmethod'
           'svd'
+          'init'
           };
         
       otherwise

@@ -64,6 +64,7 @@ tol          = ft_getopt(varargin, 'tol',          1e-18);
 fb           = ft_getopt(varargin, 'feedback',     'textbar');
 sfmethod     = ft_getopt(varargin, 'sfmethod',     'multivariate');
 dosvd        = ft_getopt(varargin, 'svd',          'no');
+init         = ft_getopt(varargin, 'init',         'chol');
 
 dosvd = istrue(dosvd);
 
@@ -166,7 +167,7 @@ if strcmp(sfmethod, 'multivariate') && nrpt==1 && isempty(block),
       Stmp = nan;
     else
       [Htmp, Ztmp, Stmp] = sfactorization_wilson(tmp, freq.freq, ...
-                                                   numiteration, tol, fb);
+                                                   numiteration, tol, fb, init);
     end
     
     % undo SVD
@@ -218,7 +219,7 @@ elseif strcmp(sfmethod, 'multivariate') && nrpt==1 && ~isempty(block),
     end
     
     [Htmp, Ztmp, Stmp] = sfactorization_wilson(Stmp, freq.freq, ...
-                                                 numiteration, tol, fb);  
+                                                 numiteration, tol, fb, init);  
     
     % undo PCA
     if dopca
@@ -275,7 +276,7 @@ elseif strcmp(sfmethod, 'multivariate') && nrpt>1 && isempty(block),
     for m = 1:ntim
       tmp = reshape(freq.crsspctrm(k,:,:,:,m), siz(2:end-1));
       [Htmp, Ztmp, Stmp] = sfactorization_wilson(tmp, freq.freq, ...
-                                                   numiteration, tol, fb);
+                                                   numiteration, tol, fb, init);
       H(k,:,:,:,m) = Htmp;
       Z(k,:,:,m)   = Ztmp;
       S(k,:,:,:,m) = Stmp;
@@ -313,7 +314,7 @@ elseif strcmp(sfmethod, 'bivariate')
   if ntim>1,
     for kk = 1:ntim
       [Htmp, Ztmp, Stmp] = sfactorization_wilson2x2(freq.crsspctrm(:,:,:,kk), ...
-                               freq.freq, numiteration, tol, cmbindx, fb);
+                               freq.freq, numiteration, tol, cmbindx, fb, init);
       if kk==1,
         H   = Htmp;
         Z   = Ztmp;
@@ -339,7 +340,7 @@ elseif strcmp(sfmethod, 'bivariate')
       for k = 1:numel(begchunk)
         fprintf('computing factorization of chunck %d/%d\n', k, numel(begchunk));
         [Htmp, Ztmp, Stmp] = sfactorization_wilson2x2(freq.crsspctrm, freq.freq, ...
-                                             numiteration, tol, cmbindx(begchunk(k):endchunk(k),:), fb);
+                                             numiteration, tol, cmbindx(begchunk(k):endchunk(k),:), fb, init);
                                            
         begix = (k-1)*4000+1;
         endix = min(k*4000, size(cmbindx,1)*4);
@@ -350,7 +351,7 @@ elseif strcmp(sfmethod, 'bivariate')
       end
     else
       [H, Z, S] = sfactorization_wilson2x2(freq.crsspctrm, freq.freq, ...
-                                             numiteration, tol, cmbindx, fb);
+                                             numiteration, tol, cmbindx, fb, init);
     end
   end
   

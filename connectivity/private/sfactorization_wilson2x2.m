@@ -1,4 +1,4 @@
-function [H, Z, S, psi] = sfactorization_wilson2x2(S,freq,Niterations,tol,cmbindx,fb)
+function [H, Z, S, psi] = sfactorization_wilson2x2(S,freq,Niterations,tol,cmbindx,fb,init)
 
 % Usage  : [H, Z, psi] = sfactorization_wilson(S,fs,freq);
 % Inputs : S (1-sided, 3D-spectral matrix in the form of Channel x Channel x frequency) 
@@ -33,8 +33,7 @@ for c = 1:m
     % f_ind             = f_ind+1;
     Sarr(:,:,c,f_ind) = Stmp(:,:,f_ind);
     if(f_ind>1)
-      %Sarr(:,:,c,2*N+2-f_ind) = Stmp(:,:,f_ind).';
-      Sarr(:,:,c,2*N+2-f_ind) = Stmp([2 1],[2 1],f_ind);
+      Sarr(:,:,c,2*N+2-f_ind) = Stmp(:,:,f_ind).';
     end
   end
 end
@@ -47,13 +46,22 @@ gam0 = gam(:,:,:,1);
 
 h    = complex(zeros(size(gam0)));
 for k = 1:m
-  [tmp, dum] = chol(gam0(:,:,k));
-  if dum
-    warning('initialization for iterations did not work well, using arbitrary starting condition');
-    tmp = rand(2,2); h(:,:,k) = triu(tmp); %arbitrary initial condition
-  else
-    h(:,:,k) = tmp;
+  switch init
+    case 'chol'
+      [tmp, dum] = chol(gam0(:,:,k));
+      if dum
+        warning('initialization with ''chol'' for iterations did not work well, using arbitrary starting condition');
+        tmp = rand(2,2); %arbitrary initial condition
+        tmp = triu(tmp);
+      end
+    case 'rand'
+      tmp = rand(2,2); %arbitrary initial condition
+      tmp = triu(tmp);
+    otherwise
+      error('initialization method should be eithe ''chol'' or ''rand''');
   end
+  h(:,:,k) = tmp;
+  
   %h(:,:,k) = chol(gam0(:,:,k));
 end
 psi  = repmat(h, [1 1 1 N2]);
@@ -69,8 +77,12 @@ for iter = 1:Niterations
   psi_old = psi;
   psi     = mtimes2x2(psi, gp);
   %psierr  = sum(sum(abs(psi-psi_old)));
-  psierr  = abs(psi-psi_old);
+  psierr  = abs(psi-psi_old)./abs(psi);
   
+  if 0
+    plot(squeeze(psierr(2,1,1,:))); hold on
+    plot(squeeze(psierr(1,1,1,:)),'r');drawnow
+  end
   psierrf = mean(psierr(:));
   if(psierrf<tol), 
     fprintf('reaching convergence at iteration %d\n',iter);

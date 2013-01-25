@@ -393,8 +393,8 @@ if any(~isfield(data, inparam)) || (isfield(data, 'crsspctrm') && (ischar(inpara
         % check whether multiple pairwise decomposition is required (this
         % can most conveniently be handled at this level
         % tmpcfg.npsf = rmfield(tmpcfg.npsf, 'channelcmb');
-        try, tmpcfg.npsf = rmfield(tmpcfg.granger, 'block'); end
-        try, tmpcfg.npsf = rmfield(tmpcfg.granger, 'blockindx'); end
+        try, tmpcfg.granger = rmfield(tmpcfg.granger, 'block'); end
+        try, tmpcfg.granger = rmfield(tmpcfg.granger, 'blockindx'); end
         % end
         optarg = ft_cfg2keyval(tmpcfg.granger);
         data = ft_connectivity_csd2transfer(data, optarg{:});

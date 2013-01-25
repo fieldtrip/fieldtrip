@@ -1,4 +1,4 @@
-function [H, Z, S, psi] = sfactorization_wilson(S,freq,Niterations,tol,fb)
+function [H, Z, S, psi] = sfactorization_wilson(S,freq,Niterations,tol,fb,init)
 
 % Usage  : [H, Z, S, psi] = sfactorization_wilson(S,fs,freq);
 % Inputs : S (1-sided, 3D-spectral matrix in the form of Channel x Channel x frequency) 
@@ -46,11 +46,21 @@ end
 
 %Step 3: Initializing for iterations 
 gam0 = gam(:,:,1);
-[h, dum] = chol(gam0);
-if dum
-  warning('initialization for iterations did not work well, using arbitrary starting condition');
-  h = rand(m,m); h = triu(h); %arbitrary initial condition
+switch init
+  case 'chol'
+    [tmp, dum] = chol(gam0);
+    if dum
+      warning('initialization with ''chol'' for iterations did not work well, using arbitrary starting condition');
+      tmp = rand(m,m); %arbitrary initial condition
+      tmp = triu(tmp);
+    end
+  case 'rand'
+    tmp = rand(m,m); %arbitrary initial condition
+    tmp = triu(tmp);
+  otherwise
+    error('initialization method should be eithe ''chol'' or ''rand''');
 end
+h = tmp;
 
 for ind = 1:N2
   psi(:,:,ind) = h; 
