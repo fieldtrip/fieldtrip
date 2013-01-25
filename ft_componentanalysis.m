@@ -218,7 +218,6 @@ if isfield(cfg, 'unmixing') && isfield(cfg, 'topolabel')
   tmpcfg.channel      = cfg.channel;     % the Mx1 labels of the data that is presented now to this function
   tmpcfg.numcomponent = 'all';
   tmpcfg.method       = 'predetermined unmixing matrix';
-  tmpcfg.outputfile   = cfg.outputfile;
   cfg                 = tmpcfg;
 end
 
