@@ -207,7 +207,7 @@ if ~(strcmp(taper,'dpss') && numel(tapsmofrq)>1) % ariable number of slepian tap
   if length(st)>1 && strcmp(st(2).name, 'ft_freqanalysis')
     % specest_mtmfft has been called by ft_freqanalysis, meaning that ft_progress has been initialised
     ft_progress(fbopt.i./fbopt.n, ['processing trial %d/%d ',str,'\n'], fbopt.i, fbopt.n);
-  else
+  elseif verbose
     fprintf([str, '\n']);
   end
   spectrum = cell(ntaper(1),1);
