@@ -192,7 +192,7 @@ if timedelay ~= 0
     anglein = (missedsamples) .* ((2.*pi./fsample) .* freqoi(ifreqoi));
     coswav  = cos(anglein);
     sinwav  = sin(anglein);
-    angletransform(ifreqoi) = angle(complex(coswav,sinwav));
+    angletransform(ifreqoi) = atan2(sinwav, coswav);
   end
   angletransform = repmat(angletransform,[nchan,1]);
 end
