@@ -5,7 +5,7 @@ function [grid, cfg] = ft_prepare_sourcemodel(cfg, vol, sens)
 % beamformer scanning, linear estimation and MEG interpolation.
 %
 % Use as
-%   grid = prepare_prepare_sourcemodel(cfg)
+%   grid = ft_prepare_sourcemodel(cfg)
 %
 % where the configuration structure contains the details on how the source
 % model should be constructed.
