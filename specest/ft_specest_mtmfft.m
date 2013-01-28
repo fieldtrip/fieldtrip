@@ -212,7 +212,8 @@ if ~(strcmp(taper,'dpss') && numel(tapsmofrq)>1) % ariable number of slepian tap
   end
   spectrum = cell(ntaper(1),1);
   for itap = 1:ntaper(1)
-    dum = transpose(fft(transpose(ft_preproc_padding(dat .* repmat(tap(itap,:),[nchan, 1]), padtype, 0, postpad)))); % double explicit transpose to speedup fft    
+    %dum = transpose(fft(transpose(ft_preproc_padding(dat .* repmat(tap(itap,:),[nchan, 1]), padtype, 0, postpad)))); % double explicit transpose to speedup fft    
+    dum = transpose(fft(transpose(ft_preproc_padding(bsxfun(@times,dat,tap(itap,:)), padtype, 0, postpad)))); % double explicit transpose to speedup fft
     dum = dum(:,freqboi);
     % phase-shift according to above angles
     if timedelay ~= 0
@@ -241,7 +242,8 @@ else % variable number of slepian tapers requested
           fprintf([str, '\n']);
         end
         for itap = 1:ntaper(ifreqoi)
-          dum = transpose(fft(transpose(ft_preproc_padding(dat .* repmat(tap{ifreqoi}(itap,:),[nchan, 1]), padtype, 0, postpad)))); % double explicit transpose to speedup fft          
+          %dum = transpose(fft(transpose(ft_preproc_padding(dat .* repmat(tap{ifreqoi}(itap,:),[nchan, 1]), padtype, 0, postpad)))); % double explicit transpose to speedup fft          
+          dum = transpose(fft(transpose(ft_preproc_padding(bsxfun(@times,dat,tap{ifreqoi}(itap,:)), padtype, 0, postpad)))); % double explicit transpose to speedup fft          
           dum = dum(:,freqboi(ifreqoi));
           % phase-shift according to above angles
           if timedelay ~= 0
@@ -273,7 +275,8 @@ else % variable number of slepian tapers requested
           fprintf([str, '\n']);
         end
         for itap = 1:ntaper(ifreqoi)
-          dum = transpose(fft(transpose(ft_preproc_padding(dat .* repmat(tap{ifreqoi}(itap,:),[nchan, 1]),[nchan, 1]), padtype, 0, postpad))); % double explicit transpose to speedup fft
+          %dum = transpose(fft(transpose(ft_preproc_padding(dat .* repmat(tap{ifreqoi}(itap,:),[nchan, 1]), padtype, 0, postpad)))); % double explicit transpose to speedup fft
+          dum = transpose(fft(transpose(ft_preproc_padding(bsxfun(@times,dat,tap{ifreqoi}(itap,:)), padtype, 0, postpad)))); % double explicit transpose to speedup fft          
           dum = dum(:,freqboi(ifreqoi));
           % phase-shift according to above angles
           if timedelay ~= 0
