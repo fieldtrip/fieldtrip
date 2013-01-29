@@ -260,11 +260,12 @@ if stack>1
   if istrue(compile)
     stackargin{1} = repmat({fcomp}, 1, numpartition);
   else
-    stackargin{1} = repmat({fname}, 1, numpartition);
-  end
-  if ischar(stackargin{1}{1})
-    % it should contain function handles, not strings
-    stackargin{1} = cellfun(@str2func, stackargin{1});
+    if ischar(fname)
+      % it should contain function handles, not strings
+      stackargin{1} = repmat({str2func(fname)}, 1, numpartition);
+    else
+      stackargin{1} = repmat({fname}, 1, numpartition);
+    end
   end
   stackargin{end-1} = repmat({'uniformoutput'},1,numpartition);  % uniformoutput
   stackargin{end}   = repmat({false},1,numpartition);            % false
