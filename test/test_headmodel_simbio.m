@@ -10,7 +10,7 @@ function test_headmodel_simbio
 
 return;
 
-ft_hastoolbox('simbio', 1);
+%ft_hastoolbox('simbio', 1);
 
 % create a 3D volume with 3 spheres
 % volume and mesh creation is adapted from test_bug1815.m
@@ -76,7 +76,7 @@ for i=1:size(headpos,1)
 end
 
 
-elec.pnt = sel(4:size(sel,1),:); %first 3 rows are only zeros
+elec.pnt = sel(4:4:size(sel,1),:); %first 3 rows are only zeros
 
 for i=1:length(elec.pnt)
   elec.label{i} = sprintf('electrode%d', i);
@@ -95,11 +95,11 @@ figure; imagesc(example.seg(:,:,50));
 
 % create meshes of the volume
 % hexahedral
-
+example=ft_datatype_segmentation(example,'segmentationstyle','probabilistic');
 % not working yet; see test_bug1815
 cfg=[];
-cfg.tissue = {'seg'};
-cfg.numvertices = 3000;
+%cfg.tissue = {'tissue_1','tissue_2','tissue_3'}; ?is this necessairy? 
+%cfg.numvertices = 3000;  ? does this make sense?
 cfg.method = 'hexahedral';          % option for hexahedral mesh generation
 hexmesh = ft_prepare_mesh(cfg,example);
 
@@ -109,15 +109,15 @@ assert(ft_datatype(parcellation,'parcellation'),'the conversion to a parcellatio
 
 % tetrahedral
 % not working yet; see test_bug1815
-cfg=[];
-cfg.tissue = {'seg'};
-cfg.numvertices = 3000;
-cfg.method = 'tetrahedral';          % option for tetrahedral mesh generation
-tetmesh = ft_prepare_mesh(cfg,example);
-
-% check mesh
-parcellation = ft_datatype_parcellation(tetmesh);
-assert(ft_datatype(parcellation,'parcellation'),'the conversion to a parcellation failed');
+% cfg=[];
+% cfg.tissue = {'seg'};
+% cfg.numvertices = 3000;
+% cfg.method = 'tetrahedral';          % option for tetrahedral mesh generation
+% tetmesh = ft_prepare_mesh(cfg,example);
+% 
+% % check mesh
+% parcellation = ft_datatype_parcellation(tetmesh);
+% assert(ft_datatype(parcellation,'parcellation'),'the conversion to a parcellation failed');
 
 
 cfg=[];
@@ -125,8 +125,8 @@ cfg.method = 'simbio';
 cfg.conductivity = [0.1 0.4 0.1];       % I just typed in some numbers, but probablt more information
                                         % is necessary on what is the unit of conductivity and if there are
                                         % "default" or suggested values
-vol_hex = ft_prepare_headmodel(hexmesh);
-vol_tet = ft_prepare_headmodel(tetmesh);
+vol_hex = ft_prepare_headmodel(cfg,hexmesh);
+%vol_tet = ft_prepare_headmodel(cfg,tetmesh);
 
 % check output structure
 
@@ -140,27 +140,26 @@ vol_tet = ft_prepare_headmodel(tetmesh);
 %    vol.unit ...
 %    vol.cfg ...
 
-% ft_datatype_headmodel could be updated for simbio
-assert(ft_datatype_headmodel(vol_hex),'Headmodel does not correspond to datatype headmodel');
-assert(ft_datatype_headmodel(vol_tet),'Headmodel does not correspond to datatype headmodel');
+%assert(ft_datatype_headmodel(vol_hex),'Headmodel does not correspond to datatype headmodel');
+%assert(ft_datatype_headmodel(vol_tet),'Headmodel does not correspond to datatype headmodel');
 
 assert(isequal(hexmesh.pnt,vol_hex.pos), 'Positions of headmodel is not equal to mesh points');
 assert(isequal(hexmesh.hex,vol_hex.hex), 'Hexahedrons in headmodel do not correpond to mesh hexahedrons');
 assert(isequal(hexmesh.tissue,vol_hex.tissue), 'Tissue field in headmodel do not correspond to tissues in mesh');
-assert(isequal(hexmesh.label,vol_hex.label), 'Labels in headmodel do not correspond to mesh labels');
+assert(isequal(hexmesh.tissuelabel,vol_hex.tissuelabel), 'Labels in headmodel do not correspond to mesh labels');
 
-assert(isequal(tetmesh.pnt,vol_tet.pos), 'Positions of headmodel is not equal to mesh points');
-assert(isequal(tetmesh.tet,vol_tet.tet), 'Tetrahedrons in headmodel do not correpond to mesh tetrahedrons');
-assert(isequal(tetmesh.tissue,vol_tet.tissue), 'Tissue field in headmodel do not correspond to tissues in mesh');
-assert(isequal(tetmesh.label,vol_tet.label), 'Labels in headmodel do not correspond to mesh labels');
+% assert(isequal(tetmesh.pnt,vol_tet.pos), 'Positions of headmodel is not equal to mesh points');
+% assert(isequal(tetmesh.tet,vol_tet.tet), 'Tetrahedrons in headmodel do not correpond to mesh tetrahedrons');
+% assert(isequal(tetmesh.tissue,vol_tet.tissue), 'Tissue field in headmodel do not correspond to tissues in mesh');
+% assert(isequal(tetmesh.label,vol_tet.label), 'Labels in headmodel do not correspond to mesh labels');
 
 %%%%
  
 % % compute the lead fields 
-cfg=[];
-cfg.vol = vol_tet;
-cfg.elec = elec;
-lf_tet  = ft_prepare_leadfield(cfg);
+% cfg=[];
+% cfg.vol = vol_tet;
+% cfg.elec = elec;
+% lf_tet  = ft_prepare_leadfield(cfg);
 
 cfg=[];
 cfg.vol = vol_hex;
