@@ -115,10 +115,7 @@ switch type
     error('unsupported filter type "%s"', type);
 end
 
-meandat = mean(dat,2);
-for i=1:nsamples
-  % demean the data
-  dat(:,i) = dat(:,i) - meandat;
-end
+% demean the data before filtering
+dat = bsxfun(@minus, dat, mean(dat, 2));
 
 filt = filter_with_correction(B,A,dat,dir);
