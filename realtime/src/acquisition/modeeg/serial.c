@@ -7,11 +7,11 @@
 #include <string.h>
 
 
-static const char serialErrOpen[]="Couldn't open the serial port.\n";
-static const char serialErrGetP[]="Couldn't read serial port parameters.\n";
-static const char serialErrGetT[]="Couldn't read serial port timeouts.\n";
-static const char serialErrSetP[]="Couldn't set serial port parameters.\n";
-static const char serialErrSetT[]="Couldn't set serial port timeout.\n";
+static const char serialErrOpen[]="Could not open the serial port.\n";
+static const char serialErrGetP[]="Could not read serial port parameters.\n";
+static const char serialErrGetT[]="Could not read serial port timeouts.\n";
+static const char serialErrSetP[]="Could not set serial port parameters.\n";
+static const char serialErrSetT[]="Could not set serial port timeout.\n";
 
 #ifdef WIN32
 

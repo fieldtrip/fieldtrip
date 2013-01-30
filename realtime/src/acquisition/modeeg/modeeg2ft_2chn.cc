@@ -204,13 +204,13 @@ int main(int argc, char *argv[]) {
 		for (int i=0;i<rbIntSize;i++) rbInt[i*rbIntChans]=-1;
 	}
 	
-	if (argc>4) {
+	if (argc>3) {
 		strncpy(hostname, argv[3], sizeof(hostname));
 	} else {
 		strcpy(hostname, "localhost");
 	}
 	
-	if (argc>5) {
+	if (argc>4) {
 		port = atoi(argv[4]);
 	} else {
 		port = 1972;
@@ -228,6 +228,9 @@ int main(int argc, char *argv[]) {
 			fprintf(stderr, "Could not spawn TCP server on port %i\n", port);
 			return 1;
 		}
+    else {
+			fprintf(stderr, "Spawned TCP server on port %i\n", port);
+    }
 		ftSocket = 0;
 	}
 	
