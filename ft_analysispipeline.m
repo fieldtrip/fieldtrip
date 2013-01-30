@@ -198,7 +198,7 @@ this = getnode(cfg);
 if isfield(cfg, 'previous') && ~isempty(cfg.previous) && iscell(cfg.previous)
   previous = cellfun(@walktree, cfg.previous, 'UniformOutput', false);
   if iscell(previous{1})
-    previous = cat(1, previous{:});
+    previous = cat(2, previous{:});
   end
 elseif isfield(cfg, 'previous') && ~isempty(cfg.previous) && isstruct(cfg.previous)
   previous = walktree(cfg.previous);
