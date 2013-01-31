@@ -120,8 +120,6 @@ end
 cfg.channel      = ft_getopt(cfg, 'channel',      'MEG');
 cfg.trials       = ft_getopt(cfg, 'trials',       'all');
 cfg.planarmethod = ft_getopt(cfg, 'planarmethod', 'sincos');
-cfg.inputfile    = ft_getopt(cfg, 'inputfile',    []);
-cfg.outputfile   = ft_getopt(cfg, 'outputfile',   []);
 cfg.feedback     = ft_getopt(cfg, 'feedback',     'text');
 
 % check if the input cfg is valid for this function

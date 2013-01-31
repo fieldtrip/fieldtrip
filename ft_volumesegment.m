@@ -153,8 +153,6 @@ cfg.write            = ft_getopt(cfg, 'write',            'no');
 cfg.keepintermediate = ft_getopt(cfg, 'keepintermediate', 'no');
 cfg.coordsys         = ft_getopt(cfg, 'coordsys',         '');
 cfg.units            = ft_getopt(cfg, 'units',            '');
-cfg.inputfile        = ft_getopt(cfg, 'inputfile',        []);
-cfg.outputfile       = ft_getopt(cfg, 'outputfile',       []);
 
 % set default for smooth and threshold
 cfg.brainsmooth      = ft_getopt(cfg, 'brainsmooth',      ''); % see also below

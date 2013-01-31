@@ -133,8 +133,6 @@ cfg.complex     = ft_getopt(cfg, 'complex', 'abs');
 cfg.jackknife   = ft_getopt(cfg, 'jackknife', 'no');
 cfg.removemean  = ft_getopt(cfg, 'removemean', 'yes');
 cfg.partchannel = ft_getopt(cfg, 'partchannel', '');
-cfg.inputfile   = ft_getopt(cfg, 'inputfile', []);
-cfg.outputfile  = ft_getopt(cfg, 'outputfile', []);
 cfg.parameter   = ft_getopt(cfg, 'parameter', []);
 
 hasjack = (isfield(data, 'method') && strcmp(data.method, 'jackknife')) || (isfield(data, 'dimord') && strcmp(data.dimord(1:6), 'rptjck'));

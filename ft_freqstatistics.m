@@ -88,7 +88,6 @@ cfg = ft_checkconfig(cfg, 'required',    {'method'});
 cfg = ft_checkconfig(cfg, 'forbidden',   {'transform'});
 
 % set the defaults
-cfg.outputfile  = ft_getopt(cfg, 'outputfile',  []);
 cfg.parameter   = ft_getopt(cfg, 'parameter',   []); % the default is assigned further down
 cfg.channel     = ft_getopt(cfg, 'channel',     'all');
 cfg.latency     = ft_getopt(cfg, 'latency',     'all');
