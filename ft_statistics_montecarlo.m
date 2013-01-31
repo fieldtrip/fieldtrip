@@ -18,7 +18,7 @@ function [stat, cfg] = ft_statistics_montecarlo(cfg, dat, design, varargin)
 %
 % The configuration options that can be specified are:
 %   cfg.numrandomization = number of randomizations, can be 'all'
-%   cfg.correctm         = string, apply multiple-comparison correction, 'no', 'max', cluster', 'bonferoni', 'holms', 'fdr' (default = 'no')
+%   cfg.correctm         = string, apply multiple-comparison correction, 'no', 'max', cluster', 'bonferroni', 'holm', 'fdr' (default = 'no')
 %   cfg.alpha            = number, critical value for rejecting the null-hypothesis per tail (default = 0.05)
 %   cfg.tail             = number, -1, 1 or 0 (default = 0)
 %   cfg.correcttail      = string, correct p-values or alpha-values when doing a two-sided test, 'alpha','prob' or 'no' (default = 'no')
@@ -106,6 +106,8 @@ cfg = ft_checkconfig(cfg, 'renamed',     {'unitfactor',       'uvar'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'repeatedmeasures', 'uvar'});
 cfg = ft_checkconfig(cfg, 'renamedval',  {'clusterthreshold', 'nonparametric', 'nonparametric_individual'});
 cfg = ft_checkconfig(cfg, 'renamedval',  {'correctm', 'yes', 'max'});
+cfg = ft_checkconfig(cfg, 'renamedval',  {'correctm', 'bonferoni', 'bonferroni'});
+cfg = ft_checkconfig(cfg, 'renamedval',  {'correctm', 'holms', 'holm'});
 cfg = ft_checkconfig(cfg, 'required',    {'statistic'});
 cfg = ft_checkconfig(cfg, 'forbidden',   {'ztransform', ...
                                           'removemarginalmeans', ...
@@ -116,7 +118,7 @@ cfg = ft_checkconfig(cfg, 'forbidden',   {'ztransform', ...
 % set the defaults for the main function
 if ~isfield(cfg, 'alpha'),               cfg.alpha    = 0.05;            end
 if ~isfield(cfg, 'tail'),                cfg.tail     = 0;               end
-if ~isfield(cfg, 'correctm'),            cfg.correctm = 'no';            end % no, max, cluster, bonferoni, fdr
+if ~isfield(cfg, 'correctm'),            cfg.correctm = 'no';            end % no, max, cluster, bonferroni, holm, fdr
 if ~isfield(cfg, 'resampling'),          cfg.resampling = 'permutation'; end % permutation, bootstrap
 if ~isfield(cfg, 'feedback'),            cfg.feedback = 'text';          end
 if ~isfield(cfg, 'ivar'),                cfg.ivar     = 'all';           end
@@ -394,16 +396,17 @@ switch lower(cfg.correctm)
     fprintf('using a cluster-based method for multiple comparison correction\n');
     fprintf('the returned probabilities and the thresholded mask are corrected for multiple comparisons\n');
     stat.mask = stat.prob<=cfg.alpha;
-  case 'bonferoni'
-    fprintf('performing Bonferoni correction for multiple comparisons\n');
+  case 'bonferroni'
+    fprintf('performing Bonferroni correction for multiple comparisons\n');
     fprintf('the returned probabilities are uncorrected, the thresholded mask is corrected\n');
     stat.mask = stat.prob<=(cfg.alpha ./ numel(stat.prob));
-  case 'holms'
+  case 'holm'
     % test the most significatt significance probability against alpha/N, the second largest against alpha/(N-1), etc.
-    fprintf('performing Holms correction for multiple comparisons\n');
+    fprintf('performing Holm-Bonferroni correction for multiple comparisons\n');
     fprintf('the returned probabilities are uncorrected, the thresholded mask is corrected\n');
     [pvals, indx] = sort(stat.prob(:));                     % this sorts the significance probabilities from smallest to largest
-    mask = pvals<=(cfg.alpha ./ ((length(pvals):-1:1)'));   % compare each significance probability against its individual threshold
+    k = find(pvals > (cfg.alpha ./ ((length(pvals):-1:1)')), 1, 'first'); % compare each significance probability against its individual threshold
+    mask = (1:length(pvals))'<k;   
     stat.mask = zeros(size(stat.prob));
     stat.mask(indx) = mask;
   case 'fdr'
