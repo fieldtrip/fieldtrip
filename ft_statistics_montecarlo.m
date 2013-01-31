@@ -404,7 +404,7 @@ switch lower(cfg.correctm)
     % test the most significatt significance probability against alpha/N, the second largest against alpha/(N-1), etc.
     fprintf('performing Holm-Bonferroni correction for multiple comparisons\n');
     fprintf('the returned probabilities are uncorrected, the thresholded mask is corrected\n');
-    [pvals, indx] = sort(stat.prob(:));                     % this sorts the significance probabilities from smallest to largest
+    [pvals, indx] = sort(stat.prob(:));                                   % this sorts the significance probabilities from smallest to largest
     k = find(pvals > (cfg.alpha ./ ((length(pvals):-1:1)')), 1, 'first'); % compare each significance probability against its individual threshold
     mask = (1:length(pvals))'<k;   
     stat.mask = zeros(size(stat.prob));

@@ -16,7 +16,7 @@ function [stat, cfg] = ft_statistics_analytic(cfg, dat, design)
 %
 % The configuration can contain
 %   cfg.statistic        = string, statistic to compute for each sample or voxel (see below)
-%   cfg.correctm         = string, apply multiple-comparison correction, 'no', 'bonferoni', 'holms', 'fdr' (default = 'no')
+%   cfg.correctm         = string, apply multiple-comparison correction, 'no', 'bonferroni', 'holm', 'fdr' (default = 'no')
 %   cfg.alpha            = number, critical value for rejecting the null-hypothesis (default = 0.05)
 %   cfg.tail             = number, -1, 1 or 0 (default = 0)
 %   cfg.ivar             = number or list with indices, independent variable(s)
@@ -58,6 +58,10 @@ function [stat, cfg] = ft_statistics_analytic(cfg, dat, design)
 %
 % $Id$
 
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'renamedval',  {'correctm', 'bonferoni', 'bonferroni'});
+cfg = ft_checkconfig(cfg, 'renamedval',  {'correctm', 'holms', 'holm'});
+
 % set the defaults
 if ~isfield(cfg, 'correctm'), cfg.correctm = 'no'; end
 if ~isfield(cfg, 'alpha'),    cfg.alpha = 0.05;    end
@@ -87,16 +91,17 @@ cfg = rmfield(cfg, 'computeprob');
 cfg = rmfield(cfg, 'computecritval');
 
 switch lower(cfg.correctm)
-  case 'bonferoni'
+  case 'bonferroni'
     fprintf('performing Bonferoni correction for multiple comparisons\n');
     fprintf('the returned probabilities are uncorrected, the thresholded mask is corrected\n');
     stat.mask = stat.prob<=(cfg.alpha ./ numel(stat.prob));
-  case 'holms'
+  case 'holm'
     % test the most significatt significance probability against alpha/N, the second largest against alpha/(N-1), etc.
-    fprintf('performing Holms correction for multiple comparisons\n');
+    fprintf('performing Holm-Bonferroni correction for multiple comparisons\n');
     fprintf('the returned probabilities are uncorrected, the thresholded mask is corrected\n');
-    [pvals, indx] = sort(stat.prob(:));                     % this sorts the significance probabilities from smallest to largest
-    mask = pvals<=(cfg.alpha ./ ((length(pvals):-1:1)'));    % compare each significance probability against its individual threshold
+    [pvals, indx] = sort(stat.prob(:));                                   % this sorts the significance probabilities from smallest to largest
+    k = find(pvals > (cfg.alpha ./ ((length(pvals):-1:1)')), 1, 'first'); % compare each significance probability against its individual threshold
+    mask = (1:length(pvals))'<k;
     stat.mask = zeros(size(stat.prob));
     stat.mask(indx) = mask;
   case 'fdr'
