@@ -18,7 +18,7 @@ function [stat, cfg] = ft_statistics_montecarlo(cfg, dat, design, varargin)
 %
 % The configuration options that can be specified are:
 %   cfg.numrandomization = number of randomizations, can be 'all'
-%   cfg.correctm         = string, apply multiple-comparison correction, 'no', 'max', cluster', 'bonferroni', 'holm', 'fdr' (default = 'no')
+%   cfg.correctm         = string, apply multiple-comparison correction, 'no', 'max', cluster', 'bonferroni', 'holm', 'hochberg', 'fdr' (default = 'no')
 %   cfg.alpha            = number, critical value for rejecting the null-hypothesis per tail (default = 0.05)
 %   cfg.tail             = number, -1, 1 or 0 (default = 0)
 %   cfg.correcttail      = string, correct p-values or alpha-values when doing a two-sided test, 'alpha','prob' or 'no' (default = 'no')
@@ -409,6 +409,15 @@ switch lower(cfg.correctm)
     mask = (1:length(pvals))'<k;   
     stat.mask = zeros(size(stat.prob));
     stat.mask(indx) = mask;
+  case 'hochberg'
+    % test the most significatt significance probability against alpha/N, the second largest against alpha/(N-1), etc.
+    fprintf('performing Hochberg''s correction for multiple comparisons (this is *not* the Benjamini-Hochberg FDR procedure!)\n');
+    fprintf('the returned probabilities are uncorrected, the thresholded mask is corrected\n');
+    [pvals, indx] = sort(stat.prob(:));                     % this sorts the significance probabilities from smallest to largest
+    k = find(pvals <= (cfg.alpha ./ ((length(pvals):-1:1)')), 1, 'last'); % compare each significance probability against its individual threshold
+    mask = (1:length(pvals))'<=k;   
+    stat.mask = zeros(size(stat.prob));
+    stat.mask(indx) = mask;    
   case 'fdr'
     fprintf('performing FDR correction for multiple comparisons\n');
     fprintf('the returned probabilities are uncorrected, the thresholded mask is corrected\n');
