@@ -3,6 +3,43 @@ function moviefunction(cfg, data)
 % data needs to be 3D, N x time x freq (last can be singleton)
 %   N needs to correspond to number of vertices (channels, gridpoints, etc)
 
+% new UI artwork
+%
+% [main window] -------------------------------------\
+% | [uipanel: plot]            | [uipanel: colormap] | 
+% |  <80%> ^70%v               |   <20%>             |
+% |  [axes: mainaxes]          |  [axes: coloraxes]  |
+% |   [axes: subaxes]          |                     |  
+% |                            |                     |
+% |                            |                     |
+% |                            |                     | 
+% |                            |                     |
+% |                            |                     |
+% |                            |                     |  
+% |                            |                     |
+% |                            |                     |
+% |                            |                     |
+% |                            |                     |
+% |                            |[Checkbox: automatic]|
+% |                            |[Checkbox: symmetric]|
+% |--[uipanel: control] <100%>-----------------------|   
+% | [Button:Go] [Checkbox:Rec]                       |
+% | [Slider: frequency]                              |
+% | [Slider: time]                                   |
+% | [TextField: speed]                               |
+% \--------------------------------------------------/
+%
+% Right click on mainaxes: 
+%     rotation options (+automatic), zooming options, open subplot (new subaxes added)
+%     start, stop, record, time, freq, colorbar
+% Left click on subaxes:  dragging it around
+% Right click on subaxes: close
+%
+% Consider following neat extras
+%   new figure for zooming and and rotation timing options during playback
+%   add an intro a la Jan-Mathijs for source, similar for normal topos
+%   make panels foldable (like on mobile devices)
+
 ft_defaults
 ft_preamble help
 ft_preamble callinfo
