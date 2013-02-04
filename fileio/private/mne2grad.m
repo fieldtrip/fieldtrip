@@ -69,6 +69,12 @@ for i = 1:orig.nchan;
   nMag = nMag +(orig.chs(i).coil_type==3022 | orig.chs(i).coil_type==3023 | orig.chs(i).coil_type==3024);
 end
 
+% how many Axial gradiometers?
+nAxGrad = 0;
+for i = 1:orig.nchan;
+  nAxGrad = nAxGrad +(orig.chs(i).coil_type==7001); % babySQUID
+end
+
 % how many EEG channels?
 nEEG = 0;
 for i = 1:orig.nchan;
@@ -76,24 +82,24 @@ for i = 1:orig.nchan;
 end
 
 % how many sensors in total?
-nSensors = nPlaGrad + nMag;
+nSensors = nPlaGrad + nMag + nAxGrad;
 
 % how many coils in total?
-nCoils = nPlaGrad*2 + nMag;
+nCoils = nPlaGrad*2 + nMag + nAxGrad*2;
 
 % intialise grad structure
-grad.coilpos   = zeros(nCoils,3);
-grad.coilori   = zeros(nCoils,3);
-grad.tra   = zeros(nSensors,nCoils);
-grad.unit  = 'cm';
-grad.label = cell(nSensors,1);
+grad.coilpos  = zeros(nCoils,3);
+grad.coilori  = zeros(nCoils,3);
+grad.tra      = zeros(nSensors,nCoils);
+grad.unit     = 'cm'; % see below for the conversion, the original fif units are in meter
+grad.label    = cell(nSensors,1);
 
-% initialise elec structure
-% ??? %
+% initialise elec structure, this can remain empty
+elec = [];
 
 % define coils
 kCoil = 1;
-k = 1;
+kChan = 1;
 % cf. Joachim's original script - I've implemented it this way in case MEG
 % and EEG channels are not listed first in the .fif file; this shouldn't
 % ever be the case but acts as a safety net...
@@ -103,52 +109,73 @@ for n = 1:orig.nchan
     t = orig.chs(n).coil_trans;
     
     % TC 2011 09 24 I have changed the coil definition, the original was
-    % grad.coilpos(kCoil,:) = 100*(t(1:3,4)); % multiply by 100 to get cm
-    grad.coilpos(kCoil,:) = 100*(t(1:3,4)+0.0003*t(1:3,3)); % multiply by 100 to get cm
+    % grad.coilpos(kCoil,:) = t(1:3,4);
     
+    grad.coilpos(kCoil,:) = t(1:3,4)+0.0003*t(1:3,3);
     grad.coilori(kCoil,:) = t(1:3,3);
-    grad.tra(k,kCoil) = 1;
+    grad.tra(kChan,kCoil) = 1;
     kCoil = kCoil+1;
-    grad.label{k} = deblank(orig.ch_names{n});
-    k = k+1;
+    grad.label{kChan} = deblank(orig.ch_names{n});
+    grad.chantype{kChan,1}='megmag';
+    kChan = kChan+1;
+    
   elseif (orig.chs(n).coil_type==3012 || orig.chs(n).coil_type==3013 || orig.chs(n).coil_type==3014 || orig.chs(n).coil_type==2) % planar gradiometer
     t = orig.chs(n).coil_trans;
     
     % TC 2011 09 24 I have changed the coil definition, the original was
-    % grad.coilpos(kCoil,:) = 100*(0.0000*t(1:3,3)+t(1:3,4)-0.0084*t(1:3,1)); % multiply with 100 to get cm
-    grad.coilpos(kCoil,:) = 100*(0.0003*t(1:3,3)+t(1:3,4)-0.0084*t(1:3,1)); % multiply with 100 to get cm
+    % grad.coilpos(kCoil,:) = 0.0000*t(1:3,3)+t(1:3,4)-0.0084*t(1:3,1)); % for the 1st coil
+    % grad.coilpos(kCoil,:) = 0.0000*t(1:3,3)+t(1:3,4)+0.0084*t(1:3,1)); % for the 2nd coil
     
+    grad.coilpos(kCoil,:) = 0.0003*t(1:3,3)+t(1:3,4)-0.0084*t(1:3,1); % for the 1st coil
     grad.coilori(kCoil,:) = t(1:3,3);
-    grad.tra(k,kCoil) = -1;
+    grad.tra(kChan,kCoil) = -1;
     kCoil = kCoil+1;
     
-    % TC 2011 09 24 I have changed the coil definition, the original was
-    % grad.coilpos(kCoil,:) = 100*(0.0000*t(1:3,3)+t(1:3,4)+0.0084*t(1:3,1));
-    grad.coilpos(kCoil,:) = 100*(0.0003*t(1:3,3)+t(1:3,4)+0.0084*t(1:3,1));
-    
+    grad.coilpos(kCoil,:) = 0.0003*t(1:3,3)+t(1:3,4)+0.0084*t(1:3,1); % for the 2nd coil
     grad.coilori(kCoil,:) = t(1:3,3);
-    grad.tra(k,kCoil) = 1;
+    grad.tra(kChan,kCoil) = 1;
     kCoil = kCoil+1;
-    grad.label{k} = deblank(orig.ch_names{n});
-    k = k+1;
+    
+    grad.label{kChan} = deblank(orig.ch_names{n});
+    grad.chantype{kChan,1}='megplanar';
+    kChan = kChan+1;
+    
+  elseif (orig.chs(n).coil_type==7001)  % babySQUID axial gradiometer bottom coils
+    t = orig.chs(n).coil_trans;
+    
+    grad.coilpos(kCoil,:)=t(1:3,4);  % for the 1st coil
+    grad.coilori(kCoil,:)=t(1:3,3);
+    grad.tra(kChan,kCoil)=1;
+    kCoil=kCoil+1;
+    
+    grad.coilpos(kCoil,:)=t(1:3,4)+0.050*t(1:3,3);  % for the 2nd coil
+    grad.coilori(kCoil,:)=t(1:3,3);
+    grad.tra(kChan,kCoil)=-1;
+    kCoil=kCoil+1;
+    
+    grad.label{kChan}=deblank(orig.ch_names{n});
+    grad.chantype{kChan,1}='megaxial';
+    kChan=kChan+1;
+    
   else
     % do nothing - either an EEG channel or something else such as a stim channel
   end
 end
 
-%check we've got all the MEG channels:
-k = k-1;
-if k ~= (nPlaGrad + nMag)
+% multiply by 100 to get cm
+grad.coilpos = 100*grad.coilpos;
+
+% check we've got all the MEG channels:
+kChan = kChan-1;
+if kChan ~= (nPlaGrad + nMag +nAxGrad)
   error('Number of MEG channels identified does not match number of channels in grad structure');
 end
 
 % define EEG channels
-elec = [];
-
 if nEEG>0
-  elec.pnt = zeros(nEEG,3);
-  elec.unit = 'cm';
-  elec.label = cell(nEEG,1);
+  elec.elecpos  = zeros(nEEG,3);
+  elec.unit     = 'cm';
+  elec.label    = cell(nEEG,1);
   
   % Amendments to overcome problem with fiff_read_meas_info.m when >60 channels (thanks to Rik Henson)
   
@@ -160,19 +187,33 @@ if nEEG>0
   
   chn_eeg = find([orig.chs.kind]==2); % Find EEG channels
   
-  k = 0;
+  kChan = 0;
   for n = chn_eeg
-    k = k+1;
+    kChan = kChan+1;
     if nEEG<=60
-      elec.pnt(k,1:3) = 100*orig.chs(n).eeg_loc(1:3); % multiply by 100 to get cm
+      elec.elecpos(kChan,1:3) = orig.chs(n).eeg_loc(1:3);
     else
-      elec.pnt(k,1:3) = 100*orig.dig(dig_eeg(k)).r; % multiply by 100 to get cm
+      elec.elecpos(kChan,1:3) = orig.dig(dig_eeg(kChan)).r;
     end
-    elec.label{k} = deblank(orig.ch_names{n});
+    elec.label{kChan} = deblank(orig.ch_names{n});
   end
   
   % check we've got all the EEG channels:
-  if k~=(nEEG)
+  if kChan~=(nEEG)
     error('Number of EEG channels identified does not match number of channels in elec structure!!!!!');
   end
+  
+  % multiply by 100 to get cm
+  elec.elecpos = 100*elec.elecpos;
+end
+
+% determine the type of acquisition system
+if nAxGrad>0
+  grad.type = 'babysquid74';
+elseif nPlaGrad>122 && nMag~=0
+  grad.type = 'neuromag306';
+elseif nPlaGrad<=122 && nMag==0
+  grad.type = 'neuromag122';
+else
+  % do not specify type of acquisition system
 end

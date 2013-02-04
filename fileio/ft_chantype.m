@@ -69,7 +69,7 @@ label = input;
 if isheader
   label  = hdr.label;
   numchan = length(hdr.label);
-  if isfield(hdr, 'grad') 
+  if isfield(hdr, 'grad')
     grad         = hdr.grad;
     [i1, i2]     = match_str(label, grad.label);          % ensure that the grad.label order matches the hdr.label order
     grad.label   = grad.label(i2);                        % reorder the channel labels
@@ -86,8 +86,13 @@ else
   error('the input that was provided to this function cannot be deciphered');
 end
 
-% start with unknown type for all channels
-type = repmat({'unknown'}, numchan, 1);
+if isfield(input, 'chantype')
+  % start with the provided channel types
+  type = input.chantype(:);
+else
+  % start with unknown type for all channels
+  type = repmat({'unknown'}, numchan, 1);
+end
 
 if ft_senstype(input, 'unknown')
   % don't bother doing all subsequent checks to determine the type of sensor array
@@ -111,13 +116,14 @@ elseif ft_senstype(input, 'neuromag') && isheader
       if hdr.orig.chaninfo.TY(i)==0
         type{selmeg(i)} = 'megmag';
       elseif hdr.orig.chaninfo.TY(i)==1
+        % FIXME this might also be a axial gradiometer in case the BabySQUID data is read with the old reading routines
         type{selmeg(i)} = 'megplanar';
       end
     end
     
   elseif isfield(hdr, 'orig') && isfield(hdr.orig, 'chs') && isfield(hdr.orig.chs, 'coil_type')
     % all the chs.kinds and chs.coil_types are obtained from the MNE manual, p.210-211
-    for sel=find([hdr.orig.chs.kind]==1 & [hdr.orig.chs.coil_type]==2)' %planar gradiometers
+    for sel=find([hdr.orig.chs.kind]==1 & [hdr.orig.chs.coil_type]==2)' % planar gradiometers
       type(sel) = {'megplanar'}; %Neuromag-122 planar gradiometer
     end
     for sel=find([hdr.orig.chs.kind]==1 & [hdr.orig.chs.coil_type]==3012)' %planar gradiometers
@@ -138,26 +144,27 @@ elseif ft_senstype(input, 'neuromag') && isheader
     for sel=find([hdr.orig.chs.kind]==1 & [hdr.orig.chs.coil_type]==3024)' %magnetometers
       type(sel) = {'megmag'};    %Type T3 magenetometer
     end
+    for sel=find([hdr.orig.chs.kind]==1 & [hdr.orig.chs.coil_type]==7001)' %axial gradiometer
+      type(sel) = {'megaxial'};
+    end
     for sel=find([hdr.orig.chs.kind]==301)' %MEG reference channel, located far from head
       type(sel) = {'ref'};
     end
-    for sel=find([hdr.orig.chs.kind]==2)' %EEG channels
+    for sel=find([hdr.orig.chs.kind]==2)'   %EEG channels
       type(sel) = {'eeg'};
     end
     for sel=find([hdr.orig.chs.kind]==201)' %MCG channels
       type(sel) = {'mcg'};
     end
     for sel=find([hdr.orig.chs.kind]==3)' %Stim channels
-      if any([hdr.orig.chs(sel).logno] == 101) %new systems: 101 (and 102, if enabled) are digital;
-        %low numbers are 'pseudo-analog' (if enabled)
+      if any([hdr.orig.chs(sel).logno] == 101) %new systems: 101 (and 102, if enabled) are digital; low numbers are 'pseudo-analog' (if enabled)
         type(sel([hdr.orig.chs(sel).logno] == 101)) = {'digital trigger'};
         type(sel([hdr.orig.chs(sel).logno] == 102)) = {'digital trigger'};
         type(sel([hdr.orig.chs(sel).logno] <= 32))  = {'analog trigger'};
         others = [hdr.orig.chs(sel).logno] > 32 & [hdr.orig.chs(sel).logno] ~= 101 & ...
           [hdr.orig.chs(sel).logno] ~= 102;
         type(sel(others)) = {'other trigger'};
-      elseif any([hdr.orig.chs(sel).logno] == 14) %older systems: STI 014/015/016 are digital;
-        %lower numbers 'pseudo-analog'(if enabled)
+      elseif any([hdr.orig.chs(sel).logno] == 14) %older systems: STI 014/015/016 are digital; lower numbers 'pseudo-analog'(if enabled)
         type(sel([hdr.orig.chs(sel).logno] == 14)) = {'digital trigger'};
         type(sel([hdr.orig.chs(sel).logno] == 15)) = {'digital trigger'};
         type(sel([hdr.orig.chs(sel).logno] == 16)) = {'digital trigger'};
@@ -185,6 +192,12 @@ elseif ft_senstype(input, 'neuromag') && isheader
       type(sel) = {'respiration'};
     end
   end
+  
+elseif ft_senstype(input, 'babysquid74')
+  % the name can be something like "MEG 001" or "MEG001" or "MEG 0113" or "MEG0113"
+  % i.e. with two or three digits and with or without a space
+  sel = myregexp('^MEG', label);
+  type(sel) = {'megaxial'};
   
 elseif ft_senstype(input, 'neuromag122')
   % the name can be something like "MEG 001" or "MEG001" or "MEG 0113" or "MEG0113"
@@ -588,5 +601,3 @@ match = false(size(list));
 for i=1:numel(list)
   match(i) = ~isempty(regexp(list{i}, pat, 'once'));
 end
-
-

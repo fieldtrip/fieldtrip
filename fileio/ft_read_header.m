@@ -1251,11 +1251,15 @@ switch headerformat
     hdr.label       = orig.ch_names(:);
     hdr.nChans      = orig.nchan;
     hdr.Fs          = orig.sfreq;
+
     % add a gradiometer structure for forward and inverse modelling
     try
-      [hdr.grad, elec] = mne2grad(orig);
+      [grad, elec] = mne2grad(orig);
+      if ~isempty(grad)
+        hdr.grad = grad;
+      end
       if ~isempty(elec)
-        hdr.elec     = elec;
+        hdr.elec = elec;
       end
     catch
       disp(lasterr);

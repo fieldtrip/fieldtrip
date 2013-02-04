@@ -161,7 +161,7 @@ switch fileformat
     hdr = ft_read_header(filename,'headerformat','neuromag_mne');
     sens = hdr.elec;
     
-  case 'neuromag_mne'
+  case {'neuromag_mne' 'babysquid_fif'}
     % the file can contain both, try to be smart in determining what to return
     hdr = ft_read_header(filename,'headerformat','neuromag_mne');
     if isfield(hdr, 'elec') && isfield(hdr, 'grad')
