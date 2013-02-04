@@ -179,7 +179,11 @@ end
 
 if useheadshape
   % get the surface describing the head shape
-  if isstruct(cfg.headshape) && isfield(cfg.headshape, 'pnt')
+  if isstruct(cfg.headshape) && isfield(cfg.headshape, 'hex')
+      headshape = mesh2edge(cfg.headshape);
+  elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'tet')
+      headshape = mesh2edge(cfg.headshape);
+  elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'pnt')
     % use the headshape surface specified in the configuration
     headshape = cfg.headshape;
   elseif isnumeric(cfg.headshape) && size(cfg.headshape,2)==3
@@ -191,7 +195,7 @@ if useheadshape
   else
     error('cfg.headshape is not specified correctly')
   end
-  if ~isfield(headshape, 'tri')
+  if ~isfield(headshape, 'tri') && ~isfield(headshape,'poly')
     % generate a closed triangulation from the surface points
     headshape.pnt = unique(headshape.pnt, 'rows');
     headshape.tri = projecttri(headshape.pnt);
@@ -632,7 +636,11 @@ function cb_redraw(hObject, eventdata, handles);
 fig = get(hObject, 'parent');
 headshape = getappdata(fig, 'headshape');
 bnd.pnt = headshape.pnt; %ft_plot_mesh wants headshape in bnd fields
+if isfield(headshape,'tri')
 bnd.tri = headshape.tri;
+elseif isfield(headshape, 'poly')
+bnd.poly = headshape.poly;
+end
 elec = getappdata(fig, 'elec');
 template = getappdata(fig, 'template');
 % get the transformation details
