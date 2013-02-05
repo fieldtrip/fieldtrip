@@ -2,8 +2,8 @@ function [data] = ft_channelrepair(cfg, data)
 
 % FT_CHANNELREPAIR repairs bad or missing channels in MEG or EEG data by
 % replacing them with the average of its neighbours (nearest-neighbour
-% approach), by interpolation based on
-% a surface Laplacian or by spherical spline interpolating (see Perrin et al., 1989). 
+% approach), by interpolation based on a surface Laplacian or by spherical 
+% spline interpolating (see Perrin et al., 1989). 
 % The nearest neighbour approach cannot be used reliably to repair multiple 
 % bad channels that lie next to each other.
 %
@@ -16,8 +16,8 @@ function [data] = ft_channelrepair(cfg, data)
 %   cfg.missingchannel = cell-array, see FT_CHANNELSELECTION for details
 %   cfg.neighbours     = neighbourhoodstructure, see also FT_PREPARE_NEIGHBOURS
 %   cfg.trials         = 'all' or a selection given as a 1xN vector (default = 'all')
-%   cfg.lambda         = regularisation parameter for smoothing (only 'sphere' and 'slap', default = 1e-5)
-%   cfg.order          = order of the polynomial interpolation (only 'sphere' and 'slap', default = 4)
+%   cfg.lambda         = regularisation parameter (default = 1e-5, not for method 'distance')
+%   cfg.order          = order of the polynomial interpolation (default = 4, not for method 'distance')
 %
 % For reconstructing channels that are absent in your data using the 
 % 'nearest' method, please define your neighbours by setting 
@@ -47,7 +47,7 @@ function [data] = ft_channelrepair(cfg, data)
 % See also FT_MEGREALIGN, FT_MEGPLANAR, FT_NEIGHBOURSELECTION
 
 % Copyright (C) 2004-2009, Robert Oostenveld
-% Copyright (C) 2012,      J?rn M. Horschig, Jason Farquhar
+% Copyright (C) 2012-2013, J?rn M. Horschig, Jason Farquhar
 
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
