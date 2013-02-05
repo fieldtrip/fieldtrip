@@ -78,7 +78,8 @@ ft_preamble debug
 cfg = ft_checkconfig(cfg, 'required', {'method'});
 
 % set the defaults
-if ~isfield(cfg, 'feedback'),       cfg.feedback = 'no';         end
+cfg.feedback = ft_getopt(cfg, 'feedback', 'no');
+cfg.channel = ft_getopt(cfg, 'channel', 'all');
 
 hasdata = nargin>1;
 if hasdata, data = ft_checkdata(data); end
@@ -139,6 +140,23 @@ else
     sens = ft_fetch_sens(cfg);
   end
   
+  chanpos = sens.chanpos;
+  label   = sens.label;
+  
+  if nargin > 1
+    % remove channels that are not in data
+    [dataidx sensidx] = match_str(data.label, label);
+    chanpos = chanpos(sensidx, :);
+    label   = label(sensidx);
+  end
+  
+  if ~strcmp(cfg.channel, 'all')
+    desired = ft_channelselection(cfg.channel, label);
+    [sensidx] = match_str(label, desired);
+    chanpos = chanpos(sensidx, :);
+    label   = label(sensidx);
+  end
+  
   switch lower(cfg.method)
     case 'distance'
       % use a smart default for the distance
@@ -159,21 +177,21 @@ else
         fprintf('using a distance threshold of %g\n', cfg.neighbourdist);
       end
       
-      neighbours = compneighbstructfromgradelec(sens, cfg.neighbourdist);
+      neighbours = compneighbstructfromgradelec(chanpos, label, cfg.neighbourdist);
     case {'triangulation', 'tri'} % the latter for reasons of simplicity
-      if size(sens.chanpos, 2)==2 || all(sens.chanpos(:,3)==0)
+      if size(chanpos, 2)==2 || all(chanpos(:,3)==0)
         % the sensor positions are already on a 2D plane
-        prj = sens.chanpos(:,1:2);
+        prj = chanpos(:,1:2);
       else
         % project sensor on a 2D plane
-        prj = elproj(sens.chanpos);
+        prj = elproj(chanpos);
       end
       % make a 2d delaunay triangulation of the projected points
       tri = delaunay(prj(:,1), prj(:,2));
       tri_x = delaunay(prj(:,1)./2, prj(:,2));
       tri_y = delaunay(prj(:,1), prj(:,2)./2);
       tri = [tri; tri_x; tri_y];
-      neighbours = compneighbstructfromtri(sens, tri);
+      neighbours = compneighbstructfromtri(chanpos, label, tri);
     otherwise
       error('Method ''%s'' not known', cfg.method);
   end
@@ -209,8 +227,12 @@ k = 0;
 for i=1:length(neighbours)
   if isempty(neighbours(i).neighblabel)
     warning('FIELDTRIP:NoNeighboursFound', 'no neighbours found for %s\n', neighbours(i).label);
-  else % only selected desired channels    
-    neighbours(i).neighblabel = neighbours(i).neighblabel(ismember(neighbours(i).neighblabel, desired));
+  % JMH: I removed this in Feb 2013 - this is handled above now
+  % note however that in case of using a template, this function behaves
+  % differently now (neighbourschans can still be channels not in
+  % cfg.channel)
+  %else % only selected desired channels    
+  %  neighbours(i).neighblabel = neighbours(i).neighblabel(ismember(neighbours(i).neighblabel, desired));
   end
   k = k + length(neighbours(i).neighblabel);
 end
@@ -241,14 +263,14 @@ ft_postamble history neighbours
 % SUBFUNCTION that compute the neighbourhood geometry from the
 % gradiometer/electrode positions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [neighbours]=compneighbstructfromgradelec(sens,neighbourdist)
+function [neighbours]=compneighbstructfromgradelec(chanpos, label, neighbourdist)
 
-nsensors = length(sens.label);
+nsensors = length(label);
 
 % compute the distance between all sensors
 dist = zeros(nsensors,nsensors);
 for i=1:nsensors
-  dist(i,:) = sqrt(sum((sens.chanpos(1:nsensors,:) - repmat(sens.chanpos(i,:), nsensors, 1)).^2,2))';
+  dist(i,:) = sqrt(sum((chanpos(1:nsensors,:) - repmat(chanpos(i,:), nsensors, 1)).^2,2))';
 end;
 
 % find the neighbouring electrodes based on distance
@@ -261,17 +283,17 @@ channeighbstructmat = (channeighbstructmat .* ~eye(nsensors));
 % construct a structured cell array with all neighbours
 neighbours=struct;
 for i=1:nsensors
-  neighbours(i).label       = sens.label{i};
-  neighbours(i).neighblabel = sens.label(find(channeighbstructmat(i,:)));
+  neighbours(i).label       = label{i};
+  neighbours(i).neighblabel = label(find(channeighbstructmat(i,:)));
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that computes the neighbourhood geometry from the
 % triangulation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [neighbours]=compneighbstructfromtri(sens,tri)
+function [neighbours]=compneighbstructfromtri(chanpos, label, tri)
 
-nsensors = length(sens.label);
+nsensors = length(label);
 
 channeighbstructmat = zeros(nsensors,nsensors);
 % mark neighbours according to triangulation
@@ -288,11 +310,11 @@ end
 neighbours=struct;
 alldist = [];
 for i=1:nsensors
-  neighbours(i).label       = sens.label{i};
+  neighbours(i).label       = label{i};
   neighbidx                 = find(channeighbstructmat(i,:));
-  neighbours(i).dist        = sqrt(sum((repmat(sens.chanpos(i, :), numel(neighbidx), 1) - sens.chanpos(neighbidx, :)).^2, 2));
+  neighbours(i).dist        = sqrt(sum((repmat(chanpos(i, :), numel(neighbidx), 1) - chanpos(neighbidx, :)).^2, 2));
   alldist                   = [alldist; neighbours(i).dist];
-  neighbours(i).neighblabel = sens.label(neighbidx);
+  neighbours(i).neighblabel = label(neighbidx);
 end
 
 % remove neighbouring channels that are too far away (imporntant e.g. in
