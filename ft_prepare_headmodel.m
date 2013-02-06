@@ -29,6 +29,13 @@ function [vol, cfg] = ft_prepare_headmodel(cfg, data)
 %   cfg.method            string that specifies the forward solution, see below
 %   cfg.conductivity      a number or a vector containing the conductivities of the compartments
 %   cfg.hdmfile           name of the file containing the headmodel, see FT_READ_VOL
+%   cfg.tissue            a string or integer, to be used in combination with a 'seg' for the
+%                         second intput.  If 'brain','skull', and 'scalp' are fields 
+%                         present in 'seg', then cfg.tissue need not be specified, as
+%                         these are defaults, depending on cfg.method. Otherwise, 
+%                         cfg.tissue should refer to which field(s) of seg should be used.
+%                   
+%                      
 %
 % For EEG the following methods are available:
 %   singlesphere       analytical single sphere model
@@ -53,13 +60,16 @@ function [vol, cfg] = ft_prepare_headmodel(cfg, data)
 % which are listed below.
 %
 % BEMCP, DIPOLI, OPENMEEG
+%     cfg.tissue            (see above; in combination with 'seg' input; default options are 'brain' or 'scalp')
 %     cfg.isolatedsource    (optional)
 %
 % CONCENTRICSPHERES
+%     cfg.tissue            (see above; in combination with 'seg' input; default options are 'brain' or 'scalp')
 %     cfg.fitind            (optional)
 %
 % LOCALSPHERES
 %     cfg.grad
+%     cfg.tissue            (see above; in combination with 'seg' input; default options are 'brain' or 'scalp')
 %     cfg.feedback          (optional)
 %     cfg.radius            (optional)
 %     cfg.maxradius         (optional)
@@ -68,6 +78,14 @@ function [vol, cfg] = ft_prepare_headmodel(cfg, data)
 % SIMBIO
 %     cfg.conductivity
 %
+% SINGLESHELL
+%     cfg.tissue            (see above; in combination with 'seg' input; default options are 'brain' or 'scalp')
+%
+% SINGLESPHERE
+%     cfg.tissue            (see above; in combination with 'seg' input; 
+%                           default options are 'brain' or 'scalp'; must be only 1 value)
+%                           
+% 
 % FNS
 %     cfg.tissue
 %     cfg.tissueval
