@@ -18,7 +18,7 @@ function [spectrum,ntaper,freqoi] = ft_specest_mtmfft(dat, time, varargin)
 %   padtype    = string, indicating type of padding to be used (see ft_preproc_padding, default: zero)
 %   freqoi     = vector, containing frequencies of interest
 %   tapsmofrq  = the amount of spectral smoothing through multi-tapering. Note: 4 Hz smoothing means plus-minus 4 Hz, i.e. a 8 Hz smoothing box
-%   dimord     = 'tap_chan_freq_time' (default) or 'chan_time_freqtap' for memory efficiency (only when use variable number slepian tapers)
+%   dimord     = 'tap_chan_freq' (default) or 'chan_time_freqtap' for memory efficiency (only when use variable number slepian tapers)
 %   polyorder  = number, the order of the polynomial to fitted to and removed from the data
 %                  prior to the fourier transform (default = 0 -> remove DC-component)
 %   taperopt   = additional taper options to be used in the WINDOW function, see WINDOW
@@ -102,7 +102,7 @@ end
 
 
 % determine whether tapers need to be recomputed
-current_argin = {time, postpad, taper, tapsmofrq, freqoi, tapopt}; % reasoning: if time and postpad are equal, it's the same length trial, if the rest is equal then the requested output is equal
+current_argin = {time, postpad, taper, tapsmofrq, freqoi, tapopt, dimord}; % reasoning: if time and postpad are equal, it's the same length trial, if the rest is equal then the requested output is equal
 if isequal(current_argin, previous_argin)
   % don't recompute tapers
   tap = previous_tap;
@@ -231,7 +231,7 @@ else % variable number of slepian tapers requested
     
     case 'tap_chan_freq' % default
       % start fft'ing
-      spectrum = complex(zeros([max(ntaper) nchan nfreqoi]));
+      spectrum = complex(NaN([max(ntaper) nchan nfreqoi]));
       for ifreqoi = 1:nfreqoi
         str = sprintf('nfft: %d samples, datalength: %d samples, frequency %d (%.2f Hz), %d tapers',endnsample,ndatsample,ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
         [st, cws] = dbstack;
@@ -250,8 +250,7 @@ else % variable number of slepian tapers requested
             dum = dum .* exp(-1i*angletransform(:,ifreqoi));
           end
           dum = dum .* sqrt(2 ./ endnsample);
-          currtapind = itap + ((ifreqoi-1) * max(ntaper));
-          spectrum(currtapind,:,ifreqoi) = dum;
+          spectrum(itap,:,ifreqoi) = dum;
         end
       end % for nfreqoi
       
