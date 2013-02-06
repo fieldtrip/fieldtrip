@@ -56,19 +56,19 @@ assert(all(abs(begflt - fliplr(endflt))<tolerance));
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 begflt = ft_preproc_bandpassfilter(begspike, Fs, Fbp, order, type, 'twopass');
-endflt = ft_preproc_bandpassfilter(endspike, Fs, Fbp, order, type, 'twopass');
+endflt = ft_preproc_bandpassfilter(endspike, Fs, Fbp, order, type, 'twopass-reverse');
 assert(all(abs(begflt - fliplr(endflt))<tolerance));
 
 begflt = ft_preproc_bandstopfilter(begspike, Fs, Fbs, order, type, 'twopass');
-endflt = ft_preproc_bandstopfilter(endspike, Fs, Fbs, order, type, 'twopass');
+endflt = ft_preproc_bandstopfilter(endspike, Fs, Fbs, order, type, 'twopass-reverse');
 assert(all(abs(begflt - fliplr(endflt))<tolerance));
 
 begflt = ft_preproc_lowpassfilter(begspike, Fs, Fl, order, type, 'twopass');
-endflt = ft_preproc_lowpassfilter(endspike, Fs, Fl, order, type, 'twopass');
+endflt = ft_preproc_lowpassfilter(endspike, Fs, Fl, order, type, 'twopass-reverse');
 assert(all(abs(begflt - fliplr(endflt))<tolerance));
 
 begflt = ft_preproc_highpassfilter(begspike, Fs, Fh, order, type, 'twopass');
-endflt = ft_preproc_highpassfilter(endspike, Fs, Fh, order, type, 'twopass');
+endflt = ft_preproc_highpassfilter(endspike, Fs, Fh, order, type, 'twopass-reverse');
 assert(all(abs(begflt - fliplr(endflt))<tolerance));
 
 figure; plot([begflt; endflt]'); legend('begspike', 'endspike')
