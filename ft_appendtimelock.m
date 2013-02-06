@@ -36,10 +36,10 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble help
-ft_preamble trackconfig
-ft_preamble debug
 ft_preamble loadvar    varargin
 ft_preamble provenance varargin
+ft_preamble trackconfig
+ft_preamble debug
 
 % check if the input data is valid for this function
 for i=1:length(varargin)

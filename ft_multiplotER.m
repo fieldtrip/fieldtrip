@@ -136,10 +136,10 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble help
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar    varargin
 ft_preamble provenance varargin
+ft_preamble trackconfig
 
 for i=1:length(varargin)
   varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'timelock', 'freq'});
@@ -703,9 +703,9 @@ if ~isempty(cfg.renderer)
 end
 
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble debug
 ft_postamble trackconfig
 ft_postamble provenance
+ft_postamble debug
 ft_postamble previous varargin
 
 

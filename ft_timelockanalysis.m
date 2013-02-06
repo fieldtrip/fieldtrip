@@ -121,10 +121,10 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble help
-ft_preamble trackconfig
-ft_preamble debug
 ft_preamble loadvar    data
 ft_preamble provenance data
+ft_preamble trackconfig
+ft_preamble debug
 
 % return immediately after distributed execution
 if ~isempty(ft_getopt(cfg, 'distribute'))

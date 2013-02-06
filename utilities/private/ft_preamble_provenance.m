@@ -42,6 +42,10 @@ if isfield(cfg, 'trackcallinfo') && ~istrue(cfg.trackcallinfo)
   return
 end
 
+% add the user-specified cfg (before any defaults handling etc.) to the
+% callinfo
+cfg.callinfo.usercfg = cfg;
+
 % compute the MD5 hash of each of the input arguments
 if isequal(ft_default.preamble, {'varargin'})
   cfg.callinfo.inputhash = cellfun(@CalcMD5, cellfun(@mxSerialize, varargin, 'UniformOutput', false), 'UniformOutput', false);
