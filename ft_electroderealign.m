@@ -178,29 +178,35 @@ if usetemplate
 end
 
 if useheadshape
-  % get the surface describing the head shape
-  if isstruct(cfg.headshape) && isfield(cfg.headshape, 'hex')
-      headshape = mesh2edge(cfg.headshape);
-  elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'tet')
-      headshape = mesh2edge(cfg.headshape);
-  elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'pnt')
-    % use the headshape surface specified in the configuration
-    headshape = cfg.headshape;
-  elseif isnumeric(cfg.headshape) && size(cfg.headshape,2)==3
-    % use the headshape points specified in the configuration
-    headshape.pnt = cfg.headshape;
-  elseif ischar(cfg.headshape)
-    % read the headshape from file
-    headshape = ft_read_headshape(cfg.headshape);
-  else
-    error('cfg.headshape is not specified correctly')
-  end
-  if ~isfield(headshape, 'tri') && ~isfield(headshape,'poly')
-    % generate a closed triangulation from the surface points
-    headshape.pnt = unique(headshape.pnt, 'rows');
-    headshape.tri = projecttri(headshape.pnt);
-  end
-  headshape = ft_convert_units(headshape, elec.unit); % ensure that the units are consistent with the electrodes
+    % get the surface describing the head shape
+    if isstruct(cfg.headshape) && isfield(cfg.headshape, 'hex')
+        if isfield(cfg.headshape,'pos') && ~isfield(cfg.headshape,'pnt')
+            cfg.headshape.pnt = cfg.headshape.pos;
+        end
+        headshape = mesh2edge(cfg.headshape);
+    elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'tet')
+        if isfield(cfg.headshape,'pos') && ~isfield(cfg.headshape,'pnt')
+            cfg.headshape.pnt = cfg.headshape.pos;
+        end
+        headshape = mesh2edge(cfg.headshape);
+    elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'pnt')
+        % use the headshape surface specified in the configuration
+        headshape = cfg.headshape;
+    elseif isnumeric(cfg.headshape) && size(cfg.headshape,2)==3
+        % use the headshape points specified in the configuration
+        headshape.pnt = cfg.headshape;
+    elseif ischar(cfg.headshape)
+        % read the headshape from file
+        headshape = ft_read_headshape(cfg.headshape);
+    else
+        error('cfg.headshape is not specified correctly')
+    end
+    if ~isfield(headshape, 'tri') && ~isfield(headshape,'poly')
+        % generate a closed triangulation from the surface points
+        headshape.pnt = unique(headshape.pnt, 'rows');
+        headshape.tri = projecttri(headshape.pnt);
+    end
+    headshape = ft_convert_units(headshape, elec.unit); % ensure that the units are consistent with the electrodes
 end
 
 % remember the original electrode locations and labels
