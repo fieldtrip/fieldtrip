@@ -13,6 +13,8 @@ function [cfg] = ft_topoplotTFR(cfg, varargin)
 % The configuration can have the following parameters:
 %   cfg.parameter          = field that contains the data to be plotted as color
 %                           'avg', 'powspctrm' or 'cohspctrm' (default depends on data.dimord)
+%   cfg.maskparameter      = field in the data to be used for masking of
+%                            data. Values between 0 and 1, 0 = transparent 
 %   cfg.xlim               = selection boundaries over first dimension in data (e.g., time)
 %                            'maxmin' or [xmin xmax] (default = 'maxmin')
 %   cfg.zlim               = plotting limits for color dimension, 'maxmin', 'maxabs' or [zmin zmax] (default = 'maxmin')
@@ -69,13 +71,15 @@ function [cfg] = ft_topoplotTFR(cfg, varargin)
 %                            In a interactive plot you can select areas and produce a new
 %                            interactive plot when a selected area is clicked. Multiple areas
 %                            can be selected by holding down the SHIFT key.
-%   cfg.directionality = '', 'inflow' or 'outflow' specifies for
-%                       connectivity measures whether the inflow into a
-%                       node, or the outflow from a node is plotted. The
-%                       (default) behavior of this option depends on the dimor
-%                       of the input data (see below).
-%   cfg.layout        = specify the channel layout for plotting using one of
-%                       the supported ways (see below).
+%   cfg.directionality     = '', 'inflow' or 'outflow' specifies for
+%                            connectivity measures whether the inflow into a
+%                            node, or the outflow from a node is plotted. The
+%                            (default) behavior of this option depends on the dimor
+%                            of the input data (see below).
+%   cfg.layout             = specify the channel layout for plotting using one of
+%                            the supported ways (see below).
+%   cfg.interpolatenan     = string 'yes', 'no' (default = 'yes')
+%                            interpolate over channels containing NaNs 
 %
 % For the plotting of directional connectivity data the cfg.directionality
 % option determines what is plotted. The default value and the supported
@@ -291,7 +295,7 @@ cfg.component         = ft_getopt(cfg, 'component',         []);
 cfg.directionality    = ft_getopt(cfg, 'directionality',    []);
 cfg.channel           = ft_getopt(cfg, 'channel',           'all');
 cfg.figurename        = ft_getopt(cfg, 'figurename',        []);
-
+cfg.interpolatenan    = ft_getopt(cfg, 'interpolatenan',    'yes');
 
 % compatibility for previous highlighting option
 if isnumeric(cfg.highlight)
@@ -828,12 +832,17 @@ if strcmp(cfg.style,'contour');     style = 'iso';         end
 if strcmp(cfg.style,'fill');        style = 'isofill';     end
 
 % check for nans
-nanInds = isnan(datavector);
-if any(nanInds)
-  warning('removing NaNs from the data');
-  chanX(nanInds) = [];
-  chanY(nanInds) = [];
-  datavector(nanInds) = [];
+if strcmp(cfg.interpolatenan,'yes')
+  nanInds = isnan(datavector);
+  if any(nanInds)
+    warning('removing NaNs from the data');
+    chanX(nanInds) = [];
+    chanY(nanInds) = [];
+    datavector(nanInds) = [];
+    maskdatavector(nanInds) = [];
+  end
+else
+  nanInds = [];
 end
 
 % Draw plot

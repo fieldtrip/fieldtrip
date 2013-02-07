@@ -17,6 +17,8 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 % The configuration can have the following parameters:
 %   cfg.parameter          = field that contains the data to be plotted as color 
 %                           'avg', 'powspctrm' or 'cohspctrm' (default depends on data.dimord)
+%   cfg.maskparameter      = field in the data to be used for masking of
+%                            data. Values between 0 and 1, 0 = transparent
 %   cfg.xlim               = selection boundaries over first dimension in data (e.g., time)
 %                            'maxmin' or [xmin xmax] (default = 'maxmin')
 %   cfg.ylim               = selection boundaries over second dimension in data (e.g., freq)
