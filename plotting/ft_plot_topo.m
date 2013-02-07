@@ -1,4 +1,4 @@
-function [Zi, h, handles] = ft_plot_topo(chanX, chanY, dat, varargin)
+function [Zi, h] = ft_plot_topo(chanX, chanY, dat, varargin)
 
 % FT_PLOT_TOPO interpolates and plots the 2-D spatial topography of the
 % potential or field distribution over the head
@@ -13,7 +13,7 @@ function [Zi, h, handles] = ft_plot_topo(chanX, chanY, dat, varargin)
 %   outline       =
 %   isolines      =
 %   interplim     =
-%   interpmethod  =
+%   interpmethod  = string, 'nearest', 'linear', 'natural', 'cubic', 'v4' (default = 'v4')
 %   style         = can be 'surf', 'iso', 'isofill', 'surfiso'
 %   datmask       =
 %   tag           =
@@ -27,7 +27,7 @@ function [Zi, h, handles] = ft_plot_topo(chanX, chanY, dat, varargin)
 %   hlim        = horizontal scaling limits within the local axes
 %   vlim        = vertical scaling limits within the local axes
 
-% Copyrights (C) 2009-2011, Giovanni Piantoni, Robert Oostenveld
+% Copyrights (C) 2009-2013, Giovanni Piantoni, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
