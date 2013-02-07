@@ -105,9 +105,7 @@ for i=1:length(dataset)
     grad4 = rmfield(grad4, 'chanunit');
   end
   grad4.chanunit = ft_chanunit(grad4);
-  if ~ismember(i, [13 14 15]) % this is known to fail on yokogawa data
-    assert(mean(strcmp('unknown', grad4.chanunit))<=mean(strcmp('unknown', grad1.chanunit))); % the number of channels with unknown units should not increase
-  end
+  assert(mean(strcmp('unknown', grad4.chanunit))<=mean(strcmp('unknown', grad1.chanunit))); % the number of channels with unknown units should not increase
   
   grad5 = grad1;
   try
@@ -121,10 +119,8 @@ for i=1:length(dataset)
   end
   grad5 = ft_datatype_sens(grad5);
   assert(~any(strcmp(grad5.type, {'unknown', 'meg'})));
-  if ~ismember(i, [13 14 15]) % this is known to fail on yokogawa data
-    assert(mean(strcmp('unknown', grad5.chanunit))<=mean(strcmp('unknown', grad1.chanunit))); % the number of channels with unknown units should not increase
-    assert(mean(strcmp('unknown', grad5.chantype))<=mean(strcmp('unknown', grad1.chantype))); % the number of channels with unknown type should not increase
-  end
+  assert(mean(strcmp('unknown', grad5.chanunit))<=mean(strcmp('unknown', grad1.chanunit))); % the number of channels with unknown units should not increase
+  assert(mean(strcmp('unknown', grad5.chantype))<=mean(strcmp('unknown', grad1.chantype))); % the number of channels with unknown type should not increase
   
 end
 
