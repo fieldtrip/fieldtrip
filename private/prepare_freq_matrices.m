@@ -77,9 +77,9 @@ end
 if strcmp(freq.dimord, 'chan_freq')
   Ntrials = 1;
 elseif strcmp(freq.dimord, 'rpt_chan_freq')
-  Ntrials = length(freq.cumtapcnt);
+  Ntrials = size(freq.cumtapcnt,1);
 elseif strcmp(freq.dimord, 'rpttap_chan_freq')
-  Ntrials = length(freq.cumtapcnt);
+  Ntrials = size(freq.cumtapcnt,1);
 else
   error('unrecognized dimord for frequency data');
 end
