@@ -10,32 +10,32 @@ function [cfg] = ft_singleplotTFR(cfg, data)
 % power or coherence that was computed using the FT_FREQANALYSIS function.
 %
 % The configuration can have the following parameters:
-%   cfg.parameter     = field to be plotted on z-axis, e.g. 'powspcrtrm' (default depends on data.dimord)
-%   cfg.maskparameter = field in the data to be used for masking of data
-%                       (not possible for mean over multiple channels, or when input contains multiple subjects
-%                       or trials)
-%   cfg.maskstyle     = style used to masking, 'opacity' or 'saturation' (default = 'opacity')
-%                       use 'saturation' when saving to vector-format (like *.eps) to avoid all sorts of image-problems
-%   cfg.maskalpha     = alpha value used for masking areas dictated by cfg.maskparameter (0 - 1, default = 1)
-%   cfg.masknans      = 'yes' or 'no' (default = 'yes')
-%   cfg.xlim          = 'maxmin' or [xmin xmax] (default = 'maxmin')
-%   cfg.ylim          = 'maxmin' or [ymin ymax] (default = 'maxmin')
-%   cfg.zlim          = 'maxmin','maxabs' or [zmin zmax] (default = 'maxmin')
-%   cfg.baseline      = 'yes','no' or [time1 time2] (default = 'no'), see FT_FREQBASELINE
-%   cfg.baselinetype  = 'absolute', 'relative' or 'relchange' (default = 'absolute')
-%   cfg.trials        = 'all' or a selection given as a 1xN vector (default = 'all')
-%   cfg.channel       = Nx1 cell-array with selection of channels (default = 'all'),
-%                       see FT_CHANNELSELECTION for details
-%   cfg.refchannel    = name of reference channel for visualising connectivity, can be 'gui'
-%   cfg.fontsize      = font size of title (default = 8)
-%   cfg.hotkeys          = enables hotkeys (up/down arrows) for dynamic colorbar adjustment
-%   cfg.colormap      = any sized colormap, see COLORMAP
-%   cfg.colorbar      = 'yes', 'no' (default = 'yes')
-%   cfg.interactive   = Interactive plot 'yes' or 'no' (default = 'no')
-%                       In a interactive plot you can select areas and produce a new
-%                       interactive plot when a selected area is clicked. Multiple areas
-%                       can be selected by holding down the SHIFT key.
-%   cfg.renderer      = 'painters', 'zbuffer',' opengl' or 'none' (default = [])
+%   cfg.parameter      = field to be plotted on z-axis, e.g. 'powspcrtrm' (default depends on data.dimord)
+%   cfg.maskparameter  = field in the data to be used for masking of data
+%                        (not possible for mean over multiple channels, or when input contains multiple subjects
+%                        or trials)
+%   cfg.maskstyle      = style used to masking, 'opacity' or 'saturation' (default = 'opacity')
+%                        use 'saturation' when saving to vector-format (like *.eps) to avoid all sorts of image-problems
+%   cfg.maskalpha      = alpha value between 0 (transparant) and 1 (opaque) used for masking areas dictated by cfg.maskparameter (default = 1)
+%   cfg.masknans       = 'yes' or 'no' (default = 'yes')
+%   cfg.xlim           = 'maxmin' or [xmin xmax] (default = 'maxmin')
+%   cfg.ylim           = 'maxmin' or [ymin ymax] (default = 'maxmin')
+%   cfg.zlim           = 'maxmin','maxabs' or [zmin zmax] (default = 'maxmin')
+%   cfg.baseline       = 'yes','no' or [time1 time2] (default = 'no'), see FT_FREQBASELINE
+%   cfg.baselinetype   = 'absolute', 'relative' or 'relchange' (default = 'absolute')
+%   cfg.trials         = 'all' or a selection given as a 1xN vector (default = 'all')
+%   cfg.channel        = Nx1 cell-array with selection of channels (default = 'all'),
+%                        see FT_CHANNELSELECTION for details
+%   cfg.refchannel     = name of reference channel for visualising connectivity, can be 'gui'
+%   cfg.fontsize       = font size of title (default = 8)
+%   cfg.hotkeys           = enables hotkeys (up/down arrows) for dynamic colorbar adjustment
+%   cfg.colormap       = any sized colormap, see COLORMAP
+%   cfg.colorbar       = 'yes', 'no' (default = 'yes')
+%   cfg.interactive    = Interactive plot 'yes' or 'no' (default = 'no')
+%                        In a interactive plot you can select areas and produce a new
+%                        interactive plot when a selected area is clicked. Multiple areas
+%                        can be selected by holding down the SHIFT key.
+%   cfg.renderer       = 'painters', 'zbuffer',' opengl' or 'none' (default = [])
 %   cfg.directionality = '', 'inflow' or 'outflow' specifies for
 %                       connectivity measures whether the inflow into a
 %                       node, or the outflow from a node is plotted. The
