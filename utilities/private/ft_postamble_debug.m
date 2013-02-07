@@ -3,7 +3,7 @@
 % see also ft_preamble_debug debugcleanup
 
 % these variables are shared by the three debug handlers
-global ce9dei2zoo_debug ce9dei2zoo_funname ce9dei2zoo_argin
+global Ce9dei2ZOo_debug Ce9dei2ZOo_funname Ce9dei2ZOo_argin
 
 if ~isfield(cfg, 'debug')
   % do not provide extra debugging facilities
@@ -18,7 +18,7 @@ switch cfg.debug
   otherwise
     % clean up the global variables
     % this results in the cleanup function doing nothing
-    ce9dei2zoo_debug   = 'no';
-    ce9dei2zoo_funname = [];
-    ce9dei2zoo_argin   = [];
+    Ce9dei2ZOo_debug   = 'no';
+    Ce9dei2ZOo_funname = [];
+    Ce9dei2ZOo_argin   = [];
 end
