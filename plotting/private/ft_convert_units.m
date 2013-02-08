@@ -1,4 +1,4 @@
-function [obj] = ft_convert_units(obj, target)
+function [obj] = ft_convert_units(obj, target, varargin)
 
 % FT_CONVERT_UNITS changes the geometrical dimension to the specified SI unit.
 % The units of the input object is determined from the structure field
@@ -8,14 +8,12 @@ function [obj] = ft_convert_units(obj, target)
 % Use as
 %   [object] = ft_convert_units(object, target)
 %
-% The following input objects are supported
-%   simple dipole position
-%   electrode definition
-%   gradiometer array definition
-%   volume conductor definition
-%   dipole grid definition
-%   anatomical mri
-%   segmented mri
+% The following geometrical objects are supported as inputs
+%   electrode or gradiometer array, see FT_DATATYPE_SENS
+%   volume conductor, see FT_DATATYPE_HEADMODEL
+%   anatomical mri, see FT_DATATYPE_VOLUME
+%   segmented mri, see FT_DATATYPE_SEGMENTATION
+%   dipole grid definition, see FT_DATATYPE_SOURCE
 %
 % Possible target units are 'm', 'dm', 'cm ' or 'mm'. If no target units
 % are specified, this function will only determine the native geometrical
@@ -48,6 +46,8 @@ function [obj] = ft_convert_units(obj, target)
 %   2) determine the requested scaling factor to obtain the output units
 %   3) try to apply the scaling to the known geometrical elements in the input object
 
+feedback = ft_getopt(varargin, 'feedback', false);
+
 if isstruct(obj) && numel(obj)>1
   % deal with a structure array
   for i=1:numel(obj)
@@ -65,13 +65,13 @@ end
 if isfield(obj, 'unit') && ~isempty(obj.unit)
   % use the units specified in the object
   unit = obj.unit;
-
+  
 else
   % try to determine the units by looking at the size of the object
   if isfield(obj, 'chanpos') && ~isempty(obj.chanpos)
     siz = norm(idrange(obj.chanpos));
     unit = ft_estimate_units(siz);
-
+    
   elseif isfield(obj, 'pnt') && ~isempty(obj.pnt)
     siz = norm(idrange(obj.pnt));
     unit = ft_estimate_units(siz);
@@ -79,7 +79,7 @@ else
   elseif isfield(obj, 'pos') && ~isempty(obj.pos)
     siz = norm(idrange(obj.pos));
     unit = ft_estimate_units(siz);
-  
+    
   elseif isfield(obj, 'transform') && ~isempty(obj.transform)
     % construct the corner points of the volume in voxel and in head coordinates
     [pos_voxel, pos_head] = cornerpoints(obj.dim, obj.transform);
@@ -89,7 +89,7 @@ else
   elseif isfield(obj, 'fid') && isfield(obj.fid, 'pnt') && ~isempty(obj.fid.pnt)
     siz = norm(idrange(obj.fid.pnt));
     unit = ft_estimate_units(siz);
-  
+    
   elseif ft_voltype(obj, 'infinite')
     % this is an infinite medium volume conductor, which does not care about units
     unit = 'm';
@@ -134,8 +134,10 @@ end
 % compue the scaling factor from the input units to the desired ones
 scale = scalingfactor(unit, target);
 
-% give some information about the conversion
-fprintf('converting units from ''%s'' to ''%s''\n', unit, target)
+if istrue(feedback)
+  % give some information about the conversion
+  fprintf('converting units from ''%s'' to ''%s''\n', unit, target)
+end
 
 % volume conductor model
 if isfield(obj, 'r'), obj.r = scale * obj.r; end
@@ -186,19 +188,18 @@ if isfield(obj, 'transformorig'),
   H = diag([scale scale scale 1]);
   obj.transformorig = H * obj.transformorig;
 end
-    
+
 % remember the unit
 obj.unit = target;
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % IDRANGE interdecile range for more robust range estimation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function r = idrange(x)
-  keeprow=true(size(x,1),1);
-  for l=1:size(x,2)
-    keeprow = keeprow & isfinite(x(:,l));
-  end
-  sx = sort(x(keeprow,:), 1);
-  ii = round(interp1([0, 1], [1, size(x(keeprow,:), 1)], [.1, .9]));  % indices for 10 & 90 percentile
-  r = diff(sx(ii, :));
+keeprow=true(size(x,1),1);
+for l=1:size(x,2)
+  keeprow = keeprow & isfinite(x(:,l));
+end
+sx = sort(x(keeprow,:), 1);
+ii = round(interp1([0, 1], [1, size(x(keeprow,:), 1)], [.1, .9]));  % indices for 10 & 90 percentile
+r = diff(sx(ii, :));
