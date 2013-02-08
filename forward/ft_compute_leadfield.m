@@ -96,7 +96,7 @@ reducerank      = ft_getopt(varargin, 'reducerank', 'no');
 normalize       = ft_getopt(varargin, 'normalize' , 'no');
 normalizeparam  = ft_getopt(varargin, 'normalizeparam', 0.5);
 weight          = ft_getopt(varargin, 'weight');
-unit            = ft_getopt(varargin, 'unit', 'arbitrary'); % arbitrary or si
+units           = ft_getopt(varargin, 'units', 'arbitrary'); % arbitrary or si
 
 if ~isstruct(sens) && size(sens, 2)==3
   % definition of electrode positions only, restructure it
@@ -121,8 +121,8 @@ if isfield(vol, 'unit') && isfield(sens, 'unit') && ~strcmp(vol.unit, sens.unit)
   error('inconsistency in the units of the volume conductor and the sensor array');
 end
 
-if strcmp(unit, 'si')
-  % convert the input objects into standard international units, the alternative is arbitrary
+if strcmp(units, 'si')
+  % convert the input objects into standard international units, the default is arbitrary
   grid.pos  = pos;
   grid.unit = sens.unit; % assume the same units for the dipole position as for the vol and sens
   grid = ft_convert_units(grid, 'm');
