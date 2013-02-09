@@ -839,7 +839,9 @@ if strcmp(cfg.interpolatenan,'yes')
     chanX(nanInds) = [];
     chanY(nanInds) = [];
     datavector(nanInds) = [];
-    maskdatavector(nanInds) = [];
+    if ~isempty(maskdatavector)
+      maskdatavector(nanInds) = [];
+    end
   end
 else
   nanInds = [];
