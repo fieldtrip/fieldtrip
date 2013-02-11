@@ -288,6 +288,10 @@ end
 hasrpt = sum(ismember(dimtok, {'rpt' 'subj'}));
 if strcmp(dtype, 'timelock') && hasrpt,
   tmpcfg        = [];
+  
+  % disable hashing of input data (speeds up things)
+  tmpcfg.trackcallinfo = 'no';
+  
   tmpcfg.trials = cfg.trials;
   for i=1:Ndata
     % save mask (timelockanalysis will remove it)

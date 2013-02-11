@@ -505,6 +505,8 @@ else
   end
 end
 cfg_mp = [];
+% disable hashing of input data (speeds up things)
+cfg_mp.trackcallinfo = 'no';
 cfg_mp.layout  = info.cfg.layout;
 cfg_mp.channel = info.data.label(info.chansel);
 currfig = gcf;
