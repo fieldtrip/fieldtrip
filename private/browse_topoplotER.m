@@ -8,7 +8,7 @@ function browse_topoplotER(cfg, data)
 % Copyright (C) 2009, Robert Oostenveld
 
 % convert to an ERP
-timelock = timelockanalysis([], data);
+timelock = ft_timelockanalysis([], data);
 
 default             = [];
 default.xlim        = [min(timelock.time) max(timelock.time)];
