@@ -897,6 +897,13 @@ end % for icell
 if ~strcmp(cfg.marker,'off')
   channelsToMark = 1:length(data.label);
   channelsToMark(nanInds) = [];
+  highlightchansel_ind = highlightchansel;
+  highlightchansel = false(length(data.label),1);
+  highlightchansel(highlightchansel_ind) = true;
+  if any(highlightchansel+nanInds>1)
+    warning('Highlighting of channel with NaN not possible when cfg.interpolatenan = ''yes'', NaN channel will not be highlighted.')
+  end
+  highlightchansel(nanInds) = [];
   channelsToMark(highlightchansel) = [];
   [dum labelindex] = match_str(ft_channelselection(channelsToMark, data.label),lay.label);
   templay.pos      = lay.pos(labelindex,:);
