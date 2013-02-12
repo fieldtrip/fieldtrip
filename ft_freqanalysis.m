@@ -59,7 +59,7 @@ function [freq] = ft_freqanalysis(cfg, data)
 %                      AND the number of samples turns out to have a large
 %                      prime factor sum. This is because the FFTs will then
 %                      be computed very inefficiently.
-%   cfg.pad        = string, type of padding (default 'zero', see
+%   cfg.padtype     = string, type of padding (default 'zero', see
 %                      ft_preproc_padding)
 %   cfg.polyremoval = number (default = 0), specifying the order of the
 %                      polynome which is fitted and subtracted from the
