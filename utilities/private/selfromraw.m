@@ -12,6 +12,11 @@ if ischar(selrpt)
   else
     error('incorrect specification of requested repetitions');
   end
+else
+  if islogical(selrpt)
+    % convert from booleans to indices
+    selrpt = find(selrpt);
+  end
 end
 
 if ischar(selchan) && strcmp(selchan, 'all')
