@@ -6,6 +6,17 @@ function [varargout] = ft_selectdata(cfg, varargin)
 %
 % Use as
 %  [data] = ft_selectdata_new(cfg, data, ...)
+%
+% Valid cfg field are:
+%   cfg.trials  = 1xN, trial indices to keep (can be 'all', [] removes all trials)
+% For data with a time-dimension possible specifications are
+%   cfg.latency = value     -> can be 'all'
+%   cfg.latency = [beg end]
+% For frequency data possible specifications are
+%   cfg.frequency = value     -> can be 'all'
+%   cfg.frequency = [beg end] -> this is less common, preferred is to use foilim
+%   cfg.foilim    = [beg end]
+
 
 % Copyright (C) 2012, Robert Oostenveld
 %
