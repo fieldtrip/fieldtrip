@@ -189,7 +189,7 @@ if haspnt && ~isempty(pnt)
   elseif ~isempty(line)
     hs = patch('Vertices', pnt, 'Faces', line);
   else
-    hs = patch('Vertices', pnt);
+    hs = patch('Vertices', pnt, 'Faces', []);
   end
   set(hs, 'FaceColor', facecolor);
   set(hs, 'EdgeColor', edgecolor);
