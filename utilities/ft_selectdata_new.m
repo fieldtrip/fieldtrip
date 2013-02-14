@@ -214,7 +214,7 @@ else
         [selchan, cfg] = getselection_chan(cfg, varargin{i});
         [selfreq, cfg] = getselection_freq(cfg, varargin{i});
         if hastime
-          [seltime, cfg] = getselection_time(cfg, varargin{i});
+          [seltime, cfg] = getselection_time(cfg, varargin{i}, 'datfields', datfields);
         end
       end % varargin
       
@@ -222,7 +222,7 @@ else
         % get the selection from all inputs
         [selchan, cfg] = getselection_chan(cfg, varargin{i});
         [selfreq, cfg] = getselection_freq(cfg, varargin{i});
-        [selrpt,  cfg] = getselection_rpt (cfg, varargin{i});
+        [selrpt,  cfg, rptdim] = getselection_rpt (cfg, varargin{i}, 'datfields', datfields);
         if hastime
           [seltime, cfg] = getselection_time(cfg, varargin{i});
         end
@@ -234,8 +234,7 @@ else
         varargin{i} = makeselection_freq(varargin{i}, selfreq, avgoverfreq); % update the freq field
         
         if ~any(isnan(selrpt))
-          % FIXME could also be rpttap
-          varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'rpt')), selfreq, avgoverrpt, datfields);
+          varargin{i} = makeselection(varargin{i}, rptdim, selrpt, avgoverrpt, datfields);
         end
         
         if hastime
@@ -495,7 +494,11 @@ if isfield(cfg, 'frequency')
   % deal with numeric selection
   if numel(cfg.frequency)==1
     % this single value should be within the time axis of each input data structure
-    fbin = nearest(data.freq, cfg.frequency, true, true);
+    if (data.freq ~= cfg.frequency)
+      fbin = nearest(data.freq, cfg.frequency, true, true);
+    else
+      fbin = 1;
+    end
     cfg.frequency = data.freq(fbin);
     freqindx = fbin;
   elseif numel(cfg.frequency)==2
@@ -542,42 +545,56 @@ end
 
 end % function getselection_freq
 
-function [rptindx, cfg] = getselection_rpt(cfg, data, varargin)
+function [rptindx, cfg, rptdim] = getselection_rpt(cfg, data, varargin)
 % this should deal with cfg.trials
 datfields = ft_getopt(varargin, 'datfields');
 
 if isfield(cfg, 'trials') && ~isequal(cfg.trials, 'all') && ~isempty(datfields)
   
   dimtok = tokenize(data.dimord, '_');
-  rptdim = [];
-  
-  if isempty(rptdim)
-    rptdim = find(strcmp(dimtok, 'rpt'));
-  end
-  if isempty(rptdim)
-    rptdim = find(strcmp(dimtok, 'rpttap'));
-  end
-  if isempty(rptdim)
-    rptdim = find(strcmp(dimtok, 'subj'));
-  end
+  rptdim = find(strcmp(dimtok, 'rpt') | strcmp(dimtok, 'rpttap') | strcmp(dimtok, 'subj'));
   
   if isempty(rptdim)
     % this return value specifies that no selection was specified
     rptindx = nan;
     return
   else
-    rptsiz  = size(data.(datfields{1}), rptdim);
     rptindx = ft_getopt(cfg, 'trials');
     rptindx = unique(sort(rptindx));
+    rptindx = unique(sort(rptindx));
+    rptsiz  = size(data.(datfields{1}), rptdim);
+    
+    if strcmp(dimtok{rptdim}, 'rpttap')
+      %account for the tapers
+      sumtapcnt = [0;cumsum(data.cumtapcnt(:))];
+      begtapcnt = sumtapcnt(1:end-1)+1;
+      endtapcnt = sumtapcnt(2:end);
+      begtapcnt = begtapcnt(rptindx);
+      endtapcnt = endtapcnt(rptindx);
+      tapers = zeros(1,sumtapcnt(end));
+      for k = 1:length(begtapcnt)
+        tapers(begtapcnt(k):endtapcnt(k)) = k;
+      end
+      rptindx   = find(tapers);
+      [srt,ix] = sort(tapers(tapers~=0));
+      rptindx  = rptindx(ix);
+%       cfg.trials = rptindx;
+      % TODO FIXME think about whether this is a good or a bad thing...
+      warning('cfg.trials accounts for the number of tapers now');
+    end
+    
     if rptindx(1)<1
       error('cannot select rpt/subj/rpttap smaller than 1');
     elseif rptindx(end)>rptsiz
       error('cannot select rpt/subj/rpttap larger than the number of repetitions in the data');
     end
-    cfg.trials = rptindx;
+
+    % commented out because of rpttap dilemma...
+%     cfg.trials = rptindx;
+
     return
-  end
-  
+  end    
+ 
 else
   rptindx = nan;
 end % if isfield cfg.trials
@@ -585,10 +602,21 @@ end % if isfield cfg.trials
 end % function getselection_rpt
 
 function ok = isequalwithoutnans(a, b)
-if numel(a)~=numel(b)
-  ok = false;
-else
-  c = ~isnan(a(:)) & ~isnan(b(:));
-  ok = isequal(a(c), b(c));
+% this is *only* used to compare matrix sizes, so we can ignore any
+% singleton last dimension
+numdiff = numel(b)-numel(a);
+
+if numdiff > 0
+  % assume singleton dimensions missing in a
+  a = [a(:); ones(numdiff, 1)];
+  b = b(:);
+elseif numdiff < 0
+  % assume singleton dimensions missing in b
+  b = [b(:); ones(abs(numdiff), 1)];  
+  a = a(:);
 end
+
+c = ~isnan(a(:)) & ~isnan(b(:));
+ok = isequal(a(c), b(c));
+
 end % function isequalwithoutnans
