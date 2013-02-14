@@ -349,7 +349,7 @@ if length(data)>1 && ~israw,
   else
     % no such field as {'label','time','freq','pos'} has to be concatenated
     sortflag  = 0;
-    tryfields = {'cumsumcnt','cumtapcnt','trialinfo'};
+    tryfields = {'cumsumcnt','cumtapcnt','trialinfo','sampleinfo'};
   end
   % add additional descriptive fields
   if isfield(data{1}, 'label'), datacat.label = data{1}.label; end
@@ -358,6 +358,7 @@ if length(data)>1 && ~israw,
   if isfield(data{1}, 'cumtapcnt'), datacat.cumtapcnt = data{1}.cumtapcnt; end
   if isfield(data{1}, 'cumsumcnt'), datacat.cumsumcnt = data{1}.cumsumcnt; end
   if isfield(data{1}, 'trialinfo'), datacat.trialinfo = data{1}.trialinfo; end
+  if isfield(data{1}, 'sampleinfo'), datacat.sampleinfo = data{1}.sampleinfo; end
   if isfield(data{1}, 'labelcmb'),  datacat.labelcmb  = data{1}.labelcmb; end
   
   
