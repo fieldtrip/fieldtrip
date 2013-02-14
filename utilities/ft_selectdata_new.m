@@ -597,6 +597,7 @@ if isfield(cfg, 'trials') && ~isequal(cfg.trials, 'all') && ~isempty(datfields)
  
 else
   rptindx = nan;
+  rptdim = nan;
 end % if isfield cfg.trials
 
 end % function getselection_rpt
