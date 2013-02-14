@@ -560,6 +560,12 @@ if isfield(cfg, 'trials') && ~isequal(cfg.trials, 'all') && ~isempty(datfields)
     return
   else
     rptindx = ft_getopt(cfg, 'trials');
+    
+    if islogical(rptindx)
+      % convert from booleans to indices
+      rptindx = find(rptindx);
+    end
+  
     rptindx = unique(sort(rptindx));
     rptindx = unique(sort(rptindx));
     rptsiz  = size(data.(datfields{1}), rptdim);
