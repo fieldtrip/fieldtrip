@@ -93,10 +93,10 @@ if insideflag
     end
   else
     if ~isequal(array, sort(array))
-      error('the array should be sorted from small to large');
+      error('the input array should be sorted from small to large');
     end
     if numel(array)<2
-      error('the array have multiple elements to compute the tolerance');
+      error('the input array must have multiple elements to compute the tolerance');
     end
     mintolerance = (array(2)-array(1))/2;
     maxtolerance = (array(end)-array(end-1))/2;
