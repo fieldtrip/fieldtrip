@@ -586,7 +586,7 @@ if isfield(cfg, 'trials') && ~isequal(cfg.trials, 'all') && ~isempty(datfields)
       rptindx  = rptindx(ix);
 %       cfg.trials = rptindx;
       % TODO FIXME think about whether this is a good or a bad thing...
-      warning('cfg.trials accounts for the number of tapers now');
+      %warning('cfg.trials accounts for the number of tapers now');
     end
     
     if rptindx(1)<1
