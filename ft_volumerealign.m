@@ -20,7 +20,7 @@ function [realign, h] = ft_volumerealign(cfg, mri, target)
 % The configuration can contain the following options
 %   cfg.method         = different methods for aligning the volume
 %                        'interactive', 'fiducial', 'landmark', 'headshape'
-%                        'volume' (see below)
+%                        'fsl', 'spm' (see below)
 %   cfg.coordsys       = 'ctf' (default when specifying cfg.method =
 %                         'interactive' or 'fiducial') or 'spm' (default
 %                         when specifying cfg.method = 'landmark').
@@ -73,7 +73,7 @@ function [realign, h] = ft_volumerealign(cfg, mri, target)
 %    can be loaded with ft_read_headshape, or a fieldtrip-structure describing
 %    a headshape
 % 
-% When cfg.method = 'volume', a third input argument is required. The input volume is
+% When cfg.method = 'fsl', a third input argument is required. The input volume is
 % coregistered to this target volume, using fsl's flirt program. This
 % assumes fsl to be installed. Options pertaining to the behavior of fsl
 % should be defined in the subcfg cfg.fsl:
@@ -87,6 +87,13 @@ function [realign, h] = ft_volumerealign(cfg, mri, target)
 %                     rescale), 9 (traditional) or 12.
 %   cfg.fsl.reslice = string, specifying whether the output image will be
 %                     resliced conform the target image (default = 'yes') 
+%
+% When cfg.method = 'spm', a third input argument is required. The input volume is
+% coregistered to this target volume, using spm. Options pertaining to the 
+% behavior of spm can be defined in the subcfg cfg.spm:
+%   cfg.spm.regtype = 'subj', 'rigid'
+%   cfg.spm.smosrc  = scalar value 
+%   cfg.spm.smoref  = scalar value
 %
 % With the 'interactive' and 'fiducial' methods it is possible to define an
 % additional point (with the key 'z'), which should be a point on the
@@ -105,7 +112,8 @@ function [realign, h] = ft_volumerealign(cfg, mri, target)
 % file. These mat files should contain only a single variable,
 % corresponding with the input/output structure.
 %
-% See also FT_READ_MRI, FT_ELECTRODEREALIGN HEADCOORDINATES
+% See also FT_READ_MRI, FT_ELECTRODEREALIGN, HEADCOORDINATES, SPM_AFFREG,
+% SPM_NORMALISE
 
 % Copyright (C) 2006-2011, Robert Oostenveld, Jan-Mathijs Schoffelen
 %
@@ -590,14 +598,15 @@ switch cfg.method
     % touch it to survive trackconfig
     cfg.headshapemri;
     
-  case 'volume'
+  case 'fsl'
     if ~isfield(cfg, 'fsl'), cfg.fsl = []; end
     cfg.fsl.path         = ft_getopt(cfg.fsl, 'path',    '');
-    cfg.fsl.costfun      = ft_getopt(cfg.fsl, 'costfun', 'mutualinfo');
+    cfg.fsl.costfun      = ft_getopt(cfg.fsl, 'costfun', 'corratio');
     cfg.fsl.interpmethod = ft_getopt(cfg.fsl, 'interpmethod', 'trilinear');
     cfg.fsl.dof          = ft_getopt(cfg.fsl, 'dof',     6);
     cfg.fsl.reslice      = ft_getopt(cfg.fsl, 'reslice', 'yes');
-   
+    cfg.fsl.searchrange  = ft_getopt(cfg.fsl, 'searchrange', [-180 180]);
+    
     % write the input and target to a temporary file
     % and create some additional temporary file names to contain the output
     tmpname1 = tempname;
@@ -617,8 +626,10 @@ switch cfg.method
     
     % create the command to call flirt
     fprintf('using flirt for the coregistration\n');
-    str = sprintf('%s/flirt -in %s -ref %s -out %s -omat %s -bins 256 -cost %s -searchrx -180 180 -searchry -180 180 -searchrz -180 180 -dof %s -interp %s',...
-          cfg.fsl.path, tmpname1, tmpname2, tmpname3, tmpname4, cfg.fsl.costfun, num2str(cfg.fsl.dof), cfg.fsl.interpmethod);
+    r1  = num2str(cfg.fsl.searchrange(1));
+    r2  = num2str(cfg.fsl.searchrange(2));
+    str = sprintf('%s/flirt -in %s -ref %s -out %s -omat %s -bins 256 -cost %s -searchrx %s %s -searchry %s %s -searchrz %s %s -dof %s -interp %s',...
+          cfg.fsl.path, tmpname1, tmpname2, tmpname3, tmpname4, cfg.fsl.costfun, r1, r2, r1, r2, r1, r2, num2str(cfg.fsl.dof), cfg.fsl.interpmethod);
     if isempty(cfg.fsl.path), str = str(2:end); end % remove the first filesep, assume path to flirt to be known
         
     % system call
@@ -644,13 +655,13 @@ switch cfg.method
         %  https://www.jiscmail.ac.uk/cgi-bin/webadmin?A2=ind0903&L=FSL&P=R93775
 
         % flip back
-        flipmat = eye(4); flipmat(1,1) = -1; flipmat(1,4) = target.dim(1)-1; 
+        flipmat = eye(4); flipmat(1,1) = -1; flipmat(1,4) = target.dim(1); 
         vox2vox = flipmat*vox2vox;
       end
       if det(mri.transform(1:3,1:3))>0
         % flirt apparently flips along the x-dim if the det < 0
         % flip back
-        flipmat = eye(4); flipmat(1,1) = -1; flipmat(1,4) = mri.dim(1)-1; 
+        flipmat = eye(4); flipmat(1,1) = -1; flipmat(1,4) = mri.dim(1); 
         vox2vox = vox2vox*flipmat;
       end
       
@@ -684,6 +695,60 @@ switch cfg.method
     delete([tmpname2,'.nii']);
     delete([tmpname3,'.nii.gz']);
     delete(tmpname4);
+    
+  case 'spm'
+    if ~isfield(cfg, 'spm'), cfg.spm = []; end
+    cfg.spm.regtype = ft_getopt(cfg.spm, 'regtype', 'subj');
+    cfg.spm.smosrc  = ft_getopt(cfg.spm, 'smosrc',  5);
+    cfg.spm.smoref  = ft_getopt(cfg.spm, 'smoref',  5);
+    
+    if ~isfield(mri,    'coordsys'), 
+      mri = ft_convert_coordsys(mri); 
+    else
+      fprintf('Input volume has coordinate system ''%s''\n', mri.coordsys);
+    end
+    if ~isfield(target, 'coordsys'),
+      target = ft_convert_coordsys(target);
+    else
+      fprintf('Target volume has coordinate system ''%s''\n', target.coordsys);
+    end
+    if strcmp(mri.coordsys, target.coordsys)
+      % this should hopefully work
+    else
+      % only works when it is possible to approximately align the input to
+      % the target coordsys
+      if strcmp(target.coordsys, 'spm')
+        mri = ft_convert_coordsys(mri, 'spm');
+      else
+        error('The coordinate systems of the input and target volumes are different, coregistration is not possible');
+      end
+    end
+    
+    % flip and permute the 3D volume itself, so that the voxel and
+    % headcoordinates approximately correspond
+    [tmp,    pvec_mri,    flip_mri, T] = align_ijk2xyz(mri);
+    [target]                           = align_ijk2xyz(target);
+        
+    tname1 = [tempname, '.img'];
+    tname2 = [tempname, '.img'];
+    V1 = ft_write_mri(tname1, tmp.anatomy,    'transform', tmp.transform,    'spmversion', spm('ver'), 'dataformat', 'nifti_spm');
+    V2 = ft_write_mri(tname2, target.anatomy, 'transform', target.transform, 'spmversion', spm('ver'), 'dataformat', 'nifti_spm');
+  
+    flags         = cfg.spm;
+    flags.nits    = 0; %set number of non-linear iterations to zero
+    params        = spm_normalise(V2,V1,[],[],[],flags);
+    mri.transform = (target.transform/params.Affine)/T;
+    transform     = eye(4);
+    if isfield(target, 'coordsys')
+      coordsys = target.coordsys;
+    else
+      coordsys = 'unknown';
+    end
+    
+    % delete the temporary files
+    delete(tname1);
+    delete(tname2);
+  
   otherwise
     error('unsupported method');
 end
