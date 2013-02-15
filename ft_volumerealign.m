@@ -697,6 +697,9 @@ switch cfg.method
     delete(tmpname4);
     
   case 'spm'
+    % ensure spm8 on the path
+    ft_hastoolbox('SPM8', 1);
+
     if ~isfield(cfg, 'spm'), cfg.spm = []; end
     cfg.spm.regtype = ft_getopt(cfg.spm, 'regtype', 'subj');
     cfg.spm.smosrc  = ft_getopt(cfg.spm, 'smosrc',  5);
