@@ -253,12 +253,12 @@ switch casetype
   case {'bti', 'bti248', 'bti248grad', 'bti148', 'bti248_planar', 'bti148_planar'}
     % all 4D-BTi MEG channels start with "A"
     % all 4D-BTi reference channels start with M or G
-    labelmeg = datachannel(strncmp('A'  , datachannel, 1));
-    labelmref = [datachannel(strncmp('M'  , datachannel, 1));
-      datachannel(strncmp('G'  , datachannel, 1))];
+ 
+    labelmeg   = datachannel(myregexp('^A[0-9]+$', datachannel));
+    labelmref  = datachannel(myregexp('^M[CLR][xyz][aA]*$', datachannel));
     labelmrefa = datachannel(~cellfun(@isempty,strfind(datachannel, 'a')));
     labelmrefc = datachannel(strncmp('MC', datachannel, 2));
-    labelmrefg = datachannel(strncmp('G', datachannel,  1));
+    labelmrefg = datachannel(myregexp('^G[xyz][xyz]A$', datachannel));
     labelmrefl = datachannel(strncmp('ML', datachannel, 2));
     labelmrefr = datachannel(strncmp('MR', datachannel, 2));
 
@@ -468,4 +468,13 @@ end
 % undo the sorting, make the order identical to that of the data channels
 [tmp, indx] = match_str(datachannel, channel);
 channel = channel(indx);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% helper function
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function match = myregexp(pat, list)
+match = false(size(list));
+for i=1:numel(list)
+  match(i) = ~isempty(regexp(list{i}, pat, 'once'));
+end
 

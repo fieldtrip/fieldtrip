@@ -307,7 +307,7 @@ elseif ft_senstype(input, 'bti')
   % all 4D-BTi MEG channels start with "A" followed by a number
   % all 4D-BTi reference channels start with M or G
   % all 4D-BTi EEG channels start with E
-  sel = myregexp('^A[0-9]*$', label);
+  sel = myregexp('^A[0-9]+$', label);
   type(sel) = {'meg'};
   sel = myregexp('^M[CLR][xyz][aA]*$', label);
   type(sel) = {'refmag'};
