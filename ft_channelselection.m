@@ -255,7 +255,7 @@ switch casetype
     % all 4D-BTi reference channels start with M or G
  
     labelmeg   = datachannel(myregexp('^A[0-9]+$', datachannel));
-    labelmref  = datachannel(myregexp('^M[CLR][xyz][aA]*$', datachannel));
+    labelmref  = [datachannel(myregexp('^M[CLR][xyz][aA]*$', datachannel)); datachannel(myregexp('^G[xyz][xyz]A$', datachannel))];
     labelmrefa = datachannel(~cellfun(@isempty,strfind(datachannel, 'a')));
     labelmrefc = datachannel(strncmp('MC', datachannel, 2));
     labelmrefg = datachannel(myregexp('^G[xyz][xyz]A$', datachannel));
