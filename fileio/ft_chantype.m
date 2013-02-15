@@ -304,12 +304,15 @@ elseif ft_senstype(input, 'ctf') && islabel
   type(sel) = {'refgrad'};            % reference gradiometers
   
 elseif ft_senstype(input, 'bti')
-  % all 4D-BTi MEG channels start with "A"
+  % all 4D-BTi MEG channels start with "A" followed by a number
   % all 4D-BTi reference channels start with M or G
   % all 4D-BTi EEG channels start with E
-  type(strncmp('A', label, 1)) = {'meg'};
-  type(strncmp('M', label, 1)) = {'refmag'};
-  type(strncmp('G', label, 1)) = {'refgrad'};
+  sel = myregexp('^A[0-9]*$', label);
+  type(sel) = {'meg'};
+  sel = myregexp('^M[CLR][xyz][aA]*$', label);
+  type(sel) = {'refmag'};
+  sel = myregexp('^G[xyz][xyz]A$', label);
+  type(sel) = {'refgrad'};
   
   if isgrad && isfield(grad, 'tra')
     gradtype = repmat({'unknown'}, size(grad.label));
