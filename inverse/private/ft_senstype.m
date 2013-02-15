@@ -246,6 +246,11 @@ else
   if isgrad && isfield(sens, 'type')
     type = sens.type;
   elseif isgrad
+    %if current sens balance == 'comp', use the old labels (not the component labels) 
+    %to detect the right senstype
+    if strcmp(sens.balance.current,'comp');
+      sens.label=sens.balance.comp.labelorg;
+    end
     % probably this is MEG, determine the type of magnetometer/gradiometer system
     % note that the order here is important: first check whether it matches a 275 channel system, then a 151 channel system, since the 151 channels are a subset of the 275
     if     (mean(ismember(ft_senslabel('ctf275'),        sens.label)) > 0.8)
