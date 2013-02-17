@@ -116,6 +116,11 @@ if ~isdeployed
   end
   
   try
+    % this directory contains various functions that were obtained from elsewere, e.g. Matlab file exchange
+    ft_hastoolbox('misc', 3, 1); % not required
+  end
+  
+  try
     % this directory contains the backward compatibility wrappers for the ft_xxx function name change
     ft_hastoolbox('compat', 3, 1); % not required
   end
