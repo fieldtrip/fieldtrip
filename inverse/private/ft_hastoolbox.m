@@ -125,6 +125,7 @@ url = {
   'ICASSO'     'see http://www.cis.hut.fi/projects/ica/icasso'
   'XUNIT'      'see http://www.mathworks.com/matlabcentral/fileexchange/22846-matlab-xunit-test-framework'
   'PLEXON'     'available from http://www.plexon.com/assets/downloads/sdk/ReadingPLXandDDTfilesinMatlab-mexw.zip'
+  'MISC'       'various functions that were downloaded from http://www.mathworks.com/matlabcentral/fileexchange and elsewhere'
   };
 
 if nargin<2
