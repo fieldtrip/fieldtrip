@@ -2746,6 +2746,7 @@ switch type
     for i = 1:33
       label{i} = sprintf('E%d', i);
     end
+    label{end+1} = 'Cz';
     
   case 'egi64'
     % this should be  uppercase for consistency with ft_read_header
@@ -2753,6 +2754,7 @@ switch type
     for i = 1:65
       label{i} = sprintf('E%d', i);
     end
+    label{end+1} = 'Cz';
     
   case 'egi128'
     % this should be  uppercase for consistency with ft_read_header
@@ -2760,6 +2762,7 @@ switch type
     for i = 1:129
       label{i} = sprintf('E%d', i);
     end
+    label{end+1} = 'Cz';
     
   case 'egi256'
     % this should be  uppercase for consistency with ft_read_header
@@ -2767,6 +2770,7 @@ switch type
     for i = 1:257
       label{i} = sprintf('E%d', i);
     end
+    label{end+1} = 'Cz';
     
   case 'itab28'
     label = {
