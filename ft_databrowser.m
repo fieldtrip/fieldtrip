@@ -129,8 +129,8 @@ hasdata = (nargin>1);
 hascomp = hasdata && ft_datatype(data, 'comp');
 
 % for backward compatibility
-cfg = ft_checkconfig(cfg, 'unused', {'comps', 'inputfile', 'outputfile'});
-cfg = ft_checkconfig(cfg, 'renamed', {'zscale', 'ylim'});
+cfg = ft_checkconfig(cfg, 'unused',     {'comps', 'inputfile', 'outputfile'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'zscale', 'ylim'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'ylim', 'auto', 'maxabs'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'selectmode', 'mark', 'markartifact'});
 
@@ -164,8 +164,6 @@ if ~isfield(cfg, 'continuous'),      cfg.continuous = [];                 end % 
 if ~isfield(cfg, 'ploteventlabels'), cfg.ploteventlabels = 'type=value';  end
 cfg.zlim           = ft_getopt(cfg, 'zlim',          'maxmin');
 cfg.compscale      = ft_getopt(cfg, 'compscale',     'global');
-
-
 
 
 if ~isfield(cfg, 'viewmode')

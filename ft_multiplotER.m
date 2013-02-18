@@ -712,6 +712,11 @@ ft_postamble provenance
 ft_postamble debug
 ft_postamble previous varargin
 
+% add a menu to the figure
+% ftmenu = uicontextmenu; set(gcf, 'uicontextmenu', ftmenu)
+ftmenu = uimenu(gcf, 'Label', 'FieldTrip');
+uimenu(ftmenu, 'Label', 'Show pipeline',  'Callback', {@menu_pipeline, cfg});
+uimenu(ftmenu, 'Label', 'About',  'Callback', @menu_about);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

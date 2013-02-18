@@ -35,7 +35,7 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 %                       interactive plot when a selected area is clicked. multiple areas
 %                       can be selected by holding down the shift key.
 %   cfg.renderer      = 'painters', 'zbuffer',' opengl' or 'none' (default = [])
-%   cfg.linestyle     = linestyle/marker type, see options of the matlab plot function (default = '-')
+%   cfg.cm_linestyle     = cm_linestyle/marker type, see options of the matlab plot function (default = '-')
 %                       can be a single style for all datasets, or a cell-array containing one style for each dataset
 %   cfg.linewidth     = linewidth in points (default = 0.5)
 %   cfg.graphcolor    = color(s) used for plotting the dataset(s) (default = 'brgkywrgbkywrgbkywrgbkyw')
@@ -112,7 +112,8 @@ ft_preamble help
 ft_preamble provenance
 ft_preamble trackconfig
 ft_preamble debug
-ft_preamble loadvar varargin
+ft_preamble loadvar    varargin
+ft_preamble provenance varargin
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'unused',     {'cohtargetchannel'});
@@ -140,7 +141,7 @@ cfg.hotkeys         = ft_getopt(cfg, 'hotkeys', 'no');
 cfg.interactive     = ft_getopt(cfg, 'interactive',  'no');
 cfg.renderer        = ft_getopt(cfg, 'renderer',     []);
 cfg.maskparameter   = ft_getopt(cfg, 'maskparameter',[]);
-cfg.linestyle       = ft_getopt(cfg, 'linestyle',    '-');
+cfg.cm_linestyle       = ft_getopt(cfg, 'cm_linestyle',    '-');
 cfg.linewidth       = ft_getopt(cfg, 'linewidth',    0.5);
 cfg.maskstyle       = ft_getopt(cfg, 'maskstyle',    'box');
 cfg.channel         = ft_getopt(cfg, 'channel',      'all');
@@ -162,19 +163,19 @@ elseif isnumeric(cfg.graphcolor)
   graphcolor = [0 0 0; cfg.graphcolor];
 end
 
-% check for linestyle being a cell-array, check it's length, and lengthen it if does not have enough styles in it
-if ischar(cfg.linestyle)
-  cfg.linestyle = {cfg.linestyle};
+% check for cm_linestyle being a cell-array, check it's length, and lengthen it if does not have enough styles in it
+if ischar(cfg.cm_linestyle)
+  cfg.cm_linestyle = {cfg.cm_linestyle};
 end
 
 if Ndata  > 1
-  if (length(cfg.linestyle) < Ndata ) && (length(cfg.linestyle) > 1)
-    error('either specify cfg.linestyle as a cell-array with one cell for each dataset, or only specify one linestyle')
-  elseif (length(cfg.linestyle) < Ndata ) && (length(cfg.linestyle) == 1)
-    tmpstyle = cfg.linestyle{1};
-    cfg.linestyle = cell(Ndata , 1);
+  if (length(cfg.cm_linestyle) < Ndata ) && (length(cfg.cm_linestyle) > 1)
+    error('either specify cfg.cm_linestyle as a cell-array with one cell for each dataset, or only specify one cm_linestyle')
+  elseif (length(cfg.cm_linestyle) < Ndata ) && (length(cfg.cm_linestyle) == 1)
+    tmpstyle = cfg.cm_linestyle{1};
+    cfg.cm_linestyle = cell(Ndata , 1);
     for idataset = 1:Ndata
-      cfg.linestyle{idataset} = tmpstyle;
+      cfg.cm_linestyle{idataset} = tmpstyle;
     end
   end
 end
@@ -518,10 +519,10 @@ for i=1:Ndata
   % only plot the mask once, for the first line (it's the same anyway for
   % all lines, and if plotted multiple times, it will overlay the others
   if i>1 && strcmp(cfg.maskstyle, 'box')
-    ft_plot_vector(xval, datavector, 'style', cfg.linestyle{i}, 'color', color, ...
+    ft_plot_vector(xval, datavector, 'style', cfg.cm_linestyle{i}, 'color', color, ...
       'linewidth', cfg.linewidth, 'hlim', cfg.xlim, 'vlim', cfg.ylim);
   else
-    ft_plot_vector(xval, datavector, 'style', cfg.linestyle{i}, 'color', color, ...
+    ft_plot_vector(xval, datavector, 'style', cfg.cm_linestyle{i}, 'color', color, ...
       'highlight', maskdatavector, 'highlightstyle', cfg.maskstyle, 'linewidth', cfg.linewidth, ...
       'hlim', cfg.xlim, 'vlim', cfg.ylim);
   end
@@ -586,6 +587,22 @@ else
 end
 h = title(t,'fontsize', cfg.fontsize);
 
+if false
+  % FIXME this is for testing purposes
+  % Define a context menu; it is not attached to anything
+  cmlines = uicontextmenu;
+  % Define the context menu items and install their callbacks
+  uimenu(cmlines, 'Label', 'dashed', 'Callback', 'set(gco, ''LineStyle'', ''--'')');
+  uimenu(cmlines, 'Label', 'dotted', 'Callback', 'set(gco, ''LineStyle'', '':'')');
+  uimenu(cmlines, 'Label', 'solid',  'Callback', 'set(gco, ''LineStyle'', ''-'')');
+  % Locate line objects
+  hlines = findall(gca, 'Type', 'line');
+  % Attach the context menu to each line
+  for line = 1:length(hlines)
+    set(hlines(line), 'uicontextmenu', cmlines)
+  end
+end
+
 % set renderer if specified
 if ~isempty(cfg.renderer)
   set(gcf, 'renderer', cfg.renderer)
@@ -597,8 +614,14 @@ ft_postamble trackconfig
 ft_postamble provenance
 ft_postamble previous varargin
 
+% add a menu to the figure
+% ftmenu = uicontextmenu; set(gcf, 'uicontextmenu', ftmenu)
+ftmenu = uimenu(gcf, 'Label', 'FieldTrip');
+uimenu(ftmenu, 'Label', 'Show pipeline',  'Callback', {@menu_pipeline, cfg});
+uimenu(ftmenu, 'Label', 'About',  'Callback', @menu_about);
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% subfunction which is called after selecting a time range
+% SUBFUNCTION which is called after selecting a time range
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function select_topoplotER(cfg, varargin)
 % first to last callback-input of ft_select_range is range
@@ -623,7 +646,7 @@ set(f, 'position', p);
 ft_topoplotTFR(cfg, varargin{:});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% subfunction which handles hot keys in the current plot
+% SUBFUNCTION which handles hot keys in the current plot
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function key_sub(handle, eventdata, varargin)
 xlimits = xlim;

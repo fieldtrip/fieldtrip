@@ -15,7 +15,7 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 % and FT_TIMELOCKSTATISTICS can be visualised.
 %
 % The configuration can have the following parameters:
-%   cfg.parameter          = field that contains the data to be plotted as color 
+%   cfg.parameter          = field that contains the data to be plotted as color
 %                           'avg', 'powspctrm' or 'cohspctrm' (default depends on data.dimord)
 %   cfg.maskparameter      = field in the data to be used for masking of
 %                            data. Values between 0 and 1, 0 = transparent
@@ -30,13 +30,13 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 %   cfg.baselinetype       = 'absolute' or 'relative' (default = 'absolute')
 %   cfg.trials             = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.colormap           = any sized colormap, see COLORMAP
-%   cfg.marker             = 'on', 'labels', 'numbers', 'off'                    
+%   cfg.marker             = 'on', 'labels', 'numbers', 'off'
 %   cfg.markersymbol       = channel marker symbol (default = 'o')
 %   cfg.markercolor        = channel marker color (default = [0 0 0] (black))
 %   cfg.markersize         = channel marker size (default = 2)
-%   cfg.markerfontsize     = font size of channel labels (default = 8 pt)                
-%   cfg.highlight          = 'on', 'labels', 'numbers', 'off'                    
-%   cfg.highlightchannel   =  Nx1 cell-array with selection of channels, or vector containing channel indices see FT_CHANNELSELECTION 
+%   cfg.markerfontsize     = font size of channel labels (default = 8 pt)
+%   cfg.highlight          = 'on', 'labels', 'numbers', 'off'
+%   cfg.highlightchannel   =  Nx1 cell-array with selection of channels, or vector containing channel indices see FT_CHANNELSELECTION
 %   cfg.highlightsymbol    = highlight marker symbol (default = 'o')
 %   cfg.highlightcolor     = highlight marker color (default = [0 0 0] (black))
 %   cfg.highlightsize      = highlight marker size (default = 6)
@@ -75,7 +75,7 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 %                            [x y] coordinates
 %   cfg.interactive        = Interactive plot 'yes' or 'no' (default = 'no')
 %                            In a interactive plot you can select areas and produce a new
-%                            interactive plot when a selected area is clicked. Multiple areas 
+%                            interactive plot when a selected area is clicked. Multiple areas
 %                            can be selected by holding down the SHIFT key.
 %   cfg.directionality     = '', 'inflow' or 'outflow' specifies for
 %                            connectivity measures whether the inflow into a
@@ -102,7 +102,7 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 % undirected connectivity metrics. In the situation where undirected
 % connectivity measures are linearly indexed, specifying 'inflow' or
 % 'outflow' can result in unexpected behavior.
-%  
+%
 % The layout defines how the channels are arranged. You can specify the
 % layout in a variety of ways:
 %  - you can provide a pre-computed layout structure, see FT_PREPARE_LAYOUT
@@ -115,7 +115,7 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 % layout. If you want to have more fine-grained control over the layout
 % of the subplots, you should create your own layout file.
 %
-% See also FT_SINGLEPLOTER, FT_MULTIPLOTER, FT_SINGLEPLOTTFR, FT_MULTIPLOTTFR, 
+% See also FT_SINGLEPLOTER, FT_MULTIPLOTER, FT_SINGLEPLOTTFR, FT_MULTIPLOTTFR,
 % FT_TOPOPLOTTFR, FT_PREPARE_LAYOUT
 
 % Undocumented local options:
@@ -148,14 +148,9 @@ ft_defaults
 ft_preamble help
 ft_preamble provenance
 
-% this is just a wrapper function around ft_topoplotTFR which does all the hard work
+% this is just a wrapper function around the common code that does all the hard work
 % the reason for this wrapper function is to have a placeholder for ER-specific documentation
 
-% make sure figure window titles are labeled appropriately, pass this onto
-% the actual plotting function
-% if we don't specify this, the window will be called 'ft_topoplotTFR',
-% which is confusing to the user
-cfg.funcname = mfilename;
 if nargin > 1
   cfg.dataname = {inputname(2)};
   for k = 3:nargin
@@ -163,8 +158,15 @@ if nargin > 1
   end
 end
 
-cfg = ft_topoplotTFR(cfg, varargin{:});
+% make sure figure window titles are labeled appropriately, pass this onto the actual
+% plotting function if we don't specify this, the window will be called
+% 'ft_topoplotTFR', which is confusing to the user
+cfg.funcname = mfilename;
 
+% call the common function that is shared between ft_topoplotER and ft_topoplotTFR
+cfg = topoplot_common(cfg, varargin{:});
+
+% remove it again
 cfg = rmfield(cfg, 'funcname');
 
 % do the general cleanup and bookkeeping at the end of the function
@@ -172,3 +174,12 @@ cfg = rmfield(cfg, 'funcname');
 ft_postamble provenance
 ft_postamble previous varargin
 
+% add a menu to the figure
+% ftmenu = uicontextmenu; set(gcf, 'uicontextmenu', ftmenu)
+ftmenu = uimenu(gcf, 'Label', 'FieldTrip');
+uimenu(ftmenu, 'Label', 'Show pipeline',  'Callback', {@menu_pipeline, cfg});
+uimenu(ftmenu, 'Label', 'About',  'Callback', @menu_about);
+
+if ~nargout
+  clear cfg
+end
