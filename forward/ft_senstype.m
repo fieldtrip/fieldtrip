@@ -248,7 +248,7 @@ else
   elseif isgrad
     %if current sens balance == 'comp', use the old labels (not the component labels) 
     %to detect the right senstype
-    if strcmp(sens.balance.current,'comp');
+    if isfield(sens,'balance') && strcmp(sens.balance.current,'comp');
       sens.label=sens.balance.comp.labelorg;
     end
     % probably this is MEG, determine the type of magnetometer/gradiometer system
