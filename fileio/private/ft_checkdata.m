@@ -696,10 +696,13 @@ if issource && ~strcmp(haspow, 'no')
 end
 
 if isfield(data, 'grad')
-  % ensure that the gradiometer balancing is specified
-  if ~isfield(data.grad, 'balance') || ~isfield(data.grad.balance, 'current')
-    data.grad.balance.current = 'none';
-  end
+  % ensure that the gradiometer structure is up to date
+  data.grad = ft_dataype_sens(data.grad);
+end
+
+if isfield(data, 'elec')
+  % ensure that the electrode structure is up to date
+  data.elec = ft_dataype_sens(data.elec);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
