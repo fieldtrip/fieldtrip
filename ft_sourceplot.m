@@ -735,12 +735,17 @@ if isequal(cfg.method,'ortho')
   opt.handlesfigure = h;
   opt.axis = cfg.axis;
   opt.quit = ~strcmp(cfg.interactive, 'yes');
-  opt.atlas = atlas;
-  opt.ana = ana;
+  if hasatlas
+    opt.atlas = cfg.atlas;
+  end
+  if hasana
+    opt.ana = ana;
+  end
   opt.update = [1 1 1];
   opt.init = true;
   opt.isvolume = isvolume;
   opt.issource= issource;
+  opt.hasatlas = hasatlas;
   opt.hasfreq = hasfreq;
   opt.hastime = hastime;
   opt.hasmsk = hasmsk;
@@ -749,7 +754,9 @@ if isequal(cfg.method,'ortho')
   opt.qi = qi;
   opt.tag = 'ik';
   opt.data = data;
-  opt.msk = msk;
+  if hasmsk
+    opt.msk = msk;
+  end
   opt.fcolmin = fcolmin;
   opt.fcolmax = fcolmax;
   opt.opacmin = opacmin;
@@ -1223,7 +1230,7 @@ opt.ijk = [xi yi zi 1]';
 if opt.isvolume
   xyz = data.transform * opt.ijk;
 elseif opt.issource
-  ix  = sub2ind(dim,xi,yi,zi);
+  ix  = sub2ind(opt.dim,xi,yi,zi);
   xyz = data.pos(ix,:);
 end
 opt.ijk = opt.ijk(1:3);
@@ -1270,7 +1277,7 @@ end
 
 %fprintf('%s %s %s %s\n', str1, str2, str3, str4);
 
-if ~isempty(opt.atlas)
+if opt.hasatlas
   tmp = [opt.ijk(:)' 1] * opt.atlas.transform; % atlas and data might have different transformation matrices, so xyz cannot be used here anymore
   % determine the anatomical label of the current position
   lab = atlas_lookup(opt.atlas, (tmp(1:3)), 'inputcoord', data.coordsys, 'queryrange', opt.queryrange);
@@ -1304,7 +1311,7 @@ if opt.hasana
   end
 end
 
-if opt.hasfun,
+if opt.hasfun
   if opt.init
     if opt.hasmsk
       tmpqi = [opt.qi 1];
@@ -1327,7 +1334,7 @@ if opt.hasfun,
     opt.funtag     = get(opt.funhandles, 'tag');
     opt.funhandles = opt.funhandles(~strcmp('ana', opt.funtag));
     opt.parenttag  = get(cell2mat(get(opt.funhandles,'parent')),'tag');
-    [i1,i2,i3] = intersect(parenttag, {'ik';'jk';'ij'});
+    [i1,i2,i3] = intersect(opt.parenttag, {'ik';'jk';'ij'});
     opt.funhandles = opt.funhandles(i3(i2)); % seems like swapping the order
     opt.funhandles = opt.funhandles(:)';
     set(opt.funhandles, 'tag', 'fun');
@@ -1393,7 +1400,7 @@ elseif strcmp(opt.colorbar,  'yes') && ~isfield(opt, 'hc'),
   end
 end
 
-if ~(opt.hasfreq || opt.hastime)
+if ~((opt.hasfreq && length(data.freq)>1) || opt.hastime)
   if opt.init
     subplot('position',[0.07+opt.xsize(1)+0.05 0.07 opt.xsize(2) opt.ysize(2)]);
     set(gca,'visible','off');
