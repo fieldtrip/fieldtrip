@@ -488,6 +488,8 @@ else
   hastime = 0;
   
   doimage = 0;
+  fcolmin = 0; % needs to be defined for callback
+  fcolmax = 1;
 end % handle fun
 
 %%% maskparameter
@@ -577,6 +579,9 @@ if hasmsk
     end
   end % handling opacitylim and opacitymap
   clear mskmin mskmax;
+else
+  opacmin = [];
+  opacmax = [];
 end
 
 % prevent outside fun from being plotted
@@ -607,6 +612,8 @@ if hasfun && hasroi && ~hasmsk
   opacmax = 1;
 elseif hasfun && hasroi && hasmsk
   msk = roi .* msk;
+  opacmin = [];
+  opacmax = []; % has to be defined
 elseif hasroi
   error('you can not have a roi without functional data')
 end
@@ -726,7 +733,6 @@ if isequal(cfg.method,'ortho')
   
   % create structure to be passed to gui
   opt = [];
-  opt.fun = fun;
   opt.dim = dim;
   opt.ijk = [xi yi zi];
   opt.xsize = xsize;
@@ -740,6 +746,9 @@ if isequal(cfg.method,'ortho')
   end
   if hasana
     opt.ana = ana;
+  end
+  if hasfun
+    opt.fun = fun;
   end
   opt.update = [1 1 1];
   opt.init = true;
