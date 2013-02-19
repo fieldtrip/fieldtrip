@@ -697,12 +697,12 @@ end
 
 if isfield(data, 'grad')
   % ensure that the gradiometer structure is up to date
-  data.grad = ft_dataype_sens(data.grad);
+  data.grad = ft_datatype_sens(data.grad);
 end
 
 if isfield(data, 'elec')
   % ensure that the electrode structure is up to date
-  data.elec = ft_dataype_sens(data.elec);
+  data.elec = ft_datatype_sens(data.elec);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
