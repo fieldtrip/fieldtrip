@@ -188,8 +188,8 @@ switch version
 
     if ismeg
       % ensure that the magnetometer/gradiometer balancing is specified
-      if ~isfield(grad, 'balance') || ~isfield(data.grad.balance, 'current')
-        grad.balance.current = 'none';
+      if ~isfield(sens, 'balance') || ~isfield(sens.balance, 'current')
+        sens.balance.current = 'none';
       end
     end
     
