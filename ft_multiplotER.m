@@ -35,7 +35,7 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 %   cfg.showlabels    = 'yes', 'no' (default = 'no')
 %   cfg.showoutline   = 'yes', 'no' (default = 'no')
 %   cfg.fontsize      = font size of comment and labels (if present) (default = 8)
-%   cfg.interactive   = Interactive plot 'yes' or 'no' (default = 'no')
+%   cfg.interactive   = Interactive plot 'yes' or 'no' (default = 'yes')
 %                       In a interactive plot you can select areas and produce a new
 %                       interactive plot when a selected area is clicked. Multiple areas
 %                       can be selected by holding down the SHIFT key.
@@ -168,7 +168,7 @@ cfg.showoutline     = ft_getopt(cfg, 'showoutline', 'no');
 cfg.box             = ft_getopt(cfg, 'box',         'no');
 cfg.fontsize        = ft_getopt(cfg, 'fontsize',    8);
 cfg.graphcolor      = ft_getopt(cfg, 'graphcolor',  'brgkywrgbkywrgbkywrgbkyw');
-cfg.interactive     = ft_getopt(cfg, 'interactive', 'no');
+cfg.interactive     = ft_getopt(cfg, 'interactive', 'yes');
 cfg.renderer        = ft_getopt(cfg, 'renderer',    []);
 cfg.maskparameter   = ft_getopt(cfg, 'maskparameter', []);
 cfg.linestyle       = ft_getopt(cfg, 'linestyle',   '-');

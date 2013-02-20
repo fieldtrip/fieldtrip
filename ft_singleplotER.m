@@ -30,7 +30,7 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 %   cfg.trials        = 'all' or a selection given as a 1xn vector (default = 'all')
 %   cfg.fontsize      = font size of title (default = 8)
 %   cfg.hotkeys       = enables hotkeys (up/down/left/right arrows) for dynamic x/y axis translation (Ctrl+) and zoom adjustment
-%   cfg.interactive   = interactive plot 'yes' or 'no' (default = 'no')
+%   cfg.interactive   = interactive plot 'yes' or 'no' (default = 'yes')
 %                       in a interactive plot you can select areas and produce a new
 %                       interactive plot when a selected area is clicked. multiple areas
 %                       can be selected by holding down the shift key.
@@ -138,7 +138,7 @@ cfg.axes            = ft_getopt(cfg,' axes',        'yes');
 cfg.fontsize        = ft_getopt(cfg, 'fontsize',    8);
 cfg.graphcolor      = ft_getopt(cfg, 'graphcolor',  'brgkywrgbkywrgbkywrgbkyw');
 cfg.hotkeys         = ft_getopt(cfg, 'hotkeys', 'no');
-cfg.interactive     = ft_getopt(cfg, 'interactive',  'no');
+cfg.interactive     = ft_getopt(cfg, 'interactive',  'yes');
 cfg.renderer        = ft_getopt(cfg, 'renderer',     []);
 cfg.maskparameter   = ft_getopt(cfg, 'maskparameter',[]);
 cfg.cm_linestyle       = ft_getopt(cfg, 'cm_linestyle',    '-');

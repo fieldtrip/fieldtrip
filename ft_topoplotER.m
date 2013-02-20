@@ -73,7 +73,7 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 %                            'title' to place comment as title
 %                            'layout' to place comment as specified for COMNT in layout
 %                            [x y] coordinates
-%   cfg.interactive        = Interactive plot 'yes' or 'no' (default = 'no')
+%   cfg.interactive        = Interactive plot 'yes' or 'no' (default = 'yes')
 %                            In a interactive plot you can select areas and produce a new
 %                            interactive plot when a selected area is clicked. Multiple areas
 %                            can be selected by holding down the SHIFT key.
