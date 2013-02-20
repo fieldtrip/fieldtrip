@@ -1,4 +1,4 @@
-function [filt] = ft_preproc_lowpassfilter(dat,Fs,Flp,N,type,dir)
+function [filt] = ft_preproc_lowpassfilter(dat,Fs,Flp,N,type,dir,instabilityfix)
 
 % FT_PREPROC_LOWPASSFILTER applies a low-pass filter to the data and thereby
 % removes all high frequency components in the data
@@ -28,7 +28,7 @@ function [filt] = ft_preproc_lowpassfilter(dat,Fs,Flp,N,type,dir)
 %
 % See also PREPROC
 
-% Copyright (c) 2003-2008, Robert Oostenveld
+% Copyright (c) 2003-2013, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -113,7 +113,29 @@ end
 meandat = mean(dat,2);
 dat = bsxfun(@minus, dat, meandat);
 
-filt = filter_with_correction(B,A,dat,dir);
+try
+  filt = filter_with_correction(B,A,dat,dir);
+catch ME
+  switch instabilityfix
+    case 'none'
+      rethrow(ME);
+    case 'reduce'
+      warning('backtrace', 'off')
+      warning('instability detected - reducing the %dth order filter to an %dth order filter', N, N-1);
+      warning('backtrace', 'on')
+      filt = ft_preproc_lowpassfilter(dat,Fs,Flp,N-1,type,dir,instabilityfix);
+    case 'split'
+      N1 = ceil(N/2);
+      N2 = floor(N/2);
+      warning('backtrace', 'off')
+      warning('instability detected - splitting the %dth order filter in a sequential %dth and a %dth order filter', N, N1, N2);
+      warning('backtrace', 'on')
+      filt1 = ft_preproc_lowpassfilter(dat  ,Fs,Flp,N1,type,dir,instabilityfix);
+      filt  = ft_preproc_lowpassfilter(filt1,Fs,Flp,N2,type,dir,instabilityfix);
+    otherwise
+      error('incorrect specification of instabilityfix');
+  end % switch
+end
 
 % add the mean back to the filtered data
 filt = bsxfun(@plus, filt, meandat);

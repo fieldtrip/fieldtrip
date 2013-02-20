@@ -1,7 +1,8 @@
 function filt = filter_with_correction(B,A,dat,dir)
+
 % FILTER_WITH_CORRECTION applies a to the data and corrects
 % edge-artifacts for one-pass filtering.
-% 
+%
 % Use as
 %   [filt] = filter_with_correction(B,A,dat,dir);
 % where
@@ -40,10 +41,7 @@ function filt = filter_with_correction(B,A,dat,dir)
 
 poles = roots(A);
 if any(abs(poles) >= 1)
-  poles
-  error(['Calculated filter coefficients have poles on or outside ' ...
-        'the unit circle and will not be stable. Try a higher cutoff ' ...
-        'frequency or a different type/order of filter.']);
+  error('Calculated filter coefficients have poles on or outside the unit circle and will not be stable. Try a higher cutoff frequency or a different type/order of filter.');
 end
 
 dcGain = sum(B)/sum(A);
@@ -56,15 +54,15 @@ switch dir
     dat = dat - repmat(offset,1,N);
     filt = filter(B, A, dat')' + repmat(dcGain*offset, 1, N);
   case 'onepass-reverse'
-  	offset = dat(:,end);
+    offset = dat(:,end);
     dat  = fliplr(dat) - repmat(offset,1,N);
     filt = filter(B, A, dat')';
     filt = fliplr(filt) + repmat(dcGain*offset, 1, N);
   case 'twopass'
-  	% filtfilt does the correction for us
+    % filtfilt does the correction for us
     filt = filtfilt(B, A, dat')';
   case 'twopass-reverse'
-  	% filtfilt does the correction for us
+    % filtfilt does the correction for us
     filt = fliplr(filtfilt(B, A, fliplr(dat)')');
   case 'twopass-average'
     % take the average from the twopass and the twopass-reverse

@@ -1,7 +1,7 @@
-function [filt] = ft_preproc_highpassfilter(dat,Fs,Fhp,N,type,dir)
+function [filt] = ft_preproc_highpassfilter(dat,Fs,Fhp,N,type,dir,instabilityfix)
 
-% FT_PREPROC_HIGHPASSFILTER applies a high-pass filter to the data and thereby
-% removes the low frequency components in the data
+% FT_PREPROC_HIGHPASSFILTER applies a high-pass filter to the data and thereby removes
+% the low frequency components in the data
 %
 % Use as
 %   [filt] = ft_preproc_highpassfilter(dat, Fsample, Fhp, N, type, dir)
@@ -22,13 +22,13 @@ function [filt] = ft_preproc_highpassfilter(dat,Fs,Fhp,N,type,dir)
 %                'twopass-reverse' zero-phase reverse and forward filter
 %                'twopass-average' average of the twopass and the twopass-reverse
 %
-% Note that a one- or two-pass filter has consequences for the
-% strength of the filter, i.e. a two-pass filter with the same filter
-% order will attenuate the signal twice as strong.
+% Note that a one- or two-pass filter has consequences for the strength of the filter,
+% i.e. a two-pass filter with the same filter order will attenuate the signal twice as
+% strong.
 %
 % See also PREPROC
 
-% Copyright (c) 2003-2008, Robert Oostenveld
+% Copyright (c) 2003-2013, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -62,8 +62,13 @@ if nargin<5 || isempty(type)
 end
 
 % set the default filter direction
-if nargin<6|| isempty(dir)
+if nargin<6 || isempty(dir)
   dir = 'twopass';
+end
+
+% specify the default instability fix
+if nargin<7 || isempty(instabilityfix)
+  instabilityfix = 'none'; % can be reduce, split or none
 end
 
 % Nyquist frequency
@@ -110,6 +115,29 @@ switch type
 end
 
 % demean the data before filtering
-dat = bsxfun(@minus, dat, mean(dat, 2));
+meandat = mean(dat,2);
+dat = bsxfun(@minus, dat, meandat);
 
-filt = filter_with_correction(B,A,dat,dir);
+try
+  filt = filter_with_correction(B,A,dat,dir);
+catch ME
+  switch instabilityfix
+    case 'none'
+      rethrow(ME);
+    case 'reduce'
+      warning('backtrace', 'off')
+      warning('filter instability detected - reducing the %dth order filter to an %dth order filter', N, N-1);
+      warning('backtrace', 'on')
+      filt = ft_preproc_highpassfilter(dat,Fs,Fhp,N-1,type,dir,instabilityfix);
+    case 'split'
+      N1 = ceil(N/2);
+      N2 = floor(N/2);
+      warning('backtrace', 'off')
+      warning('filter instability detected - splitting the %dth order filter in a sequential %dth and a %dth order filter', N, N1, N2);
+      warning('backtrace', 'on')
+      filt1 = ft_preproc_highpassfilter(dat  ,Fs,Fhp,N1,type,dir,instabilityfix);
+      filt  = ft_preproc_highpassfilter(filt1,Fs,Fhp,N2,type,dir,instabilityfix);
+    otherwise
+      error('incorrect specification of instabilityfix');
+  end % switch
+end
