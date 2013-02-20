@@ -142,10 +142,15 @@ for k = 1:nchan
   end
 end
 
+% add channel labels on grand X and Y axes
 for k = 1:nchan
   ft_plot_text(0,       (nchan + 1 - k).*1.2, data.label{k});
   ft_plot_text(k.*1.2,  (nchan + 1)    .*1.2, data.label{k});
 end
+
+% add 'from' and 'to' labels
+ft_plot_text(-0.5,           (nchan + 1)/1.7, '\it{from}', 'rotation', 90);
+ft_plot_text((nchan + 1)/1.7, (nchan + 1)*1.2+0.4, '\it{to}');
 
 axis([-0.2 (nchan+1).*1.2+0.2 0 (nchan+1).*1.2+0.2]);
 axis off;
