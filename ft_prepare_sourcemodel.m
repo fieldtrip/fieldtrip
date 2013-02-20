@@ -440,9 +440,7 @@ if basedonmri
   
   % apply a smoothing of a certain amount of voxels
   if ~strcmp(cfg.smooth, 'no');
-    fprintf('smoothing gray matter segmentation with %d voxels\n', cfg.smooth);
-    % check that the required low-level toolbox is available
-    spm_smooth(mri.gray, mri.gray, cfg.smooth);
+    mri.gray = volumesmooth(mri.gray, cfg.smooth, 'MRI gray matter');
   end
   
   % determine for each voxel whether it belongs to the cortex
