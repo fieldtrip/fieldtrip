@@ -40,7 +40,7 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 %   cfg.showlabels       = 'yes', 'no' (default = 'no')
 %   cfg.showoutline      = 'yes', 'no' (default = 'no')
 %   cfg.fontsize         = font size of comment and labels (if present) (default = 8)
-%   cfg.interactive      = Interactive plot 'yes' or 'no' (default = 'no')
+%   cfg.interactive      = Interactive plot 'yes' or 'no' (default = 'yes')
 %                          In a interactive plot you can select areas and produce a new
 %                          interactive plot when a selected area is clicked. Multiple areas 
 %                          can be selected by holding down the SHIFT key.
@@ -164,7 +164,7 @@ cfg.showlabels     = ft_getopt(cfg, 'showlabels',      'no');
 cfg.showoutline    = ft_getopt(cfg, 'showoutline',     'no');
 cfg.channel        = ft_getopt(cfg, 'channel',         'all');
 cfg.fontsize       = ft_getopt(cfg, 'fontsize',        8);
-cfg.interactive    = ft_getopt(cfg, 'interactive',     'no');
+cfg.interactive    = ft_getopt(cfg, 'interactive',     'yes');
 cfg.hotkeys        = ft_getopt(cfg, 'hotkeys',         'no');
 cfg.renderer       = ft_getopt(cfg, 'renderer',        []); % let matlab decide on default
 cfg.maskalpha      = ft_getopt(cfg, 'maskalpha',       1);

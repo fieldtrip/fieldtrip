@@ -95,16 +95,12 @@ switch version
   case '2011'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if isfield(freq, 'grad')
-      % ensure that the gradiometer balancing is specified
-      if ~isfield(freq.grad, 'balance') || ~isfield(freq.grad.balance, 'current')
-        freq.grad.balance.current = 'none';
-      end
-      
-      % ensure the new style sensor description
+      % ensure that the gradiometer structure is up to date
       freq.grad = ft_datatype_sens(freq.grad);
     end
     
     if isfield(freq, 'elec')
+      % ensure that the electrode structure is up to date
       freq.elec = ft_datatype_sens(freq.elec);
     end
  

@@ -245,95 +245,31 @@ else
   
   if isgrad && isfield(sens, 'type')
     type = sens.type;
+
   elseif isgrad
-    %if current sens balance == 'comp', use the old labels (not the component labels) 
-    %to detect the right senstype
-    if strcmp(sens.balance.current,'comp');
-      sens.label=sens.balance.comp.labelorg;
+    % this looks like MEG
+    % revert the component balancing that was previously applied
+    if isfield(sens, 'balance') && strcmp(sens.balance.current, 'comp')
+      sens = undobalancing(sens);
     end
-    % probably this is MEG, determine the type of magnetometer/gradiometer system
-    % note that the order here is important: first check whether it matches a 275 channel system, then a 151 channel system, since the 151 channels are a subset of the 275
-    if     (mean(ismember(ft_senslabel('ctf275'),        sens.label)) > 0.8)
-      type = 'ctf275';
-    elseif (mean(ismember(ft_senslabel('ctfheadloc'),    sens.label)) > 0.8)  % look at the head localization channels
-      type = 'ctf275';
-    elseif (mean(ismember(ft_senslabel('ctf151'),        sens.label)) > 0.8)
-      type = 'ctf151';
-    elseif (mean(ismember(ft_senslabel('ctf64'),         sens.label)) > 0.8)
-      type = 'ctf64';
-    elseif (mean(ismember(ft_senslabel('ctf275_planar'), sens.label)) > 0.8)
-      type = 'ctf275_planar';
-    elseif (mean(ismember(ft_senslabel('ctf151_planar'), sens.label)) > 0.8)
-      type = 'ctf151_planar';
-    elseif (mean(ismember(ft_senslabel('bti248'),        sens.label)) > 0.8) % note that it might also be a bti248grad system
-      type = 'bti248';
-    elseif (mean(ismember(ft_senslabel('bti148'),        sens.label)) > 0.8)
-      type = 'bti148';
-    elseif (mean(ismember(ft_senslabel('bti248_planar'), sens.label)) > 0.8) % note that it might also be a bti248grad_planar system
-      type = 'bti248_planar';
-    elseif (mean(ismember(ft_senslabel('bti148_planar'), sens.label)) > 0.8)
-      type = 'bti148_planar';
-    elseif (mean(ismember(ft_senslabel('itab28'),        sens.label)) > 0.8)
-      type = 'itab28';
-    elseif (mean(ismember(ft_senslabel('itab153'),       sens.label)) > 0.8)
-      type = 'itab153';
-    elseif (mean(ismember(ft_senslabel('itab153_planar'), sens.label)) > 0.8)
-      type = 'itab153_planar';
-      
-      % the order is important for the different yokogawa systems, because they all share the same channel names
-    elseif (mean(ismember(ft_senslabel('yokogawa440'),    sens.label)) > 0.7)
-      type = 'yokogawa440';
-    elseif (mean(ismember(ft_senslabel('yokogawa440_planar'),    sens.label)) > 0.7)
-      type = 'yokogawa440_planar';
-    elseif (mean(ismember(ft_senslabel('yokogawa160'),    sens.label)) > 0.4)
-      type = 'yokogawa160';
-    elseif (mean(ismember(ft_senslabel('yokogawa160_planar'), sens.label)) > 0.4)
-      type = 'yokogawa160_planar';
-    elseif (mean(ismember(ft_senslabel('yokogawa64'),    sens.label)) > 0.4)
-      type = 'yokogawa64';
-    elseif (mean(ismember(ft_senslabel('yokogawa64_planar'), sens.label)) > 0.4)
-      type = 'yokogawa64_planar';
-    elseif (mean(ismember(ft_senslabel('yokogawa9'),    sens.label)) > 0.8)
-      type = 'yokogawa9';
-      
-    elseif (mean(ismember(ft_senslabel('neuromag306'),   sens.label)) > 0.8)
-      type = 'neuromag306';
-    elseif (mean(ismember(ft_senslabel('neuromag306alt'),sens.label)) > 0.8)  % an alternative set without spaces in the name
-      type = 'neuromag306';
-    elseif (mean(ismember(ft_senslabel('neuromag122'),   sens.label)) > 0.8)
-      type = 'neuromag122';
-    elseif (mean(ismember(ft_senslabel('neuromag122alt'),sens.label)) > 0.8)  % an alternative set without spaces in the name
-      type = 'neuromag122';
-    elseif any(ismember(ft_senslabel('btiref'), sens.label))
-      type = 'bti'; % it might be 148 or 248 channels
-    elseif any(ismember(ft_senslabel('ctfref'), sens.label))
-      type = 'ctf'; % it might be 151 or 275 channels
-    elseif isfield(sens, 'pnt') && isfield(sens, 'ori') && numel(sens.label)==size(sens.pnt,1)
-      type = 'magnetometer';
-    else
+    
+    % determine the type of magnetometer/gradiometer system based on the channel names alone
+    % this uses a recursive call to the "islabel" section further down
+    type = ft_senstype(sens.label);
+    if strcmp(type, 'unknown')
+      % although we don't know the type, we do know that it is MEG
       type = 'meg';
     end
     
   elseif iselec
-    % probably this is EEG
-    if     (mean(ismember(ft_senslabel('biosemi256'),    sens.label)) > 0.8)
-      type = 'biosemi256';
-    elseif (mean(ismember(ft_senslabel('biosemi128'),    sens.label)) > 0.8)
-      type = 'biosemi128';
-    elseif (mean(ismember(ft_senslabel('biosemi64'),     sens.label)) > 0.8)
-      type = 'biosemi64';
-    elseif (mean(ismember(ft_senslabel('egi256'),        sens.label)) > 0.8)
-      type = 'egi256';
-    elseif (mean(ismember(ft_senslabel('egi128'),        sens.label)) > 0.8)
-      type = 'egi128';
-    elseif (mean(ismember(ft_senslabel('egi64'),         sens.label)) > 0.8)
-      type = 'egi64';
-    elseif (mean(ismember(ft_senslabel('egi32'),         sens.label)) > 0.8)
-      type = 'egi32';
-    elseif (sum(ismember(sens.label,         ft_senslabel('eeg1005'))) > 10) % Otherwise it's not even worth recognizing
-      type = 'ext1020';
-    else
-      type = 'electrode';
+    % this looks like EEG
+    
+    % determine the type of electrode/acquisition system based on the channel names alone
+    % this uses a recursive call to the "islabel" section further down
+    type = ft_senstype(sens.label);
+    if strcmp(type, 'unknown')
+      % although we don't know the type, we do know that it is EEG
+      type = 'eeg';
     end
     
   elseif islabel

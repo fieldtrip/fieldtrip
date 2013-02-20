@@ -1,4 +1,4 @@
-function test_bug1806
+% function test_bug1806
 
 % TEST test_bug1806
 % TEST ft_componentanalysis ft_rejectcomponent ft_megplanar ft_combineplanar ft_megrealign ft_datatype_sens
@@ -67,13 +67,27 @@ assert(strcmp(data_r.grad.type, 'ctf275'));
 cfg = [];
 cfg.method = 'pca';
 data_c = ft_componentanalysis(cfg, data);
+
+% this is how it used to be up to 19 Feb 2013
+%
+% if isfield(data_c.grad, 'type')
+%   % don't know what it is, but it should not be ctf151
+%   assert(~strcmp(data_c.grad.type, 'ctf151'));
+% else
+%   warning('gradiometer type is missing');
+%   assert(~ft_senstype(data_c.grad, 'ctf151'));
+% end
+
+% on 19 Feb 2013 I changed it, because of http://bugzilla.fcdonders.nl/show_bug.cgi?id=1959#c7
 if isfield(data_c.grad, 'type')
-  % don't know what it is, but it should not be ctf151
-  assert(~strcmp(data_c.grad.type, 'ctf151'));
+  % it should still be detected as ctf151
+  assert(strcmp(data_c.grad.type, 'ctf151'));
 else
+  % it should still be detected as ctf151
   warning('gradiometer type is missing');
-  assert(~ft_senstype(data_c.grad, 'ctf151'));
+  assert(ft_senstype(data_c.grad, 'ctf151'));
 end
+
 
 cfg = [];
 cfg.component = [];

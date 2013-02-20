@@ -388,7 +388,10 @@ if ~isempty(stype)
   end
   
   if isfield(data, 'grad') || isfield(data, 'elec')
-    if any(strcmp(ft_senstype(data), stype));
+    if any(strcmp(ft_senstype(data), stype))
+      okflag = 1;
+    elseif any(cellfun(@ft_senstype, repmat({data}, size(stype)), stype))
+      % this is required to detect more general types, such as "meg" or "ctf" rather than "ctf275"
       okflag = 1;
     else
       okflag = 0;
@@ -693,10 +696,13 @@ if issource && ~strcmp(haspow, 'no')
 end
 
 if isfield(data, 'grad')
-  % ensure that the gradiometer balancing is specified
-  if ~isfield(data.grad, 'balance') || ~isfield(data.grad.balance, 'current')
-    data.grad.balance.current = 'none';
-  end
+  % ensure that the gradiometer structure is up to date
+  data.grad = ft_datatype_sens(data.grad);
+end
+
+if isfield(data, 'elec')
+  % ensure that the electrode structure is up to date
+  data.elec = ft_datatype_sens(data.elec);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

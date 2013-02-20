@@ -185,6 +185,13 @@ switch version
         isfield(sens, 'chanori') && size(sens.chanori,1)~=length(sens.label) 
       error('inconsistent number of channels in sensor description');
     end
+
+    if ismeg
+      % ensure that the magnetometer/gradiometer balancing is specified
+      if ~isfield(sens, 'balance') || ~isfield(sens.balance, 'current')
+        sens.balance.current = 'none';
+      end
+    end
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   otherwise

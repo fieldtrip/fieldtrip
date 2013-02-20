@@ -57,10 +57,11 @@ function [input] = ft_apply_montage(input, montage, varargin)
 % $Id$
 
 % get optional input arguments
-keepunused = ft_getopt(varargin, 'keepunused',  'no');
-inverse    = ft_getopt(varargin, 'inverse',     'no');
-feedback   = ft_getopt(varargin, 'feedback',    'text');
-bname      = ft_getopt(varargin, 'balancename', '');
+keepunused  = ft_getopt(varargin, 'keepunused',  'no');
+inverse     = ft_getopt(varargin, 'inverse',     'no');
+feedback    = ft_getopt(varargin, 'feedback',    'text');
+showwarning = ft_getopt(varargin, 'warning',     'yes');
+bname       = ft_getopt(varargin, 'balancename', '');
 
 if ~isfield(input, 'label') && isfield(input, 'labelnew')
   % the input data structure is also a montage
@@ -68,6 +69,12 @@ if ~isfield(input, 'label') && isfield(input, 'labelnew')
 else
   % the input should describe the channel labels
   inputlabel = input.label;
+end
+
+if strcmp(showwarning, 'yes')
+  warningfun = @warning;
+else
+  warningfun = @nowarning;
 end
 
 % check the consistency of the input inputor array or data
@@ -88,7 +95,7 @@ if strcmp(inverse, 'yes')
   tmp.labelorg = montage.labelnew; % swap around
   tmp.tra      = full(montage.tra);
   if rank(tmp.tra) < length(tmp.tra)
-    warning('the linear projection for the montage is not full-rank, the resulting data will have reduced dimensionality');
+    warningfun('the linear projection for the montage is not full-rank, the resulting data will have reduced dimensionality');
     tmp.tra = pinv(tmp.tra);
   else
     tmp.tra = inv(tmp.tra);
@@ -383,4 +390,7 @@ end
 function y = indx2logical(x, n)
 y = false(1,n);
 y(x) = true;
+
+function nowarning(varargin)
+return
 

@@ -86,16 +86,12 @@ switch version
   case '2011v2'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if isfield(timelock, 'grad')
-      % ensure that the gradiometer balancing is specified
-      if ~isfield(timelock.grad, 'balance') || ~isfield(timelock.grad.balance, 'current')
-        timelock.grad.balance.current = 'none';
-      end
-      
-      % ensure the new style sensor description
+      % ensure that the gradiometer structure is up to date
       timelock.grad = ft_datatype_sens(timelock.grad);
     end
     
     if isfield(timelock, 'elec')
+      % ensure that the electrode structure is up to date
       timelock.elec = ft_datatype_sens(timelock.elec);
     end
 
@@ -105,6 +101,6 @@ switch version
 
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    error('unsupported version "%s" for freq datatype', version);
+    error('unsupported version "%s" for timelock datatype', version);
 end
 

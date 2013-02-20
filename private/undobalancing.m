@@ -2,7 +2,7 @@ function sens = undobalancing(sens)
 
 % UNDOBALANCING removes all balancing coefficients from the gradiometer sensor array
 %
-% This is used in CHANNELPOSITION, FT_PREPARE_LAYOUT
+% This is used in CHANNELPOSITION, FT_PREPARE_LAYOUT, FT_SENSTYPE
 
 while isfield(sens, 'balance') && isfield(sens.balance, 'current') && ~strcmp(sens.balance.current, 'none')
   fnames = setdiff(fieldnames(sens.balance), 'current');
@@ -34,7 +34,7 @@ while isfield(sens, 'balance') && isfield(sens.balance, 'current') && ~strcmp(se
       end
     end
     
-    sens = ft_apply_montage(sens, sens.balance.(sens.balance.current), 'inverse', 'yes', 'keepunused', 'yes');
+    sens = ft_apply_montage(sens, sens.balance.(sens.balance.current), 'inverse', 'yes', 'keepunused', 'yes', 'warning', 'no');
     
   else
     warning('cannot undo %s balancing\n', sens.balance.current);
