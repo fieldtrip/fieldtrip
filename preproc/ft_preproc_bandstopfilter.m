@@ -1,4 +1,4 @@
-function [filt] = ft_preproc_bandstopfilter(dat,Fs,Fbp,N,type,dir)
+function [filt] = ft_preproc_bandstopfilter(dat,Fs,Fbp,N,type,dir,instabilityfix)
 
 % FT_PREPROC_BANDSTOPFILTER applies a band-stop filter to the data and thereby
 % removes the spectral components in the specified frequency band
@@ -28,7 +28,7 @@ function [filt] = ft_preproc_bandstopfilter(dat,Fs,Fbp,N,type,dir)
 %
 % See also PREPROC
 
-% Copyright (c) 2007-2008, Robert Oostenveld
+% Copyright (c) 2007-2013, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -116,33 +116,34 @@ switch type
     error('unsupported filter type "%s"', type);
 end
 
+% demean the data before filtering
 meandat = mean(dat,2);
-for i=1:nsamples
-  % demean the data
-  dat(:,i) = dat(:,i) - meandat;
+dat = bsxfun(@minus, dat, meandat);
+
+try
+  filt = filter_with_correction(B,A,dat,dir);
+catch ME
+  switch instabilityfix
+    case 'none'
+      rethrow(ME);
+    case 'reduce'
+      warning('backtrace', 'off')
+      warning('instability detected - reducing the %dth order filter to an %dth order filter', N, N-1);
+      warning('backtrace', 'on')
+      filt = ft_preproc_bandstopfilter(dat,Fs,Fbp,N-1,type,dir,instabilityfix);
+    case 'split'
+      N1 = ceil(N/2);
+      N2 = floor(N/2);
+      warning('backtrace', 'off')
+      warning('instability detected - splitting the %dth order filter in a sequential %dth and a %dth order filter', N, N1, N2);
+      warning('backtrace', 'on')
+      filt1 = ft_preproc_bandstopfilter(dat  ,Fs,Fbp,N1,type,dir,instabilityfix);
+      filt  = ft_preproc_bandstopfilter(filt1,Fs,Fbp,N2,type,dir,instabilityfix);
+    otherwise
+      error('incorrect specification of instabilityfix');
+  end % switch
 end
 
-filt = filter_with_correction(B,A,dat,dir);
+% add the mean back to the filtered data
+filt = bsxfun(@plus, filt, meandat);
 
-for i=1:nsamples
-  % add the mean back to the filtered data
-  filt(:,i) = filt(:,i) + meandat;
-end
-
-% SK: I think the following is non-sense. Approximating a high-order
-% bandstop filter by a succession of low-order bandstop filters
-% will most likely give you very bad accuracy.
-
-% check for filter instabilities and try to solve them
-rangedat  = max(dat,[],2)  - min(dat,[],2);
-rangefilt = max(filt,[],2) - min(filt,[],2);
-result_instable = any(isnan(filt(:))) || (max(rangefilt)/max(rangedat)>2);
-if result_instable && N>1
-  warning('instable filter detected, applying two sequential filters');
-  step1 = floor(N/2);
-  step2 = N - step1;
-  % apply the filter in two steps, note that this is recursive
-  filt = dat;
-  filt = ft_preproc_bandstopfilter(filt,Fs,Fbp,step1,type,dir);
-  filt = ft_preproc_bandstopfilter(filt,Fs,Fbp,step2,type,dir);
-end
