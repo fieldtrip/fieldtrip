@@ -104,6 +104,10 @@ sel_dH    = match_str(data.label, planar(:,1));  % indices of the horizontal cha
 sel_dV    = match_str(data.label, planar(:,2));  % indices of the vertical   channels
 lab_dH    = data.label(sel_dH);
 lab_dV    = data.label(sel_dV);
+ 
+[~, sel_dH] = match_str(planar(:,1), data.label);
+[~, sel_dV] = match_str(planar(:,2), data.label);
+
 
 if length(sel_dH)~=length(sel_dV)
   error('not all planar channel combinations are complete')
@@ -115,7 +119,8 @@ lab_other = data.label(sel_other);
 
 % define the channel names after combining the planar combinations
 % they should be sorted according to the order of the planar channels in the data
-[dum, sel_planar] = match_str(data.label, planar(:,1));
+
+[~, sel_planar] = match_str(planar(:,1), data.label(sel_dH));
 lab_comb          = planar(sel_planar,3);
 
 % perform baseline correction
