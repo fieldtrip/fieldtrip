@@ -136,9 +136,7 @@ for i=1:Nsubj
   if ~isfield(varargin{i}, cfg.parameter)
     error('the field %s is not present in data structure %d', cfg.parameter, i);
   end
-  [chansel, temp] = match_str(varargin{i}.label, cfg.channel);
-  [~, idx] = sort(temp);
-  chansel = chansel(idx);
+  [dum, chansel] = match_str(cfg.channel, varargin{i}.label);
   varargin{i}.label = varargin{i}.label(chansel);
   
   if hastime

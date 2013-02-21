@@ -138,10 +138,9 @@ for k=1:numel(cfg.parameter)
         if ~isfield(varargin{i}, cfg.parameter{k})
             error('the field %s is not present in data structure %d', cfg.parameter{k}, i);
         end
-        [chansel, temp] = match_str(varargin{i}.label, cfg.channel);
-        [~, idx] = sort(temp);
-        chansel = chansel(idx);
+        [dum, chansel] = match_str(cfg.channel, varargin{i}.label);
         varargin{i}.label = varargin{i}.label(chansel);
+        
         if hasfreq
             freqsel = nearest(varargin{i}.freq, fbeg):nearest(varargin{i}.freq, fend);
             varargin{i}.freq = varargin{i}.freq(freqsel);

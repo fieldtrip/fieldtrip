@@ -100,14 +100,8 @@ end
 
 % find the combination of horizontal and vertical channels that should be combined
 planar    = planarchannelset(data);
-sel_dH    = match_str(data.label, planar(:,1));  % indices of the horizontal channels
-sel_dV    = match_str(data.label, planar(:,2));  % indices of the vertical   channels
-lab_dH    = data.label(sel_dH);
-lab_dV    = data.label(sel_dV);
- 
-[~, sel_dH] = match_str(planar(:,1), data.label);
-[~, sel_dV] = match_str(planar(:,2), data.label);
-
+[dum, sel_dH]    = match_str(planar(:,1), data.label);  % indices of the horizontal channels
+[dum, sel_dV]    = match_str(planar(:,2), data.label);  % indices of the vertical   channels
 
 if length(sel_dH)~=length(sel_dV)
   error('not all planar channel combinations are complete')
