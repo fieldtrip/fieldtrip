@@ -742,7 +742,7 @@ if isequal(cfg.method,'ortho')
   opt.axis = cfg.axis;
   opt.quit = ~strcmp(cfg.interactive, 'yes');
   if hasatlas
-    opt.atlas = cfg.atlas;
+    opt.atlas = atlas;
   end
   if hasana
     opt.ana = ana;
