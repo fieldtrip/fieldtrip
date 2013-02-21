@@ -136,8 +136,11 @@ for i=1:Nsubj
   if ~isfield(varargin{i}, cfg.parameter)
     error('the field %s is not present in data structure %d', cfg.parameter, i);
   end
-  chansel = match_str(varargin{i}.label, cfg.channel);
+  [chansel, temp] = match_str(varargin{i}.label, cfg.channel);
+  [~, idx] = sort(temp);
+  chansel = chansel(idx);
   varargin{i}.label = varargin{i}.label(chansel);
+  
   if hastime
     timesel = nearest(varargin{i}.time, cfg.latency(1)):nearest(varargin{i}.time, cfg.latency(2));
     varargin{i}.time = varargin{i}.time(timesel);
