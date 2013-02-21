@@ -121,6 +121,18 @@ datasets(end).numecg    = nan;
 datasets(end).numemg    = nan;
 datasets(end).senstype  = 'ctf151';
 
+% % Temporary test for bug1976. Should not normally be executed
+% datasets(end+1).origdir = origdir; 
+% datasets(end).type      = 'meg';
+% datasets(end).datatype  = 'ctf151_1trial1time';
+% datasets(end).filename  = 'Subject01.ds';
+% datasets(end).numeeg    = nan;
+% datasets(end).nummeg    = 151;
+% datasets(end).numeog    = 1;
+% datasets(end).numecg    = nan;
+% datasets(end).numemg    = nan;
+% datasets(end).senstype  = 'ctf151';
+
 datasets(end+1).origdir = origdir; 
 datasets(end).type      = 'meg';
 datasets(end).datatype  = 'ctf275';
