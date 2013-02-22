@@ -94,34 +94,31 @@ quiver3(pos(:,1),pos(:,2),pos(:,3),j(1,:)',j(2,:)',j(3,:)')
 
 %% Also made changes to other methods. test here:
 test_bug1049
-
-cd ~/fieldtrip-dev/test
+cd /home/common/matlab/fieldtrip/test
 test_bug1298
-cd ~/fieldtrip-dev/test
+cd /home/common/matlab/fieldtrip/test
 test_bug1563
-cd ~/fieldtrip-dev/test
+cd /home/common/matlab/fieldtrip/test
 test_bug1599
-cd ~/fieldtrip-dev/test
-test_ft_sourceanalysis_grid_data_labels
-cd ~/fieldtrip-dev/test
+cd /home/common/matlab/fieldtrip/test
 test_ft_sourceanalysis
-cd ~/fieldtrip-dev/test
+cd /home/common/matlab/fieldtrip/test
 test_ft_sourcemovie
-cd ~/fieldtrip-dev/test
+cd /home/common/matlab/fieldtrip/test
 test_ft_timelockanalysis_new
-cd ~/fieldtrip-dev/test
+cd /home/common/matlab/fieldtrip/test
 test_historical
-cd ~/fieldtrip-dev/test
+cd /home/common/matlab/fieldtrip/test
 test_testbug1563
-cd ~/fieldtrip-dev/test
+cd /home/common/matlab/fieldtrip/test
 test_tutorial_beamformer20120321
-cd ~/fieldtrip-dev/test
+cd /home/common/matlab/fieldtrip/test
 test_tutorial_beamformer
-cd ~/fieldtrip-dev/test
+cd /home/common/matlab/fieldtrip/test
 test_tutorial_coherence
-cd ~/fieldtrip-dev/test
+cd /home/common/matlab/fieldtrip/test
 test_tutorial_connectivity3
-cd ~/fieldtrip-dev/test
+cd /home/common/matlab/fieldtrip/test
 
 %%
 % Note: I (Johanna) tested this also by creating a temporary timelock ctf151 with
