@@ -19,7 +19,7 @@ function [vol, sens] = ft_prepare_vol_sens(vol, sens, varargin)
 %   'channel'    cell-array with strings (default = 'all')
 %   'order'      number, for single shell "Nolte" model (default = 10)
 %
-% The detailled behaviour of this function depends on whether the input
+% The detailed behaviour of this function depends on whether the input
 % consists of EEG or MEG and furthermoree depends on the type of volume
 % conductor model:
 % - in case of EEG single and concentric sphere models, the electrodes are
@@ -288,7 +288,7 @@ elseif ismeg
       [center,radius] = fitsphere(vol.bnd.pnt);
       
       % initialize the forward calculation (only if gradiometer coils are available)
-      if size(sens.coilpos,1)>0
+      if size(sens.coilpos,1)>0 && ~isfield(vol, 'forwpar')
         vol.forwpar = meg_ini([vol.bnd.pnt vol.bnd.nrm], center', order, [sens.coilpos sens.coilori]);
       end
       
@@ -331,9 +331,9 @@ elseif iseeg
       
     case {'halfspace', 'halfspace_monopole'}
       % electrodes' all-to-all distances
-      numel = size(sens.elecpos,1);
+      numelec = size(sens.elecpos,1);
       ref_el = sens.elecpos(1,:);
-      md = dist( (sens.elecpos-repmat(ref_el,[numel 1]))' );
+      md = dist( (sens.elecpos-repmat(ref_el,[numelec 1]))' );
       % take the min distance as reference
       md = min(md(1,2:end));
       pnt = sens.elecpos;
