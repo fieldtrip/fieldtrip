@@ -123,6 +123,7 @@ cfg.grid.filter   = source.avg.filter;
 source_bsl  = ft_sourceanalysis(cfg, freq_bsl);
 source_exp  = ft_sourceanalysis(cfg, freq_exp);
 
+source_diff = source_exp;
 source_diff.avg.pow = (source_exp.avg.pow ./ source_bsl.avg.pow) - 1;
 source_diff.pos = template.grid.pos;
 source_diff.dim = template.grid.dim;
