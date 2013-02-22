@@ -6,6 +6,7 @@ function test_bug1129
 
 % change filter order for 'fir' (fir1) filter type, rather than 25 by
 % default, instead to be based on Fs, low-frequency, and data-length
+cd /home/common/matlab/fieldtrip/test
 
 %% low-level functions on random data
 close all
@@ -199,14 +200,14 @@ y5 = ft_preproc_bandpassfilter(x1, 1000, [15 25],[],'fir');
 figure;plot(linspace(0,1000,N),abs(fft(y1)));axis([0 40 0 inf])
 hold on;plot(linspace(0,1000,N),abs(fft(y5)),'r');axis([0 40 0 inf])
 
-% NM 'firls' with order 200
-y6=nut_filter2(x1','firls','bp',[],15,25,1000,1);
+% % NM 'firls' with order 200
+% y6=nut_filter2(x1','firls','bp',[],15,25,1000,1);
 
 figure;plot(linspace(0,1000,N),abs(fft(y1)));axis([0 40 0 inf])
-hold on;plot(linspace(0,1000,N),abs(fft(y6)),'r');axis([0 40 0 inf])
+% hold on;plot(linspace(0,1000,N),abs(fft(y6)),'r');axis([0 40 0 inf])
 
 figure;plot(linspace(0,1000,N),abs(fft(y5)));axis([0 40 0 inf])
-hold on;plot(linspace(0,1000,N),abs(fft(y6)),'r');axis([0 40 0 inf])
+% hold on;plot(linspace(0,1000,N),abs(fft(y6)),'r');axis([0 40 0 inf])
 
 
 %%  do for lower frequencies (2-6 Hz)
@@ -227,14 +228,14 @@ y5 = ft_preproc_bandpassfilter(x1, 1000, [2 6],200,'fir');
 figure;plot(linspace(0,1000,1000),abs(fft(y1)));axis([0 40 0 inf])
 hold on;plot(linspace(0,1000,1000),abs(fft(y5)),'r');axis([0 40 0 inf])
 
-% NM 'firls' with order 200
-y6=nut_filter2(x1','firls','bp',200,2,6,1000,1);
+% % NM 'firls' with order 200
+% y6=nut_filter2(x1','firls','bp',200,2,6,1000,1);
 
 figure;plot(linspace(0,1000,1000),abs(fft(y1)));axis([0 40 0 inf])
-hold on;plot(linspace(0,1000,1000),abs(fft(y6)),'r');axis([0 40 0 inf])
+% hold on;plot(linspace(0,1000,1000),abs(fft(y6)),'r');axis([0 40 0 inf])
 
 figure;plot(linspace(0,1000,1000),abs(fft(y5)));axis([0 40 0 inf])
-hold on;plot(linspace(0,1000,1000),abs(fft(y6)),'r');axis([0 40 0 inf])
+% hold on;plot(linspace(0,1000,1000),abs(fft(y6)),'r');axis([0 40 0 inf])
 
 
 
