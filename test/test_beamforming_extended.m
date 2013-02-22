@@ -57,7 +57,7 @@ cfg.coordsys   = 'ctf'; % our data is CTF MEG data
 [segmentedmri] = ft_volumesegment(cfg, mri);
 
 oldsegmented = load(fullfile(mridir, 'segmentedmri.mat'));
-assert(rmfield(oldsegmented.segmentedmri, 'cfg'), rmfield(segmentedmri, 'cfg'), 'segmentation differs from stored data');
+assert(isequal(rmfield(oldsegmented.segmentedmri, 'cfg'), rmfield(segmentedmri, 'cfg')), 'segmentation differs from stored data');
 
 %save segmentedmri segmentedmri
 
