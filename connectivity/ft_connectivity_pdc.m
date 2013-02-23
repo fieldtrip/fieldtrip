@@ -1,8 +1,32 @@
 function [pdc, pdcvar, n] = ft_connectivity_pdc(input, varargin)
 
-% FIXME build in proper documentation
+% FT_CONNECTIVITY_PDC computes partial directed coherence.
+% 
+% Use as
+%   [p, v, n] = ft_connectivity_pdc(h, key1, value1, ...)
+%
+% Input arguments: 
+%   H = spectral transfer matrix, Nrpt x Nchan x Nchan x Nfreq (x Ntime),
+%      Nrpt can be 1.
+%
+% additional options need to be specified as key-value pairs and are:
+%   'hasjack'  = 0 (default) is a boolean specifying whether the input
+%                contains leave-one-outs, required for correct variance
+%                estimate
+%   'feedback' = string, determining verbosity (default = 'none'), see FT_PROGRESS
+%
+% Output arguments:
+%   p = partial directed coherence matrix Nchan x Nchan x Nfreq (x Ntime).
+%       If multiple observations in the input, the average is returned.
+%   v = variance of p across observations.
+%   n = number of observations.
+%
+% Typically, nrpt should be 1 (where the spectral transfer matrix is
+% computed across observations. When nrpt>1 and hasjack is true the input
+% is assumed to contain the leave-one-out estimates of H, thus a more
+% reliable estimate of the relevant quantities.
 
-% Copyright (C) 2012, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
+% Copyright (C) 2009-2013, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -23,7 +47,6 @@ function [pdc, pdcvar, n] = ft_connectivity_pdc(input, varargin)
 % $Id$
 
 hasjack  = ft_getopt(varargin, 'hasjack', 0);
-powindx  = ft_getopt(varargin, 'powindx');
 feedback = ft_getopt(varargin, 'feedback', 'none');
 
 % crossterms are described by chan_chan_therest
