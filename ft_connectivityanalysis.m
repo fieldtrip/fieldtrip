@@ -30,6 +30,8 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %                  freqmvar data
 %     'plv',       phase-locking value, support for freq and freqmvar data
 %     'powcorr',   power correlation, support for freq and source data
+%     'powcorr_ortho', power correlation with single trial
+%                  orthogonalisation, support for source data
 %     'ppc'        pairwise phase consistency
 %     'psi',       phaseslope index, support for freq and freqmvar data
 %     'wpli',      weighted phase lag index (signed one,
@@ -403,6 +405,11 @@ if any(~isfield(data, inparam)) || (isfield(data, 'crsspctrm') && (ischar(inpara
       end
       
     case 'source'
+      if ischar(cfg.refindx) && strcmp(cfg.refindx, 'all')
+        cfg.refindx = 1:size(data.pos,1);
+      elseif ischar(cfg.refindx)
+        error('cfg.refindx should be a 1xN vector, or ''all''');
+      end
       if strcmp(inparam, 'crsspctrm')
         [data, powindx, hasrpt] = univariate2bivariate(data, 'mom', 'crsspctrm', dtype, 'cmb', cfg.refindx, 'keeprpt', 0);
         % [data, powindx, hasrpt] = univariate2bivariate(data, 'fourierspctrm', 'crsspctrm', dtype, 0, cfg.refindx, [], 1);
@@ -470,7 +477,7 @@ elseif hasrpt && dojack && ~(exist('debiaswpli', 'var') || exist('weightppc', 'v
   % compute leave-one-outs
   data = ft_selectdata(data, 'jackknife', 'yes');
   hasjack = 1;
-elseif hasrpt && ~(exist('debiaswpli', 'var') || exist('weightppc', 'var') || strcmp(cfg.method, 'hipp'))% || needrpt)
+elseif hasrpt && ~(exist('debiaswpli', 'var') || exist('weightppc', 'var') || strcmp(cfg.method, 'powcorr_ortho'))% || needrpt)
   % create dof variable
   if isfield(data, 'dof')
     dof = data.dof;
@@ -716,10 +723,10 @@ switch cfg.method
     if exist('powindx', 'var'), optarg = cat(2, optarg, {'powindx', powindx}); end
     [datout, varout, nrpt] = ft_connectivity_psi(data.(inparam), optarg{:});
     
-  case 'hipp'
+  case 'powcorr_ortho'
     % Joerg Hipp's power correlation method
     optarg = {'refindx', cfg.refindx, 'tapvec', data.cumtapcnt};
-    [datout] = ft_connectivity_hipp(cat(2, data.mom{data.inside}).', optarg{:});
+    [datout] = ft_connectivity_powcorr_ortho(cat(2, data.mom{data.inside}).', optarg{:});
     varout = [];
     nrpt = numel(data.cumtapcnt);
     
