@@ -115,16 +115,15 @@ else
 % every neuron is considered to have its own channel (identified by its
 % neuron number).
 
-[number, ~, idx]=unique(dat{2});
-spike.label=cell(1,length(number));
-spike.timestamp=cell(1,length(number));
+spike.label=cell(1,numel(label));
+spike.timestamp=cell(1,numel(label));
 
 
-for n=1:length(number)
+for n=1:numel(label)
     % write labels ([number]: [neuron type] in [network])
-    spike.label{n}=strrep(label{number(n)},'neuron ','');
+    spike.label{n}=strrep(label{n},'neuron ','');
     % select spike times belonging to the neuron
-    sel=idx==n;
+    sel=dat{2}==n;
     spike.timestamp{n}=dat{1}(sel)';
 end
 end

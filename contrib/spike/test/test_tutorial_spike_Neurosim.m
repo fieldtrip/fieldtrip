@@ -26,7 +26,7 @@ spike = ft_spike_select(cfg, spike2);
 
 
 
-%% waverform-based cleaning; not useful, or available with neurosim data
+%% waveform-based cleaning; not useful, or available, with neurosim data
 % cfg             = [];
 % cfg.fsample     = 40000;
 % cfg.interpolate = 1; % keep the density of samples as is

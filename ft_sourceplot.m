@@ -742,7 +742,7 @@ if isequal(cfg.method,'ortho')
   opt.axis = cfg.axis;
   opt.quit = ~strcmp(cfg.interactive, 'yes');
   if hasatlas
-    opt.atlas = cfg.atlas;
+    opt.atlas = atlas;
   end
   if hasana
     opt.ana = ana;
@@ -1287,9 +1287,9 @@ end
 %fprintf('%s %s %s %s\n', str1, str2, str3, str4);
 
 if opt.hasatlas
-  tmp = [opt.ijk(:)' 1] * opt.atlas.transform; % atlas and data might have different transformation matrices, so xyz cannot be used here anymore
+  %tmp = [opt.ijk(:)' 1] * opt.atlas.transform; % atlas and data might have different transformation matrices, so xyz cannot be used here anymore
   % determine the anatomical label of the current position
-  lab = atlas_lookup(opt.atlas, (tmp(1:3)), 'inputcoord', data.coordsys, 'queryrange', opt.queryrange);
+  lab = atlas_lookup(opt.atlas, (xyz(1:3)), 'inputcoord', data.coordsys, 'queryrange', opt.queryrange);
   if isempty(lab)
     lab = 'NA';
     %fprintf('atlas labels: not found\n');

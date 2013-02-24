@@ -825,7 +825,7 @@ if strcmp(cfg.interactive, 'yes')
     set(gcf, 'WindowButtonDownFcn',   {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR, cfg, varargin{1:Ndata}}, 'event', 'WindowButtonDownFcn'});
     set(gcf, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR, cfg, varargin{1:Ndata}}, 'event', 'WindowButtonMotionFcn'});
   else
-    error('unsupported dimord "%" for interactive plotting', data.dimord);
+    warning('unsupported dimord "%s" for interactive plotting', data.dimord);
   end
 end
 

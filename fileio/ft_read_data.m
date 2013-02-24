@@ -74,6 +74,7 @@ fallback      = ft_getopt(varargin, 'fallback');
 cache         = ft_getopt(varargin, 'cache', false);
 dataformat    = ft_getopt(varargin, 'dataformat');
 chanunit      = ft_getopt(varargin, 'chanunit');
+timestamp     = ft_getopt(varargin, 'timestamp');
 
 if isempty(dataformat)
   dataformat = ft_filetype(filename);  % the default is automatically detected, but only if not specified
@@ -770,6 +771,17 @@ switch dataformat
     % cut out the desired samples
     begsample = begsample - (begrecord-1)*512;
     endsample = endsample - (begrecord-1)*512;
+    if istrue(timestamp)
+      ts1 = ncs.TimeStamp(1:end-1);
+      ts2 = ncs.TimeStamp(2:end);
+      dts = ts2-ts1;
+      % this is the best estimate of the number of timestamps per sample
+      TimestampPerSample = median(double(dts))/512;
+      % replace the data with the timestamp of each sample
+      for i=1:512
+        ncs.dat(i,:) = double(ncs.TimeStamp) + (i-1)*TimestampPerSample;
+      end
+    end
     % this also reshape the data from 512 X records into a linear array
     dat = ncs.dat(begsample:endsample);
     
