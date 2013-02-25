@@ -10,7 +10,8 @@ c = ft_connectivity_powcorr_ortho([mom1;mom2], 'refindx', 1);
 c = c(2,:);
 
 [c1, c2] = hipp_testfunction(mom1, mom2);
-assert(all(abs(c-[c1 c2])<10*eps));
+%assert(all(abs(c-[c1 c2])<10*eps));
+assert(all(abs(c-(c1+c2)./2)<10*eps));
 
 % subfunction that does the computation according to the paper
 % Nat Neuro 2012 Hipp et al.
