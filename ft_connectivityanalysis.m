@@ -19,7 +19,9 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %   cfg.method  =  string, can be
 %     'amplcorr',  amplitude correlation, support for freq and source data
 %     'coh',       coherence, support for freq, freqmvar and source data.
-%                  For partial coherence also specify cfg.partchannel
+%                  For partial coherence also specify cfg.partchannel, see below.
+%                  For imaginary part of coherency or coherency also specify
+%                  cfg.complex, see below.
 %     'csd',       cross-spectral density matrix, can also calculate partial
 %                  csds - if cfg.partchannel is specified, support for freq
 %                  and freqmvar data
@@ -73,7 +75,11 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 % input/output structure.
 %
 % See also FT_PREPROCESSING, FT_TIMELOCKANALYSIS, FT_FREQANALYSIS,
-% FT_MVARANALYSIS, FT_SOURCEANALYSIS, FT_NETWORKANALYSIS
+% FT_MVARANALYSIS, FT_SOURCEANALYSIS, FT_NETWORKANALYSIS.
+%
+% For the implemented methods, see also FT_CONNECTIVITY_CORR,
+% FT_CONNECTIVITY_GRANGER, FT_CONNECTIVITY_PPC, FT_CONNECTIVITY_WPLI,
+% FT_CONNECTIVITY_PDC, FT_CONNECTIVITY_DTF, FT_CONNECTIVITY_PSI
 
 % Undocumented options:
 %   cfg.refindx
