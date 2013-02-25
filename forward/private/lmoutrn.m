@@ -46,7 +46,7 @@ vec3 = v3 - v1;
 
 tmp(:,1,:) = vec1';
 tmp(:,2,:) = vec3';
-tmp   = pinv(tmp);
+tmp   = pinvNx2(tmp);
 la    = sum(vec0'.*shiftdim(tmp(1,:,:))).'; % tmp*vec0';
 mu    = sum(vec0'.*shiftdim(tmp(2,:,:))).';
 
