@@ -46,8 +46,17 @@ NRecords   = floor((ftell(fid) - headersize)/recordsize);
 if NRecords>0
   if (ispc), fclose(fid); end
   % read the timestamp from the first and last record
-  hdr.FirstTimeStamp = neuralynx_timestamp(filename, 1);
-  hdr.LastTimeStamp  = neuralynx_timestamp(filename, inf);
+  ts1 = neuralynx_timestamp(filename, 1);
+  ts2 = neuralynx_timestamp(filename, 2);
+  tsE = neuralynx_timestamp(filename, inf);
+  hdr.FirstTimeStamp = ts1;
+  hdr.LastTimeStamp  = tsE;
+  % estimate the timestamps per sample
+  timestampPerSample2 = double(ts2-ts1)/512;
+  timestampPerSampleE = double(tsE-ts1)/(512*NRecords);
+  if (timestampPerSampleE/timestampPerSample2-1)>0.01
+    warning('discontinuous recording, timestamps and samples will not match');
+  end
   if (ispc), fid = fopen(filename, 'rb', 'ieee-le'); end
 else
   hdr.FirstTimeStamp = nan;
@@ -55,7 +64,7 @@ else
 end
 
 if begrecord==0 && endrecord==0
-  % only read the header  
+  % only read the header
 elseif begrecord<1
   error('cannot read before the first record');
 elseif begrecord>NRecords
@@ -70,14 +79,14 @@ if begrecord>=1 && endrecord>=begrecord
   if status~=0
     error('cannot jump to the requested record');
   end
-
+  
   numrecord    = (endrecord-begrecord+1);
   TimeStamp    = zeros(1,numrecord,'uint64');
   ChanNumber   = zeros(1,numrecord);
   SampFreq     = zeros(1,numrecord);
   NumValidSamp = zeros(1,numrecord);
   Samp         = zeros(512,numrecord);  % this allows easy reshaping into a 1xNsamples vector
-
+  
   for k=1:numrecord
     % read a single continuous data record
     TimeStamp(k)    = fread(fid,   1, 'uint64=>uint64');
@@ -88,7 +97,7 @@ if begrecord>=1 && endrecord>=begrecord
     % mark the invalid samples
     Samp((NumValidSamp+1):end,k) = nan;
   end
-
+  
   % store the record data in the output structure
   ncs.TimeStamp    = TimeStamp;
   ncs.ChanNumber   = ChanNumber;
@@ -96,7 +105,7 @@ if begrecord>=1 && endrecord>=begrecord
   ncs.NumValidSamp = NumValidSamp;
   % apply the scaling factor from ADBitVolts and convert to uV
   ncs.dat          = Samp * hdr.ADBitVolts * 1e6;
-
+  
 end
 fclose(fid);
 
