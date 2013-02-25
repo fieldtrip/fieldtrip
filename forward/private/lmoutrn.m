@@ -3,10 +3,10 @@ function [la, mu, dist, proj] = lmoutrn(v1, v2, v3, r)
 % LMOUTRN computes the la/mu parameters of a point projected to triangles
 %
 % Use as
-%   [la, mu, dist, proj] = lmoutr(v1, v2, v3, r)
+%   [la, mu, dist, proj] = lmoutrn(v1, v2, v3, r)
 % where v1, v2 and v3 are Nx3 matrices with vertex positions of the triangles, 
 % and r is the point that is projected onto the planes spanned by the vertices
-% This is a vectorized version of Robert's lmoutrn function and is
+% This is a vectorized version of Robert's lmoutr function and is
 % generally faster than a for-loop around the mex-file.
 
 % Copyright (C) 2012, Jan-Mathijs Schoffelen
@@ -27,12 +27,7 @@ function [la, mu, dist, proj] = lmoutrn(v1, v2, v3, r)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: lmoutr.m 4624 2011-10-29 10:10:49Z roboos $
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% This is the Matlab implementation.
-% The mex file is many times faster and therefore preferred.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% $Id: lmoutrn.m 4624 2011-10-29 10:10:49Z roboos $
 
 if size(r,1)==1 && size(v1,1)>1
   r = repmat(r, [size(v1,1), 1]);
