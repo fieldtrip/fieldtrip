@@ -113,8 +113,7 @@ lab_other = data.label(sel_other);
 
 % define the channel names after combining the planar combinations
 % they should be sorted according to the order of the planar channels in the data
-
-[~, sel_planar] = match_str(planar(:,1), data.label(sel_dH));
+[dum, sel_planar] = match_str(data.label(sel_dH),planar(:,1)); 
 lab_comb          = planar(sel_planar,3);
 
 % perform baseline correction
