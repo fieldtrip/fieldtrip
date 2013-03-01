@@ -233,9 +233,9 @@ elseif (~is2Dana && is2Dfun) || (is2Dana && is2Dfun)
   
   for k = 1:numel(cfg.parameter)
     tmp    = getsubfield(functional, cfg.parameter{k});
-    tmp    = interpmat*tmp';
+    tmp    = interpmat*tmp;
     tmp(newoutside,:) = nan;
-    interp = setsubfield(interp, cfg.parameter{k}, tmp');
+    interp = setsubfield(interp, cfg.parameter{k}, tmp);
   end
  
   interp.pos     = pos;
