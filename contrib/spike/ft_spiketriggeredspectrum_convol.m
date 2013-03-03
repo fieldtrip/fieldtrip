@@ -179,7 +179,20 @@ nTrials                             = length(data.trial); % number of trials
 [spectrum,spiketime, spiketrial]    = deal(cell(nspikesel,nTrials)); % preallocate the outputs
 [unitsmp,unittime,unitshift]        = deal(cell(1,nspikesel));
 nSpikes = zeros(1,nspikesel);
-freqs   = NaN(length(cfg.foi),nTrials); % to deal with variable frequencies
+
+if ~isfield(data, 'fsample'), data.fsample = 1/mean(diff(data.time{1})); end
+if any(cfg.foi > (data.fsample/2)) 
+  error('frequencies in cfg.foi are above Nyquist frequency')
+end
+numsmp  = round(cfg.t_ftimwin .* data.fsample);
+numsmp(~mod(numsmp,2)) = numsmp(~mod(numsmp,2))+1; % make sure we always have uneven samples, since we want the spike in the middle
+foi = zeros(1,length(cfg.foi));
+for iSmp = 1:length(numsmp)
+  faxis         = linspace(0,data.fsample,numsmp(iSmp));
+  findx         =  nearest(faxis,cfg.foi(iSmp));
+  [foi(iSmp)]   = deal(faxis(findx)); % this is the actual frequency used, from the DFT formula
+end
+cfg.foi = unique(foi); % take the unique frequencies from this
 
 if strcmp(cfg.rejectsaturation,'yes')
   [minChan,maxChan] = deal([]);
@@ -196,8 +209,6 @@ if strcmp(cfg.rejectsaturation,'yes')
     maxChan(iChan) = mx;
   end
 end
-
-if ~isfield(data, 'fsample'), data.fsample = 1/mean(diff(data.time{1})); end
 
 % compute the spectra
 ft_progress('init', 'text',     'Please wait...');
@@ -259,7 +270,6 @@ for iTrial = 1:nTrials
     for iChan = 1:nchansel
       [spec(:,iChan),foi, numsmp] = phase_est(tmpcfg,data.trial{iTrial}(chansel(iChan),:),data.time{iTrial}, data.fsample);
     end
-    freqs(iFreq,iTrial) = foi;
     
     for iUnit = 1:nspikesel
       if nSpikes(iUnit)==0, continue,end
@@ -306,7 +316,7 @@ end
 ft_progress('close');
 % collect the results
 Sts.lfplabel          = data.label(chansel);
-Sts.freq              = nanmean(freqs,2)';
+Sts.freq              = cfg.foi;
 Sts.label             = spike.label(spikesel);
 for iUnit = 1:nspikesel
   Sts.fourierspctrm{iUnit}  = cat(1, spectrum{iUnit,:}); 
@@ -420,9 +430,8 @@ for iTaper = 1:nTapers
     wavelet = complex(coswav(:), sinwav(:));       
     fftRamp = sum(xKern.*coswav) + 1i*sum(xKern.*sinwav); % fft of ramp with dx/ds = 1 * taper 
     fftDC   = sum(ones(1,timwinSamples).*coswav) + 1i*sum(ones(1,timwinSamples).*sinwav);% fft of unit direct current * taper
-    spctrm  = spctrm + (conv2(dat(:),wavelet,'same') - (beta0*fftDC + beta1.*fftRamp))/(numsmp/2);           
+    spctrm  = spctrm + (conv_fftbased(dat(:),wavelet) - (beta0*fftDC + beta1.*fftRamp))/(numsmp/2);           
                        % fft                       % mean            %linear ramp      % make magnitude invariant to window length                             
-    %spctrm  = spctrm + (conv_fftbased(dat(:),wavelet) - (beta0*fftDC + beta1.*fftRamp))/(numsmp/2); %ALTERNATIVE IMPLEMENTATION, CAN BE TESTED                                         
 end
 spctrm = spctrm./nTapers; % normalize by number of tapers
 spctrm = spctrm.*exp(-1i*phaseCor);
@@ -457,7 +466,7 @@ spikechan = (spikechan==ntrial);
 spikelabel = data.label(spikechan);
 eeglabel   = data.label(~spikechan);
 
-% ALTERNATIVE FFT-BASED IMPLEMENTATION: LITTLE GAIN
+% CONVOLUTION: FFT BASED IMPLEMENTATION
 function c = conv_fftbased(a, b)
 
 P = numel(a);
