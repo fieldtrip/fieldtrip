@@ -1,10 +1,25 @@
-function [sts] = ft_spiketriggeredspectrum_fft(cfg, data)
+function [sts] = ft_spiketriggeredspectrum_fft(cfg, data, spike)
 
 % FT_SPIKETRIGGEREDSPECTRUM_FFT computes the Fourier spectrup of the LFP around
 % the spikes.
 %
+% The spike data can either be contained in the data input or in the spike
+% input.
+%
+% The input SPIKE should be organised as the spike or the raw datatype, obtained from
+% FT_SPIKE_MAKETRIALS or FT_PREPROCESSING (in that case, conversion is done
+% within the function)
+%
+% The input DATA should be organised as the raw datatype, obtained from
+% FT_PREPROCESSING or FT_APPENDSPIKE
+%
 % Use as
-%   [sts] = ft_spiketriggeredspectrum_fft(cfg, data)
+%   [Sts] = ft_spiketriggeredspectrum_convol(cfg,data,spike)
+% or 
+%   [Sts] = ft_spiketriggeredspectrum_convol(cfg,data)
+%
+% Important is that data.time and spike.trialtime should be referenced
+% relative to the same trial trigger times!
 %
 % The input data should be organised in a structure as obtained from
 % the FT_APPENDSPIKE. The configuration should be according to
@@ -72,6 +87,9 @@ ft_preamble trackconfig
 
 % check input data structure
 data = ft_checkdata(data,'datatype', 'raw', 'feedback', 'yes');
+if nargin==3
+  spike = ft_checkdata(spike, 'datatype', {'spike'}, 'feedback', 'yes');
+end
 
 % these were supported in the past, but are not any more (for consistency with other spike functions)
 cfg = ft_checkconfig(cfg, 'forbidden', {'inputfile','outputfile'}); 
@@ -98,39 +116,44 @@ if strcmp(cfg.taper, 'sine')
   error('sorry, sine taper is not yet implemented');
 end
 
-% autodetect the spike channels
-ntrial = length(data.trial);
-nchans  = length(data.label);
-spikechan = zeros(nchans,1);
-for i=1:ntrial
-  for j=1:nchans
-    spikechan(j) = spikechan(j) + all(data.trial{i}(j,:)==0 | data.trial{i}(j,:)==1 | data.trial{i}(j,:)==2);
+% get the spikechannels
+if nargin==2
+  % autodetect the spikechannels and EEG channels
+  [spikechannel, eegchannel] = detectspikechan(data);
+  if strcmp(cfg.spikechannel, 'all'), 
+    cfg.spikechannel = spikechannel; 
+  else
+    cfg.spikechannel = ft_channelselection(cfg.spikechannel, data.label);  
+    if ~all(ismember(cfg.spikechannel,spikechannel)), error('some selected spike channels appear eeg channels'); end        
   end
-end
-spikechan = (spikechan==ntrial);
+  if strcmp(cfg.channel,'all')  
+    cfg.channel = eegchannel;
+  else
+    cfg.channel      = ft_channelselection(cfg.channel, data.label);  
+    if ~all(ismember(cfg.channel,eegchannel)), warning('some of the selected eeg channels appear spike channels'); end    
+  end    
+  data_spk = ft_selectdata(data,'channel', cfg.spikechannel);
+  data     = ft_selectdata(data,'channel', cfg.channel); % leave only LFP
+  spike    = ft_checkdata(data_spk,'datatype', 'spike');
+  clear data_spk % remove the continuous data
+else
+  cfg.spikechannel = ft_channelselection(cfg.spikechannel, spike.label);  
+  cfg.channel      = ft_channelselection(cfg.channel, data.label);
+end 
 
-% determine the channels to be averaged
-cfg.channel = ft_channelselection(cfg.channel, data.label);
-chansel     = match_str(data.label, cfg.channel);
-nchansel    = length(cfg.channel);  % number of channels
-
-% determine the spike channel on which will be triggered
-cfg.spikechannel = ft_channelselection(cfg.spikechannel, data.label);
-spikesel         = match_str(data.label, cfg.spikechannel);
-nspikesel        = length(cfg.spikechannel);    % number of channels
+% determine the channel indices and number of chans
+chansel          = match_str(data.label, cfg.channel); % selected channels
+nchansel         = length(cfg.channel);                % number of channels
+spikesel         = match_str(spike.label, cfg.spikechannel);
+nspikesel        = length(spikesel); % number of spike channels
 
 if nspikesel==0
   error('no spike channel selected');
-end
-
-if nspikesel>1
+elseif nspikesel>1
   error('only supported for a single spike channel');
 end
 
-if ~spikechan(spikesel)
-  error('the selected spike channel seems to contain continuous data');
-end
-
+if ~isfield(data, 'fsample'), data.fsample = 1/mean(diff(data.time{1})); end
 begpad = round(cfg.timwin(1)*data.fsample);
 endpad = round(cfg.timwin(2)*data.fsample);
 numsmp = endpad - begpad + 1;
@@ -145,13 +168,11 @@ else
 end
 taper  = sparse(diag(taper));
 
+ntrial      = length(data.trial);
 spectrum    = cell(1,ntrial);
 spiketime   = cell(1,ntrial);
 spiketrial  = cell(1,ntrial);
-cumsum = zeros(nchansel, numsmp);
-cumcnt = 0;
 
-timeaxis = linspace(cfg.timwin(1),cfg.timwin(2), numsmp);
 freqaxis = linspace(0, data.fsample, numsmp);
 fbeg = nearest(freqaxis, cfg.foilim(1));
 fend = nearest(freqaxis, cfg.foilim(2));
@@ -160,64 +181,48 @@ cfg.foilim(1) = freqaxis(fbeg);
 cfg.foilim(2) = freqaxis(fend);
 
 % make a representation of the spike, this is used for the phase rotation
-spike = zeros(1,numsmp);
-time  = randn(1,numsmp); % this is actually not used
-spike(1-begpad) = 1;
-spike_fft = specest_nanfft(spike, time);
+spike_repr = zeros(1,numsmp);
+time       = linspace(cfg.timwin(1),cfg.timwin(2), numsmp);
+spike_repr(1-begpad) = 1;
+spike_fft = specest_nanfft(spike_repr, time);
 spike_fft = spike_fft(fbeg:fend);
 spike_fft = spike_fft./abs(spike_fft);
 rephase   = sparse(diag(conj(spike_fft)));
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % compute the spectra
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ft_progress('init', 'text',     'Please wait...');
-for i=1:ntrial
-  spikesmp = find(data.trial{i}(spikesel,:));
-  spikecnt = data.trial{i}(spikesel,spikesmp);
+for iTrial = 1:ntrial
   
-  if any(spikecnt>5) || any(spikecnt<0)
-    error('the spike count lies out of the regular bounds');
-  end
+  timeBins = [ data.time{iTrial}  data.time{iTrial}(end)+1/data.fsample] - (0.5/data.fsample);      
+  hasTrial = spike.trial{spikesel} == iTrial; % find the spikes that are in the trial
+  ts       = spike.time{spikesel}(hasTrial); % get the spike times for these spikes
+  ts       = ts(ts>=timeBins(1) & ts<=timeBins(end)); % only select those spikes that fall in the trial window
+  [ignore,spikesmp] = histc(ts,timeBins);      
+  spikesmp(spikesmp==0 | spikesmp==length(timeBins)) = [];
   
-  % instead of doing the bookkeeping of double spikes below, replicate the double spikes by looking at spikecnt
-  sel = find(spikecnt>1);
-  tmp = zeros(1,sum(spikecnt(sel)));
-  n   = 1;
-  for j=1:length(sel)
-    for k=1:spikecnt(sel(j))
-      tmp(n) = spikesmp(sel(j));
-      n = n + 1;
-    end
-  end
-  spikesmp(sel) = [];                     % remove the double spikes
-  spikecnt(sel) = [];                     % remove the double spikes
-  spikesmp = [spikesmp tmp];              % add the double spikes as replicated single spikes
-  spikecnt = [spikecnt ones(size(tmp))];  % add the double spikes as replicated single spikes
-  spikesmp = sort(spikesmp);              % sort them to keep the original ordering (not needed on spikecnt, since that is all ones)
+  spiketime{iTrial}  = ts;
+  spiketrial{iTrial} = iTrial*ones(size(spikesmp));
   
-  spiketime{i}  = data.time{i}(spikesmp);
-  spiketrial{i} = i*ones(size(spikesmp));
-  
-  spectrum{i} = zeros(length(spikesmp), nchansel, fend-fbeg+1);
-  ft_progress(i/ntrial, 'spectrally decomposing data for trial %d of %d, %d spikes', i, ntrial, length(spikesmp));  
+  spectrum{iTrial} = zeros(length(spikesmp), nchansel, fend-fbeg+1);
+  ft_progress(iTrial/ntrial, 'spectrally decomposing data for trial %d of %d, %d spikes', iTrial, ntrial, length(spikesmp));  
   for j=1:length(spikesmp)
     begsmp = spikesmp(j) + begpad;
     endsmp = spikesmp(j) + endpad;
     
     if (begsmp<1)
       segment = nan(nchansel, numsmp);
-    elseif endsmp>size(data.trial{i},2)
+    elseif endsmp>size(data.trial{iTrial},2)
       segment = nan(nchansel, numsmp);
     else
-      segment = data.trial{i}(chansel,begsmp:endsmp);
+      segment = data.trial{iTrial}(chansel,begsmp:endsmp);
     end
     
     % substract the DC component from every segment, to avoid any leakage of the taper
     segmentMean = repmat(nanmean(segment,2),1,numsmp); % nChan x Numsmp
     segment     = segment - segmentMean; % LFP has average of zero now (no DC)
-    
-    time  = randn(size(segment)); % this is actually not used
     
     % taper the data segment around the spike and compute the fft
     segment_fft = specest_nanfft(segment * taper, time);
@@ -229,7 +234,7 @@ for i=1:ntrial
     segment_fft = segment_fft * rephase;
     
     % store the result for this spike in this trial
-    spectrum{i}(j,:,:) = segment_fft;
+    spectrum{iTrial}(j,:,:) = segment_fft;
     
   end % for each spike in this trial  
 end % for each trial
@@ -257,8 +262,23 @@ ft_postamble previous data
 ft_postamble history sts
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION for demonstration purpose
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function y = fft_along_rows(x)
-y = fft(x, [], 2); % use normal Matlab function to compute the fft along 2nd dimension
+function [spikelabel, eeglabel] = detectspikechan(data)
 
+maxRate = 1000; % default on what we still consider a neuronal signal
+
+% autodetect the spike channels
+ntrial = length(data.trial);
+nchans  = length(data.label);
+spikechan = zeros(nchans,1);
+for i=1:ntrial
+  for j=1:nchans
+    hasAllInts    = all(isnan(data.trial{i}(j,:)) | data.trial{i}(j,:) == round(data.trial{i}(j,:)));
+    hasAllPosInts = all(isnan(data.trial{i}(j,:)) | data.trial{i}(j,:)>=0);
+    fr            = nansum(data.trial{i}(j,:)) ./ (data.time{i}(end)-data.time{i}(1));    
+    spikechan(j) = spikechan(j) + double(hasAllInts & hasAllPosInts & fr<=maxRate);
+  end
+end
+spikechan = (spikechan==ntrial);
+
+spikelabel = data.label(spikechan);
+eeglabel   = data.label(~spikechan);
