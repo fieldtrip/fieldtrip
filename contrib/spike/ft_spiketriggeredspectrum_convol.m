@@ -197,20 +197,20 @@ if strcmp(cfg.rejectsaturation,'yes')
   end
 end
 
-fsample = data.fsample;
+if ~isfield(data, 'fsample'), data.fsample = 1/mean(diff(data.time{1})); end
 
 % compute the spectra
 ft_progress('init', 'text',     'Please wait...');
 for iTrial = 1:nTrials
   
   x = data.time{iTrial};      
-  timeBins   = [x x(end)+1/fsample] - (0.5/fsample);      
+  timeBins   = [x x(end)+1/data.fsample] - (0.5/data.fsample);      
   % select the spike times for a given trial and restrict to those overlapping with the EEG
   for iUnit = 1:nspikesel
     unitindx = spikesel(iUnit);
     hasTrial = spike.trial{unitindx} == iTrial; % find the spikes that are in the trial
     ts       = spike.time{unitindx}(hasTrial); % get the spike times for these spikes
-    vld      = ts>=data.time{iTrial}(1) & ts<=data.time{iTrial}(end); % only select those spikes that fall in the trial window
+    vld      = ts>=timeBins(1) & ts<=timeBins(end); % only select those spikes that fall in the trial window
     ts       = ts(vld); % timestamps for these spikes
     %unitsmp{iUnit} = zeros(1,length(ts));
     [ignore,I] = histc(ts,timeBins);      
@@ -257,11 +257,7 @@ for iTrial = 1:nTrials
     end      
     spec = zeros(length(data.time{iTrial}),nchansel);
     for iChan = 1:nchansel
-      if isfield(data,'hdr') && isfield(data.hdr,'Fs') 
-        [spec(:,iChan),foi, numsmp] = phase_est(tmpcfg,data.trial{iTrial}(chansel(iChan),:),data.time{iTrial}, data.hdr.Fs);
-      else
-        [spec(:,iChan),foi, numsmp] = phase_est(tmpcfg,data.trial{iTrial}(chansel(iChan),:),data.time{iTrial});
-      end        
+      [spec(:,iChan),foi, numsmp] = phase_est(tmpcfg,data.trial{iTrial}(chansel(iChan),:),data.time{iTrial}, data.fsample);
     end
     freqs(iFreq,iTrial) = foi;
     
