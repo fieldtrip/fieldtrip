@@ -773,6 +773,7 @@ if isequal(cfg.method,'ortho')
   opt.colorbar = cfg.colorbar;
   opt.queryrange = cfg.queryrange;
   opt.funcolormap = cfg.funcolormap;
+  opt.crosshair = strcmp(cfg.crosshair, 'yes');
   opt.lpa = [];
   opt.rpa = [];
   opt.nas = [];
@@ -1432,20 +1433,24 @@ sel = findobj('type','axes','tag',tag);
 if ~isempty(sel)
   set(opt.handlesfigure, 'currentaxes', sel(1));
 end
-if opt.init
-  hch1 = crosshair([xi 1 zi], 'parent', opt.handlesaxes(1));
-  hch3 = crosshair([xi yi opt.dim(3)], 'parent', opt.handlesaxes(3));
-  hch2 = crosshair([opt.dim(1) yi zi], 'parent', opt.handlesaxes(2));
-  
-  opt.handlescross  = [hch1(:)';hch2(:)';hch3(:)'];
+if opt.crosshair
+  if opt.init
+    hch1 = crosshair([xi 1 zi], 'parent', opt.handlesaxes(1));
+    hch3 = crosshair([xi yi opt.dim(3)], 'parent', opt.handlesaxes(3));
+    hch2 = crosshair([opt.dim(1) yi zi], 'parent', opt.handlesaxes(2));
+    opt.handlescross  = [hch1(:)';hch2(:)';hch3(:)'];
+  else
+    crosshair([xi 1 zi], 'handle', opt.handlescross(1, :));
+    crosshair([opt.dim(1) yi zi], 'handle', opt.handlescross(2, :));
+    crosshair([xi yi opt.dim(3)], 'handle', opt.handlescross(3, :));
+  end
+end
 
+if opt.init
   opt.init = false;
   setappdata(h, 'opt', opt);
-else
-  crosshair([xi 1 zi], 'handle', opt.handlescross(1, :));
-  crosshair([opt.dim(1) yi zi], 'handle', opt.handlescross(2, :));
-  crosshair([xi yi opt.dim(3)], 'handle', opt.handlescross(3, :));
 end
+
 set(h, 'currentaxes', curr_ax);
 
 uiresume
