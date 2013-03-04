@@ -249,7 +249,6 @@ if doTopData
     if ~strcmp(cfg.errorbars,'no')
       if ~isfield(timelock,'var')  || ~isfield(timelock,'dof'), error('timelock should contain field .var and .dof for errorbars'); end
       df = timelock.dof(unitIndx,binSel);
-      df = repmat(df(:)',[nUnits 1]);
       if strcmp(cfg.errorbars, 'sem')
         err = sqrt(timelock.var(unitIndx,binSel)./df);
       elseif strcmp(cfg.errorbars, 'std')
