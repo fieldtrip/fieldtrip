@@ -57,7 +57,13 @@ cfg.coordsys   = 'ctf'; % our data is CTF MEG data
 [segmentedmri] = ft_volumesegment(cfg, mri);
 
 oldsegmented = load(fullfile(mridir, 'segmentedmri.mat'));
-assert(isequal(rmfield(oldsegmented.segmentedmri, 'cfg'), rmfield(segmentedmri, 'cfg')), 'segmentation differs from stored data');
+
+% check whether the segmentation gives results of more than 99% consistency
+assert(max(abs(oldsegmented.segmentedmri.gray(:)-segmentedmri.gray(:))) < .01, 'Gray matter segmentation differs from stored data')
+assert(max(abs(oldsegmented.segmentedmri.csf(:)-segmentedmri.csf(:))) < .01, 'CSF segmentation differs from stored data')
+assert(max(abs(oldsegmented.segmentedmri.white(:)-segmentedmri.white(:))) < .01, 'White matter segmentation differs from stored data')
+% transformation should be absolutely identical
+assert(identical(oldsegmented.segmentedmri.transform, segmentedmri.transform), 'Transform differs from stored data')
 
 %save segmentedmri segmentedmri
 
@@ -216,10 +222,17 @@ cfg              = [];
 cfg.method       = 'ortho';
 cfg.coordsys     = 'mni';
 cfg.funparameter = 'coh';
+cfg.funcolormap = 'jet';
+
+cfg.funcolorlim   = [00 .15];
+cfg.opacitylim    = [00 .15]; 
+
+cfg.maskparameter = cfg.funparameter;
+cfg.opacitymap    = 'rampup';  
 if isunix
   cfg.atlas           = '/home/common/matlab/spm8/toolbox/wfu_pickatlas/MNI_atlas_templates/aal_MNI_V4.img';
 elseif ispc
   cfg.atlas           = 'H:/common/matlab/spm8/toolbox/wfu_pickatlas/MNI_atlas_templates/aal_MNI_V4.img';
 end
-figure; ft_sourceplot(cfg, source_coh_int);
+ft_sourceplot(cfg, source_coh_int);
 end
