@@ -82,7 +82,7 @@ if nUnits==0, error('No spikechannel selected by means of cfg.spikechannel'); en
 
 [mnWaveform, varWaveform, dofWaveform] = deal([]);
 for iUnit = 1:nUnits
-  fprintf('Processing waveforms for the %d th unit \n', iUnit);
+  fprintf('Processing waveforms for the unit %d \n', iUnit);
   % check if we should get the first dimension first
   spikeindx = spikesel(iUnit);
   waves     = spike.waveform{spikeindx};  
@@ -103,7 +103,7 @@ for iUnit = 1:nUnits
 
   % discard waveforms where derivative is not positive until peak index
   if strcmp(cfg.rejectonpeak,'yes') && idown>iup   
-    fprintf('Removing units with strange rise and late peak\n')
+    fprintf('Removing spikes with strange rise and late peak\n')
     % reject the ones that do not have a rising potential to the peak index
     % do this for all four leads at the same time
     mnOverLead = nanmean(waves,1);
