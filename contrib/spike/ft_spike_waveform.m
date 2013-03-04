@@ -103,10 +103,11 @@ for iUnit = 1:nUnits
 
   % discard waveforms where derivative is not positive until peak index
   if strcmp(cfg.rejectonpeak,'yes') && idown>iup   
+    
     fprintf('Removing spikes with strange rise and late peak\n')
+    
     % reject the ones that do not have a rising potential to the peak index
-    % do this for all four leads at the same time
-    mnOverLead = nanmean(waves,1);
+    mnOverLead = nanmean(waves,1);% do this for all four leads at the same time    
     d = find(squeeze(nansum(diff(mnOverLead(:,1:iup,:),[],2),2)));    
     rm1 = find(d<0);
     
@@ -114,7 +115,6 @@ for iUnit = 1:nUnits
     mnOverLead = nanmean(waves,1);        
     [vl,iu]   = nanmax(mnOverLead,[],2);
     [vl,id]   = nanmin(mnOverLead,[],2);
-    %waves(:,:,find(iu>id)) = [];
     rm2 = find(iu>id);
   else
     rm1 = [];
@@ -122,6 +122,7 @@ for iUnit = 1:nUnits
   end
   
   if strcmp(cfg.rejectclippedspikes,'yes')
+    
     fprintf('Removing spikes whose APs were clipped\n')
         
     % reject clipped spikes
@@ -163,14 +164,15 @@ for iUnit = 1:nUnits
     for j = 1:nSpikes
         wavesShift(:,actIndx(j):actIndx(j)+nSamples-1,j) = squeeze(waves(:,:,j));
     end
-    % --- get x axis right before upscaling and parameter extraction
+    
+    % --- get time axis right
     time  = samplesShift/cfg.fsample;
     waves = wavesShift;
   else
     time = samples/cfg.fsample;
   end
   
-  % make it outlier sensitive by actually looking at the modus  
+  % interpolate waveforms 
   if cfg.interpolate > 1
      t2 = linspace(time(1), time(end), round(length(time)*cfg.interpolate));
      Wn = zeros(nLeads,length(t2),nSpikes);
@@ -187,7 +189,6 @@ for iUnit = 1:nUnits
   
   dof = sum(~isnan(waves),3);
   sd  = nanstd(waves,[],3);  
-  %maxSample  = round(2*size(waves,2)/3);
   mn         = nanmean(nanmean(waves,3),1); % nLeads by nSamples
   [vl,iup]   = nanmax(mn(1:end));
   [vl,idown] = nanmin(mn(1:end));
