@@ -35,6 +35,8 @@ function [rate] = ft_spike_rate(cfg,spike)
 %   rate.var:          nTrials array containing the variance of firing rates per unit
 %   rate.dof:          nTrials array containing the degree of freedom per unit
 %   rate.label:        nUnits cell array containing the labels of the neuronal units%
+%   rate.time:         Mean latency (this field ensures it is TIMELOCK
+%                      struct)
 
 % Copyright (C) 2010, Martin Vinck
 %
@@ -147,7 +149,8 @@ if (strcmp(cfg.keeptrials,'yes'))
   rate.trial = singleTrials;
   rate.dimord = 'rpt_chan_time';
 end
-
+if isfield(spike, 'trialinfo'), rate.trialinfo = spike.trialinfo(cfg.trials,:); end
+  
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
 ft_postamble callinfo
