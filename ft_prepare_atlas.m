@@ -612,9 +612,11 @@ elseif usewfu
     while 1
       tline = fgetl(fid);
       if ~ischar(tline), break, end
-      % use TAB as deliniter
-      [num, rem] = strtok(tline, 9);
-      [str, rem] = strtok(rem, 9);
+      % split into separate strings
+      C = textscan(tline,'%s');
+      num = C{1}{3}; 
+      str = C{1}{2};
+      
       num = str2double(num);
       if ~isnan(num)
         atlas.descr.brick(i) = 0;
