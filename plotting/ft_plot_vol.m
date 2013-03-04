@@ -86,6 +86,10 @@ switch ft_voltype(vol)
     % these already contain one or multiple triangulated surfaces for the boundaries
     bnd = vol.bnd;
     
+  case 'infinite'
+    warning('there is nothing to plot for an infinite volume conductor')
+    return
+    
   otherwise
     error('unsupported voltype')
 end
