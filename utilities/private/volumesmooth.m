@@ -4,7 +4,9 @@ function [output] = volumesmooth(input, fwhm, str)
 %
 % See also VOLUMETHRESHOLD, VOLUMEFILLHOLES
 
-fprintf('smoothing %s with a %d-voxel FWHM kernel\n', str, fwhm);
+if nargin==3
+  fprintf('smoothing %s with a %d-voxel FWHM kernel\n', str, fwhm);
+end
 
 % check for any version of SPM
 if ~ft_hastoolbox('spm')
