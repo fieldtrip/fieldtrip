@@ -513,8 +513,9 @@ header.header_data.EventCodes     = 0;%no obvious field to take this from
 if isfield(header, 'channel_data'),
   header.ChannelGain        = double([header.config.channel_data([header.channel_data.chan_no]).gain]');
   header.ChannelUnitsPerBit = double([header.config.channel_data([header.channel_data.chan_no]).units_per_bit]');
-  %header.Channel            = {header.config.channel_data([header.channel_data.chan_no]).name}';
-  header.Channel            = {header.channel_data.chan_label}';
+  header.Channel            = {header.config.channel_data([header.channel_data.chan_no]).name}';
+  %header.Channel            = {header.channel_data.chan_label}';
+  %header.Channel            = {header.channel_data([header.channel_data.index]+1).chan_label}';
   header.Format             = header.header_data.Format;
 end
 
