@@ -31,7 +31,7 @@ function [sts] = ft_spiketriggeredspectrum_fft(cfg, data, spike)
 %                      multi-tapering. Note that 4 Hz smoothing means
 %                      plus-minus 4 Hz, i.e. a 8 Hz smoothing box.
 %                      Note: multitapering rotates phases (no problem for consistency)
-%   cfg.spikechannel = string, name of single spike channel to trigger on
+%   cfg.spikechannel = string, name of spike channels to trigger on
 %   cfg.channel      = Nx1 cell-array with selection of channels (default = 'all'),
 %                      see FT_CHANNELSELECTION for details
 %   cfg.feedback     = 'no', 'text', 'textbar', 'gui' (default = 'no')
@@ -96,7 +96,7 @@ cfg = ft_checkconfig(cfg, 'forbidden', {'inputfile','outputfile'});
 
 %get the options
 cfg.timwin       = ft_getopt(cfg, 'timwin',[-0.1 0.1]);
-cfg.spikechannel = ft_getopt(cfg,'spikechannel', []);
+cfg.spikechannel = ft_getopt(cfg,'spikechannel', 'all');
 cfg.channel      = ft_getopt(cfg,'channel', 'all');
 cfg.feedback     = ft_getopt(cfg,'feedback', 'no');
 cfg.tapsmofrq    = ft_getopt(cfg,'tapsmofrq', 4);
@@ -147,11 +147,7 @@ nchansel         = length(cfg.channel);                % number of channels
 spikesel         = match_str(spike.label, cfg.spikechannel);
 nspikesel        = length(spikesel); % number of spike channels
 
-if nspikesel==0
-  error('no spike channel selected');
-elseif nspikesel>1
-  error('only supported for a single spike channel');
-end
+if nspikesel==0, error('no spike channel selected'); end
 
 if ~isfield(data, 'fsample'), data.fsample = 1/mean(diff(data.time{1})); end
 begpad = round(cfg.timwin(1)*data.fsample);
@@ -169,9 +165,9 @@ end
 taper  = sparse(diag(taper));
 
 ntrial      = length(data.trial);
-spectrum    = cell(1,ntrial);
-spiketime   = cell(1,ntrial);
-spiketrial  = cell(1,ntrial);
+spectrum    = cell(nspikesel,ntrial);
+spiketime   = cell(nspikesel,ntrial);
+spiketrial  = cell(nspikesel,ntrial);
 
 freqaxis = linspace(0, data.fsample, numsmp);
 fbeg = nearest(freqaxis, cfg.foilim(1));
@@ -194,50 +190,53 @@ rephase   = sparse(diag(conj(spike_fft)));
 % compute the spectra
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ft_progress('init', 'text',     'Please wait...');
-for iTrial = 1:ntrial
-  
-  timeBins = [ data.time{iTrial}  data.time{iTrial}(end)+1/data.fsample] - (0.5/data.fsample);      
-  hasTrial = spike.trial{spikesel} == iTrial; % find the spikes that are in the trial
-  ts       = spike.time{spikesel}(hasTrial); % get the spike times for these spikes
-  ts       = ts(ts>=timeBins(1) & ts<=timeBins(end)); % only select those spikes that fall in the trial window
-  [ignore,spikesmp] = histc(ts,timeBins);      
-  spikesmp(spikesmp==0 | spikesmp==length(timeBins)) = [];
-  
-  spiketime{iTrial}  = ts;
-  spiketrial{iTrial} = iTrial*ones(size(spikesmp));
-  
-  spectrum{iTrial} = zeros(length(spikesmp), nchansel, fend-fbeg+1);
-  ft_progress(iTrial/ntrial, 'spectrally decomposing data for trial %d of %d, %d spikes', iTrial, ntrial, length(spikesmp));  
-  for j=1:length(spikesmp)
-    begsmp = spikesmp(j) + begpad;
-    endsmp = spikesmp(j) + endpad;
-    
-    if (begsmp<1)
-      segment = nan(nchansel, numsmp);
-    elseif endsmp>size(data.trial{iTrial},2)
-      segment = nan(nchansel, numsmp);
-    else
-      segment = data.trial{iTrial}(chansel,begsmp:endsmp);
-    end
-    
-    % substract the DC component from every segment, to avoid any leakage of the taper
-    segmentMean = repmat(nanmean(segment,2),1,numsmp); % nChan x Numsmp
-    segment     = segment - segmentMean; % LFP has average of zero now (no DC)
-    
-    % taper the data segment around the spike and compute the fft
-    segment_fft = specest_nanfft(segment * taper, time);
-    
-    % select the desired output frquencies and normalize
-    segment_fft = segment_fft(:,fbeg:fend) ./ sqrt(numsmp/2);
-    
-    % rotate the estimated phase at each frequency to correct for the segment t=0 not being at the first sample
-    segment_fft = segment_fft * rephase;
-    
-    % store the result for this spike in this trial
-    spectrum{iTrial}(j,:,:) = segment_fft;
-    
-  end % for each spike in this trial  
-end % for each trial
+for iUnit  = 1:nspikesel
+  for iTrial = 1:ntrial
+
+    timeBins = [ data.time{iTrial}  data.time{iTrial}(end)+1/data.fsample] - (0.5/data.fsample);      
+    hasTrial = spike.trial{spikesel(iUnit)} == iTrial; % find the spikes that are in the trial
+    ts       = spike.time{spikesel(iUnit)}(hasTrial); % get the spike times for these spikes
+    ts       = ts(ts>=timeBins(1) & ts<=timeBins(end)); % only select those spikes that fall in the trial window
+    [ignore,spikesmp] = histc(ts,timeBins);      
+    spikesmp(spikesmp==0 | spikesmp==length(timeBins)) = [];
+
+    spiketime{iUnit, iTrial}  = ts(:);
+    tr = iTrial*ones(size(spikesmp));
+    spiketrial{iUnit, iTrial} = tr(:);
+
+    spectrum{iUnit, iTrial} = zeros(length(spikesmp), nchansel, fend-fbeg+1);
+    ft_progress(iTrial/ntrial, 'spectrally decomposing data for trial %d of %d, %d spikes for unit %d', iTrial, ntrial, length(spikesmp), iUnit);  
+    for j=1:length(spikesmp)
+      begsmp = spikesmp(j) + begpad;
+      endsmp = spikesmp(j) + endpad;
+
+      if (begsmp<1)
+        segment = nan(nchansel, numsmp);
+      elseif endsmp>size(data.trial{iTrial},2)
+        segment = nan(nchansel, numsmp);
+      else
+        segment = data.trial{iTrial}(chansel,begsmp:endsmp);
+      end
+
+      % substract the DC component from every segment, to avoid any leakage of the taper
+      segmentMean = repmat(nanmean(segment,2),1,numsmp); % nChan x Numsmp
+      segment     = segment - segmentMean; % LFP has average of zero now (no DC)
+
+      % taper the data segment around the spike and compute the fft
+      segment_fft = specest_nanfft(segment * taper, time);
+
+      % select the desired output frquencies and normalize
+      segment_fft = segment_fft(:,fbeg:fend) ./ sqrt(numsmp/2);
+
+      % rotate the estimated phase at each frequency to correct for the segment t=0 not being at the first sample
+      segment_fft = segment_fft * rephase;
+
+      % store the result for this spike in this trial
+      spectrum{iUnit, iTrial}(j,:,:) = segment_fft;
+
+    end % for each spike in this trial  
+  end % for each trial
+end
 ft_progress('close');
   
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -246,14 +245,17 @@ ft_progress('close');
 sts.lfplabel       = data.label(chansel);
 sts.freq           = freqaxis(fbeg:fend);
 sts.dimord         = 'rpt_chan_freq';
-sts.fourierspctrm  = {cat(1, spectrum{:})};
-sts.time           = {cat(2,spiketime{:})'};  % this deviates from the standard output, but is included for reference
-sts.trial          = {cat(2,spiketrial{:})'}; % this deviates from the standard output, but is included for reference
+for iUnit = 1:nspikesel
+  sts.fourierspctrm{iUnit}  = cat(1, spectrum{iUnit,:});
+  spectrum(iUnit,:) = {[]}; % free from the memory
+  sts.time{iUnit}           = cat(1,spiketime{iUnit,:});  % this deviates from the standard output, but is included for reference
+  sts.trial{iUnit}          = cat(1,spiketrial{iUnit,:}); % this deviates from the standard output, but is included for reference
+end
 sts.dimord = '{chan}_spike_lfpchan_freq';
 for i = 1:ntrial
   sts.trialtime(i,:) = [data.time{i}(1) data.time{i}(end)];
 end
-sts.label   = data.label(spikesel);
+sts.label   = spike.label(spikesel);
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
