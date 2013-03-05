@@ -771,8 +771,9 @@ switch dataformat
     % cut out the desired samples
     begsample = begsample - (begrecord-1)*512;
     endsample = endsample - (begrecord-1)*512;
-    if istrue(timestamp)              
-      TimestampPerSample = ncs.hdr.GapCorrectedTimeStampPerSample;
+    if istrue(timestamp)   
+      medianTimestampPerBlock  = median(diff(double(ncs.TimeStamp))); % to avoid influence of the gaps
+      TimestampPerSample       = medianTimestampPerBlock/512; % divide by known block size
       % replace the data with the timestamp of each sample
       for i=1:512
         ncs.dat(i,:) = double(ncs.TimeStamp) + (i-1)*TimestampPerSample;
