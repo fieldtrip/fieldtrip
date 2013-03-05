@@ -44,7 +44,6 @@ recordsize = 1044;
 NRecords   = floor((ftell(fid) - headersize)/recordsize);
 
 if NRecords>0
-  if (ispc), fclose(fid); end
      
   % read out part of the dataset to detect whether there were jumps
   NRecords_to_read = min(NRecords, 100); % read out maximum 100 blocks of data
@@ -81,8 +80,11 @@ if NRecords>0
   gapCorrectedTimeStampPerSample =  nanmean(d(d<maxJump))/512;    
 
   % read the timestamp from the first and last record
+  if (ispc), fclose(fid); end
   ts1 = neuralynx_timestamp(filename, 1);
   tsE = neuralynx_timestamp(filename, inf);  
+  if (ispc), fid = fopen(filename, 'rb', 'ieee-le'); end
+  
   hdr.FirstTimeStamp  = ts1;
   hdr.LastTimeStamp   = tsE;
   
@@ -95,7 +97,6 @@ if NRecords>0
        abs(ts_range_predicted-ts_range_observed) );       
   end
       
-  if (ispc), fid = fopen(filename, 'rb', 'ieee-le'); end
 else
   hdr.FirstTimeStamp = nan;
   hdr.LastTimeStamp  = nan;
