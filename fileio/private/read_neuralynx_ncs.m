@@ -46,13 +46,13 @@ NRecords   = floor((ftell(fid) - headersize)/recordsize);
 if NRecords>0
   if (ispc), fclose(fid); end
      
-  % read out the complete data to detect whether there were jumps
-  numrecord    = NRecords;
-  TimeStamp    = zeros(1,numrecord,'uint64');
-  ChanNumber   = zeros(1,numrecord);  
-  SampFreq     = zeros(1,numrecord);
-  
-  for k=1:NRecords
+  % read out part of the dataset to detect whether there were jumps
+  NRecords_to_read = min(NRecords, 100); % read out maximum 100 blocks of data
+  TimeStamp        = zeros(1,NRecords_to_read,'uint64');
+  ChanNumber       = zeros(1,NRecords_to_read);  
+  SampFreq         = zeros(1,NRecords_to_read);
+    
+  for k=1:NRecords_to_read
     
     % set to the correct position    
     status = fseek(fid, headersize + (k-1)*recordsize, 'bof');        
@@ -66,7 +66,8 @@ if NRecords>0
     SampFreq(k)     = fread(fid,   1, 'int32');    
   end
   
-  % automatically detect the gaps; there's a gap if no round off error of the sampling frequency could
+  % for this block of data: automatically detect the gaps; 
+  % there's a gap if no round off error of the sampling frequency could
   % explain the jump (which is always > one block)
   Fs       = nanmin(SampFreq);
   if Fs~=hdr.SamplingFrequency
@@ -74,25 +75,25 @@ if NRecords>0
       hdr.SamplingFrequency, Fs);
   end
   
+  % detect the number of timestamps per block while avoiding influencce of gaps
   d        = diff(double(TimeStamp));
   maxJump  = ceil(10^6./(Fs-1))*512;
-  hasJump  = find(d>=maxJump);
-  if length(hasJump)>0
-    warning('discontinuous recording, timestamps and samples will not match');          
-    for iJump   = 1:length(hasJump)
-      beg_block = hasJump(iJump);
-      end_block = hasJump(iJump)+1;
-      fprintf('gap of %d timestamps between sample %d in block %d at timestamp %d \n and sample %d in block %d at timestamp %d \n', d(hasJump(iJump)), beg_block*512, beg_block, double(TimeStamp(hasJump(iJump))),beg_block*512+1,end_block, double(TimeStamp(hasJump(iJump)+1)));  
-    end
-  end
-  
+  gapCorrectedTimeStampPerSample =  nanmean(d(d<maxJump))/512;    
+
   % read the timestamp from the first and last record
   ts1 = neuralynx_timestamp(filename, 1);
-  tsE = neuralynx_timestamp(filename, inf);
+  tsE = neuralynx_timestamp(filename, inf);  
   hdr.FirstTimeStamp  = ts1;
   hdr.LastTimeStamp   = tsE;
-  hdr.GapCorrectedTimeStampPerSample =  nanmean(d(d<maxJump))/512;    
-    
+  
+  % compare whether there's at least a block missing
+  minJump = min(d);
+  ts_range_predicted = (NRecords-1)*512*gapCorrectedTimeStampPerSample;
+  ts_range_observed  = double(tsE-ts1);
+  if abs(ts_range_predicted-ts_range_observed)>minJump
+     warning('discontinuous recording, predicted number of timestamps and observed number of timestamps differ by %2.2f \n Please consult the wiki',abs(ts_range_predicted-ts_range_observed) );       
+  end
+      
   if (ispc), fid = fopen(filename, 'rb', 'ieee-le'); end
 else
   hdr.FirstTimeStamp = nan;
