@@ -1,61 +1,55 @@
 function [sts] = ft_spiketriggeredspectrum_fft(cfg, data, spike)
 
-% FT_SPIKETRIGGEREDSPECTRUM_FFT computes the Fourier spectrup of the LFP around
-% the spikes.
+% FT_SPIKETRIGGEREDSPECTRUM_FFT computes the Fourier spectrum of the LFP around the
+% spikes.
 %
-% The spike data can either be contained in the data input or in the spike
-% input.
+% The spike data can either be contained in the DATA input or in the SPIKE input.
 %
-% The input SPIKE should be organised as the spike or the raw datatype, obtained from
-% FT_SPIKE_MAKETRIALS or FT_PREPROCESSING (in that case, conversion is done
+% The (optional) input SPIKE should be organised as the spike or the raw datatype,
+% obtained from FT_SPIKE_MAKETRIALS or FT_PREPROCESSING (in that case, conversion is done
 % within the function)
 %
-% The input DATA should be organised as the raw datatype, obtained from
-% FT_PREPROCESSING or FT_APPENDSPIKE
+% The input DATA should be organised as the raw datatype, obtained from FT_PREPROCESSING
+% or FT_APPENDSPIKE. 
 %
 % Use as
 %   [Sts] = ft_spiketriggeredspectrum_convol(cfg,data,spike)
 % or 
 %   [Sts] = ft_spiketriggeredspectrum_convol(cfg,data)
 %
-% Important is that data.time and spike.trialtime should be referenced
-% relative to the same trial trigger times!
+% Important is that data.time and spike.trialtime should be referenced relative to the
+% same trial trigger times.
 %
-% The input data should be organised in a structure as obtained from
-% the FT_APPENDSPIKE. The configuration should be according to
+% The configuration should be according to
 %
 %   cfg.timwin       = [begin end], time around each spike (default = [-0.1 0.1])
 %   cfg.foilim       = [begin end], frequency band of interest (default = [0 150])
 %   cfg.taper        = 'dpss', 'hanning' or many others, see WINDOW (default = 'hanning')
 %   cfg.tapsmofrq    = number, the amount of spectral smoothing through
-%                      multi-tapering. Note that 4 Hz smoothing means
-%                      plus-minus 4 Hz, i.e. a 8 Hz smoothing box.
-%                      Note: multitapering rotates phases (no problem for consistency)
-%   cfg.spikechannel = string, name of spike channels to trigger on
-%   cfg.channel      = Nx1 cell-array with selection of channels (default = 'all'),
+%                      multi-tapering. Note that 4 Hz smoothing means plus-minus 4 Hz,
+%                      i.e. a 8 Hz smoothing box. Note: multitapering rotates phases (no
+%                      problem for consistency)
+%   cfg.spikechannel = string, name of spike channels to trigger on cfg.channel = Nx1
+%                      cell-array with selection of channels (default = 'all'),
 %                      see FT_CHANNELSELECTION for details
 %   cfg.feedback     = 'no', 'text', 'textbar', 'gui' (default = 'no')
 %
-% If the triggered spike leads a spike in another channel, then the angle
-% of the Fourier spectrum of that other channel will be negative. 
-% Earlier phases are in clockwise direction.
-% See FT_SPIKETRIGGEREDINTERPOLATION to remove segments of LFP around
-% spikes
-% See FT_SPIKETRIGGEREDSPECTRUM_CONVOL for an alternative implementation
-% based on convolution
-%
 % Output sts can be input to FT_SPIKETRIGGEREDSPECTRUM_STAT
 %
-% A phase of zero corresponds to the spike being on the peak of the LFP
-% oscillation.
-% A phase of 180 degree corresponds to the spike being in the through of the
-% oscillation.
-% A phase of 45 degrees corresponds to the spike being just after the
-% peak in the LFP.
-% This function uses a NaN-aware spectral estimation technique, which will
-% default to the standard Matlab FFT routine if no NaNs are present. The
-% fft_along_rows subfunction below demonstrates the expected function
-% behaviour.
+% A phase of zero corresponds to the spike being on the peak of the LFP oscillation. A
+% phase of 180 degree corresponds to the spike being in the through of the oscillation. A
+% phase of 45 degrees corresponds to the spike being just after the peak in the LFP. 
+% 
+% If the triggered spike leads a spike in another channel, then the angle of the Fourier
+% spectrum of that other channel will be negative. Earlier phases are in clockwise
+% direction. 
+%
+% This function uses a NaN-aware spectral estimation technique, which will default to the
+% standard Matlab FFT routine if no NaNs are present. The fft_along_rows subfunction below
+% demonstrates the expected function behaviour.
+%
+% See FT_SPIKETRIGGEREDINTERPOLATION to remove segments of LFP around spikes See
+% FT_SPIKETRIGGEREDSPECTRUM_CONVOL for an alternative implementation based on convolution
 
 % Copyright (C) 2008, Robert Oostenveld
 %
@@ -118,20 +112,31 @@ end
 
 % get the spikechannels
 if nargin==2
+  
   % autodetect the spikechannels and EEG channels
   [spikechannel, eegchannel] = detectspikechan(data);
+  
+  % make the final selection of spike channels and check
   if strcmp(cfg.spikechannel, 'all'), 
     cfg.spikechannel = spikechannel; 
   else
     cfg.spikechannel = ft_channelselection(cfg.spikechannel, data.label);  
-    if ~all(ismember(cfg.spikechannel,spikechannel)), error('some selected spike channels appear eeg channels'); end        
+    if ~all(ismember(cfg.spikechannel,spikechannel)), 
+      error('some selected spike channels appear eeg channels'); 
+    end        
   end
+  
+  % make the final selection of EEG channels and check
   if strcmp(cfg.channel,'all')  
     cfg.channel = eegchannel;
   else
     cfg.channel      = ft_channelselection(cfg.channel, data.label);  
-    if ~all(ismember(cfg.channel,eegchannel)), warning('some of the selected eeg channels appear spike channels'); end    
+    if ~all(ismember(cfg.channel,eegchannel)), 
+      warning('some of the selected eeg channels appear spike channels'); 
+    end    
   end    
+  
+  % select the data and convert to a spike structure
   data_spk = ft_selectdata(data,'channel', cfg.spikechannel);
   data     = ft_selectdata(data,'channel', cfg.channel); % leave only LFP
   spike    = ft_checkdata(data_spk,'datatype', 'spike');
@@ -146,9 +151,9 @@ chansel          = match_str(data.label, cfg.channel); % selected channels
 nchansel         = length(cfg.channel);                % number of channels
 spikesel         = match_str(spike.label, cfg.spikechannel);
 nspikesel        = length(spikesel); % number of spike channels
-
 if nspikesel==0, error('no spike channel selected'); end
 
+% construct the taper
 if ~isfield(data, 'fsample'), data.fsample = 1/mean(diff(data.time{1})); end
 begpad = round(cfg.timwin(1)*data.fsample);
 endpad = round(cfg.timwin(2)*data.fsample);
@@ -164,15 +169,18 @@ else
 end
 taper  = sparse(diag(taper));
 
+% preallocate the output structures for different units / trials
 ntrial      = length(data.trial);
 spectrum    = cell(nspikesel,ntrial);
 spiketime   = cell(nspikesel,ntrial);
 spiketrial  = cell(nspikesel,ntrial);
 
+% select the frequencies
 freqaxis = linspace(0, data.fsample, numsmp);
 fbeg = nearest(freqaxis, cfg.foilim(1));
 fend = nearest(freqaxis, cfg.foilim(2));
-% update the configuration to acocunt for rounding off differences
+
+% update the configuration to account for rounding off differences
 cfg.foilim(1) = freqaxis(fbeg);
 cfg.foilim(2) = freqaxis(fend);
 
@@ -185,7 +193,6 @@ spike_fft = spike_fft(fbeg:fend);
 spike_fft = spike_fft./abs(spike_fft);
 rephase   = sparse(diag(conj(spike_fft)));
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % compute the spectra
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -193,23 +200,31 @@ ft_progress('init', 'text',     'Please wait...');
 for iUnit  = 1:nspikesel
   for iTrial = 1:ntrial
 
-    timeBins = [ data.time{iTrial}  data.time{iTrial}(end)+1/data.fsample] - (0.5/data.fsample);      
+    % select the spikes that fell in the trial and convert to samples
+    timeBins = [data.time{iTrial}  data.time{iTrial}(end)+1/data.fsample] - (0.5/data.fsample);      
     hasTrial = spike.trial{spikesel(iUnit)} == iTrial; % find the spikes that are in the trial
     ts       = spike.time{spikesel(iUnit)}(hasTrial); % get the spike times for these spikes
     ts       = ts(ts>=timeBins(1) & ts<=timeBins(end)); % only select those spikes that fall in the trial window
     [ignore,spikesmp] = histc(ts,timeBins);      
     spikesmp(spikesmp==0 | spikesmp==length(timeBins)) = [];
 
+    % store in the output cell arrays as column vectors
     spiketime{iUnit, iTrial}  = ts(:);
     tr = iTrial*ones(size(spikesmp));
     spiketrial{iUnit, iTrial} = tr(:);
 
+    % preallocate the spectrum
     spectrum{iUnit, iTrial} = zeros(length(spikesmp), nchansel, fend-fbeg+1);
+    
+    % compute the spiketriggered spectrum
     ft_progress(iTrial/ntrial, 'spectrally decomposing data for trial %d of %d, %d spikes for unit %d', iTrial, ntrial, length(spikesmp), iUnit);  
     for j=1:length(spikesmp)
+      
+      % selected samples
       begsmp = spikesmp(j) + begpad;
       endsmp = spikesmp(j) + endpad;
 
+      % handle spikes near the borders of the trials
       if (begsmp<1)
         segment = nan(nchansel, numsmp);
       elseif endsmp>size(data.trial{iTrial},2)
@@ -240,7 +255,7 @@ end
 ft_progress('close');
   
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% collect the results
+% collect the results in a structure that is a spike structure
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 sts.lfplabel       = data.label(chansel);
 sts.freq           = freqaxis(fbeg:fend);
@@ -248,14 +263,12 @@ sts.dimord         = 'rpt_chan_freq';
 for iUnit = 1:nspikesel
   sts.fourierspctrm{iUnit}  = cat(1, spectrum{iUnit,:});
   spectrum(iUnit,:) = {[]}; % free from the memory
-  sts.time{iUnit}           = cat(1,spiketime{iUnit,:});  % this deviates from the standard output, but is included for reference
-  sts.trial{iUnit}          = cat(1,spiketrial{iUnit,:}); % this deviates from the standard output, but is included for reference
+  sts.time{iUnit}           = cat(1,spiketime{iUnit,:});  
+  sts.trial{iUnit}          = cat(1,spiketrial{iUnit,:}); 
 end
-sts.dimord = '{chan}_spike_lfpchan_freq';
-for i = 1:ntrial
-  sts.trialtime(i,:) = [data.time{i}(1) data.time{i}(end)];
-end
-sts.label   = spike.label(spikesel);
+sts.dimord    = '{chan}_spike_lfpchan_freq';
+sts.trialtime = spike.trialtime;
+sts.label     = spike.label(spikesel);
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
@@ -284,3 +297,9 @@ spikechan = (spikechan==ntrial);
 
 spikelabel = data.label(spikechan);
 eeglabel   = data.label(~spikechan);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION for demonstration purpose
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function y = fft_along_rows(x)
+y = fft(x, [], 2); % use normal Matlab function to compute the fft along 2nd dimension
