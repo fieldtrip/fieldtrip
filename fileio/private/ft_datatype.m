@@ -150,12 +150,28 @@ if any(isfield(volume, {'seg', 'csf', 'white', 'gray', 'skull', 'scalp', 'brain'
 end
 
 fn = fieldnames(volume);
+isboolean = [];
+cnt = 0;
 for i=1:length(fn)
   if isfield(volume, [fn{i} 'label'])
     res = true;
     return
+  else
+    if (islogical(volume.(fn{i})) || isnumeric(volume.(fn{i}))) && isequal(size(volume.(fn{i})),volume.dim)
+      cnt = cnt+1;
+      if islogical(volume.(fn{i}))
+        isboolean(cnt) = true;
+      else
+        isboolean(cnt) = false;
+      end
+    end
   end
 end
+if ~isempty(isboolean)
+  res = all(isboolean);
+end
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
