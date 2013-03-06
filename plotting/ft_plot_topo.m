@@ -207,8 +207,10 @@ if flagNaN && strcmp(interpmethod,'v4')
   chanY(NaNind) = [];
 end
 
-% convert dat to double
+% convert chanX, chanY and dat to double
 dat = double(dat);
+chanX = double(chanX);
+chanY = double(chanY);
 
 %interpolate data
 xi         = linspace(hlim(1), hlim(2), gridscale);       % x-axis for interpolation (row vector)

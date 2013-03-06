@@ -93,7 +93,11 @@ cfg = ft_checkopt(cfg,'method','char', {'mtmfft', 'mtmconvol'});
 if strcmp(cfg.method,'mtmfft')
   % should allow for spike input as well in the future
   cfg = rmfield(cfg,'method');
-  sts = ft_spiketriggeredspectrum_fft(cfg,data);
+  if nargin==3
+    sts = ft_spiketriggeredspectrum_fft(cfg,data,spike);
+  else
+    sts = ft_spiketriggeredspectrum_fft(cfg,data);
+  end    
 elseif strcmp(cfg.method,'mtmconvol')
   cfg = rmfield(cfg,'method');    
   if nargin==3

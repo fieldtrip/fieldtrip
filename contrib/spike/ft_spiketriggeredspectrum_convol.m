@@ -1,4 +1,4 @@
-function [Sts] = ft_spiketriggeredspectrum_convol(cfg, data, spike)
+function [sts] = ft_spiketriggeredspectrum_convol(cfg, data, spike)
 
 % FT_SPIKETRIGGEREDSPECTRUM_CONVOL computes the Fourier spectrum of the LFP
 % around the spikes using convolution of the complete LFP traces. 
@@ -18,9 +18,9 @@ function [Sts] = ft_spiketriggeredspectrum_convol(cfg, data, spike)
 % FT_PREPROCESSING or FT_APPENDSPIKE
 %
 % Use as
-%   [Sts] = ft_spiketriggeredspectrum_convol(cfg,data,spike)
+%   [sts] = ft_spiketriggeredspectrum_convol(cfg,data,spike)
 % or 
-%   [Sts] = ft_spiketriggeredspectrum_convol(cfg,data)
+%   [sts] = ft_spiketriggeredspectrum_convol(cfg,data)
 %
 % Important is that data.time and spike.trialtime should be referenced
 % relative to the same trial trigger times!
@@ -63,14 +63,16 @@ function [Sts] = ft_spiketriggeredspectrum_convol(cfg, data, spike)
 % The error is smaller as data.fsample is larger.
 %
 % Outputs:
-%   Sts is a spike structure, containing new fields:
-%   Sts.fourierspctrm = 1 x nUnits cell array with dimord spike_lfplabel_freq
-%   Sts.lfplabel      = 1 x nChan cell array with EEG labels
-%   Sts.freq          = 1 x nFreq frequencies. There is usually some small
-%                       roundoff error since we determine fsample from
-%                       data.time itself
+%   sts is a spike structure, containing new fields:
+%   sts.fourierspctrm = 1 x nUnits cell array with dimord spike_lfplabel_freq
+%   sts.lfplabel      = 1 x nChan cell array with EEG labels
+%   sts.freq          = 1 x nFreq frequencies. Note that per default, not
+%                       all frequencies can be used as we compute the DFT
+%                       around the spike based on an uneven number of
+%                       samples. This introduces a slight adjustment of the
+%                       selected frequencies.
 %
-%   Note: Sts.fourierspctrm can contain NaNs, for example if
+%   Note: sts.fourierspctrm can contain NaNs, for example if
 %   cfg.borderspikes = 'no', or if cfg.rejectsaturation = 'yes', or if the
 %   trial length was too short for the window desired.
 %
@@ -169,18 +171,31 @@ chansel          = match_str(data.label, cfg.channel); % selected channels
 nchansel         = length(cfg.channel);                % number of channels
 spikesel         = match_str(spike.label, cfg.spikechannel);
 nspikesel        = length(spikesel); % number of spike channels
-
-if nspikesel==0, error('no units were selected'); end
-
-if nchansel==0, error('no channels were selected'); end
+if nspikesel==0,   error('no units were selected');   end
+if nchansel==0,    error('no channels were selected'); end
 
 % preallocate
 nTrials                             = length(data.trial); % number of trials
 [spectrum,spiketime, spiketrial]    = deal(cell(nspikesel,nTrials)); % preallocate the outputs
 [unitsmp,unittime,unitshift]        = deal(cell(1,nspikesel));
 nSpikes = zeros(1,nspikesel);
-freqs   = NaN(length(cfg.foi),nTrials); % to deal with variable frequencies
 
+% construct the frequency axis and restrict to unique frequencies
+if ~isfield(data, 'fsample'), data.fsample = 1/mean(diff(data.time{1})); end
+if any(cfg.foi > (data.fsample/2)) 
+  error('frequencies in cfg.foi are above Nyquist frequency')
+end
+numsmp  = round(cfg.t_ftimwin .* data.fsample);
+numsmp(~mod(numsmp,2)) = numsmp(~mod(numsmp,2))+1; % make sure we always have uneven samples, since we want the spike in the middle
+foi = zeros(1,length(cfg.foi));
+for iSmp = 1:length(numsmp)
+  faxis         = linspace(0,data.fsample,numsmp(iSmp));
+  findx         = nearest(faxis,cfg.foi(iSmp));
+  [foi(iSmp)]   = deal(faxis(findx)); % this is the actual frequency used, from the DFT formula
+end
+cfg.foi = unique(foi); % take the unique frequencies from this
+
+% compute the minima and maxima of the data, this is done to remove EEG portions where there are potential saturation effects
 if strcmp(cfg.rejectsaturation,'yes')
   [minChan,maxChan] = deal([]);
   for iChan = 1:nchansel
@@ -197,30 +212,28 @@ if strcmp(cfg.rejectsaturation,'yes')
   end
 end
 
-fsample = data.fsample;
-
 % compute the spectra
 ft_progress('init', 'text',     'Please wait...');
 for iTrial = 1:nTrials
   
+  % select the spike times for a given trial and restrict to those overlapping with the EEG  
   x = data.time{iTrial};      
-  timeBins   = [x x(end)+1/fsample] - (0.5/fsample);      
-  % select the spike times for a given trial and restrict to those overlapping with the EEG
+  timeBins   = [x x(end)+1/data.fsample] - (0.5/data.fsample);      
   for iUnit = 1:nspikesel
-    unitindx = spikesel(iUnit);
-    hasTrial = spike.trial{unitindx} == iTrial; % find the spikes that are in the trial
-    ts       = spike.time{unitindx}(hasTrial); % get the spike times for these spikes
-    vld      = ts>=data.time{iTrial}(1) & ts<=data.time{iTrial}(end); % only select those spikes that fall in the trial window
-    ts       = ts(vld); % timestamps for these spikes
-    %unitsmp{iUnit} = zeros(1,length(ts));
+    unitindx   = spikesel(iUnit);
+    hasTrial   = spike.trial{unitindx} == iTrial; % find the spikes that are in the trial
+    ts         = spike.time{unitindx}(hasTrial); % get the spike times for these spikes
+    vld        = ts>=timeBins(1) & ts<=timeBins(end); % only select those spikes that fall in the trial window
+    ts         = ts(vld); % timestamps for these spikes
     [ignore,I] = histc(ts,timeBins);      
     I(I==0 | I==length(timeBins)) = [];
-    unitsmp{iUnit}  = I;
-    unittime{iUnit} = ts(:); % this is for storage in the output structure
+    unitsmp{iUnit}      = I;
+    unittime{iUnit}     = ts(:); % this is for storage in the output structure
     smptime = data.time{iTrial}(unitsmp{iUnit}); % times corresponding to samples
     unitshift{iUnit}    = ts(:) - smptime(:); % shift induced by shifting to sample times, important for high-frequency oscillations
     nSpikes(iUnit)      = length(unitsmp{iUnit});
   end
+  
   if ~any(nSpikes),continue,end % continue to the next trial if this one does not contain valid spikes
   
   % set the saturated parts of the data to NaNs
@@ -236,11 +249,16 @@ for iTrial = 1:nTrials
     end
   end
   
+  % preallocate
   nFreqs = length(cfg.foi);
   for iUnit = 1:nspikesel
     if nSpikes(iUnit)>0, spectrum{iUnit,iTrial} = zeros(nSpikes(iUnit),nchansel,nFreqs); end
   end
+  
+  % process the phases for every chan-freq combination separately to save memory
   for iFreq = 1:nFreqs        
+    
+    % construct the input options for the sub-function phase_est
     tmpcfg               = cfg;
     tmpcfg.foi           = cfg.foi(iFreq);
     try tmpcfg.tapsmofrq = cfg.tapsmofrq(iFreq);end
@@ -250,28 +268,35 @@ for iTrial = 1:nTrials
       spectrum{iUnit,iTrial}(:,:,iFreq) = NaN;
       continue;
     end
+    
+    % just some message
     if nTrials==1
        ft_progress(iFreq/nFreqs, 'Processing frequency %d from %d', iFreq, nFreqs);    
     else
        ft_progress(iTrial/nTrials, 'Processing trial %d from %d', iTrial, nTrials);    
     end      
+    
+    % compute the LFP phase at every time-point
     spec = zeros(length(data.time{iTrial}),nchansel);
     for iChan = 1:nchansel
-      if isfield(data,'hdr') && isfield(data.hdr,'Fs') 
-        [spec(:,iChan),foi, numsmp] = phase_est(tmpcfg,data.trial{iTrial}(chansel(iChan),:),data.time{iTrial}, data.hdr.Fs);
-      else
-        [spec(:,iChan),foi, numsmp] = phase_est(tmpcfg,data.trial{iTrial}(chansel(iChan),:),data.time{iTrial});
-      end        
+      [spec(:,iChan),foi, numsmp] = phase_est(tmpcfg,data.trial{iTrial}(chansel(iChan),:),data.time{iTrial}, data.fsample);
     end
-    freqs(iFreq,iTrial) = foi;
     
+    % select now the proper phases for every unit
     for iUnit = 1:nspikesel
+      
       if nSpikes(iUnit)==0, continue,end
+      
+      % gather the phases at the samples where we had the spikes
       spectrum{iUnit,iTrial}(:,:,iFreq) = spec(unitsmp{iUnit},:);
+      
+      % preallocate rephasing vector
       rephase   = ones(nSpikes(iUnit),1); 
       
       % do the rephasing and use proper phases for spikes at borders
-      if strcmp(cfg.borderspikes,'yes') % if yes, we use an LFP window not centered around the spike, otherwise NaNs        
+      if strcmp(cfg.borderspikes,'yes') 
+        
+        % use an LFP window not centered around the spike, to use spikes around the trial borders as well       
         beg = 1+(numsmp-1)/2; % find the borders empirically
         ed  = length(data.time{iTrial}) - beg + 1;
         vldSpikes    = unitsmp{iUnit}>=beg & unitsmp{iUnit}<=ed; % determine the valid spikes
@@ -292,16 +317,25 @@ for iTrial = 1:nTrials
         if any(vldSpikes)
           rephase(vldSpikes)   = exp(1i*2*pi*foi*unitshift{iUnit}(vldSpikes));
         end
+        
       else
+        
+        % in this case the spikes that fall around borders are set to NaN
         if ~isempty(unitshift{iUnit})
           rephase(1:end) = exp(1i*2*pi*foi*unitshift{iUnit});
         end
+        
       end
+      
+      % Rephase the spectrum, this serves two purposes:
+      % 1) correct for potential misallignment of spikes to LFP sampling axis
+      % 2) for spikes falling at borders, we need to account for the fact that we 
+      % used the instantaneous phase at a different moment in time      
       for iChan = 1:nchansel
         spectrum{iUnit,iTrial}(:,iChan,iFreq) = spectrum{iUnit,iTrial}(:,iChan,iFreq).*rephase;
       end
       
-      % store the spiketimes and spiketrials, constructing a type of SPIKE format
+      % Store the spiketimes and spiketrials, constructing a type of SPIKE format
       spiketime{iUnit,iTrial}  = unittime{iUnit};
       spiketrial{iUnit,iTrial} = iTrial*ones(1,nSpikes(iUnit));
     end
@@ -309,23 +343,23 @@ for iTrial = 1:nTrials
 end
 ft_progress('close');
 % collect the results
-Sts.lfplabel          = data.label(chansel);
-Sts.freq              = nanmean(freqs,2)';
-Sts.label             = spike.label(spikesel);
+sts.lfplabel          = data.label(chansel);
+sts.freq              = cfg.foi;
+sts.label             = spike.label(spikesel);
 for iUnit = 1:nspikesel
-  Sts.fourierspctrm{iUnit}  = cat(1, spectrum{iUnit,:}); 
+  sts.fourierspctrm{iUnit}  = cat(1, spectrum{iUnit,:}); 
   spectrum(iUnit,:) = {[]}; % free from the memory
-  Sts.time{iUnit}           = cat(1, spiketime{iUnit,:});
-  Sts.trial{iUnit}          = cat(2, spiketrial{iUnit,:})';
+  sts.time{iUnit}           = cat(1, spiketime{iUnit,:});
+  sts.trial{iUnit}          = cat(2, spiketrial{iUnit,:})';
 end
-Sts.dimord = '{chan}_spike_lfpchan_freq';
-Sts.trialtime = spike.trialtime;
+sts.dimord = '{chan}_spike_lfpchan_freq';
+sts.trialtime = spike.trialtime;
   
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
 ft_postamble callinfo
 ft_postamble previous data spike
-ft_postamble history Sts
+ft_postamble history sts
 
 
 
@@ -424,9 +458,8 @@ for iTaper = 1:nTapers
     wavelet = complex(coswav(:), sinwav(:));       
     fftRamp = sum(xKern.*coswav) + 1i*sum(xKern.*sinwav); % fft of ramp with dx/ds = 1 * taper 
     fftDC   = sum(ones(1,timwinSamples).*coswav) + 1i*sum(ones(1,timwinSamples).*sinwav);% fft of unit direct current * taper
-    spctrm  = spctrm + (conv2(dat(:),wavelet,'same') - (beta0*fftDC + beta1.*fftRamp))/(numsmp/2);           
+    spctrm  = spctrm + (conv_fftbased(dat(:),wavelet) - (beta0*fftDC + beta1.*fftRamp))/(numsmp/2);           
                        % fft                       % mean            %linear ramp      % make magnitude invariant to window length                             
-    %spctrm  = spctrm + (conv_fftbased(dat(:),wavelet) - (beta0*fftDC + beta1.*fftRamp))/(numsmp/2); %ALTERNATIVE IMPLEMENTATION, CAN BE TESTED                                         
 end
 spctrm = spctrm./nTapers; % normalize by number of tapers
 spctrm = spctrm.*exp(-1i*phaseCor);
@@ -461,7 +494,7 @@ spikechan = (spikechan==ntrial);
 spikelabel = data.label(spikechan);
 eeglabel   = data.label(~spikechan);
 
-% ALTERNATIVE FFT-BASED IMPLEMENTATION: LITTLE GAIN
+% CONVOLUTION: FFT BASED IMPLEMENTATION
 function c = conv_fftbased(a, b)
 
 P = numel(a);

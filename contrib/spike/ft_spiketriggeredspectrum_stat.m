@@ -430,7 +430,7 @@ y = (cosSum.^2+sinSum.^2 - dof)./(dof.*(dof-1));
  
 function [angMean] = angularmean(angles)
 
-angMean = angle(nansum(angles,1)); %get the mean angle
+angMean = angle(nanmean(angles,1)); %get the mean angle
 
 
 function [cfg] = trialselection(cfg,spike)
@@ -448,6 +448,25 @@ end
 if isempty(cfg.trials), error('No trials were selected');
 end
 
+function m = nansum(x,dim)
+
+% Find NaNs and set them to zero
+nans = isnan(x);
+x(nans) = 0;
+
+if nargin == 1 % let sum deal with figuring out which dimension to use
+    % Count up non-NaNs.
+    n = sum(~nans);
+    n(n==0) = NaN; % prevent divideByZero warnings
+    % Sum up non-NaNs, and divide by the number of non-NaNs.
+    m = sum(x);
+else
+    % Count up non-NaNs.
+    n = sum(~nans,dim);
+    n(n==0) = NaN; % prevent divideByZero warnings
+    % Sum up non-NaNs, and divide by the number of non-NaNs.
+    m = sum(x,dim);
+end
 
 
 

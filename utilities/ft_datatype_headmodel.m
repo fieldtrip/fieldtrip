@@ -113,8 +113,8 @@ switch version
       end
     end
     
-    if isfield(vol, 'type') && strcmp(vol.type, 'infinite')
-      % ensure that the sensor description is up to date
+    if isfield(vol, 'sens')
+      % this applies to type=interpolate, ensure that the sensor description is up to date
       vol.sens = ft_datatype_sens(vol.sens);
     end
     

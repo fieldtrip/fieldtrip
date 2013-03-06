@@ -773,6 +773,7 @@ if isequal(cfg.method,'ortho')
   opt.colorbar = cfg.colorbar;
   opt.queryrange = cfg.queryrange;
   opt.funcolormap = cfg.funcolormap;
+  opt.crosshair = strcmp(cfg.crosshair, 'yes');
   opt.lpa = [];
   opt.rpa = [];
   opt.nas = [];
@@ -1432,20 +1433,24 @@ sel = findobj('type','axes','tag',tag);
 if ~isempty(sel)
   set(opt.handlesfigure, 'currentaxes', sel(1));
 end
-if opt.init
-  hch1 = crosshair([xi 1 zi], 'parent', opt.handlesaxes(1));
-  hch3 = crosshair([xi yi opt.dim(3)], 'parent', opt.handlesaxes(3));
-  hch2 = crosshair([opt.dim(1) yi zi], 'parent', opt.handlesaxes(2));
-  
-  opt.handlescross  = [hch1(:)';hch2(:)';hch3(:)'];
+if opt.crosshair
+  if opt.init
+    hch1 = crosshair([xi 1 zi], 'parent', opt.handlesaxes(1));
+    hch3 = crosshair([xi yi opt.dim(3)], 'parent', opt.handlesaxes(3));
+    hch2 = crosshair([opt.dim(1) yi zi], 'parent', opt.handlesaxes(2));
+    opt.handlescross  = [hch1(:)';hch2(:)';hch3(:)'];
+  else
+    crosshair([xi 1 zi], 'handle', opt.handlescross(1, :));
+    crosshair([opt.dim(1) yi zi], 'handle', opt.handlescross(2, :));
+    crosshair([xi yi opt.dim(3)], 'handle', opt.handlescross(3, :));
+  end
+end
 
+if opt.init
   opt.init = false;
   setappdata(h, 'opt', opt);
-else
-  crosshair([xi 1 zi], 'handle', opt.handlescross(1, :));
-  crosshair([opt.dim(1) yi zi], 'handle', opt.handlescross(2, :));
-  crosshair([xi yi opt.dim(3)], 'handle', opt.handlescross(3, :));
 end
+
 set(h, 'currentaxes', curr_ax);
 
 uiresume
@@ -1584,16 +1589,16 @@ if ~isempty(tag) && ~opt.init
     opt.update = [1 1 1];
   elseif strcmp(tag, 'TF1')
     % timefreq
-    opt.qi(2) = nearest(data.time, pos(1));
-    opt.qi(1) = nearest(data.freq, pos(2));
+    opt.qi(2) = nearest(opt.data.time, pos(1));
+    opt.qi(1) = nearest(opt.data.freq, pos(2));
     opt.update = [1 1 0];
   elseif strcmp(tag, 'TF2')
     % freq only
-    opt.qi  = nearest(data.freq, pos(1));
+    opt.qi  = nearest(opt.data.freq, pos(1));
     opt.update = [1 1 1];
   elseif strcmp(tag, 'TF3')
     % time only
-    opt.qi  = nearest(data.time, pos(1));  
+    opt.qi  = nearest(opt.data.time, pos(1));  
     opt.update = [1 1 1];
   end
 end

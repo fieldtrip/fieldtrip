@@ -206,7 +206,7 @@ elseif (~is2Dana && is2Dfun) || (is2Dana && is2Dfun)
     if isfield(anatomical, 'pos')
       pos = anatomical.pos;
     elseif isfield(anatomical, 'pnt')
-      pos = anatomical.pos;
+      pos = anatomical.pnt;
     else
       error('the input data sould contain either a pos or pnt field');
     end

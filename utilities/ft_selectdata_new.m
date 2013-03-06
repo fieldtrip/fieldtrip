@@ -214,7 +214,7 @@ else
         [selchan, cfg] = getselection_chan(cfg, varargin{i});
         [selfreq, cfg] = getselection_freq(cfg, varargin{i});
         if hastime
-          [seltime, cfg] = getselection_time(cfg, varargin{i}, 'datfields', datfields);
+          [seltime, cfg] = getselection_time(cfg, varargin{i});
         end
       end % varargin
       
@@ -288,6 +288,7 @@ else
   end % switch dtype
   
   % update the dimord
+  keep = {};
   if avgovertime
     dimtok = setdiff(dimtok, 'time');
   end
@@ -297,6 +298,8 @@ else
   if avgoverrpt
     % FIXME could also be rpttap or subject
     dimtok = setdiff(dimtok, 'rpt');
+  else
+    keep = [keep {'cumtapcnt' 'cumsumcnt' 'sampleinfo' 'trialinfo'}];
   end
   for i=1:numel(varargin)
     varargin{i}.dimord = sprintf('%s_', dimtok{:});
@@ -305,7 +308,7 @@ else
 
   % remove all fields from the data that do not pertain to the selection
   for i=1:numel(varargin)
-    varargin{i} = keepfields(varargin{i}, [datfields dimfields {'cfg' 'grad'}]);
+    varargin{i} = keepfields(varargin{i}, [datfields dimfields {'cfg' 'grad'} keep]);
   end
   
 end % if raw or something else
@@ -381,6 +384,7 @@ elseif avgoverchan && ~any(isnan(selchan))
   data.label = data.label(1:end-1);                  % remove the last '+'
 elseif ~isnan(selchan)
   data.label = data.label(selchan);
+  data.label = data.label(:);
 end
 end % function makeselection_chan
 
@@ -388,7 +392,7 @@ function data = makeselection_freq(data, selfreq, avgoverfreq)
 if avgoverfreq
   data = rmfield(data, 'freq');
 elseif ~isnan(selfreq)
-  data.freq  = data.time(selfreq);
+  data.freq  = data.freq(selfreq);
 end
 end % function makeselection_freq
 
@@ -507,7 +511,7 @@ if isfield(cfg, 'frequency')
     minfreq = min(data.freq);
     maxfreq = max(data.freq);
     if all(cfg.frequency<minfreq) || all(cfg.frequency>maxfreq)
-      error('the selected range falls outside the time axis in the data');
+      error('the selected range falls outside the frequency axis in the data');
     end
     fbeg = nearest(data.freq, cfg.frequency(1), false, false);
     fend = nearest(data.freq, cfg.frequency(2), false, false);

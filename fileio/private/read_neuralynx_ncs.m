@@ -44,18 +44,66 @@ recordsize = 1044;
 NRecords   = floor((ftell(fid) - headersize)/recordsize);
 
 if NRecords>0
-  if (ispc), fclose(fid); end
+     
+  % read out part of the dataset to detect whether there were jumps
+  NRecords_to_read = min(NRecords, 100); % read out maximum 100 blocks of data
+  TimeStamp        = zeros(1,NRecords_to_read,'uint64');
+  ChanNumber       = zeros(1,NRecords_to_read);  
+  SampFreq         = zeros(1,NRecords_to_read);
+    
+  for k=1:NRecords_to_read
+    
+    % set to the correct position    
+    status = fseek(fid, headersize + (k-1)*recordsize, 'bof');        
+    if status~=0
+      error('cannot jump to the requested record');
+    end
+
+    % read a single continuous data record
+    TimeStamp(k)    = fread(fid,   1, 'uint64=>uint64');
+    ChanNumber(k)   = fread(fid,   1, 'int32');
+    SampFreq(k)     = fread(fid,   1, 'int32');    
+  end
+  
+  % for this block of data: automatically detect the gaps; 
+  % there's a gap if no round off error of the sampling frequency could
+  % explain the jump (which is always > one block)
+  Fs       = nanmin(SampFreq);
+  if Fs~=hdr.SamplingFrequency
+    warning('the sampling frequency as read out from the header equals %2.2f and differs from the minimum sampling frequency as read out from the data %2.2f\n', ...
+      hdr.SamplingFrequency, Fs);
+  end
+  
+  % detect the number of timestamps per block while avoiding influencce of gaps
+  d        = diff(double(TimeStamp));
+  maxJump  = ceil(10^6./(Fs-1))*512;
+  gapCorrectedTimeStampPerSample =  nanmean(d(d<maxJump))/512;    
+
   % read the timestamp from the first and last record
-  hdr.FirstTimeStamp = neuralynx_timestamp(filename, 1);
-  hdr.LastTimeStamp  = neuralynx_timestamp(filename, inf);
+  if (ispc), fclose(fid); end
+  ts1 = neuralynx_timestamp(filename, 1);
+  tsE = neuralynx_timestamp(filename, inf);  
   if (ispc), fid = fopen(filename, 'rb', 'ieee-le'); end
+  
+  hdr.FirstTimeStamp  = ts1;
+  hdr.LastTimeStamp   = tsE;
+  
+  % compare whether there's at least a block missing
+  minJump = min(d);
+  ts_range_predicted = (NRecords-1)*512*gapCorrectedTimeStampPerSample;
+  ts_range_observed  = double(tsE-ts1);
+  if abs(ts_range_predicted-ts_range_observed)>minJump
+     warning('discontinuous recording, predicted number of timestamps and observed number of timestamps differ by %2.2f \n Please consult the wiki on http://fieldtrip.fcdonders.nl/getting_started/neuralynx?&#discontinuous_recordings',...
+       abs(ts_range_predicted-ts_range_observed) );       
+  end
+      
 else
   hdr.FirstTimeStamp = nan;
   hdr.LastTimeStamp  = nan;
 end
 
 if begrecord==0 && endrecord==0
-  % only read the header  
+  % only read the header
 elseif begrecord<1
   error('cannot read before the first record');
 elseif begrecord>NRecords
@@ -70,14 +118,14 @@ if begrecord>=1 && endrecord>=begrecord
   if status~=0
     error('cannot jump to the requested record');
   end
-
+  
   numrecord    = (endrecord-begrecord+1);
   TimeStamp    = zeros(1,numrecord,'uint64');
   ChanNumber   = zeros(1,numrecord);
   SampFreq     = zeros(1,numrecord);
   NumValidSamp = zeros(1,numrecord);
   Samp         = zeros(512,numrecord);  % this allows easy reshaping into a 1xNsamples vector
-
+  
   for k=1:numrecord
     % read a single continuous data record
     TimeStamp(k)    = fread(fid,   1, 'uint64=>uint64');
@@ -88,7 +136,7 @@ if begrecord>=1 && endrecord>=begrecord
     % mark the invalid samples
     Samp((NumValidSamp+1):end,k) = nan;
   end
-
+        
   % store the record data in the output structure
   ncs.TimeStamp    = TimeStamp;
   ncs.ChanNumber   = ChanNumber;
@@ -96,7 +144,7 @@ if begrecord>=1 && endrecord>=begrecord
   ncs.NumValidSamp = NumValidSamp;
   % apply the scaling factor from ADBitVolts and convert to uV
   ncs.dat          = Samp * hdr.ADBitVolts * 1e6;
-
+  
 end
 fclose(fid);
 

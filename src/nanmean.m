@@ -4,7 +4,7 @@
 
 
 function y = nanmean(x, dim)
-N = sum(~isnan(t), dim);
+N = sum(~isnan(x), dim);
 y = nansum(x, dim) ./ N;
 
 end

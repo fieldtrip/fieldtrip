@@ -224,6 +224,10 @@ dof      = zeros(nUnits, length(s));
 % preallocate, depending on whether nargout is 1 or 2
 if (strcmp(cfg.keeptrials,'yes')), singleTrials = zeros(nTrials,nUnits,size(s,2)); end
 if nargout==2, [sdfdata.trial(1:nTrials) sdfdata.time(1:nTrials)] = deal({[]}); end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                           compute the spike density
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for iTrial = 1:nTrials
   origTrial  = cfg.trials(iTrial);   % this is the original trial we use for DATA input
   timeAxis   = data.time{origTrial}; % get the time axis for this trial
@@ -233,6 +237,7 @@ for iTrial = 1:nTrials
   nSamples   = length(sampleSel);
   trialTime  = timeAxis(sampleSel);  % select the relevant portion of time
   
+  % handle every unit separately
   for iUnit = 1:nUnits
     unitIndx = spikesel(iUnit); % index in data.label
     dat      = data.trial{origTrial}(unitIndx,sampleSel); % get the data
@@ -247,15 +252,19 @@ for iTrial = 1:nTrials
     else
       y = y*nSamplesWin;   % now maximum becomes N (length window)
     end
+    
+    % restrict to the relevant portion of output conv
     y = y(nLeftSamples+1 : end-nRightSamples); % delete additional points we get with conv
     y([1:nLeftSamples end-nRightSamples+1:end]) = NaN; % assign NaN at borders
     
+    % write a raw data structure
     if nargout==2
       sl = ~isnan(y);
       sdfdata.trial{iTrial}(iUnit,:) = y(sl);
       sdfdata.time{iTrial}(1,:)      = trialTime(sl); % write back original time axis
     end
     
+    % pad with nans if there's variable trial length
     dofsel = ~isnan(y);%true(1,length(y));
     if strcmp(cfg.vartriallen,'yes')
       padLeft  = zeros(1, samplesShift(iTrial));
@@ -266,14 +275,18 @@ for iTrial = 1:nTrials
     else
       ySingleTrial = y;
     end
+    
+    % compute the sum and the sum of squares
     s(iUnit,:)        = nansum([s(iUnit,:);y]);      % compute the sum
     ss(iUnit,:)       = nansum([ss(iUnit,:);y.^2]);  % compute the squared sum
     
     % count the number of samples that went into the sum
     dof(iUnit,dofsel) = dof(iUnit,dofsel) + 1;
     
+    % keep the single trials if requested
     if strcmp(cfg.keeptrials,'yes'), singleTrials(iTrial,iUnit,:) = ySingleTrial; end
   end
+  
   % remove the trial from data in order to avoid buildup in memory
   data.trial{origTrial} = [];
   data.time{origTrial}  = [];
@@ -294,8 +307,8 @@ end
   
 % create a new structure that is a standard raw data spike structure itself, this is returned as second output argument
 if nargout==2
-  sdfdata.fsample              = fsample;
-  sdfdata.label(1:nUnits)      = data.label(spikesel);
+  sdfdata.fsample                   = fsample;
+  sdfdata.label(1:nUnits)           = data.label(spikesel);
   try, sdfdata.hdr                  = data.hdr; end
 end
 

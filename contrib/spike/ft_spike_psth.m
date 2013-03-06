@@ -13,20 +13,20 @@ function [psth] = ft_spike_psth(cfg,spike)
 % Configurations:
 %   cfg.binsize          =  [binsize] in sec or string. 
 %                          If 'scott', we estimate the optimal bin width
-%                          using Scott's formula (1979). 
-%                          If 'sqrt', we take
+%                          using Scott's formula (1979). If 'sqrt', we take
 %                          the number of bins as the square root of the
 %                          number of observations. The optimal bin width is
 %                          derived over all neurons; thus, this procedure
 %                          works best if the input contains only one neuron
 %                          at a time.
-%   cfg.outputunit       = 'rate' (default) or 'spikecount' or 'proportion'. If 'rate', we
+%   cfg.outputunit       = 'rate' (default) or 'spikecount' or
+%                          'proportion'. If 'rate', we
 %                          convert the output per trial to firing rates
 %                          (spikes/sec). If 'spikecount', we count the
 %                          number spikes per trial. If 'proportion', we
 %                          normalize the area under the PSTH to 1.
-%   cfg.spikechannel     = See FT_CHANNELSELECTION for details. 
-%   cfg.trials           = vector of indices (e.g., 1:2:10)
+%   cfg.spikechannel     = See FT_CHANNELSELECTION for details. cfg.trials
+%                          is vector of indices (e.g., 1:2:10)
 %                          logical selection of trials (e.g., [1010101010])
 %                          'all' (default), selects all trials
 %   cfg.vartriallen      = 'yes' (default)
@@ -41,14 +41,15 @@ function [psth] = ft_spike_psth(cfg,spike)
 %   cfg.latency          = [begin end] in seconds
 %                          'maxperiod' (default), i.e., maximum period
 %                          available 'minperiod', i.e., the minimal period
-%                          all trials share 'prestim' (all t<=0) 'poststim'
+%                          all trials share, 'prestim' (all t<=0) 'poststim'
 %                          (all t>=0).
 %   cfg.keeptrials       = 'yes' or 'no' (default).
+%   cfg.trials           =  numeric or logical selection of trials (default = 'all')
 %
 % Outputs:
 %   Psth is a timelock datatype (see FT_DATATYPE_TIMELOCK)
 %     Psth.time        = center histogram bin points
-%	  Psth.fsample     = 1/binsize;
+%	    Psth.fsample     = 1/binsize;
 %     Psth.avg         = contains average PSTH per unit 
 %     Psth.trial       = contains PSTH per unit per trial 
 %     Psth.var         = contains variance of PSTH per unit across trials
@@ -59,7 +60,7 @@ function [psth] = ft_spike_psth(cfg,spike)
 %   FT_SPIKE_PLOT_RASTER  : plot PSTH with raster for one or more neurons
 %   FT_SPIKE_JPSTH        : compute the JPSTH
 
-%  Copyright (C) 2010, Martin Vinck
+%  Copyright (C) 2010-2013, Martin Vinck
 %
 % $Id$
 
@@ -71,7 +72,7 @@ ft_preamble help
 ft_preamble callinfo
 ft_preamble trackconfig
 
-% control input spike structure
+% control input spike structure and convert to spike if raw structure
 spike = ft_checkdata(spike,'datatype', 'spike', 'feedback', 'yes');
 
 % get the default options
@@ -99,14 +100,14 @@ cfg        = trialselection(cfg,spike);
 
 % select the unit - this should be done with channelselection function
 cfg.spikechannel = ft_channelselection(cfg.spikechannel, spike.label);
-spikesel    = match_str(spike.label, cfg.spikechannel);
-nUnits      = length(spikesel);
+spikesel         = match_str(spike.label, cfg.spikechannel);
+nUnits           = length(spikesel);
 if nUnits==0, error('no spikechannel selected by means of cfg.spikechannel'); end
 
-% determine the duration of each trial - we assume N by 2, see error check before
+% determine the duration of each trial 
 begTrialLatency = spike.trialtime(cfg.trials,1); % remember: already selected on trial here
 endTrialLatency = spike.trialtime(cfg.trials,2);
-trialDur 		= endTrialLatency - begTrialLatency;
+trialDur 	    	= endTrialLatency - begTrialLatency;
 
 % select the latencies, use the same modular function in all the scripts
 cfg = latencyselection(cfg,begTrialLatency,endTrialLatency);
@@ -117,13 +118,15 @@ if ischar(cfg.binsize)
   for iUnit = 1:nUnits
     unitIndx       = spikesel(iUnit); % select the unit
     spikesInWin    = spike.time{unitIndx}>=cfg.latency(1) & spike.time{unitIndx}<=cfg.latency(2); % get spikes in trial
-    sd             = nanstd(spike.time{unitIndx}(spikesInWin));
+    
+    % automatically determine an 'optimal' binwidth
     N              = sum(spikesInWin);
     if strcmp(cfg.binsize,'scott')
-      h(iUnit) = 3.49*sd./(N^(1/3));
+      sd           = nanstd(spike.time{unitIndx}(spikesInWin));          
+      h(iUnit)     = 3.49*sd./(N^(1/3));
     elseif strcmp(cfg.binsize,'sqrt')
-      k = ceil(sqrt(N));
-      h(iUnit) = (cfg.latency(2)-cfg.latency(1))/k;
+      k            = ceil(sqrt(N));
+      h(iUnit)     = (cfg.latency(2)-cfg.latency(1))/k;
     else
       error('unsupported option for cfg.binsize'); 
     end
@@ -146,8 +149,8 @@ if strcmp(cfg.vartriallen,'no') % only select trials that fully cover our latenc
 else
   hasWindow     = ones(1,length(cfg.trials));
 end
-trialSel           = fullDur(:) & overlaps(:) & hasWindow(:);
-cfg.trials         = cfg.trials(trialSel); % note that endTrialLatency was of length cfg.trials
+trialSel        = fullDur(:) & overlaps(:) & hasWindow(:);
+cfg.trials      = cfg.trials(trialSel); % note that endTrialLatency was of length cfg.trials
 if isempty(cfg.trials), warning('No trials were selected after latency selection'); end
 nTrials         = length(cfg.trials);
 begTrialLatency = begTrialLatency(trialSel); % note that begTrialLatency was of length cfg.trials here
@@ -221,6 +224,7 @@ else
   psth.dimord = 'chan_time';
 end
 if isfield(spike,'sampleinfo'), psth.sampleinfo = spike.sampleinfo(cfg.trials,:); end
+if isfield(spike,'trialinfo'),  psth.trialinfo  = spike.trialinfo(cfg.trials,:);  end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
@@ -259,7 +263,9 @@ elseif islogical(cfg.trials)
   cfg.trials = find(cfg.trials);
 end
 cfg.trials = sort(cfg.trials(:));
-if max(cfg.trials)>nTrials, error('maximum trial number in cfg.trials should not exceed number of rows of spike.trialtime'); end
+if max(cfg.trials)>nTrials, 
+  error('maximum trial number in cfg.trials should not exceed number of rows of spike.trialtime'); 
+end
 if isempty(cfg.trials), error('No trials were selected by you, rien ne va plus'); end
 
 

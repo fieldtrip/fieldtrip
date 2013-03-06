@@ -771,12 +771,9 @@ switch dataformat
     % cut out the desired samples
     begsample = begsample - (begrecord-1)*512;
     endsample = endsample - (begrecord-1)*512;
-    if istrue(timestamp)
-      ts1 = ncs.TimeStamp(1:end-1);
-      ts2 = ncs.TimeStamp(2:end);
-      dts = ts2-ts1;
-      % this is the best estimate of the number of timestamps per sample
-      TimestampPerSample = median(double(dts))/512;
+    if istrue(timestamp)   
+      medianTimestampPerBlock  = median(diff(double(ncs.TimeStamp))); % to avoid influence of the gaps
+      TimestampPerSample       = medianTimestampPerBlock/512; % divide by known block size
       % replace the data with the timestamp of each sample
       for i=1:512
         ncs.dat(i,:) = double(ncs.TimeStamp) + (i-1)*TimestampPerSample;

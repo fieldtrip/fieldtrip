@@ -8,11 +8,11 @@ function [cfg] = ft_spike_plot_raster(cfg, spike, timelock)
 % or 
 %   ft_spike_plot_raster(cfg, spike, timelock)
 %
-% The input spike data structure should be organized as the spike or the raw datatype
-% The optional input timelock should be organized as the timelock datatype,
-% e.g. the output from FT_SPIKE_PSTH or FT_SPIKEDENSITY, having the average
-% firing rate / spike count per time-point / time-bin. However, timelock
-% could also be the output from FT_TIMELOCKANALYSIS.
+% The input SPIKE data structure should be organized as the spike or the
+% raw datatype The optional input TIMELOCK should be organized as the
+% timelock datatype, e.g. the output from FT_SPIKE_PSTH or FT_SPIKEDENSITY,
+% having the average firing rate / spike count per time-point / time-bin.
+% However, timelock could also be the output from FT_TIMELOCKANALYSIS.
 %
 % Configuration options 
 %   cfg.spikechannel     =  see FT_CHANNELSELECTION for details
@@ -30,7 +30,7 @@ function [cfg] = ft_spike_plot_raster(cfg, spike, timelock)
 %                           cfg.spikelength = 1, then no space will be left between
 %                           subsequent rows representing trials (row-unit is 1).
 %   cfg.trialborders     =  'yes' or 'no'. If 'yes', borders of trials are
-%   plotted
+%                           plotted
 %   cfg.topplotsize      =  number ranging from 0 to 1, indicating the proportion of the
 %                           rasterplot that the top plot will take (e.g., with 0.7 the top
 %                           plot will be 70% of the rasterplot in size). Default = 0.5.
@@ -38,9 +38,9 @@ function [cfg] = ft_spike_plot_raster(cfg, spike, timelock)
 %   cfg.errorbars        = 'no', 'std', 'sem' (default), 'conf95%','var'
 %
 %   cfg.interactive      = 'yes' (default) or 'no'. If 'yes', zooming and panning operate via callbacks.
-%
+%   cfg.trials           =  numeric or logical selection of trials (default = 'all').
 
-% Copyright (C) 2010-2012, Martin Vinck
+% Copyright (C) 2010-2013, Martin Vinck
 %
 % $Id$
 
@@ -96,11 +96,11 @@ end
 
 % get the spikechannels
 cfg.spikechannel = ft_channelselection(cfg.spikechannel, spike.label);
-spikesel    = match_str(spike.label, cfg.spikechannel);
-nUnits   = length(spikesel); % number of spike channels
+spikesel         = match_str(spike.label, cfg.spikechannel);
+nUnits           = length(spikesel); % number of spike channels
 if nUnits==0, error('No spikechannel selected by means of cfg.spikechannel'); end
 
-% get the number of trials or change DATA according to cfg.trials
+% get the number of trials and set the cfg.trials field
 nTrialsOrig = size(spike.trialtime,1);
 if  strcmp(cfg.trials,'all')
   cfg.trials = 1:nTrialsOrig;
@@ -108,7 +108,8 @@ elseif islogical(cfg.trials)
   cfg.trials = find(cfg.trials);
 end
 cfg.trials = sort(cfg.trials(:));
-if max(cfg.trials)>nTrialsOrig, error('maximum trial number in cfg.trials should not exceed length of spike.trial')
+if max(cfg.trials)>nTrialsOrig, 
+  error('maximum trial number in cfg.trials should not exceed length of spike.trial')
 end
 if isempty(cfg.trials), errors('No trials were selected in cfg.trials'); end
 
@@ -126,6 +127,7 @@ elseif strcmp(cfg.latency,'prestim')
 elseif strcmp(cfg.latency,'poststim')
   cfg.latency = [0 max(endTrialLatency)];
 end
+
 % check whether the time window fits with the data
 if (cfg.latency(1) < min(begTrialLatency)), cfg.latency(1) = min(begTrialLatency);
   warning('Correcting begin latency of averaging window');
@@ -152,19 +154,30 @@ for iUnit = 1:nUnits
   unitY{iUnit}   = spike.trial{unitIndx}(isInTrials(:) & latencySel(:));
 end
 
-if (cfg.spikelength<=0 || cfg.spikelength>1), error('cfg.spikelength should be a single number >0 and <=1. 1 row (1 trial) = 1'); end
-if (cfg.topplotsize<=0 || cfg.topplotsize>1), error('cfg.topplotsize should be a single number >0 and <=1. 0.7 = 70%'); end
+% some error checks on spike length
+if (cfg.spikelength<=0 || cfg.spikelength>1), 
+  error('cfg.spikelength should be a single number >0 and <=1. 1 row (1 trial) = 1'); 
+end
+
+% some error checks on the size of the top figure
+if (cfg.topplotsize<=0 || cfg.topplotsize>1), 
+  error('cfg.topplotsize should be a single number >0 and <=1. 0.7 = 70%'); 
+end
 
 % plot the trial borders if desired
 if strcmp(cfg.trialborders,'yes')
   begTrialLatency = begTrialLatency(overlaps(:));
   endTrialLatency = endTrialLatency(overlaps(:));
+  
+  % make yellow fills after trial end
   X = endTrialLatency;
   Y = cfg.trials;
   Y = [Y(:);Y(end);Y(1);(Y(1))];
   X = [X(:);cfg.latency(2);cfg.latency(2);endTrialLatency(1)];
   f = fill(X,Y,'y');
   set(f,'EdgeColor', [1 1 1]); 
+  
+  % make yellow fills before trial beginning
   X = begTrialLatency;
   Y = cfg.trials;
   Y = [Y(:);Y(end);Y(1);(Y(1))];
@@ -234,22 +247,75 @@ if doTopData
   
   % make the bar or the line plot
   if strcmp(cfg.topplotfunc,'bar')
+    
+    % plot thje density / psth as a bar plot
     avgHdl  = feval(cfg.topplotfunc,dataX,dataY', 'stack');
+    
+    % color the different bars
     for iUnit = 1:nUnits
       set(avgHdl(iUnit),'FaceColor',cfg.cmapneurons(iUnit,:),'EdgeColor', cfg.cmapneurons(iUnit,:),'LineWidth', 3);
     end
-    if strcmp(cfg.topplotfunc,'bar'),set(avgHdl,'BarWidth', 1); end
-    if ~strcmp(cfg.errorbars,'no'), warning('no error bars can be plotted when cfg.topplotfunc = "bar"'); end
+    
+    % set the bar width to 1
+    set(avgHdl,'BarWidth', 1); 
+     
+    if ~strcmp(cfg.errorbars, 'no') && nUnits>1
+      warning('error bars can only be plotted with bar plot if one unit is plotted'); 
+    end
+    
+    % add standard error bars to it
+    if ~strcmp(cfg.errorbars, 'no') && nUnits==1
+      x = [timelock.time(binSel);timelock.time(binSel)]; % create x doublets
+      if strcmp(cfg.errorbars, 'sem')
+        err = sqrt(timelock.var(unitIndx,binSel)./timelock.dof(unitIndx,binSel));
+      elseif strcmp(cfg.errorbars, 'std')
+        err = sqrt(timelock.var(unitIndx,binSel));
+      elseif strcmp(cfg.errorbars, 'var')
+        err = timelock.var(unitIndx,binSel);
+      elseif strcmp(cfg.errorbars, 'conf95%')
+        % use a try statement just in case the statistics toolbox doesn't work.
+        try
+          tCrit = tinv(0.975,timelock.dof(unitIndx,binSel));
+          err = tCrit.*sqrt(timelock.var(unitIndx,binSel)./timelock.dof(unitIndx,binSel)); % assuming normal distribution, SHOULD BE REPLACED BY STUDENTS-T!
+        catch % this is in case statistics toolbox is lacking
+          err = 0;
+          warning('error with computing 95% conf limits, probably issue with statistics toolbox'); 
+        end      
+      end
+
+      y = dataY + err;
+
+      % plot the errorbars as line plot on top of the bar plot
+      hold on
+      y = [zeros(1,length(y));y]; % let lines run from 0 to error values
+      hd = plot(x,y,'k'); % plot the error bars        
+    end
+    
   else
+    
+    % plot the density / psth
     avgHdl  = feval(cfg.topplotfunc,dataX,dataY');
+    
+    % set the color for every unit
     for iUnit = 1:nUnits
       set(avgHdl(iUnit),'Color',cfg.cmapneurons(iUnit,:));
     end
+    
+    % ensure that the data limits are increasing
     mnmax = [nanmin(dataY(:))-eps nanmax(dataY(:))+eps];
+    
+    % plot the errorbars
     if ~strcmp(cfg.errorbars,'no')
-      if ~isfield(timelock,'var')  || ~isfield(timelock,'dof'), error('timelock should contain field .var and .dof for errorbars'); end
+      
+      % check if the right error information is there
+      if ~isfield(timelock,'var')  || ~isfield(timelock,'dof'), 
+        error('timelock should contain field .var and .dof for errorbars'); 
+      end
+      
+      % select the degrees of freedom
       df = timelock.dof(unitIndx,binSel);
-      df = repmat(df(:)',[nUnits 1]);
+      
+      % plot the different error bars
       if strcmp(cfg.errorbars, 'sem')
         err = sqrt(timelock.var(unitIndx,binSel)./df);
       elseif strcmp(cfg.errorbars, 'std')
@@ -258,11 +324,15 @@ if doTopData
         err = timelock.var(unitIndx,binSel);
       elseif strcmp(cfg.errorbars, 'conf95%')
         tCrit = tinv(0.975,df);
-        err = tCrit.*sqrt(timelock.var(unitIndx,binSel)./df); 
+        err   = tCrit.*sqrt(timelock.var(unitIndx,binSel)./df); 
       end
+      
+      % ensure division by zero does not count, should not happen however
       err(~isfinite(err)) = NaN;
+      
+      % make a polygon of the error bars that allows easy filling in adobe
       for iUnit = 1:nUnits
-        upb = dataY(iUnit,:) + err(iUnit,:);
+        upb  = dataY(iUnit,:) + err(iUnit,:);
         lowb = dataY(iUnit,:) - err(iUnit,:);
         sl   = ~isnan(upb);
         [X,Y] = polygon(dataX(sl),upb(sl)+0.0001,lowb(sl)-0.0001);
@@ -273,6 +343,8 @@ if doTopData
       end
       mnmax = [nanmin(dataY(:) - err(:)) nanmax(dataY(:) + err(:))];
     end
+    
+    % set the y limits explicitly
     ylim = mnmax;
     d    = ylim(2)-ylim(1);
     yl = ylim(1)-0.05*d;
@@ -288,7 +360,10 @@ if doTopData
     ylim(2) = yl;
     set(gca,'YLim', ylim)
   end    
+  
+  % store the handle
   cfg.hdl.psth = avgHdl;
+  
   % modify the axes
   set(ax(2),'YAxisLocation', 'right') % swap y axis location
   set(ax(2),'XTickLabel', {}) % remove ticks and labels for x axis

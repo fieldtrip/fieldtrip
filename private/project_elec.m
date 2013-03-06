@@ -37,19 +37,28 @@ Ntri = size(tri,1);
 el   = zeros(Nelc, 4);
 
 for i=1:Nelc
-  smallest_dist = Inf;
-
-  for j=1:Ntri
-    [proj, dist] = ptriproj(pnt(tri(j,1),:), pnt(tri(j,2),:), pnt(tri(j,3),:), elc(i,:), 1);
-    if dist<smallest_dist
-      % remember the triangle index, distance and la/mu
-      [la, mu] = lmoutr(pnt(tri(j,1),:), pnt(tri(j,2),:), pnt(tri(j,3),:), proj);
-      smallest_dist = dist; 
-      smallest_tri  = j; 
-      smallest_la   = la; 
-      smallest_mu   = mu; 
-    end
-  end
+  [proj,dist] = ptriprojn(pnt(tri(:,1),:), pnt(tri(:,2),:), pnt(tri(:,3),:), elc(i,:), 1);
+  
+  [mindist, minindx] = min(dist);
+  [la, mu] = lmoutr(pnt(tri(minindx,1),:), pnt(tri(minindx,2),:), pnt(tri(minindx,3),:), proj(minindx,:));
+  smallest_dist = dist(minindx);
+  smallest_tri  = minindx;
+  smallest_la   = la;
+  smallest_mu   = mu;
+  
+  % the following can be done faster, because the smallest_dist can be
+  % directly selected
+%   for j=1:Ntri
+%     %[proj, dist] = ptriproj(pnt(tri(j,1),:), pnt(tri(j,2),:), pnt(tri(j,3),:), elc(i,:), 1);
+%     if dist(j)<smallest_dist
+%       % remember the triangle index, distance and la/mu
+%       [la, mu] = lmoutr(pnt(tri(j,1),:), pnt(tri(j,2),:), pnt(tri(j,3),:), proj(j,:));
+%       smallest_dist = dist(j); 
+%       smallest_tri  = j; 
+%       smallest_la   = la; 
+%       smallest_mu   = mu; 
+%     end
+%   end
 
   % store the projection for this electrode
   el(i,:) = [smallest_tri smallest_la smallest_mu smallest_dist];
