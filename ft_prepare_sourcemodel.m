@@ -226,7 +226,7 @@ if basedoncortex
 end
 
 if basedonmri
-  fprintf('creating dipole grid based on grey matter from segmented MRI\n');
+  fprintf('creating dipole grid based on an anatomical volume\n');
   cfg.threshold   = ft_getopt(cfg,      'threshold', 0.1); % relative
   cfg.smooth      = ft_getopt(cfg,      'smooth',    5);   % in voxels
   cfg.sourceunits = ft_getopt(cfg,      'sourceunits',     'auto');
@@ -429,64 +429,78 @@ if basedonmri
     end
   end
   
-  if ~isfield(mri, 'gray')
-    mri.gray = double(mri.anatomy);
-  elseif isfield(cfg.mri, 'gray')
-    % looks like a complete segmentation from VOLUMESEGMENT
-    mri.gray = double(mri.gray);
+  issegmentation = false;
+  if isfield(mri, 'gray')
+    % this is not a boolean segmentation, but based on tissue probability
+    % maps, being the original implementation here.
+    dat = double(mri.gray);
+   
+    % apply a smoothing of a certain amount of voxels
+    if ~strcmp(cfg.smooth, 'no');
+      dat = volumesmooth(dat, cfg.smooth, 'MRI gray matter');
+    end
+    
+  elseif isfield(mri, 'anatomy')
+    % this could be a tpm stored on disk, i.e. the result of
+    % ft_volumesegment. Reading it in always leads to the field 'anatomy'.
+    % Note this could be any anatomical mask
+    dat = double(mri.anatomy);
+    
+    % apply a smoothing of a certain amount of voxels
+    if ~strcmp(cfg.smooth, 'no');
+      dat = volumesmooth(dat, cfg.smooth, 'anatomy');
+    end
+
+  elseif ft_datatype(mri, 'segmentation')
+    % this is a proper segmentation, where a set of boolean masks is in the
+    % input, or and indexed volume, along with labels. FIXME for now still
+    % only works for boolean volumes.
+    issegmentation = true;
+    fn = booleanfields(mri);
+    if isempty(fn)
+      % convert indexed segmentation into probabilistic
+      segstyle = 'indexed';
+      mri      = ft_datatype_segmentation(mri, 'segmentationstyle', 'probabilistic');
+      fn       = booleanfields(mri);
+    else
+      segstyle = 'probabilistic';
+    end
+    
+    dat = false(mri.dim);
+    for i=1:numel(fn)
+      if ~strcmp(cfg.smooth, 'no')
+        mri.(fn{i}) = volumesmooth(double(mri.(fn{i})), cfg.smooth, fn{i}) > cfg.threshold;
+      end
+      dat = dat | mri.(fn{i});
+    end
+    dat = double(dat);
   else
     error('cannot determine the format of the segmentation in cfg.mri');
   end
   
-  % apply a smoothing of a certain amount of voxels
-  if ~strcmp(cfg.smooth, 'no');
-    mri.gray = volumesmooth(mri.gray, cfg.smooth, 'MRI gray matter');
-  end
   
   % determine for each voxel whether it belongs to the cortex
-  if isfield(cfg, 'threshold')
-    fprintf('thresholding gray matter segmentation at a relative value of %f\n', cfg.threshold);
-    head = mri.gray./max(mri.gray(:)) > cfg.threshold;
-  else
-    error('you must specify cfg.threshold for cortex segmentation');
-  end
+  fprintf('thresholding MRI data at a relative value of %f\n', cfg.threshold);
+  head = dat./max(dat(:)) > cfg.threshold;
   
   % convert the source/functional data into the same units as the anatomical MRI
   scale = scalingfactor(cfg.sourceunits, mri.unit);
   
   ind                 = find(head(:));
-  fprintf('%d from %d voxels in the segmentation are marked as cortex (%.0f%%)\n', length(ind), prod(size(head)), 100*length(ind)/prod(size(head)));
-  [X,Y,Z]             = ndgrid(1:mri.dim(1), 1:mri.dim(2), 1:mri.dim(3));   % create the grid in MRI-coordinates
-  posmri              = [X(ind) Y(ind) Z(ind) ones(length(ind),1)];         % take only the inside voxels
-  poshead             = mri.transform * posmri';                            % transform to head coordinates
-  poshead             = poshead(1:3,:)';
-  posmri              = posmri(:,1:3);
+  fprintf('%d from %d voxels in the segmentation are marked as ''inside'' (%.0f%%)\n', length(ind), numel(head), 100*length(ind)/numel(head));
+  [X,Y,Z]             = ndgrid(1:mri.dim(1), 1:mri.dim(2), 1:mri.dim(3));  % create the grid in MRI-coordinates
+  posmri              = [X(ind) Y(ind) Z(ind)];                            % take only the inside voxels
+  poshead             = warp_apply(mri.transform, posmri);                 % transform to head coordinates
   resolution          = cfg.grid.resolution*scale;                                        % source and mri can be expressed in different units (e.g. cm and mm)
   xgrid               = floor(min(poshead(:,1))):resolution:ceil(max(poshead(:,1)));      % create the grid in head-coordinates
   ygrid               = floor(min(poshead(:,2))):resolution:ceil(max(poshead(:,2)));      % with 'consistent' x,y,z definitions
   zgrid               = floor(min(poshead(:,3))):resolution:ceil(max(poshead(:,3)));
   [X,Y,Z]             = ndgrid(xgrid,ygrid,zgrid);
-  pos2head            = [X(:) Y(:) Z(:) ones(length(X(:)),1)]';
-  pos2mri             = mri.transform \ pos2head;                                         % transform to MRI-coordinates
-  pos2mri             = round(pos2mri(1:3,:))';
-  pos2head            = pos2head(1:3,:)';
-  pos2mri             = pos2mri(:,1:3);
-  % it might be that the box with the points does not completely fit into the MRI
-  sel = find(pos2mri(:,1)<1 |  pos2mri(:,1)>size(head,1) | ...
-    pos2mri(:,2)<1 |  pos2mri(:,2)>size(head,2) | ...
-    pos2mri(:,3)<1 |  pos2mri(:,3)>size(head,3));
-  if isempty(sel)
-    % use the efficient implementation
-    inside = head(sub2ind(mri.dim, pos2mri(:,1), pos2mri(:,2), pos2mri(:,3)));
-  else
-    % only loop over the points that can be dealt with
-    inside = zeros(length(xgrid)*length(ygrid)*length(zgrid), 1);
-    for i=setdiff(1:size(pos2mri,1), sel(:)')
-      inside(i) = head(pos2mri(i,1), pos2mri(i,2), pos2mri(i,3));
-    end
-  end
-  inside = find(inside);
-  
+  pos2head            = [X(:) Y(:) Z(:)];
+  pos2mri             = warp_apply(inv(mri.transform), pos2head);          % transform to MRI voxel coordinates
+  pos2mri             = round(pos2mri);
+  inside              = find(getinside(pos2mri, head));                    % use helper subfunction
+
   grid.pos            = pos2head/scale;                                     % convert to source units
   grid.xgrid          = xgrid/scale;                                        % convert to source units
   grid.ygrid          = ygrid/scale;                                        % convert to source units
@@ -496,9 +510,20 @@ if basedonmri
   grid.outside        = setdiff(1:size(grid.pos,1),grid.inside)';
   grid.unit           = cfg.sourceunits;
   
-  fprintf('the regular 3D grid encompassing the cortex contains %d grid points\n', size(grid.pos,1));
-  fprintf('%d grid points inside gray matter\n', length(grid.inside));
-  fprintf('%d grid points outside gray matter\n', length(grid.outside));
+  if issegmentation
+    % pass on the segmentation information on the grid points, the
+    % individual masks have been smoothed above
+    fn = booleanfields(mri);
+    for i=1:numel(fn)
+      grid.(fn{i}) = getinside(pos2mri, mri.(fn{i}));
+    end
+    % convert back is not in general possible because the masks can be
+    % overlapping due to smoothing
+    % grid = ft_datatype_segmentation(grid, 'segmentationstyle', segstyle);
+  end
+  fprintf('the regular 3D grid masked by the input MRI contains %d grid points\n', size(grid.pos,1));
+  fprintf('%d grid points inside the mask\n',  length(grid.inside));
+  fprintf('%d grid points outside the mask\n', length(grid.outside));
 end
 
 if basedoncortex
@@ -590,7 +615,7 @@ if basedonmni
   % if not create it: FIXME (this needs to be done still)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   if ischar(fname) && ~exist(fname, 'file')
-    error('the MNI template grid based on the specified resolution does not yet exist');
+      error('the MNI template grid based on the specified resolution does not yet exist');
   end
   
   % get the mri
@@ -633,6 +658,12 @@ if basedonmni
   grid.inside  = mnigrid.inside;
   grid.outside = mnigrid.outside;
   grid.params  = normalise.params;
+  if ft_datatype(mnigrid, 'parcellation')
+    fn = booleanfields(mnigrid);
+    for i=1:numel(fn)
+      grid.(fn{i}) = mnigrid.(fn{i});
+    end
+  end
   
   % convert to the requested units
   grid         = ft_convert_units(grid, cfg.sourceunits);
@@ -748,6 +779,11 @@ if strcmp(cfg.grid.tight, 'yes')
   grid.ygrid   = grid.ygrid(ymin_indx:ymax_indx);
   grid.zgrid   = grid.zgrid(zmin_indx:zmax_indx);
   grid.dim     = [length(grid.xgrid) length(grid.ygrid) length(grid.zgrid)];
+  if exist('issegmentation', 'var') && issegmentation
+    for i=1:numel(fn)
+      grid.(fn{i}) = grid.(fn{i})(sel);
+    end
+  end
 end
 fprintf('%d dipoles inside, %d dipoles outside brain\n', length(grid.inside), length(grid.outside));
 
@@ -780,3 +816,38 @@ ft_postamble trackconfig
 ft_postamble provenance
 ft_postamble history grid
 
+%--------------------------------------------------------------
+% helper function for basedonmri method to determine the inside
+% returns a boolean vector
+function inside = getinside(pos, mask)
+
+% it might be that the box with the points does not completely fit into the
+% mask
+dim = size(mask);
+sel = find(pos(:,1)<1 |  pos(:,1)>dim(1) | ...
+  pos(:,2)<1 |  pos(:,2)>dim(2) | ...
+  pos(:,3)<1 |  pos(:,3)>dim(3));
+if isempty(sel)
+  % use the efficient implementation
+  inside = mask(sub2ind(dim, pos(:,1), pos(:,2), pos(:,3)));
+else
+  % only loop over the points that can be dealt with
+  inside = zeros(size(pos,1), 1);
+  for i=setdiff(1:size(pos,1), sel(:)')
+    inside(i) = mask(pos(i,1), pos(i,2), pos(i,3));
+  end
+end
+
+%--------------------------------------------------------------------------
+% helper function to return the fieldnames of the boolean fields in a
+% segmentation, should work both for volumetric and for source
+function fn = booleanfields(mri)
+
+fn = fieldnames(mri);
+isboolean = false(1,numel(fn));
+for i=1:numel(fn)
+  if islogical(mri.(fn{i})) && isequal(numel(mri.(fn{i})),prod(mri.dim))
+    isboolean(i) = true;
+  end
+end
+fn  = fn(isboolean);
