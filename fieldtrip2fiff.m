@@ -42,7 +42,7 @@ ft_preamble callinfo        % this records the time and memory usage at teh begi
 [pathstr,name,ext] = fileparts(filename);
 if isempty(ext),
   filename = [filename, '.fif'];
-elseif ~strcmp(ext, 'fif')
+elseif ~strcmp(ext, '.fif')
   error('if the filename is specified with extension, this should read .fif');
 end
 
@@ -105,7 +105,7 @@ if istlck
   evoked.comment     = sprintf('FieldTrip data averaged');
   evoked.epochs      = data.avg;
 elseif israw
-  for j = 1:length(dataout)
+  for j = 1:length(data)
     evoked(j).aspect_kind = 100;
     evoked(j).is_smsh     = 0; % FIXME: How could we tell?
     evoked(j).nave        = 1; % FIXME: Use the real value
