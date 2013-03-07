@@ -55,7 +55,7 @@ int readSyncBytes(SerialPort *SP) {
 			continue;
 		}
 		
-		//printf("%02X %c\n", byte, byte);
+		// printf("%02X %c\n", byte, byte);
 		
 		if (byte == 0xA5) {
 			serialBuffer[0] = byte;
