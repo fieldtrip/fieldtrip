@@ -106,7 +106,7 @@ else
 end
 
 if isfield(freq, cfg.colorparam)
-  colorparam = freq.(cfg.colorparam)(:,:,fbin);
+  colorparam = freq.(cfg.colorparam)(:,fbin);
 else
   colorparam = [];
 end
