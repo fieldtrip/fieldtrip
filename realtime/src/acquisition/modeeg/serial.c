@@ -170,6 +170,7 @@ int serialOpenByName(SerialPort *SP, const char *device) {
    }
 
    if (tcgetattr(SP->comPort, &(SP->oldTermios))) {
+		   perror("tcgetattr");
       fputs(serialErrGetP, stderr);
       close(SP->comPort);
       SP->comPort=0;
@@ -223,6 +224,7 @@ int serialSetParameters(SerialPort *SP, int baudrate, int bits, int parity, int 
    newtio.c_cc[VMIN ]    = 0; 
  
    if (tcsetattr(SP->comPort, TCSANOW, &newtio)) {
+		   perror("tcsetattr");
       fputs("Couldn't change serial port settings\n",stderr);
       return 0;
    }
