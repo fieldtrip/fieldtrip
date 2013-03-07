@@ -630,9 +630,9 @@ if basedonmni
   
   % get template grid
   if ischar(fname)
-    load(fname, 'grid');
-    mnigrid = grid;
-    clear grid;
+    load(fname, 'sourcemodel');
+    mnigrid = sourcemodel;
+    clear sourcemodel;
   else
     mnigrid = cfg.grid.template;
   end
