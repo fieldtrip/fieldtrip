@@ -1,0 +1,2 @@
+This is a selection ofOctave functions that were downloaded from http://octave.sourceforge.net/signal/index.html and modified to make them MATLAB compatible. They serve as drop-in replacement for some functions in the Mathworks signal processing toolbox.
+
