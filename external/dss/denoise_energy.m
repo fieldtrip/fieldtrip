@@ -36,7 +36,7 @@ if ~isfield(params, 'initialized')
     params.usepow = 1.3;
   end
   if ~isfield(params,'gamma')
-    [p, var_smooth] = denoise_filter(params, randn(1, length(s)).^2);
+    [p, var_smooth] = denoise_filter(params, randn(1, length(s)).^2, state);
     noise_var = est_noise_var(var_smooth, 0);
     params.c = 1 / noise_var;
     %fprintf('Noise variance: %f', noise_var);
@@ -47,7 +47,7 @@ if ~isfield(params, 'initialized')
   end
 end
 
-[p, var_totsm] = denoise_filter(params, s.^2);
+[p, var_totsm] = denoise_filter(params, s.^2, state);
 
 for i = 1 : params.iternoise
   params.var_noise = est_noise_var(var_totsm, params.var_noise)*params.c;

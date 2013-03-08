@@ -58,7 +58,7 @@ s_new = zeros(size(s));
 avg = zeros(size(s,1),tr_end-tr_begin+1);
 
 if (params.tr(end)+tr_end > size(s,2))
-  message(state, 3, sprintf('  Last response ends outside the data range. Dropping...\n'));
+  dss_message(state, 3, sprintf('  Last response ends outside the data range. Dropping...\n'));
   tr_inds = tr_inds(1:end-1);
 end
 

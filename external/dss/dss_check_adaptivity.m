@@ -11,12 +11,12 @@ if isfield(state, 'alphaf')
     p = feval(state.alphaf.h);
     if p.adaptive==1
         state.adapt_alpha=1;
-        message(state, 1, 'Adaptive alpha\n');
+        dss_message(state, 1, 'Adaptive alpha\n');
     else
         [state.alphaf.params, state.alpha] = feval(state.alphaf.h, state.alphaf.params, state);
-        message(state, 1, sprintf('Constant alpha: %d\n', state.alpha));
+        dss_message(state, 1, sprintf('Constant alpha: %d\n', state.alpha));
     end
-else message(state, 1, sprintf('Fixed alpha: %d\n', state.alpha));
+else dss_message(state, 1, sprintf('Fixed alpha: %d\n', state.alpha));
 end
 
 state.adapt_beta=0;
@@ -24,12 +24,12 @@ if isfield(state, 'betaf')
     p = feval(state.betaf.h);
     if p.adaptive==1
         state.adapt_beta=1;
-        message(state, 1, 'Adaptive beta\n');
+        dss_message(state, 1, 'Adaptive beta\n');
     else
         [state.betaf.params, state.beta] = feval(state.betaf.h, state.betaf.params, state);
-        message(state, 1, sprintf('Constant beta: %d\n', state.beta));
+        dss_message(state, 1, sprintf('Constant beta: %d\n', state.beta));
     end
-else message(state, 1, sprintf('Fixed beta: %d\n', state.beta));
+else dss_message(state, 1, sprintf('Fixed beta: %d\n', state.beta));
 end
 
 state.adapt_gamma=0;
@@ -37,12 +37,12 @@ if isfield(state, 'gammaf')
     p = feval(state.gammaf.h);
     if p.adaptive==1
         state.adapt_gamma=1;
-        message(state, 1, 'Adaptive gamma\n');
+        dss_message(state, 1, 'Adaptive gamma\n');
     else
         [state.gammaf.params, state.gamma] = feval(state.gammaf.h, state.gammaf.params, state);
-        message(state, 1, sprintf('Constant gamma: %d\n', state.gamma));
+        dss_message(state, 1, sprintf('Constant gamma: %d\n', state.gamma));
     end
-else message(state, 1, sprintf('Fixed gamma: %d\n', state.gamma));
+else dss_message(state, 1, sprintf('Fixed gamma: %d\n', state.gamma));
 end
 
 
@@ -50,10 +50,10 @@ end
 %for f = {'alpha', 'beta', 'gamma'}
 %  fname = [f{1} 'f'];
 %  if isfield(state, 'alphaf')
-%    message(state, 1, [fname ' is @' func2str(state.(fname).h) '.\n']);
+%    dss_message(state, 1, [fname ' is @' func2str(state.(fname).h) '.\n']);
 %    [state.(f{1}), state.(fname).params] = ...
 %	feval(state.(fname).h, state.(fname).params, state);
 %  else
-%    message(state, 1, [fname ' is not defined.\n']);
+%    dss_message(state, 1, [fname ' is not defined.\n']);
 %  end
 %end

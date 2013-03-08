@@ -12,16 +12,16 @@ data = state;
 
 if data.iteration==1
   % -- first iteration
-  message(state,1,sprintf('  Iterating component %d', data.component));
+  dss_message(state,1,sprintf('  Iterating component %d', data.component));
 end
 
 % -- show progress status to the user
-message(state,1,'.');
+dss_message(state,1,'.');
 if data.last_iteration
-  message(state,1,sprintf('\n  Component %d found after %d iterations.\n', ...
+  dss_message(state,1,sprintf('\n  Component %d found after %d iterations.\n', ...
 	  data.component, data.iteration));
 
-  message(state,1,sprintf('  mean: %f, var: %f, skew: %f, kurt: %f\n', ...
+  dss_message(state,1,sprintf('  mean: %f, var: %f, skew: %f, kurt: %f\n', ...
 	  mean(data.s), var(data.s,1), skewness(data.s), kurtosis(data.s)-3));
 end
 
