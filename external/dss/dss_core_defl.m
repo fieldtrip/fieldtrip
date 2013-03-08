@@ -19,7 +19,7 @@ function state = dss_core_defl(state)
 % start_time
 % ...
 
-message(state,2,'Extracting components in deflationary DSS\n');
+dss_message(state,2,'Extracting components in deflationary DSS\n');
 
 % -- Initialize local variables
 start_time = cputime;
@@ -33,7 +33,7 @@ sdim = state.sdim;
 if ~isfield(state,'component'); state.component=0; end
 if ~isfield(state,'iteration'); state.iteration=0; end
 if state.component>0 & state.component<=sdim
-  message(state,1,sprintf('Continuing on component %d, iteration %d.\n', state.component, state.iteration));
+  dss_message(state,1,sprintf('Continuing on component %d, iteration %d.\n', state.component, state.iteration));
 else
   state.component=1;
   state.iteration=0;
@@ -52,16 +52,16 @@ while state.component <= sdim
   component = state.component;
 
   if state.iteration==0
-    message(state,1,sprintf('Calculate component %d ',component));
+    dss_message(state,1,sprintf('Calculate component %d ',component));
 
     if size(state.W,1)>=component
-      message(state,1,'with predefined w\n');
+      dss_message(state,1,'with predefined w\n');
       state.w = state.W(component,:)';
     elseif size(state.S,1)>=component
-      message(state,1,'with predefined s\n');
+      dss_message(state,1,'with predefined s\n');
       state.w = state.Y * state.S(component, :)';
     else
-      message(state,1,'with random w\n');
+      dss_message(state,1,'with random w\n');
       state.w = randn(wdim, 1);
     end
 
@@ -75,11 +75,11 @@ while state.component <= sdim
     state.iteration = 1;
     state.last_iteration = 0;
   else
-    message(state,2,'Continue iteration');
+    dss_message(state,2,'Continue iteration');
   end
 
   % -- for each iteration
-  message(state,3,'Iterating: ');
+  dss_message(state,3,'Iterating: ');
   while 1
     % ---- calculate new s
     % -- denoising
@@ -118,7 +118,7 @@ while state.component <= sdim
       end
       % Show progress
       signumstr='-0+';
-      message(state,3,signumstr(signum+2));
+      dss_message(state,3,signumstr(signum+2));
     end
       
     % -- learning rate adaptation
@@ -173,7 +173,7 @@ while state.component <= sdim
     break;
   end
 
-  message(state,3,'\n');
+  dss_message(state,3,'\n');
 
   state.component = state.component + 1;
   state.iteration = 0;

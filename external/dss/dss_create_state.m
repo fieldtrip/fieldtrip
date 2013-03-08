@@ -122,10 +122,10 @@ else
     params = struct([]);
   else
     if isstruct(parameters)
-      message(state,1,'Parse parameter struct\n');
+      dss_message(state,1,'Parse parameter struct\n');
       params = parameters;
     else
-      message(state,1,'Parse parameter list\n');
+      dss_message(state,1,'Parse parameter list\n');
       if mod(size(parameters,2),2)~=0
         error('Parameter list must contain parameter and value pairs.');
       end
@@ -156,7 +156,7 @@ for p=1:size(param_def,1)
   if isfield(params, paramname)
     % for ML65+: state.(paramname)=params.(paramname);
     state = setfield(state, paramname, getfield(params, paramname));
-    %message(state,1,['Parameter ' paramname '\n']);
+    %dss_message(state,1,['Parameter ' paramname '\n']);
     % Clear parameter from struct so that invalid parameters are detected
     params = rmfield(params, paramname);
   end
@@ -172,7 +172,7 @@ for p=1:size(param_def,1)
   % -- check function parameters
   if isfield(state, paramname)
     if isfield(getfield(state, paramname), 'h') & ~isfield(getfield(state, paramname), 'params')
-      %message(state,1, sprintf('Creating empty parameter structure for parameter %s.\n', paramname));
+      %dss_message(state,1, sprintf('Creating empty parameter structure for parameter %s.\n', paramname));
 
       % for ML65+: state.(paramname).params=[];
       p = getfield(state, paramname);
@@ -186,7 +186,7 @@ for p=1:size(param_def,1)
   if ~isfield(state, paramname) str = '-';
   else str = tostring(getfield(state, paramname));
   end
-  message(state, 2, ['  Parameter ' paramname ': ' str '\n']);
+  dss_message(state, 2, ['  Parameter ' paramname ': ' str '\n']);
   
 end
 
@@ -200,7 +200,7 @@ end
 
 if size(fields,1)>0
   for p = size(fields, 1)
-    message(state,1,['IGNORING INVALID PARAMETER: ''' fields{p} '''\n']);
+    dss_message(state,1,['IGNORING INVALID PARAMETER: ''' fields{p} '''\n']);
   end
 end
 
