@@ -1890,8 +1890,8 @@ for i=1:ntrial
   for j=1:nchans
     hasAllInts    = all(isnan(data.trial{i}(j,:)) | data.trial{i}(j,:) == round(data.trial{i}(j,:)));
     hasAllPosInts = all(isnan(data.trial{i}(j,:)) | data.trial{i}(j,:)>=0);
-    T = nansum(diff(data.time{i})); % total time
-    fr            = nansum(data.trial{i}(j,:)) ./ T;
+    T = nansum(diff(data.time{i}),2); % total time
+    fr            = nansum(data.trial{i}(j,:),2) ./ T;
     spikechan(j)  = spikechan(j) + double(hasAllInts & hasAllPosInts & fr<=maxRate);
   end
 end
