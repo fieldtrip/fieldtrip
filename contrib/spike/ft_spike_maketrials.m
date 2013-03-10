@@ -25,8 +25,17 @@ function [spike] = ft_spike_maketrials(cfg,spike)
 %     trial start.
 %     If more columns are added than 3, these are used to construct the
 %     spike.trialinfo field having information about the trial.
+%     Note:
 %     cfg.trl is ideally of the same class as spike.timestamp{} as it avoids round-off
-%     errors
+%     errors. In some acquisition systems, the timestamps attain very high values in 
+%     uint64 format. If these are represented in a double format, there are round-off
+%     errors. As a solution, one should cast the cfg.trl as a uint64 or int64 
+%     to avoid the round-off errors.
+%     Note that negative numbers are not allowed with uint64. The third column of 
+%     cfg.trl may contain a negative offset.
+%     To get numerical accuracy one could then cast the cfg.trl as int64.
+%     We will then explicitly convert cfg.trl(:,1:2) to uint64 inside the function.
+%     
 %
 %   cfg.trlunit = 'timestamps' (default) or 'samples'. 
 %     If 'samples', cfg.trl should 
@@ -106,7 +115,14 @@ if strcmp(cfg.trlunit,'timestamps')
   nTrials = size(cfg.trl,1);
   for iUnit = 1:nUnits
     ts = spike.timestamp{iUnit}(:);
-
+    classTs = class(ts);
+    classTrl = class(cfg.trl);
+    trlEvent = cfg.trl(:,1:2);
+    if ~strcmp(classTs, classTrl)
+        warning('timestamps of unit %d are of class %s and cfg.trl is of class %s, converting %s to %s', iUnit, class(ts), class(cfg.trl), class(cfg.trl), class(ts));
+        trlEvent = cast(trlEvent, classTs);
+    end
+    
     % take care of the waveform information as well
     hasWave =  isfield(spike, 'waveform') && ~isempty(spike.waveform) && ~isempty(spike.waveform{iUnit});
       
@@ -114,11 +130,7 @@ if strcmp(cfg.trlunit,'timestamps')
     trialNum = [];
     sel       = [];
     for iTrial = 1:nTrials
-      if ~strcmp(class(ts), class(cfg.trl))
-        isVld = find(double(ts)>=double(events(1,iTrial)) & double(ts)<=double(events(2,iTrial)));
-      else
-        isVld = find(ts>=events(1,iTrial) & ts<=events(2,iTrial));
-      end        
+      isVld = find(ts>=trlEvent(iTrial,1) & ts<=trlEvent(iTrial,2));
       if ~isempty(isVld)
         trialNum = [trialNum; iTrial*ones(length(isVld),1)];
       end
@@ -128,17 +140,12 @@ if strcmp(cfg.trlunit,'timestamps')
     % subtract the event (t=0) from the timestamps directly
     if ~isempty(trialNum)
       ts = ts(sel);
-      if ~strcmp(class(ts), class(cfg.trl))
-        warning('timestamps of unit %d are of class %s and cfg.trl is of class %s, rounding errors are possible', iUnit, class(ts), class(cfg.trl));
-        dt = double(ts) - double(cfg.trl(trialNum,1));
-      else
-        dt = double(ts - cfg.trl(trialNum,1)); % convert to double only here
-      end
+      dt = double(ts - trlEvent(trialNum,1)); % convert to double only here
       dt = dt/cfg.timestampspersecond + trlDouble(trialNum,3)/cfg.timestampspersecond;
     else
       dt = [];
     end
-    trialDur = double(cfg.trl(:,2)-cfg.trl(:,1))/cfg.timestampspersecond;
+    trialDur = double(trlEvent(:,2)-trlEvent(:,1))/cfg.timestampspersecond;
     time = [trlDouble(:,3)/cfg.timestampspersecond (trlDouble(:,3)/cfg.timestampspersecond + trialDur)]; % make the time-axis
 
     % gather the results
