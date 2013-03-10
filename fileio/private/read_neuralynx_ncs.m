@@ -75,7 +75,7 @@ if NRecords>0
   end
   
   % detect the number of timestamps per block while avoiding influencce of gaps
-  d        = diff(double(TimeStamp));
+  d        = double(diff(TimeStamp));
   maxJump  = ceil(10^6./(Fs-1))*512;
   gapCorrectedTimeStampPerSample =  nanmean(d(d<maxJump))/512;    
 
