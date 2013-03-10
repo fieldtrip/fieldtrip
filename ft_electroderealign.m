@@ -8,7 +8,9 @@ function [norm] = ft_electroderealign(cfg)
 %
 % Use as
 %   [elec] = ft_electroderealign(cfg)
-%
+% 
+% This function requires the same electrode and channel positions.
+% 
 % Different methods for aligning the input electrodes to the subjects head
 % are implemented, which are described in detail below:
 %
@@ -82,7 +84,7 @@ function [norm] = ft_electroderealign(cfg)
 %                        single triangulated boundary, or a Nx3 matrix with surface
 %                        points
 %
-% See also FT_READ_SENS, FT_VOLUMEREALIGN
+% See also FT_READ_SENS, FT_VOLUMEREALIGN, FT_DATATYPE_SENS
 
 % Copyright (C) 2005-2011, Robert Oostenveld
 %
@@ -151,6 +153,13 @@ elseif nargin>1
   % the input electrodes were specified as second input argument
 end
 elec = ft_convert_units(elec); % ensure that the units are specified
+
+% ensure up-to-date sensor descriptions 
+elec = ft_datatype_sens(elec);
+
+% ensure that channel and electrode positions are the same
+assert(isequal(elec.elecpos,elec.chanpos),'This function requires same electrode and channel positions.'); 
+
 
 usetemplate  = isfield(cfg, 'template')  && ~isempty(cfg.template);
 useheadshape = isfield(cfg, 'headshape') && ~isempty(cfg.headshape);
@@ -483,16 +492,20 @@ else
   error('unknown method');
 end
 
-% apply the spatial transformation to all electrodes, and replace the
-% electrode labels by their case-sensitive original values
+% apply the spatial transformation to all electrodes, replace the
+% electrode labels by their case-sensitive original values, and ensure the same
+% electrode and channel positions
 switch cfg.method
   case 'template'
     norm.chanpos   = warp_apply(norm.m, orig.chanpos, cfg.warp);
+    norm.elecpos   = norm.chanpos;
   case {'fiducial' 'interactive'}
     norm.chanpos   = warp_apply(norm.m, orig.chanpos);
+    norm.elecpos   = norm.chanpos;
   case 'manual'
     % the positions are already assigned in correspondence with the mesh
     norm = orig;
+    norm.elecpos   = norm.chanpos;
   otherwise
     error('unknown method');
 end
@@ -500,6 +513,8 @@ end
 if isfield(orig, 'label')
   norm.label = orig.label;
 end
+
+norm = ft_datatype_sens(norm);
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
