@@ -66,12 +66,8 @@ if NRecords>0
   end
   
   % explicitly sort the timestamps to deal with negative timestamp jumps that can occur
-  ts1 = TimeStamp(1);
-  dts = double(TimeStamp - TimeStamp(1));
-  dts = unique(dts);
-  dts = sort(dts);
-  TimeStamp = uint64(dts) + ts1;
-   
+  TimeStamp = sort(TimeStamp);
+  
   % for this block of data: automatically detect the gaps; 
   % there's a gap if no round off error of the sampling frequency could
   % explain the jump (which is always > one block)
@@ -90,7 +86,7 @@ if NRecords>0
   end
   
   % detect the number of timestamps per block while avoiding influencce of gaps
-  d        = double(diff(TimeStamp));
+  d        = diff(double(TimeStamp));
   maxJump  = ceil(10^6./(Fs-1))*512;
   gapCorrectedTimeStampPerSample =  nanmean(d(d<maxJump))/512;    
 
@@ -152,22 +148,22 @@ if begrecord>=1 && endrecord>=begrecord
     Samp((NumValidSamp+1):end,k) = nan;
   end
   
-  ts1 = TimeStamp(1);
-  dts = double(TimeStamp-ts1); % no problem with doubles here as numbers are small
- 
-  [val,indx] = sort(dts); 
-  [A,I] = unique(val); % consider only the unique values
-  indx = indx(I);
     
+  idxNeg = find(diff(double(TimeStamp))<=0);
+  if ~isempty(idxNeg)
+    [TimeStamp, indx] = sort(TimeStamp);      
+    warning('%d blocks have negative timestamp jump', length(idxNeg));
+  else
+    indx = 1:length(TimeStamp);
+  end
+  
   % store the record data in the output structure
-  ncs.TimeStamp    = uint64(dts(indx)) + ts1; % convert back to original class
+  ncs.TimeStamp    = TimeStamp;
   ncs.ChanNumber   = ChanNumber(indx);
   ncs.SampFreq     = SampFreq(indx);
   ncs.NumValidSamp = NumValidSamp(indx);
   % apply the scaling factor from ADBitVolts and convert to uV
   ncs.dat          = Samp(:,indx) * hdr.ADBitVolts * 1e6;
-
-  
   
 end
 fclose(fid);
