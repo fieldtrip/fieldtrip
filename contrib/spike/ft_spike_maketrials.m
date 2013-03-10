@@ -25,17 +25,6 @@ function [spike] = ft_spike_maketrials(cfg,spike)
 %     trial start.
 %     If more columns are added than 3, these are used to construct the
 %     spike.trialinfo field having information about the trial.
-%     Note:
-%     cfg.trl is ideally of the same class as spike.timestamp{} as it avoids round-off
-%     errors. In some acquisition systems, the timestamps attain very high values in 
-%     uint64 format. If these are represented in a double format, there are round-off
-%     errors. As a solution, one should cast the cfg.trl as a uint64 or int64 
-%     to avoid the round-off errors.
-%     Note that negative numbers are not allowed with uint64. The third column of 
-%     cfg.trl may contain a negative offset.
-%     To get numerical accuracy one could then cast the cfg.trl as int64.
-%     We will then explicitly convert cfg.trl(:,1:2) to uint64 inside the function.
-%     
 %
 %   cfg.trlunit = 'timestamps' (default) or 'samples'. 
 %     If 'samples', cfg.trl should 
@@ -133,7 +122,9 @@ if strcmp(cfg.trlunit,'timestamps')
     classTrl = class(cfg.trl);
     trlEvent = cfg.trl(:,1:2);
     if ~strcmp(classTs, classTrl)
-        warning('timestamps of unit %d are of class %s and cfg.trl is of class %s, converting %s to %s', iUnit, class(ts), class(cfg.trl), class(cfg.trl), class(ts));
+        if iUnit==1
+          warning('timestamps are of class %s and cfg.trl is of class %s, converting %s to %s', iUnit, class(ts), class(cfg.trl), class(cfg.trl), class(ts));
+        end
         trlEvent = cast(trlEvent, classTs);
     end
     
@@ -188,7 +179,9 @@ elseif strcmp(cfg.trlunit,'samples')
     % determine the corresponding sample numbers for each timestamp
     ts = spike.timestamp{iUnit}(:);
     if ~strcmp(class(ts), class(FirstTimeStamp))
-      warning('timestamps of unit %d are of class %s and hdr.FirstTimeStamp is of class %s, rounding errors are possible', iUnit, class(ts), class(FirstTimeStamp));
+      if iUnit==1
+        warning('timestamps of unit %d are of class %s and hdr.FirstTimeStamp is of class %s, rounding errors are possible', iUnit, class(ts), class(FirstTimeStamp));
+      end
       sample = (double(ts)-double(FirstTimeStamp))/TimeStampPerSample + 1;
     else
       sample = double(ts-FirstTimeStamp)/TimeStampPerSample + 1; % no rounding (compare ft_appendspike)
