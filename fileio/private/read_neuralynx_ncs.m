@@ -77,8 +77,8 @@ if NRecords>0
       hdr.SamplingFrequency, Fs);
     
       % check which one was correct
-      d = 
-      fsEst = 1e6./median(double(diff(TimeStamp)));
+      d = double(TimeStamp(2:end)-TimeStamp(1:end-1));  
+      fsEst = 1e6./median(d);
       indx = nearest([Fs hdr.SamplingFrequency], fsEst);
       if indx==1 
         warning('correcting the header frequency from %2.2f to %2.2f', hdr.SamplingFrequency, Fs);
