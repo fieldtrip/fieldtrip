@@ -68,10 +68,18 @@ if NRecords>0
   % for this block of data: automatically detect the gaps; 
   % there's a gap if no round off error of the sampling frequency could
   % explain the jump (which is always > one block)
-  Fs       = nanmin(SampFreq);
+  Fs       = median(double(SampFreq));
   if Fs~=hdr.SamplingFrequency
-    warning('the sampling frequency as read out from the header equals %2.2f and differs from the minimum sampling frequency as read out from the data %2.2f\n', ...
+      warning('the sampling frequency as read out from the header equals %2.2f and differs from the median sampling frequency as read out from the data %2.2f\n', ...
       hdr.SamplingFrequency, Fs);
+    
+      % check which one was correct
+      fsEst = 1e6./median(double(diff(TimeStamp)));
+      indx = nearest([Fs hdr.SamplingFrequency], fsEst);
+      if indx==1 
+        warning('correcting the header frequency from %2.2f to %2.2f', hdr.SamplingFrequency, Fs);
+        hdr.SamplingFrequency = Fs;
+      end
   end
   
   % detect the number of timestamps per block while avoiding influencce of gaps
