@@ -75,14 +75,13 @@ if NRecords>0
   % for this block of data: automatically detect the gaps; 
   % there's a gap if no round off error of the sampling frequency could
   % explain the jump (which is always > one block)
-  Fs       = mode(double(SampFreq));
-  if abs(Fs/hdr.SamplingFrequency-1)>0.01
-      warning('the sampling frequency as read out from the header equals %2.2f and differs from the mode sampling frequency as read out from the data %2.2f\n', ...
+  Fs       = median(double(SampFreq));
+  if Fs~=hdr.SamplingFrequency
+      warning('the sampling frequency as read out from the header equals %2.2f and differs from the median sampling frequency as read out from the data %2.2f\n', ...
       hdr.SamplingFrequency, Fs);
     
       % check which one was correct
-      d = double(TimeStamp(2:end)-TimeStamp(1:end-1));  
-      fsEst = 1e6./mode(d);
+      fsEst = 1e6./median(double(diff(TimeStamp)));
       indx = nearest([Fs hdr.SamplingFrequency], fsEst);
       if indx==1 
         warning('correcting the header frequency from %2.2f to %2.2f', hdr.SamplingFrequency, Fs);
