@@ -206,7 +206,7 @@ elseif strcmp(cfg.trlunit,'samples')
 end
 
 if size(cfg.trl,2) > 3
-    spike.trialinfo        = cfg.trl(:,4:end);
+    spike.trialinfo        = double(cfg.trl(:,4:end));
 end
 
 % do the general cleanup and bookkeeping at the end of the function
