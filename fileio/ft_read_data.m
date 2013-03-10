@@ -772,11 +772,12 @@ switch dataformat
     begsample = begsample - (begrecord-1)*512;
     endsample = endsample - (begrecord-1)*512;
     if istrue(timestamp)   
-      medianTimestampPerBlock  = median(diff(double(ncs.TimeStamp))); % to avoid influence of the gaps
+      medianTimestampPerBlock  = median(double(diff(ncs.TimeStamp))); % to avoid influence of the gaps
       TimestampPerSample       = medianTimestampPerBlock/512; % divide by known block size
+      cls = class(ncs.TimeStamp);
       % replace the data with the timestamp of each sample
       for i=1:512
-        ncs.dat(i,:) = double(ncs.TimeStamp) + (i-1)*TimestampPerSample;
+        ncs.dat(i,:) = ncs.TimeStamp + cast((i-1)*TimestampPerSample,cls);
       end
     end
     % this also reshape the data from 512 X records into a linear array
