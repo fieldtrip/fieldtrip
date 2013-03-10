@@ -148,8 +148,8 @@ if begrecord>=1 && endrecord>=begrecord
     Samp((NumValidSamp+1):end,k) = nan;
   end
   
-    
-  idxNeg = find(diff(double(TimeStamp))<=0);
+  d = TimeStamp(2:end)-TimeStamp(1:end-1);  
+  idxNeg = find(double(d)<=0);
   if ~isempty(idxNeg)
     [TimeStamp, indx] = sort(TimeStamp);      
     warning('%d blocks have negative timestamp jump', length(idxNeg));
