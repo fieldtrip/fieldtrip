@@ -77,6 +77,7 @@ if NRecords>0
       hdr.SamplingFrequency, Fs);
     
       % check which one was correct
+      d = 
       fsEst = 1e6./median(double(diff(TimeStamp)));
       indx = nearest([Fs hdr.SamplingFrequency], fsEst);
       if indx==1 
@@ -86,7 +87,7 @@ if NRecords>0
   end
   
   % detect the number of timestamps per block while avoiding influencce of gaps
-  d        = diff(double(TimeStamp));
+  d = double(TimeStamp(2:end)-TimeStamp(1:end-1));    
   maxJump  = ceil(10^6./(Fs-1))*512;
   gapCorrectedTimeStampPerSample =  nanmean(d(d<maxJump))/512;    
 
