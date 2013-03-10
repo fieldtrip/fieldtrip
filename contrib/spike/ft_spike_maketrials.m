@@ -25,6 +25,8 @@ function [spike] = ft_spike_maketrials(cfg,spike)
 %     trial start.
 %     If more columns are added than 3, these are used to construct the
 %     spike.trialinfo field having information about the trial.
+%     cfg.trl is ideally of the same class as spike.timestamp{} as it avoids round-off
+%     errors
 %
 %   cfg.trlunit = 'timestamps' (default) or 'samples'. 
 %     If 'samples', cfg.trl should 
@@ -79,7 +81,7 @@ cfg = ft_checkopt(cfg,'trl', {'numericvector', 'numericmatrix'});
 if size(cfg.trl,2)<3,
   error('cfg.trl should contain at least 3 columns, 1st column start of trial, 2nd column end, 3rd offset, in timestamp or sample units')
 end
-cfg.trl = double(cfg.trl);
+cfg.trl = cfg.trl;
 events  = cfg.trl(:,1:2)'; %2-by-nTrials now
 if ~issorted(events(:)), warning('your trials are overlapping, trials will not be statistically independent'); end
 if ~issorted(events,'rows'), error('the trials are not in sorted order'); end
@@ -88,13 +90,14 @@ if ~issorted(events,'rows'), error('the trials are not in sorted order'); end
 if strcmp(cfg.trlunit,'timestamps')
   cfg = ft_checkconfig(cfg,'forbidden', 'hdr');
   cfg = ft_checkconfig(cfg, 'required', {'timestampspersecond'});  
+  cfg.timestampspersecond = double(cfg.timestampspersecond);  
 else
   cfg = ft_checkconfig(cfg, 'required', {'hdr'});      
   if ~isfield(cfg.hdr, 'FirstTimeStamp'), error('cfg.hdr.FirstTimeStamp must be specified'); end
   if ~isfield(cfg.hdr, 'TimeStampPerSample'), error('cfg.hdr.TimeStampPerSample must be specified'); end
   if ~isfield(cfg.hdr, 'Fs'), error('cfg.hdr.Fs, the sampling frequency of the LFP must be specified'); end
 end
-  
+trlDouble = double(cfg.trl); % this is to compute trial lengths etc.  
 %cfg = ft_checkconfig(cfg, 'allowed', {'trlunit', 'timestampspersecond', 'hdr', 'trl'});
 
 if strcmp(cfg.trlunit,'timestamps')
@@ -127,12 +130,12 @@ if strcmp(cfg.trlunit,'timestamps')
       else
         dt = double(ts - cfg.trl(trialNum,1)); % convert to double only here
       end
-      dt = dt/cfg.timestampspersecond + cfg.trl(trialNum,3)/cfg.timestampspersecond;
+      dt = dt/cfg.timestampspersecond + trlDouble(trialNum,3)/cfg.timestampspersecond;
     else
       dt = [];
     end
-    trialDur = (cfg.trl(:,2)-cfg.trl(:,1))/cfg.timestampspersecond;
-    time = [cfg.trl(:,3)/cfg.timestampspersecond (cfg.trl(:,3)/cfg.timestampspersecond + trialDur)]; % make the time-axis
+    trialDur = double(cfg.trl(:,2)-cfg.trl(:,1))/cfg.timestampspersecond;
+    time = [trlDouble(:,3)/cfg.timestampspersecond (trlDouble(:,3)/cfg.timestampspersecond + trialDur)]; % make the time-axis
 
     % gather the results
     spike.time{iUnit}   = dt(:)';
