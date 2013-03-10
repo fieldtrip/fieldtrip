@@ -772,7 +772,8 @@ switch dataformat
     begsample = begsample - (begrecord-1)*512;
     endsample = endsample - (begrecord-1)*512;
     if istrue(timestamp)   
-      medianTimestampPerBlock  = median(double(diff(ncs.TimeStamp))); % to avoid influence of the gaps
+      d = ncs.TimeStamp(2:end)-ncs.TimeStamp(1:end-1);
+      medianTimestampPerBlock  = median(double(d)); % to avoid influence of the gaps
       TimestampPerSample       = medianTimestampPerBlock/512; % divide by known block size
       cls = class(ncs.TimeStamp);
       % replace the data with the timestamp of each sample
