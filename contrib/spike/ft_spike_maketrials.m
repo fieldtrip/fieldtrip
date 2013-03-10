@@ -115,34 +115,8 @@ if strcmp(cfg.trlunit,'timestamps')
   % make a loop through the spike units and make the necessary conversions
   nTrials = size(cfg.trl,1);
   for iUnit = 1:nUnits
-    ts = spike.timestamp{iUnit}(:);            
-    classTs = class(ts);
-    
-    % put a warning message if timestamps are doubles but not the right precision
-    if (strcmp(classTs, 'double') && any(ts>(2^53))) || (strcmp(classTs, 'single') && any(ts>(2^24)))
-      warning('timestamps are of class double but larger than 2^53 or single but larger than 2^24, expecting round-off errors due to precision limitation of doubles');
-    end
-    
-    % check whether trl and ts are of the same class, issue warning if not and it is a problem
-    classTrl = class(cfg.trl);
-    trlEvent = cfg.trl(:,1:2);
-    if ~strcmp(classTs, classTrl)
-        flag = 1;
-        if strcmp(classTs, 'double') || strcmp(classTrl, 'double')
-          mx = 2^53;
-          flag = 0;
-        end
-        if strcmp(classTs, 'single') || strcmp(classTrl, 'single')
-          mx = 2^24; % largest precision number
-          flag = 0;
-        end
-        % issue a warning if the class is actually a problem        
-        if iUnit==1 && flag==0 && any(cfg.trl(:)>cast(mx, classTrl)) 
-          warning('timestamps are of class %s and cfg.trl is of class %s, rounding errors are expected because of high timestamps, converting %s to %s', class(ts), class(cfg.trl), class(cfg.trl), class(ts));
-        end
-        trlEvent = cast(trlEvent, classTs);
-    end
-    
+    ts = spike.timestamp{iUnit}(:);
+
     % take care of the waveform information as well
     hasWave =  isfield(spike, 'waveform') && ~isempty(spike.waveform) && ~isempty(spike.waveform{iUnit});
       
@@ -160,8 +134,13 @@ if strcmp(cfg.trlunit,'timestamps')
     % subtract the event (t=0) from the timestamps directly
     if ~isempty(trialNum)
       ts = ts(sel);
-      dt = double(ts - trlEvent(trialNum,1)); % convert to double only here
-      dt = dt/cfg.timestampspersecond + trlDouble(trialNum,3)/cfg.timestampspersecond;
+      if ~strcmp(class(ts), class(cfg.trl))
+        warning('timestamps are of class %s and cfg.trl is of class %s, rounding errors are possible', class(ts), class(cfg.trl));
+        dt = double(ts) - double(cfg.trl(trialNum,1));
+      else
+        dt = double(ts - cfg.trl(trialNum,1)); % convert to double only here
+      end
+      dt = dt/cfg.timestampspersecond + cfg.trl(trialNum,3)/cfg.timestampspersecond;
     else
       dt = [];
     end
@@ -192,36 +171,14 @@ elseif strcmp(cfg.trlunit,'samples')
   for iUnit = 1:nUnits
     
     % determine the corresponding sample numbers for each timestamp
-    ts      = spike.timestamp{iUnit}(:);    
-    classTs = class(ts);        
-    if (strcmp(classTs, 'double') && any(ts>(2^53))) || (strcmp(classTs, 'single') && any(ts>(2^24)))
-      warning('timestamps are of class double but larger than 2^53 or single but larger than 2^24, expecting round-off errors due to precision limitation of doubles');
+    ts = spike.timestamp{iUnit}(:);
+    if ~strcmp(class(ts), class(FirstTimeStamp))
+      warning('timestamps are of class %s and hdr.FirstTimeStamp is of class %s, rounding errors are possible', class(ts), class(FirstTimeStamp));
+      sample = (double(ts)-double(FirstTimeStamp))/TimeStampPerSample + 1;
+    else
+      sample = double(ts-FirstTimeStamp)/TimeStampPerSample + 1; % no rounding (compare ft_appendspike)
     end
-    
-    if ~strcmp(classTs, class(FirstTimeStamp))
-        flag = 1;
-        if strcmp(classTs, 'double') || strcmp(class(FirstTimeStamp), 'double')
-          mx = 2^53;
-          flag = 0;
-        end
-        if strcmp(classTs, 'single') || strcmp(class(FirstTimeStamp), 'single')          
-          mx = 2^24; % largest precision number
-          flag = 0;
-        end
-        if iUnit==1 && flag==0 && FirstTimeStamp>cast(mx, class(FirstTimeStamp))
-           warning('timestamps are of class %s and hdr.FirstTimeStamp is of class %s, rounding errors are possible', class(ts), class(FirstTimeStamp));
-        end
-        FirstTimeStamp = cast(FirstTimeStamp, classTs);
-    end
-    sample = double(ts-FirstTimeStamp)/TimeStampPerSample + 1; % no rounding (compare ft_appendspike)
-    
-    % ensure that cfg.trl is of class double
-    if ~strcmp(class(cfg.trl), 'double')
-      cfg.trl = double(cfg.trl);
-    end
-    
-    % see which spikes fall into the trials
-    waveSel = [];        
+    waveSel = [];
     for iTrial = 1:nTrials
       begsample = cfg.trl(iTrial,1) - 1/2;
       endsample = cfg.trl(iTrial,2) + 1/2;
