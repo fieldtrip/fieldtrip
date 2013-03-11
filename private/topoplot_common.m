@@ -694,9 +694,7 @@ if strcmp(cfg.interpolatenan,'yes') && any(nanInds)
   chanX(nanInds) = [];
   chanY(nanInds) = [];
   datavector(nanInds) = [];
-  if ~isempty(maskdatavector)
-    maskdatavector(nanInds) = [];
-  end
+  maskdatavector(nanInds) = [];
 end
 
 % Draw plot
