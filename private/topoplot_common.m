@@ -694,6 +694,7 @@ if any(nanInds)
   chanX(nanInds) = [];
   chanY(nanInds) = [];
   datavector(nanInds) = [];
+  maskdatavector(nanInds) = [];
 end
 
 % Draw plot
