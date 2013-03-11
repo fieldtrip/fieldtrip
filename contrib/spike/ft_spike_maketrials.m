@@ -25,6 +25,8 @@ function [spike] = ft_spike_maketrials(cfg,spike)
 %     trial start.
 %     If more columns are added than 3, these are used to construct the
 %     spike.trialinfo field having information about the trial.
+%     Note that values in cfg.trl get inaccurate above 2^53 (in that case 
+%     it is better to use the original uint64 representation)
 %
 %   cfg.trlunit = 'timestamps' (default) or 'samples'. 
 %     If 'samples', cfg.trl should 
@@ -95,7 +97,7 @@ if size(cfg.trl,1)>1
 end
 cfg.trl = cfg.trl;
 events  = cfg.trl(:,1:2)'; %2-by-nTrials now
-if ~issorted(events(:)), warning('your trials are overlapping, trials will not be statistically independent'); end
+if ~issorted(events(:)), warning('your trials are overlapping, trials will not be statistically independent'); end %#ok<*WNTAG>
 if ~issorted(events,'rows'), error('the trials are not in sorted order'); end
 
 % check if the inputs are congruent: hdr should not be there if unit is timestamps
@@ -122,7 +124,15 @@ if strcmp(cfg.trlunit,'timestamps')
     classTrl = class(cfg.trl);
     trlEvent = cfg.trl(:,1:2);
     if ~strcmp(classTs, classTrl)
-        if iUnit==1
+        if strcmp(classTs, 'double')
+          mx = 2^53;
+        elseif strcmp(classTs, 'single')
+          mx = 2^24; % largest precision number
+        else
+          mx = 0;
+        end
+        if iUnit==1 && any(cfg.trl(:)>cast(mx, classTrl))
+          % check the maximum to give an indication of the possible error
           warning('timestamps are of class %s and cfg.trl is of class %s, converting %s to %s', iUnit, class(ts), class(cfg.trl), class(cfg.trl), class(ts));
         end
         trlEvent = cast(trlEvent, classTs);
@@ -177,15 +187,22 @@ elseif strcmp(cfg.trlunit,'samples')
   for iUnit = 1:nUnits
     
     % determine the corresponding sample numbers for each timestamp
-    ts = spike.timestamp{iUnit}(:);
-    if ~strcmp(class(ts), class(FirstTimeStamp))
-      if iUnit==1
-        warning('timestamps of unit %d are of class %s and hdr.FirstTimeStamp is of class %s, rounding errors are possible', iUnit, class(ts), class(FirstTimeStamp));
-      end
-      sample = (double(ts)-double(FirstTimeStamp))/TimeStampPerSample + 1;
-    else
-      sample = double(ts-FirstTimeStamp)/TimeStampPerSample + 1; % no rounding (compare ft_appendspike)
+    ts      = spike.timestamp{iUnit}(:);
+    classTs = class(ts);        
+    if ~strcmp(classTs, class(FirstTimeStamp))
+        if strcmp(classTs, 'double')
+          mx = 2^53;
+        elseif strcmp(classTs, 'single')
+          mx = 2^24; % largest precision number
+        else
+          mx = 0;
+        end
+        if iUnit==1 && FirstTimeStamp>cast(mx, class(FirstTimeStamp))
+           warning('timestamps of unit %d are of class %s and hdr.FirstTimeStamp is of class %s, rounding errors are possible', iUnit, class(ts), class(FirstTimeStamp));
+        end
+        FirstTimeStamp = cast(FirstTimeStamp, classTs);
     end
+    sample = double(ts-FirstTimeStamp)/TimeStampPerSample + 1; % no rounding (compare ft_appendspike)
     waveSel = [];
     for iTrial = 1:nTrials
       begsample = cfg.trl(iTrial,1) - 1/2;
