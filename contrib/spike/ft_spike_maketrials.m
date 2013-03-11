@@ -84,21 +84,14 @@ if size(cfg.trl,2)<3,
 end
 
 % check if the cfg.trl is in the right order and whether the trials are overlapping
-if strcmp(cfg.trlunit, 'timestamps') && ~all(cfg.trl(:,2)>cfg.trl(:,1))
+if ~all(cfg.trl(:,2)>cfg.trl(:,1))
   warning('the end of some trials does not occur after the beginning of some trials in cfg.trl'); %#ok<*WNTAG>
-elseif strcmp(cfg.trlunit, 'samples') && ~all((cfg.trl(:,2))>=cfg.trl(:,1))
-  warning('the end of some trials does not occur after the beginning of some trials in cfg.trl'); %#ok<*WNTAG>
-end  
-  
+end
 if size(cfg.trl,1)>1
   if ~all(cfg.trl(2:end,1)>cfg.trl(1:end-1,2))
-    warning('your trials are overlapping, trials will not be statistically independent, some spikes will be duplicated'); %#ok<*WNTAG>
+    warning('your trials are overlapping, trials will not be statistically independent'); %#ok<*WNTAG>
   end
 end
-cfg.trl = cfg.trl;
-events  = cfg.trl(:,1:2)'; %2-by-nTrials now
-if ~issorted(events(:)), warning('your trials are overlapping, trials will not be statistically independent'); end %#ok<*WNTAG>
-if ~issorted(events,'rows'), error('the trials are not in sorted order'); end
 
 % check if the inputs are congruent: hdr should not be there if unit is timestamps
 if strcmp(cfg.trlunit,'timestamps')
@@ -119,8 +112,13 @@ if strcmp(cfg.trlunit,'timestamps')
   % make a loop through the spike units and make the necessary conversions
   nTrials = size(cfg.trl,1);
   for iUnit = 1:nUnits
-    ts = spike.timestamp{iUnit}(:);
+    ts = spike.timestamp{iUnit}(:);            
     classTs = class(ts);
+    % put a warning message if timestamps are doubles but not the right precision
+    if strcmp(classTs, 'double') && any(ts>(2^53))
+      warning('timestamps are of class double but larger than 2^53, expecting round-off errors due to precision limitation of doubles');
+    end
+    
     classTrl = class(cfg.trl);
     trlEvent = cfg.trl(:,1:2);
     if ~strcmp(classTs, classTrl)
@@ -131,9 +129,9 @@ if strcmp(cfg.trlunit,'timestamps')
         else
           mx = 0;
         end
-        if iUnit==1 && any(cfg.trl(:)>cast(mx, classTrl))
+        if iUnit==1 && any(cfg.trl(:)>cast(mx, classTrl)) && ~strcmp(class(cfg.trl), 'int64')
           % check the maximum to give an indication of the possible error
-          warning('timestamps are of class %s and cfg.trl is of class %s, converting %s to %s', iUnit, class(ts), class(cfg.trl), class(cfg.trl), class(ts));
+          warning('timestamps are of class %s and cfg.trl is of class %s, rounding errors are expected because of high timestamps, converting %s to %s', class(ts), class(cfg.trl), class(cfg.trl), class(ts));
         end
         trlEvent = cast(trlEvent, classTs);
     end
@@ -187,8 +185,13 @@ elseif strcmp(cfg.trlunit,'samples')
   for iUnit = 1:nUnits
     
     % determine the corresponding sample numbers for each timestamp
-    ts      = spike.timestamp{iUnit}(:);
+    ts      = spike.timestamp{iUnit}(:);    
     classTs = class(ts);        
+    if strcmp(classTs, 'double') && any(ts>(2^53))
+      warning('timestamps are of class double but larger than 2^53, expecting round-off errors due to precision limitation of doubles');
+    end
+
+    
     if ~strcmp(classTs, class(FirstTimeStamp))
         if strcmp(classTs, 'double')
           mx = 2^53;
@@ -198,7 +201,7 @@ elseif strcmp(cfg.trlunit,'samples')
           mx = 0;
         end
         if iUnit==1 && FirstTimeStamp>cast(mx, class(FirstTimeStamp))
-           warning('timestamps of unit %d are of class %s and hdr.FirstTimeStamp is of class %s, rounding errors are possible', iUnit, class(ts), class(FirstTimeStamp));
+           warning('timestamps are of class %s and hdr.FirstTimeStamp is of class %s, rounding errors are possible', class(ts), class(FirstTimeStamp));
         end
         FirstTimeStamp = cast(FirstTimeStamp, classTs);
     end
