@@ -115,21 +115,23 @@ if strcmp(cfg.trlunit,'timestamps')
     ts = spike.timestamp{iUnit}(:);            
     classTs = class(ts);
     % put a warning message if timestamps are doubles but not the right precision
-    if strcmp(classTs, 'double') && any(ts>(2^53))
-      warning('timestamps are of class double but larger than 2^53, expecting round-off errors due to precision limitation of doubles');
+    if strcmp(classTs, 'double') && any(ts>(2^53)) || (strcmp(classTs, 'single') && any(ts>(2^24)))
+      warning('timestamps are of class double but larger than 2^53 or single but larger than 2^24, expecting round-off errors due to precision limitation of doubles');
     end
     
     classTrl = class(cfg.trl);
     trlEvent = cfg.trl(:,1:2);
     if ~strcmp(classTs, classTrl)
-        if strcmp(classTs, 'double')
+        flag = 1;
+        if strcmp(classTs, 'double') || strcmp(classTrl, 'double')
           mx = 2^53;
-        elseif strcmp(classTs, 'single')
-          mx = 2^24; % largest precision number
-        else
-          mx = 0;
+          flag = 0;
         end
-        if iUnit==1 && any(cfg.trl(:)>cast(mx, classTrl)) && ~strcmp(class(cfg.trl), 'int64')
+        if strcmp(classTs, 'single') || strcmp(classTrl, 'single')
+          mx = 2^24; % largest precision number
+          flag = 0;
+        end
+        if iUnit==1 && flag==0 && any(cfg.trl(:)>cast(mx, classTrl)) 
           % check the maximum to give an indication of the possible error
           warning('timestamps are of class %s and cfg.trl is of class %s, rounding errors are expected because of high timestamps, converting %s to %s', class(ts), class(cfg.trl), class(cfg.trl), class(ts));
         end
@@ -187,20 +189,21 @@ elseif strcmp(cfg.trlunit,'samples')
     % determine the corresponding sample numbers for each timestamp
     ts      = spike.timestamp{iUnit}(:);    
     classTs = class(ts);        
-    if strcmp(classTs, 'double') && any(ts>(2^53))
-      warning('timestamps are of class double but larger than 2^53, expecting round-off errors due to precision limitation of doubles');
+    if (strcmp(classTs, 'double') && any(ts>(2^53))) || (strcmp(classTs, 'single') && any(ts>(2^24)))
+      warning('timestamps are of class double but larger than 2^53 or single but larger than 2^24, expecting round-off errors due to precision limitation of doubles');
     end
-
     
     if ~strcmp(classTs, class(FirstTimeStamp))
-        if strcmp(classTs, 'double')
+        flag = 1;
+        if strcmp(classTs, 'double') || class(FirstTimeStamp, 'double')
           mx = 2^53;
-        elseif strcmp(classTs, 'single')
-          mx = 2^24; % largest precision number
-        else
-          mx = 0;
+          flag = 0;
         end
-        if iUnit==1 && FirstTimeStamp>cast(mx, class(FirstTimeStamp))
+        if strcmp(classTs, 'single') || class(FirstTimeStamp, 'single')          
+          mx = 2^24; % largest precision number
+          flag = 0;
+        end
+        if iUnit==1 && flag==0 && FirstTimeStamp>cast(mx, class(FirstTimeStamp))
            warning('timestamps are of class %s and hdr.FirstTimeStamp is of class %s, rounding errors are possible', class(ts), class(FirstTimeStamp));
         end
         FirstTimeStamp = cast(FirstTimeStamp, classTs);
