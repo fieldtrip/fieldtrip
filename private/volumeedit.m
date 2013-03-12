@@ -296,12 +296,13 @@ if isfield(opt, 'bckgrnd')
   set(opt.handlesaxes(3),'nextplot','replace');
 end
 
-xi2  = xi+(-opt.radius(1):opt.radius(1));
-yi2  = yi+(-opt.radius(2):opt.radius(2));
-zi2  = zi+(-opt.radius(3):opt.radius(3));
-dat1 = double(squeeze(sum(opt.data(xi2,:,:),1))>0)*0.5+double(squeeze(opt.data(xi,:,:)))*0.5;
-dat2 = double(sum(opt.data(:,:,zi2),3)'>0)*0.5+double(opt.data(:,:,zi)'>0)*0.5;
-dat3 = double(squeeze(sum(opt.data(:,yi2,:),2))>0)*0.5+double(squeeze(opt.data(:,yi,:))>0)*0.5;
+tmpdata = opt.data & opt.mask;
+xi2  = xi+(-opt.radius(1):opt.radius(1)); xi2(xi2<1) = 1; xi2(xi2>opt.dim(1)) = opt.dim(1);
+yi2  = yi+(-opt.radius(2):opt.radius(2)); yi2(yi2<1) = 1; yi2(yi2>opt.dim(2)) = opt.dim(2);
+zi2  = zi+(-opt.radius(3):opt.radius(3)); zi2(zi2<1) = 1; zi2(zi2>opt.dim(3)) = opt.dim(3);
+dat1 = double(squeeze(sum(tmpdata(xi2,:,:),1))>0)*0.5+double(squeeze(tmpdata(xi,:,:)))*0.5;
+dat2 = double(sum(tmpdata(:,:,zi2),3)'>0)*0.5+double(tmpdata(:,:,zi)'>0)*0.5;
+dat3 = double(squeeze(sum(tmpdata(:,yi2,:),2))>0)*0.5+double(squeeze(tmpdata(:,yi,:))>0)*0.5;
 
 set(opt.handlesslice(1), 'CData', dat1);
 set(opt.handlesslice(2), 'CData', dat2);
