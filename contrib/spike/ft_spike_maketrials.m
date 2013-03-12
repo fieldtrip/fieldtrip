@@ -89,7 +89,7 @@ if ~all(cfg.trl(:,2)>cfg.trl(:,1))
 end
 if size(cfg.trl,1)>1
   if ~all(cfg.trl(2:end,1)>cfg.trl(1:end-1,2))
-    warning('your trials are overlapping, trials will not be statistically independent'); %#ok<*WNTAG>
+    warning('your trials are overlapping, trials will not be statistically independent, some spikes will be duplicated'); %#ok<*WNTAG>
   end
 end
 
