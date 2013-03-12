@@ -225,7 +225,10 @@ for iTrial = 1:nTrials
     ts         = spike.time{unitindx}(hasTrial); % get the spike times for these spikes
     vld        = ts>=timeBins(1) & ts<=timeBins(end); % only select those spikes that fall in the trial window
     ts         = ts(vld); % timestamps for these spikes
-    [ignore,I] = histc(ts,timeBins);      
+    [ignore,I] = histc(ts,timeBins);    
+    if ~isempty(ts)
+      ts(I==0 | I==length(timeBins)) = [];
+    end
     I(I==0 | I==length(timeBins)) = [];
     unitsmp{iUnit}      = I;
     unittime{iUnit}     = ts(:); % this is for storage in the output structure
