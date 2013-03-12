@@ -237,8 +237,11 @@ xi = opt.ijk(1)+(-n(1):n(1)); xi(xi>opt.dim(1)) = []; xi(xi<1) = [];
 yi = opt.ijk(2)+(-n(2):n(2)); yi(yi>opt.dim(2)) = []; yi(yi<1) = [];
 zi = opt.ijk(3)+(-n(3):n(3)); zi(zi>opt.dim(3)) = []; zi(zi<1) = [];
 
-opt.mask(xi,yi,zi) = false;
-opt.data = opt.data & opt.mask;
+if opt.erase
+  opt.mask(xi,yi,zi) = false;
+else
+  opt.mask(xi,yi,zi) = true;
+end
 
 setappdata(h, 'opt', opt);
 uiresume(h);
@@ -293,12 +296,13 @@ if isfield(opt, 'bckgrnd')
   set(opt.handlesaxes(3),'nextplot','replace');
 end
 
-xi2  = xi+(-opt.radius(1):opt.radius(1));
-yi2  = yi+(-opt.radius(2):opt.radius(2));
-zi2  = zi+(-opt.radius(3):opt.radius(3));
-dat1 = double(squeeze(sum(opt.data(xi2,:,:),1))>0)*0.5+double(squeeze(opt.data(xi,:,:)))*0.5;
-dat2 = double(sum(opt.data(:,:,zi2),3)'>0)*0.5+double(opt.data(:,:,zi)'>0)*0.5;
-dat3 = double(squeeze(sum(opt.data(:,yi2,:),2))>0)*0.5+double(squeeze(opt.data(:,yi,:))>0)*0.5;
+tmpdata = opt.data & opt.mask;
+xi2  = xi+(-opt.radius(1):opt.radius(1)); xi2(xi2<1) = 1; xi2(xi2>opt.dim(1)) = opt.dim(1);
+yi2  = yi+(-opt.radius(2):opt.radius(2)); yi2(yi2<1) = 1; yi2(yi2>opt.dim(2)) = opt.dim(2);
+zi2  = zi+(-opt.radius(3):opt.radius(3)); zi2(zi2<1) = 1; zi2(zi2>opt.dim(3)) = opt.dim(3);
+dat1 = double(squeeze(sum(tmpdata(xi2,:,:),1))>0)*0.5+double(squeeze(tmpdata(xi,:,:)))*0.5;
+dat2 = double(sum(tmpdata(:,:,zi2),3)'>0)*0.5+double(tmpdata(:,:,zi)'>0)*0.5;
+dat3 = double(squeeze(sum(tmpdata(:,yi2,:),2))>0)*0.5+double(squeeze(tmpdata(:,yi,:))>0)*0.5;
 
 set(opt.handlesslice(1), 'CData', dat1);
 set(opt.handlesslice(2), 'CData', dat2);
@@ -331,26 +335,28 @@ uiresume
 function cb_buttonpress(h, eventdata)
 
 h   = getparent(h);
-opt = getappdata(h, 'opt');
-
 cb_getposition(h);
-opt = getappdata(h, 'opt');
 
 seltype = get(h, 'selectiontype');
 switch seltype
   case 'normal'
     % just update to new position, nothing else to be done here
-    cb_redraw(h);
   case 'alt'
+    opt = getappdata(h, 'opt');
+    opt.erase = true;
+    setappdata(h, 'opt', opt);
     cb_eraser(h);
     set(h, 'windowbuttonmotionfcn', @cb_tracemouse);
+  case 'extend'
     opt = getappdata(h, 'opt');
-    cb_redraw(h);
+    opt.erase = false;
+    setappdata(h, 'opt', opt);
+    cb_eraser(h);
+    set(h, 'windowbuttonmotionfcn', @cb_tracemouse);
   otherwise
 end
 
-setappdata(h, 'opt', opt);
-
+cb_redraw(h);
 uiresume;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -363,6 +369,8 @@ switch seltype
   case 'normal'
     % just update to new position, nothing else to be done here
   case 'alt'
+    set(h, 'windowbuttonmotionfcn', '');  
+  case 'extend'
     set(h, 'windowbuttonmotionfcn', '');  
   otherwise
 end
@@ -383,8 +391,11 @@ xi = opt.ijk(1)+(-n(1):n(1)); xi(xi>opt.dim(1)) = []; xi(xi<1) = [];
 yi = opt.ijk(2)+(-n(2):n(2)); yi(yi>opt.dim(2)) = []; yi(yi<1) = [];
 zi = opt.ijk(3)+(-n(3):n(3)); zi(zi>opt.dim(3)) = []; zi(zi<1) = [];
 
-opt.mask(xi,yi,zi) = 0;
-opt.data = opt.data & opt.mask;
+if opt.erase
+  opt.mask(xi,yi,zi) = false;
+else
+  opt.mask(xi,yi,zi) = true;
+end
 
 setappdata(h, 'opt', opt);
 cb_redraw(h);
