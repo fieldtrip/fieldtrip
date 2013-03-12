@@ -124,7 +124,7 @@ opt.handleseraser = [he1(:)';he2(:)';he3(:)'];
 opt.ijk           = [xi yi zi];
 opt.dim           = dim;
 opt.quit          = 0;
-opt.mask          = true(dim);
+opt.mask          = opt.data;
 opt.radius        = [3 3 3];
 
 setappdata(h, 'opt', opt);
@@ -137,8 +137,7 @@ end
 opt = getappdata(h, 'opt');
 delete(h);
 
-dataout = datain;
-dataout(opt.mask==0) = 0;
+dataout = opt.mask;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -296,7 +295,7 @@ if isfield(opt, 'bckgrnd')
   set(opt.handlesaxes(3),'nextplot','replace');
 end
 
-tmpdata = opt.data & opt.mask;
+tmpdata = opt.mask;
 xi2  = xi+(-opt.radius(1):opt.radius(1)); xi2(xi2<1) = 1; xi2(xi2>opt.dim(1)) = opt.dim(1);
 yi2  = yi+(-opt.radius(2):opt.radius(2)); yi2(yi2<1) = 1; yi2(yi2>opt.dim(2)) = opt.dim(2);
 zi2  = zi+(-opt.radius(3):opt.radius(3)); zi2(zi2<1) = 1; zi2(zi2>opt.dim(3)) = opt.dim(3);
