@@ -207,7 +207,10 @@ for iUnit  = 1:nspikesel
     ts       = ts(ts>=timeBins(1) & ts<=timeBins(end)); % only select those spikes that fall in the trial window
     [ignore,spikesmp] = histc(ts,timeBins);      
     spikesmp(spikesmp==0 | spikesmp==length(timeBins)) = [];
-
+    if ~isempty(ts)
+      ts(spikesmp==0 | spikesmp==length(timeBins)) = [];
+    end
+      
     % store in the output cell arrays as column vectors
     spiketime{iUnit, iTrial}  = ts(:);
     tr = iTrial*ones(size(spikesmp));
