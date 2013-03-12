@@ -212,7 +212,10 @@ for iUnit  = 1:nspikesel
       
         
     spikesmp(spikesmp==0 | spikesmp==length(timeBins)) = [];
-    
+    if ~isempty(ts)
+      ts(spikesmp==0 | spikesmp==length(timeBins)) = [];
+    end
+      
     % store in the output cell arrays as column vectors
     spiketime{iUnit, iTrial}  = ts(:);
     tr = iTrial*ones(size(spikesmp));
