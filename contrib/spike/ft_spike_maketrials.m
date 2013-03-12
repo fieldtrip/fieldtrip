@@ -84,9 +84,12 @@ if size(cfg.trl,2)<3,
 end
 
 % check if the cfg.trl is in the right order and whether the trials are overlapping
-if ~all(cfg.trl(:,2)>cfg.trl(:,1))
+if strcmp(cfg.trlunit, 'timestamps') && ~all(cfg.trl(:,2)>cfg.trl(:,1))
   warning('the end of some trials does not occur after the beginning of some trials in cfg.trl'); %#ok<*WNTAG>
-end
+elseif strcmp(cfg.trlunit, 'samples') && ~all((1+cfg.trl(:,2))>cfg.trl(:,1))
+  warning('the end of some trials does not occur after the beginning of some trials in cfg.trl'); %#ok<*WNTAG>
+end  
+  
 if size(cfg.trl,1)>1
   if ~all(cfg.trl(2:end,1)>cfg.trl(1:end-1,2))
     warning('your trials are overlapping, trials will not be statistically independent, some spikes will be duplicated'); %#ok<*WNTAG>
@@ -209,7 +212,14 @@ elseif strcmp(cfg.trlunit,'samples')
         FirstTimeStamp = cast(FirstTimeStamp, classTs);
     end
     sample = double(ts-FirstTimeStamp)/TimeStampPerSample + 1; % no rounding (compare ft_appendspike)
-    waveSel = [];
+    
+    % ensure that cfg.trl is of class double
+    if ~strcmp(class(cfg.trl), 'double')
+      cfg.trl = double(cfg.trl);
+    end
+    
+    % see which spikes fall into the trials
+    waveSel = [];        
     for iTrial = 1:nTrials
       begsample = cfg.trl(iTrial,1) - 1/2;
       endsample = cfg.trl(iTrial,2) + 1/2;
