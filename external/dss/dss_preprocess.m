@@ -8,17 +8,17 @@ function state = dss_preprocess(X, state)
 % $Id: dss_preprocess.m,v 1.6 2005/11/30 08:29:40 jaakkos Exp $
 
 if isfield(state, 'Y')
-  message(state, 1, 'WARNING: Overwriting existing preprocessed data');
+  dss_message(state, 1, 'WARNING: Overwriting existing preprocessed data');
 end
 
 if ~isfield(state, 'wdim') state.wdim = size(state.X, 1); end
 
-message(state, 1, 'Preprocessing data\n');
+dss_message(state, 1, 'Preprocessing data\n');
 [state.preprocf.params,state.X,state.Xmeans state.Y, state.V, state.dV] = ...
     feval(state.preprocf.h, state.preprocf.params, state.X, state.wdim);
 
 state.wdim = size(state.Y, 1);
 if ~isfield(state, 'sdim'); state.sdim = state.wdim; end
 
-message(state,1,sprintf('Preprocessed data dimension %i, extracting  %i components.\n', state.wdim, state.sdim));
+dss_message(state,1,sprintf('Preprocessed data dimension %i, extracting  %i components.\n', state.wdim, state.sdim));
 

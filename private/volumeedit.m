@@ -26,6 +26,8 @@ function [dataout] = volumeedit(data, varargin)
 
 revision = '$Id: ft_sourceplot.m 7192 2012-12-13 22:32:56Z roboos $';
 
+bckgrnd = ft_getopt(varargin, 'background', []);
+
 datain = data;
 data   = data~=0;
 
@@ -51,20 +53,50 @@ ysize(2) = 0.82*dim(2)/ydim;
 % create figure
 h = figure;
 set(h, 'color', [1 1 1]);
+set(h, 'pointer', 'custom');
+set(h, 'pointershapecdata', nan(16)); 
 set(h, 'visible', 'on');
 set(h, 'windowbuttondownfcn', @cb_buttonpress); 
 set(h, 'windowbuttonupfcn',   @cb_buttonrelease);
 set(h, 'windowkeypressfcn',   @cb_keyboard);
 
 % axis handles
-h1 = axes('position',[0.07 0.07+ysize(2)+0.05 xsize(1) ysize(1)]);
-h2 = axes('position',[0.07+xsize(1)+0.05 0.07+ysize(2)+0.05 xsize(2) ysize(1)]);
-h3 = axes('position',[0.07 0.07 xsize(1) ysize(2)]);
+h1 = axes('position',[0.07 0.07+ysize(2)+0.05 xsize(1) ysize(1)]); %hold on;
+h2 = axes('position',[0.07+xsize(1)+0.05 0.07+ysize(2)+0.05 xsize(2) ysize(1)]); %hold on;
+h3 = axes('position',[0.07 0.07 xsize(1) ysize(2)]); %hold on;
+
+% background handles
+if ~isempty(bckgrnd)
+  bckgrnd = double(bckgrnd./max(bckgrnd(:)));
+  bckgrnd = repmat(bckgrnd, [1 1 1 3]);
+  hb1 = imagesc(squeeze(bckgrnd(xi,:,:,:)),           'parent',h1);
+  hb2 = imagesc(permute(bckgrnd(:,:,zi,:),[2 1 4 3]), 'parent',h2);
+  hb3 = imagesc(squeeze(bckgrnd(:,yi,:,:)),           'parent',h3);
+else
+  hb1 = [];
+  hb2 = [];
+  hb3 = [];
+end
 
 % slice handles
-hs1 = imagesc(squeeze(data(xi,:,:)),'parent',h1); colormap gray;
-hs2 = imagesc(data(:,:,zi)',        'parent',h2); colormap gray;
-hs3 = imagesc(squeeze(data(:,yi,:)),'parent',h3); colormap gray;
+dat1 = double(squeeze(data(xi,:,:)));
+dat2 = double(data(:,:,zi))';
+dat3 = double(squeeze(data(:,yi,:)));
+if ~isempty(bckgrnd)
+  set(h1,'nextplot','add');
+  set(h2,'nextplot','add');
+  set(h3,'nextplot','add');
+  hs1 = imagesc(dat1,'parent',h1,'alphadata',0.5*ones(size(dat1))); colormap hot;
+  hs2 = imagesc(dat2,'parent',h2,'alphadata',0.5*ones(size(dat2))); colormap hot;
+  hs3 = imagesc(dat3,'parent',h3,'alphadata',0.5*ones(size(dat3))); colormap hot;
+  set(h1,'nextplot','replace');
+  set(h2,'nextplot','replace');
+  set(h3,'nextplot','replace');
+else
+  hs1 = imagesc(dat1,'parent',h1); %colormap gray;
+  hs2 = imagesc(dat2,'parent',h2); %colormap gray;
+  hs3 = imagesc(dat3,'parent',h3); %colormap gray;
+end  
 set(h1, 'tag', 'jk', 'clim', [0 1]);
 set(h2, 'tag', 'ji', 'clim', [0 1]);
 set(h3, 'tag', 'ik', 'clim', [0 1]);
@@ -76,11 +108,15 @@ hch3 = crosshair([zi xi], 'parent', h3, 'color', 'y');
 
 % erasercontour
 he1(1,:) = line(zi-3.5+[0 0 7 7 0],yi-3.5+[0 7 7 0 0],'color','r','parent',h1); 
-he2(1,:) = line(xi-3.5+[0 0 7 7 0],yi-3.5+[0 7 7 0 0],'color','r','parent',h2);
-he3(1,:) = line(zi-3.5+[0 0 7 7 0],xi-3.5+[0 7 7 0 0],'color','r','parent',h3);
+he2(1,:) = line(xi-3.5+[0 0 7 7 0],yi-3.5+[0 7 7 0 0],'color','r','parent',h2); 
+he3(1,:) = line(zi-3.5+[0 0 7 7 0],xi-3.5+[0 7 7 0 0],'color','r','parent',h3); 
 
 % create structure to be passed to gui
 opt.data          = data~=0;
+if ~isempty(bckgrnd)
+  opt.bckgrnd = bckgrnd;
+end
+opt.handlesana    = [hb1 hb2 hb3];
 opt.handlesaxes   = [h1 h2 h3];
 opt.handlescross  = [hch1(:)';hch2(:)';hch3(:)'];
 opt.handlesslice  = [hs1 hs2 hs3];
@@ -88,8 +124,8 @@ opt.handleseraser = [he1(:)';he2(:)';he3(:)'];
 opt.ijk           = [xi yi zi];
 opt.dim           = dim;
 opt.quit          = 0;
-opt.mask          = true(dim);
-opt.radius        = 3;
+opt.mask          = opt.data~=0;
+opt.radius        = [3 3 3];
 
 setappdata(h, 'opt', opt);
 cb_redraw(h);
@@ -101,8 +137,7 @@ end
 opt = getappdata(h, 'opt');
 delete(h);
 
-dataout = datain;
-dataout(opt.mask==0) = 0;
+dataout = datain(opt.mask);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -170,6 +205,7 @@ switch key
       opt.radius = round(response);
       opt.radius = min(opt.radius, 100);
       opt.radius = max(opt.radius, 1);
+      if numel(opt.radius)==1, opt.radius = [1 1 1]*opt.radius; end
       setappdata(h, 'opt', opt);
       cb_erasercontour(h);
     end
@@ -196,12 +232,15 @@ opt = getappdata(h, 'opt');
 n  = opt.radius;
 if numel(n)==1, n = [n n n]; end
 
-xi = opt.ijk(1)+(-n(1):n(1));
-yi = opt.ijk(2)+(-n(2):n(2));
-zi = opt.ijk(3)+(-n(3):n(3));
+xi = opt.ijk(1)+(-n(1):n(1)); xi(xi>opt.dim(1)) = []; xi(xi<1) = [];
+yi = opt.ijk(2)+(-n(2):n(2)); yi(yi>opt.dim(2)) = []; yi(yi<1) = [];
+zi = opt.ijk(3)+(-n(3):n(3)); zi(zi>opt.dim(3)) = []; zi(zi<1) = [];
 
-opt.mask(xi,yi,zi) = false;
-opt.data = opt.data & opt.mask;
+if opt.erase
+  opt.mask(xi,yi,zi) = false;
+else
+  opt.mask(xi,yi,zi) = true;
+end
 
 setappdata(h, 'opt', opt);
 uiresume(h);
@@ -241,13 +280,43 @@ xi  = opt.ijk(1);
 yi  = opt.ijk(2);
 zi  = opt.ijk(3);
 
-dat1 = squeeze(opt.data(xi,:,:));
-dat2 = opt.data(:,:,zi)';
-dat3 = squeeze(opt.data(:,yi,:));
+if isfield(opt, 'bckgrnd')
+  dat1b = squeeze(opt.bckgrnd(xi,:,:,:));
+  dat2b = permute(opt.bckgrnd(:,:,zi,:),[2 1 4 3]);
+  dat3b = squeeze(opt.bckgrnd(:,yi,:,:));
+  set(opt.handlesaxes(1),'nextplot','add');
+  set(opt.handlesaxes(2),'nextplot','add');
+  set(opt.handlesaxes(3),'nextplot','add');
+  set(opt.handlesana(1), 'CData', dat1b);
+  set(opt.handlesana(2), 'CData', dat2b);
+  set(opt.handlesana(3), 'CData', dat3b);
+  set(opt.handlesaxes(1),'nextplot','replace');
+  set(opt.handlesaxes(2),'nextplot','replace');
+  set(opt.handlesaxes(3),'nextplot','replace');
+end
+
+tmpdata = opt.data;
+tmpdata(~opt.mask) = 0;
+xi2  = xi+(-opt.radius(1):opt.radius(1)); xi2(xi2<1) = 1; xi2(xi2>opt.dim(1)) = opt.dim(1);
+yi2  = yi+(-opt.radius(2):opt.radius(2)); yi2(yi2<1) = 1; yi2(yi2>opt.dim(2)) = opt.dim(2);
+zi2  = zi+(-opt.radius(3):opt.radius(3)); zi2(zi2<1) = 1; zi2(zi2>opt.dim(3)) = opt.dim(3);
+dat1 = double(squeeze(sum(tmpdata(xi2,:,:),1))>0)*0.5+double(squeeze(tmpdata(xi,:,:)))*0.5;
+dat2 = double(sum(tmpdata(:,:,zi2),3)'>0)*0.5+double(tmpdata(:,:,zi)'>0)*0.5;
+dat3 = double(squeeze(sum(tmpdata(:,yi2,:),2))>0)*0.5+double(squeeze(tmpdata(:,yi,:))>0)*0.5;
 
 set(opt.handlesslice(1), 'CData', dat1);
 set(opt.handlesslice(2), 'CData', dat2);
 set(opt.handlesslice(3), 'CData', dat3);
+
+if isfield(opt, 'bckgrnd')
+    
+  msk1 = 0.5*double(dat1>0);
+  msk2 = 0.5*double(dat2>0);
+  msk3 = 0.5*double(dat3>0);
+  set(opt.handlesslice(1), 'AlphaData', msk1);
+  set(opt.handlesslice(2), 'AlphaData', msk2);
+  set(opt.handlesslice(3), 'AlphaData', msk3);
+end
 
 crosshair([zi yi], 'handle', opt.handlescross(1,:));
 crosshair([xi yi], 'handle', opt.handlescross(2,:));
@@ -266,26 +335,28 @@ uiresume
 function cb_buttonpress(h, eventdata)
 
 h   = getparent(h);
-opt = getappdata(h, 'opt');
-
 cb_getposition(h);
-opt = getappdata(h, 'opt');
 
 seltype = get(h, 'selectiontype');
 switch seltype
   case 'normal'
     % just update to new position, nothing else to be done here
-    cb_redraw(h);
   case 'alt'
+    opt = getappdata(h, 'opt');
+    opt.erase = true;
+    setappdata(h, 'opt', opt);
     cb_eraser(h);
     set(h, 'windowbuttonmotionfcn', @cb_tracemouse);
+  case 'extend'
     opt = getappdata(h, 'opt');
-    cb_redraw(h);
+    opt.erase = false;
+    setappdata(h, 'opt', opt);
+    cb_eraser(h);
+    set(h, 'windowbuttonmotionfcn', @cb_tracemouse);
   otherwise
 end
 
-setappdata(h, 'opt', opt);
-
+cb_redraw(h);
 uiresume;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -298,6 +369,8 @@ switch seltype
   case 'normal'
     % just update to new position, nothing else to be done here
   case 'alt'
+    set(h, 'windowbuttonmotionfcn', '');  
+  case 'extend'
     set(h, 'windowbuttonmotionfcn', '');  
   otherwise
 end
@@ -318,8 +391,11 @@ xi = opt.ijk(1)+(-n(1):n(1)); xi(xi>opt.dim(1)) = []; xi(xi<1) = [];
 yi = opt.ijk(2)+(-n(2):n(2)); yi(yi>opt.dim(2)) = []; yi(yi<1) = [];
 zi = opt.ijk(3)+(-n(3):n(3)); zi(zi>opt.dim(3)) = []; zi(zi<1) = [];
 
-opt.mask(xi,yi,zi) = 0;
-opt.data = opt.data & opt.mask;
+if opt.erase
+  opt.mask(xi,yi,zi) = false;
+else
+  opt.mask(xi,yi,zi) = true;
+end
 
 setappdata(h, 'opt', opt);
 cb_redraw(h);

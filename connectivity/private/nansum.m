@@ -4,10 +4,9 @@
 
 function y = nansum(x, dim)
 
-if nargin == 1
-  dim = 1;
-end
-idx = isnan(x);
-x(idx) = 0;
-y = sum(x, dim);
+x(isnan(x)) = 0;
+if nargin==1
+  y = sum(x);
+else
+  y = sum(x,dim);
 end

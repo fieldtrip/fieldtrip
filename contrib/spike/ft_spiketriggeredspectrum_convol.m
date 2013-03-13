@@ -225,7 +225,10 @@ for iTrial = 1:nTrials
     ts         = spike.time{unitindx}(hasTrial); % get the spike times for these spikes
     vld        = ts>=timeBins(1) & ts<=timeBins(end); % only select those spikes that fall in the trial window
     ts         = ts(vld); % timestamps for these spikes
-    [ignore,I] = histc(ts,timeBins);      
+    [ignore,I] = histc(ts,timeBins);    
+    if ~isempty(ts)
+      ts(I==0 | I==length(timeBins)) = [];
+    end
     I(I==0 | I==length(timeBins)) = [];
     unitsmp{iUnit}      = I;
     unittime{iUnit}     = ts(:); % this is for storage in the output structure
@@ -485,7 +488,7 @@ for i=1:ntrial
   for j=1:nchans
     hasAllInts    = all(isnan(data.trial{i}(j,:)) | data.trial{i}(j,:) == round(data.trial{i}(j,:)));
     hasAllPosInts = all(isnan(data.trial{i}(j,:)) | data.trial{i}(j,:)>=0);
-    fr            = nansum(data.trial{i}(j,:)) ./ (data.time{i}(end)-data.time{i}(1));    
+    fr            = nansum(data.trial{i}(j,:),2) ./ (data.time{i}(end)-data.time{i}(1));    
     spikechan(j) = spikechan(j) + double(hasAllInts & hasAllPosInts & fr<=maxRate);
   end
 end

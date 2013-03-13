@@ -206,8 +206,13 @@ for iUnit  = 1:nspikesel
     ts       = spike.time{spikesel(iUnit)}(hasTrial); % get the spike times for these spikes
     ts       = ts(ts>=timeBins(1) & ts<=timeBins(end)); % only select those spikes that fall in the trial window
     [ignore,spikesmp] = histc(ts,timeBins);      
+    if ~isempty(ts)
+      ts(spikesmp==0 | spikesmp==length(timeBins)) = [];
+    end
+      
+        
     spikesmp(spikesmp==0 | spikesmp==length(timeBins)) = [];
-
+    
     % store in the output cell arrays as column vectors
     spiketime{iUnit, iTrial}  = ts(:);
     tr = iTrial*ones(size(spikesmp));
@@ -289,7 +294,7 @@ for i=1:ntrial
   for j=1:nchans
     hasAllInts    = all(isnan(data.trial{i}(j,:)) | data.trial{i}(j,:) == round(data.trial{i}(j,:)));
     hasAllPosInts = all(isnan(data.trial{i}(j,:)) | data.trial{i}(j,:)>=0);
-    fr            = nansum(data.trial{i}(j,:)) ./ (data.time{i}(end)-data.time{i}(1));    
+    fr            = nansum(data.trial{i}(j,:),2) ./ (data.time{i}(end)-data.time{i}(1));    
     spikechan(j) = spikechan(j) + double(hasAllInts & hasAllPosInts & fr<=maxRate);
   end
 end

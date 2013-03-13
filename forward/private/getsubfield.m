@@ -38,11 +38,10 @@ if ~ischar(f)
   error('incorrect input argument for fieldname');
 end
 
-t = {};
 while (1)
-  [t{end+1}, f] = strtok(f, '.');
+  [t, f] = strtok(f, '.');
+  s = getfield(s, t);
   if isempty(f)
     break
   end
 end
-s = getfield(s, t{:});

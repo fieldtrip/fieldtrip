@@ -65,17 +65,29 @@ if NRecords>0
     SampFreq(k)     = fread(fid,   1, 'int32');    
   end
   
+  % explicitly sort the timestamps to deal with negative timestamp jumps that can occur
+  TimeStamp = sort(TimeStamp);
+  
   % for this block of data: automatically detect the gaps; 
   % there's a gap if no round off error of the sampling frequency could
   % explain the jump (which is always > one block)
-  Fs       = nanmin(SampFreq);
-  if Fs~=hdr.SamplingFrequency
-    warning('the sampling frequency as read out from the header equals %2.2f and differs from the minimum sampling frequency as read out from the data %2.2f\n', ...
+  Fs       = mode(double(SampFreq));
+  if abs(Fs/hdr.SamplingFrequency-1)>0.01
+      warning('the sampling frequency as read out from the header equals %2.2f and differs from the mode sampling frequency as read out from the data %2.2f\n', ...
       hdr.SamplingFrequency, Fs);
+    
+      % check which one was correct
+      d = double(TimeStamp(2:end)-TimeStamp(1:end-1));  
+      fsEst = 1e6./mode(d);
+      indx = nearest([Fs hdr.SamplingFrequency], fsEst);
+      if indx==1 
+        warning('correcting the header frequency from %2.2f to %2.2f', hdr.SamplingFrequency, Fs);
+        hdr.SamplingFrequency = Fs;
+      end
   end
   
   % detect the number of timestamps per block while avoiding influencce of gaps
-  d        = diff(double(TimeStamp));
+  d = double(TimeStamp(2:end)-TimeStamp(1:end-1));    
   maxJump  = ceil(10^6./(Fs-1))*512;
   gapCorrectedTimeStampPerSample =  nanmean(d(d<maxJump))/512;    
 
@@ -136,14 +148,23 @@ if begrecord>=1 && endrecord>=begrecord
     % mark the invalid samples
     Samp((NumValidSamp+1):end,k) = nan;
   end
-        
+  
+  d = TimeStamp(2:end)-TimeStamp(1:end-1);  
+  idxNeg = find(double(d)<=0);
+  if ~isempty(idxNeg)
+    [TimeStamp, indx] = sort(TimeStamp);      
+    warning('%d blocks have zero or negative timestamp jump', length(idxNeg));
+  else
+    indx = 1:length(TimeStamp);
+  end
+  
   % store the record data in the output structure
   ncs.TimeStamp    = TimeStamp;
-  ncs.ChanNumber   = ChanNumber;
-  ncs.SampFreq     = SampFreq;
-  ncs.NumValidSamp = NumValidSamp;
+  ncs.ChanNumber   = ChanNumber(indx);
+  ncs.SampFreq     = SampFreq(indx);
+  ncs.NumValidSamp = NumValidSamp(indx);
   % apply the scaling factor from ADBitVolts and convert to uV
-  ncs.dat          = Samp * hdr.ADBitVolts * 1e6;
+  ncs.dat          = Samp(:,indx) * hdr.ADBitVolts * 1e6;
   
 end
 fclose(fid);

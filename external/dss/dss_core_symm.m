@@ -15,7 +15,7 @@ function state = dss_core_symm(state)
 % Helsinki University of Technology. http://www.cis.hut.fi/projects/dss/.
 % $Id: dss_core_symm.m,v 1.23 2005/12/02 12:23:18 jaakkos Exp $
 
-message(state,2,'Extracting components in symmetric DSS\n');
+dss_message(state,2,'Extracting components in symmetric DSS\n');
 
 % -- Initialize local variables
 start_time = cputime;
@@ -24,19 +24,19 @@ wdim = size(state.Y, 1);
 sdim = state.sdim;
 
 if isfield(state,'iteration')
-  message(state,1,sprintf('Continuing iteration %d.\n', state.iteration));
+  dss_message(state,1,sprintf('Continuing iteration %d.\n', state.iteration));
 else
   state.iteration=1;
-  message(state,1,sprintf(...
+  dss_message(state,1,sprintf(...
     'Mixed signal dim: %d, original signal dim: %d\n', wdim, sdim));
 
   if isfield(state,'W')
-    message(state,1,sprintf('Using %d predefined w vectors\n',size(state.W,1)));
+    dss_message(state,1,sprintf('Using %d predefined w vectors\n',size(state.W,1)));
   end
   if isfield(state,'S') if size(state.S,1)>size(state.W,1)
     b = size(state.W,1);
     e = size(state.S,1);
-    message(state,1,sprintf('Using %d predefined s vectors\n',e-b));
+    dss_message(state,1,sprintf('Using %d predefined s vectors\n',e-b));
     state.W(b+1:e,:) = state.S(b+1:e,:) * state.Y';
   end; end
   if ~isfield(state, 'W') state.W = []; end;
@@ -132,7 +132,7 @@ while 1
     end
   end
 
-  message(state,3,'.');
+  dss_message(state,3,'.');
 
 end
 
@@ -140,7 +140,7 @@ if user_interrupt
   disp('Interrupted');
 end
 
-message(state,3,'\n');
+dss_message(state,3,'\n');
 
 % -- record the used cpu time
 if ~isfield(state, 'cputime'); state.cputime = 0; end

@@ -177,10 +177,10 @@ elseif isfield(hdr, 'config'),
       % the user_block does not contain labels to the channels and references
       % warning('the weight table does not contain contain labels to the channels and references: assuming the channel order as they occur in the header and the refchannel order M.A M.aA G.A');
       label    = {hdr.config.channel_data(:).name}';
-      meglabel = channelselection('MEG',    label);
+      meglabel = ft_channelselection('MEG',    label);
       imeg     = match_str(label, meglabel);
       tabreflabel = {'MxA';'MyA';'MzA';'MxaA';'MyaA';'MzaA';'GxxA';'GyyA';'GyxA';'GzxA';'GzyA'}; % FIXME this is hard coded according to a few tests
-      reflabel = channelselection('MEGREF', label);
+      reflabel = ft_channelselection('MEGREF', label);
       [dum, order] = match_str(reflabel, tabreflabel);
       weights.dweights = weights.dweights(imeg,:);
       weights.aweights = weights.aweights(imeg,:);

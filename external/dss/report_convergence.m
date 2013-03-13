@@ -8,7 +8,7 @@ function [report_data] = report_convergence(report_data, state)
 
 if ~isfield(report_data, 'report_interval')
   report_data.report_interval = 5;
-  message(state, 2, sprintf('Setting default report interval to %d (report_data.report_interval)\n', report_data.report_interval));
+  dss_message(state, 2, sprintf('Setting default report interval to %d (report_data.report_interval)\n', report_data.report_interval));
 end
 
 % deflation

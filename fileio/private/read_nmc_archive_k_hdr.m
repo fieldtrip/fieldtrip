@@ -5,11 +5,11 @@ function [hdr] = read_nmc_archive_k_hdr(paramfile)
 % Use as
 %   hdr = read_nmc_archive_k_hdr(paramfile)
 %
-%  
-% This function specifically only reads data from one of the archived 
+%
+% This function specifically only reads data from one of the archived
 % datasets of the Neurophysiological Mechanisms of Cognition group of
 % Eric Maris, at the Donders Centre for Cognition, Radboud University,
-% Nijmegen, the Netherlands. It should not be used for any other data 
+% Nijmegen, the Netherlands. It should not be used for any other data
 % format.
 %
 %
@@ -37,7 +37,7 @@ function [hdr] = read_nmc_archive_k_hdr(paramfile)
 
 % Checking paramfile
 if exist(paramfile,'file') ~= 2
-    error('specified newparams.txt file not found');
+  error('specified newparams.txt file not found');
 end
 
 % Reading samplingrate and channelnumber from paramfile
@@ -46,19 +46,37 @@ allfound = false;
 param = [];
 channelnum = []; samplingrate = [];
 while allfound == false
-    param = fscanf(paramid,'%s',1);
-    value = fgetl(paramid);
-    if strcmp(param,'samplerate')
-        samplingrate = str2num(value);
+  param = fscanf(paramid,'%s',1);
+  value = fgetl(paramid);
+  if strcmp(param,'samplerate')
+    samplingrate = str2num(value);
+  end
+  if strcmp(param,'channelnum')
+    channelnum = str2num(value);
+  end
+  if ~isempty(channelnum) && ~isempty(samplingrate)
+    allfound = true;
+  elseif isempty(param)
+    try
+      % try to find channel numbers and missing channels by dirlisting
+      list = dir([paramfile(1:end-10) '***']);
+      % remove any remaining dirs in the list
+      list(logical([list.isdir])) = [];
+      % extract names, and keep the last 3 characters
+      list = {list.name};
+      for iitem = 1:numel(list)
+        list{iitem} = str2num(list{iitem}(end-2:end));
+      end
+      % remove empty items by catting to a vector
+      list = [list{:}];
+      
+      % set channelnum and missingchan
+      channelnum = list(end);
+      missingchan = setdiff(1:list(end),list);
+    catch
+      error('error in newparams.txt, certain variables not present for subject')
     end
-    if strcmp(param,'channelnum')
-        channelnum = str2num(value);
-    end
-    if ~isempty(channelnum) && ~isempty(samplingrate)
-        allfound = true;
-    elseif isempty(param)
-        error('error in newparams.txt, certain variables not present for subject')
-    end
+  end
 end % while
 fclose(paramid);
 
@@ -68,75 +86,83 @@ allfound = false;
 param = [];
 dataformat = [];
 while allfound == false
-    param = fscanf(paramid,'%s',1);
-    value = fgetl(paramid);
-    if strcmp(param,'dataformat')
-        dataformat = value(3:end-1);
-        if ~strcmp(dataformat, 'short') && ~strcmp(dataformat, 'int16')
-            error('dataformat from newparams.txt not recognized')
-        end
+  param = fscanf(paramid,'%s',1);
+  value = fgetl(paramid);
+  if strcmp(param,'dataformat')
+    dataformat = value(3:end-1);
+    if ~strcmp(dataformat, 'short') && ~strcmp(dataformat, 'int16')
+      error('dataformat from newparams.txt not recognized')
     end
-    if ~isempty(dataformat)
-        allfound = true;
-    elseif isempty(param)
-        dataformat = 'short'; % default-value
-    end
+  end
+  if ~isempty(dataformat)
+    allfound = true;
+  elseif isempty(param)
+    dataformat = 'short'; % default-value
+  end
 end % while
 fclose(paramid);
 
 % Determine number of bytes per sample out of dataformat (used during data-reading)
 if strcmp(dataformat, 'short') || strcmp(dataformat, 'int16')
-    nBytes = 2;
+  nBytes = 2;
 else
-    error('dataformat from newparams.txt not recognized')
+  error('dataformat from newparams.txt not recognized')
 end
 
-% Get missing channel numbers from paramfile
-paramid = fopen(paramfile);
-allfound = false;
-param = [];
-missingchan = [];
-while allfound == false
+% Get missing channel numbers from paramfile if not read in from above
+if ~exist('missingchan','var')
+  paramid = fopen(paramfile);
+  allfound = false;
+  param = [];
+  missingchan = [];
+  while allfound == false
     param = fscanf(paramid,'%s',1);
     value = fgetl(paramid);
     if strcmp(param,'missingchan')
-        missingchan = strtrim(value);
+      missingchan = strtrim(value);
     end
     if ~isempty(missingchan) || isempty(param)
-        allfound = true;
+      allfound = true;
     end
-end % while
-fclose(paramid);
-% Reformat missingchan for later use
-if ~isempty(missingchan)
+  end % while
+  fclose(paramid);
+  % Reformat missingchan for later use
+  if ~isempty(missingchan)
     if ~isempty(strfind(missingchan,'-'))
-        missingchan(strfind(missingchan,'-')) = ':';
+      missingchan(strfind(missingchan,'-')) = ':';
     end
     missingchan = str2num(missingchan);
+  end
 end
-
 
 % Construct channel-labels and remove missing channels
 channellabels = [];
 for ichan = 1:channelnum
-    channellabels{ichan} = ['CH' num2str(ichan)];
+  channellabels{ichan} = ['CH' num2str(ichan)];
 end
 if ~isempty(missingchan)
-    channellabels(missingchan) = [];
-    channelnum = length(channellabels);
+  channellabels(missingchan) = [];
+  channelnum = length(channellabels);
 end
 
 
 % Determining total sample number (IMPORTANT: this assumes all channel files contain the same number of samples)
 % Picking first available channel file
 if length(channellabels{1} == 3)
-    channelext = ['.00' channellabels{1}(3:end)];
+  channelext = ['.00' channellabels{1}(3:end)];
 elseif length(channellabels{1} == 5)
-    channelext = ['.0' channellabels{1}(3:end)];
+  channelext = ['.0' channellabels{1}(3:end)];
 elseif  length(channellabels{1} == 7)
-    channelext = ['.' channellabels{1}(3:end)];
+  channelext = ['.' channellabels{1}(3:end)];
 end
-datafile = [paramfile(1:end-13) channelext];
+% paramfile is either newparams.txt or .params.txt
+if strcmp(paramfile(end-12:end),'newparams.txt')
+  datafile = [paramfile(1:end-13) channelext];
+elseif strcmp(paramfile(end-10:end),'.params.txt')
+  datafile = [paramfile(1:end-11) channelext];
+else
+  error(['could not properly parse param-file: ' paramfile])
+end
 datafid = fopen(datafile,'r','l');
 fseek(datafid,0,'eof');
 samplesnum = ftell(datafid) / nBytes;
@@ -149,14 +175,14 @@ subjectname = datafile((slashpos(end-2)+1):(slashpos(end-1))-1);
 
 % Building hdr structure
 hdr = [];
-hdr.Fs = samplingrate;
-hdr.nChans = channelnum;
-hdr.Sessname = datafile((findstr(datafile, 'eeg.noreref')+12):(end-4));
-hdr.label = channellabels;
-hdr.nSamples = samplesnum;
+hdr.Fs          = samplingrate;
+hdr.nChans      = channelnum;
+hdr.Sessname    = datafile((slashpos(end)+1):end-4);
+hdr.label       = channellabels;
+hdr.nSamples    = samplesnum;
 hdr.nSamplesPre = 0;
-hdr.nTrials = 1;
-hdr.dataset = datafile;
-hdr.dataformat = dataformat;
-hdr.nBytes = nBytes;
-hdr.Subject = subjectname;
+hdr.nTrials     = 1;
+hdr.dataset     = datafile;
+hdr.dataformat  = dataformat;
+hdr.nBytes      = nBytes;
+hdr.Subject     = subjectname;

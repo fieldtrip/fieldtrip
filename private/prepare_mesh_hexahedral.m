@@ -133,8 +133,9 @@ mesh.tissuelabel = {};
 ulabel = sort(unique(labels));
 for i = 1:numlabels
   mesh.tissue(labels == ulabel(i)) = i;
-  mesh.tissuelabel{i} = num2str(ulabel(i));
-  mesh.tissuename{i} = tissue{i};
+  %mesh.tissuelabel{i} = num2str(ulabel(i));
+  %mesh.tissuename{i} = tissue{i};
+  mesh.tissuelabel{i} = tissue{i};
 end
 
 end % function

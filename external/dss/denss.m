@@ -43,23 +43,23 @@ VERSION = fopen('VERSION','r');
 if VERSION ~= -1
   version = fgets(VERSION);
   version = version(1:end-1);
-  message(state,1,sprintf('Calculating DSS (release v%s)\n',version));
+  dss_message(state,1,sprintf('Calculating DSS (release v%s)\n',version));
 else
-  message(state,1,'Calculating DSS (unknown release version)\n');
+  dss_message(state,1,'Calculating DSS (unknown release version)\n');
 end  
 % -- Preprocessing
 if ~isfield(state, 'Y')
   state = dss_preprocess(state.X, state);  
 else
   % Sphered data is already available, set sphering to identity
-  message(state,2,'Sphered data exists, using it.');
+  dss_message(state,2,'Sphered data exists, using it.');
   if ~isfield(state, 'V') | ~isfield(state, 'dV')
     state.V = diag(ones(size(state.Y,1),1));
     state.dV = state.V;
-    message(state,2,' No sphering matrix given. Assuming identity matrix.\n');
+    dss_message(state,2,' No sphering matrix given. Assuming identity matrix.\n');
   else
     % using given sphering matrix
-    message(state,2,'\n');
+    dss_message(state,2,'\n');
   end
 end
 
@@ -87,7 +87,7 @@ if isfield(state, field_name)
     state.input_dims = dims(2:length(dims));
     % for ML65+: state.(field_name) = reshape(state.(field_name), dims(1), []);
     state = setfield(state, field_name, reshape(getfield(state, field_name), dims(1), []));
-    message(state,1,sprintf('Contracting [%s] dimensional input %s to [%s] dimension.\n', tostring(dims), field_name, tostring(size(getfield(state,field_name)))));
+    dss_message(state,1,sprintf('Contracting [%s] dimensional input %s to [%s] dimension.\n', tostring(dims), field_name, tostring(size(getfield(state,field_name)))));
   end
 end
 
