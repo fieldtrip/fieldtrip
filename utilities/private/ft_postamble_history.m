@@ -43,6 +43,10 @@ if isfield(cfg, 'trackdatainfo') && istrue(cfg.trackdatainfo)
 end
 
 for tmpindx=1:length(ft_default.postamble)
-  eval(sprintf('try, %s.cfg = cfg; end', ft_default.postamble{tmpindx}));
+  if isequal(ft_default.postamble, {'varargout'})
+    eval(sprintf('try, %s{%d}.cfg = cfg; end', ft_default.postamble{tmpindx}, tmpindx));
+  else
+    eval(sprintf('try, %s.cfg = cfg; end', ft_default.postamble{tmpindx}));
+  end
 end
 clear tmpindx
