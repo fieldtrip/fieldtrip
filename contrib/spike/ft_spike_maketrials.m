@@ -86,7 +86,7 @@ end
 % check if the cfg.trl is in the right order and whether the trials are overlapping
 if strcmp(cfg.trlunit, 'timestamps') && ~all(cfg.trl(:,2)>cfg.trl(:,1))
   warning('the end of some trials does not occur after the beginning of some trials in cfg.trl'); %#ok<*WNTAG>
-elseif strcmp(cfg.trlunit, 'samples') && ~all((1+cfg.trl(:,2))>cfg.trl(:,1))
+elseif strcmp(cfg.trlunit, 'samples') && ~all((cfg.trl(:,2))<cfg.trl(:,1))
   warning('the end of some trials does not occur after the beginning of some trials in cfg.trl'); %#ok<*WNTAG>
 end  
   
