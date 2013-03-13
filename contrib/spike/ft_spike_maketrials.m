@@ -198,11 +198,11 @@ elseif strcmp(cfg.trlunit,'samples')
     
     if ~strcmp(classTs, class(FirstTimeStamp))
         flag = 1;
-        if strcmp(classTs, 'double') || class(FirstTimeStamp, 'double')
+        if strcmp(classTs, 'double') || strcmp(class(FirstTimeStamp), 'double')
           mx = 2^53;
           flag = 0;
         end
-        if strcmp(classTs, 'single') || class(FirstTimeStamp, 'single')          
+        if strcmp(classTs, 'single') || strcmp(class(FirstTimeStamp), 'single')          
           mx = 2^24; % largest precision number
           flag = 0;
         end
