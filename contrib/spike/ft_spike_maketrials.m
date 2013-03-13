@@ -117,11 +117,13 @@ if strcmp(cfg.trlunit,'timestamps')
   for iUnit = 1:nUnits
     ts = spike.timestamp{iUnit}(:);            
     classTs = class(ts);
+    
     % put a warning message if timestamps are doubles but not the right precision
-    if strcmp(classTs, 'double') && any(ts>(2^53)) || (strcmp(classTs, 'single') && any(ts>(2^24)))
+    if (strcmp(classTs, 'double') && any(ts>(2^53))) || (strcmp(classTs, 'single') && any(ts>(2^24)))
       warning('timestamps are of class double but larger than 2^53 or single but larger than 2^24, expecting round-off errors due to precision limitation of doubles');
     end
     
+    % check whether trl and ts are of the same class, issue warning if not and it is a problem
     classTrl = class(cfg.trl);
     trlEvent = cfg.trl(:,1:2);
     if ~strcmp(classTs, classTrl)
@@ -134,8 +136,8 @@ if strcmp(cfg.trlunit,'timestamps')
           mx = 2^24; % largest precision number
           flag = 0;
         end
+        % issue a warning if the class is actually a problem        
         if iUnit==1 && flag==0 && any(cfg.trl(:)>cast(mx, classTrl)) 
-          % check the maximum to give an indication of the possible error
           warning('timestamps are of class %s and cfg.trl is of class %s, rounding errors are expected because of high timestamps, converting %s to %s', class(ts), class(cfg.trl), class(cfg.trl), class(ts));
         end
         trlEvent = cast(trlEvent, classTs);
