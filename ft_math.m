@@ -63,14 +63,16 @@ end
 % the actual computation is done in the middle part
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if ~isfield(varargin{1}, cfg.parameter)
+if ~issubfield(varargin{1}, cfg.parameter)
   error('the requested parameter is not present in the data');
 end
 
 % ensure that the data in all inputs has the same channels, time-axis, etc.
 tmpcfg = [];
 tmpcfg.parameter = cfg.parameter;
-[varargin{:}, tmpcfg] = ft_selectdata(tmpcfg, varargin{:});
+[varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
+% restore the provenance information
+[cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
 
 if isfield(varargin{1}, [cfg.parameter 'dimord'])
   dimord = varargin{1}.([cfg.parameter 'dimord']);
@@ -86,6 +88,7 @@ dimtok = tokenize(dimord, '_');
 haschan = any(strcmp(dimtok, 'chan'));
 hasfreq = any(strcmp(dimtok, 'freq'));
 hastime = any(strcmp(dimtok, 'time'));
+haspos  = any(strcmp(dimtok, 'pos'));
 
 % construct the output data structure
 data = [];
@@ -98,9 +101,12 @@ end
 if hastime
   data.time = varargin{1}.time;
 end
+if haspos
+  data.pos = varargin{1}.pos;
+end
 
 fprintf('selecting %s from the first input argument\n', cfg.parameter);
-tmp = varargin{1}.(cfg.parameter);
+tmp = getsubfield(varargin{1}, cfg.parameter);
 
 if length(varargin)==1
   switch cfg.operation
@@ -164,7 +170,7 @@ else
 end % one or multiple input data structures
 
 % store the result of the operation in the output structure
-data.(cfg.parameter) = tmp;
+data = setsubfield(data, cfg.parameter, tmp);
 data.dimord = dimord;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

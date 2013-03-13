@@ -50,7 +50,7 @@ function source = ft_datatype_source(source, varargin)
 % FT_DATATYPE_MVAR, FT_DATATYPE_RAW, FT_DATATYPE_SOURCE, FT_DATATYPE_SPIKE,
 % FT_DATATYPE_TIMELOCK, FT_DATATYPE_VOLUME
 
-% Copyright (C) 2011, Robert Oostenveld
+% Copyright (C) 2013, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -70,7 +70,7 @@ function source = ft_datatype_source(source, varargin)
 %
 % $Id$
 
-% FIXME: I am not sure whether the removal of the xgrid/ygrid/zgrid fields 
+% FIXME: I am not sure whether the removal of the xgrid/ygrid/zgrid fields
 % was really in 2007
 
 % get the optional input arguments, which should be specified as key-value pairs
@@ -97,6 +97,38 @@ if isfield(source, 'latency'),
 end
 
 switch version
+  case '2013x'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if isfield(source, 'xgrid')
+      source = rmfield(source, 'xgrid');
+    end
+    if isfield(source, 'ygrid')
+      source = rmfield(source, 'ygrid');
+    end
+    if isfield(source, 'zgrid')
+      source = rmfield(source, 'zgrid');
+    end
+    
+    if isfield(source, 'transform')
+      source = rmfield(source, 'transform');
+    end
+    
+    if isfield(source, 'avg')
+      % move the average fields to the main structure
+      fn = fieldnames(source.avg);
+      for i=1:length(fn)
+        source.(fn{i}) = source.avg.(fn{i});
+      end % j
+      source.dimord = 'pos';
+      source = rmfield(source, 'avg');
+    end
+    
+    % ensure that it is always logical
+    source   = fixinside(source, 'logical');
+    
+    % ensure that it has a dimord (or multiple for the different fields)
+    source = fixdimord(source);
+    
   case '2011'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if isfield(source, 'xgrid')
@@ -108,14 +140,14 @@ switch version
     if isfield(source, 'zgrid')
       source = rmfield(source, 'zgrid');
     end
-
+    
     if isfield(source, 'transform')
       source = rmfield(source, 'transform');
     end
-
+    
     % ensure that it has a dimord (or multiple for the different fields)
     source = fixdimord(source);
-
+    
   case '2010'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if isfield(source, 'xgrid')
@@ -127,16 +159,16 @@ switch version
     if isfield(source, 'zgrid')
       source = rmfield(source, 'zgrid');
     end
-
+    
     % ensure that it has a dimord (or multiple for the different fields)
     source = fixdimord(source);
-
+    
   case '2007'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if isfield(source, 'dimord')
       source = rmfield(source, 'dimord');
     end
-
+    
     if isfield(source, 'xgrid')
       source = rmfield(source, 'xgrid');
     end
@@ -146,13 +178,13 @@ switch version
     if isfield(source, 'zgrid')
       source = rmfield(source, 'zgrid');
     end
-
+    
   case '2003'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if isfield(source, 'dimord')
       source = rmfield(source, 'dimord');
     end
-
+    
     if ~isfield(source, 'xgrid') || ~isfield(source, 'ygrid') || ~isfield(source, 'zgrid')
       if isfield(source, 'dim')
         minx = min(source.pos(:,1));
@@ -166,9 +198,8 @@ switch version
         source.zgrid = linspace(minz, maxz, source.dim(3));
       end
     end
-
+    
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     error('unsupported version "%s" for source datatype', version);
 end
-
