@@ -89,10 +89,10 @@ cfg.method = 'singleshell';
 hdm = ft_prepare_headmodel(cfg, segmentedmri);
 
 
-template = load(fullfile(templatedir, 'standard_grid3d8mm')); 
+template = load(fullfile(templatedir, 'standard_sourcemodel3d8mm')); 
 % inverse-warp the subject specific grid to the template grid cfg = [];
 cfg.grid.warpmni   = 'yes';
-cfg.grid.template  = template.grid;
+cfg.grid.template  = template.sourcemodel;
 cfg.grid.nonlinear = 'yes'; % use non-linear normalization
 cfg.mri            = mri;
 sourcemodel        = ft_prepare_sourcemodel(cfg);
@@ -138,8 +138,8 @@ source_exp  = ft_sourceanalysis(cfg, freq_exp);
 
 source_diff = source_exp;
 source_diff.avg.pow = (source_exp.avg.pow ./ source_bsl.avg.pow) - 1;
-source_diff.pos = template.grid.pos;
-source_diff.dim = template.grid.dim;
+source_diff.pos = template.sourcemodel.pos;
+source_diff.dim = template.sourcemodel.dim;
 
 % note that the exact directory is user-specific
 if isunix
@@ -207,8 +207,8 @@ cfg.vol             = hdm;
 cfg.grid            = sourcemodel;
 source_coh_lft      = ft_sourceanalysis(cfg, freq_csd);
 
-source_coh_lft.pos = template.grid.pos;
-source_coh_lft.dim = template.grid.dim;
+source_coh_lft.pos = template.sourcemodel.pos;
+source_coh_lft.dim = template.sourcemodel.dim;
 
 
 % note that the exact directory is user-specific
