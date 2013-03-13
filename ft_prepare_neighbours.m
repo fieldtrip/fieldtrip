@@ -140,6 +140,9 @@ else
     sens = ft_fetch_sens(cfg);
   end
   
+  if strcmp(ft_senstype(sens), 'neuromag306')
+      warning('Neuromagr06 system detected - be aware of different sensor types, see http://fieldtrip.fcdonders.nl/faq/why_are_there_multiple_neighbour_templates_for_the_neuromag306_system');
+  end
   chanpos = sens.chanpos;
   label   = sens.label;
   
