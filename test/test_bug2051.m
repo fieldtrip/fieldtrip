@@ -17,7 +17,7 @@ timelock.label = {'a'};
 timelock.time = 1:100;
 timelock.dimord = 'chan_time';
 
-cfg = [];
+cg = [];
 cfg.parameter = 'pow';
 cfg.operation = 'log10';
 powlog = ft_math(cfg, timelock);
