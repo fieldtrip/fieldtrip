@@ -105,7 +105,7 @@ while ~success && (timeout == 0 || toc(stopwatch)<timeout)
   else
     % the job results have not arrived yet
     % wait a little bit and try again
-    pause(sleep);
+    pausejava(sleep);
     continue
   end
   
