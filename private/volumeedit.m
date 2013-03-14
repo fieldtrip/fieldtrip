@@ -53,8 +53,8 @@ ysize(2) = 0.82*dim(2)/ydim;
 % create figure
 h = figure;
 set(h, 'color', [1 1 1]);
-set(h, 'pointer', 'custom');
-set(h, 'pointershapecdata', nan(16)); 
+% set(h, 'pointer', 'custom');
+% set(h, 'pointershapecdata', nan(16)); 
 set(h, 'visible', 'on');
 set(h, 'windowbuttondownfcn', @cb_buttonpress); 
 set(h, 'windowbuttonupfcn',   @cb_buttonrelease);
@@ -137,7 +137,8 @@ end
 opt = getappdata(h, 'opt');
 delete(h);
 
-dataout = datain(opt.mask);
+dataout = datain;
+dataout(~opt.mask) = 0;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
