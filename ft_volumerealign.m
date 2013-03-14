@@ -115,6 +115,13 @@ function [realign, h] = ft_volumerealign(cfg, mri, target)
 % See also FT_READ_MRI, FT_ELECTRODEREALIGN, HEADCOORDINATES, SPM_AFFREG,
 % SPM_NORMALISE
 
+% Undocumented option:
+%   cfg.weights = vector of weights that is used to weight the individual
+%   headshape points in the icp algorithm. Used optionally in cfg.method     
+%   = 'headshape'. If not specified, weights are put on points with
+%   z-coordinate<0 (assuming those to be eye rims and nose ridges, i.e.
+%   important points.
+%
 % Copyright (C) 2006-2011, Robert Oostenveld, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see
@@ -560,16 +567,23 @@ switch cfg.method
     end
     seg           = ft_volumesegment(tmpcfg, mri);
     
-    cfg             = [];
-    cfg.method      = 'singleshell';
-    cfg.numvertices = 20000;
-    scalp           = ft_prepare_headmodel(cfg, seg);
+    tmpcfg             = [];
+    tmpcfg.method      = 'singleshell';
+    tnocfg.numvertices = 20000;
+    scalp           = ft_prepare_headmodel(tmpcfg, seg);
     scalp           = ft_convert_units(scalp, 'mm');
     
-    % weight the points with z-coordinate more than the rest. These are the
-    % likely points that belong to the nose and eye rims
-    weights = ones(size(shape.pnt,1),1);
-    weights(shape.pnt(:,3)<0) = 100; % this value seems to work
+    if ~isfield(cfg, 'weights')
+      % weight the points with z-coordinate more than the rest. These are the
+      % likely points that belong to the nose and eye rims
+      weights = ones(size(shape.pnt,1),1);
+      weights(shape.pnt(:,3)<0) = 100; % this value seems to work
+    else
+      weights = cfg.weights(:);
+      if numel(weights)~=size(shape.pnt,1),
+        error('number of weights should be equal to the number of points in the headshape');
+      end
+    end
     
     % construct the coregistration matrix
     [R, t, corr, D, data2] = icp2(scalp.bnd.pnt', shape.pnt', 20, [], weights); % icp2 is a helper function implementing the iterative closest point algorithm
