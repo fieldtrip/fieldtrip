@@ -80,7 +80,7 @@ while (num < maxnum)
       outputfile   = fullfile(curPwd, sprintf('%s_output.mat', jobid));
       logerr       = fullfile(curPwd, sprintf('%s.e*', jobid));
       while ~exist(outputfile,'file') || ~isfile(logerr)
-        pause(0.01);
+        pausejava(0.01);
       end
     
       if (regexpFilt && ~isempty(regexp(jobid, filter, 'once'))) || ...
@@ -101,7 +101,7 @@ while (num < maxnum)
   end
   
   if (sleep > 0)
-    pause(sleep);
+    pausejava(sleep);
   end
   
 end
