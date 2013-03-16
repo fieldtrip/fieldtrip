@@ -309,9 +309,9 @@ elseif strcmp(dtype, 'freq') && hasrpt,
   dimtok = tokenize(dimord, '_');
 end
 
-if isfield(cfg, 'channel') && isfield(data, 'label')
+if isfield(data, 'label')
   cfg.channel = ft_channelselection(cfg.channel, data.label);
-elseif isfield(cfg, 'channel') && isfield(data, 'labelcmb')
+elseif isfield(data, 'labelcmb')
   cfg.channel = ft_channelselection(cfg.channel, unique(data.labelcmb(:)));
 end
 
