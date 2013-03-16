@@ -575,7 +575,6 @@ t = dot(ori(~par,:), dp(~par,:), 2)./dot(ori(~par,:), line(~par,4:6), 2);
 % compute coord of intersection point
 Ppr(~par, :) = line(~par,1:3) + repmat(t,1,3).*line(~par,4:6);
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % This function serves as a replacement for the dist function in the Neural
 % Networks toolbox.
