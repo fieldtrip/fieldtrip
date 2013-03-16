@@ -514,7 +514,7 @@ elseif iseeg
         % update the sensor array with the one from the volume conductor
         sens = vol.sens;
       end % if recomputing interpolation
-
+      
       % for the leadfield computations the @nifti object is used to map the image data into memory
       ft_hastoolbox('spm8', 1);
       for i=1:length(vol.sens.label)
@@ -551,7 +551,6 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 function Ppr = pointproj(P,plane)
 % projects a point on a plane
 % plane(1:3) is a point on the plane
@@ -568,3 +567,16 @@ t = dot(ori(~par,:), dp(~par,:), 2)./dot(ori(~par,:), line(~par,4:6), 2);
 % compute coord of intersection point
 Ppr(~par, :) = line(~par,1:3) + repmat(t,1,3).*line(~par,4:6);
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% This function serves as a replacement for the dist function in the Neural
+% Networks toolbox.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [d] = dist(x)
+n = size(x,2);
+d = zeros(n,n);
+for i=1:n
+  for j=(i+1):n
+    d(i,j) = sqrt(sum((x(:,i)-x(:,j)).^2));
+    d(j,i) = d(i,j);
+  end
+end

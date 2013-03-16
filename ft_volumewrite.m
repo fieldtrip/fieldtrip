@@ -198,8 +198,8 @@ if strcmp(cfg.scaling, 'yes')
       data = int16((2^15-1) * data./maxval);
     case 'int32'
       data = int32((2^31-1) * data./maxval);
-    case 'float'
-      data = float(data ./ maxval);
+    case {'single' 'float'}
+      data = single(data ./ maxval);
     case 'double'
       data = double(data ./ maxval);
     otherwise

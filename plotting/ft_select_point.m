@@ -103,3 +103,18 @@ if nearest && ~isempty(pos)
 else
   selected = [x(:) y(:)];
 end % if nearest
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% This function serves as a replacement for the dist function in the Neural
+% Networks toolbox.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [d] = dist(x)
+n = size(x,2);
+d = zeros(n,n);
+for i=1:n
+  for j=(i+1):n
+    d(i,j) = sqrt(sum((x(:,i)-x(:,j)).^2));
+    d(j,i) = d(i,j);
+  end
+end
+
