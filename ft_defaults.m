@@ -75,46 +75,52 @@ if isempty(regexp(path, [ftPath pathsep '|' ftPath '$'], 'once'))
   addpath(ftPath);
 end
 
-% Some people mess up their path settings and then have
-% different versions of certain toolboxes on the path.
-% The following will issue a warning
-checkMultipleToolbox('FieldTrip',           'ft_defaults.m');
-checkMultipleToolbox('spm',                 'spm.m');
-checkMultipleToolbox('mne',                 'fiff_copy_tree.m');
-checkMultipleToolbox('eeglab',              'eeglab2fieldtrip.m');
-checkMultipleToolbox('dipoli',              'write_tri.m');
-checkMultipleToolbox('eeprobe',             'read_eep_avr.mexa64');
-checkMultipleToolbox('yokogawa',            'GetMeg160ChannelInfoM.p');
-checkMultipleToolbox('simbio',              'sb_compile_vista.m');
-checkMultipleToolbox('fns',                 'fns_region_read.m');
-checkMultipleToolbox('bemcp',               'bem_Cii_cst.mexa64');
-checkMultipleToolbox('bci2000',             'load_bcidat.m');
-checkMultipleToolbox('openmeeg',            'openmeeg_helper.m');
-checkMultipleToolbox('freesurfer',          'vox2ras_ksolve.m');
-checkMultipleToolbox('fastica',             'fastica.m');
-checkMultipleToolbox('besa',                'readBESAmul.m');
-checkMultipleToolbox('neuroshare',          'ns_GetAnalogData.m');
-checkMultipleToolbox('ctf',                 'setCTFDataBalance.m');
-checkMultipleToolbox('afni',                'WriteBrikHEAD.m');
-checkMultipleToolbox('gifti',               '@gifti/display.m');
-checkMultipleToolbox('sqdproject',          'sqdread.m');
-checkMultipleToolbox('xml4mat',             'xml2mat.m');
-checkMultipleToolbox('cca',                 'ccabss.m');
-checkMultipleToolbox('bsmart',              'armorf.m');
-checkMultipleToolbox('iso2mesh',            'iso2meshver.m');
-checkMultipleToolbox('bct',                 'degrees_und.m');
-checkMultipleToolbox('yokogawa_meg_reader', 'getYkgwHdrEvent.p');
-checkMultipleToolbox('biosig',              'sopen.m');
-checkMultipleToolbox('icasso',              'icassoEst.m');
-
 if ~isdeployed
-  
+
+  % Some people mess up their path settings and then have
+  % different versions of certain toolboxes on the path.
+  % The following will issue a warning
+  checkMultipleToolbox('FieldTrip',           'ft_defaults.m');
+  checkMultipleToolbox('spm',                 'spm.m');
+  checkMultipleToolbox('mne',                 'fiff_copy_tree.m');
+  checkMultipleToolbox('eeglab',              'eeglab2fieldtrip.m');
+  checkMultipleToolbox('dipoli',              'write_tri.m');
+  checkMultipleToolbox('eeprobe',             'read_eep_avr.mexa64');
+  checkMultipleToolbox('yokogawa',            'GetMeg160ChannelInfoM.p');
+  checkMultipleToolbox('simbio',              'sb_compile_vista.m');
+  checkMultipleToolbox('fns',                 'fns_region_read.m');
+  checkMultipleToolbox('bemcp',               'bem_Cii_cst.mexa64');
+  checkMultipleToolbox('bci2000',             'load_bcidat.m');
+  checkMultipleToolbox('openmeeg',            'openmeeg_helper.m');
+  checkMultipleToolbox('freesurfer',          'vox2ras_ksolve.m');
+  checkMultipleToolbox('fastica',             'fastica.m');
+  checkMultipleToolbox('besa',                'readBESAmul.m');
+  checkMultipleToolbox('neuroshare',          'ns_GetAnalogData.m');
+  checkMultipleToolbox('ctf',                 'setCTFDataBalance.m');
+  checkMultipleToolbox('afni',                'WriteBrikHEAD.m');
+  checkMultipleToolbox('gifti',               '@gifti/display.m');
+  checkMultipleToolbox('sqdproject',          'sqdread.m');
+  checkMultipleToolbox('xml4mat',             'xml2mat.m');
+  checkMultipleToolbox('cca',                 'ccabss.m');
+  checkMultipleToolbox('bsmart',              'armorf.m');
+  checkMultipleToolbox('iso2mesh',            'iso2meshver.m');
+  checkMultipleToolbox('bct',                 'degrees_und.m');
+  checkMultipleToolbox('yokogawa_meg_reader', 'getYkgwHdrEvent.p');
+  checkMultipleToolbox('biosig',              'sopen.m');
+  checkMultipleToolbox('icasso',              'icassoEst.m');
+
   if isempty(which('ft_hastoolbox'))
     % the fieldtrip/utilities directory contains the ft_hastoolbox function
     % which is required for the remainder of this script
     addpath(fullfile(fileparts(which('ft_defaults')), 'utilities'));
   end
   
+  try
+    % external/signal directory contains alternative implementations of some signal processing functions
+    % if present, it will use the Mathworks signal processing toolbox
+    ft_hastoolbox('signal', 1); % required
+  end
+
   try
     % this directory contains various functions that were obtained from elsewere, e.g. Matlab file exchange
     ft_hastoolbox('misc', 3, 1); % not required

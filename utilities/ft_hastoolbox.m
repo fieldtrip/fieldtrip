@@ -206,7 +206,7 @@ switch toolbox
   case {'SPLINES', 'CURVE_FITTING'}
     status = license('checkout', 'curve_fitting_toolbox');      % also check the availability of a toolbox license
   case 'SIGNAL'
-    status = license('checkout', 'signal_toolbox');             % also check the availability of a toolbox license
+    status = license('checkout', 'signal_toolbox') && exist('window', 'file'); % also check the availability of a toolbox license
   case 'IMAGE'
     status = license('checkout', 'image_toolbox');              % also check the availability of a toolbox license
   case {'DCT', 'DISTCOMP'}
