@@ -378,7 +378,7 @@ while (~all(collected))
     end  % if
   end % for
   
-  pause(0.1);
+  pausejava(0.1);
 end % while
 
 % ensure the output to have the same size/dimensions as the input

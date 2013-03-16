@@ -62,7 +62,7 @@ if ~isfield(ft_default, 'trackparaminfo'), ft_default.trackparaminfo = 'no';    
 % track whether we have executed ft_defaults already. Note that we should
 % not use ft_default itself directly, because the user might have set stuff
 % in that struct already before ft_defaults is called for the first time.
-if initialized
+if ~isempty(initialized) && exist('ft_hastoolbox', 'file')
   return;
 end
 

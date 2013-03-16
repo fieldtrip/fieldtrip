@@ -19,7 +19,7 @@ function [argout, optout] = qsubexec(jobid)
 % See also QSUBCELLFUN, QSUBFEVAL, QSUBGET
 
 % -----------------------------------------------------------------------
-% Copyright (C) 2011, Robert Oostenveld
+% Copyright (C) 2011-2013, Robert Oostenveld
 %
 % This program is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -45,6 +45,18 @@ try
   
   inputfile  = fullfile(p, sprintf('%s_input.mat',   jobid));
   outputfile = fullfile(p, sprintf('%s_output.mat_', jobid));
+  
+  stopwatch = tic;
+  while (~exist(inputfile, 'file') && toc(stopwatch)<60)
+    % the underlying NFS file system might be slow in updating, wait for up to 60 seconds
+    warning('the input file %s does not yet exist', inputfile);
+    pausejava(10);
+  end
+  clear stopwatch
+  
+  if ~exist(inputfile, 'file')
+    error('timeout while waiting for the input file %s', inputfile);
+  end
   
   % the input file contains a function handle
   % catch the warning if the function handle is not recognized

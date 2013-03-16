@@ -309,9 +309,9 @@ elseif strcmp(dtype, 'freq') && hasrpt,
   dimtok = tokenize(dimord, '_');
 end
 
-if isfield(cfg, 'channel') && isfield(data, 'label')
+if isfield(data, 'label')
   cfg.channel = ft_channelselection(cfg.channel, data.label);
-elseif isfield(cfg, 'channel') && isfield(data, 'labelcmb')
+elseif isfield(data, 'labelcmb')
   cfg.channel = ft_channelselection(cfg.channel, unique(data.labelcmb(:)));
 end
 
@@ -748,8 +748,8 @@ end % for icell
 % For Markers (all channels)
 if ~strcmp(cfg.marker,'off')
   channelsToMark = 1:length(data.label);
-  channelsToMark(nanInds) = [];
-  channelsToMark(highlightchansel) = [];
+  channelsNotMark = union(find(nanInds),highlightchansel);
+  channelsToMark(channelsNotMark) = [];
   [dum labelindex] = match_str(ft_channelselection(channelsToMark, data.label),lay.label);
   templay.pos      = lay.pos(labelindex,:);
   templay.width    = lay.width(labelindex);

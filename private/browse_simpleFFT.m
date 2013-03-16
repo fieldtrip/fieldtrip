@@ -27,7 +27,7 @@ end
 %%% FIXME: call ft_singleplotER for everything below 
 
 % make figure window for fft
-ffth = figure('name',cfg.figurename,'numbertitle','off','units','normalized');
+ffth = figure('name',cfg.figurename,'numbertitle','off','units','normalized','toolbar','figure');
 % set button
 butth = uicontrol('tag', 'simplefft_l2', 'parent', ffth, 'units', 'normalized', 'style', 'checkbox', 'string','log10 of power','position', [0.87, 0.6 , 0.12, 0.05],  'value',1,'callback',{@draw_simple_fft_cb},'backgroundcolor',[.8 .8 .8]);
 uicontrol('tag', 'simplefft_l2_chansel', 'parent', ffth, 'units', 'normalized', 'style', 'pushbutton', 'string','select channels','position', [0.87, 0.45 , 0.12, 0.10],'callback',{@selectchan_fft_cb});
