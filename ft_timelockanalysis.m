@@ -1,6 +1,6 @@
 function [timelock] = ft_timelockanalysis(cfg, data)
 
-% FT_TIMELOCKANALYSIS computes the timelocked average ERP/ERF and 
+% FT_TIMELOCKANALYSIS computes the timelocked average ERP/ERF and
 % computes the covariance matrix
 %
 % Use as
@@ -39,9 +39,9 @@ function [timelock] = ft_timelockanalysis(cfg, data)
 %
 % See also FT_TIMELOCKGRANDAVERAGE, FT_TIMELOCKSTATISTICS
 
-% Guidelines for use in an analysis pipeline: 
-% after FT_TIMELOCKANALYSIS you will have timelocked data - i.e., event-related 
-% fields (ERFs) or potentials (ERPs) - represented as the average and/or 
+% Guidelines for use in an analysis pipeline:
+% after FT_TIMELOCKANALYSIS you will have timelocked data - i.e., event-related
+% fields (ERFs) or potentials (ERPs) - represented as the average and/or
 % covariance over trials.
 % This usually serves as input for one of the following functions:
 %    * FT_TIMELOCKBASELINE      to perform baseline normalization
@@ -54,7 +54,7 @@ function [timelock] = ft_timelockanalysis(cfg, data)
 %    * FT_MULTIPLOTER           to plot ERPs/ERFs in a topographical layout
 
 % FIXME if input is one raw trial, the covariance is not computed correctly
-% 
+%
 % Undocumented local options:
 % cfg.feedback
 % cfg.preproc
@@ -153,7 +153,7 @@ if ~isfield(cfg, 'preproc'),       cfg.preproc      = [];     end
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
   fprintf('selecting %d trials\n', length(cfg.trials));
-  data = ft_selectdata(data, 'rpt', cfg.trials);  
+  data = ft_selectdata(data, 'rpt', cfg.trials);
 end
 
 ntrial = length(data.trial);
@@ -200,7 +200,7 @@ latency(2)   = maxperlength(2);
 switch cfg.vartrllength
   case 0
     if ~all(minperlength==maxperlength)
-      error('data has variable trial lengths, you specified not to accept that !');
+      error('data has variable trial lengths, you specified not to accept that');
     end
   case 1
     if all(minperlength==maxperlength)
@@ -221,18 +221,18 @@ if strcmp(cfg.covariance, 'yes')
   end
   if ischar(cfg.covariancewindow)
     switch cfg.covariancewindow
-    case 'prestim'
-      cfg.covariancewindow = [latency(1) 0];
-    case 'poststim'
-      cfg.covariancewindow = [0 latency(2)];
-    case 'all'
-      cfg.covariancewindow = latency;
-    case 'minperlength'
-      error('cfg.covariancewindow = ''minperlength'' is not supported anymore');
-    case 'maxperlength'
-      error('cfg.covariancewindow = ''maxperlength'' is not supported anymore');
-    otherwise
-      error('unsupported specification of cfg.covariancewindow');
+      case 'prestim'
+        cfg.covariancewindow = [latency(1) 0];
+      case 'poststim'
+        cfg.covariancewindow = [0 latency(2)];
+      case 'all'
+        cfg.covariancewindow = latency;
+      case 'minperlength'
+        error('cfg.covariancewindow = ''minperlength'' is not supported anymore');
+      case 'maxperlength'
+        error('cfg.covariancewindow = ''maxperlength'' is not supported anymore');
+      otherwise
+        error('unsupported specification of cfg.covariancewindow');
     end
   end
 end
@@ -258,7 +258,7 @@ ft_progress('init', cfg.feedback, 'averaging trials');
 for i=1:ntrial
   % fprintf('averaging trial %d of %d\n', i, ntrial);
   ft_progress(i/ntrial, 'averaging trial %d of %d\n', i, ntrial);
-
+  
   % determine whether the data in this trial can be used for all the requested computations
   switch cfg.vartrllength
     case 0
@@ -267,9 +267,9 @@ for i=1:ntrial
     case 1
       % include this trial only if the data are complete in all specified windows
       usetrial = 1;
-%       if (begsamplatency(i)>latency(1) || endsamplatency(i)<latency(2))
-%         usetrial = 0;
-%       elseif strcmp(cfg.covariance,'yes') && (begsamplatency(i)>cfg.covariancewindow(1) || endsamplatency(i)<cfg.covariancewindow(2))
+      %       if (begsamplatency(i)>latency(1) || endsamplatency(i)<latency(2))
+      %         usetrial = 0;
+      %       elseif strcmp(cfg.covariance,'yes') && (begsamplatency(i)>cfg.covariancewindow(1) || endsamplatency(i)<cfg.covariancewindow(2))
       if strcmp(cfg.covariance,'yes') && (begsamplatency(i)>cfg.covariancewindow(1) || endsamplatency(i)<cfg.covariancewindow(2))
         usetrial = 0;
         warning(['trial ' num2str(i) ' not used for avg computation because it was not used for covariance computation']);
@@ -279,11 +279,11 @@ for i=1:ntrial
       % this is handled automatically by the code below
       usetrial = 1;
   end
-
+  
   if ~usetrial
     continue;
   end
-
+  
   % for average and variance
   if (begsamplatency(i) <= latency(2)) && (endsamplatency(i) >= latency(1))
     begsampl = nearest(data.time{i}, latency(1));
@@ -306,7 +306,7 @@ for i=1:ntrial
     dof(windowsel) = dof(windowsel) + 1;
     usetrial = 1; % to indicate that this trial could be used
   end
-
+  
   if strcmp(cfg.covariance, 'yes')
     begsampl = nearest(data.time{i}, cfg.covariancewindow(1));
     endsampl = nearest(data.time{i}, cfg.covariancewindow(2));
@@ -320,7 +320,7 @@ for i=1:ntrial
       covsig(i,:,:) = dat * dat';
     end
   end
-
+  
 end % for ntrial
 ft_progress('close');
 
@@ -337,10 +337,10 @@ avg = s ./ repmat(dof(:)', [nchan 1]);
 % var = (ss - (s.^2)./tmp1) ./ tmp2;
 dof = repmat(dof(:)', [nchan 1]);
 
-if (dof > 1)
+if any(dof > 1)
   var = (ss - (s.^2)./dof) ./ (dof-1);
 else
-  var = zeros(size(avg));
+  var = nan(size(avg));
 end
 
 % normalize the covariance over all trials by the total number of samples in all trials
