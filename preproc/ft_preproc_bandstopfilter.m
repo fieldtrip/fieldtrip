@@ -66,6 +66,11 @@ if nargin<6|| isempty(dir)
   dir = 'twopass';
 end
 
+% set the default method to deal with filter instabilities
+if nargin<7|| isempty(instabilityfix)
+  instabilityfix = 'none';
+end
+
 % Nyquist frequency
 Fn = Fs/2;
 
