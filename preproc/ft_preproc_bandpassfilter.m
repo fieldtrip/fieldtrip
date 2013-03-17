@@ -73,7 +73,7 @@ end
 
 % set the default method to deal with filter instabilities
 if nargin<7|| isempty(instabilityfix)
-  instabilityfix = 'no';
+  instabilityfix = 'none';
 end
 
 % Nyquist frequency
