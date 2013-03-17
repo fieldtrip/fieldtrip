@@ -88,7 +88,12 @@ end
 channel = desired;
 
 if length(datachannel)~=length(unique(datachannel))
-  error('data with non-unique channel names is not supported');
+  warning('discarding non-unique channel names');
+  sel = false(size(datachannel));
+  for i=1:length(datachannel)
+    sel(i) = sum(strcmp(datachannel, datachannel{i}))==1;
+  end
+  datachannel = datachannel(sel);
 end
 
 if any(size(channel) == 0)
