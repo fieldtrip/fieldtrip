@@ -66,9 +66,9 @@ if nargin<6 || isempty(dir)
   dir = 'twopass';
 end
 
-% specify the default instability fix
-if nargin<7 || isempty(instabilityfix)
-  instabilityfix = 'none'; % can be reduce, split or none
+% set the default method to deal with filter instabilities
+if nargin<7|| isempty(instabilityfix)
+  instabilityfix = 'none';
 end
 
 % Nyquist frequency
