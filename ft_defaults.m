@@ -122,7 +122,7 @@ if ~isdeployed
   
   try
     % this directory contains various functions that were obtained from elsewere, e.g. Matlab file exchange
-    ft_hastoolbox('misc', 3, 1); % not required
+    ft_hastoolbox('fileexchange', 3, 1); % not required
   end
   
   try

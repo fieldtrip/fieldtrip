@@ -14,12 +14,6 @@ incorporate low-level algorithms for new EEG/MEG analysis methods.
 
 For more information please visit http://www.ru.nl/neuroimaging/fieldtrip
 
-The following files were downloaded from http://www.mathworks.com/matlabcentral/fileexchange
-  uimage.m
-  uimagesc.m
-  arrow.m
-  keep.m
-
 The FieldTrip software is free but copyrighted software, distributed
 under the terms of the GNU General Public Licence as published by
 the Free Software Foundation (either version 2, or at your option
