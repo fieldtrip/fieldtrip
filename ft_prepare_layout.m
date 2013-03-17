@@ -127,7 +127,6 @@ cfg = ft_checkconfig(cfg);
 % try to generate the layout structure
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
 skipscale = strcmp(cfg.skipscale, 'yes'); % in general a scale is desired
 skipcomnt = strcmp(cfg.skipcomnt, 'yes'); % in general a comment desired
 
@@ -277,7 +276,14 @@ elseif ischar(cfg.layout)
     if ~exist(cfg.layout, 'file')
       error('the specified layout file %s was not found', cfg.layout);
     end
-    load(cfg.layout, 'lay');
+    tmp = load(cfg.layout, 'lay');
+    if isfield(tmp, 'layout')
+      layout = tmp.layout;
+    elseif isfield(tmp, 'lay')
+      layout = tmp.lay;
+    else
+      error('mat file does not contain a layout');
+    end
     
   elseif ft_filetype(cfg.layout, 'layout')
     
