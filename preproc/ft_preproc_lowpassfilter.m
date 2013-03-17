@@ -4,7 +4,7 @@ function [filt] = ft_preproc_lowpassfilter(dat,Fs,Flp,N,type,dir,instabilityfix)
 % removes all high frequency components in the data
 %
 % Use as
-%   [filt] = ft_preproc_lowpassfilter(dat, Fsample, Flp, N, type, dir)
+%   [filt] = ft_preproc_lowpassfilter(dat, Fsample, Flp, N, type, dir, instabilityfix)
 % where
 %   dat        data matrix (Nchans X Ntime)
 %   Fsample    sampling frequency in Hz
@@ -21,6 +21,10 @@ function [filt] = ft_preproc_lowpassfilter(dat,Fs,Flp,N,type,dir,instabilityfix)
 %                'twopass'         zero-phase forward and reverse filter (default)
 %                'twopass-reverse' zero-phase reverse and forward filter
 %                'twopass-average' average of the twopass and the twopass-reverse
+%   instabilityfix optional method to deal with filter instabilities
+%                'none'     only detect and give error (default)
+%                'reduce'   reduce the filter order
+%                'split'    split the filter in two lower-order filters, apply sequentially
 %
 % Note that a one- or two-pass filter has consequences for the
 % strength of the filter, i.e. a two-pass filter with the same filter
