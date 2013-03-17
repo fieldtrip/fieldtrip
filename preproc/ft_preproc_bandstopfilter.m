@@ -22,7 +22,7 @@ function [filt] = ft_preproc_bandstopfilter(dat,Fs,Fbp,N,type,dir,instabilityfix
 %                'twopass-reverse' zero-phase reverse and forward filter
 %                'twopass-average' average of the twopass and the twopass-reverse
 %   instabilityfix optional method to deal with filter instabilities
-%                'none'     only detect and give error (default)
+%                'no'       only detect and give error (default)
 %                'reduce'   reduce the filter order
 %                'split'    split the filter in two lower-order filters, apply sequentially
 %
@@ -72,7 +72,7 @@ end
 
 % set the default method to deal with filter instabilities
 if nargin<7|| isempty(instabilityfix)
-  instabilityfix = 'none';
+  instabilityfix = 'no';
 end
 
 % Nyquist frequency
@@ -134,7 +134,7 @@ try
 catch
   switch instabilityfix
     case 'no'
-      rethrow(lasterror);
+      rethrow(ME);
     case 'reduce'
       warning('backtrace', 'off')
       warning('instability detected - reducing the %dth order filter to an %dth order filter', N, N-1);
