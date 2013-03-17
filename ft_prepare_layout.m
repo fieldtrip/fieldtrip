@@ -127,7 +127,6 @@ cfg = ft_checkconfig(cfg);
 % try to generate the layout structure
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
 skipscale = strcmp(cfg.skipscale, 'yes'); % in general a scale is desired
 skipcomnt = strcmp(cfg.skipcomnt, 'yes'); % in general a comment desired
 
@@ -148,7 +147,7 @@ end
 if isstruct(cfg.layout) && isfield(cfg.layout, 'pos') && isfield(cfg.layout, 'label') && isfield(cfg.layout, 'width') && isfield(cfg.layout, 'height')
   layout = cfg.layout;
   cfg.channel = ft_channelselection(cfg.channel, layout.label);
-  chansel = match_str(layout.label, {cfg.channel{:} 'COMNT' 'SCALE'}); % this keeps them in the order of the layout
+  chansel = match_str(layout.label, cat(1, cfg.channel(:), 'COMNT', 'SCALE')); % this keeps them in the order of the layout
   % return the layout for the subset of channels
   layout.pos    = layout.pos(chansel,:);
   layout.width  = layout.width(chansel);
@@ -277,7 +276,14 @@ elseif ischar(cfg.layout)
     if ~exist(cfg.layout, 'file')
       error('the specified layout file %s was not found', cfg.layout);
     end
-    load(cfg.layout, 'lay');
+    tmp = load(cfg.layout, 'lay');
+    if isfield(tmp, 'layout')
+      layout = tmp.layout;
+    elseif isfield(tmp, 'lay')
+      layout = tmp.lay;
+    else
+      error('mat file does not contain a layout');
+    end
     
   elseif ft_filetype(cfg.layout, 'layout')
     
