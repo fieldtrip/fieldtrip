@@ -148,14 +148,7 @@ end
 % a layout structure)
 if isstruct(cfg.layout) && isfield(cfg.layout, 'pos') && isfield(cfg.layout, 'label') && isfield(cfg.layout, 'width') && isfield(cfg.layout, 'height')
   layout = cfg.layout;
-  cfg.channel = ft_channelselection(cfg.channel, layout.label);
-  chansel = match_str(layout.label, cat(1, cfg.channel(:), 'COMNT', 'SCALE')); % this keeps them in the order of the layout
-  % return the layout for the subset of channels
-  layout.pos    = layout.pos(chansel,:);
-  layout.width  = layout.width(chansel);
-  layout.height = layout.height(chansel);
-  layout.label  = layout.label(chansel);
-  
+
 elseif isstruct(cfg.layout) && isfield(cfg.layout, 'pos') && isfield(cfg.layout, 'label') && (~isfield(cfg.layout, 'width') || ~isfield(cfg.layout, 'height'))
   layout = cfg.layout;
   % add width and height for multiplotting
@@ -610,6 +603,17 @@ elseif ~isempty(cfg.image) && isempty(cfg.layout)
   
 else
   error('no layout detected, please specify cfg.layout')
+end
+
+% FIXME note that below if-statement might be unnecessary
+if isstruct(layout) && isfield(layout, 'pos') && isfield(layout, 'label') && isfield(layout, 'width') && isfield(layout, 'height')
+  cfg.channel = ft_channelselection(cfg.channel, layout.label);
+  chansel = match_str(layout.label, cat(1, cfg.channel(:), 'COMNT', 'SCALE')); % this keeps them in the order of the layout
+  % return the layout for the subset of channels
+  layout.pos    = layout.pos(chansel,:);
+  layout.width  = layout.width(chansel);
+  layout.height = layout.height(chansel);
+  layout.label  = layout.label(chansel);
 end
 
 % FIXME there is a conflict between the use of cfg.style here and in topoplot
