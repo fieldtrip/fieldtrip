@@ -349,5 +349,5 @@ else
     set(info.ui.goodnext,'Enable', 'on');
 end
 text(info.x, info.y, info.label);
-title(description_channel(info));
+title(description_channel(info),'interpreter','none');
 hold off
