@@ -49,7 +49,7 @@ trigshift   = ft_getopt(varargin, 'trigshift',    false);
 trigpadding = ft_getopt(varargin, 'trigpadding',  true);
 fixctf      = ft_getopt(varargin, 'fixctf',       false);
 fixneuromag = ft_getopt(varargin, 'fixneuromag',  false);
-fix4dglasgow= ft_getopt(varargin, 'fix4dglasgow', false);
+fix4d8192   = ft_getopt(varargin, 'fix4d8192', false);
 fixbiosemi  = ft_getopt(varargin, 'fixbiosemi',   false);
 threshold   = ft_getopt(varargin, 'threshold'); 
 
@@ -138,7 +138,7 @@ if fixneuromag
   dat(dat<5) = 0;
 end
 
-if fix4dglasgow
+if fix4d8192
   % synchronization pulses have a value of 8192 and are set to 0
   dat = dat - bitand(dat, 8192);
   % triggers containing the first bit assume a value of 4096 when sent by presentation
