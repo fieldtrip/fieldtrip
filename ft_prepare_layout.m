@@ -35,6 +35,8 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %                   space to remove the overlap (default)), 'keep' (don't shift,
 %                   retain the overlap), 'no' (throw error when overlap is
 %                   present))
+%  cfg.skipscale    'yes' or 'no', whether the scale should be included in the layout or not (default = 'no')
+%  cfg.skipcomnt    'yes' or 'no', whether the comment should be included in the layout or not (default = 'no')
 %
 % Alternatively the layout can be constructed from either
 %   data.elec     structure with electrode positions
