@@ -5,7 +5,7 @@ function [cfg] = ft_databrowser(cfg, data)
 % xxx is the type of artifact) are marked. Additionally data pieces can be
 % marked and unmarked as artifact by manual selection. The output cfg
 % contains the updated specification of the artifacts. When visually selection
-% data, a right-click will bring up a context-menu containing functions to be 
+% data, a right-click will bring up a context-menu containing functions to be
 % executed on the selected data. You can use your own function using cfg.selfun
 % and cfg.selcfg. You can use multiple functions by giving the names/cfgs as a
 % cell-array.
@@ -18,7 +18,7 @@ function [cfg] = ft_databrowser(cfg, data)
 % where the input data is a structure as obtained from FT_PREPROCESSING or
 % from FT_COMPONENTANALYSIS.
 %
-% If you want to browse data that is on disk, you have to specify 
+% If you want to browse data that is on disk, you have to specify
 %   cfg.dataset                 = string with the filename
 % Instead of specifying the dataset, you can also explicitely specify the
 % name of the file containing the header information and the name of the
@@ -28,7 +28,7 @@ function [cfg] = ft_databrowser(cfg, data)
 %
 % The following configuration options are supported:
 %   cfg.ylim                    = vertical scaling, can be 'maxmin', 'maxabs' or [ymin ymax] (default = 'maxabs')
-%   cfg.zlim                    = color scaling to apply to component topographies, 'minmax', 'maxabs' (default = 'maxmin') 
+%   cfg.zlim                    = color scaling to apply to component topographies, 'minmax', 'maxabs' (default = 'maxmin')
 %   cfg.blocksize               = duration in seconds for cutting the data up
 %   cfg.trl                     = structure that defines the data segments of interest, only applicable for trial-based data
 %   cfg.continuous              = 'yes' or 'no' whether the data should be interpreted as continuous or trial-based
@@ -57,7 +57,7 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.mychanscale             = number, scaling to apply to the channels specified in cfg.mychan
 %   cfg.mychan                  = Nx1 cell-array with selection of channels
 %   cfg.chanscale               = Nx1 vector with scaling factors, one per channel specified in cfg.channel
-%   cfg.compscale               = string, 'global' or 'local', defines whether the colormap for the topographic scaling is 
+%   cfg.compscale               = string, 'global' or 'local', defines whether the colormap for the topographic scaling is
 %                                  applied per topography or on all visualized components (default 'global')
 %
 % In case of component viewmode, a layout is required. If no layout is
@@ -108,7 +108,7 @@ function [cfg] = ft_databrowser(cfg, data)
 % $Id$
 
 % Undocumented options
-% 
+%
 
 % FIXME these should be removed
 % FIXME document these
@@ -144,7 +144,7 @@ if ~isfield(cfg, 'selectfeature'),   cfg.selectfeature = 'visual';        end % 
 if ~isfield(cfg, 'selectmode'),      cfg.selectmode = 'markartifact';     end
 if ~isfield(cfg, 'blocksize'),       cfg.blocksize = [];                  end % now used for both continuous and non-continuous data, defaulting done below
 if ~isfield(cfg, 'preproc'),         cfg.preproc = [];                    end % see preproc for options
-if ~isfield(cfg, 'selfun'),          cfg.selfun = [];                     end % default functions: 'simpleFFT','multiplotER','topoplotER','topoplotVAR','movieplotER' 
+if ~isfield(cfg, 'selfun'),          cfg.selfun = [];                     end % default functions: 'simpleFFT','multiplotER','topoplotER','topoplotVAR','movieplotER'
 if ~isfield(cfg, 'selcfg'),          cfg.selcfg = [];                     end % defaulting done below, requires layouts/etc to be processed
 if ~isfield(cfg, 'colorgroups'),     cfg.colorgroups = 'sequential';      end
 if ~isfield(cfg, 'channelcolormap'), cfg.channelcolormap = [0.75 0 0;0 0 1;0 1 0;0.44 0.19 0.63;0 0.13 0.38;0.5 0.5 0.5;1 0.75 0;1 0 0;0.89 0.42 0.04;0.85 0.59 0.58;0.57 0.82 0.31;0 0.69 0.94;1 0 0.4;0 0.69 0.31;0 0.44 0.75];   end
@@ -551,9 +551,9 @@ else
   opt.orgdata   = [];      % this means that it will look in cfg.dataset
 end
 if strcmp(cfg.continuous, 'yes')
-  opt.trialviewtype = 'segment';  
+  opt.trialviewtype = 'segment';
 else
-  opt.trialviewtype = 'trial';   
+  opt.trialviewtype = 'trial';
 end
 opt.artdata     = artdata;
 opt.hdr         = hdr;
@@ -729,16 +729,16 @@ if nargout
     browsecfg = getappdata(h, 'cfg');
     cfg.preproc = browsecfg.preproc;
   end
-
+  
   % add the update event to the output cfg
   cfg.event = opt.event;
-
+  
   % do the general cleanup and bookkeeping at the end of the function
   ft_postamble debug
   ft_postamble trackconfig
   ft_postamble provenance
   ft_postamble previous data
-
+  
 end % if nargout
 
 end % main function
@@ -761,7 +761,7 @@ function definetrial_cb(h, eventdata)
 opt = getappdata(h, 'opt');
 cfg = getappdata(h, 'cfg');
 if strcmp(cfg.continuous, 'no')
-
+  
   % when zooming in, lock the trial! one can only go to the next trial when horizontal scaling doesn't segment the data - from ft-meeting: this might be relaxed later on - roevdmei
   if isempty(opt.trllock)
     opt.trllock = opt.trlop;
@@ -771,7 +771,7 @@ if strcmp(cfg.continuous, 'no')
   if (abs(locktrllen-cfg.blocksize) / locktrllen) < 0.1
     cfg.blocksize = locktrllen;
   end
-    
+  
   %%%%%%%%%
   % trial is locked, change subdivision of trial
   if cfg.blocksize < locktrllen
@@ -806,12 +806,12 @@ if strcmp(cfg.continuous, 'no')
       opt.trlop   = nearest(begsamples, thissegbeg);
     end
     % update trialviewtype
-    opt.trialviewtype = 'trialsegment'; 
+    opt.trialviewtype = 'trialsegment';
     % update button
     set(findobj(get(h,'children'),'string','trial'),'string','segment');
     %%%%%%%%%
     
-
+    
     %%%%%%%%%
     % trial is not locked, go to original trial division and zoom out
   elseif cfg.blocksize >= locktrllen
@@ -860,11 +860,11 @@ else
     offset = begsamples - repmat(begsamples(1),[1 numel(begsamples)]); % offset for all segments compared to the first
     offset = offset + opt.trlorg(1,3);
     trlvis(:,3) = offset;
-  else 
+  else
     offset = begsamples - repmat(begsamples(1),[1 numel(begsamples)]);
     trlvis(:,3) = offset;
   end
- 
+  
   if isfield(opt, 'trlvis')
     % update the current trial counter and try to keep the current sample the same
     % opt.trlop   = nearest(round((begsamples+endsamples)/2), thissample);
@@ -948,11 +948,11 @@ if isempty(cmenulab)
       fprintf('there is no overlap with the active artifact (%s), marking this as a new artifact\n',opt.artdata.label{opt.ftsel});
       opt.artdata.trial{1}(opt.ftsel, begsel:endsel) = 1;
     end
-  
-  % redraw only when marking (so the focus doesn't go back to the databrowser after calling selfuns
-  setappdata(h, 'opt', opt);
-  setappdata(h, 'cfg', cfg);
-  redraw_cb(h);
+    
+    % redraw only when marking (so the focus doesn't go back to the databrowser after calling selfuns
+    setappdata(h, 'opt', opt);
+    setappdata(h, 'cfg', cfg);
+    redraw_cb(h);
   elseif strcmp(cfg.selectmode, 'markpeakevent') || strcmp(cfg.selectmode, 'marktroughevent')
     %mark or unmark events, marking at peak/trough of window
     if any(intersect(begsel:endsel, [opt.event.sample]))
@@ -1000,7 +1000,7 @@ if isempty(cmenulab)
         %just add to end
         opt.event(end+1) = event_new;
       end
-      clear event_new ind_event_new event_lastpart val dum ind_minmax      
+      clear event_new ind_event_new event_lastpart val dum ind_minmax
     end
     % redraw only when marking (so the focus doesn't go back to the databrowser after calling selfuns
     setappdata(h, 'opt', opt);
@@ -1242,6 +1242,7 @@ switch key
     cfg.channel = opt.hdr.label(chansel);
     setappdata(h, 'opt', opt);
     setappdata(h, 'cfg', cfg);
+    delete(findobj(h,'tag', 'chanlabel'));  % remove channel labels here, and not in redrawing to save significant execution time (see bug 2065)
     redraw_cb(h, eventdata);
   case 'downarrow'
     chansel = match_str(opt.hdr.label, cfg.channel);
@@ -1255,6 +1256,7 @@ switch key
     cfg.channel = opt.hdr.label(chansel);
     setappdata(h, 'opt', opt);
     setappdata(h, 'cfg', cfg);
+    delete(findobj(h,'tag', 'chanlabel'));  % remove channel labels here, and not in redrawing to save significant execution time (see bug 2065)
     redraw_cb(h, eventdata);
   case 'shift+leftarrow'
     cfg.blocksize = cfg.blocksize*sqrt(2);
@@ -1288,7 +1290,7 @@ switch key
       str = sprintf('%s to display (current trial = %d/%d)', opt.trialviewtype, opt.trlop, size(opt.trlvis,1));
     else
       str = sprintf('segment to display (current segment = %d/%d)', opt.trlop, size(opt.trlvis,1));
-    end  
+    end
     response = inputdlg(str, 'specify', 1, {num2str(opt.trlop)});
     if ~isempty(response)
       opt.trlop = str2double(response);
@@ -1340,6 +1342,7 @@ switch key
     cfg.channel = opt.hdr.label(select);
     setappdata(h, 'opt', opt);
     setappdata(h, 'cfg', cfg);
+    delete(findobj(h,'tag', 'chanlabel'));  % remove channel labels here, and not in redrawing to save significant execution time (see bug 2065)
     redraw_cb(h, eventdata);
   case 'i'
     if strcmp(cfg.viewmode, 'butterfly')
@@ -1408,6 +1411,7 @@ if ~isempty(varargin) && ischar(varargin{1})
   cfg.viewmode = varargin{1};
 end
 guidata(getparent(h), opt);
+delete(findobj(h,'tag', 'chanlabel'));  % remove channel labels here, and not in redrawing to save significant execution time (see bug 2065)
 redraw_cb(h);
 end
 
@@ -1590,8 +1594,8 @@ delete(findobj(h,'tag', 'event'));
 eventcol = cell(1,numel(event));
 eventstr = cell(1,numel(event));
 eventtim = NaN(1,numel(event));
-% gather event info and plot lines 
-for ievent = 1:numel(event) 
+% gather event info and plot lines
+for ievent = 1:numel(event)
   try
     if strcmp(cfg.ploteventlabels , 'type=value')
       if isempty(event(ievent).value)
@@ -1629,6 +1633,11 @@ end
 delete(findobj(h,'tag', 'timecourse'));
 delete(findobj(h,'tag', 'identify'));
 
+% not removing channel labels, they cause the bulk of redrawing time for the slow text function (note, interpreter = none hardly helps)
+% warning, when deleting the labels using the line below, one can easily tripple the excution time of redrawing in viewmode = vertical (see bug 2065)
+%delete(findobj(h,'tag', 'chanlabel')); 
+
+
 if strcmp(cfg.viewmode, 'butterfly')
   set(gca,'ColorOrder',opt.chancolors(chanindx,:)) % plot vector does not clear axis, therefore this is possible
   ft_plot_vector(tim, dat, 'box', false, 'tag', 'timecourse', ...
@@ -1662,8 +1671,12 @@ elseif any(strcmp(cfg.viewmode, {'vertical' 'component'}))
     laysel = laysels(i);
     if ~isempty(datsel) && ~isempty(laysel)
       
-      if opt.plotLabelFlag == 1 || (opt.plotLabelFlag == 2 && mod(i,10)==0)
-        ft_plot_text(labelx(laysel), labely(laysel), opt.hdr.label(chanindx(i)), 'tag', 'timecourse', 'HorizontalAlignment', 'right','interpreter','none');
+      % only plot labels when current chanlabel objects are less then the total number of channels (see bug 2065)
+      % this is a cheap quick fix. If it causes error in plotting components, do this conditional on viewmode
+      if numel(findobj(h,'tag', 'chanlabel'))<numel(chanindx)
+        if opt.plotLabelFlag == 1 || (opt.plotLabelFlag == 2 && mod(i,10)==0)
+          ft_plot_text(labelx(laysel), labely(laysel), opt.hdr.label(chanindx(i)), 'tag', 'chanlabel', 'HorizontalAlignment', 'right','interpreter','none');
+        end
       end
       
       ft_plot_vector(tim, dat(datsel, :), 'box', false, 'color', color, 'tag', 'timecourse', ...
@@ -1731,20 +1744,20 @@ if strcmp(cfg.viewmode, 'component')
     chany = laychan.pos(sel2,2);
     
     if strcmp(cfg.compscale, 'global')
-       for i=1:length(chanindx) % loop through all components to get max and min
-         zmin(i) = min(opt.orgdata.topo(sel1,chanindx(i)));
-         zmax(i) = max(opt.orgdata.topo(sel1,chanindx(i)));
-       end
-       
-       if strcmp(cfg.zlim, 'maxmin')
-         zmin = min(zmin);
-         zmax = max(zmax);
-       elseif strcmp(cfg.zlim, 'maxabs')
-         zmax = max([abs(zmin) abs(zmax)]);
-         zmin = -zmax;
-       else
-         error('configuration option for component scaling could not be recognized');
-        end
+      for i=1:length(chanindx) % loop through all components to get max and min
+        zmin(i) = min(opt.orgdata.topo(sel1,chanindx(i)));
+        zmax(i) = max(opt.orgdata.topo(sel1,chanindx(i)));
+      end
+      
+      if strcmp(cfg.zlim, 'maxmin')
+        zmin = min(zmin);
+        zmax = max(zmax);
+      elseif strcmp(cfg.zlim, 'maxabs')
+        zmax = max([abs(zmin) abs(zmax)]);
+        zmin = -zmax;
+      else
+        error('configuration option for component scaling could not be recognized');
+      end
     end
     
     for i=1:length(chanindx)
@@ -1755,11 +1768,11 @@ if strcmp(cfg.viewmode, 'component')
       if strcmp(cfg.compscale, 'local')
         % compute scaling factors here
         if strcmp(cfg.zlim, 'maxmin')
-         zmin = min(chanz);
-         zmax = max(chanz);
-       elseif strcmp(cfg.zlim, 'maxabs')
-         zmax = max(abs(chanz));
-         zmin = -zmax;
+          zmin = min(chanz);
+          zmax = max(chanz);
+        elseif strcmp(cfg.zlim, 'maxabs')
+          zmax = max(abs(chanz));
+          zmin = -zmax;
         end
       end
       
@@ -1780,10 +1793,10 @@ if strcmp(cfg.viewmode, 'component')
       
       %axis equal
       %drawnow
-    end    
+    end
     
     caxis([0 1]);
-
+    
   end % if redraw_topo
   
   set(gca, 'yTick', [])
