@@ -624,7 +624,7 @@ elseif strcmp(cfg.comment, 'xlim')
 elseif ~ischar(cfg.comment)
   error('cfg.comment must be string');
 end
-if isfield(cfg,'refchannel')
+if ~strcmp(cfg.comment, 'no') && isfield(cfg,'refchannel')
   if iscell(cfg.refchannel)
     cfg.comment = sprintf('%s\nreference=%s %s', comment, cfg.refchannel{:});
   else
