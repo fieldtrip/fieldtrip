@@ -639,6 +639,12 @@ if isfield(cfg, 'showlabels')
   % this is not allowed in topoplotER
   cfg = rmfield(cfg, 'showlabels');
 end
+
+% if user specified a ylim, copy it over to the zlim of topoplot
+if isfield(cfg, 'ylim')
+  cfg.zlim = cfg.ylim;
+  cfg = rmfield(cfg, 'ylim');
+end
 fprintf('selected cfg.xlim = [%f %f]\n', cfg.xlim(1), cfg.xlim(2));
 p = get(gcf, 'position');
 f = figure;
