@@ -501,10 +501,14 @@ else
   chans = '<multiple channels>';
 end
 if isfield(cfg,'dataname')
-  dataname = cfg.dataname;
+  if iscell(cfg.dataname)
+    dataname = cfg.dataname{1};
+  else
+    dataname = cfg.dataname;
+  end
 elseif nargin > 1
   dataname = inputname(2);
-else
+else % data provided through cfg.inputfile
   dataname = cfg.inputfile;
 end
 if isempty(cfg.figurename)
