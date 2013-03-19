@@ -63,7 +63,7 @@ ft_preamble loadvar varargin
 
 % check if the input data is valid for this function
 for i=1:length(varargin)
-  varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'freq', 'feedback', 'yes');
+  varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'freq');
 end
 
 % check if the input cfg is valid for this function
@@ -122,6 +122,8 @@ switch cfg.appenddim
           tmpcfg.appenddim = 'freq';
         elseif boolval1 && boolval2 && ~boolval3
           tmpcfg.appenddim = 'time';
+        else
+          error('the input datasets have multiple non-identical dimensions, this function only appends one dimension at a time');
         end
       else
         if boolval1 && boolval2
@@ -207,10 +209,10 @@ switch cfg.appenddim
     if isfield(varargin{1}, 'time'), freq.time = varargin{1}.time; end
     
   case 'chan'
-    catdim = strmatch('chan', dimtok);
+    catdim = find(strcmp('chan', dimtok));
     if isempty(catdim)
       % try chancmb
-      catdim = strmatch('chancmb', dimtok);
+      catdim = find(strcmp('chancmb', dimtok));
     elseif numel(catdim)>1
       error('ambiguous dimord for concatenation');
     end
@@ -219,6 +221,16 @@ switch cfg.appenddim
     [boolval, list] = checkchan(varargin{:}, 'unique');
     if ~boolval
       error('the input data structures have non-unique channels, concatenation across channel is not possible');
+    end
+    
+    if isfield(varargin{1}, 'time')
+      if ~checktime(varargin{:}, 'identical', tol)
+        error('the input data structures have non-identical time bins, concatenation across channels not possible');
+      end
+    end
+    
+    if ~checkfreq(varargin{:}, 'identical', tol)
+      error('the input data structures have non-identical frequency bins, concatenation across channels not possible');
     end
     
     % update the channel description
@@ -230,12 +242,21 @@ switch cfg.appenddim
     freq.dimord = varargin{1}.dimord;
     
   case 'freq'
-    catdim = strmatch('freq', dimtok);
+    catdim = find(strcmp('freq', dimtok));
     
     % check whether all frequencies are unique and throw an error if not
     [boolval, list] = checkfreq(varargin{:}, 'unique', tol);
     if ~boolval
       error('the input data structures have non-unique frequency bins, concatenation across frequency is not possible');
+    end
+    
+    if ~checkchan(varargin{:}, 'identical')
+      error('the input data structures have non-identical channels, concatenation across frequency not possible');
+    end
+    if isfield(varargin{1}, 'time')
+      if ~checktime(varargin{:}, 'identical', tol)
+        error('the input data structures have non-identical time bins, concatenation across channels not possible');
+      end
     end
     
     % update the frequency description
@@ -247,12 +268,19 @@ switch cfg.appenddim
     if isfield(varargin{1}, 'time'), freq.time = varargin{1}.time; end
     
   case 'time'
-    catdim = strmatch('time', dimtok);
+    catdim = find(strcmp('time', dimtok));
     
     % check whether all time points are unique and throw an error if not
     [boolval, list] = checktime(varargin{:}, 'unique', tol);
     if ~boolval
       error('the input data structures have non-unique time bins, concatenation across time is not possible');
+    end
+    
+    if ~checkchan(varargin{:}, 'identical')
+      error('the input data structures have non-identical channels, concatenation across time not possible');
+    end
+    if ~checkfreq(varargin{:}, 'identical', tol)
+      error('the input data structures have non-identical frequency bins, concatenation across time not possible');
     end
     
     % update the time description
@@ -266,16 +294,34 @@ switch cfg.appenddim
   otherwise
 end
 
-% FIXME do a check on whether the parameters are present in all datasets
 param = cfg.parameter;
 if ~iscell(param), param = {param}; end
+
+% are we appending along the channel dimension?
+catchan = strcmp(cfg.appenddim, 'chan');
+chandim = find(strcmp('chan', dimtok));
 
 % concatenate the numeric data
 for k = 1:numel(param)
   tmp = cell(1,Ndata);
+  
   % get the numeric data 'param{k}' if present
   for m = 1:Ndata
+    
+    if ~isfield(varargin{m}, param{k})
+      error('parameter %s is not present in all data sets', param{k});
+    end
     tmp{m} = varargin{m}.(param{k});
+    
+    % if we are not appending along the channel dimension, make sure we
+    % reorder the channel dimension across the different data sets. At this
+    % point we can be sure that all data sets have identical channels.
+    if ~catchan && m > 1
+      [a,b] = match_str(varargin{1}.label, varargin{m}.label);
+      if ~all(a==b)
+        tmp{m} = reorderdim(tmp{m}, chandim, b);
+      end
+    end
   end
   
   if catdim==0,
@@ -368,16 +414,28 @@ required = varargin{end};
 varargin = varargin(1:end-1);
 
 Ndata = numel(varargin);
-Nchan = zeros(1,Ndata);
-list  = cell(0,1);
-for i=1:Ndata
-  Nchan(i) = numel(varargin{i}.label);
-  list     = [list;varargin{i}.label(:)];
-end
 
 if strcmp(required, 'unique')
+  Nchan = zeros(1,Ndata);
+  list  = cell(0,1);
+  for i=1:Ndata
+    Nchan(i) = numel(varargin{i}.label);
+    list     = [list;varargin{i}.label(:)];
+  end
   boolval = numel(unique(list))==numel(list);
+  
 elseif strcmp(required, 'identical')
+  
+  % determine whether channels are equal across the inputs
+  % channel order is not yet handled here
+  for k = 2:Ndata
+    matched = numel(match_str(varargin{1}.label, varargin{k}.label));
+    if matched ~= numel(varargin{1}.label) || matched ~= numel(varargin{k}.label)
+      boolval = 0;
+      return;
+    end
+  end
+  
   boolval = 1;
 end
 
