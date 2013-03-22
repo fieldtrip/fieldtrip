@@ -22,7 +22,7 @@ function [stat] = ft_networkanalysis(cfg, data)
 %                   for which the graph measure will be computed.
 %
 % Supported methods are
-%   assortatitivity
+%   assortativity
 %   betweenness
 %   charpath
 %   clustering_coef
