@@ -640,6 +640,10 @@ if isfield(cfg, 'showlabels')
   cfg = rmfield(cfg, 'showlabels');
 end
 
+% make sure the topo displays all channels, not just the ones in this
+% singleplot
+cfg.channel = 'all';
+
 % if user specified a ylim, copy it over to the zlim of topoplot
 if isfield(cfg, 'ylim')
   cfg.zlim = cfg.ylim;

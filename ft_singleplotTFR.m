@@ -551,6 +551,11 @@ if isfield(cfg, 'inputfile')
   % the reading has already been done and varargin contains the data
   cfg = rmfield(cfg, 'inputfile');
 end
+
+% make sure the topo displays all channels, not just the ones in this
+% singleplot
+cfg.channel = 'all';
+
 cfg.comment = 'auto';
 cfg.xlim = range(1:2);
 cfg.ylim = range(3:4);
