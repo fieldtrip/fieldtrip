@@ -42,7 +42,7 @@ disp(stat.statistic.contingency)
 stat.mymodel = stat.model{1}.primal;
 
 cfg              = [];
-cfg.zparam       = 'mymodel';
+cfg.parameter    = 'mymodel';
 cfg.layout       = 'CTF275.lay';
 cfg.xlim         = [2.0 2.5];
 cfg.comments     = '';
@@ -75,7 +75,7 @@ stat.mymodel = stat.model{1}.primal;
 
 cfg              = [];
 cfg.layout       = 'CTF275.lay';
-cfg.zparam       = 'mymodel';
+cfg.parameter    = 'mymodel';
 cfg.comment      = '';
 cfg.colorbar     = 'yes';
 cfg.interplimits = 'electrodes';
@@ -95,7 +95,7 @@ stat.mymodel     = stat.model{1}.weights;
 
 cfg              = [];
 cfg.layout       = 'CTF275.lay';
-cfg.zparam       = 'mymodel';
+cfg.parameter    = 'mymodel';
 cfg.comment      = '';
 cfg.colorbar     = 'yes';
 cfg.interplimits = 'electrodes';
