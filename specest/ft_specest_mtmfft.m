@@ -4,7 +4,7 @@ function [spectrum,ntaper,freqoi] = ft_specest_mtmfft(dat, time, varargin)
 % the DPSS sequence or using a variety of single tapers
 %
 % Use as
-%   [spectrum,freqoi] = specest_mtmfft(dat,time...)
+%   [spectrum,ntaper,freqoi] = specest_mtmfft(dat,time...)
 % where
 %   dat      = matrix of chan*sample
 %   time     = vector, containing time in seconds for each sample
