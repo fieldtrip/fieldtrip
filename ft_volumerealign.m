@@ -274,6 +274,7 @@ switch cfg.method
       '3. To change the display:\n',...
       '   a. press c or C on keyboard to show/hide crosshair\n',...
       '   b. press m or M on keyboard to show/hide marked positions\n',...
+      '   c. press + or - on (numeric) keyboard to change the color range''s upper limit\n',...
       '4. To finalize markers and quit interactive mode, press q on keyboard\n'));
     
     %'3. To unmark or remark a location\n',...
@@ -312,6 +313,23 @@ switch cfg.method
       
       try, [d1, d2, key] = ginput(1); catch, key='q'; end
       switch key
+        
+        % contrast scaling
+        case 43 % numpad +
+          if isempty(cfg.clim)
+            cfg.clim = [min(dat(:)) max(dat(:))];
+          end
+          % reduce color scale range by 10%
+          cscalefactor = (cfg.clim(2)-cfg.clim(1))/10;
+          cfg.clim(2) = cfg.clim(2)-cscalefactor;
+        case 45 % numpad -
+          if isempty(cfg.clim)
+            cfg.clim = [min(dat(:)) max(dat(:))];
+          end
+          % increase color scale range by 10%
+          cscalefactor = (cfg.clim(2)-cfg.clim(1))/10;
+          cfg.clim(2) = cfg.clim(2)+cscalefactor;
+          
         case 113 % 'q'
           delete(h(end));
           h = h(1:end-1);
