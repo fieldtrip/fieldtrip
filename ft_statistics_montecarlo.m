@@ -383,6 +383,29 @@ elseif strcmp(cfg.correcttail, 'alpha') && cfg.tail==0
   cfg.alpha = cfg.alpha / 2;
 end
 
+% compute range of confidence interval p ± 1.96(sqrt(var(p))), with var(p) = var(x/n) = p*(1-p)/N
+stddev = sqrt(stat.prob.*(1-stat.prob)/Nrand);
+stat.cirange = 1.96*stddev;
+
+if isfield(stat, 'posclusters')
+  for i=1:length(stat.posclusters)
+    stat.posclusters(i).stddev  = sqrt(stat.posclusters(i).prob.*(1-stat.posclusters(i).prob)/Nrand);
+    stat.posclusters(i).cirange =  1.96*stat.posclusters(i).stddev;
+    if stat.posclusters(i).prob<cfg.alpha && stat.posclusters(i).prob+stat.posclusters(i).cirange>=cfg.alpha
+      warning('FieldTrip:posCluster_exceeds_alpha', sprintf('The p-value confidence interval of positive cluster #%i includes %.3f - consider increasing the number of permutations!', i, cfg.alpha));
+    end
+  end
+end
+if isfield(stat, 'negclusters')  
+  for i=1:length(stat.negclusters)
+    stat.negclusters(i).stddev  = sqrt(stat.negclusters(i).prob.*(1-stat.negclusters(i).prob)/Nrand);
+    stat.negclusters(i).cirange =  1.96*stat.negclusters(i).stddev;
+    if stat.negclusters(i).prob<cfg.alpha && stat.negclusters(i).prob+stat.negclusters(i).cirange>=cfg.alpha
+      warning('FieldTrip:negCluster_exceeds_alpha', sprintf('The p-value confidence interval of negative cluster #%i includes %.3f - consider increasing the number of permutations!', i, cfg.alpha));
+    end
+  end
+end
+
 switch lower(cfg.correctm)
   case 'max'
     % the correction is implicit in the method
