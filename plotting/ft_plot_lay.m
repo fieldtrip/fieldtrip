@@ -62,6 +62,7 @@ verbose      = ft_getopt(varargin, 'verbose',      false);
 pointsymbol  = ft_getopt(varargin, 'pointsymbol');
 pointcolor   = ft_getopt(varargin, 'pointcolor');
 pointsize    = ft_getopt(varargin, 'pointsize');
+interpreter  = ft_getopt(varargin, 'interpreter', 'tex');
 
 % convert between true/false/yes/no etc. statements
 point   = istrue(point);
@@ -133,7 +134,7 @@ if label
   % the MATLAB text function fails if the position for the string is specified in single precision
   X = double(X);
   Y = double(Y);
-  text(X+labeloffset, Y+(labeloffset*1.5), Lbl ,'fontsize',labelsize);
+  text(X+labeloffset, Y+(labeloffset*1.5), Lbl ,'fontsize',labelsize,'interpreter',interpreter);
 end
 
 if box
