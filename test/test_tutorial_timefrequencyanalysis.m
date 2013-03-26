@@ -65,6 +65,7 @@ cfg.baselinetype = 'absolute';
 cfg.maskstyle    = 'saturation';
 cfg.zlim         = [-3e-27 3e-27];
 cfg.channel      = 'MRC15';
+cfg.interactive  = 'no';
 figure
 ft_singleplotTFR(cfg, TFRhann7);
 
