@@ -31,6 +31,7 @@ ft_multiplotTFR(cfg, TFRhann);
 cfg = [];
 cfg.baseline     = [-0.5 -0.1];
 cfg.baselinetype = 'absolute';
+cfg.maskstyle    = 'saturation';
 cfg.zlim         = [-3e-27 3e-27];
 cfg.channel      = 'MRC15';
 figure
@@ -39,6 +40,7 @@ ft_singleplotTFR(cfg, TFRhann);
 cfg = [];
 cfg.baseline     = [-0.5 -0.1];
 cfg.baselinetype = 'absolute';
+cfg.maskstyle    = 'saturation';
 cfg.xlim         = [0.9 1.3];
 cfg.zlim         = [-1.5e-27 1.5e-27];
 cfg.ylim         = [15 20];
@@ -46,15 +48,6 @@ cfg.showlabels   = 'markers';
 figure
 ft_topoplotTFR(cfg, TFRhann);
 
-cfg              = [];
-cfg.baseline     = [-0.5 -0.1];
-cfg.baselinetype = 'absolute';
-cfg.zlim         = [-3e-27 3e-27];
-cfg.showlabels   = 'yes';
-cfg.layout       = 'CTF151.lay';
-cfg.interactive  = 'yes';   % note this option
-figure
-ft_multiplotTFR(cfg, TFRhann);
 
 cfg              = [];
 cfg.output       = 'pow';
@@ -69,6 +62,7 @@ TFRhann7 = ft_freqanalysis(cfg, dataFIC);
 cfg              = [];
 cfg.baseline     = [-0.5 -0.1];
 cfg.baselinetype = 'absolute';
+cfg.maskstyle    = 'saturation';
 cfg.zlim         = [-3e-27 3e-27];
 cfg.channel      = 'MRC15';
 figure
