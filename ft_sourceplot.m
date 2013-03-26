@@ -1010,8 +1010,12 @@ elseif isequal(cfg.method,'slice')
   elseif isequal(cfg.slicerange, 'auto')
     if hasfun %default
       if isfield(data,'inside')
-        ind_fslice = min(find(max(max(data.inside,[],1),[],2)));
-        ind_lslice = max(find(max(max(data.inside,[],1),[],2)));
+        
+        insideMask = false(size(fun));
+        insideMask(data.inside) = true;
+        
+        ind_fslice = min(find(max(max(insideMask,[],1),[],2)));
+        ind_lslice = max(find(max(max(insideMask,[],1),[],2)));
       else
         ind_fslice = min(find(~isnan(max(max(fun,[],1),[],2))));
         ind_lslice = max(find(~isnan(max(max(fun,[],1),[],2))));
@@ -1214,6 +1218,8 @@ axis xy
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_redraw(h, eventdata)
+
+profile resume;
 
 h   = getparent(h);
 opt = getappdata(h, 'opt');
@@ -1454,6 +1460,8 @@ end
 set(h, 'currentaxes', curr_ax);
 
 uiresume
+
+profile off;
 
 function cb_keyboard(h, eventdata)
 
