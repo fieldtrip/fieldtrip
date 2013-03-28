@@ -76,6 +76,7 @@ if nargin==3
   data    = ft_checkdata(data, 'datatype', 'raw');
   label   = data.label;
   hasdata = 1;
+  nchans  = length(data.label);
 elseif nargin==2
   label   = comp.topolabel;
   hasdata = 0;
@@ -85,6 +86,7 @@ end
 
 comp    = ft_checkdata(comp, 'datatype', 'comp');
 ncomps  = length(comp.label);
+
 
 if min(cfg.component)<1
   error('you cannot remove components that are not present in the data');
@@ -104,7 +106,11 @@ end
 
 % set the rejected component amplitudes to zero
 fprintf('removing %d components\n', length(cfg.component));
-fprintf('keeping %d components\n',  ncomps-length(cfg.component));
+if ~hasdata,
+  fprintf('keeping %d components\n',  ncomps-length(cfg.component));
+else
+  fprintf('keeping %d components\n',  nchans-length(cfg.component));
+end
 
 %create a projection matrix by subtracting the subspace spanned by the
 %topographies of the to-be-removed components from identity
