@@ -145,7 +145,8 @@ end
 % position differences in MEG measurements) which don't have to do with the artifact per se,
 % the detection is compromised (although the data quality is questionable
 % when there is a lot of movement to begin with).
-pertrial = strcmp(cfg.artfctdef.zvalue.method, 'trial');
+pertrial    = strcmp(cfg.artfctdef.zvalue.method, 'trial');
+demeantrial = strcmp(cfg.artfctdef.zvalue.method, 'trialdemean');
 if pertrial
   if isfield(cfg.artfctdef.zvalue, 'ntrial') && cfg.artfctdef.zvalue.ntrial>0
     pertrial = cfg.artfctdef.zvalue.ntrial;
@@ -224,6 +225,7 @@ numsmp = zeros(numsgn, 1);
 fprintf('searching trials');
 for trlop = 1:numtrl
   fprintf('.');
+     
   if strcmp(cfg.memory, 'low') % store nothing in memory
     if isfetch
       dat = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'));
@@ -355,6 +357,12 @@ for trlop = 1:numtrl
   %     end
 end % for trlop
 
+if demeantrial
+  for trlop = 1:numtrl
+    zmax{trlop} = zmax{trlop}-mean(zmax{trlop},2);
+    zsum{trlop} = zsum{trlop}-mean(zsum{trlop},2);
+  end
+end
 %for sgnlop=1:numsgn
 %  % read the data and apply preprocessing options
 %  sumval = 0;
