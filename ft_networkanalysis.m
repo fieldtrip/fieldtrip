@@ -23,13 +23,14 @@ function [stat] = ft_networkanalysis(cfg, data)
 %
 % Supported methods are
 %   assortativity
-%   betweenness
-%   charpath
-%   clustering_coef
+%   betweenness,      betweenness centrality (nodes)
+%   charpath,         characteristic path length, needs distance matrix as
+%                     input
+%   clustering_coef,  clustering coefficient
 %   degrees
 %   density
 %   distance
-%   edge_betweenness
+%   edge_betweenness, betweenness centrality (edges)
 %   transitivity
 %
 % To facilitate data-handling and distributed computing with the
@@ -75,6 +76,8 @@ ft_preamble loadvar data
 
 cfg = ft_checkconfig(cfg, 'required', {'method' 'parameter'});
 
+cfg.threshold = ft_getopt(cfg, 'threshold', []);
+
 % ensure that the bct-toolbox is on the path
 ft_hastoolbox('BCT', 1);
 
@@ -107,6 +110,19 @@ if isbinary
   fprintf('input graph is binary\n');
 else
   fprintf('input graph is weighted\n');
+end
+
+if ~isbinary && ~isempty(cfg.threshold)
+  fprintf('thresholding the input graph at a value of %d\n', cfg.threshold);
+  newinput = false(size(input));
+  for k = 1:size(input,3)
+    for m = 1:size(input,4)
+      tmp = input(:,:,k,m);
+      newinput(:,:,k,m) = tmp>cfg.threshold;
+    end
+  end
+  input = double(newinput); clear newinput;
+  isbinary = true;
 end
 
 % check for directed or not
