@@ -1,7 +1,7 @@
 function [dat, ref] = ft_preproc_rereference(dat, refchan)
 
 % FT_PREPROC_REREFERENCE computes the average reference over all EEG channels
-% or rereferences the data to the selected channeld
+% or rereferences the data to the selected channels
 %
 % Use as
 %   [dat] = ft_preproc_rereference(dat, refchan)
