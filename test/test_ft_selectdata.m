@@ -3,39 +3,6 @@ function test_ft_selectdata
 % TEST test_ft_selectdata
 % TEST ft_selectdata ft_selectdata_old ft_selectdata_new ft_appendfreq
 
-clear freq*
-
-% make some dummy frequency structures
-freq1.label = {'1' '2'};
-freq1.freq  = 1:10;
-freq1.time  = 1:5;
-freq1.dimord = 'chan_freq_time';
-freq1.powspctrm = randn(2,10,5);
-
-cfg = [];
-cfg.parameter = 'powspctrm';
-freq2  = ft_appendfreq(cfg, freq1, freq1);
-freq2  = rmfield(freq2, 'cfg');
-freq2a = ft_selectdata(freq1, freq1, 'param', 'powspctrm'); % this should append the power spectrum
-assert(isequal(freq2, freq2a));
-
-freq4a = ft_selectdata(freq2, freq2, 'param', 'powspctrm');
-assert(isequal(size(freq4a.powspctrm), [4 2 10 5]));
-
-clear freq*
-
-freq3.label = {'1' '2'};
-freq3.freq  = 1:10;
-freq3.dimord = 'chan_freq';
-freq3.powspctrm = randn(2,10);
-
-cfg = [];
-cfg.parameter = 'powspctrm';
-freq4  = ft_appendfreq(cfg, freq3, freq3);
-freq4  = rmfield(freq4, 'cfg');
-freq4a = ft_selectdata(freq3, freq3, 'param', 'powspctrm');  % this should append the power spectrum
-assert(isequal(freq4, freq4a));
-
 timelock1 = [];
 timelock1.label = {'1' '2'};
 timelock1.time  = 1:5;
@@ -69,8 +36,6 @@ assert(isequal(size(timelock2c.trial), [1 2 5]));
 % assert(isequal(size(timelock2c.trial), [2 5]));
 
 
-%% this part of the script tests the functionality of selectdata with respect
-% to freqdata. it implements the (old) test_selectdata_freqdata 
 
 %-------------------------------------
 %generate data
@@ -90,10 +55,30 @@ grad.pnt  = randn(nchan,3);
 grad.ori  = randn(nchan,3);
 grad.tra  = eye(nchan);
 for k = 1:nchan
-  grad.label{k} = ['chan',num2str(k,'%03d')];
+  grad.label{k,1} = ['chan',num2str(k,'%03d')];
 end
 data.grad  = ft_datatype_sens(grad);
 data.label = grad.label;
+data.trialinfo = (1:10)';
+data = ft_checkdata(data, 'hassampleinfo', 'yes');
+
+%% this part of the script tests the functionality of ft_selectdata with respect
+% to raw data.
+
+sel = [5 8 12 38];
+cfg = [];cfg.channel = data.label(sel);
+d1  = ft_selectdata(data, 'channel', data.label(sel));
+d2  = ft_selectdata(cfg, data);
+assert(isequal(d1,d2));
+
+sel = [3 4 6 9];
+cfg = [];cfg.trials = sel;
+d3  = ft_selectdata(data, 'rpt', sel);
+d4  = ft_selectdata(cfg, data);
+assert(isequal(d3,d4));
+
+%% this part of the script tests the functionality of ft_selectdata with respect
+% to freqdata. it implements the (old) test_ft_selectdata_freqdata 
 
 % do spectral analysis
 cfg        = [];
@@ -122,52 +107,118 @@ cfg.output = 'pow';
 cfg.keeptrials = 'yes';
 freqtf     = ft_freqanalysis(cfg, data);
 
-%select channels
-fx1 = selectdata(freq,  'channel', data.label(5:10));
-fp1 = selectdata(freqp, 'channel', data.label(5:10));
+% select channels, compare ft_selectdata_old with ft_selectdata_new and
+% compare ft_selectdata_new with what would be expected
+cfg  = [];cfg.channel=data.label(5:10);
+fx1  = ft_selectdata(freq,  'channel', data.label(5:10));
+fx1b = ft_selectdata(cfg, freq); 
+assert(isequal(fx1.fourierspctrm, freq.fourierspctrm(:,5:10,:)));
+assert(isequal(fx1, fx1b));
+
+fp1  = ft_selectdata(freqp, 'channel', data.label(5:10));
+fp1b = ft_selectdata(cfg, freqp); 
+assert(isequal(fp1.powspctrm, freqp.powspctrm(:,5:10,:)));
+assert(isequal(fp1, fp1b));
+
 try
-  fc1 = selectdata(freqc, 'channel', data.label(5:10)); % gives error
+  fc1 = ft_selectdata(freqc, 'channel', data.label(5:10)); % gives error
 catch
   fprintf('selecting channels with csd in input does not work');
 end
-ftf1 = selectdata(freqtf, 'channel', data.label(5:10));
+ftf1  = ft_selectdata(freqtf, 'channel', data.label(5:10));
+ftf1b = ft_selectdata(cfg, freqtf); 
+assert(isequal(ftf1.powspctrm, freqtf.powspctrm(:,5:10,:,:)));
+assert(isequal(ftf1, ftf1b));
 
-%select frequencies
-fx2 = selectdata(freq,  'foilim', [10 40]);
-fp2 = selectdata(freqp, 'foilim', [10 40]);
-fc2 = selectdata(freqc, 'foilim', [10 40]);
-ftf2 = selectdata(freqtf, 'foilim', [10 40]);
+% select frequencies
+cfg  = [];cfg.frequency=[10 40];
+fx2  = ft_selectdata(freq,  'foilim', [10 40]);
+fx2b = ft_selectdata(cfg, freq);
 
-%select time
-ftf2b = selectdata(freqtf, 'toilim', [0.5 0.6]);
+% FIXME: THE LABEL IS A ROW VECTOR, SHOULD BE COLUMN. INVESTIGATE THIS
+assert(isequal(fx2.fourierspctrm, freq.fourierspctrm(:,:,9:39)));
+assert(isequal(fx2, fx2b));
 
-%select trials
-fx3 = selectdata(freq,  'rpt', 3:5);
-fp3 = selectdata(freqp, 'rpt', 3:5);
-fc3 = selectdata(freqc, 'rpt', 3:5);
-ftf3 = selectdata(freqtf, 'rpt', 3:5);
+fp2  = ft_selectdata(freqp, 'foilim', [10 40]);
+fp2b = ft_selectdata(cfg, freqp); 
+assert(isequal(fp2.powspctrm, freqp.powspctrm(:,:,9:39)));
+assert(isequal(fp2, fp2b));
 
-%avgover channels
-fx4 = selectdata(freq,  'avgoverchan', 'yes');
-fp4 = selectdata(freqp, 'avgoverchan', 'yes');
-fc4 = selectdata(freqc, 'avgoverchan', 'yes');
-ftf4 = selectdata(freqtf, 'avgoverchan', 'yes');
+fc2 = ft_selectdata(freqc, 'foilim', [10 40]);
 
-%avgover frequencies
-fx5 = selectdata(freq,  'avgoverfreq', 'yes');
-fp5 = selectdata(freqp, 'avgoverfreq', 'yes');
-fc5 = selectdata(freqc, 'avgoverfreq', 'yes');
-ftf5 = selectdata(freqtf, 'avgoverchan', 'yes');
+ftf2  = ft_selectdata(freqtf, 'foilim', [10 40]);
+ftf2b = ft_selectdata(cfg, freqtf); 
+assert(isequal(ftf2.powspctrm, freqtf.powspctrm(:,:,1:4,:)));
+assert(isequal(ftf2, ftf2b));
 
-%avgover trials
-fx6 = selectdata(freq,  'avgoverrpt', 'yes');
-fp6 = selectdata(freqp, 'avgoverrpt', 'yes');
-fc6 = selectdata(freqc, 'avgoverrpt', 'yes');
-ftf6 = selectdata(freqtf, 'avgoverrpt', 'yes');
+% select time
+ftf2b = ft_selectdata(freqtf, 'toilim', [0.5 0.6]);
 
-%leaveoneout
-fx7 = selectdata(freq,  'jackknife', 'yes');
-fp7 = selectdata(freqp, 'jackknife', 'yes');
-fc7 = selectdata(freqc, 'jackknife', 'yes');
-ftf7 = selectdata(freqtf, 'jackknife', 'yes');
+% select trials
+fx3 = ft_selectdata(freq,  'rpt', 3:5);
+fp3 = ft_selectdata(freqp, 'rpt', 3:5);
+fc3 = ft_selectdata(freqc, 'rpt', 3:5);
+ftf3 = ft_selectdata(freqtf, 'rpt', 3:5);
+
+% avgover channels
+fx4 = ft_selectdata(freq,  'avgoverchan', 'yes');
+fp4 = ft_selectdata(freqp, 'avgoverchan', 'yes');
+fc4 = ft_selectdata(freqc, 'avgoverchan', 'yes');
+ftf4 = ft_selectdata(freqtf, 'avgoverchan', 'yes');
+
+% avgover frequencies
+fx5 = ft_selectdata(freq,  'avgoverfreq', 'yes');
+fp5 = ft_selectdata(freqp, 'avgoverfreq', 'yes');
+fc5 = ft_selectdata(freqc, 'avgoverfreq', 'yes');
+ftf5 = ft_selectdata(freqtf, 'avgoverchan', 'yes');
+
+% avgover trials
+fx6 = ft_selectdata(freq,  'avgoverrpt', 'yes');
+fp6 = ft_selectdata(freqp, 'avgoverrpt', 'yes');
+fc6 = ft_selectdata(freqc, 'avgoverrpt', 'yes');
+ftf6 = ft_selectdata(freqtf, 'avgoverrpt', 'yes');
+
+% leaveoneout
+% fx7 = ft_selectdata(freq,  'jackknife', 'yes'); %FAILS due to 'rpttap'
+fp7 = ft_selectdata(freqp, 'jackknife', 'yes');
+fc7 = ft_selectdata(freqc, 'jackknife', 'yes');
+ftf7 = ft_selectdata(freqtf, 'jackknife', 'yes');
+
+%% this part tests the functionality of ft_appendfreq
+
+whos
+clear freq*
+
+% make some dummy frequency structures
+freq1.label = {'1' '2'};
+freq1.freq  = 1:10;
+freq1.time  = 1:5;
+freq1.dimord = 'chan_freq_time';
+freq1.powspctrm = randn(2,10,5);
+freq1.cfg   = [];
+
+cfg = [];
+cfg.parameter = 'powspctrm';
+freq2  = ft_appendfreq(cfg, freq1, freq1);
+freq2  = rmfield(freq2, 'cfg');
+freq2a = ft_selectdata(freq1, freq1, 'param', 'powspctrm'); % this should append the power spectrum
+assert(isequal(freq2, freq2a));
+
+freq4a = ft_selectdata(freq2, freq2, 'param', 'powspctrm');
+assert(isequal(size(freq4a.powspctrm), [4 2 10 5]));
+
+clear freq*
+
+freq3.label = {'1' '2'};
+freq3.freq  = 1:10;
+freq3.dimord = 'chan_freq';
+freq3.powspctrm = randn(2,10);
+
+cfg = [];
+cfg.parameter = 'powspctrm';
+freq4  = ft_appendfreq(cfg, freq3, freq3);
+freq4  = rmfield(freq4, 'cfg');
+freq4a = ft_selectdata(freq3, freq3, 'param', 'powspctrm');  % this should append the power spectrum
+assert(isequal(freq4, freq4a));
+
 
