@@ -23,9 +23,10 @@ function [stat] = ft_networkanalysis(cfg, data)
 %
 % Supported methods are
 %   assortativity
-%   betweenness
-%   charpath
-%   clustering_coef
+%   betweenness,      betweenness centrality (nodes)
+%   charpath,         characteristic path length, needs distance matrix as
+%                     input
+%   clustering_coef,  clustering coefficient
 %   degrees
 %   density
 %   distance
