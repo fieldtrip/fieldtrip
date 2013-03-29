@@ -1,4 +1,4 @@
-function test_tutorial_multivariateanalysis
+function test_tutorial_multivariateanalysis(datadir, dmltdir)
 
 % TEST test_tutorial_multivariateanalysis
 % TEST ft_timelockstatistics ft_topoplotER ft_freqstatistics ft_topoplotTFR
@@ -10,9 +10,15 @@ function test_tutorial_multivariateanalysis
 
 % This test script corresponds to the documentation on the wiki from 3 July 2012
 
-addpath(genpath('/home/common/matlab/fieldtrip/external/dmlt'))
-cd /home/common/matlab/fieldtrip/data/ftp/tutorial/classification
-load covatt
+if nargin==0
+  datadir = '/home/common/matlab/fieldtrip/data/ftp/tutorial/classification';
+  dmltdir = '/home/commont/matlab/fieldtrip/external/dmlt';
+end
+
+addpath(genpath(dmltdir));
+
+filename = dccnfilename(fullfile(datadir, 'covatt'));
+load(filename);
 
 cfg             = [];
 cfg.parameter   = 'trial';

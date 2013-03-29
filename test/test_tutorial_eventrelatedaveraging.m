@@ -1,4 +1,4 @@
-function test_tutorial_eventrelatedaveraging
+function test_tutorial_eventrelatedaveraging(dataset)
 
 % TEST test_tutorial_eventrelatedaveraging
 % TEST ft_preprocessing ft_timelockanalysis ft_multiplotER ft_singleplotER ft_topoplotER ft_megplanar ft_combineplanar
@@ -6,9 +6,17 @@ function test_tutorial_eventrelatedaveraging
 % see http://fieldtrip.fcdonders.nl/tutorial/eventrelatedaveraging
 % this testscript corresponds to the version on the wiki at 23 December 2012
 
-% use the tutorial dataset from home/common
-dataset = dccnfilename('/home/common/matlab/fieldtrip/data/Subject01.ds');
-
+if nargin<1
+  % use the tutorial dataset from home/common
+  dataset = dccnfilename('/home/common/matlab/fieldtrip/data/Subject01.ds');
+else
+  % use the dataset specified in the input, but check that it is called
+  % Subject01.ds
+  [p,n,e] = fileparts(dataset);
+  if ~strcmp(n, 'Subject01')
+    error('the dataset should be Subject01.ds');
+  end
+end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Preprocessing
 
