@@ -1,7 +1,7 @@
-function test_bug1792
+% function test_bug1792
 
 % this script should not be included in the regression test (yet)
-return
+% return
 
 % TEST test_bug1792
 % TEST ft_realtime_headlocalizer
@@ -53,6 +53,6 @@ cfg.bufferdata = 'first';
 cfg.offset = 5;
 cfg.jumptoeof = 'no';
 cfg.channel = 'MEGMAG';
-cfg.coilfreq = [293, 307, 321];
+cfg.coilfreq = [293, 307, 314, 321, 328];
 ft_realtime_coillocalizer(cfg);
 
