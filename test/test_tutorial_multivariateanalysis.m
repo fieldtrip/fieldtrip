@@ -12,7 +12,7 @@ function test_tutorial_multivariateanalysis(datadir, dmltdir)
 
 if nargin==0
   datadir = '/home/common/matlab/fieldtrip/data/ftp/tutorial/classification';
-  dmltdir = '/home/common/matlab/fieldtrip/external/dmlt';
+  dmltdir = '/home/commont/matlab/fieldtrip/external/dmlt';
 end
 
 addpath(genpath(dmltdir));
