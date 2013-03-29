@@ -1,4 +1,4 @@
-function test_tutorial_clusterpermutationtimelock
+function test_tutorial_clusterpermutationtimelock(dataset, datadir)
 
 % TEST test_tutorial_eventrelatedstatistics
 % TEST ft_timelockanalysis ft_multiplotER ft_singleplotER ft_timelockstatistics
@@ -7,16 +7,15 @@ function test_tutorial_clusterpermutationtimelock
 global ft_default;
 ft_default.feedback = 'no';
 
-if ispc
-  datadir = 'H:';
-else
-  datadir = '/home';
+if nargin==0
+  dataset = dccnfilename('/home/common/matlab/fieldtrip/data/Subject01.ds');
+  datadir = dccnfilename('/home/common/matlab/fieldtrip/data/ftp/tutorial/cluster_permutation_timelock');
 end
 
 %% Reading the FIC data
 % find the interesting segments of data
 cfg = [];                                           % empty configuration
-cfg.dataset                 = fullfile(datadir, 'common', 'matlab', 'fieldtrip', 'data', 'Subject01.ds');       % name of CTF dataset  
+cfg.dataset                 = dataset;       % name of CTF dataset  
 cfg.trialdef.eventtype      = 'backpanel trigger';
 cfg.trialdef.prestim        = 1;
 cfg.trialdef.poststim       = 2;
@@ -47,7 +46,7 @@ dataFIC_LP = ft_preprocessing(cfg);
 %% Reading the FC data
 % find the interesting segments of data
 cfg = [];                                           % empty configuration
-cfg.dataset                 = fullfile(datadir, 'common', 'matlab', 'fieldtrip', 'data', 'Subject01.ds');       % name of CTF dataset  
+cfg.dataset                 = dataset;       % name of CTF dataset  
 cfg.trialdef.eventtype      = 'backpanel trigger';
 cfg.trialdef.prestim        = 1;
 cfg.trialdef.poststim       = 2;
@@ -262,7 +261,7 @@ end
 
 %% WIthin-subjects experiments
 
-load(fullfile(datadir, 'common', 'matlab', 'fieldtrip', 'data', 'ftp', 'tutorial', 'cluster_permutation_timelock', 'GA_ERF_orig.mat'))
+load(fullfile(datadir, 'GA_ERF_orig.mat'))
 cfg = [];
 cfg.channel = {'MEG'};
 cfg.latency = [0 1];

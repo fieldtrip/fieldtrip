@@ -1,4 +1,4 @@
-function test_tutorial_clusterpermutationfreq
+function test_tutorial_clusterpermutationfreq(dataset, datadir)
 
 % TEST test_tutorial_eventrelatedstatistics
 % TEST ft_freqanalysis ft_multiplotTFR ft_singleplotTFR ft_freqstatistics
@@ -7,16 +7,15 @@ function test_tutorial_clusterpermutationfreq
 global ft_default;
 ft_default.feedback = 'no';
 
-if ispc
-  datadir = 'H:';
-else
-  datadir = '/home';
+if nargin==0
+  dataset = dccnfilename('/home/common/matlab/fieldtrip/data/Subject01.ds');
+  datadir = dccnfilename('/home/common/matlab/fieldtrip/data/ftp/tutorial/cluster_permutation_freq');
 end
 
 %% PREprocessing
 % find the interesting segments of data
-cfg = [];                                           % empty configuration
-cfg.dataset                 = fullfile(datadir, 'common', 'matlab', 'fieldtrip', 'data', 'Subject01.ds');       % name of CTF dataset  
+cfg = [];                                    % empty configuration
+cfg.dataset                 = dataset;       % name of CTF dataset  
 cfg.trialdef.eventtype      = 'backpanel trigger';
 cfg.trialdef.prestim        = 1;
 cfg.trialdef.poststim       = 2;
@@ -34,7 +33,7 @@ dataFIC = ft_preprocessing(cfg);
 
 % find the interesting segments of data
 cfg = [];                                           % empty configuration
-cfg.dataset                 = fullfile(datadir, 'common', 'matlab', 'fieldtrip', 'data', 'Subject01.ds');       % name of CTF dataset  
+cfg.dataset                 = dataset;       % name of CTF dataset  
 cfg.trialdef.eventtype      = 'backpanel trigger';
 cfg.trialdef.prestim        = 1;
 cfg.trialdef.poststim       = 2;
@@ -118,7 +117,7 @@ freqFC_planar_cmb  = ft_freqdescriptives(cfg, freqFC_planar_cmb);
 stat.raweffect = freqFIC_planar_cmb.powspctrm - freqFC_planar_cmb.powspctrm;
 cfg = [];
 cfg.alpha  = 0.025;
-cfg.zparam = 'raweffect';
+cfg.parameter = 'raweffect';
 cfg.zlim   = [-1e-27 1e-27];
 cfg.layout = 'CTF151.lay';
 ft_clusterplot(cfg, stat);
@@ -199,13 +198,14 @@ cfg.uvar     = 2;
 %% Plotting the results
 cfg = [];
 cfg.alpha  = 0.05;
-cfg.zparam = 'stat';
+cfg.parameter = 'stat';
 cfg.zlim   = [-4 4];
 cfg.layout = 'CTF151.lay';
 ft_clusterplot(cfg, stat);
 
 %% Within subjects experiment
-load(fullfile(datadir, 'common', 'matlab', 'fieldtrip', 'data', 'ftp', 'tutorial', 'cluster_permutation_freq', 'GA_TFR_orig.mat'))
+
+load(fullfile(datadir, 'GA_TFR_orig.mat'));
 
 cfg = [];
 cfg.channel          = {'MEG'};
@@ -248,7 +248,7 @@ for i=1:100 % this can fail sometime, like every second iteration or so, 100 is 
   % Plotting the results
   pcfg = [];
   pcfg.alpha  = 0.025;
-  pcfg.zparam = 'stat';
+  pcfg.parameter = 'stat';
   pcfg.zlim   = [-4 4];
   pcfg.layout = 'CTF151.lay';
   try
