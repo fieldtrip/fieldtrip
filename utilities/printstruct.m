@@ -57,30 +57,34 @@ if isstruct(val)
     % print it as a named structure
     fn = fieldnames(val);
     for i=1:length(fn)
-      fv = val.(fn{i});
-      switch class(fv)
-        case 'char'
-          % line = sprintf('%s = ''%s'';\n', fn{i}, fv);
-          % line = [name '.' line];
-          line = printstr([name '.' fn{i}], fv);
-          str  = [str line];
-        case {'single' 'double'}
-          line = printmat([name '.' fn{i}], fv);
-          str  = [str line];
-        case {'int8' 'int16' 'int32' 'int64' 'uint8' 'uint16' 'uint32' 'uint64' 'logical'}
-          line = printmat([name '.' fn{i}], fv);
-          str  = [str line];
-        case 'cell'
-          line = printcell([name '.' fn{i}], fv);
-          str  = [str line];
-        case 'struct'
-          line = printstruct([name '.' fn{i}], fv);
-          str  = [str line];
-        case 'function_handle'
-          printstr([name '.' fn{i}], func2str(fv));
-          str  = [str line];
-        otherwise
-          error('unsupported');
+      if numel(val)==0
+        warning('not displaying empty structure')
+      else
+        fv = val.(fn{i});
+        switch class(fv)
+          case 'char'
+            % line = sprintf('%s = ''%s'';\n', fn{i}, fv);
+            % line = [name '.' line];
+            line = printstr([name '.' fn{i}], fv);
+            str  = [str line];
+          case {'single' 'double'}
+            line = printmat([name '.' fn{i}], fv);
+            str  = [str line];
+          case {'int8' 'int16' 'int32' 'int64' 'uint8' 'uint16' 'uint32' 'uint64' 'logical'}
+            line = printmat([name '.' fn{i}], fv);
+            str  = [str line];
+          case 'cell'
+            line = printcell([name '.' fn{i}], fv);
+            str  = [str line];
+          case 'struct'
+            line = printstruct([name '.' fn{i}], fv);
+            str  = [str line];
+          case 'function_handle'
+            printstr([name '.' fn{i}], func2str(fv));
+            str  = [str line];
+          otherwise
+            error('unsupported');
+        end
       end
     end
   end
