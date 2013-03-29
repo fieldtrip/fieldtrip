@@ -1,0 +1,38 @@
+This is the FieldTrip-qsub toolbox, which facilitates distributed computing on
+a Linux cluster without requiring the MATLAB parallel toolbox or distributed
+computing engines. It only requires a standard MATLAB installation on the
+cluster nodes. Alternatively, it can use the MATLAB compiler to run on clusters
+where MATLAB is not available.
+
+The goal of this toolbox is to provide you with an easy MATLAB interface to
+distribute your jobs that is compatible with the MATLAB feval and cellfun
+functions.  It offers a simple MATLAB interface to distribute your jobs and you
+do not have to go to the Linux command-line to use the qsub command from there.
+The toolbox supports Linux clusters with Torque and other PBS versions, Sun
+Grid Engine (SGE), Oracle Grid Engine and with SLURM as the batch queueing
+system.
+
+This toolbox has been developed as part of the FieldTrip toolbox, but can be
+used separately. See http://fieldtrip.fcdonders.nl for general details on the
+FieldTrip project, http://fieldtrip.fcdonders.nl/development/qsub for specific
+details on the qsub toolbox or see http://fieldtrip.fcdonders.nl/faq.
+
+-------------------------------------------------------------------------------
+Copyright (C) 2011-2013, Robert Oostenveld
+Donders Institute for Brain, Cognition and Behaviour
+Radboud University Nijmegen, the Netherlands
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/
+-------------------------------------------------------------------------------
+
