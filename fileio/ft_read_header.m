@@ -1652,6 +1652,20 @@ switch headerformat
     hdr  = rmfield(orig, 'time');
     hdr.orig = orig;
     
+  case 'riff_wave'
+    [y, fs, nbits, opts] = wavread(filename, 1); % read one sample
+    siz = wavread(filename,'size');
+    hdr.Fs          = fs;
+    hdr.nChans      = siz(2);
+    hdr.nSamples    = siz(1);
+    hdr.nSamplesPre = 0;
+    hdr.nTrials     = 1;
+    for i=1:hdr.nChans
+      hdr.label{i,1} = sprintf('%d', i);
+      hdr.chantype{i,1} = 'audio';
+    end
+    hdr.orig = opts;
+    
   otherwise
     if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
       hdr = read_biosig_header(filename);
