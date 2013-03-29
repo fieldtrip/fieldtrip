@@ -36,7 +36,7 @@ function [data] = ft_checkdata(data, varargin)
 %   [data] = ft_checkdata(data, 'senstype', {'ctf151', 'ctf275'}), e.g. in megrealign
 %   [data] = ft_checkdata(data, 'datatype', {'timelock', 'freq'}), e.g. in sourceanalysis
 
-% Copyright (C) 2007-2012, Robert Oostenveld
+% Copyright (C) 2007-2013, Robert Oostenveld
 % Copyright (C) 2010-2012, Martin Vinck
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
