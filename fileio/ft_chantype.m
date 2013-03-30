@@ -56,11 +56,11 @@ if isempty(recursion)
 end
 
 % determine the type of input, this is handled similarly as in FT_CHANUNIT
-isheader =  isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'Fs');
-isgrad   =  isa(input, 'struct') && isfield(input, 'pnt') && isfield(input, 'ori');
-isgrad   = (isa(input, 'struct') && isfield(input, 'coilpos')) || isgrad;
-isgrad   = (isa(input, 'struct') && isfield(input, 'chanpos')) || isgrad;
-islabel  =  isa(input, 'cell')   && isa(input{1}, 'char');
+isheader = isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'Fs');
+islabel  = isa(input, 'cell')   && isa(input{1}, 'char');
+isgrad   = isa(input, 'struct') && isfield(input, 'pnt') && isfield(input, 'ori');
+isgrad   = isgrad || (isa(input, 'struct') && isfield(input, 'coilpos'));
+isgrad   = isgrad || (isa(input, 'struct') && isfield(input, 'chanpos'));
 
 hdr   = input;
 grad  = input;
@@ -77,13 +77,16 @@ if isheader
       grad.tra     = grad.tra(i2,:);                      % reorder the rows from the tra matrix
     end
   end
+  
 elseif isgrad
   label   = grad.label;
   numchan = length(label);
+
 elseif islabel
   numchan = length(label);
+
 else
-  error('the input that was provided to this function cannot be deciphered');
+  error('the input provided to this function cannot be deciphered');
 end
 
 if isfield(input, 'chantype')
@@ -96,7 +99,7 @@ end
 
 if ft_senstype(input, 'unknown')
   % don't bother doing all subsequent checks to determine the type of sensor array
-  
+
 elseif ft_senstype(input, 'neuromag') && isheader
   % channames-KI is the channel kind, 1=meg, 202=eog, 2=eeg, 3=trigger (I am not sure, but have inferred this from a single test file)
   % chaninfo-TY is the Coil type (0=magnetometer, 1=planar gradiometer)
