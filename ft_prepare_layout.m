@@ -325,7 +325,15 @@ elseif isfield(data, 'grad') && isstruct(data.grad)
   
 elseif ~isempty(cfg.image) && isempty(cfg.layout)
   fprintf('reading background image from %s\n', cfg.image);
-  img = imread(cfg.image);
+  [p,f,e] = fileparts(cfg.image);
+  switch e
+    case '.mat'
+      tmp = whos('-file', cfg.image);
+      load(cfg.image, tmp.name);
+      eval(['img = ',tmp.name,';']);
+    otherwise
+      img = imread(cfg.image);
+  end
   img = flipdim(img, 1); % in combination with "axis xy"
   
   figure
