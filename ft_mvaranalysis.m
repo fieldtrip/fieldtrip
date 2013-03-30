@@ -422,7 +422,9 @@ elseif ~dobvar
   siz    = [size(coeffs) 1];
   coeffs = reshape(coeffs, siz(2:end));
   siz    = [size(noisecov) 1];
-  noisecov = reshape(noisecov, siz(2:end));
+  if ~all(siz==1)
+    noisecov = reshape(noisecov, siz(2:end));
+  end
 elseif dobvar
   mvardata.dimord = 'chancmb_lag';
   siz    = [size(coeffs) 1];
