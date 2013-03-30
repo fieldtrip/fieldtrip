@@ -464,6 +464,12 @@ if isfield(dataout, 'grad')
   dataout = rmfield(dataout, 'grad');
 end
 
+% discard the electrode information because the weightings have been changed
+if isfield(dataout, 'elec')
+  warning('discarding electrode information because the weightings have been changed');
+  dataout = rmfield(dataout, 'elec');
+end
+
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
