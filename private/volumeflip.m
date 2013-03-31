@@ -36,6 +36,11 @@ if ischar(flipvecin)
   end
 end
 
+% shortcut out of this function
+if ~ischar(flipvecin) && all(flipvecin==0)
+  return;
+end
+
 % get the largest values on the main diagonal of the transformation matrix
 [volume, P] = volumepermute(volume);
 

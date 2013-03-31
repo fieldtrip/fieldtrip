@@ -77,8 +77,14 @@ if strcmp(cfg.foi, 'all'),
   cfg.foi = (0:1:data.fsampleorig/2);
 end
 
-cfg.channel = ft_channelselection('all', data.label);
-%cfg.channel    = ft_channelselection(cfg.channel,      data.label);
+isfull = isfield(data, 'label');
+isbvar = isfield(data, 'labelcmb');
+if isfull && isbvar
+  error('data representaion is ambiguous');
+end
+if ~isfull && ~isbvar
+  error('data representation is ambiguous');
+end
 
 %keeprpt  = strcmp(cfg.keeptrials, 'yes');
 %keeptap  = strcmp(cfg.keeptapers, 'yes');
@@ -94,15 +100,28 @@ if isfield(data, 'time')
 else
   ntoi = 1;
 end
-nlag     = size(data.coeffs,3); %change in due course
-chanindx = match_str(data.label, cfg.channel);
-nchan    = length(chanindx);
-label    = data.label(chanindx);
 
-%---allocate memory
-h         = complex(zeros(nchan, nchan,  nfoi, ntoi), zeros(nchan, nchan,  nfoi, ntoi));
-a         = complex(zeros(nchan, nchan,  nfoi, ntoi), zeros(nchan, nchan,  nfoi, ntoi));
-crsspctrm = complex(zeros(nchan, nchan,  nfoi, ntoi), zeros(nchan, nchan,  nfoi, ntoi));
+if isfull
+  cfg.channel = ft_channelselection('all', data.label);
+  %cfg.channel    = ft_channelselection(cfg.channel,      data.label);
+  chanindx = match_str(data.label, cfg.channel);
+  nchan    = length(chanindx);
+  label    = data.label(chanindx);
+  nlag     = size(data.coeffs,3); %change in due course
+
+  %---allocate memory
+  h         = complex(zeros(nchan, nchan,  nfoi, ntoi), zeros(nchan, nchan,  nfoi, ntoi));
+  a         = complex(zeros(nchan, nchan,  nfoi, ntoi), zeros(nchan, nchan,  nfoi, ntoi));
+  crsspctrm = complex(zeros(nchan, nchan,  nfoi, ntoi), zeros(nchan, nchan,  nfoi, ntoi));
+elseif isbvar
+  ncmb      = size(data.labelcmb,1)./4;
+  nlag      = size(data.coeffs,2);
+  
+  %---allocate memory
+  h         = complex(zeros(ncmb*4, nfoi, ntoi), zeros(ncmb*4, nfoi, ntoi));
+  a         = complex(zeros(ncmb*4, nfoi, ntoi), zeros(ncmb*4, nfoi, ntoi));
+  crsspctrm = complex(zeros(ncmb*4, nfoi, ntoi), zeros(ncmb*4, nfoi, ntoi));
+end
 
 %FIXME build in repetitions
 
@@ -111,35 +130,61 @@ ft_progress('init', cfg.feedback, 'computing MAR-model based TFR');
 for j = 1:ntoi
   ft_progress(j/ntoi, 'processing timewindow %d from %d\n', j, ntoi);
  
-  %---compute transfer function
-  ar = reshape(data.coeffs(:,:,:,j), [nchan nchan*nlag]);
-  [h(:,:,:,j), a(:,:,:,j)] = ar2h(ar, cfg.foi, data.fsampleorig);
-
-  %---compute cross-spectra
-  nc = data.noisecov(:,:,j);
-  for k = 1:nfoi
-    tmph               = h(:,:,k,j);
-    crsspctrm(:,:,k,j) = tmph*nc*tmph';
+  if isfull
+    %---compute transfer function
+    ar = reshape(data.coeffs(:,:,:,j), [nchan nchan*nlag]);
+    [h(:,:,:,j), a(:,:,:,j)] = ar2h(ar, cfg.foi, data.fsampleorig);
+    
+    %---compute cross-spectra
+    nc = data.noisecov(:,:,j);
+    for k = 1:nfoi
+      tmph               = h(:,:,k,j);
+      crsspctrm(:,:,k,j) = tmph*nc*tmph';
+    end
+  elseif isbvar
+    for kk = 1:ncmb
+      %---compute transfer function
+      ar = reshape(data.coeffs((kk-1)*4+(1:4),:,:,j), [2 2*nlag]);
+      [tmph,tmpa] = ar2h(ar, cfg.foi, data.fsampleorig);
+      h((kk-1)*4+(1:4),:,:) = reshape(tmph, [4 nfoi ntoi]);
+      a((kk-1)*4+(1:4),:,:) = reshape(tmpa, [4 nfoi ntoi]);
+      
+      %---compute cross-spectra
+      nc = reshape(data.noisecov((kk-1)*4+(1:4),j), [2 2]);
+      for k = 1:nfoi
+        crsspctrm((kk-1)*4+(1:4),k,j) = reshape(tmph(:,:,k)*nc*tmph(:,:,k)', [4 1]);
+      end
+    end
   end
 end  
 ft_progress('close');
 
 %---create output-structure
 freq          = [];
-freq.label    = label;
 freq.freq     = cfg.foi;
 %freq.cumtapcnt= ones(ntrl, 1)*ntap;
-if ntoi>1
-  freq.time   = data.time;
-  freq.dimord = 'chan_chan_freq_time';
-else
-  freq.dimord = 'chan_chan_freq';
-end
 freq.transfer  = h;
 %freq.itransfer = a;
 freq.noisecov  = data.noisecov;
 freq.crsspctrm = crsspctrm;
 freq.dof       = data.dof;
+if isfull
+  freq.label    = label;
+  if ntoi>1
+    freq.time   = data.time;
+    freq.dimord = 'chan_chan_freq_time';
+  else
+    freq.dimord = 'chan_chan_freq';
+  end
+elseif isbvar
+  freq.labelcmb = data.labelcmb;
+  if ntoi>1
+    freq.time   = data.time;
+    freq.dimord = 'chancmb_freq_time';
+  else
+    freq.dimord = 'chancmb_freq';
+  end
+end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
