@@ -26,13 +26,18 @@ grad.unit = 'cm';
 grad1 = ft_datatype_sens(grad);
 grad2 = ft_datatype_sens(grad);
 
-grad2.type = 'magnetometer'; % this makes ft_senstype much faster
+% this makes ft_senstype much faster
+grad2.type = 'magnetometer'; 
+for i=1:length(sel)
+  grad2.chantype{i} = 'mag';
+  grad2.chanunit{i} = 'T';
+end
 
 %% determine the time to compute some leadfields
 
 cfg = [];
 cfg.vol = vol;
-cfg.resolution = 4;
+cfg.grid.resolution = 4;
 cfg.channel = 'all';
 
 tic
@@ -51,7 +56,7 @@ if (time1/time2)>1.5
     error('the leadfield computation without grad.type takes too long (%d seconds compared to %d seconds)', time1, time2);
 end
 
-%%
+%% the following section pertains to a change (improvement) I made to the ft_senslabel function which is meant to speed up subsequent calls using a large set of persistent variables
 
 type = {
     'btiref'
