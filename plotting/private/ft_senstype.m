@@ -122,31 +122,22 @@ if isequal(current_argin, previous_argin)
   return
 end
 
-% FIXME the detection of the type of input structure should perhaps be done using the datatype function
-isdata   = isa(input, 'struct')  && isfield(input, 'hdr');
+isdata   = isa(input, 'struct')  && (isfield(input, 'hdr') || isfield(input, 'time') || isfield(input, 'freq') || isfield(input, 'grad') || isfield(input, 'elec'));
 isheader = isa(input, 'struct')  && isfield(input, 'label') && isfield(input, 'Fs');
 isgrad   = isa(input, 'struct')  && isfield(input, 'label') && isfield(input, 'pnt')  &&  isfield(input, 'ori'); % old style
-isgrad   = (isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'coilpos')) || isgrad; % new style 
+isgrad   = (isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'coilpos')) || isgrad;             % new style 
 iselec   = isa(input, 'struct')  && isfield(input, 'label') && isfield(input, 'pnt')  && ~isfield(input, 'ori'); % old style
-iselec   = (isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'elecpos')) || iselec; % new style 
+iselec   = (isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'elecpos')) || iselec;             % new style 
 islabel  = isa(input, 'cell')    && ~isempty(input) && isa(input{1}, 'char');
-isfreq   = isa(input, 'struct')  && (isfield(input, 'fourierspctrm') || isfield(input, 'powspctrm'));
 haslabel = isa(input, 'struct')  && isfield(input, 'label');
-
-if ~isdata && ~isheader
-  % timelock or freq structures don't have the header structure
-  % the header is also removed from raw data after megrealign
-  % the gradiometer definition is lost after megplanar+combineplanar
-  isdata = isa(input, 'struct') && (isfield(input, 'grad') || isfield(input, 'elec'));
-end
 
 if ~(isdata || isheader || isgrad || iselec || islabel || haslabel) && isfield(input, 'hdr')
   input    = input.hdr;
   isheader = true;
 end
 
-% the input may be a data structure which then contains a grad/elec structure, a header or only the labels
 if isdata
+  % the input may be a data structure which then contains a grad/elec structure, a header or only the labels
   % preferably look at the data and not the header for the grad, because it might be re-balanced and/or planar
   if isfield(input, 'grad')
     sens   = input.grad;
@@ -167,8 +158,7 @@ if isdata
     sens.label = input.label;
     islabel    = true;
   end
-elseif isfreq
-  type = 'unknown';
+  
 elseif isheader
   if isfield(input, 'grad')
     sens   = input.grad;
@@ -180,34 +170,32 @@ elseif isheader
     sens.label = input.label;
     islabel    = true;
   end
+  
 elseif isgrad
   sens = input;
+
 elseif iselec
   sens = input;
+
 elseif islabel
   sens.label = input;
+
 elseif haslabel
   % it does not resemble anything that we had expected at this location, but it does have channel labels
   % the channel labels can be used to determine the type of sensor array
   sens.label = input.label;
   islabel    = true;
+
 else
   sens = [];
 end
 
-if exist('sens')
-  if isfield(sens,'type')
-    istypefield = 1;
-  else
-    istypefield = 0;
-  end
-else
-  istypefield = 0;
-end
 
-if istypefield
+
+if isfield(sens,'type')
   % preferably the structure specifies its own type
   type = sens.type;
+
 elseif isfield(input, 'nChans') && input.nChans==1 && isfield(input, 'label') && ~isempty(regexp(input.label{1}, '^csc', 'once'))
   % this is a single channel header that was read from a Neuralynx file, might be fcdc_matbin or neuralynx_nsc
   type = 'neuralynx';
