@@ -50,11 +50,16 @@ cfg.grad = grad2;
 grid2 = ft_prepare_leadfield(cfg);
 time2 = toc;
 
-%% compare the time that it took, this fraction 1.5 is rather arbitrary
+%% compare the time that it took for the two grad versions, the 10 seconds and fraction 2 are rather arbitrary
 
-if (time1/time2)>1.5
+if time1>10
+  error('the leadfield computation takes too long');
+end
+
+if (time1/time2)>2
     error('the leadfield computation without grad.type takes too long (%d seconds compared to %d seconds)', time1, time2);
 end
+
 
 %% the following section pertains to a change (improvement) I made to the ft_senslabel function which is meant to speed up subsequent calls using a large set of persistent variables
 
