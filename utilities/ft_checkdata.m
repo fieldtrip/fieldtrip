@@ -396,8 +396,6 @@ if ~isempty(stype)
     else
       okflag = 0;
     end
-  else
-    okflag = 0;
   end
   
   if ~okflag
