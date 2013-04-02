@@ -100,7 +100,7 @@ haspow               = ft_getopt(varargin, 'haspow', 'no');
 cmbrepresentation    = ft_getopt(varargin, 'cmbrepresentation');
 channelcmb           = ft_getopt(varargin, 'channelcmb');
 sourcedimord         = ft_getopt(varargin, 'sourcedimord');
-sourcerepresentation = ft_getopt(varargin, 'sourcerepresentation');
+sourcerepresentation = ft_getopt(varargin, 'sourcerepresentation'); % can be 'old' or 'new'
 fsample              = ft_getopt(varargin, 'fsample');
 segmentationstyle    = ft_getopt(varargin, 'segmentationstyle'); % this will be passed on to the corresponding ft_datatype_xxx function
 parcellationstyle    = ft_getopt(varargin, 'parcellationstyle'); % this will be passed on to the corresponding ft_datatype_xxx function
@@ -1512,16 +1512,18 @@ switch fname
     if hasori, dimord = [dimord,'_ori_ori']; end;
   case 'csd'
     if hasori, dimord = [dimord,'_ori_ori']; end;
+  case 'noisecsd'
+    dimord = [dimord,'_ori_ori'];
+  case 'noisecov'
+    dimord = [dimord,'_ori_ori'];
   case 'csdlabel'
+    dimord = dimord;
+  case 'covlabel'
     dimord = dimord;
   case 'filter'
     dimord = [dimord,'_ori_chan'];
   case 'leadfield'
-    %if hasori,
     dimord = [dimord,'_chan_ori'];
-    %else
-    %  dimord = [dimord,'_chan'];
-    %end
   case 'mom'
     if isfield(output, 'cumtapcnt') && sum(output.cumtapcnt)==size(tmp{output.inside(1)},1)
       if hasori,
@@ -1529,7 +1531,9 @@ switch fname
       else
         dimord = [dimord,'_rpttap'];
       end
-    elseif isfield(output, 'time')
+    end
+    
+    if isfield(output, 'time')
       if rptflag,
         dimord = [dimord,'_rpt'];
         dimnum = dimnum + 1;
@@ -1550,8 +1554,6 @@ switch fname
     if isfield(output, 'freq') && numel(output.freq)==size(tmp,dimnum)
       dimord = [dimord,'_freq'];
     end
-  case 'noisecsd'
-    if hasori, dimord = [dimord,'_ori_ori']; end
   case 'ori'
     dimord = '';
   case 'pow'
@@ -1582,7 +1584,7 @@ function data = comp2raw(data)
 % remove the fields that are specific to the comp representation
 fn = fieldnames(data);
 fn = intersect(fn, {'topo' 'topolabel' 'unmixing'});
-data = rmfield(data, fn);  
+data = rmfield(data, fn);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % convert between datatypes
