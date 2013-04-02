@@ -1,4 +1,4 @@
-function parcel = ft_sourceparcellate(cfg, source)
+function parcel = ft_sourceparcellate(cfg, source, parcellation)
 
 % FT_SOURCEPARCELLATE combines the source-reconstruction values in the
 % parcels by averaging or by concatenating.
@@ -44,12 +44,12 @@ function parcel = ft_sourceparcellate(cfg, source)
 
 revision = '$Id$';
 
-ft_defaults                 
-ft_preamble help            
-ft_preamble provenance      
-ft_preamble trackconfig     
-ft_preamble debug           
-ft_preamble loadvar source  
+ft_defaults
+ft_preamble help
+ft_preamble provenance
+ft_preamble trackconfig
+ft_preamble debug
+ft_preamble loadvar source
 
 % get the defaults
 cfg.parcellation = ft_getopt(cfg, 'parcellation');
@@ -59,15 +59,22 @@ if ischar(cfg.parameter)
   cfg.parameter = {cfg.parameter};
 end
 
+if nargin<3
+  % the parcellation is represented in the source structure
+  parcellation = source;
+else
+  % the parcellation is specified as separate structure
+end
+
 % ensure it is a parcellation, not a segmentation
-% FIXME is the indexed style needed?
-source = ft_checkdata(source, 'datatype', 'parcellation', 'parcellationstyle', 'indexed');
+parcellation = ft_checkdata(parcellation, 'datatype', 'parcellation', 'parcellationstyle', 'indexed'); % FIXME is the indexed style needed?
+source       = ft_checkdata(source, 'datatype', 'source', 'inside', 'logical', 'sourcerepresentation', 'new');
 
 if isempty(cfg.parcellation)
-  fn = fieldnames(source);
+  fn = fieldnames(parcellation);
   for i=1:numel(fn)
-    if isfield(source, [fn{i} 'label'])
-      warning('using %s for the parcellation', fn{i});
+    if isfield(parcellation, [fn{i} 'label'])
+      warning('using "%s" for the parcellation', fn{i});
       cfg.parcellation = fn{i};
       break
     end
@@ -113,7 +120,7 @@ for i=1:numel(fn)
     dimord{i} = source.([fn{i} 'dimord']); % a specific dimord
   elseif iscell(tmp) && numel(tmp)==size(source.pos,1)
     sel(i)    = true;
-    dimord{i} = 'fixme';
+    dimord{i} = '{pos}';
   elseif ~iscell(tmp) && isequal(size(tmp), siz)
     sel(i)    = true;
     dimord{i} = source.dimord; % the general dimord
@@ -137,13 +144,32 @@ else
   dimord = dimord(i2);
 end
 
+if numel(fn)==0
+  error('there are no source parameters that can be parcellated');
+end
+
 % get the parcellation and the labels that go with it
-seg      = source.(cfg.parcellation);
-seglabel = source.([cfg.parcellation 'label']);
+seg      = parcellation.(cfg.parcellation);
+seglabel = parcellation.([cfg.parcellation 'label']);
 nseg     = length(seglabel);
 
+if isfield(source, 'inside')
+  % determine the conjunction of the parcellation and the inside source points
+  % points that are
+  n0 = numel(source.inside);
+  n1 = sum(source.inside(:));
+  n2 = sum(seg(:)~=0);
+  fprintf('there are in total %d positions, %d positions are inside the brain, %d positions have a label\n', n0, n1, n2);
+  fprintf('%d of the positions inside the brain have a label\n',        sum(seg(source.inside)~=0));
+  fprintf('%d of the labeled positions are inside the brain\n',         sum(source.inside(seg(:)~=0)));
+  fprintf('%d of the positions inside the brain do not have a label\n', sum(seg(source.inside)==0));
+  % discard the positions outside the brain and the positions in the brain that do not have a label
+  seg(~source.inside) = 0;
+end
+
 % this will hold the output
-parcel = [];
+parcel       = [];
+parcel.label = seglabel;
 if isfield(source, 'time')
   parcel.time = source.time;
   ntime = length(source.time);
@@ -168,6 +194,10 @@ for i=1:numel(fn)
   
   % determine how many "position" dimensions there are
   num = numel(strmatch('pos', tokenize(dimord{i}, '_')));
+  if num==0
+    % the positions might be represented in a cell-array, i.e. {pos}_time
+    num = numel(strmatch('{pos}', tokenize(dimord{i}, '_')));
+  end
   univariate    = (num==1);
   bivariate     = (num==2);
   multivariate  = (num>2);
@@ -175,7 +205,7 @@ for i=1:numel(fn)
   if univariate
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % univariate: loop over positions
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%]
     clear j j1 j2 % to avoid confusion
     
     for j=1:numel(seglabel)
@@ -187,6 +217,11 @@ for i=1:numel(fn)
           end
           tmp(j) = mean(dat(seg==j), 1);
           
+        case {'{pos}' '{pos}_ori_ori', '{pos}_ori_time'}
+          if isempty(tmp)
+            tmp = cell(nseg, 1);
+          end
+          tmp{j} = cellmean(dat(seg==j));
           
         case 'pos_time'
           if isempty(tmp)
@@ -262,8 +297,11 @@ for i=1:numel(fn)
       end % for each of the parcels
     end % for each of the parcels
     
-  else
+  elseif multivariate
     % more than two dimensions are not supported
+    error('dimord "%s" cannot be parcellated', dimord{i});
+    
+  else
     error('dimord "%s" cannot be parcellated', dimord{i});
   end
   
@@ -282,10 +320,24 @@ for i=1:numel(fn)
   clear dat tmp tmpdimord
 end % for each of the fields that should be parcellated
 
-ft_postamble debug            
-ft_postamble trackconfig      
-ft_postamble provenance       
-ft_postamble previous source  
-ft_postamble history parcel  
-ft_postamble savevar parcel  
+ft_postamble debug
+ft_postamble trackconfig
+ft_postamble provenance
+ft_postamble previous source parcellation
+ft_postamble history parcel
+ft_postamble savevar parcel
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function y = cellmean(x)
+siz = size(x);
+if sum(siz==1)>1
+  error('invalid size of cell array');
+end
+y = x{1};
+for i=2:prod(siz)
+  y = y + x{i};
+end
+y = y/prod(siz);
 
