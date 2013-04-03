@@ -172,7 +172,6 @@ cfg.masknans       = ft_getopt(cfg, 'masknans',        'yes');
 cfg.maskparameter  = ft_getopt(cfg, 'maskparameter',   []);
 cfg.maskstyle      = ft_getopt(cfg, 'maskstyle',       'opacity');
 cfg.directionality = ft_getopt(cfg, 'directionality',  '');
-cfg.channel        = ft_getopt(cfg, 'channel',         'all');
 cfg.figurename     = ft_getopt(cfg, 'figurename',      []);
 if ~isfield(cfg,'box')             
   if ~isempty(cfg.maskparameter)
@@ -246,7 +245,7 @@ if hasrpt,
 end % if hasrpt
 
 % Read or create the layout that will be used for plotting:
-clf; 
+cla; 
 hold on
 lay = ft_prepare_layout(cfg, data);
 cfg.layout = lay;
@@ -504,7 +503,7 @@ end
 % set colormap
 if isfield(cfg,'colormap')
   if size(cfg.colormap,2)~=3, error('multiplotTFR(): Colormap must be a n x 3 matrix'); end
-  set(gcf,'colormap',cfg.colormap);
+  set(gca,'colormap',cfg.colormap);
 end;
 
 % Plot channels:
