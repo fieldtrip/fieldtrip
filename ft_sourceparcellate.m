@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
 function parcel = ft_sourceparcellate(cfg, source)
 
 % FT_SOURCEPARCELLATE combines the source-reconstruction values in the
@@ -7,36 +5,15 @@ function parcel = ft_sourceparcellate(cfg, source)
 %
 % Use as
 %    parcel = ft_sourceparcellate(cfg, source)
-=======
-function parcel = hcp_sourceparcellate(cfg, source)
-=======
-function parcel = ft_sourceparcellate(cfg, source)
->>>>>>> enhancement - updated the documentation and added pre/postable, see #1775
-
-% FT_SOURCEPARCELLATE combines the source-reconstruction values in the
-% parcels by averaging or by concatenating.
-%
-% Use as
-<<<<<<< HEAD
-%    parcel = hcp_sourceparcellate(cfg, source)
->>>>>>> restructuring - moved sourceparcellate from hcp to ft, see #1775
-=======
-%    parcel = ft_sourceparcellate(cfg, source)
->>>>>>> enhancement - updated the documentation and added pre/postable, see #1775
 % where the input is a 3D voxel-based or a 2D surface-based source grid
 % and the output is a channel-based representation with the averages or
 % concatenared representation per parcel.
 %
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> enhancement - updated the documentation and added pre/postable, see #1775
 % The input data structure is for example obtained from FT_SOURCEANALYSIS
 % or FT_COMPUTE_LEADFIELD and is described in detail in FT_DATATYPE_SOURCE.
 % The output data structure is described in detail in
 % FT_DATATYPE_PARCELLATION.
 %
-<<<<<<< HEAD
 % The configuration "cfg" is a structure that can contain the following
 % fields
 %   cfg.method       = string
@@ -73,50 +50,6 @@ ft_preamble provenance
 ft_preamble trackconfig     
 ft_preamble debug           
 ft_preamble loadvar source  
-=======
-=======
->>>>>>> enhancement - updated the documentation and added pre/postable, see #1775
-% The configuration "cfg" is a structure that can contain the following
-% fields
-%   cfg.method       = string
-%   cfg.parcellation = string, fieldname that contains the desired parcellation
-%   cfg.parameter    = cell-array with strings, fields that should be parcellated (default = 'all')
-%
-% See also FT_SOURCEANALYSIS, FT_DATATYPE_PARCELLATION, FT_DATATYPE_SEGMENTATION
-
-<<<<<<< HEAD
-% Copyright (C) 2012, Robert Oostenveld
->>>>>>> restructuring - moved sourceparcellate from hcp to ft, see #1775
-=======
-% Copyright (C) 2012-2013, Robert Oostenveld
-%
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
-% for the documentation and details.
-%
-%    FieldTrip is free software: you can redistribute it and/or modify
-%    it under the terms of the GNU General Public License as published by
-%    the Free Software Foundation, either version 3 of the License, or
-%    (at your option) any later version.
-%
-%    FieldTrip is distributed in the hope that it will be useful,
-%    but WITHOUT ANY WARRANTY; without even the implied warranty of
-%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-%    GNU General Public License for more details.
-%
-%    You should have received a copy of the GNU General Public License
-%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
-%
-% $Id$
-
-revision = '$Id$';
-
-ft_defaults                 
-ft_preamble help            
-ft_preamble provenance      
-ft_preamble trackconfig     
-ft_preamble debug           
-ft_preamble loadvar source  
->>>>>>> enhancement - updated the documentation and added pre/postable, see #1775
 
 % get the defaults
 cfg.parcellation = ft_getopt(cfg, 'parcellation');
@@ -186,14 +119,7 @@ for i=1:numel(fn)
     dimord{i} = source.dimord; % the general dimord
   end
 end
-<<<<<<< HEAD
-<<<<<<< HEAD
 
-=======
->>>>>>> restructuring - moved sourceparcellate from hcp to ft, see #1775
-=======
-
->>>>>>> enhancement - updated the documentation and added pre/postable, see #1775
 % these two will now contain the fields and corresponding dimord to work on
 fn     = fn(sel);
 dimord = dimord(sel);
@@ -356,10 +282,6 @@ for i=1:numel(fn)
   clear dat tmp tmpdimord
 end % for each of the fields that should be parcellated
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> enhancement - updated the documentation and added pre/postable, see #1775
 ft_postamble debug            
 ft_postamble trackconfig      
 ft_postamble provenance       
@@ -367,10 +289,3 @@ ft_postamble previous source
 ft_postamble history parcel  
 ft_postamble savevar parcel  
 
-<<<<<<< HEAD
-=======
-try, cfg.previous = source.cfg; end
-parcel.cfg = cfg;
->>>>>>> restructuring - moved sourceparcellate from hcp to ft, see #1775
-=======
->>>>>>> enhancement - updated the documentation and added pre/postable, see #1775
