@@ -53,11 +53,14 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'zlim',  'absmax',  'maxabs'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'zparam', 'funparameter'});
 cfg = ft_checkconfig(cfg, 'renamed',	  {'parameter', 'funparameter'});
 cfg = ft_checkconfig(cfg, 'renamed',	  {'mask',      'maskparameter'});
+cfg = ft_checkconfig(cfg, 'renamed',	  {'framespersec',      'framerate'});
 cfg = ft_checkconfig(cfg, 'deprecated', {'xparam'});
 cfg = ft_checkconfig(cfg, 'forbidden',  {'yparam'});
 
 % set data flags
 opt = [];
+opt.valx = [];
+opt.valy = [];
 opt.issource    = ft_datatype(data, 'source');
 opt.isfreq      = ft_datatype(data, 'freq');
 opt.istimelock  = ft_datatype(data, 'timelock');
@@ -85,16 +88,31 @@ if opt.issource
   else
     error('source.pos or source.pnt is missing');
   end
-  
+else
+  % identify the interpretation of the functional data
+  dtype = ft_datatype(data); 
+  switch dtype;
+    case 'raw'
+      data   = ft_checkdata(data, 'datatype', 'timelock');
+      dtype  = ft_datatype(data);
+      dimord = data.dimord;
+    case  {'timelock' 'freq' 'chan' 'unknown'}
+      dimord = data.dimord;
+    case 'comp'
+      dimord = 'chan_comp';
+    otherwise
+  end
+  dimtok = tokenize(dimord, '_');
 end
+
 
 % set the defaults
 cfg.xlim            = ft_getopt(cfg, 'xlim', 'maxmin');
 cfg.ylim            = ft_getopt(cfg, 'ylim', 'maxmin');
 cfg.zlim            = ft_getopt(cfg, 'zlim', 'maxmin');
 cfg.xparam          = ft_getopt(cfg, 'xparam', 'time');
-cfg.yparam          = ft_getopt(cfg, 'yparam', '[]');
-if isempty(cfg.yparam ) && isfield(data, 'freq')
+cfg.yparam          = ft_getopt(cfg, 'yparam', []);
+if isempty(cfg.yparam) && isfield(data, 'freq')
   cfg.yparam        = 'freq';
 else
   cfg.yparam        = [];
@@ -108,26 +126,135 @@ elseif opt.issource
 end
 cfg.maskparameter   = ft_getopt(cfg, 'maskparameter');
 cfg.inputfile       = ft_getopt(cfg, 'inputfile',    []);
-cfg.samperframe     = ft_getopt(cfg, 'samperframe',  1);
-cfg.framespersec    = ft_getopt(cfg, 'framespersec', 5);
-cfg.framesfile      = ft_getopt(cfg, 'framesfile',   []);
 cfg.moviefreq       = ft_getopt(cfg, 'moviefreq', []);
 cfg.movietime       = ft_getopt(cfg, 'movietime', []);
 cfg.movierpt        = ft_getopt(cfg, 'movierpt', 1);
 cfg.interactive     = ft_getopt(cfg, 'interactive', 'yes');
+opt.samperframe     = ft_getopt(cfg, 'samperframe',  1);
+opt.framerate       = ft_getopt(cfg, 'framerate', 5);
+cfg.framesfile      = ft_getopt(cfg, 'framesfile',   []);
 opt.record          = ~istrue(cfg.interactive);
 
 % read or create the layout that will be used for plotting:
-if isfield(cfg, 'layout')
+if ~opt.issource && isfield(cfg, 'layout')
   opt.layout = ft_prepare_layout(cfg);
+  
+  % Handle the bivariate case
+
+  % Check for bivariate metric with 'chan_chan' in the dimord:
+  selchan = strmatch('chan', dimtok);
+  isfull  = length(selchan)>1;
+
+  % Check for bivariate metric with a labelcmb field:
+  haslabelcmb = isfield(data, 'labelcmb');
+
+  if (isfull || haslabelcmb) && isfield(data, cfg.funparameter)
+    % A reference channel is required:
+    if ~isfield(cfg, 'refchannel')
+      error('no reference channel is specified');
+    end
+
+    % check for refchannel being part of selection
+    if ~strcmp(cfg.refchannel,'gui')
+      if haslabelcmb
+        cfg.refchannel = ft_channelselection(cfg.refchannel, unique(data.labelcmb(:)));
+      else
+        cfg.refchannel = ft_channelselection(cfg.refchannel, data.label);
+      end
+      if (isfull      && ~any(ismember(data.label, cfg.refchannel))) || ...
+          (haslabelcmb && ~any(ismember(data.labelcmb(:), cfg.refchannel)))
+        error('cfg.refchannel is a not present in the (selected) channels)')
+      end
+    end
+
+    if ~isfull,
+      % Convert 2-dimensional channel matrix to a single dimension:
+      if isempty(cfg.directionality)
+        sel1 = strmatch(cfg.refchannel, data.labelcmb(:,2), 'exact');
+        sel2 = strmatch(cfg.refchannel, data.labelcmb(:,1), 'exact');
+      elseif strcmp(cfg.directionality, 'outflow')
+        sel1 = [];
+        sel2 = strmatch(cfg.refchannel, data.labelcmb(:,1), 'exact');
+      elseif strcmp(cfg.directionality, 'inflow')
+        sel1 = strmatch(cfg.refchannel, data.labelcmb(:,2), 'exact');
+        sel2 = [];
+      end
+      fprintf('selected %d channels for %s\n', length(sel1)+length(sel2), cfg.funparameter);
+      if length(sel1)+length(sel2)==0
+        error('there are no channels selected for plotting: you may need to look at the specification of cfg.directionality');
+      end
+      data.(cfg.funparameter) = data.(cfg.funparameter)([sel1;sel2],:,:);
+      data.label     = [data.labelcmb(sel1,1);data.labelcmb(sel2,2)];
+      data           = rmfield(data, 'labelcmb');
+    else
+      % General case
+      sel               = match_str(data.label, cfg.refchannel);
+      siz               = [size(data.(cfg.funparameter)) 1];
+      if strcmp(cfg.directionality, 'inflow') || isempty(cfg.directionality)
+        %the interpretation of 'inflow' and 'outflow' depend on
+        %the definition in the bivariate representation of the data
+        %in FieldTrip the row index 'causes' the column index channel
+        %data.(cfg.funparameter) = reshape(mean(data.(cfg.funparameter)(:,sel,:),2),[siz(1) 1 siz(3:end)]);
+        sel1 = 1:siz(1);
+        sel2 = sel;
+        meandir = 2;
+      elseif strcmp(cfg.directionality, 'outflow')
+        %data.(cfg.funparameter) = reshape(mean(data.(cfg.funparameter)(sel,:,:),1),[siz(1) 1 siz(3:end)]);
+        sel1 = sel;
+        sel2 = 1:siz(1);
+        meandir = 1;
+
+      elseif strcmp(cfg.directionality, 'inflow-outflow')
+        % do the subtraction and recursively call the function again
+        tmpcfg = cfg;
+        tmpcfg.directionality = 'inflow';
+        tmpdata = data;
+        tmp     = data.(tmpcfg.funparameter);
+        siz     = [size(tmp) 1];
+        for k = 1:siz(3)
+          for m = 1:siz(4)
+            tmp(:,:,k,m) = tmp(:,:,k,m)-tmp(:,:,k,m)';
+          end
+        end
+        tmpdata.(tmpcfg.funparameter) = tmp;
+        moviefunction(tmpcfg, tmpdata);
+        return;
+
+      elseif strcmp(cfg.directionality, 'outflow-inflow')
+        % do the subtraction and recursively call the function again
+        tmpcfg = cfg;
+        tmpcfg.directionality = 'outflow';
+        tmpdata = data;
+        tmp     = data.(tmpcfg.funparameter);
+        siz     = [size(tmp) 1];
+        for k = 1:siz(3)
+          for m = 1:siz(4)
+            tmp(:,:,k,m) = tmp(:,:,k,m)-tmp(:,:,k,m)';
+          end
+        end
+        tmpdata.(tmpcfg.funparameter) = tmp;
+        moviefunction(tmpcfg, tmpdata);
+        return;
+
+      end
+    end
+  end
+
   % select the channels in the data that match with the layout:
-  [seldat, sellay] = match_str(data.label, opt.layout.label);
-  if isempty(seldat)
+  [opt.seldat, opt.sellay] = match_str(data.label, opt.layout.label);
+  
+  if isempty(opt.seldat)
     error('labels in data and labels in layout do not match');
   end
+  
+  
+  selcfg = [];
+  selcfg.channel = data.label(opt.seldat);
+  data = ft_selectdata(selcfg, data);
+  
   % get the x and y coordinates and labels of the channels in the data
-  opt.chanx = opt.layout.pos(sellay,1);
-  opt.chany = opt.layout.pos(sellay,2);
+  opt.chanx = opt.layout.pos(opt.sellay,1);
+  opt.chany = opt.layout.pos(opt.sellay,2);
 else
   if ~opt.issource
     error('you need to specify a layout in case of freq or timelock data');
@@ -143,6 +270,8 @@ if ~isempty(cfg.yparam)
   opt.yvalues = data.(cfg.yparam);
 end
 opt.dat       = getsubfield(data, cfg.funparameter);
+opt.framesfile = cfg.framesfile;
+opt.fixedframesfile = ~isempty(opt.framesfile);
 
 % check consistency of xparam and yparam
 % NOTE: i set two different defaults for the 'chan_time' and the 'chan_freq_time' case
@@ -166,6 +295,13 @@ if isfield(data,'dimord')
   % and permute
   opt.dat = permute(opt.dat, [opt.zdim(:)' opt.xdim opt.ydim]);
   
+  opt.xdim = 2;
+  if ~isempty(cfg.yparam)
+    opt.ydim = 3;
+  else
+    opt.ydim = [];
+  end
+
 end
 
 if opt.issource
@@ -177,13 +313,6 @@ if opt.issource
     error('source.tri missing, this function requires a triangulated cortical sheet as source model');
   end
   
-end
-
-opt.xdim = 2;
-if ~isempty(cfg.yparam)
-  opt.ydim = 3;
-else
-  opt.ydim = [];
 end
 
 
@@ -228,11 +357,29 @@ guidata(opt.handles.figure, opt);
 
 cb_slider(opt.handles.figure);
 %uicontrol(opt.handles.colorbar);
-cb_colorbar(opt.handles.figure);
+if strcmp(cfg.zlim, 'maxmin') 
+  set(opt.handles.checkbox.automatic, 'Value', 1) 
+  set(opt.handles.checkbox.symmetric, 'Value', 0)
+  cb_colorbar(opt.handles.figure);
+elseif strcmp(cfg.zlim, 'maxabs')
+  set(opt.handles.checkbox.automatic, 'Value', 1)
+  set(opt.handles.checkbox.symmetric, 'Value', 1)
+  cb_colorbar(opt.handles.figure);
+else
+  set(opt.handles.checkbox.automatic, 'Value', 0)
+  set(opt.handles.checkbox.symmetric, 'Value', 0)
+  cb_colorbar(opt.handles.figure, cfg.zlim);
+end
 
 
 if opt.record
-  start(opt.timer);
+  opt.record = false;
+  opt.quit = true;
+  guidata(opt.handles.figure, opt);
+  cb_recordbutton(opt.handles.button.record);
+else 
+  opt.quit = false;
+  guidata(opt.handles.figure, opt);
 end
 
 end
@@ -475,12 +622,12 @@ opt.handles.menu.colormap = uicontrol(...
   'BackgroundColor',[1 1 1],...
   'Callback',@cb_colormap,...
   'Position',[0.0721649484536082 0.951310861423221 0.865979381443299 0.0374531835205993],...
-  'String',{  'jet'; 'hot'; 'cool' },...
+  'String',{  'jet'; 'hot'; 'cool'; 'ikelvin'; 'ikelvinr' },...
   'Style','popupmenu',...
   'Value',1, ...
   'Tag','colormapMenu');
 
-opt.handles.checkbox.auto = uicontrol(...
+opt.handles.checkbox.automatic = uicontrol(...
   'Parent',opt.handles.buttongroup.color,...
   'Units','normalized',...
   'Callback',@cb_colorbar,...
@@ -573,12 +720,12 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function updateMovie(opt, valx, valy)
+function updateMovie(opt)
 if ~opt.issource
-  set(opt.handles.grid, 'cdata',  griddata(opt.chanx, opt.chany, opt.mask(:,valx,valy).*opt.dat(:,valx,valy), opt.xdata, opt.nanmask.*opt.ydata, 'v4'));
+  set(opt.handles.grid, 'cdata',  griddata(opt.chanx, opt.chany, opt.mask(:,opt.valx,opt.valy).*opt.dat(:,opt.valx,opt.valy), opt.xdata, opt.nanmask.*opt.ydata, 'v4'));
 else
-  set(opt.handles.mesh, 'FaceVertexCData',  squeeze(opt.dat(:,valx,valy)));
-  set(opt.handles.mesh, 'FaceVertexAlphaData', squeeze(opt.mask(:,valx,valy)));
+  set(opt.handles.mesh, 'FaceVertexCData',  squeeze(opt.dat(:,opt.valx,opt.valy)));
+  set(opt.handles.mesh, 'FaceVertexAlphaData', squeeze(opt.mask(:,opt.valx,opt.valy)));
 end
 
 end
@@ -631,26 +778,13 @@ if opt.record
   if val>1
     % stop recording
     stop(opt.timer);
-    % save movie
-    if isfield(opt, 'framesfile') && ~isempty(opt.framesfile)
-      save(opt.framesfile, 'F');
-    end
-    % play movie
-    if ~isfield(opt, 'framespersec')
-      opt.framespersec = 4;
-      opt.movierpt = 3;
-    end
-    
-    
     % reset again
     val = 0;    
     set(opt.handles.slider.xparam, 'value', val);
     cb_slider(h);
     cb_recordbutton(opt.handles.button.record);
-    
-    movie(opt.F, opt.movierpt, opt.framespersec);
+    % TODO FIXME add some message here
     guidata(h, opt);
-    
     return;
   end
 end
@@ -662,10 +796,13 @@ set(opt.handles.slider.xparam, 'value', val);
 cb_slider(h);
 
 if opt.record
-  if ~isfield(opt, 'F') % init F
-    opt.F(1) = getframe(opt.handles.figure);
-  else
-    opt.F(end+1) = getframe(opt.handles.figure);
+  pause(.1);
+  drawnow;
+  % get starting position via parameter panel    
+  currFrame = getframe(opt.handles.figure);
+  for i=1:opt.samperframe
+    writeVideo(opt.vidObj, currFrame);
+    %opt.vidObj = addframe(opt.vidObj, currFrame);
   end
   guidata(h, opt);
 end
@@ -689,12 +826,22 @@ if ~isempty(opt.yvalues)
   valy = round(valy*(size(opt.dat, opt.ydim)-1))+1;
   valy = min(valy, size(opt.dat, opt.ydim));
   valy = max(valy, 1);
+  
+  if valy ~= opt.valy
+    cb_colorbar(h);
+  end
+  
   set(opt.handles.label.yparam, 'String', [opt.yparam ' ' num2str(opt.yvalues(valy), '%.2f') 'Hz']);
 else
   valy = 1;
 end
 
-updateMovie(opt, valx, valy);
+opt.valx = valx;
+opt.valy = valy;
+
+guidata(h, opt);
+
+updateMovie(opt);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -725,21 +872,56 @@ if ~ishandle(h)
 end
 
 opt = guidata(h);
+
+ 
 opt.record = ~opt.record; % switch state
-if isfield(opt, 'F')
-  opt = rmfield(opt, 'F');
-end
+guidata(h, opt);
 
 if opt.record
+  
+  if ~opt.fixedframesfile
+    % open a save-file dialog
+    [FileName,PathName,FilterIndex] = uiputfile('*.avi', 'Save AVI-file' , 'ft_movie');
+    
+    if (FileName == 0 & PathName == 0) % aborted
+      cb_recordbutton(h);
+      return;
+    end
+    
+    opt.framesfile = fullfile(PathName, FileName);
+    
+    if (FilterIndex==1) % remove .avi again (4 chars)
+      opt.framesfile = opt.framesfile(1:end-4);
+    end
+    
+  end
+  
   % FIXME open new window to play in there, so that frame getting works
-  set(h, 'string', 'Stop');
+  opt.vidObj = VideoWriter(opt.framesfile, 'Uncompressed AVI');
+  opt.vidObj.FrameRate = opt.framerate;
+  open(opt.vidObj); 
+  %set(opt.handles.figure,'renderer','opengl')
+  %opengl software;
+  set(opt.handles.figure,'renderer','zbuffer');
+  %opt.vidObj = avifile(opt.framesfile, 'fps', opt.framerate, 'quality', 75);
+  
+  set(h, 'string', 'Stop');  
+  guidata(h, opt);
   start(opt.timer);
 else
   % FIXME set handle back to old window
-  set(h, 'string', 'Record');
   stop(opt.timer);
+  if ~isempty(opt.framesfile)
+    %opt.vidObj = close(opt.vidObj); 
+    close(opt.vidObj);
+  end
+  set(h, 'string', 'Record');  
+  guidata(h, opt);
+    
+  if (opt.quit)
+    close(opt.handles.figure);
+  end
 end
-guidata(h, opt);
 
 
 % 
@@ -789,7 +971,7 @@ guidata(h, opt);
 % % play movie
 % movie(F, cfg.movierpt, cfg.framespersec);
 
-uiresume;
+% uiresume;
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -805,9 +987,16 @@ end
 
 opt =  guidata(h);
 
-cmap = colormap(opt.handles.axes.movie, maps{val});
+cmap = feval(maps{val}, size(colormap, 1));
+% if strcmp(maps{val}, 'ikelvin')
+%   cmap = ikelvin(size(colormap, 1));
+% elseif strcmp(maps{val}, 'kelvin')
+%   cmap = kelvin(size(colormap, 1));
+% else  
+%   cmap = colormap(opt.handles.axes.movie, maps{val});
+% end
 
-if get(opt.handles.checkbox.auto, 'Value')
+if get(opt.handles.checkbox.automatic, 'Value')
   colormap(opt.handles.axes.movie, cmap);
 else
   adjust_colorbar(opt);
@@ -831,6 +1020,9 @@ else
 end
 
 opt =  guidata(h);
+if (~incr&&~decr&&exist('eventdata', 'var')&&~isempty(eventdata)) % init call
+  caxis(opt.handles.axes.movie, eventdata);
+end
 [zmin zmax] = caxis(opt.handles.axes.movie);
 yLim = get(opt.handles.colorbar, 'YLim');
 
@@ -854,7 +1046,7 @@ elseif decr
   else
     zmax = zmax - mean(diff(yTick));
   end
-elseif get(opt.handles.checkbox.auto, 'Value') % if automatic
+elseif get(opt.handles.checkbox.automatic, 'Value') % if automatic
   set(opt.handles.lines.upperColor, 'Visible', 'off');
   set(opt.handles.lines.lowerColor, 'Visible', 'off');
   set(opt.handles.lines.upperColor, 'YData', [yLim(end)/2 yLim(end)/2]);
@@ -864,11 +1056,11 @@ elseif get(opt.handles.checkbox.auto, 'Value') % if automatic
   set(opt.handles.button.incrLowerColor, 'Enable', 'off');
   set(opt.handles.button.decrLowerColor, 'Enable', 'off');
   if get(opt.handles.checkbox.symmetric, 'Value') % maxabs
-    zmax = max(abs(opt.dat(:)));
+    zmax = max(max(abs(opt.dat(:,:,opt.valy))));
     zmin = -zmax;
-  else % maxmin
-    zmin = min(opt.dat(:));
-    zmax = max(opt.dat(:));
+  else   % maxmin
+    zmin = min(min(opt.dat(:,:,opt.valy)));
+    zmax = max(max(opt.dat(:,:,opt.valy)));
   end
 else
   set(opt.handles.lines.upperColor, 'Visible', 'on');
@@ -888,7 +1080,8 @@ else
 end % incr, decr, automatic, else
 
 maps = get(opt.handles.menu.colormap, 'String');
-cmap = colormap(opt.handles.axes.movie, maps{get(opt.handles.menu.colormap, 'Value')});
+cmap = feval(maps{get(opt.handles.menu.colormap, 'Value')}, size(colormap, 1));
+colormap(opt.handles.axes.movie, cmap);
 
 adjust_colorbar(opt);
 
@@ -928,6 +1121,9 @@ set(f, 'WindowButtonMotionFcn', @cb_dragLine);
 guidata(h, opt);
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_dragLine(h, eventdata)
 opt =  guidata(h);
 pt = get(opt.handles.current.axes, 'CurrentPoint');
@@ -950,6 +1146,16 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_stopDrag(h, eventdata)
+while ~strcmp(get(h, 'Tag'), 'mainFigure')
+  h = get(h, 'Parent');
+end
+set(h, 'WindowButtonMotionFcn', '');
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function adjust_colorbar(opt)
 % adjust colorbar
 upper = get(opt.handles.lines.upperColor, 'YData');
@@ -958,16 +1164,9 @@ if any(round(upper)==0) || any(round(lower)==0)
   return;
 end
 maps = get(opt.handles.menu.colormap, 'String');
-cmap = colormap(opt.handles.axes.movie, maps{get(opt.handles.menu.colormap, 'Value')});
+cmap = feval(maps{get(opt.handles.menu.colormap, 'Value')}, size(colormap, 1));
 cmap(round(lower(1)):round(upper(1)), :) = repmat(cmap(round(lower(1)), :), 1+round(upper(1))-round(lower(1)), 1);
 colormap(opt.handles.axes.movie, cmap);
-end
-
-function cb_stopDrag(h, eventdata)
-while ~strcmp(get(h, 'Tag'), 'mainFigure')
-  h = get(h, 'Parent');
-end
-set(h, 'WindowButtonMotionFcn', '');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1002,7 +1201,7 @@ if opt.issource
   %   cameratoolbar(opt.handles.figure, 'Show');
 else
   axes(opt.handles.axes.movie)
-  [dum, opt.handles.grid] = ft_plot_topo(opt.layout.pos(sellay,1), opt.layout.pos(sellay,2), zeros(numel(sellay),1), 'mask', opt.layout.mask, 'outline', opt.layout.outline, 'interpmethod', 'v4', 'interplim', 'mask', 'parent', opt.handles.axes.movie);
+  [dum, opt.handles.grid] = ft_plot_topo(opt.layout.pos(opt.sellay,1), opt.layout.pos(opt.sellay,2), zeros(numel(opt.sellay),1), 'mask', opt.layout.mask, 'outline', opt.layout.outline, 'interpmethod', 'v4', 'interplim', 'mask', 'parent', opt.handles.axes.movie);
   %[dum, opt.handles.grid] = ft_plot_topo(layout.pos(sellay,1), layout.pos(sellay,2), zeros(numel(sellay),1), 'mask',layout.mask,  'outline', layout.outline, 'interpmethod', 'v4', 'interplim', 'mask', 'parent', opt.handles.axes.movie);
   % set(opt.handles.grid, 'Parent', opt.handles.axes.movie);
   opt.xdata   = get(opt.handles.grid, 'xdata');
@@ -1012,4 +1211,58 @@ else
     close gcf; % sometimes there is a new window that opens up
   end
 end
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function c = ikelvin(m)
+%  pos    hue   sat   value
+cu = [
+  0.0     1/2   0     1.0
+  0.125   1/2   0.6   0.95
+  0.375   2/3   1.0   0.8
+  0.5     2/3   1.0   0.3
+  ];
+
+cl = cu;
+cl(:, 3:4) = cl(end:-1:1, 3:4);
+cl(:, 2)   = cl(:, 2) - 0.5;
+cu(:,1)    = cu(:,1)+.5;
+
+x = linspace(0, 1, m)';
+l = (x < 0.5); u = ~l;
+for i = 1:3
+  h(l, i) = interp1(cl(:, 1), cl(:, i+1), x(l));
+  h(u, i) = interp1(cu(:, 1), cu(:, i+1), x(u));
+end
+c = hsv2rgb(h);
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function c = ikelvinr(m)
+%  pos    hue   sat   value
+cu = [
+  0.0     1/2   0     1.0
+  0.125   1/2   0.6   0.95
+  0.375   2/3   1.0   0.8
+  0.5     2/3   1.0   0.3
+  ];
+
+cl = cu;
+cl(:, 3:4) = cl(end:-1:1, 3:4);
+cl(:, 2)   = cl(:, 2) - 0.5;
+cu(:,1)    = cu(:,1)+.5;
+
+x = linspace(0, 1, m)';
+l = (x < 0.5); u = ~l;
+for i = 1:3
+  h(l, i) = interp1(cl(:, 1), cl(:, i+1), x(l));
+  h(u, i) = interp1(cu(:, 1), cu(:, i+1), x(u));
+end
+c = hsv2rgb(h);
+
+c = flipud(c);
 end
