@@ -128,8 +128,8 @@ numsgn      = size(sgnindx,1);
 if csdflg
   % determine the corresponding indices of all channel combinations
   for k=1:size(cfg.channelcmb,1)
-    sgncmbindx(k,1) = strmatch(cfg.channelcmb(k,1), data.label, 'exact');
-    sgncmbindx(k,2) = strmatch(cfg.channelcmb(k,2), data.label, 'exact');
+    sgncmbindx(k,1) = find(strcmp((cfg.channelcmb(k,1), data.label));
+    sgncmbindx(k,2) = find(strcmp((cfg.channelcmb(k,2), data.label));
   end
 
   numsgncmb   = size(sgncmbindx,1);

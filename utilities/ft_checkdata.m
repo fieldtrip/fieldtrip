@@ -1311,7 +1311,7 @@ elseif strcmp(current, 'old') && strcmp(type, 'new'),
     if ~isempty(ix),
       output = rmfield(output, fnames{k});
     end
-    ix = strmatch(fnames{k}, renamefields(:,1), 'exact');
+    ix = find(strcmp(fnames{k}, renamefields(:,1)));
     if ~isempty(ix),
       output = setfield(output, renamefields{ix,2}, ...
         getfield(output, renamefields{ix,1}));

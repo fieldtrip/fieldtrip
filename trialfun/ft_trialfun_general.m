@@ -303,7 +303,7 @@ else
       [event(sel(emptyval)).value]=deal(Inf);
       eventvalue = unique([event(sel).value]);
     else
-      if ~isempty(strmatch('Inf', {event(sel).value},'exact'))
+      if ~isempty(find(strcmp('Inf', {event(sel).value})))
         % It's a very unlikely scenario but ...
         warning('Event value''Inf'' cannot be handled by GUI selection. Mistakes are possible.')
       end
