@@ -49,7 +49,7 @@ end
 
 sel = [];
 for i=1:length(label)
-  sel = [sel; strmatch(label{i}, atlas.descr.name, 'exact')];
+  sel = [sel; find(strcmp(label{i}, atlas.descr.name))];
 end
 
 fprintf('found %d matching anatomical labels\n', length(sel));
