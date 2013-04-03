@@ -94,6 +94,7 @@ grid2 = ft_prepare_leadfield(cfg);
 time2 = toc;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 %% compare the time that it took for the two grad versions, the 10 seconds and fraction 2 are rather arbitrary
 
 if time1>10
@@ -161,17 +162,28 @@ end
 
 =======
 %% compare the time that it took, this fraction 1.5 is rather arbitrary
+=======
+%% compare the time that it took for the two grad versions, the 10 seconds and fraction 2 are rather arbitrary
+>>>>>>> enhancement - do not deal with backward compatible grad in ft_compute_leadfield, leave this to ft_prepare_vol_sens. Updated test script for #2085.
 
-if (time1/time2)>1.5
+if time1>10
+  error('the leadfield computation takes too long');
+end
+
+if (time1/time2)>2
     error('the leadfield computation without grad.type takes too long (%d seconds compared to %d seconds)', time1, time2);
 end
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> enhancement - created test script for timing the leadfield computation
 =======
 %%
 =======
+=======
+
+>>>>>>> enhancement - do not deal with backward compatible grad in ft_compute_leadfield, leave this to ft_prepare_vol_sens. Updated test script for #2085.
 %% the following section pertains to a change (improvement) I made to the ft_senslabel function which is meant to speed up subsequent calls using a large set of persistent variables
 >>>>>>> enhancement - include explicit chantype in the test script, see #2085
 
