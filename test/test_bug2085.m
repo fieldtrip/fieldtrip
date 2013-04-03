@@ -38,8 +38,11 @@ grad2 = ft_datatype_sens(grad);
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> enhancement - include explicit chantype in the test script, see #2085
+=======
+>>>>>>> enhancement - merged the git and svn change to the test script
 % this makes ft_senstype much faster
 grad2.type = 'magnetometer'; 
 for i=1:length(sel)
@@ -47,16 +50,20 @@ for i=1:length(sel)
   grad2.chanunit{i} = 'T';
 end
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 grad2.type = 'magnetometer'; % this makes ft_senstype much faster
 >>>>>>> enhancement - created test script for timing the leadfield computation
 =======
 >>>>>>> enhancement - include explicit chantype in the test script, see #2085
+=======
+>>>>>>> enhancement - merged the git and svn change to the test script
 
 %% determine the time to compute some leadfields
 
 cfg = [];
 cfg.vol = vol;
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 cfg.grid.resolution = 4;
@@ -68,6 +75,9 @@ cfg.resolution = 4;
 =======
 cfg.grid.resolution = 4;
 >>>>>>> enhancement - include explicit chantype in the test script, see #2085
+=======
+cfg.grid.resolution = 4;
+>>>>>>> enhancement - merged the git and svn change to the test script
 cfg.channel = 'all';
 
 <<<<<<< HEAD
@@ -177,6 +187,7 @@ end
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> enhancement - created test script for timing the leadfield computation
 =======
 %%
@@ -186,6 +197,9 @@ end
 >>>>>>> enhancement - do not deal with backward compatible grad in ft_compute_leadfield, leave this to ft_prepare_vol_sens. Updated test script for #2085.
 %% the following section pertains to a change (improvement) I made to the ft_senslabel function which is meant to speed up subsequent calls using a large set of persistent variables
 >>>>>>> enhancement - include explicit chantype in the test script, see #2085
+=======
+%% the following section pertains to a change (improvement) I made to the ft_senslabel function which is meant to speed up subsequent calls using a large set of persistent variables
+>>>>>>> enhancement - merged the git and svn change to the test script
 
 type = {
     'btiref'
