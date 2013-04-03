@@ -921,7 +921,7 @@ CHAN1020 = zeros(1,length(CHAN));
 XYZ1020  = zeros(length(CHAN),3);
 for c = 1:length(CHAN),
     chan = CHAN{c};
-    index = strmatch(lower(chan),lower(labels),'exact');
+    index = find(strcmp(lower(chan), lower(labels)));
     if ~isempty(index),
         CHAN1020(c) = index;
         XYZ1020(c,:) = [ x(index), y(index), z(index) ];
