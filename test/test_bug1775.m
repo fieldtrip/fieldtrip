@@ -1,9 +1,7 @@
-% function test_bug1775
+function test_bug1775
 
 % TEST test_bug1775
-% TEST ft_sourceparcellate ft_datatype_source ft_datatype_parcellation ft_datatype_segmentation
-
-
+% TEST ft_sourceparcellate ft_checkdata ft_datatype_source ft_datatype_volume ft_datatype_parcellation ft_datatype_segmentation
 
 %% create a set of sensors
 
@@ -24,27 +22,26 @@ grad.type = 'magnetometer';
 
 grad = ft_datatype_sens(grad);
 
-
 %% create a volume conductor
 
 vol = [];
-vol.r = 10;
-vol.o = [0 0 0];
-vol.unit = 'cm';
+vol.r     = 10;
+vol.o     = [0 0 0];
+vol.unit  = 'cm';
 
 vol = ft_datatype_headmodel(vol);
 
 %% create some precomputed leadfields
 
 cfg = [];
-cfg.grad = grad;
-cfg.vol = vol;
+cfg.grad            = grad;
+cfg.vol             = vol;
 cfg.grid.resolution = 1;
-cfg.channel = 'all';
+cfg.channel         = 'all';
 grid = ft_prepare_leadfield(cfg);
 
 %% create an anatomical parcellation
-parcellation            = [];
+parcellation = [];
 parcellation.pos        = grid.pos;
 parcellation.unit       = grid.unit;
 parcellation.type       = zeros(size(grid.pos,1),1);
@@ -59,8 +56,8 @@ parcellation.cfg = 'manual'; % to check whether the provenance is correct
 
 %% create simulated data
 cfg = [];
-cfg.grad = grad;
-cfg.vol = vol;
+cfg.grad    = grad;
+cfg.vol     = vol;
 cfg.dip.pos = [0 0 4];
 data = ft_dipolesimulation(cfg);
 
@@ -69,28 +66,28 @@ cfg.covariance = 'yes';
 timelock = ft_timelockanalysis(cfg, data);
 
 cfg = [];
-cfg.method = 'mtmfft';
-cfg.taper = 'hanning';
+cfg.method  = 'mtmfft';
+cfg.taper   = 'hanning';
 freq1 = ft_freqanalysis(cfg, data);
 
 cfg = [];
-cfg.method = 'wavelet';
-cfg.toi = data.time{1};
+cfg.method  = 'wavelet';
+cfg.toi     = data.time{1};
 freq2 = ft_freqanalysis(cfg, data);
 
 cfg = [];
-cfg.grad = grad;
-cfg.vol = vol;
-cfg.grid = grid;
-cfg.method = 'lcmv';
+cfg.grad    = grad;
+cfg.vol     = vol;
+cfg.grid    = grid;
+cfg.method  = 'lcmv';
 source1 = ft_sourceanalysis(cfg, timelock);
 
 cfg = [];
-cfg.grad = grad;
-cfg.vol = vol;
-cfg.grid = grid;
-cfg.method = 'mne';
-cfg.lambda = 0;
+cfg.grad    = grad;
+cfg.vol     = vol;
+cfg.grid    = grid;
+cfg.method  = 'mne';
+cfg.lambda  = 0;
 source2 = ft_sourceanalysis(cfg, timelock);
 
 %% make some parcellations
@@ -99,7 +96,7 @@ gridp    = ft_sourceparcellate(cfg, grid, parcellation);
 source1p = ft_sourceparcellate(cfg, source1, parcellation);
 source2p = ft_sourceparcellate(cfg, source2, parcellation);
 
-%% construct some more complex source structures
+%% construct a more complex source structure
 source3 = [];
 source3.pos       = source2.pos;
 source3.freq      = 1:5;
@@ -135,6 +132,11 @@ end
 source5.cohdimord = '{pos_pos}_ori_freq';
 
 cfg = [];
+cfg.method = 'mean';
+source5p = ft_sourceparcellate(cfg, source5, parcellation);
+cfg.method = 'min';
+source5p = ft_sourceparcellate(cfg, source5, parcellation);
+cfg.method = 'max';
 source5p = ft_sourceparcellate(cfg, source5, parcellation);
 
 %%
