@@ -99,6 +99,8 @@ L = add_mex_source(L,'src','mxSerialize');
 L = add_mex_source(L,'src','mxDeserialize');
 L = add_mex_source(L,'src','CalcMD5');
 
+L = add_mex_source(L,'src','combineClusters');
+
 oldDir = pwd;
 [baseDir, myName] = fileparts(mfilename('fullpath'));
 try
