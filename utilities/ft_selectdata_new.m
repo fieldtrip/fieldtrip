@@ -8,7 +8,8 @@ function [varargout] = ft_selectdata_new(cfg, varargin)
 %  [data] = ft_selectdata_new(cfg, data, ...)
 %
 % Valid cfg field are:
-%   cfg.trials  = 1xN, trial indices to keep (can be 'all', [] removes all trials)
+%   cfg.trials  = 1xN, trial indices to keep. It can be 'all'. You can use
+%                 logical indexing, where false(1,N) removes all the trials) 
 % For data with a time-dimension possible specifications are
 %   cfg.latency = value     -> can be 'all'
 %   cfg.latency = [beg end]

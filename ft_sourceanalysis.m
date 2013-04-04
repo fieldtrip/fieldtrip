@@ -1052,6 +1052,10 @@ if (strcmp(cfg.keeptrials, 'yes') || strcmp(cfg.method, 'pcc')) && isfield(data,
   source.trialinfo = data.trialinfo;
 end
 
+% clean up the output source structure, e.g. ensure that the size of output
+% elements is npos*1 and not 1*npos
+source = ft_checkdata(source);
+
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
