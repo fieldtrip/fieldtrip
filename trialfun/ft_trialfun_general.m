@@ -314,8 +314,7 @@ else
       end
     end
     for j=1:length(eventvalue)
-      if (ischar(eventvalue(j)) && ~strcmp(eventvalue(j), 'Inf')) || ...
-          (isnumeric(eventvalue(j)) && eventvalue(j)~=Inf) || ...
+      if (isnumeric(eventvalue(j)) && eventvalue(j)~=Inf) || ...
           (iscell(eventvalue(j)) && ischar(eventvalue{j}) && ~strcmp(eventvalue{j}, 'Inf'))
         settings=[settings; [eventtype(i), eventvalue(j)]];
       else
