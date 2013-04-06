@@ -1,4 +1,4 @@
-% function test_bug1967
+function test_bug1967
 
 % TEST test_bug1967
 % TEST ft_prepare_vol_sens
@@ -33,15 +33,40 @@ cfg = [];
 cfg.funparameter = 'seg';
 ft_sourceplot(cfg, volume);
 
-%% convert it into a head model
+%% convert it into a mesh 
 cfg = [];
 cfg.tissue = {'skin' 'skull' 'brain'};
 cfg.method = 'hexahedral';
 mesh = ft_prepare_mesh(cfg, volume);
 
+%% convert it into a head model
 cfg = [];
 cfg.tissue = {'skin' 'skull' 'brain'};
+cfg.conductivity = [1 1/80 1];
 cfg.method = 'simbio';
 headmodel = ft_prepare_headmodel(cfg, mesh);
 
+%% make some electrodes
+[pnt, tri] = icosahedron42;
+pnt = pnt(pnt(:,3)>0,:);
+pnt = pnt*55; % not precisely fitting on the mesh
+elec = [];
+elec.chanpos = pnt;
+elec.elecpos = pnt;
+for i=1:size(pnt,1)
+  elec.label{i} = num2str(i);
+end
+elec.unit = 'mm';
+
+figure
+ft_plot_mesh(mesh, 'edgeonly', 1)
+ft_plot_sens(elec)
+
+%% prepare the volume conductor and electrodes for leadfield computation
+[vol, sens] = ft_prepare_vol_sens(headmodel, elec)
+
+% elec is the original one, sens is the one after projecting
+if isequal(sens.elecpos, elec.elecpos)
+  error('the electrodes were not projected');
+end
 
