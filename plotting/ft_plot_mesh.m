@@ -95,6 +95,10 @@ hashex  = isfield(bnd, 'hex');  % hexaheders  as a Mx8 matrix with vertex indice
 hasline = isfield(bnd, 'line'); % line segments in 3-D
 haspoly = isfield(bnd, 'poly'); % polynomial surfaces in 3-D
 
+if (hastet || hashex) && ~edgeonly
+  warning('you probably want to use the "edgeonly" option for plotting only the outer surface')
+end
+
 if isempty(vertexcolor)
   if haspnt && (hastri || hastet || hashex || hasline || haspoly)
     vertexcolor ='none';
