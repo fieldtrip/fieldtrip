@@ -78,6 +78,10 @@ sedge = sort(edge, 2);
 indx = findsingleoccurringrows(sedge);
 edge = edge(indx, :);
 
+if ~isfield(bnd, 'pnt') && isfield(bnd, 'pos')
+  bnd.pnt = bnd.pos;
+end
+
 % the naming of the output edges depends on what they represent
 newbnd.pnt  = bnd.pnt;
 if isfield(bnd, 'tri')
