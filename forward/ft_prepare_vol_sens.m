@@ -104,13 +104,6 @@ if isfield(vol, 'unit') && isfield(sens, 'unit') && ~strcmp(vol.unit, sens.unit)
   error('inconsistency in the units of the volume conductor and the sensor array');
 end
 
-switch ft_voltype(vol)
-  case 'simbio'
-    ft_hastoolbox('simbio', 1);
-  case 'openmeeg'
-    ft_hastoolbox('openmeeg', 1);
-end
-
 if ismeg && iseeg
   % this is something that could be implemented relatively easily
   error('simultaneous EEG and MEG not yet supported');
@@ -456,7 +449,11 @@ elseif iseeg
           % incorporate the linear interpolation matrix and the system matrix into one matrix
           % this speeds up the subsequent repeated leadfield computations
           fprintf('combining electrode transfer and system matrix\n');
+          
           if strcmp(ft_voltype(vol), 'openmeeg')
+            % check that the external toolbox is present
+            ft_hastoolbox('openmeeg', 1);
+            
             nb_points_external_surface = size(vol.bnd(vol.skin_surface).pnt,1);
             vol.mat = vol.mat((end-nb_points_external_surface+1):end,:);
             vol.mat = interp(:,1:nb_points_external_surface) * vol.mat;
@@ -480,12 +477,23 @@ elseif iseeg
       end
       
     case 'simbio'
-      if isfield(vol,'bnd')
-        [el, prj] = project_elec(sens.elecpos, vol.bnd.pnt, vol.bnd.tri);
-        sens.tra = transfer_elec(vol.bnd.pnt, vol.bnd.tri, el);
-        % replace the original electrode positions by the projected positions
-        sens.elecpos = prj;
+      % check that the external toolbox is present
+      ft_hastoolbox('simbio', 1);
+      
+      % extract the outer surface
+      bnd = mesh2edge(vol);
+      for j=1:length(sens.label)
+        d = bsxfun(@minus, bnd.pnt, sens.elecpos(j,:));
+        [d, i] = min(sum(d.^2, 2));
+        % replace the position of each electrode by the closest vertex
+        sens.elecpos(j,:) = bnd.pnt(i,:);
       end
+      
+      if isfield(sens, 'chanpos')
+        % this is invalid after the projection to the surface
+        sens = rmfield(sens, 'chanpos');
+      end
+      
       vol.transfer = sb_transfer(vol,sens);
       
     case 'interpolate'
@@ -566,6 +574,7 @@ dp = plane(1:3) - line(:, 1:3);
 t = dot(ori(~par,:), dp(~par,:), 2)./dot(ori(~par,:), line(~par,4:6), 2);
 % compute coord of intersection point
 Ppr(~par, :) = line(~par,1:3) + repmat(t,1,3).*line(~par,4:6);
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % This function serves as a replacement for the dist function in the Neural
