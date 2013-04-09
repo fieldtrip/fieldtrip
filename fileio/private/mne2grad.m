@@ -217,3 +217,8 @@ elseif nPlaGrad<=122 && nMag==0
 else
   % do not specify type of acquisition system
 end
+
+% remove grad if empty
+if size(grad.label,1) == 0
+  grad = [];
+end
