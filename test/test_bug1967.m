@@ -1,3 +1,4 @@
+
 function test_bug1967
 
 % TEST test_bug1967
