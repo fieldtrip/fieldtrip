@@ -1,21 +1,15 @@
-function [H] = rigidbody(f)
+function [H] = translate(f)
 
-% RIGIDBODY creates the homogenous spatial transformation matrix
-% for a 6 parameter rigid-body transformation 
+% TRANSLATE returns the homogenous coordinate transformation matrix
+% corresponding to a translation along the x, y and z-axis
 %
 % Use as
-%   [H] = rigidbody(f)
-%
-% The transformation vector f should contain the 
-%   x-shift
-%   y-shift
-%   z-shift
-% followed by the
-%   pitch (rotation around x-axis, in degrees)
-%   roll  (rotation around y-axis, in degrees)
-%   yaw   (rotation around z-axis, in degrees)
+%   [H] = translate(T)
+% where
+%   T   [tx, ty, tz] translation along each of the axes
+%   H   corresponding homogenous transformation matrix
 
-% Copyright (C) 2000-2013, Robert Oostenveld
+% Copyright (C) 2000-2005, Robert Oostenveld
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -49,16 +43,13 @@ function [H] = rigidbody(f)
 %
 % $Id$
 
-if numel(f)~=6
+if numel(f)~=3
   error('incorrect input vector');
 end
 
-% compute the homogenous transformation matrix for the translation
-T = translate(f([1 2 3]));
-
-% compute the homogenous transformation matrix for the rotation
-R = rotate(f([4 5 6]));
-
-% compute the homogenous transformation matrix for the combination
-H = T*R;
-
+H = [
+  1 0 0 f(1)
+  0 1 0 f(2)
+  0 0 1 f(3)
+  0 0 0 1
+  ];
