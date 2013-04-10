@@ -41,6 +41,9 @@ function [dat] = ft_preproc_padding(dat, padtype, prepadlength, postpadlength)
 
 if nargin < 4
   postpadlength = prepadlength;
+else
+  prepadlength  = padlength;
+  postpadlength = padlength;
 end
 
 if prepadlength == 0 && postpadlength == 0
@@ -76,7 +79,7 @@ switch(padtype)
     % postdata padding
     begsample = 1;
     endsample = 0;
-    while padlength > begsample % this will be a linear piecewise function consisting of two pieces taking turns
+    while postpadlength > begsample % this will be a linear piecewise function consisting of two pieces taking turns
       endsample                                 = begsample + min(postpadlength-endsample, nsamples-1);
       padend(begsample:endsample-1)             = fliplr(mod(0:(endsample-begsample-1), nsamples)+nsamples-endsample+begsample);
       begsample = endsample-1;
