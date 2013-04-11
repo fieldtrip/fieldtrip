@@ -138,6 +138,7 @@ cfgSelect = [];
 cfgSelect.latency = cfg.latency;
 if length(cfg.trials)~=length(data.trial), cfgSelect.trials  = cfg.trials; end
 data = ft_selectdata(cfgSelect,data);
+ntrial = length(data.trial);
 
 begpad = round(cfg.timwin(1)*data.fsample);
 endpad = round(cfg.timwin(2)*data.fsample);
