@@ -615,6 +615,9 @@ else
     if isfield(hdr, 'grad')
       dataout.grad             = hdr.grad;             % gradiometer system in head coordinates
     end
+    if isfield(hdr, 'elec')
+      dataout.elec             = hdr.elec;             % EEG information in header (f.e. headerformat = 'neuromag_fif')
+    end
 
   end % for all channel groups
 
