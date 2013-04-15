@@ -384,7 +384,7 @@ if ~isempty(createsubcfg)
           'fixedori'
           };
         
-      case {'loreta', 'rv'}
+      case {'rv'}
         fieldname = {
           'feedback'
           'lambda'
