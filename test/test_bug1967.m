@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 function test_bug1967
+=======
+% function test_bug1967
+>>>>>>> enhancement - started making a test script for bug 1967
 
 % TEST test_bug1967
 % TEST ft_prepare_vol_sens
@@ -33,12 +37,17 @@ cfg = [];
 cfg.funparameter = 'seg';
 ft_sourceplot(cfg, volume);
 
+<<<<<<< HEAD
 %% convert it into a mesh 
+=======
+%% convert it into a head model
+>>>>>>> enhancement - started making a test script for bug 1967
 cfg = [];
 cfg.tissue = {'skin' 'skull' 'brain'};
 cfg.method = 'hexahedral';
 mesh = ft_prepare_mesh(cfg, volume);
 
+<<<<<<< HEAD
 %% convert it into a head model
 cfg = [];
 cfg.tissue = {'skin' 'skull' 'brain'};
@@ -69,4 +78,11 @@ ft_plot_sens(elec)
 if isequal(sens.elecpos, elec.elecpos)
   error('the electrodes were not projected');
 end
+=======
+cfg = [];
+cfg.tissue = {'skin' 'skull' 'brain'};
+cfg.method = 'simbio';
+headmodel = ft_prepare_headmodel(cfg, mesh);
+
+>>>>>>> enhancement - started making a test script for bug 1967
 
