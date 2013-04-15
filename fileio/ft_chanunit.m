@@ -137,10 +137,10 @@ elseif ft_senstype(input, 'neuromag') && isfield(input, 'chantype')
   end
   
 elseif ft_senstype(input, 'ctf') && isfield(input, 'chantype')
-  chanunit(strcmp('eeg',              input.chantype)) = {'unknown'}; % FIXME
-  chanunit(strcmp('emg',              input.chantype)) = {'unknown'}; % FIXME
-  chanunit(strcmp('eog',              input.chantype)) = {'unknown'}; % FIXME
-  chanunit(strcmp('ecg',              input.chantype)) = {'unknown'}; % FIXME
+  chanunit(strcmp('eeg',              input.chantype)) = {'V'}; 
+  chanunit(strcmp('emg',              input.chantype)) = {'V'}; 
+  chanunit(strcmp('eog',              input.chantype)) = {'V'}; 
+  chanunit(strcmp('ecg',              input.chantype)) = {'V'}; 
   chanunit(strcmp('meggrad',          input.chantype)) = {'T'};
   chanunit(strcmp('refmag',           input.chantype)) = {'T'};
   chanunit(strcmp('refgrad',          input.chantype)) = {'T'};
