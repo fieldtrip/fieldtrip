@@ -9,6 +9,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> enhancement - started making a test script for bug 1967
 =======
@@ -54,6 +55,9 @@ function test_bug1967
 =======
 function test_bug1967
 >>>>>>> resolved merge conflict between svn and github, the only way was to allow the conflict to affect the file for some commits. This commit reverts the file back to the desired state.
+=======
+function test_bug1967
+>>>>>>> c06154ae1f0286dce8299d715683b7b0decf9411
 
 % TEST test_bug1967
 % TEST ft_prepare_vol_sens
@@ -99,6 +103,7 @@ ft_sourceplot(cfg, volume);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> enhancement - extended test script for http://bugzilla.fcdonders.nl/show_bug.cgi?id=1967
 =======
@@ -143,6 +148,9 @@ ft_sourceplot(cfg, volume);
 =======
 %% convert it into a mesh 
 >>>>>>> resolved merge conflict between svn and github, the only way was to allow the conflict to affect the file for some commits. This commit reverts the file back to the desired state.
+=======
+%% convert it into a mesh 
+>>>>>>> c06154ae1f0286dce8299d715683b7b0decf9411
 cfg = [];
 cfg.tissue = {'skin' 'skull' 'brain'};
 cfg.method = 'hexahedral';
@@ -159,6 +167,7 @@ mesh = ft_prepare_mesh(cfg, volume);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> enhancement - extended test script for http://bugzilla.fcdonders.nl/show_bug.cgi?id=1967
 =======
@@ -257,6 +266,8 @@ end
 >>>>>>> enhancement - started making a test script for bug 1967
 =======
 >>>>>>> merge conflict
+=======
+>>>>>>> c06154ae1f0286dce8299d715683b7b0decf9411
 %% convert it into a head model
 cfg = [];
 cfg.tissue = {'skin' 'skull' 'brain'};
@@ -264,6 +275,7 @@ cfg.conductivity = [1 1/80 1];
 cfg.method = 'simbio';
 headmodel = ft_prepare_headmodel(cfg, mesh);
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -321,6 +333,8 @@ headmodel = ft_prepare_headmodel(cfg, mesh);
 >>>>>>> merge conflict
 =======
 >>>>>>> resolved merge conflict between svn and github, the only way was to allow the conflict to affect the file for some commits. This commit reverts the file back to the desired state.
+=======
+>>>>>>> c06154ae1f0286dce8299d715683b7b0decf9411
 %% make some electrodes
 [pnt, tri] = icosahedron42;
 pnt = pnt(pnt(:,3)>0,:);
