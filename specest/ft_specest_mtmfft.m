@@ -84,6 +84,7 @@ endtime    = pad;                   % total time in seconds of padded data
 
 
 % Set freqboi and freqoi
+freqoiinput = freqoi;
 if isnumeric(freqoi) % if input is a vector
   freqboi   = round(freqoi ./ (fsample ./ endnsample)) + 1; % is equivalent to: round(freqoi .* endtime) + 1;
   freqboi   = unique(freqboi);
@@ -99,7 +100,16 @@ if strcmp(taper, 'dpss') && numel(tapsmofrq)~=1 && (numel(tapsmofrq)~=nfreqoi)
   error('tapsmofrq needs to contain a smoothing parameter for every frequency when requesting variable number of slepian tapers')
 end
 
-
+% throw a warning if input freqoi is different from output freqoi
+if isnumeric(freqoiinput)
+  if numel(freqoiinput) ~= numel(freqoi) % freqoi will not contain double frequency bins when requested
+    warning('output frequencies are different from input frequencies, multiples of the same bin were requested but not given');
+  else
+    if any(freqoiinput-freqoi >= eps*1e6)
+      warning('output frequencies are different from input frequencies');
+    end
+  end
+end
 
 % determine whether tapers need to be recomputed
 current_argin = {time, postpad, taper, tapsmofrq, freqoi, tapopt, dimord}; % reasoning: if time and postpad are equal, it's the same length trial, if the rest is equal then the requested output is equal

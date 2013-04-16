@@ -69,6 +69,7 @@ prepad     = zeros(1,floor(((pad - dattime) * fsample) ./ 2));
 postpad    = zeros(1,ceil(((pad - dattime) * fsample) ./ 2));
 
 % Set freqboi and freqoi
+freqoiinput = freqoi;
 if isnumeric(freqoi) % if input is a vector
   freqboi   = round(freqoi ./ (fsample ./ endnsample)) + 1; % is equivalent to: round(freqoi .* endtime) + 1;
   freqboi   = unique(freqboi);
@@ -86,7 +87,19 @@ end
 nfreqboi = length(freqboi);
 nfreqoi  = length(freqoi);
 
+% throw a warning if input freqoi is different from output freqoi
+if isnumeric(freqoiinput)
+  if numel(freqoiinput) ~= numel(freqoi) % freqoi will not contain double frequency bins when requested
+    warning('output frequencies are different from input frequencies, multiples of the same bin were requested but not given');
+  else
+    if any(freqoiinput-freqoi >= eps*1e6)
+      warning('output frequencies are different from input frequencies');
+    end
+  end
+end
+
 % Set timeboi and timeoi
+timeoiinput = timeoi;
 offset = round(time(1)*fsample);
 if isnumeric(timeoi) % if input is a vector
   timeboi  = round(timeoi .* fsample - offset) + 1;
@@ -97,6 +110,14 @@ elseif strcmp(timeoi,'all') % if input was 'all'
   ntimeboi = length(timeboi);
   timeoi   = time;
 end
+
+% throw a warning if input timeoi is different from output timeoi
+if isnumeric(timeoiinput)
+  if any(timeoiinput-timeoi >= eps*1e6) % timeoi will contain double time-points when requested
+    warning('output time-bins are different from input ime-bins');
+  end
+end
+
 
 % Creating wavelets
 % expand width to array if constant width
