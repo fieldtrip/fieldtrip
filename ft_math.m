@@ -74,8 +74,10 @@ tmpcfg.parameter = cfg.parameter;
 % restore the provenance information
 [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
 
+cfg.parameter = tmpcfg.parameter;
+
 if isfield(varargin{1}, [cfg.parameter 'dimord'])
-  dimord = varargin{1}.([cfg.parameter 'dimord']);
+ dimord = varargin{1}.([cfg.parameter 'dimord']);
 elseif isfield(varargin{1}, 'dimord')
   dimord = varargin{1}.dimord;
 else

@@ -68,18 +68,17 @@ function label = ft_senslabel(type)
 %
 % $Id$
 
-% these are for remembering the type on subsequent calls with the same input arguments
-persistent previous_argin previous_argout
+% these are for speeding up subsequent calls with the same input arguments
+persistent btiref bti148 bti148_planar bti248 bti248_planar ctfref ctfheadloc ctf64 ctf151 ctf151_planar ctf275 ctf275_planar neuromag122 neuromag122alt neuromag306 neuromag306alt eeg1020 eeg1010 eeg1005 ext1020 biosemi64 biosemi128 biosemi256 egi32 egi64 egi128 egi256 itab28 itab153 itab153_planar yokogawa9 yokogawa64 yokogawa64_planar yokogawa160 yokogawa160_planar yokogawa440 yokogawa440_planar electrode
 
 if nargin<1
   % ensure that all input arguments are defined
-  type = [];
+  type = 'none';
 end
 
-current_argin = {type};
-if isequal(current_argin, previous_argin)
-  % don't do the type detection again, but return the previous values from cache
-  label = previous_argout{1};
+if exist(type, 'var') && ~isempty(eval(type))
+  % don't construct the list of channel names again, return the previous list from cache
+  label = eval(type);
   return
 end
 
@@ -2795,7 +2794,7 @@ switch type
       'MAG_27'
       'MAG_28'
       };
-
+    
   case 'itab153'
     label        = cell(153,1);
     for i=1:153
@@ -2824,7 +2823,7 @@ switch type
     % this should be consistent with: read_yokogawa_header, ft_channelselection, yokogawa2grad, planarchannelset
     label = cell(64,1);
     for i=1:64
-      label{i} = sprintf('AG%03d',    i);
+      label{i} = sprintf('AG%03d', i);
     end
     
   case 'yokogawa64_planar'
@@ -2841,7 +2840,7 @@ switch type
     % this should be consistent with: read_yokogawa_header, ft_channelselection, yokogawa2grad, planarchannelset
     label = cell(160,1);
     for i=1:160
-      label{i} = sprintf('AG%03d',    i);
+      label{i} = sprintf('AG%03d', i);
     end
     
   case 'yokogawa160_planar'
@@ -3497,10 +3496,5 @@ switch type
     error('the requested sensor type is not supported');
 end
 
-% remember the current input and output arguments, so that they can be
-% reused on a subsequent call in case the same input argument is given
-current_argout = {label};
-if isempty(previous_argin)
-  previous_argin  = current_argin;
-  previous_argout = current_argout;
-end
+% remember this set of labels to speed up a subsequent call
+eval(sprintf('%s = label;', type));

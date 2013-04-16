@@ -1,4 +1,4 @@
-function [interp, permutevec, flipflags] = align_ijk2xyz(interp)
+function [interp, permutevec, flipflags, transform] = align_ijk2xyz(interp)
 
 % ALIGN_IJK2XYZ flips and permutes the 3D volume data such that the
 % voxel indices and the headcorodinates approximately correspond. The
@@ -37,6 +37,11 @@ end
 [dum, dim2] = max(abs(interp.transform(2,1:3)));
 [dum, dim3] = max(abs(interp.transform(3,1:3)));
 permutevec = [dim1 dim2 dim3];
+permutemat(4,4) = 1;
+permutemat(permutevec(1),1) = 1;
+permutemat(permutevec(2),2) = 1;
+permutemat(permutevec(3),3) = 1;
+transform = permutemat;
 if length(unique(permutevec))<3
   error('could not determine the correspondence between volume and headcoordinate axes');
 else
@@ -65,6 +70,7 @@ if interp.transform(1,1)<0
     interp = setsubfield(interp, param{i}, flipdim(getsubfield(interp, param{i}), 1));
   end
   interp.transform = interp.transform * flipx;
+  transform        = transform * flipx;
 end
 if interp.transform(2,2)<0
   flipflags(2) = 1;
@@ -72,6 +78,7 @@ if interp.transform(2,2)<0
     interp = setsubfield(interp, param{i}, flipdim(getsubfield(interp, param{i}), 2));
   end
   interp.transform = interp.transform * flipy;
+  transform        = transform * flipy;
 end
 if interp.transform(3,3)<0
   flipflags(3) = 1;
@@ -79,6 +86,7 @@ if interp.transform(3,3)<0
     interp = setsubfield(interp, param{i}, flipdim(getsubfield(interp, param{i}), 3));
   end
   interp.transform = interp.transform * flipz;
+  transform        = transform * flipz;
 end
 
 if isfield(interp, 'inside') && isfield(interp, 'outside')

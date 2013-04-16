@@ -76,7 +76,7 @@ switch(padtype)
     % postdata padding
     begsample = 1;
     endsample = 0;
-    while padlength > begsample % this will be a linear piecewise function consisting of two pieces taking turns
+    while postpadlength > begsample % this will be a linear piecewise function consisting of two pieces taking turns
       endsample                                 = begsample + min(postpadlength-endsample, nsamples-1);
       padend(begsample:endsample-1)             = fliplr(mod(0:(endsample-begsample-1), nsamples)+nsamples-endsample+begsample);
       begsample = endsample-1;

@@ -91,14 +91,17 @@ stat_freq_shuff = ft_freqstatistics(cfg, freq_shuff{:});
 [sel1,sel2] = match_str(stat_tl.label, stat_tl_shuff.label);
 stat_tl_shuff.label = stat_tl_shuff.label(sel2);
 stat_tl_shuff.stat = stat_tl_shuff.stat(sel2,:);
+stat_tl_shuff.prob = stat_tl_shuff.prob(sel2,:);
 
 [sel1,sel2] = match_str(stat_tl.label, stat_freq.label);
 stat_freq.label = stat_freq.label(sel2);
 stat_freq.stat = stat_freq.stat(sel2,:,:);
+stat_freq.prob = stat_freq.prob(sel2,:,:);
 
 [sel1,sel2] = match_str(stat_tl.label, stat_freq_shuff.label);
 stat_freq_shuff.label = stat_freq_shuff.label(sel2);
 stat_freq_shuff.stat = stat_freq_shuff.stat(sel2,:,:);
+stat_freq_shuff.prob = stat_freq_shuff.prob(sel2,:,:);
 
 fprintf('\ndiagnostic results:\n');
 errflag = 0;

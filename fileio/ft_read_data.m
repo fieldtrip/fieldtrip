@@ -1048,6 +1048,10 @@ switch dataformat
     
   case 'bucn_nirs'
     dat = read_bucn_nirsdata(filename, hdr, begsample, endsample, chanindx);
+
+  case 'riff_wave'
+    dat = wavread(filename, [begsample endsample])';
+    dat = dat(chanindx,:);
     
   case {'neurosim_ds' 'neurosim_signals'}
     [hdr, dat] = read_neurosim_signals(filename);

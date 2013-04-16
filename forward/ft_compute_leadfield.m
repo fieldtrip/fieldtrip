@@ -103,8 +103,11 @@ if ~isstruct(sens) && size(sens, 2)==3
   sens = struct('pnt', sens);
 end
 
-% ensure that the sensor description is up-to-date (Aug 2011)
-sens = ft_datatype_sens(sens);
+% ft_prepare_vol_sens should be called prior to ft_compute_leadfield
+% to ensure that the sens and vol are up to date, since the backward
+% compatibility check should not be performed for each dipole location
+% sens = ft_datatype_sens(sens);
+% vol  = ft_datatype_headmodel(vol);
 
 % determine whether it is EEG or MEG
 iseeg = ft_senstype(sens, 'eeg');

@@ -151,7 +151,7 @@ cfg.component         = ft_getopt(cfg, 'component',         []);
 cfg.directionality    = ft_getopt(cfg, 'directionality',    []);
 cfg.channel           = ft_getopt(cfg, 'channel',           'all');
 cfg.figurename        = ft_getopt(cfg, 'figurename',        []);
-
+cfg.interpolatenan    = ft_getopt(cfg, 'interpolatenan',    'yes');
 
 % compatibility for previous highlighting option
 if isnumeric(cfg.highlight)
@@ -689,7 +689,7 @@ if strcmp(cfg.style,'fill');        style = 'isofill';     end
 
 % check for nans
 nanInds = isnan(datavector);
-if any(nanInds)
+if strcmp(cfg.interpolatenan,'yes') && any(nanInds)
   warning('removing NaNs from the data');
   chanX(nanInds) = [];
   chanY(nanInds) = [];

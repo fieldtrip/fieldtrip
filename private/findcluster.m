@@ -101,36 +101,9 @@ end
 labelmat = reshape(labelmat, spatdimlength, nfreq*ntime);
 
 % combine clusters that are connected in neighbouring channel(s)
-% (combinations).
-replaceby=1:total;
-for spatdimlev=1:spatdimlength
-  neighbours=find(spatdimneighbstructmat(spatdimlev,:));
-  for nbindx=neighbours
-    indx = find((labelmat(spatdimlev,:)~=0) & (labelmat(nbindx,:)~=0));
-    for i=1:length(indx)
-      a = labelmat(spatdimlev, indx(i));
-      b = labelmat(nbindx, indx(i));
-      if replaceby(a)==replaceby(b)
-        % do nothing
-        continue;
-      elseif replaceby(a)<replaceby(b)
-        % replace all entries with content replaceby(b) by replaceby(a).
-        replaceby(find(replaceby==replaceby(b))) = replaceby(a); 
-      elseif replaceby(b)<replaceby(a)
-        % replace all entries with content replaceby(a) by replaceby(b).
-        replaceby(find(replaceby==replaceby(a))) = replaceby(b); 
-      end
-    end
-  end
-end
-
-% renumber all the clusters
-num = 0;
-cluster = zeros(size(labelmat));
-for uniquelabel=unique(replaceby(:))'
-  num = num+1;
-  cluster(ismember(labelmat(:),find(replaceby==uniquelabel))) = num;
-end
+% (combinations). Convert inputs to uint32 as that is required by the mex
+% file (and the values will be positive integers anyway).
+cluster = combineClusters(uint32(labelmat), logical(spatdimneighbstructmat), uint32(total));
 
 % reshape the output to the original format of the data
 cluster = reshape(cluster, spatdimlength, nfreq, ntime);
