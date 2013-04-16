@@ -19,7 +19,6 @@ function [source] = ft_sourceanalysis(cfg, data, baseline)
 %                    'dics'    dynamic imaging of coherent sources
 %                    'pcc'     partial cannonical correlation/coherence
 %                    'mne'     minimum norm estimation
-%                    'loreta'  minimum norm estimation with smoothness constraint
 %                    'rv'      scan residual variance with single dipole
 %                    'music'   multiple signal classification
 %                    'mvl'   multivariate Laplace source localization
@@ -276,7 +275,7 @@ cfg.(cfg.method).normalize     = ft_getopt(cfg.(cfg.method), 'normalize',     'n
 
 convertfreq = 0;
 convertcomp = 0;
-if ~istimelock && (strcmp(cfg.method, 'mne') || strcmp(cfg.method, 'loreta') || strcmp(cfg.method, 'rv') || strcmp(cfg.method, 'music'))
+if ~istimelock && (strcmp(cfg.method, 'mne') || strcmp(cfg.method, 'rv') || strcmp(cfg.method, 'music'))
   % these timelock methods are also supported for frequency or component data
   if isfreq
     [data, cfg] = freq2timelock(cfg, data);
@@ -608,7 +607,7 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc'}))
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % do time domain source reconstruction
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne', 'loreta', 'rv', 'music', 'pcc', 'mvl'}))
+elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne', 'rv', 'music', 'pcc', 'mvl'}))
   
   % determine the size of the data
   Nsamples = size(data.avg,2);
@@ -885,12 +884,6 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne', 'loreta', 'rv
       else
         dip(i) = minimumnormestimate(grid, sens, vol, squeeze_avg, optarg{:});
       end
-    end
-  elseif strcmp(cfg.method, 'loreta')
-    for i=1:Nrepetitions
-      fprintf('estimating LORETA current density distribution for repetition %d\n', i);
-      squeeze_avg=reshape(avg(i,:,:),[siz(2) siz(3)]);
-      dip(i) = loreta(grid, sens, vol, squeeze_avg,                optarg{:});
     end
   elseif strcmp(cfg.method, 'rv')
     for i=1:Nrepetitions

@@ -1,13 +1,17 @@
-function [grad, elec] = mne2grad(hdr)
+function [grad, elec] = mne2grad(hdr, dewar)
 
 % MNE2GRAD creates gradiometer definition for FIFF dataset
 %
 % Use as
-% [grad, elec] = mne2grad(hdr)
+%   [grad, elec] = mne2grad(hdr, dewar)
+%
+% The optional second argument is a boolean that can be used to return the sensors
+% in dewar coordinates (default is head coordinates)
 %
 % See also CTF2GRAD, BTI2GRAD
 
-% Laurence Hunt 03/12/2008 (with thanks to Joachim Gross's original script based on fiff_access). lhunt@fmrib.ox.ac.uk
+% Laurence Hunt 03/12/2008 (with thanks to Joachim Gross's original script 
+% based on fiff_access). lhunt@fmrib.ox.ac.uk
 %
 % Teresa Cheung 09/24/2011 revision to Laurence Hunt's script. The coil
 % geometry has been revised to better reflect the coil dimensions of the
@@ -37,6 +41,10 @@ function [grad, elec] = mne2grad(hdr)
 %
 % $Id$
 
+if nargin<2 || isempty(dewar)
+  dewar = false;
+end
+
 grad = [];
 
 % orig = fiff_read_meas_info(filename);
@@ -48,13 +56,28 @@ else
   orig = hdr; % assume that it is the original header
 end
 
-% begin by transforming all channel locations into device frame, if possible
-if isempty(orig.dev_head_t)==0
-  orig.chs = fiff_transform_meg_chs(orig.chs,orig.dev_head_t);
-  orig.chs = fiff_transform_eeg_chs(orig.chs,orig.dev_head_t); % EEG channels are normally stored in head coordinates anyway, but what the heck
+% begin by transforming all channel locations into the desired coordinate system, if possible
+
+if ~dewar
+  if ~isempty(orig.dev_head_t)
+    orig.chs = fiff_transform_meg_chs(orig.chs,orig.dev_head_t);
+    orig.chs = fiff_transform_eeg_chs(orig.chs,orig.dev_head_t); % EEG channels are normally stored in head coordinates anyway, but what the heck
+  else
+    warning('No device to head transform available in fif file');
+    warning('MEG channels will likely have coordinates in device frame, not head frame');
+  end
 else
-  warning('No device to head transform available in fif file');
-  warning('MEG channels will likely have coordinates in device frame, not head frame');
+  if ~isempty(orig.dev_head_t)
+    % compute the transformation from head to device
+    orig.head_dev_t.trans = inv(orig.dev_head_t.trans);
+    orig.head_dev_t.from  = orig.dev_head_t.to;
+    orig.head_dev_t.to    = orig.dev_head_t.from;
+    orig.chs = fiff_transform_meg_chs(orig.chs,orig.head_dev_t); % MEG channels are normally stored in dewar coordinates anyway, but what the heck
+    orig.chs = fiff_transform_eeg_chs(orig.chs,orig.head_dev_t);
+  else
+    warning('No device to head transform available in fif file');
+    warning('EEG channels will likely have coordinates in head frame, not device frame');
+  end
 end
 
 % how many Planar gradiometers?
