@@ -50,6 +50,7 @@ function test_bug1967
 % TEST test_bug1967
 % TEST ft_prepare_vol_sens
 
+
 %% construct a segmentation
 nx = 101;
 ny = 101;
