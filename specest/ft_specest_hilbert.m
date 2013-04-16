@@ -97,7 +97,7 @@ end
 
 % throw a warning if input timeoi is different from output timeoi
 if isnumeric(timeoiinput)
-  if any(abs(timeoiinput-timeoi) >= eps*1e6) % timeoi will contain double time-points when requested
+  if any(timeoiinput-timeoi >= eps*1e6) % timeoi will contain double time-points when requested
     warning('output time-bins are different from input ime-bins');
   end
 end
