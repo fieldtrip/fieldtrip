@@ -146,6 +146,9 @@ if isnumeric(timeoiinput)
 end
 
 % set number of samples per time-window (timwin is in seconds)
+if numel(timwin)==1 && nfreqoi~=1
+  timwin = repmat(timwin,[1 nfreqoi]);
+end
 timwinsample = round(timwin .* fsample);
 
 
