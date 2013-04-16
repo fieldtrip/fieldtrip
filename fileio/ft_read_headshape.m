@@ -111,10 +111,10 @@ end
 filename = fetch_url(filename);
 
 % get the options
-fileformat  = ft_getopt(varargin, 'format');
-coordinates = ft_getopt(varargin, 'coordinates', 'head'); % the alternative for CTF coil positions is dewar
-unit        = ft_getopt(varargin, 'unit'); % the default for yokogawa is cm, see below
-annotationfile = ft_getopt(varargin, 'annotationfile');
+fileformat      = ft_getopt(varargin, 'format');
+coordinates     = ft_getopt(varargin, 'coordinates', 'head'); % for ctf or neuromag_mne coil positions, the alternative is dewar
+unit            = ft_getopt(varargin, 'unit');                % the default for yokogawa is cm, see below
+annotationfile  = ft_getopt(varargin, 'annotationfile');
 
 if isempty(fileformat)
   % only do the autodetection if the format was not specified
@@ -304,6 +304,7 @@ switch fileformat
         for i=1:nFid % loop over fiducials
           % check that this point is in head coordinates
           % 0 is unknown
+          % 1 is device, i.e. dewar
           % 4 is fiducial system, i.e. head coordinates
           if hdr.orig.dig(i).coord_frame~=4
             warning(['Digitiser point (' num2str(i) ') not stored in head coordinates!']);
@@ -342,7 +343,9 @@ switch fileformat
         shape.fid.label=shape.fid.label';
         
       case 'dewar'
+        % FIXME Arjen will fix this for bug 1792
         error('Dewar coordinates not supported for headshape yet (MNE toolbox)');
+        
       otherwise
         error('Incorrect coordinates specified');
     end
