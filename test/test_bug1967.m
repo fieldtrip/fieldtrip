@@ -8,6 +8,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> enhancement - started making a test script for bug 1967
 =======
@@ -50,6 +51,9 @@ function test_bug1967
 =======
 function test_bug1967
 >>>>>>> merge conflict
+=======
+function test_bug1967
+>>>>>>> resolved merge conflict between svn and github, the only way was to allow the conflict to affect the file for some commits. This commit reverts the file back to the desired state.
 
 % TEST test_bug1967
 % TEST ft_prepare_vol_sens
@@ -94,6 +98,7 @@ ft_sourceplot(cfg, volume);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> enhancement - extended test script for http://bugzilla.fcdonders.nl/show_bug.cgi?id=1967
 =======
@@ -135,6 +140,9 @@ ft_sourceplot(cfg, volume);
 =======
 %% convert it into a mesh 
 >>>>>>> merge conflict
+=======
+%% convert it into a mesh 
+>>>>>>> resolved merge conflict between svn and github, the only way was to allow the conflict to affect the file for some commits. This commit reverts the file back to the desired state.
 cfg = [];
 cfg.tissue = {'skin' 'skull' 'brain'};
 cfg.method = 'hexahedral';
@@ -150,6 +158,7 @@ mesh = ft_prepare_mesh(cfg, volume);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> enhancement - extended test script for http://bugzilla.fcdonders.nl/show_bug.cgi?id=1967
 =======
@@ -194,6 +203,8 @@ end
 >>>>>>> enhancement - extended test script for http://bugzilla.fcdonders.nl/show_bug.cgi?id=1967
 =======
 >>>>>>> merge conflict
+=======
+>>>>>>> resolved merge conflict between svn and github, the only way was to allow the conflict to affect the file for some commits. This commit reverts the file back to the desired state.
 %% convert it into a head model
 =======
 %% convert it into a head model
@@ -205,6 +216,7 @@ cfg.conductivity = [1 1/80 1];
 cfg.method = 'simbio';
 headmodel = ft_prepare_headmodel(cfg, mesh);
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -307,6 +319,8 @@ headmodel = ft_prepare_headmodel(cfg, mesh);
 =======
 =======
 >>>>>>> merge conflict
+=======
+>>>>>>> resolved merge conflict between svn and github, the only way was to allow the conflict to affect the file for some commits. This commit reverts the file back to the desired state.
 %% make some electrodes
 [pnt, tri] = icosahedron42;
 pnt = pnt(pnt(:,3)>0,:);
