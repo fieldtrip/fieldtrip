@@ -11,16 +11,20 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> enhancement - started making a test script for bug 1967
 =======
 >>>>>>> enhancement - extended test script for http://bugzilla.fcdonders.nl/show_bug.cgi?id=1967
 =======
 >>>>>>> enhancement - started making a test script for bug 1967
+=======
+>>>>>>> enhancement - started making a test script for bug 1967
 function test_bug1967
 =======
 % function test_bug1967
 >>>>>>> enhancement - started making a test script for bug 1967
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -62,6 +66,8 @@ function test_bug1967
 =======
 function test_bug1967
 >>>>>>> enhancement - extended test script for http://bugzilla.fcdonders.nl/show_bug.cgi?id=1967
+=======
+>>>>>>> enhancement - started making a test script for bug 1967
 
 % TEST test_bug1967
 % TEST ft_prepare_vol_sens
@@ -109,6 +115,7 @@ ft_sourceplot(cfg, volume);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> enhancement - extended test script for http://bugzilla.fcdonders.nl/show_bug.cgi?id=1967
 =======
@@ -159,6 +166,12 @@ ft_sourceplot(cfg, volume);
 =======
 %% convert it into a mesh 
 >>>>>>> enhancement - extended test script for http://bugzilla.fcdonders.nl/show_bug.cgi?id=1967
+=======
+%% convert it into a mesh 
+=======
+%% convert it into a head model
+>>>>>>> enhancement - started making a test script for bug 1967
+>>>>>>> enhancement - started making a test script for bug 1967
 cfg = [];
 cfg.tissue = {'skin' 'skull' 'brain'};
 cfg.method = 'hexahedral';
@@ -177,6 +190,7 @@ mesh = ft_prepare_mesh(cfg, volume);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> enhancement - extended test script for http://bugzilla.fcdonders.nl/show_bug.cgi?id=1967
 =======
@@ -364,6 +378,8 @@ if isequal(sens.elecpos, elec.elecpos)
 end
 =======
 =======
+=======
+>>>>>>> enhancement - started making a test script for bug 1967
 %% convert it into a head model
 >>>>>>> enhancement - extended test script for http://bugzilla.fcdonders.nl/show_bug.cgi?id=1967
 cfg = [];
@@ -398,5 +414,15 @@ ft_plot_sens(elec)
 if isequal(sens.elecpos, elec.elecpos)
   error('the electrodes were not projected');
 end
+<<<<<<< HEAD
 >>>>>>> enhancement - extended test script for http://bugzilla.fcdonders.nl/show_bug.cgi?id=1967
+=======
+=======
+cfg = [];
+cfg.tissue = {'skin' 'skull' 'brain'};
+cfg.method = 'simbio';
+headmodel = ft_prepare_headmodel(cfg, mesh);
+
+>>>>>>> enhancement - started making a test script for bug 1967
+>>>>>>> enhancement - started making a test script for bug 1967
 
