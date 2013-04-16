@@ -58,7 +58,7 @@ cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
 
 % read the template coil positions
 if ~isempty(cfg.template)
-    template = ft_read_headshape(cfg.template, 'coordinates', 'dewar');
+    template = ft_read_headshape(cfg.template, 'coordsys', 'dewar');
     reference(1,:) = [template.fid.pnt(1,1), template.fid.pnt(1,2), template.fid.pnt(1,3)]; % nasion
     reference(2,:) = [template.fid.pnt(2,1), template.fid.pnt(2,2), template.fid.pnt(2,3)];
     reference(3,:) = [template.fid.pnt(3,1), template.fid.pnt(3,2), template.fid.pnt(3,3)];
