@@ -1,16 +1,20 @@
-function test_fieldtrip2fiff
+function test_fieldtrip2fiff()
 
-% TEST test_fieldtrip2fiff
-% TEST fieldtrip2fiff ft_read_header ft_read_data ft_read_event
-
-% use file location on Donders server
-dataset_ctf      = dccnfilename('/home/common/matlab/fieldtrip/data/Subject01.ds');
-sensfile         = dccnfilename('/home/common/matlab/fieldtrip/template/electrode/GSN-HydroCel-257.sfp');
-dataset_neuromag = dccnfilename('/home/common/matlab/fieldtrip/data/test/bug2036/sample_audvis_raw.fif');
-dataset_eeg      = dccnfilename('/home/common/matlab/fieldtrip/data/test/bug2036/svui_0003_eeg_go-sd_010.raw');
-datadir          = tempname;
-mkdir(datadir);
+if true % TODO: use file location on Donders server
+  dataset_ctf = '/data1/projects/gosd/scripts/gosd/matlab/test_fieldtrip2fiff/Subject01/Subject01.ds';
+  dataset_neuromag = '/data1/projects/gosd/scripts/gosd/matlab/test_fieldtrip2fiff/sample_audvis_raw.fif';
+  dataset_eeg = '/data1/projects/gosd/recordings/svui/subjects/0003/eeg/raw/svui_0003_eeg_go-sd_010.raw';
+  sensfile = '/data1/toolbox/fieldtrip/template/electrode/GSN-HydroCel-257.sfp';
+  datadir = '/data1/projects/gosd/scripts/gosd/matlab/test_fieldtrip2fiff';
   
+else 
+  dataset_ctf = dccnfilename('/home/common/matlab/fieldtrip/data/Subject01.ds');
+  dataset_neuromag = dccnfilename('?'); % MNE sample dataset
+  dataset_eeg = dccnfilename('?'); % any EEG dataset
+  datadir = dccnfilename('/home/common/matlab/fieldtrip/data/ftp/tutorial/test_fieldtrip2fiff'); % TODO: mkdir?
+  
+end
+
 %-------------------------------------%
 %-CTF: write raw
 cfg = [];
@@ -22,7 +26,7 @@ cfg.continuous = 'yes';
 cfg.channel = {'MEG', '-MLP31', '-MLO12'};
 data = ft_preprocessing(cfg);
 
-fifffile  = [datadir filesep 'ctf_raw.fif'];
+fifffile = [datadir filesep 'ctf_raw.fif'];
 eventfile = [datadir filesep 'ctf_raw-eve.fif'];
 fieldtrip2fiff(fifffile, data)
 
