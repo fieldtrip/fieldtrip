@@ -82,6 +82,7 @@ end
 nfreqoi = length(freqoi);
 
 % Set timeboi and timeoi
+timeoiinput = timeoi;
 offset = round(time(1)*fsample);
 if isnumeric(timeoi) % if input is a vector
   timeboi  = round(timeoi .* fsample - offset) + 1;
@@ -92,6 +93,15 @@ elseif strcmp(timeoi,'all') % if input was 'all'
   ntimeboi = length(timeboi);
   timeoi   = time;
 end
+
+
+% throw a warning if input timeoi is different from output timeoi
+if isnumeric(timeoiinput)
+  if any(timeoiinput-timeoi >= eps*1e6) % timeoi will contain double time-points when requested
+    warning('output time-bins are different from input ime-bins');
+  end
+end
+
 
 % expand width to array if constant width
 if numel(width) == 1
