@@ -102,10 +102,15 @@ end
 
 % throw a warning if input freqoi is different from output freqoi
 if isnumeric(freqoiinput)
+  % check whether padding is appropriate for the requested frequency resolution
+  rayl = 1/endtime;
+  if any(rem(freqoiinput,rayl)) % not always the case when they mismatch
+    warning('padding not sufficient for requested frequency resolution')
+  end
   if numel(freqoiinput) ~= numel(freqoi) % freqoi will not contain double frequency bins when requested
     warning('output frequencies are different from input frequencies, multiples of the same bin were requested but not given');
   else
-    if any(freqoiinput-freqoi >= eps*1e6)
+    if any(abs(freqoiinput-freqoi) >= eps*1e6)
       warning('output frequencies are different from input frequencies');
     end
   end
