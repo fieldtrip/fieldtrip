@@ -40,16 +40,21 @@ status = 0;
 
 while ~status
   depth = depth + 1;
-  if issubfield(cfg,  var)
-    val = getsubfield(cfg, var);
-    status = 1;
-  elseif issubfield(cfg, '.previous');
-    [val, status] = ft_findcfg(cfg.previous, var);
-     if status, break; end;
-  elseif iscell(cfg) 
-    for i=1:length(cfg)
-      [val, status] = ft_findcfg(cfg{i}, var);
+  if ~isempty(cfg)
+    if issubfield(cfg,  var)
+      val = getsubfield(cfg, var);
+      status = 1;
+    elseif issubfield(cfg, '.previous');
+      [val, status] = ft_findcfg(cfg.previous, var);
       if status, break; end;
+    elseif iscell(cfg)
+      for i=1:length(cfg)
+        [val, status] = ft_findcfg(cfg{i}, var);
+        if status, break; end;
+      end
+    else
+      status = -1;
+      break
     end
   else
     status = -1;
