@@ -41,6 +41,9 @@ function [dat] = ft_preproc_padding(dat, padtype, prepadlength, postpadlength)
 
 if nargin < 4
   postpadlength = prepadlength;
+else
+  prepadlength  = padlength;
+  postpadlength = padlength;
 end
 
 if prepadlength == 0 && postpadlength == 0
