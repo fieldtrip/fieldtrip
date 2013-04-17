@@ -6,6 +6,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> enhancement - started making a test script for bug 1967
 =======
@@ -30,6 +31,8 @@ function test_bug1967
 >>>>>>> enhancement - extended test script for http://bugzilla.fcdonders.nl/show_bug.cgi?id=1967
 >>>>>>> enhancement - extended test script for http://bugzilla.fcdonders.nl/show_bug.cgi?id=1967
 =======
+=======
+>>>>>>> enhancement - extended test script for http://bugzilla.fcdonders.nl/show_bug.cgi?id=1967
 function test_bug1967
 >>>>>>> merge conflict
 =======
@@ -38,8 +41,11 @@ function test_bug1967
 =======
 function test_bug1967
 >>>>>>> enhancement - extended test script for http://bugzilla.fcdonders.nl/show_bug.cgi?id=1967
+<<<<<<< HEAD
 =======
 >>>>>>> enhancement - started making a test script for bug 1967
+=======
+>>>>>>> enhancement - extended test script for http://bugzilla.fcdonders.nl/show_bug.cgi?id=1967
 
 % TEST test_bug1967
 % TEST ft_prepare_vol_sens
@@ -82,6 +88,9 @@ ft_sourceplot(cfg, volume);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> enhancement - extended test script for http://bugzilla.fcdonders.nl/show_bug.cgi?id=1967
 =======
 >>>>>>> enhancement - extended test script for http://bugzilla.fcdonders.nl/show_bug.cgi?id=1967
 %% convert it into a mesh 
@@ -91,6 +100,7 @@ ft_sourceplot(cfg, volume);
 =======
 %% convert it into a mesh 
 >>>>>>> enhancement - extended test script for http://bugzilla.fcdonders.nl/show_bug.cgi?id=1967
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 %% convert it into a mesh 
@@ -115,6 +125,8 @@ ft_sourceplot(cfg, volume);
 %% convert it into a head model
 >>>>>>> enhancement - started making a test script for bug 1967
 >>>>>>> enhancement - started making a test script for bug 1967
+=======
+>>>>>>> enhancement - extended test script for http://bugzilla.fcdonders.nl/show_bug.cgi?id=1967
 cfg = [];
 cfg.tissue = {'skin' 'skull' 'brain'};
 cfg.method = 'hexahedral';
@@ -128,6 +140,9 @@ mesh = ft_prepare_mesh(cfg, volume);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> enhancement - extended test script for http://bugzilla.fcdonders.nl/show_bug.cgi?id=1967
 =======
 >>>>>>> enhancement - extended test script for http://bugzilla.fcdonders.nl/show_bug.cgi?id=1967
 %% convert it into a head model
@@ -162,6 +177,7 @@ if isequal(sens.elecpos, elec.elecpos)
 end
 =======
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> enhancement - started making a test script for bug 1967
@@ -170,12 +186,17 @@ end
 =======
 >>>>>>> merge conflict
 %% convert it into a head model
+=======
+%% convert it into a head model
+>>>>>>> enhancement - extended test script for http://bugzilla.fcdonders.nl/show_bug.cgi?id=1967
+>>>>>>> enhancement - extended test script for http://bugzilla.fcdonders.nl/show_bug.cgi?id=1967
 cfg = [];
 cfg.tissue = {'skin' 'skull' 'brain'};
 cfg.conductivity = [1 1/80 1];
 cfg.method = 'simbio';
 headmodel = ft_prepare_headmodel(cfg, mesh);
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -269,5 +290,32 @@ cfg.method = 'simbio';
 headmodel = ft_prepare_headmodel(cfg, mesh);
 
 >>>>>>> enhancement - started making a test script for bug 1967
+=======
+>>>>>>> enhancement - extended test script for http://bugzilla.fcdonders.nl/show_bug.cgi?id=1967
 >>>>>>> enhancement - started making a test script for bug 1967
+=======
+%% make some electrodes
+[pnt, tri] = icosahedron42;
+pnt = pnt(pnt(:,3)>0,:);
+pnt = pnt*55; % not precisely fitting on the mesh
+elec = [];
+elec.chanpos = pnt;
+elec.elecpos = pnt;
+for i=1:size(pnt,1)
+  elec.label{i} = num2str(i);
+end
+elec.unit = 'mm';
+
+figure
+ft_plot_mesh(mesh, 'edgeonly', 1)
+ft_plot_sens(elec)
+
+%% prepare the volume conductor and electrodes for leadfield computation
+[vol, sens] = ft_prepare_vol_sens(headmodel, elec)
+
+% elec is the original one, sens is the one after projecting
+if isequal(sens.elecpos, elec.elecpos)
+  error('the electrodes were not projected');
+end
+>>>>>>> enhancement - extended test script for http://bugzilla.fcdonders.nl/show_bug.cgi?id=1967
 
