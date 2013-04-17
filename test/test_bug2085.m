@@ -18,8 +18,8 @@ grad.pnt = pnt(sel,:) .* 1.2;
 grad.ori = pnt(sel,:);
 grad.tra = eye(length(sel));
 for i=1:length(sel)
-  grad.ori(i,:) = grad.ori(i,:) ./ norm(grad.ori(i,:));
-  grad.label{i} = sprintf('magnetometer%d', i);
+    grad.ori(i,:) = grad.ori(i,:) ./ norm(grad.ori(i,:));
+    grad.label{i} = sprintf('magnetometer%d', i);
 end
 grad.unit = 'cm';
 
@@ -35,12 +35,12 @@ cfg.vol = vol;
 cfg.resolution = 4;
 cfg.channel = 'all';
 
-tic 
+tic
 cfg.grad = grad1;
 grid1 = ft_prepare_leadfield(cfg);
 time1 = toc;
 
-tic 
+tic
 cfg.grad = grad2;
 grid2 = ft_prepare_leadfield(cfg);
 time2 = toc;
@@ -48,6 +48,60 @@ time2 = toc;
 %% compare the time that it took, this fraction 1.5 is rather arbitrary
 
 if (time1/time2)>1.5
-  error('the leadfield computation without grad.type takes too long (%d seconds compared to %d seconds)', time1, time2);
+    error('the leadfield computation without grad.type takes too long (%d seconds compared to %d seconds)', time1, time2);
 end
+
+%%
+
+type = {
+    'btiref'
+    'bti148'
+    'bti148_planar'
+    'bti248'
+    'bti248_planar'
+    'ctfref'
+    'ctfheadloc'
+    'ctf64'
+    'ctf151'
+    'ctf151_planar'
+    'ctf275'
+    'ctf275_planar'
+    'neuromag122'
+    'neuromag122alt'
+    'neuromag306'
+    'neuromag306alt'
+    'eeg1020'
+    'eeg1010'
+    'eeg1005'
+    'ext1020'
+    'biosemi64'
+    'biosemi128'
+    'biosemi256'
+    'egi32'
+    'egi64'
+    'egi128'
+    'egi256'
+    'itab28'
+    'itab153'
+    'itab153_planar'
+    'yokogawa9'
+    'yokogawa64'
+    'yokogawa64_planar'
+    'yokogawa160'
+    'yokogawa160_planar'
+    'yokogawa440'
+    'yokogawa440_planar'
+    'electrode'
+    };
+
+for i=1:length(type)
+    clear ft_senslabel
+    disp(type{i});
+    label1 = ft_senslabel(type{i});
+    label2 = ft_senslabel(type{i}); % this is from persistent cache
+    assert(identical(label1, label2), sprintf('problem in senslabel for %s', type{i}));
+end
+
+
+
 
