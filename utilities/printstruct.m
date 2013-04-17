@@ -69,10 +69,7 @@ if isstruct(val)
             % line = [name '.' line];
             line = printstr([name '.' fn{i}], fv);
             str  = [str line];
-          case {'single' 'double'}
-            line = printmat([name '.' fn{i}], fv);
-            str  = [str line];
-          case {'logical' 'int8' 'int16' 'int32' 'int64' 'uint8' 'uint16' 'uint32' 'uint64' 'logical'}
+          case {'single' 'double' 'int8' 'int16' 'int32' 'int64' 'uint8' 'uint16' 'uint32' 'uint64' 'logical'}
             line = printmat([name '.' fn{i}], fv);
             str  = [str line];
           case 'cell'
