@@ -18,38 +18,59 @@ grad.pnt = pnt(sel,:) .* 1.2;
 grad.ori = pnt(sel,:);
 grad.tra = eye(length(sel));
 for i=1:length(sel)
+<<<<<<< HEAD
     grad.ori(i,:) = grad.ori(i,:) ./ norm(grad.ori(i,:));
     grad.label{i} = sprintf('magnetometer%d', i);
+=======
+  grad.ori(i,:) = grad.ori(i,:) ./ norm(grad.ori(i,:));
+  grad.label{i} = sprintf('magnetometer%d', i);
+>>>>>>> enhancement - created test script for timing the leadfield computation
 end
 grad.unit = 'cm';
 
 grad1 = ft_datatype_sens(grad);
 grad2 = ft_datatype_sens(grad);
 
+<<<<<<< HEAD
 % this makes ft_senstype much faster
 grad2.type = 'magnetometer'; 
 for i=1:length(sel)
   grad2.chantype{i} = 'mag';
   grad2.chanunit{i} = 'T';
 end
+=======
+grad2.type = 'magnetometer'; % this makes ft_senstype much faster
+>>>>>>> enhancement - created test script for timing the leadfield computation
 
 %% determine the time to compute some leadfields
 
 cfg = [];
 cfg.vol = vol;
+<<<<<<< HEAD
 cfg.grid.resolution = 4;
 cfg.channel = 'all';
 
 tic
+=======
+cfg.resolution = 4;
+cfg.channel = 'all';
+
+tic 
+>>>>>>> enhancement - created test script for timing the leadfield computation
 cfg.grad = grad1;
 grid1 = ft_prepare_leadfield(cfg);
 time1 = toc;
 
+<<<<<<< HEAD
 tic
+=======
+tic 
+>>>>>>> enhancement - created test script for timing the leadfield computation
 cfg.grad = grad2;
 grid2 = ft_prepare_leadfield(cfg);
 time2 = toc;
 
+<<<<<<< HEAD
 %% compare the time that it took for the two grad versions, the 10 seconds and fraction 2 are rather arbitrary
 
 if time1>10
@@ -115,3 +136,11 @@ end
 
 
 
+=======
+%% compare the time that it took, this fraction 1.5 is rather arbitrary
+
+if (time1/time2)>1.5
+  error('the leadfield computation without grad.type takes too long (%d seconds compared to %d seconds)', time1, time2);
+end
+
+>>>>>>> enhancement - created test script for timing the leadfield computation
