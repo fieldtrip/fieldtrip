@@ -26,11 +26,25 @@ function [spike] = ft_spike_maketrials(cfg,spike)
 %     If more columns are added than 3, these are used to construct the
 %     spike.trialinfo field having information about the trial.
 <<<<<<< HEAD
+<<<<<<< HEAD
 %     Note that values in cfg.trl get inaccurate above 2^53 (in that case 
 %     it is better to use the original uint64 representation)
 =======
 %     cfg.trl is ideally of the same class as spike.timestamp{} as it avoids round-off
 %     errors
+>>>>>>> avoiding roundoff errors in ft_spike_maketrials.m
+=======
+%     Note:
+%     cfg.trl is ideally of the same class as spike.timestamp{} as it avoids round-off
+%     errors. In some acquisition systems, the timestamps attain very high values in 
+%     uint64 format. If these are represented in a double format, there are round-off
+%     errors. As a solution, one should cast the cfg.trl as a uint64 or int64 
+%     to avoid the round-off errors.
+%     Note that negative numbers are not allowed with uint64. The third column of 
+%     cfg.trl may contain a negative offset.
+%     To get numerical accuracy one could then cast the cfg.trl as int64.
+%     We will then explicitly convert cfg.trl(:,1:2) to uint64 inside the function.
+%     
 >>>>>>> avoiding roundoff errors in ft_spike_maketrials.m
 %
 %   cfg.trlunit = 'timestamps' (default) or 'samples'. 
@@ -158,7 +172,18 @@ if strcmp(cfg.trlunit,'timestamps')
     
 =======
     ts = spike.timestamp{iUnit}(:);
+<<<<<<< HEAD
 
+>>>>>>> avoiding roundoff errors in ft_spike_maketrials.m
+=======
+    classTs = class(ts);
+    classTrl = class(cfg.trl);
+    trlEvent = cfg.trl(:,1:2);
+    if ~strcmp(classTs, classTrl)
+        warning('timestamps of unit %d are of class %s and cfg.trl is of class %s, converting %s to %s', iUnit, class(ts), class(cfg.trl), class(cfg.trl), class(ts));
+        trlEvent = cast(trlEvent, classTs);
+    end
+    
 >>>>>>> avoiding roundoff errors in ft_spike_maketrials.m
     % take care of the waveform information as well
     hasWave =  isfield(spike, 'waveform') && ~isempty(spike.waveform) && ~isempty(spike.waveform{iUnit});
@@ -168,6 +193,7 @@ if strcmp(cfg.trlunit,'timestamps')
     sel       = [];
     for iTrial = 1:nTrials
 <<<<<<< HEAD
+<<<<<<< HEAD
       isVld = find(ts>=trlEvent(iTrial,1) & ts<=trlEvent(iTrial,2));
 =======
       if ~strcmp(class(ts), class(cfg.trl))
@@ -175,6 +201,9 @@ if strcmp(cfg.trlunit,'timestamps')
       else
         isVld = find(ts>=events(1,iTrial) & ts<=events(2,iTrial));
       end        
+>>>>>>> avoiding roundoff errors in ft_spike_maketrials.m
+=======
+      isVld = find(ts>=trlEvent(iTrial,1) & ts<=trlEvent(iTrial,2));
 >>>>>>> avoiding roundoff errors in ft_spike_maketrials.m
       if ~isempty(isVld)
         trialNum = [trialNum; iTrial*ones(length(isVld),1)];  %#ok<*AGROW>
@@ -185,6 +214,7 @@ if strcmp(cfg.trlunit,'timestamps')
     % subtract the event (t=0) from the timestamps directly
     if ~isempty(trialNum)
       ts = ts(sel);
+<<<<<<< HEAD
 <<<<<<< HEAD
       dt = double(ts - trlEvent(trialNum,1)); % convert to double only here
       dt = dt/cfg.timestampspersecond + trlDouble(trialNum,3)/cfg.timestampspersecond;
@@ -203,11 +233,18 @@ if strcmp(cfg.trlunit,'timestamps')
     end
     trialDur = double(trlEvent(:,2)-trlEvent(:,1))/cfg.timestampspersecond;
 =======
+=======
+      dt = double(ts - trlEvent(trialNum,1)); % convert to double only here
+>>>>>>> avoiding roundoff errors in ft_spike_maketrials.m
       dt = dt/cfg.timestampspersecond + trlDouble(trialNum,3)/cfg.timestampspersecond;
     else
       dt = [];
     end
+<<<<<<< HEAD
     trialDur = double(cfg.trl(:,2)-cfg.trl(:,1))/cfg.timestampspersecond;
+>>>>>>> avoiding roundoff errors in ft_spike_maketrials.m
+=======
+    trialDur = double(trlEvent(:,2)-trlEvent(:,1))/cfg.timestampspersecond;
 >>>>>>> avoiding roundoff errors in ft_spike_maketrials.m
     time = [trlDouble(:,3)/cfg.timestampspersecond (trlDouble(:,3)/cfg.timestampspersecond + trialDur)]; % make the time-axis
 
