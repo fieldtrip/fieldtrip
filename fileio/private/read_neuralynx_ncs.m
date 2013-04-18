@@ -66,28 +66,15 @@ if NRecords>0
   end
   
   % explicitly sort the timestamps to deal with negative timestamp jumps that can occur
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> added explicit sorting and checking for unique timestamps in  read_neuralynx_ncs.m
   ts1 = TimeStamp(1);
   dts = double(TimeStamp - TimeStamp(1));
   dts = unique(dts);
   dts = sort(dts);
   TimeStamp = uint64(dts) + ts1;
    
-<<<<<<< HEAD
-=======
-  TimeStamp = sort(TimeStamp);
-  
->>>>>>> ordering the blocks of CSC data if there are negative jumps in the timestamp axis and issuing a warning message
-=======
->>>>>>> added explicit sorting and checking for unique timestamps in  read_neuralynx_ncs.m
   % for this block of data: automatically detect the gaps; 
   % there's a gap if no round off error of the sampling frequency could
   % explain the jump (which is always > one block)
-<<<<<<< HEAD
-<<<<<<< HEAD
   Fs       = mode(double(SampFreq));
   if abs(Fs/hdr.SamplingFrequency-1)>0.01
       warning('the sampling frequency as read out from the header equals %2.2f and differs from the mode sampling frequency as read out from the data %2.2f\n', ...
@@ -96,30 +83,6 @@ if NRecords>0
       % check which one was correct
       d = double(TimeStamp(2:end)-TimeStamp(1:end-1));  
       fsEst = 1e6./mode(d);
-=======
-  Fs       = median(double(SampFreq));
-  if Fs~=hdr.SamplingFrequency
-      warning('the sampling frequency as read out from the header equals %2.2f and differs from the median sampling frequency as read out from the data %2.2f\n', ...
-=======
-  Fs       = mode(double(SampFreq));
-  if abs(Fs/hdr.SamplingFrequency-1)>0.01
-      warning('the sampling frequency as read out from the header equals %2.2f and differs from the mode sampling frequency as read out from the data %2.2f\n', ...
->>>>>>> warning if timestamp jumps are zero or negative for read_neuralynx_ncs and correcting this
-      hdr.SamplingFrequency, Fs);
-    
-      % check which one was correct
-<<<<<<< HEAD
-      d = 
-      fsEst = 1e6./median(double(diff(TimeStamp)));
->>>>>>> correcting the sometimes incorrect header sampling frequency from neuralynx by reading out the sampling frequency from the blocks and comparing to the differences in the timestamps
-=======
-      d = double(TimeStamp(2:end)-TimeStamp(1:end-1));  
-<<<<<<< HEAD
-      fsEst = 1e6./median(d);
->>>>>>> computing median timestamps per sample in uint64 format
-=======
-      fsEst = 1e6./mode(d);
->>>>>>> warning if timestamp jumps are zero or negative for read_neuralynx_ncs and correcting this
       indx = nearest([Fs hdr.SamplingFrequency], fsEst);
       if indx==1 
         warning('correcting the header frequency from %2.2f to %2.2f', hdr.SamplingFrequency, Fs);
@@ -128,19 +91,7 @@ if NRecords>0
   end
   
   % detect the number of timestamps per block while avoiding influencce of gaps
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
   d = double(TimeStamp(2:end)-TimeStamp(1:end-1));    
-=======
-  d        = double(diff(TimeStamp));
->>>>>>> avoiding roundoff errors in read_neuralynx_ncs.m
-=======
-  d        = diff(double(TimeStamp));
->>>>>>> ordering the blocks of CSC data if there are negative jumps in the timestamp axis and issuing a warning message
-=======
-  d = double(TimeStamp(2:end)-TimeStamp(1:end-1));    
->>>>>>> computing median timestamps per sample in uint64 format
   maxJump  = ceil(10^6./(Fs-1))*512;
   gapCorrectedTimeStampPerSample =  nanmean(d(d<maxJump))/512;    
 
@@ -202,11 +153,6 @@ if begrecord>=1 && endrecord>=begrecord
     Samp((NumValidSamp+1):end,k) = nan;
   end
   
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> added explicit sorting and checking for unique timestamps in  read_neuralynx_ncs.m
   ts1 = TimeStamp(1);
   dts = double(TimeStamp-ts1); % no problem with doubles here as numbers are small
  
@@ -214,45 +160,15 @@ if begrecord>=1 && endrecord>=begrecord
   [A,I] = unique(val); % consider only the unique values
   indx = indx(I);
     
-<<<<<<< HEAD
   % store the record data in the output structure
   ncs.TimeStamp    = uint64(dts(indx)) + ts1; % convert back to original class
-=======
-    
-  idxNeg = find(diff(double(TimeStamp))<=0);
-=======
-  d = TimeStamp(2:end)-TimeStamp(1:end-1);  
-  idxNeg = find(double(d)<=0);
->>>>>>> computing median timestamps per sample in uint64 format
-  if ~isempty(idxNeg)
-    [TimeStamp, indx] = sort(TimeStamp);      
-    warning('%d blocks have zero or negative timestamp jump', length(idxNeg));
-  else
-    indx = 1:length(TimeStamp);
-  end
-  
-  % store the record data in the output structure
-  ncs.TimeStamp    = TimeStamp;
->>>>>>> ordering the blocks of CSC data if there are negative jumps in the timestamp axis and issuing a warning message
-=======
-  % store the record data in the output structure
-  ncs.TimeStamp    = uint64(dts(indx)) + ts1; % convert back to original class
->>>>>>> added explicit sorting and checking for unique timestamps in  read_neuralynx_ncs.m
   ncs.ChanNumber   = ChanNumber(indx);
   ncs.SampFreq     = SampFreq(indx);
   ncs.NumValidSamp = NumValidSamp(indx);
   % apply the scaling factor from ADBitVolts and convert to uV
   ncs.dat          = Samp(:,indx) * hdr.ADBitVolts * 1e6;
-<<<<<<< HEAD
-<<<<<<< HEAD
 
   
-=======
->>>>>>> ordering the blocks of CSC data if there are negative jumps in the timestamp axis and issuing a warning message
-=======
-
-  
->>>>>>> added explicit sorting and checking for unique timestamps in  read_neuralynx_ncs.m
   
 end
 fclose(fid);

@@ -45,15 +45,8 @@ ft_preamble help            % this will show the function help if nargin==0 and 
 ft_preamble callinfo        % this records the time and memory usage at teh beginning of the function
 
 % ensure that the filename has the correct extension
-<<<<<<< HEAD
 [pathstr, name, ext] = fileparts(filename);
 if ~strcmp(ext, '.fif')
-=======
-[pathstr,name,ext] = fileparts(filename);
-if isempty(ext),
-  filename = [filename, '.fif'];
-elseif ~strcmp(ext, '.fif')
->>>>>>> Merge branch 'bug2036' of github.com:oostenveld/fieldtrip
   error('if the filename is specified with extension, this should read .fif');
 end
 fifffile = [pathstr filesep name '.fif'];
@@ -118,35 +111,12 @@ else
   
 end
 
-<<<<<<< HEAD
 if israw
   info.sfreq = data.fsample;
 elseif isepch
   info.sfreq = 1 ./ mean(diff(data.time{1}));
 elseif istlck
   info.sfreq = 1 ./ mean(diff(data.time));
-=======
-if istlck
-  evoked.aspect_kind = 100;
-  evoked.is_smsh     = 0;
-  evoked.nave        = max(data.dof(:));
-  evoked.first       = round(data.time(1)*info.sfreq);
-  evoked.last        = round(data.time(end)*info.sfreq);
-  evoked.times       = data.time;
-  evoked.comment     = sprintf('FieldTrip data averaged');
-  evoked.epochs      = data.avg;
-elseif israw
-  for j = 1:length(data)
-    evoked(j).aspect_kind = 100;
-    evoked(j).is_smsh     = 0; % FIXME: How could we tell?
-    evoked(j).nave        = 1; % FIXME: Use the real value
-    evoked(j).first       = round(data.time{j}(1)*info.sfreq);
-    evoked(j).last        = round(data.time{j}(end)*info.sfreq);
-    evoked(j).times       = data.time{j};
-    evoked(j).comment     = sprintf('FieldTrip data, category/trial %d', j);
-    evoked(j).epochs      = data.trial{j};
-  end  
->>>>>>> Merge branch 'bug2036' of github.com:oostenveld/fieldtrip
 end
 info.ch_names = data.label(:)';
 info.chs      = sens2fiff(data);

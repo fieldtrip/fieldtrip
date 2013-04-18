@@ -1,6 +1,9 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> once more, trying to resolve svn rebase conflict
 function parcel = ft_sourceparcellate(cfg, source, parcellation)
 
 % FT_SOURCEPARCELLATE combines the source-reconstruction parameters over the parcels.
@@ -56,6 +59,7 @@ ft_preamble provenance
 ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar source
+<<<<<<< HEAD
 =======
 function parcel = hcp_sourceparcellate(cfg, source)
 =======
@@ -140,21 +144,19 @@ ft_preamble loadvar source
 % Copyright (C) 2012, Robert Oostenveld
 >>>>>>> restructuring - moved sourceparcellate from hcp to ft, see #1775
 >>>>>>> restructuring - moved sourceparcellate from hcp to ft, see #1775
+=======
+>>>>>>> once more, trying to resolve svn rebase conflict
 
 % get the defaults
 cfg.parcellation = ft_getopt(cfg, 'parcellation');
 cfg.parameter    = ft_getopt(cfg, 'parameter', 'all');
-<<<<<<< HEAD
 cfg.method       = ft_getopt(cfg, 'method', 'mean'); % can be mean, min, max, svd
 cfg.feedback     = ft_getopt(cfg, 'feedback', 'text');
-=======
->>>>>>> restructuring - moved sourceparcellate from hcp to ft, see #1775
 
 if ischar(cfg.parameter)
   cfg.parameter = {cfg.parameter};
 end
 
-<<<<<<< HEAD
 if nargin<3
   % the parcellation is represented in the source structure itself
   parcellation = source;
@@ -173,17 +175,6 @@ if isempty(cfg.parcellation)
   for i=1:numel(fn)
     if isfield(parcellation, [fn{i} 'label'])
       warning('using "%s" for the parcellation', fn{i});
-=======
-% ensure it is a parcellation, not a segmentation
-% FIXME is the indexed style needed?
-source = ft_checkdata(source, 'datatype', 'parcellation', 'parcellationstyle', 'indexed');
-
-if isempty(cfg.parcellation)
-  fn = fieldnames(source);
-  for i=1:numel(fn)
-    if isfield(source, [fn{i} 'label'])
-      warning('using %s for the parcellation', fn{i});
->>>>>>> restructuring - moved sourceparcellate from hcp to ft, see #1775
       cfg.parcellation = fn{i};
       break
     end
@@ -229,16 +220,13 @@ for i=1:numel(fn)
     dimord{i} = source.([fn{i} 'dimord']); % a specific dimord
   elseif iscell(tmp) && numel(tmp)==size(source.pos,1)
     sel(i)    = true;
-<<<<<<< HEAD
     dimord{i} = '{pos}';
-=======
-    dimord{i} = 'fixme';
->>>>>>> restructuring - moved sourceparcellate from hcp to ft, see #1775
   elseif ~iscell(tmp) && isequal(size(tmp), siz)
     sel(i)    = true;
     dimord{i} = source.dimord; % the general dimord
   end
 end
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -253,6 +241,9 @@ end
 =======
 >>>>>>> restructuring - moved sourceparcellate from hcp to ft, see #1775
 >>>>>>> restructuring - moved sourceparcellate from hcp to ft, see #1775
+=======
+
+>>>>>>> once more, trying to resolve svn rebase conflict
 % these two will now contain the fields and corresponding dimord to work on
 fn     = fn(sel);
 dimord = dimord(sel);
@@ -270,7 +261,6 @@ else
   dimord = dimord(i2);
 end
 
-<<<<<<< HEAD
 % although technically feasible, don't parcellate the parcellation itself
 sel    = ~strcmp(cfg.parcellation, fn);
 fn     = fn(sel);
@@ -416,158 +406,21 @@ for i=1:numel(fn)
     error('unsupported dimord %s', dimord{i})
     
   end % if pos, pos_pos, {pos}, etc.
-=======
-% get the parcellation and the labels that go with it
-seg      = source.(cfg.parcellation);
-seglabel = source.([cfg.parcellation 'label']);
-nseg     = length(seglabel);
-
-% this will hold the output
-parcel = [];
-if isfield(source, 'time')
-  parcel.time = source.time;
-  ntime = length(source.time);
-else
-  ntime = 1; % for convenience
-end
-if isfield(source, 'freq')
-  parcel.freq = source.freq;
-  nfreq = length(source.freq);
-else
-  nfreq = 1; % for convenience
-end
-
-for i=1:numel(fn)
-  if strcmp(fn{i}, cfg.parcellation)
-    % don't parcellate the parcellation itself
-    continue
-  end
-  
-  dat = source.(fn{i});
-  tmp = [];
-  
-  % determine how many "position" dimensions there are
-  num = numel(strmatch('pos', tokenize(dimord{i}, '_')));
-  univariate    = (num==1);
-  bivariate     = (num==2);
-  multivariate  = (num>2);
-  
-  if univariate
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % univariate: loop over positions
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    clear j j1 j2 % to avoid confusion
-    
-    for j=1:numel(seglabel)
-      fprintf('parcellating %s into %s\n', fn{i}, seglabel{j});
-      switch dimord{i}
-        case 'pos'
-          if isempty(tmp)
-            tmp = nan(nseg, 1);
-          end
-          tmp(j) = mean(dat(seg==j), 1);
-          
-          
-        case 'pos_time'
-          if isempty(tmp)
-            tmp = nan(nseg, ntime);
-          end
-          tmp(j,:) = mean(dat(seg==j,:), 1);
-          
-        case 'pos_freq'
-          if isempty(tmp)
-            tmp = nan(nseg, nfreq);
-          end
-          tmp(j,:) = mean(dat(seg==j,:), 1);
-          
-        case 'pos_freq_time'
-          if isempty(tmp)
-            tmp = nan(nseg, nfreq, ntime);
-          end
-          tmp(j,:,:) = mean(dat(seg==j,:,:), 1);
-          
-          % case '{pos}'
-          % case '{pos}_time'
-          % case '{pos}'
-          % case '{pos}_freq'
-          % etc.
-          
-        otherwise
-          error('dimord "%s" cannot be parcellated', dimord{i});
-      end % switch
-    end % for each of the parcels
-    
-    
-  elseif bivariate
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % bivariate: loop over pairs of positions
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    clear j j1 j2 % to avoid confusion
-    
-    for j1=1:numel(seglabel)
-      for j2=1:numel(seglabel)
-        fprintf('parcellating %s into %s\n', fn{i}, seglabel{j});
-        switch dimord{i}
-          case 'pos_pos'
-            if isempty(tmp)
-              tmp = nan(nseg, nseg);
-            end
-            tmp(j1,j2) = mean(mean(dat(seg==j1,seg==j2), 1), 2);
-            
-          case 'pos_pos_time'
-            if isempty(tmp)
-              tmp = nan(nseg, nseg, ntime);
-            end
-            tmp(j1,j2,:) = mean(mean(dat(seg==j1,seg==j2,:), 1), 2);
-            
-          case 'pos_pos_freq'
-            if isempty(tmp)
-              tmp = nan(nseg, nseg, nfreq);
-            end
-            tmp(j1,j2,:) = mean(mean(dat(seg==j1,seg==j2,:), 1), 2);
-            
-          case 'pos_pos_freq_time'
-            if isempty(tmp)
-              tmp = nan(nseg, nseg, nfreq, ntime);
-            end
-            tmp(j1,j2,:,:) = mean(mean(dat(seg==j1,seg==j2,:,:), 1), 2);
-            
-            % case '{pos_pos}_time'
-            % case '{pos_pos}_freq'
-            % etc.
-            
-          otherwise
-            error('dimord "%s" cannot be parcellated', dimord{i});
-        end % switch
-      end % for each of the parcels
-    end % for each of the parcels
-    
-  else
-    % more than two dimensions are not supported
-    error('dimord "%s" cannot be parcellated', dimord{i});
-  end
->>>>>>> restructuring - moved sourceparcellate from hcp to ft, see #1775
   
   % update the dimord, use chan rather than pos
   % this makes it look just like timelock or freq data
   tok = tokenize(dimord{i}, '_');
   tok(strcmp(tok,  'pos' )) = { 'chan' }; % replace pos by chan
   tok(strcmp(tok, '{pos}')) = {'{chan}'}; % replace pos by chan
-<<<<<<< HEAD
   tok(strcmp(tok, '{pos'))  = {'{chan' }; % replace pos by chan
   tok(strcmp(tok, 'pos}'))  = { 'chan}'}; % replace pos by chan
   tmpdimord = sprintf('%s_', tok{:});
   tmpdimord = tmpdimord(1:end-1);         % exclude the last _
-=======
-  tmpdimord = sprintf('%s_', tok{:});
-  tmpdimord = tmpdimord(1:end-1); % exclude the last _
->>>>>>> restructuring - moved sourceparcellate from hcp to ft, see #1775
   
   % store the results in the output structure
   parcel.(fn{i})            = tmp;
   parcel.([fn{i} 'dimord']) = tmpdimord;
   
-<<<<<<< HEAD
   % to avoid confusion
   clear dat tmp tmpdimord j j1 j2
 end % for each of the fields that should be parcellated
@@ -677,6 +530,7 @@ function y = cellmax2(x)
 siz = size(x);
 x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % simplify it into a single dimension
 y = cellmax1(x);
+<<<<<<< HEAD
 =======
   clear dat tmp tmpdimord
 end % for each of the fields that should be parcellated
@@ -704,3 +558,5 @@ try, cfg.previous = source.cfg; end
 parcel.cfg = cfg;
 >>>>>>> restructuring - moved sourceparcellate from hcp to ft, see #1775
 >>>>>>> restructuring - moved sourceparcellate from hcp to ft, see #1775
+=======
+>>>>>>> once more, trying to resolve svn rebase conflict

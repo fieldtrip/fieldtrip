@@ -76,15 +76,7 @@ if isempty(regexp(path, [ftPath pathsep '|' ftPath '$'], 'once'))
 end
 
 if ~isdeployed
-<<<<<<< HEAD
-<<<<<<< HEAD
   
-=======
-
->>>>>>> Merge pull request #5 from oostenveld/bug2033
-=======
-  
->>>>>>> Merge branch 'master' of github.com:oostenveld/fieldtrip
   % Some people mess up their path settings and then have
   % different versions of certain toolboxes on the path.
   % The following will issue a warning
@@ -116,15 +108,7 @@ if ~isdeployed
   checkMultipleToolbox('yokogawa_meg_reader', 'getYkgwHdrEvent.p');
   checkMultipleToolbox('biosig',              'sopen.m');
   checkMultipleToolbox('icasso',              'icassoEst.m');
-<<<<<<< HEAD
-<<<<<<< HEAD
   
-=======
-
->>>>>>> Merge pull request #5 from oostenveld/bug2033
-=======
-  
->>>>>>> Merge branch 'master' of github.com:oostenveld/fieldtrip
   if isempty(which('ft_hastoolbox'))
     % the fieldtrip/utilities directory contains the ft_hastoolbox function
     % which is required for the remainder of this script
@@ -133,22 +117,9 @@ if ~isdeployed
   
   try
     % external/signal directory contains alternative implementations of some signal processing functions
-<<<<<<< HEAD
-<<<<<<< HEAD
     addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'signal'));
   end
   
-=======
-    % if present, it will use the Mathworks signal processing toolbox
-    ft_hastoolbox('signal', 1); % required
-  end
-
->>>>>>> Merge pull request #5 from oostenveld/bug2033
-=======
-    addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'signal'));
-  end
-  
->>>>>>> Merge branch 'master' of github.com:oostenveld/fieldtrip
   try
     % this directory contains various functions that were obtained from elsewere, e.g. Matlab file exchange
     ft_hastoolbox('fileexchange', 3, 1); % not required

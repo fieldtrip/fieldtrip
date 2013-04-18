@@ -23,22 +23,10 @@ function [stat] = ft_networkanalysis(cfg, data)
 %
 % Supported methods are
 %   assortativity
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> enhancement - allow for thresholding when cfg.threshold is specified
 %   betweenness,      betweenness centrality (nodes)
 %   charpath,         characteristic path length, needs distance matrix as
 %                     input
 %   clustering_coef,  clustering coefficient
-<<<<<<< HEAD
-=======
-%   betweenness
-%   charpath
-%   clustering_coef
->>>>>>> documentation - fixed typo in reference documentation, thanks to Adham (see #2073)
-=======
->>>>>>> enhancement - allow for thresholding when cfg.threshold is specified
 %   degrees
 %   density
 %   distance

@@ -694,19 +694,9 @@ if strcmp(cfg.interpolatenan,'yes') && any(nanInds)
   chanX(nanInds) = [];
   chanY(nanInds) = [];
   datavector(nanInds) = [];
-<<<<<<< HEAD
-<<<<<<< HEAD
   if ~isempty(maskdatavector)
     maskdatavector(nanInds) = [];
   end
-=======
-  maskdatavector(nanInds) = [];
->>>>>>> bugfix: also removed NaNs from maskdatavector
-=======
-  if ~isempty(maskdatavector)
-    maskdatavector(nanInds) = [];
-  end
->>>>>>> bugfix: when nans in data but no masking, script errored, now corrected
 end
 
 % Draw plot

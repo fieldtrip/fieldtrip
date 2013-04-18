@@ -640,19 +640,10 @@ if isfield(cfg, 'showlabels')
   cfg = rmfield(cfg, 'showlabels');
 end
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> bugfix: interactively selecting a time(/freq) window in ft_singleplotER/TFR now passes cfg.channel='all' to the called topoplot (this used to be the case, don't know why it was changed to only passing those channels present in the singleplot)
 % make sure the topo displays all channels, not just the ones in this
 % singleplot
 cfg.channel = 'all';
 
-<<<<<<< HEAD
-=======
->>>>>>> enhancement: in interactive mode, singleplot now copies over the ylim to the zlim of topoplot
-=======
->>>>>>> bugfix: interactively selecting a time(/freq) window in ft_singleplotER/TFR now passes cfg.channel='all' to the called topoplot (this used to be the case, don't know why it was changed to only passing those channels present in the singleplot)
 % if user specified a ylim, copy it over to the zlim of topoplot
 if isfield(cfg, 'ylim')
   cfg.zlim = cfg.ylim;
