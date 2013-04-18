@@ -1545,7 +1545,7 @@ switch fname
     end
     
     if isfield(output, 'time')
->>>>>>> automatically synchronized identical files to revision 7747
+>>>>>>> included some small changes from oostenveld/master
       if rptflag,
         dimord = [dimord,'_rpt'];
         dimnum = dimnum + 1;
@@ -1571,7 +1571,7 @@ switch fname
   case 'noisecov'
     dimord = [dimord,'_ori_ori'];
 =======
->>>>>>> automatically synchronized identical files to revision 7747
+>>>>>>> included some small changes from oostenveld/master
   case 'ori'
     dimord = '';
   case 'pow'
