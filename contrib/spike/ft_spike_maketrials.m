@@ -115,6 +115,7 @@ if strcmp(cfg.trlunit,'timestamps')
   % make a loop through the spike units and make the necessary conversions
   nTrials = size(cfg.trl,1);
   for iUnit = 1:nUnits
+<<<<<<< HEAD
     ts = spike.timestamp{iUnit}(:);            
     classTs = class(ts);
     
@@ -143,6 +144,10 @@ if strcmp(cfg.trlunit,'timestamps')
         trlEvent = cast(trlEvent, classTs);
     end
     
+=======
+    ts = spike.timestamp{iUnit}(:);
+
+>>>>>>> avoiding roundoff errors in ft_spike_maketrials.m
     % take care of the waveform information as well
     hasWave =  isfield(spike, 'waveform') && ~isempty(spike.waveform) && ~isempty(spike.waveform{iUnit});
       
@@ -160,8 +165,18 @@ if strcmp(cfg.trlunit,'timestamps')
     % subtract the event (t=0) from the timestamps directly
     if ~isempty(trialNum)
       ts = ts(sel);
+<<<<<<< HEAD
       dt = double(ts - trlEvent(trialNum,1)); % convert to double only here
       dt = dt/cfg.timestampspersecond + trlDouble(trialNum,3)/cfg.timestampspersecond;
+=======
+      if ~strcmp(class(ts), class(cfg.trl))
+        warning('timestamps are of class %s and cfg.trl is of class %s, rounding errors are possible', class(ts), class(cfg.trl));
+        dt = double(ts) - double(cfg.trl(trialNum,1));
+      else
+        dt = double(ts - cfg.trl(trialNum,1)); % convert to double only here
+      end
+      dt = dt/cfg.timestampspersecond + cfg.trl(trialNum,3)/cfg.timestampspersecond;
+>>>>>>> avoiding roundoff errors in ft_spike_maketrials.m
     else
       dt = [];
     end
@@ -192,6 +207,7 @@ elseif strcmp(cfg.trlunit,'samples')
   for iUnit = 1:nUnits
     
     % determine the corresponding sample numbers for each timestamp
+<<<<<<< HEAD
     ts      = spike.timestamp{iUnit}(:);    
     classTs = class(ts);        
     if (strcmp(classTs, 'double') && any(ts>(2^53))) || (strcmp(classTs, 'single') && any(ts>(2^24)))
@@ -222,6 +238,16 @@ elseif strcmp(cfg.trlunit,'samples')
     
     % see which spikes fall into the trials
     waveSel = [];        
+=======
+    ts = spike.timestamp{iUnit}(:);
+    if ~strcmp(class(ts), class(FirstTimeStamp))
+      warning('timestamps are of class %s and hdr.FirstTimeStamp is of class %s, rounding errors are possible', class(ts), class(FirstTimeStamp));
+      sample = (double(ts)-double(FirstTimeStamp))/TimeStampPerSample + 1;
+    else
+      sample = double(ts-FirstTimeStamp)/TimeStampPerSample + 1; % no rounding (compare ft_appendspike)
+    end
+    waveSel = [];
+>>>>>>> avoiding roundoff errors in ft_spike_maketrials.m
     for iTrial = 1:nTrials
       begsample = cfg.trl(iTrial,1) - 1/2;
       endsample = cfg.trl(iTrial,2) + 1/2;
