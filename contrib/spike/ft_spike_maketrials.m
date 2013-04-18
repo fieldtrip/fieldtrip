@@ -190,7 +190,7 @@ if strcmp(cfg.trlunit,'timestamps')
       dt = dt/cfg.timestampspersecond + trlDouble(trialNum,3)/cfg.timestampspersecond;
 =======
       if ~strcmp(class(ts), class(cfg.trl))
-        warning_once('timestamps are of class %s and cfg.trl is of class %s, rounding errors are possible', class(ts), class(cfg.trl));
+        warning('timestamps of unit %d are of class %s and cfg.trl is of class %s, rounding errors are possible', iUnit, class(ts), class(cfg.trl));
         dt = double(ts) - double(cfg.trl(trialNum,1));
       else
         dt = double(ts - cfg.trl(trialNum,1)); % convert to double only here
@@ -269,7 +269,7 @@ elseif strcmp(cfg.trlunit,'samples')
 =======
     ts = spike.timestamp{iUnit}(:);
     if ~strcmp(class(ts), class(FirstTimeStamp))
-      warning_once('timestamps are of class %s and hdr.FirstTimeStamp is of class %s, rounding errors are possible', class(ts), class(FirstTimeStamp));
+      warning('timestamps of unit %d are of class %s and hdr.FirstTimeStamp is of class %s, rounding errors are possible', iUnit, class(ts), class(FirstTimeStamp));
       sample = (double(ts)-double(FirstTimeStamp))/TimeStampPerSample + 1;
     else
       sample = double(ts-FirstTimeStamp)/TimeStampPerSample + 1; % no rounding (compare ft_appendspike)
