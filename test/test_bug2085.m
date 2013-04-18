@@ -50,10 +50,13 @@ grad2 = ft_datatype_sens(grad);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> enhancement - include explicit chantype in the test script, see #2085
 =======
 >>>>>>> enhancement - merged the git and svn change to the test script
+=======
+>>>>>>> enhancement - include explicit chantype in the test script, see #2085
 % this makes ft_senstype much faster
 grad2.type = 'magnetometer'; 
 for i=1:length(sel)
@@ -62,6 +65,7 @@ for i=1:length(sel)
 end
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 grad2.type = 'magnetometer'; % this makes ft_senstype much faster
 >>>>>>> enhancement - created test script for timing the leadfield computation
@@ -72,11 +76,14 @@ grad2.type = 'magnetometer'; % this makes ft_senstype much faster
 =======
 grad2.type = 'magnetometer'; % this makes ft_senstype much faster
 >>>>>>> enhancement - created test script for timing the leadfield computation
+=======
+>>>>>>> enhancement - include explicit chantype in the test script, see #2085
 
 %% determine the time to compute some leadfields
 
 cfg = [];
 cfg.vol = vol;
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -103,6 +110,9 @@ tic
 >>>>>>> enhancement - changed the persistent variable handling in ft_senslabel, this should be much faster. Added it to the test script. See bug 2085
 =======
 cfg.resolution = 4;
+=======
+cfg.grid.resolution = 4;
+>>>>>>> enhancement - include explicit chantype in the test script, see #2085
 cfg.channel = 'all';
 
 <<<<<<< HEAD
@@ -296,9 +306,13 @@ if (time1/time2)>1.5
 end
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> enhancement - created test script for timing the leadfield computation
 =======
 %%
+=======
+%% the following section pertains to a change (improvement) I made to the ft_senslabel function which is meant to speed up subsequent calls using a large set of persistent variables
+>>>>>>> enhancement - include explicit chantype in the test script, see #2085
 
 type = {
     'btiref'
