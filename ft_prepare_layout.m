@@ -150,6 +150,7 @@ if isstruct(cfg.layout) && isfield(cfg.layout, 'pos') && isfield(cfg.layout, 'la
   layout = cfg.layout;
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
   cfg.channel = ft_channelselection(cfg.channel, layout.label);
   chansel = match_str(layout.label, cat(1, cfg.channel(:), 'COMNT', 'SCALE')); % this keeps them in the order of the layout
@@ -163,6 +164,9 @@ if isstruct(cfg.layout) && isfield(cfg.layout, 'pos') && isfield(cfg.layout, 'la
 =======
 
 >>>>>>> bugfix #2059 #2066 - subselection of channels when plotting works again for all cases, testscript extended
+=======
+  
+>>>>>>> bugfix - prevent COMNT and SCALE from occuring twice, see dashboard email from today
 elseif isstruct(cfg.layout) && isfield(cfg.layout, 'pos') && isfield(cfg.layout, 'label') && (~isfield(cfg.layout, 'width') || ~isfield(cfg.layout, 'height'))
   layout = cfg.layout;
   % add width and height for multiplotting
@@ -638,6 +642,9 @@ else
 end
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> bugfix - prevent COMNT and SCALE from occuring twice, see dashboard email from today
 % make the subset as specified in cfg.channel
 cfg.channel = ft_channelselection(cfg.channel, setdiff(layout.label, {'COMNT', 'SCALE'}));  % COMNT and SCALE are not really channels
 chansel = match_str(layout.label, cat(1, cfg.channel(:), 'COMNT', 'SCALE'));                % include COMNT and SCALE, keep all channels in the order of the layout
@@ -646,6 +653,7 @@ layout.pos    = layout.pos(chansel,:);
 layout.width  = layout.width(chansel);
 layout.height = layout.height(chansel);
 layout.label  = layout.label(chansel);
+<<<<<<< HEAD
 =======
 % FIXME note that below if-statement might be unnecessary
 if isstruct(layout) && isfield(layout, 'pos') && isfield(layout, 'label') && isfield(layout, 'width') && isfield(layout, 'height')
@@ -658,6 +666,8 @@ if isstruct(layout) && isfield(layout, 'pos') && isfield(layout, 'label') && isf
   layout.label  = layout.label(chansel);
 end
 >>>>>>> bugfix #2059 #2066 - subselection of channels when plotting works again for all cases, testscript extended
+=======
+>>>>>>> bugfix - prevent COMNT and SCALE from occuring twice, see dashboard email from today
 
 % FIXME there is a conflict between the use of cfg.style here and in topoplot
 if ~strcmp(cfg.style, '3d')
