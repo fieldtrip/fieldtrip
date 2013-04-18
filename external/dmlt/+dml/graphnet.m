@@ -4,19 +4,21 @@ classdef graphnet < dml.method
 %   DESCRIPTION
 %   Elastic net linear and logistic regression. Note that this algorithm
 %   allows for the GraphNet generalization that allows coupling between
-%   features.
+%   features. Requires specification of the lasso penalty term L1 and
+%   (optionally) the ridge penalty term L2. The latter can also be a matrix
+%   to allow coupling of variables.
 %
-%   REFERENCE
-%   Regularization paths for generalized linear models via coordinate descent 
-%   by Friedman et al.
+%   REFERENCE Regularization paths for generalized linear models via
+%   coordinate descent by Friedman et al.
 %
 %   Grosenick L, Klingenberg B, Knutson B. A family of interpretable
-%   multivariate models for regression and classification of whole-brain fMRI data. stanford.edu. 
+%   multivariate models for regression and classification of whole-brain
+%   fMRI data. stanford.edu.
 %
-%   EXAMPLE
+%   EXAMPLE 
 %   X = rand(10,20); Y = [1 1 1 1 1 2 2 2 2 2]'; 
-%   m = dml.graphnet
-%   m = m.train(X,Y);
+%   m = dml.graphnet('family','binomial','L1',0.1);
+%   m = m.train(X,Y); 
 %   Z = m.test(X);
 %
 %   DEVELOPER

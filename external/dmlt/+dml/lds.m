@@ -23,7 +23,7 @@ classdef lds < dml.method
 %   nsamples = 1000; ncov = 2; ncycles = 10; ntrials = 2; 
 %   Y = sin(ncycles * 2 * pi * (1:nsamples) ./ nsamples);
 %   Y = repmat(reshape(Y,[1 1 numel(Y)]),[ntrials 1 1]);
-%   X = repmat(Y,[1 ncov 1]) + 0.1*randn(ntrials,ncov,nsamples); 
+%   X = repmat(Y,[1 ncov 1]) + 0.5*randn(ntrials,ncov,nsamples); 
 %   
 %   k = dml.lds('inference','smooth','verbose',true,'indims',[ncov nsamples]);
 %   k = k.train(X,Y);
@@ -39,20 +39,22 @@ classdef lds < dml.method
 %   U = repmat(Y,[1 ncov 1]) + 0.1*randn(ntrials,ncov,nsamples); 
 %   Z = k.test(U);
 %   figure
-%   plot(squeeze(Y(1,:,:))','k');
+%   plot(squeeze(Y(1,:,:))','k--','LineWidth',2);
 %   hold on;
-%   plot(squeeze(Z(1,:,:))','r');
-%   legend('real','predicted');
+%   plot(zscore(squeeze(Z(1,:,:))'),'r','LineWidth',2);
+%   plot(squeeze(X(1,:,:))','bo');
+%   legend('real','predicted','observed');
 % 
 %   k = dml.lds('inference','smooth','verbose',true);
 %   k = k.train(X,[Y nan(size(Y))]); % mixture of hidden + observed states
 %   U = repmat(Y,[1 ncov 1]) + 0.1*randn(ntrials,ncov,nsamples); 
 %   Z = k.test(X);
 %   figure
-%   plot(squeeze(Y(1,:,:))','k');
+%   plot(zscore(squeeze(Y(1,:,:))'),'k');
 %   hold on;
-%   plot(squeeze(Z(1,:,:))','r');
-%   legend('real','predicted');
+%   plot(zscore(squeeze(Z(1,:,:))'),'r');
+%   plot(zscore(squeeze(X(1,:,:))'),'bo');
+%   legend('real','predicted','observed');
 % 
 %   REFERENCES
 %   Pattern Recognition and Machine Learning, Bishop
@@ -60,7 +62,7 @@ classdef lds < dml.method
 %
 %   DEVELOPER
 %   Marcel van Gerven (m.vangerven@donders.ru.nl)
-%   Ali Bahramisharfi (ali@cs.ru.nl)
+%   Ali Bahramisharif (ali@cs.ru.nl)
 
 
   properties

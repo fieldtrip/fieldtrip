@@ -6,7 +6,7 @@ classdef filterer < dml.method
 %   and uses that ordering to greedily determine the 'optimal' feature set
 %   or to select the best m features.
 %
-%   If filter is a string then it calls rankfeatures in the bioinformatics
+%   If filter is a string, e.g. 'ttest' then it calls rankfeatures in the bioinformatics
 %   toolbox. If it is a function it will just evaluate that function on
 %   each feature and the output.
 %
@@ -148,7 +148,7 @@ classdef filterer < dml.method
           
           cv = obj.validator.train(X(:,obj.order(1:f)),Y);
           
-          m = cv.performance;
+          m = cv.statistic;
           
           if obj.verbose, fprintf('criterion: %.2g\n',m); end
           

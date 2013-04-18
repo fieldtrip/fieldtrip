@@ -225,7 +225,7 @@ classdef crossvalidator
           
           % use the same ordering for multiple datasets by reinitializing the random number generator
           try
-            RandStream.setDefaultStream(RandStream('mt19937ar','seed',1));
+            RandStream.setGlobalStream(RandStream('mt19937ar','seed',1));
           catch
             rand('twister',1); randn('state',1);
           end

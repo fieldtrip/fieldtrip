@@ -8,14 +8,16 @@ classdef enet < dml.method
 %   parameter 'family' determines whether to use linear regression
 %   (gaussian) or logistic regression (binomial or multinomial). The mixing
 %   parameter alpha controls the influence of the 11 (alpha=1) and l2 regularizer
-%   (alpha = 0).
+%   (alpha = 0). Negative weights indicate the class with label 1. Positive
+%   weights indicate the class with label 2.
 %
 %   REFERENCE
 %   Regularization paths for generalized linear models via coordinate descent 
 %   by Friedman et al.
 %
 %   EXAMPLE
-%   X = rand(10,20); Y = [1 1 1 1 1 2 2 2 2 2]';
+%   X = randn(100,20); Y = [ones(50,1); 2*ones(50,1)]; 
+%   X(1:50,1:10) = X(1:50,1:10)+1; X(51:100,11:20) = X(51:100,11:20)+1;
 %   m = dml.enet('family','binomial');
 %   m = m.train(X,Y);
 %   Z = m.test(X);
@@ -324,9 +326,11 @@ classdef enet < dml.method
       %
       % m.weights regression coefficients
       % m.bias bias term
+      % m.lambda selected lambda value
       
       m.weights = obj.weights(1:(end-1),:);
       m.bias = obj.weights(end,:);
+      m.lambda = obj.lambda;
       
     end
     
