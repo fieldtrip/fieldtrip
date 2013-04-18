@@ -1534,6 +1534,14 @@ switch fname
         dimord = [dimord,'_rpttap'];
       end
     elseif isfield(output, 'time') && numel(output.time)>1
+<<<<<<< HEAD
+=======
+    end
+    
+    if isfield(output, 'time')
+>>>>>>> included some small changes from oostenveld/master
+=======
+>>>>>>> once more, trying to resolve svn rebase conflict
       if rptflag,
         dimord = [dimord,'_rpt'];
         dimnum = dimnum + 1;
@@ -1557,6 +1565,11 @@ switch fname
     dimord = [dimord,'_ori_ori'];
   case 'noisecov'
     dimord = [dimord,'_ori_ori'];
+<<<<<<< HEAD
+=======
+>>>>>>> included some small changes from oostenveld/master
+=======
+>>>>>>> once more, trying to resolve svn rebase conflict
   case 'ori'
     dimord = '';
   case 'pow'
