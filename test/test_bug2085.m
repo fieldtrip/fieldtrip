@@ -149,6 +149,7 @@ time2 = toc;
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 %% compare the time that it took for the two grad versions, the 10 seconds and fraction 2 are rather arbitrary
 
 if time1>10
@@ -300,17 +301,28 @@ end
 >>>>>>> enhancement - changed the persistent variable handling in ft_senslabel, this should be much faster. Added it to the test script. See bug 2085
 =======
 %% compare the time that it took, this fraction 1.5 is rather arbitrary
+=======
+%% compare the time that it took for the two grad versions, the 10 seconds and fraction 2 are rather arbitrary
+>>>>>>> fixed merge conflict related to test/test_bug2085.m
 
-if (time1/time2)>1.5
+if time1>10
+  error('the leadfield computation takes too long');
+end
+
+if (time1/time2)>2
     error('the leadfield computation without grad.type takes too long (%d seconds compared to %d seconds)', time1, time2);
 end
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> enhancement - created test script for timing the leadfield computation
 =======
 %%
 =======
+=======
+
+>>>>>>> fixed merge conflict related to test/test_bug2085.m
 %% the following section pertains to a change (improvement) I made to the ft_senslabel function which is meant to speed up subsequent calls using a large set of persistent variables
 >>>>>>> enhancement - include explicit chantype in the test script, see #2085
 
