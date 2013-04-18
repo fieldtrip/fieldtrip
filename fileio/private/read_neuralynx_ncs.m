@@ -81,6 +81,7 @@ if NRecords>0
   % there's a gap if no round off error of the sampling frequency could
   % explain the jump (which is always > one block)
 <<<<<<< HEAD
+<<<<<<< HEAD
   Fs       = mode(double(SampFreq));
   if abs(Fs/hdr.SamplingFrequency-1)>0.01
       warning('the sampling frequency as read out from the header equals %2.2f and differs from the mode sampling frequency as read out from the data %2.2f\n', ...
@@ -93,6 +94,11 @@ if NRecords>0
   Fs       = median(double(SampFreq));
   if Fs~=hdr.SamplingFrequency
       warning('the sampling frequency as read out from the header equals %2.2f and differs from the median sampling frequency as read out from the data %2.2f\n', ...
+=======
+  Fs       = mode(double(SampFreq));
+  if abs(Fs/hdr.SamplingFrequency-1)>0.01
+      warning('the sampling frequency as read out from the header equals %2.2f and differs from the mode sampling frequency as read out from the data %2.2f\n', ...
+>>>>>>> warning if timestamp jumps are zero or negative for read_neuralynx_ncs and correcting this
       hdr.SamplingFrequency, Fs);
     
       % check which one was correct
@@ -102,8 +108,12 @@ if NRecords>0
 >>>>>>> correcting the sometimes incorrect header sampling frequency from neuralynx by reading out the sampling frequency from the blocks and comparing to the differences in the timestamps
 =======
       d = double(TimeStamp(2:end)-TimeStamp(1:end-1));  
+<<<<<<< HEAD
       fsEst = 1e6./median(d);
 >>>>>>> computing median timestamps per sample in uint64 format
+=======
+      fsEst = 1e6./mode(d);
+>>>>>>> warning if timestamp jumps are zero or negative for read_neuralynx_ncs and correcting this
       indx = nearest([Fs hdr.SamplingFrequency], fsEst);
       if indx==1 
         warning('correcting the header frequency from %2.2f to %2.2f', hdr.SamplingFrequency, Fs);
@@ -206,7 +216,7 @@ if begrecord>=1 && endrecord>=begrecord
 >>>>>>> computing median timestamps per sample in uint64 format
   if ~isempty(idxNeg)
     [TimeStamp, indx] = sort(TimeStamp);      
-    warning('%d blocks have negative timestamp jump', length(idxNeg));
+    warning('%d blocks have zero or negative timestamp jump', length(idxNeg));
   else
     indx = 1:length(TimeStamp);
   end
