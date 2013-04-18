@@ -25,8 +25,13 @@ function [spike] = ft_spike_maketrials(cfg,spike)
 %     trial start.
 %     If more columns are added than 3, these are used to construct the
 %     spike.trialinfo field having information about the trial.
+<<<<<<< HEAD
 %     Note that values in cfg.trl get inaccurate above 2^53 (in that case 
 %     it is better to use the original uint64 representation)
+=======
+%     cfg.trl is ideally of the same class as spike.timestamp{} as it avoids round-off
+%     errors
+>>>>>>> avoiding roundoff errors in ft_spike_maketrials.m
 %
 %   cfg.trlunit = 'timestamps' (default) or 'samples'. 
 %     If 'samples', cfg.trl should 
@@ -95,6 +100,13 @@ if size(cfg.trl,1)>1
     warning('your trials are overlapping, trials will not be statistically independent, some spikes will be duplicated'); %#ok<*WNTAG>
   end
 end
+<<<<<<< HEAD
+=======
+cfg.trl = cfg.trl;
+events  = cfg.trl(:,1:2)'; %2-by-nTrials now
+if ~issorted(events(:)), warning('your trials are overlapping, trials will not be statistically independent'); end
+if ~issorted(events,'rows'), error('the trials are not in sorted order'); end
+>>>>>>> avoiding roundoff errors in ft_spike_maketrials.m
 
 % check if the inputs are congruent: hdr should not be there if unit is timestamps
 if strcmp(cfg.trlunit,'timestamps')
@@ -175,12 +187,20 @@ if strcmp(cfg.trlunit,'timestamps')
       else
         dt = double(ts - cfg.trl(trialNum,1)); % convert to double only here
       end
+<<<<<<< HEAD
       dt = dt/cfg.timestampspersecond + cfg.trl(trialNum,3)/cfg.timestampspersecond;
 >>>>>>> avoiding roundoff errors in ft_spike_maketrials.m
     else
       dt = [];
     end
     trialDur = double(trlEvent(:,2)-trlEvent(:,1))/cfg.timestampspersecond;
+=======
+      dt = dt/cfg.timestampspersecond + trlDouble(trialNum,3)/cfg.timestampspersecond;
+    else
+      dt = [];
+    end
+    trialDur = double(cfg.trl(:,2)-cfg.trl(:,1))/cfg.timestampspersecond;
+>>>>>>> avoiding roundoff errors in ft_spike_maketrials.m
     time = [trlDouble(:,3)/cfg.timestampspersecond (trlDouble(:,3)/cfg.timestampspersecond + trialDur)]; % make the time-axis
 
     % gather the results
