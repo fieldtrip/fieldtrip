@@ -96,6 +96,7 @@ if NRecords>0
       hdr.SamplingFrequency, Fs);
     
       % check which one was correct
+      d = 
       fsEst = 1e6./median(double(diff(TimeStamp)));
 >>>>>>> correcting the sometimes incorrect header sampling frequency from neuralynx by reading out the sampling frequency from the blocks and comparing to the differences in the timestamps
       indx = nearest([Fs hdr.SamplingFrequency], fsEst);
@@ -108,6 +109,7 @@ if NRecords>0
   % detect the number of timestamps per block while avoiding influencce of gaps
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   d = double(TimeStamp(2:end)-TimeStamp(1:end-1));    
 =======
   d        = double(diff(TimeStamp));
@@ -115,6 +117,9 @@ if NRecords>0
 =======
   d        = diff(double(TimeStamp));
 >>>>>>> ordering the blocks of CSC data if there are negative jumps in the timestamp axis and issuing a warning message
+=======
+  d = double(TimeStamp(2:end)-TimeStamp(1:end-1));    
+>>>>>>> computing median timestamps per sample in uint64 format
   maxJump  = ceil(10^6./(Fs-1))*512;
   gapCorrectedTimeStampPerSample =  nanmean(d(d<maxJump))/512;    
 
