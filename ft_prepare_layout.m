@@ -151,7 +151,7 @@ if isstruct(cfg.layout) && isfield(cfg.layout, 'pos') && isfield(cfg.layout, 'la
 <<<<<<< HEAD
 =======
   cfg.channel = ft_channelselection(cfg.channel, layout.label);
-  chansel = match_str(layout.label, {cfg.channel{:} 'COMNT' 'SCALE'}); % this keeps them in the order of the layout
+  chansel = match_str(layout.label, cat(1, cfg.channel(:), 'COMNT', 'SCALE')); % this keeps them in the order of the layout
   % return the layout for the subset of channels
   layout.pos    = layout.pos(chansel,:);
   layout.width  = layout.width(chansel);
@@ -282,6 +282,9 @@ elseif ischar(cfg.layout)
       error('the specified layout file %s was not found', cfg.layout);
     end
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> Merge branch 'master' of github.com:oostenveld/fieldtrip
     tmp = load(cfg.layout, 'lay');
     if isfield(tmp, 'layout')
       layout = tmp.layout;
@@ -290,9 +293,12 @@ elseif ischar(cfg.layout)
     else
       error('mat file does not contain a layout');
     end
+<<<<<<< HEAD
 =======
     load(cfg.layout, 'lay');
 >>>>>>> trying to solve some merge problems between git and svn
+=======
+>>>>>>> Merge branch 'master' of github.com:oostenveld/fieldtrip
     
   elseif ft_filetype(cfg.layout, 'layout')
     

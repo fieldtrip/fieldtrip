@@ -4,11 +4,15 @@ function test_bug2059
 % TEST ft_topoplotER ft_channelselection
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 load(dccnfilename('/home/common/matlab/fieldtrip/data/test/bug2059.mat'));
 =======
 % load(dccnfilename('/home/common/matlab/fieldtrip/data/test/bug2059.mat'));
 load('bug2059.mat');
 >>>>>>> trying to solve some merge problems between git and svn
+=======
+load(dccnfilename('/home/common/matlab/fieldtrip/data/test/bug2059.mat'));
+>>>>>>> Merge branch 'master' of github.com:oostenveld/fieldtrip
 
 close all
 
