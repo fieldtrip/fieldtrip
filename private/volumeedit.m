@@ -53,8 +53,13 @@ ysize(2) = 0.82*dim(2)/ydim;
 % create figure
 h = figure;
 set(h, 'color', [1 1 1]);
+<<<<<<< HEAD
 % set(h, 'pointer', 'custom');
 % set(h, 'pointershapecdata', nan(16)); 
+=======
+set(h, 'pointer', 'custom');
+set(h, 'pointershapecdata', nan(16)); 
+>>>>>>> enhancement - improved version: allow for anatomy plotting in background
 set(h, 'visible', 'on');
 set(h, 'windowbuttondownfcn', @cb_buttonpress); 
 set(h, 'windowbuttonupfcn',   @cb_buttonrelease);
@@ -124,7 +129,11 @@ opt.handleseraser = [he1(:)';he2(:)';he3(:)'];
 opt.ijk           = [xi yi zi];
 opt.dim           = dim;
 opt.quit          = 0;
+<<<<<<< HEAD
 opt.mask          = opt.data~=0;
+=======
+opt.mask          = true(dim);
+>>>>>>> enhancement - improved version: allow for anatomy plotting in background
 opt.radius        = [3 3 3];
 
 setappdata(h, 'opt', opt);
@@ -296,6 +305,7 @@ if isfield(opt, 'bckgrnd')
   set(opt.handlesaxes(3),'nextplot','replace');
 end
 
+<<<<<<< HEAD
 tmpdata = opt.data;
 tmpdata(~opt.mask) = 0;
 xi2  = xi+(-opt.radius(1):opt.radius(1)); xi2(xi2<1) = 1; xi2(xi2>opt.dim(1)) = opt.dim(1);
@@ -304,6 +314,14 @@ zi2  = zi+(-opt.radius(3):opt.radius(3)); zi2(zi2<1) = 1; zi2(zi2>opt.dim(3)) = 
 dat1 = double(squeeze(sum(tmpdata(xi2,:,:),1))>0)*0.5+double(squeeze(tmpdata(xi,:,:)))*0.5;
 dat2 = double(sum(tmpdata(:,:,zi2),3)'>0)*0.5+double(tmpdata(:,:,zi)'>0)*0.5;
 dat3 = double(squeeze(sum(tmpdata(:,yi2,:),2))>0)*0.5+double(squeeze(tmpdata(:,yi,:))>0)*0.5;
+=======
+xi2  = xi+(-opt.radius(1):opt.radius(1));
+yi2  = yi+(-opt.radius(2):opt.radius(2));
+zi2  = zi+(-opt.radius(3):opt.radius(3));
+dat1 = double(squeeze(sum(opt.data(xi2,:,:),1))>0)*0.5+double(squeeze(opt.data(xi,:,:)))*0.5;
+dat2 = double(sum(opt.data(:,:,zi2),3)'>0)*0.5+double(opt.data(:,:,zi)'>0)*0.5;
+dat3 = double(squeeze(sum(opt.data(:,yi2,:),2))>0)*0.5+double(squeeze(opt.data(:,yi,:))>0)*0.5;
+>>>>>>> enhancement - improved version: allow for anatomy plotting in background
 
 set(opt.handlesslice(1), 'CData', dat1);
 set(opt.handlesslice(2), 'CData', dat2);
