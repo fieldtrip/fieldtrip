@@ -54,12 +54,17 @@ ysize(2) = 0.82*dim(2)/ydim;
 h = figure;
 set(h, 'color', [1 1 1]);
 <<<<<<< HEAD
+<<<<<<< HEAD
 % set(h, 'pointer', 'custom');
 % set(h, 'pointershapecdata', nan(16)); 
 =======
 set(h, 'pointer', 'custom');
 set(h, 'pointershapecdata', nan(16)); 
 >>>>>>> enhancement - improved version: allow for anatomy plotting in background
+=======
+% set(h, 'pointer', 'custom');
+% set(h, 'pointershapecdata', nan(16)); 
+>>>>>>> dataout fixed
 set(h, 'visible', 'on');
 set(h, 'windowbuttondownfcn', @cb_buttonpress); 
 set(h, 'windowbuttonupfcn',   @cb_buttonrelease);
@@ -156,6 +161,7 @@ delete(h);
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 dataout = datain;
 dataout(~opt.mask) = 0;
 =======
@@ -164,6 +170,10 @@ dataout = opt.mask;
 =======
 dataout = datain(opt.mask);
 >>>>>>> enhancement - accounting for non-boolean data
+=======
+dataout = datain;
+dataout(~opt.mask) = 0;
+>>>>>>> dataout fixed
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
