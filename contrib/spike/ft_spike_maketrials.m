@@ -27,6 +27,7 @@ function [spike] = ft_spike_maketrials(cfg,spike)
 %     spike.trialinfo field having information about the trial.
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 %     Note that values in cfg.trl get inaccurate above 2^53 (in that case 
 %     it is better to use the original uint64 representation)
 =======
@@ -46,6 +47,8 @@ function [spike] = ft_spike_maketrials(cfg,spike)
 %     We will then explicitly convert cfg.trl(:,1:2) to uint64 inside the function.
 %     
 >>>>>>> avoiding roundoff errors in ft_spike_maketrials.m
+=======
+>>>>>>> updated comments on ft_spike_maketrials for cfg.trl option
 %
 %   cfg.trlunit = 'timestamps' (default) or 'samples'. 
 %     If 'samples', cfg.trl should 
@@ -180,7 +183,9 @@ if strcmp(cfg.trlunit,'timestamps')
     classTrl = class(cfg.trl);
     trlEvent = cfg.trl(:,1:2);
     if ~strcmp(classTs, classTrl)
-        warning('timestamps of unit %d are of class %s and cfg.trl is of class %s, converting %s to %s', iUnit, class(ts), class(cfg.trl), class(cfg.trl), class(ts));
+        if iUnit==1
+          warning('timestamps are of class %s and cfg.trl is of class %s, converting %s to %s', iUnit, class(ts), class(cfg.trl), class(cfg.trl), class(ts));
+        end
         trlEvent = cast(trlEvent, classTs);
     end
     
@@ -306,7 +311,9 @@ elseif strcmp(cfg.trlunit,'samples')
 =======
     ts = spike.timestamp{iUnit}(:);
     if ~strcmp(class(ts), class(FirstTimeStamp))
-      warning('timestamps of unit %d are of class %s and hdr.FirstTimeStamp is of class %s, rounding errors are possible', iUnit, class(ts), class(FirstTimeStamp));
+      if iUnit==1
+        warning('timestamps of unit %d are of class %s and hdr.FirstTimeStamp is of class %s, rounding errors are possible', iUnit, class(ts), class(FirstTimeStamp));
+      end
       sample = (double(ts)-double(FirstTimeStamp))/TimeStampPerSample + 1;
     else
       sample = double(ts-FirstTimeStamp)/TimeStampPerSample + 1; % no rounding (compare ft_appendspike)
