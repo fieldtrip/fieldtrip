@@ -70,7 +70,11 @@ if isstruct(val)
           case {'single' 'double'}
             line = printmat([name '.' fn{i}], fv);
             str  = [str line];
+<<<<<<< HEAD
           case {'logical' 'int8' 'int16' 'int32' 'int64' 'uint8' 'uint16' 'uint32' 'uint64' 'logical'}
+=======
+          case {'int8' 'int16' 'int32' 'int64' 'uint8' 'uint16' 'uint32' 'uint64' 'logical'}
+>>>>>>> enhancement - deal with an empty input structure
             line = printmat([name '.' fn{i}], fv);
             str  = [str line];
           case 'cell'
