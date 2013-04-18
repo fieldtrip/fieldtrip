@@ -131,6 +131,7 @@ opt.dim           = dim;
 opt.quit          = 0;
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 opt.mask          = opt.data~=0;
 =======
 opt.mask          = true(dim);
@@ -138,6 +139,9 @@ opt.mask          = true(dim);
 =======
 opt.mask          = opt.data;
 >>>>>>> enhancement - slight modification
+=======
+opt.mask          = opt.data~=0;
+>>>>>>> enhancement - accounting for non-boolean data
 opt.radius        = [3 3 3];
 
 setappdata(h, 'opt', opt);
@@ -151,11 +155,15 @@ opt = getappdata(h, 'opt');
 delete(h);
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 dataout = datain;
 dataout(~opt.mask) = 0;
 =======
 dataout = opt.mask;
 >>>>>>> enhancement - slight modification
+=======
+dataout = datain(opt.mask);
+>>>>>>> enhancement - accounting for non-boolean data
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -316,6 +324,7 @@ end
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 tmpdata = opt.data;
 tmpdata(~opt.mask) = 0;
 =======
@@ -324,6 +333,10 @@ tmpdata = opt.data & opt.mask;
 =======
 tmpdata = opt.mask;
 >>>>>>> enhancement - slight modification
+=======
+tmpdata = opt.data;;
+tmpdata(opt.mask) = 0;
+>>>>>>> enhancement - accounting for non-boolean data
 xi2  = xi+(-opt.radius(1):opt.radius(1)); xi2(xi2<1) = 1; xi2(xi2>opt.dim(1)) = opt.dim(1);
 yi2  = yi+(-opt.radius(2):opt.radius(2)); yi2(yi2<1) = 1; yi2(yi2>opt.dim(2)) = opt.dim(2);
 zi2  = zi+(-opt.radius(3):opt.radius(3)); zi2(zi2<1) = 1; zi2(zi2>opt.dim(3)) = opt.dim(3);
