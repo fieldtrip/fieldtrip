@@ -362,7 +362,7 @@ int main(int argc, char *argv[]) {
 	#endif
 
 	if (argc<2) {
-		fprintf(stderr, "Usage: saving_buffer directory [port/unix socket]\n");
+		fprintf(stderr, "Usage: recording <directory> [port/unix socket]\n");
 		return 1;
 	}
 
