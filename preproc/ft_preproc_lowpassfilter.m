@@ -23,10 +23,14 @@ function [filt] = ft_preproc_lowpassfilter(dat,Fs,Flp,N,type,dir,instabilityfix)
 %                'twopass-average' average of the twopass and the twopass-reverse
 %   instabilityfix optional method to deal with filter instabilities
 <<<<<<< HEAD
+<<<<<<< HEAD
 %                'no'       only detect and give error (default)
 =======
 %                'none'     only detect and give error (default)
 >>>>>>> enhancement - added the instabilityfix option to the function documentation
+=======
+%                'no'       only detect and give error (default)
+>>>>>>> enhancement - allow the specification of instabilityfix for the low-level filters in the high-level cfg, provide documentation
 %                'reduce'   reduce the filter order
 %                'split'    split the filter in two lower-order filters, apply sequentially
 %
@@ -77,10 +81,14 @@ end
 % set the default method to deal with filter instabilities
 if nargin<7|| isempty(instabilityfix)
 <<<<<<< HEAD
+<<<<<<< HEAD
   instabilityfix = 'no';
 =======
   instabilityfix = 'none';
 >>>>>>> bugfix - I noticed that no default was specified for the instabilityfix option: specify the default 'none', see also bug 780
+=======
+  instabilityfix = 'no';
+>>>>>>> enhancement - allow the specification of instabilityfix for the low-level filters in the high-level cfg, provide documentation
 end
 
 % Nyquist frequency
