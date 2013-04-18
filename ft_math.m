@@ -73,8 +73,11 @@ tmpcfg.parameter = cfg.parameter;
 [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
 % restore the provenance information
 [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
+<<<<<<< HEAD
 
 cfg.parameter = tmpcfg.parameter;
+=======
+>>>>>>> enhancement - added full provenance to ft_selectdata, implemented support for (new-style) source data in ft_selectdata_new, use rollback_provenance to keep provenance and cfg intact when doing an excursion from ft_math to ft_selectdata, added a 2013x version in ft_datatype_source (to reflect the new-style, still to be discussed with jansch), added a test script for http://bugzilla.fcdonders.nl/show_bug.cgi?id=2053
 
 if isfield(varargin{1}, [cfg.parameter 'dimord'])
  dimord = varargin{1}.([cfg.parameter 'dimord']);
