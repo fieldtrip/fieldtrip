@@ -28,6 +28,7 @@ function [spike] = ft_spike_maketrials(cfg,spike)
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 %     Note that values in cfg.trl get inaccurate above 2^53 (in that case 
 %     it is better to use the original uint64 representation)
 =======
@@ -49,6 +50,10 @@ function [spike] = ft_spike_maketrials(cfg,spike)
 >>>>>>> avoiding roundoff errors in ft_spike_maketrials.m
 =======
 >>>>>>> updated comments on ft_spike_maketrials for cfg.trl option
+=======
+%     Note that values in cfg.trl get inaccurate above 2^53 (in that case 
+%     it is better to use the original uint64 representation)
+>>>>>>> checking if rounding errors occur in ft_spike_maketrials by seeing whether the cfg.trl exceeds the bitmax
 %
 %   cfg.trlunit = 'timestamps' (default) or 'samples'. 
 %     If 'samples', cfg.trl should 
@@ -121,7 +126,7 @@ end
 =======
 cfg.trl = cfg.trl;
 events  = cfg.trl(:,1:2)'; %2-by-nTrials now
-if ~issorted(events(:)), warning('your trials are overlapping, trials will not be statistically independent'); end
+if ~issorted(events(:)), warning('your trials are overlapping, trials will not be statistically independent'); end %#ok<*WNTAG>
 if ~issorted(events,'rows'), error('the trials are not in sorted order'); end
 >>>>>>> avoiding roundoff errors in ft_spike_maketrials.m
 
@@ -183,7 +188,15 @@ if strcmp(cfg.trlunit,'timestamps')
     classTrl = class(cfg.trl);
     trlEvent = cfg.trl(:,1:2);
     if ~strcmp(classTs, classTrl)
-        if iUnit==1
+        if strcmp(classTs, 'double')
+          mx = 2^53;
+        elseif strcmp(classTs, 'single')
+          mx = 2^24; % largest precision number
+        else
+          mx = 0;
+        end
+        if iUnit==1 && any(cfg.trl(:)>cast(mx, classTrl))
+          % check the maximum to give an indication of the possible error
           warning('timestamps are of class %s and cfg.trl is of class %s, converting %s to %s', iUnit, class(ts), class(cfg.trl), class(cfg.trl), class(ts));
         end
         trlEvent = cast(trlEvent, classTs);
@@ -278,6 +291,7 @@ elseif strcmp(cfg.trlunit,'samples')
     
     % determine the corresponding sample numbers for each timestamp
 <<<<<<< HEAD
+<<<<<<< HEAD
     ts      = spike.timestamp{iUnit}(:);    
     classTs = class(ts);        
     if (strcmp(classTs, 'double') && any(ts>(2^53))) || (strcmp(classTs, 'single') && any(ts>(2^24)))
@@ -317,7 +331,24 @@ elseif strcmp(cfg.trlunit,'samples')
       sample = (double(ts)-double(FirstTimeStamp))/TimeStampPerSample + 1;
     else
       sample = double(ts-FirstTimeStamp)/TimeStampPerSample + 1; % no rounding (compare ft_appendspike)
+=======
+    ts      = spike.timestamp{iUnit}(:);
+    classTs = class(ts);        
+    if ~strcmp(classTs, class(FirstTimeStamp))
+        if strcmp(classTs, 'double')
+          mx = 2^53;
+        elseif strcmp(classTs, 'single')
+          mx = 2^24; % largest precision number
+        else
+          mx = 0;
+        end
+        if iUnit==1 && FirstTimeStamp>cast(mx, class(FirstTimeStamp))
+           warning('timestamps of unit %d are of class %s and hdr.FirstTimeStamp is of class %s, rounding errors are possible', iUnit, class(ts), class(FirstTimeStamp));
+        end
+        FirstTimeStamp = cast(FirstTimeStamp, classTs);
+>>>>>>> checking if rounding errors occur in ft_spike_maketrials by seeing whether the cfg.trl exceeds the bitmax
     end
+    sample = double(ts-FirstTimeStamp)/TimeStampPerSample + 1; % no rounding (compare ft_appendspike)
     waveSel = [];
 >>>>>>> avoiding roundoff errors in ft_spike_maketrials.m
     for iTrial = 1:nTrials
