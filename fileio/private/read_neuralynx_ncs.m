@@ -177,6 +177,7 @@ if begrecord>=1 && endrecord>=begrecord
   end
   
 <<<<<<< HEAD
+<<<<<<< HEAD
   ts1 = TimeStamp(1);
   dts = double(TimeStamp-ts1); % no problem with doubles here as numbers are small
  
@@ -189,6 +190,10 @@ if begrecord>=1 && endrecord>=begrecord
 =======
     
   idxNeg = find(diff(double(TimeStamp))<=0);
+=======
+  d = TimeStamp(2:end)-TimeStamp(1:end-1);  
+  idxNeg = find(double(d)<=0);
+>>>>>>> computing median timestamps per sample in uint64 format
   if ~isempty(idxNeg)
     [TimeStamp, indx] = sort(TimeStamp);      
     warning('%d blocks have negative timestamp jump', length(idxNeg));
