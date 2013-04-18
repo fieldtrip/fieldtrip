@@ -130,10 +130,14 @@ opt.ijk           = [xi yi zi];
 opt.dim           = dim;
 opt.quit          = 0;
 <<<<<<< HEAD
+<<<<<<< HEAD
 opt.mask          = opt.data~=0;
 =======
 opt.mask          = true(dim);
 >>>>>>> enhancement - improved version: allow for anatomy plotting in background
+=======
+opt.mask          = opt.data;
+>>>>>>> enhancement - slight modification
 opt.radius        = [3 3 3];
 
 setappdata(h, 'opt', opt);
@@ -146,8 +150,12 @@ end
 opt = getappdata(h, 'opt');
 delete(h);
 
+<<<<<<< HEAD
 dataout = datain;
 dataout(~opt.mask) = 0;
+=======
+dataout = opt.mask;
+>>>>>>> enhancement - slight modification
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -307,11 +315,15 @@ end
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 tmpdata = opt.data;
 tmpdata(~opt.mask) = 0;
 =======
 tmpdata = opt.data & opt.mask;
 >>>>>>> enhancement - volumeedit can also add/restore by using the exend click (3rd mous buton, both mouse button, shift+left)
+=======
+tmpdata = opt.mask;
+>>>>>>> enhancement - slight modification
 xi2  = xi+(-opt.radius(1):opt.radius(1)); xi2(xi2<1) = 1; xi2(xi2>opt.dim(1)) = opt.dim(1);
 yi2  = yi+(-opt.radius(2):opt.radius(2)); yi2(yi2<1) = 1; yi2(yi2>opt.dim(2)) = opt.dim(2);
 zi2  = zi+(-opt.radius(3):opt.radius(3)); zi2(zi2<1) = 1; zi2(zi2>opt.dim(3)) = opt.dim(3);
