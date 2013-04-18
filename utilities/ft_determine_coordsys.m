@@ -205,7 +205,7 @@ switch dtype
     ft_plot_vol(data);
     camlight;
     
-  case 'sens'
+  case {'grad' 'elec' 'sens'}
     ft_plot_sens(data);
     camlight;
     
