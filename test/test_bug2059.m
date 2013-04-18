@@ -3,7 +3,12 @@ function test_bug2059
 % TEST test_bug2059
 % TEST ft_topoplotER ft_channelselection
 
+<<<<<<< HEAD
 load(dccnfilename('/home/common/matlab/fieldtrip/data/test/bug2059.mat'));
+=======
+% load(dccnfilename('/home/common/matlab/fieldtrip/data/test/bug2059.mat'));
+load('bug2059.mat');
+>>>>>>> trying to solve some merge problems between git and svn
 
 close all
 
@@ -27,7 +32,11 @@ assert(~isequalfigure(1, 2));
 
 % the problem seemed to be in a buggy interaction between interactive and channel selection
 
+<<<<<<< HEAD
 cfg.interactive = 'no';
+=======
+cfg.interactive = 'yes';
+>>>>>>> trying to solve some merge problems between git and svn
 cfg.channel = {'4','11','16','19','20','21'};
 figure(3)
 ft_topoplotER(cfg, GA_loc_diff);
@@ -40,6 +49,7 @@ ft_topoplotER(cfg, GA_loc_diff);
 
 % these figures should be the same
 assert(isequalfigure(3, 4));
+<<<<<<< HEAD
 
 %% specifying layout as a string
 
@@ -78,3 +88,5 @@ assert(isequalfigure(6, 7));
 assert(isequalfigure(6, 8));
 assert(isequalfigure(7, 8));
 
+=======
+>>>>>>> trying to solve some merge problems between git and svn
