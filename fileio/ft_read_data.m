@@ -773,12 +773,17 @@ switch dataformat
     endsample = endsample - (begrecord-1)*512;
     if istrue(timestamp)   
 <<<<<<< HEAD
+<<<<<<< HEAD
       ncs.dat = cast(ncs.dat, class(ncs.TimeStamp));
       d = ncs.TimeStamp(2:end)-ncs.TimeStamp(1:end-1);
       medianTimestampPerBlock  = median(double(d)); % to avoid influence of the gaps
 =======
       medianTimestampPerBlock  = median(double(diff(ncs.TimeStamp))); % to avoid influence of the gaps
 >>>>>>> avoiding round-off errors in ft_read_data.m for neuralynx data
+=======
+      d = ncs.TimeStamp(2:end)-ncs.TimeStamp(1:end-1);
+      medianTimestampPerBlock  = median(double(d)); % to avoid influence of the gaps
+>>>>>>> computing median timestamps per sample in uint64 format
       TimestampPerSample       = medianTimestampPerBlock/512; % divide by known block size
       cls = class(ncs.TimeStamp);
       % replace the data with the timestamp of each sample
