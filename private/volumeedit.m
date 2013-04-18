@@ -325,6 +325,7 @@ end
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 tmpdata = opt.data;
 tmpdata(~opt.mask) = 0;
 =======
@@ -337,6 +338,10 @@ tmpdata = opt.mask;
 tmpdata = opt.data;;
 tmpdata(opt.mask) = 0;
 >>>>>>> enhancement - accounting for non-boolean data
+=======
+tmpdata = opt.data;
+tmpdata(~opt.mask) = 0;
+>>>>>>> enhancement - fixed adding/restoring again
 xi2  = xi+(-opt.radius(1):opt.radius(1)); xi2(xi2<1) = 1; xi2(xi2>opt.dim(1)) = opt.dim(1);
 yi2  = yi+(-opt.radius(2):opt.radius(2)); yi2(yi2<1) = 1; yi2(yi2>opt.dim(2)) = opt.dim(2);
 zi2  = zi+(-opt.radius(3):opt.radius(3)); zi2(zi2<1) = 1; zi2(zi2>opt.dim(3)) = opt.dim(3);
