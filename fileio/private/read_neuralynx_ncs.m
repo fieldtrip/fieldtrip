@@ -91,7 +91,11 @@ if NRecords>0
   end
   
   % detect the number of timestamps per block while avoiding influencce of gaps
+<<<<<<< HEAD
   d = double(TimeStamp(2:end)-TimeStamp(1:end-1));    
+=======
+  d        = double(diff(TimeStamp));
+>>>>>>> avoiding roundoff errors in read_neuralynx_ncs.m
   maxJump  = ceil(10^6./(Fs-1))*512;
   gapCorrectedTimeStampPerSample =  nanmean(d(d<maxJump))/512;    
 
