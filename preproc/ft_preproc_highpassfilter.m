@@ -22,7 +22,11 @@ function [filt] = ft_preproc_highpassfilter(dat,Fs,Fhp,N,type,dir,instabilityfix
 %                'twopass-reverse' zero-phase reverse and forward filter
 %                'twopass-average' average of the twopass and the twopass-reverse
 %   instabilityfix optional method to deal with filter instabilities
+<<<<<<< HEAD
 %                'no'       only detect and give error (default)
+=======
+%                'none'     only detect and give error (default)
+>>>>>>> enhancement - added the instabilityfix option to the function documentation
 %                'reduce'   reduce the filter order
 %                'split'    split the filter in two lower-order filters, apply sequentially
 %
