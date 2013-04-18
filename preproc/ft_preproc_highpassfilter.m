@@ -72,7 +72,11 @@ end
 
 % set the default method to deal with filter instabilities
 if nargin<7|| isempty(instabilityfix)
+<<<<<<< HEAD
   instabilityfix = 'no';
+=======
+  instabilityfix = 'none';
+>>>>>>> bugfix - I noticed that no default was specified for the instabilityfix option: specify the default 'none', see also bug 780
 end
 
 % Nyquist frequency
