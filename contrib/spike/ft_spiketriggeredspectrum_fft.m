@@ -206,6 +206,7 @@ for iUnit  = 1:nspikesel
     ts       = spike.time{spikesel(iUnit)}(hasTrial); % get the spike times for these spikes
     ts       = ts(ts>=timeBins(1) & ts<=timeBins(end)); % only select those spikes that fall in the trial window
     [ignore,spikesmp] = histc(ts,timeBins);      
+<<<<<<< HEAD
     if ~isempty(ts)
       ts(spikesmp==0 | spikesmp==length(timeBins)) = [];
     end
@@ -215,10 +216,18 @@ for iUnit  = 1:nspikesel
 <<<<<<< HEAD
     
 =======
+=======
+>>>>>>> ft_spiketriggeredspectrum added error check on ts
     if ~isempty(ts)
       ts(spikesmp==0 | spikesmp==length(timeBins)) = [];
     end
       
+<<<<<<< HEAD
+>>>>>>> ft_spiketriggeredspectrum added error check on ts
+=======
+        
+    spikesmp(spikesmp==0 | spikesmp==length(timeBins)) = [];
+    
 >>>>>>> ft_spiketriggeredspectrum added error check on ts
     % store in the output cell arrays as column vectors
     spiketime{iUnit, iTrial}  = ts(:);
