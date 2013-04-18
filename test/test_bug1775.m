@@ -1,7 +1,16 @@
+<<<<<<< HEAD
 function test_bug1775
 
 % TEST test_bug1775
 % TEST ft_sourceparcellate ft_checkdata ft_datatype_source ft_datatype_volume ft_datatype_parcellation ft_datatype_segmentation
+=======
+% function test_bug1775
+
+% TEST test_bug1775
+% TEST ft_sourceparcellate ft_datatype_source ft_datatype_parcellation ft_datatype_segmentation
+
+
+>>>>>>> enhancement - started with a test script
 
 %% create a set of sensors
 
@@ -22,18 +31,29 @@ grad.type = 'magnetometer';
 
 grad = ft_datatype_sens(grad);
 
+<<<<<<< HEAD
 %% create a volume conductor
 
 vol = [];
 vol.r     = 10;
 vol.o     = [0 0 0];
 vol.unit  = 'cm';
+=======
+
+%% create a volume conductor
+
+vol = [];
+vol.r = 10;
+vol.o = [0 0 0];
+vol.unit = 'cm';
+>>>>>>> enhancement - started with a test script
 
 vol = ft_datatype_headmodel(vol);
 
 %% create some precomputed leadfields
 
 cfg = [];
+<<<<<<< HEAD
 cfg.grad            = grad;
 cfg.vol             = vol;
 cfg.grid.resolution = 1;
@@ -157,4 +177,27 @@ cfg.method = 'max';
 source6p = ft_sourceparcellate(cfg, source6, parcellation);
 cfg.method = 'eig';
 source6p = ft_sourceparcellate(cfg, source6, parcellation);
+=======
+cfg.grad = grad;
+cfg.vol = vol;
+cfg.resolution = 4;
+cfg.channel = 'all';
+grid = ft_prepare_leadfield(cfg);
+
+%% create an anatomical parcellation
+
+
+
+
+%% parcellate the leadfields
+
+
+
+%% compute a source reconstruction
+
+
+
+
+
+>>>>>>> enhancement - started with a test script
 
