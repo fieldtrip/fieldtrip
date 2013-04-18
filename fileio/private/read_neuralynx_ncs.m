@@ -66,12 +66,17 @@ if NRecords>0
   end
   
   % explicitly sort the timestamps to deal with negative timestamp jumps that can occur
+<<<<<<< HEAD
   ts1 = TimeStamp(1);
   dts = double(TimeStamp - TimeStamp(1));
   dts = unique(dts);
   dts = sort(dts);
   TimeStamp = uint64(dts) + ts1;
    
+=======
+  TimeStamp = sort(TimeStamp);
+  
+>>>>>>> ordering the blocks of CSC data if there are negative jumps in the timestamp axis and issuing a warning message
   % for this block of data: automatically detect the gaps; 
   % there's a gap if no round off error of the sampling frequency could
   % explain the jump (which is always > one block)
@@ -102,10 +107,14 @@ if NRecords>0
   
   % detect the number of timestamps per block while avoiding influencce of gaps
 <<<<<<< HEAD
+<<<<<<< HEAD
   d = double(TimeStamp(2:end)-TimeStamp(1:end-1));    
 =======
   d        = double(diff(TimeStamp));
 >>>>>>> avoiding roundoff errors in read_neuralynx_ncs.m
+=======
+  d        = diff(double(TimeStamp));
+>>>>>>> ordering the blocks of CSC data if there are negative jumps in the timestamp axis and issuing a warning message
   maxJump  = ceil(10^6./(Fs-1))*512;
   gapCorrectedTimeStampPerSample =  nanmean(d(d<maxJump))/512;    
 
@@ -167,6 +176,7 @@ if begrecord>=1 && endrecord>=begrecord
     Samp((NumValidSamp+1):end,k) = nan;
   end
   
+<<<<<<< HEAD
   ts1 = TimeStamp(1);
   dts = double(TimeStamp-ts1); % no problem with doubles here as numbers are small
  
@@ -176,13 +186,29 @@ if begrecord>=1 && endrecord>=begrecord
     
   % store the record data in the output structure
   ncs.TimeStamp    = uint64(dts(indx)) + ts1; % convert back to original class
+=======
+    
+  idxNeg = find(diff(double(TimeStamp))<=0);
+  if ~isempty(idxNeg)
+    [TimeStamp, indx] = sort(TimeStamp);      
+    warning('%d blocks have negative timestamp jump', length(idxNeg));
+  else
+    indx = 1:length(TimeStamp);
+  end
+  
+  % store the record data in the output structure
+  ncs.TimeStamp    = TimeStamp;
+>>>>>>> ordering the blocks of CSC data if there are negative jumps in the timestamp axis and issuing a warning message
   ncs.ChanNumber   = ChanNumber(indx);
   ncs.SampFreq     = SampFreq(indx);
   ncs.NumValidSamp = NumValidSamp(indx);
   % apply the scaling factor from ADBitVolts and convert to uV
   ncs.dat          = Samp(:,indx) * hdr.ADBitVolts * 1e6;
+<<<<<<< HEAD
 
   
+=======
+>>>>>>> ordering the blocks of CSC data if there are negative jumps in the timestamp axis and issuing a warning message
   
 end
 fclose(fid);
