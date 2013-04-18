@@ -1,5 +1,6 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 function parcel = ft_sourceparcellate(cfg, source, parcellation)
 
 % FT_SOURCEPARCELLATE combines the source-reconstruction parameters over the parcels.
@@ -58,6 +59,8 @@ ft_preamble loadvar source
 =======
 function parcel = hcp_sourceparcellate(cfg, source)
 =======
+=======
+>>>>>>> restructuring - moved sourceparcellate from hcp to ft, see #1775
 function parcel = ft_sourceparcellate(cfg, source)
 >>>>>>> enhancement - updated the documentation and added pre/postable, see #1775
 
@@ -66,10 +69,20 @@ function parcel = ft_sourceparcellate(cfg, source)
 %
 % Use as
 %    parcel = ft_sourceparcellate(cfg, source)
+=======
+function parcel = hcp_sourceparcellate(cfg, source)
+
+% HCP_SOURCEPARCELLATE combines the source-reconstruction values in the
+% parcels by averaging, or by concatenating.
+%
+% Use as
+%    parcel = hcp_sourceparcellate(cfg, source)
+>>>>>>> restructuring - moved sourceparcellate from hcp to ft, see #1775
 % where the input is a 3D voxel-based or a 2D surface-based source grid
 % and the output is a channel-based representation with the averages or
 % concatenared representation per parcel.
 %
+<<<<<<< HEAD
 % The input data structure is for example obtained from FT_SOURCEANALYSIS
 % or FT_COMPUTE_LEADFIELD and is described in detail in FT_DATATYPE_SOURCE.
 % The output data structure is described in detail in
@@ -115,7 +128,18 @@ ft_preamble provenance
 ft_preamble trackconfig     
 ft_preamble debug           
 ft_preamble loadvar source  
+<<<<<<< HEAD
 >>>>>>> enhancement - updated the documentation and added pre/postable, see #1775
+=======
+=======
+% The configuration "cfg" is a structure that can contain the following
+% fields
+%   cfg.parcellation = string, fieldname that contains the desired parcellation
+%   cfg.parameter    = cell-array with strings, fields that should be parcellated (can be 'all')
+
+% Copyright (C) 2012, Robert Oostenveld
+>>>>>>> restructuring - moved sourceparcellate from hcp to ft, see #1775
+>>>>>>> restructuring - moved sourceparcellate from hcp to ft, see #1775
 
 % get the defaults
 cfg.parcellation = ft_getopt(cfg, 'parcellation');
@@ -217,12 +241,18 @@ for i=1:numel(fn)
 end
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
 >>>>>>> restructuring - moved sourceparcellate from hcp to ft, see #1775
 =======
 
 >>>>>>> enhancement - updated the documentation and added pre/postable, see #1775
+=======
+
+=======
+>>>>>>> restructuring - moved sourceparcellate from hcp to ft, see #1775
+>>>>>>> restructuring - moved sourceparcellate from hcp to ft, see #1775
 % these two will now contain the fields and corresponding dimord to work on
 fn     = fn(sel);
 dimord = dimord(sel);
@@ -652,10 +682,13 @@ y = cellmax1(x);
 end % for each of the fields that should be parcellated
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 try, cfg.previous = source.cfg; end
 parcel.cfg = cfg;
 >>>>>>> restructuring - moved sourceparcellate from hcp to ft, see #1775
 =======
+=======
+>>>>>>> restructuring - moved sourceparcellate from hcp to ft, see #1775
 ft_postamble debug            
 ft_postamble trackconfig      
 ft_postamble provenance       
@@ -663,4 +696,11 @@ ft_postamble previous source
 ft_postamble history parcel  
 ft_postamble savevar parcel  
 
+<<<<<<< HEAD
 >>>>>>> enhancement - updated the documentation and added pre/postable, see #1775
+=======
+=======
+try, cfg.previous = source.cfg; end
+parcel.cfg = cfg;
+>>>>>>> restructuring - moved sourceparcellate from hcp to ft, see #1775
+>>>>>>> restructuring - moved sourceparcellate from hcp to ft, see #1775
