@@ -306,14 +306,19 @@ if isfield(opt, 'bckgrnd')
 end
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 tmpdata = opt.data;
 tmpdata(~opt.mask) = 0;
+=======
+tmpdata = opt.data & opt.mask;
+>>>>>>> enhancement - volumeedit can also add/restore by using the exend click (3rd mous buton, both mouse button, shift+left)
 xi2  = xi+(-opt.radius(1):opt.radius(1)); xi2(xi2<1) = 1; xi2(xi2>opt.dim(1)) = opt.dim(1);
 yi2  = yi+(-opt.radius(2):opt.radius(2)); yi2(yi2<1) = 1; yi2(yi2>opt.dim(2)) = opt.dim(2);
 zi2  = zi+(-opt.radius(3):opt.radius(3)); zi2(zi2<1) = 1; zi2(zi2>opt.dim(3)) = opt.dim(3);
 dat1 = double(squeeze(sum(tmpdata(xi2,:,:),1))>0)*0.5+double(squeeze(tmpdata(xi,:,:)))*0.5;
 dat2 = double(sum(tmpdata(:,:,zi2),3)'>0)*0.5+double(tmpdata(:,:,zi)'>0)*0.5;
 dat3 = double(squeeze(sum(tmpdata(:,yi2,:),2))>0)*0.5+double(squeeze(tmpdata(:,yi,:))>0)*0.5;
+<<<<<<< HEAD
 =======
 xi2  = xi+(-opt.radius(1):opt.radius(1));
 yi2  = yi+(-opt.radius(2):opt.radius(2));
@@ -322,6 +327,8 @@ dat1 = double(squeeze(sum(opt.data(xi2,:,:),1))>0)*0.5+double(squeeze(opt.data(x
 dat2 = double(sum(opt.data(:,:,zi2),3)'>0)*0.5+double(opt.data(:,:,zi)'>0)*0.5;
 dat3 = double(squeeze(sum(opt.data(:,yi2,:),2))>0)*0.5+double(squeeze(opt.data(:,yi,:))>0)*0.5;
 >>>>>>> enhancement - improved version: allow for anatomy plotting in background
+=======
+>>>>>>> enhancement - volumeedit can also add/restore by using the exend click (3rd mous buton, both mouse button, shift+left)
 
 set(opt.handlesslice(1), 'CData', dat1);
 set(opt.handlesslice(2), 'CData', dat2);
