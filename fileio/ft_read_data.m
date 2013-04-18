@@ -774,6 +774,9 @@ switch dataformat
     if istrue(timestamp)   
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> outputting timestamps in uint64 format when using timestamp option in ft_read_data
       ncs.dat = cast(ncs.dat, class(ncs.TimeStamp));
       d = ncs.TimeStamp(2:end)-ncs.TimeStamp(1:end-1);
       medianTimestampPerBlock  = median(double(d)); % to avoid influence of the gaps
