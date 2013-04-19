@@ -37,7 +37,7 @@
 % the name of the variables are passed in the preamble field
 global ft_default
 
-if isfield(cfg, 'trackcallinfo') && ~istrue(cfg.trackcallinfo)
+if (isfield(cfg, 'trackcallinfo') && ~istrue(cfg.trackcallinfo)) || ~istrue(ft_default.trackcallinfo)
   % do not track the call information
   return
 end
@@ -48,9 +48,25 @@ cfg.callinfo.usercfg = cfg;
 
 % compute the MD5 hash of each of the input arguments
 if isequal(ft_default.preamble, {'varargin'})
-  cfg.callinfo.inputhash = cellfun(@CalcMD5, cellfun(@mxSerialize, varargin, 'UniformOutput', false), 'UniformOutput', false);
+  % temporarily remove the cfg field for getting the hash
+  tmpvarargin = varargin; % does not need extra memory, below shouldn't change the references to the data
+  for icell = 1:numel(tmpvarargin);
+    try
+      tmpvarargin{icell} = rmfield(tmpvarargin{icell},'cfg'); 
+    end
+  end
+  cfg.callinfo.inputhash = cellfun(@CalcMD5, cellfun(@mxSerialize, tmpvarargin, 'UniformOutput', false), 'UniformOutput', false);
+  clear tmpvarargin; % remove the reference
 else
-  cfg.callinfo.inputhash = cellfun(@CalcMD5, cellfun(@mxSerialize, cellfun(@eval, ft_default.preamble, 'UniformOutput', false), 'UniformOutput', false), 'UniformOutput', false);
+  % temporarily remove the cfg field for getting the hash
+  tmpvarargin = cellfun(@eval, ft_default.preamble, 'UniformOutput', false); % does not need extra memory, below shouldn't change the references to the data
+  for icell = 1:numel(tmpvarargin);
+    try
+      tmpvarargin{icell} = rmfield(tmpvarargin{icell},'cfg');
+    end
+  end
+  cfg.callinfo.inputhash = cellfun(@CalcMD5, cellfun(@mxSerialize, tmpvarargin, 'UniformOutput', false), 'UniformOutput', false);
+  clear tmpvarargin; % remove the reference
 end
 
 stack = dbstack('-completenames');

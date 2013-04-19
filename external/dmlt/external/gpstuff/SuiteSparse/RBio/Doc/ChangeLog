@@ -1,0 +1,14 @@
+May 1, 2009: version 1.1.2
+
+    * minor change to RBmake.m to compile 64-bit version
+
+Nov 1, 2007: version 1.1.1
+
+    * minor lint cleanup
+
+May 31, 2007: version 1.1
+
+    * port to 64-bit MATLAB.  Tested on Linux 32-bit and 64-bit.  Not tested on
+	Windows, since I do not have a Fortran compiler on that platform.
+
+Dec 1, 2006: version 1.0 released
