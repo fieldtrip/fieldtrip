@@ -41,7 +41,7 @@ function [vol, sens, cfg] = prepare_headmodel(cfg, data)
 % set the defaults
 if ~isfield(cfg, 'channel'),      cfg.channel = 'all';   end
 if ~isfield(cfg, 'order'),        cfg.order = 10;        end % order of expansion for Nolte method; 10 should be enough for real applications; in simulations it makes sense to go higher
-if ~isfield(cfg, 'sourceunits'),  cfg.sourceunits = [];  end % if needed, the default is set below
+if ~isfield(cfg, 'sourceunits'),  cfg.sourceunits = 'cm';  end % if needed, the default is set below
 
 if nargin<2
   data = [];
@@ -54,19 +54,8 @@ vol = ft_fetch_vol(cfg, data);
 sens = ft_fetch_sens(cfg, data);
 
 % ensure that the units are the same
-if isempty(cfg.sourceunits)
-  if ~strcmp(vol.unit, sens.unit)
-    cfg.sourceunits = 'cm';
-    vol  = ft_convert_units(vol, cfg.sourceunits);
-    sens = ft_convert_units(sens, cfg.sourceunits);
-  else
-    % they are the same, nothing to change
-  end
-else
-  % change them to the desired units
-  vol  = ft_convert_units(vol, cfg.sourceunits);
-  sens = ft_convert_units(sens, cfg.sourceunits);
-end
+vol  = ft_convert_units(vol, cfg.sourceunits);
+sens = ft_convert_units(sens, cfg.sourceunits);
 
 if isfield(data, 'topolabel')
   % the data reflects a componentanalysis, where the topographic and the
