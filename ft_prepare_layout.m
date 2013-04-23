@@ -660,9 +660,12 @@ cfg.channel = ft_channelselection(cfg.channel, setdiff(layout.label, {'COMNT', '
 chansel = match_str(layout.label, cat(1, cfg.channel(:), 'COMNT', 'SCALE'));                % include COMNT and SCALE, keep all channels in the order of the layout
 % return the layout for the subset of channels
 layout.pos    = layout.pos(chansel,:);
-layout.width  = layout.width(chansel);
-layout.height = layout.height(chansel);
 layout.label  = layout.label(chansel);
+if ~strcmp(cfg.style, '3d')
+  % these don't exist for the 3D layout
+  layout.width  = layout.width(chansel);
+  layout.height = layout.height(chansel);
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % apply the montage, i.e. combine bipolar channels into a new representation
