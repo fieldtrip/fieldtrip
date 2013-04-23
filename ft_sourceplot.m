@@ -786,7 +786,7 @@ if isequal(cfg.method,'ortho')
   fprintf('click and hold right mouse button to update the position while moving the mouse\n');
   fprintf('use the arrowkeys to navigate in the current axis\n');
     
-  if cfg.interactive
+  if istrue(cfg.interactive)
     fprintf('** INTERACTIVE MODE SPECIAL **\n');
     fprintf('press n/l/r on keyboard to record a fiducial position\n');
     fprintf('press q on keyboard to quit interactive mode\n');
