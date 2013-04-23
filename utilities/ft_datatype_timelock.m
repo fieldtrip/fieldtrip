@@ -1,6 +1,6 @@
 function timelock = ft_datatype_timelock(timelock, varargin)
 
-% FT_DATATYPE_FREQ describes the FieldTrip MATLAB structure for timelock data
+% FT_DATATYPE_TIMELOCK describes the FieldTrip MATLAB structure for timelock data
 %
 % The timelock data structure represents averaged or non-averaged
 % event-releted potentials (ERPs, in case of EEG) or ERFs (in case
@@ -22,7 +22,7 @@ function timelock = ft_datatype_timelock(timelock, varargin)
 %   - label, dimord, time
 %
 % Optional fields:
-%   - var, dof, cov, trial, grad, elec, cfg
+%   - avg, var, dof, cov, trial, grad, elec, cfg
 %
 % Deprecated fields:
 %   - <none>
