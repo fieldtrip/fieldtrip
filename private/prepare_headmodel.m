@@ -41,7 +41,7 @@ function [vol, sens, cfg] = prepare_headmodel(cfg, data)
 % set the defaults
 if ~isfield(cfg, 'channel'),      cfg.channel = 'all';   end
 if ~isfield(cfg, 'order'),        cfg.order = 10;        end % order of expansion for Nolte method; 10 should be enough for real applications; in simulations it makes sense to go higher
-if ~isfield(cfg, 'sourceunits'),  cfg.sourceunits = 'cm';  end
+if ~isfield(cfg, 'sourceunits'),  cfg.sourceunits = 'cm';  end % if needed, the default is set below
 
 if nargin<2
   data = [];
