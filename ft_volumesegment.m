@@ -52,6 +52,7 @@ function [segment] = ft_volumesegment(cfg, mri)
 %   'scalp'       - binary representation of the scalp
 %   'skullstrip'  - anatomy with only the brain
 %
+%
 % Example use:
 %   cfg        = [];
 %   segment    = ft_volumesegment(cfg, mri) will segment the anatomy and will output the
@@ -72,6 +73,17 @@ function [segment] = ft_volumesegment(cfg, mri)
 %                surface is also included). Such representation of the scalp is produced faster,
 %                because it doesn't require to create the tissue probabilty maps before creating
 %                the mask.
+%
+% It is not possible to request tissue-probability map (tpm)  in combination with binary masks
+% (brain, scalp or skull) or skull-stripped anatomy. The output will return only the probabilistic
+% maps in segment.gray, white and csf. However, when a segmentation with the probabilistic gray, white
+% and csf representations is available, it is possible to use it as input for brain or skull binary mask.
+% For example:
+%   cfg           = [];
+%   cfg.output    = {'tpm'};
+%   segment_tpm   = ft_volumesegment(cfg,mri);
+%   cfg.output    = {'brain'};
+%   segment_brain = ft_volumesegment(cfg,segment_tpm);
 %
 % For the SPM-based segmentation to work, the coordinate frame of the input MRI needs to be
 % approximately coregistered to the templates of the probabilistic tissue maps. The templates are
@@ -218,7 +230,12 @@ if numel(cfg.output) == 1 && strcmp('scalp', cfg.output)
 else
   needtpm    = any(ismember(cfg.output, {'tpm' 'gray' 'white' 'csf' 'brain' 'skull' 'skullstrip'}));
 end
-hastpm     = isfield(mri, 'gray') && isfield(mri, 'white') && isfield(mri, 'csf');
+
+if all(isfield(mri,{'gray','white','csf'}))
+    hastpm =  ~islogical(mri.gray) && ~islogical(mri.white) && ~islogical(mri.csf);  % tpm is probabilistic and not binary!
+else
+    hastpm = false;
+end
 
 if needtpm && ~hastpm
   % spm needs to be used for the creation of the tissue probability maps
