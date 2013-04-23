@@ -276,8 +276,6 @@ if strcmp(cfg.method, 'nearest')
   
   
 elseif strcmp(cfg.method, 'spline') || strcmp(cfg.method, 'slap')
-  warning('make sure that your sensor coordinates are in spherical coordinates');
-  
   if ~isempty(cfg.badchannel) || ~isempty(cfg.missingchannel)
     fprintf('Spherical spline and surface Laplacian interpolation will treat bad and missing channels the same. Missing channels will be concatenated at the end of your data structure.\n');
   end
