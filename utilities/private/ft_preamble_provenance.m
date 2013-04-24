@@ -37,7 +37,7 @@
 % the name of the variables are passed in the preamble field
 global ft_default
 
-if (isfield(cfg, 'trackcallinfo') && ~istrue(cfg.trackcallinfo)) || ~istrue(ft_default.trackcallinfo)
+if (isfield(cfg, 'trackcallinfo') && ~istrue(cfg.trackcallinfo)) 
   % do not track the call information
   return
 end
@@ -47,27 +47,28 @@ end
 cfg.callinfo.usercfg = cfg;
 
 % compute the MD5 hash of each of the input arguments
+% temporarily remove the cfg field for getting the hash (creating a duplicate of the data, but still has the same mem ref, so no extra mem needed)
 if isequal(ft_default.preamble, {'varargin'})
-  % temporarily remove the cfg field for getting the hash
-  tmpvarargin = varargin; % does not need extra memory, below shouldn't change the references to the data
-  for icell = 1:numel(tmpvarargin);
-    try
-      tmpvarargin{icell} = rmfield(tmpvarargin{icell},'cfg'); 
-    end
-  end
-  cfg.callinfo.inputhash = cellfun(@CalcMD5, cellfun(@mxSerialize, tmpvarargin, 'UniformOutput', false), 'UniformOutput', false);
-  clear tmpvarargin; % remove the reference
+  tmpargin = varargin;
 else
-  % temporarily remove the cfg field for getting the hash
-  tmpvarargin = cellfun(@eval, ft_default.preamble, 'UniformOutput', false); % does not need extra memory, below shouldn't change the references to the data
-  for icell = 1:numel(tmpvarargin);
-    try
-      tmpvarargin{icell} = rmfield(tmpvarargin{icell},'cfg');
-    end
-  end
-  cfg.callinfo.inputhash = cellfun(@CalcMD5, cellfun(@mxSerialize, tmpvarargin, 'UniformOutput', false), 'UniformOutput', false);
-  clear tmpvarargin; % remove the reference
+  tmpargin = cellfun(@eval, ft_default.preamble, 'UniformOutput', false);
 end
+cfg.callinfo.inputhash = cell(1,numel(tmpargin));
+for iargin = 1:numel(tmpargin)
+  tmparg = tmpargin{iargin}; % can't get number of bytes with whos unless taken out of it's cell
+  if isfield(tmparg,'cfg')
+    tmparg = rmfield(tmparg,'cfg');
+  else
+  end
+  % only calculate md5 when below 2^31 bytes (CalcMD5 can't handle larger input)
+  bytenum = whos('tmparg');
+  bytenum = bytenum.bytes;
+  if bytenum<2^31
+    cfg.callinfo.inputhash{iargin} = CalcMD5(mxSerialize(tmparg));
+  end
+end
+clear tmpargin tmparg; % remove the extra references
+
 
 stack = dbstack('-completenames');
 % stack(1) is this script
