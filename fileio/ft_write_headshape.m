@@ -140,13 +140,22 @@ switch fileformat
   case 'ply'
     [p, f, x] = fileparts(filename);
     filename = fullfile(p, [f, '.ply']); % ensure it has the right extension
-    if isfield(bnd, 'tri')
-      write_ply(filename, bnd.pnt, bnd.tri);
-    elseif isfield(bnd, 'tet')
-      write_ply(filename, bnd.pnt, bnd.tet);
-    elseif isfield(bnd, 'hex')
-      write_ply(filename, bnd.pnt, bnd.hex);
+    
+    if isfield(bnd, 'pnt')
+      vertices = bnd.pnt;
+    elseif isfield(bnd, 'pos')
+      vertices = bnd.pos;
     end
+    
+    if isfield(bnd, 'tri')
+      elements = bnd.tri;
+    elseif isfield(bnd, 'tet')
+      elements = bnd.tet;
+    elseif isfield(bnd, 'hex')
+      elements = bnd.hex;
+    end
+    
+    write_ply(filename, vertices, elements);
 
   case 'stl'
     nrm = normals(bnd.pnt, bnd.tri, 'triangle');
