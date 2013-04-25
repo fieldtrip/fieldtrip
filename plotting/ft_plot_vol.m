@@ -54,6 +54,7 @@ vertexcolor = ft_getopt(varargin, 'vertexcolor', 'none');
 edgecolor   = ft_getopt(varargin, 'edgecolor',   'k');
 facealpha   = ft_getopt(varargin, 'facealpha',   1);
 map         = ft_getopt(varargin, 'colormap');
+edgeonly    = ft_getopt(varargin, 'edgeonly');
 
 faceindex   = istrue(faceindex);   % yes=view the face number
 vertexindex = istrue(vertexindex); % yes=view the vertex number
@@ -86,6 +87,12 @@ switch ft_voltype(vol)
     % these already contain one or multiple triangulated surfaces for the boundaries
     bnd = vol.bnd;
     
+  case 'simbio'
+    % the code below wants a mesh and the simbio FEM model contains one
+    bnd = vol;
+    % only plot the outer edge of the volume
+    edgeonly = true;
+
   case 'infinite'
     warning('there is nothing to plot for an infinite volume conductor')
     return
@@ -98,7 +105,7 @@ end
 for i=1:length(bnd)
   ft_plot_mesh(bnd(i),'faceindex',faceindex,'vertexindex',vertexindex, ...
     'vertexsize',vertexsize,'facecolor',facecolor,'edgecolor',edgecolor, ...
-    'vertexcolor',vertexcolor,'facealpha',facealpha);
+    'vertexcolor',vertexcolor,'facealpha',facealpha, 'edgeonly', edgeonly);
 end
 
 warning(ws); %revert to original state
