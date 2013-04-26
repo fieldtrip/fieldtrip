@@ -285,7 +285,7 @@ if hasdata
         strcmp(cfg.bpfilter, 'yes') || ...
         strcmp(cfg.bsfilter, 'yes') || ...
         strcmp(cfg.medianfilter, 'yes')
-      padding = round(cfg.padding * data.Fs);
+      padding = round(cfg.padding * data.fsample);
       if strcmp(cfg.padtype, 'data')
         warning_once('datapadding not possible with in-memory data - padding will be performed by data mirroring');
         cfg.padtype = 'mirror';
@@ -295,7 +295,7 @@ if hasdata
       padding = 0;
     end
     % update the configuration (in seconds) for external reference
-    cfg.padding = padding / data.Fs;
+    cfg.padding = padding / data.fsample;
   else
     % no padding was requested
     padding = 0;
@@ -354,6 +354,7 @@ if hasdata
     end
           
     data.trial{i} = ft_preproc_padding(data.trial{i}, cfg.padtype, begpadding, endpadding);
+    data.time{i} = ft_preproc_padding(data.time{i}, cfg.padtype, begpadding, endpadding);
         
     % do the preprocessing on the selected channels
     [dataout.trial{i}, dataout.label, dataout.time{i}, cfg] = preproc(data.trial{i}(rawindx,:), data.label(rawindx), data.time{i}, cfg, begpadding, endpadding);
@@ -580,6 +581,7 @@ else
       % pad in case of no datapadding
       if ~strcmp(cfg.padtype, 'data')
         dat = ft_preproc_padding(dat, padtype, begpadding, endpadding);
+        tim = ft_preproc_padding(tim, padtype, begpadding, endpadding);
       end
         
       % do the preprocessing on the padded trial data and remove the padding after filtering
