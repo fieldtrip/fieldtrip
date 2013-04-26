@@ -57,7 +57,6 @@ else
 end
 
 % begin by transforming all channel locations into the desired coordinate system, if possible
-
 if ~dewar
   if ~isempty(orig.dev_head_t)
     orig.chs = fiff_transform_meg_chs(orig.chs,orig.dev_head_t);
