@@ -102,7 +102,7 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 %    you should have received a copy of the gnu general public license
 %    along with fieldtrip. if not, see <http://www.gnu.org/licenses/>.
 %
-% $id: ft_singleplotER.m 3147 2011-03-17 12:38:09z jansch $
+% $Id$
 
 revision = '$Id$';
 
