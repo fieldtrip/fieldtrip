@@ -14,13 +14,18 @@ function [varargout] = ft_plot_vector(varargin)
 %   highlight       = a logical vector of size Y, where 1 means that the corresponding values in Y are highlighted (according to the highlightstyle)
 %   highlightstyle  = can be 'box', 'thickness', 'saturation', 'difference' (default='box')
 %   tag             = a name this vector gets. All tags with the same name can be deleted in a figure, without deleting other parts of the figure
-%   color           = see MATLAB standard Line Properties, it can also be for example 'rbg' to plot three lines with different colors
-%   linewidth       = see MATLAB standard Line Properties
-%   markersize      = see MATLAB standard Line Properties
-%   markerfacecolor = see MATLAB standard Line Properties
-%   style           = see MATLAB standard Line Properties
-%   label           = see MATLAB standard Line Properties
-%   fontsize        = see MATLAB standard Line Properties
+%   color           = see MATLAB standard line properties and see below
+%   linewidth       = see MATLAB standard line properties
+%   markersize      = see MATLAB standard line properties
+%   markerfacecolor = see MATLAB standard line properties
+%   style           = see MATLAB standard line properties
+%   label           = see MATLAB standard line properties
+%   fontsize        = see MATLAB standard line properties
+%
+% The line color can be specified in a variety of ways
+%   - as a string with one character per line that you want to plot. Supported colors are teh same as in PLOT, i.e. 'bgrcmykw'.
+%   - as 'none' if you do not want the lines to be plotted (useful in combination with the difference highlightstyle).
+%   - as a Nx3 matrix, where N=length(x), to use graded RGB colors along the line
 %
 % It is possible to plot the object in a local pseudo-axis (c.f. subplot), which is specfied as follows
 %   hpos        = horizontal position of the center of the local axes
@@ -30,18 +35,34 @@ function [varargout] = ft_plot_vector(varargin)
 %   hlim        = horizontal scaling limits within the local axes
 %   vlim        = vertical scaling limits within the local axes
 %
-% Example use
-%   ft_plot_vector(randn(1,100), 'width', 1, 'height', 1, 'hpos', 0, 'vpos', 0)
-
-% FIXME if the color is Nx3, it plots the line segments with gradual
-% colors, this needs to be cleaned up and improved. At the moment it
-% happens around line 324.
+% Example 1
+%   subplot(2,1,1); ft_plot_vector(1:100, randn(1,100), 'color', 'r')
+%   subplot(2,1,2); ft_plot_vector(1:100, randn(1,100), 'color', rand(100,3))
 %
-% Example
-%   colormap hot; rgb = colormap; rgb = interp1(1:64, rgb, linspace(1,64,100));
-%   ft_plot_vector(1:100, 'color', rgb);
+% Example 2
+%   ft_plot_vector(randn(1,100), 'width', 0.9, 'height', 0.9, 'hpos', 0, 'vpos', 0, 'box', 'yes')
+%   ft_plot_vector(randn(1,100), 'width', 0.9, 'height', 0.9, 'hpos', 1, 'vpos', 0, 'box', 'yes')
+%   ft_plot_vector(randn(1,100), 'width', 0.9, 'height', 0.9, 'hpos', 0, 'vpos', 1, 'box', 'yes')
+%
+% Example 3
+%  x = 1:100; y = hann(100)';
+%  subplot(3,1,1); ft_plot_vector(x, y, 'highlight', y>0.8, 'highlightstyle', 'box');
+%  subplot(3,1,2); ft_plot_vector(x, y, 'highlight', y>0.8, 'highlightstyle', 'thickness');
+%  subplot(3,1,3); ft_plot_vector(x, y, 'highlight', y>0.8, 'highlightstyle', 'saturation');
+%
+% Example 4
+%  x = 1:100; y = hann(100)'; ymin = 0.8*y; ymax = 1.2*y;
+%  ft_plot_vector(x, [ymin; ymax], 'highlight', ones(size(y)), 'highlightstyle', 'difference', 'color', 'none');
+%  ft_plot_vector(x, y);
+%
+% Example 5
+%  colormap hot;
+%  rgb = colormap;
+%  rgb = interp1(1:64, rgb, linspace(1,64,100));
+%  ft_plot_vector(1:100, 'color', rgb);
 
-% Copyrights (C) 2009-2012, Robert Oostenveld
+
+% Copyrights (C) 2009-2013, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -110,13 +131,33 @@ parent          = ft_getopt(varargin, 'parent', []);
 %     highlight = highlight(:);
 % end
 
-if ischar(color)
+npnt  = numel(hdat);
+nline = numel(vdat)/npnt;
+
+if ~isequal(size(hdat), [1 npnt])
+  hdat = hdat';
+end
+if ~isequal(size(vdat), [nline npnt])
+  vdat = vdat';
+end
+
+if ischar(color) && ~strcmp(color, 'none')
   % it should be a column array
   color = color(:);
 end
 
-if ~isempty(highlight) && size(highlight,2)~=size(vdat,2)
-  error('the dimensions of the highlight should be identical to the dimensions of the data');
+if strcmp(highlightstyle, 'difference') && isempty(highlight)
+  warning('highlight is empty, highlighting the whole time interval');
+  highlight = ones(size(hdat));
+end
+
+if ~isempty(highlight)
+  if numel(highlight)~=npnt
+    error('the length of the highlight vector should correspond to the length of the data');
+  else
+    % make sure the vector points in the same direction as the data
+    highlight = reshape(highlight, size(hdat));
+  end
 end
 
 % convert the yes/no strings into boolean values
@@ -234,14 +275,17 @@ switch highlightstyle
     % find the sample number where the highligh begins and ends
     begsample = find(diff([0 highlight 0])== 1);
     endsample = find(diff([0 highlight 0])==-1)-1;
-    for j=1:size(vdat,1)
+    for j=1:nline
       for i=1:length(begsample)
         hor = hdat(   begsample(i):endsample(i));
         ver = vdat(j, begsample(i):endsample(i));
         if isempty(color)
           plot(hor,ver,'linewidth',4*linewidth,'linestyle','-'); % changed 3* to 4*, as 3* appeared to have no effect
-        elseif ischar(color) && size(color,1)==1
+        elseif ischar(color) && numel(color)==1
           % plot all lines with the same color
+          plot(hor,ver,'linewidth',4*linewidth,'linestyle','-','Color', color); % changed 3* to 4*, as 3* appeared to have no effect
+        elseif isnumeric(color) && isequal(size(color), [1 3])
+          % plot all lines with the same RGB color
           plot(hor,ver,'linewidth',4*linewidth,'linestyle','-','Color', color); % changed 3* to 4*, as 3* appeared to have no effect
         else
           % plot each line with its own color
@@ -257,11 +301,14 @@ switch highlightstyle
     begsample = find(diff([0 highlight 0])== 1);
     endsample = find(diff([0 highlight 0])==-1)-1;
     % start with plotting the lines
-    for i=1:size(vdat,1)
+    for i=1:nline
       if isempty(color)
-        h = plot(hdat, vdat, style, 'LineWidth', linewidth,'markersize',markersize,'markerfacecolor',markerfacecolor);
-      elseif ischar(color) && size(color,1)==1
+        h = plot(hdat, vdat, style, 'LineWidth', linewidth, 'markersize', markersize, 'markerfacecolor', markerfacecolor);
+      elseif ischar(color) && numel(color)==1
         % plot all lines with the same color
+        h = plot(hdat, vdat, style, 'LineWidth', linewidth, 'Color', color, 'markersize', markersize, 'markerfacecolor', markerfacecolor);
+      elseif isnumeric(color) && isequal(size(color), [1 3])
+        % plot all lines with the same RGB color
         h = plot(hdat, vdat, style, 'LineWidth', linewidth, 'Color', color, 'markersize', markersize, 'markerfacecolor', markerfacecolor);
       else
         % plot each line with its own color
@@ -284,14 +331,14 @@ switch highlightstyle
     end
     
   case 'difference'
-    if size(vdat,1)~=2
+    if nline~=2
       error('this only works if exactly two lines are plotted');
     end
     hdatbeg = [hdat(:,1) (hdat(:,1:end-1) + hdat(:,2:end))/2            ];
     hdatend = [          (hdat(:,1:end-1) + hdat(:,2:end))/2 hdat(:,end)];
     vdatbeg = [vdat(:,1) (vdat(:,1:end-1) + vdat(:,2:end))/2            ];
     vdatend = [          (vdat(:,1:end-1) + vdat(:,2:end))/2 vdat(:,end)];
-    begsample = find(diff([0 highlight 0])== 1);
+    begsample = find(diff([0 highlight 0])== 1)  ;
     endsample = find(diff([0 highlight 0])==-1)-1;
     for i=1:length(begsample)
       X = [hdatbeg(1,begsample(i)) hdat(1,begsample(i):endsample(i)) hdatend(1,endsample(i)) hdatend(1,endsample(i)) hdat(1,endsample(i):-1:begsample(i)) hdatbeg(1,begsample(i))];
@@ -315,22 +362,40 @@ switch highlightstyle
   otherwise
     % plot the actual lines after the highlight box or patch, otherwise those will be on top
     if isempty(color)
-      h = plot(hdat, vdat, style, 'LineWidth', linewidth,'markersize',markersize,'markerfacecolor',markerfacecolor);
-    elseif ischar(color) && length(color)>1
+      h = plot(hdat, vdat, style, 'LineWidth', linewidth, 'markersize', markersize, 'markerfacecolor', markerfacecolor);
+    elseif isequal(color, 'none')
+      % do not plot the lines, this is useful in combination with highlightstyle=difference
+      h = [];
+    elseif ischar(color) && numel(color)==1
+      % plot all lines with the same color
+      h = plot(hdat, vdat, style, 'LineWidth', linewidth, 'Color', color, 'markersize', markersize, 'markerfacecolor', markerfacecolor);
+    elseif isnumeric(color) && isequal(size(color), [1 3])
+      % plot all lines with the same RGB color
+      h = plot(hdat, vdat, style, 'LineWidth', linewidth, 'Color', color, 'markersize', markersize, 'markerfacecolor', markerfacecolor);
+    elseif ischar(color) && numel(color)==nline
       % plot each line with its own color
       for i=1:size(vdat,1)
         h = plot(hdat, vdat(i,:), style, 'LineWidth', linewidth, 'Color', color(i), 'markersize', markersize, 'markerfacecolor', markerfacecolor);
       end
-    elseif isnumeric(color) && length(color)==length(vdat)
-      for i=1:(length(vdat)-1)
-        h = plot(hdat(i:i+1), vdat(i:i+1), style, 'LineWidth', linewidth, 'Color', mean(color([i i+1],:),1), 'markersize', markersize, 'markerfacecolor', markerfacecolor);
+    elseif isnumeric(color) && size(color,1)==nline
+      % the color is specified as Nx3 matrix with RGB values for each line
+      for i=1:size(vdat,1)
+        h = plot(hdat, vdat(i,:), style, 'LineWidth', linewidth, 'Color', color(i,:), 'markersize', markersize, 'markerfacecolor', markerfacecolor);
+      end
+    elseif isnumeric(color) && size(color,1)==npnt
+      % the color is specified as Nx3 matrix with RGB values and varies over the length of the line
+      for i=1:(size(vdat,2)-1)
+        for j=1:size(vdat,1)
+          h = plot(hdat(i:i+1), vdat(j,i:i+1), style, 'LineWidth', linewidth, 'Color', mean(color([i i+1],:),1), 'markersize', markersize, 'markerfacecolor', markerfacecolor);
+        end
       end
     else
-      h = plot(hdat, vdat, style, 'LineWidth', linewidth, 'Color', color, 'markersize', markersize, 'markerfacecolor', markerfacecolor);
+      warning('do not know how to plot the lines in the appropriate color');
+      h = [];
     end
-     if ~isempty(parent)
-       set(h, 'Parent', parent);
-     end
+    if ~isempty(parent)
+      set(h, 'Parent', parent);
+    end
 end % switch highlightstyle
 
 
@@ -419,7 +484,7 @@ set(h,'tag',tag);
 if ~isempty(parent)
   set(h, 'Parent', parent);
 end
-      
+
 % the (optional) output is the handle
 if nargout == 1;
   varargout{1} = h;
