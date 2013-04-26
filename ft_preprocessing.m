@@ -580,8 +580,8 @@ else
       
       % pad in case of no datapadding
       if ~strcmp(cfg.padtype, 'data')
-        dat = ft_preproc_padding(dat, padtype, begpadding, endpadding);
-        tim = ft_preproc_padding(tim, padtype, begpadding, endpadding);
+        dat = ft_preproc_padding(dat, cfg.padtype, begpadding, endpadding);
+        tim = ft_preproc_padding(tim, cfg.padtype, begpadding, endpadding);
       end
         
       % do the preprocessing on the padded trial data and remove the padding after filtering
