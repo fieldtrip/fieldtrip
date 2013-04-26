@@ -10,7 +10,9 @@ classdef crossvalidator
 %   - 'nfold' : n-fold cross-validation specified by 'folds' (default: 5)
 %   - 'split' : data is split into train and test data; amount of training
 %               data is given by 'proportion' (default: 0.75)
-%   - 'loo'   : leave-one-out cross-validation
+%   - 'loo'   : leave-one-out cross-validation; takes 1 trial per fold
+%   - 'bloo'  : balanced loo cv; takes 1 trial from each class per fold.
+%               Assumes that each class has the same nr of trials.
 %  
 %   Alternatively one can specify the cell-arrays 'trainfolds' and
 %   'testfolds' to contain for each fold the trial indices that need to be
@@ -178,14 +180,25 @@ classdef crossvalidator
       function [train,test] = create_folds(obj,Y)
       % get predefined sequence for train and test folds
       
-      if strcmp(obj.type,'loo')
+      if strcmp(obj.type,'loo') || strcmp(obj.type,'bloo')
+        
         obj.type = 'nfold';
         if iscell(Y)
           obj.folds = min(cellfun(@(x)(size(x,1)),Y));
+          if strcmp(obj.type,'bloo')
+            nclasses = max(cellfun(@(x)(max(x)),Y));
+            obj.folds = obj.folds/nclasses;
+          end
         else
           obj.folds = size(Y,1);
+          if strcmp(obj.type,'bloo')
+            nclasses = max(Y);
+            obj.folds = obj.folds/nclasses;
+          end
         end
+        
       end
+      
       if strcmp(obj.type,'split'), obj.folds = 1; end
       
       if obj.verbose, fprintf('fixing random number generator for reproducibility\n'); end
