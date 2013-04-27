@@ -25,7 +25,7 @@ function [data] = ft_determine_coordsys(data, varargin)
 % coordinate system, you should press the corresponding keyboard button.
 %
 % Recognized and supported coordinate systems include: ctf, 4d, bti, itab,
-% neuromag, spm, mni, als, ras. T
+% neuromag, spm, mni, als, ras.
 %
 % See also FT_VOLUMEREALIGN, FT_VOLUMERESLICE
 
