@@ -754,7 +754,7 @@ switch eventformat
     begTime(11) = ' '; begTime(end-5:end) = [];
     begSDV = datenum(begTime);
     % find out if there are epochs in this dataset
-    if isfield(hdr.orig.xml,'epoch') && length(hdr.orig.xml.epoch) > 1
+    if isfield(hdr.orig.xml,'epochs') && length(hdr.orig.xml.epochs) > 1
       Msamp2offset = zeros(2,size(hdr.orig.epochdef,1),1+max(hdr.orig.epochdef(:,2)-hdr.orig.epochdef(:,1)));
       Msamp2offset(:) = NaN;
       for iEpoch = 1:size(hdr.orig.epochdef,1)
@@ -780,7 +780,7 @@ switch eventformat
           else
             eventCount = eventCount+1;
             % calculate eventSample, relative to start of epoch
-            if isfield(hdr.orig.xml,'epoch') && length(hdr.orig.xml.epoch) > 1
+            if isfield(hdr.orig.xml,'epochs') && length(hdr.orig.xml.epochs) > 1
               for iEpoch = 1:size(hdr.orig.epochdef,1)
                 [dum,dum2] = intersect(squeeze(Msamp2offset(2,iEpoch,:)), eventOffset);
                 if ~isempty(dum2)
