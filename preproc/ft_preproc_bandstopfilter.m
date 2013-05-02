@@ -134,7 +134,7 @@ try
 catch
   switch instabilityfix
     case 'no'
-      rethrow(ME);
+      rethrow(lasterror);
     case 'reduce'
       warning('backtrace', 'off')
       warning('instability detected - reducing the %dth order filter to an %dth order filter', N, N-1);

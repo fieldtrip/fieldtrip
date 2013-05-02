@@ -613,15 +613,6 @@ else
   error('no layout detected, please specify cfg.layout')
 end
 
-% make the subset as specified in cfg.channel
-cfg.channel = ft_channelselection(cfg.channel, setdiff(layout.label, {'COMNT', 'SCALE'}));  % COMNT and SCALE are not really channels
-chansel = match_str(layout.label, cat(1, cfg.channel(:), 'COMNT', 'SCALE'));                % include COMNT and SCALE, keep all channels in the order of the layout
-% return the layout for the subset of channels
-layout.pos    = layout.pos(chansel,:);
-layout.width  = layout.width(chansel);
-layout.height = layout.height(chansel);
-layout.label  = layout.label(chansel);
-
 % FIXME there is a conflict between the use of cfg.style here and in topoplot
 if ~strcmp(cfg.style, '3d')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

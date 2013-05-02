@@ -119,7 +119,7 @@ if isnumeric(freqoiinput)
   % check whether padding is appropriate for the requested frequency resolution
   rayl = 1/endtime;
   if any(rem(freqoiinput,rayl))
-    warning('padding not sufficient for requested frequency resolution')
+    warning('padding not sufficient for requested frequency resolution, for more information please see the FAQs on www.ru.nl/neuroimaging/fieldtrip')
   end
   if numel(freqoiinput) ~= numel(freqoi) % freqoi will not contain double frequency bins when requested
     warning('output frequencies are different from input frequencies, multiples of the same bin were requested but not given');
@@ -145,8 +145,12 @@ end
 
 % throw a warning if input timeoi is different from output timeoi
 if isnumeric(timeoiinput)
-  if any(abs(timeoiinput-timeoi) >= eps*1e6) % timeoi will contain double time-points when requested
-    warning('output time-bins are different from input ime-bins');
+  if numel(timeoiinput) ~= numel(timeoi) % timeoi will not contain double time-bins when requested
+    warning('output time-bins are different from input time-bins, multiples of the same bin were requested but not given');
+  else
+    if any(abs(timeoiinput-timeoi) >= eps*1e6) 
+      warning('output time-bins are different from input time-bins');
+    end
   end
 end
 

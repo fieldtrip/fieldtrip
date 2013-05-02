@@ -94,11 +94,14 @@ elseif strcmp(timeoi,'all') % if input was 'all'
   timeoi   = time;
 end
 
-
 % throw a warning if input timeoi is different from output timeoi
 if isnumeric(timeoiinput)
-  if any(abs(timeoiinput-timeoi) >= eps*1e6) % timeoi will contain double time-points when requested
-    warning('output time-bins are different from input ime-bins');
+  if numel(timeoiinput) ~= numel(timeoi) % timeoi will not contain double time-bins when requested
+    warning('output time-bins are different from input time-bins, multiples of the same bin were requested but not given');
+  else
+    if any(abs(timeoiinput-timeoi) >= eps*1e6)
+      warning('output time-bins are different from input time-bins');
+    end
   end
 end
 

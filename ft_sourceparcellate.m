@@ -4,11 +4,12 @@ function parcel = ft_sourceparcellate(cfg, source, parcellation)
 %
 % Use as
 %    output = ft_sourceparcellate(cfg, source, parcellation)
-% where the input source is a 3D voxel-based or a 2D surface-based source grid
-% that was for example obtained from FT_SOURCEANALYSIS or FT_COMPUTE_LEADFIELD.
-% The input parcellation is described in detail in FT_DATATYPE_PARCELLATION and
-% can be obtained from FT_READ_ATLAS. The output is a channel-based representation
-% with the combined (e.g. averaged) representation of the source parameters per parcel.
+% where the input source is a 2D surface-based or 3-D voxel-based source grid that was for
+% example obtained from FT_SOURCEANALYSIS or FT_COMPUTE_LEADFIELD. The input parcellation is
+% described in detail in FT_DATATYPE_PARCELLATION (2-D) or FT_DATATYPE_SEGMENTATION (3-D) and
+% can be obtained from FT_READ_ATLAS or from a custom parcellation/segmentation for your
+% individual subject. The output is a channel-based representation with the combined (e.g.
+% averaged) representation of the source parameters per parcel.
 %
 % The configuration "cfg" is a structure that can contain the following
 % fields
