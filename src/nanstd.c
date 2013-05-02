@@ -17,7 +17,6 @@
 #include <math.h>
 #endif
 
-
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     /* declare variables */
     const mwSize *dims;
@@ -28,26 +27,26 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     mxClassID classid;
     
     /* used with double precision input */
-    double *inputr_p,  *inputi_p,  *output1r_p,  *output1i_p,  *cnt;
+    double *inputr_p,  *inputi_p,  *output1r_p,  *cnt,  *ssqr,  *ssqi,  *sumi,  biasterm;
     
     /* used with single precision input */
-    float  *inputr_ps, *inputi_ps, *output1r_ps, *output1i_ps, *cnts;
+    float  *inputr_ps, *inputi_ps, *output1r_ps, *cnts, *ssqrs, *ssqis, *sumis, biasterms;
 
     /* figure out the classid */
     classid = mxGetClassID(prhs[0]);
 
     /* check inputs */
-    if (nrhs > 2) {
-        mexErrMsgTxt("Too many input arguments, maximum of 2 supported.");
+    if (nrhs > 3) {
+        mexErrMsgTxt("Too many input arguments.");
+    } else if (nrhs == 3) {
+        if (~mxIsEmpty(prhs[2]) && (mxGetM(prhs[2])!=1 || mxGetN(prhs[2])!=1)) {
+            mexErrMsgTxt("Invalid dimension for input argument 2, must be scalar. Weights vector is not supported in this implementation of nanstd.");
+        }
+        if (mxGetScalar(prhs[2]) <= 0) {
+            mexErrMsgTxt("Invalid value for input argument 2.");
+        }
     } else if (nrhs < 1) {
         mexErrMsgTxt("Too few input arguments, at least 1 required.");
-    } else if (nrhs == 2) {
-        if (mxGetM(prhs[1])!=1 || mxGetN(prhs[1])!=1) {
-            mexErrMsgTxt ("Invalid dimension for input argument 2, scalar required.");
-        }
-        if (mxGetScalar(prhs[1])<=0) {
-            mexErrMsgTxt ("Invalid value for input argument 2, positive integer required.");
-        }
     }
 
     if (mxIsEmpty(prhs[0])) {
@@ -62,9 +61,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     numdims = mxGetNumberOfDimensions(prhs[0]);
     numelin = mxGetNumberOfElements(prhs[0]);
 
-    if (nrhs==2) {
-        dim = mxGetScalar(prhs[1]) - 1;
-    } else if (nrhs==1) {
+    /* extract dimension for standard deviation */
+    if (nrhs==3) {
+        dim = mxGetScalar(prhs[2]) - 1;
+    } else {
         /* figure out the averaging dimension when only 1 input argument is given */
         dim = 0;
         for (i=0; i<numdims; i++) {
@@ -72,6 +72,33 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                 dim = i;
                 break;
             }
+        }
+    }
+
+    /* determine the normalisation term (either N or N-1), this depends on the numeric precision */
+    if (classid==mxDOUBLE_CLASS) {
+        if (nrhs==1) {
+            biasterm = 1.0;
+        } else if (mxIsEmpty(prhs[1])) {
+            biasterm = 1.0;
+        } else if (mxGetScalar(prhs[1])==1) {
+            biasterm = 0.0;
+        } else if (mxGetScalar(prhs[1])==0) {
+            biasterm = 1.0;
+        } else {
+            mexErrMsgTxt("Invalid value for second input argument: this should either be [], 0, or 1.");
+        }
+    } else if (classid==mxSINGLE_CLASS) {
+        if (nrhs==1) {
+            biasterms = 0.0;
+        } else if (mxIsEmpty(prhs[1])) {
+            biasterms = 0.0;
+        } else if (mxGetScalar(prhs[1])==1) {
+            biasterms = 0.0;
+        } else if (mxGetScalar(prhs[1])==0) {
+            biasterms = 1.0;
+        } else {
+            mexErrMsgTxt("Invalid value for second input argument: this should either be [], 0, or 1.");
         }
     }
 
@@ -93,15 +120,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     }
 
     /* compute the number of output elements */
-    if (numdims >= dim+1) {
+    if (numdims>=dim+1) {
         numelout = numelin / dims[dim];
     } else {
         numelout = numelin;
     }
 
     /* compute helper variables x1 and y1 needed for the indexing */
-    if (dim+1 > numdims) {
+    if (dim+1>numdims)
         /* this essentially means that no averaging is done */
+    {
         x1 = numelin;
         y1 = numelin;
     } else {
@@ -116,9 +144,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         y1 = x1 * dims[dim];
     }
 
-    if (classid == mxDOUBLE_CLASS) {
+    if (classid==mxDOUBLE_CLASS) {
         /* allocate memory for denominator */
-        /* why is this done as the second output argument? not needed, but can't hurt */
         plhs[1] = mxCreateNumericArray((numdims+x0), dimsout, classid, mxREAL);
         cnt     = mxGetData(plhs[1]);
 
@@ -130,10 +157,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         if (inputi_p == NULL) {
             plhs[0]    = mxCreateNumericArray((numdims+x0), dimsout, classid, mxREAL);
             output1r_p = mxGetData(plhs[0]);
+            plhs[2]    = mxCreateNumericArray((numdims+x0), dimsout, classid, mxREAL);
+            ssqr       = mxGetData(plhs[2]);
         } else {
-            plhs[0]    = mxCreateNumericArray((numdims+x0), dimsout, classid, mxCOMPLEX);
+            plhs[0]    = mxCreateNumericArray((numdims+x0), dimsout, classid, mxREAL);
             output1r_p = mxGetData(plhs[0]);
-            output1i_p = mxGetImagData(plhs[0]);
+            plhs[2]    = mxCreateNumericArray((numdims+x0), dimsout, classid, mxCOMPLEX);
+            ssqr       = mxGetData(plhs[2]);
+            ssqi       = mxGetImagData(plhs[2]);
+            plhs[3]    = mxCreateNumericArray((numdims+x0), dimsout, classid, mxREAL);
+            sumi       = mxGetData(plhs[3]);
         }
 
         if (inputi_p == NULL) {
@@ -142,37 +175,44 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                 if (!isnan(inputr_p[i])) {
                     indx             = i%x1 + (i/y1) * x1;
                     output1r_p[indx] = output1r_p[indx] + inputr_p[i];
-                    cnt[indx]        = cnt[indx] + 1.0;
-                } else if (dim+1 > numdims) {
+                    ssqr[indx]       = ssqr[indx]       + inputr_p[i]*inputr_p[i];
+                    cnt[indx]        = cnt[indx]        + 1.0;
+                } else if (dim+1>numdims) {
                     output1r_p[i] = inputr_p[i];
+                    ssqr[i]       = inputr_p[i]*inputr_p[i];
+                    ssqi[i]       = inputi_p[i]*inputi_p[i];
+                    cnt[i]        = 1.0;
                 }
 
             }
 
-            /* divide by the number of non-nan values per element */
+            /* compute the standard deviation from the running sum */
             for (i=0; i<numelout; i++) {
-                output1r_p[i] = output1r_p[i]/cnt[i];
+                output1r_p[i] = sqrt((ssqr[i] - (output1r_p[i]*output1r_p[i])/cnt[i])/(cnt[i] - biasterm));
             }
-        } else {
+        } else
             /* handle the complex valued case separately */
-            
+        {
             /* compute running sum */
             for (i=0; i<numelin; i++) {
                 if (!isnan(inputr_p[i]) && !isnan(inputi_p[i])) {
                     indx             = i%x1 + (i/y1) * x1;
                     output1r_p[indx] = output1r_p[indx] + inputr_p[i];
-                    output1i_p[indx] = output1i_p[indx] + inputi_p[i];
-                    cnt[indx]  = cnt[indx]  + 1.0;
+                    ssqr[indx]       = ssqr[indx]       + inputr_p[i] * inputr_p[i];
+                    ssqi[indx]       = ssqi[indx]       + inputi_p[i] * inputi_p[i];
+                    sumi[indx]       = sumi[indx]       + inputi_p[i];
+                    cnt[indx]        = cnt[indx]        + 1.0;
                 } else if (dim+1>numdims) {
                     output1r_p[i] = inputr_p[i];
-                    output1i_p[i] = inputi_p[i];
+                    ssqr[i]       = inputr_p[i]*inputr_p[i];
+                    ssqi[i]       = inputi_p[i]*inputi_p[i];
+                    cnt[i]        = 1.0;
                 }
             }
 
-            /* divide by the number of non-nan values per element */
+            /* compute the standard deviation from the running sum */
             for (i=0; i<numelout; i++) {
-                output1r_p[i] = output1r_p[i]/cnt[i];
-                output1i_p[i] = output1i_p[i]/cnt[i];
+                output1r_p[i] = sqrt((ssqr[i] + ssqi[i] - (output1r_p[i]*output1r_p[i] + sumi[i]*sumi[i])/cnt[i])/(cnt[i] - biasterm));
             }
         }
 
@@ -182,7 +222,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         return;
     }
 
-    else if (classid == mxSINGLE_CLASS) {
+    else if (classid==mxSINGLE_CLASS) {
         /* allocate memory for denominator */
         plhs[1] = mxCreateNumericArray((numdims+x0), dimsout, classid, mxREAL);
         cnts    = mxGetData(plhs[1]);
@@ -195,48 +235,62 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         if (inputi_ps == NULL) {
             plhs[0]     = mxCreateNumericArray((numdims+x0), dimsout, classid, mxREAL);
             output1r_ps = mxGetData(plhs[0]);
+            plhs[2]     = mxCreateNumericArray((numdims+x0), dimsout, classid, mxREAL);
+            ssqrs       = mxGetData(plhs[2]);
         } else {
-            plhs[0]     = mxCreateNumericArray((numdims+x0), dimsout, classid, mxCOMPLEX);
+            plhs[0]     = mxCreateNumericArray((numdims+x0), dimsout, classid, mxREAL);
             output1r_ps = mxGetData(plhs[0]);
-            output1i_ps = mxGetImagData(plhs[0]);
+            plhs[2]     = mxCreateNumericArray((numdims+x0), dimsout, classid, mxCOMPLEX);
+            ssqrs       = mxGetData(plhs[2]);
+            ssqis       = mxGetImagData(plhs[2]);
+            plhs[3]     = mxCreateNumericArray((numdims+x0), dimsout, classid, mxREAL);
+            sumis       = mxGetData(plhs[3]);
         }
 
-        if (inputi_ps == NULL) {
+        if (inputi_p == NULL) {
             /* compute running sum */
             for (i=0; i<numelin; i++) {
                 if (!isnan(inputr_ps[i])) {
                     indx              = i%x1 + (i/y1) * x1;
                     output1r_ps[indx] = output1r_ps[indx] + inputr_ps[i];
-                    cnts[indx]        = cnts[indx] + 1.0;
+                    ssqrs[indx]       = ssqrs[indx]       + inputr_ps[i]*inputr_ps[i];
+                    cnts[indx]        = cnts[indx]        + 1.0;
                 } else if (dim+1>numdims) {
                     output1r_ps[i] = inputr_ps[i];
+                    ssqrs[i]       = inputr_ps[i]*inputr_ps[i];
+                    ssqis[i]       = inputi_ps[i]*inputi_ps[i];
+                    cnts[i]        = 1.0;
                 }
+
             }
 
-            /* divide by the number of non-nan values per element */
+            /* compute the standard deviation from the running sum */
             for (i=0; i<numelout; i++) {
-                output1r_ps[i] = output1r_ps[i]/cnts[i];
+                output1r_ps[i] = sqrt((ssqrs[i] - (output1r_ps[i]*output1r_ps[i])/cnts[i])/(cnts[i] - biasterms));
             }
-        } else {
+        } else
             /* handle the complex valued case separately */
-            
+        {
             /* compute running sum */
             for (i=0; i<numelin; i++) {
                 if (!isnan(inputr_ps[i]) && !isnan(inputi_ps[i])) {
-                    indx              = i%x1 + (i/y1) * x1;
+                    indx             = i%x1 + (i/y1) * x1;
                     output1r_ps[indx] = output1r_ps[indx] + inputr_ps[i];
-                    output1i_ps[indx] = output1i_ps[indx] + inputi_ps[i];
-                    cnts[indx]        = cnts[indx]  + 1.0;
+                    ssqrs[indx]       = ssqrs[indx]       + inputr_ps[i] * inputr_ps[i];
+                    ssqis[indx]       = ssqis[indx]       + inputi_ps[i] * inputi_ps[i];
+                    sumis[indx]       = sumis[indx]       + inputi_ps[i];
+                    cnts[indx]        = cnts[indx]        + 1.0;
                 } else if (dim+1>numdims) {
                     output1r_ps[i] = inputr_ps[i];
-                    output1i_ps[i] = inputi_ps[i];
+                    ssqrs[i]       = inputr_ps[i]*inputr_ps[i];
+                    ssqis[i]       = inputi_ps[i]*inputi_ps[i];
+                    cnts[i]        = 1.0;
                 }
             }
 
-            /* divide by the number of non-nan values per element */
+            /* compute the standard deviation from the running sum */
             for (i=0; i<numelout; i++) {
-                output1r_ps[i] = output1r_ps[i]/cnts[i];
-                output1i_ps[i] = output1i_ps[i]/cnts[i];
+                output1r_ps[i] = sqrt((ssqrs[i] + ssqis[i] - (output1r_ps[i]*output1r_ps[i] + sumis[i]*sumis[i])/cnts[i])/(cnts[i] - biasterms));
             }
         }
 
@@ -244,11 +298,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         mxFree(dimsout);
 
         return;
-    } else {
+    }
+
+    else {
         /* we now at this point the input data is either numeric, char, or logical, but not double or single precision */
-        /* since only double or single can be NaN, simply call matlab's mean() function to do the work, we can safely ignore nans */
-        mexCallMATLAB(nlhs, plhs, nrhs, prhs, "mean");
+        /* since only double or single can be NaN, simply call matlab's var() function to do the work, we can safely ignore nans */
+        mexCallMATLAB(nlhs, plhs, nrhs, prhs, "std");
         return;
     }
 }
-
