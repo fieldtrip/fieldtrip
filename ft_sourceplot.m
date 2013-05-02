@@ -15,7 +15,7 @@ function [cfg] = ft_sourceplot(cfg, data)
 % FT_SOURCEINTERPOLATE.
 %
 % The slice and ortho visualization plot the data in the input data voxel
-% arrangement, i.e. the three ortho views are the 1st, 2nd and 3rd
+% arrangement, i.e.?the three ortho views are the 1st, 2nd and 3rd
 % dimension of the 3-D data matrix, not of the head coordinate system. The
 % specification of the coordinate for slice intersection is specified in
 % head coordinates, i.e. relative to the fiducials and in mm or cm. If you
@@ -80,7 +80,7 @@ function [cfg] = ft_sourceplot(cfg, data)
 %   cfg.roi           = string or cell of strings, region(s) of interest from anatomical atlas (see cfg.atlas above)
 %                        everything is masked except for ROI
 %
-% The folowing parameters apply for ortho-plotting
+% The following parameters apply for ortho-plotting
 %   cfg.location      = location of cut, (default = 'auto')
 %                        'auto', 'center' if only anatomy, 'max' if functional data
 %                        'min' and 'max' position of min/max funparameter
@@ -96,7 +96,7 @@ function [cfg] = ft_sourceplot(cfg, data)
 %   cfg.queryrange    = number, in atlas voxels (default 3)
 %
 %
-% The folowing parameters apply for slice-plotting
+% The following parameters apply for slice-plotting
 %   cfg.nslices       = number of slices, (default = 20)
 %   cfg.slicerange    = range of slices in data, (default = 'auto')
 %                       'auto', full range of data
@@ -104,7 +104,16 @@ function [cfg] = ft_sourceplot(cfg, data)
 %   cfg.slicedim      = dimension to slice 1 (x-axis) 2(y-axis) 3(z-axis) (default = 3)
 %   cfg.title         = string, title of the figure window
 %
-% The folowing parameters apply for surface-plotting
+% When cfg.method = 'surface', the functional data will be rendered onto a
+% cortical mesh (can be an inflated mesh). If the input source data
+% contains a tri-field, no interpolation is needed. If the input source
+% data does not contain a tri-field (i.e. a description of a mesh), an
+% interpolation is performed onto a specified surface. Note that the
+% coordinate system in which the surface is defined should be the same as
+% the coordinate system that is represented in source.pos.
+%
+% The following parameters apply to surface-plotting when an interpolation
+% is required
 %   cfg.surffile       = string, file that contains the surface (default = 'single_subj_T1.mat')
 %                        'single_subj_T1.mat' contains a triangulation that corresponds with the
 %                         SPM anatomical template in MNI coordinates
@@ -121,10 +130,13 @@ function [cfg] = ft_sourceplot(cfg, data)
 %   cfg.sphereradius   = maximum distance from each voxel to the surface to be
 %                        included in the sphere projection methods, expressed in mm
 %   cfg.distmat        = precomputed distance matrix (default = [])
+%
+% The following parameters apply to surface-plotting independent of whether
+% an interpolation is required
 %   cfg.camlight       = 'yes' or 'no' (default = 'yes')
 %   cfg.renderer       = 'painters', 'zbuffer',' opengl' or 'none' (default = 'opengl')
 %                        note that when using opacity the OpenGL renderer is required.
-%
+% 
 % To facilitate data-handling and distributed computing with the peer-to-peer
 % module, this function has the following option:
 %   cfg.inputfile   =  ...
@@ -185,7 +197,7 @@ end
 data     = ft_checkdata(data, 'datatype', {'volume' 'source'}, 'feedback', 'yes');
 issource = ft_datatype(data, 'source');
 isvolume = ft_datatype(data, 'volume');
-if issource && ~isfield(data, 'dim')
+if issource && ~isfield(data, 'dim') && (~isfield(cfg, 'method') || ~strcmp(cfg.method, 'surface'))
   error('the input data needs to be defined on a regular 3D grid');
 end
 
@@ -252,12 +264,13 @@ cfg.projvec        = ft_getopt(cfg, 'projvec',       1);
 cfg.projweight     = ft_getopt(cfg, 'projweight',    ones(size(cfg.projvec)));
 cfg.projcomb       = ft_getopt(cfg, 'projcomb',      'mean'); %or max
 cfg.projthresh     = ft_getopt(cfg, 'projthresh',    []);
+cfg.projmethod     = ft_getopt(cfg, 'projmethod',    'nearest');
 cfg.distmat        = ft_getopt(cfg, 'distmat',       []);
 cfg.camlight       = ft_getopt(cfg, 'camlight',      'yes');
 cfg.renderer       = ft_getopt(cfg, 'renderer',      'opengl');
-if isequal(cfg.method,'surface')
-  if ~isfield(cfg, 'projmethod'), error('specify cfg.projmethod'); end
-end
+%if isequal(cfg.method,'surface')
+  %if ~isfield(cfg, 'projmethod'), error('specify cfg.projmethod'); end
+%end
 
 % for backward compatibility
 if strcmp(cfg.location, 'interactive')
@@ -305,7 +318,11 @@ if cfg.downsample ~=1 && isvolume
 end
 
 %%% make the local variables:
-dim = data.dim;
+if isfield(data, 'dim')
+  dim = data.dim;
+else
+  dim = [size(data.pos,1) 1];
+end
 
 hasatlas = ~isempty(cfg.atlas);
 if hasatlas
@@ -849,88 +866,112 @@ elseif isequal(cfg.method,'glassbrain')
   ft_sourceplot(tmpcfg, data);
   
 elseif isequal(cfg.method,'surface')
-  if issource
+  % determine whether the source data already contains a triangulation
+  interpolate2surf = 0;
+  if isvolume
+    % no triangulation present: interpolation should be performed
+    fprintf('The source data is defined on a 3D grid, interpolation to a surface mesh will be performed\n');
+    interpolate2surf = 1;
+  elseif issource && isfield(data, 'tri')
+    fprintf('The source data is defined on a triangulated surface, allowing for easy surface plotting\n');
+  elseif issource
     % add a transform field to the data
+    fprintf('The source data does not contain a triangulated surface, we may need to interpolate to a surface mesh\n');
     data.transform = pos2transform(data.pos);
+    interpolate2surf = 1;
   end
   
-  % read the triangulated cortical surface from file
-  tmp = load(cfg.surffile, 'bnd');
-  surf = tmp.bnd;
-  if isfield(surf, 'transform'),
-    % compute the surface vertices in head coordinates
-    surf.pnt = warp_apply(surf.transform, surf.pnt);
-  end
-  
-  % downsample the cortical surface
-  if cfg.surfdownsample > 1
-    if ~isempty(cfg.surfinflated)
-      error('downsampling the surface is not possible in combination with an inflated surface');
+  if interpolate2surf,
+    % deal with the interpolation
+    % FIXME this should partially be dealt with by ft_sourceinterpolate
+    
+    % read the triangulated cortical surface from file
+    tmp  = load(cfg.surffile, 'bnd');
+    surf = tmp.bnd;
+    if isfield(surf, 'transform'),
+      % compute the surface vertices in head coordinates
+      surf.pnt = warp_apply(surf.transform, surf.pnt);
     end
-    fprintf('downsampling surface from %d vertices\n', size(surf.pnt,1));
-    [surf.tri, surf.pnt] = reducepatch(surf.tri, surf.pnt, 1/cfg.surfdownsample);
-  end
-  
-  % these are required
-  if ~isfield(data, 'inside')
-    data.inside = true(dim);
-  end
-  
-  fprintf('%d voxels in functional data\n', prod(dim));
-  fprintf('%d vertices in cortical surface\n', size(surf.pnt,1));
-  
-  if (hasfun  && strcmp(cfg.projmethod,'project')),
-    val=zeros(size(surf.pnt,1),1);
-    if hasmsk
-      maskval = val;
-    end;
-    %convert projvec in mm to a factor, assume mean distance of 70mm
-    cfg.projvec=(70-cfg.projvec)/70;
-    for iproj = 1:length(cfg.projvec),
-      sub = round(warp_apply(inv(data.transform), surf.pnt*cfg.projvec(iproj), 'homogenous'));  % express
-      sub(sub(:)<1) = 1;
-      sub(sub(:,1)>dim(1),1) = dim(1);
-      sub(sub(:,2)>dim(2),2) = dim(2);
-      sub(sub(:,3)>dim(3),3) = dim(3);
-      disp('projecting...')
-      ind = sub2ind(dim, sub(:,1), sub(:,2), sub(:,3));
-      if strcmp(cfg.projcomb,'mean')
-        val = val + cfg.projweight(iproj) * fun(ind);
-        if hasmsk
-          maskval = maskval + cfg.projweight(iproj) * msk(ind);
+    
+    % downsample the cortical surface
+    if cfg.surfdownsample > 1
+      if ~isempty(cfg.surfinflated)
+        error('downsampling the surface is not possible in combination with an inflated surface');
+      end
+      fprintf('downsampling surface from %d vertices\n', size(surf.pnt,1));
+      [surf.tri, surf.pnt] = reducepatch(surf.tri, surf.pnt, 1/cfg.surfdownsample);
+    end
+    
+    % these are required
+    if ~isfield(data, 'inside')
+      data.inside = true(dim);
+    end
+    
+    fprintf('%d voxels in functional data\n', prod(dim));
+    fprintf('%d vertices in cortical surface\n', size(surf.pnt,1));
+    
+    if (hasfun  && strcmp(cfg.projmethod,'project')),
+      val=zeros(size(surf.pnt,1),1);
+      if hasmsk
+        maskval = val;
+      end;
+      %convert projvec in mm to a factor, assume mean distance of 70mm
+      cfg.projvec=(70-cfg.projvec)/70;
+      for iproj = 1:length(cfg.projvec),
+        sub = round(warp_apply(inv(data.transform), surf.pnt*cfg.projvec(iproj), 'homogenous'));  % express
+        sub(sub(:)<1) = 1;
+        sub(sub(:,1)>dim(1),1) = dim(1);
+        sub(sub(:,2)>dim(2),2) = dim(2);
+        sub(sub(:,3)>dim(3),3) = dim(3);
+        disp('projecting...')
+        ind = sub2ind(dim, sub(:,1), sub(:,2), sub(:,3));
+        if strcmp(cfg.projcomb,'mean')
+          val = val + cfg.projweight(iproj) * fun(ind);
+          if hasmsk
+            maskval = maskval + cfg.projweight(iproj) * msk(ind);
+          end
+        elseif strcmp(cfg.projcomb,'max')
+          val =  max([val cfg.projweight(iproj) * fun(ind)],[],2);
+          tmp2 = min([val cfg.projweight(iproj) * fun(ind)],[],2);
+          fi = find(val < max(tmp2));
+          val(fi) = tmp2(fi);
+          if hasmsk
+            maskval = max(abs([maskval cfg.projweight(iproj) * fun(ind)]),[],2);
+          end
+        else
+          error('undefined method to combine projections; use cfg.projcomb= mean or max')
         end
-      elseif strcmp(cfg.projcomb,'max')
-        val =  max([val cfg.projweight(iproj) * fun(ind)],[],2);
-        tmp2 = min([val cfg.projweight(iproj) * fun(ind)],[],2);
-        fi = find(val < max(tmp2));
-        val(fi) = tmp2(fi);
+      end
+      if strcmp(cfg.projcomb,'mean'),
+        val=val/length(cfg.projvec);
         if hasmsk
           maskval = max(abs([maskval cfg.projweight(iproj) * fun(ind)]),[],2);
         end
-      else
-        error('undefined method to combine projections; use cfg.projcomb= mean or max')
+      end;
+      if ~isempty(cfg.projthresh),
+        mm=max(abs(val(:)));
+        maskval(abs(val) < cfg.projthresh*mm) = 0;
       end
     end
-    if strcmp(cfg.projcomb,'mean'),
-      val=val/length(cfg.projvec);
-      if hasmsk
-        maskval = max(abs([maskval cfg.projweight(iproj) * fun(ind)]),[],2);
-      end
+    
+    if (hasfun && ~strcmp(cfg.projmethod,'project')),
+      [interpmat, cfg.distmat] = interp_gridded(data.transform, fun, surf.pnt, 'projmethod', cfg.projmethod, 'distmat', cfg.distmat, 'sphereradius', cfg.sphereradius, 'inside', data.inside);
+      % interpolate the functional data
+      val = interpmat * fun(data.inside(:));
     end;
-    if ~isempty(cfg.projthresh),
-      mm=max(abs(val(:)));
-      maskval(abs(val) < cfg.projthresh*mm) = 0;
+    if (hasmsk && ~strcmp(cfg.projmethod,'project')),
+      % also interpolate the opacity mask
+      maskval = interpmat * msk(data.inside(:));
     end
-  end
-  
-  if (hasfun && ~strcmp(cfg.projmethod,'project')),
-    [interpmat, cfg.distmat] = interp_gridded(data.transform, fun, surf.pnt, 'projmethod', cfg.projmethod, 'distmat', cfg.distmat, 'sphereradius', cfg.sphereradius, 'inside', data.inside);
-    % interpolate the functional data
-    val = interpmat * fun(data.inside(:));
-  end;
-  if (hasmsk && ~strcmp(cfg.projmethod,'project')),
-    % also interpolate the opacity mask
-    maskval = interpmat * msk(data.inside(:));
+    
+  else
+    surf     = [];
+    surf.pnt = data.pos;
+    surf.tri = data.tri;
+    
+    if hasfun, val     = fun(data.inside(:)); end
+    if hasmsk, maskval = msk(data.inside(:)); end
+    
   end
   
   if ~isempty(cfg.surfinflated)
