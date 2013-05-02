@@ -921,7 +921,7 @@ switch headerformat
           epochdef(iEpoch,3) = round(str2double(orig.xml.epochs(iEpoch).epoch.beginTime)./1000./hdr.Fs); %offset corresponds to timing
         end
       end
-      warning('the data contains multiple epochs with possibly discontinuous boundaries. Added ''epochdef'' to hdr.orig defining begin and end sample of each epoch. See hdr.orig.xml.epochs for epoch details, use ft_read_header to obtain header or look in data.dhr.')
+      warning('the data contains multiple epochs with possibly discontinuous boundaries. Added ''epochdef'' to hdr.orig defining begin and end sample of each epoch. See hdr.orig.xml.epochs for epoch details, either by running ft_read_header or looking in data.hdr.')
       % sanity check
       if epochdef(end,2) ~= hdr.nSamples
         error('number of samples in all epochs do not add up to total number of samples')
