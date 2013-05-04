@@ -1,55 +1,58 @@
-% NANVAR provides a replacement for MATLAB's nanvar that is almost
-% compatible.
-%
-% For usage see VAR. Note that the weight-vector is not supported. If you
-% need it, please file a ticket at our bugtracker.
+function y = nanvar(x,flag,dim)
+% FORMAT: Y = NANVAR(X,FLAG,DIM)
+% 
+%    This file is intended as a drop-in replacement for Matlab's nanvar. It
+%    originally forms part of the NaN suite:
+%    http://www.mathworks.com/matlabcentral/fileexchange/6837-nan-suite/
+%    and was modified to be compatible.
 
-function Y = nanvar(X, w, dim)
+% -------------------------------------------------------------------------
+%    author:      Jan Glscher
+%    affiliation: Neuroimage Nord, University of Hamburg, Germany
+%    email:       glaescher@uke.uni-hamburg.de
+%    
 
-switch nargin
-  case 1
-    % VAR(x)
-    % Normalize by n-1 when no dim is given. 
-    Y = nanvar_base(X);
-    n = nannumel(X);
-    w = 0;
-
-  case 2
-    % VAR(x, 1)
-    % VAR(x, w)
-    % In this case, the default of normalizing by n is expected.
-    Y = nanvar_base(X);
-    n = nannumel(X);
-
-  case 3
-    % VAR(x, w, dim)
-    % if w=0 normalize by n-1, if w=1 normalize by n.
-    Y = nanvar_base(X, dim);    
-    n = nannumel(X, dim);
-
-  otherwise
-    error ('Too many input arguments!')
+if isempty(x)
+	y = NaN;
+	return
 end
 
-% Handle different forms of normalization:
-if numel(w) == 0
-  % empty weights vector defaults to 0
-  w = 0;
+if nargin < 2 || isempty(flag)
+	flag = 0;
 end
 
-if numel(w) ~= 1
-  error('Weighting vector w is not implemented! Please file a bug.');
+if nargin < 3
+	dim = find(size(x)~=1,1,'first');
+	if isempty(dim)
+		dim = 1; 
+	end	  
 end
 
-if ~isreal(X)
-  Y = real(Y) + imag(Y);
-  n = real(n);
-end
 
-if w == 1
-  Y = Y ./ n;
-end
+% Find NaNs in x and nanmean(x)
+nans = isnan(x);
+avg = nanmean(x,dim);
 
-if w == 0
-  Y = Y ./ max(1, (n - 1));  % don't divide by zero!
+% create array indicating number of element 
+% of x in dimension DIM (needed for subtraction of mean)
+tile = ones(1,max(ndims(x),dim));
+tile(dim) = size(x,dim);
+
+% remove mean
+x = x - repmat(avg,tile);
+
+count = size(x,dim) - sum(nans,dim);
+
+% Replace NaNs with zeros.
+x(isnan(x)) = 0; 
+
+
+% Protect against a  all NaNs in one dimension
+i = find(count==0);
+
+if flag == 0
+	y = sum(x.*x,dim)./max(count-1,1);
+else
+	y = sum(x.*x,dim)./max(count,1);
 end
+y(i) = i + NaN;
