@@ -298,7 +298,7 @@ else
   % add the chanpos info back into the gradiometer description
   tmplabel = interp.grad.label;
   for k = 1:numel(tmplabel)
-    if strcmp(tmplabel{k}(end-2:end), '_dV') || strcmp(tmplabel{k}(end-2:end), '_dH')
+    if ~isempty(strfind(tmplabel{k}, '_dV')) || ~isempty(strfind(tmplabel{k}, '_dH'))
       tmplabel{k} = tmplabel{k}(1:end-3);
     end
   end
