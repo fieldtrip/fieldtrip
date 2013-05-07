@@ -63,14 +63,25 @@ filename = fetch_url(filename);
 if strcmp(f, 'TTatlas+tlrc')
   defaultformat = 'afni';
 elseif strcmp(x, '.nii') && exist(fullfile(p, [f '.txt']))
-  % this is a combination of nii+txt file, where the txt file contains three columns like this
+  % This is a combination of nii+txt file, where the txt file may contain three columns like this
   %   FAG	Precentral_L	2001
   %   FAD	Precentral_R	2002
   %   F1G	Frontal_Sup_L	2101
   %   F1D	Frontal_Sup_R	2102
   %   F1OG	Frontal_Sup_Orb_L	2111
   %   ...
-  defaultformat  = 'aal';
+  % Alternatively, the txt file may contain a header line with the atlas name between square brackets
+  % and then a variable number of column text info, where the first column
+  % is the index, and the second column the label.
+  labelfile = fullfile(p, [f '.txt']);
+  fid = fopen(labelfile, 'rt');
+  l1  = fgetl(fid);
+  if strcmp(l1(1),'[') && strcmp(l1(end),']')
+    defaultformat = 'aal_ext';
+  else
+    defaultformat = 'aal';
+  end
+  fclose(fid);  
 elseif strcmp(x, '.mgz') && ~isempty(strfind(f, 'aparc')) && ~isempty(strfind(f, '+aseg'))
   % individual volume based segmentation from freesurfer
   defaultformat = 'freesurfer_volume';
@@ -106,6 +117,30 @@ switch atlasformat
       atlas.tissuelabel = atlas.tissuelabel(a(a~=0));
     end
     
+  case 'aal_ext'
+    labelfile = fullfile(p, [f '.txt']);
+    fid = fopen(labelfile, 'rt');
+    C = textscan(fid, '%d%s%*[^\n]', 'HeaderLines', 1, 'Delimiter', '\t');
+    lab = C{2};
+    idx = C{1};
+    fclose(fid);
+    
+    atlas = ft_read_mri(filename);
+    atlas.tissue = atlas.anatomy;
+    atlas = rmfield(atlas, 'anatomy');
+    atlas.tissuelabel       = {};
+    atlas.tissuelabel(idx)  = lab;
+    % The original contains a rather sparse labeling, since not all indices
+    % are being used (it starts at 2001) The question is whether it is more
+    % important to keep the original numbers or to make the list with
+    % labels compact. This could be made optional.
+    compact = true;
+    if compact
+      [a, i, j] = unique(atlas.tissue);
+      atlas.tissue = reshape(j-1, atlas.dim);
+      atlas.tissuelabel = atlas.tissuelabel(a(a~=0));
+    end
+    
   case 'afni'
     % check whether the required AFNI toolbox is available
     ft_hastoolbox('afni', 1);
@@ -116,7 +151,7 @@ switch atlasformat
     atlas.brick0 = atlas.anatomy(:,:,:,1);
     atlas.brick1 = atlas.anatomy(:,:,:,2);
     atlas        = rmfield(atlas, 'anatomy');
-    atlas.coord  = 'tal';
+    atlas.coordsys  = 'tal';
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % the following information is from https://afni.nimh.nih.gov/afni/doc/misc/ttatlas_tlrc
@@ -541,7 +576,7 @@ switch atlasformat
     % MNI space, but the coordinates will not be guaranteed to be MNI
     % compatible, for example for the rhesus or mouse atlas.
     
-    % atlas.coord  = 'mni';
+    % atlas.coordsys  = 'mni';
     
     [p, f, x] = fileparts(filename);
     
