@@ -239,6 +239,7 @@ ntap = size(tap,1);
 tmpcfg        = [];
 tmpcfg.toilim = cfg.toi([1 end]) + cfg.t_ftimwin.*[-0.5 0.5];
 data          = ft_redefinetrial(tmpcfg, data);
+ntrl          = length(data.trial);
 
 %---demean
 if strcmp(cfg.demean, 'yes'),
