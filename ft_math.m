@@ -45,7 +45,7 @@ ft_preamble loadvar varargin  % this reads the input data in case the user speci
 type = ft_datatype(varargin{1});
 for i=1:length(varargin)
   % check that all data types are equal, and update old data structures
-  varargin{i} = ft_checkdata(varargin{1}, 'datatype', type);
+  varargin{i} = ft_checkdata(varargin{i}, 'datatype', type);
 end
 
 % ensure that the required options are present
