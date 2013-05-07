@@ -143,13 +143,13 @@ else
     case 'add'
       for i=2:length(varargin)
         fprintf('adding the %s input argument\n', nth(i));
-        tmp = tmp + varargin{2}.(cfg.parameter);
+        tmp = tmp + varargin{i}.(cfg.parameter);
       end
       
     case 'multiply'
       for i=2:length(varargin)
         fprintf('multiplying with the %s input argument\n', nth(i));
-        tmp = tmp .* varargin{2}.(cfg.parameter);
+        tmp = tmp .* varargin{i}.(cfg.parameter);
       end
       
     case 'subtract'
