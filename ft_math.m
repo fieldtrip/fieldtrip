@@ -190,11 +190,11 @@ ft_postamble savevar data       % this saves the output data structure to disk i
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function s = nth(n)
-if n==1
+if rem(n,10)==1 && rem(n,100)~=11
   s = sprintf('%dst', n);
-elseif n==2
+elseif rem(n,10)==2 && rem(n,100)~=12
   s = sprintf('%dnd', n);
-elseif n==3
+elseif rem(n,10)==3 && rem(n,100)~=13
   s = sprintf('%drd', n);
 else
   s = sprintf('%dth', n);
