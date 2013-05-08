@@ -146,6 +146,11 @@ if ischar(color) && ~strcmp(color, 'none')
   color = color(:);
 end
 
+if numel(color) > nline
+  % more colors specified than lines, just take the first nline
+  color = color(1:nline);
+end
+
 if strcmp(highlightstyle, 'difference') && isempty(highlight)
   warning('highlight is empty, highlighting the whole time interval');
   highlight = ones(size(hdat));
