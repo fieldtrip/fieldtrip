@@ -152,7 +152,6 @@ if ~isfield(cfg, 'preproc'),       cfg.preproc      = [];     end
 
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
-  fprintf('selecting %d trials\n', length(cfg.trials));
   data = ft_selectdata(data, 'rpt', cfg.trials);
 end
 
