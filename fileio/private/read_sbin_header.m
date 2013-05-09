@@ -145,22 +145,18 @@ else
         if NEvent == 1
             %assume this is the segmentation event
             theEvent=find(eventData(1,:)>0);
-            theEvent=mod(theEvent(1),NSamples);
+            theEvent=mod(theEvent(1)-1,NSamples)+1;
         else
             %assume the sample that always has an event is the baseline
             %if more than one, choose the earliest one
-            baselineCandidates = unique(mod(find(eventData(:,:)'),NSamples));
-            counters=zeros(1,length(baselineCandidates));
-            totalEventSamples=mod(find(sum(eventData(:,:))'),NSamples); 
-            for i = 1:length(totalEventSamples)
-                theMatch=find(ismember(baselineCandidates,totalEventSamples(i)));
-                counters(theMatch)=counters(theMatch)+1;
-            end;
+            totalEventSamples=mod(find(sum(eventData(:,:))')-1,NSamples)+1; 
+            baselineCandidates = unique(totalEventSamples);
+            counters=hist(totalEventSamples, length(baselineCandidates));
             theEvent=min(baselineCandidates(find(ismember(counters,NSegments))));
         end;
 
         preBaseline=theEvent-1;
-        if preBaseline == -1
+        if (preBaseline == -1) || isempty(preBaseline)
             preBaseline =0;
         end;
     end
