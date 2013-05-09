@@ -69,40 +69,74 @@ else
 end;
 
 precision = bitand(version,6);
-Nevents=hdr.orig.header_array(17);
+NChan=hdr.nChans;
+Nevent=hdr.orig.header_array(17);
 
 switch precision
     case 2
-        trialLength=2*hdr.nSamples*(hdr.nChans+Nevents)+6;
+        trialLength=2*hdr.nSamples*(hdr.nChans+Nevent)+6;
         dataType='int16';
         dataLength=2;
     case 4
-        trialLength=4*hdr.nSamples*(hdr.nChans+Nevents)+6;
+        trialLength=4*hdr.nSamples*(hdr.nChans+Nevent)+6;
         dataType='single';
         dataLength=4;
     case 6
-        trialLength=8*hdr.nSamples*(hdr.nChans+Nevents)+6;
+        trialLength=8*hdr.nSamples*(hdr.nChans+Nevent)+6;
         dataType='double';
         dataLength=8;
 end
 
 if unsegmented
-    %interpret begtrial and endtrial as sample indices
-    status = fseek(fh, 36+Nevents*4, 'bof'); %skip over header
+    status = fseek(fh, 36+Nevent*4, 'bof'); %skip over header
     if status==-1
         error('Failure to skip over header of simple binary file.')
     end;
-    status = fseek(fh, ((begtrial-1)*(hdr.nChans+Nevents)*dataLength), 'cof'); %skip previous trials
+    status = fseek(fh, ((begtrial-1)*(hdr.nChans+Nevent)*dataLength), 'cof'); %skip previous trials
     if status==-1
         error('Failure to skip over previous trials of simple binary file.')
     end;
-    nSamples  = endtrial-begtrial+1;
-    [trialData count] = fread(fh, [hdr.nChans+Nevents, nSamples],dataType,endian);
-    if count < ((hdr.nChans+Nevents) * nSamples)
-        error('Failure to read all samples of simple binary file.')
+    if (hdr.orig.header_array(14))==0 && (hdr.orig.header_array(15) > 1) %epoch-marked simple binary file format
+        status = fseek(fh, 30, 'bof'); %skip over header
+        if status==-1
+            error('Failure to skip over header of simple binary file.')
+        end;
+        status = fseek(fh, ((begtrial-1)*(hdr.nChans+Nevent)*dataLength), 'cof'); %skip previous trials
+        if status==-1
+            error('Failure to skip over previous trials of simple binary file.')
+        end;
+        NSamples    = fread(fh,1,'int32',endian);
+        NEvent      = fread(fh,1,'int16',endian);
+        for j = 1:Nevent
+            EventCodes(j,1:4) = char(fread(fh,[1,4],'char',endian));
+        end
+        switch precision
+            case 2
+                [temp,count]    = fread(fh,[NChan+NEvent, NSamples],'int16',endian);
+            case 4
+                [temp,count]    = fread(fh,[NChan+NEvent, NSamples],'single',endian);
+            case 6
+                [temp,count]    = fread(fh,[NChan+NEvent, NSamples],'double',endian);
+        end
+        eventData(:,1:NSamples)  = temp( (NChan+1):(NChan+NEvent), 1:NSamples);
+        epocSamples=find(eventData(find(strcmp('epoc',cellstr(EventCodes))),:));
+        segmentLengths=diff(epocSamples);
+        segmentLengths=[segmentLengths length(eventData)-epocSamples(end)+1];
+        trialData=zeros(hdr.nChans,hdr.nSamples,endtrial-begtrial+1);
+        for iSegment=1:length(segmentLengths)
+            if (iSegment >= begtrial) && (iSegment <= endtrial)
+                trialData(:,1:segmentLengths(iSegment),iSegment-begtrial+1) = temp(1:hdr.nChans,1:sum(segmentLengths(1):segmentLengths(iSegment))); %data zero-padded to maximum epoch length
+            end;
+        end;
+    else
+        nSamples  = endtrial-begtrial+1;    %interpret begtrial and endtrial as sample indices
+        [trialData count] = fread(fh, [hdr.nChans+Nevent, nSamples],dataType,endian);
+        if count < ((hdr.nChans+Nevent) * nSamples)
+            error('Failure to read all samples of simple binary file.')
+        end;
     end;
 else
-    status = fseek(fh, 40+length(hdr.orig.CatLengths)+sum(hdr.orig.CatLengths)+Nevents*4, 'bof'); %skip over header
+    status = fseek(fh, 40+length(hdr.orig.CatLengths)+sum(hdr.orig.CatLengths)+Nevent*4, 'bof'); %skip over header
     if status==-1
         error('Failure to skip over header of simple binary file.')
     end;
@@ -119,8 +153,8 @@ else
             error('Failure to skip over segment info of simple binary file.')
         end;
         
-        [temp count] = fread(fh, [(hdr.nChans+Nevents), hdr.nSamples],dataType,endian);
-        if count < ((hdr.nChans+Nevents) * hdr.nSamples)
+        [temp count] = fread(fh, [(hdr.nChans+Nevent), hdr.nSamples],dataType,endian);
+        if count < ((hdr.nChans+Nevent) * hdr.nSamples)
             error('Failure to read all samples of simple binary file.')
         end;
         trialData(:,:,segment) = temp(1:hdr.nChans,:);
@@ -131,4 +165,3 @@ status = fclose(fh);
 if status==-1
     error('Failure to close simple binary file.')
 end;
-
