@@ -69,7 +69,6 @@ else
 end;
 
 if bitand(version,1) == 0
-    %error('ERROR:  This is an unsegmented file, which is not supported.');
     unsegmented = 1;
 else
     unsegmented = 0;
@@ -94,6 +93,7 @@ Gain        = fread(fid,1,'int16',endian);
 Bits        = fread(fid,1,'int16',endian);
 Range       = fread(fid,1,'int16',endian);
 
+epochMarked=0;
 if unsegmented,
     NumCategors = 0;
     NSegments   = 1;
@@ -105,6 +105,28 @@ if unsegmented,
     CateNames   = [];
     CatLengths  = [];
     preBaseline = 0;
+    
+    if any(strcmp('epoc',cellstr(EventCodes))) && any(strcmp('tim0',cellstr(EventCodes))) %actually epoch-marked segmented file format
+        
+        %Note that epoch-marked simple binary file format loses cell information so just the one "cell"
+        
+        switch precision
+            case 2
+                [temp,count]    = fread(fid,[NChan+NEvent, NSamples],'int16',endian);
+            case 4
+                [temp,count]    = fread(fid,[NChan+NEvent, NSamples],'single',endian);
+            case 6
+                [temp,count]    = fread(fid,[NChan+NEvent, NSamples],'double',endian);
+        end
+        eventData(:,1:NSamples)  = temp( (NChan+1):(NChan+NEvent), 1:NSamples);
+        
+        NSegments = length(find(eventData(find(strcmp('epoc',cellstr(EventCodes))),:)));
+        epocSamples=find(eventData(find(strcmp('epoc',cellstr(EventCodes))),:));
+        segmentLengths=diff(epocSamples);
+        segmentLengths=[segmentLengths length(eventData)-epocSamples(end)+1];
+        NSamples=max(segmentLengths); % samples per segment, will zero pad out to longest length
+        preBaseline=min(find(eventData(find(strcmp('tim0',cellstr(EventCodes))),:)))-min(find(eventData(find(strcmp('epoc',cellstr(EventCodes))),:))); %make assumption all prestimulus durations are the same        
+    end;
 else
     NumCategors = fread(fid,1,'int16',endian);
     for j = 1:NumCategors
@@ -121,8 +143,6 @@ else
         EventCodes(j,1:4)   = char(fread(fid,[1,4],'char',endian));
     end
 
-
-
     preBaseline=0;
     if NEvent > 0
 
@@ -137,11 +157,11 @@ else
                 case 6
                     [temp,count]    = fread(fid,[NChan+NEvent, NSamples],'double',endian);
             end
-            if (NEvent ~= 0)
-                eventData(:,((j-1)*NSamples+1):j*NSamples)  = temp( (NChan+1):(NChan+NEvent), 1:NSamples);
-            end
+            eventData(:,((j-1)*NSamples+1):j*NSamples)  = temp( (NChan+1):(NChan+NEvent), 1:NSamples);
         end
+end;
 
+if ~unsegmented
         if NEvent == 1
             %assume this is the segmentation event
             theEvent=find(eventData(1,:)>0);
@@ -165,5 +185,3 @@ end
 fclose(fid);
 
 header_array    = double([version year month day hour minute second millisecond Samp_Rate NChan Gain Bits Range NumCategors, NSegments, NSamples, NEvent]);
-
-
