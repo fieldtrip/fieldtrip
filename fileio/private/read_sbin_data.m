@@ -125,7 +125,12 @@ if unsegmented
         trialData=zeros(hdr.nChans,hdr.nSamples,endtrial-begtrial+1);
         for iSegment=1:length(segmentLengths)
             if (iSegment >= begtrial) && (iSegment <= endtrial)
-                trialData(:,1:segmentLengths(iSegment),iSegment-begtrial+1) = temp(1:hdr.nChans,1:sum(segmentLengths(1):segmentLengths(iSegment))); %data zero-padded to maximum epoch length
+                if iSegment ==1
+                    startSample=1;
+                else
+                    startSample=sum(segmentLengths(1:iSegment-1))+1;
+                end;
+                trialData(:,1:segmentLengths(iSegment),iSegment-begtrial+1) = temp(1:hdr.nChans,startSample:sum(segmentLengths(1:iSegment))); %data zero-padded to maximum epoch length
             end;
         end;
     else
