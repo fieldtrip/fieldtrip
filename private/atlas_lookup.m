@@ -89,8 +89,16 @@ for i=1:num
             ijk(3)>=1 && ijk(3)<=atlas.dim(3)
           brick0_val = atlas.brick0(ijk(1), ijk(2), ijk(3));
           brick1_val = atlas.brick1(ijk(1), ijk(2), ijk(3));
-          sel = [sel; find(atlas.descr.brick==0 & atlas.descr.value==brick0_val)];
-          sel = [sel; find(atlas.descr.brick==1 & atlas.descr.value==brick1_val)];
+          
+          toAdd = find(atlas.descr.brick==0 & atlas.descr.value==brick0_val);
+          if ~isempty(toAdd)
+            sel = [sel; toAdd];
+          end
+          
+          toAdd = find(atlas.descr.brick==1 & atlas.descr.value==brick1_val);
+          if ~isempty(toAdd)
+            sel = [sel; toAdd];
+          end
         else
           warning('location is outside atlas volume');
         end
