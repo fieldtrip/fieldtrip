@@ -56,19 +56,18 @@ end
 
 cfg = ft_checkconfig(cfg, 'renamed', {'toilim' 'latency'});
 
+% this function only works for the new (2013x) source representation without sub-structures 
 if strcmp(dtype, 'source')
-  % FIXME this updates the old-style beamformer source reconstruction
+  % update the old-style beamformer source reconstruction
   for i=1:length(varargin)
     varargin{i} = ft_datatype_source(varargin{i}, 'version', '2013x');
   end
-  dimord = varargin{1}.dimord;
-  if isfield(cfg, 'parameter') && strcmp(cfg.parameter(1:4), 'avg.')
+  if isfield(cfg, 'parameter') && length(cfg.parameter)>4 && strcmp(cfg.parameter(1:4), 'avg.')
     cfg.parameter = cfg.parameter(5:end); % remove the 'avg.' part
   end
 end
 
 if strcmp(dtype, 'raw')
-  
   % use selfromraw
   cfg.channel = ft_getopt(cfg, 'channel', 'all');
   cfg.latency = ft_getopt(cfg, 'latency', 'all');

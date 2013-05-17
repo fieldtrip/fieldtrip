@@ -59,6 +59,17 @@ else
   % or the operation is a transformation such as log10
 end
 
+% this function only works for the new (2013x) source representation without sub-structures 
+if ft_datatype(varargin{1}, 'source')
+  % update the old-style beamformer source reconstruction
+  for i=1:length(varargin)
+    varargin{i} = ft_datatype_source(varargin{i}, 'version', '2013x');
+  end
+  if isfield(cfg, 'parameter') && length(cfg.parameter)>4 && strcmp(cfg.parameter(1:4), 'avg.')
+    cfg.parameter = cfg.parameter(5:end); % remove the 'avg.' part
+  end
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the actual computation is done in the middle part
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
