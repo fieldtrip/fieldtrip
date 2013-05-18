@@ -57,9 +57,17 @@ if ft_filetype(filename, 'loreta_slor') || is_txt && strcmp(filename(end-7:end-4
   voxnumber    = 6239;
   lorind       = getfield(load('loreta_ind.mat'), 'ind_sloreta');
   source.dim   = size(lorind);
-  source.xgrid =  -70:5:70;
-  source.ygrid = -100:5:65;
-  source.zgrid =  -45:5:70;
+  %Note1, ingnie: this was the orriginal, but this can't be correct, since the x
+  %dimention, for instance, is 37, while -70:5:70 is only 29. I just left
+  %it here for reference.
+  %   source.xgrid =  -70:5:70;
+  %   source.ygrid = -100:5:65;
+  %   source.zgrid =  -45:5:70;
+  
+  %Note2, ingie: I'm assuming that the above is where the INSIDE of the source
+  % runs between, looking at the data and the Loreta-Key program, this makes
+  % a lot of sense. I based the below source.transform on this.
+  source.transform = [5 0 0 -95;0 5 0 -130; 0 0 5 -75; 0 0 0 1]; %equivalent to x-90:5:90, y-125:5:90, z-70:5:105
 elseif ft_filetype(filename, 'loreta_lorb')
   voxnumber    = 2394;
   lorind       = getfield(load('loreta_ind.mat'), 'ind_loreta');
@@ -67,11 +75,12 @@ elseif ft_filetype(filename, 'loreta_lorb')
   source.xgrid =  -66:7:67;
   source.ygrid = -102:7:66;
   source.zgrid =  -41:7:71;
+  source.transform = eye(4);      % FIXME the transformation matrix should be assigned properly
 else
   error('unsupported LORETA format');
 end
 
-source.transform = eye(4);      % FIXME the transformation matrix should be assigned properly
+
 source.inside  = find(lorind ~= lorind(1));  % first voxel is outside
 source.outside = find(lorind == lorind(1));  % first voxel is outside
 

@@ -207,7 +207,10 @@ if needhdr
   %EDF.AS.bi=bi;
   EDF.AS.IDX2=idx2;
   %EDF.AS.IDX3=idx3;
-
+  
+  % close the file
+  fclose(EDF.FILE.FID);
+  
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % convert the header to Fieldtrip-style
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

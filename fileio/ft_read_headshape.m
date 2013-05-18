@@ -82,11 +82,19 @@ if iscell(filename)
     catch
       tmpsulc = [];
     end
+    try,
+      tmpcurv = read_curv(fullfile(path, [name,'.curv']));
+    catch
+      tmpcurv = [];
+    end
     
     if i==1,
       shape = tmpshape;
       if ~isempty(tmpsulc)
         shape.sulc = tmpsulc;
+      end
+      if ~isempty(tmpcurv)
+        shape.curv = tmpcurv;
       end
     else
       tmpshape  = ft_convert_units(tmpshape, shape.unit);
@@ -101,6 +109,9 @@ if iscell(filename)
       end
       if ~isempty(tmpsulc)
         shape.sulc = cat(1, shape.sulc, tmpsulc);
+      end
+      if ~isempty(tmpcurv)
+        shape.curv = cat(1, shape.curv, tmpcurv);
       end
     end
   end

@@ -587,25 +587,33 @@ switch cfg.method
     
     tmpcfg             = [];
     tmpcfg.method      = 'singleshell';
-    tnocfg.numvertices = 20000;
+    tmpcfg.numvertices = 20000;
     scalp           = ft_prepare_headmodel(tmpcfg, seg);
     scalp           = ft_convert_units(scalp, 'mm');
     
     if ~isfield(cfg, 'weights')
       % weight the points with z-coordinate more than the rest. These are the
       % likely points that belong to the nose and eye rims
-      weights = ones(size(shape.pnt,1),1);
-      weights(shape.pnt(:,3)<0) = 100; % this value seems to work
+      w = ones(size(shape.pnt,1),1);
+      w(shape.pnt(:,3)<0) = 100; % this value seems to work
     else
-      weights = cfg.weights(:);
-      if numel(weights)~=size(shape.pnt,1),
+      w = cfg.weights(:);
+      if numel(w)~=size(shape.pnt,1),
         error('number of weights should be equal to the number of points in the headshape');
       end
     end
     
+    % the icp function wants this as a function handle.
+    weights = @(x)assignweights(x,w);
+    
     % construct the coregistration matrix
-    [R, t, corr, D, data2] = icp2(scalp.bnd.pnt', shape.pnt', 20, [], weights); % icp2 is a helper function implementing the iterative closest point algorithm
-    transform              = inv([R t;0 0 0 1]);
+    % [R, t, corr, D, data2] = icp2(scalp.bnd.pnt', shape.pnt', 20, [], weights); % icp2 is a helper function implementing the iterative closest point algorithm
+    nrm         = normals(scalp.bnd.pnt, scalp.bnd.tri, 'vertex');
+    [R, t, err] = icp(scalp.bnd.pnt', shape.pnt', 50, 'Minimize', 'plane', 'Normals', nrm', 'ReturnAll', true, 'Weight', weights, 'Extrapolation', true);
+    [m,ix]      = min(err);
+    R           = R(:,:,ix);
+    t           = t(:,:,ix);
+    transform   = inv([R t;0 0 0 1]);
     
     % warp the extracted scalp points to the new positions
     scalp.bnd.pnt          = warp_apply(transform, scalp.bnd.pnt);
@@ -1080,3 +1088,10 @@ if det(R1)<0
   R1 = V*B*U';
 end
 t1 = mm - R1*ms;
+
+
+%-------------------------------------------------------
+function y = assignweights(x, w)
+
+% x is an indexing vector with the same number of arguments as w
+y = w(:)';

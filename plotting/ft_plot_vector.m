@@ -144,6 +144,11 @@ end
 if ischar(color) && ~strcmp(color, 'none')
   % it should be a column array
   color = color(:);
+  
+  if numel(color) > nline
+    % more colors specified than lines, just take the first nline
+    color = color(1:nline);
+  end
 end
 
 if strcmp(highlightstyle, 'difference') && isempty(highlight)

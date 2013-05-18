@@ -1,4 +1,4 @@
-function test_tutorial_connectivity3
+function test_tutorial_connectivity3(datadir)
 
 % TEST test_tutorial_connectivity3
 % TEST ft_timelockanalysis ft_sourceanalysis ft_connectivityanalysis
@@ -12,14 +12,22 @@ ft_default.feedback = 'no';
 ft_default.checkconfig = 'loose';
 
 % this is where the data should be located
-cd /home/common/matlab/fieldtrip/data/ftp/tutorial/connectivity
+if nargin==0
+  if ispc
+    datadir = 'H:';
+  else
+    datadir = '/home';
+  end
+  
+  datadir = fullfile(datadir,'common', 'matlab', 'fieldtrip', 'data', 'ftp', 'tutorial', 'connectivity');
+end
+load(fullfile(datadir, 'source.mat'));
 
-load source
 
 [maxval, maxindx] = max(source.avg.coh);
 maxpos = source.pos(maxindx,:)
 
-load data
+load(fullfile(datadir,'data.mat'));
 
 %% compute the beamformer filter
 cfg                   = [];
@@ -31,7 +39,7 @@ timelock              = ft_timelockanalysis(cfg, data);
 
 cfg             = [];
 cfg.method      = 'lcmv';
-cfg.hdmfile     = 'SubjectCMC.hdm';
+cfg.hdmfile     = fullfile(datadir,'SubjectCMC.hdm');
 cfg.grid.pos    = maxpos;
 cfg.keepfilter  = 'yes';
 source          = ft_sourceanalysis(cfg, timelock);

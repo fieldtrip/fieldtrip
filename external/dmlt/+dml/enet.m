@@ -193,7 +193,7 @@ classdef enet < dml.method
           else
             mp = mean(obj.performance);
             [maxp,midx] = max(mp);
-            ep = std(obj.performance) ./ size(obj.performance,1);
+            ep = std(obj.performance) ./ sqrt(size(obj.performance,1));
             b = find(mp >= (maxp - ep(midx)),1,'first');
             if isempty(b), b=1; end
           end

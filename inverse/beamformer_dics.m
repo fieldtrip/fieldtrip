@@ -19,6 +19,7 @@ function [dipout] = beamformer_dics(dip, grad, vol, dat, Cf, varargin)
 % The input dipole model consists of
 %   dipin.pos   positions for dipole, e.g. regular grid, Npositions x 3
 %   dipin.mom   dipole orientation (optional), 3 x Npositions
+% and can additionally contain things like a precomputed filter.
 %
 % Additional options should be specified in key-value pairs and can be
 %  'Pr'               = power of the external reference channel
@@ -95,6 +96,7 @@ keepfilter     = strcmp(keepfilter,    'yes');
 keepleadfield  = strcmp(keepleadfield, 'yes');
 projectnoise   = strcmp(projectnoise,  'yes');
 fixedori       = strcmp(fixedori,      'yes');
+dofeedback     = ~strcmp(feedback,     'none');
 % FIXME besides regular/complex lambda1, also implement a real version
 
 % default is to use the largest singular value of the csd matrix, see Gross 2001
@@ -133,23 +135,40 @@ elseif ~isfield(dip, 'inside') && isfield(dip, 'outside');
   dip.inside     = setdiff(1:size(dip.pos,1), dip.outside);
 end
 
+% flags to avoid calling isfield repeatedly in the loop over grid positions
+% (saves a lot of time)
+hasmom = 0;
+hasleadfield = 0;
+hasfilter = 0;
+hassubspace = 0;
+
 % select only the dipole positions inside the brain for scanning
 dip.origpos     = dip.pos;
 dip.originside  = dip.inside;
 dip.origoutside = dip.outside;
-if isfield(dip, 'mom')
+if hasmom
+  hasmom = 1;
   dip.mom = dip.mom(:,dip.inside);
 end
 if isfield(dip, 'leadfield')
-  fprintf('using precomputed leadfields\n');
+  hasleadfield = 1;
+  if dofeedback
+    fprintf('using precomputed leadfields\n');
+  end
   dip.leadfield = dip.leadfield(dip.inside);
 end
 if isfield(dip, 'filter')
-  fprintf('using precomputed filters\n');
+  hasfilter = 1;
+  if dofeedback
+    fprintf('using precomputed filters\n');
+  end
   dip.filter = dip.filter(dip.inside);
 end
 if isfield(dip, 'subspace')
-  fprintf('using subspace projection\n');
+  hassubspace = 1;
+  if dofeedback
+    fprintf('using subspace projection\n');
+  end
   dip.subspace = dip.subspace(dip.inside);
 end
 dip.pos     = dip.pos(dip.inside, :);
@@ -204,8 +223,10 @@ else
   invCf = pinv(Cf + lambda * eye(size(Cf)));
 end
 
-if isfield(dip, 'subspace')
-  fprintf('using source-specific subspace projection\n');
+if hassubspace
+  if dofeedback
+    fprintf('using source-specific subspace projection\n');
+  end
   % remember the original data prior to the voxel dependent subspace projection
   dat_pre_subspace = dat;
   Cf_pre_subspace = Cf;
@@ -214,7 +235,9 @@ if isfield(dip, 'subspace')
     Pr_pre_subspace = Pr;
   end
 elseif ~isempty(subspace)
-  fprintf('using data-specific subspace projection\n');
+  if dofeedback
+    fprintf('using data-specific subspace projection\n');
+  end
   % TODO implement an "eigenspace beamformer" as described in Sekihara et al. 2002 in HBM
   if numel(subspace)==1,
     % interpret this as a truncation of the eigenvalue-spectrum
@@ -257,29 +280,34 @@ elseif ~isempty(subspace)
 end
 
 % start the scanning with the proper metric
-ft_progress('init', feedback, 'scanning grid');
+if dofeedback
+  ft_progress('init', feedback, 'scanning grid');
+end
 switch submethod
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% dics_power
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case 'dics_power'
     % only compute power of a dipole at the grid positions
     for i=1:size(dip.pos,1)
-      if isfield(dip, 'leadfield') && isfield(dip, 'mom') && size(dip.mom, 1)==size(dip.leadfield{i}, 2)
+      if hasleadfield && hasmom && size(dip.mom, 1)==size(dip.leadfield{i}, 2)
         % reuse the leadfield that was previously computed and project
         lf = dip.leadfield{i} * dip.mom(:,i);
-      elseif  isfield(dip, 'leadfield') &&  isfield(dip, 'mom')
+      elseif  hasleadfield &&  hasmom
         % reuse the leadfield that was previously computed but don't project
         lf = dip.leadfield{i};
-      elseif  isfield(dip, 'leadfield') && ~isfield(dip, 'mom')
+      elseif  hasleadfield && ~hasmom
         % reuse the leadfield that was previously computed
         lf = dip.leadfield{i};    
-      elseif ~isfield(dip, 'leadfield') && isfield(dip, 'mom')
+      elseif ~hasleadfield && hasmom
         % compute the leadfield for a fixed dipole orientation
         lf = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,i);
       else
         % compute the leadfield
         lf = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
       end
-      if isfield(dip, 'subspace')
+      if hassubspace
         % do subspace projection of the forward model
         lf = dip.subspace{i} * lf;
         % the cross-spectral density becomes voxel dependent due to the projection
@@ -302,33 +330,47 @@ switch submethod
         % the shape it is obtained with the following code, the w*lf=I does not
         % hold.
       end
-      if fixedori 
-        % compute the leadfield for the optimal dipole orientation
-        % subsequently the leadfield for only that dipole orientation will
-        % be used for the final filter computation
-        if isfield(dip, 'filter') && size(dip.filter{i},1)~=1
-          filt = dip.filter{i};
-        else 
-          filt = pinv(lf' * invCf * lf) * lf' * invCf;
-        end
-        [u, s, v] = svd(real(filt * Cf * ctranspose(filt)));
-        maxpowori = u(:,1);
-        eta = s(1,1)./s(2,2);
-        lf  = lf * maxpowori;
-        dipout.ori{i} = maxpowori;
-        dipout.eta{i} = eta;
-        if ~isempty(subspace), lforig = lforig * maxpowori; end
-      end
-      if isfield(dip, 'filter')
-        % use the provided filter
+      
+      if hasfilter
+        % use precomputed filter
         filt = dip.filter{i};
       else
-        % construct the spatial filter
+        % compute filter
         filt = pinv(lf' * invCf * lf) * lf' * invCf;              % Gross eqn. 3, use PINV/SVD to cover rank deficient leadfield
       end
+      
+      if fixedori
+        % use single dipole orientation
+        if hasfilter && size(filt,1) == 1
+          % provided precomputed filter already projects to one
+          % orientation, nothing to be done here
+        else
+          % find out the optimal dipole orientation
+          [u, s, v] = svd(real(filt * Cf * ctranspose(filt)));
+          maxpowori = u(:,1);
+          eta = s(1,1)./s(2,2);
+          
+          % and compute the leadfield for that orientation
+          lf  = lf * maxpowori;
+          dipout.ori{i} = maxpowori;
+          dipout.eta{i} = eta;
+          if ~isempty(subspace), lforig = lforig * maxpowori; end
+          
+          % recompute the filter to only use that orientation
+          filt = pinv(lf' * invCf * lf) * lf' * invCf;
+        end
+      elseif hasfilter && size(filt,1) == 1
+        error('the precomputed filter you provided projects to a single dipole orientation, but you request fixedori=''no''; this is invalid. Either provide a filter with the three orientations retained, or specify fixedori=''yes''.');
+      end
+      
       csd = filt * Cf * ctranspose(filt);                         % Gross eqn. 4 and 5
       if powlambda1
-        dipout.pow(i) = lambda1(csd);                             % compute the power at the dipole location, Gross eqn. 8
+        if size(csd,1) == 1
+          % only 1 orientation, no need to do svd
+          dipout.pow(i) = real(csd);
+        else
+          dipout.pow(i) = lambda1(csd);                           % compute the power at the dipole location, Gross eqn. 8
+        end
       elseif powtrace
         dipout.pow(i) = real(trace(csd));                         % compute the power at the dipole location
       end
@@ -359,23 +401,28 @@ switch submethod
           dipout.leadfield{i} = lf;
         end
       end
-      ft_progress(i/size(dip.pos,1), 'scanning grid %d/%d\n', i, size(dip.pos,1));
+      if dofeedback
+        ft_progress(i/size(dip.pos,1), 'scanning grid %d/%d\n', i, size(dip.pos,1));
+      end
     end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% dics_refchan
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case 'dics_refchan'
     % compute cortico-muscular coherence, using reference cross spectral density
     for i=1:size(dip.pos,1)
-      if isfield(dip, 'leadfield')
+      if hasleadfield
         % reuse the leadfield that was previously computed
         lf = dip.leadfield{i};
-      elseif isfield(dip, 'mom')
+      elseif hasmom
         % compute the leadfield for a fixed dipole orientation
         lf = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize) .* dip.mom(i,:)';
       else
         % compute the leadfield
         lf = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize);
       end
-      if isfield(dip, 'subspace')
+      if hassubspace
         % do subspace projection of the forward model
         lforig = lf;
         lf = dip.subspace{i} * lf;
@@ -396,22 +443,35 @@ switch submethod
         % hold.
       end
       
-      if fixedori
-        % compute the leadfield for the optimal dipole orientation
-        % subsequently the leadfield for only that dipole orientation will be used for the final filter computation
-        filt = pinv(lf' * invCf * lf) * lf' * invCf;
-        [u, s, v] = svd(real(filt * Cf * ctranspose(filt)));
-        maxpowori = u(:,1);
-        lf  = lf * maxpowori;
-        dipout.ori{i} = maxpowori;
-      end
-      if isfield(dip, 'filter')
-        % use the provided filter
+      if hasfilter
+        % use precomputed filter
         filt = dip.filter{i};
       else
-        % construct the spatial filter
-        filt = pinv(lf' * invCf * lf) * lf' * invCf;                   % use PINV/SVD to cover rank deficient leadfield
+        % compute filter
+        filt = pinv(lf' * invCf * lf) * lf' * invCf;              % Gross eqn. 3, use PINV/SVD to cover rank deficient leadfield
       end
+      
+      if fixedori
+        % use single dipole orientation
+        if hasfilter && size(filt,1) == 1
+          % provided precomputed filter already projects to one
+          % orientation, nothing to be done here
+        else
+          % find out the optimal dipole orientation
+          [u, s, v] = svd(real(filt * Cf * ctranspose(filt)));
+          maxpowori = u(:,1);
+          
+          % compute the leadfield for that orientation
+          lf  = lf * maxpowori;
+          dipout.ori{i} = maxpowori;
+          
+          % recompute the filter to only use that orientation
+          filt = pinv(lf' * invCf * lf) * lf' * invCf;
+        end
+      elseif hasfilter && size(filt,1) == 1
+        error('the precomputed filter you provided projects to a single dipole orientation, but you request fixedori=''no''; this is invalid. Either provide a filter with the three orientations retained, or specify fixedori=''yes''.');
+      end
+
       if powlambda1
         [pow, ori] = lambda1(filt * Cf * ctranspose(filt));            % compute the power and orientation at the dipole location, Gross eqn. 4, 5 and 8
       elseif powtrace
@@ -449,11 +509,16 @@ switch submethod
           dipout.leadfield{i} = lf;
         end
       end
-      ft_progress(i/size(dip.pos,1), 'scanning grid %d/%d\n', i, size(dip.pos,1));
+      if dofeedback
+        ft_progress(i/size(dip.pos,1), 'scanning grid %d/%d\n', i, size(dip.pos,1));
+      end
     end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% dics_refdip
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case 'dics_refdip'
-    if isfield(dip, 'subspace') || ~isempty(subspace)
+    if hassubspace || ~isempty(subspace)
       error('subspace projections are not supported for beaming cortico-cortical coherence');
     end
     if fixedori
@@ -469,17 +534,17 @@ switch submethod
       Pref = real(trace(filt1 * Cf * ctranspose(filt1)));  % compute the power at the first dipole location
     end
     for i=1:size(dip.pos,1)
-      if isfield(dip, 'leadfield')
+      if hasleadfield
         % reuse the leadfield that was previously computed
         lf2 = dip.leadfield{i};
-      elseif isfield(dip, 'mom')
+      elseif hasmom
         % compute the leadfield for a fixed dipole orientation
         lf2 = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize) .* dip.mom(i,:)';
       else
         % compute the leadfield
         lf2 = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize);
       end
-      if isfield(dip, 'filter')
+      if hasfilter
         % use the provided filter
         filt2 = dip.filter{i};
       else
@@ -515,12 +580,16 @@ switch submethod
       if keepleadfield
         dipout.leadfield{i} = lf2;
       end
-      ft_progress(i/size(dip.pos,1), 'scanning grid %d/%d\n', i, size(dip.pos,1));
+      if dofeedback
+        ft_progress(i/size(dip.pos,1), 'scanning grid %d/%d\n', i, size(dip.pos,1));
+      end
     end
 
 end % switch submethod
 
-ft_progress('close');
+if dofeedback
+  ft_progress('close');
+end
 
 dipout.inside  = dip.originside;
 dipout.outside = dip.origoutside;

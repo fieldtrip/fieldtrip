@@ -67,6 +67,8 @@ function [v,ftpath] = ft_version(cmd)
 %
 % $Id$
 
+persistent issvn;
+
 if nargin<1
   cmd = 'info';
 end
@@ -77,8 +79,10 @@ signaturefile = fullfile(ftpath, 'signature.md5');
 remotesignature = 'http://fieldtrip.fcdonders.nl/signature.md5';
 repository = 'http://fieldtrip.googlecode.com/svn/trunk/';
 
-% are we dealing with an SVN working copy of fieldtrip?
-issvn = isdir(fullfile(ftpath, '.svn'));
+if isempty(issvn)
+  % are we dealing with an SVN working copy of fieldtrip?
+  issvn = isdir(fullfile(ftpath, '.svn'));
+end
 
 switch cmd
 
