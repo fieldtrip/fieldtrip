@@ -83,6 +83,7 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 % Undocumented local options:
 % cfg.zlim/xparam (set to a specific frequency range or time range [zmax zmin] for an average
 % over the frequency/time bins for TFR data.  Use in conjunction with e.g. xparam = 'time', and cfg.parameter = 'powspctrm').
+% cfg.preproc
 
 % copyright (c) 2003-2006, ole jensen
 %
@@ -147,6 +148,7 @@ cfg.maskstyle       = ft_getopt(cfg, 'maskstyle',    'box');
 cfg.channel         = ft_getopt(cfg, 'channel',      'all');
 cfg.directionality  = ft_getopt(cfg, 'directionality',   []);
 cfg.figurename      = ft_getopt(cfg, 'figurename',       []);
+cfg.preproc         = ft_getopt(cfg, 'preproc', []);
 
 
 Ndata = numel(varargin);
@@ -203,6 +205,21 @@ if Ndata >1,
     error('input data are of different type; this is not supported');
   end
 end
+
+% ensure that the preproc specific options are located in the cfg.preproc substructure
+cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'});
+
+if ~isempty(cfg.preproc)
+  % preprocess the data, i.e. apply filtering, baselinecorrection, etc.
+  fprintf('applying preprocessing options\n');
+  if ~isfield(cfg.preproc, 'feedback')
+    cfg.preproc.feedback = cfg.interactive;
+  end
+  for i=1:Ndata
+    varargin{i} = ft_preprocessing(cfg.preproc, varargin{i});
+  end
+end
+
 dtype  = dtype{1};
 dimord = varargin{1}.dimord;
 dimtok = tokenize(dimord, '_');
