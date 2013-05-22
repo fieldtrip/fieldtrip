@@ -1,4 +1,24 @@
-# Configure fieldtrip path
+ # Copyright (C) 2013 Federico Raimondo
+ # Applied Artificial Intelligence Lab
+ # Computer Sciences Department 
+ # University of Buenos Aires, Argentina
+ #
+ # This file is part of Amp2ft
+ #
+ # Amp2ft is free software: you can redistribute it and/or modify
+ # it under the terms of the GNU General Public License as published by
+ # the Free Software Foundation, either version 3 of the License, or
+ # (at your option) any later version.
+ #
+ # Amp2ft is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+ # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ # GNU General Public License for more details.
+ # 
+ # You should have received a copy of the GNU General Public License
+ # along with Amp2ft.  If not, see <http://www.gnu.org/licenses/>.
+
+
 
 FIELDTRIP = ../../../..
 
