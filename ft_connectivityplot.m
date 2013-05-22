@@ -115,7 +115,8 @@ if isempty(cfg.zlim)
 end
 
 if (isfield(cfg, 'holdfig') && cfg.holdfig==0) || ~isfield(cfg, 'holdfig')
-  h = figure;hold on;
+  cla;
+  hold on;
 end
 
 for k = 1:nchan
