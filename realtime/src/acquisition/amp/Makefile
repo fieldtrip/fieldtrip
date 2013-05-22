@@ -59,17 +59,13 @@ ifeq "$(UNAME)" "Linux"
 	ifeq "$(MACHINE)" "i686"
 		LDFLAGS += -L$(FTBUFFER)/src
 		LDLIBS += -lbuffer -lpthread -ldl
-		BINDIR = $(FIELDTRIP)/realtime/bin/glnx89
+		BINDIR = $(FIELDTRIP)/realtime/bin/glnx86
     endif
     ifeq "$(MACHINE)" "x86_64"
 		LDFLAGS += -L$(FTBUFFER)/src
 		LDLIBS += -lbuffer -lpthread -ldl
 		BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
     endif
-	LDFLAGS += -L$(FTBUFFER)/src
-	LDLIBS += -lbuffer -lpthread -ldl
-	BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
-	BINDIR = .
 endif
 
 ifndef BINDIR
