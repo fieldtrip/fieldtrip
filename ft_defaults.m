@@ -71,7 +71,7 @@ end
 ftPath = fileparts(mfilename('fullpath')); % get path, strip away 'ft_defaults'
 ftPath = strrep(ftPath, '\', '\\');
 if isempty(regexp(path, [ftPath pathsep '|' ftPath '$'], 'once'))
-  warning('FieldTrip is not yet on your MATLAB path, adding %s', ftPath);
+  warning('FieldTrip is not yet on your MATLAB path, adding %s', strrep(ftPath, '\\', '\'));
   addpath(ftPath);
 end
 
