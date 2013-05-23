@@ -14,7 +14,8 @@
 #include <GL/glu.h>
 #endif
 
-#include <Fl/Fl.h>
+#include <FL/Fl.H>
+
 #include <Brain3dWindow.h>
 
 Brain3dWindow::Brain3dWindow(int X, int Y, int W, int H, const char *L) : Fl_Gl_Window(X,Y,W,H,L) {

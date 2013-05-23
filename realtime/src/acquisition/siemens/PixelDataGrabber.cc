@@ -4,9 +4,11 @@
  * Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
  */
-#include <PixelDataGrabber.h>
+
 #include <stdio.h>
 #include <math.h>
+
+#include <PixelDataGrabber.h>
 #include <FolderWatcher.h>
 
 PixelDataGrabber::PixelDataGrabber() : lastName(10) { // keep 10 file names for comparision

@@ -23,14 +23,17 @@ SUFFIX =
 WINONLY = 
 
 ifeq "$(PLATFORM)" "mingw32"
-   FLFLAGS = -IC:/msys/1.0/local/include 
-   LDFL = -mno-cygwin -lfltk -lole32 -luuid -lcomctl32 -lgdi32 -lwsock32
-   LDGL = -lfltk_gl -lopengl32 -lglu32 $(LDFL)
-   CFLAGS = -I$(FTBUFFER)/src -I$(FIELDTRIP)/realtime/src/pthreads-win32/include -I. -Wunused -Wall -pedantic
-   CXXFLAGS = $(CFLAGS) -I$(FTBUFFER)/cpp
-   LDFLAGS = pthreadGC2.dll $(FTBUFFER)/src/libbuffer.a -LC:/msys/1.0/local/lib -lws2_32 -lwinmm 
-   SUFFIX = .exe
-   WINONLY = gui_streamer.exe pixeldata_to_remote_buffer.exe 
+  FLFLAGS = -IC:/msys/1.0/local/include 
+  LDFL = -mno-cygwin -lfltk -lole32 -luuid -lcomctl32 -lgdi32 -lwsock32
+  LDGL = -lfltk_gl -lopengl32 -lglu32 $(LDFL)
+  CFLAGS = -I$(FTBUFFER)/src -I$(FIELDTRIP)/realtime/src/pthreads-win32/include -I. -Wunused -Wall -pedantic
+  CXXFLAGS = $(CFLAGS) -I$(FTBUFFER)/cpp
+  LDFLAGS = pthreadGC2.dll $(FTBUFFER)/src/libbuffer.a -LC:/msys/1.0/local/lib -lws2_32 -lwinmm 
+  SUFFIX = .exe
+  WINONLY = gui_streamer.exe pixeldata_to_remote_buffer.exe 
+  # make clean target work on windows:
+  fixpath = $(subst /,\,$1)
+  RM = del
 endif
 
 ifeq "$(UNAME)" "Darwin"
@@ -52,7 +55,12 @@ ifeq "$(UNAME)" "Darwin"
     endif
 endif
 
-all: nii_to_buffer$(SUFFIX) opengl_client$(SUFFIX) gui_buffer_client$(SUFFIX) $(WINONLY)
+TARGETS: nii_to_buffer$(SUFFIX) opengl_client$(SUFFIX) gui_buffer_client$(SUFFIX) $(WINONLY)
+
+all: $(TARGETS)
+
+clean:
+	$(RM) *.o $(call fixpath, $(TARGETS))
 
 ###############################################################################
 # Platform-independent C libraries / utilities
@@ -113,3 +121,4 @@ pixeldata_to_remote_buffer.o: pixeldata_to_remote_buffer.cc siemensap.h FolderWa
 
 FolderWatcher.o: FolderWatcher.cc FolderWatcher.h
 	$(CXX) -c FolderWatcher.cc $(CXXFLAGS)
+

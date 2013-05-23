@@ -4,8 +4,10 @@
  * Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
  */
+
 #include <stdio.h>
 #include <math.h>
+
 #include <PixelDataGrabber.h>
 
 int main(int argc, char *argv[]) {

@@ -5,6 +5,11 @@
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
  */
 
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+
 #include <platform.h>
 #if defined (PLATFORM_OSX)
 #include <OpenGL/gl.h>
@@ -14,16 +19,12 @@
 #include <GL/glu.h>
 #endif
 
-#include <Fl/Fl.h>
-#include <Fl/Fl_Gl_Window.h>
-#include <Fl/Fl_Value_Slider.h>
+#include <FL/Fl.H>
+#include <FL/Fl_Gl_Window.H>
+#include <FL/Fl_Value_Slider.H>
 
 #include <Brain3dWindow.h>
 
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
 #include <buffer.h>
 #include <siemensap.h>
 #include <SimpleStorage.h>

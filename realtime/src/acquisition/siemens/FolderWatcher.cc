@@ -4,6 +4,7 @@
  * Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
  */
+
 #include <FolderWatcher.h>
 
 FolderWatcher::FolderWatcher(const char *directory) : vecFilenames(0) {

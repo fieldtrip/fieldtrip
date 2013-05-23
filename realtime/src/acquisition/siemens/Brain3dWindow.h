@@ -7,9 +7,9 @@
 #ifndef __Brain3dWindow_h
 #define __Brain3dWindow_h
 
-#include <Fl/Fl_Gl_Window.h>
 #include <math.h>
 
+#include <FL/Fl_Gl_Window.H>
 
 struct LightProps {
    int active;
