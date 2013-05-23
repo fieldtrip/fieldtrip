@@ -100,7 +100,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble provenance
 
 % make sure figure window titles are labeled appropriately, pass this onto

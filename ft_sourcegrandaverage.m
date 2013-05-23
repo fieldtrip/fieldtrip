@@ -76,7 +76,7 @@ if 1,
   
   % do the general setup of the function
   ft_defaults
-  ft_preamble help
+  ft_preamble init
   ft_preamble provenance
   ft_preamble trackconfig
   ft_preamble debug
@@ -275,7 +275,7 @@ else
   
   % do the general setup of the function
   ft_defaults
-  ft_preamble help
+  ft_preamble init
   ft_preamble provenance
   ft_preamble trackconfig
   ft_preamble debug

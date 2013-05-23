@@ -169,7 +169,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble provenance
 
 % this is just a wrapper function around the common code that does all the hard work

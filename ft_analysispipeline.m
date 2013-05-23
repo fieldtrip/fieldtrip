@@ -63,7 +63,7 @@ if ~isfield(cfg, 'showcallinfo'), cfg.showcallinfo = 'no';   end
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble provenance
 ft_preamble trackconfig
 ft_preamble debug

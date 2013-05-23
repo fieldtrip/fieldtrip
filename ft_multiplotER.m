@@ -136,7 +136,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble debug
 ft_preamble loadvar    varargin
 ft_preamble provenance varargin

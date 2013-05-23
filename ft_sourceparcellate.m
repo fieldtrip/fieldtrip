@@ -49,7 +49,7 @@ function parcel = ft_sourceparcellate(cfg, source, parcellation)
 revision = '$Id$';
 
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble provenance
 ft_preamble trackconfig
 ft_preamble debug

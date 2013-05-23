@@ -23,6 +23,7 @@
 %
 % $Id$
 
+warning_once('-clear');
 if nargin==0
   stack = dbstack('-completenames');
   % stack(1) is this script
