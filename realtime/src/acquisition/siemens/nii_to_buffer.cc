@@ -10,6 +10,7 @@
 #include <FtBuffer.h>
 #include <vector>
 #include <string>
+#include <ctype.h>
 #include <stdlib.h>
 #ifdef WIN32
 #include <windows.h>
