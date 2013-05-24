@@ -11,7 +11,7 @@ function [freq] = ft_appendfreq(cfg, varargin)
 %
 %  cfg.parameter  = String. Specifies the name of the field to concatenate.
 %                   For example, to concatenate freq1.powspctrm,
-%                   freq2.powspecrum etc, use cft.parameter = 'powspctrm'.
+%                   freq2.powspctrm etc, use cft.parameter = 'powspctrm'.
 %
 % The configuration can optionally contain
 %  cfg.appenddim  = String. The dimension to concatenate over (default:
@@ -200,12 +200,84 @@ switch cfg.appenddim
       % FIXME append dof
     else
       freq.dimord = varargin{1}.dimord;
-      % FIXME append cumtapcnt cumsumcnt trialinfo dof
+      % FIXME append dof
+      % before append cumtapcnt cumsumcnt trialinfo check if there's a 
+      % subfield in each dataset. Append fields of different dataset might
+      % lead in empty and/or non-exinting fields in a particular dataset
+      hascumsumcnt = [];
+      hascumtapcnt = [];
+      hastrialinfo = [];
+      for i=1:Ndata
+        foivec{i} = varargin{i}.freq;%cgeck if the frequecies across datasets are equal  
+        if isfield(varargin{i},'cumsumcnt');
+          hascumsumcnt(end+1) = 1;
+        else
+          hascumsumcnt(end+1) = 0;
+        end
+        if isfield(varargin{i},'cumtapcnt');
+          hascumtapcnt(end+1) = 1;
+        else
+          hascumtapcnt(end+1) = 0;
+        end
+        if isfield(varargin{i},'trialinfo');
+          hastrialinfo(end+1) = 1;
+        else
+          hastrialinfo(end+1) = 0;
+        end
+      end
+      
+      % screen concatenable fields
+      if ~isequal(foivec{:});
+        error('the freq fields of the input data structures are not equal');
+      else
+        freq.freq=foivec{1};
+      end
+      if ~sum(hascumsumcnt)==0 && ~(sum(hascumsumcnt)==Ndata);
+        error('the cumsumcnt fields of the input data structures are not equal');
+      else
+        iscumsumcnt=unique(hascumsumcnt);
+      end
+      if ~sum(hascumtapcnt)==0 && ~(sum(hascumtapcnt)==Ndata);
+        error('the cumtapcnt fields of the input data structures are not equal');
+      else
+        iscumtapcnt=unique(hascumtapcnt);
+      end
+      if ~sum(hastrialinfo)==0 && ~(sum(hastrialinfo)==Ndata);
+        error('the trialinfo fields of the input data structures are not equal');
+      else
+        istrialinfo=unique(hastrialinfo);
+      end
+      
+      % concatenating fields
+      for i=1:Ndata;
+        if iscumsumcnt;
+          cumsumcnt{i}=varargin{i}.cumsumcnt;
+        end
+        if iscumtapcnt;
+          cumtapcnt{i}=varargin{i}.cumtapcnt;
+        end
+        if istrialinfo;
+          trialinfo{i}=varargin{i}.trialinfo;
+        end
+      end
     end
     
     % fill in the rest of the descriptive fields
+    if iscumsumcnt;
+      freq.cumsumcnt = cat(catdim,cumsumcnt{:});
+      clear cumsumcnt;
+    end
+    if iscumtapcnt;
+      freq.cumtapcnt = cat(catdim,cumtapcnt{:});
+      clear cumtapcnt;
+    end
+    if istrialinfo;
+      freq.trialinfo = cat(catdim,trialinfo{:});
+      clear trialinfo;
+    end
+    
     freq.label = varargin{1}.label;
-    freq.freq  = varargin{1}.freq;
+%     freq.freq  = varargin{1}.freq;
     if isfield(varargin{1}, 'time'), freq.time = varargin{1}.time; end
     
   case 'chan'
