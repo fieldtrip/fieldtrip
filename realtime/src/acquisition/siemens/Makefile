@@ -23,17 +23,17 @@ SUFFIX =
 WINONLY = 
 
 ifeq "$(PLATFORM)" "mingw32"
-  FLFLAGS = -IC:/msys/1.0/local/include 
-  LDFL = -mno-cygwin -lfltk -lole32 -luuid -lcomctl32 -lgdi32 -lwsock32
-  LDGL = -lfltk_gl -lopengl32 -lglu32 $(LDFL)
-  CFLAGS = -I$(FTBUFFER)/src -I$(FIELDTRIP)/realtime/src/pthreads-win32/include -I. -Wunused -Wall -pedantic
-  CXXFLAGS = $(CFLAGS) -I$(FTBUFFER)/cpp
-  LDFLAGS = pthreadGC2.dll $(FTBUFFER)/src/libbuffer.a -LC:/msys/1.0/local/lib -lws2_32 -lwinmm 
+  FLFLAGS += -IC:/MinGW/msys/1.0/local/include 
+  LDFL += -mno-cygwin -lfltk -lole32 -luuid -lcomctl32 -lgdi32 -lwsock32
+  LDGL += -lfltk_gl -lopengl32 -lglu32 $(LDFL)
+  CFLAGS += -I$(FTBUFFER)/src -I$(FIELDTRIP)/realtime/src/external/pthreads-win32/include -I. -Wunused -Wall -pedantic
+  CXXFLAGS += 
+  LDFLAGS = $(FTBUFFER)/src/libbuffer.a $(FIELDTRIP)/realtime/src/external/pthreads-win32/lib/pthreadGC2.dll -LC:/MinGW/msys/1.0/local/lib -lws2_32 -lwinmm 
   SUFFIX = .exe
   WINONLY = gui_streamer.exe pixeldata_to_remote_buffer.exe 
   # make clean target work on windows:
   fixpath = $(subst /,\,$1)
-  RM = del
+  RM = rm -f
 endif
 
 ifeq "$(UNAME)" "Darwin"
