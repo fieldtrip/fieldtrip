@@ -30,7 +30,7 @@ function freq = ft_datatype_freq(freq, varargin)
 %   - label, dimord, freq
 %
 % Optional fields:
-%   - powspctrm, fouriesspctrm, csdspctrm, cohspctrm, time, labelcmb, grad, elec
+%   - powspctrm, fouriesspctrm, csdspctrm, cohspctrm, time, labelcmb, grad, elec, cumsumcnt, cumtapcnt, trialinfo 
 %
 % Deprecated fields:
 %   - <none>
