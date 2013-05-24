@@ -1,19 +1,12 @@
 function [ws warned] = warning_once(varargin)
 %
-% WARNING_ONCE will throw a warning for every unique point in the
-% stacktrace only, e.g. in a for-loop a warning is thrown only once.
-%
 % Use as one of the following
 %   warning_once(string)
-%   warning_once(id, string)
-% Alternatively, you can use warning_once using a timeout
 %   warning_once(string, timeout)
+%   warning_once(id, string)
 %   warning_once(id, string, timeout)
 % where timeout should be inf if you don't want to see the warning ever
-% again.
-%
-% Use as warning_once('-clear') to clear old warnings from the current
-% stack
+% again. The default timeout value is 60 seconds.
 %
 % It can be used instead of the MATLAB built-in function WARNING, thus as
 %   s = warning_once(...)
@@ -32,10 +25,8 @@ function [ws warned] = warning_once(varargin)
 %   warning_once('the value is %d', 10)
 % instead you should do
 %   warning_once(sprintf('the value is %d', 10))
-%
 
 % Copyright (C) 2012, Robert Oostenveld
-% Copyright (C) 2013, Robert Oostenveld, Jörn M. Horschig
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -55,7 +46,7 @@ function [ws warned] = warning_once(varargin)
 %
 % $Id$
 
-global ft_stopwatch_warnings ft_previous_warnings
+persistent stopwatch previous
 
 if nargin < 1
   error('You need to specify at least a warning message');
@@ -64,12 +55,6 @@ end
 warned = false;
 if isstruct(varargin{1})
   warning(varargin{1});
-  return;
-end
-
-if nargin==1 && ischar(varargin{1}) && strcmp('-clear', varargin{1})
-  [fname ft_previous_warnings] = fieldnameFromStack(ft_previous_warnings);
-  ft_previous_warnings = rmsubfield(ft_previous_warnings, fname);
   return;
 end
 
@@ -94,14 +79,14 @@ elseif nargin==2 && ~isnumeric(varargin{2})
   % calling syntax (id, msg)
   
   warningArgs = varargin(1:2);
-  timeout = inf;
+  timeout = 60;
   fname = [warningArgs{1} '_' warningArgs{2}];
   
 elseif nargin==1
   % calling syntax (msg)
   
   warningArgs = varargin(1);
-  timeout = inf; % default timeout in seconds
+  timeout = 60; % default timeout in seconds
   fname = [warningArgs{1}];
   
 end
@@ -110,44 +95,35 @@ if isempty(timeout)
   error('Timeout ill-specified');
 end
 
-if isempty(ft_stopwatch_warnings)
-  ft_stopwatch_warnings= tic;
+if isempty(stopwatch)
+  stopwatch = tic;
 end
-if isempty(ft_previous_warnings)
-  ft_previous_warnings = struct;
-end
-
-now = toc(ft_stopwatch_warnings); % measure time since first function call
-if timeout ~= inf
-  fname = decomma(fixname(fname)); % make a nice string that is allowed as structure fieldname
-  if length(fname) > 63 % MATLAB max name
-    fname = fname(1:63);
-  end
-else
-  % here, we create the fieldname functionA.functionB.functionC... 
-  [fname ft_previous_warnings line] = fieldnameFromStack(ft_previous_warnings);
-  % and add the line number to make this unique for the last function
-  fname = horzcat(fname, line);
+if isempty(previous)
+  previous = struct;
 end
 
-if ~issubfield(ft_previous_warnings, fname) || ...
-    (issubfield(ft_previous_warnings, fname) && now>eval(['ft_previous_warnings.' fname '.timeout']))
+now = toc(stopwatch); % measure time since first function call
+fname = decomma(fixname(fname)); % make a nice string that is allowed as structure fieldname
 
-  % create or reset field
-  evalc(['ft_previous_warnings.' fname ' = []']);
-    
+if length(fname) > 63 % MATLAB max name
+  fname = fname(1:63);
+end
+
+if ~isfield(previous, fname) || ...
+    (isfield(previous, fname) && now>previous.(fname).timeout)
+  
   % warning never given before or timed out
   ws = warning(warningArgs{:});
-  evalc(['ft_previous_warnings.' fname '.timeout = now+timeout']);
-  evalc(['ft_previous_warnings.' fname '.ws = ws']);
+  previous.(fname).timeout = now+timeout;
+  previous.(fname).ws = ws;
   warned = true;
+
 else
-
+  
   % the warning has been issued before, but has not timed out yet
-  ws = evalc(['ft_previous_warnings.' fname '.ws']);
-
+  ws = previous.(fname).ws;
+  
 end
-
 
 end % function
 
@@ -158,51 +134,3 @@ end % function
 function name = decomma(name)
 name(name==',')=[];
 end % function
-
-function [fname ft_previous_warnings line] = fieldnameFromStack(ft_previous_warnings)
-% stack(1) is this function, stack(2) is warning_once
-stack = dbstack('-completenames');
-i0 = 3;
-% ignore ft_preamble
-while strfind(stack(i0).name, 'ft_preamble')
-  i0=i0+1;
-end
-
-fname = horzcat(stack(end).name);
-if ~issubfield(ft_previous_warnings, stack(end).name)
-  ft_previous_warnings.(stack(end).name) = []; % iteratively build up structure fields
-end
-  
-
-for i=numel(stack)-1:-1:(i0)
-  fname = horzcat(fname, '.', horzcat(stack(i).name)); % , stack(i).file
-  if ~issubfield(ft_previous_warnings, fname) % iteratively build up structure fields
-    evalc(['ft_previous_warnings.' fname ' = []']);
-  end
-end
-
-% line of last function call
-line = ['.line', num2str(stack(i0).line)];
-end
-
-function outcome = issubfield(strct, fname)
-substrindx = strfind(fname, '.');
-if numel(substrindx) > 0
-  % separate the last fieldname from all former
-  outcome = eval(['isfield(strct.' fname(1:substrindx(end)-1) ', ''' fname(substrindx(end)+1:end) ''')']);
-else
-  % there is only one fieldname
-  outcome = isfield(strct, fname);
-end
-end
-
-function strct = rmsubfield(strct, fname)
-substrindx = strfind(fname, '.');
-if numel(substrindx) > 0
-  % separate the last fieldname from all former
-  strct = eval(['rmfield(strct.' fname(1:substrindx(end)-1) ', ''' fname(substrindx(end)+1:end) ''')']);
-else
-  % there is only one fieldname
-  strct = rmfield(strct, fname);
-end
-end
