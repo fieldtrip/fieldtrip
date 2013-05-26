@@ -30,6 +30,8 @@ function ft_write_headshape(filename, bnd, varargin)
 %   'stl'       STereoLithography file format, for use with CAD and generic 3D mesh editing programs
 %   'vtk'       Visualization ToolKit file format, for use with Paraview
 %   'ply'       Stanford Polygon file format, for use with Paraview or Meshlab
+%   'freesurfer' Freesurfer surf-file format, using write_surf from
+%   Freesurfer
 %
 % See also FT_READ_HEADSHAPE
 
@@ -171,7 +173,11 @@ switch fileformat
     end
     tmp = gifti(tmp);
     save(tmp, filename);
-    
+  
+  case 'freesurfer'
+    ft_hastoolbox('freesurfer', 1);
+    write_surf(filename, bnd.pnt, bnd.tri);
+ 
   case []
     error('you must specify the output format');
     
