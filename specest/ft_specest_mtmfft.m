@@ -228,7 +228,12 @@ if ~(strcmp(taper,'dpss') && numel(tapsmofrq)>1) % ariable number of slepian tap
   spectrum = cell(ntaper(1),1);
   for itap = 1:ntaper(1)
     %dum = transpose(fft(transpose(ft_preproc_padding(dat .* repmat(tap(itap,:),[nchan, 1]), padtype, 0, postpad)))); % double explicit transpose to speedup fft    
-    dum = transpose(fft(transpose(ft_preproc_padding(bsxfun(@times,dat,tap(itap,:)), padtype, 0, postpad)))); % double explicit transpose to speedup fft
+    %dum = transpose(fft(transpose(ft_preproc_padding(bsxfun(@times,dat,tap(itap,:)), padtype, 0, postpad)))); % double explicit transpose to speedup fft
+    
+    % in fact double explicit transpose (see above) is slower than using the dim
+    % argument for fft (eelspa, 28 may 2013)
+    dum = fft(ft_preproc_padding(bsxfun(@times,dat,tap(itap,:)), padtype, 0, postpad),[],2);
+    
     dum = dum(:,freqboi);
     % phase-shift according to above angles
     if timedelay ~= 0
