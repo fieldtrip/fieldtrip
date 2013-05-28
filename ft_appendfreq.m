@@ -201,14 +201,14 @@ switch cfg.appenddim
     else
       freq.dimord = varargin{1}.dimord;
       % FIXME append dof
-      % before append cumtapcnt cumsumcnt trialinfo check if there's a 
+      % before append cumtapcnt cumsumcnt trialinfo check if there's a
       % subfield in each dataset. Append fields of different dataset might
       % lead in empty and/or non-exinting fields in a particular dataset
       hascumsumcnt = [];
       hascumtapcnt = [];
       hastrialinfo = [];
       for i=1:Ndata
-        foivec{i} = varargin{i}.freq;%cgeck if the frequecies across datasets are equal  
+        foivec{i} = varargin{i}.freq;%cgeck if the frequecies across datasets are equal
         if isfield(varargin{i},'cumsumcnt');
           hascumsumcnt(end+1) = 1;
         else
@@ -260,22 +260,22 @@ switch cfg.appenddim
           trialinfo{i}=varargin{i}.trialinfo;
         end
       end
+      
+      % fill in the rest of the descriptive fields
+      if iscumsumcnt;
+        freq.cumsumcnt = cat(catdim,cumsumcnt{:});
+        clear cumsumcnt;
+      end
+      if iscumtapcnt;
+        freq.cumtapcnt = cat(catdim,cumtapcnt{:});
+        clear cumtapcnt;
+      end
+      if istrialinfo;
+        freq.trialinfo = cat(catdim,trialinfo{:});
+        clear trialinfo;
+      end
     end
-    
-    % fill in the rest of the descriptive fields
-    if iscumsumcnt;
-      freq.cumsumcnt = cat(catdim,cumsumcnt{:});
-      clear cumsumcnt;
-    end
-    if iscumtapcnt;
-      freq.cumtapcnt = cat(catdim,cumtapcnt{:});
-      clear cumtapcnt;
-    end
-    if istrialinfo;
-      freq.trialinfo = cat(catdim,trialinfo{:});
-      clear trialinfo;
-    end
-    
+
     freq.label = varargin{1}.label;
 %     freq.freq  = varargin{1}.freq;
     if isfield(varargin{1}, 'time'), freq.time = varargin{1}.time; end
