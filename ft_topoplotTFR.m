@@ -198,18 +198,6 @@ cfg = rmfield(cfg, 'funcname');
 ft_postamble provenance
 ft_postamble previous varargin
 
-% add a menu to the figure
-% ftmenu = uicontextmenu; set(gcf, 'uicontextmenu', ftmenu)
-if isempty(strfind(get(gcf, 'Tag'), 'ft-menushowing'))
-  ftmenu = uimenu(gcf, 'Label', 'FieldTrip');
-  uimenu(ftmenu, 'Label', 'Show pipeline',  'Callback', {@menu_pipeline, cfg});
-  uimenu(ftmenu, 'Label', 'About',  'Callback', @menu_about);
-  
-  % mark the figure so that we don't add multiple menus to the same (in the
-  % case of subplots)
-  set(gcf, 'Tag', [get(gcf, 'Tag') ',ft-menushowing']);
-end
-
 if ~nargout
   clear cfg
 end
