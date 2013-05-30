@@ -84,6 +84,8 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 %                            of the input data (see below).
 %   cfg.layout             = specify the channel layout for plotting using one of
 %                            the supported ways (see below).
+%   cfg.interpolatenan     = string 'yes', 'no' (default = 'yes')
+%                            interpolate over channels containing NaNs 
 %
 % For the plotting of directional connectivity data the cfg.directionality
 % option determines what is plotted. The default value and the supported

@@ -748,7 +748,11 @@ end % for icell
 % For Markers (all channels)
 if ~strcmp(cfg.marker,'off')
   channelsToMark = 1:length(data.label);
-  channelsNotMark = union(find(nanInds),highlightchansel);
+  if strcmp(cfg.interpolatenan,'no')
+    channelsNotMark = highlightchansel;
+  else
+    channelsNotMark = union(find(isnan(dat)),highlightchansel);
+  end
   channelsToMark(channelsNotMark) = [];
   [dum labelindex] = match_str(ft_channelselection(channelsToMark, data.label),lay.label);
   templay.pos      = lay.pos(labelindex,:);
