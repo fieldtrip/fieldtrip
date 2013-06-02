@@ -237,8 +237,8 @@ elseif ismeg
           [dum, coilindex] = max(abs(sens.tra(:,i)));
         end
         
-        coillabel = sens.label{coilindex};                    % what is the label of this channel
-        chanindex = strmatch(coillabel, vol.label, 'exact');  % what is the index of this channel in the list of local spheres
+        coillabel = sens.label{coilindex};               % what is the label of this channel
+        chanindex = find(strcmp(coillabel, vol.label));  % what is the index of this channel in the list of local spheres
         localspheres.r(i,:) = vol.r(chanindex);
         localspheres.o(i,:) = vol.o(chanindex,:);
       end
