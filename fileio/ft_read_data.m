@@ -654,11 +654,11 @@ switch dataformat
     % this function as 'egi_mff_v2'.
     
     % check if requested data contains multiple epochs. If so, give error
-    if isfield(hdr.orig.xml,'epoch') && length(hdr.orig.xml.epoch) > 1
-      data_in_epoch = zeros(1,length(hdr.orig.xml.epoch));
-      for iEpoch = 1:length(hdr.orig.xml.epoch)
-        begsamp_epoch = round(str2double(hdr.orig.xml.epoch(iEpoch).epoch.beginTime)./1000./hdr.Fs);
-        endsamp_epoch = round(str2double(hdr.orig.xml.epoch(iEpoch).epoch.endTime)./1000./hdr.Fs);
+    if isfield(hdr.orig.xml,'epochs') && length(hdr.orig.xml.epochs) > 1
+      data_in_epoch = zeros(1,length(hdr.orig.xml.epochs));
+      for iEpoch = 1:length(hdr.orig.xml.epochs)
+        begsamp_epoch = round(str2double(hdr.orig.xml.epochs(iEpoch).epoch.beginTime)./1000./hdr.Fs);
+        endsamp_epoch = round(str2double(hdr.orig.xml.epochs(iEpoch).epoch.endTime)./1000./hdr.Fs);
         data_in_epoch(iEpoch) = length(intersect(begsamp_epoch:endsamp_epoch,begsample:endsample));
       end
       if sum(data_in_epoch>1) > 1
