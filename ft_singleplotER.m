@@ -357,13 +357,13 @@ if (isfull || haslabelcmb) && isfield(varargin{1}, cfg.parameter)
     if ~isfull,
       % convert 2-dimensional channel matrix to a single dimension:
       if isempty(cfg.directionality)
-        sel1 = strmatch(cfg.refchannel, varargin{i}.labelcmb(:,2), 'exact');
-        sel2 = strmatch(cfg.refchannel, varargin{i}.labelcmb(:,1), 'exact');
+        sel1 = find(strcmp(cfg.refchannel, varargin{i}.labelcmb(:,2)));
+        sel2 = find(strcmp(cfg.refchannel, varargin{i}.labelcmb(:,1)));
       elseif strcmp(cfg.directionality, 'outflow')
         sel1 = [];
-        sel2 = strmatch(cfg.refchannel, varargin{i}.labelcmb(:,1), 'exact');
+        sel2 = find(strcmp(cfg.refchannel, varargin{i}.labelcmb(:,1)));
       elseif strcmp(cfg.directionality, 'inflow')
-        sel1 = strmatch(cfg.refchannel, varargin{i}.labelcmb(:,2), 'exact');
+        sel1 = find(strcmp(cfg.refchannel, varargin{i}.labelcmb(:,2)));
         sel2 = [];
       end
       fprintf('selected %d channels for %s\n', length(sel1)+length(sel2), cfg.parameter);

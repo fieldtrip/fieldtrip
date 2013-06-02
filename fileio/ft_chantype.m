@@ -343,10 +343,10 @@ elseif ft_senstype(input, 'bti')
   else
     tmplabel = label; % might work
   end
-  sel      = strmatch('unknown', type, 'exact');
+  sel      = find(strcmp('unknown', type));
   if ~isempty(sel)
-    type(sel)= ft_chantype(tmplabel(sel));
-    sel      = strmatch('unknown', type, 'exact');
+    type(sel) = ft_chantype(tmplabel(sel));
+    sel       = find(strcmp('unknown', type));
     if ~isempty(sel)
       type(sel(strncmp('E', label(sel), 1))) = {'eeg'};
     end
