@@ -1,12 +1,11 @@
 /*
+ * This is a small library for parsing Siemens Protocol information as produced by their pMrProt->fwrite command 
+ * 
  * Copyright (C) 2010, Stefan Klanke
  * Donders Institute for Donders Institute for Brain, Cognition and Behaviour,
  * Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
- */
-
-
-/** This is a small library for parsing Siemens Protocol information as produced by their pMrProt->fwrite command 
+ *
 */
  
 #ifndef _SIEMENSAP_H

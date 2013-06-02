@@ -4,16 +4,19 @@
  * Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
  */
-#include <Fl/Fl.h>
-#include <Fl/Fl_Window.h>
-#include <Fl/Fl_Input.h>
-#include <Fl/Fl_Int_Input.h>
-#include <Fl/Fl_Browser.h>
-#include <Fl/Fl_Button.h>
-#include <Fl/Fl_Box.h>
+
 #include <stdio.h>
-#include <PixelDataGrabber.h>
 #include <math.h>
+
+#include <PixelDataGrabber.h>
+
+#include <Fl/Fl.H>
+#include <Fl/Fl_Window.H>
+#include <Fl/Fl_Input.H>
+#include <Fl/Fl_Int_Input.H>
+#include <Fl/Fl_Browser.H>
+#include <Fl/Fl_Button.H>
+#include <Fl/Fl_Box.H>
 
 Fl_Window *window;
 Fl_Input *inpHostname, *inpDirectory, *inpUdpTargetHost;

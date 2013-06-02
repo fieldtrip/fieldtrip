@@ -84,6 +84,8 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 %                            of the input data (see below).
 %   cfg.layout             = specify the channel layout for plotting using one of
 %                            the supported ways (see below).
+%   cfg.interpolatenan     = string 'yes', 'no' (default = 'yes')
+%                            interpolate over channels containing NaNs 
 %
 % For the plotting of directional connectivity data the cfg.directionality
 % option determines what is plotted. The default value and the supported
@@ -145,7 +147,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble provenance
 
 % this is just a wrapper function around the common code that does all the hard work
@@ -173,18 +175,6 @@ cfg = rmfield(cfg, 'funcname');
 % this will replace the ft_topoplotTFR callinfo with that of ft_topoplotER
 ft_postamble provenance
 ft_postamble previous varargin
-
-% add a menu to the figure
-% ftmenu = uicontextmenu; set(gcf, 'uicontextmenu', ftmenu)
-if isempty(strfind(get(gcf, 'Tag'), 'ft-menushowing'))
-  ftmenu = uimenu(gcf, 'Label', 'FieldTrip');
-  uimenu(ftmenu, 'Label', 'Show pipeline',  'Callback', {@menu_pipeline, cfg});
-  uimenu(ftmenu, 'Label', 'About',  'Callback', @menu_about);
-  
-  % mark the figure so that we don't add multiple menus to the same (in the
-  % case of subplots)
-  set(gcf, 'Tag', [get(gcf, 'Tag') ',ft-menushowing']);
-end
 
 if ~nargout
   clear cfg

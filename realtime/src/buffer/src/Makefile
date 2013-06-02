@@ -17,7 +17,7 @@ ifeq "$(PLATFORM)" "mingw32"
 	INCPATH	+= -I. -I../../external/pthreads-win32/include
 	LIBPATH += -L. -L../../external/pthreads-win32/lib
 	LIBS += -lpthreadGC2
-	RM = del
+	RM = rm -f
 endif
 
 ifeq "$(PLATFORM)" "x86_64-w64-mingw32"

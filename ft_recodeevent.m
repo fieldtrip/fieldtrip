@@ -73,7 +73,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 
 % set the defaults
 if ~isfield(cfg, 'eventtype'),  cfg.eventtype   = [];             end

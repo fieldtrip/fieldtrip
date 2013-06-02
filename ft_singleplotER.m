@@ -83,6 +83,7 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 % Undocumented local options:
 % cfg.zlim/xparam (set to a specific frequency range or time range [zmax zmin] for an average
 % over the frequency/time bins for TFR data.  Use in conjunction with e.g. xparam = 'time', and cfg.parameter = 'powspctrm').
+% cfg.preproc
 
 % copyright (c) 2003-2006, ole jensen
 %
@@ -108,7 +109,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble provenance
 ft_preamble trackconfig
 ft_preamble debug
@@ -147,6 +148,7 @@ cfg.maskstyle       = ft_getopt(cfg, 'maskstyle',    'box');
 cfg.channel         = ft_getopt(cfg, 'channel',      'all');
 cfg.directionality  = ft_getopt(cfg, 'directionality',   []);
 cfg.figurename      = ft_getopt(cfg, 'figurename',       []);
+cfg.preproc         = ft_getopt(cfg, 'preproc', []);
 
 
 Ndata = numel(varargin);
@@ -203,6 +205,21 @@ if Ndata >1,
     error('input data are of different type; this is not supported');
   end
 end
+
+% ensure that the preproc specific options are located in the cfg.preproc substructure
+cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'});
+
+if ~isempty(cfg.preproc)
+  % preprocess the data, i.e. apply filtering, baselinecorrection, etc.
+  fprintf('applying preprocessing options\n');
+  if ~isfield(cfg.preproc, 'feedback')
+    cfg.preproc.feedback = cfg.interactive;
+  end
+  for i=1:Ndata
+    varargin{i} = ft_preprocessing(cfg.preproc, varargin{i});
+  end
+end
+
 dtype  = dtype{1};
 dimord = varargin{1}.dimord;
 dimtok = tokenize(dimord, '_');
@@ -608,17 +625,22 @@ if ~isempty(cfg.renderer)
   set(gcf, 'renderer', cfg.renderer)
 end
 
+% add a menu to the figure, but only if the current figure does not have
+% subplots
+% also, delete any possibly existing previous menu
+% this is safe because delete([]) does nothing
+delete(findobj(gcf, 'type', 'uimenu', 'label', 'FieldTrip'));
+if numel(findobj(gcf, 'type', 'axes')) <= 1
+  ftmenu = uimenu(gcf, 'Label', 'FieldTrip');
+  uimenu(ftmenu, 'Label', 'Show pipeline',  'Callback', {@menu_pipeline, cfg});
+  uimenu(ftmenu, 'Label', 'About',  'Callback', @menu_about);
+end
+
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
 ft_postamble provenance
 ft_postamble previous varargin
-
-% add a menu to the figure
-% ftmenu = uicontextmenu; set(gcf, 'uicontextmenu', ftmenu)
-ftmenu = uimenu(gcf, 'Label', 'FieldTrip');
-uimenu(ftmenu, 'Label', 'Show pipeline',  'Callback', {@menu_pipeline, cfg});
-uimenu(ftmenu, 'Label', 'About',  'Callback', @menu_about);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION which is called after selecting a time range

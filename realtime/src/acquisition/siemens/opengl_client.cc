@@ -4,21 +4,27 @@
  * Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
  */
-#include <Fl/Fl.h>
-
-#include <Fl/Fl_Gl_Window.h>
-
-#include <GL/gl.h>
-#include <GL/glu.h>
-
-#include <Brain3dWindow.h>
-
-#include <Fl/Fl_Value_Slider.h>
 
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+
+#include <platform.h>
+#if defined (PLATFORM_OSX)
+#include <OpenGL/gl.h>
+#include <OpenGL/glu.h>
+#else
+#include <GL/gl.h>
+#include <GL/glu.h>
+#endif
+
+#include <FL/Fl.H>
+#include <FL/Fl_Gl_Window.H>
+#include <FL/Fl_Value_Slider.H>
+
+#include <Brain3dWindow.h>
+
 #include <buffer.h>
 #include <siemensap.h>
 #include <SimpleStorage.h>

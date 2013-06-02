@@ -42,7 +42,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble provenance
 ft_preamble trackconfig
 ft_preamble debug
@@ -115,7 +115,8 @@ if isempty(cfg.zlim)
 end
 
 if (isfield(cfg, 'holdfig') && cfg.holdfig==0) || ~isfield(cfg, 'holdfig')
-  h = figure;hold on;
+  cla;
+  hold on;
 end
 
 for k = 1:nchan

@@ -7,9 +7,9 @@
 #ifndef __FolderWatcher_h
 #define __FolderWatcher_h
 
-#include <windows.h>
 #include <vector>
 #include <string>
+#include <windows.h>
 
 #define FILE_INFO_BUFFER_SIZE  20000
 

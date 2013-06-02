@@ -4,9 +4,7 @@
  * Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
  */
-#include <Fl/Fl.h>
-#include <Fl/Fl_Window.h>
-#include <Fl/fl_draw.h>
+
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,6 +12,10 @@
 #include <FtBuffer.h>
 #include <siemensap.h>
 #include <nifti1.h>
+
+#include <FL/Fl.H>
+#include <FL/Fl_Window.H>
+#include <FL/fl_draw.H>
 
 class PixelData2Image {
 	public:

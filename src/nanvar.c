@@ -90,9 +90,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         }
     } else if (classid==mxSINGLE_CLASS) {
         if (nrhs==1) {
-            biasterms = 0.0;
+            biasterms = 1.0;
         } else if (mxIsEmpty(prhs[1])) {
-            biasterms = 0.0;
+            biasterms = 1.0;
         } else if (mxGetScalar(prhs[1])==1) {
             biasterms = 0.0;
         } else if (mxGetScalar(prhs[1])==0) {
@@ -247,7 +247,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             sumis       = mxGetData(plhs[3]);
         }
 
-        if (inputi_p == NULL) {
+        if (inputi_ps == NULL) {
             /* compute running sum */
             for (i=0; i<numelin; i++) {
                 if (!isnan(inputr_ps[i])) {

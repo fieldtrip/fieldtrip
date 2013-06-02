@@ -4,9 +4,18 @@
  * Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
  */
-#include <Fl/Fl.h>
+
+#include <platform.h>
+#if defined (PLATFORM_OSX)
+#include <OpenGL/gl.h>
+#include <OpenGL/glu.h>
+#else
 #include <GL/gl.h>
 #include <GL/glu.h>
+#endif
+
+#include <FL/Fl.H>
+
 #include <Brain3dWindow.h>
 
 Brain3dWindow::Brain3dWindow(int X, int Y, int W, int H, const char *L) : Fl_Gl_Window(X,Y,W,H,L) {
