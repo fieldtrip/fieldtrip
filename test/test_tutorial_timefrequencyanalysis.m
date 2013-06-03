@@ -4,10 +4,15 @@ function test_tutorial_timefrequencyanalysis(datadir)
 % TEST ft_freqanalysis
 
 if nargin==0
-  datadir = '/home/common/matlab/fieldtrip/data/ftp/tutorial/timefrequencyanalysis';
+  if ispc
+    datadir = 'H:';
+  else
+    datadir = '/home';
+  end
+  load(fullfile(datadir, 'common', 'matlab', 'fieldtrip', 'data', 'ftp', 'tutorial', 'timefrequencyanalysis', 'dataFIC.mat'));
+else
+  load(fullfile(datadir, 'dataFIC.mat'));
 end
-
-load([datadir,filesep,'dataFIC.mat']);
 
 cfg              = [];
 cfg.output       = 'pow';
