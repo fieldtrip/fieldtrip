@@ -2,7 +2,7 @@ function [spectrum,freqoi,timeoi] = ft_specest_wavelet(dat, time, varargin)
 
 % FT_SPECEST_WAVELET performs time-frequency analysis on any time series trial
 % data using the 'wavelet method' based on Morlet wavelets, doing
-% convolution in the time domain by multiplaction in the frequency domain
+% convolution in the time domain by multiplication in the frequency domain
 %
 % Use as
 %   [spectrum,freqoi,timeoi] = specest_wavelet(dat,time...)
