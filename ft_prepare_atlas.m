@@ -614,7 +614,7 @@ elseif usewfu
       if ~ischar(tline), break, end
       % split into separate strings
       C = textscan(tline,'%s');
-      num = C{1}{3}; 
+      num = C{1}{1}; 
       str = C{1}{2};
       
       num = str2double(num);
