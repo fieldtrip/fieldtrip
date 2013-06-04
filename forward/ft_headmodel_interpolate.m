@@ -51,7 +51,14 @@ assert(ft_datatype(sens, 'sens'), 'the second input argument should be a sensor 
 
 % the file with the path but without the extension
 [p, f, x] = fileparts(filename);
-filename = fullfile(p, f);
+
+if isempty(p)
+    p = pwd;
+end
+
+res = mkdir(p, f);
+
+filename = fullfile(p, f, f);
 
 if isfield(grid, 'leadfield')
   % the input pre-computed leadfields reflect the output of FT_PREPARE_LEADFIELD
@@ -94,7 +101,7 @@ if isfield(grid, 'leadfield')
     lf = cat(4, lfx, lfy, lfz);
     vol.filename{i} = sprintf('%s_%s.nii', filename, sens.label{i});
     fprintf('writing single channel leadfield to %s\n', vol.filename{i})
-    ft_write_mri(vol.filename{i}, lf);
+    ft_write_mri(vol.filename{i}, lf, 'spmversion', 'SPM12');
   end
   
   filename = sprintf('%s.mat', filename);
@@ -104,7 +111,7 @@ if isfield(grid, 'leadfield')
 elseif isfield(grid, 'filename')
   % the input pre-computed leadfields reflect the output of FT_HEADMODEL_INTERPOLATE,
   % which should be re-interpolated on the channel level and then stored to disk as nifti files
-  ft_hastoolbox('spm8', 1);
+  ft_hastoolbox('spm8up', 1);
   
   inputvol = grid;
   
@@ -182,7 +189,7 @@ elseif isfield(grid, 'filename')
     end
     outputvol.filename{i} = sprintf('%s_%s.nii', filename, sens.label{i});
     fprintf('writing single channel leadfield to %s\n', outputvol.filename{i})
-    ft_write_mri(outputvol.filename{i}, dat, 'transform', outputvol.transform);
+    ft_write_mri(outputvol.filename{i}, dat, 'transform', outputvol.transform, 'spmversion', 'SPM12');
   end
   
   % update the volume conductor
