@@ -6,15 +6,9 @@ function test_tutorial_beamforming_extended
 
 
 
-if ispc
-  datadir = 'H:\common\matlab\fieldtrip\data\ftp\tutorial\sensor_analysis';
-  mridir  = 'H:\common\matlab\fieldtrip\data\ftp\tutorial\beamformer_extended';
-  templatedir  = 'H:/common/matlab/fieldtrip/template/sourcemodel';
-elseif isunix
-  datadir = '/home/common/matlab/fieldtrip/data/ftp/tutorial/sensor_analysis';
-  mridir = '/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer_extended';
-  templatedir  = '/home/common/matlab/fieldtrip/template/sourcemodel';
-end
+datadir = dccnfilename('/home/common/matlab/fieldtrip/data/ftp/tutorial/sensor_analysis');
+mridir = dccnfilename('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer_extended');
+templatedir  = dccnfilename('/home/common/matlab/fieldtrip/template/sourcemodel');
 
 load(fullfile(datadir, 'subjectK.mat'));
 
@@ -142,11 +136,8 @@ source_diff.pos = template.sourcemodel.pos;
 source_diff.dim = template.sourcemodel.dim;
 
 % note that the exact directory is user-specific
-if isunix
-  templatefile = '/home/common/matlab/fieldtrip/external/spm8/templates/T1.nii';
-elseif ispc
-  templatefile = 'H:\common\matlab\fieldtrip\external\spm8\templates/T1.nii';
-end
+templatefile = dccnfilename('/home/common/matlab/fieldtrip/external/spm8/templates/T1.nii');
+
 template_mri = ft_read_mri(templatefile);
 cfg              = [];
 cfg.voxelcoord   = 'no';
@@ -166,11 +157,8 @@ cfg.opacitymap    = 'rampup';
 ft_sourceplot(cfg,source_diff_int);
 
 cfg.method = 'ortho';
-if isunix
-  cfg.atlas           = '/home/common/matlab/spm8/toolbox/wfu_pickatlas/MNI_atlas_templates/aal_MNI_V4.img';
-elseif ispc
-  cfg.atlas           = 'H:/common/matlab/spm8/toolbox/wfu_pickatlas/MNI_atlas_templates/aal_MNI_V4.img';
-end
+cfg.atlas           = dccnfilename('/home/common/matlab/spm8/toolbox/wfu_pickatlas/MNI_atlas_templates/aal_MNI_V4.nii');
+
 ft_sourceplot(cfg,source_diff_int);
 
 cfg.method = 'surface';
@@ -212,11 +200,8 @@ source_coh_lft.dim = template.sourcemodel.dim;
 
 
 % note that the exact directory is user-specific
-if isunix
-  templatefile = '/home/common/matlab/fieldtrip/external/spm8/templates/T1.nii';
-elseif ispc
-  templatefile = 'H:\common\matlab\fieldtrip\external\spm8\templates/T1.nii';
-end
+templatefile = dccnfilename('/home/common/matlab/fieldtrip/external/spm8/templates/T1.nii');
+
 template_mri = ft_read_mri(templatefile);
 cfg              = [];
 cfg.voxelcoord   = 'no';
@@ -236,10 +221,8 @@ cfg.opacitylim    = [00 .15];
 
 cfg.maskparameter = cfg.funparameter;
 cfg.opacitymap    = 'rampup';  
-if isunix
-  cfg.atlas           = '/home/common/matlab/spm8/toolbox/wfu_pickatlas/MNI_atlas_templates/aal_MNI_V4.img';
-elseif ispc
-  cfg.atlas           = 'H:/common/matlab/spm8/toolbox/wfu_pickatlas/MNI_atlas_templates/aal_MNI_V4.img';
-end
+
+cfg.atlas           = dccnfilename('/home/common/matlab/spm8/toolbox/wfu_pickatlas/MNI_atlas_templates/aal_MNI_V4.nii');
+
 ft_sourceplot(cfg, source_coh_int);
 end
