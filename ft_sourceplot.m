@@ -886,8 +886,8 @@ elseif isequal(cfg.method,'surface')
     % FIXME this should partially be dealt with by ft_sourceinterpolate
     
     % read the triangulated cortical surface from file
-    tmp  = load(cfg.surffile, 'bnd');
-    surf = tmp.bnd;
+    surf  = ft_read_headshape(cfg.surffile);
+
     if isfield(surf, 'transform'),
       % compute the surface vertices in head coordinates
       surf.pnt = warp_apply(surf.transform, surf.pnt);
@@ -975,13 +975,16 @@ elseif isequal(cfg.method,'surface')
   end
   
   if ~isempty(cfg.surfinflated)
-    % read the inflated triangulated cortical surface from file
-    tmp = load(cfg.surfinflated, 'bnd');
-    surf = tmp.bnd;
-    if isfield(surf, 'transform'),
-      % compute the surface vertices in head coordinates
-      surf.pnt = warp_apply(surf.transform, surf.pnt);
-    end
+      if ~isstruct(cfg.surfinflated)
+          % read the inflated triangulated cortical surface from file
+          surf = ft_read_headshape(cfg.surfinflated);
+      else
+          surf = cfg.surfinflated;
+          if isfield(surf, 'transform'),
+              % compute the surface vertices in head coordinates
+              surf.pnt = warp_apply(surf.transform, surf.pnt);
+          end
+      end
   end
   
   %------do the plotting
