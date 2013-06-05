@@ -19,7 +19,7 @@ function [neighbours, cfg] = ft_prepare_neighbours(cfg, data)
 %   neighbours = ft_prepare_neighbours(cfg, data)
 %
 % The configuration can contain
-%   cfg.method        = 'distance', 'triangulation' or 'template' (default = 'distance')
+%   cfg.method        = 'distance', 'triangulation' or 'template' 
 %   cfg.neighbourdist = number, maximum distance between neighbouring sensors (only for 'distance')
 %   cfg.template      = name of the template file, e.g. CTF275_neighb.mat
 %   cfg.layout        = filename of the layout, see FT_PREPARE_LAYOUT
