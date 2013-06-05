@@ -81,12 +81,8 @@ if isequal(current_argin, previous_argin)
   return
 end
 
-% check whether input is a grad or elec array, also containing types
-% Note: currently, ft_datatype cannot detect several volumes, and cannot be used here for checking volumness
-issens = ft_datatype(vol,'grad') || ft_datatype(vol,'sens');
 
-
-if isfield(vol, 'type') && ~issens
+if isfield(vol, 'type') && ~(ft_datatype(vol,'grad') || ft_datatype(vol,'sens')) % grad and sens also contain .type fields 
   % preferably the structure specifies its own type
   type = vol.type;
   
