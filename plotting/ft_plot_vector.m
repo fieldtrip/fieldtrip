@@ -463,24 +463,20 @@ if ~isempty(axis) && ~strcmp(axis, 'no')
       error('invalid specification of the "axis" option')
   end
   
-  % determine where the original [0, 0] in the data is located in the scaled and shifted axes
-  x0 = interp1(hlim, hpos + [-width/2  width/2 ], 0, 'linear', 'extrap');
-  y0 = interp1(vlim, vpos + [-height/2 height/2], 0, 'linear', 'extrap');
   
   if xaxis
-    X = [hpos-width/2  hpos+width/2];
-    Y = [y0 y0];
-    ft_plot_line(X, Y);
-    % str = sprintf('%g', hlim(1)); ft_plot_text(X(1), Y(1), str);
-    % str = sprintf('%g', hlim(2)); ft_plot_text(X(2), Y(2), str);
+    % x-axis should touch 0,0
+    [dum minind] = min(abs(hlim));
+    xrange = hlim;
+    xrange(minind) = 0;
+    ft_plot_line(xrange, [0 0],'hpos',hpos,'vpos',vpos,'hlim',hlim,'vlim',vlim,'width',width,'height',height);
   end
-  
   if yaxis
-    X = [x0 x0];
-    Y = [vpos-height/2 vpos+height/2];
-    ft_plot_line(X, Y);
-    % str = sprintf('%g', vlim(1)); ft_plot_text(X(1), Y(1), str);
-    % str = sprintf('%g', vlim(2)); ft_plot_text(X(2), Y(2), str);
+    % y-axis should touch 0,0
+    [dum minind] = min(abs(vlim));
+    yrange = vlim;
+    yrange(minind) = 0;
+    ft_plot_line([0 0], yrange,'hpos',hpos,'vpos',vpos,'hlim',hlim,'vlim',vlim,'width',width,'height',height);
   end
 end
 
