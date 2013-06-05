@@ -1707,7 +1707,6 @@ if ntrial==1
   data.dimord = 'chan_time';
 else
   
-  %%% code below cause no issues with non-rational sampling rates or time-axis that end before t=0
   % code below tries to construct a general time-axis where samples of all trials can fall on
   % find earliest beginning and latest ending
   begtime = min(cellfun(@min,data.time));
@@ -1718,47 +1717,6 @@ else
   nsmp = round((endtime-begtime)*fsample) + 1; % numerical round-off issues should be dealt with by this round, as they will/should never cause an extra sample to appear
   % construct general time-axis
   time = linspace(begtime,endtime,nsmp);
-  %%%
-  
-  %%% code below has issues with non-rational sampling rates 
-  %   % code below tries to construct a general time-axis where samples of all trials can fall on
-  %   begtime = cellfun(@min,data.time);
-  %   endtime = cellfun(@max,data.time);
-  %   % this part is just about the number of samples, not about the time-axis
-  %   for i = 1:ntrial
-  %     time = data.time{i};
-  %     mint    = min([ 0, begtime(i)]);
-  %     maxt    = max([-max(abs(2*endtime)) * eps, endtime(i)]);
-  %
-  %     % extrapolate so that we get near 0
-  %     if (mint==0)
-  %       tmptime =  -1*(fliplr(-maxt:mean(diff(time)):-mint));
-  %     else
-  %       tmptime =  mint:mean(diff(time)):maxt;
-  %     end
-  %
-  %     ix(i) = sum(tmptime<0); % number of samples pre-zero
-  %     iy(i) = sum(tmptime>=0); % number of samples post-zero
-  %
-  %     % account for strictly positive or negative time-axes by removing those
-  %     % elements that are near 0 but should not be in the time-axis
-  %     if ix(i)==0
-  %       ix(i) = 1-nearest(tmptime, begtime(i));
-  %     end
-  %     if iy(i)==0
-  %       iy(i) = nearest(tmptime, endtime(i))-length(tmptime);
-  %     end
-  %   end
-  %
-  %   [mx,ix2] = max(ix);
-  %   [my,iy2] = max(iy);
-  %   nsmp = mx+my;
-  %   % create temporary time-axis
-  %   time = linspace(min(begtime),  max(endtime), nsmp);
-  %   % remove any time-points before 0 if not needed - see bug 1477
-  %   time(nearest(time, max(endtime))+1:end) = [];
-  %%%
-  
 
   % concatenate all trials
   tmptrial = nan(ntrial, nchan, length(time));
