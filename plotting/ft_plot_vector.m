@@ -466,16 +466,20 @@ if ~isempty(axis) && ~strcmp(axis, 'no')
   
   if xaxis
     % x-axis should touch 0,0
-    [dum minind] = min(abs(hlim));
     xrange = hlim;
-    xrange(minind) = 0;
+    if sign(xrange(1))==sign(xrange(2))
+      [dum minind] = min(abs(hlim));
+      xrange(minind) = 0;
+    end
     ft_plot_line(xrange, [0 0],'hpos',hpos,'vpos',vpos,'hlim',hlim,'vlim',vlim,'width',width,'height',height);
   end
   if yaxis
     % y-axis should touch 0,0
-    [dum minind] = min(abs(vlim));
     yrange = vlim;
-    yrange(minind) = 0;
+    if sign(yrange(1))==sign(yrange(2))
+      [dum minind] = min(abs(vlim));
+      yrange(minind) = 0;
+    end
     ft_plot_line([0 0], yrange,'hpos',hpos,'vpos',vpos,'hlim',hlim,'vlim',vlim,'width',width,'height',height);
   end
 end
