@@ -277,7 +277,7 @@ switch cfg.appenddim
     end
 
     freq.label = varargin{1}.label;
-%     freq.freq  = varargin{1}.freq;
+    freq.freq  = varargin{1}.freq;
     if isfield(varargin{1}, 'time'), freq.time = varargin{1}.time; end
     
   case 'chan'
