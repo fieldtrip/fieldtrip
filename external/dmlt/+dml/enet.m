@@ -108,7 +108,7 @@ classdef enet < dml.method
           
         elseif obj.lambda == 0 && strcmp(obj.family,'binomial')
           
-          obj.weights = -logist2(Y-1,[X ones(size(X,1),1)]);
+          obj.weights = logist2(Y-1,[X ones(size(X,1),1)]);
           
         elseif obj.lambda == 0 && strcmp(obj.family,'multinomial')
           
