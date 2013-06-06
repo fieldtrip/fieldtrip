@@ -27,7 +27,11 @@ for k = 1:numel(datainfo)
   load(fname);
   datanew = rmfield(datanew, 'cfg'); % these are per construction different if writeflag = 0;
   freq    = rmfield(freq,    'cfg');
-  assert(identical(freq, datanew,'reltol',eps*1e6));
+  
+  [ok,msg] = identical(freq, datanew,'reltol',eps*1e6);
+  if ~ok
+    error('stored and computed data not identical: %s', msg);
+  end
 end
 
 for k = 1:numel(datainfo)
@@ -41,7 +45,11 @@ for k = 1:numel(datainfo)
   load(fname);
   datanew = rmfield(datanew, 'cfg'); % these are per construction different if writeflag = 0;
   freq    = rmfield(freq,    'cfg');
-  assert(identical(freq, datanew,'reltol',eps*1e6));
+  
+  [ok,msg] = identical(freq, datanew,'reltol',eps*1e6);
+  if ~ok
+    error('stored and computed data not identical: %s', msg);
+  end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -87,6 +95,9 @@ end
 if ~exist('ft_freqanalysis') && exist('freqanalysis')
   eval('ft_freqanalysis = @freqanalysis;');
 end
+
+fprintf('testing mtmconvol with datatype=%s, output=%s, keeptrials=%s...\n',...
+  dataset.datatype, output, keeptrials);
 
 cfg            = [];
 cfg.method     = 'mtmconvol';
@@ -154,6 +165,9 @@ case 'yes'
 otherwise
   error('unexpected keeptrials');
 end
+
+fprintf('testing mtmfft with datatype=%s, output=%s, keeptrials=%s...\n',...
+  dataset.datatype, output, keeptrials);
 
 cfg            = [];
 cfg.method     = 'mtmfft';

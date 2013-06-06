@@ -270,7 +270,7 @@ switch dimord
         
   case 'tap_chan_freq_time' % default
     % compute fft, major speed increases are possible here, depending on which matlab is being used whether or not it helps, which mainly focuses on orientation of the to be fft'd matrix
-    datspectrum = transpose(fft(transpose(ft_preproc_padding(dat, padtype, 0, postpad)))); % double explicit transpose to speedup fft
+    datspectrum = fft(ft_preproc_padding(dat, padtype, 0, postpad), [], 2);
     spectrum = cell(max(ntaper), nfreqoi);
     for ifreqoi = 1:nfreqoi
       str = sprintf('frequency %d (%.2f Hz), %d tapers', ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
@@ -293,7 +293,7 @@ switch dimord
         if itap > ntaper(ifreqoi)
           spectrum{itap,ifreqoi} = complex(nan(nchan,ntimeboi));
         else                                
-          dum = fftshift(transpose(ifft(transpose(datspectrum .* repmat(wltspctrm{ifreqoi}(itap,:),[nchan 1])))),2); % double explicit transpose to speedup fft
+          dum = fftshift(ifft(datspectrum .* repmat(wltspctrm{ifreqoi}(itap,:),[nchan 1]), [], 2),2);
           tmp = complex(nan(nchan,ntimeboi));
           tmp(:,reqtimeboiind) = dum(:,reqtimeboi);
           tmp = tmp .* sqrt(2 ./ timwinsample(ifreqoi));
@@ -313,7 +313,7 @@ switch dimord
     end
     
     % start fft'ing
-    datspectrum = transpose(fft(transpose(ft_preproc_padding(dat, padtype, 0, postpad)))); % double explicit transpose to speedup fft
+    datspectrum = fft(ft_preproc_padding(dat, padtype, 0, postpad), [], 2);
     spectrum = complex(zeros([nchan ntimeboi sum(ntaper)]));
     for ifreqoi = 1:nfreqoi
       str = sprintf('frequency %d (%.2f Hz), %d tapers', ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
@@ -331,7 +331,7 @@ switch dimord
         reqtimeboi       = timeboi(reqtimeboiind);
         
         % compute datspectrum*wavelet, if there are reqtimeboi's that have data
-        dum = fftshift(transpose(ifft(transpose(datspectrum .* repmat(wltspctrm{ifreqoi}(itap,:),[nchan 1])))),2); % double explicit transpose to speedup fft
+        dum = fftshift(ifft(datspectrum .* repmat(wltspctrm{ifreqoi}(itap,:),[nchan 1]), [], 2),2);
         tmp = complex(nan(nchan,ntimeboi),nan(nchan,ntimeboi));
         tmp(:,reqtimeboiind) = dum(:,reqtimeboi);
         tmp = tmp .* sqrt(2 ./ timwinsample(ifreqoi));
@@ -353,6 +353,8 @@ previous_wltspctrm = wltspctrm;
 % % than this approach can benefit from the fact that the array can be precreated containing nans
 % % compute fft, major speed increases are possible here, depending on which matlab is being used whether or not it helps, which mainly focuses on orientation of the to be fft'd matrix
 % datspectrum = transpose(fft(transpose([dat repmat(postpad,[nchan, 1])]))); % double explicit transpose to speedup fft
+% % NOTE: double explicit transpose around fft is not faster than using fft
+% with dim argument (in fact, it is slower)
 % spectrum = complex(nan([max(ntaper) nchan nfreqoi ntimeboi]),nan([max(ntaper) nchan nfreqoi ntimeboi])); % assumes fixed number of tapers
 % for ifreqoi = 1:nfreqoi
 %   fprintf('processing frequency %d (%.2f Hz), %d tapers\n', ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));

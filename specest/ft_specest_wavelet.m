@@ -186,7 +186,7 @@ end
 
 % Compute fft
 spectrum = complex(nan(nchan,nfreqoi,ntimeboi),nan(nchan,nfreqoi,ntimeboi));
-datspectrum = transpose(fft(transpose(ft_preproc_padding(dat, padtype, 0, postpad)))); % double explicit transpose to speedup fft
+datspectrum = fft(ft_preproc_padding(dat, padtype, 0, postpad), [], 2);
 for ifreqoi = 1:nfreqoi
   str = sprintf('frequency %d (%.2f Hz)', ifreqoi,freqoi(ifreqoi));
   [st, cws] = dbstack;
@@ -204,7 +204,7 @@ for ifreqoi = 1:nfreqoi
   
   % compute datspectrum*wavelet, if there are reqtimeboi's that have data
   if ~isempty(reqtimeboi)
-    dum = fftshift(transpose(ifft(transpose(datspectrum .* repmat(wltspctrm{ifreqoi},[nchan 1])))),2); % double explicit transpose to speedup fft
+    dum = fftshift(ifft(datspectrum .* repmat(wltspctrm{ifreqoi},[nchan 1]), [], 2),2);
     dum = dum .* sqrt(2 ./ fsample);
     spectrum(:,ifreqoi,reqtimeboiind) = dum(:,reqtimeboi);
   end
