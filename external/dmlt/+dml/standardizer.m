@@ -41,17 +41,33 @@ classdef standardizer < dml.method
            
       obj.mu = nanmean(X);
       obj.sigma = nanstd(X);
-      obj.sigma(obj.sigma==0) = 1; % bug fix
-      
+            
     end
     
     
     function Y = test(obj,X)
       
-      Y = bsxfun(@minus,X,obj.mu);
-      Y = bsxfun(@rdivide,Y,obj.sigma);
+      Y = X;
       
-      if any(isnan(Y(:))), warning('NaNs encountered'); end
+      idx = ~isnan(obj.mu);
+      if any(idx)
+        Y(:,idx) = bsxfun(@minus,X(:,idx),obj.mu(idx));
+      end
+      
+      % columns with mean of nan are set to zero
+      if any(~idx)
+        Y(:,~idx) = randn(size(Y(:,~idx))); 
+      end
+
+      idx = ~isnan(obj.sigma);
+      if any(idx)
+        Y(:,idx) = bsxfun(@rdivide,Y(:,idx),obj.sigma(idx));
+      end
+      
+      % columns with mean of nan are set to zero
+      if any(~idx)
+        Y(:,~idx) = randn(size(Y(:,~idx))); 
+      end
       
     end
     
