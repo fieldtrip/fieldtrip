@@ -99,7 +99,7 @@ if iscell(filename)
     if length(bnd)>2
       error('Cannot concatenate more than two files') % no more than two files are taken for cancatenation      
     else
-      fprintf('Concatenating left and right hemispheres')
+      fprintf('Concatenating the meshes in %s and %s\n', filename{1}, filename{2});
       
       shape           = [];
       
@@ -114,27 +114,24 @@ if iscell(filename)
         error('not all input files seem to contain a triangulation');
       end
       
-      if isfield(bnd(1), 'sulc') && isfield(bnd(2), 'sulc')
-        shape.sulc = cat(1, bnd.sulc);
-      elseif ~isfield(bnd(1), 'sulc') && ~isfield(bnd(2), 'sulc')
-        % this is ok
-      else
-        error('not all input files seem to contain a "sulc"');
+      % concatenate any other fields
+      fnames = {'sulc' 'curv' 'area' 'thickness'};
+      for k = 1:numel(fnames)
+        if isfield(bnd(1), fnames{k}) && isfield(bnd(2), fnames{k})
+          shape.(fnames{k}) = cat(1, bnd.(fnames{k}));
+        elseif ~isfield(bnd(1), fnames{k}) && ~isfield(bnd(2), fnames{k})
+          % this is ok
+        else
+          error('not all input files seem to contain a "%s"', fnames{k});
+        end
       end
       
-      if isfield(bnd(1), 'curv') && isfield(bnd(1), 'tri')
-        shape.curv = cat(1, bnd.curv);
-      elseif ~isfield(bnd(1), 'curv') && ~isfield(bnd(2), 'curv')
-        % this is ok
-      else
-        error('not all input files seem to contain a curvature');
-      end
       
       shape.hemisphere = []; % keeps track of the order of files in concatenation
       for h = 1:length(bnd)
         shape.hemisphere = [shape.hemisphere; h*ones(length(bnd(h).pnt), 1)];
       end
-      shape.hemispherelabel = filename;     
+      shape.hemispherelabel = filename(:);     
       
     end
   else
@@ -223,7 +220,7 @@ else
     case 'itab_asc'
       shape = read_itab_asc(filename);
       
-    case {'gifti' 'caret_surf'}
+    case 'gifti'
       ft_hastoolbox('gifti', 1);
       g = gifti(filename);
       if ~isfield(g, 'vertices')
@@ -234,6 +231,27 @@ else
       if isfield(g, 'cdata')
         shape.mom = g.cdata;
       end
+      
+    case 'caret_surf'
+      ft_hastoolbox('gifti', 1);
+      g = gifti(filename);
+      if ~isfield(g, 'vertices')
+        error('%s does not contain a tesselated surface', filename);
+      end
+      shape.pnt = warp_apply(g.mat, g.vertices);
+      shape.tri = g.faces;
+      if isfield(g, 'cdata')
+        shape.mom = g.cdata;
+      end
+      
+      % check whether there is curvature info etc
+      filename    = strrep(filename, '.surf.', '.shape.');
+      [p,f,e]     = fileparts(filename);
+      tok         = tokenize(f, '.');
+      tmpfilename = strrep(filename, tok{3}, 'sulc');
+      if exist(tmpfilename, 'file'),  g = gifti(tmpfilename); shape.sulc = g.cdata; end
+      if exist(strrep(tmpfilename, 'sulc', 'curvature'), 'file'),  g = gifti(strrep(tmpfilename, 'sulc', 'curvature')); shape.curv = g.cdata; end
+      if exist(strrep(tmpfilename, 'sulc', 'thickness'), 'file'),  g = gifti(strrep(tmpfilename, 'sulc', 'thickness')); shape.thickness = g.cdata; end
       
     case 'neuromag_mex'
       [co,ki,nu] = hpipoints(filename);
@@ -545,24 +563,10 @@ else
         end
       end
       
-      try,
-        tmpsulc = read_curv(fullfile(path, [name,'.sulc']));
-      catch
-        tmpsulc = [];
-      end
-      try,
-        tmpcurv = read_curv(fullfile(path, [name,'.curv']));
-      catch
-        tmpcurv = [];
-      end
-      
-      if ~isempty(tmpsulc)
-        shape.sulc = tmpsulc;
-      end
-      if ~isempty(tmpcurv)
-        shape.curv = tmpcurv;
-      end
-      
+      if exist(fullfile(path, [name,'.sulc']), 'file'), shape.sulc = read_curv(fullfile(path, [name,'.sulc'])); end
+      if exist(fullfile(path, [name,'.curv']), 'file'), shape.curv = read_curv(fullfile(path, [name,'.curv'])); end
+      if exist(fullfile(path, [name,'.area']), 'file'), shape.area = read_curv(fullfile(path, [name,'.area'])); end
+      if exist(fullfile(path, [name,'.thickness']), 'file'), shape.thickness = read_curv(fullfile(path, [name,'.thickness'])); end
     case 'stl'
       [pnt, tri, nrm] = read_stl(filename);
       shape.pnt = pnt;
