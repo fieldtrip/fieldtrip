@@ -290,6 +290,10 @@ switch cfg.method
     if ~isfield(cfg, 'filtdir'),          cfg.filtdir       = 'twopass';    end
     if ~isfield(cfg, 'width'),            cfg.width         = 1;            end
     
+  case 'mvar'
+    freq = feval(@ft_freqanalysis_mvar,cfg,data);
+    return
+    
   otherwise
     error('specified cfg.method is not supported')
 end
