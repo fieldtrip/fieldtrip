@@ -129,8 +129,8 @@ switch cfg.appenddim
         timelock.trial(:,begchan:endchan,:) = varargin{i}.trial;
         timelock.label = [timelock.label; varargin{i}.label(:)];
       end % for varargin
-      timelock.avg = squeeze(mean(timelock.trial,1));
-      timelock.var = squeeze(var(timelock.trial,0,1));
+      timelock.avg = permute(mean(timelock.trial,1),[2 3 1]);
+      timelock.var = permute(var(timelock.trial,0,1),[2 3 1]);
       timelock.dimord = 'rpt_chan_time';
       
     else
@@ -205,8 +205,8 @@ switch cfg.appenddim
         if hassampleinfo, timelock.sampleinfo(begtrial:endtrial,:)  = varargin{i}.sampleinfo(:,:); end
         if hascov,        timelock.cov(begtrial:endtrial,:,:)       = varargin{i}.cov(:,chansel,chansel); end
       end % for varargin
-      timelock.avg = squeeze(mean(timelock.trial,1));
-      timelock.var = squeeze(var(timelock.trial,0,1));
+      timelock.avg = permute(mean(timelock.trial,1),[2 3 1]);
+      timelock.var = permute(var(timelock.trial,0,1),[2 3 1]);
       
     elseif isfield(varargin{1}, 'avg')
       
