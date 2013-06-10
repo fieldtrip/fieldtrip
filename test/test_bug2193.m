@@ -10,5 +10,6 @@ aal = ft_read_atlas(filename);
 assert(all(~cellfun(@isempty, aal.tissuelabel)), 'there is an empty tissuelabel');
 assert(max(aal.tissue(:))==length(aal.tissuelabel), 'inconsistent number of tissues');
 
-
-
+cfg = [];
+cfg.atlas = filename;
+bbl = ft_prepare_atlas(cfg);
