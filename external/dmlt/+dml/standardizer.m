@@ -54,19 +54,19 @@ classdef standardizer < dml.method
         Y(:,idx) = bsxfun(@minus,X(:,idx),obj.mu(idx));
       end
       
-      % columns with mean of nan are set to zero
+      % columns with mean of nan are set to a small random value
       if any(~idx)
-        Y(:,~idx) = randn(size(Y(:,~idx))); 
+        Y(:,~idx) = 1e-6*randn(size(Y(:,~idx))); 
       end
 
-      idx = ~isnan(obj.sigma);
+      idx = ~isnan(obj.sigma) && ~(obj.sigma==0);
       if any(idx)
         Y(:,idx) = bsxfun(@rdivide,Y(:,idx),obj.sigma(idx));
       end
       
-      % columns with mean of nan are set to zero
+      % columns with mean of nan are set to a small random value
       if any(~idx)
-        Y(:,~idx) = randn(size(Y(:,~idx))); 
+        Y(:,~idx) = 1e-6*randn(size(Y(:,~idx))); 
       end
       
     end
