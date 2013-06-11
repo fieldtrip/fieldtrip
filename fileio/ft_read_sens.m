@@ -8,7 +8,7 @@ function [sens] = ft_read_sens(filename, varargin)
 %   yokogawa_raw 4d 4d_pdf 4d_m4d 4d_xyz ctf_ds ctf_res4 itab_raw
 %   itab_mhd netmeg neuromag_fif neuromag_mne neuromag_mne_elec
 %   neuromag_mne_grad polhemus_fil polhemus_pos zebris_sfp spmeeg_mat
-%   eeglab_set matlab
+%   eeglab_set localite_pos matlab
 %
 % Use as
 %   grad = ft_read_sens(filename, ...)  % for gradiometers
@@ -251,6 +251,77 @@ switch fileformat
       sens.fid.pnt    = [x(sel) y(sel) z(sel)];
     end
     
+  case 'localite_pos'
+     if ~usejava('jvm') % Using xml2struct requires java
+         fid = fopen(filename);
+         
+         % Read marker-file and store contents in cells of strings
+         tmp = textscan(fid,'%s');
+
+         fclose(fid);
+         
+         % Search for cells that contain coordinates
+         selx = strncmp('data0',tmp{1},5);
+         sely = strncmp('data1',tmp{1},5);
+         selz = strncmp('data2',tmp{1},5);
+         sellab = strncmp('description',tmp{1},5);
+         
+         % Extract cells that contain coordinates
+         xtemp  = tmp{1}(selx);
+         ytemp  = tmp{1}(sely);
+         ztemp  = tmp{1}(selz);
+         labtemp = tmp{1}(sellab);
+         
+         % Determine which channels are set. In localite channels that are not set
+         % automatically receive coordinates [0, 0, 0] and should therefore
+         % be discarded.
+         settemp = tmp{1}(strncmp('set',tmp{1},3));
+         selset = strncmp('set="f',settemp,6);
+         
+         % Remove channels that are not set
+         xtemp(selset) = [];
+         ytemp(selset) = [];
+         ztemp(selset) = [];
+         labtemp(selset) = [];
+         
+         % Convert cells that contain coordinates from string to double
+         x = [];
+         y = [];
+         z = [];
+         lbl = [];
+
+         for i=1:numel(xtemp)
+            x(i,1) = str2double(xtemp{i}(8:end-1));
+            y(i,1) = str2double(ytemp{i}(8:end-1));
+            z(i,1) = str2double(ztemp{i}(8:end-3));
+            lbl{i,1} = labtemp{i}(14:end-1);
+         end;
+         
+         % Create and fill sens structure
+         sens = [];
+         sens.elecpos = [x y z];
+         sens.chanpos = sens.elecpos;
+         sens.label = lbl;
+     else
+        tmp = xml2struct(filename);
+        
+        sens = [];
+        
+        % Loop through structure obtained from xml-file and store
+        % coordinate information into sens structure of channels that are
+        % set. 
+        for i=1:numel(tmp)
+            if strcmp(tmp(i).Marker.set,'true')
+                sens.elecpos(i,1) = str2double(tmp(i).Marker.ColVec3D.data0);
+                sens.elecpos(i,2) = str2double(tmp(i).Marker.ColVec3D.data1);
+                sens.elecpos(i,3) = str2double(tmp(i).Marker.ColVec3D.data2);
+                sens.label{i} = tmp(i).Marker.description;
+            end;
+        end;
+        
+        sens.chanpos = sens.elecpos;   
+     end;
+     
   otherwise
     error('unknown fileformat for electrodes or gradiometers');
 end
