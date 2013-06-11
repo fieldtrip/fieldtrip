@@ -27,7 +27,16 @@ cfg = [];
 cfg.atlas = filename;
 bbl = ft_prepare_atlas(cfg);
 
-
+cfg.atlas = '/home/common/matlab/fieldtrip/template/atlas/aal/ROI_MNI_V4.nii'
+aal0a = ft_prepare_atlas(cfg);
+aal0b = ft_read_atlas(cfg.atlas);
+assert(all(~cellfun(@isempty, aal0b.tissuelabel)), 'there is an empty tissuelabel');
+assert(max(aal0b.tissue(:))==length(aal0b.tissuelabel), 'inconsistent number of tissues');
+assert(all(cellfun(@strcmp, aal0a.descr.name, aal0b.tissuelabel)));
+% the next one fails because label are re-indexed by ft_read_atlas are different
+% assert(all(aal0a.brick0(:) == aal0b.tissue(:)));
+ 
+  
 % The following section depends on the current (10 June 2013) situation with spm8
 % on home/common, which will probably not persist forever. Therefore this section
 % should not be included in the automatic regression test.
@@ -52,9 +61,9 @@ if false
   cfg.atlas = '/home/common/matlab/spm8/toolbox/wfu_pickatlas-old/MNI_atlas_templates/aal_MNI_V4.img'
   aal3a = ft_prepare_atlas(cfg);
   aal3b = ft_read_atlas(cfg.atlas);
-  assert(all(~cellfun(@isempty, aal3b.tissuelabel)), 'there is an empty tissuelabel');
-  assert(max(aal3b.tissue(:))==length(aal3b.tissuelabel), 'inconsistent number of tissues');
-  assert(all(cellfun(@strcmp, aal3a.descr.name, aal3b.brick0label)));
+  assert(all(~cellfun(@isempty, aal3b.brick0label)), 'there is an empty tissuelabel');
+  assert(max(aal3b.brick0(:))==length(aal3b.brick0label), 'inconsistent number of tissues');
+  assert(all(cellfun(@strcmp, aal3a.descr.name, aal3b.brick0label')));
   assert(all(aal3a.brick0(:) == aal3b.brick0(:)));
   % note: not sure why the fields are called brick0 for the old wfu
   % pickatlas rather than tissue
