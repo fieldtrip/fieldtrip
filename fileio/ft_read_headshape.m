@@ -232,14 +232,37 @@ else
         shape.mom = g.cdata;
       end
       
-    case 'caret_surf'
+    case {'caret_surf' 'caret_topo' 'caret_coord'}
       ft_hastoolbox('gifti', 1);
       g = gifti(filename);
-      if ~isfield(g, 'vertices')
-        error('%s does not contain a tesselated surface', filename);
+      if ~isfield(g, 'vertices') && strcmp(fileformat, 'caret_topo')
+        try
+          % do a clever guess by replacing topo with coord
+          g2 = gifti(strrep(filename, '.topo.', '.coord.'));
+          vertices  = g2.vertices;
+          transform = g2.mat;
+        catch
+          vertices  = [0 0 0];
+          transform = eye(4);
+        end
+      else
+        vertices  = g.vertices;
+        transform = g.mat;
       end
-      shape.pnt = warp_apply(g.mat, g.vertices);
-      shape.tri = g.faces;
+      if ~isfield(g, 'faces') && strcmp(fileformat, 'caret_coord')
+        try
+          % do a clever guess by replacing topo with coord
+          g2 = gifti(strrep(filename, '.coord.', '.topo.'));
+          faces = g2.faces;
+        catch
+          faces = [];
+        end
+        else
+        faces = g.faces;
+      end
+      
+      shape.pnt = warp_apply(transform, vertices);
+      shape.tri = faces;
       if isfield(g, 'cdata')
         shape.mom = g.cdata;
       end
@@ -252,6 +275,49 @@ else
       if exist(tmpfilename, 'file'),  g = gifti(tmpfilename); shape.sulc = g.cdata; end
       if exist(strrep(tmpfilename, 'sulc', 'curvature'), 'file'),  g = gifti(strrep(tmpfilename, 'sulc', 'curvature')); shape.curv = g.cdata; end
       if exist(strrep(tmpfilename, 'sulc', 'thickness'), 'file'),  g = gifti(strrep(tmpfilename, 'sulc', 'thickness')); shape.thickness = g.cdata; end
+    
+    case 'caret_spec'
+      % read xml-file that contains a description to a bunch of files
+      % belonging together
+      ft_hastoolbox('gifti', 1);
+      g = xmltree(filename);
+      
+      % convert into a structure
+      s = convert(g);
+      
+      % topo and coord files may belong together
+      f = fieldnames(s);
+      topofiles  = {};
+      coordfiles = {};
+      for k = 1:numel(f)
+        if ~isempty(strfind(f{k}, 'topo'))
+          f2 = fieldnames(s.(f{k}));
+          for m = 1:numel(f2)
+            topofiles{end+1} = s.(f{k}).(f2{m});
+          end
+        end
+        if ~isempty(strfind(f{k}, 'coord'))
+          f2 = fieldnames(s.(f{k}));
+          for m = 1:numel(f2)
+            coordfiles{end+1} = s.(f{k}).(f2{m});
+          end
+        end
+      end
+      [selcoord, ok] = listdlg('ListString',coordfiles,'SelectionMode','single','PromptString','Select a file describing the coordinates');
+      [seltopo, ok]  = listdlg('ListString',topofiles,'SelectionMode','single','PromptString','Select a file describing the topology');
+      
+      % recursively call ft_read_headshape
+      tmp1 = ft_read_headshape(coordfiles{selcoord});
+      tmp2 = ft_read_headshape(topofiles{seltopo});
+      
+      % quick and dirty sanity check to see whether the indexing of the
+      % points in the topology matches the number of points
+      if max(tmp2.tri(:))~=size(tmp1.pnt,1)
+        error('there''s a mismatch between the number of points used in the topology, and described by the coordinates');
+      end
+      
+      shape.pnt = tmp1.pnt;
+      shape.tri = tmp2.tri;
       
     case 'neuromag_mex'
       [co,ki,nu] = hpipoints(filename);
