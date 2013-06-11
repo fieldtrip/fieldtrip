@@ -59,7 +59,7 @@ classdef standardizer < dml.method
         Y(:,~idx) = 1e-6*randn(size(Y(:,~idx))); 
       end
 
-      idx = ~isnan(obj.sigma) && ~(obj.sigma==0);
+      idx = ~isnan(obj.sigma) & ~(obj.sigma==0);
       if any(idx)
         Y(:,idx) = bsxfun(@rdivide,Y(:,idx),obj.sigma(idx));
       end
