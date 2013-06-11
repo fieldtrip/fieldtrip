@@ -129,7 +129,9 @@ if nargin==1 && ischar(varargin{1}) && strcmp('-clear', varargin{1})
     ft_default.warning.identifier = [];
     ft_default.warning.stopwatch  = [];
   else
-    ft_default.warning.identifier = rmsubfield(ft_default.warning.identifier, fname);
+    if issubfield(ft_default.warning.identifier, fname)
+      ft_default.warning.identifier = rmsubfield(ft_default.warning.identifier, fname);
+    end
   end
   return;
 end
