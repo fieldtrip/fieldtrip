@@ -79,6 +79,7 @@ if nargin==3
   % calling syntax (id, msg, timeout)
   
   warningArgs = varargin(1:2);
+  msg = warningArgs{2};
   timeout = varargin{3};
   fname = [warningArgs{1} '_' warningArgs{2}];
   
@@ -86,6 +87,7 @@ elseif nargin==2 && isnumeric(varargin{2})
   % calling syntax (msg, timeout)
   
   warningArgs = varargin(1);
+  msg = warningArgs{1};
   timeout = varargin{2};
   fname = warningArgs{1};
   
@@ -93,6 +95,7 @@ elseif nargin==2 && ~isnumeric(varargin{2})
   % calling syntax (id, msg)
   
   warningArgs = varargin(1:2);
+  msg = warningArgs{2};
   timeout = inf;
   fname = [warningArgs{1} '_' warningArgs{2}];
   
@@ -100,6 +103,7 @@ elseif nargin==1
   % calling syntax (msg)
   
   warningArgs = varargin(1);
+  msg = warningArgs{1};
   timeout = inf; % default timeout in seconds
   fname = [warningArgs{1}];
   
@@ -154,7 +158,7 @@ if ~issubfield(ft_default.warning.identifier, fname) || ...
   % warning never given before or timed out
   ws = warning(warningArgs{:});
   ft_default.warning.identifier = setsubfield(ft_default.warning.identifier, [fname '.timeout'], now+timeout);
-  ft_default.warning.identifier = setsubfield(ft_default.warning.identifier, [fname '.ws'], ws);
+  ft_default.warning.identifier = setsubfield(ft_default.warning.identifier, [fname '.ws'], msg);
   warned = true;
 else
 
