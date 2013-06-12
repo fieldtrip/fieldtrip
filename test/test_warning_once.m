@@ -1,7 +1,10 @@
 function test_warning_once
 
+warning_once('-clear');
+
 warning1 = 'hululu';
 warning2 = 'aloah hey';
+
 for i=1:2
   [output] = evalc(['warning_caller(warning1, warning2)']);
   w1size = strfind(output, warning1);
