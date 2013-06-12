@@ -327,7 +327,7 @@ lay = ft_prepare_layout(cfg, data);
 cfg.layout = lay;
 
 % Create time-series of small topoplots:
-if ~ischar(cfg.xlim) && length(cfg.xlim)>2
+if ~ischar(cfg.xlim) && length(cfg.xlim)>2 && any(ismember(dimtok, 'time'))
   % Switch off interactive mode:
   cfg.interactive = 'no';
   xlims = cfg.xlim;
