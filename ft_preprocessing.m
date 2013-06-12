@@ -285,7 +285,9 @@ if hasdata
         strcmp(cfg.bpfilter, 'yes') || ...
         strcmp(cfg.bsfilter, 'yes') || ...
         strcmp(cfg.medianfilter, 'yes')
-      padding = round(cfg.padding * data.Fs);
+      %Fs = 1/mean(cellfun(@mean, cellfun(@diff, data.time, 'UniformOutput', false)));
+      Fs = 1/mean(data.time{1});
+      padding = round(cfg.padding * Fs);
       if strcmp(cfg.padtype, 'data')
         warning_once('datapadding not possible with in-memory data - padding will be performed by data mirroring');
         cfg.padtype = 'mirror';
@@ -295,7 +297,7 @@ if hasdata
       padding = 0;
     end
     % update the configuration (in seconds) for external reference
-    cfg.padding = padding / data.Fs;
+    cfg.padding = padding / Fs;
   else
     % no padding was requested
     padding = 0;
