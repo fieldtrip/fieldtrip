@@ -129,7 +129,7 @@ for i=1:length(dimtok)
       % don't change, it is ok
       
     case {'sgncmb' 'labelcmb' 'chancmb'}
-      dimtok{i} = 'chan';
+      dimtok{i} = 'chancmb';
       
     case {'rpttap'}
       % this is a 2-D field, coding trials and tapers along the same dimension
