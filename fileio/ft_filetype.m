@@ -1089,7 +1089,7 @@ elseif filetype_check_extension(filename, '.foci') && filetype_check_header(file
 elseif filetype_check_extension(filename, '.border') && filetype_check_header(filename, '<?xml')
   type = 'caret_border';
   manufacturer = 'Caret and ConnectomeWB';
-elseif filetype_check_extension(filename, '.spec') && filetype_check_header(filename, '<?xml')
+elseif filetype_check_extension(filename, '.spec') && (filetype_check_header(filename, '<?xml') || filetype_check_header(filename, 'BeginHeader'))
   type = 'caret_spec';
   manufacturer = 'Caret and ConnectomeWB';
 elseif filetype_check_extension(filename, '.gii') && ~isempty(strfind(filename, '.coord.')) && filetype_check_header(filename, '<?xml')

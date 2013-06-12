@@ -41,6 +41,11 @@ function [shape] = ft_read_headshape(filename, varargin)
 %   'vista'
 %   'tet'
 %   'tetgen_ele'
+%   'gifti'
+%   'caret_surf'
+%   'caret_coord'
+%   'caret_topo'
+%   'caret_spec'
 %
 % See also FT_READ_VOL, FT_READ_SENS, FT_WRITE_HEADSHAPE
 
@@ -277,30 +282,19 @@ else
       if exist(strrep(tmpfilename, 'sulc', 'thickness'), 'file'),  g = gifti(strrep(tmpfilename, 'sulc', 'thickness')); shape.thickness = g.cdata; end
     
     case 'caret_spec'
-      % read xml-file that contains a description to a bunch of files
-      % belonging together
-      ft_hastoolbox('gifti', 1);
-      g = xmltree(filename);
+      [spec, headerinfo] = read_caret_spec(filename);
+      fn = fieldnames(spec)
       
-      % convert into a structure
-      s = convert(g);
-      
-      % topo and coord files may belong together
-      f = fieldnames(s);
-      topofiles  = {};
+      % concatenate the filenames that contain coordinates
+      % concatenate the filenames that contain topologies
       coordfiles = {};
-      for k = 1:numel(f)
-        if ~isempty(strfind(f{k}, 'topo'))
-          f2 = fieldnames(s.(f{k}));
-          for m = 1:numel(f2)
-            topofiles{end+1} = s.(f{k}).(f2{m});
-          end
+      topofiles  = {};
+      for k = 1:numel(fn)
+        if ~isempty(strfind(fn{k}, 'topo'))
+          topofiles = cat(1,topofiles, spec.(fn{k}));
         end
-        if ~isempty(strfind(f{k}, 'coord'))
-          f2 = fieldnames(s.(f{k}));
-          for m = 1:numel(f2)
-            coordfiles{end+1} = s.(f{k}).(f2{m});
-          end
+        if ~isempty(strfind(fn{k}, 'coord'))
+          coordfiles = cat(1,coordfiles, spec.(fn{k}));
         end
       end
       [selcoord, ok] = listdlg('ListString',coordfiles,'SelectionMode','single','PromptString','Select a file describing the coordinates');
