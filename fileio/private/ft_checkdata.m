@@ -904,9 +904,9 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'sparse')
   data           = rmfield(data, 'fourierspctrm');
   data           = rmfield(data, 'label');
   if ntim>1,
-    data.dimord = 'chan_freq_time';
+    data.dimord = 'chancmb_freq_time';
   else
-    data.dimord = 'chan_freq';
+    data.dimord = 'chancmb_freq';
   end
   
   if nrpt>1,
