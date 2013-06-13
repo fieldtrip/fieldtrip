@@ -61,7 +61,7 @@ if strcmpi(hdr.DataFormat, 'binary') && strcmpi(hdr.DataOrientation, 'multiplexe
   
   if isempty(chanindx)
     % read all the channels
-    fseek(fid, hdr.NumberOfChannels*2*(begsample-1), 'cof');
+    fseek(fid, hdr.NumberOfChannels*samplesize*(begsample-1), 'cof');
     dat = fread(fid, [hdr.NumberOfChannels, (endsample-begsample+1)], sampletype);
     % compute real microvolts using the calibration factor (resolution)
     % calib = diag(hdr.resolution);
