@@ -170,6 +170,11 @@ switch toolbox
             status = 1;
         end
     end
+    
+    %This is to avoid crashes when trying to add SPM to the path
+    if ~status 
+        toolbox = 'SPM8';
+    end
   case 'SPM12'
     status = exist('spm.m') && strncmp(spm('ver'),'SPM12', 5);
   case 'MEG-PD'
