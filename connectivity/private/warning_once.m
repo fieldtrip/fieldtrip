@@ -32,7 +32,6 @@ function [ws warned] = warning_once(varargin)
 %   warning_once('the value is %d', 10)
 % instead you should do
 %   warning_once(sprintf('the value is %d', 10))
-%
 
 % Copyright (C) 2012, Robert Oostenveld
 % Copyright (C) 2013, Robert Oostenveld, Jörn M. Horschig
