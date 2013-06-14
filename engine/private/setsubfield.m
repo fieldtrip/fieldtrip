@@ -15,7 +15,7 @@ function [s] = setsubfield(s, f, v);
 %
 % See also SETFIELD, GETSUBFIELD, ISSUBFIELD
 
-% Copyright (C) 2005, Robert Oostenveld
+% Copyright (C) 2005-2013, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -49,4 +49,3 @@ while (1)
 end
 
 s = setfield(s, t{:}, v);
-  
