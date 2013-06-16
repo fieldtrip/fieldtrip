@@ -1675,7 +1675,7 @@ elseif any(strcmp(cfg.viewmode, {'vertical' 'component'}))
       % this is a cheap quick fix. If it causes error in plotting components, do this conditional on viewmode
       if numel(findobj(h,'tag', 'chanlabel'))<numel(chanindx)
         if opt.plotLabelFlag == 1 || (opt.plotLabelFlag == 2 && mod(i,10)==0)
-          ft_plot_text(labelx(laysel), labely(laysel), opt.hdr.label(chanindx(i)), 'tag', 'chanlabel', 'HorizontalAlignment', 'right','interpreter','none');
+          ft_plot_text(labelx(laysel), labely(laysel), opt.hdr.label(chanindx(i)), 'tag', 'chanlabel', 'HorizontalAlignment', 'right','interpreter','none','FontUnits','normalized','FontSize',0.9/2/numel(chanindx));
         end
       end
       
