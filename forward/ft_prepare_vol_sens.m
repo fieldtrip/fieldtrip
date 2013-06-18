@@ -38,7 +38,7 @@ function [vol, sens] = ft_prepare_vol_sens(vol, sens, varargin)
 % See also FT_COMPUTE_LEADFIELD, FT_READ_VOL, FT_READ_SENS, FT_TRANSFORM_VOL,
 % FT_TRANSFORM_SENS
 
-% Copyright (C) 2004-2012, Robert Oostenveld
+% Copyright (C) 2004-2013, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -68,8 +68,8 @@ sens = ft_datatype_sens(sens);
 
 % this is to support volumes saved in mat-files, particularly interpolated
 if ischar(vol)
-     vpath = fileparts(vol);
-     vol   = getfield(load(vol), 'vol');
+  vpath = fileparts(vol);   % remember the path to the file
+  vol   = ft_read_vol(vol); % replace the filename with the content of the file
 end
 
 % ensure that the volume conduction description is up-to-date (Jul 2012)
