@@ -1,9 +1,13 @@
 #include <iostream>
 #include <fstream>
+#ifdef __WIN_32__
 #include <conio.h>
-#include <sstream>
 #include <windows.h>
+#endif //__WIN_32__
+
+#include <sstream>
 #include <map>
+
 
 #include <OnlineDataManager.h>
 #include <ConsoleInput.h>
@@ -112,7 +116,9 @@ void acquisition(const char *configFile, unsigned int fSample) {
 			sampleCounter += nSamplesTaken;
 			printf("Wrote %2i samples (%i total)\n", nSamplesTaken, sampleCounter);
 		}
+#ifdef __WIN_32__
 		Sleep(10);
+#endif
 	}
 	EE_DataFree(hData);
 }
