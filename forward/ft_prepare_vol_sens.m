@@ -66,6 +66,12 @@ order   = ft_getopt(varargin, 'order', 10);             % order of expansion for
 % ensure that the sensor description is up-to-date (Aug 2011)
 sens = ft_datatype_sens(sens);
 
+% this is to support volumes saved in mat-files, particularly interpolated
+if ischar(vol)
+     vpath = fileparts(vol);
+     vol   = getfield(load(vol), 'vol');
+end
+
 % ensure that the volume conduction description is up-to-date (Jul 2012)
 vol = ft_datatype_headmodel(vol);
 
@@ -497,7 +503,14 @@ elseif iseeg
       vol.transfer = sb_transfer(vol,sens);
       
     case 'interpolate'
-      
+      % this is to allow moving leadfield files
+      if ~exist(vol.filename{1}, 'file')
+         for i = 1:length(vol.filename)
+             [p, f, x] = fileparts(vol.filename{i});
+             vol.filename{i} = fullfile(vpath, [f x]);
+         end
+      end
+       
       if ~isfield(sens, 'tra') && isequal(sens.chanpos, sens.elecpos)
         sens.tra = eye(size(sens.chanpos,1));
       end
