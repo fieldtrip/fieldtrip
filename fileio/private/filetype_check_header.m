@@ -31,6 +31,10 @@ if nargin<3
   offset = 0;
 end
 
+if isempty(cache)
+  cache = false;
+end
+
 current_argin = {filename, head, offset};
 if isequal(current_argin, previous_argin) && cache
   % don't do the detection again, but return the previous value from cache
@@ -38,7 +42,8 @@ if isequal(current_argin, previous_argin) && cache
   return
 end
 
-cache = 1;
+% from here on it should use the persistent variables as cache to speed up repeated calls
+cache = true;
 
 if iscell(filename)
   % compare the header of multiple files
@@ -51,7 +56,7 @@ elseif isdir(filename)
   val = false;
 elseif ~exist(filename, 'file')
   val = false;  
-  cache = 0; % the file does not exist now but can exist later
+  cache = false; % the file does not exist now, but can exist later
 else
   % read the first few bytes from the file and compare them to the desired header
   fid = fopen(filename, 'rb');
