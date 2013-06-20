@@ -182,7 +182,6 @@ classdef crossvalidator
       
       if strcmp(obj.type,'loo') || strcmp(obj.type,'bloo')
         
-        obj.type = 'nfold';
         if iscell(Y)
           obj.folds = min(cellfun(@(x)(size(x,1)),Y));
           if strcmp(obj.type,'bloo')
@@ -196,6 +195,7 @@ classdef crossvalidator
             obj.folds = obj.folds/nclasses;
           end
         end
+        obj.type = 'nfold';
         
       end
       

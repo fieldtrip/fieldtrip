@@ -524,7 +524,7 @@ elseif iseeg
       end % if recomputing interpolation
       
       % for the leadfield computations the @nifti object is used to map the image data into memory
-      ft_hastoolbox('spm8', 1);
+      ft_hastoolbox('spm8up', 1);
       for i=1:length(vol.sens.label)
         % map each of the leadfield files into memory
         vol.chan{i} = nifti(vol.filename{i});

@@ -130,14 +130,14 @@ catch
       rethrow(lasterror);
     case 'reduce'
       warning('backtrace', 'off')
-      warning('filter instability detected - reducing the %dth order filter to an %dth order filter', N, N-1);
+      warning_once('filter instability detected - reducing the %dth order filter to an %dth order filter', N, N-1);
       warning('backtrace', 'on')
       filt = ft_preproc_highpassfilter(dat,Fs,Fhp,N-1,type,dir,instabilityfix);
     case 'split'
       N1 = ceil(N/2);
       N2 = floor(N/2);
       warning('backtrace', 'off')
-      warning('filter instability detected - splitting the %dth order filter in a sequential %dth and a %dth order filter', N, N1, N2);
+      warning_once('filter instability detected - splitting the %dth order filter in a sequential %dth and a %dth order filter', N, N1, N2);
       warning('backtrace', 'on')
       filt1 = ft_preproc_highpassfilter(dat  ,Fs,Fhp,N1,type,dir,instabilityfix);
       filt  = ft_preproc_highpassfilter(filt1,Fs,Fhp,N2,type,dir,instabilityfix);
