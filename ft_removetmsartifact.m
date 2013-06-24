@@ -24,7 +24,7 @@ function data = ft_removetmsartifact(cfg, data)
 %   cfg.lpfiltord   = lowpass  filter order
 %   cfg.lpfilttype  = digital filter type, 'but' or 'fir' or 'firls' (default = 'but')
 %   cfg.pulsewidth  = value, pulse pulsewidth to be removed in seconds. If
-%                     left empty, entire trial will be filtered.
+%                     set to 0, entire trial will be filtered.
 %   cfg.offset      = value, offset with respect to pulse onset to start
 %                     filtering, in seconds.
 %
@@ -110,7 +110,7 @@ if isempty(cfg.pulseonset) || isempty(cfg.pulsewidth)
     if ~isempty(temp_pulse)
       cfg.pulsewidth{i} = repmat(temp_pulse, 1, length(onset));
     else
-      cfg.pulsewidth{i} = zeros(1,length(onset));
+      cfg.pulsewidth{i} = width;
     end;
     
     fprintf('detected %d pulses in trial %d\n', length(onset), i);
