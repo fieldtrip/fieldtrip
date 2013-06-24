@@ -635,7 +635,7 @@ switch dataformat
     dimord = 'chans_samples_trials';
     
   case 'egi_sbin'
-    if (mod(hdr.orig.header_array(1),2)==0) && ~(hdr.orig.header_array(14))==0 && (hdr.orig.header_array(15) > 1),
+    if (bitand(hdr.orig.header_array(1),1) == 0) && ~((hdr.orig.header_array(14)==0) && (hdr.orig.header_array(15) > 1)),
       %unsegmented data contains only 1 trial, don't read the whole file
       dat = read_sbin_data(filename, hdr, begsample, endsample, chanindx);
       requestsamples = 0;
