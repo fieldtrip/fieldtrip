@@ -159,24 +159,29 @@ else
             end
             eventData(:,((j-1)*NSamples+1):j*NSamples)  = temp( (NChan+1):(NChan+NEvent), 1:NSamples);
         end
-end;
-
-if ~unsegmented
-        if NEvent == 1
+    end;
+    
+    if ~unsegmented
+        if NEvent == 0
+            theEvent=[];
+        elseif NEvent == 1
             %assume this is the segmentation event
             theEvent=find(eventData(1,:)>0);
             theEvent=mod(theEvent(1)-1,NSamples)+1;
         else
             %assume the sample that always has an event is the baseline
             %if more than one, choose the earliest one
-            totalEventSamples=mod(find(sum(eventData(:,:))')-1,NSamples)+1; 
+            totalEventSamples=mod(find(sum(eventData(:,:))')-1,NSamples)+1;
             baselineCandidates = unique(totalEventSamples);
             counters=hist(totalEventSamples, length(baselineCandidates));
             theEvent=min(baselineCandidates(find(ismember(counters,NSegments))));
         end;
-
+        
         preBaseline=theEvent-1;
-        if (preBaseline == -1) || isempty(preBaseline)
+        if (preBaseline == -1)
+            preBaseline =0;
+        end;
+        if isempty(preBaseline)
             preBaseline =0;
         end;
     end
