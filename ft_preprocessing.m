@@ -577,6 +577,11 @@ else
       % includes datapadding
       dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', rawindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
       
+      % convert the data to another numeric precision, i.e. double, single or int32
+      if ~isempty(cfg.precision)
+        dat = cast(dat, cfg.precision);
+      end
+      
       % pad in case of no datapadding
       if ~strcmp(cfg.padtype, 'data')
         dat = ft_preproc_padding(dat, cfg.padtype, begpadding, endpadding);
