@@ -34,7 +34,7 @@ function [type] = ft_voltype(vol, desired)
 % FT_HEADMODEL_CONCENTRICSPHERES, FT_HEADMODEL_LOCALSPHERES,
 % FT_HEADMODEL_SINGLESHELL, FT_HEADMODEL_INTERPOLATE
 
-% Copyright (C) 2007-2012, Robert Oostenveld
+% Copyright (C) 2007-2013, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
