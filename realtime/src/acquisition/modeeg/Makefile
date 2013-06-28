@@ -72,7 +72,7 @@ ifndef BINDIR
 $(error Unsupported platform: $(PLATFORM) :/.)
 endif
 
-TARGETS = $(patsubst %,$(BINDIR)/%$(SUFFIX), modeeg2ft modeeg2ft_2chn modeeg_setupbluesmirf)
+TARGETS = $(patsubst %,$(BINDIR)/%$(SUFFIX), modeeg2ft modeeg2ft_2chn modeeg_setupbluesmirfi)
 
 ##############################################################################
 all: $(TARGETS)

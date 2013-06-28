@@ -109,7 +109,7 @@ end
 % get the options
 retry        = ft_getopt(varargin, 'retry', false); % the default is not to retry reading the header
 headerformat = ft_getopt(varargin, 'headerformat');
-coordsys     = ft_getopt(varargin, 'coordsys', 'head'); % this is used for CTF, it can be head or dewar
+coordsys     = ft_getopt(varargin, 'coordsys', 'head'); % this is used for ctf and neuromag_mne, it can be head or dewar
 
 if isempty(headerformat)
   % only do the autodetection if the format was not specified
@@ -183,8 +183,8 @@ if cache && exist(headerfile, 'file') && ~isempty(cacheheader)
 end % if cache
 
 % the support for head/dewar coordinates is still limited
-if strcmp(coordsys, 'dewar') && ~any(strcmp(headerformat, {'fcdc_buffer', 'ctf_ds', 'ctf_meg4', 'ctf_res4'}))
-  error('dewar coordinates are sofar only supported for CTF data');
+if strcmp(coordsys, 'dewar') && ~any(strcmp(headerformat, {'fcdc_buffer', 'ctf_ds', 'ctf_meg4', 'ctf_res4', 'neuromag_fif', 'neuromag_mne', 'babysquid_fif'}))
+  error('dewar coordinates are not supported for %s', headerformat);
 end
   
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1276,7 +1276,7 @@ switch headerformat
 
     % add a gradiometer structure for forward and inverse modelling
     try
-      [grad, elec] = mne2grad(orig);
+      [grad, elec] = mne2grad(orig, strcmp(coordsys, 'dewar'));
       if ~isempty(grad)
         hdr.grad = grad;
       end

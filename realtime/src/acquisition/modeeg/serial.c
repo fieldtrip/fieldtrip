@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <string.h>
 
-
 static const char serialErrOpen[]="Could not open the serial port.\n";
 static const char serialErrGetP[]="Could not read serial port parameters.\n";
 static const char serialErrGetT[]="Could not read serial port timeouts.\n";

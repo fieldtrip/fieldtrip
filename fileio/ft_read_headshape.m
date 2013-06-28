@@ -84,11 +84,21 @@ function [shape] = ft_read_headshape(filename, varargin)
 
 
 % get the options
-fileformat     = ft_getopt(varargin, 'format');
-coordinates    = ft_getopt(varargin, 'coordinates', 'head');  % the alternative for CTF coil positions is dewar
-unit           = ft_getopt(varargin, 'unit');                 % the default for yokogawa is cm, see below
 annotationfile = ft_getopt(varargin, 'annotationfile');
 concatenate    = ft_getopt(varargin, 'concatenate', 'yes');
+coordinates    = ft_getopt(varargin, 'coordinates');         % for backward compatibility
+coordsys       = ft_getopt(varargin, 'coordsys', 'head');    % for ctf or neuromag_mne coil positions, the alternative is dewar
+fileformat     = ft_getopt(varargin, 'format');
+unit           = ft_getopt(varargin, 'unit');                 % the default for yokogawa is cm, see below
+
+% coordsys is preferred over coordinates, check whether the user specified it with the old option name
+if ~isempty(coordinates)
+  % DEPRECATED by roboos on 18 June 2013
+  % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=2114 for more details
+  % support for this functionality can be removed at the end of 2013
+  warning('please use the option coordsys instead of coordinates, see http://bugzilla.fcdonders.nl/show_bug.cgi?id=2114');
+  coordsys = coordinates;
+end
 
 if isempty(fileformat)
   % only do the autodetection if the format was not specified
@@ -373,6 +383,18 @@ else
           [v{k}, label{k}, c(k)] = read_annotation(annotationfile{k}, 1);
         end
         
+<<<<<<< HEAD
+        fidN=1;
+        pntN=1;
+        for i=1:nFid % loop over fiducials
+          % check that this point is in head coordinates
+          % 0 is unknown
+          % 1 is device, i.e. dewar
+          % 4 is fiducial system, i.e. head coordinates
+          if hdr.orig.dig(i).coord_frame~=4
+            warning(['Digitiser point (' num2str(i) ') not stored in head coordinates!']);
+          end
+=======
         % match the annotations with the src structures
         if src(1).np == numel(label{1}) && src(2).np == numel(label{2})
           src(1).labelindx = label{1};
@@ -431,6 +453,7 @@ else
       nFid = size(hdr.orig.dig,2); %work out number of fiducials
       switch coordinates
         case 'head' % digitiser points should be stored in head coordinates by default
+>>>>>>> master
           
           fidN=1;
           pntN=1;
@@ -502,6 +525,35 @@ else
             marker = hdr.orig.matching_info.marker;
           end
         end
+<<<<<<< HEAD
+        shape.fid.label=shape.fid.label';
+        
+      case 'dewar'
+        % FIXME Arjen will fix this for bug 1792
+        error('Dewar coordinates not supported for headshape yet (MNE toolbox)');
+        
+      otherwise
+        error('Incorrect coordinates specified');
+    end
+    
+  case {'yokogawa_mrk', 'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw' }
+    if ft_hastoolbox('yokogawa_meg_reader')
+      hdr = read_yokogawa_header_new(filename);
+      marker = hdr.orig.coregist.hpi;
+    else
+      hdr = read_yokogawa_header(filename);
+      marker = hdr.orig.matching_info.marker;
+    end
+    
+    % markers 1-3 identical to zero: try *.mrk file
+    if ~any([marker(:).meg_pos])
+      [p, f, x] = fileparts(filename);
+      filename = fullfile(p, [f '.mrk']);
+      if exist(filename, 'file')
+        if ft_hastoolbox('yokogawa_meg_reader')
+          hdr = read_yokogawa_header_new(filename);
+          marker = hdr.orig.coregist.hpi;
+=======
       end
       
       % non zero markers 1-3
@@ -529,6 +581,7 @@ else
           shape.fid.label = [shape.fid.label ; ['Marker',num2str(coil_ind)]];
           coil_ind = coil_ind + 1;
           ind = ind + 6;
+>>>>>>> master
         else
           ind = ind +1;
         end

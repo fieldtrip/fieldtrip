@@ -10,7 +10,7 @@ int main(int argc, char *argv[]) {
 	int nr;
 
 	if (argc<1) {
-		printf("Usage: setupbluesmirf <device>\n");
+		printf("Usage: modeeg_setupbluesmirf <device>\n");
 		printf("  <device> must be your serial port, e.g, COM3: on Windows, or /dev/ttyS0 on Linux\n");
 		return 0;
 	}
@@ -19,12 +19,14 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr, "Could not open serial port %s\n", argv[1]);
 		return 1;
 	}
+	fprintf(stderr, "Opened serial port %s\n", argv[1]);
 	
 	/* last parameter is timeout in 1/10 of a second */
 	if (!serialSetParameters(&SP, 57600, 8, 0, 1, 1)) {
 		fprintf(stderr, "Could not modify serial port parameters\n");
 		return 1;
 	}
+	fprintf(stderr, "Modified serial port parameters\n");
 	
 	nr = serialRead(&SP, 1024, buf);
 	
