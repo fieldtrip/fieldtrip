@@ -94,6 +94,21 @@ clear ft_read_header
 % start by reading the header from the realtime buffer
 hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat, 'cache', true, 'retry', true);
 
+isneuromag = ft_senstype(hdr.grad, 'neuromag306');
+isctf      = ft_senstype(hdr.grad, 'ctf275');
+
+if isneuromag
+  ctr = 0;
+  for j = 1:length(hdr.orig.raw.info.dig)
+    if hdr.orig.raw.info.dig(1,j).kind == 2 % 1: RPA/LPA/NAS, 2: HPI coils, 4: Head shape
+      ctr = ctr+1;
+      hc(ctr,:) = double((hdr.orig.raw.info.dig(1,j).r).*100); % convert from m to cm
+    end
+  end
+  fprintf('%d HPI coils found in fif header\n', ctr);
+end
+
+
 % define a subset of channels for reading
 cfg.channel = ft_channelselection(cfg.channel, hdr.label);
 cfg.refchan = ft_channelselection(cfg.refchan, hdr.label);
@@ -137,17 +152,27 @@ end
 figure
 
 % set an initial guess for each of the dipole/coil positions
-for i=1:ncoil
-  dip(i).pos = mean(sens.coilpos,1); % somewhere in the middle of the helmet
-  dip(i).mom = [0 0 0]';
+if isneuromag
+  for i=1:ncoil
+    dip(i).pos = hc(i,:);
+    dip(i).mom = [0 0 0]';
+  end
+else
+  for i=1:ncoil
+    dip(i).pos = mean(sens.coilpos,1); % somewhere in the middle of the helmet
+    dip(i).mom = [0 0 0]';
+  end
 end
 
 if strcmp(cfg.jumptoeof, 'yes')
   prevSample = hdr.nSamples * hdr.nTrials;
+elseif isfield(cfg, 'offset')
+  prevSample = (cfg.offset*hdr.Fs);
 else
   prevSample  = 0;
 end
 count = 0;
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this is the general BCI loop where realtime incoming data is handled
@@ -195,10 +220,6 @@ while true
     meg = dat(megindx,:);
     ref = dat(refindx,:);
     
-    % estimate the complex-valued MEG topography for each coil
-    % this implements a discrete Fourier transform (DFT)
-    topo = meg * ctranspose(coil);
-    
     if ~isempty(ref)
       % only consider the signal that is phase-locked to the reference channels
       ampl  = sum(ref.*coil);   % estimate the complex amplitude
@@ -207,13 +228,46 @@ while true
       for i=1:ncoil
         topo(:,i) = topo(:,i) * phase(i);
       end
-      % ignore the out-of-phase spectral component in the topography
-      topo = real(topo);
+    else
+      % estimate the complex-valued MEG topography for each coil
+      % this implements a discrete Fourier transform (DFT)
+      topo = ft_preproc_detrend(meg) * ctranspose(coil);
+    end
+    
+    if false
+      close all
+      for i=1:ncoil
+        figure
+        ft_plot_sens(sens);
+        ft_plot_dipole(dip(i).pos, dip(i).mom);
+        ft_plot_topo3d(sens.chanpos, real(topo(:,i)));
+        m = max(abs(caxis));
+        caxis([-m m]);
+        alpha 0.5
+      end
     end
     
     % fit a magnetic dipole to each of the topographies
-    for i=1:ncoil
-      dip(i) = dipole_fit(dip(i), sens, vol, topo(:,i));
+    if isneuromag
+      constr.sequential = true;
+      constr.rigidbody = true;
+      % fit the coils together
+      for i=1:ncoil
+        pos(i,:) = dip(i).pos;
+      end
+      dipall = [];
+      dipall.pos = pos;
+      dipall = dipole_fit(dipall, sens, vol, topo, 'constr', constr);
+      for i=1:ncoil
+        sel = (1:3) + 3*(i-1);
+        dip(i).pos = dipall.pos(i,:);
+        dip(i).mom = real(dipall.mom(sel,i)); % ignore the complex phase information
+      end
+    else
+      % fit the coils sequentially
+      for i=1:ncoil
+        dip(i) = dipole_fit(dip(i), sens, vol, topo(:,i));
+      end
     end
     
     cla

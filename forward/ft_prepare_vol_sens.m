@@ -243,8 +243,8 @@ elseif ismeg
           [dum, coilindex] = max(abs(sens.tra(:,i)));
         end
         
-        coillabel = sens.label{coilindex};                    % what is the label of this channel
-        chanindex = strmatch(coillabel, vol.label, 'exact');  % what is the index of this channel in the list of local spheres
+        coillabel = sens.label{coilindex};               % what is the label of this channel
+        chanindex = find(strcmp(coillabel, vol.label));  % what is the index of this channel in the list of local spheres
         localspheres.r(i,:) = vol.r(chanindex);
         localspheres.o(i,:) = vol.o(chanindex,:);
       end
@@ -568,7 +568,6 @@ if isfield(sens, 'tra')
   end
 end
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -587,7 +586,6 @@ dp = plane(1:3) - line(:, 1:3);
 t = dot(ori(~par,:), dp(~par,:), 2)./dot(ori(~par,:), line(~par,4:6), 2);
 % compute coord of intersection point
 Ppr(~par, :) = line(~par,1:3) + repmat(t,1,3).*line(~par,4:6);
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % This function serves as a replacement for the dist function in the Neural

@@ -152,7 +152,7 @@ int ft_swap_buf_to_native(UINT16_T command, UINT32_T bufsize, void *buf) {
 			/* buf contains a datadef_t and after that the data */
 			ddef = (datadef_t *) buf;
 			ft_swap32(4, ddef);	/* this is for datadef_t */
-			ft_swap_data(ddef->nchans*ddef->nsamples, ddef->data_type, ddef + 1); /* ddef+1 points to first data byte */
+			ft_swap_data(ddef->nchans*ddef->nsamples, ddef->data_type, (void *)ddef + sizeof(datadef_t)); /* ddef+1 points to first data byte */
 			return 0;
 		case PUT_HDR:
 			/* buf contains a headerdef_t and optionally chunks */
@@ -212,7 +212,6 @@ int ft_swap_events_from_native(UINT32_T size, void *buf) {
 int ft_swap_from_native(UINT16_T orgCommand, message_t *msg) {
 	datadef_t *ddef;
 	UINT32_T nchans;
-
 	UINT32_T bufsize = msg->def->bufsize;
 	
 	ft_swap16(1, &msg->def->version);
@@ -228,8 +227,8 @@ int ft_swap_from_native(UINT16_T orgCommand, message_t *msg) {
 			return ft_swap_chunks_from_native(bufsize - sizeof(headerdef_t), nchans, (char *) msg->buf + sizeof(headerdef_t));
 		case GET_DAT:
 			ddef = (datadef_t *) msg->buf;
-			ft_swap_data(ddef->nchans*ddef->nsamples, ddef->data_type, ddef + 1); /* ddef+1 points to first data byte */
-			ft_swap32(5, ddef); /* all fields are 32-bit */
+			ft_swap_data(ddef->nchans*ddef->nsamples, ddef->data_type, (void *)ddef + sizeof(datadef_t)); /* ddef+1 points to first data byte */
+			ft_swap32(4, ddef); /* all fields are 32-bit */
 			return 0;
 		case GET_EVT:
 			return ft_swap_events_from_native(bufsize, msg->buf);

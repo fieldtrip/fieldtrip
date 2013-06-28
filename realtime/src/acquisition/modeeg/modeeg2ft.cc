@@ -139,6 +139,9 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr, "Could not open serial port %s\n", argv[1]);
 		return 1;
 	}
+	else {
+		fprintf(stderr, "Opened serial port %s\n", argv[1]);
+	}
 
 	// last parameter is timeout in 1/10 of a second
 	if (!serialSetParameters(&SP, 57600, 8, 0, 1, 0)) {
@@ -150,6 +153,9 @@ int main(int argc, char *argv[]) {
 		if (!ODM.useOwnServer(port)) {
 			fprintf(stderr, "Could not spawn buffer server on port %d.\n",port);
 			return 0;
+		}
+		else {
+			fprintf(stderr, "Spawned TCP server on port %i\n", port);
 		}
 	} else {
 		if (!ODM.connectToServer(hostname, port)) {
@@ -185,7 +191,7 @@ int main(int argc, char *argv[]) {
 		}
 		
 		if (numPending == 0) {
-			if (++numTimeouts > 100) {
+			if (++numTimeouts > 250) {
 				// write one fake sample and a timeout event
 				short *block = ODM.provideBlock(1);
 				ODM.getEventList().add(0, "TIMEOUT", 0);
@@ -213,7 +219,7 @@ int main(int argc, char *argv[]) {
 				}
 				numTimeouts = 0;
 			} else {
-				usleep(10000);
+				usleep(20000);
 			}
 			continue;
 		}

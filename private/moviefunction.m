@@ -170,13 +170,13 @@ if ~opt.issource && isfield(cfg, 'layout')
     if ~isfull,
       % Convert 2-dimensional channel matrix to a single dimension:
       if isempty(cfg.directionality)
-        sel1 = strmatch(cfg.refchannel, data.labelcmb(:,2), 'exact');
-        sel2 = strmatch(cfg.refchannel, data.labelcmb(:,1), 'exact');
+        sel1 = find(strcmp(cfg.refchannel, data.labelcmb(:,2));
+        sel2 = find(strcmp(cfg.refchannel, data.labelcmb(:,1));
       elseif strcmp(cfg.directionality, 'outflow')
         sel1 = [];
-        sel2 = strmatch(cfg.refchannel, data.labelcmb(:,1), 'exact');
+        sel2 = find(strcmp(cfg.refchannel, data.labelcmb(:,1));
       elseif strcmp(cfg.directionality, 'inflow')
-        sel1 = strmatch(cfg.refchannel, data.labelcmb(:,2), 'exact');
+        sel1 = find(strcmp(cfg.refchannel, data.labelcmb(:,2));
         sel2 = [];
       end
       fprintf('selected %d channels for %s\n', length(sel1)+length(sel2), cfg.funparameter);
