@@ -22,7 +22,7 @@ function [shape] = ft_read_headshape(filename, varargin)
 %
 % Additional options should be specified in key-value pairs and can be
 %
-%   'format'		  = string, see below
+%   'format'              = string, see below
 %   'coordinates' = string, e.g. 'head' or 'dewar' (CTF)
 %   'unit'        = string, e.g. 'cm'
 %   'concatenate' = 'no' or 'yes'(default): if you read the shape of left and right hemispehers from multiple files and want to concatenate them
@@ -78,6 +78,9 @@ function [shape] = ft_read_headshape(filename, varargin)
 
 % % optionally get the data from the URL and make a temporary local copy
 % filename = fetch_url(filename);
+
+% Check the input, if filename is a cell-array, call ft_read_headshape recursively and combine the outputs.
+% This is used to read the left and right hemisphere of a Freesurfer cortical segmentation.
 
 % Check the input, if filename is a cell-array, call ft_read_headshape recursively and combine the outputs.
 % This is used to read the left and right hemisphere of a Freesurfer cortical segmentation.
@@ -383,18 +386,6 @@ else
           [v{k}, label{k}, c(k)] = read_annotation(annotationfile{k}, 1);
         end
         
-<<<<<<< HEAD
-        fidN=1;
-        pntN=1;
-        for i=1:nFid % loop over fiducials
-          % check that this point is in head coordinates
-          % 0 is unknown
-          % 1 is device, i.e. dewar
-          % 4 is fiducial system, i.e. head coordinates
-          if hdr.orig.dig(i).coord_frame~=4
-            warning(['Digitiser point (' num2str(i) ') not stored in head coordinates!']);
-          end
-=======
         % match the annotations with the src structures
         if src(1).np == numel(label{1}) && src(2).np == numel(label{2})
           src(1).labelindx = label{1};
@@ -453,7 +444,6 @@ else
       nFid = size(hdr.orig.dig,2); %work out number of fiducials
       switch coordinates
         case 'head' % digitiser points should be stored in head coordinates by default
->>>>>>> master
           
           fidN=1;
           pntN=1;
@@ -495,10 +485,11 @@ else
             end
             
           end
-          shape.fid.label=shape.fid.label';
+          shape.fid.label = shape.fid.label';
           
         case 'dewar'
           error('Dewar coordinates not supported for headshape yet (MNE toolbox)');
+
         otherwise
           error('Incorrect coordinates specified');
       end
@@ -525,35 +516,6 @@ else
             marker = hdr.orig.matching_info.marker;
           end
         end
-<<<<<<< HEAD
-        shape.fid.label=shape.fid.label';
-        
-      case 'dewar'
-        % FIXME Arjen will fix this for bug 1792
-        error('Dewar coordinates not supported for headshape yet (MNE toolbox)');
-        
-      otherwise
-        error('Incorrect coordinates specified');
-    end
-    
-  case {'yokogawa_mrk', 'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw' }
-    if ft_hastoolbox('yokogawa_meg_reader')
-      hdr = read_yokogawa_header_new(filename);
-      marker = hdr.orig.coregist.hpi;
-    else
-      hdr = read_yokogawa_header(filename);
-      marker = hdr.orig.matching_info.marker;
-    end
-    
-    % markers 1-3 identical to zero: try *.mrk file
-    if ~any([marker(:).meg_pos])
-      [p, f, x] = fileparts(filename);
-      filename = fullfile(p, [f '.mrk']);
-      if exist(filename, 'file')
-        if ft_hastoolbox('yokogawa_meg_reader')
-          hdr = read_yokogawa_header_new(filename);
-          marker = hdr.orig.coregist.hpi;
-=======
       end
       
       % non zero markers 1-3
@@ -581,7 +543,6 @@ else
           shape.fid.label = [shape.fid.label ; ['Marker',num2str(coil_ind)]];
           coil_ind = coil_ind + 1;
           ind = ind + 6;
->>>>>>> master
         else
           ind = ind +1;
         end
