@@ -46,7 +46,7 @@
 % $Id$
 
 maxnum = ft_getopt(varargin, 'maxnum', Inf);
-filter = ft_getopt(varargin, 'filter', [generatesesionid '.*']);
+filter = ft_getopt(varargin, 'filter', [generatesessionid '.*']);
 sleep  = ft_getopt(varargin, 'sleep', 0);
 
 if ischar(filter)

@@ -34,7 +34,7 @@ function [type] = ft_voltype(vol, desired)
 % FT_HEADMODEL_CONCENTRICSPHERES, FT_HEADMODEL_LOCALSPHERES,
 % FT_HEADMODEL_SINGLESHELL, FT_HEADMODEL_INTERPOLATE
 
-% Copyright (C) 2007-2012, Robert Oostenveld
+% Copyright (C) 2007-2013, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -81,12 +81,8 @@ if isequal(current_argin, previous_argin)
   return
 end
 
-% check whether input is a grad or elec array, also containing types
-% Note: currently, ft_datatype cannot detect several volumes, and cannot be used here for checking volumness
-issens = ft_datatype(vol,'grad') || ft_datatype(vol,'sens');
 
-
-if isfield(vol, 'type') && ~issens
+if isfield(vol, 'type') && ~(ft_datatype(vol,'grad') || ft_datatype(vol,'sens')) % grad and sens also contain .type fields 
   % preferably the structure specifies its own type
   type = vol.type;
   

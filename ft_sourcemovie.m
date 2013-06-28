@@ -249,9 +249,9 @@ set(hx, 'position', [0.4 0.08 0.6 0.8]);
 set(hx, 'tag', 'mesh');
 if isfield(source, 'sulc')
   vdat = source.sulc;
-  vdat = vdat-min(vdat)+1;
+  vdat = vdat-min(vdat);
   vdat = vdat./max(vdat);
-  vdat = 0.8.*repmat(vdat,[1 3]);
+  vdat = 0.1+0.3.*repmat(round(1-vdat),[1 3]);
   hs1 = ft_plot_mesh(source, 'edgecolor', 'none', 'vertexcolor', vdat);
 else
   hs1 = ft_plot_mesh(source, 'edgecolor', 'none', 'facecolor', [0.5 0.5 0.5]);

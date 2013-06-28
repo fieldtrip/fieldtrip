@@ -496,28 +496,30 @@ end
 h = title(t,'fontsize', cfg.fontsize);
 
 % set the figure window title, add channel labels if number is small
-if length(sellab) < 5
-  chans = join_str(',', cfg.channel);
-else
-  chans = '<multiple channels>';
-end
-if isfield(cfg,'dataname')
-  if iscell(cfg.dataname)
-    dataname = cfg.dataname{1};
+if isempty(get(gcf, 'Name'))
+  if length(sellab) < 5
+    chans = join_str(',', cfg.channel);
   else
-    dataname = cfg.dataname;
+    chans = '<multiple channels>';
   end
-elseif nargin > 1
-  dataname = inputname(2);
-else % data provided through cfg.inputfile
-  dataname = cfg.inputfile;
-end
-if isempty(cfg.figurename)
-  set(gcf, 'Name', sprintf('%d: %s: %s (%s)', gcf, mfilename, dataname, chans));
-  set(gcf, 'NumberTitle', 'off');
-else
-  set(gcf, 'name', cfg.figurename);
-  set(gcf, 'NumberTitle', 'off');
+  if isfield(cfg,'dataname')
+    if iscell(cfg.dataname)
+      dataname = cfg.dataname{1};
+    else
+      dataname = cfg.dataname;
+    end
+  elseif nargin > 1
+    dataname = inputname(2);
+  else % data provided through cfg.inputfile
+    dataname = cfg.inputfile;
+  end
+  if isempty(cfg.figurename)
+    set(gcf, 'Name', sprintf('%d: %s: %s (%s)', gcf, mfilename, dataname, chans));
+    set(gcf, 'NumberTitle', 'off');
+  else
+    set(gcf, 'name', cfg.figurename);
+    set(gcf, 'NumberTitle', 'off');
+  end
 end
 axis tight;
 hold off;

@@ -165,7 +165,7 @@ function [data] = ft_preprocessing(cfg, data)
 % cfg.refchannel, documented
 % cfg.reref, documented
 
-% Copyright (C) 2003-2012, Robert Oostenveld, SMI, FCDC
+% Copyright (C) 2003-2013, Robert Oostenveld, SMI, FCDC
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -285,7 +285,7 @@ if hasdata
         strcmp(cfg.bpfilter, 'yes') || ...
         strcmp(cfg.bsfilter, 'yes') || ...
         strcmp(cfg.medianfilter, 'yes')
-      padding = round(cfg.padding * data.Fs);
+      padding = round(cfg.padding * data.fsample);
       if strcmp(cfg.padtype, 'data')
         warning_once('datapadding not possible with in-memory data - padding will be performed by data mirroring');
         cfg.padtype = 'mirror';
@@ -295,7 +295,7 @@ if hasdata
       padding = 0;
     end
     % update the configuration (in seconds) for external reference
-    cfg.padding = padding / data.Fs;
+    cfg.padding = padding / data.fsample;
   else
     % no padding was requested
     padding = 0;
@@ -354,9 +354,10 @@ if hasdata
     end
           
     data.trial{i} = ft_preproc_padding(data.trial{i}, cfg.padtype, begpadding, endpadding);
-        
-    % do the preprocessing on the selected channels
-    [dataout.trial{i}, dataout.label, dataout.time{i}, cfg] = preproc(data.trial{i}(rawindx,:), data.label(rawindx), data.time{i}, cfg, begpadding, endpadding);
+    % do the preprocessing on the selected channels (with temporary time-axis)
+    [dataout.trial{i}, dataout.label, tmptime, cfg] = preproc(data.trial{i}(rawindx,:), data.label(rawindx),  offset2time(0, data.fsample, size(data.trial{i},2)), cfg, begpadding, endpadding);
+    % time axis won't change
+    dataout.time{i} = data.time{i};
     
   end % for all trials
   
@@ -575,13 +576,19 @@ else
       % read the raw data with padding on both sides of the trial - this
       % includes datapadding
       dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', rawindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
-      tim = offset2time(offset, hdr.Fs, size(dat,2));
+      
+      % convert the data to another numeric precision, i.e. double, single or int32
+      if ~isempty(cfg.precision)
+        dat = cast(dat, cfg.precision);
+      end
       
       % pad in case of no datapadding
       if ~strcmp(cfg.padtype, 'data')
-        dat = ft_preproc_padding(dat, padtype, begpadding, endpadding);
+        dat = ft_preproc_padding(dat, cfg.padtype, begpadding, endpadding);
       end
-        
+      
+      tim = offset2time(offset, hdr.Fs, size(dat,2));
+
       % do the preprocessing on the padded trial data and remove the padding after filtering
       [cutdat{i}, label, time{i}, cfg] = preproc(dat, hdr.label(rawindx), tim, cfg, begpadding, endpadding);
 

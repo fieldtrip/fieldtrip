@@ -74,11 +74,11 @@ else
 end
 
 % the time-frequency latency has already been squeezed away (see above)
-if strcmp(freq.dimord, 'chan_freq')
+if strcmp(freq.dimord, 'chan_freq') || strcmp(freq.dimord, 'chancmb_freq')
   Ntrials = 1;
-elseif strcmp(freq.dimord, 'rpt_chan_freq')
+elseif strcmp(freq.dimord, 'rpt_chan_freq') || strcmp(freq.dimord, 'rpt_chancmb_freq')
   Ntrials = size(freq.cumtapcnt,1);
-elseif strcmp(freq.dimord, 'rpttap_chan_freq')
+elseif strcmp(freq.dimord, 'rpttap_chan_freq') || strcmp(freq.dimord, 'rpttap_chancmb_freq')
   Ntrials = size(freq.cumtapcnt,1);
 else
   error('unrecognized dimord for frequency data');
@@ -108,7 +108,7 @@ if isfield(freq, 'powspctrm') && isfield(freq, 'crsspctrm')
   end
 
   % this complex rearrangement of channel indices transforms the CSDs into a square matrix
-  if strcmp(freq.dimord, 'chan_freq')
+  if strcmp(freq.dimord, 'chan_freq') || strcmp(freq.dimord, 'chancmb_freq')
     % FIXME this fails in case dimord=rpt_chan_freq and only 1 trial
     Cf = complex(nan(Nchans,Nchans));
     % first use the complex conjugate for all reversed signal combinations

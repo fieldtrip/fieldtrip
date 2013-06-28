@@ -32,7 +32,6 @@ function [ws warned] = warning_once(varargin)
 %   warning_once('the value is %d', 10)
 % instead you should do
 %   warning_once(sprintf('the value is %d', 10))
-%
 
 % Copyright (C) 2012, Robert Oostenveld
 % Copyright (C) 2013, Robert Oostenveld, Jörn M. Horschig
@@ -79,6 +78,7 @@ if nargin==3
   % calling syntax (id, msg, timeout)
   
   warningArgs = varargin(1:2);
+  msg = warningArgs{2};
   timeout = varargin{3};
   fname = [warningArgs{1} '_' warningArgs{2}];
   
@@ -86,6 +86,7 @@ elseif nargin==2 && isnumeric(varargin{2})
   % calling syntax (msg, timeout)
   
   warningArgs = varargin(1);
+  msg = warningArgs{1};
   timeout = varargin{2};
   fname = warningArgs{1};
   
@@ -93,6 +94,7 @@ elseif nargin==2 && ~isnumeric(varargin{2})
   % calling syntax (id, msg)
   
   warningArgs = varargin(1:2);
+  msg = warningArgs{2};
   timeout = inf;
   fname = [warningArgs{1} '_' warningArgs{2}];
   
@@ -100,6 +102,7 @@ elseif nargin==1
   % calling syntax (msg)
   
   warningArgs = varargin(1);
+  msg = warningArgs{1};
   timeout = inf; % default timeout in seconds
   fname = [warningArgs{1}];
   
@@ -154,7 +157,7 @@ if ~issubfield(ft_default.warning.identifier, fname) || ...
   % warning never given before or timed out
   ws = warning(warningArgs{:});
   ft_default.warning.identifier = setsubfield(ft_default.warning.identifier, [fname '.timeout'], now+timeout);
-  ft_default.warning.identifier = setsubfield(ft_default.warning.identifier, [fname '.ws'], ws);
+  ft_default.warning.identifier = setsubfield(ft_default.warning.identifier, [fname '.ws'], msg);
   warned = true;
 else
 
@@ -195,6 +198,11 @@ end
   
 
 for i=numel(stack)-1:-1:(i0)
+  % skip postamble scripts
+  if strfind(stack(i).name, 'ft_postamble')
+    break;
+  end
+
   fname = horzcat(fname, '.', horzcat(stack(i).name)); % , stack(i).file
   if ~issubfield(ft_previous_warnings, fname) % iteratively build up structure fields
     setsubfield(ft_previous_warnings, fname, []);

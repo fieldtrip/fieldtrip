@@ -195,7 +195,7 @@ if haspnt && ~isempty(pnt)
   else
     hs = patch('Vertices', pnt, 'Faces', []);
   end
-  set(hs, 'FaceColor', facecolor);
+  %set(hs, 'FaceColor', facecolor);
   set(hs, 'EdgeColor', edgecolor);
   set(hs, 'tag', tag);
 end
@@ -203,9 +203,17 @@ end
 % the vertexcolor can be specified either as a color for each point that will be drawn, or as a value at each vertex
 % if there are triangles, the vertexcolor is used for linear interpolation over the patches
 vertexpotential = ~isempty(tri) && ~ischar(vertexcolor) && (size(pnt,1)==numel(vertexcolor) || size(pnt,1)==size(vertexcolor,1));
+facepotential   = ~isempty(tri) && ~ischar(facecolor)   && (size(tri,1)==numel(facecolor)   || size(tri,1)==size(facecolor,1));
+if facepotential
+  set(hs, 'FaceVertexCData', facecolor, 'FaceColor', 'flat');
+else
+  set(hs, 'FaceColor', facecolor);
+end
 
 if vertexpotential
   % vertexcolor is an array with number of elements equal to the number of vertices
+  % if both vertexcolor and facecolor are arrays, let the vertexcolor
+  % prevail
   set(hs, 'FaceVertexCData', vertexcolor, 'FaceColor', 'interp');
 end
 

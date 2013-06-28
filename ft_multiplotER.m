@@ -676,21 +676,23 @@ if ~isempty(l)
 end
 
 % set the figure window title
-if nargin > 1
-  dataname = {inputname(2)};
-  for k = 2:Ndata
-    dataname{end+1} = inputname(k+1);
+if isempty(get(gcf, 'Name'))
+  if nargin > 1
+    dataname = {inputname(2)};
+    for k = 2:Ndata
+      dataname{end+1} = inputname(k+1);
+    end
+  else % data provided through cfg.inputfile
+    dataname = cfg.inputfile;
   end
-else % data provided through cfg.inputfile
-  dataname = cfg.inputfile;
-end
 
-if isempty(cfg.figurename)
-  set(gcf, 'Name', sprintf('%d: %s: %s', gcf, mfilename, join_str(', ',dataname)));
-  set(gcf, 'NumberTitle', 'off');
-else
-  set(gcf, 'name', cfg.figurename);
-  set(gcf, 'NumberTitle', 'off');
+  if isempty(cfg.figurename)
+    set(gcf, 'Name', sprintf('%d: %s: %s', gcf, mfilename, join_str(', ',dataname)));
+    set(gcf, 'NumberTitle', 'off');
+  else
+    set(gcf, 'name', cfg.figurename);
+    set(gcf, 'NumberTitle', 'off');
+  end
 end
 
 % Make the figure interactive:

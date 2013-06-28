@@ -601,24 +601,26 @@ if strcmp('yes',cfg.hotkeys)
 end
 
 % set the figure window title
-if isfield(cfg,'funcname')
-  funcname = cfg.funcname;
-else
-  funcname = mfilename;
-end
-if isfield(cfg,'dataname')
-    dataname = cfg.dataname;
-elseif nargin > 1
-  dataname = inputname(2);
-else % data provided through cfg.inputfile
-  dataname = cfg.inputfile;
-end
-if isempty(cfg.figurename)
-  set(gcf, 'Name', sprintf('%d: %s: %s', gcf, funcname, dataname));
-  set(gcf, 'NumberTitle', 'off');
-else
-  set(gcf, 'name', cfg.figurename);
-  set(gcf, 'NumberTitle', 'off');
+if isempty(get(gcf, 'Name'))
+  if isfield(cfg,'funcname')
+    funcname = cfg.funcname;
+  else
+    funcname = mfilename;
+  end
+  if isfield(cfg,'dataname')
+      dataname = cfg.dataname;
+  elseif nargin > 1
+    dataname = inputname(2);
+  else % data provided through cfg.inputfile
+    dataname = cfg.inputfile;
+  end
+  if isempty(cfg.figurename)
+    set(gcf, 'Name', sprintf('%d: %s: %s', gcf, funcname, dataname));
+    set(gcf, 'NumberTitle', 'off');
+  else
+    set(gcf, 'name', cfg.figurename);
+    set(gcf, 'NumberTitle', 'off');
+  end
 end
 
 % Make the figure interactive:

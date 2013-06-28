@@ -724,7 +724,6 @@ switch headerformat
     hdr.orig.ftext  = ftext;
     
   case 'egi_sbin'
-    % segmented type only
     [header_array, CateNames, CatLengths, preBaseline] = read_sbin_header(filename);
     [p, f, x]       = fileparts(filename);
     

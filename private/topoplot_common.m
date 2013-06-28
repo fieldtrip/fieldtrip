@@ -327,7 +327,7 @@ lay = ft_prepare_layout(cfg, data);
 cfg.layout = lay;
 
 % Create time-series of small topoplots:
-if ~ischar(cfg.xlim) && length(cfg.xlim)>2
+if ~ischar(cfg.xlim) && length(cfg.xlim)>2 && any(ismember(dimtok, 'time'))
   % Switch off interactive mode:
   cfg.interactive = 'no';
   xlims = cfg.xlim;
@@ -836,33 +836,35 @@ if strcmp(cfg.interactive, 'yes')
   end
 end
 
-% set the figure window title
-if isfield(cfg,'funcname')
-  funcname = cfg.funcname;
-else
-  funcname = mfilename;
-end
-if isfield(cfg,'dataname')
-  if iscell(cfg.dataname)
-    dataname = cfg.dataname{indx};
+% set the figure window title, but only if the user has not changed it
+if isempty(get(gcf, 'Name'))
+  if isfield(cfg,'funcname')
+    funcname = cfg.funcname;
   else
-    dataname = cfg.dataname;
+    funcname = mfilename;
   end
-elseif nargin > 1
-  dataname = {inputname(2)};
-  for k = 2:Ndata
-    dataname{end+1} = inputname(k+1);
+  if isfield(cfg,'dataname')
+    if iscell(cfg.dataname)
+      dataname = cfg.dataname{indx};
+    else
+      dataname = cfg.dataname;
+    end
+  elseif nargin > 1
+    dataname = {inputname(2)};
+    for k = 2:Ndata
+      dataname{end+1} = inputname(k+1);
+    end
+  else % data provided through cfg.inputfile
+    dataname = cfg.inputfile;
   end
-else % data provided through cfg.inputfile
-  dataname = cfg.inputfile;
-end
 
-if isempty(cfg.figurename)
-  set(gcf, 'Name', sprintf('%d: %s: %s', gcf, funcname, join_str(', ',dataname)));
-  set(gcf, 'NumberTitle', 'off');
-else
-  set(gcf, 'name', cfg.figurename);
-  set(gcf, 'NumberTitle', 'off');
+  if isempty(cfg.figurename)
+    set(gcf, 'Name', sprintf('%d: %s: %s', gcf, funcname, join_str(', ',dataname)));
+    set(gcf, 'NumberTitle', 'off');
+  else
+    set(gcf, 'name', cfg.figurename);
+    set(gcf, 'NumberTitle', 'off');
+  end
 end
 
 axis off

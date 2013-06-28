@@ -11,7 +11,14 @@ function [shape] = ft_read_headshape(filename, varargin)
 % Use as
 %   [shape] = ft_read_headshape(filename, ...)
 %
-% Filename can be a string or cell array of strings
+% Filename can be a string or cell array of strings. If it is a cell-array,
+% the following situations are supported:
+%   - a two-element cell-array points to files that represent the left and
+%   right hemisphere, respectively, for example freesurfer's {'lh.orig'
+%   'rh.orig'}, or caret's {'X.L.Y.Z.surf.gii' 'X.R.Y.Z.surf.gii'}
+%   - a two-element cell-array points to files that represent the
+%   coordinates and topology in separate files. Current support for
+%   caret-based files {'X.L.Y.Z.coord.gii' 'A.L.B.C.topo.gii'};
 %
 % Additional options should be specified in key-value pairs and can be
 %
@@ -41,6 +48,11 @@ function [shape] = ft_read_headshape(filename, varargin)
 %   'vista'
 %   'tet'
 %   'tetgen_ele'
+%   'gifti'
+%   'caret_surf'
+%   'caret_coord'
+%   'caret_topo'
+%   'caret_spec'
 %
 % See also FT_READ_VOL, FT_READ_SENS, FT_WRITE_HEADSHAPE
 
@@ -89,20 +101,28 @@ end
 
 if iscell(filename)
 
-  for i = 1:length(filename)
-    bnd(i) = ft_read_headshape(filename{i}, varargin{:}); 
+  for i = 1:numel(filename)
+    tmp       = ft_read_headshape(filename{i}, varargin{:}); 
+    haspnt(i) = isfield(tmp, 'pnt') && ~isempty(tmp.pnt); 
+    hastri(i) = isfield(tmp, 'tri') && ~isempty(tmp.tri); 
+    if ~haspnt(i), tmp.pnt = []; end
+    if ~hastri(i), tmp.tri = []; end
+    if ~isfield(tmp, 'unit'), tmp.unit = 'unknown'; end
+    bnd(i) = tmp;
   end
   
-  % Concatenate the bnd's (only if 'concatenate' = 'yes' )
+  % Concatenate the bnds (only if 'concatenate' = 'yes' ) and if all
+  % structures have non-empty pnts and tris. If not, the input filenames
+  % may have been caret-style coord and topo, which needs combination of
+  % the pnt and tri.
   
-  if  strcmp(concatenate, 'yes') && length(filename)>1
+  if  numel(filename)>1 && all(haspnt==1) && strcmp(concatenate, 'yes')
     if length(bnd)>2
       error('Cannot concatenate more than two files') % no more than two files are taken for cancatenation      
     else
       fprintf('Concatenating the meshes in %s and %s\n', filename{1}, filename{2});
       
-      shape           = [];
-      
+      shape     = [];
       shape.pnt = cat(1, bnd.pnt);
       npnt      = size(bnd(1).pnt,1);
       
@@ -134,7 +154,29 @@ if iscell(filename)
       shape.hemispherelabel = filename(:);     
       
     end
+  elseif numel(filename)>1 && ~all(haspnt==1)
+    if numel(bnd)>2
+      error('Cannot combine more than two files') % no more than two files are taken for cancatenation      
+    else
+      shape = [];
+      if sum(haspnt==1)==1
+        fprintf('Using the vertex positions from %s\n', filename{find(haspnt==1)});
+        shape.pnt  = bnd(haspnt==1).pnt;
+        shape.unit = bnd(haspnt==1).unit;
+      else
+        error('Don''t know what to do');
+      end
+      if sum(hastri==1)==1
+        fprintf('Using the faces definition from %s\n', filename{find(hastri==1)});
+        shape.tri = bnd(hastri==1).tri;
+      end
+      if max(shape.tri(:))~=size(shape.pnt,1)
+        error('mismatch in number of points in pnt and tri');
+      end
+    end
+    
   else
+    % in case numel(filename)==1, or strcmp(concatenate, 'no')
     shape = bnd;
   end
   
@@ -239,15 +281,12 @@ else
         try
           % do a clever guess by replacing topo with coord
           g2 = gifti(strrep(filename, '.topo.', '.coord.'));
-          vertices  = g2.vertices;
-          transform = g2.mat;
+          vertices  = warp_apply(g2.mat, g2.vertices);
         catch
-          vertices  = [0 0 0];
-          transform = eye(4);
+          vertices  = [];
         end
       else
-        vertices  = g.vertices;
-        transform = g.mat;
+        vertices  = warp_apply(g.mat, g.vertices);
       end
       if ~isfield(g, 'faces') && strcmp(fileformat, 'caret_coord')
         try
@@ -261,7 +300,7 @@ else
         faces = g.faces;
       end
       
-      shape.pnt = warp_apply(transform, vertices);
+      shape.pnt = vertices;
       shape.tri = faces;
       if isfield(g, 'cdata')
         shape.mom = g.cdata;
@@ -277,30 +316,19 @@ else
       if exist(strrep(tmpfilename, 'sulc', 'thickness'), 'file'),  g = gifti(strrep(tmpfilename, 'sulc', 'thickness')); shape.thickness = g.cdata; end
     
     case 'caret_spec'
-      % read xml-file that contains a description to a bunch of files
-      % belonging together
-      ft_hastoolbox('gifti', 1);
-      g = xmltree(filename);
+      [spec, headerinfo] = read_caret_spec(filename);
+      fn = fieldnames(spec)
       
-      % convert into a structure
-      s = convert(g);
-      
-      % topo and coord files may belong together
-      f = fieldnames(s);
-      topofiles  = {};
+      % concatenate the filenames that contain coordinates
+      % concatenate the filenames that contain topologies
       coordfiles = {};
-      for k = 1:numel(f)
-        if ~isempty(strfind(f{k}, 'topo'))
-          f2 = fieldnames(s.(f{k}));
-          for m = 1:numel(f2)
-            topofiles{end+1} = s.(f{k}).(f2{m});
-          end
+      topofiles  = {};
+      for k = 1:numel(fn)
+        if ~isempty(strfind(fn{k}, 'topo'))
+          topofiles = cat(1,topofiles, spec.(fn{k}));
         end
-        if ~isempty(strfind(f{k}, 'coord'))
-          f2 = fieldnames(s.(f{k}));
-          for m = 1:numel(f2)
-            coordfiles{end+1} = s.(f{k}).(f2{m});
-          end
+        if ~isempty(strfind(fn{k}, 'coord'))
+          coordfiles = cat(1,coordfiles, spec.(fn{k}));
         end
       end
       [selcoord, ok] = listdlg('ListString',coordfiles,'SelectionMode','single','PromptString','Select a file describing the coordinates');
@@ -773,6 +801,10 @@ else
   if ~isempty(unit)
     shape = ft_convert_units(shape, unit);
   else
-    shape = ft_convert_units(shape);
+    try
+      % ft_convert_units will fail in triangle-only gifties.
+      shape = ft_convert_units(shape);
+    catch
+    end
   end
 end

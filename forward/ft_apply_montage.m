@@ -36,7 +36,7 @@ function [input] = ft_apply_montage(input, montage, varargin)
 %
 % See also FT_READ_SENS, FT_TRANSFORM_SENS
 
-% Copyright (C) 2008-2012, Robert Oostenveld
+% Copyright (C) 2008-2013, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -173,9 +173,7 @@ montage.labelorg        = montage.labelorg(selmontage);
 
 % making the tra matrix sparse will speed up subsequent multiplications
 % but should not result in a sparse matrix
-% note that this only makes sense for matrices with a lot of zero elements,
-% for dense matrices keeping it full will be much quicker
-if size(montage.tra,1)>1 && nnz(montage.tra)/numel(montage.tra) < 0.3
+if size(montage.tra,1)>1
   montage.tra = sparse(montage.tra);
 end
 
@@ -304,7 +302,6 @@ switch inputtype
     
     Ntrials = numel(data.trial);
     ft_progress('init', feedback, 'processing trials');
-    
     for i=1:Ntrials
       ft_progress(i/Ntrials, 'processing trial %d from %d\n', i, Ntrials);
       if isa(data.trial{i}, 'single')

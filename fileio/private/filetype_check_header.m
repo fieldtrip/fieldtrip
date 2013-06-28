@@ -25,18 +25,25 @@ function [val] = filetype_check_header(filename, head, offset)
 % $Id$
 
 % these are for remembering the type on subsequent calls with the same input arguments
-persistent previous_argin previous_argout
+persistent previous_argin previous_argout cache
 
 if nargin<3
   offset = 0;
 end
 
+if isempty(cache)
+  cache = false;
+end
+
 current_argin = {filename, head, offset};
-if isequal(current_argin, previous_argin)
+if isequal(current_argin, previous_argin) && cache
   % don't do the detection again, but return the previous value from cache
   val = previous_argout;
   return
 end
+
+% from here on it should use the persistent variables as cache to speed up repeated calls
+cache = true;
 
 if iscell(filename)
   % compare the header of multiple files
@@ -47,6 +54,9 @@ if iscell(filename)
 elseif isdir(filename)
   % a directory cannot have a header
   val = false;
+elseif ~exist(filename, 'file')
+  val = false;  
+  cache = false; % the file does not exist now, but can exist later
 else
   % read the first few bytes from the file and compare them to the desired header
   fid = fopen(filename, 'rb');
