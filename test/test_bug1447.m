@@ -4,6 +4,7 @@ function test_bug1447
 % TEST ft_multiplotER ft_singleplotER ft_plot_vector
 
 % this contains the example data from Lilla, i.e. two ERPs and a layout
+cd(dccnfilename('/home/common/matlab/fieldtrip/data/test'))
 load bug1447.mat
 
 close all

@@ -607,6 +607,7 @@ if isempty(get(gcf, 'Name'))
   else
     funcname = mfilename;
   end
+  
   if isfield(cfg,'dataname')
       dataname = cfg.dataname;
   elseif nargin > 1
@@ -614,6 +615,7 @@ if isempty(get(gcf, 'Name'))
   else % data provided through cfg.inputfile
     dataname = cfg.inputfile;
   end
+  
   if isempty(cfg.figurename)
     set(gcf, 'Name', sprintf('%d: %s: %s', gcf, funcname, dataname));
     set(gcf, 'NumberTitle', 'off');
@@ -621,6 +623,9 @@ if isempty(get(gcf, 'Name'))
     set(gcf, 'name', cfg.figurename);
     set(gcf, 'NumberTitle', 'off');
   end
+else
+  funcname = '';
+  dataname = '';
 end
 
 % Make the figure interactive:

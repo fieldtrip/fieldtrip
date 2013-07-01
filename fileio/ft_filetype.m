@@ -1247,7 +1247,7 @@ if ~isempty(p)
 else
   d = dir;
 end
-res = any(strcmp((filename,{d.name})));
+res = any(strcmp(filename,{d.name}));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that checks whether the directory is neuralynx_cds

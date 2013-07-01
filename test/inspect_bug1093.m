@@ -5,7 +5,9 @@ function cfgnew = test_bug1093
 % the original bug was that ft_artifact_zvalue does not adjust the detected
 % artifacts when the threshold is adjusted
 
-load test_bug1027; % use the data for bug1027
+% use the data for bug1027
+cd(dccnfilename('/home/common/matlab/fieldtrip/data/test'))
+load bug1027.mat
 
 cfg = [];
 cfg.artfctdef.zvalue.channel = {'EOG061'};

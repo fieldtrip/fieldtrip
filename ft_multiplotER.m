@@ -693,6 +693,8 @@ if isempty(get(gcf, 'Name'))
     set(gcf, 'name', cfg.figurename);
     set(gcf, 'NumberTitle', 'off');
   end
+else
+  dataname = {};
 end
 
 % Make the figure interactive:
