@@ -1,11 +1,11 @@
 function test_bug1351
+
 % TEST test_bug1315
-% TEST ft_topoplotER ft_topoplotTFR ft_checksize checksize checkconfig
-% TEST ft_checkconfig
+% TEST ft_topoplotER ft_topoplotTFR ft_checksize ft_checkconfig
 
-
-% load test data of just two subjects
-load test_bug1351
+% load the test data of just two subjects
+cd(dccnfilename('/home/common/matlab/fieldtrip/data/test'))
+load bug1351.mat
 
 % plot topographically - note: plot will look strange
 cfg = [];
@@ -51,3 +51,4 @@ fprintf('\n');
 % else
 %   fprintf('This is fine!\n');
 % end
+

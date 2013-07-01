@@ -11,7 +11,8 @@ function test_bug1474
 % The rest of the code is only for reference.
 return;
 
-load test_bug1474.mat;
+cd(dccnfilename('/home/common/matlab/fieldtrip/data/test'))
+load bug1474.mat
 
 cfg = [];
 cfg.method = 'summary';

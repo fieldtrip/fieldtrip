@@ -3,7 +3,8 @@ function test_bug1735
 % TEST test_bug1735
 % TEST ft_appenddata
 
-load test_bug1735.mat
+cd(dccnfilename('/home/common/matlab/fieldtrip/data/test'))
+load bug1735.mat
 
 part1 = data_trgtOnstimOnBTrgtLDetected_sourceL;
 part2 = data_trgtOnstimOnBTrgtLNotDetected_sourceL;

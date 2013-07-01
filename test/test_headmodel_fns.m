@@ -29,7 +29,7 @@ svol(3).bnd.tri = tri;
 
 % load the correspondent volumetric matrix
 fprintf('Loading a volume with a number N = %d of compartments ... \n', numel(svol));
-tmp = load('spheres.mat');
+tmp = load(dccnfilename('/home/common/matlab/fieldtrip/data/test/spheres.mat'));
 bkgrnd = tmp.bkgrnd;
 
 % generate volume's external surface (mm)
