@@ -59,6 +59,21 @@ for i=1:length(dataset)
   hdr  = ft_read_header(filename, 'headerformat', headerformat);
   grad = ft_read_sens(filename, 'fileformat', headerformat);
   
+  % remove the grad.balance field if the current balancing is none
+  % as that it is not interesting to compare
+  if isfield(grad, 'balance') && strcmp(grad.balance.current, 'none')
+    grad = rmfield(grad, 'balance');
+  end
+  if isfield(hdr.grad, 'balance') && strcmp(hdr.grad.balance.current, 'none')
+    hdr.grad = rmfield(hdr.grad, 'balance');
+  end
+  if isfield(reference.grad, 'balance') && strcmp(reference.grad.balance.current, 'none')
+    reference.grad = rmfield(reference.grad, 'balance');
+  end
+  if isfield(reference.hdr.grad, 'balance') && strcmp(reference.hdr.grad.balance.current, 'none')
+    reference.hdr.grad = rmfield(reference.hdr.grad, 'balance');
+  end
+    
   assert(isequal(hdr.grad,           grad), sprintf('failed for %s', filename));
   assert(isequal(reference.grad,     grad), sprintf('failed for %s', filename));
   assert(isequal(reference.hdr.grad, grad), sprintf('failed for %s', filename));
