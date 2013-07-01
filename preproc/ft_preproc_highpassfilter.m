@@ -130,7 +130,7 @@ catch
       rethrow(lasterror);
     case 'reduce'
       warning('backtrace', 'off')
-      warning_once('filter instability detected - reducing the %dth order filter to an %dth order filter', N, N-1);
+      warning_once(sprintf('filter instability detected - reducing the %dth order filter to an %dth order filter', N, N-1));
       warning('backtrace', 'on')
       filt = ft_preproc_highpassfilter(dat,Fs,Fhp,N-1,type,dir,instabilityfix);
     case 'split'
