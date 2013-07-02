@@ -254,9 +254,9 @@ end
 if (isfield(cfg, 'smooth') && ~strcmp(cfg.smooth, 'no')) || basedonmni
   % check that SPM is on the path, try to add the preferred version
   if strcmpi(cfg.spmversion, 'spm2'),
-    ft_hastoolbox('SPM2',1);
+    ft_hastoolbox('SPM2', 1);
   elseif strcmpi(cfg.spmversion, 'spm8'),
-    ft_hastoolbox('SPM8',1);
+    ft_hastoolbox('SPM8', 1);
   end
 end
 

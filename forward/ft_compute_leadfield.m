@@ -226,17 +226,19 @@ elseif ismeg
       % orthogonal x/y/z directions
       dippar = zeros(Ndipoles*3, 6);
       for i=1:Ndipoles
-        dippar((i-1)*3+1, :) = [pos(i, :) 1 0 0]; % single dipole, x-orientation
-        dippar((i-1)*3+2, :) = [pos(i, :) 0 1 0]; % single dipole, y-orientation
-        dippar((i-1)*3+3, :) = [pos(i, :) 0 0 1]; % single dipole, z-orientation
+        dippar((i-1)*3+1, :) = [vol.forwpar.scale*pos(i, :) 1 0 0]; % single dipole with unit strength, x-orientation
+        dippar((i-1)*3+2, :) = [vol.forwpar.scale*pos(i, :) 0 1 0]; % single dipole with unit strength, y-orientation
+        dippar((i-1)*3+3, :) = [vol.forwpar.scale*pos(i, :) 0 0 1]; % single dipole with unit strength, z-orientation
       end
       % compute the leadfield for each individual coil
       lf = meg_forward(dippar, vol.forwpar);
+      % the leadfield is computed for cm units, convert it to the desired units
+      lf = lf*vol.forwpar.scale^2;
       if isfield(sens, 'tra')
         % compute the leadfield for each gradiometer (linear combination of coils)
         lf = sens.tra * lf;
       end
-      
+            
     case 'openmeeg'
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % use code from OpenMEEG
@@ -244,7 +246,7 @@ elseif ismeg
       ft_hastoolbox('openmeeg', 1);
       
       % switch the non adaptive algorithm on
-      nonadaptive = true; %HACK : this is hardcoded at the moment
+      nonadaptive = true; % HACK : this is hardcoded at the moment
       dsm = openmeeg_dsm(pos, vol, nonadaptive);
       [h2mm, s2mm]= openmeeg_megm(pos, vol, sens);
       

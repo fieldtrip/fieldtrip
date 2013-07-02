@@ -286,9 +286,11 @@ elseif ismeg
       % estimate center and radius
       [center,radius] = fitsphere(vol.bnd.pnt);
       
-      % initialize the forward calculation (only if gradiometer coils are available)
+      % initialize the forward calculation (only if  coils are available)
       if size(sens.coilpos,1)>0 && ~isfield(vol, 'forwpar')
-        vol.forwpar = meg_ini([vol.bnd.pnt vol.bnd.nrm], center', order, [sens.coilpos sens.coilori]);
+        s = scalingfactor(vol.unit, 'cm');
+        vol.forwpar = meg_ini([s*vol.bnd.pnt vol.bnd.nrm], s*center', order, [s*sens.coilpos sens.coilori]);
+        vol.forwpar.scale = s;
       end
       
     case 'openmeeg'
@@ -459,10 +461,10 @@ elseif iseeg
           if strcmp(ft_voltype(vol), 'openmeeg')
             % check that the external toolbox is present
             ft_hastoolbox('openmeeg', 1);
-            
             nb_points_external_surface = size(vol.bnd(vol.skin_surface).pnt,1);
             vol.mat = vol.mat((end-nb_points_external_surface+1):end,:);
             vol.mat = interp(:,1:nb_points_external_surface) * vol.mat;
+            
           else
             % convert to sparse matrix to speed up the subsequent multiplication
             interp  = sparse(interp);

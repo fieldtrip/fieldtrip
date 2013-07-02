@@ -21,7 +21,7 @@ function [obj] = ft_convert_units(obj, target, varargin)
 %
 % See FT_ESTIMATE_UNITS, FT_READ_VOL, FT_READ_SENS
 
-% Copyright (C) 2005-2012, Robert Oostenveld
+% Copyright (C) 2005-2013, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -61,7 +61,9 @@ if isstruct(obj) && numel(obj)>1
   return
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % determine the unit-of-dimension of the input object
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if isfield(obj, 'unit') && ~isempty(obj.unit)
   % use the units specified in the object
   unit = obj.unit;
@@ -131,7 +133,9 @@ elseif strcmp(unit, target)
   return
 end
 
-% compue the scaling factor from the input units to the desired ones
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% compute the scaling factor from the input units to the desired ones
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 scale = scalingfactor(unit, target);
 
 if istrue(feedback)
