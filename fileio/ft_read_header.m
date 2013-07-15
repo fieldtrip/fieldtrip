@@ -1326,6 +1326,7 @@ switch headerformat
       orig.raw        = raw; % keep all the details
       
     elseif isaverage
+      try,
       evoked_data    = fiff_read_evoked_all(filename);
       vartriallength = any(diff([evoked_data.evoked.first])) || any(diff([evoked_data.evoked.last]));
       if vartriallength
@@ -1352,7 +1353,11 @@ switch headerformat
         orig.info       = evoked_data.info;               % keep all the details
         orig.vartriallength = 0;
       end
-      
+      catch
+        hdr.nSamples    = 0;
+        hdr.nSamplesPre = 0;
+        hdr.nTrials     = 0;
+      end
     elseif isepoched
       error('Support for epoched *.fif data is not yet implemented.')
     end
