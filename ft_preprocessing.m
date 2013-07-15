@@ -354,10 +354,9 @@ if hasdata
     end
           
     data.trial{i} = ft_preproc_padding(data.trial{i}, cfg.padtype, begpadding, endpadding);
-    % do the preprocessing on the selected channels (with temporary time-axis)
-    [dataout.trial{i}, dataout.label, tmptime, cfg] = preproc(data.trial{i}(rawindx,:), data.label(rawindx),  offset2time(0, data.fsample, size(data.trial{i},2)), cfg, begpadding, endpadding);
-    % time axis won't change
-    dataout.time{i} = data.time{i};
+    data.time{i} =  ft_preproc_padding(data.time{i}, 'nan',       begpadding, endpadding); % pad time-axis with nans (see bug2220)
+    % do the preprocessing on the selected channels
+    [dataout.trial{i}, dataout.label, dataout.time{i}, cfg] = preproc(data.trial{i}(rawindx,:), data.label(rawindx),  data.time{i}, cfg, begpadding, endpadding);
     
   end % for all trials
   
@@ -585,9 +584,12 @@ else
       % pad in case of no datapadding
       if ~strcmp(cfg.padtype, 'data')
         dat = ft_preproc_padding(dat, cfg.padtype, begpadding, endpadding);
+        tim = offset2time(offset+begpadding, hdr.Fs, size(dat,2));
+      else
+        tim = offset2time(offset, hdr.Fs, size(dat,2));
       end
       
-      tim = offset2time(offset, hdr.Fs, size(dat,2));
+
 
       % do the preprocessing on the padded trial data and remove the padding after filtering
       [cutdat{i}, label, time{i}, cfg] = preproc(dat, hdr.label(rawindx), tim, cfg, begpadding, endpadding);
