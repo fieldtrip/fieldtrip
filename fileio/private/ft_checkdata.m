@@ -149,10 +149,19 @@ if ~isequal(feedback, 'no')
     ntime = length(data.time);
     fprintf('the input is timelock data with %d channels and %d timebins\n', nchan, ntime);
   elseif isfreq
-    nchan = length(data.label);
-    nfreq = length(data.freq);
-    if isfield(data, 'time'), ntime = num2str(length(data.time)); else ntime = 'no'; end
-    fprintf('the input is freq data with %d channels, %d frequencybins and %s timebins\n', nchan, nfreq, ntime);
+    if isfield(data, 'label')
+      nchan = length(data.label);
+      nfreq = length(data.freq);
+      if isfield(data, 'time'), ntime = num2str(length(data.time)); else ntime = 'no'; end
+      fprintf('the input is freq data with %d channels, %d frequencybins and %s timebins\n', nchan, nfreq, ntime);
+    elseif isfield(data, 'labelcmb')
+      nchan = length(data.labelcmb);
+      nfreq = length(data.freq);
+      if isfield(data, 'time'), ntime = num2str(length(data.time)); else ntime = 'no'; end
+      fprintf('the input is freq data with %d channel combinations, %d frequencybins and %s timebins\n', nchan, nfreq, ntime);  
+    else
+      error('cannot infer freq dimensions');
+    end
   elseif isspike
     nchan  = length(data.label);
     fprintf('the input is spike data with %d channels\n', nchan);
