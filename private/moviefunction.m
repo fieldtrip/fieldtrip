@@ -41,7 +41,7 @@ function moviefunction(cfg, data)
 %   make panels foldable (like on mobile devices)
 
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble callinfo
 ft_preamble trackconfig
 ft_preamble loadvar data
@@ -800,11 +800,17 @@ cb_slider(h);
 if opt.record
   pause(.1);
   drawnow;
+  vs = version('-release');
+  vs = vs(1:4);
   % get starting position via parameter panel    
   currFrame = getframe(opt.handles.figure);
   for i=1:opt.samperframe
-    writeVideo(opt.vidObj, currFrame);
-    %opt.vidObj = addframe(opt.vidObj, currFrame);
+    if vs<2010
+      opt.vidObj = addframe(opt.vidObj, currFrame);
+    else
+      writeVideo(opt.vidObj, currFrame);
+    end
+    
   end
   guidata(h, opt);
 end
@@ -899,9 +905,16 @@ if opt.record
   end
   
   % FIXME open new window to play in there, so that frame getting works
-  opt.vidObj = VideoWriter(opt.framesfile, 'Uncompressed AVI');
-  opt.vidObj.FrameRate = opt.framerate;
-  open(opt.vidObj); 
+  vs = version('-release');
+  vs = vs(1:4);
+  if vs<2010
+    opt.vidObj = avifile(opt.framesfile, 'FPS', opt.framerate);
+  else
+    opt.vidObj = VideoWriter(opt.framesfile, 'Uncompressed AVI');
+    opt.vidObj.FrameRate = opt.framerate;
+    open(opt.vidObj);
+  end
+ 
   %set(opt.handles.figure,'renderer','opengl')
   %opengl software;
   set(opt.handles.figure,'renderer','zbuffer');
@@ -914,8 +927,13 @@ else
   % FIXME set handle back to old window
   stop(opt.timer);
   if ~isempty(opt.framesfile)
-    %opt.vidObj = close(opt.vidObj); 
-    close(opt.vidObj);
+    vs = version('-release');
+    vs = vs(1:4);
+    if vs<2010
+      opt.vidObj = close(opt.vidObj); 
+    else    
+      close(opt.vidObj);
+    end
   end
   set(h, 'string', 'Record');  
   guidata(h, opt);
