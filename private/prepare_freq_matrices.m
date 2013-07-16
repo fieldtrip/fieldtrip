@@ -74,11 +74,11 @@ else
 end
 
 % the time-frequency latency has already been squeezed away (see above)
-if strcmp(freq.dimord, 'chan_freq') || strcmp(freq.dimord, 'chancmb_freq')
+if strcmp(freq.dimord, 'chan_freq') || strcmp(freq.dimord, 'chancmb_freq') || strcmp(freq.dimord, 'chan_chan_freq')
   Ntrials = 1;
-elseif strcmp(freq.dimord, 'rpt_chan_freq') || strcmp(freq.dimord, 'rpt_chancmb_freq')
+elseif strcmp(freq.dimord, 'rpt_chan_freq') || strcmp(freq.dimord, 'rpt_chancmb_freq') || strcmp(freq.dimord, 'rpt_chan_chan_freq')
   Ntrials = size(freq.cumtapcnt,1);
-elseif strcmp(freq.dimord, 'rpttap_chan_freq') || strcmp(freq.dimord, 'rpttap_chancmb_freq')
+elseif strcmp(freq.dimord, 'rpttap_chan_freq') || strcmp(freq.dimord, 'rpttap_chancmb_freq') || strcmp(freq.dimord, 'rpttap_chan_chan_freq')
   Ntrials = size(freq.cumtapcnt,1);
 else
   error('unrecognized dimord for frequency data');
@@ -185,6 +185,52 @@ if isfield(freq, 'powspctrm') && isfield(freq, 'crsspctrm')
     Cr = conj(Cr);
   end
 
+elseif isfield(freq, 'crsspctrm')
+  % this is from JMs version
+  hastime    = isfield(freq, 'time');
+  hasrefchan = ~isempty(cfg.refchan);
+
+  % select time-frequency window of interest
+  if hastime
+    freq = ft_selectdata(freq, 'foilim', cfg.frequency, 'toilim', cfg.latency);
+    fbin = 1;
+    tbin = 1:numel(freq.time);
+  else
+    freq = ft_selectdata(freq, 'foilim', cfg.frequency);
+    fbin = 1;
+  end
+  
+  % convert to square csd matrix
+  % think of incorporating 'quickflag' to speed up the
+  % computation from fourierspectra when single trial
+  % estimates are not required...
+  freq = ft_checkdata(freq, 'cmbrepresentation', 'full');
+
+  [dum, sensindx] = match_str(cfg.channel, freq.label);
+  powspctrmindx = sensindx;
+  if isempty(strfind(freq.dimord, 'rpt'))
+    Ntrials = 1;
+    Cf      = freq.crsspctrm(sensindx,sensindx,:,:);
+    if hasrefchan, 
+      refindx  = match_str(freq.label, cfg.refchan);
+      Cr       = freq.crsspctrm(sensindx,refindx,:,:);
+      Pr       = freq.crsspctrm(refindx,refindx,:,:);
+    else
+      Cr = [];
+      Pr = [];
+    end
+  elseif ~isempty(strfind(freq.dimord, 'rpt')),
+    Ntrials = length(freq.cumtapcnt);
+    Cf      = freq.crsspctrm(:,sensindx,sensindx,:,:);
+    if hasrefchan, 
+      refindx  = match_str(freq.label, cfg.refchan);
+      Cr       = freq.crsspctrm(:,sensindx,refindx,:,:);
+      Pr       = freq.crsspctrm(:,refindx,refindx,:,:);
+    else
+      Cr = [];
+      Pr = [];
+    end
+  end
 else
   fprintf('computing cross-spectrum from fourier\n');
   [dum, powspctrmindx] = match_str(cfg.channel, freq.label);
