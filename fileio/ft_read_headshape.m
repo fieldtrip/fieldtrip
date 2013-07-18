@@ -227,13 +227,13 @@ else
       end
       
       orig = read_ctf_hc(filename);
-      switch coordinates
+      switch coordsys
         case 'head'
           shape.fid.pnt = cell2mat(struct2cell(orig.head));
         case 'dewar'
           shape.fid.pnt = cell2mat(struct2cell(orig.dewar));
         otherwise
-          error('incorrect coordinates specified');
+          error('incorrect coordsys specified');
       end
       shape.fid.label = fieldnames(orig.head);
       
@@ -443,7 +443,7 @@ else
       % read the headshape and fiducials from an MNE file
       hdr = ft_read_header(filename,'headerformat','neuromag_mne');
       nFid = size(hdr.orig.dig,2); %work out number of fiducials
-      switch coordinates
+      switch coordsys
         case 'head' % digitiser points should be stored in head coordinates by default
           
           fidN=1;
@@ -823,3 +823,4 @@ else
     end
   end
 end
+
