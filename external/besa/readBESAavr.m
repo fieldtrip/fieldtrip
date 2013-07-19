@@ -1,4 +1,4 @@
-function avr = ReadBESAavr(filename)
+function avr = readBESAavr(filename)
 
 % Reads BESA *.avr files
 
@@ -25,9 +25,6 @@ if (fp)
         avr.SegmentName = fscanf(fp,'SegmentName= %s\n'); 
     catch
     end
-
-    % a line added by TJ: 20.06.2011
-    tline = fgetl(fp);
 
     if avr.Nchan >0
         avr.ChannelLabels = fgetl(fp);
