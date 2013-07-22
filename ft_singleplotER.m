@@ -205,6 +205,9 @@ if Ndata >1,
     error('input data are of different type; this is not supported');
   end
 end
+dtype  = dtype{1};
+dimord = varargin{1}.dimord;
+dimtok = tokenize(dimord, '_');
 
 % ensure that the preproc specific options are located in the cfg.preproc 
 % substructure, but also ensure that the field 'refchannel' is present at the
@@ -230,11 +233,6 @@ if ~isempty(cfg.preproc)
     varargin{i} = ft_preprocessing(cfg.preproc, varargin{i});
   end
 end
-
-dtype  = dtype{1};
-dimord = varargin{1}.dimord;
-dimtok = tokenize(dimord, '_');
-
 
 % set x/y/parameter defaults according to datatype and dimord
 switch dtype
