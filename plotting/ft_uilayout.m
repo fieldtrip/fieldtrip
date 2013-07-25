@@ -147,8 +147,8 @@ end
 % these are special features to help with the positioning of the elements
 hpos   = ft_getopt(varargin, 'hpos');
 vpos   = ft_getopt(varargin, 'vpos');
-halign = ft_getopt(varargin, 'halign');
-valign = ft_getopt(varargin, 'valign');
+halign = ft_getopt(varargin, 'halign', 'left');
+valign = ft_getopt(varargin, 'valign', 'top');
 width  = ft_getopt(varargin, 'width');
 height = ft_getopt(varargin, 'height');
 
@@ -180,10 +180,22 @@ if ~isempty(hpos)
       width = width*scale;
       pos(:,3) = width;
     end
+    
     hpos = cumsum([0.01; width+0.01]);
+    
+    if isequal(halign, 'right')
+      hpos = 1-hpos(end) + hpos - 0.01;
+    end
+    
     hpos = hpos(1:end-1);
+        
+    
   elseif isequal(hpos, 'align')
-    hpos = pos(1,2); % the position of the first element
+    if isequal(halign, 'right')
+      hpos = pos(1,2); % the position of the last element
+    else % default behaviour
+      hpos = pos(1,2); % the position of the first element
+    end
   elseif isequal(hpos, 'distribute')
     minpos = min(pos(:,1));
     maxpos = max(pos(:,1));
@@ -201,10 +213,21 @@ if ~isempty(vpos)
       height = height*scale;
       pos(:,4) = height;
     end
-    vpos = cumsum([0.01; width]);
-    vpos = vpos(1:end-1);
+    
+    vpos = cumsum([0.01; height+0.01]);
+    
+    if ~isequal(valign, 'bottom') % default
+      vpos = 1-vpos(end) + vpos - 0.01;
+    end
+    
+    vpos = vpos(end-1:-1:1);
+    
   elseif isequal(vpos, 'align')
-    vpos = pos(1,2); % the position of the first element
+    if isequal('valign', 'bottom')
+      vpos = pos(end,2); % the position of the last element
+    else % default behaviour
+      vpos = pos(1,2); % the position of the first element
+    end
   elseif isequal(vpos, 'distribute')
     minpos = min(pos(:,2));
     maxpos = max(pos(:,2));
