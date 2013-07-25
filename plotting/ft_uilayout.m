@@ -31,8 +31,6 @@ function ft_uilayout(h, varargin)
 %                                  specified scalar
 %   'height'         scalar      : sets the height of elements to the 
 %                                  specified scalar
-
-% below still needs to be implemented
 %   'halign'         'left'      : aligns the horizontal position of 
 %                                  elements to the left
 %                    'right'     : aligns the horizontal position of 
@@ -148,7 +146,7 @@ end
 hpos   = ft_getopt(varargin, 'hpos');
 vpos   = ft_getopt(varargin, 'vpos');
 halign = ft_getopt(varargin, 'halign', 'left');
-valign = ft_getopt(varargin, 'valign', 'top');
+valign = ft_getopt(varargin, 'valign', 'bottom');
 width  = ft_getopt(varargin, 'width');
 height = ft_getopt(varargin, 'height');
 
@@ -216,7 +214,7 @@ if ~isempty(vpos)
     
     vpos = cumsum([0.01; height+0.01]);
     
-    if ~isequal(valign, 'bottom') % default
+    if isequal(valign, 'bottom') % default
       vpos = 1-vpos(end) + vpos - 0.01;
     end
     
