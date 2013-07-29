@@ -11,10 +11,10 @@ function ft_realtime_headlocalizer(cfg)
 % become colorcoded, i.e. green, orange, or red.
 %
 % Repositioning between a recording session, i.e. to a previous recording session,
-% can be achieved by specifying a template. In case of CTF275 systems, by
-% pointing to another dataset; e.g. cfg.template = 'subject01xxx.ds'. In case
-% of Neuromag systems, by pointing to a textfile created during a previous
-% recording session; e.g. cfg.template = '29-Apr-2013-xxx.txt'.
+% can be achieved by specifying a template; e.g. by pointing to another dataset;
+% e.g. cfg.template = 'subject01xxx.ds' (CTF only), or by pointing to a textfile
+% created during a previous recording; e.g. cfg.template = '29-Apr-2013-xxx.txt'.
+% The latter textfile is created automatically with each 'Update' buttonpress.
 %
 % Use as
 %   ft_realtime_headlocalizer(cfg)
@@ -55,6 +55,9 @@ ft_defaults
 cfg.dataset         = ft_getopt(cfg, 'dataset', 'buffer://odin:1972'); % location of the buffer/dataset
 cfg.accuracy_green  = ft_getopt(cfg, 'accuracy_green',  .15); % green when within this distance from reference
 cfg.accuracy_orange = ft_getopt(cfg, 'accuracy_orange',  .3); % orange when within this distance from reference
+cfg.template        = ft_getopt(cfg, 'template',         []); % template dataset containing the references
+cfg.blocksize       = ft_getopt(cfg, 'blocksize',         1); % in seconds
+cfg.bufferdata      = ft_getopt(cfg, 'bufferdata',   'last'); % first (replay) or last (real-time)
 
 % start by reading the header from the realtime buffer
 clear ft_read_header; % ensure pesistent variables are cleared
@@ -73,10 +76,15 @@ isctf      = ft_senstype(hdr.grad, 'ctf275');
 % read template head position, to reposition to, if template file is specified
 if isctf
   if ~isempty(cfg.template)
-    shape = ft_read_headshape(cfg.template, 'coordinates', 'dewar');
-    template(1,:) = [shape.fid.pnt(1,1), shape.fid.pnt(1,2), shape.fid.pnt(1,3)]; % chan X pos
-    template(2,:) = [shape.fid.pnt(2,1), shape.fid.pnt(2,2), shape.fid.pnt(2,3)];
-    template(3,:) = [shape.fid.pnt(3,1), shape.fid.pnt(3,2), shape.fid.pnt(3,3)];
+    [PATH,NAME,EXT]=fileparts(cfg.template)
+    if strcmp(EXT, '.ds')
+      shape = ft_read_headshape(cfg.template, 'coordinates', 'dewar');
+      template(1,:) = [shape.fid.pnt(1,1), shape.fid.pnt(1,2), shape.fid.pnt(1,3)]; % chan X pos
+      template(2,:) = [shape.fid.pnt(2,1), shape.fid.pnt(2,2), shape.fid.pnt(2,3)];
+      template(3,:) = [shape.fid.pnt(3,1), shape.fid.pnt(3,2), shape.fid.pnt(3,3)];
+    elseif strcmp(EXT, '.txt')
+      template = dlmread(cfg.template);
+    end
   else
     template = [];
   end
@@ -156,6 +164,7 @@ info.isctf              = isctf;
 info.isneuromag         = isneuromag;
 info.cfg                = cfg;
 info.template           = template;
+info.sens               = sens;
 %info.vol                = vol;
 %info.coilsignal         = coilsignal;
 %info.dip                = dip;
@@ -493,8 +502,8 @@ function draw_sub(handle)
 info = guidata(handle);
 
 % FIXME, for testing
-fprintf('template:\n');
-display(info.template)
+%fprintf('template:\n');
+%display(info.template)
 
 if get(info.hSensorCheckBox, 'Value') && ~isempty(info.sens)
   % plot the sensors
@@ -715,12 +724,11 @@ fprintf('updating template coordinates \n')
 for j = 1:numel(info.hpi)
   info.template(j,:) = info.hpi{j}(:); % chan X pos
 end
+
 % write template position to text file for later re-positioning
-if info.isneuromag
-  template_time = [date datestr(now,'-HH-MM-SS')];
-  fprintf('writing to %s.txt \n', template_time);
-  dlmwrite([template_time '.txt'], info.template, ' ');
-end
+template_time = [date datestr(now,'-HH-MM-SS')];
+fprintf('writing to %s.txt \n', template_time);
+dlmwrite([template_time '.txt'], info.template, ' ');
 
 % put the info back
 guidata(handle, info);
