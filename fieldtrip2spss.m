@@ -63,4 +63,3 @@ dlmwrite(filename, data, '-append', 'delimiter', '\t', 'precision', 4);
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble callinfo
-

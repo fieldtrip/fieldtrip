@@ -22,7 +22,7 @@ function [shape] = ft_read_headshape(filename, varargin)
 %
 % Additional options should be specified in key-value pairs and can be
 %
-%   'format'              = string, see below
+%   'format'      = string, see below
 %   'coordinates' = string, e.g. 'head' or 'dewar' (CTF)
 %   'unit'        = string, e.g. 'cm'
 %   'concatenate' = 'no' or 'yes'(default): if you read the shape of left and right hemispehers from multiple files and want to concatenate them

@@ -117,6 +117,12 @@ grad.tra      = zeros(nSensors,nCoils);
 grad.unit     = 'cm'; % see below for the conversion, the original fif units are in meter
 grad.label    = cell(nSensors,1);
 
+if dewar
+  grad.coordsys = 'dewar';
+else
+  grad.coordsys = 'neuromag';
+end
+
 % initialise elec structure, this can remain empty
 elec = [];
 
