@@ -234,6 +234,9 @@ while true
       topo = ft_preproc_detrend(meg) * ctranspose(coil);
     end
     
+    % ignore the out-of-phase spectral component in the topography
+    topo = real(topo); % THIS SEEMS TO BE CRUCIAL
+    
     if false
       close all
       for i=1:ncoil
@@ -277,6 +280,10 @@ while true
     for i=1:ncoil
       ft_plot_dipole(dip(i).pos, dip(i).mom);
     end
+    
+    % show current timesample
+    str = sprintf('samples: %d - %d\n', begsample, endsample);
+    title(str);
     
     % force Matlab to update the figure
     drawnow

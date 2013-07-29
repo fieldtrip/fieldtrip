@@ -146,6 +146,12 @@ if isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
   grad.label = label([selMEG selREF]);
   grad.unit  = 'cm';
 
+  if dewar
+    grad.coordsys = 'dewar';
+  else
+    grad.coordsys = 'ctf';
+  end
+
   % convert the balancing coefficients into a montage that can be used with the ft_apply_montage function
   if isfield(hdr.BalanceCoefs, 'G1BR')
     meglabel          = label(hdr.BalanceCoefs.G1BR.MEGlist);
@@ -275,7 +281,12 @@ elseif isfield(hdr, 'sensType') && isfield(hdr, 'Chan')
 
   grad.label = hdr.label([selMEG selREF]);
   grad.unit  = 'cm';
-
+  
+  if dewar
+    grad.coordsys = 'dewar';
+  else
+    grad.coordsys = 'ctf';
+  end
 
 elseif isfield(hdr, 'sensor') && isfield(hdr.sensor, 'info')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

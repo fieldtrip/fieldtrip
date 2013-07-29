@@ -16,6 +16,7 @@ function [filt] = ft_preproc_bandpassfilter(dat,Fs,Fbp,N,type,dir,instabilityfix
 %                'but' Butterworth IIR filter (default)
 %                'fir' FIR filter using Matlab fir1 function
 %                'firls' FIR filter using Matlab firls function (requires Matlab Signal Processing Toolbox)
+%                'brickwall' Frequency-domain filter using Matlab FFT and iFFT function
 %   dir        optional filter direction, can be
 %                'onepass'         forward filter only
 %                'onepass-reverse' reverse filter only, i.e. backward in time
@@ -31,9 +32,14 @@ function [filt] = ft_preproc_bandpassfilter(dat,Fs,Fbp,N,type,dir,instabilityfix
 % strength of the filter, i.e. a two-pass filter with the same filter
 % order will attenuate the signal twice as strong.
 %
+% Further note that the filter type 'brickwall' filters in the frequency domain,
+% but may have severe issues. For instance, it has the implication that the time
+% domain signal is periodic. Another issue pertains to that frequencies are
+% not well defined over short time intervals; particularly for low frequencies.
+%
 % See also PREPROC
 
-% Copyright (c) 2003-2013, Robert Oostenveld
+% Copyright (c) 2003-2013, Robert Oostenveld, Arjen Stolk
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -120,6 +126,16 @@ switch type
     z(pos1:pos2) = 1;
     A = 1;
     B = firls(N,f,z); % requires Matlab signal processing toolbox
+  case 'brickwall'
+    ax = linspace(0, Fs, size(dat,2)); % frequency coefficients
+    fl = nearest(ax, min(Fbp))-1; % low cut-off frequency
+    fh = nearest(ax, max(Fbp))+1; % high cut-off frequency
+    a  = 0; % suppresion rate of frequencies-not-of-interest
+    f           = fft(dat,[],2); % FFT
+    f(:,1:fl)   = a.*f(:,1:fl); % perform low cut-off
+    f(:,fh:end) = a.*f(:,fh:end); % perform high cut-off
+    filt        = 2*real(ifft(f,[],2)); % iFFT
+    return
   otherwise
     error('unsupported filter type "%s"', type);
 end
@@ -151,4 +167,3 @@ catch
       error('incorrect specification of instabilityfix');
   end % switch
 end
-

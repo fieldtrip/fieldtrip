@@ -1,17 +1,28 @@
-function avr = ReadBESAavr(filename)
+function avr = readBESAavr(filename)
 
 % Reads BESA *.avr files
 
 fp = fopen(filename,'r');
 if (fp)
-    % Read header of .avr file
+    % Read header of .avr file.
     avr.Npts = fscanf(fp,'Npts= %i');
     avr.TSB = fscanf(fp,' TSB= %f');    
     avr.DI = fscanf(fp,'DI= %f');
     avr.Time = [avr.TSB:avr.DI:avr.TSB+avr.DI*(avr.Npts-1)];
+    
+    % Read optional information.
+    try
     temp = fscanf(fp,' SB= %f SC= %f');
+    catch
+    end
+    
     try 
-        avr.Nchan = fscanf(fp,'Nchan= %i\n'); 
+        avr.Nchan = fscanf(fp,'Nchan= %i'); 
+    catch
+    end
+    
+    try 
+        avr.SegmentName = fscanf(fp,'SegmentName= %s\n'); 
     catch
     end
 

@@ -14,8 +14,7 @@ function [freq] = ft_appendfreq(cfg, varargin)
 %                   freq2.powspctrm etc, use cft.parameter = 'powspctrm'.
 %
 % The configuration can optionally contain
-%  cfg.appenddim  = String. The dimension to concatenate over (default:
-%                   'auto').
+%  cfg.appenddim  = String. The dimension to concatenate over (default is 'auto').
 %  cfg.tolerance  = Double. Tolerance determines how different the units of
 %                   frequency structures are allowed to be to be considered
 %                   compatible (default: 1e-5).
@@ -208,7 +207,6 @@ switch cfg.appenddim
       hascumtapcnt = [];
       hastrialinfo = [];
       for i=1:Ndata
-        foivec{i} = varargin{i}.freq;%cgeck if the frequecies across datasets are equal
         if isfield(varargin{i},'cumsumcnt');
           hascumsumcnt(end+1) = 1;
         else
@@ -227,10 +225,10 @@ switch cfg.appenddim
       end
       
       % screen concatenable fields
-      if ~isequal(foivec{:});
+      if ~checkfreq(varargin{:}, 'identical', tol)
         error('the freq fields of the input data structures are not equal');
       else
-        freq.freq=foivec{1};
+        freq.freq=varargin{1}.freq;
       end
       if ~sum(hascumsumcnt)==0 && ~(sum(hascumsumcnt)==Ndata);
         error('the cumsumcnt fields of the input data structures are not equal');
@@ -275,7 +273,7 @@ switch cfg.appenddim
         clear trialinfo;
       end
     end
-
+    
     freq.label = varargin{1}.label;
     freq.freq  = varargin{1}.freq;
     if isfield(varargin{1}, 'time'), freq.time = varargin{1}.time; end
@@ -444,5 +442,3 @@ elseif strcmp(required, 'identical')
     faxis   = faxis(:,1);
   end
 end
-
-

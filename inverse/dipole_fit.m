@@ -280,6 +280,20 @@ if checkinside
   end
 end
 
+% % FIXME: not yet implemented, rigid body constraint
+% if isfield(constr, 'rigidbody') 
+%   param = []; % something to obtain [Tx Ty Tz Rx Ry Rz]
+%   H = translate(param(1:3)); % rotation before translation
+%   H = rotate(param(4:6));
+%   pos = ft_warp_apply(pos,H);
+%   %lf = ft_compute_leadfield(pos1, sens, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
+% end
+
+% % FIXME: not yet implemented, one-to-one mapping constraint
+% if isfield(constr, 'onetoone') 
+%   param = []; % something to enforce each dipole to each coil identity
+% end
+
 % construct the leadfield matrix for all dipoles
 lf = ft_compute_leadfield(pos, sens, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
 if ~isempty(ori)

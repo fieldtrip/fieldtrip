@@ -40,7 +40,7 @@ function [varargout] = ft_selectdata_new(cfg, varargin)
 % $Id$
 
 ft_defaults                   % this ensures that the path is correct and that the ft_defaults global variable is available
-ft_preamble help              % this will show the function help if nargin==0 and return an error
+ft_preamble init              % this will reset warning_once and show the function help if nargin==0 and return an error
 ft_preamble provenance        % this records the time and memory usage at teh beginning of the function
 ft_preamble trackconfig       % this converts the cfg structure in a config object, which tracks the cfg options that are being used
 ft_preamble debug             % this allows for displaying or saving the function name and input arguments upon an error
@@ -56,11 +56,11 @@ end
 
 cfg = ft_checkconfig(cfg, 'renamed', {'toilim' 'latency'});
 
-% this function only works for the new (2013x) source representation without sub-structures 
+% this function only works for the upcoming (not yet standard) source representation without sub-structures 
 if strcmp(dtype, 'source')
   % update the old-style beamformer source reconstruction
   for i=1:length(varargin)
-    varargin{i} = ft_datatype_source(varargin{i}, 'version', '2013x');
+    varargin{i} = ft_datatype_source(varargin{i}, 'version', 'upcoming');
   end
   if isfield(cfg, 'parameter') && length(cfg.parameter)>4 && strcmp(cfg.parameter(1:4), 'avg.')
     cfg.parameter = cfg.parameter(5:end); % remove the 'avg.' part

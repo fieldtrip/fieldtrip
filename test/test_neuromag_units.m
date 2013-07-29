@@ -94,31 +94,23 @@ assert_almost_equal(lf22(1,1)./lf11(1,1), 1e-3); % it is   10 dm away instead of
 assert_almost_equal(lf33(1,1)./lf11(1,1), 1e-6); % it is  100 cm away instead of 1 m
 assert_almost_equal(lf44(1,1)./lf11(1,1), 1e-9); % it is 1000 mm away instead of 1 m
 
-lf11 = ft_compute_leadfield(pos1, grad1, vol1, 'unit', 'si');
-lf22 = ft_compute_leadfield(pos2, grad2, vol2, 'unit', 'si');
-lf33 = ft_compute_leadfield(pos3, grad3, vol3, 'unit', 'si');
-lf44 = ft_compute_leadfield(pos4, grad4, vol4, 'unit', 'si');
-assert_almost_equal(lf22(1,1)./lf11(1,1), 1);
-assert_almost_equal(lf33(1,1)./lf11(1,1), 1);
-assert_almost_equal(lf44(1,1)./lf11(1,1), 1);
-
 distance      = {'m' 'dm' 'cm' 'mm'};
-fieldstrength = {'T' 'mT' 'uT' 'nT' 'pT' 'fT'};
+amplitude = {'T' 'mT' 'uT' 'nT' 'pT' 'fT'};
 for i=1:4
   for j=1:6
-    fprintf('distance = %s, fieldstrength = %s\n', distance{i}, fieldstrength{j});
-    grad1a = ft_convert_grad(grad1, fieldstrength{j}, distance{i}, 'fieldstrength');
-    grad2a = ft_convert_grad(grad2, fieldstrength{j}, distance{i}, 'fieldstrength');
-    grad3a = ft_convert_grad(grad3, fieldstrength{j}, distance{i}, 'fieldstrength');
-    grad4a = ft_convert_grad(grad4, fieldstrength{j}, distance{i}, 'fieldstrength');
-    grad1b = ft_convert_grad(grad1, fieldstrength{j}, distance{i}, 'fieldstrength/distance');
-    grad2b = ft_convert_grad(grad2, fieldstrength{j}, distance{i}, 'fieldstrength/distance');
-    grad3b = ft_convert_grad(grad3, fieldstrength{j}, distance{i}, 'fieldstrength/distance');
-    grad4b = ft_convert_grad(grad4, fieldstrength{j}, distance{i}, 'fieldstrength/distance');
-    grad1c = ft_convert_grad(grad1b, fieldstrength{j}, distance{i}, 'fieldstrength'); % should again be the same as "a"
-    grad2c = ft_convert_grad(grad2b, fieldstrength{j}, distance{i}, 'fieldstrength'); % should again be the same as "a"
-    grad3c = ft_convert_grad(grad3b, fieldstrength{j}, distance{i}, 'fieldstrength'); % should again be the same as "a"
-    grad4c = ft_convert_grad(grad4b, fieldstrength{j}, distance{i}, 'fieldstrength'); % should again be the same as "a"
+    fprintf('distance = %s, amplitude = %s\n', distance{i}, amplitude{j});
+    grad1a = ft_convert_grad(grad1, amplitude{j}, distance{i}, 'amplitude');
+    grad2a = ft_convert_grad(grad2, amplitude{j}, distance{i}, 'amplitude');
+    grad3a = ft_convert_grad(grad3, amplitude{j}, distance{i}, 'amplitude');
+    grad4a = ft_convert_grad(grad4, amplitude{j}, distance{i}, 'amplitude');
+    grad1b = ft_convert_grad(grad1, amplitude{j}, distance{i}, 'amplitude/distance');
+    grad2b = ft_convert_grad(grad2, amplitude{j}, distance{i}, 'amplitude/distance');
+    grad3b = ft_convert_grad(grad3, amplitude{j}, distance{i}, 'amplitude/distance');
+    grad4b = ft_convert_grad(grad4, amplitude{j}, distance{i}, 'amplitude/distance');
+    grad1c = ft_convert_grad(grad1b, amplitude{j}, distance{i}, 'amplitude'); % should again be the same as "a"
+    grad2c = ft_convert_grad(grad2b, amplitude{j}, distance{i}, 'amplitude'); % should again be the same as "a"
+    grad3c = ft_convert_grad(grad3b, amplitude{j}, distance{i}, 'amplitude'); % should again be the same as "a"
+    grad4c = ft_convert_grad(grad4b, amplitude{j}, distance{i}, 'amplitude'); % should again be the same as "a"
     assert(identical(grad1c, grad1a, 'reltol', 100*eps));
     assert(identical(grad2c, grad2a, 'reltol', 100*eps));
     assert(identical(grad3c, grad3a, 'reltol', 100*eps));
@@ -128,7 +120,7 @@ end
 
 try
   haserror = true;
-  lf12 = ft_compute_leadfield(pos1, grad1, vol2); % should give an error
+  ft_compute_leadfield(pos1, grad1, vol2); % should give an error
   haserror = false;
 end % try
 if ~haserror
@@ -137,20 +129,21 @@ end
 
 try
   haserror = true;
-  lf23 = ft_compute_leadfield(pos1, grad1, vol3);
+  ft_compute_leadfield(pos1, grad1, vol3); % should give an error
   haserror = false;
 end % try
 if ~haserror
   error('the invalid input should have resulted in an error')
 end
 
-lf11 = ft_compute_leadfield(pos1, grad1, vol1);
-lfsi = ft_compute_leadfield(pos1, grad1, vol1, 'units', 'si');
+lf11 = ft_compute_leadfield(pos1, grad1, vol1); % these are in T and m
+lfsi = ft_compute_leadfield(pos1, grad1, vol1, 'units', grad1.chanunit);
 assert_almost_equal(lf11(1,1)./lfsi(1,1), 1);
-grad1a = ft_convert_grad(grad1, 'fT',  'm', 'fieldstrength');           vol1a = vol1;
-grad1b = ft_convert_grad(grad1, 'fT', 'cm', 'fieldstrength');           vol1b = ft_convert_units(vol1, 'cm');
-grad1c = ft_convert_grad(grad1, 'fT',  'm', 'fieldstrength/distance');  vol1c = vol1;
-grad1d = ft_convert_grad(grad1, 'fT', 'cm', 'fieldstrength/distance');  vol1d = ft_convert_units(vol1, 'cm');
+
+grad1a = ft_convert_grad(grad1, 'fT',  'm', 'amplitude');           vol1a = vol1;
+grad1b = ft_convert_grad(grad1, 'fT', 'cm', 'amplitude');           vol1b = ft_convert_units(vol1, 'cm');
+grad1c = ft_convert_grad(grad1, 'fT',  'm', 'amplitude/distance');  vol1c = vol1;
+grad1d = ft_convert_grad(grad1, 'fT', 'cm', 'amplitude/distance');  vol1d = ft_convert_units(vol1, 'cm');
 lf1a = ft_compute_leadfield(pos1    , grad1a, vol1a);
 lf1b = ft_compute_leadfield(pos1*100, grad1b, vol1b); % in cm
 lf1c = ft_compute_leadfield(pos1    , grad1c, vol1c);

@@ -97,7 +97,7 @@ if isfield(source, 'latency'),
 end
 
 switch version
-  case '2013x'
+  case 'upcoming' % this is under development and expected to become the standard in 2013
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if isfield(source, 'xgrid')
       source = rmfield(source, 'xgrid');

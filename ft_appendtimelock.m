@@ -87,7 +87,7 @@ end
 % start with the initial output structure
 timelock        = [];
 timelock.time   = varargin{1}.time;
-ntime  = length(timelock.time);
+ntime           = length(timelock.time);
 
 
 switch cfg.appenddim
@@ -172,7 +172,7 @@ switch cfg.appenddim
       if ~all(a==b)
         if isfield(varargin{m},'trial')
           varargin{m}.trial = reorderdim(varargin{m}.trial, 2, b);
-        else %.avg and .var will be recomputed anyway if .trial exists
+        else % .avg and .var will be recomputed anyway if .trial exists
           varargin{m}.avg = reorderdim(varargin{m}.avg, 1, b);
           varargin{m}.var = reorderdim(varargin{m}.var, 1, b);
         end

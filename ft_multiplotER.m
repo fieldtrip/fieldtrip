@@ -223,8 +223,19 @@ dimord = varargin{1}.dimord;
 dimtok = tokenize(dimord, '_');
 
 
-% ensure that the preproc specific options are located in the cfg.preproc substructure
-cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'});
+% ensure that the preproc specific options are located in the cfg.preproc 
+% substructure, but also ensure that the field 'refchannel' is present at the
+% highest level in the structure. This is a little hack by JM because the field
+% refchannel can also refer to the plotting of a connectivity metric. Also,
+% the freq2raw conversion does not work at all in the call to ft_preprocessing.
+% Therefore, for now, the preprocessing will not be done when there is freq
+% data in the input. A more generic solution should be considered.
+
+if isfield(cfg, 'refchannel'), refchannelincfg = cfg.refchannel; end
+if ~any(strcmp({'freq','freqmvar'},dtype)), 
+  cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'}); 
+end
+if exist('refchannelincfg', 'var'), cfg.refchannel  = refchannelincfg; end
 
 if ~isempty(cfg.preproc)
   % preprocess the data, i.e. apply filtering, baselinecorrection, etc.

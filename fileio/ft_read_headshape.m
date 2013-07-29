@@ -22,7 +22,7 @@ function [shape] = ft_read_headshape(filename, varargin)
 %
 % Additional options should be specified in key-value pairs and can be
 %
-%   'format'              = string, see below
+%   'format'      = string, see below
 %   'coordinates' = string, e.g. 'head' or 'dewar' (CTF)
 %   'unit'        = string, e.g. 'cm'
 %   'concatenate' = 'no' or 'yes'(default): if you read the shape of left and right hemispehers from multiple files and want to concatenate them
@@ -227,13 +227,13 @@ else
       end
       
       orig = read_ctf_hc(filename);
-      switch coordinates
+      switch coordsys
         case 'head'
           shape.fid.pnt = cell2mat(struct2cell(orig.head));
         case 'dewar'
           shape.fid.pnt = cell2mat(struct2cell(orig.dewar));
         otherwise
-          error('incorrect coordinates specified');
+          error('incorrect coordsys specified');
       end
       shape.fid.label = fieldnames(orig.head);
       
@@ -418,6 +418,7 @@ else
         newtri2(newtri2==src(2).vertno(i)) = i;
       end
       shape.tri  = [newtri1; newtri2 + numel(src(1).vertno)];
+      shape.area = [src(1).use_tri_area(:); src(2).use_tri_area(:)];
       shape.orig.pnt = [src(1).rr; src(2).rr];
       shape.orig.tri = [src(1).tris; src(2).tris + src(1).np];
       shape.orig.inuse = [src(1).inuse src(2).inuse]';
@@ -442,7 +443,7 @@ else
       % read the headshape and fiducials from an MNE file
       hdr = ft_read_header(filename,'headerformat','neuromag_mne');
       nFid = size(hdr.orig.dig,2); %work out number of fiducials
-      switch coordinates
+      switch coordsys
         case 'head' % digitiser points should be stored in head coordinates by default
           
           fidN=1;
@@ -822,3 +823,4 @@ else
     end
   end
 end
+

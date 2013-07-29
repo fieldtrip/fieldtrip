@@ -31,7 +31,6 @@ function [lf] = ft_compute_leadfield(pos, sens, vol, varargin)
 %   'normalize'       = 'no', 'yes' or 'column'
 %   'normalizeparam'  = parameter for depth normalization (default = 0.5)
 %   'weight'          = number or 1xN vector, weight for each dipole position (default = 1)
-%   'unit'            = string, can be 'arbitrary' or 'si' (default = 'arbitrary')
 %
 % The leadfield weight may be used to specify a (normalized)
 % corresponding surface area for each dipole, e.g. when the dipoles
@@ -61,7 +60,7 @@ function [lf] = ft_compute_leadfield(pos, sens, vol, varargin)
 % FT_HEADMODEL_SINGLESHELL, FT_HEADMODEL_SINGLESPHERE,
 % FT_HEADMODEL_HALFSPACE
 
-% Copyright (C) 2004-2010, Robert Oostenveld
+% Copyright (C) 2004-2013, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -96,7 +95,7 @@ reducerank      = ft_getopt(varargin, 'reducerank', 'no');
 normalize       = ft_getopt(varargin, 'normalize' , 'no');
 normalizeparam  = ft_getopt(varargin, 'normalizeparam', 0.5);
 weight          = ft_getopt(varargin, 'weight');
-units           = ft_getopt(varargin, 'units', 'arbitrary'); % arbitrary or si
+units           = ft_getopt(varargin, 'units');
 
 if ~isstruct(sens) && size(sens, 2)==3
   % definition of electrode positions only, restructure it
@@ -122,21 +121,6 @@ end
 
 if isfield(vol, 'unit') && isfield(sens, 'unit') && ~strcmp(vol.unit, sens.unit)
   error('inconsistency in the units of the volume conductor and the sensor array');
-end
-
-if strcmp(units, 'si')
-  % convert the input objects into standard international units, the default is arbitrary
-  grid.pos  = pos;
-  grid.unit = sens.unit; % assume the same units for the dipole position as for the vol and sens
-  grid = ft_convert_units(grid, 'm');
-  sens = ft_convert_units(sens, 'm');
-  vol  = ft_convert_units(vol , 'm');
-  pos  = grid.pos;
-  clear grid
-  % the previous dealt with geometrical units, but not with the possibility of fT or uV
-  if ~all(strcmp(sens.chanunit, 'T/m') | strcmp(sens.chanunit, 'T') | strcmp(sens.chanunit, 'V'))
-    error('failed to convert the sensor array into SI units');
-  end
 end
 
 if ismeg && iseeg
@@ -242,17 +226,19 @@ elseif ismeg
       % orthogonal x/y/z directions
       dippar = zeros(Ndipoles*3, 6);
       for i=1:Ndipoles
-        dippar((i-1)*3+1, :) = [pos(i, :) 1 0 0]; % single dipole, x-orientation
-        dippar((i-1)*3+2, :) = [pos(i, :) 0 1 0]; % single dipole, y-orientation
-        dippar((i-1)*3+3, :) = [pos(i, :) 0 0 1]; % single dipole, z-orientation
+        dippar((i-1)*3+1, :) = [vol.forwpar.scale*pos(i, :) 1 0 0]; % single dipole with unit strength, x-orientation
+        dippar((i-1)*3+2, :) = [vol.forwpar.scale*pos(i, :) 0 1 0]; % single dipole with unit strength, y-orientation
+        dippar((i-1)*3+3, :) = [vol.forwpar.scale*pos(i, :) 0 0 1]; % single dipole with unit strength, z-orientation
       end
       % compute the leadfield for each individual coil
       lf = meg_forward(dippar, vol.forwpar);
+      % the leadfield is computed for cm units, convert it to the desired units
+      lf = lf*vol.forwpar.scale^2;
       if isfield(sens, 'tra')
         % compute the leadfield for each gradiometer (linear combination of coils)
         lf = sens.tra * lf;
       end
-      
+            
     case 'openmeeg'
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % use code from OpenMEEG
@@ -260,7 +246,7 @@ elseif ismeg
       ft_hastoolbox('openmeeg', 1);
       
       % switch the non adaptive algorithm on
-      nonadaptive = true; %HACK : this is hardcoded at the moment
+      nonadaptive = true; % HACK : this is hardcoded at the moment
       dsm = openmeeg_dsm(pos, vol, nonadaptive);
       [h2mm, s2mm]= openmeeg_megm(pos, vol, sens);
       
@@ -548,13 +534,13 @@ if ~isempty(weight)
   end
 end
 
-% display a comment about the output units (head model geometrical points and conductivity)
-% if isfield(vol, 'unit')
-% gunit = vol.unit;
-% else
-% gunit = 'unknown';
-% end
-% cunit = sprintf('S/%s', gunit);
-% str = sprintf('The input units are %s for points and %s for conductivity', gunit, cunit);
-% warning_once(str);
+if ~isempty(units)
+  assert(strcmp(vol.unit,  'm'), 'unit conversion only possible for SI input units');
+  assert(strcmp(sens.unit, 'm'), 'unit conversion only possible for SI input units');
+  assert(all(strcmp(sens.chanunit, 'V') | strcmp(sens.chanunit, 'T') | strcmp(sens.chanunit, 'T/m')), 'unit conversion only possible for SI input units');
+  % compute conversion factor and multiply each row of the matrix
+  scale = cellfun(@scalingfactor, sens.chanunit(:), units(:));
+  lf = bsxfun(@times, lf, scale(:));
+end
+
 

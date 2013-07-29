@@ -1,7 +1,52 @@
 function ft_uilayout(h, varargin)
 
 % FT_UILAYOUT is a helper function to facilitate the layout of multiple
-% usercontrol elements
+% usercontrol elements, use as:
+%   ft_uilayout(h, 'tag', '...', ...);
+% where h is the figure handle and 'tag' is a key specifying the elements
+% to be manipulated.
+% In addition to MATLAB defaults (see UICONTROL), you can use the 
+% following key-value pairs:
+%   'hpos'           'auto':       puts elements in horizontal adjacent 
+%                                  order with a fixed distance of 0.01 in
+%                                  between
+%                    'align':      adjusts the horizontal position of all 
+%                                  elements to the first element
+%                    'distribute': puts elements in horizontal adjacent 
+%                                  order such that they cover the whole
+%                                  figure width
+%                    scalar      : sets the horizontal position of elements
+%                                  to the specified scalar
+%   'vpos'           'auto':       puts elements in vertical adjacent 
+%                                  order with a fixed distance of 0.01 in
+%                                  between
+%                    'align':      adjusts the vertical position of all 
+%                                  elements to the first element
+%                    'distribute': puts elements in vertical adjacent 
+%                                  order such that they cover the whole
+%                                  figure height
+%                    scalar      : sets the vertical position of elements
+%                                  to the specified scalar
+%   'width'          scalar      : sets the width of elements to the 
+%                                  specified scalar
+%   'height'         scalar      : sets the height of elements to the 
+%                                  specified scalar
+%   'halign'         'left'      : aligns the horizontal position of 
+%                                  elements to the left
+%                    'right'     : aligns the horizontal position of 
+%                                  elements to the right
+%   'valign'         'top'       : aligns the vertical position of 
+%                                  elements to the top
+%                    'bottom'    : aligns the vertical position of 
+%                                  elements to the bottom
+%   'halign'         'left'      : aligns the horizontal position of 
+%                                  elements to the left
+%                    'right'     : aligns the horizontal position of 
+%                                  elements to the right
+%   'valign'         'top'       : aligns the vertical position of 
+%                                  elements to the top
+%                    'bottom'    : aligns the vertical position of 
+%                                  elements to the bottom
 
 % Copyright (C) 2009, Robert Oostenveld
 %
@@ -100,6 +145,8 @@ end
 % these are special features to help with the positioning of the elements
 hpos   = ft_getopt(varargin, 'hpos');
 vpos   = ft_getopt(varargin, 'vpos');
+halign = ft_getopt(varargin, 'halign', 'left');
+valign = ft_getopt(varargin, 'valign', 'bottom');
 width  = ft_getopt(varargin, 'width');
 height = ft_getopt(varargin, 'height');
 
@@ -131,10 +178,22 @@ if ~isempty(hpos)
       width = width*scale;
       pos(:,3) = width;
     end
+    
     hpos = cumsum([0.01; width+0.01]);
+    
+    if isequal(halign, 'right')
+      hpos = 1-hpos(end) + hpos - 0.01;
+    end
+    
     hpos = hpos(1:end-1);
+        
+    
   elseif isequal(hpos, 'align')
-    hpos = pos(1,2); % the position of the first element
+    if isequal(halign, 'right')
+      hpos = pos(1,2); % the position of the last element
+    else % default behaviour
+      hpos = pos(1,2); % the position of the first element
+    end
   elseif isequal(hpos, 'distribute')
     minpos = min(pos(:,1));
     maxpos = max(pos(:,1));
@@ -152,10 +211,21 @@ if ~isempty(vpos)
       height = height*scale;
       pos(:,4) = height;
     end
-    vpos = cumsum([0.01; width]);
-    vpos = vpos(1:end-1);
+    
+    vpos = cumsum([0.01; height+0.01]);
+    
+    if isequal(valign, 'bottom') % default
+      vpos = 1-vpos(end) + vpos - 0.01;
+    end
+    
+    vpos = vpos(end-1:-1:1);
+    
   elseif isequal(vpos, 'align')
-    vpos = pos(1,2); % the position of the first element
+    if isequal('valign', 'bottom')
+      vpos = pos(end,2); % the position of the last element
+    else % default behaviour
+      vpos = pos(1,2); % the position of the first element
+    end
   elseif isequal(vpos, 'distribute')
     minpos = min(pos(:,2));
     maxpos = max(pos(:,2));
