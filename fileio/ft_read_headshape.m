@@ -441,7 +441,7 @@ else
         shape.ctable = c.table;
       end
       
-    case {'neuromag_mne', 'neuromag_fif'}
+    case {'neuromag_mne', 'neuromag_fif' 'babysquid_fif'}
 
       orig = read_neuromag_hc(filename);
       switch coordsys
