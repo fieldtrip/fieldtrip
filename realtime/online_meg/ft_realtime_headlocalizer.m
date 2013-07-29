@@ -58,6 +58,7 @@ cfg.accuracy_orange = ft_getopt(cfg, 'accuracy_orange',  .3); % orange when with
 cfg.template        = ft_getopt(cfg, 'template',         []); % template dataset containing the references
 cfg.blocksize       = ft_getopt(cfg, 'blocksize',         1); % in seconds
 cfg.bufferdata      = ft_getopt(cfg, 'bufferdata',   'last'); % first (replay) or last (real-time)
+cfg.coilfreq        = ft_getopt(cfg, 'coilfreq',   [293, 307, 314, 321, 328]); % Hz, Neuromag
 
 % start by reading the header from the realtime buffer
 clear ft_read_header; % ensure pesistent variables are cleared
@@ -76,14 +77,16 @@ isctf      = ft_senstype(hdr.grad, 'ctf275');
 % read template head position, to reposition to, if template file is specified
 if isctf
   if ~isempty(cfg.template)
-    [PATH,NAME,EXT]=fileparts(cfg.template)
+    [PATH,NAME,EXT]=fileparts(cfg.template);
     if strcmp(EXT, '.ds')
-      shape = ft_read_headshape(cfg.template, 'coordinates', 'dewar');
+      shape = ft_read_headshape(cfg.template, 'coordsys', 'dewar');
       template(1,:) = [shape.fid.pnt(1,1), shape.fid.pnt(1,2), shape.fid.pnt(1,3)]; % chan X pos
       template(2,:) = [shape.fid.pnt(2,1), shape.fid.pnt(2,2), shape.fid.pnt(2,3)];
       template(3,:) = [shape.fid.pnt(3,1), shape.fid.pnt(3,2), shape.fid.pnt(3,3)];
     elseif strcmp(EXT, '.txt')
       template = dlmread(cfg.template);
+    else
+      error('incorrect template file specified');
     end
   else
     template = [];
@@ -111,7 +114,7 @@ if isctf
   sens = hdr.grad;
   coilsignal = [];
 elseif isneuromag
-  shape = ft_read_headshape(cfg.headerfile, 'coordinates', 'dewar');
+  shape = ft_read_headshape(cfg.headerfile, 'coordsys', 'dewar');
   for i = 1:min(size(shape.pnt,1),length(cfg.coilfreq)) % for as many digitized or specified coils
     if ~isempty(strfind(shape.label{i},'hpi'))
       dip(i).pos = shape.pnt(i,:); % chan X pos, initial guess for each of the dipole/coil positions
@@ -669,12 +672,11 @@ switch eventdata.Key
     for j = 1:numel(info.hpi)
       info.template(j,:) = info.hpi{j}(:); % chan X pos
     end
+    
     % write template position to text file for later re-positioning
-    if info.isneuromag
-      template_time = [date datestr(now,'-HH-MM-SS')];
-      fprintf('writing to %s.txt \n', template_time);
-      dlmwrite([template_time '.txt'], info.template, ' ');
-    end
+    template_time = [date datestr(now,'-HH-MM-SS')];
+    fprintf('writing to %s.txt \n', template_time);
+    dlmwrite([template_time '.txt'], info.template, ' ');
     
   case 'q'
     % stop the application
