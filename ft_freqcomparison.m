@@ -86,8 +86,8 @@ end
 % initiate output variable
 freq = varargin{1};
 
-% frequency comparison for multiple trials/subjects
 if strcmp(varargin{1}.dimord, 'rpt_chan_freq') || strcmp(varargin{1}.dimord, 'subj_chan_freq')
+  % frequency comparison for multiple trials/subjects
   
   if size(varargin{1}.powspctrm,3) ~= size(varargin{2}.powspctrm,3)
     error('input conditions have different sizes');
@@ -109,8 +109,8 @@ if strcmp(varargin{1}.dimord, 'rpt_chan_freq') || strcmp(varargin{1}.dimord, 'su
     error('unsupported comparisontype');
   end
   
+elseif strcmp(varargin{1}.dimord, 'chan_freq') || strcmp(varargin{1}.dimord, 'chan_freq_time')
   % frequency comparison for averages
-elseif strcmp(varargin{1}.dimord, 'chan_freq')
   
   if size(varargin{1}.powspctrm,2) ~= size(varargin{2}.powspctrm,2)
     error('input conditions have different sizes');
@@ -125,6 +125,9 @@ elseif strcmp(varargin{1}.dimord, 'chan_freq')
   else
     error('unsupported comparisontype');
   end
+  
+else
+  error('unsupported dimord')
 end
 
 % user update
@@ -134,4 +137,3 @@ fprintf('performing %s comparison \n', cfg.comparisontype);
 ft_postamble debug
 ft_postamble trackconfig
 ft_postamble provenance
-
