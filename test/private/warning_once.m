@@ -199,11 +199,11 @@ end
 
 for i=numel(stack)-1:-1:(i0)
   % skip postamble scripts
-  if strfind(stack(i).name, 'ft_postamble')
+  if strncmp(stack(i).name, 'ft_postamble', 12)
     break;
   end
 
-  fname = horzcat(fname, '.', horzcat(stack(i).name)); % , stack(i).file
+  fname = horzcat(fname, '.', horzcat(fixname(stack(i).name))); % , stack(i).file
   if ~issubfield(ft_previous_warnings, fname) % iteratively build up structure fields
     setsubfield(ft_previous_warnings, fname, []);
   end
