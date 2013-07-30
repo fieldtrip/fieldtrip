@@ -16,6 +16,7 @@ dataset = '/home/common/matlab/fieldtrip/data/test/bug1792/20130418_test_cHPI.fi
 
 cfg = [];
 cfg.dataset = dataset;
+%cfg.gradfile = dataset;
 cfg.bufferdata = 'first';
 cfg.coilfreq = [293, 307, 314, 321];%, 328];
 %ft_realtime_coillocalizer(cfg);
