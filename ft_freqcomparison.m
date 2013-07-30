@@ -137,3 +137,5 @@ fprintf('performing %s comparison \n', cfg.comparisontype);
 ft_postamble debug
 ft_postamble trackconfig
 ft_postamble provenance
+ft_postamble previous varargin  % this copies the datain.cfg structure into the cfg.previous field. You can also use it for multiple inputs, or for "varargin"
+ft_postamble history freq       % this adds the local cfg structure to the output data structure, i.e. dataout.cfg = cfg
