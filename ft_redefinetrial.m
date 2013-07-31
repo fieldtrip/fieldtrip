@@ -97,8 +97,8 @@ cfg.trl          = ft_getopt(cfg, 'trl',       []);
 cfg.length       = ft_getopt(cfg, 'length',    []);
 cfg.overlap      = ft_getopt(cfg, 'overlap',   0);
 cfg.interpmethod = ft_getopt(cfg, 'interpmethod', 'nan');  % used for interpolating missing data
-cfg.interppre    = ft_getopt(varargin, 'interppre',  nan); % used for interpolation, expressed in seconds!
-cfg.interppost   = ft_getopt(varargin, 'interppost', nan); % used for interpolation, expressed in seconds!
+cfg.interppre    = ft_getopt(cfg, 'interppre',  nan);      % used for interpolation, expressed in seconds!
+cfg.interppost   = ft_getopt(cfg, 'interppost', nan);      % used for interpolation, expressed in seconds!
 
 % store original datatype
 dtype = ft_datatype(data);
