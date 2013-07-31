@@ -264,8 +264,6 @@ elseif ismeg
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % magnetic dipole instead of electric (current) dipole in an infinite vacuum
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-      % give the warning only once
-      warning_once('assuming magnetic dipole in an infinite vacuum');
       
       pnt = sens.coilpos; % position of each coil
       ori = sens.coilori; % orientation of each coil
@@ -420,8 +418,7 @@ elseif iseeg
       [lf, session] = bem_solve_lfm_eeg(session, p3);
       
     case 'infinite'
-      % the conductivity of the medium is not known
-      warning_once('assuming electric dipole in an infinite medium with unit conductivity');
+      % note that the conductivity of the medium is not known
       lf = inf_medium_leadfield(pos, sens.elecpos, 1);
       
     case 'halfspace'
