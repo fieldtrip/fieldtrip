@@ -38,6 +38,9 @@ begsample     = ft_getopt(varargin, 'begsample');
 endsample     = ft_getopt(varargin, 'endsample');
 chanindx      = ft_getopt(varargin, 'chanindx');
 allowoverlap  = ft_getopt(varargin, 'allowoverlap', false);
+interppre     = ft_getopt(varargin, 'interppre',  nan); % used for interpolation, expressed in samples
+interppost    = ft_getopt(varargin, 'interppost', nan); % used for interpolation, expressed in samples
+interpmethod  = ft_getopt(varargin, 'interpmethod', 'nan'); % specifies the interpolation method, or just fill with nan
 
 allowoverlap = istrue(allowoverlap);
 
@@ -61,8 +64,11 @@ else
 end
 trlnum = length(data.trial);
 
+% start with the output data being all NaN
+dat = nan(numel(chanindx), endsample-begsample+1);
+
 if trlnum>1,
-  % original implementation
+  % original implementation, used when the input data has multiple trials
   
   trllen = zeros(trlnum,1);
   for trllop=1:trlnum
@@ -109,16 +115,12 @@ if trlnum>1,
   % samplenum(count>1) = NaN;
   
   % make a subselection for the desired samples
-  count     = count(begsample:endsample);
-  trialnum  = trialnum(begsample:endsample);
+  count     = count    (begsample:endsample);
+  trialnum  = trialnum (begsample:endsample);
   samplenum = samplenum(begsample:endsample);
   
   % check if all samples are present and are not present twice or more
-  if any(count==0)
-    % warning('not all requested samples are present in the data, filling with NaNs');
-    % prealloc with NaNs
-    dat = NaN(numel(chanindx),endsample-begsample+1);
-  elseif any(count>1)
+  if any(count>1)
     if ~allowoverlap
       error('some of the requested samples occur twice in the data');
     else
@@ -158,17 +160,15 @@ if trlnum>1,
 else
   % only one trial is present in the input data, so it's quite simple and can be done much faster
   
-  % check whether the requested samples are present in the input
-  if endsample>trl(2) || begsample<trl(1)
-    % warning('not all requested samples are present in the data, filling with NaNs');
-  end
-  
   % get the indices
   begindx  = begsample - trl(1) + 1;
   endindx  = endsample - trl(1) + 1;
   
+  % this is used for detecting missing data and possibly for interpolation further down
+  count = zeros(1,endsample-begsample+1);
+  count(begindx:endindx) = 1;
+  
   tmptrl = trl([1 2]) - [trl(1) trl(1)]+1; % ignore offset in case it's present
-  dat = nan(numel(chanindx), endsample-begsample+1);
   
   datbegindx = max(1,                     trl(1)-begsample+1);
   datendindx = min(endsample-begsample+1, trl(2)-begsample+1);
@@ -185,4 +185,15 @@ else
   
 end % if trlnum is multiple or one
 
-
+if any(count==0)
+  switch interpmethod
+    case 'nan'
+      % warning('not all requested samples are present in the data, filling with NaNs');
+    case {'nearest' 'linear' 'spline' 'pchip' 'cubic' 'v5cubic'}
+      % FIXME, use interp1
+    case 'fillrandom'
+      % FIXME
+    otherwise
+      error('unsupported interpolation method %s', interpmethod);
+  end % switch
+end % if

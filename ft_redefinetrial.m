@@ -86,16 +86,19 @@ ft_preamble loadvar data
 % ft_checkdata is done further down
 
 % set the defaults
-cfg.offset    = ft_getopt(cfg, 'offset',    []);
-cfg.toilim    = ft_getopt(cfg, 'toilim',    []);
-cfg.begsample = ft_getopt(cfg, 'begsample', []);
-cfg.endsample = ft_getopt(cfg, 'endsample', []);
-cfg.minlength = ft_getopt(cfg, 'minlength', []);
-cfg.trials    = ft_getopt(cfg, 'trials',    'all');
-cfg.feedback  = ft_getopt(cfg, 'feedback',  'yes');
-cfg.trl       = ft_getopt(cfg, 'trl',       []);
-cfg.length    = ft_getopt(cfg, 'length',    []);
-cfg.overlap   = ft_getopt(cfg, 'overlap',   0);
+cfg.offset       = ft_getopt(cfg, 'offset',    []);
+cfg.toilim       = ft_getopt(cfg, 'toilim',    []);
+cfg.begsample    = ft_getopt(cfg, 'begsample', []);
+cfg.endsample    = ft_getopt(cfg, 'endsample', []);
+cfg.minlength    = ft_getopt(cfg, 'minlength', []);
+cfg.trials       = ft_getopt(cfg, 'trials',    'all');
+cfg.feedback     = ft_getopt(cfg, 'feedback',  'yes');
+cfg.trl          = ft_getopt(cfg, 'trl',       []);
+cfg.length       = ft_getopt(cfg, 'length',    []);
+cfg.overlap      = ft_getopt(cfg, 'overlap',   0);
+cfg.interpmethod = ft_getopt(cfg, 'interpmethod', 'nan');  % used for interpolating missing data
+cfg.interppre    = ft_getopt(varargin, 'interppre',  nan); % used for interpolation, expressed in seconds!
+cfg.interppost   = ft_getopt(varargin, 'interppost', nan); % used for interpolation, expressed in seconds!
 
 % store original datatype
 dtype = ft_datatype(data);
