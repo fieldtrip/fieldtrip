@@ -76,12 +76,12 @@ if ~isfield(cfg, 'bufferdata'),     cfg.bufferdata = 'last';  end % first or las
 if ~isfield(cfg, 'jumptoeof'),      cfg.jumptoeof = 'no';     end % jump to end of file at initialization
 
 if ~iscell(cfg.refchan)
-  % convert from string to cell-array
-  cfg.refchan = {cfg.refchan};
+    % convert from string to cell-array
+    cfg.refchan = {cfg.refchan};
 end
 
 if ~isfield(cfg, 'dataset') && ~isfield(cfg, 'header') && ~isfield(cfg, 'datafile')
-  cfg.dataset = 'buffer://localhost:1972';
+    cfg.dataset = 'buffer://localhost:1972';
 end
 
 % translate dataset into datafile+headerfile
@@ -98,14 +98,14 @@ isneuromag = ft_senstype(hdr.grad, 'neuromag306');
 isctf      = ft_senstype(hdr.grad, 'ctf275');
 
 if isneuromag
-  ctr = 0;
-  for j = 1:length(hdr.orig.raw.info.dig)
-    if hdr.orig.raw.info.dig(1,j).kind == 2 % 1: RPA/LPA/NAS, 2: HPI coils, 4: Head shape
-      ctr = ctr+1;
-      hc(ctr,:) = double((hdr.orig.raw.info.dig(1,j).r).*100); % convert from m to cm
+    ctr = 0;
+    for j = 1:length(hdr.orig.raw.info.dig)
+        if hdr.orig.raw.info.dig(1,j).kind == 2 % 1: RPA/LPA/NAS, 2: HPI coils, 4: Head shape
+            ctr = ctr+1;
+            hc(ctr,:) = double((hdr.orig.raw.info.dig(1,j).r).*100); % convert from m to cm
+        end
     end
-  end
-  fprintf('%d HPI coils found in fif header\n', ctr);
+    fprintf('%d HPI coils found in fif header\n', ctr);
 end
 
 
@@ -123,7 +123,7 @@ chanindx    = sort([megindx(:)' refindx(:)']);
 
 nchan = length(chanindx);
 if nchan==0
-  error('no channels were selected');
+    error('no channels were selected');
 end
 
 % determine the size of blocks to process
@@ -134,14 +134,14 @@ overlap   = round(cfg.overlap*hdr.Fs);
 % FIXME the blocksize should match an integer number of cycles -> perhaps use nan and nansum?
 ncoil = length(cfg.coilfreq);
 if ncoil==0
-  error('no coil frequencies were specified');
+    error('no coil frequencies were specified');
 else
-  time = (1:blocksize)./hdr.Fs;
-  coil = zeros(ncoil, blocksize);
-  for i=1:ncoil
-    coil(i,:) = exp(time*cfg.coilfreq(i)*1i*2*pi);
-    coil(i,:) = coil(i,:) / norm(coil(i,:));
-  end
+    time = (1:blocksize)./hdr.Fs;
+    coil = zeros(ncoil, blocksize);
+    for i=1:ncoil
+        coil(i,:) = exp(time*cfg.coilfreq(i)*1i*2*pi);
+        coil(i,:) = coil(i,:) / norm(coil(i,:));
+    end
 end
 
 % prepare the forward model and the sensor array for subsequent fitting
@@ -153,140 +153,139 @@ figure
 
 % set an initial guess for each of the dipole/coil positions
 if isneuromag
-  for i=1:ncoil
-    dip(i).pos = hc(i,:);
-    dip(i).mom = [0 0 0]';
-  end
+    for i=1:ncoil
+        dip(i).pos = hc(i,:);
+        dip(i).mom = [0 0 0]';
+    end
 else
-  for i=1:ncoil
-    dip(i).pos = mean(sens.coilpos,1); % somewhere in the middle of the helmet
-    dip(i).mom = [0 0 0]';
-  end
+    for i=1:ncoil
+        dip(i).pos = mean(sens.coilpos,1); % somewhere in the middle of the helmet
+        dip(i).mom = [0 0 0]';
+    end
 end
 
 if strcmp(cfg.jumptoeof, 'yes')
-  prevSample = hdr.nSamples * hdr.nTrials;
+    prevSample = hdr.nSamples * hdr.nTrials;
 elseif isfield(cfg, 'offset')
-  prevSample = (cfg.offset*hdr.Fs);
+    prevSample = (cfg.offset*hdr.Fs);
 else
-  prevSample  = 0;
+    prevSample  = 0;
 end
 count = 0;
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this is the general BCI loop where realtime incoming data is handled
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 while true
-  
-  % determine number of samples available in buffer
-  hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat, 'cache', true);
-  
-  % see whether new samples are available
-  newsamples = (hdr.nSamples*hdr.nTrials-prevSample);
-  
-  if newsamples>=blocksize
     
-    % determine the samples to process
-    if strcmp(cfg.bufferdata, 'last')
-      begsample  = hdr.nSamples*hdr.nTrials - blocksize + 1;
-      endsample  = hdr.nSamples*hdr.nTrials;
-    elseif strcmp(cfg.bufferdata, 'first')
-      begsample  = prevSample+1;
-      endsample  = prevSample+blocksize ;
-    else
-      error('unsupported value for cfg.bufferdata');
-    end
+    % determine number of samples available in buffer
+    hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat, 'cache', true);
     
-    % this allows overlapping data segments
-    if overlap && (begsample>overlap)
-      begsample = begsample - overlap;
-      endsample = endsample - overlap;
-    end
+    % see whether new samples are available
+    newsamples = (hdr.nSamples*hdr.nTrials-prevSample);
     
-    % remember up to where the data was read
-    prevSample  = endsample;
-    count       = count + 1;
-    fprintf('processing segment %d from sample %d to %d\n', count, begsample, endsample);
-    
-    % read data segment from buffer
-    dat = ft_read_data(cfg.datafile, 'header', hdr, 'dataformat', cfg.dataformat, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', false);
-    
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % from here onward it is specific to the processing of the data
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
-    % split the data into the MEG channels and the (optional) reference channels
-    meg = dat(megindx,:);
-    ref = dat(refindx,:);
-    
-    if ~isempty(ref)
-      % only consider the signal that is phase-locked to the reference channels
-      ampl  = sum(ref.*coil);   % estimate the complex amplitude
-      phase = ampl./abs(ampl);  % estimate the phase
-      % FIXME the code should be checked for phase-flips
-      for i=1:ncoil
-        topo(:,i) = topo(:,i) * phase(i);
-      end
-    else
-      % estimate the complex-valued MEG topography for each coil
-      % this implements a discrete Fourier transform (DFT)
-      topo = ft_preproc_detrend(meg) * ctranspose(coil);
-    end
-    
-    % ignore the out-of-phase spectral component in the topography
-    topo = real(topo); % THIS SEEMS TO BE CRUCIAL
-    
-    if false
-      close all
-      for i=1:ncoil
-        figure
+    if newsamples>=blocksize
+        
+        % determine the samples to process
+        if strcmp(cfg.bufferdata, 'last')
+            begsample  = hdr.nSamples*hdr.nTrials - blocksize + 1;
+            endsample  = hdr.nSamples*hdr.nTrials;
+        elseif strcmp(cfg.bufferdata, 'first')
+            begsample  = prevSample+1;
+            endsample  = prevSample+blocksize ;
+        else
+            error('unsupported value for cfg.bufferdata');
+        end
+        
+        % this allows overlapping data segments
+        if overlap && (begsample>overlap)
+            begsample = begsample - overlap;
+            endsample = endsample - overlap;
+        end
+        
+        % remember up to where the data was read
+        prevSample  = endsample;
+        count       = count + 1;
+        fprintf('processing segment %d from sample %d to %d\n', count, begsample, endsample);
+        
+        % read data segment from buffer
+        dat = ft_read_data(cfg.datafile, 'header', hdr, 'dataformat', cfg.dataformat, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', false);
+        
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        % from here onward it is specific to the processing of the data
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        
+        % split the data into the MEG channels and the (optional) reference channels
+        meg = dat(megindx,:);
+        ref = dat(refindx,:);
+        
+        if ~isempty(ref)
+            % only consider the signal that is phase-locked to the reference channels
+            ampl  = sum(ref.*coil);   % estimate the complex amplitude
+            phase = ampl./abs(ampl);  % estimate the phase
+            % FIXME the code should be checked for phase-flips
+            for i=1:ncoil
+                topo(:,i) = topo(:,i) * phase(i);
+            end
+        else
+            % estimate the complex-valued MEG topography for each coil
+            % this implements a discrete Fourier transform (DFT)
+            topo = ft_preproc_detrend(meg) * ctranspose(coil);
+        end
+        
+        % ignore the out-of-phase spectral component in the topography
+        topo = real(topo); % THIS SEEMS TO BE CRUCIAL
+        
+        if false
+            close all
+            for i=1:ncoil
+                figure
+                ft_plot_sens(sens);
+                ft_plot_dipole(dip(i).pos, dip(i).mom);
+                ft_plot_topo3d(sens.chanpos, real(topo(:,i)));
+                m = max(abs(caxis));
+                caxis([-m m]);
+                alpha 0.5
+            end
+        end
+        
+        % fit a magnetic dipole to each of the topographies
+        if isneuromag
+            constr.sequential = true;
+            constr.rigidbody = true;
+            % fit the coils together
+            for i=1:ncoil
+                pos(i,:) = dip(i).pos;
+            end
+            dipall = [];
+            dipall.pos = pos;
+            dipall = dipole_fit(dipall, sens, vol, topo, 'constr', constr);
+            for i=1:ncoil
+                sel = (1:3) + 3*(i-1);
+                dip(i).pos = dipall.pos(i,:);
+                dip(i).mom = real(dipall.mom(sel,i)); % ignore the complex phase information
+            end
+        else
+            % fit the coils sequentially
+            for i=1:ncoil
+                dip(i) = dipole_fit(dip(i), sens, vol, topo(:,i));
+            end
+        end
+        
+        cla
+        % plot the gradiometer array for reference
         ft_plot_sens(sens);
-        ft_plot_dipole(dip(i).pos, dip(i).mom);
-        ft_plot_topo3d(sens.chanpos, real(topo(:,i)));
-        m = max(abs(caxis));
-        caxis([-m m]);
-        alpha 0.5
-      end
-    end
-    
-    % fit a magnetic dipole to each of the topographies
-    if isneuromag
-      constr.sequential = true;
-      constr.rigidbody = true;
-      % fit the coils together
-      for i=1:ncoil
-        pos(i,:) = dip(i).pos;
-      end
-      dipall = [];
-      dipall.pos = pos;
-      dipall = dipole_fit(dipall, sens, vol, topo, 'constr', constr);
-      for i=1:ncoil
-        sel = (1:3) + 3*(i-1);
-        dip(i).pos = dipall.pos(i,:);
-        dip(i).mom = real(dipall.mom(sel,i)); % ignore the complex phase information
-      end
-    else
-      % fit the coils sequentially
-      for i=1:ncoil
-        dip(i) = dipole_fit(dip(i), sens, vol, topo(:,i));
-      end
-    end
-    
-    cla
-    % plot the gradiometer array for reference
-    ft_plot_sens(sens);
-    % plot each of the fitted dipoles
-    for i=1:ncoil
-      ft_plot_dipole(dip(i).pos, dip(i).mom);
-    end
-    
-    % show current timesample
-    str = sprintf('samples: %d - %d\n', begsample, endsample);
-    title(str);
-    
-    % force Matlab to update the figure
-    drawnow
-    
-  end % if enough new samples
+        % plot each of the fitted dipoles
+        for i=1:ncoil
+            ft_plot_dipole(dip(i).pos, dip(i).mom);
+        end
+        
+        % show current timesample
+        str = sprintf('samples: %d - %d\n', begsample, endsample);
+        title(str);
+        
+        % force Matlab to update the figure
+        drawnow
+        
+    end % if enough new samples
 end % while true

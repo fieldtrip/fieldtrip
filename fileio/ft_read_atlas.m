@@ -1992,10 +1992,12 @@ switch atlasformat
         tmp = gifti(filenamemesh);
         bnd.pnt = warp_apply(tmp.mat, tmp.vertices);
         bnd.tri = tmp.faces;
+        reindex = false;
       case 'freesurfer_triangle_binary'
         [pnt, tri] = read_surf(filenamemesh);
         bnd.pnt    = pnt;
         bnd.tri    = tri;
+        reindex    = true;
       otherwise
         error('unsupported fileformat for surface mesh');
     end
@@ -2005,12 +2007,23 @@ switch atlasformat
       error('the number of vertices in the mesh does not match the number of elements in the parcellation');
     end
     
-    % reindex the parcels
-    newp = zeros(size(p));
-    for k = 1:numel(label)
-      newp(p==rgb(k)) = index(k);
+    % reindex the parcels, if needed
+    % I am not fully sure about this, but the caret label files seem to
+    % have the stuff numbered with normal numbers, with unknown being -1.
+    % assuming them to be in order;
+    if reindex
+      % this is then freesurfer convention, coding in rgb
+      newp = zeros(size(p));
+      for k = 1:numel(label)
+        newp(p==rgb(k)) = index(k);
+      end
+    else
+      uniquep = unique(p);
+      if uniquep(1)<0,
+        p(p<0) = 0; 
+      end
+      newp   = p;
     end
-    
     atlas       = [];
     atlas.pos   = bnd.pnt;
     atlas.tri   = bnd.tri;

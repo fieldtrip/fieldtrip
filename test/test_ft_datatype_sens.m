@@ -70,6 +70,11 @@ for i=1:length(filename)
     sens1 = rmfield(sens1, {'chanpos', 'chanori'});
     sens2 = rmfield(sens2, {'chanpos', 'chanori'});
   end
+    
+  % remove coordsys field as these were not yet present in reference files
+  if isfield(sens1, 'coordsys')
+    sens1 = rmfield(sens1, 'coordsys');
+  end
   
   assert(isequal(sens1, sens2));
 end

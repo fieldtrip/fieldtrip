@@ -73,6 +73,14 @@ for i=1:length(dataset)
   if isfield(reference.hdr.grad, 'balance') && strcmp(reference.hdr.grad.balance.current, 'none')
     reference.hdr.grad = rmfield(reference.hdr.grad, 'balance');
   end
+  
+  % remove coordsys field as these were not yet present in reference files
+  if isfield(grad, 'coordsys')
+    grad = rmfield(grad, 'coordsys');
+  end
+  if isfield(hdr.grad, 'coordsys')
+    hdr.grad = rmfield(hdr.grad, 'coordsys');
+  end
     
   assert(isequal(hdr.grad,           grad), sprintf('failed for %s', filename));
   assert(isequal(reference.grad,     grad), sprintf('failed for %s', filename));

@@ -250,157 +250,60 @@ function cb_creategui(hObject, eventdata, handles)
 
 fig = get(hObject, 'parent');
 % define the position of each GUI element
-position = {
-  [1]   % view radio
-  [1 1] % del ins
-  [1]   % label slice
-  [1 1] % slice
-  [1]   % brightness
-  [1 1] % brightness
-  [1]   % axis visible
-  [1 1] % view ij
-  [1 1] % jk ik
-  [1]   % label mesh
-  [1 1] % view open mesh
-  [1 1] % save exit buttons
-  };
+% constants
+CONTROL_WIDTH  = 0.10;
+CONTROL_HEIGHT = 0.075; 
+CONTROL_HOFFSET = 0.8;
+CONTROL_VOFFSET = 0.6;
 
-% define the style of each GUI element
-style = {
-  {'radiobutton'}
-  {'radiobutton' 'radiobutton'}
-  {'text' }
-  {'pushbutton' 'pushbutton'}
-  {'text'}
-  {'pushbutton' 'pushbutton'}
-  {'checkbox'}
-  {'text' 'radiobutton'}
-  {'radiobutton' 'radiobutton'}
-  {'text' }
-  {'pushbutton' 'pushbutton'}
-  {'pushbutton' 'pushbutton'}
-  };
+% control buttons
+uicontrol('tag', 'view', 'parent', fig, 'units', 'normalized', 'style', 'radiobutton', 'string', 'View', 'value', 1, 'callback', @which_task1);
+ft_uilayout(fig, 'tag', 'view',  'BackgroundColor', [0.8 0.8 0.8], 'width', 2*CONTROL_WIDTH, 'height', CONTROL_HEIGHT, 'vpos', CONTROL_VOFFSET+4*CONTROL_HEIGHT, 'hpos', CONTROL_HOFFSET);
 
-% define the descriptive string of each GUI element
-string = {
-  {'View'}
-  {'Ins' 'Del'}
-  {'slice'}
-  {'<' '>'}
-  {'brightness'}
-  {'+' '-'}
-  {'axes'}
-  {'plane' 'jk'}
-  {'ik' 'ij'}
-  {'mesh'}
-  {'smooth' 'view'}
-  {'Cancel' 'OK'}
-  };
+uicontrol('tag', 'ins', 'parent', fig, 'units', 'normalized', 'style', 'radiobutton', 'string', 'Ins', 'value', 0, 'callback', @which_task2);
+ft_uilayout(fig, 'tag', 'ins',  'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH, 'height', CONTROL_HEIGHT, 'vpos', CONTROL_VOFFSET+2.75*CONTROL_HEIGHT, 'hpos', CONTROL_HOFFSET);
+uicontrol('tag', 'del', 'parent', fig, 'units', 'normalized', 'style', 'radiobutton', 'string', 'Del', 'value', 0, 'callback', @which_task3);
+ft_uilayout(fig, 'tag', 'del',  'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH, 'height', CONTROL_HEIGHT, 'vpos', CONTROL_VOFFSET+2.75*CONTROL_HEIGHT, 'hpos', CONTROL_HOFFSET+CONTROL_WIDTH);
 
-% define the value of each GUI element
+uicontrol('tag', 'slice', 'parent', fig, 'units', 'normalized', 'style', 'text', 'string', 'slice', 'value', [], 'callback', []);
+ft_uilayout(fig, 'tag', 'slice',  'BackgroundColor', [0.8 0.8 0.8], 'width', 2*CONTROL_WIDTH, 'height', CONTROL_HEIGHT, 'vpos', CONTROL_VOFFSET+1.25*CONTROL_HEIGHT, 'hpos', CONTROL_HOFFSET);
+uicontrol('tag', 'min', 'parent', fig, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'value', [], 'callback', @cb_btn);
+ft_uilayout(fig, 'tag', 'min',  'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH, 'height', CONTROL_HEIGHT/2, 'vpos', CONTROL_VOFFSET+1*CONTROL_HEIGHT, 'hpos', CONTROL_HOFFSET);
+uicontrol('tag', 'max', 'parent', fig, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'value', [], 'callback', @cb_btn);
+ft_uilayout(fig, 'tag', 'max',  'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH, 'height', CONTROL_HEIGHT/2, 'vpos', CONTROL_VOFFSET+1*CONTROL_HEIGHT, 'hpos', CONTROL_HOFFSET+CONTROL_WIDTH);
 
-prop = getappdata(fig,'prop');
-value = {
-  {1}
-  {0 0}
-  {[]}
-  {[] []}
-  {[]}
-  {[] []}
-  {0}
-  {[] 1}
-  {0 0}
-  {[]}
-  {1 1}
-  {1 1}
-  };
+uicontrol('tag', 'brightness', 'parent', fig, 'units', 'normalized', 'style', 'text', 'string', 'brightness', 'value', [], 'callback', []);
+ft_uilayout(fig, 'tag', 'brightness',  'BackgroundColor', [0.8 0.8 0.8], 'width', 2*CONTROL_WIDTH, 'height', CONTROL_HEIGHT, 'vpos', CONTROL_VOFFSET-0.75*CONTROL_HEIGHT, 'hpos', CONTROL_HOFFSET);
+uicontrol('tag', 'plus', 'parent', fig, 'units', 'normalized', 'style', 'pushbutton', 'string', '+', 'value', [], 'callback', @cb_btn);
+ft_uilayout(fig, 'tag', 'plus',  'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH, 'height', CONTROL_HEIGHT/2, 'vpos', CONTROL_VOFFSET-1*CONTROL_HEIGHT, 'hpos', CONTROL_HOFFSET);
+uicontrol('tag', 'minus', 'parent', fig, 'units', 'normalized', 'style', 'pushbutton', 'string', '-', 'value', [], 'callback', @cb_btn);
+ft_uilayout(fig, 'tag', 'minus',  'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH, 'height', CONTROL_HEIGHT/2, 'vpos', CONTROL_VOFFSET-1*CONTROL_HEIGHT, 'hpos', CONTROL_HOFFSET+CONTROL_WIDTH);
 
-% define a tag for each GUI element
-tag = {
-  {'view'}
-  {'ins' 'del' }
-  {'slice'}
-  {'min' 'max'}
-  {'brightness'}
-  {'plus' 'minus'}
-  {'toggle axes'}
-  {'plane' 'one'}
-  {'two' 'three'}
-  {'mesh'}
-  {'smoothm' 'viewm'}
-  {'cancel' 'OK'}
-  };
+uicontrol('tag', 'toggle axes', 'parent', fig, 'units', 'normalized', 'style', 'checkbox', 'string', 'axes', 'value', 0, 'callback', @cb_redraw);
+ft_uilayout(fig, 'tag', 'toggle axes',  'BackgroundColor', [0.8 0.8 0.8], 'width', 2*CONTROL_WIDTH, 'height', CONTROL_HEIGHT, 'vpos', CONTROL_VOFFSET-2.5*CONTROL_HEIGHT, 'hpos', CONTROL_HOFFSET);
 
-% define the callback function of each GUI element
-callback = {
-  {@which_task1}
-  {@which_task2 @which_task3}
-  {[]}
-  {@cb_btn @cb_btn}
-  {[]}
-  {@cb_btn @cb_btn}
-  {@cb_redraw}
-  {[] @cb_btnp1}
-  {@cb_btnp2 @cb_btnp3}
-  {[]}
-  {@smooth_mesh @view_mesh}
-  {@cancel_mesh @cb_btn}
-  };
+uicontrol('tag', 'plane', 'parent', fig, 'units', 'normalized', 'style', 'text', 'string', 'plane', 'value', [], 'callback', []);
+ft_uilayout(fig, 'tag', 'plane',  'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH, 'height', CONTROL_HEIGHT/2, 'vpos', CONTROL_VOFFSET-3.5*CONTROL_HEIGHT, 'hpos', CONTROL_HOFFSET);
+uicontrol('tag', 'one', 'parent', fig, 'units', 'normalized', 'style', 'radiobutton', 'string', 'jk', 'value', 0, 'callback', @cb_btnp1);
+ft_uilayout(fig, 'tag', 'one',  'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH, 'height', CONTROL_HEIGHT/2, 'vpos', CONTROL_VOFFSET-3.5*CONTROL_HEIGHT, 'hpos', CONTROL_HOFFSET+CONTROL_WIDTH);
+uicontrol('tag', 'two', 'parent', fig, 'units', 'normalized', 'style', 'radiobutton', 'string', 'ik', 'value', 0, 'callback', @cb_btnp2);
+ft_uilayout(fig, 'tag', 'two',  'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH, 'height', CONTROL_HEIGHT/2, 'vpos', CONTROL_VOFFSET-4*CONTROL_HEIGHT, 'hpos', CONTROL_HOFFSET);
+uicontrol('tag', 'three', 'parent', fig, 'units', 'normalized', 'style', 'radiobutton', 'string', 'ij', 'value', 0, 'callback', @cb_btnp3);
+ft_uilayout(fig, 'tag', 'three',  'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH, 'height', CONTROL_HEIGHT/2, 'vpos', CONTROL_VOFFSET-4*CONTROL_HEIGHT, 'hpos', CONTROL_HOFFSET+CONTROL_WIDTH);
 
-visible = {
-  {'on'}
-  {'on' 'on'}
-  {'on'}
-  {'on' 'on'}
-  {'on'}
-  {'on' 'on'}
-  {'on'}
-  {'on' 'on'}
-  {'on' 'on'}
-  {'on'}
-  {'on' 'on'}
-  {'on' 'on'}
-  };
+uicontrol('tag', 'mesh', 'parent', fig, 'units', 'normalized', 'style', 'text', 'string', 'mesh', 'value', [], 'callback', []);
+ft_uilayout(fig, 'tag', 'mesh',  'BackgroundColor', [0.8 0.8 0.8], 'width', 2*CONTROL_WIDTH, 'height', CONTROL_HEIGHT, 'vpos', CONTROL_VOFFSET-5.75*CONTROL_HEIGHT, 'hpos', CONTROL_HOFFSET);
 
-layoutgui(fig, [0.77 0.10 0.20 0.85], position, style, string, value, tag, callback,visible);
+uicontrol('tag', 'smoothm', 'parent', fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'smooth', 'value', [], 'callback', @smooth_mesh);
+ft_uilayout(fig, 'tag', 'smoothm',  'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH, 'height', CONTROL_HEIGHT/2, 'vpos', CONTROL_VOFFSET-6*CONTROL_HEIGHT, 'hpos', CONTROL_HOFFSET);
+uicontrol('tag', 'viewm', 'parent', fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'view', 'value', [], 'callback', @view_mesh);
+ft_uilayout(fig, 'tag', 'viewm',  'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH, 'height', CONTROL_HEIGHT/2, 'vpos', CONTROL_VOFFSET-6*CONTROL_HEIGHT, 'hpos', CONTROL_HOFFSET+CONTROL_WIDTH);
 
-function h = layoutgui(fig, geometry, position, style, string, value, tag, callback,visible);
-horipos  = geometry(1); % lower left corner of the GUI part in the figure
-vertpos  = geometry(2); % lower left corner of the GUI part in the figure
-width    = geometry(3); % width  of the GUI part in the figure
-height   = geometry(4); % height of the GUI part in the figure
-horidist = 0.05;
-vertdist = 0.05;
-options  = {'units', 'normalized', 'HorizontalAlignment', 'center'}; %  'VerticalAlignment', 'middle'
-Nrow     = size(position,1);
-h        = cell(Nrow,1);
-for i=1:Nrow
-  if isempty(position{i})
-    continue;
-  end
-  position{i} = position{i} ./ sum(position{i});
-  Ncol = size(position{i},2);
-  ybeg = (Nrow-i  )/Nrow + vertdist/2;
-  yend = (Nrow-i+1)/Nrow - vertdist/2;
-  for j=1:Ncol
-    xbeg    = sum(position{i}(1:(j-1))) + horidist/2;
-    xend    = sum(position{i}(1:(j  ))) - horidist/2;
-    pos(1) = xbeg*width  + horipos;
-    pos(2) = ybeg*height + vertpos;
-    pos(3) = (xend-xbeg)*width;
-    pos(4) = (yend-ybeg)*height;
-    h{i}{j} = uicontrol(fig, ...
-      options{:}, ...
-      'position', pos, ...
-      'style',    style{i}{j}, ...
-      'string',   string{i}{j}, ...
-      'tag',      tag{i}{j}, ...
-      'value',    value{i}{j}, ...
-      'callback', callback{i}{j}, ...
-      'visible',  visible{i}{j} ...
-      );
-  end
-end
+uicontrol('tag', 'cancel', 'parent', fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'cancel', 'value', [], 'callback', @cancel_mesh);
+ft_uilayout(fig, 'tag', 'cancel',  'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH, 'height', CONTROL_HEIGHT/2, 'vpos', CONTROL_VOFFSET-6.5*CONTROL_HEIGHT, 'hpos', CONTROL_HOFFSET);
+uicontrol('tag', 'ok', 'parent', fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'ok', 'value', [], 'callback', @cb_btn);
+ft_uilayout(fig, 'tag', 'ok',  'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH, 'height', CONTROL_HEIGHT/2, 'vpos', CONTROL_VOFFSET-6.5*CONTROL_HEIGHT, 'hpos', CONTROL_HOFFSET+CONTROL_WIDTH);
+
 
 function cb_btn(hObject, eventdata, handles)
 fig  = get(gca, 'parent');

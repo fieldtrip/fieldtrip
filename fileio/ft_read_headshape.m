@@ -3,9 +3,9 @@ function [shape] = ft_read_headshape(filename, varargin)
 % FT_READ_HEADSHAPE reads the fiducials and/or the measured headshape
 % from a variety of files (like CTF and Polhemus). The headshape and
 % fiducials can for example be used for coregistration.
-% The input can be a filename (a string), or a cell array of filenames. 
-% In the latter case all information from the two files will be concatenated 
-% (i.e. assumed to be the shape of left and right hemispehers). The option 
+% The input can be a filename (a string), or a cell array of filenames.
+% In the latter case all information from the two files will be concatenated
+% (i.e. assumed to be the shape of left and right hemispehers). The option
 % 'concatenate' can be set to 'no'.
 %
 % Use as
@@ -23,7 +23,7 @@ function [shape] = ft_read_headshape(filename, varargin)
 % Additional options should be specified in key-value pairs and can be
 %
 %   'format'      = string, see below
-%   'coordinates' = string, e.g. 'head' or 'dewar' (CTF)
+%   'coordsys'    = string, e.g. 'head' or 'dewar' (CTF)
 %   'unit'        = string, e.g. 'cm'
 %   'concatenate' = 'no' or 'yes'(default): if you read the shape of left and right hemispehers from multiple files and want to concatenate them
 %
@@ -113,11 +113,11 @@ if ~isempty(annotationfile) && ~strcmp(fileformat, 'mne_source')
 end
 
 if iscell(filename)
-
+  
   for i = 1:numel(filename)
-    tmp       = ft_read_headshape(filename{i}, varargin{:}); 
-    haspnt(i) = isfield(tmp, 'pnt') && ~isempty(tmp.pnt); 
-    hastri(i) = isfield(tmp, 'tri') && ~isempty(tmp.tri); 
+    tmp       = ft_read_headshape(filename{i}, varargin{:});
+    haspnt(i) = isfield(tmp, 'pnt') && ~isempty(tmp.pnt);
+    hastri(i) = isfield(tmp, 'tri') && ~isempty(tmp.tri);
     if ~haspnt(i), tmp.pnt = []; end
     if ~hastri(i), tmp.tri = []; end
     if ~isfield(tmp, 'unit'), tmp.unit = 'unknown'; end
@@ -131,7 +131,7 @@ if iscell(filename)
   
   if  numel(filename)>1 && all(haspnt==1) && strcmp(concatenate, 'yes')
     if length(bnd)>2
-      error('Cannot concatenate more than two files') % no more than two files are taken for cancatenation      
+      error('Cannot concatenate more than two files') % no more than two files are taken for cancatenation
     else
       fprintf('Concatenating the meshes in %s and %s\n', filename{1}, filename{2});
       
@@ -164,12 +164,12 @@ if iscell(filename)
       for h = 1:length(bnd)
         shape.hemisphere = [shape.hemisphere; h*ones(length(bnd(h).pnt), 1)];
       end
-      shape.hemispherelabel = filename(:);     
+      shape.hemispherelabel = filename(:);
       
     end
   elseif numel(filename)>1 && ~all(haspnt==1)
     if numel(bnd)>2
-      error('Cannot combine more than two files') % no more than two files are taken for cancatenation      
+      error('Cannot combine more than two files') % no more than two files are taken for cancatenation
     else
       shape = [];
       if sum(haspnt==1)==1
@@ -230,8 +230,10 @@ else
       switch coordsys
         case 'head'
           shape.fid.pnt = cell2mat(struct2cell(orig.head));
+          shape.coordsys = 'ctf';
         case 'dewar'
           shape.fid.pnt = cell2mat(struct2cell(orig.dewar));
+          shape.coordsys = 'dewar';
         otherwise
           error('incorrect coordsys specified');
       end
@@ -309,7 +311,7 @@ else
         catch
           faces = [];
         end
-        else
+      else
         faces = g.faces;
       end
       
@@ -327,7 +329,7 @@ else
       if exist(tmpfilename, 'file'),  g = gifti(tmpfilename); shape.sulc = g.cdata; end
       if exist(strrep(tmpfilename, 'sulc', 'curvature'), 'file'),  g = gifti(strrep(tmpfilename, 'sulc', 'curvature')); shape.curv = g.cdata; end
       if exist(strrep(tmpfilename, 'sulc', 'thickness'), 'file'),  g = gifti(strrep(tmpfilename, 'sulc', 'thickness')); shape.thickness = g.cdata; end
-    
+      
     case 'caret_spec'
       [spec, headerinfo] = read_caret_spec(filename);
       fn = fieldnames(spec)
@@ -439,60 +441,42 @@ else
         shape.ctable = c.table;
       end
       
-    case {'neuromag_mne', 'neuromag_fif'}
-      % read the headshape and fiducials from an MNE file
-      hdr = ft_read_header(filename,'headerformat','neuromag_mne');
-      nFid = size(hdr.orig.dig,2); %work out number of fiducials
+    case {'neuromag_mne', 'neuromag_fif' 'babysquid_fif'}
+
+      orig = read_neuromag_hc(filename);
       switch coordsys
-        case 'head' % digitiser points should be stored in head coordinates by default
-          
+        case 'head'
           fidN=1;
           pntN=1;
-          for i=1:nFid % loop over fiducials
-            % check that this point is in head coordinates
-            % 0 is unknown
-            % 4 is fiducial system, i.e. head coordinates
-            if hdr.orig.dig(i).coord_frame~=4
-              warning(['Digitiser point (' num2str(i) ') not stored in head coordinates!']);
+          for i=1:size(orig.head.pnt,1)
+            if strcmp(orig.head.label{i}, 'LPA') || strcmp(orig.head.label{i}, 'Nasion') || strcmp(orig.head.label{i}, 'RPA')
+              shape.fid.pnt(fidN,1:3) = orig.head.pnt(i,:);
+              shape.fid.label{fidN} = orig.head.label{i};
+              fidN = fidN + 1;
+            else
+              shape.pnt(pntN,1:3) = orig.head.pnt(i,:);
+              shape.label{pntN} = orig.head.label{i};
+              pntN = pntN + 1;
             end
-            
-            switch hdr.orig.dig(i).kind % constants defined in MNE - see p.215 of MNE manual
-              case 1 % Cardinal point (Nasion, LPA or RPA)
-                % get location of fiducial:
-                shape.fid.pnt(fidN,1:3) = hdr.orig.dig(i).r*100; % multiply by 100 to convert to cm
-                switch hdr.orig.dig(i).ident
-                  case 1 % LPA
-                    shape.fid.label{fidN} = 'LPA';
-                  case 2 % nasion
-                    shape.fid.label{fidN} = 'Nasion';
-                  case 3 % RPA
-                    shape.fid.label{fidN} = 'RPA';
-                  otherwise
-                    error('Unidentified cardinal point in file');
-                end
-                fidN = fidN + 1;
-                
-              case 2 % HPI coil
-                shape.pnt(pntN,1:3) = hdr.orig.dig(i).r*100;
-                pntN = pntN + 1;
-              case 3 % EEG electrode location (or ECG)
-                shape.pnt(pntN,1:3) = hdr.orig.dig(i).r*100;
-                pntN = pntN + 1;
-              case 4 % Additional head point
-                shape.pnt(pntN,1:3) = hdr.orig.dig(i).r*100;
-                pntN = pntN + 1;
-              otherwise
-                warning('Unidentified digitiser point in file!');
-            end
-            
           end
-          shape.fid.label = shape.fid.label';
-          
+          shape.coordsys = orig.head.coordsys;
         case 'dewar'
-          error('Dewar coordinates not supported for headshape yet (MNE toolbox)');
-
+          fidN=1;
+          pntN=1;
+          for i=1:size(orig.dewar.pnt,1)
+            if strcmp(orig.dewar.label{i}, 'LPA') || strcmp(orig.dewar.label{i}, 'Nasion') || strcmp(orig.dewar.label{i}, 'RPA')
+              shape.fid.pnt(fidN,1:3) = orig.dewar.pnt(i,:);
+              shape.fid.label{fidN} = orig.dewar.label{i};
+              fidN = fidN + 1;
+            else
+              shape.pnt(pntN,1:3) = orig.dewar.pnt(i,:);
+              shape.label{pntN} = orig.dewar.label{i};
+              pntN = pntN + 1;
+            end
+          end
+          shape.coordsys = orig.dewar.coordsys;
         otherwise
-          error('Incorrect coordinates specified');
+          error('incorrect coordinates specified');
       end
       
     case {'yokogawa_mrk', 'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw' }
@@ -658,7 +642,7 @@ else
       [path,name,ext] = fileparts(filename);
       
       if strcmp(ext, '.inflated') % does the shift only for inflated surface
-        if strcmp(name, 'lh')         
+        if strcmp(name, 'lh')
           % assume freesurfer inflated mesh in mm, mni space
           % move the mesh a bit to the left, to avoid overlap with the right
           % hemisphere
@@ -823,4 +807,3 @@ else
     end
   end
 end
-
