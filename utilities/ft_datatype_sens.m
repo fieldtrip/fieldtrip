@@ -94,6 +94,7 @@ current_argin = [{sens} varargin];
 if isequal(current_argin, previous_argin)
   % don't do the whole cheking again, but return the previous output from cache
   sens = previous_argout{1};
+  return
 end
 
 % get the optional input arguments, which should be specified as key-value pairs
