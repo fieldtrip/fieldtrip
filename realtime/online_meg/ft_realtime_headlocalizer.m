@@ -80,16 +80,18 @@ count       = 0;
 isneuromag = ft_senstype(hdr.grad, 'neuromag');
 isctf      = ft_senstype(hdr.grad, 'ctf275');
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % read template head position, to reposition to, if template file is specified
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if isctf
   if ~isempty(cfg.template)
-    [PATH,NAME,EXT]=fileparts(cfg.template);
-    if strcmp(EXT, '.ds')
+    [p, f, x]=fileparts(cfg.template);
+    if strcmp(x, '.ds')
       shape = ft_read_headshape(cfg.template, 'coordsys', 'dewar');
       template(1,:) = [shape.fid.pnt(1,1), shape.fid.pnt(1,2), shape.fid.pnt(1,3)]; % chan X pos
       template(2,:) = [shape.fid.pnt(2,1), shape.fid.pnt(2,2), shape.fid.pnt(2,3)];
       template(3,:) = [shape.fid.pnt(3,1), shape.fid.pnt(3,2), shape.fid.pnt(3,3)];
-    elseif strcmp(EXT, '.txt')
+    elseif strcmp(x, '.txt')
       template = dlmread(cfg.template);
     else
       error('incorrect template file specified');
@@ -105,20 +107,29 @@ if isctf
   hdr.grad.chantype = hdr.grad.chantype(chansel,:);
   hdr.grad.label    = hdr.grad.label(chansel,:);
   hdr.grad.tra      = hdr.grad.tra(chansel,:);
+  
 elseif isneuromag
   if ~isempty(cfg.template)
     template = dlmread(cfg.template);
   else
     template = [];
   end
-end
+  
+else
+  error('the data does not resemble ctf, nor neuromag')
+end % if ctf or neuromag
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % read digitized head position (for dipole fitting)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if isctf
-  dip = []; % obsolete for CTF275 systems
-  vol = [];
   sens = hdr.grad;
+  % not needed for CTF275 systems
+  dip  = [];
+  vol  = [];
   coilsignal = [];
+  
 elseif isneuromag
   shape = ft_read_headshape(cfg.headerfile, 'coordsys', 'dewar');
   for i = 1:min(size(shape.pnt,1),length(cfg.coilfreq)) % for as many digitized or specified coils
@@ -131,41 +142,33 @@ elseif isneuromag
     error('head localization requires digitized positions for Neuromag systems')
   end
   
-  % construct the reference signal for each of the coils
-  % FIXME: this may need to be copied into data2hpi as blocksize may be
-  % updated
-  ncoil = length(cfg.coilfreq);
-  if ncoil==0
-    error('no coil frequencies were specified');
-  else
-    time = (1:blocksize)./hdr.Fs;
-    coilsignal = zeros(ncoil, blocksize);
-    for i=1:ncoil
-      coilsignal(i,:) = exp(time*cfg.coilfreq(i)*1i*2*pi);
-      coilsignal(i,:) = coilsignal(i,:) / norm(coilsignal(i,:));
-    end
-  end
-    
   % prepare the forward model and the sensor array for subsequent fitting
   % note that the forward model is a magnetic dipole in an infinite vacuum
   cfg.channel = ft_channelselection('MEGMAG', hdr.label);
   [vol, sens] = ft_prepare_vol_sens([], hdr.grad, 'channel', cfg.channel);
+  
+  % the signal passed through the coils will be computed further down
+  coilsignal = [];
+  
+else
+  error('the data does not resemble ctf, nor neuromag')
+end % if ctf or neuromag
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% define a subset of channels for reading
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if isctf
+  [dum, chanindx] = match_str('headloc', hdr.chantype);
+elseif isneuromag
+  [dum, chanindx] = match_str('megmag', hdr.chantype);
 end
 
-% define a subset of channels for reading
-if isctf
-  [~, chanindx] = match_str('headloc', hdr.chantype);
-elseif isneuromag
-  [~, chanindx] = match_str('megmag', hdr.chantype);
-end
 if isempty(chanindx)
   error('the data does not seem to have head localization channels');
 end
 
-% initiate main figure
-hMainFig = figure;
-
-% attach gui variables
+% this information is passed between the GUI callback functions
 info                    = [];
 info.hdr                = hdr;
 info.blocksize          = blocksize;
@@ -177,22 +180,30 @@ info.sens               = sens;
 %info.vol                = vol;
 %info.coilsignal         = coilsignal;
 %info.dip                = dip;
+info.continue           = true;
+
+% initiate main figure
+hMainFig = figure;
+
+% attach the info in the figure
 guidata(hMainFig, info);
 
 % initiate gui controls
 uicontrol_sub(hMainFig);
-info = guidata(hMainFig);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this is the general BCI loop where realtime incoming data is handled
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-while (get(info.hQuitButton, 'Value') == 1) % while the flag is one, the loop continues
+while ishandle(hMainFig) && info.continue % while the flag is one, the loop continues
   
   % determine number of samples available in buffer
   hdr = ft_read_header(cfg.headerfile, 'cache', true, 'coordsys', 'dewar');
   
   % see whether new samples are available
   newsamples = (hdr.nSamples*hdr.nTrials-prevSample);
+  
+  % get the potentially updated information from the main window
+  info = guidata(hMainFig);
   
   if newsamples>=info.blocksize
     
@@ -219,21 +230,41 @@ while (get(info.hQuitButton, 'Value') == 1) % while the flag is one, the loop co
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     % put the data in a fieldtrip-like raw structure
-    data.trial{1} = double(dat); clear dat;
+    data.trial{1} = double(dat);
     data.time{1}  = offset2time(begsample, hdr.Fs, endsample-begsample+1);
     data.label    = hdr.label(chanindx);
     data.hdr      = hdr;
     data.fsample  = hdr.Fs;
     
-    % get gui variables
-    info = guidata(hMainFig);
+    if isneuromag && size(coilsignal,2)~=info.blocksize
+      % construct the reference signal for each of the coils
+      % this needs to be updated if the blocksize changes
+      ncoil = length(cfg.coilfreq);
+      if ncoil==0
+        error('no coil frequencies were specified');
+      else
+        time = (1:info.blocksize)./hdr.Fs;
+        coilsignal = zeros(ncoil, info.blocksize);
+        for i=1:ncoil
+          coilsignal(i,:) = exp(time*cfg.coilfreq(i)*1i*2*pi);
+          coilsignal(i,:) = coilsignal(i,:) / norm(coilsignal(i,:));
+        end
+      end
+    end
     
-    % compute the HPI coil positions
+    % compute the HPI coil positions, this takes some time
     [hpi, dip] = data2hpi(data, dip, vol, sens, coilsignal, isctf, isneuromag); % for neuromag datasets this is slow
-    info.hpi = hpi;
-    %pause(3)
     
-    % store gui variables
+    if ~ishandle(hMainFig)
+      % the figure has been closed
+      break
+    end
+    
+    % get the potentially updated information from the main window
+    info = guidata(hMainFig);
+    % update the info
+    info.hpi = hpi;
+    % store the updated gui variables
     guidata(hMainFig, info);
     
     % DRAW LEFT PANEL - TOP VIEW
@@ -250,8 +281,10 @@ while (get(info.hQuitButton, 'Value') == 1) % while the flag is one, the loop co
     draw_sub(hMainFig);
     
     % show current timesample
-    str = sprintf('Runtime = %d s\n', round(mean(data.time{1}))); clear data;
-    title(str);
+    title(sprintf('top view, runtime = %d s\n', round(mean(data.time{1}))));
+    
+    % not needed any more
+    clear data;
     
     % viewing angle
     if isctf
@@ -273,28 +306,29 @@ while (get(info.hQuitButton, 'Value') == 1) % while the flag is one, the loop co
     % draw the color-coded head and distances from the templates
     draw_sub(hMainFig);
     
-    % show current data & time
-    title([date datestr(now,'-HH-MM-SS')]);
-    
     % viewing angle
-    if get(info.hViewRadioButton2,'Value') == 1
-      if isctf
-        view(-45, 0)
-      elseif isneuromag
-        view(0, 0)
-      end
-    elseif get(info.hViewRadioButton2,'Value') == 0
+    if get(info.hViewRadioButton1,'Value') == 1
       if isctf
         view(135, 0)
       elseif isneuromag
         view(180, 0)
       end
+      title(sprintf('anterior view, clock time %s', datestr(now))); % show current data & time
+      
+    elseif get(info.hViewRadioButton2,'Value') == 1
+      if isctf
+        view(-45, 0)
+      elseif isneuromag
+        view(0, 0)
+      end
+      title(sprintf('posterior view, clock time %s', datestr(now))); % show current data & time
     end
     
     % force Matlab to update the figure
     drawnow
     
   end % if enough new samples
+  
 end % while true
 close(hMainFig); % close the figure
 
@@ -325,7 +359,6 @@ hQuitButton = uicontrol(...
   'Units', 'normalized',...
   'Position', [.8 .0875 .15 .075],...
   'FontSize', 12,...
-  'Value', 1,... % the while loop flag variable
   'Callback', {@quit_ButtonDownFcn});
 
 hCoilCheckBox = uicontrol(...
@@ -431,6 +464,7 @@ if isctf
   hpi{1} = data.trial{1}([x1 y1 z1],end) * 100;
   hpi{2} = data.trial{1}([x2 y2 z2],end) * 100;
   hpi{3} = data.trial{1}([x3 y3 z3],end) * 100;
+  
 elseif isneuromag
   % estimate the complex-valued MEG topography for each coil
   % this implements a discrete Fourier transform (DFT)
@@ -457,7 +491,10 @@ elseif isneuromag
     dip(i).mom = real(dipall.mom(sel,i)); % ignore the complex phase information
     hpi{i} = dip(i).pos;
   end
-end
+  
+else
+  error('the data does not resemble ctf, nor neuromag')
+end % if ctf or neuromag
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that does the timing
@@ -748,7 +785,7 @@ info = guidata(handle);
 
 % stop the application
 fprintf('stopping the application \n')
-set(info.hQuitButton, 'Value', 0); % stop the while loop
+info.continue = false;
 
 % put the info back
 guidata(handle, info);
