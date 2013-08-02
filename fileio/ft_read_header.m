@@ -101,8 +101,10 @@ end
 % optionally get the data from the URL and make a temporary local copy
 filename = fetch_url(filename);
 
-% test whether the file or directory exists
-if  ~strcmp(ft_filetype(filename), 'fcdc_buffer') && ~strcmp(ft_filetype(filename), 'ctf_shm') && ~strcmp(ft_filetype(filename), 'fcdc_mysql') && ~exist(filename, 'file')
+realtime = any(strcmp(ft_filetype(filename), {'fcdc_buffer', 'ctf_shm', 'fcdc_mysql'}));
+
+% check whether the file or directory exists, not for realtime
+if  ~realtime && ~exist(filename, 'file')
   error('FILEIO:InvalidFileName', 'file or directory ''%s'' does not exist', filename);
 end
 
@@ -121,10 +123,7 @@ end
 % for uniqueness. fMRI users will probably never use channel names
 % for anything.
 
-% The skipInitialCheck flag is used to speed up the read operation from
-% the realtime buffer in general.
-
-if strcmp(headerformat, 'fcdc_buffer')
+if realtime
   % skip the rest of the initial checks to increase the speed for realtime operation
   
   checkUniqueLabels = false;
@@ -348,6 +347,13 @@ switch headerformat
     if any(diff(hdr.orig.SampleRate))
       error('channels with different sampling rate not supported');
     end
+    % assign the channel type and units for the known channels
+    hdr.chantype = repmat({'unknown'}, size(hdr.label));
+    hdr.chanunit = repmat({'unknown'}, size(hdr.label));
+    chan = ~cellfun(@isempty, regexp(hdr.label, '^A.*$'));
+    hdr.chantype(chan) = {'eeg'};
+    hdr.chanunit(chan) = {'uV'};
+
     if ft_filetype(filename, 'bham_bdf')
       % TODO channel renaming should be made a general option
       % this is for the Biosemi system used at the University of Birmingham
@@ -386,6 +392,9 @@ switch headerformat
     hdr.nSamplesPre = orig.nSamplesPre;
     hdr.nTrials     = orig.nTrials;
     hdr.orig        = orig;
+    % assign the channel type and units for the known channels
+    hdr.chantype = repmat({'eeg'}, size(hdr.label));
+    hdr.chanunit = repmat({'uV'},  size(hdr.label));
     
   case 'ced_son'
     % check that the required low-level toolbox is available

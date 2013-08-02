@@ -64,15 +64,15 @@ float meg_grad_multiplier = 1.0;
 float eeg_multiplier = 1.0;
 
 static const char *option_help = "\
-\t[--bufhost <host>]\t\tFeed a remote FieldTrip buffer on <host> instead of creating a local FieldTrip buffer.\n\
-\t[--bufport <port>]\t\tUse <port> as the local/remote TCP port for the buffer instead of the default of 1972.\n\
-\t[--chunksize <samples>]\t\tRequest <samples> at a time (a wish, not an order), system config value used by default.\n\
-\t[--fixchunksize <samples>]\tSet chunk size to <samples> and quit the program. ONLY USE IT IN CASE OF ABNORMAL PROGRAM TERMINATION!\n\
-\t[--magmul <factor>]\t\tScale the MEG magnetometer signals by <factor>, by default no scaling.\n\
-\t[--gradmul <factor>]\t\tScale the MEG gradiometer signals by <factor>, by default no scaling.\n\
-\t[--eegmul <factor>]\t\tScale the EEG signals by <factor>, by default no scaling.\n\
-\t[--version]\t\t\tDisplay version information and exit.\n\
-\t[--help]\t\t\tShow this help text.";
+                                  \t[--bufhost <host>]\t\tFeed a remote FieldTrip buffer on <host> instead of creating a local FieldTrip buffer.\n\
+                                  \t[--bufport <port>]\t\tUse <port> as the local/remote TCP port for the buffer instead of the default of 1972.\n\
+                                  \t[--chunksize <samples>]\t\tRequest <samples> at a time (a wish, not an order), system config value used by default.\n\
+                                  \t[--fixchunksize <samples>]\tSet chunk size to <samples> and quit the program. ONLY USE IT IN CASE OF ABNORMAL PROGRAM TERMINATION!\n\
+                                  \t[--magmul <factor>]\t\tScale the MEG magnetometer signals by <factor>, by default no scaling.\n\
+                                  \t[--gradmul <factor>]\t\tScale the MEG gradiometer signals by <factor>, by default no scaling.\n\
+                                  \t[--eegmul <factor>]\t\tScale the EEG signals by <factor>, by default no scaling.\n\
+                                  \t[--version]\t\t\tDisplay version information and exit.\n\
+                                  \t[--help]\t\t\tShow this help text.";
 
 
 /* -----------------------------------------------------------------------------
@@ -93,7 +93,7 @@ int collector_open()
     dacq_log("Neuromag collector connection: %s\n", err_get_error());
     return(-1);
   }
-  
+
   return(0);
 }
 
@@ -146,12 +146,12 @@ int collector_getMaxBuflen()
     /* All lines start with a three-digit code and a space or minus sign. Skip them and parse the rest */
     if (sscanf(line+4, "%s %s %s", var_name, var_value, var_type) == 3) {
       if (!strcmp(var_name, COLLECTOR_BUFVAR)) {
-	if (sscanf(var_value, "%d", &maxbuflen) != 1) {
-	  dacq_log("Neuromag collector: Misformatted variable line '%s'\n", line);
-	  return(-1);
-	} else {
-	  return(maxbuflen);
-	}
+        if (sscanf(var_value, "%d", &maxbuflen) != 1) {
+          dacq_log("Neuromag collector: Misformatted variable line '%s'\n", line);
+          return(-1);
+        } else {
+          return(maxbuflen);
+        }
       }
     }
     line = strtok(NULL, "\n");
@@ -190,15 +190,15 @@ void clean_up()
 #if defined(DACQ_OLD_CONNECTION_SCHEME)
   if (dacq_disconnect_client(shmem_sock, shmem_id) == -1)
 #else
-  if (dacq_disconnect_client(&shmem_sock, shmem_id) == -1)
+    if (dacq_disconnect_client(&shmem_sock, shmem_id) == -1)
 #endif
-  {
-    dacq_log("Neuromag data server: Could not disconnect\n");
-  }
-  else {
-    dacq_log("Neuromag data server: Disconnected\n");
-  }
-  
+    {
+      dacq_log("Neuromag data server: Could not disconnect\n");
+    }
+    else {
+      dacq_log("Neuromag data server: Disconnected\n");
+    }
+
   /* Restore the buffer length and disconnect from the control server */
   if (originalMaxBuflen > 0) {
     dacq_log("About to set maxBuflen back to its original value (%d)...\n", originalMaxBuflen);
@@ -207,7 +207,7 @@ void clean_up()
     dacq_log("Original value restored successfully\n");
   }
   collector_close();
-  
+
   /* Disconnect from / terminate the FT buffer */
   dacq_log("About to disconnect from / terminate the FieldTrip buffer\n");
   if (fieldtrip_sock == 0) {
@@ -285,87 +285,87 @@ int main (int argc, char **argv)
     if (!strcmp(argv[arg], "--bufhost")) {
       arg++;
       if (arg <= argc - 1) {
-	strcpy(fieldtrip_host.name, argv[arg]);
-	remote_buf = 1;
+        strcpy(fieldtrip_host.name, argv[arg]);
+        remote_buf = 1;
       } else {
-	fprintf(stderr, "%s: Hostname missing\n", argv[0]);
-	usage(argv[0]);
+        fprintf(stderr, "%s: Hostname missing\n", argv[0]);
+        usage(argv[0]);
       }
     }
     else if (!strcmp(argv[arg], "--bufport")) {
       arg++;
       if (arg <= argc - 1)
-	fieldtrip_host.port = atoi(argv[arg]);
+        fieldtrip_host.port = atoi(argv[arg]);
       else {
-	fprintf(stderr, "%s: Port number missing\n", argv[0]);
-	usage(argv[0]);
+        fprintf(stderr, "%s: Port number missing\n", argv[0]);
+        usage(argv[0]);
       }
     }
     else if (!strcmp(argv[arg], "--chunksize")) {
       arg++;
       if (arg <= argc - 1)
-	newMaxBuflen = atoi(argv[arg]);
+        newMaxBuflen = atoi(argv[arg]);
       else {
-	fprintf(stderr, "%s: Neuromag buffer length missing\n", argv[0]);
-	usage(argv[0]);
+        fprintf(stderr, "%s: Neuromag buffer length missing\n", argv[0]);
+        usage(argv[0]);
       }
       if (newMaxBuflen < MIN_BUFLEN) {
-	fprintf(stderr, "%s: Too small Neuromag buffer length requested, should be at least %d\n", argv[0], MIN_BUFLEN);
-	return(1);
+        fprintf(stderr, "%s: Too small Neuromag buffer length requested, should be at least %d\n", argv[0], MIN_BUFLEN);
+        return(1);
       }
     }
     else if (!strcmp(argv[arg], "--fixchunksize")) {
       arg++;
       if (arg <= argc - 1)
-	newMaxBuflen = atoi(argv[arg]);
+        newMaxBuflen = atoi(argv[arg]);
       else {
-	fprintf(stderr, "%s: Neuromag buffer length missing\n", argv[0]);
-	usage(argv[0]);
+        fprintf(stderr, "%s: Neuromag buffer length missing\n", argv[0]);
+        usage(argv[0]);
       }
       if (newMaxBuflen < MIN_BUFLEN) {
-	fprintf(stderr, "%s: Too small Neuromag buffer length requested, should be at least %d\n", argv[0], MIN_BUFLEN);
-	return(1);
+        fprintf(stderr, "%s: Too small Neuromag buffer length requested, should be at least %d\n", argv[0], MIN_BUFLEN);
+        return(1);
       }
       else {
-	/* Connect to the Elekta Neuromag acquisition control server, change the buffer length and exit*/
-	if (collector_open()) {
-	  dacq_log("Cannot change the Neuromag buffer length: Could not open collector connection\n");
-	  return(3);
-	}
-	dacq_log("Changing the Neuromag buffer length to %d\n", newMaxBuflen);
-	if (collector_setMaxBuflen(newMaxBuflen)) {
-	  dacq_log("Setting a new Neuromag buffer length failed\n");
-	  collector_close();
-	  return(3);
-	}
-	exit(0);
+        /* Connect to the Elekta Neuromag acquisition control server, change the buffer length and exit*/
+        if (collector_open()) {
+          dacq_log("Cannot change the Neuromag buffer length: Could not open collector connection\n");
+          return(3);
+        }
+        dacq_log("Changing the Neuromag buffer length to %d\n", newMaxBuflen);
+        if (collector_setMaxBuflen(newMaxBuflen)) {
+          dacq_log("Setting a new Neuromag buffer length failed\n");
+          collector_close();
+          return(3);
+        }
+        exit(0);
       }
     }
     else if (!strcmp(argv[arg], "--magmul")) {
       arg++;
       if (arg <= argc - 1)
-	meg_mag_multiplier = (float)atof(argv[arg]);
+        meg_mag_multiplier = (float)atof(argv[arg]);
       else {
-	fprintf(stderr, "%s: MEG magnetometer multiplier missing\n", argv[0]);
-	usage(argv[0]);
+        fprintf(stderr, "%s: MEG magnetometer multiplier missing\n", argv[0]);
+        usage(argv[0]);
       }
     }
     else if (!strcmp(argv[arg], "--gradmul")) {
       arg++;
       if (arg <= argc - 1)
-	meg_grad_multiplier = (float)atof(argv[arg]);
+        meg_grad_multiplier = (float)atof(argv[arg]);
       else {
-	fprintf(stderr, "%s: MEG gradiometer multiplier missing\n", argv[0]);
-	usage(argv[0]);
+        fprintf(stderr, "%s: MEG gradiometer multiplier missing\n", argv[0]);
+        usage(argv[0]);
       }
     }
     else if (!strcmp(argv[arg], "--eegmul")) {
       arg++;
       if (arg <= argc - 1)
-	eeg_multiplier = (float)atof(argv[arg]);
+        eeg_multiplier = (float)atof(argv[arg]);
       else {
-	fprintf(stderr, "%s: EEG multiplier missing\n", argv[0]);
-	usage(argv[0]);
+        fprintf(stderr, "%s: EEG multiplier missing\n", argv[0]);
+        usage(argv[0]);
       }
     }
     else if (!strcmp(argv[arg], "--help")) {
@@ -374,7 +374,7 @@ int main (int argc, char **argv)
     }
     else if (!strcmp(argv[arg], "--version")) {
       printf("%s: Version %d.%d.%d, compiled on %s\n(C)opyright Gustavo Sudre and Lauri Parkkonen, 2011\n",
-	     argv[0], version_major, version_minor, version_patch, __DATE__);
+          argv[0], version_major, version_minor, version_patch, __DATE__);
       exit(0);
     }
     else {
@@ -387,7 +387,7 @@ int main (int argc, char **argv)
   err_init_single();
   dacq_log_set_name("neuromag2ft");
   dacq_log_set_time(1);
-    
+
   /* Set up a signal handler to catch termination signals such as Control-C presses */
   sigemptyset(&sigmask);
   sigaddset(&sigmask, SIGINT);
@@ -443,7 +443,7 @@ int main (int argc, char **argv)
       return(3);
     }
     else dacq_log("Current buffer length value = %d\n",originalMaxBuflen);
-    
+
     collector_close();
     // just so we know no clean up is necessary
     originalMaxBuflen = -1;
@@ -467,18 +467,18 @@ int main (int argc, char **argv)
       dacq_log("FieldTrip buffer server thread started (TID %d)\n", buffer_tid);
     fieldtrip_sock = 0;
   }
-  
+
   /* Mainloop */
   dacq_log("Will scale up MEG mags by %g, grads by %g and EEG data by %g\n",
-	   meg_mag_multiplier, meg_grad_multiplier, eeg_multiplier);
+      meg_mag_multiplier, meg_grad_multiplier, eeg_multiplier);
   dacq_log("Waiting for the measurement to start... Press Ctrl-C to terminate this program\n");
   for (;;) {
 #if defined(DACQ_OLD_CONNECTION_SCHEME)
     if (dacq_client_receive_tag(shmem_sock, shmem_id) == -1)
 #else
-    if (dacq_client_receive_tag(&shmem_sock, shmem_id) == -1)
+      if (dacq_client_receive_tag(&shmem_sock, shmem_id) == -1)
 #endif
-      break;
+        break;
   }
   dacq_log("\n");
 

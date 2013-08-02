@@ -45,13 +45,22 @@ cfg.trl(:,4) = 1:10';
 data7        = ft_redefinetrial(cfg, data);
 assert(all(data7.trialinfo(:,1)==(1:10)'));
 
-% here the trialinfo should not be added
+% here the user-specified trialinfo should be added
 data.trialinfo = (1:10)';
 cfg          = [];
 cfg.trl      = data.sampleinfo;
 cfg.trl(:,1) = cfg.trl(:,1)+50;
 cfg.trl(:,3) = -50;
 cfg.trl(:,4) = (11:20)';
+data8        = ft_redefinetrial(cfg, data);
+assert(all(data8.trialinfo(:,1)==(11:20)'));
+
+% here the old trialinfo should be added
+data.trialinfo = (1:10)';
+cfg          = [];
+cfg.trl      = data.sampleinfo;
+cfg.trl(:,1) = cfg.trl(:,1)+50;
+cfg.trl(:,3) = -50;
 data8        = ft_redefinetrial(cfg, data);
 assert(all(data8.trialinfo(:,1)==(1:10)'));
 

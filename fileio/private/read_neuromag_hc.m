@@ -1,7 +1,7 @@
 function [hc] = read_neuromag_hc(filename)
 
 % READ_NEUROMAG_HC extracts the MEG headcoil marker positions from a neuromag
-% fif file
+% fif file or from the fieldtrip buffer
 %
 % the definition of head coordinates is according to CTF standard:
 % - Origin: Intersection of the line through LPA and RPA and a line orthogonal
@@ -44,11 +44,7 @@ function [hc] = read_neuromag_hc(filename)
 % $Id$
 
 % read neuromag fif file
-if ~isstruct(filename)
-  hdr = ft_read_header(filename, 'headerformat', 'neuromag_fif');
-else
-  error('input should be a neuromag fif file')
-end
+hdr = ft_read_header(filename);
 
 % determine number of digitized points
 nFid = size(hdr.orig.dig,2);

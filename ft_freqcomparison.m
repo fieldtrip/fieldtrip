@@ -1,25 +1,8 @@
 function [freq] = ft_freqcomparison(cfg, varargin)
 
-% FT_FREQCOMPARISON performs a comparison between two (rpt-/subj-)
-% chan-freq datasets.
+% FT_FREQCOMPARISON is deprecated, please use FT_MATH instead.
 %
-% Differently from ft_freqbaseline, ft_freqcomparison requires two datasets
-% for input arguments (n==2) where the first dataset is considered the norm.
-% The output contains the difference of the second dataset to this norm,
-% expressed in units as determined by cfg.comparisontype.
-%
-% Use as
-%   [freq] = ft_freqcomparison(cfg, dataset1, dataset2);
-%
-% where the freq data comes from FT_SPECEST_MTMFFT and the configuration
-% should contain
-%
-%   cfg.comparisontype = 'absolute' 'relchange' 'relative' (default =
-%   'absolute')
-%
-% See also FT_FREQBASELINE, FT_FREQANALYSIS, FT_TIMELOCKBASELINE
-
-% FIXME add support for cohspctrm
+% See also FT_MATH, FT_FREQBASELINE
 
 % Copyright (C) 2010-2011, Arjen Stolk, DCCN, Donders Institute
 %
@@ -40,6 +23,11 @@ function [freq] = ft_freqcomparison(cfg, varargin)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
+
+% DEPRECATED by roboos on 30 July 2013
+% see http://bugzilla.fcdonders.nl/show_bug.cgi?id=2222 for more details
+% support for this functionality can be removed at the end of 2013
+warning('FT_FREQCOMPARISON is deprecated, please use FT_MATH instead.')
 
 revision = '$Id$';
 
@@ -137,3 +125,5 @@ fprintf('performing %s comparison \n', cfg.comparisontype);
 ft_postamble debug
 ft_postamble trackconfig
 ft_postamble provenance
+ft_postamble previous varargin  % this copies the datain.cfg structure into the cfg.previous field. You can also use it for multiple inputs, or for "varargin"
+ft_postamble history freq       % this adds the local cfg structure to the output data structure, i.e. dataout.cfg = cfg

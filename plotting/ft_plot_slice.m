@@ -4,7 +4,7 @@ function [h, T2] = ft_plot_slice(dat, varargin)
 %
 % Use as
 %   ft_plot_slice(dat, ...)
-%   ft_plot_ortho(dat, mask, ...)
+%   ft_plot_slice(dat, mask, ...)
 % where dat and mask are equal-sized 3-D arrays.
 %
 % Additional options should be specified in key-value pairs and can be
@@ -63,17 +63,17 @@ if numel(varargin)>0 && (isempty(varargin{1}) || isnumeric(varargin{1}) || islog
 end
 
 % get the optional input arguments
-transform    = ft_getopt(varargin, 'transform');
-loc          = ft_getopt(varargin, 'location');
-ori          = ft_getopt(varargin, 'orientation', [0 0 1]);
-resolution   = ft_getopt(varargin, 'resolution', 1);
-mask         = ft_getopt(varargin, 'datmask');
-opacitylim   = ft_getopt(varargin, 'opacitylim');
-interpmethod = ft_getopt(varargin, 'interpmethod', 'nearest');
-cmap         = ft_getopt(varargin, 'colormap');
-clim         = ft_getopt(varargin, 'colorlim');
-doscale      = ft_getopt(varargin, 'doscale', true); % only scale when necessary (time consuming), i.e. when plotting as grayscale image & when the values are not between 0 and 1
-h            = ft_getopt(varargin, 'surfhandle', []);
+transform           = ft_getopt(varargin, 'transform');
+loc                 = ft_getopt(varargin, 'location');
+ori                 = ft_getopt(varargin, 'orientation', [0 0 1]);
+resolution          = ft_getopt(varargin, 'resolution', 1);
+mask                = ft_getopt(varargin, 'datmask');
+opacitylim          = ft_getopt(varargin, 'opacitylim');
+interpmethod        = ft_getopt(varargin, 'interpmethod', 'nearest');
+cmap                = ft_getopt(varargin, 'colormap');
+clim                = ft_getopt(varargin, 'colorlim');
+doscale             = ft_getopt(varargin, 'doscale', true); % only scale when necessary (time consuming), i.e. when plotting as grayscale image & when the values are not between 0 and 1
+h                   = ft_getopt(varargin, 'surfhandle', []);
 
 mesh                = ft_getopt(varargin, 'intersectmesh');
 intersectcolor      = ft_getopt(varargin, 'intersectcolor', 'yrgbmyrgbm');
