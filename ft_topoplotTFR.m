@@ -119,13 +119,17 @@ function [cfg] = ft_topoplotTFR(cfg, varargin)
 % corresponding to the input structure. For this particular function, the input should be
 % structured as a cell array.
 %
-% See also:
-%  FT_TOPOPLOTER, FT_TOPOPLOTIC, FT_SINGLEPLOTTFR, FT_MULTIPLOTTFR, FT_PREPARE_LAYOUT
+% See also FT_TOPOPLOTER, FT_TOPOPLOTIC, FT_SINGLEPLOTTFR, FT_MULTIPLOTTFR, FT_PREPARE_LAYOUT
 
-% It is possible to use multiple highlight-selections (e.g.: multiple statistical clusters of channels)
-% To do this, all the content of the highlight-options (including cfg.highlight) should be placed in a cell-array
-% (even if the normal content was already in a cell-array). Specific marker settings (e.g. color, size) are defaulted when
-% not present.
+% Undocumented options: 
+%
+% It is possible to use multiple highlight-selections (e.g.: multiple
+% statistical clusters of channels) To do this, all the content of
+% the highlight-options (including cfg.highlight) should be placed
+% in a cell-array (even if the normal content was already in a
+% cell-array). Specific marker settings (e.g. color, size) are defaulted
+% when not present.
+% 
 % Example (3 selections):
 % cfg.highlight          = {'labels', 'labels', 'numbers'}
 % cfg.highlightchannel   = {{'MZF03','MZC01','MRT54'}, [1:5], 'C*'}
@@ -135,15 +139,6 @@ function [cfg] = ft_topoplotTFR(cfg, varargin)
 %
 % Other options:
 % cfg.labeloffset (offset of labels to their marker, default = 0.005)
-
-% This function depends on FT_TIMELOCKBASELINE which has the following options:
-% cfg.baseline, documented
-% cfg.channel
-% cfg.baselinewindow
-%
-% This function depends on FT_FREQBASELINE which has the following options:
-% cfg.baseline, documented
-% cfg.baselinetype
 
 % Copyright (C) 2005-2011, F.C. Donders Centre
 %

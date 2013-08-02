@@ -100,11 +100,6 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 % cfg.channel
 % cfg.layoutname
 
-%
-% This function depends on FT_FREQBASELINE which has the following options:
-% cfg.baseline, documented
-% cfg.baselinetype, documented
-
 % Copyright (C) 2003-2006, Ole Jensen
 % Copyright (C) 2007-2011, Roemer van der Meij & Jan-Mathijs Schoffelen
 %

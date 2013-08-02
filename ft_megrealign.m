@@ -74,18 +74,6 @@ function [data] = ft_megrealign(cfg, data)
 %
 % See also FT_PREPARE_LOCALSPHERES, FT_PREPARE_SINGLESHELL
 
-% This function depends on FT_PREPARE_DIPOLE_GRID
-%
-% This function depends on FT_PREPARE_VOL_SENS which has the following options:
-% cfg.channel
-% cfg.elec
-% cfg.elecfile
-% cfg.grad
-% cfg.gradfile
-% cfg.hdmfile, documented
-% cfg.order
-% cfg.vol, documented
-
 % Copyright (C) 2004-2007, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip

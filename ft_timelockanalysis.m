@@ -66,35 +66,6 @@ function [timelock] = ft_timelockanalysis(cfg, data)
 % cfg.normalizevar
 % cfg.normalizecov
 
-% This function depends on PREPROC which has the following options:
-% cfg.absdiff
-% cfg.boxcar
-% cfg.bpfilter
-% cfg.bpfiltord
-% cfg.bpfilttype
-% cfg.bpfreq
-% cfg.demean
-% cfg.baselinewindow
-% cfg.derivative
-% cfg.detrend
-% cfg.dftfilter
-% cfg.dftfreq
-% cfg.hilbert
-% cfg.hpfilter
-% cfg.hpfiltord
-% cfg.hpfilttype
-% cfg.hpfreq
-% cfg.implicitref
-% cfg.lpfilter
-% cfg.lpfiltord
-% cfg.lpfilttype
-% cfg.lpfreq
-% cfg.medianfilter
-% cfg.medianfiltord
-% cfg.rectify
-% cfg.refchannel
-% cfg.reref
-
 % Copyright (C) 2003-2006, Markus Bauer
 % Copyright (C) 2003-2006, Robert Oostenveld
 %

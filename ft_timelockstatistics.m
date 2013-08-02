@@ -39,8 +39,6 @@ function [stat] = ft_timelockstatistics(cfg, varargin)
 %
 % See also FT_TIMELOCKANALYSIS, FT_TIMELOCKGRANDAVERAGE
 
-% This function depends on STATISTICS_WRAPPER
-
 % Copyright (C) 2005-2006, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip

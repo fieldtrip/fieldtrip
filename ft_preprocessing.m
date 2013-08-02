@@ -130,41 +130,6 @@ function [data] = ft_preprocessing(cfg, data)
 %   cfg.export.dataset    = string with the output file name
 %   cfg.export.dataformat = string describing the output file format, see FT_WRITE_DATA
 
-% This function depends on PREPROC which has the following options:
-% cfg.absdiff
-% cfg.boxcar
-% cfg.polyremoval, documented
-% cfg.polyorder, documented
-% cfg.demean, documented
-% cfg.baselinewindow, documented
-% cfg.bpfilter, documented
-% cfg.bpfiltord, documented
-% cfg.bpfilttype, documented
-% cfg.bpfreq, documented
-% cfg.bsfilter, documented
-% cfg.bsfiltord, documented
-% cfg.bsfilttype, documented
-% cfg.bsfreq, documented
-% cfg.derivative, documented
-% cfg.detrend, documented
-% cfg.dftfilter, documented
-% cfg.dftfreq, documented
-% cfg.hilbert, documented
-% cfg.hpfilter, documented
-% cfg.hpfiltord, documented
-% cfg.hpfilttype, documented
-% cfg.hpfreq, documented
-% cfg.implicitref, documented
-% cfg.lpfilter, documented
-% cfg.lpfiltord, documented
-% cfg.lpfilttype, documented
-% cfg.lpfreq, documented
-% cfg.medianfilter, documented
-% cfg.medianfiltord, documented
-% cfg.rectify, documented
-% cfg.refchannel, documented
-% cfg.reref, documented
-
 % Copyright (C) 2003-2013, Robert Oostenveld, SMI, FCDC
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip

@@ -47,16 +47,6 @@ function [simulated] = ft_dipolesimulation(cfg)
 % cfg.feedback
 % cfg.previous
 % cfg.version
-%
-% This function depends on FT_PREPARE_VOL_SENS which has the following options:
-% cfg.channel, documented
-% cfg.elec, documented
-% cfg.elecfile, documented
-% cfg.grad, documented
-% cfg.gradfile, documented
-% cfg.hdmfile, documented
-% cfg.order
-% cfg.vol, documented
 
 % Copyright (C) 2004, Robert Oostenveld
 %
