@@ -36,7 +36,7 @@ function [data] = ft_redefinetrial(cfg, data)
 % samples relative to the original recording
 %   cfg.trl       = Nx3 matrix with the trial definition, see FT_DEFINETRIAL
 %
-% Alternatively you can specify the data to be cut into (non-)overlapping 
+% Alternatively you can specify the data to be cut into (non-)overlapping
 % segments, starting from the beginning of each trial. This may lead to loss
 % of data at the end of the trials
 %   cfg.length    = single number (in unit of time, typically seconds) of the required snippets
@@ -96,9 +96,6 @@ cfg.feedback     = ft_getopt(cfg, 'feedback',  'yes');
 cfg.trl          = ft_getopt(cfg, 'trl',       []);
 cfg.length       = ft_getopt(cfg, 'length',    []);
 cfg.overlap      = ft_getopt(cfg, 'overlap',   0);
-cfg.interpmethod = ft_getopt(cfg, 'interpmethod', 'nan');  % used for interpolating missing data
-cfg.interppre    = ft_getopt(cfg, 'interppre',  nan);      % used for interpolation, expressed in seconds!
-cfg.interppost   = ft_getopt(cfg, 'interppost', nan);      % used for interpolation, expressed in seconds!
 
 % store original datatype
 dtype = ft_datatype(data);
@@ -152,11 +149,11 @@ if ~isempty(cfg.toilim)
       data.time{i}  = data.time{i} (   begsample(i):endsample(i));
     end
   end
-
-  % also correct the sample information 
+  
+  % also correct the sample information
   if isfield(data, 'sampleinfo'),
-      data.sampleinfo(:, 1) = data.sampleinfo(:, 1) + begsample - 1;
-      data.sampleinfo(:, 2) = data.sampleinfo(:, 1) + endsample - begsample;
+    data.sampleinfo(:, 1) = data.sampleinfo(:, 1) + begsample - 1;
+    data.sampleinfo(:, 2) = data.sampleinfo(:, 1) + endsample - begsample;
   end
   
   data.time     = data.time(~skiptrial);
@@ -196,8 +193,8 @@ elseif ~isempty(cfg.begsample) || ~isempty(cfg.endsample)
   
   % also correct the sampleinfo
   if isfield(data, 'sampleinfo')
-      data.sampleinfo(:, 1) = data.sampleinfo(:, 1) + begsample - 1;
-      data.sampleinfo(:, 2) = data.sampleinfo(:, 1) + endsample - begsample;
+    data.sampleinfo(:, 1) = data.sampleinfo(:, 1) + begsample - 1;
+    data.sampleinfo(:, 2) = data.sampleinfo(:, 1) + endsample - begsample;
   end
   
 elseif ~isempty(cfg.trl)
@@ -206,14 +203,14 @@ elseif ~isempty(cfg.trl)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
   % ensure that sampleinfo is present, otherwise ft_fetch_data will crash
-  data = ft_checkdata(data, 'hassampleinfo', 'yes');  
-
+  data = ft_checkdata(data, 'hassampleinfo', 'yes');
+  
   dataold = data;   % make a copy of the old data
   clear data        % this line is very important, we want to completely reconstruct the data from the old data!
   
   % make header
   hdr = ft_fetch_header(dataold);
-
+  
   trl = cfg.trl;
   
   % start with a completely new data structure
@@ -223,39 +220,32 @@ elseif ~isempty(cfg.trl)
   data.fsample  = dataold.fsample;
   data.trial    = cell(1,size(trl,1));
   data.time     = cell(1,size(trl,1));
-
+  
   for iTrl=1:length(trl(:,1))
     begsample = trl(iTrl,1);
     endsample = trl(iTrl,2);
     offset    = trl(iTrl,3);
     trllength = endsample - begsample + 1;
     
-    % original trial
-    iTrlorig  = find(dataold.sampleinfo(:,1)<=begsample & dataold.sampleinfo(:,2)>=endsample);
-    if isempty(iTrlorig)
-      error('some sample indices [%d %d] specified in cfg.trl are not present in the data', begsample, endsample);
-    end
-    if numel(iTrlorig)>2
-      % this explicit check is done since July 2012
-      error('some of the new trials need to be constructed from more than one input trial. This is not supported.');
-    end
-    
-    % used to speed up ft_fetch_data
-    if iTrl==1,
-      tmpdata = dataold;
-    end
-    tmpdata.trial = dataold.trial(iTrlorig);
-    tmpdata.time  = dataold.time(iTrlorig);
-    tmpdata.sampleinfo = dataold.sampleinfo(iTrlorig,:);
-    if isfield(dataold, 'trialinfo'), tmpdata.trialinfo = dataold.trialinfo(iTrlorig,:); end;  
-   
-    data.trial{iTrl} = ft_fetch_data(tmpdata, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', 1:hdr.nChans, 'docheck', 0);
+    data.trial{iTrl} = ft_fetch_data(dataold, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', 1:hdr.nChans, 'docheck', 0);
     data.time{iTrl}  = offset2time(offset, dataold.fsample, trllength);
     
-    % ensure correct handling of trialinfo
-    if isfield(dataold, 'trialinfo'),
-      data.trialinfo(iTrl,:) = dataold.trialinfo(iTrlorig,:);
-    end
+    % ensure correct handling of trialinfo.
+    % original trial
+    iTrlorig  =  find(begsample <= dataold.sampleinfo(:,2) & endsample >= dataold.sampleinfo(:,1)); % Determines which old trials are present in new trials
+    
+    if size(cfg.trl,2)>3 %In case user specified a trialinfo
+      data.trialinfo(iTrl,:) = cfg.trl(iTrl,4:end);
+      if isfield(dataold,'trialinfo')
+        warning_once('Original data has trialinfo, using user specified trialinfo instead');
+      end;
+    elseif isfield(dataold,'trialinfo') % If old data has trialinfo
+      if isequal(dataold.trialinfo(iTrlorig,:),1) || numel(iTrlorig)==1 % Checks whether trials that are combined have same trialinfo
+        data.trialinfo(iTrl,:) = dataold.trialinfo(iTrlorig(1),:);
+      else
+        error('Old trialinfo cannot be combined into new trialinfo, please specify trialinfo in cfg.trl(:,4)');
+      end;
+    end;
   end %for iTrl
   
   % add the necessary fields to the output
@@ -269,23 +259,18 @@ elseif ~isempty(cfg.trl)
     % adjust the trial definition
     data.sampleinfo  = trl(:, 1:2);
   end
-  if ~isfield(data, 'trialinfo') && size(trl,2)>3
-    data.trialinfo = trl(:,4:end);
-  elseif isfield(data, 'trialinfo') && size(trl,2)>3
-    warning('the input trl-matrix contains more than 3 columns, but the data already has a trialinfo-field. Keeping the trialinfo from the data');
-  end
   
 elseif ~isempty(cfg.length)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % cut the existing trials into segments of the specified length
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+  
   data = ft_checkdata(data, 'hassampleinfo', 'yes');
   
   % create dummy trl-matrix and recursively call ft_redefinetrial
   nsmp    = round(cfg.length*data.fsample);
   nshift  = round((1-cfg.overlap)*nsmp);
-
+  
   newtrl = zeros(0,3);
   for k = 1:numel(data.trial)
     offset = time2offset(data.time{k}, data.fsample);
@@ -297,11 +282,11 @@ elseif ~isempty(cfg.length)
       newtrl = [newtrl; tmp2];
     end
   end
-
+  
   tmpcfg = [];
   tmpcfg.trl = newtrl;
   data   = ft_redefinetrial(tmpcfg, data);
-
+  
 end % processing the realignment or data selection
 
 if ~isempty(cfg.minlength)
@@ -309,7 +294,7 @@ if ~isempty(cfg.minlength)
   trllength = zeros(Ntrial, 1);
   % determine the length of each trial
   for i=1:Ntrial
-    trllength(i) = size(data.trial{i},2) * 1/data.fsample; % this the the DURATION of the selected samples 
+    trllength(i) = size(data.trial{i},2) * 1/data.fsample; % this the the DURATION of the selected samples
   end
   if ischar(cfg.minlength) && strcmp(cfg.minlength, 'maxperlen')
     minlength = max(trllength);
