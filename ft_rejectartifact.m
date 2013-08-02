@@ -7,7 +7,8 @@ function [cfg] = ft_rejectartifact(cfg, data)
 % You should start by detecting the artifacts in the data using the
 % function FT_ARTIFACT_xxx where xxx is the type of artifact. Subsequently
 % FT_REJECTARTIFACT looks at the detected artifacts and removes them from
-% the trial definition or from the data.
+% the trial definition or from the data. In case you wish to replace bad
+% parts by nans, you have to specify data as an input parameter.
 %
 % Use as
 %   cfg = ft_rejectartifact(cfg)
@@ -16,7 +17,7 @@ function [cfg] = ft_rejectartifact(cfg, data)
 % with the data as obtained from FT_PREPROCESSING
 %
 % The following configuration options are supported:
-%   cfg.artfctdef.reject          = 'none', 'partial' or 'complete' (default = 'complete')
+%   cfg.artfctdef.reject          = 'none', 'partial','nan', or 'complete' (default = 'complete')
 %   cfg.artfctdef.minaccepttim    = when using partial rejection, minimum length
 %                                   in seconds of remaining trial (default = 0.1)
 %   cfg.artfctdef.crittoilim      = when using complete rejection, reject
@@ -240,6 +241,11 @@ cfg.artfctdef.type = cfg.artfctdef.type(sort(i));
 % ensure that it is a row vector
 cfg.artfctdef.type = cfg.artfctdef.type(:)';
 
+% If bad parts are to be filled with nans, make sure data is available
+if strcmp(cfg.artfctdef.reject, 'nan') && ~hasdata
+    error('If bad parts are to be filled with nans, input data has to be specified');
+end;
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % call the appropriate function for each of the artifact types
 % this will produce a Nx2 matrix with the begin and end sample of artifacts
@@ -388,11 +394,12 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % remove the trials that (partially) coincide with a rejection mark
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if strcmp(cfg.artfctdef.reject, 'partial') || strcmp(cfg.artfctdef.reject, 'complete')
+if strcmp(cfg.artfctdef.reject, 'partial') || strcmp(cfg.artfctdef.reject, 'complete') || strcmp(cfg.artfctdef.reject, 'nan')
   trialok = [];
   
   count_complete_reject = 0;
   count_partial_reject  = 0;
+  count_nan = 0;
   count_outsidecrit = 0;
   
   trlRemovedInd = [];
@@ -446,11 +453,17 @@ if strcmp(cfg.artfctdef.reject, 'partial') || strcmp(cfg.artfctdef.reject, 'comp
       count_partial_reject = count_partial_reject + 1;
       trialok = [trialok; trialnew];
       trlPartiallyRemovedInd = [trlPartiallyRemovedInd trial];
+      
+    elseif any(rejecttrial) && strcmp(cfg.artfctdef.reject, 'nan')
+      % Some part of the trial is bad, replace bad part with nans
+      data.trial{trial}(:,rejecttrial) = nan;
+      count_nan = count_nan + 1;
     end
   end
   
   fprintf('rejected  %3d trials completely\n', count_complete_reject);
   fprintf('rejected  %3d trials partially\n', count_partial_reject);
+  fprintf('filled parts of  %3d trials with nans\n', count_nan);
   if (checkCritToi)
     fprintf('retained  %3d trials with artifacts outside critical window\n', count_outsidecrit);
   end
@@ -477,7 +490,7 @@ end
 if isempty(cfg.trl)
   error('No trials left after artifact rejection.')
 else
-  if hasdata
+  if hasdata && ~strcmp(cfg.artfctdef.reject, 'nan') % Skip this step to avoid removing parts that should be filled with nans
     % apply the updated trial definition on the data
     tmpcfg     = [];
     tmpcfg.trl = cfg.trl;
