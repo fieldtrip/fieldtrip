@@ -33,15 +33,11 @@ function [dat] = ft_fetch_data(data, varargin)
 data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
 
 % get the options
-hdr           = ft_getopt(varargin, 'header');
-begsample     = ft_getopt(varargin, 'begsample');
-endsample     = ft_getopt(varargin, 'endsample');
-chanindx      = ft_getopt(varargin, 'chanindx');
-allowoverlap  = ft_getopt(varargin, 'allowoverlap', false);
-interppre     = ft_getopt(varargin, 'interppre',  nan); % used for interpolation, expressed in samples
-interppost    = ft_getopt(varargin, 'interppost', nan); % used for interpolation, expressed in samples
-interpmethod  = ft_getopt(varargin, 'interpmethod', 'nan'); % specifies the interpolation method, or just fill with nan
-
+hdr          = ft_getopt(varargin, 'header');
+begsample    = ft_getopt(varargin, 'begsample');
+endsample    = ft_getopt(varargin, 'endsample');
+chanindx     = ft_getopt(varargin, 'chanindx');
+allowoverlap = ft_getopt(varargin, 'allowoverlap', false);
 allowoverlap = istrue(allowoverlap);
 
 if isempty(hdr)
@@ -128,6 +124,10 @@ if trlnum>1,
     end
   end
   
+  %   if any(count==0)
+  %     warning('not all requested samples are present in the data, filling with NaNs');
+  %   end
+  
   % construct the output data array
   % dat = nan(length(chanindx), length(samplenum));
   % for smplop=1:length(samplenum)
@@ -164,14 +164,14 @@ else
   begindx  = begsample - trl(1) + 1;
   endindx  = endsample - trl(1) + 1;
   
-  % this is used for detecting missing data and possibly for interpolation further down
-  count = zeros(1,endsample-begsample+1);
-  count(begindx:endindx) = 1;
-  
   tmptrl = trl([1 2]) - [trl(1) trl(1)]+1; % ignore offset in case it's present
   
   datbegindx = max(1,                     trl(1)-begsample+1);
   datendindx = min(endsample-begsample+1, trl(2)-begsample+1);
+  
+  %   if begsample<trl(1) || endsample>trl(2)
+  %     warning('not all requested samples are present in the data, filling with NaNs');
+  %   end
   
   if begsample >= trl(1) && begsample <= trl(2)
     if endsample >= trl(1) && endsample <= trl(2)
@@ -184,16 +184,3 @@ else
   end
   
 end % if trlnum is multiple or one
-
-if any(count==0)
-  switch interpmethod
-    case 'nan'
-      % warning('not all requested samples are present in the data, filling with NaNs');
-    case {'nearest' 'linear' 'spline' 'pchip' 'cubic' 'v5cubic'}
-      % FIXME, use interp1
-    case 'fillrandom'
-      % FIXME
-    otherwise
-      error('unsupported interpolation method %s', interpmethod);
-  end % switch
-end % if
