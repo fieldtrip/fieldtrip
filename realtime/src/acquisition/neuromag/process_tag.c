@@ -31,6 +31,7 @@ static float sfreq           = -1.0; /* Sampling frequency (Hz) */
 static int bufcnt            = 0;    /* How many buffers processed? */
 static float **databuf       = NULL; /* Internal storage for one databuffer */
 static int collect_data      = 1;    /* Really use the data? */
+static FILE *ft_chunck_neuromag_fif = NULL; /* see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1792, now a file, in the future a chunck in the buffer */
 
 #ifdef FOO
 static void set_data_filter(int state)
@@ -112,6 +113,12 @@ int send_header_to_FT()
   header_t      *header   = NULL;
   ft_chunk_t    *chunk    = NULL;
 
+  if (ft_chunck_neuromag_fif!=NULL) {
+    /* close the debug file containing the header information */
+    /* note that the ft_chunck_neuromag_fif remains non-NULL, so that it won't get reopened */
+    fclose(ft_chunck_neuromag_fif);
+  }
+
   dacq_log("Creating a header: %d channels, sampling rate %g Hz\n", nchan, sfreq);
 
   // Construct the channel name chunk
@@ -178,6 +185,25 @@ int process_tag (fiffTag tag)
   int block_kind;
   int c;
   fiffChInfo ch = NULL;
+
+  if (ft_chunck_neuromag_fif==NULL) {
+    /* open the debug file containing the header information */
+    ft_chunck_neuromag_fif = fopen("neuromag2ft.fif", "rb");
+  }
+
+  if (tag->kind!=FIFF_DATA_BUFFER) {
+    /* write anything except data to the debug file */
+    if (ft_chunck_neuromag_fif==NULL)
+      perror("neuromag2ft.fif");
+    else {
+      /* the following should fail gracefully once the header has been written to the buffer, since the file is closed */
+      fwrite(&(tag->kind), sizeof(fiff_int_t), 1, ft_chunck_neuromag_fif);
+      fwrite(&(tag->type), sizeof(fiff_int_t), 1, ft_chunck_neuromag_fif);
+      fwrite(&(tag->size), sizeof(fiff_int_t), 1, ft_chunck_neuromag_fif);
+      fwrite(&(tag->next), sizeof(fiff_int_t), 1, ft_chunck_neuromag_fif);
+      fwrite(tag->data, 1, tag->size, ft_chunck_neuromag_fif);
+    }
+  }
 
   switch (tag->kind) {
 
