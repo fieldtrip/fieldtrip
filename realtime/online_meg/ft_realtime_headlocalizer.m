@@ -547,13 +547,9 @@ function draw_sub(handle)
 % get the info
 info = guidata(handle);
 
-% FIXME, for testing
-%fprintf('template:\n');
-%display(info.template)
-
 if get(info.hSensorCheckBox, 'Value') && ~isempty(info.sens)
   % plot the sensors
-  hold on; ft_plot_sens(info.sens);
+  hold on; ft_plot_sens(info.sens, 'style', 'k.');
 end
 
 % plot the template fiducial positions
@@ -679,7 +675,6 @@ if get(info.hCoilCheckBox, 'Value')
         end
       end
     else
-      colormap hot
       for j = 1:numel(info.hpi)
         plot3(info.hpi{j}(1),info.hpi{j}(2), info.hpi{j}(3),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25);
       end
