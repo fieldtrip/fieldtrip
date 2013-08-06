@@ -254,9 +254,9 @@ for type=1:length(cfg.artfctdef.type)
   fprintf('evaluating artifact_%s\n', cfg.artfctdef.type{type});
   % each call to artifact_xxx adds cfg.artfctdef.xxx.artifact
   if hasdata
-    cfg = feval(sprintf('artifact_%s', cfg.artfctdef.type{type}), cfg, data);
+    cfg = feval(sprintf('ft_artifact_%s', cfg.artfctdef.type{type}), cfg, data);
   else
-    cfg = feval(sprintf('artifact_%s', cfg.artfctdef.type{type}), cfg);
+    cfg = feval(sprintf('ft_artifact_%s', cfg.artfctdef.type{type}), cfg);
   end
 end
 
