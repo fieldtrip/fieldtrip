@@ -251,12 +251,13 @@ end;
 % this will produce a Nx2 matrix with the begin and end sample of artifacts
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for type=1:length(cfg.artfctdef.type)
-  fprintf('evaluating artifact_%s\n', cfg.artfctdef.type{type});
+  funhandle = ft_getuserfun(cfg.artfctdef.type{type}, 'artifact');
+  fprintf('evaluating %s\n', func2str(funhandle));
   % each call to artifact_xxx adds cfg.artfctdef.xxx.artifact
   if hasdata
-    cfg = feval(sprintf('ft_artifact_%s', cfg.artfctdef.type{type}), cfg, data);
+    cfg = feval(funhandle, cfg, data);
   else
-    cfg = feval(sprintf('ft_artifact_%s', cfg.artfctdef.type{type}), cfg);
+    cfg = feval(funhandle, cfg);
   end
 end
 
