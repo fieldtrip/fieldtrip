@@ -83,11 +83,12 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 
 % Undocumented options:
 %   cfg.refindx
-%   cfg.conditional
-%   cfg.blockindx
 %   cfg.jackknife
 %   cfg.method    = 'powcorr_ortho'
 %   cfg.method    = 'mi';
+%
+%   cfg.granger.block
+%   cfg.granger.conditional
 
 % Methods to be implemented
 %
@@ -286,8 +287,8 @@ switch cfg.method
     if ~isfield(cfg, 'granger')
       cfg.granger = [];
     end
-    cfg.granger.conditional = ft_getopt(cfg.granger, 'conditional', []);
-    cfg.granger.blockindx = ft_getopt(cfg.granger, 'blockindx', {});
+    cfg.granger.conditional = ft_getopt(cfg.granger, 'conditional', 'no');
+    cfg.granger.block       = ft_getopt(cfg.granger, 'block', []);
     if isfield(cfg, 'channelcmb'),
       cfg.granger.channelcmb = cfg.channelcmb;
       cfg = rmfield(cfg, 'channelcmb');
@@ -396,14 +397,8 @@ if any(~isfield(data, inparam)) || (isfield(data, 'crsspctrm') && (ischar(inpara
           data = ft_checkdata(data, 'cmbrepresentation', 'full');
         end
         tmpcfg = ft_checkconfig(cfg, 'createsubcfg', {'granger'});
-        % check whether multiple pairwise decomposition is required (this
-        % can most conveniently be handled at this level
-        % tmpcfg.npsf = rmfield(tmpcfg.npsf, 'channelcmb');
-        try, tmpcfg.granger = rmfield(tmpcfg.granger, 'block'); end
-        try, tmpcfg.granger = rmfield(tmpcfg.granger, 'blockindx'); end
-        % end
         optarg = ft_cfg2keyval(tmpcfg.granger);
-        data = ft_connectivity_csd2transfer(data, optarg{:});
+        data   = ft_connectivity_csd2transfer(data, optarg{:});
         % convert the inparam back to cell array in the case of granger
         if strcmp(cfg.method, 'granger') || strcmp(cfg.method, 'instantaneous_causality') || strcmp(cfg.method, 'total_interdependence')
           inparam = {'transfer' 'noisecov' 'crsspctrm'};
@@ -572,10 +567,10 @@ switch cfg.method
   case 'granger'
     % granger causality
     if ft_datatype(data, 'freq') || ft_datatype(data, 'freqmvar'),
-      if isfield(data, 'labelcmb') && isempty(cfg.granger.conditional),
+      if isfield(data, 'labelcmb') && ~istrue(cfg.granger.conditional),
         % multiple pairwise non-parametric transfer functions
         % linearly indexed
-        %
+        
         % The following is very slow, one may make assumptions regarding
         % the order of the channels -> csd2transfer gives combinations in
         % quadruplets, where the first and fourth are auto-combinations,
@@ -590,22 +585,61 @@ switch cfg.method
         % ix = ((k-1)*4+1):k*4;
         % powindx(ix, :) = [1 1;4 1;1 4;4 4] + (k-1)*4;
         % end
-        %
+        
         powindx = [];
-      elseif isfield(data, 'labelcmb')
-        % conditional (blockwise) needs linearly represented cross-spectra
-        for k = 1:size(cfg.conditional, 1)
-          tmp{k, 1} = cfg.conditional(k, :);
-          tmp{k, 2} = cfg.conditional(k, [1 3]);
+        
+        if isfield(data, 'label'),
+          % this field should be removed
+          data = rmfield(data, 'label');
         end
-        [cmbindx, n] = blockindx2cmbindx(data.labelcmb, cfg.blockindx, tmp);
+        
+      elseif isfield(data, 'labelcmb') && istrue(cfg.granger.conditional),
+        % conditional (blockwise) needs linearly represented cross-spectra,
+        % that have been produced by ft_connectivity_csd2transfer
+        % 
+        % each row in Nx2 cell-array tmp refers to a comparison
+        % tmp{k, 1} represents the ordered blocks
+        % for the full trivariate model: the second element drives the
+        % first element, while the rest is partialed out.
+        % tmp{k, 2} represents the ordered blocks where the driving block
+        % is left out
+        
+        
+        blocks  = unique(data.blockindx);
+        nblocks = numel(blocks);
+        
+        cnt = 0;
+        for k = 1:nblocks
+          for m = (k+1):nblocks
+            cnt  = cnt+1;
+            rest = setdiff(blocks, [k m]); 
+            tmp{cnt, 1} = [k m rest];
+            tmp{cnt, 2} = [k   rest];
+            newlabelcmb{cnt, 1} = data.block(m).name; % note the index swap: convention is driver in left column
+            newlabelcmb{cnt, 2} = data.block(k).name;
+            cnt  = cnt+1;
+            tmp{cnt, 1} = [m k rest];
+            tmp{cnt, 2} = [m   rest];
+            newlabelcmb{cnt, 1} = data.block(k).name;
+            newlabelcmb{cnt, 2} = data.block(m).name;
+          end
+        end
+        [cmbindx, n] = blockindx2cmbindx(data.labelcmb, {data.label data.blockindx}, tmp);
         powindx.cmbindx = cmbindx;
         powindx.n = n;
-      elseif isfield(cfg, 'block') && ~isempty(cfg.block)
+        data.labelcmb = newlabelcmb;
+        
+        if isfield(data, 'label')
+          % this field should be removed
+          data = rmfield(data, 'label');
+        end
+        
+      elseif isfield(cfg.granger, 'block') && ~isempty(cfg.granger.block)
         % blockwise granger
-        powindx = cfg.block;
-        for k = 1:2
-          newlabel{k, 1} = cat(2, powindx{k});
+        for k = 1:numel(cfg.granger.block)
+          %newlabel{k, 1} = cat(2, cfg.granger.block(k).label{:});
+          newlabel{k,1}  = cfg.granger.block(k).name; 
+          powindx{k,1}   = match_str(data.label, cfg.granger.block(k).label);
         end
         data.label = newlabel;
       else

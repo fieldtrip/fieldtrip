@@ -58,15 +58,26 @@ function [output] = ft_connectivity_csd2transfer(freq, varargin)
 
 numiteration = ft_getopt(varargin, 'numiteration', 100);
 channelcmb   = ft_getopt(varargin, 'channelcmb',   {});
-block        = ft_getopt(varargin, 'block',        {});
-blockindx    = ft_getopt(varargin, 'blockindx',    cell(0,2));
+block        = ft_getopt(varargin, 'block',        []);
 tol          = ft_getopt(varargin, 'tol',          1e-18);
 fb           = ft_getopt(varargin, 'feedback',     'textbar');
 sfmethod     = ft_getopt(varargin, 'sfmethod',     'multivariate');
 dosvd        = ft_getopt(varargin, 'svd',          'no');
+doconditional = ft_getopt(varargin, 'conditional', 0);
 init         = ft_getopt(varargin, 'init',         'chol');
 
-dosvd = istrue(dosvd);
+dosvd         = istrue(dosvd);
+doconditional = istrue(doconditional);
+doblock       = isstruct(block) || doconditional;
+
+if doconditional && isempty(block)
+  % create the default block struct-array
+  block = struct('name','','label',{});
+  for k = 1:numel(freq.label)
+    block(k).name  = freq.label{k};
+    block(k).label = freq.label(k);
+  end
+end
 
 % check whether input data is valid
 freq = ft_checkdata(freq, 'datatype', 'freq');
@@ -102,8 +113,8 @@ end
 
 if ~isempty(block)
   % sanity check 1
-  if ~iscell(block) 
-    error('block should be a cell-array containing 3 cells');
+  if ~isstruct(block) 
+    error('block should be a struct-array');
   end
   % sanity check 2
   if strcmp(sfmethod, 'bivariate')
@@ -138,7 +149,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the actual computations start here
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if strcmp(sfmethod, 'multivariate') && nrpt==1 && isempty(block),
+if strcmp(sfmethod, 'multivariate') && nrpt==1 && ~doconditional,
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % standard code
   % multivariate decomposition
@@ -184,7 +195,7 @@ if strcmp(sfmethod, 'multivariate') && nrpt==1 && isempty(block),
     S(:,:,:,m) = Stmp;
   end
   
-elseif strcmp(sfmethod, 'multivariate') && nrpt==1 && ~isempty(block),
+elseif strcmp(sfmethod, 'multivariate') && nrpt==1 && doblock,
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % blockwise multivariate stuff
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -193,23 +204,65 @@ elseif strcmp(sfmethod, 'multivariate') && nrpt==1 && ~isempty(block),
     error('blockwise factorization of tfrs is not yet possible');
   end
   
+  % create a blockindx array that assigns each channel to a block
+  blockindx = zeros(numel(freq.label),1);
+  for k = 1:numel(block)
+    % FIXME make robust against double occurrences
+    [ix, iy]      = match_str(freq.label, block(k).label);
+    blockindx(ix) = k;
+  end
+  
+  if doconditional
+    % multiple factorizations are needed: 
+    % -all blocks together
+    % -all pairs of blocks (
+    % -all leave-one-out blocks
+    blocks  = unique(blockindx);
+    nblocks = numel(blocks);
+    
+    tmp1 = nchoosek(blocks,2);
+    if nblocks>3
+      tmp2 = nchoosek(blocks,nblocks-1);
+    else
+      tmp2 = [];
+    end
+    
+    nfact = size(tmp1,1)+size(tmp2,1)+1;
+    maxnfact = 500;
+    if nfact>maxnfact
+      error('at present the number of factorizations for conditional granger is set to 500');
+    end
+    
+    factorizations = cell(nfact,1);
+    factorizations{1} = blocks(:)';
+    for k = 1:size(tmp1,1)
+      factorizations{k+1} = tmp1(k,:);
+    end
+    for k = 1:size(tmp2,1)
+      factorizations{k+1+size(tmp1,1)} = tmp2(k,:);
+    end
+  else
+    % only a single factorization is needed
+    % this is actually handled above
+  end
+  
   %reorder the channel order such that the blocks are ordered
-  nblocks = unique(blockindx{2});
-  for k = 1:numel(nblocks)
+  for k = 1:nblocks
     %b{k} = cfg.blockindx{2}(find(cfg.blockindx{2}==nblocks(k)));
-    b{k} = find(blockindx{2}==nblocks(k));
+    b{k} = find(blockindx==blocks(k));
   end
   indx = cat(1,b{:});
   freq.crsspctrm = freq.crsspctrm(indx, indx, :);
   freq.label     = freq.label(indx);
-  bindx          = blockindx{2}(indx);
-
-  for k = 1:numel(block)
-    sel  = find(ismember(bindx, block{k}));
+  freq.blockindx = blockindx(indx);
+  freq.block     = block;
+  
+  for k = 1:nfact
+    sel  = find(ismember(freq.blockindx, factorizations{k}(:)));
     Stmp = freq.crsspctrm(sel,sel,:);
     
     % do PCA to avoid zigzags due to numerical issues
-    dopca = 1;
+    dopca = 0;
     if dopca
       dat     = sum(Stmp,3);
       [u,s,v] = svd(real(dat));
@@ -260,10 +313,10 @@ elseif strcmp(sfmethod, 'multivariate') && nrpt==1 && ~isempty(block),
   end
   
   if strcmp(freq.dimord(1:9), 'chan_chan'),
-    freq.dimord = ['chancmb_',freq.dimord(10:end)];
+    freq.dimord = ['chancmb_',freq.dimord(strfind(freq.dimord,'freq'):end)];
   end
   
-elseif strcmp(sfmethod, 'multivariate') && nrpt>1 && isempty(block),
+elseif strcmp(sfmethod, 'multivariate') && nrpt>1 && ~doblock,
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % multiple repetitions, loop over repetitions
   % multivariate decomposition
@@ -283,7 +336,7 @@ elseif strcmp(sfmethod, 'multivariate') && nrpt>1 && isempty(block),
     end 
   end
  
-elseif strcmp(sfmethod, 'multivariate') && nrpt>1 && ~isempty(block),
+elseif strcmp(sfmethod, 'multivariate') && nrpt>1 && doblock && ~doconditional,
   % error 
   error('single trial estimates and blockwise factorisation is not yet implemented');
   
@@ -387,9 +440,10 @@ output           = [];
 if strcmp(sfmethod, 'multivariate')
   output.dimord    = freq.dimord;
 else
-  ix = strfind(freq.dimord, 'chan_chan');
-  newdimord = [freq.dimord(1:(ix+3)),'cmb',freq.dimord(ix+9:end)];
-
+  if strcmp(freq.dimord(1:9), 'chan_chan'),
+    freq.dimord = ['chancmb_',freq.dimord(strfind(freq.dimord,'freq'):end)];
+  end
+  
   %dimtok = tokenize(freq.dimord, '_');
   %chdim  = 0;
   %newdimord = '';
@@ -401,7 +455,7 @@ else
   %    newdimord = [newdimord, '_', dimtok{k}];
   %  end
   %end
-  output.dimord    = newdimord;
+  output.dimord    = freq.dimord;
 end
 output.label     = freq.label;
 output.freq      = freq.freq;
@@ -410,8 +464,14 @@ output.transfer  = H;
 output.noisecov  = Z;
 if isfield(freq, 'time'),      output.time      = freq.time;      end
 if isfield(freq, 'cumtapcnt'), output.cumtapcnt = freq.cumtapcnt; end
-if isfield(freq, 'cumsucmtn'), output.cumsumcnt = freq.cumsumcnt; end
+if isfield(freq, 'cumsumcnt'), output.cumsumcnt = freq.cumsumcnt; end
 if exist('labelcmb', 'var') && ~isempty(labelcmb)
   output.labelcmb = labelcmb;
-  output          = rmfield(output, 'label');
+  %output          = rmfield(output, 'label');
+end
+if isfield(freq, 'blockindx')
+  output.blockindx = freq.blockindx;
+end
+if isfield(freq, 'block')
+  output.block = freq.block;
 end

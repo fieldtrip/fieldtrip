@@ -1,5 +1,6 @@
 function Cij=blockwise_conditionalgranger(S,H,Z,cmbindx,n)
 
+Cij = zeros(size(cmbindx,1), size(S,2));
 for k = 1:size(cmbindx,1)
   % trivariate system
   sel  = cmbindx{k,1};
@@ -12,8 +13,8 @@ for k = 1:size(cmbindx,1)
   h123 = reshape(H(sel,:,:), [sqrt(nsel)*[1 1] siz(2:end)]);
    
   b1  = 1:n{k,1}(1);
-  b2  = b1(end)+[1:n{k,1}(2)];
-  b3  = b2(end)+[1:n{k,1}(3)];
+  b2  = b1(end)+(1:n{k,1}(2));
+  b3  = b2(end)+(1:sum(n{k,1}(3:end)));
   b   = [numel(b1) numel(b2) numel(b3)];
   
   % normalization matrix 2->1/3
@@ -29,7 +30,6 @@ for k = 1:size(cmbindx,1)
          zeros(b(3),b(1))   tmp3               eye(b(3))     ];
   
   P    = p2*p1;
-  invP = pinv(P);
   
   %bivariate system  
   sel  = cmbindx{k,2};
@@ -42,11 +42,11 @@ for k = 1:size(cmbindx,1)
   z2   = reshape(Z(sel,:,:), [sqrt(nsel)*[1 1] siz(2:end)]);
   
   bx1  = 1:n{k,2}(1);
-  bx2  = bx1(end)+[1:n{k,2}(2)];
+  bx2  = bx1(end)+(1:sum(n{k,2}(2:end)));
   bx   = [numel(bx1) numel(bx2)];
   
   for kk = 1:size(s2,3)
-    HH = h123(:,:,kk)*invP;
+    HH = h123(:,:,kk)/P;
     %Q  = [eye(bx(2))               zeros(bx(2),bx(1));
     %      -z2(bx1,bx2)/z2(bx1,bx1)   eye(bx(1))];
     Q  = [eye(bx(1))               zeros(bx(1),bx(2));
