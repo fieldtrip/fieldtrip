@@ -11,8 +11,7 @@ function [cfg, M] = ft_sourcemovie(cfg, source, source2)
 %  cfg.funparameter    = string, functional parameter that is color coded (default = 'avg.pow')
 %  cfg.maskparameter   = string, functional parameter that is used for opacity (default = [])
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following option:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 % If you specify this option the input data will be read from a *.mat
 % file on disk. This mat files should contain only a single variable named 'data',

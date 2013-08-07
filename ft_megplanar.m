@@ -42,8 +42,7 @@ function [data] = ft_megplanar(cfg, data)
 % The following cfg fields are optional:
 %   cfg.feedback
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat

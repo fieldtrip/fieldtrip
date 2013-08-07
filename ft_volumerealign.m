@@ -107,8 +107,7 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 % (with the key 'r'), that should be a point with a positive coordinate on
 % the left-right axis.
 %
-% To facilitate data-handling and distributed computing with the
-% peer-to-peer module, this function has the following options:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ... cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a
 % *.mat file on disk and/or the output data will be written to a *.mat

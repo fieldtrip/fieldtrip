@@ -14,8 +14,7 @@ function data = ft_math(cfg, varargin)
 % If you specify only a single input data structure, the configuration should contain
 %   cfg.value     = scalar value to be used in the operation
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat

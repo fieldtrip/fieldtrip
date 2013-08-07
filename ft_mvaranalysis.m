@@ -56,8 +56,7 @@ function [mvardata] = ft_mvaranalysis(cfg, data)
 %   cfg.toi       = [t1 t2 ... tx] the time points at which the windows are
 %                    centered
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat

@@ -11,8 +11,7 @@ function [timelock] = ft_timelockbaseline(cfg, timelock)
 %   cfg.parameter    = field for which to apply baseline normalization, or
 %                      cell array of strings to specify multiple fields to normalize
 %                      (default = 'avg')
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat

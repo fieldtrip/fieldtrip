@@ -117,8 +117,7 @@ function [comp] = ft_componentanalysis(cfg, data)
 %   cfg.randomseed   = integer seed value of user's choice
 %   cfg.randomseed   = comp.cfg.callinfo.randomseed (from previous call)
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat

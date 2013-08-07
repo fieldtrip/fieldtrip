@@ -42,8 +42,7 @@ function [data] = ft_redefinetrial(cfg, data)
 %   cfg.length    = single number (in unit of time, typically seconds) of the required snippets
 %   cfg.overlap   = single number (between 0 and 1 (exclusive)) specifying the fraction of overlap between snippets (0 = no overlap)
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat

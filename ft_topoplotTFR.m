@@ -111,8 +111,7 @@ function [cfg] = ft_topoplotTFR(cfg, varargin)
 % layout. If you want to have more fine-grained control over the layout
 % of the subplots, you should create your own layout file.
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following option:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 % If you specify this option the input data will be read from a *.mat
 % file on disk. This mat files should contain only a single variable named 'data',

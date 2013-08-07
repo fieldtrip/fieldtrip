@@ -93,8 +93,7 @@ function [data] = ft_preprocessing(cfg, data)
 % FT_PREPROCESSING with a single cfg input argument are
 %   cfg.method        = 'trial' or 'channel', read data per trial or per channel (default = 'trial')
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat

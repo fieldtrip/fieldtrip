@@ -39,8 +39,7 @@ function [cfg] = ft_rejectartifact(cfg, data)
 %   If cfg is used as the only input parameter, a cfg with a new trl is the output.
 %   If cfg and data are both input parameters, a new raw data structure with only the clean data segments is the output.
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following option:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 % If you specify this option the input data will be read from a *.mat
 % file on disk. This mat files should contain only a single variable named 'data',

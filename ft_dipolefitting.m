@@ -78,8 +78,7 @@ function [source] = ft_dipolefitting(cfg, data)
 %   cfg.elecfile      = name of file containing the electrode positions, see FT_READ_SENS
 %   cfg.gradfile      = name of file containing the gradiometer definition, see FT_READ_SENS
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat
