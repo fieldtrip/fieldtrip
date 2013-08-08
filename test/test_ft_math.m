@@ -8,6 +8,7 @@ timelock1.label  = {'chan1'; 'chan2'};
 timelock1.time   = 1:5;
 timelock1.dimord = 'chan_time';
 timelock1.avg    = ones(2,5);
+timelock1.cfg    = struct([]);
 
 timelock2 = timelock1;
 timelock2.avg  = ones(2,5)*2;
