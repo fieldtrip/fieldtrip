@@ -35,6 +35,12 @@ end
 if isfield(cfg, 'outputlock')
   cfg.outputlock;
 end
+if isfield(cfg, 'trackcallinfo')
+  % this one should be touched, otherwise it will be removed and when it is
+  % specified as 'no', it won't be correctly caught in
+  % ft_postamble_provenance (jansch: 20130810)
+  cfg.trackcallinfo;
+end
 
 % get the output cfg
 cfg = ft_checkconfig(cfg, 'trackconfig', 'off', 'checksize', 'yes');
