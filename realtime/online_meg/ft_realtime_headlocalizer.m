@@ -719,7 +719,7 @@ switch eventdata.Key
   case 'q'
     % stop the application
     fprintf('stopping the application \n')
-    set(info.hQuitButton, 'Value', 0); % stop the while loop
+    info.continue = false;
   case 'c'
     % display the sensors/dewar
     if get(info.hCoilCheckBox,'Value') == 0;
