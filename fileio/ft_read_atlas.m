@@ -85,6 +85,10 @@ elseif strcmp(x, '.nii') && exist(fullfile(p, [f '.txt']))
 elseif strcmp(x, '.mgz') && ~isempty(strfind(f, 'aparc')) && ~isempty(strfind(f, '+aseg'))
   % individual volume based segmentation from freesurfer
   defaultformat = 'freesurfer_volume';
+elseif ft_filetype(filename, 'caret_label')
+  % this is a gifti file that contains both the values for a set of
+  % vertices as well as the labels.
+  defaultformat = 'caret_label';
 else
   defaultformat  = 'wfu';
 end
@@ -1977,9 +1981,9 @@ switch atlasformat
     
     % read in the file
     switch ft_filetype(filename)
-      case 'caret_label'
-        p = gifti(filename);
-        p = p.cdata;
+      %case 'caret_label'
+      %  p = gifti(filename);
+      %  p = p.cdata;
       case 'freesurfer_annot'
         [v, p, c] = read_annotation(filename);
       otherwise
@@ -1988,11 +1992,11 @@ switch atlasformat
     
     % read in the mesh
     switch ft_filetype(filenamemesh)
-      case {'caret_surf' 'gifti'}
-        tmp = gifti(filenamemesh);
-        bnd.pnt = warp_apply(tmp.mat, tmp.vertices);
-        bnd.tri = tmp.faces;
-        reindex = false;
+      %case {'caret_surf' 'gifti'}
+      %  tmp = gifti(filenamemesh);
+      %  bnd.pnt = warp_apply(tmp.mat, tmp.vertices);
+      %  bnd.tri = tmp.faces;
+      %  reindex = false;
       case 'freesurfer_triangle_binary'
         [pnt, tri] = read_surf(filenamemesh);
         bnd.pnt    = pnt;
@@ -2030,7 +2034,43 @@ switch atlasformat
     atlas.(parcelfield)            = newp;
     atlas.([parcelfield, 'label']) = label(2:end);
     atlas       = ft_convert_units(atlas);
+ 
+  case 'caret_label'
+    ft_hastoolbox('gifti', 1);
+    g = gifti(filename);
     
+    label = g.private.label.name; % provides the name of the parcel
+    key   = g.private.label.key;  % maps value to name
+    % there is some additional meta data that may be useful, but for now
+    % stick to the rather uninformative parcellation1/2/3 etc.
+    % Store each column in cdata as an independent parcellation, because
+    % each vertex can have multiple values in principle
+    
+    atlas = [];
+    for k = 1:size(g.cdata,2)
+      tmporig  = g.cdata(:,k);
+      tmpnew   = zeros(size(tmporig))+nan;
+      tmplabel = cell(0,1);
+      cnt = 0;
+      for m = 1:numel(label)
+        sel = find(tmporig==key(m));
+        if ~isempty(sel)
+          cnt = cnt+1;
+          tmplabel{end+1,1} = label{m};
+          tmpnew(tmporig==key(m)) = cnt;
+        end
+      end
+      parcelfield = ['parcellation',num2str(k)];
+      
+      atlas.(parcelfield) = tmpnew;
+      atlas.([parcelfield, 'label']) = tmplabel;    
+    end
+    if exist('filenamemesh', 'var')
+      tmp       = ft_read_headshape(filenamemesh);
+      atlas.pos = tmp.pnt;
+      atlas.tri = tmp.tri;
+      atlas     = ft_convert_units(atlas);
+    end
   otherwise
     error('unsupported atlas format %s', atlasformat);
 end % case
