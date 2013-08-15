@@ -154,7 +154,7 @@ while true
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     % put the data in a fieldtrip-like raw structure
-    data.trial{1} = dat;
+    data.trial{1} = double(dat);
     data.time{1}  = offset2time(begsample, hdr.Fs, endsample-begsample+1);
     data.label    = hdr.label(chanindx);
     data.hdr      = hdr;
