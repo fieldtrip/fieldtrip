@@ -194,14 +194,14 @@ uicontrol_sub(hMainFig);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 while ishandle(hMainFig) && info.continue % while the flag is one, the loop continues
   
+  % get the potentially updated information from the main window
+  info = guidata(hMainFig);
+  
   % determine number of samples available in buffer
   info.hdr = ft_read_header(info.cfg.headerfile, 'cache', true, 'coordsys', 'dewar');
   
   % see whether new samples are available
   newsamples = (info.hdr.nSamples*info.hdr.nTrials-prevSample);
-  
-  % get the potentially updated information from the main window
-  info = guidata(hMainFig);
   
   if newsamples>=info.blocksize
     
