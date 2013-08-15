@@ -179,6 +179,19 @@ fp4 = ft_selectdata(freqp, 'avgoverchan', 'yes');
 fc4 = ft_selectdata(freqc, 'avgoverchan', 'yes');
 ftf4 = ft_selectdata(freqtf, 'avgoverchan', 'yes');
 
+% assessing label after averaging: see bug 2191
+cfg = [];
+cfg.avgoverchan = 'yes';
+fx42 = ft_selectdata(cfg,freq);
+fp42 = ft_selectdata(cfg,freqp);
+fc42 = ft_selectdata(cfg,freqc);
+ftf42 = ft_selectdata(cfg,freqtf);
+
+if ~strcmp(fx4.label{:},fx42.label{:});error('mismatch on label field');end
+if ~strcmp(fp4.label{:},fp42.label{:});error('mismatch on label field');end
+if ~strcmp(fc4.label{:},fc42.label{:});error('mismatch on label field');end
+if ~strcmp(ftf4.label{:},ftf42.label{:});error('mismatch on label field');end
+
 % avgover frequencies
 fx5 = ft_selectdata(freq,  'avgoverfreq', 'yes');
 fp5 = ft_selectdata(freqp, 'avgoverfreq', 'yes');
