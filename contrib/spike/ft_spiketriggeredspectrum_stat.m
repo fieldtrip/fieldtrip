@@ -239,14 +239,6 @@ if strcmp(cfg.timwin,'all')
           % compute PPC 1.0 and 2.0 according to Vinck et al. (2011) using summation per trial
           if strcmp(cfg.method,'ppc1')
             if ~isempty(spc)
-              m = nanmean(spc,1); % no problem with NaN
-              hasNum = ~isnan(m);
-              S(hasNum)  = S(hasNum)  + m(hasNum); % add the imaginary and real components
-              SS(hasNum) = SS(hasNum) + m(hasNum).*conj(m(hasNum));
-              dof(hasNum) = dof(hasNum) + 1; % dof needs to be kept per frequency
-            end
-          elseif strcmp(cfg.method,'ppc2')
-            if ~isempty(spc)
                n      = sum(~isnan(spc),1);
                m      = nansum(spc,1); 
                hasNum = ~isnan(m);    
@@ -254,7 +246,15 @@ if strcmp(cfg.timwin,'all')
                SS(hasNum)    = SS(hasNum) + m(hasNum).*conj(m(hasNum));
                dof(hasNum)   = dof(hasNum)  + n(hasNum);
                dofSS(hasNum) = dofSS(hasNum) + n(hasNum).^2;
-            end                              
+            end
+          elseif strcmp(cfg.method,'ppc2')                              
+            if ~isempty(spc)
+              m = nanmean(spc,1); % no problem with NaN
+              hasNum = ~isnan(m);
+              S(hasNum)  = S(hasNum)  + m(hasNum); % add the imaginary and real components
+              SS(hasNum) = SS(hasNum) + m(hasNum).*conj(m(hasNum));
+              dof(hasNum) = dof(hasNum) + 1; % dof needs to be kept per frequency
+            end
           end
       end
 
