@@ -131,6 +131,12 @@ cfg.layout = ft_prepare_layout(cfg, varargin{:});
 % don't show the callinfo for each separate component
 cfg.showcallinfo = 'no';
 
+% interactive plotting doesn't work for chan_comp dimord. 
+if isfield(cfg, 'interactive')
+  warning('Interactive plotting is not supported.');
+end;
+cfg.interactive = 'no';
+
 % allow multiplotting
 nplots = numel(selcomp);
 if nplots>1
