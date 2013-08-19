@@ -130,6 +130,7 @@ url = {
   '35625-INFORMATION-THEORY-TOOLBOX'      'see http://www.mathworks.com/matlabcentral/fileexchange/35625-information-theory-toolbox'
   '29046-MUTUAL-INFORMATION'              'see http://www.mathworks.com/matlabcentral/fileexchange/35625-information-theory-toolbox'
   '14888-MUTUAL-INFORMATION-COMPUTATION'  'see http://www.mathworks.com/matlabcentral/fileexchange/14888-mutual-information-computation'
+  'PLOT2SVG'    'see http://www.mathworks.com/matlabcentral/fileexchange/7401-scalable-vector-graphics-svg-export-of-figures'
   };
 
 if nargin<2
@@ -308,6 +309,9 @@ switch toolbox
     status = all(cellfun(@exist, filelist, repmat({'file'}, size(filelist))));
   case '14888-MUTUAL-INFORMATION-COMPUTATION'
     filelist = {'condentropy.m' 'demo_mi.m' 'estcondentropy.cpp' 'estjointentropy.cpp' 'estpa.cpp' 'findjointstateab.cpp' 'makeosmex.m' 'mutualinfo.m' 'condmutualinfo.m' 'entropy.m' 'estentropy.cpp' 'estmutualinfo.cpp' 'estpab.cpp' 'jointentropy.m' 'mergemultivariables.m' };
+    status = all(cellfun(@exist, filelist, repmat({'file'}, size(filelist))));
+  case 'PLOT2SVG'
+    filelist = {'plot2svg.m' 'simulink2svg.m'};
     status = all(cellfun(@exist, filelist, repmat({'file'}, size(filelist))));
     
     % the following are fieldtrip modules/toolboxes
