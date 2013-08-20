@@ -458,6 +458,7 @@ if strcmp(cfg.artfctdef.reject, 'partial') || strcmp(cfg.artfctdef.reject, 'comp
       % Some part of the trial is bad, replace bad part with nans
       data.trial{trial}(:,rejecttrial) = nan;
       count_nan = count_nan + 1;
+      trialok = [trialok; trl(trial,:)]; % Mark the trial as good as nothing will be removed
     end
   end
   
@@ -499,7 +500,7 @@ else
       data = rmfield(data, 'offset');
     end
   end
-end
+end;
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
