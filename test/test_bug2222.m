@@ -13,7 +13,6 @@ freq1.freq = 1:10;
 freq1.label = {'1', '2', '3'};
 freq1.powspctrm = randn(3,10);
 freq1.powspctrm(1) = 1;
-freq1.cfg = struct([]); % NOTE: if this line is omitted rollback_provenance crashes
 
 freq2 = [];
 freq2.dimord = 'chan_freq';
@@ -21,7 +20,6 @@ freq2.freq = 1:10;
 freq2.label = {'1', '2', '3'};
 freq2.powspctrm = randn(3,10);
 freq2.powspctrm(1) = 2;
-freq2.cfg = struct([]);
 
 cfg = [];
 cfg.comparisontype = 'absolute';
