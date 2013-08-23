@@ -155,7 +155,7 @@ warning(ws); % revert to original state
 function plotcoil(pnt, ori, coildiameter)
 % construct a template coil at [0 0 0], oriented towards [0 0 1]
 pos = circle(12);
-s   = scale([coildiameter coildiameter coildiameter]);
+s   = scale([coildiameter coildiameter coildiameter]/2);
 for i=1:size(pnt,1)
   x = ori(i,1);
   y = ori(i,2);
