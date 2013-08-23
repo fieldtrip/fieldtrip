@@ -461,6 +461,7 @@ previouspath = path;
 function status = myaddpath(toolbox, silent)
 if isdeployed
   warning('cannot change path settings for %s in a compiled application', toolbox);
+  status = 1;
 elseif exist(toolbox, 'dir')
   if ~silent,
     ws = warning('backtrace', 'off');
