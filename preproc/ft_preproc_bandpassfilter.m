@@ -2,7 +2,7 @@ function [filt] = ft_preproc_bandpassfilter(dat,Fs,Fbp,N,type,dir,instabilityfix
 
 % FT_PREPROC_BANDPASSFILTER applies a band-pass filter to the data and thereby
 % removes the spectral components in the data except for the ones in the
-% specified frequency band
+% specified frequency band.
 %
 % Use as
 %   [filt] = ft_preproc_bandpassfilter(dat, Fsample, Fbp, N, type, dir, instabilityfix)
