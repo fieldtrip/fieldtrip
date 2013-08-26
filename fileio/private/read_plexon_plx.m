@@ -16,8 +16,9 @@ function [varargout] = read_plexon_plx(filename, varargin)
 %   'feedback'         = 0 or 1
 %   'ChannelIndex'     = number, or list of numbers (that will result in multiple outputs)
 %   'SlowChannelIndex' = number, or list of numbers (that will result in multiple outputs)
+%   'EventIndex'       = number, or list of numbers (that will result in multiple outputs)
 
-% Copyright (C) 2007, Robert Oostenveld
+% Copyright (C) 2007-2013, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -41,9 +42,9 @@ function [varargout] = read_plexon_plx(filename, varargin)
 hdr              = ft_getopt(varargin, 'header');
 memmap           = ft_getopt(varargin, 'memmap', false);
 feedback         = ft_getopt(varargin, 'feedback', true);
-ChannelIndex     = ft_getopt(varargin, 'ChannelIndex');
-SlowChannelIndex = ft_getopt(varargin, 'SlowChannelIndex');
-EventIndex       = ft_getopt(varargin, 'EventIndex');  % not yet used
+ChannelIndex     = ft_getopt(varargin, 'ChannelIndex');     % type 1
+EventIndex       = ft_getopt(varargin, 'EventIndex');       % type 4
+SlowChannelIndex = ft_getopt(varargin, 'SlowChannelIndex'); % type 5
 
 needhdr = isempty(hdr);
 
@@ -78,12 +79,12 @@ if needhdr
     hdr.SlowChannelHeader(i) = PL_SlowChannelHeader(fid);
   end
   hdr.DataOffset = ftell(fid);
-
+  
   if memmap
     % open the file as meory mapped object, note that byte swapping may be needed
     mm = memmapfile(filename, 'offset', hdr.DataOffset, 'format', 'int16');
   end
-
+  
   dum = struct(...
     'Type', [],...
     'UpperByteOf5ByteTimestamp', [],...
@@ -93,7 +94,7 @@ if needhdr
     'NumberOfWaveforms', [],...
     'NumberOfWordsInWaveform', [] ...
     );
-
+  
   % read the header of each data block and remember its data offset in bytes
   Nblocks = 0;
   offset  = hdr.DataOffset;  % only used when reading from memmapped file
@@ -126,7 +127,7 @@ if needhdr
   % remove the allocated space that was not needed
   hdr.DataBlockOffset = hdr.DataBlockOffset(1:Nblocks);
   hdr.DataBlockHeader = hdr.DataBlockHeader(1:Nblocks);
-
+  
 end % if needhdr
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -135,38 +136,38 @@ end % if needhdr
 
 if ~isempty(ChannelIndex)
   if feedback, fprintf('reading spike data from %s\n', filename); end
-
+  
   if memmap
     % open the file as meory mapped object, note that byte swapping may be needed
     mm = memmapfile(filename, 'offset', hdr.DataOffset, 'format', 'int16');
   end
-
+  
   type = [hdr.DataBlockHeader.Type];
   chan = [hdr.DataBlockHeader.Channel];
   ts   = [hdr.DataBlockHeader.TimeStamp];
-
+  
   for i=1:length(ChannelIndex)
     % determine the data blocks with continuous data belonging to this channel
     sel = (type==1 & chan==hdr.ChannelHeader(ChannelIndex(i)).Channel);
     sel = find(sel);
-
+    
     if isempty(sel)
       warning('spike channel %d contains no data', ChannelIndex(i));
       varargin{end+1} = [];
       continue;
     end
-
+    
     % the number of samples can potentially be different in each block
     num    = double([hdr.DataBlockHeader(sel).NumberOfWordsInWaveform]) .* double([hdr.DataBlockHeader(sel).NumberOfWaveforms]);
-
+    
     % check whether the number of samples per block makes sense
     if any(num~=num(1))
       error('spike channel blocks with diffent number of samples');
     end
-
+    
     % allocate memory to hold the data
     buf = zeros(num(1), length(sel), 'int16');
-
+    
     if memmap
       % get the header information from the memory mapped file
       datbeg = double(hdr.DataBlockOffset(sel) - hdr.DataOffset)/2 + 8 + 1;  % expressed in 2-byte words, minus the file header, skip the 16 byte block header
@@ -184,10 +185,10 @@ if ~isempty(ChannelIndex)
         buf(:,j) = fread(fid, num(j), 'int16');
       end
     end % if memmap
-
+    
     % remember the data for this channel
     varargout{i} = buf;
-
+    
   end %for ChannelIndex
 end % if ChannelIndex
 
@@ -197,33 +198,32 @@ end % if ChannelIndex
 
 if ~isempty(SlowChannelIndex)
   if feedback, fprintf('reading continuous data from %s\n', filename); end
-  dat = {};
-
+  
   if memmap
     % open the file as meory mapped object, note that byte swapping may be needed
     mm = memmapfile(filename, 'offset', hdr.DataOffset, 'format', 'int16');
   end
-
+  
   type = [hdr.DataBlockHeader.Type];
   chan = [hdr.DataBlockHeader.Channel];
   ts   = [hdr.DataBlockHeader.TimeStamp];
-
+  
   for i=1:length(SlowChannelIndex)
     % determine the data blocks with continuous data belonging to this channel
     sel = (type==5 & chan==hdr.SlowChannelHeader(SlowChannelIndex(i)).Channel);
     sel = find(sel);
-
+    
     if isempty(sel)
       error(sprintf('Continuous channel %d contains no data', SlowChannelIndex(i)));
       % warning('Continuous channel %d contains no data', SlowChannelIndex(i));
       % varargin{end+1} = [];
       % continue;
     end
-
+    
     % the number of samples can be different in each block
     num    = double([hdr.DataBlockHeader(sel).NumberOfWordsInWaveform]) .* double([hdr.DataBlockHeader(sel).NumberOfWaveforms]);
     cumnum = cumsum([0 num]);
-
+    
     % allocate memory to hold the data
     buf = zeros(1, cumnum(end), 'int16');
     if memmap
@@ -249,10 +249,10 @@ if ~isempty(SlowChannelIndex)
         buf(bufbeg:bufend) = fread(fid, num(j), 'int16');
       end
     end % if memmap
-
+    
     % remember the data for this channel
     varargout{i} = buf;
-
+    
   end %for SlowChannelIndex
 end % if SlowChannelIndex
 
@@ -261,24 +261,26 @@ end % if SlowChannelIndex
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if ~isempty(EventIndex)
+  if feedback, fprintf('reading events from %s\n', filename); end
   type = [hdr.DataBlockHeader.Type];
+  unit = [hdr.DataBlockHeader.Unit];
   chan = [hdr.DataBlockHeader.Channel];
   ts   = [hdr.DataBlockHeader.TimeStamp];
-
+  
   for i=1:length(EventIndex)
     % determine the data blocks with continuous data belonging to this channel
-    sel = (type==0 & chan==hdr.EventHeader(EventIndex(i)).Channel);
+    sel = (type==4 & chan==hdr.EventHeader(EventIndex(i)).Channel);
     sel = find(sel);
-
+    
+    % all information is already contained in the DataBlockHeader, i.e. there is nothing to read
     if isempty(sel)
       warning('event channel %d contains no data', EventIndex(i));
-      varargin{end+1} = [];
-      continue;
     end
+    event.TimeStamp = ts(sel);
+    event.Channel   = chan(sel);
+    event.Unit      = unit(sel);
+    varargout{i}    = event;
     
-    % this still has to be implemented
-    keyboard
-
   end % for EventIndex
 end % if EventIndex
 
