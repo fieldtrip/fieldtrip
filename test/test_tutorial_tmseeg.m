@@ -104,7 +104,7 @@ legend(['raw data', labels]);
 trigger = {'S  1','S  3'};
 cfg                         = [];
 cfg.method                  = 'marker';
-cfg.dataset                 = 'jimher_toolkit_demo_dataset_.eeg';
+cfg.dataset                 = dccnfilename('/home/common/matlab/fieldtrip/data/ftp/tutorial/tms/sp/jimher_toolkit_demo_dataset_.eeg');
 cfg.prestim                 = .001;
 cfg.poststim                = .006;
 cfg.trialdef.eventtype      = 'Stimulus';
