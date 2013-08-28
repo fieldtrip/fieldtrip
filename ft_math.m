@@ -8,7 +8,7 @@ function data = ft_math(cfg, varargin)
 % with one or multiple FieldTrip data structures as input and where cfg is a
 % configuration structure that should contain
 %
-%  cfg.operation  = string, can be 'add', 'subtract', 'divide', 'multiply'
+%  cfg.operation  = string, can be 'add', 'subtract', 'divide', 'multiply', 'log10'
 %  cfg.parameter  = string, input data field on which the operation is performed
 %
 % If you specify only a single input data structure, the configuration should contain
