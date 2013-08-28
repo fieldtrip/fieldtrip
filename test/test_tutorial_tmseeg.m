@@ -20,7 +20,7 @@ cfg.implicitref = '5'; % Here we can specify the name of our implicit reference 
 
 data_tms = ft_preprocessing(cfg);
 
-save('data_tms_raw','data_tms','-v7.3');
+%save('data_tms_raw','data_tms','-v7.3');
 
  
 % Inspect using databrowser
@@ -144,7 +144,7 @@ cfg.fastica.g = 'gauss';
 
 comp = ft_componentanalysis(cfg, data_tms);
 
-save('comp','comp','-v7.3');
+%save('comp','comp','-v7.3');
 
 %% Time-lock average components
 cfg = [];
@@ -252,7 +252,7 @@ cfg.detrend = 'no';
 cfg.demean = 'yes';
 data_tms_clean = ft_resampledata(cfg, data_tms_clean);
 
-save('data_tms_clean','data_tms_clean','-v7.3');
+%save('data_tms_clean','data_tms_clean','-v7.3');
 
 %% Analysis - 1. time-locked average
 cfg = [];
