@@ -8,8 +8,8 @@ function [dat] = ft_fetch_data(data, varargin)
 %
 % See also FT_READ_DATA, FT_FETCH_HEADER, FT_FETCH_EVENT
 
+% Copyright (C) 2009-2013, Jan-Mathijs Schoffelen, Robert Oostenveld
 % Copyright (C) 2008, Esther Meeuwissen
-% Copyright (C) 2009-2010, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -118,7 +118,20 @@ if trlnum>1,
   % check if all samples are present and are not present twice or more
   if any(count>1)
     if ~allowoverlap
-      error('some of the requested samples occur twice in the data');
+      % error('some of the requested samples occur twice in the data');
+      % this  can be considered OK if the overlap has exactly identical values
+      sel = find(count>1); % must be row vector
+      for smplop=sel
+        % find in which trials the sample occurs
+        seltrl = find(smplop>=trl(:,1) & smplop<=trl(:,2));  % which trials
+        selsmp = smplop - trl(seltrl,1) + 1;                 % which sample in each of the trials
+        for i=2:length(seltrl)
+          % compare all occurences to the first one
+          if ~all(data.trial{seltrl(i)}(:,selsmp(i)) == data.trial{seltrl(1)}(:,selsmp(1)))
+            error('some of the requested samples occur twice in the data and have conflicting values');
+          end
+        end
+      end
     else
       warning('samples present in multiple trials, using only the last occurence of each sample')
     end
