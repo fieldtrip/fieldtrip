@@ -36,6 +36,9 @@ cfg.preproc.baselinewindow = [-0.1 -0.001];
 
 data_tms_avg = ft_timelockanalysis(cfg, data_tms);
 
+% clear data_tms to save memory
+clear data_tms
+
 % plot all in seperate window
 for i=1:numel(data_tms_avg.label) % Loop through all channels
     figure;
@@ -136,13 +139,15 @@ data_tms_clean = ft_preprocessing(cfg);
 
 %% Perform ICA on segmented data
 
-cfg = [];
-cfg.demean = 'yes';
-cfg.method = 'fastica';
-cfg.fastica.approach = 'symm';
-cfg.fastica.g = 'gauss';
+% cfg = [];
+% cfg.demean = 'yes';
+% cfg.method = 'fastica';
+% cfg.fastica.approach = 'symm';
+% cfg.fastica.g = 'gauss';
+% 
+% comp = ft_componentanalysis(cfg, data_tms_clean);
 
-comp = ft_componentanalysis(cfg, data_tms);
+load(dccnfilename('/home/common/matlab/fieldtrip/data/ftp/tutorial/tms/sp/comp.mat'));
 
 %save('comp','comp','-v7.3');
 
@@ -227,9 +232,8 @@ data_tms_clean = ft_interpolatenan(cfg, data_tms_clean);
 %% compare 
 cfg = [];
 cfg.preproc.demean = 'yes';
-cfg.preproc.baselinewindow = [-0.05 -0.001];
+cfg.preproc.baselinewindow = [-0.1 -0.001];
 
-data_tms_avg = ft_timelockanalysis(cfg, data_tms);
 data_tms_clean_avg = ft_timelockanalysis(cfg, data_tms_clean);
 
 for i=1:numel(data_tms_avg.label) % Loop through all channels
@@ -341,10 +345,10 @@ cfg.taper          = 'hanning';
 cfg.foi            = 1:50;
 cfg.t_ftimwin      = 0.3.*ones(1,numel(cfg.foi));
 cfg.toi            = -0.5:0.05:1.5;
-cfg.trials         = find(data_tms.trialinfo==1);
+cfg.trials         = find(data_tms_clean.trialinfo==1);
 relax_freq         = ft_freqanalysis(cfg, data_tms_clean);
 
-cfg.trials         = find(data_tms.trialinfo==3);
+cfg.trials         = find(data_tms_clean.trialinfo==3);
 contract_freq      = ft_freqanalysis(cfg, data_tms_clean);
 
 % Remove baseline
@@ -391,7 +395,7 @@ xlabel('time (s)');
 
 subplot(1,3,3);
 cfg.zlim = [-1.5 1.5];
-ft_singleplotTFR(cfg, freq_difference);
+ft_singleplotTFR(cfg, difference_freq);
 title('Contract - Relax');
 ylabel('Frequency (Hz)');
 xlabel('time (s)');
