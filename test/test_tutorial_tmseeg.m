@@ -120,8 +120,13 @@ cfg.poststim                = .511;
 cfg_recharge = ft_artifact_tms(cfg); % Detect TMS artifacts 
 
 % Combine into one structure
-cfg_artifact = cfg_ringing;
-cfg_artifact.artfctdef.tms.artifact = [cfg_artifact.artfctdef.tms.artifact;cfg_recharge.artfctdef.tms.artifact];
+cfg_artifact = [];
+cfg_artifact.dataset = dccnfilename('/home/common/matlab/fieldtrip/data/ftp/tutorial/tms/sp/jimher_toolkit_demo_dataset_.eeg');
+cfg_artifact.artfctdef.ringing.artifact = cfg_ringing.artfctdef.tms.artifact; % Add ringing/step response artifact
+cfg_artifact.artfctdef.recharge.artifact   = cfg_recharge.artfctdef.tms.artifact; % Add recharge artifact
+
+% cfg_artifact = cfg_ringing;
+% cfg_artifact.artfctdef.tms.artifact = [cfg_artifact.artfctdef.tms.artifact;cfg_recharge.artfctdef.tms.artifact];
 
 cfg_artifact.artfctdef.reject        = 'partial'; % Set partial artifact rejection
 
@@ -136,6 +141,22 @@ cfg.refchannel = {'all'};
 cfg.implicitref = '5';
 
 data_tms_clean = ft_preprocessing(cfg);
+
+
+%% compare segmented vs raw
+% segmented
+cfg = [];
+cfg.artfctdef = cfg_artifact.artfctdef;
+cfg.continuous = 'yes';
+ft_databrowser(cfg, data_tms_clean);
+
+%raw
+cfg = [];
+cfg.artfctdef = cfg_artifact.artfctdef;
+cfg.dataset = dccnfilename('/home/common/matlab/fieldtrip/data/ftp/tutorial/tms/sp/jimher_toolkit_demo_dataset_.eeg');
+ft_databrowser(cfg);
+
+close all;
 
 %% Perform ICA on segmented data
 
@@ -172,7 +193,7 @@ ft_topoplotIC(cfg, comp);
 cfg = [];
 cfg.layout = 'easycapM10';
 cfg.viewmode = 'component';
-cfg.trl = trl;
+
 
 ft_databrowser(cfg, comp);
 %% Apply unmixing matrix to same data without demeaning
