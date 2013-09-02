@@ -46,7 +46,7 @@ if nargin==1
   name = inputname(1);
 end
 
-str = [];
+str = '';
 if isstruct(val)
   if numel(val)>1
     str = cell(size(val));
@@ -208,7 +208,7 @@ switch class(val)
       end
       str = sprintf('[ %s ]', str(1:end-3));
     else
-      error('multidimensional arrays are not supported');
+      warning('multidimensional arrays are not supported');
     end
     
   case {'int8' 'int16' 'int32' 'int64' 'uint8' 'uint16' 'uint32' 'uint64'}
