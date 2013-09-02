@@ -25,8 +25,10 @@
 #include "engine.h"
 #include "platform.h"
 
-#define DEBUG_PRINT(string, ...) {mexPrintf(string, ## __VA_ARGS__);}
+/*
 #define DEBUG_PRINT(string, ...) {fprintf(stderr, string, ## __VA_ARGS__);}
+#define DEBUG_PRINT(string, ...) {mexPrintf(string, ## __VA_ARGS__);}
+*/
 #define DEBUG_PRINT(string, ...) {}
 #define FREE(x)                  {if (x) {free(x); x=NULL;}}
 #define TRUE            1
