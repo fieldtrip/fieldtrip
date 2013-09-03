@@ -9,13 +9,15 @@ function mesh=prepare_mesh_hexahedral(cfg,mri)
 %   meshed
 %   cfg.resolution = desired resolution of the mesh (standard = 1)
 %
-% Copyrights (C) 2012, Johannes Vorwerk
+% Copyrights (C) 2012-2013, Johannes Vorwerk
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % get the default options
 cfg.tissue      = ft_getopt(cfg, 'tissue');
 cfg.resolution  = ft_getopt(cfg, 'resolution');
+cfg.shift       = ft_getopt(cfg, 'shift');
+cfg.background  = ft_getopt(cfg, 'background');
 
 if isempty(cfg.tissue)
   mri = ft_datatype_segmentation(mri, 'segmentationstyle', 'indexed');
@@ -42,8 +44,20 @@ else
 end
 
 if isempty(cfg.resolution)
-  warning('Using standard resolution 1 mm')
-  cfg.resolution = 1;
+    warning('Using standard resolution 1 mm')
+    cfg.resolution = 1;
+end
+
+if isempty(cfg.shift)
+    warning('No node-shift selected')
+    cfg.shift = 0;
+elseif cfg.shift > 0.3
+    warning('Node-shift should not be larger than 0.3')
+    cfg.shift = 0.3;
+end
+
+if isempty(cfg.background)
+    cfg.background = 0;
 end
 
 % do the mesh extraction
@@ -82,50 +96,69 @@ else
   end
 end
 
+% reslice to desired resolution
+
+if (cfg.resolution ~= 1)
+    % this should be done like this: split seg into probabilistic, reslice
+    % single compartments, take maximum values
+    seg_array = [];
+    
+    seg_indices = unique(seg);    
+    
+    for i=1:(length(unique(seg)))
+        seg_reslice.anatomy = double(seg == (i-1));
+        seg_reslice.dim = mri.dim;
+        seg_reslice.transform = eye(4);
+        seg_reslice.transform(1:3,4) = -ceil(mri.dim/2);
+        
+        cfg_reslice = [];
+        cfg_reslice.resolution = cfg.resolution;
+        cfg_reslice.dim = ceil(mri.dim/cfg.resolution);
+        
+        seg_build = ft_volumereslice(cfg_reslice,seg_reslice);
+        
+        seg_array = [seg_array,seg_build.anatomy(:)];
+        
+        clear seg_reslice;
+    end
+    
+    [max_seg seg_build.seg] = max(seg_array,[],2);
+    
+    clear max_seg seg_array;
+    
+    seg_build.seg = reshape(seg_build.seg,seg_build.dim);
+    seg_build.seg = seg_indices(seg_build.seg);
+    seg_build.transform = mri.transform;
+    
+    clear seg_build.anatomy;
+else
+    seg_build.seg = seg;
+    seg_build.dim = mri.dim;
+    
+    clear seg;
+end
+
 % ensure that the segmentation is binary and that there is a single contiguous region
 % FIXME is this still needed when it is already binary?
 %seg = volumethreshold(seg, 0.5, tissue);
 
-% temporary file names for vgrid call
-tname         = tempname;
-shfile        = [tname '.sh'];
-MRfile        = [tname '_in.v'];
-meshfile      = [tname '_out.v'];
-materialsfile = [tname '.mtr'];
-
 ft_hastoolbox('simbio', 1);
-% write the segmented volume in a Vista format .v file
-write_vista_vol(size(seg), seg, MRfile);
 
-% write the materials file (assign tissue values to the elements of the FEM grid)
-% see tutorial http://www.rheinahrcampus.de/~medsim/vgrid/manual.html
-sb_write_materials(materialsfile, 1:numel(cfg.tissue), tissue, cfg.resolution);
+% build the mesh
 
-% determin the full path to the vgrid executable
-ft_hastoolbox('vgrid', 1);
-executable = vgrid; % the helper m-file returns the location of the executable
-
-% write the shell file
-efid = fopen(shfile, 'w');
-fprintf(efid,'#!/usr/bin/env bash\n');
-fprintf(efid,[executable ' -in ' MRfile ' -out ' meshfile ' -min ' num2str(cfg.resolution) ' -max ' num2str(cfg.resolution) ' -elem cube -material ' materialsfile ' -smooth shift -shift 0.30\n']);
-fclose(efid);
-dos(sprintf('chmod +x %s', shfile));
-disp('vgrid is writing the wireframe mesh file, this may take some time ...')
-stopwatch = tic;
-
-% use vgrid to construct the wireframe
-system(shfile);
-fprintf('elapsed time: %d seconds\n', toc(stopwatch));
-
-
-% read the mesh points
-[mesh.pnt,mesh.hex,labels] = read_vista_mesh(meshfile);
+mesh = build_mesh_hexahedral(seg_build,cfg);
 
 % converting position of meshpoints to the head coordinate system
 
+if (cfg.resolution ~= 1)
+    mesh.pnt = cfg.resolution * mesh.pnt;
+end
+
 mesh.pnt = warp_apply(mri.transform,mesh.pnt,'homogeneous');
 
+labels = mesh.labels;
+
+clear mesh.labels;
 
 mesh.tissue = zeros(size(labels));
 numlabels = size(unique(labels),1);
@@ -133,8 +166,6 @@ mesh.tissuelabel = {};
 ulabel = sort(unique(labels));
 for i = 1:numlabels
   mesh.tissue(labels == ulabel(i)) = i;
-  %mesh.tissuelabel{i} = num2str(ulabel(i));
-  %mesh.tissuename{i} = tissue{i};
   mesh.tissuelabel{i} = tissue{i};
 end
 
