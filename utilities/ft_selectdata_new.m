@@ -423,11 +423,15 @@ end % function makeselection
 
 function data = makeselection_chan(data, selchan, avgoverchan)
 if avgoverchan && all(isnan(selchan))
-  data.label = sprintf('%s+', data.label{:});        % concatenate all channel labels
-  data.label = {data.label(1:end-1)};                  % remove the last '+'
+  str = sprintf('%s, ', data.label{:});
+  str = str(1:(end-2));
+  str = sprintf('mean(%s)', str);
+  data.label = {str};
 elseif avgoverchan && ~any(isnan(selchan))
-  data.label = sprintf('%s+', data.label{selchan});  % concatenate all channel labels
-  data.label = {data.label(1:end-1)};                  % remove the last '+'
+  str = sprintf('%s, ', data.label{selchan});
+  str = str(1:(end-2));
+  str = sprintf('mean(%s)', str);
+  data.label = {str};                 % remove the last '+'
 elseif ~isnan(selchan)
   data.label = data.label(selchan);
   data.label = data.label(:);

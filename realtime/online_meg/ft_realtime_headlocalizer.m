@@ -80,6 +80,7 @@ count       = 0;
 isneuromag = ft_senstype(hdr.grad, 'neuromag');
 isctf      = ft_senstype(hdr.grad, 'ctf275');
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % read template head position, to reposition to, if template file is specified
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -128,8 +129,7 @@ if isctf
   % not needed for CTF275 systems
   dip  = [];
   vol  = [];
-  coilsignal = [];
-  
+  coilsignal = [];  
 elseif isneuromag
   shape = ft_read_headshape(cfg.headerfile, 'coordsys', 'dewar');
   for i = 1:min(size(shape.pnt,1),length(cfg.coilfreq)) % for as many digitized or specified coils
@@ -146,10 +146,7 @@ elseif isneuromag
   % note that the forward model is a magnetic dipole in an infinite vacuum
   cfg.channel = ft_channelselection('MEGMAG', hdr.label);
   [vol, sens] = ft_prepare_vol_sens([], hdr.grad, 'channel', cfg.channel);
-  
-  % the signal passed through the coils will be computed further down
   coilsignal = [];
-  
 else
   error('the data does not resemble ctf, nor neuromag')
 end % if ctf or neuromag
@@ -177,10 +174,10 @@ info.isneuromag         = isneuromag;
 info.cfg                = cfg;
 info.template           = template;
 info.sens               = sens;
-%info.vol                = vol;
-%info.coilsignal         = coilsignal;
-%info.dip                = dip;
+info.vol                = vol;
+info.dip                = dip;
 info.continue           = true;
+clear hdr blocksize isctf isneuromag cfg template sens vol dip
 
 % initiate main figure
 hMainFig = figure;
@@ -191,26 +188,27 @@ guidata(hMainFig, info);
 % initiate gui controls
 uicontrol_sub(hMainFig);
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this is the general BCI loop where realtime incoming data is handled
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 while ishandle(hMainFig) && info.continue % while the flag is one, the loop continues
   
-  % determine number of samples available in buffer
-  hdr = ft_read_header(cfg.headerfile, 'cache', true, 'coordsys', 'dewar');
-  
-  % see whether new samples are available
-  newsamples = (hdr.nSamples*hdr.nTrials-prevSample);
-  
   % get the potentially updated information from the main window
   info = guidata(hMainFig);
   
+  % determine number of samples available in buffer
+  info.hdr = ft_read_header(info.cfg.headerfile, 'cache', true, 'coordsys', 'dewar');
+  
+  % see whether new samples are available
+  newsamples = (info.hdr.nSamples*info.hdr.nTrials-prevSample);
+  
   if newsamples>=info.blocksize
     
-    if strcmp(cfg.bufferdata, 'last')
-      begsample  = hdr.nSamples*hdr.nTrials - info.blocksize + 1;
-      endsample  = hdr.nSamples*hdr.nTrials;
-    elseif strcmp(cfg.bufferdata, 'first')
+    if strcmp(info.cfg.bufferdata, 'last')
+      begsample  = info.hdr.nSamples*info.hdr.nTrials - info.blocksize + 1;
+      endsample  = info.hdr.nSamples*info.hdr.nTrials;
+    elseif strcmp(info.cfg.bufferdata, 'first')
       begsample  = prevSample + 1;
       endsample  = prevSample + info.blocksize ;
     else
@@ -223,7 +221,8 @@ while ishandle(hMainFig) && info.continue % while the flag is one, the loop cont
     fprintf('processing segment %d from sample %d to %d\n', count, begsample, endsample);
     
     % read data segment from buffer
-    dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', false);
+    dat = ft_read_data(info.cfg.datafile, 'header', info.hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', false);
+    
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % from here onward it is specific to the head localization
@@ -231,29 +230,29 @@ while ishandle(hMainFig) && info.continue % while the flag is one, the loop cont
     
     % put the data in a fieldtrip-like raw structure
     data.trial{1} = double(dat);
-    data.time{1}  = offset2time(begsample, hdr.Fs, endsample-begsample+1);
-    data.label    = hdr.label(chanindx);
-    data.hdr      = hdr;
-    data.fsample  = hdr.Fs;
+    data.time{1}  = offset2time(begsample, info.hdr.Fs, endsample-begsample+1);
+    data.label    = info.hdr.label(chanindx);
+    data.hdr      = info.hdr;
+    data.fsample  = info.hdr.Fs;
     
-    if isneuromag && size(coilsignal,2)~=info.blocksize
+    if info.isneuromag && size(coilsignal,2)~=info.blocksize
       % construct the reference signal for each of the coils
       % this needs to be updated if the blocksize changes
-      ncoil = length(cfg.coilfreq);
+      ncoil = length(info.cfg.coilfreq);
       if ncoil==0
         error('no coil frequencies were specified');
       else
-        time = (1:info.blocksize)./hdr.Fs;
+        time = (1:info.blocksize)./info.hdr.Fs;
         coilsignal = zeros(ncoil, info.blocksize);
         for i=1:ncoil
-          coilsignal(i,:) = exp(time*cfg.coilfreq(i)*1i*2*pi);
+          coilsignal(i,:) = exp(time*info.cfg.coilfreq(i)*1i*2*pi);
           coilsignal(i,:) = coilsignal(i,:) / norm(coilsignal(i,:));
         end
       end
     end
     
     % compute the HPI coil positions, this takes some time
-    [hpi, dip] = data2hpi(data, dip, vol, sens, coilsignal, isctf, isneuromag); % for neuromag datasets this is slow
+    [hpi, info.dip] = data2hpi(data, info.dip, info.vol, info.sens, coilsignal, info.isctf, info.isneuromag); % for neuromag datasets this is slow
     
     if ~ishandle(hMainFig)
       % the figure has been closed
@@ -287,9 +286,9 @@ while ishandle(hMainFig) && info.continue % while the flag is one, the loop cont
     clear data;
     
     % viewing angle
-    if isctf
+    if info.isctf
       view(-45, 90)
-    elseif isneuromag
+    elseif info.isneuromag
       view(0, 90)
     end
     
@@ -308,17 +307,17 @@ while ishandle(hMainFig) && info.continue % while the flag is one, the loop cont
     
     % viewing angle
     if get(info.hViewRadioButton1,'Value') == 1
-      if isctf
+      if info.isctf
         view(135, 0)
-      elseif isneuromag
+      elseif info.isneuromag
         view(180, 0)
       end
       title(sprintf('anterior view, clock time %s', datestr(now))); % show current data & time
       
     elseif get(info.hViewRadioButton2,'Value') == 1
-      if isctf
+      if info.isctf
         view(-45, 0)
-      elseif isneuromag
+      elseif info.isneuromag
         view(0, 0)
       end
       title(sprintf('posterior view, clock time %s', datestr(now))); % show current data & time
@@ -331,6 +330,7 @@ while ishandle(hMainFig) && info.continue % while the flag is one, the loop cont
   
 end % while true
 close(hMainFig); % close the figure
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that initiates the figure
@@ -438,6 +438,7 @@ info.hBlocksizeMenu     = hBlocksizeMenu;
 % put the info back
 guidata(handle, info);
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that computes the HPI coil positions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -496,6 +497,7 @@ else
   error('the data does not resemble ctf, nor neuromag')
 end % if ctf or neuromag
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that does the timing
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -504,6 +506,7 @@ function [time] = offset2time(offset, fsample, nsamples)
 offset   = double(offset);
 nsamples = double(nsamples);
 time = (offset + (0:(nsamples-1)))/fsample;
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION which computes the circumcenter(x,y,z) of the 3D triangle (3 coils)
@@ -539,6 +542,7 @@ cc(1) = xcirca + hpi{1}(1,end);
 cc(2) = ycirca + hpi{1}(2,end);
 cc(3) = zcirca + hpi{1}(3,end);
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION which draws the color-coded head and distances to the template
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -547,13 +551,9 @@ function draw_sub(handle)
 % get the info
 info = guidata(handle);
 
-% FIXME, for testing
-%fprintf('template:\n');
-%display(info.template)
-
 if get(info.hSensorCheckBox, 'Value') && ~isempty(info.sens)
   % plot the sensors
-  hold on; ft_plot_sens(info.sens);
+  hold on; ft_plot_sens(info.sens, 'style', 'k.');
 end
 
 % plot the template fiducial positions
@@ -679,7 +679,6 @@ if get(info.hCoilCheckBox, 'Value')
         end
       end
     else
-      colormap hot
       for j = 1:numel(info.hpi)
         plot3(info.hpi{j}(1),info.hpi{j}(2), info.hpi{j}(3),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25);
       end
@@ -699,6 +698,7 @@ axis square
 
 % put the info back
 guidata(handle, info);
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION which handles hot keys in the current plot
@@ -724,7 +724,7 @@ switch eventdata.Key
   case 'q'
     % stop the application
     fprintf('stopping the application \n')
-    set(info.hQuitButton, 'Value', 0); % stop the while loop
+    info.continue = false;
   case 'c'
     % display the sensors/dewar
     if get(info.hCoilCheckBox,'Value') == 0;
@@ -755,6 +755,7 @@ end
 
 % put the info back
 guidata(handle, info);
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTIONs which handle button presses

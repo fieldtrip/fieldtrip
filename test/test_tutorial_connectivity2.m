@@ -4,20 +4,24 @@ function test_tutorial_connectivity2
 % tutorial. Purpose: simulate linearly mixed data, and show that dependent
 % on the parameter settings the connectivity can go wild.
 
-%% create some instantaneously mixed data
+% create some instantaneously mixed data
+
+% define some variables locally
 nTrials  = 100;
 nSamples = 1000;
 fsample  = 1000;
-mixing   = [0.8 0.2 0;0 0.2 0.8]; % the middle signal will be common pick up
 
+% mixing matrix
+mixing   = [0.8 0.2 0;
+              0 0.2 0.8];
 
-data = [];
+data       = [];
 data.trial = cell(1,nTrials);
 data.time  = cell(1,nTrials);
 for k = 1:nTrials
   dat = randn(3, nSamples);
   dat(2,:) = ft_preproc_bandpassfilter(dat(2,:), 1000, [15 25]);
-  dat = (dat-repmat(mean(dat,2),[1 nSamples]))./repmat(std(dat,[],2),[1 nSamples]);
+  dat = 0.2.*(dat-repmat(mean(dat,2),[1 nSamples]))./repmat(std(dat,[],2),[1 nSamples]);
   data.trial{k} = mixing * dat;
   data.time{k}  = (0:nSamples-1)./fsample;
 end
@@ -54,9 +58,9 @@ c = ft_connectivityanalysis(cfg, freq);
 %% visualize
 cfg = [];
 cfg.parameter = 'grangerspctrm';
-ft_connectivityplot(cfg, g);
+figure;ft_connectivityplot(cfg, g);
 title('granger causality');
 cfg.parameter = 'cohspctrm';
-ft_connectivityplot(cfg, c);
+figure;ft_connectivityplot(cfg, c);
 title('coherence');
 

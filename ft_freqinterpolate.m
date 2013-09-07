@@ -11,8 +11,7 @@ function [freq] = ft_freqinterpolate(cfg, freq)
 %   cfg.foilim   = Nx2 matrix with begin and end of each interval to be
 %                  interpolated (default = [49 51; 99 101; 149 151])
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat

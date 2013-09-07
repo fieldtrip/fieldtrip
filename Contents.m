@@ -1,3 +1,6 @@
+% FieldTrip
+% Version unknown fieldtriptoolbox.org DD-MM-YYYY
+%
 % FieldTrip is the Matlab toolbox for MEG and EEG analysis that is being developed at
 % the Centre for Cognitive Neuroimaging of the Donders Institute for Brain, Cognition
 % and Behaviour together with collaborating institutes. The FieldTrip software is
@@ -28,10 +31,17 @@
 %   Eric Maris, DCC, FCDC
 %   Ingrid Nieuwenhuis, DCCN, FCDC
 %   Saskia Haegens, DCCN, FCDC
+%   Vladimir Litvak, UCL
+%   Eelke Spaak, DCCN
+%   Jorn Horschich, DCCN
+%   Roemer van der Meij, DCC
+%   Lilla Magyari, MPI, DCCN
 %   and others ...
 %
-% Copyrights (C) 2008-2012, Donders Institute for Brain, Cognition and Behaviour, Radboud University Nijmegen, The Netherlands (DCCN, DCC, DCN)
+% Copyrights (C) 2008-2013, Donders Institute for Brain, Cognition and Behaviour, Radboud University Nijmegen, The Netherlands (DCCN, DCC, DCN)
+% Copyrights (C) 2007-2013, University College London, United Kingdom (UCL)
 % Copyrights (C) 2008-2010, Centre for Cognitive Neuroimaging, Glasgow, United Kingdom (CCNi)
+% Copyrights (C) 2011-2013, Max Planck Institute for Psycholynguistics, Nijmegen, The Netherlands (MPI)
 % Copyrights (C) 2003-2008, F.C. Donders Centre, Radboud University Nijmegen, The Netherlands (FCDC)
 % Copyrights (C) 2004-2007, Nijmegen Institute for Cognition and Information, Radboud University Nijmegen, The Netherlands (NICI)
 % Copyrights (C) 2004-2005, Universitatsklinikum Hamburg-Eppendorf, Germany (UKE)

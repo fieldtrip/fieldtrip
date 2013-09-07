@@ -1134,6 +1134,14 @@ elseif filetype_check_extension(filename, '.xml') &&  filetype_check_header(file
   type = 'localite_pos';
   manufacturer = 'Localite';
   content = 'EEG electrode positions';
+elseif filetype_check_extension(filename, '.mbi')
+  type = 'manscan_mbi';
+  manufacturer = 'MANSCAN';
+  content  = 'EEG header';
+elseif filetype_check_extension(filename, '.mb2')
+  type = 'manscan_mb2';
+  manufacturer = 'MANSCAN';
+  content  = 'EEG data';    
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

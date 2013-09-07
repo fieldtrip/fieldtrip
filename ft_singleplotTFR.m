@@ -62,10 +62,6 @@ function [cfg] = ft_singleplotTFR(cfg, data)
 %
 % See also FT_SINGLEPLOTER, FT_MULTIPLOTER, FT_MULTIPLOTTFR, FT_TOPOPLOTER, FT_TOPOPLOTTFR
 
-% This function depends on FT_FREQBASELINE which has the following options:
-% cfg.baseline, documented
-% cfg.baselinetype, documented
-
 % Copyright (C) 2005-2006, F.C. Donders Centre
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip

@@ -83,8 +83,7 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 % layout. If you want to have more fine-grained control over the layout
 % of the subplots, you should create your own layout file.
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following option:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 % If you specify this option the input data will be read from a *.mat
 % file on disk. This mat files should contain only a single variable named 'data',
@@ -96,20 +95,8 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 
 % Undocumented local options:
 % cfg.layoutname
-% cfg.zlim/xparam (set to a specific frequency range or time range [zmax zmin] for an average
-% over the frequency/time bins for TFR data.  Use in conjunction with e.g. xparam = 'time', and cfg.parameter = 'powspctrm').
+% cfg.zlim/xparam (set to a specific frequency range or time range [zmax zmin] for an average over the frequency/time bins for TFR data.  Use in conjunction with e.g. xparam = 'time', and cfg.parameter = 'powspctrm').
 % cfg.preproc
-
-% This function depends on FT_TIMELOCKBASELINE which has the following options:
-% cfg.baseline, documented
-% cfg.channel
-% cfg.baselinewindow
-% cfg.previous
-% cfg.version
-%
-% This function depends on FT_FREQBASELINE which has the following options:
-% cfg.baseline, documented
-% cfg.baselinetype
 
 % Copyright (C) 2003-2006, Ole Jensen
 % Copyright (C) 2007-2011, Roemer van der Meij & Jan-Mathijs Schoffelen

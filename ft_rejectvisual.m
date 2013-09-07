@@ -71,8 +71,7 @@ function [data] = ft_rejectvisual(cfg, data)
 %   cfg.preproc.rectify     = 'yes'
 %   cfg.preproc.boxcar      = 0.2
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat
@@ -84,38 +83,6 @@ function [data] = ft_rejectvisual(cfg, data)
 
 % Undocumented local options:
 % cfg.feedback
-%
-% This function depends on PREPROC which has the following options:
-% cfg.preproc.absdiff
-% cfg.preproc.demean
-% cfg.preproc.baselinewindow
-% cfg.preproc.boxcar
-% cfg.preproc.bpfilter
-% cfg.preproc.bpfiltord
-% cfg.preproc.bpfilttype
-% cfg.preproc.bpfreq
-% cfg.preproc.derivative
-% cfg.preproc.detrend
-% cfg.preproc.dftfilter
-% cfg.preproc.dftfreq
-% cfg.preproc.hilbert
-% cfg.preproc.hpfilter
-% cfg.preproc.hpfiltord
-% cfg.preproc.hpfilttype
-% cfg.preproc.hpfreq
-% cfg.preproc.implicitref
-% cfg.preproc.lnfilter
-% cfg.preproc.lnfiltord
-% cfg.preproc.lnfreq
-% cfg.preproc.lpfilter
-% cfg.preproc.lpfiltord
-% cfg.preproc.lpfilttype
-% cfg.preproc.lpfreq
-% cfg.preproc.medianfilter
-% cfg.preproc.medianfiltord
-% cfg.preproc.rectify
-% cfg.preproc.refchannel
-% cfg.preproc.reref
 
 % Copyright (C) 2005-2006, Markus Bauer, Robert Oostenveld
 %

@@ -64,8 +64,7 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 % connectivity measures are linearly indexed, specifying 'inflow' or
 % 'outflow' can result in unexpected behavior.
 %  
-% to facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following option:
+% to facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 % if you specify this option the input data will be read from a *.mat
 % file on disk. this mat files should contain only a single variable named 'data',
@@ -73,35 +72,28 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 %
 % See also FT_SINGLEPLOTTFR, FT_MULTIPLOTER, FT_MULTIPLOTTFR, FT_TOPOPLOTER, FT_TOPOPLOTTFR
 
-% this function depends on ft_timelockbaseline which has the following options:
-% cfg.baseline, documented
-% cfg.channel
-% cfg.baselinewindow
-% cfg.previous
-% cfg.version
-
 % Undocumented local options:
 % cfg.zlim/xparam (set to a specific frequency range or time range [zmax zmin] for an average
 % over the frequency/time bins for TFR data.  Use in conjunction with e.g. xparam = 'time', and cfg.parameter = 'powspctrm').
 % cfg.preproc
 
-% copyright (c) 2003-2006, ole jensen
+% Copyright (C) 2003-2006, Ole Jensen
 %
-% this file is part of fieldtrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
 %
-%    fieldtrip is free software: you can redistribute it and/or modify
-%    it under the terms of the gnu general public license as published by
-%    the free software foundation, either version 3 of the license, or
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
 %    (at your option) any later version.
 %
-%    fieldtrip is distributed in the hope that it will be useful,
-%    but without any warranty; without even the implied warranty of
-%    merchantability or fitness for a particular purpose.  see the
-%    gnu general public license for more details.
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
 %
-%    you should have received a copy of the gnu general public license
-%    along with fieldtrip. if not, see <http://www.gnu.org/licenses/>.
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
 

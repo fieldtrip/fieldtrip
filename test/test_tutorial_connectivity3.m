@@ -109,6 +109,7 @@ cfg.method = 'coh';
 coherence = ft_connectivityanalysis(cfg, freq);
 
 cfg = [];
+cfg.zlim = [0 0.2];
 figure
 ft_connectivityplot(cfg, coherence);
 title('coherence')

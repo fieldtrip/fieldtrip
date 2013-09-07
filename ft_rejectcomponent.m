@@ -21,8 +21,7 @@ function [data] = ft_rejectcomponent(cfg, comp, data)
 %   cfg.component = list of components to remove, e.g. [1 4 7]
 %   cfg.demean    = 'no' or 'yes', whether to demean the input data (default = 'yes')
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat

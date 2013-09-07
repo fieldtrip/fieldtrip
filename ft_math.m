@@ -8,14 +8,13 @@ function data = ft_math(cfg, varargin)
 % with one or multiple FieldTrip data structures as input and where cfg is a
 % configuration structure that should contain
 %
-%  cfg.operation  = string, can be 'add', 'subtract', 'divide', 'multiply'
+%  cfg.operation  = string, can be 'add', 'subtract', 'divide', 'multiply', 'log10'
 %  cfg.parameter  = string, input data field on which the operation is performed
 %
 % If you specify only a single input data structure, the configuration should contain
 %   cfg.value     = scalar value to be used in the operation
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat

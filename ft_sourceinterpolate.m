@@ -60,8 +60,7 @@ function [interp] = ft_sourceinterpolate(cfg, functional, anatomical)
 %                       'nearest')
 %   cfg.downsample    = integer number (default = 1, i.e. no downsampling)
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat

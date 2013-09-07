@@ -121,6 +121,11 @@ if ~isdeployed
   end
   
   try
+    % some alternative implementations of statistics functions
+    addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'stats'));
+  end
+
+  try
     % this directory contains various functions that were obtained from elsewere, e.g. Matlab file exchange
     ft_hastoolbox('fileexchange', 3, 1); % not required
   end

@@ -51,12 +51,18 @@ switch init
     [tmp, dum] = chol(gam0);
     if dum
       warning('initialization with ''chol'' for iterations did not work well, using arbitrary starting condition');
-      tmp = rand(m,m); %arbitrary initial condition
-      tmp = triu(tmp);
+      tmp = randn(m,1000); %arbitrary initial condition
+      tmp = (tmp*tmp')./1000;
+      %tmp = triu(tmp);
+      [tmp, dum] = chol(tmp);
     end
   case 'rand'
-    tmp = rand(m,m); %arbitrary initial condition
-    tmp = triu(tmp);
+    %tmp = randn(m,m); %arbitrary initial condition
+    %tmp = triu(tmp);
+    tmp = randn(m,1000); %arbitrary initial condition
+    tmp = (tmp*tmp')./1000;
+    %tmp = triu(tmp);
+    [tmp, dum] = chol(tmp);
   otherwise
     error('initialization method should be eithe ''chol'' or ''rand''');
 end
@@ -71,8 +77,8 @@ ft_progress('init', fb, 'computing spectral factorization');
 for iter = 1:Niterations
   ft_progress(iter./Niterations, 'computing iteration %d/%d\n', iter, Niterations);
   for ind = 1:N2
-    invpsi     = inv(psi(:,:,ind));% + I*eps(psi(:,:,ind))); 
-    g(:,:,ind) = invpsi*Sarr(:,:,ind)*invpsi'+I;%Eq 3.1
+    invpsi     = inv(psi(:,:,ind)); 
+    g(:,:,ind) = psi(:,:,ind)\Sarr(:,:,ind)/psi(:,:,ind)'+I;%Eq 3.1
   end
   gp = PlusOperator(g,m,N+1); %gp constitutes positive and half of zero lags 
 

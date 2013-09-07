@@ -18,8 +18,7 @@ function [grandavg] = ft_freqgrandaverage(cfg, varargin)
 %                        parameter(s) to average. default is set to
 %                        'powspctrm', if it is present in the data.
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat

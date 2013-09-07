@@ -93,8 +93,7 @@ function [data] = ft_preprocessing(cfg, data)
 % FT_PREPROCESSING with a single cfg input argument are
 %   cfg.method        = 'trial' or 'channel', read data per trial or per channel (default = 'trial')
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat
@@ -129,41 +128,6 @@ function [data] = ft_preprocessing(cfg, data)
 % long continuous segment or in multiple trials. This is achieved by
 %   cfg.export.dataset    = string with the output file name
 %   cfg.export.dataformat = string describing the output file format, see FT_WRITE_DATA
-
-% This function depends on PREPROC which has the following options:
-% cfg.absdiff
-% cfg.boxcar
-% cfg.polyremoval, documented
-% cfg.polyorder, documented
-% cfg.demean, documented
-% cfg.baselinewindow, documented
-% cfg.bpfilter, documented
-% cfg.bpfiltord, documented
-% cfg.bpfilttype, documented
-% cfg.bpfreq, documented
-% cfg.bsfilter, documented
-% cfg.bsfiltord, documented
-% cfg.bsfilttype, documented
-% cfg.bsfreq, documented
-% cfg.derivative, documented
-% cfg.detrend, documented
-% cfg.dftfilter, documented
-% cfg.dftfreq, documented
-% cfg.hilbert, documented
-% cfg.hpfilter, documented
-% cfg.hpfiltord, documented
-% cfg.hpfilttype, documented
-% cfg.hpfreq, documented
-% cfg.implicitref, documented
-% cfg.lpfilter, documented
-% cfg.lpfiltord, documented
-% cfg.lpfilttype, documented
-% cfg.lpfreq, documented
-% cfg.medianfilter, documented
-% cfg.medianfiltord, documented
-% cfg.rectify, documented
-% cfg.refchannel, documented
-% cfg.reref, documented
 
 % Copyright (C) 2003-2013, Robert Oostenveld, SMI, FCDC
 %

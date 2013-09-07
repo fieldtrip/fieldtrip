@@ -33,4 +33,5 @@ ft_realtime_headlocalizer(cfg);
 % cfg = [];
 % cfg.dataset = 'buffer://localhost:1972';
 % cfg.gradfile ='/home/common/matlab/fieldtrip/data/test/bug1792/20130418_test_cHPI.fif';
+% cfg.coilfreq = [293, 307, 314, 321];%, 328];
 % ft_realtime_headlocalizer(cfg)

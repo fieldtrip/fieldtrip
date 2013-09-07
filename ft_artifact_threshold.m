@@ -38,8 +38,7 @@ function [cfg, artifact] = ft_artifact_threshold(cfg, data)
 % will mark the whole trial as an artifact if the threshold is exceeded.
 % Furthermore, this function does not support artifact- or filterpadding.
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat
 % file on disk and/or the output data will be written to a *.mat file. These mat

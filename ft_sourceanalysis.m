@@ -103,8 +103,7 @@ function [source] = ft_sourceanalysis(cfg, data, baseline)
 %   cfg.elecfile      = name of file containing the electrode positions, see FT_READ_SENS
 %   cfg.gradfile      = name of file containing the gradiometer definition, see FT_READ_SENS
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat
@@ -120,58 +119,6 @@ function [source] = ft_sourceanalysis(cfg, data, baseline)
 % cfg.refchannel
 % cfg.trialweight   = 'equal' or 'proportional'
 % cfg.powmethod     = 'lambda1' or 'trace'
-%
-% This function depends on FT_PREPARE_DIPOLE_GRID which has the following options:
-% cfg.grid.xgrid (default set in FT_PREPARE_DIPOLE_GRID: cfg.grid.xgrid = 'auto'), documented
-% cfg.grid.ygrid (default set in FT_PREPARE_DIPOLE_GRID: cfg.grid.ygrid = 'auto'), documented
-% cfg.grid.zgrid (default set in FT_PREPARE_DIPOLE_GRID: cfg.grid.zgrid = 'auto'), documented
-% cfg.grid.resolution, documented
-% cfg.grid.pos, documented
-% cfg.grid.dim, documented
-% cfg.grid.inside, documented
-% cfg.grid.outside, documented
-% cfg.mri
-% cfg.smooth
-% cfg.sourceunits
-% cfg.threshold
-% cfg.symmetry
-%
-% This function depends on FT_PREPARE_FREQ_MATRICES which has the following options:
-% cfg.channel (default set in FT_SOURCEANALYSIS: cfg.channel = 'all'), documented
-% cfg.dicsfix
-% cfg.frequency, documented
-% cfg.latency, documented
-% cfg.refchan, documented
-%
-% This function depends on FT_PREPARE_RESAMPLED_DATA which has the following options:
-% cfg.jackknife (default set in FT_SOURCEANALYSIS: cfg.jackknife = 'no'), documented
-% cfg.numbootstrap, documented
-% cfg.numcondition (set in FT_SOURCEANALYSIS: cfg.numcondition = 2)
-% cfg.numpermutation (default set in FT_SOURCEANALYSIS: cfg.numpermutation = 100), documented
-% cfg.numrandomization (default set in FT_SOURCEANALYSIS: cfg.numrandomization = 100), documented
-% cfg.permutation (default set in FT_SOURCEANALYSIS: cfg.permutation = 'no'), documented
-% cfg.pseudovalue (default set in FT_SOURCEANALYSIS: cfg.pseudovalue = 'no'), documented
-% cfg.randomization (default set in FT_SOURCEANALYSIS: cfg.randomization = 'no'), documented
-%
-% This function depends on FT_PREPARE_VOL_SENS which has the following options:
-% cfg.channel, (default set in FT_SOURCEANALYSIS: cfg.channel = 'all'), documented
-% cfg.elec, documented
-% cfg.elecfile, documented
-% cfg.grad, documented
-% cfg.gradfile, documented
-% cfg.hdmfile, documented
-% cfg.order
-% cfg.vol, documented
-%
-% This function depends on FT_PREPARE_LEADFIELD which has the following options:
-% cfg.feedback, (default set in FT_SOURCEANALYSIS: cfg.feedback = 'text'), documented
-% cfg.grid, documented
-% cfg.lbex
-% cfg.normalize (default set in FT_SOURCEANALYSIS), documented
-% cfg.previous
-% cfg.reducerank (default set in FT_SOURCEANALYSIS), documented
-% cfg.sel50p
-% cfg.version
 
 % Copyright (c) 2003-2008, Robert Oostenveld, F.C. Donders Centre
 %

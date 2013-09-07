@@ -148,7 +148,7 @@ end
 
 if ~isempty(threshold)
   % the trigger channels contain an analog (and hence noisy) TTL signal and should be thresholded
-  dat = (dat>threshold);
+  dat(abs(dat)<threshold) = 0;
 end
 
 if strcmp(detectflank, 'auto')

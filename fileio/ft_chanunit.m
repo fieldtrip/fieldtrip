@@ -146,7 +146,7 @@ elseif ft_senstype(input, 'ctf') && isfield(input, 'chantype')
   chanunit(strcmp('refgrad',          input.chantype)) = {'T'};
   
 elseif ft_senstype(input, 'yokogawa') && isfield(input, 'chantype')
-  chanunit(strcmp('meggrad',          input.chantype)) = {'unknown'}; % FIXME don't know whether it is T or T/m
+  chanunit(strcmp('meggrad',          input.chantype)) = {'T'};
   chanunit(strcmp('megplanar',        input.chantype)) = {'unknown'}; % FIXME don't know whether it is T or T/m
   
 elseif ft_senstype(input, 'bti') && isfield(input, 'chantype')

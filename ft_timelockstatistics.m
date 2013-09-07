@@ -28,8 +28,7 @@ function [stat] = ft_timelockstatistics(cfg, varargin)
 % for the corresponding configuration options and for a detailed
 % explanation of each method.
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat
@@ -38,8 +37,6 @@ function [stat] = ft_timelockstatistics(cfg, varargin)
 % input/output structure.
 %
 % See also FT_TIMELOCKANALYSIS, FT_TIMELOCKGRANDAVERAGE
-
-% This function depends on STATISTICS_WRAPPER
 
 % Copyright (C) 2005-2006, Robert Oostenveld
 %
