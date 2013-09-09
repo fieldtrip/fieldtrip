@@ -1456,7 +1456,7 @@ elseif strcmp(current, 'old') && strcmp(type, 'new'),
       try,
         ori(:,find(output.inside)) = cat(2, output.ori{find(output.inside)});
       catch
-        tmpinside = find(output.inside)
+        tmpinside = find(output.inside);
         for k = 1:numel(tmpinside)
           ouri(:,tmpinside(k)) = output.ori{tmpinside(k)}';
         end
