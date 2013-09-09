@@ -1579,7 +1579,7 @@ switch fname
     dimord = [dimord,'_ori_ori'];
   case 'ori'
     dimord = '';
-  case 'pow'
+  case {'pow' 'dspm'}
     if isfield(output, 'cumtapcnt') && size(output.cumtapcnt,1)==size(tmp,dimnum)
       dimord = [dimord,'_rpt'];
       dimnum = dimnum + 1;
