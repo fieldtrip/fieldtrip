@@ -146,6 +146,11 @@ else
   error('no vertices found');
 end
 
+if isempty(pnt)
+    hs=[];
+    return
+end
+
 if hastri+hastet+hashex+hasline+haspoly>1
   error('cannot deal with simultaneous triangles, tetraheders and/or hexaheders')
 end
@@ -187,7 +192,7 @@ else
   line = [];
 end
 
-if haspnt && ~isempty(pnt)
+if haspnt 
   if ~isempty(tri)
     hs = patch('Vertices', pnt, 'Faces', tri);
   elseif ~isempty(line)
