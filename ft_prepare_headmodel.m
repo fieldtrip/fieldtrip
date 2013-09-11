@@ -58,11 +58,11 @@ function [vol, cfg] = ft_prepare_headmodel(cfg, data)
 % which are listed below.
 %
 % BEMCP, DIPOLI, OPENMEEG
-%     cfg.tissue            (see above; in combination with 'seg' input; default options are 'brain' or 'scalp')
+%     cfg.tissue            (see above; in combination with 'seg' input)
 %     cfg.isolatedsource    (optional)
 %
 % CONCENTRICSPHERES
-%     cfg.tissue            (see above; in combination with 'seg' input; default options are 'brain' or 'scalp')
+%     cfg.tissue            (see above; in combination with 'seg' input)
 %     cfg.fitind            (optional)
 %
 % LOCALSPHERES
