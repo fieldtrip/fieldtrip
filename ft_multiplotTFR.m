@@ -497,7 +497,7 @@ end
 % set colormap
 if isfield(cfg,'colormap')
   if size(cfg.colormap,2)~=3, error('multiplotTFR(): Colormap must be a n x 3 matrix'); end
-  set(gca,'colormap',cfg.colormap);
+  set(gcf,'colormap',cfg.colormap);
 end;
 
 % Plot channels:
