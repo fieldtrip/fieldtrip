@@ -103,21 +103,12 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function str = printcell(name, val)
-str = [];
 siz = size(val);
 if isempty(val)
   str = sprintf('%s = {};\n', name);
   return;
 end
-for i=1:prod(siz)
-  typ{i} = class(val{i});
-end
-for i=2:prod(siz)
-  if ~strcmp(typ{i}, typ{1})
-    warning('different elements in cell array');
-    % return
-  end
-end
+typ = cellfun(@class, val(:), 'UniformOutput', false);
 if all(size(val)==1)
   str = sprintf('%s = { %s };\n', name, printval(val{1}));
 else
@@ -155,7 +146,6 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function str = printstr(name, val)
-str = [];
 siz = size(val);
 if siz(1)>1
   str = sprintf('%s = \n', name);
@@ -177,7 +167,6 @@ str = str(1:end-1); % remove the last space
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function str = printval(val)
-str = '';
 siz = size(val);
 switch class(val)
   case 'char'
@@ -201,10 +190,18 @@ switch class(val)
     if all(siz==0)
       str = '[]';
     elseif all(siz==1)
-      str = sprintf('%g', val);
+      if isinteger(val)
+        str = sprintf('%d', val);
+      else
+        str = sprintf('%g', val);
+      end
     elseif length(siz)==2
       for i=1:siz(1);
-        str = [ str sprintf('%g ', val(i,:)) '; ' ];
+        if all(isinteger(val(i,:)))
+          str = [ str sprintf('%d ', val(i,:)) '; ' ];
+        else
+          str = [ str sprintf('%g ', val(i,:)) '; ' ];
+        end
       end
       str = sprintf('[ %s ]', str(1:end-3));
     else
@@ -235,3 +232,9 @@ switch class(val)
     warning('cannot print unknown object at this level');
     str = '''FIXME''';
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% helper function to determine whether a floating point value contains an integer number
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function y = isinteger(x)
+y = (x==round(x));
