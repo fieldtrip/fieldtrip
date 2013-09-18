@@ -101,15 +101,17 @@ end
 % optionally get the data from the URL and make a temporary local copy
 filename = fetch_url(filename);
 
-% test whether the file or directory exists
-if  ~strcmp(ft_filetype(filename), 'fcdc_buffer') && ~strcmp(ft_filetype(filename), 'ctf_shm') && ~strcmp(ft_filetype(filename), 'fcdc_mysql') && ~exist(filename, 'file')
+realtime = any(strcmp(ft_filetype(filename), {'fcdc_buffer', 'ctf_shm', 'fcdc_mysql'}));
+
+% check whether the file or directory exists, not for realtime
+if  ~realtime && ~exist(filename, 'file')
   error('FILEIO:InvalidFileName', 'file or directory ''%s'' does not exist', filename);
 end
 
 % get the options
 retry        = ft_getopt(varargin, 'retry', false); % the default is not to retry reading the header
 headerformat = ft_getopt(varargin, 'headerformat');
-coordsys     = ft_getopt(varargin, 'coordsys', 'head'); % this is used for CTF, it can be head or dewar
+coordsys     = ft_getopt(varargin, 'coordsys', 'head'); % this is used for ctf and neuromag_mne, it can be head or dewar
 
 if isempty(headerformat)
   % only do the autodetection if the format was not specified
@@ -121,10 +123,7 @@ end
 % for uniqueness. fMRI users will probably never use channel names
 % for anything.
 
-% The skipInitialCheck flag is used to speed up the read operation from
-% the realtime buffer in general.
-
-if strcmp(headerformat, 'fcdc_buffer')
+if realtime
   % skip the rest of the initial checks to increase the speed for realtime operation
   
   checkUniqueLabels = false;
@@ -183,8 +182,8 @@ if cache && exist(headerfile, 'file') && ~isempty(cacheheader)
 end % if cache
 
 % the support for head/dewar coordinates is still limited
-if strcmp(coordsys, 'dewar') && ~any(strcmp(headerformat, {'fcdc_buffer', 'ctf_ds', 'ctf_meg4', 'ctf_res4'}))
-  error('dewar coordinates are sofar only supported for CTF data');
+if strcmp(coordsys, 'dewar') && ~any(strcmp(headerformat, {'fcdc_buffer', 'ctf_ds', 'ctf_meg4', 'ctf_res4', 'neuromag_fif', 'neuromag_mne', 'babysquid_fif'}))
+  error('dewar coordinates are not supported for %s', headerformat);
 end
   
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -348,6 +347,13 @@ switch headerformat
     if any(diff(hdr.orig.SampleRate))
       error('channels with different sampling rate not supported');
     end
+    % assign the channel type and units for the known channels
+    hdr.chantype = repmat({'unknown'}, size(hdr.label));
+    hdr.chanunit = repmat({'unknown'}, size(hdr.label));
+    chan = ~cellfun(@isempty, regexp(hdr.label, '^A.*$'));
+    hdr.chantype(chan) = {'eeg'};
+    hdr.chanunit(chan) = {'uV'};
+
     if ft_filetype(filename, 'bham_bdf')
       % TODO channel renaming should be made a general option
       % this is for the Biosemi system used at the University of Birmingham
@@ -386,6 +392,9 @@ switch headerformat
     hdr.nSamplesPre = orig.nSamplesPre;
     hdr.nTrials     = orig.nTrials;
     hdr.orig        = orig;
+    % assign the channel type and units for the known channels
+    hdr.chantype = repmat({'eeg'}, size(hdr.label));
+    hdr.chanunit = repmat({'uV'},  size(hdr.label));
     
   case 'ced_son'
     % check that the required low-level toolbox is available
@@ -724,7 +733,6 @@ switch headerformat
     hdr.orig.ftext  = ftext;
     
   case 'egi_sbin'
-    % segmented type only
     [header_array, CateNames, CatLengths, preBaseline] = read_sbin_header(filename);
     [p, f, x]       = fileparts(filename);
     
@@ -927,7 +935,31 @@ switch headerformat
     % ensure that the EGI_MFF toolbox is on the path
     ft_hastoolbox('egi_mff', 1);
     % ensure that the JVM is running and the jar file is on the path
+    %%%%%%%%%%%%%%%%%%%%%%
+    %workaround for Matlab bug resulting in global variables being cleared
+    globalTemp=cell(0);
+    globalList=whos('global');
+    varList=whos;
+    for i=1:length(globalList)
+        eval(['global ' globalList(i).name ';']);
+        eval(['globalTemp{end+1}=' globalList(i).name ';']);
+    end;
+    %%%%%%%%%%%%%%%%%%%%%%
+    
     mff_setup;
+    
+    %%%%%%%%%%%%%%%%%%%%%%
+    %workaround for Matlab bug resulting in global variables being cleared
+    varNames={varList.name};
+    for i=1:length(globalList)
+        eval(['global ' globalList(i).name ';']);
+        eval([globalList(i).name '=globalTemp{i};']);
+        if ~any(strcmp(globalList(i).name,varNames)) %was global variable originally out of scope?
+            eval(['clear ' globalList(i).name ';']); %clears link to global variable without affecting it
+        end;
+    end;
+    clear globalTemp globalList varNames varList;
+    %%%%%%%%%%%%%%%%%%%%%%
 
     if isunix && filename(1)~=filesep
       % add the full path to the dataset directory
@@ -1254,7 +1286,7 @@ switch headerformat
 
     % add a gradiometer structure for forward and inverse modelling
     try
-      [grad, elec] = mne2grad(orig);
+      [grad, elec] = mne2grad(orig, strcmp(coordsys, 'dewar'));
       if ~isempty(grad)
         hdr.grad = grad;
       end
@@ -1304,6 +1336,7 @@ switch headerformat
       orig.raw        = raw; % keep all the details
       
     elseif isaverage
+      try,
       evoked_data    = fiff_read_evoked_all(filename);
       vartriallength = any(diff([evoked_data.evoked.first])) || any(diff([evoked_data.evoked.last]));
       if vartriallength
@@ -1330,7 +1363,11 @@ switch headerformat
         orig.info       = evoked_data.info;               % keep all the details
         orig.vartriallength = 0;
       end
-      
+      catch
+        hdr.nSamples    = 0;
+        hdr.nSamplesPre = 0;
+        hdr.nTrials     = 0;
+      end
     elseif isepoched
       error('Support for epoched *.fif data is not yet implemented.')
     end
@@ -1666,6 +1703,34 @@ switch headerformat
     end
     hdr.orig = opts;
     
+   case {'manscan_mbi', 'manscan_mb2'}
+    orig       = in_fopen_manscan(filename);
+    hdr.Fs     = orig.prop.sfreq;
+    hdr.nChans = numel(orig.channelmat.Channel); 
+    hdr.nTrials  = 1;
+    if isfield(orig, 'epochs') && ~isempty(orig.epochs)             
+        hdr.nSamples = 0;
+        for i = 1:hdr.nTrials
+            hdr.nSamples =  hdr.nSamples + diff(orig.epochs(i).samples) + 1;
+        end
+    else        
+        hdr.nSamples = diff(orig.prop.samples) + 1;
+    end
+    if orig.prop.times(1) < 0
+        hdr.nSamplesPre  = round(orig.prop.times(1)/hdr.Fs);
+    else
+        hdr.nSamplesPre  = 0;  
+    end
+    for i=1:hdr.nChans
+      hdr.label{i,1}    = orig.channelmat.Channel(i).Name;
+      hdr.chantype{i,1} = lower(orig.channelmat.Channel(i).Type);
+      if isequal(hdr.chantype{i,1}, 'eeg')
+          hdr.chanunit{i, 1} = 'uV';
+      else
+          hdr.chanunit{i, 1} = 'unknown';
+      end
+    end
+    hdr.orig = orig;
   otherwise
     if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
       hdr = read_biosig_header(filename);

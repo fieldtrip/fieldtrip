@@ -23,6 +23,15 @@ function vol = ft_headmodel_simbio(geom, varargin)
 %   conductivity   = vector containing tissue conductivities using ordered
 %                    corresponding to geom.tissuelabel
 %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% To run this on Windows the following packages are necessary:
+%
+% Microsoft Visual C++ 2008 Redistributable
+%
+% Intel Visual Fortran Redistributables
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 % See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 

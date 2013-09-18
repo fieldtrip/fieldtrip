@@ -27,13 +27,14 @@ function ft_write_headshape(filename, bnd, varargin)
 %   'vista'
 %   'tetgen'
 %   'gifti'
-%   'stl'       STereoLithography file format, for use with CAD and generic 3D mesh editing programs
-%   'vtk'       Visualization ToolKit file format, for use with Paraview
-%   'ply'       Stanford Polygon file format, for use with Paraview or Meshlab
+%   'stl'        STereoLithography file format, for use with CAD and generic 3D mesh editing programs
+%   'vtk'        Visualization ToolKit file format, for use with Paraview
+%   'ply'        Stanford Polygon file format, for use with Paraview or Meshlab
+%   'freesurfer' Freesurfer surf-file format, using write_surf
 %
 % See also FT_READ_HEADSHAPE
 
-% Copyright (C) 2011, Lilla Magyari & Robert Oostenveld
+% Copyright (C) 2011-2013, Lilla Magyari & Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -140,13 +141,22 @@ switch fileformat
   case 'ply'
     [p, f, x] = fileparts(filename);
     filename = fullfile(p, [f, '.ply']); % ensure it has the right extension
-    if isfield(bnd, 'tri')
-      write_ply(filename, bnd.pnt, bnd.tri);
-    elseif isfield(bnd, 'tet')
-      write_ply(filename, bnd.pnt, bnd.tet);
-    elseif isfield(bnd, 'hex')
-      write_ply(filename, bnd.pnt, bnd.hex);
+    
+    if isfield(bnd, 'pnt')
+      vertices = bnd.pnt;
+    elseif isfield(bnd, 'pos')
+      vertices = bnd.pos;
     end
+    
+    if isfield(bnd, 'tri')
+      elements = bnd.tri;
+    elseif isfield(bnd, 'tet')
+      elements = bnd.tet;
+    elseif isfield(bnd, 'hex')
+      elements = bnd.hex;
+    end
+    
+    write_ply(filename, vertices, elements);
 
   case 'stl'
     nrm = normals(bnd.pnt, bnd.tri, 'triangle');
@@ -162,7 +172,11 @@ switch fileformat
     end
     tmp = gifti(tmp);
     save(tmp, filename);
-    
+  
+  case 'freesurfer'
+    ft_hastoolbox('freesurfer', 1);
+    write_surf(filename, bnd.pnt, bnd.tri);
+ 
   case []
     error('you must specify the output format');
     

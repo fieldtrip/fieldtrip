@@ -38,7 +38,7 @@ function [vol, sens] = ft_prepare_vol_sens(vol, sens, varargin)
 % See also FT_COMPUTE_LEADFIELD, FT_READ_VOL, FT_READ_SENS, FT_TRANSFORM_VOL,
 % FT_TRANSFORM_SENS
 
-% Copyright (C) 2004-2012, Robert Oostenveld
+% Copyright (C) 2004-2013, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -65,6 +65,12 @@ order   = ft_getopt(varargin, 'order', 10);             % order of expansion for
 
 % ensure that the sensor description is up-to-date (Aug 2011)
 sens = ft_datatype_sens(sens);
+
+% this is to support volumes saved in mat-files, particularly interpolated
+if ischar(vol)
+  vpath = fileparts(vol);   % remember the path to the file
+  vol   = ft_read_vol(vol); % replace the filename with the content of the file
+end
 
 % ensure that the volume conduction description is up-to-date (Jul 2012)
 vol = ft_datatype_headmodel(vol);
@@ -237,8 +243,8 @@ elseif ismeg
           [dum, coilindex] = max(abs(sens.tra(:,i)));
         end
         
-        coillabel = sens.label{coilindex};                    % what is the label of this channel
-        chanindex = strmatch(coillabel, vol.label, 'exact');  % what is the index of this channel in the list of local spheres
+        coillabel = sens.label{coilindex};               % what is the label of this channel
+        chanindex = find(strcmp(coillabel, vol.label));  % what is the index of this channel in the list of local spheres
         localspheres.r(i,:) = vol.r(chanindex);
         localspheres.o(i,:) = vol.o(chanindex,:);
       end
@@ -280,9 +286,11 @@ elseif ismeg
       % estimate center and radius
       [center,radius] = fitsphere(vol.bnd.pnt);
       
-      % initialize the forward calculation (only if gradiometer coils are available)
+      % initialize the forward calculation (only if  coils are available)
       if size(sens.coilpos,1)>0 && ~isfield(vol, 'forwpar')
-        vol.forwpar = meg_ini([vol.bnd.pnt vol.bnd.nrm], center', order, [sens.coilpos sens.coilori]);
+        s = scalingfactor(vol.unit, 'cm');
+        vol.forwpar = meg_ini([s*vol.bnd.pnt vol.bnd.nrm], s*center', order, [s*sens.coilpos sens.coilori]);
+        vol.forwpar.scale = s;
       end
       
     case 'openmeeg'
@@ -453,10 +461,10 @@ elseif iseeg
           if strcmp(ft_voltype(vol), 'openmeeg')
             % check that the external toolbox is present
             ft_hastoolbox('openmeeg', 1);
-            
             nb_points_external_surface = size(vol.bnd(vol.skin_surface).pnt,1);
             vol.mat = vol.mat((end-nb_points_external_surface+1):end,:);
             vol.mat = interp(:,1:nb_points_external_surface) * vol.mat;
+            
           else
             % convert to sparse matrix to speed up the subsequent multiplication
             interp  = sparse(interp);
@@ -497,7 +505,14 @@ elseif iseeg
       vol.transfer = sb_transfer(vol,sens);
       
     case 'interpolate'
-      
+      % this is to allow moving leadfield files
+      if ~exist(vol.filename{1}, 'file')
+         for i = 1:length(vol.filename)
+             [p, f, x] = fileparts(vol.filename{i});
+             vol.filename{i} = fullfile(vpath, [f x]);
+         end
+      end
+       
       if ~isfield(sens, 'tra') && isequal(sens.chanpos, sens.elecpos)
         sens.tra = eye(size(sens.chanpos,1));
       end
@@ -524,7 +539,7 @@ elseif iseeg
       end % if recomputing interpolation
       
       % for the leadfield computations the @nifti object is used to map the image data into memory
-      ft_hastoolbox('spm8', 1);
+      ft_hastoolbox('spm8up', 1);
       for i=1:length(vol.sens.label)
         % map each of the leadfield files into memory
         vol.chan{i} = nifti(vol.filename{i});
@@ -555,7 +570,6 @@ if isfield(sens, 'tra')
   end
 end
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -574,7 +588,6 @@ dp = plane(1:3) - line(:, 1:3);
 t = dot(ori(~par,:), dp(~par,:), 2)./dot(ori(~par,:), line(~par,4:6), 2);
 % compute coord of intersection point
 Ppr(~par, :) = line(~par,1:3) + repmat(t,1,3).*line(~par,4:6);
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % This function serves as a replacement for the dist function in the Neural

@@ -11,8 +11,7 @@ function [cfg, M] = ft_sourcemovie(cfg, source, source2)
 %  cfg.funparameter    = string, functional parameter that is color coded (default = 'avg.pow')
 %  cfg.maskparameter   = string, functional parameter that is used for opacity (default = [])
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following option:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 % If you specify this option the input data will be read from a *.mat
 % file on disk. This mat files should contain only a single variable named 'data',
@@ -32,7 +31,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble provenance
 ft_preamble trackconfig
 ft_preamble debug
@@ -249,9 +248,9 @@ set(hx, 'position', [0.4 0.08 0.6 0.8]);
 set(hx, 'tag', 'mesh');
 if isfield(source, 'sulc')
   vdat = source.sulc;
-  vdat = vdat-min(vdat)+1;
+  vdat = vdat-min(vdat);
   vdat = vdat./max(vdat);
-  vdat = 0.8.*repmat(vdat,[1 3]);
+  vdat = 0.1+0.3.*repmat(round(1-vdat),[1 3]);
   hs1 = ft_plot_mesh(source, 'edgecolor', 'none', 'vertexcolor', vdat);
 else
   hs1 = ft_plot_mesh(source, 'edgecolor', 'none', 'facecolor', [0.5 0.5 0.5]);
@@ -393,8 +392,9 @@ if ~(numel(previous_vindx)==numel(opt.vindx) && all(previous_vindx==opt.vindx))
 end
 
 if opt.record
+  tmp = get(opt.h, 'position');
   opt.frame = opt.frame + 1;
-  opt.movie(opt.frame) = getframe(opt.h);
+  opt.movie(opt.frame) = getframe(opt.h,[0 0 tmp(3:4)]);
 end
 setappdata(h, 'opt', opt);
 
@@ -483,9 +483,8 @@ h   = getparent(h);
 opt = getappdata(h, 'opt');
 if strcmp(get(get(h, 'currentaxes'), 'tag'), 'timecourse')
   % get the current point
-%   pos = get(opt.hy, 'currentpoint');
-%   set(opt.sliderx, 'value') = pos(1);
-%   
+  %pos = get(opt.hy, 'currentpoint');
+  %set(opt.sliderx, 'value', nearest(opt.xparam, pos(1)));  
 elseif strcmp(get(get(h, 'currentaxes'), 'tag'), 'mesh')
   % get the current point, which is defined as the intersection through the
   % axis-box (in 3D)
@@ -530,10 +529,12 @@ switch key
     opt.cfg.zlim(2) = (opt.cfg.zlim(2)-opt.cfg.zlim(1))./sqrt(2);
     setappdata(h, 'opt', opt);
     caxis(opt.cfg.zlim);
+    set(opt.hx, 'Clim', opt.cfg.zlim);
   case 'rightarrow' % change colorlim
     opt.cfg.zlim(2) = max(opt.cfg.zlim(2).*sqrt(2), opt.cfg.zlim(1));
     setappdata(h, 'opt', opt);
     caxis(opt.cfg.zlim);
+    set(opt.hx, 'Clim', opt.cfg.zlim);
   
   case 'shift+leftarrow'
     
@@ -577,10 +578,11 @@ switch key
       setappdata(h, 'opt', opt);
     end
   case 'z'
-    % select the threshold
+    % select the colorlim
     response = inputdlg('colorlim', 'specify', 1, {num2str(opt.cfg.zlim(2))});
     if ~isempty(response)
       opt.cfg.zlim(2) = str2double(response);
+      set(opt.hx, 'Clim', opt.cfg.zlim);
       setappdata(h, 'opt', opt);
     end
   case 'control+control'

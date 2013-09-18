@@ -41,7 +41,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble callinfo
 ft_preamble trackconfig
 
@@ -69,7 +69,7 @@ cfg = ft_checkopt(cfg, 'feedback', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg, 'latency', {'char', 'ascendingdoublebivector'});
 cfg = ft_checkopt(cfg, 'trials', {'char', 'doublevector', 'logical'}); 
 
-cfg = ft_checkconfig(cfg, 'allowed', {'timwin', 'spikechannel', 'channel', 'keeptrials', 'feedback', 'latency', 'trials'});
+cfg = ft_checkconfig(cfg, 'allowed', {'timwin', 'spikechannel', 'channel', 'keeptrials', 'feedback', 'latency', 'trials', 'warning'});
 
 % autodetect the spike channels
 ntrial = length(data.trial);

@@ -53,7 +53,7 @@ for ii=1:Ns % treat each mesh one at a time
     lt(lt==jj) = [];
     % list of 3 directly surrounding triangles
     lv = tri(lt,:);
-    lv = setxor(lv(:),tri(jj,:));
+    lv = setxor(lv(:)',tri(jj,:));
     % list of 3 voxels connected by 2 edges to the jj_th triangle.
     sph_pnt = pnt([tri(jj,:) lv],:);
     [center,radius] = fitsphere(sph_pnt);

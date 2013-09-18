@@ -31,7 +31,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble callinfo
 ft_preamble trackconfig
 
@@ -50,7 +50,7 @@ cfg = ft_checkopt(cfg,'latency', {'char', 'ascendingdoublebivector'});
 cfg = ft_checkopt(cfg,'errorbars', 'char', {'sem', 'std', 'conf95%', 'no', 'var'});
 cfg = ft_checkopt(cfg,'ylim', {'char', 'ascendingdoublebivector'});
 
-cfg = ft_checkconfig(cfg, 'allowed', {'spikechannel', 'latency', 'errorbars', 'ylim'});
+cfg = ft_checkconfig(cfg, 'allowed', {'spikechannel', 'latency', 'errorbars', 'ylim', 'warning'});
 
 % select the latencies
 if ischar(cfg.latency)

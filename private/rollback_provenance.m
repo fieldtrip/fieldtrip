@@ -42,6 +42,12 @@ function [cfg, varargout] = rollback_provenance(cfg, varargin)
 for i=1:(nargin-1)
   
   fn0 = fieldnames(cfg);
+  
+  if ~isfield(varargin{i}, 'cfg')
+    % input does not contain cfg, so no rollback to be performed
+    continue;
+  end
+  
   fn1 = fieldnames(varargin{i}.cfg);
   % only work on the fields that are explicitly present in the cfg
   fn = intersect(fn0, fn1);

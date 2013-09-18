@@ -103,8 +103,7 @@ function [source] = ft_sourceanalysis(cfg, data, baseline)
 %   cfg.elecfile      = name of file containing the electrode positions, see FT_READ_SENS
 %   cfg.gradfile      = name of file containing the gradiometer definition, see FT_READ_SENS
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat
@@ -120,58 +119,6 @@ function [source] = ft_sourceanalysis(cfg, data, baseline)
 % cfg.refchannel
 % cfg.trialweight   = 'equal' or 'proportional'
 % cfg.powmethod     = 'lambda1' or 'trace'
-%
-% This function depends on FT_PREPARE_DIPOLE_GRID which has the following options:
-% cfg.grid.xgrid (default set in FT_PREPARE_DIPOLE_GRID: cfg.grid.xgrid = 'auto'), documented
-% cfg.grid.ygrid (default set in FT_PREPARE_DIPOLE_GRID: cfg.grid.ygrid = 'auto'), documented
-% cfg.grid.zgrid (default set in FT_PREPARE_DIPOLE_GRID: cfg.grid.zgrid = 'auto'), documented
-% cfg.grid.resolution, documented
-% cfg.grid.pos, documented
-% cfg.grid.dim, documented
-% cfg.grid.inside, documented
-% cfg.grid.outside, documented
-% cfg.mri
-% cfg.smooth
-% cfg.sourceunits
-% cfg.threshold
-% cfg.symmetry
-%
-% This function depends on FT_PREPARE_FREQ_MATRICES which has the following options:
-% cfg.channel (default set in FT_SOURCEANALYSIS: cfg.channel = 'all'), documented
-% cfg.dicsfix
-% cfg.frequency, documented
-% cfg.latency, documented
-% cfg.refchan, documented
-%
-% This function depends on FT_PREPARE_RESAMPLED_DATA which has the following options:
-% cfg.jackknife (default set in FT_SOURCEANALYSIS: cfg.jackknife = 'no'), documented
-% cfg.numbootstrap, documented
-% cfg.numcondition (set in FT_SOURCEANALYSIS: cfg.numcondition = 2)
-% cfg.numpermutation (default set in FT_SOURCEANALYSIS: cfg.numpermutation = 100), documented
-% cfg.numrandomization (default set in FT_SOURCEANALYSIS: cfg.numrandomization = 100), documented
-% cfg.permutation (default set in FT_SOURCEANALYSIS: cfg.permutation = 'no'), documented
-% cfg.pseudovalue (default set in FT_SOURCEANALYSIS: cfg.pseudovalue = 'no'), documented
-% cfg.randomization (default set in FT_SOURCEANALYSIS: cfg.randomization = 'no'), documented
-%
-% This function depends on FT_PREPARE_VOL_SENS which has the following options:
-% cfg.channel, (default set in FT_SOURCEANALYSIS: cfg.channel = 'all'), documented
-% cfg.elec, documented
-% cfg.elecfile, documented
-% cfg.grad, documented
-% cfg.gradfile, documented
-% cfg.hdmfile, documented
-% cfg.order
-% cfg.vol, documented
-%
-% This function depends on FT_PREPARE_LEADFIELD which has the following options:
-% cfg.feedback, (default set in FT_SOURCEANALYSIS: cfg.feedback = 'text'), documented
-% cfg.grid, documented
-% cfg.lbex
-% cfg.normalize (default set in FT_SOURCEANALYSIS), documented
-% cfg.previous
-% cfg.reducerank (default set in FT_SOURCEANALYSIS), documented
-% cfg.sel50p
-% cfg.version
 
 % Copyright (c) 2003-2008, Robert Oostenveld, F.C. Donders Centre
 %
@@ -197,7 +144,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble provenance
 ft_preamble trackconfig
 ft_preamble debug
@@ -287,6 +234,8 @@ if ~istimelock && (strcmp(cfg.method, 'mne') || strcmp(cfg.method, 'rv') || strc
   istimelock = 1;     % from now on the data can be treated as timelocked
   isfreq     = 0;
   iscomp     = 0;
+elseif isfreq && isfield(data, 'labelcmb')
+  data = ft_checkdata(data, 'cmbrepresentation', 'full');
 end
 
 % select only those channels that are present in the data
@@ -311,11 +260,17 @@ if strcmp(cfg.rawtrial,'yes') && isfield(cfg,'grid') && ~isfield(cfg.grid,'filte
 end
 
 if isfreq
-  if ~strcmp(data.dimord, 'chan_freq')          && ...
+  if  ~strcmp(data.dimord, 'chan_freq')          && ...
       ~strcmp(data.dimord, 'chan_freq_time')     && ...
       ~strcmp(data.dimord, 'rpt_chan_freq')      && ...
       ~strcmp(data.dimord, 'rpt_chan_freq_time') && ...
       ~strcmp(data.dimord, 'rpttap_chan_freq')   && ...
+      ~strcmp(data.dimord, 'chancmb_freq')       && ...
+      ~strcmp(data.dimord, 'rpt_chancmb_freq')   && ...
+      ~strcmp(data.dimord, 'rpttap_chancmb_freq')  && ...
+      ~strcmp(data.dimord, 'chan_chan_freq')       && ...
+      ~strcmp(data.dimord, 'rpt_chan_chan_freq')   && ...
+      ~strcmp(data.dimord, 'rpttap_chan_chan_freq')  && ...
       ~strcmp(data.dimord, 'rpttap_chan_freq_time')
     error('dimord of input frequency data is not recognized');
   end
@@ -587,10 +542,23 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc'}))
   end
   
   % get the relevant low level options from the cfg and convert into key-value pairs
-  optarg = ft_cfg2keyval(getfield(cfg, cfg.method));
+  tmpcfg = cfg.(cfg.method);
+  % disable console feedback for the low-level function in case of multiple
+  % repetitions
+  if Nrepetitions > 1
+    tmpcfg.feedback = 'none';
+  end
+  optarg = ft_cfg2keyval(tmpcfg);
   
+  if Nrepetitions > 1
+    ft_progress('init', 'text');
+  end
   for i=1:Nrepetitions
-    fprintf('scanning repetition %d\n', i);
+    
+    if Nrepetitions > 1
+      ft_progress(i/Nrepetitions, 'scanning repetition %d of %d', i, Nrepetitions);
+    end
+    
     if     strcmp(cfg.method, 'dics') && strcmp(submethod, 'dics_power')
       dip(i) = beamformer_dics(grid, sens, vol, [],  squeeze(Cf(i,:,:)), optarg{:});
     elseif strcmp(cfg.method, 'dics') && strcmp(submethod, 'dics_refchan')
@@ -602,6 +570,9 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc'}))
     else
       error(sprintf('method ''%s'' is unsupported for source reconstruction in the frequency domain', cfg.method));
     end
+  end
+  if Nrepetitions > 1
+    ft_progress('close');
   end
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

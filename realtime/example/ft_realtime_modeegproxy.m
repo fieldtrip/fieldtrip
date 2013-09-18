@@ -54,8 +54,6 @@ if ~isfield(cfg, 'target'),             cfg.target = [];                        
 if ~isfield(cfg.target, 'datafile'),    cfg.target.datafile = 'buffer://localhost:1972';  end
 if ~isfield(cfg.target, 'dataformat'),  cfg.target.dataformat = [];                       end % default is to use autodetection of the output format
 
-
-
 % make a connection to the serial port
 fid = fopen(cfg.filename, 'r');
 if fid<0

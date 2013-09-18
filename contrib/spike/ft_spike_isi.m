@@ -49,7 +49,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble callinfo
 ft_preamble trackconfig
 
@@ -74,7 +74,7 @@ cfg = ft_checkopt(cfg,'trials', {'char', 'doublevector', 'logical'});
 cfg = ft_checkopt(cfg,'keeptrials', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'param', 'char', {'gamfit', 'coeffvar', 'lv'});
 
-cfg = ft_checkconfig(cfg, 'allowed', {'param', 'outputunit', 'bins', 'spikechannel', 'latency', 'trials', 'keeptrials'});
+cfg = ft_checkconfig(cfg, 'allowed', {'param', 'outputunit', 'bins', 'spikechannel', 'latency', 'trials', 'keeptrials', 'warning'});
 
 % get the number of trials or change DATA according to cfg.trials
 if  strcmp(cfg.trials,'all')

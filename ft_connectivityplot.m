@@ -42,7 +42,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble provenance
 ft_preamble trackconfig
 ft_preamble debug
@@ -59,6 +59,7 @@ cfg = ft_checkconfig(cfg, 'renamed', {'zparam', 'parameter'});
 cfg.channel   = ft_getopt(cfg, 'channel',   'all');
 cfg.parameter = ft_getopt(cfg, 'parameter', 'cohspctrm');
 cfg.zlim      = ft_getopt(cfg, 'zlim',       []);
+cfg.xlim      = ft_getopt(cfg, 'xlim',       [varargin{1}.freq(1) varargin{1}.freq(end)]);
 cfg.color     = ft_getopt(cfg, 'color',     'brgkywrgbkywrgbkywrgbkyw');
 
 % make the function recursive if numel(varargin)>1
@@ -104,7 +105,7 @@ if ~isfield(data, cfg.parameter)
 end
 
 cfg.channel = ft_channelselection(cfg.channel, data.label);
-data        = ft_selectdata(data, 'channel', cfg.channel);
+data        = ft_selectdata(data, 'channel', cfg.channel, 'foilim', cfg.xlim);
 
 dat   = data.(cfg.parameter);
 nchan = numel(data.label);
@@ -115,7 +116,8 @@ if isempty(cfg.zlim)
 end
 
 if (isfield(cfg, 'holdfig') && cfg.holdfig==0) || ~isfield(cfg, 'holdfig')
-  h = figure;hold on;
+  cla;
+  hold on;
 end
 
 for k = 1:nchan

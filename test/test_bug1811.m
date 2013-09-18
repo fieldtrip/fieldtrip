@@ -1,7 +1,10 @@
 function test_bug1811
 
-%loading meg + eyelink channels data appended with function_handle
-%variable
+% TEST test_bug1811
+% TEST ft_analysisprotocol
+
+% loading meg + eyelink channels data appended with function_handle variable
+cd(dccnfilename('/home/common/matlab/fieldtrip/data/test'))
 load bug1811.mat
  
 cfg              =[];

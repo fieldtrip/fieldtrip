@@ -70,10 +70,10 @@ while ~dataok && nits < 10
     yv=yv-mean(yv);
     
     dataok = ~any(isnan(x(:))) && ~any(isnan(xv(:)));
+    nits=nits+1;
 end
 if nits==10
-    disp('VG Error: Increase training set set');
-    return
+    error('VG Error: Increase training set size');
 end
 
 %----------------

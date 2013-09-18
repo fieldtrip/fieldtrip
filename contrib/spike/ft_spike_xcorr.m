@@ -76,7 +76,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble callinfo
 ft_preamble trackconfig
 
@@ -107,7 +107,7 @@ cfg = ft_checkopt(cfg, 'maxlag', 'doublescalar');
 cfg = ft_checkopt(cfg, 'binsize', 'doublescalar');
 cfg = ft_checkopt(cfg, 'outputunit', 'char', {'proportion', 'center', 'raw'});
 
-cfg = ft_checkconfig(cfg, 'allowed', {'latency', 'trials', 'keeptrials', 'method', 'channelcmb', 'vartriallen', 'debias', 'maxlag', 'binsize', 'outputunit'});
+cfg = ft_checkconfig(cfg, 'allowed', {'latency', 'trials', 'keeptrials', 'method', 'channelcmb', 'vartriallen', 'debias', 'maxlag', 'binsize', 'outputunit', 'warning'});
 
 doShiftPredictor  = strcmp(cfg.method, 'shiftpredictor'); % shift predictor
 

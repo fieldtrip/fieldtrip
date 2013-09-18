@@ -72,7 +72,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble callinfo
 ft_preamble trackconfig
 
@@ -102,7 +102,7 @@ cfg = ft_checkopt(cfg, 'winfuncopt', {'cell', 'double', 'empty'});
 cfg = ft_checkopt(cfg, 'fsample', 'double');
 if strcmp(class(cfg.winfunc), 'function_handle'), cfg.winfunc = func2str(cfg.winfunc); end
 
-cfg = ft_checkconfig(cfg, 'allowed', {'outputunit', 'spikechannel', 'latency', 'trials', 'vartriallen', 'keeptrials', 'timwin', 'winfunc', 'winfuncopt', 'fsample'});
+cfg = ft_checkconfig(cfg, 'allowed', {'outputunit', 'spikechannel', 'latency', 'trials', 'vartriallen', 'keeptrials', 'timwin', 'winfunc', 'winfuncopt', 'fsample', 'warning'});
 
 % check input data structure
 data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'fsample', cfg.fsample);

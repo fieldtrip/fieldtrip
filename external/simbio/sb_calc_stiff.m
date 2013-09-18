@@ -67,6 +67,21 @@ end
 
 mele = int32(mele);
 elem = int32(elem);
+
+% check whether the nodes have right orientation
+
+if isfield(vol,'tet')
+    if ~sb_test_ori(node,elem(1:4,:)')
+        error('Elements have wrong orientation, consider exchanging node 3 and 4');
+        return;
+    end
+elseif isfield(vol,'hex')
+    if ~sb_test_ori(node,elem')
+        error('Elements have wrong orientation or are degenerated');
+        return
+    end
+end
+
 try
     [diinsy,cols,sysmat] = calc_stiff_matrix_val(node,elem,cond,mele);
 catch err

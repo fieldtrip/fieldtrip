@@ -20,12 +20,20 @@ function [dipout] = dipole_fit(dip, sens, vol, dat, varargin)
 %   'normalize'       = 'no', 'yes' or 'column'
 %   'normalizeparam'  = parameter for depth normalization (default = 0.5)
 %
+% The constraints on the source model are specified in a structure
+%   constr.symmetry   = boolean, dipole positions are symmetrically coupled to each other
+%   constr.fixedori   = boolean, keep dipole orientation fixed over whole data window
+%   constr.rigidbody  = boolean, keep relative position of multiple dipoles fixed
+%   constr.mirror     = vector, used for symmetric dipole models
+%   constr.reduce     = vector, used for symmetric dipole models
+%   constr.expand     = vector, used for symmetric dipole models
+%
 % The maximum likelihood estimation implements
 %   Lutkenhoner B. "Dipole source localization by means of maximum
 %   likelihood estimation I. Theory and simulations" Electroencephalogr Clin
 %   Neurophysiol. 1998 Apr;106(4):314-21.
 
-% Copyright (C) 2003-2008, Robert Oostenveld
+% Copyright (C) 2003-2013, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -74,16 +82,25 @@ else
   % this is dealt with below
 end
 
-constr         = keyval('constr',         varargin); % default is not to have constraints
-metric         = keyval('metric',         varargin); if isempty(metric),        metric = 'rv';                end
-checkinside    = keyval('checkinside',    varargin); if isempty(checkinside),   checkinside = 0;              end
-display        = keyval('display',        varargin); if isempty(display),       display = 'iter';             end
-optimfun       = keyval('optimfun',       varargin); if isa(optimfun, 'char'),  optimfun = str2fun(optimfun); end
-maxiter        = keyval('maxiter',        varargin);
-reducerank     = keyval('reducerank',     varargin); % for leadfield computation
-normalize      = keyval('normalize' ,     varargin); % for leadfield computation
-normalizeparam = keyval('normalizeparam', varargin); % for leadfield computation
-weight         = keyval('weight',         varargin); % for maximum likelihood estimation
+constr         = ft_getopt(varargin, 'constr'         ); % default is not to have constraints
+metric         = ft_getopt(varargin, 'metric',    'rv');
+checkinside    = ft_getopt(varargin, 'checkinside', false);
+display        = ft_getopt(varargin, 'display', 'iter');
+optimfun       = ft_getopt(varargin, 'optimfun'       ); if isa(optimfun, 'char'),  optimfun = str2fun(optimfun); end
+maxiter        = ft_getopt(varargin, 'maxiter'        );
+reducerank     = ft_getopt(varargin, 'reducerank'     ); % for leadfield computation
+normalize      = ft_getopt(varargin, 'normalize'      ); % for leadfield computation
+normalizeparam = ft_getopt(varargin, 'normalizeparam' ); % for leadfield computation
+weight         = ft_getopt(varargin, 'weight'         ); % for maximum likelihood estimation
+
+if isfield(constr, 'mirror')
+  % for backward compatibility
+  constr.symmetry = true;
+end
+constr.symmetry   = ft_getopt(constr, 'symmetry', false);
+constr.fixedori   = ft_getopt(constr, 'fixedori', false);
+constr.rigidbody  = ft_getopt(constr, 'rigidbody', false);
+constr.sequential = ft_getopt(constr, 'sequential', false);
 
 if isempty(optimfun)
   % determine whether the Matlab Optimization toolbox is available and can be used
@@ -118,26 +135,8 @@ end
 % ensure correct dipole position and moment specification
 dip = fixdipole(dip);
 
-% reformat the position parameters in case of multiple dipoles, this
-% should result in the matrix changing from [x1 y1 z1; x2 y2 z2] to
-% [x1 y1 z1 x2 y2 z2] for the constraints to work
-numdip = size(dip.pos, 1);
-param  = dip.pos';
-param  = param(:)';
-
-% add the orientation to the nonlinear parameters
-if isfield(constr, 'fixedori') && constr.fixedori
-  for i=1:numdip
-    % add the orientation to the list of parameters
-    [th, phi, r] = cart2sph(dip.mom(1,i), dip.mom(2,i), dip.mom(3,i));
-    param = [param th phi];
-  end
-end
-
-% reduce the number of parameters to be fitted according to the constraints
-if isfield(constr, 'mirror')
-  param = param(constr.reduce);
-end
+% convert the dipole model parameters into the non-linear parameter vector that will be optimized
+[param, constr] = dipolemodel2param(dip.pos, dip.mom, constr);
 
 % set the parameters for the optimization function
 if isequal(optimfun, @fminunc)
@@ -165,32 +164,17 @@ if exitflag==0
   error('Maximum number of iterations exceeded before reaching the minimum, please try with another initial guess.')
 end
 
-% do linear optimization of dipole moment parameters
+% do the linear optimization of the dipole moment parameters
+% the error is not interesting any more, only the dipole moment is relevant
 [err, mom] = dipfit_error(param, dat, sens, vol, constr, metric, checkinside, reducerank, normalize, normalizeparam, weight);
 
-% expand the number of parameters according to the constraints
-if isfield(constr, 'mirror')
-  param = constr.mirror .* param(constr.expand);
-end
-
-% get the dipole position and orientation
-if isfield(constr, 'fixedori') && constr.fixedori
-  numdip = numel(param)/5;
-  ori = zeros(3,numdip);
-  for i=1:numdip
-    th  = param(end-(2*i)+1);
-    phi = param(end-(2*i)+2);
-    [ori(1,i), ori(2,i), ori(3,i)] = sph2cart(th, phi, 1);
-  end
-  pos = reshape(param(1:(numdip*3)), 3, numdip)';
-else
-  numdip = numel(param)/3;
-  pos = reshape(param, 3, numdip)';
-end
+% convert the non-linear parameter vector into the dipole model parameters
+[pos, ori] = param2dipolemodel(param, constr);
 
 % return the optimal dipole parameters
 dipout.pos = pos;
-if isfield(constr, 'fixedori') && constr.fixedori
+% return the optimal dipole moment and (optionally) the orientation
+if ~isempty(ori)
   dipout.mom  = ori;  % dipole orientation as vector
   dipout.ampl = mom;  % dipole strength
 else
@@ -199,6 +183,77 @@ end
 
 % ensure correct dipole position and moment specification
 dipout = fixdipole(dipout);
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% DIPOLEMODEL2PARAM takes the initial guess for the diople model and converts it
+% to a set of parameters that needs to be optimized
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [param, constr] = dipolemodel2param(pos, ori, constr)
+
+% reformat the position parameters in case of multiple dipoles, this
+% should result in the matrix changing from [x1 y1 z1; x2 y2 z2] to
+% [x1 y1 z1 x2 y2 z2] for the constraints to work
+param = reshape(pos', 1, numel(pos));
+
+% add the orientation to the nonlinear parameters
+if constr.fixedori
+  for i=1:numdip
+    % add the orientation to the list of parameters
+    [th, phi, r] = cart2sph(ori(1,i), ori(2,i), ori(3,i));
+    param = [param th phi];
+  end
+end
+
+if constr.symmetry && constr.rigidbody
+  error('simultaneous symmetry and rigidbody constraints are not supported')
+  
+elseif constr.symmetry
+  % reduce the number of parameters to be fitted according to the constraints
+  % select a subset, the other sources will be re-added by the const.mirror field
+  param = param(constr.reduce);
+  
+elseif constr.rigidbody
+  constr.coilpos = param;    % store the head localizer coil positions
+  param = [0 0 0 0 0 0];     % start with an initial translation and rotation of zero
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PARAM2DIPOLEMODEL takes the parameters and constraints and converts them into a
+% diople model for which the leadfield and residual error can be computed
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [pos, ori] = param2dipolemodel(param, constr)
+
+if constr.symmetry && constr.rigidbody
+  error('simultaneous symmetry and rigidbody constraints are not supported')
+  
+elseif constr.symmetry
+  param  = constr.mirror .* param(constr.expand);
+  
+elseif constr.rigidbody
+  numdip    = numel(constr.coilpos)/3;
+  pos       = reshape(constr.coilpos, 3, numdip); % convert from vector into 3xN matrix
+  pos(4,:)  = 1;
+  transform = rigidbody(param);                   % this is a 4x4 homogenous transformation matrix
+  pos       = transform * pos;                    % apply the homogenous transformation matrix
+  param     = reshape(pos(1:3,:), 1, 3*numdip);
+end
+
+if constr.fixedori
+  numdip = numel(param)/5;
+  ori = zeros(3,numdip);
+  for i=1:numdip
+    th  = param(end-(2*i)+1);
+    phi = param(end-(2*i)+2);
+    [ori(1,i), ori(2,i), ori(3,i)] = sph2cart(th, phi, 1);
+  end
+  pos = reshape(param(1:(numdip*3)), 3, numdip)'; % convert into a Nx3 matrix
+else
+  numdip = numel(param)/3;
+  pos = reshape(param, 3, numdip)'; % convert into a Nx3 matrix
+  ori = [];
+end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % DIPFIT_ERROR computes the error between measured and model data
@@ -214,25 +269,8 @@ if ~isempty(get(0, 'currentfigure')) && strcmp(get(gcf, 'tag'), 'stop')
   error('USER ABORT');
 end;
 
-% expand the number of parameters according to the constraints
-if isfield(constr, 'mirror')
-  param = constr.mirror .* param(constr.expand);
-end
-
-% get the dipole positions and optionally also the orientation
-if isfield(constr, 'fixedori') && constr.fixedori
-  numdip = numel(param)/5;
-  ori = zeros(3,numdip);
-  for i=1:numdip
-    th  = param(end-(2*i)+1);
-    phi = param(end-(2*i)+2);
-    [ori(1,i), ori(2,i), ori(3,i)] = sph2cart(th, phi, 1);
-  end
-  pos = reshape(param(1:(numdip*3)), 3, numdip)';
-else
-  numdip = numel(param)/3;
-  pos = reshape(param, 3, numdip)';
-end
+% convert the non-linear parameter vector into the dipole model parameters
+[pos, ori] = param2dipolemodel(param, constr);
 
 % check whether the dipole is inside the source compartment
 if checkinside
@@ -242,17 +280,35 @@ if checkinside
   end
 end
 
+% % FIXME: not yet implemented, rigid body constraint
+% if isfield(constr, 'rigidbody') 
+%   param = []; % something to obtain [Tx Ty Tz Rx Ry Rz]
+%   H = translate(param(1:3)); % rotation before translation
+%   H = rotate(param(4:6));
+%   pos = ft_warp_apply(pos,H);
+%   %lf = ft_compute_leadfield(pos1, sens, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
+% end
+
+% % FIXME: not yet implemented, one-to-one mapping constraint
+% if isfield(constr, 'onetoone') 
+%   param = []; % something to enforce each dipole to each coil identity
+% end
+
 % construct the leadfield matrix for all dipoles
 lf = ft_compute_leadfield(pos, sens, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
-if isfield(constr, 'fixedori') && constr.fixedori
+if ~isempty(ori)
   lf = lf * ori;
 end
 
 % compute the optimal dipole moment and the model error
 if ~isempty(weight)
   % maximum likelihood estimation using the weigth matrix
-  mom = pinv(lf'*weight*lf)*lf'*weight*dat;  % Lutkenhoner equation 5
-  dif = dat - lf*mom;
+  if constr.sequential
+    error('not supported');
+  else
+    mom = pinv(lf'*weight*lf)*lf'*weight*dat;  % Lutkenhoner equation 5
+    dif = dat - lf*mom;
+  end
   % compute the generalized goodness-of-fit measure
   switch metric
     case 'rv' % relative residual variance
@@ -267,7 +323,16 @@ if ~isempty(weight)
   end
 else
   % ordinary least squares, this is the same as MLE with weight=eye(nchans,nchans)
-  mom = pinv(lf)*dat;
+  if constr.sequential
+    numdip = numel(pos)/3;
+    mom = zeros(3*numdip, numdip);
+    for i=1:numdip
+      sel = (1:3)+3*(i-1);  % 1:3 for the first dipole, 4:6 for the second dipole, ...
+      mom(sel,i) = pinv(lf(:,sel))*dat(:,i);
+    end
+  else
+    mom = pinv(lf)*dat;
+  end
   dif = dat - lf*mom;
   % compute the ordinary goodness-of-fit measures
   switch metric

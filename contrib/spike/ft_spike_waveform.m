@@ -43,7 +43,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble callinfo
 ft_preamble trackconfig
 
@@ -71,7 +71,7 @@ cfg = ft_checkopt(cfg, 'normalize','char', {'yes', 'no'});
 cfg = ft_checkopt(cfg, 'spikechannel',{'cell', 'char', 'double'});
 cfg = ft_checkopt(cfg, 'fsample', 'double');
 
-cfg = ft_checkconfig(cfg, 'allowed', {'align', 'rejectclippedspikes', 'rejectonpeak', 'interpolate', 'normalize', 'spikechannel', 'fsample'});
+cfg = ft_checkconfig(cfg, 'allowed', {'align', 'rejectclippedspikes', 'rejectonpeak', 'interpolate', 'normalize', 'spikechannel', 'fsample', 'warning'});
 
 spike = ft_checkdata(spike, 'datatype', 'spike', 'feedback', 'yes');
 

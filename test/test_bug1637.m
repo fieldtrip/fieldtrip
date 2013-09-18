@@ -1,13 +1,13 @@
 function test_bug1637
+
+% TEST test_bug1637
+% TEST megplanar_sincos channelconnectivity ft_prepare_neighbours ft_channelselection
+
 % this function checks whether megplanar_sincos relies on a fixed channel
 % order or whether this can be totally mixed up (it should be able to deal
 % with that!)
 %
 % http://bugzilla.fcdonders.nl/show_bug.cgi?id=1637
-
-% TEST test_bug1637
-% TEST megplanar_sincos channelconnectivity ft_prepare_neighbours ft_channelselection
-
 
 % load neighbours
 cfg = [];
@@ -15,8 +15,9 @@ cfg.method = 'template';
 cfg.template = 'CTF275_neighb';
 neighbours = ft_prepare_neighbours(cfg);
 
-load test_bug1637_hdr;
-load test_bug1637_grad;
+cd(dccnfilename('/home/common/matlab/fieldtrip/data/test'))
+load bug1637_hdr.mat
+load bug1637_grad.mat
 
 d = pwd;
 ftPath = fileparts(mfilename('fullpath')); % get path, strip away 'ft_defaults'
@@ -126,3 +127,4 @@ cd(d)
 if errored
   error('channelorder matters whereas it should not!');
 end
+

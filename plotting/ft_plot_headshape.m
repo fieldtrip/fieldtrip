@@ -13,6 +13,7 @@ function hs = ft_plot_headshape(headshape,varargin)
 %
 % Optional arguments should come in key-value pairs and can include
 %   'vertexcolor' = color specification as [r g b] values or a string, for example 'brain', 'cortex', 'skin', 'red', 'r'
+%   'vertexsize'  = scalar value specifying the size of the vertices (default = 10)
 %   'fidcolor'    = color specification as [r g b] values or a string, for example 'brain', 'cortex', 'skin', 'red', 'r'
 %   'fidmarker'   = ['.', '*', '+',  ...]
 %   'fidlabel'    = ['yes', 'no', 1, 0, 'true', 'false']
@@ -53,6 +54,7 @@ end
 
 % get the optional input arguments
 vertexcolor = ft_getopt(varargin, 'vertexcolor',  'r');
+vertexsize  = ft_getopt(varargin, 'vertexsize',   10);
 facecolor   = ft_getopt(varargin, 'facecolor',    'none');
 edgecolor   = ft_getopt(varargin, 'edgecolor',    'none');
 fidcolor    = ft_getopt(varargin, 'fidcolor',     'g');
@@ -73,7 +75,7 @@ pnt = headshape.pnt;
 bnd.pnt = pnt;
 bnd.tri = [];
 
-ft_plot_mesh(bnd, 'vertexcolor',vertexcolor,'vertexsize',10);
+ft_plot_mesh(bnd, 'vertexcolor',vertexcolor,'vertexsize',vertexsize);
 
 if isfield(headshape, 'fid')
   fid = headshape.fid;

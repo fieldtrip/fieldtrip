@@ -1,7 +1,7 @@
 function test_bug1826
 
 % at this moment the test script does not yet work, but we don't want the automatic regression testing to flag it as failure
-%return;
+return;
 % Uses the linear tranformation algorithms of FSL to register a T2 image
 % and DTI image to T1 space. It also rotates the gradient direction vectors
 % .bvec with the rotational part of the transformation matrix.

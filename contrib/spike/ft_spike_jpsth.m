@@ -44,7 +44,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble callinfo
 ft_preamble trackconfig
 
@@ -67,7 +67,7 @@ cfg = ft_checkopt(cfg,'normalization', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'channelcmb', {'char', 'cell'});
 
 % reject configuration inputs that are not processed
-cfg = ft_checkconfig(cfg, 'allowed', {'latency', 'trials', 'keeptrials', 'method', 'normalization', 'channelcmb'});
+cfg = ft_checkconfig(cfg, 'allowed', {'latency', 'trials', 'keeptrials', 'method', 'normalization', 'channelcmb', 'warning'});
 
 % get the number of trials or change DATA according to cfg.trials
 if  strcmp(cfg.trials,'all')

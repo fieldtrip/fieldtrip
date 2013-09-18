@@ -51,7 +51,7 @@ ffth = get(h,'parent');
 fftopt = getappdata(ffth, 'fftopt');
 
 % open chansel dialog
-chansel = select_channel_list(fftopt.opt.freq.label, fftopt.chansel, 'select channels for viewing power');
+chansel = select_channel_list(fftopt.freqdata.label, fftopt.chansel, 'select channels for viewing power');
 
 % output data
 fftopt.chansel = chansel;

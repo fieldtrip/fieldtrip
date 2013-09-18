@@ -42,8 +42,7 @@ function [data] = ft_megplanar(cfg, data)
 % The following cfg fields are optional:
 %   cfg.feedback
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat
@@ -52,21 +51,6 @@ function [data] = ft_megplanar(cfg, data)
 % input/output structure.
 %
 % See also FT_COMBINEPLANAR, FT_NEIGHBOURSELECTION
-
-% This function depends on FT_PREPARE_BRAIN_SURFACE which has the following options:
-% cfg.headshape  (default set in FT_MEGPLANAR: cfg.headshape = 'headmodel'), documented
-% cfg.inwardshift (default set in FT_MEGPLANAR: cfg.inwardshift = 2.5), documented
-% cfg.spheremesh (default set in FT_MEGPLANAR: cfg.spheremesh = 642), documented
-%
-% This function depends on FT_PREPARE_VOL_SENS which has the following options:
-% cfg.channel
-% cfg.elec
-% cfg.elecfile
-% cfg.grad
-% cfg.gradfile
-% cfg.hdmfile, documented
-% cfg.order
-% cfg.vol, documented
 
 % Copyright (C) 2004, Robert Oostenveld
 %
@@ -92,7 +76,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble provenance
 ft_preamble trackconfig
 ft_preamble debug
@@ -244,11 +228,6 @@ if strcmp(cfg.planarmethod, 'sourceproject')
   %   end
   %
 else
-  % generically call megplanar_orig megplanar_sincos or megplanar_fitplante
-  fun = ['megplanar_'  cfg.planarmethod];
-  if ~exist(fun, 'file')
-    error('unknown method for computation of planar gradient');
-  end
   
   sens = ft_convert_units(data.grad);
   if any(isnan(sens.chanpos(:)))
@@ -279,8 +258,32 @@ else
   
   fprintf('minimum distance between neighbours is %6.2f %s\n', min(distance(distance~=0)), sens.unit);
   fprintf('maximum distance between gradiometers is %6.2f %s\n', max(distance(distance~=0)), sens.unit);
-    
-  planarmontage = eval([fun '(cfg, data.grad)']);
+  
+  % The following does not work when running in deployed mode because the
+  % private functions that compute the planar montage are not recognized as
+  % such and won't be compiled, unless explicitly specified.
+  
+  % % generically call megplanar_orig megplanar_sincos or megplanar_fitplane
+  %fun = ['megplanar_'  cfg.planarmethod];
+  %if ~exist(fun, 'file')
+  %  error('unknown method for computation of planar gradient');
+  %end
+  %planarmontage = eval([fun '(cfg, data.grad)']);
+  
+  switch cfg.planarmethod
+    case 'sincos'
+      planarmontage = megplanar_sincos(cfg, data.grad);
+    case 'orig'
+      planarmontage = megplanar_orig(cfg, data.grad);
+    case 'fitplane'
+      planarmontage = megplanar_fitplane(cfg, data.grad);
+    otherwise
+      fun = ['megplanar_' cfg.planarmethod];
+      if ~exist(fun, 'file')
+        error('unknown method for computation of planar gradient');
+      end
+      planarmontage = eval([fun '(cfg, data.grad)']);
+  end
   
   % apply the linear transformation to the data
   interp = ft_apply_montage(data, planarmontage, 'keepunused', 'yes', 'feedback', cfg.feedback);
@@ -298,7 +301,7 @@ else
   % add the chanpos info back into the gradiometer description
   tmplabel = interp.grad.label;
   for k = 1:numel(tmplabel)
-    if strcmp(tmplabel{k}(end-2:end), '_dV') || strcmp(tmplabel{k}(end-2:end), '_dH')
+    if ~isempty(strfind(tmplabel{k}, '_dV')) || ~isempty(strfind(tmplabel{k}, '_dH'))
       tmplabel{k} = tmplabel{k}(1:end-3);
     end
   end

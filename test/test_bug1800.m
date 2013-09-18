@@ -1,5 +1,9 @@
 function test_bug1800
-% reported by Giorgos Michalareas
+
+% TEST test_bug1800
+% TEST ft_defaults ft_selectdata ft_topoplotER
+
+% this was reported by Giorgos Michalareas
 %
 % The data spans from roughly -4 to 4 sec.
 % When the entire time of the data is used for the plot then the ft_topoplotER
@@ -9,12 +13,10 @@ function test_bug1800
 %
 % http://bugzilla.fcdonders.nl/show_bug.cgi?id=1800
 
-% TEST test_bug1800
-% TEST ft_defaults ft_selectdata ft_topoplotER
+% Load the timelocked data
+cd(dccnfilename('/home/common/matlab/fieldtrip/data/test'))
+load bug1800 tmpavg1
 
-%==================================================================
-
-load test_bug1800 tmpavg1;   % Load the timelocked data
 tmpavg2=ft_selectdata(tmpavg1,'avgovertime','yes');  % average timelocked data across all time points
 
 % Error  case - Plot the topoplot for timelocked data
@@ -34,6 +36,4 @@ ft_topoplotER(cfg,tmpavg1);
 cfg=[];
 cfg.xlim=[tmpavg1.time(2) tmpavg1.time(end-1)];
 ft_topoplotER(cfg,tmpavg1);
-%==================================================================
 
-end

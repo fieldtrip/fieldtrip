@@ -82,7 +82,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble provenance
 ft_preamble trackconfig
 ft_preamble debug
@@ -157,7 +157,7 @@ if roi2mask
 
     sel = [];
     for i = 1:length(cfg.roi)
-      sel = [sel; strmatch(cfg.roi{i}, atlas.descr.name, 'exact')];
+      sel = [sel; find(strcmp(cfg.roi{i}, atlas.descr.name))];
     end
 
     fprintf('found %d matching anatomical labels\n', length(sel));

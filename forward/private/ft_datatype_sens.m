@@ -30,6 +30,12 @@ function [sens] = ft_datatype_sens(sens, varargin)
 %
 % Revision history:
 %
+% (upcoming) The default units for all sensor descriptions will be changed to
+%  SI units, i.e. T, V and m. It will be possible to convert the amplitude and
+%  distance units (e.g. from T to fT and from m to mm).
+%  It will be possible to express planar and axial gradiometer channels in units
+%  of amplitude or in units of amplitude/distance (i.e. gradient).
+%
 % (2011v2/latest) The chantype and chanunit have been added for MEG.
 %
 % (2011v1) To facilitate determining the position of channels (e.g. for plotting)
@@ -56,7 +62,7 @@ function [sens] = ft_datatype_sens(sens, varargin)
 % See also FT_READ_SENS, FT_SENSTYPE, FT_CHANTYPE, FT_APPLY_MONTAGE, CTF2GRAD, FIF2GRAD,
 % BTI2GRAD, YOKOGAWA2GRAD, ITAB2GRAD
 
-% Copyright (C) 2011, Robert Oostenveld & Jan-Mathijs Schoffelen
+% Copyright (C) 2011-2013, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -76,19 +82,29 @@ function [sens] = ft_datatype_sens(sens, varargin)
 %
 % $Id$
 
+% undocumented options for the upcoming (2013?) format
+%   amplitude     = string, can be 'T' or 'fT'
+%   distance      = string, can be 'm', 'cm' or 'mm'
+%   scaling       = string, can be 'amplitude' or 'amplitude/distance'
+
 % these are for remembering the type on subsequent calls with the same input arguments
 persistent previous_argin previous_argout
 
 current_argin = [{sens} varargin];
 if isequal(current_argin, previous_argin)
-  % don't do the whole cheking again, but return the previous output from cache 
+  % don't do the whole cheking again, but return the previous output from cache
   sens = previous_argout{1};
+  return
 end
 
 % get the optional input arguments, which should be specified as key-value pairs
-version = ft_getopt(varargin, 'version', 'latest');
+version   = ft_getopt(varargin, 'version', 'latest');
+amplitude = ft_getopt(varargin, 'amplitude');
+distance  = ft_getopt(varargin, 'distance');
+scaling   = ft_getopt(varargin, 'scaling');
 
 if strcmp(version, 'latest')
+  % NOTE TO SELF: once finalized, the code for 2011v2 and 2013 has to be merged into a single latest version
   version = '2011v2';
 end
 
@@ -99,6 +115,9 @@ end
 switch version
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case '2011v2'
+    if ~isempty(amplitude) || ~isempty(distance) || ~isempty(scaling)
+      warning('amplitude, distance and scaling are not supported for version "%s"', version);
+    end
     
     % This speeds up subsequent calls to ft_senstype and channelposition.
     % However, if it is not more precise than MEG or EEG, don't keep it in
@@ -182,15 +201,112 @@ switch version
         isfield(sens, 'tra') && isfield(sens, 'coilpos') && size(sens.tra,2)~=size(sens.coilpos,1) || ...
         isfield(sens, 'tra') && isfield(sens, 'coilori') && size(sens.tra,2)~=size(sens.coilori,1) || ...
         isfield(sens, 'chanpos') && size(sens.chanpos,1)~=length(sens.label) || ...
-        isfield(sens, 'chanori') && size(sens.chanori,1)~=length(sens.label) 
+        isfield(sens, 'chanori') && size(sens.chanori,1)~=length(sens.label)
       error('inconsistent number of channels in sensor description');
     end
-
+    
     if ismeg
       % ensure that the magnetometer/gradiometer balancing is specified
       if ~isfield(sens, 'balance') || ~isfield(sens.balance, 'current')
         sens.balance.current = 'none';
       end
+    end
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  case 'upcoming' % this is under development and expected to become the standard in 2013
+    
+    % update it to the latest standard version
+    sens = ft_datatype_sens(sens, 'version', '2011v2');
+    
+    % perform some sanity checks
+    if ~ft_senstype(sens, 'meg')
+      error('unsupported type of gradiometer array "%s"', ft_senstype(sens));
+    end
+    
+    if ~any(strcmp(amplitude, {'T' 'mT' 'uT' 'nT' 'pT' 'fT'}))
+      error('unsupported unit of amplitude "%s"', amplitude);
+    end
+    
+    if ~any(strcmp(distance, {'m' 'dm' 'cm' 'mm'}))
+      error('unsupported unit of distance "%s"', distance);
+    end
+    
+    sel_m  = ~cellfun(@isempty, regexp(sens.chanunit, '/m$'));
+    sel_dm = ~cellfun(@isempty, regexp(sens.chanunit, '/dm$'));
+    sel_cm = ~cellfun(@isempty, regexp(sens.chanunit, '/cm$'));
+    sel_mm = ~cellfun(@isempty, regexp(sens.chanunit, '/mm$'));
+    
+    if     strcmp(sens.unit, 'm') && (any(sel_dm) || any(sel_cm) || any(sel_mm))
+      error('inconsistent units in input gradiometer');
+    elseif strcmp(sens.unit, 'dm') && (any(sel_m) || any(sel_cm) || any(sel_mm))
+      error('inconsistent units in input gradiometer');
+    elseif strcmp(sens.unit, 'cm') && (any(sel_m) || any(sel_dm) || any(sel_mm))
+      error('inconsistent units in input gradiometer');
+    elseif strcmp(sens.unit, 'mm') && (any(sel_m) || any(sel_dm) || any(sel_cm))
+      error('inconsistent units in input gradiometer');
+    end
+    
+    % update the units of distance
+    sens = ft_convert_units(sens, distance);
+    
+    % update the units of amplitude
+    nchan = length(sens.label);
+    for i=1:nchan
+      if ~isempty(regexp(sens.chanunit{i}, ['/' distance '$'], 'once'))
+        % this channel is expressed as amplitude per distance
+        sens.tra(i,:)    = sens.tra(i,:) * scalingfactor(sens.chanunit{i}, [amplitude '/' distance]);
+        sens.chanunit{i} = [amplitude '/' distance];
+      elseif ~isempty(regexp(sens.chanunit{i}, 'T$', 'once'))
+        % this channel is expressed as amplitude
+        sens.tra(i,:)    = sens.tra(i,:) * scalingfactor(sens.chanunit{i}, amplitude);
+        sens.chanunit{i} = amplitude;
+      else
+        error('unexpected channel unit "%s" in channel %d', i, sens.chanunit{i});
+      end
+    end
+    
+    % update the gradiometer scaling
+    if strcmp(scaling, 'amplitude')
+      for i=1:nchan
+        if strcmp(sens.chanunit{i}, [amplitude '/' distance])
+          % this channel is expressed as amplitude per distance
+          coil = find(abs(sens.tra(i,:))~=0);
+          if length(coil)~=2
+            error('unexpected number of coils contributing to channel %d', i);
+          end
+          baseline = norm(sens.coilpos(coil(1),:) - sens.coilpos(coil(2),:));
+          sens.tra(i,:)    = sens.tra(i,:)*baseline;  % scale with the baseline distance
+          sens.chanunit{i} = amplitude;
+        elseif strcmp(sens.chanunit{i}, amplitude)
+          % no conversion needed
+        else
+          error('unexpected channel unit "%s" in channel %d', i, sens.chanunit{i});
+        end % if
+      end % for
+      
+    elseif strcmp(scaling, 'amplitude/distance')
+      for i=1:nchan
+        if strcmp(sens.chanunit{i}, amplitude)
+          % this channel is expressed as amplitude
+          coil = find(abs(sens.tra(i,:))~=0);
+          if length(coil)==1
+            % this is a magnetometer channel, no conversion needed
+            continue
+          elseif length(coil)~=2
+            error('unexpected number of coils (%d) contributing to channel %s (%d)', length(coil), sens.label{i}, i);
+          end
+          baseline = norm(sens.coilpos(coil(1),:) - sens.coilpos(coil(2),:));
+          sens.tra(i,:)    = sens.tra(i,:)/baseline; % scale with the baseline distance
+          sens.chanunit{i} = [amplitude '/' distance];
+        elseif strcmp(sens.chanunit{i}, [amplitude '/' distance])
+          % no conversion needed
+        else
+          error('unexpected channel unit "%s" in channel %d', i, sens.chanunit{i});
+        end % if
+      end % for
+      
+    else
+      error('incorrect specification of gradiometer scaling');
     end
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -217,4 +333,3 @@ fn = sort(fieldnames(a));
 for i=1:numel(fn)
   b.(fn{i}) = a.(fn{i});
 end
-

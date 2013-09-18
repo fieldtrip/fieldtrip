@@ -10,7 +10,7 @@ while isfield(sens, 'balance') && isfield(sens.balance, 'current') && ~strcmp(se
 
   if length(indx)==1,
     % undo the synthetic gradient balancing
-    fprintf('undoing the %s balancing\n', sens.balance.current);
+    fprintf('undoing the %s balancing for the gradiometer definition\n', sens.balance.current);
 
     % if componentanalysis was followed by rejectcomponent, the balancing matrix is rank deficient
     % leading to problems in the correct allocation of the coils to the channels 
@@ -37,7 +37,7 @@ while isfield(sens, 'balance') && isfield(sens.balance, 'current') && ~strcmp(se
     sens = ft_apply_montage(sens, sens.balance.(sens.balance.current), 'inverse', 'yes', 'keepunused', 'yes', 'warning', 'no');
     
   else
-    warning('cannot undo %s balancing\n', sens.balance.current);
+    warning('cannot undo %s balancing in the gradiometer definition\n', sens.balance.current);
     break
   end
 end

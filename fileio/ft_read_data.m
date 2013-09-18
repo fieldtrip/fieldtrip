@@ -635,7 +635,7 @@ switch dataformat
     dimord = 'chans_samples_trials';
     
   case 'egi_sbin'
-    if mod(hdr.orig.header_array(1),2)==0,
+    if (bitand(hdr.orig.header_array(1),1) == 0) && ~((hdr.orig.header_array(14)==0) && (hdr.orig.header_array(15) > 1)),
       %unsegmented data contains only 1 trial, don't read the whole file
       dat = read_sbin_data(filename, hdr, begsample, endsample, chanindx);
       requestsamples = 0;
@@ -726,7 +726,30 @@ switch dataformat
     % ensure that the EGI_MFF toolbox is on the path
     ft_hastoolbox('egi_mff', 1);
     % ensure that the JVM is running and the jar file is on the path
-    mff_setup;
+      %%%%%%%%%%%%%%%%%%%%%%
+      %workaround for Matlab bug resulting in global variables being cleared
+      globalTemp=cell(0);
+      globalList=whos('global');
+      varList=whos;
+      for i=1:length(globalList)
+          eval(['global ' globalList(i).name ';']);
+          eval(['globalTemp{end+1}=' globalList(i).name ';']);
+      end;
+      %%%%%%%%%%%%%%%%%%%%%%
+      
+      mff_setup;
+      
+      %%%%%%%%%%%%%%%%%%%%%%
+      %workaround for Matlab bug resulting in global variables being cleared
+      varNames={varList.name};
+      for i=1:length(globalList)
+          eval([globalList(i).name '=globalTemp{i};']);
+          if ~any(strcmp(globalList(i).name,varNames)) %was global variable originally out of scope?
+              eval(['clear ' globalList(i).name ';']); %clears link to global variable without affecting it
+          end;
+      end;
+      clear globalTemp globalList varNames varList;
+      %%%%%%%%%%%%%%%%%%%%%%
 
     if isunix && filename(1)~=filesep
       % add the full path to the dataset directory
@@ -1086,6 +1109,32 @@ switch dataformat
     
     dat=ft_checkdata(spiketrl,'datatype', 'raw', 'fsample', spiketrl.hdr.Fs);
     dat=dat.trial{1};
+    
+   case {'manscan_mb2', 'manscan_mbi'}
+     [p, f, x] = fileparts(filename);
+     filename  = fullfile(p, [f, '.mb2']);
+     trlind = [];
+     if isfield(hdr.orig, 'epochs') && ~isempty(hdr.orig.epochs)
+         for i = 1:hdr.nTrials
+             trlind = [trlind i*ones(1, diff(hdr.orig.epochs(i).samples) + 1)];
+         end
+         if checkboundary && (trlind(begsample)~=trlind(endsample))
+             error('requested data segment extends over a discontinuous trial boundary');
+         end
+     else
+         trlind = ones(1, hdr.nSamples);
+     end
+     
+     iEpoch = unique(trlind(begsample:endsample));
+     sfid = fopen(filename, 'r');
+     dat  = zeros(hdr.nChans, endsample - begsample + 1);
+     for i = 1:length(iEpoch)
+         dat(:, trlind(begsample:endsample) == iEpoch(i)) =...
+             in_fread_manscan(hdr.orig, sfid, iEpoch(i), ...
+             [sum(trlind==iEpoch(i) & (1:length(trlind))<begsample)...
+             sum(trlind==iEpoch(i) & (1:length(trlind))<endsample)]);
+     end   
+     dat = dat(chanindx, :);
   otherwise
     if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
       dat = read_biosig_data(filename, hdr, begsample, endsample, chanindx);

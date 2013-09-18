@@ -2,7 +2,7 @@ function [spectrum,freqoi,timeoi] = ft_specest_wavelet(dat, time, varargin)
 
 % FT_SPECEST_WAVELET performs time-frequency analysis on any time series trial
 % data using the 'wavelet method' based on Morlet wavelets, doing
-% convolution in the time domain by multiplaction in the frequency domain
+% convolution in the time domain by multiplication in the frequency domain
 %
 % Use as
 %   [spectrum,freqoi,timeoi] = specest_wavelet(dat,time...)
@@ -94,13 +94,13 @@ if isnumeric(freqoiinput)
   % check whether padding is appropriate for the requested frequency resolution 
   rayl = 1/endtime;
   if any(rem(freqoiinput,rayl)) % not always the case when they mismatch
-    warning('padding not sufficient for requested frequency resolution, for more information please see the FAQs on www.ru.nl/neuroimaging/fieldtrip')
+    warning_once('padding not sufficient for requested frequency resolution, for more information please see the FAQs on www.ru.nl/neuroimaging/fieldtrip');
   end
   if numel(freqoiinput) ~= numel(freqoi) % freqoi will not contain double frequency bins when requested
-    warning('output frequencies are different from input frequencies, multiples of the same bin were requested but not given');
+    warning_once('output frequencies are different from input frequencies, multiples of the same bin were requested but not given');
   else
     if any(abs(freqoiinput-freqoi) >= eps*1e6)
-      warning('output frequencies are different from input frequencies');
+      warning_once('output frequencies are different from input frequencies');
     end
   end
 end
@@ -121,10 +121,10 @@ end
 % throw a warning if input timeoi is different from output timeoi
 if isnumeric(timeoiinput)
   if numel(timeoiinput) ~= numel(timeoi) % timeoi will not contain double time-bins when requested
-    warning('output time-bins are different from input time-bins, multiples of the same bin were requested but not given');
+    warning_once('output time-bins are different from input time-bins, multiples of the same bin were requested but not given');
   else
     if any(abs(timeoiinput-timeoi) >= eps*1e6) 
-      warning('output time-bins are different from input time-bins');
+      warning_once('output time-bins are different from input time-bins');
     end
   end
 end
@@ -186,7 +186,7 @@ end
 
 % Compute fft
 spectrum = complex(nan(nchan,nfreqoi,ntimeboi),nan(nchan,nfreqoi,ntimeboi));
-datspectrum = transpose(fft(transpose(ft_preproc_padding(dat, padtype, 0, postpad)))); % double explicit transpose to speedup fft
+datspectrum = fft(ft_preproc_padding(dat, padtype, 0, postpad), [], 2);
 for ifreqoi = 1:nfreqoi
   str = sprintf('frequency %d (%.2f Hz)', ifreqoi,freqoi(ifreqoi));
   [st, cws] = dbstack;
@@ -204,7 +204,7 @@ for ifreqoi = 1:nfreqoi
   
   % compute datspectrum*wavelet, if there are reqtimeboi's that have data
   if ~isempty(reqtimeboi)
-    dum = fftshift(transpose(ifft(transpose(datspectrum .* repmat(wltspctrm{ifreqoi},[nchan 1])))),2); % double explicit transpose to speedup fft
+    dum = fftshift(ifft(datspectrum .* repmat(wltspctrm{ifreqoi},[nchan 1]), [], 2),2);
     dum = dum .* sqrt(2 ./ fsample);
     spectrum(:,ifreqoi,reqtimeboiind) = dum(:,reqtimeboi);
   end

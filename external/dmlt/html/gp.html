@@ -2,7 +2,7 @@
    <head>
       <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
    
-      <link rel="stylesheet" href="file:////Applications/MATLAB_R2012a.app/toolbox/matlab/helptools/private/helpwin.css">
+      <link rel="stylesheet" href="file:////Applications/MATLAB_R2012b.app/toolbox/matlab/helptools/private/helpwin.css">
       <title>MATLAB File Help: dml.gp</title>
    </head>
    <body>
@@ -19,12 +19,24 @@
  
     DESCRIPTION
  
+    Wrapper to the GPstuff Gaussian process code
+ 
     REFERENCE
+     Jarno Vanhatalo, Jaakko Riihim&#xE4;ki, Jouni Hartikainen, Pasi Jyl&#xE4;nki,
+     Ville Tolvanen, Aki Vehtari (2013). GPstuff: A Toolbox for Bayesian
+     Modeling with Gaussian Processes. In Journal of Machine Learning
+     Research, accepted for publication.
  
     EXAMPLE
  
+    X = randn(20,2);
+    Y = X(:,1);
+    m = dml.gp;
+    m = m.train(X,Y);
+    Z = m.test(X);
+ 
     DEVELOPER
-    Perry Groot</pre></div><!--after help -->
+    Jarno Vanhatalo, Jaakko Riihim&#xE4;ki, Jouni Hartikainen, Pasi Jyl&#xE4;nki, Ville Tolvanen, Aki Vehtari</pre></div><!--after help -->
       <!--Class-->
       <div class="sectiontitle">Class Details</div>
       <table class="class-details">
@@ -81,7 +93,7 @@
                
             </td>
             <td class="name"><a href="matlab:helpwin('dml.gp.model')">model</a></td>
-            <td class="m-help">returns&nbsp;</td>
+            <td class="m-help">this method does not return a model&nbsp;</td>
          </tr>
          <tr class="summary-item">
             <td class="attributes">
@@ -89,7 +101,7 @@
                
             </td>
             <td class="name"><a href="matlab:helpwin('dml.gp.test')">test</a></td>
-            <td class="m-help">GP prediction&nbsp;</td>
+            <td class="m-help">&nbsp;</td>
          </tr>
          <tr class="summary-item">
             <td class="attributes">
@@ -97,7 +109,7 @@
                
             </td>
             <td class="name"><a href="matlab:helpwin('dml.gp.train')">train</a></td>
-            <td class="m-help">GP model definition&nbsp;</td>
+            <td class="m-help">&nbsp;</td>
          </tr>
       </table>
    </body>

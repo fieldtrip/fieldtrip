@@ -1,14 +1,8 @@
-function test_suite = test_bug1168
+function test_bug1168
 
 % TEST test_bug1168
 % TEST ft_multiplotTFR
 
-% add xunit to path
-ft_hastoolbox('xunit',1);
-initTestSuite;  % for xUnit
-
-
-function d = setup
 
 d.cfg = [];
 d.cfg.layout = 'CTF151.lay';
@@ -18,7 +12,7 @@ d.label = ft_channelselection('MEG', d.cfg.lay.label);
 d.nchan = length(d.label);
 
 
-function test_chan_freq_time(d)
+% function test_chan_freq_time(d)
 nfreq = 50;
 ntime = 100;
 
@@ -33,7 +27,7 @@ cfg = d.cfg;
 ft_multiplotTFR(cfg, freq); % sofar it works
 
 
-function test_chan_time_freq(d)
+% function test_chan_time_freq(d)
 nfreq = 50;
 ntime = 100;
 
@@ -48,9 +42,8 @@ cfg = d.cfg;
 ft_multiplotTFR(cfg, freq); % this still works
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the following one is more specifically for Linsey
-function test_linsey(d)
+% function test_linsey(d)
 
 nchan = length(d.label);
 nfreq = 1;
@@ -63,16 +56,13 @@ freq.time = 1:ntime;
 freq.dimord = 'chan_freq_time';
 freq.powspctrm = randn(nchan, nfreq, ntime);
 
-ft_multiplotTFR(d.cfg, freq); % this fails, nothing is plotted, visual
-                              % inspection needed
+ft_multiplotTFR(d.cfg, freq); % this fails, nothing is plotted, visual inspection needed
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-function test_unrecognized(d)
 % the following rightfully fails because the data structure is not recognized
 % as freq structure but if the data structure would have had a freq
 % dimension, it should have worked
+% function test_unrecognized(d)
 nax1 = 50;
 nax2 = 100;
 
@@ -94,12 +84,10 @@ try
 catch exception
   assert(strcmp(exception.message,'This function requires freq data as input.'))
 end
-  
- 
 
 
-function test_unknown_dim(d)
 % the following rightfully fails because ax2 is not known as dimension
+% function test_unknown_dim(d)
 nfreq = 50;
 nchan = length(d.label);
 nax2 = 100;

@@ -4,19 +4,23 @@
  * Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
  */
-#include <stdio.h>
-#include <math.h>
-#include <nifti1.h>
-#include <FtBuffer.h>
+
 #include <vector>
 #include <string>
+#include <stdio.h>
+#include <math.h>
+#include <ctype.h>
 #include <stdlib.h>
+
 #ifdef WIN32
 #include <windows.h>
 #else
 #include <unistd.h>
 #include <sys/time.h>
 #endif
+
+#include <nifti1.h>
+#include <FtBuffer.h>
 
 nifti_1_header commonHeader;
 std::vector<std::string> niiFiles;
@@ -46,7 +50,7 @@ bool areEqual(const nifti_1_header &A, const nifti_1_header &B) {
 	return true;
 }
 
-int readAndCheckScannerFile(const char *filename) {
+int readAndCheckScannerFile(char *filename) {
 	nifti_1_header thisHeader;
 	std::string path;
 	FILE *f;

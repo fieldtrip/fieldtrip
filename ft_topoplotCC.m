@@ -28,8 +28,7 @@ function [cfg] = ft_topoplotCC(cfg, freq)
 %                       i.e. the same units as the layout (default is automatically determined)
 %    cfg.arrowlength  = scalar, amount by which the length is reduced relative to the complete line (default = 0.8)
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following option:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 % If you specify this option the input data will be read from a *.mat
 % file on disk. This mat files should contain only a single variable named 'data',
@@ -60,7 +59,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble provenance
 ft_preamble trackconfig
 ft_preamble debug

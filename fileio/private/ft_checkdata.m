@@ -149,10 +149,19 @@ if ~isequal(feedback, 'no')
     ntime = length(data.time);
     fprintf('the input is timelock data with %d channels and %d timebins\n', nchan, ntime);
   elseif isfreq
-    nchan = length(data.label);
-    nfreq = length(data.freq);
-    if isfield(data, 'time'), ntime = num2str(length(data.time)); else ntime = 'no'; end
-    fprintf('the input is freq data with %d channels, %d frequencybins and %s timebins\n', nchan, nfreq, ntime);
+    if isfield(data, 'label')
+      nchan = length(data.label);
+      nfreq = length(data.freq);
+      if isfield(data, 'time'), ntime = num2str(length(data.time)); else ntime = 'no'; end
+      fprintf('the input is freq data with %d channels, %d frequencybins and %s timebins\n', nchan, nfreq, ntime);
+    elseif isfield(data, 'labelcmb')
+      nchan = length(data.labelcmb);
+      nfreq = length(data.freq);
+      if isfield(data, 'time'), ntime = num2str(length(data.time)); else ntime = 'no'; end
+      fprintf('the input is freq data with %d channel combinations, %d frequencybins and %s timebins\n', nchan, nfreq, ntime);  
+    else
+      error('cannot infer freq dimensions');
+    end
   elseif isspike
     nchan  = length(data.label);
     fprintf('the input is spike data with %d channels\n', nchan);
@@ -904,9 +913,9 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'sparse')
   data           = rmfield(data, 'fourierspctrm');
   data           = rmfield(data, 'label');
   if ntim>1,
-    data.dimord = 'chan_freq_time';
+    data.dimord = 'chancmb_freq_time';
   else
-    data.dimord = 'chan_freq';
+    data.dimord = 'chancmb_freq';
   end
   
   if nrpt>1,
@@ -1313,7 +1322,7 @@ elseif strcmp(current, 'old') && strcmp(type, 'new'),
     if ~isempty(ix),
       output = rmfield(output, fnames{k});
     end
-    ix = strmatch(fnames{k}, renamefields(:,1), 'exact');
+    ix = find(strcmp(fnames{k}, renamefields(:,1)));
     if ~isempty(ix),
       output = setfield(output, renamefields{ix,2}, ...
         getfield(output, renamefields{ix,1}));
@@ -1434,12 +1443,23 @@ elseif strcmp(current, 'old') && strcmp(type, 'new'),
   if isfield(output, 'ori')
     % convert cell-array ori into matrix
     ori = nan(3,npos);
-    try,
-      ori(:,output.inside) = cat(2, output.ori{output.inside});
-    catch
-      %when oris are in wrong orientation (row rather than column)
-      for k = 1:numel(output.inside)
-        ori(:,output.inside(k)) = output.ori{output.inside(k)}';
+    if ~islogical(output.inside)
+      try,
+        ori(:,output.inside) = cat(2, output.ori{output.inside});
+      catch
+        %when oris are in wrong orientation (row rather than column)
+        for k = 1:numel(output.inside)
+          ori(:,output.inside(k)) = output.ori{output.inside(k)}';
+        end
+      end
+    else
+      try,
+        ori(:,find(output.inside)) = cat(2, output.ori{find(output.inside)});
+      catch
+        tmpinside = find(output.inside);
+        for k = 1:numel(tmpinside)
+          ouri(:,tmpinside(k)) = output.ori{tmpinside(k)}';
+        end
       end
     end
     output.ori = ori;
@@ -1559,7 +1579,7 @@ switch fname
     dimord = [dimord,'_ori_ori'];
   case 'ori'
     dimord = '';
-  case 'pow'
+  case {'pow' 'dspm'}
     if isfield(output, 'cumtapcnt') && size(output.cumtapcnt,1)==size(tmp,dimnum)
       dimord = [dimord,'_rpt'];
       dimnum = dimnum + 1;
@@ -1707,43 +1727,17 @@ if ntrial==1
   data.dimord = 'chan_time';
 else
   
-  begtime = cellfun(@min,data.time);
-  endtime = cellfun(@max,data.time);
-  % this part is just about the number of samples, not about the time-axis
-  for i = 1:ntrial
-    time = data.time{i};
-    mint    = min([ 0, begtime(i)]);
-    maxt    = max([-max(abs(2*endtime)) * eps, endtime(i)]);
-    
-    % extrapolate so that we get near 0
-    if (mint==0)
-      tmptime =  -1*(fliplr(-maxt:mean(diff(time)):-mint));
-    else
-      tmptime =  mint:mean(diff(time)):maxt;
-    end
-    
-    ix(i) = sum(tmptime<0); % number of samples pre-zero
-    iy(i) = sum(tmptime>=0); % number of samples post-zero
-    
-    % account for strictly positive or negative time-axes by removing those
-    % elements that are near 0 but should not be in the time-axis
-    if ix(i)==0
-      ix(i) = 1-nearest(tmptime, begtime(i));
-    end
-    if iy(i)==0
-      iy(i) = nearest(tmptime, endtime(i))-length(tmptime);
-    end
-  end
-  
-  [mx,ix2] = max(ix);
-  [my,iy2] = max(iy);
-  nsmp = mx+my;
-  
-  % create temporary time-axis
-  time = linspace(min(begtime),  max(endtime), nsmp);
-  % remove any time-points before 0 iff not needed - see bug 1477
-  time(nearest(time, max(endtime))+1:end) = [];
-  
+  % code below tries to construct a general time-axis where samples of all trials can fall on
+  % find earliest beginning and latest ending
+  begtime = min(cellfun(@min,data.time));
+  endtime = max(cellfun(@max,data.time));
+  % find 'common' sampling rate
+  fsample = 1./mean(cellfun(@mean,cellfun(@diff,data.time,'uniformoutput',false)));
+  % estimate number of samples
+  nsmp = round((endtime-begtime)*fsample) + 1; % numerical round-off issues should be dealt with by this round, as they will/should never cause an extra sample to appear
+  % construct general time-axis
+  time = linspace(begtime,endtime,nsmp);
+
   % concatenate all trials
   tmptrial = nan(ntrial, nchan, length(time));
   

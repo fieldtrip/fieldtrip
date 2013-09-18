@@ -2,7 +2,7 @@
    <head>
       <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
    
-      <link rel="stylesheet" href="file:////Applications/MATLAB_R2012a.app/toolbox/matlab/helptools/private/helpwin.css">
+      <link rel="stylesheet" href="file:////Applications/MATLAB_R2012b.app/toolbox/matlab/helptools/private/helpwin.css">
       <title>MATLAB File Help: dml.crossvalidator</title>
    </head>
    <body>
@@ -26,7 +26,9 @@
     - 'nfold' : n-fold cross-validation specified by 'folds' (default: 5)
     - 'split' : data is split into train and test data; amount of training
                 data is given by 'proportion' (default: 0.75)
-    - 'loo'   : leave-one-out cross-validation
+    - 'loo'   : leave-one-out cross-validation; takes 1 trial per fold
+    - 'bloo'  : balanced loo cv; takes 1 trial from each class per fold.
+                Assumes that each class has the same nr of trials.
    
     Alternatively one can specify the cell-arrays 'trainfolds' and
     'testfolds' to contain for each fold the trial indices that need to be

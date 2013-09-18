@@ -7,7 +7,8 @@ function [cfg] = ft_rejectartifact(cfg, data)
 % You should start by detecting the artifacts in the data using the
 % function FT_ARTIFACT_xxx where xxx is the type of artifact. Subsequently
 % FT_REJECTARTIFACT looks at the detected artifacts and removes them from
-% the trial definition or from the data.
+% the trial definition or from the data. In case you wish to replace bad
+% parts by nans, you have to specify data as an input parameter.
 %
 % Use as
 %   cfg = ft_rejectartifact(cfg)
@@ -16,7 +17,7 @@ function [cfg] = ft_rejectartifact(cfg, data)
 % with the data as obtained from FT_PREPROCESSING
 %
 % The following configuration options are supported:
-%   cfg.artfctdef.reject          = 'none', 'partial' or 'complete' (default = 'complete')
+%   cfg.artfctdef.reject          = 'none', 'partial','nan', or 'complete' (default = 'complete')
 %   cfg.artfctdef.minaccepttim    = when using partial rejection, minimum length
 %                                   in seconds of remaining trial (default = 0.1)
 %   cfg.artfctdef.crittoilim      = when using complete rejection, reject
@@ -38,8 +39,7 @@ function [cfg] = ft_rejectartifact(cfg, data)
 %   If cfg is used as the only input parameter, a cfg with a new trl is the output.
 %   If cfg and data are both input parameters, a new raw data structure with only the clean data segments is the output.
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following option:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 % If you specify this option the input data will be read from a *.mat
 % file on disk. This mat files should contain only a single variable named 'data',
@@ -91,7 +91,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble provenance
 ft_preamble trackconfig
 ft_preamble debug
@@ -133,7 +133,7 @@ end
 
 % support the rejectXXX cfg settings for backward compatibility
 if isfield(cfg, 'rejectmuscle')
-  dum = strmatch('muscle', cfg.artfctdef.type, 'exact');
+  dum = find(strcmp('muscle', cfg.artfctdef.type));
   if strcmp(cfg.rejectmuscle,'yes') && isempty(dum)
     % this overrules the other setting, add it to the type-list
     cfg.artfctdef.type = cat(1, {'muscle'}, cfg.artfctdef.type(:));
@@ -146,7 +146,7 @@ end
 
 % support the rejectXXX cfg settings for backward compatibility
 if isfield(cfg, 'rejecteog')
-  dum = strmatch('eog', cfg.artfctdef.type, 'exact');
+  dum = find(strcmp('eog', cfg.artfctdef.type));
   if strcmp(cfg.rejecteog,'yes') && isempty(dum)
     % this overrules the other setting, add it to the type-list
     cfg.artfctdef.type = cat(1, {'eog'}, cfg.artfctdef.type(:));
@@ -159,7 +159,7 @@ end
 
 % support the rejectXXX cfg settings for backward compatibility
 if isfield(cfg, 'rejectjump')
-  dum = strmatch('jump', cfg.artfctdef.type, 'exact');
+  dum = find(strcmp('jump', cfg.artfctdef.type));
   if strcmp(cfg.rejectjump,'yes') && isempty(dum)
     % this overrules the other setting, add it to the type-list
     cfg.artfctdef.type = cat(1, {'jump'}, cfg.artfctdef.type(:));
@@ -173,7 +173,7 @@ end
 % support the rejectXXX cfg settings for backward compatibility
 if isfield(cfg, 'rejectfile')
   % this is slightly different to the ones above, since rejectfile is either 'no' or contains the filename
-  dum = strmatch('file', cfg.artfctdef.type, 'exact');
+  dum = find(strcmp('file', cfg.artfctdef.type));
   if ~strcmp(cfg.rejectfile,'no') && isempty(dum)
     % this overrules the other setting, add it to the type-list
     cfg.artfctdef.type = cat(1, {'file'}, cfg.artfctdef.type(:));
@@ -240,17 +240,23 @@ cfg.artfctdef.type = cfg.artfctdef.type(sort(i));
 % ensure that it is a row vector
 cfg.artfctdef.type = cfg.artfctdef.type(:)';
 
+% If bad parts are to be filled with nans, make sure data is available
+if strcmp(cfg.artfctdef.reject, 'nan') && ~hasdata
+    error('If bad parts are to be filled with nans, input data has to be specified');
+end;
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % call the appropriate function for each of the artifact types
 % this will produce a Nx2 matrix with the begin and end sample of artifacts
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for type=1:length(cfg.artfctdef.type)
-  fprintf('evaluating artifact_%s\n', cfg.artfctdef.type{type});
+  funhandle = ft_getuserfun(cfg.artfctdef.type{type}, 'artifact');
+  fprintf('evaluating %s\n', func2str(funhandle));
   % each call to artifact_xxx adds cfg.artfctdef.xxx.artifact
   if hasdata
-    cfg = feval(sprintf('artifact_%s', cfg.artfctdef.type{type}), cfg, data);
+    cfg = feval(funhandle, cfg, data);
   else
-    cfg = feval(sprintf('artifact_%s', cfg.artfctdef.type{type}), cfg);
+    cfg = feval(funhandle, cfg);
   end
 end
 
@@ -388,11 +394,12 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % remove the trials that (partially) coincide with a rejection mark
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if strcmp(cfg.artfctdef.reject, 'partial') || strcmp(cfg.artfctdef.reject, 'complete')
+if strcmp(cfg.artfctdef.reject, 'partial') || strcmp(cfg.artfctdef.reject, 'complete') || strcmp(cfg.artfctdef.reject, 'nan')
   trialok = [];
   
   count_complete_reject = 0;
   count_partial_reject  = 0;
+  count_nan = 0;
   count_outsidecrit = 0;
   
   trlRemovedInd = [];
@@ -446,11 +453,18 @@ if strcmp(cfg.artfctdef.reject, 'partial') || strcmp(cfg.artfctdef.reject, 'comp
       count_partial_reject = count_partial_reject + 1;
       trialok = [trialok; trialnew];
       trlPartiallyRemovedInd = [trlPartiallyRemovedInd trial];
+      
+    elseif any(rejecttrial) && strcmp(cfg.artfctdef.reject, 'nan')
+      % Some part of the trial is bad, replace bad part with nans
+      data.trial{trial}(:,rejecttrial) = nan;
+      count_nan = count_nan + 1;
+      trialok = [trialok; trl(trial,:)]; % Mark the trial as good as nothing will be removed
     end
   end
   
   fprintf('rejected  %3d trials completely\n', count_complete_reject);
   fprintf('rejected  %3d trials partially\n', count_partial_reject);
+  fprintf('filled parts of  %3d trials with nans\n', count_nan);
   if (checkCritToi)
     fprintf('retained  %3d trials with artifacts outside critical window\n', count_outsidecrit);
   end
@@ -477,7 +491,7 @@ end
 if isempty(cfg.trl)
   error('No trials left after artifact rejection.')
 else
-  if hasdata
+  if hasdata && ~strcmp(cfg.artfctdef.reject, 'nan') % Skip this step to avoid removing parts that should be filled with nans
     % apply the updated trial definition on the data
     tmpcfg     = [];
     tmpcfg.trl = cfg.trl;
@@ -486,7 +500,7 @@ else
       data = rmfield(data, 'offset');
     end
   end
-end
+end;
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug

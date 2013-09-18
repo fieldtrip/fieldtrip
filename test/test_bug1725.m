@@ -42,7 +42,7 @@ filename = {
   'vervet_atlas_templates/vervetType.nii'
   };
 
-for i=14:length(filename)
+for i=1:length(filename)%14:length(filename)
   % just try to read it
   disp(i);
   disp(filename{i});
@@ -52,7 +52,9 @@ end
 % plot the template MRI together with the atlas
 mri   = ft_read_mri('MNI_atlas_templates/MNI_T1.nii');
 atlas = ft_read_atlas('MNI_atlas_templates/aal_MNI_V4.nii'); % FIXME this is how it should be
-atlas = ft_prepare_atlas('MNI_atlas_templates/aal_MNI_V4.nii'); % use the old representation
+
+% FIXME is there a need to test the old to-be-deprecated functionality?
+% atlas = ft_prepare_atlas('MNI_atlas_templates/aal_MNI_V4.nii'); % use the old representation
 
 if false
   cfg = [];

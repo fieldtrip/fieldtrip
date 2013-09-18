@@ -48,8 +48,7 @@ function ft_volumewrite(cfg, volume)
 %   cfg.markorigin    = 'yes' or 'no', mark the origin
 %   cfg.markcorner    = 'yes' or 'no', mark the first corner of the volume
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following option:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 % If you specify this option the input data will be read from a *.mat
 % file on disk. This mat files should contain only a single variable named 'data',
@@ -85,7 +84,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble provenance
 ft_preamble trackconfig
 ft_preamble debug

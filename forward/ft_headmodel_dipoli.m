@@ -80,6 +80,13 @@ else
   isolatedsource = istrue(isolatedsource);
 end
 
+if isolatedsource
+  fprintf('using isolated source approach\n');
+else
+  fprintf('not using isolated source approach\n');
+end
+
+
 % determine the desired nesting of the compartments
 order = surface_nesting(vol.bnd, 'outsidefirst');
 

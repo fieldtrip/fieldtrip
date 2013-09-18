@@ -111,21 +111,24 @@ function [cfg] = ft_topoplotTFR(cfg, varargin)
 % layout. If you want to have more fine-grained control over the layout
 % of the subplots, you should create your own layout file.
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following option:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 % If you specify this option the input data will be read from a *.mat
 % file on disk. This mat files should contain only a single variable named 'data',
 % corresponding to the input structure. For this particular function, the input should be
 % structured as a cell array.
 %
-% See also:
-%  FT_TOPOPLOTER, FT_TOPOPLOTIC, FT_SINGLEPLOTTFR, FT_MULTIPLOTTFR, FT_PREPARE_LAYOUT
+% See also FT_TOPOPLOTER, FT_TOPOPLOTIC, FT_SINGLEPLOTTFR, FT_MULTIPLOTTFR, FT_PREPARE_LAYOUT
 
-% It is possible to use multiple highlight-selections (e.g.: multiple statistical clusters of channels)
-% To do this, all the content of the highlight-options (including cfg.highlight) should be placed in a cell-array
-% (even if the normal content was already in a cell-array). Specific marker settings (e.g. color, size) are defaulted when
-% not present.
+% Undocumented options: 
+%
+% It is possible to use multiple highlight-selections (e.g.: multiple
+% statistical clusters of channels) To do this, all the content of
+% the highlight-options (including cfg.highlight) should be placed
+% in a cell-array (even if the normal content was already in a
+% cell-array). Specific marker settings (e.g. color, size) are defaulted
+% when not present.
+% 
 % Example (3 selections):
 % cfg.highlight          = {'labels', 'labels', 'numbers'}
 % cfg.highlightchannel   = {{'MZF03','MZC01','MRT54'}, [1:5], 'C*'}
@@ -135,15 +138,6 @@ function [cfg] = ft_topoplotTFR(cfg, varargin)
 %
 % Other options:
 % cfg.labeloffset (offset of labels to their marker, default = 0.005)
-
-% This function depends on FT_TIMELOCKBASELINE which has the following options:
-% cfg.baseline, documented
-% cfg.channel
-% cfg.baselinewindow
-%
-% This function depends on FT_FREQBASELINE which has the following options:
-% cfg.baseline, documented
-% cfg.baselinetype
 
 % Copyright (C) 2005-2011, F.C. Donders Centre
 %
@@ -169,7 +163,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble provenance
 
 % this is just a wrapper function around the common code that does all the hard work
@@ -197,18 +191,6 @@ cfg = rmfield(cfg, 'funcname');
 % this will replace the ft_topoplotTFR callinfo with that of ft_topoplotER
 ft_postamble provenance
 ft_postamble previous varargin
-
-% add a menu to the figure
-% ftmenu = uicontextmenu; set(gcf, 'uicontextmenu', ftmenu)
-if isempty(strfind(get(gcf, 'Tag'), 'ft-menushowing'))
-  ftmenu = uimenu(gcf, 'Label', 'FieldTrip');
-  uimenu(ftmenu, 'Label', 'Show pipeline',  'Callback', {@menu_pipeline, cfg});
-  uimenu(ftmenu, 'Label', 'About',  'Callback', @menu_about);
-  
-  % mark the figure so that we don't add multiple menus to the same (in the
-  % case of subplots)
-  set(gcf, 'Tag', [get(gcf, 'Tag') ',ft-menushowing']);
-end
 
 if ~nargout
   clear cfg

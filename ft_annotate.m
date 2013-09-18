@@ -13,8 +13,7 @@ function dataout = ft_annotate(cfg, datain)
 %
 %  cfg.comment    = string
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat
@@ -49,7 +48,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults                 % this ensures that the path is correct and that the ft_defaults global variable is available
-ft_preamble help            % this will show the function help if nargin==0 and return an error
+ft_preamble init            % this will show the function help if nargin==0 and return an error
 ft_preamble provenance      % this records the time and memory usage at teh beginning of the function
 ft_preamble trackconfig     % this converts the cfg structure in a config object, which tracks the cfg options that are being used
 ft_preamble debug           % this allows for displaying or saving the function name and input arguments upon an error

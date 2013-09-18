@@ -1,8 +1,7 @@
 function test_bug1125
 
-% TEST: test_bug1125 ft_preprocessing ft_preproc_bandpassfilter
-% ft_preproc_bandstopfilter ft_preproc_lowpassfilter
-% ft_preproc_highpassfilter
+% TEST test_bug1125
+% TEST ft_preprocessing ft_preproc_bandpassfilter ft_preproc_bandstopfilter ft_preproc_lowpassfilter ft_preproc_highpassfilter
 
 N=1000;
 x1=randn(1,N)+5*rand(1);
@@ -33,9 +32,8 @@ figure;plot(linspace(0,1000,N),abs(fft(y19)));axis([0 40 0 inf])
 hold on;plot(linspace(0,1000,N),abs(fft(y29)),'m');axis([0 40 0 inf])
 % HUGE diff DC
 
-
-
-load test_bug1129
+cd(dccnfilename('/home/common/matlab/fieldtrip/data/test'))
+load bug1129.mat
 
 cfg=[];
 cfg.bpfreq=[15 25];
@@ -43,7 +41,6 @@ cfg.bpfilter='yes';
 cfg.demean='yes';
 fdmo=ft_preprocessing(cfg,raw3); %old
 fdmn=ft_preprocessing(cfg,raw3); %new
-
 
 cfg=[];
 cfg.bpfreq=[15 25];

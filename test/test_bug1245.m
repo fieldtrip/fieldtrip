@@ -10,6 +10,8 @@ function test_bug1245
 % determination algorithm includes the channels that are excluded from the
 % plotting
 
-load test_bug1245
+cd(dccnfilename('/home/common/matlab/fieldtrip/data/test'))
+load bug1245.mat
+
 data.avg = [];
 figure;ft_multiplotER(cfg, data);

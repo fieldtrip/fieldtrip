@@ -8,8 +8,8 @@ function [dat] = ft_fetch_data(data, varargin)
 %
 % See also FT_READ_DATA, FT_FETCH_HEADER, FT_FETCH_EVENT
 
+% Copyright (C) 2009-2013, Jan-Mathijs Schoffelen, Robert Oostenveld
 % Copyright (C) 2008, Esther Meeuwissen
-% Copyright (C) 2009-2010, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -33,12 +33,11 @@ function [dat] = ft_fetch_data(data, varargin)
 data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
 
 % get the options
-hdr           = ft_getopt(varargin, 'header');
-begsample     = ft_getopt(varargin, 'begsample');
-endsample     = ft_getopt(varargin, 'endsample');
-chanindx      = ft_getopt(varargin, 'chanindx');
-allowoverlap  = ft_getopt(varargin, 'allowoverlap', false);
-
+hdr          = ft_getopt(varargin, 'header');
+begsample    = ft_getopt(varargin, 'begsample');
+endsample    = ft_getopt(varargin, 'endsample');
+chanindx     = ft_getopt(varargin, 'chanindx');
+allowoverlap = ft_getopt(varargin, 'allowoverlap', false);
 allowoverlap = istrue(allowoverlap);
 
 if isempty(hdr)
@@ -61,8 +60,11 @@ else
 end
 trlnum = length(data.trial);
 
+% start with the output data being all NaN
+dat = nan(numel(chanindx), endsample-begsample+1);
+
 if trlnum>1,
-  % original implementation
+  % original implementation, used when the input data has multiple trials
   
   trllen = zeros(trlnum,1);
   for trllop=1:trlnum
@@ -109,22 +111,35 @@ if trlnum>1,
   % samplenum(count>1) = NaN;
   
   % make a subselection for the desired samples
-  count     = count(begsample:endsample);
-  trialnum  = trialnum(begsample:endsample);
+  count     = count    (begsample:endsample);
+  trialnum  = trialnum (begsample:endsample);
   samplenum = samplenum(begsample:endsample);
   
   % check if all samples are present and are not present twice or more
-  if any(count==0)
-    % warning('not all requested samples are present in the data, filling with NaNs');
-    % prealloc with NaNs
-    dat = NaN(numel(chanindx),endsample-begsample+1);
-  elseif any(count>1)
+  if any(count>1)
     if ~allowoverlap
-      error('some of the requested samples occur twice in the data');
+      % error('some of the requested samples occur twice in the data');
+      % this  can be considered OK if the overlap has exactly identical values
+      sel = find(count>1); % must be row vector
+      for smplop=sel
+        % find in which trials the sample occurs
+        seltrl = find(smplop>=trl(:,1) & smplop<=trl(:,2));  % which trials
+        selsmp = smplop - trl(seltrl,1) + 1;                 % which sample in each of the trials
+        for i=2:length(seltrl)
+          % compare all occurences to the first one
+          if ~all(data.trial{seltrl(i)}(:,selsmp(i)) == data.trial{seltrl(1)}(:,selsmp(1)))
+            error('some of the requested samples occur twice in the data and have conflicting values');
+          end
+        end
+      end
     else
       warning('samples present in multiple trials, using only the last occurence of each sample')
     end
   end
+  
+  %   if any(count==0)
+  %     warning('not all requested samples are present in the data, filling with NaNs');
+  %   end
   
   % construct the output data array
   % dat = nan(length(chanindx), length(samplenum));
@@ -158,20 +173,18 @@ if trlnum>1,
 else
   % only one trial is present in the input data, so it's quite simple and can be done much faster
   
-  % check whether the requested samples are present in the input
-  if endsample>trl(2) || begsample<trl(1)
-    % warning('not all requested samples are present in the data, filling with NaNs');
-  end
-  
   % get the indices
   begindx  = begsample - trl(1) + 1;
   endindx  = endsample - trl(1) + 1;
   
   tmptrl = trl([1 2]) - [trl(1) trl(1)]+1; % ignore offset in case it's present
-  dat = nan(numel(chanindx), endsample-begsample+1);
   
   datbegindx = max(1,                     trl(1)-begsample+1);
   datendindx = min(endsample-begsample+1, trl(2)-begsample+1);
+  
+  %   if begsample<trl(1) || endsample>trl(2)
+  %     warning('not all requested samples are present in the data, filling with NaNs');
+  %   end
   
   if begsample >= trl(1) && begsample <= trl(2)
     if endsample >= trl(1) && endsample <= trl(2)
@@ -184,5 +197,3 @@ else
   end
   
 end % if trlnum is multiple or one
-
-

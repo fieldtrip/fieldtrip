@@ -148,7 +148,7 @@ end
 
 if ~isempty(threshold)
   % the trigger channels contain an analog (and hence noisy) TTL signal and should be thresholded
-  dat = (dat>threshold);
+  dat(abs(dat)<threshold) = 0;
 end
 
 if strcmp(detectflank, 'auto')
@@ -179,6 +179,12 @@ for i=1:length(chanindx)
         event(end+1).type   = channel;
         event(end  ).sample = j + begsample - 1;      % assign the sample at which the trigger has gone down
         event(end  ).value  = trig(j+trigshift);      % assign the trigger value just _after_ going up
+      end
+    case 'updiff'
+      for j=find(diff([pad trig(:)'])>0)
+        event(end+1).type   = channel;
+        event(end  ).sample = j + begsample - 1;      % assign the sample at which the trigger has gone down
+        event(end  ).value  = trig(j+trigshift)-trig(j-1);      % assign the trigger value just _after_ going up
       end
     case 'down'
       % convert the trigger into an event with a value at a specific sample

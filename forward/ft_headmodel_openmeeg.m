@@ -25,7 +25,6 @@ function vol = ft_headmodel_openmeeg(geom, varargin)
 %
 % Optional input arguments should be specified in key-value pairs and can
 % include
-%   isolatedsource   = string, 'yes' or 'no'
 %   hdmfile          = string, filename with BEM headmodel
 %   conductivity     = vector, conductivity of each compartment
 %
@@ -40,7 +39,6 @@ ft_hastoolbox('openmeeg', 1);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % get the optional arguments
-isolatedsource  = ft_getopt(varargin, 'isolatedsource');
 conductivity    = ft_getopt(varargin, 'conductivity');
 
 % copy the boundaries from the geometry into the volume conduction model
@@ -55,18 +53,6 @@ vol.bnd = geom;
 % determine the number of compartments
 numboundaries = length(vol.bnd);
 
-if isempty(isolatedsource)
-  if numboundaries>1
-    % the isolated source compartment is by default the most inner one
-    isolatedsource = true;
-  else
-    isolatedsource = false;
-  end
-else
-  % convert into a boolean
-  isolatedsource = istrue(isolatedsource);
-end
-
 % determine the desired nesting of the compartments
 order = surface_nesting(vol.bnd, 'outsidefirst');
 
@@ -76,7 +62,7 @@ if numel(vol.bnd)>1
   fprintf('%d ', order);
   fprintf('\n');
   % update the order of the compartments
-  vol.bnd          = vol.bnd(order);
+  vol.bnd = vol.bnd(order);
 end
 
 if isempty(conductivity)
@@ -94,17 +80,12 @@ else
   if numel(conductivity)~=numboundaries
     error('a conductivity value should be specified for each compartment');
   end
+  % update the order of the compartments
   vol.cond = conductivity(order);
 end
 
-vol.skin_surface   = 1;
+vol.skin_surface = 1;
 vol.source = numboundaries;
-
-if isolatedsource
-  fprintf('using compartment %d for the isolated source approach\n', vol.source);
-else
-  fprintf('not using the isolated source approach\n');
-end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this uses an implementation that was contributed by INRIA Odyssee Team

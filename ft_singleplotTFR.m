@@ -62,10 +62,6 @@ function [cfg] = ft_singleplotTFR(cfg, data)
 %
 % See also FT_SINGLEPLOTER, FT_MULTIPLOTER, FT_MULTIPLOTTFR, FT_TOPOPLOTER, FT_TOPOPLOTTFR
 
-% This function depends on FT_FREQBASELINE which has the following options:
-% cfg.baseline, documented
-% cfg.baselinetype, documented
-
 % Copyright (C) 2005-2006, F.C. Donders Centre
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
@@ -90,7 +86,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble provenance
 ft_preamble trackconfig
 ft_preamble debug
@@ -256,13 +252,13 @@ if (isfull || haslabelcmb) && shouldPlotCmb
   if ~isfull,
     % Convert 2-dimensional channel matrix to a single dimension:
     if isempty(cfg.directionality)
-      sel1 = strmatch(cfg.refchannel, data.labelcmb(:,2), 'exact');
-      sel2 = strmatch(cfg.refchannel, data.labelcmb(:,1), 'exact');
+      sel1 = find(strcmp(cfg.refchannel, data.labelcmb(:,2)));
+      sel2 = find(strcmp(cfg.refchannel, data.labelcmb(:,1)));
     elseif strcmp(cfg.directionality, 'outflow')
       sel1 = [];
-      sel2 = strmatch(cfg.refchannel, data.labelcmb(:,1), 'exact');
+      sel2 = find(strcmp(cfg.refchannel, data.labelcmb(:,1)));
     elseif strcmp(cfg.directionality, 'inflow')
-      sel1 = strmatch(cfg.refchannel, data.labelcmb(:,2), 'exact');
+      sel1 = find(strcmp(cfg.refchannel, data.labelcmb(:,2)));
       sel2 = [];
     end
     fprintf('selected %d channels for %s\n', length(sel1)+length(sel2), cfg.parameter);
@@ -470,7 +466,8 @@ axis xy;
 % set(gca,'Color','k')
 
 if isequal(cfg.colorbar,'yes')
-  colorbar;
+  % tag the colorbar so we know which axes are colorbars
+  colorbar('tag', 'ft-colorbar');
 end
 
 % Set adjust color axis
@@ -495,28 +492,30 @@ end
 h = title(t,'fontsize', cfg.fontsize);
 
 % set the figure window title, add channel labels if number is small
-if length(sellab) < 5
-  chans = join_str(',', cfg.channel);
-else
-  chans = '<multiple channels>';
-end
-if isfield(cfg,'dataname')
-  if iscell(cfg.dataname)
-    dataname = cfg.dataname{1};
+if isempty(get(gcf, 'Name'))
+  if length(sellab) < 5
+    chans = join_str(',', cfg.channel);
   else
-    dataname = cfg.dataname;
+    chans = '<multiple channels>';
   end
-elseif nargin > 1
-  dataname = inputname(2);
-else % data provided through cfg.inputfile
-  dataname = cfg.inputfile;
-end
-if isempty(cfg.figurename)
-  set(gcf, 'Name', sprintf('%d: %s: %s (%s)', gcf, mfilename, dataname, chans));
-  set(gcf, 'NumberTitle', 'off');
-else
-  set(gcf, 'name', cfg.figurename);
-  set(gcf, 'NumberTitle', 'off');
+  if isfield(cfg,'dataname')
+    if iscell(cfg.dataname)
+      dataname = cfg.dataname{1};
+    else
+      dataname = cfg.dataname;
+    end
+  elseif nargin > 1
+    dataname = inputname(2);
+  else % data provided through cfg.inputfile
+    dataname = cfg.inputfile;
+  end
+  if isempty(cfg.figurename)
+    set(gcf, 'Name', sprintf('%d: %s: %s (%s)', gcf, mfilename, dataname, chans));
+    set(gcf, 'NumberTitle', 'off');
+  else
+    set(gcf, 'name', cfg.figurename);
+    set(gcf, 'NumberTitle', 'off');
+  end
 end
 axis tight;
 hold off;
@@ -526,17 +525,22 @@ if ~isempty(cfg.renderer)
   set(gcf, 'renderer', cfg.renderer)
 end
 
+% add a menu to the figure, but only if the current figure does not have
+% subplots
+% also, delete any possibly existing previous menu
+% this is safe because delete([]) does nothing
+delete(findobj(gcf, 'type', 'uimenu', 'label', 'FieldTrip'));
+if numel(findobj(gcf, 'type', 'axes', '-not', 'tag', 'ft-colorbar')) <= 1
+  ftmenu = uimenu(gcf, 'Label', 'FieldTrip');
+  uimenu(ftmenu, 'Label', 'Show pipeline',  'Callback', {@menu_pipeline, cfg});
+  uimenu(ftmenu, 'Label', 'About',  'Callback', @menu_about);
+end
+
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
 ft_postamble provenance
 ft_postamble previous data
-
-% add a menu to the figure
-% ftmenu = uicontextmenu; set(gcf, 'uicontextmenu', ftmenu)
-ftmenu = uimenu(gcf, 'Label', 'FieldTrip');
-uimenu(ftmenu, 'Label', 'Show pipeline',  'Callback', {@menu_pipeline, cfg});
-uimenu(ftmenu, 'Label', 'About',  'Callback', @menu_about);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION which is called after selecting a time range

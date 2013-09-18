@@ -8,6 +8,8 @@ function [dipout] = minimumnormestimate(dip, grad, vol, dat, varargin)
 %
 % Optional input arguments should come in key-value pairs and can include
 %   'noisecov'         = Nchan x Nchan matrix with noise covariance
+%   'noiselambda'      = scalar value, regularisation parameter for the noise
+%                        covariance matrix. (default=0)
 %   'sourcecov'        = Nsource x Nsource matrix with source covariance
 %                        (can be empty, the default will then be identity)
 %   'lambda'           = scalar, regularisation parameter (can be empty, 
@@ -73,12 +75,13 @@ dip.outside = dip.outside(:)';
 noisecov       = ft_getopt(varargin, 'noisecov');
 sourcecov      = ft_getopt(varargin, 'sourcecov');
 lambda         = ft_getopt(varargin, 'lambda');  % can be empty, it will then be estimated based on SNR
-snr            = ft_getopt(varargin, 'snr');  % is used to estimate lambda if lambda is not specified
+noiselambda    = ft_getopt(varargin, 'noiselambda', []);
+snr            = ft_getopt(varargin, 'snr');     % is used to estimate lambda if lambda is not specified
 
 % these settings pertain to the forward model, the defaults are set in compute_leadfield
 reducerank     = ft_getopt(varargin, 'reducerank');
 normalize      = ft_getopt(varargin, 'normalize');
-normalizeparam = ft_getopt(varargin, 'normalizeparam');
+normalizeparam = ft_getopt(varargin, 'normalizeparam', 0.5);
 keepfilter     = istrue(ft_getopt(varargin, 'keepfilter', false));
 dowhiten       = istrue(ft_getopt(varargin, 'prewhiten',  false));
 doscale        = istrue(ft_getopt(varargin, 'scalesourcecov', false));
@@ -91,9 +94,9 @@ elseif ~isempty(lambda) && ~isempty(snr)
   error('either lambda or snr should be specified, not both');
 end
 
-if ~isempty(snr) && doscale
-  error('scaling of the source covariance in combination with a specified snr parameter is not allowed');
-end
+%if ~isempty(snr) && doscale
+%  error('scaling of the source covariance in combination with a specified snr parameter is not allowed');
+%end
 
 % compute leadfield
 if hasfilter
@@ -140,7 +143,6 @@ if ~hasfilter
     n = n + size(dip.leadfield{i}, 2);
   end
   
-  fprintf('computing MNE source reconstruction, this may take some time...\n');
   % compute the inverse of the forward model, this is where prior information
   % on source and noise covariance would be useful
   if isempty(noisecov)
@@ -162,15 +164,20 @@ if ~hasfilter
       fprintf('prewhitening the leadfields using the noise covariance\n');
       
       % compute the prewhitening matrix
-      [U,S,V] = svd(C);
+      if ~isempty(noiselambda)
+        fprintf('using a regularized noise covariance matrix\n');
+        % note: if different channel types are present, one should probably load the diagonal with channel-type specific stuff
+        [U,S,V] = svd(C+eye(size(C))*noiselambda);
+      else
+        [U,S,V] = svd(C);
+      end
+      
       Tol     = 1e-12;
       diagS   = diag(S);
       sel     = find(diagS>Tol.*diagS(1));
-      
-      P = diag(1./sqrt(diag(S(sel,sel))))*U(:,sel)';
-      
-      A = P*A;
-      C = eye(size(P,1));
+      P       = diag(1./sqrt(diag(S(sel,sel))))*U(:,sel)'; % prewhitening matrix
+      A       = P*A; % prewhitened leadfields 
+      C       = eye(size(P,1)); % prewhitened noise covariance matrix
     end
     
     if doscale
@@ -181,24 +188,33 @@ if ~hasfilter
       % order for this to make sense (otherwise the diagonal elements of C
       % have different units)
       fprintf('scaling the source covariance\n');
-      scale = trace(A*R*A')/trace(C);
+      scale = trace(A*(R*A'))/trace(C);
       R     = R./scale;
-      
-    elseif ~isempty(snr)
+    end
+    
+    if ~isempty(snr)
       % the regularisation parameter can be estimated from the noise covariance,
       % see equation 6 in Lin et al. 2004
       lambda = trace(A * R * A')/(trace(C)*snr^2);
     end
     
-    % equation 5 from Lin et al 2004 (this implements Dale et al 2000, and Liu et al. 2002)
-    denom = (A*R*A'+(lambda^2)*C);
-    if cond(denom)<1e12
-      w = R * A' / denom;
-    else
-      fprintf('taking pseudo-inverse due to large condition number\n');
-      w = R * A' * pinv(denom);
-    end
-  
+    %% equation 5 from Lin et al 2004 (this implements Dale et al 2000, and Liu et al. 2002)
+    %denom = (A*R*A'+(lambda^2)*C);
+    %if cond(denom)<1e12
+    %  w = R * A' / denom;
+    %else
+    %  fprintf('taking pseudo-inverse due to large condition number\n');
+    %  w = R * A' * pinv(denom);
+    %end
+    
+    % as documented on MNE website, this is replacing the part of the code above, it gives
+    % more stable results numerically.
+    Rc      = chol(R);
+    [U,S,V] = svd(A * Rc, 'econ');
+    s  = diag(S);
+    ss = s ./ (s.^2 + lambda);
+    w  = Rc * V * diag(ss) * U';
+    
     % unwhiten the filters to bring them back into signal subspace
     if dowhiten
       w = w*P;

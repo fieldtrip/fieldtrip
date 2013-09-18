@@ -26,22 +26,13 @@ function [source] = ft_sourcedescriptives(cfg, source)
 % The following option only applies to LCMV single-trial timecourses.
 %   cfg.fixedori         = 'within_trials' or 'over_trials' (default = 'over_trials')
 %
-% You can apply a custom mathematical transformation such as a log-transform
-% on the estimated power using
-%   cfg.transform  = string describing the transformation (default is [])
-% The nai, i.e. neural activity index (power divided by projected noise),
-% is computed prior to applying the optional transformation.  Subsequently,
-% the transformation is applied on the power and on the projected noise
-% using "feval". A useful transformation is for example 'log' or 'log10'.
-%
 % If repeated trials are present that have undergone some sort of
 % resampling (i.e. jackknife, bootstrap, singletrial or rawtrial), the mean,
 % variance and standard error of mean will be computed for all source
 % parameters. This is done after applying the optional transformation
 % on the power and projected noise.
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat
@@ -49,11 +40,9 @@ function [source] = ft_sourcedescriptives(cfg, source)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_SOURCEANALYSIS, FT_SOURCESTATISTICS
+% See also FT_SOURCEANALYSIS, FT_SOURCESTATISTICS, FT_MATH
 
-% Copyright (C) 2004-2007, Robert Oostenveld & Jan-Mathijs Schoffelen
-% Copyright (C) 2010, Jan-Mathijs Schoffelen
-
+% Copyright (C) 2004-2013, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -77,7 +66,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble provenance
 ft_preamble trackconfig
 ft_preamble debug
@@ -86,7 +75,12 @@ ft_preamble loadvar source
 % check if the input data is valid for this function
 source = ft_checkdata(source, 'datatype', 'source', 'feedback', 'yes');
 
-cfg = ft_checkconfig(cfg, 'forbidden',   {'trials'});
+cfg = ft_checkconfig(cfg, 'forbidden',   {'trials'});    % trial selection is not implented here, you may want to consider ft_selectdata
+
+% DEPRECATED by roboos on 13 June 2013
+% see http://bugzilla.fcdonders.nl/show_bug.cgi?id=2199 for more details
+% support for this functionality can be removed at the end of 2013
+cfg = ft_checkconfig(cfg, 'deprecated',  {'transform'}); % please use ft_math instead
 
 % set the defaults
 cfg.transform        = ft_getopt(cfg, 'transform',        []);

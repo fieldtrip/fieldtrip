@@ -64,8 +64,7 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 % connectivity measures are linearly indexed, specifying 'inflow' or
 % 'outflow' can result in unexpected behavior.
 %  
-% to facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following option:
+% to facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 % if you specify this option the input data will be read from a *.mat
 % file on disk. this mat files should contain only a single variable named 'data',
@@ -73,42 +72,36 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 %
 % See also FT_SINGLEPLOTTFR, FT_MULTIPLOTER, FT_MULTIPLOTTFR, FT_TOPOPLOTER, FT_TOPOPLOTTFR
 
-% this function depends on ft_timelockbaseline which has the following options:
-% cfg.baseline, documented
-% cfg.channel
-% cfg.baselinewindow
-% cfg.previous
-% cfg.version
-
 % Undocumented local options:
 % cfg.zlim/xparam (set to a specific frequency range or time range [zmax zmin] for an average
 % over the frequency/time bins for TFR data.  Use in conjunction with e.g. xparam = 'time', and cfg.parameter = 'powspctrm').
+% cfg.preproc
 
-% copyright (c) 2003-2006, ole jensen
+% Copyright (C) 2003-2006, Ole Jensen
 %
-% this file is part of fieldtrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
 %
-%    fieldtrip is free software: you can redistribute it and/or modify
-%    it under the terms of the gnu general public license as published by
-%    the free software foundation, either version 3 of the license, or
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
 %    (at your option) any later version.
 %
-%    fieldtrip is distributed in the hope that it will be useful,
-%    but without any warranty; without even the implied warranty of
-%    merchantability or fitness for a particular purpose.  see the
-%    gnu general public license for more details.
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
 %
-%    you should have received a copy of the gnu general public license
-%    along with fieldtrip. if not, see <http://www.gnu.org/licenses/>.
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $id: ft_singleplotER.m 3147 2011-03-17 12:38:09z jansch $
+% $Id$
 
 revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble provenance
 ft_preamble trackconfig
 ft_preamble debug
@@ -147,6 +140,7 @@ cfg.maskstyle       = ft_getopt(cfg, 'maskstyle',    'box');
 cfg.channel         = ft_getopt(cfg, 'channel',      'all');
 cfg.directionality  = ft_getopt(cfg, 'directionality',   []);
 cfg.figurename      = ft_getopt(cfg, 'figurename',       []);
+cfg.preproc         = ft_getopt(cfg, 'preproc', []);
 
 
 Ndata = numel(varargin);
@@ -207,6 +201,30 @@ dtype  = dtype{1};
 dimord = varargin{1}.dimord;
 dimtok = tokenize(dimord, '_');
 
+% ensure that the preproc specific options are located in the cfg.preproc 
+% substructure, but also ensure that the field 'refchannel' is present at the
+% highest level in the structure. This is a little hack by JM because the field
+% refchannel can also refer to the plotting of a connectivity metric. Also,
+% the freq2raw conversion does not work at all in the call to ft_preprocessing.
+% Therefore, for now, the preprocessing will not be done when there is freq
+% data in the input. A more generic solution should be considered.
+
+if isfield(cfg, 'refchannel'), refchannelincfg = cfg.refchannel; end
+if ~any(strcmp({'freq','freqmvar'},dtype)), 
+  cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'}); 
+end
+if exist('refchannelincfg', 'var'), cfg.refchannel  = refchannelincfg; end
+
+if ~isempty(cfg.preproc)
+  % preprocess the data, i.e. apply filtering, baselinecorrection, etc.
+  fprintf('applying preprocessing options\n');
+  if ~isfield(cfg.preproc, 'feedback')
+    cfg.preproc.feedback = cfg.interactive;
+  end
+  for i=1:Ndata
+    varargin{i} = ft_preprocessing(cfg.preproc, varargin{i});
+  end
+end
 
 % set x/y/parameter defaults according to datatype and dimord
 switch dtype
@@ -340,13 +358,13 @@ if (isfull || haslabelcmb) && isfield(varargin{1}, cfg.parameter)
     if ~isfull,
       % convert 2-dimensional channel matrix to a single dimension:
       if isempty(cfg.directionality)
-        sel1 = strmatch(cfg.refchannel, varargin{i}.labelcmb(:,2), 'exact');
-        sel2 = strmatch(cfg.refchannel, varargin{i}.labelcmb(:,1), 'exact');
+        sel1 = find(strcmp(cfg.refchannel, varargin{i}.labelcmb(:,2)));
+        sel2 = find(strcmp(cfg.refchannel, varargin{i}.labelcmb(:,1)));
       elseif strcmp(cfg.directionality, 'outflow')
         sel1 = [];
-        sel2 = strmatch(cfg.refchannel, varargin{i}.labelcmb(:,1), 'exact');
+        sel2 = find(strcmp(cfg.refchannel, varargin{i}.labelcmb(:,1)));
       elseif strcmp(cfg.directionality, 'inflow')
-        sel1 = strmatch(cfg.refchannel, varargin{i}.labelcmb(:,2), 'exact');
+        sel1 = find(strcmp(cfg.refchannel, varargin{i}.labelcmb(:,2)));
         sel2 = [];
       end
       fprintf('selected %d channels for %s\n', length(sel1)+length(sel2), cfg.parameter);
@@ -549,27 +567,29 @@ if strcmp('yes',cfg.hotkeys)
 end
 
 % set the figure window title, add channel labels if number is small
-if length(sellab) < 5
-  chans = join_str(',', cfg.channel);
-else
-  chans = '<multiple channels>';
-end
-if isfield(cfg, 'dataname')
-  dataname = cfg.dataname;
-elseif nargin > 1
-  dataname = inputname(2);
-  for k = 2:Ndata
-    dataname = [dataname ', ' inputname(k+1)];
+if isempty(get(gcf,'Name'))
+  if length(sellab) < 5
+    chans = join_str(',', cfg.channel);
+  else
+    chans = '<multiple channels>';
   end
-else
-  dataname = cfg.inputfile;
-end
-if isempty(cfg.figurename)
-  set(gcf, 'Name', sprintf('%d: %s: %s (%s)', gcf, mfilename, join_str(', ',dataname), chans));
-  set(gcf, 'NumberTitle', 'off');
-else
-  set(gcf, 'name', cfg.figurename);
-  set(gcf, 'NumberTitle', 'off');
+  if isfield(cfg, 'dataname')
+    dataname = cfg.dataname;
+  elseif nargin > 1
+    dataname = inputname(2);
+    for k = 2:Ndata
+      dataname = [dataname ', ' inputname(k+1)];
+    end
+  else
+    dataname = cfg.inputfile;
+  end
+  if isempty(cfg.figurename)
+    set(gcf, 'Name', sprintf('%d: %s: %s (%s)', gcf, mfilename, join_str(', ',dataname), chans));
+    set(gcf, 'NumberTitle', 'off');
+  else
+    set(gcf, 'name', cfg.figurename);
+    set(gcf, 'NumberTitle', 'off');
+  end
 end
 
 % make the figure interactive
@@ -608,17 +628,22 @@ if ~isempty(cfg.renderer)
   set(gcf, 'renderer', cfg.renderer)
 end
 
+% add a menu to the figure, but only if the current figure does not have
+% subplots
+% also, delete any possibly existing previous menu
+% this is safe because delete([]) does nothing
+delete(findobj(gcf, 'type', 'uimenu', 'label', 'FieldTrip'));
+if numel(findobj(gcf, 'type', 'axes')) <= 1
+  ftmenu = uimenu(gcf, 'Label', 'FieldTrip');
+  uimenu(ftmenu, 'Label', 'Show pipeline',  'Callback', {@menu_pipeline, cfg});
+  uimenu(ftmenu, 'Label', 'About',  'Callback', @menu_about);
+end
+
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
 ft_postamble provenance
 ft_postamble previous varargin
-
-% add a menu to the figure
-% ftmenu = uicontextmenu; set(gcf, 'uicontextmenu', ftmenu)
-ftmenu = uimenu(gcf, 'Label', 'FieldTrip');
-uimenu(ftmenu, 'Label', 'Show pipeline',  'Callback', {@menu_pipeline, cfg});
-uimenu(ftmenu, 'Label', 'About',  'Callback', @menu_about);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION which is called after selecting a time range

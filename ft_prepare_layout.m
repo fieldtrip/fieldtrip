@@ -88,7 +88,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble provenance
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -865,11 +865,16 @@ else
     d(:, tmpsel) = inf;
   end
   
-  % take mindist as the median of the first quartile of closest channel pairs with non-zero distance
-  mindist = min(d); % get closest neighbour for all channels
-  mindist = sort(mindist(mindist>1e-6),'ascend');
-  mindist = mindist(1:round(numel(label)/4));
-  mindist = median(mindist);
+  if any(isfinite(d(:)))
+      % take mindist as the median of the first quartile of closest channel pairs with non-zero distance
+      mindist = min(d); % get closest neighbour for all channels
+      mindist = sort(mindist(mindist>1e-6),'ascend');
+      mindist = mindist(1:round(numel(label)/4));
+      mindist = median(mindist);
+  else
+      mindist = eps; % not sure this is a good value but it's just to prevent crashes when
+                     % the EEG sensor definition is meaningless
+  end    
   
   X = prj(:,1);
   Y = prj(:,2);

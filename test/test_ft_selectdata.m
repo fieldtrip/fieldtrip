@@ -69,12 +69,14 @@ sel = [5 8 12 38];
 cfg = [];cfg.channel = data.label(sel);
 d1  = ft_selectdata(data, 'channel', data.label(sel));
 d2  = ft_selectdata(cfg, data);
+d2.cfg = [];
 assert(isequal(d1,d2));
 
 sel = [3 4 6 9];
 cfg = [];cfg.trials = sel;
 d3  = ft_selectdata(data, 'rpt', sel);
 d4  = ft_selectdata(cfg, data);
+d4.cfg = []; % ft_selectdata_old does not do anything with cfg
 assert(isequal(d3,d4));
 
 %% this part of the script tests the functionality of ft_selectdata with respect
@@ -111,12 +113,16 @@ freqtf     = ft_freqanalysis(cfg, data);
 % compare ft_selectdata_new with what would be expected
 cfg  = [];cfg.channel=data.label(5:10);
 fx1  = ft_selectdata(freq,  'channel', data.label(5:10));
-fx1b = ft_selectdata(cfg, freq); 
+fx1b = ft_selectdata(cfg, freq);
+fx1  = rmfield(fx1, 'cfg');
+fx1b = rmfield(fx1b, 'cfg');
 assert(isequal(fx1.fourierspctrm, freq.fourierspctrm(:,5:10,:)));
 assert(isequal(fx1, fx1b));
 
 fp1  = ft_selectdata(freqp, 'channel', data.label(5:10));
 fp1b = ft_selectdata(cfg, freqp); 
+fp1  = rmfield(fp1, 'cfg');
+fp1b = rmfield(fp1b, 'cfg');
 assert(isequal(fp1.powspctrm, freqp.powspctrm(:,5:10,:)));
 assert(isequal(fp1, fp1b));
 
@@ -127,6 +133,8 @@ catch
 end
 ftf1  = ft_selectdata(freqtf, 'channel', data.label(5:10));
 ftf1b = ft_selectdata(cfg, freqtf); 
+ftf1  = rmfield(ftf1, 'cfg');
+ftf1b = rmfield(ftf1b, 'cfg');
 assert(isequal(ftf1.powspctrm, freqtf.powspctrm(:,5:10,:,:)));
 assert(isequal(ftf1, ftf1b));
 
@@ -134,13 +142,16 @@ assert(isequal(ftf1, ftf1b));
 cfg  = [];cfg.frequency=[10 40];
 fx2  = ft_selectdata(freq,  'foilim', [10 40]);
 fx2b = ft_selectdata(cfg, freq);
-
+fx2  = rmfield(fx2, 'cfg');
+fx2b = rmfield(fx2b, 'cfg');
 % FIXME: THE LABEL IS A ROW VECTOR, SHOULD BE COLUMN. INVESTIGATE THIS
 assert(isequal(fx2.fourierspctrm, freq.fourierspctrm(:,:,9:39)));
 assert(isequal(fx2, fx2b));
 
 fp2  = ft_selectdata(freqp, 'foilim', [10 40]);
 fp2b = ft_selectdata(cfg, freqp); 
+fp2  = rmfield(fp2, 'cfg');
+fp2b = rmfield(fp2b, 'cfg');
 assert(isequal(fp2.powspctrm, freqp.powspctrm(:,:,9:39)));
 assert(isequal(fp2, fp2b));
 
@@ -148,6 +159,8 @@ fc2 = ft_selectdata(freqc, 'foilim', [10 40]);
 
 ftf2  = ft_selectdata(freqtf, 'foilim', [10 40]);
 ftf2b = ft_selectdata(cfg, freqtf); 
+ftf2  = rmfield(ftf2, 'cfg');
+ftf2b = rmfield(ftf2b, 'cfg');
 assert(isequal(ftf2.powspctrm, freqtf.powspctrm(:,:,1:4,:)));
 assert(isequal(ftf2, ftf2b));
 
@@ -165,6 +178,19 @@ fx4 = ft_selectdata(freq,  'avgoverchan', 'yes');
 fp4 = ft_selectdata(freqp, 'avgoverchan', 'yes');
 fc4 = ft_selectdata(freqc, 'avgoverchan', 'yes');
 ftf4 = ft_selectdata(freqtf, 'avgoverchan', 'yes');
+
+% assessing label after averaging: see bug 2191
+cfg = [];
+cfg.avgoverchan = 'yes';
+fx42 = ft_selectdata(cfg,freq);
+fp42 = ft_selectdata(cfg,freqp);
+fc42 = ft_selectdata(cfg,freqc);
+ftf42 = ft_selectdata(cfg,freqtf);
+
+if ~strcmp(fx4.label{:},fx42.label{:});error('mismatch on label field');end
+if ~strcmp(fp4.label{:},fp42.label{:});error('mismatch on label field');end
+if ~strcmp(fc4.label{:},fc42.label{:});error('mismatch on label field');end
+if ~strcmp(ftf4.label{:},ftf42.label{:});error('mismatch on label field');end
 
 % avgover frequencies
 fx5 = ft_selectdata(freq,  'avgoverfreq', 'yes');

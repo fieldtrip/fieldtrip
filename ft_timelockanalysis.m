@@ -28,8 +28,7 @@ function [timelock] = ft_timelockanalysis(cfg, data)
 %       average and covariance computation. Missing values are replaced
 %       by NaN and are not included in the computation.
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat
@@ -66,35 +65,6 @@ function [timelock] = ft_timelockanalysis(cfg, data)
 % cfg.normalizevar
 % cfg.normalizecov
 
-% This function depends on PREPROC which has the following options:
-% cfg.absdiff
-% cfg.boxcar
-% cfg.bpfilter
-% cfg.bpfiltord
-% cfg.bpfilttype
-% cfg.bpfreq
-% cfg.demean
-% cfg.baselinewindow
-% cfg.derivative
-% cfg.detrend
-% cfg.dftfilter
-% cfg.dftfreq
-% cfg.hilbert
-% cfg.hpfilter
-% cfg.hpfiltord
-% cfg.hpfilttype
-% cfg.hpfreq
-% cfg.implicitref
-% cfg.lpfilter
-% cfg.lpfiltord
-% cfg.lpfilttype
-% cfg.lpfreq
-% cfg.medianfilter
-% cfg.medianfiltord
-% cfg.rectify
-% cfg.refchannel
-% cfg.reref
-
 % Copyright (C) 2003-2006, Markus Bauer
 % Copyright (C) 2003-2006, Robert Oostenveld
 %
@@ -120,7 +90,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble loadvar    data
 ft_preamble provenance data
 ft_preamble trackconfig
@@ -152,7 +122,6 @@ if ~isfield(cfg, 'preproc'),       cfg.preproc      = [];     end
 
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
-  fprintf('selecting %d trials\n', length(cfg.trials));
   data = ft_selectdata(data, 'rpt', cfg.trials);
 end
 

@@ -1,4 +1,4 @@
-function [realign, h] = ft_volumerealign(cfg, mri, target)
+function [realign, snap] = ft_volumerealign(cfg, mri, target)
 
 % FT_VOLUMEREALIGN spatially aligns an anatomical MRI with head coordinates
 % based on external fiducials or anatomical landmarks. This function does
@@ -63,10 +63,13 @@ function [realign, h] = ft_volumerealign(cfg, mri, target)
 % mode will stop and the transformation matrix is computed. This method
 % also supports the cfg-option:
 %  cfg.snapshot = 'no' ('yes'), making a snapshot of the image once a
-%    fiducial or landmark location is selected. For each of the
-%    fiducials/landmarks a new figure is created. The optional second
+%    fiducial or landmark location is selected. The optional second
 %    output argument to the function will contain the handles to these
 %    figures.
+%  cfg.snapshotfile = 'ft_volumerealign_snapshot' or string, the root of
+%    the filename for the snapshots, including the path. If no path is
+%    given the files are saved to the pwd. The consecutive figures will be
+%    numbered and saved as png-file.
 %
 % When cfg.method = 'headshape', the following cfg-option is required:
 %  cfg.headshape = string pointing to a file describing a headshape, that
@@ -104,8 +107,7 @@ function [realign, h] = ft_volumerealign(cfg, mri, target)
 % (with the key 'r'), that should be a point with a positive coordinate on
 % the left-right axis.
 %
-% To facilitate data-handling and distributed computing with the
-% peer-to-peer module, this function has the following options:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ... cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a
 % *.mat file on disk and/or the output data will be written to a *.mat
@@ -147,7 +149,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble provenance
 ft_preamble trackconfig
 ft_preamble debug
@@ -167,6 +169,7 @@ cfg.landmark   = ft_getopt(cfg, 'landmark',  []);
 cfg.parameter  = ft_getopt(cfg, 'parameter', 'anatomy');
 cfg.clim       = ft_getopt(cfg, 'clim',      []);
 cfg.snapshot   = ft_getopt(cfg, 'snapshot',  false);
+cfg.snapshotfile = ft_getopt(cfg, 'snapshotfile', fullfile(pwd,'ft_volumerealign_snapshot'));
 
 if strcmp(cfg.method, '')
   if isempty(cfg.landmark) && isempty(cfg.fiducial)
@@ -193,6 +196,10 @@ basedonfid = strcmp(cfg.method, 'fiducial');
 
 % these two have to be simultaneously true for a snapshot to be taken
 dosnapshot   = istrue(cfg.snapshot);
+if dosnapshot,
+  % create an empty array of handles
+  snap = [];
+end
 takesnapshot = false;
 
 % select the parameter that should be displayed
@@ -301,13 +308,10 @@ switch cfg.method
       drawnow;
       if dosnapshot && takesnapshot
         % create a new figure and draw right away, this will keep the old one on the screen
-        h(end+1) = figure;
-        h1 = subplot('position',[0.02 0.55 0.44 0.44]);%subplot(2,2,1);
-        h2 = subplot('position',[0.52 0.55 0.44 0.44]);%subplot(2,2,2);
-        h3 = subplot('position',[0.02 0.05 0.44 0.44]);%subplot(2,2,3);
-        handles = {h1 h2 h3};
-        [h1, h2, h3] = volplot(x, y, z, dat, [xc yc zc], cfg.clim, showcrosshair, updatepanel, handles, showmarkers, markers);
-        drawnow;
+        snap(end+1) = copyobj(h(1), 0);
+        set(snap(end), 'visible', 'off');
+        print(snap(end), '-dpng', [cfg.snapshotfile,num2str(numel(snap))]);
+        set(0, 'currentfigure', h(1));
       end
       takesnapshot = false;
       
@@ -331,8 +335,8 @@ switch cfg.method
           cfg.clim(2) = cfg.clim(2)+cscalefactor;
           
         case 113 % 'q'
-          delete(h(end));
-          h = h(1:end-1);
+          delete(h(1));
+          
           break;
         case 108 % 'l'
           lpa = [xc yc zc];
@@ -587,25 +591,33 @@ switch cfg.method
     
     tmpcfg             = [];
     tmpcfg.method      = 'singleshell';
-    tnocfg.numvertices = 20000;
+    tmpcfg.numvertices = 20000;
     scalp           = ft_prepare_headmodel(tmpcfg, seg);
     scalp           = ft_convert_units(scalp, 'mm');
     
     if ~isfield(cfg, 'weights')
       % weight the points with z-coordinate more than the rest. These are the
       % likely points that belong to the nose and eye rims
-      weights = ones(size(shape.pnt,1),1);
-      weights(shape.pnt(:,3)<0) = 100; % this value seems to work
+      w = ones(size(shape.pnt,1),1);
+      %w(shape.pnt(:,3)<0) = 100; % this value seems to work
     else
-      weights = cfg.weights(:);
-      if numel(weights)~=size(shape.pnt,1),
+      w = cfg.weights(:);
+      if numel(w)~=size(shape.pnt,1),
         error('number of weights should be equal to the number of points in the headshape');
       end
     end
     
+    % the icp function wants this as a function handle.
+    weights = @(x)assignweights(x,w);
+    
     % construct the coregistration matrix
-    [R, t, corr, D, data2] = icp2(scalp.bnd.pnt', shape.pnt', 20, [], weights); % icp2 is a helper function implementing the iterative closest point algorithm
-    transform              = inv([R t;0 0 0 1]);
+    % [R, t, corr, D, data2] = icp2(scalp.bnd.pnt', shape.pnt', 20, [], weights); % icp2 is a helper function implementing the iterative closest point algorithm
+    nrm         = normals(scalp.bnd.pnt, scalp.bnd.tri, 'vertex');
+    [R, t, err] = icp(scalp.bnd.pnt', shape.pnt', 50, 'Minimize', 'plane', 'Normals', nrm', 'ReturnAll', true, 'Weight', weights, 'Extrapolation', true, 'WorstRejection', 0.05);
+    [m,ix]      = min(err);
+    R           = R(:,:,ix);
+    t           = t(:,:,ix);
+    transform   = inv([R t;0 0 0 1]);
     
     % warp the extracted scalp points to the new positions
     scalp.bnd.pnt          = warp_apply(transform, scalp.bnd.pnt);
@@ -621,8 +633,7 @@ switch cfg.method
     %     mrifid.pnt   = warp_apply(transform*mri.transform, [fiducials.nas;fiducials.lpa;fiducials.rpa]);
     %     mrifid.label = {'NZinteractive';'Linteractive';'Rinteractive'};
     %     shapemri.fid = mrifid;
-    
-    
+       
     % update the cfg
     cfg.headshape    = shape;
     cfg.headshapemri = scalp;
@@ -734,8 +745,8 @@ switch cfg.method
 
     if ~isfield(cfg, 'spm'), cfg.spm = []; end
     cfg.spm.regtype = ft_getopt(cfg.spm, 'regtype', 'subj');
-    cfg.spm.smosrc  = ft_getopt(cfg.spm, 'smosrc',  5);
-    cfg.spm.smoref  = ft_getopt(cfg.spm, 'smoref',  5);
+    cfg.spm.smosrc  = ft_getopt(cfg.spm, 'smosrc',  2);
+    cfg.spm.smoref  = ft_getopt(cfg.spm, 'smoref',  2);
     
     if ~isfield(mri,    'coordsys'), 
       mri = ft_convert_coordsys(mri); 
@@ -772,8 +783,9 @@ switch cfg.method
     flags         = cfg.spm;
     flags.nits    = 0; %set number of non-linear iterations to zero
     params        = spm_normalise(V2,V1,[],[],[],flags);
-    mri.transform = (target.transform/params.Affine)/T;
-    transform     = eye(4);
+    %mri.transform = (target.transform/params.Affine)/T;
+    transform = (target.transform/params.Affine)/T/mri.transform;
+    % transform     = eye(4);
     if isfield(target, 'coordsys')
       coordsys = target.coordsys;
     else
@@ -1080,3 +1092,10 @@ if det(R1)<0
   R1 = V*B*U';
 end
 t1 = mm - R1*ms;
+
+
+%-------------------------------------------------------
+function y = assignweights(x, w)
+
+% x is an indexing vector with the same number of arguments as w
+y = w(:)';

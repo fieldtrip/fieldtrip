@@ -65,7 +65,18 @@ catch me
   end
 end
 
+% create a large array and test
 
+x = 0:492:(492*(25*10^7));
+y = 8424306*492;
+indx = nearest(x,y);
+indx2 = find(x<=y, 1, 'last');
+
+if indx~=indx2, 
+  error('nearest does not output the correct value');
+  fprintf('nearest is off by %d samples', indx2-indx);
+end
+% indx2 = 8424307
 
 
 

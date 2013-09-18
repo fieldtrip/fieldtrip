@@ -8,9 +8,12 @@ function [source] = loreta2fieldtrip(filename, varargin)
 %   [source]  =  loreta2fieldtrip(filename, ...)
 % where optional arguments can be passed as key-value pairs.
 %
+% filename can be the binary file from LORETA or a LORETA file exported as
+% a text file (using the format converter in LORETA-KEY).
+%
 % The following optional arguments are supported
 %   'timeframe'  =  integer number, which timepoint to read (default is to read all)
-% 
+%
 % See also NUTMEG2FIELDTRIP, SPASS2FIELDTRIP, FIELDTRIP2SPSS,
 % FT_SOURCEANALYSIS, FT_SOURCEPLOT
 
@@ -42,19 +45,29 @@ revision = '$Id$';
 ft_defaults
 ft_preamble callinfo
 
+is_txt = ft_filetype(filename, 'ascii_txt'); %FIXME text file only implemented for slor, don't know what text files look for for old loreta
+
 % get the optional input arguments
 timeframe = ft_getopt(varargin, 'timeframe'); % will be empty if not specified
 
 % start with an empty source structure
 source  =  [];
 
-if ft_filetype(filename, 'loreta_slor')
+if ft_filetype(filename, 'loreta_slor') || is_txt && strcmp(filename(end-7:end-4),'slor')
   voxnumber    = 6239;
   lorind       = getfield(load('loreta_ind.mat'), 'ind_sloreta');
   source.dim   = size(lorind);
-  source.xgrid =  -70:5:70;
-  source.ygrid = -100:5:65;
-  source.zgrid =  -45:5:70;
+  %Note1, ingnie: this was the orriginal, but this can't be correct, since the x
+  %dimention, for instance, is 37, while -70:5:70 is only 29. I just left
+  %it here for reference.
+  %   source.xgrid =  -70:5:70;
+  %   source.ygrid = -100:5:65;
+  %   source.zgrid =  -45:5:70;
+  
+  %Note2, ingie: I'm assuming that the above is where the INSIDE of the source
+  % runs between, looking at the data and the Loreta-Key program, this makes
+  % a lot of sense. I based the below source.transform on this.
+  source.transform = [5 0 0 -95;0 5 0 -130; 0 0 5 -75; 0 0 0 1]; %equivalent to x-90:5:90, y-125:5:90, z-70:5:105
 elseif ft_filetype(filename, 'loreta_lorb')
   voxnumber    = 2394;
   lorind       = getfield(load('loreta_ind.mat'), 'ind_loreta');
@@ -62,36 +75,55 @@ elseif ft_filetype(filename, 'loreta_lorb')
   source.xgrid =  -66:7:67;
   source.ygrid = -102:7:66;
   source.zgrid =  -41:7:71;
+  source.transform = eye(4);      % FIXME the transformation matrix should be assigned properly
 else
   error('unsupported LORETA format');
 end
 
-source.transform = eye(4);      % FIXME the transformation matrix should be assigned properly
+
 source.inside  = find(lorind ~= lorind(1));  % first voxel is outside
 source.outside = find(lorind == lorind(1));  % first voxel is outside
 
-fid = fopen(filename,'r', 'ieee-le');
-% determine the length of the file
-fseek(fid, 0, 'eof');
-filesize = ftell(fid);
-Ntime = filesize/voxnumber/4;
+if ~is_txt
+  % work with binary file
+  fid = fopen(filename,'r', 'ieee-le');
+  % determine the length of the file
+  fseek(fid, 0, 'eof');
+  filesize = ftell(fid);
+  Ntime = filesize/voxnumber/4;
+  % read binary file
+  if isempty(timeframe)
+    % read the complete timecourses
+    fseek(fid, 0, 'bof');
+    activity = fread(fid, [voxnumber Ntime], 'float = >single');
+  elseif length(timeframe)==1
+    % read only a single timeframe
+    fseek(fid, 4*voxnumber*(timeframe-1), 'bof');
+    activity = fread(fid, [voxnumber 1], 'float = >single');
+  else
+    error('you can read either one timeframe, or the complete timecourse');
+  end  
+  fclose(fid);  
+else
+  % read with textfile
+  activity = dlmread(filename);
+  if size(activity,1) == voxnumber || size(activity,2) == voxnumber
+    if size(activity,2) == voxnumber
+      activity = activity';
+    end
+    Ntime = size(activity,2);
+  else
+    error('expect column or row to be length 2394 or 6239')
+  end
+  if isempty(timeframe)
+  else
+    % read timeframe
+    activity = activity(:,timeframe);
+  end  
+end
 
 fprintf('file %s contains %d timepoints\n', filename, Ntime);
 fprintf('file %s contains %d grey-matter voxels\n', filename, voxnumber);
-
-if isempty(timeframe)
-  % read the complete timecourses
-  fseek(fid, 0, 'bof');
-  activity = fread(fid, [voxnumber Ntime], 'float = >single');
-elseif length(timeframe)==1
-  % read only a single timeframe
-  fseek(fid, 4*voxnumber*(timeframe-1), 'bof');
-  activity = fread(fid, [voxnumber 1], 'float = >single');
-else
-  error('you can read either one timeframe, or the complete timecourse');
-end
-
-fclose(fid);
 
 Ntime = size(activity,2);
 if Ntime>1

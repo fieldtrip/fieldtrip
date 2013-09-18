@@ -11,17 +11,15 @@ function [freq] = ft_appendfreq(cfg, varargin)
 %
 %  cfg.parameter  = String. Specifies the name of the field to concatenate.
 %                   For example, to concatenate freq1.powspctrm,
-%                   freq2.powspecrum etc, use cft.parameter = 'powspctrm'.
+%                   freq2.powspctrm etc, use cft.parameter = 'powspctrm'.
 %
 % The configuration can optionally contain
-%  cfg.appenddim  = String. The dimension to concatenate over (default:
-%                   'auto').
+%  cfg.appenddim  = String. The dimension to concatenate over (default is 'auto').
 %  cfg.tolerance  = Double. Tolerance determines how different the units of
 %                   frequency structures are allowed to be to be considered
 %                   compatible (default: 1e-5).
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a
@@ -55,7 +53,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble provenance
 ft_preamble trackconfig
 ft_preamble debug
@@ -200,10 +198,81 @@ switch cfg.appenddim
       % FIXME append dof
     else
       freq.dimord = varargin{1}.dimord;
-      % FIXME append cumtapcnt cumsumcnt trialinfo dof
+      % FIXME append dof
+      % before append cumtapcnt cumsumcnt trialinfo check if there's a
+      % subfield in each dataset. Append fields of different dataset might
+      % lead in empty and/or non-exinting fields in a particular dataset
+      hascumsumcnt = [];
+      hascumtapcnt = [];
+      hastrialinfo = [];
+      for i=1:Ndata
+        if isfield(varargin{i},'cumsumcnt');
+          hascumsumcnt(end+1) = 1;
+        else
+          hascumsumcnt(end+1) = 0;
+        end
+        if isfield(varargin{i},'cumtapcnt');
+          hascumtapcnt(end+1) = 1;
+        else
+          hascumtapcnt(end+1) = 0;
+        end
+        if isfield(varargin{i},'trialinfo');
+          hastrialinfo(end+1) = 1;
+        else
+          hastrialinfo(end+1) = 0;
+        end
+      end
+      
+      % screen concatenable fields
+      if ~checkfreq(varargin{:}, 'identical', tol)
+        error('the freq fields of the input data structures are not equal');
+      else
+        freq.freq=varargin{1}.freq;
+      end
+      if ~sum(hascumsumcnt)==0 && ~(sum(hascumsumcnt)==Ndata);
+        error('the cumsumcnt fields of the input data structures are not equal');
+      else
+        iscumsumcnt=unique(hascumsumcnt);
+      end
+      if ~sum(hascumtapcnt)==0 && ~(sum(hascumtapcnt)==Ndata);
+        error('the cumtapcnt fields of the input data structures are not equal');
+      else
+        iscumtapcnt=unique(hascumtapcnt);
+      end
+      if ~sum(hastrialinfo)==0 && ~(sum(hastrialinfo)==Ndata);
+        error('the trialinfo fields of the input data structures are not equal');
+      else
+        istrialinfo=unique(hastrialinfo);
+      end
+      
+      % concatenating fields
+      for i=1:Ndata;
+        if iscumsumcnt;
+          cumsumcnt{i}=varargin{i}.cumsumcnt;
+        end
+        if iscumtapcnt;
+          cumtapcnt{i}=varargin{i}.cumtapcnt;
+        end
+        if istrialinfo;
+          trialinfo{i}=varargin{i}.trialinfo;
+        end
+      end
+      
+      % fill in the rest of the descriptive fields
+      if iscumsumcnt;
+        freq.cumsumcnt = cat(catdim,cumsumcnt{:});
+        clear cumsumcnt;
+      end
+      if iscumtapcnt;
+        freq.cumtapcnt = cat(catdim,cumtapcnt{:});
+        clear cumtapcnt;
+      end
+      if istrialinfo;
+        freq.trialinfo = cat(catdim,trialinfo{:});
+        clear trialinfo;
+      end
     end
     
-    % fill in the rest of the descriptive fields
     freq.label = varargin{1}.label;
     freq.freq  = varargin{1}.freq;
     if isfield(varargin{1}, 'time'), freq.time = varargin{1}.time; end
@@ -372,70 +441,3 @@ elseif strcmp(required, 'identical')
     faxis   = faxis(:,1);
   end
 end
-
-%---------------------------------------------
-% subfunction to check uniqueness of time bins
-function [boolval, taxis] = checktime(varargin)
-
-% last input is always the required string
-tol      = varargin{end};
-required = varargin{end-1};
-varargin = varargin(1:end-2);
-
-Ndata = numel(varargin);
-Ntime = zeros(1,Ndata);
-taxis = zeros(1,0);
-for i=1:Ndata
-  Ntime(i) = numel(varargin{i}.time);
-  taxis    = [taxis;varargin{i}.time(:)];
-end
-
-if strcmp(required, 'unique')
-  boolval = numel(unique(taxis))==numel(taxis) && ~all(isnan(taxis));
-  % the second condition is included when the time is set to dummy nan
-elseif strcmp(required, 'identical')
-  % the number of time bins needs at least to be the same across
-  % inputs
-  boolval = all(Ntime==Ntime(1));
-  if boolval
-    % then check whether the axes are equal
-    taxis   = reshape(taxis, Ntime(1), []);
-    boolval = all(all(abs(taxis - repmat(taxis(:,1), 1, Ndata))<tol)==1);
-    taxis   = taxis(:,1);
-  end
-end
-
-%--------------------------------------------------
-% subfunction to check uniqueness of channel labels
-function [boolval, list] = checkchan(varargin)
-
-% last input is always the required string
-required = varargin{end};
-varargin = varargin(1:end-1);
-
-Ndata = numel(varargin);
-
-if strcmp(required, 'unique')
-  Nchan = zeros(1,Ndata);
-  list  = cell(0,1);
-  for i=1:Ndata
-    Nchan(i) = numel(varargin{i}.label);
-    list     = [list;varargin{i}.label(:)];
-  end
-  boolval = numel(unique(list))==numel(list);
-  
-elseif strcmp(required, 'identical')
-  
-  % determine whether channels are equal across the inputs
-  % channel order is not yet handled here
-  for k = 2:Ndata
-    matched = numel(match_str(varargin{1}.label, varargin{k}.label));
-    if matched ~= numel(varargin{1}.label) || matched ~= numel(varargin{k}.label)
-      boolval = 0;
-      return;
-    end
-  end
-  
-  boolval = 1;
-end
-

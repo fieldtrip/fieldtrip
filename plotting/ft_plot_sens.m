@@ -8,16 +8,17 @@ function hs = ft_plot_sens(sens, varargin)
 % or PREPARE_VOL_SENS.
 %
 % Optional input arguments should come in key-value pairs and can include
-%   style    = plotting style for the points representing the channels, see plot3 (default = 'k.')
-%   coil     = true/false, plot each individual coil or the channelposition (default = false)
-%   label    = show the label, can be 'off', 'label', 'number' (default = 'off')
-%   chantype = string or cell-array with strings, for example {'meg', 'megref'} (default is all)
+%   style         = plotting style for the points representing the channels, see plot3 (default = 'k.')
+%   coil          = true/false, plot each individual coil or the channelposition (default = false)
+%   coildiameter  = diameter of the MEG gradiometer coils (default = 0)
+%   label         = show the label, can be 'off', 'label', 'number' (default = 'off')
+%   chantype      = string or cell-array with strings, for example {'meg', 'megref'} (default = 'all')
 %
 % Example
 %   sens = ft_read_sens('Subject01.ds');
 %   ft_plot_sens(sens, 'style', 'r*')
 
-% Copyright (C) 2009, Robert Oostenveld
+% Copyright (C) 2009-2013, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -43,10 +44,11 @@ ws = warning('on', 'MATLAB:divideByZero');
 sens = ft_datatype_sens(sens);
 
 % get the optional input arguments
-style    = ft_getopt(varargin, 'style',  'k.');
-coil     = ft_getopt(varargin, 'coil',   false);
-label    = ft_getopt(varargin, 'label',  'off');
-chantype = ft_getopt(varargin, 'chantype');
+style         = ft_getopt(varargin, 'style',  'k.');
+coil          = ft_getopt(varargin, 'coil',   false);
+label         = ft_getopt(varargin, 'label',  'off');
+chantype      = ft_getopt(varargin, 'chantype');
+coildiameter  = ft_getopt(varargin, 'coildiameter', 0);
 
 % select a subset of channels to be plotted
 if ~isempty(chantype)
@@ -96,13 +98,26 @@ if istrue(coil)
   elseif isfield(sens, 'elecpos')
     pnt = sens.elecpos;
   end
+  if isfield(sens, 'coilori')
+    ori = sens.coilori;
+  end
   
-  hs = plot3(pnt(:,1), pnt(:,2), pnt(:,3), style);
+  if coildiameter==0
+    hs = plot3(pnt(:,1), pnt(:,2), pnt(:,3), style);
+  else
+    plotcoil(pnt, ori, coildiameter);
+  end
   
 else
   % determine the position of each channel, which is for example the mean of
   % two bipolar electrodes, or the bottom coil of a axial gradiometer
-  hs = plot3(sens.chanpos(:,1), sens.chanpos(:,2), sens.chanpos(:,3), style);
+  
+  if coildiameter==0
+    hs = plot3(sens.chanpos(:,1), sens.chanpos(:,2), sens.chanpos(:,3), style);
+  else
+    plotcoil(sens.chanpos, sens.chanori, coildiameter);
+  end
+  
   
   if ~isempty(label) && ~any(strcmp(label, {'off', 'no'}))
     for i=1:length(sens.label)
@@ -133,3 +148,43 @@ if ~holdflag
 end
 
 warning(ws); % revert to original state
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function plotcoil(pnt, ori, coildiameter)
+% construct a template coil at [0 0 0], oriented towards [0 0 1]
+pos = circle(12);
+s   = scale([coildiameter coildiameter coildiameter]/2);
+for i=1:size(pnt,1)
+  x = ori(i,1);
+  y = ori(i,2);
+  z = ori(i,3);
+  ph = atan2(y, x)*180/pi;
+  th = atan2(sqrt(x^2+y^2), z)*180/pi;
+  r1 = rotate([0 th 0]);
+  r2 = rotate([0 0 ph]);
+  t  = translate(pnt(i,:));
+  rim = warp_apply(t*r2*r1*s, pos); % scale, rotate and translate the template coil vertices, skip the central vertex
+  rim(1,:) = rim(end,:);            % replace the first (central) point with the last, this closes the circle
+  h = line(rim(:,1), rim(:,2), rim(:,3));
+  set(h, 'color', 'k');
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [pnt, tri] = circle(n)
+phi = linspace(0, 2*pi, n+1);
+phi = phi(1:end-1)';
+x = cos(phi);
+y = sin(phi);
+z = zeros(size(phi));
+pnt = [0 0 0; x y z];
+if nargout>1
+  tri = zeros(n,3);
+  for i=1:n-1
+    tri(i,:) = [1 i+1 i+2];
+  end
+  tri(end,:) = [1 n+1 2];
+end

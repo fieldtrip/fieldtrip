@@ -69,28 +69,29 @@ if istrue(ft_getopt(cfg, 'showcallinfo', 'yes'))
   clear stack
 end
 
+
 % compute the MD5 hash of each of the output arguments
-if isequal(ft_default.postamble, {'varargout'})
-  % temporarily remove the cfg field for getting the hash
-  tmpvarargout = varargout; % does not need extra memory, below shouldn't change the references to the data
-  for icell = 1:numel(tmpvarargout);
-    try
-      tmpvarargout{icell} = rmfield(tmpvarargout{icell},'cfg'); 
-    end
-  end
-  cfg.callinfo.outputhash = cellfun(@CalcMD5, cellfun(@mxSerialize, tmpvarargout, 'UniformOutput', false), 'UniformOutput', false);
-  clear tmpvarargout; % remove the reference
+% temporarily remove the cfg field for getting the hash (creating a duplicate of the data, but still has the same mem ref, so no extra mem needed)
+if isequal(ft_default.postamble, {'varargin'})
+  tmpargout = varargout;
 else
-  % temporarily remove the cfg field for getting the hash
-  tmpvarargout = cellfun(@eval, ft_default.postamble, 'UniformOutput', false); % does not need extra memory, below shouldn't change the references to the data
-  for icell = 1:numel(tmpvarargout);
-    try
-      tmpvarargout{icell} = rmfield(tmpvarargout{icell},'cfg');
-    end
-  end
-  cfg.callinfo.outputhash = cellfun(@CalcMD5, cellfun(@mxSerialize, tmpvarargout, 'UniformOutput', false), 'UniformOutput', false);
-  clear tmpvarargout; % remove the reference
+  tmpargout = cellfun(@eval, ft_default.postamble, 'UniformOutput', false);
 end
+cfg.callinfo.outputhash = cell(1,numel(tmpargout));
+for iargout = 1:numel(tmpargout)
+  tmparg = tmpargout{iargout}; % can't get number of bytes with whos unless taken out of it's cell
+  if isfield(tmparg,'cfg')
+    tmparg = rmfield(tmparg,'cfg');
+  else
+  end
+  % only calculate md5 when below 2^31 bytes (CalcMD5 can't handle larger input)
+  bytenum = whos('tmparg');
+  bytenum = bytenum.bytes;
+  if bytenum<2^31
+    cfg.callinfo.outputhash{iargout} = CalcMD5(mxSerialize(tmparg));
+  end
+end
+clear tmpargout tmparg; % remove the extra references
 
 clear ftohDiW7th_FuncTimer
 clear ftohDiW7th_FuncMem

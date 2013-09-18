@@ -96,7 +96,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble callinfo
 ft_preamble trackconfig
 
@@ -132,7 +132,7 @@ if  isequal(cfg.taper, 'dpss')
   cfg = ft_checkopt(cfg,'tapsmofrq',{'doublevector', 'doublescalar'});
 end
 
-cfg = ft_checkconfig(cfg, 'allowed', {'taper', 'borderspikes', 't_ftimwin', 'foi', 'spikechannel', 'channel', 'taperopt', 'rejectsaturation','tapsmofrq'});
+cfg = ft_checkconfig(cfg, 'allowed', {'taper', 'borderspikes', 't_ftimwin', 'foi', 'spikechannel', 'channel', 'taperopt', 'rejectsaturation','tapsmofrq', 'warning'});
 
 % length of tapsmofrq, foi and t_ftimwin should all be matched
 if isfield(cfg,'tapsmofrq')

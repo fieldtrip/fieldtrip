@@ -84,8 +84,7 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 % used for creating a layout. If you want to have more fine-grained control
 % over the layout of the subplots, you should create your own layout file.
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following option:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 % If you specify this option the input data will be read from a *.mat
 % file on disk. This mat files should contain only a single variable named 'data',
@@ -99,11 +98,6 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 % Undocumented local options:
 % cfg.channel
 % cfg.layoutname
-
-%
-% This function depends on FT_FREQBASELINE which has the following options:
-% cfg.baseline, documented
-% cfg.baselinetype, documented
 
 % Copyright (C) 2003-2006, Ole Jensen
 % Copyright (C) 2007-2011, Roemer van der Meij & Jan-Mathijs Schoffelen
@@ -130,7 +124,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble provenance
 ft_preamble trackconfig
 ft_preamble debug
@@ -314,13 +308,13 @@ if (isfull || haslabelcmb) && isfield(data, cfg.parameter)
   if ~isfull,
     % Convert 2-dimensional channel matrix to a single dimension:
     if isempty(cfg.directionality)
-      sel1 = strmatch(cfg.refchannel, data.labelcmb(:,2), 'exact');
-      sel2 = strmatch(cfg.refchannel, data.labelcmb(:,1), 'exact');
+      sel1 = find(strcmp(cfg.refchannel, data.labelcmb(:,2)));
+      sel2 = find(strcmp(cfg.refchannel, data.labelcmb(:,1)));
     elseif strcmp(cfg.directionality, 'outflow')
       sel1 = [];
-      sel2 = strmatch(cfg.refchannel, data.labelcmb(:,1), 'exact');
+      sel2 = find(strcmp(cfg.refchannel, data.labelcmb(:,1)));
     elseif strcmp(cfg.directionality, 'inflow')
-      sel1 = strmatch(cfg.refchannel, data.labelcmb(:,2), 'exact');
+      sel1 = find(strcmp(cfg.refchannel, data.labelcmb(:,2)));
       sel2 = [];
     end
     fprintf('selected %d channels for %s\n', length(sel1)+length(sel2), cfg.parameter);
@@ -503,7 +497,7 @@ end
 % set colormap
 if isfield(cfg,'colormap')
   if size(cfg.colormap,2)~=3, error('multiplotTFR(): Colormap must be a n x 3 matrix'); end
-  set(gca,'colormap',cfg.colormap);
+  set(gcf,'colormap',cfg.colormap);
 end;
 
 % Plot channels:
@@ -601,24 +595,31 @@ if strcmp('yes',cfg.hotkeys)
 end
 
 % set the figure window title
-if isfield(cfg,'funcname')
-  funcname = cfg.funcname;
+if isempty(get(gcf, 'Name'))
+  if isfield(cfg,'funcname')
+    funcname = cfg.funcname;
+  else
+    funcname = mfilename;
+  end
+  
+  if isfield(cfg,'dataname')
+      dataname = cfg.dataname;
+  elseif nargin > 1
+    dataname = inputname(2);
+  else % data provided through cfg.inputfile
+    dataname = cfg.inputfile;
+  end
+  
+  if isempty(cfg.figurename)
+    set(gcf, 'Name', sprintf('%d: %s: %s', gcf, funcname, dataname));
+    set(gcf, 'NumberTitle', 'off');
+  else
+    set(gcf, 'name', cfg.figurename);
+    set(gcf, 'NumberTitle', 'off');
+  end
 else
-  funcname = mfilename;
-end
-if isfield(cfg,'dataname')
-    dataname = cfg.dataname;
-elseif nargin > 1
-  dataname = inputname(2);
-else % data provided through cfg.inputfile
-  dataname = cfg.inputfile;
-end
-if isempty(cfg.figurename)
-  set(gcf, 'Name', sprintf('%d: %s: %s', gcf, funcname, dataname));
-  set(gcf, 'NumberTitle', 'off');
-else
-  set(gcf, 'name', cfg.figurename);
-  set(gcf, 'NumberTitle', 'off');
+  funcname = '';
+  dataname = '';
 end
 
 % Make the figure interactive:

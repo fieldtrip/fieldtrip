@@ -56,8 +56,7 @@ function [mvardata] = ft_mvaranalysis(cfg, data)
 %   cfg.toi       = [t1 t2 ... tx] the time points at which the windows are
 %                    centered
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat
@@ -96,7 +95,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble provenance
 ft_preamble trackconfig
 ft_preamble debug
@@ -239,6 +238,7 @@ ntap = size(tap,1);
 tmpcfg        = [];
 tmpcfg.toilim = cfg.toi([1 end]) + cfg.t_ftimwin.*[-0.5 0.5];
 data          = ft_redefinetrial(tmpcfg, data);
+ntrl          = length(data.trial);
 
 %---demean
 if strcmp(cfg.demean, 'yes'),

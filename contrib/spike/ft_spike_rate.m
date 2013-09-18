@@ -46,7 +46,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble callinfo
 ft_preamble trackconfig
 
@@ -71,7 +71,7 @@ cfg = ft_checkopt(cfg,'vartriallen', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'keeptrials', 'char', {'yes', 'no'});
 
 % check if the configuration inputs are valid
-cfg = ft_checkconfig(cfg, 'allowed', {'outputunit', 'spikechannel', 'trials', 'latency', 'vartriallen', 'keeptrials'});
+cfg = ft_checkconfig(cfg, 'allowed', {'outputunit', 'spikechannel', 'trials', 'latency', 'vartriallen', 'keeptrials', 'warning'});
 
 % get the spikechannels
 cfg.spikechannel = ft_channelselection(cfg.spikechannel, spike.label);

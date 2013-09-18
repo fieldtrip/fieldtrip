@@ -1,25 +1,8 @@
 function [freq] = ft_freqcomparison(cfg, varargin)
 
-% FT_FREQCOMPARISON performs a comparison between two (rpt-/subj-)
-% chan-freq datasets.
+% FT_FREQCOMPARISON is deprecated, please use FT_MATH instead.
 %
-% Differently from ft_freqbaseline, ft_freqcomparison requires two datasets
-% for input arguments (n==2) where the first dataset is considered the norm.
-% The output contains the difference of the second dataset to this norm,
-% expressed in units as determined by cfg.comparisontype.
-%
-% Use as
-%   [freq] = ft_freqcomparison(cfg, dataset1, dataset2);
-%
-% where the freq data comes from FT_SPECEST_MTMFFT and the configuration
-% should contain
-%
-%   cfg.comparisontype = 'absolute' 'relchange' 'relative' (default =
-%   'absolute')
-%
-% See also FT_FREQBASELINE, FT_FREQANALYSIS, FT_TIMELOCKBASELINE
-
-% FIXME add support for cohspctrm
+% See also FT_MATH, FT_FREQBASELINE
 
 % Copyright (C) 2010-2011, Arjen Stolk, DCCN, Donders Institute
 %
@@ -41,11 +24,16 @@ function [freq] = ft_freqcomparison(cfg, varargin)
 %
 % $Id$
 
+% DEPRECATED by roboos on 30 July 2013
+% see http://bugzilla.fcdonders.nl/show_bug.cgi?id=2222 for more details
+% support for this functionality can be removed at the end of 2013
+warning('FT_FREQCOMPARISON is deprecated, please use FT_MATH instead.')
+
 revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble provenance
 ft_preamble trackconfig
 ft_preamble debug
@@ -86,8 +74,8 @@ end
 % initiate output variable
 freq = varargin{1};
 
-% frequency comparison for multiple trials/subjects
 if strcmp(varargin{1}.dimord, 'rpt_chan_freq') || strcmp(varargin{1}.dimord, 'subj_chan_freq')
+  % frequency comparison for multiple trials/subjects
   
   if size(varargin{1}.powspctrm,3) ~= size(varargin{2}.powspctrm,3)
     error('input conditions have different sizes');
@@ -109,8 +97,8 @@ if strcmp(varargin{1}.dimord, 'rpt_chan_freq') || strcmp(varargin{1}.dimord, 'su
     error('unsupported comparisontype');
   end
   
+elseif strcmp(varargin{1}.dimord, 'chan_freq') || strcmp(varargin{1}.dimord, 'chan_freq_time')
   % frequency comparison for averages
-elseif strcmp(varargin{1}.dimord, 'chan_freq')
   
   if size(varargin{1}.powspctrm,2) ~= size(varargin{2}.powspctrm,2)
     error('input conditions have different sizes');
@@ -125,6 +113,9 @@ elseif strcmp(varargin{1}.dimord, 'chan_freq')
   else
     error('unsupported comparisontype');
   end
+  
+else
+  error('unsupported dimord')
 end
 
 % user update
@@ -134,4 +125,5 @@ fprintf('performing %s comparison \n', cfg.comparisontype);
 ft_postamble debug
 ft_postamble trackconfig
 ft_postamble provenance
-
+ft_postamble previous varargin  % this copies the datain.cfg structure into the cfg.previous field. You can also use it for multiple inputs, or for "varargin"
+ft_postamble history freq       % this adds the local cfg structure to the output data structure, i.e. dataout.cfg = cfg

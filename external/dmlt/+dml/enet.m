@@ -43,7 +43,7 @@ classdef enet < dml.method
    performance % cross-validated decoding performance for elements on lambda path
    path % lambda path followed when estimating decoding performance
    
-   df % degrees of freedom
+   df % degrees of freedom (not computed if zero)
    
   end
   
@@ -108,7 +108,7 @@ classdef enet < dml.method
           
         elseif obj.lambda == 0 && strcmp(obj.family,'binomial')
           
-          obj.weights = -logist2(Y-1,[X ones(size(X,1),1)]);
+          obj.weights = logist2(Y-1,[X ones(size(X,1),1)]);
           
         elseif obj.lambda == 0 && strcmp(obj.family,'multinomial')
           
@@ -193,7 +193,7 @@ classdef enet < dml.method
           else
             mp = mean(obj.performance);
             [maxp,midx] = max(mp);
-            ep = std(obj.performance) ./ size(obj.performance,1);
+            ep = std(obj.performance) ./ sqrt(size(obj.performance,1));
             b = find(mp >= (maxp - ep(midx)),1,'first');
             if isempty(b), b=1; end
           end
@@ -267,7 +267,7 @@ classdef enet < dml.method
       end
       
       % compute degrees of freedom for Gaussian case
-      if size(obj.weights,2)==1 && strcmp(obj.family,'gaussian')
+      if isempty(obj.df) && size(obj.weights,2)==1 && strcmp(obj.family,'gaussian')
         
         idx = (obj.weights ~= 0); idx(end)=0;
         obj.df = trace(X(:,idx)*inv(X(:,idx)'*X(:,idx) + obj.lambda*(1-obj.alpha)*eye(sum(idx)))*X(:,idx)');

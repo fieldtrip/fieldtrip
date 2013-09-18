@@ -15,7 +15,7 @@ function [status] = ft_hastoolbox(toolbox, autoadd, silent)
 % silent = 0 means that it will give some feedback about adding the toolbox
 % silent = 1 means that it will not give feedback
 
-% Copyright (C) 2005-2012, Robert Oostenveld
+% Copyright (C) 2005-2013, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -38,11 +38,11 @@ function [status] = ft_hastoolbox(toolbox, autoadd, silent)
 % this function is called many times in FieldTrip and associated toolboxes
 % use efficient handling if the same toolbox has been investigated before
 % persistent previous previouspath
-% 
+%
 % if ~isequal(previouspath, path)
 %   previous = [];
 % end
-% 
+%
 % if isempty(previous)
 %   previous = struct;
 % elseif isfield(previous, fixname(toolbox))
@@ -60,6 +60,7 @@ url = {
   'SPM2'       'see http://www.fil.ion.ucl.ac.uk/spm'
   'SPM5'       'see http://www.fil.ion.ucl.ac.uk/spm'
   'SPM8'       'see http://www.fil.ion.ucl.ac.uk/spm'
+  'SPM12'       'see http://www.fil.ion.ucl.ac.uk/spm'
   'MEG-PD'     'see http://www.kolumbus.fi/kuutela/programs/meg-pd'
   'MEG-CALC'   'this is a commercial toolbox from Neuromag, see http://www.neuromag.com'
   'BIOSIG'     'see http://biosig.sourceforge.net'
@@ -126,6 +127,10 @@ url = {
   'XUNIT'      'see http://www.mathworks.com/matlabcentral/fileexchange/22846-matlab-xunit-test-framework'
   'PLEXON'     'available from http://www.plexon.com/assets/downloads/sdk/ReadingPLXandDDTfilesinMatlab-mexw.zip'
   'MISC'       'various functions that were downloaded from http://www.mathworks.com/matlabcentral/fileexchange and elsewhere'
+  '35625-INFORMATION-THEORY-TOOLBOX'      'see http://www.mathworks.com/matlabcentral/fileexchange/35625-information-theory-toolbox'
+  '29046-MUTUAL-INFORMATION'              'see http://www.mathworks.com/matlabcentral/fileexchange/35625-information-theory-toolbox'
+  '14888-MUTUAL-INFORMATION-COMPUTATION'  'see http://www.mathworks.com/matlabcentral/fileexchange/14888-mutual-information-computation'
+  'PLOT2SVG'    'see http://www.mathworks.com/matlabcentral/fileexchange/7401-scalable-vector-graphics-svg-export-of-figures'
   };
 
 if nargin<2
@@ -161,6 +166,19 @@ switch toolbox
     status = exist('spm.m') && strcmp(spm('ver'),'SPM5');
   case 'SPM8'
     status = exist('spm.m') && strncmp(spm('ver'),'SPM8', 4);
+  case 'SPM8UP' % version 8 or later
+    status = 0;  
+    if exist('spm.m')
+        v = spm('ver');
+        if str2num(v(isstrprop(v, 'digit')))>=8
+            status = 1;
+        end
+    end
+    
+    %This is to avoid crashes when trying to add SPM to the path
+    if ~status 
+        toolbox = 'SPM8';
+    end
   case 'SPM12'
     status = exist('spm.m') && strncmp(spm('ver'),'SPM12', 5);
   case 'MEG-PD'
@@ -283,6 +301,18 @@ switch toolbox
     status = exist('initTestSuite.m', 'file') && exist('runtests.m', 'file');
   case 'PLEXON'
     status = exist('plx_adchan_gains.m', 'file') && exist('mexPlex');
+  case '35625-INFORMATION-THEORY-TOOLBOX'
+    filelist = {'conditionalEntropy' 'entropy' 'jointEntropy' 'mutualInformation' 'nmi' 'nvi' 'relativeEntropy'};
+    status = all(cellfun(@exist, filelist, repmat({'file'}, size(filelist))));
+  case '29046-MUTUAL-INFORMATION'
+    filelist = {'MI.m' 'license.txt'};
+    status = all(cellfun(@exist, filelist, repmat({'file'}, size(filelist))));
+  case '14888-MUTUAL-INFORMATION-COMPUTATION'
+    filelist = {'condentropy.m' 'demo_mi.m' 'estcondentropy.cpp' 'estjointentropy.cpp' 'estpa.cpp' 'findjointstateab.cpp' 'makeosmex.m' 'mutualinfo.m' 'condmutualinfo.m' 'entropy.m' 'estentropy.cpp' 'estmutualinfo.cpp' 'estpab.cpp' 'jointentropy.m' 'mergemultivariables.m' };
+    status = all(cellfun(@exist, filelist, repmat({'file'}, size(filelist))));
+  case 'PLOT2SVG'
+    filelist = {'plot2svg.m' 'simulink2svg.m'};
+    status = all(cellfun(@exist, filelist, repmat({'file'}, size(filelist))));
     
     % the following are fieldtrip modules/toolboxes
   case 'FILEIO'
@@ -308,8 +338,8 @@ switch toolbox
   case 'PREPROC'
     status = ~isempty(regexp(unixpath(path), [fttrunkpath '/preproc'],             'once')); % PREPROC is not added above, consider doing it there -roevdmei
     
-  % the following are not proper toolboxes, but only subdirectories in the fieldtrip toolbox
-  % these are added in ft_defaults and are specified with unix-style forward slashes
+    % the following are not proper toolboxes, but only subdirectories in the fieldtrip toolbox
+    % these are added in ft_defaults and are specified with unix-style forward slashes
   case 'COMPAT'
     status = ~isempty(regexp(unixpath(path), [fttrunkpath '/compat'],              'once'));
   case 'STATFUN'
@@ -337,7 +367,7 @@ switch toolbox
   case 'TEMPLATE/NEIGHBOURS'
     status = ~isempty(regexp(unixpath(path), [fttrunkpath '/template/neighbours'], 'once'));
   case 'TEMPLATE/SOURCEMODEL'
-    status = ~isempty(regexp(unixpath(path), [fttrunkpath '/template/sourcemodel'], 'once')); 
+    status = ~isempty(regexp(unixpath(path), [fttrunkpath '/template/sourcemodel'], 'once'));
   otherwise
     if ~silent, warning('cannot determine whether the %s toolbox is present', toolbox); end
     status = 0;
@@ -431,6 +461,7 @@ previouspath = path;
 function status = myaddpath(toolbox, silent)
 if isdeployed
   warning('cannot change path settings for %s in a compiled application', toolbox);
+  status = 1;
 elseif exist(toolbox, 'dir')
   if ~silent,
     ws = warning('backtrace', 'off');
