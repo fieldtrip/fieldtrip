@@ -952,6 +952,7 @@ switch headerformat
     %workaround for Matlab bug resulting in global variables being cleared
     varNames={varList.name};
     for i=1:length(globalList)
+        eval(['global ' globalList(i).name ';']);
         eval([globalList(i).name '=globalTemp{i};']);
         if ~any(strcmp(globalList(i).name,varNames)) %was global variable originally out of scope?
             eval(['clear ' globalList(i).name ';']); %clears link to global variable without affecting it
