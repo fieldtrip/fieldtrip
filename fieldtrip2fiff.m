@@ -1,24 +1,25 @@
 function fieldtrip2fiff(filename, data)
-% FIELDTRIP2FIFF saves a FieldTrip raw data structure as a fiff-file,
-% in order to be useable by the Neuromag software, or in the MNE suite
-% software.
+
+% FIELDTRIP2FIFF saves a FieldTrip raw data structure as a fiff-file, allowing it
+% to be further analyzed by the Neuromag software, or in the MNE suite software.
 %
 % Use as
 %   fieldtrip2fiff(filename, data)
-% where filename is the name of the output file, and data is a raw
-% data structure as obtained from FT_PREPROCESSING, or a timelock
-% structure obtained from FT_TIMELOCKANALYSIS. If the data comes from
-% preprocessing and has only one trial, then it writes the data into raw
-% continuous format. If present in the data, the original header from
-% neuromag is reused (also removing the non-used channels). Otherwise, the
-% function tries to create a correct header, which might or might not
-% contain the correct scaling and channel location. If the data contains
-% events in the cfg structure, it writes the events in the MNE format
-% (three columns) into a file based on "filename", ending with "-eve.fif"
+% where filename is the name of the output file, and data is a raw data structure
+% as obtained from FT_PREPROCESSING, or a timelock structure obtained from
+% FT_TIMELOCKANALYSIS.
+%
+% If the data comes from preprocessing and has only one trial, then it writes the
+% data into raw continuous format. If present in the data, the original header
+% from neuromag is reused (also removing the non-used channels). Otherwise, the
+% function tries to create a correct header, which might or might not contain the
+% correct scaling and channel location. If the data contains events in the cfg
+% structure, it writes the events in the MNE format (three columns) into a file
+% based on "filename", ending with "-eve.fif"
 %
 % See also FT_DATATYPE_RAW, FT_DATATYPE_TIMELOCK
 
-% Copyright (C) 2012-3, Jan-Mathijs Schoffelen, Gio Piantoni
+% Copyright (C) 2012-2013, Jan-Mathijs Schoffelen, Gio Piantoni
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -38,17 +39,12 @@ function fieldtrip2fiff(filename, data)
 %
 % $Id$
 
-revision = '$Id$';
-
-ft_defaults                 % this ensures that the path is correct and that the ft_defaults global variable is available
-ft_preamble help            % this will show the function help if nargin==0 and return an error
-ft_preamble callinfo        % this records the time and memory usage at teh beginning of the function
+% this ensures that the path is correct and that the ft_defaults global variable is available
+ft_defaults
 
 % ensure that the filename has the correct extension
-[pathstr,name,ext] = fileparts(filename);
-if isempty(ext),
-  filename = [filename, '.fif'];
-elseif ~strcmp(ext, '.fif')
+[pathstr, name, ext] = fileparts(filename);
+if ~strcmp(ext, '.fif')
   error('if the filename is specified with extension, this should read .fif');
 end
 fifffile = [pathstr filesep name '.fif'];
@@ -73,7 +69,6 @@ if ft_senstype(data, 'neuromag') && isfield(data, 'hdr')
   info = data.hdr.orig;
   
 else
-  
   info.meas_id.version = NaN;
   info.meas_id.machid  = [NaN;NaN];
   info.meas_id.secs    = NaN;
@@ -113,27 +108,14 @@ else
   
 end
 
-if istlck
-  evoked.aspect_kind = 100;
-  evoked.is_smsh     = 0;
-  evoked.nave        = max(data.dof(:));
-  evoked.first       = round(data.time(1)*info.sfreq);
-  evoked.last        = round(data.time(end)*info.sfreq);
-  evoked.times       = data.time;
-  evoked.comment     = sprintf('FieldTrip data averaged');
-  evoked.epochs      = data.avg;
-elseif israw
-  for j = 1:length(data)
-    evoked(j).aspect_kind = 100;
-    evoked(j).is_smsh     = 0; % FIXME: How could we tell?
-    evoked(j).nave        = 1; % FIXME: Use the real value
-    evoked(j).first       = round(data.time{j}(1)*info.sfreq);
-    evoked(j).last        = round(data.time{j}(end)*info.sfreq);
-    evoked(j).times       = data.time{j};
-    evoked(j).comment     = sprintf('FieldTrip data, category/trial %d', j);
-    evoked(j).epochs      = data.trial{j};
-  end  
+if israw
+  info.sfreq = data.fsample;
+elseif isepch
+  info.sfreq = 1 ./ mean(diff(data.time{1}));
+elseif istlck
+  info.sfreq = 1 ./ mean(diff(data.time));
 end
+
 info.ch_names = data.label(:)';
 info.chs      = sens2fiff(data);
 info.nchan    = numel(data.label);
@@ -183,24 +165,18 @@ elseif isepch || istlck
   
 end
 
-ft_postamble callinfo         % this records the time and memory at the end of the function, prints them on screen and adds this information together with the function name and matlab version etc. to the output cfg
-%TODO: are these three below necessary? there is no output
-% ft_postamble previous datain  % this copies the datain.cfg structure into the cfg.previous field. You can also use it for multiple inputs, or for "varargin"
-% ft_postamble history dataout  % this adds the local cfg structure to the output data structure, i.e. dataout.cfg = cfg
-% ft_postamble savevar dataout  % this saves the output data structure to disk in case the user specified the cfg.outputfile option
-
 %-------------------
 % subfunction
 function [chs] = sens2fiff(data)
 
 % use orig information if available
 if isfield(data, 'hdr') && isfield(data.hdr, 'orig') && ...
-  isfield(data.hdr.orig, 'chs')
-
+    isfield(data.hdr.orig, 'chs')
+  
   [dummy, i_label, i_chs] = intersect(data.label, {data.hdr.orig.chs.ch_name});
   chs(i_label) = data.hdr.orig.chs(i_chs);
   return
-
+  
 end
 
 % otherwise reconstruct it
@@ -288,7 +264,7 @@ for k = 1:numel(data.label)
     chs(1,k).coord_frame  = NaN;
     chs(1,k).eeg_loc      = [];
     chs(1,k).loc          = zeros(12,1);
-      
+    
   end
   
 end
