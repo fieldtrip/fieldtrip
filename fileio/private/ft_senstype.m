@@ -244,8 +244,8 @@ else
     % determine the type of magnetometer/gradiometer system based on the channel names alone
     % this uses a recursive call to the "islabel" section further down
     type = ft_senstype(sens.label);
-    sens_temp.type = type;
-    if strcmp(type, 'unknown') || ~ft_senstype(sens_temp,'meg')
+    %sens_temp.type = type;
+    if strcmp(type, 'unknown') %|| ~ft_senstype(sens_temp,'meg')
       % although we don't know the type, we do know that it is MEG
       type = 'meg';
     end
@@ -256,8 +256,8 @@ else
     % determine the type of electrode/acquisition system based on the channel names alone
     % this uses a recursive call to the "islabel" section further down
     type = ft_senstype(sens.label);
-    sens_temp.type = type;
-    if strcmp(type, 'unknown') || ~ft_senstype(sens_temp,'eeg')
+    %sens_temp.type = type;
+    if strcmp(type, 'unknown') %|| ~ft_senstype(sens_temp,'eeg')
       % although we don't know the type, we do know that it is EEG
       type = 'eeg';
     end
