@@ -50,6 +50,11 @@ function data = ft_removetmsartifact(cfg, data)
 %
 % $Id$
 
+% DEPRECATED by jimher on 19 September 2013
+% see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1791 for more details
+
+warning('FT_REMOVETMSARTIFACT is deprecated, please follow TMS-EEG tutorial instead (http://fieldtrip.fcdonders.nl/tutorial/tms-eeg).')
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the initial part deals with parsing the input options and data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -81,6 +86,7 @@ cfg.lpfiltord  = ft_getopt(cfg, 'lpfiltord', 2);
 cfg.lpfilttype = ft_getopt(cfg, 'lpfilttype', 'but');
 cfg.lpfreq     = ft_getopt(cfg, 'lpfreq', 30);
 cfg.offset     = ft_getopt(cfg, 'offset', 0);
+cfg.fillmethod = ft_getopt(cfg, 'fillmethod');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the actual computation is done in the middle part
@@ -96,6 +102,10 @@ else
 end
 
 if isnumeric(cfg.pulsewidth) && numel(cfg.pulsewidth)==1; temp_pulse = cfg.pulsewidth; end;
+
+% copy for all trials
+if isnumeric(cfg.pulseonset) && numel(cfg.pulseonset)==1; cfg.pulseonset = repmat(cfg.pulseonset, numtrl, 1); end
+if isnumeric(cfg.pulsewidth) && numel(cfg.pulsewidth)==1; cfg.pulsewidth = repmat(cfg.pulsewidth, numtrl, 1); end
 
 % check wether fields are cell where necessary
 if ~iscell(cfg.pulseonset); cfg.pulseonset = num2cell(cfg.pulseonset); end;
@@ -116,9 +126,6 @@ if isempty(cfg.pulseonset) || isempty(cfg.pulsewidth)
     fprintf('detected %d pulses in trial %d\n', length(onset), i);
   end
 end % estimate pulse onset and width
-
-% copy for all trials
-if isnumeric(cfg.pulseonset) && numel(cfg.pulseonset)==1; cfg.pulseonset = repmat(cfg.pulseonset, 1, numtrl); end
 
 switch cfg.method
   
@@ -171,7 +178,7 @@ switch cfg.method
         % express it in samples,
         pulseonset = nearest(data.time{i}, pulseonset);
         pulsewidth  = round(pulsewidth*fsample);
-        offset = round(cfg.offset*fsample);
+        offset = round(offset*fsample);
         
         begsample = pulseonset + offset;
         endsample = pulseonset + pulsewidth + offset - 1;
@@ -180,14 +187,56 @@ switch cfg.method
         begsample1 = begsample - pulsewidth;
         endsample1 = begsample - 1;
         
+        % determine a short window after the TMS pulse
+        begsample2 = endsample + 1;
+        endsample2 = endsample + pulsewidth;
+        
         dat1 = data.trial{i}(:,begsample1:endsample1);
-        fill = dat1(:,randperm(size(dat1,2))); % randomly shuffle the data points
+        dat2 = data.trial{i}(:,begsample2:endsample2);
+        %fill = dat1(:,randperm(size(dat1,2))); % randomly shuffle the data points
+        %fill = mean(dat1,2) + cumsum(std(dat1,[],2).*randn(size(dat1,1),size(dat1,2)));
+%         fill = linspace(mean(dat1,2),mean(dat2,2),endsample1-begsample1+1);
+%         fill = fill + cumsum(std(dat1,[],2).*randn(size(dat1,1),size(dat1,2)));
         
-        % FIXME an alternative would be to replace it with an interpolated version of the signal just around it
-        % FIXME an alternative would be to replace it with nan
-        % FIXME an alternative would be to replace it with random noise
+%         fill = cumsum(std(dat1,[],2).*randn(size(dat1,1),size(dat1,2)));
         
-        % replace the data in the pulse window with a random shuffled version of the data just around it
+        
+        switch cfg.fillmethod
+            case 'fft'
+            fft_dat1 = fft(dat1);
+            fft_dat2 = fft(dat2);
+            fill = real(ifft(mean([fft_dat1; fft_dat2])));
+    %         fill = std(dat1,[],2).*randn(size(dat1,1),size(dat1,2));
+    %         fill = fill .* repmat(hann(size(fill,2))',size(fill,1),1);
+    %         %fill = fill - linspace(fill(:,1),fill(:,end),endsample1-begsample1+1);
+    % %         fill = fill + linspace(mean(dat1,2),mean(dat2,2),endsample1-begsample1+1);
+    %         fill = fill + linspace(dat1(:,end),dat2(:,1),endsample1-begsample1+1);
+            case 'zeros'
+                fill = zeros(size(dat1,1),size(dat1,2));
+            case 'randperm'
+                fill = dat1(:,randperm(size(dat1,2))); % randomly shuffle the data points
+            case 'brown'
+                fill = linspace(mean(dat1,2),mean(dat2,2),endsample1-begsample1+1);
+                fill = fill + cumsum(std(dat1,[],2).*randn(size(dat1,1),size(dat1,2)));
+            case 'linear'
+                fill = interp1([1:size(dat1,2) 2*size(dat1,2)+1:3*size(dat1,2)], [dat1 dat2]', size(dat1,2)+1:2*size(dat1,2),'linear')';
+            case 'linear+noise'
+                fill = interp1([1:size(dat1,2) 2*size(dat1,2)+1:3*size(dat1,2)], [dat1 dat2]', size(dat1,2)+1:2*size(dat1,2),'linear')';
+                fill = fill(2:end-1) + std(dat1,[],2).*randn(size(dat1,1),size(dat1,2));
+            case 'spline'
+                fill = interp1([1:size(dat1,2) 2*size(dat1,2)+1:3*size(dat1,2)], [dat1 dat2]', size(dat1,2)+1:2*size(dat1,2),'spline')';
+            case 'cubic'
+                fill = interp1([1:size(dat1,2) 2*size(dat1,2)+1:3*size(dat1,2)], [dat1 dat2]', size(dat1,2)+1:2*size(dat1,2),'cubic')';
+            case 'cubic+noise'
+                fill = interp1([1:size(dat1,2) 2*size(dat1,2)+1:3*size(dat1,2)], [dat1 dat2]', size(dat1,2)+1:2*length(dat1),'cubic')';
+                fill = fill + std(dat1,[],2).*randn(size(dat1,1),size(dat1,2));
+        end;
+
+            % FIXME an alternative would be to replace it with an interpolated version of the signal just around it
+            % FIXME an alternative would be to replace it with nan
+            % FIXME an alternative would be to replace it with random noise
+
+            % replace the data in the pulse window with a random shuffled version of the data just around it
         data.trial{i}(:,begsample:endsample) = fill;
         
       end % for pulses
