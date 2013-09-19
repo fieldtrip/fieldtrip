@@ -794,6 +794,13 @@ switch headerformat
     end
     warning('on', 'MATLAB:REGEXP:deprecated')
     
+    % epochs.xml seems the most common version, but epoch.xml might also
+    % occur, so use only one name
+    if isfield(orig.xml, 'epoch')
+      orig.xml.epochs = orig.xml.epoch;
+      orig.xml = rmfield(orig.xml, 'epoch');
+    end
+    
     %make hdr according to FieldTrip rules
     hdr = [];
     Fs = zeros(length(orig.signal),1);
