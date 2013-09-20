@@ -75,6 +75,9 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 %  cfg.headshape = string pointing to a file describing a headshape, that
 %    can be loaded with ft_read_headshape, or a fieldtrip-structure describing
 %    a headshape
+% The following options are optional:
+%  cfg.scalpsmooth    = scalar (default = 2): smoothing parameter for the scalp extraction
+%  cfg.scalpthreshold = scalar (default = 0.1): threshold parameter for the scalp extraction
 % 
 % When cfg.method = 'fsl', a third input argument is required. The input volume is
 % coregistered to this target volume, using fsl's flirt program. This
@@ -170,6 +173,8 @@ cfg.parameter  = ft_getopt(cfg, 'parameter', 'anatomy');
 cfg.clim       = ft_getopt(cfg, 'clim',      []);
 cfg.snapshot   = ft_getopt(cfg, 'snapshot',  false);
 cfg.snapshotfile = ft_getopt(cfg, 'snapshotfile', fullfile(pwd,'ft_volumerealign_snapshot'));
+cfg.scalpsmooth    = ft_getopt(cfg, 'scalpsmooth',    2, 1); % empty is OK
+cfg.scalpthreshold = ft_getopt(cfg, 'scalpthreshold', 0.1);
 
 if strcmp(cfg.method, '')
   if isempty(cfg.landmark) && isempty(cfg.fiducial)
@@ -583,7 +588,8 @@ switch cfg.method
     % extract skull surface from image
     tmpcfg        = [];
     tmpcfg.output = 'scalp';
-    tmpcfg.smooth = 2;
+    tmpcfg.scalpsmooth    = cfg.scalpsmooth;
+    tmpcfg.scalpthreshold = cfg.scalpthreshold;
     if isfield(cfg, 'template')
      tmpcfg.template = cfg.template;
     end
