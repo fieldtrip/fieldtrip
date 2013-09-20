@@ -234,10 +234,9 @@ if strcmp(cfg.timwin,'all')
           trialNum      = trials(iTrial);
           spikesInTrial = find(spike.trial == trialNum);
           spc           = spike.fourierspctrm(spikesInTrial,:,:);
-
           ft_progress(iTrial/nTrials, 'Processing trial %d from %d', iTrial, nTrials);              
           % compute PPC 1.0 and 2.0 according to Vinck et al. (2011) using summation per trial
-          if strcmp(cfg.method,'ppc1')
+          if strcmp(cfg.method,'ppc2')
             if ~isempty(spc)
               m = nanmean(spc,1); % no problem with NaN
               hasNum = ~isnan(m);
@@ -245,7 +244,7 @@ if strcmp(cfg.timwin,'all')
               SS(hasNum) = SS(hasNum) + m(hasNum).*conj(m(hasNum));
               dof(hasNum) = dof(hasNum) + 1; % dof needs to be kept per frequency
             end
-          elseif strcmp(cfg.method,'ppc2')
+          elseif strcmp(cfg.method,'ppc1')
             if ~isempty(spc)
                n      = sum(~isnan(spc),1);
                m      = nansum(spc,1); 
@@ -262,7 +261,7 @@ if strcmp(cfg.timwin,'all')
       hasTrl = dof>1;
       if strcmp(cfg.method,'ppc1')
         out(hasTrl) = (S(hasTrl).*conj(S(hasTrl)) - SS(hasTrl))./(dof(hasTrl).^2 - dofSS(hasTrl));
-      else
+      elseif strcmp(cfg.method, 'ppc2')
         out(hasTrl) = (S(hasTrl).*conj(S(hasTrl)) - SS(hasTrl))./(dof(hasTrl).*(dof(hasTrl)-1));
       end
   end

@@ -244,7 +244,8 @@ else
     % determine the type of magnetometer/gradiometer system based on the channel names alone
     % this uses a recursive call to the "islabel" section further down
     type = ft_senstype(sens.label);
-    if strcmp(type, 'unknown')
+    %sens_temp.type = type;
+    if strcmp(type, 'unknown') %|| ~ft_senstype(sens_temp,'meg')
       % although we don't know the type, we do know that it is MEG
       type = 'meg';
     end
@@ -255,14 +256,17 @@ else
     % determine the type of electrode/acquisition system based on the channel names alone
     % this uses a recursive call to the "islabel" section further down
     type = ft_senstype(sens.label);
-    if strcmp(type, 'unknown')
+    %sens_temp.type = type;
+    if strcmp(type, 'unknown') %|| ~ft_senstype(sens_temp,'eeg')
       % although we don't know the type, we do know that it is EEG
       type = 'eeg';
     end
     
   elseif islabel
     % look only at the channel labels
-    if     (mean(ismember(ft_senslabel('ctf275'),        sens.label)) > 0.8)
+    if     (mean(ismember(ft_senslabel('ant128'),        sens.label)) > 0.8)
+      type = 'ant128';
+    elseif (mean(ismember(ft_senslabel('ctf275'),        sens.label)) > 0.8)
       type = 'ctf275';
     elseif (mean(ismember(ft_senslabel('ctfheadloc'),    sens.label)) > 0.8)  % look at the head localization channels
       type = 'ctf275';
@@ -368,7 +372,7 @@ if ~isempty(desired)
   % return a boolean flag
   switch desired
     case 'eeg'
-      type = any(strcmp(type, {'eeg' 'electrode' 'biosemi64' 'biosemi128' 'biosemi256' 'egi32' 'egi64' 'egi128' 'egi256' 'ext1020'}));
+      type = any(strcmp(type, {'eeg' 'electrode' 'ant128' 'biosemi64' 'biosemi128' 'biosemi256' 'egi32' 'egi64' 'egi128' 'egi256' 'ext1020'}));
     case 'biosemi'
       type = any(strcmp(type, {'biosemi64' 'biosemi128' 'biosemi256'}));
     case 'egi'
