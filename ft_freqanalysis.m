@@ -32,12 +32,6 @@ function [freq] = ft_freqanalysis(cfg, data)
 %                        output will contain a spectral transfer matrix,
 %                        the cross-spectral density matrix, and the
 %                        covariance matrix of the innovatio noise.
-%
-%                    OR, if you want to use the old implementation (not from
-%                      the specest module)
-%                      'mtmfft_old'
-%                      'mtmconvol_old'
-%                      'wltconvol_old'
 %   cfg.output     = 'pow'       return the power-spectra
 %                    'powandcsd' return the power and the cross-spectra
 %                    'fourier'   return the complex Fourier-spectra
@@ -115,10 +109,7 @@ function [freq] = ft_freqanalysis(cfg, data)
 %   cfg.foilim     = [begin end], frequency band of interest
 %   cfg.toi        = vector 1 x numtoi, the times on which the analysis windows
 %                    should be centered (in seconds)
-%   cfg.width      = 'width' of the wavelet, determines the temporal and spectral
-%                    resolution of the analysis (default = 7)
-%                    constant, for a 'classical constant-Q' wavelet analysis
-%                    vector, defining a variable width for each frequency
+%   cfg.width      = 'width', or number of cycles, of the wavelet (default = 7)
 %   cfg.gwidth     = determines the length of the used wavelets in standard deviations
 %                    of the implicit Gaussian kernel and should be choosen
 %                    >= 3; (default = 3)
@@ -135,10 +126,7 @@ function [freq] = ft_freqanalysis(cfg, data)
 %   cfg.foi        = vector 1 x numfoi, frequencies of interest
 %       OR
 %   cfg.foilim     = [begin end], frequency band of interest
-%   cfg.width      = 'width' of the wavelet, determines the temporal and spectral
-%                    resolution of the analysis (default = 7)
-%                    constant, for a 'classical constant-Q' wavelet analysis
-%                    vector, defining a variable width for each frequency
+%   cfg.width      = 'width', or number of cycles, of the wavelet (default = 7)
 %   cfg.gwidth     = determines the length of the used wavelets in standard deviations
 %                    of the implicit Gaussian kernel and should be choosen
 %                    >= 3; (default = 3)
