@@ -3,7 +3,6 @@ function [label] = atlas_lookup(atlas, pos, varargin)
 % ATLAS_LOOKUP determines the anatomical label of a location in the given atlas.
 %
 % Use as
-%   atlas = atlas_init(filename);
 %   label = atlas_lookup(atlas, pos, ...);
 %
 % Optinal input arguments should come in key-value pairs and can include
@@ -13,8 +12,6 @@ function [label] = atlas_lookup(atlas, pos, varargin)
 % Dependent on the input coordinates and the coordinates of the atlas, the
 % input positions are transformed betweem MNI and Talairach-Tournoux coordinates.
 % See http://www.mrc-cbu.cam.ac.uk/Imaging/Common/mnispace.shtml for more details.
-%
-% See also ATLAS_INIT, ATLAS_MASK
 
 % Copyright (C) 2005-2008, Robert Oostenveld
 %
@@ -85,6 +82,8 @@ elseif strcmp(inputcoord, 'tal') && strcmp(atlas.coordsys, 'tal')
   % nothing to do
 elseif strcmp(inputcoord, 'tal') && strcmp(atlas.coordsys, 'mni')
   pos = tal2mni(pos')'; % this function likes 3xN 
+elseif ~strcmp(inputcoord, atlas.coordsys)
+  error('there is a mismatch between the coordinate system in the atlas and the coordinate system in the data, which cannot be resolved');
 end
 
 num = size(pos,1);
