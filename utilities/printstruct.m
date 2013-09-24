@@ -178,6 +178,7 @@ switch class(val)
     elseif all(siz==1)
       str = sprintf('%s', printbool(val));
     elseif length(siz)==2
+      str = [];
       for i=1:siz(1);
         str = [ str sprintf('%s ', printbool(val(i,:))) '; ' ];
       end
@@ -196,6 +197,7 @@ switch class(val)
         str = sprintf('%g', val);
       end
     elseif length(siz)==2
+      str = [];
       for i=1:siz(1);
         if all(isinteger(val(i,:)))
           str = [ str sprintf('%d ', val(i,:)) '; ' ];
@@ -213,6 +215,7 @@ switch class(val)
     if all(siz==1)
       str = sprintf('%d', val);
     elseif length(siz)==2
+      str = [];
       for i=1:siz(1);
         str = [ str sprintf('%d ', val(i,:)) '; ' ];
       end
