@@ -657,8 +657,8 @@ switch dataformat
     if isfield(hdr.orig.xml,'epochs') && length(hdr.orig.xml.epochs) > 1
       data_in_epoch = zeros(1,length(hdr.orig.xml.epochs));
       for iEpoch = 1:length(hdr.orig.xml.epochs)
-        begsamp_epoch = round(str2double(hdr.orig.xml.epochs(iEpoch).epoch.beginTime)./1000./hdr.Fs);
-        endsamp_epoch = round(str2double(hdr.orig.xml.epochs(iEpoch).epoch.endTime)./1000./hdr.Fs);
+        begsamp_epoch = hdr.orig.epochdef(iEpoch,1);
+        endsamp_epoch = hdr.orig.epochdef(iEpoch,2);
         data_in_epoch(iEpoch) = length(intersect(begsamp_epoch:endsamp_epoch,begsample:endsample));
       end
       if sum(data_in_epoch>1) > 1
