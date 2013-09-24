@@ -778,9 +778,9 @@ switch eventformat
           if eventOffset < 0
             % event out of range (before recording started): do nothing
           else
-            eventCount = eventCount+1;
             % calculate eventSample, relative to start of epoch
             if isfield(hdr.orig.xml,'epochs') && length(hdr.orig.xml.epochs) > 1
+              SampIndex=[];
               for iEpoch = 1:size(hdr.orig.epochdef,1)
                 [dum,dum2] = intersect(squeeze(Msamp2offset(2,iEpoch,:)), eventOffset);
                 if ~isempty(dum2)
@@ -788,16 +788,21 @@ switch eventformat
                   SampIndex = dum2;
                 end
               end
-              eventSample = Msamp2offset(1,EpochNum,SampIndex);
-            else
+              if ~isempty(SampIndex) 
+                  eventSample = Msamp2offset(1,EpochNum,SampIndex);
+              else
+                  eventSample=[]; %Drop event if past end of epoch
+              end;
+            else 
               eventSample = eventOffset+1;
             end
-            
-            event(eventCount).type     = eventNames{iXml}(8:end);
-            event(eventCount).sample   = eventSample;
-            event(eventCount).offset   = 0;
-            event(eventCount).duration = str2double(xml.(eventNames{iXml})(iEvent).event.duration)./1000000000*hdr.Fs;
-            event(eventCount).value    = xml.(eventNames{iXml})(iEvent).event.code;
+           if ~isempty(eventSample) 
+              event(eventCount).type     = eventNames{iXml}(8:end);
+              event(eventCount).sample   = eventSample;
+              event(eventCount).offset   = 0;
+              event(eventCount).duration = str2double(xml.(eventNames{iXml})(iEvent).event.duration)./1000000000*hdr.Fs;
+              event(eventCount).value    = xml.(eventNames{iXml})(iEvent).event.code;
+            end;
           end  %if that takes care of non "-" events that are still out of range
         end %if that takes care of "-" events, which are out of range
       end %iEvent
