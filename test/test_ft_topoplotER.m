@@ -92,6 +92,10 @@ cfgc2.channelcmb = [repmat(freq2.label(5),[numel(freq2.label)-1 1]) freq2.label(
 coh2  = ft_connectivityanalysis(cfgc2, freq2);
 
 %plot
+cfg = [];
+cfg.layout = 'biosemi64.lay';
+cfg.refchannel = 'gui';
+cfg.parameter = 'cohspctrm';
 cfg.refchannel = coh2.labelcmb{1,1};
 figure;ft_topoplotER(cfg, coh2);drawnow
 
