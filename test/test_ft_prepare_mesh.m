@@ -82,7 +82,7 @@ seg1p = ft_datatype_segmentation(seg1,'segmentationstyle','probabilistic');
 
 %% mesh %%%%%%%%%%%%%%%%%
 
-% default: triangulation
+%% default: triangulation
 cfg=[];
 cfg.numvertices = 1000;
 meshA = ft_prepare_mesh(cfg,seg1p);
@@ -105,7 +105,7 @@ assert(isequal(meshA,meshB),'error: 03');
 assert(isfield(meshA(1),'pnt') && isfield(meshA(1),'tri') && isfield(meshA(1),'unit'), 'Missing field(s) in mesh structure');
 assert((cfg.numvertices == size(meshA(1).pnt,1)) && (cfg.numvertices == size(meshA(2).pnt,1)) && (cfg.numvertices == size(meshA(3).pnt,1)) && (cfg.numvertices == size(meshA(4).pnt,1)) && (cfg.numvertices == size(meshA(5).pnt,1)), 'Number of points is not equal to required');
 figure; ft_plot_mesh(meshA,'facecolor','none');
-% method: hexahedral
+%% method: hexahedral
 cfg=[];
 cfg.method = 'hexahedral';
 cfg.numvertices = 1000;
@@ -132,4 +132,27 @@ meshB=rmfield(meshB,'tissuelabel');
 assert(isequal(meshA,meshB),'error: 06');
 assert(isfield(meshA,'pnt') && isfield(meshA,'hex') && isfield(meshA,'unit'), 'Missing field(s) in mesh structure');
 figure; ft_plot_mesh(meshA,'edgeonly','yes')
+%% tissue specified
+cfg=[];
+cfg.tissue='tissue_1';
+cfg.numvertices=3000;
+meshA=ft_prepare_mesh(cfg,seg3)
+meshB=ft_prepare_mesh(cfg,seg3p)
+assert(isequal(meshA,meshB),'error: 07');
+assert(isfield(meshA,'pnt') && isfield(meshA,'tri') && isfield(meshA,'unit'), 'Missing field(s) in mesh structure');
+cfg.method='hexahedral';
+meshA=ft_prepare_mesh(cfg,seg3)
+meshB=ft_prepare_mesh(cfg,seg3p)
+assert(isequal(meshA,meshB),'error: 08');
+assert(isfield(meshA,'pnt') && isfield(meshA,'hex') && isfield(meshA,'unit'), 'Missing field(s) in mesh structure');
+cfg.tissue='tissue_2';
+meshB=ft_prepare_mesh(cfg,seg3)
+meshA=rmfield(meshA,'tissuelabel');
+meshB=rmfield(meshB,'tissuelabel');
+assert(~(isequal(meshA,meshB)),'error: 09');
+cfg.tissue={'tissue_2' 'tissue_1'};
+meshC=ft_prepare_mesh(cfg,seg3);
+meshC=rmfield(meshC,'tissuelabel');
+assert(~(isequal(meshA,meshC)),'error: 10');
+assert(~(isequal(meshB,meshC)),'error: 11');
 
