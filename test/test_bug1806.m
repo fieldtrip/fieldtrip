@@ -1,4 +1,4 @@
-% function test_bug1806
+function test_bug1806
 
 % TEST test_bug1806
 % TEST ft_componentanalysis ft_rejectcomponent ft_megplanar ft_combineplanar ft_megrealign ft_datatype_sens
