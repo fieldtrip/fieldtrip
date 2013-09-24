@@ -34,7 +34,10 @@ for k = 1:numel(datainfo)
   
   datanew = rmfield(datanew, 'cfg'); % these are per construction different if writeflag = 0;
   data    = rmfield(data,    'cfg');
-  assert(isequalwithequalnans(data, datanew));
+  [ok,msg] = identical(data, datanew,'reltol',eps*1e6);
+  if ~ok
+    error('stored and computed data not identical: %s', msg);
+  end
 end
 
 function [timelock] = timelockanalysis10trials(dataset, writeflag, version, covariance, keeptrials)
