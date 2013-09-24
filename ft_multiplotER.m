@@ -131,6 +131,14 @@ ft_preamble trackconfig
 
 for i=1:length(varargin)
   varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'timelock', 'freq'});
+  type{i} = ft_datatype(varargin{i});
+  hastime(i) = ~isempty(strfind(varargin{i}.dimord, 'time'));
+end
+
+%check if the input has different datatypes
+type = unique(type);
+if size(type,2)>1;
+  error('different datatypes are not allowed as input');
 end
 
 % check if the input cfg is valid for this function
@@ -169,9 +177,19 @@ cfg.preproc         = ft_getopt(cfg, 'preproc', []);
 cfg.tolerance       = ft_getopt(cfg, 'tolerance',  1e-5);
 
 Ndata = length(varargin);
-% ensure that all inputs are sufficiently consistent
-if ~checktime(varargin{:}, 'identical', cfg.tolerance);
-  error('this function requires identical time axes for all input structures');
+%check if time field is present in all datasets: freq datatype can or
+%cannot contain a time field
+type = sum(hastime)==Ndata;
+if sum(hastime)==Ndata;
+  hastime=1;
+end
+
+%if datatype==timelock;we expect time axis to check
+if strcmp(type,'timelock') || (strcmp(type,'freq') && hastime)
+  % ensure that all inputs are sufficiently consistent
+  if ~checktime(varargin{:}, 'identical', cfg.tolerance);
+    error('this function requires identical time axes for all input structures');
+  end
 end
 
 %FIXME rename directionality and refchannel in more meaningful options
