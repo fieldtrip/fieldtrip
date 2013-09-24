@@ -919,14 +919,14 @@ switch headerformat
       epochdef = zeros(length(orig.xml.epochs),3);
       for iEpoch = 1:length(orig.xml.epochs)
         if iEpoch == 1
-          epochdef(iEpoch,1) = round(str2double(orig.xml.epochs(iEpoch).epoch.beginTime)./1000./hdr.Fs)+1;
-          epochdef(iEpoch,2) = round(str2double(orig.xml.epochs(iEpoch).epoch.endTime)./1000./hdr.Fs);
-          epochdef(iEpoch,3) = round(str2double(orig.xml.epochs(iEpoch).epoch.beginTime)./1000./hdr.Fs); %offset corresponds to timing
+          epochdef(iEpoch,1) = round(str2double(orig.xml.epochs(iEpoch).epoch.beginTime)./(1000000./hdr.Fs))+1;
+          epochdef(iEpoch,2) = round(str2double(orig.xml.epochs(iEpoch).epoch.endTime)./(1000000./hdr.Fs));
+          epochdef(iEpoch,3) = round(str2double(orig.xml.epochs(iEpoch).epoch.beginTime)./(1000000./hdr.Fs)); %offset corresponds to timing
         else
-          NbSampEpoch = round(str2double(orig.xml.epochs(iEpoch).epoch.endTime)./1000./hdr.Fs - str2double(orig.xml.epochs(iEpoch).epoch.beginTime)./1000./hdr.Fs);
+          NbSampEpoch = round(str2double(orig.xml.epochs(iEpoch).epoch.endTime)./(1000000./hdr.Fs) - str2double(orig.xml.epochs(iEpoch).epoch.beginTime)./(1000000./hdr.Fs));
           epochdef(iEpoch,1) = epochdef(iEpoch-1,2) + 1;
           epochdef(iEpoch,2) = epochdef(iEpoch-1,2) + NbSampEpoch;
-          epochdef(iEpoch,3) = round(str2double(orig.xml.epochs(iEpoch).epoch.beginTime)./1000./hdr.Fs); %offset corresponds to timing
+          epochdef(iEpoch,3) = round(str2double(orig.xml.epochs(iEpoch).epoch.beginTime)./(1000000./hdr.Fs)); %offset corresponds to timing
         end
       end
       warning('the data contains multiple epochs with possibly discontinuous boundaries. Added ''epochdef'' to hdr.orig defining begin and end sample of each epoch. See hdr.orig.xml.epochs for epoch details, use ft_read_header to obtain header or look in data.dhr.')
