@@ -25,24 +25,13 @@ else
 end
 
 [tmp, N] = spm_bwlabel(output, 6);
-% if there are many clusters, it pays off to only count on the non-zeros
-tmp2 = sort(tmp(tmp>0), 'descend');
-n    = zeros(N,1);
 for k = 1:N
-  sel    = tmp2==k;
-  n(k,1) = sum(sel);
-  tmp2   = tmp2(~sel);
+  n(k,1) = sum(tmp(:)==k);
 end
 output   = double(tmp~=find(n==max(n))); clear tmp;
-
 [tmp, N] = spm_bwlabel(output, 6);
-% if there are many clusters, it pays off to only count on the non-zeros
-tmp2 = sort(tmp(tmp>0), 'descend');
-m    = zeros(N,1);
 for k = 1:N
-  sel    = tmp2==k;
-  m(k,1) = sum(sel);
-  tmp2   = tmp2(~sel);
+  m(k,1) = sum(tmp(:)==k);
 end
 % select the tissue that has the most voxels belonging to it
 output = (tmp~=find(m==max(m)));
