@@ -145,14 +145,17 @@ meshA=ft_prepare_mesh(cfg,seg3)
 meshB=ft_prepare_mesh(cfg,seg3p)
 assert(isequal(meshA,meshB),'error: 08');
 assert(isfield(meshA,'pnt') && isfield(meshA,'hex') && isfield(meshA,'unit'), 'Missing field(s) in mesh structure');
+assert(isequal(meshA.tissuelabel, {'tissue_1'}), 'error:09');
 cfg.tissue='tissue_2';
 meshB=ft_prepare_mesh(cfg,seg3)
+assert(isequal(meshB.tissuelabel, {'tissue_2'}), 'error:10');
 meshA=rmfield(meshA,'tissuelabel');
 meshB=rmfield(meshB,'tissuelabel');
-assert(~(isequal(meshA,meshB)),'error: 09');
+assert(~(isequal(meshA,meshB)),'error: 11');
 cfg.tissue={'tissue_2' 'tissue_1'};
 meshC=ft_prepare_mesh(cfg,seg3);
+assert(isequal(meshC.tissuelabel, cfg.tissue), 'error:12');
 meshC=rmfield(meshC,'tissuelabel');
-assert(~(isequal(meshA,meshC)),'error: 10');
-assert(~(isequal(meshB,meshC)),'error: 11');
+assert(~(isequal(meshA,meshC)),'error: 13');
+assert(~(isequal(meshB,meshC)),'error: 14');
 
