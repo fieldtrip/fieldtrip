@@ -618,6 +618,28 @@ switch eventformat
       warning('no triggerfile was found');
     end
     
+   case 'eep_trg'
+    % check that the required low-level toolbox is available
+    ft_hastoolbox('eeprobe', 1);
+    % try to read external trigger file in EEP format
+    cntfile = [filename(1:(end-3)), 'cnt'];
+    if ~exist(cntfile, 'file') && isempty(hdr)
+        warning('No corresponding .cnt-file found, cannot read in header information. No events can be read in.\n');
+    else
+      if isempty(hdr)
+        hdr = ft_read_header(cntfile);
+      end
+      tmp = read_eep_trg(filename);
+      % translate the EEProbe trigger codes to events
+      for i=1:length(tmp)
+        event(i).type     = 'trigger';
+        event(i).sample   = round((tmp(i).time/1000) * hdr.Fs) + 1;    % convert from ms to samples
+        event(i).value    = tmp(i).code;
+        event(i).offset   = 0;
+        event(i).duration = 0;
+      end
+    end
+    
   case 'egi_egis'
     if isempty(hdr)
       hdr = ft_read_header(filename);
