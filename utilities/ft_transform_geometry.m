@@ -40,8 +40,8 @@ function [output] = ft_transform_geometry(transform, input)
 %
 % $Id: ft_transform_geometry.m$
 
-checkrotation = ~strcmp(ft_voltype(input), 'unknown') || ft_senstype(input, 'meg'); 
-checkscaling  = ~strcmp(ft_voltype(input), 'unknown');
+% flg rescaling check
+allowscaling = ~ft_senstype(input, 'meg'); 
 
 % determine the rotation matrix
 rotation = eye(4);
@@ -51,17 +51,16 @@ if any(abs(transform(4,:)-[0 0 0 1])>100*eps)
   error('invalid transformation matrix');
 end
 
-if checkrotation
-  % allow for some numerical imprecision
-  if abs(det(rotation)-1)>100*eps
+if ~allowscaling
+  if abs(det(rotation)-1)>100*eps  % allow for some numerical imprecision
     error('only a rigid body transformation without rescaling is allowed');
   end
 end
 
-if checkscaling
+if allowscaling
   % FIXME build in a check for uniform rescaling probably do svd or so
   % FIXME insert check for nonuniform scaling, should give an error
-end
+end 
 
 tfields   = {'pos' 'pnt' 'o' 'chanpos' 'coilpos' 'elecpos', 'nas', 'lpa', 'rpa', 'zpoint'}; % apply rotation plus translation
 rfields   = {'ori' 'nrm' 'coilori'}; % only apply rotation
