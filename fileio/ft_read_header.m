@@ -1490,20 +1490,19 @@ switch headerformat
     hdr.orig = orig;
     
   case {'ns_cnt' 'ns_cnt16', 'ns_cnt32'}
+    ft_hastoolbox('eeglab', 1);
     if strcmp(headerformat, 'ns_cnt')
-      orig = loadcnt(filename);
+      orig = loadcnt(filename); % let loadcnt figure it out
     elseif strcmp(headerformat, 'ns_cnt16')
       orig = loadcnt(filename, 'dataformat', 'int16');
     elseif strcmp(headerformat, 'ns_cnt32')
       orig = loadcnt(filename, 'dataformat', 'int32');
     end
     
-    orig = rmfield(orig, {'data', 'ldnsamples'});
-    
     % do some reformatting/renaming of the header items
     hdr.Fs          = orig.header.rate;
     hdr.nChans      = orig.header.nchannels;
-    hdr.nSamples    = orig.header.nums;
+    hdr.nSamples    = orig.ldnsamples;
     hdr.nSamplesPre = 0;
     hdr.nTrials     = 1;
     for i=1:hdr.nChans
