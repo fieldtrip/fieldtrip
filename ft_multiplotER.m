@@ -166,8 +166,13 @@ cfg.channel         = ft_getopt(cfg, 'channel',     'all');
 cfg.directionality  = ft_getopt(cfg, 'directionality',  '');
 cfg.figurename      = ft_getopt(cfg, 'figurename',   []);
 cfg.preproc         = ft_getopt(cfg, 'preproc', []);
+cfg.tolerance       = ft_getopt(cfg, 'tolerance',  1e-5);
 
-Ndata = numel(varargin);
+Ndata = length(varargin);
+% ensure that all inputs are sufficiently consistent
+if ~checktime(varargin{:}, 'identical', cfg.tolerance);
+  error('this function requires identical time axes for all input structures');
+end
 
 %FIXME rename directionality and refchannel in more meaningful options
 if ischar(cfg.graphcolor)
