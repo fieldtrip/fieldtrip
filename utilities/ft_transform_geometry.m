@@ -52,7 +52,9 @@ if any(abs(transform(4,:)-[0 0 0 1])>100*eps)
 end
 
 if ~allowscaling
-  if abs(det(rotation)-1)>100*eps  % allow for some numerical imprecision
+  % allow for some numerical imprecision
+  if abs(det(rotation)-1)>1e-6%100*eps
+  %if abs(det(rotation)-1)>100*eps  % allow for some numerical imprecision
     error('only a rigid body transformation without rescaling is allowed');
   end
 end
@@ -65,7 +67,7 @@ end
 tfields   = {'pos' 'pnt' 'o' 'chanpos' 'coilpos' 'elecpos', 'nas', 'lpa', 'rpa', 'zpoint'}; % apply rotation plus translation
 rfields   = {'ori' 'nrm' 'coilori'}; % only apply rotation
 mfields   = {'transform'};           % plain matrix multiplication
-recfields = {'fid' 'bnd'};           % recurse into these fields
+recfields = {'fid' 'bnd' 'orig'};    % recurse into these fields
 % the field 'r' is not included here, because it applies to a volume
 % conductor model, and scaling is not allowed, so r will not change.
 
@@ -97,3 +99,4 @@ function [new] = apply(transform, old)
 old(:,4) = 1;
 new = old * transform';
 new = new(:,1:3);
+
