@@ -10,7 +10,7 @@ global testvariable
 
 testvariable = 1;
 
-hdr = ft_read_header('SE7_T7_S5_GAV.mff','dataformat','egi_mff_v2', 'headerformat','egi_mff_v2');
+hdr = ft_read_header(filename,'dataformat','egi_mff_v2', 'headerformat','egi_mff_v2');
 
 assert(exist(testvariable, 'var'));
 assert(isglobal(testvariable));
