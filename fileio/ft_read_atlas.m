@@ -110,6 +110,7 @@ switch atlasformat
     atlas = rmfield(atlas, 'anatomy');
     atlas.tissuelabel       = {};
     atlas.tissuelabel(idx)  = lab;
+    atlas.coordsys = 'mni';
     % The original contains a rather sparse labeling, since not all indices
     % are being used (it starts at 2001) The question is whether it is more
     % important to keep the original numbers or to make the list with
@@ -134,6 +135,7 @@ switch atlasformat
     atlas = rmfield(atlas, 'anatomy');
     atlas.tissuelabel       = {};
     atlas.tissuelabel(idx)  = lab;
+    atlas.coordsys = 'mni';
     % The original contains a rather sparse labeling, since not all indices
     % are being used (it starts at 2001) The question is whether it is more
     % important to keep the original numbers or to make the list with
@@ -581,6 +583,7 @@ switch atlasformat
     % compatible, for example for the rhesus or mouse atlas.
     
     % atlas.coordsys  = 'mni';
+    atlas.coordsys = 'unknown';
     
     [p, f, x] = fileparts(filename);
     
@@ -2070,6 +2073,8 @@ switch atlasformat
       atlas.pos = tmp.pnt;
       atlas.tri = tmp.tri;
       atlas     = ft_convert_units(atlas);
+    elseif ~isfield(atlas, 'coordsys')
+      atlas.coordsys = 'unknown';
     end
   otherwise
     error('unsupported atlas format %s', atlasformat);
