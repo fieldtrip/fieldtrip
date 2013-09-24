@@ -66,3 +66,10 @@ cfg.movierpt    = 3;
 cfg.layout = 'CTF151.lay';
 ft_movieplotTFR(cfg, freqFIC);
 
+% ensure that all figures are updated before XUnit starts to close the figures
+drawnow
+close all
+
+
+drawnow
+
