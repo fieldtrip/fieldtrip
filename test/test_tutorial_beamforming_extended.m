@@ -157,8 +157,7 @@ cfg.opacitymap    = 'rampup';
 ft_sourceplot(cfg,source_diff_int);
 
 cfg.method = 'ortho';
-cfg.atlas           = dccnfilename('/home/common/matlab/spm8/toolbox/wfu_pickatlas/MNI_atlas_templates/aal_MNI_V4.nii');
-
+cfg.atlas           = dccnfilename('/home/common/matlab/fieldtrip/template/atlas/aal/ROI_MNI_V4.nii');
 ft_sourceplot(cfg,source_diff_int);
 
 cfg.method = 'surface';
@@ -222,7 +221,7 @@ cfg.opacitylim    = [00 .15];
 cfg.maskparameter = cfg.funparameter;
 cfg.opacitymap    = 'rampup';  
 
-cfg.atlas           = dccnfilename('/home/common/matlab/spm8/toolbox/wfu_pickatlas/MNI_atlas_templates/aal_MNI_V4.nii');
+cfg.atlas         = dccnfilename('/home/common/matlab/fieldtrip/template/atlas/aal/ROI_MNI_V4.nii');
 
 ft_sourceplot(cfg, source_coh_int);
 end
