@@ -184,7 +184,8 @@ switch class(val)
       end
       str = sprintf('[ %s ]', str(1:end-3));
     else
-      error('multidimensional arrays are not supported');
+      warning('multidimensional arrays are not supported');
+      str = '''FIXME: printing multidimensional logical arrays is not supported''';
     end
     
   case {'single' 'double'}
@@ -208,6 +209,7 @@ switch class(val)
       str = sprintf('[ %s ]', str(1:end-3));
     else
       warning('multidimensional arrays are not supported');
+      str = '''FIXME: printing multidimensional single and double arrays is supported''';
     end
     
   case {'int8' 'int16' 'int32' 'int64' 'uint8' 'uint16' 'uint32' 'uint64'}
@@ -221,7 +223,8 @@ switch class(val)
       end
       str = sprintf('[ %s ]', str(1:end-3));
     else
-      error('multidimensional arrays are not supported');
+      warning('multidimensional arrays are not supported');
+      str = '''FIXME: printing multidimensional int/uint arrays is not supported''';
     end
     
   case 'function_handle'
@@ -229,11 +232,11 @@ switch class(val)
     
   case 'struct'
     warning('cannot print structure at this level');
-    str = '''FIXME''';
+    str = '''FIXME: printing structures at this level is not supported''';
     
   otherwise
     warning('cannot print unknown object at this level');
-    str = '''FIXME''';
+    str = '''FIXME: printing unknown objects is not supported''';
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
