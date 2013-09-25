@@ -590,6 +590,10 @@ h = figure;
 setappdata(h, 'opt', opt);
 setappdata(h, 'cfg', cfg);
 
+% enable custom data cursor text
+dcm = datacursormode(h);
+set(dcm, 'updatefcn', @datacursortext);
+
 % set the figure window title
 funcname = mfilename();
 if nargin < 2
@@ -1614,8 +1618,16 @@ for ievent = 1:numel(event)
     eventcol{ievent} = 'k';
   end
   eventtim(ievent) = (event(ievent).sample-begsample)/opt.fsample + opt.hlim(1);
-  ft_plot_line([eventtim(ievent) eventtim(ievent)], [-1 1], 'tag', 'event', 'color', eventcol{ievent}, ...
+  
+  lh = ft_plot_line([eventtim(ievent) eventtim(ievent)], [-1 1], 'tag', 'event', 'color', eventcol{ievent}, ...
     'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1]);
+  
+  % store this data in the line object so that it can be displayed in the
+  % data cursor (see subfunction datacursortext below)
+  setappdata(lh, 'ft_databrowser_linetype', 'event');
+  setappdata(lh, 'ft_databrowser_eventtime', eventtim(ievent));
+  setappdata(lh, 'ft_databrowser_eventtype', event(ievent).type);
+  setappdata(lh, 'ft_databrowser_eventvalue', event(ievent).value);
 end
 % count the consecutive occurrence of each time point
 concount = NaN(1,numel(event));
@@ -1680,8 +1692,15 @@ elseif any(strcmp(cfg.viewmode, {'vertical' 'component'}))
         end
       end
       
-      ft_plot_vector(tim, dat(datsel, :), 'box', false, 'color', color, 'tag', 'timecourse', ...
+      lh = ft_plot_vector(tim, dat(datsel, :), 'box', false, 'color', color, 'tag', 'timecourse', ...
         'hpos', opt.laytime.pos(laysel,1), 'vpos', opt.laytime.pos(laysel,2), 'width', opt.laytime.width(laysel), 'height', opt.laytime.height(laysel), 'hlim', opt.hlim, 'vlim', opt.vlim);
+      
+      % store this data in the line object so that it can be displayed in the
+      % data cursor (see subfunction datacursortext below)
+      setappdata(lh, 'ft_databrowser_linetype', 'channel');
+      setappdata(lh, 'ft_databrowser_label', opt.hdr.label(chanindx(i)));
+      setappdata(lh, 'ft_databrowser_xaxis', tim);
+      setappdata(lh, 'ft_databrowser_yaxis', dat(datsel,:));
     end
   end
   
@@ -1860,4 +1879,40 @@ if ~isempty(eventdata.Modifier)
   key = [eventdata.Modifier{1} '+' key];
 end
 
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cursortext = datacursortext(obj, event_obj)
+  pos = get(event_obj, 'position');
+  
+  linetype = getappdata(event_obj.Target, 'ft_databrowser_linetype');
+
+  if strcmp(linetype, 'event')
+    cursortext = sprintf('%s = %d\nt = %g s',...
+      getappdata(event_obj.Target, 'ft_databrowser_eventtype'),...
+      getappdata(event_obj.Target, 'ft_databrowser_eventvalue'),...
+      getappdata(event_obj.Target, 'ft_databrowser_eventtime'));
+  elseif strcmp(linetype, 'channel')
+    % get plotted x axis
+    plottedX = get(event_obj.Target, 'xdata');
+    
+    % determine values of data at real x axis
+    timeAxis = getappdata(event_obj.Target, 'ft_databrowser_xaxis');
+    dataAxis = getappdata(event_obj.Target, 'ft_databrowser_yaxis');
+    tInd = nearest(plottedX, pos(1));
+    
+    % get label
+    chanLabel = getappdata(event_obj.Target, 'ft_databrowser_label');
+    chanLabel = chanLabel{1};
+    
+    cursortext = sprintf('t = %g\n%s = %g', timeAxis(tInd), chanLabel,...
+      dataAxis(tInd));
+  else
+    cursortext = '<no cursor available>';
+    % explicitly tell the user there is no info because the x-axis and
+    % y-axis do not correspond to real data values (both are between 0 and
+    % 1 always)
+  end
 end
