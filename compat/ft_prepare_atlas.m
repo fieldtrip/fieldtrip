@@ -38,5 +38,8 @@ function [atlas, cfg] = ft_prepare_atlas(varargin)
 % $Id$
 
 warning('ft_prepare_atlas is only a compatibility wrapper, which will soon be removed. Please instead call ft_read_atlas.');
-atlas = ft_read_atlas(varargin{:});
+
+% assume first input to be a cfg structure, containing the atlas filename
+filename = varargin{1}.atlas;
+atlas    = ft_read_atlas(filename);
 

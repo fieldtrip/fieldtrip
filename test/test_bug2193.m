@@ -32,7 +32,11 @@ aal0a = ft_prepare_atlas(cfg);
 aal0b = ft_read_atlas(cfg.atlas);
 assert(all(~cellfun(@isempty, aal0b.tissuelabel)), 'there is an empty tissuelabel');
 assert(max(aal0b.tissue(:))==length(aal0b.tissuelabel), 'inconsistent number of tissues');
-assert(all(cellfun(@strcmp, aal0a.descr.name, aal0b.tissuelabel)));
+
+% the next one fails because ft_prepare_atlas has been deprecated so the
+% brick0/brick1 in combination with the descr field does not exist anymore
+% assert(all(cellfun(@strcmp, aal0a.descr.name, aal0b.tissuelabel)));
+
 % the next one fails because label are re-indexed by ft_read_atlas are different
 % assert(all(aal0a.brick0(:) == aal0b.tissue(:)));
  
