@@ -148,7 +148,25 @@ clf
 ft_compute_leadfield([30 30 30], sens, vol);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Test for uniform frequency axis in the output of mtmconvol
-[spectrum,ntaper,freqoi,timeoi] = ft_specest_mtmconvol(randn(1, 1651), linspace(-0.5000, 1, 1651), ...
-    'taper', 'sine', 'timeoi',  -0.3:0.05:0.75, 'freqoi', 1:48,...
-    'timwin', repmat(0.4, 1, 48), 'tapsmofrq', 2*ones(1, 48), 'verbose', 0);
-assert(length(unique(diff(freqoi)))==1)
+time = linspace(-0.5000, 1, 1651);
+fsample =  1/mean(diff(time));
+timestep = 0.05;
+timeres = 0.4;
+timeres = 1e-3*(round(1e3*timeres));
+timestep = round(fsample*timestep)/fsample;
+
+freqoi = 1:2:49;
+
+timeoi=(time(1)+(timeres/2)):timestep:(time(end)-(timeres/2)-1/fsample); % Time axis
+
+df = unique(diff(freqoi));
+dt = time(end) - time(1) + diff(time(1:2));
+
+pad = ceil(dt*df)/df;
+
+[spectrum,ntaper,freqoi,timeoi] = ft_specest_mtmconvol(randn(1, 1651), time, ...
+    'taper', 'sine', 'timeoi',  timeoi, 'freqoi', freqoi,...
+    'timwin', repmat(0.4, 1, length(freqoi)), 'tapsmofrq', 2*ones(1, length(freqoi)), 'pad', pad, 'padtype', 'mirror', 'verbose', 0);
+
+assert(length(unique(diff(timeoi)))==1 || max(abs(diff(unique(diff(timeoi)))))<1e-6);
+assert(length(unique(diff(freqoi)))==1 || max(abs(diff(unique(diff(freqoi)))))<1e-3);
