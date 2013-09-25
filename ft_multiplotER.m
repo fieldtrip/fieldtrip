@@ -179,7 +179,6 @@ cfg.tolerance       = ft_getopt(cfg, 'tolerance',  1e-5);
 Ndata = length(varargin);
 %check if time field is present in all datasets: freq datatype can or
 %cannot contain a time field
-type = sum(hastime)==Ndata;
 if sum(hastime)==Ndata;
   hastime=1;
 end
@@ -224,10 +223,26 @@ end
 % ensure that the inputs are consistent with each other
 for i=1:Ndata
   dtype{i} = ft_datatype(varargin{i});
+  % get time axes
+  if iscell(varargin{i}.time)
+    time(i, 1) = cellfun(@min, varargin{i}.time);
+    time(i, 2) = cellfun(@max, varargin{i}.time);
+  else
+    time(i, 1) = min(varargin{i}.time);
+    time(i, 2) = max(varargin{i}.time);
+  end
 end
 if ~all(strcmp(dtype{1}, dtype))
   error('input data are of different type; this is not supported');
 end
+
+% ensure a common time-axis
+for i=1:Ndata
+  cfgs = [];
+  cfgs.toilim = [min(time(:, 1)) max(time(:, 2))];
+  varargin{i} = ft_redefinetrial(cfgs, varargin{i});
+end
+
 dtype  = dtype{1};
 dimord = varargin{1}.dimord;
 dimtok = tokenize(dimord, '_');
