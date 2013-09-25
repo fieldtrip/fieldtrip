@@ -6,6 +6,8 @@ function test_tutorial_sensor_analysis(datadir)
 % disable verbose output
 global ft_default;
 ft_default.feedback = 'no';
+% don't convert the cfg into a config object, as that fails in r8540 due to a subsref error
+ft_default.trackconfig = 'no';
 
 if nargin==0
   if ispc
