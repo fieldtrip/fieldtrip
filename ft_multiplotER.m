@@ -131,16 +131,7 @@ ft_preamble trackconfig
 
 for i=1:length(varargin)
   varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'timelock', 'freq'});
-  type{i} = ft_datatype(varargin{i});
-  hastime(i) = ~isempty(strfind(varargin{i}.dimord, 'time'));
 end
-
-%check if the input has different datatypes
-utype = unique(type);
-if size(utype,2)>1;
-  error('different datatypes are not allowed as input');
-end
-dtype = type{1};
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'unused',     {'cohtargetchannel'});
@@ -178,18 +169,27 @@ cfg.preproc         = ft_getopt(cfg, 'preproc', []);
 cfg.tolerance       = ft_getopt(cfg, 'tolerance',  1e-5);
 
 Ndata = length(varargin);
-%check if time field is present in all datasets: freq datatype can or
-%cannot contain a time field
-if sum(hastime)==Ndata;
-  hastime=1;
+
+for i=1:Ndata
+  dtype{i}   = ft_datatype(varargin{i});
+  hastime(i) = ~isempty(strfind(varargin{i}.dimord, 'time'));
+  hasfreq(i) = ~isempty(strfind(varargin{i}.dimord, 'freq'));
 end
 
-%if datatype==timelock;we expect time axis to check
-if strcmp(dtype,'timelock') || (strcmp(dtype,'freq') && hastime)
-  % ensure that all inputs are sufficiently consistent
-  if ~checktime(varargin{:}, 'identical', cfg.tolerance);
-    error('this function requires identical time axes for all input structures');
-  end
+% check if the input has consistent datatypes
+if ~all(strcmp(dtype, dtype{1})) || ~all(hastime==hastime(1)) || ~all(hasfreq==hasfreq(1))
+  error('different datatypes are not allowed as input');
+end
+dtype   = dtype{1};
+hastime = hastime(1);
+hasfreq = hasfreq(1);
+
+% ensure that all inputs are sufficiently consistent
+if hastime && ~checktime(varargin{:}, 'identical', cfg.tolerance);
+  error('this function requires identical time axes for all input structures');
+end
+if hasfreq && ~checkfreq(varargin{:}, 'identical', cfg.tolerance);
+  error('this function requires identical frequency axes for all input structures');
 end
 
 %FIXME rename directionality and refchannel in more meaningful options
@@ -221,31 +221,10 @@ end
 %   error('interactive plotting is not supported with more than 1 input data set');
 % end
 
-if hastime;
-  for i=1:Ndata
-    % get time axes
-    if iscell(varargin{i}.time)
-      time(i, 1) = cellfun(@min, varargin{i}.time);
-      time(i, 2) = cellfun(@max, varargin{i}.time);
-    else
-      time(i, 1) = min(varargin{i}.time);
-      time(i, 2) = max(varargin{i}.time);
-    end
-  end
-  
-  % ensure a common time-axis
-  for i=1:Ndata
-    cfgs = [];
-    cfgs.toilim = [min(time(:, 1)) max(time(:, 2))];
-    varargin{i} = ft_redefinetrial(cfgs, varargin{i});
-  end
-end
-
 dimord = varargin{1}.dimord;
 dimtok = tokenize(dimord, '_');
 
-
-% ensure that the preproc specific options are located in the cfg.preproc 
+% ensure that the preproc specific options are located in the cfg.preproc
 % substructure, but also ensure that the field 'refchannel' is present at the
 % highest level in the structure. This is a little hack by JM because the field
 % refchannel can also refer to the plotting of a connectivity metric. Also,
@@ -254,8 +233,8 @@ dimtok = tokenize(dimord, '_');
 % data in the input. A more generic solution should be considered.
 
 if isfield(cfg, 'refchannel'), refchannelincfg = cfg.refchannel; end
-if ~any(strcmp({'freq','freqmvar'},dtype)), 
-  cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'}); 
+if ~any(strcmp({'freq','freqmvar'},dtype)),
+  cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'});
 end
 if exist('refchannelincfg', 'var'), cfg.refchannel  = refchannelincfg; end
 
@@ -718,7 +697,7 @@ if isempty(get(gcf, 'Name'))
   else % data provided through cfg.inputfile
     dataname = cfg.inputfile;
   end
-
+  
   if isempty(cfg.figurename)
     set(gcf, 'Name', sprintf('%d: %s: %s', gcf, mfilename, join_str(', ',dataname)));
     set(gcf, 'NumberTitle', 'off');
