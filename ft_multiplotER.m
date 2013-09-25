@@ -136,10 +136,11 @@ for i=1:length(varargin)
 end
 
 %check if the input has different datatypes
-type = unique(type);
-if size(type,2)>1;
+utype = unique(type);
+if size(utype,2)>1;
   error('different datatypes are not allowed as input');
 end
+dtype = type{1};
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'unused',     {'cohtargetchannel'});
@@ -184,7 +185,7 @@ if sum(hastime)==Ndata;
 end
 
 %if datatype==timelock;we expect time axis to check
-if strcmp(type,'timelock') || (strcmp(type,'freq') && hastime)
+if strcmp(dtype,'timelock') || (strcmp(dtype,'freq') && hastime)
   % ensure that all inputs are sufficiently consistent
   if ~checktime(varargin{:}, 'identical', cfg.tolerance);
     error('this function requires identical time axes for all input structures');
@@ -220,30 +221,26 @@ end
 %   error('interactive plotting is not supported with more than 1 input data set');
 % end
 
-% ensure that the inputs are consistent with each other
-for i=1:Ndata
-  dtype{i} = ft_datatype(varargin{i});
-  % get time axes
-  if iscell(varargin{i}.time)
-    time(i, 1) = cellfun(@min, varargin{i}.time);
-    time(i, 2) = cellfun(@max, varargin{i}.time);
-  else
-    time(i, 1) = min(varargin{i}.time);
-    time(i, 2) = max(varargin{i}.time);
+if hastime;
+  for i=1:Ndata
+    % get time axes
+    if iscell(varargin{i}.time)
+      time(i, 1) = cellfun(@min, varargin{i}.time);
+      time(i, 2) = cellfun(@max, varargin{i}.time);
+    else
+      time(i, 1) = min(varargin{i}.time);
+      time(i, 2) = max(varargin{i}.time);
+    end
+  end
+  
+  % ensure a common time-axis
+  for i=1:Ndata
+    cfgs = [];
+    cfgs.toilim = [min(time(:, 1)) max(time(:, 2))];
+    varargin{i} = ft_redefinetrial(cfgs, varargin{i});
   end
 end
-if ~all(strcmp(dtype{1}, dtype))
-  error('input data are of different type; this is not supported');
-end
 
-% ensure a common time-axis
-for i=1:Ndata
-  cfgs = [];
-  cfgs.toilim = [min(time(:, 1)) max(time(:, 2))];
-  varargin{i} = ft_redefinetrial(cfgs, varargin{i});
-end
-
-dtype  = dtype{1};
 dimord = varargin{1}.dimord;
 dimtok = tokenize(dimord, '_');
 
