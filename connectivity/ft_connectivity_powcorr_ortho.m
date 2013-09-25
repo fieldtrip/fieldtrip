@@ -13,7 +13,7 @@ function [c] = ft_connectivity_powcorr_ortho(mom, varargin)
 % specifies the index/indices of the channels that serve as a reference 
 % channel. (Default is 'all').
 %
-% The output c is a Nchanx(Nrefchanx2) matrix that contain the power correlation
+% The output c is a NchanxNrefchan matrix that contain the power correlation
 % for all channels orthogonalised relative to the reference channel in the first
 % Nrefchan columns, and the power correlation for the reference channels 
 % orthogonalised relative to the channels in the second Nrefchan columns.
