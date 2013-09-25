@@ -126,14 +126,32 @@ elseif val<minarray
 else
   % implements a threshold to correct for errors due to numerical precision
   % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=498 and http://bugzilla.fcdonders.nl/show_bug.cgi?id=1943
-  if maxarray==minarray
-    precision = 1;
-  else
-    precision = (maxarray-minarray) / 10^6;
+%   if maxarray==minarray
+%     precision = 1;
+%   else
+%     precision = (maxarray-minarray) / 10^6;
+%   end
+%   
+%   % return the first occurence of the nearest number
+%   [dum, indx] = min(round((abs(array(:) - val)./precision)).*precision);
+
+  % use find instead, see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1943
+  wassorted = true;
+  if ~issorted(array)
+    wassorted = false;
+    [array, xidx] = sort(array);
   end
   
-  % return the first occurence of the nearest number
-  [dum, indx] = min(round((abs(array(:) - val)./precision)).*precision);
+  indx2 = find(array<=val, 1, 'last');
+  indx3 = find(array>=val, 1, 'first');
+  if abs(array(indx2)-val) <= abs(array(indx3)-val)
+    indx = indx2;
+  else
+    indx = indx3;
+  end
+  if ~wassorted
+    indx = xidx(indx);
+  end
   
 end
 
