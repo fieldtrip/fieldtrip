@@ -1,5 +1,7 @@
 function test_bug472
 
+% WALLTIME 00:13:01
+
 % TEST test_bug472
 % TEST buffer.mexa64 buffer.mexmaci buffer.mexw64 buffer.mexglx buffer.mexmaci64 buffer.mexmac buffer.mexw32
 

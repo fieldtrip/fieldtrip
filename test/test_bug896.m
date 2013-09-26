@@ -1,5 +1,7 @@
 function test_bug896
 
+% WALLTIME 00:03:08
+
 % TEST test_bug896
 % TEST ft_multiplotTFR ft_prepare_layout ft_datatype ft_datatype_freq
 

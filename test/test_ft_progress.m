@@ -1,5 +1,7 @@
 function test_ft_progress
 
+% WALLTIME 00:03:03
+
 % TEST test_ft_progress
 % TEST ft_progress
 

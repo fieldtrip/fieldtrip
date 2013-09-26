@@ -1,5 +1,7 @@
 function test_headmodel_singlesphere_new_old
 
+% WALLTIME 00:03:06
+
 % TEST test_headmodel_singlesphere_new_old
 % TEST ft_prepare_headmodel ft_headmodel_singlesphere ft_prepare_concentricspheres
 

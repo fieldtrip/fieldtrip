@@ -1,5 +1,7 @@
 function test_datatype_segmentation
 
+% WALLTIME 00:03:06
+
 % TEST test_datatype_segmentation
 % TEST ft_datatype_segmentation ft_datatype
 

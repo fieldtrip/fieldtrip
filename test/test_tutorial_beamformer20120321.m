@@ -1,5 +1,7 @@
 function test_tutorial_beamformer20120321
 
+% WALLTIME 00:05:19
+
 % TEST test_tutorial_beamformer
 % TEST ft_redefinetrial ft_freqanalysis ft_volumesegment ft_prepare_singleshell ft_sourceanalysis ft_prepare_leadfield ft_sourceinterpolate ft_sourceplot ft_volumenormalise
 

@@ -1,5 +1,7 @@
 function test_resampledesign
 
+% WALLTIME 00:03:02
+
 % TEST test_resampledesign
 % TEST resampledesign
 

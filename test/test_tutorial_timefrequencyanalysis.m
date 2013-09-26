@@ -1,5 +1,7 @@
 function test_tutorial_timefrequencyanalysis(datadir)
 
+% WALLTIME 00:04:20
+
 % TEST test_tutorial_timefrequencyanalysis
 % TEST ft_freqanalysis
 

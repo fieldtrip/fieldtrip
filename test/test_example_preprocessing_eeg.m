@@ -1,5 +1,7 @@
 function test_example_preprocessing_eeg
 
+% WALLTIME 00:03:12
+
 % This is a test script for the EEG preprocessing example page that Irina made for the Cracow workshop.
 % See http://fieldtrip.fcdonders.nl/example/preprocessing_eeg
 %

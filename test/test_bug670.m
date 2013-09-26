@@ -1,5 +1,7 @@
 function test_bug670
 
+% WALLTIME 00:03:01
+
 % TEST test_bug670
 % TEST ft_channelselection ft_channelcombination
 

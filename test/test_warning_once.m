@@ -1,5 +1,7 @@
 function test_warning_once
 
+% WALLTIME 00:03:04
+
 warning_once('-clear');
 
 warning1 = 'hululu';

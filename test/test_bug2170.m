@@ -1,5 +1,7 @@
 function test_bug2170
 
+% WALLTIME 00:03:01
+
 % TEST test_bug2170
 % TEST ft_filetype ft_read_event
 

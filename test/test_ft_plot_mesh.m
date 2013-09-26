@@ -1,5 +1,7 @@
 function test_ft_plot_mesh
 
+% WALLTIME 00:03:07
+
 % TEST test_ft_plot_mesh 
 % TEST ft_plot_mesh ft_datatype_segmentation ft_prepare_mesh
 

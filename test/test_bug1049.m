@@ -1,5 +1,7 @@
 function test_bug1049
 
+% WALLTIME 00:03:51
+
 % TEST test_bug1049
 
 % this function creates a set of source-structures to be used for testing

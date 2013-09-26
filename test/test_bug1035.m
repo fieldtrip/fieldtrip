@@ -1,5 +1,7 @@
 function test_bug1035
 
+% WALLTIME 00:03:06
+
 % TEST test_bug1035
 % TEST ft_mulitplotER ft_prepare_layout
 

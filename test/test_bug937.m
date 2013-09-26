@@ -1,5 +1,7 @@
 function test_bug937
 
+% WALLTIME 00:03:10
+
 % TEST test_bug937
 % TEST ft_prepare_mesh ft_voltype ft_plot_mesh
 

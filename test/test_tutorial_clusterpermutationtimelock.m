@@ -1,5 +1,7 @@
 function test_tutorial_clusterpermutationtimelock(dataset, datadir)
 
+% WALLTIME 00:07:35
+
 % TEST test_tutorial_eventrelatedstatistics
 % TEST ft_timelockanalysis ft_multiplotER ft_singleplotER ft_timelockstatistics
 % TEST ft_topoplotER ft_clusterplot ft_megplanar ft_combineplanar

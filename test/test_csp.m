@@ -1,5 +1,7 @@
 function test_suite = test_csp
 
+% WALLTIME 00:03:03
+
 % TEST test_csp
 % TEST ft_component_analysis
 

@@ -1,5 +1,7 @@
 function test_bug1759
 
+% WALLTIME 00:03:01
+
 % TEST test_bug1759
 
 % Sparse matrix multplication results in slightly different results than nonsparse

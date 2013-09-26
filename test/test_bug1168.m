@@ -1,5 +1,7 @@
 function test_bug1168
 
+% WALLTIME 00:03:15
+
 % TEST test_bug1168
 % TEST ft_multiplotTFR
 

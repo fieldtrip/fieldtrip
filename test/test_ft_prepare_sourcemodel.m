@@ -1,5 +1,7 @@
 function test_ft_prepare_sourcemodel
 
+% WALLTIME 00:03:02
+
 % TEST: ft_prepare_sourcemodel
 
 % function to test ft_prepare_sourcemodel given configuration options (cfg), 

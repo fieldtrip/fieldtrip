@@ -1,5 +1,7 @@
 function test_bug1309
 
+% WALLTIME 00:03:10
+
 % TEST test_bug1309
 
 % This tests for the reliability of the ft_convert_units function when dealing

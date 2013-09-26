@@ -1,5 +1,7 @@
 function test_bug1318
 
+% WALLTIME 00:03:04
+
 % TEST test_bug1318
 % TEST ft_preproc_bandpassfilter ft_preproc_bandstopfilter ft_preproc_lowpassfilter ft_preproc_highpassfilter
 

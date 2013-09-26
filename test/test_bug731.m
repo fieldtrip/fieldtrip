@@ -1,5 +1,7 @@
 function test_bug731
 
+% WALLTIME 00:03:09
+
 % this function checks problems encountered with the neuromag digital
 % trigger reading
 

@@ -1,5 +1,7 @@
 function test_bug1871
 
+% WALLTIME 00:03:33
+
 % TEST test_bug1871
 % TEST ft_struct2single 
 

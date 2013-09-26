@@ -1,5 +1,7 @@
 function test_qsubcellfun3
 
+% WALLTIME 00:03:02
+
 % TEST test_qsubcellfun3
 % TEST qsubcellfun qsubfeval qsubget
 

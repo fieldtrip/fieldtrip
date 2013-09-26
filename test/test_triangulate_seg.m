@@ -1,5 +1,7 @@
 function test_triangulate_seg
 
+% WALLTIME 00:03:01
+
 % TEST: test_triangulate_seg
 % TEST: triangulate_seg
 

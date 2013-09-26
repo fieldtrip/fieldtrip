@@ -1,5 +1,7 @@
 function test_bug1029
 
+% WALLTIME 00:03:06
+
 % TEST test_bug1029
 % TEST ft_read_vol ft_headmodel_bem_asa ft_prepare_headmodel
 

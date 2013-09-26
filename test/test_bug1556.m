@@ -1,5 +1,7 @@
 function test_bug1556
 
+% WALLTIME 00:03:04
+
 % TEST test_bug1556
 % TEST statfun_depsamplesF
 

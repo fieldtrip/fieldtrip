@@ -1,5 +1,7 @@
 function test_bug1816
 
+% WALLTIME 00:03:01
+
 % test the ft_volumesegment function used for segmentation with FSL BET and FAST
 % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1816
 

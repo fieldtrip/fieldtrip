@@ -1,5 +1,7 @@
 function test_bug1409
 
+% WALLTIME 00:03:01
+
 % TEST test_bug1409
 % TEST ft_selectdata
 

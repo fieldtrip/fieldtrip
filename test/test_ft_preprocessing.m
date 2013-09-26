@@ -1,5 +1,7 @@
 function test_ft_preprocessing(datainfo, writeflag, version)
 
+% WALLTIME 00:03:11
+
 % TEST test_ft_preprocessing
 % TEST ft_preprocessing ref_datasets
 

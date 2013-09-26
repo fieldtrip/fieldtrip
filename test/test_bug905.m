@@ -1,5 +1,7 @@
 function test_bug905
 
+% WALLTIME 00:04:47
+
 % TEST test_bug905
 % TEST ft_freqanalysis ft_specest_mtmfft
 

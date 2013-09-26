@@ -1,5 +1,7 @@
 function test_bug1051
 
+% WALLTIME 00:03:03
+
 % TEST test_bug1051 ft_megplanar ft_apply_montage
 
 % the bug consists of ft_apply_montage not adequately dealing with 

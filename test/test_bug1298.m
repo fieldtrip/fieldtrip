@@ -1,5 +1,7 @@
 function test_bug1298
 
+% WALLTIME 00:03:36
+
 % TEST test_bug1298
 % TEST ft_timelockanalysis ft_prepare_leadfield ft_sourceanalysis 
 

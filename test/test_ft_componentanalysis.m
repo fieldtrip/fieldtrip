@@ -1,5 +1,7 @@
 function test_ft_componentanalysis(datainfo, writeflag, version)
 
+% WALLTIME 00:03:20
+
 % TEST test_ft_componentanalysis
 % ft_componentanalysis ref_datasets
 

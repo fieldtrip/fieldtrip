@@ -1,5 +1,7 @@
 function test_headmodel_singlesphere
 
+% WALLTIME 00:03:02
+
 % TEST test_headmodel_singlesphere
 % TEST ft_prepare_vol_sens ft_compute_leadfield ft_headmodel_singlesphere
 

@@ -1,5 +1,7 @@
 function test_ft_compute_leadfield
 
+% WALLTIME 00:03:02
+
 % TEST test_ft_compute_leadfield
 % TEST ft_compute_leadfield eeg_halfspace_medium_leadfield eeg_halfspace_monopole eeg_leadfieldb eeg_slab_monopole inf_medium_leadfield leadfield_fns leadfield_simbio magnetic_dipole meg_forward meg_leadfield1 ft_prepare_vol_sens
 

@@ -1,5 +1,7 @@
 function test_tutorial_headmodel_eeg
 
+% WALLTIME 00:43:57
+
 % TEST test_tutorial_headmodel_eeg
 % TEST ft_read_mri ft_volumesegment ft_prepare_mesh ft_prepare_headmodel
 % TEST ft_read_sens warp_apply ft_electroderealign

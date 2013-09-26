@@ -1,5 +1,7 @@
 function test_bug1794
 
+% WALLTIME 00:05:20
+
 load('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/vol.mat')
 load('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/dataFIC')
 load('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri')

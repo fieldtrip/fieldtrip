@@ -1,5 +1,7 @@
 function test_bug1412
 
+% WALLTIME 00:03:18
+
 % TEST test_bug1412
 % TEST ft_read_header loadcnt
 

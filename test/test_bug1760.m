@@ -1,5 +1,7 @@
 function test_bug1760
 
+% WALLTIME 00:03:07
+
 % TEST test_bug1760
 % TEST ft_multiplotER ft_multiplotTFR
 

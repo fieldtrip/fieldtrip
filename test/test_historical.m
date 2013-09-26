@@ -1,5 +1,7 @@
 function test_historical
 
+% WALLTIME 00:03:01
+
 % this function creates the datafiles for the historical fieldtrip versions
 
 % it should not run unattended

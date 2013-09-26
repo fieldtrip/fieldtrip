@@ -1,5 +1,7 @@
 function test_ft_denoise_synthetic
 
+% WALLTIME 00:03:04
+
 % TEST test_ft_denoise_synthetic
 % TEST ft_denoise_synthetic
 

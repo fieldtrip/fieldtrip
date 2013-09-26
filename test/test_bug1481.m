@@ -1,5 +1,7 @@
 function test_bug1481
 
+% WALLTIME 00:03:05
+
 % TEST test_bug1481
 % TEST ft_rejectcomponent
 

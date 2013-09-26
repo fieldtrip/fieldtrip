@@ -1,5 +1,7 @@
 function test_bug1351
 
+% WALLTIME 00:03:18
+
 % TEST test_bug1315
 % TEST ft_topoplotER ft_topoplotTFR ft_checksize ft_checkconfig
 

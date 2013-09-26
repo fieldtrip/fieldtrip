@@ -1,5 +1,7 @@
 function test_ft_volumerealign
 
+% WALLTIME 00:03:01
+
 % to test: 
 % within modalities
 % between modalities

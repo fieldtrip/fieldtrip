@@ -1,5 +1,7 @@
 function test_bug941
 
+% WALLTIME 00:03:08
+
 % TEST test_bug941
 % TEST ft_channelrepair ft_databrowser
 

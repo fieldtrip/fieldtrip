@@ -1,5 +1,7 @@
 function test_tutorial_preprocessing
 
+% WALLTIME 00:03:32
+
 % TEST test_tutorial_preprocessing
 % TEST ft_definetrial ft_preprocessing
 

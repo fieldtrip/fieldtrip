@@ -1,5 +1,7 @@
 function test_bug1770
 
+% WALLTIME 00:03:39
+
 % TEST test_bug1770
 % TEST read_neuralynx_dma read_neuralynx_ncs
 

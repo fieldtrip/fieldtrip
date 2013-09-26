@@ -1,5 +1,7 @@
 function test_bug1082
 
+% WALLTIME 00:03:34
+
 % TEST test_bug1082
 % TEST ft_prepare_vol_sens ft_prepare_headmodel ft_compute_leadfield ft_plot_topo3d
 

@@ -1,5 +1,7 @@
 function test_bug1651
 
+% WALLTIME 00:03:04
+
 % TEST test_bug1651
 % TEST ft_prepare_mesh ft_datatype_segmentation
 

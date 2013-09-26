@@ -1,5 +1,7 @@
 function test_bug272
 
+% WALLTIME 00:03:07
+
 % TEST test_bug272
 % TEST ft_timelockanalysis ft_prepare_layout ft_multiplotER ft_topoplotER 
 

@@ -1,5 +1,7 @@
 function test_bug1785
 
+% WALLTIME 00:03:02
+
 % TEST test_bug1785
 % TEST ft_read_sens read_asa_elc read_asa
 

@@ -1,5 +1,7 @@
 function test_bug2059
 
+% WALLTIME 00:03:36
+
 % TEST test_bug2059
 % TEST ft_topoplotER ft_channelselection
 

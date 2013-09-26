@@ -1,5 +1,7 @@
 function test_1297
 
+% WALLTIME 00:07:03
+
 % TEST test_1297
 % TEST ft_volumesegment
 

@@ -1,5 +1,7 @@
 function test_bug168
 
+% WALLTIME 00:03:07
+
 % TEST test_bug168
 % TEST ft_realtime_topography
 

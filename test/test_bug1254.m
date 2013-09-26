@@ -1,5 +1,7 @@
 function test_bug1254
 
+% WALLTIME 00:03:01
+
 % the bug has not been fixed yet, so there is no point in automatically
 % executing this test
 return

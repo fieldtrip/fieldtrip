@@ -1,5 +1,7 @@
 function test_bug921
 
+% WALLTIME 00:03:06
+
 % TEST test_bug921
 % TEST ft_selectdata ft_selectdata_old ft_selectdata_new
 

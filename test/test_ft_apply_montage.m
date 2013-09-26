@@ -1,5 +1,7 @@
 function test_ft_apply_montage
 
+% WALLTIME 00:03:04
+
 % TEST test_ft_apply_montage
 % TEST ft_apply_montage
 

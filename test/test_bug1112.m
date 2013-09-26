@@ -1,5 +1,7 @@
 function test_bug1112
 
+% WALLTIME 00:03:01
+
 % TEST test_bug1112
 % TEST ft_convert_units ft_estimate_units
 

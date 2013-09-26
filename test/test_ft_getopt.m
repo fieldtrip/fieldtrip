@@ -1,5 +1,7 @@
 function test_ft_getopt
 
+% WALLTIME 00:03:01
+
 % TEST test_ft_getopt
 % TEST ft_getopt
 

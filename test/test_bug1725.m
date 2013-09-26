@@ -1,5 +1,7 @@
 function test_bug1725
 
+% WALLTIME 00:03:23
+
 % TEST test_bug1725
 % TEST ft_read_atlas ft_prepare_atlas
 

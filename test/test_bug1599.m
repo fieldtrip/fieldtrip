@@ -1,5 +1,7 @@
 function test_bug1599(datainfo, version)
 
+% WALLTIME 00:03:08
+
 % TEST test_bug1599
 % TEST ft_sourceanalysis beamformer_lcmv
 

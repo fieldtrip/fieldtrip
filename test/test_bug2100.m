@@ -1,5 +1,7 @@
 function test_bug2100
 
+% WALLTIME 00:03:06
+
 % TEST test_bug2100
 % TEST ft_read_mri read_ctf_mri4
 

@@ -1,5 +1,7 @@
 function test_ft_regressconfound
 
+% WALLTIME 00:03:06
+
 % TEST test_ft_regressconfound
 % TEST ft_regressconfound
 

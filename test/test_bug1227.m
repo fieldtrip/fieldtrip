@@ -1,5 +1,7 @@
 function test_bug1227
 
+% WALLTIME 00:03:03
+
 % TEST test_bug1227 ft_sourcewrite
 
 [pnt, tri] = icosahedron162;

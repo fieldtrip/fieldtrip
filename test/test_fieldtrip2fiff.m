@@ -1,5 +1,7 @@
 function test_fieldtrip2fiff
 
+% WALLTIME 00:04:52
+
 % TEST test_fieldtrip2fiff
 % TEST fieldtrip2fiff ft_read_header ft_read_data ft_read_event
 

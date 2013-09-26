@@ -1,5 +1,7 @@
 function test_ft_timelockstatistics
 
+% WALLTIME 00:03:06
+
 % TEST test_ft_timelockstatistics
 % TEST ft_timelockstatistics, findcluster, clusterstat, ft_statistics_montecarlo
 

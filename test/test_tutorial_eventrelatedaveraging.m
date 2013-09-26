@@ -1,5 +1,7 @@
 function test_tutorial_eventrelatedaveraging(dataset)
 
+% WALLTIME 00:03:44
+
 % TEST test_tutorial_eventrelatedaveraging
 % TEST ft_preprocessing ft_timelockanalysis ft_multiplotER ft_singleplotER ft_topoplotER ft_megplanar ft_combineplanar
 

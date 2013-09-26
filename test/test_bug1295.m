@@ -1,5 +1,7 @@
 function test_bug1295
 
+% WALLTIME 00:03:39
+
 % first show the issue: read in dicom test data with the old and new code
 
 filename = '/home/common/matlab/fieldtrip/data/test/latest/mri/dicom/ERIVDBER_030731_R.OOSTERVELD.MR.PAUGAA_ANATOMICAL-3D.2.99.2003.7.31.11.19.16.15000.53831976.IMA';

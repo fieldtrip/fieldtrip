@@ -1,5 +1,7 @@
 function test_headmodel_localspheres_new_old
 
+% WALLTIME 00:03:10
+
 % TEST test_headmodel_localspheres_new_old
 % TEST ft_prepare_localspheres ft_prepare_headmodel
 

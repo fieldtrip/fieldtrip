@@ -1,5 +1,7 @@
 function test_bug97
 
+% WALLTIME 00:03:08
+
 % TEST test_bug97
 % TEST ft_preprocessing ft_selectdata
 

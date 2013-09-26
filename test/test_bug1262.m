@@ -1,5 +1,7 @@
 function test_bug1262
 
+% WALLTIME 00:03:05
+
 % TEST test_bug1262
 % TEST ft_read_header ft_read_data ft_read_event
 

@@ -1,5 +1,7 @@
 function test_headmodel_openmeeg
 
+% WALLTIME 00:04:06
+
 % TEST test_headmodel_openmeeg
 % TEST ft_headmodel_bem_openmeeg ft_prepare_vol_sens ft_compute_leadfield
 

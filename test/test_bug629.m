@@ -1,5 +1,7 @@
 function test_bug629
 
+% WALLTIME 00:03:01
+
 % TEST test_bug629
 % TEST ft_read_header ft_read_data ft_read_event read_mff_header read_mff_data
 

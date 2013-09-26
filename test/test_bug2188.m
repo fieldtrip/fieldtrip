@@ -1,5 +1,7 @@
 function test_bug2188
 
+% WALLTIME 00:03:02
+
 %% Test read Localite markers
 
 filename = dccnfilename('/home/common/matlab/fieldtrip/data/test/bug2188/EEG_Markers.xml');

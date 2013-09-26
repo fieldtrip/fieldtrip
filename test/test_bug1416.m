@@ -1,5 +1,7 @@
 function test_bug1416
 
+% WALLTIME 00:03:01
+
 % TEST test_bug1416
 % TEST ft_setopt
 

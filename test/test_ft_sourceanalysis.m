@@ -1,5 +1,7 @@
 function test_ft_sourceanalysis(datainfo, writeflag, version)
 
+% WALLTIME 02:36:12
+
 % TEST test_ft_sourceanalysis 
 % TEST ft_sourceanalysis ref_datasets
 

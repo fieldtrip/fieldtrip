@@ -1,5 +1,7 @@
 function test_ft_topoplotCC
 
+% WALLTIME 00:03:03
+
 % TEST test_ft_topoplotCC
 % TEST ft_topoplotCC
 

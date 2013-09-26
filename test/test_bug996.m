@@ -1,5 +1,7 @@
 function test_bug996
 
+% WALLTIME 00:03:07
+
 % TEST test_bug996
 % TEST ft_multiplotER ft_singleplotER
 

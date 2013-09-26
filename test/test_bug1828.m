@@ -1,5 +1,7 @@
 function test_bug1828
 
+% WALLTIME 00:03:14
+
 % TEST test_bug1828
 % TEST ft_convert_coordsys
 % TEST align_ctf2spm

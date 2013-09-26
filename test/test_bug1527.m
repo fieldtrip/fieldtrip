@@ -1,5 +1,7 @@
 function test_bug1527
 
+% WALLTIME 00:03:03
+
 % TEST test_bug1527
 % TEST ft_sourceplot
 

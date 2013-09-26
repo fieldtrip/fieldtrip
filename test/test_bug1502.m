@@ -1,5 +1,7 @@
 function test_bug1502
 
+% WALLTIME 00:03:01
+
 % TEST test_bug1502
 % TEST ft_checkconfig
 

@@ -1,5 +1,7 @@
 function test_bug1149
 
+% WALLTIME 00:03:02
+
 % TEST test_bug1149
 
 % generate a unit sphere

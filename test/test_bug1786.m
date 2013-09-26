@@ -1,5 +1,7 @@
 function test_bug1786
 
+% WALLTIME 00:03:03
+
 % TEST test_bug1786
 % TEST ft_channelrepair ft_prepare_neighbours
 

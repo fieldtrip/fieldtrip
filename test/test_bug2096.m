@@ -1,5 +1,7 @@
 function test_bug2096
 
+% WALLTIME 00:03:01
+
 % TEST test_bug2096
 % TEST ft_sourcewrite
 

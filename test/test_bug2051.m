@@ -1,5 +1,7 @@
 function test_bug2051
 
+% WALLTIME 00:03:02
+
 % TEST test_bug2051
 % TEST ft_math
 

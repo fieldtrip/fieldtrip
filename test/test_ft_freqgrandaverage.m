@@ -1,5 +1,7 @@
 function test_ft_freqgrandaverage
 
+% WALLTIME 00:03:03
+
 % TEST test_ft_freqgrandaverage
 % TEST ft_freqgrandaverage
 

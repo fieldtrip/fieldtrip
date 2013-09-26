@@ -1,5 +1,7 @@
 function test_bug1315
 
+% WALLTIME 00:03:03
+
 % TEST test_bug1315
 % TEST ft_checkdata ft_prepare_neighbours ft_megplanar ft_combineplanar
 

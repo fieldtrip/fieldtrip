@@ -1,5 +1,7 @@
 function test_bug1708
 
+% WALLTIME 00:03:02
+
 % TEST: test_bug1708
 % TEST ft_denoise_synthetic
 

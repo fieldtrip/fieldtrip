@@ -1,5 +1,7 @@
 function test_bug1040
 
+% WALLTIME 00:03:05
+
 % TEST: bug1040
 
 % function to test ft_prepare_sourcemodel given configuration options (cfg), 

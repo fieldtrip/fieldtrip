@@ -1,5 +1,7 @@
 function test_headmodel_dipoli_new_old
 
+% WALLTIME 00:03:35
+
 % TEST test_headmodel_dipoli_new_old
 % TEST ft_headmodel_dipoli icosahedron162 ft_prepare_vol_sens ft_compute_leadfield
 

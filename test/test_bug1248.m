@@ -1,5 +1,7 @@
 function test_bug1248
 
+% WALLTIME 00:03:38
+
 % TEST test_bug1248 ft_preprocessing preproc
 
 for samp=[25 98 999]

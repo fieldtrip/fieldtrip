@@ -1,5 +1,7 @@
 function test_bug811
 
+% WALLTIME 00:03:03
+
 % TEST test_bug811
 % TEST ft_checkdata spm2fieldtrip
 

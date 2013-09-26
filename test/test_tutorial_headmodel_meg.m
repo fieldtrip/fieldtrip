@@ -1,5 +1,7 @@
 function test_tutorial_headmodel_meg(datadir)
 
+% WALLTIME 00:27:44
+
 % TEST test_tutorial_headmodel_meg
 % TEST ft_read_mri ft_volumesegment ft_prepare_headmodel ft_plot_vol
 % TEST ft_convert_units ft_read_sens ft_plot_sens 

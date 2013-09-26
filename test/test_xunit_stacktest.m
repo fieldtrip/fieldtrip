@@ -1,5 +1,7 @@
 function test_xunit_stacktest
 
+% WALLTIME 00:03:01
+
 
 % TEST test_xunit_stacktest
 % TEST ft_defaults warning_once

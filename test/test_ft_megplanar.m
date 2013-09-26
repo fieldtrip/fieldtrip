@@ -1,5 +1,7 @@
 function test_ft_megplanar
 
+% WALLTIME 00:04:00
+
 % TEST test_ft_megplanar
 % TEST ft_megplanar ft_prepare_neighbours ft_topoplotER
 

@@ -1,5 +1,7 @@
 function test_headmodel_concentricspheres_new_old
 
+% WALLTIME 00:03:11
+
 % generate a unit sphere
 [pnt, tri] = icosahedron162;
 

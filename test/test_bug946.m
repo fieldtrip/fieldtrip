@@ -1,5 +1,7 @@
 function test_bug946
 
+% WALLTIME 00:03:01
+
 % TEST ft_appenddata
 
 % make some dummy data

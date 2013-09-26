@@ -1,5 +1,7 @@
 function test_bug804
 
+% WALLTIME 00:03:05
+
 % TEST test_bug804
 % TEST channeposition ft_datatype_sens yokogawa2grad ft_read_header
 

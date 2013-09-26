@@ -1,5 +1,7 @@
 function test_bug1677
 
+% WALLTIME 00:03:03
+
 % TEST test_bug1677
 
 % code contributed by Jasper Poort: thanks for that!

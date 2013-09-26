@@ -1,5 +1,7 @@
 function test_ft_read_header
 
+% WALLTIME 00:03:43
+
 % TEST test_ft_read_header
 % TEST ft_read_header
 

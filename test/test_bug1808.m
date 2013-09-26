@@ -1,5 +1,7 @@
 function test_bug1808
 
+% WALLTIME 00:03:09
+
 % TEST test_bug1808
 % TEST ft_read_header ft_read_sens mne2grad
 

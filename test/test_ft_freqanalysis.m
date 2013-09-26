@@ -1,5 +1,7 @@
 function test_ft_freqanalysis(datainfo, writeflag, version)
 
+% WALLTIME 00:08:33
+
 % TEST test_ft_freqanalysis 
 % TEST ft_freqanalysis ref_datasets
 

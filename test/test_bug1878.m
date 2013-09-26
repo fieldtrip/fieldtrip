@@ -1,5 +1,7 @@
 function test_bug1878
 
+% WALLTIME 00:03:25
+
 % TEST test_bug1878
 % TEST ft_artifact_clip
 

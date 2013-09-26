@@ -1,5 +1,7 @@
 function test_bug1368
 
+% WALLTIME 00:05:33
+
 % TEST test_bug1368
 % TEST 
 

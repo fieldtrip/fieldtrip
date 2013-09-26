@@ -1,5 +1,7 @@
 function test_bug1742
 
+% WALLTIME 00:04:05
+
 % TEST test_bug1742
 % TEST qsubcellfun fexec
 

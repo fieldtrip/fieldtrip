@@ -1,5 +1,7 @@
 function test_bug1870
 
+% WALLTIME 00:03:04
+
 % TEST test_bug1870
 % TEST test_ft_megplanar ft_megplanar ft_datatype_sens ft_compute_leadfield
 

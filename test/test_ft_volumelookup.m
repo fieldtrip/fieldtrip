@@ -1,5 +1,7 @@
 function test_ft_volumelookup
 
+% WALLTIME 00:03:16
+
 % TEST test_ft_volumelookup
 % TEST ft_volumelookup
 % TEST ft_read_atlas

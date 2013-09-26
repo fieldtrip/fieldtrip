@@ -1,5 +1,7 @@
 function test_bug1212
 
+% WALLTIME 00:03:04
+
 % TEST test_bug1212
 % TEST ft_layoutplot
 

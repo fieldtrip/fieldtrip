@@ -1,5 +1,7 @@
 function test_bug2133
 
+% WALLTIME 00:03:03
+
 % TEST test_bug2133
 % TEST ft_read_header read_eeg_mff
 

@@ -1,5 +1,7 @@
 function test_headmodel_bemcp
 
+% WALLTIME 00:03:04
+
 % TEST test_headmodel_bemcp
 % TEST ft_headmodel_bemcp ft_prepare_vol_sens ft_compute_leadfield
 

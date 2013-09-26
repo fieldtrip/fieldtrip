@@ -1,5 +1,7 @@
 function test_bug1249
 
+% WALLTIME 00:03:08
+
 % TEST test_bug1249
 % TEST ft_componentanalysis ft_rejectcomponent
 

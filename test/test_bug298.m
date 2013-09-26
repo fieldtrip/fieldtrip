@@ -1,5 +1,7 @@
 function test_bug298
 
+% WALLTIME 00:03:01
+
 % TEST test_bug298
 % TEST keyval keyvalx
 

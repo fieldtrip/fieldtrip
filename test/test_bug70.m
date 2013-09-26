@@ -1,5 +1,7 @@
 function test_bug70
 
+% WALLTIME 00:06:40
+
 % TEST test_bug70
 % TEST ft_prepare_headmodel ft_prepare_leadfield
 

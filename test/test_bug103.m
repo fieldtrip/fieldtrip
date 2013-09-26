@@ -1,5 +1,7 @@
 function test_bug103
 
+% WALLTIME 00:03:04
+
 % TEST test_bug103
 % TEST ft_singleplotER
 

@@ -1,5 +1,7 @@
 function test_bug1856
 
+% WALLTIME 00:03:05
+
 % TEST test_bug1856
 % TEST ft_read_header ft_read_sens ft_chanunits
 

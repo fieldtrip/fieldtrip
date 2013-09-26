@@ -1,5 +1,7 @@
 function test_headmodel_bemcp_new_old
 
+% WALLTIME 00:03:54
+
 % generate a unit sphere
 [pnt, tri] = icosahedron162;
 

@@ -1,5 +1,7 @@
 function test_ft_artifact_xxx
 
+% WALLTIME 00:03:20
+
 % TEST test_ft_artifact_xxx
 % TEST ft_artifact_clip ft_artifact_eog ft_artifact_muscle ft_artifact_zvalue ft_artifact_ecg ft_artifact_jump ft_artifact_threshold
 

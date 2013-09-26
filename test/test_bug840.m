@@ -1,5 +1,7 @@
 function test_bug800
 
+% WALLTIME 00:03:02
+
 % TEST test_bug800
 % TEST ft_preproc_resample
 

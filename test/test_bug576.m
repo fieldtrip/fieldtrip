@@ -1,5 +1,7 @@
 function test_bug576
 
+% WALLTIME 00:03:03
+
 % TEST test_bug576
 % TEST ft_checkdata ft_senstype
 

@@ -1,5 +1,7 @@
 function test_bug1826
 
+% WALLTIME 00:03:01
+
 % at this moment the test script does not yet work, but we don't want the automatic regression testing to flag it as failure
 return;
 % Uses the linear tranformation algorithms of FSL to register a T2 image

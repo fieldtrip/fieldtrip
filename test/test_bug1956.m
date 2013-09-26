@@ -1,5 +1,7 @@
 function test_bug1902
 
+% WALLTIME 00:07:42
+
 % TEST test_bug1902 ft_prepare_sourcemodel volumesmooth
 
 mri = ft_read_mri('/home/common/matlab/fieldtrip/data/test/latest/mri/nifti/single_subj_T1.nii');

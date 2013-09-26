@@ -1,5 +1,7 @@
 function test_bug2137
 
+% WALLTIME 00:19:01
+
 % TEST test_bug2137
 
 % the following lines are for interactive/manual testing

@@ -1,5 +1,7 @@
 function test_ft_redefinetrial
 
+% WALLTIME 00:03:06
+
 % TEST test_ft_redefinetrial
 % TEST test_ft_redefinetrial
 

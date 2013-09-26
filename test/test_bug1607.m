@@ -1,5 +1,7 @@
 function test_bug1607
 
+% WALLTIME 00:03:07
+
 % TEST test_bug1607
 % TEST ft_channelrepair ft_topoplotER
 

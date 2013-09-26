@@ -1,5 +1,7 @@
 function test_bug1910
 
+% WALLTIME 00:03:01
+
 % TEST test_bug1910
 % TEST ft_datatype_sens
 

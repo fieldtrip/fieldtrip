@@ -1,5 +1,7 @@
 function test_bug1427
 
+% WALLTIME 00:05:52
+
 % TEST test_bug1427
 % TEST dataset2files ft_read_header ft_read_data
 

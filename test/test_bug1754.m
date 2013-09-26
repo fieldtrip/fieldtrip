@@ -1,5 +1,7 @@
 function test_bug1754
 
+% WALLTIME 00:03:01
+
 % TEST test_bug1754
 % TEST ft_freqbaseline
 

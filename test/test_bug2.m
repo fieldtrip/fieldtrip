@@ -1,5 +1,7 @@
 function test_bug2
 
+% WALLTIME 00:03:08
+
 % TEST test_bug2
 % TEST ft_freqanalysis ft_megplanar 
 

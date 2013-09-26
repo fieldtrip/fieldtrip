@@ -1,5 +1,7 @@
 function test_bug1397
 
+% WALLTIME 00:03:07
+
 % TEST test_bug1397
 % TEST ft_preprocessing ft_appenddata
 

@@ -1,5 +1,7 @@
 function test_randomseed
 
+% WALLTIME 00:03:01
+
 % TEST test_randomseed
 
 % this is related to bug 1205

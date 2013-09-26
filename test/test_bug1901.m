@@ -1,5 +1,7 @@
 function test_bug1901
 
+% WALLTIME 00:03:53
+
 % TEST test_bug1901
 % TEST ft_prepare_leadfield ft_prepare_sourcemodel prepare_headmodel ft_convert_units
 

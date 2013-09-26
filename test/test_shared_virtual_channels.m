@@ -1,5 +1,7 @@
 function test_shared_virtual_channels
 
+% WALLTIME 00:03:09
+
 % TEST test_shared_virtual_channels
 % TEST ft_timelockanalysis ft_sourceanalysis ft_channelselection ft_databrowser
 

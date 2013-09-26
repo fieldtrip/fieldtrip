@@ -1,5 +1,7 @@
 function test_ft_channelselection
 
+% WALLTIME 00:03:39
+
 % TEST test_ft_channelselection 
 % TEST ft_senstype ref_datasets
 

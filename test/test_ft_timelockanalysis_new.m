@@ -1,5 +1,7 @@
 function test_ft_timelockanalysis_new(datainfo,writeflag)
 
+% WALLTIME 00:03:01
+
 % TEST test_ft_timelockanalysis_new
 % ft_timelockanalysis_new ft_timelockanalysis ref_datasets
 

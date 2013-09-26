@@ -1,5 +1,7 @@
 function test_fairsurface
 
+% WALLTIME 00:03:05
+
 ft_defaults
 
 hdmfile  = '/home/common/matlab/fieldtrip/data/Subject01.shape';

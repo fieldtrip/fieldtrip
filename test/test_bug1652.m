@@ -1,5 +1,7 @@
 function test_bug1652
 
+% WALLTIME 00:03:30
+
 % TEST test_bug1652
 % TEST ft_datatype_segmentation
 

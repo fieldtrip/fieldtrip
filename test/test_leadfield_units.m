@@ -1,5 +1,7 @@
 function test_leadfield_units
 
+% WALLTIME 00:03:01
+
 % TEST test_leadfield_units
 % TEST ft_compute_leadfield FT_PREPARE_VOL_SENS
 

@@ -1,5 +1,7 @@
 function test_bug1114
 
+% WALLTIME 00:03:32
+
 % This function parses all fieldtrip main and module functions and determines
 % whether there are any dependencies on fieldtrip/compat or any other
 % compat directory. If so, the files are printed with an error.

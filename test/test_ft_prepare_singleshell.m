@@ -1,5 +1,7 @@
 function test_ft_prepare_singleshell
 
+% WALLTIME 00:03:29
+
 % TEST test_ft_prepare_singleshell
 % TEST ft_headmodel_singleshell ft_prepare_headmodel ft_prepare_singleshell
 

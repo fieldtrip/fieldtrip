@@ -1,5 +1,7 @@
 function test_yokogawa
 
+% WALLTIME 00:03:03
+
 % TEST test_yokogawa
 % TEST hasyokogawa read_yokogawa_data read_yokogawa_event read_yokogawa_header yokogawa2grad yokogawa2vol
 

@@ -1,5 +1,7 @@
 function test_headmodel_singleshell_new_old
 
+% WALLTIME 00:03:07
+
 % TEST test_headmodel_singleshell_new_old
 % TEST ft_headmodel_singleshell ft_prepare_headmodel ft_headmodel_singleshell
 

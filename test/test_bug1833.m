@@ -1,5 +1,7 @@
 function test_bug1833
 
+% WALLTIME 00:03:01
+
 % TEST test_bug1833
 % TEST ft_plot_mesh ft_read_headshape
 

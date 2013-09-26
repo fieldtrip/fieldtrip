@@ -1,5 +1,7 @@
 function test_bug1389
 
+% WALLTIME 00:03:02
+
 % there is confusion as to at what level in the cfg tre preproc options
 % need to be specified: for ft_preprocessing this is to be at the main
 % level of the cfg, for all other functions that rely on preproc, it should

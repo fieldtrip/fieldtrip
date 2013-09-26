@@ -1,5 +1,7 @@
 function test_ft_multiplotTFR
 
+% WALLTIME 00:03:11
+
 % TEST test_ft_multiplotTFR 
 % TEST ft_freqanalysis ft_multiplotTFR ft_prepare_layout
 

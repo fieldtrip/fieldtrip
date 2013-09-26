@@ -1,5 +1,7 @@
 function test_ft_timelockgrandaverage
 
+% WALLTIME 00:03:03
+
 % TEST test_ft_timelockgrandaverage
 % TEST ft_timelockgrandaverage
 

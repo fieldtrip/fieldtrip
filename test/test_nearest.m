@@ -1,5 +1,7 @@
 function test_nearest
 
+% WALLTIME 00:03:05
+
 % TEST test_nearest
 % TEST nearest
 

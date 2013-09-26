@@ -1,5 +1,7 @@
 function test_ft_prepare_mesh
 
+% WALLTIME 00:03:13
+
 % test ft_prepare_mesh also used for constructing SIMBIO FEM head models
 % see also http://bugzilla.fcdonders.nl/show_bug.cgi?id=1815
 

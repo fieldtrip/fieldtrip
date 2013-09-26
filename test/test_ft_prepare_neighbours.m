@@ -1,5 +1,7 @@
 function test_ft_prepare_neighbours
 
+% WALLTIME 00:03:21
+
 % TEST test_ft_prepare_neighbours
 % TEST ft_prepare_neighbours
 

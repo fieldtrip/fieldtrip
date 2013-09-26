@@ -1,5 +1,7 @@
 function test_bug1391
 
+% WALLTIME 00:03:05
+
 % this functions tests some potential issues with numerical accuracy
 % of the time axis in preproc, which converts the time axis into a 
 % fsample and offset, and then back into a time axis again.

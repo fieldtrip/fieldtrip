@@ -1,5 +1,7 @@
 function test_bug843
 
+% WALLTIME 00:03:09
+
 % TEST test_bug843 ft_topoplotTFR
 
 % it has been reported that the linearly indexed connectivity metrics don't

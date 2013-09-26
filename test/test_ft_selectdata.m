@@ -1,5 +1,7 @@
 function test_ft_selectdata
 
+% WALLTIME 00:03:16
+
 % TEST test_ft_selectdata
 % TEST ft_selectdata ft_selectdata_old ft_selectdata_new ft_appendfreq
 

@@ -1,5 +1,7 @@
 function test_bug2222
 
+% WALLTIME 00:03:02
+
 % TEST test_bug2222
 % TEST ft_freqcomparison ft_math
 

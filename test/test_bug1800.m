@@ -1,5 +1,7 @@
 function test_bug1800
 
+% WALLTIME 00:03:05
+
 % TEST test_bug1800
 % TEST ft_defaults ft_selectdata ft_topoplotER
 

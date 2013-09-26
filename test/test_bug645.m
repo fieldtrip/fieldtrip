@@ -1,5 +1,7 @@
 function test_bug645
 
+% WALLTIME 00:03:01
+
 % TEST test_bug645
 % TEST ft_read_event
 

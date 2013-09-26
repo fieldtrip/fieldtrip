@@ -1,5 +1,7 @@
 function test_ft_timelockanalysis(datainfo, writeflag, version)
 
+% WALLTIME 00:03:35
+
 % TEST test_ft_timelockanalysis
 % ft_timelockanalysis ref_datasets
 

@@ -1,5 +1,7 @@
 function test_bug1735
 
+% WALLTIME 00:03:02
+
 % TEST test_bug1735
 % TEST ft_appenddata
 

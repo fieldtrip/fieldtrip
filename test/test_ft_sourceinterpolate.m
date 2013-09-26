@@ -1,5 +1,7 @@
 function test_ft_sourceinterpolate
 
+% WALLTIME 00:03:14
+
 % TEST test_ft_sourceinterpolate
 % TEST ft_sourceinterpolate
 

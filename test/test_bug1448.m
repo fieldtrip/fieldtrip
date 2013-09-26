@@ -1,5 +1,7 @@
 function test_bug1448
 
+% WALLTIME 00:03:08
+
 % TEST test_bug1448
 
 % this function tests whether the mask is kept inside the call to singleplotTFR

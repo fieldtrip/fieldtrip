@@ -1,5 +1,7 @@
 function test_headmodel_fns
 
+% WALLTIME 00:03:58
+
 % TEST test_ft_compute_leadfield
 % TEST ft_compute_leadfield ft_headmodel_fns ft_prepare_vol_sens ft_compute_leadfield
 

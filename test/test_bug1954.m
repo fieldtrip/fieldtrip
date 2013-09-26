@@ -1,5 +1,7 @@
 function test_bug1954
 
+% WALLTIME 00:08:08
+
 load /home/common/matlab/fieldtrip/template/headmodel/standard_mri.mat
 
 

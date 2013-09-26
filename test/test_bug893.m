@@ -1,5 +1,7 @@
 function test_bug893
 
+% WALLTIME 00:03:03
+
 % TEST test_bug893
 % TEST ft_freqstatistics statfun_indepsamplesZcoh
 

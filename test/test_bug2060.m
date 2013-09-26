@@ -1,5 +1,7 @@
 function test_bug2060
 
+% WALLTIME 00:03:01
+
 % TEST test_bug2060
 % TEST ft_read_event read_neuralynx_nev
 

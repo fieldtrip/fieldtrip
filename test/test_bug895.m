@@ -1,5 +1,7 @@
 function test_bug895
 
+% WALLTIME 00:03:08
+
 % using statfun_indepsamplesZcoh results in an output structure that
 % contains 'chan' in the dimord, rather than 'chancmb'
 

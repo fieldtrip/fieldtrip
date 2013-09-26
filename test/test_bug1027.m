@@ -1,5 +1,7 @@
 function test_bug1027
 
+% WALLTIME 00:03:03
+
 % TEST test_bug1027
 % TEST ft_artifact_zvalue
 

@@ -1,5 +1,7 @@
 function test_suite = test_bug1618
 
+% WALLTIME 00:03:02
+
 % TEST test_bug1618
 
 % add xunit to path

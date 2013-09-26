@@ -1,5 +1,7 @@
 function test_bug1163
 
+% WALLTIME 00:03:02
+
 % TEST test_bug1163 ft_timelockbaseline
 
 % the problem seems to be that ft_timelockbaseline explicitly only checks

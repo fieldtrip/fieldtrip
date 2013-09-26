@@ -1,5 +1,7 @@
 function test_bug1836
 
+% WALLTIME 00:03:01
+
 return;
 % TEST test_bug1836
 % TEST ft_datatype_segmentation ft_prepare_mesh ft_write_headshape

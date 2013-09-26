@@ -1,5 +1,7 @@
 function test_bug2269
 
+% WALLTIME 00:03:04
+
 % TEST test_bug2296
 % TEST ft_preprocessing ft_redefinetrial ft_fetch_data
 

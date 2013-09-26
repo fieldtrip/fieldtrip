@@ -1,5 +1,7 @@
 function test_warp
 
+% WALLTIME 00:03:44
+
 % function to test the warp functionality and its robustness
 
 % create a set of points

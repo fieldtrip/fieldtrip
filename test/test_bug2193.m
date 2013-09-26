@@ -1,5 +1,7 @@
 function test_bug2193
 
+% WALLTIME 00:03:02
+
 % TEST test_bug2193
 % TEST ft_read_atlas
 

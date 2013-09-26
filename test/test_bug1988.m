@@ -1,5 +1,7 @@
 function test_bug1988
 
+% WALLTIME 00:12:37
+
 % TEST test_bug1988 ft_volumesegment ft_prepare_headmodel
 
 %% segmentedmri.mat

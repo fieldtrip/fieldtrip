@@ -1,5 +1,7 @@
 function test_bug367
 
+% WALLTIME 00:04:01
+
 % this test script is for http://bugzilla.fcdonders.nl/show_bug.cgi?id=367
 % and was constructed from http://fieldtrip.fcdonders.nl/example/megrealign
 

@@ -1,5 +1,7 @@
 function test_ft_fetch_data
 
+% WALLTIME 00:03:11
+
 % TEST ft_fetch_data
 
 % this function primarily tests the speed of ft_fetch_data

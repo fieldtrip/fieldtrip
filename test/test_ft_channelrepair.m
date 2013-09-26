@@ -1,5 +1,7 @@
 function test_ft_channelrepair
 
+% WALLTIME 00:03:18
+
 % TEST test_ft_channelrepair
 % TEST ft_channelrepair ft_datatype_sens fixsens ft_prepare_neighbours
 

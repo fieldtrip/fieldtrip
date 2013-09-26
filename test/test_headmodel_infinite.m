@@ -1,5 +1,7 @@
 function test_headmodel_infinite
 
+% WALLTIME 00:03:01
+
 % TEST test_headmodel_infinite
 % TEST ft_prepare_headmodel ft_headmodel_infinite
 

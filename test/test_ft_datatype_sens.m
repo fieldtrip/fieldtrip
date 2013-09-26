@@ -1,5 +1,7 @@
 function test_ft_datatype_sens
 
+% WALLTIME 00:03:23
+
 % TEST test_ft_datatype_sens
 % TEST ft_datatype_sens ft_read_sens ft_read_header ctf2grad bti2grad itab2grad fif2grad yokogawa2grad
 

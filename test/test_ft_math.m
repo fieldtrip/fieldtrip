@@ -1,5 +1,7 @@
 function test_ft_math
 
+% WALLTIME 00:03:04
+
 % TEST test_ft_math
 % TEST ft_math
 

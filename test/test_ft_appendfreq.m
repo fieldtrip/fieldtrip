@@ -1,5 +1,7 @@
 function test_ft_appendfreq
 
+% WALLTIME 00:03:02
+
 % TEST test_ft_appendfreq
 % TEST ft_appendfreq
 

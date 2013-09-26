@@ -1,5 +1,7 @@
 function test_bug2031
 
+% WALLTIME 00:03:15
+
 % TEST test_bug2031
 % TEST ft_topoplotER ft_topoplotTFR ft_singleplotER ft_singleplotTFR
 

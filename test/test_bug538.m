@@ -1,5 +1,7 @@
 function test_bug538
 
+% WALLTIME 00:03:03
+
 % TEST test_bug538
 % TEST ft_freqanalysis ft_connectivityanalysis ft_freqstatistics
 

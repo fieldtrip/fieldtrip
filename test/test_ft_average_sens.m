@@ -1,5 +1,7 @@
 function test_ft_average_sens
 
+% WALLTIME 00:03:02
+
 % TEST test_ft_average_sens
 % TEST ft_average_sens ft_transform_sens ft_transform_geometry
 

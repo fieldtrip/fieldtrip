@@ -1,5 +1,7 @@
 function test_bug1806
 
+% WALLTIME 00:03:09
+
 % TEST test_bug1806
 % TEST ft_componentanalysis ft_rejectcomponent ft_megplanar ft_combineplanar ft_megrealign ft_datatype_sens
 

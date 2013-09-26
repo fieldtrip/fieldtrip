@@ -1,5 +1,7 @@
 function test_bug2061
 
+% WALLTIME 00:03:04
+
 % TEST test_bug2061
 % TEST ft_timelockanalysis
 

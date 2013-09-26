@@ -1,5 +1,7 @@
 function test_bug1270
 
+% WALLTIME 00:03:02
+
 % script to verify and fix an error related to using a mask in
 % ft_singleplotER
 %

@@ -1,5 +1,7 @@
 function test_bug1924
 
+% WALLTIME 00:03:05
+
 % TEST test_bug1924
 % TEST read_deymed_dat read_deymed_ini ft_filetype ft_read_header ft_read_data ft_read_event
 

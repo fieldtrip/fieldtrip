@@ -1,5 +1,7 @@
 function test_bug62
 
+% WALLTIME 00:04:04
+
 % TEST test_bug62
 % TEST ft_read_mri ft_volumenormalise
 

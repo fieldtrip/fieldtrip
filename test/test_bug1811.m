@@ -1,5 +1,7 @@
 function test_bug1811
 
+% WALLTIME 00:03:03
+
 % TEST test_bug1811
 % TEST ft_analysisprotocol
 

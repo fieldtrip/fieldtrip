@@ -1,5 +1,7 @@
 function test_bug2069
 
+% WALLTIME 00:03:25
+
 % TEST test_bug2069 ft_appendfreq ft_freqstatistics ft_timelockstatistics
 
 %% simulate some data

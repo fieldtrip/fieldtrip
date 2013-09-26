@@ -1,5 +1,7 @@
 function test_bug963
 
+% WALLTIME 00:03:07
+
 % TEST test_bug963
 % TEST ft_read_header ft_read_sens ft_datatype_sens bti2grad itab2grad netmeg2grad ctf2grad mne2grad yokogawa2grad fif2grad mne2grad.old yokogawa2grad_new
 

@@ -1,5 +1,7 @@
 function test_bug950
 
+% WALLTIME 00:03:06
+
 % TEST ft_megrealign test_bug950
 
 % the issue explored here is a reputed crash in megrealign due to a problem

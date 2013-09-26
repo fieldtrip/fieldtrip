@@ -1,5 +1,7 @@
 function test_bug932
 
+% WALLTIME 00:03:31
+
 % TEST test_bug932
 % TEST ft_freqstatistics ft_selectdata ft_appendfreq ft_datatype_freq ft_datatype_sens
 

@@ -1,5 +1,7 @@
 function test_neuromag_units
 
+% WALLTIME 00:04:40
+
 % TEST test_neuromag_units
 % TEST ft_read_header ft_read_data
 

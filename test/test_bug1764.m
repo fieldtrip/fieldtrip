@@ -1,5 +1,7 @@
 function test_bug1764
 
+% WALLTIME 00:03:14
+
 % TEST test_bug1764
 % TEST ft_prepare_singleshell ft_prepare_mesh
 

@@ -1,5 +1,7 @@
 function test_bug1014
 
+% WALLTIME 00:03:02
+
 % TEST test_bug1014
 % TEST ft_checkdata ft_appendtimelock ft_selectdata
 

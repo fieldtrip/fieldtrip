@@ -1,5 +1,7 @@
 function test_bug1150
 
+% WALLTIME 00:04:10
+
 % TEST test_bug1150
 % TEST ft_sourcestatistics
 

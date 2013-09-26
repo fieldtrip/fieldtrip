@@ -1,5 +1,7 @@
 function test_ft_movieplotTFR
 
+% WALLTIME 00:03:10
+
 % TEST test_ft_movieplotTFR
 % TEST ft_movieplotTFR ft_movieplotER
 

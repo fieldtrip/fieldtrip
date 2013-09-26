@@ -1,5 +1,7 @@
 function test_bug1925
 
+% WALLTIME 00:03:01
+
 % TEST test_bug1925
 % TEST surface_nesting ft_headmodel_bemcp
 

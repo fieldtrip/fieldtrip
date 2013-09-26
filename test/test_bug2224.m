@@ -1,5 +1,7 @@
 function test_bug2224
 
+% WALLTIME 00:03:06
+
 % TEST test_bug2224
 % TEST ft_selectdata ft_selectdata_new ft_postamble ft_postamble_previous ft_postamble_history
 

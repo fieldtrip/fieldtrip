@@ -1,5 +1,7 @@
 function test_bug2086
 
+% WALLTIME 00:03:01
+
 % TEST test_bug2086
 % TEST ft_databrowser
 

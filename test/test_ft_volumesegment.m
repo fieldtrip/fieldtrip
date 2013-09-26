@@ -1,5 +1,7 @@
 function test_ft_volumesegment
 
+% WALLTIME 00:05:44
+
 % TEST test_ft_volumesegment
 % TEST ft_volumesegment  ft_read_mri
 

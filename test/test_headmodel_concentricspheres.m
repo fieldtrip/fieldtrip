@@ -1,5 +1,7 @@
 function test_headmodel_concentricspheres
 
+% WALLTIME 00:03:02
+
 % TEST test_headmodel_concentricspheres
 % TEST ft_headmodel_concentricspheres ft_prepare_vol_sens ft_compute_leadfield
 

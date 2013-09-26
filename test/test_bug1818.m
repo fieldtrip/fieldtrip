@@ -1,5 +1,7 @@
 function test_bug1818
 
+% WALLTIME 00:03:38
+
 % test the reading function of meshes used for constructing SIMBIO FEM head models
 % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1818
 
