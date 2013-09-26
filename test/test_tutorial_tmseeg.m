@@ -1,4 +1,8 @@
 function test_tutorial_tmseeg
+
+% TEST test_tutorial_tmseeg
+% TEST ft_math ft_interpolatenan
+
 triggers = {'S  1', 'S  3'}; % These values correspond to the markers placed in this dataset
 
 cfg = [];

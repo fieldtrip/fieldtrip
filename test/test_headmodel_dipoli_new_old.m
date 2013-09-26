@@ -1,10 +1,9 @@
 function test_headmodel_dipoli_new_old
-% TEST test_headmodel_dipoli_new_old
-%
-% Tests the old and new version of dipoli wrapper
 
-% Copyright Cristiano Micheli
-% $Id$
+% TEST test_headmodel_dipoli_new_old
+% TEST ft_headmodel_dipoli icosahedron162 ft_prepare_vol_sens ft_compute_leadfield
+
+% tests the old and new version of dipoli wrapper
 
 % generate a unit sphere
 [pnt, tri] = icosahedron162;

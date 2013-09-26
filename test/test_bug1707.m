@@ -1,4 +1,5 @@
 function test_bug1707
+
 % TEST test_bug1707
 % TEST ft_channelrepair ft_combineplanar ft_componentanalysis
 % TEST ft_connectivityanalysis ft_freqanalysis ft_freqdescriptives
@@ -14,6 +15,7 @@ function test_bug1707
 % different orderings of channels that determine the output of
 % ft_timelockstatistics, depending on what the order of the input arguments has
 % been.
+%
 % FieldTrip should nowhere assume that the order and list of channels present is
 % the same for all data input arguments, nor that the order is the same in e.g.
 % the data.label and data.grad.label.

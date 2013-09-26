@@ -1,4 +1,5 @@
 function test_ft_channelselection
+
 % TEST test_ft_channelselection 
 % TEST ft_senstype ref_datasets
 

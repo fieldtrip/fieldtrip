@@ -1,6 +1,8 @@
 function test_bug1029
-%TEST test_bug1029 ft_read_vol ft_headmodel_bem_asa ft_prepare_headmodel
-% 
+
+% TEST test_bug1029
+% TEST ft_read_vol ft_headmodel_bem_asa ft_prepare_headmodel
+
 % tests the functionality of the forward models after changing the names of
 % the headmodels
 

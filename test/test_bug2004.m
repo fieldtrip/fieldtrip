@@ -1,3 +1,5 @@
+function test_bug2004
+
 % TEST test_bug2004 
 % TEST ft_connectivityanalysis
 % TEST ft_connectivity_corr

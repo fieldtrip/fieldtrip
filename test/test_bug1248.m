@@ -1,4 +1,7 @@
 function test_bug1248
+
+% TEST test_bug1248 ft_preprocessing preproc
+
 for samp=[25 98 999]
   for fs=[235 943]
     data = [];

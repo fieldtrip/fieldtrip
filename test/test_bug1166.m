@@ -1,6 +1,8 @@
 function test_bug1166
-%TEST test_bug1166 ft_prepare_headmodel ft_headmodel_bem_asa 
-%
+
+% TEST test_bug1166
+% TEST ft_prepare_headmodel ft_headmodel_bem_asa 
+
 % This function tests that the inputs for the headmodel functions are
 % read-in correctly
 

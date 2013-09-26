@@ -1,7 +1,8 @@
 function test_ft_fetch_data
-% this function primarily tests the speed of ft_fetch_data
 
 % TEST ft_fetch_data
+
+% this function primarily tests the speed of ft_fetch_data
 
 nchan     = 300;
 fsample   = 1200;
