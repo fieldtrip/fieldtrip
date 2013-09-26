@@ -454,9 +454,33 @@ cfg.method='singlesphere';
 cfg.headshape=shape.pnt;
 vol813=ft_prepare_headmodel(cfg);
 
-
-%% simbio, fns
+%% simbio - INPUT: hexahedral mesh
 % test_headmodel_simbio exists
+
+clear vol*;
+
+% you can create simbio headmodel only from hexahedral mesh
+cfg=[];
+cfg.method = 'hexahedral';    
+hexmesh = ft_prepare_mesh(cfg,seg2);
+
+cfg=[];
+cfg.method = 'simbio';
+cfg.conductivity = [0.33 0.01 0.43];  
+
+try % this should not work 
+  vol90=ft_prepare_headmodel(cfg,mri);
+  success = true;
+catch
+  success=false;
+end
+if success, error('90');end
+
+% create headmodel
+vol_hex = ft_prepare_headmodel(cfg,hexmesh);
+clear vol_hex;
+
+%% fns
 % test_headmodel_fns exists
 
 %% interpolate
