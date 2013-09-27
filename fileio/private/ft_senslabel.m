@@ -6,7 +6,8 @@ function label = ft_senslabel(type)
 % Use as
 %    label = ft_senslabel(type)
 %
-% The input type can be any of the following
+% The input sensor array type can be any of the following
+%   'ant128'
 %   'biosemi64'
 %   'biosemi128'
 %   'biosemi256'
@@ -24,11 +25,11 @@ function label = ft_senslabel(type)
 %   'eeg1005'
 %   'eeg1010'
 %   'eeg1020'
-%   'egi128'
-%   'egi256'
+%   'ext1020'
 %   'egi32'
 %   'egi64'
-%   'ext1020'
+%   'egi128'
+%   'egi256'
 %   'neuromag122'
 %   'neuromag122alt'
 %   'neuromag306'
@@ -43,11 +44,12 @@ function label = ft_senslabel(type)
 %   'yokogawa160_planar'
 %   'yokogawa440'
 %   'yokogawa440_planar'
+%   'eeg'
 %   'electrode'
 %
 % See also FT_SENSTYPE, FT_CHANNELSELECTION
 
-% Copyright (C) 2007-2012, Robert Oostenveld
+% Copyright (C) 2007-2013, Robert Oostenveld
 % Copyright (C) 2008, Vladimir Litvak
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
@@ -69,7 +71,7 @@ function label = ft_senslabel(type)
 % $Id$
 
 % these are for speeding up subsequent calls with the same input arguments
-persistent btiref bti148 bti148_planar bti248 bti248_planar ctfref ctfheadloc ctf64 ctf151 ctf151_planar ctf275 ctf275_planar neuromag122 neuromag122alt neuromag306 neuromag306alt eeg1020 eeg1010 eeg1005 ext1020 biosemi64 biosemi128 biosemi256 egi32 egi64 egi128 egi256 itab28 itab153 itab153_planar yokogawa9 yokogawa64 yokogawa64_planar yokogawa160 yokogawa160_planar yokogawa440 yokogawa440_planar electrode
+persistent ant128 btiref bti148 bti148_planar bti248 bti248_planar ctfref ctfheadloc ctf64 ctf151 ctf151_planar ctf275 ctf275_planar neuromag122 neuromag122alt neuromag306 neuromag306alt eeg1020 eeg1010 eeg1005 ext1020 biosemi64 biosemi128 biosemi256 egi32 egi64 egi128 egi256 itab28 itab153 itab153_planar yokogawa9 yokogawa64 yokogawa64_planar yokogawa160 yokogawa160_planar yokogawa440 yokogawa440_planar eeg electrode
 
 if nargin<1
   % ensure that all input arguments are defined
@@ -3617,9 +3619,9 @@ switch type
       };
     label = label(:);
     
-  case 'electrode'
+  case {'eeg' 'electrode'}
     % there is no default set of electrode labels for all possible EEG systems
-    % but nevertheless the requested input type 'electrode' should not result in an error
+    % but nevertheless the requested input type should not result in an error
     label = {};
     
   otherwise
