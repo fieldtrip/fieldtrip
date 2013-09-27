@@ -52,7 +52,7 @@ datasets(end).nummeg    = nan;
 datasets(end).numeog    = nan;
 datasets(end).numecg    = nan;
 datasets(end).numemg    = nan;
-datasets(end).senstype  = 'electrode';
+datasets(end).senstype  = 'eeg';
 
 datasets(end+1).origdir = origdir; 
 datasets(end).type      = 'eeg';
