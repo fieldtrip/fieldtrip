@@ -29,6 +29,7 @@ function [type] = ft_senstype(input, desired)
 %   'yokogawa160_planar'
 %   'yokogawa440'
 %   'yokogawa440'_planar
+%   'ext1020' (this includes eeg1020, eeg1010 and eeg1005)
 %   'neuromag122'
 %   'neuromag306'
 %   'egi32'
@@ -38,7 +39,7 @@ function [type] = ft_senstype(input, desired)
 %   'biosemi64'
 %   'biosemi128'
 %   'biosemi256'
-%   'ext1020'
+%   'neuralynx'
 %   'plexon'
 %   'eeg' (this was called 'electrode' in older versions)
 %   'meg' (this was called 'magnetometer' in older versions)
