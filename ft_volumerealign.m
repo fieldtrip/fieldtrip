@@ -601,11 +601,23 @@ switch cfg.method
     scalp           = ft_prepare_headmodel(tmpcfg, seg);
     scalp           = ft_convert_units(scalp, 'mm');
     
+    % Here it is advisable to interactively realign the shape and scalp, in
+    % order to get a good starting point for the icp-algorithm.
+    % We will use ft_interactiverealign for this.
+    tmpcfg                       = [];
+    tmpcfg.template.elec         = shape;
+    tmpcfg.template.elec.chanpos = shape.pnt;
+    tmpcfg.individual.headshape  = scalp.bnd;
+    tmpcfg.individual.headshapestyle = 'surface';
+    tmpcfg = ft_interactiverealign(tmpcfg);
+    M      = tmpcfg.m;
+    
+    % update the relevant geometrical info
+    mri.transform = M*mri.transform;
+    scalp.bnd     = ft_transform_geometry(M, scalp.bnd);
+    
     if ~isfield(cfg, 'weights')
-      % weight the points with z-coordinate more than the rest. These are the
-      % likely points that belong to the nose and eye rims
       w = ones(size(shape.pnt,1),1);
-      %w(shape.pnt(:,3)<0) = 100; % this value seems to work
     else
       w = cfg.weights(:);
       if numel(w)~=size(shape.pnt,1),
@@ -617,35 +629,65 @@ switch cfg.method
     weights = @(x)assignweights(x,w);
     
     % construct the coregistration matrix
-    % [R, t, corr, D, data2] = icp2(scalp.bnd.pnt', shape.pnt', 20, [], weights); % icp2 is a helper function implementing the iterative closest point algorithm
     nrm         = normals(scalp.bnd.pnt, scalp.bnd.tri, 'vertex');
-    [R, t, err] = icp(scalp.bnd.pnt', shape.pnt', 50, 'Minimize', 'plane', 'Normals', nrm', 'ReturnAll', true, 'Weight', weights, 'Extrapolation', true, 'WorstRejection', 0.05);
-    [m,ix]      = min(err);
-    R           = R(:,:,ix);
-    t           = t(:,:,ix);
-    transform   = inv([R t;0 0 0 1]);
+    [R, t, err,~,info] = icp(scalp.bnd.pnt', shape.pnt', 50, 'Minimize', 'plane', 'Normals', nrm', 'Weight', weights, 'Extrapolation', true, 'WorstRejection', 0.05);
     
-    % warp the extracted scalp points to the new positions
-    scalp.bnd.pnt          = warp_apply(transform, scalp.bnd.pnt);
+    % smooth the distance function and use this for new weights
+    target        = scalp.bnd;
+    target.pos    = target.pnt;
+    target.inside = (1:size(target.pos,1))';
     
+    functional     = rmfield(shape,'pnt');
+    functional.pow = info.distanceout(:);
+    functional.pos = info.qout';
+
+    tmpcfg           = [];
+    tmpcfg.parameter = 'pow';
+    tmpcfg.interpmethod = 'sphere_avg';
+    tmpcfg.sphereradius = 10;
+    smoothdist          = ft_sourceinterpolate(tmpcfg, functional, target);
+    scalp.bnd.distance  = smoothdist.pow(:);
+    
+% A second iteration of the icp algorithm does not seem to improve things.
+% Code is kept just to consider investigating this in more detail.
+%
+%     % this one transforms from scalp 'headspace' to shape 'headspace'
+%     transform   = inv([R t;0 0 0 1]);
+%     
+%     % warp the extracted scalp points to the new positions
+%     scalp.bnd.pnt = warp_apply(transform, scalp.bnd.pnt);
+%     
+%     % now the idea would be to do a second round where the points are
+%     % weighted with the (locally averaged) distance to the scalp
+%     newweights = abs(smoothdist.pow(info.q_idx));
+%     weights = @(x)assignweights(x,newweights(:)');
+%     
+%     [R2, t2, err2,~,info(2)] = icp(scalp.bnd.pnt', info.pin, 50, 'Minimize', 'plane', 'Normals', nrm', 'Weight', weights, 'Extrapolation', true);
+%     
+%     % this one transforms from scalp 'headspace' to shape 'headspace'
+%     transform   = [R2 t2;0 0 0 1]\transform;
+%     
+%     % warp the extracted scalp points to the new positions
+%     scalp.bnd.pnt = warp_apply(inv([R2 t2;0 0 0 1]), scalp.bnd.pnt);
+  
     % create headshape structure for mri-based surface point cloud
     if isfield(mri, 'coordsys')
       scalp.coordsys = mri.coordsys;
+    
+      % coordsys is the same as input mri
+      coordsys = mri.coordsys;
+    else
+      coordsys  = 'unknown';
     end
-    
-    % coordsys is the same as input mri
-    coordsys = mri.coordsys;
-    
-    %     mrifid.pnt   = warp_apply(transform*mri.transform, [fiducials.nas;fiducials.lpa;fiducials.rpa]);
-    %     mrifid.label = {'NZinteractive';'Linteractive';'Rinteractive'};
-    %     shapemri.fid = mrifid;
-       
+           
     % update the cfg
     cfg.headshape    = shape;
     cfg.headshapemri = scalp;
+    cfg.icpinfo      = info;
     
     % touch it to survive trackconfig
     cfg.headshapemri;
+    cfg.icpinfo;
     
   case 'fsl'
     if ~isfield(cfg, 'fsl'), cfg.fsl = []; end
