@@ -942,6 +942,7 @@ switch headerformat
     % ensure that the EGI_MFF toolbox is on the path
     ft_hastoolbox('egi_mff', 1);
     % ensure that the JVM is running and the jar file is on the path
+
     %%%%%%%%%%%%%%%%%%%%%%
     %workaround for Matlab bug resulting in global variables being cleared
     globalTemp=cell(0);
@@ -1778,8 +1779,8 @@ end
 % ensure that it is a column array
 hdr.label = hdr.label(:);
 
-% as of November 2011, the header is supposed to include the channel type
-% (see FT_CHANTYPE) and the units of each channel (e.g. uV, fT, ...).
+% as of November 2011, the header is supposed to include the channel type (see FT_CHANTYPE, 
+% e.g. meggrad, megref, eeg) and the units of each channel (see FT_CHANUNIT, e.g. uV, fT)
 
 if ~isfield(hdr, 'chantype')
   % use a helper function which has some built in intelligence
