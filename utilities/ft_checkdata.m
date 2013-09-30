@@ -1671,13 +1671,21 @@ data = fixinside(data, 'logical');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function data = freq2raw(freq)
 
-if strcmp(freq.dimord, 'rpt_chan_freq_time')
-  dat = freq.powspctrm;
-elseif strcmp(freq.dimord, 'rpttap_chan_freq_time')
-  warning('converting fourier representation into raw data format. this is experimental code');
-  dat = freq.fourierspctrm;
+if isfield(freq, 'powspctrm')
+  param = 'powspctrm';
+elseif isfield(freq, 'fourierspctrm')
+  param = 'fourierspctrm';
 else
-  error('this only works for dimord=''rpt_chan_freq_time''');
+  error('not supported for this data representation');
+end  
+
+if strcmp(freq.dimord, 'rpt_chan_freq_time') || strcmp(freq.dimord, 'rpttap_chan_freq_time')
+  dat = freq.(param);
+elseif strcmp(freq.dimord, 'chan_freq_time')
+  dat = freq.(param);
+  dat = reshape(dat, [1 size(dat)]); % add a singleton dimension
+else
+  error('not supported for dimord %s', freq.dimord);
 end
 
 nrpt  = size(dat,1);
