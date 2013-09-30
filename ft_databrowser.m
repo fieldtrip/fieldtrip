@@ -209,23 +209,28 @@ end
 
 if strcmp(cfg.viewmode, 'component')
   % read or create the layout that will be used for the topoplots
-  tmpcfg = [];
-  tmpcfg.layout = cfg.layout;
-  if isempty(cfg.layout)
+  
+  if ~isempty(cfg.layout)
+    tmpcfg = [];
+    tmpcfg.layout = cfg.layout;
+    cfg.layout = ft_prepare_layout(tmpcfg);
+  else
     warning('No layout specified - will try to construct one using sensor positions');
-    if ft_datatype(data, 'meg')
-      tmpcfg.grad = ft_fetch_sens(cfg, data);
-    elseif ft_datatype(data, 'eeg')
-      tmpcfg.elec = ft_fetch_sens(cfg, data);
-    else
-      error('cannot infer sensor type');
-    end
+    try
+      tmpcfg = [];
+      tmpcfg.layout = [];
+      if isfield(data, 'grad')
+        tmpcfg.grad = data.grad;
+      elseif isfield(data, 'elec')
+        tmpcfg.elec = data.elec;
+      else
+        error('cannot infer sensor type');
+      end
+      cfg.layout = ft_prepare_layout(tmpcfg);
+    catch
+      cfg.layout = [];
+    end % try
   end
-  cfg.layout = ft_prepare_layout(tmpcfg);
-elseif ~isempty(cfg.layout)
-  tmpcfg = [];
-  tmpcfg.layout = cfg.layout;
-  cfg.layout = ft_prepare_layout(tmpcfg);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -648,7 +653,7 @@ for iArt = 1:length(artlabel)
   uicontrol('tag', 'artifactui', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', ['control+' num2str(iArt)], 'position', [0.96, 0.855 - ((iArt-1)*0.09), 0.03, 0.04], 'backgroundcolor', opt.artcolors(iArt,:))
 end
 
-if strcmp(cfg.viewmode, 'butterfly')
+if true % strcmp(cfg.viewmode, 'butterfly')
   % button to find label of nearest channel to datapoint
   uicontrol('tag', 'artifactui', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'identify', 'userdata', 'i', 'position', [0.91, 0.1, 0.08, 0.05], 'backgroundcolor', [1 1 1])
 end
@@ -1566,11 +1571,10 @@ opt.height = ax(4)-ax(3);
 opt.hlim = [tim(1) tim(end)];
 opt.vlim = cfg.ylim;
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % fprintf('plotting artifacts...\n');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-delete(findobj(h,'tag', 'artifact'));
+delete(findobj(h, 'tag', 'artifact'));
 
 for j = ordervec
   tmp = diff([0 art(j,:) 0]);
@@ -1585,7 +1589,10 @@ for j = ordervec
 end % for each of the artifact channels
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%fprintf('plotting events...\n');
+% fprintf('plotting events...\n');
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+delete(findobj(h, 'tag', 'event'));
+
 if strcmp(cfg.ploteventlabels , 'colorvalue') && ~isempty(opt.event)
   eventlabellegend = [];
   for iType = 1:length(opt.eventtypes)
@@ -1593,12 +1600,12 @@ if strcmp(cfg.ploteventlabels , 'colorvalue') && ~isempty(opt.event)
   end
   fprintf(eventlabellegend);
 end
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-delete(findobj(h,'tag', 'event'));
+
 % save stuff to able to shift event labels downwards when they occur at the same time-point
 eventcol = cell(1,numel(event));
 eventstr = cell(1,numel(event));
 eventtim = NaN(1,numel(event));
+
 % gather event info and plot lines
 for ievent = 1:numel(event)
   try
@@ -1634,7 +1641,7 @@ concount = NaN(1,numel(event));
 for ievent = 1:numel(event)
   concount(ievent) = sum(eventtim(ievent)==eventtim(1:ievent-1));
 end
-% plot labels
+% plot event labels
 for ievent = 1:numel(event)
   ft_plot_text(eventtim(ievent), 0.9-concount(ievent)*.06, eventstr{ievent}, 'tag', 'event', 'Color', eventcol{ievent}, ...
     'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1],'interpreter','none');
@@ -1648,7 +1655,7 @@ delete(findobj(h,'tag', 'identify'));
 
 % not removing channel labels, they cause the bulk of redrawing time for the slow text function (note, interpreter = none hardly helps)
 % warning, when deleting the labels using the line below, one can easily tripple the excution time of redrawing in viewmode = vertical (see bug 2065)
-%delete(findobj(h,'tag', 'chanlabel')); 
+%delete(findobj(h, 'tag', 'chanlabel'));
 
 
 if strcmp(cfg.viewmode, 'butterfly')
@@ -1688,7 +1695,7 @@ elseif any(strcmp(cfg.viewmode, {'vertical' 'component'}))
       % this is a cheap quick fix. If it causes error in plotting components, do this conditional on viewmode
       if numel(findobj(h,'tag', 'chanlabel'))<numel(chanindx)
         if opt.plotLabelFlag == 1 || (opt.plotLabelFlag == 2 && mod(i,10)==0)
-          ft_plot_text(labelx(laysel), labely(laysel), opt.hdr.label(chanindx(i)), 'tag', 'chanlabel', 'HorizontalAlignment', 'right','interpreter','none','FontUnits','normalized','FontSize',0.9/2/numel(chanindx));
+          ft_plot_text(labelx(laysel), labely(laysel), opt.hdr.label(chanindx(i)), 'tag', 'chanlabel', 'HorizontalAlignment', 'right','interpreter','none','FontUnits','normalized','FontSize',8);
         end
       end
       
@@ -1849,7 +1856,7 @@ drawnow
 
 setappdata(h, 'opt', opt);
 setappdata(h, 'cfg', cfg);
-end
+end % function
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -1879,40 +1886,40 @@ if ~isempty(eventdata.Modifier)
   key = [eventdata.Modifier{1} '+' key];
 end
 
-end
+end % function
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cursortext = datacursortext(obj, event_obj)
-  pos = get(event_obj, 'position');
-  
-  linetype = getappdata(event_obj.Target, 'ft_databrowser_linetype');
+pos = get(event_obj, 'position');
 
-  if strcmp(linetype, 'event')
-    cursortext = sprintf('%s = %d\nt = %g s',...
-      getappdata(event_obj.Target, 'ft_databrowser_eventtype'),...
-      getappdata(event_obj.Target, 'ft_databrowser_eventvalue'),...
-      getappdata(event_obj.Target, 'ft_databrowser_eventtime'));
-  elseif strcmp(linetype, 'channel')
-    % get plotted x axis
-    plottedX = get(event_obj.Target, 'xdata');
-    
-    % determine values of data at real x axis
-    timeAxis = getappdata(event_obj.Target, 'ft_databrowser_xaxis');
-    dataAxis = getappdata(event_obj.Target, 'ft_databrowser_yaxis');
-    tInd = nearest(plottedX, pos(1));
-    
-    % get label
-    chanLabel = getappdata(event_obj.Target, 'ft_databrowser_label');
-    chanLabel = chanLabel{1};
-    
-    cursortext = sprintf('t = %g\n%s = %g', timeAxis(tInd), chanLabel,...
-      dataAxis(tInd));
-  else
-    cursortext = '<no cursor available>';
-    % explicitly tell the user there is no info because the x-axis and
-    % y-axis do not correspond to real data values (both are between 0 and
-    % 1 always)
-  end
+linetype = getappdata(event_obj.Target, 'ft_databrowser_linetype');
+
+if strcmp(linetype, 'event')
+  cursortext = sprintf('%s = %d\nt = %g s',...
+    getappdata(event_obj.Target, 'ft_databrowser_eventtype'),...
+    getappdata(event_obj.Target, 'ft_databrowser_eventvalue'),...
+    getappdata(event_obj.Target, 'ft_databrowser_eventtime'));
+elseif strcmp(linetype, 'channel')
+  % get plotted x axis
+  plottedX = get(event_obj.Target, 'xdata');
+  
+  % determine values of data at real x axis
+  timeAxis = getappdata(event_obj.Target, 'ft_databrowser_xaxis');
+  dataAxis = getappdata(event_obj.Target, 'ft_databrowser_yaxis');
+  tInd = nearest(plottedX, pos(1));
+  
+  % get label
+  chanLabel = getappdata(event_obj.Target, 'ft_databrowser_label');
+  chanLabel = chanLabel{1};
+  
+  cursortext = sprintf('t = %g\n%s = %g', timeAxis(tInd), chanLabel,...
+    dataAxis(tInd));
+else
+  cursortext = '<no cursor available>';
+  % explicitly tell the user there is no info because the x-axis and
+  % y-axis do not correspond to real data values (both are between 0 and
+  % 1 always)
 end
+end % function
