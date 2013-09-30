@@ -113,10 +113,11 @@ function [freq] = ft_freqanalysis(cfg, data)
 %   cfg.gwidth     = determines the length of the used wavelets in standard deviations
 %                    of the implicit Gaussian kernel and should be choosen
 %                    >= 3; (default = 3)
-%      The standard deviation in the frequency domain (sf) at frequency f0 is
-%      defined as: sf = f0/width
-%      The standard deviation in the temporal domain (st) at frequency f0 is
-%      defined as: st = width/f0 = 1/sf
+% 
+% The standard deviation in the frequency domain (sf) at frequency f0 is
+% defined as: sf = f0/width
+% The standard deviation in the temporal domain (st) at frequency f0 is
+% defined as: st = width/f0 = 1/sf
 %
 %
 %  TFR
