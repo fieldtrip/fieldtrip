@@ -36,6 +36,15 @@ while isfield(sens, 'balance') && isfield(sens.balance, 'current') && ~strcmp(se
     
     sens = ft_apply_montage(sens, sens.balance.(sens.balance.current), 'inverse', 'yes', 'keepunused', 'yes', 'warning', 'no');
     
+    if any(isnan(sens.chanpos(:))) || any(isnan(sens.chanori(:)))
+      % this happens if the data has been component-analyzed
+      % try to reconstruct the channel position and orientation
+      [pos, ori, lab] = channelposition(sens);
+      [sel1, sel2] = match_str(sens.label, lab);
+      sens.chanpos(sel1,:) = pos(sel2,:);
+      sens.chanori(sel1,:) = ori(sel2,:);
+    end
+    
   else
     warning('cannot undo %s balancing in the gradiometer definition\n', sens.balance.current);
     break
