@@ -36,7 +36,7 @@ while isfield(sens, 'balance') && isfield(sens.balance, 'current') && ~strcmp(se
     
     sens = ft_apply_montage(sens, sens.balance.(sens.balance.current), 'inverse', 'yes', 'keepunused', 'yes', 'warning', 'no');
     
-    if any(isnan(sens.chanpos(:))) || any(isnan(sens.chanori(:)))
+    if ~isfield(sens, 'chanpos') || any(isnan(sens.chanpos(:))) || any(isnan(sens.chanori(:)))
       % this happens if the data has been component-analyzed
       % try to reconstruct the channel position and orientation
       [pos, ori, lab] = channelposition(sens);
