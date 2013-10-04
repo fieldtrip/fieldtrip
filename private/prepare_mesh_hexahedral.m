@@ -171,7 +171,10 @@ for i = 1:numlabels
   mesh.tissuelabel{i} = tissue{i};
 end
 
-%% subfunction %%
+
+end % function
+
+%% subfunctions %%
 
 function mesh = build_mesh_hexahedral(cfg,mri)
 
@@ -233,7 +236,7 @@ mesh.pnt = mesh.pnt(C,:,:,:);
 mesh.pnt = mesh.pnt + repmat(shift_coord,size(mesh.pnt,1),1);
 mesh.hex(:) = ic;
 
-end
+end % subfunction
 
 % function creating elements from a MRI-Image with the dimensions x_dim,
 % y_dim, z_dim. Each voxel of the MRI-Image corresponds to one element in
@@ -275,7 +278,7 @@ function elements = create_elements(x_dim,y_dim,z_dim)
     elements(:,8) = b + c + (x_dim + 1)*(y_dim+1) + (x_dim+1);
     clear b;
     clear c;
-end
+end %subfunction
 
 % function creating the nodes and assigning coordinates in the 
 % [0,x_dim]x[0,y_dim]x[0,z_dim] box. for details on the node-numbering see
@@ -297,7 +300,6 @@ end
 % function shifting the nodes
 function nodes = shift_nodes(points,hex,labels, sh,x_dim,y_dim,z_dim)
     cfg = [];
-    ft_preamble provenance
     fprintf('Applying shift %f\n', sh);
     nodes = points;
     
@@ -479,7 +481,7 @@ function nodes = shift_nodes(points,hex,labels, sh,x_dim,y_dim,z_dim)
     nodes(tbcsum == 0,:) = points(tbcsum == 0,:);
     nodes(tbcsum ~= 0,:) = (1-sh)*nodes(tbcsum ~= 0,:) + sh*centroidcomb(tbcsum ~= 0,:);
    
-end
+end %subfunction
 
 
-end % function
+
