@@ -50,6 +50,12 @@ function [status] = ft_hastoolbox(toolbox, autoadd, silent)
 %   return
 % end
 
+if isdeployed
+  % it is not possible to check the presence of functions or change the path in a compiled application
+  status = 1;
+  return
+end
+
 % this points the user to the website where he/she can download the toolbox
 url = {
   'AFNI'       'see http://afni.nimh.nih.gov'
