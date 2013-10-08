@@ -655,16 +655,18 @@ switch dataformat
     
     % check if requested data contains multiple epochs. If so, give error
     if isfield(hdr.orig.xml,'epochs') && length(hdr.orig.xml.epochs) > 1
-      data_in_epoch = zeros(1,length(hdr.orig.xml.epochs));
-      for iEpoch = 1:length(hdr.orig.xml.epochs)
-        begsamp_epoch = hdr.orig.epochdef(iEpoch,1);
-        endsamp_epoch = hdr.orig.epochdef(iEpoch,2);
-        data_in_epoch(iEpoch) = length(intersect(begsamp_epoch:endsamp_epoch,begsample:endsample));
-      end
-      if sum(data_in_epoch>1) > 1
-        fprintf('Requested sample %i to %i. \n', begsample, endsample);
-        error('The requested data is spread out over multiple epochs with possibly discontinuous boundaries. This is not allowed. Adjust trl to request only data within a single epoch.');
-      end
+            if hdr.nTrials ==1
+            data_in_epoch = zeros(1,length(hdr.orig.xml.epochs));
+            for iEpoch = 1:length(hdr.orig.xml.epochs)
+                begsamp_epoch = hdr.orig.epochdef(iEpoch,1);
+                endsamp_epoch = hdr.orig.epochdef(iEpoch,2);
+                data_in_epoch(iEpoch) = length(intersect(begsamp_epoch:endsamp_epoch,begsample:endsample));
+            end
+            if sum(data_in_epoch>1) > 1
+                fprintf('Requested sample %i to %i. \n', begsample, endsample);
+                error('The requested data is spread out over multiple epochs with possibly discontinuous boundaries. This is not allowed. Adjust trl to request only data within a single epoch.');
+            end
+        end
     end
     
     % read in data in different signals
@@ -721,6 +723,14 @@ switch dataformat
     end
     % concat signals
     dat = cat(1,dat{:});
+
+    if hdr.nTrials > 1
+        dat2=zeros(hdr.nChans,hdr.nSamples,hdr.nTrials);
+        for i=1:hdr.nTrials
+            dat2(:,:,i)=dat(:,hdr.orig.epochdef(i,1):hdr.orig.epochdef(i,2));
+        end;
+        dat=dat2;
+    end
     
   case 'egi_mff_v2'
     % ensure that the EGI_MFF toolbox is on the path
