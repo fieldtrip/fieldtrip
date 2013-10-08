@@ -929,13 +929,19 @@ switch headerformat
           epochdef(iEpoch,3) = round(str2double(orig.xml.epochs(iEpoch).epoch.beginTime)./(1000000./hdr.Fs)); %offset corresponds to timing
         end
       end
-      warning('the data contains multiple epochs with possibly discontinuous boundaries. Added ''epochdef'' to hdr.orig defining begin and end sample of each epoch. See hdr.orig.xml.epochs for epoch details, use ft_read_header to obtain header or look in data.dhr.')
-      % sanity check
-      if epochdef(end,2) ~= hdr.nSamples
-        error('number of samples in all epochs do not add up to total number of samples')
+      epochLengths=epochdef(:,2)-epochdef(:,1)+1;
+      if ~any(diff(epochLengths))
+          hdr.nSamples=epochLengths(1);
+          hdr.nTrials=length(epochLengths);
+      else
+          warning('the data contains multiple epochs with possibly discontinuous boundaries. Added ''epochdef'' to hdr.orig defining begin and end sample of each epoch. See hdr.orig.xml.epochs for epoch details, use ft_read_header to obtain header or look in data.dhr.')
+          % sanity check
+          if epochdef(end,2) ~= hdr.nSamples
+              error('number of samples in all epochs do not add up to total number of samples')
+          end
       end
       orig.epochdef = epochdef;
-    end
+    end;
     hdr.orig = orig;
     
   case 'egi_mff_v2'
