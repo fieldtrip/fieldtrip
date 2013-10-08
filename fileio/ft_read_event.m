@@ -819,6 +819,7 @@ switch eventformat
               eventSample = eventOffset+1;
             end
            if ~isempty(eventSample) 
+              eventCount=eventCount+1;
               event(eventCount).type     = eventNames{iXml}(8:end);
               event(eventCount).sample   = eventSample;
               event(eventCount).offset   = 0;
