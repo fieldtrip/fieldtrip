@@ -133,7 +133,7 @@ if issource
         tmpcfg.roi = cfg.roi{i};
         tmpcfg.inputcoord = cfg.inputcoord;
         tmpcfg.atlas = cfg.atlas;
-        tmp = volumelookup(tmpcfg, varargin{1});
+        tmp = ft_volumelookup(tmpcfg, varargin{1});
       end
       if strcmp(cfg.avgoverroi, 'no') && ~isfield(cfg, 'hemisphere')
         % no reason to deal with seperated left/right hemispheres
