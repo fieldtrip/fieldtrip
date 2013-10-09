@@ -1740,7 +1740,9 @@ elseif any(strcmp(cfg.viewmode, {'component', 'vertical'}))
   set(gca, 'yTick', yTick);
   set(gca, 'yTickLabel', yTickLabel);
   
-elseif any(strcmp(cfg.viewmode, {'1column', '2column', '3column', '4column', '5column', '6column', '7column', '8column', '9column'}))
+else
+  % the following is implemented for 2column, 3column, etcetera.
+  % it also works for topographic layouts, such as CTF151
   
   % determine channel indices into data outside of loop
   laysels = match_str(opt.laytime.label, opt.hdr.label);
@@ -1772,8 +1774,6 @@ elseif any(strcmp(cfg.viewmode, {'1column', '2column', '3column', '4column', '5c
   set(gca, 'yTick', yTick);
   set(gca, 'yTickLabel', yTickLabel);
   
-else
-  error('unknown viewmode "%s"', cfg.viewmode);
 end % if strcmp viewmode
 
 if any(strcmp(cfg.viewmode, {'butterfly', 'component', 'vertical'}))
