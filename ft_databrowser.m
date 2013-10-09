@@ -1539,7 +1539,11 @@ if strcmp(cfg.viewmode, 'butterfly')
 else
   % this needs to be reconstructed if the channel selection changes
   tmpcfg = [];
-  tmpcfg.layout  = 'vertical';
+  if strcmp(cfg.viewmode, 'component')
+    tmpcfg.layout  = 'vertical';
+  else
+    tmpcfg.layout  = cfg.viewmode;
+  end
   tmpcfg.channel = cfg.channel;
   tmpcfg.skipcomnt = 'yes';
   tmpcfg.skipscale = 'yes';
@@ -1593,59 +1597,63 @@ end % for each of the artifact channels
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 delete(findobj(h, 'tag', 'event'));
 
-if strcmp(cfg.ploteventlabels , 'colorvalue') && ~isempty(opt.event)
-  eventlabellegend = [];
-  for iType = 1:length(opt.eventtypes)
-    eventlabellegend = [eventlabellegend sprintf('%s = %s\n',opt.eventtypes{iType},opt.eventtypecolorlabels{iType})];
-  end
-  fprintf(eventlabellegend);
-end
-
-% save stuff to able to shift event labels downwards when they occur at the same time-point
-eventcol = cell(1,numel(event));
-eventstr = cell(1,numel(event));
-eventtim = NaN(1,numel(event));
-
-% gather event info and plot lines
-for ievent = 1:numel(event)
-  try
-    if strcmp(cfg.ploteventlabels , 'type=value')
-      if isempty(event(ievent).value)
-        eventstr{ievent} = '';
-      else
-        eventstr{ievent} = sprintf('%s = %s', event(ievent).type, num2str(event(ievent).value)); % value can be both number and string
-      end
-      eventcol{ievent} = 'k';
-    elseif strcmp(cfg.ploteventlabels , 'colorvalue')
-      eventcol{ievent} = opt.eventtypescolors(match_str(opt.eventtypes, event(ievent).type),:);
-      eventstr{ievent} = sprintf('%s', num2str(event(ievent).value)); % value can be both number and string
+if any(strcmp(cfg.viewmode, {'butterfly', 'component', 'vertical'}))
+  
+  if strcmp(cfg.ploteventlabels , 'colorvalue') && ~isempty(opt.event)
+    eventlabellegend = [];
+    for iType = 1:length(opt.eventtypes)
+      eventlabellegend = [eventlabellegend sprintf('%s = %s\n',opt.eventtypes{iType},opt.eventtypecolorlabels{iType})];
     end
-  catch
-    eventstr{ievent} = 'unknown';
-    eventcol{ievent} = 'k';
+    fprintf(eventlabellegend);
   end
-  eventtim(ievent) = (event(ievent).sample-begsample)/opt.fsample + opt.hlim(1);
   
-  lh = ft_plot_line([eventtim(ievent) eventtim(ievent)], [-1 1], 'tag', 'event', 'color', eventcol{ievent}, ...
-    'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1]);
+  % save stuff to able to shift event labels downwards when they occur at the same time-point
+  eventcol = cell(1,numel(event));
+  eventstr = cell(1,numel(event));
+  eventtim = NaN(1,numel(event));
   
-  % store this data in the line object so that it can be displayed in the
-  % data cursor (see subfunction datacursortext below)
-  setappdata(lh, 'ft_databrowser_linetype', 'event');
-  setappdata(lh, 'ft_databrowser_eventtime', eventtim(ievent));
-  setappdata(lh, 'ft_databrowser_eventtype', event(ievent).type);
-  setappdata(lh, 'ft_databrowser_eventvalue', event(ievent).value);
-end
-% count the consecutive occurrence of each time point
-concount = NaN(1,numel(event));
-for ievent = 1:numel(event)
-  concount(ievent) = sum(eventtim(ievent)==eventtim(1:ievent-1));
-end
-% plot event labels
-for ievent = 1:numel(event)
-  ft_plot_text(eventtim(ievent), 0.9-concount(ievent)*.06, eventstr{ievent}, 'tag', 'event', 'Color', eventcol{ievent}, ...
-    'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1],'interpreter','none');
-end
+  % gather event info and plot lines
+  for ievent = 1:numel(event)
+    try
+      if strcmp(cfg.ploteventlabels , 'type=value')
+        if isempty(event(ievent).value)
+          eventstr{ievent} = '';
+        else
+          eventstr{ievent} = sprintf('%s = %s', event(ievent).type, num2str(event(ievent).value)); % value can be both number and string
+        end
+        eventcol{ievent} = 'k';
+      elseif strcmp(cfg.ploteventlabels , 'colorvalue')
+        eventcol{ievent} = opt.eventtypescolors(match_str(opt.eventtypes, event(ievent).type),:);
+        eventstr{ievent} = sprintf('%s', num2str(event(ievent).value)); % value can be both number and string
+      end
+    catch
+      eventstr{ievent} = 'unknown';
+      eventcol{ievent} = 'k';
+    end
+    eventtim(ievent) = (event(ievent).sample-begsample)/opt.fsample + opt.hlim(1);
+    
+    lh = ft_plot_line([eventtim(ievent) eventtim(ievent)], [-1 1], 'tag', 'event', 'color', eventcol{ievent}, ...
+      'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1]);
+    
+    % store this data in the line object so that it can be displayed in the
+    % data cursor (see subfunction datacursortext below)
+    setappdata(lh, 'ft_databrowser_linetype', 'event');
+    setappdata(lh, 'ft_databrowser_eventtime', eventtim(ievent));
+    setappdata(lh, 'ft_databrowser_eventtype', event(ievent).type);
+    setappdata(lh, 'ft_databrowser_eventvalue', event(ievent).value);
+  end
+  % count the consecutive occurrence of each time point
+  concount = NaN(1,numel(event));
+  for ievent = 1:numel(event)
+    concount(ievent) = sum(eventtim(ievent)==eventtim(1:ievent-1));
+  end
+  % plot event labels
+  for ievent = 1:numel(event)
+    ft_plot_text(eventtim(ievent), 0.9-concount(ievent)*.06, eventstr{ievent}, 'tag', 'event', 'Color', eventcol{ievent}, ...
+      'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1],'interpreter','none');
+  end
+  
+end % if viewmode appropriate for events
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %fprintf('plotting data...\n');
@@ -1656,7 +1664,6 @@ delete(findobj(h,'tag', 'identify'));
 % not removing channel labels, they cause the bulk of redrawing time for the slow text function (note, interpreter = none hardly helps)
 % warning, when deleting the labels using the line below, one can easily tripple the excution time of redrawing in viewmode = vertical (see bug 2065)
 %delete(findobj(h, 'tag', 'chanlabel'));
-
 
 if strcmp(cfg.viewmode, 'butterfly')
   set(gca,'ColorOrder',opt.chancolors(chanindx,:)) % plot vector does not clear axis, therefore this is possible
@@ -1676,9 +1683,9 @@ if strcmp(cfg.viewmode, 'butterfly')
   set(gca, 'yTick', yTick);
   set(gca, 'yTickLabel', yTickLabel)
   
-elseif any(strcmp(cfg.viewmode, {'vertical' 'component'}))
+elseif any(strcmp(cfg.viewmode, {'component', 'vertical'}))
   
-  % determine channel indices into data outside of loop
+    % determine channel indices into data outside of loop
   laysels = match_str(opt.laytime.label, opt.hdr.label);
   
   for i = 1:length(chanindx)
@@ -1689,8 +1696,8 @@ elseif any(strcmp(cfg.viewmode, {'vertical' 'component'}))
     end
     datsel = i;
     laysel = laysels(i);
+
     if ~isempty(datsel) && ~isempty(laysel)
-      
       % only plot labels when current chanlabel objects are less then the total number of channels (see bug 2065)
       % this is a cheap quick fix. If it causes error in plotting components, do this conditional on viewmode
       if numel(findobj(h,'tag', 'chanlabel'))<numel(chanindx)
@@ -1733,18 +1740,56 @@ elseif any(strcmp(cfg.viewmode, {'vertical' 'component'}))
   set(gca, 'yTick', yTick);
   set(gca, 'yTickLabel', yTickLabel);
   
+elseif any(strcmp(cfg.viewmode, {'1column', '2column', '3column', '4column', '5column', '6column', '7column', '8column', '9column'}))
+  
+  % determine channel indices into data outside of loop
+  laysels = match_str(opt.laytime.label, opt.hdr.label);
+  
+  for i = 1:length(chanindx)
+    color = opt.chancolors(chanindx(i),:);
+    datsel = i;
+    laysel = laysels(i);
+    
+    if ~isempty(datsel) && ~isempty(laysel)
+      
+      lh = ft_plot_vector(tim, dat(datsel, :), 'box', false, 'color', color, 'tag', 'timecourse', ...
+        'hpos', opt.laytime.pos(laysel,1), 'vpos', opt.laytime.pos(laysel,2), 'width', opt.laytime.width(laysel), 'height', opt.laytime.height(laysel), 'hlim', opt.hlim, 'vlim', opt.vlim);
+      
+      % store this data in the line object so that it can be displayed in the
+      % data cursor (see subfunction datacursortext below)
+      setappdata(lh, 'ft_databrowser_linetype', 'channel');
+      setappdata(lh, 'ft_databrowser_label', opt.hdr.label(chanindx(i)));
+      setappdata(lh, 'ft_databrowser_xaxis', tim);
+      setappdata(lh, 'ft_databrowser_yaxis', dat(datsel,:));
+    end
+  end
+  
+  % ticks are not supported with such a layout
+  yTick = [];
+  yTickLabel = [];
+  
+  yTickLabel = repmat(yTickLabel, 1, length(chanindx));
+  set(gca, 'yTick', yTick);
+  set(gca, 'yTickLabel', yTickLabel);
+  
 else
   error('unknown viewmode "%s"', cfg.viewmode);
 end % if strcmp viewmode
 
-nticks = 11;
-xTickLabel = cellstr(num2str( linspace(tim(1), tim(end), nticks)' , '%1.2f'))';
-if nsamplepad>0
-  nlabindat = sum(linspace(tim(1), tim(end), nticks) < tim(end-nsamplepad));
-  xTickLabel(nlabindat+1:end) = repmat({' '},[1 nticks-nlabindat]);
+if any(strcmp(cfg.viewmode, {'butterfly', 'component', 'vertical'}))
+  nticks = 11;
+  xTickLabel = cellstr(num2str( linspace(tim(1), tim(end), nticks)' , '%1.2f'))';
+  if nsamplepad>0
+    nlabindat = sum(linspace(tim(1), tim(end), nticks) < tim(end-nsamplepad));
+    xTickLabel(nlabindat+1:end) = repmat({' '},[1 nticks-nlabindat]);
+  end
+  set(gca, 'xTick', linspace(ax(1), ax(2), nticks))
+  set(gca, 'xTickLabel', xTickLabel)
+  xlabel('time');
+else
+  set(gca, 'xTick', [])
+  set(gca, 'xTickLabel', [])
 end
-set(gca, 'xTick', linspace(ax(1), ax(2), nticks))
-set(gca, 'xTickLabel', xTickLabel)
 
 if strcmp(cfg.viewmode, 'component')
   
@@ -1848,8 +1893,6 @@ else
   str = sprintf('trial %d/%d: segment: %d/%d , time from %g to %g s', opt.trllock, size(opt.trlorg,1), opt.trlop, size(opt.trlvis,1), startim, endtim);
 end
 title(str);
-
-xlabel('time');
 
 % possibly adds some responsiveness if the 'thing' is clogged
 drawnow
