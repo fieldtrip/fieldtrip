@@ -809,7 +809,7 @@ end;
 if strcmp(cfg.method,'mtmfft') && (keeprpt == 2 || keeprpt == 4)
   freq.cumsumcnt = trllength';
 end
-if exist('cumtapcnt','var')
+if exist('cumtapcnt','var') && (keeprpt == 2 || keeprpt == 4)
   freq.cumtapcnt = cumtapcnt;
 end
 
