@@ -167,22 +167,34 @@ else
   end
   
   % make clusterslabel matrix per significant cluster
-  posCLM = squeeze(stat.posclusterslabelmat);
-  sigposCLM = zeros(size(posCLM));
-  probpos = [];
-  for iPos = 1:length(sigpos)
-    sigposCLM(:,:,iPos) = (posCLM == sigpos(iPos));
-    probpos(iPos) = stat.posclusters(iPos).prob;
-    hlsignpos(iPos) = prob2hlsign(probpos(iPos), cfg.highlightsymbolseries);
+  if haspos
+    posCLM = squeeze(stat.posclusterslabelmat);
+    sigposCLM = zeros(size(posCLM));
+    probpos = [];
+    for iPos = 1:length(sigpos)
+      sigposCLM(:,:,iPos) = (posCLM == sigpos(iPos));
+      probpos(iPos) = stat.posclusters(iPos).prob;
+      hlsignpos(iPos) = prob2hlsign(probpos(iPos), cfg.highlightsymbolseries);
+    end
+  else
+    posCLM = [];
+    sigposCLM = [];
+    probpos = [];
   end
   
-  negCLM = squeeze(stat.negclusterslabelmat);
-  signegCLM = zeros(size(negCLM));
-  probneg = [];
-  for iNeg = 1:length(signeg)
-    signegCLM(:,:,iNeg) = (negCLM == signeg(iNeg));
-    probneg(iNeg) = stat.negclusters(iNeg).prob;
-    hlsignneg(iNeg) = prob2hlsign(probneg(iNeg), cfg.highlightsymbolseries);
+  if hasneg
+    negCLM = squeeze(stat.negclusterslabelmat);
+    signegCLM = zeros(size(negCLM));
+    probneg = [];
+    for iNeg = 1:length(signeg)
+      signegCLM(:,:,iNeg) = (negCLM == signeg(iNeg));
+      probneg(iNeg) = stat.negclusters(iNeg).prob;
+      hlsignneg(iNeg) = prob2hlsign(probneg(iNeg), cfg.highlightsymbolseries);
+    end
+  else % no negative clusters
+    negCLM = [];
+    signegCLM = [];
+    probneg = [];
   end
   
   fprintf('%s%i%s%g%s\n','There are ',Nsigall,' clusters smaller than alpha (',cfg.alpha,')')
