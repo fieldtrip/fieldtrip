@@ -108,3 +108,5 @@ cluster = combineClusters(uint32(labelmat), logical(spatdimneighbstructmat), uin
 % reshape the output to the original format of the data
 cluster = reshape(cluster, spatdimlength, nfreq, ntime);
 
+% update the total number
+total = numel(unique(cluster(:)))-1; % the value of 0 does not count
