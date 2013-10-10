@@ -1,4 +1,4 @@
-function [cluster, num] = findcluster(onoff, spatdimneighbstructmat, varargin)
+function [cluster, total] = findcluster(onoff, spatdimneighbstructmat, varargin)
 
 % FINDCLUSTER returns all connected clusters in a 3 dimensional matrix
 % with a connectivity of 6.
