@@ -653,9 +653,9 @@ switch dataformat
     % released as fieldtrip/external/egi_mff and referred further down in
     % this function as 'egi_mff_v2'.
     
-    % check if requested data contains multiple epochs. If so, give error
+    % check if requested data contains multiple epochs and not segmented. If so, give error
     if isfield(hdr.orig.xml,'epochs') && length(hdr.orig.xml.epochs) > 1
-            if hdr.nTrials ==1
+        if hdr.nTrials ==1
             data_in_epoch = zeros(1,length(hdr.orig.xml.epochs));
             for iEpoch = 1:length(hdr.orig.xml.epochs)
                 begsamp_epoch = hdr.orig.epochdef(iEpoch,1);
