@@ -585,21 +585,27 @@ switch cfg.method
     end
     shape = ft_convert_units(shape, 'mm');
     
-    % extract skull surface from image
-    tmpcfg        = [];
-    tmpcfg.output = 'scalp';
-    tmpcfg.scalpsmooth    = cfg.scalpsmooth;
-    tmpcfg.scalpthreshold = cfg.scalpthreshold;
-    if isfield(cfg, 'template')
-     tmpcfg.template = cfg.template;
+    if ~isfield(mri, 'scalp') || ~islogical(mri.scalp)
+      % extract the scalp surface from the anatomical image
+      tmpcfg        = [];
+      tmpcfg.output = 'scalp';
+      tmpcfg.scalpsmooth    = cfg.scalpsmooth;
+      tmpcfg.scalpthreshold = cfg.scalpthreshold;
+      if isfield(cfg, 'template')
+        tmpcfg.template = cfg.template;
+      end
+      seg           = ft_volumesegment(tmpcfg, mri);
+    else
+      % use the scalp segmentation that is provided
+      seg = mri;
     end
-    seg           = ft_volumesegment(tmpcfg, mri);
     
     tmpcfg             = [];
-    tmpcfg.method      = 'singleshell';
-    tmpcfg.numvertices = 20000;
-    scalp           = ft_prepare_headmodel(tmpcfg, seg);
-    scalp           = ft_convert_units(scalp, 'mm');
+    tmpcfg.tissue      = 'scalp';
+    tmpcfg.method      = 'isosurface';
+    tmpcfg.numvertices = nan;
+    scalp              = ft_prepare_mesh(tmpcfg, seg);
+    scalp              = ft_convert_units(scalp, 'mm');
     
     % Here it is advisable to interactively realign the shape and scalp, in
     % order to get a good starting point for the icp-algorithm.
@@ -607,14 +613,14 @@ switch cfg.method
     tmpcfg                       = [];
     tmpcfg.template.elec         = shape;
     tmpcfg.template.elec.chanpos = shape.pnt;
-    tmpcfg.individual.headshape  = scalp.bnd;
+    tmpcfg.individual.headshape  = scalp;
     tmpcfg.individual.headshapestyle = 'surface';
     tmpcfg = ft_interactiverealign(tmpcfg);
     M      = tmpcfg.m;
     
     % update the relevant geometrical info
     mri.transform = M*mri.transform;
-    scalp.bnd     = ft_transform_geometry(M, scalp.bnd);
+    scalp     = ft_transform_geometry(M, scalp);
     
     if ~isfield(cfg, 'weights')
       w = ones(size(shape.pnt,1),1);
@@ -629,11 +635,11 @@ switch cfg.method
     weights = @(x)assignweights(x,w);
     
     % construct the coregistration matrix
-    nrm         = normals(scalp.bnd.pnt, scalp.bnd.tri, 'vertex');
-    [R, t, err,~,info] = icp(scalp.bnd.pnt', shape.pnt', 50, 'Minimize', 'plane', 'Normals', nrm', 'Weight', weights, 'Extrapolation', true, 'WorstRejection', 0.05);
+    nrm = normals(scalp.pnt, scalp.tri, 'vertex');
+    [R, t, err, ~, info] = icp(scalp.pnt', shape.pnt', 50, 'Minimize', 'plane', 'Normals', nrm', 'Weight', weights, 'Extrapolation', true, 'WorstRejection', 0.05);
     
     % smooth the distance function and use this for new weights
-    target        = scalp.bnd;
+    target        = scalp;
     target.pos    = target.pnt;
     target.inside = (1:size(target.pos,1))';
     
@@ -646,7 +652,7 @@ switch cfg.method
     tmpcfg.interpmethod = 'sphere_avg';
     tmpcfg.sphereradius = 10;
     smoothdist          = ft_sourceinterpolate(tmpcfg, functional, target);
-    scalp.bnd.distance  = smoothdist.pow(:);
+    scalp.distance  = smoothdist.pow(:);
     
 % A second iteration of the icp algorithm does not seem to improve things.
 % Code is kept just to consider investigating this in more detail.
@@ -655,20 +661,20 @@ switch cfg.method
 %     transform   = inv([R t;0 0 0 1]);
 %     
 %     % warp the extracted scalp points to the new positions
-%     scalp.bnd.pnt = warp_apply(transform, scalp.bnd.pnt);
+%     scalp.pnt = warp_apply(transform, scalp.pnt);
 %     
 %     % now the idea would be to do a second round where the points are
 %     % weighted with the (locally averaged) distance to the scalp
 %     newweights = abs(smoothdist.pow(info.q_idx));
 %     weights = @(x)assignweights(x,newweights(:)');
 %     
-%     [R2, t2, err2,~,info(2)] = icp(scalp.bnd.pnt', info.pin, 50, 'Minimize', 'plane', 'Normals', nrm', 'Weight', weights, 'Extrapolation', true);
+%     [R2, t2, err2,~,info(2)] = icp(scalp.pnt', info.pin, 50, 'Minimize', 'plane', 'Normals', nrm', 'Weight', weights, 'Extrapolation', true);
 %     
 %     % this one transforms from scalp 'headspace' to shape 'headspace'
 %     transform   = [R2 t2;0 0 0 1]\transform;
 %     
 %     % warp the extracted scalp points to the new positions
-%     scalp.bnd.pnt = warp_apply(inv([R2 t2;0 0 0 1]), scalp.bnd.pnt);
+%     scalp.pnt = warp_apply(inv([R2 t2;0 0 0 1]), scalp.pnt);
   
     % create headshape structure for mri-based surface point cloud
     if isfield(mri, 'coordsys')
