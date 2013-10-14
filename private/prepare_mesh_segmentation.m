@@ -80,7 +80,11 @@ for i =1:numel(cfg.tissue)
       tissue = sprintf('tissue %d', i);
     end
   end
-  fprintf('triangulating the outer boundary of compartment %d (%s) with %d vertices\n', i, tissue, cfg.numvertices(i));
+  if strcmp(cfg.method, 'isosurface')
+    fprintf('triangulating the outer boundary of compartment %d (%s) with the isosurface method\n', i, tissue);
+  else
+    fprintf('triangulating the outer boundary of compartment %d (%s) with %d vertices\n', i, tissue, cfg.numvertices(i));
+  end
   
   % in principle it is possible to do volumesmooth and volumethreshold, but
   % the user is expected to prepare his segmentation outside this function
@@ -94,11 +98,17 @@ for i =1:numel(cfg.tissue)
   % FIXME is this still needed when it is already binary?
   seg = volumefillholes(seg);
   
-  [mrix, mriy, mriz] = ndgrid(1:mri.dim(1), 1:mri.dim(2), 1:mri.dim(3));
-  ori(1) = mean(mrix(seg(:)));
-  ori(2) = mean(mriy(seg(:)));
-  ori(3) = mean(mriz(seg(:)));
-  [pnt, tri] = triangulate_seg(seg, cfg.numvertices(i), ori);
+  if strcmp(cfg.method, 'isosurface')
+    [tri, pnt] = isosurface(seg, 0.5);
+    pnt = pnt(:,[2 1 3]); % Mathworks isosurface indexes differently
+  else
+    [mrix, mriy, mriz] = ndgrid(1:mri.dim(1), 1:mri.dim(2), 1:mri.dim(3));
+    ori(1) = mean(mrix(seg(:)));
+    ori(2) = mean(mriy(seg(:)));
+    ori(3) = mean(mriz(seg(:)));
+    
+    [pnt, tri] = triangulate_seg(seg, cfg.numvertices(i), ori);
+  end
   
   bnd(i).pnt = warp_apply(mri.transform, pnt);
   bnd(i).tri = tri;
