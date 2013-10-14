@@ -12,6 +12,7 @@ function bnd = prepare_mesh_segmentation(cfg, mri)
 cfg.spmversion  = ft_getopt(cfg, 'spmversion', 'spm8');
 cfg.numvertices = ft_getopt(cfg, 'numvertices');
 cfg.tissue      = ft_getopt(cfg, 'tissue');
+cfg.method      = ft_getopt(cfg, 'method');
 
 % check that SPM is on the path, try to add the preferred version
 if strcmpi(cfg.spmversion, 'spm2'),
@@ -80,6 +81,7 @@ for i =1:numel(cfg.tissue)
       tissue = sprintf('tissue %d', i);
     end
   end
+  
   if strcmp(cfg.method, 'isosurface')
     fprintf('triangulating the outer boundary of compartment %d (%s) with the isosurface method\n', i, tissue);
   else
