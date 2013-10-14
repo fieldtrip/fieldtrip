@@ -245,6 +245,8 @@ end
 ft_postamble debug
 ft_postamble trackconfig
 ft_postamble provenance
+ft_postamble previous mri
+ft_postamble history bnd
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % HELPER FUNCTION
