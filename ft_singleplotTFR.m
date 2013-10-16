@@ -14,8 +14,8 @@ function [cfg] = ft_singleplotTFR(cfg, data)
 %   cfg.maskparameter  = field in the data to be used for masking of data
 %                        (not possible for mean over multiple channels, or when input contains multiple subjects
 %                        or trials)
-%   cfg.maskstyle      = style used to masking, 'opacity' or 'saturation' (default = 'opacity')
-%                        use 'saturation' when saving to vector-format (like *.eps) to avoid all sorts of image-problems
+%   cfg.maskstyle      = style used to masking, 'opacity', 'saturation' or 'outline' (default = 'opacity')
+%                        use 'saturation' or 'outline' when saving to vector-format (like *.eps) to avoid all sorts of image-problems
 %   cfg.maskalpha      = alpha value between 0 (transparant) and 1 (opaque) used for masking areas dictated by cfg.maskparameter (default = 1)
 %   cfg.masknans       = 'yes' or 'no' (default = 'yes')
 %   cfg.xlim           = 'maxmin' or [xmin xmax] (default = 'maxmin')
