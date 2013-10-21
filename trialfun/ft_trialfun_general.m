@@ -141,14 +141,16 @@ if ~isempty(cfg.trialdef.eventvalue)
   % this cannot be done robustly in a single line of code
   if ~iscell(cfg.trialdef.eventvalue)
     valchar    = ischar(cfg.trialdef.eventvalue); 
-    valnumeric = isnumeric(cfg.trialdef.eventvalue); 
+    valnumeric = isnumeric(cfg.trialdef.eventvalue);
+    eventvalue = cfg.trialdef.eventvalue;
   else
     valchar    = ischar(cfg.trialdef.eventvalue{1});
     valnumeric = isnumeric(cfg.trialdef.eventvalue{1});
+    eventvalue = cfg.trialdef.eventvalue{1};
   end  
   for i=1:numel(event)
     if (ischar(event(i).value) && valchar) || (isnumeric(event(i).value) && valnumeric)
-      sel(i) = sel(i) & ~isempty(intersect(event(i).value, cfg.trialdef.eventvalue));
+      sel(i) = sel(i) & ~isempty(intersect(event(i).value, eventvalue));
     end
   end
 end
