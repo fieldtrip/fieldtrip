@@ -1,4 +1,4 @@
-function [TR, TT, ER, t] = icp(q,p,varargin)
+function [TR, TT, ER, t, info] = icp(q,p,varargin)
 % Perform the Iterative Closest Point algorithm on three dimensional point
 % clouds.
 %
@@ -14,6 +14,12 @@ function [TR, TT, ER, t] = icp(q,p,varargin)
 %
 % [TR, TT, ER, t] = icp(q,p,k)   also returns the calculation times per
 % iteration in a (k+1)x1 vector. t(0) is the time consumed for preprocessing.
+%
+% [TR, TT, ER, t, info] = icp(q,p,k)   also returns a structure info, that 
+% contains some diagnostic information. This functionality has been added
+% by Jan-Mathijs Schoffelen, October 2013, containing the indices to the 
+% matching points of the point clouds, as well as the initial positions
+% and the positions after the coregistration.
 %
 % Additional settings may be provided in a parameter list:
 %
@@ -289,7 +295,24 @@ if not(arg.ReturnAll)
     TR = TR(:,:,end);
     TT = TT(:,:,end);
 end
+
+% keep track of some information (added by JMS)
+info.q_idx = q_idx;
+info.p_idx = find(p_idx);
+info.qout  = q(:,q_idx);
+info.pout  = pt(:,p_idx);
+info.pin   = p(:,p_idx);
+
+% run some diagnostics
+npnt     = size(info.pout,2);
+q_origin = mean(info.qout,2); q_radius = sqrt(sum((info.qout-q_origin*ones(1,npnt)).^2)); 
+p_origin = mean(info.pout,2); p_radius = sqrt(sum((info.pout-q_origin*ones(1,npnt)).^2)); %q_origin is on purpose here
+
+info.distanceout = sqrt(sum((info.qout-info.pout).^2)).*sign(p_radius-q_radius);
+info.distancein  = sqrt(sum((info.qout-info.pin ).^2)).*sign(p_radius-q_radius);
     
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function [match mindist] = match_bruteForce(q, p)
