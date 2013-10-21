@@ -245,21 +245,25 @@ elseif ismeg
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       ft_hastoolbox('openmeeg', 1);
       
-      % switch the non adaptive algorithm on
-      nonadaptive = true; % HACK : this is hardcoded at the moment
-      dsm = openmeeg_dsm(pos, vol, nonadaptive);
-      [h2mm, s2mm]= openmeeg_megm(pos, vol, sens);
-      
-      if isfield(vol, 'mat')
-        lf = s2mm+h2mm*(vol.mat*dsm);
+      if isfield(vol,'mat')
+          % switch the non adaptive algorithm on
+          nonadaptive = true; % HACK : this is hardcoded at the moment
+          dsm = openmeeg_dsm(pos, vol, nonadaptive);
+          [h2mm, s2mm]= openmeeg_megm(pos, vol, sens);
+
+          %if isfield(vol, 'mat')
+            lf = s2mm+h2mm*(vol.mat*dsm);
+          %else
+          %  error('No system matrix is present, BEM head model not calculated yet')
+          %end
+          if isfield(sens, 'tra')
+            % compute the leadfield for each gradiometer (linear combination of coils)
+            lf = sens.tra * lf;
+          end
       else
-        error('No system matrix is present, BEM head model not calculated yet')
+            warning('No system matrix is present, Calling the Nemo Lab pipeline')
+            lf = ft_om_compute_lead(pos, vol, sens);
       end
-      if isfield(sens, 'tra')
-        % compute the leadfield for each gradiometer (linear combination of coils)
-        lf = sens.tra * lf;
-      end
-      
     case 'infinite'
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % magnetic dipole instead of electric (current) dipole in an infinite vacuum
@@ -391,13 +395,14 @@ elseif iseeg
       
     case 'openmeeg'
       ft_hastoolbox('openmeeg', 1)
-      % switch the non adaptive algorithm on
-      nonadaptive = true; % HACK this is hardcoded at the moment
-      dsm = openmeeg_dsm(pos, vol, nonadaptive);
       if isfield(vol, 'mat')
+        % switch the non adaptive algorithm on
+        nonadaptive = true; % HACK this is hardcoded at the moment
+        dsm = openmeeg_dsm(pos, vol, nonadaptive);
         lf = vol.mat*dsm;
       else
-        error('No system matrix is present, BEM head model not calculated yet')
+        disp('No system matrix is present, calling the Nemo Lab pipeline...')
+        lf = ft_leadfield_openmeeg(pos, vol, sens);
       end
       
     case 'metufem'
