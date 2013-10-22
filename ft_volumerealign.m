@@ -284,8 +284,8 @@ switch cfg.method
       '   d. additional control point for the landmarks can be a point along the\n',...
       '      positive x-axis (to the participant''s right), press r\n',...
       '3. To change the display:\n',...
-      '   a. press c or C on keyboard to show/hide crosshair\n',...
-      '   b. press m or M on keyboard to show/hide marked positions\n',...
+      '   a. press c on keyboard to toggle crosshair visibility\n',...
+      '   b. press m on keyboard to toggle marked positions visibility\n',...
       '   c. press + or - on (numeric) keyboard to change the color range''s upper limit\n',...
       '4. To finalize markers and quit interactive mode, press q on keyboard\n'));
     
@@ -362,13 +362,13 @@ switch cfg.method
           xzpoint = [xc yc zc];
           takesnapshot = true;
         case 99  % 'c'
-          showcrosshair = true;
-        case 67  % 'C'
-          showcrosshair = false;
+          showcrosshair = ~showcrosshair;
         case 109 % 'm'
-          showmarkers = 2;
-        case 77 % 'M'
-          showmarkers = 0;
+          if showmarkers > 0
+            showmarkers = 0;
+          else
+            showmarkers = 2;
+          end
         case 1 % left mouse click
           % update the view to a new position
           l1 = get(get(gca, 'xlabel'), 'string');
