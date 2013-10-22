@@ -50,6 +50,7 @@ CHUNK_ASCII_KEYVAL = 4
 CHUNK_NIFTI1 = 5
 CHUNK_SIEMENS_AP = 6
 CHUNK_CTF_RES4 = 7
+CHUNK_NEUROMAG_FIF = 8
 
 # List for converting FieldTrip datatypes to Numpy datatypes
 numpyType = ['int8', 'uint8', 'uint16', 'uint32', 'uint64', 'int8', 'int16', 'int32', 'int64', 'float32', 'float64']
