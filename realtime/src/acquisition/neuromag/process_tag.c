@@ -115,9 +115,8 @@ int send_header_to_FT()
 
   if (headerfile!=NULL) {
     /* close the header information file */
-    fclose(headerfile);
     /* the file pointer remains non-NULL, so that it won't get reopened */
-    headerfile = -1;
+    fclose(headerfile);
   }
 
   dacq_log("Creating a header: %d channels, sampling rate %g Hz\n", nchan, sfreq);
@@ -186,34 +185,32 @@ int process_tag (fiffTag tag)
   int block_kind;
   int c;
   fiffChInfo ch = NULL;
-  int buf[9]; 
+  int bufi[] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+  char bufc[] = {255, 255, 255, 255};
 
   if (headerfile==NULL) {
     /* open the header information file */
     headerfile = fopen("neuromag2ft.fif", "wb");
 
     /* prepend 'FIFF.FIFF_FILE_ID', the data represents 20 zero bytes */
-    buf[0] = 100; /* kind */
-    buf[1] = 31;  /* type */
-    buf[2] = 20;  /* size */
-    buf[3] = 0;   /* next */
-    buf[4] = 0;   /* four data bytes */
-    buf[5] = 0;   /* four data bytes */
-    buf[6] = 0;   /* four data bytes */
-    buf[7] = 0;   /* four data bytes */
-    buf[8] = 0;   /* four data bytes */
-    fwrite(headerfile, buf, sizeof(int), 9);
+    bufi[0] = 100; /* kind */
+    bufi[1] = 31;  /* type */
+    bufi[2] = 20;  /* size */
+    bufi[3] = 0;   /* next */
+    bufi[4] = 0;   /* four data bytes */
+    bufi[5] = 0;   /* four data bytes */
+    bufi[6] = 0;   /* four data bytes */
+    bufi[7] = 0;   /* four data bytes */
+    bufi[8] = 0;   /* four data bytes */
+    fwrite(bufi, sizeof(int), 9, headerfile);
 
     /* prepend 'FIFF.FIFF_DIR_POINTER', the data represents 4 times 255 */
-    buf[0] = 101; /* kind */
-    buf[1] = 3;  /* type */
-    buf[2] = 4;  /* size */
-    buf[3] = 0;   /* next */
-    (char *)(buf+4)[0] = 255; /* one data byte */
-    (char *)(buf+4)[1] = 255; /* one data byte */
-    (char *)(buf+4)[2] = 255; /* one data byte */
-    (char *)(buf+4)[3] = 255; /* one data byte */
-    fwrite(headerfile, buf, sizeof(int), 5);
+    bufi[0] = 101; /* kind */
+    bufi[1] = 3;   /* type */
+    bufi[2] = 4;   /* size */
+    bufi[3] = 0;   /* next */
+    fwrite(bufi, sizeof(int), 4, headerfile);
+    fwrite(bufc, sizeof(char), 4, headerfile);
   }
 
   if (tag->kind!=FIFF_DATA_BUFFER) {
