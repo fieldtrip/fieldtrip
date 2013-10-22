@@ -7,12 +7,16 @@ function [varargout] = ft_selectdata_new(cfg, varargin)
 % Use as
 %  [data] = ft_selectdata_new(cfg, data, ...)
 %
-% Valid cfg field are:
+% The cfg artument is a configuration structure which can contain
+%   cfg.channel = Nx1 cell-array with selection of channels (default = 'all'),
+%                 see FT_CHANNELSELECTION
 %   cfg.trials  = 1xN, trial indices to keep. It can be 'all'. You can use
 %                 logical indexing, where false(1,N) removes all the trials) 
+%
 % For data with a time-dimension possible specifications are
 %   cfg.latency = value     -> can be 'all'
 %   cfg.latency = [beg end]
+%
 % For frequency data possible specifications are
 %   cfg.frequency = value     -> can be 'all'
 %   cfg.frequency = [beg end] -> this is less common, preferred is to use foilim
