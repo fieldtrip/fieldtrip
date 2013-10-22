@@ -151,7 +151,7 @@ if haselec || hasgrad,
     if haselec, sens{j} = varargin{j}.elec; end
     if hasgrad, sens{j} = varargin{j}.grad; end
     if j>1,
-      if numel(sens{j}.chanpos) ~= numel(sens{1}.chanpos) || any(sens{j}.chanpos(:) ~= sens{1}.chanpos(:)),
+      if ~isequalwithequalnans(sens{j}, sens{1})
         removesens = 1;
         warning('sensor information does not seem to be consistent across the input arguments');
         break;
