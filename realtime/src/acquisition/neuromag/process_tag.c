@@ -31,7 +31,7 @@ static float sfreq           = -1.0; /* Sampling frequency (Hz) */
 static int bufcnt            = 0;    /* How many buffers processed? */
 static float **databuf       = NULL; /* Internal storage for one databuffer */
 static int collect_data      = 1;    /* Really use the data? */
-static FILE *ft_chunck_neuromag_fif = NULL; /* see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1792, now a file, in the future a chunck in the buffer */
+static FILE *headerfile      = NULL; /* see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1792, this is a temporary file that is copied to a chunk in the buffer */
 
 #ifdef FOO
 static void set_data_filter(int state)
@@ -113,10 +113,11 @@ int send_header_to_FT()
   header_t      *header   = NULL;
   ft_chunk_t    *chunk    = NULL;
 
-  if (ft_chunck_neuromag_fif!=NULL) {
-    /* close the debug file containing the header information */
-    /* note that the ft_chunck_neuromag_fif remains non-NULL, so that it won't get reopened */
-    fclose(ft_chunck_neuromag_fif);
+  if (headerfile!=NULL) {
+    /* close the header information file */
+    fclose(headerfile);
+    /* the file pointer remains non-NULL, so that it won't get reopened */
+    headerfile = -1;
   }
 
   dacq_log("Creating a header: %d channels, sampling rate %g Hz\n", nchan, sfreq);
@@ -185,23 +186,47 @@ int process_tag (fiffTag tag)
   int block_kind;
   int c;
   fiffChInfo ch = NULL;
+  int buf[9]; 
 
-  if (ft_chunck_neuromag_fif==NULL) {
-    /* open the debug file containing the header information */
-    ft_chunck_neuromag_fif = fopen("neuromag2ft.fif", "rb");
+  if (headerfile==NULL) {
+    /* open the header information file */
+    headerfile = fopen("neuromag2ft.fif", "wb");
+
+    /* prepend 'FIFF.FIFF_FILE_ID', the data represents 20 zero bytes */
+    buf[0] = 100; /* kind */
+    buf[1] = 31;  /* type */
+    buf[2] = 20;  /* size */
+    buf[3] = 0;   /* next */
+    buf[4] = 0;   /* four data bytes */
+    buf[5] = 0;   /* four data bytes */
+    buf[6] = 0;   /* four data bytes */
+    buf[7] = 0;   /* four data bytes */
+    buf[8] = 0;   /* four data bytes */
+    fwrite(headerfile, buf, sizeof(int), 9);
+
+    /* prepend 'FIFF.FIFF_DIR_POINTER', the data represents 4 times 255 */
+    buf[0] = 101; /* kind */
+    buf[1] = 3;  /* type */
+    buf[2] = 4;  /* size */
+    buf[3] = 0;   /* next */
+    (char *)(buf+4)[0] = 255; /* one data byte */
+    (char *)(buf+4)[1] = 255; /* one data byte */
+    (char *)(buf+4)[2] = 255; /* one data byte */
+    (char *)(buf+4)[3] = 255; /* one data byte */
+    fwrite(headerfile, buf, sizeof(int), 5);
   }
 
   if (tag->kind!=FIFF_DATA_BUFFER) {
-    /* write anything except data to the debug file */
-    if (ft_chunck_neuromag_fif==NULL)
+    /* write anything except data to the header information file */
+    if (headerfile==NULL)
       perror("neuromag2ft.fif");
     else {
       /* the following should fail gracefully once the header has been written to the buffer, since the file is closed */
-      fwrite(&(tag->kind), sizeof(fiff_int_t), 1, ft_chunck_neuromag_fif);
-      fwrite(&(tag->type), sizeof(fiff_int_t), 1, ft_chunck_neuromag_fif);
-      fwrite(&(tag->size), sizeof(fiff_int_t), 1, ft_chunck_neuromag_fif);
-      fwrite(&(tag->next), sizeof(fiff_int_t), 1, ft_chunck_neuromag_fif);
-      fwrite(tag->data, 1, tag->size, ft_chunck_neuromag_fif);
+      fwrite(&(tag->kind), sizeof(fiff_int_t), 1, headerfile);
+      fwrite(&(tag->type), sizeof(fiff_int_t), 1, headerfile);
+      fwrite(&(tag->size), sizeof(fiff_int_t), 1, headerfile);
+      fwrite(&(tag->next), sizeof(fiff_int_t), 1, headerfile);
+      fwrite(tag->data, 1, tag->size, headerfile);
     }
   }
 
