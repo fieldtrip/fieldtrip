@@ -106,12 +106,13 @@ static void catch_data(fiffTag tag,     /* Our data tag */
 
 int send_header_to_FT()
 {
-  int c, namelen = 0, status = 0;
+  int c, namelen = 0, status = 0, numbytes = 0;
   char *namevec = NULL, *name;
   message_t     *request  = NULL;
   message_t     *response = NULL;
   header_t      *header   = NULL;
   ft_chunk_t    *chunk    = NULL;
+  char *buffer = NULL;
 
   if (headerfile!=NULL) {
     /* close the header information file */
@@ -145,6 +146,49 @@ int send_header_to_FT()
   header->def->bufsize   = sizeof(ft_chunkdef_t) + namelen * sizeof(char);
   header->buf = chunk;
 
+  // Append the fif headerfile chunk
+  if (headerfile != NULL) {
+
+		  /* open the existing file for reading */
+		  headerfile = fopen("neuromag2ft.fif", "wb");
+
+		  /* ship the remainder if the file does not exist */
+		  if(headerfile != NULL) {
+				  dacq_log("Failed to open the file with the fif header information\n", numbytes);
+				  perror("fopen");
+		  }
+		  else {
+				  /* Get the number of bytes */
+				  fseek(headerfile, 0L, SEEK_END);
+				  numbytes = ftell(headerfile);
+
+				  /* reset the file position indicator to 
+					 the beginning of the file */
+				  fseek(headerfile, 0L, SEEK_SET);  
+
+				  /* grab sufficient memory for the 
+					 buffer to hold the text */
+				  buffer = (char*)malloc(numbytes);
+
+				  /* memory error */
+				  if(buffer == NULL) {
+						  dacq_log("Failed to allocate %d bytes for the fif header information\n", numbytes);
+						  perror("malloc");
+				  }
+				  else {
+						  /* copy all the text into the buffer */
+						  fread(buffer, sizeof(char), numbytes, headerfile);
+						  fclose(headerfile);
+
+						  header->def->bufsize = append(&header->buf, header->def->bufsize, buffer, numbytes);
+						  dacq_log("Appended %d bytes with fif header information\n", numbytes);
+
+						  /* free the memory we used for the buffer */
+						  FREE(buffer);
+				  }
+		  }
+  }
+
   // Construct the message with the header
   request      = malloc(sizeof(message_t));
   request->def = malloc(sizeof(messagedef_t));
@@ -158,9 +202,9 @@ int send_header_to_FT()
   // Send the message to the buffer
   status = clientrequest(fieldtrip_sock, request, &response);
   if (status) {
-    dacq_log("Something wrong with FieldTrip buffer during initialization, status %d. Exiting.\n", status);
-    clean_up();
-    exit(1);
+		  dacq_log("Something wrong with FieldTrip buffer during initialization, status %d. Exiting.\n", status);
+		  clean_up();
+		  exit(1);
   }
   dacq_log("Header sent to the FieldTrip buffer\n");
 
@@ -182,156 +226,156 @@ int send_header_to_FT()
 
 int process_tag (fiffTag tag)
 {
-  int block_kind;
-  int c;
-  fiffChInfo ch = NULL;
-  int bufi[] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
-  char bufc[] = {255, 255, 255, 255};
+		int block_kind;
+		int c;
+		fiffChInfo ch = NULL;
+		int bufi[] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+		char bufc[] = {255, 255, 255, 255};
 
-  if (headerfile==NULL) {
-    /* open the header information file */
-    headerfile = fopen("neuromag2ft.fif", "wb");
+		if (headerfile==NULL) {
+				/* open the header information file */
+				headerfile = fopen("neuromag2ft.fif", "wb");
 
-    /* prepend 'FIFF.FIFF_FILE_ID', the data represents 20 zero bytes */
-    bufi[0] = 100; /* kind */
-    bufi[1] = 31;  /* type */
-    bufi[2] = 20;  /* size */
-    bufi[3] = 0;   /* next */
-    bufi[4] = 0;   /* four data bytes */
-    bufi[5] = 0;   /* four data bytes */
-    bufi[6] = 0;   /* four data bytes */
-    bufi[7] = 0;   /* four data bytes */
-    bufi[8] = 0;   /* four data bytes */
-    fwrite(bufi, sizeof(int), 9, headerfile);
+				/* prepend 'FIFF.FIFF_FILE_ID', the data represents 20 zero bytes */
+				bufi[0] = 100; /* kind */
+				bufi[1] = 31;  /* type */
+				bufi[2] = 20;  /* size */
+				bufi[3] = 0;   /* next */
+				bufi[4] = 0;   /* four data bytes */
+				bufi[5] = 0;   /* four data bytes */
+				bufi[6] = 0;   /* four data bytes */
+				bufi[7] = 0;   /* four data bytes */
+				bufi[8] = 0;   /* four data bytes */
+				fwrite(bufi, sizeof(int), 9, headerfile);
 
-    /* prepend 'FIFF.FIFF_DIR_POINTER', the data represents 4 times 255 */
-    bufi[0] = 101; /* kind */
-    bufi[1] = 3;   /* type */
-    bufi[2] = 4;   /* size */
-    bufi[3] = 0;   /* next */
-    fwrite(bufi, sizeof(int), 4, headerfile);
-    fwrite(bufc, sizeof(char), 4, headerfile);
-  }
+				/* prepend 'FIFF.FIFF_DIR_POINTER', the data represents 4 times 255 */
+				bufi[0] = 101; /* kind */
+				bufi[1] = 3;   /* type */
+				bufi[2] = 4;   /* size */
+				bufi[3] = 0;   /* next */
+				fwrite(bufi, sizeof(int), 4, headerfile);
+				fwrite(bufc, sizeof(char), 4, headerfile);
+		}
 
-  if (tag->kind!=FIFF_DATA_BUFFER) {
-    /* write anything except data to the header information file */
-    if (headerfile==NULL)
-      perror("neuromag2ft.fif");
-    else {
-      /* the following should fail gracefully once the header has been written to the buffer, since the file is closed */
-      fwrite(&(tag->kind), sizeof(fiff_int_t), 1, headerfile);
-      fwrite(&(tag->type), sizeof(fiff_int_t), 1, headerfile);
-      fwrite(&(tag->size), sizeof(fiff_int_t), 1, headerfile);
-      fwrite(&(tag->next), sizeof(fiff_int_t), 1, headerfile);
-      fwrite(tag->data, 1, tag->size, headerfile);
-    }
-  }
+		if (tag->kind!=FIFF_DATA_BUFFER) {
+				/* write anything except data to the header information file */
+				if (headerfile==NULL)
+						perror("neuromag2ft.fif");
+				else {
+						/* the following should fail gracefully once the header has been written to the buffer, since the file is closed */
+						fwrite(&(tag->kind), sizeof(fiff_int_t), 1, headerfile);
+						fwrite(&(tag->type), sizeof(fiff_int_t), 1, headerfile);
+						fwrite(&(tag->size), sizeof(fiff_int_t), 1, headerfile);
+						fwrite(&(tag->next), sizeof(fiff_int_t), 1, headerfile);
+						fwrite(tag->data, 1, tag->size, headerfile);
+				}
+		}
 
-  switch (tag->kind) {
+		switch (tag->kind) {
 
-    case FIFF_NCHAN:               /* Number of channels */
-      nchan = *(int *)tag->data;
-      ch_info = calloc(nchan, sizeof(fiffChInfo));
-      break;
+				case FIFF_NCHAN:               /* Number of channels */
+						nchan = *(int *)tag->data;
+						ch_info = calloc(nchan, sizeof(fiffChInfo));
+						break;
 
-    case FIFF_CH_INFO:             /* Information about one channel */
-      ch = (fiffChInfo)(tag->data);
-      ch_info[ch_count] = malloc(sizeof(fiffChInfoRec));
-      memcpy(ch_info[ch_count], ch, sizeof(fiffChInfoRec));
-      ch_count++;
-      break;
+				case FIFF_CH_INFO:             /* Information about one channel */
+						ch = (fiffChInfo)(tag->data);
+						ch_info[ch_count] = malloc(sizeof(fiffChInfoRec));
+						memcpy(ch_info[ch_count], ch, sizeof(fiffChInfoRec));
+						ch_count++;
+						break;
 
-    case FIFF_DATA_BUFFER:         /* One buffer of data */
-      if (tag->type == FIFFT_DAU_PACK16)
-        nsamp = nchan > 0 ? tag->size / (nchan * sizeof(fiff_dau_pack16_t)) : 0;
-      else  /* FIFFT_INT */
-        nsamp = nchan > 0 ? tag->size / (nchan * sizeof(fiff_int_t)) : 0;
-      bufcnt++;
+				case FIFF_DATA_BUFFER:         /* One buffer of data */
+						if (tag->type == FIFFT_DAU_PACK16)
+								nsamp = nchan > 0 ? tag->size / (nchan * sizeof(fiff_dau_pack16_t)) : 0;
+						else  /* FIFFT_INT */
+								nsamp = nchan > 0 ? tag->size / (nchan * sizeof(fiff_int_t)) : 0;
+						bufcnt++;
 
-      if (collect_data) {
+						if (collect_data) {
 
-        if (databuf == NULL) {
-          databuf = calloc(nchan, sizeof(float *));
-          for (c = 0; c < nchan; c++)
-            databuf[c] = calloc(nsamp, sizeof(float));
-        }
+								if (databuf == NULL) {
+										databuf = calloc(nchan, sizeof(float *));
+										for (c = 0; c < nchan; c++)
+												databuf[c] = calloc(nsamp, sizeof(float));
+								}
 
-        catch_data(tag,databuf,nchan,nsamp);
-        process_data(databuf,nchan,nsamp,ch_info);
+								catch_data(tag,databuf,nchan,nsamp);
+								process_data(databuf,nchan,nsamp,ch_info);
 
-      } else
-        printf("Data buffer not sent\n");
+						} else
+								printf("Data buffer not sent\n");
 
-      break;
+						break;
 
-    case FIFF_ERROR_MESSAGE : /* Message from the front-end */
-      dacq_log("Error message from the data acquisition system: %s\n",tag->data);
-      break;
+				case FIFF_ERROR_MESSAGE : /* Message from the front-end */
+						dacq_log("Error message from the data acquisition system: %s\n",tag->data);
+						break;
 
-    case FIFF_SFREQ :         /* Sampling frequency */
-      if (tag->data)
-        sfreq = *(float *)tag->data;
-      break;
+				case FIFF_SFREQ :         /* Sampling frequency */
+						if (tag->data)
+								sfreq = *(float *)tag->data;
+						break;
 
-    case FIFF_BLOCK_START :
-      block_kind = *(int *)(tag->data);
-      switch (block_kind) {
+				case FIFF_BLOCK_START :
+						block_kind = *(int *)(tag->data);
+						switch (block_kind) {
 
-        case FIFFB_MEAS :       /* Every file starts with this */
-          dacq_log("New measurement is starting...\n");
-          nchan = 0;
-          sfreq = -1.0;
-          /* set_data_filter (TRUE); */
-          break;
+								case FIFFB_MEAS :       /* Every file starts with this */
+										dacq_log("New measurement is starting...\n");
+										nchan = 0;
+										sfreq = -1.0;
+										/* set_data_filter (TRUE); */
+										break;
 
-        case FIFFB_RAW_DATA :   /* The data buffers start */
-          dacq_log("Data buffers coming soon...\n");
-          bufcnt = 0;
-          send_header_to_FT();
-          break;
-      }
-      break;
+								case FIFFB_RAW_DATA :   /* The data buffers start */
+										dacq_log("Data buffers coming soon...\n");
+										bufcnt = 0;
+										send_header_to_FT();
+										break;
+						}
+						break;
 
-    case FIFF_BLOCK_END :
-      block_kind = *(int *)(tag->data);
-      switch (block_kind) {
+				case FIFF_BLOCK_END :
+						block_kind = *(int *)(tag->data);
+						switch (block_kind) {
 
-        case FIFFB_MEAS :
-          dacq_log("Measurement ended (%d buffers).\n", bufcnt);
+								case FIFFB_MEAS :
+										dacq_log("Measurement ended (%d buffers).\n", bufcnt);
 
-          // data was acquired, so we need to clear the data and the channel info
-          if (databuf != NULL) {
-            for (c = 0; c < nchan; c++) {
-              free(databuf[c]);
-              free(ch_info[c]);
-            }
-            free(databuf); databuf = NULL;
-            free(ch_info); ch_info = NULL;
-          }
-          // channel info was created, but data was not acquired
-          if (ch_info != NULL) {
-            for (c = 0; c < nchan; c++)
-              free(ch_info[c]);
-            free(ch_info); ch_info = NULL;
-          }
+										// data was acquired, so we need to clear the data and the channel info
+										if (databuf != NULL) {
+												for (c = 0; c < nchan; c++) {
+														free(databuf[c]);
+														free(ch_info[c]);
+												}
+												free(databuf); databuf = NULL;
+												free(ch_info); ch_info = NULL;
+										}
+										// channel info was created, but data was not acquired
+										if (ch_info != NULL) {
+												for (c = 0; c < nchan; c++)
+														free(ch_info[c]);
+												free(ch_info); ch_info = NULL;
+										}
 
-          nchan = 0;
-          nsamp = 0;
-          bufcnt = 0;
-          ch_count = 0;
-          sfreq = -1.0;
-          break;
-      }
-      break;
+										nchan = 0;
+										nsamp = 0;
+										bufcnt = 0;
+										ch_count = 0;
+										sfreq = -1.0;
+										break;
+						}
+						break;
 
-    case FIFF_CLOSE_FILE :
-      dacq_log("File closed.\n");
-      break;
+				case FIFF_CLOSE_FILE :
+						dacq_log("File closed.\n");
+						break;
 
-    default:                  /* An unknown tag but it doesn't harm */
-      break;
-  }
+				default:                  /* An unknown tag but it doesn't harm */
+						break;
+		}
 
-  fflush(stdout);
-  return(0);
+		fflush(stdout);
+		return(0);
 }
