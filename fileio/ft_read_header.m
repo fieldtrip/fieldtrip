@@ -1404,10 +1404,10 @@ switch headerformat
     % remember the original header details
     hdr.orig = info;
     
-    % these are useful to know in ft_read_event
-    hdr.info.isaverage    = isaverage;
-    hdr.info.iscontinuous = iscontinuous;
-    hdr.info.isepoched    = isepoched;
+    % these are useful to know in ft_read_event and ft_read_data
+    hdr.orig.isaverage    = isaverage;
+    hdr.orig.iscontinuous = iscontinuous;
+    hdr.orig.isepoched    = isepoched;
     
   case 'neuromag_mex'
     % check that the required low-level toolbox is available
