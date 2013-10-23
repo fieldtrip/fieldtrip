@@ -7,7 +7,7 @@ function test_ft_plot_mesh
 
 % initial version by Lilla Magyari 2013
 
-%% test ft_plot_mesh with 'edgeonly' option
+%% test ft_plot_mesh with 'surfaceonly' option
 %% create an example segmentation 
 example.dim = [91 104 111];   % slightly different numbers
 example.transform = eye(4);   
@@ -56,16 +56,16 @@ cfg.method = 'hexahedral';
 mesh=ft_prepare_mesh(cfg,seg);
 
 %% plot mesh
-ft_plot_mesh(mesh,'edgeonly','yes');
+ft_plot_mesh(mesh,'surfaceonly','yes');
 
 %% ft_plot_mesh with empty points should return without error (e.g. in ft_prepare_localspheres)
 mesh.pnt=[];
-ft_plot_mesh(mesh,'edgeonly','yes');
+ft_plot_mesh(mesh,'surfaceonly','yes');
 
 %% ft_plot_mesh without a pnt field should return an error
 mesh = rmfield(mesh, 'pnt')
 try
-  ft_plot_mesh(mesh, 'edgeonly','yes')
+  ft_plot_mesh(mesh, 'surfaceonly','yes')
   success = true;
 catch
   success=false;

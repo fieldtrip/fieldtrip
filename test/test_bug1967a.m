@@ -64,7 +64,7 @@ end
 elec.unit = 'mm';
 
 figure
-ft_plot_mesh(mesh, 'edgeonly', 1)
+ft_plot_mesh(mesh, 'surfaceonly', 1)
 ft_plot_sens(elec)
 
 %% prepare the volume conductor and electrodes for leadfield computation

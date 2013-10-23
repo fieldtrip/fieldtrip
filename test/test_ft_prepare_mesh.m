@@ -133,7 +133,7 @@ meshA=rmfield(meshA,'tissuelabel');
 meshB=rmfield(meshB,'tissuelabel');
 assert(isequal(meshA,meshB),'error: 06');
 assert(isfield(meshA,'pnt') && isfield(meshA,'hex') && isfield(meshA,'unit'), 'Missing field(s) in mesh structure');
-figure; ft_plot_mesh(meshA,'edgeonly','yes')
+figure; ft_plot_mesh(meshA,'surfaceonly','yes')
 %% tissue specified
 cfg=[];
 cfg.tissue='tissue_1';

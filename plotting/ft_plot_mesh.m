@@ -18,9 +18,9 @@ function [hs] = ft_plot_mesh(bnd, varargin)
 %     'vertexindex' = true or false
 %     'facealpha'   = transparency, between 0 and 1 (default = 1)
 %     'edgealpha'   = transparency, between 0 and 1 (default = 1)
+%     'surfaceonly' = true or false, plot only the outer surface of a hexahedral or tetrahedral mesh (default = false)
 %
-% If you don't want the faces or vertices to be plotted, you should
-% specify the color as 'none'.
+% If you don't want the faces or vertices to be plotted, you should specify the color as 'none'.
 %
 % Example
 %   [pnt, tri] = icosahedron162;
@@ -31,7 +31,7 @@ function [hs] = ft_plot_mesh(bnd, varargin)
 %
 % See also TRIMESH, PATCH
 
-% Copyright (C) 2009-2012, Robert Oostenveld
+% Copyright (C) 2009-2013, Robert Oostenveld
 % Copyright (C) 2009, Cristiano Micheli
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
@@ -82,9 +82,9 @@ vertexsize  = ft_getopt(varargin, 'vertexsize',  10);
 facealpha   = ft_getopt(varargin, 'facealpha',   1);
 edgealpha   = ft_getopt(varargin, 'edgealpha',   1);
 tag         = ft_getopt(varargin, 'tag',         '');
-edgeonly    = ft_getopt(varargin, 'edgeonly',  false);
+surfaceonly    = ft_getopt(varargin, 'surfaceonly',  false);
 
-if edgeonly
+if surfaceonly
   bnd = mesh2edge(bnd);
 end
 
@@ -95,8 +95,8 @@ hashex  = isfield(bnd, 'hex');  % hexaheders  as a Mx8 matrix with vertex indice
 hasline = isfield(bnd, 'line'); % line segments in 3-D
 haspoly = isfield(bnd, 'poly'); % polynomial surfaces in 3-D
 
-if (hastet || hashex) && ~edgeonly
-  warning('you probably want to use the "edgeonly" option for plotting only the outer surface')
+if (hastet || hashex) && ~surfaceonly
+  warning('you probably want to use the "surfaceonly" option for plotting only the outer surface')
 end
 
 if isempty(vertexcolor)
