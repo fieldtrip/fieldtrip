@@ -20,9 +20,30 @@ F = fopen(filename, 'w');
 fwrite(F, chunk, 'uint8');
 fclose(F);
 
-% calling ft_read_header rather than the low-level MNE functions ensures that mne2grad
-% and other auxiliary functions will be called
-hdr = ft_read_header(filename, 'headerformat', 'neuromag_mne', 'endian', 'L');
+% % calling ft_read_header rather than the low-level MNE functions ensures that mne2grad
+% % and other auxiliary functions will be called
+% hdr = ft_read_header(filename, 'headerformat', 'neuromag_mne', 'endian', 'L');
+
+% open and read the file as little endian
+[fid, tree] = fiff_open_le(filename);
+[info, meas] = fiff_read_meas_info(fid, tree);
+fclose(fid);
 
 % clean up the temporary file
 delete(filename);
+
+% add a gradiometer structure for forward and inverse modelling
+try
+  [grad, elec] = mne2grad(info, strcmp(coordsys, 'dewar'));
+  if ~isempty(grad)
+    hdr.grad = grad;
+  end
+  if ~isempty(elec)
+    hdr.elec = elec;
+  end
+catch
+  disp(lasterr);
+end
+
+% remember the original header details
+hdr.orig = info;

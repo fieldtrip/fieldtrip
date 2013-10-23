@@ -112,7 +112,6 @@ end
 headerformat = ft_getopt(varargin, 'headerformat');
 retry        = ft_getopt(varargin, 'retry', false);     % the default is not to retry reading the header
 coordsys     = ft_getopt(varargin, 'coordsys', 'head'); % this is used for ctf and neuromag_mne, it can be head or dewar
-endian       = ft_getopt(varargin, 'endian');           % this is used for realtime neuromag data
 
 if isempty(headerformat)
   % only do the autodetection if the format was not specified
@@ -1307,15 +1306,7 @@ switch headerformat
     % check that the required low-level toolbox is available
     ft_hastoolbox('mne', 1);
     
-    if strcmpi(endian, 'L')
-      % explicitly open it as little-endian
-      [fid, tree] = fiff_open_le(filename);
-    else
-      % open it with the default options
-      [fid, tree] = fiff_open(filename);
-    end
-    [info, meas] = fiff_read_meas_info(fid, tree);
-    fclose(fid);
+    info = fiff_read_meas_info(filename);
     
     % convert to fieldtrip format header
     hdr.label       = info.ch_names(:);
