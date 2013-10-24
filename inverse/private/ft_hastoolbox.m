@@ -66,7 +66,7 @@ url = {
   'SPM2'       'see http://www.fil.ion.ucl.ac.uk/spm'
   'SPM5'       'see http://www.fil.ion.ucl.ac.uk/spm'
   'SPM8'       'see http://www.fil.ion.ucl.ac.uk/spm'
-  'SPM12'       'see http://www.fil.ion.ucl.ac.uk/spm'
+  'SPM12'      'see http://www.fil.ion.ucl.ac.uk/spm'
   'MEG-PD'     'see http://www.kolumbus.fi/kuutela/programs/meg-pd'
   'MEG-CALC'   'this is a commercial toolbox from Neuromag, see http://www.neuromag.com'
   'BIOSIG'     'see http://biosig.sourceforge.net'
@@ -155,7 +155,7 @@ toolbox = upper(toolbox);
 fttrunkpath = unixpath(fileparts(which('ft_defaults')));
 switch toolbox
   case 'AFNI'
-    status = (exist('BrikLoad') && exist('BrikInfo'));
+    status = (exist('BrikLoad', 'file') && exist('BrikInfo', 'file'));
   case 'DSS'
     status = exist('denss', 'file') && exist('dss_create_state', 'file');
   case 'EEGLAB'
@@ -163,48 +163,48 @@ switch toolbox
   case 'NWAY'
     status = exist('parafac', 'file');
   case 'SPM'
-    status = exist('spm.m'); % any version of SPM is fine
+    status = exist('spm.m', 'file'); % any version of SPM is fine
   case 'SPM99'
-    status = exist('spm.m') && strcmp(spm('ver'),'SPM99');
+    status = exist('spm.m', 'file') && strcmp(spm('ver'),'SPM99');
   case 'SPM2'
-    status = exist('spm.m') && strcmp(spm('ver'),'SPM2');
+    status = exist('spm.m', 'file') && strcmp(spm('ver'),'SPM2');
   case 'SPM5'
-    status = exist('spm.m') && strcmp(spm('ver'),'SPM5');
+    status = exist('spm.m', 'file') && strcmp(spm('ver'),'SPM5');
   case 'SPM8'
-    status = exist('spm.m') && strncmp(spm('ver'),'SPM8', 4);
+    status = exist('spm.m', 'file') && strncmp(spm('ver'),'SPM8', 4);
   case 'SPM8UP' % version 8 or later
-    status = 0;  
-    if exist('spm.m')
-        v = spm('ver');
-        if str2num(v(isstrprop(v, 'digit')))>=8
-            status = 1;
-        end
+    status = 0;
+    if exist('spm.m', 'file')
+      v = spm('ver');
+      if str2num(v(isstrprop(v, 'digit')))>=8
+        status = 1;
+      end
     end
     
     %This is to avoid crashes when trying to add SPM to the path
-    if ~status 
-        toolbox = 'SPM8';
+    if ~status
+      toolbox = 'SPM8';
     end
   case 'SPM12'
-    status = exist('spm.m') && strncmp(spm('ver'),'SPM12', 5);
+    status = exist('spm.m', 'file') && strncmp(spm('ver'),'SPM12', 5);
   case 'MEG-PD'
-    status = (exist('rawdata') && exist('channames'));
+    status = (exist('rawdata', 'file') && exist('channames', 'file'));
   case 'MEG-CALC'
-    status = (exist('megmodel') && exist('megfield') && exist('megtrans'));
+    status = (exist('megmodel', 'file') && exist('megfield', 'file') && exist('megtrans', 'file'));
   case 'BIOSIG'
-    status = (exist('sopen') && exist('sread'));
+    status = (exist('sopen', 'file') && exist('sread', 'file'));
   case 'EEG'
-    status = (exist('ctf_read_res4') && exist('ctf_read_meg4'));
+    status = (exist('ctf_read_res4', 'file') && exist('ctf_read_meg4', 'file'));
   case 'EEGSF'  % alternative name
-    status = (exist('ctf_read_res4') && exist('ctf_read_meg4'));
+    status = (exist('ctf_read_res4', 'file') && exist('ctf_read_meg4', 'file'));
   case 'MRI'    % other functions in the mri section
-    status = (exist('avw_hdr_read') && exist('avw_img_read'));
+    status = (exist('avw_hdr_read', 'file') && exist('avw_img_read', 'file'));
   case 'NEUROSHARE'
-    status  = (exist('ns_OpenFile') && exist('ns_SetLibrary') && exist('ns_GetAnalogData'));
+    status  = (exist('ns_OpenFile', 'file') && exist('ns_SetLibrary', 'file') && exist('ns_GetAnalogData', 'file'));
   case 'BESA'
-    status = (exist('readBESAtfc') && exist('readBESAswf'));
+    status = (exist('readBESAtfc', 'file') && exist('readBESAswf', 'file'));
   case 'EEPROBE'
-    status  = (exist('read_eep_avr') && exist('read_eep_cnt'));
+    status  = (exist('read_eep_avr', 'file') && exist('read_eep_cnt', 'file'));
   case 'YOKOGAWA'
     status = hasyokogawa('16bitBeta6');
   case 'YOKOGAWA12BITBETA3'
@@ -216,13 +216,13 @@ switch toolbox
   case 'YOKOGAWA_MEG_READER'
     status = hasyokogawa('1.4');
   case 'BEOWULF'
-    status = (exist('evalwulf') && exist('evalwulf') && exist('evalwulf'));
+    status = (exist('evalwulf', 'file') && exist('evalwulf', 'file') && exist('evalwulf', 'file'));
   case 'MENTAT'
-    status  = (exist('pcompile') && exist('pfor') && exist('peval'));
+    status  = (exist('pcompile', 'file') && exist('pfor', 'file') && exist('peval', 'file'));
   case 'SON2'
-    status  = (exist('SONFileHeader') && exist('SONChanList') && exist('SONGetChannel'));
+    status  = (exist('SONFileHeader', 'file') && exist('SONChanList', 'file') && exist('SONGetChannel', 'file'));
   case '4D-VERSION'
-    status  = (exist('read4d') && exist('read4dhdr'));
+    status  = (exist('read4d', 'file') && exist('read4dhdr', 'file'));
   case {'STATS', 'STATISTICS'}
     status = license('checkout', 'statistics_toolbox');         % also check the availability of a toolbox license
   case {'OPTIM', 'OPTIMIZATION'}
@@ -240,13 +240,13 @@ switch toolbox
   case 'FASTICA'
     status  = exist('fpica', 'file');
   case 'BRAINSTORM'
-    status  = exist('bem_xfer');
+    status  = exist('bem_xfer', 'file');
   case 'DENOISE'
     status  = (exist('tsr', 'file') && exist('sns', 'file'));
   case 'CTF'
-    status  = (exist('getCTFBalanceCoefs') && exist('getCTFdata'));
+    status  = (exist('getCTFBalanceCoefs', 'file') && exist('getCTFdata', 'file'));
   case 'BCI2000'
-    status  = exist('load_bcidat');
+    status  = exist('load_bcidat', 'file');
   case 'NLXNETCOM'
     status  = (exist('MatlabNetComClient', 'file') && exist('NlxConnectToServer', 'file') && exist('NlxGetNewCSCData', 'file'));
   case 'DIPOLI'
@@ -264,7 +264,7 @@ switch toolbox
   case 'ITAB'
     status  = (exist('lcReadHeader', 'file') && exist('lcReadData', 'file'));
   case 'BSMART'
-    status  = exist('bsmart');
+    status  = exist('bsmart', 'file');
   case 'FREESURFER'
     status  = exist('MRIread', 'file') && exist('vox2ras_0to1', 'file');
   case 'FNS'
@@ -286,9 +286,9 @@ switch toolbox
   case 'EGI_MFF'
     status = exist('mff_getObject.m', 'file') && exist('mff_getSummaryInfo.m', 'file');
   case 'TOOLBOX_GRAPH'
-    status = exist('toolbox_graph');
+    status = exist('toolbox_graph', 'file');
   case 'NETCDF'
-    status = exist('netcdf');
+    status = exist('netcdf', 'file');
   case 'MYSQL'
     status = exist(['mysql.' mexext], 'file'); % this only consists of a single mex file
   case 'ISO2MESH'
@@ -306,7 +306,7 @@ switch toolbox
   case 'XUNIT'
     status = exist('initTestSuite.m', 'file') && exist('runtests.m', 'file');
   case 'PLEXON'
-    status = exist('plx_adchan_gains.m', 'file') && exist('mexPlex');
+    status = exist('plx_adchan_gains.m', 'file') && exist('mexPlex', 'file');
   case '35625-INFORMATION-THEORY-TOOLBOX'
     filelist = {'conditionalEntropy' 'entropy' 'jointEntropy' 'mutualInformation' 'nmi' 'nvi' 'relativeEntropy'};
     status = all(cellfun(@exist, filelist, repmat({'file'}, size(filelist))));
