@@ -731,6 +731,11 @@ if isequal(cfg.method,'ortho')
   xdim = dim(1) + dim(2);
   ydim = dim(2) + dim(3);
   
+  % inspect transform matrix, if the voxels are isotropic then the screen
+  % pixels also should be square
+  hasIsotropicVoxels = norm(data.transform(1:3,1)) == norm(data.transform(1:3,2))...
+    && norm(data.transform(1:3,2)) == norm(data.transform(1:3,3));
+  
   xsize(1) = 0.82*dim(1)/xdim;
   xsize(2) = 0.82*dim(2)/xdim;
   ysize(1) = 0.82*dim(3)/ydim;
@@ -746,6 +751,12 @@ if isequal(cfg.method,'ortho')
   set(h2,'Tag','jk','Visible',cfg.axis,'XAxisLocation','top');
   set(h3,'Tag','ij','Visible',cfg.axis);
   set(h, 'renderer', cfg.renderer); % ensure that this is done in interactive mode
+  
+  if hasIsotropicVoxels
+    set(h1,'DataAspectRatio',[1 1 1]);
+    set(h2,'DataAspectRatio',[1 1 1]);
+    set(h3,'DataAspectRatio',[1 1 1]);
+  end
   
   % create structure to be passed to gui
   opt = [];
