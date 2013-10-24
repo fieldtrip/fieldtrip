@@ -19,6 +19,9 @@ function [cfg, M] = ft_sourcemovie(cfg, source, source2)
 %
 % See also FT_SOURCEPLOT, FT_SOURCEINTERPOLATE
 
+% Undocumented options: 
+%   cfg.parcellation
+
 % Copyright (C) 2011, Robert Oostenveld
 %
 % $Id$
@@ -60,6 +63,7 @@ xparam        = ft_getopt(cfg, 'xparam', 'time');                 % use time as 
 yparam        = ft_getopt(cfg, 'yparam');                         % default is dealt with below
 funparameter  = ft_getopt(cfg, 'funparameter', 'avg.pow');        % use power as default
 maskparameter = ft_getopt(cfg, 'maskparameter');
+parcellation  = ft_getopt(cfg, 'parcellation');
 
 if isempty(yparam) && isfield(source, 'freq')
   % the default is freq (if present)
@@ -76,8 +80,23 @@ cfg.yparam        = yparam;
 % the actual computation is done in the middle part
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-fun = getsubfield(source, funparameter); % might be avg.pow
-if nargin>2, fun2 = getsubfield(source2, funparameter); end
+if nargin==2
+  fun = getsubfield(source, funparameter); % might be avg.pow
+elseif nargin>2 && isfield(source2, 'pos'), 
+  fun  = getsubfield(source, funparameter); % might be avg.pow
+  fun2 = getsubfield(source2, funparameter); 
+elseif nargin>2
+  % assume the first data argument to be a parcellation, and the second a
+  % parcellated structure
+  tmp = getsubfield(source2, funparameter);
+  fun = zeros(size(source.pos, 1), size(tmp, 2));
+  for k = 1:numel(source2.label)
+    sel = match_str(source.([parcellation,'label']), source2.label{k});
+    sel = source.(parcellation)==sel;
+    fun(sel,:) = repmat(tmp(k,:), [sum(sel) 1]);
+  end
+  source.(xparam) = source2.(xparam);
+end
 if size(source.pos)~=size(fun,1)
   error('inconsistent number of vertices in the cortical mesh');
 end
@@ -137,7 +156,9 @@ end
 xparam  = xparam(xbeg:xend);
 yparam  = yparam(ybeg:yend);
 fun     = fun(:,xbeg:xend,ybeg:yend);
-if nargin>2, fun2 = fun2(:,xbeg:xend,ybeg:yend); end
+if nargin>2 && isfield(source2, 'pos'), 
+  fun2 = fun2(:,xbeg:xend,ybeg:yend); 
+end
 mask    = mask(:,xbeg:xend,ybeg:yend);
 clear xbeg xend ybeg yend
 
@@ -178,7 +199,7 @@ opt.cleanup = false;
 
 % add functional data of optional third input to the opt structure
 % FIXME here we should first check whether the meshes correspond!
-if nargin>2
+if nargin>2 && isfield(source2, 'pos')
   opt.dat2 = fun2;
 end
 
@@ -274,7 +295,7 @@ if ~hasyparam
   axis([opt.xparam(1) opt.xparam(end) abc(3:4)]);
   vline = plot(opt.xparam(1)*[1 1], abc(3:4), 'r');
   
-  if nargin>2
+  if nargin>2 && isfield(source2, 'pos')
     tline2 = plot(opt.xparam, mean(opt.dat2(opt.vindx,:)), 'r'); hold on;
   end
   
@@ -291,7 +312,9 @@ opt.hy  = hy; % handle to the axes containing the timecourse
 opt.cam = [cam1 cam2]; % handles to the light objects
 opt.vline = vline; % handle to the line in the ERF plot
 opt.tline = tline; % handle to the ERF
-if nargin>2, opt.tline2 = tline2; end
+if nargin>2 && isfield(source2, 'pos'), 
+  opt.tline2 = tline2; 
+end
 opt.playbutton   = playbutton; % handle to the playbutton
 opt.recordbutton = recordbutton; % handle to the recordbutton
 opt.quitbutton   = quitbutton; % handle to the quitbutton
@@ -394,7 +417,7 @@ end
 if opt.record
   tmp = get(opt.h, 'position');
   opt.frame = opt.frame + 1;
-  opt.movie(opt.frame) = getframe(opt.h,[0 0 tmp(3:4)]);
+  opt.movie(opt.frame) = getframe(opt.h,[1 1 tmp(3:4)-1]);
 end
 setappdata(h, 'opt', opt);
 
