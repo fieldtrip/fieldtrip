@@ -625,6 +625,20 @@ switch headerformat
     
   case 'eeglab_erp'
     hdr = read_erplabheader(filename);
+
+  case 'emotiv_mat'
+    % This is a MATLAB *.mat file that is created using the Emotiv MATLAB
+    % example code. It contains a 25xNsamples matrix and some other stuff.
+    orig = load(filename);
+    hdr.Fs          = 128;
+    hdr.nChans      = 25;
+    hdr.nSamples    = size(orig.data_eeg,1);
+    hdr.nSamplesPre = 0;
+    hdr.nTrials     = 1;        
+    hdr.label       = {'ED_COUNTER','ED_INTERPOLATED','ED_RAW_CQ','ED_AF3','ED_F7','ED_F3','ED_FC5','ED_T7','ED_P7','ED_O1','ED_O2','ED_P8','ED_T8','ED_FC6','ED_F4','ED_F8','ED_AF4','ED_GYROX','ED_GYROY','ED_TIMESTAMP','ED_ES_TIMESTAMP','ED_FUNC_ID','ED_FUNC_VALUE','ED_MARKER','ED_SYNC_SIGNAL'};
+    % store the complete information in hdr.orig
+    % ft_read_data and ft_read_event will get it from there
+    hdr.orig        = orig; 
     
   case 'eyelink_asc'
     asc = read_eyelink_asc(filename);

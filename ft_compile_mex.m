@@ -180,14 +180,22 @@ function compile_mex_list(L, baseDir, force)
 
 for i=1:length(L)
   [relDir, name] = fileparts(L(i).relName);
-  
-  sfname = [baseDir filesep L(i).dir filesep L(i).relName '.c'];
-  SF = dir(sfname);
-  if numel(SF)<1
-    fprintf(1,'Error: source file %s cannot be found.', sfname);
+  sfname1 = fullfile(baseDir, L(i).dir, [L(i).relName '.c']);
+  sfname2 = fullfile(baseDir, L(i).dir, [L(i).relName '.cpp']);
+  if exist(sfname1, 'file')
+    sfname = sfname1;
+    L(i).ext = 'c';
+  elseif exist(sfname2, 'file')
+    sfname = sfname2;
+    L(i).ext = 'cpp';
+  else
+    sfname = '';
+    L(i).ext = '';
+    fprintf(1,'Error: source file for %s cannot be found.\n', L(i).relName);
     continue;
   end
-  
+  SF = dir(sfname);
+    
   if ~force
     mfname = [baseDir filesep L(i).dir filesep name '.' mexext];
     MF = dir(mfname);
@@ -198,6 +206,6 @@ for i=1:length(L)
   end
   fprintf(1,'Compiling MEX file %s/%s ...\n', L(i).dir, name);
   cd([baseDir '/' L(i).dir]);
-  cmd = sprintf('mex %s.c %s', L(i). relName, L(i).extras);
+  cmd = sprintf('mex %s.%s %s', L(i).relName, L(i).ext, L(i).extras);
   eval(cmd);
 end

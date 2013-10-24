@@ -60,15 +60,15 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.compscale               = string, 'global' or 'local', defines whether the colormap for the topographic scaling is
 %                                  applied per topography or on all visualized components (default 'global')
 %
-% In case of component viewmode, a layout is required. If no layout is
-% give, an attempt is made to construct one from the sensor definition.
-% EEG or MEG sensor positions can be present in the data or can be specified as
-%   cfg.elec          = structure with electrode positions, see FT_DATATYPE_SENS
-%   cfg.grad          = structure with gradiometer definition, see FT_DATATYPE_SENS
-%   cfg.elecfile      = name of file containing the electrode positions, see FT_READ_SENS
-%   cfg.gradfile      = name of file containing the gradiometer definition, see FT_READ_SENS
+% In case of component viewmode, a layout is required. If no layout is specified, an attempt is
+% made to construct one from the sensor definition that is present in the data or specified in
+% the configuration.
+%   cfg.layout                  = filename of the layout, see FT_PREPARE_LAYOUT
+%   cfg.elec                    = structure with electrode positions, see FT_DATATYPE_SENS
+%   cfg.grad                    = structure with gradiometer definition, see FT_DATATYPE_SENS
+%   cfg.elecfile                = name of file containing the electrode positions, see FT_READ_SENS
+%   cfg.gradfile                = name of file containing the gradiometer definition, see FT_READ_SENS
 %
-
 % The scaling to the EEG, EOG, ECG, EMG and MEG channels is optional and
 % can be used to bring the absolute numbers of the different channel types
 % in the same range (e.g. fT and uV). The channel types are determined from
@@ -107,11 +107,7 @@ function [cfg] = ft_databrowser(cfg, data)
 %
 % $Id$
 
-% Undocumented options
-%
-
-% FIXME these should be removed
-% FIXME document these
+% FIXME these should be removed or documented
 % cfg.preproc
 % cfg.channelcolormap
 % cfg.colorgroups
@@ -486,10 +482,10 @@ else
   eventtypes = [];
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% set up default functions to be available in the right-click menu
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% set up default defselfuns
-% use two cfg sections
 % cfg.selfun - labels that are presented in rightclick menu, and is appended using ft_getuserfun(..., 'browse') later on to create a function handle
 % cfg.selcfg - cfgs for functions to be executed
 defselfun = [];
@@ -533,9 +529,6 @@ else
   cfg.selfun = defselfun;
   cfg.selcfg = defselcfg;
 end
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % set up the data structures used in the GUI
@@ -676,8 +669,6 @@ ft_uilayout(h, 'tag', 'viewui', 'BackgroundColor', [0.8 0.8 0.8], 'hpos', 'auto'
 
 definetrial_cb(h);
 redraw_cb(h);
-
-
 
 
 % %% Scrollbar
