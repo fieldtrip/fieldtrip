@@ -169,50 +169,67 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             sumi       = mxGetData(plhs[3]);
         }
 
-        if (inputi_p == NULL) {
-            /* compute running sum */
+        if (inputi_p == NULL) { /* input data is real-valued */
+            
+            /* compute variance using 'online' algorithm */
+            /* Knuth (1998). The Art of Computer Programming, volume 2: Seminumerical Algorithms, 3rd edn., p. 232. */
+            double delta;
             for (i=0; i<numelin; i++) {
                 if (!isnan(inputr_p[i])) {
                     indx             = i%x1 + (i/y1) * x1;
-                    output1r_p[indx] = output1r_p[indx] + inputr_p[i];
-                    ssqr[indx]       = ssqr[indx]       + inputr_p[i]*inputr_p[i];
                     cnt[indx]        = cnt[indx]        + 1.0;
+                    
+                    delta = inputr_p[i] - output1r_p[indx];
+                    output1r_p[indx] = output1r_p[indx] + delta/cnt[indx];
+                    ssqr[indx]       = ssqr[indx] + delta*(inputr_p[i] - output1r_p[indx]);
+                    
                 } else if (dim+1>numdims) {
                     output1r_p[i] = inputr_p[i];
                     ssqr[i]       = inputr_p[i]*inputr_p[i];
-                    ssqi[i]       = inputi_p[i]*inputi_p[i];
                     cnt[i]        = 1.0;
                 }
 
             }
-
-            /* compute the standard deviation from the running sum */
+            
+            /* compute the variance */
             for (i=0; i<numelout; i++) {
-                output1r_p[i] = sqrt((ssqr[i] - (output1r_p[i]*output1r_p[i])/cnt[i])/(cnt[i] - biasterm));
+                output1r_p[i] = sqrt(ssqr[i]/(cnt[i] - biasterm));
             }
+
+            
         } else
             /* handle the complex valued case separately */
         {
-            /* compute running sum */
+        
+            /* compute variance using 'online' algorithm */
+            /* Knuth (1998). The Art of Computer Programming, volume 2: Seminumerical Algorithms, 3rd edn., p. 232. */
+            double delta;
             for (i=0; i<numelin; i++) {
                 if (!isnan(inputr_p[i]) && !isnan(inputi_p[i])) {
                     indx             = i%x1 + (i/y1) * x1;
-                    output1r_p[indx] = output1r_p[indx] + inputr_p[i];
-                    ssqr[indx]       = ssqr[indx]       + inputr_p[i] * inputr_p[i];
-                    ssqi[indx]       = ssqi[indx]       + inputi_p[i] * inputi_p[i];
-                    sumi[indx]       = sumi[indx]       + inputi_p[i];
                     cnt[indx]        = cnt[indx]        + 1.0;
+                    
+                    delta = inputr_p[i] - output1r_p[indx];
+                    output1r_p[indx] = output1r_p[indx] + delta/cnt[indx];
+                    ssqr[indx] = ssqr[indx] + delta*(inputr_p[i] - output1r_p[indx]);
+                    
+                    delta = inputi_p[i] - sumi[indx];
+                    sumi[indx] = sumi[indx] + delta/cnt[indx];
+                    ssqi[indx] = ssqi[indx] + delta*(inputi_p[i] - sumi[indx]);
+                    
                 } else if (dim+1>numdims) {
                     output1r_p[i] = inputr_p[i];
+                    sumi[i] = inputi_p[i];
                     ssqr[i]       = inputr_p[i]*inputr_p[i];
                     ssqi[i]       = inputi_p[i]*inputi_p[i];
                     cnt[i]        = 1.0;
                 }
-            }
 
-            /* compute the standard deviation from the running sum */
+            }
+            
+            /* compute the variance */
             for (i=0; i<numelout; i++) {
-                output1r_p[i] = sqrt((ssqr[i] + ssqi[i] - (output1r_p[i]*output1r_p[i] + sumi[i]*sumi[i])/cnt[i])/(cnt[i] - biasterm));
+                output1r_p[i] = sqrt((ssqr[i] + ssqi[i])/(cnt[i] - biasterm));
             }
         }
 
@@ -247,50 +264,66 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             sumis       = mxGetData(plhs[3]);
         }
 
-        if (inputi_ps == NULL) {
-            /* compute running sum */
+        if (inputi_ps == NULL) { /* real-valued input data */
+        
+            /* compute variance using 'online' algorithm */
+            /* Knuth (1998). The Art of Computer Programming, volume 2: Seminumerical Algorithms, 3rd edn., p. 232. */
+            double delta;
             for (i=0; i<numelin; i++) {
                 if (!isnan(inputr_ps[i])) {
-                    indx              = i%x1 + (i/y1) * x1;
-                    output1r_ps[indx] = output1r_ps[indx] + inputr_ps[i];
-                    ssqrs[indx]       = ssqrs[indx]       + inputr_ps[i]*inputr_ps[i];
+                    indx             = i%x1 + (i/y1) * x1;
                     cnts[indx]        = cnts[indx]        + 1.0;
+                    
+                    delta = inputr_ps[i] - output1r_ps[indx];
+                    output1r_ps[indx] = output1r_ps[indx] + delta/cnts[indx];
+                    ssqrs[indx]       = ssqrs[indx] + delta*(inputr_ps[i] - output1r_ps[indx]);
+                    
                 } else if (dim+1>numdims) {
                     output1r_ps[i] = inputr_ps[i];
                     ssqrs[i]       = inputr_ps[i]*inputr_ps[i];
-                    ssqis[i]       = inputi_ps[i]*inputi_ps[i];
                     cnts[i]        = 1.0;
                 }
 
             }
-
-            /* compute the standard deviation from the running sum */
+            
+            /* compute the variance */
             for (i=0; i<numelout; i++) {
-                output1r_ps[i] = sqrt((ssqrs[i] - (output1r_ps[i]*output1r_ps[i])/cnts[i])/(cnts[i] - biasterms));
+                output1r_ps[i] = sqrt(ssqrs[i]/(cnts[i] - biasterms));
             }
+            
         } else
             /* handle the complex valued case separately */
         {
-            /* compute running sum */
+        
+            /* compute variance using 'online' algorithm */
+            /* Knuth (1998). The Art of Computer Programming, volume 2: Seminumerical Algorithms, 3rd edn., p. 232. */
+            double delta;
             for (i=0; i<numelin; i++) {
                 if (!isnan(inputr_ps[i]) && !isnan(inputi_ps[i])) {
                     indx             = i%x1 + (i/y1) * x1;
-                    output1r_ps[indx] = output1r_ps[indx] + inputr_ps[i];
-                    ssqrs[indx]       = ssqrs[indx]       + inputr_ps[i] * inputr_ps[i];
-                    ssqis[indx]       = ssqis[indx]       + inputi_ps[i] * inputi_ps[i];
-                    sumis[indx]       = sumis[indx]       + inputi_ps[i];
                     cnts[indx]        = cnts[indx]        + 1.0;
+                    
+                    delta = inputr_ps[i] - output1r_ps[indx];
+                    output1r_ps[indx] = output1r_ps[indx] + delta/cnts[indx];
+                    ssqrs[indx] = ssqrs[indx] + delta*(inputr_ps[i] - output1r_ps[indx]);
+                    
+                    delta = inputi_ps[i] - sumis[indx];
+                    sumis[indx] = sumis[indx] + delta/cnts[indx];
+                    ssqis[indx] = ssqis[indx] + delta*(inputi_ps[i] - sumis[indx]);
+                    
                 } else if (dim+1>numdims) {
                     output1r_ps[i] = inputr_ps[i];
+                    sumis[i] = inputi_ps[i];
                     ssqrs[i]       = inputr_ps[i]*inputr_ps[i];
                     ssqis[i]       = inputi_ps[i]*inputi_ps[i];
                     cnts[i]        = 1.0;
                 }
-            }
 
-            /* compute the standard deviation from the running sum */
+            }
+            
+            /* compute the variance */
             for (i=0; i<numelout; i++) {
-                output1r_ps[i] = sqrt((ssqrs[i] + ssqis[i] - (output1r_ps[i]*output1r_ps[i] + sumis[i]*sumis[i])/cnts[i])/(cnts[i] - biasterms));
+                output1r_ps[i] = sqrt((ssqrs[i] + ssqis[i])/(cnts[i] - biasterms));
             }
         }
 
@@ -302,7 +335,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
     else {
         /* we now at this point the input data is either numeric, char, or logical, but not double or single precision */
-        /* since only double or single can be NaN, simply call matlab's var() function to do the work, we can safely ignore nans */
+        /* since only double or single can be NaN, simply call matlab's std() function to do the work, we can safely ignore nans */
         mexCallMATLAB(nlhs, plhs, nrhs, prhs, "std");
         return;
     }

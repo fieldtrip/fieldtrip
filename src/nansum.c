@@ -138,7 +138,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     indx             = i%x1 + (i/y1) * x1;
                     output1r_p[indx] = output1r_p[indx] + inputr_p[i];
                 } else if (dim+1 > numdims) {
-                    output1r_p[i] = inputr_p[i];
+                    /* we are summing across a singleton dimension, nothing */
+                    /* should happen except all nans become 0 (as per Mathworks'  implementation) */
+                    output1r_p[i] = 0.0;
                 }
 
             }
@@ -152,8 +154,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     output1r_p[indx] = output1r_p[indx] + inputr_p[i];
                     output1i_p[indx] = output1i_p[indx] + inputi_p[i];
                 } else if (dim+1>numdims) {
-                    output1r_p[i] = inputr_p[i];
-                    output1i_p[i] = inputi_p[i];
+                    /* we are summing across a singleton dimension, nothing */
+                    /* should happen except all nans become 0 (as per Mathworks'  implementation) */
+                    output1r_p[i] = 0.0;
+                    output1i_p[i] = 0.0;
                 }
             }
         }
@@ -186,7 +190,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     indx              = i%x1 + (i/y1) * x1;
                     output1r_ps[indx] = output1r_ps[indx] + inputr_ps[i];
                 } else if (dim+1>numdims) {
-                    output1r_ps[i] = inputr_ps[i];
+                    /* we are summing across a singleton dimension, nothing */
+                    /* should happen except all nans become 0 (as per Mathworks'  implementation) */
+                    output1r_p[i] = 0.0;
                 }
             }
 
@@ -200,8 +206,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     output1r_ps[indx] = output1r_ps[indx] + inputr_ps[i];
                     output1i_ps[indx] = output1i_ps[indx] + inputi_ps[i];
                 } else if (dim+1>numdims) {
-                    output1r_ps[i] = inputr_ps[i];
-                    output1i_ps[i] = inputi_ps[i];
+                    /* we are summing across a singleton dimension, nothing */
+                    /* should happen except all nans become 0 (as per Mathworks'  implementation) */
+                    output1r_ps[i] = 0.0;
+                    output1i_ps[i] = 0.0;
                 }
             }
         }
