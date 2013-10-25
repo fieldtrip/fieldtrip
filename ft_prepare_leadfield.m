@@ -100,15 +100,15 @@ else
 end
 
 % set the defaults
-if ~isfield(cfg, 'normalize'),        cfg.normalize  = 'no';          end
-if ~isfield(cfg, 'normalizeparam'),   cfg.normalizeparam = 0.5;       end
-if ~isfield(cfg, 'lbex'),             cfg.lbex       = 'no';          end
-if ~isfield(cfg, 'sel50p'),           cfg.sel50p     = 'no';          end
-if ~isfield(cfg, 'feedback'),         cfg.feedback   = 'text';        end
-if ~isfield(cfg, 'mollify'),          cfg.mollify    = 'no';          end
-if ~isfield(cfg, 'patchsvd'),         cfg.patchsvd   = 'no';          end
-% if ~isfield(cfg, 'reducerank'),     cfg.reducerank = 'no';          end % the default for this depends on EEG/MEG and is set below
-% if ~isfield(cfg, 'sourceunits'),     cfg.sourceunits = [];          end % the default for this is set inside prepare_headmodel
+cfg.normalize      = ft_getopt(cfg, 'normalize',      'no');
+cfg.normalizeparam = ft_getopt(cfg, 'normalizeparam', 0.5);
+cfg.lbex           = ft_getopt(cfg, 'lbex',           'no');
+cfg.sel50p         = ft_getopt(cfg, 'sel50p',         'no');
+cfg.feedback       = ft_getopt(cfg, 'feedback',       'no');
+cfg.mollify        = ft_getopt(cfg, 'mollify',        'no');
+cfg.patchsvd       = ft_getopt(cfg, 'patchsvd',       'no');
+% cfg.reducerank   = ft_getopt(cfg, 'reducerank', 'no');      % the default for this depends on EEG/MEG and is set below
+% cfg.sourceunits  = ft_getopt(cfg, 'sourceunits');           % the default for this is set inside prepare_headmodel
 
 % put the low-level options pertaining to the dipole grid in their own field
 cfg = ft_checkconfig(cfg, 'createsubcfg',  {'grid'});
@@ -132,7 +132,7 @@ if ~isfield(cfg, 'reducerank')
 end
 
 % construct the dipole grid according to the configuration
-tmpcfg = [];
+tmpcfg      = [];
 tmpcfg.vol  = vol;
 tmpcfg.grad = sens; % this can be electrodes or gradiometers
 % copy all options that are potentially used in ft_prepare_sourcemodel
