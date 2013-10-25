@@ -10,6 +10,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <time.h>
 
 /* Elekta libraries */
@@ -23,15 +24,18 @@
 /* Local */
 #include "neuromag2ft.h"
 
-static int nsamp             = 0;    /* Number of samples in a data buffer */
-static int nchan             = 0;    /* Total number of channels */
-static int ch_count          = 0;    /* General channel counter */
-static fiffChInfo *ch_info   = NULL; /* Channel information */
-static float sfreq           = -1.0; /* Sampling frequency (Hz) */
-static int bufcnt            = 0;    /* How many buffers processed? */
-static float **databuf       = NULL; /* Internal storage for one databuffer */
-static int collect_data      = 1;    /* Really use the data? */
-static FILE *headerfile      = NULL; /* see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1792, this is a temporary file that is copied to a chunk in the buffer */
+static int nsamp              = 0;    /* Number of samples in a data buffer */
+static int nchan              = 0;    /* Total number of channels */
+static int ch_count           = 0;    /* General channel counter */
+static fiffChInfo *ch_info    = NULL; /* Channel information */
+static float sfreq            = -1.0; /* Sampling frequency (Hz) */
+static int bufcnt             = 0;    /* How many buffers processed? */
+static float **databuf        = NULL; /* Internal storage for one databuffer */
+static int collect_data       = 1;    /* Really use the data? */
+static int collect_headerfile = 1;    /* Should tags be added to the headerfile? */
+static FILE *headerfile       = NULL; /* see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1792, this is a temporary file that is copied to a chunk in the buffer */
+
+#define HEADERFILE "/tmp/neuromag2ft.fif"
 
 #ifdef FOO
 static void set_data_filter(int state)
@@ -106,21 +110,26 @@ static void catch_data(fiffTag tag,     /* Our data tag */
 
 int send_header_to_FT()
 {
-  int c, namelen = 0, status = 0, numbytes = 0;
+  int c, namelen = 0, status = 0, fiflen = 0;
   char *namevec = NULL, *name;
   message_t     *request  = NULL;
   message_t     *response = NULL;
   header_t      *header   = NULL;
   ft_chunk_t    *chunk    = NULL;
-  char *buffer = NULL;
-
-  if (headerfile!=NULL) {
-    /* close the header information file */
-    /* the file pointer remains non-NULL, so that it won't get reopened */
-    fclose(headerfile);
-  }
+  char          *fifvec   = NULL;
 
   dacq_log("Creating a header: %d channels, sampling rate %g Hz\n", nchan, sfreq);
+
+  // Construct the header with the channel name chunk
+  header      = malloc(sizeof(header_t));
+  header->def = malloc(sizeof(headerdef_t));
+  header->def->nchans    = nchan;
+  header->def->fsample   = sfreq;
+  header->def->nsamples  = 0;
+  header->def->nevents   = 0;
+  header->def->data_type = DATATYPE_FLOAT32;
+  header->def->bufsize   = 0;    /* will be updated later on */
+  header->buf            = NULL; /* will be updated later on */
 
   // Construct the channel name chunk
   for (c = 0; c < nchan; c++) {
@@ -135,57 +144,50 @@ int send_header_to_FT()
   memcpy(chunk->data, namevec, namelen);  // I don't like this kind of assumptions on how structures are laid out in memory
   FREE(namevec);
 
-  // Construct the header with the channel name chunk
-  header      = malloc(sizeof(header_t));
-  header->def = malloc(sizeof(headerdef_t));
-  header->def->nchans    = nchan;
-  header->def->nsamples  = 0;
-  header->def->nevents   = 0;
-  header->def->fsample   = sfreq;
-  header->def->data_type = DATATYPE_FLOAT32;
-  header->def->bufsize   = sizeof(ft_chunkdef_t) + namelen * sizeof(char);
-  header->buf = chunk;
+  // Append the channel name chunk
+  header->def->bufsize = append(&header->buf, header->def->bufsize, chunk, sizeof(ft_chunkdef_t) + namelen * sizeof(char));
+  dacq_log("Appended %d bytes with channel name information\n", namelen);
+  FREE(chunk);
 
-  // Append the fif headerfile chunk
-  if (headerfile != NULL) {
+  /* if all went well, there should be a fif file with additional header information */
+  headerfile = fopen(HEADERFILE, "rb");
+  if(headerfile == NULL) {
+		  /* ship the remainder if the file cannot be opened */
+		  dacq_log("Failed to open the file with the fif header information\n");
+  }
+  else {
+		  /* Get the number of bytes */
+		  fseek(headerfile, 0L, SEEK_END);
+		  fiflen = ftell(headerfile);
 
-		  /* open the existing file for reading */
-		  headerfile = fopen("neuromag2ft.fif", "wb");
+		  /* reset the file position indicator to the beginning of the file */
+			 
+		  fseek(headerfile, 0L, SEEK_SET);  
 
-		  /* ship the remainder if the file does not exist */
-		  if(headerfile != NULL) {
-				  dacq_log("Failed to open the file with the fif header information\n", numbytes);
-				  perror("fopen");
+		  /* grab sufficient memory to hold the file content */
+		  fifvec = (char*)malloc(fiflen);
+
+		  if(fifvec == NULL) {
+				  /* memory error */
+				  dacq_log("Failed to allocate %d bytes to hold the fif header information\n", fiflen);
+				  fclose(headerfile);
 		  }
 		  else {
-				  /* Get the number of bytes */
-				  fseek(headerfile, 0L, SEEK_END);
-				  numbytes = ftell(headerfile);
+				  /* copy the content of the file into memory */
+				  fread(fifvec, sizeof(char), fiflen, headerfile);
+				  fclose(headerfile);
 
-				  /* reset the file position indicator to 
-					 the beginning of the file */
-				  fseek(headerfile, 0L, SEEK_SET);  
+				  // Construct the fif headerfile chunk
+				  chunk = malloc(sizeof(ft_chunkdef_t) + fiflen * sizeof(char));
+				  chunk->def.type = FT_CHUNK_NEUROMAG_FIF;
+				  chunk->def.size = fiflen;
+				  memcpy(chunk->data, fifvec, fiflen);  // I don't like this kind of assumptions on how structures are laid out in memory
+				  FREE(fifvec);
 
-				  /* grab sufficient memory for the 
-					 buffer to hold the text */
-				  buffer = (char*)malloc(numbytes);
-
-				  /* memory error */
-				  if(buffer == NULL) {
-						  dacq_log("Failed to allocate %d bytes for the fif header information\n", numbytes);
-						  perror("malloc");
-				  }
-				  else {
-						  /* copy all the text into the buffer */
-						  fread(buffer, sizeof(char), numbytes, headerfile);
-						  fclose(headerfile);
-
-						  header->def->bufsize = append(&header->buf, header->def->bufsize, buffer, numbytes);
-						  dacq_log("Appended %d bytes with fif header information\n", numbytes);
-
-						  /* free the memory we used for the buffer */
-						  FREE(buffer);
-				  }
+				  // Append the fif headerfile chunk
+				  header->def->bufsize = append(&header->buf, header->def->bufsize, chunk, sizeof(ft_chunkdef_t) + fiflen * sizeof(char));
+				  dacq_log("Appended %d bytes with fif header information\n", fiflen);
+				  FREE(chunk);
 		  }
   }
 
@@ -232,9 +234,10 @@ int process_tag (fiffTag tag)
 		int bufi[] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
 		char bufc[] = {255, 255, 255, 255};
 
-		if (headerfile==NULL) {
-				/* open the header information file */
-				headerfile = fopen("neuromag2ft.fif", "wb");
+		/* the process_tag function is called for each tag, whereas the file should only be opened once */
+		if (headerfile==NULL && collect_headerfile) {
+				/* open the header information file  for writing */
+				headerfile = fopen(HEADERFILE, "wb");
 
 				/* prepend 'FIFF.FIFF_FILE_ID', the data represents 20 zero bytes */
 				bufi[0] = 100; /* kind */
@@ -257,18 +260,14 @@ int process_tag (fiffTag tag)
 				fwrite(bufc, sizeof(char), 4, headerfile);
 		}
 
-		if (tag->kind!=FIFF_DATA_BUFFER) {
-				/* write anything except data to the header information file */
-				if (headerfile==NULL)
-						perror("neuromag2ft.fif");
-				else {
-						/* the following should fail gracefully once the header has been written to the buffer, since the file is closed */
-						fwrite(&(tag->kind), sizeof(fiff_int_t), 1, headerfile);
-						fwrite(&(tag->type), sizeof(fiff_int_t), 1, headerfile);
-						fwrite(&(tag->size), sizeof(fiff_int_t), 1, headerfile);
-						fwrite(&(tag->next), sizeof(fiff_int_t), 1, headerfile);
-						fwrite(tag->data, 1, tag->size, headerfile);
-				}
+		if (tag->kind!=FIFF_DATA_BUFFER && headerfile!=NULL) {
+				/* as long as the headerfile is open, write anything except data to the header information file */
+				/* the following should fail gracefully once the header has been written to the buffer, since the file is closed */
+				fwrite(&(tag->kind), sizeof(fiff_int_t), 1, headerfile);
+				fwrite(&(tag->type), sizeof(fiff_int_t), 1, headerfile);
+				fwrite(&(tag->size), sizeof(fiff_int_t), 1, headerfile);
+				fwrite(&(tag->next), sizeof(fiff_int_t), 1, headerfile);
+				fwrite(tag->data, 1, tag->size, headerfile);
 		}
 
 		switch (tag->kind) {
@@ -331,6 +330,12 @@ int process_tag (fiffTag tag)
 								case FIFFB_RAW_DATA :   /* The data buffers start */
 										dacq_log("Data buffers coming soon...\n");
 										bufcnt = 0;
+										if (headerfile!=NULL) {
+												/* close the header information file */
+												fclose(headerfile);
+												headerfile = NULL;
+												collect_headerfile = 0;
+										}
 										send_header_to_FT();
 										break;
 						}
@@ -358,6 +363,8 @@ int process_tag (fiffTag tag)
 														free(ch_info[c]);
 												free(ch_info); ch_info = NULL;
 										}
+										// remove the header information file, it does not apply for subsequent measurements
+										remove(HEADERFILE);
 
 										nchan = 0;
 										nsamp = 0;
@@ -370,6 +377,9 @@ int process_tag (fiffTag tag)
 
 				case FIFF_CLOSE_FILE :
 						dacq_log("File closed.\n");
+						if (tag->next==-1)
+								// we should start collecting header information again in the next measurement
+								collect_headerfile = 1;
 						break;
 
 				default:                  /* An unknown tag but it doesn't harm */
