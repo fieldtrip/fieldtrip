@@ -1,5 +1,6 @@
 function test_xunit_stacktest
 
+% MEM 1gb
 % WALLTIME 00:03:01
 
 

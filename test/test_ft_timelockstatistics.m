@@ -1,5 +1,6 @@
 function test_ft_timelockstatistics
 
+% MEM 1gb
 % WALLTIME 00:03:06
 
 % TEST test_ft_timelockstatistics

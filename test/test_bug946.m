@@ -1,5 +1,6 @@
 function test_bug946
 
+% MEM 1gb
 % WALLTIME 00:03:01
 
 % TEST ft_appenddata

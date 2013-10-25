@@ -1,5 +1,6 @@
 function test_bug2069
 
+% MEM 1gb
 % WALLTIME 00:03:25
 
 % TEST test_bug2069 ft_appendfreq ft_freqstatistics ft_timelockstatistics

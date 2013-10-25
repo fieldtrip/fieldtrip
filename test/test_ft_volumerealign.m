@@ -1,5 +1,6 @@
 function test_ft_volumerealign
 
+% MEM 1gb
 % WALLTIME 00:03:01
 
 % to test: 

@@ -1,5 +1,6 @@
 function test_ft_prepare_neighbours
 
+% MEM 1gb
 % WALLTIME 00:03:21
 
 % TEST test_ft_prepare_neighbours

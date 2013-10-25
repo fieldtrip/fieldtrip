@@ -1,5 +1,6 @@
 function test_bug1288
 
+% MEM 1gb
 % WALLTIME 00:03:04
 
 % this function serves to create planar gradient data and combined planar

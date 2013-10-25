@@ -1,5 +1,6 @@
 function test_ft_appendtimelock
 
+% MEM 2gb
 % WALLTIME 00:03:21
 
 % TEST test_ft_appendtimelock

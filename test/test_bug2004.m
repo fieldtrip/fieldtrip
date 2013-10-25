@@ -1,5 +1,6 @@
 function test_bug2004
 
+% MEM 1gb
 % TEST test_bug2004 
 % TEST ft_connectivityanalysis
 % TEST ft_connectivity_corr

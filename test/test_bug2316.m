@@ -1,5 +1,6 @@
 function test_bug2316
 
+% MEM 1gb
 % TEST test_bug2316
 % TEST ft_databrowser
 

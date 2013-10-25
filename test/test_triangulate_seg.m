@@ -1,5 +1,6 @@
 function test_triangulate_seg
 
+% MEM 1gb
 % WALLTIME 00:03:01
 
 % TEST: test_triangulate_seg

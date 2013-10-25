@@ -1,5 +1,6 @@
 function test_headmodel_infinite
 
+% MEM 1gb
 % WALLTIME 00:03:01
 
 % TEST test_headmodel_infinite

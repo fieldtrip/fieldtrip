@@ -1,5 +1,6 @@
 function test_bug1295
 
+% MEM 1gb
 % WALLTIME 00:03:39
 
 % first show the issue: read in dicom test data with the old and new code

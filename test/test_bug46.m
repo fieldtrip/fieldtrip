@@ -1,5 +1,6 @@
 function test_bug46
 
+% MEM 1gb
 % TEST test_bug46
 % TEST ft_connectivityanalysis univariate2bivariate ft_checkdata
 

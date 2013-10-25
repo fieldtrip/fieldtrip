@@ -1,5 +1,6 @@
 function test_headmodel_openmeeg
 
+% MEM 1gb
 % WALLTIME 00:04:06
 
 % TEST test_headmodel_openmeeg

@@ -1,5 +1,6 @@
 function test_bug1818
 
+% MEM 2gb
 % WALLTIME 00:03:38
 
 % test the reading function of meshes used for constructing SIMBIO FEM head models

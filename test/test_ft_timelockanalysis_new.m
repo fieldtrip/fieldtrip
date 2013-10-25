@@ -1,5 +1,6 @@
 function test_ft_timelockanalysis_new(datainfo,writeflag)
 
+% MEM 1gb
 % WALLTIME 00:03:01
 
 % TEST test_ft_timelockanalysis_new

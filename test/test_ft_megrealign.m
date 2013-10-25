@@ -1,5 +1,6 @@
 function test_ft_megrealign
 
+% MEM 1gb
 % WALLTIME 00:03:38
 
 % TEST test_ft_megrealign

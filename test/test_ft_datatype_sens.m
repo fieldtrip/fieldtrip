@@ -1,5 +1,6 @@
 function test_ft_datatype_sens
 
+% MEM 1gb
 % WALLTIME 00:03:23
 
 % TEST test_ft_datatype_sens

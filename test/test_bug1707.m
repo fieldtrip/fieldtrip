@@ -1,5 +1,7 @@
 function test_bug1707
 
+% MEM 2gb
+
 % TEST test_bug1707
 % TEST ft_channelrepair ft_combineplanar ft_componentanalysis
 % TEST ft_connectivityanalysis ft_freqanalysis ft_freqdescriptives

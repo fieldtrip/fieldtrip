@@ -1,5 +1,6 @@
 function test_ft_channelselection
 
+% MEM 1gb
 % WALLTIME 00:03:39
 
 % TEST test_ft_channelselection 

@@ -1,5 +1,6 @@
 function test_bug1051
 
+% MEM 1gb
 % WALLTIME 00:03:03
 
 % TEST test_bug1051 ft_megplanar ft_apply_montage

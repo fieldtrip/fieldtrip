@@ -1,5 +1,6 @@
 function test_tutorial_clusterpermutationfreq(dataset, datadir)
 
+% MEM 1gb
 % WALLTIME 00:05:04
 
 % TEST test_tutorial_eventrelatedstatistics

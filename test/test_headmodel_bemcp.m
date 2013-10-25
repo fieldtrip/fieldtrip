@@ -1,5 +1,6 @@
 function test_headmodel_bemcp
 
+% MEM 1gb
 % WALLTIME 00:03:04
 
 % TEST test_headmodel_bemcp

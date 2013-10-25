@@ -1,5 +1,6 @@
 function test_headmodel_concentricspheres
 
+% MEM 1gb
 % WALLTIME 00:03:02
 
 % TEST test_headmodel_concentricspheres

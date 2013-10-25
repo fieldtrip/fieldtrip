@@ -1,5 +1,6 @@
 function test_bug1270
 
+% MEM 1gb
 % WALLTIME 00:03:02
 
 % script to verify and fix an error related to using a mask in

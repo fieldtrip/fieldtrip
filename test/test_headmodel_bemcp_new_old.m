@@ -1,5 +1,6 @@
 function test_headmodel_bemcp_new_old
 
+% MEM 1gb
 % WALLTIME 00:03:54
 
 % generate a unit sphere

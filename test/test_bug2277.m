@@ -1,5 +1,6 @@
 function test_bug2277
 
+% MEM 1gb
 % TEST test_bug2277
 % TEST ft_preprocessing ft_preproc_padding preproc
 

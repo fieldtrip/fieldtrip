@@ -1,5 +1,6 @@
 function test_bug1403
 
+% MEM 1gb
 % TEST test_bug1403
 % TEST ft_read_header
 

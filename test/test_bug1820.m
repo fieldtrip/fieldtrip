@@ -1,12 +1,13 @@
 function test_bug1820
 
+% MEM 2gb
+
 % TEST test_bug1820
 % TEST ft_prepare_mesh ft_headmodel_simbio ft_prepare_vol_sens ft_compute_leadfield
 
 % See http://bugzilla.fcdonders.nl/show_bug.cgi?id=1820
 
 %% create segmentation 
-
 
 example.dim = [200 200 200];   % slightly different numbers
 example.transform = eye(4);

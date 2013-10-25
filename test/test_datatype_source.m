@@ -1,5 +1,6 @@
 function test_datatype_source
 
+% MEM 1gb
 % WALLTIME 00:03:01
 
 % this function defines a bunch of 'ideal' source structures

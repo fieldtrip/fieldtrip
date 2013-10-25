@@ -1,5 +1,6 @@
 function test_bug1248
 
+% MEM 1gb
 % WALLTIME 00:03:38
 
 % TEST test_bug1248 ft_preprocessing preproc

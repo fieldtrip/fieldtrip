@@ -1,4 +1,6 @@
-% function test_bug686
+function test_bug686
+
+% MEM 2gb
 
 % TEST test_bug686
 % TEST ft_convert_units ft_prepare_headmodel ft_prepare_leadfield

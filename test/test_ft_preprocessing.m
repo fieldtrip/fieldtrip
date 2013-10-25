@@ -1,5 +1,6 @@
 function test_ft_preprocessing(datainfo, writeflag, version)
 
+% MEM 1gb
 % WALLTIME 00:03:11
 
 % TEST test_ft_preprocessing

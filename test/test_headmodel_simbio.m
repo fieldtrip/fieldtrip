@@ -1,9 +1,11 @@
 function test_headmodel_simbio
 
+% MEM 2gb
+
 % TEST test_headmodel_simbio
 % TEST ft_prepare_headmodel ft_prepare_mesh ft_prepare_leadfield ft_prepare_sourcemodel 
-% this function tests that simbio forward model works, comparing the results with a 3 concentric
-% spheres model
+
+% this function tests that simbio forward model works, comparing the results with a 3 concentric spheres model
 % intial version by Lilla Magyari 2013
 
 %% create example segmentation

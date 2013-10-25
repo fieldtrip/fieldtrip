@@ -1,5 +1,6 @@
 function test_ft_topoplotER
 
+% MEM 1gb
 % TEST test_ft_topoplotER
 % TEST ft_topoplotER ft_topoplotTFR ft_topoplotIC
 

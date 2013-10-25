@@ -1,5 +1,6 @@
 function test_warp
 
+% MEM 1gb
 % WALLTIME 00:03:44
 
 % function to test the warp functionality and its robustness

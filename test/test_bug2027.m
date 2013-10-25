@@ -1,5 +1,6 @@
 function test_bug2027
 
+% MEM 1gb
 % TEST test_bug2027
 % TEST read_4d_hdr
 % TEST ft_read_header

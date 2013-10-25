@@ -1,5 +1,6 @@
 function test_bug950
 
+% MEM 1gb
 % WALLTIME 00:03:06
 
 % TEST ft_megrealign test_bug950

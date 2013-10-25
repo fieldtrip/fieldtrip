@@ -1,5 +1,6 @@
 function test_bug1142
 
+% MEM 1gb
 % WALLTIME 00:03:01
 
 % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1142

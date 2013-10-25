@@ -1,5 +1,6 @@
 function test_ft_artifact_xxx
 
+% MEM 1gb
 % WALLTIME 00:03:20
 
 % TEST test_ft_artifact_xxx

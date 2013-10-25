@@ -1,5 +1,6 @@
 function test_ft_prepare_mesh
 
+% MEM 1gb
 % WALLTIME 00:03:13
 
 % test ft_prepare_mesh also used for constructing SIMBIO FEM head models

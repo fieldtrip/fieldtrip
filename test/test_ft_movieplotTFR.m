@@ -1,5 +1,6 @@
 function test_ft_movieplotTFR
 
+% MEM 1gb
 % WALLTIME 00:03:10
 
 % TEST test_ft_movieplotTFR

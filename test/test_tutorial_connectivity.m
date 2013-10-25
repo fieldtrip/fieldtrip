@@ -1,5 +1,6 @@
 function test_tutorial_connectivity
 
+% MEM 1gb
 % TEST test_tutorial_connectivity
 % TEST ft_connectivityanalysis ft_connectivitysimulation ft_freqanalysis ft_connectivityplot ft_mvaranalysis
 

@@ -1,5 +1,6 @@
 function test_ft_componentanalysis(datainfo, writeflag, version)
 
+% MEM 2gb
 % WALLTIME 00:03:20
 
 % TEST test_ft_componentanalysis

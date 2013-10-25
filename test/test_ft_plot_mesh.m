@@ -1,5 +1,6 @@
 function test_ft_plot_mesh
 
+% MEM 1gb
 % WALLTIME 00:03:07
 
 % TEST test_ft_plot_mesh 
