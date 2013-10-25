@@ -20,6 +20,7 @@ function parcel = ft_sourceparcellate(cfg, source, parcellation)
 % The values within a parcel or parcel-combination can be combined using
 % the following methods:
 %   'mean'      compute the mean
+%   'median'    compute the median (unsupported for fields that are represented in a cell-array)
 %   'eig'       compute the largest eigenvector
 %   'min'       take the minimal value
 %   'max'       take the maximal value
@@ -168,7 +169,6 @@ nseg     = length(seglabel);
 
 if isfield(source, 'inside')
   % determine the conjunction of the parcellation and the inside source points
-  % points that are
   n0 = numel(source.inside);
   n1 = sum(source.inside(:));
   n2 = sum(seg(:)~=0);
@@ -207,6 +207,8 @@ for i=1:numel(fn)
         switch cfg.method
           case 'mean'
             tmp{j1,j2} = cellmean2(dat(seg==j1,seg==j2,:));
+          case 'median'
+            error('taking the median from data in a cell-array is not yet implemented');
           case 'min'
             tmp{j1,j2} = cellmin2(dat(seg==j1,seg==j2,:));
           case 'max'
@@ -229,6 +231,8 @@ for i=1:numel(fn)
       switch cfg.method
         case 'mean'
           tmp{j} = cellmean1(dat(seg==j));
+        case 'median'
+          error('taking the median from data in a cell-array is not yet implemented');
         case 'min'
           tmp{j} = cellmin1(dat(seg==j));
         case 'max'
@@ -257,6 +261,8 @@ for i=1:numel(fn)
         switch cfg.method
           case 'mean'
             tmp(j1,j2,:) = arraymean2(dat(seg==j1,seg==j2,:));
+          case 'median'
+            tmp(j1,j2,:) = arraymedian2(dat(seg==j1,seg==j2,:));
           case 'min'
             tmp(j1,j2,:) = arraymin2(dat(seg==j1,seg==j2,:));
           case 'max'
@@ -281,6 +287,8 @@ for i=1:numel(fn)
       switch cfg.method
         case 'mean'
           tmp(j,:) = arraymean1(dat(seg==j,:));
+        case 'median'
+          tmp(j,:) = arraymedian1(dat(seg==j,:));
         case 'min'
           tmp(j,:) = arraymin1(dat(seg==j,:));
         case 'max'
@@ -329,6 +337,9 @@ ft_postamble savevar parcel
 function y = arraymean1(x)
 y = mean(x,1);
 
+function y = arraymedian1(x)
+y = median(x,1);
+
 function y = arraymin1(x)
 y = min(x,[], 1);
 
@@ -349,6 +360,11 @@ function y = arraymean2(x)
 siz = size(x);
 x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % simplify it into a single dimension
 y = arraymean1(x);
+
+function y = arraymedian2(x)
+siz = size(x);
+x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % simplify it into a single dimension
+y = arraymedian1(x);
 
 function y = arraymin2(x)
 siz = size(x);
