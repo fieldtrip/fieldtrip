@@ -1,8 +1,5 @@
 function test_bug1756
 
-% MEM 1gb
-% WALLTIME 00:04:57
-
 % TEST test_bug1756
 % TEST ft_voltype ft_prepare_headmodel
 

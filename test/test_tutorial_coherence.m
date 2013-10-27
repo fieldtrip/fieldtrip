@@ -1,6 +1,5 @@
 function test_tutorial_coherence
 
-% MEM 1gb
 % TEST test_tutorial_coherence
 % TEST ft_freqanalysis ft_connectivityanalysis ft_multiplotER ft_singleplotER ft_topoplotER ft_sourceanalysis ft_sourceinterpolate
 

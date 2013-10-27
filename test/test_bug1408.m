@@ -1,8 +1,5 @@
 function test_bug1408
 
-% MEM 1gb
-% WALLTIME 00:03:43
-
 % TEST test_bug1408
 % TEST ft_preprocessing preproc ft_preproc_bandpassfilter ft_preproc_bandstopfilter ft_preproc_dftfilter ft_preproc_highpassfilter ft_preproc_lowpassfilter
 
