@@ -1,5 +1,6 @@
 function test_ft_multiplotTFR
 
+% MEM 1gb
 % WALLTIME 00:03:11
 
 % TEST test_ft_multiplotTFR 

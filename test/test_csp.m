@@ -1,5 +1,6 @@
 function test_suite = test_csp
 
+% MEM 1gb
 % WALLTIME 00:03:03
 
 % TEST test_csp

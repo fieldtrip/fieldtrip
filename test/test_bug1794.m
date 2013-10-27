@@ -1,5 +1,6 @@
 function test_bug1794
 
+% MEM 1gb
 % WALLTIME 00:05:20
 
 load('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/vol.mat')

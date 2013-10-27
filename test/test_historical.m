@@ -1,5 +1,6 @@
 function test_historical
 
+% MEM 1gb
 % WALLTIME 00:03:01
 
 % this function creates the datafiles for the historical fieldtrip versions

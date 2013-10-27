@@ -1,6 +1,8 @@
 function test_tutorial_connectivity
 
 % MEM 1gb
+% WALLTIME 0:03:01
+
 % TEST test_tutorial_connectivity
 % TEST ft_connectivityanalysis ft_connectivitysimulation ft_freqanalysis ft_connectivityplot ft_mvaranalysis
 

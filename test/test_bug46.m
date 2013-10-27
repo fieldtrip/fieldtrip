@@ -1,6 +1,8 @@
 function test_bug46
 
 % MEM 1gb
+% WALLTIME 0:03:01
+
 % TEST test_bug46
 % TEST ft_connectivityanalysis univariate2bivariate ft_checkdata
 

@@ -1,5 +1,6 @@
 function test_ft_sourcemovie
 
+% MEM 1gb
 % WALLTIME 00:03:01
 
 % TEST test_ft_sourcemovie

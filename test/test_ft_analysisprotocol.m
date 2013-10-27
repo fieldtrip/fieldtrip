@@ -1,5 +1,6 @@
 function test_ft_analysisprotocol
 
+% MEM 1gb
 % WALLTIME 02:53:11
 
 % TEST test_ft_analysisprotocol

@@ -1,5 +1,6 @@
 function test_headmodel_dipoli_new_old
 
+% MEM 1gb
 % WALLTIME 00:03:35
 
 % TEST test_headmodel_dipoli_new_old

@@ -1,5 +1,6 @@
 function test_headmodel_fns
 
+% MEM 1gb
 % WALLTIME 00:03:58
 
 % TEST test_ft_compute_leadfield

@@ -1,5 +1,6 @@
 function test_ft_componentanalysis_methods
 
+% MEM 1gb
 % WALLTIME 00:03:12
 
 % TEST test_ft_componentanalysis_methods

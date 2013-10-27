@@ -1,5 +1,6 @@
 function test_bug2085
 
+% MEM 1gb
 % TEST test_bug2085
 % TEST ft_senstype ft_senslabel
 

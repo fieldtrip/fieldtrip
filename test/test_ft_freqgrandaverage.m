@@ -1,5 +1,6 @@
 function test_ft_freqgrandaverage
 
+% MEM 1gb
 % WALLTIME 00:03:03
 
 % TEST test_ft_freqgrandaverage

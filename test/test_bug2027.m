@@ -1,6 +1,8 @@
 function test_bug2027
 
 % MEM 1gb
+% WALLTIME 0:03:01
+
 % TEST test_bug2027
 % TEST read_4d_hdr
 % TEST ft_read_header

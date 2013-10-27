@@ -1,6 +1,8 @@
 function test_bug1425
 
 % MEM 1gb
+% WALLTIME 0:03:01
+
 % TEST test_bug1425
 % TEST ft_connectivityanalysis
 % TEST ft_connectivity_corr

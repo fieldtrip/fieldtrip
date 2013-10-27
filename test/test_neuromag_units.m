@@ -1,5 +1,6 @@
 function test_neuromag_units
 
+% MEM 1gb
 % WALLTIME 00:04:40
 
 % TEST test_neuromag_units

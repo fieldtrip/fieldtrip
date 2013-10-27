@@ -1,5 +1,6 @@
 function test_bug2231
 
+% MEM 1gb
 % WALLTIME 00:03:04
 
 % TEST: ft_read_header
