@@ -1,7 +1,11 @@
 function test_ft_spikedensity()
 
+% MEM 1gb
+% WALLTIME 00:05:00
+
 % TEST test_ft_spikedensity
-% ft_spikedensity
+% TEST ft_spikedensity
+
 data = [];
 nTrials = 100;
 nSamples = 1001;

@@ -1,7 +1,10 @@
 function test_ft_spike_isi()
 
+% MEM 2gb
+% WALLTIME 00:05:00
+
 % TEST test_ft_spike_isi
-% ft_spike_isi
+% TEST ft_spike_isi
 
 clear
 nTrials = 100;

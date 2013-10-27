@@ -1,5 +1,8 @@
 function test_ft_plot_lay
 
+% MEM 1gb
+% WALLTIME 0:03:00
+
 % TEST test_ft_plot_lay
 % TEST ft_plot_lay
 

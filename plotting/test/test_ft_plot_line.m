@@ -1,5 +1,8 @@
 function test_ft_plot_line
 
+% MEM 1gb
+% WALLTIME 0:03:00
+
 % TEST test_ft_plot_line
 % TEST ft_plot_line
 

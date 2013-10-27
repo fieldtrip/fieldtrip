@@ -1,5 +1,8 @@
 function test_bug1404
 
+% MEM 1gb
+% WALLTIME 00:05:00
+
 % TEST test_bug1404
 % TEST ft_read_header ft_read_data ft_read_spike
 

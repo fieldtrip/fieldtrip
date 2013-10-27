@@ -1,7 +1,11 @@
 function test_ft_spiketriggeredspectrum_stat()
 
+% MEM 1gb
+% WALLTIME 00:05:00
+
 % TEST test_ft_spiketriggeredspectrum_stat
-% ft_spiketriggeredspectrum_stat
+% TEST ft_spiketriggeredspectrum_stat
+
 nSpikes = 10000;
 randPhases = [];
 kappa = 1;

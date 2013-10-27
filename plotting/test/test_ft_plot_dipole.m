@@ -1,5 +1,8 @@
 function test_ft_plot_dipole
 
+% MEM 1gb
+% WALLTIME 0:03:00
+
 % TEST test_ft_plot_dipole
 % TEST ft_plot_dipole
 

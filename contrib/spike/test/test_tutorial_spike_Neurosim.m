@@ -1,4 +1,8 @@
 function test_tutorial_spike_Neurosim
+
+% MEM 1gb
+% WALLTIME 00:05:00
+
 % TEST test_tutorial_spike_sim
 % performs all the operations mentioned int the spike tutorial
 % (http://fieldtrip.fcdonders.nl/tutorial/spike), but only plots figures
@@ -16,8 +20,7 @@ function test_tutorial_spike_Neurosim
 % TEST ft_spike_isi ft_spike_plot_isireturn ft_spike_psth ft_spikedensity
 % TEST ft_spike_plot_raster ft_spike_xcorr
 
-spike2 = ft_read_spike('/home/common/matlab/fieldtrip/data/test/original/neurosim/spikes'); %should be the folder containing 'signals' and 'spikes'; or the spikes file directly
-
+spike2 = ft_read_spike('/home/common/matlab/fieldtrip/data/test/original/neurosim/spikes'); % should be the folder containing 'signals' and 'spikes'; or the spikes file directly
 
 
 cfg              = [];

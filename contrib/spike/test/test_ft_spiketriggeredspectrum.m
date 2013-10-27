@@ -1,7 +1,10 @@
 function test_ft_spiketriggeredspectrum()
 
+% MEM 1gb
+% WALLTIME 00:05:00
+
 % TEST test_ft_spiketriggeredspectrum
-% ft_spiketriggeredspectrum
+% TEST ft_spiketriggeredspectrum
 
 % create the data, in which spikes fall at known phases, and in which our spike times
 % fall precicely on the samples. In this case there is no phase error

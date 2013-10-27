@@ -1,7 +1,10 @@
 function test_ft_spike_maketrials()
 
+% MEM 1gb
+% WALLTIME 00:05:00
+
 % TEST test_ft_spike_maketrials
-% ft_spike_maketrials
+% TEST ft_spike_maketrials
 
 spike = [];
 tsAll = [];
