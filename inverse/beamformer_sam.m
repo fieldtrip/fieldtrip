@@ -93,6 +93,14 @@ dip.outside = [];
 
 isrankdeficient = (rank(all_cov)<size(all_cov,1));
 
+% it is difficult to give a quantitative estimate of lambda, therefore also
+% support relative (percentage) measure that can be specified as string (i.e. '10%')
+if ~isempty(lambda) && ischar(lambda) && lambda(end)=='%'
+  ratio = sscanf(lambda, '%f%%');
+  ratio = ratio/100;
+  lambda = ratio * trace(all_cov)/size(all_cov,1);
+end
+
 % estimate the noise power, which is further assumed to be equal and uncorrelated over channels
 if isrankdeficient
   % estimated noise floor is equal to or higher than lambda
