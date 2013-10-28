@@ -40,7 +40,6 @@ datainfo = ref_datasets;
 if false
 % I (=robert) noticed that the code below is still rather incomplete
 % rather than it showing up as error on the dashboard, I have now commented it out for the time being
-% once you implement something proper, please update the MEM and WALLTIME
 
 % first step: preprocess all the data
 % ft_channelrepair
