@@ -26,12 +26,13 @@ data_tms = ft_preprocessing(cfg);
 
 %save('data_tms_raw','data_tms','-v7.3');
 
- 
-% Inspect using databrowser
-cfg = [];
-cfg.preproc.demean = 'yes';
-cfg.preproc.baselinewindow = [-0.1 -0.001]; % For plotting purposes we will apply a baseline correction to the pre-stimulation period
-ft_databrowser(cfg, data_tms);
+if false
+  % Inspect using databrowser, this should not run in automated mode
+  cfg = [];
+  cfg.preproc.demean = 'yes';
+  cfg.preproc.baselinewindow = [-0.1 -0.001]; % For plotting purposes we will apply a baseline correction to the pre-stimulation period
+  ft_databrowser(cfg, data_tms);
+end
 
 % Average
 cfg = [];
@@ -45,13 +46,13 @@ clear data_tms
 
 % plot all in seperate window
 for i=1:numel(data_tms_avg.label) % Loop through all channels
-    figure;
-    plot(data_tms_avg.time, data_tms_avg.avg(i,:)); % Plot all data
-    xlim([-0.1 0.6]); % Here we can specify the limits of what to plot on the x-axis
-    ylim([-23 15]); % Here we can specify the limits of what to plot on the y-axis
-    title(['Channel ' data_tms_avg.label{i}]);
-    ylabel('Amplitude (uV)')
-    xlabel('Time (s)');
+  figure;
+  plot(data_tms_avg.time, data_tms_avg.avg(i,:)); % Plot all data
+  xlim([-0.1 0.6]); % Here we can specify the limits of what to plot on the x-axis
+  ylim([-23 15]); % Here we can specify the limits of what to plot on the y-axis
+  title(['Channel ' data_tms_avg.label{i}]);
+  ylabel('Amplitude (uV)')
+  xlabel('Time (s)');
 end;
 
 % close all windows
@@ -70,7 +71,7 @@ ylabel('Amplitude (uV)')
 xlabel('Time (s)');
 
 % adjust limits
-xlim([-0 0.020]); 
+xlim([-0 0.020]);
 ylim([-60 100]);
 
 % highlight artifacts
@@ -121,7 +122,7 @@ cfg_ringing = ft_artifact_tms(cfg); % Detect TMS artifacts
 % Recharge
 cfg.prestim                 = -.499;
 cfg.poststim                = .511;
-cfg_recharge = ft_artifact_tms(cfg); % Detect TMS artifacts 
+cfg_recharge = ft_artifact_tms(cfg); % Detect TMS artifacts
 
 % Combine into one structure
 cfg_artifact = [];
@@ -148,17 +149,21 @@ data_tms_clean = ft_preprocessing(cfg);
 
 
 %% compare segmented vs raw
-% segmented
-cfg = [];
-cfg.artfctdef = cfg_artifact.artfctdef;
-cfg.continuous = 'yes';
-ft_databrowser(cfg, data_tms_clean);
-
-%raw
-cfg = [];
-cfg.artfctdef = cfg_artifact.artfctdef;
-cfg.dataset = dccnfilename('/home/common/matlab/fieldtrip/data/ftp/tutorial/tms/sp/jimher_toolkit_demo_dataset_.eeg');
-ft_databrowser(cfg);
+if false
+  % Inspect using databrowser, this should not run in automated mode
+  
+  % segmented
+  cfg = [];
+  cfg.artfctdef = cfg_artifact.artfctdef;
+  cfg.continuous = 'yes';
+  ft_databrowser(cfg, data_tms_clean);
+  
+  % raw
+  cfg = [];
+  cfg.artfctdef = cfg_artifact.artfctdef;
+  cfg.dataset = dccnfilename('/home/common/matlab/fieldtrip/data/ftp/tutorial/tms/sp/jimher_toolkit_demo_dataset_.eeg');
+  ft_databrowser(cfg);
+end
 
 close all;
 
@@ -169,7 +174,7 @@ close all;
 % cfg.method = 'fastica';
 % cfg.fastica.approach = 'symm';
 % cfg.fastica.g = 'gauss';
-% 
+%
 % comp = ft_componentanalysis(cfg, data_tms_clean);
 
 load(dccnfilename('/home/common/matlab/fieldtrip/data/ftp/tutorial/tms/sp/comp.mat'));
@@ -178,13 +183,16 @@ load(dccnfilename('/home/common/matlab/fieldtrip/data/ftp/tutorial/tms/sp/comp.m
 
 %% Time-lock average components
 cfg = [];
-cfg.vartrllength  = 2; 
+cfg.vartrllength  = 2;
 comp_avg = ft_timelockanalysis(cfg, comp);
 
 %% Databrowser
-figure;
-cfg = [];
-ft_databrowser(cfg, comp_avg);
+if false
+  % Inspect using databrowser, this should not run in automated mode
+  figure;
+  cfg = [];
+  ft_databrowser(cfg, comp_avg);
+end
 
 %% ft_topoplotIC
 figure;
@@ -193,13 +201,16 @@ cfg.component = 1:60;
 cfg.comment = 'no';
 cfg.layout = 'easycapM10';
 ft_topoplotIC(cfg, comp);
+
 %% databrowser to browse through trials
-cfg = [];
-cfg.layout = 'easycapM10';
-cfg.viewmode = 'component';
+if false
+  % Inspect using databrowser, this should not run in automated mode
+  cfg = [];
+  cfg.layout = 'easycapM10';
+  cfg.viewmode = 'component';
+  ft_databrowser(cfg, comp);
+end
 
-
-ft_databrowser(cfg, comp);
 %% Apply unmixing matrix to same data without demeaning
 
 cfg = [];
@@ -224,12 +235,12 @@ cfg.preproc.demean = 'no';
 data_tms_clean_avg = ft_timelockanalysis(cfg, data_tms_clean);
 
 for i=1:numel(data_tms_clean_avg.label) % Loop through all channels
-    figure;
-    plot(data_tms_clean_avg.time, data_tms_clean_avg.avg(i,:),'b'); % Plot all data
-    xlim([-0.1 0.6]); % Here we can specify the limits of what to plot on the x-axis
-    title(['Channel ' data_tms_clean_avg.label{i}]);
-    ylabel('Amplitude (uV)')
-    xlabel('Time (s)');
+  figure;
+  plot(data_tms_clean_avg.time, data_tms_clean_avg.avg(i,:),'b'); % Plot all data
+  xlim([-0.1 0.6]); % Here we can specify the limits of what to plot on the x-axis
+  title(['Channel ' data_tms_clean_avg.label{i}]);
+  ylabel('Amplitude (uV)')
+  xlabel('Time (s)');
 end;
 
 
@@ -254,7 +265,7 @@ cfg.prewindow = 0.01;
 cfg.postwindow = 0.01;
 data_tms_clean = ft_interpolatenan(cfg, data_tms_clean);
 
-%% compare 
+%% compare
 cfg = [];
 cfg.preproc.demean = 'yes';
 cfg.preproc.baselinewindow = [-0.1 -0.001];
@@ -262,16 +273,16 @@ cfg.preproc.baselinewindow = [-0.1 -0.001];
 data_tms_clean_avg = ft_timelockanalysis(cfg, data_tms_clean);
 
 for i=1:numel(data_tms_avg.label) % Loop through all channels
-    figure;
-    plot(data_tms_avg.time, data_tms_avg.avg(i,:),'r'); % Plot all data
-    hold on;
-    plot(data_tms_clean_avg.time, data_tms_clean_avg.avg(i,:),'b'); % Plot all data
-    xlim([-0.1 0.6]); % Here we can specify the limits of what to plot on the x-axis
-    ylim([-23 15]); % Here we can specify the limits of what to plot on the y-axis
-    title(['Channel ' data_tms_avg.label{i}]);
-    ylabel('Amplitude (uV)')
-    xlabel('Time (s)');
-    legend({'Raw' 'Cleaned'});
+  figure;
+  plot(data_tms_avg.time, data_tms_avg.avg(i,:),'r'); % Plot all data
+  hold on;
+  plot(data_tms_clean_avg.time, data_tms_clean_avg.avg(i,:),'b'); % Plot all data
+  xlim([-0.1 0.6]); % Here we can specify the limits of what to plot on the x-axis
+  ylim([-23 15]); % Here we can specify the limits of what to plot on the y-axis
+  title(['Channel ' data_tms_avg.label{i}]);
+  ylabel('Amplitude (uV)')
+  xlabel('Time (s)');
+  legend({'Raw' 'Cleaned'});
 end;
 
 %% Apply rest of processing steps
