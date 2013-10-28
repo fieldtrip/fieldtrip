@@ -1,7 +1,6 @@
 function test_fieldtrip2fiff
 
-% MEM 1gb
-
+% MEM 2gb
 % WALLTIME 00:04:52
 
 % TEST test_fieldtrip2fiff

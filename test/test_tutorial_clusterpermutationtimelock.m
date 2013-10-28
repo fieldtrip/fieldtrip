@@ -1,6 +1,6 @@
 function test_tutorial_clusterpermutationtimelock(dataset, datadir)
 
-% MEM 1gb
+% MEM 2gb
 % WALLTIME 0:06:00
 
 % TEST test_tutorial_eventrelatedstatistics

@@ -1,6 +1,6 @@
 function test_tutorial_eventrelatedstatistics(datadir)
 
-% MEM 1gb
+% MEM 2gb
 % WALLTIME 0:10:00
 
 % TEST test_tutorial_eventrelatedstatistics
