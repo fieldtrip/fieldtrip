@@ -1,7 +1,7 @@
 function test_tutorial_headmodel_eeg
 
-% ME 1gb
-% WALLTIME 00:43:57
+% MEM 1gb
+% WALLTIME 00:30:00
 
 % TEST test_tutorial_headmodel_eeg
 % TEST ft_read_mri ft_volumesegment ft_prepare_mesh ft_prepare_headmodel
