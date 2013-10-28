@@ -1,6 +1,6 @@
 function test_ft_datatype
 
-% MEM 2gb
+% MEM 3gb
 % WALLTIME 00:26:39
 
 % TEST test_ft_datatype

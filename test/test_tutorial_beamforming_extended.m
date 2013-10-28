@@ -1,6 +1,6 @@
 function test_tutorial_beamforming_extended
 
-% MEM 2gb
+% MEM 4gb
 % WALLTIME 00:08:06
 
 % TEST test_beamforming_extended

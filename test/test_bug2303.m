@@ -23,7 +23,7 @@ hdr = ft_read_header(filename);
 %        chantype: {14x1 cell}
 %        chanunit: {14x1 cell}
 
-assert(ft_filetype(filename), 'eeglab_set')
+assert(ft_filetype(filename, 'eeglab_set'))
 assert(hdr.Fs==500);
 assert(hdr.nChans==14);
 assert(hdr.nSamplesPre==100);
