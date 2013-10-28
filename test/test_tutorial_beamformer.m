@@ -1,5 +1,6 @@
 function test_tutorial_beamformer(datadir)
 
+% MEM 2gb
 % WALLTIME 00:12:19
 
 % TEST test_tutorial_beamformer

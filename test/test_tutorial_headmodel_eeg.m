@@ -1,5 +1,6 @@
 function test_tutorial_headmodel_eeg
 
+% ME 1gb
 % WALLTIME 00:43:57
 
 % TEST test_tutorial_headmodel_eeg

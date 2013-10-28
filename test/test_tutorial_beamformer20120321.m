@@ -1,5 +1,6 @@
 function test_tutorial_beamformer20120321
 
+% MEM 1gb
 % WALLTIME 00:05:19
 
 % TEST test_tutorial_beamformer
