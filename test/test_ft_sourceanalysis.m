@@ -1,6 +1,6 @@
 function test_ft_sourceanalysis(datainfo, writeflag, version)
 
-% MEM 1gb
+% MEM 3gb
 % WALLTIME 02:36:12
 
 % TEST test_ft_sourceanalysis 

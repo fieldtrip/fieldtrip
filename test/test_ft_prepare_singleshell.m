@@ -1,6 +1,6 @@
 function test_ft_prepare_singleshell
 
-% MEM 1gb
+% MEM 2gb
 % WALLTIME 00:03:29
 
 % TEST test_ft_prepare_singleshell

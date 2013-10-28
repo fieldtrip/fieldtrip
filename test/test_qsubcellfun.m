@@ -1,6 +1,6 @@
 function test_qsubcellfun
 
-% MEM 2gb
+% MEM 3gb
 % WALLTIME 00:31:04
 
 % TEST test_qsubcellfun
