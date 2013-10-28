@@ -1,6 +1,7 @@
 function test_bug1707
 
 % MEM 2gb
+% WALLTIME 0:03:00
 
 % TEST test_bug1707
 % TEST ft_channelrepair ft_combineplanar ft_componentanalysis
@@ -35,6 +36,11 @@ datainfo = ref_datasets;
 % all functions + appropriate cfgs to be tested
 
 %% check whether all runs through smoothly
+
+if false
+% I (=robert) noticed that the code below is still rather incomplete
+% rather than it showing up as error on the dashboard, I have now commented it out for the time being
+% once you implement something proper, please update the MEM and WALLTIME
 
 % first step: preprocess all the data
 % ft_channelrepair
@@ -139,3 +145,5 @@ cfgs{end}.
 funs{end+1} = 'ft_multiplotTFR';
 cfgs{end+1} = [];
 cfgs{end}.
+
+end
