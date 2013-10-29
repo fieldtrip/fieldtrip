@@ -477,10 +477,6 @@ else
           error('incorrect coordinates specified');
       end
       
-    case {'fcdc_buffer'} % FIXME: this supports realtime neuromag only
-      
-      orig = read_neuromag_hc(filename);
-
     case {'yokogawa_mrk', 'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw' }
       if ft_hastoolbox('yokogawa_meg_reader')
         hdr = read_yokogawa_header_new(filename);
