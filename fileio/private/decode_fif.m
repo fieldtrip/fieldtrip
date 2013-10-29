@@ -20,14 +20,21 @@ F = fopen(filename, 'w');
 fwrite(F, chunk, 'uint8');
 fclose(F);
 
+% check that the required low-level toolbox is available
+ft_hastoolbox('mne', 1);
+
 % open and read the file as little endian
-ft_hastoolbox('mne', 1, 1); % add MNE toolbox
-[fid, tree] = fiff_open_le(filename);
+[fid, tree] = fiff_open_le(filename); % open as little endian
 [info, meas] = fiff_read_meas_info(fid, tree);
 fclose(fid);
 
 % clean up the temporary file
 delete(filename);
+
+% convert to fieldtrip format header
+hdr.label       = info.ch_names(:);
+hdr.nChans      = info.nchan;
+hdr.Fs          = info.sfreq;
 
 % add a gradiometer structure for forward and inverse modelling
 try
