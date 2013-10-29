@@ -25,6 +25,7 @@ fclose(F);
 % hdr = ft_read_header(filename, 'headerformat', 'neuromag_mne', 'endian', 'L');
 
 % open and read the file as little endian
+ft_hastoolbox('mne', 1, 1); % add MNE toolbox
 [fid, tree] = fiff_open_le(filename);
 [info, meas] = fiff_read_meas_info(fid, tree);
 fclose(fid);
@@ -34,7 +35,7 @@ delete(filename);
 
 % add a gradiometer structure for forward and inverse modelling
 try
-  [grad, elec] = mne2grad(info, strcmp(coordsys, 'dewar'));
+  [grad, elec] = mne2grad(info, 1); % 1: 'coordsys' = 'dewar'
   if ~isempty(grad)
     hdr.grad = grad;
   end
