@@ -131,7 +131,7 @@ if isctf
   vol  = [];
   coilsignal = [];  
 elseif isneuromag
-  shape = ft_read_headshape(cfg.headerfile, 'coordsys', 'dewar', 'fileformat', 'neuromag_fif');
+  shape = ft_read_headshape(cfg.headerfile, 'coordsys', 'dewar', 'format', 'neuromag_fif');
   for i = 1:min(size(shape.pnt,1),length(cfg.coilfreq)) % for as many digitized or specified coils
     if ~isempty(strfind(shape.label{i},'hpi'))
       dip(i).pos = shape.pnt(i,:); % chan X pos, initial guess for each of the dipole/coil positions
