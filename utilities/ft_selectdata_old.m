@@ -94,11 +94,11 @@ isvolume   = strcmp(dtype{1},'volume');
 isfreqmvar = strcmp(dtype{1},'freqmvar');
 
 % get the optional arguments
-selchan      = ft_getopt(varargin, 'channel',      []); selectchan = ~isempty(selchan);
-selfoi       = ft_getopt(varargin, 'foilim',       []); selectfoi  = ~isempty(selfoi);
-seltoi       = ft_getopt(varargin, 'toilim',       []); selecttoi  = ~isempty(seltoi);
+selchan      = ft_getopt(varargin, 'channel',      'all', 1); selectchan = ~(ischar(selchan) && strcmp(selchan, 'all'));
+selfoi       = ft_getopt(varargin, 'foilim',       'all', 1); selectfoi  = ~(ischar(selfoi)  && strcmp(selfoi,  'all'));
+seltoi       = ft_getopt(varargin, 'toilim',       'all', 1); selecttoi  = ~(ischar(seltoi)  && strcmp(seltoi,  'all'));
 selroi       = ft_getopt(varargin, 'roi',          []); selectroi  = ~isempty(selroi);
-selrpt       = ft_getopt(varargin, 'rpt',          []); selectrpt  = ~isempty(selrpt);
+selrpt       = ft_getopt(varargin, 'rpt',          'all', 1); selectrpt  = ~(ischar(selrpt)  && strcmp(selrpt,  'all'));
 selpos       = ft_getopt(varargin, 'pos',          []); selectpos  = ~isempty(selpos);
 param        = ft_getopt(varargin, 'param',        'all'); % FIXME think about this
 avgoverchan  = ft_getopt(varargin, 'avgoverchan',  false);
@@ -161,42 +161,42 @@ if length(data)>1 && ~israw,
   dimtok                           = tokenize(dimord{1}, '_');
   dimtok(strmatch('chan', dimtok)) = {'label'}; % data.chan does not exist
   
-  %   dimmat      = zeros(length(dimtok), length(data));
-  %   dimmat(:,1) = 1;
-  %   for k = 1:length(dimtok)
-  %     if isempty(strfind(dimtok{k},'rpt')) && isempty(strfind(dimtok{k},'{pos}')) && isempty(strfind(dimtok{k},'ori')),
-  %       dimdat = data{1}.(dimtok{k});
-  %     elseif ~isempty(strfind(dimtok{k},'{pos}')),
-  %       dimdat = data{1}.(dimtok{k}(2:end-1));
-  %     elseif isempty(strfind(dimtok{k},'ori')),
-  %       % dimtok is 'rpt' or 'rpttap'
-  %       dimdat = size(data{1}.(param{1}),1);
-  %     end
-  %     for m = 2:length(data)
-  %       if isempty(strfind(dimtok{k},'rpt')) && isempty(strfind(dimtok{k}, '{pos}')) && isempty(strfind(dimtok{k},'ori')),
-  %         dimdat2 = data{m}.(dimtok{k});
-  %       elseif ~isempty(strfind(dimtok{k},'{pos}')),
-  %         dimdat2 = data{m}.(dimtok{k}(2:end-1));
-  %       elseif isempty(strfind(dimtok{k},'ori')),
-  %         % dimtok is 'rpt' or 'rpttap'
-  %         dimdat2 = size(data{m}.(param{1}),1);
-  %       end
-  %       try, dimmat(k,m) = all(dimdat(:)==dimdat2(:));            catch end;
-  %       try, dimmat(k,m) = all(cellfun(@isequal,dimdat,dimdat2)); catch end;
-  %     end
-  %   end
-  %  catdim = find(sum(dimmat,2)<length(data));
-  
-  if any(strcmp(dimtok, 'rpt'))
-    catdim = find(strcmp(dimtok, 'rpt'));
-  elseif any(strcmp(dimtok, 'rpttap'))
-    catdim = find(strcmp(dimtok, 'rpttap'));
-  elseif any(strcmp(dimtok, 'subj'))
-    catdim = find(strcmp(dimtok, 'subj'));
-  else
-    catdim = [];
-  end
-  
+     dimmat      = zeros(length(dimtok), length(data));
+     dimmat(:,1) = 1;
+     for k = 1:length(dimtok)
+       if isempty(strfind(dimtok{k},'rpt')) && isempty(strfind(dimtok{k},'{pos}')) && isempty(strfind(dimtok{k},'ori')),
+         dimdat = data{1}.(dimtok{k});
+       elseif ~isempty(strfind(dimtok{k},'{pos}')),
+         dimdat = data{1}.(dimtok{k}(2:end-1));
+       elseif isempty(strfind(dimtok{k},'ori')),
+         % dimtok is 'rpt' or 'rpttap'
+         dimdat = size(data{1}.(param{1}),1);
+       end
+       for m = 2:length(data)
+         if isempty(strfind(dimtok{k},'rpt')) && isempty(strfind(dimtok{k}, '{pos}')) && isempty(strfind(dimtok{k},'ori')),
+           dimdat2 = data{m}.(dimtok{k});
+         elseif ~isempty(strfind(dimtok{k},'{pos}')),
+           dimdat2 = data{m}.(dimtok{k}(2:end-1));
+         elseif isempty(strfind(dimtok{k},'ori')),
+           % dimtok is 'rpt' or 'rpttap'
+           dimdat2 = size(data{m}.(param{1}),1);
+         end
+         try, dimmat(k,m) = all(dimdat(:)==dimdat2(:));            catch end;
+         try, dimmat(k,m) = all(cellfun(@isequal,dimdat,dimdat2)); catch end;
+       end
+     end
+    catdim = find(sum(dimmat,2)<length(data));
+
+%   if any(strcmp(dimtok, 'rpt'))
+%     catdim = find(strcmp(dimtok, 'rpt'));
+%   elseif any(strcmp(dimtok, 'rpttap'))
+%     catdim = find(strcmp(dimtok, 'rpttap'));
+%   elseif any(strcmp(dimtok, 'subj'))
+%     catdim = find(strcmp(dimtok, 'subj'));
+%   else
+%     catdim = [];
+%   end
+%   
   if length(catdim)>1,
     error('ambiguous dimensions for concatenation');
   elseif isempty(catdim) && isempty(intersect(dimtok, {'rpt', 'rpttap', 'subj'}))

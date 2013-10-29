@@ -73,9 +73,9 @@ end
 
 if strcmp(dtype, 'raw')
   % use selfromraw
-  cfg.channel = ft_getopt(cfg, 'channel', 'all');
-  cfg.latency = ft_getopt(cfg, 'latency', 'all');
-  cfg.trials  = ft_getopt(cfg, 'trials',  'all');
+  cfg.channel = ft_getopt(cfg, 'channel', 'all', 1); % empty definition by user is meaningful
+  cfg.latency = ft_getopt(cfg, 'latency', 'all', 1);
+  cfg.trials  = ft_getopt(cfg, 'trials',  'all', 1);
   
   for i=1:length(varargin)
     varargin{i} = selfromraw(varargin{i}, 'rpt', cfg.trials, 'chan', cfg.channel, 'latency', cfg.latency);
@@ -83,7 +83,10 @@ if strcmp(dtype, 'raw')
   
 else
   
-  cfg.trials  = ft_getopt(cfg, 'trials',  'all');
+  cfg.channel = ft_getopt(cfg, 'channel', 'all', 1);
+  cfg.latency = ft_getopt(cfg, 'latency', 'all', 1);
+  cfg.trials  = ft_getopt(cfg, 'trials',  'all', 1);
+  
   if length(varargin)>1 && ~isequal(cfg.trials, 'all')
     error('it is ambiguous to a subselection of trials while concatenating data')
   end
@@ -252,7 +255,7 @@ else
         % get the selection from all inputs
         [selchan, cfg] = getselection_chan(cfg, varargin{i});
         [selfreq, cfg] = getselection_freq(cfg, varargin{i});
-        [selrpt,  cfg, rptdim] = getselection_rpt (cfg, varargin{i}, 'datfields', datfields);
+        [selrpt,  cfg, rptdim, selrpttap] = getselection_rpt(cfg, varargin{i}, 'datfields', datfields); % in case tapers were kept, selrpt~=selrpttap, otherwise selrpt==selrpttap
         if hastime
           [seltime, cfg] = getselection_time(cfg, varargin{i});
         end
@@ -264,7 +267,8 @@ else
         varargin{i} = makeselection_freq(varargin{i}, selfreq, avgoverfreq); % update the freq field
         
         if ~any(isnan(selrpt))
-          varargin{i} = makeselection(varargin{i}, rptdim, selrpt, avgoverrpt, datfields);
+          varargin{i} = makeselection(varargin{i}, rptdim, selrpttap, avgoverrpt, datfields);
+          varargin{i} = makeselection_rpt(varargin{i}, selrpt); % avgoverrpt is dealt with later
         end
         
         if hastime
@@ -398,7 +402,7 @@ if numel(seldim) > 1
 end
 
 for i=1:numel(datfields)
-  if ~isnan(selindx)
+  if isempty(selindx) || all(~isnan(selindx))
     % the value NaN indicates that it is not needed to make a selection, rather take all values
     switch seldim
       case 1
@@ -439,6 +443,8 @@ elseif avgoverchan && ~any(isnan(selchan))
 elseif ~isnan(selchan)
   data.label = data.label(selchan);
   data.label = data.label(:);
+elseif isempty(selchan)
+  data.label = {};
 end
 end % function makeselection_chan
 
@@ -447,6 +453,8 @@ if avgoverfreq
   data = rmfield(data, 'freq');
 elseif ~isnan(selfreq)
   data.freq  = data.freq(selfreq);
+elseif isempty(selfreq)
+  data.freq  = zeros(1,0);
 end
 end % function makeselection_freq
 
@@ -455,6 +463,8 @@ if avgovertime
   data = rmfield(data, 'time');
 elseif ~isnan(seltime)
   data.time  = data.time(seltime);
+elseif isempty(seltime)
+  data.time  = zeros(1,0);
 end
 end % function makeselection_time
 
@@ -466,6 +476,20 @@ elseif ~isnan(selpos)
 end
 end % function makeselection_pos
 
+function data = makeselection_rpt(data, selrpt)
+if isfield(data, 'cumtapcnt')
+  data.cumtapcnt = data.cumtapcnt(selrpt,:,:);
+end
+if isfield(data, 'cumsumcnt')
+  data.cumsumcnt = data.cumsumcnt(selrpt,:,:);
+end
+if isfield(data, 'trialinfo')
+  data.trialinfo = data.trialinfo(selrpt,:);
+end
+if isfield(data, 'sampleinfo')
+  data.sampleinfo = data.sampleinfo(selrpt,:);
+end
+end % function makeselection_rpt
 
 function [chanindx, cfg] = getselection_chan(cfg, data)
 
@@ -523,6 +547,8 @@ if isfield(cfg, 'latency')
     timeindx = tbeg:tend;
   elseif size(cfg.latency,2)==2
     % this may be used for specification of the computation, not for data selection
+  elseif isempty(cfg.latency)
+    timeindx = [];
   else
     error('incorrect specification of cfg.latency');
   end
@@ -582,6 +608,8 @@ if isfield(cfg, 'frequency')
     freqindx = fbeg:fend;
   elseif size(cfg.frequency,2)==2
     % this may be used for specification of the computation, not for data selection
+  elseif isempty(cfg.frequency)
+    freqindx = [];
   else
     error('incorrect specification of cfg.frequency');
   end
@@ -612,7 +640,7 @@ end
 
 end % function getselection_freq
 
-function [rptindx, cfg, rptdim] = getselection_rpt(cfg, data, varargin)
+function [rptindx, cfg, rptdim, rptindxtap] = getselection_rpt(cfg, data, varargin)
 % this should deal with cfg.trials
 datfields = ft_getopt(varargin, 'datfields');
 
@@ -648,17 +676,19 @@ if isfield(cfg, 'trials') && ~isequal(cfg.trials, 'all') && ~isempty(datfields)
       for k = 1:length(begtapcnt)
         tapers(begtapcnt(k):endtapcnt(k)) = k;
       end
-      rptindx   = find(tapers);
-      [srt,ix] = sort(tapers(tapers~=0));
-      rptindx  = rptindx(ix);
+      rptindxtap = find(tapers);
+      [srt,ix]   = sort(tapers(tapers~=0));
+      rptindxtap = rptindxtap(ix);
       %       cfg.trials = rptindx;
       % TODO FIXME think about whether this is a good or a bad thing...
       %warning('cfg.trials accounts for the number of tapers now');
+    else
+      rptindxtap = rptindx;
     end
     
-    if rptindx(1)<1
+    if ~isempty(rptindx) && rptindx(1)<1
       error('cannot select rpt/subj/rpttap smaller than 1');
-    elseif rptindx(end)>rptsiz
+    elseif ~isempty(rptindx) && rptindx(end)>rptsiz
       error('cannot select rpt/subj/rpttap larger than the number of repetitions in the data');
     end
     
@@ -670,6 +700,7 @@ if isfield(cfg, 'trials') && ~isequal(cfg.trials, 'all') && ~isempty(datfields)
   
 else
   rptindx = nan;
+  rptindxtap = nan;
   rptdim = nan;
 end % if isfield cfg.trials
 
