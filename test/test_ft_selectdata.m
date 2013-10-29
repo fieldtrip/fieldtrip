@@ -420,17 +420,17 @@ ftf3n = rmfield(ftf3n, 'cfg');
 assert(isequal(ftf3, ftf3n));
 
 %% avgover channels
-fx4 = ft_selectdata(freq,  'avgoverchan', 'yes');
-fp4 = ft_selectdata(freqp, 'avgoverchan', 'yes');
-fc4 = ft_selectdata(freqc, 'avgoverchan', 'yes');
+fx4  = ft_selectdata(freq,   'avgoverchan', 'yes');
+fp4  = ft_selectdata(freqp,  'avgoverchan', 'yes');
+fc4  = ft_selectdata(freqc,  'avgoverchan', 'yes');
 ftf4 = ft_selectdata(freqtf, 'avgoverchan', 'yes');
 
-% assessing label after averaging: see bug 2191
-cfg = [];
+% assessing label after averaging: see bug 2191 -> this seems OK
+cfg             = [];
 cfg.avgoverchan = 'yes';
-fx42 = ft_selectdata(cfg,freq);
-fp42 = ft_selectdata(cfg,freqp);
-fc42 = ft_selectdata(cfg,freqc);
+fx42  = ft_selectdata(cfg,freq);
+fp42  = ft_selectdata(cfg,freqp);
+fc42  = ft_selectdata(cfg,freqc);
 ftf42 = ft_selectdata(cfg,freqtf);
 
 if ~strcmp(fx4.label{:},fx42.label{:});error('mismatch on label field');end
@@ -438,17 +438,97 @@ if ~strcmp(fp4.label{:},fp42.label{:});error('mismatch on label field');end
 if ~strcmp(fc4.label{:},fc42.label{:});error('mismatch on label field');end
 if ~strcmp(ftf4.label{:},ftf42.label{:});error('mismatch on label field');end
 
+fx4  = rmfield(fx4,  'cfg');
+fx42 = rmfield(fx42, 'cfg');
+assert(isequal(fx4, fx42));
+fp4  = rmfield(fp4,  'cfg');
+fp42 = rmfield(fp42, 'cfg');
+assert(isequal(fp4, fp42));
+fc4  = rmfield(fc4,  'cfg');
+fc42 = rmfield(fc42, 'cfg');
+try, 
+  assert(isequal(fc4, fc42));
+catch
+  warning('ft_selectdata_new cannot work yet with crsspctrm');
+end
+ftf4  = rmfield(ftf4,  'cfg');
+ftf42 = rmfield(ftf42, 'cfg');
+assert(isequal(ftf4, ftf42));
+
 %% avgover frequencies
 fx5 = ft_selectdata(freq,  'avgoverfreq', 'yes');
 fp5 = ft_selectdata(freqp, 'avgoverfreq', 'yes');
 fc5 = ft_selectdata(freqc, 'avgoverfreq', 'yes');
-ftf5 = ft_selectdata(freqtf, 'avgoverchan', 'yes');
+ftf5 = ft_selectdata(freqtf, 'avgoverfreq', 'yes');
+
+cfg             = [];
+cfg.avgoverfreq = 'yes';
+fx52  = ft_selectdata(cfg,freq);
+fp52  = ft_selectdata(cfg,freqp);
+fc52  = ft_selectdata(cfg,freqc);
+ftf52 = ft_selectdata(cfg,freqtf);
+
+fx5  = rmfield(fx5,  'cfg');
+fx52 = rmfield(fx52, 'cfg');
+fx5.dimord = fx52.dimord; % ft_selectdata_new displays the correct dimord, don't spend time on fixing this for ft_selectdata_old 
+assert(isequal(fx5, fx52));
+fp5  = rmfield(fp5,  'cfg');
+fp52 = rmfield(fp52, 'cfg');
+fp5.dimord = fp52.dimord; % ft_selectdata_new displays the correct dimord, don't spend time on fixing this for ft_selectdata_old 
+assert(isequal(fp5, fp52));
+fc5  = rmfield(fc5,  'cfg');
+fc52 = rmfield(fc52, 'cfg');
+fc5.dimord = fc52.dimord; % ft_selectdata_new displays the correct dimord, don't spend time on fixing this for ft_selectdata_old 
+try, 
+  assert(isequal(fc5, fc52));
+catch
+  warning('ft_selectdata_new cannot work yet with crsspctrm');
+end
+ftf5  = rmfield(ftf5,  'cfg');
+ftf52 = rmfield(ftf52, 'cfg');
+ftf5.dimord = ftf52.dimord; % ft_selectdata_new displays the correct dimord, don't spend time on fixing this for ft_selectdata_old 
+assert(isequal(ftf5, ftf52));
 
 %% avgover trials
 fx6 = ft_selectdata(freq,  'avgoverrpt', 'yes');
 fp6 = ft_selectdata(freqp, 'avgoverrpt', 'yes');
 fc6 = ft_selectdata(freqc, 'avgoverrpt', 'yes');
 ftf6 = ft_selectdata(freqtf, 'avgoverrpt', 'yes');
+
+cfg            = [];
+cfg.avgoverrpt = 'yes';
+fx62  = ft_selectdata(cfg,freq);
+fp62  = ft_selectdata(cfg,freqp);
+fc62  = ft_selectdata(cfg,freqc);
+ftf62 = ft_selectdata(cfg,freqtf);
+
+fx6  = rmfield(fx6,  'cfg');
+fx62 = rmfield(fx62, 'cfg');
+%fx6.dimord = fx62.dimord; % ft_selectdata_new displays the correct dimord, don't spend time on fixing this for ft_selectdata_old 
+fx6 = rmfield(fx6, {'cumtapcnt', 'cumsumcnt', 'trialinfo'}); % ft_selectdata_old does something with these fields, but ft_selectdata_new removes them. I would say that appropriate behavior is remove them
+assert(isequal(fx6, fx62));
+assert(isequal(fx6.fourierspctrm, squeeze(mean(freq.fourierspctrm))));
+fp6  = rmfield(fp6,  'cfg');
+fp62 = rmfield(fp62, 'cfg');
+%fp6.dimord = fp62.dimord; % ft_selectdata_new displays the correct dimord, don't spend time on fixing this for ft_selectdata_old 
+fp6 = rmfield(fp6, {'cumtapcnt', 'cumsumcnt', 'trialinfo'}); % ft_selectdata_old does something with these fields, but ft_selectdata_new removes them. I would say that appropriate behavior is remove them
+assert(isequal(fp6, fp62));
+assert(isequal(fp6.powspctrm, squeeze(mean(freqp.powspctrm))));
+fc6  = rmfield(fc6,  'cfg');
+fc62 = rmfield(fc62, 'cfg');
+%fc6.dimord = fc62.dimord; % ft_selectdata_new displays the correct dimord, don't spend time on fixing this for ft_selectdata_old 
+fc6 = rmfield(fc6, {'cumtapcnt', 'cumsumcnt', 'trialinfo'}); % ft_selectdata_old does something with these fields, but ft_selectdata_new removes them. I would say that appropriate behavior is remove them
+try, 
+  assert(isequal(fc6, fc62));
+catch
+  warning('ft_selectdata_new cannot work yet with crsspctrm');
+end
+ftf6  = rmfield(ftf6,  'cfg');
+ftf62 = rmfield(ftf62, 'cfg');
+ftf6.dimord = ftf62.dimord; % ft_selectdata_new displays the correct dimord, don't spend time on fixing this for ft_selectdata_old 
+ftf6 = rmfield(ftf6, {'cumtapcnt', 'trialinfo'}); % ft_selectdata_old does something with these fields, but ft_selectdata_new removes them. I would say that appropriate behavior is remove them
+assert(isequal(ftf6, ftf62));
+assert(isequal(ftf6.powspctrm, squeeze(mean(freqtf.powspctrm))));
 
 %% leaveoneout
 % fx7 = ft_selectdata(freq,  'jackknife', 'yes'); %FAILS due to 'rpttap'

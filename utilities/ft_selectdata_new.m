@@ -266,10 +266,15 @@ else
         varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'freq')), selfreq, avgoverfreq, datfields);
         varargin{i} = makeselection_freq(varargin{i}, selfreq, avgoverfreq); % update the freq field
         
-        if ~any(isnan(selrpt))
-          varargin{i} = makeselection(varargin{i}, rptdim, selrpttap, avgoverrpt, datfields);
-          varargin{i} = makeselection_rpt(varargin{i}, selrpt); % avgoverrpt is dealt with later
-        end
+        varargin{i} = makeselection(varargin{i}, rptdim, selrpttap, avgoverrpt, datfields);
+        %shiftdim the datfields, because convention has it that this should
+        %be done
+        if avgoverrpt,
+          for k =1:numel(datfields)
+            varargin{i}.(datfields{k}) = shiftdim(varargin{i}.(datfields{k}),1);
+          end
+        end  
+        varargin{i} = makeselection_rpt(varargin{i}, selrpt); % avgoverrpt for the supporting fields is dealt with later
         
         if hastime
           varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'time')), seltime, avgovertime, datfields);
@@ -334,19 +339,23 @@ else
   % update the dimord
   keep = {};
   if avgovertime
-    dimtok = setdiff(dimtok, 'time');
+    [dum, order] = setdiff(dimtok, 'time');
+    dimtok       = dimtok(order);
   end
   if avgoverfreq
-    dimtok = setdiff(dimtok, 'freq');
+    [dum, order] = setdiff(dimtok, 'freq');
+    dimtok       = dimtok(order);
   end
   if avgoverpos
-    dimtok = setdiff(dimtok, 'pos');
+    [dum, order] = setdiff(dimtok, 'pos');
+    dimtok       = dimtok(order);  
   else
     keep = [keep {'inside' 'outside' 'dim'}];
   end
   if avgoverrpt
-    % FIXME could also be rpttap or subject
-    dimtok = setdiff(dimtok, 'rpt');
+    sel = ismember(dimtok, {'rpt' 'rpttap' 'subject'});
+    [dum, order] = setdiff(dimtok, dimtok{sel});
+    dimtok       = dimtok(order);
   else
     keep = [keep {'cumtapcnt' 'cumsumcnt' 'sampleinfo' 'trialinfo'}];
   end
@@ -450,7 +459,12 @@ end % function makeselection_chan
 
 function data = makeselection_freq(data, selfreq, avgoverfreq)
 if avgoverfreq
-  data = rmfield(data, 'freq');
+  %data = rmfield(data, 'freq');
+  if ~isnan(selfreq)
+    data.freq  = mean(data.freq(selfreq));
+  else
+    data.freq  = mean(data.freq);
+  end
 elseif ~isnan(selfreq)
   data.freq  = data.freq(selfreq);
 elseif isempty(selfreq)
@@ -477,17 +491,19 @@ end
 end % function makeselection_pos
 
 function data = makeselection_rpt(data, selrpt)
-if isfield(data, 'cumtapcnt')
-  data.cumtapcnt = data.cumtapcnt(selrpt,:,:);
-end
-if isfield(data, 'cumsumcnt')
-  data.cumsumcnt = data.cumsumcnt(selrpt,:,:);
-end
-if isfield(data, 'trialinfo')
-  data.trialinfo = data.trialinfo(selrpt,:);
-end
-if isfield(data, 'sampleinfo')
-  data.sampleinfo = data.sampleinfo(selrpt,:);
+if all(isfinite(selrpt)) || isempty(selrpt)
+  if isfield(data, 'cumtapcnt')
+    data.cumtapcnt = data.cumtapcnt(selrpt,:,:);
+  end
+  if isfield(data, 'cumsumcnt')
+    data.cumsumcnt = data.cumsumcnt(selrpt,:,:);
+  end
+  if isfield(data, 'trialinfo')
+    data.trialinfo = data.trialinfo(selrpt,:);
+  end
+  if isfield(data, 'sampleinfo')
+    data.sampleinfo = data.sampleinfo(selrpt,:);
+  end
 end
 end % function makeselection_rpt
 
@@ -701,7 +717,10 @@ if isfield(cfg, 'trials') && ~isequal(cfg.trials, 'all') && ~isempty(datfields)
 else
   rptindx = nan;
   rptindxtap = nan;
-  rptdim = nan;
+  
+  % recover the rptdim if possible
+  dimtok = tokenize(data.dimord, '_');
+  rptdim = find(strcmp(dimtok, 'rpt') | strcmp(dimtok, 'rpttap') | strcmp(dimtok, 'subj'));
 end % if isfield cfg.trials
 
 end % function getselection_rpt
