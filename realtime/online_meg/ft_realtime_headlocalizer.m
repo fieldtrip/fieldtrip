@@ -65,12 +65,6 @@ clear ft_read_header; % ensure pesistent variables are cleared
 cfg = ft_checkconfig(cfg, 'dataset2files', 'yes'); % translate dataset into datafile+headerfile
 hdr = ft_read_header(cfg.headerfile, 'cache', true, 'coordsys', 'dewar');
 
-% hidden option to bypass the online missing grad info (FIXME: neuromag2ft)
-if isfield(cfg,'gradfile');
-  temp = ft_read_header(cfg.gradfile, 'coordsys', 'dewar');
-  hdr.grad = temp.grad;
-end
-
 % determine the size of blocks to process
 blocksize   = round(cfg.blocksize * hdr.Fs);
 prevSample  = 0;
