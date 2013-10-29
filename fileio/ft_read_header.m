@@ -1026,7 +1026,7 @@ switch headerformat
     hdr.nTrials     = 1;  % since continuous
     hdr.orig        = []; % this will contain the chunks (if present)
     
-    % add the contents of attached RES4 chunk after decoding to Matlab structure
+    % add the contents of attached FIF_header chunk after decoding to Matlab structure
     if isfield(orig, 'neuromag_fif')
       if isempty(cachechunk)
         % this only needs to be decoded once

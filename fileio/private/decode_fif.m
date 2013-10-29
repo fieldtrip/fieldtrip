@@ -20,10 +20,6 @@ F = fopen(filename, 'w');
 fwrite(F, chunk, 'uint8');
 fclose(F);
 
-% % calling ft_read_header rather than the low-level MNE functions ensures that mne2grad
-% % and other auxiliary functions will be called
-% hdr = ft_read_header(filename, 'headerformat', 'neuromag_mne', 'endian', 'L');
-
 % open and read the file as little endian
 ft_hastoolbox('mne', 1, 1); % add MNE toolbox
 [fid, tree] = fiff_open_le(filename);
