@@ -107,7 +107,7 @@ if isfield(grid, 'leadfield')
     end
     vol.filename{i} = sprintf('%s_%s.nii', filename, sens.label{i});
     fprintf('writing single channel leadfield to %s\n', vol.filename{i})
-    ft_write_mri(vol.filename{i}, dat, 'spmversion', 'SPM12');
+    ft_write_mri(vol.filename{i}, dat, 'spmversion', 'SPM12', 'dataformat', 'nifti_spm');
   end
   
   filename = sprintf('%s.mat', filename);
@@ -201,7 +201,7 @@ elseif isfield(grid, 'filename')
     end
     outputvol.filename{i} = sprintf('%s_%s.nii', filename, sens.label{i});
     fprintf('writing single channel leadfield to %s\n', outputvol.filename{i})
-    ft_write_mri(outputvol.filename{i}, dat, 'transform', outputvol.transform, 'spmversion', 'SPM12');
+    ft_write_mri(outputvol.filename{i}, dat, 'transform', outputvol.transform, 'spmversion', 'SPM12', 'dataformat', 'nifti_spm');
   end
   
   % update the volume conductor
