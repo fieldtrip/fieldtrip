@@ -126,9 +126,9 @@ if isctf
   vol  = [];
   coilsignal = [];
 elseif isneuromag
-  if ~isfield(cfg, 'hpifile')
+  if isempty(cfg.hpifile)
     shape = ft_read_headshape(cfg.headerfile, 'coordsys', 'dewar', 'format', 'neuromag_fif');
-  elseif isfield(cfg, 'hpifile')
+  elseif ~isempty(cfg.hpifile)
     shape = ft_read_headshape(cfg.hpifile, 'coordsys', 'dewar', 'format', 'neuromag_fif');
   end
   for i = 1:min(size(shape.pnt,1),length(cfg.coilfreq)) % for as many digitized or specified coils
