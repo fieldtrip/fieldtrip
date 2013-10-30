@@ -71,6 +71,9 @@ if ~isempty(oldevent)
     end;
 end;
 
+nameList=fieldnames(oldevent);
+nameList=setdiff(nameList,{'type','value','sample','offset','duration','latency'});
+
 for index = 1:length(oldevent)
 
   if isfield(oldevent,'code')
@@ -108,6 +111,11 @@ for index = 1:length(oldevent)
   event(index).sample   = sample;   % this is the sample in the datafile at which the event happens
   event(index).offset   = offset;   % some events should be represented with a shifted time-axix, e.g. a trial with a baseline period
   event(index).duration = duration; % some events have a duration, such as a trial
+
+  %add custom fields
+  for iField=1:length(nameList)
+      eval(['event(index).' nameList{iField} '=oldevent(index).' nameList{iField} ';']);
+  end;
 
 end;
 
