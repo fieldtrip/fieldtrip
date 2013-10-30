@@ -81,10 +81,10 @@ if isheader
 elseif isgrad
   label   = grad.label;
   numchan = length(label);
-
+  
 elseif islabel
   numchan = length(label);
-
+  
 else
   error('the input provided to this function cannot be deciphered');
 end
@@ -99,7 +99,7 @@ end
 
 if ft_senstype(input, 'unknown')
   % don't bother doing all subsequent checks to determine the type of sensor array
-
+  
 elseif ft_senstype(input, 'neuromag') && isheader
   % channames-KI is the channel kind, 1=meg, 202=eog, 2=eeg, 3=trigger (I am not sure, but have inferred this from a single test file)
   % chaninfo-TY is the Coil type (0=magnetometer, 1=planar gradiometer)
@@ -307,48 +307,77 @@ elseif ft_senstype(input, 'ctf') && islabel
   type(sel) = {'refgrad'};            % reference gradiometers
   
 elseif ft_senstype(input, 'bti')
-  % all 4D-BTi MEG channels start with "A" followed by a number
-  % all 4D-BTi reference channels start with M or G
-  % all 4D-BTi EEG channels start with E
-  sel = myregexp('^A[0-9]+$', label);
-  type(sel) = {'meg'};
-  sel = myregexp('^M[CLR][xyz][aA]*$', label);
-  type(sel) = {'refmag'};
-  sel = myregexp('^G[xyz][xyz]A$', label);
-  type(sel) = {'refgrad'};
-  
-  if isgrad && isfield(grad, 'tra')
-    gradtype = repmat({'unknown'}, size(grad.label));
-    gradtype(strncmp('A', grad.label, 1)) = {'meg'};
-    gradtype(strncmp('M', grad.label, 1)) = {'refmag'};
-    gradtype(strncmp('G', grad.label, 1)) = {'refgrad'};
-    % look at the number of coils of the meg channels
-    selchan = find(strcmp('meg', gradtype));
-    for k = 1:length(selchan)
-      ncoils = length(find(grad.tra(selchan(k),:)==1));
-      if ncoils==1,
-        gradtype{selchan(k)} = 'megmag';
-      elseif ncoils==2,
-        gradtype{selchan(k)} = 'meggrad';
+  if isfield(hdr, 'orig') && isfield(hdr.orig, 'config')
+    configname = {hdr.orig.config.channel_data.name};
+    configtype = [hdr.orig.config.channel_data.type];
+    
+    if ~identical(configname(:), hdr.label(:))
+      % reorder the channels according to the order in hdr.label
+      [sel1, sel2] = match_str(hdr.label, configname);
+      configname = configname(sel2);
+      configtype = configtype(sel2);
+      configdata = hdr.orig.config.channel_data(sel2);
+    end
+    numloops = zeros(size(configdata));
+    for i=1:length(configdata)
+      if isfield(configdata(i).device_data, 'total_loops')
+        numloops(i) = configdata(i).device_data.total_loops;
       end
     end
-    [selchan, selgrad] = match_str(label, grad.label);
-    type(selchan) = gradtype(selgrad);
-  end
-  
-  % This is to allow setting additional channel types based on the names
-  if isheader && issubfield(hdr, 'orig.channel_data.chan_label')
-    tmplabel = {hdr.orig.channel_data.chan_label};
-    tmplabel = tmplabel(:);
+    
+    % these are taken from bti2grad
+    type(configtype==1 & numloops==1) = {'megmag'};
+    type(configtype==1 & numloops==2) = {'meggrad'};
+    type(configtype==2) = {'eeg'};
+    type(configtype==3) = {'megref'};
+    type(configtype==4) = {'aux'};
+    type(configtype==5) = {'trigger'};
+    
   else
-    tmplabel = label; % might work
-  end
-  sel      = find(strcmp('unknown', type));
-  if ~isempty(sel)
-    type(sel) = ft_chantype(tmplabel(sel));
-    sel       = find(strcmp('unknown', type));
+    % determine the type on the basis of the channel labels
+    % all 4D-BTi MEG channels start with "A" followed by a number
+    % all 4D-BTi reference channels start with M or G
+    % all 4D-BTi EEG channels start with E
+    sel = myregexp('^A[0-9]+$', label);
+    type(sel) = {'meg'};
+    sel = myregexp('^M[CLR][xyz][aA]*$', label);
+    type(sel) = {'refmag'};
+    sel = myregexp('^G[xyz][xyz]A$', label);
+    type(sel) = {'refgrad'};
+    
+    if isgrad && isfield(grad, 'tra')
+      gradtype = repmat({'unknown'}, size(grad.label));
+      gradtype(strncmp('A', grad.label, 1)) = {'meg'};
+      gradtype(strncmp('M', grad.label, 1)) = {'refmag'};
+      gradtype(strncmp('G', grad.label, 1)) = {'refgrad'};
+      % look at the number of coils of the meg channels
+      selchan = find(strcmp('meg', gradtype));
+      for k = 1:length(selchan)
+        ncoils = length(find(grad.tra(selchan(k),:)==1));
+        if ncoils==1,
+          gradtype{selchan(k)} = 'megmag';
+        elseif ncoils==2,
+          gradtype{selchan(k)} = 'meggrad';
+        end
+      end
+      [selchan, selgrad] = match_str(label, grad.label);
+      type(selchan) = gradtype(selgrad);
+    end
+    
+    % This is to allow setting additional channel types based on the names
+    if isheader && issubfield(hdr, 'orig.channel_data.chan_label')
+      tmplabel = {hdr.orig.channel_data.chan_label};
+      tmplabel = tmplabel(:);
+    else
+      tmplabel = label; % might work
+    end
+    sel      = find(strcmp('unknown', type));
     if ~isempty(sel)
-      type(sel(strncmp('E', label(sel), 1))) = {'eeg'};
+      type(sel) = ft_chantype(tmplabel(sel));
+      sel       = find(strcmp('unknown', type));
+      if ~isempty(sel)
+        type(sel(strncmp('E', label(sel), 1))) = {'eeg'};
+      end
     end
   end
   

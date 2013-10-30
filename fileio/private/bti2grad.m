@@ -69,25 +69,31 @@ elseif isfield(hdr, 'config'),
   chan_no = double([hdr.config.channel_data.chan_no]');
   name    = {hdr.config.channel_data.name}';
   
-  selMEG = chan_no(type==1);
-  selREF = chan_no(type==3);
+  selMEG  = chan_no(type==1); % these are the Axxx channels
+  selEEG  = chan_no(type==2); % these are the Exx channels and might also include ExG
+  selREF  = chan_no(type==3); % these include MLzA, MCzaA, GyyA
+  selAUX  = chan_no(type==4); % these are the Xx channels
+  selTRG  = chan_no(type==5); % these include TRIGGER, RESPONSE
+  selUA   = chan_no(type==6); % these are the UAx and UACurrent channels
+  selUnknown = chan_no(type==7);
+  selUnknown = chan_no(type==8); % these include SA1, SA2, SA3
+  
   selMEG = selMEG(:)';
   selREF = selREF(:)';
   numMEG = length(selMEG);
   numREF = length(selREF);
   
-  %sort magnetometers and references
+  % sort magnetometers and references
   
   %sortrows does not work here
   %for k = 1:length(selMEG)
   %  n(k) = str2num(name{selMEG(k)}(2:end));
   %end
   
-  selALL = [selMEG selREF];
+  selALL = [selMEG selREF]; % these are the channels with one or multiple coils
   numALL = length(selALL);
   
-  totalcoils = 0;
-  numcoils   = zeros(length(type),1);
+  numcoils = zeros(length(type),1);
   for i=1:numALL
     numcoils(selALL(i)) = hdr.config.channel_data(selALL(i)).device_data.total_loops;
   end

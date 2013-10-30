@@ -151,9 +151,11 @@ elseif ft_senstype(input, 'yokogawa') && isfield(input, 'chantype')
   
 elseif ft_senstype(input, 'bti') && isfield(input, 'chantype')
   chanunit(strcmp('meg',                 input.chantype)) = {'T'}; % this was the channel type until approx. 2 November 2012, see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1807
-  chanunit(strcmp('megmag',              input.chantype)) = {'T'}; % for most 4D/BTi systems
+  chanunit(strcmp('megmag',              input.chantype)) = {'T'}; % applies for magnetometer 4D/BTi systems
   chanunit(strcmp('eeg',                 input.chantype)) = {'V'}; % seems to be true for the example I have (VL)
-  chanunit(strcmp('meggrad',             input.chantype)) = {'unknown'}; % FIXME don't know whether it is T or T/m
+  chanunit(strcmp('meggrad',             input.chantype)) = {'T'}; % this is the plain difference in the field at the two coils, i.e. in T
+  chanunit(strcmp('refmag',              input.chantype)) = {'T'};
+  chanunit(strcmp('refgrad',             input.chantype)) = {'T'};
   
 elseif ft_senstype(input, 'itab') && isfield(input, 'chantype')
   chanunit(strcmp('megmag',              input.chantype)) = {'T'};
