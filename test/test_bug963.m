@@ -47,7 +47,8 @@ for i=1:length(dataset)
     filename = fullfile(rawdataprefix, dataset{i});
     disp(filename)
     hdr  = ft_read_header(filename, 'headerformat', headerformat);
-    grad = ft_read_sens(filename, 'fileformat', headerformat);
+    grad = ft_read_sens(filename, 'fileformat', headerformat, 'senstype', 'meg');
+    warning('writing reference solution to %s', outputfile);
     save(outputfile, 'hdr', 'grad');
   end
   
@@ -60,7 +61,7 @@ for i=1:length(dataset)
   filename = fullfile(rawdataprefix, dataset{i});
   disp(filename)
   hdr  = ft_read_header(filename, 'headerformat', headerformat);
-  grad = ft_read_sens(filename, 'fileformat', headerformat);
+  grad = ft_read_sens(filename, 'fileformat', headerformat, 'senstype', 'meg');
   
   % remove the grad.balance field if the current balancing is none
   % as that it is not interesting to compare

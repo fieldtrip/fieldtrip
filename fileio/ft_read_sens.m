@@ -70,6 +70,7 @@ end
 
 % get the options
 fileformat = ft_getopt(varargin, 'fileformat', ft_filetype(filename));
+senstype   = ft_getopt(varargin, 'senstype', 'eeg'); % can be eeg or meg, this is used to decide what to return if both are present in a fif file
 
 switch fileformat
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -150,8 +151,14 @@ switch fileformat
     % sometimes there can also be electrode position information in the header
     hdr = ft_read_header(filename, 'headerformat', fileformat);
     if isfield(hdr, 'elec') && isfield(hdr, 'grad')
-      warning('both electrode and gradiometer information is present, returning the electrode information');
-      sens = hdr.elec;
+      switch senstype
+        case 'eeg'
+          warning('both electrode and gradiometer information is present, returning the electrode information');
+          sens = hdr.elec;
+        case 'meg'
+          warning('both electrode and gradiometer information is present, returning the gradiometer information');
+          sens = hdr.grad;
+      end
     elseif ~isfield(hdr, 'elec') && ~isfield(hdr, 'grad')
       error('neither electrode nor gradiometer information is present');
     elseif isfield(hdr, 'grad')
@@ -162,11 +169,13 @@ switch fileformat
     
   case 'neuromag_mne_grad'
     % the file can contain both, force reading the gradiometer info
+    % note that this functionality overlaps with senstype=eeg/meg
     hdr = ft_read_header(filename,'headerformat','neuromag_mne');
     sens = hdr.grad;
     
   case 'neuromag_mne_elec'
     % the file can contain both, force reading the electrode info
+    % note that this functionality overlaps with senstype=eeg/meg
     hdr = ft_read_header(filename,'headerformat','neuromag_mne');
     sens = hdr.elec;
     
