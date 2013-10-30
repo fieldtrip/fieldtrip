@@ -32,9 +32,9 @@ function [sens] = ft_datatype_sens(sens, varargin)
 %
 % (upcoming) The default units for all sensor descriptions will be changed to
 %  SI units, i.e. T, V and m. It will be possible to convert the amplitude and
-%  distance units (e.g. from T to fT and from m to mm).
-%  It will be possible to express planar and axial gradiometer channels in units
-%  of amplitude or in units of amplitude/distance (i.e. gradient).
+%  distance units (e.g. from T to fT and from m to mm). It will also be possible
+%  to express planar and axial gradiometer channels in units of amplitude or in
+% units of amplitude/distance (i.e. gradient).
 %
 % (2011v2/latest) The chantype and chanunit have been added for MEG.
 %
@@ -114,6 +114,103 @@ end
 
 switch version
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  case 'upcoming' % this is under development and expected to become the standard in 2013
+    
+    % update it to the latest standard version
+    sens = ft_datatype_sens(sens, 'version', '2011v2');
+    
+    % perform some sanity checks
+    if ~ft_senstype(sens, 'meg')
+      error('unsupported type of gradiometer array "%s"', ft_senstype(sens));
+    end
+    
+    if ~any(strcmp(amplitude, {'T' 'mT' 'uT' 'nT' 'pT' 'fT'}))
+      error('unsupported unit of amplitude "%s"', amplitude);
+    end
+    
+    if ~any(strcmp(distance, {'m' 'dm' 'cm' 'mm'}))
+      error('unsupported unit of distance "%s"', distance);
+    end
+    
+    sel_m  = ~cellfun(@isempty, regexp(sens.chanunit, '/m$'));
+    sel_dm = ~cellfun(@isempty, regexp(sens.chanunit, '/dm$'));
+    sel_cm = ~cellfun(@isempty, regexp(sens.chanunit, '/cm$'));
+    sel_mm = ~cellfun(@isempty, regexp(sens.chanunit, '/mm$'));
+    
+    if     strcmp(sens.unit, 'm') && (any(sel_dm) || any(sel_cm) || any(sel_mm))
+      error('inconsistent units in input gradiometer');
+    elseif strcmp(sens.unit, 'dm') && (any(sel_m) || any(sel_cm) || any(sel_mm))
+      error('inconsistent units in input gradiometer');
+    elseif strcmp(sens.unit, 'cm') && (any(sel_m) || any(sel_dm) || any(sel_mm))
+      error('inconsistent units in input gradiometer');
+    elseif strcmp(sens.unit, 'mm') && (any(sel_m) || any(sel_dm) || any(sel_cm))
+      error('inconsistent units in input gradiometer');
+    end
+    
+    % update the units of distance
+    sens = ft_convert_units(sens, distance);
+    
+    % update the units of amplitude
+    nchan = length(sens.label);
+    for i=1:nchan
+      if ~isempty(regexp(sens.chanunit{i}, ['/' distance '$'], 'once'))
+        % this channel is expressed as amplitude per distance
+        sens.tra(i,:)    = sens.tra(i,:) * scalingfactor(sens.chanunit{i}, [amplitude '/' distance]);
+        sens.chanunit{i} = [amplitude '/' distance];
+      elseif ~isempty(regexp(sens.chanunit{i}, 'T$', 'once'))
+        % this channel is expressed as amplitude
+        sens.tra(i,:)    = sens.tra(i,:) * scalingfactor(sens.chanunit{i}, amplitude);
+        sens.chanunit{i} = amplitude;
+      else
+        error('unexpected channel unit "%s" in channel %d', i, sens.chanunit{i});
+      end
+    end
+    
+    % update the gradiometer scaling
+    if strcmp(scaling, 'amplitude')
+      for i=1:nchan
+        if strcmp(sens.chanunit{i}, [amplitude '/' distance])
+          % this channel is expressed as amplitude per distance
+          coil = find(abs(sens.tra(i,:))~=0);
+          if length(coil)~=2
+            error('unexpected number of coils contributing to channel %d', i);
+          end
+          baseline = norm(sens.coilpos(coil(1),:) - sens.coilpos(coil(2),:));
+          sens.tra(i,:)    = sens.tra(i,:)*baseline;  % scale with the baseline distance
+          sens.chanunit{i} = amplitude;
+        elseif strcmp(sens.chanunit{i}, amplitude)
+          % no conversion needed
+        else
+          error('unexpected channel unit "%s" in channel %d', i, sens.chanunit{i});
+        end % if
+      end % for
+      
+    elseif strcmp(scaling, 'amplitude/distance')
+      for i=1:nchan
+        if strcmp(sens.chanunit{i}, amplitude)
+          % this channel is expressed as amplitude
+          coil = find(abs(sens.tra(i,:))~=0);
+          if length(coil)==1
+            % this is a magnetometer channel, no conversion needed
+            continue
+          elseif length(coil)~=2
+            error('unexpected number of coils (%d) contributing to channel %s (%d)', length(coil), sens.label{i}, i);
+          end
+          baseline = norm(sens.coilpos(coil(1),:) - sens.coilpos(coil(2),:));
+          sens.tra(i,:)    = sens.tra(i,:)/baseline; % scale with the baseline distance
+          sens.chanunit{i} = [amplitude '/' distance];
+        elseif strcmp(sens.chanunit{i}, [amplitude '/' distance])
+          % no conversion needed
+        else
+          error('unexpected channel unit "%s" in channel %d', i, sens.chanunit{i});
+        end % if
+      end % for
+      
+    else
+      error('incorrect specification of gradiometer scaling');
+    end
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case '2011v2'
     if ~isempty(amplitude) || ~isempty(distance) || ~isempty(scaling)
       warning('amplitude, distance and scaling are not supported for version "%s"', version);
@@ -212,102 +309,6 @@ switch version
       end
     end
     
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  case 'upcoming' % this is under development and expected to become the standard in 2013
-    
-    % update it to the latest standard version
-    sens = ft_datatype_sens(sens, 'version', '2011v2');
-    
-    % perform some sanity checks
-    if ~ft_senstype(sens, 'meg')
-      error('unsupported type of gradiometer array "%s"', ft_senstype(sens));
-    end
-    
-    if ~any(strcmp(amplitude, {'T' 'mT' 'uT' 'nT' 'pT' 'fT'}))
-      error('unsupported unit of amplitude "%s"', amplitude);
-    end
-    
-    if ~any(strcmp(distance, {'m' 'dm' 'cm' 'mm'}))
-      error('unsupported unit of distance "%s"', distance);
-    end
-    
-    sel_m  = ~cellfun(@isempty, regexp(sens.chanunit, '/m$'));
-    sel_dm = ~cellfun(@isempty, regexp(sens.chanunit, '/dm$'));
-    sel_cm = ~cellfun(@isempty, regexp(sens.chanunit, '/cm$'));
-    sel_mm = ~cellfun(@isempty, regexp(sens.chanunit, '/mm$'));
-    
-    if     strcmp(sens.unit, 'm') && (any(sel_dm) || any(sel_cm) || any(sel_mm))
-      error('inconsistent units in input gradiometer');
-    elseif strcmp(sens.unit, 'dm') && (any(sel_m) || any(sel_cm) || any(sel_mm))
-      error('inconsistent units in input gradiometer');
-    elseif strcmp(sens.unit, 'cm') && (any(sel_m) || any(sel_dm) || any(sel_mm))
-      error('inconsistent units in input gradiometer');
-    elseif strcmp(sens.unit, 'mm') && (any(sel_m) || any(sel_dm) || any(sel_cm))
-      error('inconsistent units in input gradiometer');
-    end
-    
-    % update the units of distance
-    sens = ft_convert_units(sens, distance);
-    
-    % update the units of amplitude
-    nchan = length(sens.label);
-    for i=1:nchan
-      if ~isempty(regexp(sens.chanunit{i}, ['/' distance '$'], 'once'))
-        % this channel is expressed as amplitude per distance
-        sens.tra(i,:)    = sens.tra(i,:) * scalingfactor(sens.chanunit{i}, [amplitude '/' distance]);
-        sens.chanunit{i} = [amplitude '/' distance];
-      elseif ~isempty(regexp(sens.chanunit{i}, 'T$', 'once'))
-        % this channel is expressed as amplitude
-        sens.tra(i,:)    = sens.tra(i,:) * scalingfactor(sens.chanunit{i}, amplitude);
-        sens.chanunit{i} = amplitude;
-      else
-        error('unexpected channel unit "%s" in channel %d', i, sens.chanunit{i});
-      end
-    end
-    
-    % update the gradiometer scaling
-    if strcmp(scaling, 'amplitude')
-      for i=1:nchan
-        if strcmp(sens.chanunit{i}, [amplitude '/' distance])
-          % this channel is expressed as amplitude per distance
-          coil = find(abs(sens.tra(i,:))~=0);
-          if length(coil)~=2
-            error('unexpected number of coils contributing to channel %d', i);
-          end
-          baseline = norm(sens.coilpos(coil(1),:) - sens.coilpos(coil(2),:));
-          sens.tra(i,:)    = sens.tra(i,:)*baseline;  % scale with the baseline distance
-          sens.chanunit{i} = amplitude;
-        elseif strcmp(sens.chanunit{i}, amplitude)
-          % no conversion needed
-        else
-          error('unexpected channel unit "%s" in channel %d', i, sens.chanunit{i});
-        end % if
-      end % for
-      
-    elseif strcmp(scaling, 'amplitude/distance')
-      for i=1:nchan
-        if strcmp(sens.chanunit{i}, amplitude)
-          % this channel is expressed as amplitude
-          coil = find(abs(sens.tra(i,:))~=0);
-          if length(coil)==1
-            % this is a magnetometer channel, no conversion needed
-            continue
-          elseif length(coil)~=2
-            error('unexpected number of coils (%d) contributing to channel %s (%d)', length(coil), sens.label{i}, i);
-          end
-          baseline = norm(sens.coilpos(coil(1),:) - sens.coilpos(coil(2),:));
-          sens.tra(i,:)    = sens.tra(i,:)/baseline; % scale with the baseline distance
-          sens.chanunit{i} = [amplitude '/' distance];
-        elseif strcmp(sens.chanunit{i}, [amplitude '/' distance])
-          % no conversion needed
-        else
-          error('unexpected channel unit "%s" in channel %d', i, sens.chanunit{i});
-        end % if
-      end % for
-      
-    else
-      error('incorrect specification of gradiometer scaling');
-    end
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   otherwise
