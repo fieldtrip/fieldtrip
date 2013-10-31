@@ -38,11 +38,6 @@ function [segment] = ft_volumesegment(cfg, mri)
 %                       (default = 0.1)
 %   cfg.downsample     = integer, amount of downsampling before segmentation
 %                       (default = 1; i.e., no downsampling)
-%   cfg.coordsys       = string, specifying the coordinate system in which the anatomical data is
-%                       defined. This will be used if the input mri does not contain a
-%                       coordsys-field, (default = '', which results in the user being forced to
-%                       evaluate the coordinate system)
-%   cfg.units          = the physical units in which the output will be expressed. (default = 'mm')
 %
 % The desired segmentation output is specified with cfg.output as a string or cell-array of strings
 % and can contain
@@ -151,10 +146,10 @@ if ischar(mri),
 end
 
 % check if the input data is valid for this function
-mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes');
+mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes', 'hasunits', 'yes', 'hascoordsys', 'yes');
 
-% check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'renamed',  {'coordinates', 'coordsys'});
+% ensure that old and unsuipported options are not being relied on by the end-user's script
+cfg = ft_checkconfig(cfg, 'forbidden', {'units', 'inputcoordsys', 'coordsys', 'coordinates'});
 
 % set the defaults
 cfg.output           = ft_getopt(cfg, 'output',           'tpm');
@@ -162,8 +157,6 @@ cfg.downsample       = ft_getopt(cfg, 'downsample',       1);
 cfg.spmversion       = ft_getopt(cfg, 'spmversion',       'spm8');
 cfg.write            = ft_getopt(cfg, 'write',            'no');
 cfg.keepintermediate = ft_getopt(cfg, 'keepintermediate', 'no');
-cfg.coordsys         = ft_getopt(cfg, 'coordsys',         '');
-cfg.units            = ft_getopt(cfg, 'units',            '');
 
 % set default for smooth and threshold
 cfg.brainsmooth      = ft_getopt(cfg, 'brainsmooth',      ''); % see also below
@@ -274,15 +267,9 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if dotpm
   
-  % ensure that the data has interpretable units and that the coordinate
-  % system is in approximate spm space
-  if ~isfield(mri, 'unit'),     mri.unit     = cfg.units;    end
-  if ~isfield(mri, 'coordsys'), mri.coordsys = cfg.coordsys; end
-  
   % remember the original transformation matrix coordinate system
   original.transform = mri.transform;
   original.coordsys  = mri.coordsys;
-  
   mri = ft_convert_units(mri,    'mm');
   if isdeployed
     mri = ft_convert_coordsys(mri, 'spm', 2, cfg.template);

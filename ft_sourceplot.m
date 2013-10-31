@@ -193,15 +193,15 @@ if ischar(data)
 end
 
 % check if the input data is valid for this function
-data     = ft_checkdata(data, 'datatype', {'volume' 'source'}, 'feedback', 'yes');
+data     = ft_checkdata(data, 'datatype', {'volume' 'source'}, 'feedback', 'yes', 'hasunits', 'yes', 'hascoordsys', 'yes');
 issource = ft_datatype(data, 'source');
 isvolume = ft_datatype(data, 'volume');
 if issource && ~isfield(data, 'dim') && (~isfield(cfg, 'method') || ~strcmp(cfg.method, 'surface'))
   error('the input data needs to be defined on a regular 3D grid');
 end
 
-% check if the input configuration is valid for this function
-cfg = ft_checkconfig(cfg, 'renamed', {'inputcoordsys', 'coordsys'});
+% ensure that old and unsuipported options are not being relied on by the end-user's script
+cfg = ft_checkconfig(cfg, 'forbidden', {'units', 'inputcoordsys', 'coordsys', 'coordinates'});
 
 % set the defaults for all methods
 cfg.method        = ft_getopt(cfg, 'method', 'ortho');
@@ -241,8 +241,6 @@ cfg.colorbar            = ft_getopt(cfg, 'colorbar',            'yes');
 cfg.axis                = ft_getopt(cfg, 'axis',                'on');
 cfg.interactive         = ft_getopt(cfg, 'interactive',         'no');
 cfg.queryrange          = ft_getopt(cfg, 'queryrange',          3);
-cfg.coordsys            = ft_getopt(cfg, 'coordsys',            []);
-cfg.units               = ft_getopt(cfg, 'units',               []);
 
 if isfield(cfg, 'TTlookup'),
   error('TTlookup is old; now specify cfg.atlas, see help!');
@@ -275,30 +273,6 @@ cfg.renderer       = ft_getopt(cfg, 'renderer',      'opengl');
 if strcmp(cfg.location, 'interactive')
   cfg.location = 'auto';
   cfg.interactive = 'yes';
-end
-
-% ensure that the data has interpretable spatial units
-if     ~isfield(data, 'unit') && ~isempty(cfg.units)
-  data.unit = cfg.units;
-elseif ~isfield(data, 'unit') &&  isempty(cfg.units)
-  data = ft_convert_units(data);
-elseif  isfield(data, 'unit') && ~isempty(cfg.units)
-  data = ft_convert_units(data, cfg.units);
-elseif  isfield(data, 'unit') &&  isempty(cfg.units)
-  % nothing to do
-end
-
-% ensure that the data has an interpretable coordinate system
-if     ~isfield(data, 'coordsys') && ~isempty(cfg.coordsys)
-  data.coordsys = cfg.coordsys;
-elseif ~isfield(data, 'coordsys') &&  isempty(cfg.coordsys) && ~isempty(cfg.atlas)
-  % only needed if an atlas was specified for volumelookup
-  data = ft_convert_coordsys(data);
-elseif  isfield(data, 'coordsys') && ~isempty(cfg.coordsys) && ~isempty(cfg.atlas)
-  % only needed if an atlas was specified for volumelookup
-  data = ft_convert_coordsys(data, cfg.units);
-elseif  isfield(data, 'coordsys') &&  isempty(cfg.coordsys)
-  % nothing to do
 end
 
 % select the functional and the mask parameter

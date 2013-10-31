@@ -13,7 +13,6 @@ function [normalise] = ft_volumenormalise(cfg, interp)
 %   cfg.template    = filename of the template anatomical MRI (default = 'T1.mnc' for spm2 or 'T1.nii' for spm8)
 %   cfg.parameter   = cell-array with the functional data which has to be normalised (default = 'all')
 %   cfg.downsample  = integer number (default = 1, i.e. no downsampling)
-%   cfg.coordsys    = 'spm, 'ctf' or empty for interactive (default = [])
 %   cfg.name        = string for output filename
 %   cfg.write       = 'no' (default) or 'yes', writes the segmented volumes to SPM2
 %                     compatible analyze-file, with the suffix
@@ -80,10 +79,13 @@ if ischar(interp),
 end
 
 % check if the input data is valid for this function
-interp = ft_checkdata(interp, 'datatype', 'volume', 'feedback', 'yes');
+interp = ft_checkdata(interp, 'datatype', 'volume', 'feedback', 'yes', 'hasunits', 'yes', 'hascoordsys', 'yes');
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed', {'coordinates', 'coordsys'});
+
+% ensure that old and unsuipported options are not being relied on by the end-user's script
+cfg = ft_checkconfig(cfg, 'forbidden', {'units', 'inputcoordsys', 'coordsys', 'coordinates'});
 
 % set the defaults
 cfg.spmversion       = ft_getopt(cfg, 'spmversion',       'spm8');
@@ -92,8 +94,6 @@ cfg.downsample       = ft_getopt(cfg, 'downsample',       1);
 cfg.write            = ft_getopt(cfg, 'write',            'no');
 cfg.keepinside       = ft_getopt(cfg, 'keepinside',       'yes');
 cfg.keepintermediate = ft_getopt(cfg, 'keepintermediate', 'no');
-cfg.coordsys         = ft_getopt(cfg, 'coordsys',         '');
-cfg.units            = ft_getopt(cfg, 'units',            'mm');
 cfg.nonlinear        = ft_getopt(cfg, 'nonlinear',        'yes');
 cfg.smooth           = ft_getopt(cfg, 'smooth',           'no');
 
@@ -112,8 +112,6 @@ end
 % ensure that the data has interpretable units and that the coordinate
 % system is in approximate spm space and keep track of an initial transformation
 % matrix that approximately does the co-registration
-if ~isfield(interp, 'unit'),     interp.unit     = cfg.units;    end
-if ~isfield(interp, 'coordsys'), interp.coordsys = cfg.coordsys; end
 interp  = ft_convert_units(interp,    'mm');
 orig    = interp.transform;
 if isdeployed
