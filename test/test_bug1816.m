@@ -70,7 +70,3 @@ end
 
 assert(isfield(seg,'cfg'),'cfg is missing from segmentation'); 
 
-% check if other methods of segmentation are still working
-
-test_ft_volumesegment;
-
