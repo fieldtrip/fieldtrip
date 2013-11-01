@@ -349,6 +349,16 @@ if ~isempty(createsubcfg)
           'realfilter'
           'subspace'
           };
+      
+      case 'eloreta'
+        fieldname = {
+          'keepfilter'
+          'keepmom'
+          'lambda'
+          'normalize'
+          'normalizeparam'
+          'reducerank'
+          };
         
       case 'lcmv'
         fieldname = {
