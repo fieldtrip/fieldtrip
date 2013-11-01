@@ -34,7 +34,7 @@ function [sens] = ft_datatype_sens(sens, varargin)
 %  SI units, i.e. T, V and m. It will be possible to convert the amplitude and
 %  distance units (e.g. from T to fT and from m to mm). It will also be possible
 %  to express planar and axial gradiometer channels in units of amplitude or in
-% units of amplitude/distance (i.e. gradient).
+%  units of amplitude/distance (i.e. gradient).
 %
 % (2011v2/latest) The chantype and chanunit have been added for MEG.
 %
@@ -99,9 +99,9 @@ end
 
 % get the optional input arguments, which should be specified as key-value pairs
 version   = ft_getopt(varargin, 'version', 'latest');
-amplitude = ft_getopt(varargin, 'amplitude');
-distance  = ft_getopt(varargin, 'distance');
-scaling   = ft_getopt(varargin, 'scaling');
+amplitude = ft_getopt(varargin, 'amplitude'); % should be 'V' 'uV' 'T' 'mT' 'uT' 'nT' 'pT' 'fT'
+distance  = ft_getopt(varargin, 'distance');  % should be 'm' 'dm' 'cm' 'mm'
+scaling   = ft_getopt(varargin, 'scaling');   % should be 'amplitude' or 'amplitude/distance'
 
 if strcmp(version, 'latest')
   % NOTE TO SELF: once finalized, the code for 2011v2 and 2013 has to be merged into a single latest version
@@ -124,7 +124,7 @@ switch version
       error('unsupported type of gradiometer array "%s"', ft_senstype(sens));
     end
     
-    if ~any(strcmp(amplitude, {'T' 'mT' 'uT' 'nT' 'pT' 'fT'}))
+    if ~any(strcmp(amplitude, {'V' 'uV' 'T' 'mT' 'uT' 'nT' 'pT' 'fT'}))
       error('unsupported unit of amplitude "%s"', amplitude);
     end
     
@@ -147,17 +147,17 @@ switch version
       error('inconsistent units in input gradiometer');
     end
     
-    % update the units of distance
+    % update the units of distance, this also updates the tra matrix
     sens = ft_convert_units(sens, distance);
     
-    % update the units of amplitude
+    % update the tra matrix for the units of amplitude
     nchan = length(sens.label);
     for i=1:nchan
-      if ~isempty(regexp(sens.chanunit{i}, ['/' distance '$'], 'once'))
+      if ~isempty(regexp(sens.chanunit{i}, 'm$', 'once'))
         % this channel is expressed as amplitude per distance
         sens.tra(i,:)    = sens.tra(i,:) * scalingfactor(sens.chanunit{i}, [amplitude '/' distance]);
         sens.chanunit{i} = [amplitude '/' distance];
-      elseif ~isempty(regexp(sens.chanunit{i}, 'T$', 'once'))
+      elseif ~isempty(regexp(sens.chanunit{i}, '[T|V]$', 'once'))
         % this channel is expressed as amplitude
         sens.tra(i,:)    = sens.tra(i,:) * scalingfactor(sens.chanunit{i}, amplitude);
         sens.chanunit{i} = amplitude;
@@ -165,6 +165,9 @@ switch version
         error('unexpected channel unit "%s" in channel %d', i, sens.chanunit{i});
       end
     end
+    
+    % FIXME what is the default scaling? ctf=amplitude, neuromag=amplitude/distance
+    % at the moment the default is [], which means "don't change"
     
     % update the gradiometer scaling
     if strcmp(scaling, 'amplitude')
@@ -175,7 +178,7 @@ switch version
           if length(coil)~=2
             error('unexpected number of coils contributing to channel %d', i);
           end
-          baseline = norm(sens.coilpos(coil(1),:) - sens.coilpos(coil(2),:));
+          baseline         = norm(sens.coilpos(coil(1),:) - sens.coilpos(coil(2),:));
           sens.tra(i,:)    = sens.tra(i,:)*baseline;  % scale with the baseline distance
           sens.chanunit{i} = amplitude;
         elseif strcmp(sens.chanunit{i}, amplitude)
@@ -196,7 +199,7 @@ switch version
           elseif length(coil)~=2
             error('unexpected number of coils (%d) contributing to channel %s (%d)', length(coil), sens.label{i}, i);
           end
-          baseline = norm(sens.coilpos(coil(1),:) - sens.coilpos(coil(2),:));
+          baseline         = norm(sens.coilpos(coil(1),:) - sens.coilpos(coil(2),:));
           sens.tra(i,:)    = sens.tra(i,:)/baseline; % scale with the baseline distance
           sens.chanunit{i} = [amplitude '/' distance];
         elseif strcmp(sens.chanunit{i}, [amplitude '/' distance])

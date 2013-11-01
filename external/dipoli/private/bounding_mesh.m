@@ -1,4 +1,4 @@
-function [inside] = bounding_mesh(pos, pnt, tri);
+function [inside] = bounding_mesh(pos, pnt, tri)
 
 % BOUNDING_MESH determines if a point is inside/outside a triangle mesh 
 % whereby the bounding triangle mesh should be closed.
