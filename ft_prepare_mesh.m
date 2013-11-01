@@ -8,8 +8,8 @@ function [bnd, cfg] = ft_prepare_mesh(cfg, mri)
 % related to mri and are expressed in world coordinates.
 %
 % Use as
-%   bnd = ft_prepare_mesh(cfg, volume)
-%   bnd = ft_prepare_mesh(cfg, segmentation)
+%   bnd = ft_prepare_mesh(cfg, mri)
+%   bnd = ft_prepare_mesh(cfg, seg)
 %
 % Configuration options:
 %   cfg.interactive     = 'no' (default) or 'yes' (manual interaction)

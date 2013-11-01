@@ -95,7 +95,12 @@ reducerank      = ft_getopt(varargin, 'reducerank', 'no');
 normalize       = ft_getopt(varargin, 'normalize' , 'no');
 normalizeparam  = ft_getopt(varargin, 'normalizeparam', 0.5);
 weight          = ft_getopt(varargin, 'weight');
-units           = ft_getopt(varargin, 'units');
+chanunit        = ft_getopt(varargin, 'chanunit');   % this is something like V, T, or T/m
+dipoleunit      = ft_getopt(varargin, 'dipoleunit'); % this is something like nA*m
+
+if any(strcmp(varargin, 'units'))
+  error('the ''units'' option is not supported any more, please use ''chanunit''');
+end
 
 if ~isstruct(sens) && size(sens, 2)==3
   % definition of electrode positions only, restructure it
@@ -238,7 +243,7 @@ elseif ismeg
         % compute the leadfield for each gradiometer (linear combination of coils)
         lf = sens.tra * lf;
       end
-            
+      
     case 'openmeeg'
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % use code from OpenMEEG
@@ -246,23 +251,23 @@ elseif ismeg
       ft_hastoolbox('openmeeg', 1);
       
       if isfield(vol,'mat')
-          % switch the non adaptive algorithm on
-          nonadaptive = true; % HACK : this is hardcoded at the moment
-          dsm = openmeeg_dsm(pos, vol, nonadaptive);
-          [h2mm, s2mm]= openmeeg_megm(pos, vol, sens);
-
-          %if isfield(vol, 'mat')
-            lf = s2mm+h2mm*(vol.mat*dsm);
-          %else
-          %  error('No system matrix is present, BEM head model not calculated yet')
-          %end
-          if isfield(sens, 'tra')
-            % compute the leadfield for each gradiometer (linear combination of coils)
-            lf = sens.tra * lf;
-          end
+        % switch the non adaptive algorithm on
+        nonadaptive = true; % HACK : this is hardcoded at the moment
+        dsm = openmeeg_dsm(pos, vol, nonadaptive);
+        [h2mm, s2mm]= openmeeg_megm(pos, vol, sens);
+        
+        %if isfield(vol, 'mat')
+        lf = s2mm+h2mm*(vol.mat*dsm);
+        %else
+        %  error('No system matrix is present, BEM head model not calculated yet')
+        %end
+        if isfield(sens, 'tra')
+          % compute the leadfield for each gradiometer (linear combination of coils)
+          lf = sens.tra * lf;
+        end
       else
-            warning('No system matrix is present, Calling the Nemo Lab pipeline')
-            lf = ft_om_compute_lead(pos, vol, sens);
+        warning('No system matrix is present, Calling the Nemo Lab pipeline')
+        lf = ft_om_compute_lead(pos, vol, sens);
       end
     case 'infinite'
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -447,7 +452,7 @@ elseif iseeg
       % note that the electrode information is contained in the vol structure
       % tolerance = 1e-8;
       lf = leadfield_fns(pos, vol);
-
+      
     case 'interpolate'
       % note that the electrode information is contained within the vol structure
       lf = leadfield_interpolate(pos, vol);
@@ -536,13 +541,24 @@ if ~isempty(weight)
   end
 end
 
-if ~isempty(units)
+if ~isempty(chanunit) || ~isempty(dipoleunit)
   assert(strcmp(vol.unit,  'm'), 'unit conversion only possible for SI input units');
   assert(strcmp(sens.unit, 'm'), 'unit conversion only possible for SI input units');
-  assert(all(strcmp(sens.chanunit, 'V') | strcmp(sens.chanunit, 'T') | strcmp(sens.chanunit, 'T/m')), 'unit conversion only possible for SI input units');
-  % compute conversion factor and multiply each row of the matrix
-  scale = cellfun(@scalingfactor, sens.chanunit(:), units(:));
-  lf = bsxfun(@times, lf, scale(:));
 end
+
+if ~isempty(chanunit)
+  assert(all(strcmp(sens.chanunit, 'V') | strcmp(sens.chanunit, 'V/m') | strcmp(sens.chanunit, 'T') | strcmp(sens.chanunit, 'T/m')), 'unit conversion only possible for SI input units');
+  % compute conversion factor and multiply each row of the matrix
+  scale = cellfun(@scalingfactor, sens.chanunit(:), chanunit(:));
+  lf = bsxfun(@times, lf, scale(:));
+  % prior to this conversion, the units might be  (T/m)/(A*m) for planar gradients or   (V/m)/(A*m) for bipolar EEG
+  % after this conversion, the units will be     (T/cm)/(A*m)                      or (uV/mm)/(A*m)
+end
+
+if ~isempty(dipoleunit)
+  scale = scalingfactor('A*m', dipoleunit);
+  lf    = scale*lf;
+end
+
 
 

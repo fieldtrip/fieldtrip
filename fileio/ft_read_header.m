@@ -1827,11 +1827,12 @@ if ~isfield(hdr, 'chanunit')
   hdr.chanunit = ft_chanunit(hdr);
 end % for
 
-% ensure that the output grad/elec is according to the latest definition
-% allow both elec and sens to be present
+% ensure that the output grad is according to the latest definition
 if isfield(hdr, 'grad')
   hdr.grad = ft_datatype_sens(hdr.grad);
 end
+
+% ensure that the output elec is according to the latest definition
 if isfield(hdr, 'elec')
   hdr.elec = ft_datatype_sens(hdr.elec);
 end

@@ -15,7 +15,7 @@ function [vol, cfg] = ft_prepare_headmodel(cfg, data)
 %
 % Use as
 %   vol = ft_prepare_headmodel(cfg)       or
-%   vol = ft_prepare_headmodel(cfg, bnd)  with the output of FT_PREPARE_MESH or FT_READ_HEADSHAPE
+%   vol = ft_prepare_headmodel(cfg, mesh) with the output of FT_PREPARE_MESH or FT_READ_HEADSHAPE
 %   vol = ft_prepare_headmodel(cfg, seg)  with the output of FT_VOLUMESEGMENT
 %   vol = ft_prepare_headmodel(cfg, elec) with the output of FT_READ_SENS
 %
@@ -171,13 +171,25 @@ cfg.baseline        = ft_getopt(cfg, 'baseline');
 cfg.singlesphere    = ft_getopt(cfg, 'singlesphere');
 cfg.tissueval       = ft_getopt(cfg, 'tissueval'); % FEM
 cfg.transform       = ft_getopt(cfg, 'transform');
+cfg.siunits         = ft_getopt(cfg, 'siunits', 'no'); % yes/no, convert the input and continue with SI units
 
 if nargin>1,
-  data = ft_checkdata(data);
+  % ensure that it has the units specified
+  data = ft_checkdata(data, 'hasunits', 'yes');
 else
   data = [];
 end
 
+if cfg.siunits
+  % convert to SI units
+  if ~isempty(data)
+    data = ft_convert_units(data, 'm');
+  end
+  if ~isempty(cfg.grad)
+    cfg.grad = ft_convert_units(cfg.grad, 'm');
+  end
+end
+    
 % if the conductivity is in the data cfg.conductivity is overwritten
 if nargin>1 && isfield(data, 'cond')
   cfg.conductivity = data.cond;
@@ -187,13 +199,14 @@ if isfield(data, 'bnd')
   data = data.bnd;
 end
 
-% boolean variables to manages the different input types
+% boolean variables to manages the different geometrical input data objects
 input_mesh  = isfield(data, 'pnt') && ~isfield(data, 'label');
 input_seg   = ft_datatype(data, 'segmentation');
-input_sens  = ft_datatype(data, 'sens');
+input_elec  = ft_datatype(data, 'sens');
 
 % the construction of the volume conductor model is performed below
 switch cfg.method
+  
   case 'asa'
     if ~ft_filetype(cfg.hdmfile, 'asa_vol')
       error('You must supply a valid cfg.hdmfile for use with ASA headmodel')
@@ -201,7 +214,6 @@ switch cfg.method
     vol = ft_headmodel_asa(cfg.hdmfile);
     
   case {'bemcp' 'dipoli' 'openmeeg'}
-    
     % the low-level functions all need a mesh
     if input_mesh
       if ~isfield(data, 'tri')
@@ -227,7 +239,6 @@ switch cfg.method
     end
     
   case 'concentricspheres'
-    
     % the low-level functions needs surface points, triangles are not needed
     if input_mesh
       geometry = data;
@@ -236,7 +247,7 @@ switch cfg.method
       tmpcfg.numvertices = cfg.numvertices;
       tmpcfg.tissue = cfg.tissue;
       geometry = ft_prepare_mesh(tmpcfg, data);
-    elseif input_sens
+    elseif input_elec
       geometry.pnt = data.chanpos;
       geometry.unit = data.unit;
     elseif ~isempty(cfg.headshape) && isnumeric(cfg.headshape)
@@ -252,7 +263,6 @@ switch cfg.method
     vol = ft_headmodel_concentricspheres(geometry, 'conductivity', cfg.conductivity, 'fitind', cfg.fitind);
     
   case 'halfspace'
-    
     if input_mesh
       geometry = data;
     else
@@ -269,7 +279,6 @@ switch cfg.method
     vol = ft_headmodel_infinite();
     
   case {'localspheres' 'singlesphere' 'singleshell'}
-    
     % these requires one boundary mesh or set of surface points
     if input_mesh
       geometry = data;
@@ -304,7 +313,7 @@ switch cfg.method
         geometry = ft_prepare_mesh(tmpcfg, data);
       end
     elseif strcmp(cfg.method, 'singlesphere') % this can behave like concentricspheres here
-      if input_sens
+      if input_elec
         geometry.pnt = data.chanpos;
         geometry.unit = data.unit;
       elseif ~isempty(cfg.headshape) && isnumeric(cfg.headshape)
@@ -349,8 +358,7 @@ switch cfg.method
     end
     
   case {'simbio'}
-    
-    if input_sens || isfield(data, 'pos') || input_mesh
+    if input_elec || isfield(data, 'pos') || input_mesh
       geometry = data; % more serious checks of validity of the mesh occur inside ft_headmodel_simbio
     else
       error('You must provide a mesh with tetrahedral or hexahedral elements, where each element has a scalar or tensor conductivity');
@@ -358,7 +366,6 @@ switch cfg.method
     vol = ft_headmodel_simbio(geometry, 'conductivity', cfg.conductivity);
     
   case {'fns'}
-    
     if input_seg
       data = ft_datatype_segmentation(data, 'segmentationstyle', 'indexed');
     else
@@ -368,7 +375,6 @@ switch cfg.method
     vol = ft_headmodel_fns(data.seg, 'tissue', cfg.tissue, 'tissueval', cfg.tissueval, 'tissuecond', cfg.conductivity, 'sens', sens, 'transform', cfg.transform, 'unit', cfg.unit);
     
   otherwise
-    
     error('unsupported method "%s"', cfg.method);
     
 end

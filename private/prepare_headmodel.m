@@ -53,7 +53,7 @@ vol = ft_fetch_vol(cfg, data);
 % get the gradiometer or electrode definition
 sens = ft_fetch_sens(cfg, data);
 
-% ensure that the units are the same
+% ensure that the geometrical units are the same
 vol  = ft_convert_units(vol, cfg.sourceunits);
 sens = ft_convert_units(sens, cfg.sourceunits);
 

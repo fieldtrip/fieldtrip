@@ -24,11 +24,11 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 %   cfg.coordsys       = 'ctf' (default when specifying cfg.method =
 %                         'interactive' or 'fiducial') or 'spm' (default
 %                         when specifying cfg.method = 'landmark').
-%                         Specifies the output coordinate system of the head. This
-%                         string specifies the origin and the axes of the
+%                         Specifies the output coordinate system of the head.
+%                         This string specifies the origin and the axes of the
 %                         coordinate system. supported coordinate systems
-%                         are: 'ctf', '4d', 'yokogawa', 'neuromag', 'itab'
-%                         'spm', 'tal'.
+%                         are 'ctf', '4d', 'yokogawa', 'neuromag', 'itab'
+%                         'spm' and 'tal'.
 %   cfg.clim           = [min max], scaling of the anatomy color (default
 %                        is to adjust to the minimum and maximum)
 %   cfg.parameter      = 'anatomy' the parameter which is used for the

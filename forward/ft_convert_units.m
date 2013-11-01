@@ -74,6 +74,14 @@ else
     siz = norm(idrange(obj.chanpos));
     unit = ft_estimate_units(siz);
     
+  elseif isfield(obj, 'elecpos') && ~isempty(obj.elecpos)
+    siz = norm(idrange(obj.elecpos));
+    unit = ft_estimate_units(siz);
+
+  elseif isfield(obj, 'coilpos') && ~isempty(obj.coilpos)
+    siz = norm(idrange(obj.coilpos));
+    unit = ft_estimate_units(siz);
+
   elseif isfield(obj, 'pnt') && ~isempty(obj.pnt)
     siz = norm(idrange(obj.pnt));
     unit = ft_estimate_units(siz);
@@ -164,10 +172,10 @@ if isfield(obj, 'tra') && isfield(obj, 'chanunit')
   % find the gradiometer channels that are expressed as unit of field strength divided by unit of distance, e.g. T/cm
   for i=1:length(obj.chanunit)
     tok = tokenize(obj.chanunit{i}, '/');
-    if length(tok)==1
+    if ~isempty(regexp(obj.chanunit{i}, '[T|V]$', 'once'))
       % assume that it is T or so
-    elseif length(tok)==2
-      % assume that it is T/cm or so
+    elseif ~isempty(regexp(obj.chanunit{i}, 'm$', 'once'))
+      % assume that it is T/m or so
       obj.tra(i,:)    = obj.tra(i,:) / scale;
       obj.chanunit{i} = [tok{1} '/' target];
     else
