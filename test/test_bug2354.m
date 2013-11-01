@@ -1,7 +1,7 @@
 function test_bug2354
 
 % MEM 1gb
-% WALLTIME 00:02:00
+% WALLTIME 00:05:00
 
 % TEST test_bug2354
 % TEST ft_topoplotER ft_multiplotER ft_singleplotER

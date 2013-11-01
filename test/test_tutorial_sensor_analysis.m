@@ -1,7 +1,7 @@
 function test_tutorial_sensor_analysis(datadir)
 
 % MEM 2gb
-% WALLTIME 0:03:00
+% WALLTIME 0:05:00
 
 % TEST test_tutorial_sensor_overview
 % TEST ft_redefinetrial ft_freqanalysis ft_timelockanalysis ft_appenddata ft_prepare_neighbours ft_megplanar ft_combineplanar ft_multiplotER ft_multiplotTFR ft_connectivityanalysis
