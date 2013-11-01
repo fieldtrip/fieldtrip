@@ -287,6 +287,18 @@ for i=1:numel(fn)
       switch cfg.method
         case 'mean'
           tmp(j,:) = arraymean1(dat(seg==j,:));
+        case 'mean_thresholded'
+          cfg.mean = ft_getopt(cfg, 'mean', struct('threshold', []));
+          if isempty(cfg.mean.threshold),
+            error('when cfg.method = ''mean_thresholded'', you should specify a cfg.mean.threshold');
+          end
+          if numel(cfg.mean.threshold)==size(dat,1)
+            % assume one threshold per vertex
+            threshold = cfg.mean.threshold(seg==j,:);
+          else
+            threshold = cfg.mean.threshold;
+          end
+          tmp(j,:) = arraymean1(dat(seg==j,:), threshold); 
         case 'median'
           tmp(j,:) = arraymedian1(dat(seg==j,:));
         case 'min'
@@ -334,8 +346,24 @@ ft_postamble savevar parcel
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTIONS to complute something over the first dimension
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function y = arraymean1(x)
-y = mean(x,1);
+function y = arraymean1(x, threshold)
+
+if nargin==1
+  y = mean(x,1);
+else
+  if numel(threshold)==1
+    % scalar comparison is possible
+  elseif size(threshold,1) == size(x,1)
+    % assume threshold to be column vector
+    threshold = repmat(threshold, [1, size(x,2)]);
+  end
+  sel = sum(x>threshold,2);
+  if ~isempty(sel)
+    y   = mean(x(sel>0,:),1);
+  else
+    y   = nan+zeros(1,size(x,2));
+  end
+end
 
 function y = arraymedian1(x)
 y = median(x,1);
