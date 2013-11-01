@@ -328,6 +328,10 @@ if strcmp(dtype, 'timelock') && hasrpt,
       tmpmask = varargin{i}.(cfg.maskparameter);
     end
     varargin{i} = ft_timelockanalysis(tmpcfg, varargin{i});
+    % rename avg back into the parameter
+    varargin{i}.(cfg.parameter) = varargin{i}.avg;
+    varargin{i} = rmfield(varargin{i}, 'avg');
+    
     % put back mask
     if ~isempty(cfg.maskparameter)
       varargin{i}.(cfg.maskparameter) = tmpmask;
