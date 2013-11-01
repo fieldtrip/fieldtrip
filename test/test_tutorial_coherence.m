@@ -1,7 +1,7 @@
 function test_tutorial_coherence
 
 % MEM 4gb
-% WALLTIME 0:08:00
+% WALLTIME 0:12:00
 
 % TEST test_tutorial_coherence
 % TEST ft_freqanalysis ft_connectivityanalysis ft_multiplotER ft_singleplotER ft_topoplotER ft_sourceanalysis ft_sourceinterpolate
