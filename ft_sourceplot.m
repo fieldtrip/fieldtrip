@@ -192,16 +192,23 @@ if ischar(data)
   error('please use cfg.inputfile instead of specifying the input variable as a sting');
 end
 
+% ensure that old and unsupported options are not being relied on by the end-user's script
+% instead of specifying cfg.coordsys, the user should specify the coordsys in the data
+cfg = ft_checkconfig(cfg, 'forbidden', {'units', 'inputcoordsys', 'coordinates'});
+cfg = ft_checkconfig(cfg, 'deprecated', 'coordsys');
+if isfield(cfg, 'coordsys') && ~isfield(data, 'coordsys')
+  data.coordsys = cfg.coordsys;
+end
+
 % check if the input data is valid for this function
-data     = ft_checkdata(data, 'datatype', {'volume' 'source'}, 'feedback', 'yes', 'hasunits', 'yes', 'hascoordsys', 'yes');
+data     = ft_checkdata(data, 'datatype', {'volume' 'source'}, 'feedback', 'yes', 'hasunits', 'yes');
+
+% determine the type of data
 issource = ft_datatype(data, 'source');
 isvolume = ft_datatype(data, 'volume');
 if issource && ~isfield(data, 'dim') && (~isfield(cfg, 'method') || ~strcmp(cfg.method, 'surface'))
   error('the input data needs to be defined on a regular 3D grid');
 end
-
-% ensure that old and unsuipported options are not being relied on by the end-user's script
-cfg = ft_checkconfig(cfg, 'forbidden', {'units', 'inputcoordsys', 'coordsys', 'coordinates'});
 
 % set the defaults for all methods
 cfg.method        = ft_getopt(cfg, 'method', 'ortho');

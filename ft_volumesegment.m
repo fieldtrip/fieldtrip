@@ -145,11 +145,17 @@ if ischar(mri),
   error('please use cfg.inputfile instead of specifying the input variable as a string');
 end
 
+% ensure that old and unsupported options are not being relied on by the end-user's script
+% instead of specifying cfg.coordsys, the user should specify the coordsys in the data
+cfg = ft_checkconfig(cfg, 'forbidden', {'units', 'inputcoordsys', 'coordinates'});
+cfg = ft_checkconfig(cfg, 'deprecated', 'coordsys');
+if isfield(cfg, 'coordsys') && ~isfield(mri, 'coordsys')
+  % from revision 8680 onward (Oct 2013) it is not recommended to use cfg.coordsys to specify the coordinate system of the data.
+  mri.coordsys = cfg.coordsys;
+end
+
 % check if the input data is valid for this function
 mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes', 'hasunits', 'yes', 'hascoordsys', 'yes');
-
-% ensure that old and unsuipported options are not being relied on by the end-user's script
-cfg = ft_checkconfig(cfg, 'forbidden', {'units', 'inputcoordsys', 'coordsys', 'coordinates'});
 
 % set the defaults
 cfg.output           = ft_getopt(cfg, 'output',           'tpm');
