@@ -323,6 +323,7 @@ if ~isempty(createsubcfg)
           'ygrid'
           'zgrid'
           'resolution'
+          'unit'
           'filter'
           'leadfield'
           'inside'
