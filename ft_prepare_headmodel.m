@@ -150,7 +150,6 @@ cfg.hdmfile         = ft_getopt(cfg, 'hdmfile');
 cfg.headshape       = ft_getopt(cfg, 'headshape');
 cfg.unit            = ft_getopt(cfg, 'unit');
 cfg.conductivity    = ft_getopt(cfg, 'conductivity');
-cfg.sourceunits     = ft_getopt(cfg, 'sourceunits');
 
 % volume related options
 cfg.tissue          = ft_getopt(cfg, 'tissue');
@@ -159,19 +158,19 @@ cfg.threshold       = ft_getopt(cfg, 'threshold');
 
 % other options
 cfg.numvertices     = ft_getopt(cfg, 'numvertices', 3000);
-cfg.isolatedsource  = ft_getopt(cfg, 'isolatedsource'); % for dipoli and openmeeg
-cfg.fitind          = ft_getopt(cfg, 'fitind'); % concentricspheres
-cfg.point           = ft_getopt(cfg, 'point'); % halfspace
-cfg.submethod       = ft_getopt(cfg, 'submethod'); % halfspace
-cfg.grad            = ft_getopt(cfg, 'grad'); % localspheres
+cfg.isolatedsource  = ft_getopt(cfg, 'isolatedsource'); % used for dipoli and openmeeg
+cfg.fitind          = ft_getopt(cfg, 'fitind');         % used for concentricspheres
+cfg.point           = ft_getopt(cfg, 'point');          % used for halfspace
+cfg.submethod       = ft_getopt(cfg, 'submethod');      % used for halfspace
+cfg.grad            = ft_getopt(cfg, 'grad');           % used for localspheres
 cfg.feedback        = ft_getopt(cfg, 'feedback');
 cfg.radius          = ft_getopt(cfg, 'radius');
 cfg.maxradius       = ft_getopt(cfg, 'maxradius');
 cfg.baseline        = ft_getopt(cfg, 'baseline');
 cfg.singlesphere    = ft_getopt(cfg, 'singlesphere');
-cfg.tissueval       = ft_getopt(cfg, 'tissueval'); % FEM
+cfg.tissueval       = ft_getopt(cfg, 'tissueval');      % used for FEM
 cfg.transform       = ft_getopt(cfg, 'transform');
-cfg.siunits         = ft_getopt(cfg, 'siunits', 'no'); % yes/no, convert the input and continue with SI units
+cfg.siunits         = ft_getopt(cfg, 'siunits', 'no');  % yes/no, convert the input and continue with SI units
 
 if nargin>1,
   % ensure that it has the units specified

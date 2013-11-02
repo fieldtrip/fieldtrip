@@ -116,9 +116,12 @@ if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
   cfg.headshape = struct(cfg.headshape);
 end
 
-% put the low-level options pertaining to the dipole grid in their own field
-cfg = ft_checkconfig(cfg, 'createsubcfg',  {'grid'});
 cfg = ft_checkconfig(cfg, 'renamedvalue',  {'headshape', 'headmodel', []});
+
+% put the low-level options pertaining to the dipole grid in their own field
+cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'}); % this is moved to cfg.grid.tight by the subsequent createsubcfg
+cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved to cfg.grid.unit by the subsequent createsubcfg
+cfg = ft_checkconfig(cfg, 'createsubcfg',  {'grid'});
 
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')

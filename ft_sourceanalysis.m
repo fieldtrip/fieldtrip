@@ -206,12 +206,16 @@ cfg.killwulf         = ft_getopt(cfg, 'killwulf', 'yes');
 cfg.channel          = ft_getopt(cfg, 'channel',  'all');
 cfg.supdip           = ft_getopt(cfg, 'supdip',        []);
 
-% if ~isfield(cfg, 'reducerank'),     cfg.reducerank = 'no';      end  %
 % the default for this depends on EEG/MEG and is set below
-% put the low-level options pertaining to the source reconstruction method in their own field
-% put the low-level options pertaining to the dipole grid in their own field
+% if ~isfield(cfg, 'reducerank'),     cfg.reducerank = 'no';      end  
 
-cfg = ft_checkconfig(cfg, 'createsubcfg',  {cfg.method, 'grid'});
+% put the low-level options pertaining to the source reconstruction method in their own field
+cfg = ft_checkconfig(cfg, 'createsubcfg',  cfg.method);
+
+% put the low-level options pertaining to the dipole grid in their own field
+cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'}); % this is moved to cfg.grid.tight by the subsequent createsubcfg
+cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved to cfg.grid.unit by the subsequent createsubcfg
+cfg = ft_checkconfig(cfg, 'createsubcfg', 'grid');
 
 cfg.(cfg.method).keepfilter    = ft_getopt(cfg.(cfg.method), 'keepfilter',    'no');
 cfg.(cfg.method).keepcsd       = ft_getopt(cfg.(cfg.method), 'keepcsd',       'no');
@@ -321,13 +325,11 @@ else
   try, tmpcfg.grid        = cfg.grid;         end
   try, tmpcfg.mri         = cfg.mri;          end
   try, tmpcfg.headshape   = cfg.headshape;    end
-  try, tmpcfg.tightgrid   = cfg.tightgrid;    end
   try, tmpcfg.symmetry    = cfg.symmetry;     end
   try, tmpcfg.smooth      = cfg.smooth;       end
   try, tmpcfg.threshold   = cfg.threshold;    end
   try, tmpcfg.spheremesh  = cfg.spheremesh;   end
   try, tmpcfg.inwardshift = cfg.inwardshift;  end
-  try, tmpcfg.sourceunits = cfg.sourceunits;  end
   grid = ft_prepare_sourcemodel(tmpcfg);
 end
 

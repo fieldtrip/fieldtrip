@@ -128,9 +128,11 @@ ft_preamble debug
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'deprecated', 'mriunits');
-cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'});
+
+% put the low-level options pertaining to the dipole grid in their own field
+cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'}); % this is moved to cfg.grid.tight by the subsequent createsubcfg
 cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved to cfg.grid.unit by the subsequent createsubcfg
-cfg = ft_checkconfig(cfg, 'createsubcfg', {'grid'});
+cfg = ft_checkconfig(cfg, 'createsubcfg',  {'grid'});
 
 % set the defaults
 cfg.symmetry   = ft_getopt(cfg, 'symmetry',   []);
@@ -273,6 +275,7 @@ end
 if strcmp(cfg.grid.unit, 'auto')
   if isfield(cfg.grid, 'pos')
     % estimate the units based on the existing source positions
+    cfg.grid = rmfield(cfg.grid, 'unit'); % remove 'auto' and have ft_convert_units determine it properly
     cfg.grid = ft_convert_units(cfg.grid);
   elseif ~isempty(sens)
     % copy the units from the sensor array
