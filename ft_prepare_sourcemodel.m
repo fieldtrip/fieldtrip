@@ -273,7 +273,7 @@ catch
 end
 
 if strcmp(cfg.grid.unit, 'auto')
-  if isfield(cfg.grid, 'pos')
+  if isfield(cfg.grid, 'pos') && size(cfg.grid.pos,1)>10
     % estimate the units based on the existing source positions
     cfg.grid = rmfield(cfg.grid, 'unit'); % remove 'auto' and have ft_convert_units determine it properly
     cfg.grid = ft_convert_units(cfg.grid);
