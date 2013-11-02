@@ -7,9 +7,9 @@ function [planar] = planarchannelset(data)
 % Use as
 %   [planar] = planarchannelset(data)
 %
-% See also SENSTYPE
+% See also FT_SENSTYPE, FT_SENSLABEL
 
-% Copyright (C) 2005-2008, Robert Oostenveld
+% Copyright (C) 2005-2013, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -530,8 +530,8 @@ switch lower(ft_senstype(data))
       };
 
   case 'neuromag306'
-    count1 = mean(ismember(data.label, senslabel('neuromag306')));
-    count2 = mean(ismember(data.label, senslabel('neuromag306alt')));
+    count1 = mean(ismember(data.label, ft_senslabel('neuromag306')));
+    count2 = mean(ismember(data.label, ft_senslabel('neuromag306alt')));
 
     if count1>count2
       % it looks like the channels have a space in them
