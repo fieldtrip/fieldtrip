@@ -281,8 +281,11 @@ if strcmp(dtype, 'timelock') && hasrpt,
   tmpcfg        = [];
   tmpcfg.trials = cfg.trials;
   data          = ft_timelockanalysis(tmpcfg, data);
-  data.(cfg.parameter) = data.avg;
-  data          = rmfield(data, 'avg');
+  if ~strcmp(cfg.parameter, 'avg')
+    % rename avg back into the parameter
+    data.(cfg.parameter) = data.avg;
+    data                 = rmfield(data, 'avg');
+  end
   dimord        = data.dimord;
   dimtok        = tokenize(dimord, '_');
 elseif strcmp(dtype, 'freq') && hasrpt,

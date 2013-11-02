@@ -271,8 +271,11 @@ if strcmp(dtype, 'timelock') && hasrpt,
   for i=1:Ndata
     varargin{i} = ft_timelockanalysis(tmpcfg, varargin{i});
   end
-  varargin{i}.(cfg.parameter) = varargin{i}.avg;
-  varargin{i}   = rmfield(varargin{i}, 'avg');
+  if ~strcmp(cfg.parameter, 'avg')
+    % rename avg back into the parameter
+    varargin{i}.(cfg.parameter) = varargin{i}.avg;
+    varargin{i}                 = rmfield(varargin{i}, 'avg');
+  end
   dimord        = varargin{1}.dimord;
   dimtok        = tokenize(dimord, '_');
 elseif strcmp(dtype, 'freq') && hasrpt,
