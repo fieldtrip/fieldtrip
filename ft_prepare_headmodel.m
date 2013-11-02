@@ -180,7 +180,7 @@ else
   data = [];
 end
 
-if cfg.siunits
+if istrue(cfg.siunits)
   % convert to SI units
   if ~isempty(data)
     data = ft_convert_units(data, 'm');
