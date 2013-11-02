@@ -41,7 +41,6 @@ function [vol, sens, cfg] = prepare_headmodel(cfg, data)
 % set the defaults
 if ~isfield(cfg, 'channel'),      cfg.channel = 'all';   end
 if ~isfield(cfg, 'order'),        cfg.order = 10;        end % order of expansion for Nolte method; 10 should be enough for real applications; in simulations it makes sense to go higher
-if ~isfield(cfg, 'sourceunits'),  cfg.sourceunits = 'cm';  end
 
 if nargin<2
   data = [];
@@ -53,9 +52,11 @@ vol = ft_fetch_vol(cfg, data);
 % get the gradiometer or electrode definition
 sens = ft_fetch_sens(cfg, data);
 
-% ensure that the geometrical units are the same
-vol  = ft_convert_units(vol, cfg.sourceunits);
-sens = ft_convert_units(sens, cfg.sourceunits);
+if ~strcmp(vol.unit, sens.unit)
+  % ensure that the geometrical units are the same
+  warning('convering the sensor array units to "%s"', vol.unit);
+  sens = ft_convert_units(sens, vol.unit);
+end
 
 if isfield(data, 'topolabel')
   % the data reflects a componentanalysis, where the topographic and the
