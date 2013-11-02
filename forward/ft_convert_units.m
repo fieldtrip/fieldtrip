@@ -172,12 +172,14 @@ if isfield(obj, 'tra') && isfield(obj, 'chanunit')
   % find the gradiometer channels that are expressed as unit of field strength divided by unit of distance, e.g. T/cm
   for i=1:length(obj.chanunit)
     tok = tokenize(obj.chanunit{i}, '/');
-    if ~isempty(regexp(obj.chanunit{i}, '[T|V]$', 'once'))
-      % assume that it is T or so
-    elseif ~isempty(regexp(obj.chanunit{i}, 'm$', 'once'))
+    if ~isempty(regexp(obj.chanunit{i}, 'm$', 'once'))
       % assume that it is T/m or so
       obj.tra(i,:)    = obj.tra(i,:) / scale;
       obj.chanunit{i} = [tok{1} '/' target];
+    elseif ~isempty(regexp(obj.chanunit{i}, '[T|V]$', 'once'))
+      % assume that it is T or V, don't do anything
+    elseif strcmp(obj.chanunit{i}, 'unknown')
+      % assume that it is T or V, don't do anything
     else
       error('unexpected units %s', obj.chanunit{i});
     end
