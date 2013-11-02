@@ -311,7 +311,7 @@ elseif ft_senstype(input, 'bti')
     configname = {hdr.orig.config.channel_data.name};
     configtype = [hdr.orig.config.channel_data.type];
     
-    if ~identical(configname(:), hdr.label(:))
+    if ~isequal(configname(:), hdr.label(:))
       % reorder the channels according to the order in hdr.label
       [sel1, sel2] = match_str(hdr.label, configname);
       configname = configname(sel2);
