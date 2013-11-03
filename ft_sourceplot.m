@@ -714,8 +714,13 @@ if isequal(cfg.method,'ortho')
   
   % inspect transform matrix, if the voxels are isotropic then the screen
   % pixels also should be square
-  hasIsotropicVoxels = norm(data.transform(1:3,1)) == norm(data.transform(1:3,2))...
-    && norm(data.transform(1:3,2)) == norm(data.transform(1:3,3));
+  hasIsotropicVoxels = 0;
+  if isfield(data, 'transform'),
+    % NOTE: it is not a given that the data to be plotted has a transform,
+    % i.e. source data (uninterpolated)
+    hasIsotropicVoxels = norm(data.transform(1:3,1)) == norm(data.transform(1:3,2))...
+      && norm(data.transform(1:3,2)) == norm(data.transform(1:3,3));
+  end
   
   xsize(1) = 0.82*dim(1)/xdim;
   xsize(2) = 0.82*dim(2)/xdim;
