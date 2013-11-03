@@ -185,7 +185,9 @@ cfg.funcname = mfilename;
 [cfg] = topoplot_common(cfg, varargin{:});
 
 % remove it again
-cfg = rmfield(cfg, 'funcname');
+if isfield(cfg, 'funcname'),
+  cfg = rmfield(cfg, 'funcname');
+end
 
 % do the general cleanup and bookkeeping at the end of the function
 % this will replace the ft_topoplotTFR callinfo with that of ft_topoplotER

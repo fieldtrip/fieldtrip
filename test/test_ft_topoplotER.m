@@ -12,9 +12,7 @@ function test_ft_topoplotER
 
 pwdir = pwd;
 
-%cd('/Volumes/home/common/matlab/fieldtrip/data/test/latest/raw/eeg');
-cd(dccnfilename('/home/common/matlab/fieldtrip/data/test/latest/raw/eeg'));
-load('preproc_neuroscan16');
+load(dccnfilename('/home/common/matlab/fieldtrip/data/test/latest/raw/eeg/preproc_neuroscan16'));
 
 %there's an unresolved issue with duplicate labels 'FREE'
 %FIXME
@@ -138,7 +136,9 @@ figure;ft_topoplotER(cfg, granger);drawnow
 stat = freq;
 stat.stat = freq.powspctrm(:,10);
 stat = rmfield(stat, 'freq');
-stat = rmfield(stat, 'cumtapcnt');
+if isfield(stat, 'cumtapcnt'), 
+  stat = rmfield(stat, 'cumtapcnt');
+end
 stat = rmfield(stat, 'powspctrm');
 stat.dimord = 'chan';
 
