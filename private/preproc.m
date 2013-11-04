@@ -108,7 +108,7 @@ function [dat, label, time, cfg] = preproc(dat, label, time, cfg, begpadding, en
 % $Id$
 
 % compute fsample
-fsample = 1./mean(diff(time));
+fsample = 1./nanmean(diff(time));
 
 if nargin<5 || isempty(begpadding)
   begpadding = 0;
