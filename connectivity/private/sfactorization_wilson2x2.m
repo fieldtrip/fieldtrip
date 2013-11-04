@@ -1,15 +1,19 @@
 function [H, Z, S, psi] = sfactorization_wilson2x2(S,freq,Niterations,tol,cmbindx,fb,init)
 
 % Usage  : [H, Z, psi] = sfactorization_wilson(S,fs,freq);
+%
 % Inputs : S (1-sided, 3D-spectral matrix in the form of Channel x Channel x frequency) 
 %        : fs (sampling frequency in Hz)
 %        : freq (a vector of frequencies) at which S is given
+%
 % Outputs: H (transfer function)
 %        : Z (noise covariance)
 %        : S (cross-spectral density 1-sided)
 %        : psi (left spectral factor)
+%
 % This function is an implemention of Wilson's algorithm (Eq. 3.1)
-% for spectral matrix factorization
+% for spectral matrix factorization.
+%
 % Ref: G.T. Wilson,"The Factorization of Matricial Spectral Densities,"
 % SIAM J. Appl. Math.23,420-426(1972).
 % Written by M. Dhamala & G. Rangarajan, UF, Aug 3-4, 2006.
@@ -26,14 +30,16 @@ I      = repmat(eye(2),[1 1 m N2]); % Defining 2 x 2 identity matrix
 
 %Step 1: Forming 2-sided spectral densities for ifft routine in matlab
 for c = 1:m
-  % f_ind = 0;
   Stmp  = S(cmbindx(c,:),cmbindx(c,:),:);
   for f_ind = 1:(N+1)
-  % for f = freq
-    % f_ind             = f_ind+1;
     Sarr(:,:,c,f_ind) = Stmp(:,:,f_ind);
-    if(f_ind>1)
+    if freq(f_ind)~=0,
       Sarr(:,:,c,2*N+2-f_ind) = Stmp(:,:,f_ind).';
+    else
+      % the input cross-spectral density is assumed to be weighted with a
+      % factor of 2 in all non-DC bins, therefore weight the DC-bin with a
+      % factor of 2 to get a correct two-sided representation
+      Sarr(:,:,c,f_ind) = Sarr(:,:,c,f_ind).*2;
     end
   end
 end
