@@ -33,7 +33,7 @@ for k = 1:numel(datainfo)
   
   [ok,msg] = identical(freq, datanew,'reltol',eps*1e6);
   if ~ok
-    error('stored and computed data not identical: %s', msg);
+    error('stored and computed data not identical: %s', msg{:});
   end
 end
 
@@ -51,7 +51,7 @@ for k = 1:numel(datainfo)
   
   [ok,msg] = identical(freq, datanew,'reltol',eps*1e6);
   if ~ok
-    error('stored and computed data not identical: %s', msg);
+    error('stored and computed data not identical: %s', msg{:});
   end
 end
 
