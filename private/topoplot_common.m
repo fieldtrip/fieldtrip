@@ -70,7 +70,7 @@ if Ndata>1 && ~isnumeric(varargin{end})
     % to have all data avalaible. at the moment I couldn't think of
     % anything better than using an additional indx variable and letting the 
     % function recursively call itself.
-    ft_topoplotTFR(cfg, varargin{1:Ndata}, indx);
+    topoplot_common(cfg, varargin{1:Ndata}, indx);
     indx = indx + 1;
   end
   return

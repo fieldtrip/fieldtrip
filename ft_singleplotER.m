@@ -582,8 +582,10 @@ if isempty(get(gcf,'Name'))
     dataname = cfg.dataname;
   elseif nargin > 1
     dataname = inputname(2);
+    cfg.dataname = {inputname(2)};
     for k = 2:Ndata
       dataname = [dataname ', ' inputname(k+1)];
+      cfg.dataname{end+1} = inputname(k+1);
     end
   else
     dataname = cfg.inputfile;

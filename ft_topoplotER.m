@@ -153,7 +153,7 @@ ft_preamble provenance
 % this is just a wrapper function around the common code that does all the hard work
 % the reason for this wrapper function is to have a placeholder for ER-specific documentation
 
-if nargin > 1
+if nargin > 1 && ~isfield(cfg, 'dataname')
   cfg.dataname = {inputname(2)};
   for k = 3:nargin
     cfg.dataname{end+1} = inputname(k);
