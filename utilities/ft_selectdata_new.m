@@ -237,7 +237,18 @@ else
         if ~any(isnan(selrpt))
           % FIXME could also be subject
           varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'rpt')), selrpt, avgoverrpt, datfields);
+          varargin{i} = makeselection_rpt(varargin{i}, selrpt); % avgoverrpt for the supporting fields is dealt with later
         end
+        
+        %shiftdim the datfields, because convention has it that this should
+        %be done
+        if avgoverrpt,
+          for k =1:numel(datfields)
+            varargin{i}.(datfields{k}) = shiftdim(varargin{i}.(datfields{k}),1);
+          end
+        end  
+          
+        
       end % varargin
       
       
