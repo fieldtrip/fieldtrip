@@ -205,7 +205,10 @@ else
   fn  = fieldnames(varargin{1})';
   sel = false(size(fn));
   for i=1:numel(fn)
-    sel(i) = isequal(size(varargin{1}.(fn{i})), dimsiz) || isequal(size(varargin{1}.(fn{i})), [dimsiz 1]);
+    sel(i) = (isequal(size(varargin{1}.(fn{i})), dimsiz)...
+      || isequal(size(varargin{1}.(fn{i})), [dimsiz 1]))...
+      && ~strcmp(fn{i}, 'label') && ~strcmp(fn{i}, 'time')...
+      && ~strcmp(fn{i}, 'freq'); % make sure we do not treat a descriptive field as data
   end
   
   % select the fields that represent the data
