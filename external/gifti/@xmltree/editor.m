@@ -7,13 +7,14 @@ function editor(tree)
 %  This is a beta version of <xmltree/view> successor
 %
 %  See also XMLTREE
-%_______________________________________________________________________
-% Copyright (C) 2002-2008  http://www.artefact.tk/
+%__________________________________________________________________________
+% Copyright (C) 2002-2011  http://www.artefact.tk/
 
-% Guillaume Flandin <guillaume@artefact.tk>
+% Guillaume Flandin
 % $Id$
 
-error(nargchk(1,1,nargin));
+
+%error(nargchk(1,1,nargin));
 
 if ~isempty(getfilename(tree))
     title = getfilename(tree);
@@ -34,7 +35,7 @@ doUpdate([],[],h);
 
 set(h,'HandleVisibility','callback');
 
-%=======================================================================
+%==========================================================================
 
 function h = initWindow(title)
 
@@ -154,7 +155,7 @@ uicontrol('Style', 'pushbutton', ...
     'Tag', 'closebutton', ...
     'Callback', {@doClose,h});
 
-%=======================================================================
+%==========================================================================
 
 function doClose(fig,evd,h)
     s = getappdata(h, 'save');
@@ -304,7 +305,7 @@ function doAttributes(fig,evd,h)
         setappdata(h, 'save', 1); %- only if attributes have been modified
     end
     
-%=======================================================================
+%==========================================================================
 
 function doList(fig,evd,h)
     tree =    getappdata(h, 'tree');
@@ -355,7 +356,7 @@ function doUpdate(fig,evd,h)
     set(handles.xmllistbox, 'String', batchString);
     setappdata(h, 'uidlist', uidList);
     
-%=======================================================================
+%==========================================================================
 
 function [batchString, uidList] = doUpdateR(tree, uid, o)
     if nargin < 2, uid = root(tree); end

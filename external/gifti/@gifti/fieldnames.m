@@ -11,6 +11,6 @@ function names = fieldnames(this)
 
 if numel(this) > 1, warning('Only handle scalar objects yet.'); end
 
-pfn = {'vertices' 'faces' 'normals' 'cdata' 'mat'};
+pfn = {'vertices' 'faces' 'normals' 'cdata' 'mat' 'labels'};
 
 names = pfn(isintent(this,pfn));

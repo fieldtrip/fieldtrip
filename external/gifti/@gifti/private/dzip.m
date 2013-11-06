@@ -13,7 +13,9 @@ function Z = dzip(M)
 
 M = typecast(M(:),'uint8');
 f = java.io.ByteArrayOutputStream();
+%f = javaObject('java.io.ByteArrayOutputStream');
 g = java.util.zip.DeflaterOutputStream(f);
+%g = javaObject('java.util.zip.DeflaterOutputStream',f);
 g.write(M);
 g.close;
 Z = typecast(f.toByteArray,'uint8');

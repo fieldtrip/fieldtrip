@@ -15,14 +15,14 @@ function list = find(varargin)
 % Grammar for addressing parts of an XML document: 
 %        XML Path Language XPath (http://www.w3.org/TR/xpath)
 % Example: /element1//element2[1]/element3[5]/element4
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
 % Find elements in an XML tree with specified characteristics or given
 % a path (using a subset of XPath language).
-%_______________________________________________________________________
-% Copyright (C) 2002-2008  http://www.artefact.tk/
+%__________________________________________________________________________
+% Copyright (C) 2002-2011  http://www.artefact.tk/
 
-% Guillaume Flandin <guillaume@artefact.tk>
+% Guillaume Flandin
 % $Id$
 
 % TODO:
@@ -48,7 +48,7 @@ else
    error('[XMLTree] Arguments must be parameter/value pairs.');
 end
 
-%=======================================================================
+%==========================================================================
 function list = sub_find_subtree1(varargin)
     list = [];
     for i=1:length(varargin{2})
@@ -57,7 +57,7 @@ function list = sub_find_subtree1(varargin)
         list = [list res];
     end
 
-%=======================================================================
+%==========================================================================
 function list = sub_find_subtree2(varargin)
     uid = varargin{2};
     list = [];
@@ -69,7 +69,7 @@ function list = sub_find_subtree2(varargin)
                 varargin{1}{uid}.contents,varargin{3:end})];
     end
 
-%=======================================================================
+%==========================================================================
 function match = sub_comp_element(varargin)
 match = 0;
 try
@@ -102,7 +102,7 @@ end
 %   end
 %end
 
-%=======================================================================
+%==========================================================================
 function list = sub_pathfinder(tree,pth)
     %- Search for the delimiter '/' in the path
     i = strfind(pth,'/');
@@ -162,7 +162,7 @@ function list = sub_pathfinder(tree,pth)
         j = j + 1;
     end
     
-%=======================================================================
+%==========================================================================
 function list = sub_findchild(tree,listt,elmt)
     list = [];
     for a=1:length(listt)

@@ -6,16 +6,17 @@ function value = get(tree,uid,parameter)
 % uid       - array of uid's
 % parameter - property name
 % value     - property value
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
 % Get object properties of a tree given their UIDs.
-%_______________________________________________________________________
-% Copyright (C) 2002-2008  http://www.artefact.tk/
+%__________________________________________________________________________
+% Copyright (C) 2002-2011  http://www.artefact.tk/
 
-% Guillaume Flandin <guillaume@artefact.tk>
+% Guillaume Flandin
 % $Id$
 
-error(nargchk(2,3,nargin));
+
+%error(nargchk(2,3,nargin));
 
 value = cell(size(uid));
 uid = uid(:);

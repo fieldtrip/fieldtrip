@@ -3,15 +3,16 @@ function view(tree)
 % FORMAT view(tree)
 % 
 % tree   - XMLTree object
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
 % Display an XML tree in a graphical interface
-%_______________________________________________________________________
-% Copyright (C) 2002-2008  http://www.artefact.tk/
+%__________________________________________________________________________
+% Copyright (C) 2002-2011  http://www.artefact.tk/
 
-% Guillaume Flandin <guillaume@artefact.tk>
+% Guillaume Flandin
 % $Id$
 
-error(nargchk(1,1,nargin));
+
+%error(nargchk(1,1,nargin));
 
 editor(tree);

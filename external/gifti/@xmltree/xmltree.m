@@ -8,17 +8,17 @@ function tree = xmltree(varargin)
 %     tree = xmltree;             % creates a minimal XML tree: '<tag/>'
 %     tree = xmltree('foo.xml');  % creates a tree from XML file 'foo.xml'
 %     tree = xmltree('<tag>content</tag>') % creates a tree from string
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
 % This is the constructor of the XMLTree class. 
 % It creates a tree of an XML 1.0 file (after parsing) that is stored 
 % using a Document Object Model (DOM) representation.
 % See http://www.w3.org/TR/REC-xml for details about XML 1.0.
 % See http://www.w3.org/DOM/ for details about DOM platform.
-%_______________________________________________________________________
-% Copyright (C) 2002-2008  http://www.artefact.tk/
+%__________________________________________________________________________
+% Copyright (C) 2002-2011  http://www.artefact.tk/
 
-% Guillaume Flandin <guillaume@artefact.tk>
+% Guillaume Flandin
 % $Id$
 
 switch(nargin)

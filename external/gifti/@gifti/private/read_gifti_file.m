@@ -143,7 +143,7 @@ catch
 end
     
 [unused,unused,mach] = fopen(1);
-sb = @deal; %inline('x');
+sb = @(x) x;
 try
     if (strcmp(s.Endian,'LittleEndian') && ~isempty(strmatch('ieee-be',mach))) ...
         || (strcmp(s.Endian,'BigEndian') && ~isempty(strmatch('ieee-le',mach)))
@@ -168,7 +168,7 @@ switch s.Encoding
         if isempty(p)
             s.ExternalFileName = fullfile(pwd,[f e]);
         end
-        if true
+        if false
             fid = fopen(s.ExternalFileName,'r');
             if fid == -1
                 error('[GIFTI] Unable to read binary file %s.',s.ExternalFileName);
@@ -178,7 +178,7 @@ switch s.Encoding
             fclose(fid);
         else
             d = file_array(s.ExternalFileName, s.Dim, tp.class, ...
-                str2double(s.ExternalFileOffset),1,0,'ro');
+                str2double(s.ExternalFileOffset),1,0,'rw');
         end
         
     otherwise
