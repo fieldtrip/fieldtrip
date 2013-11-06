@@ -98,16 +98,40 @@ if isfield(grid, 'leadfield')
       lfy(j) = grid.leadfield{j}(i,2);
       lfz(j) = grid.leadfield{j}(i,3);
     end
-    dat = cat(4, lfx, lfy, lfz);
+    dat = cat(4, lfx, lfy, lfz);    
+        
+    if i == 1
+        ft_write_mri('masklf.nii',~~dat(:, :, :, 1), 'transform', grid.transform, 'spmversion', 'SPM12', 'dataformat', 'nifti_spm');
+        spm_smooth('masklf.nii', 'smasklf.nii', grid.transform(1,1)*[1 1 1]);
+        mask = spm_read_vols(spm_vol('smasklf.nii'));
+        spm_unlink('masklf.nii');
+        spm_unlink('smasklf.nii');
+    end
+        
+    ft_write_mri('rawlf.nii', dat, 'transform', grid.transform, 'spmversion', 'SPM12', 'dataformat', 'nifti_spm');
+    spm_smooth('rawlf.nii', 'srawlf.nii', grid.transform(1,1)*[1 1 1]);
+    
+    
+    dat = spm_read_vols(spm_vol('srawlf.nii'));
+    dat = dat./repmat(mask, [1 1 1, size(dat, 4)]);
+    dat(~isfinite(dat)) = 0;
+    
+    spm_unlink('rawlf.nii');
+    spm_unlink('srawlf.nii');
+    
+    
+    vol.filename{i} = sprintf('%s_%s.nii', filename, sens.label{i});
+    fprintf('writing single channel leadfield to %s\n', vol.filename{i})
+    
     if exist('spm_bsplinc', 'file')
         dat = cat(4, dat, 0*dat);
         for k = 1:3
             dat(:, :, :, k+3) = spm_bsplinc(squeeze(dat(:, :, :, k)), [4 4 4 0 0 0]);
         end
     end
-    vol.filename{i} = sprintf('%s_%s.nii', filename, sens.label{i});
-    fprintf('writing single channel leadfield to %s\n', vol.filename{i})
-    ft_write_mri(vol.filename{i}, dat, 'spmversion', 'SPM12', 'dataformat', 'nifti_spm');
+    
+    ft_write_mri(vol.filename{i}, dat , 'transform', grid.transform, 'spmversion', 'SPM12', 'dataformat', 'nifti_spm');
+       
   end
   
   filename = sprintf('%s.mat', filename);
