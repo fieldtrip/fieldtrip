@@ -1,10 +1,6 @@
-function test_historical
-
-% MEM 4gb
-% WALLTIME 00:03:01
+function inspect_historical
 
 % this function creates the datafiles for the historical fieldtrip versions
-
 % it should not run unattended
 return
 
