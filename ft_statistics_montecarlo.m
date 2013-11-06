@@ -116,18 +116,18 @@ cfg = ft_checkconfig(cfg, 'forbidden',   {'ztransform', ...
                                           'voxelstatistic'});
 
 % set the defaults for the main function
-if ~isfield(cfg, 'alpha'),               cfg.alpha    = 0.05;            end
-if ~isfield(cfg, 'tail'),                cfg.tail     = 0;               end
-if ~isfield(cfg, 'correctm'),            cfg.correctm = 'no';            end % no, max, cluster, bonferroni, holm, fdr
-if ~isfield(cfg, 'resampling'),          cfg.resampling = 'permutation'; end % permutation, bootstrap
-if ~isfield(cfg, 'feedback'),            cfg.feedback = 'text';          end
-if ~isfield(cfg, 'ivar'),                cfg.ivar     = 'all';           end
-if ~isfield(cfg, 'uvar'),                cfg.uvar     = [];              end
-if ~isfield(cfg, 'cvar'),                cfg.cvar     = [];              end
-if ~isfield(cfg, 'wvar'),                cfg.wvar     = [];              end
-if ~isfield(cfg, 'correcttail'),         cfg.correcttail = 'no';         end % for the number of tails in a two-sided test
-if ~isfield(cfg, 'randomseed'),          cfg.randomseed = 'yes';         end
-if ~isfield(cfg, 'precondition'),        cfg.precondition = [];          end
+cfg.alpha        = ft_getopt(cfg, 'alpha',      0.05);
+cfg.tail         = ft_getopt(cfg, 'tail',       0);
+cfg.correctm     = ft_getopt(cfg, 'correctm',   'no');
+cfg.resampling   = ft_getopt(cfg, 'resampling', 'permutation');
+cfg.feedback     = ft_getopt(cfg, 'feedback',   'text');
+cfg.ivar         = ft_getopt(cfg, 'ivar',       'all');
+cfg.uvar         = ft_getopt(cfg, 'uvar',       'all');
+cfg.cvar         = ft_getopt(cfg, 'cvar',       []);
+cfg.wvar         = ft_getopt(cfg, 'wvar',       []);
+cfg.correcttail  = ft_getopt(cfg, 'correcttail',  'no');
+cfg.randomseed   = ft_getopt(cfg, 'randomseed',   'yes');
+cfg.precondition = ft_getopt(cfg, 'precondition', []);
 
 % explicit check for option 'yes' in cfg.correctail.
 if strcmp(cfg.correcttail,'yes')
@@ -136,11 +136,15 @@ end
 
 if strcmp(cfg.correctm, 'cluster')
   % set the defaults for clustering
-  if ~isfield(cfg, 'clusterstatistic'),    cfg.clusterstatistic = 'maxsum';     end  % no, max, maxsize, maxsum, wcm
-  if ~isfield(cfg, 'clusterthreshold'),    cfg.clusterthreshold = 'parametric'; end  % parametric, nonparametric_individual, nonparametric_common
-  if ~isfield(cfg, 'clusteralpha'),        cfg.clusteralpha = 0.05;             end
-  if ~isfield(cfg, 'clustercritval'),      cfg.clustercritval = [];             end
-  if ~isfield(cfg, 'clustertail'),         cfg.clustertail = cfg.tail;          end
+  cfg.clusterstatistic = ft_getopt(cfg, 'clusterstatistic', 'maxsum');
+  cfg.clusterthreshold = ft_getopt(cfg, 'clusterthreshold', 'parametric');
+  cfg.clusteralpha     = ft_getopt(cfg, 'clusteralpha',     0.05);
+  cfg.clustercritval   = ft_getopt(cfg, 'clustercritval',   []);
+  cfg.clustertail      = ft_getopt(cfg, 'clustertail',      cfg.tail);
+  
+  % NOTE: here it would be good to deal with the neighbourhood of the
+  % channels/triangulation
+  
 else
   % these options only apply to clustering, to ensure appropriate configs they are forbidden when _not_ clustering
   cfg = ft_checkconfig(cfg, 'unused', {'clusterstatistic', 'clusteralpha', 'clustercritval', 'clusterthreshold', 'clustertail', 'neighbours'});
