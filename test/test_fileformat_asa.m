@@ -1,6 +1,6 @@
 function test_fileformat_asa
 
-% MEM 1gb
+% MEM 1500mb
 % WALLTIME 00:03:05
 
 % TEST test_fileformat_asa

@@ -1,6 +1,6 @@
 function test_randomseed
 
-% MEM 1gb
+% MEM 1500mb
 % WALLTIME 00:03:01
 
 % TEST test_randomseed

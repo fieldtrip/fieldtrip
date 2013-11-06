@@ -1,6 +1,6 @@
 function test_ft_preprocessing(datainfo, writeflag, version)
 
-% MEM 1gb
+% MEM 1500mb
 % WALLTIME 00:03:11
 
 % TEST test_ft_preprocessing
@@ -19,7 +19,7 @@ if nargin<3
   version = 'latest';
 end
 
-for k = 7%1:numel(datainfo)
+for k = 1:numel(datainfo)
   datanew = preprocessing10trials(datainfo(k), writeflag, version);
 
   fname = fullfile(datainfo(k).origdir,version,'raw',datainfo(k).type,['preproc_',datainfo(k).datatype]);
@@ -32,9 +32,8 @@ for k = 7%1:numel(datainfo)
   datanew2     = datanew; 
   datanew2.hdr = [];
   
-  % do the comparison with the header removed, the output argument still
-  % contains the header
-  assert(isequalwithequalnans(data, datanew2));
+  % do the comparison with the header removed, the output argument still contains the header
+  assert(isequalwithequalnans(data, datanew2));  
 end
 
 

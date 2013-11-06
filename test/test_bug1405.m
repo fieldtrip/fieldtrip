@@ -1,7 +1,7 @@
 function test_bug1405
 
-% MEM 1gb
-% WALLTIME 00:03:01
+% MEM 1500mb
+% WALLTIME 00:05:01
 
 % TEST test_bug1405
 % TEST ft_checkdata ft_senstype

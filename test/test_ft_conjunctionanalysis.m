@@ -1,6 +1,6 @@
 function test_ft_conjunctionanalysis
 
-% MEM 1gb
+% MEM 1500mb
 % WALLTIME 0:03:01
 
 % TEST test_ft_conjunctionanalysis

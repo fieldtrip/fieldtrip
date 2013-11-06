@@ -1,6 +1,6 @@
 function test_shared_virtual_channels
 
-% MEM 1gb
+% MEM 1500mb
 % WALLTIME 00:03:09
 
 % TEST test_shared_virtual_channels

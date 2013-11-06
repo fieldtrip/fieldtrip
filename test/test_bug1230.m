@@ -1,6 +1,6 @@
 function test_bug1230
 
-% MEM 1gb
+% MEM 1500mb
 % WALLTIME 00:03:01
 
 % this is not really pertaining to a bug, but to a feature request.

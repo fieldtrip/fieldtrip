@@ -1,6 +1,6 @@
 function test_nanstat
 
-% MEM 1gb
+% MEM 1500mb
 % WALLTIME 0:03:01
 
 % TEST test_nanstat nansum nanmean nanstd nanvar nanvar_base

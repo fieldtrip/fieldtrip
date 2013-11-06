@@ -1,6 +1,6 @@
 function test_spm_ft_integration
 
-% MEM 1gb
+% MEM 1500mb
 % WALLTIME 00:04:55
 
 % TEST test_spm_ft_integration

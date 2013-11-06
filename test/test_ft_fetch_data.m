@@ -1,6 +1,6 @@
 function test_ft_fetch_data
 
-% MEM 2gb
+% MEM 4gb
 % WALLTIME 00:03:11
 
 % TEST ft_fetch_data

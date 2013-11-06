@@ -1,6 +1,6 @@
 function test_tutorial_eventrelatedaveraging(dataset)
 
-% MEM 1gb
+% MEM 1500mb
 % WALLTIME 00:03:44
 
 % TEST test_tutorial_eventrelatedaveraging

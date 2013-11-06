@@ -1,6 +1,6 @@
 function test_bug367
 
-% MEM 1gb
+% MEM 1500mb
 % WALLTIME 00:04:01
 
 % this test script is for http://bugzilla.fcdonders.nl/show_bug.cgi?id=367

@@ -1,6 +1,6 @@
 function test_bug1114
 
-% MEM 1gb
+% MEM 1500mb
 % WALLTIME 00:03:32
 
 % This function parses all fieldtrip main and module functions and determines

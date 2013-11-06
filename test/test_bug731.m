@@ -1,6 +1,6 @@
 function test_bug731
 
-% MEM 1gb
+% MEM 1500mb
 % WALLTIME 00:03:09
 
 % this function checks problems encountered with the neuromag digital

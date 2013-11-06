@@ -1,6 +1,6 @@
 function test_bug1573
 
-% MEM 1gb
+% MEM 1500mb
 % WALLTIME 00:03:01
 
 % TEST ft_read_mri ft_volumnrealign ft_sourceinterpolate

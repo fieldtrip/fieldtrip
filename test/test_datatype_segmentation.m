@@ -1,6 +1,6 @@
 function test_datatype_segmentation
 
-% MEM 1gb
+% MEM 1500mb
 % WALLTIME 00:03:06
 
 % TEST test_datatype_segmentation

@@ -1,7 +1,7 @@
 function test_bug1443
 
-% MEM 1gb
-% WALLTIME 00:04:44
+% MEM 1500mb
+% WALLTIME 00:03:44
 
 % TEST test_bug1443
 % TEST ft_rejectcomponent ft_componentanalysis

@@ -1,7 +1,7 @@
 function test_bug1707
 
 % MEM 2gb
-% WALLTIME 0:03:00
+% WALLTIME 0:05:00
 
 % TEST test_bug1707
 % TEST ft_channelrepair ft_combineplanar ft_componentanalysis

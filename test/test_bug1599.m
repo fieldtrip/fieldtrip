@@ -1,6 +1,6 @@
 function test_bug1599(datainfo, version)
 
-% MEM 1gb
+% MEM 1500mb
 % WALLTIME 00:03:08
 
 % TEST test_bug1599

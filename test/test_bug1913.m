@@ -1,6 +1,6 @@
 function test_bug1913
 
-% MEM 2gb
+% MEM 1500mb
 
 % TEST test_bug1913
 

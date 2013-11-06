@@ -1,6 +1,6 @@
 function test_ft_channelrepair
 
-% MEM 1gb
+% MEM 1500mb
 % WALLTIME 00:03:18
 
 % TEST test_ft_channelrepair

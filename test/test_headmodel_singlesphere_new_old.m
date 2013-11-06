@@ -1,6 +1,6 @@
 function test_headmodel_singlesphere_new_old
 
-% MEM 1gb
+% MEM 1500mb
 % WALLTIME 00:03:06
 
 % TEST test_headmodel_singlesphere_new_old

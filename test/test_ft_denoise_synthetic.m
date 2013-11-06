@@ -1,6 +1,6 @@
 function test_ft_denoise_synthetic
 
-% MEM 1gb
+% MEM 1500mb
 % WALLTIME 00:03:04
 
 % TEST test_ft_denoise_synthetic

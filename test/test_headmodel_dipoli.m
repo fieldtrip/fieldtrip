@@ -1,6 +1,6 @@
 function test_headmodel_dipoli
 
-% MEM 1gb
+% MEM 1500mb
 % WALLTIME 00:03:04
 
 % TEST test_headmodel_dipoli

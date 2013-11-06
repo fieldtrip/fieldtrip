@@ -1,6 +1,6 @@
 function test_ft_read_sens
 
-% MEM 1gb
+% MEM 1500mb
 % WALLTIME 00:03:14
 
 % TEST test_ft_read_sens

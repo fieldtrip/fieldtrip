@@ -1,6 +1,6 @@
 function test_ft_megplanar
 
-% MEM 1gb
+% MEM 1500mb
 % WALLTIME 00:04:00
 
 % TEST test_ft_megplanar

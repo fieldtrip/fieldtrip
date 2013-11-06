@@ -1,6 +1,6 @@
 function test_tutorial_multivariateanalysis(datadir, dmltdir)
 
-% MEM 1gb
+% MEM 1500mb
 % WALLTIME 00:03:35
 
 % TEST test_tutorial_multivariateanalysis

@@ -1,6 +1,6 @@
 function test_yokogawa
 
-% MEM 1gb
+% MEM 1500mb
 % WALLTIME 00:03:03
 
 % TEST test_yokogawa

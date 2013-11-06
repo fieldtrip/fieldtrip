@@ -20,7 +20,7 @@ segbf=segmentedmri;clear segmentedmri
 % Note to developer: if these assertss fail, is current code wrong, or should
 % tutorial be updated?
 assert(isequalwithequalnans(segmentedmri_bf.gray,segbf.gray))
-assert(isequalwithequalnans(segmentedmri_bf,segbf))
+assert(isequalwithequalnans(rmfield(segmentedmri_bf, 'cfg'),rmfield(segbf, 'cfg')))
 
 % headmodel_meg, as it's called in the headmodel_meg tutorial
 mri=ft_read_mri('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/Subject01.mri');

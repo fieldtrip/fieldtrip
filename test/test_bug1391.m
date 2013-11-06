@@ -1,6 +1,6 @@
 function test_bug1391
 
-% MEM 1gb
+% MEM 1500mb
 % WALLTIME 00:03:05
 
 % this functions tests some potential issues with numerical accuracy

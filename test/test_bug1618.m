@@ -1,7 +1,7 @@
 function test_suite = test_bug1618
 
-% MEM 1gb
-% WALLTIME 00:03:02
+% MEM 1500mb
+% WALLTIME 00:05:02
 
 % TEST test_bug1618
 

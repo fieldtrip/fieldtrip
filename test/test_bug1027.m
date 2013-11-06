@@ -1,7 +1,7 @@
 function test_bug1027
 
-% MEM 1gb
-% WALLTIME 00:03:03
+% MEM 1500mb
+% WALLTIME 00:05:00
 
 % TEST test_bug1027
 % TEST ft_artifact_zvalue

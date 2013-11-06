@@ -1,7 +1,7 @@
 function test_bug1014
 
-% MEM 1gb
-% WALLTIME 00:03:02
+% MEM 1500mb
+% WALLTIME 00:03:00
 
 % TEST test_bug1014
 % TEST ft_checkdata ft_appendtimelock ft_selectdata

@@ -1,6 +1,6 @@
 function test_bug1254
 
-% MEM 1gb
+% MEM 1500mb
 % WALLTIME 00:03:01
 
 % the bug has not been fixed yet, so there is no point in automatically

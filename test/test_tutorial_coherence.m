@@ -1,6 +1,6 @@
 function test_tutorial_coherence
 
-% MEM 4gb
+% MEM 4500mb
 % WALLTIME 0:12:00
 
 % TEST test_tutorial_coherence

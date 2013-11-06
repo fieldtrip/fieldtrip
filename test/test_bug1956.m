@@ -1,7 +1,7 @@
 function test_bug1956
 
-% MEM 1gb
-% WALLTIME 00:07:42
+% MEM 1500mb
+% WALLTIME 00:09:42
 
 % TEST test_bug1956 
 % TEST ft_prepare_sourcemodel volumesmooth

@@ -1,7 +1,7 @@
 function test_bug1490
 
-% MEM 1gb
-% WALLTIME 00:03:41
+% MEM 1500mb
+% WALLTIME 00:05:41
 
 % TEST test_bug1490
 % TEST ft_read_header ft_read_data loadcnt

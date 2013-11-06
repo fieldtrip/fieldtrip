@@ -1,6 +1,6 @@
 function test_ft_prepare_localspheres
 
-% MEM 2gb
+% MEM 2500mb
 % WALLTIME 00:10:00
 
 % TEST test_ft_prepare_localspheres

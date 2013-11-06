@@ -1,6 +1,6 @@
 function test_ft_connectivityanalysis
 
-% MEM 1gb
+% MEM 1500mb
 % WALLTIME 0:05:00
 
 % TEST test_ft_connectivityanalysis

@@ -1,6 +1,6 @@
 function test_ft_freqstatistics
 
-% MEM 1gb
+% MEM 1500mb
 % WALLTIME 00:03:29
 
 % TEST test_ft_freqstatistics

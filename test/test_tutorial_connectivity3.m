@@ -1,6 +1,6 @@
 function test_tutorial_connectivity3(datadir)
 
-% MEM 1gb
+% MEM 1500mb
 % WALLTIME 0:03:01
 
 % TEST test_tutorial_connectivity3
