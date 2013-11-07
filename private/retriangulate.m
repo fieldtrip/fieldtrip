@@ -15,14 +15,16 @@ function [pnt3, tri3] = retriangulate(pnt1, tri1, pnt2, tri2, flag)
 % its original location.
 % 
 % flag=0 means no shift (default)
-% flag=1 means shifting to the geometrical mean
-% flag=2 means shifting to the center of the bounding box
+% flag=1 means shifting to the geometrical mean of the respective triangulations
+% flag=2 means shifting to the center of the bounding box of the respective triangulations
+% flag=3 means shifting to the geometrical mean of the first triangulation
+% flag=4 means shifting to the center of the bounding box of the first triangulation
 %
 % The projection is done from the coordinate system origin (0,0,0). 
 %
 % See also ICOSAHEDRONxxx, ISOSURFACE, REDUCEPATCH
 
-% Copyright (C) 2003, Robert Oostenveld
+% Copyright (C) 2003-2013, Robert Oostenveld
 
 if nargin<5
   flag = 0;
@@ -37,6 +39,12 @@ elseif flag==1
 elseif flag==2
   center1 = (min(pnt1) + max(pnt1))./2;
   center2 = (min(pnt2) + max(pnt2))./2;
+elseif flag==3
+  center1 = mean(pnt1,2);
+  center2 = center1;
+elseif flag==4
+  center1 = (min(pnt1) + max(pnt1))./2;
+  center2 = center1;
 end
 
 % shift the center of both surfaces
