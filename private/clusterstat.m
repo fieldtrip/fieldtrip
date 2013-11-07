@@ -37,35 +37,16 @@ function [stat, cfg] = clusterstat(cfg, statrnd, statobs, varargin)
 % $Id$
 
 % set the defaults
-if ~isfield(cfg,'orderedstats'),   cfg.orderedstats = 'no';    end
-if ~isfield(cfg,'multivariate'),   cfg.multivariate = 'no';    end
-if ~isfield(cfg,'minnbchan'),      cfg.minnbchan=0;            end
-% if ~isfield(cfg,'channeighbstructmat'),      cfg.channeighbstructmat=[];               end
-% if ~isfield(cfg,'chancmbneighbstructmat'),   cfg.chancmbneighbstructmat=[];            end
-% if ~isfield(cfg,'chancmbneighbselmat'),      cfg.chancmbneighbselmat=[];               end
-
-% get issource from varargin, to determine source-data-specific options and allow the proper usage of cfg.neighbours
-% (cfg.neighbours was previously used in determining wheter source-data was source data or not) set to zero by default
-% note, this may cause problems when functions call clusterstat without giving issource, as issource was previously
-% set in clusterstat.m but has now been transfered to the function that calls clusterstat.m (but only implemented in ft_statistics_montecarlo)
-issource = ft_getopt(varargin, 'issource', false);
+cfg.orderedstats = ft_getopt(cfg, 'orderedstats', 'no');
+cfg.multivariate = ft_getopt(cfg, 'multivariate', 'no');
+cfg.minnbchan    = ft_getopt(cfg, 'minnbchan',    0);
 
 if cfg.tail~=cfg.clustertail
   error('cfg.tail and cfg.clustertail should be identical')
 end
 
-% create neighbour structure (but only when not using source data)
-if isfield(cfg, 'neighbours') && ~issource
-  channeighbstructmat = makechanneighbstructmat(cfg);
-else
-  channeighbstructmat  = 0;
-end
-
-% perform fixinside fix if input data is source data
-if issource
-  % cfg contains dim and inside that are needed for reshaping the data to a volume, and inside should behave as a index vector
-  cfg = fixinside(cfg, 'index');
-end
+% get conncevitiy matrix for the spatially neighbouring elements
+channeighbstructmat = full(ft_getopt(cfg, 'connectivity', false));
 
 needpos = cfg.tail==0 || cfg.tail== 1;
 needneg = cfg.tail==0 || cfg.tail==-1;
@@ -74,8 +55,6 @@ Nrand   = size(statrnd,2);
 
 prb_pos    = ones(Nsample,     1);
 prb_neg    = ones(Nsample,     1);
-postailobs = false(Nsample,    1);  % this holds the thresholded values
-negtailobs = false(Nsample,    1);  % this holds the thresholded values
 postailrnd = false(Nsample,Nrand);  % this holds the thresholded values
 negtailrnd = false(Nsample,Nrand);  % this holds the thresholded values
 Nobspos = 0;                        % number of positive clusters in observed data
@@ -181,8 +160,13 @@ end
 
 % first do the clustering on the observed data
 if needpos,
-  if issource
-    if isfield(cfg, 'origdim'), cfg.dim = cfg.origdim; end %this snippet is to support correct clustering of N-dimensional data, not fully tested yet
+  
+  if ~isfinite(channeighbstructmat)
+    % this pertains to data for which the spatial dimension can be reshaped
+    % into 3D, i.e. when it is described on an ordered set of positions on a 3D-grid
+    if isfield(cfg, 'origdim'), 
+      cfg.dim = cfg.origdim; 
+    end %this snippet is to support correct clustering of N-dimensional data, not fully tested yet
     tmp = zeros(cfg.dim);
     tmp(cfg.inside) = postailobs;
     
@@ -202,14 +186,19 @@ if needpos,
     end
     posclusobs = posclusobs(:);
   end
-  Nobspos = max(posclusobs); % number of clusters exceeding the threshold
+  Nobspos = max(posclusobs(:)); % number of clusters exceeding the threshold
   fprintf('found %d positive clusters in observed data\n', Nobspos);
+
 end
 if needneg,
-  if issource
+  
+  if ~isfinite(channeighbstructmat)
+    % this pertains to data for which the spatial dimension can be reshaped
+    % into 3D, i.e. when it is described on an ordered set of positions on a 3D-grid
+    
     tmp = zeros(cfg.dim);
     tmp(cfg.inside) = negtailobs;
-    
+      
     numdims = length(cfg.dim);
     if numdims == 2 || numdims == 3 % if 2D or 3D data
       ft_hastoolbox('spm8',1);
@@ -226,8 +215,9 @@ if needneg,
     end
     negclusobs = negclusobs(:);
   end
-  Nobsneg = max(negclusobs);
+  Nobsneg = max(negclusobs(:));
   fprintf('found %d negative clusters in observed data\n', Nobsneg);
+
 end
 
 stat = [];
@@ -256,7 +246,7 @@ ft_progress('init', cfg.feedback, 'computing clusters in randomization');
 for i=1:Nrand
   ft_progress(i/Nrand, 'computing clusters in randomization %d from %d\n', i, Nrand);
   if needpos,
-    if issource
+    if ~isfinite(channeighbstructmat)
       tmp = zeros(cfg.dim);
       tmp(cfg.inside) = postailrnd(:,i);
       
@@ -275,7 +265,7 @@ for i=1:Nrand
       end
       posclusrnd = posclusrnd(:);
     end
-    Nrndpos = max(posclusrnd);  % number of clusters exceeding the threshold
+    Nrndpos = max(posclusrnd(:));  % number of clusters exceeding the threshold
     stat    = zeros(1,Nrndpos); % this will hold the statistic for each cluster
     % fprintf('found %d positive clusters in this randomization\n', Nrndpos);
     for j = 1:Nrndpos
@@ -304,10 +294,11 @@ for i=1:Nrand
     end
   end % needpos
   if needneg,
-    if issource
+    if ~isfinite(channeighbstructmat)
+      
       tmp = zeros(cfg.dim);
       tmp(cfg.inside) = negtailrnd(:,i);
-      
+        
       numdims = length(cfg.dim);
       if numdims == 2 || numdims == 3 % if 2D or 3D data
         ft_hastoolbox('spm8',1);
@@ -324,7 +315,7 @@ for i=1:Nrand
       end
       negclusrnd = negclusrnd(:);
     end
-    Nrndneg = max(negclusrnd);  % number of clusters exceeding the threshold
+    Nrndneg = max(negclusrnd(:));  % number of clusters exceeding the threshold
     stat    = zeros(1,Nrndneg); % this will hold the statistic for each cluster
     % fprintf('found %d negative clusters in this randomization\n', Nrndneg);
     for j = 1:Nrndneg

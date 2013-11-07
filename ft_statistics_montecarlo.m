@@ -100,6 +100,20 @@ function [stat, cfg] = ft_statistics_montecarlo(cfg, dat, design, varargin)
 %
 % $Id$
 
+% deal with the user specified randomseed first, to mimick old behavior
+cfg.randomseed = ft_getopt(cfg, 'randomseed', 'yes');
+if istrue(cfg.randomseed)
+  cfg.randomseed = sum(100*clock);
+end
+
+% do the general initialization
+ft_defaults;
+ft_preamble init
+ft_preamble provenance
+ft_preamble randomseed
+ft_preamble trackconfig
+ft_preamble debug
+
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed',     {'factor',           'ivar'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'unitfactor',       'uvar'});
@@ -126,7 +140,7 @@ cfg.uvar         = ft_getopt(cfg, 'uvar',       []);
 cfg.cvar         = ft_getopt(cfg, 'cvar',       []);
 cfg.wvar         = ft_getopt(cfg, 'wvar',       []);
 cfg.correcttail  = ft_getopt(cfg, 'correcttail',  'no');
-cfg.randomseed   = ft_getopt(cfg, 'randomseed',   'yes');
+%cfg.randomseed   = ft_getopt(cfg, 'randomseed',   'yes');
 cfg.precondition = ft_getopt(cfg, 'precondition', []);
 
 % explicit check for option 'yes' in cfg.correctail.
@@ -142,9 +156,32 @@ if strcmp(cfg.correctm, 'cluster')
   cfg.clustercritval   = ft_getopt(cfg, 'clustercritval',   []);
   cfg.clustertail      = ft_getopt(cfg, 'clustertail',      cfg.tail);
   
-  % NOTE: here it would be good to deal with the neighbourhood of the
+  % deal with the neighbourhood of the
   % channels/triangulation
-  
+  cfg.connectivity     = ft_getopt(cfg, 'connectivity',     []);
+  if ischar(cfg.connectivity) && strcmp(cfg.connectivity, 'bwlabeln')
+    % this is set in statistics_wrapper when input source data is
+    % reshapable, requiring to use spm_bwlabel, rather than clusterstat)
+    cfg.connectivity = nan; % this designates that the data is reshapable in 3D space and that these dimensions can be treated by bwlabeln
+    if isfield(cfg, 'inside')
+      cfg = fixinside(cfg, 'index');
+    end
+  elseif isempty(cfg.connectivity)
+    if isfield(cfg, 'tri')
+      cfg.connectivity = triangle2connectivity(cfg.tri);
+      if isfield(cfg, 'insideorig')
+        cfg.connectivity = cfg.connectivity(cfg.insideorig, cfg.insideorig);
+      end
+    elseif isfield(cfg, 'channel')
+      cfg.neighbours   = ft_getopt(cfg, 'neighbours', []);
+      cfg.connectivity = channelconnectivity(cfg);
+    else
+      % no connectivity in the spatial dimension
+      cfg.connectivity = false(size(dat,1));
+    end
+  else
+    % use the specified connectivity: op hoop van zegen
+  end
 else
   % these options only apply to clustering, to ensure appropriate configs they are forbidden when _not_ clustering
   cfg = ft_checkconfig(cfg, 'unused', {'clusterstatistic', 'clusteralpha', 'clustercritval', 'clusterthreshold', 'clustertail', 'neighbours'});
@@ -163,9 +200,6 @@ if strcmp(cfg.correcttail,'no') && cfg.tail==0 && cfg.alpha==0.05
   warning('doing a two-sided test without correcting p-values or alpha-level, p-values and alpha-level will reflect one-sided tests per tail')
 end
 
-% get the issource out flag
-issource = ft_getopt(varargin, 'issource', false);
-
 % for backward compatibility
 if size(design,2)~=size(dat,2)
   design = transpose(design);
@@ -183,15 +217,15 @@ else
   fprintf('using "%s" for the single-sample statistics\n', func2str(statfun));
 end
 
-% initialize the random number generator.
-if strcmp(cfg.randomseed, 'no')
-  % do nothing
-elseif strcmp(cfg.randomseed, 'yes')
-  rand('state',sum(100*clock));
-else
-  % seed with the user-given value
-  rand('state',cfg.randomseed);
-end;
+% % initialize the random number generator.
+% if strcmp(cfg.randomseed, 'no')
+%   % do nothing
+% elseif strcmp(cfg.randomseed, 'yes')
+%   rand('state',sum(100*clock));
+% else
+%   % seed with the user-given value
+%   rand('state',cfg.randomseed);
+% end;
 
 % construct the resampled design matrix or data-shuffling matrix
 fprintf('constructing randomized design\n');
@@ -210,7 +244,7 @@ if strcmp(cfg.correctm, 'cluster')
     fprintf('computing a parametric threshold for clustering\n');
     tmpcfg = [];
     tmpcfg.dimord         = cfg.dimord;
-    tmpcfg.dim            = cfg.dim;
+    if isfield(cfg, 'dim'), tmpcfg.dim            = cfg.dim; end
     tmpcfg.alpha          = cfg.clusteralpha;
     tmpcfg.tail           = cfg.clustertail;
     tmpcfg.ivar           = cfg.ivar;
@@ -327,7 +361,7 @@ ft_progress('close');
 
 if strcmp(cfg.correctm, 'cluster')
   % do the cluster postprocessing
-  [stat, cfg] = clusterstat(cfg, statrand, statobs,'issource',issource);
+  [stat, cfg] = clusterstat(cfg, statrand, statobs);
 else
   if ~isequal(cfg.numrandomization, 'all')
     % in case of random permutations (i.e., montecarlo sample, and NOT full
@@ -472,4 +506,10 @@ for i=1:length(fn)
 end
 
 warning(ws); % revert to original state
+
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble debug
+ft_postamble trackconfig
+ft_postamble provenance
+ft_postamble randomseed
 
