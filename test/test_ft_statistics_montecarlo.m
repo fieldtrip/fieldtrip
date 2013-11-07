@@ -172,7 +172,9 @@ cfg.parameter = 'avg.pow';
 stat = ft_sourcestatistics(cfg, s1{:}, s2{:});
 
 cfg.correctm = 'cluster';
+cfg.parameter = 'pow';
 stat = ft_sourcestatistics(cfg, source1, source2);
+cfg.parameter = 'avg.pow';
 stat = ft_sourcestatistics(cfg, s1{:},   s2{:});
 
 cfg.parameter = 'pow';
@@ -193,7 +195,9 @@ stat = ft_sourcestatistics(cfg, s1_mesh{:}, s2_mesh{:});
 
 cfg.correctm = 'cluster';
 cfg.tri      = tri;
+cfg.parameter = 'pow';
 stat  = ft_sourcestatistics(cfg, source1_mesh, source2_mesh);
+cfg.parameter = 'avg.pow';
 stat = ft_sourcestatistics(cfg, s1_mesh{:}, s2_mesh{:});
 
 
