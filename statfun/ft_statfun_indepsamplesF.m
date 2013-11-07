@@ -2,9 +2,9 @@ function [s,cfg] = ft_statfun_indepsamplesF(cfg, dat, design)
 
 % FT_STATFUN_INDEPSAMPLESF calculates the independent samples F-statistic 
 % on the biological data in dat (the dependent variable), using the information on 
-% the independent variable (iv) in design.
+% the independent variable (ivar) in design.
 %
-% Use this function by calling one of the high-level statistics functions as:
+% Use this function by calling one of the high-level statistics functions as
 %   [stat] = ft_timelockstatistics(cfg, timelock1, timelock2, ...)
 %   [stat] = ft_freqstatistics(cfg, freq1, freq2, ...)
 %   [stat] = ft_sourcestatistics(cfg, source1, source2, ...)
@@ -17,9 +17,9 @@ function [s,cfg] = ft_statfun_indepsamplesF(cfg, dat, design)
 %   [s,cfg] = statfun_indepsamplesF(cfg, dat, design);
 % where
 %   dat    contains the biological data, Nsamples x Nreplications
-%   design contains the independent variable (iv),  Nfac x Nreplications
+%   design contains the independent variable (ivar),  Nfac x Nreplications
 %
-% Configuration options:
+% Configuration options
 %   cfg.computestat    = 'yes' or 'no', calculate the statistic (default='yes')
 %   cfg.computecritval = 'yes' or 'no', calculate the critical values of the test statistics (default='no')
 %   cfg.computeprob    = 'yes' or 'no', calculate the p-values (default='no')
@@ -27,16 +27,16 @@ function [s,cfg] = ft_statfun_indepsamplesF(cfg, dat, design)
 % The following options are relevant if cfg.computecritval='yes' and/or
 % cfg.computeprob='yes'.
 %   cfg.alpha = critical alpha-level of the statistical test (default=0.05)
-%   cfg.tail = -1, 0, or 1, left, two-sided, or right (default=1)
-%              cfg.tail in combination with cfg.computecritval='yes'
-%              determines whether the critical value is computed at
-%              quantile cfg.alpha (with cfg.tail=-1), at quantiles
-%              cfg.alpha/2 and (1-cfg.alpha/2) (with cfg.tail=0), or at
-%              quantile (1-cfg.alpha) (with cfg.tail=1).
+%   cfg.tail  = -1, 0, or 1, left, two-sided, or right (default=1)
+%               cfg.tail in combination with cfg.computecritval='yes'
+%               determines whether the critical value is computed at
+%               quantile cfg.alpha (with cfg.tail=-1), at quantiles
+%               cfg.alpha/2 and (1-cfg.alpha/2) (with cfg.tail=0), or at
+%               quantile (1-cfg.alpha) (with cfg.tail=1).
 %
-% Design specification:
-%   cfg.ivar = row number of the design that contains the labels of the conditions that must be 
-%              compared (default=1). The labels range from 1 to the number of conditions.
+% Design specification
+%   cfg.ivar  = row number of the design that contains the labels of the conditions that must be 
+%               compared (default=1). The labels range from 1 to the number of conditions.
 
 % Copyright (C) 2006, Eric Maris
 %

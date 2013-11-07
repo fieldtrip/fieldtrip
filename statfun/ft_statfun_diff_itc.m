@@ -18,13 +18,13 @@ function [s] = ft_statfun_diff_itc(cfg, dat, design)
 % Use this function by calling 
 %   [stat] = ft_freqstatistics(cfg, freq1, freq2, ...)
 % with the following configuration options
-%   cfg.statistic = 'diff_itc'
 %   cfg.method    = 'montecarlo'
-% and optionally (for use in the statfun) the option
-%  cfg.complex = 'diffabs' to compute the difference of the absolute ITC values, or
-%  cfg.complex = 'absdiff' to compute the absolute value of the difference in the complex ITC values
+%   cfg.statistic = 'diff_itc'
+% and optionally the options
+%  cfg.complex    = 'diffabs' to compute the difference of the absolute ITC values (default), or
+%                   'absdiff' to compute the absolute value of the difference in the complex ITC values.
 % 
-% See FT_FREQSTATISTICS and STATISTICS_MONTECARLO for more details
+% See FT_FREQSTATISTICS and FT_STATISTICS_MONTECARLO for more details
 
 % Copyright (C) 2008, Robert Oostenveld
 %
