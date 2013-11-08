@@ -4,7 +4,7 @@ function test_tutorial_coherence
 % WALLTIME 0:12:00
 
 % TEST test_tutorial_coherence
-% TEST ft_freqanalysis ft_connectivityanalysis ft_multiplotER ft_singleplotER ft_topoplotER ft_sourceanalysis ft_sourceinterpolate
+% TEST ft_freqanalysis ft_connectivityanalysis ft_multiplotER ft_singleplotER ft_topoplotER ft_sourceanalysis ft_sourceinterpolate ft_prepare_sourcemodel headsurface
 
 addpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/coherence');
 addpath('/home/common/matlab/fieldtrip/data/');

@@ -4,7 +4,7 @@ function test_bug1042
 % WALLTIME 00:18:06
 
 % TEST test_bug1042 test_bug686
-% TEST ft_convert_units ft_prepare_headmodel ft_compute_leadfield
+% TEST ft_convert_units ft_prepare_headmodel ft_compute_leadfield ft_prepare_sourcemodel headsurface
 
 [pnt, tri] = icosahedron162;
 

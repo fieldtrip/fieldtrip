@@ -4,7 +4,7 @@ function test_bug686
 % WALLTIME 0:05:00
 
 % TEST test_bug686
-% TEST ft_convert_units ft_prepare_headmodel ft_prepare_leadfield
+% TEST ft_convert_units ft_prepare_headmodel ft_prepare_leadfield ft_prepare_sourcemodel headsurface
 
 global ft_default
 ft_default = [];
