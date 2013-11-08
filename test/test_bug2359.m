@@ -1,6 +1,6 @@
 function test_bug2359
 
-% WALLTIME 00:03:00
+% WALLTIME 00:05:00
 % MEM 1500mb
 
 % TEST test_bug2359
@@ -77,9 +77,6 @@ cfg = [];
 cfg.method = 'concentricspheres';
 vol = ft_prepare_headmodel(cfg, mesh);
 
-% cfg = [];
-% cfg.method = 'singlesphere';
-% vol = ft_prepare_headmodel(cfg, iskull);
 
 cfg = [];
 cfg.vol = vol;
@@ -92,4 +89,23 @@ assert(isempty(gridsphere.outside));
 figure
 ft_plot_vol(vol, 'edgecolor', 'none', 'facecolor', 'skin', 'facealpha', 0.5);
 ft_plot_mesh(gridsphere)
+
+%% this is a weird modification, I am just curious to see how it works
+
+cfg = [];
+cfg.method = 'singlesphere';
+vol = ft_prepare_headmodel(cfg, iskull);
+
+cfg = [];
+cfg.vol = vol;
+cfg.grid.xgrid = -200:10:200;    % this is in mm
+cfg.grid.ygrid = -200:10:200;    % this is in mm
+cfg.grid.zgrid =  -50:10:150;    % this is in mm
+cfg.spherify = 'yes';
+gridsphere = ft_prepare_sourcemodel(cfg);
+
+figure
+ft_plot_vol(vol, 'edgecolor', 'none', 'facecolor', 'skin', 'facealpha', 0.5);
+ft_plot_mesh(gridsphere)
+
 

@@ -41,13 +41,11 @@ function [grid, cfg] = ft_prepare_sourcemodel(cfg, vol, sens)
 %   cfg.grid.lbex
 %
 % Configuration options for a warped MNI grid
-%   cfg.mri             = can be filename or MRI structure, containing the
-%                         individual anatomy
+%   cfg.mri             = can be filename or MRI structure, containing the individual anatomy
 %   cfg.grid.warpmni    = 'yes'
 %   cfg.grid.resolution = number (e.g. 6) of the resolution of the
 %                         template MNI grid, defined in mm
-%   cfg.grid.template   = specification of a template grid (grid
-%                         structure), or a
+%   cfg.grid.template   = specification of a template grid (grid structure), or a
 %                         filename of a template grid (defined in MNI space),
 %                         either cfg.grid.resolution or cfg.grid.template needs
 %                         to be defined. If both are defined cfg.grid.template
@@ -65,8 +63,9 @@ function [grid, cfg] = ft_prepare_sourcemodel(cfg, vol, sens)
 % The EEG or MEG sensor positions can be present in the data or can be specified as
 %   cfg.elec          = structure with electrode positions, see FT_DATATYPE_SENS
 %   cfg.grad          = structure with gradiometer definition, see FT_DATATYPE_SENS
+% or alternatively
 %   cfg.elecfile      = name of file containing the electrode positions, see FT_READ_SENS
-%   cfg.gradfile        = name of file containing the gradiometer definition, see FT_READ_SENS
+%   cfg.gradfile      = name of file containing the gradiometer definition, see FT_READ_SENS
 %
 % The headmodel or volume conduction model can be specified as
 %   cfg.hdmfile         = string, file containing the volume conduction model, see FT_READ_SENS
@@ -77,26 +76,18 @@ function [grid, cfg] = ft_prepare_sourcemodel(cfg, vol, sens)
 % Other configuration options
 %   cfg.grid.unit       = string, can be 'mm', 'cm', 'm' (default is automatic)
 %   cfg.grid.tight   = 'yes' or 'no' (default is automatic)
-%   cfg.inwardshift  = depth of the bounding layer for the source space, relative to the head model surface (default = 0)
-%   cfg.moveinward   = 'yes' or 'no', move dipoles inward to ensure that they ly withing the (potentially inward shifted) source compartment
+%   cfg.inwardshift  = number, how much should the innermost surface be moved inward to constrain
+%                      sources to be considered inside the source compartment (default = 0)
+%   cfg.moveinward   = number, , move dipoles inward to ensure a certain distance to the innermost
+%                      surface of the source compartment (default = 0)
+%   cfg.spherify     = 'yes' or 'no', scale the source model so that it fits inside a sperical
+%                      volume conduction model (default = 'no')
 %   cfg.symmetry     = 'x', 'y' or 'z' symmetry for two dipoles, can be empty (default = [])
-%   cfg.headshape    = a filename containing headshape, a structure containing a
-%                      single triangulated boundary, or a Nx3 matrix with surface
-%                      points
+%   cfg.headshape    = a filename for the headshape, a structure containing a single surface,
+%                      or a Nx3 matrix with headshape surface points (default = [])
 %
 % See also FT_PREPARE_LEADFIELD, FT_PREPARE_HEADMODEL, FT_SOURCEANALYSIS,
 % FT_DIPOLEFITTING, FT_MEGREALIGN
-
-% Searching through the code, it seems that the following cfg fields are being used
-% cfg.grid
-% cfg.mri
-% cfg.headshape
-% cfg.tightgrid
-% cfg.symmetry
-% cfg.smooth
-% cfg.threshold
-% cfg.spheremesh
-% cfg.inwardshift
 
 % Copyright (C) 2004-2013, Robert Oostenveld
 %
@@ -670,7 +661,7 @@ if strcmp(cfg.spherify, 'yes')
   % deform the cortex so that it fits in a unit sphere
   pnt = mesh_spherify(grid.pos, [], 'shift', 'range');
   % scale it to the radius of the innermost sphere, make it a tiny bit smaller to
-  % ensure that the support point with the exact radius 1 is still inside the sphere 
+  % ensure that the support point with the exact radius 1 is still inside the sphere
   pnt = pnt*min(vol.r)*0.999;
   pnt(:,1) = pnt(:,1) + vol.o(1);
   pnt(:,2) = pnt(:,2) + vol.o(2);
