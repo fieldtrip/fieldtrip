@@ -323,10 +323,12 @@ else
       filename    = strrep(filename, '.surf.', '.shape.');
       [p,f,e]     = fileparts(filename);
       tok         = tokenize(f, '.');
-      tmpfilename = strrep(filename, tok{3}, 'sulc');
-      if exist(tmpfilename, 'file'),  g = gifti(tmpfilename); shape.sulc = g.cdata; end
-      if exist(strrep(tmpfilename, 'sulc', 'curvature'), 'file'),  g = gifti(strrep(tmpfilename, 'sulc', 'curvature')); shape.curv = g.cdata; end
-      if exist(strrep(tmpfilename, 'sulc', 'thickness'), 'file'),  g = gifti(strrep(tmpfilename, 'sulc', 'thickness')); shape.thickness = g.cdata; end
+      if length(tok)>2
+        tmpfilename = strrep(filename, tok{3}, 'sulc');
+        if exist(tmpfilename, 'file'), g = gifti(tmpfilename); shape.sulc = g.cdata; end
+        if exist(strrep(tmpfilename, 'sulc', 'curvature'), 'file'),  g = gifti(strrep(tmpfilename, 'sulc', 'curvature')); shape.curv = g.cdata; end
+        if exist(strrep(tmpfilename, 'sulc', 'thickness'), 'file'),  g = gifti(strrep(tmpfilename, 'sulc', 'thickness')); shape.thickness = g.cdata; end
+      end
       
     case 'caret_spec'
       [spec, headerinfo] = read_caret_spec(filename);
