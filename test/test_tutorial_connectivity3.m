@@ -94,8 +94,7 @@ emgdata = ft_selectdata(cfg, data);
 cfg = [];
 combineddata = ft_appenddata(cfg, virtualchanneldata, emgdata);
 
-save combineddata combineddata
-
+% save combineddata combineddata
 
 %% compute the spectral decomposition
 cfg            = [];
