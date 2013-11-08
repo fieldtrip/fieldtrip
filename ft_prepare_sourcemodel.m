@@ -78,6 +78,7 @@ function [grid, cfg] = ft_prepare_sourcemodel(cfg, vol, sens)
 %   cfg.grid.unit       = string, can be 'mm', 'cm', 'm' (default is automatic)
 %   cfg.grid.tight   = 'yes' or 'no' (default is automatic)
 %   cfg.inwardshift  = depth of the bounding layer for the source space, relative to the head model surface (default = 0)
+%   cfg.moveinward   = 'yes' or 'no', move dipoles inward to ensure that they ly withing the (potentially inward shifted) source compartment
 %   cfg.symmetry     = 'x', 'y' or 'z' symmetry for two dipoles, can be empty (default = [])
 %   cfg.headshape    = a filename containing headshape, a structure containing a
 %                      single triangulated boundary, or a Nx3 matrix with surface
@@ -135,10 +136,14 @@ cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved t
 cfg = ft_checkconfig(cfg, 'createsubcfg',  {'grid'});
 
 % set the defaults
+cfg.moveinward = ft_getopt(cfg, 'moveinward',  []); % the default is automatic and depends on a triangulation being present
+cfg.spherify   = ft_getopt(cfg, 'spherify',  'no');
+cfg.headshape  = ft_getopt(cfg, 'headshape',  []);
 cfg.symmetry   = ft_getopt(cfg, 'symmetry',   []);
 cfg.grid       = ft_getopt(cfg, 'grid',       []);
 cfg.spmversion = ft_getopt(cfg, 'spmversion', 'spm8');
 cfg.grid.unit  = ft_getopt(cfg.grid, 'unit',  'auto');
+cfg.grid       = ft_checkconfig(cfg.grid, 'renamed',  {'pnt' 'pos'});
 
 if ~isfield(cfg, 'vol') && nargin>1
   % put it in the configuration structure
@@ -165,7 +170,7 @@ end
 % a source model can be constructed in a number of ways
 basedongrid   = isfield(cfg.grid, 'xgrid') && ~ischar(cfg.grid.xgrid);                              % regular 3D grid with explicit specification
 basedonpos    = isfield(cfg.grid, 'pos');                                                           % using user-supplied grid positions, which can be regular or irregular
-basedonshape  = isfield(cfg, 'headshape') && ~isempty(cfg.headshape);                               % surface grid based on inward shifted head surface from external file
+basedonshape  = ~isempty(cfg.headshape);                                                            % surface grid based on inward shifted head surface from external file
 basedonmri    = isfield(cfg, 'mri') && ~(isfield(cfg.grid, 'warpmni') && istrue(cfg.grid.warpmni)); % regular 3D grid, based on segmented MRI, restricted to gray matter
 basedonmni    = isfield(cfg, 'mri') && (isfield(cfg.grid, 'warpmni') && istrue(cfg.grid.warpmni));  % regular 3D grid, based on warped MNI template
 basedonvol    = false;                                                                              % surface grid based on inward shifted brain surface from volume conductor
@@ -347,6 +352,9 @@ if basedonpos
   grid.unit = cfg.grid.unit;
   if isfield(cfg.grid, 'mom')
     grid.mom = cfg.grid.mom;
+  end
+  if isfield(cfg.grid, 'tri')
+    grid.tri = cfg.grid.tri;
   end
   if isfield(cfg.grid, 'dim')
     grid.dim = cfg.grid.dim;
@@ -618,11 +626,11 @@ if basedonmni
   else
     mnigrid = cfg.grid.template;
   end
-
+  
   % ensure these to have units in mm, the conversion of the source model is done further down
   mri     = ft_convert_units(mri, 'mm');
   mnigrid = ft_convert_units(mnigrid, 'mm');
-
+  
   % spatial normalisation of mri and construction of subject specific dipole grid positions
   tmpcfg           = [];
   tmpcfg.nonlinear = cfg.grid.nonlinear;
@@ -655,68 +663,41 @@ end
 % convert to the requested units
 grid = ft_convert_units(grid, cfg.grid.unit);
 
-% FIXME use inside_vol instead of this replication of code
-% determine the dipole locations inside the brain volume
-if ~isfield(grid, 'inside') && ~isfield(grid, 'outside')
-  if ft_voltype(vol, 'infinite') || ft_voltype(vol, 'infinite_monopole')
-    % an empty vol in combination with gradiometers indicates a magnetic dipole
-    % in an infinite vacuum, i.e. all dipoles can be considered to be inside
-    grid.inside  = 1:size(grid.pos,1);
-    grid.outside = [];
-    outside      = zeros(1,size(grid.pos,1));
-    grid.outside = find(outside); % JMH: this makes no sense, right??
-    grid.inside  = find(~outside);
-  elseif ft_voltype(vol, 'halfspace') || ft_voltype(vol, 'halfspace_monopole')
-    grid.inside  = 1:size(grid.pos,1);
-    grid.outside = [];
-    outside = zeros(1,size(grid.pos,1));
-    for i = 1:size(grid.pos,1);
-      dip1 = grid.pos(i,:);
-      % condition of dipoles/monopoles falling in the non conductive halfspace
-      invacuum = acos(dot(vol.ori,(dip1-vol.pnt)./norm(dip1-vol.pnt))) < pi/2;
-      if invacuum
-        outside(i) = 1;
-      end
-    end
-    grid.outside = find(outside);
-    grid.inside  = find(~outside);
-  elseif ft_voltype(vol, 'slab_monopole')
-    grid.inside = 1:size(grid.pos,1);
-    grid.outside = [];
-    outside = zeros(1,size(grid.pos,1));
-    for i =1:size(grid.pos,1);
-      pol = grid.pos(i,:);
-      % condition of dipoles/monopoles falling in the non conductive halfspace
-      % Attention: voxels on the boundary are automatically considered
-      % outside the strip!
-      instrip1 = acos(dot(vol.ori1,(pol-vol.pnt1)./norm(pol-vol.pnt1))) > pi/2;
-      instrip2 = acos(dot(vol.ori2,(pol-vol.pnt2)./norm(pol-vol.pnt2))) > pi/2;
-      instrip = instrip1&instrip2;
-      if ~instrip
-        outside(i) = 1;
-      end
-    end
-    grid.outside = find(outside);
-    grid.inside  = find(~outside);
-  else
-    if isfield(sens, 'coilori') && isfield(sens, 'coilpos') && isfield(sens, 'tra')
-      % in case of MEG, make a triangulation of the outermost surface
-      if isfield(cfg, 'headshape')
-        % use the specified headshape to construct the bounding triangulation
-        [pnt, tri] = headsurface(vol, sens, 'headshape', cfg.headshape, 'inwardshift', cfg.inwardshift, 'surface', 'skin');
-      else
-        % use the volume conductor model to construct the bounding triangulation
-        [pnt, tri] = headsurface(vol, sens, 'inwardshift', cfg.inwardshift, 'surface', 'skin');
-      end
-    else
-      % in case of EEG, make a triangulation of the innermost surface
-      [pnt, tri] = headsurface(vol, sens, 'inwardshift', cfg.inwardshift, 'surface', 'brain');
-    end
-    % determine the dipole positions that are inside the triangulated surface
-    tmp = bounding_mesh(grid.pos, pnt, tri);
-    grid.inside  = find(tmp==1);
-    grid.outside = find(tmp==0);
+if strcmp(cfg.spherify, 'yes')
+  if ~ft_voltype(vol, 'singlesphere') && ~ft_voltype(vol, 'concentricspheres')
+    error('this only works for spherical volume conduction models');
   end
+  % deform the cortex so that it fits in a unit sphere
+  pnt = mesh_spherify(grid.pos, [], 'shift', 'range');
+  % scale it to the radius of the innermost sphere, make it a tiny bit smaller to
+  % ensure that the support point with the exact radius 1 is still inside the sphere 
+  pnt = pnt*min(vol.r)*0.999;
+  pnt(:,1) = pnt(:,1) + vol.o(1);
+  pnt(:,2) = pnt(:,2) + vol.o(2);
+  pnt(:,3) = pnt(:,3) + vol.o(3);
+  grid.pos = pnt;
+end
+
+if ~isempty(cfg.moveinward)
+  % construct a triangulated boundary of the source compartment
+  [pnt1, tri1] = headsurface(vol, [], 'inwardshift', cfg.moveinward, 'surface', 'brain');
+  inside = bounding_mesh(grid.pos, pnt1, tri1);
+  if ~all(inside)
+    pnt2 = grid.pos(~inside,:);
+    [dum, pnt3] = project_elec(pnt2, pnt1, tri1);
+    grid.pos(~inside,:) = pnt3;
+  end
+  if cfg.moveinward>cfg.inwardshift
+    grid.inside  = 1:size(grid.pos,1);
+    grid.outside = [];
+  end
+end
+
+% determine the dipole locations that are inside the source compartment of the volume conduction model
+if ~isfield(grid, 'inside') && ~isfield(grid, 'outside')
+  inside = ft_inside_vol(grid.pos, vol, 'grad', sens, 'headshape', cfg.headshape, 'inwardshift', cfg.inwardshift); % this returns a boolean vector
+  grid.inside  = find(inside==true);
+  grid.outside = find(inside==false);
 elseif ~isfield(grid, 'inside')
   grid.inside = setdiff(1:size(grid.pos,1), grid.outside);
 elseif ~isfield(grid, 'outside')

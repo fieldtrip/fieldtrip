@@ -49,15 +49,15 @@ cfgmix3.grad=ft_convert_units(cfg.grad,'cm');
 % cd('/home/common/matlab/fieldtrip')
 % restoredefaultpath;
 % ft_defaults;
-gridLFmmcur= ft_prepare_leadfield(cfgmm);
-gridLFcmcur= ft_prepare_leadfield(cfgcm);
+gridLFmmcur = ft_prepare_leadfield(cfgmm);
+gridLFcmcur = ft_prepare_leadfield(cfgcm);
 gridLFmmcur.leadfield{gridLFmmcur.inside(1)}(1,:)
 gridLFcmcur.leadfield{gridLFcmcur.inside(1)}(1,:)
 
 % save  grid1794.mat gridLF*
-gridLFmix1= ft_prepare_leadfield(cfgmix1);
-gridLFmix2= ft_prepare_leadfield(cfgmix2);
-gridLFmix3= ft_prepare_leadfield(cfgmix3);
+gridLFmix1 = ft_prepare_leadfield(cfgmix1);
+gridLFmix2 = ft_prepare_leadfield(cfgmix2);
+gridLFmix3 = ft_prepare_leadfield(cfgmix3);
 
 gridLFcmcur.leadfield{gridLFcmcur.inside(1)}(1,:)
 gridLFmmcur.leadfield{gridLFmmcur.inside(1)}(1,:)

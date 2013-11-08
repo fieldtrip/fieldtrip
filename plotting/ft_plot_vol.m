@@ -12,6 +12,7 @@ function ft_plot_vol(vol, varargin)
 %     'facecolor'     [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r'
 %     'vertexcolor'   [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r'
 %     'edgecolor'     [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r'
+%     'facealpha'     number between 0 and 1
 %     'faceindex'     true or false
 %     'vertexindex'   true or false
 %
@@ -53,7 +54,6 @@ facecolor   = ft_getopt(varargin, 'facecolor',   'white');
 vertexcolor = ft_getopt(varargin, 'vertexcolor', 'none');
 edgecolor   = ft_getopt(varargin, 'edgecolor',   'k');
 facealpha   = ft_getopt(varargin, 'facealpha',   1);
-map         = ft_getopt(varargin, 'colormap');
 surfaceonly = ft_getopt(varargin, 'surfaceonly');
 
 faceindex   = istrue(faceindex);   % yes=view the face number
@@ -88,8 +88,9 @@ switch ft_voltype(vol)
     bnd = vol.bnd;
     
   case 'simbio'
-    % the code below wants the SIMBIO tetrahedral or hexahedral mesh
+    % the ft_plot_mesh function below wants the SIMBIO tetrahedral or hexahedral mesh
     bnd = vol;
+    
     % only plot the outer surface of the volume
     surfaceonly = true;
     
@@ -97,16 +98,20 @@ switch ft_voltype(vol)
     xgrid = 1:vol.dim(1);
     ygrid = 1:vol.dim(2);
     zgrid = 1:vol.dim(3);
-    [x y z] = ndgrid(xgrid, ygrid, zgrid);
+    [x, y, z] = ndgrid(xgrid, ygrid, zgrid);
     gridpos = warp_apply(vol.transform, [x(:) y(:) z(:)]);
     
+    % plot the dipole positions that are inside
     plot3(gridpos(vol.inside, 1), gridpos(vol.inside, 2), gridpos(vol.inside, 3), 'k.');
     
-    return;
+    % there is no boundary to be displayed
+    bnd = [];
     
   case 'infinite'
     warning('there is nothing to plot for an infinite volume conductor')
-    return
+    
+    % there is no boundary to be displayed
+    bnd = [];
     
   otherwise
     error('unsupported voltype')
@@ -119,6 +124,7 @@ for i=1:length(bnd)
     'vertexcolor',vertexcolor,'facealpha',facealpha, 'surfaceonly', surfaceonly);
 end
 
-warning(ws); %revert to original state
+% revert to original state
+warning(ws); 
 
 
