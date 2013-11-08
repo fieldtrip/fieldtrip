@@ -111,7 +111,7 @@ switch ft_voltype(vol)
       inside(i) = instrip1 & instrip2;
     end
     
-  case {'bem', 'dipoli', 'bemcp', 'asa', 'singleshell', 'neuromag'}
+  case {'bem', 'dipoli', 'bemcp', 'openmeeg', 'asa', 'singleshell', 'neuromag'}
     % this is a model with a realistic shape described by a triangulated boundary
     [pnt, tri] = headsurface(vol, [], 'inwardshift', inwardshift, 'surface', 'brain');
     inside = bounding_mesh(pos, pnt, tri);
