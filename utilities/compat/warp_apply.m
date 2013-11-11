@@ -11,9 +11,8 @@ function varargout = funname(varargin)
 %
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
-prefix    = 'ft_realtime';
+prefix    = 'ft_';
 funname   = mfilename;
-funname   = funname(3:end); % strip the rt_ prefix, keep the underscore
 warning([upper(mfilename) ' is only a compatibility wrapper, which will soon be removed. Please instead call ' upper(prefix) upper(funname) '.']);
 funhandle = str2func([prefix funname]);
 [varargout{1:nargout}] = funhandle(varargin{:});
