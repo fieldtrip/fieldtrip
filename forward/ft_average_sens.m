@@ -118,18 +118,18 @@ for i=1:nsens
 end
 
 % compute the homogeneous transformation matrix that aligns the three reference sensors to the x-, y-, and z-axis
-tra = headcoordinates(mean1, mean2, mean3);
+tra = ft_headcoordinates(mean1, mean2, mean3);
 
 if ismeg
   % just realign the MEG coils
-  tra1  = headcoordinates(sens(1).chanpos(ind1, :), sens(1).chanpos(ind2, :), sens(1).chanpos(ind3, :));
+  tra1  = ft_headcoordinates(sens(1).chanpos(ind1, :), sens(1).chanpos(ind2, :), sens(1).chanpos(ind3, :));
   asens = ft_transform_sens(tra\tra1, sens(1));
   
 elseif iseeg
   % also average sensor locations
   pnt = zeros(size(sens(1).chanpos));
   for i=1:nsens
-    tra1  = headcoordinates(sens(i).chanpos(ind1, :), sens(i).chanpos(ind2, :), sens(i).chanpos(ind3, :));
+    tra1  = ft_headcoordinates(sens(i).chanpos(ind1, :), sens(i).chanpos(ind2, :), sens(i).chanpos(ind3, :));
     csens = ft_transform_sens(tra\tra1, sens(i));
     
     if toplot && iseeg
@@ -162,7 +162,7 @@ switch nfid
     afiducials = [];
     
   case 1
-    tra1  = headcoordinates(sens(1).chanpos(ind1, :), sens(1).chanpos(ind2, :), sens(1).chanpos(ind3, :));
+    tra1  = ft_headcoordinates(sens(1).chanpos(ind1, :), sens(1).chanpos(ind2, :), sens(1).chanpos(ind3, :));
     afiducials = ft_transform_headshape(tra\tra1, fiducials);
     
   case nsens    
@@ -184,7 +184,7 @@ switch nfid
         error('all fiducials should have the same labels for averaging');
       end
       
-      tra1 = headcoordinates(sens(i).chanpos(ind1, :), sens(i).chanpos(ind2, :), sens(i).chanpos(ind3, :));
+      tra1 = ft_headcoordinates(sens(i).chanpos(ind1, :), sens(i).chanpos(ind2, :), sens(i).chanpos(ind3, :));
       
       cfiducials = ft_transform_headshape(tra1, fiducials(i));
       

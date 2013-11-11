@@ -867,10 +867,10 @@ if basedonfid
   rpa_head = ft_warp_apply(mri.transform, cfg.fiducial.rpa);
   if isfield(cfg.fiducial, 'zpoint') && ~isempty(cfg.fiducial.zpoint)
     zpnt_head = ft_warp_apply(mri.transform, cfg.fiducial.zpoint);
-    [transform, coordsys] = headcoordinates(nas_head, lpa_head, rpa_head, zpnt_head, cfg.coordsys);
+    [transform, coordsys] = ft_headcoordinates(nas_head, lpa_head, rpa_head, zpnt_head, cfg.coordsys);
   else
     % compute the homogeneous transformation matrix describing the new coordinate system
-    [transform, coordsys] = headcoordinates(nas_head, lpa_head, rpa_head, cfg.coordsys);
+    [transform, coordsys] = ft_headcoordinates(nas_head, lpa_head, rpa_head, cfg.coordsys);
   end
 elseif basedonmrk
   % the fiducial locations are now specified in voxels, convert them to head
@@ -880,10 +880,10 @@ elseif basedonmrk
   xzpoint= ft_warp_apply(mri.transform, cfg.landmark.xzpoint);
   if isfield(cfg.landmark, 'rpoint') && ~isempty(cfg.landmark.rpoint)
     rpnt_head = ft_warp_apply(mri.transform, cfg.landmark.rpoint);
-    [transform, coordsys] = headcoordinates(ac, pc, xzpoint, rpnt_head, 'spm');
+    [transform, coordsys] = ft_headcoordinates(ac, pc, xzpoint, rpnt_head, 'spm');
   else
     % compute the homogenous transformation matrix describing the new coordinate system
-    [transform, coordsys] = headcoordinates(ac, pc, xzpoint, 'spm');
+    [transform, coordsys] = ft_headcoordinates(ac, pc, xzpoint, 'spm');
   end
   
 else

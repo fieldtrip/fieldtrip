@@ -190,7 +190,7 @@ if exist('headcoordinates', 'file')
   end
 
   % use the headcoordinates function (roboos/misc) to compute the transformaton matrix
-  hdr.transformMRI2Head = headcoordinates(hdr.fiducial.mri.nas, hdr.fiducial.mri.lpa, hdr.fiducial.mri.rpa, 'asa');
+  hdr.transformMRI2Head = ft_headcoordinates(hdr.fiducial.mri.nas, hdr.fiducial.mri.lpa, hdr.fiducial.mri.rpa, 'asa');
   hdr.transformHead2MRI = inv(hdr.transformMRI2Head);
 
   % compute the fiducials in head coordinates

@@ -423,8 +423,8 @@ elseif strcmp(cfg.method, 'fiducial')
   templ_rpa = mean(templ_rpa,1);
   
   % realign both to a common coordinate system
-  elec2common  = headcoordinates(elec_nas, elec_lpa, elec_rpa);
-  templ2common = headcoordinates(templ_nas, templ_lpa, templ_rpa);
+  elec2common  = ft_headcoordinates(elec_nas, elec_lpa, elec_rpa);
+  templ2common = ft_headcoordinates(templ_nas, templ_lpa, templ_rpa);
   
   % compute the combined transform and realign the electrodes to the template
   norm         = [];

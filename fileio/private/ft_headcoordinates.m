@@ -1,16 +1,15 @@
-function [h, flag] = headcoordinates(nas, lpa, rpa, extrapoint, flag)
+function [h, flag] = ft_headcoordinates(nas, lpa, rpa, extrapoint, flag)
 
-% HEADCOORDINATES returns the homogeneous coordinate transformation matrix
+% FT_HEADCOORDINATES returns the homogeneous coordinate transformation matrix
 % that converts the specified fiducials in any coordinate system (e.g. MRI)
 % into the rotated and translated headcoordinate system.
 %
-% [h, coordsys] = headcoordinates(nas, lpa, rpa,    flag) or
-% [h, coordsys] = headcoordinates(pt1, pt2, pt3,    flag)
-% [h, coordsys] = headcoordinates(ac,  pc,  zpoint, flag)
-%
-% [h, coordsys] = headcoordinates(nas, lpa, rpa, extrapoint, flag)
-% 
-% [h, coordsys] = headcoordinates(nas, lpa, rpa, isrighthanded, flag)
+% Use as
+%   [h, coordsys] = ft_headcoordinates(nas, lpa, rpa,    flag)
+%   [h, coordsys] = ft_headcoordinates(pt1, pt2, pt3,    flag)
+%   [h, coordsys] = ft_headcoordinates(ac,  pc,  zpoint, flag)
+%   [h, coordsys] = ft_headcoordinates(nas, lpa, rpa, extrapoint, flag)
+%   [h, coordsys] = ft_headcoordinates(nas, lpa, rpa, isrighthanded, flag)
 %
 % The optional flag determines how the direction of the axes and the
 % location of the origin will be specified
