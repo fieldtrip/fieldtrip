@@ -214,9 +214,9 @@ facepotential   = ~isempty(tri) && ~ischar(facecolor  ) && (size(tri,1)==numel(f
 if facepotential
   set(hs, 'FaceVertexCData', facecolor, 'FaceColor', 'flat');
 else
-  if size(facecolor,1)==size(tri,1)
+  if ~ischar(facecolor) && size(facecolor,1)==size(tri,1)
     set(hs, 'FaceColor', facecolor);
-  elseif size(facecolor,1)==size(pnt,1)
+  elseif ~ischar(facecolor) && size(facecolor,1)==size(pnt,1)
     set(hs, 'FaceVertexCData', facecolor, 'FaceColor', 'flat');
   end
 end
