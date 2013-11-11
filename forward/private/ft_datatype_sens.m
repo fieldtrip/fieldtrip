@@ -101,7 +101,7 @@ end
 version   = ft_getopt(varargin, 'version', 'latest');
 amplitude = ft_getopt(varargin, 'amplitude'); % should be 'V' 'uV' 'T' 'mT' 'uT' 'nT' 'pT' 'fT'
 distance  = ft_getopt(varargin, 'distance');  % should be 'm' 'dm' 'cm' 'mm'
-scaling   = ft_getopt(varargin, 'scaling');   % should be 'amplitude' or 'amplitude/distance'
+scaling   = ft_getopt(varargin, 'scaling');   % should be 'amplitude' or 'amplitude/distance', the default depends on the senstype
 
 if strcmp(version, 'latest')
   % NOTE TO SELF: once finalized, the code for 2011v2 and 2013 has to be merged into a single latest version
