@@ -54,8 +54,9 @@ function [type] = ft_filetype(filename, desired, varargin)
 %  - Yokogawa
 %  - nifti, gifti
 %  - Localite
+%  - Stanford *.ply
 
-% Copyright (C) 2003-2011 Robert Oostenveld
+% Copyright (C) 2003-2013 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -1130,7 +1131,7 @@ elseif filetype_check_extension(filename, 'trk')
   type = 'trackvis_trk';
   manufacturer = 'Martinos Center for Biomedical Imaging, see http://www.trackvis.org';
   content = 'fiber tracking data from diffusion MR imaging';
-elseif filetype_check_extension(filename, '.xml') &&  filetype_check_header(filename, '<EEGMarkerList', 39)
+elseif filetype_check_extension(filename, '.xml') && filetype_check_header(filename, '<EEGMarkerList', 39)
   type = 'localite_pos';
   manufacturer = 'Localite';
   content = 'EEG electrode positions';
@@ -1142,6 +1143,10 @@ elseif filetype_check_extension(filename, '.mb2')
   type = 'manscan_mb2';
   manufacturer = 'MANSCAN';
   content  = 'EEG data';    
+elseif filetype_check_header(filename, 'ply')
+  type = 'ply';
+  manufacturer = 'Stanford Triangle Format';
+  content = 'three dimensional data from 3D scanners, see http://en.wikipedia.org/wiki/PLY_(file_format)';
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

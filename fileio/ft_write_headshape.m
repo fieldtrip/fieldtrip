@@ -126,7 +126,7 @@ switch fileformat
     % the third argument is the element type. At the moment only type 302
     % (triangle) is supported
     surf_to_tetgen(filename, bnd.pnt, bnd.tri, 302*ones(size(bnd.tri,1),1),[],[]);
-  
+    
   case 'vtk'
     [p, f, x] = fileparts(filename);
     filename = fullfile(p, [f, '.vtk']); % ensure it has the right extension
@@ -137,8 +137,8 @@ switch fileformat
     elseif isfield(bnd, 'hex')
       write_vtk(filename, bnd.pnt, bnd.hex);
     end
-
-  case 'ply'
+    
+  case {'ply', 'ply_ascii', 'ply_binary'}
     [p, f, x] = fileparts(filename);
     filename = fullfile(p, [f, '.ply']); % ensure it has the right extension
     
@@ -156,12 +156,16 @@ switch fileformat
       elements = bnd.hex;
     end
     
-    write_ply(filename, vertices, elements);
-
+    if length(fileformat)>4
+      write_ply(filename, vertices, elements, fileformat(5:end));
+    else
+      write_ply(filename, vertices, elements, 'ascii');
+    end
+    
   case 'stl'
     nrm = normals(bnd.pnt, bnd.tri, 'triangle');
     write_stl(filename, bnd.pnt, bnd.tri, nrm);
-
+    
   case 'gifti'
     ft_hastoolbox('gifti', 1);
     tmp = [];
@@ -172,11 +176,11 @@ switch fileformat
     end
     tmp = gifti(tmp);
     save(tmp, filename);
-  
+    
   case 'freesurfer'
     ft_hastoolbox('freesurfer', 1);
     write_surf(filename, bnd.pnt, bnd.tri);
- 
+    
   case []
     error('you must specify the output format');
     

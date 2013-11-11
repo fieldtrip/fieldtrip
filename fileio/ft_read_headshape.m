@@ -592,6 +592,21 @@ else
       
       fclose(fid);
       
+    case 'ply'
+      [vert, face] = read_ply(filename);
+      shape.pnt = [vert.x vert.y vert.z];
+      if isfield(vert, 'red') && isfield(vert, 'green') && isfield(vert, 'blue')
+        shape.color = double([vert.red vert.green vert.blue]/255);
+      end
+      switch size(face,2)
+        case 3
+          shape.tri = face;
+        case 4
+          shape.tet = face;
+        case 8
+          shape.hex = face;
+      end
+      
     case 'polhemus_fil'
       [shape.fid.pnt, shape.pnt, shape.fid.label] = read_polhemus_fil(filename, 0);
       
@@ -660,6 +675,7 @@ else
       if exist(fullfile(path, [name,'.curv']), 'file'), shape.curv = read_curv(fullfile(path, [name,'.curv'])); end
       if exist(fullfile(path, [name,'.area']), 'file'), shape.area = read_curv(fullfile(path, [name,'.area'])); end
       if exist(fullfile(path, [name,'.thickness']), 'file'), shape.thickness = read_curv(fullfile(path, [name,'.thickness'])); end
+
     case 'stl'
       [pnt, tri, nrm] = read_stl(filename);
       shape.pnt = pnt;
