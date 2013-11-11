@@ -11,13 +11,13 @@ function [warped]= sn2individual(P, input)
 if numel(P.Tr)==0,
   % only an affine transformation has been done
   T      = P.VF.mat*P.Affine/(P.VG.mat);
-  warped = warp_apply(T, input);
+  warped = ft_warp_apply(T, input);
 else
   % we need the spm_dctmtx function for the nonlinear case
   ft_hastoolbox('spm8', 1);
 
   dim  = P.VG.dim(1:3);
-  xyz  = warp_apply(inv(P.VG.mat), input); % goes into voxel coordinates
+  xyz  = ft_warp_apply(inv(P.VG.mat), input); % goes into voxel coordinates
   
   basX = spm_dctmtx(dim(1), size(P.Tr,1), xyz(:,1)-1);
   basY = spm_dctmtx(dim(2), size(P.Tr,2), xyz(:,2)-1);
@@ -40,5 +40,5 @@ else
   end
   
   T      = P.VF.mat*P.Affine;
-  warped = warp_apply(T, xyz+xyztmp);
+  warped = ft_warp_apply(T, xyz+xyztmp);
 end;

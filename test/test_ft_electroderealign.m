@@ -4,7 +4,7 @@ function test_ft_electroderealign
 % WALLTIME 00:03:27
 
 % TEST ft_electroderealign
-% TEST ft_read_mri ft_read_sens ft_prepare_mesh warp_apply
+% TEST ft_read_mri ft_read_sens ft_prepare_mesh ft_warp_apply
 
 % first version of this script was made on 10.03.2013 by Lilla Magyari
 

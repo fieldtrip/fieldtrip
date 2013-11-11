@@ -281,7 +281,7 @@ else
       if ~isfield(g, 'vertices')
         error('%s does not contain a tesselated surface', filename);
       end
-      shape.pnt = warp_apply(g.mat, g.vertices);
+      shape.pnt = ft_warp_apply(g.mat, g.vertices);
       shape.tri = g.faces;
       if isfield(g, 'cdata')
         shape.mom = g.cdata;
@@ -294,12 +294,12 @@ else
         try
           % do a clever guess by replacing topo with coord
           g2 = gifti(strrep(filename, '.topo.', '.coord.'));
-          vertices  = warp_apply(g2.mat, g2.vertices);
+          vertices  = ft_warp_apply(g2.mat, g2.vertices);
         catch
           vertices  = [];
         end
       else
-        vertices  = warp_apply(g.mat, g.vertices);
+        vertices  = ft_warp_apply(g.mat, g.vertices);
       end
       if ~isfield(g, 'faces') && strcmp(fileformat, 'caret_coord')
         try

@@ -5,7 +5,7 @@ function test_tutorial_headmodel_eeg
 
 % TEST test_tutorial_headmodel_eeg
 % TEST ft_read_mri ft_volumesegment ft_prepare_mesh ft_prepare_headmodel
-% TEST ft_read_sens warp_apply ft_electroderealign
+% TEST ft_read_sens ft_warp_apply ft_electroderealign
 % TEST ft_plot_mesh ft_plot_vol ft_plot_sens
 
 clear all;

@@ -116,7 +116,7 @@ try
 
     % write the positions of the electrodes on disk
     disp('writing the electrodes file...')
-    pos = warp_apply(inv(transform),sens.chanpos); % in voxel coordinates!
+    pos = ft_warp_apply(inv(transform),sens.chanpos); % in voxel coordinates!
 
     % convert pos into int32 datatype. 
     hdf5write(elecfile, '/electrodes/gridlocs', int32(pos));

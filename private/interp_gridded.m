@@ -58,7 +58,7 @@ if isempty(distmat)
   switch projmethod
     case 'nearest'
       % determine the nearest voxel for each vertex
-      sub = round(warp_apply(inv(transform), pnt, 'homogenous'));  % express
+      sub = round(ft_warp_apply(inv(transform), pnt, 'homogenous'));  % express
       sub(sub(:)<1) = 1;
       sub(sub(:,1)>dim(1),1) = dim(1);
       sub(sub(:,2)>dim(2),2) = dim(2);
@@ -76,7 +76,7 @@ if isempty(distmat)
       end
 
       [X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
-      pos = warp_apply(sparse(transform), [X(:) Y(:) Z(:)]);
+      pos = ft_warp_apply(sparse(transform), [X(:) Y(:) Z(:)]);
       % the distance only has to be computed to voxels inside the brain
       pos  = pos(inside,:);
       npos = size(pos,1);

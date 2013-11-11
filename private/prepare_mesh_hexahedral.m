@@ -156,7 +156,7 @@ if (cfg.resolution ~= 1)
     mesh.pnt = cfg.resolution * mesh.pnt;
 end
 
-mesh.pnt = warp_apply(mri.transform,mesh.pnt,'homogeneous');
+mesh.pnt = ft_warp_apply(mri.transform,mesh.pnt,'homogeneous');
 
 labels = mesh.labels;
 

@@ -91,7 +91,7 @@ sel = cell(1,numel(fn));
 label = {};
 
 % convert the atlas head coordinates into voxel coordinates
-vox  = warp_apply(inv(atlas.transform), pos);
+vox  = ft_warp_apply(inv(atlas.transform), pos);
 
 for i=1:num
 

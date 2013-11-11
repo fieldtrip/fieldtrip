@@ -1997,7 +1997,7 @@ switch atlasformat
     switch ft_filetype(filenamemesh)
       %case {'caret_surf' 'gifti'}
       %  tmp = gifti(filenamemesh);
-      %  bnd.pnt = warp_apply(tmp.mat, tmp.vertices);
+      %  bnd.pnt = ft_warp_apply(tmp.mat, tmp.vertices);
       %  bnd.tri = tmp.faces;
       %  reindex = false;
       case 'freesurfer_triangle_binary'

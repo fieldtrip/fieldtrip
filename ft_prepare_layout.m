@@ -864,7 +864,7 @@ if isempty(rz)
       rz = 0;
   end
 end
-sens.chanpos = warp_apply(rotate([0 0 rz]), sens.chanpos, 'homogenous');
+sens.chanpos = ft_warp_apply(rotate([0 0 rz]), sens.chanpos, 'homogenous');
 
 % determine the 3D channel positions
 pnt   = sens.chanpos;

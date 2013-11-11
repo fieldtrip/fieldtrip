@@ -82,7 +82,7 @@ if isfield(headshape, 'fid')
   if ~isempty(transform)
     % spatially transform the fiducials
     % FIXME what is the reason for this?
-    fid.pnt = warp_apply(transform, fid.pnt);
+    fid.pnt = ft_warp_apply(transform, fid.pnt);
   end
   
   % show the fiducial labels

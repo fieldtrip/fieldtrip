@@ -1623,7 +1623,7 @@ else
   ygrid = 1:data.dim(2);
   zgrid = 1:data.dim(3);
   [x y z] = ndgrid(xgrid, ygrid, zgrid);
-  data.pos = warp_apply(data.transform, [x(:) y(:) z(:)]);
+  data.pos = ft_warp_apply(data.transform, [x(:) y(:) z(:)]);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

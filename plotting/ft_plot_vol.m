@@ -99,7 +99,7 @@ switch ft_voltype(vol)
     ygrid = 1:vol.dim(2);
     zgrid = 1:vol.dim(3);
     [x, y, z] = ndgrid(xgrid, ygrid, zgrid);
-    gridpos = warp_apply(vol.transform, [x(:) y(:) z(:)]);
+    gridpos = ft_warp_apply(vol.transform, [x(:) y(:) z(:)]);
     
     % plot the dipole positions that are inside
     plot3(gridpos(vol.inside, 1), gridpos(vol.inside, 2), gridpos(vol.inside, 3), 'k.');

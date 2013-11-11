@@ -17,7 +17,7 @@ i1 = ft_sourceinterpolate(cfg, source1, mri);
 
 % 3D source to 3D grid
 [x,y,z] = ndgrid(4:4:256,4:4:256,4:4:256);
-grid.pos = warp_apply(mri.transform, [x(:) y(:) z(:)]); clear x y z
+grid.pos = ft_warp_apply(mri.transform, [x(:) y(:) z(:)]); clear x y z
 grid.dim = [64 64 64];
 grid.inside = 1:size(grid.pos,1);
 grid.outside = [];

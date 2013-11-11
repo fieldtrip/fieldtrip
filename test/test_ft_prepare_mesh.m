@@ -37,7 +37,7 @@ example.transform(1:4,4)   = [-origin(:); 1];  % head-coordinate [0 0 0] is in t
 
 [X, Y, Z] = ndgrid(1:example.dim(1), 1:example.dim(2), 1:example.dim(3));
 voxelpos = [X(:) Y(:) Z(:)];
-headpos = warp_apply(example.transform, voxelpos);
+headpos = ft_warp_apply(example.transform, voxelpos);
 
 % create 5 spheres
 radius1 = 14;

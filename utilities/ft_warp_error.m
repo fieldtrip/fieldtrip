@@ -1,10 +1,10 @@
-function [dist] = warp_error(M, input, target, varargin)
+function [dist] = ft_warp_error(M, input, target, varargin)
 
 % WARP_ERROR computes the mean distance after linear or non-linear warping
 % and can be used as the goalfunction in a 3D warping minimalisation
 %
 % Use as
-%   [dist] = warp_error(M, input, target, 'method')
+%   [dist] = ft_warp_error(M, input, target, 'method')
 %
 % It returns the mean Euclidian distance (residu) when attempting to
 % transform the input towards the target using transformation M
@@ -46,7 +46,7 @@ function [dist] = warp_error(M, input, target, varargin)
 
 if ~isempty(M)
   % apply the warp to the input positions
-  input = warp_apply(M, input, varargin{:});
+  input = ft_warp_apply(M, input, varargin{:});
 end
 
 if isstruct(target)

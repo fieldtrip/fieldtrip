@@ -274,7 +274,7 @@ if strcmp(cfg.method, 'template') && usetemplate
   stderr = std(all, [], 3);
   
   fprintf('warping electrodes to template... '); % the newline comes later
-  [norm.chanpos, norm.m] = warp_optim(elec.chanpos, avg, cfg.warp);
+  [norm.chanpos, norm.m] = ft_warp_optim(elec.chanpos, avg, cfg.warp);
   norm.label = elec.label;
   
   dpre  = mean(sqrt(sum((avg - elec.chanpos).^2, 2)));
@@ -327,11 +327,11 @@ elseif strcmp(cfg.method, 'template') && useheadshape
   elec.chanpos   = elec.chanpos(datsel,:);
   
   fprintf('warping electrodes to head shape... '); % the newline comes later
-  [norm.chanpos, norm.m] = warp_optim(elec.chanpos, headshape, cfg.warp);
+  [norm.chanpos, norm.m] = ft_warp_optim(elec.chanpos, headshape, cfg.warp);
   norm.label = elec.label;
   
-  dpre  = warp_error([],     elec.chanpos, headshape, cfg.warp);
-  dpost = warp_error(norm.m, elec.chanpos, headshape, cfg.warp);
+  dpre  = ft_warp_error([],     elec.chanpos, headshape, cfg.warp);
+  dpost = ft_warp_error(norm.m, elec.chanpos, headshape, cfg.warp);
   fprintf('mean distance prior to warping %f, after warping %f\n', dpre, dpost);
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -404,10 +404,10 @@ elseif strcmp(cfg.method, 'fiducial')
   templ2common = headcoordinates(templ_nas, templ_lpa, templ_rpa);
   
   % compute the combined transform and realign the electrodes to the template
-  norm       = [];
-  norm.m     = elec2common * inv(templ2common);
-  norm.chanpos   = warp_apply(norm.m, elec.chanpos, 'homogeneous');
-  norm.label = elec.label;
+  norm         = [];
+  norm.m       = elec2common * inv(templ2common);
+  norm.chanpos = ft_warp_apply(norm.m, elec.chanpos, 'homogeneous');
+  norm.label   = elec.label;
   
   nas_indx = match_str(lower(elec.label), lower(cfg.fiducial{1}));
   lpa_indx = match_str(lower(elec.label), lower(cfg.fiducial{2}));
@@ -497,10 +497,10 @@ end
 % electrode and channel positions
 switch cfg.method
   case 'template'
-    norm.chanpos   = warp_apply(norm.m, orig.chanpos, cfg.warp);
+    norm.chanpos   = ft_warp_apply(norm.m, orig.chanpos, cfg.warp);
     norm.elecpos   = norm.chanpos;
   case {'fiducial' 'interactive'}
-    norm.chanpos   = warp_apply(norm.m, orig.chanpos);
+    norm.chanpos   = ft_warp_apply(norm.m, orig.chanpos);
     norm.elecpos   = norm.chanpos;
   case 'manual'
     % the positions are already assigned in correspondence with the mesh

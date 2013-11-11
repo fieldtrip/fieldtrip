@@ -482,14 +482,14 @@ if basedonmri
   fprintf('%d from %d voxels in the segmentation are marked as ''inside'' (%.0f%%)\n', length(ind), numel(head), 100*length(ind)/numel(head));
   [X,Y,Z]             = ndgrid(1:mri.dim(1), 1:mri.dim(2), 1:mri.dim(3));  % create the grid in MRI-coordinates
   posmri              = [X(ind) Y(ind) Z(ind)];                            % take only the inside voxels
-  poshead             = warp_apply(mri.transform, posmri);                 % transform to head coordinates
+  poshead             = ft_warp_apply(mri.transform, posmri);                 % transform to head coordinates
   resolution          = cfg.grid.resolution*scale;                                        % source and mri can be expressed in different units (e.g. cm and mm)
   xgrid               = floor(min(poshead(:,1))):resolution:ceil(max(poshead(:,1)));      % create the grid in head-coordinates
   ygrid               = floor(min(poshead(:,2))):resolution:ceil(max(poshead(:,2)));      % with 'consistent' x,y,z definitions
   zgrid               = floor(min(poshead(:,3))):resolution:ceil(max(poshead(:,3)));
   [X,Y,Z]             = ndgrid(xgrid,ygrid,zgrid);
   pos2head            = [X(:) Y(:) Z(:)];
-  pos2mri             = warp_apply(inv(mri.transform), pos2head);          % transform to MRI voxel coordinates
+  pos2mri             = ft_warp_apply(inv(mri.transform), pos2head);          % transform to MRI voxel coordinates
   pos2mri             = round(pos2mri);
   inside              = find(getinside(pos2mri, head));                    % use helper subfunction
   
@@ -632,9 +632,9 @@ if basedonmni
   
   if ~isfield(normalise, 'params') && ~isfield(normalise, 'initial')
     fprintf('applying an inverse warp based on a linear transformation only\n');
-    grid.pos = warp_apply(inv(normalise.cfg.final), mnigrid.pos);
+    grid.pos = ft_warp_apply(inv(normalise.cfg.final), mnigrid.pos);
   else
-    grid.pos = warp_apply(inv(normalise.initial), warp_apply(normalise.params, mnigrid.pos, 'sn2individual'));
+    grid.pos = ft_warp_apply(inv(normalise.initial), ft_warp_apply(normalise.params, mnigrid.pos, 'sn2individual'));
   end
   grid.dim     = mnigrid.dim;
   grid.unit    = mnigrid.unit;

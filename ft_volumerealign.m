@@ -497,53 +497,53 @@ switch cfg.method
         str = sprintf('voxel %d, indices [%d %d %d]', sub2ind(mri.dim(1:3), round(xc), round(yc), round(zc)), round([xc yc zc]));
         
         if isfield(mri, 'coordsys') && isfield(mri, 'unit')
-          str = sprintf('%s, %s coordinates [%.1f %.1f %.1f] %s', str, mri.coordsys, warp_apply(mri.transform, [xc yc zc]), mri.unit);
+          str = sprintf('%s, %s coordinates [%.1f %.1f %.1f] %s', str, mri.coordsys, ft_warp_apply(mri.transform, [xc yc zc]), mri.unit);
         elseif ~isfield(mri, 'coordsys') && isfield(mri, 'unit')
-          str = sprintf('%s, location [%.1f %.1f %.1f] %s', str, warp_apply(mri.transform, [xc yc zc]), mri.unit);
+          str = sprintf('%s, location [%.1f %.1f %.1f] %s', str, ft_warp_apply(mri.transform, [xc yc zc]), mri.unit);
         elseif isfield(mri, 'coordsys') && ~isfield(mri, 'unit')
-          str = sprintf('%s, %s coordinates [%.1f %.1f %.1f]', str, mri.coordsys, warp_apply(mri.transform, [xc yc zc]));
+          str = sprintf('%s, %s coordinates [%.1f %.1f %.1f]', str, mri.coordsys, ft_warp_apply(mri.transform, [xc yc zc]));
         elseif ~isfield(mri, 'coordsys') && ~isfield(mri, 'unis')
-          str = sprintf('%s, location [%.1f %.1f %.1f]', str, warp_apply(mri.transform, [xc yc zc]));
+          str = sprintf('%s, location [%.1f %.1f %.1f]', str, ft_warp_apply(mri.transform, [xc yc zc]));
         end
         fprintf('%s\n', str);
-        % fprintf('cur_voxel = [%f %f %f], cur_head = [%f %f %f]\n', [xc yc zc], warp_apply(mri.transform, [xc yc zc]));
+        % fprintf('cur_voxel = [%f %f %f], cur_head = [%f %f %f]\n', [xc yc zc], ft_warp_apply(mri.transform, [xc yc zc]));
       end
       
       markerpos   = zeros(0,3);
       markerlabel = {};
       markercolor = {};
       if ~isempty(nas),
-        fprintf('nas_voxel = [%f %f %f], nas_head = [%f %f %f]\n', nas, warp_apply(mri.transform, nas));
+        fprintf('nas_voxel = [%f %f %f], nas_head = [%f %f %f]\n', nas, ft_warp_apply(mri.transform, nas));
         markerpos   = [markerpos; nas];
         markerlabel = [markerlabel; {'nas'}];
         markercolor = [markercolor; {'b'}];
       end
       if ~isempty(lpa),
-        fprintf('lpa_voxel = [%f %f %f], lpa_head = [%f %f %f]\n', lpa, warp_apply(mri.transform, lpa));
+        fprintf('lpa_voxel = [%f %f %f], lpa_head = [%f %f %f]\n', lpa, ft_warp_apply(mri.transform, lpa));
         markerpos   = [markerpos; lpa];
         markerlabel = [markerlabel; {'lpa'}];
         markercolor = [markercolor; {'g'}];
       end
       if ~isempty(rpa),
-        fprintf('rpa_voxel = [%f %f %f], rpa_head = [%f %f %f]\n', rpa, warp_apply(mri.transform, rpa));
+        fprintf('rpa_voxel = [%f %f %f], rpa_head = [%f %f %f]\n', rpa, ft_warp_apply(mri.transform, rpa));
         markerpos   = [markerpos; rpa];
         markerlabel = [markerlabel; {'rpa'}];
         markercolor = [markercolor; {'r'}];
       end
       if ~isempty(antcomm),
-        fprintf('antcomm_voxel = [%f %f %f], antcomm_head = [%f %f %f]\n', antcomm, warp_apply(mri.transform, antcomm));
+        fprintf('antcomm_voxel = [%f %f %f], antcomm_head = [%f %f %f]\n', antcomm, ft_warp_apply(mri.transform, antcomm));
         markerpos   = [markerpos; antcomm];
         markerlabel = [markerlabel; {'antcomm'}];
         markercolor = [markercolor; {'b'}];
       end
       if ~isempty(pstcomm),
-        fprintf('pstcomm_voxel = [%f %f %f], pstcomm_head = [%f %f %f]\n', pstcomm, warp_apply(mri.transform, pstcomm));
+        fprintf('pstcomm_voxel = [%f %f %f], pstcomm_head = [%f %f %f]\n', pstcomm, ft_warp_apply(mri.transform, pstcomm));
         markerpos   = [markerpos; pstcomm];
         markerlabel = [markerlabel; {'pstcomm'}];
         markercolor = [markercolor; {'g'}];
       end
       if ~isempty(xzpoint),
-        fprintf('xzpoint_voxel = [%f %f %f], xzpoint_head = [%f %f %f]\n', xzpoint, warp_apply(mri.transform, xzpoint));
+        fprintf('xzpoint_voxel = [%f %f %f], xzpoint_head = [%f %f %f]\n', xzpoint, ft_warp_apply(mri.transform, xzpoint));
         markerpos   = [markerpos; xzpoint];
         markerlabel = [markerlabel; {'xzpoint'}];
         markercolor = [markercolor; {'y'}];
@@ -661,7 +661,7 @@ switch cfg.method
 %     transform   = inv([R t;0 0 0 1]);
 %     
 %     % warp the extracted scalp points to the new positions
-%     scalp.pnt = warp_apply(transform, scalp.pnt);
+%     scalp.pnt = ft_warp_apply(transform, scalp.pnt);
 %     
 %     % now the idea would be to do a second round where the points are
 %     % weighted with the (locally averaged) distance to the scalp
@@ -674,7 +674,7 @@ switch cfg.method
 %     transform   = [R2 t2;0 0 0 1]\transform;
 %     
 %     % warp the extracted scalp points to the new positions
-%     scalp.pnt = warp_apply(inv([R2 t2;0 0 0 1]), scalp.pnt);
+%     scalp.pnt = ft_warp_apply(inv([R2 t2;0 0 0 1]), scalp.pnt);
   
     % create headshape structure for mri-based surface point cloud
     if isfield(mri, 'coordsys')
@@ -862,11 +862,11 @@ end
 if basedonfid
   % the fiducial locations are now specified in voxels, convert them to head
   % coordinates according to the existing transform matrix
-  nas_head = warp_apply(mri.transform, cfg.fiducial.nas);
-  lpa_head = warp_apply(mri.transform, cfg.fiducial.lpa);
-  rpa_head = warp_apply(mri.transform, cfg.fiducial.rpa);
+  nas_head = ft_warp_apply(mri.transform, cfg.fiducial.nas);
+  lpa_head = ft_warp_apply(mri.transform, cfg.fiducial.lpa);
+  rpa_head = ft_warp_apply(mri.transform, cfg.fiducial.rpa);
   if isfield(cfg.fiducial, 'zpoint') && ~isempty(cfg.fiducial.zpoint)
-    zpnt_head = warp_apply(mri.transform, cfg.fiducial.zpoint);
+    zpnt_head = ft_warp_apply(mri.transform, cfg.fiducial.zpoint);
     [transform, coordsys] = headcoordinates(nas_head, lpa_head, rpa_head, zpnt_head, cfg.coordsys);
   else
     % compute the homogeneous transformation matrix describing the new coordinate system
@@ -875,11 +875,11 @@ if basedonfid
 elseif basedonmrk
   % the fiducial locations are now specified in voxels, convert them to head
   % coordinates according to the existing transform matrix
-  ac     = warp_apply(mri.transform, cfg.landmark.ac);
-  pc     = warp_apply(mri.transform, cfg.landmark.pc);
-  xzpoint= warp_apply(mri.transform, cfg.landmark.xzpoint);
+  ac     = ft_warp_apply(mri.transform, cfg.landmark.ac);
+  pc     = ft_warp_apply(mri.transform, cfg.landmark.pc);
+  xzpoint= ft_warp_apply(mri.transform, cfg.landmark.xzpoint);
   if isfield(cfg.landmark, 'rpoint') && ~isempty(cfg.landmark.rpoint)
-    rpnt_head = warp_apply(mri.transform, cfg.landmark.rpoint);
+    rpnt_head = ft_warp_apply(mri.transform, cfg.landmark.rpoint);
     [transform, coordsys] = headcoordinates(ac, pc, xzpoint, rpnt_head, 'spm');
   else
     % compute the homogenous transformation matrix describing the new coordinate system

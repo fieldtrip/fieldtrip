@@ -1,11 +1,11 @@
-function [warped] = warp_apply(M, input, method, tol)
+function [warped] = ft_warp_apply(M, input, method, tol)
 
 % WARP_APPLY performs a 3D linear or nonlinear transformation on the input
 % coordinates, similar to those in AIR 3.08. You can find technical
 % documentation on warping in general at http://bishopw.loni.ucla.edu/AIR3
 %
 % Use as
-%   [warped] = warp_apply(M, input, method, tol)
+%   [warped] = ft_warp_apply(M, input, method, tol)
 % where
 %   M        vector or matrix with warping parameters
 %   input    Nx3 matrix with coordinates
@@ -163,7 +163,7 @@ elseif strcmp(method, 'homogenous') || strcmp(method, 'homogeneous')
 elseif exist(method, 'file') && ~isa(M, 'struct')
   % get the homogenous transformation matrix
   H = feval(method, M);
-  warped = warp_apply(H, input, 'homogeneous');
+  warped = ft_warp_apply(H, input, 'homogeneous');
 
 elseif strcmp(method, 'sn2individual') && isa(M, 'struct')
   % use SPM structure with parameters for an inverse warp

@@ -20,4 +20,4 @@ voxel = [
   ];
 
 % determine the corner points of the volume in plotting space
-head = warp_apply(transform, voxel);
+head = ft_warp_apply(transform, voxel);

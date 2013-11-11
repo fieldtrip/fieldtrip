@@ -112,7 +112,7 @@ for i =1:numel(cfg.tissue)
     [pnt, tri] = triangulate_seg(seg, cfg.numvertices(i), ori);
   end
   
-  bnd(i).pnt = warp_apply(mri.transform, pnt);
+  bnd(i).pnt = ft_warp_apply(mri.transform, pnt);
   bnd(i).tri = tri;
   bnd(i).unit = mri.unit;
   
