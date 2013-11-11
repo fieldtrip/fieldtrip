@@ -171,10 +171,10 @@ if usetemplate
   end
   Ntemplate = length(cfg.template);
   for i=1:Ntemplate
-    if isstruct(cfg.template{i})
-      template(i) = cfg.template{i};
-    else
+    if ischar(cfg.template{i})
       template(i) = ft_read_sens(cfg.template{i});
+    else
+      template(i) = cfg.template{i};
     end
   end
   
