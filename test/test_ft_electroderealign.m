@@ -43,9 +43,9 @@ fem=ft_prepare_mesh(cfg,segmentedmri);
  
  transm=mri.transform;
  
- nas=warp_apply(transm,nas, 'homogenous');
- lpa=warp_apply(transm,lpa, 'homogenous');
- rpa=warp_apply(transm,rpa, 'homogenous');
+ nas=ft_warp_apply(transm,nas, 'homogenous');
+ lpa=ft_warp_apply(transm,lpa, 'homogenous');
+ rpa=ft_warp_apply(transm,rpa, 'homogenous');
  
  fiducials.chanpos=[nas; lpa; rpa];
  fiducials.label={'Nz','LPA','RPA'};
