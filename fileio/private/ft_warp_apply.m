@@ -1,6 +1,6 @@
 function [warped] = ft_warp_apply(M, input, method, tol)
 
-% WARP_APPLY performs a 3D linear or nonlinear transformation on the input
+% FT_WARP_APPLY performs a 3D linear or nonlinear transformation on the input
 % coordinates, similar to those in AIR 3.08. You can find technical
 % documentation on warping in general at http://bishopw.loni.ucla.edu/AIR3
 %
@@ -38,8 +38,10 @@ function [warped] = ft_warp_apply(M, input, method, tol)
 % matrix. Supplied functions in the warping toolbox are translate,
 % rotate, scale, rigidbody, globalrescale, traditional, affine,
 % perspective.
+%
+% See also FT_WARP_OPTIM, FT_WARP_ERROR
 
-% Copyright (C) 2000-2005, Robert Oostenveld
+% Copyright (C) 2000-2013, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
