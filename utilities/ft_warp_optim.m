@@ -75,7 +75,7 @@ pos2 = target;
 % fieldtrip, i.e. only available to functions in the fieldtrip toolbox.
 % The following line ensures that the function can also be found by the
 % feval that is executed by the optimalization toolbox.
-warp_error = str2func('warp_error');
+errorfun = str2func('ft_warp_error');
 
 % determine whether the Matlab Optimization toolbox is available and can be used
 if ft_hastoolbox('optim')
@@ -100,7 +100,7 @@ else
   warning('unknown optimization function "%s", using default parameters', func2str(optimfun));
 end
 
-if fb; fprintf('distance = %f\n', ft_warp_error([0 0 0 0 0 0], pos1, pos2, 'rigidbody')); end
+if fb; fprintf('distance = %f\n', errorfun([0 0 0 0 0 0], pos1, pos2, 'rigidbody')); end
 
 if isempty(method)
   error('incorrect warping method specified');
@@ -126,24 +126,24 @@ if level>=1
   % do a rigid-body transformation (6 parameters)
   if fb; disp('rigidbody...'); end
   ri = [0 0 0 0 0 0];
-  rf = optimfun(ft_warp_error, ri, options, pos1, pos2, 'rigidbody');
-  if fb; fprintf('distance = %f\n', ft_warp_error(rf, pos1, pos2, 'rigidbody')); end
+  rf = optimfun(errorfun, ri, options, pos1, pos2, 'rigidbody');
+  if fb; fprintf('distance = %f\n', errorfun(rf, pos1, pos2, 'rigidbody')); end
 end
 
 if level>=2
   % do a rigid-body + global rescaling transformation (7 parameters)
   if fb; disp('rigidbody + global rescaling...'); end
   gi = [rf 1];
-  gf = optimfun(ft_warp_error, gi, options, pos1, pos2, 'globalrescale');
-  if fb; fprintf('distance = %f\n', ft_warp_error(gf, pos1, pos2, 'globalrescale')); end
+  gf = optimfun(errorfun, gi, options, pos1, pos2, 'globalrescale');
+  if fb; fprintf('distance = %f\n', errorfun(gf, pos1, pos2, 'globalrescale')); end
 end
 
 if level>=3
   % do a rigid-body + individual rescaling transformation (9 parameters)
   if fb; disp('rigidbody + individual rescaling...'); end
   ti = [gf gf(7) gf(7)];
-  tf = optimfun(ft_warp_error, ti, options, pos1, pos2, 'traditional');
-  if fb; fprintf('distance = %f\n', ft_warp_error(tf, pos1, pos2, 'traditional')); end
+  tf = optimfun(errorfun, ti, options, pos1, pos2, 'traditional');
+  if fb; fprintf('distance = %f\n', errorfun(tf, pos1, pos2, 'traditional')); end
 end
 
 if level>=4
@@ -151,40 +151,40 @@ if level>=4
   if fb; disp('1st order nonlinear...'); end
   e1i = traditional(tf);
   e1i = [e1i(1:3,4) e1i(1:3,1:3)];  % reshuffle from homogenous into nonlinear
-  e1f = optimfun(ft_warp_error, e1i, options, pos1, pos2);
-  if fb; fprintf('distance = %f\n', ft_warp_error(e1f, pos1, pos2, 'nonlinear')); end
+  e1f = optimfun(errorfun, e1i, options, pos1, pos2);
+  if fb; fprintf('distance = %f\n', errorfun(e1f, pos1, pos2, 'nonlinear')); end
 end
 
 if level>=5
   % do a second order nonlinear transformation,
   if fb; disp('2nd order nonlinear...'); end
   e2i = [e1f zeros(3,6)];
-  e2f = optimfun(ft_warp_error, e2i, options, pos1, pos2);
-  if fb; fprintf('distance = %f\n', ft_warp_error(e2f, pos1, pos2, 'nonlinear')); end
+  e2f = optimfun(errorfun, e2i, options, pos1, pos2);
+  if fb; fprintf('distance = %f\n', errorfun(e2f, pos1, pos2, 'nonlinear')); end
 end
 
 if level>=6
   % do a third order nonlinear transformation,
   if fb; disp('3rd order nonlinear...'); end
   e3i = [e2f zeros(3,10)];
-  e3f = optimfun(ft_warp_error, e3i, options, pos1, pos2);
-  if fb; fprintf('distance = %f\n', ft_warp_error(e3f, pos1, pos2, 'nonlinear')); end
+  e3f = optimfun(errorfun, e3i, options, pos1, pos2);
+  if fb; fprintf('distance = %f\n', errorfun(e3f, pos1, pos2, 'nonlinear')); end
 end
 
 if level>=7
   % do a fourth order nonlinear transformation,
   if fb; disp('4th order nonlinear...'); end
   e4i = [e3f zeros(3,15)];
-  e4f = optimfun(ft_warp_error, e4i, options, pos1, pos2);
-  if fb; fprintf('distance = %f\n', ft_warp_error(e4f, pos1, pos2, 'nonlinear')); end
+  e4f = optimfun(errorfun, e4i, options, pos1, pos2);
+  if fb; fprintf('distance = %f\n', errorfun(e4f, pos1, pos2, 'nonlinear')); end
 end
 
 if level>=8
   % do a fifth order nonlinear transformation,
   if fb; disp('5th order nonlinear...'); end
   e5i = [e4f zeros(3,21)];
-  e5f = optimfun(ft_warp_error, e5i, options, pos1, pos2);
-  if fb; fprintf('distance = %f\n', ft_warp_error(e5f, pos1, pos2, 'nonlinear')); end
+  e5f = optimfun(errorfun, e5i, options, pos1, pos2);
+  if fb; fprintf('distance = %f\n', errorfun(e5f, pos1, pos2, 'nonlinear')); end
 end
 
 % return the estimated parameters of the highest level warp
