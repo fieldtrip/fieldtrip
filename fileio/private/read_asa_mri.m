@@ -7,14 +7,14 @@ function [mri, seg, hdr] = read_asa_mri(fn);
 %
 % The raw image data is returned, together with the position of the
 % external head markers in raw image coordinates.
-% 
+%
 % In the ASA default PAN (pre-auricular/nasion) coordinate system
 %   PointOnPositiveYAxis -> LPA
 %   PointOnNegativeYAxis -> RPA
 %   PointOnPositiveXAxis -> nasion
 
 % Copyright (C) 2002, Robert Oostenveld
-% 
+%
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
 %
@@ -132,7 +132,7 @@ end
 % 2st dimension corresponds to rows,    which should be 'sagittal(right-left)'
 % 3rd dimension corresponds to slices,  which should be 'horizontal(inferior-superior)'
 
-if     strcmp(hdr.columns, 'coronal(occipital-frontal)') 
+if     strcmp(hdr.columns, 'coronal(occipital-frontal)')
   orientation(1) = 1;
 elseif strcmp(hdr.columns, 'sagittal(right-left)')
   orientation(1) = 2;
@@ -172,30 +172,29 @@ dim = size(mri);
 % if possible, create the accompanying homogenous coordinate transformation matrix
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if exist('headcoordinates', 'file')
-  % In case of PointOn..., ASA counts voxels from the center of the MRI
-  % and in case of VoxelOn..., ASA counts voxels from the corner of the MRI
-  % In both cases, ASA starts counting at [0 0 0], which is C convention
-  % whereas I want to count from the 1st voxel and number that with [1 1 1]
-  if ~isempty(hdr.posx) & ~isempty(hdr.negy) & ~isempty(hdr.posy)
-    offset = (dim + [1 1 1])/2;
-    hdr.fiducial.mri.nas = hdr.posx + offset;
-    hdr.fiducial.mri.lpa = hdr.posy + offset;
-    hdr.fiducial.mri.rpa = hdr.negy + offset;
-  else
-    offset = [1 1 1];
-    hdr.fiducial.mri.nas = hdr.voxposx + offset;
-    hdr.fiducial.mri.lpa = hdr.voxposy + offset;
-    hdr.fiducial.mri.rpa = hdr.voxnegy + offset;
-  end
-
-  % use the headcoordinates function (roboos/misc) to compute the transformaton matrix
-  hdr.transformMRI2Head = ft_headcoordinates(hdr.fiducial.mri.nas, hdr.fiducial.mri.lpa, hdr.fiducial.mri.rpa, 'asa');
-  hdr.transformHead2MRI = inv(hdr.transformMRI2Head);
-
-  % compute the fiducials in head coordinates
-  hdr.fiducial.head.nas = ft_warp_apply(hdr.transformMRI2Head, hdr.fiducial.mri.nas, 'homogenous');
-  hdr.fiducial.head.lpa = ft_warp_apply(hdr.transformMRI2Head, hdr.fiducial.mri.lpa, 'homogenous');
-  hdr.fiducial.head.rpa = ft_warp_apply(hdr.transformMRI2Head, hdr.fiducial.mri.rpa, 'homogenous');
+% In case of PointOn..., ASA counts voxels from the center of the MRI
+% and in case of VoxelOn..., ASA counts voxels from the corner of the MRI
+% In both cases, ASA starts counting at [0 0 0], which is C convention
+% whereas I want to count from the 1st voxel and number that with [1 1 1]
+if ~isempty(hdr.posx) & ~isempty(hdr.negy) & ~isempty(hdr.posy)
+  offset = (dim + [1 1 1])/2;
+  hdr.fiducial.mri.nas = hdr.posx + offset;
+  hdr.fiducial.mri.lpa = hdr.posy + offset;
+  hdr.fiducial.mri.rpa = hdr.negy + offset;
+else
+  offset = [1 1 1];
+  hdr.fiducial.mri.nas = hdr.voxposx + offset;
+  hdr.fiducial.mri.lpa = hdr.voxposy + offset;
+  hdr.fiducial.mri.rpa = hdr.voxnegy + offset;
 end
+
+% use the headcoordinates function (roboos/misc) to compute the transformaton matrix
+hdr.transformMRI2Head = ft_headcoordinates(hdr.fiducial.mri.nas, hdr.fiducial.mri.lpa, hdr.fiducial.mri.rpa, 'asa');
+hdr.transformHead2MRI = inv(hdr.transformMRI2Head);
+
+% compute the fiducials in head coordinates
+hdr.fiducial.head.nas = ft_warp_apply(hdr.transformMRI2Head, hdr.fiducial.mri.nas, 'homogenous');
+hdr.fiducial.head.lpa = ft_warp_apply(hdr.transformMRI2Head, hdr.fiducial.mri.lpa, 'homogenous');
+hdr.fiducial.head.rpa = ft_warp_apply(hdr.transformMRI2Head, hdr.fiducial.mri.rpa, 'homogenous');
+
 
