@@ -1,6 +1,6 @@
 function [result, M] = ft_warp_optim(input, target, method)
 
-% WARP_OPTIM determine intermediate positions using warping (deformation)
+% FT_WARP_OPTIM determine intermediate positions using warping (deformation)
 % the input cloud of points is warped to match the target.
 % The strategy is to start with simpelest linear warp, followed by a more
 % elaborate linear warp, which then is followed by the nonlinear warps up
@@ -24,8 +24,10 @@ function [result, M] = ft_warp_optim(input, target, method)
 % of the 1st (affine) up to the 5th order.
 %
 % When available, this function will use the MATLAB optimization toolbox.
+%
+% See also FT_WARP_APPLY, FT_WARP_ERRROR
 
-% Copyright (C) 2000-20011, Robert Oostenveld
+% Copyright (C) 2000-2013, Robert Oostenveld
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by

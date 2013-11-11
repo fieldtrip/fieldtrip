@@ -1,6 +1,6 @@
 function [dist] = ft_warp_error(M, input, target, varargin)
 
-% WARP_ERROR computes the mean distance after linear or non-linear warping
+% T_WARP_ERROR computes the mean distance after linear or non-linear warping
 % and can be used as the goalfunction in a 3D warping minimalisation
 %
 % Use as
@@ -9,8 +9,10 @@ function [dist] = ft_warp_error(M, input, target, varargin)
 % It returns the mean Euclidian distance (residu) when attempting to
 % transform the input towards the target using transformation M
 % and using the specified warping method.
+%
+% See also FT_WARP_OPTIM, FT_WARP_APPLY
 
-% Copyright (C) 2000-2005, Robert Oostenveld
+% Copyright (C) 2000-2013, Robert Oostenveld
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
