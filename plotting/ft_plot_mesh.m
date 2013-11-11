@@ -147,8 +147,8 @@ else
 end
 
 if isempty(pnt)
-    hs=[];
-    return
+  hs=[];
+  return
 end
 
 if hastri+hastet+hashex+hasline+haspoly>1
@@ -192,7 +192,7 @@ else
   line = [];
 end
 
-if haspnt 
+if haspnt
   if ~isempty(tri)
     hs = patch('Vertices', pnt, 'Faces', tri);
   elseif ~isempty(line)
@@ -205,20 +205,25 @@ if haspnt
   set(hs, 'tag', tag);
 end
 
-% the vertexcolor can be specified either as a color for each point that will be drawn, or as a value at each vertex
+% the vertexcolor can be specified either as a RGB color for each vertex, or as a single value at each vertex
+% the facecolor can be specified either as a RGB color for each triangle, or as a single value at each triangle
 % if there are triangles, the vertexcolor is used for linear interpolation over the patches
-vertexpotential = ~isempty(tri) && ~ischar(vertexcolor) && (size(pnt,1)==numel(vertexcolor) || size(pnt,1)==size(vertexcolor,1));
-facepotential   = ~isempty(tri) && ~ischar(facecolor)   && (size(tri,1)==numel(facecolor)   || size(tri,1)==size(facecolor,1));
+vertexpotential = ~isempty(tri) && ~ischar(vertexcolor) && (size(pnt,1)==numel(vertexcolor) || size(pnt,1)==size(vertexcolor,1) && size(vertexcolor,2)==1);
+facepotential   = ~isempty(tri) && ~ischar(facecolor  ) && (size(tri,1)==numel(facecolor  ) || size(tri,1)==size(facecolor  ,1) && size(facecolor  ,2)==1);
+
 if facepotential
   set(hs, 'FaceVertexCData', facecolor, 'FaceColor', 'flat');
 else
-  set(hs, 'FaceColor', facecolor);
+  if size(facecolor,1)==size(tri,1)
+    set(hs, 'FaceColor', facecolor);
+  elseif size(facecolor,1)==size(pnt,1)
+    set(hs, 'FaceVertexCData', facecolor, 'FaceColor', 'flat');
+  end
 end
 
 if vertexpotential
   % vertexcolor is an array with number of elements equal to the number of vertices
-  % if both vertexcolor and facecolor are arrays, let the vertexcolor
-  % prevail
+  % if both vertexcolor and facecolor are arrays, let the vertexcolor prevail
   set(hs, 'FaceVertexCData', vertexcolor, 'FaceColor', 'interp');
 end
 
@@ -293,7 +298,7 @@ if ~isequal(vertexcolor, 'none') && ~vertexpotential
       set(hs, 'MarkerSize', vertexsize, 'MarkerEdgeColor', vertexcolor);
     end
     
-  elseif ~ischar(vertexcolor) && size(vertexcolor,1)==size(pnt,1)
+  elseif ~ischar(vertexcolor) && size(vertexcolor,1)==size(pnt,1) && size(vertexcolor,2)==3
     % one RGB color for each point
     if size(pnt,2)==2
       for i=1:size(pnt,1)
