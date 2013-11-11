@@ -596,7 +596,7 @@ else
       [vert, face] = read_ply(filename);
       shape.pnt = [vert.x vert.y vert.z];
       if isfield(vert, 'red') && isfield(vert, 'green') && isfield(vert, 'blue')
-        shape.color = double([vert.red vert.green vert.blue]/255);
+        shape.color = double([vert.red vert.green vert.blue])/255;
       end
       switch size(face,2)
         case 3
