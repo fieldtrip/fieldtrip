@@ -208,8 +208,8 @@ end
 % the vertexcolor can be specified either as a RGB color for each vertex, or as a single value at each vertex
 % the facecolor can be specified either as a RGB color for each triangle, or as a single value at each triangle
 % if there are triangles, the vertexcolor is used for linear interpolation over the patches
-vertexpotential = ~isempty(tri) && ~ischar(vertexcolor) && (size(pnt,1)==numel(vertexcolor) || size(pnt,1)==size(vertexcolor,1) && size(vertexcolor,2)==1);
-facepotential   = ~isempty(tri) && ~ischar(facecolor  ) && (size(tri,1)==numel(facecolor  ) || size(tri,1)==size(facecolor  ,1) && size(facecolor  ,2)==1);
+vertexpotential = ~isempty(tri) && ~ischar(vertexcolor) && (size(pnt,1)==numel(vertexcolor) || size(pnt,1)==size(vertexcolor,1) && (size(vertexcolor,2)==1 || size(vertexcolor,2)==3));
+facepotential   = ~isempty(tri) && ~ischar(facecolor  ) && (size(tri,1)==numel(facecolor  ) || size(tri,1)==size(facecolor  ,1) && (size(facecolor  ,2)==1 || size(facecolor,2)==3));
 
 if facepotential
   set(hs, 'FaceVertexCData', facecolor, 'FaceColor', 'flat');
