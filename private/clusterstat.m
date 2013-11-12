@@ -115,7 +115,7 @@ elseif strcmp(cfg.clusterthreshold, 'nonparametric_individual')
     % only positive tail is needed
     postailcritval = srt(:,round((1-cfg.clusteralpha)*size(statrnd,2)));
     negtailcritval = -inf * ones(size(postailcritval));
-  elseif cfg.clustertail==1
+  elseif cfg.clustertail==-1
     % only negative tail is needed
     negtailcritval = srt(:,round((  cfg.clusteralpha)*size(statrnd,2)));
     postailcritval = +inf * ones(size(negtailcritval));
@@ -133,7 +133,7 @@ elseif strcmp(cfg.clusterthreshold, 'nonparametric_common')
     % only positive tail is needed
     postailcritval = srt(round((1-cfg.clusteralpha)*prod(size(statrnd))));
     negtailcritval = -inf * ones(size(postailcritval));
-  elseif cfg.clustertail==1
+  elseif cfg.clustertail==-1
     % only negative tail is needed
     negtailcritval = srt(round((  cfg.clusteralpha)*prod(size(statrnd))));
     postailcritval = +inf * ones(size(negtailcritval));
