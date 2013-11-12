@@ -363,7 +363,7 @@ switch eventformat
     statusindx = find(strcmp(hdr.label, 'STATUS'));
     if length(statusindx)==1
       % represent the rising flanks in the STATUS channel as events
-      event = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', statusindx, 'detectflank', 'up', 'trigshift', trigshift, 'fixbiosemi', true,);
+      event = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', statusindx, 'detectflank', 'up', 'trigshift', trigshift, 'fixbiosemi', true);
     else
       warning('BIOSIG does not have a consistent event representation, skipping events')
       event = [];
