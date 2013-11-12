@@ -380,7 +380,7 @@ switch headerformat
     hdr.nSamplesPre = 0;
     hdr.nTrials     = 1;
     hdr.orig        = orig;
-    % close the file between seperate read operations
+    % close the file between separate read operations
     fclose(orig.Head.FILE.FID);
     
   case {'brainvision_vhdr', 'brainvision_seg', 'brainvision_eeg', 'brainvision_dat'}

@@ -380,13 +380,13 @@ switch eventformat
       if ~isempty(line) && ~(isnumeric(line) && line==-1)
         if strncmpi(line, 'Mk', 2)
           % this line contains a marker
-          tok = tokenize(line, '=', 0);    % do not squeeze repetitions of the seperator
+          tok = tokenize(line, '=', 0);    % do not squeeze repetitions of the separator
           if length(tok)~=2
             warning('skipping unexpected formatted line in BrainVision marker file');
           else
             % the line looks like "MkXXX=YYY", which is ok
             % the interesting part now is in the YYY, i.e. the second token
-            tok = tokenize(tok{2}, ',', 0);    % do not squeeze repetitions of the seperator
+            tok = tokenize(tok{2}, ',', 0);    % do not squeeze repetitions of the separator
             if isempty(tok{1})
               tok{1}  = [];
             end
@@ -540,7 +540,7 @@ switch eventformat
       evt = read_edf(filename, hdr);
       % undo the faulty calibration
       evt = (evt - hdr.orig.Off(hdr.orig.annotation)) ./ hdr.orig.Cal(hdr.orig.annotation);
-      % convert the 16 bit format into the seperate bytes
+      % convert the 16 bit format into the separate bytes
       evt = typecast(int16(evt), 'uint8');
       % construct the Time-stamped Annotations Lists (TAL)
       tal  = tokenize(evt, char(0), true);
@@ -1042,7 +1042,7 @@ switch eventformat
     pnet(udp,'close');
     
   case 'fcdc_serial'
-    % this code is moved to a seperate file
+    % this code is moved to a separate file
     event = read_serial_event(filename);
     
   case 'fcdc_mysql'
@@ -1263,7 +1263,7 @@ switch eventformat
       % read the Parallel_in channel from the DMA log file
       ttl = read_neuralynx_dma(filename, begsample, endsample, 'ttl');
     elseif strcmp(eventformat, 'neuralynx_sdma')
-      % determine the seperate files with the trigger and timestamp information
+      % determine the separate files with the trigger and timestamp information
       [p, f, x] = fileparts(filename);
       ttlfile = fullfile(filename, [f '.ttl.bin']);
       tslfile = fullfile(filename, [f '.tsl.bin']);
@@ -1278,19 +1278,19 @@ switch eventformat
         % these files must be present in a splitted dma dataset
         error('could not locate the individual ttl, tsl and tsh files');
       end
-      % read the trigger values from the seperate file
+      % read the trigger values from the separate file
       ttl = read_neuralynx_bin(ttlfile, begsample, endsample);
     elseif strcmp(eventformat, 'neuralynx_ttl')
       % determine the optional files with timestamp information
       tslfile = [filename(1:(end-4)) '.tsl'];
       tshfile = [filename(1:(end-4)) '.tsh'];
-      % read the triggers from a seperate *.ttl file
+      % read the triggers from a separate *.ttl file
       ttl = read_neuralynx_ttl(filename, begsample, endsample);
     elseif strcmp(eventformat, 'neuralynx_bin')
       % determine the optional files with timestamp information
       tslfile = [filename(1:(end-8)) '.tsl.bin'];
       tshfile = [filename(1:(end-8)) '.tsh.bin'];
-      % read the triggers from a seperate *.ttl.bin file
+      % read the triggers from a separate *.ttl.bin file
       ttl = read_neuralynx_bin(filename, begsample, endsample);
     end
     
@@ -1408,14 +1408,14 @@ switch eventformat
     
   
   case 'neuralynx_cds'
-    % this is a combined Neuralynx dataset with seperate subdirectories for the LFP, MUA and spike channels
+    % this is a combined Neuralynx dataset with separate subdirectories for the LFP, MUA and spike channels
     dirlist   = dir(filename);
     %haslfp   = any(filetype_check_extension({dirlist.name}, 'lfp'));
     %hasmua   = any(filetype_check_extension({dirlist.name}, 'mua'));
     %hasspike = any(filetype_check_extension({dirlist.name}, 'spike'));
-    %hastsl   = any(filetype_check_extension({dirlist.name}, 'tsl'));   % seperate file with original TimeStampLow
-    %hastsh   = any(filetype_check_extension({dirlist.name}, 'tsh'));   % seperate file with original TimeStampHi
-    hasttl    = any(filetype_check_extension({dirlist.name}, 'ttl'));   % seperate file with original Parallel_in
+    %hastsl   = any(filetype_check_extension({dirlist.name}, 'tsl'));   % separate file with original TimeStampLow
+    %hastsh   = any(filetype_check_extension({dirlist.name}, 'tsh'));   % separate file with original TimeStampHi
+    hasttl    = any(filetype_check_extension({dirlist.name}, 'ttl'));   % separate file with original Parallel_in
     hasnev    = any(filetype_check_extension({dirlist.name}, 'nev'));   % original Events.Nev file
     hasmat    = 0;
     if hasttl

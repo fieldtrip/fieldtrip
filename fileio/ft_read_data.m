@@ -341,7 +341,7 @@ switch dataformat
     begsample = begsample - (begepoch-1)*epochlength;  % correct for the number of bytes that were skipped
     endsample = endsample - (begepoch-1)*epochlength;  % correct for the number of bytes that were skipped
     dat = dat(:, begsample:endsample);
-    % close the file between seperate read operations
+    % close the file between separate read operations
     fclose(orig.Head.FILE.FID);
     
   case {'biosig'}

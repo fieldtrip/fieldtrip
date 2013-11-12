@@ -644,11 +644,11 @@ elseif ~isdir(filename) && isdir(p) && exist(fullfile(p, 'info.xml'), 'file') &&
   
   % these are formally not Neuralynx file formats, but at the FCDC we use them together with Neuralynx
 elseif isdir(filename) && filetype_check_neuralynx_cds(filename)
-  % a downsampled Neuralynx DMA file can be split into three seperate lfp/mua/spike directories
+  % a downsampled Neuralynx DMA file can be split into three separate lfp/mua/spike directories
   % treat them as one combined dataset
   type = 'neuralynx_cds';
   manufacturer = 'Donders Centre for Cognitive Neuroimaging';
-  content = 'dataset containing seperate lfp/mua/spike directories';
+  content = 'dataset containing separate lfp/mua/spike directories';
 elseif filetype_check_extension(filename, '.tsl') && filetype_check_header(filename, 'tsl')
   type = 'neuralynx_tsl';
   manufacturer = 'Donders Centre for Cognitive Neuroimaging';
@@ -748,7 +748,7 @@ elseif filetype_check_extension(filename, '.bsa')
 elseif exist(fullfile(p, [f '.dat']), 'file') && (exist(fullfile(p, [f '.gen']), 'file') || exist(fullfile(p, [f '.generic']), 'file'))
   type = 'besa_sb';
   manufacturer = 'BESA';
-  content = 'simple binary channel data with a seperate generic ascii header';
+  content = 'simple binary channel data with a separate generic ascii header';
   
   % known Dataq file formats
 elseif filetype_check_extension(upper(filename), '.WDQ')

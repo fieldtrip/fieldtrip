@@ -23,7 +23,7 @@ function elec = read_asa_elc(fn);
 %
 % $Id$
 
-% the older *.elc files have an Nx3 matrix with positions and seperate labels
+% the older *.elc files have an Nx3 matrix with positions and separate labels
 % the newer *.elc files are formatted like this
 %    Fp1:    94.9    30.7    14.0
 % and also include Positions2D
