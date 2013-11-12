@@ -751,7 +751,6 @@ if ~any(strcmp('COMNT', layout.label)) && strcmpi(cfg.style, '2d') && ~skipcomnt
   layout.width(end+1)  = mean(layout.width);
   layout.height(end+1) = mean(layout.height);
   X                 = min(layout.pos(:,1));
-  Y                 = max(layout.pos(:,2));
   Y                 = min(layout.pos(:,2));
   layout.pos(end+1,:)  = [X Y];
 elseif any(strcmp('COMNT', layout.label)) && skipcomnt
