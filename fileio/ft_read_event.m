@@ -177,15 +177,15 @@ switch eventformat
     % read the trigger channel and do flank detection
     trgindx = match_str(hdr.label, 'TRIGGER');
     if isfield(hdr, 'orig') && isfield(hdr.orig, 'config_data') && (strcmp(hdr.orig.config_data.site_name, 'Glasgow') || strcmp(hdr.orig.config_data.site_name, 'Marseille')),
-      trigger = read_trigger(filename, 'header', hdr, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trgindx, 'detectflank', detectflank, 'trigshift', trigshift,'fix4d8192',1, 'dataformat', '4d');
+      trigger = read_trigger(filename, 'header', hdr, 'dataformat', '4d', 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trgindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fix4d8192', true);
     else
-      trigger = read_trigger(filename, 'header', hdr, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trgindx, 'detectflank', detectflank, 'trigshift', trigshift,'fix4d8192',0, 'dataformat', '4d');
+      trigger = read_trigger(filename, 'header', hdr, 'dataformat', '4d', 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trgindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fix4d8192', false);
     end
     event   = appendevent(event, trigger);
     
     respindx = match_str(hdr.label, 'RESPONSE');
     if ~isempty(respindx)
-      response = read_trigger(filename, 'header', hdr, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', respindx, 'detectflank', detectflank, 'trigshift', trigshift, 'dataformat', '4d');
+      response = read_trigger(filename, 'header', hdr, 'dataformat', '4d', 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', respindx, 'detectflank', detectflank, 'trigshift', trigshift);
       event    = appendevent(event, response);
     end
     
@@ -363,8 +363,7 @@ switch eventformat
     statusindx = find(strcmp(hdr.label, 'STATUS'));
     if length(statusindx)==1
       % represent the rising flanks in the STATUS channel as events
-      event = read_trigger(filename, 'header', hdr, 'chanindx', statusindx, ...
-        'detectflank', 'up', 'fixbiosemi', true, 'begsample', flt_minsample, 'endsample', flt_maxsample);
+      event = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', statusindx, 'detectflank', 'up', 'trigshift', trigshift, 'fixbiosemi', true,);
     else
       warning('BIOSIG does not have a consistent event representation, skipping events')
       event = [];
@@ -478,10 +477,10 @@ switch eventformat
       origSensType = [];
     end
     % meg channels are 5, refmag 0, refgrad 1, adcs 18, trigger 11, eeg 9
-    trigchanindx = find(origSensType==11);
-    if ~isempty(trigchanindx)
+    trigindx = find(origSensType==11);
+    if ~isempty(trigindx)
       % read the trigger channel and do flank detection
-      trigger = read_trigger(filename, 'header', hdr, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trigchanindx, 'dataformat', dataformat, 'detectflank', detectflank, 'trigshift', trigshift, 'fixctf', 1);
+      trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trigindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixctf', true);
       event   = appendevent(event, trigger);
     end
     
@@ -1067,7 +1066,7 @@ switch eventformat
     end
     % use a helper function to read the trigger channels and detect the flanks
     % pass all the other users options to the read_trigger function
-    event = read_trigger(filename, 'header', hdr, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trigindx, 'dataformat', dataformat, 'detectflank', detectflank, 'trigshift', trigshift);
+    event = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trigindx, 'detectflank', detectflank, 'trigshift', trigshift);
     
   case {'itab_raw' 'itab_mhd'}
     if isempty(hdr)
@@ -1082,8 +1081,8 @@ switch eventformat
     end
     if isempty(event)
       warning('no events found in the event table, reading the trigger channel(s)');
-      trigsel = find(ft_chantype(hdr, 'flag'));
-      trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trigsel, 'detectflank', detectflank, 'trigshift', trigshift);
+      trigindx = find(ft_chantype(hdr, 'flag'));
+      trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trigindx, 'detectflank', detectflank, 'trigshift', trigshift);
       event   = appendevent(event, trigger);
     end
     
@@ -1098,7 +1097,7 @@ switch eventformat
     end
     if isfield(hdr, 'orig') && isfield(hdr.orig, 'Trigger_Area') && isfield(hdr.orig, 'Tigger_Area_Length')
       if ~isempty(trigindx)
-        trigger = read_trigger(filename, 'header', hdr, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trigindx, 'detectflank', detectflank, 'trigshift', trigshift,'dataformat', 'micromed_trc');
+        trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trigindx, 'detectflank', detectflank, 'trigshift', trigshift);
         event   = appendevent(event, trigger);
       else
         % routine that reads analog triggers in case no index is specified
@@ -1212,7 +1211,7 @@ switch eventformat
       end
       
       if ~isempty(binaryindx)
-        trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', binaryindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixneuromag', 0);
+        trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', binaryindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixneuromag', false);
         event   = appendevent(event, trigger);
       end
       if ~isempty(analogindx)
@@ -1220,7 +1219,7 @@ switch eventformat
         % there are some issues with noise on these analog trigger
         % channels, on older systems only
         % read the trigger channel and do flank detection
-        trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', analogindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixneuromag', 1);
+        trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', analogindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixneuromag', true);
         event   = appendevent(event, trigger);
       end
       
