@@ -171,6 +171,16 @@ for i=1:length(chanindx)
   end
 
   switch detectflank
+    case 'bit'
+      trig = uint32([pad trig]);
+      for k=1:32
+        bitval = bitget(trig, k);                             % get each of the bits separately
+        for j=find(~bitval(1:end-1) & bitval(2:end))
+          event(end+1).type   = channel;
+          event(end  ).sample = j + begsample - 1;            % assign the sample at which the trigger has gone down
+          event(end  ).value  = 2^(k-1);                      % assign the value represented by this bit
+        end % j
+      end % k
     case 'up'
       % convert the trigger into an event with a value at a specific sample
       for j=find(diff([pad trig(:)'])>0)
