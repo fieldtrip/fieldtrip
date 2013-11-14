@@ -350,7 +350,7 @@ switch headerformat
     % assign the channel type and units for the known channels
     hdr.chantype = repmat({'unknown'}, size(hdr.label));
     hdr.chanunit = repmat({'unknown'}, size(hdr.label));
-    chan = ~cellfun(@isempty, regexp(hdr.label, '^A.*$'));
+    chan = ~cellfun(@isempty, regexp(hdr.label, '^[A-D]\d*$'));
     hdr.chantype(chan) = {'eeg'};
     hdr.chanunit(chan) = {'uV'};
     
