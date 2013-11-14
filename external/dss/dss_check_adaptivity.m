@@ -4,7 +4,7 @@ function state = dss_check_adaptivity(state)
 % Copyright (C) 2004, 2005 DSS MATLAB package team (dss@cis.hut.fi).
 % Distributed by Laboratory of Computer and Information Science,
 % Helsinki University of Technology. http://www.cis.hut.fi/projects/dss/.
-% $Id: dss_check_adaptivity.m,v 1.2 2005/04/20 10:19:24 kosti Exp $
+% $Id$
 
 state.adapt_alpha=0;
 if isfield(state, 'alphaf')

@@ -10,7 +10,7 @@ function json=savejson(rootname,obj,varargin)
 % author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
 %            created on 2011/09/09
 %
-% $Id: savejson.m 341 2012-01-25 23:51:33Z fangq $
+% $Id$
 %
 % input:
 %      rootname: name of the root-object, if set to '', will use variable name

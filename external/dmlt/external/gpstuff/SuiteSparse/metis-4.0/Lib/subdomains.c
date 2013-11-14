@@ -9,7 +9,7 @@
  * Started 7/15/98
  * George
  *
- * $Id: subdomains.c,v 1.1 1998/11/27 17:59:32 karypis Exp $
+ * $Id$
  *
  */
 

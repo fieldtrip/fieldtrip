@@ -16,7 +16,7 @@ function data = loadjson(fname,varargin)
 %         http://www.mathworks.com/matlabcentral/fileexchange/20565
 %            date: 2008/07/03
 %
-% $Id: loadjson.m 360 2012-02-29 19:50:48Z fangq $
+% $Id$
 %
 % input:
 %      fname: input file name, if fname contains "{}" or "[]", fname

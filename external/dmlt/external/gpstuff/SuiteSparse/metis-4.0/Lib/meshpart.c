@@ -8,7 +8,7 @@
  * Started 9/29/97
  * George
  *
- * $Id: meshpart.c,v 1.1 1998/11/27 17:59:21 karypis Exp $
+ * $Id$
  *
  */
 

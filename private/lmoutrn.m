@@ -27,7 +27,7 @@ function [la, mu, dist, proj] = lmoutrn(v1, v2, v3, r)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: lmoutrn.m 4624 2011-10-29 10:10:49Z roboos $
+% $Id$
 
 if size(r,1)==1 && size(v1,1)>1
   r = repmat(r, [size(v1,1), 1]);

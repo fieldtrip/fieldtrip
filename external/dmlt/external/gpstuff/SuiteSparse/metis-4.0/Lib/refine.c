@@ -8,7 +8,7 @@
  * Started 7/24/97
  * George
  *
- * $Id: refine.c,v 1.1 1998/11/27 17:59:29 karypis Exp $
+ * $Id$
  */
 
 #include <metis.h>

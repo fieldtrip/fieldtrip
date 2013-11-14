@@ -9,7 +9,7 @@
  * Started 9/18/98
  * George
  *
- * $Id: mtest.c,v 1.8 1998/09/20 17:36:14 karypis Exp $
+ * $Id$
  *
  */
 

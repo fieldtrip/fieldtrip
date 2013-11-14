@@ -8,7 +8,7 @@
  * Started 7/24/97
  * George
  *
- * $Id: timing.c,v 1.1 1998/11/27 17:59:32 karypis Exp $
+ * $Id$
  *
  */
 

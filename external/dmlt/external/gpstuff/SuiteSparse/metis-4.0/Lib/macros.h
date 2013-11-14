@@ -8,7 +8,7 @@
  * Started 9/25/94
  * George
  *
- * $Id: macros.h,v 1.1 1998/11/27 17:59:18 karypis Exp $
+ * $Id$
  *
  */
 

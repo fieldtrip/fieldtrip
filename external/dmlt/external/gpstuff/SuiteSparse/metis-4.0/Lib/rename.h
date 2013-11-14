@@ -8,7 +8,7 @@
  * Started 10/2/97
  * George
  *
- * $Id: rename.h,v 1.1 1998/11/27 17:59:29 karypis Exp $
+ * $Id$
  *
  */
 

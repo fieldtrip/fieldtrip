@@ -12,7 +12,7 @@ function [params, s_new] = denoise_pow3(params, s, state)
 % Copyright (C) 2004, 2005 DSS MATLAB package team (dss@cis.hut.fi).
 % Distributed by Laboratory of Computer and Information Science,
 % Helsinki University of Technology. http://www.cis.hut.fi/projects/dss/.
-% $Id: denoise_pow3.m,v 1.12 2005/12/02 12:23:18 jaakkos Exp $
+% $Id$
 
 if nargin<3 | ~isstruct(state)
     params.name = 'Kurtosis based denoising';

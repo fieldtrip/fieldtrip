@@ -9,7 +9,7 @@
  * Started 8/18/97
  * George
  *
- * $Id: mesh.c,v 1.1 1998/11/27 17:59:20 karypis Exp $
+ * $Id$
  *
  */
 

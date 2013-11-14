@@ -1,8 +1,8 @@
 ### Table of patient codes. 
 # This file is part of the biosig project http://biosig.sf.net/
 # Copyright (C) 2004-2005 Alois Schloegl <a.schloegl@ieee.org>
-# $Revision: 1.12 $
-# $Id: eventcodes.txt,v 1.12 2005/05/21 21:05:13 schloegl Exp $
+# $Revision$
+# $Id$
 #
 ### table of patient codes: lines starting with # are omitted
 

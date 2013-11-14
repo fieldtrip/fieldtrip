@@ -8,7 +8,7 @@
  * Started 9/26/95
  * George
  *
- * $Id: struct.h,v 1.1 1998/11/27 17:59:31 karypis Exp $
+ * $Id$
  */
 
 /* Undefine the following #define in order to use short int as the idxtype */

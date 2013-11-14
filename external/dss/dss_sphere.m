@@ -11,7 +11,7 @@ function [V,dV] = dss_sphere(X, dim, symmetric)
 % Copyright (C) 2004, 2005 DSS MATLAB package team (dss@cis.hut.fi).
 % Distributed by Laboratory of Computer and Information Science,
 % Helsinki University of Technology. http://www.cis.hut.fi/projects/dss/.
-% $Id: dss_sphere.m,v 1.2 2005/11/30 08:29:40 jaakkos Exp $
+% $Id$
 
 % Treshold for eigenvalues that are treated zero
 tresholdEig=1e-9;

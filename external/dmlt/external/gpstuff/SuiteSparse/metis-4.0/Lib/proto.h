@@ -8,7 +8,7 @@
  * Started 10/19/95
  * George
  *
- * $Id: proto.h,v 1.1 1998/11/27 17:59:28 karypis Exp $
+ * $Id$
  *
  */
 

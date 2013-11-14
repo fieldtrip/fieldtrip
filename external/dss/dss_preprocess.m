@@ -5,7 +5,7 @@ function state = dss_preprocess(X, state)
 % Copyright (C) 2004, 2005 DSS MATLAB package team (dss@cis.hut.fi).
 % Distributed by Laboratory of Computer and Information Science,
 % Helsinki University of Technology. http://www.cis.hut.fi/projects/dss/.
-% $Id: dss_preprocess.m,v 1.6 2005/11/30 08:29:40 jaakkos Exp $
+% $Id$
 
 if isfield(state, 'Y')
   dss_message(state, 1, 'WARNING: Overwriting existing preprocessed data');

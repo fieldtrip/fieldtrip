@@ -23,7 +23,7 @@ function [major,minor,patchnum,extra]=iso2meshver
 major=1;
 minor=0;
 patchnum=1;
-extra='$Rev:: 296 $';
+extra='$Rev::     $';
 extra=regexprep(extra,'[\s$:]', '');
 
 iso2meshvstr=sprintf('%d.%d.%d',major,minor,patchnum);

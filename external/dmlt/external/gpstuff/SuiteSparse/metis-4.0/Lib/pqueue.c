@@ -10,7 +10,7 @@
  * Started 9/2/94
  * George
  *
- * $Id: pqueue.c,v 1.1 1998/11/27 17:59:28 karypis Exp $
+ * $Id$
  *
  */
 

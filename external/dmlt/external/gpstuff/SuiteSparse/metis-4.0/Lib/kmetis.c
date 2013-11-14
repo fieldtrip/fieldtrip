@@ -9,7 +9,7 @@
  * Started 7/28/97
  * George
  *
- * $Id: kmetis.c,v 1.1 1998/11/27 17:59:15 karypis Exp $
+ * $Id$
  *
  */
 

@@ -24,7 +24,7 @@ function [vol, M, dcminfo, mr_parms] = load_dicom_fl(flist)
 % CVS Revision Info:
 %    $Author: nicks $
 %    $Date: 2011/03/02 00:04:12 $
-%    $Revision: 1.11 $
+%    $Revision$
 %
 % Copyright © 2011 The General Hospital Corporation (Boston, MA) "MGH"
 %

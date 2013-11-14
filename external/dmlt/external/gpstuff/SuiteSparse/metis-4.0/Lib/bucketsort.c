@@ -9,7 +9,7 @@
  * Started 7/25/97
  * George
  *
- * $Id: bucketsort.c,v 1.1 1998/11/27 17:59:11 karypis Exp $
+ * $Id$
  *
  */
 

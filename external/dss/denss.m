@@ -21,7 +21,7 @@ function [state, B, A] = denss(X_or_state, parameters)
 % Copyright (C) 2004, 2005 DSS MATLAB package team (dss@cis.hut.fi).
 % Distributed by Laboratory of Computer and Information Science,
 % Helsinki University of Technology. http://www.cis.hut.fi/projects/dss/.
-% $Id: denss.m,v 1.2 2005/12/02 12:23:18 jaakkos Exp $
+% $Id$
 
 % -- Initialize state
 if nargin>=2 | ~isstruct(X_or_state)
