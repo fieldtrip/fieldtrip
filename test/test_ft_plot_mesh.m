@@ -74,4 +74,24 @@ end
 if success, error('01');end
 
 
+%% while working on bug 2376 I noticed that there was again an error in ft_plot_mesh with color handling
+[pnt, tri] = icosahedron162;
+bnd.pnt = pnt;
+bnd.tri = tri;
+
+% these should all be self explanatory
+figure; ft_plot_mesh(bnd, 'vertexcolor',  'r')
+figure; ft_plot_mesh(bnd, 'facecolor',    'r')
+figure; ft_plot_mesh(bnd, 'vertexcolor',  rand(162,3))
+figure; ft_plot_mesh(bnd, 'facecolor',    rand(320,3))
+figure; ft_plot_mesh(bnd, 'vertexcolor',  rand(162,1))
+figure; ft_plot_mesh(bnd, 'facecolor',    rand(320,1))
+figure; ft_plot_mesh(bnd, 'vertexcolor',  rand(1,3))
+figure; ft_plot_mesh(bnd, 'facecolor',    rand(1,3))
+figure; ft_plot_mesh(bnd, 'facecolor', 'r', 'vertexcolor', rand(162,1))                         % vertexcolor should prevail as potential distribution
+figure; ft_plot_mesh(bnd, 'facecolor', 'r', 'vertexcolor', rand(162,3))                         % vertexcolor should prevail as potential distribution
+figure; ft_plot_mesh(bnd, 'facecolor', 'r', 'vertexcolor', 'g')                                 % vertexcolor should NOT prevail, i.e. green dots on a red sphere
+figure; ft_plot_mesh(bnd, 'facecolor', 'r'); ft_plot_mesh(bnd.pnt, 'vertexcolor', rand(162,3)); % polkadots on a red sphere
+
+
 

@@ -328,6 +328,9 @@ elseif iseeg
     sens.label   = sens.label(selsens);
   end
   
+  % the electrodes will be projected onto the surface, hence the sensor positions need to be updated at the end
+  sens = rmfield(sens, 'chanpos');
+  
   switch ft_voltype(vol)
     case {'infinite' 'infinite_monopole'}
       % nothing to do
@@ -560,6 +563,11 @@ elseif iseeg
   % end
   
 end % if iseeg or ismeg
+
+% add/update the channel positions, this is needed if the electrodes are projected to the surface
+if ~isfield(sens, 'senspos')
+  sens.chanpos = channelposition(sens);
+end
 
 if isfield(sens, 'tra')
   if issparse(sens.tra) && size(sens.tra, 1)==1
