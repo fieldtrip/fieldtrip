@@ -31,6 +31,16 @@ function state=randomseed(setseed)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 
+if ischar(setseed)
+  if strcmp(setseed, 'no')
+    setseed = [];
+  elseif strcmp(setseed, 'yes')
+    setseed = sum(100*clock);
+  else
+    error('unknown specification for a random seed');
+  end
+end
+
 if isempty(setseed) % save out rand state for later use
   if matlabversion(-Inf,'7.3') 
     rand('twister',sum(100*clock)) % can fail otherwise, if first time rand is called per matlab session
@@ -46,11 +56,22 @@ if isempty(setseed) % save out rand state for later use
   end
 else % seedval is actual random seed value set by user, OR saved state
   if matlabversion(-Inf,'7.6') 
-    rand('twister',setseed);
-    state=rand('twister');
+    if isscalar(setseed)
+      state=rand('twister',setseed);
+    elseif isnumeric(setseed)
+      % use only the first number of the array
+      fprintf('the requested random seed seems an array, but only a scalar is supported in this version of MATLAB, using the first entry\n');
+      state=rand('twister',setseed(1)); 
+    else
+      state=rand('twister');
+    end
   elseif matlabversion('7.7','7.11')
     if isscalar(setseed)
       stream=RandStream('mt19937ar','Seed',setseed);
+    elseif isnumeric(setseed)
+      % use only the first number of the array
+      fprintf('the requested random seed seems an array, but only a scalar is supported in this version of MATLAB, using the first entry\n');
+      stream=RandStream('mt19937ar','Seed',setseed(1));
     else
       stream=RandStream.getDefaultStream;
       stream.State=setseed;
@@ -75,5 +96,4 @@ else % seedval is actual random seed value set by user, OR saved state
     state=s.State;
   end
 end;
-
 

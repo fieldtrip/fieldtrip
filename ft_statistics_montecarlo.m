@@ -102,9 +102,6 @@ function [stat, cfg] = ft_statistics_montecarlo(cfg, dat, design, varargin)
 
 % deal with the user specified randomseed first, to mimick old behavior
 cfg.randomseed = ft_getopt(cfg, 'randomseed', 'yes');
-if istrue(cfg.randomseed)
-  cfg.randomseed = sum(100*clock);
-end
 
 % do the general initialization
 ft_defaults;
