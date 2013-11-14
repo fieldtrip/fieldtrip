@@ -556,8 +556,8 @@ if ~isempty(chanunit)
 end
 
 if ~isempty(dipoleunit)
-  scale = scalingfactor('A*m', dipoleunit);
-  lf    = scale*lf;
+  scale = scalingfactor('A*m', dipoleunit); % compue the scaling factor from A*m to the desired dipoleunit
+  lf    = lf/scale;                         % the leadfield is expressed in chanunit per dipoleunit, i.e. chanunit/dipoleunit
 end
 
 
