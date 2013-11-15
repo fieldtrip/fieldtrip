@@ -4,7 +4,7 @@ function test_bug963
 % WALLTIME 00:03:07
 
 % TEST test_bug963
-% TEST ft_read_header ft_read_sens ft_datatype_sens bti2grad itab2grad netmeg2grad ctf2grad mne2grad yokogawa2grad fif2grad mne2grad.old yokogawa2grad_new
+% TEST ft_read_header ft_read_sens ft_datatype_sens bti2grad itab2grad netmeg2grad ctf2grad mne2grad yokogawa2grad fif2grad mne2grad.old yokogawa2grad_new ft_compute_leadfield ft_prepare_vol_sens
 
 datadir = '/home/common/matlab/fieldtrip/data/test/bug963';
 rawdataprefix = '/home/common/matlab/fieldtrip/data/test';
@@ -39,7 +39,7 @@ for i=1:length(dataset)
   end
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % PART ONE: generate the reference data as a set of *.mat files
+  % PART 1A: generate the reference data as a set of *.mat files
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
   outputfile = sprintf('dataset%02d.mat', i);
@@ -53,7 +53,7 @@ for i=1:length(dataset)
   end
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % PART TWO: read the datasets and compare them to the reference data
+  % PART 1B: read the datasets and compare them to the reference data
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   outputfile = sprintf('dataset%02d.mat', i);
   reference = load(outputfile);
@@ -85,7 +85,7 @@ for i=1:length(dataset)
   if isfield(hdr.grad, 'coordsys')
     hdr.grad = rmfield(hdr.grad, 'coordsys');
   end
-    
+  
   assert(isequal(hdr.grad,           grad), sprintf('failed for %s', filename));
   assert(isequal(reference.grad,     grad), sprintf('failed for %s', filename));
   assert(isequal(reference.hdr.grad, grad), sprintf('failed for %s', filename));
@@ -95,10 +95,11 @@ for i=1:length(dataset)
   
 end % for all datasets
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PART 2:
 % also do a quick sanity check on the tutorial data
 % this checks that all three CTF implementations still work
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 filename = '/home/common/matlab/fieldtrip/data/Subject01.ds';
 hdr1 = ft_read_header(filename, 'headerformat', 'ctf_ds');
@@ -106,8 +107,10 @@ hdr2 = ft_read_header(filename, 'headerformat', 'read_ctf_res4');
 hdr3 = ft_read_header(filename, 'headerformat', 'ctf_read_res4');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PART 3:
 % it is important that all missing information can be added automatically
 % since people might have old grad structures in *.mat files on disk
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 for i=1:length(dataset)
   
@@ -151,4 +154,56 @@ for i=1:length(dataset)
   
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PART 4:
+% try out the unit conversion on a hand-crafted gradiometer array
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+sens          = [];
+sens.coilpos  = [0.01 0 0.01; -0.01 0 0.01];
+sens.coilori  = [0 0 1; 0 0 1];
+sens.tra      = [1 -1] / 0.02; % divide by the baseline
+sens.label    = {'M1'};
+sens.chantype = {'megplanar'};
+sens.chanunit = {'T/m'};
+sens.unit     = 'm';
+sens.type     = 'meg';
+
+if false
+  sens          = [];
+  sens.coilpos  = [0 0 0.01];
+  sens.coilori  = [0 0 1];
+  sens.chanpos  = [0 0 0.01];
+  sens.chanori  = [0 0 1];
+  sens.tra      = 1;
+  sens.label    = {'M1'};
+  sens.chantype = {'megmag'};
+  sens.chanunit = {'T'};
+  sens.unit     = 'm';
+  sens.type     = 'meg';
+end
+
+vol      = [];
+vol.type = 'infinite';
+vol.unit = 'm';
+
+pos = [0 0 -0.01];
+
+pos_m  = pos;
+pos_cm = pos*100;
+pos_mm = pos*1000;
+
+vol_m  = ft_convert_units(vol, 'm');
+vol_cm = ft_convert_units(vol, 'cm');
+vol_mm = ft_convert_units(vol, 'mm');
+
+sens_m  = ft_convert_units(sens, 'm');
+sens_cm = ft_convert_units(sens, 'cm');
+sens_mm = ft_convert_units(sens, 'mm');
+
+if strcmp(sens.chantype{1}, 'megplanar')
+  % this should be scaled with the geometrical units
+  assert(~isequal(sens_m.tra, sens_cm.tra));
+  assert(~isequal(sens_m.tra, sens_cm.tra));
+end
 
