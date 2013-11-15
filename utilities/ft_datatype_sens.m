@@ -298,7 +298,7 @@ switch version
     if ~isfield(sens, 'chanpos')
       if ismeg
         % sensor description is a MEG sensor-array, containing oriented coils
-        [chanpos, chanori, lab] = channelposition(sens, 'channel', 'all');
+        [chanpos, chanori, lab] = channelposition(sens);
         % the channel order can be different in the two representations
         [selsens, selpos] = match_str(sens.label, lab);
         sens.chanpos = nan(length(sens.label), 3);
@@ -312,7 +312,7 @@ switch version
       else
         % sensor description is something else, EEG/ECoG etc
         % note that chanori will be all NaNs
-        [chanpos, chanori, lab] = channelposition(sens, 'channel', 'all');
+        [chanpos, chanori, lab] = channelposition(sens);
         % the channel order can be different in the two representations
         [selsens, selpos] = match_str(sens.label, lab);
         sens.chanpos = nan(length(sens.label), 3);

@@ -565,7 +565,7 @@ elseif iseeg
 end % if iseeg or ismeg
 
 % add/update the channel positions, this is needed if the electrodes are projected to the surface
-if ~isfield(sens, 'senspos')
+if ~isfield(sens, 'chanpos')
   sens.chanpos = channelposition(sens);
 end
 
