@@ -65,6 +65,10 @@ elseif iselec
 elseif islabel
   label   = input;
   numchan = length(label);
+elseif isfield(input, 'label')
+  % this is a last resort: I don't know what it is, but perhaps the labels are informative
+  label   = input.label;
+  numchan = length(label);
 else
   error('the input that was provided to this function cannot be deciphered');
 end
