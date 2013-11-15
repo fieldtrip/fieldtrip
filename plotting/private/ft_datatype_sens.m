@@ -22,19 +22,20 @@ function [sens] = ft_datatype_sens(sens, varargin)
 % In case sens.tra is not present in the EEG sensor array, the channels
 % are assumed to be average referenced.
 %
+% The following fields apply to MEG and EEG
+%    sens.chantype = Mx1 cell-array with the type of the channel, see FT_CHANTYPE
+%    sens.chanunit = Mx1 cell-array with the units of the channel signal, e.g. 'V', 'fT' or 'T/cm', see FT_CHANUNIT
+%
 % The following fields are optional
 %    sens.type     = string with the MEG or EEG acquisition system, see FT_SENSTYPE
-%    sens.chantype = Mx1 cell-array with the type of the channel, see FT_CHANTYPE
-%    sens.chanunit = Mx1 cell-array with the units of the channel signal, e.g. 'T', 'fT' or 'fT/cm'
 %    sens.fid      = structure with fiducial information
 %
 % Revision history:
 %
-% (upcoming) The default units for all sensor descriptions will be changed to
-%  SI units, i.e. T, V and m. It will be possible to convert the amplitude and
-%  distance units (e.g. from T to fT and from m to mm). It will also be possible
-%  to express planar and axial gradiometer channels in units of amplitude or in
-%  units of amplitude/distance (i.e. gradient).
+% (upcoming) The chantype and chanunit have become required fields. It is possible
+%  to convert the amplitude and distance units (e.g. from T to fT and from m to mm)
+%  and it is possible to express planar and axial gradiometer channels either in
+%  units of amplitude or in units of amplitude/distance (i.e. proper gradient).
 %
 % (2011v2/latest) The chantype and chanunit have been added for MEG.
 %
@@ -103,8 +104,15 @@ amplitude = ft_getopt(varargin, 'amplitude'); % should be 'V' 'uV' 'T' 'mT' 'uT'
 distance  = ft_getopt(varargin, 'distance');  % should be 'm' 'dm' 'cm' 'mm'
 scaling   = ft_getopt(varargin, 'scaling');   % should be 'amplitude' or 'amplitude/distance', the default depends on the senstype
 
+if ~isempty(amplitude) && ~any(strcmp(amplitude, {'V' 'uV' 'T' 'mT' 'uT' 'nT' 'pT' 'fT'}))
+  error('unsupported unit of amplitude "%s"', amplitude);
+end
+
+if ~isempty(distance) && ~any(strcmp(distance, {'m' 'dm' 'cm' 'mm'}))
+  error('unsupported unit of distance "%s"', distance);
+end
+
 if strcmp(version, 'latest')
-  % NOTE TO SELF: once finalized, the code for 2011v2 and 2013 has to be merged into a single latest version
   version = '2011v2';
 end
 
@@ -112,109 +120,159 @@ if isempty(sens)
   return;
 end
 
+% this is needed further down
+nchan = length(sens.label);
+
+% there are many cases which deal with either eeg or meg
+ismeg = ft_senstype(sens, 'meg');
+
+
 switch version
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case 'upcoming' % this is under development and expected to become the standard in 2013
     
-    % update it to the latest standard version
+    % update it to the previous standard version
     sens = ft_datatype_sens(sens, 'version', '2011v2');
-    
-    % perform some sanity checks
-    if ~ft_senstype(sens, 'meg')
-      error('unsupported type of gradiometer array "%s"', ft_senstype(sens));
+
+    % in version 2011v2 this was optional, now it is required
+    if ~isfield(sens, 'chantype') || all(strcmp(sens.chantype, 'unknown'))
+      sens.chantype = ft_chantype(sens);
     end
     
-    if ~any(strcmp(amplitude, {'V' 'uV' 'T' 'mT' 'uT' 'nT' 'pT' 'fT'}))
-      error('unsupported unit of amplitude "%s"', amplitude);
+    % in version 2011v2 this was optional, now it is required
+    if ~isfield(sens, 'chanunit') || all(strcmp(sens.chanunit, 'unknown'))
+      sens.chanunit = ft_chanunit(sens);
+    end
+
+    if ~isempty(distance)
+      % update the units of distance, this also updates the tra matrix
+      sens = ft_convert_units(sens, distance);
+    else
+      % determine the default, this may be needed to set the scaling
+      distance = sens.unit;
     end
     
-    if ~any(strcmp(distance, {'m' 'dm' 'cm' 'mm'}))
-      error('unsupported unit of distance "%s"', distance);
-    end
-    
-    sel_m  = ~cellfun(@isempty, regexp(sens.chanunit, '/m$'));
-    sel_dm = ~cellfun(@isempty, regexp(sens.chanunit, '/dm$'));
-    sel_cm = ~cellfun(@isempty, regexp(sens.chanunit, '/cm$'));
-    sel_mm = ~cellfun(@isempty, regexp(sens.chanunit, '/mm$'));
-    
-    if     strcmp(sens.unit, 'm') && (any(sel_dm) || any(sel_cm) || any(sel_mm))
-      error('inconsistent units in input gradiometer');
-    elseif strcmp(sens.unit, 'dm') && (any(sel_m) || any(sel_cm) || any(sel_mm))
-      error('inconsistent units in input gradiometer');
-    elseif strcmp(sens.unit, 'cm') && (any(sel_m) || any(sel_dm) || any(sel_mm))
-      error('inconsistent units in input gradiometer');
-    elseif strcmp(sens.unit, 'mm') && (any(sel_m) || any(sel_dm) || any(sel_cm))
-      error('inconsistent units in input gradiometer');
-    end
-    
-    % update the units of distance, this also updates the tra matrix
-    sens = ft_convert_units(sens, distance);
-    
-    % update the tra matrix for the units of amplitude
-    nchan = length(sens.label);
-    for i=1:nchan
-      if ~isempty(regexp(sens.chanunit{i}, 'm$', 'once'))
-        % this channel is expressed as amplitude per distance
-        sens.tra(i,:)    = sens.tra(i,:) * scalingfactor(sens.chanunit{i}, [amplitude '/' distance]);
-        sens.chanunit{i} = [amplitude '/' distance];
-      elseif ~isempty(regexp(sens.chanunit{i}, '[T|V]$', 'once'))
-        % this channel is expressed as amplitude
-        sens.tra(i,:)    = sens.tra(i,:) * scalingfactor(sens.chanunit{i}, amplitude);
-        sens.chanunit{i} = amplitude;
+    if ~isempty(amplitude)
+      % update the tra matrix for the units of amplitude
+      % FIXME this fails if there is no tra matrix
+      for i=1:nchan
+        if ~isempty(regexp(sens.chanunit{i}, 'm$', 'once'))
+          % this channel is expressed as amplitude per distance
+          sens.tra(i,:)    = sens.tra(i,:) * scalingfactor(sens.chanunit{i}, [amplitude '/' distance]);
+          sens.chanunit{i} = [amplitude '/' distance];
+        elseif ~isempty(regexp(sens.chanunit{i}, '[T|V]$', 'once'))
+          % this channel is expressed as amplitude
+          sens.tra(i,:)    = sens.tra(i,:) * scalingfactor(sens.chanunit{i}, amplitude);
+          sens.chanunit{i} = amplitude;
+        else
+          error('unexpected channel unit "%s" in channel %d', i, sens.chanunit{i});
+        end
+      end
+    else
+      % determine the default amplityde, this may be needed to set the scaling
+      if any(~cellfun(@isempty, regexp(sens.chanunit, '^T')))
+        % one of the channel units starts with T
+        amplitude = 'T';
+      elseif any(~cellfun(@isempty, regexp(sens.chanunit, '^fT')))
+        % one of the channel units starts with fT
+        amplitude = 'fT';
+      elseif any(~cellfun(@isempty, regexp(sens.chanunit, '^V')))
+        % one of the channel units starts with V
+        amplitude = 'V';
+      elseif any(~cellfun(@isempty, regexp(sens.chanunit, '^uV')))
+        % one of the channel units starts with uV
+        amplitude = 'uV';
       else
-        error('unexpected channel unit "%s" in channel %d', i, sens.chanunit{i});
+        % this unknown amplitude will cause a problem if the scaling needs to be changed between amplitude and amplitude/distance
+        amplitude = 'unknown';
       end
     end
     
-    % FIXME what is the default scaling? ctf=amplitude, neuromag=amplitude/distance
-    % at the moment the default is [], which means "don't change"
-    
-    % update the gradiometer scaling
-    if strcmp(scaling, 'amplitude')
-      for i=1:nchan
-        if strcmp(sens.chanunit{i}, [amplitude '/' distance])
-          % this channel is expressed as amplitude per distance
-          coil = find(abs(sens.tra(i,:))~=0);
-          if length(coil)~=2
-            error('unexpected number of coils contributing to channel %d', i);
-          end
-          baseline         = norm(sens.coilpos(coil(1),:) - sens.coilpos(coil(2),:));
-          sens.tra(i,:)    = sens.tra(i,:)*baseline;  % scale with the baseline distance
-          sens.chanunit{i} = amplitude;
-        elseif strcmp(sens.chanunit{i}, amplitude)
-          % no conversion needed
-        else
-          error('unexpected channel unit "%s" in channel %d', i, sens.chanunit{i});
-        end % if
-      end % for
+    % perform some sanity checks
+    if ismeg
+      sel_m  = ~cellfun(@isempty, regexp(sens.chanunit, '/m$'));
+      sel_dm = ~cellfun(@isempty, regexp(sens.chanunit, '/dm$'));
+      sel_cm = ~cellfun(@isempty, regexp(sens.chanunit, '/cm$'));
+      sel_mm = ~cellfun(@isempty, regexp(sens.chanunit, '/mm$'));
       
-    elseif strcmp(scaling, 'amplitude/distance')
-      for i=1:nchan
-        if strcmp(sens.chanunit{i}, amplitude)
-          % this channel is expressed as amplitude
-          coil = find(abs(sens.tra(i,:))~=0);
-          if length(coil)==1
-            % this is a magnetometer channel, no conversion needed
-            continue
-          elseif length(coil)~=2
-            error('unexpected number of coils (%d) contributing to channel %s (%d)', length(coil), sens.label{i}, i);
-          end
-          baseline         = norm(sens.coilpos(coil(1),:) - sens.coilpos(coil(2),:));
-          sens.tra(i,:)    = sens.tra(i,:)/baseline; % scale with the baseline distance
-          sens.chanunit{i} = [amplitude '/' distance];
-        elseif strcmp(sens.chanunit{i}, [amplitude '/' distance])
-          % no conversion needed
+      if     strcmp(sens.unit, 'm') && (any(sel_dm) || any(sel_cm) || any(sel_mm))
+        error('inconsistent units in input gradiometer');
+      elseif strcmp(sens.unit, 'dm') && (any(sel_m) || any(sel_cm) || any(sel_mm))
+        error('inconsistent units in input gradiometer');
+      elseif strcmp(sens.unit, 'cm') && (any(sel_m) || any(sel_dm) || any(sel_mm))
+        error('inconsistent units in input gradiometer');
+      elseif strcmp(sens.unit, 'mm') && (any(sel_m) || any(sel_dm) || any(sel_cm))
+        error('inconsistent units in input gradiometer');
+      end
+      
+      % the default should be amplitude/distance for neuromag and aplitude for all others
+      if isempty(scaling)
+        if ft_senstype(sens, 'neuromag')
+          scaling = 'amplitude/distance';
+        elseif ft_senstype(sens, 'yokogawa440')
+          warning('asuming that the default scaling should be amplitude rather than amplitude/distance');
+          scaling = 'amplitude';
         else
-          error('unexpected channel unit "%s" in channel %d', i, sens.chanunit{i});
-        end % if
-      end % for
+          scaling = 'amplitude';
+        end
+      end
+      
+      % update the gradiometer scaling
+      if strcmp(scaling, 'amplitude')
+        for i=1:nchan
+          if strcmp(sens.chanunit{i}, [amplitude '/' distance])
+            % this channel is expressed as amplitude per distance
+            coil = find(abs(sens.tra(i,:))~=0);
+            if length(coil)~=2
+              error('unexpected number of coils contributing to channel %d', i);
+            end
+            baseline         = norm(sens.coilpos(coil(1),:) - sens.coilpos(coil(2),:));
+            sens.tra(i,:)    = sens.tra(i,:)*baseline;  % scale with the baseline distance
+            sens.chanunit{i} = amplitude;
+          elseif strcmp(sens.chanunit{i}, amplitude)
+            % no conversion needed
+          else
+            error('unexpected channel unit "%s" in channel %d', i, sens.chanunit{i});
+          end % if
+        end % for
+        
+      elseif strcmp(scaling, 'amplitude/distance')
+        for i=1:nchan
+          if strcmp(sens.chanunit{i}, amplitude)
+            % this channel is expressed as amplitude
+            coil = find(abs(sens.tra(i,:))~=0);
+            if length(coil)==1
+              % this is a magnetometer channel, no conversion needed
+              continue
+            elseif length(coil)~=2
+              error('unexpected number of coils (%d) contributing to channel %s (%d)', length(coil), sens.label{i}, i);
+            end
+            baseline         = norm(sens.coilpos(coil(1),:) - sens.coilpos(coil(2),:));
+            sens.tra(i,:)    = sens.tra(i,:)/baseline; % scale with the baseline distance
+            sens.chanunit{i} = [amplitude '/' distance];
+          elseif strcmp(sens.chanunit{i}, [amplitude '/' distance])
+            % no conversion needed
+          else
+            error('unexpected channel unit "%s" in channel %d', i, sens.chanunit{i});
+          end % if
+        end % for
+        
+      end % if strcmp scaling
       
     else
-      error('incorrect specification of gradiometer scaling');
-    end
+      sel_m  = ~cellfun(@isempty, regexp(sens.chanunit, '/m$'));
+      sel_dm = ~cellfun(@isempty, regexp(sens.chanunit, '/dm$'));
+      sel_cm = ~cellfun(@isempty, regexp(sens.chanunit, '/cm$'));
+      sel_mm = ~cellfun(@isempty, regexp(sens.chanunit, '/mm$'));
+      if any(sel_m | sel_dm | sel_cm | sel_mm)
+        error('scaling of amplitude/distance has not been considered yet for EEG');
+      end
+      
+    end % if iseeg or ismeg
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case '2011v2'
+    
     if ~isempty(amplitude) || ~isempty(distance) || ~isempty(scaling)
       warning('amplitude, distance and scaling are not supported for version "%s"', version);
     end
@@ -225,9 +283,6 @@ switch version
     if ~isfield(sens, 'type')
       sens.type = ft_senstype(sens);
     end
-    
-    % there are many cases which deal with either eeg or meg
-    ismeg = ft_senstype(sens, 'meg');
     
     if isfield(sens, 'pnt')
       if ismeg
@@ -273,20 +328,21 @@ switch version
       if ismeg
         sens.chantype = ft_chantype(sens);
       else
-        % FIXME for EEG we have not yet figured out how to deal with this
+        % for EEG it is not required
       end
+    end
+    
+    if ~isfield(sens, 'unit')
+      % this should be done prior to calling ft_chanunit, since ft_chanunit uses this for planar neuromag channels
+      sens = ft_convert_units(sens);
     end
     
     if ~isfield(sens, 'chanunit') || all(strcmp(sens.chanunit, 'unknown'))
       if ismeg
         sens.chanunit = ft_chanunit(sens);
       else
-        % FIXME for EEG we have not yet figured out how to deal with this
+        % for EEG it is not required
       end
-    end
-    
-    if ~isfield(sens, 'unit')
-      sens = ft_convert_units(sens);
     end
     
     if any(strcmp(sens.type, {'meg', 'eeg', 'magnetometer', 'electrode', 'unknown'}))
