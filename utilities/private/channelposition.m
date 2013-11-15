@@ -266,14 +266,22 @@ switch ft_senstype(sens)
     if isfield(sens, 'tra')
       % each channel depends on multiple sensors (electrodes or coils)
       % compute a weighted position for the channel
-      [nchan, ncoil] = size(sens.tra);
-      pnt = zeros(nchan,3);
-      ori = zeros(nchan,3); % FIXME not sure whether this will work
-      for i=1:nchan
-        weight = abs(sens.tra(i,:));
-        weight = weight ./ sum(weight);
-        pnt(i,:) = weight * sens.coilpos;
-        ori(i,:) = weight * sens.coilori;
+      [nchan, ncoil] = size(sens.tra); % ncoil might also be nelec
+      pnt = nan(nchan,3);
+      ori = nan(nchan,3);
+      if isfield(sens, 'coilpos')
+        for i=1:nchan
+          weight = abs(sens.tra(i,:));
+          weight = weight ./ sum(weight);
+          pnt(i,:) = weight * sens.coilpos;
+          ori(i,:) = weight * sens.coilori;
+        end
+      elseif isfield(sens, 'elecpos')
+        for i=1:nchan
+          weight = abs(sens.tra(i,:));
+          weight = weight ./ sum(weight);
+          pnt(i,:) = weight * sens.elecpos;
+        end
       end
       lab = sens.label;
       
