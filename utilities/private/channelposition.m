@@ -30,11 +30,6 @@ function [pnt, ori, lab] = channelposition(sens, varargin)
 %
 % $Id$
 
-% FIXME varargin is not documented
-
-% get the optional input arguments
-getref = ft_getopt(varargin, 'channel', false);
-
 % remove the balancing from the sensor definition, e.g. planar gradients, 3rd-order gradients, PCA-cleaned data or ICA projections
 if isfield(sens, 'balance') && ~strcmp(sens.balance.current, 'none')
   sens = undobalancing(sens);
@@ -130,36 +125,34 @@ switch ft_senstype(sens)
     ori(sel,:) = sens.coilori(ind, :);
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % then do the references if needed
+    % then do the references
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    if getref
-      sens = sensorig;
-      sel  = ft_chantype(sens, 'ref');
-      
-      sens.label = sens.label(sel);
-      sens.tra   = sens.tra(sel,:);
-      
-      % subsequently remove the unused coils
-      used = any(abs(sens.tra)>0.0001, 1);  % allow a little bit of rounding-off error
-      sens.coilpos = sens.coilpos(used,:);
-      sens.coilori = sens.coilori(used,:);
-      sens.tra = sens.tra(:,used);
-      
-      [nchan, ncoil] = size(sens.tra);
-      refpnt = zeros(nchan,3);
-      refori = zeros(nchan,3); % FIXME not sure whether this will work
-      for i=1:nchan
-        weight = abs(sens.tra(i,:));
-        weight = weight ./ sum(weight);
-        refpnt(i,:) = weight * sens.coilpos;
-        refori(i,:) = weight * sens.coilori;
-      end
-      reflab = sens.label;
-      
-      lab(sel) = reflab;
-      pnt(sel,:) = refpnt;
-      ori(sel,:) = refori;
+    sens = sensorig;
+    sel  = ft_chantype(sens, 'ref');
+    
+    sens.label = sens.label(sel);
+    sens.tra   = sens.tra(sel,:);
+    
+    % subsequently remove the unused coils
+    used = any(abs(sens.tra)>0.0001, 1);  % allow a little bit of rounding-off error
+    sens.coilpos = sens.coilpos(used,:);
+    sens.coilori = sens.coilori(used,:);
+    sens.tra = sens.tra(:,used);
+    
+    [nchan, ncoil] = size(sens.tra);
+    refpnt = zeros(nchan,3);
+    refori = zeros(nchan,3); % FIXME not sure whether this will work
+    for i=1:nchan
+      weight = abs(sens.tra(i,:));
+      weight = weight ./ sum(weight);
+      refpnt(i,:) = weight * sens.coilpos;
+      refori(i,:) = weight * sens.coilori;
     end
+    reflab = sens.label;
+    
+    lab(sel)   = reflab;
+    pnt(sel,:) = refpnt;
+    ori(sel,:) = refori;
     
     sens = sensorig;
     
@@ -308,7 +301,7 @@ if n>1 && size(lab, 1)>1 % this is to prevent confusion when lab happens to be a
   ori = repmat(ori, n, 1);
 end
 
-% ensure that ther order is the same is in sens
+% ensure that the channel order is the same as in sens
 [sel1, sel2] = match_str(sens.label, lab);
 lab = lab(sel2);
 pnt = pnt(sel2, :);
@@ -317,18 +310,9 @@ ori = ori(sel2, :);
 % ensure that it is a row vector
 lab = lab(:);
 
-% the function can be called with a different number of output arguments
-if nargout==1
-  pnt = pnt;
-  ori = [];
-  lab = [];
-elseif nargout==2
-  pnt = pnt;
-  ori = lab;  % second output argument
-  lab = [];   % third output argument
-elseif nargout==3
-  pnt = pnt;
-  ori = ori;  % second output argument
-  lab = lab;  % third output argument
+% do a sanity check on the number of positions
+nchan = numel(sens.label);
+if length(lab)~=nchan || size(pnt,1)~=nchan || size(ori,1)~=nchan
+  warning('the positions were not determined for all channels');
 end
 
