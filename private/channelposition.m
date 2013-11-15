@@ -1,12 +1,11 @@
-function [pnt, ori, lab] = channelposition(sens, varargin)
+function [pnt, ori, lab] = channelposition(sens)
 
 % CHANNELPOSITION computes the channel positions and orientations from the
 % coils or electrodes
 %
 % Use as
-%   [pos, ori, lab] = channelposition(sens, ...)
-% where sens is an electrode or gradiometer array and the optional input
-% arguments should be specified as key value pairs.
+%   [pos, ori, lab] = channelposition(sens)
+% where sens is an electrode or gradiometer array.
 %
 % See also FT_DATATYPE_SENS
 
