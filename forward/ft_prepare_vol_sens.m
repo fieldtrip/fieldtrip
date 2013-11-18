@@ -150,7 +150,7 @@ elseif ismeg
   sens.tra     = sens.tra(:,selcoil);
   
   switch ft_voltype(vol)
-    case {'infinite' 'infinite_monopole'}
+    case {'infinite' 'infinite_monopole' 'infinite_currentdipole' 'infinite_magneticdipole'}
       % nothing to do
       
     case 'singlesphere'
@@ -332,7 +332,7 @@ elseif iseeg
   sens = rmfield(sens, 'chanpos');
   
   switch ft_voltype(vol)
-    case {'infinite' 'infinite_monopole'}
+    case {'infinite' 'infinite_monopole' 'infinite_currentdipole'}
       % nothing to do
       
     case {'halfspace', 'halfspace_monopole'}

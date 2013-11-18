@@ -167,6 +167,9 @@ elseif ft_senstype(input, 'itab') && isfield(input, 'chantype')
   
 end % if senstype
 
+% ensure that it is a column vector
+chanunit = chanunit(:);
+
 if nargin>1
   chanunit = strcmp(desired, chanunit);
 end

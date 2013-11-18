@@ -98,7 +98,10 @@ weight          = ft_getopt(varargin, 'weight');
 chanunit        = ft_getopt(varargin, 'chanunit');   % this is something like V, T, or T/m
 dipoleunit      = ft_getopt(varargin, 'dipoleunit'); % this is something like nA*m
 
-if any(strcmp(varargin, 'units'))
+if any(strcmp(varargin(1:2:end), 'unit'))
+  error('the ''unit'' option is not supported any more, please use ''chanunit''');
+end
+if any(strcmp(varargin(1:2:end), 'units'))
   error('the ''units'' option is not supported any more, please use ''chanunit''');
 end
 
@@ -269,7 +272,8 @@ elseif ismeg
         warning('No system matrix is present, Calling the Nemo Lab pipeline')
         lf = ft_om_compute_lead(pos, vol, sens);
       end
-    case 'infinite'
+      
+    case {'infinite_magneticdipole', 'infinite'}
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % magnetic dipole instead of electric (current) dipole in an infinite vacuum
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -286,6 +290,30 @@ elseif ismeg
       else
         % only single dipole
         lf = magnetic_dipole(pos, pnt, ori);
+      end
+      
+      if isfield(sens, 'tra')
+        % construct the channels from a linear combination of all magnetometer coils
+        lf = sens.tra * lf;
+      end
+      
+    case {'infinite_currentdipole'}
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      % current dipole in an infinite homogenous conducting medium
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      
+      pnt = sens.coilpos; % position of each coil
+      ori = sens.coilori; % orientation of each coil
+      
+      if Ndipoles>1
+        % loop over multiple dipoles
+        lf = zeros(size(pnt, 1), 3*Ndipoles);
+        for i=1:Ndipoles
+          lf(:, (3*i-2):(3*i)) = current_dipole(pos(i, :), pnt, ori);
+        end
+      else
+        % only single dipole
+        lf = current_dipole(pos, pnt, ori);
       end
       
       if isfield(sens, 'tra')
@@ -427,8 +455,8 @@ elseif iseeg
       end
       [lf, session] = bem_solve_lfm_eeg(session, p3);
       
-    case 'infinite'
-      % note that the conductivity of the medium is not known
+    case {'infinite_currentdipole' 'infinite'}
+      % FIXME the conductivity of the medium is not known
       lf = inf_medium_leadfield(pos, sens.elecpos, 1);
       
     case 'halfspace'
