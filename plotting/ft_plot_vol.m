@@ -113,7 +113,7 @@ switch ft_voltype(vol)
     % there is no boundary to be displayed
     bnd = [];
     
-  case 'infinite'
+  case {'infinite' 'infinite_monopole' 'infinite_currentdipole' 'infinite_magneticdipole'}
     warning('there is nothing to plot for an infinite volume conductor')
     
     % there is no boundary to be displayed
