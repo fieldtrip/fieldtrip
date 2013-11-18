@@ -32,7 +32,8 @@ function [data] = ft_combineplanar(cfg, data)
 % cfg.foilim
 % cfg.trials
 
-% Copyright (C) 2004, Ole Jensen, Robert Oostenveld
+% Copyright (C) 2004, Ole Jensen
+% Copyright (C) 2004-2013, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -98,7 +99,7 @@ if ~strcmp(cfg.trials, 'all')
 end
 
 % find the combination of horizontal and vertical channels that should be combined
-planar    = planarchannelset(data);
+planar = ft_senslabel(ft_senstype(data), 'outputformat', 'planar');
 [dum, sel_dH]    = match_str(planar(:,1), data.label);  % indices of the horizontal channels
 [dum, sel_dV]    = match_str(planar(:,2), data.label);  % indices of the vertical   channels
 
