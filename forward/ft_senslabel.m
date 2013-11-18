@@ -3673,4 +3673,8 @@ switch outputformat
     planar    = eval(type);
     combined  = eval([type '_combined']);
     label     = [planar(:,1:2) combined]; % magnetometers are in the 3rd column for neuromag306
+    
+  otherwise
+    error('unsupported outputformat "%s"', outputformat);
+    
 end

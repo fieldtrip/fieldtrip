@@ -99,7 +99,7 @@ if ~strcmp(cfg.trials, 'all')
 end
 
 % find the combination of horizontal and vertical channels that should be combined
-planar = ft_senslabel(ft_senstype(data), 'outputformat', 'planar');
+planar = ft_senslabel(ft_senstype(data), 'outputformat', 'planarcombined');
 [dum, sel_dH]    = match_str(planar(:,1), data.label);  % indices of the horizontal channels
 [dum, sel_dV]    = match_str(planar(:,2), data.label);  % indices of the vertical   channels
 
