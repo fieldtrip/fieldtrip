@@ -68,6 +68,19 @@ if isfield(obj, 'unit') && ~isempty(obj.unit)
   % use the units specified in the object
   unit = obj.unit;
   
+elseif isfield(obj, 'bnd') && isfield(obj.bnd, 'unit')
+  
+  unit = unique({obj.bnd.unit});
+  if ~all(strcmp(unit, unit{1}))
+    error('inconsistent units in the individual boundaries');
+  else
+    unit = unit{1};
+  end
+  
+  % keep one representation of the units rather than keeping it with each boundary
+  % the units will be reassigned further down
+  obj.bnd = rmfield(obj.bnd, 'unit');
+  
 else
   % try to determine the units by looking at the size of the object
   if isfield(obj, 'chanpos') && ~isempty(obj.chanpos)
@@ -77,11 +90,11 @@ else
   elseif isfield(obj, 'elecpos') && ~isempty(obj.elecpos)
     siz = norm(idrange(obj.elecpos));
     unit = ft_estimate_units(siz);
-
+    
   elseif isfield(obj, 'coilpos') && ~isempty(obj.coilpos)
     siz = norm(idrange(obj.coilpos));
     unit = ft_estimate_units(siz);
-
+    
   elseif isfield(obj, 'pnt') && ~isempty(obj.pnt)
     siz = norm(idrange(obj.pnt));
     unit = ft_estimate_units(siz);
@@ -154,7 +167,11 @@ end
 % volume conductor model
 if isfield(obj, 'r'), obj.r = scale * obj.r; end
 if isfield(obj, 'o'), obj.o = scale * obj.o; end
-if isfield(obj, 'bnd'), for i=1:length(obj.bnd), obj.bnd(i).pnt = scale * obj.bnd(i).pnt; end, end
+if isfield(obj, 'bnd'),
+  for i=1:length(obj.bnd)
+    obj.bnd(i).pnt = scale * obj.bnd(i).pnt;
+  end
+end
 
 % gradiometer array
 if isfield(obj, 'pnt1'), obj.pnt1 = scale * obj.pnt1; end
