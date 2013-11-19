@@ -58,17 +58,19 @@ dip = [0 0 0.08]; % in meter
 [vol1, elec] = ft_prepare_vol_sens(vol1, elec);
 [vol2, elec] = ft_prepare_vol_sens(vol2, elec);
 [vol3, elec] = ft_prepare_vol_sens(vol3, elec);
+[vol4, elec] = ft_prepare_vol_sens(vol4, elec);
 
 lf0 = ft_compute_leadfield(dip, elec, vol0);
 lf1 = ft_compute_leadfield(dip, elec, vol1);
 lf2 = ft_compute_leadfield(dip, elec, vol2);
 lf3 = ft_compute_leadfield(dip, elec, vol3);
+lf4 = ft_compute_leadfield(dip, elec, vol4);
 
 n0 = norm(lf0);
 n1 = norm(lf1);
 n2 = norm(lf2);
 n3 = norm(lf3);
-n4 = norm(lf3);
+n4 = norm(lf4);
 % these should be relatively close to two, due to the mirror sources for the boundary condition
 assert(abs(n1/n0-2)<0.3);
 assert(abs(n2/n0-2)<0.3);
