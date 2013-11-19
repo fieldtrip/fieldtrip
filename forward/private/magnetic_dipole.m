@@ -8,6 +8,8 @@ function [lf] = magnetic_dipole(R, pos, ori)
 %   R           position dipole
 %   pos         position magnetometers
 %   ori         orientation magnetometers
+%
+% See also CURRENT_DIPOLE
 
 % Copyright (C) 2003, Robert Oostenveld
 %
@@ -31,6 +33,9 @@ function [lf] = magnetic_dipole(R, pos, ori)
 
 mu0   = 4*pi*1e-7;
 nchan = size(pos,1);
+
+% ensure that the dipole position is a row vector
+R = reshape(R, [1 3]);
 
 % shift the magnetometer coils so that the dipole is in the origin
 pos(:,1) = pos(:,1) - R(1);
@@ -63,9 +68,9 @@ r = sqrt(sum(R.^2,2));
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 r2 = repmat(r.^2, [1 3]);
 r5 = repmat(r.^5, [1 3]);
-x = R(1); x = [x x x];
-y = R(2); y = [y y y];
-z = R(3); z = [z z z];
+x = R(:,1); x = [x x x];
+y = R(:,2); y = [y y y];
+z = R(:,3); z = [z z z];
 mx = zeros(nchan,3); mx(:,1) = 1;
 my = zeros(nchan,3); my(:,2) = 1;
 mz = zeros(nchan,3); mz(:,3) = 1;

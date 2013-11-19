@@ -1,4 +1,4 @@
-function [lf] = magnetic_dipole(R, pos, ori)
+function [lf] = current_dipole(R, pos, ori)
 
 % CURRENT_DIPOLE leadfield for a current dipole in an infinite homogenous medium
 %
@@ -36,6 +36,9 @@ function [lf] = magnetic_dipole(R, pos, ori)
 
 mu0   = 4*pi*1e-7;
 nchan = size(pos,1);
+
+% ensure that the dipole position is a row vector
+R = reshape(R, [1 3]);
 
 % shift the magnetometer coils so that the dipole is in the origin
 pos(:,1) = pos(:,1) - R(1);
