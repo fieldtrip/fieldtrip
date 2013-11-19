@@ -139,19 +139,19 @@ if length(chanindx)==length(channel)
 end
 
 % define the known groups with channel labels
-labelall  = datachannel;
-label1020 = ft_senslabel('eeg1020'); % use external helper function
-label1010 = ft_senslabel('eeg1010'); % use external helper function
-label1005 = ft_senslabel('eeg1005'); % use external helper function
+labelall    = datachannel;
+label1020   = ft_senslabel('eeg1020'); % use external helper function
+label1010   = ft_senslabel('eeg1010'); % use external helper function
+label1005   = ft_senslabel('eeg1005'); % use external helper function
 labelchwilla = {'Fz', 'Cz', 'Pz', 'F7', 'F8', 'LAT', 'RAT', 'LT', 'RT', 'LTP', 'RTP', 'OL', 'OR', 'FzA', 'Oz', 'F7A', 'F8A', 'F3A', 'F4A', 'F3', 'F4', 'P3', 'P4', 'T5', 'T6', 'P3P', 'P4P'}';
-labelbham = {'P9', 'PPO9h', 'PO7', 'PPO5h', 'PPO3h', 'PO5h', 'POO9h', 'PO9', 'I1', 'OI1h', 'O1', 'POO1', 'PO3h', 'PPO1h', 'PPO2h', 'POz', 'Oz', 'Iz', 'I2', 'OI2h', 'O2', 'POO2', 'PO4h', 'PPO4h', 'PO6h', 'POO10h', 'PO10', 'PO8', 'PPO6h', 'PPO10h', 'P10', 'P8', 'TPP9h', 'TP7', 'TTP7h', 'CP5', 'TPP7h', 'P7', 'P5', 'CPP5h', 'CCP5h', 'CP3', 'P3', 'CPP3h', 'CCP3h', 'CP1', 'P1', 'Pz', 'CPP1h', 'CPz', 'CPP2h', 'P2', 'CPP4h', 'CP2', 'CCP4h', 'CP4', 'P4', 'P6', 'CPP6h', 'CCP6h', 'CP6', 'TPP8h', 'TP8', 'TPP10h', 'T7', 'FTT7h', 'FT7', 'FC5', 'FCC5h', 'C5', 'C3', 'FCC3h', 'FC3', 'FC1', 'C1', 'CCP1h', 'Cz', 'FCC1h', 'FCz', 'FFC1h', 'Fz', 'FFC2h', 'FC2', 'FCC2h', 'CCP2h', 'C2', 'C4', 'FCC4h', 'FC4', 'FC6', 'FCC6h', 'C6', 'TTP8h', 'T8', 'FTT8h', 'FT8', 'FT9', 'FFT9h', 'F7', 'FFT7h', 'FFC5h', 'F5', 'AFF7h', 'AF7', 'AF5h', 'AFF5h', 'F3', 'FFC3h', 'F1', 'AF3h', 'Fp1', 'Fpz', 'Fp2', 'AFz', 'AF4h', 'F2', 'FFC4h', 'F4', 'AFF6h', 'AF6h', 'AF8', 'AFF8h', 'F6', 'FFC6h', 'FFT8h', 'F8', 'FFT10h', 'FT10'};
-labelref  = {'M1', 'M2', 'LM', 'RM', 'A1', 'A2'}';
-labeleog  = datachannel(strncmp('EOG', datachannel, length('EOG')));               % anything that starts with EOG
-labeleog  = {labeleog{:} 'HEOG', 'VEOG', 'VEOG-L', 'VEOG-R', 'hEOG', 'vEOG', 'Eye_Ver', 'Eye_Hor'}';     % or any of these
-labelecg  = datachannel(strncmp('ECG', datachannel, length('ECG')));
-labelemg  = datachannel(strncmp('EMG', datachannel, length('EMG')));
-labellfp  = datachannel(strncmp('lfp', datachannel, length('lfp')));
-labelmua  = datachannel(strncmp('mua', datachannel, length('mua')));
+labelbham   = {'P9', 'PPO9h', 'PO7', 'PPO5h', 'PPO3h', 'PO5h', 'POO9h', 'PO9', 'I1', 'OI1h', 'O1', 'POO1', 'PO3h', 'PPO1h', 'PPO2h', 'POz', 'Oz', 'Iz', 'I2', 'OI2h', 'O2', 'POO2', 'PO4h', 'PPO4h', 'PO6h', 'POO10h', 'PO10', 'PO8', 'PPO6h', 'PPO10h', 'P10', 'P8', 'TPP9h', 'TP7', 'TTP7h', 'CP5', 'TPP7h', 'P7', 'P5', 'CPP5h', 'CCP5h', 'CP3', 'P3', 'CPP3h', 'CCP3h', 'CP1', 'P1', 'Pz', 'CPP1h', 'CPz', 'CPP2h', 'P2', 'CPP4h', 'CP2', 'CCP4h', 'CP4', 'P4', 'P6', 'CPP6h', 'CCP6h', 'CP6', 'TPP8h', 'TP8', 'TPP10h', 'T7', 'FTT7h', 'FT7', 'FC5', 'FCC5h', 'C5', 'C3', 'FCC3h', 'FC3', 'FC1', 'C1', 'CCP1h', 'Cz', 'FCC1h', 'FCz', 'FFC1h', 'Fz', 'FFC2h', 'FC2', 'FCC2h', 'CCP2h', 'C2', 'C4', 'FCC4h', 'FC4', 'FC6', 'FCC6h', 'C6', 'TTP8h', 'T8', 'FTT8h', 'FT8', 'FT9', 'FFT9h', 'F7', 'FFT7h', 'FFC5h', 'F5', 'AFF7h', 'AF7', 'AF5h', 'AFF5h', 'F3', 'FFC3h', 'F1', 'AF3h', 'Fp1', 'Fpz', 'Fp2', 'AFz', 'AF4h', 'F2', 'FFC4h', 'F4', 'AFF6h', 'AF6h', 'AF8', 'AFF8h', 'F6', 'FFC6h', 'FFT8h', 'F8', 'FFT10h', 'FT10'};
+labelref    = {'M1', 'M2', 'LM', 'RM', 'A1', 'A2'}';
+labeleog    = datachannel(strncmp('EOG', datachannel, length('EOG')));               % anything that starts with EOG
+labeleog    = [labeleog {'HEOG', 'VEOG', 'VEOG-L', 'VEOG-R', 'hEOG', 'vEOG', 'Eye_Ver', 'Eye_Hor'}];     % or any of these
+labelecg    = datachannel(strncmp('ECG', datachannel, length('ECG')));
+labelemg    = datachannel(strncmp('EMG', datachannel, length('EMG')));
+labellfp    = datachannel(strncmp('lfp', datachannel, length('lfp')));
+labelmua    = datachannel(strncmp('mua', datachannel, length('mua')));
 labelspike  = datachannel(strncmp('spike', datachannel, length('spike')));
 
 % use regular expressions to deal with the wildcards
@@ -189,9 +189,11 @@ findreg  = unique(findreg); % remove multiple occurances due to multiple wildcar
 labelreg = datachannel(labelreg);
 
 % initialize all the system-specific variables to empty
-labelmeg   = [];
-labelmref  = [];
-labeleeg   = [];
+labelmeg     = [];
+labelmeggrad = [];
+labelmegref  = [];
+labelmegmag  = [];
+labeleeg     = [];
 
 if strcmp(type,'unknown');
     casetype=ft_senstype(datachannel);
@@ -208,15 +210,15 @@ switch casetype
     megpl    = strncmp('PG', datachannel, length('PG'));
     megmag   = strncmp('M',  datachannel, length('M' ));
     megind   = logical( megax + megpl + megmag);
-    labelmeg = datachannel(megind);
-    labelmegmag = datachannel(megmag);
-    labelmeggrad = datachannel(megax | megpl);
+    labelmeg      = datachannel(megind);
+    labelmegmag   = datachannel(megmag);
+    labelmeggrad  = datachannel(megax | megpl);
 
   case {'ctf64'}
-    labelml   = datachannel(~cellfun(@isempty, regexp(datachannel, '^SL')));    % left    MEG channels
-    labelmr   = datachannel(~cellfun(@isempty, regexp(datachannel, '^SR')));    % right   MEG channels
-    labelmeg = cat(1, labelml, labelmr);
-    labelmref = [datachannel(strncmp('B'  , datachannel, 1));
+    labelml     = datachannel(~cellfun(@isempty, regexp(datachannel, '^SL')));    % left    MEG channels
+    labelmr     = datachannel(~cellfun(@isempty, regexp(datachannel, '^SR')));    % right   MEG channels
+    labelmeg    = cat(1, labelml, labelmr);
+    labelmegref = [datachannel(strncmp('B'  , datachannel, 1));
       datachannel(strncmp('G'  , datachannel, 1));
       datachannel(strncmp('P'  , datachannel, 1));
       datachannel(strncmp('Q'  , datachannel, 1));
@@ -226,8 +228,8 @@ switch casetype
     % all CTF MEG channels start with "M"
     % all CTF reference channels start with B, G, P, Q or R
     % all CTF EEG channels start with "EEG"
-    labelmeg = datachannel(strncmp('M'  , datachannel, length('M'  )));
-    labelmref = [datachannel(strncmp('B'  , datachannel, 1));
+    labelmeg    = datachannel(strncmp('M'  , datachannel, length('M'  )));
+    labelmegref = [datachannel(strncmp('B'  , datachannel, 1));
       datachannel(strncmp('G'  , datachannel, 1));
       datachannel(strncmp('P'  , datachannel, 1));
       datachannel(strncmp('Q'  , datachannel, 1));
@@ -259,13 +261,13 @@ switch casetype
     % all 4D-BTi MEG channels start with "A"
     % all 4D-BTi reference channels start with M or G
  
-    labelmeg   = datachannel(myregexp('^A[0-9]+$', datachannel));
-    labelmref  = [datachannel(myregexp('^M[CLR][xyz][aA]*$', datachannel)); datachannel(myregexp('^G[xyz][xyz]A$', datachannel))];
-    labelmrefa = datachannel(~cellfun(@isempty,strfind(datachannel, 'a')));
-    labelmrefc = datachannel(strncmp('MC', datachannel, 2));
-    labelmrefg = datachannel(myregexp('^G[xyz][xyz]A$', datachannel));
-    labelmrefl = datachannel(strncmp('ML', datachannel, 2));
-    labelmrefr = datachannel(strncmp('MR', datachannel, 2));
+    labelmeg     = datachannel(myregexp('^A[0-9]+$', datachannel));
+    labelmegref  = [datachannel(myregexp('^M[CLR][xyz][aA]*$', datachannel)); datachannel(myregexp('^G[xyz][xyz]A$', datachannel))];
+    labelmegrefa = datachannel(~cellfun(@isempty,strfind(datachannel, 'a')));
+    labelmegrefc = datachannel(strncmp('MC', datachannel, 2));
+    labelmegrefg = datachannel(myregexp('^G[xyz][xyz]A$', datachannel));
+    labelmegrefl = datachannel(strncmp('ML', datachannel, 2));
+    labelmegrefr = datachannel(strncmp('MR', datachannel, 2));
 
   case {'neuromag122'}
     % all neuromag MEG channels start with MEG
@@ -282,7 +284,7 @@ switch casetype
     labeleeg = datachannel(strncmp('EEG', datachannel, length('EEG')));
     
     labelmeggrad = labelmeg(~cellfun(@isempty, regexp(labelmeg, '^MEG.*[23]$')));
-    labelmegmag = labelmeg(~cellfun(@isempty, regexp(labelmeg, '^MEG.*1$')));
+    labelmegmag  = labelmeg(~cellfun(@isempty, regexp(labelmeg, '^MEG.*1$')));
 
   case {'biosemi64', 'biosemi128', 'biosemi256', 'egi64', 'egi128', 'egi256', 'ext1020'}
     % use an external helper function to define the list with EEG channel names
@@ -403,14 +405,14 @@ if findeeg1005,    channel = [channel; label1005]; end
 if findeegchwilla, channel = [channel; labelchwilla]; end
 if findeegbham,    channel = [channel; labelbham]; end
 if findeegref,     channel = [channel; labelref]; end
-if findmegref,     channel = [channel; labelmref]; end
+if findmegref,     channel = [channel; labelmegref]; end
 if findmeggrad,    channel = [channel; labelmeggrad]; end
 if findmegmag,     channel = [channel; labelmegmag]; end
-if findmegrefa,    channel = [channel; labelmrefa]; end
-if findmegrefc,    channel = [channel; labelmrefc]; end
-if findmegrefg,    channel = [channel; labelmrefg]; end
-if findmegrefl,    channel = [channel; labelmrefl]; end
-if findmegrefr,    channel = [channel; labelmrefr]; end
+if findmegrefa,    channel = [channel; labelmegrefa]; end
+if findmegrefc,    channel = [channel; labelmegrefc]; end
+if findmegrefg,    channel = [channel; labelmegrefg]; end
+if findmegrefl,    channel = [channel; labelmegrefl]; end
+if findmegrefr,    channel = [channel; labelmegrefr]; end
 if findeog,        channel = [channel; labeleog]; end
 if findmz ,        channel = [channel; labelmz ]; end
 if findml ,        channel = [channel; labelml ]; end

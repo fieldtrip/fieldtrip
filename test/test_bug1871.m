@@ -26,7 +26,8 @@ freq.powspctrm = ft_struct2single(freq.powspctrm);
 cfg = [];
 cfg.channel     = 'MEGGRAD';
 cfg.interactive = 'yes';
-cfg.showlabels  = 'no';
+% cfg.showlabels  = 'no'; % this is a deprecated option, use cfg.marker instead
+cfg.marker = 'no'; 
 cfg.zlim        = 'maxabs';
 cfg.layout      = 'neuromag306cmb.lay';
 ft_topoplotTFR(cfg, freq);

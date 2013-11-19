@@ -76,18 +76,18 @@ for i=1:length(system)
   disp(system{i});
   % clear ft_senslabel
   
-  label1 = ft_senslabel(system{i}, 'outputformat', 'list');           % all physical channels
-  label2 = ft_senslabel(system{i}, 'outputformat', 'planarcombined'); % the virtual planar channels plus the combination thereof
+  label1 = ft_senslabel(system{i}, 'output', 'normal');         % all physical channels
+  label2 = ft_senslabel(system{i}, 'output', 'planarcombined'); % the virtual planar channels plus the combination thereof
   
   if i~=7 && i~=8
     % all systems except neuromag306
-    assert(size(label1,2)==1); % one column
+    assert(size(label1,2)==2); % one column
     assert(size(label2,2)==3); % three columns
-    assert(size(label2,1)==size(label1,1)/2);
+    assert(size(label2,1)==size(label1,1));
   else
-    assert(size(label1,2)==1); % one column
+    assert(size(label1,2)==3); % one column
     assert(size(label2,2)==3); % three columns
-    assert(size(label2,1)==size(label1,1)/3);
+    assert(size(label2,1)==size(label1,1));
   end
 end
 
