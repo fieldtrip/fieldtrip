@@ -18,7 +18,7 @@ function vol = ft_headmodel_singlesphere(geometry, varargin)
 
 % FIXME document the EEG case
 
-% Copyright (C) 2012, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
+% Copyright (C) 2012-2013, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -40,10 +40,10 @@ function vol = ft_headmodel_singlesphere(geometry, varargin)
 
 % get the optional arguments
 conductivity = ft_getopt(varargin, 'conductivity', 1);
-unit         = ft_getopt(varargin, 'unit');
 
-if length(conductivity)~=1
-  error('the conductivity should be a single number')
+if any(strcmp(varargin(1:2:end), 'unit')) || any(strcmp(varargin(1:2:end), 'units'))
+  % the geometrical units should be specified in the input geometry
+  error('the ''unit'' option is not supported any more');
 end
 
 if isnumeric(geometry) && size(geometry,2)==3
@@ -53,29 +53,35 @@ if isnumeric(geometry) && size(geometry,2)==3
 elseif isstruct(geometry) && isfield(geometry,'bnd')
   % take the triangulated surfaces from the input structure
   geometry = geometry.bnd;
-elseif ~(isstruct(geometry) && isfield(geometry,'pnt'))
+end
+
+if ~isstruct(geometry) || ~isfield(geometry, 'pnt')
   error('the input geometry should be a set of points or a single triangulated surface')
+end
+
+if numel(conductivity)~=1
+  error('the conductivity should be a single number')
+end
+
+if numel(geometry)~=1
+  error('fitting a single sphere requires a single geometry')
 end
 
 % start with an empty volume conductor
 vol = [];
 
-if ~isempty(unit)
-  vol.unit = unit;                       % use the user-specified units for the output
-else
-  geometry = ft_convert_units(geometry); % ensure that it has units, estimate them if needed
-  vol.unit = geometry.unit;              % copy the geometrical units into the volume conductor
-end
+% ensure that the geometry has units, estimate them if needed
+geometry = ft_convert_units(geometry);
 
-% get the points from the triangulated surface
-geometry = geometry.pnt;
+% copy the geometrical units into the volume conductor
+vol.unit = geometry.unit;
 
 % fit a single sphere to all headshape points
-[single_o, single_r] = fitsphere(geometry);
+[single_o, single_r] = fitsphere(geometry.pnt);
 
-vol.r = single_r;
-vol.o = single_o;
-vol.c = conductivity;
+vol.r    = single_r;
+vol.o    = single_o;
+vol.c    = conductivity;
 vol.type = 'singlesphere';
-vol      = ft_convert_units(vol); % ensure the object to have a unit
 
+fprintf('single sphere: radius = %.1f, conductivity = %f\n', vol.r, vol.c);

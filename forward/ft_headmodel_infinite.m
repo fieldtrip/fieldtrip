@@ -30,13 +30,19 @@ function vol = ft_headmodel_infinite(varargin)
 %
 % $Id$
 
-model = ft_getopt(varargin, 'sourcemodel', 'dipole');
+sourcemodel = ft_getopt(varargin, 'sourcemodel');
 
 % this is an easy one
 vol = [];
 
-if strcmp(model,'monopole')
+switch sourcemodel
+case 'monopole'
   vol.type = 'infinite_monopole';  
-else
+case 'magneticdipole'
+  vol.type = 'infinite_magneticdipole';  
+case 'currentdipole'
+  vol.type = 'infinite_currentdipole';  
+otherwise
   vol.type = 'infinite';
-end
+end % switch
+

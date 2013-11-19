@@ -20,12 +20,12 @@ function vol = ft_headmodel_concentricspheres(geometry, varargin)
 %
 % Optional input arguments should be specified in key-value pairs and can
 % include
-%   conductivity     = vector with the conductivity of each compartment
-%   fitind           = vector with indices of the surfaces to use in fitting the center of the spheres
+%   conductivity = vector with the conductivity of each compartment
+%   fitind       = vector with indices of the surfaces to use in fitting the center of the spheres
 %
 % See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
-% Copyright (C) 2012, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
+% Copyright (C) 2012-2013, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -48,7 +48,11 @@ function vol = ft_headmodel_concentricspheres(geometry, varargin)
 % get the optional input arguments
 conductivity = ft_getopt(varargin, 'conductivity'); % default is determined below
 fitind       = ft_getopt(varargin, 'fitind', 'all');
-unit         = ft_getopt(varargin, 'unit');
+
+if any(strcmp(varargin(1:2:end), 'unit')) || any(strcmp(varargin(1:2:end), 'units'))
+  % the geometrical units should be specified in the input geometry
+  error('the ''unit'' option is not supported any more');
+end
 
 if isnumeric(geometry) && size(geometry,2)==3
   % assume that it is a Nx3 array with vertices
@@ -57,32 +61,28 @@ if isnumeric(geometry) && size(geometry,2)==3
 elseif isstruct(geometry) && isfield(geometry,'bnd')
   % take the triangulated surfaces from the input structure
   geometry = geometry.bnd;
-elseif ~(isstruct(geometry) && isfield(geometry,'pnt'))
+end
+
+if ~isstruct(geometry) || ~isfield(geometry, 'pnt')
   error('the input geometry should be a set of points or a single triangulated surface')
 end
 
 % start with an empty volume conductor
 vol = [];
 
-if ~isempty(unit)
-  vol.unit = unit;                       % use the user-specified units for the output
-else
-  geometry = ft_convert_units(geometry); % ensure that it has units, estimate them if needed
-  vol.unit = geometry(1).unit;           % copy the geometrical units into the volume conductor
-end
+% ensure that the geometry has units, estimate them if needed
+geometry = ft_convert_units(geometry);
+
+% copy the geometrical units into the volume conductor
+vol.unit = geometry(1).unit;
 
 if isequal(fitind, 'all')
   fitind = 1:numel(geometry);
 end
 
-% determine the number of compartments
-numboundaries = numel(geometry);
-
 % concatenate the vertices of all surfaces
-pnt = [];
-for i = fitind
-  pnt = [pnt ; geometry(i).pnt];
-end
+pnt = {geometry.pnt};
+pnt = cat(1, pnt{:});
 
 % remove double vertices
 pnt  = unique(pnt, 'rows');
@@ -101,13 +101,11 @@ for i = 1:numel(geometry)
   vol.r(i) = mean(dist);
 end
 
-
 vol.o    = single_o;              % specify the center of the spheres
-vol.c    = conductivity;          % specify the conductivity of the spheres
+vol.c    = conductivity;          % specify the conductivity of the spheres, can be empty up to here
 vol.type = 'concentricspheres';
-vol      = ft_convert_units(vol); % ensure the object to have a unit
 
-% sort the spheres from the smallest to the largest ('insidefirst' order)
+% sort the spheres from the smallest to the largest
 [vol.r, indx] = sort(vol.r);
 
 if isempty(vol.c)

@@ -47,7 +47,11 @@ function vol = ft_headmodel_localspheres(geometry, grad, varargin)
 unit          = ft_getopt(varargin, 'unit');
 feedback      = ft_getopt(varargin, 'feedback', true);
 singlesphere  = ft_getopt(varargin, 'singlesphere', 'no');
-% there are some more defaults further down that depend on the units
+
+if any(strcmp(varargin(1:2:end), 'unit')) || any(strcmp(varargin(1:2:end), 'units'))
+  % the geometrical units should be specified in the input geometry
+  error('the ''unit'' option is not supported any more');
+end
 
 % convert from 'yes'/'no' string into boolean value
 feedback = istrue(feedback);
@@ -70,13 +74,14 @@ end
 % start with an empty volume conductor
 vol = [];
 
-if ~isempty(unit)
-  vol.unit = unit;                       % use the user-specified units for the output
-else
-  geometry = ft_convert_units(geometry); % ensure that it has units, estimate them if needed
-  vol.unit = geometry.unit;              % copy the geometrical units into the volume conductor
-end
-grad = ft_convert_units(grad, vol.unit);
+% ensure that the geometry has units, estimate them if needed
+geometry = ft_convert_units(geometry);
+
+% ensure that it has consistent units
+grad = ft_convert_units(grad, geometry.unit);
+
+% copy the geometrical units into the volume conductor
+vol.unit = geometry.unit;
 
 % ensure that all defaults have the same user-defined units
 radius    = ft_getopt(varargin, 'radius',    scalingfactor('cm', vol.unit) * 8.5);
@@ -189,5 +194,3 @@ for chan=1:Nchan
 end % for all channels
 
 vol.type = 'localspheres';
-vol      = ft_convert_units(vol); % ensure the object to have a unit
-

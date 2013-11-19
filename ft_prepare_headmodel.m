@@ -139,6 +139,7 @@ ft_preamble provenance
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'required', 'method');
 cfg = ft_checkconfig(cfg, 'deprecated', 'geom');
+cfg = ft_checkconfig(cfg, 'forbidden', 'unit'); % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=2375
 cfg = ft_checkconfig(cfg, 'renamed', {'geom', 'headshape'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'bem_openmeeg', 'openmeeg'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'bem_dipoli', 'dipoli'});
@@ -148,7 +149,6 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'nolte', 'singleshell'});
 % set the general defaults
 cfg.hdmfile         = ft_getopt(cfg, 'hdmfile');
 cfg.headshape       = ft_getopt(cfg, 'headshape');
-cfg.unit            = ft_getopt(cfg, 'unit');
 cfg.conductivity    = ft_getopt(cfg, 'conductivity');
 
 % volume related options
@@ -188,7 +188,7 @@ if istrue(cfg.siunits)
     cfg.grad = ft_convert_units(cfg.grad, 'm');
   end
 end
-    
+
 % if the conductivity is in the data cfg.conductivity is overwritten
 if nargin>1 && isfield(data, 'cond')
   cfg.conductivity = data.cond;
@@ -353,7 +353,7 @@ switch cfg.method
         end
         vol = ft_headmodel_singleshell(geometry);
       case 'singlesphere'
-        vol = ft_headmodel_singlesphere(geometry, 'conductivity', cfg.conductivity, 'unit', cfg.unit);
+        vol = ft_headmodel_singlesphere(geometry, 'conductivity', cfg.conductivity);
     end
     
   case {'simbio'}
@@ -371,7 +371,7 @@ switch cfg.method
       error('segmented MRI must be given as data input')
     end
     sens = ft_fetch_sens(cfg, data);
-    vol = ft_headmodel_fns(data.seg, 'tissue', cfg.tissue, 'tissueval', cfg.tissueval, 'tissuecond', cfg.conductivity, 'sens', sens, 'transform', cfg.transform, 'unit', cfg.unit);
+    vol = ft_headmodel_fns(data.seg, 'tissue', cfg.tissue, 'tissueval', cfg.tissueval, 'tissuecond', cfg.conductivity, 'sens', sens, 'transform', cfg.transform);
     
   otherwise
     error('unsupported method "%s"', cfg.method);
@@ -388,4 +388,3 @@ ft_postamble trackconfig
 ft_postamble provenance
 ft_postamble previous data
 ft_postamble history vol
-
