@@ -79,7 +79,7 @@ if nargin<1
 end
 
 % get the optional input arguments
-outputformat  = ft_getopt(varargin, 'outputformat', 'list'); % 'list' or 'planarcombined'
+output  = ft_getopt(varargin, 'output', 'normal'); % 'normal' or 'planarcombined'
 
 if isempty(eval(type))
   
@@ -3661,12 +3661,11 @@ end % if isempty
 % prepare the output
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-switch outputformat
-  case 'list'
+switch output
+  case 'normal'
     % return labels as 2*Nx1 cell-array for planar systems or 3*Nx1 for neuromag306
     % return labels as   Nx1 cell-array for non-planar systems
     label = eval(type);
-    label = label(:);
     
   case 'planarcombined'
     % return labels as Nx3 cell-array for the planar channels, 3rd column contains the combination
@@ -3675,6 +3674,6 @@ switch outputformat
     label     = [planar(:,1:2) combined]; % magnetometers are in the 3rd column for neuromag306
     
   otherwise
-    error('unsupported outputformat "%s"', outputformat);
+    error('unsupported output "%s"', output);
     
 end
