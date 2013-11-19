@@ -40,7 +40,7 @@ elec_cm = ft_convert_units(elec, 'cm');
 elec_mm = ft_convert_units(elec, 'mm');
 
 % create two conductivities
-conductivity = [1 3 7];
+conductivity = [1 0.1];
 
 %% For EEG the following methods are available
 % singlesphere
@@ -230,8 +230,10 @@ for k = 1:numel(conductivity)
   end
 end
 
-%% In the table with scaling factors the columns correspond to m, cm, mm,
-% the rows correspond to the different volume conduction models
+%% In the table with scaling factors 
+% dim1 = the "slices" correspond to different conductivities
+% dim2 = the rows correspond to the different volume conduction models
+% dim3 = the columns correspond to m, cm, mm
 
 eeg_table = cellfun(@norm, eeg_leadfield);
 meg_table = cellfun(@norm, meg_leadfield);
