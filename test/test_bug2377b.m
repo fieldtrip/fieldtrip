@@ -11,21 +11,40 @@ function test_bug2377b
 pnt = pnt .* 10;                % convert to cm
 sel = find(pnt(:,3)>0);         % take the upper hemisphere
 nchan = length(sel);            % there are 71 channels remaining
-lab = ft_senslabel('eeg1010');  % take the channel names from this set
 
 sens = [];
 sens.elecpos = pnt(sel,:);
-sens.label = lab(1:nchan);
 sens.unit = 'cm';
+
+lab = ft_senslabel('eeg1010');  % take the channel names from this set
+
+% perform the test sequence for a sensor array with 10-20 channel labels
+sens.label = lab(1:nchan);
+perform_actual_test(sens)
+
+for i=1:nchan
+  lab{i} = sprintf('ch%02d', i);
+end
+
+% perform the test sequence for a sensor array with unkown labels
+sens.label = lab(1:nchan);
+perform_actual_test(sens)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function perform_actual_test(sens)
+
+nchan = length(sens.label);
 
 % without most new fields
 sens0 = sens;
 
-% with manual chantype 
+% with manual chantype
 sens.chantype = repmat({'eeg'}, nchan, 1);
 sens1 = sens;
 
-% with automatic chantype 
+% with automatic chantype
 sens.chantype = ft_chantype(sens);
 sens2 = sens;
 
