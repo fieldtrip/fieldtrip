@@ -81,7 +81,12 @@ end
 % get the optional input arguments
 output  = ft_getopt(varargin, 'output', 'normal'); % 'normal' or 'planarcombined'
 
-if isempty(eval(type))
+
+if ~exist(type, 'var')
+  error('the requested sensor type "%s" is not supported', type);
+  
+elseif isempty(eval(type))
+  % assign the list of channels only once, keep it as persistent variable
   
   switch type
     case 'ant128'
@@ -3648,14 +3653,15 @@ if isempty(eval(type))
       label = {};
       
     otherwise
-      error('the requested sensor type is not supported');
-  end
+      error('the requested sensor type "%s" is not supported', type);
+      
+  end % switch
   
   % remember this set of labels to speed up subsequent function calls
   eval(sprintf('%s = label;', type));
   clear label
   
-end % if isempty
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % prepare the output
