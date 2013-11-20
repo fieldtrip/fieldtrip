@@ -46,12 +46,12 @@ function chanunit = ft_chanunit(input, desired)
 
 % determine the type of input, this is handled similarly as in FT_CHANTYPE
 isheader =  isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'Fs');
+islabel  =  isa(input, 'cell')   && isa(input{1}, 'char');
 isgrad   =  isa(input, 'struct') && isfield(input, 'pnt') && isfield(input, 'ori');
 isgrad   = (isa(input, 'struct') && isfield(input, 'coilpos')) || isgrad;
 isgrad   = (isa(input, 'struct') && isfield(input, 'coilori')) || isgrad;
 iselec   =  isa(input, 'struct') && isfield(input, 'pnt') && ~isfield(input, 'ori');
 iselec   = (isa(input, 'struct') && isfield(input, 'elecpos')) || iselec;
-islabel  =  isa(input, 'cell')   && isa(input{1}, 'char');
 
 if isheader
   label = input.label;
@@ -99,6 +99,10 @@ elseif isheader && ft_senstype(input, 'neuromag') && issubfield(input, 'orig.chs
     end
   end
   
+elseif iselec && isfield(input, 'chantype')
+  % electrode definitions are expressed in SI units, i.e. V
+  chanunit(strcmp('eeg',              input.chantype)) = {'V'};
+
 elseif isgrad && ft_senstype(input, 'neuromag') && isfield(input, 'chantype')
   % look at the type of the channels
   chanunit(strcmp('eeg',              input.chantype)) = {'unknown'}; % FIXME
