@@ -165,7 +165,7 @@ switch version
           sens.tra(i,:)    = sens.tra(i,:) * scalingfactor(sens.chanunit{i}, amplitude);
           sens.chanunit{i} = amplitude;
         else
-          error('unexpected channel unit "%s" in channel %d', i, sens.chanunit{i});
+          error('unexpected channel unit "%s" in channel %d', sens.chanunit{i}, i);
         end
       end
     else
