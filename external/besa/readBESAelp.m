@@ -21,7 +21,11 @@ function Coords = readBESAelp(filename)
 
 fp = fopen(filename, 'r');
 
-if (fp)
+% MATLAB reserves file identifiers 0, 1, and 2 for standard input,  
+% standard output (the screen), and standard error, respectively. When 
+% fopen successfully opens a file, it returns a file identifier greater 
+% than or equal to 3.
+if(fp >= 3)
 
     % Read the first line of the file. It should look like this:
     % [EEG] [Fp1] -92 -72 [1]
@@ -30,7 +34,8 @@ if (fp)
     
     ChannelCounter = 1;
     
-    tmp = regexp(FirstLine, ' ', 'split');
+    % Use as a delimiter for split one ore more white spaces.
+    tmp = regexp(FirstLine, '\s+', 'split');
     
     % Get the number of the columns.
     NumParams = size(tmp, 2);
@@ -73,12 +78,19 @@ if (fp)
             end
             
             ChannelCounter = ChannelCounter + 1;
-            tmp = regexp(CurrentLine, ' ', 'split');
+            tmp = regexp(CurrentLine, '\s+', 'split');
             Coords(ChannelCounter, 1) = str2double(tmp(IndexPhi));
             Coords(ChannelCounter, 2) = str2double(tmp(IndexTheta));
             
         end
         
     end
+    
+    fclose(fp);
+    
+else
+    
+    Coords = [];
+    disp('Error! Invalid file identifier.')
     
 end
