@@ -1,7 +1,7 @@
 function test_bug1988
 
-% MEM 2gb
-% WALLTIME 00:12:37
+% MEM 3gb
+% WALLTIME 00:20:00
 
 % TEST test_bug1988 ft_volumesegment ft_prepare_headmodel
 
