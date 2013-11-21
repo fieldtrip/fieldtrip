@@ -21,7 +21,11 @@ function avr = readBESAavr(filename)
 
 fp = fopen(filename, 'r');
 
-if (fp)
+% MATLAB reserves file identifiers 0, 1, and 2 for standard input,  
+% standard output (the screen), and standard error, respectively. When 
+% fopen successfully opens a file, it returns a file identifier greater 
+% than or equal to 3.
+if(fp >= 3)
     
     % Get the first line of the file. It looks something like that:
     % Npts= 512   TSB= -400.000 DI= 3.125000 SB= 1.000 SC= 200.0 ...
@@ -95,6 +99,11 @@ if (fp)
     
     avr.Nchan=size(avr.Data, 1);
     
+    fclose(fp);
+    
+else
+    
+    avr = [];
+    disp('Error! Invalid file identifier.')
+    
 end
-
-fclose(fp);
