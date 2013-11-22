@@ -345,7 +345,7 @@ switch fileformat
     fid = fopen(filename);
     tmp = textscan(fid,'%s%s%s%s');
     fclose(fid);
-
+    
     sens = [];
     if all(cellfun(@isempty, tmp{4}))
       % it contains theta and phi
@@ -353,10 +353,10 @@ switch fileformat
       theta = cellfun(@str2double, tmp{2}(2:end));
       phi   = cellfun(@str2double, tmp{3}(2:end));
       radians = @(x) pi*x/180;
-      warning('assuming a head radius of 10 cm');
-      x = 10*cos(radians(phi)).*sin(radians(theta));
-      y = 10*sin(radians(theta)).*sin(radians(phi));
-      z = 10*cos(radians(theta));
+      warning('assuming a head radius of 85 mm');
+      x = 85*cos(radians(phi)).*sin(radians(theta));
+      y = 85*sin(radians(theta)).*sin(radians(phi));
+      z = 85*cos(radians(theta));
       sens.unit = 'cm';
       sens.elecpos = [x y z];
       sens.chanpos = [x y z];
@@ -377,5 +377,3 @@ end
 % ensure that the sensor description is up-to-date
 % this will also add chantype and units to the sensor array if missing
 sens = ft_datatype_sens(sens);
-
-
