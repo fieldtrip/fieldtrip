@@ -52,7 +52,7 @@ if isstruct(obj) && numel(obj)>1
   % deal with a structure array
   for i=1:numel(obj)
     if nargin>1
-      tmp(i) = ft_convert_units(obj(i), target);
+      tmp(i) = ft_convert_units(obj(i), target, varargin{:});
     else
       tmp(i) = ft_convert_units(obj(i));
     end

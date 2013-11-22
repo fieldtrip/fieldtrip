@@ -39,8 +39,9 @@ function [vol, sens, cfg] = prepare_headmodel(cfg, data)
 % $Id$
 
 % set the defaults
-if ~isfield(cfg, 'channel'),      cfg.channel = 'all';   end
-if ~isfield(cfg, 'order'),        cfg.order = 10;        end % order of expansion for Nolte method; 10 should be enough for real applications; in simulations it makes sense to go higher
+cfg.channel  = ft_getopt(cfg, 'channel', 'all');
+cfg.order    = ft_getopt(cfg, 'order', 10);       % order of expansion for Nolte method; 10 should be enough for real applications; in simulations it makes sense to go higher
+cfg.siunits  = ft_getopt(cfg, 'siunits', 'no');   % yes/no, ensure that SI units are used consistently
 
 if nargin<2
   data = [];
@@ -52,10 +53,23 @@ vol = ft_fetch_vol(cfg, data);
 % get the gradiometer or electrode definition
 sens = ft_fetch_sens(cfg, data);
 
-if ~strcmp(vol.unit, sens.unit)
+if istrue(cfg.siunits)
+  % ensure that the geometrical units are in SI units
+  sens = ft_convert_units(sens, 'm', 'feedback', true);
+  vol  = ft_convert_units(vol,  'm', 'feedback', true);
+  if isfield(cfg, 'grid')
+    cfg.grid = ft_convert_units(cfg.grid,  'm', 'feedback', true);
+  end
+else
   % ensure that the geometrical units are the same
-  warning('convering the sensor array units to "%s"', vol.unit);
-  sens = ft_convert_units(sens, vol.unit);
+  if isfield(cfg, 'grid') && isfield(cfg.grid, 'unit')
+    % convert it to the units of the source model
+    sens = ft_convert_units(sens, cfg.grid.unit, 'feedback', true);
+    vol  = ft_convert_units(vol,  cfg.grid.unit, 'feedback', true);
+  else
+    % convert it to the units of the head model
+    sens = ft_convert_units(sens, vol.unit, 'feedback', true);
+  end
 end
 
 if isfield(data, 'topolabel')
