@@ -147,6 +147,17 @@ try, tmpcfg.spheremesh  = cfg.spheremesh;   end
 try, tmpcfg.inwardshift = cfg.inwardshift;  end
 grid = ft_prepare_sourcemodel(tmpcfg);
 
+% check whether units are equal (NOTE: this was previously not required,
+% this check can be removed if the underlying bug is resolved. See 
+% http://bugzilla.fcdonders.nl/show_bug.cgi?id=2387
+if ~isfield(vol, 'unit') || ~isfield(grid, 'unit') || ~isfield(sens, 'unit')
+  warning('cannot determine the units of all geometric objects required for leadfield computation (headmodel, sourcemodel, sensor configuration). THIS CAN LEAD TO WRONG RESULTS! (refer to http://bugzilla.fcdonders.nl/show_bug.cgi?id=2387)');
+else
+  if ~strcmp(vol.unit, grid.unit) || ~strcmp(grid.unit, sens.unit)
+    error('geometric objects (headmodel, sourcemodel, sensor configuration) are not expressed in the same units (this used to be allowed, and will be again in the future, but for now there is a bug which prevents a correct leadfield from being computed; see http://bugzilla.fcdonders.nl/show_bug.cgi?id=2387)');
+  end
+end
+
 if ft_voltype(vol, 'openmeeg')
   % the system call to the openmeeg executable makes it rather slow
   % calling it once is much more efficient
