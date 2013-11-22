@@ -270,76 +270,106 @@ switch fileformat
     end
     
   case 'localite_pos'
-     if ~usejava('jvm') % Using xml2struct requires java
-         fid = fopen(filename);
-         
-         % Read marker-file and store contents in cells of strings
-         tmp = textscan(fid,'%s');
-
-         fclose(fid);
-         
-         % Search for cells that contain coordinates
-         selx = strncmp('data0',tmp{1},5);
-         sely = strncmp('data1',tmp{1},5);
-         selz = strncmp('data2',tmp{1},5);
-         sellab = strncmp('description',tmp{1},5);
-         
-         % Extract cells that contain coordinates
-         xtemp  = tmp{1}(selx);
-         ytemp  = tmp{1}(sely);
-         ztemp  = tmp{1}(selz);
-         labtemp = tmp{1}(sellab);
-         
-         % Determine which channels are set. In localite channels that are not set
-         % automatically receive coordinates [0, 0, 0] and should therefore
-         % be discarded.
-         settemp = tmp{1}(strncmp('set',tmp{1},3));
-         selset = strncmp('set="f',settemp,6);
-         
-         % Remove channels that are not set
-         xtemp(selset) = [];
-         ytemp(selset) = [];
-         ztemp(selset) = [];
-         labtemp(selset) = [];
-         
-         % Convert cells that contain coordinates from string to double
-         x = [];
-         y = [];
-         z = [];
-         lbl = [];
-
-         for i=1:numel(xtemp)
-            x(i,1) = str2double(xtemp{i}(8:end-1));
-            y(i,1) = str2double(ytemp{i}(8:end-1));
-            z(i,1) = str2double(ztemp{i}(8:end-3));
-            lbl{i,1} = labtemp{i}(14:end-1);
-         end;
-         
-         % Create and fill sens structure
-         sens = [];
-         sens.elecpos = [x y z];
-         sens.chanpos = sens.elecpos;
-         sens.label = lbl;
-     else
-        tmp = xml2struct(filename);
-        
-        sens = [];
-        
-        % Loop through structure obtained from xml-file and store
-        % coordinate information into sens structure of channels that are
-        % set. 
-        for i=1:numel(tmp)
-            if strcmp(tmp(i).Marker.set,'true')
-                sens.elecpos(i,1) = str2double(tmp(i).Marker.ColVec3D.data0);
-                sens.elecpos(i,2) = str2double(tmp(i).Marker.ColVec3D.data1);
-                sens.elecpos(i,3) = str2double(tmp(i).Marker.ColVec3D.data2);
-                sens.label{i} = tmp(i).Marker.description;
-            end;
+    if ~usejava('jvm') % Using xml2struct requires java
+      fid = fopen(filename);
+      
+      % Read marker-file and store contents in cells of strings
+      tmp = textscan(fid,'%s');
+      
+      fclose(fid);
+      
+      % Search for cells that contain coordinates
+      selx = strncmp('data0',tmp{1},5);
+      sely = strncmp('data1',tmp{1},5);
+      selz = strncmp('data2',tmp{1},5);
+      sellab = strncmp('description',tmp{1},5);
+      
+      % Extract cells that contain coordinates
+      xtemp  = tmp{1}(selx);
+      ytemp  = tmp{1}(sely);
+      ztemp  = tmp{1}(selz);
+      labtemp = tmp{1}(sellab);
+      
+      % Determine which channels are set. In localite channels that are not set
+      % automatically receive coordinates [0, 0, 0] and should therefore
+      % be discarded.
+      settemp = tmp{1}(strncmp('set',tmp{1},3));
+      selset = strncmp('set="f',settemp,6);
+      
+      % Remove channels that are not set
+      xtemp(selset) = [];
+      ytemp(selset) = [];
+      ztemp(selset) = [];
+      labtemp(selset) = [];
+      
+      % Convert cells that contain coordinates from string to double
+      x = [];
+      y = [];
+      z = [];
+      lbl = [];
+      
+      for i=1:numel(xtemp)
+        x(i,1) = str2double(xtemp{i}(8:end-1));
+        y(i,1) = str2double(ytemp{i}(8:end-1));
+        z(i,1) = str2double(ztemp{i}(8:end-3));
+        lbl{i,1} = labtemp{i}(14:end-1);
+      end;
+      
+      % Create and fill sens structure
+      sens = [];
+      sens.elecpos = [x y z];
+      sens.chanpos = sens.elecpos;
+      sens.label = lbl;
+    else
+      tmp = xml2struct(filename);
+      
+      sens = [];
+      
+      % Loop through structure obtained from xml-file and store
+      % coordinate information into sens structure of channels that are
+      % set.
+      for i=1:numel(tmp)
+        if strcmp(tmp(i).Marker.set,'true')
+          sens.elecpos(i,1) = str2double(tmp(i).Marker.ColVec3D.data0);
+          sens.elecpos(i,2) = str2double(tmp(i).Marker.ColVec3D.data1);
+          sens.elecpos(i,3) = str2double(tmp(i).Marker.ColVec3D.data2);
+          sens.label{i} = tmp(i).Marker.description;
         end;
-        
-        sens.chanpos = sens.elecpos;   
-     end;
-     
+      end;
+      
+      sens.chanpos = sens.elecpos;
+    end;
+    
+  case 'easycap_txt'
+    % Read the file and store all contents in cells of strings
+    fid = fopen(filename);
+    tmp = textscan(fid,'%s%s%s%s');
+    fclose(fid);
+
+    sens = [];
+    if all(cellfun(@isempty, tmp{4}))
+      % it contains theta and phi
+      sens.label   = cellfun(@str2double, tmp{1}(2:end));
+      theta = cellfun(@str2double, tmp{2}(2:end));
+      phi   = cellfun(@str2double, tmp{3}(2:end));
+      radians = @(x) pi*x/180;
+      warning('assuming a head radius of 10 cm');
+      x = 10*cos(radians(phi)).*sin(radians(theta));
+      y = 10*sin(radians(theta)).*sin(radians(phi));
+      z = 10*cos(radians(theta));
+      sens.unit = 'cm';
+      sens.elecpos = [x y z];
+      sens.chanpos = [x y z];
+    else
+      % it contains X, Y, Z
+      sens.label = tmp{1}(2:end);
+      x = cellfun(@str2double, tmp{2}(2:end));
+      y = cellfun(@str2double, tmp{3}(2:end));
+      z = cellfun(@str2double, tmp{4}(2:end));
+      sens.elecpos = [x y z];
+      sens.chanpos = [x y z];
+    end
+    
   otherwise
     error('unknown fileformat for electrodes or gradiometers');
 end
@@ -347,4 +377,5 @@ end
 % ensure that the sensor description is up-to-date
 % this will also add chantype and units to the sensor array if missing
 sens = ft_datatype_sens(sens);
+
 
