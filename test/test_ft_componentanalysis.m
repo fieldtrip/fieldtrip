@@ -74,16 +74,26 @@ switch dataset.datatype
 end
 
 cfg.inputfile  = fullfile(dataset.origdir,version,'raw',dataset.type,['preproc_',dataset.datatype]);
+outputfile     = fullfile(dataset.origdir,version,'comp',dataset.type,['comp_',dataset.datatype])
 if writeflag
-  cfg.outputfile = fullfile(dataset.origdir,version,'comp',dataset.type,['comp_',dataset.datatype]);
+  cfg.outputfile = outputfile;
 end
 
-if ~strcmp(version, 'latest') && str2num(version)<20100000
+if ~strcmp(version, 'latest') && str2double(version)<20100000
   % -- HISTORICAL --- older fieldtrip versions don't support inputfile and outputfile
+  load(outputfile, 'comp');
+  if isfield(comp.cfg.callinfo, 'randomseed')
+      cfg.randomseed = comp.cfg.callinfo.randomseed;
+  end
+  
   load(cfg.inputfile, 'data');
   comp = ft_componentanalysis(cfg, data);
   save(cfg.outputfile, 'comp');
 else
+  load(outputfile, 'comp');
+  if isfield(comp.cfg.callinfo, 'randomseed')
+      cfg.randomseed = comp.cfg.callinfo.randomseed;
+  end
   comp = ft_componentanalysis(cfg);
 end
 
