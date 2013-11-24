@@ -2042,8 +2042,11 @@ switch atlasformat
     ft_hastoolbox('gifti', 1);
     g = gifti(filename);
     
-    label = g.private.label.name; % provides the name of the parcel
-    key   = g.private.label.key;  % maps value to name
+    label = g.labels.name(:);
+    key   = g.labels.key(:);
+    
+    %label = g.private.label.name; % provides the name of the parcel
+    %key   = g.private.label.key;  % maps value to name
     % there is some additional meta data that may be useful, but for now
     % stick to the rather uninformative parcellation1/2/3 etc.
     % Store each column in cdata as an independent parcellation, because
