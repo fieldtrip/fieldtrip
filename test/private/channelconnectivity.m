@@ -7,6 +7,7 @@ function [connectivity] = channelconnectivity(cfg, data)
 
 if (isfield(cfg, 'avgoverchan') && strcmp(cfg.avgoverchan, 'yes'))...
     || isempty(cfg.neighbours)
+  nchan = numel(cfg.channel);
   connectivity = false(nchan,nchan);
 else
   
@@ -36,8 +37,12 @@ else
 %   end
   % the following code should be equivalent:
   
+  if numel(cfg.neighbours) < nchan/4
+    error('channelconnectivity only works when at least 1/4th of all channels has neighbours defined (or with neighbours = [])');
+    % FIXME the above error is true (or maybe with <1/5th) but I don't
+    % understand why, ES 25-nov-2013
+  end
   
-    
   % avoid using match_str inside the loop for performance reasons
   [sel1,sel2] = match_str(chans, {cfg.neighbours.label}');
 
@@ -53,7 +58,6 @@ else
   selneighb = match_str(chans, allneighb, 1);
   % ...and then we can reshape the indices again to get the neighbours
   selneighb = mat2cell(selneighb, numAllNeighb);
-
   for k = 1:numel(sel1)
     % remove zeroes from selneighb (these correspond to channels absent)
     seln = selneighb{k};
