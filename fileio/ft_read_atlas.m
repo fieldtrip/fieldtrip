@@ -89,6 +89,9 @@ elseif ft_filetype(filename, 'caret_label')
   % this is a gifti file that contains both the values for a set of
   % vertices as well as the labels.
   defaultformat = 'caret_label';
+elseif ~isempty(strfind(filename, 'MPM'))
+  % assume to be from the spm_anatomy toolbox
+  defaultformat = 'spm_anatomy';
 else
   defaultformat  = 'wfu';
 end
@@ -2079,6 +2082,36 @@ switch atlasformat
     elseif ~isfield(atlas, 'coordsys')
       atlas.coordsys = 'unknown';
     end
+  case 'spm_anatomy'
+    ft_hastoolbox('spm8up', 1);
+    
+    % load the map, this is assumed to be the struct array MAP
+    load(filename);
+    [p,f,e]      = fileparts(filename);
+    mrifilename  = fullfile(p,[strrep(f, '_MPM',''),'.img']);
+    atlas        = ft_read_mri(mrifilename, 'format', 'analyze_img');
+    tissue       = round(atlas.anatomy); % I don't know why the values are non-integer
+    atlas        = rmfield(atlas, 'anatomy');
+    label        = {MAP.name}';
+    idx          = [MAP.GV]';
+    
+    % check whether all labels are present
+    if numel(intersect(idx,unique(tissue(:))))<numel(idx)
+      fprintf('there are fewer labels in the volume than in the list\n');
+    end
+    
+    % remap the values of the labels to run from 1-numel(idx)
+    newtissue = zeros(size(tissue));
+    for k = 1:numel(idx)
+      newtissue(tissue==idx(k)) = k;
+    end
+    atlas.tissue      = newtissue;
+    atlas.tissuelabel = label;
+    atlas.coordsys    = 'spm'; % I think this is safe to assume 
+    
+    clear tissue newtissue;
+    
+    
   otherwise
     error('unsupported atlas format %s', atlasformat);
 end % case
