@@ -1,4 +1,4 @@
-function [sel1, sel2] = match_str(a, b)
+function [sel1, sel2] = match_str(a, b, fullout)
 
 % MATCH_STR looks for matching labels in two listst of strings
 % and returns the indices into both the 1st and 2nd list of the matches.
@@ -8,6 +8,12 @@ function [sel1, sel2] = match_str(a, b)
 %
 % The strings can be stored as a char matrix or as an vertical array of
 % cells, the matching is done for each row.
+%
+% When including a 1 as the third input argument, the output lists of
+% indices will be expanded to the size of the largest input argument.
+% Entries that occur only in one of the two inputs will correspond to a 0
+% in the output, in this case. This can be convenient in rare cases if the
+% size of the input lists is meaningful.
 
 % Copyright (C) 2000-2012, Robert Oostenveld
 %
@@ -80,12 +86,22 @@ b = c((Na+1):end);
 a(empty_a) = nan;
 b(empty_b) = nan;
 
-sel1 = [];
-sel2 = [];
-for i=1:length(a)
-  % s = find(strcmp(a(i), b));  % for string comparison
-  s = find(a(i)==b);            % for numeric comparison
-  sel2 = [sel2; s];
-  s(:) = i;
-  sel1 = [sel1; s];
+if nargin < 3 || ~fullout
+  sel1 = [];
+  sel2 = [];
+  for i=1:length(a)
+    % s = find(strcmp(a(i), b));  % for string comparison
+    s = find(a(i)==b);            % for numeric comparison
+    sel2 = [sel2; s];
+    s(:) = i;
+    sel1 = [sel1; s];
+  end
+else
+  sel1 = zeros(max(Na,Nb),1);
+  sel2 = zeros(max(Na,Nb),1);
+  for i=1:length(a)
+    s = find(a(i)==b);
+    sel2(s) = s;
+    sel1(s) = i;
+  end
 end
