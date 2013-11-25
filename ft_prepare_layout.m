@@ -103,23 +103,24 @@ end
 % set default configuration options
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if ~isfield(cfg, 'rotate'),     cfg.rotate = [];                end  % [] => rotation is determined based on the type of sensors
-if ~isfield(cfg, 'style'),      cfg.style = '2d';               end
-if ~isfield(cfg, 'projection'), cfg.projection = 'polar';       end
-if ~isfield(cfg, 'layout'),     cfg.layout = [];                end
-if ~isfield(cfg, 'grad'),       cfg.grad = [];                  end
-if ~isfield(cfg, 'elec'),       cfg.elec = [];                  end
-if ~isfield(cfg, 'gradfile'),   cfg.gradfile = [];              end
-if ~isfield(cfg, 'elecfile'),   cfg.elecfile = [];              end
-if ~isfield(cfg, 'output'),     cfg.output = [];                end
-if ~isfield(cfg, 'feedback'),   cfg.feedback = 'no';            end
-if ~isfield(cfg, 'montage'),    cfg.montage = 'no';             end
-if ~isfield(cfg, 'image'),      cfg.image = [];                 end
-if ~isfield(cfg, 'bw'),         cfg.bw = 0;                     end
-if ~isfield(cfg, 'channel'),    cfg.channel = 'all';            end
-if ~isfield(cfg, 'skipscale'),  cfg.skipscale = 'no';           end
-if ~isfield(cfg, 'skipcomnt'),  cfg.skipcomnt = 'no';           end
-if ~isfield(cfg, 'overlap'),    cfg.overlap = 'shift';          end
+cfg.rotate     = ft_getopt(cfg, 'rotate',     []); % [] => rotation is determined based on the type of sensors
+cfg.style      = ft_getopt(cfg, 'style',      '2d');
+cfg.projection = ft_getopt(cfg, 'projection', 'polar');
+cfg.layout     = ft_getopt(cfg, 'layout',     []);
+cfg.grad       = ft_getopt(cfg, 'grad',       []);
+cfg.elec       = ft_getopt(cfg, 'elec',       []);
+cfg.gradfile   = ft_getopt(cfg, 'gradfile',   []);
+cfg.elecfile   = ft_getopt(cfg, 'elecfile',   []);
+cfg.output     = ft_getopt(cfg, 'output',     []);
+cfg.feedback   = ft_getopt(cfg, 'feedback',   'no');
+cfg.montage    = ft_getopt(cfg, 'montage',    'no');
+cfg.image      = ft_getopt(cfg, 'image',      []);
+cfg.mesh       = ft_getopt(cfg, 'mesh',       []); % experimental, should only work with meshes defined in 2D
+cfg.bw         = ft_getopt(cfg, 'bw',         0);
+cfg.channel    = ft_getopt(cfg, 'channel',    'all');
+cfg.skipscale  = ft_getopt(cfg, 'skipscale',  'no');
+cfg.skipcomnt  = ft_getopt(cfg, 'skipcomnt',  'no');
+cfg.overlap    = ft_getopt(cfg, 'overlap',    'shift');
 
 cfg = ft_checkconfig(cfg);
 
@@ -371,32 +372,42 @@ elseif isfield(data, 'grad') && isstruct(data.grad)
   data = ft_checkdata(data);
   layout = sens2lay(data.grad, cfg.rotate, cfg.projection, cfg.style, cfg.overlap);
   
-elseif ~isempty(cfg.image) && isempty(cfg.layout)
-  fprintf('reading background image from %s\n', cfg.image);
-  [p,f,e] = fileparts(cfg.image);
-  switch e
-    case '.mat'
-      tmp = whos('-file', cfg.image);
-      load(cfg.image, tmp.name);
-      eval(['img = ',tmp.name,';']);
-    otherwise
-      img = imread(cfg.image);
+elseif (~isempty(cfg.image) || ~isempty(cfg.mesh)) && isempty(cfg.layout)
+  % deal with image file
+  if ~isempty(cfg.image)
+  
+    fprintf('reading background image from %s\n', cfg.image);
+    [p,f,e] = fileparts(cfg.image);
+    switch e
+      case '.mat'
+        tmp = whos('-file', cfg.image);
+        load(cfg.image, tmp.name);
+        eval(['img = ',tmp.name,';']);
+      otherwise
+        img = imread(cfg.image);
+    end
+    img = flipdim(img, 1); % in combination with "axis xy"
+    
+    figure
+    bw = cfg.bw;
+    
+    if bw
+      % convert to greyscale image
+      img = mean(img, 3);
+      imagesc(img);
+      colormap gray
+    else
+      % plot as RGB image
+      image(img);
+    end
+    
+  elseif ~isempty(cfg.mesh)
+    if isfield(cfg.mesh, 'sulc')
+      ft_plot_mesh(cfg.mesh, 'edgecolor','none','vertexcolor',cfg.mesh.sulc);colormap gray;
+    else
+      ft_plot_mesh(cfg.mesh, 'edgecolor','none');
+    end
   end
-  img = flipdim(img, 1); % in combination with "axis xy"
-  
-  figure
-  bw = cfg.bw;
-  
-  if bw
-    % convert to greyscale image
-    img = mean(img, 3);
-    imagesc(img);
-    colormap gray
-  else
-    % plot as RGB image
-    image(img);
-  end
-  
   hold on
   axis equal
   axis off
@@ -435,7 +446,11 @@ elseif ~isempty(cfg.image) && isempty(cfg.layout)
           pos = pos(1:end-1,:);
           % completely redraw the figure
           cla
-          h = image(img);
+          if ~isempty(cfg.image)
+            h = image(img);
+          else
+            h = ft_plot_mesh(cfg.mesh,'edgecolor','none','vertexcolor',cfg.mesh.sulc);
+          end
           hold on
           axis equal
           axis off
@@ -494,7 +509,11 @@ elseif ~isempty(cfg.image) && isempty(cfg.layout)
           polygon{thispolygon} = polygon{thispolygon}(1:end-1,:);
           % completely redraw the figure
           cla
-          h = image(img);
+          if ~isempty(cfg.image)
+            h = image(img);
+          else
+            h = ft_plot_mesh(cfg.mesh,'edgecolor','none','vertexcolor',cfg.mesh.sulc);
+          end
           hold on
           axis equal
           axis off
@@ -589,7 +608,11 @@ elseif ~isempty(cfg.image) && isempty(cfg.layout)
           polygon{thispolygon} = polygon{thispolygon}(1:end-1,:);
           % completely redraw the figure
           cla
-          h = image(img);
+          if ~isempty(cfg.image)
+            h = image(img);
+          else
+            h = ft_plot_mesh(cfg.mesh,'edgecolor','none','vertexcolor',cfg.mesh.sulc);
+          end
           hold on
           axis equal
           axis off
