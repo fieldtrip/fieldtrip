@@ -5,8 +5,8 @@ function [connectivity] = channelconnectivity(cfg, data)
 %
 % See also FT_PREPARE_NEIGHBOURS
 
-if isfield(cfg, 'avgoverchan') && strcmp(cfg.avgoverchan, 'yes')
-  nchan = 1;
+if (isfield(cfg, 'avgoverchan') && strcmp(cfg.avgoverchan, 'yes'))...
+    || isempty(cfg.neighbours)
   connectivity = false(nchan,nchan);
 else
   
@@ -35,13 +35,17 @@ else
 %     end
 %   end
   % the following code should be equivalent:
+  
+  
     
   % avoid using match_str inside the loop for performance reasons
-  [sel1,sel2] = match_str(cfg.channel, {cfg.neighbours.label}');
+  [sel1,sel2] = match_str(chans, {cfg.neighbours.label}');
 
+  % make sure we only have the neighbours present in the data
+  cfg.neighbours = cfg.neighbours(sel2);
+  
   % make big list of all neighbour labels...
   allneighb = {cfg.neighbours.neighblabel};
-  allneighb = allneighb(sel2);
   % ...store dimensionality...
   numAllNeighb = cellfun(@numel, allneighb);
   allneighb = cat(1, allneighb{:});
