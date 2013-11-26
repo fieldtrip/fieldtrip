@@ -331,7 +331,7 @@ elseif ft_senstype(input, 'bti')
     % determine the type on the basis of the channel labels
     % all 4D-BTi MEG channels start with "A" followed by a number
     % all 4D-BTi reference channels start with M or G
-    % all 4D-BTi EEG channels start with E
+    % all 4D-BTi EEG channels start with E, except for the 248-MEG/32-EEG system in Warsaw where they end with -1
     sel = myregexp('^A[0-9]+$', label);
     type(sel) = {'meg'};
     sel = myregexp('^M[CLR][xyz][aA]*$', label);
@@ -358,19 +358,21 @@ elseif ft_senstype(input, 'bti')
       type(selchan) = gradtype(selgrad);
     end
     
-    % This is to allow setting additional channel types based on the names
+    % deal with additional channel types based on the names
     if isheader && issubfield(input, 'orig.channel_data.chan_label')
       tmplabel = {input.orig.channel_data.chan_label};
       tmplabel = tmplabel(:);
     else
       tmplabel = label; % might work
     end
-    sel      = find(strcmp('unknown', type));
+    sel = find(strcmp('unknown', type));
     if ~isempty(sel)
       type(sel) = ft_chantype(tmplabel(sel));
       sel       = find(strcmp('unknown', type));
       if ~isempty(sel)
-        type(sel(strncmp('E', label(sel), 1))) = {'eeg'};
+        % channels that start with E are assumed to be EEG
+        % channels that end with -1 are also assumed to be EEG, see http://bugzilla.fcdonders.nl/show_bug.cgi?id=2389
+        type(sel(cellfun(@(x) strcmp(x(end-1:end),'-1') || strcmp(x(1),'E'), label(sel)))) = {'eeg'};
       end
     end
   end
