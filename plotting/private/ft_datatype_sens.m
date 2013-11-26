@@ -152,13 +152,9 @@ switch version
       distance = sens.unit;
     end
     
-    if ~isempty(amplitude)
-      % update the tra matrix for the units of amplitude
-      if ~isfield(sens, 'tra') && ~ismeg
-        warning('constructing average reference over all EEG channels');
-        sens.tra = eye(nchan) - 1/nchan;
-      end
-        
+    if ~isempty(amplitude) && isfield(sens, 'tra')
+      % update the tra matrix for the units of amplitude, this ensures that
+      % the leadfield values remain consistent with the units
       for i=1:nchan
         if ~isempty(regexp(sens.chanunit{i}, 'm$', 'once'))
           % this channel is expressed as amplitude per distance
