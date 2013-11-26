@@ -7,7 +7,11 @@ function [connectivity] = channelconnectivity(cfg, data)
 
 if (isfield(cfg, 'avgoverchan') && strcmp(cfg.avgoverchan, 'yes'))...
     || isempty(cfg.neighbours)
-  nchan = numel(cfg.channel);
+  if nargin < 2
+    nchan = numel(cfg.channel);
+  else
+    nchan = numel(data.label);
+  end
   connectivity = false(nchan,nchan);
 else
   
