@@ -595,45 +595,41 @@ switch eventformat
     event(end  ).offset   = -hdr.nSamplesPre;
     event(end  ).value    = [];
     
-  case 'eep_cnt'
+  case {'eep_cnt' 'eep_trg'}
     % check that the required low-level toolbox is available
     ft_hastoolbox('eeprobe', 1);
-    % try to read external trigger file in EEP format
-    trgfile = [filename(1:(end-3)), 'trg'];
-    if exist(trgfile, 'file')
-      if isempty(hdr)
-        hdr = ft_read_header(filename);
-      end
-      tmp = read_eep_trg(trgfile);
-      % translate the EEProbe trigger codes to events
-      for i=1:length(tmp)
-        event(i).type     = 'trigger';
-        event(i).sample   = round((tmp(i).time/1000) * hdr.Fs) + 1;    % convert from ms to samples
-        event(i).value    = tmp(i).code;
-        event(i).offset   = 0;
-        event(i).duration = 0;
-      end
-    else
-      warning('no triggerfile was found');
+
+    % this requires the header from the cnt file and the triggers from the trg file
+    if strcmp(eventformat, 'eep_cnt')
+      trgfile = [filename(1:(end-3)), 'trg'];
+      cntfile = filename;
+    elseif strcmp(eventformat, 'eep_trg')
+      cntfile = [filename(1:(end-3)), 'cnt'];
+      trgfile = filename;
     end
-    
-   case 'eep_trg'
-    % check that the required low-level toolbox is available
-    ft_hastoolbox('eeprobe', 1);
-    % try to read external trigger file in EEP format
-    cntfile = [filename(1:(end-3)), 'cnt'];
-    if ~exist(cntfile, 'file') && isempty(hdr)
-        warning('No corresponding .cnt-file found, cannot read in header information. No events can be read in.\n');
+
+    if exist(trgfile, 'file')
+      trg = read_eep_trg(trgfile);
     else
-      if isempty(hdr)
+      warning('The corresponding "%s" file was not found, cannot read in trigger information. No events can be read in.', trgfile);
+      trg = []; % make it empty, needed below
+    end
+
+    if isempty(hdr) 
+      if exist(cntfile, 'file')
         hdr = ft_read_header(cntfile);
+      else
+        warning('The corresponding "%s" file was not found, cannot read in header information. No events can be read in.', cntfile);
+        hdr = []; % remains empty, needed below
       end
-      tmp = read_eep_trg(filename);
+    end
+
+    if ~isempty(trg) && ~isempty(hdr)
       % translate the EEProbe trigger codes to events
       for i=1:length(tmp)
         event(i).type     = 'trigger';
-        event(i).sample   = round((tmp(i).time/1000) * hdr.Fs) + 1;    % convert from ms to samples
-        event(i).value    = tmp(i).code;
+        event(i).sample   = round((trg(i).time/1000) * hdr.Fs) + 1;    % convert from ms to samples
+        event(i).value    = trg(i).code;
         event(i).offset   = 0;
         event(i).duration = 0;
       end
