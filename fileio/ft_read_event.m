@@ -626,7 +626,7 @@ switch eventformat
 
     if ~isempty(trg) && ~isempty(hdr)
       % translate the EEProbe trigger codes to events
-      for i=1:length(tmp)
+      for i=1:length(trg)
         event(i).type     = 'trigger';
         event(i).sample   = round((trg(i).time/1000) * hdr.Fs) + 1;    % convert from ms to samples
         event(i).value    = trg(i).code;
