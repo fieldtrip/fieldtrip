@@ -1,7 +1,7 @@
 function test_tutorial_beamformerextended20131122
 
 % MEM 8gb
-% WALLTIME 01:45:00
+% WALLTIME 02:30:00
 
 % TEST test_tutorial_beamformer20131122
 % TEST ft_sourceanalysis ft_prepare_leadfield
