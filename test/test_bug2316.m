@@ -1,7 +1,7 @@
 function test_bug2316
 
 % MEM 1500mb
-% WALLTIME 0:03:01
+% WALLTIME 0:05:00
 
 % TEST test_bug2316
 % TEST ft_databrowser

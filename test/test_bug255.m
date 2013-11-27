@@ -1,7 +1,7 @@
 function test_bug255
 
 % MEM 1500mb
-% WALLTIME 00:04:30
+% WALLTIME 00:06:30
 
 % TEST test_bug255
 % TEST ft_timelockanalysis ft_prepare_layout ft_timelockstatistics ft_topoplotER

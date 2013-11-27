@@ -1,7 +1,7 @@
 function test_ft_plot_topo3d
 
 % MEM 1gb
-% WALLTIME 0:03:00
+% WALLTIME 0:05:00
 
 % TEST test_ft_plot_topo3d
 % TEST ft_plot_topo3d
