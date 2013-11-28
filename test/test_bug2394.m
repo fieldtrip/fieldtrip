@@ -14,6 +14,8 @@ data.trial = repmat({randn(100,1000)},100,1);
 
 %% subselect ft_selectdata_old
 
+%{
+% don't check this anymore
 datsel = ft_selectdata_old(data, 'rpt', []);
 if numel(datsel.trial) == 0;
   oldnum = 'success';
@@ -27,6 +29,7 @@ if numel(datsel.trial) == 0;
 else
   oldlog = 'fail';
 end
+%}
 
 %% subselect ft_selectdata_new
 
@@ -50,11 +53,11 @@ end
 
 %% report
 
-fprintf('ft_selectdata_old, numeric indexing: %s\n', oldnum);
-fprintf('ft_selectdata_old, logical indexing: %s\n', oldlog);
+%fprintf('ft_selectdata_old, numeric indexing: %s\n', oldnum);
+%fprintf('ft_selectdata_old, logical indexing: %s\n', oldlog);
 fprintf('ft_selectdata_new, numeric indexing: %s\n', newnum);
 fprintf('ft_selectdata_new, logical indexing: %s\n', newlog);
 
-if strfind([oldnum oldlog newnum newlog], 'fail')
+if strfind([newnum newlog], 'fail')
   error('the test failed, see above for details');
 end
