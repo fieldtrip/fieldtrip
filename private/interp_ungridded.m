@@ -54,13 +54,25 @@ sphereradius = ft_getopt(varargin, 'sphereradius');   % required for some projec
 distmat      = ft_getopt(varargin, 'distmat');        % will be computed if needed and not present
 triin        = ft_getopt(varargin, 'triin');          % not yet implemented
 triout       = ft_getopt(varargin, 'triout');   
-val          = ft_getopt(varargin, 'data');           % functional data defined at pntin
+dat          = ft_getopt(varargin, 'data');           % functional data defined at pntin
+inside       = ft_getopt(varargin, 'inside');
 
-hasval  = ~isempty(val);
-npntin  = size(pntin, 1);
-npntout = size(pntout, 1);
+hasdat    = ~isempty(dat);
+hasinside = ~isempty(inside);
+npntin    = size(pntin, 1);
+npntout   = size(pntout, 1);
 
 dimres  = sqrt(sum((pntout(2,:)-pntout(1,:)).^2,2));
+
+if hasinside,
+  % convert to boolean vector
+  tmp         = false(npntin,1);
+  tmp(inside) = true;
+  inside      = tmp;
+  clear tmp;
+else
+  inside      = true(npntin,1);
+end
 
 if isempty(distmat)
   %------compute a distance matrix
@@ -95,7 +107,7 @@ if isempty(distmat)
         % the following lines are equivalent to the previous 2 but use
         % fewer flops
         d    = sqrt(dpntinsq - 2 * pntin * pntout(j,:)' + dpntoutsq(j));
-        sel  = find(d < sphereradius);
+        sel  = find(d < sphereradius & inside);
         
         nsel = numel(sel);
         if nsel>0
@@ -155,9 +167,9 @@ switch projmethod
     error('unsupported projection method');
 end  % case projmethod
 
-if hasval
+if hasdat
   % return the interpolated values
-  varargout{1} = projmat * val;
+  varargout{1} = projmat * dat;
 else
   % return the interpolation and the distance matrix
   varargout{1} = projmat;
