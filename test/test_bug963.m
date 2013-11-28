@@ -27,7 +27,7 @@ dataset = {
   'original/meg/yokogawa64/2011_01_28_0354_ME053_AEF.con'
   };
 
-cd(datadir)
+%cd(datadir)
 
 for i=1:length(dataset)
   
@@ -42,7 +42,7 @@ for i=1:length(dataset)
   % PART 1A: generate the reference data as a set of *.mat files
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
-  outputfile = sprintf('dataset%02d.mat', i);
+  outputfile = fullfile(datadir, sprintf('dataset%02d.mat', i));
   if ~exist(outputfile)
     filename = fullfile(rawdataprefix, dataset{i});
     disp(filename)
@@ -55,7 +55,7 @@ for i=1:length(dataset)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % PART 1B: read the datasets and compare them to the reference data
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  outputfile = sprintf('dataset%02d.mat', i);
+  outputfile = fullfile(datadir, sprintf('dataset%02d.mat', i));
   reference = load(outputfile);
   
   filename = fullfile(rawdataprefix, dataset{i});
