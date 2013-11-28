@@ -621,8 +621,12 @@ elseif istlck,
   if selectchan, data = seloverdim(data, 'chan', selchan, fb); end
   if selectfoi,  data = seloverdim(data, 'freq', selfoi,  fb); end
   if selecttoi,  data = seloverdim(data, 'time', seltoi,  fb); end
-  if isfield(data,'trial') && isfield(data,'avg') && size(data.trial,3)~=size(data.avg,2)
-    warning('Warning: .avg, .var, .dof and .cov not updated. Please use ft_selectdata_new for this to work correctly on .trial timelock data.');
+  if isfield(data,'trial') && isfield(data,'avg') %&& size(data.trial,3)~=size(data.avg,2)
+    warning('Warning: .avg, .var, .dof and .cov not updated.');
+    if isfield(data, 'avg'), data = rmfield(data, 'avg'); end
+    if isfield(data, 'cov'), data = rmfield(data, 'cov'); end
+    if isfield(data, 'dof'), data = rmfield(data, 'dof'); end
+    if isfield(data, 'var'), data = rmfield(data, 'var'); end
   end
   % average over dimensions
   if avgoverrpt,  data = avgoverdim(data, 'rpt',  fb); end
