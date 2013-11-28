@@ -222,7 +222,7 @@ if nEEG>0
     if nEEG<=60
       elec.elecpos(kChan,1:3) = orig.chs(n).eeg_loc(1:3);
     else
-      if kChan<numel(dig_eeg)
+      if kChan<=numel(dig_eeg)
         elec.elecpos(kChan,1:3) = orig.dig(dig_eeg(kChan)).r;
       else
         warning_once('not all EEG channel positions have been digitized');
