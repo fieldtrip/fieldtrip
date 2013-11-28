@@ -131,14 +131,14 @@ for k = 1:nchan
       if k==1,
         % first column, plot scale on y axis
         fontsize = 10;
-        ft_plot_text( ix.*1.2-0.5,iy.*1.2-0.5,num2str(cfg.zlim(1),3),'HorizontalAlignment','Right','VerticalAlignment','Middle','Fontsize',fontsize);
-        ft_plot_text( ix.*1.2-0.5,iy.*1.2+0.5,num2str(cfg.zlim(2),3),'HorizontalAlignment','Right','VerticalAlignment','Middle','Fontsize',fontsize);
+        ft_plot_text( ix.*1.2-0.5,iy.*1.2-0.5,num2str(cfg.zlim(1),3),'HorizontalAlignment','Right','VerticalAlignment','Middle','Fontsize',fontsize,'Interpreter','none');
+        ft_plot_text( ix.*1.2-0.5,iy.*1.2+0.5,num2str(cfg.zlim(2),3),'HorizontalAlignment','Right','VerticalAlignment','Middle','Fontsize',fontsize,'Interpreter','none');
       end
       if m==nchan,
         % bottom row, plot scale on x axis
         fontsize = 10;
-        ft_plot_text( ix.*1.2-0.5,iy.*1.2-0.5,num2str(data.freq(1  ),3),'HorizontalAlignment','Center','VerticalAlignment','top','Fontsize',fontsize);
-        ft_plot_text( ix.*1.2+0.5,iy.*1.2-0.5,num2str(data.freq(end),3),'HorizontalAlignment','Center','VerticalAlignment','top','Fontsize',fontsize);
+        ft_plot_text( ix.*1.2-0.5,iy.*1.2-0.5,num2str(data.freq(1  ),3),'HorizontalAlignment','Center','VerticalAlignment','top','Fontsize',fontsize,'Interpreter','none');
+        ft_plot_text( ix.*1.2+0.5,iy.*1.2-0.5,num2str(data.freq(end),3),'HorizontalAlignment','Center','VerticalAlignment','top','Fontsize',fontsize,'Interpreter','none');
       end
     end
   end
@@ -146,8 +146,8 @@ end
 
 % add channel labels on grand X and Y axes
 for k = 1:nchan
-  ft_plot_text(0,       (nchan + 1 - k).*1.2, data.label{k});
-  ft_plot_text(k.*1.2,  (nchan + 1)    .*1.2, data.label{k});
+  ft_plot_text(0,       (nchan + 1 - k).*1.2, data.label{k}, 'Interpreter', 'none');
+  ft_plot_text(k.*1.2,  (nchan + 1)    .*1.2, data.label{k}, 'Interpreter', 'none');
 end
 
 % add 'from' and 'to' labels
