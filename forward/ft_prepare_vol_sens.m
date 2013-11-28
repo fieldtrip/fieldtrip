@@ -248,7 +248,8 @@ elseif ismeg
         localspheres.r(i,:) = vol.r(chanindex);
         localspheres.o(i,:) = vol.o(chanindex,:);
       end
-      vol = localspheres;
+      vol.r = localspheres.r;
+      vol.o = localspheres.o;
       
       % finally do the selection of channels and coils
       % order them according to the users specification
@@ -312,10 +313,13 @@ elseif iseeg
   [selchan, selsens] = match_str(channel, sens.label);
   Nchans = length(sens.label);
   
+  sens.chanpos   = sens.chanpos(selsens,:);
+  sens.label     = sens.label(selsens);
+  try, sens.chantype  = sens.chantype(selsens); end;
+  try, sens.chanunit  = sens.chanunit(selsens); end;
+  
   if isfield(sens, 'tra')
     % first only modify the linear combination of electrodes into channels
-    sens.chanpos = sens.chanpos(selsens,:);
-    sens.label   = sens.label(selsens);
     sens.tra     = sens.tra(selsens,:);
     % subsequently remove the electrodes that do not contribute to any channel output
     selelec      = any(sens.tra~=0,1);
@@ -323,9 +327,7 @@ elseif iseeg
     sens.tra     = sens.tra(:,selelec);
   else
     % the electrodes and channels are identical
-    sens.chanpos = sens.chanpos(selsens,:);
     sens.elecpos = sens.elecpos(selsens,:);
-    sens.label   = sens.label(selsens);
   end
   
   % the electrodes will be projected onto the surface, hence the sensor positions need to be updated at the end
