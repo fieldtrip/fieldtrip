@@ -51,6 +51,13 @@ if ~success
   error('ft_prepare_sourcemodel was not able to determine the inside brain');
 end
 
+% check whether the inside field is constrained to the positions inside the
+% volume conductor model
+success = success && numel(grid.inside)~=size(grid.pos,1);
+if ~success
+  error('ft_prepare_sourcemodel was not able to constrain the inside positions');
+end
+
 %%%%%%%%%%%%%%%%%%%%%
 % do the computations (extended gradiometer)
 
