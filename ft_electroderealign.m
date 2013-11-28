@@ -144,9 +144,9 @@ if nargin==1
   catch lasterr
     % start with an empty set of electrodes, this is useful for manual positioning
     elec = [];
-    elec.pnt    = zeros(0,3);
-    elec.label  = cell(0,1);
-    elec.unit   = 'mm';
+    elec.chanpos = zeros(0,3);
+    elec.label   = cell(0,1);
+    elec.unit    = 'mm';
     warning(lasterr.message, lasterr.identifier);
   end
 elseif nargin>1
