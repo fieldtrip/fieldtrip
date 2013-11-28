@@ -106,8 +106,34 @@ end
   
 %Barnes&Hillebrand eq. 15
 r    = (((4*log(2)).^(-3/2))./6).*(f./indx);
-dx   = sqrt(sum((source.pos(2,:)-source.pos(1,:)).^2)); %assuming isotropic volume
-  
+
+% get the approximate voxel spacing, also works for non-isotropic volumes
+dx = zeros(source.dim);
+cnt  = zeros(source.dim);
+
+pos  = zeros([source.dim 3]);
+pos(:,:,:,1) = reshape(source.pos(:,1), source.dim);
+pos(:,:,:,2) = reshape(source.pos(:,2), source.dim);
+pos(:,:,:,3) = reshape(source.pos(:,3), source.dim);
+
+% wiggle around
+dx(2:end,:,:)   = dx(2:end,:,:)   + sqrt(sum((pos(1:end-1,:,:,:)-pos(2:end,:,:,:)).^2,4));
+dx(1:end-1,:,:) = dx(1:end-1,:,:) + sqrt(sum((pos(1:end-1,:,:,:)-pos(2:end,:,:,:)).^2,4));
+dx(:,2:end,:  ) = dx(:,2:end,:  ) + sqrt(sum((pos(:,1:end-1,:,:)-pos(:,2:end,:,:)).^2,4));
+dx(:,1:end-1,:) = dx(:,1:end-1,:) + sqrt(sum((pos(:,1:end-1,:,:)-pos(:,2:end,:,:)).^2,4));
+dx(:,:,2:end  ) = dx(:,:,2:end  ) + sqrt(sum((pos(:,:,1:end-1,:)-pos(:,:,2:end,:)).^2,4));
+dx(:,:,1:end-1) = dx(:,:,1:end-1) + sqrt(sum((pos(:,:,1:end-1,:)-pos(:,:,2:end,:)).^2,4));
+cnt(2:end,  :,:) = cnt(2:end,  :,:) + 1;
+cnt(1:end-1,:,:) = cnt(1:end-1,:,:) + 1;
+cnt(:,2:end,  :) = cnt(:,2:end,  :) + 1;
+cnt(:,1:end-1,:) = cnt(:,1:end-1,:) + 1;
+cnt(:,:,2:end  ) = cnt(:,:,2:end  ) + 1;
+cnt(:,:,1:end-1) = cnt(:,:,1:end-1) + 1;
+
+dx = dx./cnt;
+
+%dx   = sqrt(sum((source.pos(2,:)-source.pos(1,:)).^2)); %assuming isotropic volume
+
 %Barnes&Hillebrand eq. 16
 fwhm = dx./(3.*sqrt(r));
   
@@ -123,16 +149,19 @@ if removecenter,
   %only thought through for 3D fwhm
   tmp2 = ones(size(fwhm));
   tmp  = fwhm(xrange,yrange,zrange);
-  tmp  = tmp<1.25*min(tmp(:));
+  tmp  = tmp<2*min(tmp(:));
   tmp  = convn(convn(tmp, conndef(3,'min'), 'same'), conndef(3,'min'), 'same');
   tmp2(xrange,yrange,zrange) = tmp==0;
-  tmp2(tmp2==0) = nan;
-  fwhm  = fwhm.*double(tmp2);
+  %fwhm(tmp2==0) = max(max(max(fwhm(xrange,yrange,zrange))));
+  fwhm(tmp2==0) = nan;
+  fwhm(source.outside) = nan;
+  %fwhm  = fwhm.*double(tmp2);
 end
 
 source.fwhm      = fwhm(:);
+source.indx      = indx(:);
 source.insideold = source.inside;
-source.inside    = find(isfinite(fwhm(:,:,:,1,1)));
+source.inside    = find(isfinite(fwhm));
 source.outside   = setdiff((1:size(source.pos,1))', source.inside);
 
 %in the extreme cases a is either: [2 1 1;1 2 1;1 1 2]; det(a) = 4; no correlation      = small FWHM
