@@ -109,6 +109,7 @@ cfg.feedback     = ft_getopt(cfg, 'feedback',     'text');
 % check if the input cfg is valid for this function
 if ~strcmp(cfg.planarmethod, 'sourceproject')
   cfg = ft_checkconfig(cfg, 'required', {'neighbours'});
+  cfg.neighbours = struct(cfg.neighbours);
 end
 
 if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
@@ -242,6 +243,7 @@ else
   % ensure channel order according to cfg.channel (there might be one check
   % too much in here somewhere or in the subfunctions, but I don't care.
   % Better one too much than one too little - JMH @ 09/19/12
+  cfg = struct(cfg);
   [neighbsel] = match_str({cfg.neighbours.label}, cfg.channel);
   cfg.neighbours = cfg.neighbours(neighbsel);
   cfg.neighbsel = channelconnectivity(cfg);
