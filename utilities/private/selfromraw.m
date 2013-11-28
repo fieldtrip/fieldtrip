@@ -2,9 +2,9 @@ function [data] = selfromraw(data, varargin)
 
 % FIXME this function is not documented
 
-selrpt  = ft_getopt(varargin, 'rpt',  'all');
-selchan = ft_getopt(varargin, 'chan', 'all');
-seltim  = ft_getopt(varargin, 'latency', 'all');
+selrpt  = ft_getopt(varargin, 'rpt',  'all', 1);
+selchan = ft_getopt(varargin, 'chan', 'all', 1);
+seltim  = ft_getopt(varargin, 'latency', 'all', 1);
 
 if ischar(selrpt)
   if strcmp(selrpt, 'all')
