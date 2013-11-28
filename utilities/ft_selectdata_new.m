@@ -237,10 +237,15 @@ else
         varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'time')), seltime, avgovertime, datfields);
         varargin{i} = makeselection_time(varargin{i}, seltime, avgovertime); % update the time field
         
-        if ~any(isnan(selrpt))
-          % FIXME could also be subject
-          varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'rpt')), selrpt, avgoverrpt, datfields);
-          varargin{i} = makeselection_rpt(varargin{i}, selrpt); % avgoverrpt for the supporting fields is dealt with later
+        % FIXME could also be subject
+        varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'rpt')), selrpt, avgoverrpt, datfields);
+        varargin{i} = makeselection_rpt(varargin{i}, selrpt); % avgoverrpt for the supporting fields is dealt with later
+        
+        % make an exception for the covariance here (JM 20131128)
+        if isfield(varargin{i}, 'cov') && (all(~isnan(selrpt)) || all(~isnan(selchan)))
+          varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok, 'chan'))+[0 1], selchan, avgoverchan, {'cov'});
+          varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok, 'rpt')),        selrpt,  avgoverrpt,  {'cov'});
+          datfields   = [datfields {'cov'}];
         end
         
         %shiftdim the datfields, because convention has it that this should
@@ -402,7 +407,9 @@ ft_postamble provenance         % this records the time and memory at the end of
 % output argument's xxx.cfg
 for k = 1:numel(varargout)
   varargout{k}.cfg          = cfg;
-  varargout{k}.cfg.previous = varargin{k}.cfg;
+  if isfield(varargin{k}, 'cfg')
+    varargout{k}.cfg.previous = varargin{k}.cfg;
+  end
 end
 
 % ft_postamble savevar varargout  % this saves the output data structure to disk in case the user specified the cfg.outputfile option
@@ -429,8 +436,9 @@ function data = makeselection(data, seldim, selindx, avgoverdim, datfields)
 
 if numel(seldim) > 1
   for k = 1:numel(seldim)
-    data = makeselection(data, seldim(k), selindx, datfields);
+    data = makeselection(data, seldim(k), selindx, avgoverdim, datfields);
   end
+  return;
 end
 
 for i=1:numel(datfields)
