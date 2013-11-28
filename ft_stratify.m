@@ -100,14 +100,17 @@ if strcmp(cfg.method, 'histogram'),
     varargout{3} = b;
   else
     %------prepare some stuff
+    if numel(cfg.numbin) ~= nchan
+      cfg.numbin = repmat(cfg.numbin(1), [1 nchan]);
+    end
     for j = 1:nchan
       tmp  = [];
       for cndlop = 1:ncond
-        tmp = [tmp input{cndlop}(j,:)];
+        tmp = cat(2, tmp, input{cndlop}(j,:));
       end %concatenate input-data
       
       %create a 'common binspace'
-      [ndum,x] = hist([tmp], cfg.numbin);
+      [ndum,x] = hist(tmp, cfg.numbin(j));
       dx    = diff(x);
       xc    = [-inf x(1:end-1)+0.5*dx(1) inf];
       
@@ -116,22 +119,22 @@ if strcmp(cfg.method, 'histogram'),
       %repetitions as possible
       tmp = [];
       for cndlop = 1:ncond
-        [n{cndlop}(j,:), b{cndlop}(j,:)] = histc(input{cndlop}(j,:), xc);
+        [n{cndlop}(j,1:numel(xc)), b{cndlop}(j,:)] = histc(input{cndlop}(j,:), xc);
         tmp = [tmp; n{cndlop}(j,:)];
       end
-      binaxis(j,:) = xc;
+      binaxis(j,1:(cfg.numbin(j)+1)) = xc;
     end
     
     %------index the trials
     %------create n-d histo
-    linearhisto = zeros(ncond, cfg.numbin.^nchan);
+    linearhisto = zeros(ncond, prod(cfg.numbin));
     for cndlop = 1:ncond
       tmpb = zeros(1, size(b{cndlop},2));
       for j = 1:nchan
         if j == 1,
-          tmpb = tmpb + (b{cndlop}(j,:)).*(cfg.numbin.^(j-1));
+          tmpb = tmpb + (b{cndlop}(j,:)).*prod(cfg.numbin(1:(j-1)));
         else
-          tmpb = tmpb + (b{cndlop}(j,:)-1).*(cfg.numbin.^(j-1));
+          tmpb = tmpb + (b{cndlop}(j,:)-1).*prod(cfg.numbin(1:(j-1)));
         end
       end
       b{cndlop}             = tmpb;
