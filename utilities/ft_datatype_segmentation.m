@@ -8,11 +8,11 @@ function segmentation = ft_datatype_segmentation(segmentation, varargin)
 % MRI, which describes for each voxel the tissue type. It for example distinguishes
 % between white matter, grey matter, csf, skull and skin. It is mainly used for masking
 % in visualization, construction of volume conduction models and for construction of
-% cortical sheets. An volume-based atlas is basically a very detailled segmentation with
+% cortical sheets. An volume-based atlas is basically a very detailed segmentation with
 % an anatomical label for each voxel.
 %
 % For example, the AFNI TTatlas+tlrc segmented brain atlas (which can be created
-% with FT_PREPARE_ATLAS) looks like this
+% with FT_READ_ATLAS) looks like this
 %
 %              dim: [161 191 141]        the size of the 3D volume in voxels
 %        transform: [4x4 double]         affine transformation matrix for mapping the voxel coordinates to head coordinate system
