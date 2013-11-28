@@ -325,7 +325,7 @@ if dointersect
       if ~isempty(intersectcolor),     set(p(k), 'EdgeColor', intersectcolor(k)); end
       if ~isempty(intersectlinewidth), set(p(k), 'LineWidth', intersectlinewidth); end
       if ~isempty(intersectlinestyle), set(p(k), 'LineStyle', intersectlinestyle); end
-  end
+    end
   end
 end
 
