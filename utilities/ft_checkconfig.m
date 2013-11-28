@@ -442,6 +442,7 @@ if ~isempty(createsubcfg)
           'sfmethod'
           'svd'
           'init'
+          'checkconvergence'
           };
         
       otherwise
