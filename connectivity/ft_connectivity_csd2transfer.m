@@ -65,6 +65,7 @@ sfmethod     = ft_getopt(varargin, 'sfmethod',     'multivariate');
 dosvd        = ft_getopt(varargin, 'svd',          'no');
 doconditional = ft_getopt(varargin, 'conditional', 0);
 init         = ft_getopt(varargin, 'init',         'chol');
+checkconvergence = ft_getopt(varargin, 'checkconvergence', true);
 
 dosvd         = istrue(dosvd);
 doconditional = istrue(doconditional);
@@ -367,7 +368,7 @@ elseif strcmp(sfmethod, 'bivariate')
   if ntim>1,
     for kk = 1:ntim
       [Htmp, Ztmp, Stmp] = sfactorization_wilson2x2(freq.crsspctrm(:,:,:,kk), ...
-                               freq.freq, numiteration, tol, cmbindx, fb, init);
+                               freq.freq, numiteration, tol, cmbindx, fb, init, checkconvergence);
       if kk==1,
         H   = Htmp;
         Z   = Ztmp;
@@ -384,9 +385,10 @@ elseif strcmp(sfmethod, 'bivariate')
   else
     % if the number of pairs becomes too big, it seems to slow down quite a
     % bit. try to chunk
-    if size(cmbindx,1)>1000
-      begchunk = 1:1000:size(cmbindx,1);
-      endchunk = [1000:1000:size(cmbindx,1) size(cmbindx,1)];
+    nperchunk = 2000;
+    if size(cmbindx,1)>nperchunk
+      begchunk = 1:nperchunk:size(cmbindx,1);
+      endchunk = [nperchunk:nperchunk:size(cmbindx,1) size(cmbindx,1)];
       H = zeros(4*size(cmbindx,1), numel(freq.freq));
       S = zeros(4*size(cmbindx,1), numel(freq.freq));
       Z = zeros(4*size(cmbindx,1), 1);
@@ -395,8 +397,8 @@ elseif strcmp(sfmethod, 'bivariate')
         [Htmp, Ztmp, Stmp] = sfactorization_wilson2x2(freq.crsspctrm, freq.freq, ...
                                              numiteration, tol, cmbindx(begchunk(k):endchunk(k),:), fb, init);
                                            
-        begix = (k-1)*4000+1;
-        endix = min(k*4000, size(cmbindx,1)*4);
+        begix = (k-1)*nperchunk*4+1;
+        endix = min(k*nperchunk*4, size(cmbindx,1)*4);
         H(begix:endix, :) = Htmp;
         S(begix:endix, :) = Stmp;
         Z(begix:endix, :) = Ztmp;
@@ -404,7 +406,7 @@ elseif strcmp(sfmethod, 'bivariate')
       end
     else
       [H, Z, S] = sfactorization_wilson2x2(freq.crsspctrm, freq.freq, ...
-                                             numiteration, tol, cmbindx, fb, init);
+                                             numiteration, tol, cmbindx, fb, init, checkconvergence);
     end
   end
   
