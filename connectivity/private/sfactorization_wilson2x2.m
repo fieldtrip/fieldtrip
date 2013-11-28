@@ -1,10 +1,12 @@
-function [H, Z, S, psi] = sfactorization_wilson2x2(S,freq,Niterations,tol,cmbindx,fb,init)
+function [H, Z, S, psi] = sfactorization_wilson2x2(S,freq,Niterations,tol,cmbindx,fb,init,checkflag)
 
+% SFACTORIZATION_WILSON2X2 performs pairwise non-parametric spectral factorization on
+% cross-spectra, based on Wilson's algorithm.
+%
 % Usage  : [H, Z, psi] = sfactorization_wilson(S,fs,freq);
 %
 % Inputs : S (1-sided, 3D-spectral matrix in the form of Channel x Channel x frequency) 
-%        : fs (sampling frequency in Hz)
-%        : freq (a vector of frequencies) at which S is given
+%        : freq (a vector of frequencies) at which S is given. 
 %
 % Outputs: H (transfer function)
 %        : Z (noise covariance)
@@ -39,11 +41,39 @@ function [H, Z, S, psi] = sfactorization_wilson2x2(S,freq,Niterations,tol,cmbind
 %
 % $Id$
 
+if nargin<8, checkflag = true;   end
+if nargin<7, init      = 'chol'; end
+if nargin<6, fb        = 'none'; end
+if nargin<5, 
+  error('FieldTrip:connectivity:sfactorization_wilson2x2', 'when requesting multiple pairwise spectral decomposition, ''cmbindx'' needs to be specified');
+end
+if nargin<4, tol        = 1e-8;   end
+if nargin<3, Niterations = 1000;  end;
+
+dfreq = diff(freq);
+if ~all(dfreq==dfreq(1))
+  error('FieldTrip:connectivity:sfactorization_wilson2x2', 'frequency axis is not evenly spaced');
+end
+
+if freq(1)~=0
+  warning_once('FieldTrip:connectivity:sfactorization_wilson2x2', 'when performing non-parametric spectral factorization, the frequency axis should ideally start at 0, zero padding the spectral density'); 
+  dfreq = mean(dfreq);
+  npad  = freq(1)./dfreq;
+  
+  % update the freq axis and keep track of the frequency bins that are
+  % expected in the output
+  selfreq  = (1:numel(freq)) + npad;
+  freq     = [(0:(npad-1))./dfreq freq];
+  S        = cat(3, zeros(size(S,1), size(S,1), npad), S);  
+else
+  selfreq  = 1:numel(freq);
+end
+
 m   = size(cmbindx,1);
 N   = length(freq)-1;
 N2  = 2*N;
 
-% preallocate memory for efficiency
+% preallocate memory for the 2-sided spectral density
 Sarr   = zeros(2,2,m,N2) + 1i.*zeros(2,2,m,N2);
 I      = repmat(eye(2),[1 1 m N2]); % Defining 2 x 2 identity matrix
 
@@ -102,17 +132,16 @@ for iter = 1:Niterations
   psi_old = psi;
   psi     = mtimes2x2(psi, gp);
   %psierr  = sum(sum(abs(psi-psi_old)));
-  psierr  = abs(psi-psi_old)./abs(psi);
+  %psierr  = abs(psi-psi_old)./abs(psi);
   
-  if 0
-    plot(squeeze(psierr(2,1,1,:))); hold on
-    plot(squeeze(psierr(1,1,1,:)),'r');drawnow
+  if checkflag,
+    psierr  = abs(psi-psi_old)./abs(psi);
+    psierrf = mean(psierr(:));
+    if(psierrf<tol), 
+      fprintf('reaching convergence at iteration %d\n',iter);
+      break; 
+    end; % checking convergence
   end
-  psierrf = mean(psierr(:));
-  if(psierrf<tol), 
-    fprintf('reaching convergence at iteration %d\n',iter);
-    break; 
-  end; % checking convergence
 end 
 ft_progress('close');
 
@@ -149,6 +178,13 @@ Z   = reshape(Z, [4*siz(3) siz(4:end)]);
 siz = [size(psi) 1 1];
 psi = reshape(psi, [4*siz(3) siz(4:end)]);
 
+if numel(selfreq)~=numel(freq)
+  % return only the frequency bins that were in the input
+  H   =   H(:,selfreq,:,:);
+  S   =   S(:,selfreq,:,:);
+  psi = psi(:,selfreq,:,:);
+end
+  
 %---------------------------------------------------------------------
 function gp = PlusOperator2x2(g,ncmb,nfreq)
 

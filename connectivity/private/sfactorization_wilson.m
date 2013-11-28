@@ -4,7 +4,7 @@ function [H, Z, S, psi] = sfactorization_wilson(S,freq,Niterations,tol,fb,init)
 %
 % Inputs : S (1-sided, 3D-spectral matrix in the form of Channel x Channel x frequency) 
 %        : fs (sampling frequency in Hz)
-%        : freq (a vector of frequencies) at which S is given
+%        : freq (a vector of frequencies) at which S is given. 
 %
 % Outputs: H (transfer function)
 %        : Z (noise covariance)
@@ -37,6 +37,20 @@ function [H, Z, S, psi] = sfactorization_wilson(S,freq,Niterations,tol,fb,init)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
+
+if freq(1)~=0
+  warning_once('FieldTrip:connectivity:sfactorization_wilson', 'when performing non-parametric spectral factorization, the frequency axis should ideally start at 0, zero padding the spectral density'); 
+  dfreq = mean(dfreq);
+  npad  = freq(1)./dfreq;
+  
+  % update the freq axis and keep track of the frequency bins that are
+  % expected in the output
+  selfreq  = (1:numel(freq)) + npad;
+  freq     = [(0:(npad-1))./dfreq freq];
+  S        = cat(3, zeros(size(S,1), size(S,1), npad), S);  
+else
+  selfreq  = 1:numel(freq);
+end
 
 % number of channels
 m   = size(S,1);
@@ -143,6 +157,13 @@ H = zeros(m,m,N+1) + 1i*zeros(m,m,N+1);
 for k = 1:N+1
   H(:,:,k) = psi(:,:,k)*A0inv;       %Transfer function
   S(:,:,k) = psi(:,:,k)*psi(:,:,k)'; %Updated cross-spectral density
+end
+
+if numel(selfreq)~=numel(freq)
+  % return only the frequency bins that were in the input
+  H   =   H(:,:,selfreq);
+  S   =   S(:,:,selfreq);
+  psi = psi(:,:,selfreq);
 end
 
 %---------------------------------------------------------------------
