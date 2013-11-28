@@ -27,6 +27,7 @@ source = find_innermost_boundary(vol.bnd);
 if skin==length(vol.bnd) && source==1
   % flip the order of the compartments
   vol.bnd    = fliplr(vol.bnd(:)');
+  vol.cond   = fliplr(vol.cond(:)');
   vol.skin_surface   = 1;
   vol.source = length(vol.bnd);
 elseif skin==1 && source==length(vol.bnd)
