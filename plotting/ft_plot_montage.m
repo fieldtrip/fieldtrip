@@ -178,7 +178,9 @@ for k = 1:nslice
     end
     pprevious = [pprevious(:);p(:)];
   end
-  drawnow;
+  %drawnow; %this statement slows down the process big time on some file
+  %systems. I don't know what's going on there, but the statement is not
+  %really necessary, so commented out.
 end
 set(gcf, 'color', [0 0 0]);
 set(gca, 'zlim', [0 1]);
