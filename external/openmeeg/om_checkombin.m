@@ -22,5 +22,6 @@ if status
     disp('http://fieldtrip.fcdonders.nl/development/openmeeg/testinginstallation')
     disp('---------------------------------------------')
     disp('---------------------------------------------')
+    disp(result);
     error('OpenMEEG not found')
 end
