@@ -292,6 +292,7 @@ for k = 1:numel(reduceddim)
   cfg.dimord = [cfg.dimord, '_', dimtok{reduceddim(k)}];
 end
 cfg.dimord = cfg.dimord(2:end); % store the dimord of the output in the cfg
+cfg.channel = data.label; % store the labels of the channels in the cfg
 
 if size(cfg.design,2)~=size(dat,2)
   error('the number of observations in the design does not match the number of observations in the data');
