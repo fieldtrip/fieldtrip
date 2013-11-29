@@ -137,6 +137,7 @@ url = {
   '29046-MUTUAL-INFORMATION'              'see http://www.mathworks.com/matlabcentral/fileexchange/35625-information-theory-toolbox'
   '14888-MUTUAL-INFORMATION-COMPUTATION'  'see http://www.mathworks.com/matlabcentral/fileexchange/14888-mutual-information-computation'
   'PLOT2SVG'    'see http://www.mathworks.com/matlabcentral/fileexchange/7401-scalable-vector-graphics-svg-export-of-figures'
+  'BRAINSUITE'  'see http://brainsuite.bmap.ucla.edu/processing/additional-tools/'
   };
 
 if nargin<2
@@ -318,6 +319,9 @@ switch toolbox
     status = all(cellfun(@exist, filelist, repmat({'file'}, size(filelist))));
   case 'PLOT2SVG'
     filelist = {'plot2svg.m' 'simulink2svg.m'};
+    status = all(cellfun(@exist, filelist, repmat({'file'}, size(filelist))));
+  case 'BRAINSUITE'
+    filelist = {'readdfs.m' 'writedfc.m'};
     status = all(cellfun(@exist, filelist, repmat({'file'}, size(filelist))));
     
     % the following are fieldtrip modules/toolboxes
