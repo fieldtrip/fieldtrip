@@ -513,11 +513,11 @@ elseif iseeg
       end
       
       if ~isfield(sens, 'tra')
-        sens.tra = eye(size(sens.chanpos,1));
+        sens.tra = eye(length(vol.label));
       end
       
       if ~isfield(vol.sens, 'tra')
-        vol.sens.tra = eye(size(vol.sens.chanpos,1));
+        vol.sens.tra = eye(length(vol.sens.label));
       end
       
       % the channel positions can be nan, for example for a bipolar montage
