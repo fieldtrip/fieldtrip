@@ -123,9 +123,6 @@ elseif ~ismeg && ~iseeg
   
 elseif ismeg
   
-  % keep a copy of the original sensor array, this is needed for the MEG localspheres model
-  sens_orig = sens;
-  
   % always ensure that there is a linear transfer matrix for combining the coils into gradiometers
   if ~isfield(sens, 'tra');
     Nchans = length(sens.label);
@@ -136,16 +133,19 @@ elseif ismeg
     sens.tra = eye(Nchans, Ncoils);
   end
   
-  % select the desired channels from the gradiometer array
-  % order them according to the users specification
-  [selchan, selsens] = match_str(channel, sens.label);
+  if ~ft_voltype(vol, 'localspheres')
+    % select the desired channels from the gradiometer array
+    [selchan, selsens] = match_str(channel, sens.label);
+    % only keep the desired channels, order them according to the users specification
+    try, sens.chantype = sens.chantype(selsens,:); end
+    try, sens.chanunit = sens.chanunit(selsens,:); end
+    sens.label    = sens.label(selsens);
+    sens.tra      = sens.tra(selsens,:);
+  else
+    % for the localspheres model it is done further down
+  end
   
-  % first only modify the linear combination of coils into channels
-  try, sens.chantype = sens.chantype(selsens,:); end
-  try, sens.chanunit = sens.chanunit(selsens,:); end
-  sens.label    = sens.label(selsens);
-  sens.tra      = sens.tra(selsens,:);
-  % subsequently remove the coils that do not contribute to any channel output
+  % remove the coils that do not contribute to any channel output
   selcoil      = any(sens.tra~=0,1);
   sens.coilpos = sens.coilpos(selcoil,:);
   sens.coilori = sens.coilori(selcoil,:);
@@ -176,17 +176,6 @@ elseif ismeg
       % have to match the channels in the gradiometer array and the volume
       % conduction model.
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-      
-      % use the original sensor array instead of the one with a subset of
-      % channels, because we need the complete mapping of coils to channels
-      sens = sens_orig;
-      
-      % remove the coils that do not contribute to any channel output
-      % since these do not have a corresponding sphere
-      selcoil      = find(sum(sens.tra,1)~=0);
-      sens.coilpos = sens.coilpos(selcoil,:);
-      sens.coilori = sens.coilori(selcoil,:);
-      sens.tra     = sens.tra(:,selcoil);
       
       % the initial localspheres volume conductor has a local sphere per
       % channel, whereas it should have a local sphere for each coil
@@ -235,7 +224,11 @@ elseif ismeg
         end
       end
       
+      % make a new structure that only holds the local spheres, one per coil
       localspheres = [];
+      localspheres.type = vol.type;
+      localspheres.unit = vol.unit;
+      
       % for each coil in the MEG helmet, determine the corresponding channel and from that the corresponding local sphere
       for i=1:Ncoils
         coilindex = find(sens.tra(:,i)~=0); % to which channel does this coil belong
@@ -250,8 +243,7 @@ elseif ismeg
         localspheres.r(i,:) = vol.r(chanindex);
         localspheres.o(i,:) = vol.o(chanindex,:);
       end
-      vol.r = localspheres.r;
-      vol.o = localspheres.o;
+      vol = localspheres;
       
       % finally do the selection of channels and coils
       % order them according to the users specification
