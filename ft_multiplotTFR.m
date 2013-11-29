@@ -297,6 +297,7 @@ if (isfull || haslabelcmb) && isfield(data, cfg.parameter)
     info.x     = lay.pos(:,1);
     info.y     = lay.pos(:,2);
     info.label = lay.label;
+    info.dataname = '';
     guidata(h, info);
     %set(gcf, 'WindowButtonUpFcn', {@ft_select_channel, 'callback', {@select_topoplotER, cfg, data}});
     set(gcf, 'WindowButtonUpFcn',     {@ft_select_channel, 'multiple', true, 'callback', {@select_multiplotTFR, cfg, data}, 'event', 'WindowButtonUpFcn'});
