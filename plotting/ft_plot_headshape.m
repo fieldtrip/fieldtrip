@@ -52,11 +52,20 @@ if ~isstruct(headshape) && isnumeric(headshape) && size(headshape,2)==3
   headshape.pnt = headshape;
 end
 
+% the default behaviour depends on whether there is a triangulated surface or not
+hastri = isfield(headshape, 'tri');
+
 % get the optional input arguments
-vertexcolor = ft_getopt(varargin, 'vertexcolor',  'r');
+if hastri
+  vertexcolor = ft_getopt(varargin, 'vertexcolor',  'none');
+  facecolor   = ft_getopt(varargin, 'facecolor',    [1 1 1]/2);
+  edgecolor   = ft_getopt(varargin, 'edgecolor',    'none');
+else
+  vertexcolor = ft_getopt(varargin, 'vertexcolor',  'r');
+  facecolor   = ft_getopt(varargin, 'facecolor',    'none');
+  edgecolor   = ft_getopt(varargin, 'edgecolor',    'none');
+end
 vertexsize  = ft_getopt(varargin, 'vertexsize',   10);
-facecolor   = ft_getopt(varargin, 'facecolor',    'none');
-edgecolor   = ft_getopt(varargin, 'edgecolor',    'none');
 fidcolor    = ft_getopt(varargin, 'fidcolor',     'g');
 fidmarker   = ft_getopt(varargin, 'fidmarker',    '*');
 fidlabel    = ft_getopt(varargin, 'fidlabel',     true);
@@ -71,11 +80,16 @@ if ~holdflag
   hold on
 end
 
-pnt = headshape.pnt;
-bnd.pnt = pnt;
-bnd.tri = [];
 
-ft_plot_mesh(bnd, 'vertexcolor',vertexcolor,'vertexsize',vertexsize);
+mesh = [];
+mesh.pnt = headshape.pnt;
+if hastri
+  mesh.tri = headshape.tri;
+else
+  mesh.tri = [];
+end
+
+ft_plot_mesh(mesh, 'vertexcolor', vertexcolor, 'vertexsize',vertexsize, 'facecolor', facecolor, 'edgecolor', edgecolor);
 
 if isfield(headshape, 'fid')
   fid = headshape.fid;

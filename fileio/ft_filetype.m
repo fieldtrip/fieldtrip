@@ -55,6 +55,7 @@ function [type] = ft_filetype(filename, desired, varargin)
 %  - nifti, gifti
 %  - Localite
 %  - Stanford *.ply
+%  - BrainSuite
 
 % Copyright (C) 2003-2013 Robert Oostenveld
 %
@@ -1005,6 +1006,20 @@ elseif any(filetype_check_extension(filename, {'.node' '.poly' '.smesh' '.ele' '
   manufacturer = 'TetGen, see http://tetgen.berlios.de';
   content = 'geometrical data desribed with only nodes';
   
+  % some BrainSuite file formats, see http://brainsuite.bmap.ucla.edu/
+elseif filetype_check_extension(filename, '.dfs') && filetype_check_header(filename, 'DFS_LE v2.0')
+  type = 'brainsuite_dfs';
+  manufacturer = 'BrainSuite, see http://brainsuite.bmap.ucla.edu';
+  content = 'list of triangles and vertices';
+elseif filetype_check_extension(filename, '.bst') && filetype_check_ascii(filename)
+  type = 'brainsuite_dst';
+  manufacturer = 'BrainSuite, see http://brainsuite.bmap.ucla.edu';
+  content = 'a collection of files with geometrical data'; % it seems to be similar to a Caret *.spec file
+elseif filetype_check_extension(filename, '.dfc') && filetype_check_header(filename, 'LONIDFC')
+  type = 'loni_dfc';
+  manufacturer = 'LONI'; % it is used in BrainSuite
+  content = 'curvature information';
+  
   % some other known file types
 elseif length(filename)>4 && exist([filename(1:(end-4)) '.mat'], 'file') && exist([filename(1:(end-4)) '.bin'], 'file')
   % this is a self-defined FCDC data format, consisting of two files
@@ -1146,7 +1161,7 @@ elseif filetype_check_extension(filename, '.mbi')
 elseif filetype_check_extension(filename, '.mb2')
   type = 'manscan_mb2';
   manufacturer = 'MANSCAN';
-  content  = 'EEG data';    
+  content  = 'EEG data';
 elseif filetype_check_header(filename, 'ply')
   type = 'ply';
   manufacturer = 'Stanford Triangle Format';

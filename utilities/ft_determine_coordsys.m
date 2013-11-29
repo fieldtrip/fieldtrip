@@ -12,7 +12,7 @@ function [data] = ft_determine_coordsys(data, varargin)
 %  - a volume conduction model of the head
 % or most other FieldTrip structures that represent geometrical information.
 %
-% Additional optional input arguments should be specified as key-value pairs 
+% Additional optional input arguments should be specified as key-value pairs
 % and can include
 %   interactive  = string, 'yes' or 'no' (default = 'yes')
 %   axisscale    = scaling factor for the reference axes and sphere (default = 1)
@@ -200,7 +200,7 @@ switch dtype
   case 'mesh'
     ft_plot_mesh(data);
     camlight;
-
+    
   case 'headmodel'
     ft_plot_vol(data);
     camlight;
@@ -219,6 +219,12 @@ switch dtype
     
   case 'unknown'
 end % switch dtype{k}
+
+if isfield(data, 'tri')
+  % this makes the 3-D object easier to understand
+  camlight
+  lighting gouraud
+end
 
 % get the xyz-axes
 xdat  = [-axmax 0 0; axmax 0 0];

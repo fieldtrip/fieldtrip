@@ -638,7 +638,6 @@ else
       end
       
     case {'freesurfer_triangle_binary', 'freesurfer_quadrangle'}
-      
       % the freesurfer toolbox is required for this
       ft_hastoolbox('freesurfer', 1);
       
@@ -760,7 +759,35 @@ else
       shape.pnt = IMPORT.data(:,2:4);
       % the fiducials don't apply to this format
       shape = rmfield(shape,'fid');
+    
+    case 'brainsuite_dfs'
+      % this requires the readdfs function from the BrainSuite MATLAB utilities
+      ft_hastoolbox('brainsuite', 1);
+
+      dfs = readdfs(filename);
+      % these are expressed in MRI dimensions
+      shape.pnt = dfs.vertices;
+      shape.tri = dfs.faces;
       
+      % the filename is something like 2467264.right.mid.cortex.svreg.dfs
+      % whereas the corresponding MRI is 2467264.nii and might be gzipped
+      [p, f, x] = fileparts(filename);
+      while ~isempty(x) 
+        [junk, f, x] = fileparts(f);
+      end
+      
+      if exist(fullfile(p, [f '.nii']), 'file')
+        mri = ft_read_mri(fullfile(p, [f '.nii']));
+        shape.pnt  = ft_warp_apply(mri.transform, shape.pnt);
+        shape.unit = mri.unit;
+      elseif exist(fullfile(p, [f '.nii.gz']), 'file')
+        mri = ft_read_mri(fullfile(p, [f '.nii.gz']));
+        shape.pnt  = ft_warp_apply(mri.transform, shape.pnt);
+        shape.unit = mri.unit;
+      else
+        warning('could not find accompanying MRI file, returning vertices in voxel coordinates');
+      end
+
     otherwise
       % try reading it from an electrode of volume conduction model file
       success = false;
