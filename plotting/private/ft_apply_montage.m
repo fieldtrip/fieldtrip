@@ -229,7 +229,6 @@ switch inputtype
         sens.chanpos = sens.chanpos(sel2,:);
       else
         sens.chanpos = nan(numel(montage.labelnew),3);
-        %input = rmfield(input, 'chanpos');
       end
     end
     
@@ -238,7 +237,24 @@ switch inputtype
         sens.chanori = sens.chanori(sel2,:);
       else
         sens.chanori = nan(numel(montage.labelnew),3);
-        %input = rmfield(input, 'chanori');
+      end
+    end
+    
+    if isfield(sens, 'chantype')
+      if keepchans
+        sens.chantype = sens.chantype(sel2,:);
+      else
+        % FIXME don't know what to do here  
+        sens = rmfield(sens, 'chantype')
+      end
+    end
+    
+    if isfield(sens, 'chanunit')
+      if keepchans
+        sens.chanunit = sens.chanunit(sel2,:);
+      else
+        % FIXME don't know what to do here  
+        sens = rmfield(sens, 'chanunit')
       end
     end
     
