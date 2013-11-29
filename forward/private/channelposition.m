@@ -254,11 +254,41 @@ switch ft_senstype(sens)
     
   otherwise
     % compute the position for each gradiometer or electrode
+    nchan = length(sens.label);
+    if isfield(sens, 'elecpos')
+      nelec = size(sens.elecpos,1); % these are the electrodes
+    elseif isfield(sens, 'coilpos')
+      ncoil = size(sens.coilpos,1); % these are the coils
+    end
     
-    if isfield(sens, 'tra')
-      % each channel depends on multiple sensors (electrodes or coils)
-      % compute a weighted position for the channel
-      [nchan, ncoil] = size(sens.tra); % ncoil might also be nelec
+    if ~isfield(sens, 'tra') && isfield(sens, 'elecpos') && nchan==nelec
+      % there is one electrode per channel, which means that the channel position is identical to the electrode position
+      pnt = sens.elecpos;
+      ori = nan(size(pnt));
+      lab = sens.label;
+      
+    elseif isfield(sens, 'tra') && isfield(sens, 'elecpos') && isequal(sens.tra, eye(nelec))
+      % there is one electrode per channel, which means that the channel position is identical to the electrode position
+      pnt = sens.elecpos;
+      ori = nan(size(pnt));
+      lab = sens.label;
+      
+    elseif isfield(sens, 'tra') && isfield(sens, 'elecpos') && isequal(sens.tra, eye(nelec)-1/nelec)
+      % there is one electrode per channel, channels are average referenced
+      pnt = sens.elecpos;
+      ori = nan(size(pnt));
+      lab = sens.label;
+      
+    elseif ~isfield(sens, 'tra') && isfield(sens, 'coilpos') && nchan==ncoil
+      % there is one coil per channel, which means that the channel position is identical to the coil position
+      pnt = sens.coilpos;
+      ori = sens.coilori;
+      lab = sens.label;
+      
+    elseif isfield(sens, 'tra')
+      % each channel depends on multiple sensors (electrodes or coils), compute a weighted position for the channel
+      % for MEG gradiometer channels this means that the position is in between the two coils
+      % for bipolar EEG channels this means that the position is in between the two electrodes
       pnt = nan(nchan,3);
       ori = nan(nchan,3);
       if isfield(sens, 'coilpos')
@@ -275,18 +305,6 @@ switch ft_senstype(sens)
           pnt(i,:) = weight * sens.elecpos;
         end
       end
-      lab = sens.label;
-      
-    elseif isfield(sens, 'coilpos')
-      % there is one sensor per channel, which means that the channel position is identical to the sensor position
-      pnt = sens.coilpos;
-      ori = sens.coilori;
-      lab = sens.label;
-      
-    elseif isfield(sens, 'elecpos')
-      % there is one sensor per channel, which means that the channel position is identical to the sensor position
-      pnt = sens.elecpos;
-      ori = nan(size(sens.elecpos));
       lab = sens.label;
       
     end
@@ -314,4 +332,3 @@ nchan = numel(sens.label);
 if length(lab)~=nchan || size(pnt,1)~=nchan || size(ori,1)~=nchan
   warning('the positions were not determined for all channels');
 end
-
