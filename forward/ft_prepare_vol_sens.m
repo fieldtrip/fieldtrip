@@ -549,12 +549,16 @@ elseif iseeg
 end % if iseeg or ismeg
 
 % update the channel positions, this is needed because the electrodes are projected to the surface
-[pos, ori] = channelposition(sens);
+[pos, ori, lab] = channelposition(sens);
+[selsens, selpos] = match_str(sens.label, lab);
 if iseeg
-  sens.chanpos = pos;
+  sens.chanpos = nan(length(sens.label),3);
+  sens.chanpos(selsens,:) = pos(selpos,:);
 else
-  sens.chanpos = pos;
-  sens.chanori = ori;
+  sens.chanpos = nan(length(sens.label),3);
+  sens.chanpos(selsens,:) = pos(selpos,:);
+  sens.chanori = nan(length(sens.label),3);
+  sens.chanori(selsens,:) = ori(selpos,:);
 end
 
 if isfield(sens, 'tra')
