@@ -36,26 +36,27 @@ function [type] = ft_filetype(filename, desired, varargin)
 %  - Analyse
 %  - Analyze/SPM
 %  - BESA
+%  - BrainSuite
+%  - BrainVisa
 %  - BrainVision
 %  - Curry
 %  - Dataq
 %  - EDF
 %  - EEProbe
 %  - Elektra/Neuromag
-%  - LORETA
 %  - FreeSurfer
+%  - LORETA
+%  - Localite
 %  - MINC
 %  - Neuralynx
 %  - Neuroscan
 %  - Plexon
 %  - SR Research Eyelink
+%  - Stanford *.ply
 %  - Tucker Davis Technology
 %  - VSM-Medtech/CTF
 %  - Yokogawa
 %  - nifti, gifti
-%  - Localite
-%  - Stanford *.ply
-%  - BrainSuite
 
 % Copyright (C) 2003-2013 Robert Oostenveld
 %
@@ -1020,6 +1021,16 @@ elseif filetype_check_extension(filename, '.dfc') && filetype_check_header(filen
   manufacturer = 'LONI'; % it is used in BrainSuite
   content = 'curvature information';
   
+    % some BrainVISA file formats, see http://brainvisa.info
+elseif filetype_check_extension(filename, '.mesh') && (filetype_check_header(filename, 'ascii') || filetype_check_header(filename, 'binarABCD') || filetype_check_header(filename, 'binarDCBA'))  % http://brainvisa.info/doc/documents-4.4/formats/mesh.pdf
+  type = 'brainvisa_mesh';
+  manufacturer = 'BrainVISA';
+  content = 'vertices and triangles';
+elseif filetype_check_extension(filename, '.minf') && filetype_check_ascii(filename)
+  type = 'brainvisa_minf';
+  manufacturer = 'BrainVISA';
+  content = 'annotation/metadata';
+
   % some other known file types
 elseif length(filename)>4 && exist([filename(1:(end-4)) '.mat'], 'file') && exist([filename(1:(end-4)) '.bin'], 'file')
   % this is a self-defined FCDC data format, consisting of two files
