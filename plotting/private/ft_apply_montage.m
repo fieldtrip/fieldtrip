@@ -245,7 +245,7 @@ switch inputtype
         sens.chantype = sens.chantype(sel2,:);
       else
         % FIXME don't know what to do here  
-        sens = rmfield(sens, 'chantype')
+        sens = rmfield(sens, 'chantype');
       end
     end
     
@@ -254,7 +254,7 @@ switch inputtype
         sens.chanunit = sens.chanunit(sel2,:);
       else
         % FIXME don't know what to do here  
-        sens = rmfield(sens, 'chanunit')
+        sens = rmfield(sens, 'chanunit');
       end
     end
     
