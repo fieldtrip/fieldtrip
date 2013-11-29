@@ -53,6 +53,8 @@ function [shape] = ft_read_headshape(filename, varargin)
 %   'caret_coord'
 %   'caret_topo'
 %   'caret_spec'
+%   'brainvisa_mesh'
+%   'brainsuite_dfs'
 %
 % See also FT_READ_VOL, FT_READ_SENS, FT_WRITE_HEADSHAPE
 
@@ -810,24 +812,28 @@ else
         end
       end
       
-      % the filename is for example subject01_Rwhite_inflated_4d.mesh
-      % and it is accompanied by subject01.nii
-      [p, f, x] = fileparts(filename);
-      f = tokenize(f, '_');
-      f = f{1};
-      
-      if exist(fullfile(p, [f '.nii']), 'file')
-        fprintf('reading accompanying MRI file "%s"\n', fullfile(p, [f '.nii']));
-        mri = ft_read_mri(fullfile(p, [f '.nii']));
-        shape.pnt  = ft_warp_apply(mri.transform, shape.pnt);
-        shape.unit = mri.unit;
-        transform = true; % used for feedback
-      elseif exist(fullfile(p, [f '.nii.gz']), 'file')
-        fprintf('reading accompanying MRI file "%s"\n', fullfile(p, [f '.nii.gz']));
-        mri = ft_read_mri(fullfile(p, [f '.nii.gz']));
-        shape.pnt  = ft_warp_apply(mri.transform, shape.pnt);
-        shape.unit = mri.unit;
-        transform = true; % used for feedback
+      if isempty(transform)
+        % the transformation was not present in the minf file, try to get it from the MRI
+        
+        % the filename is something like subject01_Rwhite_inflated_4d.mesh
+        % and it is accompanied by subject01.nii
+        [p, f, x] = fileparts(filename);
+        f = tokenize(f, '_');
+        f = f{1};
+        
+        if exist(fullfile(p, [f '.nii']), 'file')
+          fprintf('reading accompanying MRI file "%s"\n', fullfile(p, [f '.nii']));
+          mri = ft_read_mri(fullfile(p, [f '.nii']));
+          shape.pnt  = ft_warp_apply(mri.transform, shape.pnt);
+          shape.unit = mri.unit;
+          transform = true; % used for feedback
+        elseif exist(fullfile(p, [f '.nii.gz']), 'file')
+          fprintf('reading accompanying MRI file "%s"\n', fullfile(p, [f '.nii.gz']));
+          mri = ft_read_mri(fullfile(p, [f '.nii.gz']));
+          shape.pnt  = ft_warp_apply(mri.transform, shape.pnt);
+          shape.unit = mri.unit;
+          transform = true; % used for feedback
+        end
       end
       
       if isempty(transform)
