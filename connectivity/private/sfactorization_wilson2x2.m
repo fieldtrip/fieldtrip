@@ -3,7 +3,7 @@ function [H, Z, S, psi] = sfactorization_wilson2x2(S,freq,Niterations,tol,cmbind
 % SFACTORIZATION_WILSON2X2 performs pairwise non-parametric spectral factorization on
 % cross-spectra, based on Wilson's algorithm.
 %
-% Usage  : [H, Z, psi] = sfactorization_wilson(S,fs,freq);
+% Usage  : [H, Z, psi] = sfactorization_wilson(S,freq);
 %
 % Inputs : S (1-sided, 3D-spectral matrix in the form of Channel x Channel x frequency) 
 %        : freq (a vector of frequencies) at which S is given. 
@@ -69,9 +69,19 @@ else
   selfreq  = 1:numel(freq);
 end
 
-m   = size(cmbindx,1);
-N   = length(freq)-1;
-N2  = 2*N;
+% check whether the last frequency bin is strictly real-valued.
+% if that's the case, then it is assumed to be the Nyquist frequency
+% and the two-sided spectral density will have an even number of 
+% frequency bins. if not, in order to preserve hermitian symmetry,
+% the number of frequency bins needs to be odd.
+Send = S(:,:,end);
+N    = numel(freq);
+m    = size(cmbindx,1);
+if all(imag(Send(:))<abs(trace(Send)./size(Send,1)*1e-9))
+  N2 = 2*(N-1);
+else
+  N2 = 2*(N-1)+1;
+end
 
 % preallocate memory for the 2-sided spectral density
 Sarr   = zeros(2,2,m,N2) + 1i.*zeros(2,2,m,N2);
@@ -80,17 +90,23 @@ I      = repmat(eye(2),[1 1 m N2]); % Defining 2 x 2 identity matrix
 %Step 1: Forming 2-sided spectral densities for ifft routine in matlab
 for c = 1:m
   Stmp  = S(cmbindx(c,:),cmbindx(c,:),:);
-  for f_ind = 1:(N+1)
-    Sarr(:,:,c,f_ind) = Stmp(:,:,f_ind);
-    if freq(f_ind)~=0,
-      Sarr(:,:,c,2*N+2-f_ind) = Stmp(:,:,f_ind).';
-    else
-      % the input cross-spectral density is assumed to be weighted with a
-      % factor of 2 in all non-DC bins, therefore weight the DC-bin with a
-      % factor of 2 to get a correct two-sided representation
-      Sarr(:,:,c,f_ind) = Sarr(:,:,c,f_ind).*2;
-    end
+  
+  % the input cross-spectral density is assumed to be weighted with a
+  % factor of 2 in all non-DC and Nyquist bins, therefore weight the 
+  % DC-bin with a factor of 2 to get a correct two-sided representation
+  Sarr(:,:,c,1) = Stmp(:,:,1).*2;
+  
+  for f_ind = 2:N
+    Sarr(:,:,c,       f_ind) = Stmp(:,:,f_ind);
+    Sarr(:,:,c,(N2+1)-f_ind) = Stmp(:,:,f_ind).';
   end
+end
+
+% the input cross-spectral density is assumed to be weighted with a
+% factor of 2 in all non-DC and Nyquist bins, therefore weight the 
+% Nyquist bin with a factor of 2 to get a correct two-sided representation
+if mod(size(Sarr,4),2)==0
+  Sarr(:,:,:,end) = Sarr(:,:,:,end).*2;
 end
 
 %Step 2: Computing covariance matrices
@@ -127,12 +143,10 @@ for iter = 1:Niterations
   ft_progress(iter./Niterations, 'computing iteration %d/%d\n', iter, Niterations);
   invpsi = inv2x2(psi);
   g      = sandwich2x2(invpsi, Sarr) + I;
-  gp     = PlusOperator2x2(g,m,N+1); %gp constitutes positive and half of zero lags 
+  gp     = PlusOperator2x2(g,m,N); %gp constitutes positive and half of zero lags 
   
   psi_old = psi;
   psi     = mtimes2x2(psi, gp);
-  %psierr  = sum(sum(abs(psi-psi_old)));
-  %psierr  = abs(psi-psi_old)./abs(psi);
   
   if checkflag,
     psierr  = abs(psi-psi_old)./abs(psi);
@@ -140,7 +154,7 @@ for iter = 1:Niterations
     if(psierrf<tol), 
       fprintf('reaching convergence at iteration %d\n',iter);
       break; 
-    end; % checking convergence
+    end % checking convergence
   end
 end 
 ft_progress('close');
@@ -160,9 +174,9 @@ for k = 1:m
   %this also makes it more equivalent to the noisecov estimated by biosig's mvar-function
 end
 
-H = complex(zeros(2,2,m,N+1));
-S = complex(zeros(2,2,m,N+1));
-for k = 1:(N+1)
+H = complex(zeros(2,2,m,N));
+S = complex(zeros(2,2,m,N));
+for k = 1:N
   for kk = 1:m
     H(:,:,kk,k) = psi(:,:,kk,k)*A0inv(:,:,kk);  % Transfer function
     S(:,:,kk,k) = psi(:,:,kk,k)*psi(:,:,kk,k)'; % Cross-spectral density
@@ -192,7 +206,7 @@ function gp = PlusOperator2x2(g,ncmb,nfreq)
 % to take the positive lags & half of the zero lag and reconstitute 
 % M. Dhamala, UF, August 2006
 
-g   = transpose(reshape(g, [4*ncmb 2*(nfreq-1)]));
+g   = transpose(reshape(g, 4*ncmb, []));
 gam = ifft(g);
 
 % taking only the positive lags and half of the zero lag
@@ -208,4 +222,4 @@ gamp(nfreq+1:end,:) = 0;
 
 % reconstituting
 gp = fft(gamp);
-gp = reshape(transpose(gp), [2 2 ncmb 2*(nfreq-1)]); 
+gp = reshape(transpose(gp), [2 2 ncmb numel(gp)/(4*ncmb)]); 

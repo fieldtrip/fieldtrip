@@ -1,9 +1,11 @@
-function [H, Z, S, psi] = sfactorization_wilson(S,freq,Niterations,tol,fb,init)
+function [H, Z, S, psi] = sfactorization_wilson(S,freq,Niterations,tol,fb,init,checkflag)
 
-% Usage  : [H, Z, S, psi] = sfactorization_wilson(S,fs,freq);
+% SFACTORIZATION_WILSON performs multivariate non-parametric spectral factorization on
+% cross-spectra, based on Wilson's algorithm.
+%
+% Usage  : [H, Z, S, psi] = sfactorization_wilson(S,freq);
 %
 % Inputs : S (1-sided, 3D-spectral matrix in the form of Channel x Channel x frequency) 
-%        : fs (sampling frequency in Hz)
 %        : freq (a vector of frequencies) at which S is given. 
 %
 % Outputs: H (transfer function)
@@ -38,6 +40,17 @@ function [H, Z, S, psi] = sfactorization_wilson(S,freq,Niterations,tol,fb,init)
 %
 % $Id$
 
+if nargin<7, checkflag = true;   end
+if nargin<6, init      = 'chol'; end
+if nargin<5, fb        = 'none'; end
+if nargin<4, tol       = 1e-8;   end
+if nargin<3, Niterations = 1000; end
+
+dfreq = diff(freq);
+if ~all(dfreq==dfreq(1))
+  error('FieldTrip:connectivity:sfactorization_wilson2x2', 'frequency axis is not evenly spaced');
+end
+
 if freq(1)~=0
   warning_once('FieldTrip:connectivity:sfactorization_wilson', 'when performing non-parametric spectral factorization, the frequency axis should ideally start at 0, zero padding the spectral density'); 
   dfreq = mean(dfreq);
@@ -52,10 +65,19 @@ else
   selfreq  = 1:numel(freq);
 end
 
-% number of channels
-m   = size(S,1);
-N   = length(freq)-1;
-N2  = 2*N;
+% check whether the last frequency bin is strictly real-valued.
+% if that's the case, then it is assumed to be the Nyquist frequency
+% and the two-sided spectral density will have an even number of 
+% frequency bins. if not, in order to preserve hermitian symmetry,
+% the number of frequency bins needs to be odd.
+Send = S(:,:,end);
+N    = numel(freq);
+m    = size(S,1);
+if all(imag(Send(:))<abs(trace(Send)./size(Send,1)*1e-9))
+  N2 = 2*(N-1);
+else
+  N2 = 2*(N-1)+1;
+end
 
 % preallocate memory for efficiency
 Sarr   = zeros(m,m,N2) + 1i.*zeros(m,m,N2);
@@ -65,16 +87,21 @@ psi    = zeros(m,m,N2);
 I      = eye(m); % Defining m x m identity matrix
 
 %Step 1: Forming 2-sided spectral densities for ifft routine in matlab
-for f_ind = 1:(N+1)
-  Sarr(:,:,f_ind) = S(:,:,f_ind);
-  if freq(f_ind)~=0,
-    Sarr(:,:,2*N+2-f_ind) = S(:,:,f_ind).';
-  else
-    % the input cross-spectral density is assumed to be weighted with a
-    % factor of 2 in all non-DC bins, therefore weight the DC-bin with a
-    % factor of 2 to get a correct two-sided representation
-    Sarr(:,:,f_ind) = S(:,:,f_ind).*2;
-  end
+
+% the input cross-spectral density is assumed to be weighted with a
+% factor of 2 in all non-DC and Nyquist bins, therefore weight the 
+% DC-bin with a factor of 2 to get a correct two-sided representation
+Sarr(:,:,1) = S(:,:,1).*2;
+for f_ind = 2:N
+  Sarr(:,:,       f_ind) = S(:,:,f_ind);
+  Sarr(:,:,(N2+1)-f_ind) = S(:,:,f_ind).';
+end
+
+% the input cross-spectral density is assumed to be weighted with a
+% factor of 2 in all non-DC and Nyquist bins, therefore weight the 
+% Nyquist bin with a factor of 2 to get a correct two-sided representation
+if mod(size(Sarr,4),2)==0
+  Sarr(:,:,:,end) = Sarr(:,:,:,end).*2;
 end
 
 %Step 2: Computing covariance matrices
@@ -114,6 +141,7 @@ for ind = 1:N2
 end
 
 %Step 4: Iterating to get spectral factors
+g = zeros(size(psi));
 ft_progress('init', fb, 'computing spectral factorization');
 for iter = 1:Niterations
   ft_progress(iter./Niterations, 'computing iteration %d/%d\n', iter, Niterations);
@@ -121,18 +149,21 @@ for iter = 1:Niterations
     %invpsi     = inv(psi(:,:,ind)); 
     g(:,:,ind) = psi(:,:,ind)\Sarr(:,:,ind)/psi(:,:,ind)'+I;%Eq 3.1
   end
-  gp = PlusOperator(g,m,N+1); %gp constitutes positive and half of zero lags 
+  gp = PlusOperator(g,m,N); %gp constitutes positive and half of zero lags 
 
   psi_old = psi;
   for k = 1:N2
     psi(:,:,k) = psi(:,:,k)*gp(:,:,k);
     psierr(k)  = norm(psi(:,:,k)-psi_old(:,:,k),1);
   end
-  psierrf = mean(psierr);
-  if(psierrf<tol), 
-    fprintf('reaching convergence at iteration %d\n',iter);
-    break; 
-  end; % checking convergence
+
+  if checkflag,
+    psierrf = mean(psierr);
+    if(psierrf<tol), 
+      fprintf('reaching convergence at iteration %d\n',iter);
+      break; 
+    end % checking convergence
+  end
 end 
 ft_progress('close');
 
@@ -153,8 +184,8 @@ Z     = A0*A0.'; %Noise covariance matrix not multiplied by sampling frequency
 %FIXME check this; at least not multiplying it removes the need to correct later on
 %this also makes it more equivalent to the noisecov estimated by biosig's mvar-function
 
-H = zeros(m,m,N+1) + 1i*zeros(m,m,N+1);
-for k = 1:N+1
+H = zeros(m,m,N) + 1i*zeros(m,m,N);
+for k = 1:N
   H(:,:,k) = psi(:,:,k)*A0inv;       %Transfer function
   S(:,:,k) = psi(:,:,k)*psi(:,:,k)'; %Updated cross-spectral density
 end
@@ -173,7 +204,7 @@ function gp = PlusOperator(g,nchan,nfreq)
 % to take the positive lags & half of the zero lag and reconstitute 
 % M. Dhamala, UF, August 2006
 
-g   = transpose(reshape(g, [nchan^2 2*(nfreq-1)]));
+g   = transpose(reshape(g, nchan^2, []));
 gam = ifft(g);
 
 % taking only the positive lags and half of the zero lag
@@ -185,7 +216,7 @@ gamp(nfreq+1:end,:) = 0;
 
 % reconstituting
 gp = fft(gamp);
-gp = reshape(transpose(gp), [nchan nchan 2*(nfreq-1)]); 
+gp = reshape(transpose(gp), [nchan nchan numel(gp)/(nchan^2)]); 
 
 %------------------------------------------------------
 %this is the original code; above is vectorized version
