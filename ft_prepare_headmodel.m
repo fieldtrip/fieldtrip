@@ -278,14 +278,18 @@ switch cfg.method
     vol = ft_headmodel_infinite();
     
   case {'localspheres' 'singlesphere' 'singleshell'}
-    % these requires one boundary mesh or set of surface points
+    % these three methods all require a single mesh or set of surface points
     if input_mesh
       geometry = data;
     elseif input_seg
       tmpcfg = [];
       tmpcfg.numvertices = cfg.numvertices;
-      tmpcfg.tissue = cfg.tissue;
-      if isempty(tmpcfg.tissue)
+      if ~isempty(cfg.tissue)
+        % extract the specified surface
+        tmpcfg.tissue = cfg.tissue;
+        geometry = ft_prepare_mesh(tmpcfg, data);
+      else
+        % try to extract either the brain or scalp surface
         geometry = [];
         if isempty(geometry)
           try
@@ -300,51 +304,63 @@ switch cfg.method
           end
         end
         if isempty(geometry)
-          try
-            tmpcfg.tissue = cfg.tissue;
-            geometry = ft_prepare_mesh(tmpcfg, data);
-          end
+          error('please specificy cfg.tissue and pass an appropriate segmented MRI as input data')
         end
-        if isempty(geometry)
-          error('Please specificy cfg.tissue and pass an appropriate segmented MRI as input data')
-        end
-      else
-        geometry = ft_prepare_mesh(tmpcfg, data);
       end
-    elseif strcmp(cfg.method, 'singlesphere') % this can behave like concentricspheres here
-      if input_elec
-        geometry.pnt = data.chanpos;
-        geometry.unit = data.unit;
-      elseif ~isempty(cfg.headshape) && isnumeric(cfg.headshape)
-        geometry.pnt = cfg.headshape;
-      elseif ~isempty(cfg.headshape) && isstruct(cfg.headshape)
-        geometry = cfg.headshape;
-      elseif ~isempty(cfg.headshape) && ischar(cfg.headshape)
-        geometry = ft_read_headshape(cfg.headshape);
-      else
-        error('Boundary mesh, set of surface points or segmented mri required');
-      end
-    elseif strcmp(cfg.method, 'localspheres') || strcmp(cfg.method, 'singleshell') % this can behave like concentricspheres here
-      if ~isempty(cfg.headshape) && isnumeric(cfg.headshape)
-        geometry.pnt = cfg.headshape;
-      elseif ~isempty(cfg.headshape) && isstruct(cfg.headshape)
-        geometry = cfg.headshape;
-      elseif ~isempty(cfg.headshape) && ischar(cfg.headshape)
-        geometry = ft_read_headshape(cfg.headshape);
-      else
-        error('Boundary mesh, set of surface points or segmented mri required');
-      end
+    elseif input_elec
+      geometry.pnt = data.chanpos;
+      geometry.unit = data.unit;
+    elseif ~isempty(cfg.headshape) && isnumeric(cfg.headshape)
+      geometry.pnt = cfg.headshape;
+    elseif ~isempty(cfg.headshape) && isstruct(cfg.headshape)
+      geometry = cfg.headshape;
+    elseif ~isempty(cfg.headshape) && ischar(cfg.headshape)
+      geometry = ft_read_headshape(cfg.headshape);
+    elseif ~isempty(cfg.hdmfile)
+      % the CTF *.hdm file will be read further down
     else
-      error('Boundary mesh, set of surface points or segmented mri required');
+      error('this requires a mesh, set of surface points or a segmented mri');
     end
     
     switch cfg.method
+      case 'singlesphere'
+        if ~isempty(cfg.hdmfile)
+          % read the volume conduction model from a CTF *.hdm file
+          tmp = ft_read_vol(cfg.hdmfile);
+          try
+            % the single sphere is contained in the "orig" field
+            vol = [];
+            vol.r =  tmp.orig.MEG_Sphere.RADIUS;
+            vol.o = [tmp.orig.MEG_Sphere.ORIGIN_X tmp.orig.MEG_Sphere.ORIGIN_Y tmp.orig.MEG_Sphere.ORIGIN_Z];
+            vol.unit = 'cm';
+          catch
+            error('the volume conduction model in "%s" is invalid', cfg.hdmfile);
+          end
+        else
+          % construct the volume conduction model
+          vol = ft_headmodel_singlesphere(geometry, 'conductivity', cfg.conductivity);
+        end % hdmfile
       case 'localspheres'
-        cfg.grad = ft_getopt(cfg, 'grad');
-        if isempty(cfg.grad)
-          error('for cfg.method = %s, you need to supply a cfg.grad structure', cfg.method);
-        end
-        vol = ft_headmodel_localspheres(geometry, cfg.grad, 'feedback', cfg.feedback, 'radius', cfg.radius, 'maxradius', cfg.maxradius, 'baseline', cfg.baseline, 'singlesphere', cfg.singlesphere);
+        if ~isempty(cfg.hdmfile)
+          % read the volume conduction model from a CTF *.hdm file
+          tmp = ft_read_vol(cfg.hdmfile);
+          try
+            vol = [];
+            vol.label = tmp.label;
+            vol.r = tmp.r;
+            vol.o = tmp.o;
+            vol.unit = 'cm';
+          catch
+            error('the volume conduction model in "%s" is invalid', cfg.hdmfile);
+          end
+        else
+          % construct the volume conduction model
+          cfg.grad = ft_getopt(cfg, 'grad');
+          if isempty(cfg.grad)
+            error('for cfg.method = %s, you need to supply a cfg.grad structure', cfg.method);
+          end
+          vol = ft_headmodel_localspheres(geometry, cfg.grad, 'feedback', cfg.feedback, 'radius', cfg.radius, 'maxradius', cfg.maxradius, 'baseline', cfg.baseline, 'singlesphere', cfg.singlesphere);
+        end % hdmfile
       case 'singleshell'
         if ~isfield(geometry, 'tri')
           tmpcfg = [];
@@ -352,8 +368,6 @@ switch cfg.method
           geometry = ft_prepare_mesh(tmpcfg);
         end
         vol = ft_headmodel_singleshell(geometry);
-      case 'singlesphere'
-        vol = ft_headmodel_singlesphere(geometry, 'conductivity', cfg.conductivity);
     end
     
   case {'simbio'}
