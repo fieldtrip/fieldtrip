@@ -1,4 +1,4 @@
-function [output] = ft_connectivity_csd2transfer(freq, varargin)
+unction [output] = ft_connectivity_csd2transfer(freq, varargin)
 
 % FT_CONNECTIVITY_CSD2TRANSFER computes the transfer-function from frequency
 % domain data using the Wilson-Burg algorithm. The transfer function can be
@@ -410,14 +410,6 @@ elseif strcmp(sfmethod, 'bivariate')
     end
   end
   
-  %convert crsspctrm accordingly
-  siz          = [size(H) 1];
-  tmpcrsspctrm = complex(zeros([2 2 siz(1)/4 siz(2:end)]));
-  for k = 1:size(cmbindx,1)
-    tmpcrsspctrm(:,:,k,:,:) = freq.crsspctrm(cmbindx(k,:),cmbindx(k,:),:,:);   
-  end
-  freq.crsspctrm = reshape(tmpcrsspctrm, siz);
-  
   labelcmb = cell(size(cmbindx,1)*4, 2);
   for k = 1:size(cmbindx,1)
     indx = (k-1)*4 + (1:4);
@@ -446,17 +438,6 @@ else
     freq.dimord = ['chancmb_',freq.dimord(strfind(freq.dimord,'freq'):end)];
   end
   
-  %dimtok = tokenize(freq.dimord, '_');
-  %chdim  = 0;
-  %newdimord = '';
-  %for k = 1:numel(dimtok)
-  %  if strcmp(dimtok{k}, 'chan'), chdim = chdim+1; end
-  %  if chdim==1,
-  %    newdimord = [newdimord,'_chancmb'];
-  %  elseif chdim
-  %    newdimord = [newdimord, '_', dimtok{k}];
-  %  end
-  %end
   output.dimord    = freq.dimord;
 end
 output.label     = freq.label;
