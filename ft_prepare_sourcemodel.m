@@ -301,8 +301,9 @@ if basedonauto
   % or gradiometer coils, this will typically also cover the complete brain
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   if isempty(sens)
-    error('creating a 3D-grid sourcemodel based on automatic detection requires sensor position information');
+    error('creating a 3D-grid sourcemodel this way requires sensor position information to estimate the extent of the brain');
   end
+  fprintf('creating dipole grid with %g %s resolution\n', cfg.grid.resolution, cfg.grid.unit);
   % FIXME there is a potential problem here with the use of "floor", as it will
   % behave differently depending on the units of the source model
   if ischar(cfg.grid.xgrid) && strcmp(cfg.grid.xgrid, 'auto')
