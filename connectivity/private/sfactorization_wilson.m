@@ -101,7 +101,7 @@ end
 % factor of 2 in all non-DC and Nyquist bins, therefore weight the 
 % Nyquist bin with a factor of 2 to get a correct two-sided representation
 if mod(size(Sarr,4),2)==0
-  Sarr(:,:,:,end) = Sarr(:,:,:,end).*2;
+  Sarr(:,:,:,N) = Sarr(:,:,:,N).*2;
 end
 
 %Step 2: Computing covariance matrices
