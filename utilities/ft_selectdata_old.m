@@ -129,9 +129,9 @@ end
 
 % a quick check to ensure the user does not use this function in cases
 % where it is known to contain a bug
-if selectrpt && (isempty(selrpt) || ~any(selrpt))
-  error('ft_selectdata_old does not work when selecting 0 trials; please use ft_selectdata_new instead (use a cfg input, instead of key-value pairs, to ft_selectdata)');
-end
+%if selectrpt && (isempty(selrpt) || ~any(selrpt))
+%  error('ft_selectdata_old does not work when selecting 0 trials; please use ft_selectdata_new instead (use a cfg input, instead of key-value pairs, to ft_selectdata)');
+%end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % concatenate the data
