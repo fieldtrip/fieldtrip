@@ -1,4 +1,4 @@
-unction [output] = ft_connectivity_csd2transfer(freq, varargin)
+function [output] = ft_connectivity_csd2transfer(freq, varargin)
 
 % FT_CONNECTIVITY_CSD2TRANSFER computes the transfer-function from frequency
 % domain data using the Wilson-Burg algorithm. The transfer function can be
