@@ -32,6 +32,7 @@ function [type] = ft_senstype(input, desired)
 %   'ext1020' (this includes eeg1020, eeg1010 and eeg1005)
 %   'neuromag122'
 %   'neuromag306'
+%   'babysquid74'
 %   'egi32'
 %   'egi64'
 %   'egi128'

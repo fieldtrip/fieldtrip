@@ -899,7 +899,7 @@ switch dataformat
     dat       = dat(:,chanindx,:);      % select channels
     dimord    = 'trials_chans_samples'; % selection using begsample and endsample will be done later
     
-  case {'neuromag_fif' 'neuromag_mne' 'babysquid_fif'}
+  case {'neuromag_fif' 'neuromag_mne'}
     % check that the required low-level toolbox is available
     ft_hastoolbox('mne', 1);
     if (hdr.orig.iscontinuous)

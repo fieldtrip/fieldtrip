@@ -178,21 +178,7 @@ switch fileformat
     % note that this functionality overlaps with senstype=eeg/meg
     hdr = ft_read_header(filename,'headerformat','neuromag_mne');
     sens = hdr.elec;
-    
-  case {'neuromag_mne' 'babysquid_fif'}
-    % the file can contain both, try to be smart in determining what to return
-    hdr = ft_read_header(filename,'headerformat','neuromag_mne');
-    if isfield(hdr, 'elec') && isfield(hdr, 'grad')
-      warning('returning electrode information, not gradiometer location');
-      sens = hdr.elec;
-    elseif isfield(hdr, 'elec')
-      sens = hdr.elec;
-    elseif isfield(hdr, 'grad')
-      sens = hdr.grad;
-    else
-      error('cannot find electrode or gradiometer information');
-    end
-    
+        
   case {'spmeeg_mat', 'eeglab_set'}
     % this is for EEG formats where electrode positions can be stored with the data
     hdr = ft_read_header(filename);

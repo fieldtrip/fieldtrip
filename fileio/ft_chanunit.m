@@ -83,7 +83,7 @@ elseif isheader && ft_senstype(input, 'eeg')
   % until now in all stand-alone EEG systems examined the data was in uV
   chanunit(strcmp('eeg',              input.chantype)) = {'uV'};
   
-elseif isheader && ft_senstype(input, 'neuromag') && issubfield(input, 'orig.chs')
+elseif isheader && (ft_senstype(input, 'neuromag') || ft_senstype(input, 'babysquid74')) && issubfield(input, 'orig.chs')
   for i = 1:numchan % make a cell array of units for each channel
     switch input.orig.chs(i).unit
       case 201 % defined as constants by MNE, see p. 217 of MNE manual
@@ -103,13 +103,14 @@ elseif iselec && isfield(input, 'chantype')
   % electrode definitions are expressed in SI units, i.e. V
   chanunit(strcmp('eeg',              input.chantype)) = {'V'};
 
-elseif isgrad && ft_senstype(input, 'neuromag') && isfield(input, 'chantype')
+elseif isgrad && (ft_senstype(input, 'neuromag') || ft_senstype(input, 'babysquid74')) && isfield(input, 'chantype')
   % look at the type of the channels
   chanunit(strcmp('eeg',              input.chantype)) = {'unknown'}; % FIXME
   chanunit(strcmp('emg',              input.chantype)) = {'unknown'}; % FIXME
   chanunit(strcmp('eog',              input.chantype)) = {'unknown'}; % FIXME
   chanunit(strcmp('ecg',              input.chantype)) = {'unknown'}; % FIXME
   chanunit(strcmp('megmag',           input.chantype)) = {'T'};
+  chanunit(strcmp('megaxial',         input.chantype)) = {'T'}; % applies to BabySQUID system
   
   if isfield(input, 'tra')
     if all(sum(abs(input.tra),2)==1 | sum(abs(input.tra),2)==2)
@@ -128,13 +129,14 @@ elseif isgrad && ft_senstype(input, 'neuromag') && isfield(input, 'chantype')
     end
   end
   
-elseif ft_senstype(input, 'neuromag') && isfield(input, 'chantype')
+elseif (ft_senstype(input, 'neuromag') || ft_senstype(input, 'babysquid74')) && isfield(input, 'chantype')
   % determine the units only based on the channel name and type
   chanunit(strcmp('eeg',              input.chantype)) = {'unknown'}; % FIXME
   chanunit(strcmp('emg',              input.chantype)) = {'unknown'}; % FIXME
   chanunit(strcmp('eog',              input.chantype)) = {'unknown'}; % FIXME
   chanunit(strcmp('ecg',              input.chantype)) = {'unknown'}; % FIXME
   chanunit(strcmp('megmag',           input.chantype)) = {'T'};
+  chanunit(strcmp('megaxial',         input.chantype)) = {'T'}; % applies to BabySQUID system
   
   if isfield(input, 'unit')
     assumption = sprintf('T/%s', input.unit);

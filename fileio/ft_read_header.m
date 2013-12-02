@@ -179,7 +179,7 @@ if cache && exist(headerfile, 'file') && ~isempty(cacheheader)
 end % if cache
 
 % the support for head/dewar coordinates is still limited
-if strcmp(coordsys, 'dewar') && ~any(strcmp(headerformat, {'fcdc_buffer', 'ctf_ds', 'ctf_meg4', 'ctf_res4', 'neuromag_fif', 'neuromag_mne', 'babysquid_fif'}))
+if strcmp(coordsys, 'dewar') && ~any(strcmp(headerformat, {'fcdc_buffer', 'ctf_ds', 'ctf_meg4', 'ctf_res4', 'neuromag_fif', 'neuromag_mne'}))
   error('dewar coordinates are not supported for %s', headerformat);
 end
 
@@ -1316,7 +1316,7 @@ switch headerformat
   case 'nexstim_nxe'
     hdr = read_nexstim_nxe(filename);
     
-  case {'neuromag_fif' 'neuromag_mne' 'babysquid_fif'}
+  case {'neuromag_fif' 'neuromag_mne'}
     % check that the required low-level toolbox is available
     ft_hastoolbox('mne', 1);
     

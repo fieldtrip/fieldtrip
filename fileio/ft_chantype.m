@@ -94,7 +94,7 @@ end
 if ft_senstype(input, 'unknown')
   % don't bother doing all subsequent checks to determine the type of sensor array
   
-elseif ft_senstype(input, 'neuromag') && isheader
+elseif isheader && (ft_senstype(input, 'neuromag') || ft_senstype(input, 'babysquid74')) 
   % channames-KI is the channel kind, 1=meg, 202=eog, 2=eeg, 3=trigger (I am not sure, but have inferred this from a single test file)
   % chaninfo-TY is the Coil type (0=magnetometer, 1=planar gradiometer)
   if isfield(input, 'orig') && isfield(input.orig, 'channames')
