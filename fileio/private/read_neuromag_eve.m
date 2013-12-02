@@ -1,10 +1,18 @@
-function [smp, tim, val3, val4] = read_babysquid_eve(filename)
+function [col1, col2, col3, col4] = read_babysquid_eve(filename)
 
 % READ_BABYSQUID_EVE imports events from the *.eve file that accompanies the *.fif
 % file.
 %
 % Use as
 %  [smp, tim, val3, val4] = read_babysquid_eve(filename)
+%
+% Column one is the sample number. Column two is the tiem. Column three is is most
+% cases always zero, but is useful when you need to mark a segment rather than a
+% time point. Column four value is the event type you assign, i.e. the value of
+% the trigger.
+%
+% The recording to disk may start later than the actual acquisition. This is
+% represented in hdr.orig.raw.first_samp
 
 % Copyright (C) 2013 Robert Oostenveld
 %
@@ -27,7 +35,6 @@ function [smp, tim, val3, val4] = read_babysquid_eve(filename)
 % $Id$
 
 % TODO check sample indexing (1 or 0 based)
-% TODO clarify val3 and val4
 
 fid = fopen(filename, 'rt');
 [a, count] = fscanf(fid, '%f', [inf]);
@@ -38,8 +45,7 @@ m = 4;
 n = count/m;
 a = reshape(a, m, n);
 
-smp  = a(1,:)'; % sample indices should start counting at 1, not at 0
-tim  = a(2,:)';
-val3 = a(3,:)';
-val4 = a(4,:)';
-
+col1 = a(1,:)'; % sample indices start counting at 0
+col2 = a(2,:)'; % time is not guaranteed to start with 0 at the start of the file
+col3 = a(3,:)';
+col4 = a(4,:)';

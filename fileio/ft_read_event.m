@@ -575,7 +575,7 @@ switch eventformat
       hdr = ft_read_header(filename);
     end
     event = read_erplabevent(filename, 'header', hdr);
-
+    
   case 'spmeeg_mat'
     if isempty(hdr)
       hdr = ft_read_header(filename);
@@ -598,7 +598,7 @@ switch eventformat
   case {'eep_cnt' 'eep_trg'}
     % check that the required low-level toolbox is available
     ft_hastoolbox('eeprobe', 1);
-
+    
     % this requires the header from the cnt file and the triggers from the trg file
     if strcmp(eventformat, 'eep_cnt')
       trgfile = [filename(1:(end-3)), 'trg'];
@@ -607,15 +607,15 @@ switch eventformat
       cntfile = [filename(1:(end-3)), 'cnt'];
       trgfile = filename;
     end
-
+    
     if exist(trgfile, 'file')
       trg = read_eep_trg(trgfile);
     else
       warning('The corresponding "%s" file was not found, cannot read in trigger information. No events can be read in.', trgfile);
       trg = []; % make it empty, needed below
     end
-
-    if isempty(hdr) 
+    
+    if isempty(hdr)
       if exist(cntfile, 'file')
         hdr = ft_read_header(cntfile);
       else
@@ -623,7 +623,7 @@ switch eventformat
         hdr = []; % remains empty, needed below
       end
     end
-
+    
     if ~isempty(trg) && ~isempty(hdr)
       % translate the EEProbe trigger codes to events
       for i=1:length(trg)
@@ -752,9 +752,9 @@ switch eventformat
     xmlfiles = dir( fullfile(filename, '*.xml'));
     disp('reading xml files to obtain event info... This might take a while if many events/triggers are present')
     if isempty(xmlfiles)
-        xml=struct([]);
+      xml=struct([]);
     else
-        xml=[];
+      xml=[];
     end;
     for i = 1:numel(xmlfiles)
       if strcmpi(xmlfiles(i).name(1:6), 'Events')
@@ -805,15 +805,15 @@ switch eventformat
                   SampIndex = dum2;
                 end
               end
-              if ~isempty(SampIndex) 
-                  eventSample = Msamp2offset(1,EpochNum,SampIndex);
+              if ~isempty(SampIndex)
+                eventSample = Msamp2offset(1,EpochNum,SampIndex);
               else
-                  eventSample=[]; %Drop event if past end of epoch
+                eventSample=[]; %Drop event if past end of epoch
               end;
-            else 
+            else
               eventSample = eventOffset+1;
             end
-           if ~isempty(eventSample) 
+            if ~isempty(eventSample)
               eventCount=eventCount+1;
               event(eventCount).type     = eventNames{iXml}(8:end);
               event(eventCount).sample   = eventSample;
@@ -826,38 +826,38 @@ switch eventformat
         end %if that takes care of "-" events, which are out of range
       end %iEvent
     end
-  
+    
     % add "trial" events for segmented data
-    if (hdr.nTrials >1) && (length(hdr.orig.epochdef)==hdr.nTrials) 
-        cellNames=cell(hdr.nTrials,1);
-        recTime=zeros(hdr.nTrials,1);
-        epochTimes=cell(hdr.nTrials,1);
-        for iEpoch=1:hdr.nTrials
-            epochTimes{iEpoch}=hdr.orig.xml.epochs(iEpoch).epoch.beginTime;
-            recTime(iEpoch)=((str2num(hdr.orig.xml.epochs(iEpoch).epoch.beginTime)/1000)/(1000/hdr.Fs))+1;
+    if (hdr.nTrials >1) && (length(hdr.orig.epochdef)==hdr.nTrials)
+      cellNames=cell(hdr.nTrials,1);
+      recTime=zeros(hdr.nTrials,1);
+      epochTimes=cell(hdr.nTrials,1);
+      for iEpoch=1:hdr.nTrials
+        epochTimes{iEpoch}=hdr.orig.xml.epochs(iEpoch).epoch.beginTime;
+        recTime(iEpoch)=((str2num(hdr.orig.xml.epochs(iEpoch).epoch.beginTime)/1000)/(1000/hdr.Fs))+1;
+      end;
+      for iCat=1:length(hdr.orig.xml.categories)
+        theTimes=cell(length(hdr.orig.xml.categories(iCat).cat.segments),1);
+        for i=1:length(hdr.orig.xml.categories(iCat).cat.segments)
+          theTimes{i}=hdr.orig.xml.categories(iCat).cat.segments(i).seg.beginTime;
         end;
-        for iCat=1:length(hdr.orig.xml.categories)
-            theTimes=cell(length(hdr.orig.xml.categories(iCat).cat.segments),1);
-            for i=1:length(hdr.orig.xml.categories(iCat).cat.segments)
-                theTimes{i}=hdr.orig.xml.categories(iCat).cat.segments(i).seg.beginTime;
-            end;
-            epochIndex=find(ismember(epochTimes,theTimes));
-            for i=1:length(epochIndex)
-                cellNames{epochIndex(i)}=hdr.orig.xml.categories(iCat).cat.name;
-            end;
+        epochIndex=find(ismember(epochTimes,theTimes));
+        for i=1:length(epochIndex)
+          cellNames{epochIndex(i)}=hdr.orig.xml.categories(iCat).cat.name;
         end;
-        
-        eventCount=length(event);
-        for iEpoch=1:hdr.nTrials
-            eventCount=eventCount+1;
-            event(eventCount).type     = 'trial';
-            event(eventCount).sample   = hdr.orig.epochdef(iEpoch,1);
-            event(eventCount).offset   = -hdr.nSamplesPre;
-            event(eventCount).duration = hdr.nSamples;
-            event(eventCount).value    = cellNames{iEpoch};
-        end;
+      end;
+      
+      eventCount=length(event);
+      for iEpoch=1:hdr.nTrials
+        eventCount=eventCount+1;
+        event(eventCount).type     = 'trial';
+        event(eventCount).sample   = hdr.orig.epochdef(iEpoch,1);
+        event(eventCount).offset   = -hdr.nSamplesPre;
+        event(eventCount).duration = hdr.nSamples;
+        event(eventCount).value    = cellNames{iEpoch};
+      end;
     end;
-  
+    
   case 'egi_mff_v2'
     % ensure that the EGI toolbox is on the path
     ft_hastoolbox('egi_mff', 1);
@@ -868,7 +868,7 @@ switch eventformat
       % FIXME I don't know how this is supposed to work on Windows computers
       % with the drive letter in front of the path
     end
-    % pass the header along to speed it up, it will be read on the fly in case it is empty 
+    % pass the header along to speed it up, it will be read on the fly in case it is empty
     event = read_mff_event(filename, hdr);
     % clean up the fields in the event structure
     fn = fieldnames(event);
@@ -876,7 +876,7 @@ switch eventformat
     for i=1:length(fn)
       event = rmfield(event, fn{i});
     end
-
+    
   case 'eyelink_asc'
     if isempty(hdr)
       hdr = ft_read_header(filename);
@@ -959,7 +959,7 @@ switch eventformat
   case 'fcdc_buffer_offline'
     [path, file, ext] = fileparts(filename);
     if isempty(hdr)
-       headerfile = fullfile(path, 'header'); 
+      headerfile = fullfile(path, 'header');
       hdr = read_buffer_offline_header(headerfile);
     end
     eventfile = fullfile(path, 'events');
@@ -979,7 +979,7 @@ switch eventformat
     
     if ~exist(fifo,'file')
       warning('the FIFO %s does not exist; attempting to create it', fifo);
-    fid = fopen(fifo, 'r');
+      fid = fopen(fifo, 'r');
       system(sprintf('mkfifo -m 0666 %s',fifo));
     end
     
@@ -1138,22 +1138,35 @@ switch eventformat
       event(i).offset   = 0;                      % expressed in samples
       event(i).duration = hdr.nSamples;           % expressed in samples
     end
-
-  case {'babysquid_fif' 'babysquid_eve'}
-    if strcmp(eventformat, 'babysquid_fif')
-      % ensure that we are reading the *.eve file
-      [p, f, x] = fileparts(filename);
-      filename = fullfile(p, [f '.eve']);
+    
+  case {'neuromag_eve'}
+    % previously this was called babysquid_eve, now it is neuromag_eve
+    % see also http://bugzilla.fcdonders.nl/show_bug.cgi?id=2170
+    [p, f, x] = fileparts(filename);
+    evefile = fullfile(p, [f '.eve']);
+    fiffile = fullfile(p, [f '.fif']);
+    
+    if isempty(hdr)
+      hdr = ft_read_header(fiffile, 'headerformat', 'neuromag_mne');
     end
-    % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1914 for details
-    [smp, tim, val, typ] = read_babysquid_eve(filename);
+    
+    [smp, tim, typ, val] = read_neuromag_eve(evefile);
+    
+    smp = smp + 1; % should be 1-offset
+    smp = smp - double(hdr.orig.raw.first_samp); % the recording to disk may start later than the actual acquisition
+    
     if ~isempty(smp)
-      smp     = num2cell(smp);
-      val     = num2cell(val);
-      typ     = cellfun(@num2str, num2cell(typ), 'UniformOutput', false);
+      sample  = num2cell(smp);
+      value   = num2cell(val);
       offset  = num2cell(zeros(size(smp)));
+      type    = repmat({'unknown'}, size(typ));
+      type(typ==0) = {'trigger'};
+      if any(typ~=0)
+        % see the comments in read_neuromag_eve
+        warning('entries in the *.eve file with a type other than 0 are represented as ''unknown''')
+      end
       % convert to a structure array
-      event = struct('type', typ, 'value', val, 'sample', smp, 'offset', offset);
+      event = struct('type', type, 'value', value, 'sample', sample, 'offset', offset);
     else
       event = [];
     end
@@ -1236,6 +1249,17 @@ switch eventformat
       
     elseif isepoched
       error('Support for epoched *.fif data is not yet implemented.')
+    end
+    
+    % check whether the *.fif file is accompanied by an *.eve file
+    [p, f, x] = fileparts(filename);
+    evefile = fullfile(p, [f '.eve']);
+    if exist(evefile, 'file')
+      eve = ft_read_event(evefile, 'header', hdr);
+      if ~isempty(eve)
+        fprintf('appending %d events from "%s"\n', length(eve), evefile);
+        event = appendevent(event, eve);
+      end
     end
     
   case {'neuralynx_ttl' 'neuralynx_bin' 'neuralynx_dma' 'neuralynx_sdma'}
@@ -1382,7 +1406,7 @@ switch eventformat
   case {'neuralynx_nev'}
     % instead of the directory containing the combination of nev and ncs files, the nev file was specified
     % do NOT read the header of the dataset
-
+    
     % read the events, apply filter is applicable
     nev = read_neuralynx_nev(filename, 'type', flt_type, 'value', flt_value, 'mintimestamp', flt_mintimestamp, 'maxtimestamp', flt_maxtimestamp, 'minnumber', flt_minnumber, 'maxnumber', flt_maxnumber);
     
@@ -1397,12 +1421,12 @@ switch eventformat
       duration  = repmat({[]},size(value));
       offset    = repmat({[]},size(value));
       % since the ncs files are not specified, there is no mapping between lfp samples and timestamps
-      sample    = repmat({nan}, size(value)); 
+      sample    = repmat({nan}, size(value));
       % convert it into a structure array
       event = struct('type', type, 'value', value, 'sample', sample, 'timestamp', timestamp, 'duration', duration, 'offset', offset, 'number', number);
     end
     
-  
+    
   case 'neuralynx_cds'
     % this is a combined Neuralynx dataset with separate subdirectories for the LFP, MUA and spike channels
     dirlist   = dir(filename);
@@ -1599,7 +1623,7 @@ switch eventformat
     event = read_nmc_archive_k_event(filename);
     
   case 'netmeg'
-    warning('reading of events for the netmeg format is not yet supported');
+    warning('FieldTrip:ft_read_event:unsupported_event_format', 'reading of events for the netmeg format is not yet supported');
     event = [];
     
   case 'neuroshare' % NOTE: still under development
@@ -1629,27 +1653,27 @@ switch eventformat
   case 'bucn_nirs'
     event = read_bucn_nirsevent(filename);
     
-  case {'manscan_mbi', 'manscan_mb2'} 
-      if isempty(hdr)
-          hdr = ft_read_header(filename);
+  case {'manscan_mbi', 'manscan_mb2'}
+    if isempty(hdr)
+      hdr = ft_read_header(filename);
+    end
+    if isfield(hdr.orig, 'epochs') && ~isempty(hdr.orig.epochs)
+      for i = 1:hdr.nTrials
+        trlind = [trlind i*ones(1, diff(hdr.orig.epochs(i).samples) + 1)];
       end
-      if isfield(hdr.orig, 'epochs') && ~isempty(hdr.orig.epochs)
-          for i = 1:hdr.nTrials
-              trlind = [trlind i*ones(1, diff(hdr.orig.epochs(i).samples) + 1)];
-          end
-      else
-          trlind = ones(1, hdr.nSamples);
-      end      
-      if isfield(hdr.orig, 'events')
-          for i = 1:numel(hdr.orig.events)
-              for j = 1:length(hdr.orig.events(i).samples)
-                  event(end+1).type   = 'trigger';
-                  event(end).value    = hdr.orig.events(i).label;
-                  event(end).sample   = find(cumsum(trlind == hdr.orig.events(i).epochs(j))...
-                      == hdr.orig.events(i).samples(j), 1, 'first');
-              end
-          end
+    else
+      trlind = ones(1, hdr.nSamples);
+    end
+    if isfield(hdr.orig, 'events')
+      for i = 1:numel(hdr.orig.events)
+        for j = 1:length(hdr.orig.events(i).samples)
+          event(end+1).type   = 'trigger';
+          event(end).value    = hdr.orig.events(i).label;
+          event(end).sample   = find(cumsum(trlind == hdr.orig.events(i).epochs(j))...
+            == hdr.orig.events(i).samples(j), 1, 'first');
+        end
       end
+    end
   otherwise
     warning('FieldTrip:ft_read_event:unsupported_event_format','unsupported event format (%s)', eventformat);
     event = [];

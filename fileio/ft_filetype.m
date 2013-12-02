@@ -278,16 +278,6 @@ elseif filetype_check_extension(filename, '.trc') && filetype_check_header(filen
   manufacturer = 'Micromed';
   content = 'Electrophysiological data';
   
-  % known BabySQUID file types, these should go before Neuromag
-elseif filetype_check_extension(filename, '.fif') && exist(fullfile(p, [f '.eve']), 'file')
-  type = 'babysquid_fif';
-  manufacturer = 'Tristan Technologies';
-  content = 'MEG data';
-elseif filetype_check_extension(filename, '.eve') && exist(fullfile(p, [f '.fif']), 'file')
-  type = 'babysquid_eve';
-  manufacturer = 'Tristan Technologies';
-  content = 'MEG data';
-  
   % known Neuromag file types
 elseif filetype_check_extension(filename, '.fif')
   type = 'neuromag_fif';
@@ -297,6 +287,10 @@ elseif filetype_check_extension(filename, '.bdip')
   type = 'neuromag_bdip';
   manufacturer = 'Neuromag';
   content = 'dipole model';
+elseif filetype_check_extension(filename, '.eve') && exist(fullfile(p, [f '.fif']), 'file')
+  type = 'neuromag_eve'; % these are being used by Tristan Technologies for the BabySQUID system
+  manufacturer = 'Neuromag';
+  content = 'events';
   
   % known Yokogawa file types
 elseif filetype_check_extension(filename, '.ave') || filetype_check_extension(filename, '.sqd')
