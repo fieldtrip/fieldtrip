@@ -51,8 +51,7 @@ cfg         = [];
 cfg.method  = 'localspheres';
 cfg.singlesphere = 'yes';
 cfg.grad    = grad;
-cfg.geom    = shape;
-vol{4}      = ft_prepare_headmodel(cfg);
+vol{4}      = ft_prepare_headmodel(cfg, shape);
 
 % compare the volume conductor structures
 comb = nchoosek(1:numel(vol),2);
@@ -105,8 +104,7 @@ vol{3}           = ft_prepare_localspheres(cfg);
 cfg         = [];
 cfg.method  = 'localspheres';
 cfg.grad    = grad;
-cfg.geom    = shape;
-vol{4}      = ft_prepare_headmodel(cfg);
+vol{4}      = ft_prepare_headmodel(cfg, shape);
 vol{4} = rmfield(vol{4},'unit');
 
 % compute the leadfields for a comparison

@@ -66,10 +66,6 @@ order   = ft_getopt(varargin, 'order', 10);             % order of expansion for
 % ensure that the sensor description is up-to-date (Aug 2011)
 sens = ft_datatype_sens(sens);
 
-% the electrodes and coils are used, the channel positions are not relevant any more
-if isfield(sens, 'chanpos'); sens = rmfield(sens, 'chanpos'); end
-if isfield(sens, 'chanori'); sens = rmfield(sens, 'chanori'); end
-
 % this is to support volumes saved in mat-files, particularly interpolated
 if ischar(vol)
   vpath = fileparts(vol);   % remember the path to the file
@@ -139,6 +135,8 @@ elseif ismeg
     % only keep the desired channels, order them according to the users specification
     try, sens.chantype = sens.chantype(selsens,:); end
     try, sens.chanunit = sens.chanunit(selsens,:); end
+    try, sens.chanpos  = sens.chanpos (selsens,:); end
+    try, sens.chanori  = sens.chanori (selsens,:); end
     sens.label    = sens.label(selsens);
     sens.tra      = sens.tra(selsens,:);
   else
@@ -252,6 +250,8 @@ elseif ismeg
       % first only modify the linear combination of coils into channels
       try, sens.chantype = sens.chantype(selsens,:); end
       try, sens.chanunit = sens.chanunit(selsens,:); end
+      try, sens.chanpos  = sens.chanpos (selsens,:); end
+      try, sens.chanori  = sens.chanori (selsens,:); end
       sens.label   = sens.label(selsens);
       sens.tra     = sens.tra(selsens,:);
       % subsequently remove the coils that do not contribute to any sensor output
@@ -299,6 +299,10 @@ elseif ismeg
   end
   
 elseif iseeg
+  
+  % the electrodes are used, the channel positions are not relevant any more
+  % channel positinos need to be recomputed after projecting the electrodes on the skin
+  if isfield(sens, 'chanpos'); sens = rmfield(sens, 'chanpos'); end
   
   % select the desired channels from the electrode array
   % order them according to the users specification
@@ -546,20 +550,13 @@ elseif iseeg
   %   sens.tra = eye(length(sens.label));
   % end
   
-end % if iseeg or ismeg
+  % update the channel positions as the electrodes were projected to the skin surface
+  [pos, ori, lab] = channelposition(sens);
+  [selsens, selpos] = match_str(sens.label, lab);
+  sens.chanpos = nan(length(sens.label),3);
+  sens.chanpos(selsens,:) = pos(selpos,:);
 
-% update the channel positions, this is needed because the electrodes are projected to the surface
-[pos, ori, lab] = channelposition(sens);
-[selsens, selpos] = match_str(sens.label, lab);
-if iseeg
-  sens.chanpos = nan(length(sens.label),3);
-  sens.chanpos(selsens,:) = pos(selpos,:);
-else
-  sens.chanpos = nan(length(sens.label),3);
-  sens.chanpos(selsens,:) = pos(selpos,:);
-  sens.chanori = nan(length(sens.label),3);
-  sens.chanori(selsens,:) = ori(selpos,:);
-end
+end % if iseeg or ismeg
 
 if isfield(sens, 'tra')
   if issparse(sens.tra) && size(sens.tra, 1)==1
