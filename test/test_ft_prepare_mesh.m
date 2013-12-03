@@ -90,21 +90,21 @@ cfg=[];
 cfg.numvertices = 1000;
 meshA = ft_prepare_mesh(cfg,seg1p);
 meshB = ft_prepare_mesh(cfg,seg1);
-assert(isequal(meshA,meshB),'error: 01');
+assert(isequalwithoutcfg(meshA,meshB),'error: 01');
 assert(isfield(meshA,'pnt') && isfield(meshA,'tri') && isfield(meshA,'unit'), 'Missing field(s) in mesh structure');
 assert((cfg.numvertices == size(meshA.pnt,1)) , 'Number of points is not equal to required');
 cfg=[];
 cfg.numvertices = 1000;
 meshA = ft_prepare_mesh(cfg,seg3p);
 meshB = ft_prepare_mesh(cfg,seg3);
-assert(isequal(meshA,meshB),'error: 02');
+assert(isequalwithoutcfg(meshA,meshB),'error: 02');
 assert(isfield(meshA(1),'pnt') && isfield(meshA(1),'tri') && isfield(meshA(1),'unit'), 'Missing field(s) in mesh structure');
 assert((cfg.numvertices == size(meshA(1).pnt,1)) && (cfg.numvertices == size(meshA(2).pnt,1)) && (cfg.numvertices == size(meshA(3).pnt,1)), 'Number of points is not equal to required');
 cfg=[];
 cfg.numvertices = 1000;
 meshA = ft_prepare_mesh(cfg,seg5p);
 meshB = ft_prepare_mesh(cfg,seg5);
-assert(isequal(meshA,meshB),'error: 03');
+assert(isequalwithoutcfg(meshA,meshB),'error: 03');
 assert(isfield(meshA(1),'pnt') && isfield(meshA(1),'tri') && isfield(meshA(1),'unit'), 'Missing field(s) in mesh structure');
 assert((cfg.numvertices == size(meshA(1).pnt,1)) && (cfg.numvertices == size(meshA(2).pnt,1)) && (cfg.numvertices == size(meshA(3).pnt,1)) && (cfg.numvertices == size(meshA(4).pnt,1)) && (cfg.numvertices == size(meshA(5).pnt,1)), 'Number of points is not equal to required');
 figure; ft_plot_mesh(meshA,'facecolor','none');
@@ -114,7 +114,7 @@ cfg.method = 'hexahedral';
 cfg.numvertices = 1000;
 meshA = ft_prepare_mesh(cfg,seg1p);
 meshB = ft_prepare_mesh(cfg,seg1);
-assert(isequal(meshA,meshB),'error: 04');
+assert(isequalwithoutcfg(meshA,meshB),'error: 04');
 assert(isfield(meshA,'pnt') && isfield(meshA,'hex') && isfield(meshA,'unit'), 'Missing field(s) in mesh structure');
 cfg=[];
 cfg.method = 'hexahedral';
@@ -123,7 +123,7 @@ meshA = ft_prepare_mesh(cfg,seg3p);
 meshB = ft_prepare_mesh(cfg,seg3);
 meshA=rmfield(meshA,'tissuelabel');
 meshB=rmfield(meshB,'tissuelabel');
-assert(isequal(meshA,meshB),'error: 05');
+assert(isequalwithoutcfg(meshA,meshB),'error: 05');
 assert(isfield(meshA,'pnt') && isfield(meshA,'hex') && isfield(meshA,'unit'), 'Missing field(s) in mesh structure');
 cfg=[];
 cfg.method = 'hexahedral';
@@ -132,7 +132,7 @@ meshA = ft_prepare_mesh(cfg,seg5p);
 meshB = ft_prepare_mesh(cfg,seg5);
 meshA=rmfield(meshA,'tissuelabel');
 meshB=rmfield(meshB,'tissuelabel');
-assert(isequal(meshA,meshB),'error: 06');
+assert(isequalwithoutcfg(meshA,meshB),'error: 06');
 assert(isfield(meshA,'pnt') && isfield(meshA,'hex') && isfield(meshA,'unit'), 'Missing field(s) in mesh structure');
 figure; ft_plot_mesh(meshA,'surfaceonly','yes')
 %% tissue specified
@@ -141,24 +141,37 @@ cfg.tissue='tissue_1';
 cfg.numvertices=3000;
 meshA=ft_prepare_mesh(cfg,seg3)
 meshB=ft_prepare_mesh(cfg,seg3p)
-assert(isequal(meshA,meshB),'error: 07');
+assert(isequalwithoutcfg(meshA,meshB),'error: 07');
 assert(isfield(meshA,'pnt') && isfield(meshA,'tri') && isfield(meshA,'unit'), 'Missing field(s) in mesh structure');
 cfg.method='hexahedral';
 meshA=ft_prepare_mesh(cfg,seg3)
 meshB=ft_prepare_mesh(cfg,seg3p)
-assert(isequal(meshA,meshB),'error: 08');
+assert(isequalwithoutcfg(meshA,meshB),'error: 08');
 assert(isfield(meshA,'pnt') && isfield(meshA,'hex') && isfield(meshA,'unit'), 'Missing field(s) in mesh structure');
-assert(isequal(meshA.tissuelabel, {'tissue_1'}), 'error:09');
+assert(isequalwithoutcfg(meshA.tissuelabel, {'tissue_1'}), 'error:09');
 cfg.tissue='tissue_2';
 meshB=ft_prepare_mesh(cfg,seg3)
-assert(isequal(meshB.tissuelabel, {'tissue_2'}), 'error:10');
+assert(isequalwithoutcfg(meshB.tissuelabel, {'tissue_2'}), 'error:10');
 meshA=rmfield(meshA,'tissuelabel');
 meshB=rmfield(meshB,'tissuelabel');
-assert(~(isequal(meshA,meshB)),'error: 11');
+assert(~(isequalwithoutcfg(meshA,meshB)),'error: 11');
 cfg.tissue={'tissue_2' 'tissue_1'};
 meshC=ft_prepare_mesh(cfg,seg3);
-assert(isequal(meshC.tissuelabel, cfg.tissue), 'error:12');
+assert(isequalwithoutcfg(meshC.tissuelabel, cfg.tissue), 'error:12');
 meshC=rmfield(meshC,'tissuelabel');
-assert(~(isequal(meshA,meshC)),'error: 13');
-assert(~(isequal(meshB,meshC)),'error: 14');
+assert(~(isequalwithoutcfg(meshA,meshC)),'error: 13');
+assert(~(isequalwithoutcfg(meshB,meshC)),'error: 14');
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function c = isequalwithoutcfg(a, b)
+if isfield(a, 'cfg')
+  a = rmfield(a, 'cfg');
+end
+if isfield(b, 'cfg')
+  b = rmfield(b, 'cfg');
+end
+c = isequal(a, b);
 
