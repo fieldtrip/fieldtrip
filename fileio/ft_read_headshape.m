@@ -205,9 +205,9 @@ else
   % start with an empty structure
   shape           = [];
   shape.pnt       = [];
-  % FIXME is it required that it has an empty fiducial substructure? -> perhaps for SPM
-  shape.fid.pnt   = [];
-  shape.fid.label = {};
+  % I don't think it is required that it has an empty fiducial substructure
+  % shape.fid.pnt   = [];
+  % shape.fid.label = {};
   
   
   switch fileformat
@@ -443,7 +443,7 @@ else
         shape.ctable = c.table;
       end
       
-    case {'neuromag_mne', 'neuromag_fif' 'babysquid_fif'}
+    case {'neuromag_fif' 'neuromag_mne'}
       
       orig = read_neuromag_hc(filename);
       switch coordsys
@@ -778,16 +778,20 @@ else
       while ~isempty(x)
         [junk, f, x] = fileparts(f);
       end
-      
+
       if exist(fullfile(p, [f '.nii']), 'file')
         fprintf('reading accompanying MRI file "%s"\n', fullfile(p, [f '.nii']));
         mri = ft_read_mri(fullfile(p, [f '.nii']));
-        shape.pnt  = ft_warp_apply(mri.transform, shape.pnt);
+        transform = eye(4);
+        transform(1:3,4) = mri.transform(1:3,4); % only use the translation
+        shape.pnt  = ft_warp_apply(transform, shape.pnt);
         shape.unit = mri.unit;
       elseif exist(fullfile(p, [f '.nii.gz']), 'file')
         fprintf('reading accompanying MRI file "%s"\n', fullfile(p, [f '.nii']));
         mri = ft_read_mri(fullfile(p, [f '.nii.gz']));
-        shape.pnt  = ft_warp_apply(mri.transform, shape.pnt);
+        transform = eye(4);
+        transform(1:3,4) = mri.transform(1:3,4); % only use the translation
+        shape.pnt  = ft_warp_apply(transform, shape.pnt);
         shape.unit = mri.unit;
       else
         warning('could not find accompanying MRI file, returning vertices in voxel coordinates');
