@@ -108,6 +108,7 @@ ft_plot_mesh(bnd(2),'edgecolor','g','facecolor','none')
 ft_plot_mesh(bnd(3),'edgecolor','r','facecolor','none')
 
 % set of points
+clear bnd
 for i=1:3
   cfg = [];
   cfg.headshape   = svol.bnd(i).pnt;
