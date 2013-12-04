@@ -651,8 +651,6 @@ else
       end
       shape.pnt = pnt;
       shape.tri = tri;
-      shape = rmfield(shape, 'fid');
-      
       
       % for the left and right
       [path,name,ext] = fileparts(filename);
@@ -759,8 +757,6 @@ else
       end
       IMPORT = importdata([filename '.node'],' ',1);
       shape.pnt = IMPORT.data(:,2:4);
-      % the fiducials don't apply to this format
-      shape = rmfield(shape,'fid');
       
     case 'brainsuite_dfs'
       % this requires the readdfs function from the BrainSuite MATLAB utilities
