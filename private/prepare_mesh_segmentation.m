@@ -59,15 +59,28 @@ end
 if isempty(cfg.tissue)
   mri = ft_datatype_segmentation(mri, 'segmentationstyle', 'indexed');
   fn = fieldnames(mri);
-  for i=1:numel(fn),if numel(mri.(fn{i}))==prod(mri.dim), segfield=fn{i};end;end
-  cfg.tissue=setdiff(unique(mri.(segfield)(:)),0);
+  for i=1:numel(fn)
+    if numel(mri.(fn{i}))==prod(mri.dim)
+      segfield=fn{i};
+    end
+  end
+  if isfield(mri, [segfield 'label'])
+    cfg.tissue = mri.([segfield 'label']);
+    cfg.tissue = cfg.tissue(~cellfun(@isempty, cfg.tissue));
+    fprintf('making mesh for %s tissue\n', cfg.tissue{:});
+  else
+    cfg.tissue=setdiff(unique(mri.(segfield)(:)),0);
+    fprintf('making mesh for tissue with segmentation value %d\n', cfg.tissue);
+  end
 end
 
 if ischar(cfg.tissue)
   % it should either be something like {'brain', 'skull', 'scalp'}, or something like [1 2 3]
   cfg.tissue = {cfg.tissue};
 end
+
 if numel(cfg.tissue)>1 && numel(cfg.numvertices)==1
+  % use the same number of vertices for each tissue
   cfg.numvertices = repmat(cfg.numvertices, size(cfg.tissue));
 elseif numel(cfg.tissue)~=numel(cfg.numvertices)
   error('you should specify the number of vertices for each tissue type');
@@ -90,7 +103,7 @@ end
 
 for i =1:numel(cfg.tissue)
   if iscell(cfg.tissue)
-    % this assumes that it is a probabilistic representation
+    % the code below assumes that it is a probabilistic representation
     % for example {'brain', 'skull', scalp'}
     try
       seg = mri.(cfg.tissue{i});
@@ -137,8 +150,15 @@ for i =1:numel(cfg.tissue)
       pnt = pnt(:,[2 1 3]); % Mathworks isosurface indexes differently
       
     case 'iso2mesh'
-      % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=2397
-      keyboard
+      ft_hastoolbox('iso2mesh', 1);
+      
+      opt = [];
+      opt.radbound = 3; % set the target surface mesh element bounding sphere be <3 pixels in radius
+      opt.maxnode = cfg.numvertices(i);
+      opt.maxsurf = 1;
+      
+      [pnt, tri] = v2s(seg, 1, opt, 'cgalsurf');
+      tri = tri(:,1:3);
       
     case 'projectmesh'
       [mrix, mriy, mriz] = ndgrid(1:mri.dim(1), 1:mri.dim(2), 1:mri.dim(3));
@@ -151,6 +171,8 @@ for i =1:numel(cfg.tissue)
     otherwise
       error('unsupported method "%s"', cfg.method);
   end % case
+  
+  numvoxels(i) = sum(find(seg(:))); % the number of voxels in this tissue
   
   bnd(i).pnt = ft_warp_apply(mri.transform, pnt);
   bnd(i).tri = tri;
