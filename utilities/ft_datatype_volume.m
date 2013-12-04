@@ -9,16 +9,18 @@ function volume = ft_datatype_volume(volume, varargin)
 % or interpolated on the regular 3-D dipole grid (like a box).
 %
 % An example volume structure is
+%       anatomy: [181x217x181 double]  the numeric data, in this case anatomical information
 %           dim: [181 217 181]         the dimensionality of the 3D volume
 %     transform: [4x4 double]          affine transformation matrix for mapping the voxel coordinates to the head coordinate system
-%       anatomy: [181x217x181 double]  the numeric data, in this case anatomical information
+%          unit: 'mm'                  geometrical units of the coordinate system
+%      coordsys: 'ctf'                 description of the coordinate system
 %
 % Required fields:
 %   - transform, dim
 %
 % Optional fields:
-%   - anatomy, prob, stat, grey, white, csf, or any other field with
-%     dimensions that are consistent with dim
+%   - anatomy, prob, stat, grey, white, csf, or any other field with dimensions that are consistent with dim
+%   - size, coordsys
 %
 % Deprecated fields:
 %   - dimord
@@ -95,7 +97,7 @@ switch version
   case '2012b'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if isfield(volume, 'dimord')
-      volume = rmfield(volume, 'dimord')
+      volume = rmfield(volume, 'dimord');
     end
 
     if isfield(volume, 'anatomy')
