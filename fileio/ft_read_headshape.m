@@ -205,10 +205,6 @@ else
   % start with an empty structure
   shape           = [];
   shape.pnt       = [];
-  % I don't think it is required that it has an empty fiducial substructure
-  % shape.fid.pnt   = [];
-  % shape.fid.label = {};
-  
   
   switch fileformat
     case {'ctf_ds', 'ctf_hc', 'ctf_meg4', 'ctf_res4', 'ctf_old'}
@@ -243,9 +239,9 @@ else
       orig = read_ctf_shape(filename);
       shape.pnt = orig.pnt;
       shape.fid.label = {'NASION', 'LEFT_EAR', 'RIGHT_EAR'};
+      shape.fid.pnt = zeros(0,3); % start with an empty array
       for i = 1:numel(shape.fid.label)
-        shape.fid.pnt = cat(1, shape.fid.pnt, ...
-          getfield(orig.MRI_Info, shape.fid.label{i}));
+        shape.fid.pnt = cat(1, shape.fid.pnt, getfield(orig.MRI_Info, shape.fid.label{i}));
       end
       
     case {'4d_xyz', '4d_m4d', '4d_hs', '4d', '4d_pdf'}
