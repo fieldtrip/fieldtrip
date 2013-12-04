@@ -85,7 +85,9 @@ for i=1:4
 end
 
 % plot them together, this should form a consistent set
-ft_plot_mesh(dfs{1}, 'edgecolor', 'none', 'facecolor', [1 1 1]/2, 'facealpha', 0.3); % this one is now not correct
+ft_plot_mesh(dfs{1}, 'edgecolor', 'none', 'facecolor', [1 1 1]/2, 'facealpha', 0.3);
 ft_plot_mesh(mesh{3}, 'edgecolor', 'none', 'facecolor', [1 1 1]/2, 'facealpha', 0.3);
 ft_plot_mesh(surf{3}, 'edgecolor', 'none', 'facecolor', [1 1 1]/2, 'facealpha', 0.3);
+
+dfsall = cellfun(@ft_read_headshape, dfsfile);
 
