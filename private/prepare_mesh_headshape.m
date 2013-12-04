@@ -24,6 +24,14 @@ function bnd = prepare_mesh_headshape(cfg)
 %
 % $Id$
 
+% get the specific options
+cfg.headshape    = ft_getopt(cfg, 'headshape');
+
+if isa(cfg.headshape, 'config')
+  % convert the nested config-object back into a normal structure
+  cfg.headshape = struct(cfg.headshape);
+end
+
 % get the surface describing the head shape
 if isstruct(cfg.headshape) && isfield(cfg.headshape, 'pnt')
   % use the headshape surface specified in the configuration
@@ -94,22 +102,22 @@ function [pnt, tri] = mysphere(N)
 % that are nicely distributed over the sphere. The vertices are aligned
 % along equally spaced horizontal contours according to an algorithm of
 % Dave Russel.
-% 
+%
 % Use as
 %  [pnt, tri] = msphere(M)
 %
 % See also SPHERE, NSPHERE, ICOSAHEDRON, REFINE
-% Copyright (C) 1994, Dave Rusin 
+% Copyright (C) 1994, Dave Rusin
 
 storeM    = [];
 storelen  = [];
 increaseM = 0;
 while (1)
-
+  
   % put a single vertex at the top
   phi = [0];
   th  = [0];
-
+  
   M = round((pi/4)*sqrt(N)) + increaseM;
   for k=1:M
     newphi = (k/M)*pi;
@@ -123,11 +131,11 @@ while (1)
       end
     end
   end
-
+  
   % put a single vertex at the bottom
   phi(end+1) = [pi];
   th(end+1)  = [0];
-
+  
   % store this vertex packing
   storeM(end+1).th  = th;
   storeM(end  ).phi = phi;
@@ -231,10 +239,10 @@ XYZmm = ts.XYZmm;
 % smoothing iterations
 %--------------------------------------------------------------------------
 for j=1:N
-
+  
   XYZmm_o = zeros(3,ts.nr(1)) ;
   XYZmm_o2 = zeros(3,ts.nr(1)) ;
-
+  
   for i=1:ts.nr(1)
     ln = find(M_con(:,i));
     d_i = sqrt(sum((XYZmm(:,ln)-XYZmm(:,i)*ones(1,length(ln))).^2));
@@ -246,7 +254,7 @@ for j=1:N
     XYZmm_o(:,i) = XYZmm(:,i) + ...
       lam * sum((XYZmm(:,ln)-XYZmm(:,i)*ones(1,length(ln))).*(ones(3,1)*w_i),2);
   end
-
+  
   for i=1:ts.nr(1)
     ln = find(M_con(:,i));
     d_i = sqrt(sum((XYZmm(:,ln)-XYZmm(:,i)*ones(1,length(ln))).^2));
@@ -258,9 +266,9 @@ for j=1:N
     XYZmm_o2(:,i) = XYZmm_o(:,i) + ...
       mu * sum((XYZmm_o(:,ln)-XYZmm_o(:,i)*ones(1,length(ln))).*(ones(3,1)*w_i),2);
   end
-
+  
   XYZmm = XYZmm_o2;
-
+  
 end
 
 % collect output results

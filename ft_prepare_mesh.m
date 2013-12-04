@@ -82,154 +82,90 @@ ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar mri
 
+% we cannot use nargin, because the data might have been loaded from cfg.inputfile
+hasdata = exist('mri', 'var');
+
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'forbidden', {'numcompartments', 'outputfile', 'sourceunits', 'mriunits'});
 
-% get the defaults
-cfg.headshape    = ft_getopt(cfg, 'headshape');         % input option
-cfg.interactive  = ft_getopt(cfg, 'interactive', 'no'); % to interact with the volume
-% cfg.tissue       = ft_getopt(cfg, 'tissue');            % to perform the meshing on a specific tissue
-cfg.numvertices  = ft_getopt(cfg, 'numvertices');       % resolution of the mesh
-cfg.downsample   = ft_getopt(cfg, 'downsample', 1);
+% get the options
+cfg.downsample = ft_getopt(cfg, 'downsample', 1); % default is no downsampling
 
-if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
-  % convert the nested config-object back into a normal structure
-  cfg.headshape = struct(cfg.headshape);
-end
-
-% here we cannot use nargin, because the data might have been loaded from cfg.inputfile
-hasdata = exist('mri', 'var');
-
-if ~hasdata
-  mri = [];
-elseif ~ft_voltype(mri, 'unknown')
-  % The input appears to be a headmodel. This is deprecated, but at this
-  % moment (2012-09-28) we decided not to break the old functionality yet.
-else
-  mri = ft_checkdata(mri, 'datatype', {'volume', 'segmentation'});
-end
-
-if hasdata
-  % try to estimate the units, these will also be assigned to the output meshes
-  mri = ft_convert_units(mri);
-end
-
-if hasdata
-  % determine the type of input data
-  basedonmri        = ft_datatype(mri, 'volume');
-  basedonseg        = ft_datatype(mri, 'segmentation');
-  basedonheadshape  = 0;
-  basedonbnd        = isfield(mri, 'bnd');
-  basedonsphere     = all(isfield(mri, {'r', 'o'}));
-elseif isfield(cfg,'headshape') && ~isempty(cfg.headshape)
-  % in absence of input data
-  basedonmri       = false;
-  basedonseg       = false;
-  basedonheadshape = true;
-  basedonbnd       = false;
-  basedonsphere    = false;
-else
-  error('inconsistent configuration and input data');
-end
-
-if isfield(cfg, 'method') && strcmp(cfg.method, 'hexahedral')
-  % the MRI is assumed to contain a segmentation, call the helper function
-  bnd = prepare_mesh_hexahedral(cfg, mri); %should go fieldtrip/private
-  % ensure that non of the other options gets executed
-  basedonmri       = false;
-  basedonseg       = false;
-  basedonheadshape = false;
-  basedonbnd       = false;
-  basedonsphere    = false;
-  
-elseif isfield(cfg, 'method') && strcmp(cfg.method, 'tetrahedral')
-  % the MRI is assumed to contain a segmentation, call the helper function
-  bnd = prepare_mesh_tetrahedral(cfg, mri);
-  % ensure that non of the other options gets executed
-  basedonmri       = false;
-  basedonseg       = false;
-  basedonheadshape = false;
-  basedonbnd       = false;
-  basedonsphere    = false;
-  
-elseif basedonseg || basedonmri
-  if all(isfield(mri, {'gray', 'white', 'csf'}))
-    cfg.tissue      = ft_getopt(cfg, 'tissue', 'brain');
-    cfg.numvertices = ft_getopt(cfg, 'numvertices', 3000);
-  else
-    cfg.tissue      = ft_getopt(cfg, 'tissue');
+% This was changed on 3 December 2013, this backward compatibility can be removed in 6 months from now.
+if isfield(cfg, 'interactive')
+  if strcmp(cfg.interactive, 'yes')
+    warning('please specify cfg.method=''interactive'' instead of cfg.interactive=''yes''');
+    cfg.method = 'interactive';
   end
-  cfg = ft_checkconfig(cfg, 'required', {'tissue', 'numvertices'});
+  cfg = rmfield(cfg, 'interactive');
 end
 
-if (basedonseg || basedonmri) && cfg.downsample~=1
+% This was changed on 3 December 2013, it makes sense to keep it like this on the
+% long term (previously there was no explicit use of cfg.method, now there is).
+% Translate the input options in the appropriate cfg.method.
+if ~isfield(cfg, 'method')
+  if isfield(cfg, 'headshape') && ~isempty(cfg.headshape)
+    warning('please specify cfg.method=''headshape''');
+    cfg.method = 'headshape';
+  elseif hasdata && ~strcmp(ft_voltype(mri), 'unknown')
+    % the input is a spherical volume conduction model
+    cfg.method = ft_voltype(mri);
+  elseif hasdata
+    warning('please specify cfg.method=''projectmesh'', ''iso2mesh'' or ''isosurface''');
+    warning('using ''projectmesh'' as default');
+    cfg.method = 'projectmesh';
+  end
+end
+
+if hasdata && cfg.downsample~=1
   % optionally downsample the anatomical MRI and/or the tissue segmentation
   tmpcfg = [];
   tmpcfg.downsample = cfg.downsample;
   mri = ft_volumedownsample(tmpcfg, mri);
 end
 
-if (basedonmri || basedonseg) && istrue(cfg.interactive)
-  % this only makes sense with a (segmented) MRI as input
-  fprintf('using the manual approach\n');
-  bnd = prepare_mesh_manual(cfg, mri);
-  
-elseif basedonseg
-  % FIXME this should be renamed to prepare_mesh_triangulation
-  fprintf('using the segmentation approach\n');
-  bnd = prepare_mesh_segmentation(cfg, mri);
-  
-elseif basedonmri && iscell(cfg.tissue) && all(isfield(mri, cfg.tissue))
-  % the input is not detected as segmentation, but it does have all fields
-  % that the user requests to have triangulated, so assume that it is a
-  % segmentation after all
-  fprintf('using the segmentation approach\n');
-  bnd = prepare_mesh_segmentation(cfg, mri);
-  
-elseif basedonmri
-  error('Unsegmented MRI only allowed in combination with cfg.interactive=yes')
-  
-elseif basedonheadshape
-  fprintf('using the head shape to construct a triangulated mesh\n');
-  bnd = prepare_mesh_headshape(cfg);
-  
-elseif basedonbnd
-  fprintf('using the mesh specified in the input volume conductor\n');
-  bnd = mri.bnd;
-  
-elseif basedonsphere
-  fprintf('triangulating the sphere in the volume conductor\n');
-  vol = mri;
-  
-  [pnt, tri] = makesphere(cfg.numvertices);
-  
-  
-  switch ft_voltype(vol)
-    case {'singlesphere' 'concentricspheres'}
-      bnd = [];
-      for i=1:length(vol.r)
-        bnd(i).pnt(:,1) = pnt(:,1)*vol.r(i) + vol.o(1);
-        bnd(i).pnt(:,2) = pnt(:,2)*vol.r(i) + vol.o(2);
-        bnd(i).pnt(:,3) = pnt(:,3)*vol.r(i) + vol.o(3);
-        bnd(i).tri = tri;
-      end
-    case 'localspheres'
-      % FIXME this should be replaced by an outline of the head, see private/headsurface
-      bnd = [];
-      for i=1:length(vol.label)
-        bnd(i).pnt(:,1) = pnt(:,1)*vol.r(i) + vol.o(i,1);
-        bnd(i).pnt(:,2) = pnt(:,2)*vol.r(i) + vol.o(i,2);
-        bnd(i).pnt(:,3) = pnt(:,3)*vol.r(i) + vol.o(i,3);
-        bnd(i).tri = tri;
-      end
-  end
-  
-elseif isfield(cfg, 'method') && strcmp(cfg.method, 'hexahedral')
-  % do nothing
-elseif isfield(cfg, 'method') && strcmp(cfg.method, 'tetrahedral')
-  % do nothing
-else
-  error('unsupported cfg.method and/or input')
+switch cfg.method
+  case 'interactive'
+    % this makes sense with a non-segmented MRI as input
+    % call the corresponding helper function
+    bnd = prepare_mesh_manual(cfg, mri);
+    
+  case {'projectmesh', 'iso2mesh', 'isosurface'}
+    % this makes sense with a segmented MRI as input
+    % call the corresponding helper function
+    bnd = prepare_mesh_segmentation(cfg, mri);
+    
+  case 'headshape'
+    % call the corresponding helper function
+    bnd = prepare_mesh_headshape(cfg);
+    
+  case 'hexahedral'
+    % the MRI is assumed to contain a segmentation
+    % call the corresponding helper function
+    bnd = prepare_mesh_hexahedral(cfg, mri);
+    
+  case 'tetrahedral'
+    % the MRI is assumed to contain a segmentation
+    % call the corresponding helper function
+    bnd = prepare_mesh_tetrahedral(cfg, mri);
+    
+    
+  case {'singlesphere' 'concentricspheres' 'localspheres'}
+    % FIXME for localspheres it should be replaced by an outline of the head, see private/headsurface
+    fprintf('triangulating the sphere in the volume conductor\n');
+    [pnt, tri] = makesphere(cfg.numvertices);
+    bnd = [];
+    mri = ft_convert_units(mri);      % ensure that it has units
+    vol = ft_datatype_headmodel(mri); % rename it and ensure that it is consistent and up-to-date
+    for i=1:length(vol.r)
+      bnd(i).pnt(:,1) = pnt(:,1)*vol.r(i) + vol.o(1);
+      bnd(i).pnt(:,2) = pnt(:,2)*vol.r(i) + vol.o(2);
+      bnd(i).pnt(:,3) = pnt(:,3)*vol.r(i) + vol.o(3);
+      bnd(i).tri = tri;
+    end
+    
+  otherwise
+    error('unsupported cfg.method')
 end
 
 % copy the geometrical units from the input to the output

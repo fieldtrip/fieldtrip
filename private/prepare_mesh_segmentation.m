@@ -2,17 +2,43 @@ function bnd = prepare_mesh_segmentation(cfg, mri)
 
 % PREPARE_MESH_SEGMENTATION
 %
-% See also PREPARE_MESH_MANUAL, PREPARE_MESH_HEADSHAPE
+% See also PREPARE_MESH_MANUAL, PREPARE_MESH_HEADSHAPE, PREPARE_MESH_HEXAHEDRAL
 
 % Copyrights (C) 2009, Robert Oostenveld
 %
-% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
+
+
+% ensure that the input data is consistent with what this function expects
+mri = ft_checkdata(mri, 'datatype', {'volume', 'segmentation'}, 'hasunits', 'yes');
 
 % get the default options
-cfg.spmversion  = ft_getopt(cfg, 'spmversion', 'spm8');
-cfg.numvertices = ft_getopt(cfg, 'numvertices');
-cfg.tissue      = ft_getopt(cfg, 'tissue');
-cfg.method      = ft_getopt(cfg, 'method');
+cfg.spmversion    = ft_getopt(cfg, 'spmversion', 'spm8');
+cfg.method        = ft_getopt(cfg, 'method', 'projectmesh');
+if all(isfield(mri, {'gray', 'white', 'csf'}))
+  cfg.tissue      = ft_getopt(cfg, 'tissue', 'brain');    % set the default
+  cfg.numvertices = ft_getopt(cfg, 'numvertices', 3000);  % set the default
+else
+  % do not set defaults for tissue and numvertices
+  cfg.tissue      = ft_getopt(cfg, 'tissue');
+  cfg.numvertices = ft_getopt(cfg, 'numvertices');
+end
 
 % check that SPM is on the path, try to add the preferred version
 if strcmpi(cfg.spmversion, 'spm2'),
@@ -20,6 +46,9 @@ if strcmpi(cfg.spmversion, 'spm2'),
 elseif strcmpi(cfg.spmversion, 'spm8'),
   ft_hastoolbox('SPM8',1);
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% try to determine the tissue (if not specified)
 
 % special exceptional case first
 if isempty(cfg.tissue) && numel(cfg.numvertices)==1 && isfield(mri,'white') && isfield(mri,'gray') && isfield(mri,'csf')
@@ -56,7 +85,9 @@ else
   mri = ft_datatype_segmentation(mri, 'segmentationstyle', 'indexed');
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % do the mesh extraction
+
 for i =1:numel(cfg.tissue)
   if iscell(cfg.tissue)
     % this assumes that it is a probabilistic representation
@@ -100,20 +131,29 @@ for i =1:numel(cfg.tissue)
   % FIXME is this still needed when it is already binary?
   seg = volumefillholes(seg);
   
-  if strcmp(cfg.method, 'isosurface')
-    [tri, pnt] = isosurface(seg, 0.5);
-    pnt = pnt(:,[2 1 3]); % Mathworks isosurface indexes differently
-  else
-    [mrix, mriy, mriz] = ndgrid(1:mri.dim(1), 1:mri.dim(2), 1:mri.dim(3));
-    ori(1) = mean(mrix(seg(:)));
-    ori(2) = mean(mriy(seg(:)));
-    ori(3) = mean(mriz(seg(:)));
-    
-    [pnt, tri] = triangulate_seg(seg, cfg.numvertices(i), ori);
-  end
+  switch cfg.method
+    case 'isosurface'
+      [tri, pnt] = isosurface(seg, 0.5);
+      pnt = pnt(:,[2 1 3]); % Mathworks isosurface indexes differently
+      
+    case 'iso2mesh'
+      % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=2397
+      keyboard
+      
+    case 'projectmesh'
+      [mrix, mriy, mriz] = ndgrid(1:mri.dim(1), 1:mri.dim(2), 1:mri.dim(3));
+      ori(1) = mean(mrix(seg(:)));
+      ori(2) = mean(mriy(seg(:)));
+      ori(3) = mean(mriz(seg(:)));
+      
+      [pnt, tri] = triangulate_seg(seg, cfg.numvertices(i), ori);
+      
+    otherwise
+      error('unsupported method "%s"', cfg.method);
+  end % case
   
   bnd(i).pnt = ft_warp_apply(mri.transform, pnt);
   bnd(i).tri = tri;
   bnd(i).unit = mri.unit;
   
-end
+end % for each tissue
