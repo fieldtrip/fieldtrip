@@ -54,16 +54,18 @@ function [hdr] = ft_read_header(filename, varargin)
 %   NeuroScan (*.eeg, *.cnt, *.avg)
 %   Nexstim (*.nxe)
 %
-% The following spike and LFP dataformats are supported (with some limitations)
+% The following spike and LFP dataformats are supported
 %   Neuralynx (*.ncs, *.nse, *.nts, *.nev, DMA log files)
 %   Plextor (*.nex, *.plx, *.ddt)
 %   CED - Cambridge Electronic Design (*.smr)
 %   MPI - Max Planck Institute (*.dap)
-%   neurosim_spikes
-%   neurosim_signals, Neurosim_ds
+%   Neurosim  (neurosim_spikes, neurosim_signals, neurosim_ds)
 %
 % The following NIRS dataformats are supported
 %   BUCN (*.txt)
+%
+% The following Eyetracker dataformats are supported
+%   EyeLink (*.asc)
 %
 % See also FT_READ_DATA, FT_READ_EVENT, FT_WRITE_DATA, FT_WRITE_EVENT,
 % FT_CHANTYPE, FT_CHANUNIT
