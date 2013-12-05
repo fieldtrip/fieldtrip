@@ -278,7 +278,7 @@ switch backend
     end
     
     if ~isempty(timreq) && ~isnan(timreq) && ~isinf(timreq)
-      submitoptions = [submitoptions sprintf('-l h_rt=%d ', timreq+timoverhead)];
+      submitoptions = [submitoptions sprintf('-l h_rt=%.0f ', timreq+timoverhead)];
     end
     
     if ~isempty(memreq) && ~isnan(memreq) && ~isinf(memreq)
@@ -309,7 +309,7 @@ switch backend
     end
     
     if ~isempty(timreq) && ~isnan(timreq) && ~isinf(timreq)
-      submitoptions = [submitoptions sprintf(' -l walltime=%d ', timreq+timoverhead)];
+      submitoptions = [submitoptions sprintf(' -l walltime=%.0f ', timreq+timoverhead)];
     end
     
     if ~isempty(memreq) && ~isnan(memreq) && ~isinf(memreq)
