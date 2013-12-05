@@ -1,8 +1,8 @@
-function [pnt, dhk] = icosahedron();
+function [pnt, tri] = icosahedron();
 
 % ICOSAHEDRON creates an icosahedron
 %
-% [pnt, dhk] = icosahedron
+% [pnt, tri] = icosahedron
 % creates an icosahedron with 12 vertices and 20 triangles
 % 
 % See also OCTAHEDRON, ICOSAHEDRON42, ICOSAHEDRON162, ICOSAHEDRON642, ICOSAHEDRON2562
@@ -27,7 +27,7 @@ function [pnt, dhk] = icosahedron();
 %
 % $Id$
 
-dhk = [
+tri = [
    1   2   3
    1   3   4
    1   4   5

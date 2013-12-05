@@ -1,4 +1,4 @@
-function [pnt, dhk] = icosahedron162()
+function [pnt, tri] = icosahedron162()
 
 % ICOSAHEDRON162 creates a 2-fold refined icosahedron
 
@@ -22,8 +22,8 @@ function [pnt, dhk] = icosahedron162()
 %
 % $Id$
 
-[pnt, dhk] = icosahedron;
-[pnt, dhk] = refine(pnt, dhk);
-[pnt, dhk] = refine(pnt, dhk);
+[pnt, tri] = icosahedron;
+[pnt, tri] = refine(pnt, tri);
+[pnt, tri] = refine(pnt, tri);
 
 pnt = pnt ./ repmat(sqrt(sum(pnt.^2,2)), 1,3);
