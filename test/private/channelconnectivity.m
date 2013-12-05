@@ -15,19 +15,19 @@ if (isfield(cfg, 'avgoverchan') && strcmp(cfg.avgoverchan, 'yes'))...
   connectivity = false(nchan,nchan);
 else
   
-  try
-  
-    % check whether to use channels in the cfg or data
-    if nargin < 2 && isfield(cfg, 'channel')
-      chans = cfg.channel;
-    elseif nargin == 2
-      chans = data.label;
-    else
-      error('either the cfg needs to have both cfg.channel and cfg.neighbours, or a second (data) input argument needs to be specified');
-    end
+  % check whether to use channels in the cfg or data
+  if nargin < 2 && isfield(cfg, 'channel')
+    chans = cfg.channel;
+  elseif nargin == 2
+    chans = data.label;
+  else
+    error('either the cfg needs to have both cfg.channel and cfg.neighbours, or a second (data) input argument needs to be specified');
+  end
 
-    nchan = length(chans);
-    connectivity = false(nchan,nchan);
+  nchan = length(chans);
+  connectivity = false(nchan,nchan);
+  
+  try
 
     % the original loop was the following, which is very slow:
   %   for chan=1:length(cfg.neighbours)
