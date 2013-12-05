@@ -1,4 +1,4 @@
-function [pntr, dhkr] = refine(pnt, dhk, method, varargin);
+function [pntr, trir] = refine(pnt, tri, method, varargin);
 
 % REFINE a 3D surface that is described by a triangulation
 %
@@ -44,51 +44,51 @@ end
 switch lower(method)
 case 'banks'
   npnt   = size(pnt,1);
-  ndhk   = size(dhk,1);
-  insert = spalloc(3*npnt,3*npnt,3*ndhk);
+  ntri   = size(tri,1);
+  insert = spalloc(3*npnt,3*npnt,3*ntri);
 
-  dhkr  = zeros(4*ndhk,3);      % allocate memory for the new triangles
-  pntr  = zeros(npnt+3*ndhk,3);     % allocate memory for the maximum number of new vertices
+  trir  = zeros(4*ntri,3);      % allocate memory for the new triangles
+  pntr  = zeros(npnt+3*ntri,3);     % allocate memory for the maximum number of new vertices
   pntr(1:npnt,:) = pnt;         % insert the original vertices
   current = npnt;
 
-  for i=1:ndhk
+  for i=1:ntri
 
-    if ~insert(dhk(i,1),dhk(i,2))
+    if ~insert(tri(i,1),tri(i,2))
       current = current + 1;
-      pntr(current,:) = (pnt(dhk(i,1),:) + pnt(dhk(i,2),:))/2;
-      insert(dhk(i,1),dhk(i,2)) = current;
-      insert(dhk(i,2),dhk(i,1)) = current;
+      pntr(current,:) = (pnt(tri(i,1),:) + pnt(tri(i,2),:))/2;
+      insert(tri(i,1),tri(i,2)) = current;
+      insert(tri(i,2),tri(i,1)) = current;
       v12 = current;
     else
-      v12 = insert(dhk(i,1),dhk(i,2));
+      v12 = insert(tri(i,1),tri(i,2));
     end
 
-    if ~insert(dhk(i,2),dhk(i,3))
+    if ~insert(tri(i,2),tri(i,3))
       current = current + 1;
-      pntr(current,:) = (pnt(dhk(i,2),:) + pnt(dhk(i,3),:))/2;
-      insert(dhk(i,2),dhk(i,3)) = current;
-      insert(dhk(i,3),dhk(i,2)) = current;
+      pntr(current,:) = (pnt(tri(i,2),:) + pnt(tri(i,3),:))/2;
+      insert(tri(i,2),tri(i,3)) = current;
+      insert(tri(i,3),tri(i,2)) = current;
       v23 = current;
     else
-      v23 = insert(dhk(i,2),dhk(i,3));
+      v23 = insert(tri(i,2),tri(i,3));
     end
 
-    if ~insert(dhk(i,3),dhk(i,1))
+    if ~insert(tri(i,3),tri(i,1))
       current = current + 1;
-      pntr(current,:) = (pnt(dhk(i,3),:) + pnt(dhk(i,1),:))/2;
-      insert(dhk(i,3),dhk(i,1)) = current;
-      insert(dhk(i,1),dhk(i,3)) = current;
+      pntr(current,:) = (pnt(tri(i,3),:) + pnt(tri(i,1),:))/2;
+      insert(tri(i,3),tri(i,1)) = current;
+      insert(tri(i,1),tri(i,3)) = current;
       v31 = current;
     else
-      v31 = insert(dhk(i,3),dhk(i,1));
+      v31 = insert(tri(i,3),tri(i,1));
     end
 
     % add the 4 new triangles with the correct indices
-    dhkr(4*(i-1)+1, :) = [dhk(i,1) v12 v31];
-    dhkr(4*(i-1)+2, :) = [dhk(i,2) v23 v12];
-    dhkr(4*(i-1)+3, :) = [dhk(i,3) v31 v23];
-    dhkr(4*(i-1)+4, :) = [v12 v23 v31];
+    trir(4*(i-1)+1, :) = [tri(i,1) v12 v31];
+    trir(4*(i-1)+2, :) = [tri(i,2) v23 v12];
+    trir(4*(i-1)+3, :) = [tri(i,3) v31 v23];
+    trir(4*(i-1)+4, :) = [v12 v23 v31];
 
   end
 
@@ -96,14 +96,14 @@ case 'banks'
   pntr = pntr(1:current, :);
 
 case 'updown'
-  ndhk = size(dhk,1);
-  while ndhk<varargin{1}
+  ntri = size(tri,1);
+  while ntri<varargin{1}
     % increase the number of triangles by a factor of 4
-    [pnt, dhk] = refine(pnt, dhk, 'banks');
-    ndhk = size(dhk,1);
+    [pnt, tri] = refine(pnt, tri, 'banks');
+    ntri = size(tri,1);
   end
   % reduce number of triangles using Matlab function
-  [dhkr, pntr] = reducepatch(dhk, pnt, varargin{1});
+  [trir, pntr] = reducepatch(tri, pnt, varargin{1});
 
 otherwise
   error(['unsupported method: ' method]);
