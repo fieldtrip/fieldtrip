@@ -55,22 +55,23 @@ function [hdr] = ft_read_header(filename, varargin)
 %   Nexstim (*.nxe)
 %
 % The following spike and LFP dataformats are supported
-%   Neuralynx (*.ncs, *.nse, *.nts, *.nev, DMA log files)
+%   Neuralynx (*.ncs, *.nse, *.nts, *.nev, *.nrd, *.dma, *.log)
 %   Plextor (*.nex, *.plx, *.ddt)
 %   CED - Cambridge Electronic Design (*.smr)
 %   MPI - Max Planck Institute (*.dap)
 %   Neurosim  (neurosim_spikes, neurosim_signals, neurosim_ds)
+%   Windaq (*.wdq)
 %
 % The following NIRS dataformats are supported
-%   BUCN (*.txt)
+%   BUCN - Birkbeck college, London (*.txt)
 %
 % The following Eyetracker dataformats are supported
-%   EyeLink (*.asc)
+%   EyeLink - SR Research (*.asc)
 %
 % See also FT_READ_DATA, FT_READ_EVENT, FT_WRITE_DATA, FT_WRITE_EVENT,
 % FT_CHANTYPE, FT_CHANUNIT
 
-% Copyright (C) 2003-2012 Robert Oostenveld
+% Copyright (C) 2003-2013 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
