@@ -190,6 +190,7 @@ elseif (~is2Dana && is2Dfun) || (is2Dana && is2Dfun)
   % set default interpmethod for this situation
   cfg.interpmethod = ft_getopt(cfg, 'interpmethod', 'nearest');
   cfg.sphereradius = ft_getopt(cfg, 'sphereradius', 0.5);
+  cfg.power        = ft_getopt(cfg, 'power',        1);
   
   % interpolate onto a 3D volume, ensure that the anatomical is indeed a volume
   if ~is2Dana
@@ -213,7 +214,7 @@ elseif (~is2Dana && is2Dfun) || (is2Dana && is2Dfun)
   functional = ft_convert_units(functional, anatomical.unit);
   
   interpmat = interp_ungridded(functional.pos, pos, ...
-    'projmethod', cfg.interpmethod, 'sphereradius', cfg.sphereradius); %FIXME include other key-value pairs as well
+    'projmethod', cfg.interpmethod, 'sphereradius', cfg.sphereradius, 'power', cfg.power); %FIXME include other key-value pairs as well
   
   interp = [];
   if isfield(functional, 'time')
@@ -246,6 +247,22 @@ elseif is2Dana && ~is2Dfun
   % ensure the functional data to be in double precision
   functional = ft_struct2double(functional);
   
+  % ensure that the anatomical has as pos-field
+  if ~isfield(anatomical, 'pos') && isfield(anatomical, 'pnt')
+    anatomical.pos = anatomical.pnt;
+    anatomical     = rmfield(anatomical, 'pnt');
+  end
+  
+  % get the positions at which the functional data is defined
+  dim       = functional.dim;
+  if isfield(functional, 'pos')
+    funpos = functional.pos;
+  elseif isfield(functional, 'transform')
+    [X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
+    funpos    = ft_warp_apply(functional.transform, [X(:) Y(:) Z(:)]);
+    clear X Y Z;
+  end
+   
   % ensure to keep the fields if these exist (will be lost in ft_checkdata)
   if isfield(functional, 'time'), time = functional.time; end
   if isfield(functional, 'freq'), freq = functional.freq; end
@@ -253,24 +270,19 @@ elseif is2Dana && ~is2Dfun
   % set default interpmethod for this situation
   cfg.interpmethod = ft_getopt(cfg, 'interpmethod', 'nearest');
   cfg.sphereradius = ft_getopt(cfg, 'sphereradius', []);
+  cfg.power        = ft_getopt(cfg, 'power',        1);
+  
+  % ensure compatible units
+  anatomical = ft_convert_units(anatomical);
+  functional = ft_convert_units(functional, anatomical.unit);
+  functional = ft_checkdata(functional, 'inside', 'logical');
   
   % interpolate the 3D volume onto the anatomy
-  anatomical = ft_convert_units(anatomical);
-  %functional = ft_checkdata(functional, 'datatype', 'volume', 'inside', 'logical', 'feedback', 'yes', 'hasunits', 'yes');
-  functional = ft_convert_units(functional, anatomical.unit);
-  
-  % get voxel indices and use interp_ungridded
-  dim       = functional.dim;
-  %[X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
-  
-  %interpmat  = interp_ungridded([X(:) Y(:) Z(:)], ft_warp_apply(inv(functional.transform), anatomical.pnt), ...,
-  %  'projmethod', cfg.interpmethod, 'sphereradius', cfg.sphereradius);
-  %clear X Y Z;
-  interpmat = interp_ungridded(functional.pos, anatomical.pnt, 'projmethod', cfg.interpmethod, 'sphereradius', cfg.sphereradius, 'inside', functional.inside);
+  interpmat = interp_ungridded(funpos, anatomical.pos, 'projmethod', cfg.interpmethod, 'sphereradius', cfg.sphereradius, 'inside', functional.inside, 'power', cfg.power);
   
   interp           = [];
-  interp.pos       = anatomical.pnt;
-  interp.inside    = (1:size(anatomical.pnt,1))';
+  interp.pos       = anatomical.pos;
+  interp.inside    = (1:size(anatomical.pos,1))';
   interp.outside   = [];
   if isfield(anatomical, 'tri'), interp.tri = anatomical.tri; end
   

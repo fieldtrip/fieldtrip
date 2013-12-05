@@ -9,7 +9,6 @@ function varargout = interp_ungridded(pntin, pntout, varargin)
 %   pntin   Nx3 matrix with the vertex positions
 %   pntout  Mx3 matrix with the vertex positions onto which the data should
 %           be interpolated
-%   valin   NxK matrix with functional data, defined at the points in pntin
 %
 % Alternatively to get the interpolation matrix itself, you can use it as
 %   [interpmat, distmat] = interp_ungridded(pntin, pntout, ...)
@@ -23,8 +22,12 @@ function varargout = interp_ungridded(pntin, pntout, varargin)
 %    triin        = triangulation for the first set of vertices
 %    triout       = triangulation for the second set of vertices
 %    data         = NxK matrix with functional data
+%
+% Optional extra arguments when using projmethod = 'sphere_weighteddistance'
+%    power        = power parameter as in the Inverse Distance Weighting
+%                   function proposed by Shepard (default = 1).
 
-% Copyright (C) 2007-2011, Jan-Mathijs Schoffelen & Robert Oostenveld
+% Copyright (C) 2007-2013, Jan-Mathijs Schoffelen & Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -51,6 +54,7 @@ end
 % get the optional arguments
 projmethod   = ft_getopt(varargin, 'projmethod');     % required
 sphereradius = ft_getopt(varargin, 'sphereradius');   % required for some projection methods
+powerparam   = ft_getopt(varargin, 'power', 1);
 distmat      = ft_getopt(varargin, 'distmat');        % will be computed if needed and not present
 triin        = ft_getopt(varargin, 'triin');          % not yet implemented
 triout       = ft_getopt(varargin, 'triout');   
@@ -155,10 +159,10 @@ switch projmethod
   case 'sphere_weighteddistance'
     projmat         = distmat;
     [ind1, ind2, d] = find(projmat);
-    projmat         = sparse(ind1, ind2, 1./d, npnt, npntin);
+    projmat         = sparse(ind1, ind2, d.^-powerparam, npntout, npntin);
     [ind1, ind2, d] = find(projmat);
-    normnz          = sqrt(full(sum(projmat.^2, 2)));
-    projmat         = sparse(ind1, ind2, d./normnz(ind1), npnt, npntin);
+    normnz          = full(sum(projmat, 2));
+    projmat         = sparse(ind1, ind2, d./normnz(ind1), npntout, npntin);
 
   case 'smudge'
     projmat = distmat;
