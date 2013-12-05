@@ -59,7 +59,7 @@ assert(isequalwithequalnans(segmentedmri_he,reference_he))
 
 load /home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/vol.mat
 % has a vol of type 'nolte' in 'cm' and as an example pnt:
-volbf = vol;clear vol
+volbf = vol; clear vol
 
 cfg = [];
 cfg.method = 'singleshell';
@@ -71,7 +71,7 @@ assert(isequalwithequalnans(volbf_new,volbf))
 
 load /home/common/matlab/fieldtrip/data/ftp/tutorial/headmodel_meg/vol.mat
 % has a vol of type 'singleshell' in 'cm' and as an example pnt:
-volhm = vol;clear vol
+volhm = vol; clear vol
 
 cfg = [];
 cfg.method = 'singleshell';

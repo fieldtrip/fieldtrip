@@ -62,9 +62,8 @@ for k = 1:numel(conductivity)
   cfg.method = 'concentricspheres';
   eegvol_concentricspheres = ft_prepare_headmodel(cfg, bnd);
   % HACK otherwise it will call eeg_leadfield1 instead of eeg_leadfield4
-  eegvol_concentricspheres.r = repmat(eegvol_concentricspheres.r, 1, 4);
-  eegvol_concentricspheres.c = repmat(eegvol_concentricspheres.c, 1, 4);
-  
+  eegvol_concentricspheres.r    = repmat(eegvol_concentricspheres.r,    1, 4);
+  eegvol_concentricspheres.cond = repmat(eegvol_concentricspheres.cond, 1, 4);
   
   bnd.pnt = pnt;
   bnd.tri = tri;

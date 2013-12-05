@@ -5,18 +5,20 @@ function lf = eeg_leadfield1(R, elc, vol)
 % [lf] = eeg_leadfield1(R, elc, vol)
 %
 % with input arguments
-%   R       position dipole (vector of length 3)
-%   elc     position electrodes
+%   R         position dipole (vector of length 3)
+%   elc       position electrodes
 % and vol being a structure with the elements
-%   vol.r   radius of sphere
-%   vol.c   conductivity of sphere
+%   vol.r     radius of sphere
+%   vol.cond  conductivity of sphere
+%
+% The center of the sphere should be at the origin.
+%
+% This implementation is adapted from
+%   Luetkenhoener, Habilschrift '92
+% The original reference is
+%   R. Kavanagh, T. M. Darccey, D. Lehmann, and D. H. Fender. Evaluation of methods for three-dimensional localization of electric sources in the human brain. IEEE Trans Biomed Eng, 25:421-429, 1978.
 
 % Copyright (C) 2002, Robert Oostenveld
-%
-% this implementation is adapted from
-%   Luetkenhoener, Habilschrift '92
-% the original reference is
-%   R. Kavanagh, T. M. Darccey, D. Lehmann, and D. H. Fender. Evaluation of methods for three-dimensional localization of electric sources in the human brain. IEEE Trans Biomed Eng, 25:421-429, 1978.
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -41,7 +43,7 @@ lf = zeros(Nchans,3);
 
 % always take the outermost sphere, this makes comparison with the 4-sphere computation easier
 [vol.r, indx] = max(vol.r);
-vol.c = vol.c(indx);
+vol.cond = vol.cond(indx);
 
 % check whether the electrode ly on the sphere, allowing 0.5% tolerance
 dist = sqrt(sum(elc.^2,2));
@@ -57,7 +59,7 @@ elc = vol.r * elc ./ [dist dist dist];
 
 c0 = norm(R);
 c1 = vol.r;
-c2 = 4*pi*c0^2*vol.c;
+c2 = 4*pi*c0^2*vol.cond;
 
 if c0==0
   % the dipole is in the origin, this can and should be handeled as an exception
@@ -67,7 +69,7 @@ if c0==0
   lf(:,2) = sin(theta).*sin(phi);
   lf(:,3) = cos(theta);
   % the potential in a homogenous sphere is three times the infinite medium potential
-  lf = 3/(c1^2*4*pi*vol.c)*lf;
+  lf = 3/(c1^2*4*pi*vol.cond)*lf;
 
 else
   for i=1:Nchans
@@ -80,7 +82,7 @@ else
     c6 = c0^2*r - dot(r,R)*R;        % lutkenhoner, just after A.17
 
     % the original code reads (cf. lutkenhoner1992 equation A.17)
-    % lf(i,:) = ((dot(R, r/norm(r) - (r-R)/norm(r-R))/(norm(cross(r,R))^2) + 2/(norm(r-R)^3)) * cross(R, cross(r, R)) + ((norm(r)^2-norm(R)^2)/(norm(r-R)^3) - 1/norm(r)) * R) / (4*pi*vol.c(1)*norm(R)^2);
+    % lf(i,:) = ((dot(R, r/norm(r) - (r-R)/norm(r-R))/(norm(cross(r,R))^2) + 2/(norm(r-R)^3)) * cross(R, cross(r, R)) + ((norm(r)^2-norm(R)^2)/(norm(r-R)^3) - 1/norm(r)) * R) / (4*pi*vol.cond(1)*norm(R)^2);
 
     % but more efficient execution of the code is achieved by some precomputations
     if c5<1000*eps

@@ -349,7 +349,7 @@ elseif iseeg
       % sort the spheres from the smallest to the largest
       % furthermore, the radius should be one (?)
       [radii, indx] = sort(vol.r/max(vol.r));
-      sigma = vol.c(indx);
+      sigma = vol.cond(indx);
       r = (sens.elecpos-repmat(center, Nelec, 1))./max(vol.r);
       pos = pos./max(vol.r);
       
@@ -383,9 +383,9 @@ elseif iseeg
       % FIXME, this is not consistent between spherical and BEM
       % sort the spheres from the smallest to the largest
       [vol.r, indx] = sort(vol.r);
-      vol.c = vol.c(indx);
+      vol.cond = vol.cond(indx);
       
-      Nspheres = length(vol.c);
+      Nspheres = length(vol.cond);
       if length(vol.r)~=Nspheres
         error('the number of spheres in the volume conductor model is ambiguous');
       end
@@ -401,15 +401,15 @@ elseif iseeg
           funnam = 'eeg_leadfield1';
         case 2
           vol.r = [vol.r(1) vol.r(2) vol.r(2) vol.r(2)];
-          vol.c = [vol.c(1) vol.c(2) vol.c(2) vol.c(2)];
+          vol.cond = [vol.cond(1) vol.cond(2) vol.cond(2) vol.cond(2)];
           funnam = 'eeg_leadfield4';
         case 3
           vol.r = [vol.r(1) vol.r(2) vol.r(3) vol.r(3)];
-          vol.c = [vol.c(1) vol.c(2) vol.c(3) vol.c(3)];
+          vol.cond = [vol.cond(1) vol.cond(2) vol.cond(3) vol.cond(3)];
           funnam = 'eeg_leadfield4';
         case 4
           vol.r = [vol.r(1) vol.r(2) vol.r(3) vol.r(4)];
-          vol.c = [vol.c(1) vol.c(2) vol.c(3) vol.c(4)];
+          vol.cond = [vol.cond(1) vol.cond(2) vol.cond(3) vol.cond(4)];
           funnam = 'eeg_leadfield4';
         otherwise
           error('more than 4 concentric spheres are not supported')

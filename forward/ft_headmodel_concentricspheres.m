@@ -102,29 +102,29 @@ for i = 1:numel(geometry)
 end
 
 vol.o    = single_o;              % specify the center of the spheres
-vol.c    = conductivity;          % specify the conductivity of the spheres, can be empty up to here
+vol.cond = conductivity;          % specify the conductivity of the spheres, can be empty up to here
 vol.type = 'concentricspheres';
 
 % sort the spheres from the smallest to the largest
 [vol.r, indx] = sort(vol.r);
 
-if isempty(vol.c)
+if isempty(vol.cond)
   % it being empty indicates that the user did not specify a conductivity, use a default instead
   if length(vol.r)==1
-    vol.c = 1; % brain
+    vol.cond = 1;                        % brain
   elseif length(vol.r)==3
-    vol.c = [0.3300   0.0042 0.3300]; % brain,      skull, skin
+    vol.cond = [0.3300   0.0042 0.3300]; % brain,      skull, skin
   elseif length(vol.r)==4
-    vol.c = [0.3300 1 0.0042 0.3300]; % brain, csf, skull, skin
+    vol.cond = [0.3300 1 0.0042 0.3300]; % brain, csf, skull, skin
   else
     error('conductivity values should be specified for each tissue type');
   end
 else
   % the conductivity as specified by the user should be in the same order as the geometries
   % sort the spheres from the smallest to the largest ('insidefirst' order)
-  vol.c = vol.c(indx);
+  vol.cond = vol.cond(indx);
 end
 
 for i=1:numel(geometry)
-  fprintf('concentric sphere %d: radius = %.1f, conductivity = %f\n', i, vol.r(i), vol.c(i));
+  fprintf('concentric sphere %d: radius = %.1f, conductivity = %f\n', i, vol.r(i), vol.cond(i));
 end

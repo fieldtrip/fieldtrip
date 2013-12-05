@@ -1,17 +1,20 @@
-function [lut_t, cuf_t] = eeg_leadfield4_prepare(vol, Nmax);
+function [lut_t, cuf_t] = eeg_leadfield4_prepare(vol, Nmax)
 
 % EEG_LEADFIELD4_PREPARE computes constant factors for series expansion
-% for the 4 concentric sphere electric leadfield computation 
+% for the 4 concentric sphere electric leadfield computation. Calling
+% this function speeds up subsequent computations, as the constant
+% factors "t" do not have to be computed each time in eeg_leadfield4.
 %
-% use this function prior to repeated calls of eeg_leadfield4 according to
+% Use as
 %   vol.t = eeg_leadfield4_prepare(vol, N);
 % where
 %   vol.r      radius of the 4 spheres 
-%   vol.c      conductivity of the 4 spheres
-% and N is the number of terms for the series (default 60). The constant
-% factors t then do not have to be computed each time in eeg_leadfield4.
+%   vol.cond   conductivity of the 4 spheres
+% and N is the number of terms for the series (default 60). 
 %
-% this implementation is adapted from
+% The center of the spheres should be at the origin.
+%
+% This implementation is adapted from
 %   Lutkenhoner, Habilschrift 1992.
 % which again is taken from
 %   B. N. Cuffin and D. Cohen. Comparion of the Magnetoencephalogram and the Electroencephalogram. Electroencephalogr Clin Neurophysiol, 47:131-146, 1979.
@@ -40,12 +43,12 @@ function [lut_t, cuf_t] = eeg_leadfield4_prepare(vol, Nmax);
 
 % sort the spheres from the smallest to the largest
 [vol.r, indx] = sort(vol.r);
-[vol.c]       = vol.c(indx);
+vol.cond      = vol.cond(indx);
 
-r1 = vol.r(1); c1 = vol.c(1);
-r2 = vol.r(2); c2 = vol.c(2);
-r3 = vol.r(3); c3 = vol.c(3);
-r4 = vol.r(4); c4 = vol.c(4);
+r1 = vol.r(1); c1 = vol.cond(1);
+r2 = vol.r(2); c2 = vol.cond(2);
+r3 = vol.r(3); c3 = vol.cond(3);
+r4 = vol.r(4); c4 = vol.cond(4);
 
 if nargin==1
   Nmax = 60;

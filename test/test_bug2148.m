@@ -82,7 +82,7 @@ vol = [];
 vol.o = [0 0 4];
 vol.r = 12;
 vol.unit = 'cm';
-vol.c = 0.5;
+vol.cond = 0.5;
 vol.type = 'singlesphere';
 cfgs.vol = vol;
 cfgs.frequency = 10;
@@ -107,7 +107,7 @@ end
 vol = [];
 vol.o = [0 0 4];
 vol.r = 12;
-vol.c = 0.5;
+vol.cond = 0.5;
 vol.unit = 'cm';
 vol.type = 'singlesphere';
 cfgs.vol = vol;
@@ -130,7 +130,7 @@ end
 vol = [];
 vol.o = [0 0 4];
 vol.r = 12;
-vol.c = 0.5;
+vol.cond = 0.5;
 vol.unit = 'cm';
 vol.type = 'singlesphere';
 cfgs.vol = vol;

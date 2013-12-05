@@ -81,7 +81,7 @@ vol.unit = geometry.unit;
 
 vol.r    = single_r;
 vol.o    = single_o;
-vol.c    = conductivity;
+vol.cond = conductivity;
 vol.type = 'singlesphere';
 
-fprintf('single sphere: radius = %.1f, conductivity = %f\n', vol.r, vol.c);
+fprintf('single sphere: radius = %.1f, conductivity = %f\n', vol.r, vol.cond);
