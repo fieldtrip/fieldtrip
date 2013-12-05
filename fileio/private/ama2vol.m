@@ -29,7 +29,7 @@ vol  = [];
 ngeo = length(ama.geo);
 for i=1:ngeo
   vol.bnd(i).pnt = ama.geo(i).pnt;
-  vol.bnd(i).tri = ama.geo(i).dhk;
+  vol.bnd(i).tri = ama.geo(i).tri;
   vol.cond(i) = ama.geo(i).sigmam;
 end
 vol.mat = ama.bi;

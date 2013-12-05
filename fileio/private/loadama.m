@@ -39,7 +39,7 @@ mode = fread(fid, 1, 'int');
 ngeo = fread(fid, 1, 'int');
 
 totpnt = 0;
-totdhk = 0;
+tottri = 0;
 nrow   = 0;
 
 % read the boundaries
@@ -48,14 +48,14 @@ for i=1:ngeo
   geo(i).name    = char(fread(fid, [1 80], 'uchar'));
   geo(i).npnt    = fread(fid, 1, 'int');
   geo(i).pnt     = fread(fid, [3 geo(i).npnt], 'float')';
-  geo(i).ndhk    = fread(fid, 1, 'int');
-  geo(i).dhk     = fread(fid, [3 geo(i).ndhk], 'int')' + 1;  % Matlab indexing starts at 1
+  geo(i).ntri    = fread(fid, 1, 'int');
+  geo(i).tri     = fread(fid, [3 geo(i).ntri], 'int')' + 1;  % Matlab indexing starts at 1
   geo(i).sigmam  = fread(fid, 1, 'float');
   geo(i).sigmap  = fread(fid, 1, 'float');
   geo(i).geocon  = fread(fid, ngeo, 'int');
   geo(i).deflat  = fread(fid, ngeo, 'float');
   totpnt = totpnt + geo(i).npnt;
-  totdhk = totdhk + geo(i).ndhk;
+  tottri = tottri + geo(i).ntri;
 end
 
 % read the electrodes
@@ -63,7 +63,7 @@ if mode~=1
   elec.name    = char(fread(fid, [1 80], 'uchar'));
   elec.npnt    = fread(fid, 1, 'int');
   for i=1:(elec.npnt+1)
-    elec.el(i).dhk  = fread(fid, 1, 'int') + 1; % Matlab indexing starts at 1
+    elec.el(i).tri  = fread(fid, 1, 'int') + 1; % Matlab indexing starts at 1
     elec.el(i).la   = fread(fid, 1, 'float');
     elec.el(i).mu   = fread(fid, 1, 'float');
     elec.el(i).name = char(fread(fid, [1 10], 'char'));

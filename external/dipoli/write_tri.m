@@ -1,7 +1,7 @@
-function write_tri(fn, pnt, dhk)
+function write_tri(fn, pnt, tri)
 
 % WRITE_TRI writes a triangulation to a MBF file
-%	write_tri(filename, pnt, dhk)
+%	write_tri(filename, pnt, tri)
 %
 % See also READ_PNT, READ_TRI, WRITE_PNT
 
@@ -23,8 +23,8 @@ if fid~=-1
   fprintf(fid, '%d\t%f\t%f\t%f\n', ([(1:size(pnt,1))' pnt])');
 
   % write the triangles
-  fprintf(fid, '%d\n', size(dhk,1));
-  fprintf(fid, '%d\t%d\t%d\t%d\n', ([(1:size(dhk,1))' dhk])');
+  fprintf(fid, '%d\n', size(tri,1));
+  fprintf(fid, '%d\t%d\t%d\t%d\n', ([(1:size(tri,1))' tri])');
 
   fclose(fid);
 

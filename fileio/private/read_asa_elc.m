@@ -30,11 +30,11 @@ function elec = read_asa_elc(fn)
 
 
 Npnt = read_asa(fn, 'NumberPositions=', '%d');
-Ndhk = read_asa(fn, 'NumberPolygons=', '%d');
+Ntri = read_asa(fn, 'NumberPolygons=', '%d');
 Unit = read_asa(fn, 'UnitPosition', '%s', 1);
 pnt  = read_asa(fn, 'Positions', '%f', Npnt, ':');
 prj  = read_asa(fn, 'Positions2D', '%f', Npnt, ':'); % only in newer files
-dhk  = read_asa(fn, 'Polygons', '%d', Ndhk);
+tri  = read_asa(fn, 'Polygons', '%d', Ntri);
 lab  = read_asa(fn, 'Labels', '%s', Npnt);
 ref  = read_asa(fn, 'ReferenceChannel', '%s', 1); % only in newer files
 

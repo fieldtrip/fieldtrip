@@ -1,10 +1,10 @@
-function [X, Y, Z, pnt1, dhk1, pnt2, dhk2] = intersect_plane(pnt, dhk, v1, v2, v3)
+function [X, Y, Z, pnt1, tri1, pnt2, tri2] = intersect_plane(pnt, tri, v1, v2, v3)
 
 % INTERSECT_PLANE intersection between a triangulated surface and a plane
 % it returns the coordinates of the vertices which form a contour
 
 % % Use as
-%   [X, Y, Z] = intersect_plane(pnt, dhk, v1, v2, v3)
+%   [X, Y, Z] = intersect_plane(pnt, tri, v1, v2, v3)
 %
 % where the intersecting plane is spanned by the vertices v1, v2, v3
 % and the return values are each Nx2 for the N line segments.
@@ -14,7 +14,7 @@ function [X, Y, Z, pnt1, dhk1, pnt2, dhk2] = intersect_plane(pnt, dhk, v1, v2, v
 % $Id$
 
 npnt = size(pnt,1);
-ndhk = size(dhk,1);
+ntri = size(tri,1);
 % side = zeros(npnt,1);
 % for i=1:npnt
 %   side(i) = ptriside(v1, v2, v3, pnt(i,:));
@@ -22,12 +22,12 @@ ndhk = size(dhk,1);
 side = ptriside(v1, v2, v3, pnt);
 
 % find the triangles which have vertices on both sides of the plane
-indx = find(abs(sum(side(dhk),2))~=3);
+indx = find(abs(sum(side(tri),2))~=3);
 cnt1 = zeros(length(indx), 3);
 cnt2 = zeros(length(indx), 3);
 
 for i=1:length(indx)
-  cur = dhk(indx(i),:);
+  cur = tri(indx(i),:);
   tmp = side(cur);
   l1 = pnt(cur(1),:);
   l2 = pnt(cur(2),:);
@@ -82,15 +82,15 @@ if nargout>3
   % also output the two meshes on either side of the plane
   indx1 = find(side==1);
   pnt1  = pnt(indx1,:);
-  sel1  = sum(ismember(dhk, indx1), 2)==3;
-  dhk1  = dhk(sel1,:);
-  dhk1  = tri_reindex(dhk1);
+  sel1  = sum(ismember(tri, indx1), 2)==3;
+  tri1  = tri(sel1,:);
+  tri1  = tri_reindex(tri1);
   
   indx2 = find(side==-1);
   pnt2  = pnt(indx2,:);
-  sel2  = sum(ismember(dhk, indx2), 2)==3;
-  dhk2  = dhk(sel2,:);
-  dhk2  = tri_reindex(dhk2);
+  sel2  = sum(ismember(tri, indx2), 2)==3;
+  tri2  = tri(sel2,:);
+  tri2  = tri_reindex(tri2);
 end
 
 function [newtri] = tri_reindex(tri)
