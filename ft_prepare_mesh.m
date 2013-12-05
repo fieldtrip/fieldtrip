@@ -12,12 +12,13 @@ function [bnd, cfg] = ft_prepare_mesh(cfg, mri)
 %   bnd = ft_prepare_mesh(cfg, seg)
 %
 % Configuration options:
-%   cfg.interactive     = 'no' (default) or 'yes' (manual interaction)
-%   cfg.tissue          = cell-array with tissue types or numeric vector with integer values
-%   cfg.numvertices     = numeric vector, should have same number of elements as cfg.tissue
-%   cfg.downsample      = integer number (default = 1, i.e. no downsampling), see FT_VOLUMEDOWNSAMPLE
-%   cfg.headshape       = (optional) a filename containing headshape, a Nx3 matrix with surface
-%                         points, or a structure with a single or multiple boundaries
+%   cfg.method      = string, can be 'interactive', 'projectmesh', 'iso2mesh', 'isosurface',
+%                     'headshape', 'hexahedral', 'tetrahedral'
+%   cfg.tissue      = cell-array with tissue types or numeric vector with integer values
+%   cfg.numvertices = numeric vector, should have same number of elements as cfg.tissue
+%   cfg.downsample  = integer number (default = 1, i.e. no downsampling), see FT_VOLUMEDOWNSAMPLE
+%   cfg.headshape   = (optional) a filename containing headshape, a Nx3 matrix with surface
+%                     points, or a structure with a single or multiple boundaries
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -48,8 +49,8 @@ function [bnd, cfg] = ft_prepare_mesh(cfg, mri)
 %   cfg.vol           = structure with volume conduction model, see FT_PREPARE_HEADMODEL
 %   cfg.headshape     = name of file containing the volume conduction model, see FT_READ_VOL
 %
-% Undocumented options
-%   cfg.method = hexahedral, tetrahedral, isosurface
+% Undocumented options, I have no clue why they exist
+%   cfg.method = {'singlesphere' 'concentricspheres' 'localspheres'}
 
 % Copyrights (C) 2009-2012, Robert Oostenveld & Cristiano Micheli
 % Copyrights (C) 2012-2013, Robert Oostenveld & Lilla Magyari
