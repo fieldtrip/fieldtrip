@@ -20,7 +20,7 @@ function quality=meshquality(node,elem)
 %
 % reference:
 %    A. Liu, B. Joe, Relationship between tetrahedron shape measures, 
-%                    BIT 34 (2) (1994) 268–287.
+%                    BIT 34 (2) (1994) 268-287.
 %
 % -- this function is part of iso2mesh toolbox (http://iso2mesh.sf.net)
 %

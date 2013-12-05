@@ -15,7 +15,7 @@ function p=smoothsurf(node,mask,conn,iter,useralpha,usermethod,userbeta)
 %           contains a list of all neighboring node ID for node n,
 %           this can be computed from meshconn function
 %    iter:  smoothing iteration number
-%    useralpha: scaler, smoothing parameter, v(k+1)=alpha*v(k)+(1-alpha)*mean(neighbors)
+%    useralpha: scaler, smoothing parameter, v(k+1)=(1-alpha)*v(k)+alpha*mean(neighbors)
 %    usermethod: smoothing method, including 'laplacian','laplacianhc' and 'lowpass'
 %    userbeta: scaler, smoothing parameter, for 'laplacianhc'
 %
@@ -55,7 +55,6 @@ if(nargin>4)
 end
 ibeta=1-beta;
 ialpha=1-alpha;
-lambda=-1.02*alpha;
 
 for i=1:nn
     if(length(conn{idx(i)})==0)
@@ -85,7 +84,7 @@ elseif(strcmp(method,'laplacianhc'))
     end
 elseif(strcmp(method,'lowpass'))
     beta=-1.02*alpha;
-    ibeta=1+1.02*alpha;
+    ibeta=1-beta;
     for j=1:iter
         for i=1:nn
             p(idx(i),:)=ialpha*node(idx(i),:)+alpha*mean(node(conn{idx(i)},:)); 

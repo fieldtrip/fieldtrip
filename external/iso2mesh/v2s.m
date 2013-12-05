@@ -7,7 +7,8 @@ function [no,el,regions,holes]=v2s(img,isovalues,opt,method)
 %
 % author: Qianqian Fang (fangq <at> nmr.mgh.harvard.edu)
 %
-% inputs and outputs are similar to those defined in vol2surf
+% inputs and outputs are similar to those defined in vol2surf; In v2s, 
+% method can be set to 'cgalmesh' in addition to those allowed by vol2surf.
 %
 % -- this function is part of iso2mesh toolbox (http://iso2mesh.sf.net)
 %

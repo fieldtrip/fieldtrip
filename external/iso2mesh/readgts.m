@@ -2,7 +2,7 @@ function [node,elem,edges,edgemap]=readgts(fname)
 %
 % [node,elem,edges,edgemap]=readgts(fname)
 %
-% read GNU Triangulated Surface Format (GTS)
+% read GNU Triangulated Surface files (GTS)
 %
 % author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
 % date: 2008/03/28
