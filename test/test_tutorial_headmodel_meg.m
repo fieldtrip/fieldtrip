@@ -5,7 +5,7 @@ function test_tutorial_headmodel_meg(datadir)
 
 % TEST test_tutorial_headmodel_meg
 % TEST ft_read_mri ft_volumesegment ft_prepare_headmodel ft_plot_vol
-% TEST ft_convert_units ft_read_sens ft_plot_sens 
+% TEST ft_convert_units ft_read_sens ft_plot_sens
 % intial version by Lilla Magyari
 
 if nargin==0
@@ -34,12 +34,23 @@ vol = ft_prepare_headmodel(cfg, segmentedmri);
 % check if vol is equivalent with vol on the ftp site
 
 vol2 = load([datadir,'ftp/tutorial/headmodel_meg/vol']);
-vol=rmfield(vol,'cfg');
-vol2=rmfield(vol2.vol,'cfg');
-vol = ft_convert_units(vol,'mm');
+vol2 = vol2.vol; % copy it over
+
+vol  = tryrmfield(vol, 'cfg');
+vol2 = tryrmfield(vol2,'cfg');
+% it is presently (Dec 2013) a bit messy where the cfg and unit are being stored after ft_prepare_mesh
+vol  = tryrmfield(vol.bnd, 'unit');
+vol2 = tryrmfield(vol2.bnd,'unit');
+vol  = tryrmfield(vol.bnd, 'cfg');
+vol2 = tryrmfield(vol2.bnd,'cfg');
+
+vol  = ft_convert_units(vol, 'mm');
+vol2 = ft_convert_units(vol2,'mm');
+
 assert(identical(vol,vol2,'abstol',0.0001),'The headmodel does not match the headmodel stored on the ftp site.');
 
-% 
+%
+
 sens = ft_read_sens([datadir,'/Subject01.ds']);
 
 vol = ft_convert_units(vol,'cm');
@@ -50,7 +61,10 @@ ft_plot_sens(sens, 'style', '*b');
 hold on
 ft_plot_vol(vol);
 
-
+function s = tryremovefield(s, f)
+if isfield(s, f)
+  s = rmfield(s, f);
+end
 
 
 
