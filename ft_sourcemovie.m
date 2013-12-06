@@ -90,10 +90,14 @@ elseif nargin>2
   % parcellated structure
   tmp = getsubfield(source2, funparameter);
   fun = zeros(size(source.pos, 1), size(tmp, 2));
+  parcels      = source.(parcellation);
+  parcelslabel = source.([parcellation,'label']);
   for k = 1:numel(source2.label)
     sel = match_str(source.([parcellation,'label']), source2.label{k});
-    sel = source.(parcellation)==sel;
-    fun(sel,:) = repmat(tmp(k,:), [sum(sel) 1]);
+    if ~isempty(sel)
+      sel = source.(parcellation)==sel;
+      fun(sel,:) = repmat(tmp(k,:), [sum(sel) 1]);
+    end
   end
   source.(xparam) = source2.(xparam);
 end
@@ -177,7 +181,7 @@ if isempty(olim)
     olim(2) = 1;
   end
   % update the configuration
-  cfg.alim = olim;
+  %cfg.alim = olim;
 end
 
 % collect the data and the options to be used in the figure
@@ -187,7 +191,7 @@ opt.yparam  = yparam;
 opt.xval    = 0;
 opt.yval    = 0;
 opt.dat     = fun;
-opt.mask    = mask;
+opt.mask    = abs(mask);
 opt.pos     = source.pos;
 opt.tri     = source.tri;
 opt.vindx   = source.inside(:);
@@ -196,6 +200,8 @@ opt.record  = 0;
 opt.threshold = 0;
 opt.frame   = 0;
 opt.cleanup = false;
+if exist('parcels',      'var'), opt.parcellation      = parcels; end
+if exist('parcelslabel', 'var'), opt.parcellationlabel = parcelslabel; end
 
 % add functional data of optional third input to the opt structure
 % FIXME here we should first check whether the meshes correspond!
@@ -236,6 +242,7 @@ stringx  = uicontrol('parent', h, 'units', 'normalized', 'style', 'text');
 slidery  = uicontrol('parent', h, 'units', 'normalized', 'style', 'slider',     'string', sprintf('%s = ', cfg.yparam));
 stringy  = uicontrol('parent', h, 'units', 'normalized', 'style', 'text');
 stringz  = uicontrol('parent', h, 'units', 'normalized', 'style', 'text');
+stringp  = uicontrol('parent', h, 'units', 'normalized', 'style', 'text');
 
 set(cambutton,    'position', [0.095 0.28 0.09 0.05], 'callback', @cb_keyboard);
 set(quitbutton,   'position', [0.005 0.28 0.09 0.05], 'callback', @cb_keyboard);
@@ -255,13 +262,16 @@ set(slidery,      'position', [0.200 0.005 0.78 0.03], 'callback', @cb_slider);
 set(stringx,      'position', [0.800 0.93 0.18 0.03]);
 set(stringy,      'position', [0.800 0.90 0.18 0.03]);
 set(stringz,      'position', [0.650 0.96 0.33 0.03]);
+set(stringp,      'position', [0.650 0.87 0.33 0.03]);
 
 set(stringx, 'string', sprintf('%s = ', cfg.xparam));
 set(stringy, 'string', sprintf('%s = ', cfg.yparam));
 set(stringz, 'string', sprintf('position = '));
+set(stringp, 'string', sprintf('parcel = '));
 set(stringx, 'horizontalalignment', 'right', 'backgroundcolor', [1 1 1]);
 set(stringy, 'horizontalalignment', 'right', 'backgroundcolor', [1 1 1]);
 set(stringz, 'horizontalalignment', 'right', 'backgroundcolor', [1 1 1]);
+set(stringp, 'horizontalalignment', 'right', 'backgroundcolor', [1 1 1]);
 
 % create axes object to contain the mesh
 hx = axes;
@@ -277,12 +287,12 @@ else
   hs1 = ft_plot_mesh(source, 'edgecolor', 'none', 'facecolor', [0.5 0.5 0.5]);
 end
 lighting gouraud
-hs = ft_plot_mesh(source, 'edgecolor', 'none', 'vertexcolor', 0*opt.dat(:,1,1), 'facealpha', 0*opt.mask(:,1,1));
+hs = ft_plot_mesh(source, 'edgecolor', 'none', 'vertexcolor', 0*opt.dat(:,1,1));%, 'facealpha', 0*opt.mask(:,1,1));
 lighting gouraud
 cam1 = camlight('left');
 cam2 = camlight('right');
 caxis(cfg.zlim);
-alim(cfg.alim);
+%alim(cfg.alim);
 
 % create axis object to contain a time course
 hy = axes;
@@ -328,10 +338,15 @@ opt.slidery  = slidery;
 opt.stringx  = stringx;
 opt.stringy  = stringy;
 opt.stringz  = stringz;
+opt.stringp  = stringp;
 
 if ~hasyparam
   set(opt.slidery, 'visible', 'off');
   set(opt.stringy, 'visible', 'off');
+end
+
+if ~exist('parcels', 'var')
+  set(opt.stringp, 'visible', 'off');
 end
 
 setappdata(h, 'opt', opt);
@@ -412,6 +427,9 @@ if ~(numel(previous_vindx)==numel(opt.vindx) && all(previous_vindx==opt.vindx))
   
   set(opt.hy,    'yaxislocation', 'right');
   set(opt.stringz, 'string', sprintf('position = [%2.1f, %2.1f, %2.1f]', opt.pos(opt.vindx,:)));
+  if isfield(opt, 'parcellation'),
+    set(opt.stringp, 'string', sprintf('parcel = %s', opt.parcellationlabel{opt.parcellation(opt.vindx)}));
+  end
 end
 
 if opt.record
