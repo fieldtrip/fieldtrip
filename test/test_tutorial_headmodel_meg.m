@@ -15,7 +15,6 @@ end
 mri = ft_read_mri([datadir,'ftp/tutorial/beamformer/Subject01.mri']);
 
 cfg           = [];
-cfg.coordsys  = 'ctf';
 cfg.output    = 'brain';
 segmentedmri  = ft_volumesegment(cfg, mri);
 
