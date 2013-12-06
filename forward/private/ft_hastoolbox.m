@@ -425,13 +425,13 @@ if autoadd>0 && ~status
   
   % for linux computers in the Donders Centre for Cognitive Neuroimaging
   prefix = '/home/common/matlab';
-  if ~status && isunix
+  if ~status && isdir(prefix)
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
   end
   
   % for windows computers in the Donders Centre for Cognitive Neuroimaging
   prefix = 'h:\common\matlab';
-  if ~status && ispc
+  if ~status && isdir(prefix)
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
   end
   
@@ -484,6 +484,8 @@ elseif exist(toolbox, 'dir')
   end
   addpath(toolbox);
   status = 1;
+elseif (~isempty(regexp(toolbox, 'spm5$')) || ~isempty(regexp(toolbox, 'spm8$')) || ~isempty(regexp(toolbox, 'spm12$'))) && exist([toolbox 'b'], 'dir')
+  status = myaddpath([toolbox 'b'], silent);
 else
   status = 0;
 end
