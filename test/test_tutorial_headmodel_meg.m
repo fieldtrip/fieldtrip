@@ -61,7 +61,7 @@ ft_plot_sens(sens, 'style', '*b');
 hold on
 ft_plot_vol(vol);
 
-function s = tryremovefield(s, f)
+function s = tryrmfield(s, f)
 if isfield(s, f)
   s = rmfield(s, f);
 end
