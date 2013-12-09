@@ -75,6 +75,30 @@ y = 8424306*492;
 indx = nearest(x,y);
 indx2 = find(x<=y, 1, 'last');
 
+% temporal comparison
+
+tic
+for i=1:10
+  indx = nearest(x,y);
+end
+t1 = toc;
+
+tic
+for i=1:10
+  x = sort(x);
+  indx2 = find(x<=y, 1, 'last');
+  indx3 = find(x>=y, 1, 'first');
+  if abs(x(indx2)-y) < abs(x(indx3)-y)
+    indx4 = indx2;
+  else
+    indx4 = indx3;
+  end
+end
+t2 = toc;
+
+fprintf('Time needed for nearest function: %.2s per 100 calls\n', t1/100);
+fprintf('Time needed for find function: %.2s per 100 calls\n', t2/100);
+
 if indx~=indx2, 
   error('nearest does not output the correct value');
   fprintf('nearest is off by %d samples', indx2-indx);
