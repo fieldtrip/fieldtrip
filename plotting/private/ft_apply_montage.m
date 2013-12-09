@@ -181,6 +181,7 @@ montage.labelorg        = montage.labelorg(selmontage);
 % note that this only makes sense for matrices with a lot of zero elements,
 % for dense matrices keeping it full will be much quicker
 if size(montage.tra,1)>1 && nnz(montage.tra)/numel(montage.tra) < 0.3
+  montage.tra = sparse(montage.tra);
 end
 
 inputtype = 'unknown';
