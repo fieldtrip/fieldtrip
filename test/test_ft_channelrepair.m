@@ -18,7 +18,7 @@ load(fname);
 
 cfg = [];
 cfg.method = 'triangulation';
-neighbours = ft_neighbourselection(cfg, data);
+neighbours = ft_prepare_neighbours(cfg, data);
 
 cfg = [];
 cfg.badchannel = data.label(100);
@@ -33,7 +33,7 @@ newdata = ft_channelrepair(cfg, data);
 % cfg = [];
 % cfg.method = 'template';
 % cfg.template = 'EEG1010_neighb.mat';
-% neighbours = ft_neighbourselection(cfg);
+% neighbours = ft_prepare_neighbours(cfg);
 % 
 % cfg = [];
 % cfg.badchannel = data.label(10);
