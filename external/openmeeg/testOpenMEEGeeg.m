@@ -64,9 +64,9 @@ function [rdms,mags] = run_bem_computation(r,c,pos)
     % [pnt, tri] = icosahedron642;
 
     %% Create a set of electrodes on the outer surface
-    sens.pnt = max(r) * pnt;
+    sens.elecpos = max(r) * pnt;
     sens.label = {};
-    nsens = size(sens.pnt,1);
+    nsens = size(sens.elecpos,1);
     for ii=1:nsens
         sens.label{ii} = sprintf('vertex%03d', ii);
     end
@@ -83,7 +83,7 @@ function [rdms,mags] = run_bem_computation(r,c,pos)
 
     cfg.method = 'openmeeg';
 
-    vol = ft_prepare_bemmodel(cfg, vol);
+    vol = ft_prepare_headmodel(cfg, vol);
 
     cfg.vol = vol;
     cfg.grid.pos = pos;
