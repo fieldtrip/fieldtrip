@@ -11,6 +11,7 @@ function lf = leadfield_interpolate(pos, vol)
 %
 % $Id$
 
+% express the position in voxel coordinates
 pos = ft_warp_apply(inv(vol.transform), pos);
 
 lf = nan(length(vol.sens.label), 3*size(pos, 1));

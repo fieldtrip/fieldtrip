@@ -508,20 +508,11 @@ elseif iseeg
         end
       end
       
-      if ~isfield(sens, 'tra')
-        sens.tra = eye(length(vol.label));
-      end
-      
-      if ~isfield(vol.sens, 'tra')
-        vol.sens.tra = eye(length(vol.sens.label));
-      end
-      
-      % the channel positions can be nan, for example for a bipolar montage
-      match = isequal(sens.label, vol.sens.label) & ...
-        isequal(sens.tra, vol.sens.tra)           & ...
-        isequal(sens.elecpos, vol.sens.elecpos);
-      
-      if match
+      matchlab = isequal(sens.label, vol.sens.label);
+      matchpos = isequal(sens.elecpos, vol.sens.elecpos);
+      matchtra = (~isfield(sens, 'tra') && ~isfield(vol.sens, 'tra')) || isequal(sens.tra, vol.sens.tra); 
+
+      if matchlab && matchpos && matchtra
         % the input sensor array matches precisely with the forward model
         % no further interpolation is needed
       else

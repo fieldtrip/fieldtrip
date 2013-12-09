@@ -482,7 +482,7 @@ elseif iseeg
       lf = leadfield_fns(pos, vol);
       
     case 'interpolate'
-      % note that the electrode information is contained within the vol structure
+      % note that the electrode information is contained in the vol structure
       lf = leadfield_interpolate(pos, vol);
       % the leadfield is already correctly referenced, i.e. it represents the
       % channel values rather than the electrode values. Prevent that the

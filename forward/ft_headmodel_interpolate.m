@@ -49,16 +49,17 @@ function vol = ft_headmodel_interpolate(filename, sens, grid, varargin)
 % check the validity of the input arguments
 assert(ft_datatype(sens, 'sens'), 'the second input argument should be a sensor definition');
 
+% get the optional input arguments
+smooth = ft_getopt(varargin, 'smooth', true);
+
 % the file with the path but without the extension
 [p, f, x] = fileparts(filename);
 
 if isempty(p)
-    p = pwd;
+  p = pwd;
 end
 
-res = mkdir(p, f);
-
-filename = fullfile(p, f, f);
+filename = fullfile(p, f);
 
 if isfield(grid, 'leadfield')
   % the input pre-computed leadfields reflect the output of FT_PREPARE_LEADFIELD
@@ -88,54 +89,63 @@ if isfield(grid, 'leadfield')
     vol = ft_convert_units(vol);
   end
   
-  lfx = zeros(vol.dim);
-  lfy = zeros(vol.dim);
-  lfz = zeros(vol.dim);
+  % these go in the same directory as the other nii files, they will be removed after use
+  masklf  = fullfile(p, 'masklf.nii');
+  smasklf = fullfile(p, 'smasklf.nii');
+  rawlf   = fullfile(p, 'rawlf.nii');
+  srawlf  = fullfile(p, 'srawlf.nii');
+  
+  % ensure that the output directory exists
+  if ~exist(p, 'dir')
+    mkdir(p);
+  end
   
   for i=1:nchan
+    dat = zeros([vol.dim 3]);
     for j=grid.inside(:)'
-      lfx(j) = grid.leadfield{j}(i,1);
-      lfy(j) = grid.leadfield{j}(i,2);
-      lfz(j) = grid.leadfield{j}(i,3);
+      [i1, i2, i3] = ind2sub(vol.dim, j);
+      dat(i1, i2, i3, 1) = grid.leadfield{j}(i,1);
+      dat(i1, i2, i3, 2) = grid.leadfield{j}(i,2);
+      dat(i1, i2, i3, 3) = grid.leadfield{j}(i,3);
     end
-    dat = cat(4, lfx, lfy, lfz);    
+    
+    if istrue(smooth)
+      if i == 1
+        ft_write_mri(masklf,~~dat(:, :, :, 1), 'transform', grid.transform, 'spmversion', 'SPM12', 'dataformat', 'nifti_spm');
+        spm_smooth(masklf, smasklf, grid.transform(1,1)*[1 1 1]);
+        mask = spm_read_vols(spm_vol(smasklf));
         
-    if i == 1
-        ft_write_mri('masklf.nii',~~dat(:, :, :, 1), 'transform', grid.transform, 'spmversion', 'SPM12', 'dataformat', 'nifti_spm');
-        spm_smooth('masklf.nii', 'smasklf.nii', grid.transform(1,1)*[1 1 1]);
-        mask = spm_read_vols(spm_vol('smasklf.nii'));
-        spm_unlink('masklf.nii');
-        spm_unlink('smasklf.nii');
+        spm_unlink(masklf);
+        spm_unlink(smasklf);
+      end
+      
+      ft_write_mri(rawlf, dat, 'transform', grid.transform, 'spmversion', 'SPM12', 'dataformat', 'nifti_spm');
+      spm_smooth(rawlf, srawlf, grid.transform(1,1)*[1 1 1]);
+      dat = spm_read_vols(spm_vol(srawlf));
+      dat = dat./repmat(mask, [1 1 1, size(dat, 4)]);
+      dat(~isfinite(dat)) = 0;
+      
+      spm_unlink(rawlf);
+      spm_unlink(srawlf);
     end
-        
-    ft_write_mri('rawlf.nii', dat, 'transform', grid.transform, 'spmversion', 'SPM12', 'dataformat', 'nifti_spm');
-    spm_smooth('rawlf.nii', 'srawlf.nii', grid.transform(1,1)*[1 1 1]);
-    
-    
-    dat = spm_read_vols(spm_vol('srawlf.nii'));
-    dat = dat./repmat(mask, [1 1 1, size(dat, 4)]);
-    dat(~isfinite(dat)) = 0;
-    
-    spm_unlink('rawlf.nii');
-    spm_unlink('srawlf.nii');
     
     
     vol.filename{i} = sprintf('%s_%s.nii', filename, sens.label{i});
     fprintf('writing single channel leadfield to %s\n', vol.filename{i})
     
     if exist('spm_bsplinc', 'file')
-        dat = cat(4, dat, 0*dat);
-        for k = 1:3
-            dat(:, :, :, k+3) = spm_bsplinc(squeeze(dat(:, :, :, k)), [4 4 4 0 0 0]);
-        end
+      dat = cat(4, dat, 0*dat);
+      for k = 1:3
+        dat(:, :, :, k+3) = spm_bsplinc(squeeze(dat(:, :, :, k)), [4 4 4 0 0 0]);
+      end
     end
     
     ft_write_mri(vol.filename{i}, dat , 'transform', grid.transform, 'spmversion', 'SPM12', 'dataformat', 'nifti_spm');
-       
+    
   end
   
   filename = sprintf('%s.mat', filename);
-  fprintf('writing volume conductor structure to %s\n', filename)
+  fprintf('writing volume conduction model metadata to %s\n', filename)
   save(filename, 'vol');
   
 elseif isfield(grid, 'filename')
@@ -144,6 +154,14 @@ elseif isfield(grid, 'filename')
   ft_hastoolbox('spm8up', 1);
   
   inputvol = grid;
+  
+  if ~isfield(sens, 'tra')
+    sens.tra = eye(length(sens.label));
+  end
+  
+  if ~isfield(inputvol.sens, 'tra')
+    inputvol.sens.tra = eye(length(inputvol.sens.label));
+  end
   
   % create a 2D projection and triangulation
   pnt = inputvol.sens.elecpos;
@@ -166,7 +184,7 @@ elseif isfield(grid, 'filename')
   make4from3.labelnew = sens.label;
   make4from3.tra      = sens.tra;
   for i=1:n3
-    make4from3.labelorg{i} = sprintf('p3_%d', i);
+    make4from3.labelorg{i} = sprintf('3to4_%d', i);
   end
   
   % this is the montage for getting the computed channels from the computed electrode positions
@@ -192,6 +210,8 @@ elseif isfield(grid, 'filename')
   make4from1.labelnew = make4from3.labelnew;
   
   sens = ft_apply_montage(inputvol.sens, make4from1, 'keepunused', 'no');
+  % make the rounding off errors equal to zero
+  sens.tra(sens.tra<10*eps) = 0;
   
   % map the leadfields for the old channels into memory
   chan = cell(1,n1);
@@ -218,10 +238,10 @@ elseif isfield(grid, 'filename')
       end
     end
     if exist('spm_bsplinc', 'file')
-        dat = cat(4, dat, 0*dat);
-        for k = 1:3
-            dat(:, :, :, k+3) = spm_bsplinc(squeeze(dat(:, :, :, k)), [4 4 4 0 0 0]);
-        end
+      dat = cat(4, dat, 0*dat);
+      for k = 1:3
+        dat(:, :, :, k+3) = spm_bsplinc(squeeze(dat(:, :, :, k)), [4 4 4 0 0 0]);
+      end
     end
     outputvol.filename{i} = sprintf('%s_%s.nii', filename, sens.label{i});
     fprintf('writing single channel leadfield to %s\n', outputvol.filename{i})
