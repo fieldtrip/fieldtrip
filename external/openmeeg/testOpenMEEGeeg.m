@@ -101,7 +101,7 @@ function [rdms,mags] = run_bem_computation(r,c,pos)
     %% Compute the analytic leadfield
     vol_sphere = [];
     vol_sphere.r = r;
-    vol_sphere.c = c;
+    vol_sphere.cond = c;
     lf_sphere = ft_compute_leadfield(pos, sens, vol_sphere);
 
     %% Evaluate the quality of the result using RDM and MAG
