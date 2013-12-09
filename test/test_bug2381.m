@@ -1,10 +1,10 @@
 function test_bug2381
 
-%MEM 4gb
-%WALLTIME 00:10:00
+% MEM 4gb
+% WALLTIME 00:10:00
 
-%TEST: test_bug2381
-%TEST: ft_sourcestatistics
+% TEST test_bug2381
+% TEST ft_sourcestatistics
 
 %filename = dccnfilename(fullfile('/home/common/matlab/fieldtrip/data/test/bug2381','AVG.mat'));
 filename = dccnfilename('/home/common/matlab/fieldtrip/data/test/bug2381');
