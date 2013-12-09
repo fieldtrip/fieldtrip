@@ -6,9 +6,9 @@ function test_bug1794
 % TEST test_bug1794
 % TEST ft_prepare_sourcemodel ft_convert_units ft_prepare_leadfield
 
-load('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/vol.mat')
-load('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/dataFIC')
-load('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri')
+load(dccnfilename('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/vol.mat'))
+load(dccnfilename('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/dataFIC'))
+load(dccnfilename('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri'))
 cfg=[];
 cfg.grid.resolution=1;
 cfg.mri=segmentedmri;
