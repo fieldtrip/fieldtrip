@@ -178,8 +178,9 @@ montage.labelorg        = montage.labelorg(selmontage);
 
 % making the tra matrix sparse will speed up subsequent multiplications
 % but should not result in a sparse matrix
-if size(montage.tra,1)>1
-  montage.tra = sparse(montage.tra);
+% note that this only makes sense for matrices with a lot of zero elements,
+% for dense matrices keeping it full will be much quicker
+if size(montage.tra,1)>1 && nnz(montage.tra)/numel(montage.tra) < 0.3
 end
 
 inputtype = 'unknown';
