@@ -1,7 +1,7 @@
 function test_ft_datatype
 
 % MEM 3gb
-% WALLTIME 00:35:00
+% WALLTIME 00:45:00
 
 % TEST test_ft_datatype
 % TEST ft_datatype ft_datatype_comp ft_datatype_mvar ft_datatype_source ft_datatype_dip ft_datatype_parcellation ft_datatype_spike ft_datatype_freq ft_datatype_raw ft_datatype_timelock ft_datatype_headmodel ft_datatype_segmentation ft_datatype_volume ft_datatype ft_datatype_sens

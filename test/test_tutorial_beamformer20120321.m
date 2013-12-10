@@ -1,6 +1,6 @@
 function test_tutorial_beamformer20120321
 
-% MEM 8gb
+% MEM 10gb
 % WALLTIME 02:30:00
 
 % TEST test_tutorial_beamformer

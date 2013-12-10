@@ -1,7 +1,7 @@
 function test_bug2137
 
 % MEM 2gb
-% WALLTIME 00:15:01
+% WALLTIME 00:30:00
 
 % TEST test_bug2137
 
