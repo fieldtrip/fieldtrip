@@ -70,6 +70,7 @@ end
 
 % get the options
 fileformat = ft_getopt(varargin, 'fileformat', ft_filetype(filename));
+senstype   = ft_getopt(varargin, 'senstype', 'eeg'); % can be eeg or meg, this is used to decide what to return if both are present in a fif file
 
 switch fileformat
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -145,36 +146,39 @@ switch fileformat
     sens.chanpos = [tmp{2:4}];
     sens.elecpos = sens.chanpos;
     
-  case {'ctf_ds', 'ctf_res4', 'ctf_old', 'neuromag_fif', '4d', '4d_pdf', '4d_m4d', '4d_xyz', 'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw', 'itab_raw' 'itab_mhd', 'netmeg'}
-    % gradiometer information is always stored in the header of the MEG dataset
-    % hence uses the standard fieldtrip/fileio read_header function
+  case {'ctf_ds', 'ctf_res4', 'ctf_old', 'neuromag_fif', 'neuromag_mne', '4d', '4d_pdf', '4d_m4d', '4d_xyz', 'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw', 'itab_raw' 'itab_mhd', 'netmeg'}
+    % gradiometer information is always stored in the header of the MEG dataset, hence uses the standard fieldtrip/fileio ft_read_header function
+    % sometimes there can also be electrode position information in the header
     hdr = ft_read_header(filename, 'headerformat', fileformat);
-    sens = hdr.grad;
+    if isfield(hdr, 'elec') && isfield(hdr, 'grad')
+      switch senstype
+        case 'eeg'
+          warning('both electrode and gradiometer information is present, returning the electrode information');
+          sens = hdr.elec;
+        case 'meg'
+          warning('both electrode and gradiometer information is present, returning the gradiometer information');
+          sens = hdr.grad;
+      end
+    elseif ~isfield(hdr, 'elec') && ~isfield(hdr, 'grad')
+      error('neither electrode nor gradiometer information is present');
+    elseif isfield(hdr, 'grad')
+      sens = hdr.grad;
+    elseif isfield(hdr, 'elec')
+      sens = hdr.elec;
+    end
     
   case 'neuromag_mne_grad'
     % the file can contain both, force reading the gradiometer info
+    % note that this functionality overlaps with senstype=eeg/meg
     hdr = ft_read_header(filename,'headerformat','neuromag_mne');
     sens = hdr.grad;
     
   case 'neuromag_mne_elec'
     % the file can contain both, force reading the electrode info
+    % note that this functionality overlaps with senstype=eeg/meg
     hdr = ft_read_header(filename,'headerformat','neuromag_mne');
     sens = hdr.elec;
-    
-  case {'neuromag_mne' 'babysquid_fif'}
-    % the file can contain both, try to be smart in determining what to return
-    hdr = ft_read_header(filename,'headerformat','neuromag_mne');
-    if isfield(hdr, 'elec') && isfield(hdr, 'grad')
-      warning('returning electrode information, not gradiometer location');
-      sens = hdr.elec;
-    elseif isfield(hdr, 'elec')
-      sens = hdr.elec;
-    elseif isfield(hdr, 'grad')
-      sens = hdr.grad;
-    else
-      error('cannot find electrode or gradiometer information');
-    end
-    
+        
   case {'spmeeg_mat', 'eeglab_set'}
     % this is for EEG formats where electrode positions can be stored with the data
     hdr = ft_read_header(filename);
@@ -252,76 +256,106 @@ switch fileformat
     end
     
   case 'localite_pos'
-     if ~usejava('jvm') % Using xml2struct requires java
-         fid = fopen(filename);
-         
-         % Read marker-file and store contents in cells of strings
-         tmp = textscan(fid,'%s');
-
-         fclose(fid);
-         
-         % Search for cells that contain coordinates
-         selx = strncmp('data0',tmp{1},5);
-         sely = strncmp('data1',tmp{1},5);
-         selz = strncmp('data2',tmp{1},5);
-         sellab = strncmp('description',tmp{1},5);
-         
-         % Extract cells that contain coordinates
-         xtemp  = tmp{1}(selx);
-         ytemp  = tmp{1}(sely);
-         ztemp  = tmp{1}(selz);
-         labtemp = tmp{1}(sellab);
-         
-         % Determine which channels are set. In localite channels that are not set
-         % automatically receive coordinates [0, 0, 0] and should therefore
-         % be discarded.
-         settemp = tmp{1}(strncmp('set',tmp{1},3));
-         selset = strncmp('set="f',settemp,6);
-         
-         % Remove channels that are not set
-         xtemp(selset) = [];
-         ytemp(selset) = [];
-         ztemp(selset) = [];
-         labtemp(selset) = [];
-         
-         % Convert cells that contain coordinates from string to double
-         x = [];
-         y = [];
-         z = [];
-         lbl = [];
-
-         for i=1:numel(xtemp)
-            x(i,1) = str2double(xtemp{i}(8:end-1));
-            y(i,1) = str2double(ytemp{i}(8:end-1));
-            z(i,1) = str2double(ztemp{i}(8:end-3));
-            lbl{i,1} = labtemp{i}(14:end-1);
-         end;
-         
-         % Create and fill sens structure
-         sens = [];
-         sens.elecpos = [x y z];
-         sens.chanpos = sens.elecpos;
-         sens.label = lbl;
-     else
-        tmp = xml2struct(filename);
-        
-        sens = [];
-        
-        % Loop through structure obtained from xml-file and store
-        % coordinate information into sens structure of channels that are
-        % set. 
-        for i=1:numel(tmp)
-            if strcmp(tmp(i).Marker.set,'true')
-                sens.elecpos(i,1) = str2double(tmp(i).Marker.ColVec3D.data0);
-                sens.elecpos(i,2) = str2double(tmp(i).Marker.ColVec3D.data1);
-                sens.elecpos(i,3) = str2double(tmp(i).Marker.ColVec3D.data2);
-                sens.label{i} = tmp(i).Marker.description;
-            end;
+    if ~usejava('jvm') % Using xml2struct requires java
+      fid = fopen(filename);
+      
+      % Read marker-file and store contents in cells of strings
+      tmp = textscan(fid,'%s');
+      
+      fclose(fid);
+      
+      % Search for cells that contain coordinates
+      selx = strncmp('data0',tmp{1},5);
+      sely = strncmp('data1',tmp{1},5);
+      selz = strncmp('data2',tmp{1},5);
+      sellab = strncmp('description',tmp{1},5);
+      
+      % Extract cells that contain coordinates
+      xtemp  = tmp{1}(selx);
+      ytemp  = tmp{1}(sely);
+      ztemp  = tmp{1}(selz);
+      labtemp = tmp{1}(sellab);
+      
+      % Determine which channels are set. In localite channels that are not set
+      % automatically receive coordinates [0, 0, 0] and should therefore
+      % be discarded.
+      settemp = tmp{1}(strncmp('set',tmp{1},3));
+      selset = strncmp('set="f',settemp,6);
+      
+      % Remove channels that are not set
+      xtemp(selset) = [];
+      ytemp(selset) = [];
+      ztemp(selset) = [];
+      labtemp(selset) = [];
+      
+      % Convert cells that contain coordinates from string to double
+      x = [];
+      y = [];
+      z = [];
+      lbl = [];
+      
+      for i=1:numel(xtemp)
+        x(i,1) = str2double(xtemp{i}(8:end-1));
+        y(i,1) = str2double(ytemp{i}(8:end-1));
+        z(i,1) = str2double(ztemp{i}(8:end-3));
+        lbl{i,1} = labtemp{i}(14:end-1);
+      end;
+      
+      % Create and fill sens structure
+      sens = [];
+      sens.elecpos = [x y z];
+      sens.chanpos = sens.elecpos;
+      sens.label = lbl;
+    else
+      tmp = xml2struct(filename);
+      
+      sens = [];
+      
+      % Loop through structure obtained from xml-file and store
+      % coordinate information into sens structure of channels that are
+      % set.
+      for i=1:numel(tmp)
+        if strcmp(tmp(i).Marker.set,'true')
+          sens.elecpos(i,1) = str2double(tmp(i).Marker.ColVec3D.data0);
+          sens.elecpos(i,2) = str2double(tmp(i).Marker.ColVec3D.data1);
+          sens.elecpos(i,3) = str2double(tmp(i).Marker.ColVec3D.data2);
+          sens.label{i} = tmp(i).Marker.description;
         end;
-        
-        sens.chanpos = sens.elecpos;   
-     end;
-     
+      end;
+      
+      sens.chanpos = sens.elecpos;
+    end;
+    
+  case 'easycap_txt'
+    % Read the file and store all contents in cells of strings
+    fid = fopen(filename);
+    tmp = textscan(fid,'%s%s%s%s');
+    fclose(fid);
+    
+    sens = [];
+    if all(cellfun(@isempty, tmp{4}))
+      % it contains theta and phi
+      sens.label   = cellfun(@str2double, tmp{1}(2:end));
+      theta = cellfun(@str2double, tmp{2}(2:end));
+      phi   = cellfun(@str2double, tmp{3}(2:end));
+      radians = @(x) pi*x/180;
+      warning('assuming a head radius of 85 mm');
+      x = 85*cos(radians(phi)).*sin(radians(theta));
+      y = 85*sin(radians(theta)).*sin(radians(phi));
+      z = 85*cos(radians(theta));
+      sens.unit = 'cm';
+      sens.elecpos = [x y z];
+      sens.chanpos = [x y z];
+    else
+      % it contains X, Y, Z
+      sens.label = tmp{1}(2:end);
+      x = cellfun(@str2double, tmp{2}(2:end));
+      y = cellfun(@str2double, tmp{3}(2:end));
+      z = cellfun(@str2double, tmp{4}(2:end));
+      sens.elecpos = [x y z];
+      sens.chanpos = [x y z];
+    end
+    
   otherwise
     error('unknown fileformat for electrodes or gradiometers');
 end
@@ -329,4 +363,3 @@ end
 % ensure that the sensor description is up-to-date
 % this will also add chantype and units to the sensor array if missing
 sens = ft_datatype_sens(sens);
-

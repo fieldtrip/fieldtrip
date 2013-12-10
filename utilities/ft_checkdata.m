@@ -21,7 +21,8 @@ function [data] = ft_checkdata(data, varargin)
 %   inside             = logical, index
 %   ismeg              = yes, no
 %   hastrials          = yes, no
-%   hasunits           = yes, no
+%   hasunit            = yes, no
+%   hascoordsys        = yes, no
 %   hassampleinfo      = yes, no, ifmakessense (only applies to raw data)
 %   hascumtapcnt       = yes, no (only applies to freq data)
 %   hasdim             = yes, no
@@ -90,7 +91,8 @@ stype                = ft_getopt(varargin, 'senstype'); % senstype is a function
 ismeg                = ft_getopt(varargin, 'ismeg');
 inside               = ft_getopt(varargin, 'inside'); % can be 'logical' or 'index'
 hastrials            = ft_getopt(varargin, 'hastrials');
-hasunits             = ft_getopt(varargin, 'hasunits');
+hasunit              = ft_getopt(varargin, 'hasunit', 'no');
+hascoordsys          = ft_getopt(varargin, 'hascoordsys', 'no');
 hassampleinfo        = ft_getopt(varargin, 'hassampleinfo', 'ifmakessense');
 hasdimord            = ft_getopt(varargin, 'hasdimord', 'no');
 hasdim               = ft_getopt(varargin, 'hasdim');
@@ -457,9 +459,13 @@ end
 %  end
 %end
 
-if isequal(hasunits, 'yes') && ~isfield(data, 'units')
+if istrue(hasunit) && ~isfield(data, 'unit')
   % calling convert_units with only the input data adds the units without converting
   data = ft_convert_units(data);
+end
+
+if istrue(hascoordsys) && ~isfield(data, 'coordsys')
+  data = ft_determine_coordsys(data);
 end
 
 if issource || isvolume,
@@ -1617,7 +1623,7 @@ else
   ygrid = 1:data.dim(2);
   zgrid = 1:data.dim(3);
   [x y z] = ndgrid(xgrid, ygrid, zgrid);
-  data.pos = warp_apply(data.transform, [x(:) y(:) z(:)]);
+  data.pos = ft_warp_apply(data.transform, [x(:) y(:) z(:)]);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1671,13 +1677,21 @@ data = fixinside(data, 'logical');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function data = freq2raw(freq)
 
-if strcmp(freq.dimord, 'rpt_chan_freq_time')
-  dat = freq.powspctrm;
-elseif strcmp(freq.dimord, 'rpttap_chan_freq_time')
-  warning('converting fourier representation into raw data format. this is experimental code');
-  dat = freq.fourierspctrm;
+if isfield(freq, 'powspctrm')
+  param = 'powspctrm';
+elseif isfield(freq, 'fourierspctrm')
+  param = 'fourierspctrm';
 else
-  error('this only works for dimord=''rpt_chan_freq_time''');
+  error('not supported for this data representation');
+end  
+
+if strcmp(freq.dimord, 'rpt_chan_freq_time') || strcmp(freq.dimord, 'rpttap_chan_freq_time')
+  dat = freq.(param);
+elseif strcmp(freq.dimord, 'chan_freq_time')
+  dat = freq.(param);
+  dat = reshape(dat, [1 size(dat)]); % add a singleton dimension
+else
+  error('not supported for dimord %s', freq.dimord);
 end
 
 nrpt  = size(dat,1);

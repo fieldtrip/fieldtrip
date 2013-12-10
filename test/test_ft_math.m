@@ -1,5 +1,8 @@
 function test_ft_math
 
+% MEM 1500mb
+% WALLTIME 00:03:04
+
 % TEST test_ft_math
 % TEST ft_math
 

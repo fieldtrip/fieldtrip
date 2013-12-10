@@ -1,5 +1,8 @@
 function test_bug1887
 
+% MEM 1500mb
+% WALLTIME 00:03:02
+
 % TEST test_bug1887
 % TEST ft_checkdata ft_datatype_raw ft_datatype_comp ft_datatype_timelock ft_componentanalysis ft_connectivityanalysis
 

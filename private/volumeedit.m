@@ -22,9 +22,9 @@ function [dataout] = volumeedit(data, varargin)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id:$
+% $Id$
 
-revision = '$Id: ft_sourceplot.m 7192 2012-12-13 22:32:56Z roboos $';
+revision = '$Id$';
 
 bckgrnd = ft_getopt(varargin, 'background', []);
 

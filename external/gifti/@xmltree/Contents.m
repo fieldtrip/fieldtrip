@@ -1,4 +1,4 @@
-% XMLTree: XML Toolbox for Matlab.
+% XMLTree: XML Toolbox for MATLAB.
 % Version 1.3  21-Apr-2008
 %
 % XML file I/O.
@@ -10,7 +10,7 @@
 %   attributes  - Handle attributes of a node.
 %   branch      - Extract a subtree from a tree.
 %   children    - Return children of a node.
-%   convert     - Convert a tree in a Matlab structure.
+%   convert     - Convert a tree in a MATLAB structure.
 %   copy        - Copy nodes within a tree.
 %   delete      - Delete a node in a tree.
 %   find        - Find nodes in a tree.
@@ -26,7 +26,7 @@
 %   setfilename - Set filename
 %
 % Graphical user interface methods (work in progress).
-%   editor      - Reimplementation of <view> for Matlab 6+
+%   editor      - Reimplementation of <view> for MATLAB 6+
 %   view        - Graphical display of a tree.
 %   view_ui     - Useful function for view method.
 %
@@ -38,7 +38,7 @@
 %   xml_parser  - XML parser.
 %   xml_findstr - Find one string within another (mexfile)
 %
-% Conversions Matlab <=> XML
+% Conversions MATLAB <=> XML
 %   loadxml     - 
 %   savexml     - 
 %   mat2xml     - 
@@ -50,7 +50,7 @@
 %   xmldemo2    - Read an XML file and access fields.
 %   xmldemo3    - Read an XML file, modify some fields and save it.
 
-% Copyright 2002-2008  http://www.artefact.tk/
+% Copyright 2002-2011  http://www.artefact.tk/
 
 % Guillaume Flandin <Guillaume@artefact.tk>
 % $Id$

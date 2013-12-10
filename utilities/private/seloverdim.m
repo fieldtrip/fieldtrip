@@ -125,7 +125,7 @@ end
 
 switch seldim
   case 'rpt'
-    if tapflag && isfield(data, 'cumtapcnt'),
+    if tapflag && isfield(data, 'cumtapcnt') && ~isempty(sel),
       sumtapcnt = cumsum([0;data.cumtapcnt(:)]);
       tapers    = zeros(1, sumtapcnt(end));
       for i=1:length(data.cumtapcnt)
@@ -135,8 +135,8 @@ switch seldim
       tmpsel(1) = tapers(sel(1));
       for i=2:length(sel)
         if tapers(sel(i))~=tapers(sel(i-1))
-	  tmpsel(end+1) = tapers(sel(i));
-	end
+	        tmpsel(end+1) = tapers(sel(i));
+	      end
       end
     else
       tmpsel = sel;

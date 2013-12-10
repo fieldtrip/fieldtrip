@@ -1,5 +1,8 @@
 function test_bug1878
 
+% MEM 3gb
+% WALLTIME 00:03:25
+
 % TEST test_bug1878
 % TEST ft_artifact_clip
 

@@ -95,7 +95,15 @@ reducerank      = ft_getopt(varargin, 'reducerank', 'no');
 normalize       = ft_getopt(varargin, 'normalize' , 'no');
 normalizeparam  = ft_getopt(varargin, 'normalizeparam', 0.5);
 weight          = ft_getopt(varargin, 'weight');
-units           = ft_getopt(varargin, 'units');
+chanunit        = ft_getopt(varargin, 'chanunit');   % this is something like V, T, or T/m
+dipoleunit      = ft_getopt(varargin, 'dipoleunit'); % this is something like nA*m
+
+if any(strcmp(varargin(1:2:end), 'unit'))
+  error('the ''unit'' option is not supported any more, please use ''chanunit''');
+end
+if any(strcmp(varargin(1:2:end), 'units'))
+  error('the ''units'' option is not supported any more, please use ''chanunit''');
+end
 
 if ~isstruct(sens) && size(sens, 2)==3
   % definition of electrode positions only, restructure it
@@ -238,29 +246,34 @@ elseif ismeg
         % compute the leadfield for each gradiometer (linear combination of coils)
         lf = sens.tra * lf;
       end
-            
+      
     case 'openmeeg'
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % use code from OpenMEEG
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       ft_hastoolbox('openmeeg', 1);
       
-      % switch the non adaptive algorithm on
-      nonadaptive = true; % HACK : this is hardcoded at the moment
-      dsm = openmeeg_dsm(pos, vol, nonadaptive);
-      [h2mm, s2mm]= openmeeg_megm(pos, vol, sens);
-      
-      if isfield(vol, 'mat')
+      if isfield(vol,'mat')
+        % switch the non adaptive algorithm on
+        nonadaptive = true; % HACK : this is hardcoded at the moment
+        dsm = openmeeg_dsm(pos, vol, nonadaptive);
+        [h2mm, s2mm]= openmeeg_megm(pos, vol, sens);
+        
+        %if isfield(vol, 'mat')
         lf = s2mm+h2mm*(vol.mat*dsm);
+        %else
+        %  error('No system matrix is present, BEM head model not calculated yet')
+        %end
+        if isfield(sens, 'tra')
+          % compute the leadfield for each gradiometer (linear combination of coils)
+          lf = sens.tra * lf;
+        end
       else
-        error('No system matrix is present, BEM head model not calculated yet')
-      end
-      if isfield(sens, 'tra')
-        % compute the leadfield for each gradiometer (linear combination of coils)
-        lf = sens.tra * lf;
+        warning('No system matrix is present, Calling the Nemo Lab pipeline')
+        lf = ft_om_compute_lead(pos, vol, sens);
       end
       
-    case 'infinite'
+    case {'infinite_magneticdipole', 'infinite'}
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % magnetic dipole instead of electric (current) dipole in an infinite vacuum
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -277,6 +290,30 @@ elseif ismeg
       else
         % only single dipole
         lf = magnetic_dipole(pos, pnt, ori);
+      end
+      
+      if isfield(sens, 'tra')
+        % construct the channels from a linear combination of all magnetometer coils
+        lf = sens.tra * lf;
+      end
+      
+    case {'infinite_currentdipole'}
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      % current dipole in an infinite homogenous conducting medium
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      
+      pnt = sens.coilpos; % position of each coil
+      ori = sens.coilori; % orientation of each coil
+      
+      if Ndipoles>1
+        % loop over multiple dipoles
+        lf = zeros(size(pnt, 1), 3*Ndipoles);
+        for i=1:Ndipoles
+          lf(:, (3*i-2):(3*i)) = current_dipole(pos(i, :), pnt, ori);
+        end
+      else
+        % only single dipole
+        lf = current_dipole(pos, pnt, ori);
       end
       
       if isfield(sens, 'tra')
@@ -312,7 +349,7 @@ elseif iseeg
       % sort the spheres from the smallest to the largest
       % furthermore, the radius should be one (?)
       [radii, indx] = sort(vol.r/max(vol.r));
-      sigma = vol.c(indx);
+      sigma = vol.cond(indx);
       r = (sens.elecpos-repmat(center, Nelec, 1))./max(vol.r);
       pos = pos./max(vol.r);
       
@@ -346,9 +383,9 @@ elseif iseeg
       % FIXME, this is not consistent between spherical and BEM
       % sort the spheres from the smallest to the largest
       [vol.r, indx] = sort(vol.r);
-      vol.c = vol.c(indx);
+      vol.cond = vol.cond(indx);
       
-      Nspheres = length(vol.c);
+      Nspheres = length(vol.cond);
       if length(vol.r)~=Nspheres
         error('the number of spheres in the volume conductor model is ambiguous');
       end
@@ -364,15 +401,15 @@ elseif iseeg
           funnam = 'eeg_leadfield1';
         case 2
           vol.r = [vol.r(1) vol.r(2) vol.r(2) vol.r(2)];
-          vol.c = [vol.c(1) vol.c(2) vol.c(2) vol.c(2)];
+          vol.cond = [vol.cond(1) vol.cond(2) vol.cond(2) vol.cond(2)];
           funnam = 'eeg_leadfield4';
         case 3
           vol.r = [vol.r(1) vol.r(2) vol.r(3) vol.r(3)];
-          vol.c = [vol.c(1) vol.c(2) vol.c(3) vol.c(3)];
+          vol.cond = [vol.cond(1) vol.cond(2) vol.cond(3) vol.cond(3)];
           funnam = 'eeg_leadfield4';
         case 4
           vol.r = [vol.r(1) vol.r(2) vol.r(3) vol.r(4)];
-          vol.c = [vol.c(1) vol.c(2) vol.c(3) vol.c(4)];
+          vol.cond = [vol.cond(1) vol.cond(2) vol.cond(3) vol.cond(4)];
           funnam = 'eeg_leadfield4';
         otherwise
           error('more than 4 concentric spheres are not supported')
@@ -391,13 +428,14 @@ elseif iseeg
       
     case 'openmeeg'
       ft_hastoolbox('openmeeg', 1)
-      % switch the non adaptive algorithm on
-      nonadaptive = true; % HACK this is hardcoded at the moment
-      dsm = openmeeg_dsm(pos, vol, nonadaptive);
       if isfield(vol, 'mat')
+        % switch the non adaptive algorithm on
+        nonadaptive = true; % HACK this is hardcoded at the moment
+        dsm = openmeeg_dsm(pos, vol, nonadaptive);
         lf = vol.mat*dsm;
       else
-        error('No system matrix is present, BEM head model not calculated yet')
+        disp('No system matrix is present, calling the Nemo Lab pipeline...')
+        lf = ft_leadfield_openmeeg(pos, vol, sens);
       end
       
     case 'metufem'
@@ -417,8 +455,8 @@ elseif iseeg
       end
       [lf, session] = bem_solve_lfm_eeg(session, p3);
       
-    case 'infinite'
-      % note that the conductivity of the medium is not known
+    case {'infinite_currentdipole' 'infinite'}
+      % FIXME the conductivity of the medium is not known
       lf = inf_medium_leadfield(pos, sens.elecpos, 1);
       
     case 'halfspace'
@@ -442,9 +480,9 @@ elseif iseeg
       % note that the electrode information is contained in the vol structure
       % tolerance = 1e-8;
       lf = leadfield_fns(pos, vol);
-
+      
     case 'interpolate'
-      % note that the electrode information is contained within the vol structure
+      % note that the electrode information is contained in the vol structure
       lf = leadfield_interpolate(pos, vol);
       % the leadfield is already correctly referenced, i.e. it represents the
       % channel values rather than the electrode values. Prevent that the
@@ -531,13 +569,24 @@ if ~isempty(weight)
   end
 end
 
-if ~isempty(units)
+if ~isempty(chanunit) || ~isempty(dipoleunit)
   assert(strcmp(vol.unit,  'm'), 'unit conversion only possible for SI input units');
   assert(strcmp(sens.unit, 'm'), 'unit conversion only possible for SI input units');
-  assert(all(strcmp(sens.chanunit, 'V') | strcmp(sens.chanunit, 'T') | strcmp(sens.chanunit, 'T/m')), 'unit conversion only possible for SI input units');
-  % compute conversion factor and multiply each row of the matrix
-  scale = cellfun(@scalingfactor, sens.chanunit(:), units(:));
-  lf = bsxfun(@times, lf, scale(:));
 end
+
+if ~isempty(chanunit)
+  assert(all(strcmp(sens.chanunit, 'V') | strcmp(sens.chanunit, 'V/m') | strcmp(sens.chanunit, 'T') | strcmp(sens.chanunit, 'T/m')), 'unit conversion only possible for SI input units');
+  % compute conversion factor and multiply each row of the matrix
+  scale = cellfun(@scalingfactor, sens.chanunit(:), chanunit(:));
+  lf = bsxfun(@times, lf, scale(:));
+  % prior to this conversion, the units might be  (T/m)/(A*m) for planar gradients or   (V/m)/(A*m) for bipolar EEG
+  % after this conversion, the units will be     (T/cm)/(A*m)                      or (uV/mm)/(A*m)
+end
+
+if ~isempty(dipoleunit)
+  scale = scalingfactor('A*m', dipoleunit); % compue the scaling factor from A*m to the desired dipoleunit
+  lf    = lf/scale;                         % the leadfield is expressed in chanunit per dipoleunit, i.e. chanunit/dipoleunit
+end
+
 
 

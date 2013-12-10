@@ -122,6 +122,9 @@ if hasrpt, if ~strcmp(cfg.trials,  'all'), freq = ft_selectdata(freq, 'rpt',    
 
 if ~strcmp(cfg.channel, 'all'),
   channel = ft_channelselection(cfg.channel, freq.label);
+  if isempty(channel)
+      error('no channels selected');
+  end
   freq    = ft_selectdata(freq, 'channel', channel);
 end
 

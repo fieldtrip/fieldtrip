@@ -1,5 +1,8 @@
 function test_bug798
 
+% MEM 1500mb
+% WALLTIME 00:03:20
+
 % TEST test_bug798
 % TEST ft_freqstatistics ft_selectdata ft_datatype_freq ft_appendfreq
 

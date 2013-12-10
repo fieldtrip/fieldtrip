@@ -64,28 +64,30 @@ function [rdms,mags] = run_bem_computation(r,c,pos)
     % [pnt, tri] = icosahedron642;
 
     %% Create a set of electrodes on the outer surface
-    sens.pnt = max(r) * pnt;
+    sens.elecpos = max(r) * pnt;
     sens.label = {};
-    nsens = size(sens.pnt,1);
+    nsens = size(sens.elecpos,1);
     for ii=1:nsens
         sens.label{ii} = sprintf('vertex%03d', ii);
     end
 
-    %% Create a BEM volume conduction model
+    %% Create a triangulated mesh, the first boundary is inside
     vol = [];
     for ii=1:length(r)
         vol.bnd(ii).pnt = pnt * r(ii);
         vol.bnd(ii).tri = tri;
     end
-    vol.cond = c;
-
-    %% Compute the BEM
-
+    
+    
+    %% Compute the BEM model
+    cfg.conductivity = c;
     cfg.method = 'openmeeg';
 
-    vol = ft_prepare_bemmodel(cfg, vol);
-
-    cfg.vol = vol;
+    vol1 = ft_prepare_bemmodel(cfg, vol);
+    vol2 = ft_prepare_headmodel(cfg, vol);
+    vol_bem = vol1;
+    
+    cfg.vol = vol_bem;
     cfg.grid.pos = pos;
     cfg.elec = sens;
     grid = ft_prepare_leadfield(cfg);
@@ -97,8 +99,9 @@ function [rdms,mags] = run_bem_computation(r,c,pos)
     % lf_openmeeg = lf_openmeeg - repmat(mean(lf_openmeeg),size(lf_openmeeg,1),1);
 
     %% Compute the analytic leadfield
+    vol_sphere = [];
     vol_sphere.r = r;
-    vol_sphere.c = c;
+    vol_sphere.cond = c;
     lf_sphere = ft_compute_leadfield(pos, sens, vol_sphere);
 
     %% Evaluate the quality of the result using RDM and MAG

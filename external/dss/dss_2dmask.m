@@ -11,7 +11,7 @@ function [S] = dss_2dmask(X, mask, params)
 % Copyright (C) 2004, 2005 DSS MATLAB package team (dss@cis.hut.fi).
 % Distributed by Laboratory of Computer and Information Science,
 % Helsinki University of Technology. http://www.cis.hut.fi/projects/dss/.
-% $Id: dss_2dmask.m,v 1.7 2005/12/07 11:24:30 jaakkos Exp $
+% $Id$
 
 wdim = size(X,1)
 fdim = size(X,2)

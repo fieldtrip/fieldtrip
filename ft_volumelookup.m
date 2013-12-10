@@ -1,7 +1,7 @@
 function [output] = ft_volumelookup(cfg, volume)
 
 % FT_VOLUMELOOKUP can be used in to combine an anatomical or functional
-% atlas with source recunstruction. You can use it for forward and reverse
+% atlas with source reconstruction. You can use it for forward and reverse
 % lookup.
 %
 % Given the anatomical or functional label, it looks up the locations and
@@ -24,7 +24,7 @@ function [output] = ft_volumelookup(cfg, volume)
 %   cfg.inputcoord = 'mni' or 'tal', coordinate system of the mri/source/stat
 %   cfg.atlas      = string, filename of atlas to use, either the AFNI
 %                     brik file that is available from http://afni.nimh.nih.gov/afni/doc/misc/ttatlas_tlrc,
-%                     or the WFU atlasses available from  http://fmri.wfubmc.edu. see FT_PREPARE_ATLAS
+%                     or the WFU atlasses available from  http://fmri.wfubmc.edu. see FT_READ_ATLAS
 %   cfg.roi        = string or cell of strings, region(s) of interest from anatomical atlas
 %
 % The configuration options for a spherical/box mask around a point of interest:
@@ -56,9 +56,10 @@ function [output] = ft_volumelookup(cfg, volume)
 % input MRI is transformed betweem MNI and Talairach-Tournoux coordinates
 % See http://www.mrc-cbu.cam.ac.uk/Imaging/Common/mnispace.shtml for more details.
 %
-% See also FT_PREPARE_ATLAS, FT_SOURCEPLOT
+% See also FT_READ_ATLAS, FT_SOURCEPLOT
 
-% Copyright (C) 2008, Robert Oostenveld, Ingrid Nieuwenhuis
+% Copyright (C) 2008-2013, Robert Oostenveld, Ingrid Nieuwenhuis
+% Copyright (C) 2013, Jan-Mathijs Schoffelen 
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -149,62 +150,101 @@ if roi2mask
   xyz = volume.transform * ijk; % note that this is 4xN
 
   if isatlas
-    atlas = ft_prepare_atlas(cfg);
-
+    if ischar(cfg.atlas),
+      % assume it to represent a filename
+      atlas = ft_read_atlas(cfg.atlas);
+    else
+      % assume cfg.atlas to be a struct, but it may have been converted
+      % into a config object
+      atlas = struct(cfg.atlas);
+    end
+    
+    % determine which field(s) to use to look up the labels,
+    % and whether these are boolean or indexed
+    fn = fieldnames(atlas);
+    isboolean = false(numel(fn),1);
+    isindexed = false(numel(fn),1);
+    for i=1:length(fn)
+      if islogical(atlas.(fn{i})) && isequal(size(atlas.(fn{i})), atlas.dim)
+        isboolean(i) = true;
+      elseif isnumeric(atlas.(fn{i})) && isequal(size(atlas.(fn{i})), atlas.dim)
+        isindexed(i) = true;
+      end
+    end
+    if any(isindexed)
+      % let the indexed prevail
+      fn = fn(isindexed);
+      isindexed = 1;
+    elseif any(isboolean)
+      % use the boolean
+      fn = fn(isboolean);
+      isindexed = 0;
+    end
+ 
     if ischar(cfg.roi)
       cfg.roi = {cfg.roi};
     end
-
-    sel = [];
-    for i = 1:length(cfg.roi)
-      sel = [sel; find(strcmp(cfg.roi{i}, atlas.descr.name))];
-    end
-
-    fprintf('found %d matching anatomical labels\n', length(sel));
-
-    brick = atlas.descr.brick(sel);
-    value = atlas.descr.value(sel);
-
-    % convert between MNI head coordinates and TAL head coordinates
-    % coordinates should be expressed compatible with the atlas
-    if     strcmp(cfg.inputcoord, 'mni') && strcmp(atlas.coord, 'tal')
-      xyz(1:3,:) = mni2tal(xyz(1:3,:));
-    elseif strcmp(cfg.inputcoord, 'mni') && strcmp(atlas.coord, 'mni')
-      % nothing to do
-    elseif strcmp(cfg.inputcoord, 'tal') && strcmp(atlas.coord, 'tal')
-      % nothing to do
-    elseif strcmp(cfg.inputcoord, 'tal') && strcmp(atlas.coord, 'mni')
-      xyz(1:3,:) = tal2mni(xyz(1:3,:));
-    end
-
-    % determine location of each anatomical voxel in atlas voxel coordinates
-    ijk = inv(atlas.transform) * xyz;
-    ijk = round(ijk(1:3,:))';
-
-    inside_vol = ijk(:,1)>=1 & ijk(:,1)<=atlas.dim(1) & ...
-      ijk(:,2)>=1 & ijk(:,2)<=atlas.dim(2) & ...
-      ijk(:,3)>=1 & ijk(:,3)<=atlas.dim(3);
-    inside_vol = find(inside_vol);
-
-    % convert the selection inside the atlas volume into linear indices
-    ind = sub2ind(atlas.dim, ijk(inside_vol,1), ijk(inside_vol,2), ijk(inside_vol,3));
-
-    brick0_val = zeros(prod(dim),1);
-    brick1_val = zeros(prod(dim),1);
-    % search the two bricks for the value of each voxel
-    brick0_val(inside_vol) = atlas.brick0(ind);
-    brick1_val(inside_vol) = atlas.brick1(ind);
-
-    mask = zeros(prod(dim),1);
-    for i=1:length(sel)
-      fprintf('constructing mask for %s\n', atlas.descr.name{sel(i)});
-      if brick(i)==0
-        mask = mask | (brick0_val==value(i));
-      elseif brick(i)==1
-        mask = mask | (brick1_val==value(i));
+    
+    if isindexed,
+      sel = zeros(0,2);
+      for m = 1:length(fn)
+        for i = 1:length(cfg.roi)
+          tmp = find(strcmp(cfg.roi{i}, atlas.([fn{m},'label'])));
+          sel = [sel; tmp m*ones(numel(tmp),1)];
+        end
       end
+      fprintf('found %d matching anatomical labels\n', size(sel,1));
+      
+      % this is to accommodate for multiple parcellations:
+      % the brick refers to the parcellationname
+      % the value refers to the value within the given parcellation
+      brick = sel(:,2);
+      value = sel(:,1);
+      
+      % convert between MNI head coordinates and TAL head coordinates
+      % coordinates should be expressed compatible with the atlas
+      if     strcmp(cfg.inputcoord, 'mni') && strcmp(atlas.coordsys, 'tal')
+        xyz(1:3,:) = mni2tal(xyz(1:3,:));
+      elseif strcmp(cfg.inputcoord, 'mni') && strcmp(atlas.coordsys, 'mni')
+        % nothing to do
+      elseif strcmp(cfg.inputcoord, 'tal') && strcmp(atlas.coordsys, 'tal')
+        % nothing to do
+      elseif strcmp(cfg.inputcoord, 'tal') && strcmp(atlas.coordsys, 'mni')
+        xyz(1:3,:) = tal2mni(xyz(1:3,:));
+      elseif ~strcmp(inputcoord, atlas.coordsys)
+        error('there is a mismatch between the coordinate system in the atlas and the coordinate system in the data, which cannot be resolved');
+      end
+      
+      % determine location of each anatomical voxel in atlas voxel coordinates
+      ijk = atlas.transform \ xyz;
+      ijk = round(ijk(1:3,:))';
+      
+      inside_vol = ijk(:,1)>=1 & ijk(:,1)<=atlas.dim(1) & ...
+        ijk(:,2)>=1 & ijk(:,2)<=atlas.dim(2) & ...
+        ijk(:,3)>=1 & ijk(:,3)<=atlas.dim(3);
+      inside_vol = find(inside_vol);
+      
+      % convert the selection inside the atlas volume into linear indices
+      ind = sub2ind(atlas.dim, ijk(inside_vol,1), ijk(inside_vol,2), ijk(inside_vol,3));
+      
+      brick_val = cell(1,numel(brick));
+      % search the bricks for the value of each voxel
+      for i=1:numel(brick_val)
+        brick_val{i} = zeros(prod(dim),1);
+        brick_val{i}(inside_vol) = atlas.(fn{brick(i)})(ind);
+      end
+      
+      mask = zeros(prod(dim),1);
+      for i=1:numel(brick_val)
+        %fprintf('constructing mask for %s\n', atlas.descr.name{sel(i)});
+        mask = mask | (brick_val{i}==value(i));
+      end
+    else
+      error('support for atlases that have a probabilistic segmentationstyle is not supported yet');
+      % NOTE: this may be very straightforward indeed: the mask is just the
+      % logical or of the specified rois.
     end
-
+    
   elseif ispoi
 
     if istrue(cfg.round2nearestvoxel)
@@ -237,9 +277,41 @@ if roi2mask
   output = mask;
 
 elseif mask2label
-  atlas = ft_prepare_atlas(cfg.atlas);
-  sel = find(volume.(cfg.maskparameter)(:));
-  labels.name = atlas.descr.name;
+  if ischar(cfg.atlas),
+    % assume it to represent a filename
+    atlas = ft_read_atlas(cfg.atlas);
+  else
+    % assume cfg.atlas to be a struct, but it may have been converted
+    % into a config object
+    atlas = struct(cfg.atlas);
+  end
+  
+  % determine which field(s) to use to look up the labels,
+  % and whether these are boolean or indexed
+  fn = fieldnames(atlas);
+  isboolean = false(numel(fn),1);
+  isindexed = false(numel(fn),1);
+  for i=1:length(fn)
+    if islogical(atlas.(fn{i})) && isequal(size(atlas.(fn{i})), atlas.dim)
+      isboolean(i) = true;
+    elseif isnumeric(atlas.(fn{i})) && isequal(size(atlas.(fn{i})), atlas.dim)
+      isindexed(i) = true;
+    end
+  end
+  if any(isindexed)
+    % let the indexed prevail
+    fn = fn(isindexed);
+    isindexed = 1;
+  elseif any(isboolean)
+    % use the boolean
+    fn = fn(isboolean);
+    isindexed = 0;
+  end
+  sel   = find(volume.(cfg.maskparameter)(:));
+  labels.name = cell(0,1);
+  for k = 1:numel(fn)
+    labels.name = cat(1, labels.name, atlas.([fn{k},'label']));
+  end
   labels.name{end+1} = 'no_label_found';
   labels.count = zeros(length(labels.name),1);
   for iLab = 1:length(labels.name)

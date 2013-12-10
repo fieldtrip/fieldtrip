@@ -44,7 +44,7 @@ spmhead_Lpa_canal    = spmvox2spmhead * spmvox_Lpa_canal ;
 spmhead_Rpa_canal    = spmvox2spmhead * spmvox_Rpa_canal ;
 
 itabvox2itabhead  = mri.transform;
-spmhead2itabhead  = headcoordinates(spmhead_Nas(1:3), spmhead_Lpa_canal(1:3), spmhead_Rpa_canal(1:3), 'itab');
+spmhead2itabhead  = ft_headcoordinates(spmhead_Nas(1:3), spmhead_Lpa_canal(1:3), spmhead_Rpa_canal(1:3), 'itab');
 
 %itabvox2spmhead =  inv(spmhead2itabhead) * itabvox2itabhead;
 itabvox2spmhead  =  spmhead2itabhead \ itabvox2itabhead;

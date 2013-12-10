@@ -6,7 +6,7 @@
  * Started 7/8/98
  * George
  *
- * $Id: kwayvolfm.c,v 1.1 1998/11/27 17:59:17 karypis Exp $
+ * $Id$
  *
  */
 

@@ -1,5 +1,8 @@
 function test_neuromag_units
 
+% MEM 1500mb
+% WALLTIME 00:04:40
+
 % TEST test_neuromag_units
 % TEST ft_read_header ft_read_data
 
@@ -137,7 +140,7 @@ if ~haserror
 end
 
 lf11 = ft_compute_leadfield(pos1, grad1, vol1); % these are in T and m
-lfsi = ft_compute_leadfield(pos1, grad1, vol1, 'units', grad1.chanunit);
+lfsi = ft_compute_leadfield(pos1, grad1, vol1, 'chanunit', grad1.chanunit);
 assert_almost_equal(lf11(1,1)./lfsi(1,1), 1);
 
 grad1a = ft_convert_grad(grad1, 'fT',  'm', 'amplitude');           vol1a = vol1;

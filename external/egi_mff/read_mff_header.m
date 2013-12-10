@@ -41,7 +41,16 @@ for p = 1:sensors.size
             tmpLabel = char(tmpLabel);
         end
         header.label{p} = tmpLabel;
-        header.chantype{p} = 'eeg'; % hard-coded for now. 
+        
+        switch sensorType
+          case 0
+            header.chantype{p} = 'eeg';
+          case 1
+            header.chantype{p} = 'unknown'; % FIXME this applies to a channel named VREF, but I am not sure what it is
+          otherwise
+            header.chantype{p} = 'unknown';
+        end
+        
         header.chanunit{p} = 'uV'; % hard-coded for now. 
         nChans = nChans + 1;
     end

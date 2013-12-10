@@ -1,5 +1,8 @@
 function test_bug1742
 
+% MEM 1500mb
+% WALLTIME 00:06:05
+
 % TEST test_bug1742
 % TEST qsubcellfun fexec
 

@@ -59,8 +59,8 @@ spk_hasorig       = isfield(data,'origtrial') && isfield(data,'origtime'); % for
 isspike           = isfield(data, 'label') && (spk_hastimestamp || spk_hastrials || spk_hasorig);
 
 % check if it is a sensor array
-isgrad = isfield(data, 'label') && isfield(data, 'coilpos') && isfield(data, 'chanpos') && isfield(data, 'coilori');
-iselec = isfield(data, 'label') && isfield(data, 'elecpos') && isfield(data, 'chanpos');
+isgrad = isfield(data, 'label') && isfield(data, 'coilpos') && isfield(data, 'coilori');
+iselec = isfield(data, 'label') && isfield(data, 'elecpos');
 
 if iscomp
   % comp should conditionally go before raw, otherwise the returned ft_datatype will be raw

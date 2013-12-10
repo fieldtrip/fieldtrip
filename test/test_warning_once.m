@@ -1,5 +1,8 @@
 function test_warning_once
 
+% MEM 1500mb
+% WALLTIME 00:05:04
+
 warning_once('-clear');
 
 warning1 = 'hululu';

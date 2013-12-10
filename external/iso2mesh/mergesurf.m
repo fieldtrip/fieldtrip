@@ -19,7 +19,7 @@ function [newnode,newelem]=mergesurf(node,elem,varargin)
 %
 % example:
 %
-%   [node1,elem1,face1]=meshabox([0 0 0],[10 10 10],1,1);
+%   [node1,face1,elem1]=meshabox([0 0 0],[10 10 10],1,1);
 %   [node2,face2,elem2]=meshasphere([5 5 10],3,0.3,3);
 %   [newnode,newface]=mergemesh(node1,face1,node2,face2);
 %   plotmesh(newnode,newface,'x>5');

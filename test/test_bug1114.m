@@ -1,5 +1,8 @@
 function test_bug1114
 
+% MEM 1500mb
+% WALLTIME 00:03:32
+
 % This function parses all fieldtrip main and module functions and determines
 % whether there are any dependencies on fieldtrip/compat or any other
 % compat directory. If so, the files are printed with an error.
@@ -32,6 +35,8 @@ for dirindex=1:length(dirlist)
   functionlist = dir(fullfile(dirlist{dirindex}, '*.m'));
   functionlist = {functionlist.name};
   
+  fprintf('==== processing directory %s ====\n', dirlist{dirindex});
+  
   % find the dependencies
   [outlist, depmat] = mydepfun(functionlist);
   
@@ -44,7 +49,9 @@ for dirindex=1:length(dirlist)
   
   if ~isempty(compat)
     % report on the problems
+    fprintf('\nThe compat functions ...\n');
     disp(outlist(compat));
+    fprintf('... are being used by\n');
     disp(functionlist(any(depmat(:,compat),2))');
     error('some of the FT functions depend on compat functions');
     % warning('some of the FT functions depend on compat functions');

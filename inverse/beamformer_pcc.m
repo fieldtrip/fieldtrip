@@ -246,7 +246,8 @@ dipout.outside = dip.origoutside;
 dipout.pos     = dip.origpos;
 
 % remember how all components in the output csd should be interpreted
-scandiplabel = repmat({'scandip'}, 1, size(lf, 2));    % based on last leadfield
+%scandiplabel = repmat({'scandip'}, 1, size(lf, 2));    % based on last leadfield
+scandiplabel = repmat({'scandip'}, 1, size(filt, 1)-size(rf, 2)-size(sf, 2)-Nrefchan-Nsupchan); % robust if lf does not exist
 refdiplabel  = repmat({'refdip'},  1, size(rf, 2));
 supdiplabel  = repmat({'supdip'},  1, size(sf, 2));
 refchanlabel = repmat({'refchan'}, 1, Nrefchan);

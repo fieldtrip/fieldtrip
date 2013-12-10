@@ -81,7 +81,6 @@ if isequal(current_argin, previous_argin)
   return
 end
 
-
 if isfield(vol, 'type') && ~(ft_datatype(vol,'grad') || ft_datatype(vol,'sens')) % grad and sens also contain .type fields 
   % preferably the structure specifies its own type
   type = vol.type;

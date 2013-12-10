@@ -13,12 +13,14 @@ function [cfg] = ft_connectivityplot(cfg, varargin)
 %
 % The cfg can have the following options:
 %   cfg.parameter   = string, the functional parameter to be plotted (default = 'cohspctrm')
-%   cfg.zlim        = [lower upper]
+%   cfg.xlim        = selection boundaries over first dimension in data (e.g., freq)
+%                     'maxmin' or [xmin xmax] (default = 'maxmin')
+%   cfg.zlim        = plotting limits for color dimension, 'maxmin', 'maxabs' or [zmin zmax] (default = 'maxmin')
 %   cfg.channel     = list of channels to be included for the plotting (default = 'all'), see FT_CHANNELSELECTION for details
 %
 % See also FT_CONNECTIVITYANALYSIS, FT_CONNECTIVITYSIMULATION, FT_MULTIPLOTCC, FT_TOPOPLOTCC
 
-% Copyright (C) 2011, Jan-Mathijs Schoffelen
+% Copyright (C) 2011-2013, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -58,9 +60,43 @@ cfg = ft_checkconfig(cfg, 'renamed', {'zparam', 'parameter'});
 % set the defaults
 cfg.channel   = ft_getopt(cfg, 'channel',   'all');
 cfg.parameter = ft_getopt(cfg, 'parameter', 'cohspctrm');
-cfg.zlim      = ft_getopt(cfg, 'zlim',       []);
-cfg.xlim      = ft_getopt(cfg, 'xlim',       [varargin{1}.freq(1) varargin{1}.freq(end)]);
+cfg.zlim      = ft_getopt(cfg, 'zlim',      'maxmin');
+cfg.xlim      = ft_getopt(cfg, 'xlim',      'maxmin');
 cfg.color     = ft_getopt(cfg, 'color',     'brgkywrgbkywrgbkywrgbkyw');
+
+% Get physical min/max range of x:
+if ischar(cfg.xlim) && strcmp(cfg.xlim,'maxmin')
+  xmin = inf;
+  xmax = -inf;
+  for k = 1:numel(varargin)
+    xmin = min(xmin,varargin{k}.freq(1));
+    xmax = max(xmax,varargin{k}.freq(end));
+  end
+else
+  xmin = cfg.xlim(1);
+  xmax = cfg.xlim(2);
+end
+cfg.xlim = [xmin xmax];
+
+% Get physical min/max range of z:
+if ischar(cfg.zlim) && strcmp(cfg.zlim,'maxmin')
+  zmin = inf;
+  zmax = -inf;
+  for k = 1:numel(varargin)
+    zmin = min(zmin,min(varargin{k}.(cfg.parameter)(:)));
+    zmax = max(zmax,max(varargin{k}.(cfg.parameter)(:)));
+  end
+elseif ischar(cfg.zlim) && strcmp(cfg.zlim,'maxabs')
+  zmax = -inf;
+  for k = 1:numel(varargin)
+    zmax = max(zmax,max(abs(varargin{k}.(parameter)(:))));
+  end
+  zmin = -zmax;
+else
+  zmin = cfg.zlim(1);
+  zmax = cfg.zlim(2);
+end
+cfg.zlim = [zmin zmax];
 
 % make the function recursive if numel(varargin)>1
 % FIXME check explicitly which channels belong together
@@ -105,15 +141,15 @@ if ~isfield(data, cfg.parameter)
 end
 
 cfg.channel = ft_channelselection(cfg.channel, data.label);
-data        = ft_selectdata(data, 'channel', cfg.channel, 'foilim', cfg.xlim);
+
+tmpcfg         = [];
+tmpcfg.channel = cfg.channel;
+tmpcfg.foilim  = cfg.xlim;
+data           = ft_selectdata(tmpcfg, data);
 
 dat   = data.(cfg.parameter);
 nchan = numel(data.label);
 nfreq = numel(data.freq);
-
-if isempty(cfg.zlim)
-  cfg.zlim = [min(dat(:)) max(dat(:))];
-end
 
 if (isfield(cfg, 'holdfig') && cfg.holdfig==0) || ~isfield(cfg, 'holdfig')
   cla;
@@ -131,14 +167,14 @@ for k = 1:nchan
       if k==1,
         % first column, plot scale on y axis
         fontsize = 10;
-        ft_plot_text( ix.*1.2-0.5,iy.*1.2-0.5,num2str(cfg.zlim(1),3),'HorizontalAlignment','Right','VerticalAlignment','Middle','Fontsize',fontsize);
-        ft_plot_text( ix.*1.2-0.5,iy.*1.2+0.5,num2str(cfg.zlim(2),3),'HorizontalAlignment','Right','VerticalAlignment','Middle','Fontsize',fontsize);
+        ft_plot_text( ix.*1.2-0.5,iy.*1.2-0.5,num2str(cfg.zlim(1),3),'HorizontalAlignment','Right','VerticalAlignment','Middle','Fontsize',fontsize,'Interpreter','none');
+        ft_plot_text( ix.*1.2-0.5,iy.*1.2+0.5,num2str(cfg.zlim(2),3),'HorizontalAlignment','Right','VerticalAlignment','Middle','Fontsize',fontsize,'Interpreter','none');
       end
       if m==nchan,
         % bottom row, plot scale on x axis
         fontsize = 10;
-        ft_plot_text( ix.*1.2-0.5,iy.*1.2-0.5,num2str(data.freq(1  ),3),'HorizontalAlignment','Center','VerticalAlignment','top','Fontsize',fontsize);
-        ft_plot_text( ix.*1.2+0.5,iy.*1.2-0.5,num2str(data.freq(end),3),'HorizontalAlignment','Center','VerticalAlignment','top','Fontsize',fontsize);
+        ft_plot_text( ix.*1.2-0.5,iy.*1.2-0.5,num2str(data.freq(1  ),3),'HorizontalAlignment','Center','VerticalAlignment','top','Fontsize',fontsize,'Interpreter','none');
+        ft_plot_text( ix.*1.2+0.5,iy.*1.2-0.5,num2str(data.freq(end),3),'HorizontalAlignment','Center','VerticalAlignment','top','Fontsize',fontsize,'Interpreter','none');
       end
     end
   end
@@ -146,8 +182,8 @@ end
 
 % add channel labels on grand X and Y axes
 for k = 1:nchan
-  ft_plot_text(0,       (nchan + 1 - k).*1.2, data.label{k});
-  ft_plot_text(k.*1.2,  (nchan + 1)    .*1.2, data.label{k});
+  ft_plot_text(0,       (nchan + 1 - k).*1.2, data.label{k}, 'Interpreter', 'none');
+  ft_plot_text(k.*1.2,  (nchan + 1)    .*1.2, data.label{k}, 'Interpreter', 'none');
 end
 
 % add 'from' and 'to' labels

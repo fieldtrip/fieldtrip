@@ -1,5 +1,8 @@
 function test_fairsurface
 
+% MEM 1500mb
+% WALLTIME 00:03:05
+
 ft_defaults
 
 hdmfile  = '/home/common/matlab/fieldtrip/data/Subject01.shape';

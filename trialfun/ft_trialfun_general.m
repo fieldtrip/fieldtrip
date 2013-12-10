@@ -141,14 +141,37 @@ if ~isempty(cfg.trialdef.eventvalue)
   % this cannot be done robustly in a single line of code
   if ~iscell(cfg.trialdef.eventvalue)
     valchar    = ischar(cfg.trialdef.eventvalue); 
-    valnumeric = isnumeric(cfg.trialdef.eventvalue); 
+    valnumeric = isnumeric(cfg.trialdef.eventvalue);
   else
     valchar    = ischar(cfg.trialdef.eventvalue{1});
     valnumeric = isnumeric(cfg.trialdef.eventvalue{1});
   end  
   for i=1:numel(event)
     if (ischar(event(i).value) && valchar) || (isnumeric(event(i).value) && valnumeric)
-      sel(i) = sel(i) & ~isempty(intersect(event(i).value, cfg.trialdef.eventvalue));
+      if ~iscell(cfg.trialdef.eventvalue)
+        sel(i) = sel(i) & ~isempty(intersect(event(i).value, cfg.trialdef.eventvalue));
+      elseif ~isempty(event(i).value) % Don't want empty cells
+        % Cells - we need to make sure that we are dealing with cell arrays
+        % of strings and not numbers - in the future, it might be easier to
+        % just convert everything to cell arrays of strings to begin with
+        
+        if isnumeric(event(i).value)
+            eventvalue = num2str(event(i).value);
+        else
+            eventvalue = event(i).value;
+        end
+        
+        td_eventvalue = cell(size(cfg.trialdef.eventvalue));
+        for jj = 1:length(td_eventvalue)
+            if isnumeric(cfg.trialdef.eventvalue{jj})
+                td_eventvalue{jj} = num2str(cfg.trialdef.eventvalue{jj});
+            else
+                td_eventvalue{jj} = cfg.trialdef.eventvalue{jj};
+            end
+        end
+        
+        sel(i) = sel(i) & ~isempty(intersect({eventvalue}, td_eventvalue));
+      end
     end
   end
 end

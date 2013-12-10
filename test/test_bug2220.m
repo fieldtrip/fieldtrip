@@ -1,5 +1,8 @@
 function test_bug2220
 
+% MEM 2gb
+% WALLTIME 00:04:48
+
 % TEST test_bug2220
 % TEST ft_preprocessing ft_preproc_padding preproc
 

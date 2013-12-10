@@ -1,5 +1,8 @@
 function test_bug1563(datainfo, version)
 
+% MEM 1500mb
+% WALLTIME 00:03:11
+
 % TEST test_bug1599
 % TEST ft_sourceanalysis beamformer_lcmv
 

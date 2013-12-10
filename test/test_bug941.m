@@ -1,5 +1,8 @@
 function test_bug941
 
+% MEM 1500mb
+% WALLTIME 00:03:08
+
 % TEST test_bug941
 % TEST ft_channelrepair ft_databrowser
 

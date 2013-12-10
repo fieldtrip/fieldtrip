@@ -97,7 +97,7 @@ while ischar(line)
 
     % if the key ends with begin and there is no value, then there is a block
     % of numbers following that relates to the magnetometer/gradiometer information.
-    % All lines in that Begin-End block should be treated seperately
+    % All lines in that Begin-End block should be treated separately
     val = {};
     lab = {};
     num = {};

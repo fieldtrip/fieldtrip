@@ -1,8 +1,11 @@
 function test_tutorial_headmodel_eeg
 
+% MEM 2gb
+% WALLTIME 00:30:00
+
 % TEST test_tutorial_headmodel_eeg
 % TEST ft_read_mri ft_volumesegment ft_prepare_mesh ft_prepare_headmodel
-% TEST ft_read_sens warp_apply ft_electroderealign
+% TEST ft_read_sens ft_warp_apply ft_electroderealign
 % TEST ft_plot_mesh ft_plot_vol ft_plot_sens
 
 clear all;
@@ -87,9 +90,9 @@ close all;
  
  transm=mri.transform;
  
- nas=warp_apply(transm,nas, 'homogenous');
- lpa=warp_apply(transm,lpa, 'homogenous');
- rpa=warp_apply(transm,rpa, 'homogenous');
+ nas=ft_warp_apply(transm,nas, 'homogenous');
+ lpa=ft_warp_apply(transm,lpa, 'homogenous');
+ rpa=ft_warp_apply(transm,rpa, 'homogenous');
  
  fiducials.chanpos=[nas; lpa; rpa];
  fiducials.label={'Nz','LPA','RPA'};

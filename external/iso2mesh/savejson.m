@@ -1,7 +1,8 @@
 function json=savejson(rootname,obj,varargin)
 %
-% json=savejson(rootname,obj,opt)
+% json=savejson(rootname,obj,filename)
 %    or
+% json=savejson(rootname,obj,opt)
 % json=savejson(rootname,obj,'param1',value1,'param2',value2,...)
 %
 % convert a MATLAB object (cell, struct or array) into a JSON (JavaScript
@@ -10,13 +11,16 @@ function json=savejson(rootname,obj,varargin)
 % author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
 %            created on 2011/09/09
 %
-% $Id: savejson.m 341 2012-01-25 23:51:33Z fangq $
+% $Id$
 %
 % input:
 %      rootname: name of the root-object, if set to '', will use variable name
 %      obj: a MATLAB object (array, cell, cell array, struct, struct array)
+%      filename: a string for the file name to save the output JSON data
 %      opt: a struct for additional options, use [] if all use default
 %        opt can have the following fields (first in [.|.] is the default)
+%
+%        opt.FileName [''|string]: a file name to save the output JSON data
 %        opt.FloatFormat ['%.10g'|string]: format to show each numeric element
 %                         of a 1D/2D array;
 %        opt.ArrayIndent [1|0]: if 1, output explicit data array with
@@ -44,6 +48,17 @@ function json=savejson(rootname,obj,varargin)
 %                         does not have a name, 'root' will be used; if this 
 %                         is set to 0 and rootname is empty, the root level 
 %                         will be merged down to the lower level.
+%        opt.Inf ['"$1_Inf_"'|string]: a customized regular expression pattern
+%                         to represent +/-Inf. The matched pattern is '([-+]*)Inf'
+%                         and $1 represents the sign. For those who want to use
+%                         1e999 to represent Inf, they can set opt.Inf to '$11e999'
+%        opt.NaN ['"_NaN_"'|string]: a customized regular expression pattern
+%                         to represent NaN
+%        opt.JSONP [''|string]: to generate a JSONP output (JSON with padding),
+%                         for example, if opt.JSON='foo', the JSON data is
+%                         wrapped inside a function call as 'foo(...);'
+%        opt.UnpackHex [1|0]: conver the 0x[hex code] output by loadjson 
+%                         back to the string form
 %        opt can be replaced by a list of ('param',value) pairs. The param 
 %        string is equivallent to a field in opt.
 % output:
@@ -61,8 +76,22 @@ function json=savejson(rootname,obj,varargin)
 % -- this function is part of jsonlab toolbox (http://iso2mesh.sf.net/cgi-bin/index.cgi?jsonlab)
 %
 
-varname=inputname(2);
-opt=varargin2struct(varargin{:});
+if(nargin==1)
+   varname=inputname(1);
+   obj=rootname;
+   if(isempty(varname)) 
+      varname='root';
+   end
+   rootname=varname;
+else
+   varname=inputname(2);
+end
+if(length(varargin)==1 && ischar(varargin{1}))
+   opt=struct('FileName',varargin{1});
+else
+   opt=varargin2struct(varargin{:});
+end
+opt.IsOctave=exist('OCTAVE_VERSION');
 rootisarray=0;
 rootlevel=1;
 forceroot=jsonopt('ForceRootName',0,opt);
@@ -82,6 +111,18 @@ if(rootisarray)
     json=sprintf('%s\n',json);
 else
     json=sprintf('{\n%s\n}\n',json);
+end
+
+jsonp=jsonopt('JSONP','',opt);
+if(~isempty(jsonp))
+    json=sprintf('%s(%s);\n',jsonp,json);
+end
+
+% save to a file if FileName is set, suggested by Patrick Rapin
+if(~isempty(jsonopt('FileName','',opt)))
+    fid = fopen(opt.FileName, 'wt');
+    fwrite(fid,json,'char');
+    fclose(fid);
 end
 
 %%-------------------------------------------------------------------------
@@ -110,9 +151,15 @@ padding1=repmat(sprintf('\t'),1,level-1);
 padding0=repmat(sprintf('\t'),1,level);
 if(len>1) 
     if(~isempty(name))
-        txt=sprintf('%s"%s": [\n',padding0, name); name=''; 
+        txt=sprintf('%s"%s": [\n',padding0, checkname(name,varargin{:})); name=''; 
     else
         txt=sprintf('%s[\n',padding0); 
+    end
+elseif(len==0)
+    if(~isempty(name))
+        txt=sprintf('%s"%s": null',padding0, checkname(name,varargin{:})); name=''; 
+    else
+        txt=sprintf('%snull',padding0); 
     end
 end
 for i=1:len
@@ -133,14 +180,14 @@ padding0=repmat(sprintf('\t'),1,level);
 sep=',';
 
 if(~isempty(name)) 
-    if(len>1) txt=sprintf('%s"%s": [\n',padding0,name); end
+    if(len>1) txt=sprintf('%s"%s": [\n',padding0,checkname(name,varargin{:})); end
 else
     if(len>1) txt=sprintf('%s[\n',padding0); end
 end
 for e=1:len
   names = fieldnames(item(e));
   if(~isempty(name) && len==1)
-        txt=sprintf('%s%s"%s": {\n',txt,repmat(sprintf('\t'),1,level+(len>1)), name); 
+        txt=sprintf('%s%s"%s": {\n',txt,repmat(sprintf('\t'),1,level+(len>1)), checkname(name,varargin{:})); 
   else
         txt=sprintf('%s%s{\n',txt,repmat(sprintf('\t'),1,level+(len>1))); 
   end
@@ -160,11 +207,11 @@ if(len>1) txt=sprintf('%s\n%s]',txt,padding0); end
 
 %%-------------------------------------------------------------------------
 function txt=str2json(name,item,level,varargin)
-global isoct
 txt='';
 if(~ischar(item))
         error('input is not a string');
 end
+item=reshape(item, max(size(item),[1 0]));
 len=size(item,1);
 sep=sprintf(',\n');
 
@@ -172,10 +219,11 @@ padding1=repmat(sprintf('\t'),1,level);
 padding0=repmat(sprintf('\t'),1,level+1);
 
 if(~isempty(name)) 
-    if(len>1) txt=sprintf('%s"%s": [\n',padding1,name); end
+    if(len>1) txt=sprintf('%s"%s": [\n',padding1,checkname(name,varargin{:})); end
 else
     if(len>1) txt=sprintf('%s[\n',padding1); end
 end
+isoct=jsonopt('IsOctave',0,varargin{:});
 for e=1:len
     if(isoct)
         val=regexprep(item(e,:),'\\','\\');
@@ -187,7 +235,7 @@ for e=1:len
         val=regexprep(val,'^"','\\"');
     end
     if(len==1)
-        obj=['"' name '": ' '"',val,'"'];
+        obj=['"' checkname(name,varargin{:}) '": ' '"',val,'"'];
 	if(isempty(name)) obj=['"',val,'"']; end
         txt=sprintf('%s%s%s%s',txt,repmat(sprintf('\t'),1,level),obj);
     else
@@ -207,13 +255,14 @@ end
 padding1=repmat(sprintf('\t'),1,level);
 padding0=repmat(sprintf('\t'),1,level+1);
 
-if(length(size(item))>2 || issparse(item) || ~isreal(item) || jsonopt('ArrayToStruct',0,varargin{:}))
+if(length(size(item))>2 || issparse(item) || ~isreal(item) || ...
+   isempty(item) ||jsonopt('ArrayToStruct',0,varargin{:}))
     if(isempty(name))
     	txt=sprintf('%s{\n%s"_ArrayType_": "%s",\n%s"_ArraySize_": %s,\n',...
               padding1,padding0,class(item),padding0,regexprep(mat2str(size(item)),'\s+',',') );
     else
     	txt=sprintf('%s"%s": {\n%s"_ArrayType_": "%s",\n%s"_ArraySize_": %s,\n',...
-              padding1,name,padding0,class(item),padding0,regexprep(mat2str(size(item)),'\s+',',') );
+              padding1,checkname(name,varargin{:}),padding0,class(item),padding0,regexprep(mat2str(size(item)),'\s+',',') );
     end
 else
     if(isempty(name))
@@ -221,9 +270,9 @@ else
     else
         if(numel(item)==1 && jsonopt('NoRowBracket',1,varargin{:})==1)
             numtxt=regexprep(regexprep(matdata2json(item,level+1,varargin{:}),'^\[',''),']','');
-           	txt=sprintf('%s"%s": %s',padding1,name,numtxt);
+           	txt=sprintf('%s"%s": %s',padding1,checkname(name,varargin{:}),numtxt);
         else
-    	    txt=sprintf('%s"%s": %s',padding1,name,matdata2json(item,level+1,varargin{:}));
+    	    txt=sprintf('%s"%s": %s',padding1,checkname(name,varargin{:}),matdata2json(item,level+1,varargin{:}));
         end
     end
     return;
@@ -235,13 +284,24 @@ if(issparse(item))
     data=full(item(find(item)));
     if(~isreal(item))
        data=[real(data(:)),imag(data(:))];
+       if(size(item,1)==1)
+           % Kludge to have data's 'transposedness' match item's.
+           % (Necessary for complex row vector handling below.)
+           data=data';
+       end
        txt=sprintf(dataformat,txt,padding0,'"_ArrayIsComplex_": ','1', sprintf(',\n'));
     end
     txt=sprintf(dataformat,txt,padding0,'"_ArrayIsSparse_": ','1', sprintf(',\n'));
-    if(find(size(item)==1))
+    if(size(item,1)==1)
+        % Row vector, store only column indices.
+        txt=sprintf(dataformat,txt,padding0,'"_ArrayData_": ',...
+           matdata2json([iy(:),data'],level+2,varargin{:}), sprintf('\n'));
+    elseif(size(item,2)==1)
+        % Column vector, store only row indices.
         txt=sprintf(dataformat,txt,padding0,'"_ArrayData_": ',...
            matdata2json([ix,data],level+2,varargin{:}), sprintf('\n'));
     else
+        % General case, store row and column indices.
         txt=sprintf(dataformat,txt,padding0,'"_ArrayData_": ',...
            matdata2json([ix,iy,data],level+2,varargin{:}), sprintf('\n'));
     end
@@ -290,17 +350,36 @@ end
 % end
 txt=[pre txt post];
 if(any(isinf(mat(:))))
-    txt=regexprep(txt,'([-+]*)Inf','"$1_Inf_"');
+    txt=regexprep(txt,'([-+]*)Inf',jsonopt('Inf','"$1_Inf_"',varargin{:}));
 end
 if(any(isnan(mat(:))))
-    txt=regexprep(txt,'NaN','"_NaN_"');
+    txt=regexprep(txt,'NaN',jsonopt('NaN','"_NaN_"',varargin{:}));
 end
 
 %%-------------------------------------------------------------------------
-function val=jsonopt(key,default,varargin)
-val=default;
-if(nargin<=2) return; end
-opt=varargin{1};
-if(isstruct(opt) && isfield(opt,key))
-    val=getfield(opt,key);
+function newname=checkname(name,varargin)
+isunpack=jsonopt('UnpackHex',1,varargin{:});
+newname=name;
+if(isempty(regexp(name,'0x([0-9a-fA-F]+)_','once')))
+    return
 end
+if(isunpack)
+    isoct=jsonopt('IsOctave',0,varargin{:});
+    if(~isoct)
+        newname=regexprep(name,'(^x|_){1}0x([0-9a-fA-F]+)_','${native2unicode(hex2dec($2))}');
+    else
+        pos=regexp(name,'(^x|_){1}0x([0-9a-fA-F]+)_','start');
+        pend=regexp(name,'(^x|_){1}0x([0-9a-fA-F]+)_','end');
+        if(isempty(pos)) return; end
+        str0=name;
+        pos0=[0 pend(:)' length(name)];
+        newname='';
+        for i=1:length(pos)
+            newname=[newname str0(pos0(i)+1:pos(i)-1) char(hex2dec(str0(pos(i)+3:pend(i)-1)))];
+        end
+        if(pos(end)~=length(name))
+            newname=[newname str0(pos0(end-1)+1:pos0(end))];
+        end
+    end
+end
+

@@ -1,5 +1,8 @@
 function test_bug1502
 
+% MEM 1500mb
+% WALLTIME 00:03:01
+
 % TEST test_bug1502
 % TEST ft_checkconfig
 

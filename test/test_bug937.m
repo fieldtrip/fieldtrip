@@ -1,5 +1,8 @@
 function test_bug937
 
+% MEM 1500mb
+% WALLTIME 00:03:10
+
 % TEST test_bug937
 % TEST ft_prepare_mesh ft_voltype ft_plot_mesh
 
@@ -105,6 +108,7 @@ ft_plot_mesh(bnd(2),'edgecolor','g','facecolor','none')
 ft_plot_mesh(bnd(3),'edgecolor','r','facecolor','none')
 
 % set of points
+clear bnd
 for i=1:3
   cfg = [];
   cfg.headshape   = svol.bnd(i).pnt;

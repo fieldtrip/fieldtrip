@@ -1,5 +1,8 @@
 function test_bug1871
 
+% MEM 1500mb
+% WALLTIME 00:03:33
+
 % TEST test_bug1871
 % TEST ft_struct2single 
 
@@ -23,7 +26,8 @@ freq.powspctrm = ft_struct2single(freq.powspctrm);
 cfg = [];
 cfg.channel     = 'MEGGRAD';
 cfg.interactive = 'yes';
-cfg.showlabels  = 'no';
+% cfg.showlabels  = 'no'; % this is a deprecated option, use cfg.marker instead
+cfg.marker = 'no'; 
 cfg.zlim        = 'maxabs';
 cfg.layout      = 'neuromag306cmb.lay';
 ft_topoplotTFR(cfg, freq);

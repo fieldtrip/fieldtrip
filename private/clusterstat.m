@@ -37,35 +37,16 @@ function [stat, cfg] = clusterstat(cfg, statrnd, statobs, varargin)
 % $Id$
 
 % set the defaults
-if ~isfield(cfg,'orderedstats'),   cfg.orderedstats = 'no';    end
-if ~isfield(cfg,'multivariate'),   cfg.multivariate = 'no';    end
-if ~isfield(cfg,'minnbchan'),      cfg.minnbchan=0;            end
-% if ~isfield(cfg,'channeighbstructmat'),      cfg.channeighbstructmat=[];               end
-% if ~isfield(cfg,'chancmbneighbstructmat'),   cfg.chancmbneighbstructmat=[];            end
-% if ~isfield(cfg,'chancmbneighbselmat'),      cfg.chancmbneighbselmat=[];               end
-
-% get issource from varargin, to determine source-data-specific options and allow the proper usage of cfg.neighbours
-% (cfg.neighbours was previously used in determining wheter source-data was source data or not) set to zero by default
-% note, this may cause problems when functions call clusterstat without giving issource, as issource was previously
-% set in clusterstat.m but has now been transfered to the function that calls clusterstat.m (but only implemented in ft_statistics_montecarlo)
-issource = ft_getopt(varargin, 'issource', false);
+cfg.orderedstats = ft_getopt(cfg, 'orderedstats', 'no');
+cfg.multivariate = ft_getopt(cfg, 'multivariate', 'no');
+cfg.minnbchan    = ft_getopt(cfg, 'minnbchan',    0);
 
 if cfg.tail~=cfg.clustertail
   error('cfg.tail and cfg.clustertail should be identical')
 end
 
-% create neighbour structure (but only when not using source data)
-if isfield(cfg, 'neighbours') && ~issource
-  channeighbstructmat = makechanneighbstructmat(cfg);
-else
-  channeighbstructmat  = 0;
-end
-
-% perform fixinside fix if input data is source data
-if issource
-  % cfg contains dim and inside that are needed for reshaping the data to a volume, and inside should behave as a index vector
-  cfg = fixinside(cfg, 'index');
-end
+% get conncevitiy matrix for the spatially neighbouring elements
+channeighbstructmat = full(ft_getopt(cfg, 'connectivity', false));
 
 needpos = cfg.tail==0 || cfg.tail== 1;
 needneg = cfg.tail==0 || cfg.tail==-1;
@@ -74,8 +55,6 @@ Nrand   = size(statrnd,2);
 
 prb_pos    = ones(Nsample,     1);
 prb_neg    = ones(Nsample,     1);
-postailobs = false(Nsample,    1);  % this holds the thresholded values
-negtailobs = false(Nsample,    1);  % this holds the thresholded values
 postailrnd = false(Nsample,Nrand);  % this holds the thresholded values
 negtailrnd = false(Nsample,Nrand);  % this holds the thresholded values
 Nobspos = 0;                        % number of positive clusters in observed data
@@ -136,7 +115,7 @@ elseif strcmp(cfg.clusterthreshold, 'nonparametric_individual')
     % only positive tail is needed
     postailcritval = srt(:,round((1-cfg.clusteralpha)*size(statrnd,2)));
     negtailcritval = -inf * ones(size(postailcritval));
-  elseif cfg.clustertail==1
+  elseif cfg.clustertail==-1
     % only negative tail is needed
     negtailcritval = srt(:,round((  cfg.clusteralpha)*size(statrnd,2)));
     postailcritval = +inf * ones(size(negtailcritval));
@@ -148,15 +127,15 @@ elseif strcmp(cfg.clusterthreshold, 'nonparametric_common')
   [srt, ind] = sort(statrnd(:));
   if cfg.clustertail==0
     % both tails are needed
-    negtailcritval = srt(round((  cfg.clusteralpha/2)*prod(size(statrnd))));
-    postailcritval = srt(round((1-cfg.clusteralpha/2)*prod(size(statrnd))));
+    negtailcritval = srt(round((  cfg.clusteralpha/2)*numel(statrnd)));
+    postailcritval = srt(round((1-cfg.clusteralpha/2)*numel(statrnd)));
   elseif cfg.clustertail==1
     % only positive tail is needed
-    postailcritval = srt(round((1-cfg.clusteralpha)*prod(size(statrnd))));
+    postailcritval = srt(round((1-cfg.clusteralpha)*numel(statrnd)));
     negtailcritval = -inf * ones(size(postailcritval));
-  elseif cfg.clustertail==1
+  elseif cfg.clustertail==-1
     % only negative tail is needed
-    negtailcritval = srt(round((  cfg.clusteralpha)*prod(size(statrnd))));
+    negtailcritval = srt(round((  cfg.clusteralpha)*numel(statrnd)));
     postailcritval = +inf * ones(size(negtailcritval));
   end
   
@@ -181,8 +160,13 @@ end
 
 % first do the clustering on the observed data
 if needpos,
-  if issource
-    if isfield(cfg, 'origdim'), cfg.dim = cfg.origdim; end %this snippet is to support correct clustering of N-dimensional data, not fully tested yet
+  
+  if ~isfinite(channeighbstructmat)
+    % this pertains to data for which the spatial dimension can be reshaped
+    % into 3D, i.e. when it is described on an ordered set of positions on a 3D-grid
+    if isfield(cfg, 'origdim'),
+      cfg.dim = cfg.origdim;
+    end %this snippet is to support correct clustering of N-dimensional data, not fully tested yet
     tmp = zeros(cfg.dim);
     tmp(cfg.inside) = postailobs;
     
@@ -202,11 +186,16 @@ if needpos,
     end
     posclusobs = posclusobs(:);
   end
-  Nobspos = max(posclusobs); % number of clusters exceeding the threshold
+  Nobspos = max(posclusobs(:)); % number of clusters exceeding the threshold
   fprintf('found %d positive clusters in observed data\n', Nobspos);
+  
 end
 if needneg,
-  if issource
+  
+  if ~isfinite(channeighbstructmat)
+    % this pertains to data for which the spatial dimension can be reshaped
+    % into 3D, i.e. when it is described on an ordered set of positions on a 3D-grid
+    
     tmp = zeros(cfg.dim);
     tmp(cfg.inside) = negtailobs;
     
@@ -226,8 +215,9 @@ if needneg,
     end
     negclusobs = negclusobs(:);
   end
-  Nobsneg = max(negclusobs);
+  Nobsneg = max(negclusobs(:));
   fprintf('found %d negative clusters in observed data\n', Nobsneg);
+  
 end
 
 stat = [];
@@ -256,7 +246,7 @@ ft_progress('init', cfg.feedback, 'computing clusters in randomization');
 for i=1:Nrand
   ft_progress(i/Nrand, 'computing clusters in randomization %d from %d\n', i, Nrand);
   if needpos,
-    if issource
+    if ~isfinite(channeighbstructmat)
       tmp = zeros(cfg.dim);
       tmp(cfg.inside) = postailrnd(:,i);
       
@@ -275,18 +265,18 @@ for i=1:Nrand
       end
       posclusrnd = posclusrnd(:);
     end
-    Nrndpos = max(posclusrnd);  % number of clusters exceeding the threshold
+    Nrndpos = max(posclusrnd(:));  % number of clusters exceeding the threshold
     stat    = zeros(1,Nrndpos); % this will hold the statistic for each cluster
     % fprintf('found %d positive clusters in this randomization\n', Nrndpos);
     for j = 1:Nrndpos
       if strcmp(cfg.clusterstatistic, 'max'),
-        stat(j) = max(statrnd(find(posclusrnd==j),i));
+        stat(j) = max(statrnd(posclusrnd==j,i));
       elseif strcmp(cfg.clusterstatistic, 'maxsize'),
         stat(j) = length(find(posclusrnd==j));
       elseif strcmp(cfg.clusterstatistic, 'maxsum'),
-        stat(j) = sum(statrnd(find(posclusrnd==j),i));
+        stat(j) = sum(statrnd(posclusrnd==j,i));
       elseif strcmp(cfg.clusterstatistic, 'wcm'),
-        stat(j) = sum((statrnd(find(posclusrnd==j),i)-postailcritval).^cfg.wcm_weight);
+        stat(j) = sum((statrnd(posclusrnd==j,i)-postailcritval).^cfg.wcm_weight);
       else
         error('unknown clusterstatistic');
       end
@@ -304,7 +294,8 @@ for i=1:Nrand
     end
   end % needpos
   if needneg,
-    if issource
+    if ~isfinite(channeighbstructmat)
+      
       tmp = zeros(cfg.dim);
       tmp(cfg.inside) = negtailrnd(:,i);
       
@@ -324,18 +315,18 @@ for i=1:Nrand
       end
       negclusrnd = negclusrnd(:);
     end
-    Nrndneg = max(negclusrnd);  % number of clusters exceeding the threshold
+    Nrndneg = max(negclusrnd(:));  % number of clusters exceeding the threshold
     stat    = zeros(1,Nrndneg); % this will hold the statistic for each cluster
     % fprintf('found %d negative clusters in this randomization\n', Nrndneg);
     for j = 1:Nrndneg
       if strcmp(cfg.clusterstatistic, 'max'),
-        stat(j) = min(statrnd(find(negclusrnd==j),i));
+        stat(j) = min(statrnd(negclusrnd==j,i));
       elseif strcmp(cfg.clusterstatistic, 'maxsize'),
         stat(j) = -length(find(negclusrnd==j)); % encode the size of a negative cluster as a negative value
       elseif strcmp(cfg.clusterstatistic, 'maxsum'),
-        stat(j) = sum(statrnd(find(negclusrnd==j),i));
+        stat(j) = sum(statrnd(negclusrnd==j,i));
       elseif strcmp(cfg.clusterstatistic, 'wcm'),
-        stat(j) = -sum((abs(statrnd(find(negclusrnd==j),i)-negtailcritval)).^cfg.wcm_weight); % encoded as a negative value
+        stat(j) = -sum((abs(statrnd(negclusrnd==j,i)-negtailcritval)).^cfg.wcm_weight); % encoded as a negative value
       else
         error('unknown clusterstatistic');
       end
@@ -361,13 +352,13 @@ if needpos,
   stat = zeros(1,Nobspos);
   for j = 1:Nobspos
     if strcmp(cfg.clusterstatistic, 'max'),
-      stat(j) = max(statobs(find(posclusobs==j)));
+      stat(j) = max(statobs(posclusobs==j));
     elseif strcmp(cfg.clusterstatistic, 'maxsize'),
       stat(j) = length(find(posclusobs==j));
     elseif strcmp(cfg.clusterstatistic, 'maxsum'),
-      stat(j) = sum(statobs(find(posclusobs==j)));
+      stat(j) = sum(statobs(posclusobs==j));
     elseif strcmp(cfg.clusterstatistic, 'wcm'),
-      stat(j) = sum((statobs(find(posclusobs==j))-postailcritval).^cfg.wcm_weight);
+      stat(j) = sum((statobs(posclusobs==j)-postailcritval).^cfg.wcm_weight);
     else
       error('unknown clusterstatistic');
     end
@@ -377,7 +368,7 @@ if needpos,
   % reorder the cluster indices in the data
   tmp = zeros(size(posclusobs));
   for j=1:Nobspos
-    tmp(find(posclusobs==indx(j))) = j;
+    tmp(posclusobs==indx(j)) = j;
   end
   posclusobs = tmp;
   if strcmp(cfg.multivariate, 'yes')
@@ -398,7 +389,7 @@ if needpos,
       posclusters(j).clusterstat = stat(j);
     end
     % collect the probabilities in one large array
-    prb_pos(find(posclusobs~=0)) = prob;
+    prb_pos(posclusobs~=0) = prob;
   elseif strcmp(cfg.orderedstats, 'yes')
     % compare the Nth ovbserved cluster against the randomization distribution of the Nth cluster
     prob = zeros(1,Nobspos);
@@ -412,7 +403,7 @@ if needpos,
       posclusters(j).prob = prob(j);
       posclusters(j).clusterstat = stat(j);
       % collect the probabilities in one large array
-      prb_pos(find(posclusobs==j)) = prob(j);
+      prb_pos(posclusobs==j) = prob(j);
     end
   else
     % univariate -> each cluster has it's own probability
@@ -427,7 +418,7 @@ if needpos,
       posclusters(j).prob = prob(j);
       posclusters(j).clusterstat = stat(j);
       % collect the probabilities in one large array
-      prb_pos(find(posclusobs==j)) = prob(j);
+      prb_pos(posclusobs==j) = prob(j);
     end
   end
 end
@@ -437,13 +428,13 @@ if needneg,
   stat = zeros(1,Nobsneg);
   for j = 1:Nobsneg
     if strcmp(cfg.clusterstatistic, 'max'),
-      stat(j) = min(statobs(find(negclusobs==j)));
+      stat(j) = min(statobs(negclusobs==j));
     elseif strcmp(cfg.clusterstatistic, 'maxsize'),
       stat(j) = -length(find(negclusobs==j)); % encode the size of a negative cluster as a negative value
     elseif strcmp(cfg.clusterstatistic, 'maxsum'),
-      stat(j) = sum(statobs(find(negclusobs==j)));
+      stat(j) = sum(statobs(negclusobs==j));
     elseif strcmp(cfg.clusterstatistic, 'wcm'),
-      stat(j) = -sum((abs(statobs(find(negclusobs==j))-negtailcritval)).^cfg.wcm_weight); % encoded as a negative value
+      stat(j) = -sum((abs(statobs(negclusobs==j)-negtailcritval)).^cfg.wcm_weight); % encoded as a negative value
     else
       error('unknown clusterstatistic');
     end
@@ -453,7 +444,7 @@ if needneg,
   % reorder the cluster indices in the observed data
   tmp = zeros(size(negclusobs));
   for j=1:Nobsneg
-    tmp(find(negclusobs==indx(j))) = j;
+    tmp(negclusobs==indx(j)) = j;
   end
   negclusobs = tmp;
   if strcmp(cfg.multivariate, 'yes')
@@ -474,7 +465,7 @@ if needneg,
       negclusters(j).clusterstat = stat(j);
     end
     % collect the probabilities in one large array
-    prb_neg(find(negclusobs~=0)) = prob;
+    prb_neg(negclusobs~=0) = prob;
   elseif strcmp(cfg.orderedstats, 'yes')
     % compare the Nth ovbserved cluster against the randomization distribution of the Nth cluster
     prob = zeros(1,Nobsneg);
@@ -488,7 +479,7 @@ if needneg,
       negclusters(j).prob = prob(j);
       negclusters(j).clusterstat = stat(j);
       % collect the probabilities in one large array
-      prb_neg(find(negclusobs==j)) = prob(j);
+      prb_neg(negclusobs==j) = prob(j);
     end
   else
     % univariate -> each cluster has it's own probability
@@ -503,7 +494,7 @@ if needneg,
       negclusters(j).prob = prob(j);
       negclusters(j).clusterstat = stat(j);
       % collect the probabilities in one large array
-      prb_neg(find(negclusobs==j)) = prob(j);
+      prb_neg(negclusobs==j) = prob(j);
     end
   end
 end
@@ -531,236 +522,3 @@ if needneg,
   stat.negclusterslabelmat = negclusobs;
   stat.negdistribution     = negdistribution;
 end
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% BEGIN SUBFUNCTION MAKECHANNEIGHBSTRUCTMAT
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function channeighbstructmat = makechanneighbstructmat(cfg);
-
-% MAKECHANNEIGHBSTRUCTMAT makes the makes the matrix containing the channel
-% neighbourhood structure.
-
-% because clusterstat has no access to the actual data (containing data.label), this workaround is required
-% cfg.neighbours is cleared here because it is not done where avgoverchan is effectuated (it should actually be changed there)
-if strcmp(cfg.avgoverchan, 'no')
-  nchan=length(cfg.channel);
-elseif strcmp(cfg.avgoverchan, 'yes')
-  nchan = 1;
-  cfg.neighbours = [];
-end
-channeighbstructmat = false(nchan,nchan);
-for chan=1:length(cfg.neighbours)
-  [seld] = match_str(cfg.channel, cfg.neighbours(chan).label);
-  [seln] = match_str(cfg.channel, cfg.neighbours(chan).neighblabel);
-  if isempty(seld)
-    % this channel was not present in the data
-    continue;
-  else
-    % add the neighbours of this channel to the matrix
-    channeighbstructmat(seld, seln) = true;
-  end
-end;
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% BEGIN SUBFUNCTION MAKECHANCMBNEIGHBMATS
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function  [chancmbneighbstructmat, chancmbneighbselmat] = makechancmbneighbmats(channeighbstructmat,labelcmb,label,orderedchancmbs,original);
-
-% compute CHANCMBNEIGHBSTRUCTMAT and CHANCMBNEIGHBSELMAT, which will be
-% used for clustering channel combinations.
-
-nchan=length(label);
-nchansqr=nchan^2;
-
-% Construct an array labelcmbnrs from labelcmb by replacing the label pairs
-% in labelcmb by numbers that correspond to the order of the labels in label.
-nchancmb = size(labelcmb,1);
-labelcmbnrs=zeros(nchancmb,2);
-for chanindx=1:nchan
-  [chansel1] = match_str(labelcmb(:,1),label(chanindx));
-  labelcmbnrs(chansel1,1)=chanindx;
-  [chansel2] = match_str(labelcmb(:,2),label(chanindx));
-  labelcmbnrs(chansel2,2)=chanindx;
-end;
-% Calculate the row and column indices (which are identical) of the
-% channel combinations that are present in the data.
-chancmbindcs=zeros(nchancmb,1);
-for indx=1:nchancmb
-  chancmbindcs(indx)=(labelcmbnrs(indx,1)-1)*nchan + labelcmbnrs(indx,2);
-end;
-
-% put all elements on the diagonal of CHANNEIGHBSTRUCTMAT equal to one
-channeighbstructmat=channeighbstructmat | logical(eye(nchan));
-
-% Compute CHANCMBNEIGHBSTRUCTMAT
-% First compute the complete CHANCMBNEIGHBSTRUCTMAT (containing all
-% ORDERED channel combinations that can be formed with all channels present in
-% the data) and later select and reorder the channel combinations actually
-% present in data). In the complete CHANCMBNEIGHBSTRUCTMAT, the row and the
-% column pairs are ordered lexicographically.
-
-chancmbneighbstructmat = false(nchansqr);
-if original
-  % two channel pairs are neighbours if their first elements are
-  % neighbours
-  chancmbneighbstructmat = logical(kron(channeighbstructmat,ones(nchan)));
-  
-  % or if their second elements are neighbours
-  chancmbneighbstructmat = chancmbneighbstructmat | logical(kron(ones(nchan),channeighbstructmat));
-else    %  version that consumes less memory
-  for chanindx=1:nchan
-    % two channel pairs are neighbours if their first elements are neighbours
-    % or if their second elements are neighbours
-    chancmbneighbstructmat(:,((chanindx-1)*nchan + 1):(chanindx*nchan)) = ...
-      logical(kron(channeighbstructmat(:,chanindx),ones(nchan))) | ...
-      logical(kron(ones(nchan,1),channeighbstructmat));
-  end;
-end;
-
-if ~orderedchancmbs
-  if original
-    % or if the first element of the row channel pair is a neighbour of the
-    % second element of the column channel pair
-    chancmbneighbstructmat = chancmbneighbstructmat | logical(repmat(kron(channeighbstructmat,ones(nchan,1)), [1 nchan]));
-    
-    % or if the first element of the column channel pair is a neighbour of the
-    % second element of the row channel pair
-    chancmbneighbstructmat = chancmbneighbstructmat | logical(repmat(kron(channeighbstructmat,ones(1,nchan)),[nchan 1]));
-  else
-    for chanindx=1:nchan
-      % two channel pairs are neighbours if
-      % the first element of the row channel pair is a neighbour of the
-      % second element of the column channel pair
-      % or if the first element of the column channel pair is a neighbour of the
-      % second element of the row channel pair
-      chancmbneighbstructmat(:,((chanindx-1)*nchan + 1):(chanindx*nchan)) = ...
-        chancmbneighbstructmat(:,((chanindx-1)*nchan + 1):(chanindx*nchan)) | ...
-        logical(kron(channeighbstructmat,ones(nchan,1))) | ...
-        logical(repmat(kron(channeighbstructmat(:,chanindx),ones(1,nchan)),[nchan 1]));
-    end;
-  end;
-end;
-
-% reorder and select the entries in chancmbneighbstructmat such that they correspond to labelcmb.
-chancmbneighbstructmat = sparse(chancmbneighbstructmat);
-chancmbneighbstructmat = chancmbneighbstructmat(chancmbindcs,chancmbindcs);
-
-% compute CHANCMBNEIGHBSELMAT
-% CHANCMBNEIGHBSELMAT identifies so-called parallel pairs. A channel pair
-% is parallel if (a) all four sensors are different and (b) all elements (of the first
-% and the second pair) are neighbours of an element of the other pair.
-% if orderedpairs is true, then condition (b) is as follows: the first
-% elements of the two pairs are neighbours, and the second elements of the
-% two pairs are neighbours.
-
-% put all elements on the diagonal of CHANNEIGHBSTRUCTMAT equal to zero
-channeighbstructmat = logical(channeighbstructmat.*(ones(nchan)-diag(ones(nchan,1))));
-
-chancmbneighbselmat = false(nchansqr);
-if orderedchancmbs
-  if original
-    % if the first element of the row pair is a neighbour of the
-    % first element of the column pair
-    chancmbneighbselmat = logical(kron(channeighbstructmat,ones(nchan)));
-    % and the second element of the row pair is a neighbour of the
-    % second element of the column pair
-    chancmbneighbselmat = chancmbneighbselmat & logical(kron(ones(nchan),channeighbstructmat));
-  else    %  version that consumes less memory
-    for chanindx=1:nchan
-      % if the first element of the row pair is a neighbour of the
-      % first element of the column pair
-      % and the second element of the row pair is a neighbour of the
-      % second element of the column pair
-      chancmbneighbselmat(:,((chanindx-1)*nchan + 1):(chanindx*nchan)) = ...
-        logical(kron(channeighbstructmat(:,chanindx),ones(nchan))) & logical(kron(ones(nchan,1),channeighbstructmat));
-    end;
-  end;
-else  % unordered channel combinations
-  if original
-    % if the first element of the row pair is a neighbour of one of the
-    % two elements of the column pair
-    chancmbneighbselmat = logical(kron(channeighbstructmat,ones(nchan))) | logical(repmat(kron(channeighbstructmat,ones(nchan,1)), [1 nchan]));
-    % and the second element of the row pair is a neighbour of one of the
-    % two elements of the column pair
-    chancmbneighbselmat = chancmbneighbselmat & (logical(kron(ones(nchan),channeighbstructmat)) | ...
-      logical(repmat(kron(channeighbstructmat,ones(1,nchan)), [nchan 1])));
-  else    %  version that consumes less memory
-    for chanindx=1:nchan
-      % if the first element of the row pair is a neighbour of one of the
-      % two elements of the column pair
-      % and the second element of the row pair is a neighbour of one of the
-      % two elements of the column pair
-      chancmbneighbselmat(:,((chanindx-1)*nchan + 1):(chanindx*nchan)) = ...
-        (logical(kron(channeighbstructmat(:,chanindx),ones(nchan))) | logical(kron(channeighbstructmat,ones(nchan,1)))) ...
-        & (logical(kron(ones(nchan,1),channeighbstructmat)) | ...
-        logical(repmat(kron(channeighbstructmat(:,chanindx),ones(1,nchan)), [nchan 1])));
-    end;
-  end;
-end;
-
-if original
-  % remove all pairs of channel combinations that have one channel in common.
-  % common channel in the first elements of the two pairs.
-  chancmbneighbselmat = chancmbneighbselmat & kron(~eye(nchan),ones(nchan));
-  
-  % common channel in the second elements of the two pairs.
-  chancmbneighbselmat = chancmbneighbselmat & kron(ones(nchan),~eye(nchan));
-  
-  % common channel in the first element of the row pair and the second
-  % element of the column pair.
-  tempselmat=logical(zeros(nchansqr));
-  tempselmat(:)= ~repmat([repmat([ones(nchan,1); zeros(nchansqr,1)],[(nchan-1) 1]); ones(nchan,1)],[nchan 1]);
-  chancmbneighbselmat = chancmbneighbselmat & tempselmat;
-  
-  % common channel in the second element of the row pair and the first
-  % element of the column pair.
-  chancmbneighbselmat = chancmbneighbselmat & tempselmat';
-else
-  noteye=~eye(nchan);
-  tempselmat=logical(zeros(nchansqr,nchan));
-  tempselmat(:)= ~[repmat([ones(nchan,1); zeros(nchansqr,1)],[(nchan-1) 1]); ones(nchan,1)];
-  for chanindx=1:nchan
-    % remove all pairs of channel combinations that have one channel in common.
-    % common channel in the first elements of the two pairs.
-    % common channel in the second elements of the two pairs.
-    % common channel in the first element of the row pair and the second
-    % element of the column pair.
-    chancmbneighbselmat(:,((chanindx-1)*nchan + 1):(chanindx*nchan)) = ...
-      chancmbneighbselmat(:,((chanindx-1)*nchan + 1):(chanindx*nchan)) ...
-      & logical(kron(noteye(:,chanindx),ones(nchan))) ...
-      & logical(kron(ones(nchan,1),noteye)) ...
-      & tempselmat;
-  end;
-  for chanindx=1:nchan
-    % remove all pairs of channel combinations that have one
-    % common channel in the second element of the row pair and the first
-    % element of the column pair.
-    chancmbneighbselmat(((chanindx-1)*nchan + 1):(chanindx*nchan),:) = ...
-      chancmbneighbselmat(((chanindx-1)*nchan + 1):(chanindx*nchan),:) & tempselmat';
-  end;
-end;
-
-% reorder and select the entries in chancmbneighbselmat such that they correspond to labelcmb.
-chancmbneighbselmat = sparse(chancmbneighbselmat);
-chancmbneighbselmat = chancmbneighbselmat(chancmbindcs,chancmbindcs);
-
-% put all elements below and on the diagonal equal to zero
-nchancmbindcs = length(chancmbindcs);
-for chancmbindx=1:nchancmbindcs
-  selvec=[true(chancmbindx-1,1);false(nchancmbindcs-chancmbindx+1,1)];
-  chancmbneighbstructmat(:,chancmbindx) = chancmbneighbstructmat(:,chancmbindx) & selvec;
-  chancmbneighbselmat(:,chancmbindx) = chancmbneighbselmat(:,chancmbindx) & selvec;
-end;
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION convert Nx2 cell array with channel combinations into Nx1 cell array with labels
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function label = cmb2label(labelcmb);
-label = {};
-for i=1:size(labelcmb)
-  label{i,1} = [labelcmb{i,1} '&' labelcmb{i,2}];
-end
-
-

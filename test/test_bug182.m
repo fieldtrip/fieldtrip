@@ -1,5 +1,8 @@
 function test_bug182
 
+% MEM 1500mb
+% WALLTIME 00:03:27
+
 % TEST test_bug182
 % TEST ft_preprocessing ft_componentanalysis ft_rejectcomponent ft_componentbrowser ft_databrowser
 

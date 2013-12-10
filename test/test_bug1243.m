@@ -1,5 +1,8 @@
 function test_bug1243
 
+% MEM 1500mb
+% WALLTIME 00:03:09
+
 % TEST test_bug1243
 % TEST ft_topoplotIC
 

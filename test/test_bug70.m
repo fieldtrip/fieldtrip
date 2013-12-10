@@ -1,5 +1,8 @@
 function test_bug70
 
+% MEM 1500mb
+% WALLTIME 00:06:40
+
 % TEST test_bug70
 % TEST ft_prepare_headmodel ft_prepare_leadfield
 

@@ -148,7 +148,7 @@ for i=1:length(dimtok)
     case {'pos'}
       % this is for source data on a 3-d grid, a cortical sheet, or unstructured positions
       
-    case {'{pos}'}
+    case {'{pos}' '{pos}_rpt' '{pos}_rpttap'}
       % this is for source data on a 3-d grid, a cortical sheet, or unstructured positions
       % the data itself is represented in a cell-array, e.g. source.mom or source.leadfield
 

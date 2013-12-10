@@ -64,6 +64,9 @@ switch nargin
                 catch
                     error('[GIFTI] Loading of file %s failed.', varargin{1});
                 end
+            elseif strcmpi(e,'.asc') || strcmpi(e,'.srf')
+                this = read_freesurfer_file(varargin{1});
+                this = gifti(this);
             else
                 this = read_gifti_file(varargin{1},giftistruct);
                 this = class(this,'gifti');

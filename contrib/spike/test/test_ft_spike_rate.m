@@ -1,7 +1,10 @@
 function test_ft_spike_rate()
 
+% MEM 1gb
+% WALLTIME 00:05:00
+
 % TEST test_ft_spike_rate
-% ft_spike_rate
+% TEST ft_spike_rate
 
 clear
 spikesPerTrial = 1;

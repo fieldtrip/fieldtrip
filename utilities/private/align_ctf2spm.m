@@ -49,7 +49,7 @@ spmhead_Lpa_canal    = spmvox2spmhead * spmvox_Lpa_canal ;
 spmhead_Rpa_canal    = spmvox2spmhead * spmvox_Rpa_canal ;
 
 ctfvox2ctfhead  = mri.transform;
-spmhead2ctfhead = headcoordinates(spmhead_Nas(1:3), spmhead_Lpa_canal(1:3), spmhead_Rpa_canal(1:3), 'ctf');
+spmhead2ctfhead = ft_headcoordinates(spmhead_Nas(1:3), spmhead_Lpa_canal(1:3), spmhead_Rpa_canal(1:3), 'ctf');
 
 %ctfvox2spmhead =  inv(spmhead2ctfhead) *  ctfvox2ctfhead;
 ctfvox2spmhead =  spmhead2ctfhead \ ctfvox2ctfhead;

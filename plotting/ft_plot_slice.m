@@ -192,7 +192,7 @@ if dointerp
   
   if false
     % this is for debugging
-    ft_plot_mesh(warp_apply(T2, pos))
+    ft_plot_mesh(ft_warp_apply(T2, pos))
     ft_plot_mesh(corner_head)
     axis on
     grid on
@@ -212,7 +212,7 @@ if dointerp
   M = transform\T2;
   
   % get the positions of the pixels of the desires plane in voxel space
-  pos = warp_apply(M, pos);
+  pos = ft_warp_apply(M, pos);
   
   Xi              = reshape(pos(:, 1), siz);
   Yi              = reshape(pos(:, 2), siz);
@@ -279,7 +279,7 @@ end
 
 if isempty(h),
   % get positions of the plane in plotting space
-  posh = warp_apply(transform, [Xi(:) Yi(:) Zi(:)], 'homogeneous', 1e-8);
+  posh = ft_warp_apply(transform, [Xi(:) Yi(:) Zi(:)], 'homogeneous', 1e-8);
   if ~isempty(posh)
     Xh   = reshape(posh(:, 1), siz+1);
     Yh   = reshape(posh(:, 2), siz+1);
@@ -325,7 +325,7 @@ if dointersect
       if ~isempty(intersectcolor),     set(p(k), 'EdgeColor', intersectcolor(k)); end
       if ~isempty(intersectlinewidth), set(p(k), 'LineWidth', intersectlinewidth); end
       if ~isempty(intersectlinestyle), set(p(k), 'LineStyle', intersectlinestyle); end
-  end
+    end
   end
 end
 

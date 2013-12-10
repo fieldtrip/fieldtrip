@@ -1,5 +1,8 @@
 function test_bug670
 
+% MEM 1500mb
+% WALLTIME 00:03:01
+
 % TEST test_bug670
 % TEST ft_channelselection ft_channelcombination
 

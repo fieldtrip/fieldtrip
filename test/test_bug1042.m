@@ -1,7 +1,10 @@
 function test_bug1042
 
+% MEM 1500mb
+% WALLTIME 00:18:06
+
 % TEST test_bug1042 test_bug686
-% TEST ft_convert_units ft_prepare_headmodel ft_compute_leadfield
+% TEST ft_convert_units ft_prepare_headmodel ft_compute_leadfield ft_prepare_sourcemodel headsurface
 
 [pnt, tri] = icosahedron162;
 
@@ -37,7 +40,7 @@ elec_cm = ft_convert_units(elec, 'cm');
 elec_mm = ft_convert_units(elec, 'mm');
 
 % create two conductivities
-conductivity = [1 3 7];
+conductivity = [1 0.1];
 
 %% For EEG the following methods are available
 % singlesphere
@@ -59,9 +62,8 @@ for k = 1:numel(conductivity)
   cfg.method = 'concentricspheres';
   eegvol_concentricspheres = ft_prepare_headmodel(cfg, bnd);
   % HACK otherwise it will call eeg_leadfield1 instead of eeg_leadfield4
-  eegvol_concentricspheres.r = repmat(eegvol_concentricspheres.r, 1, 4);
-  eegvol_concentricspheres.c = repmat(eegvol_concentricspheres.c, 1, 4);
-  
+  eegvol_concentricspheres.r    = repmat(eegvol_concentricspheres.r,    1, 4);
+  eegvol_concentricspheres.cond = repmat(eegvol_concentricspheres.cond, 1, 4);
   
   bnd.pnt = pnt;
   bnd.tri = tri;
@@ -227,8 +229,10 @@ for k = 1:numel(conductivity)
   end
 end
 
-%% In the table with scaling factors the columns correspond to m, cm, mm,
-% the rows correspond to the different volume conduction models
+%% In the table with scaling factors 
+% dim1 = the "slices" correspond to different conductivities
+% dim2 = the rows correspond to the different volume conduction models
+% dim3 = the columns correspond to m, cm, mm
 
 eeg_table = cellfun(@norm, eeg_leadfield);
 meg_table = cellfun(@norm, meg_leadfield);

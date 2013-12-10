@@ -1,5 +1,8 @@
 function test_bug1708
 
+% MEM 1500mb
+% WALLTIME 00:03:02
+
 % TEST: test_bug1708
 % TEST ft_denoise_synthetic
 

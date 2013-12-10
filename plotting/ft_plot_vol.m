@@ -12,6 +12,7 @@ function ft_plot_vol(vol, varargin)
 %     'facecolor'     [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r'
 %     'vertexcolor'   [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r'
 %     'edgecolor'     [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r'
+%     'facealpha'     number between 0 and 1
 %     'faceindex'     true or false
 %     'vertexindex'   true or false
 %
@@ -46,21 +47,20 @@ ws = warning('on', 'MATLAB:divideByZero');
 vol = ft_datatype_headmodel(vol);
 
 % get the optional input arguments
-faceindex   = ft_getopt(varargin, 'faceindex',   'none');
+faceindex   = ft_getopt(varargin, 'faceindex', 'none');
 vertexindex = ft_getopt(varargin, 'vertexindex', 'none');
-vertexsize  = ft_getopt(varargin, 'vertexsize',  10);
-facecolor   = ft_getopt(varargin, 'facecolor',   'white');
+vertexsize  = ft_getopt(varargin, 'vertexsize', 10);
+facecolor   = ft_getopt(varargin, 'facecolor', 'white');
 vertexcolor = ft_getopt(varargin, 'vertexcolor', 'none');
-edgecolor   = ft_getopt(varargin, 'edgecolor',   'k');
-facealpha   = ft_getopt(varargin, 'facealpha',   1);
-map         = ft_getopt(varargin, 'colormap');
-edgeonly    = ft_getopt(varargin, 'edgeonly');
+edgecolor   = ft_getopt(varargin, 'edgecolor'); % the default for this is set below
+facealpha   = ft_getopt(varargin, 'facealpha', 1);
+surfaceonly = ft_getopt(varargin, 'surfaceonly');
 
 faceindex   = istrue(faceindex);   % yes=view the face number
 vertexindex = istrue(vertexindex); % yes=view the vertex number
 
 % we will probably need a sphere, so let's prepare one
-[pnt, tri] = icosahedron162;
+[pnt, tri] = icosahedron2562;
 
 % prepare a single or multiple triangulated boundaries
 switch ft_voltype(vol)
@@ -73,6 +73,9 @@ switch ft_voltype(vol)
       bnd(i).pnt(:,3) = pnt(:,3)*vol.r(i) + vol.o(3);
       bnd(i).tri = tri;
     end
+    if isempty(edgecolor)
+      edgecolor = 'none';
+    end
     
   case 'localspheres'
     bnd = [];
@@ -82,43 +85,55 @@ switch ft_voltype(vol)
       bnd(i).pnt(:,3) = pnt(:,3)*vol.r(i) + vol.o(i,3);
       bnd(i).tri = tri;
     end
+    if isempty(edgecolor)
+      edgecolor = 'none';
+    end
     
   case {'bem', 'dipoli', 'asa', 'bemcp', 'singleshell' 'openmeeg'}
     % these already contain one or multiple triangulated surfaces for the boundaries
     bnd = vol.bnd;
     
   case 'simbio'
-    % the code below wants a mesh and the simbio FEM model contains one
+    % the ft_plot_mesh function below wants the SIMBIO tetrahedral or hexahedral mesh
     bnd = vol;
-    % only plot the outer edge of the volume
-    edgeonly = true;
+    
+    % only plot the outer surface of the volume
+    surfaceonly = true;
     
   case 'interpolate'
     xgrid = 1:vol.dim(1);
     ygrid = 1:vol.dim(2);
     zgrid = 1:vol.dim(3);
-    [x y z] = ndgrid(xgrid, ygrid, zgrid);
-    gridpos = warp_apply(vol.transform, [x(:) y(:) z(:)]);
+    [x, y, z] = ndgrid(xgrid, ygrid, zgrid);
+    gridpos = ft_warp_apply(vol.transform, [x(:) y(:) z(:)]);
     
+    % plot the dipole positions that are inside
     plot3(gridpos(vol.inside, 1), gridpos(vol.inside, 2), gridpos(vol.inside, 3), 'k.');
     
-    return;
+    % there is no boundary to be displayed
+    bnd = [];
     
-  case 'infinite'
+  case {'infinite' 'infinite_monopole' 'infinite_currentdipole' 'infinite_magneticdipole'}
     warning('there is nothing to plot for an infinite volume conductor')
-    return
+    
+    % there is no boundary to be displayed
+    bnd = [];
     
   otherwise
     error('unsupported voltype')
+end
+
+% all models except for the spherical ones
+if isempty(edgecolor)
+  edgecolor = 'k';
 end
 
 % plot the triangulated surfaces of the volume conduction model
 for i=1:length(bnd)
   ft_plot_mesh(bnd(i),'faceindex',faceindex,'vertexindex',vertexindex, ...
     'vertexsize',vertexsize,'facecolor',facecolor,'edgecolor',edgecolor, ...
-    'vertexcolor',vertexcolor,'facealpha',facealpha, 'edgeonly', edgeonly);
+    'vertexcolor',vertexcolor,'facealpha',facealpha, 'surfaceonly', surfaceonly);
 end
 
-warning(ws); %revert to original state
-
-
+% revert to original state
+warning(ws);

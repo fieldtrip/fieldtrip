@@ -89,6 +89,9 @@ elseif ft_filetype(filename, 'caret_label')
   % this is a gifti file that contains both the values for a set of
   % vertices as well as the labels.
   defaultformat = 'caret_label';
+elseif ~isempty(strfind(filename, 'MPM'))
+  % assume to be from the spm_anatomy toolbox
+  defaultformat = 'spm_anatomy';
 else
   defaultformat  = 'wfu';
 end
@@ -110,6 +113,7 @@ switch atlasformat
     atlas = rmfield(atlas, 'anatomy');
     atlas.tissuelabel       = {};
     atlas.tissuelabel(idx)  = lab;
+    atlas.coordsys = 'mni';
     % The original contains a rather sparse labeling, since not all indices
     % are being used (it starts at 2001) The question is whether it is more
     % important to keep the original numbers or to make the list with
@@ -134,6 +138,7 @@ switch atlasformat
     atlas = rmfield(atlas, 'anatomy');
     atlas.tissuelabel       = {};
     atlas.tissuelabel(idx)  = lab;
+    atlas.coordsys = 'mni';
     % The original contains a rather sparse labeling, since not all indices
     % are being used (it starts at 2001) The question is whether it is more
     % important to keep the original numbers or to make the list with
@@ -581,6 +586,7 @@ switch atlasformat
     % compatible, for example for the rhesus or mouse atlas.
     
     % atlas.coordsys  = 'mni';
+    atlas.coordsys = 'unknown';
     
     [p, f, x] = fileparts(filename);
     
@@ -1994,7 +2000,7 @@ switch atlasformat
     switch ft_filetype(filenamemesh)
       %case {'caret_surf' 'gifti'}
       %  tmp = gifti(filenamemesh);
-      %  bnd.pnt = warp_apply(tmp.mat, tmp.vertices);
+      %  bnd.pnt = ft_warp_apply(tmp.mat, tmp.vertices);
       %  bnd.tri = tmp.faces;
       %  reindex = false;
       case 'freesurfer_triangle_binary'
@@ -2039,8 +2045,11 @@ switch atlasformat
     ft_hastoolbox('gifti', 1);
     g = gifti(filename);
     
-    label = g.private.label.name; % provides the name of the parcel
-    key   = g.private.label.key;  % maps value to name
+    label = g.labels.name(:);
+    key   = g.labels.key(:);
+    
+    %label = g.private.label.name; % provides the name of the parcel
+    %key   = g.private.label.key;  % maps value to name
     % there is some additional meta data that may be useful, but for now
     % stick to the rather uninformative parcellation1/2/3 etc.
     % Store each column in cdata as an independent parcellation, because
@@ -2070,7 +2079,39 @@ switch atlasformat
       atlas.pos = tmp.pnt;
       atlas.tri = tmp.tri;
       atlas     = ft_convert_units(atlas);
+    elseif ~isfield(atlas, 'coordsys')
+      atlas.coordsys = 'unknown';
     end
+  case 'spm_anatomy'
+    ft_hastoolbox('spm8up', 1);
+    
+    % load the map, this is assumed to be the struct array MAP
+    load(filename);
+    [p,f,e]      = fileparts(filename);
+    mrifilename  = fullfile(p,[strrep(f, '_MPM',''),'.img']);
+    atlas        = ft_read_mri(mrifilename, 'format', 'analyze_img');
+    tissue       = round(atlas.anatomy); % I don't know why the values are non-integer
+    atlas        = rmfield(atlas, 'anatomy');
+    label        = {MAP.name}';
+    idx          = [MAP.GV]';
+    
+    % check whether all labels are present
+    if numel(intersect(idx,unique(tissue(:))))<numel(idx)
+      fprintf('there are fewer labels in the volume than in the list\n');
+    end
+    
+    % remap the values of the labels to run from 1-numel(idx)
+    newtissue = zeros(size(tissue));
+    for k = 1:numel(idx)
+      newtissue(tissue==idx(k)) = k;
+    end
+    atlas.tissue      = newtissue;
+    atlas.tissuelabel = label;
+    atlas.coordsys    = 'spm'; % I think this is safe to assume 
+    
+    clear tissue newtissue;
+    
+    
   otherwise
     error('unsupported atlas format %s', atlasformat);
 end % case

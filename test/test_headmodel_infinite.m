@@ -1,5 +1,8 @@
 function test_headmodel_infinite
 
+% MEM 1500mb
+% WALLTIME 00:03:01
+
 % TEST test_headmodel_infinite
 % TEST ft_prepare_headmodel ft_headmodel_infinite
 

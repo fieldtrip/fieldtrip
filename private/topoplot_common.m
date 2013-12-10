@@ -70,7 +70,7 @@ if Ndata>1 && ~isnumeric(varargin{end})
     % to have all data avalaible. at the moment I couldn't think of
     % anything better than using an additional indx variable and letting the 
     % function recursively call itself.
-    ft_topoplotTFR(cfg, varargin{1:Ndata}, indx);
+    topoplot_common(cfg, varargin{1:Ndata}, indx);
     indx = indx + 1;
   end
   return
@@ -281,6 +281,11 @@ if strcmp(dtype, 'timelock') && hasrpt,
   tmpcfg        = [];
   tmpcfg.trials = cfg.trials;
   data          = ft_timelockanalysis(tmpcfg, data);
+  if ~strcmp(cfg.parameter, 'avg')
+    % rename avg back into the parameter
+    data.(cfg.parameter) = data.avg;
+    data                 = rmfield(data, 'avg');
+  end
   dimord        = data.dimord;
   dimtok        = tokenize(dimord, '_');
 elseif strcmp(dtype, 'freq') && hasrpt,

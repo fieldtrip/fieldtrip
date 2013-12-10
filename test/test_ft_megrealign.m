@@ -1,5 +1,8 @@
 function test_ft_megrealign
 
+% MEM 1500mb
+% WALLTIME 00:03:38
+
 % TEST test_ft_megrealign
 % TEST ft_megrealign ft_neighbourselection ft_transform_geometry
 

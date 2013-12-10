@@ -103,13 +103,18 @@ if strcmp(inverse, 'yes')
   montage = tmp;
 end
 
-% use default transfer from sensors to channels if not specified
-if isfield(input, 'pnt') && ~isfield(input, 'tra')
-  nchan = size(input.pnt,1);
-  input.tra = eye(nchan);
-elseif isfield(input, 'chanpos') && ~isfield(input, 'tra')
-  nchan = size(input.chanpos,1);
-  input.tra = eye(nchan);
+% use a default unit transfer from sensors to channels if not otherwise specified
+if ~isfield(input, 'tra') && isfield(input, 'label')
+  if     isfield(input, 'elecpos') && length(input.label)==size(input.elecpos, 1)
+    nchan = length(input.label);
+    input.tra = eye(nchan);
+  elseif isfield(input, 'coilpos') && length(input.label)==size(input.coilpos, 1)
+    nchan = length(input.label);
+    input.tra = eye(nchan);
+  elseif isfield(input, 'chanpos') && length(input.label)==size(input.chanpos, 1)
+    nchan = length(input.label);
+    input.tra = eye(nchan);
+  end
 end
 
 % select and keep the columns that are non-empty, i.e. remove the empty columns
@@ -173,7 +178,9 @@ montage.labelorg        = montage.labelorg(selmontage);
 
 % making the tra matrix sparse will speed up subsequent multiplications
 % but should not result in a sparse matrix
-if size(montage.tra,1)>1
+% note that this only makes sense for matrices with a lot of zero elements,
+% for dense matrices keeping it full will be much quicker
+if size(montage.tra,1)>1 && nnz(montage.tra)/numel(montage.tra) < 0.3
   montage.tra = sparse(montage.tra);
 end
 
@@ -224,7 +231,6 @@ switch inputtype
         sens.chanpos = sens.chanpos(sel2,:);
       else
         sens.chanpos = nan(numel(montage.labelnew),3);
-        %input = rmfield(input, 'chanpos');
       end
     end
     
@@ -233,7 +239,24 @@ switch inputtype
         sens.chanori = sens.chanori(sel2,:);
       else
         sens.chanori = nan(numel(montage.labelnew),3);
-        %input = rmfield(input, 'chanori');
+      end
+    end
+    
+    if isfield(sens, 'chantype')
+      if keepchans
+        sens.chantype = sens.chantype(sel2,:);
+      else
+        % FIXME don't know what to do here  
+        sens = rmfield(sens, 'chantype');
+      end
+    end
+    
+    if isfield(sens, 'chanunit')
+      if keepchans
+        sens.chanunit = sens.chanunit(sel2,:);
+      else
+        % FIXME don't know what to do here  
+        sens = rmfield(sens, 'chanunit');
       end
     end
     

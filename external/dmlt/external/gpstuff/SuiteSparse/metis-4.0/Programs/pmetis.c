@@ -8,7 +8,7 @@
  * Started 8/28/94
  * George
  *
- * $Id: pmetis.c,v 1.1 1998/11/27 17:59:39 karypis Exp $
+ * $Id$
  *
  */
 

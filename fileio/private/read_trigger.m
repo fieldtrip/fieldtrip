@@ -5,17 +5,14 @@ function [event] = read_trigger(filename, varargin)
 % dataformats that have one or multiple continuously sampled TTL channels
 % in the data.
 %
-% The optional trigshift (default is 0) causes the value of the
-% trigger to be obtained from a sample that is shifted N samples away
-% from the actual flank.
-%
-% This is a helper function for READ_EVENT
+% This is a helper function for FT_READ_EVENT. Please look at the code of
+% this function for further details.
 %
 % TODO
 %  - merge read_ctf_trigger into this function (requires trigshift and bitmasking option)
 %  - merge biosemi code into this function (requires bitmasking option)
 
-% Copyright (C) 2008, Robert Oostenveld
+% Copyright (C) 2008-2013, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -35,23 +32,21 @@ function [event] = read_trigger(filename, varargin)
 %
 % $Id$
 
-event = [];
-
 % get the optional input arguments
-hdr         = ft_getopt(varargin, 'header');
-dataformat  = ft_getopt(varargin, 'dataformat');
-begsample   = ft_getopt(varargin, 'begsample');
-endsample   = ft_getopt(varargin, 'endsample');
-chanindx    = ft_getopt(varargin, 'chanindx');
-detectflank = ft_getopt(varargin, 'detectflank'); % can be up, down, both, auto
-denoise     = ft_getopt(varargin, 'denoise',      true);
-trigshift   = ft_getopt(varargin, 'trigshift',    false);
-trigpadding = ft_getopt(varargin, 'trigpadding',  true);
+hdr         = ft_getopt(varargin, 'header'             );
+dataformat  = ft_getopt(varargin, 'dataformat'         );
+begsample   = ft_getopt(varargin, 'begsample'          );
+endsample   = ft_getopt(varargin, 'endsample'          );
+chanindx    = ft_getopt(varargin, 'chanindx'           );
+detectflank = ft_getopt(varargin, 'detectflank'        ); % can be up, down, both, auto
+denoise     = ft_getopt(varargin, 'denoise',      true );
+trigshift   = ft_getopt(varargin, 'trigshift',    false); % causes the value of the trigger to be obtained from a sample that is shifted N samples away from the actual flank
+trigpadding = ft_getopt(varargin, 'trigpadding',  true );
 fixctf      = ft_getopt(varargin, 'fixctf',       false);
 fixneuromag = ft_getopt(varargin, 'fixneuromag',  false);
-fix4d8192   = ft_getopt(varargin, 'fix4d8192', false);
+fix4d8192   = ft_getopt(varargin, 'fix4d8192',    false);
 fixbiosemi  = ft_getopt(varargin, 'fixbiosemi',   false);
-threshold   = ft_getopt(varargin, 'threshold'); 
+threshold   = ft_getopt(varargin, 'threshold'          ); 
 
 if isempty(hdr)
   hdr = ft_read_header(filename);
@@ -67,6 +62,9 @@ end
 
 % read the trigger channel as raw data, can safely assume that it is continuous
 dat = ft_read_data(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', 0);
+
+% start with an empty event structure
+event = [];
 
 if isempty(dat)
   % there are no triggers to detect
@@ -173,18 +171,28 @@ for i=1:length(chanindx)
   end
 
   switch detectflank
+    case 'bit'
+      trig = uint32([pad trig]);
+      for k=1:32
+        bitval = bitget(trig, k);                             % get each of the bits separately
+        for j=find(~bitval(1:end-1) & bitval(2:end))
+          event(end+1).type   = channel;
+          event(end  ).sample = j + begsample - 1;            % assign the sample at which the trigger has gone down
+          event(end  ).value  = 2^(k-1);                      % assign the value represented by this bit
+        end % j
+      end % k
     case 'up'
       % convert the trigger into an event with a value at a specific sample
       for j=find(diff([pad trig(:)'])>0)
         event(end+1).type   = channel;
-        event(end  ).sample = j + begsample - 1;      % assign the sample at which the trigger has gone down
-        event(end  ).value  = trig(j+trigshift);      % assign the trigger value just _after_ going up
+        event(end  ).sample = j + begsample - 1;            % assign the sample at which the trigger has gone down
+        event(end  ).value  = trig(j+trigshift);            % assign the trigger value just _after_ going up
       end
     case 'updiff'
       for j=find(diff([pad trig(:)'])>0)
         event(end+1).type   = channel;
-        event(end  ).sample = j + begsample - 1;      % assign the sample at which the trigger has gone down
-        event(end  ).value  = trig(j+trigshift)-trig(j-1);      % assign the trigger value just _after_ going up
+        event(end  ).sample = j + begsample - 1;            % assign the sample at which the trigger has gone down
+        event(end  ).value  = trig(j+trigshift)-trig(j-1);  % assign the trigger value just _after_ going up minus the value before
       end
     case 'down'
       % convert the trigger into an event with a value at a specific sample

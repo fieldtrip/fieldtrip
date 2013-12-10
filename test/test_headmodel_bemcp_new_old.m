@@ -1,5 +1,8 @@
 function test_headmodel_bemcp_new_old
 
+% MEM 2gb
+% WALLTIME 00:03:54
+
 % generate a unit sphere
 [pnt, tri] = icosahedron162;
 

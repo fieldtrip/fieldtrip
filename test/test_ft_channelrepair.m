@@ -1,5 +1,8 @@
 function test_ft_channelrepair
 
+% MEM 1500mb
+% WALLTIME 00:03:18
+
 % TEST test_ft_channelrepair
 % TEST ft_channelrepair ft_datatype_sens fixsens ft_prepare_neighbours
 
@@ -15,7 +18,7 @@ load(fname);
 
 cfg = [];
 cfg.method = 'triangulation';
-neighbours = ft_neighbourselection(cfg, data);
+neighbours = ft_prepare_neighbours(cfg, data);
 
 cfg = [];
 cfg.badchannel = data.label(100);
@@ -30,7 +33,7 @@ newdata = ft_channelrepair(cfg, data);
 % cfg = [];
 % cfg.method = 'template';
 % cfg.template = 'EEG1010_neighb.mat';
-% neighbours = ft_neighbourselection(cfg);
+% neighbours = ft_prepare_neighbours(cfg);
 % 
 % cfg = [];
 % cfg.badchannel = data.label(10);

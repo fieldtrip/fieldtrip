@@ -1,8 +1,12 @@
 function test_bug1067
+
+% MEM 1500mb
+% WALLTIME 00:03:03
+
+% TEST test_bug1067
+
 % tests whether parameters that are in ft_freq* but not in ft_source* will
 % be caught by ft_source* (and vice versa)
-
-
 
 % get all functions
 source_functions = dir(fullfile('..','ft_source*.m'));

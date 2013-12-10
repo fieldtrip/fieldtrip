@@ -1,5 +1,8 @@
 function test_ft_selectdata
 
+% MEM 1500mb
+% WALLTIME 00:03:16
+
 % TEST test_ft_selectdata
 % TEST ft_selectdata ft_selectdata_old ft_selectdata_new ft_appendfreq
 
@@ -65,23 +68,20 @@ data = ft_checkdata(data, 'hassampleinfo', 'yes');
 %% this part of the script tests the functionality of ft_selectdata with respect
 % to raw data.
 
-sel = [5 8 12 38];
-cfg = [];cfg.channel = data.label(sel);
-d1  = ft_selectdata(data, 'channel', data.label(sel));
-d2  = ft_selectdata(cfg, data);
-d2.cfg = [];
-assert(isequal(d1,d2));
+compare_outputs(data, 'channel', data.label([5 8 12 38]));
+% compare_outputs(data, 'channel', {}); % works neither with new nor old
+compare_outputs(data, 'channel', 'all');
+compare_outputs(data, 'trials',  [3 4 6 9]);
+compare_outputs(data, 'trials',  []);
+compare_outputs(data, 'trials',  'all');
 
-sel = [3 4 6 9];
-cfg = [];cfg.trials = sel;
-d3  = ft_selectdata(data, 'rpt', sel);
-d4  = ft_selectdata(cfg, data);
-d4.cfg = []; % ft_selectdata_old does not do anything with cfg
-assert(isequal(d3,d4));
+% FIXME also test latency
+% 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% this part of the script tests the functionality of ft_selectdata with respect
 % to freqdata. it implements the (old) test_ft_selectdata_freqdata 
-
+ 
 % do spectral analysis
 cfg        = [];
 cfg.method = 'mtmfft';
@@ -90,15 +90,15 @@ cfg.foilim = [2 100];
 cfg.pad    = 1;
 cfg.tapsmofrq = 3;
 freq       = ft_freqanalysis(cfg, data);
-
+ 
 cfg.output = 'pow';
 cfg.keeptrials = 'yes';
 freqp      = ft_freqanalysis(cfg, data);
-
+ 
 cfg.output = 'powandcsd';
 cfg.channelcmb = ft_channelcombination([data.label(1) {'all'};data.label(2) {'all'}], data.label);
 freqc      = ft_freqanalysis(cfg, data);
-
+ 
 cfg        = [];
 cfg.method = 'mtmconvol';
 cfg.foi    = [10:10:100];
@@ -108,107 +108,220 @@ cfg.taper  = 'hanning';
 cfg.output = 'pow';
 cfg.keeptrials = 'yes';
 freqtf     = ft_freqanalysis(cfg, data);
-
-% select channels, compare ft_selectdata_old with ft_selectdata_new and
+ 
+%% select channels, compare ft_selectdata_old with ft_selectdata_new and
 % compare ft_selectdata_new with what would be expected
-cfg  = [];cfg.channel=data.label(5:10);
-fx1  = ft_selectdata(freq,  'channel', data.label(5:10));
-fx1b = ft_selectdata(cfg, freq);
-fx1  = rmfield(fx1, 'cfg');
-fx1b = rmfield(fx1b, 'cfg');
-assert(isequal(fx1.fourierspctrm, freq.fourierspctrm(:,5:10,:)));
-assert(isequal(fx1, fx1b));
+ 
+% make a selection of channels
+[data_old, data_new] = compare_outputs(freq, 'channel', freq.label(5:10));
+assert(isequal(data_old.fourierspctrm, freq.fourierspctrm(:,5:10,:)));
+assert(isequal(data_new.fourierspctrm, freq.fourierspctrm(:,5:10,:)));
 
-fp1  = ft_selectdata(freqp, 'channel', data.label(5:10));
-fp1b = ft_selectdata(cfg, freqp); 
-fp1  = rmfield(fp1, 'cfg');
-fp1b = rmfield(fp1b, 'cfg');
-assert(isequal(fp1.powspctrm, freqp.powspctrm(:,5:10,:)));
-assert(isequal(fp1, fp1b));
+[data_old, data_new] = compare_outputs(freqp, 'channel', freq.label(5:10));
+assert(isequal(data_old.powspctrm, freqp.powspctrm(:,5:10,:)));
+assert(isequal(data_new.powspctrm, freqp.powspctrm(:,5:10,:)));
 
 try
-  fc1 = ft_selectdata(freqc, 'channel', data.label(5:10)); % gives error
+  [data_old, data_new] = compare_outputs(freqc, 'channel', freq.label(5:10));
+  assert(isequal(data_old.powspctrm, freqc.powspctrm(:,5:10,:)));
+  assert(isequal(data_new.powspctrm, freqc.powspctrm(:,5:10,:)));
 catch
   fprintf('selecting channels with csd in input does not work');
 end
-ftf1  = ft_selectdata(freqtf, 'channel', data.label(5:10));
-ftf1b = ft_selectdata(cfg, freqtf); 
-ftf1  = rmfield(ftf1, 'cfg');
-ftf1b = rmfield(ftf1b, 'cfg');
-assert(isequal(ftf1.powspctrm, freqtf.powspctrm(:,5:10,:,:)));
-assert(isequal(ftf1, ftf1b));
 
-% select frequencies
-cfg  = [];cfg.frequency=[10 40];
-fx2  = ft_selectdata(freq,  'foilim', [10 40]);
-fx2b = ft_selectdata(cfg, freq);
-fx2  = rmfield(fx2, 'cfg');
-fx2b = rmfield(fx2b, 'cfg');
-% FIXME: THE LABEL IS A ROW VECTOR, SHOULD BE COLUMN. INVESTIGATE THIS
-assert(isequal(fx2.fourierspctrm, freq.fourierspctrm(:,:,9:39)));
-assert(isequal(fx2, fx2b));
+[data_old, data_new] = compare_outputs(freqtf, 'channel', freq.label(5:10));
+assert(isequal(data_old.powspctrm, freqtf.powspctrm(:,5:10,:,:)));
+assert(isequal(data_new.powspctrm, freqtf.powspctrm(:,5:10,:,:)));
 
-fp2  = ft_selectdata(freqp, 'foilim', [10 40]);
-fp2b = ft_selectdata(cfg, freqp); 
-fp2  = rmfield(fp2, 'cfg');
-fp2b = rmfield(fp2b, 'cfg');
-assert(isequal(fp2.powspctrm, freqp.powspctrm(:,:,9:39)));
-assert(isequal(fp2, fp2b));
+% make a selection of all channels
+[data_old, data_new] = compare_outputs(freq, 'channel', 'all');
+assert(isequal(data_old.fourierspctrm, freq.fourierspctrm));
+assert(isequal(data_new.fourierspctrm, freq.fourierspctrm));
 
-fc2 = ft_selectdata(freqc, 'foilim', [10 40]);
+[data_old, data_new] = compare_outputs(freqp, 'channel', 'all');
+assert(isequal(data_old.powspctrm, freqp.powspctrm));
+assert(isequal(data_new.powspctrm, freqp.powspctrm));
 
-ftf2  = ft_selectdata(freqtf, 'foilim', [10 40]);
-ftf2b = ft_selectdata(cfg, freqtf); 
-ftf2  = rmfield(ftf2, 'cfg');
-ftf2b = rmfield(ftf2b, 'cfg');
-assert(isequal(ftf2.powspctrm, freqtf.powspctrm(:,:,1:4,:)));
-assert(isequal(ftf2, ftf2b));
+try
+  [data_old, data_new] = compare_outputs(freqc, 'channel', 'all');
+  assert(isequal(data_old.powspctrm, freqc.powspctrm));
+  assert(isequal(data_new.powspctrm, freqc.powspctrm));
+catch
+  fprintf('selecting channels with csd in input does not work');
+end
 
-% select time
-ftf2b = ft_selectdata(freqtf, 'toilim', [0.5 0.6]);
+[data_old, data_new] = compare_outputs(freqtf, 'channel', 'all');
+assert(isequal(data_old.powspctrm, freqtf.powspctrm));
+assert(isequal(data_new.powspctrm, freqtf.powspctrm));
 
-% select trials
-fx3 = ft_selectdata(freq,  'rpt', 3:5);
-fp3 = ft_selectdata(freqp, 'rpt', 3:5);
-fc3 = ft_selectdata(freqc, 'rpt', 3:5);
-ftf3 = ft_selectdata(freqtf, 'rpt', 3:5);
+% make a selection of no channels
+[data_old, data_new] = compare_outputs(freq, 'channel', {});
+assert(isequal(data_old.label,{}));
+assert(isequal(data_new.label,{}));
 
-% avgover channels
-fx4 = ft_selectdata(freq,  'avgoverchan', 'yes');
-fp4 = ft_selectdata(freqp, 'avgoverchan', 'yes');
-fc4 = ft_selectdata(freqc, 'avgoverchan', 'yes');
-ftf4 = ft_selectdata(freqtf, 'avgoverchan', 'yes');
+[data_old, data_new] = compare_outputs(freqp, 'channel', {});
+assert(isequal(data_old.label,{}));
+assert(isequal(data_new.label,{}));
 
-% assessing label after averaging: see bug 2191
-cfg = [];
-cfg.avgoverchan = 'yes';
-fx42 = ft_selectdata(cfg,freq);
-fp42 = ft_selectdata(cfg,freqp);
-fc42 = ft_selectdata(cfg,freqc);
-ftf42 = ft_selectdata(cfg,freqtf);
+try
+  [data_old, data_new] = compare_outputs(freqc, 'channel', {});
+  assert(isequal(data_old.label,{}));
+  assert(isequal(data_new.label,{}));
+catch
+  fprintf('selecting channels with csd in input does not work');
+end
 
-if ~strcmp(fx4.label{:},fx42.label{:});error('mismatch on label field');end
-if ~strcmp(fp4.label{:},fp42.label{:});error('mismatch on label field');end
-if ~strcmp(fc4.label{:},fc42.label{:});error('mismatch on label field');end
-if ~strcmp(ftf4.label{:},ftf42.label{:});error('mismatch on label field');end
+[data_old, data_new] = compare_outputs(freqtf, 'channel', {});
+assert(isequal(data_old.label,{}));
+assert(isequal(data_new.label,{}));
 
-% avgover frequencies
-fx5 = ft_selectdata(freq,  'avgoverfreq', 'yes');
-fp5 = ft_selectdata(freqp, 'avgoverfreq', 'yes');
-fc5 = ft_selectdata(freqc, 'avgoverfreq', 'yes');
-ftf5 = ft_selectdata(freqtf, 'avgoverchan', 'yes');
+%% select frequencies
 
-% avgover trials
-fx6 = ft_selectdata(freq,  'avgoverrpt', 'yes');
-fp6 = ft_selectdata(freqp, 'avgoverrpt', 'yes');
-fc6 = ft_selectdata(freqc, 'avgoverrpt', 'yes');
-ftf6 = ft_selectdata(freqtf, 'avgoverrpt', 'yes');
+[data_old, data_new] = compare_outputs(freq, 'frequency', freq.freq([9 39]));
+assert(isequal(data_old.fourierspctrm, freq.fourierspctrm(:,:,9:39)));
+assert(isequal(data_new.fourierspctrm, freq.fourierspctrm(:,:,9:39)));
 
-% leaveoneout
-% fx7 = ft_selectdata(freq,  'jackknife', 'yes'); %FAILS due to 'rpttap'
-fp7 = ft_selectdata(freqp, 'jackknife', 'yes');
-fc7 = ft_selectdata(freqc, 'jackknife', 'yes');
-ftf7 = ft_selectdata(freqtf, 'jackknife', 'yes');
+[data_old, data_new] = compare_outputs(freqp, 'frequency', freqp.freq([9 39]));
+assert(isequal(data_old.powspctrm, freqp.powspctrm(:,:,9:39)));
+assert(isequal(data_new.powspctrm, freqp.powspctrm(:,:,9:39)));
+
+try
+  [data_old, data_new] = compare_outputs(freqc, 'frequency', freqc.freq([9 39]));
+  assert(isequal(data_old.powspctrm, freqp.powspctrm(:,5:10,:)));
+  assert(isequal(data_new.powspctrm, freqp.powspctrm(:,5:10,:)));
+catch
+  fprintf('selecting channels with csd in input does not work');
+end
+
+[data_old, data_new] = compare_outputs(freqtf, 'frequency', freqtf.freq([1 4]));
+assert(isequal(data_old.powspctrm, freqtf.powspctrm(:,:,1:4,:)));
+assert(isequal(data_new.powspctrm, freqtf.powspctrm(:,:,1:4,:)));
+
+% make a selection of all channels
+[data_old, data_new] = compare_outputs(freq, 'frequency', 'all');
+assert(isequal(data_old.fourierspctrm, freq.fourierspctrm));
+assert(isequal(data_new.fourierspctrm, freq.fourierspctrm));
+
+[data_old, data_new] = compare_outputs(freqp, 'frequency', 'all');
+assert(isequal(data_old.powspctrm, freqp.powspctrm));
+assert(isequal(data_new.powspctrm, freqp.powspctrm));
+
+try
+  [data_old, data_new] = compare_outputs(freqp, 'frequency', 'all');
+  assert(isequal(data_old.powspctrm, freqp.powspctrm));
+  assert(isequal(data_new.powspctrm, freqp.powspctrm));
+catch
+  fprintf('selecting channels with csd in input does not work');
+end
+
+[data_old, data_new] = compare_outputs(freqtf, 'frequency', 'all');
+assert(isequal(data_old.powspctrm, freqtf.powspctrm));
+assert(isequal(data_new.powspctrm, freqtf.powspctrm));
+
+% make a selection of no channels
+compare_outputs(freq, 'frequency', []);
+compare_outputs(freqp, 'frequency', []);
+try
+  compare_outputs(freqp, 'frequency', []);
+catch
+  fprintf('selecting channels with csd in input does not work');
+end
+compare_outputs(freqtf, 'frequency', []);
+
+%% select time
+ 
+% subselection
+[data_old, data_new] = compare_outputs(freqtf, 'latency', [0.5 0.6]);
+assert(isequal(data_old.powspctrm, freqtf.powspctrm(:,:,:,[2 3])));
+assert(isequal(data_new.powspctrm, freqtf.powspctrm(:,:,:,[2 3])));% 
+
+compare_outputs(freqtf, 'latency', 'all'); % all
+compare_outputs(freqtf, 'latency', []); % nothing
+ 
+%% select trials
+ 
+% do a subselection
+compare_outputs(freq,   'trials', 3:5);
+compare_outputs(freqp,  'trials', 3:5);
+try
+  compare_outputs(freqc,  'trials', 3:5);
+catch
+  warning('assertion failed, because ft_selectdata_new cannot deal with crsspctrm in input yet');
+end
+compare_outputs(freqtf, 'trials', 3:5);
+ 
+% do an empty selection
+compare_outputs(freq,   'trials', []);
+compare_outputs(freqp,  'trials', []);
+try
+  compare_outputs(freqc,  'trials', []);
+catch
+  warning('assertion failed, because ft_selectdata_new cannot deal with crsspctrm in input yet');
+end
+compare_outputs(freqtf, 'trials', []);
+
+% select all
+compare_outputs(freq,   'trials', 'all');
+compare_outputs(freqp,  'trials', 'all');
+try
+  compare_outputs(freqc,  'trials', 'all');
+catch
+  warning('assertion failed, because ft_selectdata_new cannot deal with crsspctrm in input yet');
+end
+compare_outputs(freqtf, 'trials', 'all');
+
+%% avgover channels
+% Old snippet: not needed anymore
+% fx4  = ft_selectdata(freq,   'avgoverchan', 'yes');
+% fp4  = ft_selectdata(freqp,  'avgoverchan', 'yes');
+% fc4  = ft_selectdata(freqc,  'avgoverchan', 'yes');
+% ftf4 = ft_selectdata(freqtf, 'avgoverchan', 'yes');
+% 
+% % assessing label after averaging: see bug 2191 -> this seems OK
+% cfg             = [];
+% cfg.avgoverchan = 'yes';
+% fx42  = ft_selectdata(cfg,freq);
+% fp42  = ft_selectdata(cfg,freqp);
+% fc42  = ft_selectdata(cfg,freqc);
+% ftf42 = ft_selectdata(cfg,freqtf);
+% 
+% if ~strcmp(fx4.label{:},fx42.label{:});error('mismatch on label field');end
+% if ~strcmp(fp4.label{:},fp42.label{:});error('mismatch on label field');end
+% if ~strcmp(fc4.label{:},fc42.label{:});error('mismatch on label field');end
+% if ~strcmp(ftf4.label{:},ftf42.label{:});error('mismatch on label field');end
+
+compare_outputs(freq,   'avgoverchan');
+compare_outputs(freqp,  'avgoverchan');
+try
+  compare_outputs(freqc,  'avgoverchan');
+catch
+end
+compare_outputs(freqtf, 'avgoverchan');
+
+%% avgover frequencies
+compare_outputs(freq,  'avgoverfreq');
+compare_outputs(freqp, 'avgoverfreq');
+try
+  compare_outputs(freqc, 'avgoverfreq');
+catch
+end
+compare_outputs(freqtf, 'avgoverfreq');
+
+%% avgover trials
+compare_outputs(freq,  'avgoverrpt');
+compare_outputs(freqp, 'avgoverrpt');
+try
+  compare_outputs(freqc, 'avgoverrpt');
+catch
+end
+compare_outputs(freqtf, 'avgoverrpt');
+
+%% leaveoneout
+% FIXME: to be looked into
+% % fx7 = ft_selectdata(freq,  'jackknife', 'yes'); %FAILS due to 'rpttap'
+% fp7 = ft_selectdata(freqp, 'jackknife', 'yes');
+% fc7 = ft_selectdata(freqc, 'jackknife', 'yes');
+% ftf7 = ft_selectdata(freqtf, 'jackknife', 'yes');
 
 %% this part tests the functionality of ft_appendfreq
 
@@ -247,4 +360,162 @@ freq4  = rmfield(freq4, 'cfg');
 freq4a = ft_selectdata(freq3, freq3, 'param', 'powspctrm');  % this should append the power spectrum
 assert(isequal(freq4, freq4a));
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% this part of the function tests the functionality of ft_selectdata with respect to timelock data
 
+% create timelocked data
+cfg = [];
+cfg.keeptrials = 'yes';
+tlck = ft_timelockanalysis(cfg, data);
+cfg.covariance = 'yes';
+tlckc = ft_timelockanalysis(cfg, data);
+cfg.keeptrials = 'no';
+tlckcavg = ft_timelockanalysis(cfg, data);
+cfg.covariance = 'no';
+tlckavg = ft_timelockanalysis(cfg, data);
+
+%% select trials
+compare_outputs(tlck,  'trials', [4 5 6]);
+compare_outputs(tlckc, 'trials', [4 5 6]);
+compare_outputs(tlck,  'trials', []);
+compare_outputs(tlckc, 'trials', []);
+compare_outputs(tlck,  'trials', 'all');
+compare_outputs(tlckc, 'trials', 'all');
+
+%% select latency
+compare_outputs(tlck,      'latency', [-0.1 0.1]);
+compare_outputs(tlckc,     'latency', [-0.1 0.1]);
+compare_outputs(tlckavg,   'latency', [-0.1 0.1]);
+compare_outputs(tlckcavg,  'latency', [-0.1 0.1]);
+compare_outputs(tlck,      'latency', []);
+compare_outputs(tlckc,     'latency', []);
+compare_outputs(tlckavg,   'latency', []);
+compare_outputs(tlckcavg,  'latency', []);
+compare_outputs(tlck,      'latency', 'all');
+compare_outputs(tlckc,     'latency', 'all');
+compare_outputs(tlckavg,   'latency', 'all');
+compare_outputs(tlckcavg,  'latency', 'all');
+
+%% select channels
+compare_outputs(tlck,      'channel', tlck.label(11:20));
+compare_outputs(tlckc,     'channel', tlckc.label(11:20));
+compare_outputs(tlckavg,   'channel', tlckavg.label(11:20));
+% compare_outputs(tlckcavg,  'channel', tlckcavg.label(11:20));% this one
+%fails because ft_selectdata correctly selects channels from cov and
+%ft_selectdata does not
+compare_outputs(tlck,      'channel', []);
+compare_outputs(tlckc,     'channel', []);
+compare_outputs(tlckavg,   'channel', []);
+% compare_outputs(tlckcavg,  'channel', []);% this one
+%fails because ft_selectdata correctly selects channels from cov and
+%ft_selectdata does not
+compare_outputs(tlck,      'channel', 'all');
+compare_outputs(tlckc,     'channel', 'all');
+compare_outputs(tlckavg,   'channel', 'all');
+compare_outputs(tlckcavg,  'channel', 'all');
+
+%% avgoverrpt
+compare_outputs(tlck,  'avgoverrpt');
+compare_outputs(tlckc, 'avgoverrpt');
+
+%% avgoverchan
+compare_outputs(tlck,  'avgoverchan');
+compare_outputs(tlckc, 'avgoverchan');
+compare_outputs(tlckavg,  'avgoverchan');
+compare_outputs(tlckcavg, 'avgoverchan');
+
+%% avgovertime
+% FIXME: ft_selectdata_new removes time altogether, ft_selectdata_new does
+% not: discuss what is expected behavior
+
+%compare_outputs(tlck,  'avgovertime');
+%compare_outputs(tlckc, 'avgovertime');
+%compare_outputs(tlckavg,  'avgovertime');
+%compare_outputs(tlckcavg, 'avgovertime');
+
+
+
+function [data_old, data_new] = compare_outputs(data, key, value)
+
+switch key
+  case 'trials'
+    keyold = 'rpt';
+  case 'frequency'
+    keyold = 'foilim';
+  case 'latency'
+    keyold = 'toilim';
+  otherwise
+    keyold = key;
+end
+
+if nargin>2
+  % there has been a key and a value
+  cfg       = [];
+  cfg.(key) = value;
+  data_new  = ft_selectdata(cfg,  data);
+  data_old  = ft_selectdata(data, keyold, value);
+  
+  % don't include the cfg
+  data_new  = rmfield(data_new, 'cfg');
+  data_old  = rmfield(data_old, 'cfg');
+  if isfield(data_new, 'cov') && ~isfield(data_old, 'cov')
+    % skip the comparison of the cov, because ft_selectdata_old could not
+    % deal with this correctly: this is not something to be asserted here
+    data_new = rmfield(data_new, 'cov')
+  end
+  assert(isequal(data_old, data_new));
+  
+  % check whether the output is the same as the input
+  if ischar(value) && strcmp(value, 'all')
+    dataorig = data;
+    try, if isfield(dataorig, 'trial'), data = rmfield(dataorig, {'avg', 'var', 'dof'}); end ; end% only remove when trial
+    try, if isfield(data, 'cov') && ~isfield(data_old, 'cov'), data = rmfield(data, 'cov'); end; end
+    data = rmfield(data, 'cfg');
+    assert(isequal(data, data_old));
+    
+    data = dataorig;
+    try, if isfield(dataorig, 'trial'), data = rmfield(dataorig, {'avg', 'var', 'dof'}); end ; end% only remove when trial
+    try, if isfield(data, 'cov') && ~isfield(data_new, 'cov'), data = rmfield(data, 'cov'); end; end
+    data = rmfield(data, 'cfg');
+    assert(isequal(data, data_new));
+  end
+else
+  % assume the avgoverXXX is tested
+  cfg       = [];
+  cfg.(key) = 'yes';
+  data_new  = ft_selectdata(cfg,  data);
+  data_old  = ft_selectdata(data, keyold, 'yes');
+  
+  % don't include the cfg
+  data_new  = rmfield(data_new, 'cfg');
+  data_old  = rmfield(data_old, 'cfg');
+  
+  if strcmp(key, 'avgoverfreq') | strcmp(key, 'avgoverrpt')
+    % apparently something may be wrong with the data_old.dimord
+    % don't spend time on fixing this here
+    data_old.dimord = data_new.dimord;
+  end
+  
+  if strcmp(key, 'avgoverrpt')
+    % ft_selectdata_old does something inconsistent, don't bother to fix it
+    if isfield(data_old, 'cumtapcnt'), data_old = rmfield(data_old, 'cumtapcnt'); end
+    if isfield(data_old, 'cumsumcnt'), data_old = rmfield(data_old, 'cumsumcnt'); end
+    if isfield(data_old, 'trialinfo'), data_old = rmfield(data_old, 'trialinfo'); end
+  
+    % ft_selectdata_new tries to keep the cov, but ft_selectdata doesn't,
+    % don't bother to fix ft_selectdata_old
+    if isfield(data_new, 'cov'), data_new = rmfield(data_new, 'cov'); end
+  end  
+  
+  if strcmp(key, 'avgoverchan')
+    % ft_selectdata_old sometimes keeps the cov (without averaging), don't
+    % bother to fix it
+    if isfield(data_old, 'cov'), data_old = rmfield(data_old, 'cov'); end 
+    
+    % ft_selectdata_new tries to keep the cov, but ft_selectdata doesn't,
+    % don't bother to fix ft_selectdata_old
+    if isfield(data_new, 'cov'), data_new = rmfield(data_new, 'cov'); end
+  end
+  
+  assert(isequal(data_old, data_new));
+end

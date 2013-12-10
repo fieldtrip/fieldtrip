@@ -1,5 +1,8 @@
 function test_ft_sourcemovie
 
+% MEM 1500mb
+% WALLTIME 00:03:01
+
 % TEST test_ft_sourcemovie
 % TEST ft_sourcemovie ft_sourceanalysis ft_prepare_singleshell ft_prepare_leadfield
 % TEST qsubcellfun qsubfeval qsubget

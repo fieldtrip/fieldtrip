@@ -1,5 +1,8 @@
 function test_ft_appendfreq
 
+% MEM 1500mb
+% WALLTIME 00:03:02
+
 % TEST test_ft_appendfreq
 % TEST ft_appendfreq
 

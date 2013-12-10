@@ -12,10 +12,13 @@ function [data] = ft_rejectcomponent(cfg, comp, data)
 %
 % where the input comp is the result of FT_COMPONENTANALYSIS. The output
 % data will have the same format as the output of FT_PREPROCESSING.
+%
 % An optional input argument data can be provided. In that case
 % componentanalysis will do a subspace projection of the input data
 % onto the space which is spanned by the topographies in the unmixing
-% matrix in comp, after removal of the artifact components.
+% matrix in comp, after removal of the artifact components.  Please use
+% this option of including data as input, if you wish to use the output 
+% data.grad in further computation, for example for leadfield computation.
 %
 % The configuration should contain
 %   cfg.component = list of components to remove, e.g. [1 4 7]

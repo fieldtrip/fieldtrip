@@ -15,7 +15,8 @@ end
 table = {...
     'NIFTI_TYPE_UINT8',   'uint8',   '%d', @uint8, 'uint8'
     'NIFTI_TYPE_INT32',   'int32',   '%d', @int32, 'int32' 
-    'NIFTI_TYPE_FLOAT32', 'float32', '%f', @single, 'single'};
+    'NIFTI_TYPE_FLOAT32', 'float32', '%f', @single, 'single'
+    'NIFTI_TYPE_FLOAT64', 'float64', '%f', @double, 'double'};
 
 for i=1:size(table,1)
     dict.(table{i,1}) = cell2struct({table{i,2:end}},...

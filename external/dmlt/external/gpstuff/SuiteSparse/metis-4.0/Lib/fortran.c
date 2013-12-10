@@ -8,7 +8,7 @@
  * Started 8/19/97
  * George
  *
- * $Id: fortran.c,v 1.1 1998/11/27 17:59:14 karypis Exp $
+ * $Id$
  *
  */
 

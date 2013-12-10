@@ -1,5 +1,8 @@
 function test_bug1976
 
+% MEM 1500mb
+% WALLTIME 00:03:00
+
 % TEST test_bug1976 ft_sourceanalysis test_ft_sourceanalysis
 
 % clear all
@@ -91,34 +94,6 @@ source = ft_sourceanalysis(cfg, data);
 plot3(pnt(:,1),pnt(:,2),pnt(:,3),'y.'); hold on
 quiver3(sens.chanpos(:,1),sens.chanpos(:,2),sens.chanpos(:,3),sens.chanori(:,1),sens.chanori(:,2),sens.chanori(:,3))
 quiver3(pos(:,1),pos(:,2),pos(:,3),j(1,:)',j(2,:)',j(3,:)')
-
-%% Also made changes to other methods. test here:
-test_bug1049
-cd /home/common/matlab/fieldtrip/test
-test_bug1298
-cd /home/common/matlab/fieldtrip/test
-test_bug1563
-cd /home/common/matlab/fieldtrip/test
-test_bug1599
-cd /home/common/matlab/fieldtrip/test
-test_ft_sourceanalysis
-cd /home/common/matlab/fieldtrip/test
-test_ft_sourcemovie
-cd /home/common/matlab/fieldtrip/test
-test_ft_timelockanalysis_new
-cd /home/common/matlab/fieldtrip/test
-test_historical
-cd /home/common/matlab/fieldtrip/test
-test_testbug1563
-cd /home/common/matlab/fieldtrip/test
-test_tutorial_beamformer20120321
-cd /home/common/matlab/fieldtrip/test
-test_tutorial_beamformer
-cd /home/common/matlab/fieldtrip/test
-test_tutorial_coherence
-cd /home/common/matlab/fieldtrip/test
-test_tutorial_connectivity3
-cd /home/common/matlab/fieldtrip/test
 
 %%
 % Note: I (Johanna) tested this also by creating a temporary timelock ctf151 with

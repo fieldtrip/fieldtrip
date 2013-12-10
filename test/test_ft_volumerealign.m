@@ -1,5 +1,8 @@
 function test_ft_volumerealign
 
+% MEM 1500mb
+% WALLTIME 00:03:01
+
 % to test: 
 % within modalities
 % between modalities

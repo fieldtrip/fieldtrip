@@ -59,6 +59,11 @@ if ~isfield(ft_default, 'trackcallinfo'),  ft_default.trackcallinfo  = 'yes';   
 if ~isfield(ft_default, 'trackdatainfo'),  ft_default.trackdatainfo  = 'no';     end % yes or no, this is still under development
 if ~isfield(ft_default, 'trackparaminfo'), ft_default.trackparaminfo = 'no';     end % yes or no, this is still under development
 
+% throw warning if matlab is newer than 2012b, as we cannot currently guarantee compatibility with 2013a
+if ~verLessThan('matlab','8.1') % version 8.1 is R2013a
+  warning(['You are using MATLAB ' version('-release') '. FieldTrip is currently not supported on 2013a (8.1) or newer. Using your current MATLAB version can lead to unexpected behaviour, which might not be easily noticable. Continuing is not advised.'])
+end
+
 % track whether we have executed ft_defaults already. Note that we should
 % not use ft_default itself directly, because the user might have set stuff
 % in that struct already before ft_defaults is called for the first time.

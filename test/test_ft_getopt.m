@@ -1,5 +1,8 @@
 function test_ft_getopt
 
+% MEM 1500mb
+% WALLTIME 00:03:01
+
 % TEST test_ft_getopt
 % TEST ft_getopt
 

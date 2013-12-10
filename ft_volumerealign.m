@@ -24,11 +24,11 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 %   cfg.coordsys       = 'ctf' (default when specifying cfg.method =
 %                         'interactive' or 'fiducial') or 'spm' (default
 %                         when specifying cfg.method = 'landmark').
-%                         Specifies the output coordinate system of the head. This
-%                         string specifies the origin and the axes of the
+%                         Specifies the output coordinate system of the head.
+%                         This string specifies the origin and the axes of the
 %                         coordinate system. supported coordinate systems
-%                         are: 'ctf', '4d', 'yokogawa', 'neuromag', 'itab'
-%                         'spm', 'tal'.
+%                         are 'ctf', '4d', 'yokogawa', 'neuromag', 'itab'
+%                         'spm' and 'tal'.
 %   cfg.clim           = [min max], scaling of the anatomy color (default
 %                        is to adjust to the minimum and maximum)
 %   cfg.parameter      = 'anatomy' the parameter which is used for the
@@ -284,8 +284,8 @@ switch cfg.method
       '   d. additional control point for the landmarks can be a point along the\n',...
       '      positive x-axis (to the participant''s right), press r\n',...
       '3. To change the display:\n',...
-      '   a. press c or C on keyboard to show/hide crosshair\n',...
-      '   b. press m or M on keyboard to show/hide marked positions\n',...
+      '   a. press c on keyboard to toggle crosshair visibility\n',...
+      '   b. press m on keyboard to toggle marked positions visibility\n',...
       '   c. press + or - on (numeric) keyboard to change the color range''s upper limit\n',...
       '4. To finalize markers and quit interactive mode, press q on keyboard\n'));
     
@@ -362,13 +362,13 @@ switch cfg.method
           xzpoint = [xc yc zc];
           takesnapshot = true;
         case 99  % 'c'
-          showcrosshair = true;
-        case 67  % 'C'
-          showcrosshair = false;
+          showcrosshair = ~showcrosshair;
         case 109 % 'm'
-          showmarkers = 2;
-        case 77 % 'M'
-          showmarkers = 0;
+          if showmarkers > 0
+            showmarkers = 0;
+          else
+            showmarkers = 2;
+          end
         case 1 % left mouse click
           % update the view to a new position
           l1 = get(get(gca, 'xlabel'), 'string');
@@ -497,53 +497,53 @@ switch cfg.method
         str = sprintf('voxel %d, indices [%d %d %d]', sub2ind(mri.dim(1:3), round(xc), round(yc), round(zc)), round([xc yc zc]));
         
         if isfield(mri, 'coordsys') && isfield(mri, 'unit')
-          str = sprintf('%s, %s coordinates [%.1f %.1f %.1f] %s', str, mri.coordsys, warp_apply(mri.transform, [xc yc zc]), mri.unit);
+          str = sprintf('%s, %s coordinates [%.1f %.1f %.1f] %s', str, mri.coordsys, ft_warp_apply(mri.transform, [xc yc zc]), mri.unit);
         elseif ~isfield(mri, 'coordsys') && isfield(mri, 'unit')
-          str = sprintf('%s, location [%.1f %.1f %.1f] %s', str, warp_apply(mri.transform, [xc yc zc]), mri.unit);
+          str = sprintf('%s, location [%.1f %.1f %.1f] %s', str, ft_warp_apply(mri.transform, [xc yc zc]), mri.unit);
         elseif isfield(mri, 'coordsys') && ~isfield(mri, 'unit')
-          str = sprintf('%s, %s coordinates [%.1f %.1f %.1f]', str, mri.coordsys, warp_apply(mri.transform, [xc yc zc]));
+          str = sprintf('%s, %s coordinates [%.1f %.1f %.1f]', str, mri.coordsys, ft_warp_apply(mri.transform, [xc yc zc]));
         elseif ~isfield(mri, 'coordsys') && ~isfield(mri, 'unis')
-          str = sprintf('%s, location [%.1f %.1f %.1f]', str, warp_apply(mri.transform, [xc yc zc]));
+          str = sprintf('%s, location [%.1f %.1f %.1f]', str, ft_warp_apply(mri.transform, [xc yc zc]));
         end
         fprintf('%s\n', str);
-        % fprintf('cur_voxel = [%f %f %f], cur_head = [%f %f %f]\n', [xc yc zc], warp_apply(mri.transform, [xc yc zc]));
+        % fprintf('cur_voxel = [%f %f %f], cur_head = [%f %f %f]\n', [xc yc zc], ft_warp_apply(mri.transform, [xc yc zc]));
       end
       
       markerpos   = zeros(0,3);
       markerlabel = {};
       markercolor = {};
       if ~isempty(nas),
-        fprintf('nas_voxel = [%f %f %f], nas_head = [%f %f %f]\n', nas, warp_apply(mri.transform, nas));
+        fprintf('nas_voxel = [%f %f %f], nas_head = [%f %f %f]\n', nas, ft_warp_apply(mri.transform, nas));
         markerpos   = [markerpos; nas];
         markerlabel = [markerlabel; {'nas'}];
         markercolor = [markercolor; {'b'}];
       end
       if ~isempty(lpa),
-        fprintf('lpa_voxel = [%f %f %f], lpa_head = [%f %f %f]\n', lpa, warp_apply(mri.transform, lpa));
+        fprintf('lpa_voxel = [%f %f %f], lpa_head = [%f %f %f]\n', lpa, ft_warp_apply(mri.transform, lpa));
         markerpos   = [markerpos; lpa];
         markerlabel = [markerlabel; {'lpa'}];
         markercolor = [markercolor; {'g'}];
       end
       if ~isempty(rpa),
-        fprintf('rpa_voxel = [%f %f %f], rpa_head = [%f %f %f]\n', rpa, warp_apply(mri.transform, rpa));
+        fprintf('rpa_voxel = [%f %f %f], rpa_head = [%f %f %f]\n', rpa, ft_warp_apply(mri.transform, rpa));
         markerpos   = [markerpos; rpa];
         markerlabel = [markerlabel; {'rpa'}];
         markercolor = [markercolor; {'r'}];
       end
       if ~isempty(antcomm),
-        fprintf('antcomm_voxel = [%f %f %f], antcomm_head = [%f %f %f]\n', antcomm, warp_apply(mri.transform, antcomm));
+        fprintf('antcomm_voxel = [%f %f %f], antcomm_head = [%f %f %f]\n', antcomm, ft_warp_apply(mri.transform, antcomm));
         markerpos   = [markerpos; antcomm];
         markerlabel = [markerlabel; {'antcomm'}];
         markercolor = [markercolor; {'b'}];
       end
       if ~isempty(pstcomm),
-        fprintf('pstcomm_voxel = [%f %f %f], pstcomm_head = [%f %f %f]\n', pstcomm, warp_apply(mri.transform, pstcomm));
+        fprintf('pstcomm_voxel = [%f %f %f], pstcomm_head = [%f %f %f]\n', pstcomm, ft_warp_apply(mri.transform, pstcomm));
         markerpos   = [markerpos; pstcomm];
         markerlabel = [markerlabel; {'pstcomm'}];
         markercolor = [markercolor; {'g'}];
       end
       if ~isempty(xzpoint),
-        fprintf('xzpoint_voxel = [%f %f %f], xzpoint_head = [%f %f %f]\n', xzpoint, warp_apply(mri.transform, xzpoint));
+        fprintf('xzpoint_voxel = [%f %f %f], xzpoint_head = [%f %f %f]\n', xzpoint, ft_warp_apply(mri.transform, xzpoint));
         markerpos   = [markerpos; xzpoint];
         markerlabel = [markerlabel; {'xzpoint'}];
         markercolor = [markercolor; {'y'}];
@@ -585,27 +585,45 @@ switch cfg.method
     end
     shape = ft_convert_units(shape, 'mm');
     
-    % extract skull surface from image
-    tmpcfg        = [];
-    tmpcfg.output = 'scalp';
-    tmpcfg.scalpsmooth    = cfg.scalpsmooth;
-    tmpcfg.scalpthreshold = cfg.scalpthreshold;
-    if isfield(cfg, 'template')
-     tmpcfg.template = cfg.template;
+    if ~isfield(mri, 'scalp') || ~islogical(mri.scalp)
+      % extract the scalp surface from the anatomical image
+      tmpcfg        = [];
+      tmpcfg.output = 'scalp';
+      tmpcfg.scalpsmooth    = cfg.scalpsmooth;
+      tmpcfg.scalpthreshold = cfg.scalpthreshold;
+      if isfield(cfg, 'template')
+        tmpcfg.template = cfg.template;
+      end
+      seg           = ft_volumesegment(tmpcfg, mri);
+    else
+      % use the scalp segmentation that is provided
+      seg = mri;
     end
-    seg           = ft_volumesegment(tmpcfg, mri);
     
     tmpcfg             = [];
-    tmpcfg.method      = 'singleshell';
-    tmpcfg.numvertices = 20000;
-    scalp           = ft_prepare_headmodel(tmpcfg, seg);
-    scalp           = ft_convert_units(scalp, 'mm');
+    tmpcfg.tissue      = 'scalp';
+    tmpcfg.method      = 'isosurface';
+    tmpcfg.numvertices = nan;
+    scalp              = ft_prepare_mesh(tmpcfg, seg);
+    scalp              = ft_convert_units(scalp, 'mm');
+    
+    % Here it is advisable to interactively realign the shape and scalp, in
+    % order to get a good starting point for the icp-algorithm.
+    % We will use ft_interactiverealign for this.
+    tmpcfg                       = [];
+    tmpcfg.template.elec         = shape;
+    tmpcfg.template.elec.chanpos = shape.pnt;
+    tmpcfg.individual.headshape  = scalp;
+    tmpcfg.individual.headshapestyle = 'surface';
+    tmpcfg = ft_interactiverealign(tmpcfg);
+    M      = tmpcfg.m;
+    
+    % update the relevant geometrical info
+    mri.transform = M*mri.transform;
+    scalp     = ft_transform_geometry(M, scalp);
     
     if ~isfield(cfg, 'weights')
-      % weight the points with z-coordinate more than the rest. These are the
-      % likely points that belong to the nose and eye rims
       w = ones(size(shape.pnt,1),1);
-      %w(shape.pnt(:,3)<0) = 100; % this value seems to work
     else
       w = cfg.weights(:);
       if numel(w)~=size(shape.pnt,1),
@@ -617,35 +635,65 @@ switch cfg.method
     weights = @(x)assignweights(x,w);
     
     % construct the coregistration matrix
-    % [R, t, corr, D, data2] = icp2(scalp.bnd.pnt', shape.pnt', 20, [], weights); % icp2 is a helper function implementing the iterative closest point algorithm
-    nrm         = normals(scalp.bnd.pnt, scalp.bnd.tri, 'vertex');
-    [R, t, err] = icp(scalp.bnd.pnt', shape.pnt', 50, 'Minimize', 'plane', 'Normals', nrm', 'ReturnAll', true, 'Weight', weights, 'Extrapolation', true, 'WorstRejection', 0.05);
-    [m,ix]      = min(err);
-    R           = R(:,:,ix);
-    t           = t(:,:,ix);
-    transform   = inv([R t;0 0 0 1]);
+    nrm = normals(scalp.pnt, scalp.tri, 'vertex');
+    [R, t, err, ~, info] = icp(scalp.pnt', shape.pnt', 50, 'Minimize', 'plane', 'Normals', nrm', 'Weight', weights, 'Extrapolation', true, 'WorstRejection', 0.05);
     
-    % warp the extracted scalp points to the new positions
-    scalp.bnd.pnt          = warp_apply(transform, scalp.bnd.pnt);
+    % smooth the distance function and use this for new weights
+    target        = scalp;
+    target.pos    = target.pnt;
+    target.inside = (1:size(target.pos,1))';
     
+    functional     = rmfield(shape,'pnt');
+    functional.pow = info.distanceout(:);
+    functional.pos = info.qout';
+
+    tmpcfg           = [];
+    tmpcfg.parameter = 'pow';
+    tmpcfg.interpmethod = 'sphere_avg';
+    tmpcfg.sphereradius = 10;
+    smoothdist          = ft_sourceinterpolate(tmpcfg, functional, target);
+    scalp.distance  = smoothdist.pow(:);
+    
+% A second iteration of the icp algorithm does not seem to improve things.
+% Code is kept just to consider investigating this in more detail.
+%
+%     % this one transforms from scalp 'headspace' to shape 'headspace'
+%     transform   = inv([R t;0 0 0 1]);
+%     
+%     % warp the extracted scalp points to the new positions
+%     scalp.pnt = ft_warp_apply(transform, scalp.pnt);
+%     
+%     % now the idea would be to do a second round where the points are
+%     % weighted with the (locally averaged) distance to the scalp
+%     newweights = abs(smoothdist.pow(info.q_idx));
+%     weights = @(x)assignweights(x,newweights(:)');
+%     
+%     [R2, t2, err2,~,info(2)] = icp(scalp.pnt', info.pin, 50, 'Minimize', 'plane', 'Normals', nrm', 'Weight', weights, 'Extrapolation', true);
+%     
+%     % this one transforms from scalp 'headspace' to shape 'headspace'
+%     transform   = [R2 t2;0 0 0 1]\transform;
+%     
+%     % warp the extracted scalp points to the new positions
+%     scalp.pnt = ft_warp_apply(inv([R2 t2;0 0 0 1]), scalp.pnt);
+  
     % create headshape structure for mri-based surface point cloud
     if isfield(mri, 'coordsys')
       scalp.coordsys = mri.coordsys;
+    
+      % coordsys is the same as input mri
+      coordsys = mri.coordsys;
+    else
+      coordsys  = 'unknown';
     end
-    
-    % coordsys is the same as input mri
-    coordsys = mri.coordsys;
-    
-    %     mrifid.pnt   = warp_apply(transform*mri.transform, [fiducials.nas;fiducials.lpa;fiducials.rpa]);
-    %     mrifid.label = {'NZinteractive';'Linteractive';'Rinteractive'};
-    %     shapemri.fid = mrifid;
-       
+           
     % update the cfg
     cfg.headshape    = shape;
     cfg.headshapemri = scalp;
+    cfg.icpinfo      = info;
     
     % touch it to survive trackconfig
     cfg.headshapemri;
+    cfg.icpinfo;
     
   case 'fsl'
     if ~isfield(cfg, 'fsl'), cfg.fsl = []; end
@@ -814,28 +862,28 @@ end
 if basedonfid
   % the fiducial locations are now specified in voxels, convert them to head
   % coordinates according to the existing transform matrix
-  nas_head = warp_apply(mri.transform, cfg.fiducial.nas);
-  lpa_head = warp_apply(mri.transform, cfg.fiducial.lpa);
-  rpa_head = warp_apply(mri.transform, cfg.fiducial.rpa);
+  nas_head = ft_warp_apply(mri.transform, cfg.fiducial.nas);
+  lpa_head = ft_warp_apply(mri.transform, cfg.fiducial.lpa);
+  rpa_head = ft_warp_apply(mri.transform, cfg.fiducial.rpa);
   if isfield(cfg.fiducial, 'zpoint') && ~isempty(cfg.fiducial.zpoint)
-    zpnt_head = warp_apply(mri.transform, cfg.fiducial.zpoint);
-    [transform, coordsys] = headcoordinates(nas_head, lpa_head, rpa_head, zpnt_head, cfg.coordsys);
+    zpnt_head = ft_warp_apply(mri.transform, cfg.fiducial.zpoint);
+    [transform, coordsys] = ft_headcoordinates(nas_head, lpa_head, rpa_head, zpnt_head, cfg.coordsys);
   else
     % compute the homogeneous transformation matrix describing the new coordinate system
-    [transform, coordsys] = headcoordinates(nas_head, lpa_head, rpa_head, cfg.coordsys);
+    [transform, coordsys] = ft_headcoordinates(nas_head, lpa_head, rpa_head, cfg.coordsys);
   end
 elseif basedonmrk
   % the fiducial locations are now specified in voxels, convert them to head
   % coordinates according to the existing transform matrix
-  ac     = warp_apply(mri.transform, cfg.landmark.ac);
-  pc     = warp_apply(mri.transform, cfg.landmark.pc);
-  xzpoint= warp_apply(mri.transform, cfg.landmark.xzpoint);
+  ac     = ft_warp_apply(mri.transform, cfg.landmark.ac);
+  pc     = ft_warp_apply(mri.transform, cfg.landmark.pc);
+  xzpoint= ft_warp_apply(mri.transform, cfg.landmark.xzpoint);
   if isfield(cfg.landmark, 'rpoint') && ~isempty(cfg.landmark.rpoint)
-    rpnt_head = warp_apply(mri.transform, cfg.landmark.rpoint);
-    [transform, coordsys] = headcoordinates(ac, pc, xzpoint, rpnt_head, 'spm');
+    rpnt_head = ft_warp_apply(mri.transform, cfg.landmark.rpoint);
+    [transform, coordsys] = ft_headcoordinates(ac, pc, xzpoint, rpnt_head, 'spm');
   else
     % compute the homogenous transformation matrix describing the new coordinate system
-    [transform, coordsys] = headcoordinates(ac, pc, xzpoint, 'spm');
+    [transform, coordsys] = ft_headcoordinates(ac, pc, xzpoint, 'spm');
   end
   
 else
@@ -977,131 +1025,9 @@ colormap gray
 
 h = gca;
 
-function [R, t, corr, error, data2] = icp2(data1, data2, res, tri, weights)
-
-% [R, t, corr, error, data2] = icp2(data1, data2, res, tri)
-%
-% This is an implementation of the Iterative Closest Point (ICP) algorithm.
-% The function takes two data sets and registers data2 with data1. It is
-% assumed that data1 and data2 are in approximation registration. The code
-% iterates till no more correspondences can be found.
-%
-% This is a modified version (12 April, 2005). It is more accurate and has
-% less chances of getting stuck in a local minimum as opposed to my earlier
-% version icp.m
-%
-% Arguments: data1 - 3 x n matrix of the x, y and z coordinates of data set 1
-%            data2 - 3 x m matrix of the x, y and z coordinates of data set 2
-%            res   - the tolerance distance for establishing closest point
-%                     correspondences. Normally set equal to the resolution
-%                     of data1
-%            tri   - optional argument. obtained by tri = delaunayn(data1');
-%
-% Returns: R - 3 x 3 accumulative rotation matrix used to register data2
-%          t - 3 x 1 accumulative translation vector used to register data2
-%          corr - p x 3 matrix of the index no.s of the corresponding points of
-%                 data1 and data2 and their corresponding Euclidean distance
-%          error - the mean error between the corresponding points of data1
-%                  and data2 (normalized with res)
-%          data2 - 3 x m matrix of the registered data2
-%
-%
-% Copyright : This code is written by Ajmal Saeed Mian {ajmal@csse.uwa.edu.au}
-%              Computer Science, The University of Western Australia. The code
-%              may be used, modified and distributed for research purposes with
-%              acknowledgement of the author and inclusion of this copyright information.
-
-maxIter = 500;
-c1 = 0;
-c2 = 1;
-R = eye(3);
-t = zeros(3,1);
-if nargin < 4 || isempty(tri)
-    tri = delaunayn(data1');
-end
-n = 0;
-while c2 ~= c1
-  c1 = c2;
-  [corr, D] = dsearchn(data1', tri, data2');
-  corr(:,2:3)     = [(1 : length(corr))' D];
-  corr(D>2*res,:) = [];
-  
-  corr = -sortrows(-corr,3);
-  corr = sortrows(corr,1);
-  [B, Bi, Bj] = unique(corr(:,1));
-  corr = corr(Bi,:);
-  
-  [R1, t1] = reg(data1, data2, corr, weights);
-  data2 = R1*data2;
-  data2 = [data2(1,:)+t1(1); data2(2,:)+t1(2); data2(3,:)+t1(3)];
-  R = R1*R;
-  t = R1*t + t1;
-  c2 = length(corr);
-  n = n + 1;
-  if n > maxIter
-    break;
-  end
-end
-
-e1 = 1000001;
-e2 = 1000000;
-n = 0;
-noChangeCount = 0;
-while noChangeCount < 10
-  e1 = e2;
-  [corr, D] = dsearchn(data1', tri, data2');
-  corr(:,2:3) = [(1:length(corr))' D];
-  corr(D>2*res,:) = [];
-  
-  corr = -sortrows(-corr,3);
-  corr = sortrows(corr,1);
-  [B, Bi, Bj] = unique(corr(:,1));
-  corr = corr(Bi,:);
-  
-  [R1 t1] = reg(data1, data2, corr, weights);
-  data2 = R1*data2;
-  data2 = [data2(1,:)+t1(1); data2(2,:)+t1(2); data2(3,:)+t1(3)];
-  R = R1*R;
-  t = R1*t + t1;
-  e2 = sum(corr(:,3))/(length(corr)*res);
-  
-  n = n + 1;
-  if n > maxIter
-    break;
-  end
-  if abs(e2-e1)<res/10000
-    noChangeCount = noChangeCount + 1;
-  end
-end
-error = min(e1,e2);
-
-%-----------------------------------------------------------------
-function [R1, t1] = reg(data1, data2, corr, weights)
-
-n = length(corr);
-if nargin<4
-  weights = ones(n,1);
-end
-M = data1(:,corr(:,1));
-mm = mean(M,2);
-S = data2(:,corr(:,2));%*sparse(diag(weights(corr(:,2))));
-ms = mean(S,2);
-Sshifted = [S(1,:)-ms(1); S(2,:)-ms(2); S(3,:)-ms(3)];
-Mshifted = [M(1,:)-mm(1); M(2,:)-mm(2); M(3,:)-mm(3)];
-K = Sshifted*sparse(diag(weights(corr(:,2))))*Mshifted';
-K = K/n;
-[U A V] = svd(K);
-R1 = V*U';
-if det(R1)<0
-  B = eye(3);
-  B(3,3) = det(V*U');
-  R1 = V*B*U';
-end
-t1 = mm - R1*ms;
-
-
 %-------------------------------------------------------
 function y = assignweights(x, w)
 
 % x is an indexing vector with the same number of arguments as w
 y = w(:)';
+

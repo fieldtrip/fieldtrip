@@ -1,5 +1,8 @@
 function test_ft_prepare_sourcemodel
 
+% MEM 1500mb
+% WALLTIME 00:03:02
+
 % TEST: ft_prepare_sourcemodel
 
 % function to test ft_prepare_sourcemodel given configuration options (cfg), 
@@ -46,6 +49,13 @@ end
 success     = success && ~isempty(grid.inside);
 if ~success
   error('ft_prepare_sourcemodel was not able to determine the inside brain');
+end
+
+% check whether the inside field is constrained to the positions inside the
+% volume conductor model
+success = success && numel(grid.inside)~=size(grid.pos,1);
+if ~success
+  error('ft_prepare_sourcemodel was not able to constrain the inside positions');
 end
 
 %%%%%%%%%%%%%%%%%%%%%

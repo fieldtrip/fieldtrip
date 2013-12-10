@@ -19,6 +19,9 @@ function [cfg, M] = ft_sourcemovie(cfg, source, source2)
 %
 % See also FT_SOURCEPLOT, FT_SOURCEINTERPOLATE
 
+% Undocumented options: 
+%   cfg.parcellation
+
 % Copyright (C) 2011, Robert Oostenveld
 %
 % $Id$
@@ -60,6 +63,7 @@ xparam        = ft_getopt(cfg, 'xparam', 'time');                 % use time as 
 yparam        = ft_getopt(cfg, 'yparam');                         % default is dealt with below
 funparameter  = ft_getopt(cfg, 'funparameter', 'avg.pow');        % use power as default
 maskparameter = ft_getopt(cfg, 'maskparameter');
+parcellation  = ft_getopt(cfg, 'parcellation');
 
 if isempty(yparam) && isfield(source, 'freq')
   % the default is freq (if present)
@@ -76,8 +80,27 @@ cfg.yparam        = yparam;
 % the actual computation is done in the middle part
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-fun = getsubfield(source, funparameter); % might be avg.pow
-if nargin>2, fun2 = getsubfield(source2, funparameter); end
+if nargin==2
+  fun = getsubfield(source, funparameter); % might be avg.pow
+elseif nargin>2 && isfield(source2, 'pos'), 
+  fun  = getsubfield(source, funparameter); % might be avg.pow
+  fun2 = getsubfield(source2, funparameter); 
+elseif nargin>2
+  % assume the first data argument to be a parcellation, and the second a
+  % parcellated structure
+  tmp = getsubfield(source2, funparameter);
+  fun = zeros(size(source.pos, 1), size(tmp, 2));
+  parcels      = source.(parcellation);
+  parcelslabel = source.([parcellation,'label']);
+  for k = 1:numel(source2.label)
+    sel = match_str(source.([parcellation,'label']), source2.label{k});
+    if ~isempty(sel)
+      sel = source.(parcellation)==sel;
+      fun(sel,:) = repmat(tmp(k,:), [sum(sel) 1]);
+    end
+  end
+  source.(xparam) = source2.(xparam);
+end
 if size(source.pos)~=size(fun,1)
   error('inconsistent number of vertices in the cortical mesh');
 end
@@ -137,7 +160,9 @@ end
 xparam  = xparam(xbeg:xend);
 yparam  = yparam(ybeg:yend);
 fun     = fun(:,xbeg:xend,ybeg:yend);
-if nargin>2, fun2 = fun2(:,xbeg:xend,ybeg:yend); end
+if nargin>2 && isfield(source2, 'pos'), 
+  fun2 = fun2(:,xbeg:xend,ybeg:yend); 
+end
 mask    = mask(:,xbeg:xend,ybeg:yend);
 clear xbeg xend ybeg yend
 
@@ -156,7 +181,7 @@ if isempty(olim)
     olim(2) = 1;
   end
   % update the configuration
-  cfg.alim = olim;
+  %cfg.alim = olim;
 end
 
 % collect the data and the options to be used in the figure
@@ -166,7 +191,7 @@ opt.yparam  = yparam;
 opt.xval    = 0;
 opt.yval    = 0;
 opt.dat     = fun;
-opt.mask    = mask;
+opt.mask    = abs(mask);
 opt.pos     = source.pos;
 opt.tri     = source.tri;
 opt.vindx   = source.inside(:);
@@ -175,10 +200,12 @@ opt.record  = 0;
 opt.threshold = 0;
 opt.frame   = 0;
 opt.cleanup = false;
+if exist('parcels',      'var'), opt.parcellation      = parcels; end
+if exist('parcelslabel', 'var'), opt.parcellationlabel = parcelslabel; end
 
 % add functional data of optional third input to the opt structure
 % FIXME here we should first check whether the meshes correspond!
-if nargin>2
+if nargin>2 && isfield(source2, 'pos')
   opt.dat2 = fun2;
 end
 
@@ -215,6 +242,7 @@ stringx  = uicontrol('parent', h, 'units', 'normalized', 'style', 'text');
 slidery  = uicontrol('parent', h, 'units', 'normalized', 'style', 'slider',     'string', sprintf('%s = ', cfg.yparam));
 stringy  = uicontrol('parent', h, 'units', 'normalized', 'style', 'text');
 stringz  = uicontrol('parent', h, 'units', 'normalized', 'style', 'text');
+stringp  = uicontrol('parent', h, 'units', 'normalized', 'style', 'text');
 
 set(cambutton,    'position', [0.095 0.28 0.09 0.05], 'callback', @cb_keyboard);
 set(quitbutton,   'position', [0.005 0.28 0.09 0.05], 'callback', @cb_keyboard);
@@ -234,13 +262,16 @@ set(slidery,      'position', [0.200 0.005 0.78 0.03], 'callback', @cb_slider);
 set(stringx,      'position', [0.800 0.93 0.18 0.03]);
 set(stringy,      'position', [0.800 0.90 0.18 0.03]);
 set(stringz,      'position', [0.650 0.96 0.33 0.03]);
+set(stringp,      'position', [0.650 0.87 0.33 0.03]);
 
 set(stringx, 'string', sprintf('%s = ', cfg.xparam));
 set(stringy, 'string', sprintf('%s = ', cfg.yparam));
 set(stringz, 'string', sprintf('position = '));
+set(stringp, 'string', sprintf('parcel = '));
 set(stringx, 'horizontalalignment', 'right', 'backgroundcolor', [1 1 1]);
 set(stringy, 'horizontalalignment', 'right', 'backgroundcolor', [1 1 1]);
 set(stringz, 'horizontalalignment', 'right', 'backgroundcolor', [1 1 1]);
+set(stringp, 'horizontalalignment', 'right', 'backgroundcolor', [1 1 1]);
 
 % create axes object to contain the mesh
 hx = axes;
@@ -256,12 +287,12 @@ else
   hs1 = ft_plot_mesh(source, 'edgecolor', 'none', 'facecolor', [0.5 0.5 0.5]);
 end
 lighting gouraud
-hs = ft_plot_mesh(source, 'edgecolor', 'none', 'vertexcolor', 0*opt.dat(:,1,1), 'facealpha', 0*opt.mask(:,1,1));
+hs = ft_plot_mesh(source, 'edgecolor', 'none', 'vertexcolor', 0*opt.dat(:,1,1));%, 'facealpha', 0*opt.mask(:,1,1));
 lighting gouraud
 cam1 = camlight('left');
 cam2 = camlight('right');
 caxis(cfg.zlim);
-alim(cfg.alim);
+%alim(cfg.alim);
 
 % create axis object to contain a time course
 hy = axes;
@@ -274,7 +305,7 @@ if ~hasyparam
   axis([opt.xparam(1) opt.xparam(end) abc(3:4)]);
   vline = plot(opt.xparam(1)*[1 1], abc(3:4), 'r');
   
-  if nargin>2
+  if nargin>2 && isfield(source2, 'pos')
     tline2 = plot(opt.xparam, mean(opt.dat2(opt.vindx,:)), 'r'); hold on;
   end
   
@@ -291,7 +322,9 @@ opt.hy  = hy; % handle to the axes containing the timecourse
 opt.cam = [cam1 cam2]; % handles to the light objects
 opt.vline = vline; % handle to the line in the ERF plot
 opt.tline = tline; % handle to the ERF
-if nargin>2, opt.tline2 = tline2; end
+if nargin>2 && isfield(source2, 'pos'), 
+  opt.tline2 = tline2; 
+end
 opt.playbutton   = playbutton; % handle to the playbutton
 opt.recordbutton = recordbutton; % handle to the recordbutton
 opt.quitbutton   = quitbutton; % handle to the quitbutton
@@ -305,10 +338,15 @@ opt.slidery  = slidery;
 opt.stringx  = stringx;
 opt.stringy  = stringy;
 opt.stringz  = stringz;
+opt.stringp  = stringp;
 
 if ~hasyparam
   set(opt.slidery, 'visible', 'off');
   set(opt.stringy, 'visible', 'off');
+end
+
+if ~exist('parcels', 'var')
+  set(opt.stringp, 'visible', 'off');
 end
 
 setappdata(h, 'opt', opt);
@@ -389,12 +427,15 @@ if ~(numel(previous_vindx)==numel(opt.vindx) && all(previous_vindx==opt.vindx))
   
   set(opt.hy,    'yaxislocation', 'right');
   set(opt.stringz, 'string', sprintf('position = [%2.1f, %2.1f, %2.1f]', opt.pos(opt.vindx,:)));
+  if isfield(opt, 'parcellation'),
+    set(opt.stringp, 'string', sprintf('parcel = %s', opt.parcellationlabel{opt.parcellation(opt.vindx)}));
+  end
 end
 
 if opt.record
   tmp = get(opt.h, 'position');
   opt.frame = opt.frame + 1;
-  opt.movie(opt.frame) = getframe(opt.h,[0 0 tmp(3:4)]);
+  opt.movie(opt.frame) = getframe(opt.h,[1 1 tmp(3:4)-1]);
 end
 setappdata(h, 'opt', opt);
 

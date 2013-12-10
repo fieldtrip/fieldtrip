@@ -1,7 +1,10 @@
 function test_bug1571
+
+% MEM 3gb
+% WALLTIME 00:03:29
+
 % TEST test_bug1571
-% TEST ft_preprocessing, ft_preproc_dftfilter, dftfilter, ft_freqanalysis,
-% ft_singleplotER
+% TEST ft_preprocessing ft_preproc_dftfilter dftfilter ft_freqanalysis ft_singleplotER
 
 % Philipp Hintze wrote:
 % The issue with the continuous data is the following: I tried using

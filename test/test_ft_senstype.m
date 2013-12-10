@@ -1,5 +1,8 @@
 function test_ft_senstype
 
+% MEM 1500mb
+% WALLTIME 00:03:04
+
 % TEST test_ft_senstype
 % TEST ft_senstype
 

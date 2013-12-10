@@ -1,5 +1,8 @@
 function test_bug1816
 
+% MEM 1500mb
+% WALLTIME 00:03:01
+
 % test the ft_volumesegment function used for segmentation with FSL BET and FAST
 % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1816
 
@@ -66,8 +69,4 @@ assert(isequal(size(getfield(seg,cfg.output{i})),seg.dim),'Tissue does not have 
 end
 
 assert(isfield(seg,'cfg'),'cfg is missing from segmentation'); 
-
-% check if other methods of segmentation are still working
-
-test_ft_volumesegment;
 

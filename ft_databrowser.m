@@ -60,15 +60,15 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.compscale               = string, 'global' or 'local', defines whether the colormap for the topographic scaling is
 %                                  applied per topography or on all visualized components (default 'global')
 %
-% In case of component viewmode, a layout is required. If no layout is
-% give, an attempt is made to construct one from the sensor definition.
-% EEG or MEG sensor positions can be present in the data or can be specified as
-%   cfg.elec          = structure with electrode positions, see FT_DATATYPE_SENS
-%   cfg.grad          = structure with gradiometer definition, see FT_DATATYPE_SENS
-%   cfg.elecfile      = name of file containing the electrode positions, see FT_READ_SENS
-%   cfg.gradfile      = name of file containing the gradiometer definition, see FT_READ_SENS
+% In case of component viewmode, a layout is required. If no layout is specified, an attempt is
+% made to construct one from the sensor definition that is present in the data or specified in
+% the configuration.
+%   cfg.layout                  = filename of the layout, see FT_PREPARE_LAYOUT
+%   cfg.elec                    = structure with electrode positions, see FT_DATATYPE_SENS
+%   cfg.grad                    = structure with gradiometer definition, see FT_DATATYPE_SENS
+%   cfg.elecfile                = name of file containing the electrode positions, see FT_READ_SENS
+%   cfg.gradfile                = name of file containing the gradiometer definition, see FT_READ_SENS
 %
-
 % The scaling to the EEG, EOG, ECG, EMG and MEG channels is optional and
 % can be used to bring the absolute numbers of the different channel types
 % in the same range (e.g. fT and uV). The channel types are determined from
@@ -107,11 +107,7 @@ function [cfg] = ft_databrowser(cfg, data)
 %
 % $Id$
 
-% Undocumented options
-%
-
-% FIXME these should be removed
-% FIXME document these
+% FIXME these should be removed or documented
 % cfg.preproc
 % cfg.channelcolormap
 % cfg.colorgroups
@@ -209,23 +205,28 @@ end
 
 if strcmp(cfg.viewmode, 'component')
   % read or create the layout that will be used for the topoplots
-  tmpcfg = [];
-  tmpcfg.layout = cfg.layout;
-  if isempty(cfg.layout)
+  
+  if ~isempty(cfg.layout)
+    tmpcfg = [];
+    tmpcfg.layout = cfg.layout;
+    cfg.layout = ft_prepare_layout(tmpcfg);
+  else
     warning('No layout specified - will try to construct one using sensor positions');
-    if ft_datatype(data, 'meg')
-      tmpcfg.grad = ft_fetch_sens(cfg, data);
-    elseif ft_datatype(data, 'eeg')
-      tmpcfg.elec = ft_fetch_sens(cfg, data);
-    else
-      error('cannot infer sensor type');
-    end
+    try
+      tmpcfg = [];
+      tmpcfg.layout = [];
+      if isfield(data, 'grad')
+        tmpcfg.grad = data.grad;
+      elseif isfield(data, 'elec')
+        tmpcfg.elec = data.elec;
+      else
+        error('cannot infer sensor type');
+      end
+      cfg.layout = ft_prepare_layout(tmpcfg);
+    catch
+      cfg.layout = [];
+    end % try
   end
-  cfg.layout = ft_prepare_layout(tmpcfg);
-elseif ~isempty(cfg.layout)
-  tmpcfg = [];
-  tmpcfg.layout = cfg.layout;
-  cfg.layout = ft_prepare_layout(tmpcfg);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -481,10 +482,10 @@ else
   eventtypes = [];
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% set up default functions to be available in the right-click menu
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% set up default defselfuns
-% use two cfg sections
 % cfg.selfun - labels that are presented in rightclick menu, and is appended using ft_getuserfun(..., 'browse') later on to create a function handle
 % cfg.selcfg - cfgs for functions to be executed
 defselfun = [];
@@ -528,9 +529,6 @@ else
   cfg.selfun = defselfun;
   cfg.selcfg = defselcfg;
 end
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % set up the data structures used in the GUI
@@ -590,6 +588,10 @@ h = figure;
 setappdata(h, 'opt', opt);
 setappdata(h, 'cfg', cfg);
 
+% enable custom data cursor text
+dcm = datacursormode(h);
+set(dcm, 'updatefcn', @datacursortext);
+
 % set the figure window title
 funcname = mfilename();
 if nargin < 2
@@ -644,7 +646,7 @@ for iArt = 1:length(artlabel)
   uicontrol('tag', 'artifactui', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', ['control+' num2str(iArt)], 'position', [0.96, 0.855 - ((iArt-1)*0.09), 0.03, 0.04], 'backgroundcolor', opt.artcolors(iArt,:))
 end
 
-if strcmp(cfg.viewmode, 'butterfly')
+if true % strcmp(cfg.viewmode, 'butterfly')
   % button to find label of nearest channel to datapoint
   uicontrol('tag', 'artifactui', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'identify', 'userdata', 'i', 'position', [0.91, 0.1, 0.08, 0.05], 'backgroundcolor', [1 1 1])
 end
@@ -667,8 +669,6 @@ ft_uilayout(h, 'tag', 'viewui', 'BackgroundColor', [0.8 0.8 0.8], 'hpos', 'auto'
 
 definetrial_cb(h);
 redraw_cb(h);
-
-
 
 
 % %% Scrollbar
@@ -1530,7 +1530,11 @@ if strcmp(cfg.viewmode, 'butterfly')
 else
   % this needs to be reconstructed if the channel selection changes
   tmpcfg = [];
-  tmpcfg.layout  = 'vertical';
+  if strcmp(cfg.viewmode, 'component')
+    tmpcfg.layout  = 'vertical';
+  else
+    tmpcfg.layout  = cfg.viewmode;
+  end
   tmpcfg.channel = cfg.channel;
   tmpcfg.skipcomnt = 'yes';
   tmpcfg.skipscale = 'yes';
@@ -1562,11 +1566,10 @@ opt.height = ax(4)-ax(3);
 opt.hlim = [tim(1) tim(end)];
 opt.vlim = cfg.ylim;
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % fprintf('plotting artifacts...\n');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-delete(findobj(h,'tag', 'artifact'));
+delete(findobj(h, 'tag', 'artifact'));
 
 for j = ordervec
   tmp = diff([0 art(j,:) 0]);
@@ -1574,58 +1577,74 @@ for j = ordervec
   artend = find(tmp==-1) - 1;
   
   for k=1:numel(artbeg)
-    h_artifact = ft_plot_box([tim(artbeg(k)) tim(artend(k)) -1 1], 'facecolor', opt.artcolors(j,:), 'edgecolor', 'none', 'tag', 'artifact',  ...
+    xpos = [tim(artbeg(k)) tim(artend(k))] + ([-.5 +.5]./opt.fsample);
+    h_artifact = ft_plot_box([xpos -1 1], 'facecolor', opt.artcolors(j,:), 'edgecolor', 'none', 'tag', 'artifact',  ...
       'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1]);
   end
 end % for each of the artifact channels
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%fprintf('plotting events...\n');
-if strcmp(cfg.ploteventlabels , 'colorvalue') && ~isempty(opt.event)
-  eventlabellegend = [];
-  for iType = 1:length(opt.eventtypes)
-    eventlabellegend = [eventlabellegend sprintf('%s = %s\n',opt.eventtypes{iType},opt.eventtypecolorlabels{iType})];
-  end
-  fprintf(eventlabellegend);
-end
+% fprintf('plotting events...\n');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-delete(findobj(h,'tag', 'event'));
-% save stuff to able to shift event labels downwards when they occur at the same time-point
-eventcol = cell(1,numel(event));
-eventstr = cell(1,numel(event));
-eventtim = NaN(1,numel(event));
-% gather event info and plot lines
-for ievent = 1:numel(event)
-  try
-    if strcmp(cfg.ploteventlabels , 'type=value')
-      if isempty(event(ievent).value)
-        eventstr{ievent} = '';
-      else
-        eventstr{ievent} = sprintf('%s = %s', event(ievent).type, num2str(event(ievent).value)); % value can be both number and string
-      end
-      eventcol{ievent} = 'k';
-    elseif strcmp(cfg.ploteventlabels , 'colorvalue')
-      eventcol{ievent} = opt.eventtypescolors(match_str(opt.eventtypes, event(ievent).type),:);
-      eventstr{ievent} = sprintf('%s', num2str(event(ievent).value)); % value can be both number and string
+delete(findobj(h, 'tag', 'event'));
+
+if any(strcmp(cfg.viewmode, {'butterfly', 'component', 'vertical'}))
+  
+  if strcmp(cfg.ploteventlabels , 'colorvalue') && ~isempty(opt.event)
+    eventlabellegend = [];
+    for iType = 1:length(opt.eventtypes)
+      eventlabellegend = [eventlabellegend sprintf('%s = %s\n',opt.eventtypes{iType},opt.eventtypecolorlabels{iType})];
     end
-  catch
-    eventstr{ievent} = 'unknown';
-    eventcol{ievent} = 'k';
+    fprintf(eventlabellegend);
   end
-  eventtim(ievent) = (event(ievent).sample-begsample)/opt.fsample + opt.hlim(1);
-  ft_plot_line([eventtim(ievent) eventtim(ievent)], [-1 1], 'tag', 'event', 'color', eventcol{ievent}, ...
-    'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1]);
-end
-% count the consecutive occurrence of each time point
-concount = NaN(1,numel(event));
-for ievent = 1:numel(event)
-  concount(ievent) = sum(eventtim(ievent)==eventtim(1:ievent-1));
-end
-% plot labels
-for ievent = 1:numel(event)
-  ft_plot_text(eventtim(ievent), 0.9-concount(ievent)*.06, eventstr{ievent}, 'tag', 'event', 'Color', eventcol{ievent}, ...
-    'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1],'interpreter','none');
-end
+  
+  % save stuff to able to shift event labels downwards when they occur at the same time-point
+  eventcol = cell(1,numel(event));
+  eventstr = cell(1,numel(event));
+  eventtim = NaN(1,numel(event));
+  
+  % gather event info and plot lines
+  for ievent = 1:numel(event)
+    try
+      if strcmp(cfg.ploteventlabels , 'type=value')
+        if isempty(event(ievent).value)
+          eventstr{ievent} = '';
+        else
+          eventstr{ievent} = sprintf('%s = %s', event(ievent).type, num2str(event(ievent).value)); % value can be both number and string
+        end
+        eventcol{ievent} = 'k';
+      elseif strcmp(cfg.ploteventlabels , 'colorvalue')
+        eventcol{ievent} = opt.eventtypescolors(match_str(opt.eventtypes, event(ievent).type),:);
+        eventstr{ievent} = sprintf('%s', num2str(event(ievent).value)); % value can be both number and string
+      end
+    catch
+      eventstr{ievent} = 'unknown';
+      eventcol{ievent} = 'k';
+    end
+    eventtim(ievent) = (event(ievent).sample-begsample)/opt.fsample + opt.hlim(1);
+    
+    lh = ft_plot_line([eventtim(ievent) eventtim(ievent)], [-1 1], 'tag', 'event', 'color', eventcol{ievent}, ...
+      'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1]);
+    
+    % store this data in the line object so that it can be displayed in the
+    % data cursor (see subfunction datacursortext below)
+    setappdata(lh, 'ft_databrowser_linetype', 'event');
+    setappdata(lh, 'ft_databrowser_eventtime', eventtim(ievent));
+    setappdata(lh, 'ft_databrowser_eventtype', event(ievent).type);
+    setappdata(lh, 'ft_databrowser_eventvalue', event(ievent).value);
+  end
+  % count the consecutive occurrence of each time point
+  concount = NaN(1,numel(event));
+  for ievent = 1:numel(event)
+    concount(ievent) = sum(eventtim(ievent)==eventtim(1:ievent-1));
+  end
+  % plot event labels
+  for ievent = 1:numel(event)
+    ft_plot_text(eventtim(ievent), 0.9-concount(ievent)*.06, eventstr{ievent}, 'tag', 'event', 'Color', eventcol{ievent}, ...
+      'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1],'interpreter','none');
+  end
+  
+end % if viewmode appropriate for events
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %fprintf('plotting data...\n');
@@ -1635,8 +1654,7 @@ delete(findobj(h,'tag', 'identify'));
 
 % not removing channel labels, they cause the bulk of redrawing time for the slow text function (note, interpreter = none hardly helps)
 % warning, when deleting the labels using the line below, one can easily tripple the excution time of redrawing in viewmode = vertical (see bug 2065)
-%delete(findobj(h,'tag', 'chanlabel')); 
-
+%delete(findobj(h, 'tag', 'chanlabel'));
 
 if strcmp(cfg.viewmode, 'butterfly')
   set(gca,'ColorOrder',opt.chancolors(chanindx,:)) % plot vector does not clear axis, therefore this is possible
@@ -1656,9 +1674,9 @@ if strcmp(cfg.viewmode, 'butterfly')
   set(gca, 'yTick', yTick);
   set(gca, 'yTickLabel', yTickLabel)
   
-elseif any(strcmp(cfg.viewmode, {'vertical' 'component'}))
+elseif any(strcmp(cfg.viewmode, {'component', 'vertical'}))
   
-  % determine channel indices into data outside of loop
+    % determine channel indices into data outside of loop
   laysels = match_str(opt.laytime.label, opt.hdr.label);
   
   for i = 1:length(chanindx)
@@ -1669,18 +1687,25 @@ elseif any(strcmp(cfg.viewmode, {'vertical' 'component'}))
     end
     datsel = i;
     laysel = laysels(i);
+
     if ~isempty(datsel) && ~isempty(laysel)
-      
       % only plot labels when current chanlabel objects are less then the total number of channels (see bug 2065)
       % this is a cheap quick fix. If it causes error in plotting components, do this conditional on viewmode
       if numel(findobj(h,'tag', 'chanlabel'))<numel(chanindx)
         if opt.plotLabelFlag == 1 || (opt.plotLabelFlag == 2 && mod(i,10)==0)
-          ft_plot_text(labelx(laysel), labely(laysel), opt.hdr.label(chanindx(i)), 'tag', 'chanlabel', 'HorizontalAlignment', 'right','interpreter','none','FontUnits','normalized','FontSize',0.9/2/numel(chanindx));
+          ft_plot_text(labelx(laysel), labely(laysel), opt.hdr.label(chanindx(i)), 'tag', 'chanlabel', 'HorizontalAlignment', 'right','interpreter','none','FontUnits','normalized','FontSize',8);
         end
       end
       
-      ft_plot_vector(tim, dat(datsel, :), 'box', false, 'color', color, 'tag', 'timecourse', ...
+      lh = ft_plot_vector(tim, dat(datsel, :), 'box', false, 'color', color, 'tag', 'timecourse', ...
         'hpos', opt.laytime.pos(laysel,1), 'vpos', opt.laytime.pos(laysel,2), 'width', opt.laytime.width(laysel), 'height', opt.laytime.height(laysel), 'hlim', opt.hlim, 'vlim', opt.vlim);
+      
+      % store this data in the line object so that it can be displayed in the
+      % data cursor (see subfunction datacursortext below)
+      setappdata(lh, 'ft_databrowser_linetype', 'channel');
+      setappdata(lh, 'ft_databrowser_label', opt.hdr.label(chanindx(i)));
+      setappdata(lh, 'ft_databrowser_xaxis', tim);
+      setappdata(lh, 'ft_databrowser_yaxis', dat(datsel,:));
     end
   end
   
@@ -1707,17 +1732,55 @@ elseif any(strcmp(cfg.viewmode, {'vertical' 'component'}))
   set(gca, 'yTickLabel', yTickLabel);
   
 else
-  error('unknown viewmode "%s"', cfg.viewmode);
+  % the following is implemented for 2column, 3column, etcetera.
+  % it also works for topographic layouts, such as CTF151
+  
+  % determine channel indices into data outside of loop
+  laysels = match_str(opt.laytime.label, opt.hdr.label);
+  
+  for i = 1:length(chanindx)
+    color = opt.chancolors(chanindx(i),:);
+    datsel = i;
+    laysel = laysels(i);
+    
+    if ~isempty(datsel) && ~isempty(laysel)
+      
+      lh = ft_plot_vector(tim, dat(datsel, :), 'box', false, 'color', color, 'tag', 'timecourse', ...
+        'hpos', opt.laytime.pos(laysel,1), 'vpos', opt.laytime.pos(laysel,2), 'width', opt.laytime.width(laysel), 'height', opt.laytime.height(laysel), 'hlim', opt.hlim, 'vlim', opt.vlim);
+      
+      % store this data in the line object so that it can be displayed in the
+      % data cursor (see subfunction datacursortext below)
+      setappdata(lh, 'ft_databrowser_linetype', 'channel');
+      setappdata(lh, 'ft_databrowser_label', opt.hdr.label(chanindx(i)));
+      setappdata(lh, 'ft_databrowser_xaxis', tim);
+      setappdata(lh, 'ft_databrowser_yaxis', dat(datsel,:));
+    end
+  end
+  
+  % ticks are not supported with such a layout
+  yTick = [];
+  yTickLabel = [];
+  
+  yTickLabel = repmat(yTickLabel, 1, length(chanindx));
+  set(gca, 'yTick', yTick);
+  set(gca, 'yTickLabel', yTickLabel);
+  
 end % if strcmp viewmode
 
-nticks = 11;
-xTickLabel = cellstr(num2str( linspace(tim(1), tim(end), nticks)' , '%1.2f'))';
-if nsamplepad>0
-  nlabindat = sum(linspace(tim(1), tim(end), nticks) < tim(end-nsamplepad));
-  xTickLabel(nlabindat+1:end) = repmat({' '},[1 nticks-nlabindat]);
+if any(strcmp(cfg.viewmode, {'butterfly', 'component', 'vertical'}))
+  nticks = 11;
+  xTickLabel = cellstr(num2str( linspace(tim(1), tim(end), nticks)' , '%1.2f'))';
+  if nsamplepad>0
+    nlabindat = sum(linspace(tim(1), tim(end), nticks) < tim(end-nsamplepad));
+    xTickLabel(nlabindat+1:end) = repmat({' '},[1 nticks-nlabindat]);
+  end
+  set(gca, 'xTick', linspace(ax(1), ax(2), nticks))
+  set(gca, 'xTickLabel', xTickLabel)
+  xlabel('time');
+else
+  set(gca, 'xTick', [])
+  set(gca, 'xTickLabel', [])
 end
-set(gca, 'xTick', linspace(ax(1), ax(2), nticks))
-set(gca, 'xTickLabel', xTickLabel)
 
 if strcmp(cfg.viewmode, 'component')
   
@@ -1822,14 +1885,12 @@ else
 end
 title(str);
 
-xlabel('time');
-
 % possibly adds some responsiveness if the 'thing' is clogged
 drawnow
 
 setappdata(h, 'opt', opt);
 setappdata(h, 'cfg', cfg);
-end
+end % function
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -1859,4 +1920,40 @@ if ~isempty(eventdata.Modifier)
   key = [eventdata.Modifier{1} '+' key];
 end
 
+end % function
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cursortext = datacursortext(obj, event_obj)
+pos = get(event_obj, 'position');
+
+linetype = getappdata(event_obj.Target, 'ft_databrowser_linetype');
+
+if strcmp(linetype, 'event')
+  cursortext = sprintf('%s = %d\nt = %g s',...
+    getappdata(event_obj.Target, 'ft_databrowser_eventtype'),...
+    getappdata(event_obj.Target, 'ft_databrowser_eventvalue'),...
+    getappdata(event_obj.Target, 'ft_databrowser_eventtime'));
+elseif strcmp(linetype, 'channel')
+  % get plotted x axis
+  plottedX = get(event_obj.Target, 'xdata');
+  
+  % determine values of data at real x axis
+  timeAxis = getappdata(event_obj.Target, 'ft_databrowser_xaxis');
+  dataAxis = getappdata(event_obj.Target, 'ft_databrowser_yaxis');
+  tInd = nearest(plottedX, pos(1));
+  
+  % get label
+  chanLabel = getappdata(event_obj.Target, 'ft_databrowser_label');
+  chanLabel = chanLabel{1};
+  
+  cursortext = sprintf('t = %g\n%s = %g', timeAxis(tInd), chanLabel,...
+    dataAxis(tInd));
+else
+  cursortext = '<no cursor available>';
+  % explicitly tell the user there is no info because the x-axis and
+  % y-axis do not correspond to real data values (both are between 0 and
+  % 1 always)
 end
+end % function

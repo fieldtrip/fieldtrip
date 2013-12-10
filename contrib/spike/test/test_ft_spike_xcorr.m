@@ -1,7 +1,10 @@
 function test_ft_spike_xcorr()
 
+% MEM 1gb
+% WALLTIME 00:05:00
+
 % TEST test_ft_spike_xcorr
-% ft_spike_xcorr
+% TEST ft_spike_xcorr
 
 data = [];
 spikesPerTrial = 10;

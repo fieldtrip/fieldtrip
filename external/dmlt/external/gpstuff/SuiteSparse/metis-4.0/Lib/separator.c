@@ -8,7 +8,7 @@
  * Started 8/1/97
  * George
  *
- * $Id: separator.c,v 1.1 1998/11/27 17:59:30 karypis Exp $
+ * $Id$
  *
  */
 

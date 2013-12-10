@@ -1,5 +1,8 @@
 function test_bug2163
 
+% MEM 1500mb
+% WALLTIME 00:03:02
+
 % TEST test_bug2163
 % TEST ft_read_spike read_neuralynx_nse
 

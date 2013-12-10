@@ -8,7 +8,7 @@
  * Started 7/28/97
  * George
  *
- * $Id: kwayvolrefine.c,v 1.2 1998/11/30 16:13:57 karypis Exp $
+ * $Id$
  */
 
 #include <metis.h>

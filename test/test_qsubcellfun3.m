@@ -1,5 +1,8 @@
 function test_qsubcellfun3
 
+% MEM 1500mb
+% WALLTIME 00:03:02
+
 % TEST test_qsubcellfun3
 % TEST qsubcellfun qsubfeval qsubget
 

@@ -165,7 +165,7 @@ for i=1:size(pnt,1)
   r1 = rotate([0 th 0]);
   r2 = rotate([0 0 ph]);
   t  = translate(pnt(i,:));
-  rim = warp_apply(t*r2*r1*s, pos); % scale, rotate and translate the template coil vertices, skip the central vertex
+  rim = ft_warp_apply(t*r2*r1*s, pos); % scale, rotate and translate the template coil vertices, skip the central vertex
   rim(1,:) = rim(end,:);            % replace the first (central) point with the last, this closes the circle
   h = line(rim(:,1), rim(:,2), rim(:,3));
   set(h, 'color', 'k');

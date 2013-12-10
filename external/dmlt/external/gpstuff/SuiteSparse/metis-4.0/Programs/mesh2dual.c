@@ -9,7 +9,7 @@
  * Started 9/29/97
  * George
  *
- * $Id: mesh2dual.c,v 1.1 1998/11/27 17:59:35 karypis Exp $
+ * $Id$
  *
  */
 

@@ -1,5 +1,8 @@
 function test_ft_networkanalysis
 
+% MEM 1500mb
+% WALLTIME 00:03:02
+
 % TEST test_ft_networkanalysis ft_networkanalysis
 
 data = [];

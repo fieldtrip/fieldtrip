@@ -1,5 +1,8 @@
 function test_bug2051
 
+% MEM 1500mb
+% WALLTIME 00:03:02
+
 % TEST test_bug2051
 % TEST ft_math
 

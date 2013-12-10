@@ -21,9 +21,11 @@ function [source] = ft_sourceanalysis(cfg, data, baseline)
 %                    'mne'     minimum norm estimation
 %                    'rv'      scan residual variance with single dipole
 %                    'music'   multiple signal classification
-%                    'mvl'   multivariate Laplace source localization
+%                    'mvl'     multivariate Laplace source localization
+%                    'eloreta' exact low-resolution electromagnetic tomography  
 % The DICS and PCC methods are for frequency domain data, all other methods
-% are for time domain data.
+% are for time domain data. ELORETA can be used both for frequency and time
+% domain data.
 %
 % The positions of the sources can be specified as a regular 3-D
 % grid that is aligned with the axes of the head coordinate system
@@ -204,12 +206,16 @@ cfg.killwulf         = ft_getopt(cfg, 'killwulf', 'yes');
 cfg.channel          = ft_getopt(cfg, 'channel',  'all');
 cfg.supdip           = ft_getopt(cfg, 'supdip',        []);
 
-% if ~isfield(cfg, 'reducerank'),     cfg.reducerank = 'no';      end  %
 % the default for this depends on EEG/MEG and is set below
-% put the low-level options pertaining to the source reconstruction method in their own field
-% put the low-level options pertaining to the dipole grid in their own field
+% if ~isfield(cfg, 'reducerank'),     cfg.reducerank = 'no';      end  
 
-cfg = ft_checkconfig(cfg, 'createsubcfg',  {cfg.method, 'grid'});
+% put the low-level options pertaining to the source reconstruction method in their own field
+cfg = ft_checkconfig(cfg, 'createsubcfg',  cfg.method);
+
+% put the low-level options pertaining to the dipole grid in their own field
+cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'}); % this is moved to cfg.grid.tight by the subsequent createsubcfg
+cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved to cfg.grid.unit by the subsequent createsubcfg
+cfg = ft_checkconfig(cfg, 'createsubcfg', 'grid');
 
 cfg.(cfg.method).keepfilter    = ft_getopt(cfg.(cfg.method), 'keepfilter',    'no');
 cfg.(cfg.method).keepcsd       = ft_getopt(cfg.(cfg.method), 'keepcsd',       'no');
@@ -319,13 +325,11 @@ else
   try, tmpcfg.grid        = cfg.grid;         end
   try, tmpcfg.mri         = cfg.mri;          end
   try, tmpcfg.headshape   = cfg.headshape;    end
-  try, tmpcfg.tightgrid   = cfg.tightgrid;    end
   try, tmpcfg.symmetry    = cfg.symmetry;     end
   try, tmpcfg.smooth      = cfg.smooth;       end
   try, tmpcfg.threshold   = cfg.threshold;    end
   try, tmpcfg.spheremesh  = cfg.spheremesh;   end
   try, tmpcfg.inwardshift = cfg.inwardshift;  end
-  try, tmpcfg.sourceunits = cfg.sourceunits;  end
   grid = ft_prepare_sourcemodel(tmpcfg);
 end
 
@@ -340,7 +344,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % do frequency domain source reconstruction
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if isfreq && any(strcmp(cfg.method, {'dics', 'pcc'}))
+if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta'}))
   
   if strcmp(cfg.method, 'pcc')
     % HACK: requires some extra defaults
@@ -567,6 +571,8 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc'}))
       dip(i) = beamformer_dics(grid, sens, vol, [],  squeeze(Cf(i,:,:)), optarg{:}, 'refdip', cfg.refdip);
     elseif strcmp(cfg.method, 'pcc')
       dip(i) = beamformer_pcc(grid, sens, vol, avg, squeeze(Cf(i,:,:)), optarg{:}, 'refdip', cfg.refdip, 'refchan', refchanindx, 'supdip', cfg.supdip, 'supchan', supchanindx);
+    elseif strcmp(cfg.method, 'eloreta')
+      dip(i) = ft_eloreta(grid, sens, vol, [], squeeze(Cf(i,:,:)), optarg{:});
     else
       error(sprintf('method ''%s'' is unsupported for source reconstruction in the frequency domain', cfg.method));
     end
@@ -578,7 +584,7 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc'}))
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % do time domain source reconstruction
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne', 'rv', 'music', 'pcc', 'mvl'}))
+elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne', 'rv', 'music', 'pcc', 'mvl' 'eloreta'}))
   
   % determine the size of the data
   Nsamples = size(data.avg,2);
@@ -833,6 +839,11 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne', 'rv', 'music'
           dip(i).pow(indx) = tmps(1);
         end
       end
+    end
+  elseif strcmp(cfg.method, 'eloreta'),
+    for i=1:Nrepetitions
+      fprintf('scanning repetition %d\n', i);
+      dip(i) = ft_eloreta(grid, sens, vol, squeeze(avg(i,:,:)), squeeze(Cy(i,:,:)), optarg{:});
     end
   elseif strcmp(cfg.method, 'sam')
     for i=1:Nrepetitions

@@ -19,7 +19,7 @@ function r = gamrnd(a,b,m,n);
 
 %   B.A. Jones 2-1-93
 %   Copyright (c) 1993-98 by The MathWorks, Inc.
-%   $Revision: 2212 $  $Date: 2004/02/10 18:58:56 $
+%   $Revision$  $Date: 2004/02/10 18:58:56 $
 
 if nargin < 2, 
    error('Requires at least two input arguments.'); 

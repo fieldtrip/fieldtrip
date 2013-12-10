@@ -8,7 +8,7 @@
  * Started 9/28/95
  * George
  *
- * $Id: util.c,v 1.1 1998/11/27 17:59:32 karypis Exp $
+ * $Id$
  */
 
 #include <metis.h>

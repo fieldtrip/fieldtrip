@@ -11,6 +11,9 @@ function [node,elem,face,regions]=vol2mesh(img,ix,iy,iz,opt,maxvol,dofix,method,
 %	 ix,iy,iz: subvolume selection indices in x,y,z directions
 %	 opt: as defined in vol2surf.m
 %	 maxvol: target maximum tetrahedral elem volume
+%                when method='cgalmesh', maxvol can specify the target
+%                for each label (subregion index) by the following syntax
+%                'label1=size1:label2=size2:...'
 %	 dofix: 1: perform mesh validation&repair, 0: skip repairing
 %	 method: 'cgalsurf' or omit: use CGAL surface mesher
 %		 'simplify': use binsurface and then simplify
@@ -22,7 +25,7 @@ function [node,elem,face,regions]=vol2mesh(img,ix,iy,iz,opt,maxvol,dofix,method,
 %		 uint8 volume, and 2) can not extract meshes from gray-scale
 %		 volumes. If ones goal is to process a gray-scale volume,
 %		 he/she should use the 'cgalsurf' option. 'simplify' approach
-%		 is not recommended unless other options failed.
+%		 is not recommended unless other options has failed.
 %	 isovalues: a list of isovalues where the levelset is defined
 %
 % output:

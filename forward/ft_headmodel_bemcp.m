@@ -37,7 +37,6 @@ function vol = ft_headmodel_bemcp(geom, varargin)
 ft_hastoolbox('bemcp', 1);
 
 % get the optional input arguments
-hdmfile         = ft_getopt(varargin, 'hdmfile');
 conductivity    = ft_getopt(varargin, 'conductivity');
 
 if isfield(geom,'bnd')

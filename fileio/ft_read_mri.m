@@ -75,7 +75,7 @@ if strcmp(mriformat, 'ctf_mri')
   [img, hdr] = read_ctf_mri(filename);
   transform = hdr.transformMRI2Head;
   coordsys  = 'ctf';
-
+  
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif strcmp(mriformat, 'ctf_mri4')
   [img, hdr] = read_ctf_mri4(filename);
@@ -86,12 +86,12 @@ elseif strcmp(mriformat, 'ctf_mri4')
 elseif strcmp(mriformat, 'ctf_svl')
   [img, hdr] = read_ctf_svl(filename);
   transform = hdr.transform;
-
+  
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif strcmp(mriformat, 'asa_mri')
   [img, seg, hdr] = read_asa_mri(filename);
   transform = hdr.transformMRI2Head;
-
+  
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif strcmp(mriformat, 'minc')
   if ~(hasspm2 || hasspm5)
@@ -102,20 +102,20 @@ elseif strcmp(mriformat, 'minc')
   hdr = spm_vol_minc(filename);
   img = spm_read_vols(hdr);
   transform = hdr.mat;
-
+  
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % USE FREESURFER CODE FOR THE READING OF NIFTI-FILES: THAT CODE ALSO
   % DEALS WITH 4D NIFTIs
 elseif strcmp(mriformat, 'nifti_spm')
-   if ~(hasspm5 || hasspm8 || hasspm12)
-     fprintf('the SPM5 or newer toolbox is required to read *.nii files\n');
-     ft_hastoolbox('spm8',1);
-   end
-   % use the functions from SPM
-   hdr = spm_vol_nifti(filename);
-   img = spm_read_vols(hdr);
-   transform = hdr.mat;
-
+  if ~(hasspm5 || hasspm8 || hasspm12)
+    fprintf('the SPM5 or newer toolbox is required to read *.nii files\n');
+    ft_hastoolbox('spm8',1);
+  end
+  % use the functions from SPM
+  hdr = spm_vol_nifti(filename);
+  img = spm_read_vols(hdr);
+  transform = hdr.mat;
+  
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif (strcmp(mriformat, 'analyze_img') || strcmp(mriformat, 'analyze_hdr')) && hasspm
   % use the image file instead of the header
@@ -124,7 +124,7 @@ elseif (strcmp(mriformat, 'analyze_img') || strcmp(mriformat, 'analyze_hdr')) &&
   hdr = spm_vol(filename);
   img = spm_read_vols(hdr);
   transform = hdr.mat;
-
+  
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif (strcmp(mriformat, 'analyze_hdr') || strcmp(mriformat, 'analyze_img')) && hasmri
   % use the functions from Darren Weber's mri_toolbox to read the Analyze MRI
@@ -139,7 +139,7 @@ elseif (strcmp(mriformat, 'analyze_hdr') || strcmp(mriformat, 'analyze_img')) &&
   % the coordinate system comparable to SPM
   warning('flipping 1st dimension (L-R) to obtain volume in neurological convention');
   img = flipdim(img, 1);
-   
+  
   transform      = diag(hdr.dime.pixdim(2:4));
   transform(4,4) = 1;
   
@@ -149,7 +149,7 @@ elseif (strcmp(mriformat, 'afni_brik') || strcmp(mriformat, 'afni_head')) && has
   if err
     error('could not read AFNI file');
   end
-
+  
   % FIXME: this should be checked, but I only have a single BRIK file
   % construct the homogenous transformation matrix that defines the axes
   warning('homogenous transformation might be incorrect for AFNI file');
@@ -158,14 +158,14 @@ elseif (strcmp(mriformat, 'afni_brik') || strcmp(mriformat, 'afni_head')) && has
   transform(1,1)   = hdr.DELTA(1);
   transform(2,2)   = hdr.DELTA(2);
   transform(3,3)   = hdr.DELTA(3);
-
+  
   % FIXME: I am not sure about the "RAI" image orientation
   img = flipdim(img,1);
   img = flipdim(img,2);
   dim = size(img);
   transform(1,4) = -dim(1) - transform(1,4);
   transform(2,4) = -dim(2) - transform(2,4);
-
+  
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif strcmp(mriformat, 'neuromag_fif') && ft_hastoolbox('mne')
   % use the mne functions to read the Neuromag MRI
@@ -212,7 +212,7 @@ elseif strcmp(mriformat, 'neuromag_fif') && ft_hastoolbox('mne')
       matlab_shift = eye(4);
       matlab_shift(1:3,4) = [-1,-1,-1];
       transform = transform\(hdr.voxel_trans.trans * matlab_shift);
-
+      
       coordsys  = 'neuromag';
       mri.unit  = 'm';
     else
@@ -223,7 +223,7 @@ elseif strcmp(mriformat, 'neuromag_fif') && ft_hastoolbox('mne')
     warning('W: voxel_trans structure is not defined.');
     warning('W: Please check the MRI fif-file');
   end
-
+  
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif strcmp(mriformat, 'neuromag_fif') && ft_hastoolbox('meg_pd')
   % use the meg_pd functions to read the Neuromag MRI
@@ -232,16 +232,16 @@ elseif strcmp(mriformat, 'neuromag_fif') && ft_hastoolbox('meg_pd')
   transform  = dev*coords;
   hdr.coords = coords;
   hdr.dev    = dev;
-
+  
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif strcmp(mriformat, 'neuromag_fif')
   error('reading MRI data from a fif file requires either the MNE toolbox or the meg_pd toolbox to be installed');
-
+  
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif strcmp(mriformat, 'dicom')
   % this seems to return a right-handed volume with the transformation
   % matrix stored in the file headers.
-    
+  
   % use the freesurfer toolbox
   ft_hastoolbox('freesurfer', 1);
   [dcmdir,junk1,junk2] = fileparts(filename);
@@ -250,8 +250,8 @@ elseif strcmp(mriformat, 'dicom')
   end
   [img,transform,hdr,mr_params] = load_dicom_series(dcmdir,dcmdir,filename);
   transform = vox2ras_0to1(transform);
-
-elseif strcmp(mriformat, 'dicom_old')  
+  
+elseif strcmp(mriformat, 'dicom_old')
   % this does not necessarily return a right-handed volume and only a
   % transformation-matrix with the voxel size
   
@@ -260,25 +260,25 @@ elseif strcmp(mriformat, 'dicom_old')
   orig = dicominfo(filename);
   dim(1) = orig.Rows;
   dim(2) = orig.Columns;
-
+  
   [p, f] = fileparts(filename);
-
+  
   % this works for the Siemens scanners at the FCDC
   tok = tokenize(f, '.');
   for i=5:length(tok)
-    tok{i} = '*';  
+    tok{i} = '*';
   end
   filename = sprintf('%s.', tok{:});  % reconstruct the filename with wildcards and '.' between the segments
   filename = filename(1:end-1);       % remove the last '.'
   dirlist  = dir(fullfile(p, filename));
   dirlist  = {dirlist.name};
-
+  
   if length(dirlist)==1
     % try something else to get a list of all the slices
     dirlist = dir(fullfile(p, '*'));
     dirlist = {dirlist(~[dirlist.isdir]).name};
   end
-    
+  
   keep = false(1, length(dirlist));
   for i=1:length(dirlist)
     filename = char(fullfile(p, dirlist{i}));
@@ -299,7 +299,7 @@ elseif strcmp(mriformat, 'dicom_old')
   % remove the files that were skipped
   hdr     = hdr(keep);
   dirlist = dirlist(keep);
-
+  
   % pre-allocate enough space for the subsequent slices
   dim(3) = length(dirlist);
   img    = zeros(dim(1), dim(2), dim(3));
@@ -325,13 +325,13 @@ elseif strcmp(mriformat, 'dicom_old')
     transform(3,3) = dz;
   end
   
- 
+  
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif any(strcmp(mriformat, {'nifti', 'freesurfer_mgz', 'freesurfer_mgh', 'nifti_fsl'}))
   if strcmp(mriformat, 'freesurfer_mgz') && ispc
     error('Compressed .mgz files cannot be read on a PC');
   end
-    
+  
   ft_hastoolbox('freesurfer', 1);
   tmp = MRIread(filename);
   ndims = numel(size(tmp.vol));
@@ -345,8 +345,8 @@ elseif any(strcmp(mriformat, {'nifti', 'freesurfer_mgz', 'freesurfer_mgh', 'nift
   end
   hdr = rmfield(tmp, 'vol');
   transform = tmp.vox2ras1;
-
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif strcmp(mriformat, 'yokogawa_mri')
   ft_hastoolbox('yokogawa', 1);
   fid = fopen(filename, 'rb');
@@ -354,7 +354,7 @@ elseif strcmp(mriformat, 'yokogawa_mri')
   patient_info = GetMeg160PatientInfoFromMriFileM(fid);
   [data_style, model, marker, image_parameter, normalize, besa_fiducial_point] = GetMeg160MriFileHeaderInfoM(fid);
   fclose(fid);
-
+  
   % gather all meta-information
   hdr.mri_info = mri_info;
   hdr.patient_info = patient_info;
@@ -368,19 +368,28 @@ elseif strcmp(mriformat, 'yokogawa_mri')
   error('FIXME yokogawa_mri implementation is incomplete');
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+elseif strcmp(mriformat, 'matlab')
+  mri = loadvar(filename, 'mri');
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 else
   error(sprintf('unrecognized filetype ''%s'' for ''%s''', mriformat, filename));
 end
 
-% set up the axes of the volume in voxel coordinates
-nx = size(img,1);
-ny = size(img,2);
-nz = size(img,3);
-mri.dim = [nx ny nz];
-% store the anatomical data
-mri.anatomy = img;
-% store the header with all file format specific details
-mri.hdr = hdr;
+if exist('img', 'var')
+  % set up the axes of the volume in voxel coordinates
+  nx = size(img,1);
+  ny = size(img,2);
+  nz = size(img,3);
+  mri.dim = [nx ny nz];
+  % store the anatomical data
+  mri.anatomy = img;
+end
+
+if exist('hdr', 'var')
+  % store the header with all file format specific details
+  mri.hdr = hdr;
+end
 
 try
   % store the homogenous transformation matrix if present
@@ -395,4 +404,16 @@ end
 try
   % try to add a descriptive label for the coordinate system
   mri.coordsys = coordsys;
+end
+
+function value = loadvar(filename, varname)
+var = whos('-file', filename);
+if length(var)==1
+  filecontent = load(filename); % read the one variable in the file, regardless of how it is called
+  value       = filecontent.(var.name);
+  clear filecontent
+else
+  filecontent = load(filename, varname);
+  value       = filecontent.(varname);  % read the variable named according to the input specification
+  clear filecontent
 end

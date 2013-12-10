@@ -16,18 +16,20 @@ function varargout = attributes(varargin)
 %     tree = attributes(tree,'add',uid,key,val)
 %     tree = attributes(tree,'del',uid[,n])
 %     l    = attributes(tree,'length',uid)
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
 % Handle attributes of an element node.
 % The tree parameter must be in input AND in output for 'set', 'add' and
 % 'del' methods.
-%_______________________________________________________________________
-% Copyright (C) 2002-2008  http://www.artefact.tk/
+%__________________________________________________________________________
+% Copyright (C) 2002-2011  http://www.artefact.tk/
 
-% Guillaume Flandin <guillaume@artefact.tk>
+% Guillaume Flandin
 % $Id$
 
-error(nargchk(3,6,nargin));
+
+%error(nargchk(3,6,nargin));
+
 tree = varargin{1};
 if ~ischar(varargin{2}) || ...
    ~any(strcmp(varargin{2},{'set','get','add','del','length'}))
@@ -44,7 +46,7 @@ end
 
 switch varargin{2}
     case 'set'
-        error(nargchk(6,6,nargin));
+        %error(nargchk(6,6,nargin));
         if ~isa(varargin{4},'double') || ...
            any(varargin{4}>length(tree.tree{uid}.attributes)) || ...
            any(varargin{4}<1)
@@ -54,7 +56,7 @@ switch varargin{2}
         tree.tree{uid}.attributes{ind} = struct('key',varargin{5},'val',varargin{6});
         varargout{1} = tree;
     case 'get'
-        error(nargchk(3,4,nargin));
+        %error(nargchk(3,4,nargin));
         if nargin == 4
             if ischar(varargin{4})
                 for i=1:length(tree.tree{uid}.attributes)
@@ -89,12 +91,12 @@ switch varargin{2}
             end
         end
     case 'add'
-        error(nargchk(5,5,nargin));
+        %error(nargchk(5,5,nargin));
         ind = length(tree.tree{uid}.attributes) + 1;
         tree.tree{uid}.attributes{ind} = struct('key',varargin{4},'val',varargin{5});
         varargout{1} = tree;
     case 'del'
-        error(nargchk(3,4,nargin));
+        %error(nargchk(3,4,nargin));
         if nargin == 4
             if ~isa(varargin{4},'double') || ...
               any(varargin{4}>length(tree.tree{uid}.attributes)) || ...
@@ -108,7 +110,7 @@ switch varargin{2}
         end
         varargout{1} = tree;
     case 'length'
-        error(nargchk(3,3,nargin));
+        %error(nargchk(3,3,nargin));
         varargout{1} = length(tree.tree{uid}.attributes);
     otherwise
         error('[XMLTree] Unknown method.');

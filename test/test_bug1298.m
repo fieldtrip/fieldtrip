@@ -1,9 +1,12 @@
 function test_bug1298
 
+% MEM 3gb
+% WALLTIME 00:03:36
+
 % TEST test_bug1298
 % TEST ft_timelockanalysis ft_prepare_leadfield ft_sourceanalysis 
 
-megraw=load('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/dataFIC.mat')
+megraw=load('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/dataFIC.mat');
 
 cfg=[];
 cfg.covariance='yes';

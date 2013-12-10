@@ -1,5 +1,8 @@
 function test_bug538
 
+% MEM 1500mb
+% WALLTIME 00:03:03
+
 % TEST test_bug538
 % TEST ft_freqanalysis ft_connectivityanalysis ft_freqstatistics
 

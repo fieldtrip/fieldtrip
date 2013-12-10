@@ -1,5 +1,8 @@
 function test_ft_movieplotTFR
 
+% MEM 1500mb
+% WALLTIME 00:03:10
+
 % TEST test_ft_movieplotTFR
 % TEST ft_movieplotTFR ft_movieplotER
 
@@ -65,4 +68,11 @@ cfg.moviefreq   = 2;
 cfg.movierpt    = 3;
 cfg.layout = 'CTF151.lay';
 ft_movieplotTFR(cfg, freqFIC);
+
+% ensure that all figures are updated before XUnit starts to close the figures
+drawnow
+close all
+
+
+drawnow
 

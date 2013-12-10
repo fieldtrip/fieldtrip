@@ -192,16 +192,23 @@ if ischar(data)
   error('please use cfg.inputfile instead of specifying the input variable as a sting');
 end
 
+% ensure that old and unsupported options are not being relied on by the end-user's script
+% instead of specifying cfg.coordsys, the user should specify the coordsys in the data
+cfg = ft_checkconfig(cfg, 'forbidden', {'units', 'inputcoordsys', 'coordinates'});
+cfg = ft_checkconfig(cfg, 'deprecated', 'coordsys');
+if isfield(cfg, 'coordsys') && ~isfield(data, 'coordsys')
+  data.coordsys = cfg.coordsys;
+end
+
 % check if the input data is valid for this function
-data     = ft_checkdata(data, 'datatype', {'volume' 'source'}, 'feedback', 'yes');
+data     = ft_checkdata(data, 'datatype', {'volume' 'source'}, 'feedback', 'yes', 'hasunit', 'yes');
+
+% determine the type of data
 issource = ft_datatype(data, 'source');
 isvolume = ft_datatype(data, 'volume');
 if issource && ~isfield(data, 'dim') && (~isfield(cfg, 'method') || ~strcmp(cfg.method, 'surface'))
   error('the input data needs to be defined on a regular 3D grid');
 end
-
-% check if the input configuration is valid for this function
-cfg = ft_checkconfig(cfg, 'renamed', {'inputcoordsys', 'coordsys'});
 
 % set the defaults for all methods
 cfg.method        = ft_getopt(cfg, 'method', 'ortho');
@@ -241,8 +248,6 @@ cfg.colorbar            = ft_getopt(cfg, 'colorbar',            'yes');
 cfg.axis                = ft_getopt(cfg, 'axis',                'on');
 cfg.interactive         = ft_getopt(cfg, 'interactive',         'no');
 cfg.queryrange          = ft_getopt(cfg, 'queryrange',          3);
-cfg.coordsys            = ft_getopt(cfg, 'coordsys',            []);
-cfg.units               = ft_getopt(cfg, 'units',               []);
 
 if isfield(cfg, 'TTlookup'),
   error('TTlookup is old; now specify cfg.atlas, see help!');
@@ -275,30 +280,6 @@ cfg.renderer       = ft_getopt(cfg, 'renderer',      'opengl');
 if strcmp(cfg.location, 'interactive')
   cfg.location = 'auto';
   cfg.interactive = 'yes';
-end
-
-% ensure that the data has interpretable spatial units
-if     ~isfield(data, 'unit') && ~isempty(cfg.units)
-  data.unit = cfg.units;
-elseif ~isfield(data, 'unit') &&  isempty(cfg.units)
-  data = ft_convert_units(data);
-elseif  isfield(data, 'unit') && ~isempty(cfg.units)
-  data = ft_convert_units(data, cfg.units);
-elseif  isfield(data, 'unit') &&  isempty(cfg.units)
-  % nothing to do
-end
-
-% ensure that the data has an interpretable coordinate system
-if     ~isfield(data, 'coordsys') && ~isempty(cfg.coordsys)
-  data.coordsys = cfg.coordsys;
-elseif ~isfield(data, 'coordsys') &&  isempty(cfg.coordsys) && ~isempty(cfg.atlas)
-  % only needed if an atlas was specified for volumelookup
-  data = ft_convert_coordsys(data);
-elseif  isfield(data, 'coordsys') && ~isempty(cfg.coordsys) && ~isempty(cfg.atlas)
-  % only needed if an atlas was specified for volumelookup
-  data = ft_convert_coordsys(data, cfg.units);
-elseif  isfield(data, 'coordsys') &&  isempty(cfg.coordsys)
-  % nothing to do
 end
 
 % select the functional and the mask parameter
@@ -731,6 +712,16 @@ if isequal(cfg.method,'ortho')
   xdim = dim(1) + dim(2);
   ydim = dim(2) + dim(3);
   
+  % inspect transform matrix, if the voxels are isotropic then the screen
+  % pixels also should be square
+  hasIsotropicVoxels = 0;
+  if isfield(data, 'transform'),
+    % NOTE: it is not a given that the data to be plotted has a transform,
+    % i.e. source data (uninterpolated)
+    hasIsotropicVoxels = norm(data.transform(1:3,1)) == norm(data.transform(1:3,2))...
+      && norm(data.transform(1:3,2)) == norm(data.transform(1:3,3));
+  end
+  
   xsize(1) = 0.82*dim(1)/xdim;
   xsize(2) = 0.82*dim(2)/xdim;
   ysize(1) = 0.82*dim(3)/ydim;
@@ -746,6 +737,12 @@ if isequal(cfg.method,'ortho')
   set(h2,'Tag','jk','Visible',cfg.axis,'XAxisLocation','top');
   set(h3,'Tag','ij','Visible',cfg.axis);
   set(h, 'renderer', cfg.renderer); % ensure that this is done in interactive mode
+  
+  if hasIsotropicVoxels
+    set(h1,'DataAspectRatio',[1 1 1]);
+    set(h2,'DataAspectRatio',[1 1 1]);
+    set(h3,'DataAspectRatio',[1 1 1]);
+  end
   
   % create structure to be passed to gui
   opt = [];
@@ -889,7 +886,7 @@ elseif isequal(cfg.method,'surface')
 
     if isfield(surf, 'transform'),
       % compute the surface vertices in head coordinates
-      surf.pnt = warp_apply(surf.transform, surf.pnt);
+      surf.pnt = ft_warp_apply(surf.transform, surf.pnt);
     end
     
     % downsample the cortical surface
@@ -917,7 +914,7 @@ elseif isequal(cfg.method,'surface')
       %convert projvec in mm to a factor, assume mean distance of 70mm
       cfg.projvec=(70-cfg.projvec)/70;
       for iproj = 1:length(cfg.projvec),
-        sub = round(warp_apply(inv(data.transform), surf.pnt*cfg.projvec(iproj), 'homogenous'));  % express
+        sub = round(ft_warp_apply(inv(data.transform), surf.pnt*cfg.projvec(iproj), 'homogenous'));  % express
         sub(sub(:)<1) = 1;
         sub(sub(:,1)>dim(1),1) = dim(1);
         sub(sub(:,2)>dim(2),2) = dim(2);
@@ -981,7 +978,7 @@ elseif isequal(cfg.method,'surface')
           surf = cfg.surfinflated;
           if isfield(surf, 'transform'),
               % compute the surface vertices in head coordinates
-              surf.pnt = warp_apply(surf.transform, surf.pnt);
+              surf.pnt = ft_warp_apply(surf.transform, surf.pnt);
           end
       end
   end

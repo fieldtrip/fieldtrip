@@ -10,7 +10,7 @@ function [params,X,means,wX,wM,dwM] = pre_sphere_symm(params, X, dim)
 % Copyright (C) 2004, 2005 DSS MATLAB package team (dss@cis.hut.fi).
 % Distributed by Laboratory of Computer and Information Science,
 % Helsinki University of Technology. http://www.cis.hut.fi/projects/dss/.
-% $Id: pre_sphere_symm.m,v 1.7 2005/11/30 08:29:40 jaakkos Exp $
+% $Id$
 
 if nargin<2
     params.name = 'Symmetric sphering';

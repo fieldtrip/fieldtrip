@@ -1,7 +1,7 @@
-function artifact_viewer(cfg, artcfg, zval, artval, zindx, inputdata);
+function artifact_viewer(cfg, artcfg, zval, artval, zindx, inputdata)
 
 % ARTIFACT_VIEWER is a subfunction that reads a segment of data
-% (one channel only) and displays it together with the cummulated
+% (one channel only) and displays it together with the cumulated
 % z-value
 
 % Copyright (C) 2004-2006, Jan-Mathijs Schoffelen & Robert Oostenveld
@@ -24,16 +24,35 @@ function artifact_viewer(cfg, artcfg, zval, artval, zindx, inputdata);
 %
 % $Id$
 
+if ishandle(cfg)
+  % get the input variables from the handle's guidata
+  hx     = cfg; clear cfg;
+  tmp    = guidata(hx);
+  cfg    = tmp.cfg;
+  cfg.trl = tmp.trl;
+  artcfg = tmp.artcfg;
+  zval   = tmp.zval;
+  artval = tmp.artval;
+  zindx  = tmp.zindx;
+  if ~isempty(tmp.data)
+    inputdata = tmp.data;
+    hdr       = ft_fetch_header(inputdata);
+  else
+    hdr       = ft_read_header(cfg.headerfile);
+  end
+  % make a new figure
+  figure;
+else
+  if nargin == 5
+    hdr = ft_read_header(cfg.headerfile);
+  elseif nargin == 6
+    hdr = ft_fetch_header(inputdata); % used name inputdata iso data, because data is already used later in this function
+  end
+end
+
 dat.cfg     = cfg;
 dat.artcfg  = artcfg;
-if nargin == 5
-  % no data is given
-  dat.hdr          = ft_read_header(cfg.headerfile);
-elseif nargin == 6
-  % data is given
-  dat.hdr          = ft_fetch_header(inputdata); % used name inputdata iso data, because data is already used later in this function
-  dat.inputdata    = inputdata; % to be able to get inputdata into h (by guidata)
-end
+if exist('inputdata', 'var') dat.inputdata = inputdata; end
 dat.trlop   = 1;
 dat.zval    = zval;
 dat.artval  = artval;
@@ -41,6 +60,7 @@ dat.zindx   = zindx;
 dat.stop    = 0;
 dat.numtrl  = size(cfg.trl,1);
 dat.trialok = zeros(1,dat.numtrl);
+dat.hdr     = hdr;
 for trlop=1:dat.numtrl
   dat.trialok(trlop) = ~any(artval{trlop});
 end

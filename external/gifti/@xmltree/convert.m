@@ -5,17 +5,17 @@ function s = convert(tree,uid)
 % uid       - uid of the root of the subtree, if provided.
 %             Default is root
 % s         - converted structure
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
 % Convert an xmltree into a Matlab structure, when possible.
 % When several identical tags are present, a cell array is used.
 % The root tag is not saved in the structure.
 % If provided, only the structure corresponding to the subtree defined
 % by the uid UID is returned.
-%_______________________________________________________________________
-% Copyright (C) 2002-2008  http://www.artefact.tk/
+%__________________________________________________________________________
+% Copyright (C) 2002-2011  http://www.artefact.tk/
 
-% Guillaume Flandin <guillaume@artefact.tk>
+% Guillaume Flandin
 % $Id$
 
 % Exemple:
@@ -23,7 +23,7 @@ function s = convert(tree,uid)
 % toto = convert(tree);
 % <=> toto = struct('titi',{{'field1', 'field3'}},'tutu','field2')
 
-error(nargchk(1,2,nargin));
+%error(nargchk(1,2,nargin));
 
 % Get the root uid of the output structure
 if nargin == 1
@@ -45,7 +45,7 @@ s = sub_convert(tree,s,root_uid,{});
 
 s = rmfield(s,'deletedummy');
 
-%=======================================================================
+%==========================================================================
 function s = sub_convert(tree,s,uid,arg)
     type = get(tree,uid,'type');
     switch type
@@ -122,7 +122,7 @@ function s = sub_convert(tree,s,uid,arg)
             warning(sprintf('Type %s unknown : not saved',get(tree,uid,'type')));
     end
     
-%=======================================================================
+%==========================================================================
 function s = sub_setfield(s,varargin)
 % Same as setfield but using '{}' rather than '()'
 %if (isempty(varargin) | length(varargin) < 2)

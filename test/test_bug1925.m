@@ -1,5 +1,8 @@
 function test_bug1925
 
+% MEM 1500mb
+% WALLTIME 00:03:01
+
 % TEST test_bug1925
 % TEST surface_nesting ft_headmodel_bemcp
 

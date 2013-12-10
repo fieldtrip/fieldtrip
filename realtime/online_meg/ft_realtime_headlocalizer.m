@@ -59,17 +59,12 @@ cfg.template        = ft_getopt(cfg, 'template',         []); % template dataset
 cfg.blocksize       = ft_getopt(cfg, 'blocksize',         1); % in seconds
 cfg.bufferdata      = ft_getopt(cfg, 'bufferdata',   'last'); % first (replay) or last (real-time)
 cfg.coilfreq        = ft_getopt(cfg, 'coilfreq',   [293, 307, 314, 321, 328]); % Hz, Neuromag
+cfg.hpifile         = ft_getopt(cfg, 'hpifile',          []); % fif file containing digitized HPI coils
 
 % start by reading the header from the realtime buffer
 clear ft_read_header; % ensure pesistent variables are cleared
 cfg = ft_checkconfig(cfg, 'dataset2files', 'yes'); % translate dataset into datafile+headerfile
 hdr = ft_read_header(cfg.headerfile, 'cache', true, 'coordsys', 'dewar');
-
-% hidden option to bypass the online missing grad info (FIXME: neuromag2ft)
-if isfield(cfg,'gradfile');
-  temp = ft_read_header(cfg.gradfile, 'coordsys', 'dewar');
-  hdr.grad = temp.grad;
-end
 
 % determine the size of blocks to process
 blocksize   = round(cfg.blocksize * hdr.Fs);
@@ -129,9 +124,13 @@ if isctf
   % not needed for CTF275 systems
   dip  = [];
   vol  = [];
-  coilsignal = [];  
+  coilsignal = [];
 elseif isneuromag
-  shape = ft_read_headshape(cfg.headerfile, 'coordsys', 'dewar');
+  if isempty(cfg.hpifile)
+    shape = ft_read_headshape(cfg.headerfile, 'coordsys', 'dewar', 'format', 'neuromag_fif');
+  elseif ~isempty(cfg.hpifile)
+    shape = ft_read_headshape(cfg.hpifile, 'coordsys', 'dewar', 'format', 'neuromag_fif');
+  end
   for i = 1:min(size(shape.pnt,1),length(cfg.coilfreq)) % for as many digitized or specified coils
     if ~isempty(strfind(shape.label{i},'hpi'))
       dip(i).pos = shape.pnt(i,:); % chan X pos, initial guess for each of the dipole/coil positions

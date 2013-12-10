@@ -1,5 +1,8 @@
 function test_bug1041
 
+% MEM 1500mb
+% WALLTIME 00:03:04
+
 % TEST test_bug1041
 % TEST ft_freqdescriptives memtic memtoc
 

@@ -387,22 +387,16 @@ switch cfg.method
       optarg = ft_cfg2keyval(cfg.(cfg.icasso.method));
       sR     = icassoEst(cfg.icasso.mode, dat, cfg.icasso.Niter, optarg{:});
     else
-      error('only ''fastica'' is supported as method for icasso');
-     
-      % FIXME the code below does not work yet 
-      % prewhiten using fastica
-      [whitedat, A, B] = fastica(dat, 'only', 'white', 'lastEig', cfg.icasso.Npca);
-      tmpdata          = rmfield(data, 'trial');
-      tmpdata.trial{1} = whitedat;
-      tmpdata.time     = {1:size(whitedat,2)};
-      tmpdata.label    = data.label(1:size(whitedat,1));
-      sR.whiteningMatrix   = A;
-      sR.dewhiteningMatrix = B;
-      
+%       error('only ''fastica'' is supported as method for icasso');
+%      
+%       % FIXME the code below does not work yet 
+
       % recurse into ft_componentanalysis
       tmpcfg = rmfield(cfg, 'icasso');
       tmpcfg.method = cfg.icasso.method;
-
+      
+      tmpdata = data;
+      
       sR.W = cell(cfg.icasso.Niter, 1);
       sR.A = cell(cfg.icasso.Niter, 1);
       sR.index = zeros(0,2);
@@ -410,13 +404,17 @@ switch cfg.method
         tmp = ft_componentanalysis(tmpcfg, tmpdata);
         sR.W{k}  = tmp.unmixing;
         sR.A{k}  = tmp.topo;
-        sR.index = cat(1, sR.index, [ones(size(tmp.topo,2),1) (1:size(tmp.topo,2))']);
+        sR.index = cat(1, sR.index, [k*ones(size(tmp.topo,2),1) (1:size(tmp.topo,2))']);
+      
+        if strcmp(tmpcfg.method, 'dss')
+          sR.whiteningMatrix   = tmp.cfg.dss.V;
+          sR.dewhiteningMatrix = tmp.cfg.dss.dV;
+        end
       end
       sR.signal = dat;
       sR.mode   = cfg.icasso.mode;
       sR.rdim   = size(tmp.topo,2);
     end
-
     sR     = icassoExp(sR);
     [Iq, mixing, unmixing, dat] = icassoShow(sR, 'estimate', 'off');%, 'L', cfg.numcomponent);    
     
@@ -449,7 +447,7 @@ switch cfg.method
         '  if ~isempty(W)                  %% ORIGINAL VERSION\n' ...
         'to\n' ...
         '  if ~isempty(W) && nargout ~= 2  %% if nargout == 2, we return [A, W], and NOT ICASIG\n']);
-      % forward original error
+     % forward original error
       rethrow(me);
     end
     
@@ -551,8 +549,22 @@ switch cfg.method
     if ~ischar(cfg.numcomponent)
       params.sdim = cfg.numcomponent;
     end
+    if isfield(cfg.dss, 'wdim') && ~isempty(cfg.dss.wdim)
+      params.wdim = cfg.dss.wdim;
+    end
+    if isfield(cfg.dss, 'V') && ~isempty(cfg.dss.V)
+      params.Y = params.V*dat;
+    end
+    
     % create the state
     state   = dss_create_state(dat, params);
+    if isfield(cfg.dss, 'V') && ~isempty(cfg.dss.V)
+      state.V = cfg.dss.V;
+    end
+    if isfield(cfg.dss, 'dV') && ~isempty(cfg.dss.dV)
+      state.dV = cfg.dss.dV;
+    end
+    
     % increase the amount of information that is displayed on screen
     %state.verbose = 3;
     % start the decomposition
@@ -560,7 +572,7 @@ switch cfg.method
     state   = denss(state);  % this is for the DSS toolbox version 1.0
     %weights = state.W;
     %sphere  = state.V;
-    
+  
     mixing   = state.A;
     unmixing = state.B;
     
@@ -571,6 +583,7 @@ switch cfg.method
     cfg.dss.stopf     = state.stopf;
     cfg.dss.W         = state.W;
     cfg.dss.V         = state.V;
+    cfg.dss.dV        = state.dV;
     cfg.numcomponent  = state.sdim;
     
   case 'sobi'

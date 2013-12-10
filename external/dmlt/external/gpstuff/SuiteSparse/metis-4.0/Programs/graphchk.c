@@ -8,7 +8,7 @@
  * Started 8/28/94
  * George
  *
- * $Id: graphchk.c,v 1.1 1998/11/27 17:59:33 karypis Exp $
+ * $Id$
  *
  */
 

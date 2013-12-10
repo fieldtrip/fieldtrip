@@ -6,7 +6,7 @@
  * Started 7/23/97
  * George
  *
- * $Id: mcoarsen.c,v 1.1 1998/11/27 17:59:19 karypis Exp $
+ * $Id$
  *
  */
 

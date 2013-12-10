@@ -11,7 +11,7 @@ function [el, prj] = project_elec(elc, pnt, tri)
 %
 % See also TRANSFER_ELEC 
 
-% Copyright (C) 1999-2002, Robert Oostenveld
+% Copyright (C) 1999-2013, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -32,9 +32,12 @@ function [el, prj] = project_elec(elc, pnt, tri)
 % $Id$
 
 Nelc = size(elc,1);
-Npnt = size(pnt,1);
-Ntri = size(tri,1);
 el   = zeros(Nelc, 4);
+
+% this is a work-around for http://bugzilla.fcdonders.nl/show_bug.cgi?id=2369
+elc = double(elc);
+pnt = double(pnt);
+tri = double(tri);
 
 for i=1:Nelc
   [proj,dist] = ptriprojn(pnt(tri(:,1),:), pnt(tri(:,2),:), pnt(tri(:,3),:), elc(i,:), 1);
@@ -48,6 +51,7 @@ for i=1:Nelc
   
   % the following can be done faster, because the smallest_dist can be
   % directly selected
+%   Ntri = size(tri,1);
 %   for j=1:Ntri
 %     %[proj, dist] = ptriproj(pnt(tri(j,1),:), pnt(tri(j,2),:), pnt(tri(j,3),:), elc(i,:), 1);
 %     if dist(j)<smallest_dist

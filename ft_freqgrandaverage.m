@@ -27,7 +27,8 @@ function [grandavg] = ft_freqgrandaverage(cfg, varargin)
 % input/output structure. For this particular function, the input should be
 % specified as a cell array.
 %
-% See also FT_TIMELOCKGRANDAVERAGE, FT_FREQANALYSIS, FT_FREQDESCRIPTIVES
+% See also FT_TIMELOCKGRANDAVERAGE, FT_FREQANALYSIS, FT_FREQDESCRIPTIVES,
+% FT_FREQBASELINE
 
 % FIXME averaging coherence is not possible if inputs contain different amounts of data (i.e. chan/freq/time)
 

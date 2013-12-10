@@ -1,5 +1,8 @@
 function test_tutorial_clusterpermutationfreq(dataset, datadir)
 
+% MEM 1500mb
+% WALLTIME 00:07:04
+
 % TEST test_tutorial_eventrelatedstatistics
 % TEST ft_freqanalysis ft_multiplotTFR ft_singleplotTFR ft_freqstatistics
 % TEST ft_topoplotTFR ft_clustTFRplot ft_megplanar ft_combineplanar

@@ -1,5 +1,8 @@
 function test_bug27
 
+% MEM 1500mb
+% WALLTIME 00:03:03
+
 % TEST test_bug27
 % TEST ft_preproc_lowpassfilter ft_resampledata ft_resampledata 
 

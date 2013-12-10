@@ -1,5 +1,8 @@
 function test_bug1725
 
+% MEM 2000mb
+% WALLTIME 00:03:23
+
 % TEST test_bug1725
 % TEST ft_read_atlas ft_prepare_atlas
 

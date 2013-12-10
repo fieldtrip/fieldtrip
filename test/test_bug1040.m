@@ -1,5 +1,8 @@
 function test_bug1040
 
+% MEM 1500mb
+% WALLTIME 00:03:05
+
 % TEST: bug1040
 
 % function to test ft_prepare_sourcemodel given configuration options (cfg), 

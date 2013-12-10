@@ -17,6 +17,9 @@ if length(this) == 1 && ~isempty(this.data)
     eval([display_name ' = struct(this);']);
     eval(['display(' display_name ');']);
 else
+    disp(' ')
+    disp([display_name ' =']);
+    disp(' ');
     eval([display_name ' = this;']);
-    eval(['builtin(''display'',' display_name ');']);
+    eval(['disp(' display_name ');']);
 end

@@ -8,7 +8,7 @@
  * Started 8/27/94
  * George
  *
- * $Id: metis.h,v 1.1 1998/11/27 17:59:21 karypis Exp $
+ * $Id$
  */
 
 

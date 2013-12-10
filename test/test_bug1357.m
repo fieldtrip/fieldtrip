@@ -1,5 +1,8 @@
 function test_bug1357
 
+% MEM 1500mb
+% WALLTIME 00:03:37
+
 % TEST test_bug1357
 % TEST ft_multiplotTFR ft_singleplotTFR ft_singleplotTFR ft_singleplotTFR
 
@@ -9,11 +12,25 @@ lay = ft_prepare_layout(cfg);
 
 label = ft_channelselection('MEG', lay.label);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 nchan = length(label);
 nfreq = 50;
 ntime = 100;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+freq = [];
+freq.label = label;
+freq.freq = 1:nfreq;
+freq.dimord = 'chan_freq';
+freq.powspctrm = randn(nchan, nfreq);
+
+cfg = [];
+cfg.parameter = 'powspctrm';
+cfg.layout = lay;
+ft_multiplotER(cfg, freq);
+ft_singleplotER(cfg, freq);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 freq = [];
 freq.label = label;

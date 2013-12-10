@@ -1,5 +1,8 @@
 function test_ft_prepare_localspheres
 
+% MEM 2500mb
+% WALLTIME 00:10:00
+
 % TEST test_ft_prepare_localspheres
 % TEST ft_headmodel_localspheres ft_prepare_headmodel ft_prepare_localspheres
 

@@ -72,17 +72,6 @@ else
   defaultbackend = 'local';
 end
 
-hostname = gethostname();
-if ~isempty(regexp(hostname, '^dccn-c', 'once')) || ~isempty(regexp(hostname, '^mentat', 'once'))
-  % At the DCCN we want the distributed MATLAB jobs to be queued in the
-  % "matlab" queue. This routes them to specific multi-core machines and
-  % limits the number of licenses that can be claimed at once.
-  defaultqueue = 'matlab';
-else
-  % let the queueing system decide
-  defaultqueue = [];
-end
-
 % convert the input arguments into something that strmatch can work with
 strargin = varargin;
 strargin(~cellfun(@ischar, strargin)) = {''};
@@ -119,12 +108,12 @@ batchid       = ft_getopt(optarg, 'batchid');
 timoverhead   = ft_getopt(optarg, 'timoverhead', 180);            % allow some overhead to start up the MATLAB executable
 memoverhead   = ft_getopt(optarg, 'memoverhead', 1024*1024*1024); % allow some overhead for the MATLAB executable in memory
 backend       = ft_getopt(optarg, 'backend', defaultbackend);     % can be torque, local, sge
-queue         = ft_getopt(optarg, 'queue', defaultqueue);
+queue         = ft_getopt(optarg, 'queue', []);                   % the default is specified further down in the code
 submitoptions = ft_getopt(optarg, 'options', []);
 display       = ft_getopt(optarg, 'display', 'no');
 jvm           = ft_getopt(optarg, 'jvm', 'yes');
 numargout     = ft_getopt(optarg, 'nargout', []);
-whichfunction = ft_getopt(optarg, 'whichfunction');    % the complete filename to the function, including path
+whichfunction = ft_getopt(optarg, 'whichfunction');               % the complete filename to the function, including path
 
 % skip the optional key-value arguments
 if ~isempty(optbeg)
@@ -132,13 +121,20 @@ if ~isempty(optbeg)
 end
 
 % determine whether the function has been compiled
-compile = isstruct(varargin{1});
+compiled = isstruct(varargin{1});
 
-if isa(varargin{1}, 'struct')
+if compiled
   % the function has been compited by qsubcompile
   compiledfun = varargin{1}.executable;
   % continue with the original function name
   varargin{1} = varargin{1}.fname;
+end
+
+hostname = gethostname();
+if isempty(queue) && ~compiled && (~isempty(regexp(hostname, '^dccn-c', 'once')) || ~isempty(regexp(hostname, '^mentat', 'once')))
+  % At the DCCN we want the non-compiled distributed MATLAB jobs to be queued in the "matlab" queue. This
+  % routes them to specific multi-core machines and limits the number of licenses that can be claimed at once.
+  queue = 'matlab';
 end
 
 if ~isempty(previous_argin) && ~isequal(varargin{1}, previous_argin{1})
@@ -168,7 +164,7 @@ argin = varargin;
 optin = options;
 save(inputfile, 'argin', 'optin');
 
-if ~compile
+if ~compiled
   
   if isempty(previous_matlabcmd)
     % determine the name of the matlab startup script
@@ -243,7 +239,7 @@ if ~compile
     sprintf('qsubexec(''%s'');', fullfile(pwd, jobid)),...
     sprintf('exit')];
 
-end % if ~compile
+end % if ~compiled
 
 % set the job requirements according to the users specification
 switch backend
@@ -257,7 +253,7 @@ switch backend
     % this is for testing the execution in case no cluster is available,
     % for example when working on the road with a laptop
     
-    if compile
+    if compiled
       % create the command line for the compiled application
       cmdline = sprintf('%s %s %s', compiledfun, matlabroot, jobid);
     else
@@ -278,14 +274,14 @@ switch backend
     end
     
     if ~isempty(timreq) && ~isnan(timreq) && ~isinf(timreq)
-      submitoptions = [submitoptions sprintf('-l h_rt=%d ', timreq+timoverhead)];
+      submitoptions = [submitoptions sprintf('-l h_rt=%.0f ', timreq+timoverhead)];
     end
     
     if ~isempty(memreq) && ~isnan(memreq) && ~isinf(memreq)
       submitoptions = [submitoptions sprintf('-l h_vmem=%.0f ', memreq+memoverhead)];
     end
     
-    if compile
+    if compiled
       % create the command line for the compiled application
       cmdline = sprintf('%s %s %s', compiledfun, matlabroot, jobid);
     else
@@ -309,7 +305,7 @@ switch backend
     end
     
     if ~isempty(timreq) && ~isnan(timreq) && ~isinf(timreq)
-      submitoptions = [submitoptions sprintf(' -l walltime=%d ', timreq+timoverhead)];
+      submitoptions = [submitoptions sprintf(' -l walltime=%.0f ', timreq+timoverhead)];
     end
     
     if ~isempty(memreq) && ~isnan(memreq) && ~isinf(memreq)
@@ -325,7 +321,7 @@ switch backend
     % However, any matlab errors will be reported back by fexec.
     % cmdline = ['qsub -e /dev/null -o /dev/null -N ' jobid ' ' requirements shellscript];
     
-    if compile
+    if compiled
       % create the command line for the compiled application
       cmdline = sprintf('%s %s %s', compiledfun, matlabroot, jobid);
     else
@@ -368,7 +364,7 @@ switch backend
     logout = fullfile(curPwd, sprintf('%s.o', jobid));
     logerr = fullfile(curPwd, sprintf('%s.e', jobid));
     
-    if compile
+    if compiled
       % create the command line for the compiled application
       cmdline = sprintf('%s %s %s', compiledfun, matlabroot, jobid);
     else

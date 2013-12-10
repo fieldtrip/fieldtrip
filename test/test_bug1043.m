@@ -1,5 +1,8 @@
 function test_bug1043
 
+% MEM 1500mb
+% WALLTIME 00:03:08
+
 % TEST test_bug1043 
 % TEST ft_megplanar ft_apply_montage yokogawa2grad channelposition
 

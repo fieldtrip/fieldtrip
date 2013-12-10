@@ -22,10 +22,6 @@ function y = base64decode(x)
 
 %   Modified by Guillaume Flandin, May 2008
 
-% check number of input arguments
-%--------------------------------------------------------------------------
-
-error(nargchk(1, 1, nargin));
 
 % Perform the following mapping
 %--------------------------------------------------------------------------

@@ -303,7 +303,7 @@ if strcmp(cfg.method, 'template')
   average = ft_average_sens(template);
   
   fprintf('warping electrodes to average template... '); % the newline comes later
-  [norm.chanpos, norm.m] = warp_optim(elec.chanpos, average.chanpos, cfg.warp);
+  [norm.chanpos, norm.m] = ft_warp_optim(elec.chanpos, average.chanpos, cfg.warp);
   norm.label = elec.label;
   
   dpre  = mean(sqrt(sum((average.chanpos - elec.chanpos).^2, 2)));
@@ -338,11 +338,11 @@ elseif strcmp(cfg.method, 'headshape')
   elec.chanpos = elec.chanpos(datsel,:);
   
   fprintf('warping electrodes to skin surface... '); % the newline comes later
-  [norm.chanpos, norm.m] = warp_optim(elec.chanpos, headshape, cfg.warp);
+  [norm.chanpos, norm.m] = ft_warp_optim(elec.chanpos, headshape, cfg.warp);
   norm.label = elec.label;
   
-  dpre  = warp_error([],     elec.chanpos, headshape, cfg.warp);
-  dpost = warp_error(norm.m, elec.chanpos, headshape, cfg.warp);
+  dpre  = ft_warp_error([],     elec.chanpos, headshape, cfg.warp);
+  dpost = ft_warp_error(norm.m, elec.chanpos, headshape, cfg.warp);
   fprintf('mean distance prior to warping %f, after warping %f\n', dpre, dpost);
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -423,14 +423,14 @@ elseif strcmp(cfg.method, 'fiducial')
   templ_rpa = mean(templ_rpa,1);
   
   % realign both to a common coordinate system
-  elec2common  = headcoordinates(elec_nas, elec_lpa, elec_rpa);
-  templ2common = headcoordinates(templ_nas, templ_lpa, templ_rpa);
+  elec2common  = ft_headcoordinates(elec_nas, elec_lpa, elec_rpa);
+  templ2common = ft_headcoordinates(templ_nas, templ_lpa, templ_rpa);
   
   % compute the combined transform and realign the electrodes to the template
-  norm       = [];
-  norm.m     = elec2common * inv(templ2common);
-  norm.chanpos   = warp_apply(norm.m, elec.chanpos, 'homogeneous');
-  norm.label = elec.label;
+  norm         = [];
+  norm.m       = elec2common * inv(templ2common);
+  norm.chanpos = ft_warp_apply(norm.m, elec.chanpos, 'homogeneous');
+  norm.label   = elec.label;
   
   nas_indx = match_str(lower(elec.label), lower(cfg.fiducial{1}));
   lpa_indx = match_str(lower(elec.label), lower(cfg.fiducial{2}));
@@ -537,7 +537,7 @@ switch cfg.method
     catch
       % the previous section will fail for nonlinear transformations
       elec_realigned.label   = elec_original.label;
-      elec_realigned.chanpos = warp_apply(norm.m, elec_original.chanpos, cfg.warp);
+      elec_realigned.chanpos = ft_warp_apply(norm.m, elec_original.chanpos, cfg.warp);
     end
     % remember the transformation
     elec_realigned.(cfg.warp) = norm.m;

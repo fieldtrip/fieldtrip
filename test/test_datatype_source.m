@@ -1,5 +1,8 @@
 function test_datatype_source
 
+% MEM 1500mb
+% WALLTIME 00:03:01
+
 % this function defines a bunch of 'ideal' source structures
 
 % create a set of 3D grid positions

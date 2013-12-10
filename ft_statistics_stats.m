@@ -89,7 +89,8 @@ case {'ttest', 'ttest_samples_vs_const'}
   ft_progress('init', cfg.feedback);
   for chan = 1:Nobs
     ft_progress(chan/Nobs, 'Processing observation %d/%d\n', chan, Nobs);
-    [h(chan), p(chan), ci(chan, :)] = ttest(dat(chan, :), cfg.constantvalue, cfg.alpha, cfg.tail);
+    [h(chan), p(chan), ci(chan, :), stats] = ttest(dat(chan, :), cfg.constantvalue, cfg.alpha, cfg.tail);
+    s(chan) = stats.tstat;
   end
   ft_progress('close');
 
@@ -157,7 +158,8 @@ case {'paired-ttest'}
   ft_progress('init', cfg.feedback);
   for chan = 1:Nobs
     ft_progress(chan/Nobs, 'Processing observation %d/%d\n', chan, Nobs);
-    [h(chan), p(chan), ci(chan, :)] = ttest(dat(chan, selA)-dat(chan, selB), 0, cfg.alpha, cfg.tail);
+    [h(chan), p(chan), ci(chan, :), stats] = ttest(dat(chan, selA)-dat(chan, selB), 0, cfg.alpha, cfg.tail);
+    s(chan) = stats.tstat;
   end
   ft_progress('close');
 

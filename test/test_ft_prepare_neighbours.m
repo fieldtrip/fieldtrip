@@ -1,5 +1,8 @@
 function test_ft_prepare_neighbours
 
+% MEM 1gb
+% WALLTIME 00:05:21
+
 % TEST test_ft_prepare_neighbours
 % TEST ft_prepare_neighbours
 
@@ -117,3 +120,4 @@ neighbours = ft_prepare_neighbours(cfg, data);
 %  use an appropriate template and do only on some channels
 cfg.channel = data.label(1:end/2);
 neighbours = ft_prepare_neighbours(cfg, data);
+

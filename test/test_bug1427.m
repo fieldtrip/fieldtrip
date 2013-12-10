@@ -1,9 +1,15 @@
 function test_bug1427
 
-% TEST test_bug1427
-% TEST dataset2files
+% MEM 2gb
+% WALLTIME 00:05:52
 
-filepath = '/home/common/matlab/fieldtrip/data/test/bug1427/Long64ChannelWithEvents.mff';
+% TEST test_bug1427
+% TEST dataset2files ft_read_header ft_read_data
+
+% the Long64ChannelWithEvents fails because it consists of muliple segments
+% filepath = '/home/common/matlab/fieldtrip/data/test/bug1427/Long64ChannelWithEvents.mff';
+
+filepath = '/home/common/matlab/fieldtrip/data/test/bug1427/NS500Sine6Hz.mff';
 
 filename = dir(filepath);
 filename = {filename(~[filename.isdir]).name};
@@ -22,12 +28,14 @@ end
 % read the header for any of the files
 hdr = cell(size(filename));
 for i=1:length(filename)
+  disp(filename{i})
   hdr{i} = ft_read_header(fullfile(filepath, filename{i}));
 end
 
 % read some data for any of the files
 dat = cell(size(filename));
 for i=1:length(filename)
+  disp(filename{i})
   dat{i} = ft_read_data(fullfile(filepath, filename{i}), 'begsample', 1, 'endsample', 1000);
 end
 

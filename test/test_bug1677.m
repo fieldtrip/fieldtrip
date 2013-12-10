@@ -1,5 +1,8 @@
 function test_bug1677
 
+% MEM 1500mb
+% WALLTIME 00:05:03
+
 % TEST test_bug1677
 
 % code contributed by Jasper Poort: thanks for that!

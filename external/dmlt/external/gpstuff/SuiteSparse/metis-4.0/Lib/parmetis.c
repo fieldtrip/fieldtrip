@@ -8,7 +8,7 @@
  * Started 10/14/97
  * George
  *
- * $Id: parmetis.c,v 1.1 1998/11/27 17:59:27 karypis Exp $
+ * $Id$
  *
  */
 

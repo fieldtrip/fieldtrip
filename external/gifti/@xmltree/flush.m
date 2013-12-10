@@ -4,17 +4,18 @@ function tree = flush(tree,uid)
 % tree      - XMLTree object
 % uid       - array of UID's of subtrees to be cleared
 %             Default is root
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
 % Clear a subtree given its UID (remove all the leaves of the tree)
 % The tree parameter must be in input AND in output
-%_______________________________________________________________________
-% Copyright (C) 2002-2008  http://www.artefact.tk/
+%__________________________________________________________________________
+% Copyright (C) 2002-2011  http://www.artefact.tk/
 
-% Guillaume Flandin <guillaume@artefact.tk>
+% Guillaume Flandin
 % $Id$
 
-error(nargchk(1,2,nargin));
+
+%error(nargchk(1,2,nargin));
 
 if nargin == 1,
     uid = root(tree);
@@ -25,7 +26,7 @@ for i=1:length(uid)
      tree = sub_flush(tree,uid(i));
 end
 
-%=======================================================================
+%==========================================================================
 function tree = sub_flush(tree,uid)
     if isfield(tree.tree{uid},'contents')
         % contents is parsed in reverse order because each child is

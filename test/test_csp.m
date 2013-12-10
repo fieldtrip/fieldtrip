@@ -1,7 +1,11 @@
 function test_suite = test_csp
+
+% MEM 1500mb
+% WALLTIME 00:03:03
+
 % TEST test_csp
 % TEST ft_component_analysis
-%
+
 % Please beware of notations mistakes in [1]. For example equation (1) does not
 % compute the t by t channel covariance, but an n by n time covariance matrix.
 %

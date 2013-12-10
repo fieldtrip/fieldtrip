@@ -1,5 +1,8 @@
 function test_headmodel_asa
 
+% MEM 1500mb
+% WALLTIME 00:03:03
+
 % TEST test_headmodel_asa
 % TEST ft_headmodel_asa ft_prepare_vol_sens ft_compute_leadfield
 

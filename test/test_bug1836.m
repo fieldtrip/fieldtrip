@@ -1,5 +1,8 @@
 function test_bug1836
 
+% MEM 1500mb
+% WALLTIME 00:03:01
+
 return;
 % TEST test_bug1836
 % TEST ft_datatype_segmentation ft_prepare_mesh ft_write_headshape
@@ -34,7 +37,7 @@ example.transform(1:4,4)   = [-origin(:); 1];
 
 [X, Y, Z] = ndgrid(1:example.dim(1), 1:example.dim(2), 1:example.dim(3));
 voxelpos = [X(:) Y(:) Z(:)];
-headpos = warp_apply(example.transform, voxelpos);
+headpos = ft_warp_apply(example.transform, voxelpos);
 
 % create a sphere with 1 and 2 mm radius in the example volume
 

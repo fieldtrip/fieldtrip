@@ -31,7 +31,7 @@ function [dat] = ft_read_data(filename, varargin)
 %
 % See also FT_READ_HEADER, FT_READ_EVENT, FT_WRITE_DATA, FT_WRITE_EVENT
 
-% Copyright (C) 2003-2012 Robert Oostenveld
+% Copyright (C) 2003-2013 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -341,7 +341,7 @@ switch dataformat
     begsample = begsample - (begepoch-1)*epochlength;  % correct for the number of bytes that were skipped
     endsample = endsample - (begepoch-1)*epochlength;  % correct for the number of bytes that were skipped
     dat = dat(:, begsample:endsample);
-    % close the file between seperate read operations
+    % close the file between separate read operations
     fclose(orig.Head.FILE.FID);
     
   case {'biosig'}
@@ -424,6 +424,13 @@ switch dataformat
       hdr.orig = [];
     end
     dat = read_deymed_dat(datafile, hdr.orig, begsample, endsample);
+    dat = dat(chanindx, :);
+    
+  case 'emotiv_mat'
+    % This is a MATLAB *.mat file that is created using the Emotiv MATLAB
+    % example code. It contains a 25xNsamples matrix and some other stuff.
+    dat = hdr.orig.data_eeg';
+    dat = dat(chanindx, begsample:endsample);
     
   case 'gtec_mat'
     if isfield(hdr, 'orig')
@@ -653,18 +660,20 @@ switch dataformat
     % released as fieldtrip/external/egi_mff and referred further down in
     % this function as 'egi_mff_v2'.
     
-    % check if requested data contains multiple epochs. If so, give error
+    % check if requested data contains multiple epochs and not segmented. If so, give error
     if isfield(hdr.orig.xml,'epochs') && length(hdr.orig.xml.epochs) > 1
-      data_in_epoch = zeros(1,length(hdr.orig.xml.epochs));
-      for iEpoch = 1:length(hdr.orig.xml.epochs)
-        begsamp_epoch = round(str2double(hdr.orig.xml.epochs(iEpoch).epoch.beginTime)./1000./hdr.Fs);
-        endsamp_epoch = round(str2double(hdr.orig.xml.epochs(iEpoch).epoch.endTime)./1000./hdr.Fs);
-        data_in_epoch(iEpoch) = length(intersect(begsamp_epoch:endsamp_epoch,begsample:endsample));
-      end
-      if sum(data_in_epoch>1) > 1
-        fprintf('Requested sample %i to %i. \n', begsample, endsample);
-        error('The requested data is spread out over multiple epochs with possibly discontinuous boundaries. This is not allowed. Adjust trl to request only data within a single epoch.');
-      end
+        if hdr.nTrials ==1
+            data_in_epoch = zeros(1,length(hdr.orig.xml.epochs));
+            for iEpoch = 1:length(hdr.orig.xml.epochs)
+                begsamp_epoch = hdr.orig.epochdef(iEpoch,1);
+                endsamp_epoch = hdr.orig.epochdef(iEpoch,2);
+                data_in_epoch(iEpoch) = length(intersect(begsamp_epoch:endsamp_epoch,begsample:endsample));
+            end
+            if sum(data_in_epoch>1) > 1
+                fprintf('Requested sample %i to %i. \n', begsample, endsample);
+                error('The requested data is spread out over multiple epochs with possibly discontinuous boundaries. This is not allowed. Adjust trl to request only data within a single epoch.');
+            end
+        end
     end
     
     % read in data in different signals
@@ -721,6 +730,14 @@ switch dataformat
     end
     % concat signals
     dat = cat(1,dat{:});
+
+    if hdr.nTrials > 1
+        dat2=zeros(hdr.nChans,hdr.nSamples,hdr.nTrials);
+        for i=1:hdr.nTrials
+            dat2(:,:,i)=dat(:,hdr.orig.epochdef(i,1):hdr.orig.epochdef(i,2));
+        end;
+        dat=dat2;
+    end
     
   case 'egi_mff_v2'
     % ensure that the EGI_MFF toolbox is on the path
@@ -851,6 +868,7 @@ switch dataformat
     dat  = orig.data(chanindx, begsample:endsample);
     
   case {'ns_cnt' 'ns_cnt16', 'ns_cnt32'}
+    ft_hastoolbox('eeglab', 1);
     % Neuroscan continuous data
     sample1    = begsample-1;
     ldnsamples = endsample-begsample+1; % number of samples to read
@@ -865,7 +883,7 @@ switch dataformat
     end
     
     if strcmp(dataformat, 'ns_cnt')
-      tmp = loadcnt(filename, 'sample1', sample1, 'ldnsamples', ldnsamples);
+      tmp = loadcnt(filename, 'sample1', sample1, 'ldnsamples', ldnsamples); % let loadcnt figure it out
     elseif strcmp(dataformat, 'ns_cnt16')
       tmp = loadcnt(filename, 'sample1', sample1, 'ldnsamples', ldnsamples, 'dataformat', 'int16');
     elseif strcmp(dataformat, 'ns_cnt32')
@@ -881,7 +899,7 @@ switch dataformat
     dat       = dat(:,chanindx,:);      % select channels
     dimord    = 'trials_chans_samples'; % selection using begsample and endsample will be done later
     
-  case {'neuromag_fif' 'neuromag_mne' 'babysquid_fif'}
+  case {'neuromag_fif' 'neuromag_mne'}
     % check that the required low-level toolbox is available
     ft_hastoolbox('mne', 1);
     if (hdr.orig.iscontinuous)

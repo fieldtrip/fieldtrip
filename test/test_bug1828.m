@@ -1,5 +1,8 @@
 function test_bug1828
 
+% MEM 1500mb
+% WALLTIME 00:03:14
+
 % TEST test_bug1828
 % TEST ft_convert_coordsys
 % TEST align_ctf2spm
@@ -15,9 +18,9 @@ mri0 = ft_convert_coordsys(mri, 'spm', 0);
 mri1 = ft_convert_coordsys(mri, 'spm', 1);
 mri2 = ft_convert_coordsys(mri, 'spm', 2);
 
-acvox0 = warp_apply(inv(mri0.transform), [0 0 0]);
-acvox1 = warp_apply(inv(mri1.transform), [0 0 0]);
-acvox2 = warp_apply(inv(mri2.transform), [0 0 0]);
+acvox0 = ft_warp_apply(inv(mri0.transform), [0 0 0]);
+acvox1 = ft_warp_apply(inv(mri1.transform), [0 0 0]);
+acvox2 = ft_warp_apply(inv(mri2.transform), [0 0 0]);
 
 if 0,
   figure;hold on;

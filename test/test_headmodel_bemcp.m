@@ -1,5 +1,8 @@
 function test_headmodel_bemcp
 
+% MEM 1500mb
+% WALLTIME 00:05:04
+
 % TEST test_headmodel_bemcp
 % TEST ft_headmodel_bemcp ft_prepare_vol_sens ft_compute_leadfield
 

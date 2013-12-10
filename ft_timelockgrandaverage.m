@@ -40,7 +40,7 @@ function [grandavg] = ft_timelockgrandaverage(cfg, varargin)
 % input/output structure. For this particular function, the input should be
 % structured as a cell array.
 %
-% See also FT_TIMELOCKANALYSIS, FT_TIMELOCKSTATISTICS
+% See also FT_TIMELOCKANALYSIS, FT_TIMELOCKSTATISTICS, FT_TIMELOCKBASELINE
 
 % Copyright (C) 2003-2006, Jens Schwarzbach
 % Copyright (C) 2013, Burkhard Maess

@@ -65,6 +65,7 @@ sfmethod     = ft_getopt(varargin, 'sfmethod',     'multivariate');
 dosvd        = ft_getopt(varargin, 'svd',          'no');
 doconditional = ft_getopt(varargin, 'conditional', 0);
 init         = ft_getopt(varargin, 'init',         'chol');
+checkconvergence = ft_getopt(varargin, 'checkconvergence', true);
 
 dosvd         = istrue(dosvd);
 doconditional = istrue(doconditional);
@@ -367,7 +368,7 @@ elseif strcmp(sfmethod, 'bivariate')
   if ntim>1,
     for kk = 1:ntim
       [Htmp, Ztmp, Stmp] = sfactorization_wilson2x2(freq.crsspctrm(:,:,:,kk), ...
-                               freq.freq, numiteration, tol, cmbindx, fb, init);
+                               freq.freq, numiteration, tol, cmbindx, fb, init, checkconvergence);
       if kk==1,
         H   = Htmp;
         Z   = Ztmp;
@@ -384,9 +385,10 @@ elseif strcmp(sfmethod, 'bivariate')
   else
     % if the number of pairs becomes too big, it seems to slow down quite a
     % bit. try to chunk
-    if size(cmbindx,1)>1000
-      begchunk = 1:1000:size(cmbindx,1);
-      endchunk = [1000:1000:size(cmbindx,1) size(cmbindx,1)];
+    nperchunk = 2000;
+    if size(cmbindx,1)>nperchunk
+      begchunk = 1:nperchunk:size(cmbindx,1);
+      endchunk = [nperchunk:nperchunk:size(cmbindx,1) size(cmbindx,1)];
       H = zeros(4*size(cmbindx,1), numel(freq.freq));
       S = zeros(4*size(cmbindx,1), numel(freq.freq));
       Z = zeros(4*size(cmbindx,1), 1);
@@ -395,8 +397,8 @@ elseif strcmp(sfmethod, 'bivariate')
         [Htmp, Ztmp, Stmp] = sfactorization_wilson2x2(freq.crsspctrm, freq.freq, ...
                                              numiteration, tol, cmbindx(begchunk(k):endchunk(k),:), fb, init);
                                            
-        begix = (k-1)*4000+1;
-        endix = min(k*4000, size(cmbindx,1)*4);
+        begix = (k-1)*nperchunk*4+1;
+        endix = min(k*nperchunk*4, size(cmbindx,1)*4);
         H(begix:endix, :) = Htmp;
         S(begix:endix, :) = Stmp;
         Z(begix:endix, :) = Ztmp;
@@ -404,17 +406,9 @@ elseif strcmp(sfmethod, 'bivariate')
       end
     else
       [H, Z, S] = sfactorization_wilson2x2(freq.crsspctrm, freq.freq, ...
-                                             numiteration, tol, cmbindx, fb, init);
+                                             numiteration, tol, cmbindx, fb, init, checkconvergence);
     end
   end
-  
-  %convert crsspctrm accordingly
-  siz          = [size(H) 1];
-  tmpcrsspctrm = complex(zeros([2 2 siz(1)/4 siz(2:end)]));
-  for k = 1:size(cmbindx,1)
-    tmpcrsspctrm(:,:,k,:,:) = freq.crsspctrm(cmbindx(k,:),cmbindx(k,:),:,:);   
-  end
-  freq.crsspctrm = reshape(tmpcrsspctrm, siz);
   
   labelcmb = cell(size(cmbindx,1)*4, 2);
   for k = 1:size(cmbindx,1)
@@ -444,17 +438,6 @@ else
     freq.dimord = ['chancmb_',freq.dimord(strfind(freq.dimord,'freq'):end)];
   end
   
-  %dimtok = tokenize(freq.dimord, '_');
-  %chdim  = 0;
-  %newdimord = '';
-  %for k = 1:numel(dimtok)
-  %  if strcmp(dimtok{k}, 'chan'), chdim = chdim+1; end
-  %  if chdim==1,
-  %    newdimord = [newdimord,'_chancmb'];
-  %  elseif chdim
-  %    newdimord = [newdimord, '_', dimtok{k}];
-  %  end
-  %end
   output.dimord    = freq.dimord;
 end
 output.label     = freq.label;

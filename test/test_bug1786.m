@@ -1,6 +1,11 @@
 function test_bug1786
-%
-% 
+
+% MEM 1500mb
+% WALLTIME 00:03:03
+
+% TEST test_bug1786
+% TEST ft_channelrepair ft_prepare_neighbours
+
 % Original report:
 % Hello,
 % 
@@ -11,11 +16,6 @@ function test_bug1786
 % Yoel
 %
 % http://bugzilla.fcdonders.nl/show_bug.cgi?id=1786
-
-
-% TEST test_bug1786
-% TEST ft_channelrepair ft_prepare_neighbours
-
 
 % EEG bad electrode repair
 % requires fieldtrip

@@ -15,8 +15,8 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 %   cfg.parameter        = field to be represented as color (default depends on data.dimord)
 %                          'powspctrm' or 'cohspctrm' 
 %   cfg.maskparameter    = field in the data to be used for opacity masking of data
-%   cfg.maskstyle        = style used to masking, 'opacity' or 'saturation' (default = 'opacity')
-%                          use 'saturation' when saving to vector-format (like *.eps) to avoid all 
+%   cfg.maskstyle        = style used to masking, 'opacity', 'saturation' or 'outline' (default = 'opacity')
+%                          use 'saturation' or 'outline' when saving to vector-format (like *.eps) to avoid all 
 %                          sorts of image-problems (currently only possible with a white backgroud)
 %   cfg.maskalpha        = alpha value between 0 (transparant) and 1 (opaque) used for masking areas dictated by cfg.maskparameter (default = 1)
 %   cfg.masknans         = 'yes' or 'no' (default = 'yes')
@@ -297,6 +297,7 @@ if (isfull || haslabelcmb) && isfield(data, cfg.parameter)
     info.x     = lay.pos(:,1);
     info.y     = lay.pos(:,2);
     info.label = lay.label;
+    info.dataname = '';
     guidata(h, info);
     %set(gcf, 'WindowButtonUpFcn', {@ft_select_channel, 'callback', {@select_topoplotER, cfg, data}});
     set(gcf, 'WindowButtonUpFcn',     {@ft_select_channel, 'multiple', true, 'callback', {@select_multiplotTFR, cfg, data}, 'event', 'WindowButtonUpFcn'});

@@ -440,7 +440,7 @@ else
   % allocate memory for all data
   dat = zeros(length(chanindx), endsample-begsample+1);
 
-  % read all channels, one small chunk at at time, and write it to seperate files
+  % read all channels, one small chunk at at time, and write it to separate files
   for i=1:length(chanindx)
     j = chanindx(i);
     dat(i,:) = double(read_neuralynx_bin(filelist{j}, begsample, endsample));

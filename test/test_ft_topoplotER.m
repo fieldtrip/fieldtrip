@@ -1,5 +1,8 @@
 function test_ft_topoplotER
 
+% MEM 1500mb
+% WALLTIME 0:05:00
+
 % TEST test_ft_topoplotER
 % TEST ft_topoplotER ft_topoplotTFR ft_topoplotIC
 
@@ -9,9 +12,7 @@ function test_ft_topoplotER
 
 pwdir = pwd;
 
-%cd('/Volumes/home/common/matlab/fieldtrip/data/test/latest/raw/eeg');
-cd('/home/common/matlab/fieldtrip/data/test/latest/raw/eeg');
-load('preproc_neuroscan16');
+load(dccnfilename('/home/common/matlab/fieldtrip/data/test/latest/raw/eeg/preproc_neuroscan16'));
 
 %there's an unresolved issue with duplicate labels 'FREE'
 %FIXME
@@ -92,6 +93,10 @@ cfgc2.channelcmb = [repmat(freq2.label(5),[numel(freq2.label)-1 1]) freq2.label(
 coh2  = ft_connectivityanalysis(cfgc2, freq2);
 
 %plot
+cfg = [];
+cfg.layout = 'biosemi64.lay';
+cfg.refchannel = 'gui';
+cfg.parameter = 'cohspctrm';
 cfg.refchannel = coh2.labelcmb{1,1};
 figure;ft_topoplotER(cfg, coh2);drawnow
 
@@ -131,7 +136,9 @@ figure;ft_topoplotER(cfg, granger);drawnow
 stat = freq;
 stat.stat = freq.powspctrm(:,10);
 stat = rmfield(stat, 'freq');
-stat = rmfield(stat, 'cumtapcnt');
+if isfield(stat, 'cumtapcnt'), 
+  stat = rmfield(stat, 'cumtapcnt');
+end
 stat = rmfield(stat, 'powspctrm');
 stat.dimord = 'chan';
 

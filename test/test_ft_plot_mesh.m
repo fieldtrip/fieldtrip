@@ -1,11 +1,14 @@
 function test_ft_plot_mesh
 
+% MEM 1500mb
+% WALLTIME 00:03:07
+
 % TEST test_ft_plot_mesh 
 % TEST ft_plot_mesh ft_datatype_segmentation ft_prepare_mesh
 
 % initial version by Lilla Magyari 2013
 
-%% test ft_plot_mesh with 'edgeonly' option
+%% test ft_plot_mesh with 'surfaceonly' option
 %% create an example segmentation 
 example.dim = [91 104 111];   % slightly different numbers
 example.transform = eye(4);   
@@ -28,7 +31,7 @@ example.transform(1:4,4)   = [-origin(:); 1];  % head-coordinate [0 0 0] is in t
 % compute position for each voxel in voxelspace and in headspace
 [X, Y, Z] = ndgrid(1:example.dim(1), 1:example.dim(2), 1:example.dim(3));
 voxelpos = [X(:) Y(:) Z(:)];
-headpos = warp_apply(example.transform, voxelpos);
+headpos = ft_warp_apply(example.transform, voxelpos);
 
 % create 3 spheres
 radius1 = 40;
@@ -54,21 +57,41 @@ cfg.method = 'hexahedral';
 mesh=ft_prepare_mesh(cfg,seg);
 
 %% plot mesh
-ft_plot_mesh(mesh,'edgeonly','yes');
+ft_plot_mesh(mesh,'surfaceonly','yes');
 
 %% ft_plot_mesh with empty points should return without error (e.g. in ft_prepare_localspheres)
 mesh.pnt=[];
-ft_plot_mesh(mesh,'edgeonly','yes');
+ft_plot_mesh(mesh,'surfaceonly','yes');
 
 %% ft_plot_mesh without a pnt field should return an error
 mesh = rmfield(mesh, 'pnt')
 try
-  ft_plot_mesh(mesh, 'edgeonly','yes')
+  ft_plot_mesh(mesh, 'surfaceonly','yes')
   success = true;
 catch
   success=false;
 end
 if success, error('01');end
+
+
+%% while working on bug 2376 I noticed that there was again an error in ft_plot_mesh with color handling
+[pnt, tri] = icosahedron162;
+bnd.pnt = pnt;
+bnd.tri = tri;
+
+% these should all be self explanatory
+figure; ft_plot_mesh(bnd, 'vertexcolor',  'r')
+figure; ft_plot_mesh(bnd, 'facecolor',    'r')
+figure; ft_plot_mesh(bnd, 'vertexcolor',  rand(162,3))
+figure; ft_plot_mesh(bnd, 'facecolor',    rand(320,3))
+figure; ft_plot_mesh(bnd, 'vertexcolor',  rand(162,1))
+figure; ft_plot_mesh(bnd, 'facecolor',    rand(320,1))
+figure; ft_plot_mesh(bnd, 'vertexcolor',  rand(1,3))
+figure; ft_plot_mesh(bnd, 'facecolor',    rand(1,3))
+figure; ft_plot_mesh(bnd, 'facecolor', 'r', 'vertexcolor', rand(162,1))                         % vertexcolor should prevail as potential distribution
+figure; ft_plot_mesh(bnd, 'facecolor', 'r', 'vertexcolor', rand(162,3))                         % vertexcolor should prevail as potential distribution
+figure; ft_plot_mesh(bnd, 'facecolor', 'r', 'vertexcolor', 'g')                                 % vertexcolor should NOT prevail, i.e. green dots on a red sphere
+figure; ft_plot_mesh(bnd, 'facecolor', 'r'); ft_plot_mesh(bnd.pnt, 'vertexcolor', rand(162,3)); % polkadots on a red sphere
 
 
 

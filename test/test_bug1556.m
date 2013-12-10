@@ -1,5 +1,8 @@
 function test_bug1556
 
+% MEM 1500mb
+% WALLTIME 00:03:04
+
 % TEST test_bug1556
 % TEST statfun_depsamplesF
 

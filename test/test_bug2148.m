@@ -1,5 +1,8 @@
 function test_bug2148
 
+% MEM 1500mb
+% WALLTIME 0:03:01
+
 % TEST test_bug2148
 % TEST ft_connectivitysimulation ft_freqanalysis ft_connectivityanalysis
 % TEST ft_connectivityplot ft_freqdescriptives ft_checkdata
@@ -79,7 +82,7 @@ vol = [];
 vol.o = [0 0 4];
 vol.r = 12;
 vol.unit = 'cm';
-vol.c = 0.5;
+vol.cond = 0.5;
 vol.type = 'singlesphere';
 cfgs.vol = vol;
 cfgs.frequency = 10;
@@ -104,7 +107,7 @@ end
 vol = [];
 vol.o = [0 0 4];
 vol.r = 12;
-vol.c = 0.5;
+vol.cond = 0.5;
 vol.unit = 'cm';
 vol.type = 'singlesphere';
 cfgs.vol = vol;
@@ -127,7 +130,7 @@ end
 vol = [];
 vol.o = [0 0 4];
 vol.r = 12;
-vol.c = 0.5;
+vol.cond = 0.5;
 vol.unit = 'cm';
 vol.type = 'singlesphere';
 cfgs.vol = vol;

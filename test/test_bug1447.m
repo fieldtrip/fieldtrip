@@ -1,5 +1,8 @@
 function test_bug1447
 
+% MEM 1500mb
+% WALLTIME 00:03:07
+
 % TEST test_bug1447
 % TEST ft_multiplotER ft_singleplotER ft_plot_vector
 

@@ -166,8 +166,31 @@ cfg.channel         = ft_getopt(cfg, 'channel',     'all');
 cfg.directionality  = ft_getopt(cfg, 'directionality',  '');
 cfg.figurename      = ft_getopt(cfg, 'figurename',   []);
 cfg.preproc         = ft_getopt(cfg, 'preproc', []);
+cfg.tolerance       = ft_getopt(cfg, 'tolerance',  1e-5);
 
-Ndata = numel(varargin);
+Ndata = length(varargin);
+
+for i=1:Ndata
+  dtype{i}   = ft_datatype(varargin{i});
+  hastime(i) = ~isempty(strfind(varargin{i}.dimord, 'time'));
+  hasfreq(i) = ~isempty(strfind(varargin{i}.dimord, 'freq'));
+end
+
+% check if the input has consistent datatypes
+if ~all(strcmp(dtype, dtype{1})) || ~all(hastime==hastime(1)) || ~all(hasfreq==hasfreq(1))
+  error('different datatypes are not allowed as input');
+end
+dtype   = dtype{1};
+hastime = hastime(1);
+hasfreq = hasfreq(1);
+
+% ensure that all inputs are sufficiently consistent
+if hastime && ~checktime(varargin{:}, 'identical', cfg.tolerance);
+  error('this function requires identical time axes for all input structures');
+end
+if hasfreq && ~checkfreq(varargin{:}, 'identical', cfg.tolerance);
+  error('this function requires identical frequency axes for all input structures');
+end
 
 %FIXME rename directionality and refchannel in more meaningful options
 if ischar(cfg.graphcolor)
@@ -198,19 +221,10 @@ end
 %   error('interactive plotting is not supported with more than 1 input data set');
 % end
 
-% ensure that the inputs are consistent with each other
-for i=1:Ndata
-  dtype{i} = ft_datatype(varargin{i});
-end
-if ~all(strcmp(dtype{1}, dtype))
-  error('input data are of different type; this is not supported');
-end
-dtype  = dtype{1};
 dimord = varargin{1}.dimord;
 dimtok = tokenize(dimord, '_');
 
-
-% ensure that the preproc specific options are located in the cfg.preproc 
+% ensure that the preproc specific options are located in the cfg.preproc
 % substructure, but also ensure that the field 'refchannel' is present at the
 % highest level in the structure. This is a little hack by JM because the field
 % refchannel can also refer to the plotting of a connectivity metric. Also,
@@ -219,8 +233,8 @@ dimtok = tokenize(dimord, '_');
 % data in the input. A more generic solution should be considered.
 
 if isfield(cfg, 'refchannel'), refchannelincfg = cfg.refchannel; end
-if ~any(strcmp({'freq','freqmvar'},dtype)), 
-  cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'}); 
+if ~any(strcmp({'freq','freqmvar'},dtype)),
+  cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'});
 end
 if exist('refchannelincfg', 'var'), cfg.refchannel  = refchannelincfg; end
 
@@ -314,6 +328,12 @@ if strcmp(dtype, 'timelock') && hasrpt,
       tmpmask = varargin{i}.(cfg.maskparameter);
     end
     varargin{i} = ft_timelockanalysis(tmpcfg, varargin{i});
+    if ~strcmp(cfg.parameter, 'avg')
+      % rename avg back into its original parameter name
+      varargin{i}.(cfg.parameter) = varargin{i}.avg;
+      varargin{i} = rmfield(varargin{i}, 'avg');
+    end
+    
     % put back mask
     if ~isempty(cfg.maskparameter)
       varargin{i}.(cfg.maskparameter) = tmpmask;
@@ -683,7 +703,7 @@ if isempty(get(gcf, 'Name'))
   else % data provided through cfg.inputfile
     dataname = cfg.inputfile;
   end
-
+  
   if isempty(cfg.figurename)
     set(gcf, 'Name', sprintf('%d: %s: %s', gcf, mfilename, join_str(', ',dataname)));
     set(gcf, 'NumberTitle', 'off');

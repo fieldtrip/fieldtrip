@@ -8,7 +8,7 @@
 #     CEN/TC 251 2005-07 prEN1064:2005/A1 
 # [4] 64_e_stm_ver22.pdf EN1064:2005+A1:2007(E) Table 5 - Lead Identification Codes
 #
-#	$Id: leadidtable_scpecg.txt,v 1.3 2007-04-30 10:10:53 schloegl Exp $
+#	$Id$
 #	(C) 2005,2007 by Alois Schloegl <a.schloegl@ieee.org>	
 #    	This is part of the BIOSIG-toolbox http://biosig.sf.net/
 #

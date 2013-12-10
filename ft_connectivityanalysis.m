@@ -9,10 +9,10 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %   stat = ft_connectivityanalysis(cfg, freq)
 %   stat = ft_connectivityanalysis(cfg, source)
 % where the first input argument is a configuration structure (see below)
-% and the second argument is the output of FT_PREPROCESSING,  
-% FT_TIMELOCKANLAYSIS, FT_FREQANALYSIS, FT_MVARANALYSIS or FT_SOURCEANALYSIS. 
+% and the second argument is the output of FT_PREPROCESSING,
+% FT_TIMELOCKANLAYSIS, FT_FREQANALYSIS, FT_MVARANALYSIS or FT_SOURCEANALYSIS.
 %
-% The different connectivity metrics are supported only for specific 
+% The different connectivity metrics are supported only for specific
 % datatypes (see below).
 %
 % The configuration structure has to contain
@@ -81,21 +81,18 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 % FT_CONNECTIVITY_PDC, FT_CONNECTIVITY_DTF, FT_CONNECTIVITY_PSI
 
 % Undocumented options:
-%   cfg.refindx
-%   cfg.jackknife
-%   cfg.method    = 'powcorr_ortho'
-%   cfg.method    = 'mi';
+%   cfg.refindx             =
+%   cfg.jackknife           =
+%   cfg.method              = 'mi';
+%   cfg.granger.block       =
+%   cfg.granger.conditional =
 %
-%   cfg.granger.block
-%   cfg.granger.conditional
-
 % Methods to be implemented
-%
 %                 'xcorr',     cross correlation function
 %                 'di',        directionality index
 %                 'spearman'   spearman's rank correlation
 %                 'corr'       pearson correlation
-%
+
 % Copyright (C) 2009, Jan-Mathijs Schoffelen, Andre Bastos, Martin Vinck, Robert Oostenveld
 % Copyright (C) 2010-2011, Jan-Mathijs Schoffelen, Martin Vinck
 % Copyright (C) 2012, Jan-Mathijs Schoffelen
@@ -314,7 +311,7 @@ switch cfg.method
     inparam = 'crsspctrm';
     outparam = 'psispctrm';
   case {'powcorr_ortho'}
-    data = ft_checkdata(data, 'datatype', 'source');
+    data = ft_checkdata(data, 'datatype', {'source', 'freq'});
     % inparam = 'avg.mom';
     inparam = 'mom';
     outparam = 'powcorrspctrm';
@@ -418,7 +415,7 @@ if any(~isfield(data, inparam)) || (isfield(data, 'crsspctrm') && (ischar(inpara
         [data, powindx, hasrpt] = univariate2bivariate(data, 'pow', 'powcov', dtype, 'demeanflag', strcmp(cfg.removemean, 'yes'), 'cmb', cfg.refindx, 'sqrtflag', strcmp(cfg.method, 'amplcorr'), 'keeprpt', 0);
       end
       
-    case 'raw'
+    case 'comp'
       [data, powindx, hasrpt] = univariate2bivariate(data, 'trial', 'cov', dtype, 'demeanflag', strcmp(cfg.removemean, 'yes'), 'cmb', cfg.channelcmb, 'sqrtflag', false, 'keeprpt', 1);
       
   end % switch dtype
@@ -595,7 +592,7 @@ switch cfg.method
       elseif isfield(data, 'labelcmb') && istrue(cfg.granger.conditional),
         % conditional (blockwise) needs linearly represented cross-spectra,
         % that have been produced by ft_connectivity_csd2transfer
-        % 
+        %
         % each row in Nx2 cell-array tmp refers to a comparison
         % tmp{k, 1} represents the ordered blocks
         % for the full trivariate model: the second element drives the
@@ -611,7 +608,7 @@ switch cfg.method
         for k = 1:nblocks
           for m = (k+1):nblocks
             cnt  = cnt+1;
-            rest = setdiff(blocks, [k m]); 
+            rest = setdiff(blocks, [k m]);
             tmp{cnt, 1} = [k m rest];
             tmp{cnt, 2} = [k   rest];
             newlabelcmb{cnt, 1} = data.block(m).name; % note the index swap: convention is driver in left column
@@ -637,7 +634,7 @@ switch cfg.method
         % blockwise granger
         for k = 1:numel(cfg.granger.block)
           %newlabel{k, 1} = cat(2, cfg.granger.block(k).label{:});
-          newlabel{k,1}  = cfg.granger.block(k).name; 
+          newlabel{k,1}  = cfg.granger.block(k).name;
           powindx{k,1}   = match_str(data.label, cfg.granger.block(k).label);
         end
         data.label = newlabel;
@@ -765,7 +762,24 @@ switch cfg.method
   case 'powcorr_ortho'
     % Joerg Hipp's power correlation method
     optarg = {'refindx', cfg.refindx, 'tapvec', data.cumtapcnt};
-    [datout] = ft_connectivity_powcorr_ortho(cat(2, data.mom{data.inside}).', optarg{:});
+    if isfield(data, 'mom')
+      % this is expected to be a single frequency
+      dat    = cat(2, data.mom{data.inside}).';
+      datout = ft_connectivity_powcorr_ortho(dat, optarg{:});
+    elseif strcmp(data.dimord, 'rpttap_chan_freq')
+      % loop over all frequencies
+      [nrpttap, nchan, nfreq] = size(data.fourierspctrm);
+      datout = cell(1, nfreq);
+      for i=1:length(data.freq)
+        dat       = reshape(data.fourierspctrm(:,:,i)', nrpttap, nchan).';
+        datout{i} = ft_connectivity_powcorr_ortho(dat, optarg{:});
+      end
+      datout = cat(3, datout{:});
+      % HACK otherwise I don't know how to inform the code further down about the dimord
+      data.dimord = 'rpttap_chan_chan_freq';
+    else
+      error('unsupported data representation');
+    end
     varout = [];
     nrpt = numel(data.cumtapcnt);
     

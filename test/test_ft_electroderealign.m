@@ -1,7 +1,10 @@
 function test_ft_electroderealign
 
+% MEM 2gb
+% WALLTIME 00:03:27
+
 % TEST ft_electroderealign
-% TEST ft_read_mri ft_read_sens ft_prepare_mesh warp_apply
+% TEST ft_read_mri ft_read_sens ft_prepare_mesh ft_warp_apply
 
 % first version of this script was made on 10.03.2013 by Lilla Magyari
 
@@ -40,9 +43,9 @@ fem=ft_prepare_mesh(cfg,segmentedmri);
  
  transm=mri.transform;
  
- nas=warp_apply(transm,nas, 'homogenous');
- lpa=warp_apply(transm,lpa, 'homogenous');
- rpa=warp_apply(transm,rpa, 'homogenous');
+ nas=ft_warp_apply(transm,nas, 'homogenous');
+ lpa=ft_warp_apply(transm,lpa, 'homogenous');
+ rpa=ft_warp_apply(transm,rpa, 'homogenous');
  
  fiducials.chanpos=[nas; lpa; rpa];
  fiducials.label={'Nz','LPA','RPA'};

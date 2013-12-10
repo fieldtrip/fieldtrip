@@ -108,41 +108,41 @@ for i=1:size(pos,1)
   
   % create a unit sphere and cylinder
   [sphere.pnt, sphere.tri] = icosahedron642;
-  sphere.pnt = warp_apply(scale([0.5 0.5 0.5]), sphere.pnt, 'homogeneous'); % the diameter should be 1
+  sphere.pnt = ft_warp_apply(scale([0.5 0.5 0.5]), sphere.pnt, 'homogeneous'); % the diameter should be 1
   [stick.pnt, stick.tri]   = cylinder(36, 2);
-  stick.pnt = warp_apply(scale([0.5 0.5 0.5]), stick.pnt, 'homogeneous'); % the length should be 1
-  stick.pnt = warp_apply(translate([0 0 0.5]), stick.pnt, 'homogeneous'); % it should start in the origin
+  stick.pnt = ft_warp_apply(scale([0.5 0.5 0.5]), stick.pnt, 'homogeneous'); % the length should be 1
+  stick.pnt = ft_warp_apply(translate([0 0 0.5]), stick.pnt, 'homogeneous'); % it should start in the origin
   
   % scale the sphere
   sx = this_diameter;
   sy = this_diameter;
   sz = this_diameter;
-  sphere.pnt = warp_apply(scale([sx sy sz]),     sphere.pnt, 'homogeneous');
+  sphere.pnt = ft_warp_apply(scale([sx sy sz]),     sphere.pnt, 'homogeneous');
   
   % translate the sphere
   tx = pos(i,1);
   ty = pos(i,2);
   tz = pos(i,3);
-  sphere.pnt = warp_apply(translate([tx ty tz]), sphere.pnt, 'homogeneous');
+  sphere.pnt = ft_warp_apply(translate([tx ty tz]), sphere.pnt, 'homogeneous');
   
   % scale the stick
   sx = this_diameter/3;
   sy = this_diameter/3;
   sz = this_length;
-  stick.pnt = warp_apply(scale([sx sy sz]),     stick.pnt, 'homogeneous');
+  stick.pnt = ft_warp_apply(scale([sx sy sz]),     stick.pnt, 'homogeneous');
   
   % first rotate the stick to point along the x-axis
-  stick.pnt = warp_apply(rotate([0 90 0]),    stick.pnt, 'homogeneous');
+  stick.pnt = ft_warp_apply(rotate([0 90 0]),    stick.pnt, 'homogeneous');
   % then rotate the stick in the desired direction
   [az, el] = cart2sph(ori(1,i), ori(2,i), ori(3,i));
-  stick.pnt = warp_apply(rotate([0 -el*180/pi 0]),  stick.pnt, 'homogeneous'); % rotate around y-axis
-  stick.pnt = warp_apply(rotate([0  0 az*180/pi]),  stick.pnt, 'homogeneous'); % rotate around z-axis
+  stick.pnt = ft_warp_apply(rotate([0 -el*180/pi 0]),  stick.pnt, 'homogeneous'); % rotate around y-axis
+  stick.pnt = ft_warp_apply(rotate([0  0 az*180/pi]),  stick.pnt, 'homogeneous'); % rotate around z-axis
   
   % translate the stick
   tx = pos(i,1);
   ty = pos(i,2);
   tz = pos(i,3);
-  stick.pnt = warp_apply(translate([tx ty tz]), stick.pnt, 'homogeneous');
+  stick.pnt = ft_warp_apply(translate([tx ty tz]), stick.pnt, 'homogeneous');
   
   % plot the sphere and the stick
   ft_plot_mesh(sphere, 'vertexcolor', 'none', 'edgecolor', false, 'facecolor', color);

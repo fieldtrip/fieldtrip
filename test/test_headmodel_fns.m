@@ -1,7 +1,10 @@
 function test_headmodel_fns
 
+% MEM 1500mb
+% WALLTIME 00:03:58
+
 % TEST test_ft_compute_leadfield
-% TEST ft_compute_leadfield ft_headmodel_fdm_fns ft_prepare_vol_sens ft_compute_leadfield
+% TEST ft_compute_leadfield ft_headmodel_fns ft_prepare_vol_sens ft_compute_leadfield
 
 % this function tests that FNS forward model works, comparing the results with a 3 concentric
 % spheres model
@@ -59,7 +62,7 @@ transform(1:3,4) = [-76 -76 -76]'; % voxels to mm
 
 % ATTENTION: fns wants the coordinates in voxel units,
 % conductivity in S/m, sensors in voxels, dipoles in voxels
-vol  = ft_headmodel_fdm_fns(bkgrnd,'tissue',{'sph1','sph2','sph3'}, ...
+vol  = ft_headmodel_fns(bkgrnd,'tissue',{'sph1','sph2','sph3'}, ...
                                       'tissueval',[1 2 3], ...
                                       'tissuecond',[0.022 0.33 0.33], ...
                                       'sens',sens, ...

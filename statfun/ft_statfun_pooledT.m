@@ -1,6 +1,6 @@
-function [s] = statfun_pooledT(cfg, dat, design)
+function [s] = ft_statfun_pooledT(cfg, dat, design)
 
-% STATFUN_pooledT computes the pooled t-value over a number of
+% FT_STATFUN_POOLEDT computes the pooled t-value over a number of
 % replications. The idea is that you compute a contrast between two
 % conditions per subject The t-values are pooled over subjects and
 % compared against the pooled pseudo-values. Since according to H0
@@ -26,11 +26,11 @@ function [s] = statfun_pooledT(cfg, dat, design)
 %   [stat] = ft_timelockstatistics(cfg, timelock1, timelock2, ...)
 %   [stat] = ft_freqstatistics(cfg, freq1, freq2, ...)
 %   [stat] = ft_sourcestatistics(cfg, source1, source2, ...)
-% with the following configuration option:
+% with the following configuration option
 %   cfg.statistic = 'pooledT'
 %
 % Configuration options that are relevant for this function are
-%   cfg.ivar = number, index into the design matrix with the independent variable
+%   cfg.ivar      = number, index into the design matrix with the independent variable
 %
 % See FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS
 % for details.

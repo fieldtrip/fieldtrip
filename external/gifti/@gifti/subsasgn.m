@@ -15,6 +15,7 @@ switch subs(1).type
             [i,n] = isintent(this,subs(1).subs);
             if isempty(i) && ~strcmp(subs(1).subs,'private')
                 n = length(this.data) + 1;
+                if n==1, this.data = {};end
                 % TODO % Initialise data field appropriately
                 this.data{n}.metadata = struct([]);
                 this.data{n}.space    = [];

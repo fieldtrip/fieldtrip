@@ -1,7 +1,9 @@
 function test_bug1967a
 
-% with the inititial version of this test script I had merge conflicts that I was not able to resolve, hence now the name with an "a'
+% MEM 2gb
+% WALLTIME 00:08:06
 
+% with the inititial version of this test script I had merge conflicts that I was not able to resolve, hence now the name with an "a'
 
 % TEST test_bug1967
 % TEST ft_prepare_vol_sens
@@ -62,7 +64,7 @@ end
 elec.unit = 'mm';
 
 figure
-ft_plot_mesh(mesh, 'edgeonly', 1)
+ft_plot_mesh(mesh, 'surfaceonly', 1)
 ft_plot_sens(elec)
 
 %% prepare the volume conductor and electrodes for leadfield computation

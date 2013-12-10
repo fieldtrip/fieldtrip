@@ -323,6 +323,7 @@ if ~isempty(createsubcfg)
           'ygrid'
           'zgrid'
           'resolution'
+          'unit'
           'filter'
           'leadfield'
           'inside'
@@ -348,6 +349,16 @@ if ~isempty(createsubcfg)
           'reducerank'
           'realfilter'
           'subspace'
+          };
+      
+      case 'eloreta'
+        fieldname = {
+          'keepfilter'
+          'keepmom'
+          'lambda'
+          'normalize'
+          'normalizeparam'
+          'reducerank'
           };
         
       case 'lcmv'
@@ -431,6 +442,7 @@ if ~isempty(createsubcfg)
           'sfmethod'
           'svd'
           'init'
+          'checkconvergence'
           };
         
       otherwise

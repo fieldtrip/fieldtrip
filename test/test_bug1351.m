@@ -1,5 +1,8 @@
 function test_bug1351
 
+% MEM 1500mb
+% WALLTIME 00:05:18
+
 % TEST test_bug1315
 % TEST ft_topoplotER ft_topoplotTFR ft_checksize ft_checkconfig
 

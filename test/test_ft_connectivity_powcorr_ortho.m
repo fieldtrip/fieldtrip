@@ -1,5 +1,8 @@
 function test_ft_connectivity_powcorr_ortho
 
+% MEM 1500mb
+% WALLTIME 00:03:01
+
 % TEST: test_ft_connectivity_powcorr_ortho
 % TEST: ft_connectivity_powcorr_ortho
 

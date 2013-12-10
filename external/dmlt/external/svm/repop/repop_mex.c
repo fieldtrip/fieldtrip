@@ -19,7 +19,7 @@
  and Adi Vehtari -- but heavily modifed to make it more general, easier to
  understand and faster!
 
- $Id: repop_mex.c 2782 2011-02-03 11:00:18Z roboos $
+ $Id$
 
 TESTCASES
 

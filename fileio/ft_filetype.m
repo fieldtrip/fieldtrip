@@ -36,26 +36,29 @@ function [type] = ft_filetype(filename, desired, varargin)
 %  - Analyse
 %  - Analyze/SPM
 %  - BESA
+%  - BrainSuite
+%  - BrainVisa
 %  - BrainVision
 %  - Curry
 %  - Dataq
 %  - EDF
 %  - EEProbe
 %  - Elektra/Neuromag
-%  - LORETA
 %  - FreeSurfer
+%  - LORETA
+%  - Localite
 %  - MINC
 %  - Neuralynx
 %  - Neuroscan
 %  - Plexon
 %  - SR Research Eyelink
+%  - Stanford *.ply
 %  - Tucker Davis Technology
 %  - VSM-Medtech/CTF
 %  - Yokogawa
 %  - nifti, gifti
-%  - Localite
 
-% Copyright (C) 2003-2011 Robert Oostenveld
+% Copyright (C) 2003-2013 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -275,16 +278,6 @@ elseif filetype_check_extension(filename, '.trc') && filetype_check_header(filen
   manufacturer = 'Micromed';
   content = 'Electrophysiological data';
   
-  % known BabySQUID file types, these should go before Neuromag
-elseif filetype_check_extension(filename, '.fif') && exist(fullfile(p, [f '.eve']), 'file')
-  type = 'babysquid_fif';
-  manufacturer = 'Tristan Technologies';
-  content = 'MEG data';
-elseif filetype_check_extension(filename, '.eve') && exist(fullfile(p, [f '.fif']), 'file')
-  type = 'babysquid_eve';
-  manufacturer = 'Tristan Technologies';
-  content = 'MEG data';
-  
   % known Neuromag file types
 elseif filetype_check_extension(filename, '.fif')
   type = 'neuromag_fif';
@@ -294,6 +287,10 @@ elseif filetype_check_extension(filename, '.bdip')
   type = 'neuromag_bdip';
   manufacturer = 'Neuromag';
   content = 'dipole model';
+elseif filetype_check_extension(filename, '.eve') && exist(fullfile(p, [f '.fif']), 'file')
+  type = 'neuromag_eve'; % these are being used by Tristan Technologies for the BabySQUID system
+  manufacturer = 'Neuromag';
+  content = 'events';
   
   % known Yokogawa file types
 elseif filetype_check_extension(filename, '.ave') || filetype_check_extension(filename, '.sqd')
@@ -643,11 +640,11 @@ elseif ~isdir(filename) && isdir(p) && exist(fullfile(p, 'info.xml'), 'file') &&
   
   % these are formally not Neuralynx file formats, but at the FCDC we use them together with Neuralynx
 elseif isdir(filename) && filetype_check_neuralynx_cds(filename)
-  % a downsampled Neuralynx DMA file can be split into three seperate lfp/mua/spike directories
+  % a downsampled Neuralynx DMA file can be split into three separate lfp/mua/spike directories
   % treat them as one combined dataset
   type = 'neuralynx_cds';
   manufacturer = 'Donders Centre for Cognitive Neuroimaging';
-  content = 'dataset containing seperate lfp/mua/spike directories';
+  content = 'dataset containing separate lfp/mua/spike directories';
 elseif filetype_check_extension(filename, '.tsl') && filetype_check_header(filename, 'tsl')
   type = 'neuralynx_tsl';
   manufacturer = 'Donders Centre for Cognitive Neuroimaging';
@@ -747,7 +744,7 @@ elseif filetype_check_extension(filename, '.bsa')
 elseif exist(fullfile(p, [f '.dat']), 'file') && (exist(fullfile(p, [f '.gen']), 'file') || exist(fullfile(p, [f '.generic']), 'file'))
   type = 'besa_sb';
   manufacturer = 'BESA';
-  content = 'simple binary channel data with a seperate generic ascii header';
+  content = 'simple binary channel data with a separate generic ascii header';
   
   % known Dataq file formats
 elseif filetype_check_extension(upper(filename), '.WDQ')
@@ -1004,6 +1001,30 @@ elseif any(filetype_check_extension(filename, {'.node' '.poly' '.smesh' '.ele' '
   manufacturer = 'TetGen, see http://tetgen.berlios.de';
   content = 'geometrical data desribed with only nodes';
   
+  % some BrainSuite file formats, see http://brainsuite.bmap.ucla.edu/
+elseif filetype_check_extension(filename, '.dfs') && filetype_check_header(filename, 'DFS_LE v2.0')
+  type = 'brainsuite_dfs';
+  manufacturer = 'BrainSuite, see http://brainsuite.bmap.ucla.edu';
+  content = 'list of triangles and vertices';
+elseif filetype_check_extension(filename, '.bst') && filetype_check_ascii(filename)
+  type = 'brainsuite_dst';
+  manufacturer = 'BrainSuite, see http://brainsuite.bmap.ucla.edu';
+  content = 'a collection of files with geometrical data'; % it seems to be similar to a Caret *.spec file
+elseif filetype_check_extension(filename, '.dfc') && filetype_check_header(filename, 'LONIDFC')
+  type = 'loni_dfc';
+  manufacturer = 'LONI'; % it is used in BrainSuite
+  content = 'curvature information';
+  
+    % some BrainVISA file formats, see http://brainvisa.info
+elseif filetype_check_extension(filename, '.mesh') && (filetype_check_header(filename, 'ascii') || filetype_check_header(filename, 'binarABCD') || filetype_check_header(filename, 'binarDCBA'))  % http://brainvisa.info/doc/documents-4.4/formats/mesh.pdf
+  type = 'brainvisa_mesh';
+  manufacturer = 'BrainVISA';
+  content = 'vertices and triangles';
+elseif filetype_check_extension(filename, '.minf') && filetype_check_ascii(filename)
+  type = 'brainvisa_minf';
+  manufacturer = 'BrainVISA';
+  content = 'annotation/metadata';
+
   % some other known file types
 elseif length(filename)>4 && exist([filename(1:(end-4)) '.mat'], 'file') && exist([filename(1:(end-4)) '.bin'], 'file')
   % this is a self-defined FCDC data format, consisting of two files
@@ -1059,6 +1080,10 @@ elseif filetype_check_header(filename, 'RIFF', 0) && filetype_check_header(filen
   type = 'riff_wave';
   manufacturer = 'Microsoft';
   content = 'audio';
+elseif filetype_check_extension(filename, '.txt') && filetype_check_header(filename, 'Site')
+  type = 'easycap_txt';
+  manufacturer = 'Easycap';
+  content = 'electrode positions';
 elseif filetype_check_extension(filename, '.txt')
   type = 'ascii_txt';
   manufacturer = '';
@@ -1130,7 +1155,7 @@ elseif filetype_check_extension(filename, 'trk')
   type = 'trackvis_trk';
   manufacturer = 'Martinos Center for Biomedical Imaging, see http://www.trackvis.org';
   content = 'fiber tracking data from diffusion MR imaging';
-elseif filetype_check_extension(filename, '.xml') &&  filetype_check_header(filename, '<EEGMarkerList', 39)
+elseif filetype_check_extension(filename, '.xml') && filetype_check_header(filename, '<EEGMarkerList', 39)
   type = 'localite_pos';
   manufacturer = 'Localite';
   content = 'EEG electrode positions';
@@ -1141,7 +1166,11 @@ elseif filetype_check_extension(filename, '.mbi')
 elseif filetype_check_extension(filename, '.mb2')
   type = 'manscan_mb2';
   manufacturer = 'MANSCAN';
-  content  = 'EEG data';    
+  content  = 'EEG data';
+elseif filetype_check_header(filename, 'ply')
+  type = 'ply';
+  manufacturer = 'Stanford Triangle Format';
+  content = 'three dimensional data from 3D scanners, see http://en.wikipedia.org/wiki/PLY_(file_format)';
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

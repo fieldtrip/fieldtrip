@@ -9,7 +9,6 @@ function varargout = interp_ungridded(pntin, pntout, varargin)
 %   pntin   Nx3 matrix with the vertex positions
 %   pntout  Mx3 matrix with the vertex positions onto which the data should
 %           be interpolated
-%   valin   NxK matrix with functional data, defined at the points in pntin
 %
 % Alternatively to get the interpolation matrix itself, you can use it as
 %   [interpmat, distmat] = interp_ungridded(pntin, pntout, ...)
@@ -23,8 +22,12 @@ function varargout = interp_ungridded(pntin, pntout, varargin)
 %    triin        = triangulation for the first set of vertices
 %    triout       = triangulation for the second set of vertices
 %    data         = NxK matrix with functional data
+%
+% Optional extra arguments when using projmethod = 'sphere_weighteddistance'
+%    power        = power parameter as in the Inverse Distance Weighting
+%                   function proposed by Shepard (default = 1).
 
-% Copyright (C) 2007-2011, Jan-Mathijs Schoffelen & Robert Oostenveld
+% Copyright (C) 2007-2013, Jan-Mathijs Schoffelen & Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -51,16 +54,29 @@ end
 % get the optional arguments
 projmethod   = ft_getopt(varargin, 'projmethod');     % required
 sphereradius = ft_getopt(varargin, 'sphereradius');   % required for some projection methods
+powerparam   = ft_getopt(varargin, 'power', 1);
 distmat      = ft_getopt(varargin, 'distmat');        % will be computed if needed and not present
 triin        = ft_getopt(varargin, 'triin');          % not yet implemented
 triout       = ft_getopt(varargin, 'triout');   
-val          = ft_getopt(varargin, 'data');           % functional data defined at pntin
+dat          = ft_getopt(varargin, 'data');           % functional data defined at pntin
+inside       = ft_getopt(varargin, 'inside');
 
-hasval  = ~isempty(val);
-npntin  = size(pntin, 1);
-npntout = size(pntout, 1);
+hasdat    = ~isempty(dat);
+hasinside = ~isempty(inside);
+npntin    = size(pntin, 1);
+npntout   = size(pntout, 1);
 
 dimres  = sqrt(sum((pntout(2,:)-pntout(1,:)).^2,2));
+
+if hasinside,
+  % convert to boolean vector
+  tmp         = false(npntin,1);
+  tmp(inside) = true;
+  inside      = tmp;
+  clear tmp;
+else
+  inside      = true(npntin,1);
+end
 
 if isempty(distmat)
   %------compute a distance matrix
@@ -95,7 +111,7 @@ if isempty(distmat)
         % the following lines are equivalent to the previous 2 but use
         % fewer flops
         d    = sqrt(dpntinsq - 2 * pntin * pntout(j,:)' + dpntoutsq(j));
-        sel  = find(d < sphereradius);
+        sel  = find(d < sphereradius & inside);
         
         nsel = numel(sel);
         if nsel>0
@@ -143,10 +159,10 @@ switch projmethod
   case 'sphere_weighteddistance'
     projmat         = distmat;
     [ind1, ind2, d] = find(projmat);
-    projmat         = sparse(ind1, ind2, 1./d, npnt, npntin);
+    projmat         = sparse(ind1, ind2, d.^-powerparam, npntout, npntin);
     [ind1, ind2, d] = find(projmat);
-    normnz          = sqrt(full(sum(projmat.^2, 2)));
-    projmat         = sparse(ind1, ind2, d./normnz(ind1), npnt, npntin);
+    normnz          = full(sum(projmat, 2));
+    projmat         = sparse(ind1, ind2, d./normnz(ind1), npntout, npntin);
 
   case 'smudge'
     projmat = distmat;
@@ -155,9 +171,9 @@ switch projmethod
     error('unsupported projection method');
 end  % case projmethod
 
-if hasval
+if hasdat
   % return the interpolated values
-  varargout{1} = projmat * val;
+  varargout{1} = projmat * dat;
 else
   % return the interpolation and the distance matrix
   varargout{1} = projmat;

@@ -1,5 +1,8 @@
 function test_bug2222
 
+% MEM 1500mb
+% WALLTIME 00:03:02
+
 % TEST test_bug2222
 % TEST ft_freqcomparison ft_math
 

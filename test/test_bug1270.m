@@ -1,5 +1,8 @@
 function test_bug1270
 
+% MEM 1500mb
+% WALLTIME 00:05:02
+
 % script to verify and fix an error related to using a mask in
 % ft_singleplotER
 %

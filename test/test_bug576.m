@@ -1,5 +1,8 @@
 function test_bug576
 
+% MEM 1500mb
+% WALLTIME 00:03:03
+
 % TEST test_bug576
 % TEST ft_checkdata ft_senstype
 

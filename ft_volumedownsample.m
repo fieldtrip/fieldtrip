@@ -119,8 +119,7 @@ if isfield(cfg, 'smooth') && ~strcmp(cfg.smooth, 'no'),
       fprintf('not smoothing %s\n', cfg.parameter{j});
     else
       fprintf('smoothing %s with a kernel of %d voxels\n', cfg.parameter{j}, cfg.smooth);
-      tmp = double(getsubfield(source, cfg.parameter{j}));
-      spm_smooth(tmp, tmp, cfg.smooth);
+      tmp = volumesmooth(getsubfield(source, cfg.parameter{j}));
       setsubfield(source, cfg.parameter{j}, tmp);
     end
   end

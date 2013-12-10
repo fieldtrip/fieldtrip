@@ -14,18 +14,20 @@ How to obtain iso2mesh
 
 1. Download the latest release
 
-iso2mesh 1.0.1, codenamed [7]Mapo Tofu - Update 1
+iso2mesh 2013 (1.5.0), codenamed [7]Laba Porridge
 
-   Please download the latest v1.0.1 stable release at our
+   Please download the latest v1.5.0 release at our
    [8]registration/download page. We are greatly appreciated if you can
    tell us a little bit about you and your related research by
    [9]registering your copy of iso2mesh.
+     * Release date: July 16, 2013
      * This software is supported on [os-icons3.png]
 
-iso2mesh 1.0.0, codenamed Mapo Tofu (stable)
+iso2mesh 1.4.9, codenamed Laba Porridge (beta)
 
-   Please download the latest v1.0.0 release at our
+   Please download the stable v1.4.9 release at our
    [10]registration/download page.
+     * Release date: Jan. 20, 2013
 
 2. Download Development Snapshot from SVN (not fully tested)
 
@@ -49,30 +51,27 @@ iso2mesh 1.0.0, codenamed Mapo Tofu (stable)
 
 2.1. Anonymous SVN Access
 
-   The latest code snapshot can be checked out from project's SVN
-   repository. This can be done anonymously by the following command.
+   The latest code snapshot can be checked out from project's [12]SVN
+   repository. It can be checked out anonymously by the following command.
 
- svn checkout --username anonymous_user https://orbit.nmr.mgh.harvard.edu/svn/iso2mesh/trunk/iso2mesh iso2mesh
+ svn checkout svn://svn.code.sf.net/p/iso2mesh/code/trunk/iso2mesh iso2mesh
 
-   The password is the same as the username. After checking out the code,
-   you need to set up the path based on the [12]installation instructions.
-   Then you can start matlab or octave, and run the example scripts under
-   the sample directory.
+   After checking out the code, you need to set up the path based on the
+   [13]installation instructions. Then you can start matlab or octave, and
+   run the example scripts under the sample directory.
 
 2.2. Developer SVN Access
 
-   If you are one of the developers who have SVN write permission, you can
-   checkout the latest code with the following command:
+   If you are one of the developers who have SVN write-permission, you can
+   checkout the latest code with the same command above.
 
- svn checkout --username youraccount https://orbit.nmr.mgh.harvard.edu/svn/iso2mesh/trunk/iso2mesh iso2mesh
+   You will have to [14]register an account and ask the [15]project
+   maintainer to grant you SVN permission).
 
-   where youraccount is your registered account in [13]orbit (of course,
-   you have to [14]register first and ask the [15]project maintainer to
-   grant you SVN write permission).
-
-   You can simply make changes or debug your changes in your local copy.
-   If your local changes have passed review by other co-developers, you
-   can then commit your changes back to the SVN repository by
+   Once checkout, you can simply make changes or debug your changes in
+   your local copy. If your local changes have passed review by other
+   co-developers, you can then commit your changes back to the SVN
+   repository by
 
  cd /path/to/iso2mesh/local/copy
  svn commit -m "a short summary of your changes"
@@ -81,7 +80,7 @@ iso2mesh 1.0.0, codenamed Mapo Tofu (stable)
 
    The iso2mesh toolbox is licensed under [16]GNU Public License (GPL).
    However, it included a number of external tools (under bin/ directory)
-   to perform certain functionalities by means of [17]pipelines. These
+   to perform certain functionality by means of [17]pipelines. These
    external tools are subjected to their upstream licenses and are not
    necessarily GPL (or GPL compatible). The complete list of these
    external commands and their author info and licenses can be found from
@@ -120,15 +119,15 @@ References
    4. http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?Download#Anonymous_SVN_Access
    5. http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?Download#Developer_SVN_Access
    6. http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?Download#Important_Note_on_Licenses
-   7. http://en.wikipedia.org/wiki/Mapo_doufu
+   7. http://en.wikipedia.org/wiki/Laba_Congee
    8. http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?register/iso2mesh
    9. http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?action=edit&id=register/iso2mesh
   10. http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?register/iso2mesh
   11. http://tortoisesvn.net/downloads
-  12. http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?Doc/Installation
-  13. https://orbit.nmr.mgh.harvard.edu/
-  14. https://orbit.nmr.mgh.harvard.edu/account/register.php
-  15. https://orbit.nmr.mgh.harvard.edu/users/fangq/
+  12. http://sourceforge.net/p/iso2mesh/code/404/tree/
+  13. http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?Doc/Installation
+  14. https://sourceforge.net/user/registration
+  15. http://sourceforge.net/users/fangq
   16. http://www.gnu.org/licenses/gpl-2.0.html
   17. http://en.wikipedia.org/wiki/Unix_pipe
   18. http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?Doc/README#Acknowledgement

@@ -1,5 +1,8 @@
 function test_bug645
 
+% MEM 1500mb
+% WALLTIME 00:03:01
+
 % TEST test_bug645
 % TEST ft_read_event
 

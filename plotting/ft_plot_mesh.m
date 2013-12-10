@@ -11,16 +11,16 @@ function [hs] = ft_plot_mesh(bnd, varargin)
 %   ft_plot_mesh(pnt, ...)
 %
 % Optional arguments should come in key-value pairs and can include
-%     'facecolor'   = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r'
+%     'facecolor'   = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx1 array where N is the number of faces
 %     'vertexcolor' = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx1 array where N is the number of vertices
 %     'edgecolor'   = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r'
 %     'faceindex'   = true or false
 %     'vertexindex' = true or false
 %     'facealpha'   = transparency, between 0 and 1 (default = 1)
 %     'edgealpha'   = transparency, between 0 and 1 (default = 1)
+%     'surfaceonly' = true or false, plot only the outer surface of a hexahedral or tetrahedral mesh (default = false)
 %
-% If you don't want the faces or vertices to be plotted, you should
-% specify the color as 'none'.
+% If you don't want the faces or vertices to be plotted, you should specify the color as 'none'.
 %
 % Example
 %   [pnt, tri] = icosahedron162;
@@ -31,7 +31,7 @@ function [hs] = ft_plot_mesh(bnd, varargin)
 %
 % See also TRIMESH, PATCH
 
-% Copyright (C) 2009-2012, Robert Oostenveld
+% Copyright (C) 2009-2013, Robert Oostenveld
 % Copyright (C) 2009, Cristiano Micheli
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
@@ -82,9 +82,9 @@ vertexsize  = ft_getopt(varargin, 'vertexsize',  10);
 facealpha   = ft_getopt(varargin, 'facealpha',   1);
 edgealpha   = ft_getopt(varargin, 'edgealpha',   1);
 tag         = ft_getopt(varargin, 'tag',         '');
-edgeonly    = ft_getopt(varargin, 'edgeonly',  false);
+surfaceonly    = ft_getopt(varargin, 'surfaceonly',  false);
 
-if edgeonly
+if surfaceonly
   bnd = mesh2edge(bnd);
 end
 
@@ -95,8 +95,8 @@ hashex  = isfield(bnd, 'hex');  % hexaheders  as a Mx8 matrix with vertex indice
 hasline = isfield(bnd, 'line'); % line segments in 3-D
 haspoly = isfield(bnd, 'poly'); % polynomial surfaces in 3-D
 
-if (hastet || hashex) && ~edgeonly
-  warning('you probably want to use the "edgeonly" option for plotting only the outer surface')
+if (hastet || hashex) && ~surfaceonly
+  warning('you probably want to use the "surfaceonly" option for plotting only the outer surface')
 end
 
 if isempty(vertexcolor)
@@ -147,8 +147,8 @@ else
 end
 
 if isempty(pnt)
-    hs=[];
-    return
+  hs=[];
+  return
 end
 
 if hastri+hastet+hashex+hasline+haspoly>1
@@ -192,7 +192,7 @@ else
   line = [];
 end
 
-if haspnt 
+if haspnt
   if ~isempty(tri)
     hs = patch('Vertices', pnt, 'Faces', tri);
   elseif ~isempty(line)
@@ -205,21 +205,21 @@ if haspnt
   set(hs, 'tag', tag);
 end
 
-% the vertexcolor can be specified either as a color for each point that will be drawn, or as a value at each vertex
+% the vertexcolor can be specified either as a RGB color for each vertex, or as a single value at each vertex
+% the facecolor can be specified either as a RGB color for each triangle, or as a single value at each triangle
 % if there are triangles, the vertexcolor is used for linear interpolation over the patches
-vertexpotential = ~isempty(tri) && ~ischar(vertexcolor) && (size(pnt,1)==numel(vertexcolor) || size(pnt,1)==size(vertexcolor,1));
-facepotential   = ~isempty(tri) && ~ischar(facecolor)   && (size(tri,1)==numel(facecolor)   || size(tri,1)==size(facecolor,1));
-if facepotential
-  set(hs, 'FaceVertexCData', facecolor, 'FaceColor', 'flat');
-else
-  set(hs, 'FaceColor', facecolor);
-end
+vertexpotential = ~isempty(tri) && ~ischar(vertexcolor) && (size(pnt,1)==numel(vertexcolor) || size(pnt,1)==size(vertexcolor,1) && (size(vertexcolor,2)==1 || size(vertexcolor,2)==3));
+facepotential   = ~isempty(tri) && ~ischar(facecolor  ) && (size(tri,1)==numel(facecolor  ) || size(tri,1)==size(facecolor  ,1) && (size(facecolor  ,2)==1 || size(facecolor,  2)==3));
 
+% if both vertexcolor and facecolor are numeric arrays, let the vertexcolor prevail
 if vertexpotential
   % vertexcolor is an array with number of elements equal to the number of vertices
-  % if both vertexcolor and facecolor are arrays, let the vertexcolor
-  % prevail
   set(hs, 'FaceVertexCData', vertexcolor, 'FaceColor', 'interp');
+elseif facepotential
+  set(hs, 'FaceVertexCData', facecolor, 'FaceColor', 'flat');
+else
+  % the color is indicated as a single character or as a single RGB triplet
+  set(hs, 'FaceColor', facecolor);
 end
 
 % if facealpha is an array with number of elements equal to the number of vertices
@@ -293,7 +293,7 @@ if ~isequal(vertexcolor, 'none') && ~vertexpotential
       set(hs, 'MarkerSize', vertexsize, 'MarkerEdgeColor', vertexcolor);
     end
     
-  elseif ~ischar(vertexcolor) && size(vertexcolor,1)==size(pnt,1)
+  elseif ~ischar(vertexcolor) && size(vertexcolor,1)==size(pnt,1) && size(vertexcolor,2)==3
     % one RGB color for each point
     if size(pnt,2)==2
       for i=1:size(pnt,1)

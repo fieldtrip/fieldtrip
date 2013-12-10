@@ -53,6 +53,8 @@ function [shape] = ft_read_headshape(filename, varargin)
 %   'caret_coord'
 %   'caret_topo'
 %   'caret_spec'
+%   'brainvisa_mesh'
+%   'brainsuite_dfs'
 %
 % See also FT_READ_VOL, FT_READ_SENS, FT_WRITE_HEADSHAPE
 
@@ -193,20 +195,16 @@ if iscell(filename)
     shape = bnd;
   end
   
-else  
+else
   
   % test whether the file exists (unless it's streamed in realtime)
   if ~exist(filename) && ~strcmp(fileformat,'fcdc_buffer')
     error('file ''%s'' does not exist', filename);
-  end  
+  end
   
   % start with an empty structure
   shape           = [];
   shape.pnt       = [];
-  % FIXME is it required that it has an empty fiducial substructure? -> perhaps for SPM
-  shape.fid.pnt   = [];
-  shape.fid.label = {};
-  
   
   switch fileformat
     case {'ctf_ds', 'ctf_hc', 'ctf_meg4', 'ctf_res4', 'ctf_old'}
@@ -241,9 +239,9 @@ else
       orig = read_ctf_shape(filename);
       shape.pnt = orig.pnt;
       shape.fid.label = {'NASION', 'LEFT_EAR', 'RIGHT_EAR'};
+      shape.fid.pnt = zeros(0,3); % start with an empty array
       for i = 1:numel(shape.fid.label)
-        shape.fid.pnt = cat(1, shape.fid.pnt, ...
-          getfield(orig.MRI_Info, shape.fid.label{i}));
+        shape.fid.pnt = cat(1, shape.fid.pnt, getfield(orig.MRI_Info, shape.fid.label{i}));
       end
       
     case {'4d_xyz', '4d_m4d', '4d_hs', '4d', '4d_pdf'}
@@ -281,7 +279,7 @@ else
       if ~isfield(g, 'vertices')
         error('%s does not contain a tesselated surface', filename);
       end
-      shape.pnt = warp_apply(g.mat, g.vertices);
+      shape.pnt = ft_warp_apply(g.mat, g.vertices);
       shape.tri = g.faces;
       if isfield(g, 'cdata')
         shape.mom = g.cdata;
@@ -294,12 +292,12 @@ else
         try
           % do a clever guess by replacing topo with coord
           g2 = gifti(strrep(filename, '.topo.', '.coord.'));
-          vertices  = warp_apply(g2.mat, g2.vertices);
+          vertices  = ft_warp_apply(g2.mat, g2.vertices);
         catch
           vertices  = [];
         end
       else
-        vertices  = warp_apply(g.mat, g.vertices);
+        vertices  = ft_warp_apply(g.mat, g.vertices);
       end
       if ~isfield(g, 'faces') && strcmp(fileformat, 'caret_coord')
         try
@@ -323,10 +321,12 @@ else
       filename    = strrep(filename, '.surf.', '.shape.');
       [p,f,e]     = fileparts(filename);
       tok         = tokenize(f, '.');
-      tmpfilename = strrep(filename, tok{3}, 'sulc');
-      if exist(tmpfilename, 'file'),  g = gifti(tmpfilename); shape.sulc = g.cdata; end
-      if exist(strrep(tmpfilename, 'sulc', 'curvature'), 'file'),  g = gifti(strrep(tmpfilename, 'sulc', 'curvature')); shape.curv = g.cdata; end
-      if exist(strrep(tmpfilename, 'sulc', 'thickness'), 'file'),  g = gifti(strrep(tmpfilename, 'sulc', 'thickness')); shape.thickness = g.cdata; end
+      if length(tok)>2
+        tmpfilename = strrep(filename, tok{3}, 'sulc');
+        if exist(tmpfilename, 'file'), g = gifti(tmpfilename); shape.sulc = g.cdata; end
+        if exist(strrep(tmpfilename, 'sulc', 'curvature'), 'file'),  g = gifti(strrep(tmpfilename, 'sulc', 'curvature')); shape.curv = g.cdata; end
+        if exist(strrep(tmpfilename, 'sulc', 'thickness'), 'file'),  g = gifti(strrep(tmpfilename, 'sulc', 'thickness')); shape.thickness = g.cdata; end
+      end
       
     case 'caret_spec'
       [spec, headerinfo] = read_caret_spec(filename);
@@ -439,8 +439,8 @@ else
         shape.ctable = c.table;
       end
       
-    case {'neuromag_mne', 'neuromag_fif' 'babysquid_fif'}
-
+    case {'neuromag_fif' 'neuromag_mne'}
+      
       orig = read_neuromag_hc(filename);
       switch coordsys
         case 'head'
@@ -477,10 +477,6 @@ else
           error('incorrect coordinates specified');
       end
       
-    case {'fcdc_buffer'} % FIXME: this supports realtime neuromag only
-      
-      orig = read_neuromag_hc(filename);
-
     case {'yokogawa_mrk', 'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw' }
       if ft_hastoolbox('yokogawa_meg_reader')
         hdr = read_yokogawa_header_new(filename);
@@ -594,6 +590,21 @@ else
       
       fclose(fid);
       
+    case 'ply'
+      [vert, face] = read_ply(filename);
+      shape.pnt = [vert.x vert.y vert.z];
+      if isfield(vert, 'red') && isfield(vert, 'green') && isfield(vert, 'blue')
+        shape.color = double([vert.red vert.green vert.blue])/255;
+      end
+      switch size(face,2)
+        case 3
+          shape.tri = face;
+        case 4
+          shape.tet = face;
+        case 8
+          shape.hex = face;
+      end
+      
     case 'polhemus_fil'
       [shape.fid.pnt, shape.pnt, shape.fid.label] = read_polhemus_fil(filename, 0);
       
@@ -625,7 +636,6 @@ else
       end
       
     case {'freesurfer_triangle_binary', 'freesurfer_quadrangle'}
-      
       % the freesurfer toolbox is required for this
       ft_hastoolbox('freesurfer', 1);
       
@@ -637,8 +647,6 @@ else
       end
       shape.pnt = pnt;
       shape.tri = tri;
-      shape = rmfield(shape, 'fid');
-      
       
       % for the left and right
       [path,name,ext] = fileparts(filename);
@@ -662,6 +670,7 @@ else
       if exist(fullfile(path, [name,'.curv']), 'file'), shape.curv = read_curv(fullfile(path, [name,'.curv'])); end
       if exist(fullfile(path, [name,'.area']), 'file'), shape.area = read_curv(fullfile(path, [name,'.area'])); end
       if exist(fullfile(path, [name,'.thickness']), 'file'), shape.thickness = read_curv(fullfile(path, [name,'.thickness'])); end
+      
     case 'stl'
       [pnt, tri, nrm] = read_stl(filename);
       shape.pnt = pnt;
@@ -744,8 +753,89 @@ else
       end
       IMPORT = importdata([filename '.node'],' ',1);
       shape.pnt = IMPORT.data(:,2:4);
-      % the fiducials don't apply to this format
-      shape = rmfield(shape,'fid');
+      
+    case 'brainsuite_dfs'
+      % this requires the readdfs function from the BrainSuite MATLAB utilities
+      ft_hastoolbox('brainsuite', 1);
+      
+      dfs = readdfs(filename);
+      % these are expressed in MRI dimensions
+      shape.pnt  = dfs.vertices;
+      shape.tri  = dfs.faces;
+      shape.unit = 'unkown';
+      
+      % the filename is something like 2467264.right.mid.cortex.svreg.dfs
+      % whereas the corresponding MRI is 2467264.nii and might be gzipped
+      [p, f, x] = fileparts(filename);
+      while ~isempty(x)
+        [junk, f, x] = fileparts(f);
+      end
+
+      if exist(fullfile(p, [f '.nii']), 'file')
+        fprintf('reading accompanying MRI file "%s"\n', fullfile(p, [f '.nii']));
+        mri = ft_read_mri(fullfile(p, [f '.nii']));
+        transform = eye(4);
+        transform(1:3,4) = mri.transform(1:3,4); % only use the translation
+        shape.pnt  = ft_warp_apply(transform, shape.pnt);
+        shape.unit = mri.unit;
+      elseif exist(fullfile(p, [f '.nii.gz']), 'file')
+        fprintf('reading accompanying MRI file "%s"\n', fullfile(p, [f '.nii']));
+        mri = ft_read_mri(fullfile(p, [f '.nii.gz']));
+        transform = eye(4);
+        transform(1:3,4) = mri.transform(1:3,4); % only use the translation
+        shape.pnt  = ft_warp_apply(transform, shape.pnt);
+        shape.unit = mri.unit;
+      else
+        warning('could not find accompanying MRI file, returning vertices in voxel coordinates');
+      end
+      
+    case 'brainvisa_mesh'
+      % this requires the loadmesh function from the BrainVISA MATLAB utilities
+      ft_hastoolbox('brainvisa', 1);
+      [shape.pnt, shape.tri, shape.nrm] = loadmesh(filename);
+      shape.tri = shape.tri + 1; % they should be 1-offset, not 0-offset
+      shape.unit = 'unkown';
+      
+      if exist([filename '.minf'], 'file')
+        minffid = fopen([filename '.minf']);
+        hdr=fgetl(minffid);
+        tfm_idx = strfind(hdr,'''transformations'':') + 21;
+        transform = sscanf(hdr(tfm_idx:end),'%f,',[4 4])';
+        fclose(minffid);
+        if ~isempty(transform)
+          shape.pnt = ft_warp_apply(transform, shape.pnt);
+          shape = rmfield(shape, 'unit'); % it will be determined later on, based on the size
+        end
+      end
+      
+      if isempty(transform)
+        % the transformation was not present in the minf file, try to get it from the MRI
+        
+        % the filename is something like subject01_Rwhite_inflated_4d.mesh
+        % and it is accompanied by subject01.nii
+        [p, f, x] = fileparts(filename);
+        f = tokenize(f, '_');
+        f = f{1};
+        
+        if exist(fullfile(p, [f '.nii']), 'file')
+          fprintf('reading accompanying MRI file "%s"\n', fullfile(p, [f '.nii']));
+          mri = ft_read_mri(fullfile(p, [f '.nii']));
+          shape.pnt  = ft_warp_apply(mri.transform, shape.pnt);
+          shape.unit = mri.unit;
+          transform = true; % used for feedback
+        elseif exist(fullfile(p, [f '.nii.gz']), 'file')
+          fprintf('reading accompanying MRI file "%s"\n', fullfile(p, [f '.nii.gz']));
+          mri = ft_read_mri(fullfile(p, [f '.nii.gz']));
+          shape.pnt  = ft_warp_apply(mri.transform, shape.pnt);
+          shape.unit = mri.unit;
+          transform = true; % used for feedback
+        end
+      end
+      
+      if isempty(transform)
+        warning('cound not determine the coordinate transformation, returning vertices in voxel coordinates');
+      end
+      
       
     otherwise
       % try reading it from an electrode of volume conduction model file

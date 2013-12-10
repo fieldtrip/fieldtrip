@@ -24,7 +24,7 @@ function chanunit = ft_chanunit(input, desired)
 %
 % See also FT_CHANTYPE
 
-% Copyright (C) 2011, Robert Oostenveld
+% Copyright (C) 2011-2013, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -44,28 +44,30 @@ function chanunit = ft_chanunit(input, desired)
 %
 % $Id$
 
-
 % determine the type of input, this is handled similarly as in FT_CHANTYPE
 isheader =  isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'Fs');
+islabel  =  isa(input, 'cell')   && isa(input{1}, 'char');
 isgrad   =  isa(input, 'struct') && isfield(input, 'pnt') && isfield(input, 'ori');
 isgrad   = (isa(input, 'struct') && isfield(input, 'coilpos')) || isgrad;
-isgrad   = (isa(input, 'struct') && isfield(input, 'chanpos')) || isgrad;
-islabel  =  isa(input, 'cell')   && isa(input{1}, 'char');
-
-hdr   = input;
-grad  = input;
-label = input;
+isgrad   = (isa(input, 'struct') && isfield(input, 'coilori')) || isgrad;
+iselec   =  isa(input, 'struct') && isfield(input, 'pnt') && ~isfield(input, 'ori');
+iselec   = (isa(input, 'struct') && isfield(input, 'elecpos')) || iselec;
 
 if isheader
-  numchan = hdr.nChans;
-  if isfield(hdr, 'grad')
-    grad  = hdr.grad;
-  end
-  label = hdr.label;
+  label = input.label;
+  numchan = length(label);
 elseif isgrad
-  label   = grad.label;
+  label   = input.label;
+  numchan = length(label);
+elseif iselec
+  label   = input.label;
   numchan = length(label);
 elseif islabel
+  label   = input;
+  numchan = length(label);
+elseif isfield(input, 'label')
+  % this is a last resort: I don't know what it is, but perhaps the labels are informative
+  label   = input.label;
   numchan = length(label);
 else
   error('the input that was provided to this function cannot be deciphered');
@@ -77,13 +79,13 @@ chanunit = repmat({'unknown'}, size(input.label));
 if ft_senstype(input, 'unknown')
   % don't bother doing all subsequent checks to determine the type of sensor array
   
-elseif ft_senstype(input, 'eeg') && isheader
+elseif isheader && ft_senstype(input, 'eeg')
   % until now in all stand-alone EEG systems examined the data was in uV
   chanunit(strcmp('eeg',              input.chantype)) = {'uV'};
   
-elseif ft_senstype(input, 'neuromag') && isheader && issubfield(input, 'orig.chs')
+elseif isheader && (ft_senstype(input, 'neuromag') || ft_senstype(input, 'babysquid74')) && issubfield(input, 'orig.chs')
   for i = 1:numchan % make a cell array of units for each channel
-    switch hdr.orig.chs(i).unit
+    switch input.orig.chs(i).unit
       case 201 % defined as constants by MNE, see p. 217 of MNE manual
         chanunit{i} = 'T/m';
       case 112
@@ -97,68 +99,82 @@ elseif ft_senstype(input, 'neuromag') && isheader && issubfield(input, 'orig.chs
     end
   end
   
-elseif ft_senstype(input, 'neuromag') && isfield(input, 'chantype') && isgrad 
+elseif iselec && isfield(input, 'chantype')
+  % electrode definitions are expressed in SI units, i.e. V
+  chanunit(strcmp('eeg',              input.chantype)) = {'V'};
+
+elseif isgrad && (ft_senstype(input, 'neuromag') || ft_senstype(input, 'babysquid74')) && isfield(input, 'chantype')
   % look at the type of the channels
-  chanunit(strcmp('eeg',              grad.chantype)) = {'unknown'}; % FIXME
-  chanunit(strcmp('emg',              grad.chantype)) = {'unknown'}; % FIXME
-  chanunit(strcmp('eog',              grad.chantype)) = {'unknown'}; % FIXME
-  chanunit(strcmp('ecg',              grad.chantype)) = {'unknown'}; % FIXME
-  chanunit(strcmp('megmag',           grad.chantype)) = {'T'};
+  chanunit(strcmp('eeg',              input.chantype)) = {'unknown'}; % FIXME
+  chanunit(strcmp('emg',              input.chantype)) = {'unknown'}; % FIXME
+  chanunit(strcmp('eog',              input.chantype)) = {'unknown'}; % FIXME
+  chanunit(strcmp('ecg',              input.chantype)) = {'unknown'}; % FIXME
+  chanunit(strcmp('megmag',           input.chantype)) = {'T'};
+  chanunit(strcmp('megaxial',         input.chantype)) = {'T'}; % applies to BabySQUID system
   
-  if isfield(grad, 'tra')
+  if isfield(input, 'tra')
     if all(sum(abs(input.tra),2)==1 | sum(abs(input.tra),2)==2)
       % it is not scaled with distance
-      chanunit(strcmp('megplanar',        grad.chantype)) = {'T'};
+      chanunit(strcmp('megplanar',        input.chantype)) = {'T'};
     else
       % it is scaled with distance
       if isfield(input, 'unit')
         assumption = sprintf('T/%s', input.unit);
         chanunit(strcmp('megplanar',        input.chantype)) = {assumption};
-        warning('assuming that planar channel units are %s, consistent with the geometrical units', assumption);
+        warning('assuming that planar channel units are %s', assumption);
       else
-        % the channel units remain unknown
+        chanunit(strcmp('megplanar',        input.chantype)) = {'unknown'};
+        warning('cannot determine the units for the planar MEG channels');
       end
     end
   end
-
-elseif ft_senstype(input, 'neuromag') && isfield(input, 'chantype')
+  
+elseif (ft_senstype(input, 'neuromag') || ft_senstype(input, 'babysquid74')) && isfield(input, 'chantype')
   % determine the units only based on the channel name and type
   chanunit(strcmp('eeg',              input.chantype)) = {'unknown'}; % FIXME
   chanunit(strcmp('emg',              input.chantype)) = {'unknown'}; % FIXME
   chanunit(strcmp('eog',              input.chantype)) = {'unknown'}; % FIXME
   chanunit(strcmp('ecg',              input.chantype)) = {'unknown'}; % FIXME
   chanunit(strcmp('megmag',           input.chantype)) = {'T'};
+  chanunit(strcmp('megaxial',         input.chantype)) = {'T'}; % applies to BabySQUID system
+  
   if isfield(input, 'unit')
     assumption = sprintf('T/%s', input.unit);
     chanunit(strcmp('megplanar',        input.chantype)) = {assumption};
     warning('assuming that planar channel units are %s, consistent with the geometrical units', assumption);
   else
-    % the channel units remain unknown
+    chanunit(strcmp('megplanar',        input.chantype)) = {'unknown'};
+    warning('cannot determine the units for the planar MEG channels');
   end
   
 elseif ft_senstype(input, 'ctf') && isfield(input, 'chantype')
-  chanunit(strcmp('eeg',              input.chantype)) = {'V'}; 
-  chanunit(strcmp('emg',              input.chantype)) = {'V'}; 
-  chanunit(strcmp('eog',              input.chantype)) = {'V'}; 
-  chanunit(strcmp('ecg',              input.chantype)) = {'V'}; 
+  chanunit(strcmp('eeg',              input.chantype)) = {'V'};
+  chanunit(strcmp('emg',              input.chantype)) = {'V'};
+  chanunit(strcmp('eog',              input.chantype)) = {'V'};
+  chanunit(strcmp('ecg',              input.chantype)) = {'V'};
   chanunit(strcmp('meggrad',          input.chantype)) = {'T'};
   chanunit(strcmp('refmag',           input.chantype)) = {'T'};
   chanunit(strcmp('refgrad',          input.chantype)) = {'T'};
   
 elseif ft_senstype(input, 'yokogawa') && isfield(input, 'chantype')
   chanunit(strcmp('meggrad',          input.chantype)) = {'T'};
-  chanunit(strcmp('megplanar',        input.chantype)) = {'unknown'}; % FIXME don't know whether it is T or T/m
+  chanunit(strcmp('megplanar',        input.chantype)) = {'T'}; % I am not sure whether it is T or T/m
   
 elseif ft_senstype(input, 'bti') && isfield(input, 'chantype')
   chanunit(strcmp('meg',                 input.chantype)) = {'T'}; % this was the channel type until approx. 2 November 2012, see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1807
-  chanunit(strcmp('megmag',              input.chantype)) = {'T'}; % for most 4D/BTi systems
+  chanunit(strcmp('megmag',              input.chantype)) = {'T'}; % applies for magnetometer 4D/BTi systems
   chanunit(strcmp('eeg',                 input.chantype)) = {'V'}; % seems to be true for the example I have (VL)
-  chanunit(strcmp('meggrad',             input.chantype)) = {'unknown'}; % FIXME don't know whether it is T or T/m
+  chanunit(strcmp('meggrad',             input.chantype)) = {'T'}; % this is the plain difference in the field at the two coils, i.e. in T
+  chanunit(strcmp('refmag',              input.chantype)) = {'T'};
+  chanunit(strcmp('refgrad',             input.chantype)) = {'T'};
   
 elseif ft_senstype(input, 'itab') && isfield(input, 'chantype')
   chanunit(strcmp('megmag',              input.chantype)) = {'T'};
   
 end % if senstype
+
+% ensure that it is a column vector
+chanunit = chanunit(:);
 
 if nargin>1
   chanunit = strcmp(desired, chanunit);

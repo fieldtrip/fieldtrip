@@ -1,5 +1,8 @@
 function test_bug1901
 
+% MEM 2500mb
+% WALLTIME 00:15:00
+
 % TEST test_bug1901
 % TEST ft_prepare_leadfield ft_prepare_sourcemodel prepare_headmodel ft_convert_units
 
@@ -17,6 +20,7 @@ cfg.grad = grad;
 cfg.vol = vol;
 cfg.channel = ft_channelselection('MEG', grad.label);
 cfg.grid.resolution = 5;
+cfg.grid.unit = 'cm';
 
 grid = ft_prepare_leadfield(cfg);
 

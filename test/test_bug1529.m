@@ -1,5 +1,8 @@
 function test_bug1529
 
+% MEM 1500mb
+% WALLTIME 00:03:02
+
 % TEST test_bug1529
 % TEST ft_plot_ortho
 

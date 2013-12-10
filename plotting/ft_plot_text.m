@@ -120,9 +120,9 @@ set(h, 'HorizontalAlignment', HorizontalAlignment);
 set(h, 'Color', Color);
 set(h, 'rotation', rotation);
 set(h, 'VerticalAlignment',VerticalAlignment); 
+if ~isempty(FontUnits), set(h, 'FontUnits', FontUnits); end
 if ~isempty(FontSize),  set(h, 'FontSize', FontSize);  end
 if ~isempty(FontName),  set(h, 'FontName', FontName);  end
-if ~isempty(FontUnits), set(h, 'FontUnits', FontUnits); end
 set(h, 'tag', tag);
 set(h, 'interpreter', interpreter);
 

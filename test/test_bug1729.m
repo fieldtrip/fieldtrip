@@ -1,5 +1,8 @@
 function test_bug1729
 
+% MEM 1500mb
+% WALLTIME 00:03:06
+
 % TEST test_bug1729
 % TEST ft_multiplotTFR ft_singleplotTFR ft_plot_matrix
 

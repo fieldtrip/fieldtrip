@@ -41,7 +41,7 @@ function p = normcdf(x,mu,sigma)
 %      Functions", Government Printing Office, 1964, 26.2.
 
 %   Copyright (c) 1993-98 by The MathWorks, Inc.
-%   $Revision: 2212 $  $Date: 2004/02/10 18:58:56 $
+%   $Revision$  $Date: 2004/02/10 18:58:56 $
 
 if nargin < 3, 
     sigma = 1;
@@ -96,7 +96,7 @@ function x = norminv(p,mu,sigma);
 %      Functions", Government Printing Office, 1964, 7.1.1 and 26.2.2
 
 %   Copyright (c) 1993-98 by The MathWorks, Inc.
-%   $Revision: 2212 $  $Date: 2004/02/10 18:58:56 $
+%   $Revision$  $Date: 2004/02/10 18:58:56 $
 
 if nargin < 3, 
     sigma = 1;

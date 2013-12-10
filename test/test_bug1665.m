@@ -1,5 +1,8 @@
 function test_bug1665
 
+% MEM 1500mb
+% WALLTIME 00:03:57
+
 % TEST test_bug1665
 % TEST ft_volumesegment ft_volumenormalise align_ctf2spm ft_hastoolbox
 % ft_checkdata

@@ -1,5 +1,8 @@
 function test_tutorial_preprocessing
 
+% WALLTIME 00:03:32
+% MEM 2gb
+
 % TEST test_tutorial_preprocessing
 % TEST ft_definetrial ft_preprocessing
 

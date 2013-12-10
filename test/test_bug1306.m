@@ -1,5 +1,8 @@
 function test_bug1306b
 
+% MEM 1500mb
+% WALLTIME 00:05:10
+
 % Use function signature below for testing --- note that xUnit does not seem to support it.
 %function datanew = test_ft_preprocessing(datainfo, writeflag, version)
 

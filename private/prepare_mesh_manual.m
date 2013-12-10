@@ -39,6 +39,8 @@ function bnd = prepare_mesh_manual(cfg, mri)
 
 global obj
 
+mri = ft_checkdata(mri, 'datatype', {'volume', 'segmentation'}, 'hasunit', 'yes');
+
 bnd.pnt = [];
 bnd.tri = [];
 

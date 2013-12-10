@@ -1,5 +1,8 @@
 function test_bug542
 
+% MEM 1500mb
+% WALLTIME 00:03:05
+
 % TEST test_bug542
 % TEST ft_multiplotER
 

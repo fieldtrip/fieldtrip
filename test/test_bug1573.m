@@ -1,5 +1,8 @@
 function test_bug1573
 
+% MEM 1500mb
+% WALLTIME 00:03:01
+
 % TEST ft_read_mri ft_volumnrealign ft_sourceinterpolate
 
 template = '/home/common/matlab/spm8/canonical/single_subj_T1.nii';

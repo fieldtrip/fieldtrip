@@ -109,6 +109,7 @@ cfg.feedback     = ft_getopt(cfg, 'feedback',     'text');
 % check if the input cfg is valid for this function
 if ~strcmp(cfg.planarmethod, 'sourceproject')
   cfg = ft_checkconfig(cfg, 'required', {'neighbours'});
+  cfg.neighbours = struct(cfg.neighbours);
 end
 
 if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
@@ -116,9 +117,12 @@ if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
   cfg.headshape = struct(cfg.headshape);
 end
 
-% put the low-level options pertaining to the dipole grid in their own field
-cfg = ft_checkconfig(cfg, 'createsubcfg',  {'grid'});
 cfg = ft_checkconfig(cfg, 'renamedvalue',  {'headshape', 'headmodel', []});
+
+% put the low-level options pertaining to the dipole grid in their own field
+cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'}); % this is moved to cfg.grid.tight by the subsequent createsubcfg
+cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved to cfg.grid.unit by the subsequent createsubcfg
+cfg = ft_checkconfig(cfg, 'createsubcfg',  {'grid'});
 
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
@@ -239,6 +243,7 @@ else
   % ensure channel order according to cfg.channel (there might be one check
   % too much in here somewhere or in the subfunctions, but I don't care.
   % Better one too much than one too little - JMH @ 09/19/12
+  cfg = struct(cfg);
   [neighbsel] = match_str({cfg.neighbours.label}, cfg.channel);
   cfg.neighbours = cfg.neighbours(neighbsel);
   cfg.neighbsel = channelconnectivity(cfg);

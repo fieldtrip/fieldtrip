@@ -129,7 +129,7 @@ for k = 1:nslice
   
   % project the positions onto the xy-plane
   pos = [xtmp(:) ytmp(:) ztmp(:)];
-  pos = warp_apply(inv(T), pos);
+  pos = ft_warp_apply(inv(T), pos);
   
   xtmp = reshape(pos(:,1), siz);
   ytmp = reshape(pos(:,2), siz);
@@ -165,7 +165,7 @@ for k = 1:nslice
       siz2 = size(xtmp);
       
       pos = [xtmp(:) ytmp(:) ztmp(:)];
-      pos = warp_apply(inv(T), pos);
+      pos = ft_warp_apply(inv(T), pos);
   
       xtmp = reshape(pos(:,1), siz2);
       ytmp = reshape(pos(:,2), siz2);
@@ -178,7 +178,9 @@ for k = 1:nslice
     end
     pprevious = [pprevious(:);p(:)];
   end
-  drawnow;
+  %drawnow; %this statement slows down the process big time on some file
+  %systems. I don't know what's going on there, but the statement is not
+  %really necessary, so commented out.
 end
 set(gcf, 'color', [0 0 0]);
 set(gca, 'zlim', [0 1]);

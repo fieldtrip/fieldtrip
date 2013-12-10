@@ -90,7 +90,7 @@ switch lower(spmversion)
                 error('Invalid output dimensions');
         end
                                
-        Va = spm_vol(spm_select('ExtList', '.', N.dat.fname ,Inf));        
+        Va = spm_vol(N.dat.fname);        
     otherwise
         error('unsupported version of spm requested');
 end

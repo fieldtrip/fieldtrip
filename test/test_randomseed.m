@@ -1,5 +1,8 @@
 function test_randomseed
 
+% MEM 1500mb
+% WALLTIME 00:03:01
+
 % TEST test_randomseed
 
 % this is related to bug 1205

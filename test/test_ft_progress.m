@@ -1,5 +1,8 @@
 function test_ft_progress
 
+% MEM 1500mb
+% WALLTIME 00:03:03
+
 % TEST test_ft_progress
 % TEST ft_progress
 

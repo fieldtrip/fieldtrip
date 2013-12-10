@@ -1,5 +1,8 @@
 function test_ft_connectivityanalysis
 
+% MEM 1500mb
+% WALLTIME 0:05:00
+
 % TEST test_ft_connectivityanalysis
 % TEST ft_connectivityanalysis ft_connectivity_granger ft_connectivity_corr ft_connectivity_psi ft_mvaranalysis ft_connectivitysimulation ft_freqanalysis ft_connectivity_pdc ft_connectivity_dtf ft_connectivity_csd2transfer
 
@@ -232,6 +235,7 @@ cfgf.method    = 'mtmfft';
 cfgf.output    = 'fourier';
 cfgf.tapsmofrq = 2;
 freq           = ft_freqanalysis(cfgf, data);
+freqsub        = ft_selectdata(freq, 'foilim', freq.freq(2:end));
 
 % connectivityanalysis
 cfgc           = [];
@@ -240,6 +244,7 @@ c1m            = ft_connectivityanalysis(cfgc, mfreq);
 c1b            = ft_connectivityanalysis(cfgc, freq);
 cfgc.granger.sfmethod = 'bivariate';
 c1b2           = ft_connectivityanalysis(cfgc, freq);
+c1b2sub        = ft_connectivityanalysis(cfgc, freqsub);
 cfgc.granger.sfmethod = 'multivariate';
 cfgc.granger.block(1).name =  'block1';
 cfgc.granger.block(1).label = freq.label(1);

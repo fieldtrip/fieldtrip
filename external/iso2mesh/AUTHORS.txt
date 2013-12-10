@@ -1,5 +1,5 @@
 The author of "iso2mesh" toolbox is Qianqian Fang. Qianqian
-is currently an Instructor at Massachusetts General Hospital, 
+is currently an Assistant Professor at Massachusetts General Hospital, 
 Harvard Medical School.
 
 Address: Martinos Center for Biomedical Imaging, 
@@ -17,3 +17,6 @@ Other people had also contributed to this toolbox, they include
 - Pierre Alliez <pierre.alliez at sophia.inria.fr>
 - Laurent Rineau <laurent.rineau__CGAL at normalesup.org>
 - Donghyeon Kim <danielkim at gist.ac.kr>
+- Blake Johnson <bjohnso at bbn.com>
+- Niclas Borlin <Niclas.Borlin at cs.umu.se>
+- Peter Varga <peter.varga at charite.de>

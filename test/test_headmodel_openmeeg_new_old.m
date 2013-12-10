@@ -1,5 +1,8 @@
 function test_headmodel_openmeeg_new_old
 
+% MEM 1500mb
+% WALLTIME 01:26:42
+
 % TEST test_headmodel_openmeeg_new_old
 % TEST ft_prepare_headmodel ft_headmodel_openmeeg ft_prepare_bemmodel
 

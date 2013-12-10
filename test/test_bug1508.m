@@ -1,5 +1,8 @@
 function test_bug1508
 
+% MEM 1500mb
+% WALLTIME 00:03:02
+
 % TEST test_bug1508
 % TEST ft_freqanalysis
 

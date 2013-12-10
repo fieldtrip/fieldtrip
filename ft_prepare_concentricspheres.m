@@ -127,7 +127,7 @@ for i = 1:numel(headshape)
 end
 
 if numel(cfg.conductivity)==numel(headshape)
-  vol.c = cfg.conductivity;
+  vol.cond = cfg.conductivity;
 else
   error('incorrect specification of cfg.conductivity');
 end

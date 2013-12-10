@@ -1,10 +1,10 @@
 function test_bug1368
 
-% TEST test_bug1368
-% TEST 
+% MEM 1500mb
+% WALLTIME 00:05:33
 
-fprintf('***  DIAGNOSTICAL INFORMATION ***\n');
-fprintf('test script is running on host: %s\n', gethostname());
+% TEST test_bug1368
+% TEST ft_prepare_sourcemodel headsurface
 
 pnt = [
   0         0    1.0000

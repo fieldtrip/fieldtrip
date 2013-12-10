@@ -8,7 +8,7 @@ function [mask] = estimate_mask(s, filter_params, iterations)
 % Copyright (C) 2004, 2005 DSS MATLAB package team (dss@cis.hut.fi).
 % Distributed by Laboratory of Computer and Information Science,
 % Helsinki University of Technology. http://www.cis.hut.fi/projects/dss/.
-% $Id: estimate_mask.m,v 1.8 2005/05/06 12:43:04 kosti Exp $
+% $Id$
 
 filter_h = @denoise_filter;
 

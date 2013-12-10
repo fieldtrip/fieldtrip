@@ -111,7 +111,7 @@ switch eventformat
 	% information here. Please explicitly use ft_create_buffer instead.
   
   case 'fcdc_serial'
-    % this code is moved to a seperate file
+    % this code is moved to a separate file
     write_serial_event(filename, event);
 
   case 'fcdc_mysql'

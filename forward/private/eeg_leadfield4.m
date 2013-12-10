@@ -5,22 +5,24 @@ function [lf, vol] = eeg_leadfield4(R, elc, vol)
 % [lf] = eeg_leadfield4(R, elc, vol)
 %
 % with input arguments
-%   R            position of the dipole
+%   R          position of the dipole
 %   elc        position of the electrodes
 % and vol being a structure with the elements
 %   vol.r      radius of the 4 spheres 
-%   vol.c      conductivity of the 4 spheres
+%   vol.cond   conductivity of the 4 spheres
 %   vol.t      constant factors for series expansion (optional)
+%
+% The center of the spheres should be at the origin.
+%
+% This implementation is adapted from
+%   Lutkenhoner, Habilschrift 1992.
+% The original reference is
+%  Cuffin BN, Cohen D. Comparison of the magnetoencephalogram and electroencephalogram. Electroencephalogr Clin Neurophysiol. 1979 Aug;47(2):132-46. 
 %
 % See also EEG_LEADFIELD4_PREPARE for precomputing the constant factors,
 % which can save time when multiple leadfield computations are done.
 
 % Copyright (C) 2002, Robert Oostenveld
-%
-% this implementation is adapted from
-%   Lutkenhoner, Habilschrift 1992.
-% the original reference is
-%  Cuffin BN, Cohen D. Comparison of the magnetoencephalogram and electroencephalogram. Electroencephalogr Clin Neurophysiol. 1979 Aug;47(2):132-46. 
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -42,13 +44,13 @@ function [lf, vol] = eeg_leadfield4(R, elc, vol)
 
 % sort the spheres from the smallest to the largest
 [vol.r, indx] = sort(vol.r);
-[vol.c]       = vol.c(indx);
+vol.cond      = vol.cond(indx);
 
-% use more convenient names for the radii and conductivity
-r1 = vol.r(1); c1 = vol.c(1);
-r2 = vol.r(2); c2 = vol.c(2);
-r3 = vol.r(3); c3 = vol.c(3);
-r4 = vol.r(4); c4 = vol.c(4);
+% use more convenient names for the radii and conductivities
+r1 = vol.r(1); c1 = vol.cond(1);
+r2 = vol.r(2); c2 = vol.cond(2);
+r3 = vol.r(3); c3 = vol.cond(3);
+r4 = vol.r(4); c4 = vol.cond(4);
 
 % check whether the electrode ly on the sphere, allowing 0.5% tolerance
 dist = sqrt(sum(elc.^2,2));

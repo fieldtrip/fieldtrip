@@ -1,6 +1,6 @@
-function [node,elem,face]=meshabox(p0,p1,opt,nodesize)
+function [node,face,elem]=meshabox(p0,p1,opt,nodesize)
 %
-% [node,elem,face]=meshabox(p0,p1,opt,maxvol)
+% [node,face,elem]=meshabox(p0,p1,opt,maxvol)
 %
 % create the surface and tetrahedral mesh of a box geometry
 %
@@ -20,7 +20,7 @@ function [node,elem,face]=meshabox(p0,p1,opt,nodesize)
 %         a tetrahedron 
 %
 % example:
-%   [node,elem,face]=meshabox([2 3 2],[6 12 15],0.1,1);
+%   [node,face,elem]=meshabox([2 3 2],[6 12 15],0.1,1);
 %   plotmesh(node,elem,'x>4');
 %
 % -- this function is part of iso2mesh toolbox (http://iso2mesh.sf.net)

@@ -1,4 +1,4 @@
-function [cluster, num] = findcluster(onoff, spatdimneighbstructmat, varargin)
+function [cluster, total] = findcluster(onoff, spatdimneighbstructmat, varargin)
 
 % FINDCLUSTER returns all connected clusters in a 3 dimensional matrix
 % with a connectivity of 6.
@@ -19,11 +19,8 @@ function [cluster, num] = findcluster(onoff, spatdimneighbstructmat, varargin)
 % to a channel (combination) along the first dimension and along that row/column, elements
 % with "1" define the neighbouring channel(s) (combinations). The first dimension of
 % onoff should correspond to the channel(s) (combinations).
-% The lower triangle of spatdimneighbstructmat, including the diagonal, is
-% assumed to be zero. 
 %
-% See also BWSELECT, BWLABELN (image processing toolbox) 
-% and SPM_CLUSTERS (spm2 toolbox).
+% See also SPM_BWLABEL (spm toolbox) 
 
 % Copyright (C) 2004, Robert Oostenveld
 %
@@ -108,3 +105,5 @@ cluster = combineClusters(uint32(labelmat), logical(spatdimneighbstructmat), uin
 % reshape the output to the original format of the data
 cluster = reshape(cluster, spatdimlength, nfreq, ntime);
 
+% update the total number
+total = numel(unique(cluster(:)))-1; % the value of 0 does not count

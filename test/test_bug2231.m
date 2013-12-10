@@ -1,5 +1,8 @@
 function test_bug2231
 
+% MEM 1500mb
+% WALLTIME 00:03:04
+
 % TEST: ft_read_header
 % TEST: ft_preprocessing
 % TEST: read_bti_m4d
