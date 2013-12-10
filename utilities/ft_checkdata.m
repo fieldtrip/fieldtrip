@@ -21,7 +21,7 @@ function [data] = ft_checkdata(data, varargin)
 %   inside             = logical, index
 %   ismeg              = yes, no
 %   hastrials          = yes, no
-%   hasunits           = yes, no
+%   hasunit            = yes, no
 %   hascoordsys        = yes, no
 %   hassampleinfo      = yes, no, ifmakessense (only applies to raw data)
 %   hascumtapcnt       = yes, no (only applies to freq data)
@@ -91,7 +91,7 @@ stype                = ft_getopt(varargin, 'senstype'); % senstype is a function
 ismeg                = ft_getopt(varargin, 'ismeg');
 inside               = ft_getopt(varargin, 'inside'); % can be 'logical' or 'index'
 hastrials            = ft_getopt(varargin, 'hastrials');
-hasunits             = ft_getopt(varargin, 'hasunits', 'no');
+hasunit              = ft_getopt(varargin, 'hasunit', 'no');
 hascoordsys          = ft_getopt(varargin, 'hascoordsys', 'no');
 hassampleinfo        = ft_getopt(varargin, 'hassampleinfo', 'ifmakessense');
 hasdimord            = ft_getopt(varargin, 'hasdimord', 'no');
@@ -459,7 +459,7 @@ end
 %  end
 %end
 
-if istrue(hasunits) && ~isfield(data, 'units')
+if istrue(hasunit) && ~isfield(data, 'unit')
   % calling convert_units with only the input data adds the units without converting
   data = ft_convert_units(data);
 end

@@ -25,8 +25,8 @@ function bnd = prepare_mesh_segmentation(cfg, mri)
 % $Id$
 
 
-% ensure that the input data is consistent with what this function expects
-mri = ft_checkdata(mri, 'datatype', {'volume', 'segmentation'}, 'hasunits', 'yes');
+% ensure that the input is consistent with what this function expects
+mri = ft_checkdata(mri, 'datatype', {'volume', 'segmentation'}, 'hasunit', 'yes');
 
 % get the default options
 cfg.spmversion    = ft_getopt(cfg, 'spmversion', 'spm8');

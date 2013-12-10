@@ -155,7 +155,7 @@ if isfield(cfg, 'coordsys') && ~isfield(mri, 'coordsys')
 end
 
 % check if the input data is valid for this function
-mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes', 'hasunits', 'yes', 'hascoordsys', 'yes');
+mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes', 'hasunit', 'yes', 'hascoordsys', 'yes');
 
 % set the defaults
 cfg.output           = ft_getopt(cfg, 'output',           'tpm');

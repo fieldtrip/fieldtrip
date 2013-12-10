@@ -88,7 +88,7 @@ if isfield(cfg, 'coordsys') && ~isfield(interp, 'coordsys')
 end
 
 % check if the input data is valid for this function
-interp = ft_checkdata(interp, 'datatype', 'volume', 'feedback', 'yes', 'hasunits', 'yes', 'hascoordsys', 'yes');
+interp = ft_checkdata(interp, 'datatype', 'volume', 'feedback', 'yes', 'hasunit', 'yes', 'hascoordsys', 'yes');
 
 % set the defaults
 cfg.spmversion       = ft_getopt(cfg, 'spmversion',       'spm8');

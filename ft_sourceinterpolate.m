@@ -194,7 +194,7 @@ elseif (~is2Dana && is2Dfun) || (is2Dana && is2Dfun)
   
   % interpolate onto a 3D volume, ensure that the anatomical is indeed a volume
   if ~is2Dana
-    anatomical = ft_checkdata(anatomical, 'datatype', 'volume', 'inside', 'logical', 'feedback', 'yes', 'hasunits', 'yes');
+    anatomical = ft_checkdata(anatomical, 'datatype', 'volume', 'inside', 'logical', 'feedback', 'yes', 'hasunit', 'yes');
   
     % get voxel indices, convert to positions and use interp_ungridded
     dim     = anatomical.dim;
@@ -202,7 +202,7 @@ elseif (~is2Dana && is2Dfun) || (is2Dana && is2Dfun)
     pos     = ft_warp_apply(anatomical.transform, [x(:) y(:) z(:)]);
     clear x y z
   else
-    anatomical = ft_checkdata(anatomical, 'hasunits', 'yes');
+    anatomical = ft_checkdata(anatomical, 'hasunit', 'yes');
     if isfield(anatomical, 'pos')
       pos = anatomical.pos;
     elseif isfield(anatomical, 'pnt')
@@ -302,8 +302,8 @@ elseif ~is2Dana && ~is2Dfun
   cfg.interpmethod = ft_getopt(cfg, 'interpmethod', 'linear');
  
   % check if the input data is valid for this function and ensure that the structures correctly describes a volume
-  functional = ft_checkdata(functional, 'datatype', 'volume', 'inside', 'logical', 'feedback', 'yes', 'hasunits', 'yes');
-  anatomical = ft_checkdata(anatomical, 'datatype', 'volume', 'inside', 'logical', 'feedback', 'yes', 'hasunits', 'yes');
+  functional = ft_checkdata(functional, 'datatype', 'volume', 'inside', 'logical', 'feedback', 'yes', 'hasunit', 'yes');
+  anatomical = ft_checkdata(anatomical, 'datatype', 'volume', 'inside', 'logical', 'feedback', 'yes', 'hasunit', 'yes');
   
   % ensure that the functional data has the same unit as the anatomical
   % data

@@ -8,18 +8,19 @@ function mesh=prepare_mesh_hexahedral(cfg,mri)
 %   cfg.tissue = cell with the names of the compartments that should be
 %   meshed
 %   cfg.resolution = desired resolution of the mesh (standard = 1)
-%
+
 % Copyrights (C) 2012-2013, Johannes Vorwerk
 %
-% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
+% $Id$
 
+% ensure that the input is consistent with what this function expects
+mri = ft_checkdata(mri, 'datatype', {'volume', 'segmentation'}, 'hasunit', 'yes');
 
 % get the default options
 cfg.tissue      = ft_getopt(cfg, 'tissue');
 cfg.resolution  = ft_getopt(cfg, 'resolution');
 cfg.shift       = ft_getopt(cfg, 'shift');
 cfg.background  = ft_getopt(cfg, 'background');
-
 
 if isempty(cfg.tissue)
   mri = ft_datatype_segmentation(mri, 'segmentationstyle', 'indexed');

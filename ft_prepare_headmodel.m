@@ -174,7 +174,7 @@ cfg.siunits         = ft_getopt(cfg, 'siunits', 'no');  % yes/no, convert the in
 
 if nargin>1,
   % ensure that it has the units specified
-  data = ft_checkdata(data, 'hasunits', 'yes');
+  data = ft_checkdata(data, 'hasunit', 'yes');
 else
   data = [];
 end

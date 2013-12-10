@@ -164,7 +164,7 @@ else
     case 'distance'
       % use a smart default for the distance
       if ~isfield(cfg, 'neighbourdist')
-        sens = ft_checkdata(sens, 'hasunits', 'yes');
+        sens = ft_checkdata(sens, 'hasunit', 'yes');
         if isfield(sens, 'unit') && strcmp(sens.unit, 'm')
           cfg.neighbourdist = 0.04;
         elseif isfield(sens, 'unit') && strcmp(sens.unit, 'dm')

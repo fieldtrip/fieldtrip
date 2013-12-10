@@ -151,7 +151,6 @@ switch cfg.method
     % call the corresponding helper function
     bnd = prepare_mesh_tetrahedral(cfg, mri);
     
-    
   case {'singlesphere' 'concentricspheres' 'localspheres'}
     % FIXME for localspheres it should be replaced by an outline of the head, see private/headsurface
     fprintf('triangulating the sphere in the volume conductor\n');
@@ -171,7 +170,7 @@ switch cfg.method
 end
 
 % copy the geometrical units from the input to the output
-if ~isfield(bnd, 'unit') && hasdata
+if ~isfield(bnd, 'unit') && hasdata && isfield(mri, 'unit')
   for i=1:numel(bnd)
     bnd(i).unit = mri.unit;
   end

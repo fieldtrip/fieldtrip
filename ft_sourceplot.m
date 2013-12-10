@@ -201,7 +201,7 @@ if isfield(cfg, 'coordsys') && ~isfield(data, 'coordsys')
 end
 
 % check if the input data is valid for this function
-data     = ft_checkdata(data, 'datatype', {'volume' 'source'}, 'feedback', 'yes', 'hasunits', 'yes');
+data     = ft_checkdata(data, 'datatype', {'volume' 'source'}, 'feedback', 'yes', 'hasunit', 'yes');
 
 % determine the type of data
 issource = ft_datatype(data, 'source');
