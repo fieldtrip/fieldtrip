@@ -44,8 +44,11 @@ function label = ft_senslabel(type, varargin)
 %  'yokogawa160_planar'
 %  'yokogawa440'
 %  'yokogawa440_planar'
+%
+% It is also possible to specify 
 %  'eeg'
 %  'electrode'
+% although for these an empty set of labels (i.e. {}) will be returned.
 %
 % See also FT_SENSTYPE, FT_CHANNELSELECTION
 
@@ -80,7 +83,6 @@ end
 
 % get the optional input arguments
 output  = ft_getopt(varargin, 'output', 'normal'); % 'normal' or 'planarcombined'
-
 
 if ~exist(type, 'var')
   error('the requested sensor type "%s" is not supported', type);
