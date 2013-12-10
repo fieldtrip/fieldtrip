@@ -90,7 +90,8 @@ hasdata = exist('mri', 'var');
 cfg = ft_checkconfig(cfg, 'forbidden', {'numcompartments', 'outputfile', 'sourceunits', 'mriunits'});
 
 % get the options
-cfg.downsample = ft_getopt(cfg, 'downsample', 1); % default is no downsampling
+cfg.downsample  = ft_getopt(cfg, 'downsample', 1); % default is no downsampling
+cfg.numvertices = ft_getopt(cfg, 'numvertices');   % no default
 
 % This was changed on 3 December 2013, this backward compatibility can be removed in 6 months from now.
 if isfield(cfg, 'interactive')
