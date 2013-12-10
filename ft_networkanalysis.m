@@ -166,7 +166,7 @@ switch cfg.method
     elseif strcmp(data.dimord(1:4), 'chan')
       dimord = data.dimord(6:end);
     end
-  case {'distance' 'edge_betweennness'}
+  case {'distance' 'edge_betweenness'}
     % 1 value per node pair
     outsiz = [size(input) 1];
     output = zeros(outsiz);
