@@ -628,7 +628,7 @@ switch headerformat
     
   case 'eeglab_erp'
     hdr = read_erplabheader(filename);
-
+    
   case 'emotiv_mat'
     % This is a MATLAB *.mat file that is created using the Emotiv MATLAB
     % example code. It contains a 25xNsamples matrix and some other stuff.
@@ -637,11 +637,11 @@ switch headerformat
     hdr.nChans      = 25;
     hdr.nSamples    = size(orig.data_eeg,1);
     hdr.nSamplesPre = 0;
-    hdr.nTrials     = 1;        
+    hdr.nTrials     = 1;
     hdr.label       = {'ED_COUNTER','ED_INTERPOLATED','ED_RAW_CQ','ED_AF3','ED_F7','ED_F3','ED_FC5','ED_T7','ED_P7','ED_O1','ED_O2','ED_P8','ED_T8','ED_FC6','ED_F4','ED_F8','ED_AF4','ED_GYROX','ED_GYROY','ED_TIMESTAMP','ED_ES_TIMESTAMP','ED_FUNC_ID','ED_FUNC_VALUE','ED_MARKER','ED_SYNC_SIGNAL'};
     % store the complete information in hdr.orig
     % ft_read_data and ft_read_event will get it from there
-    hdr.orig        = orig; 
+    hdr.orig        = orig;
     
   case 'eyelink_asc'
     asc = read_eyelink_asc(filename);
@@ -1033,11 +1033,29 @@ switch headerformat
     if isfield(orig, 'neuromag_fif')
       if isempty(cachechunk)
         % this only needs to be decoded once
-        cachechunk = decode_fif(orig.neuromag_fif);
+        cachechunk = decode_fif(orig);
       end
-      % copy the gradiometer details
-      hdr.grad = cachechunk.grad;
-      hdr.orig = cachechunk.orig;
+      
+      % convert to fieldtrip format header
+      hdr.label       = cachechunk.ch_names(:);
+      hdr.nChans      = cachechunk.nchan;
+      hdr.Fs          = cachechunk.sfreq;
+      
+      % add a gradiometer structure for forward and inverse modelling
+      try
+        [grad, elec] = mne2grad(cachechunk, 1); % 1: 'coordsys' = 'dewar'
+        if ~isempty(grad)
+          hdr.grad = grad;
+        end
+        if ~isempty(elec)
+          hdr.elec = elec;
+        end
+      catch
+        disp(lasterr);
+      end
+      
+      % store the original details
+      hdr.orig = cachechunk;
     end
     
     % add the contents of attached RES4 chunk after decoding to Matlab structure
