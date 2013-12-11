@@ -234,8 +234,17 @@ if strcmp(cfg.planarmethod, 'sourceproject')
 else
   
   sens = ft_convert_units(data.grad);
-  if any(isnan(sens.chanpos(:)))
-    error('The channel positions contain NaNs; this prohibits correct behavior of the function. Please replace the input channel definition with one that contains valid channel positions');
+  chanposnans = any(isnan(sens.chanpos(:)));
+  if chanposnans
+    if isfield(sens, 'chanposorg')
+      % temporarily replace chanpos and chanorig with the original values
+      sens.chanpos = sens.chanposorg;
+      sens.chanori = sens.chanoriorg;
+      sens.label = sens.labelorg;
+      sens = rmfield(sens, {'chanposorg', 'chanoriorg', 'labelorg'});
+    else
+      error('The channel positions contain NaNs; this prohibits correct behavior of the function. Please replace the input channel definition with one that contains valid channel positions');
+    end
   end
   cfg.channel = ft_channelselection(cfg.channel, sens.label);
   cfg.channel = ft_channelselection(cfg.channel, data.label);
@@ -252,7 +261,7 @@ else
   fprintf('average number of neighbours is %.2f\n', mean(sum(cfg.neighbsel)));
   
   Ngrad = length(sens.label);
-  cfg.distance = zeros(Ngrad,Ngrad);
+  distance = zeros(Ngrad,Ngrad);
   
   for i=1:size(cfg.neighbsel,1)
     j=find(cfg.neighbsel(i, :));
@@ -277,11 +286,11 @@ else
   
   switch cfg.planarmethod
     case 'sincos'
-      planarmontage = megplanar_sincos(cfg, data.grad);
+      planarmontage = megplanar_sincos(cfg, sens);
     case 'orig'
-      planarmontage = megplanar_orig(cfg, data.grad);
+      planarmontage = megplanar_orig(cfg, sens);
     case 'fitplane'
-      planarmontage = megplanar_fitplane(cfg, data.grad);
+      planarmontage = megplanar_fitplane(cfg, sens);
     otherwise
       fun = ['megplanar_' cfg.planarmethod];
       if ~exist(fun, 'file')
@@ -294,12 +303,12 @@ else
   interp = ft_apply_montage(data, planarmontage, 'keepunused', 'yes', 'feedback', cfg.feedback);
   
   % also apply the linear transformation to the gradiometer definition
-  interp.grad = ft_apply_montage(data.grad, planarmontage, 'balancename', 'planar', 'keepunused', 'yes');
+  interp.grad = ft_apply_montage(sens, planarmontage, 'balancename', 'planar', 'keepunused', 'yes');
   
   % ensure there is a type string describing the gradiometer definition
   if ~isfield(interp.grad, 'type')
     % put the original gradiometer type in (will get _planar appended)
-    interp.grad.type = ft_senstype(data.grad);
+    interp.grad.type = ft_senstype(sens);
   end
   interp.grad.type = [interp.grad.type '_planar'];
   
@@ -310,8 +319,18 @@ else
       tmplabel{k} = tmplabel{k}(1:end-3);
     end
   end
-  [ix,iy] = match_str(tmplabel, data.grad.label);
-  interp.grad.chanpos(ix,:) = data.grad.chanpos(iy,:);
+  [ix,iy] = match_str(tmplabel, sens.label);
+  interp.grad.chanpos(ix,:) = sens.chanpos(iy,:);
+  
+  % if the original chanpos contained nans, make sure to put nans in the
+  % updated one as well, and move the updated chanpos values to chanposorg
+  if chanposnans
+    interp.grad.chanposorg = sens.chanpos;
+    interp.grad.chanoriorg = sens.chanori;
+    interp.grad.labelorg = sens.label;
+    interp.grad.chanpos = nan(size(interp.grad.chanpos));
+    interp.grad.chanori = nan(size(interp.grad.chanori));
+  end
 end
 
 if istlck

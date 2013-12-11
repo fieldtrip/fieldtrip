@@ -164,6 +164,10 @@ if istrue(feedback)
   fprintf('converting units from ''%s'' to ''%s''\n', unit, target)
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% apply the scaling factor
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % volume conductor model
 if isfield(obj, 'r'), obj.r = scale * obj.r; end
 if isfield(obj, 'o'), obj.o = scale * obj.o; end
@@ -179,10 +183,11 @@ if isfield(obj, 'pnt2'), obj.pnt2 = scale * obj.pnt2; end
 if isfield(obj, 'prj'),  obj.prj  = scale * obj.prj;  end
 
 % gradiometer array, electrode array, head shape or dipole grid
-if isfield(obj, 'pnt'),     obj.pnt     = scale * obj.pnt; end
-if isfield(obj, 'chanpos'), obj.chanpos = scale * obj.chanpos; end
-if isfield(obj, 'coilpos'), obj.coilpos = scale * obj.coilpos; end
-if isfield(obj, 'elecpos'), obj.elecpos = scale * obj.elecpos; end
+if isfield(obj, 'pnt'),        obj.pnt     = scale * obj.pnt; end
+if isfield(obj, 'chanpos'),    obj.chanpos = scale * obj.chanpos; end
+if isfield(obj, 'chanposorg'), obj.chanposorg = scale * obj.chanposorg; end
+if isfield(obj, 'coilpos'),    obj.coilpos = scale * obj.coilpos; end
+if isfield(obj, 'elecpos'),    obj.elecpos = scale * obj.elecpos; end
 
 % gradiometer array that combines multiple coils in one channel
 if isfield(obj, 'tra') && isfield(obj, 'chanunit')

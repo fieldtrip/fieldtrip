@@ -64,7 +64,7 @@ if allowscaling
   % FIXME insert check for nonuniform scaling, should give an error
 end 
 
-tfields   = {'pos' 'pnt' 'o' 'chanpos' 'coilpos' 'elecpos', 'nas', 'lpa', 'rpa', 'zpoint'}; % apply rotation plus translation
+tfields   = {'pos' 'pnt' 'o' 'chanpos' 'chanposorg' 'coilpos' 'elecpos', 'nas', 'lpa', 'rpa', 'zpoint'}; % apply rotation plus translation
 rfields   = {'ori' 'nrm' 'coilori'}; % only apply rotation
 mfields   = {'transform'};           % plain matrix multiplication
 recfields = {'fid' 'bnd' 'orig'};    % recurse into these fields

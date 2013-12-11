@@ -14,6 +14,13 @@ function [sens] = ft_datatype_sens(sens, varargin)
 %    sens.coilori  = Nx3 matrix with coil orientations
 %    sens.balance  = structure containing info about the balancing, See FT_APPLY_MONTAGE
 %
+% and optionally
+%    sens.chanposorg = Mx3 matrix with original channel positions (in case
+%                      sens.chanpos has been updated to contain NaNs, e.g.
+%                      after ft_componentanalysis)
+%    sens.chanoriorg = Mx3 matrix with original channel orientations
+%    sens.labelorg   = Mx1 cell-array with original channel labels
+%
 % The structure for EEG or ECoG channels contains
 %    sens.label    = Mx1 cell-array with channel labels
 %    sens.chanpos  = Mx3 matrix with channel positions
