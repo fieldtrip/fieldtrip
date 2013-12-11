@@ -98,7 +98,7 @@ for c = 1:m
   
   for f_ind = 2:N
     Sarr(:,:,c,       f_ind) = Stmp(:,:,f_ind);
-    Sarr(:,:,c,(N2+1)-f_ind) = Stmp(:,:,f_ind).';
+    Sarr(:,:,c,(N2+2)-f_ind) = Stmp(:,:,f_ind).';
   end
 end
 
