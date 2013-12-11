@@ -45,7 +45,7 @@ if isfield(orig, 'neuromag_fif')
   % reading functions to decode the blob
   filename = tempname;
   
-  % wtite the binary blob to disk, byte-by-byte to avoid any swapping between little and big-endian content
+  % write the binary blob to disk, byte-by-byte to avoid any swapping between little and big-endian content
   F = fopen(filename, 'w');
   fwrite(F, orig.neuromag_fif, 'uint8');
   fclose(F);
@@ -59,19 +59,17 @@ if isfield(orig, 'neuromag_fif')
   delete(filename);
 end
 
+% typically, at the end of acquisition, the isotrak and hpiresult information
+% is stored in the neuromag fiff container which can then (offline) be read by
+% fiff_read_meas_info. However, for the purpose of head position monitoring
+% (see Stolk et al., Neuroimage 2013) during acquisition, this crucial
+% information requires to be accessible online. read_isotrak and read_hpiresult
+% can extract information from the additionally chunked (neuromag2ft) files
 if isfield(orig, 'isotrak')
-  % typically, at the end of acquisition, this information is stored in the
-  % neuromag fiff container which can then (offline) be read by
-  % fiff_read_meas_info. However, for the purpose of head position monitoring
-  % (see Stolk et al., Neuroimage 2013) during acquisition, this crucial
-  % isotrak information requires to be accessible online. This function allows
-  % extracting the digitized coil position information from the isotrak file.
   [info.dig] = read_isotrak(orig.isotrak);
 end
 
 if isfield(orig, 'hpiresult')
-  % this function allows extracting the calculated transformation matrix from
-  % the hpiresult file.
   [info.dev_head_t, info.ctf_head_t] = read_hpiresult(orig.hpiresult);
 end
 
