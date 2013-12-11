@@ -59,7 +59,7 @@ stopwatch = tic;
 % check if torque or sge is present and running
 if ~isempty(getenv('SGE_ROOT'))
   defaultbackend = 'sge';
-elseif ~isempty(getenv('TORQUEHOME'))
+elseif ~isempty(getenv('TORQUEHOME')) || ~isempty(getenv('PBS_VERSION'))
   defaultbackend = 'torque';
 elseif ~isempty(getenv('CONDOR_ARCH'))
   % this has not been tested and I am not 100% sure that this is the right variable to probe
