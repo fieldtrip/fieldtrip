@@ -65,11 +65,11 @@ end
 % (see Stolk et al., Neuroimage 2013) during acquisition, this crucial
 % information requires to be accessible online. read_isotrak and read_hpiresult
 % can extract information from the additionally chunked (neuromag2ft) files
-if isfield(orig, 'isotrak')
+if isfield(orig, 'neuromag_isotrak')
   [info.dig] = read_isotrak(orig.isotrak);
 end
 
-if isfield(orig, 'hpiresult')
+if isfield(orig, 'neuromag_hpiresult')
   [info.dev_head_t, info.ctf_head_t] = read_hpiresult(orig.hpiresult);
 end
 
@@ -80,7 +80,7 @@ function [dig] = read_isotrak(filename)
 
 % open the isotrak file (big endian)
 % (typically stored in meas_info dir during acquisition, no fif extension required)
-[fid, tree, dir] = fiff_open(filename);
+[fid, tree] = fiff_open(filename);
 
 % locate the Polhemus data
 isotrak = fiff_dir_tree_find(tree,FIFF.FIFFB_ISOTRAK);
@@ -124,7 +124,7 @@ function [dev_head_t, ctf_head_t] = read_hpiresult(filename)
 
 % open the hpiresult file (big endian)
 % (typically stored in meas_info dir during acquisition, no fif extension required)
-[fid, tree, dir] = fiff_open(filename);
+[fid, tree] = fiff_open(filename);
 
 % locate the transformation matrix
 dev_head_t=[];
