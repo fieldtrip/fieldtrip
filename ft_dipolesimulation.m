@@ -29,6 +29,8 @@ function [simulated] = ft_dipolesimulation(cfg)
 % Optional input arguments are
 %   cfg.channel    = Nx1 cell-array with selection of channels (default = 'all'),
 %                    see FT_CHANNELSELECTION for details
+%   cfg.dipoleunit = units for dipole amplitude (default nA*m)
+%   cfg.chanunit   = units for the channel data
 %
 % The volume conduction model of the head should be specified as
 %   cfg.vol           = structure with volume conduction model, see FT_PREPARE_HEADMODEL
@@ -86,6 +88,8 @@ if ~isfield(cfg, 'relnoise'),   cfg.relnoise = 0;         end
 if ~isfield(cfg, 'absnoise'),   cfg.absnoise = 0;         end
 if ~isfield(cfg, 'feedback'),   cfg.feedback = 'text';    end
 if ~isfield(cfg, 'channel'),    cfg.channel = 'all';      end
+if ~isfield(cfg, 'dipoleunit'), cfg.dipoleunit = 'nA*m';  end
+if ~isfield(cfg, 'chanunit'),   cfg.chanunit = {};        end
 
 cfg = ft_checkconfig(cfg);
 
@@ -185,7 +189,11 @@ simulated.time   = {};
 ft_progress('init', cfg.feedback, 'computing simulated data');
 for trial=1:Ntrials
   ft_progress(trial/Ntrials, 'computing simulated data for trial %d\n', trial);
-  lf = ft_compute_leadfield(dippos{trial}, sens, vol);
+  if numel(cfg.chanunit) == numel(cfg.channel)
+      lf = ft_compute_leadfield(dippos{trial}, sens, vol, 'dipoleunit', cfg.dipoleunit, 'chanunit', cfg.chanunit);
+  else
+      lf = ft_compute_leadfield(dippos{trial}, sens, vol);
+  end
   nsamples = size(dipsignal{trial},2);
   nchannels = size(lf,1);
   simulated.trial{trial} = zeros(nchannels,nsamples);
