@@ -66,11 +66,11 @@ end
 % information requires to be accessible online. read_isotrak and read_hpiresult
 % can extract information from the additionally chunked (neuromag2ft) files
 if isfield(orig, 'neuromag_isotrak')
-  [info.dig] = read_isotrak(orig.isotrak);
+  [info.dig] = read_isotrak(orig.neuromag_isotrak);
 end
 
 if isfield(orig, 'neuromag_hpiresult')
-  [info.dev_head_t, info.ctf_head_t] = read_hpiresult(orig.hpiresult);
+  [info.dev_head_t, info.ctf_head_t] = read_hpiresult(orig.neuromag_hpiresult);
 end
 
 
