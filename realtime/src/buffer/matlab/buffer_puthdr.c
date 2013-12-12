@@ -151,7 +151,6 @@ int buffer_puthdr(int server, mxArray * plhs[], const mxArray * prhs[])
     } else {
       chunk_def.size = SIZE_NIFTI_1;
       chunk_def.type = FT_CHUNK_NIFTI1;
-
       request_def.bufsize = ft_mx_append(&request.buf, request_def.bufsize, &chunk_def, sizeof(chunk_def));
       request_def.bufsize = ft_mx_append(&request.buf, request_def.bufsize, mxGetData(field), chunk_def.size);
     }
@@ -165,7 +164,6 @@ int buffer_puthdr(int server, mxArray * plhs[], const mxArray * prhs[])
     } else {
       chunk_def.size = mxGetNumberOfElements(field);
       chunk_def.type = FT_CHUNK_SIEMENS_AP;
-
       request_def.bufsize = ft_mx_append(&request.buf, request_def.bufsize, &chunk_def, sizeof(chunk_def));
       request_def.bufsize = ft_mx_append(&request.buf, request_def.bufsize, mxGetData(field), chunk_def.size);
     }
@@ -179,21 +177,45 @@ int buffer_puthdr(int server, mxArray * plhs[], const mxArray * prhs[])
     } else {
       chunk_def.size = mxGetNumberOfElements(field);
       chunk_def.type = FT_CHUNK_CTF_RES4;
-
       request_def.bufsize = ft_mx_append(&request.buf, request_def.bufsize, &chunk_def, sizeof(chunk_def));
       request_def.bufsize = ft_mx_append(&request.buf, request_def.bufsize, mxGetData(field), chunk_def.size);
     }
   }	
 
-  fieldnumber = mxGetFieldNumber(prhs[0], "neuromag_fif");
+  fieldnumber = mxGetFieldNumber(prhs[0], "neuromag_header");
   if (fieldnumber>=0) {
     field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
     if (!mxIsUint8(field)) {
-      mexWarnMsgTxt("invalid data type for field 'neuromag_fif' -- ignoring");
+      mexWarnMsgTxt("invalid data type for field 'neuromag_header' -- ignoring");
     } else {
       chunk_def.size = mxGetNumberOfElements(field);
-      chunk_def.type = FT_CHUNK_NEUROMAG_FIF;
+      chunk_def.type = FT_CHUNK_NEUROMAG_HEADER;
+      request_def.bufsize = ft_mx_append(&request.buf, request_def.bufsize, &chunk_def, sizeof(chunk_def));
+      request_def.bufsize = ft_mx_append(&request.buf, request_def.bufsize, mxGetData(field), chunk_def.size);
+    }
+  }	
 
+  fieldnumber = mxGetFieldNumber(prhs[0], "neuromag_isotrak");
+  if (fieldnumber>=0) {
+    field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
+    if (!mxIsUint8(field)) {
+      mexWarnMsgTxt("invalid data type for field 'neuromag_isotrak' -- ignoring");
+    } else {
+      chunk_def.size = mxGetNumberOfElements(field);
+      chunk_def.type = FT_CHUNK_NEUROMAG_ISOTRAK;
+      request_def.bufsize = ft_mx_append(&request.buf, request_def.bufsize, &chunk_def, sizeof(chunk_def));
+      request_def.bufsize = ft_mx_append(&request.buf, request_def.bufsize, mxGetData(field), chunk_def.size);
+    }
+  }	
+
+  fieldnumber = mxGetFieldNumber(prhs[0], "neuromag_hpiresult");
+  if (fieldnumber>=0) {
+    field = mxGetFieldByNumber(prhs[0], 0, fieldnumber);
+    if (!mxIsUint8(field)) {
+      mexWarnMsgTxt("invalid data type for field 'neuromag_hpiresult' -- ignoring");
+    } else {
+      chunk_def.size = mxGetNumberOfElements(field);
+      chunk_def.type = FT_CHUNK_NEUROMAG_HPIRESULT;
       request_def.bufsize = ft_mx_append(&request.buf, request_def.bufsize, &chunk_def, sizeof(chunk_def));
       request_def.bufsize = ft_mx_append(&request.buf, request_def.bufsize, mxGetData(field), chunk_def.size);
     }

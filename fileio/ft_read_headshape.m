@@ -197,11 +197,6 @@ if iscell(filename)
   
 else
   
-  % test whether the file exists (unless it's streamed in realtime)
-  if ~exist(filename) && ~strcmp(fileformat,'fcdc_buffer')
-    error('file ''%s'' does not exist', filename);
-  end
-  
   % start with an empty structure
   shape           = [];
   shape.pnt       = [];

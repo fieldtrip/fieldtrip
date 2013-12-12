@@ -29,7 +29,7 @@ function [info] = decode_fif(orig)
 % check that the required low-level toolbox is available
 ft_hastoolbox('mne', 1);
 
-global FIFF;
+global FIFF
 if isempty(FIFF)
   FIFF = fiff_define_constants();
 end
@@ -87,6 +87,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [info, meas] = read_header(filename)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % open and read the file as little endian
 [fid, tree] = fiff_open_le(filename); % open as little endian
 [info, meas] = fiff_read_meas_info(fid, tree);
@@ -96,6 +97,7 @@ fclose(fid);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [dig] = read_isotrak(filename)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+global FIFF
 
 % open the isotrak file (big endian)
 % (typically stored in meas_info dir during acquisition, no fif extension required)
@@ -140,6 +142,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [dev_head_t, ctf_head_t] = read_hpiresult(filename)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+global FIFF
 
 % open the hpiresult file (big endian)
 % (typically stored in meas_info dir during acquisition, no fif extension required)
