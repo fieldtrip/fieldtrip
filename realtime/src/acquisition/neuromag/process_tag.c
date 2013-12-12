@@ -35,7 +35,9 @@ static int collect_data       = 1;    /* Really use the data? */
 static int collect_headerfile = 1;    /* Should tags be added to the headerfile? */
 static FILE *headerfile       = NULL; /* see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1792, this is a temporary file that is copied to a chunk in the buffer */
 
-#define HEADERFILE "/tmp/neuromag2ft.fif"
+#define HEADERFILE    "/tmp/neuromag2ft.fif"
+#define ISOTRAKFILE   "/neuro/dacq/meas_info/isotrak"
+#define HPIRESULTFILE "/neuro/dacq/meas_info/hpi_result"
 
 #ifdef FOO
 static void set_data_filter(int state)
@@ -103,20 +105,73 @@ static void catch_data(fiffTag tag,     /* Our data tag */
   }
 }
 
+/* -------------------------------------------
+ * Read the header file and append it as chunk
+ */
+
+void append_file_as_chunk(header_t *header, const char *filename, const int chunktype)
+{
+  FILE *fp          = NULL;
+  char *filebuf     = NULL;
+  int filelen       = 0;
+  ft_chunk_t *chunk = NULL;
+
+  /* if all went well, there should be some files with additional header information */
+  fp = fopen(filename, "rb");
+
+  if (fp == NULL) {
+		  /* do not send this as chunk if the file cannot be opened */
+		  dacq_log("Failed to open %s\n", filename);
+  }
+  else {
+		  /* Get the number of bytes */
+		  fseek(fp, 0L, SEEK_END);
+		  filelen = ftell(fp);
+		  /* Reset the file position indicator to the beginning of the file */
+		  fseek(fp, 0L, SEEK_SET);  
+
+		  /* grab sufficient memory to hold the file content */
+		  filebuf = (char*)malloc(filelen);
+		  chunk = malloc(sizeof(ft_chunkdef_t) + filelen * sizeof(char));
+
+		  if ((filebuf==NULL) || (chunk==NULL)) {
+				  /* memory error */
+				  dacq_log("Failed to allocate %d bytes to hold the file chunk information\n", filelen);
+          FREE(filebuf); // this will only free it if not NULL
+          FREE(chunk);   // this will only free it if not NULL
+				  fclose(fp);
+		  }
+		  else {
+				  /* copy the content of the file into memory */
+				  fread(filebuf, sizeof(char), filelen, fp);
+				  fclose(fp);
+
+				  // Construct the fif headerfile chunk
+				  chunk->def.type = chunktype;
+				  chunk->def.size = filelen;
+				  memcpy(chunk->data, filebuf, filelen);  // I don't like this kind of assumptions on how structures are laid out in memory
+				  FREE(filebuf);
+
+				  // Append the fif headerfile chunk
+				  header->def->bufsize = append(&header->buf, header->def->bufsize, chunk, sizeof(ft_chunkdef_t) + filelen * sizeof(char));
+				  dacq_log("Appended %d bytes with information from %s\n", filelen, filename);
+				  FREE(chunk);
+		  }
+  }
+}
 
 /* -------------------------------------
- * Send the file header to the FT buffer
+ * Send the realtime stream header to the FT buffer
  */
 
 int send_header_to_FT()
 {
-  int c, namelen = 0, status = 0, fiflen = 0;
+  int c, namelen = 0, status = 0;
   char *namevec = NULL, *name;
   message_t     *request  = NULL;
   message_t     *response = NULL;
   header_t      *header   = NULL;
   ft_chunk_t    *chunk    = NULL;
-  char          *fifvec   = NULL;
 
   dacq_log("Creating a header: %d channels, sampling rate %g Hz\n", nchan, sfreq);
 
@@ -149,47 +204,10 @@ int send_header_to_FT()
   dacq_log("Appended %d bytes with channel name information\n", namelen);
   FREE(chunk);
 
-  /* if all went well, there should be a fif file with additional header information */
-  headerfile = fopen(HEADERFILE, "rb");
-  if(headerfile == NULL) {
-		  /* ship the remainder if the file cannot be opened */
-		  dacq_log("Failed to open the file with the fif header information\n");
-  }
-  else {
-		  /* Get the number of bytes */
-		  fseek(headerfile, 0L, SEEK_END);
-		  fiflen = ftell(headerfile);
-
-		  /* reset the file position indicator to the beginning of the file */
-			 
-		  fseek(headerfile, 0L, SEEK_SET);  
-
-		  /* grab sufficient memory to hold the file content */
-		  fifvec = (char*)malloc(fiflen);
-
-		  if(fifvec == NULL) {
-				  /* memory error */
-				  dacq_log("Failed to allocate %d bytes to hold the fif header information\n", fiflen);
-				  fclose(headerfile);
-		  }
-		  else {
-				  /* copy the content of the file into memory */
-				  fread(fifvec, sizeof(char), fiflen, headerfile);
-				  fclose(headerfile);
-
-				  // Construct the fif headerfile chunk
-				  chunk = malloc(sizeof(ft_chunkdef_t) + fiflen * sizeof(char));
-				  chunk->def.type = FT_CHUNK_NEUROMAG_FIF;
-				  chunk->def.size = fiflen;
-				  memcpy(chunk->data, fifvec, fiflen);  // I don't like this kind of assumptions on how structures are laid out in memory
-				  FREE(fifvec);
-
-				  // Append the fif headerfile chunk
-				  header->def->bufsize = append(&header->buf, header->def->bufsize, chunk, sizeof(ft_chunkdef_t) + fiflen * sizeof(char));
-				  dacq_log("Appended %d bytes with fif header information\n", fiflen);
-				  FREE(chunk);
-		  }
-  }
+  // Append the chunks with the additional files
+  append_file_as_chunk(header, HEADERFILE,    FT_CHUNK_NEUROMAG_HEADER);
+  append_file_as_chunk(header, ISOTRAKFILE,   FT_CHUNK_NEUROMAG_ISOTRAK);
+  append_file_as_chunk(header, HPIRESULTFILE, FT_CHUNK_NEUROMAG_HPIRESULT);
 
   // Construct the message with the header
   request      = malloc(sizeof(message_t));

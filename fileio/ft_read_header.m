@@ -1030,7 +1030,7 @@ switch headerformat
     hdr.orig        = []; % this will contain the chunks (if present)
     
     % add the contents of attached FIF_header chunk after decoding to Matlab structure
-    if isfield(orig, 'neuromag_fif')
+    if isfield(orig, 'neuromag_header')
       if isempty(cachechunk)
         % this only needs to be decoded once
         cachechunk = decode_fif(orig);

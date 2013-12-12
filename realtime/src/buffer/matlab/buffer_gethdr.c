@@ -106,8 +106,26 @@ void addChunksToMatrix(mxArray *S, const char *buf, int bufsize, int numChannels
         mxSetFieldByNumber(S, 0, field, A);
         break;
 
-      case FT_CHUNK_NEUROMAG_FIF:
-        field = addIfNew(S, "neuromag_fif");
+      case FT_CHUNK_NEUROMAG_HEADER:
+        field = addIfNew(S, "neuromag_header");
+        if (field < 0) break;
+        /* pass on as uint8, should be decoded on MATLAB level */
+        A  = mxCreateNumericMatrix(1, chunk->def.size, mxUINT8_CLASS, mxREAL);
+        memcpy(mxGetData(A), chunk->data, chunk->def.size);
+        mxSetFieldByNumber(S, 0, field, A);
+        break;
+
+      case FT_CHUNK_NEUROMAG_ISOTRAK:
+        field = addIfNew(S, "neuromag_isotrak");
+        if (field < 0) break;
+        /* pass on as uint8, should be decoded on MATLAB level */
+        A  = mxCreateNumericMatrix(1, chunk->def.size, mxUINT8_CLASS, mxREAL);
+        memcpy(mxGetData(A), chunk->data, chunk->def.size);
+        mxSetFieldByNumber(S, 0, field, A);
+        break;
+
+      case FT_CHUNK_NEUROMAG_HPIRESULT:
+        field = addIfNew(S, "neuromag_hpiresult");
         if (field < 0) break;
         /* pass on as uint8, should be decoded on MATLAB level */
         A  = mxCreateNumericMatrix(1, chunk->def.size, mxUINT8_CLASS, mxREAL);

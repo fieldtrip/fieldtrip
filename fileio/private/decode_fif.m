@@ -34,44 +34,63 @@ if isempty(FIFF)
   FIFF = fiff_define_constants();
 end
 
-if isfield(orig, 'neuromag_fif')
-  % the binary blob was created on the little-endian Intel Linux acquisition
+if isfield(orig, 'neuromag_header')
+  % The binary blob was created on the little-endian Intel Linux acquisition
   % computer, whereas the default for fiff files is that they are stored in
   % big-endian byte order. MATLAB is able to swap the bytes on the fly by specifying
   % 'le" or "be" to fopen. The normal MNE fiff_open function assumes that it is big
   % endian, hence here we have to open it as little endian.
   
-  % decode the fif chunck content, first write the binary blob to disk, then use the standard
-  % reading functions to decode the blob
   filename = tempname;
-  
   % write the binary blob to disk, byte-by-byte to avoid any swapping between little and big-endian content
   F = fopen(filename, 'w');
-  fwrite(F, orig.neuromag_fif, 'uint8');
+  fwrite(F, orig.neuromag_header, 'uint8');
   fclose(F);
-  
-  % open and read the file as little endian
-  [fid, tree] = fiff_open_le(filename); % open as little endian
-  [info, meas] = fiff_read_meas_info(fid, tree);
-  fclose(fid);
-  
+  % read the content of the file using the standard reading functions
+  [info, meas] = read_header(filename);
   % clean up the temporary file
   delete(filename);
 end
 
-% typically, at the end of acquisition, the isotrak and hpiresult information
+% Typically, at the end of acquisition, the isotrak and hpiresult information
 % is stored in the neuromag fiff container which can then (offline) be read by
 % fiff_read_meas_info. However, for the purpose of head position monitoring
 % (see Stolk et al., Neuroimage 2013) during acquisition, this crucial
 % information requires to be accessible online. read_isotrak and read_hpiresult
-% can extract information from the additionally chunked (neuromag2ft) files
+% can extract information from the additionally chunked (neuromag2ft) files.
+
 if isfield(orig, 'neuromag_isotrak')
-  [info.dig] = read_isotrak(orig.neuromag_isotrak);
+  filename = tempname;
+  % write the binary blob to disk, byte-by-byte to avoid any swapping between little and big-endian content
+  F = fopen(filename, 'w');
+  fwrite(F, orig.neuromag_isotrak, 'uint8');
+  fclose(F);
+  % read the content of the file using the standard reading functions
+  [info.dig] = read_isotrak(filename);
+  % clean up the temporary file
+  delete(filename);
 end
 
 if isfield(orig, 'neuromag_hpiresult')
-  [info.dev_head_t, info.ctf_head_t] = read_hpiresult(orig.neuromag_hpiresult);
+  filename = tempname;
+  % write the binary blob to disk, byte-by-byte to avoid any swapping between little and big-endian content
+  F = fopen(filename, 'w');
+  fwrite(F, orig.neuromag_hpiresult, 'uint8');
+  fclose(F);
+  % read the content of the file using the standard reading functions
+  [info.dev_head_t, info.ctf_head_t] = read_hpiresult(filename);
+  % clean up the temporary file
+  delete(filename);
 end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [info, meas] = read_header(filename)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% open and read the file as little endian
+[fid, tree] = fiff_open_le(filename); % open as little endian
+[info, meas] = fiff_read_meas_info(fid, tree);
+fclose(fid);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -88,33 +107,33 @@ isotrak = fiff_dir_tree_find(tree,FIFF.FIFFB_ISOTRAK);
 dig=struct('kind',{},'ident',{},'r',{},'coord_frame',{});
 coord_frame = FIFF.FIFFV_COORD_HEAD;
 if length(isotrak) == 1
-    p = 0;
-    for k = 1:isotrak.nent
-        kind = isotrak.dir(k).kind;
-        pos  = isotrak.dir(k).pos;
-        if kind == FIFF.FIFF_DIG_POINT
-            p = p + 1;
-            tag = fiff_read_tag(fid,pos);
-            dig(p) = tag.data;
-        else
-            if kind == FIFF.FIFF_MNE_COORD_FRAME
-                tag = fiff_read_tag(fid,pos);
-                coord_frame = tag.data;
-            elseif kind == FIFF.FIFF_COORD_TRANS
-                tag = fiff_read_tag(fid,pos);
-                dig_trans = tag.data;
-            end
-        end
+  p = 0;
+  for k = 1:isotrak.nent
+    kind = isotrak.dir(k).kind;
+    pos  = isotrak.dir(k).pos;
+    if kind == FIFF.FIFF_DIG_POINT
+      p = p + 1;
+      tag = fiff_read_tag(fid,pos);
+      dig(p) = tag.data;
+    else
+      if kind == FIFF.FIFF_MNE_COORD_FRAME
+        tag = fiff_read_tag(fid,pos);
+        coord_frame = tag.data;
+      elseif kind == FIFF.FIFF_COORD_TRANS
+        tag = fiff_read_tag(fid,pos);
+        dig_trans = tag.data;
+      end
     end
+  end
 end
 for k = 1:length(dig)
-    dig(k).coord_frame = coord_frame;
+  dig(k).coord_frame = coord_frame;
 end
 
 if exist('dig_trans','var')
-    if (dig_trans.from ~= coord_frame && dig_trans.to ~= coord_frame)
-        clear('dig_trans');
-    end
+  if (dig_trans.from ~= coord_frame && dig_trans.to ~= coord_frame)
+    clear('dig_trans');
+  end
 end
 
 
