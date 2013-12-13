@@ -261,7 +261,7 @@ cfg.slicerange = ft_getopt(cfg, 'slicerange', 'auto');
 % surface
 cfg.downsample     = ft_getopt(cfg, 'downsample',     1);
 cfg.surfdownsample = ft_getopt(cfg, 'surfdownsample', 1);
-cfg.surffile       = ft_getopt(cfg, 'surffile',       'single_subj_T1.mat');% use a triangulation that corresponds with the collin27 anatomical template in MNI coordinates
+cfg.surffile       = ft_getopt(cfg, 'surffile', 'surface_white_both.mat');% use a triangulation that corresponds with the collin27 anatomical template in MNI coordinates
 cfg.surfinflated   = ft_getopt(cfg, 'surfinflated',  []);
 cfg.sphereradius   = ft_getopt(cfg, 'sphereradius',  []);
 cfg.projvec        = ft_getopt(cfg, 'projvec',       1);
