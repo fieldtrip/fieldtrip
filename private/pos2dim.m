@@ -8,7 +8,7 @@ function [dim] = pos2dim(pos)
 %  The output dim is a 3-element vector whichi correspond to the 3D 
 %  volumetric dimensions
 
-% Copyright (C) 2009, Jan-Mathijs Schoffelen
+% Copyright (C) 2009-2013, Jan-Mathijs Schoffelen
 
 if isstruct(pos),
   %the input is a structure
@@ -17,11 +17,14 @@ if isstruct(pos),
   pos    = pos.pos;
 end
 
-%this part depends on the assumption that the list of positions is describing a full 3D volume in 
-%an ordered way which allows for the extraction of a transformation matrix
-%i.e. slice by slice
+% this part depends on the assumption that the list of positions is describing a full 3D volume in 
+% an ordered way which allows for the extraction of a transformation matrix
+% i.e. slice by slice
 npos = size(pos,1);
-dpos = zscore(abs(diff(pos,[],1)));
+tmp  = abs(diff(pos,[],1));
+
+% zscore
+dpos = (tmp-repmat(mean(tmp,1),[size(tmp,1) 1]))./repmat(std(tmp,[],1),[size(tmp,1) 1]);
 
 [tmp, ind] = max(dpos,[],2);
 dim(1)     = find(tmp>1.5,1,'first');
