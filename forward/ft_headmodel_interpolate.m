@@ -191,14 +191,19 @@ if isfield(grid, 'leadfield')
   if ~exist(p, 'dir')
     mkdir(p);
   end
+
+  % these indices only have to be determined once and speed-up the reassignment
+  [ind1, ind2, ind3] = ndgrid(1:vol.dim(1), 1:vol.dim(2), 1:vol.dim(3));
   
   for i=1:nchan
     dat = zeros([vol.dim 3]);
     for j=grid.inside(:)'
-      [i1, i2, i3] = ind2sub(vol.dim, j);
-      dat(i1, i2, i3, 1) = grid.leadfield{j}(i,1);
-      dat(i1, i2, i3, 2) = grid.leadfield{j}(i,2);
-      dat(i1, i2, i3, 3) = grid.leadfield{j}(i,3);
+      % [i1, i2, i3] = ind2sub(vol.dim, j);
+      % ind2sub is slow, simply look them up instead
+      i1 = ind1(j);
+      i2 = ind2(j);
+      i3 = ind3(j);
+      dat(i1, i2, i3, :) = grid.leadfield{j}(i,:);
     end
     
     if istrue(smooth)
@@ -352,3 +357,5 @@ elseif isfield(grid, 'filename')
   save(filename, 'vol');
   
 end
+
+
