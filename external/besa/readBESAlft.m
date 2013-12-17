@@ -33,21 +33,21 @@ function [dim lf] = readBESAlft(filename)
 % Try to open file.
 FileID = fopen(filename, 'rb');
 if(FileID < 0)
-	printf('Error opening file.\n');
+	fprintf('Error opening file.\n');
 	return
 end
 
 % Read version number (int32)
 [VersionNumber NrReadElements] = fread(FileID, 1, 'int32');
 if(NrReadElements ~= 1)
-	printf('Could not read number of elements.\n');
+	fprintf('Could not read number of elements.\n');
 	return
 end
 
 % Check version number
 ExpectedVersionNumber = 1;
 if(VersionNumber ~= ExpectedVersionNumber)
-	printf('Wrong version number. Expected: %d, read %d.\n', ExpectedVersionNumber, ...
+	fprintf('Wrong version number. Expected: %d, read %d.\n', ExpectedVersionNumber, ...
 		VersionNumber);
 	return
 end
@@ -55,21 +55,21 @@ end
 % Read number of sensors (int32)
 [NumberSensors NrReadElements] = fread(FileID, 1, 'int32');
 if(NrReadElements ~= 1)
-	printf('Could not read number of sensors.\n');
+	fprintf('Could not read number of sensors.\n');
 	return
 end
 
 % Read number of source space nodes (int32)
 [NumberSourceSpaceNodes NrReadElements] = fread(FileID, 1, 'int32');
 if(NrReadElements ~= 1)
-	printf('Could not read number of source space nodes.\n');
+	fprintf('Could not read number of source space nodes.\n');
 	return
 end
 
 % Read number of source directions per node (int32)
 [NumberDirections NrReadElements] = fread(FileID, 1, 'int32');
 if(NrReadElements ~= 1)
-	printf('Could not read number of source directions.\n');
+	fprintf('Could not read number of source directions.\n');
 	return
 end
 
@@ -77,7 +77,7 @@ end
 NumberColumns = NumberDirections * NumberSourceSpaceNodes;
 [MaxVals NrReadElements] = fread(FileID, NumberColumns, 'float32');
 if(NrReadElements ~= NumberColumns)
-	printf('Could not read maximum leadfield values from file.\n');
+	fprintf('Could not read maximum leadfield values from file.\n');
 	return
 end
 
@@ -85,7 +85,7 @@ end
 NumberLFValues = NumberColumns * NumberSensors;
 [CompactLFVals NrReadElements] = fread(FileID, NumberLFValues, 'int16');
 if(NrReadElements ~= NumberLFValues)
-	printf('Could not read leadfield values from file.\n');
+	fprintf('Could not read leadfield values from file.\n');
 	return
 end
 
