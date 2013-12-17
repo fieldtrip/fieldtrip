@@ -745,7 +745,11 @@ elseif exist(fullfile(p, [f '.dat']), 'file') && (exist(fullfile(p, [f '.gen']),
   type = 'besa_sb';
   manufacturer = 'BESA';
   content = 'simple binary channel data with a separate generic ascii header';
-  
+elseif filetype_check_extension(filename, '.sfh') && filetype_check_header(filename, 'NrOfPoints')
+  type = 'besa_sfh';
+  manufacturer = 'BESA';
+  content = 'electrode and fiducial information';
+    
   % known Dataq file formats
 elseif filetype_check_extension(upper(filename), '.WDQ')
   type         = 'dataq_wdq';
