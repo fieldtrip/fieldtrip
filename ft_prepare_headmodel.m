@@ -18,6 +18,7 @@ function [vol, cfg] = ft_prepare_headmodel(cfg, data)
 %   vol = ft_prepare_headmodel(cfg, mesh) with the output of FT_PREPARE_MESH or FT_READ_HEADSHAPE
 %   vol = ft_prepare_headmodel(cfg, seg)  with the output of FT_VOLUMESEGMENT
 %   vol = ft_prepare_headmodel(cfg, elec) with the output of FT_READ_SENS
+%   vol = ft_prepare_headmodel(cfg, grid) with the output of FT_PREPARE_LEADFIELD
 %
 % In general the input to this function is a geometrical description of the
 % shape of the head and a description of the electrical conductivity. The
@@ -26,14 +27,14 @@ function [vol, cfg] = ft_prepare_headmodel(cfg, data)
 % a segmented anatomical MRI that was obtained from FT_VOLUMESEGMENT.
 %
 % The cfg argument is a structure that can contain:
-%   cfg.method            string that specifies the forward solution, see below
-%   cfg.conductivity      a number or a vector containing the conductivities of the compartments
-%   cfg.hdmfile           name of the file containing the headmodel, see FT_READ_VOL
-%   cfg.tissue            a string or integer, to be used in combination with a 'seg' for the
-%                         second intput. If 'brain', 'skull', and 'scalp' are fields
-%                         present in 'seg', then cfg.tissue need not be specified, as
-%                         these are defaults, depending on cfg.method. Otherwise,
-%                         cfg.tissue should refer to which field(s) of seg should be used.
+%   cfg.method         string that specifies the forward solution, see below
+%   cfg.conductivity   a number or a vector containing the conductivities of the compartments
+%   cfg.hdmfile        name of the file containing the headmodel, see FT_READ_VOL
+%   cfg.tissue         a string or integer, to be used in combination with a 'seg' for the
+%                      second intput. If 'brain', 'skull', and 'scalp' are fields
+%                      present in 'seg', then cfg.tissue need not be specified, as
+%                      these are defaults, depending on cfg.method. Otherwise,
+%                      cfg.tissue should refer to which field(s) of seg should be used.
 %
 % For EEG the following methods are available:
 %   singlesphere       analytical single sphere model
@@ -46,6 +47,8 @@ function [vol, cfg] = ft_prepare_headmodel(cfg, data)
 %   fns                finite difference method, based on the FNS software
 %   infinite           electric dipole in an infinite homogenous medium
 %   halfspace          infinite homogenous medium on one side, vacuum on the other
+%   besa               finite element leadfield matrix from BESA
+%   interpolate        interpolate the precomputed leadfield
 %
 % For MEG the following methods are available:
 %   singlesphere       analytical single sphere model
@@ -53,47 +56,52 @@ function [vol, cfg] = ft_prepare_headmodel(cfg, data)
 %   singleshell        realisically shaped single shell approximation, based on the implementation from Guido Nolte
 %   infinite           magnetic dipole in an infinite vacuum
 %
-%
-% Additionally, each specific method has its specific configuration options
-% which are listed below.
+% Each specific method has its own specific configuration options which are listed below.
 %
 % BEMCP, DIPOLI, OPENMEEG
-%     cfg.tissue            (see above; in combination with 'seg' input)
-%     cfg.isolatedsource    (optional)
+%   cfg.tissue            see above; in combination with 'seg' input
+%   cfg.isolatedsource    (optional)
 %
 % CONCENTRICSPHERES
-%     cfg.tissue            (see above; in combination with 'seg' input)
-%     cfg.fitind            (optional)
+%   cfg.tissue            see above; in combination with 'seg' input
+%   cfg.fitind            (optional)
 %
 % LOCALSPHERES
-%     cfg.grad
-%     cfg.tissue            (see above; in combination with 'seg' input; default options are 'brain' or 'scalp')
-%     cfg.feedback          (optional)
-%     cfg.radius            (optional)
-%     cfg.maxradius         (optional)
-%     cfg.baseline          (optional)
+%   cfg.grad
+%   cfg.tissue            see above; in combination with 'seg' input; default options are 'brain' or 'scalp'
+%   cfg.feedback          (optional)
+%   cfg.radius            (optional)
+%   cfg.maxradius         (optional)
+%   cfg.baseline          (optional)
 %
 % SIMBIO
-%     cfg.conductivity
+%   cfg.conductivity
 %
 % SINGLESHELL
-%     cfg.tissue            (see above; in combination with 'seg' input; default options are 'brain' or 'scalp')
+%   cfg.tissue            see above; in combination with 'seg' input; default options are 'brain' or 'scalp'
 %
 % SINGLESPHERE
-%     cfg.tissue            (see above; in combination with 'seg' input;
-%                           default options are 'brain' or 'scalp'; must be only 1 value)
+%   cfg.tissue            see above; in combination with 'seg' input; default options are 'brain' or 'scalp'; must be only 1 value
+%
+% INTERPOLATE
+%    cfg.outputfile       (required) string, filename prefix for the output files
+%
+% BESA
+%   cfg.hdmfile           (required) string, filename of precomputed FEM leadfield
+%   cfg.elecfile          (required) string, filename of electrode configuration for the FEM leadfield
+%    cfg.outputfile       (required) string, filename prefix for the output files
 %
 % FNS
-%     cfg.tissue
-%     cfg.tissueval
-%     cfg.conductivity
-%     cfg.elec or cfg.grad
-%     cfg.transform
-%     cfg.unit
+%   cfg.tissue
+%   cfg.tissueval
+%   cfg.conductivity
+%   cfg.elec or cfg.grad
+%   cfg.transform
+%   cfg.unit
 %
 % HALFSPACE
-%     cfg.point
-%     cfg.submethod         (optional)
+%   cfg.point
+%   cfg.submethod         (optional)
 %
 % More details for each of the specific methods can be found in the corresponding
 % low-level function which is called FT_HEADMODEL_XXX where XXX is the method
@@ -104,7 +112,7 @@ function [vol, cfg] = ft_prepare_headmodel(cfg, data)
 % FT_HEADMODEL_SIMBIO, FT_HEADMODEL_FNS, FT_HEADMODEL_HALFSPACE,
 % FT_HEADMODEL_INFINITE, FT_HEADMODEL_OPENMEEG, FT_HEADMODEL_SINGLESPHERE,
 % FT_HEADMODEL_CONCENTRICSPHERES, FT_HEADMODEL_LOCALSPHERES,
-% FT_HEADMODEL_SINGLESHELL
+% FT_HEADMODEL_SINGLESHELL, FT_HEADMODEL_INTERPOLATE
 
 % Copyright (C) 2011, Cristiano Micheli
 % Copyright (C) 2011-2012, Jan-Mathijs Schoffelen, Robert Oostenveld
@@ -162,15 +170,15 @@ cfg.isolatedsource  = ft_getopt(cfg, 'isolatedsource'); % used for dipoli and op
 cfg.fitind          = ft_getopt(cfg, 'fitind');         % used for concentricspheres
 cfg.point           = ft_getopt(cfg, 'point');          % used for halfspace
 cfg.submethod       = ft_getopt(cfg, 'submethod');      % used for halfspace
-cfg.grad            = ft_getopt(cfg, 'grad');           % used for localspheres
 cfg.feedback        = ft_getopt(cfg, 'feedback');
 cfg.radius          = ft_getopt(cfg, 'radius');
 cfg.maxradius       = ft_getopt(cfg, 'maxradius');
 cfg.baseline        = ft_getopt(cfg, 'baseline');
 cfg.singlesphere    = ft_getopt(cfg, 'singlesphere');
-cfg.tissueval       = ft_getopt(cfg, 'tissueval');      % used for FEM
+cfg.tissueval       = ft_getopt(cfg, 'tissueval');      % used for simbio
 cfg.transform       = ft_getopt(cfg, 'transform');
 cfg.siunits         = ft_getopt(cfg, 'siunits', 'no');  % yes/no, convert the input and continue with SI units
+cfg.smooth          = ft_getopt(cfg, 'smooth');         % used for interpolate
 
 if nargin>1,
   % ensure that it has the units specified
@@ -206,6 +214,18 @@ input_elec  = ft_datatype(data, 'sens');
 % the construction of the volume conductor model is performed below
 switch cfg.method
   
+  case 'interpolate'
+    % the "data" here represents the output of FT_PREPARE_LEADIFLED, i.e. a regular dipole 
+    % grid with pre-computed leadfields
+    sens = ft_fetch_sens(cfg, data);
+    vol = ft_headmodel_interpolate(cfg.outputfile, sens, data, 'smooth', cfg.smooth);
+    
+  case 'besa'
+    % the cfg.hdmfile points to the filename of the FEM solution that was computed
+    % in BESA, cfg.elecfile should point to the corresponding electrode specification
+    sens = ft_fetch_sens(cfg, data);
+    vol = ft_headmodel_interpolate(cfg.outputfile, sens, cfg.hdmfile, 'smooth', cfg.smooth);
+    
   case 'asa'
     if ~ft_filetype(cfg.hdmfile, 'asa_vol')
       error('You must supply a valid cfg.hdmfile for use with ASA headmodel')
@@ -278,6 +298,8 @@ switch cfg.method
     vol = ft_headmodel_infinite();
     
   case {'localspheres' 'singlesphere' 'singleshell'}
+    cfg.grad = ft_getopt(cfg, 'grad');           % used for localspheres
+    
     % these three methods all require a single mesh or set of surface points
     if input_mesh
       geometry = data;
@@ -389,8 +411,7 @@ switch cfg.method
     
   otherwise
     error('unsupported method "%s"', cfg.method);
-    
-end
+end % switch method
 
 % ensure that the geometrical units are specified
 if ~ft_voltype(vol, 'infinite'),

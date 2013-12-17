@@ -52,14 +52,106 @@ assert(ft_datatype(sens, 'sens'), 'the second input argument should be a sensor 
 % get the optional input arguments
 smooth = ft_getopt(varargin, 'smooth', true);
 
-% the file with the path but without the extension
+% get the filename with the path but without the extension
 [p, f, x] = fileparts(filename);
-
 if isempty(p)
   p = pwd;
 end
-
 filename = fullfile(p, f);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PART ONE (optional), read the pre-computed besa leadfield
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+if ischar(grid)
+  % the input is a filename that points to a BESA precomputed leadfield
+  hdmfile = grid;
+  clear grid
+  
+  % this requires the BESA functions
+  ft_hastoolbox('besa', 1);
+  
+  % get the filename with the path but without the extension
+  [p, f, x] = fileparts(hdmfile);
+  if isempty(p)
+    p = pwd;
+  end
+  lftfile = fullfile(p, [f, '.lft']);
+  locfile = fullfile(p, [f, '.loc']);
+  
+  % Read source space grid nodes
+  [ssg, IdxNeighbour] = readBESAloc(locfile);
+  fprintf('Number of nodes: %i\n', size(ssg, 1));
+  fprintf('Number of neighbours/node: %i\n', size(IdxNeighbour, 1));
+  
+  % the locations are represented as a Nx3 list of grid points
+  % convert the representation to dim/transform/inside
+  
+  minx = min(ssg(:,1));
+  maxx = max(ssg(:,1));
+  miny = min(ssg(:,2));
+  maxy = max(ssg(:,2));
+  minz = min(ssg(:,3));
+  maxz = max(ssg(:,3));
+  
+  xgrid = sort(unique(ssg(:,1)));
+  ygrid = sort(unique(ssg(:,2)));
+  zgrid = sort(unique(ssg(:,3)));
+  
+  dim = [length(xgrid) length(ygrid) length(zgrid)];
+  
+  pos = ssg;
+  ind = zeros(size(pos));
+  
+  for i=1:size(ssg,1)
+    ind(i,1) = find(xgrid==pos(i,1));
+    ind(i,2) = find(ygrid==pos(i,2));
+    ind(i,3) = find(zgrid==pos(i,3));
+  end
+  
+  ind = ind';ind(4,:) = 1;
+  pos = pos';pos(4,:) = 1;
+  transform = pos/ind;
+  
+  inside = sub2ind(dim, ind(1,:), ind(2,:), ind(3,:)); % note that ind is transposed
+  
+  if false
+    % this shows how the positions are reconstructed from dim+transform+inside
+    [X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
+    vox = [X(:) Y(:) Z(:)];
+    head = ft_warp_apply(transform, vox);
+    assert(norm(head(inside,:)-ssg)/norm(ssg)<1e-9); % there is a little bit rounding off error
+  end
+  
+  grid           = [];
+  grid.dim       = dim;
+  grid.transform = transform;
+  grid.inside    = inside; % all other grid points are assumed to be "outside"
+  grid.leadfield = cell(dim);
+  
+  % ensure that it has geometrical units (probably mm)
+  grid = ft_convert_units(grid);
+  
+  % Read leadfield, all channels, all locations, 3 orientations
+  [lftdim, lft] = readBESAlft(lftfile);
+  
+  assert(lftdim(1)==length(sens.label), 'inconsistent number of electrodes');
+  assert(lftdim(2)==length(inside), 'inconsistent number of grid positions');
+  assert(lftdim(3)==3, 'unexpected number of leadfield columns');
+  assert(isequal(grid.unit, sens.unit), 'inconsistent geometrical units');
+  
+  
+  for i=1:length(grid.inside)
+    sel = 3*(i-1)+(1:3);
+    grid.leadfield{grid.inside(i)} = lft(:,sel);
+  end
+  
+  fprintf('finished import of BESA leadfield file\n');
+end % process the BESA file, grid is now compatible with FT_PREPARE_LEADFIELD
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PART TWO: write the leadfield to a set of nifti files
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if isfield(grid, 'leadfield')
   % the input pre-computed leadfields reflect the output of FT_PREPARE_LEADFIELD
