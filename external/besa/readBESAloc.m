@@ -43,7 +43,7 @@ NrNodes = fread(FileID, 1, 'int32');
 NrDataElements = NrNodes * 3;
 [Nodes NrReadElements] = fread(FileID, NrDataElements, 'float64');
 if(NrReadElements ~= NrDataElements)
-	printf('Could not read grid node coordinates.\n');
+	fprintf('Could not read grid node coordinates.\n');
 	return;
 end
 
@@ -70,7 +70,7 @@ NumNeighbours = fread(FileID, 1, 'int32');
 TotalNumberNeighbours = NrNodes * NumNeighbours;
 [IndicesNeighbourNodes NrReadElements] = fread(FileID, TotalNumberNeighbours, 'int32');
 if(NrReadElements ~= TotalNumberNeighbours)
-	printf('Could not read neighbour nodes from file.\n');
+	fprintf('Could not read neighbour nodes from file.\n');
 	return
 end
 % Reshape matrix with indices of neighbour nodes
