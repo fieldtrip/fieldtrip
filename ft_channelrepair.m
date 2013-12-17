@@ -342,6 +342,8 @@ else
   error('unknown method "%s" for interpolation', cfg.method);
 end
 
+interp.label = label;
+
 % copy the additional fields over to the newly interpolated data
 if isfield(data, 'sampleinfo')
   interp.sampleinfo = data.sampleinfo;
