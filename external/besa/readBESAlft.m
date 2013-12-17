@@ -1,4 +1,4 @@
-function [dim lf] = readBESAlft(filename)
+function [dim lf] = readBESAlft(filename, chanid)
 
 % readBESAlft reads the leadfield from the BESA leadfield file format.
 % The leadfield matrix and a vector with the leadfield dimensions are
@@ -10,10 +10,16 @@ function [dim lf] = readBESAlft(filename)
 %         the file it should be the full path including the name of the 
 %         lft file else only the name of the file should be specified. 
 % 
+%     [chanid]
+%         Additional parameter specifying particular channel for which
+%         leadfield information should be returned.
+%
 % Return:
 %     [dim] 
 %         Leadfield dimensions {<number sensors>, <number source space
-%         nodes>, <number source directions>}
+%         nodes>, <number source directions>}. Please note, in case that
+%         the additional parameter is specified, the number of sensors will
+%         be set to 1.
 % 
 %     [lf] 
 %         Leadfield matrix with <number sensors> rows and <number source
@@ -29,6 +35,20 @@ function [dim lf] = readBESAlft(filename)
 % Author: Benjamin Lanfer/Robert Spangler
 % Created: 2013-11-27
 
+
+% Check additional parameter
+if exist('chanid', 'var')
+    % check if chanid is scalar
+    if isscalar(chanid)
+        % get leadfield info from specific channels
+    else
+        % error; only scalar values allowed for chanid
+        error('Parameter chanid is not a scalar value!');
+    end;
+else
+    % get leadfield info all channels
+    chanid = [];
+end;
 
 % Try to open file.
 FileID = fopen(filename, 'rb');
@@ -59,6 +79,16 @@ if(NrReadElements ~= 1)
 	return
 end
 
+% In case the leadfield for one specific channel has to be returned, check
+% if chanid is in correct range.
+if ~isempty(chanid)
+    if ((chanid > NumberSensors) ||...
+        (chanid < 1))
+        % error; chanid out of range
+        error('Parameter chanid is out of range!');    
+    end;
+end;
+
 % Read number of source space nodes (int32)
 [NumberSourceSpaceNodes NrReadElements] = fread(FileID, 1, 'int32');
 if(NrReadElements ~= 1)
@@ -81,12 +111,37 @@ if(NrReadElements ~= NumberColumns)
 	return
 end
 
-% Read compactly stored LF values (int16)
-NumberLFValues = NumberColumns * NumberSensors;
-[CompactLFVals NrReadElements] = fread(FileID, NumberLFValues, 'int16');
-if(NrReadElements ~= NumberLFValues)
-	fprintf('Could not read leadfield values from file.\n');
-	return
+if ~isempty(chanid)
+    % Get leadfield for specific channel only
+    lf = [];
+    NumberSensors = 1;
+    
+    % Go to correct position in file where leadfield info for current
+    % channel is stored
+    NumSkippedBytes = (chanid-1)*NumberSourceSpaceNodes*NumberDirections*2;
+    status = fseek(FileID, NumSkippedBytes, 0);
+    if status ~= 0
+        error('Unable to move to specified position in file.');
+    end;
+
+    % Read compactly stored LF values for channel #chanid (int16)
+    NumberLFValues = NumberColumns * 1;
+    [CompactLFVals NrReadElements] = fread(FileID, NumberLFValues, 'int16');
+    if(NrReadElements ~= NumberLFValues)
+        fprintf('Could not read leadfield values from file.\n');
+        return
+    end
+    
+else
+    % Get leadfield for all channels
+
+    % Read compactly stored LF values (int16)
+    NumberLFValues = NumberColumns * NumberSensors;
+    [CompactLFVals NrReadElements] = fread(FileID, NumberLFValues, 'int16');
+    if(NrReadElements ~= NumberLFValues)
+        fprintf('Could not read leadfield values from file.\n');
+        return
+    end
 end
 
 % Reshape matrix with compact LF values.
@@ -96,7 +151,9 @@ CompactLFVals = CompactLFVals';
 % Compute factors for converting compactly stored LF values
 % to float values.
 ConversionFactors = MaxVals / 32767.0;
-clear MaxVals;
+
+% Clear superfluous parameters
+clear('MaxVals');
 
 % Convert compact LF values to float.
 %lf = CompactLFVals * repmat(ConversionFactors, 1, NumberColumns);
