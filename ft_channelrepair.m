@@ -337,12 +337,12 @@ elseif strcmp(cfg.method, 'spline') || strcmp(cfg.method, 'slap')
     interp.trial{i} = repair * data.trial{i}(dataidx, :);
   end
   fprintf('\n');
-  
+  % update channels labels due to reordering by 
+  interp.label = label;
+
 else
   error('unknown method "%s" for interpolation', cfg.method);
 end
-
-interp.label = label;
 
 % copy the additional fields over to the newly interpolated data
 if isfield(data, 'sampleinfo')
