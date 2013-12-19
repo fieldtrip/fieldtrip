@@ -55,16 +55,12 @@ fprintf('Number of neighbours/node: %i\n', size(IdxNeighbour, 1));
 % Read scalp, skull, csf & brain surface
 [pnt_scalp, tri_scalp, srf_scalp] = ft_read_bv_srf(strPath__ScalpSurface);
 [pnt_skull, tri_skull, srf_skull] = ft_read_bv_srf(strPath__SkullSurface);
-[pnt_csf, tri_csf, srf_csf] = ft_read_bv_srf(strPath__CSFSurface);
+[pnt_csf, tri_csf, srf_csf]       = ft_read_bv_srf(strPath__CSFSurface);
 [pnt_brain, tri_brain, srf_brain] = ft_read_bv_srf(strPath__BrainSurface);
 
 
-% I noticed this causing a problem, FIXME this problem should not exist in the future
-% readBESAlft('nonexistentfile')
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% The second part of the test script pertains to the high-level fieldtrip implementation
-
 
 cfg = [];
 cfg.method = 'besa';
