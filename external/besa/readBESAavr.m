@@ -64,6 +64,7 @@ if(fp >= 3)
         'n' 'o' 'p' 'q' 'r' 's' 't' 'u' 'v' 'w' 'x' 'y' 'z'};
     NumChars = size(Characters, 2);
     iCounter = 1;
+    bContainsCharacter = 0;
     for ch = 1:NumChars
         
         % If the second line contains characters then these are the channel
@@ -71,14 +72,19 @@ if(fp >= 3)
         if(~isempty(regexpi(SecondLine, Characters{ch}, 'match')))
             
             avr.ChannelLabels = SecondLine;
+            bContainsCharacter = 1;
             break;
         
-        else
-            
-            avr.Data(iCounter, :) = sscanf(SecondLine, '%f', [avr.Npts,1]);
-            iCounter = 2;
-            
         end
+        
+    end
+    
+    % If the second line does not contain characters then these are no
+    % labels but data instead.
+    if(bContainsCharacter == 0)
+        
+        avr.Data(iCounter, :) = sscanf(SecondLine, '%f', [avr.Npts,1]);
+        iCounter = 2;
         
     end
 
