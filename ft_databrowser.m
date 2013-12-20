@@ -212,20 +212,16 @@ if strcmp(cfg.viewmode, 'component')
     cfg.layout = ft_prepare_layout(tmpcfg);
   else
     warning('No layout specified - will try to construct one using sensor positions');
-    try
-      tmpcfg = [];
-      tmpcfg.layout = [];
-      if isfield(data, 'grad')
-        tmpcfg.grad = data.grad;
-      elseif isfield(data, 'elec')
-        tmpcfg.elec = data.elec;
-      else
-        error('cannot infer sensor type');
-      end
-      cfg.layout = ft_prepare_layout(tmpcfg);
-    catch
-      cfg.layout = [];
-    end % try
+    tmpcfg = [];
+    try, tmpcfg.elec = cfg.elec; end
+    try, tmpcfg.grad = cfg.grad; end
+    try, tmpcfg.elecfile = cfg.elecfile; end
+    try, tmpcfg.gradfile = cfg.gradfile; end
+    if hasdata
+      cfg.layout = ft_prepare_layout(tmpcfg, data)
+    else
+      cfg.layout = ft_prepare_layout(tmpcfg)
+    end
   end
 end
 
