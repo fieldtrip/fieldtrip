@@ -69,7 +69,7 @@ for i=1:num
       % remove unuseable characters from the variable name (key)
       key = key(key~=':');
       % assign the value to the header structure
-      indx =  strfind(key,'µ'); % avoid problems with this field in the new Neuralynx header      
+      indx =  strfind(key,char(181)); % avoid problems with this field in the new Neuralynx header      
       if ~isempty(indx)
         key(indx) = 'm';
       end
