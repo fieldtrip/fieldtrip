@@ -183,6 +183,7 @@ if numel(extrapoint)==3
     phi = dirq(:)'*dirx(:);
     if sign(phi)<0
       warning('the input coordinate system seems left-handed, flipping x-axis to keep the transformation matrix consistent');
+      dirx = -dirx;
     end
   else
     warning('the extra input coordinate is not used');
