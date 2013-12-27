@@ -408,10 +408,14 @@ uiresume;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_quit(h, eventdata)
 
-par = get(h, 'parent')
+par = get(h, 'parent');
 if par==0
   setappdata(h, 'cleanup', true);
 else
   setappdata(par, 'cleanup', true);
 end
+
+% ensure to apply the current transformation
+cb_apply(h);
+
 uiresume;
