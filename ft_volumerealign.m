@@ -602,8 +602,8 @@ switch cfg.method
     
     tmpcfg             = [];
     tmpcfg.tissue      = 'scalp';
-    tmpcfg.method      = 'isosurface';
-    tmpcfg.numvertices = nan;
+    tmpcfg.method      = 'projectmesh';%'isosurface';
+    tmpcfg.numvertices = 20000;
     scalp              = ft_prepare_mesh(tmpcfg, seg);
     scalp              = ft_convert_units(scalp, 'mm');
     
