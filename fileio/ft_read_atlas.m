@@ -25,7 +25,7 @@ function atlas = ft_read_atlas(filename, varargin)
 %
 % See also FT_READ_MRI, FT_READ_HEADSHAPE
 
-% Copyright (C) 2005-2012, Robert Oostenveld, Ingrid Nieuwenhuis
+% Copyright (C) 2005-2014, Robert Oostenveld, Ingrid Nieuwenhuis, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -92,7 +92,7 @@ elseif ft_filetype(filename, 'caret_label')
 elseif ~isempty(strfind(filename, 'MPM'))
   % assume to be from the spm_anatomy toolbox
   defaultformat = 'spm_anatomy';
-elseif strcmp(x, '.xml') && (isdir(strtok(f, '_')) || isdir(strtok(f, '-')))
+elseif strcmp(x, '.xml') && (isdir(strtok(fullfile(p,f), '_')) || isdir(strtok(fullfile(p,f), '-')))
   % fsl-format atlas, this is assumed to consist of an .xml file that
   % specifies the labels, as well as the filenames of the files with the actual data stored
   % in a directory with the of the strtok'ed (with '-' or '_') file name.
@@ -2122,8 +2122,7 @@ switch atlasformat
     hdr = convert(hdr);
     
     % get the full path
-    filename = which(filename);
-    [p,f,e]  = fileparts(filename);
+     [p,f,e]  = fileparts(filename);
     
     % this uses the thresholded image
     mrifilename = fullfile(p, [hdr.header.images{1}.summaryimagefile,'.nii.gz']);
