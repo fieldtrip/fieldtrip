@@ -288,6 +288,9 @@ else
     case 'sincos'
       planarmontage = megplanar_sincos(cfg, sens);
     case 'orig'
+      % method specific info that is needed
+      cfg.distance  = distance;
+      
       planarmontage = megplanar_orig(cfg, sens);
     case 'fitplane'
       planarmontage = megplanar_fitplane(cfg, sens);
