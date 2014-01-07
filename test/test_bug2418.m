@@ -6,6 +6,8 @@ function test_bug2418
 % TEST test_bug2418
 % TEST ft_senstype ft_senslabel
 
+%% test the consistency between labels and type
+
 type = {
   'ant128'
   'biosemi64'
@@ -54,3 +56,21 @@ for i=1:length(type)
   disp(type{i});
   assert(strcmp(type{i}, ft_senstype(lab)));
 end
+
+%% test the provided problematic data
+
+cd(dccnfilename('/home/common/matlab/fieldtrip/data/test'));
+load bug2418.mat
+
+assert(isequal(ft_senstype(testdata_short), 'neuromag306')); % this one is incorrect due to the testdata_short.grad.type field
+assert(isequal(ft_senstype(testdata_short.label), 'neuromag306alt'));
+assert(isequal(ft_senstype(testdata_short.grad), 'neuromag306')); % this one is incorrect due to the testdata_short.grad.type field
+assert(isequal(ft_senstype(testdata_short.grad.label), 'neuromag306alt'));
+
+testdata_short.grad = rmfield(testdata_short.grad, 'type');
+
+assert(isequal(ft_senstype(testdata_short), 'neuromag306alt'));
+assert(isequal(ft_senstype(testdata_short.label), 'neuromag306alt'));
+assert(isequal(ft_senstype(testdata_short.grad), 'neuromag306alt'));
+assert(isequal(ft_senstype(testdata_short.grad.label), 'neuromag306alt'));
+
