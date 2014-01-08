@@ -68,7 +68,7 @@ if Ndata>1 && ~isnumeric(varargin{end})
     % ft_singleplotER needs all data again and the entry into
     % ft_singleplotER will be through one of the figures (which thus needs
     % to have all data avalaible. at the moment I couldn't think of
-    % anything better than using an additional indx variable and letting the 
+    % anything better than using an additional indx variable and letting the
     % function recursively call itself.
     topoplot_common(cfg, varargin{1:Ndata}, indx);
     indx = indx + 1;
@@ -76,7 +76,7 @@ if Ndata>1 && ~isnumeric(varargin{end})
   return
 end
 
-data = varargin{indx}; 
+data = varargin{indx};
 data = ft_checkdata(data, 'datatype', {'timelock', 'freq', 'comp'});
 
 % check for option-values to be renamed
@@ -107,13 +107,13 @@ cfg = ft_checkconfig(cfg, 'renamed',     {'efsize',        'markerfontsize'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'headlimits',    'interplimits'});
 % check for forbidden options
 cfg = ft_checkconfig(cfg, 'forbidden',  {'hllinewidth', ...
-                                         'headcolor', ...
-                                         'hcolor', ...
-                                         'hlinewidth', ...
-                                         'contcolor', ...
-                                         'outline', ...
-                                         'highlightfacecolor', ...
-                                         'showlabels'});
+  'headcolor', ...
+  'hcolor', ...
+  'hlinewidth', ...
+  'contcolor', ...
+  'outline', ...
+  'highlightfacecolor', ...
+  'showlabels'});
 
 % Set other config defaults:
 cfg.xlim           = ft_getopt(cfg, 'xlim',          'maxmin');
@@ -473,7 +473,7 @@ if (isfull || haslabelcmb) && isfield(data, cfg.parameter)
       tmpdata.(tmpcfg.parameter) = tmp;
       ft_topoplotTFR(tmpcfg, tmpdata);
       return;
-    
+      
     end
   end
 end
@@ -862,7 +862,7 @@ if isempty(get(gcf, 'Name'))
   else % data provided through cfg.inputfile
     dataname = cfg.inputfile;
   end
-
+  
   if isempty(cfg.figurename)
     set(gcf, 'Name', sprintf('%d: %s: %s', gcf, funcname, join_str(', ',dataname)));
     set(gcf, 'NumberTitle', 'off');
@@ -876,10 +876,8 @@ axis off
 hold off
 axis equal
 
-% add a menu to the figure, but only if the current figure does not have
-% subplots
-% also, delete any possibly existing previous menu
-% this is safe because delete([]) does nothing
+% add a menu to the figure, but only if the current figure does not have subplots
+% also, delete any possibly existing previous menu, this is safe because delete([]) does nothing
 delete(findobj(gcf, 'type', 'uimenu', 'label', 'FieldTrip'));
 if numel(findobj(gcf, 'type', 'axes')) <= 1
   ftmenu = uimenu(gcf, 'Label', 'FieldTrip');
@@ -972,4 +970,3 @@ elseif strcmp(eventdata.Key,'downarrow')
 elseif strcmp(eventdata.Key,'m')
   caxis([varargin{1} varargin{2}]);
 end
-

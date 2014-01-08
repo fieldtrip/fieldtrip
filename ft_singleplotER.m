@@ -63,7 +63,7 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 % undirected connectivity metrics. In the situation where undirected
 % connectivity measures are linearly indexed, specifying 'inflow' or
 % 'outflow' can result in unexpected behavior.
-%  
+%
 % to facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 % if you specify this option the input data will be read from a *.mat
@@ -201,7 +201,7 @@ dtype  = dtype{1};
 dimord = varargin{1}.dimord;
 dimtok = tokenize(dimord, '_');
 
-% ensure that the preproc specific options are located in the cfg.preproc 
+% ensure that the preproc specific options are located in the cfg.preproc
 % substructure, but also ensure that the field 'refchannel' is present at the
 % highest level in the structure. This is a little hack by JM because the field
 % refchannel can also refer to the plotting of a connectivity metric. Also,
@@ -210,8 +210,8 @@ dimtok = tokenize(dimord, '_');
 % data in the input. A more generic solution should be considered.
 
 if isfield(cfg, 'refchannel'), refchannelincfg = cfg.refchannel; end
-if ~any(strcmp({'freq','freqmvar'},dtype)), 
-  cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'}); 
+if ~any(strcmp({'freq','freqmvar'},dtype)),
+  cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'});
 end
 if exist('refchannelincfg', 'var'), cfg.refchannel  = refchannelincfg; end
 
@@ -428,7 +428,7 @@ end
 
 if strcmp('freq',yparam) && strcmp('freq',dtype)
   for i=1:Ndata
-    varargin{i} = ft_selectdata(varargin{i},'param',cfg.parameter,'foilim',cfg.zlim,'avgoverfreq','yes');    
+    varargin{i} = ft_selectdata(varargin{i},'param',cfg.parameter,'foilim',cfg.zlim,'avgoverfreq','yes');
   end
 elseif strcmp('time',yparam) && strcmp('freq',dtype)
   for i=1:Ndata
@@ -460,8 +460,8 @@ for i=1:Ndata
   zdim = setdiff(1:ndims(dat), [ydim xdim]);
   % and permute to make sure that dimensions are in the correct order
   dat = permute(dat, [zdim(:)' ydim xdim]);
-
-
+  
+  
   xval = varargin{i}.(xparam);
   
   % take subselection of channels
@@ -571,24 +571,25 @@ if strcmp('yes',cfg.hotkeys)
   set(gcf, 'keypressfcn', {@key_sub, xmin, xmax, ymin, ymax})
 end
 
-% set the figure window title, add channel labels if number is small
+if isfield(cfg, 'dataname')
+  dataname = cfg.dataname;
+elseif nargin > 1
+  dataname = inputname(2);
+  cfg.dataname = {inputname(2)};
+  for k = 2:Ndata
+    dataname = [dataname ', ' inputname(k+1)];
+    cfg.dataname{end+1} = inputname(k+1);
+  end
+else
+  dataname = cfg.inputfile;
+end
+
+% set the figure window title, add the channel labels if number is small
 if isempty(get(gcf,'Name'))
   if length(sellab) < 5
     chans = join_str(',', cfg.channel);
   else
     chans = '<multiple channels>';
-  end
-  if isfield(cfg, 'dataname')
-    dataname = cfg.dataname;
-  elseif nargin > 1
-    dataname = inputname(2);
-    cfg.dataname = {inputname(2)};
-    for k = 2:Ndata
-      dataname = [dataname ', ' inputname(k+1)];
-      cfg.dataname{end+1} = inputname(k+1);
-    end
-  else
-    dataname = cfg.inputfile;
   end
   if isempty(cfg.figurename)
     set(gcf, 'Name', sprintf('%d: %s: %s (%s)', gcf, mfilename, join_str(', ',dataname), chans));
@@ -601,6 +602,12 @@ end
 
 % make the figure interactive
 if strcmp(cfg.interactive, 'yes')
+  % add the dataname to the figure
+  % this is used in the callbacks
+  info          = guidata(gcf);
+  info.dataname = dataname;
+  guidata(gcf, info);
+  
   set(gcf, 'windowbuttonupfcn',     {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER, cfg, varargin{:}}, 'event', 'windowbuttonupfcn'});
   set(gcf, 'windowbuttondownfcn',   {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER, cfg, varargin{:}}, 'event', 'windowbuttondownfcn'});
   set(gcf, 'windowbuttonmotionfcn', {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER, cfg, varargin{:}}, 'event', 'windowbuttonmotionfcn'});
@@ -613,6 +620,11 @@ else
   t = sprintf('mean(%0s)', join_str(',', cfg.channel));
 end
 h = title(t,'fontsize', cfg.fontsize);
+
+% set renderer if specified
+if ~isempty(cfg.renderer)
+  set(gcf, 'renderer', cfg.renderer)
+end
 
 if false
   % FIXME this is for testing purposes
@@ -630,15 +642,8 @@ if false
   end
 end
 
-% set renderer if specified
-if ~isempty(cfg.renderer)
-  set(gcf, 'renderer', cfg.renderer)
-end
-
-% add a menu to the figure, but only if the current figure does not have
-% subplots
-% also, delete any possibly existing previous menu
-% this is safe because delete([]) does nothing
+% add a menu to the figure, but only if the current figure does not have subplots
+% also, delete any possibly existing previous menu, this is safe because delete([]) does nothing
 delete(findobj(gcf, 'type', 'uimenu', 'label', 'FieldTrip'));
 if numel(findobj(gcf, 'type', 'axes')) <= 1
   ftmenu = uimenu(gcf, 'Label', 'FieldTrip');
@@ -658,11 +663,8 @@ ft_postamble previous varargin
 function select_topoplotER(cfg, varargin)
 % first to last callback-input of ft_select_range is range
 % last callback-input of ft_select_range is contextmenu label, if used
-range = varargin{end-1}; 
+range = varargin{end-1};
 varargin = varargin(1:end-2); % remove range and last
-
-cfg.comment = 'auto';
-cfg.xlim = range(1:2);
 if isfield(cfg, 'inputfile')
   % the reading has already been done and varargin contains the data
   cfg = rmfield(cfg, 'inputfile');
@@ -671,11 +673,13 @@ if isfield(cfg, 'showlabels')
   % this is not allowed in topoplotER
   cfg = rmfield(cfg, 'showlabels');
 end
-
-% make sure the topo displays all channels, not just the ones in this
-% singleplot
+% make sure the topo displays all channels, not just the ones in this singleplot
 cfg.channel = 'all';
-
+cfg.comment = 'auto';
+cfg.xlim = range(1:2);
+% put data name in here, this cannot be resolved by other means
+info = guidata(gcf);
+cfg.dataname = info.dataname;
 % if user specified a ylim, copy it over to the zlim of topoplot
 if isfield(cfg, 'ylim')
   cfg.zlim = cfg.ylim;

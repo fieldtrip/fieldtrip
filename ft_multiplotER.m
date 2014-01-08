@@ -718,11 +718,12 @@ end
 % Make the figure interactive:
 if strcmp(cfg.interactive, 'yes')
   
-  % add the channel information to the figure
-  info       = guidata(gcf);
-  info.x     = lay.pos(:,1);
-  info.y     = lay.pos(:,2);
-  info.label = lay.label;
+  % add the dataname and channel information to the figure
+  % this is used in the callbacks
+  info          = guidata(gcf);
+  info.x        = lay.pos(:,1);
+  info.y        = lay.pos(:,2);
+  info.label    = lay.label;
   info.dataname = dataname;
   guidata(gcf, info);
   
@@ -745,17 +746,20 @@ if ~isempty(cfg.renderer)
   set(gcf, 'renderer', cfg.renderer)
 end
 
+% add a menu to the figure, but only if the current figure does not have subplots
+% also, delete any possibly existing previous menu, this is safe because delete([]) does nothing
+if numel(findobj(gcf, 'type', 'axes')) <= 1
+  % ftmenu = uicontextmenu; set(gcf, 'uicontextmenu', ftmenu)
+  ftmenu = uimenu(gcf, 'Label', 'FieldTrip');
+  uimenu(ftmenu, 'Label', 'Show pipeline',  'Callback', {@menu_pipeline, cfg});
+  uimenu(ftmenu, 'Label', 'About',  'Callback', @menu_about);
+end
+
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
 ft_postamble provenance
 ft_postamble debug
 ft_postamble previous varargin
-
-% add a menu to the figure
-% ftmenu = uicontextmenu; set(gcf, 'uicontextmenu', ftmenu)
-ftmenu = uimenu(gcf, 'Label', 'FieldTrip');
-uimenu(ftmenu, 'Label', 'Show pipeline',  'Callback', {@menu_pipeline, cfg});
-uimenu(ftmenu, 'Label', 'About',  'Callback', @menu_about);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -799,24 +803,24 @@ end
 % SUBFUNCTION which is called after selecting channels in case of cfg.refchannel='gui'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function select_multiplotER(label, cfg, varargin)
-if isfield(cfg, 'inputfile')
-  % the reading has already been done and varargin contains the data
-  cfg = rmfield(cfg, 'inputfile');
+if ~isempty(label)
+  if isfield(cfg, 'inputfile')
+    % the reading has already been done and varargin contains the data
+    cfg = rmfield(cfg, 'inputfile');
+  end
+  % put data name in here, this cannot be resolved by other means
+  info = guidata(gcf);
+  cfg.dataname = info.dataname;
+  if iscell(label)
+    label = label{1};
+  end
+  cfg.refchannel = label; % FIXME this only works with label being a string
+  fprintf('selected cfg.refchannel = ''%s''\n', cfg.refchannel);
+  p = get(gcf, 'Position');
+  f = figure;
+  set(f, 'Position', p);
+  ft_multiplotER(cfg, varargin{:});
 end
-
-% put data name in here, this cannot be resolved by other means
-info = guidata(gcf);
-cfg.dataname = info.dataname;
-
-if iscell(label)
-  label = label{1};
-end
-cfg.refchannel = label; %FIXME this only works with label being a string
-fprintf('selected cfg.refchannel = ''%s''\n', cfg.refchannel);
-p = get(gcf, 'Position');
-f = figure;
-set(f, 'Position', p);
-ft_multiplotER(cfg, varargin{:});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION which is called after selecting channels in case of cfg.interactive='yes'
@@ -829,11 +833,9 @@ if ~isempty(label)
   end
   cfg.xlim = 'maxmin';
   cfg.channel = label;
-  
   % put data name in here, this cannot be resolved by other means
   info = guidata(gcf);
   cfg.dataname = info.dataname;
-  
   fprintf('selected cfg.channel = {');
   for i=1:(length(cfg.channel)-1)
     fprintf('''%s'', ', cfg.channel{i});
