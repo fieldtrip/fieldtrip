@@ -102,7 +102,7 @@ switch cmd
         case 'slurm'
           system(sprintf('scancel --name %s', jobid));
         case 'lsf'
-          warning('cleaning up LFS jobs is not supported');
+          system(sprintf('bkill %s', pbsid));
         case 'local'
           warning('cleaning up local jobs is not supported');
         case 'system'
@@ -116,7 +116,7 @@ switch cmd
     end
     
   case 'killall'
-    if length(list_jobid)>0
+    if ~isempty(list_jobid)
       % give an explicit warning, because chances are that the user will see messages from qdel
       % about jobs that have just completed and hence cannot be deleted any more
       warning('cleaning up all scheduled and running jobs, don''t worry if you see warnings from "qdel"');

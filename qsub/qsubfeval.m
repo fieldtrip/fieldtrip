@@ -222,7 +222,7 @@ if ~compiled
     sprintf('addpath(''%s'');', fileparts(mfilename('fullpath'))),...
     sprintf('qsubexec(''%s'');', fullfile(pwd, jobid)),...
     sprintf('exit')];
-
+  
 end % if ~compiled
 
 % set the job requirements according to the users specification
@@ -391,7 +391,7 @@ switch backend
     
     
   case 'lsf'
-    % this is for Platform Load Sharing Facility (LSF) 
+    % this is for Platform Load Sharing Facility (LSF)
     
     if isempty(submitoptions)
       % start with an empty string
@@ -403,11 +403,11 @@ switch backend
     end
     
     if ~isempty(timreq) && ~isnan(timreq) && ~isinf(timreq)
-      submitoptions = [submitoptions sprintf('-R rusage[duration=%.0f] ', (timreq+timoverhead) / 60)]; % in minutes
+      submitoptions = [submitoptions sprintf('-W %.0f ', ceil((timreq+timoverhead) / 60))]; % in minutes
     end
     
     if ~isempty(memreq) && ~isnan(memreq) && ~isinf(memreq)
-      submitoptions = [submitoptions sprintf('-R rusage[mem=%.0f] ', (memreq+memoverhead) / 1024 ^2)];  % in Mb
+      submitoptions = [submitoptions sprintf('-M %.0f ', ceil((memreq+memoverhead) / 1024^2))];  % in MB
     end
     
     % specifying the o and e names might be useful for the others as well
@@ -430,9 +430,15 @@ switch backend
     
 end % switch
 
-fprintf('submitting job %s...', jobid); % note the lack of the end-of-line, the qsub outpt will follow
+fprintf('submitting job %s...', jobid); % note the lack of the end-of-line, the qsub output will follow
+
 if ~strcmp(backend, 'local')
+  % the system call will also print some information to screen to complete the line
   [status, result] = system(cmdline);
+  if status
+    % this should have returned 0, the screen output in result will probably be informative
+    error(result);
+  end
 else
   % this will read the job input *.mat file, call feval with all try-catch
   % precautions, measure time and memory and eventually write the results to
@@ -449,6 +455,12 @@ switch backend
   case 'local'
     % the job was executed by a local feval call, but the results will still be written in a job file
     result = jobid;
+  case 'lsf'
+    % the result of bsub returns a string in format: "Job <job_number> is submitted to default queue <queue_name>"
+    % parse the job number
+    pbsid_beg = strfind(result, '<');
+    pbsid_end = strfind(result, '>');
+    result = result(pbsid_beg(1)+1:pbsid_end(1)-1);
   otherwise
     % for torque and sge it is enough to remove the white space
     result = strtrim(result);
@@ -472,4 +484,3 @@ puttime = toc(stopwatch);
 
 % remember the input arguments to speed up subsequent calls
 previous_argin  = varargin;
-
