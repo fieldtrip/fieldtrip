@@ -44,8 +44,6 @@ function qsublist(cmd, jobid, pbsid)
 
 persistent list_jobid list_pbsid
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 if nargin<1
   cmd = 'list';
 end
@@ -57,6 +55,10 @@ end
 if nargin<3
   pbsid = [];
 end
+
+% FIXME this relies on the default and cannot be overruled at the moment
+% see http://bugzilla.fcdonders.nl/show_bug.cgi?id=2430
+backend = defaultbackend;
 
 if isempty(jobid) && ~isempty(pbsid)
   % get it from the persistent list
@@ -73,8 +75,6 @@ if isempty(pbsid) && ~isempty(jobid)
     pbsid = list_pbsid{sel};
   end
 end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 switch cmd
   case 'add'
@@ -94,10 +94,19 @@ switch cmd
     sel = strmatch(jobid, list_jobid);
     if ~isempty(sel)
       % remove it from the batch queue
-      if ~isempty(getenv('SLURM_ENABLE'))
-        system(sprintf('scancel --name %s', jobid));
-      else
-        system(sprintf('qdel %s', pbsid));
+      switch backend
+        case 'torque'
+          system(sprintf('qdel %s', pbsid));
+        case 'sge'
+          system(sprintf('qdel %s', pbsid));
+        case 'slurm'
+          system(sprintf('scancel --name %s', jobid));
+        case 'lsf'
+          warning('cleaning up LFS jobs is not supported');
+        case 'local'
+          warning('cleaning up local jobs is not supported');
+        case 'system'
+          warning('cleaning up system jobs is not supported');
       end
       % remove the corresponing files from the shared storage
       system(sprintf('rm -f %s*', jobid));

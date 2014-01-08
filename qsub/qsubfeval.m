@@ -56,24 +56,6 @@ persistent previous_matlabcmd
 % keep track of the time
 stopwatch = tic;
 
-% check if torque or sge is present and running
-if ~isempty(getenv('SGE_ROOT'))
-  defaultbackend = 'sge';
-elseif ~isempty(getenv('TORQUEHOME')) || ~isempty(getenv('PBS_VERSION'))
-  defaultbackend = 'torque';
-elseif ~isempty(getenv('CONDOR_ARCH'))
-  % this has not been tested and I am not 100% sure that this is the right variable to probe
-  defaultbackend = 'condor';
-elseif ~isempty(getenv('SLURM_ENABLE'))
-  defaultbackend = 'slurm';
-elseif ~isempty(getenv('LSF_ENVDIR'))
-  defaultbackend = 'lsf';
-else
-  % backend=local causes the job to be executed in this MATLAB by feval
-  % backend=system causes the job to be executed on the same computer using system('matlab -r ...')
-  defaultbackend = 'local';
-end
-
 % convert the input arguments into something that strmatch can work with
 strargin = varargin;
 strargin(~cellfun(@ischar, strargin)) = {''};
@@ -109,7 +91,7 @@ batch         = ft_getopt(optarg, 'batch', 1);
 batchid       = ft_getopt(optarg, 'batchid');
 timoverhead   = ft_getopt(optarg, 'timoverhead', 180);            % allow some overhead to start up the MATLAB executable
 memoverhead   = ft_getopt(optarg, 'memoverhead', 1024*1024*1024); % allow some overhead for the MATLAB executable in memory
-backend       = ft_getopt(optarg, 'backend', defaultbackend);     % can be torque, local, sge
+backend       = ft_getopt(optarg, 'backend', defaultbackend);     % this uses the defaultbackend helper function to determine the default
 queue         = ft_getopt(optarg, 'queue', []);                   % the default is specified further down in the code
 submitoptions = ft_getopt(optarg, 'options', []);
 display       = ft_getopt(optarg, 'display', 'no');
