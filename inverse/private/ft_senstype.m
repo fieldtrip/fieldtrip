@@ -193,9 +193,16 @@ else
 end
 
 
-if isfield(sens,'type')
+if isfield(sens, 'type')
   % preferably the structure specifies its own type
   type = sens.type;
+  
+  % do not make a distinction between the neuromag data with or without space in the channel names
+  if strcmp(type, 'neuromag306alt')
+    type = 'neuromag306';
+  elseif strcmp(type, 'neuromag122alt')
+    type = 'neuromag122';
+  end
 
 elseif isfield(input, 'nChans') && input.nChans==1 && isfield(input, 'label') && ~isempty(regexp(input.label{1}, '^csc', 'once'))
   % this is a single channel header that was read from a Neuralynx file, might be fcdc_matbin or neuralynx_nsc
@@ -312,14 +319,9 @@ else
 
     elseif any(mean(ismember(ft_senslabel('neuromag306'),     sens.label)) > 0.4) % there are two possibilities for the channel labels: with and without a space
        type = 'neuromag306';
-%    elseif any(mean(ismember(ft_senslabel('neuromag306'),     sens.label)) > 0.8)
-%       type = 'neuromag306';
-%     elseif any(mean(ismember(ft_senslabel('neuromag306alt'),  sens.label)) > 0.8)  % an alternative set without spaces in the name
-%       type = 'neuromag306alt';
-    elseif any(mean(ismember(ft_senslabel('neuromag122'),     sens.label)) > 0.8)
+    elseif any(mean(ismember(ft_senslabel('neuromag122'),     sens.label)) > 0.4) % there are two possibilities for the channel labels: with and without a space
       type = 'neuromag122';
-    elseif any(mean(ismember(ft_senslabel('neuromag122alt'),  sens.label)) > 0.8)  % an alternative set without spaces in the name
-      type = 'neuromag122alt';
+
     elseif (mean(ismember(ft_senslabel('biosemi256'),         sens.label)) > 0.8)
       type = 'biosemi256';
     elseif (mean(ismember(ft_senslabel('biosemi128'),         sens.label)) > 0.8)
