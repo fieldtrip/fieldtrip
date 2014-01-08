@@ -15,7 +15,7 @@ function [jobid, puttime] = qsubfeval(varargin)
 %   memoverhead = number in bytes, how much memory to account for MATLAB itself (default = 1024^3, i.e. 1GB)
 %   timreq      = number in seconds, how much time does the job require (no default)
 %   timoverhead = number in seconds, how much time to allow MATLAB to start (default = 180 seconds)
-%   backend     = string, can be 'sge', 'torque', 'slurm', 'system', 'local' (default is automatic)
+%   backend     = string, can be 'torque', 'sge', 'slurm', 'lsf', 'system', 'local' (default is automatic)
 %   diary       = string, can be 'always', 'never', 'warning', 'error' (default = 'error')
 %   queue       = string, which queue to submit the job in (default is empty)
 %   options     = string, additional options that will be passed to qsub/srun (default is empty)
@@ -66,6 +66,8 @@ elseif ~isempty(getenv('CONDOR_ARCH'))
   defaultbackend = 'condor';
 elseif ~isempty(getenv('SLURM_ENABLE'))
   defaultbackend = 'slurm';
+elseif ~isempty(getenv('LSF_ENVDIR'))
+  defaultbackend = 'lsf';
 else
   % backend=local causes the job to be executed in this MATLAB by feval
   % backend=system causes the job to be executed on the same computer using system('matlab -r ...')
@@ -404,6 +406,42 @@ switch backend
     fclose(fid);
     
     cmdline = sprintf('condor_submit %s', submitfile);
+    
+    
+  case 'lsf'
+    % this is for Platform Load Sharing Facility (LSF) 
+    
+    if isempty(submitoptions)
+      % start with an empty string
+      submitoptions = '';
+    end
+    
+    if ~isempty(queue)
+      submitoptions = [submitoptions sprintf('-q %s ', queue)];
+    end
+    
+    if ~isempty(timreq) && ~isnan(timreq) && ~isinf(timreq)
+      submitoptions = [submitoptions sprintf('-R rusage[duration=%.0f] ', (timreq+timoverhead) / 60)]; % in minutes
+    end
+    
+    if ~isempty(memreq) && ~isnan(memreq) && ~isinf(memreq)
+      submitoptions = [submitoptions sprintf('-R rusage[mem=%.0f] ', (memreq+memoverhead) / 1024 ^2)];  % in Mb
+    end
+    
+    % specifying the o and e names might be useful for the others as well
+    logout = fullfile(curPwd, sprintf('%s.o', jobid));
+    logerr = fullfile(curPwd, sprintf('%s.e', jobid));
+    
+    if compiled
+      % create the command line for the compiled application
+      cmdline = sprintf('%s %s %s', compiledfun, matlabroot, jobid);
+    else
+      % create the shell commands to execute matlab
+      cmdline = sprintf('%s -r \\"%s\\"', matlabcmd, matlabscript);
+    end
+    
+    % pass the command to qsub with all requirements
+    cmdline = sprintf('echo "%s" | bsub -J %s %s -o %s -e %s', cmdline, jobid, submitoptions, logout, logerr);
     
   otherwise
     error('unsupported backend "%s"', backend);

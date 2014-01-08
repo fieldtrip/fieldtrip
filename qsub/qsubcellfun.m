@@ -17,7 +17,7 @@ function varargout = qsubcellfun(fname, varargin)
 %   timreq         = number, the time in seconds required to run a single job
 %   memreq         = number, the memory in bytes required to run a single job
 %   stack          = number, stack multiple jobs in a single qsub job (default = 'auto')
-%   backend        = string, can be 'sge', 'torque', 'slurm', 'local' (default is automatic)
+%   backend        = string, can be 'torque', 'sge', 'slurm', 'lsf', 'system', 'local' (default is automatic)
 %   batchid        = string, to identify the jobs in the queue (default is user_host_pid_batch)
 %   compile        = string, can be 'auto', 'yes', 'no' (default = 'no')
 %   queue          = string, which queue to submit the job in (default is empty)
