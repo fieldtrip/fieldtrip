@@ -33,9 +33,9 @@ type = {
   'egi128'
   'egi256'
   'neuromag122'
-  'neuromag122alt'
+%  'neuromag122alt' % does not apply any more, see bugzilla
   'neuromag306'
-  'neuromag306alt'
+%  'neuromag306alt' % does not apply any more, see bugzilla
   'itab28'
   'itab153'
   'itab153_planar'
