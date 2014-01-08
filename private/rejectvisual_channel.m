@@ -30,10 +30,6 @@ trlsel  = logical(ones(1,ntrl));
 chansel = logical(zeros(1,nchan));
 chansel(match_str(data.label, cfg.channel)) = 1;
 
-% remove all non-wanted channels
-nchan = sum(chansel);
-data = ft_selectdata(data, 'channel', cfg.channel);
-
 % compute the sampling frequency from the first two timepoints
 fsample = 1/mean(diff(data.time{1}));
 
