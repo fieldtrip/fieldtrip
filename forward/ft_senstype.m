@@ -309,11 +309,13 @@ else
       type = 'yokogawa64_planar';
     elseif all(ismember(ft_senslabel('yokogawa9'),            sens.label))
       type = 'yokogawa9';
-      
-    elseif any(mean(ismember(ft_senslabel('neuromag306'),     sens.label)) > 0.8)
-      type = 'neuromag306';
-    elseif any(mean(ismember(ft_senslabel('neuromag306alt'),  sens.label)) > 0.8)  % an alternative set without spaces in the name
-      type = 'neuromag306alt';
+
+    elseif any(mean(ismember(ft_senslabel('neuromag306'),     sens.label)) > 0.4) % there are two possibilities for the channel labels: with and without a space
+       type = 'neuromag306';
+%    elseif any(mean(ismember(ft_senslabel('neuromag306'),     sens.label)) > 0.8)
+%       type = 'neuromag306';
+%     elseif any(mean(ismember(ft_senslabel('neuromag306alt'),  sens.label)) > 0.8)  % an alternative set without spaces in the name
+%       type = 'neuromag306alt';
     elseif any(mean(ismember(ft_senslabel('neuromag122'),     sens.label)) > 0.8)
       type = 'neuromag122';
     elseif any(mean(ismember(ft_senslabel('neuromag122alt'),  sens.label)) > 0.8)  % an alternative set without spaces in the name

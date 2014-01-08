@@ -1416,7 +1416,8 @@ elseif isempty(eval(type))
       neuromag122alt_combined = label(:,3);
       label = label(:,1:2);
       
-    case 'neuromag306'
+    case {'neuromag306' 'neuromag306alt'}
+      % this is the combination of the two versions (with and without space)
       label = {
         'MEG 0112'  'MEG 0113'  'MEG 0111'  'MEG 0112+0113'
         'MEG 0122'  'MEG 0123'  'MEG 0121'  'MEG 0122+0123'
@@ -1520,13 +1521,7 @@ elseif isempty(eval(type))
         'MEG 2622'  'MEG 2623'  'MEG 2621'  'MEG 2622+2623'
         'MEG 2632'  'MEG 2633'  'MEG 2631'  'MEG 2632+2633'
         'MEG 2642'  'MEG 2643'  'MEG 2641'  'MEG 2642+2643'
-        };
-      neuromag306_combined = label(:,4);
-      label = label(:,1:3);
-      
-    case 'neuromag306alt'
       % this is an alternative set of labels without a space in them
-      label = {
         'MEG0112'  'MEG0113'  'MEG0111'  'MEG0112+0113'
         'MEG0122'  'MEG0123'  'MEG0121'  'MEG0122+0123'
         'MEG0132'  'MEG0133'  'MEG0131'  'MEG0132+0133'
@@ -1630,6 +1625,7 @@ elseif isempty(eval(type))
         'MEG2632'  'MEG2633'  'MEG2631'  'MEG2632+2633'
         'MEG2642'  'MEG2643'  'MEG2641'  'MEG2642+2643'
         };
+      neuromag306_combined = label(:,4);
       neuromag306alt_combined = label(:,4);
       label = label(:,1:3);
       
