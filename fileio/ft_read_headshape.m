@@ -413,7 +413,9 @@ else
         newtri2(newtri2==src(2).vertno(i)) = i;
       end
       shape.tri  = [newtri1; newtri2 + numel(src(1).vertno)];
-      shape.area = [src(1).use_tri_area(:); src(2).use_tri_area(:)];
+      if isfield(src(1), 'use_tri_area')
+        shape.area = [src(1).use_tri_area(:); src(2).use_tri_area(:)];
+      end
       shape.orig.pnt = [src(1).rr; src(2).rr];
       shape.orig.tri = [src(1).tris; src(2).tris + src(1).np];
       shape.orig.inuse = [src(1).inuse src(2).inuse]';
