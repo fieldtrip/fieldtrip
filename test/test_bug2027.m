@@ -15,9 +15,11 @@ function test_bug2027
 datasets = {'/home/common/matlab/fieldtrip/data/test/bug2027/colorado/e,rfhp1.0Hz,COH';
             '/home/common/matlab/fieldtrip/data/test/bug2027/glasgow/e,rfDC';
             '/home/common/matlab/fieldtrip/data/test/bug2027/marseille/e,rfhp1.0Hz,COH';
-            '/home/common/matlab/fieldtrip/data/test/bug2027/stlouis/e,rfhp1.0Hz,COH'};
-                        
+            '/home/common/matlab/fieldtrip/data/test/bug2027/stlouis/e,rfhp1.0Hz,COH';
+            '/home/common/matlab/fieldtrip/data/test/bug2027/konstanz/c,rfhp0.1Hz'};
+  
+nummeg = [248 248 248 248 148];          
 for k = 1:numel(datasets)
-  hdr = ft_read_header(datasets{k});
-  assert(numel(ft_channelselection('MEG',hdr.label))==248);
+  hdr = ft_read_header(dccnfilename(datasets{k}));
+  assert(numel(ft_channelselection('MEG',hdr.label))==nummeg(k));
 end
