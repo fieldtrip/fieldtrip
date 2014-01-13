@@ -60,11 +60,12 @@ hdr.Fs = 1e6/(hdr.SamplingInterval);
 hdr.nSamples = Inf;
 
 % determine the number of samples by looking at the binary file
+[p, f, x] = fileparts(filename);
+datafile = fullfile(p, hdr.DataFile); % add full-path to datafile
+
 if strcmpi(hdr.DataFormat, 'binary')
   % the data file is supposed to be located in the same directory as the header file
   % but that might be on another location than the present working directory
-  [p, f, x] = fileparts(filename);
-  datafile = fullfile(p, hdr.DataFile);
   info = dir(datafile);
   if isempty(info)
     error('cannot determine the location of the data file %s', hdr.DataFile);
@@ -85,7 +86,7 @@ elseif strcmpi(hdr.DataFormat, 'ascii') && strcmpi(hdr.DataOrientation, 'vectori
   % F3    -28.696 -26.314 -35.005 -27.244 -31.401 -39.445 -30.411 -20.194 -16.488
   % FC1   -35.627 -29.906 -38.013 -33.426 -40.532 -49.079 -38.047 -26.693 -22.852
   % ...
-  fid = fopen(hdr.DataFile, 'rt');
+  fid = fopen(datafile, 'rt');
   tline = fgetl(fid);             % read the complete first line
   fclose(fid);
   t = tokenize(tline, ' ', true); % cut the line into pieces
