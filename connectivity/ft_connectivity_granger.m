@@ -277,8 +277,8 @@ case 'instantaneous'
           %iauto1=k;iauto2=k;icross1=k;icross2=k;
         end
         
-        zc1     = Z(j,iauto1,:) - Z(j,icross2,:).^2./Z(j,iauto2,:);
-        zc2     = Z(j,iauto2,:) - Z(j,icross1,:).^2./Z(j,iauto1,:);
+        zc1     = Z(j,iauto1,:, :) - Z(j,icross2,:, :).^2./Z(j,iauto2,:, :);
+        zc2     = Z(j,iauto2,:, :) - Z(j,icross1,:, :).^2./Z(j,iauto1,:, :);
         term1   = abs(S(j,iauto2,:,:)) - zc1(:,:,ones(1,size(H,3)),:).*abs(H(j,icross2,:,:)).^2;
         term2   = abs(S(j,iauto1,:,:)) - zc2(:,:,ones(1,size(H,3)),:).*abs(H(j,icross1,:,:)).^2;
         numer   = term1.*term2;
