@@ -72,7 +72,7 @@ timelock        = [];
 timelock.avg    = avg;
 timelock.label  = cfg.channel;
 timelock.time   = 1:size(timelock.avg,2);
-timelock.cfg    = freq.cfg;
+if isfield(freq, 'cfg'), timelock.cfg = freq.cfg; end
 timelock.dimord = 'chan_time';
 
 if isfield(freq, 'grad')
