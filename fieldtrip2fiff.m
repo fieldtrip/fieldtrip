@@ -126,7 +126,11 @@ if israw
   fiff_finish_writing_raw(outfid);
   
   % write events, if they exists
-  event = ft_findcfg(data.cfg, 'event');
+  if isfield(data, 'cfg')
+    event = ft_findcfg(data.cfg, 'event');
+  else
+    event = [];
+  end
   if ~isempty(event)
     eve = convertevent(event);
     mne_write_events(eventfile, eve);

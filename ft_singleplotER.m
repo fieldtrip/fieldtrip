@@ -299,7 +299,7 @@ elseif strcmp(dtype, 'freq') && hasrpt,
       tempdata.freq      = varargin{i}.freq;
       tempdata.label     = varargin{i}.label;
       tempdata.powspctrm = varargin{i}.(cfg.parameter);
-      tempdata.cfg       = varargin{i}.cfg;
+      if isfield(varargin{i}, 'cfg') tempdata.cfg = varargin{i}.cfg; end
       tempdata           = ft_freqdescriptives(tmpcfg, tempdata);
       varargin{i}.(cfg.parameter)  = tempdata.powspctrm;
       clear tempdata
