@@ -621,6 +621,7 @@ switch cfg.method
     % update the relevant geometrical info
     mri.transform = M*mri.transform;
     scalp     = ft_transform_geometry(M, scalp);
+
     
     if ~isfield(cfg, 'weights')
       w = ones(size(shape.pnt,1),1);
@@ -638,6 +639,12 @@ switch cfg.method
     nrm = normals(scalp.pnt, scalp.tri, 'vertex');
     [R, t, err, ~, info] = icp(scalp.pnt', shape.pnt', 50, 'Minimize', 'plane', 'Normals', nrm', 'Weight', weights, 'Extrapolation', true, 'WorstRejection', 0.05);
     
+    % this one transforms from scalp 'headspace' to shape 'headspace'
+    transform = inv([R t;0 0 0 1]);
+   
+    % warp the extracted scalp points to the new positions
+    scalp.pnt = ft_warp_apply(transform, scalp.pnt);
+     
     % smooth the distance function and use this for new weights
     target        = scalp;
     target.pos    = target.pnt;
@@ -653,29 +660,7 @@ switch cfg.method
     tmpcfg.sphereradius = 10;
     smoothdist          = ft_sourceinterpolate(tmpcfg, functional, target);
     scalp.distance  = smoothdist.pow(:);
-    
-% A second iteration of the icp algorithm does not seem to improve things.
-% Code is kept just to consider investigating this in more detail.
-%
-%     % this one transforms from scalp 'headspace' to shape 'headspace'
-%     transform   = inv([R t;0 0 0 1]);
-%     
-%     % warp the extracted scalp points to the new positions
-%     scalp.pnt = ft_warp_apply(transform, scalp.pnt);
-%     
-%     % now the idea would be to do a second round where the points are
-%     % weighted with the (locally averaged) distance to the scalp
-%     newweights = abs(smoothdist.pow(info.q_idx));
-%     weights = @(x)assignweights(x,newweights(:)');
-%     
-%     [R2, t2, err2,~,info(2)] = icp(scalp.pnt', info.pin, 50, 'Minimize', 'plane', 'Normals', nrm', 'Weight', weights, 'Extrapolation', true);
-%     
-%     % this one transforms from scalp 'headspace' to shape 'headspace'
-%     transform   = [R2 t2;0 0 0 1]\transform;
-%     
-%     % warp the extracted scalp points to the new positions
-%     scalp.pnt = ft_warp_apply(inv([R2 t2;0 0 0 1]), scalp.pnt);
-  
+      
     % create headshape structure for mri-based surface point cloud
     if isfield(mri, 'coordsys')
       scalp.coordsys = mri.coordsys;
