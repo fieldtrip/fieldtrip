@@ -60,6 +60,20 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.compscale               = string, 'global' or 'local', defines whether the colormap for the topographic scaling is
 %                                  applied per topography or on all visualized components (default 'global')
 %
+% The scaling to the EEG, EOG, ECG, EMG and MEG channels is optional and
+% can be used to bring the absolute numbers of the different channel types
+% in the same range (e.g. fT and uV). The channel types are determined from
+% the input data using FT_CHANNELSELECTION.
+%
+% You can specify preprocessing options that are to be applied to the  data prior
+% to display. Most options from FT_PREPROCESSING are supported. They should be
+% specified in the sub-structure cfg.preproc like these examples
+%   cfg.preproc.lpfilter        = 'no' or 'yes'  lowpass filter (default = 'no')
+%   cfg.preproc.lpfreq          = lowpass  frequency in Hz
+%   cfg.preproc.demean          = 'no' or 'yes', whether to apply baseline correction (default = 'no')
+%   cfg.preproc.detrend         = 'no' or 'yes', remove linear trend from the data (done per trial) (default = 'no')
+%   cfg.preproc.baselinewindow  = [begin end] in seconds, the default is the complete trial (default = 'all')
+%
 % In case of component viewmode, a layout is required. If no layout is specified, an attempt is
 % made to construct one from the sensor definition that is present in the data or specified in
 % the configuration.
@@ -69,25 +83,20 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.elecfile                = name of file containing the electrode positions, see FT_READ_SENS
 %   cfg.gradfile                = name of file containing the gradiometer definition, see FT_READ_SENS
 %
-% The scaling to the EEG, EOG, ECG, EMG and MEG channels is optional and
-% can be used to bring the absolute numbers of the different channel types
-% in the same range (e.g. fT and uV). The channel types are determined from
-% the input data using FT_CHANNELSELECTION.
-%
 % The "artifact" field in the output cfg is a Nx2 matrix comparable to the
 % "trl" matrix of FT_DEFINETRIAL. The first column of which specifying the
 % beginsamples of an artifact period, the second column contains the
 % endsamples of the artifactperiods.
 %
-% NOTE for debugging: in case the databrowser crashes, use delete(gcf) to
-% kill the figure.
+% Note for debugging: in case the databrowser crashes, use delete(gcf) to kill 
+% the figure.
 %
 % See also FT_PREPROCESSING, FT_REJECTARTIFACT, FT_ARTIFACT_EOG,
 % FT_ARTIFACT_MUSCLE, FT_ARTIFACT_JUMP, FT_ARTIFACT_MANUAL,
 % FT_ARTIFACT_THRESHOLD, FT_ARTIFACT_CLIP, FT_ARTIFACT_ECG,
 % FT_COMPONENTANALYSIS
 
-% Copyright (C) 2009-2011, Robert Oostenveld, Ingrid Nieuwenhuis
+% Copyright (C) 2009-2013, Robert Oostenveld, Ingrid Nieuwenhuis
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
