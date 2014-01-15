@@ -28,6 +28,10 @@ function [filename, headerfile, datafile] = dataset2files(filename, format)
 
 persistent previous_argin previous_argout
 
+if isempty(format)
+  format = ft_filetype(filename);
+end
+
 current_argin = {filename, format};
 if isequal(current_argin, previous_argin)
   % don't do the whole cheking again, but return the previous output from cache
@@ -35,10 +39,6 @@ if isequal(current_argin, previous_argin)
   headerfile = previous_argout{2};
   datafile   = previous_argout{3};
   return
-end
-
-if isempty(format)
-  format = ft_filetype(filename);
 end
 
 switch format
