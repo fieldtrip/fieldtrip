@@ -1,4 +1,4 @@
-function test_bug2336 
+%function test_bug2336 
 
 % these settings are needed to execute the test script on out cluster
 % WALLTIME 00:30:00
@@ -22,8 +22,9 @@ ft_hastoolbox('besa', 1);
 %% The first part of the test script pertains to the low-level reading functions
 
 % Specify path to data folder
-strPath_Data = '/home/common/matlab/fieldtrip/data/test/bug2336/';
-
+%strPath_Data = '/home/common/matlab/fieldtrip/data/test/bug2336/';
+strPath_Data = 'M:/Fieldtrip Test Data/';
+addpath 'N:\spm toolbox\spm12b';
 
 % Filenames of BESA MRI output files
 strPath_Leadfield         = sprintf('%sBESA_MRI_Electrode_Config_34_PB_FEM_DATA.lft', strPath_Data);
@@ -47,16 +48,15 @@ fprintf('Number of orientations: %i\n', dim(3));
 fprintf('Number of nodes: %i\n', size(ssg, 1));
 fprintf('Number of neighbours/node: %i\n', size(IdxNeighbour, 1));
 
-
-% Read electrode config, surface points & fiducials, FIXME this function is missing
-% sfh = readBESAsfh(strPath__ElectrodeConfig);
-
+% Read electrode config &  fiducials
+cfg_eeg = readBESAsfh(strPath__ElectrodeConfig, 'eeg');
+cfg_fid = readBESAsfh(strPath__ElectrodeConfig, 'fiducial');
 
 % Read scalp, skull, csf & brain surface
-[pnt_scalp, tri_scalp, srf_scalp] = ft_read_bv_srf(strPath__ScalpSurface);
-[pnt_skull, tri_skull, srf_skull] = ft_read_bv_srf(strPath__SkullSurface);
-[pnt_csf, tri_csf, srf_csf]       = ft_read_bv_srf(strPath__CSFSurface);
-[pnt_brain, tri_brain, srf_brain] = ft_read_bv_srf(strPath__BrainSurface);
+cfg_scalp = readBESAsrf(strPath__ScalpSurface);
+cfg_skull = readBESAsrf(strPath__SkullSurface);
+cfg_csf   = readBESAsrf(strPath__CSFSurface);
+cfg_brain = readBESAsrf(strPath__BrainSurface);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -69,3 +69,35 @@ cfg.hdmfile = strPath_Leadfield;
 cfg.outputfile = tempname;
 cfg.smooth = 'no';
 vol = ft_prepare_headmodel(cfg);
+
+pos = ssg(1,:);
+sens1 = ft_read_sens(strPath__ElectrodeConfig);
+sens2 = sens1;
+sens2.elecpos = sens.elecpos+randn(size(sens.elecpos));
+
+[vol1, sens1] = ft_prepare_vol_sens(vol, sens1);
+lf1 = ft_compute_leadfield(pos, sens1, vol1);
+
+[vol2, sens2] = ft_prepare_vol_sens(vol, sens2);
+lf2 = ft_compute_leadfield(pos, sens2, vol2);
+
+figure
+subplot(2,2,1)
+ft_plot_topo3d(sens.elecpos, lf(:,1))
+subplot(2,2,2)
+ft_plot_topo3d(sens.elecpos, lf(:,2))
+subplot(2,2,3)
+ft_plot_topo3d(sens.elecpos, lf(:,3))
+
+
+% show 3D stuff
+figure
+ft_plot_dipole(pos, [0 0 1]', 'diameter', 10, 'length', 20);
+ft_plot_topo3d(sens.elecpos, lf(:,3))
+
+[X, Y, Z] = ndgrid(1:vol.dim(1), 1:vol.dim(2), 1:vol.dim(3));
+pos = ft_warp_apply(vol.transform, [X(:) Y(:) Z(:)]);
+% ft_plot_mesh(pos);
+
+
+
