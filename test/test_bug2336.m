@@ -1,4 +1,4 @@
-%function test_bug2336 
+function test_bug2336 
 
 % these settings are needed to execute the test script on out cluster
 % WALLTIME 00:30:00
@@ -22,9 +22,7 @@ ft_hastoolbox('besa', 1);
 %% The first part of the test script pertains to the low-level reading functions
 
 % Specify path to data folder
-%strPath_Data = '/home/common/matlab/fieldtrip/data/test/bug2336/';
-strPath_Data = 'M:/Fieldtrip Test Data/';
-addpath 'N:\spm toolbox\spm12b';
+strPath_Data = '/home/common/matlab/fieldtrip/data/test/bug2336/';
 
 % Filenames of BESA MRI output files
 strPath_Leadfield         = sprintf('%sBESA_MRI_Electrode_Config_34_PB_FEM_DATA.lft', strPath_Data);
