@@ -1,8 +1,8 @@
-function [s,cfg] = ft_statfun_depsamplesF(cfg, dat, design)
+function [s,cfg] = ft_statfun_depsamplesFmultivariate(cfg, dat, design)
 
-% FT_STATFUN_DEPSAMPLESF calculates the dependent samples F-statistic 
-% on the biological data in dat (the dependent variable), using the information on 
-% the independent variable (ivar) in design.
+% FT_STATFUN_DEPSAMPLESFMULTIVARIATE calculates the MANOVA dependent samples 
+% F-statistic on the biological data in dat (the dependent variable), using 
+% the information on the independent variable (ivar) in design.
 %
 % Use this function by calling one of the high-level statistics functions as
 %   [stat] = ft_timelockstatistics(cfg, timelock1, timelock2, ...)
