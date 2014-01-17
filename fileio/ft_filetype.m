@@ -749,6 +749,10 @@ elseif filetype_check_extension(filename, '.sfh') && filetype_check_header(filen
   type = 'besa_sfh';
   manufacturer = 'BESA';
   content = 'electrode and fiducial information';
+elseif filetype_check_extension(filename, '.srf') && filetype_check_header(filename, [0 0 0 0], 4)
+  type = 'brainvoyager_srf';
+  manufacturer = 'BrainVoyager'; % see http://support.brainvoyager.com/installation-introduction/23-file-formats/375-users-guide-23-the-format-of-srf-files.html
+  content = 'surface';
     
   % known Dataq file formats
 elseif filetype_check_extension(upper(filename), '.WDQ')
