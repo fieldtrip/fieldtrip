@@ -830,13 +830,22 @@ else
       end
       
       if isempty(transform)
-        warning('cound not determine the coordinate transformation, returning vertices in voxel coordinates');
+          warning('cound not determine the coordinate transformation, returning vertices in voxel coordinates');
       end
-      
-      
-    otherwise
-      % try reading it from an electrode of volume conduction model file
-      success = false;
+
+      case 'brainvoyager_srf'
+          [pnt, tri, srf] = read_bv_srf(filename);
+          shape.pnt = pnt;
+          shape.tri = tri;
+          
+          % FIXME add details from srf if possible
+          % FIXME do transform
+          % FIXME remove vertices that are not in a triangle
+          % FIXME add unit
+
+      otherwise
+          % try reading it from an electrode of volume conduction model file
+          success = false;
       
       if ~success
         % try reading it as electrode positions
