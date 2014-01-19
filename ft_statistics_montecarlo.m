@@ -50,14 +50,14 @@ function [stat, cfg] = ft_statistics_montecarlo(cfg, dat, design, varargin)
 %
 % The statistic that is computed for each sample in each random reshuffling
 % of the data is specified as
-%   cfg.statistic       = 'indepsamplesT'     independent samples T-statistic,
-%                         'indepsamplesF'     independent samples F-statistic,
-%                         'indepsamplesregrT' independent samples regression coefficient T-statistic,
-%                         'indepsamplesZcoh'  independent samples Z-statistic for coherence,
-%                         'depsamplesT'       dependent samples T-statistic,
-%                         'depsamplesF'       dependent samples F-statistic,
-%                         'depsamplesregrT'   dependent samples regression coefficient T-statistic,
-%                         'actvsblT'          activation versus baseline T-statistic.
+%   cfg.statistic       = 'indepsamplesT'           independent samples T-statistic,
+%                         'indepsamplesF'           independent samples F-statistic,
+%                         'indepsamplesregrT'       independent samples regression coefficient T-statistic,
+%                         'indepsamplesZcoh'        independent samples Z-statistic for coherence,
+%                         'depsamplesT'             dependent samples T-statistic,
+%                         'depsamplesFmultivariate' dependent samples F-statistic MANOVA,
+%                         'depsamplesregrT'         dependent samples regression coefficient T-statistic,
+%                         'actvsblT'                activation versus baseline T-statistic.
 % or you can specify your own low-level statistical function.
 %
 % You can also use a custom statistic of your choise that is sensitive
