@@ -192,8 +192,12 @@ if istrue(cfg.siunits)
   if ~isempty(data)
     data = ft_convert_units(data, 'm');
   end
-  if ~isempty(cfg.grad)
+  if isfield(cfg, 'grad') && ~isempty(cfg.grad)
     cfg.grad = ft_convert_units(cfg.grad, 'm');
+  end
+  
+  if isfield(cfg, 'elec') && ~isempty(cfg.elec)
+      cfg.elec = ft_convert_units(cfg.elec, 'm');
   end
 end
 
