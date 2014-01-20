@@ -5,4 +5,7 @@
 % supported.
 
 function Y = nanstd(varargin)
+
 Y = sqrt(nanvar(varargin{:}));
+
+end % function
