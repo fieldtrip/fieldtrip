@@ -10,3 +10,5 @@ if nargin==1
 else
   y = sum(x,dim);
 end
+
+end % function
