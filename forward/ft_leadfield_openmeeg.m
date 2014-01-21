@@ -62,12 +62,13 @@ function [lp, voxels_in] = ft_leadfield_openmeeg ( voxels, vol, sens, varargin )
 CPU_LIM = feature('numCores');
 VOXCHUNKSIZE = 25000;
 
+OPENMEEG_PATH = []; % '/usr/local/bin/';    % In case OpenMEEG executables omitted from PATH variable
+
 persistent ldLibraryPath0;
 
 if ispc
     warning('Sorry, Windows is not yet tested');
 elseif isunix
-    OPENMEEG_PATH = []; % '/usr/local/bin/';    % In case OpenMEEG executables omitted from PATH variable
     setenv('OMP_NUM_THREADS',num2str(CPU_LIM));
     if(~ismac) % MacOS doesn't use LD_LIBRARY_PATH; in case of problems, look into "DYLD_LIBRARY_PATH"
         if isempty(ldLibraryPath0)
@@ -78,7 +79,7 @@ elseif isunix
     end
 end
 
-if system('om_assemble')
+if system(fullfile(OPENMEEG_PATH,'om_assemble'))
     error('Unable to properly execute OpenMEEG. Please configure variable declarations and paths in this file as needed.');
 end
 
