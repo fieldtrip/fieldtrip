@@ -62,7 +62,7 @@ function [lp, voxels_in] = ft_leadfield_openmeeg ( voxels, vol, sens, varargin )
 CPU_LIM = feature('numCores');
 VOXCHUNKSIZE = 25000;
 
-
+persistent ldLibraryPath0;
 
 if ispc
     warning('Sorry, Windows is not yet tested');
