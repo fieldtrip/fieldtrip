@@ -309,9 +309,11 @@ elseif ischar(cfg.layout)
     if exist(cfg.layout, 'file')
       fprintf('layout file without .mat (or .lay) extension specified, appending .mat\n');
       layout = ft_prepare_layout(cfg);
+      return;
     else
       cfg.layout = [cfg.layout(1:end-3) 'lay'];
       layout = ft_prepare_layout(cfg);
+      return;
     end
     
   elseif ft_filetype(cfg.layout, 'matlab')
@@ -338,6 +340,7 @@ elseif ischar(cfg.layout)
       warning_once(sprintf('layout file %s was not found on your path, attempting to use a similarly named .mat file instead',cfg.layout));
       cfg.layout = [cfg.layout(1:end-3) 'mat'];
       layout = ft_prepare_layout(cfg);
+      return;
     end
     
   elseif ~ft_filetype(cfg.layout, 'layout')
