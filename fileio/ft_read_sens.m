@@ -347,7 +347,7 @@ switch fileformat
     sens = [];
     if all(cellfun(@isempty, tmp{4}))
       % it contains theta and phi
-      sens.label   = cellfun(@str2double, tmp{1}(2:end));
+      sens.label = tmp{1}(2:end);
       theta = cellfun(@str2double, tmp{2}(2:end));
       phi   = cellfun(@str2double, tmp{3}(2:end));
       radians = @(x) pi*x/180;
