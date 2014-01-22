@@ -1,3 +1,4 @@
+Site	 Theta	Phi
 1	   0	   0
 2	  23	  90
 3	  23	  30

@@ -1,3 +1,4 @@
+Site	 Theta	Phi
 Fp1	 -92	-72
 Fp2	  92	 72
 F3	 -60	-51
