@@ -9,7 +9,7 @@ function [filt] = ft_preproc_highpassfilter(dat,Fs,Fhp,N,type,dir,instabilityfix
 %   dat        data matrix (Nchans X Ntime)
 %   Fsample    sampling frequency in Hz
 %   Fhp        filter frequency
-%   N          optional filter order, default is 4 (but) or dependent upon
+%   N          optional filter order, default is 6 (but) or dependent upon
 %              frequency band and data length (fir/firls)
 %   type       optional filter type, can be
 %                'but' Butterworth IIR filter (default)
