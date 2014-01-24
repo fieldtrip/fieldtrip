@@ -56,8 +56,8 @@ function [cfg] = ft_sourceplot(cfg, data)
 %   cfg.funcolorlim   = color range of the functional data (default = 'auto')
 %                        [min max]
 %                        'maxabs', from -max(abs(funparameter)) to +max(abs(funparameter))
-%                        'zeromax', from 0 to max(abs(funparameter))
-%                        'minzero', from min(abs(funparameter)) to 0
+%                        'zeromax', from 0 to max(funparameter)
+%                        'minzero', from min(funparameter) to 0
 %                        'auto', if funparameter values are all positive: 'zeromax',
 %                          all negative: 'minzero', both possitive and negative: 'maxabs'
 %   cfg.colorbar      = 'yes' or 'no' (default = 'yes')
@@ -308,7 +308,7 @@ hasatlas = ~isempty(cfg.atlas);
 if hasatlas
   if ischar(cfg.atlas)
     % initialize the atlas
-    [p, f, x] = fileparts(cfg.atlas);
+    [p, f, x] = fileparts(cfg.atlas);funmin
     fprintf(['reading ', f,' atlas coordinates and labels\n']);
     atlas = ft_read_atlas(cfg.atlas);
   else
