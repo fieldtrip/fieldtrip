@@ -1613,6 +1613,28 @@ switch eventformat
     
   case 'plexon_nex'
     event = read_nex_event(filename);
+	
+  case 'plexon_plx_v2'
+    ft_hastoolbox('PLEXON', 1);
+    if isempty(hdr)
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
+    end %if
+    [~, evchans] = plx_event_chanmap(filename);
+    [~, names] = plx_event_names(filename);
+	names = cellstr(names);
+	idx = find(hdr.orig.EVCounts>0)';
+    for i=idx
+		[n, ts, sv]= plx_event_ts(filename, i-1);
+        type = names{evchans == i-1};
+        for j=1:n
+          event(end+1).type = type;
+          event(end).sample = round(ts(j)*hdr.Fs) + 1;
+		  event(end).timestamp = ts(j);
+          if length(sv) >= j && sv(j) ~= 0
+            event(end).value = sv(j);
+          end %if
+        end %for
+    end %for
     
   case {'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw'}
     % check that the required low-level toolbox is available

@@ -1657,7 +1657,7 @@ switch headerformat
     end
     fsample = [orig.SlowChannelHeader.ADFreq];
     if any(fsample~=fsample(1))
-      error('different sampling rates in continuous data not supported');
+      warning('different sampling rates in continuous data not supported, please select channels carefully');
     end
     for i=1:length(orig.SlowChannelHeader)
       label{i} = deblank(orig.SlowChannelHeader(i).Name);
@@ -1701,6 +1701,46 @@ switch headerformat
     hdr.label = hdr.label(:);
     hdr.nChans = length(hdr.label);
     
+  case {'plexon_plx_v2'}
+    ft_hastoolbox('PLEXON', 1);
+    
+    orig = plx_orig_header(filename);
+    
+    if orig.NumSlowChannels==0
+      error('file does not contain continuous channels');
+	end
+    for i=1:length(orig.SlowChannelHeader)
+      label{i} = deblank(orig.SlowChannelHeader(i).Name);
+    end
+    % continuous channels don't always contain data, remove the empty ones
+    [~, scounts] = plx_adchan_samplecounts(filename);
+    chansel = scounts > 0;
+    chansel = find(chansel); % this is required for timestamp selection
+    label = label(chansel);
+	fsample = [orig.SlowChannelHeader.ADFreq];
+	fsample = fsample(chansel); %select non-empty channels only
+	if any(fsample~=fsample(1))
+      warning('different sampling rates in continuous data not supported, please select channels carefully');
+    end
+    % only the continuous channels are returned as visible
+    hdr.nChans      = length(label);
+    hdr.Fs          = fsample(1);
+    hdr.label       = label;
+    % also remember the original header
+    hdr.orig        = orig;
+    
+    hdr.nSamples = max(scounts);
+    hdr.nSamplesPre = 0;      % continuous
+    hdr.nTrials     = 1;      % continuous
+    hdr.TimeStampPerSample = double(orig.ADFrequency) / hdr.Fs;
+    
+    % also make the spike channels visible
+    for i=1:length(orig.ChannelHeader)
+      hdr.label{end+1} = deblank(orig.ChannelHeader(i).Name);
+    end
+    hdr.label = hdr.label(:);
+    hdr.nChans = length(hdr.label);
+  
   case {'tdt_tsq', 'tdt_tev'}
     % FIXME the code below is not yet functional, it requires more input from the ESI in Frankfurt
     %     tsq = read_tdt_tsq(headerfile);

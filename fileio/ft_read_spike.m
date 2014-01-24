@@ -205,6 +205,41 @@ switch spikeformat
       spike.waveform{i} = permute(read_plexon_plx(filename, 'ChannelIndex', i, 'header', hdr),[3 1 2]);
     end
     spike.hdr = hdr;
+	
+	case 'plexon_plx_v2'
+	  ft_hastoolbox('PLEXON', 1);
+	  hdr = ft_read_header(filename);
+	  hdr = hdr.orig;
+	  nchan = length(hdr.WFCounts)-1;
+  
+	  for i=1:nchan
+	    spike.label{i} = deblank(hdr.ChannelHeader(i).Name);
+	    if sum(hdr.WFCounts(:, i+1)) ~= 0
+	      spike.timestamp{i} = [];
+	      spike.unit{i} = [];
+	      spike.waveform{i} = [];
+	      for k=1:5
+	        if hdr.WFCounts(k, i+1) ~= 0
+	          [n, npw, ts, wave] = plx_waves_v(filename, i, k-1);
+	          spike.timestamp{i}(end+1:end+n) = uint64(round(ts*hdr.ADFrequency));
+	          spike.unit{i}(end+1:end+n) = int16(k-1);
+	          if isempty(spike.waveform{i})
+	            spike.waveform{i}(1, :, :) = wave';
+	          else
+	            spike.waveform{i}(1, :, end+1:end+n) = wave';
+	          end %if
+	        end %if
+	      end %for
+	      % sort by timestamps...
+	      [~, idx] = sort([spike.timestamp{i}]);
+	      spike.timestamp{i} = uint64(spike.timestamp{i}(idx));
+	      spike.unit{i} = int16(spike.unit{i}(idx));
+	      spike.waveform{i} = spike.waveform{i}(:, :, idx);
+	    else
+	      spike.timestamp{i} = [];
+	      spike.unit{i} = [];
+	    end %if
+	  end %for
     
   case 'neuroshare' % NOTE: still under development
     % check that the required neuroshare toolbox is available

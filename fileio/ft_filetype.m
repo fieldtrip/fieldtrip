@@ -681,6 +681,10 @@ elseif filetype_check_extension(filename, '.plx')  && filetype_check_header(file
   type = 'plexon_plx';
   manufacturer = 'Plexon';
   content = 'electrophysiological data';
+elseif filetype_check_extension(filename, '.pl2')
+  type = 'plexon_plx_v2';
+  manufacturer = 'Plexon';
+  content = 'electrophysiological data';
 elseif filetype_check_extension(filename, '.ddt')
   type = 'plexon_ddt';
   manufacturer = 'Plexon';

@@ -1060,6 +1060,49 @@ switch dataformat
       end
     end
     
+  case {'plexon_plx_v2'}
+    % check if Plexon Offline SDK is there...
+    ft_hastoolbox('PLEXON', 1);
+    
+    % determine the continuous channels
+    contlabel = {hdr.orig.SlowChannelHeader.Name};
+    for i=1:length(contlabel)
+      contlabel{i} = deblank(contlabel{i});
+    end
+    [contindx, contsel]  = match_str(contlabel, hdr.label(chanindx));
+    
+    % determine the channels with spike waveforms
+    spikelabel = {hdr.orig.ChannelHeader.Name};
+    for i=1:length(spikelabel)
+      spikelabel{i} = deblank(spikelabel{i});
+    end
+    [spikeindx, spikesel] = match_str(spikelabel, hdr.label(chanindx));
+    
+    if (length(contindx)+length(spikeindx))<length(chanindx)
+      error('not all selected channels could be located in the data');
+    end
+    
+    % allocate memory to hold all data
+    dat = zeros(length(chanindx), endsample-begsample+1);
+    
+    for i=1:length(contsel)
+      [~, ~, tempdat] = plx_ad_span_v(filename, contindx(i)-1, begsample, endsample);
+      dat(contsel(i), :) = tempdat;
+    end %for
+    
+    for i=1:length(spikesel)
+      for k=1:size(hdr.orig.TSCounts, 1)
+        if hdr.orig.TSCounts(k, i+1) > 0
+          [~, ts] = plx_ts(filename,i, k-1);
+          sample = round(ts*hdr.Fs);
+          sample = sample(sample>=begsample & sample<=endsample) - begsample + 1;
+          for j=sample(:)'
+            dat(spikesel(i),j) = dat(spikesel(i),j) + 1;
+          end %for
+        end %if
+      end %for
+    end %for 
+
   case {'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw'}
     
     % the data can be read with three toolboxes: Yokogawa MEG Reader, Maryland sqdread,
