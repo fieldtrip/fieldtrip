@@ -24,8 +24,9 @@ else
     error('either the cfg needs to have both cfg.channel and cfg.neighbours, or a second (data) input argument needs to be specified');
   end
 
-  nchan = length(chans);
+  nchan        = length(chans);
   connectivity = false(nchan,nchan);
+  neighbours   = struct(cfg.neighbours);
   
   try
 
@@ -44,7 +45,7 @@ else
     % the above is still used in case the fast version fails (catch below)
     % the following code should be equivalent:
 
-    if numel(cfg.neighbours) < nchan/4
+    if numel(neighbours) < nchan/4
       error('channelconnectivity only works when at least 1/4th of all channels has neighbours defined (or with neighbours = [])');
       % FIXME the above error is true (or maybe with <1/5th) but I don't
       % understand why, ES 25-nov-2013
@@ -53,13 +54,13 @@ else
     end
 
     % avoid using match_str inside the loop for performance reasons
-    [sel1,sel2] = match_str(chans, {cfg.neighbours.label}');
+    [sel1,sel2] = match_str(chans, {neighbours.label}');
 
     % make sure we only have the neighbours present in the data
-    cfg.neighbours = cfg.neighbours(sel2);
+    neighbours = neighbours(sel2);
 
     % make big list of all neighbour labels...
-    allneighb = {cfg.neighbours.neighblabel};
+    allneighb = {neighbours.neighblabel};
 
     % determine whether neighbours are stored as row or column vector
     siz1 = cellfun(@size, allneighb, repmat({1},size(allneighb)));
@@ -89,8 +90,8 @@ else
     % the fast version failed, use slow instead
     
     for chan=1:length(cfg.neighbours)
-      [seld] = match_str(chans, cfg.neighbours(chan).label);
-      [seln] = match_str(chans, cfg.neighbours(chan).neighblabel);
+      [seld] = match_str(chans, neighbours(chan).label);
+      [seln] = match_str(chans, neighbours(chan).neighblabel);
       if isempty(seld)
         % this channel was not present in the data
         continue;
