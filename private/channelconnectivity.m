@@ -89,7 +89,7 @@ else
   catch err
     % the fast version failed, use slow instead
     
-    for chan=1:length(cfg.neighbours)
+    for chan=1:length(neighbours)
       [seld] = match_str(chans, neighbours(chan).label);
       [seln] = match_str(chans, neighbours(chan).neighblabel);
       if isempty(seld)
