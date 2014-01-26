@@ -308,7 +308,7 @@ hasatlas = ~isempty(cfg.atlas);
 if hasatlas
   if ischar(cfg.atlas)
     % initialize the atlas
-    [p, f, x] = fileparts(cfg.atlas);funmin
+    [p, f, x] = fileparts(cfg.atlas);
     fprintf(['reading ', f,' atlas coordinates and labels\n']);
     atlas = ft_read_atlas(cfg.atlas);
   else
