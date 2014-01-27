@@ -225,7 +225,7 @@ if issource
 
   % check whether the original input data contains a dim, which would allow
   % for 3D reshaping and clustering with bwlabeln
-  if isfield(varargin{1}, 'dim') && prod(varargin{1}.dim)==size(varargin{1}.pos,1)
+  if isfield(varargin{1}, 'transform') || (if isfield(varargin{1}, 'dim') && prod(varargin{1}.dim)==size(varargin{1}.pos,1))
     cfg.connectivity = 'bwlabeln';
   end
   
@@ -640,7 +640,14 @@ end
 insideorig = find(inside(:,1));
 inside = find(inside(:));
 if isfield(varargin{1}, 'inside')
-  fprintf('only selecting voxels inside the brain for statistics (%.1f%%)\n', 100*length(varargin{1}.inside)/size(varargin{1}.pos,1));
+  if isfield(varargin{1}, 'pos')
+    npos = size(varargin{1}.pos,1);
+  elseif isfield(varargin{1}, 'dim')
+    npos = prod(varargin{1}.dim);
+  else
+    npos = length(varargin{1}.inside); % uninformative, at least prevents crash
+  end
+  fprintf('only selecting voxels inside the brain for statistics (%.1f%%)\n', 100*length(varargin{1}.inside)/npos);
   dat = dat(inside,:);
 end
 % remember the dimension of the source data
