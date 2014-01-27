@@ -20,7 +20,7 @@ function [cfg] = ft_singleplotTFR(cfg, data)
 %   cfg.masknans       = 'yes' or 'no' (default = 'yes')
 %   cfg.xlim           = 'maxmin' or [xmin xmax] (default = 'maxmin')
 %   cfg.ylim           = 'maxmin' or [ymin ymax] (default = 'maxmin')
-%   cfg.zlim           = 'maxmin','maxabs' or [zmin zmax] (default = 'maxmin')
+%   cfg.zlim           = 'maxmin','maxabs', 'zeromax', 'minzero', or [zmin zmax] (default = 'maxmin')
 %   cfg.baseline       = 'yes','no' or [time1 time2] (default = 'no'), see FT_FREQBASELINE
 %   cfg.baselinetype   = 'absolute', 'relative', 'relchange' or 'db' (default = 'absolute')
 %   cfg.trials         = 'all' or a selection given as a 1xN vector (default = 'all')
@@ -433,6 +433,12 @@ if strcmp(cfg.zlim,'maxmin')
 elseif strcmp(cfg.zlim,'maxabs')
   zmin = -max(abs(datamatrix(:)));
   zmax = max(abs(datamatrix(:)));
+elseif strcmp(cfg.zlim,'zeromax')
+  zmin = 0;
+  zmax = max(datamatrix(:));
+elseif strcmp(cfg.zlim,'minzero')
+  zmin = min(datamatrix(:));
+  zmax = 0;
 else
   zmin = cfg.zlim(1);
   zmax = cfg.zlim(2);

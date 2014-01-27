@@ -22,7 +22,7 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 %   cfg.masknans         = 'yes' or 'no' (default = 'yes')
 %   cfg.xlim             = 'maxmin' or [xmin xmax] (default = 'maxmin')
 %   cfg.ylim             = 'maxmin' or [ymin ymax] (default = 'maxmin')
-%   cfg.zlim             = 'maxmin','maxabs' or [zmin zmax] (default = 'maxmin')
+%   cfg.zlim             = 'maxmin','maxabs', 'zeromin','zeromax', or [zmin zmax] (default = 'maxmin')
 %   cfg.gradscale        = number, scaling to apply to the MEG gradiometer channels prior to display
 %   cfg.magscale         = number, scaling to apply to the MEG magnetometer channels prior to display
 %   cfg.channel          = Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
@@ -490,6 +490,12 @@ if strcmp(cfg.zlim,'maxmin')
 elseif strcmp(cfg.zlim,'maxabs')
   zmin = -max(abs(datsel(:)));
   zmax = max(abs(datsel(:)));
+elseif strcmp(cfg.zlim,'zeromax')
+  zmin = 0;
+  zmax = max(datsel(:));
+elseif strcmp(cfg.zlim,'minzero')
+  zmin = min(datsel(:));
+  zmax = 0;
 else
   zmin = cfg.zlim(1);
   zmax = cfg.zlim(2);

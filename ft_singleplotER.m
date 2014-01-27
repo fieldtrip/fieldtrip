@@ -21,7 +21,7 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 %                       or trials)
 %   cfg.maskstyle     = style used for masking of data, 'box', 'thickness' or 'saturation' (default = 'box')
 %   cfg.xlim          = 'maxmin' or [xmin xmax] (default = 'maxmin')
-%   cfg.ylim          = 'maxmin' or [ymin ymax] (default = 'maxmin')
+%   cfg.ylim          = 'maxmin', 'maxabs', 'zeromax', 'minzero', or [ymin ymax] (default = 'maxmin')
 %   cfg.channel       = nx1 cell-array with selection of channels (default = 'all'),
 %                       see ft_channelselection for details
 %   cfg.refchannel    = name of reference channel for visualising connectivity, can be 'gui'
@@ -525,14 +525,25 @@ for i=1:Ndata
   end
   
   % update ymin and ymax for the current data set:
-  if strcmp(cfg.ylim,'maxmin')
+  if ischar(cfg.ylim)
     if i==1
       ymin = [];
       ymax = [];
     end
-    % select the channels in the data that match with the layout:
-    ymin = min([ymin min(datavector)]);
-    ymax = max([ymax max(datavector)]);
+    if strcmp(cfg.ylim,'maxmin')
+      % select the channels in the data that match with the layout:
+      ymin = min([ymin min(datavector)]);
+      ymax = max([ymax max(datavector)]);
+    elseif strcmp(cfg.ylim,'maxabs')
+      ymax = max([ymax max(abs(datavector))]);
+      ymin = -ymax;
+    elseif strcmp(cfg.ylim,'zeromax')
+      ymin = 0;
+      ymax = max([ymax max(datavector)]);
+    elseif strcmp(cfg.ylim,'minzero')
+      ymin = min([ymin min(datavector)]);
+      ymax = 0;
+    end;
   else
     ymin = cfg.ylim(1);
     ymax = cfg.ylim(2);

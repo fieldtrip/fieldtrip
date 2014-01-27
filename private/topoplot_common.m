@@ -593,6 +593,12 @@ if strcmp(cfg.zlim,'maxmin')
 elseif strcmp(cfg.zlim,'maxabs')
   zmin = -max(max(abs(datavector)));
   zmax = max(max(abs(datavector)));
+elseif strcmp(cfg.zlim,'zeromax')
+  zmin = 0;
+  zmax = max(datavector);
+elseif strcmp(cfg.zlim,'minzero')
+  zmin = min(datavector);
+  zmax = 0;
 else
   zmin = cfg.zlim(1);
   zmax = cfg.zlim(2);
