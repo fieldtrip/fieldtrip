@@ -225,7 +225,7 @@ if issource
 
   % check whether the original input data contains a dim, which would allow
   % for 3D reshaping and clustering with bwlabeln
-  if isfield(varargin{1}, 'transform') || (if isfield(varargin{1}, 'dim') && prod(varargin{1}.dim)==size(varargin{1}.pos,1))
+  if isfield(varargin{1}, 'transform') || (isfield(varargin{1}, 'dim') && prod(varargin{1}.dim)==size(varargin{1}.pos,1))
     cfg.connectivity = 'bwlabeln';
   end
   
