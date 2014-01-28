@@ -1491,15 +1491,23 @@ switch eventformat
     
     
   case {'neuroprax_eeg', 'neuroprax_mrk'}
-    tmp = np_readmarker (filename, 0, inf, 'samples');
     event = [];
+    % start reading the markers, which I believe to be more like clinical annotations
+    tmp = np_readmarker (filename, 0, inf, 'samples');
     for i = 1:numel(tmp.marker)
       if isempty(tmp.marker{i})
         break;
       end
-      event = [event struct('type', tmp.markernames(i),...
-        'sample', num2cell(tmp.marker{i}),...
-        'value', {tmp.markertyp(i)})];
+      event = appendevent(event, struct('type', tmp.markernames(i), 'sample', num2cell(tmp.marker{i}), 'value', {tmp.markertyp(i)}));
+    end
+    % if present, read the digital triggers which are present as channel in the data
+    if isempty(hdr)
+      hdr = ft_read_header(filename);
+    end
+    trgindx = match_str(hdr.label, 'DTRIG');
+    if ~isempty(trgindx)
+      trigger = read_trigger(filename, 'header', hdr, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trgindx, 'detectflank', detectflank, 'trigshift', trigshift);
+      event   = appendevent(event, trigger);
     end
     
   case 'nexstim_nxe'
