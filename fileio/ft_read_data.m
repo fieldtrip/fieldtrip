@@ -109,6 +109,12 @@ if ~isempty(endtrial) && mod(endtrial, 1)
   endtrial = round(endtrial);
 end
 
+% if we are dealing with a compressed dataset, inflate it first
+if strcmp(dataformat, 'compressed')
+  filename = inflate_file(filename);
+  dataformat = ft_filetype(filename);
+end
+
 % ensure that the headerfile and datafile are defined, which are sometimes different than the name of the dataset
 [filename, headerfile, datafile] = dataset2files(filename, dataformat);
 

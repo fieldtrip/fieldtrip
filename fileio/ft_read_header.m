@@ -121,6 +121,12 @@ if isempty(headerformat)
   headerformat = ft_filetype(filename);
 end
 
+% if we are dealing with a compressed dataset, inflate it first
+if strcmp(headerformat, 'compressed')
+  filename = inflate_file(filename);
+  headerformat = ft_filetype(filename);
+end
+
 % The checkUniqueLabels flag is used for the realtime buffer in case
 % it contains fMRI data. It prevents 1000000 voxel names to be checked
 % for uniqueness. fMRI users will probably never use channel names

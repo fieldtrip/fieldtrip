@@ -92,6 +92,12 @@ if isempty(mriformat)
   mriformat = ft_filetype(filename);
 end
 
+% extract if needed
+if strcmp(mriformat, 'compressed')
+  filename = inflate_file(filename);
+  mriformat = ft_filetype(filename);
+end
+
 % test whether the file exists
 if ~exist(filename, 'file')
   error('file ''%s'' does not exist', filename);
