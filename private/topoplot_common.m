@@ -611,14 +611,14 @@ if strcmp(cfg.comment, 'auto')
     if strcmp(cfg.xlim,'maxmin')
       comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, xparam, data.(xparam)(xmin), data.(xparam)(xmax));
     else
-      comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, xparam, cfg.xlim(1), cfg.xlim(2));
+      comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, xparam, data.(xparam)(xmin), data.(xparam)(xmax));
     end
   end
   if ~isempty(yparam)
     if strcmp(cfg.ylim,'maxmin')
       comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, yparam, data.(yparam)(ymin), data.(yparam)(ymax));
     else
-      comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, yparam, cfg.ylim(1), cfg.ylim(2));
+      comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, yparam, data.(yparam)(ymin), data.(yparam)(ymax));
     end
   end
   if ~isempty(cfg.parameter)
