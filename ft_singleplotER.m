@@ -618,10 +618,14 @@ if strcmp(cfg.interactive, 'yes')
   info          = guidata(gcf);
   info.dataname = dataname;
   guidata(gcf, info);
-  
-  set(gcf, 'windowbuttonupfcn',     {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER, cfg, varargin{:}}, 'event', 'windowbuttonupfcn'});
-  set(gcf, 'windowbuttondownfcn',   {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER, cfg, varargin{:}}, 'event', 'windowbuttondownfcn'});
-  set(gcf, 'windowbuttonmotionfcn', {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER, cfg, varargin{:}}, 'event', 'windowbuttonmotionfcn'});
+  % attach data to the figure with the current axis handle as a name
+  dataname = num2str(gca);
+  dotpos   = findstr(dataname,'.');
+  dataname = ['DATA' dataname(1:dotpos-1) 'DOT' dataname(dotpos+1:end)];
+  setappdata(gcf,dataname,varargin);
+  set(gcf, 'windowbuttonupfcn',     {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER, cfg}, 'event', 'windowbuttonupfcn'});
+  set(gcf, 'windowbuttondownfcn',   {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER, cfg}, 'event', 'windowbuttondownfcn'});
+  set(gcf, 'windowbuttonmotionfcn', {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER, cfg}, 'event', 'windowbuttonmotionfcn'});
 end
 
 % create title text containing channel name(s) and channel number(s):
@@ -676,6 +680,13 @@ function select_topoplotER(cfg, varargin)
 % last callback-input of ft_select_range is contextmenu label, if used
 range = varargin{end-1};
 varargin = varargin(1:end-2); % remove range and last
+
+% get appdata belonging to current axis
+dataname = num2str(gca);
+dotpos   = findstr(dataname,'.');
+dataname = ['DATA' dataname(1:dotpos-1) 'DOT' dataname(dotpos+1:end)];
+data = getappdata(gcf, dataname);
+
 if isfield(cfg, 'inputfile')
   % the reading has already been done and varargin contains the data
   cfg = rmfield(cfg, 'inputfile');
@@ -700,7 +711,7 @@ fprintf('selected cfg.xlim = [%f %f]\n', cfg.xlim(1), cfg.xlim(2));
 p = get(gcf, 'position');
 f = figure;
 set(f, 'position', p);
-ft_topoplotER(cfg, varargin{:});
+ft_topoplotER(cfg, data{:});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION which handles hot keys in the current plot
