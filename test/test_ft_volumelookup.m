@@ -42,3 +42,12 @@ cfg.atlas = atlasfilename;
 cfg.inputcoord = 'mni';
 cfg.maskparameter = 'mask';
 mask5     = ft_volumelookup(cfg, mri);
+
+
+atlasfilename = dccnfilename('/home/common/matlab/fieldtrip/template/atlas/aal/ROI_MNI_V4.nii');     
+cfg       = [];
+cfg.atlas = atlasfilename;
+cfg.inputcoord = 'mni';
+cfg.roi = 'Calcarine_R'; % right V1
+mask6 = ft_volumelookup(cfg, mri);
+assert(isequal(sum(mask6(:)),1861));
