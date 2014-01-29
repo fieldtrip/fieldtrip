@@ -383,9 +383,13 @@ elseif (~isempty(cfg.image) || ~isempty(cfg.mesh)) && isempty(cfg.layout)
     [p,f,e] = fileparts(cfg.image);
     switch e
       case '.mat'
-        tmp = whos('-file', cfg.image);
-        load(cfg.image, tmp.name);
-        eval(['img = ',tmp.name,';']);
+        tmp    = load(cfg.image);
+        fnames = fieldnames(tmp);
+        if numel(fnames)~=1
+          error('there is not just a single variable in %s', cfg.image);
+        else
+          img = tmp.(fname{1});
+        end
       otherwise
         img = imread(cfg.image);
     end
