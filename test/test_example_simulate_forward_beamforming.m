@@ -1,5 +1,11 @@
 function test_example_simulate_forward_beamforming
 
+% MEM 100mb
+% WALLTIME 00:05:00
+
+% TEST test_example_simulate_forward_beamforming
+% TEST ft_dipolesimulation ft_timelockanalysis ft_sourceanalysis
+
 % This example script shows you how to create some simulated channel-level
 % MEG data with a single dipole at a specified location in the head.
 % Subsequently it does a beamformer source reconstruction to localize that

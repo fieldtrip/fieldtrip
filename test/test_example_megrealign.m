@@ -1,9 +1,10 @@
 function test_example_megrealign
 
-% MEM 0.0005gb
+% MEM 200mb
 % WALLTIME 00:05:00
 
-% TEST test_example_megralign
+% TEST test_example_megrealign
+% TEST ft_read_sens ft_dipolesimulation ft_timelockanalysis 
 
 global ft_default;
 ft_default.feedback = 'no';

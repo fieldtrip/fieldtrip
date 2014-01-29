@@ -1,9 +1,10 @@
 function test_example_incorporate_head_movements(datadir)
 
-% MEM 8gb
-% WALLTIME 03:30:00
+% MEM 200mb
+% WALLTIME 00:05:00
 
 % TEST test_example_incorporate_head_movements
+% TEST ft_definetrial ft_preprocessing ft_timelockanalysis ft_regressconfound
 
 global ft_default;
 ft_default.feedback = 'no';
@@ -44,7 +45,7 @@ coil3(:,t) = [mean(headpos.trial{1,t}(7,:)); mean(headpos.trial{1,t}(8,:)); mean
 end
  
 % calculate the headposition and orientation per trial (for function see bottom page) 
-cc = circumcenter(coil1, coil2, coil3)
+cc = circumcenter(coil1, coil2, coil3);
 
 cc_rel = [cc - repmat(cc(:,1),1,size(cc,2))]';
  
