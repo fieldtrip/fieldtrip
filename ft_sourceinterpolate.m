@@ -130,6 +130,19 @@ if ~isa(cfg.parameter, 'cell')
   cfg.parameter = {cfg.parameter};
 end
 
+if any(strcmp(cfg.parameter, 'all'))
+  cfg.parameter = parameterselection('all', functional);
+  for k = numel(cfg.parameter):-1:1
+    % check whether the field is numeric 
+    tmp = getsubfield(functional, cfg.parameter{k});
+    if iscell(tmp)
+      cfg.parameter(k) = [];
+    elseif strcmp(cfg.parameter{k}, 'pos')
+      cfg.parameter(k) = [];
+    end
+  end
+end
+
 if isfield(anatomical, 'transform') && isfield(anatomical, 'dim')
   % anatomical volume
   is2Dana  = 0;
@@ -262,7 +275,7 @@ elseif is2Dana && ~is2Dfun
     funpos    = ft_warp_apply(functional.transform, [X(:) Y(:) Z(:)]);
     clear X Y Z;
   end
-   
+  
   % ensure to keep the fields if these exist (will be lost in ft_checkdata)
   if isfield(functional, 'time'), time = functional.time; end
   if isfield(functional, 'freq'), freq = functional.freq; end
