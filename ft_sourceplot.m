@@ -91,8 +91,9 @@ function [cfg] = ft_sourceplot(cfg, data)
 %                              'voxel', voxelcoordinates as indices
 %   cfg.crosshair     = 'yes' or 'no' (default = 'yes')
 %   cfg.axis          = 'on' or 'off' (default = 'on')
-%   cfg.interactive   = 'yes' or 'no' (default = 'no')
-%                        in interactive mode cursor click determines location of cut
+%   cfg.interactive   = 'yes' or 'no' (default = 'no' if no nargout is desired, 'yes' otherwise)
+%                        in interactive mode the function returns the 
+%                        fiducials when closing the figure in the cfg
 %   cfg.queryrange    = number, in atlas voxels (default 3)
 %
 %
@@ -246,8 +247,12 @@ cfg.locationcoordinates = ft_getopt(cfg, 'locationcoordinates', 'head');
 cfg.crosshair           = ft_getopt(cfg, 'crosshair',           'yes');
 cfg.colorbar            = ft_getopt(cfg, 'colorbar',            'yes');
 cfg.axis                = ft_getopt(cfg, 'axis',                'on');
-cfg.interactive         = ft_getopt(cfg, 'interactive',         'no');
 cfg.queryrange          = ft_getopt(cfg, 'queryrange',          3);
+if nargout
+  cfg.interactive         = ft_getopt(cfg, 'interactive',         'yes');
+else
+  cfg.interactive         = ft_getopt(cfg, 'interactive',         'no');
+end
 
 if isfield(cfg, 'TTlookup'),
   error('TTlookup is old; now specify cfg.atlas, see help!');
