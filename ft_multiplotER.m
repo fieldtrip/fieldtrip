@@ -167,6 +167,10 @@ cfg.directionality  = ft_getopt(cfg, 'directionality',  '');
 cfg.figurename      = ft_getopt(cfg, 'figurename',   []);
 cfg.preproc         = ft_getopt(cfg, 'preproc', []);
 cfg.tolerance       = ft_getopt(cfg, 'tolerance',  1e-5);
+if numel(findobj(gcf, 'type', 'axes', '-not', 'tag', 'ft-colorbar')) > 1 && strcmp(cfg.interactive,'yes')
+  warning('using cfg.interactive = ''yes'' in subplots is not supported, setting cfg.interactive = ''no''')
+  cfg.interactive = 'no';
+end
 
 Ndata = length(varargin);
 

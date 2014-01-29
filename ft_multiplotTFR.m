@@ -174,6 +174,11 @@ if ~isfield(cfg,'box')
     cfg.box = 'no';
   end
 end
+if numel(findobj(gcf, 'type', 'axes', '-not', 'tag', 'ft-colorbar')) > 1 && strcmp(cfg.interactive,'yes')
+  warning('using cfg.interactive = ''yes'' in subplots is not supported, setting cfg.interactive = ''no''')
+  cfg.interactive = 'no';
+end
+
 
 dimord = data.dimord;
 dimtok = tokenize(dimord, '_');
