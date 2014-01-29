@@ -202,14 +202,15 @@ isfull  = length(selchan)>1;
 haslabelcmb = isfield(data, 'labelcmb');
 
 % check whether the bivariate metric is the one requested to plot
-shouldPlotCmb = (haslabelcmb && ...
-  size(data.(cfg.parameter),selchan(1)) == size(data.labelcmb,1)) ...
-  || isfull; % this should work because if dimord has multiple chans (so isfull=1)
-             % then we can never plot anything without reference channel
-             % this is different when haslabelcmb=1; then the parameter
-             % requested to plot might well be a simple powspctrm
+%shouldPlotCmb = (haslabelcmb && ...
+%  size(data.(cfg.parameter),selchan(1)) == size(data.labelcmb,1)) ...
+%  || isfull; % this should work because if dimord has multiple chans (so isfull=1)
+%             % then we can never plot anything without reference channel
+%             % this is different when haslabelcmb=1; then the parameter
+%             % requested to plot might well be a simple powspctrm
+%if (isfull || haslabelcmb) && shouldPlotCmb
 
-if (isfull || haslabelcmb) && shouldPlotCmb
+if (isfull || haslabelcmb) && (isfield(data, cfg.parameter) && ~strcmp(cfg.parameter, 'powspctrm'))
   % A reference channel is required:
   if ~isfield(cfg, 'refchannel')
     error('no reference channel is specified');

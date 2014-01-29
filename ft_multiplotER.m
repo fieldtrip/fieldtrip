@@ -404,7 +404,7 @@ isfull  = length(selchan)>1;
 % Check for bivariate metric with a labelcmb
 haslabelcmb = isfield(varargin{1}, 'labelcmb');
 
-if (isfull || haslabelcmb) && isfield(varargin{1}, cfg.parameter)
+if (isfull || haslabelcmb) && (isfield(varargin{1}, cfg.parameter) && ~strcmp(cfg.parameter, 'powspctrm'))
   % A reference channel is required:
   if ~isfield(cfg, 'refchannel')
     error('no reference channel is specified');
