@@ -325,7 +325,7 @@ if (isfull || haslabelcmb) && (isfield(data, cfg.parameter) && ~strcmp(cfg.param
     data.(cfg.parameter) = data.(cfg.parameter)([sel1;sel2],:,:);
     data.label     = [data.labelcmb(sel1,1);data.labelcmb(sel2,2)];
     data.labelcmb  = data.labelcmb([sel1;sel2],:);
-    data           = rmfield(data, 'labelcmb');
+    %data           = rmfield(data, 'labelcmb');
   else
     % General case
     sel               = match_str(data.label, cfg.refchannel);
