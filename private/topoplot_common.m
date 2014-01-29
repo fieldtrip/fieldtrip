@@ -629,7 +629,7 @@ elseif strcmp(cfg.comment, 'xlim')
   if strcmp(cfg.xlim,'maxmin')
     comment = sprintf('%0s=[%.3g %.3g]', xparam, data.(xparam)(xmin), data.(xparam)(xmax));
   else
-    comment = sprintf('%0s=[%.3g %.3g]', xparam, cfg.xlim(1), cfg.xlim(2));
+    comment = sprintf('%0s=[%.3g %.3g]', xparam, data.(xparam)(xmin), data.(xparam)(xmax));
   end
   cfg.comment = comment;
 elseif ~ischar(cfg.comment)
