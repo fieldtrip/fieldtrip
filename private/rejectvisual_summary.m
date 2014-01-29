@@ -237,7 +237,7 @@ if strcmp(info.cfg.viewmode, 'toggle') && (sum(info.chansel==0) > 0)
   hold off;
 end
 abc = axis;
-axis([abc(1:2) 0 info.nchan]); % have to use 0 as lower limit because ylim([1 1]) (i.e. the single-channel case) is invalid
+axis([abc(1:2) 0.5 info.nchan+0.5]); % have to use 0 as lower limit because ylim([1 1]) (i.e. the single-channel case) is invalid
 set(info.axes(2),'ButtonDownFcn',@toggle_visual);  % needs to be here; call to axis resets this property
 ylabel('channel number');
 
@@ -249,7 +249,7 @@ if strcmp(info.cfg.viewmode, 'toggle') && (sum(info.trlsel==0) > 0)
   plot(find(info.trlsel==0), maxpertrl_all(info.trlsel==0), 'o');
   hold off;
 end
-abc = axis; axis([1 info.ntrl abc(3:4)]);
+abc = axis; axis([0.5 info.ntrl+0.5 abc(3:4)]);
 set(info.axes(3),'ButtonDownFcn',@toggle_visual);  % needs to be here; call to axis resets this property
 xlabel('trial number');
 
