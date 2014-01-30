@@ -69,6 +69,9 @@ else
   selfreq  = 1:numel(freq);
 end
 
+% ensure input S is double (mex-files don't work with single)
+S = double(S);
+
 % check whether the last frequency bin is strictly real-valued.
 % if that's the case, then it is assumed to be the Nyquist frequency
 % and the two-sided spectral density will have an even number of 
