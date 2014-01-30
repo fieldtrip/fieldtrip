@@ -792,49 +792,52 @@ switch eventformat
     % construct event according to FieldTrip rules
     eventCount = 0;
     for iXml = 1:length(eventNames)
-      for iEvent = 1:length(xml.(eventNames{iXml}))
-        eventTime  = xml.(eventNames{iXml})(iEvent).event.beginTime;
-        eventTime(11) = ' '; eventTime(end-5:end) = [];
-        if strcmp('-',eventTime(21))
-          % event out of range (before recording started): do nothing.
-        else
-          eventSDV = datenum(eventTime);
-          eventOffset = round((eventSDV - begSDV)*24*60*60*hdr.Fs); %in samples, relative to start of recording
-          if eventOffset < 0
-            % event out of range (before recording started): do nothing
-          else
-            % calculate eventSample, relative to start of epoch
-            if isfield(hdr.orig.xml,'epochs') && length(hdr.orig.xml.epochs) > 1
-              SampIndex=[];
-              for iEpoch = 1:size(hdr.orig.epochdef,1)
-                [dum,dum2] = intersect(squeeze(Msamp2offset(2,iEpoch,:)), eventOffset);
-                if ~isempty(dum2)
-                  EpochNum = iEpoch;
-                  SampIndex = dum2;
-                end
-              end
-              if ~isempty(SampIndex)
-                eventSample = Msamp2offset(1,EpochNum,SampIndex);
-              else
-                eventSample=[]; %Drop event if past end of epoch
-              end;
-            else
-              eventSample = eventOffset+1;
-            end
-            if ~isempty(eventSample)
-              eventCount=eventCount+1;
-              event(eventCount).type     = eventNames{iXml}(8:end);
-              event(eventCount).sample   = eventSample;
-              event(eventCount).offset   = 0;
-              event(eventCount).duration = str2double(xml.(eventNames{iXml})(iEvent).event.duration)./1000000000*hdr.Fs;
-              event(eventCount).value    = xml.(eventNames{iXml})(iEvent).event.code;
-              event(eventCount).orig    = xml.(eventNames{iXml})(iEvent).event;
-            end;
-          end  %if that takes care of non "-" events that are still out of range
-        end %if that takes care of "-" events, which are out of range
-      end %iEvent
+        eval(['eventField=isfield(xml.' eventNames{iXml} ',''event'');'])
+        if eventField
+            for iEvent = 1:length(xml.(eventNames{iXml}))
+                eventTime  = xml.(eventNames{iXml})(iEvent).event.beginTime;
+                eventTime(11) = ' '; eventTime(end-5:end) = [];
+                if strcmp('-',eventTime(21))
+                    % event out of range (before recording started): do nothing.
+                else
+                    eventSDV = datenum(eventTime);
+                    eventOffset = round((eventSDV - begSDV)*24*60*60*hdr.Fs); %in samples, relative to start of recording
+                    if eventOffset < 0
+                        % event out of range (before recording started): do nothing
+                    else
+                        % calculate eventSample, relative to start of epoch
+                        if isfield(hdr.orig.xml,'epochs') && length(hdr.orig.xml.epochs) > 1
+                            SampIndex=[];
+                            for iEpoch = 1:size(hdr.orig.epochdef,1)
+                                [dum,dum2] = intersect(squeeze(Msamp2offset(2,iEpoch,:)), eventOffset);
+                                if ~isempty(dum2)
+                                    EpochNum = iEpoch;
+                                    SampIndex = dum2;
+                                end
+                            end
+                            if ~isempty(SampIndex)
+                                eventSample = Msamp2offset(1,EpochNum,SampIndex);
+                            else
+                                eventSample=[]; %Drop event if past end of epoch
+                            end;
+                        else
+                            eventSample = eventOffset+1;
+                        end
+                        if ~isempty(eventSample)
+                            eventCount=eventCount+1;
+                            event(eventCount).type     = eventNames{iXml}(8:end);
+                            event(eventCount).sample   = eventSample;
+                            event(eventCount).offset   = 0;
+                            event(eventCount).duration = str2double(xml.(eventNames{iXml})(iEvent).event.duration)./1000000000*hdr.Fs;
+                            event(eventCount).value    = xml.(eventNames{iXml})(iEvent).event.code;
+                            event(eventCount).orig    = xml.(eventNames{iXml})(iEvent).event;
+                        end;
+                    end  %if that takes care of non "-" events that are still out of range
+                end %if that takes care of "-" events, which are out of range
+            end %iEvent
+        end;
     end
-    
+ 
     % add "trial" events for segmented data
     if (hdr.nTrials >1) && (length(hdr.orig.epochdef)==hdr.nTrials)
       cellNames=cell(hdr.nTrials,1);
