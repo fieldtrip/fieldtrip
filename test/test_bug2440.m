@@ -26,6 +26,7 @@ freq.logspctrm = log(freq.powspctrm);
 % plot
 cfg = [];
 cfg.parameter = 'logspctrm';
+cfg.trials = 2;
 ft_singleplotTFR(cfg,freq); 
 
 end

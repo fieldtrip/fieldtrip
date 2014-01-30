@@ -176,6 +176,7 @@ if hasrpt,
     tempdata.dimord    = data.dimord;
     tempdata.freq      = data.freq;
     tempdata.label     = data.label;
+    tempdata.time      = data.time;
     tempdata.powspctrm = data.(cfg.parameter);
     if isfield(data, 'cfg') tempdata.cfg = data.cfg; end
     tempdata           = ft_freqdescriptives(tmpcfg, tempdata);
