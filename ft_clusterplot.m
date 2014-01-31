@@ -221,7 +221,14 @@ else
     possum = sum(possum,1);
     negsum = sum(signegCLM,3);
     negsum = sum(negsum,1);
-    allsum = possum + negsum;
+    
+    if haspos && hasneg
+      allsum = possum + negsum;
+    elseif haspos
+      allsum = possum;
+    else
+      allsum = negsum;
+    end
     
     ind_timewin_min = min(find(allsum~=0));
     ind_timewin_max = max(find(allsum~=0));
