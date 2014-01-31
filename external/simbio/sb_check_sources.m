@@ -1,4 +1,4 @@
-function [gridout, cfg] = sb_check_sources(cfg, vol, gridin)
+function [inside, cfg] = sb_check_sources(cfg, vol, gridin)
 
 % SB_CHECK_SOURCES
 %
@@ -15,8 +15,7 @@ function [gridout, cfg] = sb_check_sources(cfg, vol, gridin)
 %
 % $Id$
 
-cfg.sourcelabel = ft_getopt(cfg,'sourcelabel');
-cfg.corr = ft_getopt(cfg, 'corr');
+cfg.sourcelabel = ft_getopt(cfg.grid,'sourcelabel');
 
 % find connectivity information and write them to elem
 if isfield(vol,'tet')
@@ -43,7 +42,7 @@ else
     error('Could not find connectivity information!')
 end
 
-nnod = size(vol.pnt,1);
+nnod = size(vol.pos,1);
 
 nsource = size(gridin,1);
 
@@ -52,18 +51,16 @@ node_ele_assignment   = revert_assignment(elem,0.5);
 
 if isfield(cfg,'sourcelabel') && isfield(vol,'tissue') && isfield(vol,'tissuelabel')
          if length(vol.tissue) == size(elem,1)
-             numsource = length(cfg.sourcelabel);
-             source2num = [];
-             for i=1:numsource
-                 source2num(i) = str2num(cfg.sourcelabel{i});
-             end                 
+             numsource = length(cfg.sourcelabel);         
              numlabels = length(vol.tissuelabel);
              sourcetissue = [];
              for i=1:numlabels
-                 if ismember(str2num(vol.tissuelabel{i}),source2num)
-                     sourcetissue = [sourcetissue; i];
+                 for j=1:numsource
+                     if strcmpi(vol.tissuelabel{i},cfg.sourcelabel{j})
+                         sourcetissue = [sourcetissue; i];
+                     end
                  end
-             end 
+             end
              source_log_ind = ismember(vol.tissue,sourcetissue);
         else
             error('Dimensions of vol.tet/vol.hex and vol.tissue do not fit!');
@@ -83,41 +80,45 @@ for i=1:length(com_nodes)
 end
 
 valid_nodes = find(pos_nodes_log_ind);
-valid_nodes_pnt = vol.pnt(valid_nodes,:);
 
 gridout = zeros(size(gridin));
-griddel = zeros(size(gridin,1),1);
+%inside = zeros(size(gridin,1),1);
 
-maxmov = 0;
-meanmov = 0;
-nmov = 0;
+tic;
 
-time = clock;
-timing = zeros(nsource,1);
-for i=1:nsource
-    [dummy,near_node_ind] = min(sum(bsxfun(@minus,vol.pnt,gridin(i,:)).^2,2));
-    if(pos_nodes_log_ind(near_node_ind))
-        gridout(i,:) = gridin(i,:);
-    elseif strcmp(cfg.corr,'delete')
-        griddel(i) = i;
-    else
-        nmov = nmov + 1;
-    end
-end
+near_node_ind = zeros(nsource,1);
 
-griddel = griddel(griddel ~= 0);
-if strcmp(cfg.corr,'delete')
-    gridout(griddel,:)=[];
-    nmov = length(griddel);
-end
-
-if(meanmov ~= 0)
-    if strcmp(cfg.corr,'delete')
-        warning('%d source positions have been deleted.', nmov);
-    elseif nmov > 0
-        warning('%d source positions are not inside the designated source compartments! This may lead to high numerical errors!', nmov);
-    end
+if (ft_hastoolbox('STATISTICS'))
+    near_node_ind = knnsearch(vol.pos,gridin);
 else
-    warning('All source positions ok.');
+    warning('Statistics toolbox not available, using fallback routine. This might take a while.')
+    parfor i=1:nsource
+        [dummy,near_node_ind(i)] = min(sum(bsxfun(@minus,vol.pos,gridin(i,:)).^2,2));
+    end
 end
+
+clear dummy;
+
+toc
+
+inside = 1:nsource;
+
+inside(find(~pos_nodes_log_ind(near_node_ind))) = [];
+
+% 
+% griddel = griddel(griddel ~= 0);
+% if strcmp(cfg.corr,'delete')
+%     gridout(griddel,:)=[];
+%     nmov = length(griddel);
+% end
+% 
+% if(meanmov ~= 0)
+%     if strcmp(cfg.corr,'delete')
+%         warning('%d source positions have been deleted.', nmov);
+%     elseif nmov > 0
+%         warning('%d source positions are not inside the designated source compartments! This may lead to high numerical errors!', nmov);
+%     end
+% else
+%     warning('All source positions ok.');
+% end
 end
