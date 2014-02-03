@@ -125,7 +125,7 @@ if isctf
   vol  = [];
   coilsignal = [];
 elseif isneuromag
-    shape = ft_read_headshape(cfg.headerfile, 'coordsys', 'dewar', 'format', 'neuromag_fif');
+    shape = ft_read_headshape(cfg.headerfile, 'coordsys', 'dewar', 'format', 'neuromag_fif','unit','m'); % ensure SI units
   for i = 1:min(size(shape.pnt,1),length(cfg.coilfreq)) % for as many digitized or specified coils
     if ~isempty(strfind(shape.label{i},'hpi'))
       dip(i).pos = shape.pnt(i,:); % chan X pos, initial guess for each of the dipole/coil positions
@@ -138,9 +138,15 @@ elseif isneuromag
   
   % prepare the forward model and the sensor array for subsequent fitting
   % note that the forward model is a magnetic dipole in an infinite vacuum
-  cfg.channel = ft_channelselection('MEGMAG', hdr.label);
+  %cfg.channel = ft_channelselection('MEG', hdr.label); % because we want to planars as well (previously only magnetometers)
+  cfg.channel = ft_channelselection('MEGMAG', hdr.label); % old
   [vol, sens] = ft_prepare_vol_sens([], hdr.grad, 'channel', cfg.channel);
+  sens = ft_datatype_sens(sens, 'version', 'upcoming', 'scaling', 'amplitude/distance', 'distance', 'm'); % ensure SI units
   coilsignal = [];
+  
+  % update distances, given that sensor units are m an not cm
+  cfg.accuracy_green = cfg.accuracy_green/100;
+  cfg.accuracy_orange = cfg.accuracy_orange/100;
 else
   error('the data does not resemble ctf, nor neuromag')
 end % if ctf or neuromag
@@ -153,6 +159,9 @@ if isctf
   [dum, chanindx] = match_str('headloc', hdr.chantype);
 elseif isneuromag
   [dum, chanindx] = match_str('megmag', hdr.chantype);
+%   [dum, chanindx1] = match_str('megmag', hdr.chantype);
+%   [dum, chanindx2] = match_str('megplanar', hdr.chantype); % because we want to planars as well
+%   chanindx = sort([chanindx1; chanindx2],1); % because we want to planars as well
 end
 
 if isempty(chanindx)
@@ -246,7 +255,7 @@ while ishandle(hMainFig) && info.continue % while the flag is one, the loop cont
     end
     
     % compute the HPI coil positions, this takes some time
-    [hpi, info.dip] = data2hpi(data, info.dip, info.vol, info.sens, coilsignal, info.isctf, info.isneuromag); % for neuromag datasets this is slow
+    [hpi, info.dip] = data2hpi(data, info.dip, info.vol, info.sens, coilsignal, info.isctf, info.isneuromag); % for neuromag datasets this is relatively slow
     
     if ~ishandle(hMainFig)
       % the figure has been closed
