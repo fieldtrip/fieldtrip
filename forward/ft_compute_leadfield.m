@@ -9,7 +9,7 @@ function [lf] = ft_compute_leadfield(pos, sens, vol, varargin)
 % Use as
 %   [lf] = ft_compute_leadfield(pos, sens, vol, ...)
 % with input arguments
-%   pos    position dipole (1x3 or Nx3)
+%   pos    position dipole (1*3 or Ndip*3)
 %   sens   structure with gradiometer or electrode definition
 %   vol    structure with volume conductor definition
 %
