@@ -1,7 +1,7 @@
 function test_bug1168
 
 % MEM 1500mb
-% WALLTIME 00:03:15
+% WALLTIME 00:10:00
 
 % TEST test_bug1168
 % TEST ft_multiplotTFR

@@ -1,7 +1,7 @@
 function test_ft_electroderealign
 
 % MEM 2gb
-% WALLTIME 00:03:27
+% WALLTIME 00:10:00
 
 % TEST ft_electroderealign
 % TEST ft_read_mri ft_read_sens ft_prepare_mesh ft_warp_apply

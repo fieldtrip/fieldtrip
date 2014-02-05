@@ -1,7 +1,7 @@
 function test_fieldtrip2fiff
 
 % MEM 3gb
-% WALLTIME 00:04:52
+% WALLTIME 00:10:00
 
 % TEST test_fieldtrip2fiff
 % TEST fieldtrip2fiff ft_read_header ft_read_data ft_read_event

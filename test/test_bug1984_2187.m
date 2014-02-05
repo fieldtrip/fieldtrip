@@ -1,7 +1,7 @@
 function test_bug1984_2187
 
 % MEM 1500mb
-% WALLTIME 00:03:45
+% WALLTIME 00:10:00
 
 % TEST test_bug1984_2187
 % TEST ft_appendfreq ft_freqgrandaverage ft_freqstatistics ft_prepare_neighbours

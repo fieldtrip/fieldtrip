@@ -1,7 +1,7 @@
 function test_bug1389
 
 % MEM 1500mb
-% WALLTIME 00:03:02
+% WALLTIME 00:10:00
 
 % there is confusion as to at what level in the cfg tre preproc options
 % need to be specified: for ft_preprocessing this is to be at the main

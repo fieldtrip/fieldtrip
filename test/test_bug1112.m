@@ -1,7 +1,7 @@
 function test_bug1112
 
 % MEM 1500mb
-% WALLTIME 00:05:00
+% WALLTIME 00:10:00
 
 % TEST test_bug1112
 % TEST ft_convert_units ft_estimate_units

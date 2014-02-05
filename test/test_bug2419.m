@@ -1,7 +1,7 @@
 function test_bug2419
 
 % MEM 100mb
-% WALLTIME 00:02:00
+% WALLTIME 00:10:00
 
 % TEST test_bug2419
 % TEST ft_read_headshape

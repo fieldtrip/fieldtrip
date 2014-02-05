@@ -1,7 +1,7 @@
 function test_bug1807
 
 % MEM 1500mb
-% WALLTIME 00:04:00
+% WALLTIME 00:10:00
 
 % TEST test_bug1807
 % TEST ft_senstype bti2grad ft_datatype_sens ft_read_header ft_read_sens

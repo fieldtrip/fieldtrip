@@ -1,6 +1,6 @@
 function test_tutorial_eeg_preprocessing
 
-% WALLTIME 00:03:32
+% WALLTIME 00:10:00
 % MEM 2gb
 
 % TEST test_tutorial_eeg_preprocessing

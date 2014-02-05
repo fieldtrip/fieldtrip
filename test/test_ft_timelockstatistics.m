@@ -1,7 +1,7 @@
 function test_ft_timelockstatistics
 
 % MEM 1500mb
-% WALLTIME 00:05:06
+% WALLTIME 00:10:00
 
 % TEST test_ft_timelockstatistics
 % TEST ft_timelockstatistics, findcluster, clusterstat, ft_statistics_montecarlo

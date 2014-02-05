@@ -1,7 +1,7 @@
 function test_bug1786
 
 % MEM 1500mb
-% WALLTIME 00:03:03
+% WALLTIME 00:10:00
 
 % TEST test_bug1786
 % TEST ft_channelrepair ft_prepare_neighbours

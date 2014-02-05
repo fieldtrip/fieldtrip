@@ -1,7 +1,7 @@
 function test_bug1530
 
 % MEM 2gb
-% WALLTIME 00:03:08
+% WALLTIME 00:10:00
 
 % TEST test_bug1530
 % TEST ft_sourceplot

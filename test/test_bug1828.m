@@ -1,7 +1,7 @@
 function test_bug1828
 
 % MEM 1500mb
-% WALLTIME 00:03:14
+% WALLTIME 00:10:00
 
 % TEST test_bug1828
 % TEST ft_convert_coordsys

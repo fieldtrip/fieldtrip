@@ -1,7 +1,7 @@
 function test_bug1230
 
 % MEM 1500mb
-% WALLTIME 00:03:01
+% WALLTIME 00:10:00
 
 % this is not really pertaining to a bug, but to a feature request.
 % therefore the code is commented out, the more so, because the function that is called

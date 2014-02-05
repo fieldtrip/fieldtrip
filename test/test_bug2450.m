@@ -1,7 +1,7 @@
 function test_bug2450
 
 % MEM 500mb
-% WALLTIME 00:05:00
+% WALLTIME 00:10:00
 
 % TEST test_bug2450
 % TEST ft_rejectvisual

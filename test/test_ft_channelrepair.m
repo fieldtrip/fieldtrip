@@ -1,7 +1,7 @@
 function test_ft_channelrepair
 
 % MEM 1500mb
-% WALLTIME 00:03:18
+% WALLTIME 00:10:00
 
 % TEST test_ft_channelrepair
 % TEST ft_channelrepair ft_datatype_sens fixsens ft_prepare_neighbours

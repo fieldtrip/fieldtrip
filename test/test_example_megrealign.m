@@ -1,7 +1,7 @@
 function test_example_megrealign
 
 % MEM 200mb
-% WALLTIME 00:05:00
+% WALLTIME 00:10:00
 
 % TEST test_example_megrealign
 % TEST ft_read_sens ft_dipolesimulation ft_timelockanalysis 

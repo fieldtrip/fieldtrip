@@ -1,7 +1,7 @@
 function test_bug62
 
 % MEM 1500mb
-% WALLTIME 00:04:04
+% WALLTIME 00:10:00
 
 % TEST test_bug62
 % TEST ft_read_mri ft_volumenormalise

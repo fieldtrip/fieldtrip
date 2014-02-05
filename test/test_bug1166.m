@@ -1,7 +1,7 @@
 function test_bug1166
 
 % MEM 1500mb
-% WALLTIME 00:03:13
+% WALLTIME 00:10:00
 
 % TEST test_bug1166
 % TEST ft_prepare_headmodel ft_headmodel_bem_asa 

@@ -1,7 +1,7 @@
 function test_bug2332
 
 % MEM 1500mb
-% WALLTIME 00:03:04
+% WALLTIME 00:10:00
 
 % TEST test_bug2332
 % TEST ft_apply_montage ft_componentanalysis ft_rejectcomponent

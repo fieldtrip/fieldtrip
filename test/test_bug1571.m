@@ -1,7 +1,7 @@
 function test_bug1571
 
 % MEM 3gb
-% WALLTIME 00:03:29
+% WALLTIME 00:10:00
 
 % TEST test_bug1571
 % TEST ft_preprocessing ft_preproc_dftfilter dftfilter ft_freqanalysis ft_singleplotER

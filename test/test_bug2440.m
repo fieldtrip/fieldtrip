@@ -1,8 +1,9 @@
 function test_bug2440
 
 % MEM 500mb
-% WALLTIME 00:01:00
-% test_bug2440
+% WALLTIME 00:10:00
+
+% TEST test_bug2440 ft_freqsimulation ft_freqanalysis ft_singleplotTFR
 
 cfg = [];
 cfg.method = 'broadband';

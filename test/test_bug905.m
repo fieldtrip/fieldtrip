@@ -1,7 +1,7 @@
 function test_bug905
 
 % MEM 1500mb
-% WALLTIME 00:06:47
+% WALLTIME 00:10:00
 
 % TEST test_bug905
 % TEST ft_freqanalysis ft_specest_mtmfft

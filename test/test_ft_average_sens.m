@@ -1,7 +1,7 @@
 function test_ft_average_sens
 
 % MEM 1500mb
-% WALLTIME 00:03:02
+% WALLTIME 00:10:00
 
 % TEST test_ft_average_sens
 % TEST ft_average_sens ft_transform_sens ft_transform_geometry

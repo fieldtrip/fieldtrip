@@ -1,7 +1,7 @@
 function test_bug1114
 
 % MEM 1500mb
-% WALLTIME 00:03:32
+% WALLTIME 00:10:00
 
 % This function parses all fieldtrip main and module functions and determines
 % whether there are any dependencies on fieldtrip/compat or any other

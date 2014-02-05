@@ -1,7 +1,7 @@
 function test_bug1390
 
 % MEM 2gb
-% WALLTIME 00:03:09
+% WALLTIME 00:10:00
 
 % TEST test_bug1390
 % TEST ft_timelockanalysis ft_datatype_raw

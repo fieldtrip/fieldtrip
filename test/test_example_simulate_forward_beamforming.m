@@ -1,7 +1,7 @@
 function test_example_simulate_forward_beamforming
 
 % MEM 100mb
-% WALLTIME 00:05:00
+% WALLTIME 00:10:00
 
 % TEST test_example_simulate_forward_beamforming
 % TEST ft_dipolesimulation ft_timelockanalysis ft_sourceanalysis

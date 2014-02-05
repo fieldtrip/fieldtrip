@@ -1,7 +1,7 @@
 function test_example_simulate_forward_dipolefit
 
 % MEM 100mb
-% WALLTIME 00:05:00
+% WALLTIME 00:10:00
 
 % TEST test_example_simulate_forward_dipolefit
 % TEST ft_dipolesimulation ft_timelockanalysis ft_dipolefitting

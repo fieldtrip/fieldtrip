@@ -1,7 +1,7 @@
 function test_bug1816
 
 % MEM 1500mb
-% WALLTIME 00:03:01
+% WALLTIME 00:10:00
 
 % test the ft_volumesegment function used for segmentation with FSL BET and FAST
 % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1816

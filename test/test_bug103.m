@@ -1,7 +1,7 @@
 function test_bug103
 
 % MEM 1500mb
-% WALLTIME 00:03:04
+% WALLTIME 00:10:00
 
 % TEST test_bug103
 % TEST ft_singleplotER

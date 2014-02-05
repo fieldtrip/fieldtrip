@@ -1,7 +1,7 @@
 function test_bug1245
 
 % MEM 1500mb
-% WALLTIME 00:05:04
+% WALLTIME 00:10:00
 
 % TEST test_bug_1245
 % TEST ft_multiplotER

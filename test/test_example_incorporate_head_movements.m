@@ -1,7 +1,7 @@
 function test_example_incorporate_head_movements(datadir)
 
 % MEM 200mb
-% WALLTIME 00:05:00
+% WALLTIME 00:10:00
 
 % TEST test_example_incorporate_head_movements
 % TEST ft_definetrial ft_preprocessing ft_timelockanalysis ft_regressconfound

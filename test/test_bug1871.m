@@ -1,7 +1,7 @@
 function test_bug1871
 
 % MEM 1500mb
-% WALLTIME 00:03:33
+% WALLTIME 00:10:00
 
 % TEST test_bug1871
 % TEST ft_struct2single 

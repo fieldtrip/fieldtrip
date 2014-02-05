@@ -1,7 +1,7 @@
 function test_bug1409
 
 % MEM 1500mb
-% WALLTIME 00:03:01
+% WALLTIME 00:10:00
 
 % TEST test_bug1409
 % TEST ft_selectdata
