@@ -222,7 +222,7 @@ ft_postamble savevar conjunction
 % SUBFUNCTIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [minstat] = minimumstatistics(variable1, variable2)
-minAbsT   = max(abs(variable1),abs(variable2)) - abs(variable1-variable2); % maximum - difference
+minAbsT   = min(abs(variable1), abs(variable2));  % minimum of the absolute values
 equalSign = (sign(variable1) == sign(variable2)); % 1 is signs are equal, 0 otherwise
 origSign  = sign(variable1);                      % sign(varagin2) gives same result
 minstat   = minAbsT.*equalSign.*origSign;
