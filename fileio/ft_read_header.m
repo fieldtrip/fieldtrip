@@ -1378,13 +1378,23 @@ switch headerformat
     end
     
     iscontinuous  = 0;
+    isepoched     = 0;
     isaverage     = 0;
-    isepoched     = 0;     % FIXME don't know how to determine this, or whether epoched .fif data exists!
     
     if isempty(fiff_find_evoked(filename)) % true if file contains no evoked responses
-      iscontinuous = 1;
+      try
+        epochs = fiff_read_epochs(filename);
+        isepoched = 1;
+      catch err
+        if strcmp(err.identifier, 'MNE:fiff_read_events')
+          iscontinuous = 1;
+        else
+          rethrow(err)
+        end
+      end
+      
     else
-      isaverage    = 1;
+      isaverage = 1;
     end
     
     if iscontinuous
@@ -1414,6 +1424,12 @@ switch headerformat
       % otherwise conflicts will occur in read_data
       hdr.nTrials     = 1;
       info.raw        = raw; % keep all the details
+      
+    elseif isepoched
+        hdr.nSamples    = length(epochs.times);
+        hdr.nSamplesPre = sum(epochs.times < 0);
+        hdr.nTrials     = size(epochs.data, 1);
+        info.epochs     = epochs;  % this is used by read_data to get the actual data, i.e. to prevent re-reading
       
     elseif isaverage
       try,
@@ -1448,8 +1464,6 @@ switch headerformat
         hdr.nSamplesPre = 0;
         hdr.nTrials     = 0;
       end
-    elseif isepoched
-      error('Support for epoched *.fif data is not yet implemented.')
     end
     
     % remember the original header details
