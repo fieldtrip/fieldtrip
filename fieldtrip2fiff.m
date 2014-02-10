@@ -137,31 +137,34 @@ if israw
     fprintf('Writing events to %s\n', eventfile)
   end
   
-elseif isepch || istlck
+elseif isepch
   
-  if isepch
-    for j = 1:length(data.trial)
-      evoked(j).aspect_kind = 100;
-      evoked(j).is_smsh     = 0; % FIXME: How could we tell?
-      evoked(j).nave        = 1; % FIXME: Use the real value
-      evoked(j).first       = round(data.time{j}(1)*info.sfreq);
-      evoked(j).last        = round(data.time{j}(end)*info.sfreq);
-      evoked(j).times       = data.time{j};
-      evoked(j).comment     = sprintf('FieldTrip data, category/trial %d', j);
-      evoked(j).epochs      = data.trial{j};
-    end
-    
-  elseif istlck
-    evoked.aspect_kind = 100;
-    evoked.is_smsh     = 0;
-    evoked.nave        = max(data.dof(:));
-    evoked.first       = round(data.time(1)*info.sfreq);
-    evoked.last        = round(data.time(end)*info.sfreq);
-    evoked.times       = data.time;
-    evoked.comment     = sprintf('FieldTrip data averaged');
-    evoked.epochs      = data.avg;
-    
+  error('fieldtrip2fiff:NotImplementedError', 'Function to write epochs to MNE not implemented yet')
+  
+  for j = 1:length(data.trial)
+    evoked(j).aspect_kind = 100;
+    evoked(j).is_smsh     = 0; % FIXME: How could we tell?
+    evoked(j).nave        = 1; % FIXME: Use the real value
+    evoked(j).first       = round(data.time{j}(1)*info.sfreq);
+    evoked(j).last        = round(data.time{j}(end)*info.sfreq);
+    evoked(j).times       = data.time{j};
+    evoked(j).comment     = sprintf('FieldTrip data, category/trial %d', j);
+    evoked(j).epochs      = data.trial{j};
   end
+  
+  % fiffdata.info   = info;
+  % fiffdata.evoked = evoked;
+  % fiff_write_XXX(fifffile, fiffdata);
+  
+elseif istlck
+  evoked.aspect_kind = 100;
+  evoked.is_smsh     = 0;
+  evoked.nave        = max(data.dof(:));
+  evoked.first       = round(data.time(1)*info.sfreq);
+  evoked.last        = round(data.time(end)*info.sfreq);
+  evoked.times       = data.time;
+  evoked.comment     = sprintf('FieldTrip data averaged');
+  evoked.epochs      = data.avg;
   
   fiffdata.info   = info;
   fiffdata.evoked = evoked;
@@ -284,7 +287,7 @@ if any(backpanel)
   
   eve = zeros(numel(trigger), 3);
   eve(:,1) = [event(backpanel).sample];
-  eve(:,2) = [event(backpanel).value];
+  eve(:,3) = [event(backpanel).value];
   return
 end
 
