@@ -104,6 +104,12 @@ for i = 1:orig.nchan;
   nEEG = nEEG +(orig.chs(i).kind==2);
 end
 
+% % how many IAS (internal active shielding) channels?
+% nIAS = 0;
+% for i = 1:orig.nchan;
+%   nIAS = nIAS + ~isempty(strmatch('IAS', orig.chs(i).ch_name));
+% end
+
 % how many sensors in total?
 nSensors = nPlaGrad + nMag + nAxGrad;
 
@@ -185,7 +191,7 @@ for n = 1:orig.nchan
     grad.label{kChan}=deblank(orig.ch_names{n});
     grad.chantype{kChan,1}='megaxial';
     kChan=kChan+1;
-    
+        
   else
     % do nothing - either an EEG channel or something else such as a stim channel
   end

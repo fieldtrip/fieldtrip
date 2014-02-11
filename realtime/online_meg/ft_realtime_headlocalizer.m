@@ -140,6 +140,8 @@ elseif isneuromag
   % note that the forward model is a magnetic dipole in an infinite vacuum
   %cfg.channel = ft_channelselection('MEG', hdr.label); % because we want to planars as well (previously only magnetometers)
   cfg.channel = ft_channelselection('MEGMAG', hdr.label); % old
+  %cfg.channel = setdiff(ft_channelselection('MEG', hdr.label),ft_channelselection('MEGMAG', hdr.label)); % just trying out (planar mags)
+  %cfg.channel = ft_channelselection('IAS*',hdr.label); % internal active shielding
   [vol, sens] = ft_prepare_vol_sens([], hdr.grad, 'channel', cfg.channel);
   sens = ft_datatype_sens(sens, 'version', 'upcoming', 'scaling', 'amplitude/distance', 'distance', 'm'); % ensure SI units
   coilsignal = [];
@@ -158,10 +160,19 @@ end % if ctf or neuromag
 if isctf
   [dum, chanindx] = match_str('headloc', hdr.chantype);
 elseif isneuromag
+  % 102 magnetometers
   [dum, chanindx] = match_str('megmag', hdr.chantype);
-%   [dum, chanindx1] = match_str('megmag', hdr.chantype);
-%   [dum, chanindx2] = match_str('megplanar', hdr.chantype); % because we want to planars as well
-%   chanindx = sort([chanindx1; chanindx2],1); % because we want to planars as well
+  
+  % all 306
+  %[dum, chanindx1] = match_str('megmag', hdr.chantype);
+  %[dum, chanindx2] = match_str('megplanar', hdr.chantype); % because we want to planars as well
+  %chanindx = sort([chanindx1; chanindx2],1); % because we want to planars as well
+  
+  % 204 planar gradiometers
+  %[dum, chanindx] = match_str('megplanar', hdr.chantype);
+  
+  % 11 IAS
+  % chanindx = 1:11;  
 end
 
 if isempty(chanindx)
@@ -473,6 +484,8 @@ elseif isneuromag
   % estimate the complex-valued MEG topography for each coil
   % this implements a discrete Fourier transform (DFT)
   topo = [];
+  %[x, ut] = svdfft( data.trial{1} );
+  %data.trial{1} = x;
   topo = ft_preproc_detrend(data.trial{1}) * ctranspose(coilsignal);
   
   % ignore the out-of-phase spectral component in the topography
