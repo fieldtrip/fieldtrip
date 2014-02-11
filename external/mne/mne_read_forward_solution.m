@@ -386,17 +386,21 @@ end
 
 return;
 
-    function [tag] = find_tag(node,findkind)
+    function [tag] = find_tag(nodes,findkind)
 
-        for p = 1:node.nent
-            if node.dir(p).kind == findkind
-                tag = fiff_read_tag(fid,node.dir(p).pos);
-                return;
-            end
-        end
-        tag = [];
-        return;
-    end
+   for kk = 1:length(nodes)
+      node = nodes(kk);
+      for p = 1:node.nent
+         if node.dir(p).kind == findkind
+            tag = fiff_read_tag(fid,node.dir(p).pos);
+            return;
+         end
+      end
+      tag = [];
+      return;
+   end
+   
+   end
 
     function [one] = read_one(node)
         %
