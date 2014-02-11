@@ -237,6 +237,16 @@ for i=1:size(dip.pos,1)
   end
   
   ft_progress(i/size(dip.pos,1), 'beaming source %d from %d\n', i, size(dip.pos,1));
+  
+  % remember how all components in the output csd should be interpreted
+  %scandiplabel = repmat({'scandip'}, 1, size(lf, 2));    % based on last leadfield
+  scandiplabel = repmat({'scandip'}, 1, size(filt, 1)-size(rf, 2)-size(sf, 2)-Nrefchan-Nsupchan); % robust if lf does not exist
+  refdiplabel  = repmat({'refdip'},  1, size(rf, 2));
+  supdiplabel  = repmat({'supdip'},  1, size(sf, 2));
+  refchanlabel = repmat({'refchan'}, 1, Nrefchan);
+  supchanlabel = repmat({'supchan'}, 1, Nsupchan);
+  % concatenate all the labels
+  dipout.csdlabel{i} = [scandiplabel refdiplabel supdiplabel refchanlabel supchanlabel];
 end % for all dipoles
 
 ft_progress('close');
@@ -244,16 +254,6 @@ ft_progress('close');
 dipout.inside  = dip.originside;
 dipout.outside = dip.origoutside;
 dipout.pos     = dip.origpos;
-
-% remember how all components in the output csd should be interpreted
-%scandiplabel = repmat({'scandip'}, 1, size(lf, 2));    % based on last leadfield
-scandiplabel = repmat({'scandip'}, 1, size(filt, 1)-size(rf, 2)-size(sf, 2)-Nrefchan-Nsupchan); % robust if lf does not exist
-refdiplabel  = repmat({'refdip'},  1, size(rf, 2));
-supdiplabel  = repmat({'supdip'},  1, size(sf, 2));
-refchanlabel = repmat({'refchan'}, 1, Nrefchan);
-supchanlabel = repmat({'supchan'}, 1, Nsupchan);
-% concatenate all the labels
-dipout.csdlabel = [scandiplabel refdiplabel supdiplabel refchanlabel supchanlabel];
 
 % reassign the scan values over the inside and outside grid positions
 if isfield(dipout, 'leadfield')
@@ -275,6 +275,10 @@ end
 if isfield(dipout, 'noisecsd')
   dipout.noisecsd(dipout.inside)  = dipout.noisecsd;
   dipout.noisecsd(dipout.outside) = {[]};
+end
+if isfield(dipout, 'csdlabel')
+  dipout.csdlabel(dipout.inside)  = dipout.csdlabel;
+  dipout.csdlabel(dipout.outside) = {[]};
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

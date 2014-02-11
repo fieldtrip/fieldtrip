@@ -479,7 +479,7 @@ return % statistics_wrapper main()
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION for extracting the data of interest
-% data resemples PCC beamed source reconstruction, multiple trials are coded in mom
+% data resembles PCC beamed source reconstruction, multiple trials are coded in mom
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [dat, cfg] = get_source_pcc_mom(cfg, varargin)
 Nsource = length(varargin);
@@ -487,11 +487,17 @@ Nvoxel  = length(varargin{1}.inside) + length(varargin{1}.outside);
 Ninside = length(varargin{1}.inside);
 dim     = varargin{1}.dim;
 for i=1:Nsource
-  dipsel  = find(strcmp(varargin{i}.avg.csdlabel, 'scandip'));
   ntrltap = sum(varargin{i}.cumtapcnt);
   dat{i}  = zeros(Ninside, ntrltap);
   for j=1:Ninside
     k = varargin{1}.inside(j);
+    if ischar(varargin{i}.avg.csdlabel{1})
+      % this represents the 'old-style' csdlabel, one list for all dipoles
+      dipsel  = find(strcmp(varargin{i}.avg.csdlabel, 'scandip'));
+    else
+      % this represents the 'new-style' csdlabel, one list for each of the dipoles
+      dipsel  = find(strcmp(varargin{i}.avg.csdlabel{k}, 'scandip'));
+    end
     dat{i}(j,:) = reshape(varargin{i}.avg.mom{k}(dipsel,:), 1, ntrltap);
   end
 end

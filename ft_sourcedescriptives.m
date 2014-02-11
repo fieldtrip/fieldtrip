@@ -196,16 +196,23 @@ switch cfg.powmethod
 end
 
 if ispccdata
+  
   % the source reconstruction was computed using the pcc beamformer
   Ndipole    = length(source.inside) + length(source.outside);
-  dipsel     = match_str(source.avg.csdlabel, 'scandip');
-  refchansel = match_str(source.avg.csdlabel, 'refchan');
-  refdipsel  = match_str(source.avg.csdlabel, 'refdip');
-  supchansel = match_str(source.avg.csdlabel, 'supchan');
-  supdipsel  = match_str(source.avg.csdlabel, 'supdip');
+  
+  if ischar(source.avg.csdlabel{1}), source.avg.csdlabel = {source.avg.csdlabel}; end
+  if numel(source.avg.csdlabel)==1,
+    source.avg.csdlabel = repmat(source.avg.csdlabel, [Ndipole 1]);
+  end
+  
+  dipsel     = find(strcmp(source.avg.csdlabel{1}, 'scandip'));
+  refchansel = find(strcmp(source.avg.csdlabel{1}, 'refchan'));
+  refdipsel  = find(strcmp(source.avg.csdlabel{1}, 'refdip'));
+  supchansel = find(strcmp(source.avg.csdlabel{1}, 'supchan'));
+  supdipsel  = find(strcmp(source.avg.csdlabel{1}, 'supdip'));
 
   % cannot handle reference channels and reference dipoles simultaneously
-  if length(refchansel)>0 && length(refdipsel)>0
+  if numel(refchansel)>0 && numel(refdipsel)>0
     error('cannot simultaneously handle reference channels and reference dipole');
   end
 
@@ -213,11 +220,25 @@ if ispccdata
   refsel = [refdipsel refchansel];
   supsel = [supdipsel supchansel];
 
+  % first do the projection of the moment, if requested
   if projectmom
     source.avg.ori = cell(1, Ndipole);
     ft_progress('init', cfg.feedback, 'projecting dipole moment');
     for diplop=1:length(source.inside)
       ft_progress(diplop/length(source.inside), 'projecting dipole moment %d/%d\n', diplop, length(source.inside));
+      
+      if numel(source.avg.csdlabel)>1,
+        dipsel     = find(strcmp(source.avg.csdlabel{diplop}, 'scandip'));
+        refchansel = find(strcmp(source.avg.csdlabel{diplop}, 'refchan'));
+        refdipsel  = find(strcmp(source.avg.csdlabel{diplop}, 'refdip'));
+        supchansel = find(strcmp(source.avg.csdlabel{diplop}, 'supchan'));
+        supdipsel  = find(strcmp(source.avg.csdlabel{diplop}, 'supdip'));
+        
+        % these are only used to count the number of reference/suppression dipoles and channels
+        refsel = [refdipsel refchansel];
+        supsel = [supdipsel supchansel];
+      end
+      
       i       = source.inside(diplop);
       mom     = source.avg.mom{i}(dipsel,     :);
       ref     = source.avg.mom{i}(refdipsel,  :);
@@ -236,23 +257,23 @@ if ispccdata
       source.avg.mom{i} = cat(1, mom, ref, sup, refchan, supchan);
 
       % create rotation-matrix
-      rotmat = zeros(0, length(source.avg.csdlabel));
+      rotmat = zeros(0, length(source.avg.csdlabel{i}));
       if ~isempty(rmom),
-        rotmat = [rotmat; rmom zeros(1,length([refsel(:);supsel(:)]))];
+        rotmat = [rotmat; rmom zeros(numel(refsel)+numel(supsel),1)];
       end
       if ~isempty(rref),
-        rotmat = [rotmat; zeros(1, length([dipsel])), rref, zeros(1,length([refchansel(:);supsel(:)]))];
+        rotmat = [rotmat; zeros(1, numel(dipsel)), rref, zeros(1,numel(refchansel)+numel(supsel))];
       end
       if ~isempty(rsup),
-        rotmat = [rotmat; zeros(1, length([dipsel(:);refdipsel(:)])), rsup, zeros(1,length([refchansel(:);supchansel(:)]))];
+        rotmat = [rotmat; zeros(1, numel(dipsel)+numel(refdipsel)), rsup, zeros(1,numel(refchansel)+numel(supchansel))];
       end
       for j=1:length(supchansel)
         rotmat(end+1,:) = 0;
-        rotmat(end,length([dipsel(:);refdipsel(:);supdipsel(:)])+j) = 1;
+        rotmat(end,numel(dipsel)+numel(refdipsel)+numel(supdipsel)+j) = 1;
       end
       for j=1:length(refchansel)
         rotmat(end+1,:) = 0;
-        rotmat(end,length([dipsel(:);refdipsel(:);supdipsel(:);supchansel(:)])+j) = 1;
+        rotmat(end,numel(dipsel)+numel(refdipsel)+numel(supdipsel)+numel(supchansel)+j) = 1;
       end
       
       % compute voxel-level csd-matrix
@@ -261,6 +282,17 @@ if ispccdata
       if isfield(source.avg, 'noisecsd'), source.avg.noisecsd{i} = rotmat * source.avg.noisecsd{i} * rotmat'; end
       % compute rotated filter
       if isfield(source.avg, 'filter'),   source.avg.filter{i}   = rotmat * source.avg.filter{i}; end
+      if isfield(source.avg, 'csdlabel'),
+        % remember what the interpretation is of all CSD output components
+        scandiplabel = repmat({'scandip'}, 1, cfg.numcomp);          % only one dipole orientation remains
+        refdiplabel  = repmat({'refdip'},  1, length(refdipsel)>0);  % for svdfft at max. only one dipole orientation remains
+        supdiplabel  = repmat({'supdip'},  1, length(supdipsel)>0);  % for svdfft at max. only one dipole orientation remains
+        refchanlabel = repmat({'refchan'}, 1, length(refchansel));
+        supchanlabel = repmat({'supchan'}, 1, length(supchansel));
+        % concatenate all the labels
+        source.avg.csdlabel{i} = cat(2, scandiplabel, refdiplabel, supdiplabel, refchanlabel, supchanlabel);
+      end
+      
       % compute rotated leadfield
       % FIXME in the presence of a refdip and/or supdip, this does not work; leadfield is Nx3
       if isfield(source,  'leadfield'),   
@@ -273,20 +305,12 @@ if ispccdata
     end %for diplop
     ft_progress('close');
 
-    % remember what the interpretation is of all CSD output components
-    scandiplabel = repmat({'scandip'}, 1, cfg.numcomp);          % only one dipole orientation remains
-    refdiplabel  = repmat({'refdip'},  1, length(refdipsel)>0);  % for svdfft at max. only one dipole orientation remains
-    supdiplabel  = repmat({'supdip'},  1, length(supdipsel)>0);  % for svdfft at max. only one dipole orientation remains
-    refchanlabel = repmat({'refchan'}, 1, length(refchansel));
-    supchanlabel = repmat({'supchan'}, 1, length(supchansel));
-    % concatenate all the labels
-    source.avg.csdlabel = cat(2, scandiplabel, refdiplabel, supdiplabel, refchanlabel, supchanlabel);
     % update the indices
-    dipsel     = match_str(source.avg.csdlabel, 'scandip');
-    refchansel = match_str(source.avg.csdlabel, 'refchan');
-    refdipsel  = match_str(source.avg.csdlabel, 'refdip');
-    supchansel = match_str(source.avg.csdlabel, 'supchan');
-    supdipsel  = match_str(source.avg.csdlabel, 'supdip');
+    dipsel     = find(strcmp(source.avg.csdlabel, 'scandip'));
+    refchansel = find(strcmp(source.avg.csdlabel, 'refchan'));
+    refdipsel  = find(strcmp(source.avg.csdlabel, 'refdip'));
+    supchansel = find(strcmp(source.avg.csdlabel, 'supchan'));
+    supdipsel  = find(strcmp(source.avg.csdlabel, 'supdip'));
     refsel     = [refdipsel refchansel];
     supsel     = [supdipsel supchansel];
   end % if projectmom
@@ -306,33 +330,62 @@ if ispccdata
         i   = source.inside(diplop);
         dat = source.avg.mom{i};
         tmpmom = dat(:, sumtapcnt(triallop)+1:sumtapcnt(triallop+1));
-        tmpcsd = [tmpmom * tmpmom'] ./cumtapcnt(triallop);
+        tmpcsd = (tmpmom * tmpmom') ./cumtapcnt(triallop);
         source.trial(triallop).mom{i} = tmpmom;
         source.trial(triallop).csd{i} = tmpcsd;
       end %for diplop
     end % for triallop
     ft_progress('close');
-    % remove the average, continue with separate trials
-    source = rmfield(source, 'avg');
+    % remove the average, continue with separate trials, but keep track of
+    % the csdlabel
+    csdlabel = source.avg.csdlabel;
+    source   = rmfield(source, 'avg');
   else
     fprintf('using average voxel-level cross-spectral densities\n');
+    csdlabel = source.avg.csdlabel;
   end % if keeptrials
-
-  hasrefdip  = ~isempty(refdipsel);
-  hasrefchan = ~isempty(refchansel);
-  hassupdip  = ~isempty(supdipsel);
-  hassupchan = ~isempty(supchansel);
+  
+  % process the csdlabel for each of the dipoles
+  hasrefdip  = true;
+  hasrefchan = true;
+  hassupdip  = true;
+  hassupchan = true;
+  
+  dipselcell     = cell(Ndipole,1);
+  refdipselcell  = cell(Ndipole,1);
+  refchanselcell = cell(Ndipole,1);
+  supdipselcell  = cell(Ndipole,1);
+  supchanselcell = cell(Ndipole,1);
+  
+  for diplop = 1:Ndipole
+    dipsel     = find(strcmp(csdlabel{diplop}, 'scandip'));
+    refchansel = find(strcmp(csdlabel{diplop}, 'refchan'));
+    refdipsel  = find(strcmp(csdlabel{diplop}, 'refdip'));
+    supchansel = find(strcmp(csdlabel{diplop}, 'supchan'));
+    supdipsel  = find(strcmp(csdlabel{diplop}, 'supdip'));
+  
+    hasrefdip  = ~isempty(refdipsel)  && hasrefdip; %NOTE: it has to be true for all dipoles!
+    hasrefchan = ~isempty(refchansel) && hasrefchan;
+    hassupdip  = ~isempty(supdipsel)  && hassupdip;
+    hassupchan = ~isempty(supchansel) && hassupchan;
+  
+    dipselcell{diplop}     = dipsel;
+    refdipselcell{diplop}  = refdipsel;
+    refchanselcell{diplop} = refchansel;
+    supdipselcell{diplop}  = supdipsel;
+    supchanselcell{diplop} = supchansel;
+  end
   
   if keeptrials
     % do the processing of the CSD matrices for each trial
     if ~strcmp(cfg.supmethod, 'none')
       error('suppression is only supported for average CSD');
     end
-    dipselcell = mat2cell(repmat(dipsel(:)', [Ndipole 1]), ones(Ndipole,1), length(dipsel));
-    if hasrefdip,  refdipselcell  = mat2cell(repmat(refdipsel(:)',  [Ndipole 1]), ones(Ndipole,1), length(refdipsel));  end
-    if hasrefchan, refchanselcell = mat2cell(repmat(refchansel(:)', [Ndipole 1]), ones(Ndipole,1), length(refchansel)); end
-    if hassupdip,  supdipselcell  = mat2cell(repmat(supdipsel(:)',  [Ndipole 1]), ones(Ndipole,1), length(supdipsel));  end
-    if hassupchan, supchanselcell = mat2cell(repmat(supchansel(:)', [Ndipole 1]), ones(Ndipole,1), length(supchansel)); end
+    %dipselcell = mat2cell(repmat(dipsel(:)', [Ndipole 1]), ones(Ndipole,1), length(dipsel));
+    %if hasrefdip,  refdipselcell  = mat2cell(repmat(refdipsel(:)',  [Ndipole 1]), ones(Ndipole,1), length(refdipsel));  end
+    %if hasrefchan, refchanselcell = mat2cell(repmat(refchansel(:)', [Ndipole 1]), ones(Ndipole,1), length(refchansel)); end
+    %if hassupdip,  supdipselcell  = mat2cell(repmat(supdipsel(:)',  [Ndipole 1]), ones(Ndipole,1), length(supdipsel));  end
+    %if hassupchan, supchanselcell = mat2cell(repmat(supchansel(:)', [Ndipole 1]), ones(Ndipole,1), length(supchansel)); end
     
     ft_progress('init', cfg.feedback, 'computing singletrial voxel-level power');
     for triallop = 1:Ntrial
@@ -374,9 +427,9 @@ if ispccdata
           supindx = [supdipsel supchansel];
           if diplop==1, refsel  = refsel - length(supdipsel); end%adjust index only once
         case 'chan'
-          supindx = [supchansel];
+          supindx = supchansel;
         case 'dip'
-          supindx = [supdipsel];
+          supindx = supdipsel;
           if diplop==1, refsel  = refsel - length(supdipsel); end
         case 'none'
           % do nothing
@@ -384,7 +437,7 @@ if ispccdata
       end
       tmpcsd  = source.avg.csd{i};
       scnindx = setdiff(1:size(tmpcsd,1), supindx);
-      tmpcsd  = tmpcsd(scnindx, scnindx) - [tmpcsd(scnindx, supindx)*pinv(tmpcsd(supindx, supindx))*tmpcsd(supindx, scnindx)];
+      tmpcsd  = tmpcsd(scnindx, scnindx) - tmpcsd(scnindx, supindx)*pinv(tmpcsd(supindx, supindx))*tmpcsd(supindx, scnindx);
       source.avg.csd{i}   = tmpcsd;
     end % for diplop
     source.avg.csdlabel = source.avg.csdlabel(scnindx);
