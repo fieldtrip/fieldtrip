@@ -1641,7 +1641,7 @@ if ~isempty(tag) && ~opt.init
     % timefreq
     opt.qi(2) = nearest(opt.data.time, pos(1));
     opt.qi(1) = nearest(opt.data.freq, pos(2));
-    opt.update = [1 1 0];
+    opt.update = [1 1 1];
   elseif strcmp(tag, 'TF2')
     % freq only
     opt.qi  = nearest(opt.data.freq, pos(1));
