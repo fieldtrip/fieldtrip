@@ -43,10 +43,7 @@ function ft_uilayout(h, varargin)
 %                                  elements to the left
 %                    'right'     : aligns the horizontal position of 
 %                                  elements to the right
-%   'valign'         'top'       : aligns the vertical position of 
-%                                  elements to the top
-%                    'bottom'    : aligns the vertical position of 
-%                                  elements to the bottom
+
 
 % Copyright (C) 2009, Robert Oostenveld
 %
@@ -190,9 +187,9 @@ if ~isempty(hpos)
     
   elseif isequal(hpos, 'align')
     if isequal(halign, 'right')
-      hpos = pos(1,2); % the position of the last element
+      hpos = pos(end,1); % the position of the last element
     else % default behaviour
-      hpos = pos(1,2); % the position of the first element
+      hpos = pos(1,1); % the position of the first element
     end
   elseif isequal(hpos, 'distribute')
     minpos = min(pos(:,1));
