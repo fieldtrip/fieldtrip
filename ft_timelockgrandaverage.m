@@ -102,7 +102,7 @@ Nsubj    = length(varargin);
 dimord   = varargin{1}.dimord;
 hastime  = ~isempty(strfind(varargin{1}.dimord, 'time'));
 hasrpt   = ~isempty(strfind(varargin{1}.dimord, 'rpt'));
-
+hasdof   = isfield(varargin{1}, 'dof');
 % check whether the input data is suitable
 if hasrpt
   fprintf('ignoring the single-subject repetition dimension\n');
@@ -142,6 +142,12 @@ for i=1:Nsubj
     timesel = nearest(varargin{i}.time, cfg.latency(1)):nearest(varargin{i}.time, cfg.latency(2));
     varargin{i}.time = varargin{i}.time(timesel);
   end
+  
+  if hasdof
+    timesel = nearest(varargin{i}.time, cfg.latency(1)):nearest(varargin{i}.time, cfg.latency(2));
+    varargin{i}.dof = varargin{i}.dof(chansel,timesel);
+  end
+  
   % select the overlapping samples in the data matrix
   switch dimord
     case 'chan'
