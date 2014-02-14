@@ -85,7 +85,7 @@ if strcmp(dtype, 'source')
   end
 end
 
-if strcmp(dtype, 'raw')
+if strcmp(dtype, 'raw') || strcmp(dtype, 'comp')
   if strcmp(cfg.selmode, 'union')
     error('cfg.selmode ''union'' is not yet supported for raw data');
   end
