@@ -335,6 +335,10 @@ else
         varargin{i} = makeselection_rpt(varargin{i}, selrpt{i}); % avgoverrpt for the supporting fields is dealt with later
         if hastime, 
           varargin{i} = makeselection_time(varargin{i}, seltime{i}, avgovertime); % update the time field
+        
+          % also deal with the cumtapcnt-field, because it has a frequency
+          % dimension when time dimension is present
+          varargin{i} = makeselection_cumtapcnt(varargin{i}, selfreq{i}, avgoverfreq);
         end
       end % varargin
       
@@ -625,6 +629,40 @@ elseif isempty(selfreq)
   data.freq  = zeros(1,0);
 end
 end % function makeselection_freq
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function data = makeselection_cumtapcnt(data, selfreq, avgoverfreq)
+
+if ~isfield(data, 'time')
+  error('the subfunction makeselection_cumtapcnt should only be called when there is a time dimension in the data');
+end
+if ~isfield(data, 'cumtapcnt')
+  return;
+end
+
+if avgoverfreq
+  %data = rmfield(data, 'freq');
+  if ~isnan(selfreq)
+    data.cumtapcnt  = mean(data.cumtapcnt(:,selfreq),2);
+  else
+    data.cumtapcnt  = mean(data.cumtapcnt,2);
+  end
+elseif numel(selfreq)==1 && ~isfinite(selfreq)
+  % do nothing
+elseif numel(selfreq)==1 && isfinite(selfreq)
+  data.cumtapcnt = data.cumtapcnt(:,selfreq);
+elseif numel(selfreq)>1 && any(~isfinite(selfreq))
+  tmp  = selfreq(:)';
+  tmp2 = zeros(size(data.cumtapcnt,1), numel(selfreq));
+  sel = isfinite(selfreq);
+  tmp2(:, sel)  = data.cumtapcnt(:,selfreq(sel));
+  data.freq = tmp2;
+elseif numel(selfreq)>1 && all(isfinite(selfreq))
+  data.cumtapcnt = data.cumtapcnt(:,selfreq);
+elseif isempty(selfreq)
+  %data.cumtapcnt  = zeros(1,0);
+end
+end % function makeselection_cumtapcnt
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function data = makeselection_time(data, seltime, avgovertime)
