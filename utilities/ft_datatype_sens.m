@@ -248,7 +248,7 @@ switch version
           if strcmp(sens.chanunit{i}, amplitude)
             % this channel is expressed as amplitude
             coil = find(abs(sens.tra(i,:))~=0);
-            if length(coil)==1
+            if length(coil)==1 || strcmp(sens.chantype{i}, 'megmag')
               % this is a magnetometer channel, no conversion needed
               continue
             elseif length(coil)~=2
