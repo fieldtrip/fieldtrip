@@ -1,4 +1,4 @@
-function qsublist(cmd, jobid, pbsid)
+function retval = qsublist(cmd, jobid, pbsid)
 
 % QSUBLIST is a helper function that is used to keep track of all the
 % jobs in a submitted bacth
@@ -16,6 +16,7 @@ function qsublist(cmd, jobid, pbsid)
 %   'list'
 %   'kill'
 %   'killall'
+%
 %
 % The following commands are used by QSUBFEVAL and QSUBGET respectively.
 %   'add'
@@ -130,6 +131,14 @@ switch cmd
     for i=1:length(list_jobid)
       fprintf('%s %s\n', list_jobid{i}, list_pbsid{i});
     end
+    
+  case 'getjobid'
+    % return the mathing jobid, given the pbsid
+    retval = jobid;
+    
+  case 'getpbsid'
+    % return the mathing pbsid, given the jobid
+    retval = pbsid;
     
   otherwise
     error('unsupported command (%s)', cmd);

@@ -18,6 +18,7 @@ function [jobid, puttime] = qsubfeval(varargin)
 %   backend     = string, can be 'torque', 'sge', 'slurm', 'lsf', 'system', 'local' (default is automatic)
 %   diary       = string, can be 'always', 'never', 'warning', 'error' (default = 'error')
 %   queue       = string, which queue to submit the job in (default is empty)
+%   waitfor     = string, jobid of job to wait on finishing before executing current job
 %   options     = string, additional options that will be passed to qsub/srun (default is empty)
 %   batch       = number, of the bach to which the job belongs. When called by QSUBCELLFUN
 %                 it will be a number that is automatically incremented over subsequent calls.
@@ -78,6 +79,7 @@ optbeg = optbeg | strcmp('jvm',           strargin);
 optbeg = optbeg | strcmp('display',       strargin);
 optbeg = optbeg | strcmp('nargout',       strargin);
 optbeg = optbeg | strcmp('whichfunction', strargin);
+optbeg = optbeg | strcmp('waitfor',       strargin);
 optbeg = find(optbeg);
 optarg = varargin(optbeg:end);
 
@@ -101,6 +103,7 @@ matlabcmd     = ft_getopt(optarg, 'matlabcmd', []);
 jvm           = ft_getopt(optarg, 'jvm', 'yes');
 numargout     = ft_getopt(optarg, 'nargout', []);
 whichfunction = ft_getopt(optarg, 'whichfunction');               % the complete filename to the function, including path
+waitfor       = ft_getopt(optarg, 'waitfor');
 
 % skip the optional key-value arguments
 if ~isempty(optbeg)
@@ -268,6 +271,11 @@ switch backend
     
     if ~isempty(memreq) && ~isnan(memreq) && ~isinf(memreq)
       submitoptions = [submitoptions sprintf('-l h_vmem=%.0f ', memreq+memoverhead)];
+    end
+    
+    if ~isempty(waitfor)
+      % waitfor contains the jobid of the job to wait for
+      submitoptions = [submitoptions sprintf('-W depend=afterok:%s', qsublist('getpbsid', waitfor))];
     end
     
     if compiled
