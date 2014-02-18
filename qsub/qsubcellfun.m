@@ -22,6 +22,7 @@ function varargout = qsubcellfun(fname, varargin)
 %   compile        = string, can be 'auto', 'yes', 'no' (default = 'no')
 %   queue          = string, which queue to submit the job in (default is empty)
 %   options        = string, additional options that will be passed to qsub/srun (default is empty)
+%   matlabcmd      = string, the Linux command line to start MATLAB on the compute nodes (default is automatic
 %   display        = 'yes' or 'no', whether the nodisplay option should be passed to MATLAB (default = 'no', meaning nodisplay)
 %   jvm            = 'yes' or 'no', whether the nojvm option should be passed to MATLAB (default = 'yes', meaning with jvm)
 %
@@ -115,6 +116,7 @@ submitoptions = ft_getopt(optarg, 'options', []);
 batch         = ft_getopt(optarg, 'batch',   getbatch());               % this is a number that is automatically incremented
 batchid       = ft_getopt(optarg, 'batchid', generatebatchid(batch));   % this is a string like user_host_pid_batch
 display       = ft_getopt(optarg, 'display', 'no');
+matlabcmd     = ft_getopt(optarg, 'matlabcmd', []);
 jvm           = ft_getopt(optarg, 'jvm', 'yes');
 whichfunction = ft_getopt(optarg, 'whichfunction');   % the complete filename to the function, including path
 
@@ -337,10 +339,10 @@ for submit=1:numjob
   % submit the job
   if ~isempty(fcomp)
     % use the compiled version
-    [curjobid curputtime] = qsubfeval(fcomp, argin{:}, 'memreq', memreq, 'timreq', timreq, 'diary', diary, 'batch', batch, 'batchid', batchid, 'backend', backend, 'options', submitoptions, 'queue', queue, 'display', display, 'jvm', jvm, 'nargout', numargout, 'whichfunction', whichfunction);
+    [curjobid curputtime] = qsubfeval(fcomp, argin{:}, 'memreq', memreq, 'timreq', timreq, 'diary', diary, 'batch', batch, 'batchid', batchid, 'backend', backend, 'options', submitoptions, 'queue', queue, 'matlabcmd', matlabcmd, 'display', display, 'jvm', jvm, 'nargout', numargout, 'whichfunction', whichfunction);
   else
     % use the non-compiled version
-    [curjobid curputtime] = qsubfeval(fname, argin{:}, 'memreq', memreq, 'timreq', timreq, 'diary', diary, 'batch', batch, 'batchid', batchid, 'backend', backend, 'options', submitoptions, 'queue', queue, 'display', display, 'jvm', jvm, 'nargout', numargout, 'whichfunction', whichfunction);
+    [curjobid curputtime] = qsubfeval(fname, argin{:}, 'memreq', memreq, 'timreq', timreq, 'diary', diary, 'batch', batch, 'batchid', batchid, 'backend', backend, 'options', submitoptions, 'queue', queue, 'matlabcmd', matlabcmd, 'display', display, 'jvm', jvm, 'nargout', numargout, 'whichfunction', whichfunction);
   end
   
   % fprintf('submitted job %d\n', submit);
