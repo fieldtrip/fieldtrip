@@ -91,6 +91,10 @@ if ~holdflag
   hold on
 end
 
+if all(any(isnan(sens.chanpos), 2))
+    coil = true;
+end
+
 if istrue(coil)
   % simply plot the position of all coils or electrodes
   if isfield(sens, 'coilpos')

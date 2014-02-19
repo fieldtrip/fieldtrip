@@ -50,7 +50,7 @@ end
 if nargin<4, tol        = 1e-8;   end
 if nargin<3, Niterations = 1000;  end;
 
-dfreq = diff(freq);
+dfreq = round(diff(freq)*1e5)./1e5; % allow for some numeric issues
 if ~all(dfreq==dfreq(1))
   error('FieldTrip:connectivity:sfactorization_wilson2x2', 'frequency axis is not evenly spaced');
 end
@@ -69,6 +69,9 @@ else
   selfreq  = 1:numel(freq);
 end
 
+% ensure input S is double (mex-files don't work with single)
+S = double(S);
+
 % check whether the last frequency bin is strictly real-valued.
 % if that's the case, then it is assumed to be the Nyquist frequency
 % and the two-sided spectral density will have an even number of 
@@ -78,34 +81,54 @@ Send = S(:,:,end);
 N    = numel(freq);
 m    = size(cmbindx,1);
 if all(imag(Send(:))<abs(trace(Send)./size(Send,1)*1e-9))
-  N2 = 2*(N-1);
+  hasnyq = true;
+  N2     = 2*(N-1);
 else
-  N2 = 2*(N-1)+1;
+  hasnyq = false;
+  N2     = 2*(N-1)+1;
 end
 
-% preallocate memory for the 2-sided spectral density
-Sarr   = zeros(2,2,m,N2) + 1i.*zeros(2,2,m,N2);
+% preallocate memory for the identity matrix
 I      = repmat(eye(2),[1 1 m N2]); % Defining 2 x 2 identity matrix
 
-%Step 1: Forming 2-sided spectral densities for ifft routine in matlab
+% %Step 1: Forming 2-sided spectral densities for ifft routine in matlab
+% Sarr   = zeros(2,2,m,N2) + 1i.*zeros(2,2,m,N2);
+% for c = 1:m
+%   Stmp  = S(cmbindx(c,:),cmbindx(c,:),:);
+%   
+%   % the input cross-spectral density is assumed to be weighted with a
+%   % factor of 2 in all non-DC and Nyquist bins, therefore weight the 
+%   % DC-bin with a factor of 2 to get a correct two-sided representation
+%   Sarr(:,:,c,1) = Stmp(:,:,1).*2;
+%   
+%   for f_ind = 2:N
+%     Sarr(:,:,c,       f_ind) = Stmp(:,:,f_ind);
+%     Sarr(:,:,c,(N2+2)-f_ind) = Stmp(:,:,f_ind).';
+%   end
+% end
+% Sarr2 = Sarr;
+
+% preallocate memory for the 2-sided spectral density
+Sarr = zeros(2,2,N2,m) + 1i.*zeros(2,2,N2,m);
 for c = 1:m
-  Stmp  = S(cmbindx(c,:),cmbindx(c,:),:);
-  
-  % the input cross-spectral density is assumed to be weighted with a
-  % factor of 2 in all non-DC and Nyquist bins, therefore weight the 
-  % DC-bin with a factor of 2 to get a correct two-sided representation
-  Sarr(:,:,c,1) = Stmp(:,:,1).*2;
-  
-  for f_ind = 2:N
-    Sarr(:,:,c,       f_ind) = Stmp(:,:,f_ind);
-    Sarr(:,:,c,(N2+1)-f_ind) = Stmp(:,:,f_ind).';
-  end
+  Sarr(:,:,1:N,c) = S(cmbindx(c,:),cmbindx(c,:),:);
 end
+if hasnyq,
+  N1 = N;
+else
+  N1 = N + 1; % the highest frequency needs to be represented twice, for symmetry purposes
+end
+Sarr(:,:,N1:N2,:) = flipdim(Sarr(:,:,2:N,:),3);
+Sarr(2,1,N1:N2,:) = conj(Sarr(2,1,N1:N2,:));
+Sarr(1,2,N1:N2,:) = conj(Sarr(1,2,N1:N2,:));
+Sarr              = permute(Sarr, [1 2 4 3]);
+Sarr(:,:,:,1)     = Sarr(:,:,:,1).*2; % weight the DC-bin
+
 
 % the input cross-spectral density is assumed to be weighted with a
 % factor of 2 in all non-DC and Nyquist bins, therefore weight the 
 % Nyquist bin with a factor of 2 to get a correct two-sided representation
-if mod(size(Sarr,4),2)==0
+if hasnyq
   Sarr(:,:,:,N) = Sarr(:,:,:,N).*2;
 end
 

@@ -23,7 +23,7 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 %                            'maxmin' or [xmin xmax] (default = 'maxmin')
 %   cfg.ylim               = selection boundaries over second dimension in data (e.g., freq)
 %                            'maxmin' or [xmin xmax] (default = 'maxmin')
-%   cfg.zlim               = plotting limits for color dimension, 'maxmin', 'maxabs' or [zmin zmax] (default = 'maxmin')
+%   cfg.zlim               = plotting limits for color dimension, 'maxmin', 'maxabs', 'zeromax', 'minzero', or [zmin zmax] (default = 'maxmin')
 %   cfg.channel            = Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
 %   cfg.refchannel         = name of reference channel for visualising connectivity, can be 'gui'
 %   cfg.baseline           = 'yes','no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE or FT_FREQBASELINE
@@ -85,7 +85,7 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 %   cfg.layout             = specify the channel layout for plotting using one of
 %                            the supported ways (see below).
 %   cfg.interpolatenan     = string 'yes', 'no' (default = 'yes')
-%                            interpolate over channels containing NaNs 
+%                            interpolate over channels containing NaNs
 %
 % For the plotting of directional connectivity data the cfg.directionality
 % option determines what is plotted. The default value and the supported
@@ -169,7 +169,7 @@ cfg.funcname = mfilename;
 cfg = topoplot_common(cfg, varargin{:});
 
 % remove it again
-cfg = rmfield(cfg, 'funcname');
+if isfield(cfg, 'funcname'), cfg = rmfield(cfg, 'funcname'); end
 
 % do the general cleanup and bookkeeping at the end of the function
 % this will replace the ft_topoplotTFR callinfo with that of ft_topoplotER

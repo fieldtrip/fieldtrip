@@ -22,7 +22,7 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 %   cfg.masknans         = 'yes' or 'no' (default = 'yes')
 %   cfg.xlim             = 'maxmin' or [xmin xmax] (default = 'maxmin')
 %   cfg.ylim             = 'maxmin' or [ymin ymax] (default = 'maxmin')
-%   cfg.zlim             = 'maxmin','maxabs' or [zmin zmax] (default = 'maxmin')
+%   cfg.zlim             = 'maxmin','maxabs', 'zeromin','zeromax', or [zmin zmax] (default = 'maxmin')
 %   cfg.gradscale        = number, scaling to apply to the MEG gradiometer channels prior to display
 %   cfg.magscale         = number, scaling to apply to the MEG magnetometer channels prior to display
 %   cfg.channel          = Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
@@ -174,6 +174,11 @@ if ~isfield(cfg,'box')
     cfg.box = 'no';
   end
 end
+if numel(findobj(gcf, 'type', 'axes', '-not', 'tag', 'ft-colorbar')) > 1 && strcmp(cfg.interactive,'yes')
+  warning('using cfg.interactive = ''yes'' in subplots is not supported, setting cfg.interactive = ''no''')
+  cfg.interactive = 'no';
+end
+
 
 dimord = data.dimord;
 dimtok = tokenize(dimord, '_');
@@ -223,7 +228,7 @@ if hasrpt,
     tempdata.freq      = data.freq;
     tempdata.label     = data.label;
     tempdata.powspctrm = data.(cfg.parameter);
-    tempdata.cfg       = data.cfg;
+    if isfield(data, 'cfg') tempdata.cfg = data.cfg; end
     tempdata           = ft_freqdescriptives(tmpcfg, tempdata);
     data.(cfg.parameter)  = tempdata.powspctrm;
     clear tempdata
@@ -267,7 +272,7 @@ isfull  = length(selchan)>1;
 % Check for bivariate metric with a labelcmb
 haslabelcmb = isfield(data, 'labelcmb');
 
-if (isfull || haslabelcmb) && isfield(data, cfg.parameter)
+if (isfull || haslabelcmb) && (isfield(data, cfg.parameter) && ~strcmp(cfg.parameter, 'powspctrm'))
   % A reference channel is required:
   if ~isfield(cfg, 'refchannel')
     error('no reference channel is specified');
@@ -325,7 +330,7 @@ if (isfull || haslabelcmb) && isfield(data, cfg.parameter)
     data.(cfg.parameter) = data.(cfg.parameter)([sel1;sel2],:,:);
     data.label     = [data.labelcmb(sel1,1);data.labelcmb(sel2,2)];
     data.labelcmb  = data.labelcmb([sel1;sel2],:);
-    data           = rmfield(data, 'labelcmb');
+    %data           = rmfield(data, 'labelcmb');
   else
     % General case
     sel               = match_str(data.label, cfg.refchannel);
@@ -490,6 +495,12 @@ if strcmp(cfg.zlim,'maxmin')
 elseif strcmp(cfg.zlim,'maxabs')
   zmin = -max(abs(datsel(:)));
   zmax = max(abs(datsel(:)));
+elseif strcmp(cfg.zlim,'zeromax')
+  zmin = 0;
+  zmax = max(datsel(:));
+elseif strcmp(cfg.zlim,'minzero')
+  zmin = min(datsel(:));
+  zmax = 0;
 else
   zmin = cfg.zlim(1);
   zmax = cfg.zlim(2);

@@ -26,14 +26,14 @@ function [stat, cfg] = ft_statistics_analytic(cfg, dat, design)
 % The parametric statistic that is computed for each sample (and for
 % which the analytic probability of the null-hypothesis is computed) is
 % specified as
-%   cfg.statistic       = 'indepsamplesT'     independent samples T-statistic,
-%                         'indepsamplesF'     independent samples F-statistic,
-%                         'indepsamplesregrT' independent samples regression coefficient T-statistic,
-%                         'indepsamplesZcoh'  independent samples Z-statistic for coherence,
-%                         'depsamplesT'       dependent samples T-statistic,
-%                         'depsamplesF'       dependent samples F-statistic,
-%                         'depsamplesregrT'   dependent samples regression coefficient T-statistic,
-%                         'actvsblT'          activation versus baseline T-statistic.
+%   cfg.statistic       = 'indepsamplesT'           independent samples T-statistic,
+%                         'indepsamplesF'           independent samples F-statistic,
+%                         'indepsamplesregrT'       independent samples regression coefficient T-statistic,
+%                         'indepsamplesZcoh'        independent samples Z-statistic for coherence,
+%                         'depsamplesT'             dependent samples T-statistic,
+%                         'depsamplesFmultivariate' dependent samples F-statistic MANOVA,
+%                         'depsamplesregrT'         dependent samples regression coefficient T-statistic,
+%                         'actvsblT'                activation versus baseline T-statistic.
 % or you can specify your own low-level statistical function.
 %
 % See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS, FT_SOURCESTATISTICS
@@ -69,6 +69,9 @@ if ~isfield(cfg, 'tail'),     cfg.tail = 0;        end
 
 % fetch function handle to the low-level statistics function
 statfun = ft_getuserfun(cfg.statistic, 'statfun');
+if isempty(statfun) && (strcmp(cfg.statistic,'depsamplesF') || strcmp(cfg.statistic,'ft_statfun_depsamplesF'));
+  error(['statistic function ' cfg.statistic ' has recently changed its name to ft_statfun_depsamplesFmultivariate']);
+end
 if isempty(statfun)
   error('could not locate the appropriate statistics function');
 else

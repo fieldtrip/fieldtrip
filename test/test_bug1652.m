@@ -1,7 +1,7 @@
 function test_bug1652
 
 % MEM 2gb
-% WALLTIME 00:05:30
+% WALLTIME 00:10:00
 
 % TEST test_bug1652
 % TEST ft_datatype_segmentation

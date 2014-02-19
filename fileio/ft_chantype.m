@@ -583,6 +583,7 @@ label2type = {
   {'eog', 'heog', 'veog'};
   {'lfp'};
   {'eeg'};
+  {'trigger', 'trig', 'dtrig'};
   };
 for i = 1:numel(label2type)
   for j = 1:numel(label2type{i})

@@ -1,7 +1,7 @@
 function test_bug1427
 
 % MEM 2gb
-% WALLTIME 00:05:52
+% WALLTIME 00:10:00
 
 % TEST test_bug1427
 % TEST dataset2files ft_read_header ft_read_data

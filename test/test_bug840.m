@@ -1,7 +1,7 @@
 function test_bug800
 
 % MEM 1500mb
-% WALLTIME 00:03:02
+% WALLTIME 00:10:00
 
 % TEST test_bug800
 % TEST ft_preproc_resample

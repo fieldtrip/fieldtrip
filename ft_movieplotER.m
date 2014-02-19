@@ -9,7 +9,7 @@ function [cfg] = ft_movieplotER(cfg, data)
 % can contain
 %   cfg.parameter    = string, parameter that is color coded (default = 'avg')
 %   cfg.xlim         = 'maxmin' or [xmin xmax] (default = 'maxmin')
-%   cfg.zlim         = 'maxmin', 'maxabs' or [zmin zmax] (default = 'maxmin')
+%   cfg.zlim         = 'maxmin', 'maxabs','zeromax','minzero', or [zmin zmax] (default = 'maxmin')
 %   cfg.samperframe  = number, samples per fram (default = 1)
 %   cfg.framespersec = number, frames per second (default = 5)
 %   cfg.framesfile   = [], no file saved, or 'string', filename of saved frames.mat (default = []);

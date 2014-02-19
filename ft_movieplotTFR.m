@@ -12,7 +12,7 @@ function [cfg] = ft_movieplotTFR(cfg, data)
 %   cfg.ylim         = selection boundaries over second dimension in data (e.g., freq)
 %                          'maxmin' or [xmin xmax] (default = 'maxmin')
 %   cfg.zlim         = plotting limits for color dimension, 'maxmin',
-%                          'maxabs' or [zmin zmax] (default = 'maxmin')
+%                          'maxabs', 'zeromax', 'minzero', or [zmin zmax] (default = 'maxmin')
 %   cfg.samperframe  = number, samples per fram (default = 1)
 %   cfg.framespersec = number, frames per second (default = 5)
 %   cfg.framesfile   = [] (optional), no file saved, or 'string', filename of saved frames.mat (default = []);
@@ -193,6 +193,14 @@ elseif ischar(cfg.zlim) && strcmp(cfg.zlim,'maxabs')
   cfg.zlim     = [];
   cfg.zlim(1)  = -max(abs(parameter(:)));
   cfg.zlim(2)  =  max(abs(parameter(:)));
+elseif ischar(cfg.zlim) && strcmp(cfg.zlim,'zeromax')
+  cfg.zlim     = [];
+  cfg.zlim(1)  = 0;
+  cfg.zlim(2)  = max(parameter(:));
+elseif ischar(cfg.zlim) && strcmp(cfg.zlim,'minzero')
+  cfg.zlim     = [];
+  cfg.zlim(1)  = min(parameter(:));
+  cfg.zlim(2)  = 0;
 end
 
 h = gcf;

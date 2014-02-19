@@ -1,7 +1,7 @@
 function test_bug1150
 
 % MEM 2000mb
-% WALLTIME 00:03:10
+% WALLTIME 00:10:00
 
 % TEST test_bug1150
 % TEST ft_sourcestatistics

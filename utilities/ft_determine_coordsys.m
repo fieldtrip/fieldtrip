@@ -121,6 +121,10 @@ if isfield(data, 'coordsys') && ~isempty(data.coordsys)
     label{1} = 'the right';
     label{2} = 'anterior';
     label{3} = 'superior';
+  elseif strcmpi(data.coordsys, 'unknown')
+    label{1} = 'unknown';
+    label{2} = 'unknown';
+    label{3} = 'unknown';
   else
     error('unsupported coordsys');
   end

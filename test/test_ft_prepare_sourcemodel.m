@@ -1,7 +1,7 @@
 function test_ft_prepare_sourcemodel
 
 % MEM 1500mb
-% WALLTIME 00:03:02
+% WALLTIME 00:10:00
 
 % TEST: ft_prepare_sourcemodel
 

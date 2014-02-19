@@ -1,7 +1,7 @@
 function test_tutorial_timefrequencyanalysis(datadir)
 
 % MEM 1500mb
-% WALLTIME 00:04:20
+% WALLTIME 00:10:00
 
 % TEST test_tutorial_timefrequencyanalysis
 % TEST ft_freqanalysis

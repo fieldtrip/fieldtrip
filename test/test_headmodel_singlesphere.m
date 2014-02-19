@@ -1,7 +1,7 @@
 function test_headmodel_singlesphere
 
 % MEM 1500mb
-% WALLTIME 00:03:02
+% WALLTIME 00:10:00
 
 % TEST test_headmodel_singlesphere
 % TEST ft_prepare_vol_sens ft_compute_leadfield ft_headmodel_singlesphere

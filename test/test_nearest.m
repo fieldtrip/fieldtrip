@@ -1,7 +1,7 @@
 function test_nearest
 
 % MEM 3gb
-% WALLTIME 00:03:05
+% WALLTIME 00:10:00
 
 % TEST test_nearest
 % TEST nearest

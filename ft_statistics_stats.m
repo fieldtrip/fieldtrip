@@ -82,6 +82,7 @@ case {'ttest', 'ttest_samples_vs_const'}
 
   h = zeros(Nobs, 1);
   p = zeros(Nobs, 1);
+  s = zeros(Nobs, 1);
   ci = zeros(Nobs, 2);
   fprintf('number of observations %d\n', Nobs);
   fprintf('number of replications %d\n', Nrepl);
@@ -115,6 +116,7 @@ case {'ttest2', 'ttest_2samples_by_timepoint'}
 
   h = zeros(Nobs, 1);
   p = zeros(Nobs, 1);
+  s = zeros(Nobs, 1);
   ci = zeros(Nobs, 2);
   fprintf('number of observations %d\n', Nobs);
   fprintf('number of replications %d and %d\n', Nrepl(1), Nrepl(2));
@@ -151,6 +153,7 @@ case {'paired-ttest'}
 
   h = zeros(Nobs, 1);
   p = zeros(Nobs, 1);
+  s = zeros(Nobs, 1);
   ci = zeros(Nobs, 2);
   fprintf('number of observations %d\n', Nobs);
   fprintf('number of replications %d and %d\n', Nrepl(1), Nrepl(2));
@@ -175,7 +178,6 @@ case {'anova1'}
 
   h = zeros(Nobs, 1);
   p = zeros(Nobs, 1);
-  ci = zeros(Nobs, 2);
   fprintf('number of observations %d\n', Nobs);
   fprintf('number of replications %d\n', Nrepl);
   fprintf('number of levels %d\n', Ncond);
@@ -199,7 +201,6 @@ case {'kruskalwallis'}
 
   h = zeros(Nobs, 1);
   p = zeros(Nobs, 1);
-  ci = zeros(Nobs, 2);
   fprintf('number of observations %d\n', Nobs);
   fprintf('number of replications %d\n', Nrepl);
   fprintf('number of levels %d\n', Ncond);

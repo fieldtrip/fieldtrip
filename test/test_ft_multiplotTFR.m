@@ -1,7 +1,7 @@
 function test_ft_multiplotTFR
 
 % MEM 1500mb
-% WALLTIME 00:03:11
+% WALLTIME 00:10:00
 
 % TEST test_ft_multiplotTFR 
 % TEST ft_freqanalysis ft_multiplotTFR ft_prepare_layout

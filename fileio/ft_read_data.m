@@ -109,6 +109,12 @@ if ~isempty(endtrial) && mod(endtrial, 1)
   endtrial = round(endtrial);
 end
 
+% if we are dealing with a compressed dataset, inflate it first
+if strcmp(dataformat, 'compressed')
+  filename = inflate_file(filename);
+  dataformat = ft_filetype(filename);
+end
+
 % ensure that the headerfile and datafile are defined, which are sometimes different than the name of the dataset
 [filename, headerfile, datafile] = dataset2files(filename, dataformat);
 
@@ -905,6 +911,13 @@ switch dataformat
     if (hdr.orig.iscontinuous)
       dat = fiff_read_raw_segment(hdr.orig.raw,begsample+hdr.orig.raw.first_samp-1,endsample+hdr.orig.raw.first_samp-1,chanindx);
       dimord = 'chans_samples';
+    elseif (hdr.orig.isepoched)
+      data = permute(hdr.orig.epochs.data, [2 3 1]);  % Chan X Sample X Trials
+      if requesttrials
+        dat = data(chanindx, :, begtrial:endtrial);
+      else
+        dat = data(chanindx, begsample:endsample);  % reading over boundaries
+      end
     elseif (hdr.orig.isaverage)
       dat = cat(2, hdr.orig.evoked.epochs);            % concatenate all epochs, this works both when they are of constant or variable length
       if checkboundary
@@ -918,8 +931,6 @@ switch dataformat
       end
       dat = dat(chanindx, begsample:endsample);        % select the desired channels and samples
       dimord = 'chans_samples';
-    elseif (hdr.orig.isepoched)
-      error('Support for epoched *.fif data is not yet implemented.')
     end
     
   case 'neuromag_mex'

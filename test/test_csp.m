@@ -1,7 +1,7 @@
 function test_suite = test_csp
 
 % MEM 1500mb
-% WALLTIME 00:03:03
+% WALLTIME 00:10:00
 
 % TEST test_csp
 % TEST ft_component_analysis

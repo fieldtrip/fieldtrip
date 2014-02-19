@@ -1,10 +1,10 @@
 function test_bug1556
 
 % MEM 1500mb
-% WALLTIME 00:03:04
+% WALLTIME 00:10:00
 
 % TEST test_bug1556
-% TEST statfun_depsamplesF
+% TEST statfun_depsamplesFmultivariate
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -32,7 +32,7 @@ cfg.method   = 'analytic';
 cfg.feedback = 'no';
 cfg.alpha    = 5.0000e-02;
 cfg.tail = 1;
-cfg.statistic = 'depsamplesF';
+cfg.statistic = 'depsamplesFmultivariate';
 cfg.ivar      = 1;
 cfg.uvar      = 2;
 cfg.design    = [ 1 1 1 1 1 1 1 1 1 1  2 2 2 2 2 2 2 2 2 2  3 3 3 3 3 3 3 3 3 3
@@ -59,7 +59,7 @@ stats_indepsamplesF = ft_freqstatistics(cfg, data1, data2);
 cfg.uvar = 2;
 cfg.statistic = 'depsamplesT';
 stats_depsamplesT = ft_freqstatistics(cfg, data1, data2);
-cfg.statistic = 'depsamplesF';
+cfg.statistic = 'depsamplesFmultivariate';
 stats_depsamplesF = ft_freqstatistics(cfg, data1, data2);
 
 stats_indepsamplesT.stat

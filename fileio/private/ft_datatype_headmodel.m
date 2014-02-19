@@ -50,7 +50,9 @@ function vol = ft_datatype_headmodel(vol, varargin)
 %
 % Revision history:
 %
-% (2013/latest) Always use the field "cond" for conductivity.
+% (2014/latest) All numeric values are represented in double precision.
+%
+% (2013) Always use the field "cond" for conductivity.
 %
 % (2012) Use consistent names for the volume conductor type in the structure, the
 % documentation and for the actual implementation, e.g. bem_openmeeg -> openmeeg,
@@ -69,7 +71,7 @@ function vol = ft_datatype_headmodel(vol, varargin)
 version = ft_getopt(varargin, 'version', 'latest');
 
 if strcmp(version, 'latest')
-  version = '2013';
+  version = '2014';
 end
 
 if isempty(vol)
@@ -78,6 +80,13 @@ end
 
 switch version
   
+  case '2014'
+    % first make it consistent with the 2012 version
+    vol = ft_datatype_headmodel(vol, 'version', '2012');
+    
+    % ensure that all numbers are represented in double precision
+    vol = ft_struct2double(vol);
+    
   case '2013'
     % first make it consistent with the 2012 version
     vol = ft_datatype_headmodel(vol, 'version', '2012');

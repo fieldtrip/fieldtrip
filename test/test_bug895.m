@@ -1,7 +1,7 @@
 function test_bug895
 
 % MEM 1500mb
-% WALLTIME 00:03:08
+% WALLTIME 00:10:00
 
 % using statfun_indepsamplesZcoh results in an output structure that
 % contains 'chan' in the dimord, rather than 'chancmb'

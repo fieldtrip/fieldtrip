@@ -1,7 +1,7 @@
 function test_ft_movieplotTFR
 
 % MEM 1500mb
-% WALLTIME 00:03:10
+% WALLTIME 00:10:00
 
 % TEST test_ft_movieplotTFR
 % TEST ft_movieplotTFR ft_movieplotER

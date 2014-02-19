@@ -103,8 +103,12 @@ if isfield(headshape, 'fid')
   for i=1:size(fid.pnt,1)
     hs = plot3(fid.pnt(i,1), fid.pnt(i,2), fid.pnt(i,3), 'Marker',fidmarker,'MarkerEdgeColor',fidcolor);
     if isfield(fid,'label') && istrue(fidlabel)
+      % the text command does not like int or single position values
+      x = double(fid.pnt(i, 1));
+      y = double(fid.pnt(i, 2));
+      z = double(fid.pnt(i, 3));
       str = sprintf('%s', fid.label{i});
-      h   = text(fid.pnt(i, 1), fid.pnt(i, 2), fid.pnt(i, 3), str, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle','Interpreter','none');
+      h   = text(x, y, z, str, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle','Interpreter','none');
       hs  = [hs; h];
     end
   end

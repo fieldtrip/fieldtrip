@@ -191,9 +191,9 @@ while strfind(stack(i0).name, 'ft_preamble')
   i0=i0+1;
 end
 
-fname = horzcat(stack(end).name);
-if ~issubfield(ft_previous_warnings, stack(end).name)
-  ft_previous_warnings.(stack(end).name) = []; % iteratively build up structure fields
+fname = horzcat(fixname(stack(end).name));
+if ~issubfield(ft_previous_warnings, fixname(stack(end).name))
+  ft_previous_warnings.(fixname(stack(end).name)) = []; % iteratively build up structure fields
 end
   
 

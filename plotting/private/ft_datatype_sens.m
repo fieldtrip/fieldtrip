@@ -14,6 +14,13 @@ function [sens] = ft_datatype_sens(sens, varargin)
 %    sens.coilori  = Nx3 matrix with coil orientations
 %    sens.balance  = structure containing info about the balancing, See FT_APPLY_MONTAGE
 %
+% and optionally
+%    sens.chanposorg = Mx3 matrix with original channel positions (in case
+%                      sens.chanpos has been updated to contain NaNs, e.g.
+%                      after ft_componentanalysis)
+%    sens.chanoriorg = Mx3 matrix with original channel orientations
+%    sens.labelorg   = Mx1 cell-array with original channel labels
+%
 % The structure for EEG or ECoG channels contains
 %    sens.label    = Mx1 cell-array with channel labels
 %    sens.chanpos  = Mx3 matrix with channel positions
@@ -36,6 +43,7 @@ function [sens] = ft_datatype_sens(sens, varargin)
 %  to convert the amplitude and distance units (e.g. from T to fT and from m to mm)
 %  and it is possible to express planar and axial gradiometer channels either in
 %  units of amplitude or in units of amplitude/distance (i.e. proper gradient).
+%  All numeric values are represented in double precision.
 %
 % (2011v2/latest) The chantype and chanunit have been added for MEG.
 %
@@ -126,14 +134,16 @@ nchan = length(sens.label);
 % there are many cases which deal with either eeg or meg
 ismeg = ft_senstype(sens, 'meg');
 
-
 switch version
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case 'upcoming' % this is under development and expected to become the standard in 2013
     
     % update it to the previous standard version
     sens = ft_datatype_sens(sens, 'version', '2011v2');
-
+    
+    % ensure that all numbers are represented in double precision
+    sens = ft_struct2double(sens);
+    
     % in version 2011v2 this was optional, now it is required
     if ~isfield(sens, 'chantype') || all(strcmp(sens.chantype, 'unknown'))
       sens.chantype = ft_chantype(sens);
@@ -143,7 +153,7 @@ switch version
     if ~isfield(sens, 'chanunit') || all(strcmp(sens.chanunit, 'unknown'))
       sens.chanunit = ft_chanunit(sens);
     end
-
+    
     if ~isempty(distance)
       % update the units of distance, this also updates the tra matrix
       sens = ft_convert_units(sens, distance);
@@ -241,7 +251,7 @@ switch version
           if strcmp(sens.chanunit{i}, amplitude)
             % this channel is expressed as amplitude
             coil = find(abs(sens.tra(i,:))~=0);
-            if length(coil)==1
+            if length(coil)==1 || strcmp(sens.chantype{i}, 'megmag')
               % this is a magnetometer channel, no conversion needed
               continue
             elseif length(coil)~=2
@@ -367,7 +377,6 @@ switch version
         sens.balance.current = 'none';
       end
     end
-    
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   otherwise

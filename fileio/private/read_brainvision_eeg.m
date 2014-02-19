@@ -110,6 +110,14 @@ elseif strcmpi(hdr.DataFormat, 'binary') && strcmpi(hdr.DataOrientation, 'vector
   
 elseif strcmpi(hdr.DataFormat, 'ascii') && strcmpi(hdr.DataOrientation, 'multiplexed')
   fid = fopen(filename, 'rt');
+  
+  % skip lines if hdr.skipLines is set and not zero
+  if isfield(hdr,'skipLines') && hdr.skipLines > 0
+    for line=1:hdr.skipLines
+      str = fgets(fid);
+    end;
+  end;
+  
   for line=1:(begsample-1)
     % read first lines and discard the data in them
     str = fgets(fid);
@@ -129,9 +137,13 @@ elseif strcmpi(hdr.DataFormat, 'ascii') && strcmpi(hdr.DataOrientation, 'vectori
   % read in all the samples of each channel and then select only the samples of interest
   fid = fopen(filename, 'rt');
   dat = zeros(hdr.NumberOfChannels, endsample-begsample+1);
+  skipColumns = 0;
   for chan=1:hdr.NumberOfChannels
     % this is very slow, so better give some feedback to indicate that something is happening
     fprintf('reading channel %d from ascii file to get data from sample %d to %d\n', chan, begsample, endsample);
+    
+    % check whether columns have to be skipped
+    if isfield(hdr,'skipColumns'); skipColumns = hdr.skipColumns; end;
     
     str = fgets(fid);             % read all samples of a single channel
     str(str==',') = '.';          % replace comma with point
@@ -142,12 +154,15 @@ elseif strcmpi(hdr.DataFormat, 'ascii') && strcmpi(hdr.DataOrientation, 'vectori
       sel   = regexp(str(1:10), ' [-0-9]');   % find the first number, or actually the last space before the first number
       label = str(1:(sel));                   % this includes the space
       str   = str((sel+1):end);               % keep only the numbers
+      
+      % as heading columns are already removed, set skipColumns to zero
+      skipColumns = 0;
     end
     
     % convert the string into numbers and copy the desired samples over
     % into the data matrix
     tmp = str2num(str);
-    dat(chan,:) = tmp(begsample:endsample);
+    dat(chan,:) = tmp(skipColumns+begsample:skipColumns+endsample);
   end
   fclose(fid);
   

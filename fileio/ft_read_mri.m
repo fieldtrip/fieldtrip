@@ -7,13 +7,36 @@ function [mri] = ft_read_mri(filename, varargin)
 % Use as
 %   [mri] = ft_read_mri(filename)
 %
-% The output MRI may have a homogenous transformation matrix that converts
-% the coordinates of each voxel (in xgrid/ygrid/zgrid) into head
-% coordinates.
+% Additional options should be specified in key-value pairs and can be
+%   'dataformat'       string specifying the file format, determining the low-
+%                      level reading routine to be used. if no format is 
+%                      given, it is determined automatically (at least the
+%                      function tries). the following values for dataformat can
+%                      be used:
+%                        'afni_head'/'afni_brik',     uses afni
+%                        'analyze_img'/'analyze_hdr', uses spm
+%                        'analyze_old',               uses Darren Webber's code
+%                        'asa_mri'
+%                        'ctf_mri'
+%                        'ctf_mri4'
+%                        'ctf_svl'
+%                        'dicom',            uses freesurfer
+%                        'dicom_old',        uses own code
+%                        'freesurfer_mgh',   uses freesurfer
+%                        'freesurfer_mgz',   uses freesurfer
+%                        'minc',             uses spm (<= version spm5)
+%                        'nifti',            uses freesurfer
+%                        'nifti_fsl',        uses freesurfer
+%                        'nifti_spm',        uses spm
+%                        'neuromag_fif',     uses mne toolbox
+%                        'neuromag_fif_old', uses meg-pd toolbox
+%                        'yokogawa_mri'
+%                        'matlab'            assumes mri to be in a fieldtrip-style 
+%                                            structure, in a .mat file
 %
 % The following MRI file formats are supported
 %   CTF - VSM MedTech (*.svl, *.mri version 4 and 5)
-%   NIFTi (*.nii)
+%   NIFTi (*.nii) and zipped NIFTi (*.nii.gz)
 %   Analyze (*.img, *.hdr)
 %   DICOM (*.dcm, *.ima)
 %   AFNI (*.head, *.brik)
@@ -23,9 +46,13 @@ function [mri] = ft_read_mri(filename, varargin)
 %   ANT - Advanced Neuro Technology (*.mri)
 %   Yokogawa (*.mrk, incomplete)
 %
+% The output MRI may have a homogenous transformation matrix that converts
+% the coordinates of each voxel (in xgrid/ygrid/zgrid) into head
+% coordinates.
+%
 % See also FT_WRITE_MRI, FT_READ_DATA, FT_READ_HEADER, FT_READ_EVENT
 
-% Copyright (C) 2008-2012, Robert Oostenveld
+% Copyright (C) 2008-2013, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -49,10 +76,25 @@ function [mri] = ft_read_mri(filename, varargin)
 filename = fetch_url(filename);
 
 % get the options
-mriformat = ft_getopt(varargin, 'format'); % FIXME this is inconsistent with ft_read_mri, which uses 'dataformat'
+mriformat = ft_getopt(varargin, 'dataformat'); 
+
+% the following is added for backward compatibility of using 'format' rather than 'dataformat'
+format    = ft_getopt(varargin, 'format');
+if ~isempty(format)
+  warning('the option ''format'' will be deprecated soon, please use ''dataformat'' instead');
+  if isempty(mriformat)
+    mriformat  = format;
+  end
+end
 
 if isempty(mriformat)
   % only do the autodetection if the format was not specified
+  mriformat = ft_filetype(filename);
+end
+
+% extract if needed
+if strcmp(mriformat, 'compressed')
+  filename = inflate_file(filename);
   mriformat = ft_filetype(filename);
 end
 
@@ -62,38 +104,32 @@ if ~exist(filename, 'file')
 end
 
 % test for the presence of some external functions from other toolboxes
-hasmri   = ft_hastoolbox('mri');     % from Darren Weber, see http://eeg.sourceforge.net/
 hasspm2  = ft_hastoolbox('spm2');    % see http://www.fil.ion.ucl.ac.uk/spm/
 hasspm5  = ft_hastoolbox('spm5');    % see http://www.fil.ion.ucl.ac.uk/spm/
 hasspm8  = ft_hastoolbox('spm8');    % see http://www.fil.ion.ucl.ac.uk/spm/
 hasspm12 = ft_hastoolbox('spm12');   % see http://www.fil.ion.ucl.ac.uk/spm/
 hasspm   = (hasspm2 || hasspm5 || hasspm8 || hasspm12);
-hasafni  = ft_hastoolbox('afni');    % see http://afni.nimh.nih.gov/
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if strcmp(mriformat, 'ctf_mri')
+switch mriformat
+case 'ctf_mri'
   [img, hdr] = read_ctf_mri(filename);
   transform = hdr.transformMRI2Head;
   coordsys  = 'ctf';
-  
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-elseif strcmp(mriformat, 'ctf_mri4')
+ 
+case 'ctf_mri4' 
   [img, hdr] = read_ctf_mri4(filename);
   transform = hdr.transformMRI2Head;
   coordsys  = 'ctf';
-  
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-elseif strcmp(mriformat, 'ctf_svl')
+
+case 'ctf_svl'  
   [img, hdr] = read_ctf_svl(filename);
   transform = hdr.transform;
-  
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-elseif strcmp(mriformat, 'asa_mri')
+ 
+case 'asa_mri' 
   [img, seg, hdr] = read_asa_mri(filename);
   transform = hdr.transformMRI2Head;
   
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-elseif strcmp(mriformat, 'minc')
+case 'minc'
   if ~(hasspm2 || hasspm5)
     fprintf('the SPM2 or SPM5 toolbox is required to read *.mnc files\n');
     ft_hastoolbox('spm2',1);
@@ -102,22 +138,20 @@ elseif strcmp(mriformat, 'minc')
   hdr = spm_vol_minc(filename);
   img = spm_read_vols(hdr);
   transform = hdr.mat;
-  
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % USE FREESURFER CODE FOR THE READING OF NIFTI-FILES: THAT CODE ALSO
-  % DEALS WITH 4D NIFTIs
-elseif strcmp(mriformat, 'nifti_spm')
+
+case 'nifti_spm'  
   if ~(hasspm5 || hasspm8 || hasspm12)
     fprintf('the SPM5 or newer toolbox is required to read *.nii files\n');
-    ft_hastoolbox('spm8',1);
+    ft_hastoolbox('spm8', 1);
   end
   % use the functions from SPM
   hdr = spm_vol_nifti(filename);
   img = spm_read_vols(hdr);
   transform = hdr.mat;
   
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-elseif (strcmp(mriformat, 'analyze_img') || strcmp(mriformat, 'analyze_hdr')) && hasspm
+case {'analyze_img' 'analyze_hdr'}
+  ft_hastoolbox('spm8', 1);  
+
   % use the image file instead of the header
   filename((end-2):end) = 'img';
   % use the functions from SPM to read the Analyze MRI
@@ -125,9 +159,10 @@ elseif (strcmp(mriformat, 'analyze_img') || strcmp(mriformat, 'analyze_hdr')) &&
   img = spm_read_vols(hdr);
   transform = hdr.mat;
   
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-elseif (strcmp(mriformat, 'analyze_hdr') || strcmp(mriformat, 'analyze_img')) && hasmri
+case 'analyze_old'
   % use the functions from Darren Weber's mri_toolbox to read the Analyze MRI
+  ft_hastoolbox('mri', 1);     % from Darren Weber, see http://eeg.sourceforge.net/
+  
   avw = avw_img_read(filename, 0); % returned volume is LAS*
   img = avw.img;
   hdr = avw.hdr;
@@ -143,8 +178,10 @@ elseif (strcmp(mriformat, 'analyze_hdr') || strcmp(mriformat, 'analyze_img')) &&
   transform      = diag(hdr.dime.pixdim(2:4));
   transform(4,4) = 1;
   
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-elseif (strcmp(mriformat, 'afni_brik') || strcmp(mriformat, 'afni_head')) && hasafni
+case {'afni_brik' 'afni_head'}
+  % needs afni
+  ft_hastoolbox('afni', 1);    % see http://afni.nimh.nih.gov/
+  
   [err, img, hdr, ErrMessage] = BrikLoad(filename);
   if err
     error('could not read AFNI file');
@@ -166,8 +203,10 @@ elseif (strcmp(mriformat, 'afni_brik') || strcmp(mriformat, 'afni_head')) && has
   transform(1,4) = -dim(1) - transform(1,4);
   transform(2,4) = -dim(2) - transform(2,4);
   
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-elseif strcmp(mriformat, 'neuromag_fif') && ft_hastoolbox('mne')
+case 'neuromag_fif'
+  % needs mne toolbox
+  ft_hastoolbox('mne', 1);
+
   % use the mne functions to read the Neuromag MRI
   hdr = fiff_read_mri(filename);
   img_t = cat(3, hdr.slices.data);
@@ -224,8 +263,10 @@ elseif strcmp(mriformat, 'neuromag_fif') && ft_hastoolbox('mne')
     warning('W: Please check the MRI fif-file');
   end
   
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-elseif strcmp(mriformat, 'neuromag_fif') && ft_hastoolbox('meg_pd')
+case 'neuromag_fif_old'
+  % needs meg_pd toolbox
+  ft_hastoolbox('meg-pd', 1);
+
   % use the meg_pd functions to read the Neuromag MRI
   [img,coords] = loadmri(filename);
   dev = loadtrans(filename,'MRI','HEAD');
@@ -233,16 +274,11 @@ elseif strcmp(mriformat, 'neuromag_fif') && ft_hastoolbox('meg_pd')
   hdr.coords = coords;
   hdr.dev    = dev;
   
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-elseif strcmp(mriformat, 'neuromag_fif')
-  error('reading MRI data from a fif file requires either the MNE toolbox or the meg_pd toolbox to be installed');
-  
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-elseif strcmp(mriformat, 'dicom')
+case 'dicom'
   % this seems to return a right-handed volume with the transformation
   % matrix stored in the file headers.
   
-  % use the freesurfer toolbox
+  % needs the freesurfer toolbox
   ft_hastoolbox('freesurfer', 1);
   [dcmdir,junk1,junk2] = fileparts(filename);
   if isempty(dcmdir),
@@ -251,7 +287,7 @@ elseif strcmp(mriformat, 'dicom')
   [img,transform,hdr,mr_params] = load_dicom_series(dcmdir,dcmdir,filename);
   transform = vox2ras_0to1(transform);
   
-elseif strcmp(mriformat, 'dicom_old')
+case 'dicom_old'
   % this does not necessarily return a right-handed volume and only a
   % transformation-matrix with the voxel size
   
@@ -325,9 +361,7 @@ elseif strcmp(mriformat, 'dicom_old')
     transform(3,3) = dz;
   end
   
-  
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-elseif any(strcmp(mriformat, {'nifti', 'freesurfer_mgz', 'freesurfer_mgh', 'nifti_fsl'}))
+case {'nifti', 'freesurfer_mgz', 'freesurfer_mgh', 'nifti_fsl'}
   if strcmp(mriformat, 'freesurfer_mgz') && ispc
     error('Compressed .mgz files cannot be read on a PC');
   end
@@ -346,8 +380,7 @@ elseif any(strcmp(mriformat, {'nifti', 'freesurfer_mgz', 'freesurfer_mgh', 'nift
   hdr = rmfield(tmp, 'vol');
   transform = tmp.vox2ras1;
   
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-elseif strcmp(mriformat, 'yokogawa_mri')
+case 'yokogawa_mri'
   ft_hastoolbox('yokogawa', 1);
   fid = fopen(filename, 'rb');
   mri_info = GetMeg160MriInfoM(fid);
@@ -367,12 +400,10 @@ elseif strcmp(mriformat, 'yokogawa_mri')
   
   error('FIXME yokogawa_mri implementation is incomplete');
   
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-elseif strcmp(mriformat, 'matlab')
+case 'matlab'
   mri = loadvar(filename, 'mri');
   
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-else
+otherwise
   error(sprintf('unrecognized filetype ''%s'' for ''%s''', mriformat, filename));
 end
 

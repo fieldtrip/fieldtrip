@@ -197,11 +197,6 @@ if iscell(filename)
   
 else
   
-  % test whether the file exists (unless it's streamed in realtime)
-  if ~exist(filename) && ~strcmp(fileformat,'fcdc_buffer')
-    error('file ''%s'' does not exist', filename);
-  end
-  
   % start with an empty structure
   shape           = [];
   shape.pnt       = [];
@@ -418,7 +413,9 @@ else
         newtri2(newtri2==src(2).vertno(i)) = i;
       end
       shape.tri  = [newtri1; newtri2 + numel(src(1).vertno)];
-      shape.area = [src(1).use_tri_area(:); src(2).use_tri_area(:)];
+      if isfield(src(1), 'use_tri_area')
+        shape.area = [src(1).use_tri_area(:); src(2).use_tri_area(:)];
+      end
       shape.orig.pnt = [src(1).rr; src(2).rr];
       shape.orig.tri = [src(1).tris; src(2).tris + src(1).np];
       shape.orig.inuse = [src(1).inuse src(2).inuse]';
@@ -833,13 +830,22 @@ else
       end
       
       if isempty(transform)
-        warning('cound not determine the coordinate transformation, returning vertices in voxel coordinates');
+          warning('cound not determine the coordinate transformation, returning vertices in voxel coordinates');
       end
-      
-      
-    otherwise
-      % try reading it from an electrode of volume conduction model file
-      success = false;
+
+      case 'brainvoyager_srf'
+          [pnt, tri, srf] = read_bv_srf(filename);
+          shape.pnt = pnt;
+          shape.tri = tri;
+          
+          % FIXME add details from srf if possible
+          % FIXME do transform
+          % FIXME remove vertices that are not in a triangle
+          % FIXME add unit
+
+      otherwise
+          % try reading it from an electrode of volume conduction model file
+          success = false;
       
       if ~success
         % try reading it as electrode positions

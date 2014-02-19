@@ -1,4 +1,4 @@
-function qsublist(cmd, jobid, pbsid)
+function retval = qsublist(cmd, jobid, pbsid)
 
 % QSUBLIST is a helper function that is used to keep track of all the
 % jobs in a submitted bacth
@@ -16,6 +16,7 @@ function qsublist(cmd, jobid, pbsid)
 %   'list'
 %   'kill'
 %   'killall'
+%
 %
 % The following commands are used by QSUBFEVAL and QSUBGET respectively.
 %   'add'
@@ -44,8 +45,6 @@ function qsublist(cmd, jobid, pbsid)
 
 persistent list_jobid list_pbsid
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 if nargin<1
   cmd = 'list';
 end
@@ -57,6 +56,10 @@ end
 if nargin<3
   pbsid = [];
 end
+
+% FIXME this relies on the default and cannot be overruled at the moment
+% see http://bugzilla.fcdonders.nl/show_bug.cgi?id=2430
+backend = defaultbackend;
 
 if isempty(jobid) && ~isempty(pbsid)
   % get it from the persistent list
@@ -73,8 +76,6 @@ if isempty(pbsid) && ~isempty(jobid)
     pbsid = list_pbsid{sel};
   end
 end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 switch cmd
   case 'add'
@@ -94,10 +95,19 @@ switch cmd
     sel = strmatch(jobid, list_jobid);
     if ~isempty(sel)
       % remove it from the batch queue
-      if ~isempty(getenv('SLURM_ENABLE'))
-        system(sprintf('scancel --name %s', jobid));
-      else
-        system(sprintf('qdel %s', pbsid));
+      switch backend
+        case 'torque'
+          system(sprintf('qdel %s', pbsid));
+        case 'sge'
+          system(sprintf('qdel %s', pbsid));
+        case 'slurm'
+          system(sprintf('scancel --name %s', jobid));
+        case 'lsf'
+          system(sprintf('bkill %s', pbsid));
+        case 'local'
+          warning('cleaning up local jobs is not supported');
+        case 'system'
+          warning('cleaning up system jobs is not supported');
       end
       % remove the corresponing files from the shared storage
       system(sprintf('rm -f %s*', jobid));
@@ -107,7 +117,7 @@ switch cmd
     end
     
   case 'killall'
-    if length(list_jobid)>0
+    if ~isempty(list_jobid)
       % give an explicit warning, because chances are that the user will see messages from qdel
       % about jobs that have just completed and hence cannot be deleted any more
       warning('cleaning up all scheduled and running jobs, don''t worry if you see warnings from "qdel"');
@@ -121,6 +131,14 @@ switch cmd
     for i=1:length(list_jobid)
       fprintf('%s %s\n', list_jobid{i}, list_pbsid{i});
     end
+    
+  case 'getjobid'
+    % return the mathing jobid, given the pbsid
+    retval = jobid;
+    
+  case 'getpbsid'
+    % return the mathing pbsid, given the jobid
+    retval = pbsid;
     
   otherwise
     error('unsupported command (%s)', cmd);

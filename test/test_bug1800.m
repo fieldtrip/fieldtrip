@@ -1,7 +1,7 @@
 function test_bug1800
 
 % MEM 1500mb
-% WALLTIME 00:03:05
+% WALLTIME 00:10:00
 
 % TEST test_bug1800
 % TEST ft_defaults ft_selectdata ft_topoplotER

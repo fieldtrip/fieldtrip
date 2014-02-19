@@ -9,7 +9,7 @@ function [lf] = ft_compute_leadfield(pos, sens, vol, varargin)
 % Use as
 %   [lf] = ft_compute_leadfield(pos, sens, vol, ...)
 % with input arguments
-%   pos    position dipole (1x3 or Nx3)
+%   pos    position dipole (1*3 or Ndip*3)
 %   sens   structure with gradiometer or electrode definition
 %   vol    structure with volume conductor definition
 %
@@ -270,7 +270,7 @@ elseif ismeg
         end
       else
         warning('No system matrix is present, Calling the Nemo Lab pipeline')
-        lf = ft_om_compute_lead(pos, vol, sens);
+        lf = ft_leadfield_openmeeg(pos, vol, sens);
       end
       
     case {'infinite_magneticdipole', 'infinite'}

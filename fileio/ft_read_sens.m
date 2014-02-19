@@ -138,13 +138,25 @@ switch fileformat
       end
     end
     
+  case 'besa_sfh'
+    sfh = readBESAsfh(filename);
+    sens.label   = sfh.SurfacePointsLabels(:);
+    sens.elecpos = sfh.SurfacePointsCoordinates(:,1:3);
+    sel = true(sfh.NrOfPoints, 1);
+    for i=1:sfh.NrOfPoints
+      tok = tokenize(sens.label{i}, '_');
+      sens.label{i} = tok{2};
+      sel(i) = ~strcmp(tok{1}, 'Fid');
+    end
+    sens.label   = sens.label(sel);
+    sens.elecpos = sens.elecpos(sel,:);
+    
   case 'besa_sfp'
     fid = fopen(filename);
     tmp = textscan(fid, ' %[^ \t]%n%n%n');
     fclose(fid);
     sens.label   = tmp{1};
-    sens.chanpos = [tmp{2:4}];
-    sens.elecpos = sens.chanpos;
+    sens.elecpos = [tmp{2:4}];
     
   case {'ctf_ds', 'ctf_res4', 'ctf_old', 'neuromag_fif', 'neuromag_mne', '4d', '4d_pdf', '4d_m4d', '4d_xyz', 'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw', 'itab_raw' 'itab_mhd', 'netmeg'}
     % gradiometer information is always stored in the header of the MEG dataset, hence uses the standard fieldtrip/fileio ft_read_header function
@@ -178,7 +190,7 @@ switch fileformat
     % note that this functionality overlaps with senstype=eeg/meg
     hdr = ft_read_header(filename,'headerformat','neuromag_mne');
     sens = hdr.elec;
-        
+    
   case {'spmeeg_mat', 'eeglab_set'}
     % this is for EEG formats where electrode positions can be stored with the data
     hdr = ft_read_header(filename);
@@ -335,7 +347,7 @@ switch fileformat
     sens = [];
     if all(cellfun(@isempty, tmp{4}))
       % it contains theta and phi
-      sens.label   = cellfun(@str2double, tmp{1}(2:end));
+      sens.label = tmp{1}(2:end);
       theta = cellfun(@str2double, tmp{2}(2:end));
       phi   = cellfun(@str2double, tmp{3}(2:end));
       radians = @(x) pi*x/180;

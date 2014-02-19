@@ -642,6 +642,7 @@ if basedonmni
   grid.inside  = mnigrid.inside;
   grid.outside = mnigrid.outside;
   grid.params  = normalise.params;
+  grid.initial = normalise.initial;
   if ft_datatype(mnigrid, 'parcellation')
     fn = booleanfields(mnigrid);
     for i=1:numel(fn)

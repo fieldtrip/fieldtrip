@@ -1,7 +1,7 @@
 function test_ft_selectdata
 
 % MEM 1500mb
-% WALLTIME 00:03:16
+% WALLTIME 00:10:00
 
 % TEST test_ft_selectdata
 % TEST ft_selectdata ft_selectdata_old ft_selectdata_new ft_appendfreq
@@ -433,8 +433,6 @@ compare_outputs(tlckcavg, 'avgoverchan');
 %compare_outputs(tlckavg,  'avgovertime');
 %compare_outputs(tlckcavg, 'avgovertime');
 
-
-
 function [data_old, data_new] = compare_outputs(data, key, value)
 
 switch key
@@ -458,11 +456,19 @@ if nargin>2
   % don't include the cfg
   data_new  = rmfield(data_new, 'cfg');
   data_old  = rmfield(data_old, 'cfg');
+  
+  % don't include the cumtapcnt if present (ft_selectdata_old might be
+  % incorrect)
+  if isfield(data_new, 'cumtapcnt'), data_new = rmfield(data_new, 'cumtapcnt'); end
+  if isfield(data_old, 'cumtapcnt'), data_old = rmfield(data_old, 'cumtapcnt'); end
+  
   if isfield(data_new, 'cov') && ~isfield(data_old, 'cov')
     % skip the comparison of the cov, because ft_selectdata_old could not
     % deal with this correctly: this is not something to be asserted here
     data_new = rmfield(data_new, 'cov')
   end
+  if numel(data_old.label)==0, data_old.label = {}; end
+  if numel(data_new.label)==0, data_new.label = {}; end
   assert(isequal(data_old, data_new));
   
   % check whether the output is the same as the input
@@ -471,12 +477,14 @@ if nargin>2
     try, if isfield(dataorig, 'trial'), data = rmfield(dataorig, {'avg', 'var', 'dof'}); end ; end% only remove when trial
     try, if isfield(data, 'cov') && ~isfield(data_old, 'cov'), data = rmfield(data, 'cov'); end; end
     data = rmfield(data, 'cfg');
+    if isfield(data, 'cumtapcnt'), data = rmfield(data, 'cumtapcnt'); end
     assert(isequal(data, data_old));
     
     data = dataorig;
     try, if isfield(dataorig, 'trial'), data = rmfield(dataorig, {'avg', 'var', 'dof'}); end ; end% only remove when trial
     try, if isfield(data, 'cov') && ~isfield(data_new, 'cov'), data = rmfield(data, 'cov'); end; end
     data = rmfield(data, 'cfg');
+    if isfield(data, 'cumtapcnt'), data = rmfield(data, 'cumtapcnt'); end
     assert(isequal(data, data_new));
   end
 else
@@ -490,10 +498,14 @@ else
   data_new  = rmfield(data_new, 'cfg');
   data_old  = rmfield(data_old, 'cfg');
   
-  if strcmp(key, 'avgoverfreq') | strcmp(key, 'avgoverrpt')
+  if strcmp(key, 'avgoverfreq') || strcmp(key, 'avgoverrpt')
     % apparently something may be wrong with the data_old.dimord
     % don't spend time on fixing this here
     data_old.dimord = data_new.dimord;
+    
+    % also, the cumtapcnt is inconsistent in ft_selectdata_old
+    if isfield(data_old, 'cumtapcnt'), data_old = rmfield(data_old, 'cumtapcnt'); end
+    if isfield(data_new, 'cumtapcnt'), data_new = rmfield(data_new, 'cumtapcnt'); end
   end
   
   if strcmp(key, 'avgoverrpt')
@@ -511,6 +523,8 @@ else
     % ft_selectdata_old sometimes keeps the cov (without averaging), don't
     % bother to fix it
     if isfield(data_old, 'cov'), data_old = rmfield(data_old, 'cov'); end 
+    if isfield(data_old, 'cumtapcnt'), data_old = rmfield(data_old, 'cumtapcnt'); end
+    if isfield(data_new, 'cumtapcnt'), data_new = rmfield(data_new, 'cumtapcnt'); end
     
     % ft_selectdata_new tries to keep the cov, but ft_selectdata doesn't,
     % don't bother to fix ft_selectdata_old

@@ -1,7 +1,7 @@
 function test_bug2031
 
 % MEM 1500mb
-% WALLTIME 00:03:15
+% WALLTIME 00:10:00
 
 % TEST test_bug2031
 % TEST ft_topoplotER ft_topoplotTFR ft_singleplotER ft_singleplotTFR

@@ -21,7 +21,7 @@ function [dipout] = ft_eloreta(dip, grad, vol, dat, Cf, varargin)
 %  'keepfilter'       = remember the beamformer filter,    can be 'yes' or 'no'
 %  'keepleadfield'    = remember the forward computation,  can be 'yes' or 'no'
 %  'keepmom'          = remember the dipole moment,        can be 'yes' or 'no'
-%  'lambda'           = regularisation parameter
+%  'lambda'           = scalar, regularisation parameter (default = 0.05)
 
 % These options influence the forward computation of the leadfield
 %  'reducerank'       = reduce the leadfield rank, can be 'no' or a number (e.g. 2)
@@ -206,5 +206,5 @@ if isfield(dipout, 'pow') %here pow is cell
 end
 if isfield(dipout, 'ori') %here pow is cell
     dipout.ori(dipout.inside)  = dipout.ori;
-    dipout.ori(dipout.outside) = nan;
+    dipout.ori(dipout.outside) = {[]};
 end

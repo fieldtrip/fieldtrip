@@ -1,7 +1,7 @@
 function test_bug1785
 
 % MEM 1500mb
-% WALLTIME 00:03:02
+% WALLTIME 00:10:00
 
 % TEST test_bug1785
 % TEST ft_read_sens read_asa_elc read_asa

@@ -1,7 +1,7 @@
 function test_fairsurface
 
 % MEM 1500mb
-% WALLTIME 00:03:05
+% WALLTIME 00:10:00
 
 ft_defaults
 

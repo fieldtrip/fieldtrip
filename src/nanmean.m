@@ -2,9 +2,14 @@
 %
 % For usage see MEAN.
 
-
 function y = nanmean(x, dim)
-N = sum(~isnan(x), dim);
-y = nansum(x, dim) ./ N;
 
+if nargin<2
+  N = sum(~isnan(x));
+  y = nansum(x) ./ N;
+else
+  N = sum(~isnan(x), dim);
+  y = nansum(x, dim) ./ N;
 end
+
+end % function

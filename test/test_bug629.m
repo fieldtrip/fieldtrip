@@ -1,7 +1,7 @@
 function test_bug629
 
 % MEM 1500mb
-% WALLTIME 00:03:01
+% WALLTIME 00:10:00
 
 % TEST test_bug629
 % TEST ft_read_header ft_read_data ft_read_event read_mff_header read_mff_data

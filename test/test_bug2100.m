@@ -1,7 +1,7 @@
 function test_bug2100
 
 % MEM 1500mb
-% WALLTIME 00:03:06
+% WALLTIME 00:10:00
 
 % TEST test_bug2100
 % TEST ft_read_mri read_ctf_mri4

@@ -234,9 +234,11 @@ thrplus  = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 
 spdmin   = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', 'shift+downarrow');
 spd      = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'speed','userdata', 's');
 spdplus  = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', 'shift+uparrow');
-climmin  = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', 'leftarrow');
-clim     = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'colorlim', 'userdata', 'z');
-climplus = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', 'rightarrow');
+clim       = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'colorlim', 'userdata', 'z');
+climminmin = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '-', 'userdata', 'leftarrow');
+climmaxmin = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '+', 'userdata', 'shift+leftarrow');
+climminplus = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '-', 'userdata', 'rightarrow');
+climmaxplus = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '+', 'userdata', 'shift+rightarrow');
 sliderx  = uicontrol('parent', h, 'units', 'normalized', 'style', 'slider',     'string', sprintf('%s = ', cfg.xparam));
 stringx  = uicontrol('parent', h, 'units', 'normalized', 'style', 'text');
 slidery  = uicontrol('parent', h, 'units', 'normalized', 'style', 'slider',     'string', sprintf('%s = ', cfg.yparam));
@@ -251,9 +253,11 @@ set(recordbutton, 'position', [0.095 0.22 0.09 0.05], 'callback', @cb_keyboard);
 set(thrmin,       'position', [0.005 0.16 0.03 0.05], 'callback', @cb_keyboard);
 set(thr,          'position', [0.035 0.16 0.12 0.05], 'callback', @cb_keyboard);
 set(thrplus,      'position', [0.155 0.16 0.03 0.05], 'callback', @cb_keyboard);
-set(climmin,      'position', [0.005 0.10 0.03 0.05], 'callback', @cb_keyboard);
+set(climminmin,   'position', [0.005 0.10  0.03 0.025], 'callback', @cb_keyboard);
+set(climmaxmin,   'position', [0.005 0.125 0.03 0.025], 'callback', @cb_keyboard);
 set(clim,         'position', [0.035 0.10 0.12 0.05], 'callback', @cb_keyboard);
-set(climplus,     'position', [0.155 0.10 0.03 0.05], 'callback', @cb_keyboard);
+set(climminplus,  'position', [0.155 0.10  0.03 0.025], 'callback', @cb_keyboard);
+set(climmaxplus,  'position', [0.155 0.125 0.03 0.025], 'callback', @cb_keyboard);
 set(spdmin,       'position', [0.005 0.04 0.03 0.05], 'callback', @cb_keyboard);
 set(spd,          'position', [0.035 0.04 0.12 0.05], 'callback', @cb_keyboard);
 set(spdplus,      'position', [0.155 0.04 0.03 0.05], 'callback', @cb_keyboard);
@@ -567,19 +571,28 @@ opt = getappdata(h, 'opt');
 
 switch key
   case 'leftarrow' % change colorlim
-    opt.cfg.zlim(2) = (opt.cfg.zlim(2)-opt.cfg.zlim(1))./sqrt(2);
+    opt.cfg.zlim(1) = opt.cfg.zlim(1)-0.1*abs(opt.cfg.zlim(1));
     setappdata(h, 'opt', opt);
     caxis(opt.cfg.zlim);
     set(opt.hx, 'Clim', opt.cfg.zlim);
-  case 'rightarrow' % change colorlim
-    opt.cfg.zlim(2) = max(opt.cfg.zlim(2).*sqrt(2), opt.cfg.zlim(1));
+    
+  case 'shift+leftarrow' % change colorlim
+    opt.cfg.zlim(1) = opt.cfg.zlim(1)+0.1*abs(opt.cfg.zlim(1));
     setappdata(h, 'opt', opt);
     caxis(opt.cfg.zlim);
     set(opt.hx, 'Clim', opt.cfg.zlim);
   
-  case 'shift+leftarrow'
+  case 'rightarrow'
+    opt.cfg.zlim(2) = opt.cfg.zlim(2)-0.1*abs(opt.cfg.zlim(2));
+    setappdata(h, 'opt', opt);
+    caxis(opt.cfg.zlim);
+    set(opt.hx, 'Clim', opt.cfg.zlim);
     
   case 'shift+rightarrow'
+    opt.cfg.zlim(2) = opt.cfg.zlim(2)+0.1*abs(opt.cfg.zlim(2));
+    setappdata(h, 'opt', opt);
+    caxis(opt.cfg.zlim);
+    set(opt.hx, 'Clim', opt.cfg.zlim);
   
   case 'uparrow' % enhance threshold
     opt.threshold = opt.threshold+0.01.*max(opt.dat(:));
@@ -620,9 +633,11 @@ switch key
     end
   case 'z'
     % select the colorlim
-    response = inputdlg('colorlim', 'specify', 1, {num2str(opt.cfg.zlim(2))});
+    response = inputdlg('colorlim', 'specify', 1, {[num2str(opt.cfg.zlim(1)),' ',num2str(opt.cfg.zlim(2))]});
     if ~isempty(response)
-      opt.cfg.zlim(2) = str2double(response);
+      [tok1, tok2] = strtok(response, ' ');
+      opt.cfg.zlim(1) = str2double(deblank(tok1));
+      opt.cfg.zlim(2) = str2double(deblank(tok2));
       set(opt.hx, 'Clim', opt.cfg.zlim);
       setappdata(h, 'opt', opt);
     end

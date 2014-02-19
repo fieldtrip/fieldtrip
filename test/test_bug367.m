@@ -1,7 +1,7 @@
 function test_bug367
 
 % MEM 1500mb
-% WALLTIME 00:04:01
+% WALLTIME 00:10:00
 
 % this test script is for http://bugzilla.fcdonders.nl/show_bug.cgi?id=367
 % and was constructed from http://fieldtrip.fcdonders.nl/example/megrealign

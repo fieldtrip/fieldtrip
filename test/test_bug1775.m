@@ -1,7 +1,7 @@
 function test_bug1775
 
 % MEM 2gb
-% WALLTIME 00:04:07
+% WALLTIME 00:10:00
 
 % TEST test_bug1775
 % TEST ft_sourceparcellate ft_checkdata ft_datatype_source ft_datatype_volume ft_datatype_parcellation ft_datatype_segmentation

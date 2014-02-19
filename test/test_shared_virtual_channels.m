@@ -1,7 +1,7 @@
 function test_shared_virtual_channels
 
 % MEM 1500mb
-% WALLTIME 00:03:09
+% WALLTIME 00:10:00
 
 % TEST test_shared_virtual_channels
 % TEST ft_timelockanalysis ft_sourceanalysis ft_channelselection ft_databrowser

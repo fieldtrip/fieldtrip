@@ -787,59 +787,63 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne', 'rv', 'music'
   optarg = ft_cfg2keyval(getfield(cfg, cfg.method));
   
   siz=[size(avg) 1];
-  if strcmp(cfg.method, 'lcmv') && ~isfield(grid, 'filter'),
+  if strcmp(cfg.method, 'lcmv')% && ~isfield(grid, 'filter'),
     for i=1:Nrepetitions
       squeeze_avg=reshape(avg(i,:,:),[siz(2) siz(3)]);
       fprintf('scanning repetition %d\n', i);
       dip(i) = beamformer_lcmv(grid, sens, vol, squeeze_avg, squeeze(Cy(i,:,:)), optarg{:});
     end
-  elseif strcmp(cfg.method, 'lcmv')
-    %don't loop over repetitions (slow), but reshape the input data to obtain single trial timecourses efficiently
-    %in the presence of filters pre-computed on the average (or whatever)
-    tmpdat = reshape(permute(avg,[2 3 1]),[siz(2) siz(3)*siz(1)]);
-    tmpdip = beamformer_lcmv(grid, sens, vol, tmpdat, squeeze(mean(Cy,1)), optarg{:});
-    tmpmom = tmpdip.mom{tmpdip.inside(1)};
-    sizmom = size(tmpmom);
-
-    for i=1:length(tmpdip.inside)
-      indx = tmpdip.inside(i);
-      tmpdip.mom{indx} = permute(reshape(tmpdip.mom{indx}, [sizmom(1) siz(3) siz(1)]), [3 1 2]);
-    end
-    try, tmpdip = rmfield(tmpdip, 'pow'); end
-    try, tmpdip = rmfield(tmpdip, 'cov'); end
-    try, tmpdip = rmfield(tmpdip, 'noise'); end
-    for i=1:Nrepetitions
-      dip(i).pos     = tmpdip.pos;
-      dip(i).inside  = tmpdip.inside;
-      dip(i).outside = tmpdip.outside;
-      dip(i).mom     = cell(1,size(tmpdip.pos,1));
-      if isfield(tmpdip, 'ori')
-        dip(i).ori   = cell(1,size(tmpdip.pos,1));
-      end
-      dip(i).cov     = cell(1,size(tmpdip.pos,1));
-      dip(i).pow     = nan(size(tmpdip.pos,1),1);
-      for ii=1:length(tmpdip.inside)
-        indx             = tmpdip.inside(ii);
-        tmpmom           = reshape(tmpdip.mom{indx}(i,:,:),[sizmom(1) siz(3)]);
-        dip(i).mom{indx} = tmpmom;
-        if isfield(tmpdip, 'ori')
-          dip(i).ori{indx} = tmpdip.ori{indx};
-        end
-       
-        % the following recovers the single trial power and covariance, but
-        % importantly the latency over which the power is defined is the
-        % latency of the event-related field in the input and not the
-        % latency of the covariance window, which can differ from the
-        % former
-        dip(i).cov{indx} = (tmpmom*tmpmom')./siz(3);
-        if isempty(cfg.lcmv.powmethod) || strcmp(cfg.lcmv.powmethod, 'trace')
-          dip(i).pow(indx) = trace(dip(i).cov{indx});
-        else
-          [tmpu,tmps,tmpv] = svd(dip(i).cov{indx});
-          dip(i).pow(indx) = tmps(1);
-        end
-      end
-    end
+    
+% the following has been disabled since it turns out to be wrong (see
+% bugzilla bug 2395)
+%   elseif 0 && strcmp(cfg.method, 'lcmv')
+%     %don't loop over repetitions (slow), but reshape the input data to obtain single trial timecourses efficiently
+%     %in the presence of filters pre-computed on the average (or whatever)
+%     tmpdat = reshape(permute(avg,[2 3 1]),[siz(2) siz(3)*siz(1)]);
+%     tmpdip = beamformer_lcmv(grid, sens, vol, tmpdat, squeeze(mean(Cy,1)), optarg{:});
+%     tmpmom = tmpdip.mom{tmpdip.inside(1)};
+%     sizmom = size(tmpmom);
+% 
+%     for i=1:length(tmpdip.inside)
+%       indx = tmpdip.inside(i);
+%       tmpdip.mom{indx} = permute(reshape(tmpdip.mom{indx}, [sizmom(1) siz(3) siz(1)]), [3 1 2]);
+%     end
+%     try, tmpdip = rmfield(tmpdip, 'pow'); end
+%     try, tmpdip = rmfield(tmpdip, 'cov'); end
+%     try, tmpdip = rmfield(tmpdip, 'noise'); end
+%     for i=1:Nrepetitions
+%       dip(i).pos     = tmpdip.pos;
+%       dip(i).inside  = tmpdip.inside;
+%       dip(i).outside = tmpdip.outside;
+%       dip(i).mom     = cell(1,size(tmpdip.pos,1));
+%       if isfield(tmpdip, 'ori')
+%         dip(i).ori   = cell(1,size(tmpdip.pos,1));
+%       end
+%       dip(i).cov     = cell(1,size(tmpdip.pos,1));
+%       dip(i).pow     = nan(size(tmpdip.pos,1),1);
+%       for ii=1:length(tmpdip.inside)
+%         indx             = tmpdip.inside(ii);
+%         tmpmom           = reshape(tmpdip.mom{indx}(i,:,:),[sizmom(1) siz(3)]);
+%         dip(i).mom{indx} = tmpmom;
+%         if isfield(tmpdip, 'ori')
+%           dip(i).ori{indx} = tmpdip.ori{indx};
+%         end
+%        
+%         % the following recovers the single trial power and covariance, but
+%         % importantly the latency over which the power is defined is the
+%         % latency of the event-related field in the input and not the
+%         % latency of the covariance window, which can differ from the
+%         % former
+%         dip(i).cov{indx} = (tmpmom*tmpmom')./siz(3);
+%         if isempty(cfg.lcmv.powmethod) || strcmp(cfg.lcmv.powmethod, 'trace')
+%           dip(i).pow(indx) = trace(dip(i).cov{indx});
+%         else
+%           [tmpu,tmps,tmpv] = svd(dip(i).cov{indx});
+%           dip(i).pow(indx) = tmps(1);
+%         end
+%       end
+%     end
+    
   elseif strcmp(cfg.method, 'eloreta'),
     for i=1:Nrepetitions
       fprintf('scanning repetition %d\n', i);

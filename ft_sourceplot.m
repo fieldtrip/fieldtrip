@@ -56,8 +56,8 @@ function [cfg] = ft_sourceplot(cfg, data)
 %   cfg.funcolorlim   = color range of the functional data (default = 'auto')
 %                        [min max]
 %                        'maxabs', from -max(abs(funparameter)) to +max(abs(funparameter))
-%                        'zeromax', from 0 to max(abs(funparameter))
-%                        'minzero', from min(abs(funparameter)) to 0
+%                        'zeromax', from 0 to max(funparameter)
+%                        'minzero', from min(funparameter) to 0
 %                        'auto', if funparameter values are all positive: 'zeromax',
 %                          all negative: 'minzero', both possitive and negative: 'maxabs'
 %   cfg.colorbar      = 'yes' or 'no' (default = 'yes')
@@ -91,8 +91,9 @@ function [cfg] = ft_sourceplot(cfg, data)
 %                              'voxel', voxelcoordinates as indices
 %   cfg.crosshair     = 'yes' or 'no' (default = 'yes')
 %   cfg.axis          = 'on' or 'off' (default = 'on')
-%   cfg.interactive   = 'yes' or 'no' (default = 'no')
-%                        in interactive mode cursor click determines location of cut
+%   cfg.interactive   = 'yes' or 'no' (default = 'no' if no nargout is desired, 'yes' otherwise)
+%                        in interactive mode the function returns the 
+%                        fiducials when closing the figure in the cfg
 %   cfg.queryrange    = number, in atlas voxels (default 3)
 %
 %
@@ -246,8 +247,12 @@ cfg.locationcoordinates = ft_getopt(cfg, 'locationcoordinates', 'head');
 cfg.crosshair           = ft_getopt(cfg, 'crosshair',           'yes');
 cfg.colorbar            = ft_getopt(cfg, 'colorbar',            'yes');
 cfg.axis                = ft_getopt(cfg, 'axis',                'on');
-cfg.interactive         = ft_getopt(cfg, 'interactive',         'no');
 cfg.queryrange          = ft_getopt(cfg, 'queryrange',          3);
+if nargout
+  cfg.interactive         = ft_getopt(cfg, 'interactive',         'yes');
+else
+  cfg.interactive         = ft_getopt(cfg, 'interactive',         'no');
+end
 
 if isfield(cfg, 'TTlookup'),
   error('TTlookup is old; now specify cfg.atlas, see help!');
@@ -261,7 +266,7 @@ cfg.slicerange = ft_getopt(cfg, 'slicerange', 'auto');
 % surface
 cfg.downsample     = ft_getopt(cfg, 'downsample',     1);
 cfg.surfdownsample = ft_getopt(cfg, 'surfdownsample', 1);
-cfg.surffile       = ft_getopt(cfg, 'surffile',       'single_subj_T1.mat');% use a triangulation that corresponds with the collin27 anatomical template in MNI coordinates
+cfg.surffile       = ft_getopt(cfg, 'surffile', 'surface_white_both.mat');% use a triangulation that corresponds with the collin27 anatomical template in MNI coordinates
 cfg.surfinflated   = ft_getopt(cfg, 'surfinflated',  []);
 cfg.sphereradius   = ft_getopt(cfg, 'sphereradius',  []);
 cfg.projvec        = ft_getopt(cfg, 'projvec',       1);
@@ -1636,7 +1641,7 @@ if ~isempty(tag) && ~opt.init
     % timefreq
     opt.qi(2) = nearest(opt.data.time, pos(1));
     opt.qi(1) = nearest(opt.data.freq, pos(2));
-    opt.update = [1 1 0];
+    opt.update = [1 1 1];
   elseif strcmp(tag, 'TF2')
     % freq only
     opt.qi  = nearest(opt.data.freq, pos(1));

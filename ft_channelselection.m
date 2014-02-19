@@ -269,13 +269,13 @@ switch casetype
     labelmegrefl = datachannel(strncmp('ML', datachannel, 2));
     labelmegrefr = datachannel(strncmp('MR', datachannel, 2));
 
-  case {'neuromag122'}
+  case {'neuromag122' 'neuromag122alt'}
     % all neuromag MEG channels start with MEG
     % all neuromag EEG channels start with EEG
     labelmeg = datachannel(strncmp('MEG', datachannel, length('MEG')));
     labeleeg = datachannel(strncmp('EEG', datachannel, length('EEG')));
     
-  case {'neuromag306'}
+  case {'neuromag306' 'neuromag306alt'}
     % all neuromag MEG channels start with MEG
     % all neuromag EEG channels start with EEG
     % all neuromag-306 gradiometers follow pattern MEG*2,MEG*3
@@ -286,7 +286,7 @@ switch casetype
     labelmeggrad = labelmeg(~cellfun(@isempty, regexp(labelmeg, '^MEG.*[23]$')));
     labelmegmag  = labelmeg(~cellfun(@isempty, regexp(labelmeg, '^MEG.*1$')));
 
-  case {'biosemi64', 'biosemi128', 'biosemi256', 'egi64', 'egi128', 'egi256', 'ext1020'}
+  case {'ant128', 'biosemi64', 'biosemi128', 'biosemi256', 'egi32', 'egi64', 'egi128', 'egi256', 'eeg1020', 'eeg1010', 'eeg1005', 'ext1020'}
     % use an external helper function to define the list with EEG channel names
     labeleeg = ft_senslabel(ft_senstype(datachannel));
   

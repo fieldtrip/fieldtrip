@@ -1,7 +1,7 @@
 function test_bug1391
 
 % MEM 1500mb
-% WALLTIME 00:03:05
+% WALLTIME 00:10:00
 
 % this functions tests some potential issues with numerical accuracy
 % of the time axis in preproc, which converts the time axis into a 

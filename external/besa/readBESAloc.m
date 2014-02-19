@@ -43,7 +43,7 @@ NrNodes = fread(FileID, 1, 'int32');
 NrDataElements = NrNodes * 3;
 [Nodes NrReadElements] = fread(FileID, NrDataElements, 'float64');
 if(NrReadElements ~= NrDataElements)
-	printf('Could not read grid node coordinates.\n');
+	fprintf('Could not read grid node coordinates.\n');
 	return;
 end
 
@@ -57,7 +57,9 @@ Nodes = Nodes';
 Nodes = Nodes*1e3;
 
 % NOTE LF grid node coordinates are in ACPC space and in m. The AC point
-% is then, e.g., at (0.128, 0.128, 0.128).
+% is then, e.g., at (0.1275, 0.1275, 0.1275).
+
+Nodes = Nodes - 127.5; % the same for x, y and z
 
 % NOTE The file actually continues beyond this point. It furthermore
 % contains the neighbours for each grid node. But we do not need this
@@ -70,7 +72,7 @@ NumNeighbours = fread(FileID, 1, 'int32');
 TotalNumberNeighbours = NrNodes * NumNeighbours;
 [IndicesNeighbourNodes NrReadElements] = fread(FileID, TotalNumberNeighbours, 'int32');
 if(NrReadElements ~= TotalNumberNeighbours)
-	printf('Could not read neighbour nodes from file.\n');
+	fprintf('Could not read neighbour nodes from file.\n');
 	return
 end
 % Reshape matrix with indices of neighbour nodes

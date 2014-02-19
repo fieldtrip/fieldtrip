@@ -140,6 +140,9 @@ if isfield(cfg.artfctdef.zvalue, 'artifact')
   return
 end
 
+% set feedback
+cfg.feedback = ft_getopt(cfg, 'feedback',   'text');
+
 % flag whether to compute z-value per trial or not, rationale being that if
 % there are fluctuations in the variance across trials (e.g. due to
 % position differences in MEG measurements) which don't have to do with the artifact per se,
@@ -214,18 +217,16 @@ thresholdsum  = strcmp(cfg.artfctdef.zvalue.cumulative, 'yes');
 
 if numsgn<1
   error('no channels selected');
-else
-  fprintf('searching for artifacts in %d channels\n', numsgn);
-end
+end 
 
 % read the data and apply preprocessing options
 sumval = zeros(numsgn, 1);
 sumsqr = zeros(numsgn, 1);
 numsmp = zeros(numsgn, 1);
-fprintf('searching trials');
+ft_progress('init', cfg.feedback, ['searching for artifacts in ' num2str(numsgn) ' channels']);
 for trlop = 1:numtrl
-  fprintf('.');
-     
+  ft_progress(trlop/numtrl, 'searching in trial %d from %d\n', trlop, numtrl);
+      
   if strcmp(cfg.memory, 'low') % store nothing in memory
     if isfetch
       dat = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'));
@@ -290,6 +291,7 @@ for trlop = 1:numtrl
     end
   end
 end % for trlop
+ft_progress('close');
 
 if pertrial>1
   sumval = ft_preproc_smooth(sumval, pertrial)*pertrial;

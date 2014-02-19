@@ -1,7 +1,7 @@
 function test_bug1163
 
 % MEM 1500mb
-% WALLTIME 00:03:02
+% WALLTIME 00:10:00
 
 % TEST test_bug1163 ft_timelockbaseline
 

@@ -306,7 +306,7 @@ switch dtype
       timelock.elec = data.elec;
     end
     timelock.label = data.label;
-    timelock.cfg   = data.cfg;
+    if isfield(data, 'cfg'), timelock.cfg = data.cfg; end
     
     tmpcov   = zeros(nrpt, nchan, nchan);
     nsamples = zeros(1,nrpt);

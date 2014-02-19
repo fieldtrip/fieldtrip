@@ -1,7 +1,7 @@
 function test_bug1637
 
 % MEM 1500mb
-% WALLTIME 00:03:07
+% WALLTIME 00:10:00
 
 % TEST test_bug1637
 % TEST megplanar_sincos channelconnectivity ft_prepare_neighbours ft_channelselection

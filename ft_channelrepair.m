@@ -1,8 +1,9 @@
 function [data] = ft_channelrepair(cfg, data)
 
 % FT_CHANNELREPAIR repairs bad or missing channels in MEG or EEG data by
-% replacing them with the average of its neighbours (nearest-neighbour
-% approach), by interpolation based on a surface Laplacian, by spherical
+% replacing them with the average of its neighbours weighted by distance 
+% ('nearest'-neighbour approach) or by the average of all neighbours 
+% ('average'), by interpolation based on a surface Laplacian or by spherical
 % spline interpolating (see Perrin et al., 1989).
 % The nearest neighbour approach cannot be used reliably to repair multiple
 % bad channels that lie next to each other.
@@ -11,7 +12,7 @@ function [data] = ft_channelrepair(cfg, data)
 %   [interp] = ft_channelrepair(cfg, data)
 %
 % The configuration must contain
-%   cfg.method         = 'nearest', 'spline' or 'slap' (default='nearest')
+%   cfg.method         = 'nearest', 'average', 'spline' or 'slap' (default='nearest')
 %   cfg.badchannel     = cell-array, see FT_CHANNELSELECTION for details
 %   cfg.missingchannel = cell-array, see FT_CHANNELSELECTION for details
 %   cfg.neighbours     = neighbourhoodstructure, see also FT_PREPARE_NEIGHBOURS
@@ -143,7 +144,7 @@ interp.label   = data.label;
 interp.time    = data.time;
 
 % first repair badchannels
-if strcmp(cfg.method, 'nearest')
+if strcmp(cfg.method, 'nearest') || strcmp(cfg.method, 'average')
   
   if ~isempty(cfg.badchannel)
     [goodchanlabels,goodchanindcs] = setdiff(data.label,cfg.badchannel);
@@ -171,7 +172,11 @@ if strcmp(cfg.method, 'nearest')
       [a, b] = match_str(sens.label, data.label(k));
       badsensindx = a(b);
       fprintf('\tusing neighbour %s\n', sens.label{goodsensindx});
-      distance = sqrt(sum((sens.chanpos(goodsensindx,:) - repmat(sens.chanpos(badsensindx, :), numel(goodsensindx), 1)).^2, 2));
+      if strcmp(cfg.method, 'nearest')
+        distance = sqrt(sum((sens.chanpos(goodsensindx,:) - repmat(sens.chanpos(badsensindx, :), numel(goodsensindx), 1)).^2, 2));
+      elseif strcmp(cfg.method, 'average')
+          distance = 1;
+      end
       repair(k,l) = (1./distance);
       repair(k,l) = repair(k,l) ./ sum(repair(k,l));
     end
@@ -231,7 +236,11 @@ if strcmp(cfg.method, 'nearest')
         [a, b] = match_str(sens.label, interp.label(k));
         badsensindx = a(b);
         fprintf('\tusing neighbour %s\n', sens.label{goodsensindx});
-        distance = sqrt(sum((sens.chanpos(goodsensindx,:) - repmat(sens.chanpos(badsensindx, :), numel(goodsensindx), 1)).^2, 2));
+        if strcmp(cfg.method, 'nearest')
+            distance = sqrt(sum((sens.chanpos(goodsensindx,:) - repmat(sens.chanpos(badsensindx, :), numel(goodsensindx), 1)).^2, 2));
+        elseif strcmp(cfg.method, 'average')
+            distance = 1;
+        end
         repair(k,l) = (1./distance);
         repair(k,l) = repair(k,l) ./ sum(repair(k,l));
       end
@@ -328,7 +337,9 @@ elseif strcmp(cfg.method, 'spline') || strcmp(cfg.method, 'slap')
     interp.trial{i} = repair * data.trial{i}(dataidx, :);
   end
   fprintf('\n');
-  
+  % update channels labels due to reordering by 
+  interp.label = label;
+
 else
   error('unknown method "%s" for interpolation', cfg.method);
 end

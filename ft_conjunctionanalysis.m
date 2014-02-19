@@ -19,7 +19,7 @@ function [conjunction] = ft_conjunctionanalysis(cfg, varargin)
 %
 % See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS, FT_SOURCESTATISTICS
 
-% Copyright (C) 2010-2012, Arjen Stolk
+% Copyright (C) 2010-2014, Arjen Stolk
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -79,42 +79,43 @@ for i = 1:ndatasets-1
   %% SOURCE DATA
   if issource
     
-    if isfield(data1, 'stat') % conjunction on t-values
-      fprintf('minimum statistics on voxel T values \n');
+    if isfield(data1, 'stat')
+      fprintf('minimum statistics on source level data \n');
       
       % equal size input check
       if ~isequal(size(data1.stat), size(data2.stat))
         error('the input arguments have different sizes');
       end
       
+      % prepare the output data structure
       conjunction = data1;
+            
+      if isfield(data1, 'posclusters') % remove cluster details
+        fprintf('removing information about positive clusters\n');
+        conjunction = rmfield(conjunction, 'posclusters');
+        conjunction = rmfield(conjunction, 'posclusterslabelmat');
+      end
+           
+      if isfield(data1, 'negclusters') % remove cluster details
+        fprintf('removing information about negative clusters\n');
+        conjunction = rmfield(conjunction, 'negclusters');
+        conjunction = rmfield(conjunction, 'negclusterslabelmat');
+      end     
+            
+      fprintf('minimum statistics on stat fields \n');  
       conjunction.stat = minimumstatistics(data1.stat, data2.stat);
       
-      if isfield(data1, 'posclusterslabelmat') % conjunction on cluster values
-        fprintf('minimum statistics on positive clusters \n');
-        
-        conjunction.posclusterslabelmat = minimumstatistics(data1.posclusterslabelmat, data2.posclusterslabelmat);
-      end
-      
-      if isfield(data1, 'negclusterslabelmat') % conjunction on cluster values
-        fprintf('minimum statistics on negative clusters \n');
-        
-        conjunction.negclusterslabelmat = minimumstatistics(data1.negclusterslabelmat, data2.negclusterslabelmat);
-      end
-      
-      if isfield(data1, 'prob') % conjunction on probabilities
-        fprintf('minimum statistics on probabilities \n');
-        
+      if isfield(data1, 'prob') && isfield(data2, 'prob') % conjunction on probabilities
+        fprintf('minimum statistics on prob fields \n');        
         conjunction.prob = maximumprobabilities(data1.prob, data2.prob);
       end
       
-      if isfield(data1, 'mask') % conjunction on mask parameters
-        fprintf('logical AND on masking parameters \n');
-        
+      if isfield(data1, 'mask') && isfield(data2, 'mask') % conjunction on mask parameters
+        fprintf('logical AND on mask fields \n');        
         conjunction.mask = logicalAND(data1.mask, data2.mask);
       end
       
-    elseif isfield(data1, 'avg') % conjunction on mean power values
+    elseif isfield(data1, 'avg') && isfield(data2, 'avg') % conjunction on mean power values
       fprintf('minimum statistics on mean voxel power \n');
       
       % equal size input check
@@ -136,41 +137,42 @@ for i = 1:ndatasets-1
   if isfreq || istimelock
     
     if isfield(data1, 'stat') % conjunction on t-values
-      fprintf('minimum statistics on sensor T values \n');
+      fprintf('minimum statistics on sensor level data \n');
       
       % equal size input check
       if ~isequal(size(data1.stat), size(data2.stat))
         error('the input arguments have different sizes');
       end
       
+      % prepare the output data structure
       conjunction = data1;
+            
+      if isfield(data1, 'posclusters') % remove cluster details
+        fprintf('removing information about positive clusters\n');
+        conjunction = rmfield(conjunction, 'posclusters');
+        conjunction = rmfield(conjunction, 'posclusterslabelmat');
+      end
+           
+      if isfield(data1, 'negclusters') % remove cluster details
+        fprintf('removing information about negative clusters\n');
+        conjunction = rmfield(conjunction, 'negclusters');
+        conjunction = rmfield(conjunction, 'negclusterslabelmat');
+      end 
+      
+      fprintf('minimum statistics on stat fields \n');  
       conjunction.stat = minimumstatistics(data1.stat, data2.stat);
       
-      if isfield(data1, 'posclusterslabelmat') % conjunction on cluster values
-        fprintf('minimum statistics on positive clusters \n');
-        
-        conjunction.posclusterslabelmat = minimumstatistics(data1.posclusterslabelmat, data2.posclusterslabelmat);
-      end
-      
-      if isfield(data1, 'negclusterslabelmat') % conjunction on cluster values
-        fprintf('minimum statistics on negative clusters \n');
-        
-        conjunction.negclusterslabelmat = minimumstatistics(data1.negclusterslabelmat, data2.negclusterslabelmat);
-      end
-      
-      if isfield(data1, 'prob') % conjunction on probabilities
-        fprintf('minimum statistics on probabilities \n');
-        
+      if isfield(data1, 'prob') && isfield(data2, 'prob') % conjunction on probabilities
+        fprintf('minimum statistics on prob fields \n');        
         conjunction.prob = maximumprobabilities(data1.prob, data2.prob);
       end
       
-      if isfield(data1, 'mask') % conjunction on mask parameters
-        fprintf('logical AND on masking parameters \n');
-        
+      if isfield(data1, 'mask') && isfield(data2, 'mask') % conjunction on mask parameters
+        fprintf('logical AND on mask fields \n');        
         conjunction.mask = logicalAND(data1.mask, data2.mask);
       end
       
-    elseif isfield(data1, 'powspctrm') % conjunction on mean power values
+    elseif isfield(data1, 'powspctrm') && isfield(data2, 'powspctrm') % conjunction on mean power values
       fprintf('minimum statistics on mean sensor power \n');
       
       % equal size input check
@@ -181,7 +183,7 @@ for i = 1:ndatasets-1
       conjunction = data1;
       conjunction.powspctrm = minimumstatistics(data1.powspctrm, data2.powspctrm);
       
-    elseif isfield(data1, 'avg') % conjunction on mean signal amplitudes
+    elseif isfield(data1, 'avg') && isfield(data2, 'avg') % conjunction on mean signal amplitudes
       fprintf('minimum statistics on mean sensor amplitudes \n');
       
       % equal size input check

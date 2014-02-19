@@ -1,7 +1,7 @@
 function test_headmodel_localspheres_new_old
 
 % MEM 1500mb
-% WALLTIME 00:03:10
+% WALLTIME 00:10:00
 
 % TEST test_headmodel_localspheres_new_old
 % TEST ft_prepare_localspheres ft_prepare_headmodel

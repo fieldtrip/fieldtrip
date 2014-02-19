@@ -48,7 +48,11 @@ end
 event    = [];                % these will be the output in FieldTrip format
 oldevent = hdr.orig.event;    % these are in EEGLAB format
 
-nameList=fieldnames(oldevent);
+if ~isempty(oldevent)
+    nameList=fieldnames(oldevent);
+else
+    nameList=[];
+end;
 nameList=setdiff(nameList,{'type','value','sample','offset','duration','latency'});
 
 for index = 1:length(oldevent)

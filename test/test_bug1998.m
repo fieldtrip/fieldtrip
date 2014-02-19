@@ -1,6 +1,6 @@
 function test_bug1998
 
-% WALLTIME 00:05:01
+% WALLTIME 00:10:00
 % MEM 2gb
 
 % TEST test_bug1998

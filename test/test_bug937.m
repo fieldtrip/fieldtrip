@@ -1,7 +1,7 @@
 function test_bug937
 
 % MEM 1500mb
-% WALLTIME 00:03:10
+% WALLTIME 00:10:00
 
 % TEST test_bug937
 % TEST ft_prepare_mesh ft_voltype ft_plot_mesh

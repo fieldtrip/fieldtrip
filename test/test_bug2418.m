@@ -1,10 +1,12 @@
 function test_bug2418
 
-% WALLTIME 00:05:00
+% WALLTIME 00:10:00
 % MEM 1500mb
 
 % TEST test_bug2418
 % TEST ft_senstype ft_senslabel
+
+%% test the consistency between labels and type
 
 type = {
   'ant128'
@@ -31,9 +33,9 @@ type = {
   'egi128'
   'egi256'
   'neuromag122'
-  'neuromag122alt'
+%  'neuromag122alt' % does not apply any more, see bugzilla
   'neuromag306'
-  'neuromag306alt'
+%  'neuromag306alt' % does not apply any more, see bugzilla
   'itab28'
   'itab153'
   'itab153_planar'
@@ -54,3 +56,14 @@ for i=1:length(type)
   disp(type{i});
   assert(strcmp(type{i}, ft_senstype(lab)));
 end
+
+%% test the provided problematic data
+
+cd(dccnfilename('/home/common/matlab/fieldtrip/data/test'));
+load bug2418.mat
+
+assert(isequal(ft_senstype(testdata_short), 'neuromag306'));
+assert(isequal(ft_senstype(testdata_short.label), 'neuromag306'));
+assert(isequal(ft_senstype(testdata_short.grad), 'neuromag306'));
+assert(isequal(ft_senstype(testdata_short.grad.label), 'neuromag306'));
+

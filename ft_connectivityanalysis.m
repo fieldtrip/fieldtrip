@@ -95,7 +95,7 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 
 % Copyright (C) 2009, Jan-Mathijs Schoffelen, Andre Bastos, Martin Vinck, Robert Oostenveld
 % Copyright (C) 2010-2011, Jan-Mathijs Schoffelen, Martin Vinck
-% Copyright (C) 2012, Jan-Mathijs Schoffelen
+% Copyright (C) 2012-2013, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -278,7 +278,7 @@ switch cfg.method
       otherwise
     end
     outparam = [cfg.method, 'spctrm'];
-  case {'granger'}
+  case {'granger' 'instantaneous_causality' 'total_interdependence'}
     % create subcfg for the spectral factorization
     if ~isfield(cfg, 'granger')
       cfg.granger = [];
@@ -291,16 +291,9 @@ switch cfg.method
     end
     data = ft_checkdata(data, 'datatype', {'mvar' 'freqmvar' 'freq'});
     inparam = {'transfer', 'noisecov', 'crsspctrm'};
-    outparam = 'grangerspctrm';
-    % FIXME could also work with time domain data
-  case {'instantaneous_causality'}
-    data = ft_checkdata(data, 'datatype', {'mvar' 'freqmvar' 'freq'});
-    inparam = {'transfer', 'noisecov', 'crsspctrm'};
-    outparam = 'instantspctrm';
-  case {'total_interdependence'}
-    data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
-    inparam = {'transfer', 'noisecov', 'crsspctrm'};
-    outparam = 'totispctrm';
+    if strcmp(cfg.method, 'granger'),                 outparam = 'grangerspctrm'; end
+    if strcmp(cfg.method, 'instantaneous_causality'), outparam = 'instantspctrm'; end
+    if strcmp(cfg.method, 'total_interdependence'),   outparam = 'totispctrm';    end
   case {'dtf' 'pdc'}
     data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
     inparam = 'transfer';
@@ -560,7 +553,7 @@ switch cfg.method
     if exist('powindx', 'var'), optarg = cat(2, optarg, {'powindx', powindx}); end
     [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg{:});
     
-  case 'granger'
+  case {'granger' 'instantaneous_causality' 'total_interdependence'}
     % granger causality
     if ft_datatype(data, 'freq') || ft_datatype(data, 'freqmvar'),
       if isfield(data, 'labelcmb') && ~istrue(cfg.granger.conditional),
@@ -643,79 +636,15 @@ switch cfg.method
       end
       % fs = cfg.fsample; % FIXME do we really need this, or is this related to how noisecov is defined and normalised?
       if ~exist('powindx', 'var'), powindx = []; end
-      optarg = {'hasjack', hasjack, 'method', 'granger', 'powindx', powindx, 'dimord', data.dimord};
+      if strcmp(cfg.method, 'granger'),                 methodstr = 'granger';      end
+      if strcmp(cfg.method, 'instantaneous_causality'), methodstr = 'instantaneous'; end
+      if strcmp(cfg.method, 'total_interdependence'),   methodstr = 'total';        end
+      optarg = {'hasjack', hasjack, 'method', methodstr, 'powindx', powindx, 'dimord', data.dimord};
       [datout, varout, nrpt] = ft_connectivity_granger(data.transfer, data.noisecov, data.crsspctrm, optarg{:});
     else
       error('granger for time domain data is not yet implemented');
     end
-    
-  case 'instantaneous_causality'
-    % instantaneous ft_connectivity between the series, requires the same elements as granger
-    if ft_datatype(data, 'freq') || ft_datatype(data, 'freqmvar'),
-      if isfield(data, 'labelcmb') && isempty(cfg.conditional),
-        % linearly indexed channel pairs
-      elseif isfield(data, 'labelcmb')
-        % conditional (blockwise) needs linearly represented cross-spectra
-        for k = 1:size(cfg.conditional, 1)
-          tmp{k, 1} = cfg.conditional(k, :);
-          tmp{k, 2} = cfg.conditional(k, [1 3]);
-        end
-        [cmbindx, n] = blockindx2cmbindx(data.labelcmb, cfg.blockindx, tmp);
-        powindx.cmbindx = cmbindx;
-        powindx.n = n;
-      elseif isfield(cfg, 'block') && ~isempty(cfg.block)
-        % blockwise granger
-        powindx = cfg.block;
-        newlabel = cell(2, 1);
-        for k = 1:2
-          newlabel{k, 1} = cat(2, powindx{k});
-        end
-        data.label = newlabel;
-      else
-        powindx = [];
-      end
-      % fs = cfg.fsample; % FIXME do we really need this, or is this related to how
-      % noisecov is defined and normalised?
-      if ~exist('powindx', 'var'), powindx = []; end
-      optarg = {'hasjack', hasjack, 'method', 'instantaneous', 'powindx', powindx, 'dimord', data.dimord};
-      [datout, varout, nrpt] = ft_connectivity_granger(data.transfer, data.noisecov, data.crsspctrm, optarg{:});
-    else
-      error('granger for time domain data is not yet implemented');
-    end
-    
-  case 'total_interdependence'
-    % total interdependence
-    if ft_datatype(data, 'freq') || ft_datatype(data, 'freqmvar'),
-      if isfield(data, 'labelcmb') && isempty(cfg.conditional),
-        % multiple pairwise non-parametric transfer functions
-        % linearly indexed
-      elseif isfield(data, 'labelcmb')
-        % conditional (blockwise) needs linearly represented cross-spectra
-        for k = 1:size(cfg.conditional, 1)
-          tmp{k, 1} = cfg.conditional(k, :);
-          tmp{k, 2} = cfg.conditional(k, [1 3]);
-        end
-        [cmbindx, n] = blockindx2cmbindx(data.labelcmb, cfg.blockindx, tmp);
-        powindx.cmbindx = cmbindx;
-        powindx.n = n;
-      elseif isfield(cfg, 'block') && ~isempty(cfg.block)
-        % blockwise granger
-        powindx = cfg.block;
-        for k = 1:2
-          newlabel{k, 1} = cat(2, powindx{k});
-        end
-        data.label = newlabel;
-      else
-        powindx = [];
-      end
-      % fs = cfg.fsample; % FIXME do we really need this, or is this related to how noisecov is defined and normalised?
-      if ~exist('powindx', 'var'), powindx = []; end
-      optarg = {'hasjack', hasjack, 'method', 'total', 'powindx', powindx, 'dimord', data.dimord};
-      [datout, varout, nrpt] = ft_connectivity_granger(data.transfer, data.noisecov, data.crsspctrm, optarg{:});
-    else
-      error('granger for time domain data is not yet implemented');
-    end
-    
+        
   case 'dtf'
     % directed transfer function
     if isfield(data, 'labelcmb'),

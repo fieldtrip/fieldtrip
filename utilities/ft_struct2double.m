@@ -1,4 +1,4 @@
-function [x] = ft_struct2double(x, maxdepth);
+function [x] = ft_struct2double(x, maxdepth)
 
 % FT_STRUCT2DOUBLE converts all single precision numeric data in a structure 
 % into double precision. It will also convert plain matrices and
@@ -7,17 +7,17 @@ function [x] = ft_struct2double(x, maxdepth);
 % Use as
 %    x = ft_struct2double(x);
 %
-% Starting from Matlab 7.0, you can use single precision data in your
+% Starting from MATLAB 7.0, you can use single precision data in your
 % computations, i.e. you do not have to convert back to double precision.
 %
-% Matlab version 6.5 and older only support single precision for storing
+% MATLAB version 6.5 and older only support single precision for storing
 % data in memory or on disk, but do not allow computations on single
 % precision data. Therefore you should converted your data from single to
 % double precision after reading from file.
 %
 % See also FT_STRUCT2SINGLE
 
-% Copyright (C) 2005, Robert Oostenveld
+% Copyright (C) 2005-2014, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -47,7 +47,7 @@ x = convert(x, 0, maxdepth);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this subfunction does the actual work
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [a] = convert(a, depth, maxdepth);
+function [a] = convert(a, depth, maxdepth)
 
 if depth>maxdepth
   error('recursive depth exceeded');
@@ -75,7 +75,7 @@ switch class(a)
       a{i} = convert(a{i}, depth+1, maxdepth);
     end
 
-  case {'single' 'int32' 'uint32' 'int16' 'uint16'}
+  case {'single' 'int64' 'uint64' 'int32' 'uint32' 'int16' 'uint16' 'int8' 'uint8'}
     % convert the values to double precision
     a = double(a);
 
@@ -83,6 +83,5 @@ switch class(a)
     % keep as it is
 
   otherwise
-    warning_once(sprintf('not converting class %s', class(a)));
     % do nothing
 end

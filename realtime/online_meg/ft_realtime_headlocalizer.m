@@ -59,7 +59,6 @@ cfg.template        = ft_getopt(cfg, 'template',         []); % template dataset
 cfg.blocksize       = ft_getopt(cfg, 'blocksize',         1); % in seconds
 cfg.bufferdata      = ft_getopt(cfg, 'bufferdata',   'last'); % first (replay) or last (real-time)
 cfg.coilfreq        = ft_getopt(cfg, 'coilfreq',   [293, 307, 314, 321, 328]); % Hz, Neuromag
-cfg.hpifile         = ft_getopt(cfg, 'hpifile',          []); % fif file containing digitized HPI coils
 
 % start by reading the header from the realtime buffer
 clear ft_read_header; % ensure pesistent variables are cleared
@@ -83,7 +82,7 @@ if isctf
   if ~isempty(cfg.template)
     [p, f, x]=fileparts(cfg.template);
     if strcmp(x, '.ds')
-      shape = ft_read_headshape(cfg.template, 'coordsys', 'dewar');
+      shape = ft_read_headshape(cfg.template, 'coordsys', 'dewar', 'format', 'ctf_ds');
       template(1,:) = [shape.fid.pnt(1,1), shape.fid.pnt(1,2), shape.fid.pnt(1,3)]; % chan X pos
       template(2,:) = [shape.fid.pnt(2,1), shape.fid.pnt(2,2), shape.fid.pnt(2,3)];
       template(3,:) = [shape.fid.pnt(3,1), shape.fid.pnt(3,2), shape.fid.pnt(3,3)];
@@ -126,11 +125,7 @@ if isctf
   vol  = [];
   coilsignal = [];
 elseif isneuromag
-  if isempty(cfg.hpifile)
-    shape = ft_read_headshape(cfg.headerfile, 'coordsys', 'dewar', 'format', 'neuromag_fif');
-  elseif ~isempty(cfg.hpifile)
-    shape = ft_read_headshape(cfg.hpifile, 'coordsys', 'dewar', 'format', 'neuromag_fif');
-  end
+    shape = ft_read_headshape(cfg.headerfile, 'coordsys', 'dewar', 'format', 'neuromag_fif','unit','m'); % ensure SI units
   for i = 1:min(size(shape.pnt,1),length(cfg.coilfreq)) % for as many digitized or specified coils
     if ~isempty(strfind(shape.label{i},'hpi'))
       dip(i).pos = shape.pnt(i,:); % chan X pos, initial guess for each of the dipole/coil positions
@@ -143,9 +138,17 @@ elseif isneuromag
   
   % prepare the forward model and the sensor array for subsequent fitting
   % note that the forward model is a magnetic dipole in an infinite vacuum
-  cfg.channel = ft_channelselection('MEGMAG', hdr.label);
+  %cfg.channel = ft_channelselection('MEG', hdr.label); % because we want to planars as well (previously only magnetometers)
+  cfg.channel = ft_channelselection('MEGMAG', hdr.label); % old
+  %cfg.channel = setdiff(ft_channelselection('MEG', hdr.label),ft_channelselection('MEGMAG', hdr.label)); % just trying out (planar mags)
+  %cfg.channel = ft_channelselection('IAS*',hdr.label); % internal active shielding
   [vol, sens] = ft_prepare_vol_sens([], hdr.grad, 'channel', cfg.channel);
+  sens = ft_datatype_sens(sens, 'version', 'upcoming', 'scaling', 'amplitude/distance', 'distance', 'm'); % ensure SI units
   coilsignal = [];
+  
+  % update distances, given that sensor units are m an not cm
+  cfg.accuracy_green = cfg.accuracy_green/100;
+  cfg.accuracy_orange = cfg.accuracy_orange/100;
 else
   error('the data does not resemble ctf, nor neuromag')
 end % if ctf or neuromag
@@ -157,7 +160,19 @@ end % if ctf or neuromag
 if isctf
   [dum, chanindx] = match_str('headloc', hdr.chantype);
 elseif isneuromag
+  % 102 magnetometers
   [dum, chanindx] = match_str('megmag', hdr.chantype);
+  
+  % all 306
+  %[dum, chanindx1] = match_str('megmag', hdr.chantype);
+  %[dum, chanindx2] = match_str('megplanar', hdr.chantype); % because we want to planars as well
+  %chanindx = sort([chanindx1; chanindx2],1); % because we want to planars as well
+  
+  % 204 planar gradiometers
+  %[dum, chanindx] = match_str('megplanar', hdr.chantype);
+  
+  % 11 IAS
+  % chanindx = 1:11;  
 end
 
 if isempty(chanindx)
@@ -251,7 +266,7 @@ while ishandle(hMainFig) && info.continue % while the flag is one, the loop cont
     end
     
     % compute the HPI coil positions, this takes some time
-    [hpi, info.dip] = data2hpi(data, info.dip, info.vol, info.sens, coilsignal, info.isctf, info.isneuromag); % for neuromag datasets this is slow
+    [hpi, info.dip] = data2hpi(data, info.dip, info.vol, info.sens, coilsignal, info.isctf, info.isneuromag); % for neuromag datasets this is relatively slow
     
     if ~ishandle(hMainFig)
       % the figure has been closed
@@ -469,6 +484,8 @@ elseif isneuromag
   % estimate the complex-valued MEG topography for each coil
   % this implements a discrete Fourier transform (DFT)
   topo = [];
+  %[x, ut] = svdfft( data.trial{1} );
+  %data.trial{1} = x;
   topo = ft_preproc_detrend(data.trial{1}) * ctranspose(coilsignal);
   
   % ignore the out-of-phase spectral component in the topography

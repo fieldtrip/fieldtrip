@@ -1,7 +1,7 @@
 function test_bug1826
 
 % MEM 1500mb
-% WALLTIME 00:03:01
+% WALLTIME 00:10:00
 
 % at this moment the test script does not yet work, but we don't want the automatic regression testing to flag it as failure
 return;

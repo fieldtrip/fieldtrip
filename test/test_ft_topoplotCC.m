@@ -1,7 +1,7 @@
 function test_ft_topoplotCC
 
 % MEM 1500mb
-% WALLTIME 00:03:03
+% WALLTIME 00:10:00
 
 % TEST test_ft_topoplotCC
 % TEST ft_topoplotCC

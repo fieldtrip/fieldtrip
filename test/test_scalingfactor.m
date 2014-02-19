@@ -1,7 +1,7 @@
 function test_scalingfactor
 
 % MEM 1500mb
-% WALLTIME 00:03:02
+% WALLTIME 00:10:00
 
 % TEST test_scalingfactor
 % TEST scalingfactor ft_convert_units

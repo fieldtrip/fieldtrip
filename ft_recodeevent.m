@@ -76,12 +76,12 @@ ft_defaults
 ft_preamble init
 
 % set the defaults
-if ~isfield(cfg, 'eventtype'),  cfg.eventtype   = [];             end
-if ~isfield(cfg, 'eventvalue'), cfg.eventvalue  = [];             end
-if ~isfield(cfg, 'searchrange'),cfg.searchrange = 'anywhere';     end
-if ~isfield(cfg, 'nearestto'),  cfg.nearestto   = 'trialzero';    end
-if ~isfield(cfg, 'match'),      cfg.match       = 'nearest';      end
-if ~isfield(cfg, 'output'),     cfg.output      = 'eventvalue';   end
+cfg.eventtype   = ft_getopt(cfg, 'eventtype',   []);
+cfg.eventvalue  = ft_getopt(cfg, 'eventvalue',  []);
+cfg.searchrange = ft_getopt(cfg, 'searchrange', 'anywhere');
+cfg.nearestto   = ft_getopt(cfg, 'nearestto',   'trialzero');
+cfg.match       = ft_getopt(cfg, 'match',       'nearest');
+cfg.output      = ft_getopt(cfg, 'output',      'eventvalue');
 
 % these should be numeric lists or cell-arrays with strings
 if ischar(cfg.eventtype)
@@ -95,8 +95,13 @@ if nargin==2
   % event and trl are not specified in the function call, but the data is given ->
   % try to locate event and trl in the configuration
   data  = event;                       % rename the input variable
-  event = ft_findcfg(data.cfg, 'event');  % search for the event field
-  trl   = ft_findcfg(data.cfg, 'trl');    % search for the trl field
+  if isfield(data, 'cfg')
+    event = ft_findcfg(data.cfg, 'event');  % search for the event field
+    trl   = ft_findcfg(data.cfg, 'trl');    % search for the trl field
+  else
+    event = [];
+    trl   = [];
+  end
   if isempty(event)
     error('could not locate event structure in the data');
   elseif isempty(trl)

@@ -95,11 +95,11 @@ if ~is_txt
   if isempty(timeframe)
     % read the complete timecourses
     fseek(fid, 0, 'bof');
-    activity = fread(fid, [voxnumber Ntime], 'float = >single');
+    activity = fread(fid, [voxnumber Ntime], 'float=>single');
   elseif length(timeframe)==1
     % read only a single timeframe
     fseek(fid, 4*voxnumber*(timeframe-1), 'bof');
-    activity = fread(fid, [voxnumber 1], 'float = >single');
+    activity = fread(fid, [voxnumber 1], 'float=>single');
   else
     error('you can read either one timeframe, or the complete timecourse');
   end  

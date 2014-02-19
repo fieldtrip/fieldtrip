@@ -15,15 +15,17 @@ function [jobid, puttime] = qsubfeval(varargin)
 %   memoverhead = number in bytes, how much memory to account for MATLAB itself (default = 1024^3, i.e. 1GB)
 %   timreq      = number in seconds, how much time does the job require (no default)
 %   timoverhead = number in seconds, how much time to allow MATLAB to start (default = 180 seconds)
-%   backend     = string, can be 'sge', 'torque', 'slurm', 'system', 'local' (default is automatic)
+%   backend     = string, can be 'torque', 'sge', 'slurm', 'lsf', 'system', 'local' (default is automatic)
 %   diary       = string, can be 'always', 'never', 'warning', 'error' (default = 'error')
 %   queue       = string, which queue to submit the job in (default is empty)
+%   waitfor     = string, jobid of job to wait on finishing before executing current job
 %   options     = string, additional options that will be passed to qsub/srun (default is empty)
 %   batch       = number, of the bach to which the job belongs. When called by QSUBCELLFUN
 %                 it will be a number that is automatically incremented over subsequent calls.
 %   batchid     = string that is used for the compiled application filename and to identify
 %                 the jobs in the queue, the default is automatically determined and looks
 %                 like user_host_pid_batch.
+%   matlabcmd   = string, the Linux command line to start MATLAB on the compute nodes (default is automatic
 %   display     = 'yes' or 'no', whether the nodisplay option should be passed to MATLAB (default = 'no', meaning nodisplay)
 %   jvm         = 'yes' or 'no', whether the nojvm option should be passed to MATLAB (default = 'yes', meaning with jvm)
 %
@@ -56,22 +58,6 @@ persistent previous_matlabcmd
 % keep track of the time
 stopwatch = tic;
 
-% check if torque or sge is present and running
-if ~isempty(getenv('SGE_ROOT'))
-  defaultbackend = 'sge';
-elseif ~isempty(getenv('TORQUEHOME'))
-  defaultbackend = 'torque';
-elseif ~isempty(getenv('CONDOR_ARCH'))
-  % this has not been tested and I am not 100% sure that this is the right variable to probe
-  defaultbackend = 'condor';
-elseif ~isempty(getenv('SLURM_ENABLE'))
-  defaultbackend = 'slurm';
-else
-  % backend=local causes the job to be executed in this MATLAB by feval
-  % backend=system causes the job to be executed on the same computer using system('matlab -r ...')
-  defaultbackend = 'local';
-end
-
 % convert the input arguments into something that strmatch can work with
 strargin = varargin;
 strargin(~cellfun(@ischar, strargin)) = {''};
@@ -88,10 +74,12 @@ optbeg = optbeg | strcmp('memoverhead',   strargin);
 optbeg = optbeg | strcmp('backend',       strargin);
 optbeg = optbeg | strcmp('queue',         strargin);
 optbeg = optbeg | strcmp('options',       strargin);
+optbeg = optbeg | strcmp('matlabcmd',     strargin);
 optbeg = optbeg | strcmp('jvm',           strargin);
 optbeg = optbeg | strcmp('display',       strargin);
 optbeg = optbeg | strcmp('nargout',       strargin);
 optbeg = optbeg | strcmp('whichfunction', strargin);
+optbeg = optbeg | strcmp('waitfor',       strargin);
 optbeg = find(optbeg);
 optarg = varargin(optbeg:end);
 
@@ -107,13 +95,15 @@ batch         = ft_getopt(optarg, 'batch', 1);
 batchid       = ft_getopt(optarg, 'batchid');
 timoverhead   = ft_getopt(optarg, 'timoverhead', 180);            % allow some overhead to start up the MATLAB executable
 memoverhead   = ft_getopt(optarg, 'memoverhead', 1024*1024*1024); % allow some overhead for the MATLAB executable in memory
-backend       = ft_getopt(optarg, 'backend', defaultbackend);     % can be torque, local, sge
+backend       = ft_getopt(optarg, 'backend', defaultbackend);     % this uses the defaultbackend helper function to determine the default
 queue         = ft_getopt(optarg, 'queue', []);                   % the default is specified further down in the code
 submitoptions = ft_getopt(optarg, 'options', []);
 display       = ft_getopt(optarg, 'display', 'no');
+matlabcmd     = ft_getopt(optarg, 'matlabcmd', []);
 jvm           = ft_getopt(optarg, 'jvm', 'yes');
 numargout     = ft_getopt(optarg, 'nargout', []);
 whichfunction = ft_getopt(optarg, 'whichfunction');               % the complete filename to the function, including path
+waitfor       = ft_getopt(optarg, 'waitfor');
 
 % skip the optional key-value arguments
 if ~isempty(optbeg)
@@ -148,7 +138,7 @@ end
 jobid = generatejobid(batch, batchid);
 
 % get the current working directory to store the temp files in
-curPwd = getcustompwd();
+curPwd = getcustompwd(); 
 
 % each job should have a different random number sequence
 randomseed = rand(1)*double(intmax);
@@ -166,7 +156,9 @@ save(inputfile, 'argin', 'optin');
 
 if ~compiled
   
-  if isempty(previous_matlabcmd)
+  if ~isempty(matlabcmd) 
+    % take the user-specified matlab startup script
+  elseif isempty(previous_matlabcmd)
     % determine the name of the matlab startup script
     if matlabversion(7.1)
       matlabcmd = 'matlab71';
@@ -238,7 +230,7 @@ if ~compiled
     sprintf('addpath(''%s'');', fileparts(mfilename('fullpath'))),...
     sprintf('qsubexec(''%s'');', fullfile(pwd, jobid)),...
     sprintf('exit')];
-
+  
 end % if ~compiled
 
 % set the job requirements according to the users specification
@@ -279,6 +271,11 @@ switch backend
     
     if ~isempty(memreq) && ~isnan(memreq) && ~isinf(memreq)
       submitoptions = [submitoptions sprintf('-l h_vmem=%.0f ', memreq+memoverhead)];
+    end
+    
+    if ~isempty(waitfor)
+      % waitfor contains the jobid of the job to wait for
+      submitoptions = [submitoptions sprintf('-W depend=afterok:%s', qsublist('getpbsid', waitfor))];
     end
     
     if compiled
@@ -405,14 +402,56 @@ switch backend
     
     cmdline = sprintf('condor_submit %s', submitfile);
     
+    
+  case 'lsf'
+    % this is for Platform Load Sharing Facility (LSF)
+    
+    if isempty(submitoptions)
+      % start with an empty string
+      submitoptions = '';
+    end
+    
+    if ~isempty(queue)
+      submitoptions = [submitoptions sprintf('-q %s ', queue)];
+    end
+    
+    if ~isempty(timreq) && ~isnan(timreq) && ~isinf(timreq)
+      submitoptions = [submitoptions sprintf('-W %.0f ', ceil((timreq+timoverhead) / 60))]; % in minutes
+    end
+    
+    if ~isempty(memreq) && ~isnan(memreq) && ~isinf(memreq)
+      submitoptions = [submitoptions sprintf('-M %.0f ', ceil((memreq+memoverhead) / 1024^2))];  % in MB
+    end
+    
+    % specifying the o and e names might be useful for the others as well
+    logout = fullfile(curPwd, sprintf('%s.o', jobid));
+    logerr = fullfile(curPwd, sprintf('%s.e', jobid));
+    
+    if compiled
+      % create the command line for the compiled application
+      cmdline = sprintf('%s %s %s', compiledfun, matlabroot, jobid);
+    else
+      % create the shell commands to execute matlab
+      cmdline = sprintf('%s -r \\"%s\\"', matlabcmd, matlabscript);
+    end
+    
+    % pass the command to qsub with all requirements
+    cmdline = sprintf('echo "%s" | bsub -J %s %s -o %s -e %s', cmdline, jobid, submitoptions, logout, logerr);
+    
   otherwise
     error('unsupported backend "%s"', backend);
     
 end % switch
 
-fprintf('submitting job %s...', jobid); % note the lack of the end-of-line, the qsub outpt will follow
+fprintf('submitting job %s...', jobid); % note the lack of the end-of-line, the qsub output will follow
+
 if ~strcmp(backend, 'local')
+  % the system call will also print some information to screen to complete the line
   [status, result] = system(cmdline);
+  if status
+    % this should have returned 0, the screen output in result will probably be informative
+    error(result);
+  end
 else
   % this will read the job input *.mat file, call feval with all try-catch
   % precautions, measure time and memory and eventually write the results to
@@ -429,6 +468,12 @@ switch backend
   case 'local'
     % the job was executed by a local feval call, but the results will still be written in a job file
     result = jobid;
+  case 'lsf'
+    % the result of bsub returns a string in format: "Job <job_number> is submitted to default queue <queue_name>"
+    % parse the job number
+    pbsid_beg = strfind(result, '<');
+    pbsid_end = strfind(result, '>');
+    result = result(pbsid_beg(1)+1:pbsid_end(1)-1);
   otherwise
     % for torque and sge it is enough to remove the white space
     result = strtrim(result);
@@ -452,4 +497,3 @@ puttime = toc(stopwatch);
 
 % remember the input arguments to speed up subsequent calls
 previous_argin  = varargin;
-

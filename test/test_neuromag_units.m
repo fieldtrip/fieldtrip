@@ -1,7 +1,7 @@
 function test_neuromag_units
 
 % MEM 1500mb
-% WALLTIME 00:04:40
+% WALLTIME 00:10:00
 
 % TEST test_neuromag_units
 % TEST ft_read_header ft_read_data

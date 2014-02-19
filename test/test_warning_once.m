@@ -1,7 +1,7 @@
 function test_warning_once
 
 % MEM 1500mb
-% WALLTIME 00:05:04
+% WALLTIME 00:10:00
 
 warning_once('-clear');
 

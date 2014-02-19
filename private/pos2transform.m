@@ -1,4 +1,4 @@
-function [transform] = pos2transform(pos)
+function [transform] = pos2transform(pos, dim)
 
 % POS2TRANSFORM reconstructs a transformation matrix from an ordered list 
 % of positions.
@@ -12,7 +12,11 @@ function [transform] = pos2transform(pos)
 
 % Copyright (C) 2009, Jan-Mathijs Schoffelen
 
-dim = pos2dim(pos);
+if nargin>1,
+  % do nothing
+else
+  dim = pos2dim(pos);
+end
 x   = 1:dim(1);
 y   = 1:dim(2);
 z   = 1:dim(3);
@@ -20,4 +24,8 @@ z   = 1:dim(3);
 ind = [X(:) Y(:) Z(:)];
 ind = ind';ind(4,:) = 1;
 pos = pos';pos(4,:) = 1;
-transform = pos/ind;
+
+% build in some robustness against nans
+sel = sum(isfinite(pos))==4;
+
+transform = pos(:,sel)/ind(:,sel);

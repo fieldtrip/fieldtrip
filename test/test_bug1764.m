@@ -1,7 +1,7 @@
 function test_bug1764
 
 % MEM 1500mb
-% WALLTIME 00:04:14
+% WALLTIME 00:10:00
 
 % TEST test_bug1764
 % TEST ft_prepare_singleshell ft_prepare_mesh

@@ -46,9 +46,9 @@ if nargin<5, fb        = 'none'; end
 if nargin<4, tol       = 1e-8;   end
 if nargin<3, Niterations = 1000; end
 
-dfreq = diff(freq);
+dfreq = round(diff(freq)*1e5)./1e5; % allow for some numeric issues
 if ~all(dfreq==dfreq(1))
-  error('FieldTrip:connectivity:sfactorization_wilson2x2', 'frequency axis is not evenly spaced');
+  error('FieldTrip:connectivity:sfactorization_wilson', 'frequency axis is not evenly spaced');
 end
 
 if freq(1)~=0
@@ -94,14 +94,14 @@ I      = eye(m); % Defining m x m identity matrix
 Sarr(:,:,1) = S(:,:,1).*2;
 for f_ind = 2:N
   Sarr(:,:,       f_ind) = S(:,:,f_ind);
-  Sarr(:,:,(N2+1)-f_ind) = S(:,:,f_ind).';
+  Sarr(:,:,(N2+2)-f_ind) = S(:,:,f_ind).';
 end
 
 % the input cross-spectral density is assumed to be weighted with a
 % factor of 2 in all non-DC and Nyquist bins, therefore weight the 
 % Nyquist bin with a factor of 2 to get a correct two-sided representation
-if mod(size(Sarr,4),2)==0
-  Sarr(:,:,:,N) = Sarr(:,:,:,N).*2;
+if mod(size(Sarr,3),2)==0
+  Sarr(:,:,N) = Sarr(:,:,N).*2;
 end
 
 %Step 2: Computing covariance matrices

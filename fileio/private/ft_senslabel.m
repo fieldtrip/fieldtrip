@@ -31,9 +31,7 @@ function label = ft_senslabel(type, varargin)
 %  'egi128'
 %  'egi256'
 %  'neuromag122'
-%  'neuromag122alt'
 %  'neuromag306'
-%  'neuromag306alt'
 %  'itab28'
 %  'itab153'
 %  'itab153_planar'
@@ -45,7 +43,7 @@ function label = ft_senslabel(type, varargin)
 %  'yokogawa440'
 %  'yokogawa440_planar'
 %
-% It is also possible to specify 
+% It is also possible to specify
 %  'eeg'
 %  'electrode'
 % although for these an empty set of labels (i.e. {}) will be returned.
@@ -74,7 +72,9 @@ function label = ft_senslabel(type, varargin)
 % $Id$
 
 % these are for speeding up subsequent calls with the same input arguments
-persistent eeg electrode ant128 btiref bti148 bti148_planar bti148_planar_combined bti248 bti248_planar bti248_planar_combined ctfref ctfheadloc ctf64 ctf151 ctf151_planar ctf151_planar_combined ctf275 ctf275_planar ctf275_planar_combined neuromag122 neuromag122_combined neuromag122alt neuromag122alt_combined neuromag306 neuromag306_combined neuromag306alt neuromag306alt_combined eeg1020 eeg1010 eeg1005 ext1020 biosemi64 biosemi128 biosemi256 egi32 egi64 egi128 egi256 itab28 itab153 itab153_planar itab153_planar_combined yokogawa9 yokogawa64 yokogawa64_planar yokogawa64_planar_combined yokogawa160 yokogawa160_planar yokogawa160_planar_combined yokogawa440 yokogawa440_planar yokogawa440_planar_combined
+persistent eeg electrode ant128 btiref bti148 bti148_planar bti148_planar_combined bti248 bti248_planar bti248_planar_combined ctfref ctfheadloc ctf64 ctf151 ctf151_planar ctf151_planar_combined ctf275 ctf275_planar ctf275_planar_combined neuromag122 neuromag122_combined neuromag306 neuromag306_combined eeg1020 eeg1010 eeg1005 ext1020 biosemi64 biosemi128 biosemi256 egi32 egi64 egi128 egi256 itab28 itab153 itab153_planar itab153_planar_combined yokogawa9 yokogawa64 yokogawa64_planar yokogawa64_planar_combined yokogawa160 yokogawa160_planar yokogawa160_planar_combined yokogawa440 yokogawa440_planar yokogawa440_planar_combined
+% these are for backward compatibility
+persistent neuromag122alt neuromag122alt_combined neuromag306alt neuromag306alt_combined
 
 if nargin<1
   % ensure that all input arguments are defined
@@ -1281,7 +1281,8 @@ elseif isempty(eval(type))
       ctf275_planar_combined = label(:,3);
       label = label(:,1:2);
       
-    case 'neuromag122'
+    case {'neuromag122' 'neuromag122alt'}
+      % this is the combination of the two versions (with and without space)
       label = {
         'MEG 001'  'MEG 002'  'MEG 001+002'
         'MEG 003'  'MEG 004'  'MEG 003+004'
@@ -1344,13 +1345,7 @@ elseif isempty(eval(type))
         'MEG 117'  'MEG 118'  'MEG 117+118'
         'MEG 119'  'MEG 120'  'MEG 119+120'
         'MEG 121'  'MEG 122'  'MEG 121+122'
-        };
-      neuromag122_combined = label(:,3);
-      label = label(:,1:2);
-      
-    case 'neuromag122alt'
-      % this is an alternative set of labels without a space in them
-      label = {
+        % this is an alternative set of labels without a space in them
         'MEG001'  'MEG002'  'MEG001+002'
         'MEG003'  'MEG004'  'MEG003+004'
         'MEG005'  'MEG006'  'MEG005+006'
@@ -1413,10 +1408,12 @@ elseif isempty(eval(type))
         'MEG119'  'MEG120'  'MEG119+120'
         'MEG121'  'MEG122'  'MEG121+122'
         };
+      neuromag122_combined = label(:,3);
       neuromag122alt_combined = label(:,3);
       label = label(:,1:2);
       
-    case 'neuromag306'
+    case {'neuromag306' 'neuromag306alt'}
+      % this is the combination of the two versions (with and without space)
       label = {
         'MEG 0112'  'MEG 0113'  'MEG 0111'  'MEG 0112+0113'
         'MEG 0122'  'MEG 0123'  'MEG 0121'  'MEG 0122+0123'
@@ -1520,13 +1517,7 @@ elseif isempty(eval(type))
         'MEG 2622'  'MEG 2623'  'MEG 2621'  'MEG 2622+2623'
         'MEG 2632'  'MEG 2633'  'MEG 2631'  'MEG 2632+2633'
         'MEG 2642'  'MEG 2643'  'MEG 2641'  'MEG 2642+2643'
-        };
-      neuromag306_combined = label(:,4);
-      label = label(:,1:3);
-      
-    case 'neuromag306alt'
-      % this is an alternative set of labels without a space in them
-      label = {
+        % this is an alternative set of labels without a space in them
         'MEG0112'  'MEG0113'  'MEG0111'  'MEG0112+0113'
         'MEG0122'  'MEG0123'  'MEG0121'  'MEG0122+0123'
         'MEG0132'  'MEG0133'  'MEG0131'  'MEG0132+0133'
@@ -1630,6 +1621,7 @@ elseif isempty(eval(type))
         'MEG2632'  'MEG2633'  'MEG2631'  'MEG2632+2633'
         'MEG2642'  'MEG2643'  'MEG2641'  'MEG2642+2643'
         };
+      neuromag306_combined = label(:,4);
       neuromag306alt_combined = label(:,4);
       label = label(:,1:3);
       
