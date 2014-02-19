@@ -36,3 +36,25 @@ if nargin==0
   msg.stack       = stack;
   error(msg);
 end
+
+% in case cfg.outputfile is specified, check wheter outputfile already
+% exists and if so, skip the caller function if and only if 
+% cfg.overwriteoutput = 'no';
+if isfield(cfg.outputfile) && ~isempty(cfg.outputfile)
+    if isfield(cfg.overwriteoutput) && ~isempty(cfg.overwriteoutput)
+        if ~exist(cfg.outputfile,'file')
+            % outputfile does not exist yet: continue with caller execution
+        else
+            % outputfile exists already
+            switch cfg.overwriteoutput
+                case 'yes'
+                    % do nothing and continue with caller execution
+                case 'no'
+                    % abort caller function
+                    return
+                otherwise
+                    error('cfg.overwriteoutput can either be set to ''yes'' or ''no''')
+            end
+        end
+    end
+end
