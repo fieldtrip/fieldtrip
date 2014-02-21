@@ -1,8 +1,7 @@
 function test_bug2474
 
-% WALLTIME 0:10:00
 % MEM 1000mb
-
+% WALLTIME 00:10:00
 
 % TEST test_bug2474
 % TEST ft_compute_leadfield ft_prepare_vol_sens

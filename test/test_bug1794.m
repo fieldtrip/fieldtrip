@@ -1,7 +1,7 @@
 function test_bug1794
 
 % MEM 1500mb
-% WALLTIME 0:04:00
+% WALLTIME 00:10:00
 
 % TEST test_bug1794
 % TEST ft_prepare_sourcemodel ft_convert_units ft_prepare_leadfield

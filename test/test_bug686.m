@@ -1,7 +1,7 @@
 function test_bug686
 
 % MEM 2gb
-% WALLTIME 0:05:00
+% WALLTIME 00:10:00
 
 % TEST test_bug686
 % TEST ft_convert_units ft_prepare_headmodel ft_prepare_leadfield ft_prepare_sourcemodel headsurface

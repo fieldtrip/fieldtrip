@@ -1,6 +1,6 @@
 function test_bug2440
 
-% MEM 500mb
+% MEM 1gb
 % WALLTIME 00:10:00
 
 % TEST test_bug2440 ft_freqsimulation ft_freqanalysis ft_singleplotTFR
