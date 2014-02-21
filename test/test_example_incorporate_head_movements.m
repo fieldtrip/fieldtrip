@@ -1,6 +1,6 @@
 function test_example_incorporate_head_movements(datadir)
 
-% MEM 200mb
+% MEM 400mb
 % WALLTIME 00:10:00
 
 % TEST test_example_incorporate_head_movements
