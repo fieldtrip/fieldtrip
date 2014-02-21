@@ -10,7 +10,9 @@ function ft_plot_topo3d(pnt, val, varargin)
 %
 % Optional input arguments should be specified in key-value pairs and can include
 %   'contourstyle' = string, 'none', 'black', 'color' (default = 'none')
-%   'facealpha'    = number, between 0 and 1 (default = 1)
+%   'facealpha'    = scalar, between 0 and 1 (default = 1)
+%   'refine'       = scalar, number of refinement steps for the triangulation, to
+%                            get a smoother interpolation (default = 0)
 %
 % See also FT_PLOT_TOPO
 
@@ -38,12 +40,13 @@ ws = warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
 contourstyle  = ft_getopt(varargin, 'contourstyle', 'none');
+nrefine       = ft_getopt(varargin, 'refine', 0);
 isocontour    = ft_getopt(varargin, 'isocontour', 'auto');  % FIXME what is the purpose of this option?
 topostyle     = ft_getopt(varargin, 'topostyle', 'color'); % FIXME what is the purpose of this option?
 facealpha     = ft_getopt(varargin, 'facealpha', 1);
 
 if islogical(contourstyle) && contourstyle==false
-  % false was supported up to 18 November 2013, 'none' is morre consistent with other plotting options
+  % false was supported up to 18 November 2013, 'none' is more consistent with other plotting options
   contourstyle = 'none';
 end
 
@@ -59,6 +62,22 @@ end
 
 % the interpolation requires a triangulation
 tri = projecttri(pnt, 'delaunay');
+
+if nrefine>0,
+  pntorig = pnt;
+  triorig = tri;
+  valorig = val;
+  for k = 1:nrefine
+    [pnt,tri] = refine(pnt, tri);
+  end
+  prjorig = elproj(pntorig);
+  prj     = elproj(pnt);
+  val     = griddata(prjorig(:,1),prjorig(:,2),valorig,prj(:,1),prj(:,2),'v4');
+  if numel(facealpha)==size(pntorig,1)
+    facealpha = griddata(prjorig(:,1),prjorig(:,2),facealpha,prj(:,1),prj(:,2),'v4');
+  end
+end
+
 
 if ~isequal(topostyle, false)
   switch topostyle
