@@ -993,7 +993,7 @@ switch eventformat
     % this is multiplexed data in a *.bin file, accompanied by a matlab file containing the header and event
     [path, file, ext] = fileparts(filename);
     filename = fullfile(path, [file '.mat']);
-    % read the events from the Matlab file
+    % read the events from the MATLAB file
     tmp   = load(filename, 'event');
     event = tmp.event;
     
@@ -1107,7 +1107,7 @@ switch eventformat
     end
     
   case 'matlab'
-    % read the events from a normal Matlab file
+    % read the events from a normal MATLAB file
     tmp   = load(filename, 'event');
     event = tmp.event;
     

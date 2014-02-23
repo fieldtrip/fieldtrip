@@ -361,7 +361,7 @@ end
 % merge anatomy, functional data and mask
 fprintf('constructing overlay...');
 if ischar(cfg.colormap)
-  % replace string by colormap using standard Matlab function
+  % replace string by colormap using standard MATLAB function
   cfg.colormap = colormap(cfg.colormap);
 end
 cmap = cfg.colormap;

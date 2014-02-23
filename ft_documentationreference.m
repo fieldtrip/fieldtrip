@@ -116,7 +116,7 @@ for i=1:length(funname)
   
   fid = fopen(filename, 'wt');
   fprintf(fid, '=====  %s =====\n\n', upper(funname{i}));
-  fprintf(fid, 'Note that this reference documentation is identical to the help that is displayed in Matlab when you type "help %s".\n\n', funname{i});
+  fprintf(fid, 'Note that this reference documentation is identical to the help that is displayed in MATLAB when you type "help %s".\n\n', funname{i});
   fprintf(fid, '<html><pre>\n');   % required for docuwiki > use html preformatted style
   fprintf(fid, '%s', str);
   fprintf(fid, '</pre></html>\n'); % required for docuwiki

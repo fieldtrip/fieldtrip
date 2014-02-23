@@ -983,7 +983,7 @@ switch headerformat
     % ensure that the JVM is running and the jar file is on the path
     
     %%%%%%%%%%%%%%%%%%%%%%
-    %workaround for Matlab bug resulting in global variables being cleared
+    %workaround for MATLAB bug resulting in global variables being cleared
     globalTemp=cell(0);
     globalList=whos('global');
     varList=whos;
@@ -996,7 +996,7 @@ switch headerformat
     mff_setup;
     
     %%%%%%%%%%%%%%%%%%%%%%
-    %workaround for Matlab bug resulting in global variables being cleared
+    %workaround for MATLAB bug resulting in global variables being cleared
     varNames={varList.name};
     for i=1:length(globalList)
       eval(['global ' globalList(i).name ';']);
@@ -1045,7 +1045,7 @@ switch headerformat
     hdr.nTrials     = 1;  % since continuous
     hdr.orig        = []; % this will contain the chunks (if present)
     
-    % add the contents of attached FIF_header chunk after decoding to Matlab structure
+    % add the contents of attached FIF_header chunk after decoding to MATLAB structure
     if isfield(orig, 'neuromag_header')
       if isempty(cachechunk)
         % this only needs to be decoded once
@@ -1074,7 +1074,7 @@ switch headerformat
       hdr.orig = cachechunk;
     end
     
-    % add the contents of attached RES4 chunk after decoding to Matlab structure
+    % add the contents of attached RES4 chunk after decoding to MATLAB structure
     if isfield(orig, 'ctf_res4')
       if isempty(cachechunk)
         % this only needs to be decoded once
@@ -1100,14 +1100,14 @@ switch headerformat
       hdr.orig.ctf_res4 = orig.ctf_res4;
     end
     
-    % add the contents of attached NIFTI-1 chunk after decoding to Matlab structure
+    % add the contents of attached NIFTI-1 chunk after decoding to MATLAB structure
     if isfield(orig, 'nifti_1')
       hdr.nifti_1 = decode_nifti1(orig.nifti_1);
       % add the raw chunk as well
       hdr.orig.nifti_1 = orig.nifti_1;
     end
     
-    % add the contents of attached SiemensAP chunk after decoding to Matlab structure
+    % add the contents of attached SiemensAP chunk after decoding to MATLAB structure
     if isfield(orig, 'siemensap') && exist('sap2matlab')==3 % only run this if MEX file is present
       hdr.siemensap = sap2matlab(orig.siemensap);
       % add the raw chunk as well

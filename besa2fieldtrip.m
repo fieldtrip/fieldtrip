@@ -7,7 +7,7 @@ function [data] = besa2fieldtrip(input)
 % Use as
 %   [data] = besa2fieldtrip(filename)
 % where the filename should point to a BESA datafile (or data that
-% is exported by BESA). The output is a Matlab structure that is
+% is exported by BESA). The output is a MATLAB structure that is
 % compatible with FieldTrip.
 %
 % The format of the output structure depends on the type of datafile:
@@ -19,7 +19,7 @@ function [data] = besa2fieldtrip(input)
 %   *.dat combined with a *.gen or *.generic is converted to a structure similar to the output of PREPROCESSING
 %
 % Note (*): If the BESA toolbox by Karsten Hochstatter is found on your
-% Matlab path, the readBESAxxx functions will be used (where xxx=tfc/swf),
+% MATLAB path, the readBESAxxx functions will be used (where xxx=tfc/swf),
 % alternatively the private functions from FieldTrip will be used.
 %
 % See also EEGLAB2FIELDTRIP

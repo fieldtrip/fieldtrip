@@ -16,7 +16,7 @@ function [stat] = ft_sourcestatistics(cfg, varargin)
 %   cfg.method       = different methods for calculating the probability of the null-hypothesis,
 %                    'montecarlo'    uses a non-parametric randomization test to get a Monte-Carlo estimate of the probability,
 %                    'analytic'      uses a parametric test that results in analytic probability,
-%                    'stats'         (soon deprecated) uses a parametric test from the Matlab statistics toolbox,
+%                    'stats'         (soon deprecated) uses a parametric test from the MATLAB statistics toolbox,
 %
 % You can restrict the statistical analysis to regions of interest (ROIs)
 % or to the average value inside ROIs using the following options:
@@ -36,7 +36,7 @@ function [stat] = ft_sourcestatistics(cfg, varargin)
 % See also FT_SOURCEANALYSIS, FT_SOURCEDESCRIPTIVES, FT_SOURCEGRANDAVERAGE
 
 % Deprecated cfg.method options:
-%                    'parametric'    uses the Matlab statistics toolbox (very similar to 'stats'),
+%                    'parametric'    uses the MATLAB statistics toolbox (very similar to 'stats'),
 %                    'randomization' uses randomization of the data prior to source reconstruction,
 %                    'randcluster'   uses randomization of the data prior to source reconstruction 
 %                                    in combination with spatial clusters.
@@ -301,7 +301,7 @@ elseif strcmp(cfg.implementation, 'new')
   
   % determine the number of output arguments
   try
-    % the nargout function in Matlab 6.5 and older does not work on function handles
+    % the nargout function in MATLAB 6.5 and older does not work on function handles
     num = nargout(statmethod);
   catch
     num = 1;
@@ -330,7 +330,7 @@ elseif strcmp(cfg.implementation, 'new')
     statfield = fieldnames(stat);
   else
     % only the probability was returned as a single matrix, reformat into a structure
-    dum = stat; stat = []; % this prevents a Matlab warning that appears from release 7.0.4 onwards
+    dum = stat; stat = []; % this prevents a MATLAB warning that appears from release 7.0.4 onwards
     stat.prob = dum;
     statfield = fieldnames(stat);
   end

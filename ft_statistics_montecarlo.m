@@ -272,7 +272,7 @@ ft_progress('init', cfg.feedback, 'computing statistic');
 time_pre = cputime;
 
 try
-  % the nargout function in Matlab 6.5 and older does not work on function handles
+  % the nargout function in MATLAB 6.5 and older does not work on function handles
   num = nargout(statfun);
 catch
   num = 1;

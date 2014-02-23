@@ -188,7 +188,7 @@ end
 
 % otherwise reconstruct it
 fprintf('Reconstructing channel locations, it might be inaccurate\n')
-FIFF = fiff_define_constants; % some constants are not defined in the Matlab function
+FIFF = fiff_define_constants; % some constants are not defined in the MATLAB function
 
 if isfield(data, 'grad')
   hasgrad = true;

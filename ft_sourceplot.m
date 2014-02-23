@@ -1031,7 +1031,7 @@ elseif isequal(cfg.method,'surface')
   
   if strcmp(cfg.colorbar,  'yes'),
     if hasfun
-      % use a normal Matlab colorbar
+      % use a normal MATLAB colorbar
       hc = colorbar;
       set(hc, 'YLim', [fcolmin fcolmax]);
     else
@@ -1128,7 +1128,7 @@ elseif isequal(cfg.method,'slice')
   axis off
   if strcmp(cfg.colorbar,  'yes'),
     if hasfun
-      % use a normal Matlab coorbar
+      % use a normal MATLAB coorbar
       hc = colorbar;
       set(hc, 'YLim', [fcolmin fcolmax]);
     else
@@ -1212,7 +1212,7 @@ hasana = length(vols2D)>0 && ~isempty(vols2D{1});
 hasfun = length(vols2D)>1 && ~isempty(vols2D{2});
 hasmsk = length(vols2D)>2 && ~isempty(vols2D{3});
 
-% the transpose is needed for displaying the matrix using the Matlab image() function
+% the transpose is needed for displaying the matrix using the MATLAB image() function
 if hasana; ana = vols2D{1}'; end;
 if hasfun && ~doimage; fun = vols2D{2}'; end;
 if hasfun && doimage;  fun = permute(vols2D{2},[2 1 3]); end;
@@ -1443,7 +1443,7 @@ elseif strcmp(opt.colorbar,  'yes') && ~isfield(opt, 'hc'),
   if opt.hasfun
     % vectorcolorbar = linspace(fscolmin, fcolmax,length(cfg.funcolormap));
     % imagesc(vectorcolorbar,1,vectorcolorbar);colormap(cfg.funcolormap);
-    % use a normal Matlab colorbar, attach it to the invisible 4th subplot
+    % use a normal MATLAB colorbar, attach it to the invisible 4th subplot
     try
       caxis([opt.fcolmin opt.fcolmax]);
     end

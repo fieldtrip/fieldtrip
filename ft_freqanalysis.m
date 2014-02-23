@@ -453,6 +453,7 @@ end
 
 ft_progress('init', cfg.feedback, 'processing trials');
 for itrial = 1:ntrials
+    
   %disp(['processing trial ' num2str(itrial) ': ' num2str(size(data.trial{itrial},2)) ' samples']);
   fbopt.i = itrial;
   fbopt.n = ntrials;

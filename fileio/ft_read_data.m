@@ -750,7 +750,7 @@ switch dataformat
     ft_hastoolbox('egi_mff', 1);
     % ensure that the JVM is running and the jar file is on the path
       %%%%%%%%%%%%%%%%%%%%%%
-      %workaround for Matlab bug resulting in global variables being cleared
+      %workaround for MATLAB bug resulting in global variables being cleared
       globalTemp=cell(0);
       globalList=whos('global');
       varList=whos;
@@ -763,7 +763,7 @@ switch dataformat
       mff_setup;
       
       %%%%%%%%%%%%%%%%%%%%%%
-      %workaround for Matlab bug resulting in global variables being cleared
+      %workaround for MATLAB bug resulting in global variables being cleared
       varNames={varList.name};
       for i=1:length(globalList)
           eval([globalList(i).name '=globalTemp{i};']);
