@@ -88,4 +88,5 @@ for i=1:length(dataset)
     assert(isequal(v1_hdr{i}.label,       v2_hdr{i}.label)        , 'difference in hdr.label'); % this fails in revision 5979
     assert(isequal(v1_dat{i},  v2_dat{i})       , 'difference in data');
     assert(length(v1_evt{i})==length(v2_evt{i}) , 'difference in number of events'); 
+    assert(isequal(sort([v1_evt{i}.sample]), sort([v2_evt{i}.sample])), 'difference in event.sample'); 
 end
