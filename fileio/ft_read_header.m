@@ -937,19 +937,19 @@ switch headerformat
     end
     
     % check if multiple epochs are present
-    if isfield(orig.xml,'epochs') && length(orig.xml.epochs) > 1
+    if isfield(orig.xml,'epochs')
       % add info to header about which sample correspond to which epochs, becasue this is quite hard for user to get...
       epochdef = zeros(length(orig.xml.epochs),3);
       for iEpoch = 1:length(orig.xml.epochs)
         if iEpoch == 1
           epochdef(iEpoch,1) = round(str2double(orig.xml.epochs(iEpoch).epoch.beginTime)./(1000000./hdr.Fs))+1;
-          epochdef(iEpoch,2) = round(str2double(orig.xml.epochs(iEpoch).epoch.endTime)./(1000000./hdr.Fs));
-          epochdef(iEpoch,3) = round(str2double(orig.xml.epochs(iEpoch).epoch.beginTime)./(1000000./hdr.Fs)); %offset corresponds to timing
+          epochdef(iEpoch,2) = round(str2double(orig.xml.epochs(iEpoch).epoch.endTime  )./(1000000./hdr.Fs));
+          epochdef(iEpoch,3) = round(str2double(orig.xml.epochs(iEpoch).epoch.beginTime)./(1000000./hdr.Fs)); % offset corresponds to timing
         else
           NbSampEpoch = round(str2double(orig.xml.epochs(iEpoch).epoch.endTime)./(1000000./hdr.Fs) - str2double(orig.xml.epochs(iEpoch).epoch.beginTime)./(1000000./hdr.Fs));
           epochdef(iEpoch,1) = epochdef(iEpoch-1,2) + 1;
           epochdef(iEpoch,2) = epochdef(iEpoch-1,2) + NbSampEpoch;
-          epochdef(iEpoch,3) = round(str2double(orig.xml.epochs(iEpoch).epoch.beginTime)./(1000000./hdr.Fs)); %offset corresponds to timing
+          epochdef(iEpoch,3) = round(str2double(orig.xml.epochs(iEpoch).epoch.beginTime)./(1000000./hdr.Fs)); % offset corresponds to timing
         end
       end
       epochLengths=epochdef(:,2)-epochdef(:,1)+1;
@@ -957,10 +957,10 @@ switch headerformat
         hdr.nSamples=epochLengths(1);
         hdr.nTrials=length(epochLengths);
       else
-        warning('the data contains multiple epochs with possibly discontinuous boundaries. Added ''epochdef'' to hdr.orig defining begin and end sample of each epoch. See hdr.orig.xml.epochs for epoch details, use ft_read_header to obtain header or look in data.dhr.')
+        warning('the data contains multiple epochs with variable length, possibly causing discontinuities in the data')
         % sanity check
         if epochdef(end,2) ~= hdr.nSamples
-            %check for NS 4.5.4 picosecond timing
+            % check for NS 4.5.4 picosecond timing
             if (epochdef(end,2)/1000) == hdr.nSamples
                 for iEpoch=1:size(epochdef,1)
                     epochdef(iEpoch,1)=((epochdef(iEpoch,1)-1)/1000)+1;

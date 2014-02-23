@@ -659,6 +659,7 @@ switch dataformat
     dimord = 'chans_samples_trials';
     
   case {'egi_mff_v1' 'egi_mff'} % this is currently the default
+    
     % The following represents the code that was written by Ingrid, Robert
     % and Giovanni to get started with the EGI mff dataset format. It might
     % not support all details of the file formats.
@@ -676,8 +677,7 @@ switch dataformat
                 data_in_epoch(iEpoch) = length(intersect(begsamp_epoch:endsamp_epoch,begsample:endsample));
             end
             if sum(data_in_epoch>1) > 1
-                fprintf('Requested sample %i to %i. \n', begsample, endsample);
-                error('The requested data is spread out over multiple epochs with possibly discontinuous boundaries. This is not allowed. Adjust trl to request only data within a single epoch.');
+                warning('The requested segment from %i to %i is spread out over multiple epochs with possibly discontinuous boundaries', begsample, endsample);
             end
         end
     end
