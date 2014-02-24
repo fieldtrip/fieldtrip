@@ -13,9 +13,9 @@ function [dat,baseline] = ft_preproc_baselinecorrect(dat, begsample, endsample)
 % If no begin and end sample are specified for the baseline estimate, it
 % will be estimated on the complete data.
 %
-% See also FT_PREPROC_POLYREMOVAL
+% See also FT_PREPROC_DETREND, FT_PREPROC_POLYREMOVAL
 
-% Copyright (C) 1998-2012, Robert Oostenveld
+% Copyright (C) 1998-2014, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
