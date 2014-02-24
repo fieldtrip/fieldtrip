@@ -39,14 +39,14 @@ function [dat,baseline] = ft_preproc_baselinecorrect(dat, begsample, endsample)
 % since we assume that polyremoval uses ones as its constant regressor
 
 % take the whole segment if begsample and endsample are not specified
-if nargin<2
+if nargin<2 || isempty(begsample)
   begsample = 1;
 end
-if nargin<3
+if nargin<3 || isempty(endsample)
   endsample = size(dat,2);
 end
 
-[dat,baseline] = ft_preproc_polyremoval(dat,0,begsample,endsample);
+[dat,baseline] = ft_preproc_polyremoval(dat, 0, begsample, endsample);
 
 % save this old code because it looks non-trivially optimized
 %

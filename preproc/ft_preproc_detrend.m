@@ -13,7 +13,7 @@ function [dat,beta,x] = ft_preproc_detrend(dat, begsample, endsample)
 % If no begin and end sample are specified for the trend estimate, it
 % will be estimated on the complete data.
 %
-% See also FT_PREPROC_DEMEAN, FT_PREPROC_POLYREMOVAL
+% See also FT_PREPROC_BASELINECORRECT, FT_PREPROC_POLYREMOVAL
 
 % Copyright (C) 2008-2014, Robert Oostenveld
 %
@@ -36,10 +36,10 @@ function [dat,beta,x] = ft_preproc_detrend(dat, begsample, endsample)
 % $Id$
 
 % take the whole segment if begsample and endsample are not specified
-if nargin<2
+if nargin<2 || isempty(begsample)
   begsample = 1;
 end
-if nargin<3
+if nargin<3|| isempty(endsample)
   endsample = size(dat,2);
 end
 
