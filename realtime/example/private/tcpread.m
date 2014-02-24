@@ -20,9 +20,7 @@ function a = tcpread(sock, siz, type)
 % 
 % See also PNET
 
-% Copyright (C0 2008-2009, Robert Oostenveld 
-%
-% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
+% Copyright (C) 2008-2009, Robert Oostenveld 
 
 persistent offset buf bufnull
 

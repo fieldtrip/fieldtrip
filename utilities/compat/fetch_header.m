@@ -1,6 +1,4 @@
 function varargout = funname(varargin)
-
-% This function is a backward compatibility wrapper. It allows existing
 % Matlab scripts that do not use the new FieldTrip ft_xxx function naming
 % scheme to work with recent versions of the FieldTrip toolbox.
 % 
@@ -8,8 +6,6 @@ function varargout = funname(varargin)
 % for, where xxx is the name of the function that you were looking for.
 
 % Copyright (C) 2009, Robert Oostenveld
-%
-% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 prefix    = 'ft_';
 funname   = mfilename;

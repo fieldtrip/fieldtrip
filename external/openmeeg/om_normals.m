@@ -7,8 +7,6 @@ function [nrm] = normals(pnt, tri, opt);
 % where opt is either 'vertex' or 'triangle'
 
 % Copyright (C) 2002-2007, Robert Oostenveld
-%
-% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 if nargin<3
   opt='vertex';

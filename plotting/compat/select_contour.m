@@ -8,8 +8,6 @@ function varargout = funname(varargin)
 % for, where xxx is the name of the function that you were looking for.
 
 % Copyright (C) 2009, Robert Oostenveld
-%
-% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 prefix    = 'ft_';
 funname   = mfilename;
