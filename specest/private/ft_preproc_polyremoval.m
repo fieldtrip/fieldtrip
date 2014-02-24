@@ -48,13 +48,13 @@ function [dat,beta,x] = ft_preproc_polyremoval(dat, order, begsample, endsample,
 % $Id: ft_preproc_polyremoval.m$
 
 % take the whole segment if begsample and endsample are not specified
-if nargin<3
+if nargin<3 || isempty(begsample)
   begsample = 1;
 end
-if nargin<4
+if nargin<4 || isempty(endsample)
   endsample = size(dat,2);
 end
-if nargin<5
+if nargin<5 || isempty(order)
   flag = 0;
 end
 
