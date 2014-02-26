@@ -1657,7 +1657,7 @@ switch headerformat
     end
     fsample = [orig.SlowChannelHeader.ADFreq];
     if any(fsample~=fsample(1))
-      warning('different sampling rates in continuous data not supported, please select channels carefully');
+      error('different sampling rates in continuous data not supported');
     end
     for i=1:length(orig.SlowChannelHeader)
       label{i} = deblank(orig.SlowChannelHeader(i).Name);
@@ -1720,7 +1720,7 @@ switch headerformat
 	fsample = [orig.SlowChannelHeader.ADFreq];
 	fsample = fsample(chansel); %select non-empty channels only
 	if any(fsample~=fsample(1))
-      warning('different sampling rates in continuous data not supported, please select channels carefully');
+      error('different sampling rates in continuous data not supported');
     end
     % only the continuous channels are returned as visible
     hdr.nChans      = length(label);
