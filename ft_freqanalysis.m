@@ -32,6 +32,9 @@ function [freq] = ft_freqanalysis(cfg, data)
 %   cfg.output     = 'pow'       return the power-spectra
 %                    'powandcsd' return the power and the cross-spectra
 %                    'fourier'   return the complex Fourier-spectra
+%                    'eigcomplx'   return the eignevector decomposition of
+%                        the imaginary (for NZPL) or real cross-spectra 
+%                        the iamginary or real cross-spectra
 %   cfg.channel    = Nx1 cell-array with selection of channels (default = 'all'),
 %                      see FT_CHANNELSELECTION for details
 %   cfg.channelcmb = Mx2 cell-array with selection of channel pairs (default = {'all' 'all'}),
@@ -59,7 +62,10 @@ function [freq] = ft_freqanalysis(cfg, data)
 %                      subtraction, thus a value of 0. If no removal is requested,
 %                      specify -1.
 %                      see FT_PREPROC_POLYREMOVAL for details
-%
+%   cfg.eigcomplx   = 'imag', 'real1' or 'real2', if cfg.output =
+%                      'eigcomplx', then this specifies which component of the 
+%                      cross-spectra to perform eigendecomposition on
+%                      (default 'imag');
 %
 %  METHOD SPECIFIC OPTIONS AND DESCRIPTIONS
 %
@@ -329,26 +335,52 @@ if strcmp(cfg.output,'pow')
   powflg = 1;
   csdflg = 0;
   fftflg = 0;
+  ecxflg = 0;
 elseif strcmp(cfg.output,'powandcsd')
   powflg = 1;
   csdflg = 1;
   fftflg = 0;
+  ecxflg = 0;
 elseif strcmp(cfg.output,'fourier')
   powflg = 0;
   csdflg = 0;
   fftflg = 1;
+  ecxflg = 0;
+elseif strcmp(cfg.output,'eigcomplx')
+  powflg = 0;
+  csdflg = 0;
+  fftflg = 0;
+  ecxflg = 1;
 else
   error('Unrecognized output required');
 end
 
+
+
 % prepare channel(cmb)
-if ~isfield(cfg, 'channelcmb') && csdflg
+if ~isfield(cfg, 'channelcmb') && (csdflg || ecxflg)
   %set the default for the channelcombination
   cfg.channelcmb = {'all' 'all'};
-elseif isfield(cfg, 'channelcmb') && ~csdflg
+elseif isfield(cfg, 'channelcmb') && ~(csdflg || ecxflg)
   % no cross-spectrum needs to be computed, hence remove the combinations from cfg
   cfg = rmfield(cfg, 'channelcmb');
 end
+
+
+    
+    
+% set default component for eigcomplx
+if (~isfield(cfg, 'eigcomplx') || strcmp(cfg.eigcomplx,'imag')) && ecxflg
+    cfg.eigcomplx = 'imag';
+elseif isfield(cfg, 'eigcomplx')  && ~ecxflg
+    % delete this option if there is eigcomplx is not specfied
+    cfg = rmfield(cfg, 'eigcomplx');
+    warning('cfg.eigcomplx is ignored if cfg.method is not ''eigcomplx''');
+end
+
+
+    
+    
 
 % ensure that channelselection and selection of channelcombinations is
 % perfomed consistently
@@ -379,7 +411,7 @@ data = ft_selectdata(data, 'channel', selchan);
 % determine the corresponding indices of all channels
 chanind    = match_str(data.label, cfg.channel);
 nchan      = size(chanind,1);
-if csdflg
+if csdflg || ecxflg
   % determine the corresponding indices of all channel combinations
   [dummy,chancmbind(:,1)] = match_str(cfg.channelcmb(:,1), data.label);
   [dummy,chancmbind(:,2)] = match_str(cfg.channelcmb(:,2), data.label);
@@ -554,18 +586,18 @@ for itrial = 1:ntrials
   if itrial == 1
     % allocate memory to output variables
     if keeprpt == 1 % cfg.keeptrials,'no' &&  cfg.keeptapers,'no'
-      if powflg, powspctrm     = zeros(nchan,nfoi,ntoi,cfg.precision);             end
-      if csdflg, crsspctrm     = complex(zeros(nchancmb,nfoi,ntoi,cfg.precision)); end
+      if powflg || ecxflg, powspctrm     = zeros(nchan,nfoi,ntoi,cfg.precision);             end
+      if csdflg || ecxflg, crsspctrm     = complex(zeros(nchancmb,nfoi,ntoi,cfg.precision)); end
       if fftflg, fourierspctrm = complex(zeros(nchan,nfoi,ntoi,cfg.precision));    end
       dimord    = 'chan_freq_time';
     elseif keeprpt == 2 % cfg.keeptrials,'yes' &&  cfg.keeptapers,'no'
-      if powflg, powspctrm     = nan(ntrials,nchan,nfoi,ntoi,cfg.precision);                                                                 end
-      if csdflg, crsspctrm     = complex(nan(ntrials,nchancmb,nfoi,ntoi,cfg.precision),nan(ntrials,nchancmb,nfoi,ntoi,cfg.precision)); end
+      if powflg || ecxflg, powspctrm     = nan(ntrials,nchan,nfoi,ntoi,cfg.precision);                                                                 end
+      if csdflg || ecxflg, crsspctrm     = complex(nan(ntrials,nchancmb,nfoi,ntoi,cfg.precision),nan(ntrials,nchancmb,nfoi,ntoi,cfg.precision)); end
       if fftflg, fourierspctrm = complex(nan(ntrials,nchan,nfoi,ntoi,cfg.precision),nan(ntrials,nchan,nfoi,ntoi,cfg.precision));       end
       dimord    = 'rpt_chan_freq_time';
     elseif keeprpt == 4 % cfg.keeptrials,'yes' &&  cfg.keeptapers,'yes'
-      if powflg, powspctrm     = zeros(ntaptrl,nchan,nfoi,ntoi,cfg.precision);        end %
-      if csdflg, crsspctrm     = complex(zeros(ntaptrl,nchancmb,nfoi,ntoi,cfg.precision)); end
+      if powflg || ecxflg, powspctrm     = zeros(ntaptrl,nchan,nfoi,ntoi,cfg.precision);        end %
+      if csdflg || ecxflg, crsspctrm     = complex(zeros(ntaptrl,nchancmb,nfoi,ntoi,cfg.precision)); end
       if fftflg, fourierspctrm = complex(zeros(ntaptrl,nchan,nfoi,ntoi,cfg.precision));    end
       dimord    = 'rpttap_chan_freq_time';
     end
@@ -612,6 +644,7 @@ for itrial = 1:ntrials
       % set ingredients for below
       acttboi  = squeeze(~isnan(spectrum(1,1,foiind(ifoi),:)));
       nacttboi = sum(acttboi);
+
       if ~hastime
         acttboi  = 1;
         nacttboi = 1;
@@ -621,7 +654,7 @@ for itrial = 1:ntrials
       acttap = squeeze(~isnan(spectrum(:,1,foiind(ifoi),find(acttboi,1))));
       acttap = logical([ones(ntaper(ifoi),1);zeros(size(spectrum,1)-ntaper(ifoi),1)]);
       if powflg
-        powdum = abs(spectrum(acttap,:,foiind(ifoi),acttboi)) .^2;
+        powdum = abs(spectrum(acttap,chanind,foiind(ifoi),acttboi)) .^2;
         % sinetaper scaling is disabled, because it is not consistent with the other
         % tapers. if scaling is required, please specify cfg.taper =
         % 'sine_old'
@@ -637,11 +670,21 @@ for itrial = 1:ntrials
         %           end
       end
       if fftflg
-        fourierdum = spectrum(acttap,:,foiind(ifoi),acttboi);
+        fourierdum = spectrum(acttap,chanind,foiind(ifoi),acttboi);
       end
       if csdflg
-        csddum =      spectrum(acttap,cutdatindcmb(:,1),foiind(ifoi),acttboi) .* ...
-          conj(spectrum(acttap,cutdatindcmb(:,2),foiind(ifoi),acttboi));
+          csddum =      spectrum(acttap,cutdatindcmb(:,1),foiind(ifoi),acttboi) .* ...
+              conj(spectrum(acttap,cutdatindcmb(:,2),foiind(ifoi),acttboi));
+      end
+      if ecxflg
+          % perform eigendecomposition, then treat as normal pow and csd
+          if nacttboi>0;
+              [powdum csddum] = ft_csd_eigendecomp(spectrum(acttap,chanind,foiind(ifoi),acttboi),cutdatindcmb,cfg.eigcomplx);
+              
+          else
+              powdum=zeros(size(spectrum(acttap,chanind,foiind(ifoi),acttboi)));
+              csddum=zeros(size(spectrum(acttap,cutdatindcmb(:,1),foiind(ifoi),acttboi)));
+          end
       end
       
       % switch between keep's
@@ -652,7 +695,7 @@ for itrial = 1:ntrials
             trlcnt(1, ifoi, :) = trlcnt(1, ifoi, :) + shiftdim(double(acttboi(:)'),-1);
           end
           
-          if powflg
+          if powflg || ecxflg
             powspctrm(:,ifoi,acttboi) = powspctrm(:,ifoi,acttboi) + (reshape(mean(powdum,1),[nchan 1 nacttboi]) ./ ntrials);
             %powspctrm(:,ifoi,~acttboi) = NaN;
           end
@@ -660,13 +703,13 @@ for itrial = 1:ntrials
             fourierspctrm(:,ifoi,acttboi) = fourierspctrm(:,ifoi,acttboi) + (reshape(mean(fourierdum,1),[nchan 1 nacttboi]) ./ ntrials);
             %fourierspctrm(:,ifoi,~acttboi) = NaN;
           end
-          if csdflg
+          if csdflg || ecxflg
             crsspctrm(:,ifoi,acttboi) = crsspctrm(:,ifoi,acttboi) + (reshape(mean(csddum,1),[nchancmb 1 nacttboi]) ./ ntrials);
             %crsspctrm(:,ifoi,~acttboi) = NaN;
           end
           
         case 2 % cfg.keeptrials,'yes' &&  cfg.keeptapers,'no'
-          if powflg
+          if powflg  || ecxflg
             powspctrm(itrial,:,ifoi,acttboi) = reshape(mean(powdum,1),[nchan 1 nacttboi]);
             powspctrm(itrial,:,ifoi,~acttboi) = NaN;
           end
@@ -674,7 +717,7 @@ for itrial = 1:ntrials
             fourierspctrm(itrial,:,ifoi,acttboi) = reshape(mean(fourierdum,1), [nchan 1 nacttboi]);
             fourierspctrm(itrial,:,ifoi,~acttboi) = NaN;
           end
-          if csdflg
+          if csdflg  || ecxflg
             crsspctrm(itrial,:,ifoi,acttboi) = reshape(mean(csddum,1), [nchancmb 1 nacttboi]);
             crsspctrm(itrial,:,ifoi,~acttboi) = NaN;
           end
@@ -690,6 +733,8 @@ for itrial = 1:ntrials
           dof(ifoi) = ntaper(ifoi) + dof(ifoi);
         end
       end
+      
+
     end %ifoi
     
   else
@@ -716,6 +761,7 @@ for itrial = 1:ntrials
       crsspctrm(currrptind,:,:,:) =          spectrum(cutdatindcmb(:,1),:,:) .* ...
         conj(spectrum(cutdatindcmb(:,2),:,:));
     end
+
     
   end
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -738,7 +784,7 @@ ft_progress('close');
 % re-normalise the TFRs if keeprpt==1
 if (strcmp(cfg.method, 'mtmconvol') || strcmp(cfg.method, 'wavelet')) && keeprpt==1
   nanmask = trlcnt==0;
-  if powflg
+  if powflg  || ecxflg
     powspctrm = powspctrm.*ntrials;
     powspctrm = powspctrm./trlcnt(ones(size(powspctrm,1),1),:,:);
     powspctrm(nanmask(ones(size(powspctrm,1),1),:,:)) = nan;
@@ -748,7 +794,7 @@ if (strcmp(cfg.method, 'mtmconvol') || strcmp(cfg.method, 'wavelet')) && keeprpt
     fourierspctrm = fourierspctrm./trlcnt(ones(size(fourierspctrm,1),1),:,:);
     fourierspctrm(nanmask(ones(size(fourierspctrm,1),1),:,:)) = nan;
   end
-  if csdflg
+  if csdflg  || ecxflg
     crsspctrm = crsspctrm.*ntrials;
     crsspctrm = crsspctrm./trlcnt(ones(size(crsspctrm,1),1),:,:);
     crsspctrm(nanmask(ones(size(crsspctrm,1),1),:,:)) = nan;
@@ -766,7 +812,7 @@ hasdc_nyq   = [hasdc hasnyq];
 if exist('toi','var')
   freq.time = toi;
 end
-if powflg
+if powflg  || ecxflg
   % correct the 0 Hz or Nyqist bin if present, scaling with a factor of 2 is only appropriate for ~0 Hz
   if ~isempty(hasdc_nyq)
     if keeprpt>1
@@ -788,7 +834,7 @@ if fftflg
   end
   freq.fourierspctrm = fourierspctrm;
 end
-if csdflg
+if csdflg  || ecxflg
   % correct the 0 Hz or Nyqist bin if present, scaling with a factor of 2 is only appropriate for ~0 Hz
   if ~isempty(hasdc_nyq)
     if keeprpt>1
