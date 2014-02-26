@@ -52,7 +52,7 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 %                          of the input data (see below).
 %   cfg.layout           = specify the channel layout for plotting using one of
 %                         the supported ways (see below).
-%
+
 % For the plotting of directional connectivity data the cfg.directionality
 % option determines what is plotted. The default value and the supported
 % functionality depend on the dimord of the input data. If the input data
@@ -272,7 +272,29 @@ isfull  = length(selchan)>1;
 % Check for bivariate metric with a labelcmb
 haslabelcmb = isfield(data, 'labelcmb');
 
-if (isfull || haslabelcmb) && (isfield(data, cfg.parameter) && ~strcmp(cfg.parameter, 'powspctrm'))
+% check if summerised connectivity data is present
+% cparam_temp=cfg.parameter(1:strfind(cfg.parameter,'_')-1);
+% if isfield(data, cfg.parameter) && isfield(data, cparam_temp) && haslabelcmb &&
+%     if isfield(cfg, 'refchannel')
+%         warning('Selected parameter is not connectivity data. cfg.refchannel is ignored');
+%     end
+    
+%check if selected paramater is bivariate or univariate
+if haslabelcmb
+    if size(data.(cfg.parameter),selchan)==size(data.label,1);
+        isconn=0;
+    elseif  size(data.(cfg.parameter),selchan)==size(data.labelcmb,1);
+        isconn=1;
+    else
+        error('Cannot determine if selected paramater is bivariate or univariate');
+    end
+else
+    isconn=0;
+end
+
+
+% if (isfull || haslabelcmb) && (isfield(data, cfg.parameter) && ~strcmp(cfg.parameter, 'powspctrm'))
+if isconn
   % A reference channel is required:
   if ~isfield(cfg, 'refchannel')
     error('no reference channel is specified');

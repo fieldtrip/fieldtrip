@@ -64,6 +64,10 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %     '-logabs', support for method 'coh', 'csd', 'plv'
 %   cfg.removemean  = 'yes' (default), or 'no', support for method
 %     'powcorr' and 'amplcorr'.
+%   cfg.sumcon           = includes a sumerised connectivity measure for 
+%                   each channel. Can be 'none' (default) or 'max', 'absmax',
+%                       'avg','sumsqr', 'std' or 'var'. This option cannot 
+%                           be specfied with cfg.refchannel.
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -139,6 +143,7 @@ cfg.jackknife   = ft_getopt(cfg, 'jackknife', 'no');
 cfg.removemean  = ft_getopt(cfg, 'removemean', 'yes');
 cfg.partchannel = ft_getopt(cfg, 'partchannel', '');
 cfg.parameter   = ft_getopt(cfg, 'parameter', []);
+cfg.sumcon      = ft_getopt(cfg, 'sumcon', 'none');
 
 hasjack = (isfield(data, 'method') && strcmp(data.method, 'jackknife')) || (isfield(data, 'dimord') && strcmp(data.dimord(1:6), 'rptjck'));
 hasrpt  = (isfield(data, 'dimord') && ~isempty(strfind(data.dimord, 'rpt'))) || (isfield(data, 'avg') && isfield(data.avg, 'mom')); % FIXME old-fashioned pcc data
@@ -806,6 +811,70 @@ if exist('powindx', 'var') && ~isempty(powindx),
   end % switch dtype
 end
 
+
+% creates sumerised connectivity measure
+
+ % test for one-sidedness, and if so, assume symmetry
+ 
+if any(powindx(:,1)<powindx(:,2));
+    symflg=0;
+else
+    symflg=1;
+end
+
+if strcmp(cfg.sumcon,'none');
+    % do nothing
+else 
+    nchncmb=length(data.crsspctrm);
+    nchn=length(selchan);
+    dat_size=size(datout);
+    datout_sum=NaN.*ones([nchn dat_size(2:end)]);
+    
+    for i=1:prod(dat_size(2:end))
+i
+        conmatrx=ones(nchn).*NaN;
+        keepchn_idx=find(keepchn);
+        for j=1:length(keepchn_idx)
+            conmatrx(powindx(keepchn_idx(j),1),powindx(keepchn_idx(j),2))=datout(j,i);
+        end
+        
+        if symflg
+            conmatrx=tril(conmatrx) + triu(conmatrx',1);
+        end
+
+        
+        if strcmp(cfg.sumcon,'max');
+            datout_sum(:,i)=nanmax(conmatrx);
+            outparam_sum=[outparam '_max'];
+        elseif strcmp(cfg.sumcon,'absmax');
+            datout_sum(:,i)=nanmax(abs(conmatrx));
+            outparam_sum=[outparam '_absmax'];
+        elseif  strcmp(cfg.sumcon,'avg');
+            datout_sum(:,i)=nanmean(conmatrx);
+            outparam_sum=[outparam '_avg'];
+        elseif  strcmp(cfg.sumcon,'absavg');
+            datout_sum(:,i)=nanmean(abs(conmatrx));
+            outparam_sum=[outparam '_absavg'];
+        elseif  strcmp(cfg.sumcon,'sumsqr');
+            datout_sum(:,i)=nansum((conmatrx).^2);
+            outparam_sum=[outparam '_sumsqr'];
+        elseif  strcmp(cfg.sumcon,'min');
+            datout_sum(:,i)=nanmin(conmatrx);
+            outparam_sum=[outparam '_min'];
+        elseif  strcmp(cfg.sumcon,'std');
+            datout_sum(:,i)=nanstd(conmatrx);
+            outparam_sum=[outparam '_std'];
+        elseif  strcmp(cfg.sumcon,'var');
+            datout_sum(:,i)=nanvar(conmatrx);
+            outparam_sum=[outparam '_var'];
+        else
+            warning('Unknown cfg.sumcon option. Not computing summarised connectivity measures.');
+            clear datout_sum
+            break
+        end
+    end
+end
+    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % create the output structure
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -865,6 +934,13 @@ switch dtype
       stat.([outparam, 'sem']) = (varout/nrpt).^0.5;
     end
 end % switch dtype
+
+
+% add summerised connectivity to output
+if ~strcmp(cfg.sumcon,'none')
+    stat.(outparam_sum) = datout_sum;
+    stat.label=unique(data.labelcmb(:));
+end
 
 if isfield(data, 'freq'), stat.freq = data.freq; end
 if isfield(data, 'time'), stat.time = data.time; end

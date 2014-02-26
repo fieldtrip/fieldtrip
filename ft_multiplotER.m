@@ -408,7 +408,22 @@ isfull  = length(selchan)>1;
 % Check for bivariate metric with a labelcmb
 haslabelcmb = isfield(varargin{1}, 'labelcmb');
 
-if (isfull || haslabelcmb) && (isfield(varargin{1}, cfg.parameter) && ~strcmp(cfg.parameter, 'powspctrm'))
+%check if selected paramater is bivariate or univariate
+if haslabelcmb
+    if size(varargin{1}.(cfg.parameter),selchan)==size(varargin{1}.label,1);
+        isconn=0;
+    elseif  size(varargin{1}.(cfg.parameter),selchan)==size(varargin{1}.labelcmb,1);
+        isconn=1;
+    else
+        error('Cannot determine if selected paramater is bivariate or univariate');
+    end
+else
+    isconn=0;
+end
+
+
+% if (isfull || haslabelcmb) && (isfield(varargin{1}, cfg.parameter) && ~strcmp(cfg.parameter, 'powspctrm'))
+if isconn
   % A reference channel is required:
   if ~isfield(cfg, 'refchannel')
     error('no reference channel is specified');
