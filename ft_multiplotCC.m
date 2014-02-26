@@ -1,6 +1,6 @@
 function [cfg] = ft_multiplotCC(cfg, data)
 
-% FT_MULTIPLOTCC visualises the coherence between channels by using
+% FT_MULTIPLOTCC visualises the connectiivty between channels by using
 % multiple topoplots. The topoplot at a given channel location shows the
 % coherence of that channel with all other channels.
 %
@@ -9,10 +9,35 @@ function [cfg] = ft_multiplotCC(cfg, data)
 %
 % See also FT_PREPARE_LAYOUT, FT_TOPOPLOTCC, FT_CONNECTIVITYPLOT
 
-% Undocumented local options:
-% cfg.layout  = layout filename or a structure produced by prepare_layout
-% cfg.xlim
-% cfg.parameter
+% Configuration options:
+% cfg.layout    = layout filename or a structure produced by prepare_layout
+% (requred)
+% cfg.foi       = lower and uper lower limits of freqency of interest (if freq is
+%                   present) (default = 'all');
+% cfg.toi       = lower and uper lower limits of time of interest (if time is
+%                   present)   (default = 'all');
+% cfg.parameter = the paramater to be plotted. Must be bivariate data.
+%                   (dafault = 'cohspctrm')
+% cfg.zlim      = plotting limits for color dimension, 'maxmin', 
+%                   'maxabs', 'zeromax', 'minzero', or [zmin zmax] (default = 'maxmin')
+% cfg.colorbar  = 'off' or 'on', displays colorbar (default = 'off').
+% cfg.marker    = 'labels', 'numbers' or 'off' displays channel names next
+%                   to each plot (default = 'markers')
+% cfg.directionality     = '', 'inflow' or 'outflow' specifies for
+%                            connectivity measures whether the inflow into a
+%                            node, or the outflow from a node is plotted.
+%                            Leave empty for symmetrical (uundirected)
+%                            connectivity (default = '');
+% cfg.outline   = 'off' or 'on' plots the head outline for each plot
+%                   (default = 'off');
+%
+% Additonal low-level plotting options (see FT_PLOT_TOPO):
+% cfg.interpmethod
+% cfg.shading
+% cfg.gridscale
+% cfg.style
+% cfg.interplim
+
 % This function requires input from FT_FREQSTATISTICS_SHIFTPREDICT
 % This function should be rewritten, using the clean topoplot implementation
 
@@ -49,86 +74,236 @@ ft_preamble debug
 data = ft_checkdata(data);
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'renamed',	 {'zparam', 'parameter'});
-cfg = ft_checkconfig(cfg, 'deprecated',  {'xparam'});
 
-% if ~isfield(cfg, 'layout'),    cfg.layout = 'CTF151.lay';        end;
-if ~isfield(cfg, 'xparam'),      cfg.xparam = 'foi';                end;
-if ~isfield(cfg, 'xlim'),        cfg.xlim   = 'all';                end;
-if ~isfield(cfg, 'parameter'),   cfg.parameter = 'avg.icohspctrm';  end;
+if ~isfield(cfg, 'layout'),
+error('cfg.layout is required.');
+end;
+if ~isfield(cfg, 'foilim'),         cfg.foilim   = 'all';               end;
+if ~isfield(cfg, 'toilim'),         cfg.toilim   = 'all';               end;
+if ~isfield(cfg, 'parameter'),      cfg.parameter = 'cohspctrm';        end;
+if ~isfield(cfg, 'zlim'),           cfg.zlim = 'maxmin';                end;
+if ~isfield(cfg, 'directionality'), cfg.directionality = [];            end;
+if ~isfield(cfg, 'outline'),        cfg.outline = 'off';                 end;
 
-if strcmp(cfg.parameter, 'avg.icohspctrm') && ~issubfield(data, 'avg.icohspctrm'),
-  data.avg.icohspctrm = abs(imag(data.avg.cohspctrm));
-end
+% options for low-level ft_plot_topo function
+if ~isfield(cfg, 'interpmethod'),   cfg.interpmethod = 'v4';            end;
+if ~isfield(cfg, 'shading'),        cfg.shading = 'flat';               end;
+if ~isfield(cfg, 'gridscale'),      cfg.gridscale = 50;                 end;
+if ~isfield(cfg, 'style'),          cfg.style = 'surf';                 end;
+if ~isfield(cfg, 'interplim'),      cfg.interplim = 'mask';             end;
 
-if strcmp(data.dimord, 'refchan_chan_freq'),
-  % reshape input-data, such that ft_topoplotTFR will take it
-  cnt = 1;
-  siz = size(data.prob);
-  data.labelcmb = cell(siz(1)*siz(2),2);
-  data.prob = reshape(data.prob, [siz(1)*siz(2) siz(3)]);
-  data.stat = reshape(data.stat, [siz(1)*siz(2) siz(3)]);
-  for j = 1:length(data.label)
-    for k = 1:length(data.reflabel)
-      data.labelcmb(cnt,:) = [data.reflabel(k) data.label(j)];
-      cnt = cnt + 1;
+% options for marking channels
+if ~isfield(cfg, 'marker'),         cfg.marker = 'labels';                 end;
+if ~isfield(cfg, 'markersymbol'),   cfg.markersymbol = 'o';             end;
+if ~isfield(cfg, 'markercolor'),    cfg.markercolor = [0 0 0];          end;
+if ~isfield(cfg, 'markersize'),     cfg.markersize = 2;                 end;
+if ~isfield(cfg, 'markerfontsize'), cfg.markerfontsize = 8;             end;
+if ~isfield(cfg, 'labeloffset'),    cfg.labeloffset = 0.005;            end;
+
+
+
+%these arent implimented yet
+if ~isfield(cfg, 'channellocal'),   cfg.channellocal = 'all';  end;
+if ~isfield(cfg, 'channelglobal'),   cfg.channelglobal = 'all';  end;
+if ~isfield(cfg, 'chansubsample'),   cfg.chansubsample = 'off';  end;
+
+cfg.shading
+
+% identify dimensions and indices ot average data over
+dimtok = tokenize(data.dimord, '_');
+
+idx_string=[];
+
+for i=1:length(dimtok);
+    if strcmp(dimtok{i},'chan');
+        chan_dim=i;
+        idx_string=[idx_string ':,'];
+        
+    elseif strcmp(dimtok{i},'freq');
+        fdim=i;
+        if strcmp(cfg.foilim, 'all');
+            foilim=[1 length(data.freq)];
+        else
+            foilim=[nearest(data.freq, cfg.foilim(1)) nearest(data.freq, cfg.foilim(end))];
+        end
+        
+        idx_string=[idx_string num2str(foilim(1)) ':' num2str(foilim(end)) ','];
+        
+        
+        
+        
+    elseif strcmp(dimtok{i},'time');
+        tdim=i;
+        
+        if strcmp(cfg.toilim, 'all');
+            toilim=[1 length(data.time)];
+        else
+            toilim=[nearest(data.time, cfg.toilim(1)) nearest(data.time, cfg.toilim(end))];
+        end
+        
+        idx_string=[idx_string num2str(toilim(1)) ':' num2str(toilim(end)) ','];
+        
+    else
+        idx_string=[idx_string ':,'];
     end
-  end
-  tmpdata = data;
-else
-  dat   = getsubfield(data, cfg.parameter);
-  scale = [0 max(dat(:))-0.2];
+    
+    
+    
 end
 
-if isfield(cfg, 'xparam'),
-  xparam = getsubfield(data, cfg.xparam);
-  if ~strcmp(cfg.xlim, 'all'),
-    fbin = [nearest(xparam, cfg.xlim(1)) nearest(xparam, cfg.xlim(2))];
-  else
-    fbin = [xparam(1) xparam(end)];
-  end
-end
+idx_string(end)=[];
+dat = data.(cfg.parameter);
 
-% R=read or create the layout that will be used for plotting
-lay = ft_prepare_layout(cfg, varargin{1});
-cfg.layout = lay;
-ft_plot_lay(lay, 'box', false,'label','no','point','no');
+dat=eval(['dat(' idx_string ');']);
 
+dat=permute(dat,[chan_dim setxor(chan_dim,1:ndims(dat))]);
+datm=nanmean(dat(:,:),2);
+
+
+% data.(cfg.parameter)=(dat);
+% if exist('tdim','var')
+%     data.time=data.time(toilim(1):toilim(end));
+% end
+% if exist('fdim','var')
+%     data.freq=data.freq(foilim(1):foilim(2));
+% end
+% data.dimord='chan';
+
+%%
+
+lay = ft_prepare_layout(cfg, data); 
+
+% import channel positions from layout file
 [chNum,X,Y,Width,Height,Lbl] = textread(cfg.layout,'%f %f %f %f %f %s');
 
-xScaleFac = 1/(max(Width)+ max(X) - min(X));
-yScaleFac = 1/(max(Height)+ max(Y) - min(Y));
+% % keep orignal X and Y postions for local topographic plots.  
+X0=X;
+Y0=Y;
+% 
+% % normalise channel posiitons to [0 1]
+% X=(X-min(X))./(max(X)-min(X));
+% Y=(Y-min(Y))./(max(Y)-min(Y));
+% 
+% % add a border
+% b=0.025;
+% X=(X-min(X))./(max(X)+(4.*b)-min(X));
+% Y=(Y-min(Y))./(max(Y)+(2.*b)-min(Y))+b;
+% 
+Yd=repmat(Y,1,length(Y))-repmat(Y,1,length(Y))';
+Xd=repmat(X,1,length(X))-repmat(X,1,length(X))';
+% XYd=sqrt(abs([X Y]*[X Y]' - [[X Y]*[X Y]']'));
+
+XYd=sqrt(sum([Xd(:) Yd(:)].^2,2).*4);
+mindist=(min(XYd(find(XYd~=0))));
+
+% X=X./(max(X+mindist+2*b));
+% Y=Y./(max(Y+mindist+b));
 
 
-Xpos = xScaleFac*(X-min(X));
-Ypos = 0.9*yScaleFac*(Y-min(Y));
-
-for k=1:length(chNum) - 2
-  subplotOL('position',[Xpos(k) Ypos(k)+(Height(k)*yScaleFac) Width(k)*xScaleFac*2 Height(k)*yScaleFac*2])
-  config.layout     = cfg.layout;
-  if exist('tmpdata'),
-
-    config.style      = 'straight';
-    config.marker     = 'off';
-    try, config.refmarker = strmatch(Lbl(k), data.reflabel);
-    catch, config.refmarker  = strmatch(Lbl(k), data.label); end
-    config.interplimits = 'electrodes';
-    if isfield(cfg, 'xparam'),
-      config.xparam = cfg.xparam;
-      config.xlim   = xparam;
-    else
-      config.xparam = 'time';
-      config.xlim   = [k-0.5 k+0.5];
-    end
-    config.parameter = cfg.parameter;
-    config.refchannel = Lbl(k);
-    config.colorbar = 'no';
-    config.zlim     = scale;
-    config.grid_scale = 30;
-    ft_topoplotTFR(config, data);
-    drawnow;
-  end
+% get right zlims for all topoplots
+if strcmp(cfg.zlim,'maxmin');
+    zlim=[min(datm) max(datm)];
+elseif strcmp(cfg.zlim,'maxabs');
+    zlim=max(abs(datm)).*[-1 1];
+elseif strcmp(cfg.zlim,'zeromax');
+    zlim=[0 max(datm)];
+elseif strcmp(cfg.zlim,'minzero');
+    zlim=[min(datm) 0];
 end
+
+% do the plotting!
+
+ft_progress('init', 'text')
+
+datamatrix=NaN.*ones(length(chNum));
+
+for k=1:size(data.labelcmb,1)
+ 
+    
+    % identify channelcmb indices for current channl
+ %   chancmbidx=chancmbidx+[k.*strcmp(Lbl,data.labelcmb(k,1)) k.*strcmp(Lbl,data.labelcmb(k,2))];
+    chanidx1=find(strcmp(Lbl,data.labelcmb(k,1)));
+    chanidx2=find(strcmp(Lbl,data.labelcmb(k,2)));
+    
+    datamatrix(chanidx1,chanidx2)=datm(k);
+end
+
+% assume symmetry if matrix is one-sided
+if all(isnan(datamatrix(find(triu(ones(size(datamatrix)),1)))));
+    datamatrix=tril(datamatrix) + ctranspose(tril(datamatrix));
+    if ~isempty(cfg.directionality)
+        cfg.directionality=[];
+        warning('Connectivity appears to be undirected. Ignoring cfg.directionality');
+    end
+    
+end
+
+% go through each channel
+for k=1:length(chNum)
+
+if all(isnan(datamatrix(:,k)))
+        plotted_chan(k)=0;
+else
+                plotted_chan(k)=1;
+        ft_progress(k/length(chNum), 'Plotting connectivity for sensor %d of %d', k, length(chNum));
+        
+        %plot the data for current channel
+        ft_plot_topo(X0,Y0,datamatrix(:,k),'interpmethod',cfg.interpmethod,...
+            'interplim',cfg.interplim,...
+            'gridscale',cfg.gridscale,...
+            'outline',[],...
+            'shading',cfg.shading,...
+            'mask',lay.mask,...
+            'style',cfg.style,...
+            'hpos',X(k),...
+            'vpos',Y(k),...
+            'width',mindist,...
+            'height',mindist);
+        
+
+
+    end
+end
+
+ft_progress('close')
+%%
+% if colorbar specfied, do one colorbar for all plots
+if strcmp(cfg.colorbar,'on');
+    colorbar;
+end
+
+% change color limits
+caxis(cfg.zlim);
+
+%display markers
+if ~strcmp(cfg.marker,'off')
+  keep_chan = find(plotted_chan);
+ 
+  templay.pos      = [X(keep_chan) Y(keep_chan)];
+  templay.width    = mindist;
+  templay.height   = mindist;
+  templay.label    = Lbl(keep_chan);
+  if strcmp(cfg.marker, 'labels') || strcmp(cfg.marker, 'numbers')
+    labelflg = 1;
+  else
+    labelflg = 0;
+  end
+  if strcmp(cfg.marker, 'numbers')
+    for ichan = 1:length(keep_chan)
+      templay.label{ichan} = num2str(keep_chan(ichan));
+    end
+  end
+  ft_plot_lay(templay,'box','no','label',labelflg,'point','yes',...
+    'pointsymbol',cfg.markersymbol,...
+    'pointcolor',cfg.markercolor,...
+    'pointsize',cfg.markersize,...
+    'labelsize',cfg.markerfontsize,...
+    'labeloffset',cfg.labeloffset)
+end
+
+axis square;
+axis off;
+
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
