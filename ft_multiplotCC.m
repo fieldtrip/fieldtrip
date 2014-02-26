@@ -107,7 +107,6 @@ if ~isfield(cfg, 'channellocal'),   cfg.channellocal = 'all';  end;
 if ~isfield(cfg, 'channelglobal'),   cfg.channelglobal = 'all';  end;
 if ~isfield(cfg, 'chansubsample'),   cfg.chansubsample = 'off';  end;
 
-cfg.shading
 
 % identify dimensions and indices ot average data over
 dimtok = tokenize(data.dimord, '_');
@@ -214,6 +213,7 @@ end
 % do the plotting!
 
 ft_progress('init', 'text')
+warning off
 
 datamatrix=NaN.*ones(length(chNum));
 
@@ -266,6 +266,7 @@ else
 end
 
 ft_progress('close')
+warning on
 %%
 % if colorbar specfied, do one colorbar for all plots
 if strcmp(cfg.colorbar,'on');
