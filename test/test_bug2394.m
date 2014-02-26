@@ -1,7 +1,7 @@
 function test_bug2394
 
 % WALLTIME 00:10:00
-% MEM 800mb
+% MEM 1gb
 
 % TEST test_bug2394 ft_selectdata ft_selectdata_new ft_selectdata_old
 

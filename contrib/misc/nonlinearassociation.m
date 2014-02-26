@@ -67,10 +67,8 @@ function [association] = nonlinearassociation(cfg, data)
 % analytical approach. Neurophysiol Clin 20(1):1-11.
 
 % Copyright (C) 2007, Inge Westmijse
-%
-% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
-fieldtripdefs
+ft_defaults
 
 % set the defaults
 if ~isfield(cfg, 'trials'),        cfg.trials  = 'all';             end

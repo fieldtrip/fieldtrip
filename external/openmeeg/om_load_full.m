@@ -12,8 +12,6 @@ function [data] = om_load_full(filename,format)
 %   Created by Alexandre Gramfort on 2007-11-27.
 %   Copyright (c) 2007 Alexandre Gramfort. All rights reserved.
 
-% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailed information
-
 if nargin == 1
     format = 'binary';
 end

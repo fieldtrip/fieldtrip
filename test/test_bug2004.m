@@ -1,7 +1,7 @@
 function test_bug2004
 
 % MEM 1500mb
-% WALLTIME 0:03:01
+% WALLTIME 00:10:00
 
 % TEST test_bug2004 
 % TEST ft_connectivityanalysis

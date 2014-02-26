@@ -27,7 +27,7 @@ function [stat] = ft_freqstatistics(cfg, varargin)
 %   cfg.method       = different methods for calculating the significance probability and/or critical value
 %                    'montecarlo'    get Monte-Carlo estimates of the significance probabilities and/or critical values from the permutation distribution,
 %                    'analytic'      get significance probabilities and/or critical values from the analytic reference distribution (typically, the sampling distribution under the null hypothesis),
-%                    'stats'         use a parametric test from the Matlab statistics toolbox,
+%                    'stats'         use a parametric test from the MATLAB statistics toolbox,
 %                    'crossvalidate' use crossvalidation to compute predictive performance
 %
 %   cfg.design       = Nxnumobservations: design matrix (for examples/advice, please see the Fieldtrip wiki,
@@ -330,7 +330,7 @@ if isstruct(stat)
   statfield = fieldnames(stat);
 else
   % only the probability was returned as a single matrix, reformat into a structure
-  dum = stat; stat = []; % this prevents a Matlab warning that appears from release 7.0.4 onwards
+  dum = stat; stat = []; % this prevents a MATLAB warning that appears from release 7.0.4 onwards
   stat.prob = dum;
   statfield = fieldnames(stat);
 end

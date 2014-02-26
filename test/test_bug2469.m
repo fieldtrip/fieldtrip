@@ -1,6 +1,6 @@
 function test_bug2469
 
-% MEM 300mb
+% MEM 1gb
 % WALLTIME 00:10:00
 
 % TEST ft_connectivityanalysis

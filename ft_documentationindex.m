@@ -152,7 +152,7 @@ fid = fopen(filename, 'wb');
 currletter = char(96);
 fprintf(fid, '====== Index of configuration options ======\n\n');
 fprintf(fid, 'A detailed description of each function is available in the [[:reference|reference documentation]].\n\n');
-fprintf(fid, 'This index to the reference documentation is automatically generated from the Matlab code every day. Therefore you should not edit this page manually, since your changes would be overwritten automatically. If you want to suggest corrections to the documentation, please send them by email to the mailing list or to one of the main developers (see [[:contact]]).\n\n');
+fprintf(fid, 'This index to the reference documentation is automatically generated from the MATLAB code every day. Therefore you should not edit this page manually, since your changes would be overwritten automatically. If you want to suggest corrections to the documentation, please send them by email to the mailing list or to one of the main developers (see [[:contact]]).\n\n');
 for i=1:size(index,1)
   fprintf('%s -- %s -- %s\n', index{i,2}, index{i,3}, index{i,1});
   if isempty(index{i,1})

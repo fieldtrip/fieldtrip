@@ -1,7 +1,7 @@
 function test_bug2355
 
 % MEM 1500mb
-% WALLTIME 0:07:00
+% WALLTIME 00:10:00
 
 % TEST test_bug2355
 % TEST ft_prepare_sourcemodel

@@ -1,6 +1,6 @@
 function test_example_megrealign
 
-% MEM 200mb
+% MEM 1gb
 % WALLTIME 00:10:00
 
 % TEST test_example_megrealign

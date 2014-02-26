@@ -73,7 +73,7 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 %
 % When cfg.method = 'headshape', the following cfg-option is required:
 %  cfg.headshape = string pointing to a file describing a headshape, that
-%    can be loaded with ft_read_headshape, or a fieldtrip-structure describing
+%    can be loaded with FT_READ_HEADSHAPE, or a FieldTrip-structure describing
 %    a headshape
 % The following options are optional:
 %  cfg.scalpsmooth    = scalar (default = 2): smoothing parameter for the scalp extraction

@@ -7,8 +7,6 @@ function openmeeg_license
 
 % Copyright (C) 2009, Robert Oostenveld
 
-% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailed information
-
 persistent status
 
 if isempty(status)

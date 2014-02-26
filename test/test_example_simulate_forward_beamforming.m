@@ -1,6 +1,6 @@
 function test_example_simulate_forward_beamforming
 
-% MEM 100mb
+% MEM 1gb
 % WALLTIME 00:10:00
 
 % TEST test_example_simulate_forward_beamforming

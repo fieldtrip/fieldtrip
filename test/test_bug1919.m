@@ -1,7 +1,7 @@
 function test_bug1919
 
 % MEM 1500mb
-% WALLTIME 0:03:00
+% WALLTIME 00:10:00
 
 % TEST test_bug1919
 % TEST ft_senslabel

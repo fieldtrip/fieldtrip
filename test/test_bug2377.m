@@ -1,7 +1,7 @@
 function test_bug2377
 
 % MEM 1500mb
-% WALLTIME 0:05:00
+% WALLTIME 00:10:00
 
 % TEST test_bug2377
 % TEST ft_datatype_sens ft_compute_leadfield

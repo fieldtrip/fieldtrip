@@ -9,8 +9,6 @@ function x = tinv(p,v);
 % This is an open source function that was assembled by Eric Maris using
 % open source subfunctions found on the web.
 
-% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
-
 if nargin < 2, 
     error('Requires two input arguments.'); 
 end

@@ -23,7 +23,7 @@ function y = struct(x, varargin)
 % $Id$
 
 if nargin==1
-  % convert the config object into a regular Matlab structure
+  % convert the config object into a regular MATLAB structure
   for i=1:numel(x)
     y(i) = struct(x(i).value);
   end
@@ -39,7 +39,7 @@ if nargin==1
     end
   end
 else
-  % mimic the behaviour of the builtin Matlab struct function
+  % mimic the behaviour of the builtin MATLAB struct function
   if mod(nargin,2)
     error('Incorrect number of input arguments (should be key-value pairs)')
   end

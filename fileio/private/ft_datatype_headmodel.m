@@ -81,8 +81,9 @@ end
 switch version
   
   case '2014'
-    % first make it consistent with the 2012 version
-    vol = ft_datatype_headmodel(vol, 'version', '2012');
+    % first make it consistent with the 2013 version that makes a
+    % consistency check with 2012 first
+    vol = ft_datatype_headmodel(vol, 'version', '2013');
     
     % ensure that all numbers are represented in double precision
     vol = ft_struct2double(vol);

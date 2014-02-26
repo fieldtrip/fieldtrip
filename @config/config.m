@@ -18,7 +18,7 @@ function y = config(x, varargin)
 % to each field are being counted.
 %
 % The config object can be used throughout your FieldTrip function
-% as if it were a plain Matlab structure. At the end of your FieldTrip
+% as if it were a plain MATLAB structure. At the end of your FieldTrip
 % function you can report the fields that were
 %   - not used (references=0)
 %   - locally assigned as compared to assigned by the end user (assignments>0)

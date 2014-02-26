@@ -1,7 +1,7 @@
 function test_bug2377b
 
-% WALLTIME 0:05:00
 % MEM 1500mb
+% WALLTIME 00:10:00
 
 % TEST test_bug2377b
 % TEST ft_senslabel ft_senstype ft_chantype ft_chanunit ft_datatype_sens

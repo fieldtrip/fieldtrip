@@ -1,7 +1,7 @@
 function test_bug2338
 
-% WALLTIME 0:10:00
 % MEM 2000mb
+% WALLTIME 00:10:00
 
 % TEST test_bug2338
 % TEST ft_prepare_bemmodel ft_prepare_headmodel ft_prepare_leadfield ft_compute_leadfield openmeeg

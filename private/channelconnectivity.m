@@ -86,7 +86,7 @@ else
       connectivity(sel1(k), seln) = true;
     end
 
-  catch err
+  catch
     % the fast version failed, use slow instead
     
     for chan=1:length(neighbours)

@@ -176,13 +176,15 @@ end % switch cfg.method
 if nargin==1
   try % try to get the description from the cfg
     elec_original = ft_fetch_sens(cfg);
-  catch lasterr
+  catch
+    % the "catch me" syntax is broken on MATLAB74, this fixes it
+    me = lasterror;
     % start with an empty set of electrodes, this is useful for manual positioning
     elec_original = [];
     elec_original.pnt    = zeros(0,3);
     elec_original.label  = cell(0,1);
     elec_original.unit   = 'mm';
-    warning(lasterr.message, lasterr.identifier);
+    warning(me.message, me.identifier);
   end
 elseif nargin>1
   % the input electrodes were specified as second input argument

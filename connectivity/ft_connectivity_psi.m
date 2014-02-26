@@ -1,4 +1,4 @@
-function [p, v, n] = ft_connectivity_psi(input, varargin)
+function [c, v, n] = ft_connectivity_psi(input, varargin)
 
 % FT_CONNECTIVITY_PSI computes the phase slope index from a data-matrix
 % containing the cross-spectral density. It implements the method described

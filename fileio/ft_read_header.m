@@ -937,19 +937,19 @@ switch headerformat
     end
     
     % check if multiple epochs are present
-    if isfield(orig.xml,'epochs') && length(orig.xml.epochs) > 1
+    if isfield(orig.xml,'epochs')
       % add info to header about which sample correspond to which epochs, becasue this is quite hard for user to get...
       epochdef = zeros(length(orig.xml.epochs),3);
       for iEpoch = 1:length(orig.xml.epochs)
         if iEpoch == 1
           epochdef(iEpoch,1) = round(str2double(orig.xml.epochs(iEpoch).epoch.beginTime)./(1000000./hdr.Fs))+1;
-          epochdef(iEpoch,2) = round(str2double(orig.xml.epochs(iEpoch).epoch.endTime)./(1000000./hdr.Fs));
-          epochdef(iEpoch,3) = round(str2double(orig.xml.epochs(iEpoch).epoch.beginTime)./(1000000./hdr.Fs)); %offset corresponds to timing
+          epochdef(iEpoch,2) = round(str2double(orig.xml.epochs(iEpoch).epoch.endTime  )./(1000000./hdr.Fs));
+          epochdef(iEpoch,3) = round(str2double(orig.xml.epochs(iEpoch).epoch.beginTime)./(1000000./hdr.Fs)); % offset corresponds to timing
         else
           NbSampEpoch = round(str2double(orig.xml.epochs(iEpoch).epoch.endTime)./(1000000./hdr.Fs) - str2double(orig.xml.epochs(iEpoch).epoch.beginTime)./(1000000./hdr.Fs));
           epochdef(iEpoch,1) = epochdef(iEpoch-1,2) + 1;
           epochdef(iEpoch,2) = epochdef(iEpoch-1,2) + NbSampEpoch;
-          epochdef(iEpoch,3) = round(str2double(orig.xml.epochs(iEpoch).epoch.beginTime)./(1000000./hdr.Fs)); %offset corresponds to timing
+          epochdef(iEpoch,3) = round(str2double(orig.xml.epochs(iEpoch).epoch.beginTime)./(1000000./hdr.Fs)); % offset corresponds to timing
         end
       end
       epochLengths=epochdef(:,2)-epochdef(:,1)+1;
@@ -957,10 +957,10 @@ switch headerformat
         hdr.nSamples=epochLengths(1);
         hdr.nTrials=length(epochLengths);
       else
-        warning('the data contains multiple epochs with possibly discontinuous boundaries. Added ''epochdef'' to hdr.orig defining begin and end sample of each epoch. See hdr.orig.xml.epochs for epoch details, use ft_read_header to obtain header or look in data.dhr.')
+        warning('the data contains multiple epochs with variable length, possibly causing discontinuities in the data')
         % sanity check
         if epochdef(end,2) ~= hdr.nSamples
-            %check for NS 4.5.4 picosecond timing
+            % check for NS 4.5.4 picosecond timing
             if (epochdef(end,2)/1000) == hdr.nSamples
                 for iEpoch=1:size(epochdef,1)
                     epochdef(iEpoch,1)=((epochdef(iEpoch,1)-1)/1000)+1;
@@ -983,7 +983,7 @@ switch headerformat
     % ensure that the JVM is running and the jar file is on the path
     
     %%%%%%%%%%%%%%%%%%%%%%
-    %workaround for Matlab bug resulting in global variables being cleared
+    %workaround for MATLAB bug resulting in global variables being cleared
     globalTemp=cell(0);
     globalList=whos('global');
     varList=whos;
@@ -996,7 +996,7 @@ switch headerformat
     mff_setup;
     
     %%%%%%%%%%%%%%%%%%%%%%
-    %workaround for Matlab bug resulting in global variables being cleared
+    %workaround for MATLAB bug resulting in global variables being cleared
     varNames={varList.name};
     for i=1:length(globalList)
       eval(['global ' globalList(i).name ';']);
@@ -1045,7 +1045,7 @@ switch headerformat
     hdr.nTrials     = 1;  % since continuous
     hdr.orig        = []; % this will contain the chunks (if present)
     
-    % add the contents of attached FIF_header chunk after decoding to Matlab structure
+    % add the contents of attached FIF_header chunk after decoding to MATLAB structure
     if isfield(orig, 'neuromag_header')
       if isempty(cachechunk)
         % this only needs to be decoded once
@@ -1074,7 +1074,7 @@ switch headerformat
       hdr.orig = cachechunk;
     end
     
-    % add the contents of attached RES4 chunk after decoding to Matlab structure
+    % add the contents of attached RES4 chunk after decoding to MATLAB structure
     if isfield(orig, 'ctf_res4')
       if isempty(cachechunk)
         % this only needs to be decoded once
@@ -1100,14 +1100,14 @@ switch headerformat
       hdr.orig.ctf_res4 = orig.ctf_res4;
     end
     
-    % add the contents of attached NIFTI-1 chunk after decoding to Matlab structure
+    % add the contents of attached NIFTI-1 chunk after decoding to MATLAB structure
     if isfield(orig, 'nifti_1')
       hdr.nifti_1 = decode_nifti1(orig.nifti_1);
       % add the raw chunk as well
       hdr.orig.nifti_1 = orig.nifti_1;
     end
     
-    % add the contents of attached SiemensAP chunk after decoding to Matlab structure
+    % add the contents of attached SiemensAP chunk after decoding to MATLAB structure
     if isfield(orig, 'siemensap') && exist('sap2matlab')==3 % only run this if MEX file is present
       hdr.siemensap = sap2matlab(orig.siemensap);
       % add the raw chunk as well
@@ -1385,11 +1385,13 @@ switch headerformat
       try
         epochs = fiff_read_epochs(filename);
         isepoched = 1;
-      catch err
-        if strcmp(err.identifier, 'MNE:fiff_read_events')
+      catch
+        % the "catch me" syntax is broken on MATLAB74, this fixes it
+        me = lasterr;
+        if strcmp(me.identifier, 'MNE:fiff_read_events')
           iscontinuous = 1;
         else
-          rethrow(err)
+          rethrow(me)
         end
       end
       

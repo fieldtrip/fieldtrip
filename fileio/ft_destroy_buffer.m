@@ -1,7 +1,7 @@
 function ft_destroy_buffer
 
 % FT_DESTROY_BUFFER stops the thread with the TCP server attached to
-% the local Matlab instance and removes all data from memory.
+% the local MATLAB instance and removes all data from memory.
 %
 % Use as
 %   ft_destroy_buffer

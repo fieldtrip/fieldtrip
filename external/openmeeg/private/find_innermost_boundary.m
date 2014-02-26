@@ -11,8 +11,6 @@ function [innermost, inside] = find_innermost_boundary(bnd)
 %   bnd(i).tri  triangles of boundary i (matrix of size Mx3)
 
 % Copyright (C) 2003, Robert Oostenveld
-%
-% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 ncmp = length(bnd);
 

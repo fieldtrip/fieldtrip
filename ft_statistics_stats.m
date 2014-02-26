@@ -15,7 +15,7 @@ function [stat, cfg] = ft_statistics_stats(cfg, dat, design)
 % FT_FREQGRANDAVERAGE or FT_SOURCEGRANDAVERAGE respectively and with
 % cfg.method = 'montecarlo'
 %
-%  This function uses the Matlab statistics toolbox to perform various
+%  This function uses the MATLAB statistics toolbox to perform various
 %  statistical tests on timelock, frequency or source data. Supported
 %  configuration options are
 %   cfg.alpha     = number, critical value for rejecting the null-hypothesis (default = 0.05)

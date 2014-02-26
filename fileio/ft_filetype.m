@@ -1082,8 +1082,8 @@ elseif filetype_check_extension(filename, '.mat') && filetype_check_header(filen
   content = 'electrophysiological data';
 elseif filetype_check_extension(filename, '.mat') && filetype_check_header(filename, 'MATLAB')
   type = 'matlab';
-  manufacturer = 'Matlab';
-  content = 'Matlab binary data';
+  manufacturer = 'MATLAB';
+  content = 'MATLAB binary data';
 elseif filetype_check_header(filename, 'RIFF', 0) && filetype_check_header(filename, 'WAVE', 8)
   type = 'riff_wave';
   manufacturer = 'Microsoft';

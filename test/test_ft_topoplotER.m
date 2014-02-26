@@ -1,7 +1,7 @@
 function test_ft_topoplotER
 
 % MEM 1500mb
-% WALLTIME 0:05:00
+% WALLTIME 00:10:00
 
 % TEST test_ft_topoplotER
 % TEST ft_topoplotER ft_topoplotTFR ft_topoplotIC
