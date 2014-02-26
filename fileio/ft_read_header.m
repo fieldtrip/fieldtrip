@@ -1385,11 +1385,13 @@ switch headerformat
       try
         epochs = fiff_read_epochs(filename);
         isepoched = 1;
-      catch err
-        if strcmp(err.identifier, 'MNE:fiff_read_events')
+      catch
+        % the "catch me" syntax is broken on MATLAB74, this fixes it
+        me = lasterr;
+        if strcmp(me.identifier, 'MNE:fiff_read_events')
           iscontinuous = 1;
         else
-          rethrow(err)
+          rethrow(me)
         end
       end
       

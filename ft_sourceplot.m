@@ -818,7 +818,7 @@ if isequal(cfg.method,'ortho')
       cfg.nas = opt.nas;
       cfg.rpa = opt.rpa;
       cfg.lpa = opt.lpa;
-    catch e
+    catch
       warning('Figure seem to be closed not by pressing ''q'' - returning of fiducials not possible\n'); 
       cfg.nas = [];
       cfg.rpa = [];
