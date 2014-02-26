@@ -132,6 +132,11 @@ cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'}); % this is moved to
 cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved to cfg.grid.unit by the subsequent createsubcfg
 cfg = ft_checkconfig(cfg, 'createsubcfg',  {'grid'});
 
+if isstruct(cfg.template)
+  % this should be a cell-array
+  cfg.template = {cfg.template};
+end
+
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
   fprintf('selecting %d trials\n', length(cfg.trials));
