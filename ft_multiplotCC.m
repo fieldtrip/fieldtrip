@@ -199,17 +199,6 @@ mindist=(min(XYd(find(XYd~=0))));
 % Y=Y./(max(Y+mindist+b));
 
 
-% get right zlims for all topoplots
-if strcmp(cfg.zlim,'maxmin');
-    zlim=[min(datm) max(datm)];
-elseif strcmp(cfg.zlim,'maxabs');
-    zlim=max(abs(datm)).*[-1 1];
-elseif strcmp(cfg.zlim,'zeromax');
-    zlim=[0 max(datm)];
-elseif strcmp(cfg.zlim,'minzero');
-    zlim=[min(datm) 0];
-end
-
 % do the plotting!
 
 ft_progress('init', 'text')
@@ -237,6 +226,26 @@ if all(isnan(datamatrix(find(triu(ones(size(datamatrix)),1)))));
     end
     
 end
+
+% do stuff to deal with complex data
+if sum(abs(real(datamatrix(:))))~=0 || sum(abs(imag(datamatrix(:))))~=0
+    datamatrix=abs(datamatrix);
+elseif sum(abs(real(datamatrix(:))))==0 || sum(abs(imag(datamatrix(:))))~=0
+    datamatrix=imag(datamatrix);
+end
+
+
+% get right zlims for all topoplots
+if strcmp(cfg.zlim,'maxmin');
+    zlim=[min(datm) max(datm)];
+elseif strcmp(cfg.zlim,'maxabs');
+    zlim=max(abs(datm)).*[-1 1];
+elseif strcmp(cfg.zlim,'zeromax');
+    zlim=[0 max(datm)];
+elseif strcmp(cfg.zlim,'minzero');
+    zlim=[min(datm) 0];
+end
+
 
 % go through each channel
 for k=1:length(chNum)
@@ -304,7 +313,6 @@ end
 
 axis square;
 axis off;
-
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
