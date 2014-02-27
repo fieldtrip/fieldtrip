@@ -831,7 +831,7 @@ else
     datout_sum=NaN.*ones([nchn dat_size(2:end)]);
     
     for i=1:prod(dat_size(2:end))
-i
+
         conmatrx=ones(nchn).*NaN;
         keepchn_idx=find(keepchn);
         for j=1:length(keepchn_idx)
