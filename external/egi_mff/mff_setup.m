@@ -30,6 +30,10 @@ if ~(exist('com.egi.services.mff.api.MFFFactory', 'class')==8)
   warning('adding %s to your Java path', p);
   javaclasspath(p);
   
+  % The following pertains to http://bugzilla.fcdonders.nl/show_bug.cgi?id=2133
+  % also available as http://bit.ly/1o7QlRk, for which we cannot provide a solution. 
+  warning('javaclasspath clears all global variables due to a bug in MATLAB. Please execute %s.m immediately after starting MATLAB. See http://bit.ly/1o7QlRk', mfilename('fullpath'));
+  
   % restore the global variables
   for i=1:length(name)
     eval(sprintf('global %s', name{i}));
