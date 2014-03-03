@@ -47,7 +47,7 @@ if ~isempty(hdr.NumberOfChannels)
     if ~isempty(resolution)
       hdr.resolution(i) = resolution;
     else
-      warning('Unknown resolution for channel %d in %s!', i, filename);
+      warning('unknown resolution (i.e. recording units) for channel %d in %s', i, filename);
       hdr.resolution(i) = 1;
     end
   end

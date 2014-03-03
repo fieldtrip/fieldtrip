@@ -1,15 +1,25 @@
 function [trl, event] = ft_trialfun_brainvision_segmented(cfg)
-
-
 % FT_TRIALFUN_BRAINVISION_SEGMENTED creates trials for a Brain Vision Analyzer
 % dataset that was segmented in the BVA software.
 %
 % Use as 
 %   cfg          = [];
-%   cfg.dataset  = 'pp01_pilot_load0_3s.vhdr';
+%   cfg.dataset  = '<datasetname>.vhdr';
 %   cfg.trialfun = 'ft_trialfun_brainvision_segmented';
 %   cfg  = ft_definetrial(cfg);
 %   data = ft_preprocessing(cfg);
+%
+% Optionally, you can also specify:
+%   cfg.trigformat = 'S %d';
+% which will instruct this function to parse stimulus triggers according to
+% the format you specified. The default is 'S %d'. cfg.trigformat always
+% needs to contain exactly one %d code. Trigger values read in this way
+% will be stored in columns 4 and upwards of the output 'trl' matrix, and
+% will end up in data.trialinfo if this matrix is subsequently passed to
+% ft_preprocessing in order to read in data.
+%
+% A dataset needs to consist of three files: a .eeg, .vhdr, and .vmrk file.
+% cfg.dataset needs to refer to the .vhdr file.
 %
 % See also FT_DEFINETRIAL, FT_PREPROCESSING
 
@@ -33,9 +43,11 @@ function [trl, event] = ft_trialfun_brainvision_segmented(cfg)
 %
 % $Id$
 
-
 hdr = ft_read_header(cfg.dataset);
 event = ft_read_event(cfg.dataset);
+
+% set the defaults
+cfg.trigformat = ft_getopt(cfg, 'trigformat', 'S %d');
 
 sel = find(strcmp({event.type}, 'New Segment'));
 ntrial = length(sel);
@@ -88,7 +100,7 @@ numstim = cellfun(@length, stim);
 if all(numstim==numstim(1))
   for i=1:length(stim)
     for j=1:numstim(i)
-      stimvalue  = sscanf(value{stim{i}(j)}, 'S %d');
+      stimvalue  = sscanf(value{stim{i}(j)}, cfg.trigformat);
       stimsample = sample(stim{i}(j));
       stimtime   = (stimsample - begsample(i) + offset(i))/hdr.Fs; % relative to 'Time 0'
       trialinfo(i,2*(j-1)+1) = stimvalue;
