@@ -607,6 +607,7 @@ switch cfg.method
     scalp              = ft_prepare_mesh(tmpcfg, seg);
     scalp              = ft_convert_units(scalp, 'mm');
     
+    if 1,
     % Here it is advisable to interactively realign the shape and scalp, in
     % order to get a good starting point for the icp-algorithm.
     % We will use ft_interactiverealign for this.
@@ -621,7 +622,7 @@ switch cfg.method
     % update the relevant geometrical info
     mri.transform = M*mri.transform;
     scalp     = ft_transform_geometry(M, scalp);
-
+    end
     
     if ~isfield(cfg, 'weights')
       w = ones(size(shape.pnt,1),1);
