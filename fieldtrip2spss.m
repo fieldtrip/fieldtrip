@@ -47,7 +47,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble callinfo
+ft_preamble provenance
 
 % check whether data and labels have the same lengths
 if ~isequal(size(data,2),size(labels,2))
@@ -62,4 +62,4 @@ dlmwrite(filename, txt, '');
 dlmwrite(filename, data, '-append', 'delimiter', '\t', 'precision', 4);
 
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble callinfo
+ft_postamble provenance

@@ -43,7 +43,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble callinfo
+ft_preamble provenance
 
 is_txt = ft_filetype(filename, 'ascii_txt'); %FIXME text file only implemented for slor, don't know what text files look for for old loreta
 
@@ -150,6 +150,6 @@ cfg.timeframe = timeframe;
 cfg.filename  = filename;
 
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble callinfo
+ft_postamble provenance
 ft_postamble history source
 
