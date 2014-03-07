@@ -1648,19 +1648,7 @@ if isfield(data, 'dimord')
 end
 
 if isfield(data, 'dim') && length(data.dim)>=3,
-  % it is an old-fashioned source description, or the source describes a regular 3D volume in pos
-  xgrid = 1:data.dim(1);
-  ygrid = 1:data.dim(2);
-  zgrid = 1:data.dim(3);
-  [x y z] = ndgrid(xgrid, ygrid, zgrid);
-  ind = [x(:) y(:) z(:)];    % these are the positions expressed in voxel indices along each of the three axes
-  pos = data.pos;            % these are the positions expressed in head coordinates
-  % represent the positions in a manner that is compatible with the homogeneous matrix multiplication,
-  % i.e. pos = H * ind
-  ind = ind'; ind(4,:) = 1;
-  pos = pos'; pos(4,:) = 1;
-  % recompute the homogeneous transformation matrix
-  data.transform = pos / ind;
+  data.transform = pos2transform(data.pos, data.dim);
 end
 
 % remove the unwanted fields
