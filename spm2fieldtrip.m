@@ -15,7 +15,7 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble help
-ft_preamble provenance
+ft_preamble callinfo
 
 if ~ft_hastoolbox('spm8')
   error('this requires a full version of SPM8 on your MATLAB path');
@@ -51,6 +51,6 @@ end
 cfg = [];
 
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble provenance
+ft_postamble callinfo
 ft_postamble history data
 
