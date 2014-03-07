@@ -13,10 +13,13 @@ load /home/common/matlab/fieldtrip/data/test/bug1150.mat
 % which could be tracked down to the dimord being incorrect after
 % ft_checkdata
 
-sourcenew = ft_checkdata(temp, 'sourcerepresentation', 'new');
+% the data seems to be incosistent so the conversion fails.
+temp.trial = temp.trial(1:10);
+temp.cumtapcnt = temp.cumtapcnt(1:10);
+temp.trialinfo = temp.trialinfo(1:10,:);
+
+sourcenew  = ft_checkdata(temp, 'sourcerepresentation', 'new');
 if ~strcmp(sourcenew.powdimord, 'pos_rpt')
   error('incorrect posdimord');
 end
-
-
 
