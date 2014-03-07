@@ -50,7 +50,7 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
+ft_preamble callinfo
 ft_preamble trackconfig
 
 % check if data is of proper format 
@@ -170,7 +170,7 @@ isih.(param) = out;
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
-ft_postamble provenance
+ft_postamble callinfo
 ft_postamble previous spike
 ft_postamble history isih
 

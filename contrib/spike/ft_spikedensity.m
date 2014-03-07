@@ -73,7 +73,7 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
+ft_preamble callinfo
 ft_preamble trackconfig
 
 % get the default options
@@ -314,7 +314,7 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
-ft_postamble provenance
+ft_postamble callinfo
 ft_postamble previous data
 ft_postamble history sdf
 if nargout==2
