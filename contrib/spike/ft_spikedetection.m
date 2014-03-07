@@ -84,7 +84,7 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble callinfo
+ft_preamble provenance
 ft_preamble trackconfig
 
 % set the general defaults
@@ -474,5 +474,5 @@ end % for each file
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
-ft_postamble callinfo
+ft_postamble provenance
 

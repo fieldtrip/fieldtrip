@@ -47,7 +47,7 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble callinfo
+ft_preamble provenance
 ft_preamble trackconfig
 
 % control input spike structure
@@ -153,7 +153,7 @@ if isfield(spike, 'trialinfo'), rate.trialinfo = spike.trialinfo(cfg.trials,:); 
   
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
-ft_postamble callinfo
+ft_postamble provenance
 ft_postamble previous spike
 ft_postamble history rate
 

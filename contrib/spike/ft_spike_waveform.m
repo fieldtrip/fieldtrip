@@ -44,7 +44,7 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble callinfo
+ft_preamble provenance
 ft_preamble trackconfig
 
 % ensure that the required options are present
@@ -235,7 +235,7 @@ wave.label = spike.label(spikesel);
 wave.dimord = 'chan_lead_time';
 
 ft_postamble trackconfig
-ft_postamble callinfo
+ft_postamble provenance
 ft_postamble previous spike
 ft_postamble history spike wave
 
