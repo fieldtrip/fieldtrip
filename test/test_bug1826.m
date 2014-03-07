@@ -24,12 +24,26 @@ mri2 = ft_read_mri('/home/common/matlab/fieldtrip/data/test/bug1826/mri07mm.nii.
 mri1.coordsys = 'bti';
 mri2.coordsys = 'spm';
 
+cfg        = [];
+cfg.method = 'spm';
+mric       = ft_volumerealign(cfg, mri1, mri2);
+
+% reslice to be able to visualize together
+cfgr            = [];
+cfgr.resolution = 1;
+cfgr.xrange = [-120 120];
+cfgr.yrange = [-150 100];
+cfgr.zrange = [-120 80];
+mri2r = ft_volumereslice(cfgr,mri2);
+mricr = ft_volumereslice(cfgr,mric);
+
+
 cfgd.downsample = 2;
 mri1b = ft_volumedownsample(cfgd, mri1);
 mri2b = ft_volumedownsample(cfgd, mri2);
 
 cfg          = [];
-cfg.method   = 'volume';
+cfg.method   = 'fsl';
 cfg.fsl.path = '/opt/fsl/bin'; % '/opt/fsl_5.0/bin'; % fsl_5.0 only works on high mentats due to libraries
 cfg.fsl.dof  = 7; % globalrescale
 cfg.fsl.interpmethod = 'trilinear';
