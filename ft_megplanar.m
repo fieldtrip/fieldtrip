@@ -234,7 +234,7 @@ if strcmp(cfg.planarmethod, 'sourceproject')
 else
   
   sens = ft_convert_units(data.grad);
-  chanposnans = any(isnan(sens.chanpos(:)));
+  chanposnans = any(isnan(sens.chanpos(:))) || any(isnan(sens.chanori(:)));
   if chanposnans
     if isfield(sens, 'chanposorg')
       % temporarily replace chanpos and chanorig with the original values
@@ -243,7 +243,7 @@ else
       sens.label = sens.labelorg;
       sens = rmfield(sens, {'chanposorg', 'chanoriorg', 'labelorg'});
     else
-      error('The channel positions contain NaNs; this prohibits correct behavior of the function. Please replace the input channel definition with one that contains valid channel positions');
+      error('The channel positions (and/or orientations) contain NaNs; this prohibits correct behavior of the function. Please replace the input channel definition with one that contains valid channel positions');
     end
   end
   cfg.channel = ft_channelselection(cfg.channel, sens.label);
