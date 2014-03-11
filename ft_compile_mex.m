@@ -95,8 +95,8 @@ L = add_mex_source(L,'src','inv2x2');
 L = add_mex_source(L,'src','mtimes2x2');
 L = add_mex_source(L,'src','sandwich2x2');
 
-L = add_mex_source(L,'src','mxSerialize');
-L = add_mex_source(L,'src','mxDeserialize');
+L = add_mex_source(L,'src','mxSerialize_c');
+L = add_mex_source(L,'src','mxDeserialize_c');
 L = add_mex_source(L,'src','CalcMD5');
 
 L = add_mex_source(L,'src','combineClusters');
