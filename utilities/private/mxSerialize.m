@@ -1,8 +1,12 @@
-function [varargout] = funname(varargin)
+function [argout] = mxSerialize(argin)
 
-% FUNNAME compile the missing mex file on the fly
+% MXSERIALIZE converts any MATLAB object into a uint8 array suitable
+% for passing down a comms channel to be reconstructed at the other end.
+%
+% See also MXDESERIALIZE
 
-% Copyright (C) 2009, Robert Oostenveld
+% Copyright (C) 2005, Brad Phelan         http://xtargets.com
+% Copyright (C) 2007, Robert Oostenveld   http://www.fcdonders.ru.nl
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -22,34 +26,12 @@ function [varargout] = funname(varargin)
 %
 % $Id$
 
-% remember the original working directory
-pwdir = pwd;
-
-% determine the name and full path of this function
-funname = mfilename('fullpath');
-mexsrc  = [funname '.c'];
-[mexdir, mexname] = fileparts(funname);
-
-try
-  % try to compile the mex file on the fly
-  warning('trying to compile MEX file from %s', mexsrc);
-  cd(mexdir);
-  mex(mexsrc);
-  cd(pwdir);
-  success = true;
-
-catch
-  % compilation failed
-  disp(lasterr);
-  error('could not locate MEX file for %s', mexname);
-  cd(pwdir);
-  success = false;
-end
-
-if success
-  % execute the mex file that was juist created
-  funname   = mfilename;
-  funhandle = str2func(funname);
-  [varargout{1:nargout}] = funhandle(varargin{:});
+if verLessThan('matlab', '8.3')
+  % use the original implementation of the mex file
+  argout = mxSerialize_c(argin);
+else
+  % use the C++ implementation of the mex file
+  % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=2452
+  argout = mxSerialize_cpp(argin);
 end
 
