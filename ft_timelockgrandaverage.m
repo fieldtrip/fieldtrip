@@ -158,7 +158,7 @@ for i=1:Nsubj
       varargin{i}.(cfg.parameter) = varargin{i}.(cfg.parameter)(chansel);
       varargin{i}.dimord = 'chan';
     case {'rpt_chan_time' 'subj_chan_time'}
-      varargin{i}.(cfg.parameter) = varargin{i}.(cfg.parameter)(chansel,timesel);
+      varargin{i}.(cfg.parameter) = varargin{i}.(cfg.parameter)(:,chansel,timesel);
       varargin{i}.dimord = 'chan_time';
     otherwise
       error('unsupported dimord');
