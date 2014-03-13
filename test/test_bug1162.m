@@ -10,14 +10,14 @@ timelock1 = [];
 timelock1.label = {'1' '2'};
 timelock1.time  = 1:5;
 timelock1.dimord = 'rpt_chan_time';
-timelock1.avg = randn(2,5);
+timelock1.avg = randn(1,2,5);
 timelock1.cfg = 'this is number 1';
 
 timelock2 = [];
 timelock2.label = {'1' '2'};
 timelock2.time  = 1:5;
 timelock2.dimord = 'rpt_chan_time';
-timelock2.avg = randn(2,5);
+timelock2.avg = randn(1,2,5);
 timelock2.cfg = 'this is number 2';
 
 cfg = [];
