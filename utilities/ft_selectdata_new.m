@@ -213,7 +213,7 @@ else
     sel = false(size(fn));
     for i=1:numel(fn)
       if isequalwithoutnans(size(varargin{1}.(fn{i})), dimsiz)
-        warning('using the "%s" field to determine the size along the unknown dimensions', fn{i});
+        fprintf('ft_selectdata: using the "%s" field to determine the size along the unknown dimensions\n', fn{i});
         % update the size of all dimensions
         dimsiz = size(varargin{1}.(fn{i}));
         % update the fieldname of each dimension
