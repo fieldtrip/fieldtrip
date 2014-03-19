@@ -12,7 +12,7 @@ function test_ft_topoplotER
 
 pwdir = pwd;
 
-load(dccnfilename('/home/common/matlab/fieldtrip/data/test/latest/raw/eeg/preproc_neuroscan16'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/eeg/preproc_neuroscan16'));
 
 %there's an unresolved issue with duplicate labels 'FREE'
 %FIXME

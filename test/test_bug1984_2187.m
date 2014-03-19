@@ -6,7 +6,7 @@ function test_bug1984_2187
 % TEST test_bug1984_2187
 % TEST ft_appendfreq ft_freqgrandaverage ft_freqstatistics ft_prepare_neighbours
 
-cd(dccnfilename('/home/common/matlab/fieldtrip/data/test'));
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test'));
 load bug1984_2187.mat
 
 %% first: test rpt concatenation

@@ -15,7 +15,7 @@ end
 
 cfg = [];
 cfg.dataset = '/home/common/matlab/fieldtrip/data/Subject01.ds';
-% cfg.dataset = dccnfilename('/home/common/matlab/fieldtrip/data/Subject01.ds');
+% cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
 data = ft_preprocessing(cfg);
 
 cfg            = [];

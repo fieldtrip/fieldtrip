@@ -13,7 +13,7 @@ function test_bug1245
 % determination algorithm includes the channels that are excluded from the
 % plotting
 
-cd(dccnfilename('/home/common/matlab/fieldtrip/data/test'))
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test'))
 
 % this is one way of having ft_multiplotER select avg as the parameter
 load bug1245.mat

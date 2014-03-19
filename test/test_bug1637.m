@@ -18,7 +18,7 @@ cfg.method = 'template';
 cfg.template = 'CTF275_neighb';
 neighbours = ft_prepare_neighbours(cfg);
 
-cd(dccnfilename('/home/common/matlab/fieldtrip/data/test'))
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test'))
 load bug1637_hdr.mat
 load bug1637_grad.mat
 

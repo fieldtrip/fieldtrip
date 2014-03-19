@@ -6,7 +6,7 @@ function test_bug1914
 % TEST test_bug1914
 % TEST ft_filetype ft_read_header ft_read_data ft_read_event
 
-cd(dccnfilename('/home/common/matlab/fieldtrip/data/test/bug1914'));
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1914'));
 
 dataset = {
   'conversion_testing_MEGEEG_raw.fif'

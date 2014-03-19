@@ -3,7 +3,7 @@ function test_bug2385
 % TEST test_bug2385
 % TEST ft_filetype ft_read_sens
 
-cd(dccnfilename('/home/common/matlab/fieldtrip/data/test/original/electrodes/easycap'));
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/original/electrodes/easycap'));
 
 filename = {
   'M10_ThetaPhi.txt'

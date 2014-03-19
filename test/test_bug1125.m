@@ -35,7 +35,7 @@ figure;plot(linspace(0,1000,N),abs(fft(y19)));axis([0 40 0 inf])
 hold on;plot(linspace(0,1000,N),abs(fft(y29)),'m');axis([0 40 0 inf])
 % HUGE diff DC
 
-cd(dccnfilename('/home/common/matlab/fieldtrip/data/test'))
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test'))
 load bug1129.mat
 
 cfg=[];

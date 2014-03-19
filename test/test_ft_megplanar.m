@@ -99,7 +99,7 @@ end
 %% check for qualitative changes in transformation
 % load exampledata from ER tutorial, simplified
 
-cd(dccnfilename('/home/common/matlab/fieldtrip/data/test'))
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test'))
 load avgFIC
 
 % compute neighbours

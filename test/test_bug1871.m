@@ -6,7 +6,7 @@ function test_bug1871
 % TEST test_bug1871
 % TEST ft_struct2single 
 
-cd(dccnfilename('/home/common/matlab/fieldtrip/data/test'));
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test'));
 load avgFIC.mat
 
 avgFIC.avg = ft_struct2single(avgFIC.avg);

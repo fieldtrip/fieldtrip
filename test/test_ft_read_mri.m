@@ -25,6 +25,6 @@ files = {
 datadir = '/home/common/matlab/fieldtrip/data/test/latest/mri';
 
 for k = 1:numel(files)
-  filename = dccnfilename(fullfile(datadir,files{k}));
+  filename = dccnpath(fullfile(datadir,files{k}));
   ft_read_mri(filename);
 end

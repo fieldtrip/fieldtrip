@@ -13,12 +13,12 @@ global ft_default
 ft_default = [];
 
 if ispc
-  dccnfilename = @(filename) strrep(strrep(filename,'/home','H:'),'/','\');
+  dccnpath = @(filename) strrep(strrep(filename,'/home','H:'),'/','\');
 else
-  dccnfilename = @(filename) strrep(strrep(filename,'H:','/home'),'\','/');
+  dccnpath = @(filename) strrep(strrep(filename,'H:','/home'),'\','/');
 end
 
-cd(dccnfilename('/home/common/matlab/fieldtrip/data'));
+cd(dccnpath('/home/common/matlab/fieldtrip/data'));
 
 % find the interesting segments of data
 cfg = [];                                           % empty configuration

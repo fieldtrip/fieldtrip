@@ -6,8 +6,8 @@ function test_bug2381
 % TEST test_bug2381
 % TEST ft_sourcestatistics
 
-%filename = dccnfilename(fullfile('/home/common/matlab/fieldtrip/data/test/bug2381','AVG.mat'));
-filename = dccnfilename('/home/common/matlab/fieldtrip/data/test/bug2381');
+%filename = dccnpath(fullfile('/home/common/matlab/fieldtrip/data/test/bug2381','AVG.mat'));
+filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2381');
 load(filename);
 
 nsubj = 15;

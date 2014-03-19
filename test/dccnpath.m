@@ -1,10 +1,10 @@
-function file = dccnfilename(filename)
+function file = dccnpath(filename)
 
-% DCCNFILENAME updates the full path specificaion to a file for all files
+% DCCNPATH updates the full path specificaion to a file for all files
 % on DCCN home central storage.
 %
 % Use as
-%  filename = dccnfilename(filename)
+%  filename = dccnpath(filename)
 %
 % The function assumes that on a Windows machine the DCCN home network
 % drive is mapped to H:. The function basically converts between H:\ and

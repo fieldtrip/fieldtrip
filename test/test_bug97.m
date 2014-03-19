@@ -16,7 +16,7 @@ function test_bug97
 % argument as the corresponding 'value'. In such case [] has a definite meaning
 % (rather than not being defined by the user)
 
-datafile   = dccnfilename('/home/common/matlab/fieldtrip/data/test/original/meg/ctf275/A0132_Aud-Obj-Recognition_20051115_02.ds');
+datafile   = dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/ctf275/A0132_Aud-Obj-Recognition_20051115_02.ds');
 
 cfg          = [];
 cfg.datafile = datafile;

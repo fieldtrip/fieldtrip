@@ -41,7 +41,7 @@ cfg.selmode          = 'union';
 [freq1out, freq2out] = ft_selectdata_new(cfg,freq1,freq2);
 
 %%%%%%%%%%%
-filename = dccnfilename('/home/common/matlab/fieldtrip/data/test/bug2221.mat');
+filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2221.mat');
 load(filename);
 
 data1 = data_S10_cond1;

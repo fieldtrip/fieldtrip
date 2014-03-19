@@ -6,9 +6,9 @@ function test_tutorial_beamforming_extended
 % TEST test_beamforming_extended
 % TEST ft_read_mri ft_redefinetrial ft_freqanalysis ft_volumesegment ft_appenddata ft_selectdata ft_prepare_singleshell ft_sourceanalysis ft_prepare_leadfield ft_prepare_headmodel ft_prepare_sourcemodel ft_plot_vol ft_plot_sens ft_plot_mesh ft_sourceinterpolate ft_sourceplot 
 
-datadir = dccnfilename('/home/common/matlab/fieldtrip/data/ftp/tutorial/sensor_analysis');
-mridir = dccnfilename('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer_extended');
-templatedir  = dccnfilename('/home/common/matlab/fieldtrip/template/sourcemodel');
+datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/sensor_analysis');
+mridir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer_extended');
+templatedir  = dccnpath('/home/common/matlab/fieldtrip/template/sourcemodel');
 
 load(fullfile(datadir, 'subjectK.mat'));
 
@@ -136,7 +136,7 @@ source_diff.pos = template.sourcemodel.pos;
 source_diff.dim = template.sourcemodel.dim;
 
 % note that the exact directory is user-specific
-templatefile = dccnfilename('/home/common/matlab/fieldtrip/external/spm8/templates/T1.nii');
+templatefile = dccnpath('/home/common/matlab/fieldtrip/external/spm8/templates/T1.nii');
 
 template_mri = ft_read_mri(templatefile);
 cfg              = [];
@@ -157,7 +157,7 @@ cfg.opacitymap    = 'rampup';
 ft_sourceplot(cfg,source_diff_int);
 
 cfg.method = 'ortho';
-cfg.atlas           = dccnfilename('/home/common/matlab/fieldtrip/template/atlas/aal/ROI_MNI_V4.nii');
+cfg.atlas           = dccnpath('/home/common/matlab/fieldtrip/template/atlas/aal/ROI_MNI_V4.nii');
 ft_sourceplot(cfg,source_diff_int);
 
 cfg.method = 'surface';
@@ -199,7 +199,7 @@ source_coh_lft.dim = template.sourcemodel.dim;
 
 
 % note that the exact directory is user-specific
-templatefile = dccnfilename('/home/common/matlab/fieldtrip/external/spm8/templates/T1.nii');
+templatefile = dccnpath('/home/common/matlab/fieldtrip/external/spm8/templates/T1.nii');
 
 template_mri = ft_read_mri(templatefile);
 cfg              = [];
@@ -221,7 +221,7 @@ cfg.opacitylim    = [00 .15];
 cfg.maskparameter = cfg.funparameter;
 cfg.opacitymap    = 'rampup';  
 
-cfg.atlas         = dccnfilename('/home/common/matlab/fieldtrip/template/atlas/aal/ROI_MNI_V4.nii');
+cfg.atlas         = dccnpath('/home/common/matlab/fieldtrip/template/atlas/aal/ROI_MNI_V4.nii');
 
 ft_sourceplot(cfg, source_coh_int);
 end

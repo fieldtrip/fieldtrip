@@ -8,8 +8,8 @@ function test_bug2482
 
 %% define the trials
 
-headerfile = dccnfilename('/home/common/matlab/fieldtrip/data/test/bug2482/001 P11 M1 004_Seg_fs6.vhdr');
-datafile = dccnfilename('/home/common/matlab/fieldtrip/data/test/bug2482/001 P11 M1 004_Seg_fs6.eeg');
+headerfile = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2482/001 P11 M1 004_Seg_fs6.vhdr');
+datafile = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2482/001 P11 M1 004_Seg_fs6.eeg');
 
 cfg = [];
 cfg.trialfun = 'ft_trialfun_brainvision_segmented';

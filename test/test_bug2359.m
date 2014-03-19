@@ -7,7 +7,7 @@ function test_bug2359
 % TEST ft_prepare_mesh ft_prepare_sourcemodel
 
 
-cd(dccnfilename('/home/common/matlab/fieldtrip/data/test/bug2359'));
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2359'));
 
 cortex = ft_read_headshape('cortex_20484.surf.gii');
 iskull = ft_read_headshape('iskull_2562.surf.gii');
