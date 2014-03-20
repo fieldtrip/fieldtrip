@@ -947,6 +947,11 @@ if ~isempty(label)
   end
   cfg.xlim = 'maxmin';
   cfg.channel = label;
+  % if user specified a zlim, copy it over to the ylim of singleplot
+  if isfield(cfg, 'zlim')
+    cfg.ylim = cfg.zlim;
+    cfg = rmfield(cfg, 'zlim');
+  end
   fprintf('selected cfg.channel = {');
   for i=1:(length(cfg.channel)-1)
     fprintf('''%s'', ', cfg.channel{i});
