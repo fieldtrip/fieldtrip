@@ -76,7 +76,89 @@ compare_outputs(data, 'trials',  []);
 compare_outputs(data, 'trials',  'all');
 
 % FIXME also test latency
-% 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% this part of the script tests the functionality of ft_selectdata with respect
+% to averaging over each dimension
+
+% rpt_chan_freq_time
+
+freq = [];
+freq.dimord = 'rpt_chan_freq_time';
+freq.label = {'1', '2', '3'};
+freq.freq = 1:4;
+freq.time = 1:5;
+freq.powspctrm = randn(2, 3, 4, 5);
+
+cfg = [];
+cfg.avgoverrpt = 'yes';
+freq_avgoverrpt = ft_selectdata(cfg, freq)
+
+cfg = [];
+cfg.avgoverchan = 'yes';
+freq_avgoverchan = ft_selectdata(cfg, freq)
+
+cfg = [];
+cfg.avgoverfreq = 'yes';
+freq_avgoverfreq = ft_selectdata(cfg, freq)
+
+cfg = [];
+cfg.avgovertime = 'yes';
+freq_avgovertime = ft_selectdata(cfg, freq)
+
+cfg = [];
+cfg.avgoverrpt = 'yes';
+cfg.avgoverchan = 'yes';
+cfg.avgoverfreq = 'yes';
+cfg.avgovertime = 'yes';
+freq_avgoverall = ft_selectdata(cfg, freq)
+
+% rpt_chan_time
+
+timelock = [];
+timelock.dimord = 'rpt_chan_time';
+timelock.label = {'1', '2', '3'};
+timelock.time = 1:4;
+timelock.avg = randn(2, 3, 4);
+
+cfg = [];
+cfg.avgoverrpt = 'yes';
+timelock_avgoverrpt = ft_selectdata(cfg, timelock)
+
+cfg = [];
+cfg.avgoverchan = 'yes';
+timelock_avgoverchan = ft_selectdata(cfg, timelock)
+
+cfg = [];
+cfg.avgoverrpt = 'yes';
+cfg.avgoverchan = 'yes';
+cfg.avgovertime = 'yes';
+timelock_avgoverall = ft_selectdata(cfg, timelock)
+
+% rpt_chan_time
+
+cfg = [];
+cfg.avgovertime = 'yes';
+timelock_avgovertime = ft_selectdata(cfg, timelock)
+
+timelock = [];
+timelock.dimord = 'chan_time';
+timelock.label = {'1', '2', '3'};
+timelock.time = 1:4;
+timelock.avg = randn(3, 4);
+
+cfg = [];
+cfg.avgoverchan = 'yes';
+timelock_avgoverchan = ft_selectdata(cfg, timelock)
+
+cfg = [];
+cfg.avgovertime = 'yes';
+timelock_avgovertime = ft_selectdata(cfg, timelock)
+
+cfg = [];
+cfg.avgoverchan = 'yes';
+cfg.avgovertime = 'yes';
+timelock_avgoverall = ft_selectdata(cfg, timelock)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% this part of the script tests the functionality of ft_selectdata with respect
