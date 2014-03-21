@@ -109,14 +109,13 @@ else
   end
   
   if length(varargin)>1 && ~isequal(cfg.trials, 'all')
-    error('it is ambiguous to a subselection of trials while concatenating data')
+    error('it is ambiguous to make a subselection of trials while at the same time concatenating multiple data structures')
   end
   
-  hastime   = isfield(varargin{1}, 'time');
-  hasfreq   = isfield(varargin{1}, 'freq');
-  hasdimord = ~all(cellfun(@isempty, regexp(fieldnames(varargin{1}), '.*dimord')));
   haspos    = isfield(varargin{1}, 'pos');
   haschan   = isfield(varargin{1}, 'label');
+  hasfreq   = isfield(varargin{1}, 'freq');
+  hastime   = isfield(varargin{1}, 'time');
   
   avgoverpos  = istrue(ft_getopt(cfg, 'avgoverroi',  false)); % although being called region-of-interest, the selection is actually made over source positions
   avgoverrpt  = istrue(ft_getopt(cfg, 'avgoverrpt',  false));
@@ -130,15 +129,15 @@ else
   if avgoverfreq, assert(hasfreq, 'there is no frequency dimension, so averaging is not possible'); end
   if avgovertime, assert(hastime, 'there is no time dimension, so averaging over time is not possible'); end
   
+  %  keepposdim  = istrue(ft_getopt(cfg, 'keepposdim', true));
   %  keeprptdim  = istrue(ft_getopt(cfg, 'keeprptdim', true));
   %  keepchandim = istrue(ft_getopt(cfg, 'keepchandim', true));
   %  keepfreqdim = istrue(ft_getopt(cfg, 'keepfreqdim', true));
   %  keeptimedim = istrue(ft_getopt(cfg, 'keeptimedim', true));
   
-  if strcmp(cfg.selmode, 'union') && (avgoverrpt || avgoverchan || avgoverfreq || avgovertime)
+  if strcmp(cfg.selmode, 'union') && (avgoverpos || avgoverrpt || avgoverchan || avgoverfreq || avgovertime)
     error('cfg.selmode ''union'' in combination with averaging across one of the dimensions is not implemented');
   end
-  
   
   if avgoverpos
     for i=1:length(varargin)
@@ -222,7 +221,6 @@ else
   % deal with the data dimensions whose size is only implicitly represented
   if any(strcmp(dimfields, 'implicit'))
     fn  = fieldnames(varargin{1})';
-    sel = false(size(fn));
     for i=1:numel(fn)
       if isequalwithoutnans(size(varargin{1}.(fn{i})), dimsiz)
         fprintf('ft_selectdata: using the "%s" field to determine the size along the unknown dimensions\n', fn{i});
@@ -284,7 +282,7 @@ else
       % in the case of selmode='union', create the union of the descriptive axes
       if strcmp(cfg.selmode, 'union')
         label = varargin{1}.label;
-        time = varargin{1}.time;
+        time  = varargin{1}.time;
         
         for i=2:numel(varargin)
           tmplabel = varargin{i}.label;
@@ -338,8 +336,7 @@ else
         end
       end % varargin
       
-      % in the case of selmode='union', create the union of the descriptive
-      % axes
+      % in the case of selmode='union', create the union of the descriptive axes
       if strcmp(cfg.selmode, 'union')
         label = varargin{1}.label;
         freq  = varargin{1}.freq;
