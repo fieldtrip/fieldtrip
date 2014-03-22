@@ -80,8 +80,10 @@ function [source] = ft_sourceanalysis(cfg, data, baseline)
 % Other configuration options are
 %   cfg.channel       = Nx1 cell-array with selection of channels (default = 'all'),
 %                       see FT_CHANNELSELECTION for details
-%   cfg.frequency     = single number (in Hz)
-%   cfg.latency       = single number in seconds, for time-frequency analysis
+%   cfg.frequency     = single number (in Hz), or...
+%   cfg.foilim        = lower and upper limits frequency range
+%   cfg.latency       = single number in seconds, for time-frequency   analysis, or..
+%   cfg.toilim        = lower and upper limits of time range
 %   cfg.lambda        = number or empty for automatic default
 %   cfg.refchan       = reference channel label (for coherence)
 %   cfg.refdip        = reference dipole location (for coherence)
@@ -226,6 +228,18 @@ cfg.(cfg.method).lambda        = ft_getopt(cfg.(cfg.method), 'lambda',        []
 cfg.(cfg.method).powmethod     = ft_getopt(cfg.(cfg.method), 'powmethod',     []);
 cfg.(cfg.method).normalize     = ft_getopt(cfg.(cfg.method), 'normalize',     'no');
 
+if isfield('frequency',cfg) && ~isfield('foilim',cfg)
+    cfg.foilim=[cfg.frequency cfg.frequency];
+elseif isfield('foilim',cfg)
+    cfg.frequency=mean(cfg.foilim);
+end
+
+if isfield('latancy',cfg) && ~isfield('toilim',cfg)
+    cfg.toilim=[cfg.latancy cfg.latancy];
+elseif isfield('toilim',cfg) 
+    cfg.latency=mean(cfg.toilim);
+end
+
 convertfreq = 0;
 convertcomp = 0;
 if ~istimelock && (strcmp(cfg.method, 'mne') || strcmp(cfg.method, 'rv') || strcmp(cfg.method, 'music'))
@@ -241,7 +255,7 @@ if ~istimelock && (strcmp(cfg.method, 'mne') || strcmp(cfg.method, 'rv') || strc
   isfreq     = 0;
   iscomp     = 0;
 elseif isfreq && isfield(data, 'labelcmb')
-  data = ft_checkdata(data, 'cmbrepresentation', 'full');
+%   data = ft_checkdata(data, 'cmbrepresentation', 'full');
 end
 
 % select only those channels that are present in the data
@@ -253,8 +267,8 @@ elseif nargin<3 && (strcmp(cfg.randomization, 'yes') || strcmp(cfg.permutation, 
   error('randomization or permutation requires that you give two conditions as input');
 end
 
-if isfield(cfg, 'latency') && istimelock
-  error('specification of cfg.latency is only required for time-frequency data');
+if isfield(cfg, 'toilim') && istimelock
+  error('specification of cfg.latency or cfg.toilim is only required for time-frequency data');
 end
 
 if sum([strcmp(cfg.jackknife, 'yes'), strcmp(cfg.bootstrap, 'yes'), strcmp(cfg.pseudovalue, 'yes'), strcmp(cfg.singletrial, 'yes'), strcmp(cfg.rawtrial, 'yes'), strcmp(cfg.randomization, 'yes'), strcmp(cfg.permutation, 'yes')])>1
@@ -275,6 +289,7 @@ if isfreq
       ~strcmp(data.dimord, 'rpt_chancmb_freq')   && ...
       ~strcmp(data.dimord, 'rpttap_chancmb_freq')  && ...
       ~strcmp(data.dimord, 'chan_chan_freq')       && ...
+      ~strcmp(data.dimord, 'chan_chan_freq_time')       && ...
       ~strcmp(data.dimord, 'rpt_chan_chan_freq')   && ...
       ~strcmp(data.dimord, 'rpttap_chan_chan_freq')  && ...
       ~strcmp(data.dimord, 'rpttap_chan_freq_time')
@@ -391,19 +406,19 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta'}))
     % ' leads to a conjugate transposition check this in beamformer_pcc
     if isfield(data, 'fourierspctrm')
       [dum, datchanindx] = match_str(tmpcfg.channel, data.label);
-      fbin = nearest(data.freq, cfg.frequency);
+      fbin = nearest(data.freq, cfg.foilim(1)):nearest(data.freq, cfg.foilim(2));
       if strcmp(data.dimord, 'chan_freq')
-        avg = data.fourierspctrm(datchanindx, fbin);
+        avg = mean(data.fourierspctrm(datchanindx, fbin),2);
       elseif strcmp(data.dimord, 'rpt_chan_freq') || strcmp(data.dimord, 'rpttap_chan_freq'),
-        %avg = data.fourierspctrm(:, datchanindx, fbin)';
-        avg = transpose(data.fourierspctrm(:, datchanindx, fbin));
+        %avg = mean(data.fourierspctrm(:, datchanindx, fbin),3)';
+        avg = transpose(mean(data.fourierspctrm(:, datchanindx, fbin),3));
       elseif strcmp(data.dimord, 'chan_freq_time')
-        tbin = nearest(data.time, cfg.latency);
-        avg = data.fourierspctrm(datchanindx, fbin, tbin);
+        tbin = nearest(data.time, cfg.toilim(1)):nearest(data.time, cfg.toilim(2));
+        avg = mean(data.fourierspctrm(datchanindx, fbin, tbin),3);
       elseif strcmp(data.dimord, 'rpt_chan_freq_time') || strcmp(data.dimord, 'rpttap_chan_freq_time'),
-        tbin = nearest(data.time, cfg.latency);
-        %avg = data.fourierspctrm(:, datchanindx, fbin, tbin)';
-        avg = transpose(data.fourierspctrm(:, datchanindx, fbin, tbin));
+        tbin = nearest(data.time, cfg.toilim(1)):nearest(data.time, cfg.toilim(2));
+        %avg = mean(data.fourierspctrm(:, datchanindx, fbin, tbin),3)';
+        avg = transpose(mean(data.fourierspctrm(:, datchanindx, fbin, tbin),3));
       end
     else
       avg = [];
@@ -928,10 +943,10 @@ elseif iscomp
   % FIXME, add the component numbers to the output
 elseif isfreq
   % add the frequency axis to the output
-  cfg.frequency    = data.freq(nearest(data.freq, cfg.frequency));
+%  cfg.frequency    = data.freq(nearest(data.freq, cfg.frequency));
   source.freq = cfg.frequency;
   if isfield(data, 'time') && isfield(cfg, 'latency')
-    cfg.latency    = data.time(nearest(data.time, cfg.latency));
+%    cfg.latency    = data.time(nearest(data.time, cfg.latency));
     source.time    = cfg.latency;
   end
   if isfield(data, 'cumtapcnt'),
