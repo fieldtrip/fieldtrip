@@ -86,6 +86,9 @@ function [grid, cfg] = ft_prepare_sourcemodel(cfg, vol, sens)
 %   cfg.headshape    = a filename for the headshape, a structure containing a single surface,
 %                      or a Nx3 matrix with headshape surface points (default = [])
 %
+%   cfg.grid.maxdepth = Maximum depth of source to be included in source space (0 = no limit).
+%        
+
 % See also FT_PREPARE_LEADFIELD, FT_PREPARE_HEADMODEL, FT_SOURCEANALYSIS,
 % FT_DIPOLEFITTING, FT_MEGREALIGN
 
@@ -135,6 +138,7 @@ cfg.grid       = ft_getopt(cfg, 'grid',       []);
 cfg.spmversion = ft_getopt(cfg, 'spmversion', 'spm8');
 cfg.grid.unit  = ft_getopt(cfg.grid, 'unit',  'auto');
 cfg.grid       = ft_checkconfig(cfg.grid, 'renamed',  {'pnt' 'pos'});
+cfg.grid.maxdepth  = ft_getopt(cfg.grid, 'maxdepth',   0);
 
 if ~isfield(cfg, 'vol') && nargin>1
   % put it in the configuration structure
@@ -756,6 +760,24 @@ if ~isempty(cfg.symmetry)
   fprintf('each source describes two dipoles with symmetry along %s axis\n', cfg.symmetry);
   % expand the number of parameters from one (3) to two dipoles (6)
   grid.pos = grid.pos(:,expand) .* repmat(mirror, size(grid.pos,1), 1);
+end
+
+% remove any sources that ere below the max depth limit
+if cfg.grid.maxdepth>0
+    
+      fprintf('computing source depth\n');
+
+    depth=ft_sourcedepth(grid.pos(grid.inside,:),vol);
+    
+    remove_depth=find(depth<-cfg.grid.maxdepth);
+    inside_remove=grid.inside(remove_depth);
+    
+    fprintf('found %d dipoles more than %d %s deep.\n',length(inside_remove),cfg.grid.maxdepth,cfg.grid.unit);
+    grid.inside(remove_depth)=[];
+    grid.outside=sort([ grid.outside inside_remove]);
+    
+    fprintf('%d dipoles inside, %d dipoles outside brain\n', length(grid.inside), length(grid.outside));
+
 end
 
 % do the general cleanup and bookkeeping at the end of the function
