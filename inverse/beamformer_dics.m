@@ -24,7 +24,8 @@ function [dipout] = beamformer_dics(dip, grad, vol, dat, Cf, varargin)
 % Additional options should be specified in key-value pairs and can be
 %  'Pr'               = power of the external reference channel
 %  'Cr'               = cross spectral density between all data channels and the external reference channel
-%  'refdip'           = location of dipole with which coherence is computed
+%  'refdip'           = location of dipole(s) with which coherence is computed
+%                       computed. use 'all' to to treat all source dipoles as ref dipoles
 %  'lambda'           = regularisation parameter
 %  'powmethod'        = can be 'trace' or 'lambda1'
 %  'feedback'         = give ft_progress indication, can be 'text', 'gui' or 'none'
@@ -34,6 +35,9 @@ function [dipout] = beamformer_dics(dip, grad, vol, dat, Cf, varargin)
 %  'keepfilter'       = remember the beamformer filter,                can be 'yes' or 'no'
 %  'keepleadfield'    = remember the forward computation,              can be 'yes' or 'no'
 %  'keepcsd'          = remember the estimated cross-spectral density, can be 'yes' or 'no'
+%  'connsum'          = Summary of coherence values (if more than one refdips specifled. 
+%                       Can be 'max', 'absmax','sse','var','std'.
+%  'imagcoh'          = Compute d
 %
 % These options influence the forward computation of the leadfield
 %  'reducerank'       = reduce the leadfield rank, can be 'no' or a number (e.g. 2)
@@ -89,7 +93,8 @@ lambda         = keyval('lambda',        varargin); if isempty(lambda  ),      l
 projectnoise   = keyval('projectnoise',  varargin); if isempty(projectnoise),  projectnoise = 'yes';         end
 fixedori       = keyval('fixedori',      varargin); if isempty(fixedori),      fixedori = 'no';              end
 subspace       = keyval('subspace',      varargin); 
-
+connsum        = keyval('connsum',       varargin); if isempty(connsum),      connsum = 'absmax';              end
+imagcoh        = keyval('imagcoh',       varargin); if isempty(imagcoh),      imagcoh = 0;              end
 % convert the yes/no arguments to the corresponding logical values
 keepcsd        = strcmp(keepcsd,       'yes');
 keepfilter     = strcmp(keepfilter,    'yes');
@@ -525,66 +530,231 @@ switch submethod
       error('fixed orientations are not supported for beaming cortico-cortical coherence');
     end
     % compute cortio-cortical coherence with a dipole at the reference position
-    lf1 = ft_compute_leadfield(refdip, grad, vol, 'reducerank', reducerank, 'normalize', normalize);
-    % construct the spatial filter for the first (reference) dipole location
-    filt1 = pinv(lf1' * invCf * lf1) * lf1' * invCf;       % use PINV/SVD to cover rank deficient leadfield
-    if powlambda1
-      Pref = lambda1(filt1 * Cf * ctranspose(filt1));      % compute the power at the first dipole location, Gross eqn. 8
-    elseif powtrace
-      Pref = real(trace(filt1 * Cf * ctranspose(filt1)));  % compute the power at the first dipole location
+
+
+% select all source positions as refereces (this does whole-brain
+% connectivity)
+    if isequal(refdip,'all')
+        refdip=dip.pos;
     end
+    
+    % identify refdips that match existing source positions to reuse later
+        [lf_keep keep_idx]=ismember(refdip,dip.pos,'rows');
+  
+        % check if any refdipoles are not part of original source spaces and compute New leadfileds for new source positions. 
+        new_idx=zeros(size(keep_idx));
+        lf_new={}; 
+            for i=1:length(lf_keep)
+                if lf_keep(i)
+                 %   filt{keep_idx(i)} = pinv(lf{i}' * invCf * lf{i}) * lf{i}' * invCf;
+                else
+                    lf_new{end+1} = ft_compute_leadfield(refdip(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize);
+               %     filt_new{end+1} = pinv(lf_new{end}' * invCf * lf_new{end}) * lf_new{end}' * invCf;
+                    new_idx(i) = length(lf_new);
+                end
+            end
+            
+            % get indices for source positions thst match refdips
+            [lf_keep2 keep_idx2]=ismember(dip.pos,refdip,'rows');
+
+            
+            
+
+
+    dipout.coh = NaN.*ones(size(dip.pos,1),size(refdip,1));
+    iscsd = ones(size(dip.pos,1),size(refdip,1));
+    
+               if keepcsd
+                      dipout.csd = cell(size(dip.pos,1),size(refdip,1));
+                  end
+                  if projectnoise && keepcsd
+                      dipout.noisecsd = cell(size(dip.pos,1),size(refdip,1));
+                  end
+                  
+                  
+    
+    
+    % construct filters for source dipoles
     for i=1:size(dip.pos,1)
       if hasleadfield
         % reuse the leadfield that was previously computed
-        lf2 = dip.leadfield{i};
+        lf{i} = dip.leadfield{i};
       elseif hasmom
         % compute the leadfield for a fixed dipole orientation
-        lf2 = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize) .* dip.mom(i,:)';
+        lf{i} = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize) .* dip.mom(i,:)';
       else
         % compute the leadfield
-        lf2 = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize);
+        lf{i} = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize);
       end
       if hasfilter
         % use the provided filter
-        filt2 = dip.filter{i};
+        filt{i} = dip.filter{i};
       else
         % construct the spatial filter for the second dipole location
-        filt2 = pinv(lf2' * invCf * lf2) * lf2' * invCf;   %  use PINV/SVD to cover rank deficient leadfield
+        filt{i} = pinv(lf{i}' * invCf * lf{i}) * lf{i}' * invCf;   %  use PINV/SVD to cover rank deficient leadfield
       end
-      csd = filt1 * Cf * ctranspose(filt2);                % compute the cross spectral density between the two dipoles, Gross eqn. 4
+      
+
+      
+
+    
+    end
+    
+      
+    % reconstruct csds between source and fer dipoles
+    for i=1:size(dip.pos,1)  
+        
+              %reconstruct power for sources
       if powlambda1
-        pow = lambda1(filt2 * Cf * ctranspose(filt2));     % compute the power at the second dipole location, Gross eqn. 8
+        pow = lambda1(filt{i} * Cf * ctranspose(filt{i}));     % compute the power at the second dipole location, Gross eqn. 8
       elseif powtrace
-        pow = real(trace(filt2 * Cf * ctranspose(filt2))); % compute the power at the second dipole location
-      end
-      if powlambda1
-        coh = lambda1(csd)^2 / (pow * Pref);               % compute the coherence between the first and second dipole
-      elseif powtrace
-        coh = real(trace((csd)))^2 / (pow * Pref);         % compute the coherence between the first and second dipole
+        pow = real(trace(filt{i} * Cf * ctranspose(filt{i}))); % compute the power at the second dipole location
       end
       dipout.pow(i) = pow;
-      dipout.coh(i) = coh;
-      if keepcsd
-        dipout.csd{i} = csd;
-      end
+      
       if projectnoise
-        if powlambda1
-          dipout.noise(i) = noise * lambda1(filt2 * ctranspose(filt2));
-        elseif powtrace
-          dipout.noise(i) = noise * real(trace(filt2 * ctranspose(filt2)));
-        end
-        if keepcsd
-          dipout.noisecsd{i} = noise * filt2 * ctranspose(filt2);
-        end
+          if powlambda1
+              dipout.noise(i) = noise * lambda1(filt{i} * ctranspose(filt{i}));
+          elseif powtrace
+              dipout.noise(i) = noise * real(trace(filt{i} * ctranspose(filt{i})));
+          end
       end
-      if keepleadfield
-        dipout.leadfield{i} = lf2;
+      
+
+      
+      % construct filters for referece dipoles if needed
+ 
+      for j=1:size(refdip,1)
+          
+
+          
+          if new_idx(j)>0
+              lf2 = lf_new{new_idx(j)};
+              filt2 = lf2' * invCf * lf2 * lf2' * invCf;   %  use PINV/SVD to cover rank deficient leadfield
+
+
+              
+          else
+              
+                    if keep_idx(j)==i;
+               iscsd(i,j)=NaN;
+                    end
+      
+             % if previously computed for alternate pair , just take the
+          % transpose of that
+          
+              if keep_idx2(i)>0
+              if ~isnan(dipout.coh(keep_idx(j),keep_idx2(i)))
+                  dipout.coh(i,j)=(dipout.coh(keep_idx(j),keep_idx2(i)));
+                  if keepcsd
+                      dipout.csd{i,j} = ctranspose(dipout.csd{keep_idx(j),keep_idx2(i)});
+                  end
+                  if projectnoise && keepcsd
+                      dipout.noisecsd{i,j} = ctranspose(dipout.noisecsd{keep_idx(j),keep_idx2(i)});
+                  end
+                  if imagcoh
+                  dipout.icoh(i,j)=ctranspose(dipout.icoh(keep_idx(j),keep_idx2(i)));
+                  end
+                  continue
+              end
+              
+              end
+
+              filt2 = filt{keep_idx(j)};
+              lf2 = dip.leadfield{keep_idx(j)};
+              
+
+          end
+
+          
+          if powlambda1
+              Pref = lambda1(filt2 * Cf * ctranspose(filt2));      % compute the power at the first dipole location, Gross eqn. 8
+          elseif powtrace
+              Pref = real(trace(filt2 * Cf * ctranspose(filt2)));  % compute the power at the first dipole location
+          end
+          
+
+    
+      
+          
+      csd = filt{i} * Cf * ctranspose(filt2);                % compute the cross spectral density between the two dipoles, Gross eqn. 4
+      
+%       if ~isempty(complexcoh) % compute imag, real or abs of csd before computing coherence
+%           csd=eval([complexcoh '(csd);']);
+%       end
+      
+      if powlambda1
+        coh = lambda1(csd)^2 / (pow * Pref);               % compute the coherence between the first and second dipole
+     if imagcoh
+         icoh = lambda1(imag(csd))^2 / (pow * Pref);
+     end
+      elseif powtrace
+        coh = real(trace((csd)))^2 / (pow * Pref);         % compute the coherence between the first and second dipole
+     if imagcoh
+        icoh = real(trace(imag(csd)))^2 / (pow * Pref);         % compute the coherence between the first and second dipole
+     end
       end
-      if dofeedback
-        ft_progress(i/size(dip.pos,1), 'scanning grid %d/%d\n', i, size(dip.pos,1));
+
+      dipout.coh(i,j) = coh;
+      
+            if imagcoh
+          dipout.icoh(i,j) = icoh;
       end
+      
+      if keepcsd
+          dipout.csd{i,j} = csd;
+      end
+      if projectnoise && keepcsd
+          dipout.noisecsd{i,j} = noise * filt{i} * ctranspose(filt2);
+      end
+      end
+      
+
+
+    if keepleadfield
+        dipout.leadfield{i} = lf{:};
+    end
+    
+    if keepfilter
+        dipout.filter{i} = filt{:};
     end
 
+
+    
+    if dofeedback
+        ft_progress(i/size(dip.pos,1), 'scanning grid %d/%d\n', i, size(dip.pos,1));
+    end
+    end
+    
+    switch connsum
+        case 'max'
+            dipout.cohsum=nanmax(dipout.coh.*iscsd,[],2);
+        case 'absmax'
+            dipout.cohsum=nanmax(abs(dipout.coh).*iscsd,[],2);
+        case 'sumsqr'
+            dipout.cohsum=nansum((dipout.coh.^2).*iscsd,[],2);
+        case 'std'
+            dipout.cohsum=nanstd((dipout.coh).*iscsd,[],2);
+        case 'var'
+            dipout.cohsum=nanstd((cdipout.cohoh).*iscsd,[],2).^2;
+    end
+    
+    if imagcoh
+            switch connsum
+        case 'max'
+            dipout.icohsum=nanmax(dipout.icoh.*iscsd,[],2);
+        case 'absmax'
+            dipout.icohsum=nanmax(abs(dipout.icoh).*iscsd,[],2);
+        case 'sumsqr'
+            dipout.icohsum=nansum((dipout.icoh.^2).*iscsd,[],2);
+        case 'std'
+            dipout.icohsum=nanstd((dipout.icoh).*iscsd,[],2);
+        case 'var'
+            dipout.icohsum=nanstd((dipout.icoh).*iscsd,[],2).^2;
+            end
+    end
+
+    
 end % switch submethod
 
 if dofeedback
@@ -617,13 +787,30 @@ if isfield(dipout, 'noise')
   dipout.noise(dipout.outside) = nan;
 end
 if isfield(dipout, 'coh')
-  dipout.coh(dipout.inside)  = dipout.coh;
-  dipout.coh(dipout.outside) = nan;
+  dipout.coh(dipout.inside,:)  = dipout.coh;
+  dipout.coh(dipout.outside,:) = nan;
 end
 if isfield(dipout, 'csd')
-  dipout.csd(dipout.inside)  = dipout.csd;
-  dipout.csd(dipout.outside) = {[]};
+  dipout.csd(dipout.inside,:)  = dipout.csd;
+  dipout.csd(dipout.outside,:) = {[]};
 end
+if isfield(dipout, 'icoh')
+  dipout.icoh(dipout.inside,:)  = dipout.icoh;
+  dipout.icoh(dipout.outside,:) = nan;
+end
+if isfield(dipout, 'csdnoise')
+  dipout.csd(dipout.inside,:)  = dipout.csdnoise;
+  dipout.csd(dipout.outside,:) = {[]};
+end
+if isfield(dipout, 'cohsum')
+  dipout.cohsum(dipout.inside,:)  = dipout.cohsum;
+  dipout.cohsum(dipout.outside,:) = NaN;
+end
+if isfield(dipout, 'icohsum')
+  dipout.icohsum(dipout.inside,:)  = dipout.icohsum;
+  dipout.icohsum(dipout.outside,:) = NaN;
+end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper function to obtain the largest singular value
