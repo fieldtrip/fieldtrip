@@ -18,7 +18,8 @@ function [jobid, puttime] = qsubfeval(varargin)
 %   backend     = string, can be 'torque', 'sge', 'slurm', 'lsf', 'system', 'local' (default is automatic)
 %   diary       = string, can be 'always', 'never', 'warning', 'error' (default = 'error')
 %   queue       = string, which queue to submit the job in (default is empty)
-%   waitfor     = string, jobid of job to wait on finishing before executing current job
+%   waitfor     = string or cell-array of strings, jobids of jobs to wait on finishing
+%                 before executing the current job (default is empty)
 %   options     = string, additional options that will be passed to qsub/srun (default is empty)
 %   batch       = number, of the bach to which the job belongs. When called by QSUBCELLFUN
 %                 it will be a number that is automatically incremented over subsequent calls.
@@ -103,11 +104,16 @@ matlabcmd     = ft_getopt(optarg, 'matlabcmd', []);
 jvm           = ft_getopt(optarg, 'jvm', 'yes');
 numargout     = ft_getopt(optarg, 'nargout', []);
 whichfunction = ft_getopt(optarg, 'whichfunction');               % the complete filename to the function, including path
-waitfor       = ft_getopt(optarg, 'waitfor');
+waitfor       = ft_getopt(optarg, 'waitfor', {});                 % default is empty cell-array
 
 % skip the optional key-value arguments
 if ~isempty(optbeg)
   varargin = varargin(1:(optbeg-1));
+end
+
+% it should be specified as a cell-array of strings
+if ischar(waitfor)
+  waitfor = {waitfor};
 end
 
 % determine whether the function has been compiled
@@ -138,7 +144,7 @@ end
 jobid = generatejobid(batch, batchid);
 
 % get the current working directory to store the temp files in
-curPwd = getcustompwd(); 
+curPwd = getcustompwd();
 
 % each job should have a different random number sequence
 randomseed = rand(1)*double(intmax);
@@ -156,7 +162,7 @@ save(inputfile, 'argin', 'optin');
 
 if ~compiled
   
-  if ~isempty(matlabcmd) 
+  if ~isempty(matlabcmd)
     % take the user-specified matlab startup script
   elseif isempty(previous_matlabcmd)
     % determine the name of the matlab startup script
@@ -273,11 +279,6 @@ switch backend
       submitoptions = [submitoptions sprintf('-l h_vmem=%.0f ', memreq+memoverhead)];
     end
     
-    if ~isempty(waitfor)
-      % waitfor contains the jobid of the job to wait for
-      submitoptions = [submitoptions sprintf('-W depend=afterok:%s', qsublist('getpbsid', waitfor))];
-    end
-    
     if compiled
       % create the command line for the compiled application
       cmdline = sprintf('%s %s %s', compiledfun, matlabroot, jobid);
@@ -311,6 +312,14 @@ switch backend
       %   submitoptions = [submitoptions sprintf(' -l vmem=%.0f ',  memreq+memoverhead)];
       %   submitoptions = [submitoptions sprintf(' -l pmem=%.0f ',  memreq+memoverhead)];
       %   submitoptions = [submitoptions sprintf(' -l pvmem=%.0f ', memreq+memoverhead)];
+    end
+    
+    if ~isempty(waitfor)
+      % waitfor contains the jobids of the jobs to wait for
+      submitoptions = [submitoptions '-W depend=afterok'];
+      for iJob = 1:numel(waitfor)
+        submitoptions = [submitoptions sprintf(':%s',qsublist('getpbsid', waitfor{iJob}))];
+      end
     end
     
     % In the command below both stderr and stout are redirected to /dev/null,
