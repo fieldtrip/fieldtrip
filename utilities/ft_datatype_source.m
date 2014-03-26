@@ -32,6 +32,10 @@ function source = ft_datatype_source(source, varargin)
 % Obsoleted fields:
 %   - xgrid, ygrid, zgrid, transform, latency, frequency
 %
+% Historical fields:
+%   - avg, cfg, cumtapcnt, df, dim, freq, frequency, inside, method,
+%   outside, pos, time, trial, vol, see bug2513
+%
 % Revision history:
 %
 % (2011/latest) The source representation should always be irregular, i.e. not

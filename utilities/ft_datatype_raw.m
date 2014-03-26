@@ -29,6 +29,10 @@ function data = ft_datatype_raw(data, varargin)
 %
 % Obsoleted fields:
 %   - offset
+% 
+% Historical fields:
+%   - cfg, elec, fsample, grad, hdr, label, offset, sampleinfo, time,
+%   trial, trialdef, see bug2513
 %
 % Revision history:
 %
@@ -72,7 +76,7 @@ function data = ft_datatype_raw(data, varargin)
 % $Id$
 
 % get the optional input arguments, which should be specified as key-value pairs
-version       = ft_getopt(varargin, 'version', 'latest');
+version       = ft_getopt(varargin, version', 'latest');
 hassampleinfo = ft_getopt(varargin, 'hassampleinfo', 'ifmakessense'); % can be yes/no/ifmakessense
 hastrialinfo  = ft_getopt(varargin, 'hastrialinfo',  'ifmakessense'); % can be yes/no/ifmakessense
 
