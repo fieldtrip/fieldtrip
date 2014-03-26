@@ -91,7 +91,7 @@ if strcmp(dtype, 'source')
   end
 end
 
-if length(varargin)>1 && ~isequal(cfg.trials, 'all')
+if length(varargin)>1 && isfield(cfg, 'trials') && ~isequal(cfg.trials, 'all')
   error('it is ambiguous to make a subselection of trials while at the same time concatenating multiple data structures')
 end
 
@@ -117,14 +117,14 @@ else % not raw or comp
   if ~isfield(cfg, 'foilim')
     cfg.frequency = ft_getopt(cfg, 'frequency', 'all', 1);
   end
-    
+  
   if isfield(cfg, 'parameter') && isfield(varargin{1}, [cfg.parameter 'dimord'])
     dimord = varargin{1}.([cfg.parameter 'dimord']);
   elseif isfield(varargin{1}, 'dimord')
     dimord = varargin{1}.dimord;
   end
   dimtok = tokenize(dimord, '_');
-
+  
   haspos    = isfield(varargin{1}, 'pos');
   hasrpt    = any(ismember(dimtok, {'rpt', 'rpttap', 'subj'}));
   haschan   = isfield(varargin{1}, 'label');
@@ -208,10 +208,10 @@ else % not raw or comp
         
       case 'refchan'
         error('FIXME');
-
+        
       case 'voxel'
         error('FIXME');
-      
+        
       case 'ori'
         error('FIXME');
         
@@ -322,7 +322,7 @@ else % not raw or comp
       for i=1:numel(varargin)
         % the rpt selection stays within this loop, it only should work with a single data argument anyway
         % in case tapers were kept, selrpt~=selrpttap, otherwise selrpt==selrpttap
-        [selrpt{i}, dum, rptdim{i}, selrpttap{i}] = getselection_rpt(cfg, varargin{i}, 'datfields', datfields); 
+        [selrpt{i}, dum, rptdim{i}, selrpttap{i}] = getselection_rpt(cfg, varargin{i}, 'datfields', datfields);
         
         varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'chan')), selchan{i},   avgoverchan, datfields, cfg.select);
         varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'freq')), selfreq{i},   avgoverfreq, datfields, cfg.select);
