@@ -31,7 +31,7 @@ for k = 1:numel(datainfo)
   datanew = rmfield(datanew, 'cfg'); % these are per construction different if writeflag = 0;
   freq    = rmfield(freq,    'cfg');
   
-  [ok,msg] = identical(freq, datanew,'reltol',eps*1e6);
+  [ok,msg] = identical(freq, datanew,'reltol',1e-6);
   if ~ok
     error('stored and computed data not identical: %s', msg{:});
   end
