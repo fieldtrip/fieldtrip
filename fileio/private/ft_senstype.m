@@ -71,7 +71,7 @@ function [type] = ft_senstype(input, desired)
 %
 % See also FT_SENSLABEL, FT_CHANTYPE, FT_READ_SENS, FT_COMPUTE_LEADFIELD, FT_DATATYPE_SENS
 
-% Copyright (C) 2007-2011, Robert Oostenveld
+% Copyright (C) 2007-2014, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -119,7 +119,7 @@ end
 
 current_argin = {input, desired};
 if isequal(current_argin, previous_argin)
-  % don't do the type detection again, but return the previous output from cache 
+  % don't do the type detection again, but return the previous output from cache
   type = previous_argout{1};
   return
 end
@@ -128,8 +128,8 @@ isdata   = isa(input, 'struct')  && (isfield(input, 'hdr') || isfield(input, 'ti
 isheader = isa(input, 'struct')  && isfield(input, 'label') && isfield(input, 'Fs');
 isgrad   = isa(input, 'struct')  && isfield(input, 'label') && isfield(input, 'pnt')  &&  isfield(input, 'ori'); % old style
 iselec   = isa(input, 'struct')  && isfield(input, 'label') && isfield(input, 'pnt')  && ~isfield(input, 'ori'); % old style
-isgrad   = (isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'coilpos')) || isgrad;             % new style 
-iselec   = (isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'elecpos')) || iselec;             % new style 
+isgrad   = (isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'coilpos')) || isgrad;             % new style
+iselec   = (isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'elecpos')) || iselec;             % new style
 islabel  = isa(input, 'cell')    && ~isempty(input) && isa(input{1}, 'char');
 haslabel = isa(input, 'struct')  && isfield(input, 'label');
 
@@ -175,19 +175,19 @@ elseif isheader
   
 elseif isgrad
   sens = input;
-
+  
 elseif iselec
   sens = input;
-
+  
 elseif islabel
   sens.label = input;
-
+  
 elseif haslabel
   % it does not resemble anything that we had expected at this location, but it does have channel labels
   % the channel labels can be used to determine the type of sensor array
   sens.label = input.label;
   islabel    = true;
-
+  
 else
   sens = [];
 end
@@ -203,7 +203,7 @@ if isfield(sens, 'type')
   elseif strcmp(type, 'neuromag122alt')
     type = 'neuromag122';
   end
-
+  
 elseif isfield(input, 'nChans') && input.nChans==1 && isfield(input, 'label') && ~isempty(regexp(input.label{1}, '^csc', 'once'))
   % this is a single channel header that was read from a Neuralynx file, might be fcdc_matbin or neuralynx_nsc
   type = 'neuralynx';
@@ -241,7 +241,7 @@ else
   
   if isgrad && isfield(sens, 'type')
     type = sens.type;
-
+    
   elseif isgrad
     % this looks like MEG
     % revert the component balancing that was previously applied
@@ -316,12 +316,12 @@ else
       type = 'yokogawa64_planar';
     elseif all(ismember(ft_senslabel('yokogawa9'),            sens.label))
       type = 'yokogawa9';
-
+      
     elseif any(mean(ismember(ft_senslabel('neuromag306'),     sens.label)) > 0.4) % there are two possibilities for the channel labels: with and without a space
-       type = 'neuromag306';
+      type = 'neuromag306';
     elseif any(mean(ismember(ft_senslabel('neuromag122'),     sens.label)) > 0.4) % there are two possibilities for the channel labels: with and without a space
       type = 'neuromag122';
-
+      
     elseif (mean(ismember(ft_senslabel('biosemi256'),         sens.label)) > 0.8)
       type = 'biosemi256';
     elseif (mean(ismember(ft_senslabel('biosemi128'),         sens.label)) > 0.8)
@@ -336,12 +336,15 @@ else
       type = 'egi64';
     elseif (mean(ismember(ft_senslabel('egi32'),              sens.label)) > 0.8)
       type = 'egi32';
-    elseif (mean(ismember(ft_senslabel('eeg1005'),            sens.label)) > 0.8)
-      type = 'eeg1005';
-    elseif (mean(ismember(ft_senslabel('eeg1010'),            sens.label)) > 0.8)
-      type = 'eeg1010';
-    elseif (mean(ismember(ft_senslabel('eeg1020'),            sens.label)) > 0.8)
+      
+      % the following check on the fraction of channels in the user's data rather than on the fraction of channels in the predefined set
+    elseif (mean(ismember(sens.label, ft_senslabel('eeg1020'))) > 0.8)
       type = 'eeg1020';
+    elseif (mean(ismember(sens.label, ft_senslabel('eeg1010'))) > 0.8)
+      type = 'eeg1010';
+    elseif (mean(ismember(sens.label, ft_senslabel('eeg1005'))) > 0.8)
+      type = 'eeg1005';
+      
     elseif (sum(ismember(sens.label, ft_senslabel('eeg1005'))) > 10) % Otherwise it's not even worth recognizing
       type = 'ext1020'; % this will also cover small subsets of eeg1020, eeg1010 and eeg1005
     elseif any(ismember(ft_senslabel('btiref'), sens.label))
