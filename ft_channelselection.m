@@ -54,7 +54,7 @@ function [channel] = ft_channelselection(desired, datachannel, type)
 % Note that the order of channels that is returned should correspond with
 % the order of the channels in the data.
 
-% Copyright (C) 2003-2011, Robert Oostenveld
+% Copyright (C) 2003-2014, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
