@@ -35,6 +35,10 @@ function comp = ft_datatype_comp(comp, varargin)
 %
 % Obsoleted fields:
 %   - offset
+% 
+% Historical fields:
+%   - cfg, fsample, grad, label, sampleinfo, time, topo, topolabel, trial,
+%   unmixing, see bug2513
 %
 % Revision history:
 % (2011/latest) The unmixing matrix has been added to the component data
