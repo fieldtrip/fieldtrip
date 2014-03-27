@@ -115,8 +115,8 @@ function [cfg] = ft_sourceplot(cfg, data)
 %
 % The following parameters apply to surface-plotting when an interpolation
 % is required
-%   cfg.surffile       = string, file that contains the surface (default = 'single_subj_T1.mat')
-%                        'single_subj_T1.mat' contains a triangulation that corresponds with the
+%   cfg.surffile       = string, file that contains the surface (default = 'surface_white_both.mat')
+%                        'surface_white_both.mat' contains a triangulation that corresponds with the
 %                         SPM anatomical template in MNI coordinates
 %   cfg.surfinflated   = string, file that contains the inflated surface (default = [])
 %   cfg.surfdownsample = number (default = 1, i.e. no downsampling)
