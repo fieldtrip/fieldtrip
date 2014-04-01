@@ -137,8 +137,14 @@ if prod(siz)==0
   str = sprintf('%s = [];\n', name);
 elseif prod(siz)==1
   str = sprintf('%s = %s;\n', name, printval(val));
+elseif numel(siz)==2 && siz(1)==1
+    str = '';
+    for col=1:siz(2)
+      str = sprintf('%s %s', str, printval(val(1,col)));
+    end
+   str = sprintf('%s = [%s ];\n', name, str);
 elseif numel(siz)==2
-  str = sprintf('%s = [\n', name);
+    str = sprintf('%s = [\n', name);
   for row=1:siz(1)
     for col=1:siz(2)
       str = sprintf('%s %s', str, printval(val(row,col)));
