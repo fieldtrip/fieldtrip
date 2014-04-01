@@ -387,7 +387,7 @@ else % not raw or comp
       
       for i=1:numel(varargin)
         % get the selection from all inputs
-        varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'pos')), selpos, avgoverpos, datfields);
+        varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'pos')), selpos, avgoverpos, datfields, cfg.select);
         varargin{i} = makeselection_pos(varargin{i}, selpos, avgoverpos); % update the pos field
       end % varargin
       
