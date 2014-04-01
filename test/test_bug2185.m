@@ -12,6 +12,8 @@ source = [];
 source.dim = [10 11 12];
 source.transform = eye(4);
 source.avg.pow = rand(10*11*12,1);
+source.inside = 1:660;
+source.outside = 661:1320;
 
 ft_checkdata(source, 'datatype', 'source')
 
@@ -29,6 +31,9 @@ source = [];
 source.transform = eye(4);
 source.pos = rand(10,3);
 source.pow = rand(10,1);
+source.inside = 1:660;
+source.outside = 661:1320;
+
 
 ft_checkdata(source, 'datatype', 'source')
 
@@ -46,6 +51,8 @@ source = [];
 source.dim = [10 11 12];
 source.transform = eye(4);
 source.pow = rand(10*11*12,1);
+source.inside = 1:660;
+source.outside = 661:1320;
 
 ft_checkdata(source, 'datatype', 'source')
 
@@ -56,4 +63,8 @@ grandavg = ft_sourcegrandaverage(cfg, source, source)
 
 cfg.keepindividual = 'yes';
 grandavg = ft_sourcegrandaverage(cfg, source, source)
+
+
+
+
 
