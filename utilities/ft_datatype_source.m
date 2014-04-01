@@ -101,8 +101,15 @@ if isfield(source, 'latency'),
 end
 
 switch version
-  case 'upcoming' % this is under development and expected to become the standard in 2013
+  case 'upcoming' % this is under development and expected to become the standard in 2014
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % ensure that it has individual source positions
+    source = fixpos(source);
+    
+    % remove obsolete fields
+    if isfield(source, 'transform')
+      source = rmfield(source, 'transform');
+    end
     if isfield(source, 'xgrid')
       source = rmfield(source, 'xgrid');
     end
@@ -113,28 +120,103 @@ switch version
       source = rmfield(source, 'zgrid');
     end
     
-    if isfield(source, 'transform')
-      source = rmfield(source, 'transform');
-    end
-    
     if isfield(source, 'avg')
       % move the average fields to the main structure
       fn = fieldnames(source.avg);
       for i=1:length(fn)
         source.(fn{i}) = source.avg.(fn{i});
       end % j
-      source.dimord = 'pos';
       source = rmfield(source, 'avg');
     end
     
     % ensure that it is always logical
-    source   = fixinside(source, 'logical');
+    source = fixinside(source, 'logical');
+    
+    fn = fieldnames(source);
+    for i=1:length(fn)
+      npos  = size(source.pos,1);
+      if isfield(source, 'time')
+        ntime = length(source.time);
+      else
+        ntime = nan;
+      end
+      if isfield(source, 'freq')
+        nfreq = length(source.freq);
+      else
+        nfreq = nan;
+      end
+      
+      dimord = [];
+      
+      if isnumeric(source.(fn{i}))
+        val = source.(fn{i});
+        switch numel(val)
+          case npos
+            dimord = 'pos';
+          case npos*ntime
+            dimord = 'pos_time';
+          case npos*nfreq
+            dimord = 'pos_freq';
+          case npos*nfreq*ntime
+            if isequal(size(val), [npos nfreq ntime])
+              dimord = 'pos_freq_time';
+            elseif isequal(size(val), [npos ntime nfreq])
+              dimord = 'pos_time_freq';
+            else
+              error('cannot determine dimord for %s', fn{i});
+            end
+            % FIXME possible other cases are
+            %           case npos*npos
+            %           case npos*npos*ntime
+            %           case npos*npos*nfreq
+            %           case npos*npos*nfreq*ntime
+          otherwise
+            dimord = [];
+        end % switch
+        
+      elseif iscell(source.(fn{i})) && numel(source.(fn{i}))==npos
+        if isfield(source, 'inside')
+          % it is logically indexed
+          probe = find(source.inside, 1, 'first');
+        else
+          % just take the first source position
+          probe = 1;
+        end
+        
+        val = source.(fn{i}){probe};
+        switch numel(val)
+          case ntime
+            dimord = '{pos}_time';
+          case nfreq
+            dimord = '{pos}_freq';
+          case nfreq*ntime
+            if isequal(size(val), [nfreq ntime])
+              dimord = '{pos}_freq_time';
+            elseif isequal(size(val), [ntime nfreq])
+              dimord = '{pos}_time_freq';
+            else
+              error('cannot determine dimord for %s', fn{i});
+            end
+          otherwise
+            dimord = [];
+        end % switch
+        
+      end % if isnumeric or iscell
+      
+      if ~isempty(dimord)
+        source.([fn{i} 'dimord']) = dimord;
+      end
+    end % for each field
     
     % ensure that it has a dimord (or multiple for the different fields)
     source = fixdimord(source);
     
   case '2011'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % ensure that it has individual source positions
+    source = fixpos(source);
+    
+    % remove obsolete fields
     if isfield(source, 'xgrid')
       source = rmfield(source, 'xgrid');
     end
@@ -154,6 +236,10 @@ switch version
     
   case '2010'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % ensure that it has individual source positions
+    source = fixpos(source);
+    
+    % remove obsolete fields
     if isfield(source, 'xgrid')
       source = rmfield(source, 'xgrid');
     end
@@ -169,10 +255,13 @@ switch version
     
   case '2007'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % ensure that it has individual source positions
+    source = fixpos(source);
+    
+    % remove obsolete fields
     if isfield(source, 'dimord')
       source = rmfield(source, 'dimord');
     end
-    
     if isfield(source, 'xgrid')
       source = rmfield(source, 'xgrid');
     end
@@ -207,3 +296,25 @@ switch version
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     error('unsupported version "%s" for source datatype', version);
 end
+
+function source = fixpos(source)
+if ~isfield(source, 'pos')
+  if isfield(source, 'xgrid') && isfield(source, 'ygrid') && isfield(source, 'zgrid')
+    source.pos = grid2pos(source.xgrid, source.ygrid, source.zgrid);
+  elseif isfield(source, 'dim') && isfield(source, 'transform')
+    source.pos = dim2pos(source.dim, source.transform);
+  else
+    error('cannot reconstruct individual source positions');
+  end
+end
+
+function pos = grid2pos(xgrid, ygrid, zgrid)
+[X, Y, Z] = ndgrid(xgrid, ygrid, zgrid);
+pos = [X(:) Y(:) Z(:)];
+
+function pos = dim2pos(dim, transform)
+[X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
+pos = [X(:) Y(:) Z(:)];
+pos = ft_warp_apply(transform, pos, 'homogenous');
+
+
