@@ -1,7 +1,7 @@
 function test_bug2460
 
 % WALLTIME 00:10:00
-% MEM 150mb
+% MEM 1gb
 
 % TEST test_bug2460
 % TEST ft_checkdata
