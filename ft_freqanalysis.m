@@ -801,29 +801,35 @@ if csdflg
   freq.labelcmb  = cfg.channelcmb;
   freq.crsspctrm = crsspctrm;
 end
-if strcmp(cfg.calcdof,'yes');
+if strcmp(cfg.calcdof, 'yes');
   freq.dof = 2 .* dof;
 end;
-if strcmp(cfg.method,'mtmfft') && (keeprpt == 2 || keeprpt == 4)
+if strcmp(cfg.method, 'mtmfft') && (keeprpt == 2 || keeprpt == 4)
   freq.cumsumcnt = trllength';
 end
-if exist('cumtapcnt','var') && (keeprpt == 2 || keeprpt == 4)
+if exist('cumtapcnt', 'var') && (keeprpt == 2 || keeprpt == 4)
   freq.cumtapcnt = cumtapcnt;
 end
 
 % backwards compatability of foilim
 if ~isempty(cfg.foilim)
-  cfg = rmfield(cfg,'foi');
+  cfg = rmfield(cfg, 'foi');
 else
-  cfg = rmfield(cfg,'foilim');
+  cfg = rmfield(cfg, 'foilim');
 end
 
-if isfield(data, 'grad'),
-  freq.grad = data.grad;
-end   % remember the gradiometer array
-if isfield(data, 'elec'),
-  freq.elec = data.elec;
-end   % remember the electrode array
+% some fields from the input should be copied over in the output
+copyfield = {'grad', 'elec', 'topo', 'topolabel', 'unmixing'};
+for i=1:length(copyfield)
+  if isfield(data, copyfield{i})
+    freq.(copyfield{i}) = data.(copyfield{i});
+  end
+end
+
+if isfield(data, 'trialinfo') && strcmp(cfg.keeptrials, 'yes')
+  % copy the trialinfo into the output, but not the sampleinfo
+  freq.trialinfo = data.trialinfo;
+end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
@@ -831,11 +837,4 @@ ft_postamble trackconfig
 ft_postamble provenance
 ft_postamble previous data
 ft_postamble history freq
-
-
-% copy the trial specific information into the output
-if isfield(cfg, 'keeptrials') && strcmp(cfg.keeptrials, 'yes') && isfield(data, 'trialinfo'),
-  freq.trialinfo = data.trialinfo;
-end
-
 ft_postamble savevar freq

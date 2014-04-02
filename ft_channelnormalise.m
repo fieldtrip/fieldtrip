@@ -74,11 +74,16 @@ datssq = zeros(nchan,1);
 % FIXME this can be kept, provided the scaling is built in appropriately
 dataout         = [];
 dataout.label   = data.label;
-if isfield(data, 'fsample'); dataout.fsample = data.fsample; end;
 dataout.trial   = cell(1,ntrl);
 dataout.time    = data.time;
-if isfield(data, 'sampleinfo'),  dataout.sampleinfo  = data.sampleinfo;  end
-if isfield(data, 'trialinfo'), dataout.trialinfo = data.trialinfo; end
+
+% some fields from the input should be copied over in the output
+copyfield = {'fsample', 'sampleinfo', 'trialinfo'};
+for i=1:length(copyfield)
+  if isfield(data, copyfield{i})
+    dataout.(copyfield{i}) = data.(copyfield{i});
+  end
+end
 
 % compute the mean and std
 for k = 1:ntrl

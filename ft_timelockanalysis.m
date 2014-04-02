@@ -350,17 +350,17 @@ end
 if strcmp(cfg.covariance, 'yes')
   timelock.cov = covsig;
 end
-if isfield(data, 'grad')
-  % copy the gradiometer array along
-  timelock.grad = data.grad;
+
+% some fields from the input should be copied over in the output
+copyfield = {'grad', 'elec', 'topo', 'topolabel', 'unmixing'};
+for i=1:length(copyfield)
+  if isfield(data, copyfield{i})
+    timelock.(copyfield{i}) = data.(copyfield{i});
+  end
 end
-if isfield(data, 'elec')
-  % copy the electrode array along
-  timelock.elec = data.elec;
-end
+
 if isfield(data, 'trialinfo') && strcmp(cfg.keeptrials, 'yes')
-  % copy the trialinfo into the output
-  % but not the sampleinfo
+  % copy the trialinfo into the output, but not the sampleinfo
   timelock.trialinfo = data.trialinfo;
 end
 
@@ -371,4 +371,3 @@ ft_postamble provenance timelock
 ft_postamble history    timelock
 ft_postamble savevar    timelock
 ft_postamble debug
-

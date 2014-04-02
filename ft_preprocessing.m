@@ -60,10 +60,10 @@ function [data] = ft_preprocessing(cfg, data)
 %   cfg.hpfilttype    = digital filter type, 'but' or 'fir' or 'firls' (default = 'but')
 %   cfg.bpfilttype    = digital filter type, 'but' or 'fir' or 'firls' (default = 'but')
 %   cfg.bsfilttype    = digital filter type, 'but' or 'fir' or 'firls' (default = 'but')
-%   cfg.lpfiltdir     = filter direction, 'twopass', 'onepass' or 'onepass-reverse' (default = 'twopass') 
-%   cfg.hpfiltdir     = filter direction, 'twopass', 'onepass' or 'onepass-reverse' (default = 'twopass') 
-%   cfg.bpfiltdir     = filter direction, 'twopass', 'onepass' or 'onepass-reverse' (default = 'twopass') 
-%   cfg.bsfiltdir     = filter direction, 'twopass', 'onepass' or 'onepass-reverse' (default = 'twopass') 
+%   cfg.lpfiltdir     = filter direction, 'twopass', 'onepass' or 'onepass-reverse' (default = 'twopass')
+%   cfg.hpfiltdir     = filter direction, 'twopass', 'onepass' or 'onepass-reverse' (default = 'twopass')
+%   cfg.bpfiltdir     = filter direction, 'twopass', 'onepass' or 'onepass-reverse' (default = 'twopass')
+%   cfg.bsfiltdir     = filter direction, 'twopass', 'onepass' or 'onepass-reverse' (default = 'twopass')
 %   cfg.lpinstabilityfix = deal with filter instability, 'no', 'reduce', 'split' (default  = 'no')
 %   cfg.hpinstabilityfix = deal with filter instability, 'no', 'reduce', 'split' (default  = 'no')
 %   cfg.bpinstabilityfix = deal with filter instability, 'no', 'reduce', 'split' (default  = 'no')
@@ -103,9 +103,9 @@ function [data] = ft_preprocessing(cfg, data)
 %
 % See also FT_DEFINETRIAL, FT_REDEFINETRIAL, FT_APPENDDATA, FT_APPENDSPIKE
 
-% Guidelines for use in an analysis pipeline: 
-% After FT_PREPROCESSING you will have raw data represented as a single 
-% continuous segment or as multiple data segments that often correspond to 
+% Guidelines for use in an analysis pipeline:
+% After FT_PREPROCESSING you will have raw data represented as a single
+% continuous segment or as multiple data segments that often correspond to
 % trials in an experiment.
 % This usually serves as input for one of the following functions:
 %    * FT_TIMELOCKANALYSIS  to compute event-related fields or potentials
@@ -234,14 +234,16 @@ if hasdata
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % do preprocessing of data that has already been read into memory
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+  
+  % this is used to convert the data back to timelock later
   convert = ft_datatype(data);
+  
   % the input data must be raw
   data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
-
+  
   % check if the input cfg is valid for this function
   cfg = ft_checkconfig(cfg, 'forbidden',   {'trl', 'dataset', 'datafile', 'headerfile'});
-
+  
   if cfg.padding>0
     if strcmp(cfg.dftfilter, 'yes') || ...
         strcmp(cfg.lpfilter, 'yes') || ...
@@ -263,29 +265,40 @@ if hasdata
   else
     % no padding was requested
     padding = 0;
-  end  
-
+  end
+  
+  % some options don't make sense on component data
+  if isfield(data, 'comp')
+    if ~isempty(cfg.montage)
+      error('the application of a montage on component data is not supported');
+    end
+    if strcmp(cfg.reref, 'yes')
+      error('rereferencing component data is not supported');
+    end
+  end
+  
   % set the defaults
   if ~isfield(cfg, 'trials'), cfg.trials = 'all'; end
-
+  
   % select trials of interest
   if ~strcmp(cfg.trials, 'all')
     data = ft_selectdata(data, 'rpt', cfg.trials);
   end
-
+  
   % translate the channel groups (like 'all' and 'MEG') into real labels
   cfg.channel = ft_channelselection(cfg.channel, data.label);
   rawindx = match_str(data.label, cfg.channel);
-
+  
   % this will contain the newly processed data
   dataout = [];
-  % take along relevant fields of input data to output data
-  if isfield(data, 'hdr'),      dataout.hdr     = data.hdr;         end
-  if isfield(data, 'fsample'),  dataout.fsample = data.fsample;     end
-  if isfield(data, 'grad'),     dataout.grad    = data.grad;        end
-  if isfield(data, 'elec'),     dataout.elec    = data.elec;        end
-  if isfield(data, 'sampleinfo'),  dataout.sampleinfo  = data.sampleinfo;  end
-  if isfield(data, 'trialinfo'), dataout.trialinfo = data.trialinfo; end
+  
+  % some fields from the input should be copied over in the output
+  copyfield = {'hdr', 'fsample', 'grad', 'elec', 'sampleinfo', 'trialinfo', 'topo', 'topolabel', 'unmixing'};
+  for i=1:length(copyfield)
+    if isfield(data, copyfield{i})
+      dataout.(copyfield{i}) = data.(copyfield{i});
+    end
+  end
   
   ft_progress('init', cfg.feedback, 'preprocessing');
   ntrl = length(data.trial);
@@ -316,7 +329,7 @@ if hasdata
           error('unsupported requested direction of padding');
       end
     end
-          
+    
     data.trial{i} = ft_preproc_padding(data.trial{i}, cfg.padtype, begpadding, endpadding);
     data.time{i} =  ft_preproc_padding(data.time{i}, 'nan',       begpadding, endpadding); % pad time-axis with nans (see bug2220)
     % do the preprocessing on the selected channels
@@ -336,10 +349,10 @@ if hasdata
   
   % convert back to input type if necessary
   switch convert
-      case 'timelock'
-          dataout = ft_checkdata(dataout, 'datatype', 'timelock');
-      otherwise
-          % keep the output as it is
+    case 'timelock'
+      dataout = ft_checkdata(dataout, 'datatype', 'timelock');
+    otherwise
+      % keep the output as it is
   end
   ft_progress('close');
   
@@ -347,20 +360,20 @@ else
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % read the data from file and do the preprocessing
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+  
   if isfield(cfg, 'trialdef') && ~isfield(cfg, 'trl')
     error('you must call FT_DEFINETRIAL prior to FT_PREPROCESSING');
   end
-
+  
   % check if the input cfg is valid for this function
   cfg = ft_checkconfig(cfg, 'dataset2files', {'yes'});
   cfg = ft_checkconfig(cfg, 'required', {'headerfile', 'datafile'});
   cfg = ft_checkconfig(cfg, 'renamed',    {'datatype', 'continuous'});
   cfg = ft_checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
-
+  
   % read the header
   hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
-
+  
   % this option relates to reading over trial boundaries in a pseudo-continuous dataset
   if ~isfield(cfg, 'continuous')
     if hdr.nTrials==1
@@ -369,7 +382,7 @@ else
       cfg.continuous = 'no';
     end
   end
-
+  
   if ~isfield(cfg, 'trl')
     % treat the data as continuous if possible, otherwise define all trials as indicated in the header
     if strcmp(cfg.continuous, 'yes')
@@ -387,32 +400,32 @@ else
     end
     cfg.trl = trl;
   end
-
+  
   % this should be a cell array
   if ~iscell(cfg.channel) && ischar(cfg.channel)
     cfg.channel = {cfg.channel};
   end
-
+  
   % this should be a cell array
   if ~iscell(cfg.refchannel) && ischar(cfg.refchannel)
     cfg.refchannel = {cfg.refchannel};
   end
-
+  
   % do a sanity check for the re-referencing
   if strcmp(cfg.reref, 'no') && ~isempty(cfg.refchannel)
     warning('no re-referencing is performed');
     cfg.refchannel = {};
   end
-
+  
   % translate the channel groups (like 'all' and 'MEG') into real labels
   cfg.channel = ft_channelselection(cfg.channel, hdr.label);
-
+  
   if ~isempty(cfg.implicitref)
     % add the label of the implicit reference channel to these cell-arrays
-    cfg.channel    = cat(1, cfg.channel(:), cfg.implicitref);
+    cfg.channel = cat(1, cfg.channel(:), cfg.implicitref);
   end
   cfg.refchannel = ft_channelselection(cfg.refchannel, cfg.channel);
-
+  
   % determine the length in samples to which the data should be padded before filtering is applied
   % the filter padding is done by reading a longer segment of data from the original data file
   if cfg.padding>0
@@ -433,20 +446,20 @@ else
     % no padding was requested
     padding = 0;
   end
-
-  if any(strmatch('reject',       fieldnames(cfg))) || ...
+  
+  if any(strmatch('reject',        fieldnames(cfg))) || ...
       any(strmatch('rejecteog',    fieldnames(cfg))) || ...
       any(strmatch('rejectmuscle', fieldnames(cfg))) || ...
       any(strmatch('rejectjump',   fieldnames(cfg)))
     % this is only for backward compatibility
     error('you should call FT_REJECTARTIFACT prior to FT_PREPROCESSING, please update your scripts');
   end
-
+  
   ntrl = size(cfg.trl,1);
   if ntrl<1
     error('no trials were selected for preprocessing, see FT_DEFINETRIAL for help');
   end
-
+  
   % compute the template for MCG and the QRS latency indices, and add it to the configuration
   if strcmp(cfg.removemcg, 'yes')
     cfg = template_mcg(cfg);
@@ -456,30 +469,30 @@ else
       fprintf('removing mcg on channel %s\n', mcgchannel{i});
     end
   end
-
+  
   % determine the channel numbers of interest for preprocessing
   [chnindx, rawindx] = match_str(cfg.channel, hdr.label);
-
+  
   if strcmp(cfg.method, 'channel')
     % read one channel at a time, loop over channels and over trials
     chnloop = mat2cell(chnindx, ones(length(chnindx), 1), 1);
     rawloop = mat2cell(rawindx, ones(length(chnindx), 1), 1);
-
+    
   elseif strcmp(cfg.method, 'trial')
     % read all channels simultaneously, only loop trials
     chnloop = {chnindx};
     rawloop = {rawindx};
-
+    
   else
     error('unsupported option for cfg.method');
   end
-
+  
   for j=1:length(chnloop)
     % read one channel group at a time, this speeds up combined datasets
     % a multiplexed dataformat is faster if you read all channels, one trial at a time
     chnindx = chnloop{j};
     rawindx = rawloop{j};
-
+    
     fprintf('processing channel { %s}\n', sprintf('''%s'' ', hdr.label{rawindx}));
     
     % initialize cell arrays
@@ -501,23 +514,23 @@ else
         endpadding = 0;
       else
         switch cfg.paddir
-        case 'both'
-          % begpadding+nsamples+endpadding = total length of raw data that will be read
-          begpadding = ceil((padding-nsamples)/2);
-          endpadding = floor((padding-nsamples)/2);
-        case 'left'
-          begpadding = padding-nsamples;
-          endpadding = 0;
-        case 'right'
-          begpadding = 0;
-          endpadding = padding-nsamples;
-        otherwise
-          error('unsupported requested direction of padding');
+          case 'both'
+            % begpadding+nsamples+endpadding = total length of raw data that will be read
+            begpadding = ceil((padding-nsamples)/2);
+            endpadding = floor((padding-nsamples)/2);
+          case 'left'
+            begpadding = padding-nsamples;
+            endpadding = 0;
+          case 'right'
+            begpadding = 0;
+            endpadding = padding-nsamples;
+          otherwise
+            error('unsupported requested direction of padding');
         end
         
         if strcmp(cfg.padtype, 'data');
           begsample  = cfg.trl(i,1) - begpadding;
-          endsample  = cfg.trl(i,2) + endpadding;   
+          endsample  = cfg.trl(i,2) + endpadding;
         else
           % padding will be done below
           begsample  = cfg.trl(i,1);
@@ -526,16 +539,16 @@ else
         if begsample<1
           warning('cannot apply enough padding at begin of file');
           begpadding = begpadding - (1 - begsample);
-          begsample  = 1;           
+          begsample  = 1;
         end
         if endsample>(hdr.nSamples*hdr.nTrials)
           warning('cannot apply enough padding at end of file');
           endpadding = endpadding - (endsample - hdr.nSamples*hdr.nTrials);
           endsample  = hdr.nSamples*hdr.nTrials;
         end
-        offset     = cfg.trl(i,3) - begpadding;
+        offset = cfg.trl(i,3) - begpadding;
       end
-
+      
       % read the raw data with padding on both sides of the trial - this
       % includes datapadding
       dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', rawindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
@@ -553,11 +566,9 @@ else
         tim = offset2time(offset, hdr.Fs, size(dat,2));
       end
       
-
-
       % do the preprocessing on the padded trial data and remove the padding after filtering
       [cutdat{i}, label, time{i}, cfg] = preproc(dat, hdr.label(rawindx), tim, cfg, begpadding, endpadding);
-
+      
       if isfield(cfg, 'export') && ~isempty(cfg.export)
         % write the processed data to an original manufacturer format file
         newhdr        = [];
@@ -567,14 +578,14 @@ else
         % only append for the second and consecutive trials
         ft_write_data(cfg.export.dataset, cutdat{i}, 'dataformat', cfg.export.dataformat, 'header', newhdr, 'append', i~=1);
         if nargout==0
-          % don't keep th eprocessed data in memory
+          % don't keep the processed data in memory
           cutdat(i) = [];
         end
       end
-
+      
     end % for all trials
     ft_progress('close');
-
+    
     dataout                    = [];
     dataout.hdr                = hdr;                  % header details of the datafile
     dataout.label              = label;                % labels of channels that have been read, can be different from labels in file due to montage
@@ -583,7 +594,7 @@ else
     dataout.fsample            = hdr.Fs;
     dataout.sampleinfo         = cfg.trl(:,1:2);
     if size(cfg.trl,2) > 3
-        dataout.trialinfo      = cfg.trl(:,4:end);
+      dataout.trialinfo      = cfg.trl(:,4:end);
     end
     if isfield(hdr, 'grad')
       dataout.grad             = hdr.grad;             % gradiometer system in head coordinates
@@ -591,9 +602,9 @@ else
     if isfield(hdr, 'elec')
       dataout.elec             = hdr.elec;             % EEG information in header (f.e. headerformat = 'neuromag_fif')
     end
-
+    
   end % for all channel groups
-
+  
 end % if hasdata
 
 % do the general cleanup and bookkeeping at the end of the function
