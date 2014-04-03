@@ -122,6 +122,8 @@ else % not raw or comp
     dimord = varargin{1}.([cfg.parameter 'dimord']);
   elseif isfield(varargin{1}, 'dimord')
     dimord = varargin{1}.dimord;
+  else
+    error('cannot determine main dimord, please specify cfg.parameter');
   end
   dimtok = tokenize(dimord, '_');
   
@@ -190,6 +192,9 @@ else % not raw or comp
       case 'pos'
         dimsiz(i) = size(varargin{1}.pos,1);
         dimfields{i} = 'pos';
+      case '{pos}'
+        dimsiz(i) = size(varargin{1}.pos,1);
+        dimfields{i} = '{pos}';
       case 'comp'
         dimsiz(i) = length(varargin{1}.label);
         dimfields{i} = 'label';
@@ -213,7 +218,8 @@ else % not raw or comp
         error('FIXME');
         
       case 'ori'
-        error('FIXME');
+        dimsiz(i) = nan;
+        dimfields{i} = 'implicit';
         
       otherwise
         % try to guess the size from the corresponding field
@@ -231,8 +237,11 @@ else % not raw or comp
   if any(strcmp(dimfields, 'implicit'))
     fn  = fieldnames(varargin{1})';
     for i=1:numel(fn)
-      if isequalwithoutnans(size(varargin{1}.(fn{i})), dimsiz)
-        fprintf('ft_selectdata: using the "%s" field to determine the size along the unknown dimensions\n', fn{i});
+      val = varargin{1}.(fn{i});
+      siz = cellmatsize(val, dimfields);
+      clear val
+      if isequalwithoutnans(siz, dimsiz)
+        fprintf('using the "%s" field to determine the size along the unknown dimensions\n', fn{i});
         % update the size of all dimensions
         dimsiz = size(varargin{1}.(fn{i}));
         % update the fieldname of each dimension
@@ -387,7 +396,7 @@ else % not raw or comp
       
       for i=1:numel(varargin)
         % get the selection from all inputs
-        varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'pos')), selpos, avgoverpos, datfields, cfg.select);
+        varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'pos') | strcmp(dimtok,'{pos}')), selpos, avgoverpos, datfields, cfg.select);
         varargin{i} = makeselection_pos(varargin{i}, selpos, avgoverpos); % update the pos field
       end % varargin
       
@@ -469,9 +478,13 @@ else % not raw or comp
     end
   end
   
+  if isfield(cfg, 'parameter')
+    datfields = [datfields cfg.parameter];
+  end
+  
   % remove all fields from the data that do not pertain to the selection
   for i=1:numel(varargin)
-    varargin{i} = keepfields(varargin{i}, [datfields {'cfg' 'dimord' 'grad'} keepfield]);
+    varargin{i} = keepfields(varargin{i}, [datfields {'cfg' 'dimord' 'elec' 'grad'} keepfield]);
   end
   
 end % if raw or something else
@@ -1113,3 +1126,17 @@ c = ~isnan(a(:)) & ~isnan(b(:));
 ok = isequal(a(c), b(c));
 
 end % function isequalwithoutnans
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function siz = cellmatsize(x, dimfields)
+% this function serves to return the dimension of data representations like {pos}_ori_time
+if iscell(x) && strcmp(dimfields{1}, '{pos}')
+  cellsize = size(x);           % the size of the cell-array
+  cellsize = prod(cellsize);    % squeeze the dimensions into one
+  [dum, indx] = max(cellfun(@numel, x));
+  matsize = size(x{indx});      % the size of the content of the cell-array
+  siz  = [cellsize matsize];    % concatenate the two
+else
+  siz = size(x);
+end
+end % function cellmatsize
