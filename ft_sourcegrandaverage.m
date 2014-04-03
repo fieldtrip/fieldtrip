@@ -108,25 +108,17 @@ end
 % ensure a consistent selection of the data over all inputs
 [varargin{:}] = ft_selectdata(cfg, varargin{:});
 
-% some fields from the input should be copied over in the output
-copyfield = {'pos', 'inside', 'outside', 'dim'};
-for i=1:length(copyfield)
-  if isfield(varargin{1}, copyfield{i})
-    grandavg.(copyfield{i}) = varargin{1}.(copyfield{i});
-  end
-end
-
-if iscell(varargin{i}.(cfg.parameter))
+if iscell(varargin{1}.(cfg.parameter))
   
   % collect the data
   dat = cellfun(@getfield, varargin, repmat({cfg.parameter}, size(varargin)), 'UniformOutput', false);
   
   npos = numel(dat{1});
   nrpt = numel(dat);
-  dat = cat(2, dat{:}); % make it {pos_rpt}
+  dat  = cat(2, dat{:}); % make it {pos_rpt}
   
   if isfield(varargin{1}, 'inside')
-    % it is logically indexed
+    % it is logically indexed, take the first inside source location
     probe = find(varargin{1}.inside, 1, 'first');
   else
     % just take the first source position
@@ -168,7 +160,7 @@ if iscell(varargin{i}.(cfg.parameter))
   else
     for i=1:npos
       for j=2:nrpt
-        dat{i,1} = dat{i,1} + dat{i,j}; % add them all onto the first one
+        dat{i,1} = dat{i,1} + dat{i,j}; % add them all to the first one
       end
       dat{i,1} = dat{i,1}/nrpt;
     end
@@ -185,8 +177,9 @@ if iscell(varargin{i}.(cfg.parameter))
   
 else
   % determine the dimensions, include the new repetition dimension
-  olddim = size(varargin{i}.(cfg.parameter));
+  olddim = size(varargin{1}.(cfg.parameter));
   newdim = [1 olddim];
+  
   % collect and reshape the data
   dat = cellfun(@getfield, varargin, repmat({cfg.parameter}, size(varargin)), 'UniformOutput', false);
   
@@ -215,6 +208,27 @@ else
   clear dat
 
 end % if iscell
+
+% the fields that describe the actual data need to be copied over from the input to the output
+if isfield(grandavg, [cfg.parameter 'dimord'])
+  dimord = grandavg.([cfg.parameter 'dimord']);
+elseif isfield(grandavg, 'dimord')
+  dimord = grandavg.('dimord');
+else
+  dimord = [];
+end
+
+% some standard fields from the input should be copied over in the output
+copyfield = {'pos', 'inside', 'outside', 'dim'};
+if ~isempty(strfind(dimord, 'time')), copyfield{end+1} = 'time'; end
+if ~isempty(strfind(dimord, 'freq')), copyfield{end+1} = 'freq'; end
+for i=1:length(copyfield)
+  if isfield(varargin{1}, copyfield{i})
+    grandavg.(copyfield{i}) = varargin{1}.(copyfield{i});
+  end
+end
+
+
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug

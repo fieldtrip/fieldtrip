@@ -1,4 +1,4 @@
-% function test_bug2185
+function test_bug2185
 
 % WALLTIME 00:20:00
 % MEM 4gb
@@ -9,8 +9,8 @@
 global ft_default
 ft_default = [];
 
-testsection1 = false;
-testsection2 = false;
+testsection1 = true;
+testsection2 = true; % note that this takes a long time to test and will not throw an error in case something is wrong
 testsection3 = true;
 
 if testsection1
@@ -78,7 +78,6 @@ end % testsection1
 if testsection2
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %% test the historical versions
-  clear all
   
   p = dccnpath('/home/common/matlab/fieldtrip/data/test/');
   d = dir(fullfile(p, '20*'));
@@ -149,31 +148,45 @@ end % testsection2
 if testsection3
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %% use the end-user provided test data
-  clear all
   
   filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2185.mat');
   load(filename);
   
+  % source_timelock_stim{1}
+  % ans =
+  %        time: [1x1500 double]
+  %         pos: [8196x3 double]
+  %      inside: [8196x1 double]
+  %     outside: [1x0 double]
+  %      method: 'average'
+  %         avg: [1x1 struct]
+  %         cfg: [1x1 struct]
+  % source_timelock_stim{1}.avg
+  % ans =
+  %          mom: {8196x1 cell}
+  %          pow: [8196x1500 double]
+  %     noisecov: {8196x1 cell}
+  
   cfg = [];
   cfg.parameter = 'pow';
   cfg.keepindividual = 'no';
-  output = ft_sourcegrandaverage(cfg, source_timelock_stim{:});
+  output = ft_sourcegrandaverage(cfg, source_timelock_stim{:})
   
-  assert( isfield(output, 'pow'), 'missing output field');
-  assert(~isfield(output, 'time'), 'the output should not have time, only pow');
+  assert(isfield(output, 'pow'), 'missing output field');
+  assert(isfield(output, 'time'), 'missing output field');
   
   cfg = [];
   cfg.parameter = 'pow';
   cfg.keepindividual = 'yes';
-  output = ft_sourcegrandaverage(cfg, source_timelock_stim{:});
+  output = ft_sourcegrandaverage(cfg, source_timelock_stim{:})
   
   assert( isfield(output, 'pow'), 'missing output field');
-  assert(~isfield(output, 'time'), 'the output should not have time, only pow');
+  assert(isfield(output, 'time'), 'missing output field');
   
   cfg = [];
   cfg.parameter = 'mom';
   cfg.keepindividual = 'no';
-  output = ft_sourcegrandaverage(cfg, source_timelock_stim{:});
+  output = ft_sourcegrandaverage(cfg, source_timelock_stim{:})
   
   assert( isfield(output, 'mom'), 'missing output field');
   assert( isfield(output, 'time'), 'missing output field');
@@ -181,16 +194,16 @@ if testsection3
   cfg = [];
   cfg.parameter = 'mom';
   cfg.keepindividual = 'yes';
-  output = ft_sourcegrandaverage(cfg, source_timelock_stim{:});
+  output = ft_sourcegrandaverage(cfg, source_timelock_stim{:})
   
   assert( isfield(output, 'mom'), 'missing output field');
   assert( isfield(output, 'time'), 'missing output field');
-
-    cfg = [];
+  
+  cfg = [];
   cfg.parameter = 'noisecov';
   cfg.keepindividual = 'yes';
-  output = ft_sourcegrandaverage(cfg, source_timelock_stim{:});
-
+  output = ft_sourcegrandaverage(cfg, source_timelock_stim{:})
+  
   
 end % testsection3
 
