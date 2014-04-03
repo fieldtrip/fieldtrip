@@ -234,7 +234,7 @@ elseif cattrial
     data.time     = cat(2, data.time,   varargin{i}.time(:)');
     % check if all datasets to merge have the sampleinfo field
     if hassampleinfo, data.sampleinfo = cat(1, data.sampleinfo, varargin{i}.sampleinfo); end
-    if hastrialinfo,  data.trialinfo  = cat(1, data.trialinfo, varargin{i}.trialinfo);   end;
+    if hastrialinfo,  data.trialinfo  = cat(1, data.trialinfo,  varargin{i}.trialinfo);  end
     % FIXME is not entirely robust if the different inputs have different number of columns in trialinfo
   end
   
@@ -251,6 +251,8 @@ elseif catlabel
   data.label = varargin{1}.label;
   data.trial = varargin{1}.trial;
   data.time  = varargin{1}.time;
+  if hassampleinfo, data.sampleinfo=varargin{i}.sampleinfo; end
+  if hastrialinfo,  data.trialinfo =varargin{i}.trialinfo;  end
   
   for i=2:Ndata
     % concatenate the labels
@@ -260,9 +262,9 @@ elseif catlabel
     if hassampleinfo && ~all(data.sampleinfo(:)==varargin{i}.sampleinfo(:))
       removesampleinfo = 1;
     end
-    %if hastrialinfo && ~all(data.trialinfo(:)==varargin{i}.trialinfo(:))
-    %  removetrialinfo = 1;
-    %end
+    if hastrialinfo && ~all(data.trialinfo(:)==varargin{i}.trialinfo(:))
+      removetrialinfo = 1;
+    end
   end
   
   if ~isfield(data, 'fsample')
