@@ -107,6 +107,9 @@ switch version
     source = fixpos(source);
     
     % remove obsolete fields
+    if isfield(source, 'method')
+      source = rmfield(source, 'method');
+    end
     if isfield(source, 'transform')
       source = rmfield(source, 'transform');
     end
@@ -120,13 +123,71 @@ switch version
       source = rmfield(source, 'zgrid');
     end
     
-    if isfield(source, 'avg')
+    if isfield(source, 'avg') && isstruct(source.avg)
       % move the average fields to the main structure
       fn = fieldnames(source.avg);
       for i=1:length(fn)
         source.(fn{i}) = source.avg.(fn{i});
       end % j
       source = rmfield(source, 'avg');
+    end
+    
+    if isfield(source, 'trial') && isstruct(source.trial)
+      npos = size(source.pos,1);
+      nrpt = numel(source.trial); % note that this field is also used further doen
+      
+      % concatenate the fields for each trial and move them to the main structure
+      fn = fieldnames(source.trial);
+      
+      for i=1:length(fn)
+        % start with the first trial
+        dum = source.trial(1).(fn{i});
+        
+        % some fields are descriptive and hence identical over trials
+        if strcmp(fn{i}, 'csdlabel')
+          source.csdlabel = dum;
+          continue
+        end
+        
+        if iscell(dum)
+          val = cell(nrpt, npos);
+          dum = reshape(dum, [1 npos]);
+          val(1,:) = dum;
+          for j=2:length(source.trial)
+            dum = source.trial(j).(fn{i});
+            dum = reshape(dum, [1 npos]);
+            % concatenate them as {rpt_pos}
+            val(j,:) = dum;
+          end % for all trials
+          source.(fn{i}) = val;
+          
+        else
+          val = nan([nrpt size(dum)]);
+          dum = reshape(dum, [1 size(dum)]);
+          val(1,:,:,:,:) = dum;
+          for j=2:length(source.trial)
+            dum = source.trial(j).(fn{i});
+            dum = reshape(dum, [1 size(dum)]);
+            % concatenate them as rpt_pos_etc
+            val(j,:,:,:,:) = dum;
+          end % for all trials
+          source.(fn{i}) = val;
+        end
+      end % for each field
+      
+      source = rmfield(source, 'trial');
+    elseif isfield(source, 'cumtapcnt')
+      % note that this field is also used further doen
+      nrpt = length(source.cumtapcnt);
+    else
+      % note that this field is also used further doen
+      nrpt = nan;
+    end % if trial
+    
+    if isfield(source, 'cfg') && isfield(source.cfg, 'channel')
+      nchan = length(source.cfg.channel);
+    else
+      nchan = nan;
     end
     
     % ensure that it is always logical
@@ -155,8 +216,12 @@ switch version
             dimord = 'pos';
           case npos*ntime
             dimord = 'pos_time';
+          case nrpt*npos*ntime
+            dimord = 'rpt_pos_time';
           case npos*nfreq
             dimord = 'pos_freq';
+          case nrpt*npos*nfreq
+            dimord = 'rpt_pos_freq';
           case npos*nfreq*ntime
             if isequal(size(val), [npos nfreq ntime])
               dimord = 'pos_freq_time';
@@ -165,16 +230,19 @@ switch version
             else
               error('cannot determine dimord for %s', fn{i});
             end
-            % FIXME possible other cases are
-            %           case npos*npos
-            %           case npos*npos*ntime
-            %           case npos*npos*nfreq
-            %           case npos*npos*nfreq*ntime
+          case nrpt*npos*nfreq*ntime
+            if isequal(size(val), [nrpt npos nfreq ntime])
+              dimord = 'rpt_pos_freq_time';
+            elseif isequal(size(val), [nrpt npos ntime nfreq])
+              dimord = 'rpt_pos_time_freq';
+            else
+              error('cannot determine dimord for %s', fn{i});
+            end
           otherwise
             dimord = [];
         end % switch
         
-      elseif iscell(source.(fn{i})) && numel(source.(fn{i}))==npos
+      elseif iscell(source.(fn{i}))
         if isfield(source, 'inside')
           % it is logically indexed
           probe = find(source.inside, 1, 'first');
@@ -183,23 +251,49 @@ switch version
           probe = 1;
         end
         
-        val = source.(fn{i}){probe};
-        switch numel(val)
-          case ntime
-            dimord = '{pos}_time';
-          case nfreq
-            dimord = '{pos}_freq';
-          case nfreq*ntime
-            if isequal(size(val), [nfreq ntime])
-              dimord = '{pos}_freq_time';
-            elseif isequal(size(val), [ntime nfreq])
-              dimord = '{pos}_time_freq';
-            else
-              error('cannot determine dimord for %s', fn{i});
-            end
-          otherwise
-            dimord = [];
-        end % switch
+        if length(source.(fn{i}))==npos
+          
+          val = source.(fn{i}){probe};
+          switch numel(val)
+            case 1
+              dimord = '{pos}';
+            case ntime
+              dimord = '{pos}_time';
+            case 3*ntime
+              dimord = '{pos}_ori_time';
+            case nfreq
+              dimord = '{pos}_freq';
+            case 3*nfreq
+              dimord = '{pos}_ori_freq';
+            case 3*nrpt
+              dimord = '{pos}_ori_rpt';
+            case nchan*3
+              dimord = '{pos}_chan_ori';
+            case nfreq*ntime
+              if isequal(size(val), [nfreq ntime])
+                dimord = '{pos}_freq_time';
+              elseif isequal(size(val), [ntime nfreq])
+                dimord = '{pos}_time_freq';
+              else
+                error('cannot determine dimord for %s', fn{i});
+              end
+            case 3*nfreq*ntime
+              if isequal(size(val), [3 nfreq ntime])
+                dimord = '{pos}_ori_freq_time';
+              elseif isequal(size(val), [3 ntime nfreq])
+                dimord = '{pos}_ori_time_freq';
+              else
+                error('cannot determine dimord for %s', fn{i});
+              end
+            case 3*3
+              dimord = '{pos}_ori_ori';
+            otherwise
+              dimord = [];
+          end % switch
+        elseif isequal(size(source.(fn{i}),1), [nrpt npos])
+          
+          
+        end % if npos or nrpt*npos
         
       end % if isnumeric or iscell
       
@@ -210,6 +304,7 @@ switch version
     
     % ensure that it has a dimord (or multiple for the different fields)
     source = fixdimord(source);
+    
     
   case '2011'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -226,7 +321,6 @@ switch version
     if isfield(source, 'zgrid')
       source = rmfield(source, 'zgrid');
     end
-    
     if isfield(source, 'transform')
       source = rmfield(source, 'transform');
     end
