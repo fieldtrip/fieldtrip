@@ -1,7 +1,7 @@
 function test_bug2518a
 
 % WALLTIME 00:30:00
-% MEM 1gb
+% MEM 2gb
 
 % TEST test_bug2518a
 % TEST ft_componentanalysis

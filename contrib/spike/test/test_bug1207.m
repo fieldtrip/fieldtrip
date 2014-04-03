@@ -1,7 +1,7 @@
 function test_bug1207
 
 % MEM 1gb
-% WALLTIME 00:05:00
+% WALLTIME 00:10:00
 
 % TT5.ntt in this directory
 % TT5_1.t in this directory

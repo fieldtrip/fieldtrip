@@ -1,7 +1,7 @@
 function test_tutorial_spike_Neurosim
 
 % MEM 1gb
-% WALLTIME 00:05:00
+% WALLTIME 00:10:00
 
 % TEST test_tutorial_spike_sim
 % performs all the operations mentioned int the spike tutorial
