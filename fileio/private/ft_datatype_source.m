@@ -21,10 +21,10 @@ function source = ft_datatype_source(source, varargin)
 %                                       in this case 6732 dipole positions x 120 observations
 %
 % Required fields:
-%   - pos, dimord
+%   - pos
 %
 % Optional fields:
-%   - time, freq, pow, mom, ori, dim, cumtapcnt, channel, other fields with a dimord
+%   - time, freq, pow, mom, ori, dim, cumtapcnt, cfg, dimord, other fields with a dimord
 %
 % Deprecated fields:
 %   - method

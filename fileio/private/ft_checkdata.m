@@ -602,23 +602,28 @@ if issource || isvolume,
     dimtok = tokenize(data.dimord, '_');
     for i=1:length(dimtok)
       if strcmp(dimtok(i), 'pos')
-        dim(1,i) = size(getsubfield(data,dimtok{i}),1);
-      elseif strcmp(dimtok(i), 'rpt')
-        dim(1,i) = nan;
-      else
+        dim(1,i) = size(data.pos,1);
+      elseif strcmp(dimtok(i), '{pos}')
+        dim(1,i) = size(data.pos,1);
+      elseif issubfield(data,dimtok{i})
         dim(1,i) = length(getsubfield(data,dimtok{i}));
+      else
+        dim(1,i) = nan; % this applies to rpt, ori
       end
     end
-    i = find(isnan(dim));
-    if ~isempty(i)
-      n = fieldnames(data);
-      for ii=1:length(n)
-        numels(1,ii) = numel(getfield(data,n{ii}));
+    try 
+      % the following only works for rpt, not for ori
+      i = find(isnan(dim));
+      if ~isempty(i)
+        n = fieldnames(data);
+        for ii=1:length(n)
+          numels(1,ii) = numel(getfield(data,n{ii}));
+        end
+        nrpt = numels./prod(dim(setdiff(1:length(dim),i)));
+        nrpt = nrpt(nrpt==round(nrpt));
+        dim(i) = max(nrpt);
       end
-      nrpt = numels./prod(dim(setdiff(1:length(dim),i)));
-      nrpt = nrpt(nrpt==round(nrpt));
-      dim(i) = max(nrpt);
-    end
+    end % try
     if numel(dim)==1, dim(1,2) = 1; end;
   end
   
