@@ -24,13 +24,13 @@ function spike = ft_datatype_spike(spike, varargin)
 % with the raw timestamps as recorded by the hardware system. As example,
 % the original content of the .timestamp field can be
 %
-%         timestamp:  {[1x993 uint64]  [1x423 uint64]  [1x3424 uint64]}
+%         timestamp:  {[1x504 uint64]  [1x50 uint64]  [1x101 uint64]}
 %
 % An optional field that is typically obtained from the raw recording
 % contains the waveforms for every unit and label as a cell-array. For
 % example, the content of this field may be
 %
-%         waveform:   {[1x32x993 double] [1x32x423 double] [1x32x3224 double]}
+%         waveform:   {[1x32x504 double] [1x32x50 double] [1x32x101 double]}
 %
 % If the data has been organised to reflect the temporal structure of the
 % experiment (i.e. the trials), the SPIKE structure should contain a
@@ -86,10 +86,10 @@ function spike = ft_datatype_spike(spike, varargin)
 %         fourierspctrmdimord: '{chan}_spike_lfplabel_freq'
 %         lfplabel:       {'lfpchan1', 'lfpchan2'}
 %         freq:           [1x20 double]
-%         cfg
 %
 % Required fields:
-%   - the combination label and timestamp
+%   - label
+%   - timestamp
 %
 % Optional fields:
 %   - unit
@@ -120,7 +120,7 @@ function spike = ft_datatype_spike(spike, varargin)
 %
 % See also FT_DATATYPE, FT_DATATYPE_RAW, FT_DATATYPE_FREQ, FT_DATATYPE_TIMELOCK
 
-% Copyright (C) 2011, Robert Oostenveld & Martin Vinck
+% Copyright (C) 2011-2014, Robert Oostenveld & Martin Vinck
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
