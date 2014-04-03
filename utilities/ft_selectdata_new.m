@@ -420,34 +420,39 @@ else % not raw or comp
   
   % update the fields and the dimord
   keepdim   = true(size(dimtok));
-  keepfield = {};
+  keepfield = dimfields;
   
   if avgoverchan && ~keepchandim
     keepdim(strcmp(dimtok, 'chan')) = false;
+    keepfield = setdiff(keepfield, 'label');
   else
     keepfield = [keepfield 'label'];
   end
   
   if avgoverfreq && ~keepfreqdim
     keepdim(strcmp(dimtok, 'freq')) = false;
+    keepfield = setdiff(keepfield, 'freq');
   else
     keepfield = [keepfield 'freq'];
   end
   
   if avgovertime && ~keeptimedim
     keepdim(strcmp(dimtok, 'time')) = false;
+    keepfield = setdiff(keepfield, 'time');
   else
     keepfield = [keepfield 'time'];
   end
   
   if avgoverpos && ~keepposdim
     keepdim(strcmp(dimtok, 'pos')) = false;
+    keepfield = setdiff(keepfield, 'pos');
   else
-    keepfield = [keepfield 'time'];
+    keepfield = [keepfield 'pos'];
   end
   
   if avgoverrpt && ~keeprptdim
     keepdim(ismember(dimtok, {'rpt', 'rpttap', 'subj'})) = false;
+    keepfield = setdiff(keepfield, {'cumtapcnt' 'cumsumcnt' 'sampleinfo' 'trialinfo'});
   else
     keepfield = [keepfield {'cumtapcnt' 'cumsumcnt' 'sampleinfo' 'trialinfo'}];
   end
@@ -466,7 +471,7 @@ else % not raw or comp
   
   % remove all fields from the data that do not pertain to the selection
   for i=1:numel(varargin)
-    varargin{i} = keepfields(varargin{i}, [datfields dimfields {'cfg' 'dimord' 'grad'} keepfield]);
+    varargin{i} = keepfields(varargin{i}, [datfields {'cfg' 'dimord' 'grad'} keepfield]);
   end
   
 end % if raw or something else
