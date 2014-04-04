@@ -101,12 +101,13 @@ for k = 1:numel(checkfields)
         error('the input sources vary in the field %s', tmpstr);
       end
     end
-    grandavg.(tmpstr) = varargin{1}.(tmpstr);
   end
 end
 
 % ensure a consistent selection of the data over all inputs
 [varargin{:}] = ft_selectdata(cfg, varargin{:});
+
+% start with an empty output structure
 
 if iscell(varargin{1}.(cfg.parameter))
   
@@ -134,7 +135,7 @@ if iscell(varargin{1}.(cfg.parameter))
       dat{i,1} = cat(1, dat{i,:}); % concatenate them into the first one
     end
     grandavg.(cfg.parameter) = dat(:,1);
-
+    
     if ~isequal(size(grandavg.(cfg.parameter)), size(varargin{1}.(cfg.parameter)))
       % this is a bit unexpected, but let's reshape it back into the original size
       grandavg.(cfg.parameter) = reshape(grandavg.(cfg.parameter), size(varargin{1}.(cfg.parameter)));
@@ -165,13 +166,13 @@ if iscell(varargin{1}.(cfg.parameter))
       dat{i,1} = dat{i,1}/nrpt;
     end
     grandavg.(cfg.parameter) = dat(:,1);
-
+    
     if isfield(varargin{1}, [cfg.parameter 'dimord'])
       grandavg.([cfg.parameter 'dimord']) = varargin{1}.([cfg.parameter 'dimord']);
     elseif isfield(varargin{1}, 'dimord')
       grandavg.dimord = varargin{1}.dimord;
     end
-  
+    
   end % if keepindividual
   clear dat
   
@@ -206,7 +207,7 @@ else
     end
   end % if keepindividual
   clear dat
-
+  
 end % if iscell
 
 % the fields that describe the actual data need to be copied over from the input to the output
@@ -227,8 +228,6 @@ for i=1:length(copyfield)
     grandavg.(copyfield{i}) = varargin{1}.(copyfield{i});
   end
 end
-
-
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
