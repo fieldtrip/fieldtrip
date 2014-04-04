@@ -76,6 +76,7 @@ end
 
 cfg = ft_checkconfig(cfg, 'renamed', {'selmode',  'select'});
 cfg = ft_checkconfig(cfg, 'renamed', {'toilim' 'latency'});
+cfg = ft_checkconfig(cfg, 'renamed', {'avgoverroi' 'avgoverpos'});
 
 cfg.tolerance = ft_getopt(cfg, 'tolerance', 1e-5);        % default tolerance for checking equality of time/freq axes
 cfg.select    = ft_getopt(cfg, 'selmode',   'intersect'); % default is to take intersection, alternative 'union'
@@ -127,13 +128,13 @@ else % not raw or comp
   end
   dimtok = tokenize(dimord, '_');
   
-  haspos    = isfield(varargin{1}, 'pos');
   hasrpt    = any(ismember(dimtok, {'rpt', 'rpttap', 'subj'}));
-  haschan   = isfield(varargin{1}, 'label');
-  hasfreq   = isfield(varargin{1}, 'freq');
-  hastime   = isfield(varargin{1}, 'time');
+  haspos    = isfield(varargin{1}, 'pos')   && (ismember('pos', dimtok) || ismember('{pos}', dimtok));
+  haschan   = isfield(varargin{1}, 'label') &&  ismember('chan', dimtok);
+  hasfreq   = isfield(varargin{1}, 'freq')  &&  ismember('freq', dimtok);
+  hastime   = isfield(varargin{1}, 'time')  &&  ismember('time', dimtok);
   
-  avgoverpos  = istrue(ft_getopt(cfg, 'avgoverroi',  false)); % although being called region-of-interest, the selection is actually made over source positions
+  avgoverpos  = istrue(ft_getopt(cfg, 'avgoverpos',  false)); % at some places it is also referred to as roi (region-of-interest)
   avgoverrpt  = istrue(ft_getopt(cfg, 'avgoverrpt',  false));
   avgoverchan = istrue(ft_getopt(cfg, 'avgoverchan', false));
   avgoverfreq = istrue(ft_getopt(cfg, 'avgoverfreq', false));
@@ -147,7 +148,7 @@ else % not raw or comp
   
   % by default we keep most of the dimensions in the data structure when averaging over them
   keeprptdim  = istrue(ft_getopt(cfg, 'keeprptdim', false));
-  keepposdim  = istrue(ft_getopt(cfg, 'keepposdim',  true)); keepposdim = false; % FIXME see http://bugzilla.fcdonders.nl/show_bug.cgi?id=2053
+  keepposdim  = istrue(ft_getopt(cfg, 'keepposdim',  true));
   keepchandim = istrue(ft_getopt(cfg, 'keepchandim', true));
   keepfreqdim = istrue(ft_getopt(cfg, 'keepfreqdim', true));
   keeptimedim = istrue(ft_getopt(cfg, 'keeptimedim', true));
@@ -161,9 +162,6 @@ else % not raw or comp
       % must be a source representation, not a volume representation
       varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'source');
     end
-    % the rest of the implementation is not yet complete
-    % there is already avgoverpos, which works, but the selection according to cfg.roi does not work
-    error('this is not yet implemented, please see http://bugzilla.fcdonders.nl/show_bug.cgi?id=2053')
   end
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -238,7 +236,7 @@ else % not raw or comp
     fn  = fieldnames(varargin{1})';
     for i=1:numel(fn)
       val = varargin{1}.(fn{i});
-      siz = cellmatsize(val, dimfields);
+      siz = cellmatsize(val);
       clear val
       if isequalwithoutnans(siz, dimsiz)
         fprintf('using the "%s" field to determine the size along the unknown dimensions\n', fn{i});
@@ -255,18 +253,27 @@ else % not raw or comp
     end
   end
   
-  fn  = fieldnames(varargin{1})';
-  sel = false(size(fn));
-  for i=1:numel(fn)
-    sel(i) = (isequal(size(varargin{1}.(fn{i})), dimsiz)...
-      || isequal(size(varargin{1}.(fn{i})), [dimsiz 1]))...
-      && ~strcmp(fn{i}, 'label')...
-      && ~strcmp(fn{i}, 'time')...
-      && ~strcmp(fn{i}, 'freq'); % make sure we do not treat a descriptive field as data
-  end
-  
   % select the fields that represent the data
-  datfields = fn(sel);
+  if ~isfield(cfg, 'parameter') || isempty(cfg.parameter)
+    fn  = fieldnames(varargin{1})';
+    sel = false(size(fn));
+    for i=1:numel(fn)
+      sel(i) = (isequal(size(varargin{1}.(fn{i})), dimsiz)...
+        || isequal(size(varargin{1}.(fn{i})), [dimsiz 1]))...
+        && ~strcmp(fn{i}, 'pos')...
+        && ~strcmp(fn{i}, 'label')...
+        && ~strcmp(fn{i}, 'time')...
+        && ~strcmp(fn{i}, 'freq'); % make sure we do not treat a descriptive field as data
+    end
+    datfields = fn(sel);
+    cfg.parameter = datfields;
+  else
+    if ischar(cfg.parameter)
+      datfields = {cfg.parameter};
+    else
+      datfields = cfg.parameter;
+    end
+  end
   
   switch dtype
     % this switch-list is consistent with ft_datatype
@@ -282,7 +289,7 @@ else % not raw or comp
         
         varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'chan')),                      selchan{i}, avgoverchan, datfields, cfg.select);
         varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'time')),                      seltime{i}, avgovertime, datfields, cfg.select);
-        varargin{i} = makeselection(varargin{i}, find(ismember(dimtok,{'rpt', 'rpttap', 'subj'})), selrpt{i}, avgoverrpt, datfields, 'intersect');
+        varargin{i} = makeselection(varargin{i}, find(ismember(dimtok,{'rpt', 'rpttap', 'subj'})), selrpt{i},  avgoverrpt,  datfields, 'intersect');
         
         varargin{i} = makeselection_chan(varargin{i}, selchan{i}, avgoverchan); % update the label field
         varargin{i} = makeselection_time(varargin{i}, seltime{i}, avgovertime); % update the time field
@@ -321,8 +328,8 @@ else % not raw or comp
       
     case 'freq'
       % trim the selection to all inputs
-      [selfreq, cfg] = getselection_freq(cfg, varargin{:}, cfg.tolerance, cfg.select);
       [selchan, cfg] = getselection_chan(cfg, varargin{:},                cfg.select); % tolerance not needed
+      [selfreq, cfg] = getselection_freq(cfg, varargin{:}, cfg.tolerance, cfg.select); % freq is always present
       if hastime, [seltime, cfg] = getselection_time(cfg, varargin{:}, cfg.tolerance, cfg.select); end
       
       selrpt    = cell(numel(varargin),1);
@@ -336,18 +343,17 @@ else % not raw or comp
         varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'chan')), selchan{i},   avgoverchan, datfields, cfg.select);
         varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'freq')), selfreq{i},   avgoverfreq, datfields, cfg.select);
         varargin{i} = makeselection(varargin{i}, rptdim{i},                   selrpttap{i}, avgoverrpt,  datfields, 'intersect');
-        if hastime
-          varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'time')), seltime{i}, avgovertime, datfields, cfg.select);
-        end
         
         varargin{i} = makeselection_chan(varargin{i}, selchan{i}, avgoverchan); % update the label field
         varargin{i} = makeselection_freq(varargin{i}, selfreq{i}, avgoverfreq); % update the freq field
-        varargin{i} = makeselection_rpt(varargin{i}, selrpt{i}); % avgoverrpt for the supporting fields is dealt with later
-        if hastime,
+        varargin{i} = makeselection_rpt(varargin{i},  selrpt{i}); % avgoverrpt for the supporting fields is dealt with later
+        
+        if hastime
+          varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'time')), seltime{i}, avgovertime, datfields, cfg.select);
           varargin{i} = makeselection_time(varargin{i}, seltime{i}, avgovertime); % update the time field
           
-          % also deal with the cumtapcnt-field, because it has a frequency dimension when time dimension is present
-          % this is a workaround, see http://bugzilla.fcdonders.nl/show_bug.cgi?id=2509
+          % also deal with the supporting cumtapcnt field, because it has a frequency dimension when time dimension is present
+          % this is a temporary workaround, see http://bugzilla.fcdonders.nl/show_bug.cgi?id=2509
           if isfield(varargin{i}, 'cumtapcnt')
             varargin{i} = makeselection_cumtapcnt(varargin{i}, selfreq{i}, avgoverfreq);
           end
@@ -389,15 +395,27 @@ else % not raw or comp
       end
       
     case 'source'
-      for i=1:numel(varargin)
-        % trim the selection to all inputs
-        [selpos, cfg] = getselection_pos(cfg, varargin{i});
-      end
+      % trim the selection to all inputs
+      [selpos, cfg] = getselection_pos(cfg, varargin{:});
+      if hastime, [seltime, cfg] = getselection_time(cfg, varargin{:}, cfg.tolerance, cfg.select); end
+      if hasfreq, [selfreq, cfg] = getselection_freq(cfg, varargin{:}, cfg.tolerance, cfg.select); end
       
       for i=1:numel(varargin)
         % get the selection from all inputs
         varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'pos') | strcmp(dimtok,'{pos}')), selpos, avgoverpos, datfields, cfg.select);
         varargin{i} = makeselection_pos(varargin{i}, selpos, avgoverpos); % update the pos field
+        
+        % FIXME this code does not deal with repetitions
+        
+        if hastime,
+          varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'time')), seltime{i}, avgovertime, datfields, cfg.select);
+          varargin{i} = makeselection_time(varargin{i}, seltime{i}, avgovertime); % update the time field
+        end
+        if hasfreq,
+          varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'freq')), selfreq{i},   avgoverfreq, datfields, cfg.select);
+          varargin{i} = makeselection_freq(varargin{i}, selfreq{i}, avgoverfreq); % update the freq field
+        end
+        
       end % varargin
       
     case 'freqmvar'
@@ -453,10 +471,11 @@ else % not raw or comp
   end
   
   if avgoverpos && ~keepposdim
-    keepdim(strcmp(dimtok, 'pos')) = false;
-    keepfield = setdiff(keepfield, 'pos');
+    keepdim(strcmp(dimtok, 'pos'))   = false;
+    keepdim(strcmp(dimtok, '{pos}')) = false;
+    keepfield = setdiff(keepfield, {'pos' '{pos}' 'dim'});
   else
-    keepfield = [keepfield 'pos'];
+    keepfield = [keepfield {'pos' '{pos}' 'dim'}];
   end
   
   if avgoverrpt && ~keeprptdim
@@ -554,28 +573,12 @@ switch selmode
   case 'intersect'
     
     for i=1:numel(datfields)
-      
+      % the selindx value of NaN indicates that it is not needed to make a selection
       if isempty(selindx) || all(~isnan(selindx))
-        % the value NaN indicates that it is not needed to make a selection, rather take all values
-        switch seldim
-          case 1
-            data.(datfields{i}) = data.(datfields{i})(selindx,:,:,:,:,:);
-          case 2
-            data.(datfields{i}) = data.(datfields{i})(:,selindx,:,:,:,:);
-          case 3
-            data.(datfields{i}) = data.(datfields{i})(:,:,selindx,:,:,:);
-          case 4
-            data.(datfields{i}) = data.(datfields{i})(:,:,:,selindx,:,:);
-          case 5
-            data.(datfields{i}) = data.(datfields{i})(:,:,:,:,selindx,:);
-          case 6
-            data.(datfields{i}) = data.(datfields{i})(:,:,:,:,:,selindx);
-          otherwise
-            error('unsupported dimension (%d) for making a selection for %s', seldim, datfields{i});
-        end % switch
+        data.(datfields{i}) = cellmatselect(data.(datfields{i}), seldim, selindx);
       end
       if avgoverdim
-        data.(datfields{i}) = mean(data.(datfields{i}), seldim);
+        data.(datfields{i}) = cellmatmean(data.(datfields{i}), seldim);
       end
     end % for datfields
     
@@ -744,11 +747,11 @@ end % function makeselection_rpt
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function data = makeselection_pos(data, selpos, avgoverpos)
-if avgoverpos
-  % FIXME see http://bugzilla.fcdonders.nl/show_bug.cgi?id=2053
-  data = rmfield(data, 'pos');
-elseif ~isnan(selpos)
+if ~isnan(selpos)
   data.pos = data.pos(selpos, :);
+end
+if avgoverpos
+  data.pos = mean(data.pos, 1);
 end
 end % function makeselection_pos
 
@@ -1079,7 +1082,7 @@ if isfield(cfg, 'trials') && ~isequal(cfg.trials, 'all') && ~isempty(datfields)
   end
   
 else
-  rptindx = nan;
+  rptindx    = nan;
   rptindxtap = nan;
   
   % recover the rptdim if possible
@@ -1090,10 +1093,16 @@ end % if isfield cfg.trials
 end % function getselection_rpt
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [posindx, cfg] = getselection_pos(cfg, data)
+function [posindx, cfg] = getselection_pos(cfg, varargin)
 % possible specifications are <none>
-posindx = 1:size(data.pos,1);
-
+for i=2:length(varargin)
+  if ~isequal(varargin{i}.pos, varargin{1}.pos)
+    % FIXME it would be possible here to make a selection based on intersect or union
+    error('source positions are different');
+  end
+end % for
+% posindx = 1:size(varargin{1}.pos,1);
+posindx = nan;    % the nan return value specifies that no selection was specified
 end % function getselection_pos
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1128,11 +1137,12 @@ ok = isequal(a(c), b(c));
 end % function isequalwithoutnans
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function siz = cellmatsize(x, dimfields)
-% this function serves to return the dimension of data representations like {pos}_ori_time
-if iscell(x) && strcmp(dimfields{1}, '{pos}')
-  cellsize = size(x);           % the size of the cell-array
-  cellsize = prod(cellsize);    % squeeze the dimensions into one
+% SUBFUNCTION to determine the size of data representations like {pos}_ori_time
+% FIXME this will fail for {xxx_yyy}_zzz
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function siz = cellmatsize(x)
+if iscell(x)
+  cellsize = numel(x);          % the number of elements in the cell-array
   [dum, indx] = max(cellfun(@numel, x));
   matsize = size(x{indx});      % the size of the content of the cell-array
   siz  = [cellsize matsize];    % concatenate the two
@@ -1140,3 +1150,70 @@ else
   siz = size(x);
 end
 end % function cellmatsize
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION to make a selextion in data representations like {pos}_ori_time
+% FIXME this will fail for {xxx_yyy}_zzz
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function x = cellmatselect(x, seldim, selindx)
+if iscell(x)
+  if seldim==1
+    x = x(selindx);
+  else
+    for i=1:numel(x)
+      switch seldim
+        case 2
+          x{i} = x{i}(selindx,:,:,:,:);
+        case 3
+          x{i} = x{i}(:,selindx,:,:,:);
+        case 4
+          x{i} = x{i}(:,:,selindx,:,:);
+        case 5
+          x{i} = x{i}(:,:,:,selindx,:);
+        case 6
+          x{i} = x{i}(:,:,:,:,selindx);
+        otherwise
+          error('unsupported dimension (%d) for making a selection', seldim);
+      end % switch
+    end % for
+  end
+else
+  switch seldim
+    case 1
+      x = x(selindx,:,:,:,:,:);
+    case 2
+      x = x(:,selindx,:,:,:,:);
+    case 3
+      x = x(:,:,selindx,:,:,:);
+    case 4
+      x = x(:,:,:,selindx,:,:);
+    case 5
+      x = x(:,:,:,:,selindx,:);
+    case 6
+      x = x(:,:,:,:,:,selindx);
+    otherwise
+      error('unsupported dimension (%d) for making a selection', seldim);
+  end
+end
+end % function cellmatselect
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION to take an average in data representations like {pos}_ori_time
+% FIXME this will fail for {xxx_yyy}_zzz
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function x = cellmatmean(x, seldim)
+if iscell(x)
+  if seldim==1
+    for i=2:numel(x)
+      x{1} = x{1} + x{i};
+    end
+    x = {x{1}/numel(x)};
+  else
+    for i=1:numel(x)
+      x{i} = mean(x{i}, seldim-1);
+    end % for
+  end
+else
+  x = mean(x, seldim);
+end
+end % function cellmatmean
