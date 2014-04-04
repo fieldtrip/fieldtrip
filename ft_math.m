@@ -140,23 +140,43 @@ if length(varargin)==1
   switch cfg.operation
     case 'add'
       fprintf('adding %f to the %s\n', cfg.value, cfg.parameter);
-      tmp = tmp + cfg.value;
+      if iscell(tmp)
+        tmp = cellplus(tmp, cfg.value);
+      else
+        tmp = tmp + cfg.value;
+      end
       
     case 'subtract'
       fprintf('subtracting %f from the %s\n', cfg.value, cfg.parameter);
-      tmp = tmp - cfg.value;
+      if iscell(tmp)
+        tmp = cellminus(tmp, cfg.value);
+      else
+        tmp = tmp - cfg.value;
+      end
       
     case 'multiply'
       fprintf('multiplying %s with %f\n', cfg.parameter, cfg.value);
-      tmp = tmp .* cfg.value;
+      if iscell(tmp)
+        tmp = celltimes(tmp, cfg.value);
+      else
+        tmp = tmp .* cfg.value;
+      end
       
     case 'divide'
       fprintf('dividing %s by %f\n', cfg.parameter, cfg.value);
-      tmp = tmp ./ cfg.value;
+      if iscell(tmp)
+        tmp = cellrdivide(tmp, cfg.value);
+      else
+        tmp = tmp ./ cfg.value;
+      end
       
     case 'log10'
       fprintf('taking the log10 of %s\n', cfg.parameter);
-      tmp = log10(tmp);
+      if iscell(tmp)
+        tmp = celllog10(tmp);
+      else
+        tmp = log10(tmp);
+      end
       
     otherwise
       error('unsupported operation "%s"', cfg.operation);
@@ -169,13 +189,21 @@ else
     case 'add'
       for i=2:length(varargin)
         fprintf('adding the %s input argument\n', nth(i));
-        tmp = tmp + varargin{i}.(cfg.parameter);
+        if iscell(tmp)
+          tmp = cellplus(tmp, varargin{i}.(cfg.parameter));
+        else
+          tmp = tmp + varargin{i}.(cfg.parameter);
+        end
       end
       
     case 'multiply'
       for i=2:length(varargin)
         fprintf('multiplying with the %s input argument\n', nth(i));
-        tmp = tmp .* varargin{i}.(cfg.parameter);
+        if iscell(tmp)
+          tmp = celltimes(tmp, varargin{i}.(cfg.parameter));
+        else
+          tmp = tmp .* varargin{i}.(cfg.parameter);
+        end
       end
       
     case 'subtract'
@@ -183,14 +211,22 @@ else
         error('the operation "%s" requires exactly 2 input arguments', cfg.operation);
       end
       fprintf('subtracting the 2nd input argument from the 1st\n');
-      tmp = tmp - varargin{2}.(cfg.parameter);
-            
+      if iscell(tmp)
+        tmp = cellminus(tmp, varargin{2}.(cfg.parameter));
+      else
+        tmp = tmp - varargin{2}.(cfg.parameter);
+      end
+      
     case 'divide'
       if length(varargin)>2
         error('the operation "%s" requires exactly 2 input arguments', cfg.operation);
       end
       fprintf('dividing the 1st input argument by the 2nd\n');
-      tmp = tmp ./ varargin{2}.(cfg.parameter);
+      if iscell(tmp)
+        tmp = cellrdivide(tmp, varargin{2}.(cfg.parameter));
+      else
+        tmp = tmp ./ varargin{2}.(cfg.parameter);
+      end
       
     otherwise
       error('unsupported operation "%s"', cfg.operation);
@@ -225,3 +261,33 @@ elseif rem(n,10)==3 && rem(n,100)~=13
 else
   s = sprintf('%dth', n);
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTIONS for doing math on each element of a cell-array
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function x = cellplus(x, y)
+if ~iscell(y)
+  y = repmat({y}, size(x));
+end
+x = cellfun(@plus, x, y, 'UniformOutput', false);
+
+function x = cellminus(x, y)
+if ~iscell(y)
+  y = repmat({y}, size(x));
+end
+x = cellfun(@minus, x, y, 'UniformOutput', false);
+
+function x = celltimes(x, y)
+if ~iscell(y)
+  y = repmat({y}, size(x));
+end
+x = cellfun(@times, x, y, 'UniformOutput', false);
+
+function x = cellrdivide(x, y)
+if ~iscell(y)
+  y = repmat({y}, size(x));
+end
+x = cellfun(@rdivide, x, y, 'UniformOutput', false);
+
+function x = celllog10(x)
+x = cellfun(@log10, x, 'UniformOutput', false);
