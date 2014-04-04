@@ -414,7 +414,11 @@ elseif nargin == 5
 end
 
 % determine whether it is EEG or MEG
+try
 [iseeg, ismeg, isctf, fltp] = filetyper(timelock.cfg.dataset);
+catch % in case the input is a matfile (and the dataset field does not exist): ugly workaround
+  [iseeg, ismeg, isctf, fltp] = filetyper(headpos.cfg.dataset);
+end
 if ismeg
   scaling = 1e15; % assuming data is in T and needs to become fT
   powscaling = scaling^2;
