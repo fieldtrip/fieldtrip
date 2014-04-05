@@ -6,7 +6,7 @@ function test_ft_datatype
 % TEST test_ft_datatype
 % TEST ft_datatype ft_datatype_comp ft_datatype_mvar ft_datatype_source ft_datatype_dip ft_datatype_parcellation ft_datatype_spike ft_datatype_freq ft_datatype_raw ft_datatype_timelock ft_datatype_headmodel ft_datatype_segmentation ft_datatype_volume ft_datatype ft_datatype_sens
 
-% the style of this test script is also used in test_ft_analysisprotcol
+% the style of this test script is also used in test_ft_analysisprotocol and test_ft_datatype_source
 
 dirlist = {
   '/home/common/matlab/fieldtrip/data/test/latest'
