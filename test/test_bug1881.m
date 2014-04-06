@@ -5,10 +5,10 @@ function test_bug1881
 
 % TEST ft_selectdata
 
-filename = dccnfilename('/home/common/matlab/fieldtrip/data/test/bug1881');
+filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1881.mat');
 load(filename);
 
 cfg        = [];
 cfg.foilim = [0 90];
-freqnew    = ft_selectdata(cfg, freqnew);
+output     = ft_selectdata(cfg, freq);
 
