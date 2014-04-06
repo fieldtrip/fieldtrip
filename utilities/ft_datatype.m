@@ -33,6 +33,10 @@ function [type, dimord] = ft_datatype(data, desired)
 %
 % $Id$
 
+if nargin<2
+  desired = [];
+end
+
 % determine the type of input data, this can be raw, freq, timelock, comp, spike, source, volume, dip, segmentation, parcellation
 israw          =  isfield(data, 'label') && isfield(data, 'time') && isa(data.time, 'cell') && isfield(data, 'trial') && isa(data.trial, 'cell') && ~isfield(data,'trialtime');
 isfreq         = (isfield(data, 'label') || isfield(data, 'labelcmb')) && isfield(data, 'freq') && ~isfield(data,'trialtime') && ~isfield(data,'origtrial'); %&& (isfield(data, 'powspctrm') || isfield(data, 'crsspctrm') || isfield(data, 'cohspctrm') || isfield(data, 'fourierspctrm') || isfield(data, 'powcovspctrm'));
@@ -62,8 +66,25 @@ isspike           = isfield(data, 'label') && (spk_hastimestamp || spk_hastrials
 isgrad = isfield(data, 'label') && isfield(data, 'coilpos') && isfield(data, 'coilori');
 iselec = isfield(data, 'label') && isfield(data, 'elecpos');
 
-if iscomp
-  % comp should conditionally go before raw, otherwise the returned ft_datatype will be raw
+if iscomp && israw
+  if strcmp(desired, 'raw')
+    type = 'raw';
+  else
+    type = 'comp'; % this is the default
+  end
+elseif iscomp && istimelock
+  if strcmp(desired, 'comp')
+    type = 'comp';
+  else
+    type = 'timelock'; % this is the default
+  end
+elseif iscomp && isfreq
+  if strcmp(desired, 'comp')
+    type = 'comp';
+  else
+    type = 'freq'; % this is the default
+  end
+elseif iscomp
   type = 'comp';
 elseif israw
   type = 'raw';
