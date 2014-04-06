@@ -533,6 +533,35 @@ compare_outputs(tlck,  'avgovertime');
 compare_outputs(tlckavg,  'avgovertime');
 compare_outputs(tlckcavg, 'avgovertime');
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% this part of the script tests the functionality of ft_selectdata with selections
+% that are made into multiple fields present in the data
+
+if false
+  % this section does not yet work on 5 April 2014, so no point in testing
+  freq = [];
+  freq.powspctrm = randn(3, 4, 5);
+  freq.dimord = 'chan_freq_time';
+  freq.crsspctrm = randn(3, 3, 4, 5);
+  freq.crsspctrmdimord = 'chan_chan_freq_time';
+  freq.label = {'1', '2', '3'};
+  freq.freq  = 1:4;
+  freq.time  = 1:5;
+  
+  cfg = [];
+  cfg.channel = {'1', '2'};
+  cfg.foilim = [1 3];
+  output = ft_selectdata(cfg, freq);
+  assert(isfield(output, 'powspctrm'), 'field missing');
+  assert(isfield(output, 'crsspctrm'), 'field missing');
+  assert(size(output.powspctrm, 1)==2, 'incorrect size'); % chan
+  assert(size(output.powspctrm, 2)==3, 'incorrect size'); % freq
+  assert(size(output.crsspctrm, 1)==2, 'incorrect size'); % chan
+  assert(size(output.crsspctrm, 2)==2, 'incorrect size'); % chan
+  assert(size(output.crsspctrm, 3)==3, 'incorrect size'); % freq
+end
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION used for testing
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -560,8 +589,7 @@ if nargin>2
   data_new  = rmfield(data_new, 'cfg');
   data_old  = rmfield(data_old, 'cfg');
   
-  % don't include the cumtapcnt if present (ft_selectdata_old might be
-  % incorrect)
+  % don't include the cumtapcnt if present (ft_selectdata_old might be incorrect)
   if isfield(data_new, 'cumtapcnt'), data_new = rmfield(data_new, 'cumtapcnt'); end
   if isfield(data_old, 'cumtapcnt'), data_old = rmfield(data_old, 'cumtapcnt'); end
   
