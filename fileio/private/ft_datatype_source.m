@@ -290,10 +290,10 @@ switch version
             otherwise
               dimord = [];
           end % switch
-        elseif isequal(size(source.(fn{i}),1), [nrpt npos])
-          
-          
-        end % if npos or nrpt*npos
+
+        else
+          error('unsupported dimensions for cell-array data');
+        end % if npos
         
       end % if isnumeric or iscell
       
