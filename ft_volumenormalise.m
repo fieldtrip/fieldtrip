@@ -1,4 +1,4 @@
-function [normalise] = ft_volumenormalise(cfg, interp)
+function [normalised] = ft_volumenormalise(cfg, mri)
 
 % FT_VOLUMENORMALISE normalises anatomical and functional volume data
 % to a template anatomical MRI.
@@ -71,10 +71,10 @@ ft_preamble init
 ft_preamble provenance
 ft_preamble trackconfig
 ft_preamble debug
-ft_preamble loadvar interp
+ft_preamble loadvar mri
 
 % this is not supported any more as of 26/10/2011
-if ischar(interp),
+if ischar(mri),
   error('please use cfg.inputfile instead of specifying the input variable as a sting');
 end
 
@@ -82,13 +82,13 @@ end
 % instead of specifying cfg.coordsys, the user should specify the coordsys in the data
 cfg = ft_checkconfig(cfg, 'forbidden', {'units', 'inputcoordsys', 'coordinates'});
 cfg = ft_checkconfig(cfg, 'deprecated', 'coordsys');
-if isfield(cfg, 'coordsys') && ~isfield(interp, 'coordsys')
+if isfield(cfg, 'coordsys') && ~isfield(mri, 'coordsys')
   % from revision 8680 onward (Oct 2013) it is not recommended to use cfg.coordsys to specify the coordinate system of the data.
-  interp.coordsys = cfg.coordsys;
+  mri.coordsys = cfg.coordsys;
 end
 
 % check if the input data is valid for this function
-interp = ft_checkdata(interp, 'datatype', 'volume', 'feedback', 'yes', 'hasunit', 'yes', 'hascoordsys', 'yes');
+mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes', 'hasunit', 'yes', 'hascoordsys', 'yes');
 
 % set the defaults
 cfg.spmversion       = ft_getopt(cfg, 'spmversion',       'spm8');
@@ -101,28 +101,24 @@ cfg.nonlinear        = ft_getopt(cfg, 'nonlinear',        'yes');
 cfg.smooth           = ft_getopt(cfg, 'smooth',           'no');
 
 % check if the required spm is in your path:
-if strcmpi(cfg.spmversion, 'spm2'),
-  ft_hastoolbox('SPM2',1);
-elseif strcmpi(cfg.spmversion, 'spm8'),
-  ft_hastoolbox('SPM8',1);
-end
+ft_hastoolbox(upper(cfg.spmversion),1);
 
 % check whether the input has an anatomy
-if ~isfield(interp,'anatomy'),
+if ~isfield(mri,'anatomy'),
   error('no anatomical information available, this is required for normalisation');
 end
 
 % ensure that the data has interpretable units and that the coordinate
 % system is in approximate spm space and keep track of an initial transformation
 % matrix that approximately does the co-registration
-interp  = ft_convert_units(interp,    'mm');
-orig    = interp.transform;
+mri  = ft_convert_units(mri,    'mm');
+orig = mri.transform;
 if isdeployed
-  interp = ft_convert_coordsys(interp, 'spm', 2, cfg.template); 
+  mri = ft_convert_coordsys(mri, 'spm', 2, cfg.template);
 else
-  interp = ft_convert_coordsys(interp, 'spm');
+  mri = ft_convert_coordsys(mri, 'spm');
 end
-initial = interp.transform / orig;
+initial = mri.transform / orig;
 
 if isdeployed
   % in deployed mode, fieldtrip cannot use the template in the release version, because these are not compiled
@@ -166,7 +162,7 @@ else
 end
 
 % select the parameters that should be normalised
-cfg.parameter = parameterselection(cfg.parameter, interp);
+cfg.parameter = parameterselection(cfg.parameter, mri);
 
 % the anatomy should always be normalised as the first volume
 sel = strcmp(cfg.parameter, 'anatomy');
@@ -182,7 +178,7 @@ tmpcfg            = [];
 tmpcfg.downsample = cfg.downsample;
 tmpcfg.parameter  = cfg.parameter;
 tmpcfg.smooth     = cfg.smooth;
-interp = ft_volumedownsample(tmpcfg, interp);
+mri = ft_volumedownsample(tmpcfg, mri);
 
 ws = warning('off');
 
@@ -191,14 +187,14 @@ ws = warning('off');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % create an spm-compatible header for the anatomical volume data
-VF = ft_write_mri([cfg.intermediatename,'_anatomy.img'], interp.anatomy, 'transform', interp.transform, 'spmversion', cfg.spmversion);
+VF = ft_write_mri([cfg.intermediatename,'_anatomy.img'], mri.anatomy, 'transform', mri.transform, 'spmversion', cfg.spmversion);
 
 % create an spm-compatible file for each of the functional volumes
 for parlop=2:length(cfg.parameter)  % skip the anatomy
   tmp  = cfg.parameter{parlop};
-  data = reshape(getsubfield(interp, tmp), interp.dim);
+  data = reshape(getsubfield(mri, tmp), mri.dim);
   tmp(tmp=='.') = '_';
-  ft_write_mri([cfg.intermediatename,'_' tmp '.img'], data, 'transform', interp.transform, 'spmversion', cfg.spmversion);
+  ft_write_mri([cfg.intermediatename,'_' tmp '.img'], data, 'transform', mri.transform, 'spmversion', cfg.spmversion);
 end
 
 % read the template anatomical volume
@@ -251,35 +247,35 @@ for parlop=1:length(cfg.parameter)
 end
 spm_write_sn(char(files),params,flags);  % this creates the 'w' prefixed files
 
-normalise = [];
+normalised = [];
 
 % read the normalised results from the 'w' prefixed files
 V = spm_vol(char(wfiles));
 for vlop=1:length(V)
-  normalise = setsubfield(normalise, cfg.parameter{vlop}, spm_read_vols(V(vlop)));
+  normalised = setsubfield(normalised, cfg.parameter{vlop}, spm_read_vols(V(vlop)));
 end
 
-normalise.transform = V(1).mat;
-normalise.dim       = size(normalise.anatomy);
-normalise.params    = params;  % this holds the normalization parameters
-normalise.initial   = initial; % this holds the initial co-registration to approximately align with the template
-normalise.coordsys  = 'spm';
+normalised.transform = V(1).mat;
+normalised.dim       = size(normalised.anatomy);
+normalised.params    = params;  % this holds the normalization parameters
+normalised.initial   = initial; % this holds the initial co-registration to approximately align with the template
+normalised.coordsys  = 'spm';
 
-if isfield(normalise, 'inside')
+if isfield(normalised, 'inside')
   % convert back to a logical volume
-  normalise.inside  = abs(normalise.inside-1)<=10*eps;
+  normalised.inside  = abs(normalised.inside-1)<=10*eps;
 end
 
 % flip and permute the dimensions to align the volume with the headcoordinate axes
-normalise = align_ijk2xyz(normalise);
+normalised = align_ijk2xyz(normalised);
 
 if strcmp(cfg.write,'yes')
   % create an spm-compatible file for each of the normalised volumes
   for parlop=1:length(cfg.parameter)  % include the anatomy
     tmp  = cfg.parameter{parlop};
-    data = reshape(getsubfield(normalise, tmp), normalise.dim);
+    data = reshape(getsubfield(normalised, tmp), normalised.dim);
     tmp(tmp=='.') = '_';
-    ft_write_mri([cfg.name,'_' tmp '.img'], data, 'transform', normalise.transform, 'spmversion', cfg.spmversion);
+    ft_write_mri([cfg.name,'_' tmp '.img'], data, 'transform', normalised.transform, 'spmversion', cfg.spmversion);
   end
 end
 
@@ -304,6 +300,6 @@ cfg.spmparams = params;
 cfg.final     = final;
 
 ft_postamble provenance
-ft_postamble previous interp
-ft_postamble history normalise
-ft_postamble savevar normalise
+ft_postamble previous mri
+ft_postamble history normalised
+ft_postamble savevar normalised

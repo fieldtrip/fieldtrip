@@ -904,7 +904,7 @@ switch cfg.method
     delete(tname2);
   
   otherwise
-    error('unsupported method');
+    error('unsupported method "%s"', cfg.method);
 end
 
 if basedonfid && basedonmrk
