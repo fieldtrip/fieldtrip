@@ -1,6 +1,6 @@
 function test_ft_volumerealign
 
-% MEM 1500mb
+% MEM 2500mb
 % WALLTIME 00:10:00
 
 % TEST test_ft_volumerealign
