@@ -70,7 +70,7 @@ else
   % these should be column arrays
   originalkeep   = cfg.keep(:);
   originalremove = cfg.remove(:);
-  originalask    = cfg.ask{:};
+  originalask    = cfg.ask(:);
   
   % these two variables are recursively updated by the subfunction
   actualkeep   = {};
