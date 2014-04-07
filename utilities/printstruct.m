@@ -1,6 +1,6 @@
 function str = printstruct(name, val)
 
-% PRINTSTRUCT converts a MATLAB structure int a multi-line string that can be
+% PRINTSTRUCT converts a MATLAB structure into a multi-line string that can be
 % interpreted by MATLAB, resulting in the original structure.
 %
 % Use as
