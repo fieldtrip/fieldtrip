@@ -498,18 +498,20 @@ end % for numel(info)
 set(fig, 'WindowButtonUpFcn', @button);
 % set(fig, 'KeyPressFcn', @key);
 
-% add a menu to the figure
+% add a context menu to the figure
 % ftmenu = uicontextmenu; set(gcf, 'uicontextmenu', ftmenu)
+
+% add a regular menu item to the figure
 ftmenu  = uimenu(fig, 'Label', 'FieldTrip');
-ftmenu1 = uimenu(ftmenu, 'Label', 'Save pipeline');
-ftmenu2 = uimenu(ftmenu, 'Label', 'Share pipeline');
+% ftmenu1 = uimenu(ftmenu, 'Label', 'Save pipeline');
+% ftmenu2 = uimenu(ftmenu, 'Label', 'Share pipeline');
 uimenu(ftmenu, 'Label', 'About',  'Separator', 'on', 'Callback', @menu_about);
-uimenu(ftmenu1, 'Label', 'Save as MATLAB script');
-uimenu(ftmenu1, 'Label', 'Save as PSOM pipeline');
-uimenu(ftmenu1, 'Label', 'Save as HTML page');
-uimenu(ftmenu2, 'Label', 'Share within DCCN');
-uimenu(ftmenu2, 'Label', 'Share on PasteBin.com');
-uimenu(ftmenu2, 'Label', 'Share on MyExperiment.org');
+% uimenu(ftmenu1, 'Label', 'Save as MATLAB script');
+% uimenu(ftmenu1, 'Label', 'Save as PSOM pipeline');
+% uimenu(ftmenu1, 'Label', 'Save as HTML page');
+% uimenu(ftmenu2, 'Label', 'Share within DCCN');
+% uimenu(ftmenu2, 'Label', 'Share on PasteBin.com');
+% uimenu(ftmenu2, 'Label', 'Share on MyExperiment.org');
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
