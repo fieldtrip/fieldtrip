@@ -1,23 +1,33 @@
 function data = ft_anonimizedata(cfg, data)
 
 % FT_ANONIMIZEDATA clears the value of potentially identifying fields in
-% the provenance information, i.e., it updates the configuration structure
-% and history that is maintained by FieldTrip in the cfg field.
+% the data and in the provenance information, i.e., it updates the data and
+% the configuration structure and history that is maintained by FieldTrip
+% in the cfg field.
 %
 % Use as
 %   output = ft_anonimizedata(cfg, data)
 % where data is any FieldTrip data structure and cfg is a configuration
 % structure that should contain
+%   cfg.keepnumeric = 'yes' or 'no', keep numeric fields (default = 'yes')
+%   cfg.keepfield   = cell-array with strings, fields to keep (default = {})
+%   cfg.removefield = cell-array with strings, fields to remove (default = {})
+%   cfg.keepvalue   = cell-array with strings, values to keep (default = {})
+%   cfg.removevalue = cell-array with strings, values to remove (default = {})
 %
-%  cfg.keep      = cell-array with strings, fields to keep (default = {})
-%  cfg.remove    = cell-array with strings, fields to remove (default = {})
-%  cfg.ask       = cell-array with strings, fields to ask explicitly (default = {})
-%  cfg.uncertain = string, what to do with unknown fields, can be 'ask',
-%                  'keep', 'remove', 'error' (default = 'ask')
+% The graphical user interface consists of a table that shows the name and
+% value of each provenance element, and whether it should be kept or
+% removed. Furthermore, it has a number of buttons:
+%   - sort        specify which column is used for sorting
+%   - apply       apply the current selection of "keep" and "remove" and hide the corresponding rows
+%   - keep all    toggle all visibe rows to "keep"
+%   - remove all  toggle all visibe rows to "keep"
+%   - clear all   clear all visibe rows, i.e. neither "keep" nor "remove"
+%   - quit        apply the current selection of "keep" and "remove" and exit
 %
 % To facilitate data-handling and distributed computing you can use
-%   cfg.inputfile   =  ...
-%   cfg.outputfile  =  ...
+%   cfg.inputfile  = ...
+%   cfg.outputfile  = ...
 % If you specify one of these (or both) the input data will be read from a *.mat
 % file on disk and/or the output data will be written to a *.mat file. These mat
 % files should contain only a single variable, corresponding with the
@@ -30,143 +40,299 @@ function data = ft_anonimizedata(cfg, data)
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
 %
-%    FieldTrip is free software: you can redistribute it and/or modify
-%    it under the terms of the GNU General Public License as published by
-%    the Free Software Foundation, either version 3 of the License, or
-%    (at your option) any later version.
+%  FieldTrip is free software: you can redistribute it and/or modify
+%  it under the terms of the GNU General Public License as published by
+%  the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
 %
-%    FieldTrip is distributed in the hope that it will be useful,
-%    but WITHOUT ANY WARRANTY; without even the implied warranty of
-%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-%    GNU General Public License for more details.
+%  FieldTrip is distributed in the hope that it will be useful,
+%  but WITHOUT ANY WARRANTY; without even the implied warranty of
+%  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%  GNU General Public License for more details.
 %
-%    You should have received a copy of the GNU General Public License
-%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%  You should have received a copy of the GNU General Public License
+%  along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
 
 revision = '$Id$';
 
 % do the general setup of the function
-ft_defaults                 % this ensures that the path is correct and that the ft_defaults global variable is available
-ft_preamble init            % this will reset warning_once and show the function help if nargin==0 and return an error
-ft_preamble provenance      % this records the time and memory usage at teh beginning of the function
-ft_preamble trackconfig     % this converts the cfg structure in a config object, which tracks the cfg options that are being used
-ft_preamble debug           % this allows for displaying or saving the function name and input arguments upon an error
-ft_preamble loadvar data    % this reads the input data in case the user specified the cfg.inputfile option
+ft_defaults               % this ensures that the path is correct and that the ft_defaults global variable is available
+ft_preamble init          % this will reset warning_once and show the function help if nargin==0 and return an error
+ft_preamble provenance    % this records the time and memory usage at teh beginning of the function
+ft_preamble trackconfig   % this converts the cfg structure in a config object, which tracks the cfg options that are being used
+ft_preamble debug         % this allows for displaying or saving the function name and input arguments upon an error
+ft_preamble loadvar data  % this reads the input data in case the user specified the cfg.inputfile option
 
 % get the options
-cfg.keep      = ft_getopt(cfg, 'keep',      {});
-cfg.remove    = ft_getopt(cfg, 'remove',    {});
-cfg.ask       = ft_getopt(cfg, 'ask',       {});
-cfg.uncertain = ft_getopt(cfg, 'uncertain', 'ask');
+cfg.keepfield   = ft_getopt(cfg, 'keepfield', {});
+cfg.removefield = ft_getopt(cfg, 'removefield', {});
+cfg.keepvalue   = ft_getopt(cfg, 'keepvalue', {});
+cfg.removevalue = ft_getopt(cfg, 'removevalue', {});
+cfg.keepnumeric = ft_getopt(cfg, 'keepnumeric', 'yes');
 
 % process the data using a recursive helper function
 if ~isfield(data, 'cfg')
-  warning('the input data has no provenance information, nothing to do');
-else
-  data.cfg = struct(data.cfg); % ensure that it is a structure
-  
-  % these should be column arrays
-  originalkeep   = cfg.keep(:);
-  originalremove = cfg.remove(:);
-  originalask    = cfg.ask(:);
-  
-  % these two variables are recursively updated by the subfunction
-  actualkeep   = {};
-  actualremove = {};
-  actualask    = {};
-  
-  % FIXME hier verder
-  
-  [data.cfg, actualkeep, actualremove] = parsestructure(data.cfg, cfg.keep, cfg.remove, actualkeep, actualremove, cfg.uncertain);
-  
-  % update the output configuration with the actual fields
-  cfg.keep   = actualkeep;
-  cfg.remove = actualremove;
-  
+  error('the input data has no provenance information, nothing to do');
 end
 
-% deal with the output
-ft_postamble debug            % this clears the onCleanup function used for debugging in case of an error
-ft_postamble trackconfig      % this converts the config object back into a struct and can report on the unused fields
-ft_postamble provenance       % this records the time and memory at the end of the function, prints them on screen and adds this information together with the function name and matlab version etc. to the output cfg
-ft_postamble previous data    % this copies the datain.cfg structure into the cfg.previous field. You can also use it for multiple inputs, or for "varargin"
-ft_postamble history data     % this adds the local cfg structure to the output data structure, i.e. dataout.cfg = cfg
-ft_postamble savevar data     % this saves the output data structure to disk in case the user specified the cfg.outputfile option
+% ensure that it is a structure
+data.cfg = struct(data.cfg);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% determine the name and value of each element in the structure
+[name, value] = splitstruct('data', data);
 
-function [s, actualkeep, actualremove, uncertain] = parsestructure(s, originalkeep, originalremove, actualkeep, actualremove, uncertain)
-fn = fieldnames(s);
+% we can rule out the numeric values as identifying
+sel = cellfun(@ischar, value);
+if istrue(cfg.keepnumeric)
+  name  = name(sel);
+  value = value(sel);
+else
+  % the numeric values are also to be judged by the end-user, but cannot be displayed easily
+  value(~sel) = {'<numeric>'};
+end
 
-% concatenate the known fields to keep and remove
-originalkeep   = unique(cat(1, originalkeep, actualkeep));
-originalremove = unique(cat(1, originalremove, actualremove));
+keep = false(size(name));
+for i=1:numel(cfg.keepfield)
+  expression = sprintf('\\.%s$', cfg.keepfield{i});
+  keep = keep | ~cellfun(@isempty, regexp(name, expression), 'uniformoutput', 1);
+  expression = sprintf('\\.%s\\.', cfg.keepfield{i});
+  keep = keep | ~cellfun(@isempty, regexp(name, expression), 'uniformoutput', 1);
+  expression = sprintf('\\.%s\\(', cfg.keepfield{i});
+  keep = keep | ~cellfun(@isempty, regexp(name, expression), 'uniformoutput', 1);
+  expression = sprintf('\\.%s\\{', cfg.keepfield{i});
+  keep = keep | ~cellfun(@isempty, regexp(name, expression), 'uniformoutput', 1);
+end
 
-for i=1:length(fn)
+keep = keep | ismember(value, cfg.keepvalue);
+
+remove = false(size(name));
+for i=1:numel(cfg.removefield)
+  expression = sprintf('\\.%s$', cfg.removefield{i});
+  remove = remove | ~cellfun(@isempty, regexp(name, expression), 'uniformoutput', 1);
+  expression = sprintf('\\.%s\\.', cfg.removefield{i});
+  remove = remove | ~cellfun(@isempty, regexp(name, expression), 'uniformoutput', 1);
+  expression = sprintf('\\.%s\\(', cfg.removefield{i});
+  remove = remove | ~cellfun(@isempty, regexp(name, expression), 'uniformoutput', 1);
+  expression = sprintf('\\.%s\\{', cfg.removefield{i});
+  remove = remove | ~cellfun(@isempty, regexp(name, expression), 'uniformoutput', 1);
+end
+
+remove = remove | ismember(value, cfg.removevalue);
+
+%% construct the graphical user interface
+
+h = figure;
+set(h, 'menuBar', 'none')
+set(h, 'units','normalized','outerposition',[0 0.1 1 0.9])
+
+%% add the table to the GUI
+
+t = uitable;
+set(t, 'units', 'normalized', 'position', [0 0.1 1 0.9]);
+set(t, 'ColumnEditable', [true true false false]);
+set(t, 'ColumnName', {'keep', 'remove', 'name', 'value'});
+set(t, 'RowName', {});
+
+%% add the buttons to the GUI
+
+uicontrol('tag', 'sort', 'parent', h, 'units', 'normalized', 'style', 'popupmenu', 'string', {'name', 'value', 'keep', 'remove'}, 'userdata', 'sort', 'callback', @sort_cb);
+uicontrol('tag', 'apply', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'apply', 'userdata', 'a', 'callback', @keyboard_cb)
+uicontrol('tag', 'keep all', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'keep all', 'userdata', 'ka', 'callback', @keyboard_cb)
+uicontrol('tag', 'remove all', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'remove all', 'userdata', 'ra', 'callback', @keyboard_cb)
+uicontrol('tag', 'clear all', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'clear all', 'userdata', 'ca', 'callback', @keyboard_cb)
+uicontrol('tag', 'quit', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'quit', 'userdata', 'q', 'callback', @keyboard_cb)
+
+ft_uilayout(h, 'tag', 'sort', 'width', 0.10, 'height', 0.05);
+ft_uilayout(h, 'tag', 'apply', 'width', 0.10, 'height', 0.05);
+ft_uilayout(h, 'tag', 'keep all', 'width', 0.10, 'height', 0.05);
+ft_uilayout(h, 'tag', 'remove all', 'width', 0.10, 'height', 0.05);
+ft_uilayout(h, 'tag', 'clear all', 'width', 0.10, 'height', 0.05);
+ft_uilayout(h, 'tag', 'quit', 'width', 0.10, 'height', 0.05);
+
+ft_uilayout(h, 'tag', 'sort', 'retag', 'buttongroup');
+ft_uilayout(h, 'tag', 'apply', 'retag', 'buttongroup');
+ft_uilayout(h, 'tag', 'keep all', 'retag', 'buttongroup');
+ft_uilayout(h, 'tag', 'remove all', 'retag', 'buttongroup');
+ft_uilayout(h, 'tag', 'clear all', 'retag', 'buttongroup');
+ft_uilayout(h, 'tag', 'quit', 'retag', 'buttongroup');
+
+ft_uilayout(h, 'tag', 'buttongroup', 'BackgroundColor', [0.8 0.8 0.8], 'hpos', 'auto', 'vpos', 0.01);
+
+% this structure is passed around as appdata
+info         = [];
+info.table   = t;
+info.name    = name;
+info.value   = value;
+info.keep    = keep;
+info.remove  = remove;
+info.hide    = false(size(name));
+info.cleanup = false;
+info.abort   = false;
+info.cfg     = cfg;
+
+% start by having them sorted on name, this is consistent with the sort button
+[dum, indx] = sort(info.name);
+info.keep   = info.keep(indx);
+info.remove = info.remove(indx);
+info.name   = info.name(indx);
+info.value  = info.value(indx);
+info.hide   = info.hide(indx);
+
+% these callbacks need the info appdata
+setappdata(h, 'info', info);
+set(h, 'CloseRequestFcn', @abort_cb);
+set(h, 'ResizeFcn', @resize_cb);
+
+redraw_cb(h);
+resize_cb(h);
+
+while ~info.abort && ~info.cleanup
   
-  if isstruct(s.(fn{i}))
-    % recurse into all sub-structures
-    for j=1:length(s.(fn{i}))
-      [s.(fn{i})(j), actualkeep, actualremove, uncertain] = parsestructure(s.(fn{i})(j), originalkeep, originalremove, actualkeep, actualremove, uncertain);
-    end
-    
-  elseif iscell(s.(fn{i})) && all(cellfun(@isstruct, s.(fn{i})))
-    % recurse into all sub-structures
-    for j=1:length(s.(fn{i}))
-      [s.(fn{i}){j}, actualkeep, actualremove, uncertain] = parsestructure(s.(fn{i}){j}, originalkeep, originalremove, actualkeep, actualremove, uncertain);
-    end
-    
-  elseif ~ischar(s.(fn{i}))
-    % fprintf('keeping field %s with non-string value\n', fn{i});
-    
-  elseif any(strcmp(fn{i}, originalkeep)) || strcmp(uncertain, 'keep')
-    fprintf('keeping %s = ''%s''\n', fn{i},  s.(fn{i}));
-    actualkeep = cat(1, actualkeep, fn{i});
-    
-  elseif any(strcmp(fn{i}, originalremove)) || strcmp(uncertain, 'remove')
-    fprintf('removing %s = ''%s''\n', fn{i},  s.(fn{i}));
-    s.(fn{i}) = 'removed by ft_anonimizedata';
-    actualremove = cat(1, actualremove, fn{i});
-    
-  elseif strcmp(uncertain, 'ask')
-    fprintf('\nUncertain about %s = ''%s''\n', fn{i},  s.(fn{i}));
-    question = 'Should this field be (k)ept, (r)emoved, [K]eep all, [R]emove all? ';
-    
-    answer = 'x';
-    while ~ismember(answer, {'k', 'r', 'K', 'R'})
-      answer = smartinput(question, answer);
-    end
-    
-    switch answer
-      case 'k'
-        fprintf('keeping %s = ''%s''\n', fn{i},  s.(fn{i}));
-        actualkeep = cat(1, actualkeep, fn{i});
-      case 'r'
-        fprintf('removing %s = ''%s''\n', fn{i},  s.(fn{i}));
-        actualremove = cat(1, actualremove, fn{i});
-        s.(fn{i}) = 'removed by ft_anonimizedata';
-      case 'K'
-        fprintf('keeping %s = ''%s''\n', fn{i},  s.(fn{i}));
-        actualkeep = cat(1, actualkeep, fn{i});
-        uncertain = 'keep'; % for the next time
-      case 'R'
-        fprintf('removing %s = ''%s''\n', fn{i},  s.(fn{i}));
-        actualremove = cat(1, actualremove, fn{i});
-        s.(fn{i}) = 'removed by ft_anonimizedata';
-        uncertain = 'remove'; % for the next time
-        
-    end % switch
-    
-  else
-    error('Cannot decide what to do with the field %s', fn{i});
+  uiwait(h); % we only get part this point with abort or cleanup
+  
+  if ~ishandle(h)
+    error('aborted by user');
   end
-end % for
+  
+  info = getappdata(h, 'info');
+  
+  if info.abort
+    delete(h);
+    error('aborted by user');
+  elseif info.cleanup
+    if ~all(xor(info.keep, info.remove))
+      warning('not all fields have been marked as "keep" or "remove"');
+      info.cleanup = false;
+    else
+      delete(h);
+    end
+  end
+end
 
-% ensure that each field is only present once
-actualkeep   = unique(actualkeep);
-actualremove = unique(actualremove);
 
+fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
+name = info.name(info.remove);
+for i=1:length(name)
+  str = sprintf('%s = ''removed by ft_anonimizedata'';', name{i});
+  disp(str);
+  eval(str);
+end
+fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
+
+% deal with the output
+ft_postamble debug  % this clears the onCleanup function used for debugging in case of an error
+ft_postamble trackconfig  % this converts the config object back into a struct and can report on the unused fields
+ft_postamble provenance  % this records the time and memory at the end of the function, prints them on screen and adds this information together with the function name and matlab version etc. to the output cfg
+ft_postamble previous data  % this copies the datain.cfg structure into the cfg.previous field. You can also use it for multiple inputs, or for "varargin"
+ft_postamble history data  % this adds the local cfg structure to the output data structure, i.e. dataout.cfg = cfg
+ft_postamble savevar data  % this saves the output data structure to disk in case the user specified the cfg.outputfile option
+
+end % function
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function h = getparent(h)
+p = h;
+while p~=0
+  h = p;
+  p = get(h, 'parent');
+end
+end % function
+
+function redraw_cb(h, eventdata)
+h = getparent(h);
+info = getappdata(h, 'info');
+data = cat(2, num2cell(info.keep), num2cell(info.remove), info.name, info.value);
+data = data(~info.hide,:);
+set(info.table, 'data', data);
+end % function
+
+function keyboard_cb(h, eventdata)
+if isempty(eventdata)
+  % determine the key that corresponds to the uicontrol element that was activated
+  key = get(h, 'userdata');
+else
+  % determine the key that was pressed on the keyboard
+  key = parseKeyboardEvent(eventdata);
+end
+h = getparent(h);
+info = getappdata(h, 'info');
+
+data = get(info.table, 'data');
+
+sel = info.keep & info.remove;
+if any(sel)
+  warning('items that were marked both as "keep" and "remove" have been cleared');
+  info.keep(sel) = false;
+  info.remove(sel) = false;
+end
+
+info.keep  (~info.hide) = cell2mat(data(:,1));
+info.remove(~info.hide) = cell2mat(data(:,2));
+
+switch key
+  case 'q'
+    info.cleanup = true;
+    uiresume
+  case 'a'
+    info.hide(info.keep)   = true;
+    info.hide(info.remove) = true;
+  case 'ka'
+    info.keep  (~info.hide) = true;
+    info.remove(~info.hide) = false;
+  case 'ra'
+    info.keep  (~info.hide) = false;
+    info.remove(~info.hide) = true;
+  case 'ca'
+    info.keep  (~info.hide) = false;
+    info.remove(~info.hide) = false;
+end
+setappdata(h, 'info', info);
+redraw_cb(h)
+end % function
+
+function sort_cb(h, eventdata)
+h = getparent(h);
+info = getappdata(h, 'info');
+val = get(findobj(h, 'userdata', 'sort'), 'value');
+str = get(findobj(h, 'userdata', 'sort'), 'string');
+switch str{val}
+  case 'name'
+    [dum, indx] = sort(info.name);
+  case 'value'
+    [dum, indx] = sort(info.value);
+  case 'keep'
+    [dum, indx] = sort(info.keep);
+  case 'remove'
+    [dum, indx] = sort(info.remove);
+end
+info.keep   = info.keep(indx);
+info.remove = info.remove(indx);
+info.name   = info.name(indx);
+info.value  = info.value(indx);
+info.hide   = info.hide(indx);
+setappdata(h, 'info', info);
+redraw_cb(h);
+end % function
+
+function abort_cb(h, eventdata)
+h = getparent(h);
+info = getappdata(h, 'info');
+info.abort = true;
+setappdata(h, 'info', info);
+uiresume
+end
+
+function resize_cb(h, eventdata)
+drawnow
+h = getparent(h);
+info = getappdata(h, 'info');
+set(h, 'units', 'pixels');
+siz = get(h, 'position');
+width = siz(3);
+% the 15 is for the vertical scrollbar on the right
+set(info.table, 'ColumnWidth', {50 50 width-500-15 400});
+end
