@@ -6,6 +6,9 @@ function savevar(filename, varname, value)
 %
 % $Id$
 
+assert(ischar(filename), 'file name should be a string');
+assert(ischar(varname), 'variable name should be a string');
+
 fprintf('writing ''%s'' to file ''%s''\n', varname, filename);
 
 eval(sprintf('%s = value;', varname));
