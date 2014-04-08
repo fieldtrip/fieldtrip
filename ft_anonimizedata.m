@@ -72,13 +72,10 @@ cfg.keepvalue   = ft_getopt(cfg, 'keepvalue', {});
 cfg.removevalue = ft_getopt(cfg, 'removevalue', {});
 cfg.keepnumeric = ft_getopt(cfg, 'keepnumeric', 'yes');
 
-% process the data using a recursive helper function
-if ~isfield(data, 'cfg')
-  error('the input data has no provenance information, nothing to do');
+if isfield(data, 'cfg')
+  % ensure that it is a structure, not a config object
+  data.cfg = struct(data.cfg);
 end
-
-% ensure that it is a structure
-data.cfg = struct(data.cfg);
 
 % determine the name and value of each element in the structure
 [name, value] = splitstruct('data', data);
@@ -137,6 +134,9 @@ end
 
 remove = remove | ismember(value, cfg.removevalue);
 
+% ensure there is no overlap
+keep(remove) = false;
+
 %% construct the graphical user interface
 
 h = figure;
@@ -158,7 +158,7 @@ set(t, 'RowName', {});
 
 %% add the buttons to the GUI
 
-uicontrol('tag', 'button1', 'parent', h, 'units', 'pixels', 'style', 'popupmenu', 'string', {'name', 'value', 'keep', 'remove'}, 'userdata', 'sort', 'callback', @sort_cb);
+uicontrol('tag', 'button1', 'parent', h, 'units', 'pixels', 'style', 'popupmenu', 'string', {'remove', 'keep', 'name', 'value'}, 'userdata', 'sort', 'callback', @sort_cb);
 uicontrol('tag', 'button2', 'parent', h, 'units', 'pixels', 'style', 'pushbutton', 'string', 'apply',       'userdata', 'a',  'callback', @keyboard_cb)
 uicontrol('tag', 'button3', 'parent', h, 'units', 'pixels', 'style', 'pushbutton', 'string', 'keep all',    'userdata', 'ka', 'callback', @keyboard_cb)
 uicontrol('tag', 'button4', 'parent', h, 'units', 'pixels', 'style', 'pushbutton', 'string', 'remove all',  'userdata', 'ra', 'callback', @keyboard_cb)
@@ -193,8 +193,8 @@ info.hide    = false(size(name));
 info.cleanup = false;
 info.cfg     = cfg;
 
-% start by having them sorted on name, this is consistent with the sort button
-[dum, indx] = sort(info.name);
+% this is consistent with the sort button
+[dum, indx] = sort(~info.remove);
 info.keep   = info.keep(indx);
 info.remove = info.remove(indx);
 info.name   = info.name(indx);
@@ -219,10 +219,7 @@ while ~info.cleanup
   
   info = getappdata(h, 'info');
   
-  if info.abort
-    delete(h);
-    error('aborted by user');
-  elseif info.cleanup
+  if info.cleanup
     if ~all(xor(info.keep, info.remove))
       warning('not all fields have been marked as "keep" or "remove"');
       info.cleanup = false;
@@ -321,14 +318,14 @@ info = getappdata(h, 'info');
 val = get(findobj(h, 'userdata', 'sort'), 'value');
 str = get(findobj(h, 'userdata', 'sort'), 'string');
 switch str{val}
+  case 'remove'
+    [dum, indx] = sort(~info.remove);
+  case 'keep'
+    [dum, indx] = sort(~info.keep);
   case 'name'
     [dum, indx] = sort(info.name);
   case 'value'
     [dum, indx] = sort(info.value);
-  case 'keep'
-    [dum, indx] = sort(info.keep);
-  case 'remove'
-    [dum, indx] = sort(info.remove);
 end
 info.keep   = info.keep(indx);
 info.remove = info.remove(indx);
