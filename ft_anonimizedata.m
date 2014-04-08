@@ -90,7 +90,23 @@ if istrue(cfg.keepnumeric)
   value = value(sel);
 else
   % the numeric values are also to be judged by the end-user, but cannot be displayed easily
+  % FIXME it would be possible to display single scalar values by converting them to a string
   value(~sel) = {'<numeric>'};
+end
+
+% do not bother with fields that are empty
+sel = cellfun(@numel, value)>0;
+name  = name(sel);
+value = value(sel);
+
+% all values are char, but some might be a char-array rather than a single string
+sel = cellfun('size', value, 1)>1;
+value(sel) = {'<multiline char array>'};
+
+for i=1:length(value)
+  % remove all non-printable characters
+  sel = value{i}<32 | value{i}>126;
+  value{i}(sel) = [];
 end
 
 keep = false(size(name));
@@ -125,40 +141,46 @@ remove = remove | ismember(value, cfg.removevalue);
 
 h = figure;
 set(h, 'menuBar', 'none')
-set(h, 'units','normalized','outerposition',[0 0.1 1 0.9])
+mp = get(0, 'MonitorPosition');
+if size(mp,1)==1
+  % there is only a single monitor, we can try to go fullscreen
+  set(h,'units','normalized','position',[0 0 1 1])
+else
+  set(h,'units','normalized');
+end
 
 %% add the table to the GUI
 
 t = uitable;
-set(t, 'units', 'normalized', 'position', [0 0.1 1 0.9]);
 set(t, 'ColumnEditable', [true true false false]);
 set(t, 'ColumnName', {'keep', 'remove', 'name', 'value'});
 set(t, 'RowName', {});
 
 %% add the buttons to the GUI
 
-uicontrol('tag', 'sort', 'parent', h, 'units', 'normalized', 'style', 'popupmenu', 'string', {'name', 'value', 'keep', 'remove'}, 'userdata', 'sort', 'callback', @sort_cb);
-uicontrol('tag', 'apply', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'apply', 'userdata', 'a', 'callback', @keyboard_cb)
-uicontrol('tag', 'keep all', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'keep all', 'userdata', 'ka', 'callback', @keyboard_cb)
-uicontrol('tag', 'remove all', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'remove all', 'userdata', 'ra', 'callback', @keyboard_cb)
-uicontrol('tag', 'clear all', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'clear all', 'userdata', 'ca', 'callback', @keyboard_cb)
-uicontrol('tag', 'quit', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'quit', 'userdata', 'q', 'callback', @keyboard_cb)
+uicontrol('tag', 'button1', 'parent', h, 'units', 'pixels', 'style', 'popupmenu', 'string', {'name', 'value', 'keep', 'remove'}, 'userdata', 'sort', 'callback', @sort_cb);
+uicontrol('tag', 'button2', 'parent', h, 'units', 'pixels', 'style', 'pushbutton', 'string', 'apply',       'userdata', 'a',  'callback', @keyboard_cb)
+uicontrol('tag', 'button3', 'parent', h, 'units', 'pixels', 'style', 'pushbutton', 'string', 'keep all',    'userdata', 'ka', 'callback', @keyboard_cb)
+uicontrol('tag', 'button4', 'parent', h, 'units', 'pixels', 'style', 'pushbutton', 'string', 'remove all',  'userdata', 'ra', 'callback', @keyboard_cb)
+uicontrol('tag', 'button5', 'parent', h, 'units', 'pixels', 'style', 'pushbutton', 'string', 'clear all',   'userdata', 'ca', 'callback', @keyboard_cb)
+uicontrol('tag', 'button6', 'parent', h, 'units', 'pixels', 'style', 'pushbutton', 'string', 'quit',        'userdata', 'q',  'callback', @keyboard_cb)
 
-ft_uilayout(h, 'tag', 'sort', 'width', 0.10, 'height', 0.05);
-ft_uilayout(h, 'tag', 'apply', 'width', 0.10, 'height', 0.05);
-ft_uilayout(h, 'tag', 'keep all', 'width', 0.10, 'height', 0.05);
-ft_uilayout(h, 'tag', 'remove all', 'width', 0.10, 'height', 0.05);
-ft_uilayout(h, 'tag', 'clear all', 'width', 0.10, 'height', 0.05);
-ft_uilayout(h, 'tag', 'quit', 'width', 0.10, 'height', 0.05);
+% use manual positioning of the buttons in pixel units
+ft_uilayout(h, 'tag', 'button1', 'hpos', 20+(80+10)*0, 'vpos', 10, 'width', 80, 'height', 25);
+ft_uilayout(h, 'tag', 'button2', 'hpos', 20+(80+10)*1, 'vpos', 10, 'width', 80, 'height', 25);
+ft_uilayout(h, 'tag', 'button3', 'hpos', 20+(80+10)*2, 'vpos', 10, 'width', 80, 'height', 25);
+ft_uilayout(h, 'tag', 'button4', 'hpos', 20+(80+10)*3, 'vpos', 10, 'width', 80, 'height', 25);
+ft_uilayout(h, 'tag', 'button5', 'hpos', 20+(80+10)*4, 'vpos', 10, 'width', 80, 'height', 25);
+ft_uilayout(h, 'tag', 'button6', 'hpos', 20+(80+10)*5, 'vpos', 10, 'width', 80, 'height', 25);
 
-ft_uilayout(h, 'tag', 'sort', 'retag', 'buttongroup');
-ft_uilayout(h, 'tag', 'apply', 'retag', 'buttongroup');
-ft_uilayout(h, 'tag', 'keep all', 'retag', 'buttongroup');
-ft_uilayout(h, 'tag', 'remove all', 'retag', 'buttongroup');
-ft_uilayout(h, 'tag', 'clear all', 'retag', 'buttongroup');
-ft_uilayout(h, 'tag', 'quit', 'retag', 'buttongroup');
+ft_uilayout(h, 'tag', 'button1', 'retag', 'buttongroup')
+ft_uilayout(h, 'tag', 'button1', 'retag', 'buttongroup')
+ft_uilayout(h, 'tag', 'button1', 'retag', 'buttongroup')
+ft_uilayout(h, 'tag', 'button1', 'retag', 'buttongroup')
+ft_uilayout(h, 'tag', 'button1', 'retag', 'buttongroup')
+ft_uilayout(h, 'tag', 'button1', 'retag', 'buttongroup')
 
-ft_uilayout(h, 'tag', 'buttongroup', 'BackgroundColor', [0.8 0.8 0.8], 'hpos', 'auto', 'vpos', 0.01);
+ft_uilayout(h, 'tag', 'buttongroup', 'BackgroundColor', [0.8 0.8 0.8]);
 
 % this structure is passed around as appdata
 info         = [];
@@ -169,7 +191,6 @@ info.keep    = keep;
 info.remove  = remove;
 info.hide    = false(size(name));
 info.cleanup = false;
-info.abort   = false;
 info.cfg     = cfg;
 
 % start by having them sorted on name, this is consistent with the sort button
@@ -182,13 +203,13 @@ info.hide   = info.hide(indx);
 
 % these callbacks need the info appdata
 setappdata(h, 'info', info);
-set(h, 'CloseRequestFcn', @abort_cb);
+set(h, 'CloseRequestFcn', 'delete(gcf)');
 set(h, 'ResizeFcn', @resize_cb);
 
 redraw_cb(h);
 resize_cb(h);
 
-while ~info.abort && ~info.cleanup
+while ~info.cleanup
   
   uiwait(h); % we only get part this point with abort or cleanup
   
@@ -318,21 +339,13 @@ setappdata(h, 'info', info);
 redraw_cb(h);
 end % function
 
-function abort_cb(h, eventdata)
-h = getparent(h);
-info = getappdata(h, 'info');
-info.abort = true;
-setappdata(h, 'info', info);
-uiresume
-end
-
 function resize_cb(h, eventdata)
 drawnow
 h = getparent(h);
 info = getappdata(h, 'info');
 set(h, 'units', 'pixels');
 siz = get(h, 'position');
-width = siz(3);
 % the 15 is for the vertical scrollbar on the right
-set(info.table, 'ColumnWidth', {50 50 width-500-15 400});
+set(info.table, 'units', 'normalized', 'position', [0.05 0.1 0.90 0.85]);
+set(info.table, 'ColumnWidth', {50 50 300 600});
 end
