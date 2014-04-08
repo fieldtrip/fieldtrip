@@ -146,6 +146,11 @@ assert(ft_datatype(rawc,       'comp'), 'incorrect datatype');
 assert(ft_datatype(timelockc,  'comp'), 'incorrect datatype');
 assert(ft_datatype(freqc,      'comp'), 'incorrect datatype');
 
+% the default is that for raw+comp ft_datatype returns comp 
+% the default for timelock+comp and freq+comp is to return them as timelock or freq for backward compatibility
 assert(strcmp(ft_datatype(rawc       ), 'comp'), 'comp datatype was expected');
-assert(strcmp(ft_datatype(timelockc  ), 'comp'), 'comp datatype was expected');
-assert(strcmp(ft_datatype(freqc      ), 'comp'), 'comp datatype was expected');
+assert(strcmp(ft_datatype(timelockc  ), 'timelock'), 'timelock datatype was expected');
+assert(strcmp(ft_datatype(freqc      ), 'freq'), 'freq datatype was expected');
+
+
+
