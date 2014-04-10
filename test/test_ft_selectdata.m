@@ -218,7 +218,7 @@ freqc      = ft_freqanalysis(cfg, data);
 
 cfg        = [];
 cfg.method = 'mtmconvol';
-cfg.foi    = [10:10:100];
+cfg.foi    = [20:20:100]; % there are 10 repetitions, so let's use 5 frequencies
 cfg.toi    = [0.4 0.5 0.6];
 cfg.t_ftimwin = ones(1,numel(cfg.foi)).*0.2;
 cfg.taper  = 'hanning';
@@ -594,9 +594,23 @@ if nargin>2
   if isfield(data_old, 'cumtapcnt'), data_old = rmfield(data_old, 'cumtapcnt'); end
   
   if isfield(data_new, 'cov') && ~isfield(data_old, 'cov')
-    % skip the comparison of the cov, because ft_selectdata_old could not
-    % deal with this correctly: this is not something to be asserted here
+    % skip this comparison, because ft_selectdata_old could not deal with this correctly: this is not something to be asserted here
     data_new = rmfield(data_new, 'cov');
+  end
+  if isfield(data, 'trial') && isfield(data_new, 'avg') && ~isfield(data_old, 'avg')
+    % skip this comparison, because ft_selectdata_old could not deal with this correctly: this is not something to be asserted here
+    data_new = rmfield(data_new, 'avg');
+  end
+  if isfield(data, 'trial') && isfield(data_new, 'var') && ~isfield(data_old, 'var')
+    % skip this comparison, because ft_selectdata_old could not deal with this correctly: this is not something to be asserted here
+    data_new = rmfield(data_new, 'var');
+  end
+  if isfield(data, 'trial') && isfield(data_new, 'dof') && ~isfield(data_old, 'dof')
+    % skip this comparison, because ft_selectdata_old could not deal with this correctly: this is not something to be asserted here
+    data_new = rmfield(data_new, 'dof');
+  end
+  if isfield(data_old, 'fsample') && ~isfield(data_new, 'fsample')
+    data_old = rmfield(data_old, 'fsample');
   end
   if numel(data_old.label)==0, data_old.label = {}; end
   if numel(data_new.label)==0, data_new.label = {}; end
@@ -618,6 +632,7 @@ if nargin>2
     if isfield(data, 'cumtapcnt'), data = rmfield(data, 'cumtapcnt'); end
     assert(isequal(data, data_new));
   end
+  
 else
   % assume the avgoverXXX is tested
   cfg       = [];
@@ -628,6 +643,23 @@ else
   % don't include the cfg
   data_new  = rmfield(data_new, 'cfg');
   data_old  = rmfield(data_old, 'cfg');
+  
+  if isfield(data_new, 'cov') && ~isfield(data_old, 'cov')
+    % skip this comparison, because ft_selectdata_old could not deal with this correctly: this is not something to be asserted here
+    data_new = rmfield(data_new, 'cov');
+  end
+  if isfield(data, 'trial') && isfield(data_new, 'avg') && ~isfield(data_old, 'avg')
+    % skip this comparison, because ft_selectdata_old could not deal with this correctly: this is not something to be asserted here
+    data_new = rmfield(data_new, 'avg');
+  end
+  if isfield(data, 'trial') && isfield(data_new, 'var') && ~isfield(data_old, 'var')
+    % skip this comparison, because ft_selectdata_old could not deal with this correctly: this is not something to be asserted here
+    data_new = rmfield(data_new, 'var');
+  end
+  if isfield(data, 'trial') && isfield(data_new, 'dof') && ~isfield(data_old, 'dof')
+    % skip this comparison, because ft_selectdata_old could not deal with this correctly: this is not something to be asserted here
+    data_new = rmfield(data_new, 'dof');
+  end
   
   if strcmp(key, 'avgoverfreq') || strcmp(key, 'avgoverrpt')
     % apparently something may be wrong with the data_old.dimord
