@@ -32,8 +32,8 @@ grandavg = ft_sourcegrandaverage(cfg, source, source)
 
 source = [];
 source.transform = eye(4);
-source.pos = rand(10,3);
-source.pow = rand(10,1);
+source.pos = rand(1320,3);
+source.pow = rand(1320,1);
 source.inside = 1:660;
 source.outside = 661:1320;
 
