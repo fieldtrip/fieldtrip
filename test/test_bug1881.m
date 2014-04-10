@@ -12,3 +12,4 @@ cfg        = [];
 cfg.foilim = [0 90];
 output     = ft_selectdata(cfg, freq);
 
+assert(length(output.freq)==419, 'incorrect frequency selection')
