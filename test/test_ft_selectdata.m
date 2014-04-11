@@ -609,6 +609,17 @@ if nargin>2
     % skip this comparison, because ft_selectdata_old could not deal with this correctly: this is not something to be asserted here
     data_new = rmfield(data_new, 'dof');
   end
+  fn = {'trial', 'time', 'trialinfo', 'sampleinfo'};
+  
+  for i=1:length(fn)
+    if isfield(data_old, fn{i}) && isfield(data_new, fn{i}) && numel(data_old.(fn{i}))==0 && numel(data_new.(fn{i}))==0
+      % this is needed because these two comparisons return false
+      % isequal(zeros(0,0), zeros(1,0))
+      % isequal(cell(0,0), cell(1,0))
+      data_old.(fn{i}) = data_new.(fn{i});
+    end
+  end
+  
   if isfield(data_old, 'fsample') && ~isfield(data_new, 'fsample')
     data_old = rmfield(data_old, 'fsample');
   end

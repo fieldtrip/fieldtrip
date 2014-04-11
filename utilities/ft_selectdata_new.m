@@ -85,7 +85,7 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'parameter' 'trial.mom' 'mom'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'parameter' 'trial.nai' 'nai'});
 
 cfg.tolerance = ft_getopt(cfg, 'tolerance', 1e-5);        % default tolerance for checking equality of time/freq axes
-cfg.select    = ft_getopt(cfg, 'selmode',   'intersect'); % default is to take intersection, alternative 'union'
+cfg.select    = ft_getopt(cfg, 'select',    'intersect'); % default is to take intersection, alternative 'union'
 cfg.parameter = ft_getopt(cfg, 'parameter', {});
 
 % this function only works for the upcoming (not yet standard) source representation without sub-structures
