@@ -21,6 +21,7 @@ function retval = qsublist(cmd, jobid, pbsid)
 % The following commands are used by QSUBFEVAL and QSUBGET respectively.
 %   'add'
 %   'del'
+%   'completed'
 %
 % See also QSUBCELLFUN, QSUBFEVAL, QSUBGET
 
@@ -125,6 +126,26 @@ switch cmd
     % start at the end, work towards the begin of the list
     for i=length(list_jobid):-1:1
       qsublist('kill', list_jobid{i}, list_pbsid{i});
+    end
+    
+  case 'completed'
+    % cmd = 'completed' returns whether the job is completed as a boolean
+    % when backend-specific syntax is known, it uses the appropriate command, 
+    % otherwise it determines it in the old way (based on output and log files)
+    switch backend
+      case 'torque'
+        [dum,jobstatus] = system(['qstat ' pbsid ' -f1 | grep job_state | grep -o "= [A-Z]" | grep -o [A-Z]']);
+        if strcmp(strtrim(jobstatus),'C')
+          retval = true;
+        else
+          retval = false;
+        end
+      case {'sge','slurm','lsf','local','system'}
+        curPwd = getcustompwd();
+        outputfile   = fullfile(curPwd, sprintf('%s_output.mat', jobid));
+        logout       = fullfile(curPwd, sprintf('%s.o*', jobid)); % note the wildcard in the file name
+        logerr       = fullfile(curPwd, sprintf('%s.e*', jobid)); % note the wildcard in the file name
+        retval = exist(outputfile, 'file') && isfile(logout) && isfile(logerr);
     end
     
   case 'list'
