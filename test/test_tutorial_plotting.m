@@ -1,6 +1,6 @@
 function test_tutorial_plotting
 
-% MEM 1500mb
+% MEM 2500mb
 % WALLTIME 00:15:00
 
 % TEST test_tutorial_plotting
