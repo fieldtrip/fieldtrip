@@ -165,3 +165,12 @@ switch cmd
     error('unsupported command (%s)', cmd);
 end % switch
 
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% helper function that detects a file, even with a wildcard in the filename
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function status = isfile(name)
+tmp = dir(name);
+status = length(tmp)==1 && ~tmp.isdir;
