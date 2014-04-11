@@ -71,6 +71,16 @@ cfg.endsample = 500;
 datanew = ft_redefinetrial(cfg, data);
 assert(isfield(datanew, 'trialinfo'));  % WORKS FINE
 
+mytrl = [
+  0001 0300 0 1
+  0301 0600 0 2
+  0601 0900 0 3
+  0901 1200 0 4
+  0201 1500 0 5
+  0501 1800 0 6
+  1801 2100 0 7
+  ];
+
 % select specific time window with new trl matrix
 cfg = [];
 cfg.trl = mytrl; % use ft_definetrial.m
