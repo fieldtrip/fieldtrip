@@ -129,8 +129,13 @@ end
 
 datfield  = fieldnames(varargin{1});
 orgdim1   = datfield(~cellfun(@isempty, regexp(datfield, 'dimord$')));
-datfield  = setdiff(datfield, {'cfg' 'hdr' 'fsample' 'grad' 'elec' 'transform' 'unit' 'label' 'labelcmb' 'topolabel' 'time' 'freq' 'pos' 'dim'});
 datfield  = setdiff(datfield, orgdim1);
+switch dtype
+  case {'raw' 'spike'}
+    datfield  = setdiff(datfield, {'cfg' 'hdr' 'fsample' 'grad' 'elec' 'transform' 'unit' 'label' 'labelcmb' 'topolabel' 'lfplabel' 'freq' 'pos' 'dim'});
+  otherwise
+    datfield  = setdiff(datfield, {'cfg' 'hdr' 'fsample' 'grad' 'elec' 'transform' 'unit' 'label' 'labelcmb' 'topolabel' 'lfplabel' 'freq' 'pos' 'dim' 'time'});
+end
 datfield  = datfield(:)';
 
 sel = strcmp(datfield, 'cumtapcnt');
@@ -162,11 +167,12 @@ dimtok = unique(dimtok);
 hasrpt     = any(ismember(dimtok, {'rpt', 'subj'}));
 hasrpttap  = any(ismember(dimtok, 'rpttap'));
 haspos     = any(ismember(dimtok, {'pos', '{pos}'}));
-haschan    = any(ismember(dimtok, 'chan'));
+haschan    = any(ismember(dimtok, {'chan', '{chan}'}));
 haschancmb = any(ismember(dimtok, 'chancmb'));
 hasfreq    = any(ismember(dimtok, 'freq'));
 hastime    = any(ismember(dimtok, 'time'));
 % hasori is not known and is not a dimension with a fixed number of elements in it
+% hasspike is not known and is not a dimension with a fixed number of elements in it
 
 clear dimtok
 
@@ -229,16 +235,16 @@ for i=1:numel(varargin)
     [selrpt{i}, dum, rptdim{i}, selrpttap{i}] = getselection_rpt(cfg, varargin{i}, dimord{j});
     
     % check for the presence of each dimension in each datafield
-    fieldhaspos     = ismember('pos',    dimtok);
-    fieldhaschan    = ismember('chan',   dimtok);
+    fieldhaspos     = ismember('pos',     dimtok) | ismember('{pos}', dimtok);
+    fieldhaschan    = ismember('chan',    dimtok) | ismember('{chan}', dimtok);
     fieldhaschancmb = ismember('chancmb', dimtok);
-    fieldhastime    = ismember('time',   dimtok);
-    fieldhasfreq    = ismember('freq',   dimtok);
-    fieldhasrpt     = ismember('rpt',    dimtok) | ismember('subj', dimtok) | ismember('{rpt}', dimtok);
-    fieldhasrpttap  = ismember('rpttap', dimtok);
+    fieldhastime    = ismember('time',    dimtok);
+    fieldhasfreq    = ismember('freq',    dimtok);
+    fieldhasrpt     = ismember('rpt',     dimtok) | ismember('subj', dimtok) | ismember('{rpt}', dimtok);
+    fieldhasrpttap  = ismember('rpttap',  dimtok);
     
     if fieldhaspos,     varargin{i} = makeselection(varargin{i}, find(ismember(dimtok, {'pos', '{pos}'})), selpos{i},     avgoverpos,  datfield(j), cfg.select); end
-    if fieldhaschan,    varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'chan')),              selchan{i},    avgoverchan, datfield(j), cfg.select); end
+    if fieldhaschan,    varargin{i} = makeselection(varargin{i}, find(ismember(dimtok,{'chan' '{chan}'})), selchan{i},    avgoverchan, datfield(j), cfg.select); end
     if fieldhaschancmb, varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'chancmb')),           selchancmb{i}, avgoverchancmb, datfield(j), cfg.select); end
     if fieldhastime,    varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'time')),              seltime{i},    avgovertime, datfield(j), cfg.select); end
     if fieldhasfreq,    varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'freq')),              selfreq{i},    avgoverfreq, datfield(j), cfg.select); end
@@ -301,15 +307,6 @@ for i=1:numel(varargin)
   if haschancmb, varargin{i} = makeselection_chancmb(varargin{i}, selchancmb{i}, avgoverchancmb); end % update the labelcmb field
   if hastime,    varargin{i} = makeselection_time   (varargin{i}, seltime{i}, avgovertime); end % update the time field
   if hasfreq,    varargin{i} = makeselection_freq   (varargin{i}, selfreq{i}, avgoverfreq); end % update the freq field
-  
-  %  perform the trial selection for the time in raw data
-  if isfield(varargin{i}, 'time') && iscell(varargin{i}.time)
-    if ~isempty(selrpt{i}) && all(isnan(selrpt{i}))
-      % no selection has to be made
-    else
-      varargin{i}.time = varargin{i}.time(selrpt{i});
-    end
-  end
   
 end % for varargin
 

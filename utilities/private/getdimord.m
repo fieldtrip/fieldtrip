@@ -34,6 +34,7 @@ nrpttap   = nan;
 npos      = inf;
 nori      = nan; % this will be 3 in many cases
 ntopochan = inf;
+nspike    = inf; % this is only for the first spike channel
 
 % use an anonymous function
 assign = @(var, val) assignin('caller', var, val);
@@ -50,7 +51,11 @@ if isfield(data, 'labelcmb')
   nchancmb = size(data.labelcmb, 1);
 end
 if isfield(data, 'time')
-  ntime = length(data.time);
+  if iscell(data.time)
+    ntime = length(data.time{1}); % raw data: only for the first trial
+  else
+    ntime = length(data.time);
+  end
 end
 if isfield(data, 'freq')
   nfreq = length(data.freq);
@@ -88,6 +93,9 @@ end
 if isfield(data, 'topolabel')
   % this is used in ICA and PCA decompositions
   ntopochan = length(data.topolabel);
+end
+if isfield(data, 'timestamp') && iscell(data.timestamp)
+  nspike = length(data.timestamp{1}); % spike data: only for the first channel
 end
 
 % determine the size of the actual data
@@ -213,10 +221,12 @@ switch field
     end
     
   case {'trial'}
-    if iscell(data.trial)
-      dimord = '{rpt}_chan_time';
-    elseif isequalwithoutnans(datsiz, [nrpt nchan ntime])
+    if ~iscell(data.(field)) && isequalwithoutnans(datsiz, [nrpt nchan ntime])
       dimord = 'rpt_chan_time';
+    elseif isequalwithoutnans(datsiz, [nrpt nchan ntime])
+      dimord = '{rpt}_chan_time';
+    elseif isequalwithoutnans(datsiz, [nchan nspike]) || isequalwithoutnans(datsiz, [nchan 1 nspike])
+      dimord = '{chan}_spike';
     end
     
   case {'sampleinfo' 'trialinfo'}
@@ -244,6 +254,13 @@ switch field
       dimord = 'pos';
     end
     
+  case {'timestamp' 'time'}
+    if iscell(data.(field)) && datsiz(1)==nchan
+      dimord = '{chan}_spike';
+    elseif iscell(data.(field)) && datsiz(1)==nrpt
+      dimord = '{rpt}_time';
+    end
+      
 end % switch field
 
 
