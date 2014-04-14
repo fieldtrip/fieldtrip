@@ -18,6 +18,10 @@ function [varargout] = ft_selectdata_newer(cfg, varargin)
 %   cfg.channel     = Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION
 %   cfg.avgoverchan = string, can be 'yes' or 'no' (default = 'no')
 %
+% For data with channel combinations you can specify
+%   cfg.channelcmb     = Nx2 cell-array with selection of channels (default = 'all'), see FT_CHANNELCOMBINATION
+%   cfg.avgoverchancmb = string, can be 'yes' or 'no' (default = 'no')
+%
 % For data with a time dimension you can specify
 %   cfg.latency     = scalar    -> can be 'all'
 %   cfg.latency     = [beg end]
@@ -235,7 +239,7 @@ for i=1:numel(varargin)
     
     if fieldhaspos,     varargin{i} = makeselection(varargin{i}, find(ismember(dimtok, {'pos', '{pos}'})), selpos{i},     avgoverpos,  datfield(j), cfg.select); end
     if fieldhaschan,    varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'chan')),              selchan{i},    avgoverchan, datfield(j), cfg.select); end
-    if fieldhaschancmb, varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'chancmb')),           selchancmb{i}, false,       datfield(j), cfg.select); end
+    if fieldhaschancmb, varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'chancmb')),           selchancmb{i}, avgoverchancmb, datfield(j), cfg.select); end
     if fieldhastime,    varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'time')),              seltime{i},    avgovertime, datfield(j), cfg.select); end
     if fieldhasfreq,    varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'freq')),              selfreq{i},    avgoverfreq, datfield(j), cfg.select); end
     if fieldhasrpt,     varargin{i} = makeselection(varargin{i}, rptdim{i},                                selrpt{i},     avgoverrpt,  datfield(j), 'intersect'); end
@@ -489,20 +493,24 @@ end % function makeselection_chan
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function data = makeselection_chancmb(data, selchancmb, avgoverchancmb)
 if avgoverchancmb && all(isnan(selchancmb))
+  % naming the channel combinations becomes ambiguous, but should not
+  % suggest that the mean was computed prior to combining
   str1 = sprintf('%s, ', data.labelcmb{:,1});
   str1 = str1(1:end-2);
-  str1 = sprintf('mean(%s)', str1);
+  % str1 = sprintf('mean(%s)', str1);
   str2 = sprintf('%s, ', data.labelcmb{:,2});
   str2 = str2(1:end-2);
-  str2 = sprintf('mean(%s)', str2);
+  % str2 = sprintf('mean(%s)', str2);
   data.label = {str1, str2};
 elseif avgoverchancmb && ~any(isnan(selchancmb))
+  % naming the channel combinations becomes ambiguous, but should not
+  % suggest that the mean was computed prior to combining
   str1 = sprintf('%s, ', data.labelcmb{selchancmb,1});
   str1 = str1(1:end-2);
-  str1 = sprintf('mean(%s)', str1);
+  % str1 = sprintf('mean(%s)', str1);
   str2 = sprintf('%s, ', data.labelcmb{selchancmb,2});
   str2 = str2(1:end-2);
-  str2 = sprintf('mean(%s)', str2);
+  % str2 = sprintf('mean(%s)', str2);
   data.label = {str1, str2};
 elseif all(isfinite(selchancmb))
   data.labelcmb = data.labelcmb(selchancmb);
