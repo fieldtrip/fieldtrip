@@ -18,7 +18,8 @@ function retval = qsublist(cmd, jobid, pbsid)
 %   'killall'
 %
 %
-% The following commands are used by QSUBFEVAL and QSUBGET respectively.
+% The following low-level commands are used by QSUBFEVAL and QSUBGET for job
+% maintenance and monitoring.
 %   'add'
 %   'del'
 %   'completed'
@@ -26,7 +27,7 @@ function retval = qsublist(cmd, jobid, pbsid)
 % See also QSUBCELLFUN, QSUBFEVAL, QSUBGET
 
 % -----------------------------------------------------------------------
-% Copyright (C) 2011, Robert Oostenveld
+% Copyright (C) 2011-2014, Robert Oostenveld
 %
 % This program is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -130,23 +131,35 @@ switch cmd
     
   case 'completed'
     % cmd = 'completed' returns whether the job is completed as a boolean
-    % when backend-specific syntax is known, it uses the appropriate command, 
-    % otherwise it determines it in the old way (based on output and log files)
-    switch backend
-      case 'torque'
-        [dum,jobstatus] = system(['qstat ' pbsid ' -f1 | grep job_state | grep -o "= [A-Z]" | grep -o [A-Z]']);
-        if strcmp(strtrim(jobstatus),'C')
-          retval = true;
-        else
-          retval = false;
-        end
-      case {'sge','slurm','lsf','local','system'}
-        curPwd = getcustompwd();
-        outputfile   = fullfile(curPwd, sprintf('%s_output.mat', jobid));
-        logout       = fullfile(curPwd, sprintf('%s.o*', jobid)); % note the wildcard in the file name
-        logerr       = fullfile(curPwd, sprintf('%s.e*', jobid)); % note the wildcard in the file name
-        retval = exist(outputfile, 'file') && isfile(logout) && isfile(logerr);
-    end
+    %
+    % It first determines whether the output files exist. If so, it might be that the
+    % batch queueing system is still writing to them, hence the next system-specific
+    % check also polls the status of the job. First checking the files and then the
+    % job status ensures that we don't saturate the torque server with job-status
+    % requests.
+    
+    curPwd     = getcustompwd();
+    outputfile = fullfile(curPwd, sprintf('%s_output.mat', jobid));
+    logout     = fullfile(curPwd, sprintf('%s.o*', jobid)); % note the wildcard in the file name
+    logerr     = fullfile(curPwd, sprintf('%s.e*', jobid)); % note the wildcard in the file name
+    
+    % check that all files exist
+    retval = exist(outputfile, 'file') && isfile(logout) && isfile(logerr);
+    
+    if retval
+      % poll the job status to confirm that the job truely completed
+      switch backend
+        case 'torque'
+          [dum, jobstatus] = system(['qstat ' pbsid ' -f1 | grep job_state | grep -o "= [A-Z]" | grep -o [A-Z]']);
+          retval = strcmp(strtrim(jobstatus) ,'C');
+        case {'local','system'}
+          % only return the status based on the presence of the output files
+          % there is no way polling the batch execution system
+        otherwise
+          % only return the status based on the presence of the output files
+          % FIXME it would be good to implement this for sge, lsf and slurm as well
+      end
+    end % if retval
     
   case 'list'
     for i=1:length(list_jobid)
@@ -164,8 +177,6 @@ switch cmd
   otherwise
     error('unsupported command (%s)', cmd);
 end % switch
-
-
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

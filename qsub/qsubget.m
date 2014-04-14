@@ -17,7 +17,7 @@ function varargout = qsubget(jobid, varargin)
 % See also QSUBFEVAL, QSUBCELLFUN
 
 % -----------------------------------------------------------------------
-% Copyright (C) 2010, Robert Oostenveld
+% Copyright (C) 2010-2014, Robert Oostenveld
 %
 % This program is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -64,30 +64,29 @@ while ~success && (timeout == 0 || toc(stopwatch)<timeout)
   % the code is largely shared with fieldtrip/peer/peerget.m
   % this section is the only part where it is different between peer and qsub
   
-  curPwd = getcustompwd();
-  inputfile    = fullfile(curPwd, sprintf('%s_input.mat', jobid));
-  outputfile   = fullfile(curPwd, sprintf('%s_output.mat', jobid));
-  logout       = fullfile(curPwd, sprintf('%s.o*', jobid)); % note the wildcard in the file name
-  logerr       = fullfile(curPwd, sprintf('%s.e*', jobid)); % note the wildcard in the file name
-  
-  % the STDERR output log file should be empty, otherwise it indicates an error
-  direrr = dir(logerr);
-  if ~isempty(direrr) && direrr.bytes>0
-    if ~exist(outputfile, 'file')
-      % the STDERR file is not empty and the output file was not created
-      % something is wrong, repeat the error that was printed on STDERR
-      type(fullfile(curPwd, direrr.name));
-      error('the batch queue system returned an error for job %s, now aborting', jobid);
-    else
-      % the STDERR file is not empty but the output file looks OK
-      % something might be wrong, show the error that was printed on STDERR
-      type(fullfile(curPwd, direrr.name));
+  if qsublist('completed', jobid)
+    % the job has completed and the output file exist
+    
+    curPwd       = getcustompwd();
+    outputfile   = fullfile(curPwd, sprintf('%s_output.mat', jobid));
+    logout       = fullfile(curPwd, sprintf('%s.o*', jobid)); % note the wildcard in the file name
+    logerr       = fullfile(curPwd, sprintf('%s.e*', jobid)); % note the wildcard in the file name
+    
+    % the STDERR output log file should be empty, otherwise it indicates an error
+    direrr = dir(logerr);
+    if ~isempty(direrr) && direrr.bytes>0
+      if ~exist(outputfile, 'file')
+        % the STDERR file is not empty and the output file was not created
+        % something is wrong, repeat the error that was printed on STDERR
+        type(fullfile(curPwd, direrr.name));
+        error('the batch queue system returned an error for job %s, now aborting', jobid);
+      else
+        % the STDERR file is not empty but the output file looks OK
+        % something might be wrong, show the error that was printed on STDERR
+        type(fullfile(curPwd, direrr.name));
+      end
     end
-  end
-  
-  % the stdout and stderr log files are the last ones created
-  % wait until they exist prior to reading the results
-  if exist(outputfile, 'file') && isfile(logout) && isfile(logerr)
+    
     % load the results from the output file
     tmp = load(outputfile);
     argout  = tmp.argout;

@@ -69,7 +69,7 @@ function varargout = qsubcellfun(fname, varargin)
 % See also QSUBCOMPILE, QSUBFEVAL, CELLFUN, PEERCELLFUN, FEVAL, DFEVAL, DFEVALASYNC
 
 % -----------------------------------------------------------------------
-% Copyright (C) 2011-2012, Robert Oostenveld
+% Copyright (C) 2011-2014, Robert Oostenveld
 %
 % This program is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
