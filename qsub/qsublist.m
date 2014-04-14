@@ -152,12 +152,15 @@ switch cmd
         case 'torque'
           [dum, jobstatus] = system(['qstat ' pbsid ' -f1 | grep job_state | grep -o "= [A-Z]" | grep -o [A-Z]']);
           retval = strcmp(strtrim(jobstatus) ,'C');
+        case 'lsf'
+          [dum, jobstatus] = system(['bjobs ' pbsid ' | awk ''NR==2'' | awk ''{print $3}'' ']);
+          retval = strcmp(strtrim(jobstatus), 'DONE');
         case {'local','system'}
           % only return the status based on the presence of the output files
           % there is no way polling the batch execution system
         otherwise
           % only return the status based on the presence of the output files
-          % FIXME it would be good to implement this for sge, lsf and slurm as well
+          % FIXME it would be good to implement this for sge and slurm as well
       end
     end % if retval
     
