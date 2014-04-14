@@ -127,7 +127,13 @@ switch version
       % move the average fields to the main structure
       fn = fieldnames(source.avg);
       for i=1:length(fn)
-        source.(fn{i}) = source.avg.(fn{i});
+        dum = source.avg.(fn{i});
+        if isequal(size(dum), [1 size(source.pos,1)])
+          source.(fn{i}) = dum';
+        else
+          source.(fn{i}) = dum;
+        end
+        clear dum
       end % j
       source = rmfield(source, 'avg');
     end
@@ -196,29 +202,7 @@ switch version
       
       source = rmfield(source, 'trial');
       
-    elseif isfield(source, 'cumtapcnt')
-      % note that this field is also used further doen
-      nrpt = length(source.cumtapcnt);
-    else
-      % note that this field is also used further doen
-      nrpt = nan;
     end % if trial
-    
-    if isfield(source, 'cfg') && isfield(source.cfg, 'channel')
-      nchan = length(source.cfg.channel);
-    else
-      nchan = nan;
-    end
-    
-    fn = fieldnames(source);
-    fn = setdiff(fn, {'pos' 'inside' 'outside' 'time' 'freq' 'dim' 'cumtapcnt'});
-    
-    for i=1:length(fn)
-      dimord = getdimord(source, fn{i}, 'nrpt', nrpt);
-      if ~isempty(dimord)
-        source.([fn{i} 'dimord']) = dimord;
-      end
-    end % for each field
     
     % ensure that it has a dimord (or multiple for the different fields)
     source = fixdimord(source);
