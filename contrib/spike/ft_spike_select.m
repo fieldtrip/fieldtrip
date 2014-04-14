@@ -1,4 +1,4 @@
-function [spike] = ft_spike_psth(cfg,spike)
+function [spike] = ft_spike_select(cfg,spike)
 
 % FT_SPIKE_SELECT selects subsets of spikes, channels and trials from a
 % spike structure
@@ -40,7 +40,7 @@ spike = ft_checkdata(spike,'datatype', 'spike', 'feedback', 'yes');
 % get the default options
 cfg.spikechannel = ft_getopt(cfg, 'spikechannel', 'all');
 cfg.trials       = ft_getopt(cfg, 'trials', 'all');
-cfg.latency      = ft_getopt(cfg,'latency','maxperiod');
+cfg.latency      = ft_getopt(cfg, 'latency', 'maxperiod');
 
 % ensure that the options are valid
 cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});
