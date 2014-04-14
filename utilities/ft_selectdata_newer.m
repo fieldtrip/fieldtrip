@@ -132,6 +132,7 @@ orgdim1   = datfield(~cellfun(@isempty, regexp(datfield, 'dimord$')));
 datfield  = setdiff(datfield, orgdim1);
 switch dtype
   case {'raw' 'spike'}
+    % time is treated as a data field in raw and in spike data, and as a descriptive field otherwise
     datfield  = setdiff(datfield, {'cfg' 'hdr' 'fsample' 'grad' 'elec' 'transform' 'unit' 'label' 'labelcmb' 'topolabel' 'lfplabel' 'freq' 'pos' 'dim'});
   otherwise
     datfield  = setdiff(datfield, {'cfg' 'hdr' 'fsample' 'grad' 'elec' 'transform' 'unit' 'label' 'labelcmb' 'topolabel' 'lfplabel' 'freq' 'pos' 'dim' 'time'});
@@ -305,9 +306,11 @@ for i=1:numel(varargin)
   if haspos,     varargin{i} = makeselection_pos    (varargin{i}, selpos{i}, avgoverpos); end % update the pos field
   if haschan,    varargin{i} = makeselection_chan   (varargin{i}, selchan{i}, avgoverchan); end % update the label field
   if haschancmb, varargin{i} = makeselection_chancmb(varargin{i}, selchancmb{i}, avgoverchancmb); end % update the labelcmb field
-  if hastime,    varargin{i} = makeselection_time   (varargin{i}, seltime{i}, avgovertime); end % update the time field
   if hasfreq,    varargin{i} = makeselection_freq   (varargin{i}, selfreq{i}, avgoverfreq); end % update the freq field
-  
+  if ~ismember('time', datfield)
+    % time is treated as a data field in raw and in spike data, and as a descriptive field otherwise
+    if hastime,  varargin{i} = makeselection_time   (varargin{i}, seltime{i}, avgovertime); end % update the time field
+  end
 end % for varargin
 
 if strcmp(cfg.select, 'union')
@@ -406,10 +409,12 @@ switch selmode
       % the selindx value of NaN indicates that it is not needed to make a selection
       if iscell(selindx)
         % there are multiple selections in multipe vectors
-        % no selection needs to be made for the nan values
-        sel = find(~cellfun(@isnan, selindx));
-        for j=1:numel(sel)
-          data.(datfield{i}){j} = cellmatselect(data.(datfield{i}){j}, seldim, selindx{j});
+        for j=1:numel(selindx)
+          if isnan(selindx{j})
+            % no selection needs to be made
+          else
+            data.(datfield{i}){j} = cellmatselect(data.(datfield{i}){j}, seldim-1, selindx{j});
+          end
         end
       else
         % there is a single selection in a single vector
@@ -557,9 +562,12 @@ function data = makeselection_time(data, seltime, avgovertime)
 if iscell(seltime) && iscell(data.time)
   % it is raw data
   assert(~avgovertime, 'averaging over time is not supported for raw data');
-  sel = find(~cellfun(@isnan, seltime));
-  for j=1:numel(sel)
-    data.time{j} = cellmatselect(data.time{j}, seldim, seltime{j});
+  for j=1:numel(seltime)
+    if isnan(seltime{j})
+      % no selection needs to be made
+    else
+      data.time{j} = cellmatselect(data.time{j}, 2, seltime{j});
+    end
   end
 elseif avgovertime
   % compute the mean latency
@@ -711,6 +719,17 @@ tol      = varargin{end-1};
 ndata    = numel(varargin)-2;
 varargin = varargin(1:ndata);
 
+if iscell(varargin{1}.time)
+  if ndata>1
+    error('latency selection in multiple raw data structures is not supported')
+  else
+    if ~isfield(cfg, 'latency') || strcmp(cfg.latency, 'all')
+      timeindx = {num2cell(nan(size(varargin{1}.time)))};
+      return
+    end
+  end
+end % iscell, i.e. raw data
+
 % if there is a single timelock/freq input, there is one time vector
 % if there are multiple timelock/freq inputs, there are multiple time vectors
 % if there is a single raw input, there are multiple time vectors
@@ -768,6 +787,7 @@ if isfield(cfg, 'latency')
   % deal with numeric selection
   if isempty(cfg.latency)
     for k = 1:numel(alltimecell)
+      % FIXME I do not understand this
       % this signifies that all time bins are deselected and should be removed
       timeindx{k} = [];
     end
@@ -881,6 +901,7 @@ if isfield(cfg, 'frequency')
   % deal with numeric selection
   if isempty(cfg.frequency)
     for k = 1:ndata
+      % FIXME I do not understand this
       % this signifies that all frequency bins are deselected and should be removed
       freqindx{k} = [];
     end
@@ -1071,7 +1092,13 @@ if iscell(x)
       end
       switch seldim
         case 2
-          x{i} = x{i}(selindx,:,:,:,:);
+          if isvector(x{i})
+            % sometimes the data is 1xN, whereas the dimord describes only the first dimension
+            % in this case a row and column vector can be interpreted as equivalent
+            x{i} = x{i}(selindx);
+          else
+            x{i} = x{i}(selindx,:,:,:,:);
+          end
         case 3
           x{i} = x{i}(:,selindx,:,:,:);
         case 4
@@ -1088,7 +1115,13 @@ if iscell(x)
 else
   switch seldim
     case 1
-      x = x(selindx,:,:,:,:,:);
+      if isvector(x)
+        % sometimes the data is 1xN, whereas the dimord describes only the first dimension
+        % in this case a row and column vector can be interpreted as equivalent
+        x = x(selindx);
+      else
+        x = x(selindx,:,:,:,:,:);
+      end
     case 2
       x = x(:,selindx,:,:,:,:);
     case 3

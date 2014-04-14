@@ -203,7 +203,7 @@ else
     if isfield(varargin{1}, [cfg.parameter 'dimord'])
       grandavg.([cfg.parameter 'dimord']) = varargin{1}.([cfg.parameter 'dimord']);
     elseif isfield(varargin{1}, 'dimord')
-      grandavg.dimord = varargin{1}.('dimord');
+      grandavg.dimord = varargin{1}.dimord;
     end
   end % if keepindividual
   clear dat
@@ -211,16 +211,10 @@ else
 end % if iscell
 
 % the fields that describe the actual data need to be copied over from the input to the output
-if isfield(grandavg, [cfg.parameter 'dimord'])
-  dimord = grandavg.([cfg.parameter 'dimord']);
-elseif isfield(grandavg, 'dimord')
-  dimord = grandavg.('dimord');
-else
-  dimord = [];
-end
+dimord = getdimord(grandavg, cfg.parameter);
 
 % some standard fields from the input should be copied over in the output
-copyfield = {'pos', 'inside', 'outside', 'dim'};
+copyfield = {'pos' 'dim' 'inside' 'outside' 'unit' 'coordsys'};
 if ~isempty(strfind(dimord, 'time')), copyfield{end+1} = 'time'; end
 if ~isempty(strfind(dimord, 'freq')), copyfield{end+1} = 'freq'; end
 for i=1:length(copyfield)

@@ -102,14 +102,7 @@ tmpcfg.parameter = cfg.parameter;
 
 cfg.parameter = tmpcfg.parameter;
 
-if isfield(varargin{1}, [cfg.parameter 'dimord'])
-  dimord = varargin{1}.([cfg.parameter 'dimord']);
-elseif isfield(varargin{1}, 'dimord')
-  dimord = varargin{1}.dimord;
-else
-  error('the dimord of the requested parameter is unknown');
-end
-
+dimord = getdimord(varargin{1}, cfg.parameter);
 dimtok = tokenize(dimord, '_');
 
 % this determines which descriptive fields will get copied over
