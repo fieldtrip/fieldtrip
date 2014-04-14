@@ -1061,6 +1061,9 @@ if iscell(x)
     x = x(selindx);
   else
     for i=1:numel(x)
+      if isempty(x{i})
+        continue
+      end
       switch seldim
         case 2
           x{i} = x{i}(selindx,:,:,:,:);

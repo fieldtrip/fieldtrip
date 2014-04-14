@@ -132,6 +132,17 @@ switch version
       source = rmfield(source, 'avg');
     end
     
+    % ensure that it is always logical
+    source = fixinside(source, 'logical');
+    
+    if isfield(source, 'inside')
+      % it is logically indexed
+      probe = find(source.inside, 1, 'first');
+    else
+      % just take the first source position
+      probe = 1;
+    end
+    
     if isfield(source, 'trial') && isstruct(source.trial)
       npos = size(source.pos,1);
       nrpt = numel(source.trial); % note that this field is also used further doen
@@ -150,32 +161,41 @@ switch version
         end
         
         if iscell(dum)
-          val = cell(nrpt, npos);
-          dum = reshape(dum, [1 npos]);
-          val(1,:) = dum;
+          indx = find(source.inside);
+          siz = size(dum{probe});
+          siz = [nrpt siz];
+          val = cell(npos,1);
+          for k=1:length(indx)
+            val{indx(k)}          = nan(siz);
+            val{indx(k)}(1,:,:,:) = dum{indx(k)};
+          end
+          % concatenate all data as {pos}_rpt_etc
           for j=2:length(source.trial)
             dum = source.trial(j).(fn{i});
-            dum = reshape(dum, [1 npos]);
-            % concatenate them as {rpt_pos}
-            val(j,:) = dum;
+            for k=1:length(indx)
+              val{indx(k)}(j,:,:,:) = dum{indx(k)};
+            end
+            
           end % for all trials
           source.(fn{i}) = val;
           
         else
-          val = nan([nrpt size(dum)]);
-          dum = reshape(dum, [1 size(dum)]);
-          val(1,:,:,:,:) = dum;
+          siz = size(dum);
+          siz = [npos nrpt siz(2:end)];
+          val = nan(siz);
+          % concatenate all data as pos_rpt_etc
+          val(:,1,:,:,:) = dum;
           for j=2:length(source.trial)
             dum = source.trial(j).(fn{i});
-            dum = reshape(dum, [1 size(dum)]);
-            % concatenate them as rpt_pos_etc
-            val(j,:,:,:,:) = dum;
+            val(:,j,:,:,:) = dum;
           end % for all trials
           source.(fn{i}) = val;
+          
         end
       end % for each field
       
       source = rmfield(source, 'trial');
+      
     elseif isfield(source, 'cumtapcnt')
       % note that this field is also used further doen
       nrpt = length(source.cumtapcnt);
@@ -190,113 +210,11 @@ switch version
       nchan = nan;
     end
     
-    % ensure that it is always logical
-    source = fixinside(source, 'logical');
-    
     fn = fieldnames(source);
+    fn = setdiff(fn, {'pos' 'inside' 'outside' 'time' 'freq' 'dim' 'cumtapcnt'});
+    
     for i=1:length(fn)
-      npos  = size(source.pos,1);
-      if isfield(source, 'time')
-        ntime = length(source.time);
-      else
-        ntime = nan;
-      end
-      if isfield(source, 'freq')
-        nfreq = length(source.freq);
-      else
-        nfreq = nan;
-      end
-      
-      dimord = [];
-      
-      if isnumeric(source.(fn{i}))
-        val = source.(fn{i});
-        switch numel(val)
-          case npos
-            dimord = 'pos';
-          case npos*ntime
-            dimord = 'pos_time';
-          case nrpt*npos*ntime
-            dimord = 'rpt_pos_time';
-          case npos*nfreq
-            dimord = 'pos_freq';
-          case nrpt*npos*nfreq
-            dimord = 'rpt_pos_freq';
-          case npos*nfreq*ntime
-            if isequal(size(val), [npos nfreq ntime])
-              dimord = 'pos_freq_time';
-            elseif isequal(size(val), [npos ntime nfreq])
-              dimord = 'pos_time_freq';
-            else
-              error('cannot determine dimord for %s', fn{i});
-            end
-          case nrpt*npos*nfreq*ntime
-            if isequal(size(val), [nrpt npos nfreq ntime])
-              dimord = 'rpt_pos_freq_time';
-            elseif isequal(size(val), [nrpt npos ntime nfreq])
-              dimord = 'rpt_pos_time_freq';
-            else
-              error('cannot determine dimord for %s', fn{i});
-            end
-          otherwise
-            dimord = [];
-        end % switch
-        
-      elseif iscell(source.(fn{i}))
-        if isfield(source, 'inside')
-          % it is logically indexed
-          probe = find(source.inside, 1, 'first');
-        else
-          % just take the first source position
-          probe = 1;
-        end
-        
-        if length(source.(fn{i}))==npos
-          
-          val = source.(fn{i}){probe};
-          switch numel(val)
-            case 1
-              dimord = '{pos}';
-            case ntime
-              dimord = '{pos}_time';
-            case 3*ntime
-              dimord = '{pos}_ori_time';
-            case nfreq
-              dimord = '{pos}_freq';
-            case 3*nfreq
-              dimord = '{pos}_ori_freq';
-            case 3*nrpt
-              dimord = '{pos}_ori_rpt';
-            case nchan*3
-              dimord = '{pos}_chan_ori';
-            case nfreq*ntime
-              if isequal(size(val), [nfreq ntime])
-                dimord = '{pos}_freq_time';
-              elseif isequal(size(val), [ntime nfreq])
-                dimord = '{pos}_time_freq';
-              else
-                error('cannot determine dimord for %s', fn{i});
-              end
-            case 3*nfreq*ntime
-              if isequal(size(val), [3 nfreq ntime])
-                dimord = '{pos}_ori_freq_time';
-              elseif isequal(size(val), [3 ntime nfreq])
-                dimord = '{pos}_ori_time_freq';
-              else
-                error('cannot determine dimord for %s', fn{i});
-              end
-            case 3*3
-              dimord = '{pos}_ori_ori';
-            otherwise
-              dimord = [];
-          end % switch
-
-        else
-          error('unsupported dimensions for cell-array data');
-        end % if npos
-        
-      end % if isnumeric or iscell
-      
+      dimord = getdimord(source, fn{i}, 'nrpt', nrpt);
       if ~isempty(dimord)
         source.([fn{i} 'dimord']) = dimord;
       end

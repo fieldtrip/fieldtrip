@@ -24,7 +24,7 @@ if iscell(x)
   cellsize = numel(x);          % the number of elements in the cell-array
   [dum, indx] = max(cellfun(@numel, x));
   matsize = size(x{indx});      % the size of the content of the cell-array
-  siz  = [cellsize matsize];    % concatenate the two
+  siz = [cellsize matsize];     % concatenate the two
 else
   siz = size(x);
 end
