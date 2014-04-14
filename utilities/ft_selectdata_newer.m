@@ -1009,9 +1009,11 @@ tol     = varargin{end-1}; % FIXME this is still ignored
 selmode = varargin{end};   % FIXME this is still ignored
 data    = varargin(1:ndata);
 
-if ~isequal(varargin{i}.pos, varargin{1}.pos)
-  % FIXME it would be possible here to make a selection based on intersect or union
-  error('not yet implemented');
+for i=1:ndata
+  if ~isequal(varargin{i}.pos, varargin{1}.pos)
+    % FIXME it would be possible here to make a selection based on intersect or union
+    error('not yet implemented');
+  end
 end
 
 if strcmp(cfg.select, 'union')
