@@ -139,10 +139,11 @@ if ~isfield(cfg, 'foilim')
 end
 
 datfield  = fieldnames(varargin{1});
+datfield  = setdiff(datfield, {'label' 'labelcmb'}); % these fields will be used for selection, but are not treated as data fields
+xtrafield =  {'cfg' 'hdr' 'fsample' 'grad' 'elec' 'transform' 'unit' 'topolabel' 'lfplabel' 'dim'}; % these fields will not be touched in any way by the code
+datfield  = setdiff(datfield, xtrafield);
 orgdim1   = datfield(~cellfun(@isempty, regexp(datfield, 'dimord$')));
 datfield  = setdiff(datfield, orgdim1);
-datfield  = setdiff(datfield, {'cfg' 'hdr' 'fsample' 'grad' 'elec' 'transform' 'unit' 'label' 'labelcmb' 'topolabel' 'lfplabel' 'dim'});
-% time, freq and pos are also treated as data fields and not as descriptive fields
 datfield  = datfield(:)';
 
 sel = strcmp(datfield, 'cumtapcnt');
@@ -242,8 +243,8 @@ if haschancmb, [selchancmb, cfg] = getselection_chancmb(cfg, varargin{:}, cfg.se
 if hasfreq,    [selfreq,    cfg] = getselection_freq   (cfg, varargin{:}, cfg.tolerance, cfg.select); end
 if hastime,    [seltime,    cfg] = getselection_time   (cfg, varargin{:}, cfg.tolerance, cfg.select); end
 
-% keep track of fields that should be retained in the output
-keepfield = {};
+% this is to keep track of all fields that should be retained in the output
+keepfield = datfield;
 
 for i=1:numel(varargin)
   
@@ -325,15 +326,10 @@ for i=1:numel(varargin)
     
   end % for datfield
   
-  % also update the fields that describe each of the dimensions
-  % if haspos,     varargin{i} = makeselection_pos    (varargin{i}, selpos{i}, avgoverpos); end % update the pos field
+  % also update the fields that describe the dimensions, time/freq/pos have been dealt with as data
   if haschan,    varargin{i} = makeselection_chan   (varargin{i}, selchan{i}, avgoverchan); end % update the label field
   if haschancmb, varargin{i} = makeselection_chancmb(varargin{i}, selchancmb{i}, avgoverchancmb); end % update the labelcmb field
-  %   if hasfreq,    varargin{i} = makeselection_freq   (varargin{i}, selfreq{i}, avgoverfreq); end % update the freq field
-  %   if ~ismember('time', datfield)
-  %     % time is treated as a data field in raw and in spike data, and as a descriptive field otherwise
-  %     if hastime,  varargin{i} = makeselection_time   (varargin{i}, seltime{i}, avgovertime); end % update the time field
-  %   end
+ 
 end % for varargin
 
 if strcmp(cfg.select, 'union')
@@ -352,16 +348,16 @@ sel = strcmp(keepfield, 'chancmb');  if any(sel), keepfield(sel) = {'labelcmb'};
 
 if avgoverrpt
   % these are invalid after averaging
-  datfield = setdiff(datfield, {'cumsumcnt' 'cumtapcnt' 'trialinfo' 'sampleinfo'});
+  keepfield = setdiff(keepfield, {'cumsumcnt' 'cumtapcnt' 'trialinfo' 'sampleinfo'});
 end
 
 if avgovertime || ~isequal(cfg.latency, 'all')
   % these are invalid after averaging or making a latency selection
-  datfield = setdiff(datfield, {'sampleinfo'});
+  keepfield = setdiff(keepfield, {'sampleinfo'});
 end
 
 for i=1:numel(varargin)
-  varargin{i} = keepfields(varargin{i}, [datfield keepfield {'cfg' 'hdr' 'fsample' 'grad' 'elec' 'transform' 'unit'}]);
+  varargin{i} = keepfields(varargin{i}, [keepfield xtrafield]);
 end
 
 % restore the original dimord fields in the data
@@ -408,16 +404,6 @@ end % main function ft_selectdata
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTIONS
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [data] = keepfields(data, fn)
-
-fn = setdiff(fieldnames(data), fn);
-for i=1:numel(fn)
-  data = rmfield(data, fn{i});
-end
-
-end % function keepfields
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function data = makeselection(data, seldim, selindx, avgoverdim, datfield, selmode)
 
@@ -475,26 +461,30 @@ switch selmode
     end
     
   case 'union'
-    tmp = data.(datfield);
-    siz = size(tmp);
-    siz(seldim) = numel(selindx);
-    data.(datfield) = nan(siz);
-    sel = isfinite(selindx);
-    switch seldim
-      case 1
-        data.(datfield)(sel,:,:,:,:,:) = tmp(selindx(sel),:,:,:,:,:);
-      case 2
-        data.(datfield)(:,sel,:,:,:,:) = tmp(:,selindx(sel),:,:,:,:);
-      case 3
-        data.(datfield)(:,:,sel,:,:,:) = tmp(:,:,selindx(sel),:,:,:);
-      case 4
-        data.(datfield)(:,:,:,sel,:,:) = tmp(:,:,:,selindx(sel),:,:);
-      case 5
-        data.(datfield)(:,:,:,:,sel,:) = tmp(:,:,:,:,selindx(sel),:);
-      case 6
-        data.(datfield)(:,:,:,:,:,sel) = tmp(:,:,:,:,:,selindx(sel));
-      otherwise
-        error('unsupported dimension (%d) for making a selection for %s', seldim, datfield);
+    if ~isempty(selindx) && all(isnan(selindx))
+      % no selection needs to be made
+    else
+      tmp = data.(datfield);
+      siz = size(tmp);
+      siz(seldim) = numel(selindx);
+      data.(datfield) = nan(siz);
+      sel = isfinite(selindx);
+      switch seldim
+        case 1
+          data.(datfield)(sel,:,:,:,:,:) = tmp(selindx(sel),:,:,:,:,:);
+        case 2
+          data.(datfield)(:,sel,:,:,:,:) = tmp(:,selindx(sel),:,:,:,:);
+        case 3
+          data.(datfield)(:,:,sel,:,:,:) = tmp(:,:,selindx(sel),:,:,:);
+        case 4
+          data.(datfield)(:,:,:,sel,:,:) = tmp(:,:,:,selindx(sel),:,:);
+        case 5
+          data.(datfield)(:,:,:,:,sel,:) = tmp(:,:,:,:,selindx(sel),:);
+        case 6
+          data.(datfield)(:,:,:,:,:,sel) = tmp(:,:,:,:,:,selindx(sel));
+        otherwise
+          error('unsupported dimension (%d) for making a selection for %s', seldim, datfield);
+      end
     end
     
     if avgoverdim
@@ -757,17 +747,13 @@ tol      = varargin{end-1};
 ndata    = numel(varargin)-2;
 varargin = varargin(1:ndata);
 
-if isequal(cfg.latency, 'all')
-  % the nan return value specifies that no selection was specified
+if isequal(cfg.latency, 'all') && iscell(varargin{1}.time)
+  % for raw data this means that all trials should be selected as they are
+  % for timelock/freq data it is still needed to make the intersection between data arguments
   timeindx = cell(1,ndata);
-  if isnumeric(varargin{1}.time)
-    for i=1:ndata
-      timeindx{i} = nan;
-    end
-  elseif iscell(varargin{1}.time)
-    for i=1:ndata
-      timeindx{i} = num2cell(nan(1, length(varargin{i}.time)));
-    end
+  for i=1:ndata
+    % the nan return value specifies that no selection was specified
+    timeindx{i} = num2cell(nan(1, length(varargin{i}.time)));
   end
   return
 end
@@ -1097,6 +1083,14 @@ for i=1:ndata
   posindx{i} = nan;    % the nan return value specifies that no selection was specified
 end
 end % function getselection_pos
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [data] = keepfields(data, fn)
+fn = setdiff(fieldnames(data), fn);
+for i=1:numel(fn)
+  data = rmfield(data, fn{i});
+end
+end % function keepfields
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function x = squeezedim(x, dim)
