@@ -115,13 +115,13 @@ if strcmp(dtype, 'source')
   end
 end
 
-if length(varargin)>1 && ~isequal(cfg.trials, 'all')
-  error('it is ambiguous to make a subselection of trials while at the same time concatenating multiple data structures')
-end
-
 cfg.channel = ft_getopt(cfg, 'channel', 'all', 1);
 cfg.latency = ft_getopt(cfg, 'latency', 'all', 1);
 cfg.trials  = ft_getopt(cfg, 'trials',  'all', 1);
+
+if length(varargin)>1 && ~isequal(cfg.trials, 'all')
+  error('it is ambiguous to make a subselection of trials while at the same time concatenating multiple data structures')
+end
 
 if ~isfield(cfg, 'foilim')
   cfg.frequency = ft_getopt(cfg, 'frequency', 'all', 1);
