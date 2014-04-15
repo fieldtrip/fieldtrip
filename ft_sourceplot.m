@@ -92,7 +92,7 @@ function [cfg] = ft_sourceplot(cfg, data)
 %   cfg.crosshair     = 'yes' or 'no' (default = 'yes')
 %   cfg.axis          = 'on' or 'off' (default = 'on')
 %   cfg.interactive   = 'yes' or 'no' (default = 'no' if no nargout is desired, 'yes' otherwise)
-%                        in interactive mode the function returns the 
+%                        in interactive mode the function returns the
 %                        fiducials when closing the figure in the cfg
 %   cfg.queryrange    = number, in atlas voxels (default 3)
 %
@@ -137,7 +137,7 @@ function [cfg] = ft_sourceplot(cfg, data)
 %   cfg.camlight       = 'yes' or 'no' (default = 'yes')
 %   cfg.renderer       = 'painters', 'zbuffer',' opengl' or 'none' (default = 'opengl')
 %                        note that when using opacity the OpenGL renderer is required.
-% 
+%
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 % If you specify this option the input data will be read from a *.mat
@@ -278,7 +278,7 @@ cfg.distmat        = ft_getopt(cfg, 'distmat',       []);
 cfg.camlight       = ft_getopt(cfg, 'camlight',      'yes');
 cfg.renderer       = ft_getopt(cfg, 'renderer',      'opengl');
 %if isequal(cfg.method,'surface')
-  %if ~isfield(cfg, 'projmethod'), error('specify cfg.projmethod'); end
+%if ~isfield(cfg, 'projmethod'), error('specify cfg.projmethod'); end
 %end
 
 % for backward compatibility
@@ -452,19 +452,19 @@ elseif hasfun
   
   %what if fun is 4D?
   if ndims(fun)>3 || prod(dim)==size(fun,1)
-    if isfield(data, 'time') && isfield(data, 'freq'),
+    if isfield(data, 'time') && length(data.time)>1 && isfield(data, 'freq') && length(data.freq)>1
       %data contains timefrequency representation
       qi      = [1 1];
       hasfreq = 1;
       hastime = 1;
       fun     = reshape(fun, [dim numel(data.freq) numel(data.time)]);
-    elseif isfield(data, 'time')
+    elseif isfield(data, 'time') && length(data.time)>1
       %data contains evoked field
       qi      = 1;
       hasfreq = 0;
       hastime = 1;
       fun     = reshape(fun, [dim numel(data.time)]);
-    elseif isfield(data, 'freq')
+    elseif isfield(data, 'freq') && length(data.freq)>1
       %data contains frequency spectra
       qi      = 1;
       hasfreq = 1;
@@ -751,14 +751,14 @@ if isequal(cfg.method,'ortho')
   
   % create structure to be passed to gui
   opt = [];
-  opt.dim = dim;
-  opt.ijk = [xi yi zi];
-  opt.xsize = xsize;
-  opt.ysize = ysize;
+  opt.dim           = dim;
+  opt.ijk           = [xi yi zi];
+  opt.xsize         = xsize;
+  opt.ysize         = ysize;
   opt.handlesaxes   = [h1 h2 h3];
   opt.handlesfigure = h;
-  opt.axis = cfg.axis;
-  opt.quit = ~strcmp(cfg.interactive, 'yes');
+  opt.axis          = cfg.axis;
+  opt.quit          = ~strcmp(cfg.interactive, 'yes');
   if hasatlas
     opt.atlas = atlas;
   end
@@ -768,33 +768,33 @@ if isequal(cfg.method,'ortho')
   if hasfun
     opt.fun = fun;
   end
-  opt.update = [1 1 1];
-  opt.init = true;
-  opt.isvolume = isvolume;
-  opt.issource= issource;
-  opt.hasatlas = hasatlas;
-  opt.hasfreq = hasfreq;
-  opt.hastime = hastime;
-  opt.hasmsk = hasmsk;
-  opt.hasfun = hasfun;
-  opt.hasana = hasana;
-  opt.qi = qi;
-  opt.tag = 'ik';
-  opt.data = data;
+  opt.update        = [1 1 1];
+  opt.init          = true;
+  opt.isvolume      = isvolume;
+  opt.issource      = issource;
+  opt.hasatlas      = hasatlas;
+  opt.hasfreq       = hasfreq;
+  opt.hastime       = hastime;
+  opt.hasmsk        = hasmsk;
+  opt.hasfun        = hasfun;
+  opt.hasana        = hasana;
+  opt.qi            = qi;
+  opt.tag           = 'ik';
+  opt.data          = data;
   if hasmsk
     opt.msk = msk;
   end
-  opt.fcolmin = fcolmin;
-  opt.fcolmax = fcolmax;
-  opt.opacmin = opacmin;
-  opt.opacmax = opacmax;
-  opt.colorbar = cfg.colorbar;
-  opt.queryrange = cfg.queryrange;
-  opt.funcolormap = cfg.funcolormap;
-  opt.crosshair = strcmp(cfg.crosshair, 'yes');
-  opt.lpa = [];
-  opt.rpa = [];
-  opt.nas = [];
+  opt.fcolmin       = fcolmin;
+  opt.fcolmax       = fcolmax;
+  opt.opacmin       = opacmin;
+  opt.opacmax       = opacmax;
+  opt.colorbar      = cfg.colorbar;
+  opt.queryrange    = cfg.queryrange;
+  opt.funcolormap   = cfg.funcolormap;
+  opt.crosshair     = strcmp(cfg.crosshair, 'yes');
+  opt.lpa           = [];
+  opt.rpa           = [];
+  opt.nas           = [];
   setappdata(h, 'opt', opt);
   cb_redraw(h);
   
@@ -803,7 +803,7 @@ if isequal(cfg.method,'ortho')
   fprintf('click left mouse button to reposition the cursor\n');
   fprintf('click and hold right mouse button to update the position while moving the mouse\n');
   fprintf('use the arrowkeys to navigate in the current axis\n');
-    
+  
   if istrue(cfg.interactive)
     fprintf('** INTERACTIVE MODE SPECIAL **\n');
     fprintf('press n/l/r on keyboard to record a fiducial position\n');
@@ -819,7 +819,7 @@ if isequal(cfg.method,'ortho')
       cfg.rpa = opt.rpa;
       cfg.lpa = opt.lpa;
     catch
-      warning('Figure seem to be closed not by pressing ''q'' - returning of fiducials not possible\n'); 
+      warning('Figure seem to be closed not by pressing ''q'' - returning of fiducials not possible\n');
       cfg.nas = [];
       cfg.rpa = [];
       cfg.lpa = [];
@@ -888,7 +888,7 @@ elseif isequal(cfg.method,'surface')
     
     % read the triangulated cortical surface from file
     surf  = ft_read_headshape(cfg.surffile);
-
+    
     if isfield(surf, 'transform'),
       % compute the surface vertices in head coordinates
       surf.pnt = ft_warp_apply(surf.transform, surf.pnt);
@@ -991,16 +991,16 @@ elseif isequal(cfg.method,'surface')
   end
   
   if ~isempty(cfg.surfinflated)
-      if ~isstruct(cfg.surfinflated)
-          % read the inflated triangulated cortical surface from file
-          surf = ft_read_headshape(cfg.surfinflated);
-      else
-          surf = cfg.surfinflated;
-          if isfield(surf, 'transform'),
-              % compute the surface vertices in head coordinates
-              surf.pnt = ft_warp_apply(surf.transform, surf.pnt);
-          end
+    if ~isstruct(cfg.surfinflated)
+      % read the inflated triangulated cortical surface from file
+      surf = ft_read_headshape(cfg.surfinflated);
+    else
+      surf = cfg.surfinflated;
+      if isfield(surf, 'transform'),
+        % compute the surface vertices in head coordinates
+        surf.pnt = ft_warp_apply(surf.transform, surf.pnt);
       end
+    end
   end
   
   %------do the plotting
@@ -1360,11 +1360,11 @@ if opt.hasatlas
     lab = 'NA';
     %fprintf('atlas labels: not found\n');
   else
-      tmp = sprintf('%s', strrep(lab{1}, '_', ' '));
+    tmp = sprintf('%s', strrep(lab{1}, '_', ' '));
     for i=2:length(lab)
       tmp = [tmp sprintf(', %s', strrep(lab{i}, '_', ' '))];
     end
-      lab = tmp;
+    lab = tmp;
   end
 else
   lab = 'NA';
@@ -1446,7 +1446,7 @@ if opt.hasfreq && opt.hastime && opt.hasfun,
   xlabel('time'); ylabel('freq');
   set(h4,'tag','TF1');
   caxis([opt.fcolmin opt.fcolmax]);
-elseif opt.hasfreq && numel(data.freq)>1 && opt.hasfun,
+elseif opt.hasfreq && opt.hasfun,
   h4 = subplot(2,2,4);
   plot(data.freq, squeeze(opt.fun(xi,yi,zi,:))); xlabel('freq');
   axis([data.freq(1) data.freq(end) opt.fcolmin opt.fcolmax]);
@@ -1618,7 +1618,7 @@ uiresume;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_buttonrelease(h, eventdata)
 
-set(h, 'windowbuttonmotionfcn', '');  
+set(h, 'windowbuttonmotionfcn', '');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -1664,7 +1664,7 @@ if ~isempty(tag) && ~opt.init
     opt.update = [1 1 1];
   elseif strcmp(tag, 'TF3')
     % time only
-    opt.qi  = nearest(opt.data.time, pos(1));  
+    opt.qi  = nearest(opt.data.time, pos(1));
     opt.update = [1 1 1];
   end
 end
@@ -1683,7 +1683,7 @@ opt = getappdata(h, 'opt');
 opt.quit = true;
 setappdata(h, 'opt', opt);
 uiresume
-  
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1693,7 +1693,6 @@ while p~=0
   h = p;
   p = get(h, 'parent');
 end
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -1722,5 +1721,5 @@ end
 if ~isempty(eventdata.Modifier)
   key = [eventdata.Modifier{1} '+' key];
 end
-  
+
 
