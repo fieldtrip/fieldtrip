@@ -47,22 +47,31 @@ end
 if isfield(data, 'label')
   nchan = length(data.label);
 end
+
 if isfield(data, 'labelcmb')
   nchancmb = size(data.labelcmb, 1);
 end
+
 if isfield(data, 'time')
-  if iscell(data.time)
+  if iscell(data.time) && ~isempty(data.time)
     ntime = length(data.time{1}); % raw data: only for the first trial
   else
     ntime = length(data.time);
   end
 end
+
 if isfield(data, 'freq')
   nfreq = length(data.freq);
 end
-if isfield(data, 'trial') && iscell(data.trial)
+
+if isfield(data, 'trial') && ft_datatype(data, 'raw')
   nrpt = length(data.trial);
 end
+
+if isfield(data, 'trialtime') && ft_datatype(data, 'spike')
+  nrpt = size(data.trialtime,1);
+end
+
 if isfield(data, 'cumtapcnt')
   nrpt = size(data.cumtapcnt,1);
   if numel(data.cumtapcnt)==length(data.cumtapcnt)
@@ -80,9 +89,11 @@ if isfield(data, 'cumtapcnt')
     end
   end
 end
+
 if isfield(data, 'pos')
   npos = size(data.pos,1);
 end
+
 if isfield(data, 'csdlabel')
   % this is used in PCC beamformers
   nori = length(data.csdlabel);
@@ -90,10 +101,12 @@ elseif isfinite(npos)
   % assume that there are three dipole orientations per source
   nori = 3;
 end
+
 if isfield(data, 'topolabel')
   % this is used in ICA and PCA decompositions
   ntopochan = length(data.topolabel);
 end
+
 if isfield(data, 'timestamp') && iscell(data.timestamp)
   nspike = length(data.timestamp{1}); % spike data: only for the first channel
 end
@@ -172,6 +185,7 @@ switch field
     end
     
   case {'cov' 'coh' 'csd' 'noisecov' 'noisecsd'}
+    % these occur in timelock and in source structures
     if isequalwithoutnans(datsiz, [nrpt nchan nchan])
       dimord = 'rpt_chan_chan';
     elseif isequalwithoutnans(datsiz, [nchan nchan])
@@ -181,6 +195,12 @@ switch field
         dimord = '{pos}_ori_ori';
       else
         dimord = 'pos_ori_ori';
+      end
+    elseif isequalwithoutnans(datsiz, [npos nrpt nori nori])
+      if iscell(data.(field))
+        dimord = '{pos}_rpt_ori_ori';
+      else
+        dimord = 'pos_rpt_ori_ori';
       end
     end
     
@@ -229,7 +249,7 @@ switch field
       dimord = '{chan}_spike';
     end
     
-  case {'sampleinfo' 'trialinfo'}
+  case {'sampleinfo' 'trialinfo' 'trialtime'}
     if isequalwithoutnans(datsiz, [nrpt nan])
       dimord = 'rpt_unknown';
     end
@@ -255,12 +275,19 @@ switch field
     end
     
   case {'timestamp' 'time'}
-    if iscell(data.(field)) && datsiz(1)==nchan
+    if ft_datatype(data, 'spike') && iscell(data.(field)) && datsiz(1)==nchan
       dimord = '{chan}_spike';
-    elseif iscell(data.(field)) && datsiz(1)==nrpt
+    elseif ft_datatype(data, 'raw') && iscell(data.(field)) && datsiz(1)==nrpt
       dimord = '{rpt}_time';
+    elseif isvector(data.(field)) && isequal(datsiz, [1 ntime])
+      dimord = 'time';
     end
-      
+
+  case {'freq'}
+    if isvector(data.(field)) && isequal(datsiz, [1 nfreq])
+      dimord = 'freq';
+    end
+
 end % switch field
 
 

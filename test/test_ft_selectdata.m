@@ -195,6 +195,20 @@ cfg.avgoverchan = 'yes';
 cfg.avgovertime = 'yes';
 timelock_avgoverall = ft_selectdata(cfg, timelock)
 
+source = [];
+source.dim = [10 11 12];
+source.transform = eye(4);
+source.avg.pow = rand(10*11*12,1);
+source.inside = 1:660;
+source.outside = 661:1320;
+
+cfg = [];
+cfg.avgoverpos = 'yes';
+output = ft_selectdata(cfg, source)
+assert(output.pos(1)==5.5);
+assert(output.pos(2)==6.0);
+assert(output.pos(3)==6.5);
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% this part of the script tests the functionality of ft_selectdata with respect
 % to freqdata. it implements the (old) test_ft_selectdata_freqdata
@@ -609,8 +623,8 @@ if nargin>2
     % skip this comparison, because ft_selectdata_old could not deal with this correctly: this is not something to be asserted here
     data_new = rmfield(data_new, 'dof');
   end
-  fn = {'trial', 'time', 'trialinfo', 'sampleinfo'};
   
+  fn = {'trial', 'time', 'freq', 'trialinfo', 'sampleinfo'};
   for i=1:length(fn)
     if isfield(data_old, fn{i}) && isfield(data_new, fn{i}) && numel(data_old.(fn{i}))==0 && numel(data_new.(fn{i}))==0
       % this is needed because these two comparisons return false
@@ -623,6 +637,7 @@ if nargin>2
   if isfield(data_old, 'fsample') && ~isfield(data_new, 'fsample')
     data_old = rmfield(data_old, 'fsample');
   end
+  
   if numel(data_old.label)==0, data_old.label = {}; end
   if numel(data_new.label)==0, data_new.label = {}; end
   assert(isequal(data_old, data_new));
