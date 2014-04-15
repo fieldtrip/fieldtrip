@@ -162,7 +162,7 @@ ft_sourceplot(cfg,source_diff_int);
 
 cfg.method = 'surface';
 cfg.projmethod     = 'nearest'; 
-cfg.surffile       = 'surface_l4_both.mat';
+cfg.surffile       = 'surface_white_both.mat';
 cfg.surfdownsample = 10;
 ft_sourceplot(cfg,source_diff_int);
 

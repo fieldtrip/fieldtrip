@@ -335,7 +335,7 @@ cfg.funcolormap    = 'jet';
 cfg.opacitylim     = [0.0 1.2];
 cfg.opacitymap     = 'rampup';
 cfg.projmethod     = 'nearest';
-cfg.surffile       = 'surface_l4_both.mat';
+cfg.surffile       = 'surface_white_both.mat';
 cfg.surfdownsample = 10;
 figure
 ft_sourceplot(cfg, sourceDiffIntNorm);
