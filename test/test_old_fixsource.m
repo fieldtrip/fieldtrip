@@ -5,7 +5,7 @@ function test_old_fixsource
 
 % TEST test_old_fixsource
 
-%this script tests the fixsource function which is part of checkdata
+%this script tests the fixsource function which is part of ft_checkdata
 
 %-------------------------------------
 %generate data
@@ -83,41 +83,41 @@ cfgs.fixedori  = 'no';
 cfgs.keepcsd   = 'yes';
 cfgs.realfilter = 'yes';
 cfgs.keepleadfield = 'yes';
-source         = sourceanalysis(cfgs,freq);
-sdics          = checkdata(source, 'sourcerepresentation', 'new');
+source         = ft_sourceanalysis(cfgs,freq);
+sdics          = ft_checkdata(source, 'sourcerepresentation', 'new');
 
 cfgs.grid.filter = sdics.filter;
 cfgs.method      = 'pcc';
 cfgs.keepmom     = 'yes';
 source           = ft_sourceanalysis(cfgs, freq);
-spcc1            = checkdata(source, 'sourcerepresentation', 'new', 'haspow', 'yes');
+spcc1            = ft_checkdata(source, 'sourcerepresentation', 'new', 'haspow', 'yes');
 %this gives a warning
 
 cfgsd            = [];
 cfgsd.projectmom = 'yes';
 sd               = ft_sourcedescriptives(cfgsd, source);
-spcc2            = checkdata(sd, 'sourcerepresentation', 'new', 'haspow', 'yes');
+spcc2            = ft_checkdata(sd, 'sourcerepresentation', 'new', 'haspow', 'yes');
 
 %with fixedori
 cfgs.grid     = grid;
 cfgs.method   = 'dics';
 cfgs.keepmom  = 'no';
 cfgs.fixedori = 'yes';
-source        = sourceanalysis(cfgs, freq);
-sdics2        = checkdata(source, 'sourcerepresentation', 'new');
+source        = ft_sourceanalysis(cfgs, freq);
+sdics2        = ft_checkdata(source, 'sourcerepresentation', 'new');
 
 cfgs.grid.filter = sdics2.filter;
 cfgs.method      = 'pcc';
 cfgs.keepmom     = 'yes';
 
-%there are two ways for not crashing the second round of sourceanalysis
+%there are two ways for not crashing the second round of ft_sourceanalysis
 %with fixori = 'yes';
 for k = 1:numel(source.inside)
   kk = source.inside(k);
   cfgs.grid.leadfield{kk} = sdics2.leadfield{kk}*sdics2.ori{kk};
 end
 source = ft_sourceanalysis(cfgs, freq);
-spcc1f = checkdata(source, 'sourcerepresentation', 'new', 'haspow', 'yes');
+spcc1f = ft_checkdata(source, 'sourcerepresentation', 'new', 'haspow', 'yes');
 %FIXME known problem: ori-field is missing here
 
 % alternative
@@ -130,7 +130,7 @@ end
 %FIXME there's an issue here with mom being expected to be Nx3 and 3xN in beamformer_pcc
 source = ft_sourceanalysis(cfgs, freq);
 try,
-  spcc2f = checkdata(source, 'sourcerepresentation', 'new', 'haspow', 'yes');
+  spcc2f = ft_checkdata(source, 'sourcerepresentation', 'new', 'haspow', 'yes');
 catch
   error('this does not work');
 end
@@ -139,7 +139,7 @@ end
 cfgsd            = [];
 cfgsd.keeptrials = 'yes';
 sd               = ft_sourcedescriptives(cfgsd, source);
-spcc3f           = checkdata(sd, 'sourcerepresentation', 'new');
+spcc3f           = ft_checkdata(sd, 'sourcerepresentation', 'new');
 
 %lcmv
 cfgs           = [];
@@ -153,10 +153,10 @@ cfgs.vol       = vol;
 cfgs.fixedori  = 'no';
 cfgs.keepcov   = 'yes';
 cfgs.keepleadfield = 'yes';
-source         = sourceanalysis(cfgs,tlck);
-slcmv          = checkdata(source, 'sourcerepresentation', 'new');
+source         = ft_sourceanalysis(cfgs,tlck);
+slcmv          = ft_checkdata(source, 'sourcerepresentation', 'new');
 
 cfgs.grid.filter = slcmv.filter;
 cfgs.rawtrial    = 'yes';
-source           = sourceanalysis(cfgs, tlck);
-slcmv2           = checkdata(source, 'sourcerepresentation', 'new');
+source           = ft_sourceanalysis(cfgs, tlck);
+slcmv2           = ft_checkdata(source, 'sourcerepresentation', 'new');
