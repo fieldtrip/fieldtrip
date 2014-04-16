@@ -83,7 +83,7 @@ cfgs.fixedori  = 'yes';
 cfgs.keepcsd   = 'yes';
 cfgs.realfilter = 'yes';
 cfgs.keepleadfield = 'yes';
-source         = sourceanalysis(cfgs,freq);
+source         = ft_sourceanalysis(cfgs,freq);
 
 cfgsd            = [];
 cfgsd.projectmom = 'yes';
@@ -93,7 +93,7 @@ cfgs.grid.filter = sd.avg.filter;
 cfgs.method      = 'pcc';
 cfgs.keepmom     = 'yes';
 
-%there are two ways for not crashing the second round of sourceanalysis
+%there are two ways for not crashing the second round of ft_sourceanalysis
 %with fixori = 'yes';
 for k = 1:numel(source.inside)
   kk = source.inside(k);
@@ -118,11 +118,11 @@ cfgs.vol       = vol;
 cfgs.fixedori  = 'yes';
 cfgs.keepcov   = 'yes';
 cfgs.keepleadfield = 'yes';
-slcmv          = sourceanalysis(cfgs,tlck);
+slcmv          = ft_sourceanalysis(cfgs,tlck);
 
 cfgs.grid.filter = slcmv.avg.filter;
 cfgs.rawtrial    = 'yes';
-slcmv2           = sourceanalysis(cfgs, tlck);
+slcmv2           = ft_sourceanalysis(cfgs, tlck);
 
 %--------
 %do sourcestatistics
