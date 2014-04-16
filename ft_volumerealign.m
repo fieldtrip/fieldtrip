@@ -678,30 +678,41 @@ switch cfg.method
       scalp  = ft_transform_geometry(M, scalp);
     end % dointeractive
     
-    if doicp
-      if ~isfield(cfg, 'weights')
-        w = ones(size(shape.pnt,1),1);
-      else
-        w = cfg.weights(:);
-        if numel(w)~=size(shape.pnt,1),
-          error('number of weights should be equal to the number of points in the headshape');
-        end
+    % always perform an icp-step, because this will give an estimate of the
+    % initial distance of the corresponding points. depending on the value
+    % for doicp, deal with the output differently
+    if doicp,
+      numiter = 50;
+    else
+      numiter = 1;
+    end
+    
+    if ~isfield(cfg, 'weights')
+      w = ones(size(shape.pnt,1),1);
+    else
+      w = cfg.weights(:);
+      if numel(w)~=size(shape.pnt,1),
+        error('number of weights should be equal to the number of points in the headshape');
       end
+    end
       
-      % the icp function wants this as a function handle.
-      weights = @(x)assignweights(x,w);
+    % the icp function wants this as a function handle.
+    weights = @(x)assignweights(x,w);
       
-      % construct the coregistration matrix
-      nrm = normals(scalp.pnt, scalp.tri, 'vertex');
-      [R, t, err, ~, info] = icp(scalp.pnt', shape.pnt', 50, 'Minimize', 'plane', 'Normals', nrm', 'Weight', weights, 'Extrapolation', true, 'WorstRejection', 0.05);
+    % construct the coregistration matrix
+    nrm = normals(scalp.pnt, scalp.tri, 'vertex');
+    [R, t, err, ~, info] = icp(scalp.pnt', shape.pnt', numiter, 'Minimize', 'plane', 'Normals', nrm', 'Weight', weights, 'Extrapolation', true, 'WorstRejection', 0.05);
+    
+    if doicp,
+      % create the additional transformation matrix and compute the
+      % distance between the corresponding points, both prior and after icp
       
       % this one transforms from scalp 'headspace' to shape 'headspace'
-      M2             = inv([R t;0 0 0 1]);
+      M2 = inv([R t;0 0 0 1]);
       
       % warp the extracted scalp points to the new positions
       scalp.pnt = ft_warp_apply(M2, scalp.pnt);
       
-      % smooth the distance function and use this for new weights
       target        = scalp;
       target.pos    = target.pnt;
       target.inside = (1:size(target.pos,1))';
@@ -717,12 +728,36 @@ switch cfg.method
       smoothdist          = ft_sourceinterpolate(tmpcfg, functional, target);
       scalp.distance      = smoothdist.pow(:);
       
+      functional.pow      = info.distancein(:);
+      smoothdist          = ft_sourceinterpolate(tmpcfg, functional, target);
+      scalp.distancein    = smoothdist.pow(:);
+           
       cfg.icpinfo = info;
       cfg.transform_icp = M2;
       
       % touch it to survive trackconfig
       cfg.icpinfo;
       cfg.transform_icp;
+    else
+      % compute the distance between the corresponding points, prior to
+      % icp: this corresponds to the final result after interactive only
+      
+      M2 = eye(4); % this is needed later on
+      
+      target        = scalp;
+      target.pos    = target.pnt;
+      target.inside = (1:size(target.pos,1))';
+      
+      functional     = rmfield(shape,'pnt');
+      functional.pow = info.distancein(:);
+      functional.pos = info.qout';
+      
+      tmpcfg              = [];
+      tmpcfg.parameter    = 'pow';
+      tmpcfg.interpmethod = 'sphere_avg';
+      tmpcfg.sphereradius = 10;
+      smoothdist          = ft_sourceinterpolate(tmpcfg, functional, target);
+      scalp.distance      = smoothdist.pow(:);
       
     end % doicp
     
