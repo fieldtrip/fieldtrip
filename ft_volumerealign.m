@@ -256,9 +256,9 @@ switch cfg.method
     showcrosshair = true;
     showmarkers   = 1;
     dat = mri.(cfg.parameter);
-    nas = [];
-    lpa = [];
-    rpa = [];
+    if isfield(cfg, 'fiducial') && isfield(cfg.fiducial, 'nas'),  nas = cfg.fiducial.nas; else nas = []; end
+    if isfield(cfg, 'fiducial') && isfield(cfg.fiducial, 'lpa'),  lpa = cfg.fiducial.lpa; else lpa = []; end
+    if isfield(cfg, 'fiducial') && isfield(cfg.fiducial, 'rpa'),  rpa = cfg.fiducial.rpa; else rpa = []; end
     antcomm = [];
     pstcomm = [];
     xzpoint = [];
@@ -270,7 +270,11 @@ switch cfg.method
     zc = round(mri.dim(3)/2);
     
     updatepanel = [1 2 3];
-    pnt         = zeros(0,3);
+    if isfield(cfg, 'pnt') 
+      pnt = cfg.pnt;
+    else
+      pnt = zeros(0,3);
+    end
     markerpos   = zeros(0,3);
     markerlabel = {};
     markercolor = {};
@@ -733,12 +737,11 @@ switch cfg.method
     end
     
     % update the cfg
-    cfg.headshape    = shape;
-    cfg.headshapemri = scalp;
+    cfg.headshape.headshape    = shape;
+    cfg.headshape.headshapemri = scalp;
       
     % touch it to survive trackconfig
     cfg.headshape;
-    cfg.headshapemri;
     
     if doicp && dointeractive
       transform = M2*M;
