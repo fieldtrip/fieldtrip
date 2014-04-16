@@ -14,16 +14,16 @@ hdr.nSamplesPre = 0;
 hdr.Fs = 1000;
 % hdr.label = ...
 
-write_data(filename, [], 'header', hdr, 'append', 0);
+ft_write_data(filename, [], 'header', hdr, 'append', 0);
 
 siz = round(logspace(0, 3, 100));
 dat = zeros(hdr.nChans, max(siz));
 stopwatch = tic;
 t(1) = toc(stopwatch);
 for i=1:length(siz)
-disp(i)
-write_data(filename, dat(:,1:siz(i)), 'header', hdr, 'append', 1);
-t(i+1) = toc(stopwatch);
+  disp(i)
+  ft_write_data(filename, dat(:,1:siz(i)), 'header', hdr, 'append', 1);
+  t(i+1) = toc(stopwatch);
 end
 
 t = diff(t);
@@ -37,7 +37,7 @@ sel = round(0.33*numel(siz)):numel(siz);
 [p, s] = polyfit(siz(sel), t(sel), 1);
 e = polyval(p, siz);
 
-hold on 
+hold on
 plot(siz, e, 'r-')
 
 fprintf('latency   = %f sec\n', p(2));
