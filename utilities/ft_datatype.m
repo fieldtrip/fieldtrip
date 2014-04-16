@@ -131,7 +131,11 @@ if nargin>1
   % return a boolean value
   switch desired
     case 'raw'
-      type = any(strcmp(type, {'raw', 'comp'}));
+      type = strcmp(type, 'raw')      || (strcmp(type, 'comp') && israw);
+    case 'timelock'
+      type = strcmp(type, 'timelock') || (strcmp(type, 'comp') && istimelock);
+    case 'freq'
+      type = strcmp(type, 'freq')     || (strcmp(type, 'comp') && isfreq);
     case 'volume'
       type = any(strcmp(type, {'volume', 'segmentation'}));
     case 'source'
@@ -193,7 +197,6 @@ end
 if ~isempty(isboolean)
   res = all(isboolean);
 end
-
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
