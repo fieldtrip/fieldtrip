@@ -985,8 +985,10 @@ elseif isequal(cfg.method,'surface')
     surf.pnt = data.pos;
     surf.tri = data.tri;
     
-    if hasfun, val     = fun(data.inside(:)); end
-    if hasmsk, maskval = msk(data.inside(:)); end
+    %if hasfun, val     = fun(data.inside(:)); end
+    %if hasmsk, maskval = msk(data.inside(:)); end
+    if hasfun, val     = fun(:); end
+    if hasmsk, maskval = msk(:); end
     
   end
   
