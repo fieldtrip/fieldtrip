@@ -28,7 +28,7 @@ function test_old_trialdef
 % -sampleinfo and trialinfo should be adjusted by ft_rejectartifact
 
 
-cd('/Volumes/home/common/matlab/fieldtrip/testdata/raw/meg/ctf275/A0132_Aud-Obj-Recognition_20051115_02.ds');
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/ctf275/A0132_Aud-Obj-Recognition_20051115_02.ds'));
 headerfile = 'A0132_Aud-Obj-Recognition_20051115_02.res4';
 datafile   = 'A0132_Aud-Obj-Recognition_20051115_02.meg4';
 %hdr        = ft_read_header(headerfile);
