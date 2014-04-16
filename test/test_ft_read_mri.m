@@ -13,14 +13,13 @@ files = {
   'analyze/oostenveld_r.img'
   'ctf_v22/anonymous.mri'
   'ctf_v41/anonymous.mri'
-  'dicom/ERIVDBER_030731_R.OOSTERVELD.MR.PAUGAA_ANATOMICAL-3D.2.100.2003.7.31.11.19.16.15000.53831991.IMA'
+  'dicom/19112010_JHORSCHIG.MR.FCDC_SEQUENCES_STANDARD_SEQUENCES.0002.0064.2010.11.19.12.08.01.265625.73005239.IMA'
   'freesurfer/T1.mgz'
   'minc/single_subj_T1.mnc'
   'nifti/single_subj_T1.nii'
   'neuromag/scans/mri.fif'
   };
   %'neuromag/slices/MR1.3.12.2.1107.5.2.32.35204.2008010817494647729256323'
-  %};
 
 datadir = '/home/common/matlab/fieldtrip/data/test/latest/mri';
 
