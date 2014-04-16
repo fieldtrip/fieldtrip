@@ -5,7 +5,7 @@ function test_old_source2sparse
 
 % TEST test_old_source2sparse
 
-%this script tests the functionality of source2sparse with respect
+%this script tests the functionality of ft_source2sparse with respect
 %to source data new style
 
 %-------------------------------------
@@ -84,7 +84,7 @@ cfgs.fixedori  = 'yes';
 cfgs.keepcsd   = 'yes';
 cfgs.realfilter = 'yes';
 cfgs.keepleadfield = 'yes';
-source         = sourceanalysis(cfgs,freq);
+source         = ft_sourceanalysis(cfgs,freq);
 
 cfgsd            = [];
 cfgsd.projectmom = 'yes';
@@ -94,17 +94,17 @@ cfgs.grid.filter = sd.avg.filter;
 cfgs.method      = 'pcc';
 cfgs.keepmom     = 'yes';
 
-%there are two ways for not crashing the second round of sourceanalysis
+%there are two ways for not crashing the second round of ft_sourceanalysis
 %with fixori = 'yes';
 for k = 1:numel(source.inside)
   kk = source.inside(k);
   cfgs.grid.leadfield{kk} = sd.leadfield{kk}*sd.avg.ori{kk};
 end
 spccold = ft_sourceanalysis(cfgs, freq);
-spccnew = checkdata(spccold, 'sourcerepresentation', 'new');
+spccnew = ft_checkdata(spccold, 'sourcerepresentation', 'new');
 
-spccold2 = source2sparse(spccold);
-spccnew2 = source2sparse(spccnew);
+spccold2 = ft_source2sparse(spccold);
+spccnew2 = ft_source2sparse(spccnew);
 
 spccold3 = source2full(spccold2);
 spccnew3 = source2full(spccnew2);
