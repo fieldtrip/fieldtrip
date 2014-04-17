@@ -54,7 +54,6 @@ freq_exp.cumsumcnt = freq_cmb.cumsumcnt(cfg.trials);
 
 mri = ft_read_mri(fullfile(mridir, 'subjectK.mri'));
 cfg = [];
-cfg.coordsys   = 'ctf'; % our data is CTF MEG data
 [segmentedmri] = ft_volumesegment(cfg, mri);
 
 oldsegmented = load(fullfile(mridir, 'segmentedmri.mat'));
@@ -143,12 +142,10 @@ cfg              = [];
 cfg.voxelcoord   = 'no';
 cfg.parameter    = 'avg.pow';
 cfg.interpmethod = 'nearest';
-cfg.coordsys     = 'mni';
 source_diff_int  = ft_sourceinterpolate(cfg, source_diff, template_mri);
 
 cfg               = [];
 cfg.method        = 'slice';
-cfg.coordsys      = 'mni';
 cfg.funparameter  = 'avg.pow';
 cfg.maskparameter = cfg.funparameter;
 cfg.funcolorlim   = [0.0 1.2];
@@ -206,12 +203,10 @@ cfg              = [];
 cfg.voxelcoord   = 'no';
 cfg.parameter    = 'coh';
 cfg.interpmethod = 'nearest';
-cfg.coordsys     = 'mni';
 source_coh_int   = ft_sourceinterpolate(cfg, source_coh_lft, template_mri);
 
 cfg              = [];
 cfg.method       = 'ortho';
-cfg.coordsys     = 'mni';
 cfg.funparameter = 'coh';
 cfg.funcolormap = 'jet';
 

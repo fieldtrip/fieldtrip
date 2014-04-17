@@ -58,7 +58,6 @@ freqPost = ft_freqanalysis(cfg, dataPost);
   %if ~exist('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat', 'file')
   cfg = [];
   cfg.write        = 'no';
-  cfg.coordsys     = 'ctf';
   [segmentedmri] = ft_volumesegment(cfg, mri);
 %catch
 %  mri = ft_read_mri('/home/common/matlab/fieldtrip/data/Subject01.mri');
@@ -304,7 +303,6 @@ ft_sourceplot(cfg, sourceDiffInt);
 %% Template MRI
 
 cfg = [];
-cfg.coordsys      = 'ctf';
 cfg.nonlinear     = 'no';
 sourceDiffIntNorm = ft_volumenormalise(cfg, sourceDiffInt);
 
@@ -321,7 +319,6 @@ ft_sourceplot(cfg, sourceDiffIntNorm);
 
 %% Project to a surface
 % cfg = [];
-% cfg.coordsys      = 'ctf';
 % cfg.nonlinear     = 'no';
 % sourceDiffIntNorm = ft_volumenormalise(cfg, sourceDiffInt);
 
