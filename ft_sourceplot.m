@@ -44,7 +44,6 @@ function [cfg] = ft_sourceplot(cfg, data)
 %   cfg.downsample    = downsampling for resolution reduction, integer value (default = 1) (orig: from surface)
 %   cfg.atlas         = string, filename of atlas to use (default = []) SEE FT_PREPARE_ATLAS
 %                        for ROI masking (see "masking" below) or in interactive mode (see "ortho-plotting" below)
-%   cfg.coordsys      = 'mni' or 'tal', coordinate system of the input data, used to lookup the label from the atlas
 %
 % The following parameters can be used for the functional data:
 %   cfg.funcolormap   = colormap for functional data, see COLORMAP (default = 'auto')
@@ -197,12 +196,19 @@ end
 % instead of specifying cfg.coordsys, the user should specify the coordsys in the data
 cfg = ft_checkconfig(cfg, 'forbidden', {'units', 'inputcoordsys', 'coordinates'});
 cfg = ft_checkconfig(cfg, 'deprecated', 'coordsys');
-if isfield(cfg, 'coordsys') && ~isfield(data, 'coordsys')
-  data.coordsys = cfg.coordsys;
+%if isfield(cfg, 'coordsys') && ~isfield(data, 'coordsys')
+%  data.coordsys = cfg.coordsys;
+%end
+
+needcoordsys = isfield(cfg, 'atlas');
+if needcoordsys
+  % for the atlas lookup a coordsys is needed
+  data     = ft_checkdata(data, 'datatype', {'volume' 'source'}, 'feedback', 'yes', 'hasunit', 'yes', 'hascoordsys', 'yes');
+else
+  % check if the input data is valid for this function, a coordsys is not directly needed
+  data     = ft_checkdata(data, 'datatype', {'volume' 'source'}, 'feedback', 'yes', 'hasunit', 'yes');
 end
 
-% check if the input data is valid for this function
-data     = ft_checkdata(data, 'datatype', {'volume' 'source'}, 'feedback', 'yes', 'hasunit', 'yes');
 
 % determine the type of data
 issource = ft_datatype(data, 'source');
@@ -330,7 +336,7 @@ if hasroi
     tmpcfg          = [];
     tmpcfg.roi      = cfg.roi;
     tmpcfg.atlas    = cfg.atlas;
-    tmpcfg.coordsys = cfg.coordsys;
+    tmpcfg.coordsys = data.coordsys;
     roi = ft_volumelookup(tmpcfg,data);
   end
 end
