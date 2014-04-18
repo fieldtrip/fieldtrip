@@ -122,6 +122,7 @@ end
 if ft_datatype(comp, 'raw')
   raw = comp;
   raw = rmfield(raw, 'topo');
+  raw = rmfield(raw, 'unmixing');
   raw = rmfield(raw, 'topolabel');
   raw = ft_datatype_raw(raw, 'version', rawversion, 'hassampleinfo', hassampleinfo, 'hastrialinfo', hastrialinfo);
   
@@ -135,6 +136,7 @@ if ft_datatype(comp, 'raw')
 elseif ft_datatype(comp, 'timelock')
   timelock = comp;
   timelock = rmfield(timelock, 'topo');
+  timelock = rmfield(timelock, 'unmixing');
   timelock = rmfield(timelock, 'topolabel');
   timelock = ft_datatype_timelock(timelock, 'version', timelockversion);
   
@@ -148,6 +150,7 @@ elseif ft_datatype(comp, 'timelock')
 elseif ft_datatype(comp, 'freq')
   freq = comp;
   freq = rmfield(freq, 'topo');
+  freq = rmfield(freq, 'unmixing');
   freq = rmfield(freq, 'topolabel');
   freq = ft_datatype_freq(freq, 'version', freqversion);
   
