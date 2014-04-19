@@ -200,7 +200,7 @@ cfg = ft_checkconfig(cfg, 'deprecated', 'coordsys');
 %  data.coordsys = cfg.coordsys;
 %end
 
-needcoordsys = isfield(cfg, 'atlas');
+needcoordsys = isfield(cfg, 'atlas') && ~isempty(cfg.atlas);
 if needcoordsys
   % for the atlas lookup a coordsys is needed
   data     = ft_checkdata(data, 'datatype', {'volume' 'source'}, 'feedback', 'yes', 'hasunit', 'yes', 'hascoordsys', 'yes');
