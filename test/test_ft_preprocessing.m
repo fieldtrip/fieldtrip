@@ -19,7 +19,7 @@ if nargin<3
   version = 'latest';
 end
 
-for k = 1:numel(datainfo)
+for k = 10%1:numel(datainfo)
   datanew = preprocessing10trials(datainfo(k), writeflag, version);
 
   fname = fullfile(datainfo(k).origdir,version,'raw',datainfo(k).type,['preproc_',datainfo(k).datatype]);

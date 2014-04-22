@@ -38,11 +38,12 @@ vol2 = vol2.vol; % copy it over
 
 vol  = tryrmfield(vol, 'cfg');
 vol2 = tryrmfield(vol2,'cfg');
+
 % it is presently (Dec 2013) a bit messy where the cfg and unit are being stored after ft_prepare_mesh
-vol  = tryrmfield(vol.bnd, 'unit');
-vol2 = tryrmfield(vol2.bnd,'unit');
-vol  = tryrmfield(vol.bnd, 'cfg');
-vol2 = tryrmfield(vol2.bnd,'cfg');
+vol  = tryrmsubfield(vol,  'bnd.unit');
+vol2 = tryrmsubfield(vol2, 'bnd.unit');
+vol  = tryrmsubfield(vol,  'bnd.cfg');
+vol2 = tryrmsubfield(vol2, 'bnd.cfg');
 
 vol  = ft_convert_units(vol, 'mm');
 vol2 = ft_convert_units(vol2,'mm');
@@ -64,6 +65,11 @@ ft_plot_vol(vol);
 function s = tryrmfield(s, f)
 if isfield(s, f)
   s = rmfield(s, f);
+end
+
+function s = tryrmsubfield(s, f)
+if issubfield(s, f)
+  s = rmsubfield(s, f);
 end
 
 

@@ -11,8 +11,8 @@ global ft_default;
 ft_default.feedback = 'no';
 
 if nargin==0
-  dataset = dccnfilename('/home/common/matlab/fieldtrip/data/Subject01.ds');
-  datadir = dccnfilename('/home/common/matlab/fieldtrip/data/ftp/tutorial/cluster_permutation_timelock');
+  dataset = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
+  datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/cluster_permutation_timelock');
 end
 
 %% Reading the FIC data

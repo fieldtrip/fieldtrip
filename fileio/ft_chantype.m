@@ -543,7 +543,9 @@ elseif ft_senstype(input, 'itab') && islabel
   
 elseif ft_senstype(input, 'eeg') && islabel
   % use an external helper function to define the list with EEG channel names
-  type(match_str(label, ft_senslabel(ft_senstype(label)))) = {'eeg'};
+  type(match_str(label, ft_senslabel('eeg1005'))) = {'eeg'};
+  type(match_str(label, ft_senslabel('eeg1010'))) = {'eeg'};
+  type(match_str(label, ft_senslabel('eeg1020'))) = {'eeg'};
 
 elseif ft_senstype(input, 'eeg') && iselec
   % all channels in an electrode definition must be eeg channels

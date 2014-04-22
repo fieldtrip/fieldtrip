@@ -72,7 +72,7 @@ else
 end
 
 % remove empty fields
-param(find(cellfun('isempty', param))) = [];
+param(cellfun('isempty', param)) = [];
 
 % ensure that there are no double entries
 param = unique(param);
@@ -83,28 +83,26 @@ for i=1:length(param)
     % the field is present, check whether the dimension is correct
     dim = size(getsubfield(data, param{i}));
     if isfield(data, 'dim') && isequal(dim(:), data.dim(:))
-      select{end+1} = param{i}; 
+      select{end+1} = param{i};
     elseif isfield(data, 'dim') && prod(dim)==prod(data.dim)
       select{end+1} = param{i};
     elseif isfield(data, 'dim') && numel(dim)==3 && isequal(dim(1:3)', data.dim(:))
       select{end+1} = param{i};
     elseif isfield(data, 'pos') && (prod(dim)==size(data.pos, 1) || dim(1)==size(data.pos,1))
-      select{end+1} = param{i}; 
+      select{end+1} = param{i};
     elseif isfield(data, 'dimord') && (isfield(data, 'pos') || isfield(data, 'transform')),
       dimtok = tokenize(data.dimord, '_');
       nels   = 1;
       for k=1:numel(dimtok)
         if strcmp(dimtok{k}, 'rpt') || strcmp(dimtok{k}, 'rpttap')
-	      nels = nels*dim(k);
-	    elseif strcmp(dimtok{k}, 'pos') && isfield(data, 'pos')
-	      %for source structure
-	      nels = nels*size(data.pos,1);
-	    elseif strcmp(dimtok{k}, 'pos') 
-	      %for volume structure FIXME 'pos' in dimord is not OK
-	      nels = nels*prod(data.dim(1:3));
-	    else
+          nels = nels*dim(k);
+        elseif strcmp(dimtok{k}, 'pos') && isfield(data, 'pos')
+          nels = nels*size(data.pos,1);
+        elseif strcmp(dimtok{k}, '{pos}') && isfield(data, 'pos')
+          nels = nels*size(data.pos,1);
+        elseif isfield(data, dimtok{k})
           nels = nels*numel(getfield(data, dimtok{k}));
-	    end
+        end
       end
       if nels==prod(dim),
         select{end+1} = param{i};

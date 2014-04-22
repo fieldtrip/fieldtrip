@@ -11,7 +11,7 @@
 
 path = '/home/common/matlab/fieldtrip/data/test/original';
 try
-  path = dccnfilename('/home/common/matlab/fieldtrip/data/test/original');
+  path = dccnpath('/home/common/matlab/fieldtrip/data/test/original');
 end
 
 filename = {

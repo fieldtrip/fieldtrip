@@ -6,7 +6,7 @@ function cfgnew = test_bug1093
 % artifacts when the threshold is adjusted
 
 % use the data for bug1027
-cd(dccnfilename('/home/common/matlab/fieldtrip/data/test'))
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test'))
 load bug1027.mat
 
 cfg = [];

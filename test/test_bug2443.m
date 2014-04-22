@@ -4,7 +4,7 @@ function test_bug2443
 % TEST ft_multiplotER
 
 % get some data
-filename = dccnfilename('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_neuromag306.mat');
+filename = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_neuromag306.mat');
 load(filename);
 
 data_pre  = data;

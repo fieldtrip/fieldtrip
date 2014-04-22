@@ -6,7 +6,7 @@ function test_bug1315
 % TEST test_bug1315
 % TEST ft_checkdata ft_prepare_neighbours ft_megplanar ft_combineplanar
 
-load(dccnfilename('/home/common/matlab/fieldtrip/data/test/bug1315.mat'))
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1315.mat'))
 
 % neighbours
 cfg = [];

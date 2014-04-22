@@ -1,10 +1,11 @@
 function test_bug1826
 
-% MEM 1500mb
+% MEM 3gb
 % WALLTIME 00:10:00
 
-% at this moment the test script does not yet work, but we don't want the automatic regression testing to flag it as failure
-return;
+% TEST test_bug1826
+% TEST ft_read_mri ft_write_mri ft_volumerealign
+
 % Uses the linear tranformation algorithms of FSL to register a T2 image
 % and DTI image to T1 space. It also rotates the gradient direction vectors
 % .bvec with the rotational part of the transformation matrix.
@@ -14,9 +15,6 @@ return;
 %{mutualinfo,corratio,normcorr,normmi,leastsq}
 %please do not forget to modify the fsl version as in your system
 
-% TEST test_bug1826
-% TEST ft_read_mri ft_write_mri ft_volumerealign
-
 %% The part below relates to the within modality registration of 2 different coordinate systems requested by HCP.
 mri1 = ft_read_mri('/home/common/matlab/fieldtrip/data/test/bug1826/mri1mm.nii');
 mri2 = ft_read_mri('/home/common/matlab/fieldtrip/data/test/bug1826/mri07mm.nii.gz');
@@ -24,12 +22,25 @@ mri2 = ft_read_mri('/home/common/matlab/fieldtrip/data/test/bug1826/mri07mm.nii.
 mri1.coordsys = 'bti';
 mri2.coordsys = 'spm';
 
+cfg        = [];
+cfg.method = 'spm';
+mric       = ft_volumerealign(cfg, mri1, mri2);
+
+% reslice to be able to visualize together
+cfgr            = [];
+cfgr.resolution = 1;
+cfgr.xrange = [-120 120];
+cfgr.yrange = [-150 100];
+cfgr.zrange = [-120 80];
+mri2r = ft_volumereslice(cfgr,mri2);
+mricr = ft_volumereslice(cfgr,mric);
+
 cfgd.downsample = 2;
 mri1b = ft_volumedownsample(cfgd, mri1);
 mri2b = ft_volumedownsample(cfgd, mri2);
 
 cfg          = [];
-cfg.method   = 'volume';
+cfg.method   = 'fsl';
 cfg.fsl.path = '/opt/fsl/bin'; % '/opt/fsl_5.0/bin'; % fsl_5.0 only works on high mentats due to libraries
 cfg.fsl.dof  = 7; % globalrescale
 cfg.fsl.interpmethod = 'trilinear';
@@ -71,9 +82,6 @@ mri1cx = ft_volumerealign(cfg, mri1bx, mri1x);
 
 % CONCLUSION: not too bad if the volumes are resliced
 
-
-
-
 %% The part below relates to the cross-modality registration requested by the Simbio guys.
 subjectT1  = '/home/common/matlab/fieldtrip/data/test/bug1826/T1.nii.gz';%'~/meeting_simbio/test_bug1826_data/test_bug1826_data/T1.nii.gz';
 subjectT2  = '/home/common/matlab/fieldtrip/data/test/bug1826/T2.nii.gz';%'~/meeting_simbio/test_bug1826_data/test_bug1826_data/T2.nii.gz';
@@ -108,6 +116,9 @@ costfuns      = {'mutualinfo', 'corratio', 'normcorr', 'normmi', 'leastsq'};
 % FIXME: not all combinations of interpmethods and cost functions make
 % sense! Between modality considerations etc
 
+% the remainder test script does not yet work, but we don't want the automatic regression testing to flag it as failure
+return;
+
 %T2->T1
 for k = 1:numel(interpmethods)
   for m = 1:numel(costfuns)
@@ -128,8 +139,6 @@ for k = 1:numel(interpmethods)
   end
 end
 
-
-
 %% FSL parameters
 
 %cfg.fsl.version='/opt/fsl_4.1/bin/';% write the fsl version that you are using. The version I use is 4.1
@@ -144,7 +153,6 @@ cfg.fsl.T2interp='sinc';
 cfg.fsl.DTIcost='mutualinfo';
 cfg.fsl.DTIdof='6';
 cfg.fsl.DTIinterp='spline';
-
 
 %% Use until dot for naming
 
@@ -169,7 +177,7 @@ switch cfg.fsl.T2interp
     % unix(aa,'-echo')
     
     cmd = sprintf('%s/flirt -in %s -ref %s -out %s_T1Space_trilinear.nii -omat T2_T1Space.mat -bins 256 -cost %s -searchrx -180 180 -searchry -180 180 -searchrz -180 180 -dof %s -interp trilinear', ...
-          cfg.fsl.path, subjectT2, subjectT1, T2name, cfg.fsl.T2cost, cfg.fsl.T2dof);
+      cfg.fsl.path, subjectT2, subjectT1, T2name, cfg.fsl.T2cost, cfg.fsl.T2dof);
     
     unix(cmd,'-echo')
     
@@ -185,7 +193,7 @@ switch cfg.fsl.T2interp
     % so in order to get a spline interpolation FLIRT cannot be used. Only
     % the registration matrix will be used, and then the utility "applywarp"
     cmd = sprintf('%s/applywarp --in=%s --ref=%s --out=%s_T1Space_spline.nii --premat=T2_T1Space.mat --interp=spline', ...
-          cfg.fsl.path, subjectT2, subjectT1, T2name);
+      cfg.fsl.path, subjectT2, subjectT1, T2name);
     
     unix(cmd,'-echo')
     
@@ -201,8 +209,8 @@ switch cfg.fsl.T2interp
     % unix(aa,'-echo')
     
     cmd = sprintf('%s/flirt -in %s -ref %s -out %s_T1Space%s.nii -omat T2_T1Space.mat -bins 256 -cost %s -searchrx -180 180 -searchry -180 180 -searchrz -180 180 -dof %s -interp %s', ...
-          cfg.fsl.path, subjectT2, subjectT1, T2name, cfg.fsl.T2interp, cfg.fsl.T2cost, cfg.fsl.T2dof, cfg.fsl.T2interp);
-        
+      cfg.fsl.path, subjectT2, subjectT1, T2name, cfg.fsl.T2interp, cfg.fsl.T2cost, cfg.fsl.T2dof, cfg.fsl.T2interp);
+    
     subjectT2aligned = horzcat(T2name,'_T1Space',cfg.fsl.T2interp,'.nii.gz');
     T2_aligned       = ft_read_mri(subjectT2aligned);
     
@@ -318,4 +326,3 @@ assert(isequal(T1.transform,T2_aligned.transform),'Transformation matrix changed
 assert(~isequal(T2.transform,T2_aligned.anatomy),'Anatomy has not changed despite of alignement.');
 
 T2_4p1_sinc = T2_aligned;
-

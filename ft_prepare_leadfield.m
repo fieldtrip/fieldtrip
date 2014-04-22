@@ -45,6 +45,9 @@ function [grid, cfg] = ft_prepare_leadfield(cfg, data)
 %   cfg.reducerank      = 'no', or number (default = 3 for EEG, 2 for MEG)
 %   cfg.normalize       = 'yes' or 'no' (default = 'no')
 %   cfg.normalizeparam  = depth normalization parameter (default = 0.5)
+%   cfg.backproject     = 'yes' or 'no' (default = 'yes') determines when reducerank is applied
+%                         whether the lower rank leadfield is projected back onto the original 
+%                         linear subspace, or not. 
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -104,9 +107,10 @@ cfg.normalize      = ft_getopt(cfg, 'normalize',      'no');
 cfg.normalizeparam = ft_getopt(cfg, 'normalizeparam', 0.5);
 cfg.lbex           = ft_getopt(cfg, 'lbex',           'no');
 cfg.sel50p         = ft_getopt(cfg, 'sel50p',         'no');
-cfg.feedback       = ft_getopt(cfg, 'feedback',       'no');
+cfg.feedback       = ft_getopt(cfg, 'feedback',       'text');
 cfg.mollify        = ft_getopt(cfg, 'mollify',        'no');
 cfg.patchsvd       = ft_getopt(cfg, 'patchsvd',       'no');
+cfg.backproject    = ft_getopt(cfg, 'backproject',    'yes'); % determines whether after rank reduction the subspace projected leadfield is backprojected onto the original space
 % cfg.reducerank   = ft_getopt(cfg, 'reducerank', 'no');      % the default for this depends on EEG/MEG and is set below
 
 % put the low-level options pertaining to the dipole grid in their own field
@@ -206,7 +210,7 @@ else
     % compute the leadfield on all grid positions inside the brain
     ft_progress(i/length(grid.inside), 'computing leadfield %d/%d\n', i, length(grid.inside));
     dipindx = grid.inside(i);
-    grid.leadfield{dipindx} = ft_compute_leadfield(grid.pos(dipindx,:), sens, vol, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam);
+    grid.leadfield{dipindx} = ft_compute_leadfield(grid.pos(dipindx,:), sens, vol, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam, 'backproject', cfg.backproject);
     
     if isfield(cfg, 'grid') && isfield(cfg.grid, 'mom')
       % multiply with the normalized dipole moment to get the leadfield in the desired orientation

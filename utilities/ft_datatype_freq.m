@@ -38,6 +38,11 @@ function freq = ft_datatype_freq(freq, varargin)
 % Obsoleted fields:
 %   - <none>
 %
+% Historical fields:
+%   - cfg, crsspctrm, cumsumcnt, cumtapcnt, dimord, elec, foi,
+%   fourierspctrm, freq, grad, label, labelcmb, powspctrm, time, toi, see
+%   bug2513
+%
 % Revision history:
 %
 % (2011/latest) The description of the sensors has changed, see FT_DATATYPE_SENS

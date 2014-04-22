@@ -79,6 +79,19 @@ if Ndata<2
   error('you must give at least two datasets to append');
 end
 
+% ensure consistent input data
+for i=2:Ndata
+  if isfield(varargin{1}, 'topo'),
+    assert(isequalwithequalnans(varargin{1}.topo, varargin{i}.topo), 'the input has inconsistent topo fields')
+  end
+  if isfield(varargin{1}, 'topolabel'),
+    assert(isequalwithequalnans(varargin{1}.topolabel, varargin{i}.topolabel), 'the input has inconsistent topolabel fields')
+  end
+  if isfield(varargin{1}, 'unmixing'),
+    assert(isequalwithequalnans(varargin{1}.unmixing, varargin{i}.unmixing), 'the input has inconsistent unmixing fields')
+  end
+end
+
 Nchan  = zeros(1,Ndata);
 Ntrial = zeros(1,Ndata);
 label  = {};
@@ -113,9 +126,9 @@ hassampleinfo = 0;
 sampleinfo = cell(1, Ndata);
 for i=1:Ndata
   if isfield(varargin{i}, 'sampleinfo')
-     sampleinfo{i} = varargin{i}.sampleinfo;
+    sampleinfo{i} = varargin{i}.sampleinfo;
   else
-     sampleinfo{i} = [];
+    sampleinfo{i} = [];
   end
   if isempty(sampleinfo{i})
     % a sample definition is expected in each data set
@@ -164,7 +177,7 @@ end
 removesampleinfo = 0;
 removetrialinfo  = 0;
 try
-  origfile1      = ft_findcfg(varargin{1}.cfg, 'datafile');
+  origfile1 = ft_findcfg(varargin{1}.cfg, 'datafile');
   for j=2:Ndata
     if ~isempty(origfile1) && ~strcmp(origfile1, ft_findcfg(varargin{j}.cfg, 'datafile')),
       removesampleinfo = 1;
@@ -174,12 +187,11 @@ try
   end
 catch err
   if strcmp(err.identifier, 'MATLAB:nonExistentField')
-    % this means no data.cfg is present; should not be treated as a fatal
-    % error, so throw warning instead
+    % this means no data.cfg is present; should not be treated as a fatal error, so throw warning instead
     warning('cannot determine from which datafiles the data is taken');
   else
     % not sure which error, probably a bigger problem
-    throw(err); 
+    throw(err);
   end
 end
 
@@ -204,41 +216,43 @@ if shuflabel,
   end
 end
 
-% FIXME create the output from scratch and don't use the first varargin
-% (both for cattrial and catlabel
 if cattrial && catlabel
   error('cannot determine how the data should be concatenated');
-  % FIXME think whether this can ever happen
   
 elseif cattrial
-  % concatenate the trials
   fprintf('concatenating the trials over all datasets\n');
-  data = varargin{1};
+  
+  data = [];
+  data.label  = varargin{1}.label;
   data.trial  = {};
   data.time   = {};
   if hassampleinfo, data.sampleinfo = []; end
   if hastrialinfo,  data.trialinfo  = []; end;
+  
   for i=1:Ndata
     data.trial    = cat(2, data.trial,  varargin{i}.trial(:)');
     data.time     = cat(2, data.time,   varargin{i}.time(:)');
     % check if all datasets to merge have the sampleinfo field
     if hassampleinfo, data.sampleinfo = cat(1, data.sampleinfo, varargin{i}.sampleinfo); end
-    if hastrialinfo,  data.trialinfo  = cat(1, data.trialinfo, varargin{i}.trialinfo);   end;
-    % FIXME is not entirely robust if the different inputs have different
-    % number of columns in trialinfo
+    if hastrialinfo,  data.trialinfo  = cat(1, data.trialinfo,  varargin{i}.trialinfo);  end
+    % FIXME is not entirely robust if the different inputs have different number of columns in trialinfo
   end
-  % also concatenate the trial specification
-  %cfg.trl = cat(1, trl{:});
   
 elseif catlabel
-  % concatenate the channels in each trial
   fprintf('concatenating the channels within each trial\n');
-  data = varargin{1};
+  
   if ~all(diff(Ntrial)==0)
     error('not all datasets have the same number of trials');
   else
     Ntrial = Ntrial(1);
   end
+  
+  data = [];
+  data.label = varargin{1}.label;
+  data.trial = varargin{1}.trial;
+  data.time  = varargin{1}.time;
+  if hassampleinfo, data.sampleinfo=varargin{i}.sampleinfo; end
+  if hastrialinfo,  data.trialinfo =varargin{i}.trialinfo;  end
   
   for i=2:Ndata
     % concatenate the labels
@@ -248,17 +262,17 @@ elseif catlabel
     if hassampleinfo && ~all(data.sampleinfo(:)==varargin{i}.sampleinfo(:))
       removesampleinfo = 1;
     end
-    %if hastrialinfo && ~all(data.trialinfo(:)==varargin{i}.trialinfo(:))
-    %  removetrialinfo = 1;
-    %end
+    if hastrialinfo && ~all(data.trialinfo(:)==varargin{i}.trialinfo(:))
+      removetrialinfo = 1;
+    end
   end
-
+  
   if ~isfield(data, 'fsample')
     fsample = 1/mean(diff(data.time{1}));
   else
     fsample = data.fsample;
   end
-
+  
   for j=1:Ntrial
     %pre-allocate memory for this trial
     data.trial{j} = [data.trial{j}; zeros(sum(Nchan(2:end)), size(data.trial{j},2))];
@@ -282,11 +296,18 @@ else
   error('cannot determine how the data should be concatenated');
 end
 
+% some fields from the input should be copied over in the output
+copyfield = {'grad', 'elec', 'topo', 'topolabel', 'unmixing'};
+for i=1:length(copyfield)
+  if isfield(varargin{1}, copyfield{i})
+    data.(copyfield{i}) = varargin{1}.(copyfield{i});
+  end
+end
+
 % unshuffle the channels again to match the order of the first input data-structure
 if shuflabel
-  [srt,reorder] = sort(order(order(:,1)~=0,1));
-  
-  fprintf('reordering the channels\n');
+  fprintf('reordering the channels back to the original input order\n');
+  [dum,reorder] = sort(order(order(:,1)~=0,1));
   for i=1:length(data.trial)
     data.trial{i} = data.trial{i}(reorder,:);
   end
@@ -299,15 +320,14 @@ if removesens
   if hasgrad, data = rmfield(data, 'grad'); end
 end
 
-if removesampleinfo && isfield(data, 'sampleinfo')
+if removesampleinfo
   fprintf('removing sampleinfo field from output\n');
-  data = rmfield(data, 'sampleinfo');
-  if isfield(cfg, 'trl'), cfg = rmfield(cfg, 'trl'); end
+  if isfield(data, 'sampleinfo'), data = rmfield(data, 'sampleinfo'); end
 end
 
-if removetrialinfo && isfield(data, 'trialinfo')
+if removetrialinfo
   fprintf('removing trialinfo field from output\n');
-  data = rmfield(data, 'trialinfo');
+  if isfield(data, 'trialinfo'), data = rmfield(data, 'trialinfo'); end
 end
 
 % do the general cleanup and bookkeeping at the end of the function

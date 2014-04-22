@@ -6,8 +6,7 @@ function test_bug2315
 % TEST test_bug2315
 % TEST ft_databrowser ft_prepare_layout
 
-
-load dataFIC
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/dataFIC.mat'));
 
 cfg = [];
 cfg.viewmode = '3column';

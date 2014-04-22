@@ -6,7 +6,7 @@ function test_bug1243
 % TEST test_bug1243
 % TEST ft_topoplotIC
 
-cd(dccnfilename('/home/common/matlab/fieldtrip/data/test'))
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test'))
 load bug1243.mat
 
 figure

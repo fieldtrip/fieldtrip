@@ -9,7 +9,7 @@ function test_bug2469
 % this test function tests the functionality of Hipp's method on
 % sensor-level data.
 
-filename = dccnfilename('/home/common/matlab/fieldtrip/data/test/bug2469.mat');
+filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2469.mat');
 load(filename);
 
 % this is only 1 channel data, will not work to begin with.

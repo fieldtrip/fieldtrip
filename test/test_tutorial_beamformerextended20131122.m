@@ -13,17 +13,17 @@ global ft_default
 ft_default = [];
 
 if ispc
-  dccnfilename = @(filename) strrep(strrep(filename,'/home','H:'),'/','\');
+  dccnpath = @(filename) strrep(strrep(filename,'/home','H:'),'/','\');
 else
-  dccnfilename = @(filename) strrep(strrep(filename,'H:','/home'),'\','/');
+  dccnpath = @(filename) strrep(strrep(filename,'H:','/home'),'\','/');
 end
 
-cd(dccnfilename('/home/common/matlab/fieldtrip/data/ftp/tutorial/sensor_analysis'));
+cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/sensor_analysis'));
 load subjectK
 
 data_combined = ft_appenddata([], data_left, data_right);
 
-cd(dccnfilename('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer_extended'));
+cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer_extended'));
 load segmentedmri
 
 mri = ft_read_mri('subjectK.mri');

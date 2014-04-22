@@ -10,7 +10,7 @@ function test_bug2004
 
 %% test the functionality of ft_connectivityanalysis with respect to source level data (pcc)
 
-filename = dccnfilename('/home/common/matlab/fieldtrip/data/test/bug2004.mat');
+filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2004.mat');
 load(filename);
 
 cfg = [];
@@ -26,7 +26,7 @@ cfg.method = 'powcorr_ortho';
 out5 = ft_connectivityanalysis(cfg, data);
 
 % grabbing the data from another bug.
-filename = dccnfilename('/home/common/matlab/fieldtrip/data/test/bug2468.mat');
+filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2468.mat');
 load(filename);
 
 % recompute source level pcc data

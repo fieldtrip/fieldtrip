@@ -233,18 +233,8 @@ for i=1:length(outline)
   ft_plot_vector(xval, yval, 'Color','k', 'LineWidth',2, 'tag', tag, 'parent', parent);
 end
 
-% Create isolines
-if strcmp(style,'iso') || strcmp(style,'surfiso')
-  if ~isempty(isolines)
-    [cont, h] = contour(Xi,Yi,Zi,isolines,'k');
-    set(h, 'tag', tag);
-    if ~isempty(parent)
-      set(h, 'Parent', parent);
-    end
-  end
-end
-
 % Plot surface
+% this should be done prior to the isolines to ensure that it is exported correctly, see http://bugzilla.fcdonders.nl/show_bug.cgi?id=2496
 if strcmp(style,'surf') || strcmp(style,'surfiso')
   deltax = xi(2)-xi(1); % length of grid entry
   deltay = yi(2)-yi(1); % length of grid entry
@@ -258,6 +248,17 @@ if strcmp(style,'surf') || strcmp(style,'surfiso')
   %  set(h, 'alphadatamapping', 'scaled');
   %  set(h, 'alphadata', maskimagetmp);
   %end
+end
+
+% Create isolines
+if strcmp(style,'iso') || strcmp(style,'surfiso')
+  if ~isempty(isolines)
+    [cont, h] = contour(Xi,Yi,Zi,isolines,'k');
+    set(h, 'tag', tag);
+    if ~isempty(parent)
+      set(h, 'Parent', parent);
+    end
+  end
 end
 
 % Plot filled contours

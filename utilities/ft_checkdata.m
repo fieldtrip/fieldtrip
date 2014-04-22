@@ -602,23 +602,28 @@ if issource || isvolume,
     dimtok = tokenize(data.dimord, '_');
     for i=1:length(dimtok)
       if strcmp(dimtok(i), 'pos')
-        dim(1,i) = size(getsubfield(data,dimtok{i}),1);
-      elseif strcmp(dimtok(i), 'rpt')
-        dim(1,i) = nan;
-      else
+        dim(1,i) = size(data.pos,1);
+      elseif strcmp(dimtok(i), '{pos}')
+        dim(1,i) = size(data.pos,1);
+      elseif issubfield(data,dimtok{i})
         dim(1,i) = length(getsubfield(data,dimtok{i}));
+      else
+        dim(1,i) = nan; % this applies to rpt, ori
       end
     end
-    i = find(isnan(dim));
-    if ~isempty(i)
-      n = fieldnames(data);
-      for ii=1:length(n)
-        numels(1,ii) = numel(getfield(data,n{ii}));
+    try 
+      % the following only works for rpt, not for ori
+      i = find(isnan(dim));
+      if ~isempty(i)
+        n = fieldnames(data);
+        for ii=1:length(n)
+          numels(1,ii) = numel(getfield(data,n{ii}));
+        end
+        nrpt = numels./prod(dim(setdiff(1:length(dim),i)));
+        nrpt = nrpt(nrpt==round(nrpt));
+        dim(i) = max(nrpt);
       end
-      nrpt = numels./prod(dim(setdiff(1:length(dim),i)));
-      nrpt = nrpt(nrpt==round(nrpt));
-      dim(i) = max(nrpt);
-    end
+    end % try
     if numel(dim)==1, dim(1,2) = 1; end;
   end
   
@@ -1648,19 +1653,7 @@ if isfield(data, 'dimord')
 end
 
 if isfield(data, 'dim') && length(data.dim)>=3,
-  % it is an old-fashioned source description, or the source describes a regular 3D volume in pos
-  xgrid = 1:data.dim(1);
-  ygrid = 1:data.dim(2);
-  zgrid = 1:data.dim(3);
-  [x y z] = ndgrid(xgrid, ygrid, zgrid);
-  ind = [x(:) y(:) z(:)];    % these are the positions expressed in voxel indices along each of the three axes
-  pos = data.pos;            % these are the positions expressed in head coordinates
-  % represent the positions in a manner that is compatible with the homogeneous matrix multiplication,
-  % i.e. pos = H * ind
-  ind = ind'; ind(4,:) = 1;
-  pos = pos'; pos(4,:) = 1;
-  % recompute the homogeneous transformation matrix
-  data.transform = pos / ind;
+  data.transform = pos2transform(data.pos, data.dim);
 end
 
 % remove the unwanted fields

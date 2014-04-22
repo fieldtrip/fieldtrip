@@ -6,7 +6,7 @@ function test_bug2471
 % TEST test_bug2471
 % TEST ft_timelockgrandaverage
 
-load(dccnfilename('/home/common/matlab/fieldtrip/data/test/bug2471.mat'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2471.mat'));
 
 cfg = [];
 cfg.channel = 'all';

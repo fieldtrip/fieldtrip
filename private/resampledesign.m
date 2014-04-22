@@ -189,7 +189,7 @@ elseif isempty(cfg.uvar) && strcmp(cfg.resampling, 'bootstrap')
   % but the h1 test can be achieved using a control variable
   resample = zeros(cfg.numrandomization, Nrepl);
   for i=1:cfg.numrandomization
-    resample(i,:) = randsample(1:Nrepl, Nrepl);
+    resample(i,:) = randsample(1:Nrepl, Nrepl, true);
   end
   
 elseif ~isempty(cfg.uvar) && strcmp(cfg.resampling, 'permutation')
@@ -265,7 +265,7 @@ elseif length(cfg.uvar)==1 && strcmp(cfg.resampling, 'bootstrap') && isempty(cfg
   
   if ~checkunique,
     for i=1:cfg.numrandomization
-      tmp           = randsample(1:Nrepl/Nrep(1), Nrepl/Nrep(1));
+      tmp           = randsample(1:Nrepl/Nrep(1), Nrepl/Nrep(1), true);
       for k=1:size(indx,1)
         resample(i,indx(k,:)) = indx(k,tmp);
       end
@@ -273,7 +273,7 @@ elseif length(cfg.uvar)==1 && strcmp(cfg.resampling, 'bootstrap') && isempty(cfg
   else
     tmp = zeros(cfg.numrandomization*10, Nrepl/Nrep(1));
     for i=1:cfg.numrandomization*10
-      tmp(i,:) = sort(randsample(1:Nrepl/Nrep(1), Nrepl/Nrep(1)));
+      tmp(i,:) = sort(randsample(1:Nrepl/Nrep(1), Nrepl/Nrep(1), true));
     end
     
     tmp = unique(tmp, 'rows');

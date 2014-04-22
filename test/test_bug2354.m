@@ -7,7 +7,7 @@ function test_bug2354
 % TEST ft_topoplotER ft_multiplotER ft_singleplotER
 
 % example ERF data
-filename = dccnfilename('/home/common/matlab/fieldtrip/data/test/bug2354.mat');
+filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2354.mat');
 load(filename);
 
 % plot a time window 

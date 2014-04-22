@@ -904,4 +904,6 @@ else
     catch
     end
   end
+  
+  shape = ft_struct2double(shape);
 end

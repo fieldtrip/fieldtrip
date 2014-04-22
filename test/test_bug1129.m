@@ -80,7 +80,7 @@ for N=[199 432 1000] % test 'firls' option
 end
 
 %% high-level ft_preprocessing
-cd(dccnfilename('/home/common/matlab/fieldtrip/data/test'))
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test'))
 load bug1129.mat
 
 cfg=[];

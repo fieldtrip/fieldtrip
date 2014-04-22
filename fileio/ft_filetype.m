@@ -1186,7 +1186,11 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if strcmp(type, 'unknown')
-  warning_once(sprintf('could not determine filetype of %s', filename));
+  if ~exist(filename, 'file') || ~exist(filename, 'dir')
+    warning('file or directory "%s" does not exist, could not determine fileformat', filename);
+  else
+    warning('could not determine filetype of %s', filename);
+  end
 end
 
 if ~isempty(desired)

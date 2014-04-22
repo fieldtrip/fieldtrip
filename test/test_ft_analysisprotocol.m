@@ -6,10 +6,14 @@ function test_ft_analysisprotocol
 % TEST test_ft_analysisprotocol
 % TEST ft_analysisprotocol
 
-% the style of this test script is also used in test_ft_datatype
+% the style of this test script is also used in test_ft_datatype and test_bug2185
 
 dirlist = {
   '/home/common/matlab/fieldtrip/data/test/latest'
+  '/home/common/matlab/fieldtrip/data/test/20131231'
+  '/home/common/matlab/fieldtrip/data/test/20130630'
+  '/home/common/matlab/fieldtrip/data/test/20121231'
+  '/home/common/matlab/fieldtrip/data/test/20120630'
   '/home/common/matlab/fieldtrip/data/test/20111231'
   '/home/common/matlab/fieldtrip/data/test/20110630'
   '/home/common/matlab/fieldtrip/data/test/20101231'

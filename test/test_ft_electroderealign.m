@@ -1,6 +1,6 @@
 function test_ft_electroderealign
 
-% MEM 2gb
+% MEM 2500mb
 % WALLTIME 00:10:00
 
 % TEST ft_electroderealign

@@ -114,6 +114,7 @@ switch dataformat
     mri          = [];
     mri.vol      = dat;
     mri.vox2ras0 = vox2ras_1to0(transform);
+    mri.volres   = sqrt(sum(transform(:,1:3).^2));
     MRIwrite(mri, filename, datatype);
     
   case {'vista'}

@@ -1,9 +1,9 @@
 function [data] = ft_megrealign(cfg, data)
 
-% FT_MEGREALIGN interpolates MEG data towards standard gradiometer locations
-% by projecting the individual timelocked data towards a coarse source
-% reconstructed representation and computing the magnetic field on
-% the standard gradiometer locations.
+% FT_MEGREALIGN interpolates MEG data towards standard gradiometer locations by
+% projecting the individual timelocked data towards a coarse source reconstructed
+% representation and computing the magnetic field on the standard gradiometer
+% locations.
 %
 % Use as
 %   [interp] = ft_megrealign(cfg, data)
@@ -73,7 +73,7 @@ function [data] = ft_megrealign(cfg, data)
 %
 % See also FT_PREPARE_LOCALSPHERES, FT_PREPARE_SINGLESHELL
 
-% Copyright (C) 2004-2007, Robert Oostenveld
+% Copyright (C) 2004-2014, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -131,6 +131,11 @@ pertrial = all(ismember({'nasX';'nasY';'nasZ';'lpaX';'lpaY';'lpaZ';'rpaX';'rpaY'
 cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'}); % this is moved to cfg.grid.tight by the subsequent createsubcfg
 cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved to cfg.grid.unit by the subsequent createsubcfg
 cfg = ft_checkconfig(cfg, 'createsubcfg',  {'grid'});
+
+if isstruct(cfg.template)
+  % this should be a cell-array
+  cfg.template = {cfg.template};
+end
 
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')

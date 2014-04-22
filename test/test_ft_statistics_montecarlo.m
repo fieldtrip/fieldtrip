@@ -13,7 +13,7 @@ function test_ft_statistics_montecarlo
 % respect to the clustering behaviour.
 
 % start with some data
-filename = dccnfilename('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf275.mat');
+filename = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf275.mat');
 load(filename);
 
 cfg.channel = ft_channelselection('MEG',data.label);

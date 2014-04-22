@@ -59,7 +59,7 @@ end
 
 %% test the provided problematic data
 
-cd(dccnfilename('/home/common/matlab/fieldtrip/data/test'));
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test'));
 load bug2418.mat
 
 assert(isequal(ft_senstype(testdata_short), 'neuromag306'));

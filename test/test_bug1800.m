@@ -17,7 +17,7 @@ function test_bug1800
 % http://bugzilla.fcdonders.nl/show_bug.cgi?id=1800
 
 % Load the timelocked data
-cd(dccnfilename('/home/common/matlab/fieldtrip/data/test'))
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test'))
 load bug1800 tmpavg1
 
 tmpavg2=ft_selectdata(tmpavg1,'avgovertime','yes');  % average timelocked data across all time points

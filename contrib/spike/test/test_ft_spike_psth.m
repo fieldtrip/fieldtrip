@@ -1,7 +1,7 @@
 function test_ft_spike_psth()
 
 % MEM 1gb
-% WALLTIME 00:05:00
+% WALLTIME 00:10:00
 
 % TEST test_ft_spike_psth
 % TEST ft_spike_psth

@@ -20,6 +20,6 @@ datasets = {'/home/common/matlab/fieldtrip/data/test/bug2027/colorado/e,rfhp1.0H
   
 nummeg = [248 248 248 248 148];          
 for k = 1:numel(datasets)
-  hdr = ft_read_header(dccnfilename(datasets{k}));
+  hdr = ft_read_header(dccnpath(datasets{k}));
   assert(numel(ft_channelselection('MEG',hdr.label))==nummeg(k));
 end

@@ -29,6 +29,10 @@ function data = ft_datatype_raw(data, varargin)
 %
 % Obsoleted fields:
 %   - offset
+% 
+% Historical fields:
+%   - cfg, elec, fsample, grad, hdr, label, offset, sampleinfo, time,
+%   trial, trialdef, see bug2513
 %
 % Revision history:
 %

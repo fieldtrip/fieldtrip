@@ -84,7 +84,7 @@ cfgs.fixedori  = 'yes';
 cfgs.keepcsd   = 'yes';
 cfgs.realfilter = 'yes';
 cfgs.keepleadfield = 'yes';
-source         = sourceanalysis(cfgs,freq);
+source         = ft_sourceanalysis(cfgs,freq);
 
 cfgsd            = [];
 cfgsd.projectmom = 'yes';

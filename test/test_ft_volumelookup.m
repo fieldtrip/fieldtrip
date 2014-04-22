@@ -8,8 +8,8 @@ function test_ft_volumelookup
 % TEST ft_read_atlas
 % TEST atlas_lookup
 
-atlasfilename = dccnfilename('/home/common/matlab/fieldtrip/template/atlas/afni/TTatlas+tlrc.BRIK');
-mrifilename   = dccnfilename('/home/common/matlab/fieldtrip/external/spm8/templates/T1.nii');
+atlasfilename = dccnpath('/home/common/matlab/fieldtrip/template/atlas/afni/TTatlas+tlrc.BRIK');
+mrifilename   = dccnpath('/home/common/matlab/fieldtrip/external/spm8/templates/T1.nii');
 
 mri = ft_read_mri(mrifilename);
 
@@ -44,7 +44,7 @@ cfg.maskparameter = 'mask';
 mask5     = ft_volumelookup(cfg, mri);
 
 
-atlasfilename = dccnfilename('/home/common/matlab/fieldtrip/template/atlas/aal/ROI_MNI_V4.nii');     
+atlasfilename = dccnpath('/home/common/matlab/fieldtrip/template/atlas/aal/ROI_MNI_V4.nii');     
 cfg       = [];
 cfg.atlas = atlasfilename;
 cfg.inputcoord = 'mni';

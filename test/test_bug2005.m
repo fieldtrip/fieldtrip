@@ -3,7 +3,7 @@ function test_bug2005
 % TEST test_bug2005
 % TEST ft_sourceanalysis
 
-fname = dccnfilename('/home/common/matlab/fieldtrip/data/test/bug2005.mat');
+fname = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2005.mat');
 load(fname);
 
 foi = 5;

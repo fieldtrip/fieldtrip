@@ -5,7 +5,7 @@ function dataout = ft_examplefunction(cfg, datain)
 % Use as
 %  outdata = ft_examplefunction(cfg, indata) 
 % where indata is <<describe the type of data or where it comes from>> 
-% and cfg is a configuratioun structure that should contain 
+% and cfg is a configuration structure that should contain 
 %
 % <<note that the cfg list should be indented with two spaces
 %

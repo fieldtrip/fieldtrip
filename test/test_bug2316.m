@@ -10,7 +10,7 @@ function test_bug2316
 % i.e. it crashes Matlab (2011a, but possibly other versions as well) on
 % a PC running Windows 7. on MacOS it seems fine. 
 
-filename = dccnfilename('/home/common/matlab/fieldtrip/data/test/bug2316.mat');
+filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2316.mat');
 load(filename);
 
 cfg = [];

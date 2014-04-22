@@ -44,7 +44,6 @@ function [cfg] = ft_sourceplot(cfg, data)
 %   cfg.downsample    = downsampling for resolution reduction, integer value (default = 1) (orig: from surface)
 %   cfg.atlas         = string, filename of atlas to use (default = []) SEE FT_PREPARE_ATLAS
 %                        for ROI masking (see "masking" below) or in interactive mode (see "ortho-plotting" below)
-%   cfg.coordsys      = 'mni' or 'tal', coordinate system of the input data, used to lookup the label from the atlas
 %
 % The following parameters can be used for the functional data:
 %   cfg.funcolormap   = colormap for functional data, see COLORMAP (default = 'auto')
@@ -92,7 +91,7 @@ function [cfg] = ft_sourceplot(cfg, data)
 %   cfg.crosshair     = 'yes' or 'no' (default = 'yes')
 %   cfg.axis          = 'on' or 'off' (default = 'on')
 %   cfg.interactive   = 'yes' or 'no' (default = 'no' if no nargout is desired, 'yes' otherwise)
-%                        in interactive mode the function returns the 
+%                        in interactive mode the function returns the
 %                        fiducials when closing the figure in the cfg
 %   cfg.queryrange    = number, in atlas voxels (default 3)
 %
@@ -115,8 +114,8 @@ function [cfg] = ft_sourceplot(cfg, data)
 %
 % The following parameters apply to surface-plotting when an interpolation
 % is required
-%   cfg.surffile       = string, file that contains the surface (default = 'single_subj_T1.mat')
-%                        'single_subj_T1.mat' contains a triangulation that corresponds with the
+%   cfg.surffile       = string, file that contains the surface (default = 'surface_white_both.mat')
+%                        'surface_white_both.mat' contains a triangulation that corresponds with the
 %                         SPM anatomical template in MNI coordinates
 %   cfg.surfinflated   = string, file that contains the inflated surface (default = [])
 %   cfg.surfdownsample = number (default = 1, i.e. no downsampling)
@@ -137,7 +136,7 @@ function [cfg] = ft_sourceplot(cfg, data)
 %   cfg.camlight       = 'yes' or 'no' (default = 'yes')
 %   cfg.renderer       = 'painters', 'zbuffer',' opengl' or 'none' (default = 'opengl')
 %                        note that when using opacity the OpenGL renderer is required.
-% 
+%
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 % If you specify this option the input data will be read from a *.mat
@@ -197,12 +196,19 @@ end
 % instead of specifying cfg.coordsys, the user should specify the coordsys in the data
 cfg = ft_checkconfig(cfg, 'forbidden', {'units', 'inputcoordsys', 'coordinates'});
 cfg = ft_checkconfig(cfg, 'deprecated', 'coordsys');
-if isfield(cfg, 'coordsys') && ~isfield(data, 'coordsys')
-  data.coordsys = cfg.coordsys;
+%if isfield(cfg, 'coordsys') && ~isfield(data, 'coordsys')
+%  data.coordsys = cfg.coordsys;
+%end
+
+needcoordsys = isfield(cfg, 'atlas') && ~isempty(cfg.atlas);
+if needcoordsys
+  % for the atlas lookup a coordsys is needed
+  data     = ft_checkdata(data, 'datatype', {'volume' 'source'}, 'feedback', 'yes', 'hasunit', 'yes', 'hascoordsys', 'yes');
+else
+  % check if the input data is valid for this function, a coordsys is not directly needed
+  data     = ft_checkdata(data, 'datatype', {'volume' 'source'}, 'feedback', 'yes', 'hasunit', 'yes');
 end
 
-% check if the input data is valid for this function
-data     = ft_checkdata(data, 'datatype', {'volume' 'source'}, 'feedback', 'yes', 'hasunit', 'yes');
 
 % determine the type of data
 issource = ft_datatype(data, 'source');
@@ -278,7 +284,7 @@ cfg.distmat        = ft_getopt(cfg, 'distmat',       []);
 cfg.camlight       = ft_getopt(cfg, 'camlight',      'yes');
 cfg.renderer       = ft_getopt(cfg, 'renderer',      'opengl');
 %if isequal(cfg.method,'surface')
-  %if ~isfield(cfg, 'projmethod'), error('specify cfg.projmethod'); end
+%if ~isfield(cfg, 'projmethod'), error('specify cfg.projmethod'); end
 %end
 
 % for backward compatibility
@@ -330,7 +336,7 @@ if hasroi
     tmpcfg          = [];
     tmpcfg.roi      = cfg.roi;
     tmpcfg.atlas    = cfg.atlas;
-    tmpcfg.coordsys = cfg.coordsys;
+    tmpcfg.coordsys = data.coordsys;
     roi = ft_volumelookup(tmpcfg,data);
   end
 end
@@ -452,19 +458,19 @@ elseif hasfun
   
   %what if fun is 4D?
   if ndims(fun)>3 || prod(dim)==size(fun,1)
-    if isfield(data, 'time') && isfield(data, 'freq'),
+    if isfield(data, 'time') && length(data.time)>1 && isfield(data, 'freq') && length(data.freq)>1
       %data contains timefrequency representation
       qi      = [1 1];
       hasfreq = 1;
       hastime = 1;
       fun     = reshape(fun, [dim numel(data.freq) numel(data.time)]);
-    elseif isfield(data, 'time')
+    elseif isfield(data, 'time') && length(data.time)>1
       %data contains evoked field
       qi      = 1;
       hasfreq = 0;
       hastime = 1;
       fun     = reshape(fun, [dim numel(data.time)]);
-    elseif isfield(data, 'freq')
+    elseif isfield(data, 'freq') && length(data.freq)>1
       %data contains frequency spectra
       qi      = 1;
       hasfreq = 1;
@@ -751,14 +757,14 @@ if isequal(cfg.method,'ortho')
   
   % create structure to be passed to gui
   opt = [];
-  opt.dim = dim;
-  opt.ijk = [xi yi zi];
-  opt.xsize = xsize;
-  opt.ysize = ysize;
+  opt.dim           = dim;
+  opt.ijk           = [xi yi zi];
+  opt.xsize         = xsize;
+  opt.ysize         = ysize;
   opt.handlesaxes   = [h1 h2 h3];
   opt.handlesfigure = h;
-  opt.axis = cfg.axis;
-  opt.quit = ~strcmp(cfg.interactive, 'yes');
+  opt.axis          = cfg.axis;
+  opt.quit          = ~strcmp(cfg.interactive, 'yes');
   if hasatlas
     opt.atlas = atlas;
   end
@@ -768,33 +774,33 @@ if isequal(cfg.method,'ortho')
   if hasfun
     opt.fun = fun;
   end
-  opt.update = [1 1 1];
-  opt.init = true;
-  opt.isvolume = isvolume;
-  opt.issource= issource;
-  opt.hasatlas = hasatlas;
-  opt.hasfreq = hasfreq;
-  opt.hastime = hastime;
-  opt.hasmsk = hasmsk;
-  opt.hasfun = hasfun;
-  opt.hasana = hasana;
-  opt.qi = qi;
-  opt.tag = 'ik';
-  opt.data = data;
+  opt.update        = [1 1 1];
+  opt.init          = true;
+  opt.isvolume      = isvolume;
+  opt.issource      = issource;
+  opt.hasatlas      = hasatlas;
+  opt.hasfreq       = hasfreq;
+  opt.hastime       = hastime;
+  opt.hasmsk        = hasmsk;
+  opt.hasfun        = hasfun;
+  opt.hasana        = hasana;
+  opt.qi            = qi;
+  opt.tag           = 'ik';
+  opt.data          = data;
   if hasmsk
     opt.msk = msk;
   end
-  opt.fcolmin = fcolmin;
-  opt.fcolmax = fcolmax;
-  opt.opacmin = opacmin;
-  opt.opacmax = opacmax;
-  opt.colorbar = cfg.colorbar;
-  opt.queryrange = cfg.queryrange;
-  opt.funcolormap = cfg.funcolormap;
-  opt.crosshair = strcmp(cfg.crosshair, 'yes');
-  opt.lpa = [];
-  opt.rpa = [];
-  opt.nas = [];
+  opt.fcolmin       = fcolmin;
+  opt.fcolmax       = fcolmax;
+  opt.opacmin       = opacmin;
+  opt.opacmax       = opacmax;
+  opt.colorbar      = cfg.colorbar;
+  opt.queryrange    = cfg.queryrange;
+  opt.funcolormap   = cfg.funcolormap;
+  opt.crosshair     = strcmp(cfg.crosshair, 'yes');
+  opt.lpa           = [];
+  opt.rpa           = [];
+  opt.nas           = [];
   setappdata(h, 'opt', opt);
   cb_redraw(h);
   
@@ -803,7 +809,7 @@ if isequal(cfg.method,'ortho')
   fprintf('click left mouse button to reposition the cursor\n');
   fprintf('click and hold right mouse button to update the position while moving the mouse\n');
   fprintf('use the arrowkeys to navigate in the current axis\n');
-    
+  
   if istrue(cfg.interactive)
     fprintf('** INTERACTIVE MODE SPECIAL **\n');
     fprintf('press n/l/r on keyboard to record a fiducial position\n');
@@ -819,7 +825,7 @@ if isequal(cfg.method,'ortho')
       cfg.rpa = opt.rpa;
       cfg.lpa = opt.lpa;
     catch
-      warning('Figure seem to be closed not by pressing ''q'' - returning of fiducials not possible\n'); 
+      warning('Figure seem to be closed not by pressing ''q'' - returning of fiducials not possible\n');
       cfg.nas = [];
       cfg.rpa = [];
       cfg.lpa = [];
@@ -888,7 +894,7 @@ elseif isequal(cfg.method,'surface')
     
     % read the triangulated cortical surface from file
     surf  = ft_read_headshape(cfg.surffile);
-
+    
     if isfield(surf, 'transform'),
       % compute the surface vertices in head coordinates
       surf.pnt = ft_warp_apply(surf.transform, surf.pnt);
@@ -900,7 +906,22 @@ elseif isequal(cfg.method,'surface')
         error('downsampling the surface is not possible in combination with an inflated surface');
       end
       fprintf('downsampling surface from %d vertices\n', size(surf.pnt,1));
-      [surf.tri, surf.pnt] = reducepatch(surf.tri, surf.pnt, 1/cfg.surfdownsample);
+      [temp.tri, temp.pnt] = reducepatch(surf.tri, surf.pnt, 1/cfg.surfdownsample);
+      % find indices of retained patch faces
+      [~, idx] = ismember(temp.pnt, surf.pnt, 'rows');
+      surf.tri = temp.tri;
+      surf.pnt = temp.pnt;
+      clear temp
+      % downsample other fields
+      if isfield(surf, 'curv')
+        surf.curv = surf.curv(idx);
+      end
+      if isfield(surf, 'sulc')
+        surf.sulc = surf.sulc(idx);
+      end
+      if isfield(surf, 'hemisphere')
+        surf.hemisphere = surf.hemisphere(idx);
+      end
     end
     
     % these are required
@@ -970,22 +991,24 @@ elseif isequal(cfg.method,'surface')
     surf.pnt = data.pos;
     surf.tri = data.tri;
     
-    if hasfun, val     = fun(data.inside(:)); end
-    if hasmsk, maskval = msk(data.inside(:)); end
+    %if hasfun, val     = fun(data.inside(:)); end
+    %if hasmsk, maskval = msk(data.inside(:)); end
+    if hasfun, val     = fun(:); end
+    if hasmsk, maskval = msk(:); end
     
   end
   
   if ~isempty(cfg.surfinflated)
-      if ~isstruct(cfg.surfinflated)
-          % read the inflated triangulated cortical surface from file
-          surf = ft_read_headshape(cfg.surfinflated);
-      else
-          surf = cfg.surfinflated;
-          if isfield(surf, 'transform'),
-              % compute the surface vertices in head coordinates
-              surf.pnt = ft_warp_apply(surf.transform, surf.pnt);
-          end
+    if ~isstruct(cfg.surfinflated)
+      % read the inflated triangulated cortical surface from file
+      surf = ft_read_headshape(cfg.surfinflated);
+    else
+      surf = cfg.surfinflated;
+      if isfield(surf, 'transform'),
+        % compute the surface vertices in head coordinates
+        surf.pnt = ft_warp_apply(surf.transform, surf.pnt);
       end
+    end
   end
   
   %------do the plotting
@@ -994,6 +1017,7 @@ elseif isequal(cfg.method,'surface')
   if isfield(surf, 'curv')
     % the curvature determines the color of gyri and sulci
     color = surf.curv(:) * cortex_light + (1-surf.curv(:)) * cortex_dark;
+    color = repmat(cortex_light, size(surf.pnt,1), 1);
   else
     color = repmat(cortex_light, size(surf.pnt,1), 1);
   end
@@ -1344,11 +1368,11 @@ if opt.hasatlas
     lab = 'NA';
     %fprintf('atlas labels: not found\n');
   else
-      tmp = sprintf('%s', strrep(lab{1}, '_', ' '));
+    tmp = sprintf('%s', strrep(lab{1}, '_', ' '));
     for i=2:length(lab)
       tmp = [tmp sprintf(', %s', strrep(lab{i}, '_', ' '))];
     end
-      lab = tmp;
+    lab = tmp;
   end
 else
   lab = 'NA';
@@ -1430,7 +1454,7 @@ if opt.hasfreq && opt.hastime && opt.hasfun,
   xlabel('time'); ylabel('freq');
   set(h4,'tag','TF1');
   caxis([opt.fcolmin opt.fcolmax]);
-elseif opt.hasfreq && numel(data.freq)>1 && opt.hasfun,
+elseif opt.hasfreq && opt.hasfun,
   h4 = subplot(2,2,4);
   plot(data.freq, squeeze(opt.fun(xi,yi,zi,:))); xlabel('freq');
   axis([data.freq(1) data.freq(end) opt.fcolmin opt.fcolmax]);
@@ -1602,7 +1626,7 @@ uiresume;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_buttonrelease(h, eventdata)
 
-set(h, 'windowbuttonmotionfcn', '');  
+set(h, 'windowbuttonmotionfcn', '');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -1648,7 +1672,7 @@ if ~isempty(tag) && ~opt.init
     opt.update = [1 1 1];
   elseif strcmp(tag, 'TF3')
     % time only
-    opt.qi  = nearest(opt.data.time, pos(1));  
+    opt.qi  = nearest(opt.data.time, pos(1));
     opt.update = [1 1 1];
   end
 end
@@ -1667,7 +1691,7 @@ opt = getappdata(h, 'opt');
 opt.quit = true;
 setappdata(h, 'opt', opt);
 uiresume
-  
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1677,7 +1701,6 @@ while p~=0
   h = p;
   p = get(h, 'parent');
 end
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -1706,5 +1729,5 @@ end
 if ~isempty(eventdata.Modifier)
   key = [eventdata.Modifier{1} '+' key];
 end
-  
+
 

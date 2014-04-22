@@ -18,3 +18,13 @@ cfg        = [];
 cfg.planarmethod = 'sincos';
 cfg.neighbours   = neighbours;
 planar     = ft_megplanar(cfg, data);
+
+% the loss of chanpos seems to be appropriate, but the subsequent call
+% to e.g. freqanalysis fails when fixsens applies a too strict checking
+% relaxing the conditional statements prevents the crash
+
+cfg = [];
+cfg.method = 'mtmfft';
+cfg.foilim = [0 20];
+cfg.taper = 'hanning';
+freq = ft_freqanalysis(cfg, planar);

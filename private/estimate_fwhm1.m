@@ -135,7 +135,9 @@ dx = dx./cnt;
 %dx   = sqrt(sum((source.pos(2,:)-source.pos(1,:)).^2)); %assuming isotropic volume
 
 %Barnes&Hillebrand eq. 16
-fwhm = dx./(3.*sqrt(r));
+
+% fwhm = dx./(3.*sqrt(r)); % this is probably a typo in the paper, spotted by Giorgos
+fwhm = dx./(r.^(1/3)); % This is the correct version
   
 if removecenter,
   %FIXME this is a bit strange

@@ -11,7 +11,7 @@ function test_bug1911
 %
 % I have only experienced this problem in Windows. 
 
-cd(dccnfilename('/home/common/matlab/fieldtrip/data/test'));
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test'));
 load bug1911.mat
 
 cfg = [];

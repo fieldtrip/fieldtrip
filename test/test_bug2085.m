@@ -38,14 +38,20 @@ cfg.vol = vol;
 cfg.grid.resolution = 4;
 cfg.channel = 'all';
 
-tic 
 cfg.grad = grad1;
-grid1 = ft_prepare_leadfield(cfg);
+grid1 = ft_prepare_leadfield(cfg); % don't count the first one
+tic
+for i=1:10
+  grid1 = ft_prepare_leadfield(cfg); % iterate a few times for better time estimate
+end
 time1 = toc;
 
-tic 
 cfg.grad = grad2;
-grid2 = ft_prepare_leadfield(cfg);
+grid2 = ft_prepare_leadfield(cfg); % don't count the first one
+tic
+for i=1:10
+  grid2 = ft_prepare_leadfield(cfg); % iterate a few times for better time estimate
+end
 time2 = toc;
 
 %% compare the time that it took, this fraction 1.5 is rather arbitrary

@@ -6,7 +6,7 @@ function test_bug2303
 % TEST test_bug2303
 % TEST ft_read_header read_eeglabheader
 
-filename = dccnfilename('/home/common/matlab/fieldtrip/data/test/bug2303/Dopa2_Quart2_Av.set');
+filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2303/Dopa2_Quart2_Av.set');
 
 hdr = ft_read_header(filename);
 

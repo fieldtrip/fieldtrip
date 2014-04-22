@@ -62,7 +62,7 @@ filename = fetch_url(filename);
 
 if strcmp(f, 'TTatlas+tlrc')
   defaultformat = 'afni';
-elseif strcmp(x, '.nii') && exist(fullfile(p, [f '.txt']))
+elseif strcmp(x, '.nii') && exist(fullfile(p, [f '.txt']), 'file')
   % This is a combination of nii+txt file, where the txt file may contain three columns like this
   %   FAG	Precentral_L	2001
   %   FAD	Precentral_R	2002
@@ -97,6 +97,8 @@ elseif strcmp(x, '.xml') && (isdir(strtok(fullfile(p,f), '_')) || isdir(strtok(f
   % specifies the labels, as well as the filenames of the files with the actual data stored
   % in a directory with the of the strtok'ed (with '-' or '_') file name.
   defaultformat = 'fsl';
+elseif strcmp(x, '.mat')
+  defaultformat = 'mat';
 else
   defaultformat = 'wfu';
 end
@@ -2134,6 +2136,12 @@ switch atlasformat
     atlas.tissue      = tissue;
     atlas.tissuelabel = label;
     atlas.coordsys    = 'mni';
+  
+  case 'mat'
+    load(filename);
+    if ~exist('atlas', 'var')
+      error('the mat-file %s does not contain a variable called ''atlas''',filename);
+    end
     
   otherwise
     error('unsupported atlas format %s', atlasformat);

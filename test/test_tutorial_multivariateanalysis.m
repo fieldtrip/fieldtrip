@@ -20,7 +20,7 @@ end
 
 addpath(genpath(dmltdir));
 
-filename = dccnfilename(fullfile(datadir, 'covatt'));
+filename = dccnpath(fullfile(datadir, 'covatt'));
 load(filename);
 
 cfg             = [];

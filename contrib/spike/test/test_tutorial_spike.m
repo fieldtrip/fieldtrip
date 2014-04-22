@@ -1,5 +1,8 @@
 function test_tutorial_spike
 
+% MEM 2500mb
+% WALLTIME 00:15:00
+
 % performs all the operations mentioned int the spike tutorial
 % (http://fieldtrip.fcdonders.nl/tutorial/spike), but only plots figures
 % that are called by external functions (e.g. ft_spike_plot_isireturn).

@@ -13,12 +13,12 @@ global ft_default
 ft_default = [];
 
 if ispc
-  dccnfilename = @(filename) strrep(strrep(filename,'/home','H:'),'/','\');
+  dccnpath = @(filename) strrep(strrep(filename,'/home','H:'),'/','\');
 else
-  dccnfilename = @(filename) strrep(strrep(filename,'H:','/home'),'\','/');
+  dccnpath = @(filename) strrep(strrep(filename,'H:','/home'),'\','/');
 end
 
-cd(dccnfilename('/home/common/matlab/fieldtrip/data'));
+cd(dccnpath('/home/common/matlab/fieldtrip/data'));
 
 % find the interesting segments of data
 cfg = [];                                           % empty configuration
@@ -200,7 +200,7 @@ cfg.funcolormap    = 'jet';
 cfg.opacitylim     = [0.0 1.2];
 cfg.opacitymap     = 'rampup';
 cfg.projmethod     = 'nearest';
-cfg.surffile       = 'surface_l4_both.mat';
+cfg.surffile       = 'surface_white_both.mat';
 cfg.surfdownsample = 10;
 ft_sourceplot(cfg, sourceDiffIntNorm);
 view ([90 0])

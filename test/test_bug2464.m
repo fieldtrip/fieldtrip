@@ -6,7 +6,7 @@ function test_bug2464
 % TEST test_bug2464
 % TEST ft_selectdata
 
-filename = dccnfilename('/home/common/matlab/fieldtrip/data/test/bug2464.mat');
+filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2464.mat');
 load(filename);
 
 cfg = [];

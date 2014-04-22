@@ -14,7 +14,7 @@ data = cell(numel(datasets),1);
 
 for i=1:numel(datasets)
   cfg = [];
-  cfg.dataset = dccnfilename([homedir datasets{i}]);
+  cfg.dataset = dccnpath([homedir datasets{i}]);
   
   data{i} = ft_preprocessing(cfg);
 end;

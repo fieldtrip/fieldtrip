@@ -7,7 +7,7 @@ function test_bug1887
 % TEST ft_checkdata ft_datatype_raw ft_datatype_comp ft_datatype_timelock ft_componentanalysis ft_connectivityanalysis
 
 % this contains raw data, 10 trials with nans
-load(dccnfilename('/home/common/matlab/fieldtrip/data/test/bug1887.mat'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1887.mat'));
 
 for i=1:10
 data.trial{i} = randn(size(data.trial{i}));

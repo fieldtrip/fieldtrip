@@ -1,5 +1,8 @@
 function test_tutorial_spikefield
 
+% MEM 1500mb
+% WALLTIME 00:10:00
+
 % performs all the operations mentioned int the spikefield tutorial
 % (http://fieldtrip.fcdonders.nl/tutorial/spikefield), but only plots figures
 % that are called by external functions (e.g. ft_singleplotTFR).

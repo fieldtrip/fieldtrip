@@ -6,7 +6,7 @@ function test_bug2059
 % TEST test_bug2059
 % TEST ft_topoplotER ft_channelselection
 
-load(dccnfilename('/home/common/matlab/fieldtrip/data/test/bug2059.mat'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2059.mat'));
 
 close all
 

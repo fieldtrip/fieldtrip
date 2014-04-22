@@ -5,43 +5,40 @@ function ft_uilayout(h, varargin)
 %   ft_uilayout(h, 'tag', '...', ...);
 % where h is the figure handle and 'tag' is a key specifying the elements
 % to be manipulated.
-% In addition to MATLAB defaults (see UICONTROL), you can use the 
+%
+% In addition to MATLAB defaults (see UICONTROL), you can use the
 % following key-value pairs:
-%   'hpos'           'auto':       puts elements in horizontal adjacent 
-%                                  order with a fixed distance of 0.01 in
-%                                  between
-%                    'align':      adjusts the horizontal position of all 
+%   'hpos'           'auto':       puts elements in horizontal adjacent
+%                                  order with a fixed distance of 0.01
+%                    'align':      adjusts the horizontal position of all
 %                                  elements to the first element
-%                    'distribute': puts elements in horizontal adjacent 
-%                                  order such that they cover the whole
-%                                  figure width
+%                    'distribute': puts elements in horizontal adjacent
+%                                  order such that they distribute evenly
 %                    scalar      : sets the horizontal position of elements
 %                                  to the specified scalar
-%   'vpos'           'auto':       puts elements in vertical adjacent 
-%                                  order with a fixed distance of 0.01 in
-%                                  between
-%                    'align':      adjusts the vertical position of all 
+%   'vpos'           'auto':       puts elements in vertical adjacent
+%                                  order with a fixed distance of 0.01
+%                    'align':      adjusts the vertical position of all
 %                                  elements to the first element
-%                    'distribute': puts elements in vertical adjacent 
-%                                  order such that they cover the whole
-%                                  figure height
+%                    'distribute': puts elements in vertical adjacent
+%                                  order such that they distribute evenly
 %                    scalar      : sets the vertical position of elements
 %                                  to the specified scalar
-%   'width'          scalar      : sets the width of elements to the 
+%   'width'          scalar      : sets the width of elements to the
 %                                  specified scalar
-%   'height'         scalar      : sets the height of elements to the 
+%   'height'         scalar      : sets the height of elements to the
 %                                  specified scalar
-%   'halign'         'left'      : aligns the horizontal position of 
+%   'halign'         'left'      : aligns the horizontal position of
 %                                  elements to the left
-%                    'right'     : aligns the horizontal position of 
+%                    'right'     : aligns the horizontal position of
 %                                  elements to the right
-%   'valign'         'top'       : aligns the vertical position of 
+%   'valign'         'top'       : aligns the vertical position of
 %                                  elements to the top
-%                    'bottom'    : aligns the vertical position of 
+%                    'bottom'    : aligns the vertical position of
 %                                  elements to the bottom
-%   'halign'         'left'      : aligns the horizontal position of 
+%   'halign'         'left'      : aligns the horizontal position of
 %                                  elements to the left
-%                    'right'     : aligns the horizontal position of 
+%                    'right'     : aligns the horizontal position of
 %                                  elements to the right
 
 
@@ -154,6 +151,7 @@ end
 
 pos = zeros(length(c), 4);
 for i=1:length(c)
+  % this only works if the units are normalized
   pos(i,:) = get(c(i), 'position');
 end
 
@@ -183,7 +181,7 @@ if ~isempty(hpos)
     end
     
     hpos = hpos(1:end-1);
-        
+    
     
   elseif isequal(hpos, 'align')
     if isequal(halign, 'right')

@@ -1,7 +1,7 @@
 function test_ft_plot_vol
 
 % MEM 1gb
-% WALLTIME 0:03:00
+% WALLTIME 00:10:00
 
 % TEST test_ft_plot_vol
 % TEST ft_plot_vol

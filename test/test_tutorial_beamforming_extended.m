@@ -5,10 +5,10 @@ function test_tutorial_beamforming_extended
 
 % TEST test_beamforming_extended
 % TEST ft_read_mri ft_redefinetrial ft_freqanalysis ft_volumesegment ft_appenddata ft_selectdata ft_prepare_singleshell ft_sourceanalysis ft_prepare_leadfield ft_prepare_headmodel ft_prepare_sourcemodel ft_plot_vol ft_plot_sens ft_plot_mesh ft_sourceinterpolate ft_sourceplot 
-
-datadir = dccnfilename('/home/common/matlab/fieldtrip/data/ftp/tutorial/sensor_analysis');
-mridir = dccnfilename('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer_extended');
-templatedir  = dccnfilename('/home/common/matlab/fieldtrip/template/sourcemodel');
+if false
+datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/sensor_analysis');
+mridir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer_extended');
+templatedir  = dccnpath('/home/common/matlab/fieldtrip/template/sourcemodel');
 
 load(fullfile(datadir, 'subjectK.mat'));
 
@@ -54,7 +54,6 @@ freq_exp.cumsumcnt = freq_cmb.cumsumcnt(cfg.trials);
 
 mri = ft_read_mri(fullfile(mridir, 'subjectK.mri'));
 cfg = [];
-cfg.coordsys   = 'ctf'; % our data is CTF MEG data
 [segmentedmri] = ft_volumesegment(cfg, mri);
 
 oldsegmented = load(fullfile(mridir, 'segmentedmri.mat'));
@@ -64,10 +63,10 @@ assert(max(abs(oldsegmented.segmentedmri.gray(:)-segmentedmri.gray(:))) < .01, '
 assert(max(abs(oldsegmented.segmentedmri.csf(:)-segmentedmri.csf(:))) < .01, 'CSF segmentation differs from stored data')
 assert(max(abs(oldsegmented.segmentedmri.white(:)-segmentedmri.white(:))) < .01, 'White matter segmentation differs from stored data')
 % transformation should be absolutely identical
-assert(identical(oldsegmented.segmentedmri.transform, segmentedmri.transform), 'Transform differs from stored data')
+assert(isequal(oldsegmented.segmentedmri.transform, segmentedmri.transform), 'Transform differs from stored data')
 
 %save segmentedmri segmentedmri
-
+end % if false
 
 % add anatomical information to the segmentation
 segmentedmri.transform = mri.transform;
@@ -136,19 +135,18 @@ source_diff.pos = template.sourcemodel.pos;
 source_diff.dim = template.sourcemodel.dim;
 
 % note that the exact directory is user-specific
-templatefile = dccnfilename('/home/common/matlab/fieldtrip/external/spm8/templates/T1.nii');
-
+templatefile = dccnpath('/home/common/matlab/fieldtrip/external/spm8/templates/T1.nii');
 template_mri = ft_read_mri(templatefile);
+template_mri.coordsys = 'spm';
+
 cfg              = [];
 cfg.voxelcoord   = 'no';
 cfg.parameter    = 'avg.pow';
 cfg.interpmethod = 'nearest';
-cfg.coordsys     = 'mni';
 source_diff_int  = ft_sourceinterpolate(cfg, source_diff, template_mri);
 
 cfg               = [];
 cfg.method        = 'slice';
-cfg.coordsys      = 'mni';
 cfg.funparameter  = 'avg.pow';
 cfg.maskparameter = cfg.funparameter;
 cfg.funcolorlim   = [0.0 1.2];
@@ -157,12 +155,12 @@ cfg.opacitymap    = 'rampup';
 ft_sourceplot(cfg,source_diff_int);
 
 cfg.method = 'ortho';
-cfg.atlas           = dccnfilename('/home/common/matlab/fieldtrip/template/atlas/aal/ROI_MNI_V4.nii');
+cfg.atlas           = dccnpath('/home/common/matlab/fieldtrip/template/atlas/aal/ROI_MNI_V4.nii');
 ft_sourceplot(cfg,source_diff_int);
 
 cfg.method = 'surface';
 cfg.projmethod     = 'nearest'; 
-cfg.surffile       = 'surface_l4_both.mat';
+cfg.surffile       = 'surface_white_both.mat';
 cfg.surfdownsample = 10;
 ft_sourceplot(cfg,source_diff_int);
 
@@ -197,21 +195,19 @@ source_coh_lft      = ft_sourceanalysis(cfg, freq_csd);
 source_coh_lft.pos = template.sourcemodel.pos;
 source_coh_lft.dim = template.sourcemodel.dim;
 
-
 % note that the exact directory is user-specific
-templatefile = dccnfilename('/home/common/matlab/fieldtrip/external/spm8/templates/T1.nii');
-
+templatefile = dccnpath('/home/common/matlab/fieldtrip/external/spm8/templates/T1.nii');
 template_mri = ft_read_mri(templatefile);
+template_mri.coordsys = 'spm';
+
 cfg              = [];
 cfg.voxelcoord   = 'no';
 cfg.parameter    = 'coh';
 cfg.interpmethod = 'nearest';
-cfg.coordsys     = 'mni';
 source_coh_int   = ft_sourceinterpolate(cfg, source_coh_lft, template_mri);
 
 cfg              = [];
 cfg.method       = 'ortho';
-cfg.coordsys     = 'mni';
 cfg.funparameter = 'coh';
 cfg.funcolormap = 'jet';
 
@@ -221,7 +217,7 @@ cfg.opacitylim    = [00 .15];
 cfg.maskparameter = cfg.funparameter;
 cfg.opacitymap    = 'rampup';  
 
-cfg.atlas         = dccnfilename('/home/common/matlab/fieldtrip/template/atlas/aal/ROI_MNI_V4.nii');
+cfg.atlas         = dccnpath('/home/common/matlab/fieldtrip/template/atlas/aal/ROI_MNI_V4.nii');
 
 ft_sourceplot(cfg, source_coh_int);
-end
+

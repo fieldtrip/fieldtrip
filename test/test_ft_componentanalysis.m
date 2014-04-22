@@ -21,7 +21,7 @@ end
 
 for k = 1:numel(datainfo)
   datanew = componentanalysis(datainfo(k), writeflag, version);
-
+  
   fname = fullfile(datainfo(k).origdir,version,'comp',datainfo(k).type,['comp_',datainfo(k).datatype]);
   tmp = load(fname);
   if isfield(tmp, 'comp')
@@ -81,19 +81,30 @@ end
 
 if ~strcmp(version, 'latest') && str2double(version)<20100000
   % -- HISTORICAL --- older fieldtrip versions don't support inputfile and outputfile
-  load(outputfile, 'comp');
-  if isfield(comp.cfg.callinfo, 'randomseed')
+  try
+    % use the previous random seed
+    load(outputfile, 'comp');
+    if isfield(comp.cfg.callinfo, 'randomseed')
       cfg.randomseed = comp.cfg.callinfo.randomseed;
+    end
+  catch
+    % use a new random seed
   end
   
   load(cfg.inputfile, 'data');
   comp = ft_componentanalysis(cfg, data);
   save(cfg.outputfile, 'comp');
 else
-  load(outputfile, 'comp');
-  if isfield(comp.cfg.callinfo, 'randomseed')
+  try
+    % use the previous random seed
+    load(outputfile, 'comp');
+    if isfield(comp.cfg.callinfo, 'randomseed')
       cfg.randomseed = comp.cfg.callinfo.randomseed;
+    end
+  catch
+    % use a new random seed
   end
+  
   comp = ft_componentanalysis(cfg);
 end
 

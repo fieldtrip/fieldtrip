@@ -1,4 +1,4 @@
-function [reslice] = ft_volumereslice(cfg, mri)
+function [resliced] = ft_volumereslice(cfg, mri)
 
 % FT_VOLUMERESLICE interpolates and reslices a volume along the
 % principal axes of the coordinate system according to a specified
@@ -137,40 +137,40 @@ xgrid = cfg.xrange(1):cfg.resolution:cfg.xrange(2);
 ygrid = cfg.yrange(1):cfg.resolution:cfg.yrange(2);
 zgrid = cfg.zrange(1):cfg.resolution:cfg.zrange(2);
 
-reslice           = [];
-reslice.dim       = [length(xgrid) length(ygrid) length(zgrid)];
-reslice.transform = translate([cfg.xrange(1) cfg.yrange(1) cfg.zrange(1)]) * scale([cfg.resolution cfg.resolution cfg.resolution]) * translate([-1 -1 -1]);
-reslice.anatomy   = zeros(reslice.dim, 'int8');
+resliced           = [];
+resliced.dim       = [length(xgrid) length(ygrid) length(zgrid)];
+resliced.transform = translate([cfg.xrange(1) cfg.yrange(1) cfg.zrange(1)]) * scale([cfg.resolution cfg.resolution cfg.resolution]) * translate([-1 -1 -1]);
+resliced.anatomy   = zeros(resliced.dim, 'int8');
 
 clear xgrid ygrid zgrid
 
 % these are the same in the resliced as in the input anatomical MRI
 if isfield(mri, 'coordsys')
-  reslice.coordsys = mri.coordsys;
+  resliced.coordsys = mri.coordsys;
 end
 if isfield(mri, 'unit')
-  reslice.unit = mri.unit;
+  resliced.unit = mri.unit;
 end
 
-fprintf('reslicing from [%d %d %d] to [%d %d %d]\n', mri.dim(1), mri.dim(2), mri.dim(3), reslice.dim(1), reslice.dim(2), reslice.dim(3));
+fprintf('reslicing from [%d %d %d] to [%d %d %d]\n', mri.dim(1), mri.dim(2), mri.dim(3), resliced.dim(1), resliced.dim(2), resliced.dim(3));
 
 % the actual work is being done by ft_sourceinterpolate, which interpolates the real mri volume
 % on the resolution that is defined for the resliced volume
 tmpcfg = [];
 tmpcfg.parameter = 'anatomy';
-reslice = ft_sourceinterpolate(tmpcfg, mri, reslice);
+resliced = ft_sourceinterpolate(tmpcfg, mri, resliced);
 
 % remove fields that were not present in the input, this applies specifically to
 % the 'inside' field that may have been added by ft_sourceinterpolate
-reslice = rmfield(reslice, setdiff(fieldnames(reslice), fieldnames(mri)));
+resliced = rmfield(resliced, setdiff(fieldnames(resliced), fieldnames(mri)));
 
 % convert any non-finite values to 0 to avoid problems later on
-reslice.anatomy(~isfinite(reslice.anatomy)) = 0;
+resliced.anatomy(~isfinite(resliced.anatomy)) = 0;
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
 ft_postamble provenance
 ft_postamble previous mri
-ft_postamble history reslice
-ft_postamble savevar reslice
+ft_postamble history resliced
+ft_postamble savevar resliced

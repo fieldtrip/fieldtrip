@@ -18,14 +18,16 @@ function retval = qsublist(cmd, jobid, pbsid)
 %   'killall'
 %
 %
-% The following commands are used by QSUBFEVAL and QSUBGET respectively.
+% The following low-level commands are used by QSUBFEVAL and QSUBGET for job
+% maintenance and monitoring.
 %   'add'
 %   'del'
+%   'completed'
 %
 % See also QSUBCELLFUN, QSUBFEVAL, QSUBGET
 
 % -----------------------------------------------------------------------
-% Copyright (C) 2011, Robert Oostenveld
+% Copyright (C) 2011-2014, Robert Oostenveld
 %
 % This program is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -127,6 +129,44 @@ switch cmd
       qsublist('kill', list_jobid{i}, list_pbsid{i});
     end
     
+  case 'completed'
+    % cmd = 'completed' returns whether the job is completed as a boolean
+    %
+    % It first determines whether the output files exist. If so, it might be that the
+    % batch queueing system is still writing to them, hence the next system-specific
+    % check also polls the status of the job. First checking the files and then the
+    % job status ensures that we don't saturate the torque server with job-status
+    % requests.
+    
+    curPwd     = getcustompwd();
+    outputfile = fullfile(curPwd, sprintf('%s_output.mat', jobid));
+    logout     = fullfile(curPwd, sprintf('%s.o*', jobid)); % note the wildcard in the file name
+    logerr     = fullfile(curPwd, sprintf('%s.e*', jobid)); % note the wildcard in the file name
+    
+    % check that all files exist
+    retval = exist(outputfile, 'file') && isfile(logout) && isfile(logerr);
+    
+    if retval
+      % poll the job status to confirm that the job truely completed
+      switch backend
+        case 'torque'
+          [dum, jobstatus] = system(['qstat ' pbsid ' -f1 | grep job_state | grep -o "= [A-Z]" | grep -o [A-Z]']);
+          retval = strcmp(strtrim(jobstatus) ,'C');
+        case 'lsf'
+          [dum, jobstatus] = system(['bjobs ' pbsid ' | awk ''NR==2'' | awk ''{print $3}'' ']);
+          retval = strcmp(strtrim(jobstatus), 'DONE');
+        case 'sge'
+          [dum, jobstatus] = system(['qstat -s z | grep ' pbsid ' | awk ''{print $5}''']);
+          retval = strcmp(strtrim(jobstatus), 'z');
+        case {'local','system'}
+          % only return the status based on the presence of the output files
+          % there is no way polling the batch execution system
+        otherwise
+          % only return the status based on the presence of the output files
+          % FIXME it would be good to implement this for slurm as well
+      end
+    end % if retval
+    
   case 'list'
     for i=1:length(list_jobid)
       fprintf('%s %s\n', list_jobid{i}, list_pbsid{i});
@@ -144,3 +184,10 @@ switch cmd
     error('unsupported command (%s)', cmd);
 end % switch
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% helper function that detects a file, even with a wildcard in the filename
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function status = isfile(name)
+tmp = dir(name);
+status = length(tmp)==1 && ~tmp.isdir;

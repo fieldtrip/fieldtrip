@@ -71,14 +71,25 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 %    given the files are saved to the pwd. The consecutive figures will be
 %    numbered and saved as png-file.
 %
-% When cfg.method = 'headshape', the following cfg-option is required:
-%  cfg.headshape = string pointing to a file describing a headshape, that
+% When cfg.method = 'headshape', the function extracts the scalp surface from
+% the input MRI, and aligns this surface with the headshape. Options pertaining 
+% to this method can be defined in the subcfg cfg.headshape. The following 
+% cfg-option is required:
+%  cfg.headshape.headshape = string pointing to a file describing a headshape, that
 %    can be loaded with FT_READ_HEADSHAPE, or a FieldTrip-structure describing
 %    a headshape
+%
 % The following options are optional:
-%  cfg.scalpsmooth    = scalar (default = 2): smoothing parameter for the scalp extraction
-%  cfg.scalpthreshold = scalar (default = 0.1): threshold parameter for the scalp extraction
-% 
+%  cfg.headshape.scalpsmooth    = scalar (default = 2): smoothing parameter
+%    for the scalp extraction 
+%  cfg.headsahpe.scalpthreshold = scalar (default = 0.1): threshold parameter 
+%    for the scalp extraction
+%  cfg.headshape.interactive    = 'yes' ('no'): use interactive realignment
+%    to align headshape with scalp surface
+%  cfg.headshape.icp            = 'yes' ('no'): use automatic realignment 
+%    based on the icp-algorithm. If both 'interactive' and 'icp' are
+%    executed, the icp step follows the interactive realignment step.
+%
 % When cfg.method = 'fsl', a third input argument is required. The input volume is
 % coregistered to this target volume, using fsl's flirt program. This
 % assumes fsl to be installed. Options pertaining to the behavior of fsl
@@ -173,8 +184,6 @@ cfg.parameter  = ft_getopt(cfg, 'parameter', 'anatomy');
 cfg.clim       = ft_getopt(cfg, 'clim',      []);
 cfg.snapshot   = ft_getopt(cfg, 'snapshot',  false);
 cfg.snapshotfile = ft_getopt(cfg, 'snapshotfile', fullfile(pwd,'ft_volumerealign_snapshot'));
-cfg.scalpsmooth    = ft_getopt(cfg, 'scalpsmooth',    2, 1); % empty is OK
-cfg.scalpthreshold = ft_getopt(cfg, 'scalpthreshold', 0.1);
 
 if strcmp(cfg.method, '')
   if isempty(cfg.landmark) && isempty(cfg.fiducial)
@@ -247,9 +256,9 @@ switch cfg.method
     showcrosshair = true;
     showmarkers   = 1;
     dat = mri.(cfg.parameter);
-    nas = [];
-    lpa = [];
-    rpa = [];
+    if isfield(cfg, 'fiducial') && isfield(cfg.fiducial, 'nas'),  nas = cfg.fiducial.nas; else nas = []; end
+    if isfield(cfg, 'fiducial') && isfield(cfg.fiducial, 'lpa'),  lpa = cfg.fiducial.lpa; else lpa = []; end
+    if isfield(cfg, 'fiducial') && isfield(cfg.fiducial, 'rpa'),  rpa = cfg.fiducial.rpa; else rpa = []; end
     antcomm = [];
     pstcomm = [];
     xzpoint = [];
@@ -261,7 +270,11 @@ switch cfg.method
     zc = round(mri.dim(3)/2);
     
     updatepanel = [1 2 3];
-    pnt         = zeros(0,3);
+    if isfield(cfg, 'pnt') 
+      pnt = cfg.pnt;
+    else
+      pnt = zeros(0,3);
+    end
     markerpos   = zeros(0,3);
     markerlabel = {};
     markercolor = {};
@@ -578,19 +591,60 @@ switch cfg.method
     end
     
   case 'headshape'
+    if strcmp(class(cfg.headshape), 'config')
+      cfg.headshape = struct(cfg.headshape);
+    end
+    
     if ischar(cfg.headshape)
-      shape = ft_read_headshape(cfg.headshape);
+      % old-style specification, convert cfg into new representation
+      cfg.headshape.headshape   = cfg.headshape;
+      
+      if isfield(cfg, 'scalpsmooth'),
+        cfg.headshape.scalpsmooth = cfg.scalpsmooth;
+        cfg = rmfield(cfg, 'scalpsmooth');
+      end
+      if isfield(cfg, 'scalpthreshold'),
+        cfg.headshape.scalpthreshold = cfg.scalpthreshold;
+        cfg = rmfield(cfg, 'scalpthreshold');
+      end
+    elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'pnt')
+      % old-style specification, convert into new representation
+      cfg.headshape.headshape   = cfg.headshape;
+      if isfield(cfg, 'scalpsmooth'),
+        cfg.headshape.scalpsmooth = cfg.scalpsmooth;
+        cfg = rmfield(cfg, 'scalpsmooth');
+      end
+      if isfield(cfg, 'scalpthreshold'),
+        cfg.headshape.scalpthreshold = cfg.scalpthreshold;
+        cfg = rmfield(cfg, 'scalpthreshold');
+      end
+      
+    elseif isstruct(cfg.headshape)
+      % new-style specification, do nothing
     else
-      shape = cfg.headshape;
+      error('incorrect specification of cfg.headshape');
+    end
+    if ischar(cfg.headshape.headshape)
+      shape = ft_read_headshape(cfg.headshape.headshape);
+    else
+      shape = cfg.headshape.headshape;
     end
     shape = ft_convert_units(shape, 'mm');
+    
+    cfg.headshape.interactive    = ft_getopt(cfg.headshape, 'interactive', true);
+    cfg.headshape.icp            = ft_getopt(cfg.headshape, 'icp',         true);
+    cfg.headshape.scalpsmooth    = ft_getopt(cfg.headshape, 'scalpsmooth',    2, 1); % empty is OK
+    cfg.headshape.scalpthreshold = ft_getopt(cfg.headshape, 'scalpthreshold', 0.1);
+
+    dointeractive = istrue(cfg.headshape.interactive);
+    doicp         = istrue(cfg.headshape.icp);
     
     if ~isfield(mri, 'scalp') || ~islogical(mri.scalp)
       % extract the scalp surface from the anatomical image
       tmpcfg        = [];
       tmpcfg.output = 'scalp';
-      tmpcfg.scalpsmooth    = cfg.scalpsmooth;
-      tmpcfg.scalpthreshold = cfg.scalpthreshold;
+      tmpcfg.scalpsmooth    = cfg.headshape.scalpsmooth;
+      tmpcfg.scalpthreshold = cfg.headshape.scalpthreshold;
       if isfield(cfg, 'template')
         tmpcfg.template = cfg.template;
       end
@@ -607,21 +661,31 @@ switch cfg.method
     scalp              = ft_prepare_mesh(tmpcfg, seg);
     scalp              = ft_convert_units(scalp, 'mm');
     
-    % Here it is advisable to interactively realign the shape and scalp, in
-    % order to get a good starting point for the icp-algorithm.
-    % We will use ft_interactiverealign for this.
-    tmpcfg                       = [];
-    tmpcfg.template.elec         = shape;
-    tmpcfg.template.elec.chanpos = shape.pnt;
-    tmpcfg.individual.headshape  = scalp;
-    tmpcfg.individual.headshapestyle = 'surface';
-    tmpcfg = ft_interactiverealign(tmpcfg);
-    M      = tmpcfg.m;
+    if dointeractive,
+      tmpcfg                       = [];
+      tmpcfg.template.elec         = shape;
+      tmpcfg.template.elec.chanpos = shape.pnt;
+      tmpcfg.individual.headshape  = scalp;
+      tmpcfg.individual.headshapestyle = 'surface';
+      tmpcfg = ft_interactiverealign(tmpcfg);
+      M      = tmpcfg.m;
+      cfg.transform_interactive = M;
+      
+      % touch it to survive trackconfig
+      cfg.transform_interactive;
+      
+      % update the relevant geometrical info
+      scalp  = ft_transform_geometry(M, scalp);
+    end % dointeractive
     
-    % update the relevant geometrical info
-    mri.transform = M*mri.transform;
-    scalp     = ft_transform_geometry(M, scalp);
-
+    % always perform an icp-step, because this will give an estimate of the
+    % initial distance of the corresponding points. depending on the value
+    % for doicp, deal with the output differently
+    if doicp,
+      numiter = 50;
+    else
+      numiter = 1;
+    end
     
     if ~isfield(cfg, 'weights')
       w = ones(size(shape.pnt,1),1);
@@ -631,54 +695,96 @@ switch cfg.method
         error('number of weights should be equal to the number of points in the headshape');
       end
     end
-    
+      
     % the icp function wants this as a function handle.
     weights = @(x)assignweights(x,w);
-    
+      
     % construct the coregistration matrix
     nrm = normals(scalp.pnt, scalp.tri, 'vertex');
-    [R, t, err, ~, info] = icp(scalp.pnt', shape.pnt', 50, 'Minimize', 'plane', 'Normals', nrm', 'Weight', weights, 'Extrapolation', true, 'WorstRejection', 0.05);
+    [R, t, err, ~, info] = icp(scalp.pnt', shape.pnt', numiter, 'Minimize', 'plane', 'Normals', nrm', 'Weight', weights, 'Extrapolation', true, 'WorstRejection', 0.05);
     
-    % this one transforms from scalp 'headspace' to shape 'headspace'
-    transform = inv([R t;0 0 0 1]);
-   
-    % warp the extracted scalp points to the new positions
-    scalp.pnt = ft_warp_apply(transform, scalp.pnt);
-     
-    % smooth the distance function and use this for new weights
-    target        = scalp;
-    target.pos    = target.pnt;
-    target.inside = (1:size(target.pos,1))';
-    
-    functional     = rmfield(shape,'pnt');
-    functional.pow = info.distanceout(:);
-    functional.pos = info.qout';
-
-    tmpcfg           = [];
-    tmpcfg.parameter = 'pow';
-    tmpcfg.interpmethod = 'sphere_avg';
-    tmpcfg.sphereradius = 10;
-    smoothdist          = ft_sourceinterpolate(tmpcfg, functional, target);
-    scalp.distance  = smoothdist.pow(:);
+    if doicp,
+      % create the additional transformation matrix and compute the
+      % distance between the corresponding points, both prior and after icp
       
+      % this one transforms from scalp 'headspace' to shape 'headspace'
+      M2 = inv([R t;0 0 0 1]);
+      
+      % warp the extracted scalp points to the new positions
+      scalp.pnt = ft_warp_apply(M2, scalp.pnt);
+      
+      target        = scalp;
+      target.pos    = target.pnt;
+      target.inside = (1:size(target.pos,1))';
+      
+      functional     = rmfield(shape,'pnt');
+      functional.pow = info.distanceout(:);
+      functional.pos = info.qout';
+      
+      tmpcfg              = [];
+      tmpcfg.parameter    = 'pow';
+      tmpcfg.interpmethod = 'sphere_avg';
+      tmpcfg.sphereradius = 10;
+      smoothdist          = ft_sourceinterpolate(tmpcfg, functional, target);
+      scalp.distance      = smoothdist.pow(:);
+      
+      functional.pow      = info.distancein(:);
+      smoothdist          = ft_sourceinterpolate(tmpcfg, functional, target);
+      scalp.distancein    = smoothdist.pow(:);
+           
+      cfg.icpinfo = info;
+      cfg.transform_icp = M2;
+      
+      % touch it to survive trackconfig
+      cfg.icpinfo;
+      cfg.transform_icp;
+    else
+      % compute the distance between the corresponding points, prior to
+      % icp: this corresponds to the final result after interactive only
+      
+      M2 = eye(4); % this is needed later on
+      
+      target        = scalp;
+      target.pos    = target.pnt;
+      target.inside = (1:size(target.pos,1))';
+      
+      functional     = rmfield(shape,'pnt');
+      functional.pow = info.distancein(:);
+      functional.pos = info.qout';
+      
+      tmpcfg              = [];
+      tmpcfg.parameter    = 'pow';
+      tmpcfg.interpmethod = 'sphere_avg';
+      tmpcfg.sphereradius = 10;
+      smoothdist          = ft_sourceinterpolate(tmpcfg, functional, target);
+      scalp.distance      = smoothdist.pow(:);
+      
+    end % doicp
+    
     % create headshape structure for mri-based surface point cloud
     if isfield(mri, 'coordsys')
       scalp.coordsys = mri.coordsys;
-    
+      
       % coordsys is the same as input mri
       coordsys = mri.coordsys;
     else
       coordsys  = 'unknown';
     end
-           
-    % update the cfg
-    cfg.headshape    = shape;
-    cfg.headshapemri = scalp;
-    cfg.icpinfo      = info;
     
+    % update the cfg
+    cfg.headshape.headshape    = shape;
+    cfg.headshape.headshapemri = scalp;
+      
     % touch it to survive trackconfig
-    cfg.headshapemri;
-    cfg.icpinfo;
+    cfg.headshape;
+    
+    if doicp && dointeractive
+      transform = M2*M;
+    elseif doicp
+      transform = M2;
+    elseif dointeractive
+      transform = M;
+    end
     
   case 'fsl'
     if ~isfield(cfg, 'fsl'), cfg.fsl = []; end
@@ -836,7 +942,7 @@ switch cfg.method
     delete(tname2);
   
   otherwise
-    error('unsupported method');
+    error('unsupported method "%s"', cfg.method);
 end
 
 if basedonfid && basedonmrk

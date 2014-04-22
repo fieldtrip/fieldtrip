@@ -21,16 +21,20 @@ function source = ft_datatype_source(source, varargin)
 %                                       in this case 6732 dipole positions x 120 observations
 %
 % Required fields:
-%   - pos, dimord
+%   - pos
 %
 % Optional fields:
-%   - time, freq, pow, mom, ori, dim, cumtapcnt, channel, other fields with a dimord
+%   - time, freq, pow, mom, ori, dim, cumtapcnt, cfg, dimord, other fields with a dimord
 %
 % Deprecated fields:
 %   - method
 %
 % Obsoleted fields:
 %   - xgrid, ygrid, zgrid, transform, latency, frequency
+%
+% Historical fields:
+%   - avg, cfg, cumtapcnt, df, dim, freq, frequency, inside, method,
+%   outside, pos, time, trial, vol, see bug2513
 %
 % Revision history:
 %
@@ -97,8 +101,18 @@ if isfield(source, 'latency'),
 end
 
 switch version
-  case 'upcoming' % this is under development and expected to become the standard in 2013
+  case 'upcoming' % this is under development and expected to become the standard in 2014
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % ensure that it has individual source positions
+    source = fixpos(source);
+    
+    % remove obsolete fields
+    if isfield(source, 'method')
+      source = rmfield(source, 'method');
+    end
+    if isfield(source, 'transform')
+      source = rmfield(source, 'transform');
+    end
     if isfield(source, 'xgrid')
       source = rmfield(source, 'xgrid');
     end
@@ -109,28 +123,97 @@ switch version
       source = rmfield(source, 'zgrid');
     end
     
-    if isfield(source, 'transform')
-      source = rmfield(source, 'transform');
-    end
-    
-    if isfield(source, 'avg')
+    if isfield(source, 'avg') && isstruct(source.avg)
       % move the average fields to the main structure
       fn = fieldnames(source.avg);
       for i=1:length(fn)
-        source.(fn{i}) = source.avg.(fn{i});
+        dum = source.avg.(fn{i});
+        if isequal(size(dum), [1 size(source.pos,1)])
+          source.(fn{i}) = dum';
+        else
+          source.(fn{i}) = dum;
+        end
+        clear dum
       end % j
-      source.dimord = 'pos';
       source = rmfield(source, 'avg');
     end
     
     % ensure that it is always logical
-    source   = fixinside(source, 'logical');
+    source = fixinside(source, 'logical');
+    
+    if isfield(source, 'inside')
+      % it is logically indexed
+      probe = find(source.inside, 1, 'first');
+    else
+      % just take the first source position
+      probe = 1;
+    end
+    
+    if isfield(source, 'trial') && isstruct(source.trial)
+      npos = size(source.pos,1);
+      nrpt = numel(source.trial); % note that this field is also used further doen
+      
+      % concatenate the fields for each trial and move them to the main structure
+      fn = fieldnames(source.trial);
+      
+      for i=1:length(fn)
+        % start with the first trial
+        dum = source.trial(1).(fn{i});
+        
+        % some fields are descriptive and hence identical over trials
+        if strcmp(fn{i}, 'csdlabel')
+          source.csdlabel = dum;
+          continue
+        end
+        
+        if iscell(dum)
+          indx = find(source.inside);
+          siz = size(dum{probe});
+          siz = [nrpt siz];
+          val = cell(npos,1);
+          for k=1:length(indx)
+            val{indx(k)}          = nan(siz);
+            val{indx(k)}(1,:,:,:) = dum{indx(k)};
+          end
+          % concatenate all data as {pos}_rpt_etc
+          for j=2:length(source.trial)
+            dum = source.trial(j).(fn{i});
+            for k=1:length(indx)
+              val{indx(k)}(j,:,:,:) = dum{indx(k)};
+            end
+            
+          end % for all trials
+          source.(fn{i}) = val;
+          
+        else
+          siz = size(dum);
+          siz = [npos nrpt siz(2:end)];
+          val = nan(siz);
+          % concatenate all data as pos_rpt_etc
+          val(:,1,:,:,:) = dum;
+          for j=2:length(source.trial)
+            dum = source.trial(j).(fn{i});
+            val(:,j,:,:,:) = dum;
+          end % for all trials
+          source.(fn{i}) = val;
+          
+        end
+      end % for each field
+      
+      source = rmfield(source, 'trial');
+      
+    end % if trial
     
     % ensure that it has a dimord (or multiple for the different fields)
     source = fixdimord(source);
     
+    
   case '2011'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % ensure that it has individual source positions
+    source = fixpos(source);
+    
+    % remove obsolete fields
     if isfield(source, 'xgrid')
       source = rmfield(source, 'xgrid');
     end
@@ -140,7 +223,6 @@ switch version
     if isfield(source, 'zgrid')
       source = rmfield(source, 'zgrid');
     end
-    
     if isfield(source, 'transform')
       source = rmfield(source, 'transform');
     end
@@ -150,6 +232,10 @@ switch version
     
   case '2010'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % ensure that it has individual source positions
+    source = fixpos(source);
+    
+    % remove obsolete fields
     if isfield(source, 'xgrid')
       source = rmfield(source, 'xgrid');
     end
@@ -165,10 +251,13 @@ switch version
     
   case '2007'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % ensure that it has individual source positions
+    source = fixpos(source);
+    
+    % remove obsolete fields
     if isfield(source, 'dimord')
       source = rmfield(source, 'dimord');
     end
-    
     if isfield(source, 'xgrid')
       source = rmfield(source, 'xgrid');
     end
@@ -203,3 +292,25 @@ switch version
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     error('unsupported version "%s" for source datatype', version);
 end
+
+function source = fixpos(source)
+if ~isfield(source, 'pos')
+  if isfield(source, 'xgrid') && isfield(source, 'ygrid') && isfield(source, 'zgrid')
+    source.pos = grid2pos(source.xgrid, source.ygrid, source.zgrid);
+  elseif isfield(source, 'dim') && isfield(source, 'transform')
+    source.pos = dim2pos(source.dim, source.transform);
+  else
+    error('cannot reconstruct individual source positions');
+  end
+end
+
+function pos = grid2pos(xgrid, ygrid, zgrid)
+[X, Y, Z] = ndgrid(xgrid, ygrid, zgrid);
+pos = [X(:) Y(:) Z(:)];
+
+function pos = dim2pos(dim, transform)
+[X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
+pos = [X(:) Y(:) Z(:)];
+pos = ft_warp_apply(transform, pos, 'homogenous');
+
+

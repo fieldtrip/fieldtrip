@@ -451,10 +451,13 @@ switch cfg.method
       rethrow(me);
     end
     
-  case 'runica'
+  case 'runica'  
     % check whether the required low-level toolboxes are installed
     % see http://www.sccn.ucsd.edu/eeglab
     ft_hastoolbox('eeglab', 1);
+    
+    % set the number of components to be estimated
+    cfg.runica.pca = cfg.numcomponent;
     
     % construct key-value pairs for the optional arguments
     optarg = ft_cfg2keyval(cfg.runica);

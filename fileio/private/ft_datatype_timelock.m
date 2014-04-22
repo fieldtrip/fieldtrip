@@ -29,6 +29,10 @@ function timelock = ft_datatype_timelock(timelock, varargin)
 %
 % Obsoleted fields:
 %   - fsample
+% 
+% Historical fields:
+%   - avg, cfg, cov, dimord, dof, dofvec, elec, fsample, grad, label,
+% numcovsamples, numsamples, time, trial, var, see bug2513
 %
 % Revision history:
 %
