@@ -257,8 +257,8 @@ for i=1:numel(varargin)
     
     % check for the presence of each dimension in each datafield
     fieldhasspike   = ismember('spike',   dimtok);
-    fieldhaspos     = ismember('pos',     dimtok) | ismember('{pos}', dimtok);
-    fieldhaschan    = ismember('chan',    dimtok) | ismember('{chan}', dimtok);
+    fieldhaspos     = ismember('pos',     dimtok) || ismember('{pos}', dimtok);
+    fieldhaschan    = (ismember('chan',    dimtok) || ismember('{chan}', dimtok)) && isfield(varargin{1}, 'label');
     fieldhaschancmb = ismember('chancmb', dimtok);
     fieldhastime    = ismember('time',    dimtok) && ~hasspike;
     fieldhasfreq    = ismember('freq',    dimtok);
