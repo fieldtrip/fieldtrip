@@ -516,6 +516,8 @@ else
       nr_items = size(in_str,1);
       ind = 1;
       coil_ind = 1;
+      shape.fid.pnt = [];
+      shape.fid.label = {};
       while ind < nr_items
         if strcmp(in_str{ind},'MEG:x=')
           shape.fid.pnt = [shape.fid.pnt; str2num(strtok(in_str{ind+1},[',','['])) ...
