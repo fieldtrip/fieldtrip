@@ -156,7 +156,7 @@ else
     return;
   elseif (varargin{1}-p)<0.01 && strcmp(t, 'etf')
     % display should not be updated it the difference is less than one percent
-    return;
+    % return;
   end
 
   % count the number of updates, for debugging
