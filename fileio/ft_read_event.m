@@ -20,8 +20,7 @@ function [event] = ft_read_event(filename, varargin)
 %   'blocking'      wait for the selected number of events (default = 'no')
 %   'timeout'       amount of time in seconds to wait when blocking (default = 5)
 %   'tolerance'     tolerance in samples when merging analogue trigger
-%                   channels, only for Neuromag using the '_v2'
-%                   experimental versions at the moment (default = 1,
+%                   channels, only for Neuromag (default = 1,
 %                   meaning that an offset of one sample in both directions
 %                   is compensated for)
 %
