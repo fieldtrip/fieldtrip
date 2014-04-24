@@ -81,36 +81,35 @@ hassampleinfo = ft_getopt(varargin, 'hassampleinfo', 'ifmakessense'); % can be y
 hastrialinfo  = ft_getopt(varargin, 'hastrialinfo',  'ifmakessense'); % can be yes/no/ifmakessense
 
 if isequal(hassampleinfo, 'ifmakessense')
-  hassampleinfo = 'yes';
+  hassampleinfo = 'no'; % default to not adding it
   if isfield(data, 'sampleinfo') && size(data.sampleinfo,1)~=numel(data.trial)
     % it does not make sense, so don't keep it
     hassampleinfo = 'no';
   end
   if isfield(data, 'sampleinfo')
+    hassampleinfo = 'yes'; % if it's already there, consider keeping it
     numsmp = data.sampleinfo(:,2)-data.sampleinfo(:,1)+1;
     for i=1:length(data.trial)
       if size(data.trial{i},2)~=numsmp(i);
         % it does not make sense, so don't keep it
         hassampleinfo = 'no';
+        % the actual removal will be done further down
+        warning('removing inconsistent sampleinfo');
         break;
       end
     end
   end
-  if strcmp(hassampleinfo, 'no')
-    % the actual removal will be done further down
-    warning('removing inconsistent sampleinfo');
-  end
 end
 
 if isequal(hastrialinfo, 'ifmakessense')
-  hastrialinfo = 'yes';
-  if isfield(data, 'trialinfo') && size(data.trialinfo,1)~=numel(data.trial)
-    % it does not make sense, so don't keep it
-    hastrialinfo = 'no';
-  end
-  if strcmp(hastrialinfo, 'no')
-    % the actual removal will be done further down
-    warning('removing inconsistent sampleinfo');
+  hastrialinfo = 'no';
+  if isfield(data, 'trialinfo')
+    hastrialinfo = 'yes';
+    if size(data.trialinfo,1)~=numel(data.trial)
+      % it does not make sense, so don't keep it
+      hastrialinfo = 'no';
+      warning('removing inconsistent trialinfo');
+    end
   end
 end
 

@@ -69,7 +69,7 @@ ft_preamble loadvar varargin
 
 % check if the input data is valid for this function
 for i=1:length(varargin)
-  varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'raw', 'feedback', 'no', 'hassampleinfo', 'yes');
+  varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'raw', 'feedback', 'no');
 end
 
 % determine the dimensions of the data
@@ -130,10 +130,14 @@ for i=1:Ndata
   else
     sampleinfo{i} = [];
   end
-  if isempty(sampleinfo{i})
-    % a sample definition is expected in each data set
-    warning('no ''sampleinfo'' field in data structure %d', i);
-  end
+  
+  % the function should behave properly even if no sampleinfo is present,
+  % hence the warning seems inappropriate (ES, 24-apr-2014)
+%   if isempty(sampleinfo{i})
+%     % a sample definition is expected in each data set
+%     warning('no ''sampleinfo'' field in data structure %d', i);
+%   end
+
   hassampleinfo = isfield(varargin{i}, 'sampleinfo') + hassampleinfo;
   hastrialinfo = isfield(varargin{i}, 'trialinfo') + hastrialinfo;
 end
@@ -187,8 +191,8 @@ try
   end
 catch err
   if strcmp(err.identifier, 'MATLAB:nonExistentField')
-    % this means no data.cfg is present; should not be treated as a fatal error, so throw warning instead
-    warning('cannot determine from which datafiles the data is taken');
+    % this means no data.cfg is present; should not be treated as a fatal error
+    fprintf('cannot determine from which datafiles the data is taken\n');
   else
     % not sure which error, probably a bigger problem
     throw(err);
