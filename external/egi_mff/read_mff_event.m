@@ -1,9 +1,17 @@
 %% read_mff_event.m
 %  Matlab File
 %  author Colin Davey
-%  date 3/2/2012
-%  Copyright 2012 EGI. All rights reserved.
-%  Returns events in Field Trip format. 
+%  date 3/2/2012, 4/15/2014
+%  Copyright 2012, 2014 EGI. All rights reserved.
+%
+%  Takes the path to the data and returns the events in the structure
+%  described at http://fieldtrip.fcdonders.nl/reference/ft_read_event. 
+%
+%  filePath ? The path to the .mff file. 
+%
+%  hdr ? FieldTrip header. You have the option of passing in the header, or
+%  []. If you pass in the header, it pulls data out of it, rather than
+%  recomputing them.
 %%
 function events = read_mff_event(filePath, hdr)
 if isempty(hdr)
@@ -57,36 +65,39 @@ if eventtrackcount > 0
     % MFFUtil is used to for operations on string-based timestamp
     MFFUtil = javaObject('com.egi.services.mff.utility.MFFUtil');
     for tracknum = 0:eventtrackcount-1
-        eventTrackObj = mff_getObject(com.egi.services.mff.api.MFFResourceType.kMFF_RT_EventTrack, eventtracknamelist.get(tracknum), filePath);
-        eventList = eventTrackObj.getEvents;
-        numEvents = eventList.size;
-        for p = 0:numEvents-1
-            % Java arrays are 0 based
-            theEvent = eventList.get(p);
-            eventTime = theEvent.getBeginTime;
+        trackname = lower(eventtracknamelist.get(tracknum));
+        if strcmp(trackname(end-3:end), '.xml')
+            eventTrackObj = mff_getObject(com.egi.services.mff.api.MFFResourceType.kMFF_RT_EventTrack, trackname, filePath);
+            eventList = eventTrackObj.getEvents;
+            numEvents = eventList.size;
+            for p = 0:numEvents-1
+                % Java arrays are 0 based
+                theEvent = eventList.get(p);
+                eventTime = theEvent.getBeginTime;
 
-            %Need to convert to samples (get sampling rate up above)
-            eventTimeInMicros = uint64(MFFUtil.getTimeDifferenceInMicroseconds(eventTime , beginTime));
-            [eventTimeInSamples, sampleRemainder] = mff_micros2Sample(eventTimeInMicros, summaryInfo.sampRate);
-            eventTimeInEpochSamples = samples2EpochSample(eventTimeInSamples, epochBeginSamps, epochNumSamps);
-            if eventTimeInEpochSamples < 1
-                % Error: invalid sample number
-            else
-                eventInd = eventInd + 1;
-%                fprintf('%d %d %d\n', eventTimeInSamples, eventTimeInEpochSamples, eventTimeInSamples-eventTimeInEpochSamples);
-                % Matlab arrays are 1 based
-                events(eventInd).type = char(theEvent.getCode);
-                events(eventInd).sample = eventTimeInEpochSamples;
-                events(eventInd).sampleRemainder = sampleRemainder;
-                events(eventInd).value = [];
-                events(eventInd).offset = [];
-                [events(eventInd).duration, events(eventInd).durationRemainder] = mff_micros2Sample(theEvent.getDuration, summaryInfo.sampRate);
-                if events(eventInd).durationRemainder > 0
-                    events(eventInd).duration = events(eventInd).duration + 1;
+                %Need to convert to samples (get sampling rate up above)
+                eventTimeInMicros = uint64(MFFUtil.getTimeDifferenceInMicroseconds(eventTime , beginTime));
+                [eventTimeInSamples, sampleRemainder] = mff_micros2Sample(eventTimeInMicros, summaryInfo.sampRate);
+                eventTimeInEpochSamples = samples2EpochSample(eventTimeInSamples, epochBeginSamps, epochNumSamps);
+                if eventTimeInEpochSamples < 1
+                    % Error: invalid sample number
+                else
+                    eventInd = eventInd + 1;
+    %                fprintf('%d %d %d\n', eventTimeInSamples, eventTimeInEpochSamples, eventTimeInSamples-eventTimeInEpochSamples);
+                    % Matlab arrays are 1 based
+                    events(eventInd).type = char(theEvent.getCode);
+                    events(eventInd).sample = eventTimeInEpochSamples;
+                    events(eventInd).sampleRemainder = sampleRemainder;
+                    events(eventInd).value = [];
+                    events(eventInd).offset = [];
+                    [events(eventInd).duration, events(eventInd).durationRemainder] = mff_micros2Sample(theEvent.getDuration, summaryInfo.sampRate);
+                    if events(eventInd).durationRemainder > 0
+                        events(eventInd).duration = events(eventInd).duration + 1;
+                    end
+                    events(eventInd).timestamp = []; %eventTime;
+                    eventInds(eventInd,1) = events(eventInd).sample;
+                    eventInds(eventInd,2) = eventInd;
                 end
-                events(eventInd).timestamp = []; %eventTime;
-                eventInds(eventInd,1) = events(eventInd).sample;
-                eventInds(eventInd,2) = eventInd;
             end
         end
     end
