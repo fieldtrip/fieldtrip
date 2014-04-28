@@ -44,7 +44,7 @@ function [resample] = resampledesign(cfg, design)
 % be done, at the same time controlling that repetitions are not shuffled
 % between different control blocks.
 %
-% See also STATISTICS_MONTECARLO
+% See also FT_STATISTICS_MONTECARLO
 
 % Copyright (C) 2005-2011, Robert Oostenveld
 %

@@ -47,6 +47,10 @@ function retval = qsublist(cmd, jobid, pbsid)
 
 persistent list_jobid list_pbsid
 
+% this function should stay in memory to keep the persistent variables for a long time
+% locking it ensures that it does not accidentally get cleared if the m-file on disk gets updated
+mlock
+
 if nargin<1
   cmd = 'list';
 end
@@ -128,6 +132,8 @@ switch cmd
     for i=length(list_jobid):-1:1
       qsublist('kill', list_jobid{i}, list_pbsid{i});
     end
+    % it is now safe to unload the function and persistent variables from memory
+    munlock
     
   case 'completed'
     % cmd = 'completed' returns whether the job is completed as a boolean
@@ -139,12 +145,12 @@ switch cmd
     % requests.
     
     curPwd     = getcustompwd();
-    outputfile = fullfile(curPwd, sprintf('%s_output.mat', jobid));
+    outputfile = fullfile(curPwd, sprintf('%s_output.mat', jobid)); % if the job is aborted to a resource violation, there will not be an output file
     logout     = fullfile(curPwd, sprintf('%s.o*', jobid)); % note the wildcard in the file name
     logerr     = fullfile(curPwd, sprintf('%s.e*', jobid)); % note the wildcard in the file name
     
     % check that all files exist
-    retval = exist(outputfile, 'file') && isfile(logout) && isfile(logerr);
+    retval = isfile(logout) && isfile(logerr);
     
     if retval
       % poll the job status to confirm that the job truely completed
