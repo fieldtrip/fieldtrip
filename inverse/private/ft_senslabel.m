@@ -1649,6 +1649,9 @@ elseif isempty(eval(type))
         'Oz'
         'O2'};
       
+      % Add also reference and some alternative labels that might be used
+      label = cat(1, label, {'A1' 'A2' 'M1' 'M2' 'T3' 'T4' 'T5' 'T6'}');
+      
     case 'eeg1010'
       label = {
         'Fp1'
@@ -1738,7 +1741,10 @@ elseif isempty(eval(type))
         'Iz'
         'I2'
         };
-      
+
+      % Add also reference and some alternative labels that might be used
+      label = cat(1, label, {'A1' 'A2' 'M1' 'M2' 'T3' 'T4' 'T5' 'T6'}');
+
     case 'eeg1005'
       label = {
         'Fp1'
@@ -2077,6 +2083,9 @@ elseif isempty(eval(type))
         'OIz'
         'OI2'
         };
+
+      % Add also reference and some alternative labels that might be used
+      label = cat(1, label, {'A1' 'A2' 'M1' 'M2' 'T3' 'T4' 'T5' 'T6'}');
       
     case 'ext1020'
       % start with the eeg1005 list
@@ -2418,7 +2427,7 @@ elseif isempty(eval(type))
         'OI2'
         };
       
-      % Add also alternative labels that are used in some systems
+      % Add also reference and some alternative labels that might be used
       label = cat(1, label, {'A1' 'A2' 'M1' 'M2' 'T3' 'T4' 'T5' 'T6'}');
       
       % This is to account for all variants of case in 1020 systems
