@@ -6,18 +6,18 @@ function test_ft_channelselection
 % TEST test_ft_channelselection 
 % TEST ft_senstype ref_datasets
 
-datasets=ref_datasets;
+datasets = ref_datasets;
 
 for i=1:size(datasets,2);
     filename = fullfile(datasets(i).origdir, 'original', datasets(i).type, datasets(i).datatype, datasets(i).filename);
     
-    if isempty(datasets(i).dataformat);
+    if isempty(datasets(i).dataformat)
         hdr = ft_read_header(filename);
     else
         hdr = ft_read_header(filename,'headerformat',datasets(i).dataformat);
     end
     
-    if ~ft_senstype(hdr, datasets(i).senstype);
+    if ~ft_senstype(hdr, datasets(i).senstype)
         error(['incorrect senstype detection: ' datasets(i).datatype]);
     else
         type=ft_senstype(hdr);
@@ -41,7 +41,7 @@ for i=1:size(datasets,2);
 
     %exceptions for 'neuromag306' and 'yokogawa160' MEG datasets:
     %selecting gradiometer/magnetometer sensors
-    if strcmp(type,'neuromag306') || strcmp(type,'yokogawa160');
+    if strcmp(type,'neuromag306') || strcmp(type,'yokogawa160')
         if ~isnan(datasets(i).numemg) && length(ft_channelselection('MEGMAG', hdr.label, type))~=datasets(i).nummegmag
             error('incorrect number of MEGMAG channels');
         end
