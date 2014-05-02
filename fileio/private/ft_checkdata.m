@@ -277,7 +277,13 @@ if ~isempty(dtype)
   if ~okflag
     % try to convert the data
     for iCell = 1:length(dtype)
-      if isequal(dtype(iCell), {'source'}) && isvolume
+      if isequal(dtype(iCell), {'parcellation'}) && issegmentation
+        data = volume2source(data); % segmentation=volume, parcellation=source
+        data = ft_datatype_parcellation(data);
+        issegmentation = 0;
+        isparcellation = 1;
+        okflag = 1;
+      elseif isequal(dtype(iCell), {'source'}) && isvolume
         data = volume2source(data);
         data = ft_datatype_source(data);
         isvolume = 0;
@@ -1976,3 +1982,5 @@ data.label = spike.label;
 data.fsample = fsample;
 if isfield(spike,'hdr'), data.hdr = spike.hdr; end
 if isfield(spike,'cfg'), data.cfg = spike.cfg; end
+
+
