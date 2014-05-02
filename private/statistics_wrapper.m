@@ -287,7 +287,7 @@ fprintf('using "%s" for the statistical testing\n', func2str(statmethod));
 
 % check that the design completely describes the data
 if size(dat,2) ~= size(cfg.design,2)
-  error('the size of the design matrix does not match the number of observations in the data');
+  error('the size of the design matrix (%d) does not match the number of observations in the data (%d)', size(cfg.design,2), size(dat,2));
 end
 
 % determine the number of output arguments
