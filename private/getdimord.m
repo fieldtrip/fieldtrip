@@ -7,7 +7,6 @@ function dimord = getdimord(data, field, varargin)
 %
 % See also GETDIMSIZ
 
-
 if ~isfield(data, field)
   error('field "%s" not present in data', field);
 end
@@ -29,6 +28,7 @@ ntime     = inf;
 nfreq     = inf;
 nchan     = inf;
 nchancmb  = inf;
+nsubj     = nan;
 nrpt      = nan;
 nrpttap   = nan;
 npos      = inf;
@@ -114,39 +114,72 @@ end
 % determine the size of the actual data
 datsiz = getdimsiz(data, field);
 
-tok = {'rpt' 'rpttap' 'chan' 'chancmb' 'freq' 'time' 'pos' 'ori' 'topochan'};
-siz = [nrpt nrpttap nchan nchancmb nfreq ntime npos nori ntopochan];
+tok = {'subj' 'rpt' 'rpttap' 'chan' 'chancmb' 'freq' 'time' 'pos' 'ori' 'topochan'};
+siz = [nsubj nrpt nrpttap nchan nchancmb nfreq ntime npos nori ntopochan];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ATTEMPT 2: a general dimord is present and might apply
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if isfield(data, 'dimord')
-  dimtok = cell(size(datsiz));
-  
-  for i=1:length(datsiz)
-    sel = find(siz==datsiz(i));
-    if length(sel)==1
-      dimtok{i} = tok{sel};
-    else
-      dimtok{i} = [];
+  dimtok  = tokenize(data.dimord, '_');
+  if length(dimtok)==length(datsiz)
+    success = false(size(dimtok));
+    for i=1:length(dimtok)
+      sel = strcmp(tok, dimtok{i});
+      if any(sel) && datsiz(i)==siz(sel)
+        success(i) = true;
+      elseif strcmp(dimtok{i}, 'subj')
+        % the number of subjects cannot be determined, and will be indicated as nan
+        success(i) = true;
+      elseif strcmp(dimtok{i}, 'rpt')
+        % the number of trials is hard to determine, and might be indicated as nan
+        success(i) = true;
+      end
+    end % for
+    if all(success)
+      dimord = data.dimord;
+      return
     end
-  end
-  if all(~cellfun(@isempty, dimtok))
-    if iscell(data.(field))
-      dimtok{1} = ['{' dimtok{1} '}'];
-    end
-    dimord = sprintf('%s_', dimtok{:});
-    dimord = dimord(1:end-1);
-    return
   end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% ATTEMPT 3: look at the size of some common fields that are known
+% ATTEMPT 3: there is only one way that the dimensions can be interpreted
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+dimtok = cell(size(datsiz));
+
+for i=1:length(datsiz)
+  sel = find(siz==datsiz(i));
+  if length(sel)==1
+    % there is exactly one corresponding dimension
+    dimtok{i} = tok{sel};
+  else
+    % there are zero or multiple corresponding dimensions
+    dimtok{i} = [];
+  end
+end
+
+if all(~cellfun(@isempty, dimtok))
+  if iscell(data.(field))
+    dimtok{1} = ['{' dimtok{1} '}'];
+  end
+  dimord = sprintf('%s_', dimtok{:});
+  dimord = dimord(1:end-1);
+  return
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% ATTEMPT 4: look at the size of some common fields that are known
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 switch field
+  case {'individual'}
+    if isequalwithoutnans(datsiz, [nsubj nchan ntime])
+      dimord = 'subj_chan_time';
+    end
+    
   case {'avg' 'var' 'dof'}
     if isequalwithoutnans(datsiz, [nrpt nchan ntime])
       dimord = 'rpt_chan_time';
@@ -282,18 +315,18 @@ switch field
     elseif isvector(data.(field)) && isequal(datsiz, [1 ntime])
       dimord = 'time';
     end
-
+    
   case {'freq'}
     if isvector(data.(field)) && isequal(datsiz, [1 nfreq])
       dimord = 'freq';
     end
-
+    
 end % switch field
 
 
 if ~exist('dimord', 'var')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % ATTEMPT 4: compare the size with the known size of each dimension
+  % ATTEMPT 5: compare the size with the known size of each dimension
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   sel = ~isnan(siz) & ~isinf(siz);
   % nan means that the value is not known and might remain unknown
@@ -305,6 +338,7 @@ if ~exist('dimord', 'var')
     dimtok(datsiz==nori)      = {'ori'};
     dimtok(datsiz==nrpttap)   = {'rpttap'};
     dimtok(datsiz==nrpt)      = {'rpt'};
+    dimtok(datsiz==nsubj)     = {'subj'};
     dimtok(datsiz==nchancmb)  = {'chancmb'};
     dimtok(datsiz==nchan)     = {'chan'};
     dimtok(datsiz==nfreq)     = {'freq'};
@@ -327,7 +361,7 @@ if ~exist('dimord', 'var')
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% ATTEMPT 5: return "unknown_unknown"
+% ATTEMPT 6: return "unknown_unknown"
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~exist('dimord', 'var')
   % this should not happen
@@ -369,4 +403,3 @@ c = ~isnan(a(:)) & ~isnan(b(:));
 ok = isequal(a(c), b(c));
 
 end % function isequalwithoutnans
-
