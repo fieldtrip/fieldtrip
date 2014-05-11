@@ -70,7 +70,7 @@ feedback    = ft_getopt(varargin, 'feedback',    'text');
 showwarning = ft_getopt(varargin, 'warning',     'yes');
 bname       = ft_getopt(varargin, 'balancename', '');
 
-if strcmp(showwarning, 'yes')
+if istrue(showwarning)
   warningfun = @warning;
 else
   warningfun = @nowarning;
@@ -78,8 +78,8 @@ end
 
 % these are optional, at the end we will clean up the output in case they did not
 % exist
-haschantype = isfield(input, 'chantype') && all(isfield(montage, {'chantypeorg', 'chantypenew'}));
-haschanunit = isfield(input, 'chanunit') && all(isfield(montage, {'chanunitorg', 'chanunitnew'}));
+haschantype = (isfield(input, 'chantype') || isfield(input, 'chantypenew')) && all(isfield(montage, {'chantypeorg', 'chantypenew'}));
+haschanunit = (isfield(input, 'chanunit') || isfield(input, 'chanunitnew')) && all(isfield(montage, {'chanunitorg', 'chanunitnew'}));
 
 % make sure they always exist to facilitate the remainder of the code
 if ~isfield(montage, 'chantypeorg')
@@ -149,7 +149,7 @@ if ~isfield(input, 'tra') && isfield(input, 'label')
   end
 end
 
-if strcmp(inverse, 'yes')
+if istrue(inverse)
   % swap the role of the original and new channels
   tmp.labelnew    = montage.labelorg;
   tmp.labelorg    = montage.labelnew;
@@ -207,7 +207,7 @@ addchanunit = inputchanunit(sort(ix));
 m = size(montage.tra,1);
 n = size(montage.tra,2);
 k = length(addlabel);
-if strcmp(keepunused, 'yes')
+if istrue(keepunused)
   % add the channels that are not rereferenced to the input and output of the
   % montage
   montage.tra((m+(1:k)),(n+(1:k))) = eye(k);
@@ -261,7 +261,23 @@ else
   montage.tra = full(montage.tra);
 end
 
-inputtype = 'unknown';
+% update the channel scaling if the input has different units than the montage expects
+if isfield(input, 'chanunit') && ~isequal(input.chanunit, montage.chanunitorg)
+  scale = scalingfactor(input.chanunit, montage.chanunitorg);
+  montage.tra = montage.tra * diag(scale);
+  montage.chanunitorg = input.chanunit;
+elseif isfield(input, 'chanunitnew') && ~isequal(input.chanunitnew, montage.chanunitorg)
+  scale = scalingfactor(input.chanunitnew, montage.chanunitorg);
+  montage.tra = montage.tra * diag(scale);
+  montage.chanunitorg = input.chanunitnew;
+end
+
+if isfield(input, 'chantype') && ~isequal(input.chantype, montage.chantypeorg)
+  error('inconsistent chantype in data and montage');
+elseif isfield(input, 'chantypenew') && ~isequal(input.chantypenew, montage.chantypeorg)
+  error('inconsistent chantype in data and montage');
+end
+
 if isfield(input, 'labelorg') && isfield(input, 'labelnew')
   inputtype = 'montage';
 elseif isfield(input, 'tra')
@@ -270,6 +286,8 @@ elseif isfield(input, 'trial')
   inputtype = 'raw';
 elseif isfield(input, 'fourierspctrm')
   inputtype = 'freq';
+else
+  inputtype = 'unknown';
 end
 
 switch inputtype
@@ -346,7 +364,7 @@ switch inputtype
     end
     
     % keep track of the order of the balancing and which one is the current one
-    if strcmp(inverse, 'yes')
+    if istrue(inverse)
       if isfield(sens, 'balance')% && isfield(sens.balance, 'previous')
         if isfield(sens.balance, 'previous') && numel(sens.balance.previous)>=1
           sens.balance.current  = sens.balance.previous{1};
@@ -358,7 +376,7 @@ switch inputtype
           sens.balance.current  = 'none';
         end
       end
-    elseif ~strcmp(inverse, 'yes') && ~isempty(bname)
+    elseif ~istrue(inverse) && ~isempty(bname)
       
       if isfield(sens, 'balance'),
         % check whether a balancing montage with name bname already exist,
@@ -472,12 +490,12 @@ switch inputtype
     error('unrecognized input');
 end % switch inputtype
 
-% only retain the chantype and/or chanunit if they were present in the input.
-if ~haschantype && isfield(input, 'chantype')
-  input = rmfield(input, 'chantype');
+% only retain the chantype and/or chanunit if they were present in the input
+if ~haschantype 
+  input = removefields(input, {'chantype', 'chantypeorg', 'chantypenew'});
 end
-if ~haschanunit && isfield(input, 'chanunit')
-  input = rmfield(input, 'chanunit');
+if ~haschanunit
+  input = removefields(input, {'chanunit', 'chanunitorg', 'chanunitnew'});
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -489,4 +507,11 @@ y(x) = true;
 
 function nowarning(varargin)
 return
+
+function s = removefields(s, fn)
+for i=1:length(fn)
+  if isfield(s, fn{i})
+    s = rmfield(s, fn{i});
+  end
+end
 
