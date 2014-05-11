@@ -97,9 +97,17 @@ end
 
 if ~isfield(input, 'label') && isfield(input, 'labelnew')
   % the input data structure is also a montage
-  inputlabel    = input.labelnew;
-  inputchantype = input.chantypenew;
-  inputchanunit = input.chanunitnew;
+  inputlabel = input.labelnew;
+  if isfield(input, 'chantypenew')
+    inputchantype = input.chantypenew;
+  else
+    inputchantype = repmat({'unknown'}, size(input.labelnew));
+  end
+  if isfield(input, 'chanunitnew')
+    inputchanunit = input.chanunitnew;
+  else
+    inputchanunit = repmat({'unknown'}, size(input.labelnew));
+  end
 else
   % the input should describe the channel labels, and optionally the type and unit
   inputlabel = input.label;
