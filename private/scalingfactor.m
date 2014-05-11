@@ -79,6 +79,15 @@ if isempty(previous_old)
   previous_factor = [];
 end
 
+if ~isequal(class(old), class(new))
+  error('the input arguments should be of the same class');
+end
+
+if iscell(old)
+  factor = cellfun(@scalingfactor, old, new);
+  return
+end
+
 cachehit = strcmp(old, previous_old) & strcmp(new, previous_new);
 if any(cachehit)
   factor = previous_factor(cachehit);
