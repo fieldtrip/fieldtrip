@@ -14,8 +14,8 @@ function [input] = ft_apply_montage(input, montage, varargin)
 %
 % A montage is specified as a structure with the fields
 %   montage.tra      = MxN matrix
-%   montage.labelnew = Mx1 cell-array
 %   montage.labelorg = Nx1 cell-array
+%   montage.labelnew = Mx1 cell-array
 %
 % As an example, a bipolar montage could look like this
 %   bipolar.labelorg  = {'1', '2', '3', '4'}
@@ -25,6 +25,13 @@ function [input] = ft_apply_montage(input, montage, varargin)
 %      0 +1 -1  0
 %      0  0 +1 -1
 %   ];
+%
+% The montage can optionally also specify the channel type and unit of the input
+% and output data with
+%   montage.chantypeorg = Nx1 cell-array
+%   montage.chantypenew = Mx1 cell-array
+%   montage.chanunitorg = Nx1 cell-array
+%   montage.chanunitnew = Mx1 cell-array
 %
 % Additional options should be specified in key-value pairs and can be
 %   'keepunused'    string, 'yes' or 'no' (default = 'no')
@@ -36,7 +43,7 @@ function [input] = ft_apply_montage(input, montage, varargin)
 %
 % See also FT_READ_SENS, FT_TRANSFORM_SENS
 
-% Copyright (C) 2008-2013, Robert Oostenveld
+% Copyright (C) 2008-2014, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -63,21 +70,52 @@ feedback    = ft_getopt(varargin, 'feedback',    'text');
 showwarning = ft_getopt(varargin, 'warning',     'yes');
 bname       = ft_getopt(varargin, 'balancename', '');
 
-if ~isfield(input, 'label') && isfield(input, 'labelnew')
-  % the input data structure is also a montage
-  inputlabel = input.labelnew;
-else
-  % the input should describe the channel labels
-  inputlabel = input.label;
-end
-
 if strcmp(showwarning, 'yes')
   warningfun = @warning;
 else
   warningfun = @nowarning;
 end
 
-% check the consistency of the input inputor array or data
+% these are optional, at the end we will clean up the output in case they did not
+% exist
+haschantype = isfield(input, 'chantype') && all(isfield(montage, {'chantypeorg', 'chantypenew'}));
+haschanunit = isfield(input, 'chanunit') && all(isfield(montage, {'chanunitorg', 'chanunitnew'}));
+
+% make sure they always exist to facilitate the remainder of the code
+if ~isfield(montage, 'chantypeorg')
+  montage.chantypeorg = repmat({'unknown'}, size(montage.labelorg));
+end
+if ~isfield(montage, 'chantypenew')
+  montage.chantypenew = repmat({'unknown'}, size(montage.labelnew));
+end
+if ~isfield(montage, 'chanunitorg')
+  montage.chanunitorg = repmat({'unknown'}, size(montage.labelorg));
+end
+if ~isfield(montage, 'chanunitnew')
+  montage.chanunitnew = repmat({'unknown'}, size(montage.labelnew));
+end
+
+if ~isfield(input, 'label') && isfield(input, 'labelnew')
+  % the input data structure is also a montage
+  inputlabel    = input.labelnew;
+  inputchantype = input.chantypenew;
+  inputchanunit = input.chanunitnew;
+else
+  % the input should describe the channel labels, and optionally the type and unit
+  inputlabel = input.label;
+  if isfield(input, 'chantype')
+    inputchantype = input.chantype;
+  else
+    inputchantype = repmat({'unknown'}, size(input.label));
+  end
+  if isfield(input, 'chanunit')
+    inputchanunit = input.chanunit;
+  else
+    inputchanunit = repmat({'unknown'}, size(input.label));
+  end
+end
+
+% check the consistency of the montage
 if ~all(isfield(montage, {'tra', 'labelorg', 'labelnew'}))
   error('the second input argument does not correspond to a montage');
 end
@@ -87,20 +125,6 @@ if size(montage.tra,1)~=length(montage.labelnew)
   error('the number of channels in the montage is inconsistent');
 elseif size(montage.tra,2)~=length(montage.labelorg)
   error('the number of channels in the montage is inconsistent');
-end
-
-if strcmp(inverse, 'yes')
-  % apply the inverse montage, i.e. undo a previously applied montage
-  tmp.labelnew = montage.labelorg; % swap around
-  tmp.labelorg = montage.labelnew; % swap around
-  tmp.tra      = full(montage.tra);
-  if rank(tmp.tra) < length(tmp.tra)
-    warningfun('the linear projection for the montage is not full-rank, the resulting data will have reduced dimensionality');
-    tmp.tra = pinv(tmp.tra);
-  else
-    tmp.tra = inv(tmp.tra);
-  end
-  montage = tmp;
 end
 
 % use a default unit transfer from sensors to channels if not otherwise specified
@@ -117,13 +141,36 @@ if ~isfield(input, 'tra') && isfield(input, 'label')
   end
 end
 
+if strcmp(inverse, 'yes')
+  % swap the role of the original and new channels
+  tmp.labelnew    = montage.labelorg;
+  tmp.labelorg    = montage.labelnew;
+  tmp.chantypenew = montage.chantypeorg;
+  tmp.chantypeorg = montage.chantypenew;
+  tmp.chanunitnew = montage.chanunitorg;
+  tmp.chanunitorg = montage.chanunitnew;
+  % apply the inverse montage, this can be used to undo a previously
+  % applied montage
+  tmp.tra = full(montage.tra);
+  if rank(tmp.tra) < length(tmp.tra)
+    warningfun('the linear projection for the montage is not full-rank, the resulting data will have reduced dimensionality');
+    tmp.tra = pinv(tmp.tra);
+  else
+    tmp.tra = inv(tmp.tra);
+  end
+  montage = tmp;
+end
+
 % select and keep the columns that are non-empty, i.e. remove the empty columns
 selcol           = find(~all(montage.tra==0, 1));
 montage.tra      = montage.tra(:,selcol);
 montage.labelorg = montage.labelorg(selcol);
+montage.chantypeorg = montage.chantypeorg(selcol);
+montage.chanunitorg = montage.chanunitorg(selcol);
 clear selcol
 
-% select and remove the columns corresponding to channels that are not present in the original data
+% select and remove the columns corresponding to channels that are not present in the
+% original data
 remove = setdiff(montage.labelorg, intersect(montage.labelorg, inputlabel));
 selcol = match_str(montage.labelorg, remove);
 % we cannot just remove the colums, all rows that depend on it should also be removed
@@ -134,27 +181,42 @@ end
 % convert from indices to logical vector
 selcol = indx2logical(selcol, length(montage.labelorg));
 % remove rows and columns
-montage.labelorg = montage.labelorg(~selcol);
-montage.labelnew = montage.labelnew(~selrow);
-montage.tra = montage.tra(~selrow, ~selcol);
+montage.labelorg    = montage.labelorg(~selcol);
+montage.labelnew    = montage.labelnew(~selrow);
+montage.chantypeorg = montage.chantypeorg(~selcol);
+montage.chantypenew = montage.chantypenew(~selrow);
+montage.chanunitorg = montage.chanunitorg(~selcol);
+montage.chanunitnew = montage.chanunitnew(~selrow);
+montage.tra         = montage.tra(~selrow, ~selcol);
 clear remove selcol selrow i
-% add columns for the channels that are present in the data but not involved in the montage, and stick to the original order in the data
-[add, ix] = setdiff(inputlabel, montage.labelorg);
-add = inputlabel(sort(ix));
+
+% add columns for channels that are present in the input data but not specified in
+% the montage, stick to the original order in the data
+[dum, ix]   = setdiff(inputlabel, montage.labelorg);
+addlabel    = inputlabel(sort(ix));
+addchantype = inputchantype(sort(ix));
+addchanunit = inputchanunit(sort(ix));
 m = size(montage.tra,1);
 n = size(montage.tra,2);
-k = length(add);
+k = length(addlabel);
 if strcmp(keepunused, 'yes')
-  % add the channels that are not rereferenced to the input and output
+  % add the channels that are not rereferenced to the input and output of the
+  % montage
   montage.tra((m+(1:k)),(n+(1:k))) = eye(k);
-  montage.labelorg = cat(1, montage.labelorg(:), add(:));
-  montage.labelnew = cat(1, montage.labelnew(:), add(:));
+  montage.labelorg    = cat(1, montage.labelorg(:), addlabel(:));
+  montage.labelnew    = cat(1, montage.labelnew(:), addlabel(:));
+  montage.chantypeorg = cat(1, montage.chantypeorg(:), addchantype(:));
+  montage.chantypenew = cat(1, montage.chantypenew(:), addchantype(:));
+  montage.chanunitorg = cat(1, montage.chanunitorg(:), addchanunit(:));
+  montage.chanunitnew = cat(1, montage.chanunitnew(:), addchanunit(:));
 else
-  % add the channels that are not rereferenced to the input montage only
+  % add the channels that are not rereferenced to the input of the montage only
   montage.tra(:,(n+(1:k))) = zeros(m,k);
-  montage.labelorg = cat(1, montage.labelorg(:), add(:));
+  montage.labelorg    = cat(1, montage.labelorg(:), addlabel(:));
+  montage.chantypeorg = cat(1, montage.chantypeorg(:), addchantype(:));
+  montage.chanunitorg = cat(1, montage.chanunitorg(:), addchanunit(:));
 end
-clear add m n k
+clear addlabel addchantype addchanunit m n k
 
 % determine whether all channels are unique
 m = size(montage.tra,1);
@@ -172,16 +234,23 @@ if length(intersect(inputlabel, montage.labelorg))~=length(montage.labelorg)
 end
 
 % reorder the columns of the montage matrix
-[selinput, selmontage]  = match_str(inputlabel, montage.labelorg);
-montage.tra             = double(montage.tra(:,selmontage));
-montage.labelorg        = montage.labelorg(selmontage);
+[selinput, selmontage] = match_str(inputlabel, montage.labelorg);
+montage.tra            = montage.tra(:,selmontage);
+montage.labelorg       = montage.labelorg(selmontage);
+montage.chantypeorg    = montage.chantypeorg(selmontage);
+montage.chanunitorg    = montage.chanunitorg(selmontage);
 
-% making the tra matrix sparse will speed up subsequent multiplications
-% but should not result in a sparse matrix
-% note that this only makes sense for matrices with a lot of zero elements,
-% for dense matrices keeping it full will be much quicker
+% ensure that the montage is double precision
+montage.tra = double(montage.tra);
+
+% making the tra matrix sparse will speed up subsequent multiplications, but should
+% not result in a sparse matrix
+% note that this only makes sense for matrices with a lot of zero elements, for dense
+% matrices keeping it full will be much quicker
 if size(montage.tra,1)>1 && nnz(montage.tra)/numel(montage.tra) < 0.3
   montage.tra = sparse(montage.tra);
+else
+  montage.tra = full(montage.tra);
 end
 
 inputtype = 'unknown';
@@ -196,7 +265,6 @@ elseif isfield(input, 'fourierspctrm')
 end
 
 switch inputtype
-  
   case 'montage'
     % apply the montage on top of the other montage
     if isa(input.tra, 'single')
@@ -205,7 +273,9 @@ switch inputtype
     else
       input.tra = montage.tra * input.tra;
     end
-    input.labelnew = montage.labelnew;
+    input.labelnew    = montage.labelnew;
+    input.chantypenew = montage.chantypenew;
+    input.chanunitnew = montage.chanunitnew;
     
   case 'sens'
     % apply the montage to an electrode or gradiometer description
@@ -220,9 +290,9 @@ switch inputtype
       sens.tra = montage.tra * sens.tra;
     end
     
-    % The montage operates on the coil weights in sens.tra, but the output
-    % channels can be different. If possible, we want to keep the original
-    % channel positions and orientations.
+    % The montage operates on the coil weights in sens.tra, but the output channels
+    % can be different. If possible, we want to keep the original channel positions
+    % and orientations.
     [sel1, sel2] = match_str(montage.labelnew, inputlabel);
     keepchans = length(sel1)==length(montage.labelnew);
     
@@ -249,28 +319,22 @@ switch inputtype
       end
     end
     
-    if isfield(sens, 'chantype')
-      if keepchans
-        sens.chantype = sens.chantype(sel2,:);
-      else
-        % FIXME don't know what to do here  
-        sens = rmfield(sens, 'chantype');
-      end
-    end
+    sens.label    = montage.labelnew;
+    sens.chantype = montage.chantypenew;
+    sens.chanunit = montage.chanunitnew;
     
-    if isfield(sens, 'chanunit')
-      if keepchans
-        sens.chanunit = sens.chanunit(sel2,:);
-      else
-        % FIXME don't know what to do here  
-        sens = rmfield(sens, 'chanunit');
-      end
-    end
-    
-    sens.label = montage.labelnew;
-    
+    % keep the
+    % original label,
+    % type and unit
+    % for reference
     if ~isfield(sens, 'labelorg')
       sens.labelorg = inputlabel;
+    end
+    if ~isfield(sens, 'chantypeorg')
+      sens.chantypeorg = inputchantype;
+    end
+    if ~isfield(sens, 'chanunitorg')
+      sens.chanunitorg = inputchanunit;
     end
     
     % keep track of the order of the balancing and which one is the current one
@@ -339,7 +403,8 @@ switch inputtype
     for i=1:Ntrials
       ft_progress(i/Ntrials, 'processing trial %d from %d\n', i, Ntrials);
       if isa(data.trial{i}, 'single')
-        % sparse matrices and single precision do not match
+        % sparse matrices and single
+        % precision do not match
         data.trial{i} = full(montage.tra) * data.trial{i};
       else
         data.trial{i} = montage.tra * data.trial{i};
@@ -347,7 +412,9 @@ switch inputtype
     end
     ft_progress('close');
     
-    data.label = montage.labelnew;
+    data.label    = montage.labelnew;
+    data.chantype = montage.chantypenew;
+    data.chanunit = montage.chanunitnew;
     
     % rename the output variable
     input = data;
@@ -367,6 +434,7 @@ switch inputtype
       for foilop=1:nfreq
         output(:,:,foilop) = freq.fourierspctrm(:,:,foilop) * montage.tra';
       end
+      freq.fourierspctrm = output; % replace the original Fourier spectrum
     elseif strcmp(freq.dimord, 'rpttap_chan_freq_time')
       siz    = size(freq.fourierspctrm);
       nrpt   = siz(1);
@@ -379,13 +447,14 @@ switch inputtype
           output(:,:,foilop,toilop) = freq.fourierspctrm(:,:,foilop,toilop) * montage.tra';
         end
       end
+      freq.fourierspctrm = output; % replace the original Fourier spectrum
     else
       error('unsupported dimord in frequency data (%s)', freq.dimord);
     end
     
-    % replace the Fourier spectrum
-    freq.fourierspctrm = output;
-    freq.label = montage.labelnew;
+    freq.label    = montage.labelnew;
+    freq.chantype = montage.chantypenew;
+    freq.chanunit = montage.chanunitnew;
     
     % rename the output variable
     input = freq;
@@ -395,27 +464,12 @@ switch inputtype
     error('unrecognized input');
 end % switch inputtype
 
-% check whether the input contains chantype and/or chanunit and remove these
-% as they may have been invalidated by the transform (e.g. with megplanar)
-[sel1, sel2] = match_str(montage.labelnew, inputlabel);
-keepchans = (length(sel1)==length(montage.labelnew));
-
-if isfield(input, 'chantype')
-  if keepchans
-    % reorder them according to the montage
-    sens.chantype = input.chantype(sel2,:);
-  else
-    input = rmfield(input, 'chantype');
-  end
+% only retain the chantype and/or chanunit if they were present in the input.
+if ~haschantype && isfield(input, 'chantype')
+  input = rmfield(input, 'chantype');
 end
-
-if isfield(input, 'chanunit')
-  if keepchans
-    % reorder them according to the montage
-    sens.chanunit = input.chanunit(sel2,:);
-  else
-    input = rmfield(input, 'chanunit');
-  end
+if ~haschanunit && isfield(input, 'chanunit')
+  input = rmfield(input, 'chanunit');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
