@@ -465,15 +465,15 @@ function [hpi, dip] = data2hpi(data, dip, vol, sens, coilsignal, isctf, isneurom
 
 if isctf
   % assign the channels to the resp. coil coordinates
-  [~, x1] = match_str('HLC0011', data.label);
-  [~, y1] = match_str('HLC0012', data.label);
-  [~, z1] = match_str('HLC0013', data.label);
-  [~, x2] = match_str('HLC0021', data.label);
-  [~, y2] = match_str('HLC0022', data.label);
-  [~, z2] = match_str('HLC0023', data.label);
-  [~, x3] = match_str('HLC0031', data.label);
-  [~, y3] = match_str('HLC0032', data.label);
-  [~, z3] = match_str('HLC0033', data.label);
+  [dum, x1] = match_str('HLC0011', data.label);
+  [dum, y1] = match_str('HLC0012', data.label);
+  [dum, z1] = match_str('HLC0013', data.label);
+  [dum, x2] = match_str('HLC0021', data.label);
+  [dum, y2] = match_str('HLC0022', data.label);
+  [dum, z2] = match_str('HLC0023', data.label);
+  [dum, x3] = match_str('HLC0031', data.label);
+  [dum, y3] = match_str('HLC0032', data.label);
+  [dum, z3] = match_str('HLC0033', data.label);
   
   % convert from meter to cm and assign to the resp. coil
   hpi{1} = data.trial{1}([x1 y1 z1],end) * 100;

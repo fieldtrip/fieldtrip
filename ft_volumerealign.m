@@ -701,7 +701,7 @@ switch cfg.method
       
     % construct the coregistration matrix
     nrm = normals(scalp.pnt, scalp.tri, 'vertex');
-    [R, t, err, ~, info] = icp(scalp.pnt', shape.pnt', numiter, 'Minimize', 'plane', 'Normals', nrm', 'Weight', weights, 'Extrapolation', true, 'WorstRejection', 0.05);
+    [R, t, err, dummy, info] = icp(scalp.pnt', shape.pnt', numiter, 'Minimize', 'plane', 'Normals', nrm', 'Weight', weights, 'Extrapolation', true, 'WorstRejection', 0.05);
     
     if doicp,
       % create the additional transformation matrix and compute the

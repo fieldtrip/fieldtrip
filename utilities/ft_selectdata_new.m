@@ -946,7 +946,7 @@ end
 
 indx = nan+zeros(numel(timeaxis), ndata);
 for k = 1:ndata
-  [~, ix, iy] = intersect(timeaxis, round(varargin{k}.time(:)/tol)*tol);
+  [dum, ix, iy] = intersect(timeaxis, round(varargin{k}.time(:)/tol)*tol);
   indx(ix,k) = iy;
 end
 
@@ -1044,7 +1044,7 @@ end
 
 indx = nan+zeros(numel(freqaxis), ndata);
 for k = 1:ndata
-  [~, ix, iy] = intersect(freqaxis, round(varargin{k}.freq(:)/tol)*tol);
+  [dum, ix, iy] = intersect(freqaxis, round(varargin{k}.freq(:)/tol)*tol);
   indx(ix,k) = iy;
 end
 

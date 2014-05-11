@@ -908,7 +908,7 @@ elseif isequal(cfg.method,'surface')
       fprintf('downsampling surface from %d vertices\n', size(surf.pnt,1));
       [temp.tri, temp.pnt] = reducepatch(surf.tri, surf.pnt, 1/cfg.surfdownsample);
       % find indices of retained patch faces
-      [~, idx] = ismember(temp.pnt, surf.pnt, 'rows');
+      [dummy, idx] = ismember(temp.pnt, surf.pnt, 'rows');
       surf.tri = temp.tri;
       surf.pnt = temp.pnt;
       clear temp

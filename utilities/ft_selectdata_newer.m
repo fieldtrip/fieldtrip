@@ -852,7 +852,7 @@ end
 
 indx = nan(numel(alltimevec), numel(alltimecell));
 for k = 1:numel(alltimecell)
-  [~, ix, iy] = intersect(alltimevec, round(alltimecell{k}/tol)*tol);
+  [dum, ix, iy] = intersect(alltimevec, round(alltimecell{k}/tol)*tol);
   indx(ix,k) = iy;
 end
 
@@ -971,7 +971,7 @@ end
 
 indx = nan+zeros(numel(freqaxis), ndata);
 for k = 1:ndata
-  [~, ix, iy] = intersect(freqaxis, round(varargin{k}.freq(:)/tol)*tol);
+  [dum, ix, iy] = intersect(freqaxis, round(varargin{k}.freq(:)/tol)*tol);
   indx(ix,k) = iy;
 end
 
