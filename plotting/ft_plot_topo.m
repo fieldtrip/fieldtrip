@@ -14,9 +14,10 @@ function [Zi, h] = ft_plot_topo(chanX, chanY, dat, varargin)
 %   isolines      =
 %   interplim     =
 %   interpmethod  = string, 'nearest', 'linear', 'natural', 'cubic', 'v4' (default = 'v4')
-%   style         = can be 'surf', 'iso', 'isofill', 'surfiso'
+%   style         = can be 'surf', 'iso', 'isofill', 'surfiso', 'imsat', 'imsatiso'
 %   datmask       =
 %   tag           =
+%   clim          = maximum and minimum color limit
 %   parent        = handle which is set as the parent for all plots
 %
 % It is possible to plot the object in a local pseudo-axis (c.f. subplot), which is specfied as follows
@@ -61,12 +62,13 @@ gridscale     = ft_getopt(varargin, 'gridscale',      67); % 67 in original
 shading       = ft_getopt(varargin, 'shading',        'flat');
 interplim     = ft_getopt(varargin, 'interplim',      'electrodes');
 interpmethod  = ft_getopt(varargin, 'interpmethod',   'v4');
-style         = ft_getopt(varargin, 'style',          'surfiso'); % can be 'surf', 'iso', 'isofill', 'surfiso'
+style         = ft_getopt(varargin, 'style',          'surfiso'); % can be 'surf', 'iso', 'isofill', 'surfiso', 'imsat', 'imsatiso'
 tag           = ft_getopt(varargin, 'tag',            '');
 isolines      = ft_getopt(varargin, 'isolines');
 datmask       = ft_getopt(varargin, 'datmask');
 mask          = ft_getopt(varargin, 'mask');
 outline       = ft_getopt(varargin, 'outline');
+clim          = ft_getopt(varargin, 'clim',[]);
 parent        = ft_getopt(varargin, 'parent', []);
 
 % check for nans in the data, they can be still left incase people want to
@@ -155,7 +157,7 @@ end
 
 % try to speed up the preparation of the mask on subsequent calls
 %current_argin = {chanX, chanY, gridscale, mask, datmask}; % old: to be plotted channel positions must be the same
-current_argin = {chanXorg, chanYorg, gridscale, mask, datmask}; % new: unscaled channel positions must be the same over calls
+current_argin = {chanXorg, chanYorg, gridscale, mask, datmask, interplim}; % new: unscaled channel positions must be the same over calls
 if isequal(current_argin, previous_argin)
   % don't construct the binary image, but reuse it from the previous call
   maskimage = previous_maskimage;
@@ -250,8 +252,44 @@ if strcmp(style,'surf') || strcmp(style,'surfiso')
   %end
 end
 
+% Plot the surface in an alternate style (using imagesc and saturation masking) so that it can be nicely saved to a vectorized format
+if strcmp(style,'imsat') || strcmp(style,'imsatiso') 
+  % set mask and check for clim
+  if isempty(clim)
+    error('clim is necessary for style = ''imsat'' or style = ''imsatiso''')
+  end
+  satmask = maskimage;
+  
+  % below code is shared with ft_plot_matrix
+  tmpcdat = Zi;
+  % Transform cdat-values to have a 0-64 range, dependent on clim
+  % (think of it as the data having an exact range of min=clim(1) to max=(clim2), convert this range to 0-64)
+  tmpcdat = (tmpcdat + -clim(1)) * (64 / (-clim(1) + clim(2)));
+  %tmpcdat = (tmpcdat + -min(min(tmpcdat))) * (64 / max(max((tmpcdat + -min(min(tmpcdat))))))
+  % Make sure NaNs are plotted as white pixels, even when using non-integer mask values
+  satmask(isnan(tmpcdat)) = 0;
+  tmpcdat(isnan(tmpcdat)) = 32;
+  % ind->rgb->hsv ||change saturation values||  hsv->rgb ->  plot
+  rgbcdat = ind2rgb(uint8(floor(tmpcdat)), colormap);
+  hsvcdat = rgb2hsv(rgbcdat);
+  hsvcdat(:,:,2) = hsvcdat(:,:,2) .* satmask;
+  hsvcdat(:,:,2) = hsvcdat(:,:,2);
+  rgbcdatsat = hsv2rgb(hsvcdat);
+  h = imagesc(xi, yi, rgbcdatsat,clim);
+  set(h,'tag',tag);
+  
+  % plot outline again, to place it on top
+  % plot the outline of the head, ears and nose
+  for i=1:length(outline)
+    xval = outline{i}(:,1) * xScaling  + hpos;
+    yval = outline{i}(:,2) * yScaling + vpos;
+    ft_plot_vector(xval, yval, 'Color','k', 'LineWidth',2, 'tag', tag, 'parent', parent);
+  end
+end
+
+
 % Create isolines
-if strcmp(style,'iso') || strcmp(style,'surfiso')
+if strcmp(style,'iso') || strcmp(style,'surfiso') ||  strcmp(style,'imsatiso')
   if ~isempty(isolines)
     [cont, h] = contour(Xi,Yi,Zi,isolines,'k');
     set(h, 'tag', tag);
@@ -269,6 +307,13 @@ if strcmp(style,'isofill') && ~isempty(isolines)
     set(h, 'Parent', parent);
   end
 end
+
+% apply clim if it was given
+if ~isempty(clim)
+  caxis(clim)
+end
+
+
 
 % remember the current input arguments, so that they can be
 % reused on a subsequent call in case the same input argument is given
