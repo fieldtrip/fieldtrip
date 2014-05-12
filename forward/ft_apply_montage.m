@@ -84,12 +84,22 @@ haschanunit = (isfield(input, 'chanunit') || isfield(input, 'chanunitnew')) && a
 % make sure they always exist to facilitate the remainder of the code
 if ~isfield(montage, 'chantypeorg')
   montage.chantypeorg = repmat({'unknown'}, size(montage.labelorg));
+  if isfield(input, 'chantype')
+    warning('copying input chantype to montage');
+    [sel1, sel2] = match_str(montage.labelorg, input.label);
+    montage.chantypeorg(sel2) = input.chantype(sel1);
+  end
 end
 if ~isfield(montage, 'chantypenew')
   montage.chantypenew = repmat({'unknown'}, size(montage.labelnew));
 end
 if ~isfield(montage, 'chanunitorg')
   montage.chanunitorg = repmat({'unknown'}, size(montage.labelorg));
+  if isfield(input, 'chanunit')
+    warning('copying input chanunit to montage');
+    [sel1, sel2] = match_str(montage.labelorg, input.label);
+    montage.chanunitorg(sel2) = input.chanunit(sel1);
+  end
 end
 if ~isfield(montage, 'chanunitnew')
   montage.chanunitnew = repmat({'unknown'}, size(montage.labelnew));
@@ -491,7 +501,7 @@ switch inputtype
 end % switch inputtype
 
 % only retain the chantype and/or chanunit if they were present in the input
-if ~haschantype 
+if ~haschantype
   input = removefields(input, {'chantype', 'chantypeorg', 'chantypenew'});
 end
 if ~haschanunit
