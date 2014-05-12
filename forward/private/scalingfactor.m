@@ -114,6 +114,7 @@ A   = 7;
 K   = 11;
 mol = 13;
 cd  = 17;
+unknown = -1;
 
 % each of the derives units is represented by a product and/or ratio of prime numbers
 Hz  = 1/s;
@@ -161,8 +162,8 @@ for i=1:length(unit)
   eval(sprintf('Y%s  = %s;', unit{i}, unit{i}));
 end
 
-eval(sprintf('oldunit = %s;', 'old'));
-eval(sprintf('newunit = %s;', 'new'));
+eval(sprintf('oldunit = %s;', old));
+eval(sprintf('newunit = %s;', new));
 if ~isequal(oldunit, newunit)
   error('cannot convert %s to %s', old, new);
 end
@@ -226,8 +227,8 @@ for i=1:length(unit)
   eval(sprintf('Y%s  = 1e24 * %s;', unit{i}, unit{i}));
 end
 
-eval(sprintf('old2si = %s;', 'old'));
-eval(sprintf('new2si = %s;', 'new'));
+eval(sprintf('old2si = %s;', old));
+eval(sprintf('new2si = %s;', new));
 
 factor = old2si/new2si;
 
