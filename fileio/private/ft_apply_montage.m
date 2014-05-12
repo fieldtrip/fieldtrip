@@ -87,7 +87,7 @@ if ~isfield(montage, 'chantypeorg')
   if isfield(input, 'chantype')
     warning('copying input chantype to montage');
     [sel1, sel2] = match_str(montage.labelorg, input.label);
-    montage.chantypeorg(sel2) = input.chantype(sel1);
+    montage.chantypeorg(sel1) = input.chantype(sel2);
   end
 end
 if ~isfield(montage, 'chantypenew')
@@ -98,7 +98,7 @@ if ~isfield(montage, 'chanunitorg')
   if isfield(input, 'chanunit')
     warning('copying input chanunit to montage');
     [sel1, sel2] = match_str(montage.labelorg, input.label);
-    montage.chanunitorg(sel2) = input.chanunit(sel1);
+    montage.chanunitorg(sel1) = input.chanunit(sel2);
   end
 end
 if ~isfield(montage, 'chanunitnew')
