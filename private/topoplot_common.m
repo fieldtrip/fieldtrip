@@ -278,16 +278,20 @@ end
 % check whether rpt/subj is present and remove if necessary and whether
 hasrpt = any(ismember(dimtok, {'rpt' 'subj'}));
 if strcmp(dtype, 'timelock') && hasrpt,
-  tmpcfg        = [];
-  tmpcfg.trials = cfg.trials;
-  data          = ft_timelockanalysis(tmpcfg, data);
-  if ~strcmp(cfg.parameter, 'avg')
-    % rename avg back into the parameter
-    data.(cfg.parameter) = data.avg;
-    data                 = rmfield(data, 'avg');
+  if ~isfield(data, cfg.parameter)
+    tmpcfg        = [];
+    tmpcfg.trials = cfg.trials;
+    data          = ft_timelockanalysis(tmpcfg, data);
+    if ~strcmp(cfg.parameter, 'avg')
+      % rename avg back into the parameter
+      data.(cfg.parameter) = data.avg;
+      data                 = rmfield(data, 'avg');
+    end
+    dimord        = data.dimord;
+    dimtok        = tokenize(dimord, '_');
+  else
+    fprintf('input data contains repetitions, ignoring these and using ''%s'' field\n', cfg.parameter);
   end
-  dimord        = data.dimord;
-  dimtok        = tokenize(dimord, '_');
 elseif strcmp(dtype, 'freq') && hasrpt,
   % this also deals with fourier-spectra in the input
   % or with multiple subjects in a frequency domain stat-structure
