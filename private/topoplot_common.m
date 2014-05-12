@@ -698,10 +698,13 @@ hold on
 % Set ft_plot_topo specific options
 if strcmp(cfg.interplimits,'head'),  interplimits = 'mask';
 else interplimits = cfg.interplimits; end
-if strcmp(cfg.style,'both');        style = 'surfiso';     end
-if strcmp(cfg.style,'straight');    style = 'surf';         end
-if strcmp(cfg.style,'contour');     style = 'iso';         end
-if strcmp(cfg.style,'fill');        style = 'isofill';     end
+if strcmp(cfg.style,'both');            style = 'surfiso';     end
+if strcmp(cfg.style,'straight');        style = 'surf';        end
+if strcmp(cfg.style,'contour');         style = 'iso';         end
+if strcmp(cfg.style,'fill');            style = 'isofill';     end
+if strcmp(cfg.style,'straight_imsat');  style = 'imsat';       end
+if strcmp(cfg.style,'both_imsat');      style = 'imsatiso';    end
+
 
 % check for nans
 nanInds = isnan(datavector);
@@ -717,7 +720,7 @@ end
 
 % Draw plot
 if ~strcmp(cfg.style,'blank')
-  ft_plot_topo(chanX,chanY,datavector,'interpmethod',cfg.interpolation,...
+  opt = {'interpmethod',cfg.interpolation,...
     'interplim',interplimits,...
     'gridscale',cfg.gridscale,...
     'outline',cfg.layout.outline,...
@@ -725,7 +728,12 @@ if ~strcmp(cfg.style,'blank')
     'isolines',cfg.contournum,...
     'mask',cfg.layout.mask,...
     'style',style,...
-    'datmask', maskdatavector);
+    'datmask', maskdatavector};
+  if strcmp(style,'imsat') || strcmp(style,'imsatiso')
+    % add clim to opt
+    opt = [opt {'clim',[zmin zmax]}];
+  end
+  ft_plot_topo(chanX,chanY,datavector,opt{:});
 elseif ~strcmp(cfg.style,'blank')
   ft_plot_lay(lay,'box','no','label','no','point','no')
 end
