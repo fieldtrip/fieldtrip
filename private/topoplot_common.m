@@ -699,16 +699,19 @@ end
 % Draw topoplot
 cla
 hold on
+
 % Set ft_plot_topo specific options
-if strcmp(cfg.interplimits,'head'),  interplimits = 'mask';
-else interplimits = cfg.interplimits; end
+if strcmp(cfg.interplimits,'head')
+  interplimits = 'mask';
+else
+  interplimits = cfg.interplimits; 
+end
 if strcmp(cfg.style,'both');            style = 'surfiso';     end
 if strcmp(cfg.style,'straight');        style = 'surf';        end
 if strcmp(cfg.style,'contour');         style = 'iso';         end
 if strcmp(cfg.style,'fill');            style = 'isofill';     end
 if strcmp(cfg.style,'straight_imsat');  style = 'imsat';       end
 if strcmp(cfg.style,'both_imsat');      style = 'imsatiso';    end
-
 
 % check for nans
 nanInds = isnan(datavector);
