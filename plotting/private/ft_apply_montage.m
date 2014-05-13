@@ -84,25 +84,38 @@ haschanunit = (isfield(input, 'chanunit') || isfield(input, 'chanunitnew')) && a
 % make sure they always exist to facilitate the remainder of the code
 if ~isfield(montage, 'chantypeorg')
   montage.chantypeorg = repmat({'unknown'}, size(montage.labelorg));
-  if isfield(input, 'chantype')
+  if isfield(input, 'chantype') && ~istrue(inverse)
     warning('copying input chantype to montage');
     [sel1, sel2] = match_str(montage.labelorg, input.label);
     montage.chantypeorg(sel1) = input.chantype(sel2);
   end
 end
+
 if ~isfield(montage, 'chantypenew')
   montage.chantypenew = repmat({'unknown'}, size(montage.labelnew));
+  if isfield(input, 'chantype') && istrue(inverse)
+    warning('copying input chantype to montage');
+    [sel1, sel2] = match_str(montage.labelnew, input.label);
+    montage.chantypenew(sel1) = input.chantype(sel2);
+  end
 end
+
 if ~isfield(montage, 'chanunitorg')
   montage.chanunitorg = repmat({'unknown'}, size(montage.labelorg));
-  if isfield(input, 'chanunit')
+  if isfield(input, 'chanunit') && ~istrue(inverse)
     warning('copying input chanunit to montage');
     [sel1, sel2] = match_str(montage.labelorg, input.label);
     montage.chanunitorg(sel1) = input.chanunit(sel2);
   end
 end
+
 if ~isfield(montage, 'chanunitnew')
   montage.chanunitnew = repmat({'unknown'}, size(montage.labelnew));
+  if isfield(input, 'chanunit') && istrue(inverse)
+    warning('copying input chanunit to montage');
+    [sel1, sel2] = match_str(montage.labelnew, input.label);
+    montage.chanunitnew(sel1) = input.chanunit(sel2);
+  end
 end
 
 if ~isfield(input, 'label') && isfield(input, 'labelnew')
