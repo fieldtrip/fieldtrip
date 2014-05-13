@@ -166,6 +166,10 @@ if nargin > 1
 elseif nargin == 1
   % only cfg given
   isfetch = 0;
+  
+  if ~isfield(cfg, 'headerfile') && isfield(cfg, 'dataset')
+    cfg = dataset2files(cfg);
+  end
   hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
   
   % check whether the value for trlpadding makes sense; negative trlpadding
