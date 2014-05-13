@@ -299,7 +299,11 @@ if strcmp(cfg.gridsearch, 'yes')
   % construct the dipole grid on which the gridsearch will be done
   tmpcfg = [];
   tmpcfg.vol  = vol;
-  tmpcfg.grad = sens; % this can be electrodes or gradiometers
+  if ft_senstype(sens, 'eeg')
+    tmpcfg.elec = sens;
+  else
+    tmpcfg.grad = sens;
+  end
   % copy all options that are potentially used in ft_prepare_sourcemodel
   try, tmpcfg.grid        = cfg.grid;         end
   try, tmpcfg.mri         = cfg.mri;          end
