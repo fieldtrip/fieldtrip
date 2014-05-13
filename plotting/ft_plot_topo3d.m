@@ -11,8 +11,7 @@ function ft_plot_topo3d(pnt, val, varargin)
 % Optional input arguments should be specified in key-value pairs and can include
 %   'contourstyle' = string, 'none', 'black', 'color' (default = 'none')
 %   'facealpha'    = scalar, between 0 and 1 (default = 1)
-%   'refine'       = scalar, number of refinement steps for the triangulation, to
-%                            get a smoother interpolation (default = 0)
+%   'refine'       = scalar, number of refinement steps for the triangulation, to get a smoother interpolation (default = 0)
 %
 % See also FT_PLOT_TOPO
 

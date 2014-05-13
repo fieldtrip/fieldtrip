@@ -9,18 +9,18 @@ function [varargout] = ft_plot_vector(varargin)
 % where X and Y are similar as the input to the Matlab plot function.
 %
 % Optional arguments should come in key-value pairs and can include
-%   axis            = draw the local axis,  can be 'yes', 'no', 'xy', 'x' or 'y'
-%   box             = draw a box around the local axes, can be 'yes' or 'no'
-%   highlight       = a logical vector of size Y, where 1 means that the corresponding values in Y are highlighted (according to the highlightstyle)
-%   highlightstyle  = can be 'box', 'thickness', 'saturation', 'difference' (default='box')
-%   tag             = a name this vector gets. All tags with the same name can be deleted in a figure, without deleting other parts of the figure
-%   color           = see MATLAB standard line properties and see below
-%   linewidth       = see MATLAB standard line properties
-%   markersize      = see MATLAB standard line properties
-%   markerfacecolor = see MATLAB standard line properties
-%   style           = see MATLAB standard line properties
-%   label           = see MATLAB standard line properties
-%   fontsize        = see MATLAB standard line properties
+%   'axis'            = draw the local axis,  can be 'yes', 'no', 'xy', 'x' or 'y'
+%   'box'             = draw a box around the local axes, can be 'yes' or 'no'
+%   'highlight'       = a logical vector of size Y, where 1 means that the corresponding values in Y are highlighted (according to the highlightstyle)
+%   'highlightstyle'  = can be 'box', 'thickness', 'saturation', 'difference' (default='box')
+%   'tag'             = string, the name this vector gets. All tags with the same name can be deleted in a figure, without deleting other parts of the figure.
+%   'color'           = see MATLAB standard line properties and see below
+%   'linewidth'       = see MATLAB standard line properties
+%   'markersize'      = see MATLAB standard line properties
+%   'markerfacecolor' = see MATLAB standard line properties
+%   'style'           = see MATLAB standard line properties
+%   'label'           = see MATLAB standard line properties
+%   'fontsize'        = see MATLAB standard line properties
 %
 % The line color can be specified in a variety of ways
 %   - as a string with one character per line that you want to plot. Supported colors are teh same as in PLOT, i.e. 'bgrcmykw'.
@@ -28,12 +28,12 @@ function [varargout] = ft_plot_vector(varargin)
 %   - as a Nx3 matrix, where N=length(x), to use graded RGB colors along the line
 %
 % It is possible to plot the object in a local pseudo-axis (c.f. subplot), which is specfied as follows
-%   hpos        = horizontal position of the center of the local axes
-%   vpos        = vertical position of the center of the local axes
-%   width       = width of the local axes
-%   height      = height of the local axes
-%   hlim        = horizontal scaling limits within the local axes
-%   vlim        = vertical scaling limits within the local axes
+%   'hpos'            = horizontal position of the center of the local axes
+%   'vpos'            = vertical position of the center of the local axes
+%   'width'           = width of the local axes
+%   'height'          = height of the local axes
+%   'hlim'            = horizontal scaling limits within the local axes
+%   'vlim'            = vertical scaling limits within the local axes
 %
 % Example 1
 %   subplot(2,1,1); ft_plot_vector(1:100, randn(1,100), 'color', 'r')
@@ -60,7 +60,8 @@ function [varargout] = ft_plot_vector(varargin)
 %  rgb = colormap;
 %  rgb = interp1(1:64, rgb, linspace(1,64,100));
 %  ft_plot_vector(1:100, 'color', rgb);
-
+%
+% See also FT_PLOT_MATRIX
 
 % Copyrights (C) 2009-2013, Robert Oostenveld
 %

@@ -9,24 +9,13 @@ function [hx, hy, hz] = ft_plot_ortho(dat, varargin)
 % 
 % Additional options should be specified in key-value pairs and can be
 %   'style'        = string, 'subplot' or 'intersect' (default = 'subplot')
-%   'parents'      = (optional) 3-element vector containing the handles of
-%                    the axes for the subplots (when style = 'subplot')
-%   'surfhandle'   = (optional) 3-element vector containing the handles of 
-%                    the surfaces for each of the sublots (when style =
-%                    'subplot'). Parents and surfhandle are mutually
-%                    exclusive
-%   'transform'    = 4x4 homogeneous transformation matrix specifying the mapping from
-%                    voxel space to the coordinate system in which the data are plotted.
-%   'location'     = 1x3 vector specifying a point on the plane which will be plotted
-%                    the coordinates are expressed in the coordinate system in which the
-%                    data will be plotted. location defines the origin of the plane
-%   'orientation'  = 3x3 matrix specifying the directions orthogonal through the planes
-%                    which will be plotted.
-%   'datmask'      = 3D-matrix with the same size as the matrix dat, serving as opacitymap
-%                    if the second input argument to the function
-%                    contains a matrix, this will be used as the mask
-%   'interpmethod' = string specifying the method for the interpolation,
-%                    see INTERPN (default = 'nearest')
+%   'parents'      = (optional) 3-element vector containing the handles of the axes for the subplots (when style = 'subplot')
+%   'surfhandle'   = (optional) 3-element vector containing the handles of the surfaces for each of the sublots (when style = 'subplot'). Parents and surfhandle are mutually exclusive
+%   'transform'    = 4x4 homogeneous transformation matrix specifying the mapping from voxel space to the coordinate system in which the data are plotted
+%   'location'     = 1x3 vector specifying a point on the plane which will be plotted the coordinates are expressed in the coordinate system in which the data will be plotted. location defines the origin of the plane
+%   'orientation'  = 3x3 matrix specifying the directions orthogonal through the planes which will be plotted
+%   'datmask'      = 3D-matrix with the same size as the matrix dat, serving as opacitymap if the second input argument to the function contains a matrix, this will be used as the mask
+%   'interpmethod' = string specifying the method for the interpolation, see INTERPN (default = 'nearest')
 %   'colormap'     = string, see COLORMAP
 %
 % See also FT_PLOT_SLICE, FT_PLOT_MONTAGE, FT_SOURCEPLOT

@@ -14,14 +14,13 @@ function ft_select_range(handle, eventdata, varargin)
 % the selection option.
 % 
 % Input arguments:
-%   event       = string, event used as hook.
-%   callback    = function handle or cell-array containing function handle and additional input arguments
-%   contextmenu = cell-array containing labels shown in right-click menu
-%   multiple    = boolean, allowing multiple selection boxes or not
-%   xrange      = boolean, xrange variable or not
-%   yrange      = boolean, yrange variable or not
-%   clear       = boolean
-%
+%   'event'       = string, event used as hook.
+%   'callback'    = function handle or cell-array containing function handle and additional input arguments
+%   'contextmenu' = cell-array containing labels shown in right-click menu
+%   'multiple'    = boolean, allowing multiple selection boxes or not
+%   'xrange'      = boolean, xrange variable or not
+%   'yrange'      = boolean, yrange variable or not
+%   'clear'       = boolean
 %
 % Example use:
 %   x = randn(10,1);

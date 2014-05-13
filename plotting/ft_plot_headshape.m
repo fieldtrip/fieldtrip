@@ -17,8 +17,7 @@ function hs = ft_plot_headshape(headshape,varargin)
 %   'fidcolor'    = color specification as [r g b] values or a string, for example 'brain', 'cortex', 'skin', 'red', 'r'
 %   'fidmarker'   = ['.', '*', '+',  ...]
 %   'fidlabel'    = ['yes', 'no', 1, 0, 'true', 'false']
-%   'transform'   = transformation matrix for the fiducials, converts MRI
-%                   voxels into head shape coordinates
+%   'transform'   = transformation matrix for the fiducials, converts MRI voxels into head shape coordinates
 %
 % Example
 %   shape = ft_read_headshape(filename);

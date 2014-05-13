@@ -1,16 +1,15 @@
 function [selected] = ft_select_point3d(bnd, varargin)
 
-% FT_SELECT_POINT3D helper function for selecting one or multiple points
-% on a 3D mesh using the mouse.
+% FT_SELECT_POINT3D helper function for selecting one or multiple points on a 3D mesh
+% using the mouse. It returns a list of the [x y z] coordinates of the selected
+% points.
 %
 % Use as
 %   [selected] = ft_select_point3d(bnd, ...)
 %
-% It returns a list of the [x y z] coordinates of the selected points.
-%
 % Optional input arguments should come in key-value pairs and can include
-%   'multiple'    true/false, make multiple selections, pressing "q" on the keyboard finalizes the selection (default = false)
-%   'nearest'     true/false (default = true)
+%   'multiple'   = true/false, make multiple selections, pressing "q" on the keyboard finalizes the selection (default = false)
+%   'nearest'    = true/false (default = true)
 %
 % Example use
 %   [pnt, tri] = icosahedron162;

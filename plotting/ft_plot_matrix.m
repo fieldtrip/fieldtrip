@@ -12,26 +12,24 @@ function ft_plot_matrix(varargin)
 % respectively.
 %
 % Optional arguments should come in key-value pairs and can include
-%   clim            = maximum and minimum color limit
-%   box             = draw a box around the local axes, can be 'yes' or 'no'
-%   highlight       = a logical matrix of size C, where 0 means that the
-%                     corresponding values in C are highlighted according
-%                     to the highlightstyle
-%   highlightstyle  = can be 'saturation' or 'opacity'
-%   tag             = a name this image gets. All tags with the same name
-%                     can be deleted in a figure, without deleting other 
-%                     parts of the figure
+%   'clim'            = maximum and minimum color limit
+%   'box'             = draw a box around the local axes, can be 'yes' or 'no'
+%   'highlight'       = a logical matrix of size C, where 0 means that the corresponding values in C are highlighted according to the highlightstyle
+%   'highlightstyle'  = can be 'saturation' or 'opacity'
+%   'tag'             = string, the name this vector gets. All tags with the same name can be deleted in a figure, without deleting other parts of the figure.
 %
 % It is possible to plot the object in a local pseudo-axis (c.f. subplot), which is specfied as follows
-%   hpos        = horizontal position of the center of the local axes
-%   vpos        = vertical position of the center of the local axes
-%   width       = width of the local axes
-%   height      = height of the local axes
-%   hlim        = horizontal scaling limits within the local axes
-%   vlim        = vertical scaling limits within the local axes
+%   'hpos'            = horizontal position of the center of the local axes
+%   'vpos'            = vertical position of the center of the local axes
+%   'width'           = width of the local axes
+%   'height'          = height of the local axes
+%   'hlim'            = horizontal scaling limits within the local axes
+%   'vlim'            = vertical scaling limits within the local axes
 %
 % Example use
 %   ft_plot_matrix(randn(30,50), 'width', 1, 'height', 1, 'hpos', 0, 'vpos', 0)
+%
+% See also T_PLOT_VECTOR
 
 % Copyrights (C) 2009-2011, Robert Oostenveld
 %
