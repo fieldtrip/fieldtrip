@@ -182,6 +182,7 @@ end
 % ensure that the input is correct, also backward compatibility with old data structures:
 dtype = cell(Ndata, 1);
 for i=1:Ndata
+  % check if the input data is valid for this function
   varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'timelock', 'freq'});
   dtype{i}    = ft_datatype(varargin{i});
   

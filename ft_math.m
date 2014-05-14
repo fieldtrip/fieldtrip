@@ -64,7 +64,7 @@ end
 
 type = ft_datatype(varargin{1});
 for i=1:length(varargin)
-  % check that all data types are equal, and update old data structures
+  % check if the input data is valid for this function, that all data types are equal and update old data structures
   varargin{i} = ft_checkdata(varargin{i}, 'datatype', type);
 end
 

@@ -104,6 +104,7 @@ if nargin<2
   % where it would be used for channel selection
   data = [];
 else
+  % check if the input data is valid for this function
   data = ft_checkdata(data);
 end
 

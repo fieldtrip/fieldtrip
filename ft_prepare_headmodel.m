@@ -186,7 +186,7 @@ cfg.siunits         = ft_getopt(cfg, 'siunits', 'no');  % yes/no, convert the in
 cfg.smooth          = ft_getopt(cfg, 'smooth');         % used for interpolate
 
 if nargin>1,
-  % ensure that it has the units specified
+  % check if the input data is valid for this function and ensure that it has the units specified
   data = ft_checkdata(data, 'hasunit', 'yes');
 else
   data = [];

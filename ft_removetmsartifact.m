@@ -61,7 +61,6 @@ warning('FT_REMOVETMSARTIFACT is deprecated, please follow TMS-EEG tutorial inst
 revision = '$Id$';
 
 % do the general setup of the function
-
 ft_defaults                 % this ensures that the path is correct and that the ft_defaults global variable is available
 ft_preamble init            % this will show the function help if nargin==0 and return an error
 ft_preamble provenance      % this records the time and memory usage at teh beginning of the function
@@ -74,9 +73,7 @@ if abort
   return
 end
 
-% ensure that the input data is valid for this function, this will also do
-% backward-compatibility conversions of old data that for example was
-% read from an old *.mat file
+% check if the input data is valid for this function
 data = ft_checkdata(data, 'datatype', {'raw'}, 'feedback', 'yes');
 
 % ensure that the required options are present

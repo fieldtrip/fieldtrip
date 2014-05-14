@@ -65,9 +65,7 @@ if abort
   return
 end
 
-% ensure that the input data is valid for this function, this will also do 
-% backward-compatibility conversions of old data that for example was 
-% read from an old *.mat file
+% check if the input data is valid for this function
 datain = ft_checkdata(datain, 'datatype', {'raw', 'comp'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
 
 % check if the input is valid

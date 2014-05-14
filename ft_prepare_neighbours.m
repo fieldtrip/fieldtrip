@@ -87,7 +87,11 @@ cfg.feedback = ft_getopt(cfg, 'feedback', 'no');
 cfg.channel = ft_getopt(cfg, 'channel', 'all');
 
 hasdata = nargin>1;
-if hasdata, data = ft_checkdata(data); end
+
+if hasdata
+  % check if the input data is valid for this function
+  data = ft_checkdata(data);
+end
 
 if strcmp(cfg.method, 'template')
   neighbours = [];

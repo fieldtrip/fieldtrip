@@ -75,7 +75,8 @@ if abort
   return
 end
 
-% check the input dtaa, this function is also called from ft_movieplotER
+% check if the input data is valid for this function
+% note that this function is also called from ft_movieplotER
 data = ft_checkdata(data, 'datatype', {'timelock', 'freq'});
 
 % check if the input cfg is valid for this function

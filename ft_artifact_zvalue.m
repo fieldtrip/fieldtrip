@@ -164,10 +164,11 @@ if pertrial
 end
 
 if nargin > 1
-  % data given as input
-  isfetch = 1;
-  hdr  = ft_fetch_header(data);
+  % check if the input data is valid for this function
   data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
+  % data given as input, use ft_fetch_header and ft_fetch_data in the remainder of the code
+  isfetch = 1;
+  hdr = ft_fetch_header(data);
 elseif nargin == 1
   % only cfg given
   isfetch = 0;

@@ -80,6 +80,7 @@ nargin = nargin + exist('comp', 'var');
 nargin = nargin + exist('data', 'var');
 
 if nargin==3
+  % check if the input data is valid for this function
   data    = ft_checkdata(data, 'datatype', 'raw');
   label   = data.label;
   hasdata = 1;

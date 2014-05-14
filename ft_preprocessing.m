@@ -243,7 +243,7 @@ if hasdata
   % this is used to convert the data back to timelock later
   convert = ft_datatype(data);
   
-  % the input data must be raw
+  % check if the input data is valid for this function, the input data must be raw
   data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
   
   % check if the input cfg is valid for this function

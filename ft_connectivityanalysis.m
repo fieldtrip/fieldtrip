@@ -131,6 +131,7 @@ if abort
 end
 
 % FIXME it should be checked carefully whether the following works
+% check if the input data is valid for this function
 % data = ft_checkdata(data, 'datatype', {'raw', 'timelock', 'freq', 'source'});
 
 % set the defaults

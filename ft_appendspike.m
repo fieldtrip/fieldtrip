@@ -59,6 +59,7 @@ end
 if all(isspike)
   spike = {};
   for i=1:length(varargin)
+    % check if the input data is valid for this function
     spike{i} = ft_checkdata(varargin{i}, 'datatype', 'spike');
   end
   

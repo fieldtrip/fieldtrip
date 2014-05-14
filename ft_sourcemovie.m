@@ -45,9 +45,7 @@ if abort
   return
 end
 
-% ensure that the input data is valiud for this function, this will also do
-% backward-compatibility conversions of old data that for example was
-% read from an old *.mat file
+% check if the input data is valid for this function
 source = ft_checkdata(source, 'datatype', 'source', 'feedback', 'yes');
 
 % check if the input cfg is valid for this function

@@ -65,7 +65,11 @@ if abort
 end
 
 hasdata = nargin>1;
-if hasdata, data = ft_checkdata(data); end
+
+if hasdata
+  % check if the input data is valid for this function
+  data = ft_checkdata(data);
+end
 
 cfg.enableedit = ft_getopt(cfg, 'enableedit', 'no');
 

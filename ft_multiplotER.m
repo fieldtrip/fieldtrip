@@ -135,6 +135,7 @@ if abort
 end
 
 for i=1:length(varargin)
+  % check if the input data is valid for this function
   varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'timelock', 'freq'});
 end
 

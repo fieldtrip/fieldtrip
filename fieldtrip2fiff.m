@@ -53,7 +53,7 @@ eventfile = [pathstr filesep name '-eve.fif'];
 % ensure the mne-toolbox to be on the path
 ft_hastoolbox('mne', 1);
 
-% check the input data
+% check if the input data is valid for this function
 data   = ft_checkdata(data, 'datatype', {'raw', 'timelock'}, 'feedback', 'yes');
 istlck = ft_datatype(data, 'timelock');
 isepch = ft_datatype(data, 'raw');
