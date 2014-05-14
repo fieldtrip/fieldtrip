@@ -17,7 +17,6 @@ function retval = qsublist(cmd, jobid, pbsid)
 %   'kill'
 %   'killall'
 %
-%
 % The following low-level commands are used by QSUBFEVAL and QSUBGET for job
 % maintenance and monitoring.
 %   'add'
@@ -51,6 +50,14 @@ persistent list_jobid list_pbsid
 % locking it ensures that it does not accidentally get cleared if the m-file on disk gets updated
 mlock
 
+if ~isempty(list_jobid) && isequal(list_jobid, list_pbsid)
+  % it might also be system, but torque, sge, slurm and lsf will have other job identifiers
+  backend = 'local';
+else
+  % use the environment variables to determine the backend
+  backend = defaultbackend;
+end
+
 if nargin<1
   cmd = 'list';
 end
@@ -62,10 +69,6 @@ end
 if nargin<3
   pbsid = [];
 end
-
-% FIXME this relies on the default and cannot be overruled at the moment
-% see http://bugzilla.fcdonders.nl/show_bug.cgi?id=2430
-backend = defaultbackend;
 
 if isempty(jobid) && ~isempty(pbsid)
   % get it from the persistent list
@@ -111,9 +114,9 @@ switch cmd
         case 'lsf'
           system(sprintf('bkill %s', pbsid));
         case 'local'
-          warning('cleaning up local jobs is not supported');
+          % cleaning up of local jobs is not supported
         case 'system'
-          warning('cleaning up system jobs is not supported');
+          % cleaning up of system jobs is not supported
       end
       % remove the corresponing files from the shared storage
       system(sprintf('rm -f %s*', jobid));
@@ -126,12 +129,13 @@ switch cmd
     if ~isempty(list_jobid)
       % give an explicit warning, because chances are that the user will see messages from qdel
       % about jobs that have just completed and hence cannot be deleted any more
-      warning('cleaning up all scheduled and running jobs, don''t worry if you see warnings from "qdel"');
+      fprintf('cleaning up all scheduled and running jobs, don''t worry if you see warnings from "qdel"\n');
     end
     % start at the end, work towards the begin of the list
     for i=length(list_jobid):-1:1
       qsublist('kill', list_jobid{i}, list_pbsid{i});
     end
+    
     % it is now safe to unload the function and persistent variables from memory
     munlock
     
@@ -149,11 +153,9 @@ switch cmd
     logout     = fullfile(curPwd, sprintf('%s.o*', jobid)); % note the wildcard in the file name
     logerr     = fullfile(curPwd, sprintf('%s.e*', jobid)); % note the wildcard in the file name
     
-    % check that all files exist
-    retval = isfile(logout) && isfile(logerr);
-    
-    if retval
-      % poll the job status to confirm that the job truely completed
+    % poll the job status to confirm that the job truely completed
+    if isfile(logout) && isfile(logerr)
+      % only perform the more expensive check once the log files exist
       switch backend
         case 'torque'
           [dum, jobstatus] = system(['qstat ' pbsid ' -f1 | grep job_state | grep -o "= [A-Z]" | grep -o [A-Z]']);
@@ -163,15 +165,18 @@ switch cmd
           retval = strcmp(strtrim(jobstatus), 'DONE');
         case 'sge'
           [dum, jobstatus] = system(['qstat -s z | grep ' pbsid ' | awk ''{print $5}''']);
-          retval = strcmp(strtrim(jobstatus), 'z');
+        case 'slurm'
+          % only return the status based on the presence of the output files
+          % FIXME it would be good to implement a proper check for slurm as well
+          retval = 1;
         case {'local','system'}
           % only return the status based on the presence of the output files
           % there is no way polling the batch execution system
-        otherwise
-          % only return the status based on the presence of the output files
-          % FIXME it would be good to implement this for slurm as well
+          retval = 1;
       end
-    end % if retval
+    else
+      retval = 0;
+    end
     
   case 'list'
     for i=1:length(list_jobid)
@@ -189,7 +194,6 @@ switch cmd
   otherwise
     error('unsupported command (%s)', cmd);
 end % switch
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper function that detects a file, even with a wildcard in the filename
