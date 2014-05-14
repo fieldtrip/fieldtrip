@@ -637,7 +637,7 @@ if basedonmni
   else
     grid.pos = ft_warp_apply(inv(normalise.initial), ft_warp_apply(normalise.params, mnigrid.pos, 'sn2individual'));
   end
-  if isfield(grid, 'dim')
+  if isfield(mnigrid, 'dim')
     grid.dim     = mnigrid.dim;
   end
   grid.unit    = mnigrid.unit;
