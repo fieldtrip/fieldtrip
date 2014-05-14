@@ -10,11 +10,41 @@ function data = ft_math(cfg, varargin)
 %
 %  cfg.operation  = string, can be 'add', 'subtract', 'divide', 'multiply', 'log10'
 %                   or a functional specification of the operation (see below)
-%  cfg.parameter  = string, input data field on which the operation is performed
+%  cfg.parameter  = string, field from the input data on which the operation is
+%                   performed, e.g. 'pow' or 'avg'
 %
-% If you specify only a single input data structure with operation 'add', 'subtract',
-% 'divide' or 'multiply', the configuration should contain
+% Optionally, if you specify only a single input data structure and the operation
+% 'add', 'subtract', 'divide' or 'multiply', the configuration should also contain
 %   cfg.scalar    = scalar value to be used in the operation
+%
+% The operation 'add' is implemented as follows
+%   y = x1 + x2 + ....
+% if you specify multiple input arguments, or as
+%   y = x1 + s
+% if you specify one input argument and a scalar value.
+%
+% The operation 'subtract' is implemented as follows
+%   y = x1 - x2 - ....
+% if you specify multiple input arguments, or as
+%   y = x1 - s
+% if you specify one input argument and a scalar value.
+%
+% The operation 'divide' is implemented as follows
+%   y = x1 / x2
+% if you specify two input arguments, or as
+%   y = x1 / s
+% if you specify one input argument and a scalar value.
+%
+% The operation 'multiply' is implemented as follows
+%   y = x1 * x2
+% if you specify two input arguments, or as
+%   y = x1 * s
+% if you specify one input argument and a scalar value.
+%
+% It is also possible to specify your own operation as a sting, like this
+%   cfg.operation = '(x1-x2)/(x1+x2)
+% or using 's' for the scalar value like this
+%   cfg.operation = '(x1-x2)^s'
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
