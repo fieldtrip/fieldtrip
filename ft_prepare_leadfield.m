@@ -94,6 +94,11 @@ ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar data
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 if nargin<2
   % the data variable will be passed to the prepare_headmodel function below
   % where it would be used for channel selection

@@ -75,6 +75,11 @@ revision = '$Id$';
 ft_defaults
 ft_preamble init
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 % set the defaults
 cfg.eventtype   = ft_getopt(cfg, 'eventtype',   []);
 cfg.eventvalue  = ft_getopt(cfg, 'eventvalue',  []);

@@ -93,6 +93,11 @@ ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar data
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 % set the defaults
 if ~isfield(cfg, 'method'),        cfg.method = 'spline';    end
 if ~isfield(cfg, 'conductivity'),  cfg.conductivity = 0.33;  end    % in S/m

@@ -40,6 +40,11 @@ ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar source
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 % ensure that the input data is valiud for this function, this will also do
 % backward-compatibility conversions of old data that for example was
 % read from an old *.mat file

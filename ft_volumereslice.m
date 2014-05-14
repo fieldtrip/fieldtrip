@@ -65,6 +65,11 @@ ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar mri
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 % check if the input data is valid for this function and ensure that the structures correctly describes a volume
 if isfield(mri, 'inside')
   mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes', 'hasunit', 'yes', 'inside', 'logical');

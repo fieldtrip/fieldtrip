@@ -77,6 +77,11 @@ ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar data
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 % set the default configuration
 cfg.badchannel     = ft_getopt(cfg, 'badchannel',     {});
 cfg.missingchannel = ft_getopt(cfg, 'missingchannel', {});

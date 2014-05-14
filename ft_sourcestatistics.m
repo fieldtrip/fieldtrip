@@ -70,6 +70,11 @@ ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar varargin
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 % this wrapper should be compatible with the already existing statistical
 % functions that only work for source input data
 

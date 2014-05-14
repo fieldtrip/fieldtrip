@@ -74,6 +74,11 @@ ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar varargin
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 % return immediately after distributed execution
 if ~isempty(ft_getopt(cfg, 'distribute'))
   return

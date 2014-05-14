@@ -64,6 +64,11 @@ ft_preamble provenance
 ft_preamble trackconfig
 ft_preamble debug
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 % set the defaults
 cfg.analyze   = ft_getopt(cfg, 'analyze',   'yes');
 cfg.savemat   = ft_getopt(cfg, 'savemat',   'yes');

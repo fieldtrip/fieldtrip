@@ -121,6 +121,11 @@ ft_preamble provenance
 ft_preamble trackconfig
 ft_preamble debug
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 % the interactive method uses a global variable to get the data from the figure when it is closed
 global norm
 

@@ -7,6 +7,8 @@
 %   ft_preamble loadvar data
 %   ft_preamble loadvar source mri
 %   ft_preamble loadvar varargin
+%
+% See also FT_POSTAMBLE_SAVEVAR
 
 % Copyright (C) 2011-2012, Robert Oostenveld, DCCN
 %
@@ -33,6 +35,7 @@ global ft_default
 
 % use an anonymous function
 assign = @(var, val) assignin('caller', var, val);
+
 
 if isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
   

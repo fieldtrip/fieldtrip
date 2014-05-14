@@ -110,6 +110,11 @@ ft_preamble provenance
 ft_preamble trackconfig
 ft_preamble debug
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 % check input configuration for the generally applicable options
 cfg = ft_checkconfig(cfg, 'required', {'nsignal' 'ntrials' 'triallength' 'fsample' 'method'});
 cfg = ft_checkconfig(cfg, 'rename',   {'blc', 'demean'});

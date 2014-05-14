@@ -195,6 +195,11 @@ ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar data
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 % defaults for optional input/ouputfile and feedback
 cfg.feedback   = ft_getopt(cfg, 'feedback',   'text');
 cfg.inputlock  = ft_getopt(cfg, 'inputlock',  []);  % this can be used as mutex when doing distributed computation

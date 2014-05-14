@@ -103,6 +103,11 @@ ft_defaults
 ft_preamble init
 ft_preamble provenance
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 % make sure figure window titles are labeled appropriately, pass this onto
 % the actual plotting function
 % if we don't specify this, the window will be called 'ft_topoplotTFR',

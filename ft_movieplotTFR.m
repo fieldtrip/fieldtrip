@@ -70,6 +70,11 @@ ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar data
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 % check the input dtaa, this function is also called from ft_movieplotER
 data = ft_checkdata(data, 'datatype', {'timelock', 'freq'});
 

@@ -73,6 +73,11 @@ ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar mri
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 % this is not supported any more as of 26/10/2011
 if ischar(mri),
   error('please use cfg.inputfile instead of specifying the input variable as a sting');

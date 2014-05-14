@@ -115,6 +115,11 @@ ft_preamble provenance
 ft_preamble trackconfig
 ft_preamble debug
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 % text output
 disp('Close the figure to output new sensor positions');
 

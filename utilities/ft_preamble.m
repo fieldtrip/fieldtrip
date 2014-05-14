@@ -38,7 +38,7 @@ function ft_preamble(cmd, varargin)
 % the following section ensures that these scripts are included as
 % dependencies when using the MATLAB compiler
 %
-%#function ft_preamble_help
+%#function ft_preamble_init
 %#function ft_preamble_debug
 %#function ft_preamble_trackconfig
 %#function ft_preamble_provenance

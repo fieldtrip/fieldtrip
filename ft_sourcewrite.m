@@ -33,6 +33,11 @@ ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar source
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 source = ft_checkdata(source, 'datatype', 'source', 'feedback', 'yes');
 
 % ensure that the required options are present

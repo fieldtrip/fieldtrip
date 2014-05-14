@@ -4,8 +4,10 @@
 % cfg.outputfile variable.
 %
 % Use as
-%   ft_preamble savevar data
-%   ft_preamble savevar source mri
+%   ft_postamble savevar data
+%   ft_postamble savevar source mri
+%
+% See also FT_PREAMBLE_LOADVAR
 
 % Copyright (C) 2011-2012, Robert Oostenveld, DCCN
 %

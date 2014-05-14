@@ -74,6 +74,11 @@ ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar freq
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed', {'jacknife', 'jackknife'});
 

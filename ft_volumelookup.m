@@ -89,6 +89,11 @@ ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar volume
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 % the handling of the default cfg options is done further down
 % the checking of the input data is done further down
 

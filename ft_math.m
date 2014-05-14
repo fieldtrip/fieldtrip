@@ -57,6 +57,11 @@ ft_preamble trackconfig       % this converts the cfg structure in a config obje
 ft_preamble debug
 ft_preamble loadvar varargin  % this reads the input data in case the user specified the cfg.inputfile option
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 type = ft_datatype(varargin{1});
 for i=1:length(varargin)
   % check that all data types are equal, and update old data structures

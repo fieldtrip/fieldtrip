@@ -64,6 +64,11 @@ ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar comp data
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 % set defaults
 cfg.component  = ft_getopt(cfg, 'component',  []);
 cfg.demean     = ft_getopt(cfg, 'demean',    'yes');

@@ -111,6 +111,11 @@ ft_preamble init
 ft_preamble provenance
 ft_preamble loadvar data
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 % set default rejection parameters
 cfg.headerformat                 = ft_getopt(cfg,                  'headerformat', []);
 cfg.dataformat                   = ft_getopt(cfg,                  'dataformat',   []);
