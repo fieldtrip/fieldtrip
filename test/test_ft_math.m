@@ -22,14 +22,14 @@ source1.pow = randn(10,1);
 source1.powdimord = 'pos';
 source1.mom = cell(10,1);
 for i=1:10
-  source1.mom{i} = ones(3, 20)*i;
+  source1.mom{i} = ones(3, 20)*1;
 end
 source1.momdimord = '{pos}_ori_time';
 source1.time = 1:20;
 
 source2 = source1;
 for i=1:10
-  source2.mom{i} = ones(3, 20)*i;
+  source2.mom{i} = ones(3, 20)*2;
 end
 
 
@@ -46,7 +46,7 @@ tmp = ft_math(cfg, timelock1);
 assert(isfield(tmp, cfg.parameter), 'the output parameter is missing');
 assert(isfield(tmp, 'dimord'), 'the output dimord is missing');
 
-cfg.value = pi;
+cfg.scalar = pi;
 
 cfg.operation = 'add';
 tmp = ft_math(cfg, timelock1);
@@ -82,7 +82,7 @@ tmp = ft_math(cfg, source1);
 assert(isfield(tmp, cfg.parameter), 'the output parameter is missing');
 assert(isfield(tmp, 'dimord'), 'the output dimord is missing');
 
-cfg.value = pi;
+cfg.scalar = pi;
 
 cfg.operation = 'add';
 tmp = ft_math(cfg, source1);
@@ -200,4 +200,89 @@ tmp = ft_math(cfg, source1, source2, source1, source2);
 assert(isfield(tmp, cfg.parameter), 'the output parameter is missing');
 assert(isfield(tmp, 'dimord'), 'the output dimord is missing');
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% check the numerical output of the operation
+
+cfg = [];
+cfg.parameter = 'avg';
+cfg.operation = 'add';
+tmp = ft_math(cfg, timelock1, timelock2);
+assert(tmp.avg(1)==3);
+
+cfg.operation = 'subtract';
+tmp = ft_math(cfg, timelock1, timelock2);
+assert(tmp.avg(1)==-1);
+
+cfg.operation = 'add';
+tmp = ft_math(cfg, timelock1, timelock2);
+assert(tmp.avg(1)==3);
+
+cfg.operation = 'divide';
+tmp = ft_math(cfg, timelock1, timelock2);
+assert(tmp.avg(1)==1/2);
+
+cfg.operation = 'multiply';
+tmp = ft_math(cfg, timelock1, timelock2);
+assert(tmp.avg(1)==2);
+
+cfg.operation = 'log10';
+tmp = ft_math(cfg, timelock1);
+assert(tmp.avg(1)==0);
+
+cfg.operation = 'log(x1)';
+tmp = ft_math(cfg, timelock1);
+assert(tmp.avg(1)==0);
+
+cfg.operation = '(x1-x2)/(x1+x2)';
+tmp = ft_math(cfg, timelock1, timelock2);
+assert(tmp.avg(1)==-1/3);
+
+cfg.scalar = 2;
+cfg.operation = '(x1+x2)^s';
+tmp = ft_math(cfg, timelock1, timelock2);
+assert(tmp.avg(1)==9);
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% idem for a source structure with a cell array
+
+cfg = [];
+cfg.parameter = 'mom';
+cfg.operation = 'add';
+tmp = ft_math(cfg, source1, source2);
+assert(tmp.mom{1}(1)==3);
+
+cfg.operation = 'subtract';
+tmp = ft_math(cfg, source1, source2);
+assert(tmp.mom{1}(1)==-1);
+
+cfg.operation = 'add';
+tmp = ft_math(cfg, source1, source2);
+assert(tmp.mom{1}(1)==3);
+
+cfg.operation = 'divide';
+tmp = ft_math(cfg, source1, source2);
+assert(tmp.mom{1}(1)==1/2);
+
+cfg.operation = 'multiply';
+tmp = ft_math(cfg, source1, source2);
+assert(tmp.mom{1}(1)==2);
+
+cfg.operation = 'log10';
+tmp = ft_math(cfg, source1);
+assert(tmp.mom{1}(1)==0);
+
+cfg.operation = 'log(x1)';
+tmp = ft_math(cfg, source1);
+assert(tmp.mom{1}(1)==0);
+
+cfg.operation = '(x1-x2)/(x1+x2)';
+tmp = ft_math(cfg, source1, source2);
+assert(tmp.mom{1}(1)==-1/3);
+
+cfg.scalar = 2;
+cfg.operation = '(x1+x2)^s';
+tmp = ft_math(cfg, source1, source2);
+assert(tmp.mom{1}(1)==9);
 

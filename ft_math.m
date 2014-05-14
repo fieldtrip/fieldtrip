@@ -9,10 +9,12 @@ function data = ft_math(cfg, varargin)
 % configuration structure that should contain
 %
 %  cfg.operation  = string, can be 'add', 'subtract', 'divide', 'multiply', 'log10'
+%                   or a functional specification of the operation (see below)
 %  cfg.parameter  = string, input data field on which the operation is performed
 %
-% If you specify only a single input data structure, the configuration should contain
-%   cfg.value     = scalar value to be used in the operation
+% If you specify only a single input data structure with operation 'add', 'subtract',
+% 'divide' or 'multiply', the configuration should contain
+%   cfg.scalar    = scalar value to be used in the operation
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -24,7 +26,7 @@ function data = ft_math(cfg, varargin)
 %
 % See also FT_DATATYPE
 
-% Copyright (C) 2012-2013, Robert Oostenveld
+% Copyright (C) 2012-2014, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -70,14 +72,7 @@ end
 
 % ensure that the required options are present
 cfg = ft_checkconfig(cfg, 'required', {'operation', 'parameter'});
-
-if length(varargin)>1
-  % perform the operation on two or multiple input data structures
-  cfg = ft_checkconfig(cfg, 'forbidden', {'value'});
-else
-  % the operation involves the data structure and the specified value
-  % or the operation is a transformation such as log10
-end
+cfg = ft_checkconfig(cfg, 'renamed', {'value', 'scalar'});
 
 % this function only works for the upcoming (not yet standard) source representation without sub-structures
 if ft_datatype(varargin{1}, 'source')
@@ -131,53 +126,92 @@ if haspos
   data.pos = varargin{1}.pos;
 end
 
+% use an anonymous function
+assign = @(var, val) assignin('caller', var, val);
+
 fprintf('selecting %s from the first input argument\n', cfg.parameter);
-tmp = getsubfield(varargin{1}, cfg.parameter);
+% create the local variables x1, x2, ...
+for i=1:length(varargin)
+  assign(sprintf('x%i', i), getsubfield(varargin{i}, cfg.parameter));
+end
+
+% create the local variable s
+s = ft_getopt(cfg, 'scalar');
 
 if length(varargin)==1
   switch cfg.operation
     case 'add'
-      fprintf('adding %f to the %s\n', cfg.value, cfg.parameter);
-      if iscell(tmp)
-        tmp = cellplus(tmp, cfg.value);
+      fprintf('adding %f to the %s\n', s, cfg.parameter);
+      if iscell(x1)
+        y = cellplus(x1, s);
       else
-        tmp = tmp + cfg.value;
+        y = x1 + s;
       end
       
     case 'subtract'
-      fprintf('subtracting %f from the %s\n', cfg.value, cfg.parameter);
-      if iscell(tmp)
-        tmp = cellminus(tmp, cfg.value);
+      fprintf('subtracting %f from the %s\n', s, cfg.parameter);
+      if iscell(x1)
+        y = cellminus(x1, s);
       else
-        tmp = tmp - cfg.value;
+        y = x1 - s;
       end
       
     case 'multiply'
-      fprintf('multiplying %s with %f\n', cfg.parameter, cfg.value);
-      if iscell(tmp)
-        tmp = celltimes(tmp, cfg.value);
+      fprintf('multiplying %s with %f\n', cfg.parameter, s);
+      if iscell(x1)
+        y = celltimes(x1, s);
       else
-        tmp = tmp .* cfg.value;
+        y = x1 .* s;
       end
       
     case 'divide'
-      fprintf('dividing %s by %f\n', cfg.parameter, cfg.value);
-      if iscell(tmp)
-        tmp = cellrdivide(tmp, cfg.value);
+      fprintf('dividing %s by %f\n', cfg.parameter, s);
+      if iscell(x1)
+        y = cellrdivide(x1, s);
       else
-        tmp = tmp ./ cfg.value;
+        y = x1 ./ s;
       end
       
     case 'log10'
       fprintf('taking the log10 of %s\n', cfg.parameter);
-      if iscell(tmp)
-        tmp = celllog10(tmp);
+      if iscell(x1)
+        y = celllog10(x1);
       else
-        tmp = log10(tmp);
+        y = log10(x1);
       end
       
     otherwise
-      error('unsupported operation "%s"', cfg.operation);
+      % assume that the operation is descibed as a string, e.g. x1^s
+      % where x1 is the first argument and s is obtained from cfg.scalar
+      
+      arginstr = sprintf('x%i,', 1:length(varargin));
+      arginstr = arginstr(1:end-1); % remove the trailing ','
+      eval(sprintf('operation = @(%s) %s;', arginstr, cfg.operation));
+      
+      if ~iscell(varargin{1}.(cfg.parameter))
+        % gather x1, x2, ... into a cell-array
+        arginval = eval(sprintf('{%s}', arginstr));
+        eval(sprintf('operation = @(%s) %s;', arginstr, cfg.operation));
+        y = arrayfun(operation, arginval{:});
+        
+      else
+        y = cell(size(x1));
+        % do the same thing, but now for each element of the cell array
+        for i=1:numel(y)
+          for j=1:length(varargin)
+            % rather than working with x1 and x2, we need to work on its elements
+            % xx1 is one element of the x1 cell-array
+            assign(sprintf('xx%d', j), eval(sprintf('x%d{%d}', j, i)))
+          end
+          
+          % gather xx1, xx2, ... into a cell-array
+          arginstr = sprintf('xx%i,', 1:length(varargin));
+          arginstr = arginstr(1:end-1); % remove the trailing ','
+          arginval = eval(sprintf('{%s}', arginstr));
+          y{i} = arrayfun(operation, arginval{:});
+        end % for each element
+      end % iscell or not
+      
   end % switch
   
   
@@ -187,20 +221,20 @@ else
     case 'add'
       for i=2:length(varargin)
         fprintf('adding the %s input argument\n', nth(i));
-        if iscell(tmp)
-          tmp = cellplus(tmp, varargin{i}.(cfg.parameter));
+        if iscell(x1)
+          y = cellplus(x1, varargin{i}.(cfg.parameter));
         else
-          tmp = tmp + varargin{i}.(cfg.parameter);
+          y = x1 + varargin{i}.(cfg.parameter);
         end
       end
       
     case 'multiply'
       for i=2:length(varargin)
         fprintf('multiplying with the %s input argument\n', nth(i));
-        if iscell(tmp)
-          tmp = celltimes(tmp, varargin{i}.(cfg.parameter));
+        if iscell(x1)
+          y = celltimes(x1, varargin{i}.(cfg.parameter));
         else
-          tmp = tmp .* varargin{i}.(cfg.parameter);
+          y = x1 .* varargin{i}.(cfg.parameter);
         end
       end
       
@@ -209,10 +243,10 @@ else
         error('the operation "%s" requires exactly 2 input arguments', cfg.operation);
       end
       fprintf('subtracting the 2nd input argument from the 1st\n');
-      if iscell(tmp)
-        tmp = cellminus(tmp, varargin{2}.(cfg.parameter));
+      if iscell(x1)
+        y = cellminus(x1, varargin{2}.(cfg.parameter));
       else
-        tmp = tmp - varargin{2}.(cfg.parameter);
+        y = x1 - varargin{2}.(cfg.parameter);
       end
       
     case 'divide'
@@ -220,19 +254,53 @@ else
         error('the operation "%s" requires exactly 2 input arguments', cfg.operation);
       end
       fprintf('dividing the 1st input argument by the 2nd\n');
-      if iscell(tmp)
-        tmp = cellrdivide(tmp, varargin{2}.(cfg.parameter));
+      if iscell(x1)
+        y = cellrdivide(x1, varargin{2}.(cfg.parameter));
       else
-        tmp = tmp ./ varargin{2}.(cfg.parameter);
+        y = x1 ./ varargin{2}.(cfg.parameter);
       end
       
     otherwise
-      error('unsupported operation "%s"', cfg.operation);
+      % assume that the operation is descibed as a string, e.g. (x1-x2)/(x1+x2)
+      
+      % ensure that all input arguments are being used
+      for i=1:length(varargin)
+        assert(~isempty(regexp(cfg.operation, sprintf('x%i', i), 'once')), 'not all input arguments are assigned in the operation')
+      end
+      
+      arginstr = sprintf('x%i,', 1:length(varargin));
+      arginstr = arginstr(1:end-1); % remove the trailing ','
+      eval(sprintf('operation = @(%s) %s;', arginstr, cfg.operation));
+      
+      if ~iscell(varargin{1}.(cfg.parameter))
+        % gather x1, x2, ... into a cell-array
+        arginval = eval(sprintf('{%s}', arginstr));
+        eval(sprintf('operation = @(%s) %s;', arginstr, cfg.operation));
+        y = arrayfun(operation, arginval{:});
+        
+      else
+        y = cell(size(x1));
+        % do the same thing, but now for each element of the cell array
+        for i=1:numel(y)
+          for j=1:length(varargin)
+            % rather than working with x1 and x2, we need to work on its elements
+            % xx1 is one element of the x1 cell-array
+            assign(sprintf('xx%d', j), eval(sprintf('x%d{%d}', j, i)))
+          end
+          
+          % gather xx1, xx2, ... into a cell-array
+          arginstr = sprintf('xx%i,', 1:length(varargin));
+          arginstr = arginstr(1:end-1); % remove the trailing ','
+          arginval = eval(sprintf('{%s}', arginstr));
+          y{i} = arrayfun(operation, arginval{:});
+        end % for each element
+      end % iscell or not
+      
   end % switch
 end % one or multiple input data structures
 
 % store the result of the operation in the output structure
-data = setsubfield(data, cfg.parameter, tmp);
+data = setsubfield(data, cfg.parameter, y);
 data.dimord = dimord;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -263,29 +331,29 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTIONS for doing math on each element of a cell-array
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function x = cellplus(x, y)
+function z = cellplus(x, y)
 if ~iscell(y)
   y = repmat({y}, size(x));
 end
-x = cellfun(@plus, x, y, 'UniformOutput', false);
+z = cellfun(@plus, x, y, 'UniformOutput', false);
 
-function x = cellminus(x, y)
+function z = cellminus(x, y)
 if ~iscell(y)
   y = repmat({y}, size(x));
 end
-x = cellfun(@minus, x, y, 'UniformOutput', false);
+z = cellfun(@minus, x, y, 'UniformOutput', false);
 
-function x = celltimes(x, y)
+function z = celltimes(x, y)
 if ~iscell(y)
   y = repmat({y}, size(x));
 end
-x = cellfun(@times, x, y, 'UniformOutput', false);
+z = cellfun(@times, x, y, 'UniformOutput', false);
 
-function x = cellrdivide(x, y)
+function z = cellrdivide(x, y)
 if ~iscell(y)
   y = repmat({y}, size(x));
 end
-x = cellfun(@rdivide, x, y, 'UniformOutput', false);
+z = cellfun(@rdivide, x, y, 'UniformOutput', false);
 
-function x = celllog10(x)
-x = cellfun(@log10, x, 'UniformOutput', false);
+function z = celllog10(x)
+z = cellfun(@log10, x, 'UniformOutput', false);
