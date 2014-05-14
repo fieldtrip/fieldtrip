@@ -36,10 +36,13 @@ switch style
       seglabel = segmentation.([fn{i} 'label']);
       for j=i:length(seglabel)
         fprintf('creating probabilistic representation for %s\n', seglabel{j});
-        segmentation.(fixname(seglabel{j})) = (seg==j);
+        tmp.(fixname(seglabel{j})) = (seg==j);  % avoid overwriting the existing segmentation
       end % for j
       segmentation = rmfield(segmentation,  fn{i}         );
       segmentation = rmfield(segmentation, [fn{i} 'label']);
+      for j=i:length(seglabel)
+        segmentation.(fixname(seglabel{j})) = tmp.(fixname(seglabel{j})); % avoid overwriting the existing segmentation
+      end
     end % for i
     
   otherwise
