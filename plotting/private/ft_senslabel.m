@@ -163,6 +163,7 @@ elseif isempty(eval(type))
         'LE2'
         'LE3'
         'LE4'
+        'Lm'
         'R1'
         'R2'
         'R3'
@@ -219,6 +220,7 @@ elseif isempty(eval(type))
         'RE2'
         'RE3'
         'RE4'
+        'Rm'
         };
       
     case 'btiref'
