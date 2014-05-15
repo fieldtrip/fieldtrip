@@ -83,6 +83,11 @@ parcellation = ft_checkdata(parcellation, 'datatype', 'parcellation', 'parcellat
 % ensure it is a source, not a volume
 source       = ft_checkdata(source, 'datatype', 'source', 'inside', 'logical', 'sourcerepresentation', 'new');
 
+% ensure that the source and the parcellation are anatomically consistent
+if ~isequal(source.pos, parcellation.pos)
+  error('the source positions are not consistent with the parcellation, please use FT_SOURCEINTERPOLATE');
+end
+
 if isempty(cfg.parcellation)
   % determine the first field that can be used for the parcellation
   fn = fieldnames(parcellation);
