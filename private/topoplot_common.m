@@ -278,7 +278,7 @@ end
 % check whether rpt/subj is present and remove if necessary and whether
 hasrpt = any(ismember(dimtok, {'rpt' 'subj'}));
 if strcmp(dtype, 'timelock') && hasrpt,
-  if ~isfield(data, cfg.parameter)
+  if ~isfield(data, cfg.parameter) || strcmp(cfg.parameter, 'individual')
     tmpcfg        = [];
     tmpcfg.trials = cfg.trials;
     data          = ft_timelockanalysis(tmpcfg, data);
