@@ -1,6 +1,6 @@
-function test_bug1223
+function inspect_bug1223
 
-% TEST test_bug1223
+% TEST inspect_bug1223
 % TEST ft_read_mri ft_sourceplot
 
 cd H:/common/matlab/fieldtrip/data/test/bug1223
