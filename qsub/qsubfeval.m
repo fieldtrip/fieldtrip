@@ -115,6 +115,8 @@ end
 if ischar(waitfor)
   waitfor = {waitfor};
 end
+% remove empty elements
+waitfor = waitfor(~cellfun(@isempty, waitfor));
 
 % determine whether the function has been compiled
 compiled = isstruct(varargin{1});
