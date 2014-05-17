@@ -54,7 +54,8 @@ end
 
 if isfield(data, 'time')
   if iscell(data.time) && ~isempty(data.time)
-    ntime = length(data.time{1}); % raw data: only for the first trial
+    tmp   = getdimsiz(data, 'time');
+    ntime = tmp(3); % raw data may contain variable length trials
   else
     ntime = length(data.time);
   end
