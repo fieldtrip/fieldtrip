@@ -630,8 +630,18 @@ end
 %%%%%%%%%%%%%%%%% Remove overall row means of data %%%%%%%%%%%%%%%%%%%%%%%
 %
 icaprintf(verb,fid,'Removing mean of each channel ...\n');
-rowmeans = mean(data');
-data = data - rowmeans'*ones(1,frames);      % subtract row means
+
+%BLGBLGBLG replaced
+% rowmeans = mean(data');
+% data = data - rowmeans'*ones(1,frames);      % subtract row means
+%BLGBLGBLG replacement starts
+rowmeans = mean(data,2)'; %BLG
+% data = data - rowmeans'*ones(1,frames);      % subtract row means
+for iii=1:size(data,1) %avoids memory errors BLG
+    data(iii,:)=data(iii,:)-rowmeans(iii);
+end
+%BLGBLGBLG replacement ends
+
 icaprintf(verb,fid,'Final training data range: %g to %g\n', min(min(data)),max(max(data)));
 
 %
@@ -639,8 +649,33 @@ icaprintf(verb,fid,'Final training data range: %g to %g\n', min(min(data)),max(m
 %
 if strcmp(pcaflag,'on')
     icaprintf(verb,fid,'Reducing the data to %d principal dimensions...\n',ncomps);
-    [eigenvectors,eigenvalues,data] = pcsquash(data,ncomps);
+    
+    %BLGBLGBLG replaced
+    %[eigenvectors,eigenvalues,data] = pcsquash(data,ncomps);
     % make data its projection onto the ncomps-dim principal subspace
+    %BLGBLGBLG replacement starts
+    %[eigenvectors,eigenvalues,data] = pcsquash(data,ncomps);
+    % no need to re-subtract row-means, it was done a few lines above!
+    PCdat2 = data';                    % transpose data
+    [PCn,PCp]=size(PCdat2);                  % now p chans,n time points
+    PCdat2=PCdat2/PCn;
+    PCout=data*PCdat2;
+    clear PCdat2;
+    
+    [PCV,PCD] = eig(PCout);                  % get eigenvectors/eigenvalues
+    [PCeigenval,PCindex] = sort(diag(PCD));
+    PCindex=rot90(rot90(PCindex));
+    PCEigenValues=rot90(rot90(PCeigenval))';
+    PCEigenVectors=PCV(:,PCindex);
+    %PCCompressed = PCEigenVectors(:,1:ncomps)'*data;
+    data = PCEigenVectors(:,1:ncomps)'*data;
+    
+    eigenvectors=PCEigenVectors;
+    eigenvalues=PCEigenValues; %#ok<NASGU>
+    
+    clear PCn PCp PCout PCV PCD PCeigenval PCindex PCEigenValues PCEigenVectors
+    %BLGBLGBLG replacement ends
+    
 end
 
 %

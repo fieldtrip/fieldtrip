@@ -8,5 +8,10 @@ under Linux, Unix, Windows, and Mac OS (current v7 recommended).
 See http://sccn.ucsd.edu/eeglab for details.
 
 This directory contains a small subset of the EEGLAB functions that
-are used in FieldTrip. The functions included here correspond to
-the developers SVN release from 21 January 2011.
+are used in FieldTrip. 
+
+The functions included here (apart from loadcnt and eeg2fieldtrip)
+are taken from a downloaded version of eeglab, version 13_02_2b.
+
+The previous version corresponded to
+the developer's SVN release from 21 January 2011.
