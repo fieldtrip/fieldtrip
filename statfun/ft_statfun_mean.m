@@ -12,7 +12,7 @@ function [stat] = ft_statfun_mean(cfg, dat, design)
 % structure, that contains the result of the computation inside this
 % function in the stat field.
 %
-% See also STATFUN_DIFF for an other simple example statfun
+% See also FT_STATFUN_DIFF for an other simple example statfun
 
 % Copyright (C) 2012, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %

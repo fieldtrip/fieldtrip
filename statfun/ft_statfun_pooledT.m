@@ -27,13 +27,19 @@ function [s] = ft_statfun_pooledT(cfg, dat, design)
 %   [stat] = ft_freqstatistics(cfg, freq1, freq2, ...)
 %   [stat] = ft_sourcestatistics(cfg, source1, source2, ...)
 % with the following configuration option
-%   cfg.statistic = 'pooledT'
+%   cfg.statistic = 'ft_statfun_pooledT'
 %
 % Configuration options that are relevant for this function are
 %   cfg.ivar      = number, index into the design matrix with the independent variable
 %
-% See FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS
-% for details.
+% See FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS for details.
+%
+% For low-level use, the external interface of this function has to be
+%   [s,cfg] = ft_statfun_pooledT(cfg, dat, design);
+% where
+%   dat    contains the biological data, Nsamples x Nreplications
+%          dat must contain fourier representations. 
+%   design contains the independent variable (ivar), Nreplications x Nvar
 
 % Copyright (C) 2007, Robert Oostenveld
 %

@@ -9,12 +9,12 @@ function [s,cfg] = ft_statfun_indepsamplesF(cfg, dat, design)
 %   [stat] = ft_freqstatistics(cfg, freq1, freq2, ...)
 %   [stat] = ft_sourcestatistics(cfg, source1, source2, ...)
 % with the following configuration option
-%   cfg.statistic = 'indepsamplesF'
+%   cfg.statistic = 'ft_statfun_indepsamplesF'
 %
 % See FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS for details.
 %
 % For low-level use, the external interface of this function has to be
-%   [s,cfg] = statfun_indepsamplesF(cfg, dat, design);
+%   [s,cfg] = ft_statfun_indepsamplesF(cfg, dat, design);
 % where
 %   dat    contains the biological data, Nsamples x Nreplications
 %   design contains the independent variable (ivar),  Nfac x Nreplications
