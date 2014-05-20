@@ -104,51 +104,14 @@ if isempty(cfg.parcellation)
   error('you should specify the field containing the parcellation');
 end
 
-if isfield(source, 'dimord')
-  % determine the size of fields that are consistent with the general dimord
-  tok = tokenize(source.dimord, '_');
-  siz = nan(size(tok));
-  for i=1:length(tok)
-    switch tok{i}
-      case 'pos'
-        siz(i) = size(source.pos,1);
-      case 'time'
-        siz(i) = length(source.time);
-      case 'freq'
-        siz(i) = length(source.freq);
-      otherwise
-        error('cannot determine the dimensions for "%s"', tok{i});
-    end % switch
-  end
-  if numel(siz)==1
-    % the size function always returns 2 or more elements
-    siz(2) = 1;
-  end
-else
-  % this will cause a failure further down in the code
-  siz = nan;
-end
-
-fn     = fieldnames(source);
-sel    = false(size(fn));
+% determine the fields and corresponding dimords to work on
+fn = fieldnames(source);
+fn = setdiff(fn, {'pos', 'inside', 'dim', 'transform'}); % remove known fields
+fn = fn(cellfun(@isempty, regexp(fn, 'dimord'))); % remove dimord fields
 dimord = cell(size(fn));
 for i=1:numel(fn)
-  tmp = source.(fn{i});
-  if isfield(source, [fn{i} 'dimord'])
-    sel(i)    = true;
-    dimord{i} = source.([fn{i} 'dimord']); % a specific dimord
-  elseif iscell(tmp) && numel(tmp)==size(source.pos,1)
-    sel(i)    = true;
-    dimord{i} = '{pos}';
-  elseif ~iscell(tmp) && isequal(size(tmp), siz)
-    sel(i)    = true;
-    dimord{i} = source.dimord; % the general dimord
-  end
+  dimord{i} = getdimord(source, fn{i});
 end
-
-% these two will now contain the fields and corresponding dimord to work on
-fn     = fn(sel);
-dimord = dimord(sel);
 
 if any(strcmp(cfg.parameter, 'all'))
   cfg.parameter = fn;
