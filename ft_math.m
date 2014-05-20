@@ -153,7 +153,15 @@ if hastime
   data.time = varargin{1}.time;
 end
 if haspos
-  data.pos = varargin{1}.pos;
+  if isfield(varargin{1}, 'pos')
+    data.pos = varargin{1}.pos;
+  end
+  if isfield(varargin{1}, 'dim')
+    data.dim = varargin{1}.dim;
+  end
+  if isfield(varargin{1}, 'transform')
+    data.transform = varargin{1}.transform;
+  end
 end
 
 % use an anonymous function
