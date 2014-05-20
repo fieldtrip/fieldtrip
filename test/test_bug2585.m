@@ -21,7 +21,7 @@ cfg.channel = {'all'};
 
 % cfg.randomseed = 1;
 
-cfg.method = 'jader'; % this is the default and uses the implementation from EEGLAB
+cfg.method = 'runica'; % this is the default and uses the implementation from EEGLAB
 % cfg.numcomponent = 20;
 % cfg.runica.pca = 20;
 
