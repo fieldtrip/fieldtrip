@@ -102,7 +102,7 @@ if ~isfield(cfg, 'method'),     cfg.method     = 'pchip'; end  % interpolation m
 convert = ft_datatype(data);
   
 % check if the input data is valid for this function, this will convert it to raw if needed
-data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
+data = ft_checkdata(data, 'datatype', {'raw+comp', 'raw'}, 'feedback', 'yes');
   
 if isempty(cfg.detrend)
   error('The previous default to apply detrending has been changed. Recommended is to apply a baseline correction instead of detrending. See the help of this function for more details.');
