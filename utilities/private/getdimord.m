@@ -379,10 +379,10 @@ end
 if ~exist('dimord', 'var')
   % this should not happen
   % if it does, it might help in diagnosis to have a very informative warning message
-  disp(data);
   % since there have been problems with trials not being selected correctly due to the warning going unnoticed
   % it is better to throw an error than a warning
-  error('could not determine dimord of "%s" in the following data', field)
+  warning('could not determine dimord of "%s" in the following data', field)
+  disp(data);
   
   dimtok = repmat({'unknown'}, size(datsiz));
   if all(~cellfun(@isempty, dimtok))

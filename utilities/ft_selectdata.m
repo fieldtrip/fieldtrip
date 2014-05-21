@@ -159,11 +159,17 @@ for i=1:length(orgdim1)
 end
 
 dimord = cell(size(datfield));
-datsiz = cell(size(datfield));
 for i=1:length(datfield)
   dimord{i} = getdimord(varargin{1}, datfield{i});
-  datsiz{i} = getdimsiz(varargin{1}, datfield{i});
 end
+
+% do not consider fields of which the dimensions are unknown
+sel = cellfun(@isempty, regexp(dimord, 'unknown'));
+for i=find(~sel)
+  fprintf('not including "%s" in selection\n', datfield{i});
+end
+datfield = datfield(sel);
+dimord   = dimord(sel);
 
 % determine all dimensions that are present in all data fields
 dimtok = {};
