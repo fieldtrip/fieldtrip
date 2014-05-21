@@ -68,28 +68,16 @@ iselec = isfield(data, 'label') && isfield(data, 'elecpos');
 
 if isspike
   type = 'spike';
-elseif iscomp && israw
-  if strcmp(desired, 'raw')
-    type = 'raw';
-  else
-    type = 'comp'; % this is the default
-  end
-elseif iscomp && istimelock
-  if strcmp(desired, 'comp')
-    type = 'comp';
-  else
-    type = 'timelock'; % this is the default
-  end
-elseif iscomp && isfreq
-  if strcmp(desired, 'comp')
-    type = 'comp';
-  else
-    type = 'freq'; % this is the default
-  end
-elseif iscomp
-  type = 'comp';
+elseif israw && iscomp
+  type = 'raw+comp';
+elseif istimelock && iscomp
+  type = 'timelock+comp';
+elseif isfreq && iscomp
+    type = 'freq+comp';
 elseif israw
   type = 'raw';
+elseif iscomp
+  type = 'comp';
 elseif isfreqmvar
   % freqmvar should conditionally go before freq, otherwise the returned ft_datatype will be freq in the case of frequency mvar data
   type = 'freqmvar';
@@ -102,8 +90,6 @@ elseif isdip
   type = 'dip';
 elseif istimelock
   type = 'timelock';
-elseif isspike
-  type = 'spike';
 elseif issegmentation
   % a segmentation data structure is a volume data structure, but in general not vice versa
   % segmentation should conditionally go before volume, otherwise the returned ft_datatype will be volume
@@ -131,11 +117,13 @@ if nargin>1
   % return a boolean value
   switch desired
     case 'raw'
-      type = strcmp(type, 'raw')      || (strcmp(type, 'comp') && israw);
+      type = any(strcmp(type, {'raw', 'raw+comp'}));
     case 'timelock'
-      type = strcmp(type, 'timelock') || (strcmp(type, 'comp') && istimelock);
+      type = any(strcmp(type, {'timelock', 'timelock+comp'}));
     case 'freq'
-      type = strcmp(type, 'freq')     || (strcmp(type, 'comp') && isfreq);
+      type = any(strcmp(type, {'freq', 'freq+comp'}));
+    case 'comp'
+      type = any(strcmp(type, {'comp', 'raw+comp', 'timelock+comp', 'freq+comp'}));
     case 'volume'
       type = any(strcmp(type, {'volume', 'segmentation'}));
     case 'source'
@@ -148,6 +136,7 @@ if nargin>1
 end
 
 if nargout>1
+  % FIXME this should be replaced with getdimord in the calling code
   % also return the dimord of the input data
   if isfield(data, 'dimord')
     dimord = data.dimord;
