@@ -251,17 +251,17 @@ switch field
       else
         dimord = 'pos_freq';
       end
-    elseif isequal(datsiz, [npos nrpt]) % only if nrpt is known
-      if iscell(data.(field))
-        dimord = '{pos}_rpt';
-      else
-        dimord = 'pos_rpt';
-      end
     elseif isequal(datsiz, [npos 1]) % in case there are no repetitions
       if iscell(data.(field))
         dimord = '{pos}';
       else
         dimord = 'pos';
+      end
+    elseif isequalwithoutnans(datsiz, [npos nrpt]) % only if nrpt is known
+      if iscell(data.(field))
+        dimord = '{pos}_rpt';
+      else
+        dimord = 'pos_rpt';
       end
     end
     
@@ -379,8 +379,10 @@ end
 if ~exist('dimord', 'var')
   % this should not happen
   % if it does, it might help in diagnosis to have a very informative warning message
-  warning('could not determine dimord of "%s" in the following data', field)
   disp(data);
+  % since there have been problems with trials not being selected correctly due to the warning going unnoticed
+  % it is better to throw an error than a warning
+  error('could not determine dimord of "%s" in the following data', field)
   
   dimtok = repmat({'unknown'}, size(datsiz));
   if all(~cellfun(@isempty, dimtok))
