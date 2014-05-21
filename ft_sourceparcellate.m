@@ -106,7 +106,7 @@ end
 
 % determine the fields and corresponding dimords to work on
 fn = fieldnames(source);
-fn = setdiff(fn, {'pos', 'inside', 'dim', 'transform', 'cfg'}); % remove known fields
+fn = setdiff(fn, {'pos', 'inside', 'dim', 'transform', 'unit', 'coordsys', 'cfg'}); % remove known fields
 fn = fn(cellfun(@isempty, regexp(fn, 'dimord'))); % remove dimord fields
 dimord = cell(size(fn));
 for i=1:numel(fn)
