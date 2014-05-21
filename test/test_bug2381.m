@@ -13,7 +13,7 @@ load(filename);
 nsubj = 15;
 cfg = [];
 cfg.method = 'montecarlo';
-cfg.statistic = 'depsamplesT';
+cfg.statistic = 'ft_statfun_depsamplesT';
 cfg.parameter = 'pow';
 cfg.correctm  = 'cluster';
 cfg.numrandomization = 10;

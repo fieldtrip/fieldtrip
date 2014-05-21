@@ -24,7 +24,7 @@ a = ft_checkdata(t2_subj1, 'datatype', 'timelock');
 % the reported problem was something like this, resulting in 274x0 sized outputs
 cfg = [];
 cfg.method = 'montecarlo';
-cfg.statistic = 'pooledT';
+cfg.statistic = 'ft_statfun_pooledT';
 cfg.tail = 0;
 cfg.alpha = 0.025;
 cfg.correctm = 'cluster';

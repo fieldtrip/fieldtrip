@@ -49,7 +49,7 @@ plv4 = ft_connectivityanalysis(cfg, freq4);
 
 
 cfg = [];
-cfg.statistic = 'depsamplesT';
+cfg.statistic = 'ft_statfun_depsamplesT';
 cfg.parameter = 'plvspctrm';
 cfg.design    = [1 1 2 2;1 2 1 2];
 cfg.ivar      = 1;

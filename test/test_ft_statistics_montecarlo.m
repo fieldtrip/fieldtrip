@@ -55,7 +55,7 @@ tlck2 = ft_timelockanalysis(cfg, data2);
 
 cfg = [];
 cfg.method = 'montecarlo';
-cfg.statistic = 'indepsamplesT';
+cfg.statistic = 'ft_statfun_indepsamplesT';
 cfg.design = [ones(1,40) ones(1,40)*2];
 cfg.ivar   = 1;
 cfg.numrandomization = 50;
@@ -82,7 +82,7 @@ freq2      = ft_freqanalysis(cfg, data2);
 
 cfg = [];
 cfg.method = 'montecarlo';
-cfg.statistic = 'indepsamplesT';
+cfg.statistic = 'ft_statfun_indepsamplesT';
 cfg.design = [ones(1,40) ones(1,40)*2];
 cfg.ivar   = 1;
 cfg.numrandomization = 50;
@@ -153,7 +153,7 @@ source2_mesh    = ft_sourceanalysis(cfg, freq2);
 %% stats on source data
 cfg           = [];
 cfg.method    = 'montecarlo';
-cfg.statistic = 'indepsamplesT';
+cfg.statistic = 'ft_statfun_indepsamplesT';
 cfg.design    = [ones(1,40) ones(1,40)*2];
 cfg.ivar      = 1;
 cfg.numrandomization = 50;

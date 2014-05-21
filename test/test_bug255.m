@@ -31,7 +31,7 @@ lay = ft_prepare_layout(cfg);
 
 % do statistics
 cfg = [];
-cfg.statistic   = 'indepsamplesT';
+cfg.statistic   = 'ft_statfun_indepsamplesT';
 cfg.avgovertime = 'yes';
 cfg.design      = [ones(1,5) ones(1,5)*2];
 cfg.method      = 'montecarlo';

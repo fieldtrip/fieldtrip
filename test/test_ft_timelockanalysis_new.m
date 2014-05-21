@@ -428,7 +428,7 @@ tlock2 = ft_selectdata(tlock, 'rpt',37:72)
 
 cfg=[];
 cfg.method='analytic';
-   cfg.statistic='indepsamplesT' ;
+   cfg.statistic='ft_statfun_indepsamplesT' ;
 stat=ft_timelockstatistics(cfg,tlock1,tlock2);
 end
 
