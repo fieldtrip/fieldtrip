@@ -31,7 +31,7 @@ raw = ft_preprocessing(cfg);
 
 % this takes less than 5 minutes
 cfg = [];
-cfgethod = 'runica';
+cfg.method = 'runica';
 cfg.runica.pca = 30;
 comp = ft_componentanalysis(cfg, raw);
 

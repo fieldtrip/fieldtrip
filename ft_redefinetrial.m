@@ -105,7 +105,7 @@ cfg.overlap      = ft_getopt(cfg, 'overlap',   0);
 dtype = ft_datatype(data);
 
 % check if the input data is valid for this function, this will convert it to raw if needed
-data = ft_checkdata(data, 'datatype', 'raw', 'feedback', cfg.feedback);
+data = ft_checkdata(data, 'datatype', {'raw+comp', 'raw'}, 'feedback', cfg.feedback);
 fb   = istrue(cfg.feedback);
 
 % select trials of interest
