@@ -3,12 +3,15 @@
 % alternative to the user specifying the data structures as input variables
 % to the calling function. This makes use of the cfg.inputfile variable.
 %
+% Furthermore, this function computes the MD5 hash of the input data structures for
+% provenance.
+%
 % Use as
 %   ft_preamble loadvar data
 %   ft_preamble loadvar source mri
 %   ft_preamble loadvar varargin
 %
-% See also FT_POSTAMBLE_SAVEVAR
+% See also FT_POSTAMBLE_SAVEVAR, FT_PREAMBLE_PROVENANCE
 
 % Copyright (C) 2011-2012, Robert Oostenveld, DCCN
 %

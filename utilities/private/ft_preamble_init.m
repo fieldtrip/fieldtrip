@@ -2,6 +2,9 @@
 % help in case the user did not specify any input argument. This can be
 % used in all fieldtrip main functions that take at least a cfg input
 % argument, and most also take one or multiple data structures.
+%
+% Use as
+%   ft_preamble init
 
 % Copyright (C) 2011-2012, Robert Oostenveld, DCCN
 %

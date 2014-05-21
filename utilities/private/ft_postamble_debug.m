@@ -1,6 +1,13 @@
-% ft_postamble_debug is a helper script for debugging problems with fieldtrip functions
+% FT_POSTAMBLE_DEBUG is a helper script for debugging problems with FieldTrip
+% functions. It is executed at normal termination of the calling function and
+% disables the "onCleanup" function.
 %
-% see also ft_preamble_debug debugcleanup
+% Use as
+%   ft_preamble debug
+%   .... regular code goes here ...
+%   ft_postamble debug
+%
+% See also FT_PREAMBLE_DEBUG DEBUGCLEANUP
 
 % these variables are shared by the three debug handlers
 global Ce9dei2ZOo_debug Ce9dei2ZOo_funname Ce9dei2ZOo_argin

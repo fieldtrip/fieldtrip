@@ -1,9 +1,15 @@
-% FT_PREAMBLE_DEBUG is a helper script for debugging problems with FieldTrip functions
+% FT_PREAMBLE_DEBUG is a helper script for debugging problems with FieldTrip
+% functions. It installs an "onCleanup" function that gets executed if an error is
+% detected, allowing to automatically save the input data and configuration to disk.
 %
-% In case of an error, the debugCleanup function does the remainder of the work.
+% In case of an error, the DEBUGCLEANUP function does the remainder of the work. In
+% case a normal termination, FT_POSTAMBLE_DEBUG will be called first, followed by
+% DEBUGCLEANUP.
 %
-% In case a normal termination, pt_postamble_debug will be called first, followed by
-% debugCleanup.
+% Use as
+%   ft_preamble debug
+%   .... regular code goes here ...
+%   ft_postamble debug
 %
 % See also FT_POSTAMBLE_DEBUG, DEBUGCLEANUP
 

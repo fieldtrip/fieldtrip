@@ -1,5 +1,5 @@
 % FT_POSTAMBLE_PREVIOUS adds the cfg structure from the input data
-% structure(s) to the current configuration structure as cfg.previous
+% structure or structures to the current configuration structure.
 %
 % Use as
 %   ft_postamble previous inputvar
