@@ -1,4 +1,4 @@
-function [cfg] = ft_topoplotIC(cfg, varargin)
+function [cfg] = ft_topoplotIC(cfg, comp)
 
 % FT_TOPOPLOTIC plots the topographic distribution of an independent
 % component that was computed using the FT_COMPONENTANALYSIS function,
@@ -123,29 +123,29 @@ if nargin > 1
   end
 end
 
+% check if the input data is valid for this function
+% this will remove all time-series information
+comp = ft_checkdata(comp, 'datatype', 'comp');
+
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'required', 'component');
 
 cfg.title = ft_getopt(cfg, 'title', 'auto');
 
-% FIXME why is this done like this instead of using ft_checkdata?
-% add a dimord
-varargin{:}.dimord = 'chan_comp';
-
-% create temporary variable
-selcomp = cfg.component;
-
 % prepare the layout only once
-cfg.layout = ft_prepare_layout(cfg, varargin{:});
+cfg.layout = ft_prepare_layout(cfg, comp); 
 
 % don't show the callinfo for each separate component
 cfg.showcallinfo = 'no';
 
 % interactive plotting doesn't work for chan_comp dimord. 
-if isfield(cfg, 'interactive')
+if isfield(cfg, 'interactive') && strcmp(cfg.interactive, 'yes')
   warning('Interactive plotting is not supported.');
-end;
+end
 cfg.interactive = 'no';
+
+% create temporary variable
+selcomp = cfg.component;
 
 % allow multiplotting
 nplots = numel(selcomp);
@@ -155,7 +155,7 @@ if nplots>1
   for i = 1:length(selcomp)
     subplot(nxplot, nyplot, i);
     cfg.component = selcomp(i);
-    ft_topoplotTFR(cfg, varargin{:});
+    ft_topoplotTFR(cfg, comp);
     
     if strcmp(cfg.title, 'auto')
       title(['component ' num2str(selcomp(i))]);
@@ -165,7 +165,7 @@ if nplots>1
   end
 else
   cfg.component = selcomp;
-  ft_topoplotTFR(cfg, varargin{:});
+  ft_topoplotTFR(cfg, comp);
   
   if strcmp(cfg.title, 'auto')
     title(['component ' num2str(selcomp)]);
@@ -179,5 +179,5 @@ cfg.showcallinfo = 'yes';
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble provenance
-ft_postamble previous varargin
+ft_postamble previous comp
 

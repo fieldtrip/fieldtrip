@@ -77,7 +77,7 @@ if Ndata>1 && ~isnumeric(varargin{end})
 end
 
 data = varargin{indx};
-data = ft_checkdata(data, 'datatype', {'timelock', 'freq', 'comp'});
+data = ft_checkdata(data, 'datatype', {'comp', 'timelock', 'freq'});
 
 % check for option-values to be renamed
 cfg = ft_checkconfig(cfg, 'renamedval', {'electrodes',   'dotnum',      'numbers'});
@@ -535,10 +535,8 @@ end
 % Make vector dat with one value for each channel
 dat    = data.(cfg.parameter);
 % get dimord dimensions
-dims = textscan(data.dimord,'%s', 'Delimiter', '_');
-dims = dims{1};
-ydim = find(strcmp(yparam, dims));
-xdim = find(strcmp(xparam, dims));
+ydim = find(strcmp(yparam, dimtok{1}));
+xdim = find(strcmp(xparam, dimtok{1}));
 zdim = setdiff(1:ndims(dat), [ydim xdim]);
 % and permute
 dat = permute(dat, [zdim(:)' ydim xdim]);

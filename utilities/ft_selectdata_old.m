@@ -63,7 +63,7 @@ dtype   = cell(1,length(data));
 dimord  = cell(1,length(data));
 hassubj = false(1, length(data));
 for k = 1:length(data)
-  data{k} = ft_checkdata(data{k}, 'datatype', {'freq' 'timelock' 'source', 'volume', 'freqmvar', 'raw', 'comp', 'chan'});
+  data{k} = ft_checkdata(data{k}, 'datatype', {'freq', 'freq+comp', 'timelock', 'timelock+comp', 'raw', 'raw+comp', 'source', 'volume', 'freqmvar', 'chan'});
   if isfield(data{k}, 'dimord') && ~isempty(strfind(data{k}.dimord, 'subj'))
     hassubj(k)     = true;
     data{k}.dimord = strrep(data{k}.dimord, 'subj', 'rpt');

@@ -82,18 +82,20 @@ nargin = nargin + exist('data', 'var');
 if nargin==3
   % check if the input data is valid for this function
   data    = ft_checkdata(data, 'datatype', 'raw');
+  comp    = ft_checkdata(comp, 'datatype', 'comp');
   label   = data.label;
-  hasdata = 1;
   nchans  = length(data.label);
+  ncomps  = length(comp.label);
+  hasdata = 1;
 elseif nargin==2
+  % check if the input data is valid for this function
+  comp    = ft_checkdata(comp, 'datatype', 'raw+comp');
   label   = comp.topolabel;
+  ncomps  = length(comp.label);
   hasdata = 0;
 else
   error('incorrect number of input arguments');
 end
-
-comp    = ft_checkdata(comp, 'datatype', 'comp');
-ncomps  = length(comp.label);
 
 if min(cfg.component)<1
   error('you cannot remove components that are not present in the data');
