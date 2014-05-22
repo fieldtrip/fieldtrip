@@ -209,7 +209,7 @@ if ~hasfilter
     
     % as documented on MNE website, this is replacing the part of the code above, it gives
     % more stable results numerically.
-    Rc      = chol(R);
+    Rc      = chol(R, 'lower');
     [U,S,V] = svd(A * Rc, 'econ');
     s  = diag(S);
     ss = s ./ (s.^2 + lambda);
