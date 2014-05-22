@@ -490,7 +490,7 @@ switch backend
     result = strtrim(result);
 end
 
-fprintf(' qstat job id %s\n', result);
+fprintf(' %s id %s\n', backend, result);
 
 % both Torque and SGE will return a log file with stdout and stderr information
 % for local execution we have to emulate these files, because qsubget expects them
