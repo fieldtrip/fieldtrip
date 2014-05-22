@@ -96,7 +96,7 @@ batch         = ft_getopt(optarg, 'batch', 1);
 batchid       = ft_getopt(optarg, 'batchid');
 timoverhead   = ft_getopt(optarg, 'timoverhead', 180);            % allow some overhead to start up the MATLAB executable
 memoverhead   = ft_getopt(optarg, 'memoverhead', 1024*1024*1024); % allow some overhead for the MATLAB executable in memory
-backend       = ft_getopt(optarg, 'backend', defaultbackend);     % this uses the defaultbackend helper function to determine the default
+backend       = ft_getopt(optarg, 'backend', []);                 % the defaultbackend helper function will be used to determine the default
 queue         = ft_getopt(optarg, 'queue', []);                   % the default is specified further down in the code
 submitoptions = ft_getopt(optarg, 'options', []);
 display       = ft_getopt(optarg, 'display', 'no');
@@ -109,6 +109,15 @@ waitfor       = ft_getopt(optarg, 'waitfor', {});                 % default is e
 % skip the optional key-value arguments
 if ~isempty(optbeg)
   varargin = varargin(1:(optbeg-1));
+end
+
+if isempty(backend)
+  % use the system default backend
+  backend = defaultbackend;
+else
+  % use the user-specified backend
+  % this makes it persistent and available to qsublist
+  defaultbackend(backend);
 end
 
 % it should be specified as a cell-array of strings

@@ -411,7 +411,7 @@ end
 fprintf('computational time = %.1f sec, elapsed = %.1f sec, speedup %.1f x\n', nansum(timused), toc(stopwatch), nansum(timused)/toc(stopwatch));
 
 if all(puttime>timused)
-  warning('copying the jobs over the network took more time than their execution');
+  warning('the job submission took more time than the actual execution');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
