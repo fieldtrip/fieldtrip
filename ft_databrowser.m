@@ -10,6 +10,12 @@ function [cfg] = ft_databrowser(cfg, data)
 % and cfg.selcfg. You can use multiple functions by giving the names/cfgs as a
 % cell-array.
 %
+% In butterfly mode, you can use the "identify" button to reveal the name
+% of a channel. Please be aware that it searches only vertically. This
+% means that it will return the channel with the amplitude closest to the
+% point you have clicked at the specific time point. This might be
+% counterintuitive at first.
+%
 % Use as
 %   cfg = ft_databrowser(cfg)
 % where the configuration structure contains the reference to the dataset
