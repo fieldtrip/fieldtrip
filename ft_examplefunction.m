@@ -3,7 +3,7 @@ function dataout = ft_examplefunction(cfg, datain)
 % FT_EXAMPLEFUNCTION demonstrates to new developers how a FieldTrip function should look like
 %
 % Use as
-%  outdata = ft_examplefunction(cfg, indata) 
+%   outdata = ft_examplefunction(cfg, indata) 
 % where indata is <<describe the type of data or where it comes from>> 
 % and cfg is a configuration structure that should contain 
 %

@@ -1,6 +1,7 @@
 function data = ft_removetmsartifact(cfg, data)
 
 % FT_REMOVETMSARTIFACT removes TMS artifacts from EEG data
+%
 % %% NOTE: Please be aware that this function is deprecated. Please follow
 %          the TMS-EEG tutorial instead
 %          (http://fieldtrip.fcdonders.nl/tutorial/tms-eeg).
