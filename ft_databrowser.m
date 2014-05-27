@@ -1484,11 +1484,6 @@ if nsamplepad>0
   dat = [dat NaN(numel(lab), opt.nanpaddata(opt.trlop))];
   tim = [tim linspace(tim(end),tim(end)+nsamplepad*mean(diff(tim)),nsamplepad)];  % possible machine precision error here
 end
-opt.curdat.label      = lab;
-opt.curdat.time{1}    = tim;
-opt.curdat.trial{1}   = dat;
-opt.curdat.fsample    = opt.fsample;
-opt.curdat.sampleinfo = [begsample endsample offset];
 
 % apply scaling to selected channels
 % using wildcard to support subselection of channels
@@ -1529,6 +1524,12 @@ if ~isempty(cfg.mychanscale)
   chansel = match_str(lab, ft_channelselection(cfg.mychan, lab));
   dat(chansel,:) = dat(chansel,:) .* cfg.mychanscale;
 end
+
+opt.curdat.label      = lab;
+opt.curdat.time{1}    = tim;
+opt.curdat.trial{1}   = dat;
+opt.curdat.fsample    = opt.fsample;
+opt.curdat.sampleinfo = [begsample endsample offset];
 
 % to assure current feature is plotted on top
 ordervec = 1:length(opt.artdata.label);
