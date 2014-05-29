@@ -325,19 +325,19 @@ if ~isempty(dtype)
         israw = 1;
         okflag = 1;
       elseif isequal(dtype(iCell), {'comp'}) && israw
-        data = keepfields(data, {'label', 'topo', 'topolabel', 'unmixing', 'cfg'}); % these are the only relevant fields
+        data = keepfields(data, {'label', 'topo', 'topolabel', 'unmixing', 'elec', 'grad', 'cfg'}); % these are the only relevant fields
         data = ft_datatype_comp(data);
         israw = 0;
         iscomp = 1;
         okflag = 1;
       elseif isequal(dtype(iCell), {'comp'}) && istimelock
-        data = keepfields(data, {'label', 'topo', 'topolabel', 'unmixing', 'cfg'}); % these are the only relevant fields
+        data = keepfields(data, {'label', 'topo', 'topolabel', 'unmixing', 'elec', 'grad', 'cfg'}); % these are the only relevant fields
         data = ft_datatype_comp(data);
         istimelock = 0;
         iscomp = 1;
         okflag = 1;
       elseif isequal(dtype(iCell), {'comp'}) && isfreq
-        data = keepfields(data, {'label', 'topo', 'topolabel', 'unmixing', 'cfg'}); % these are the only relevant fields
+        data = keepfields(data, {'label', 'topo', 'topolabel', 'unmixing', 'elec', 'grad', 'cfg'}); % these are the only relevant fields
         data = ft_datatype_comp(data);
         isfreq = 0;
         iscomp = 1;
