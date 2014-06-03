@@ -30,19 +30,19 @@ function data = ft_math(cfg, varargin)
 % if you specify one input argument and a scalar value.
 %
 % The operation 'divide' is implemented as follows
-%   y = x1 / x2
+%   y = x1 ./ x2
 % if you specify two input arguments, or as
 %   y = x1 / s
 % if you specify one input argument and a scalar value.
 %
 % The operation 'multiply' is implemented as follows
-%   y = x1 * x2
+%   y = x1 .* x2
 % if you specify two input arguments, or as
 %   y = x1 * s
 % if you specify one input argument and a scalar value.
 %
 % It is also possible to specify your own operation as a sting, like this
-%   cfg.operation = '(x1-x2)/(x1+x2)
+%   cfg.operation = '(x1-x2)/(x1+x2)'
 % or using 's' for the scalar value like this
 %   cfg.operation = '(x1-x2)^s'
 %
@@ -297,6 +297,13 @@ else
       else
         y = x1 ./ varargin{2}.(cfg.parameter);
       end
+            
+    case 'log10'
+      if length(varargin)>2
+        error('the operation "%s" requires exactly 2 input arguments', cfg.operation);
+      end
+      fprintf('taking the log difference between the 2nd input argument and the 1st\n');
+      tmp = log10(tmp ./ varargin{2}.(cfg.parameter));
       
     otherwise
       % assume that the operation is descibed as a string, e.g. (x1-x2)/(x1+x2)
