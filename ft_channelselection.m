@@ -257,12 +257,13 @@ switch senstype
     % all 4D-BTi reference channels start with M or G
  
     labelmeg     = datachannel(myregexp('^A[0-9]+$', datachannel));
-    labelmegref  = [datachannel(myregexp('^M[CLR][xyz][aA]*$', datachannel)); datachannel(myregexp('^G[xyz][xyz]A$', datachannel))];
+    labelmegref  = [datachannel(myregexp('^M[CLR][xyz][aA]*$', datachannel)); datachannel(myregexp('^G[xyz][xyz]A$', datachannel)); datachannel(myregexp('^M[xyz][aA]*$', datachannel))];
     labelmegrefa = datachannel(~cellfun(@isempty,strfind(datachannel, 'a')));
     labelmegrefc = datachannel(strncmp('MC', datachannel, 2));
     labelmegrefg = datachannel(myregexp('^G[xyz][xyz]A$', datachannel));
     labelmegrefl = datachannel(strncmp('ML', datachannel, 2));
     labelmegrefr = datachannel(strncmp('MR', datachannel, 2));
+    labelmegrefm = datachannel(myregexp('^M[xyz][aA]*$', datachannel));
 
   case {'neuromag122' 'neuromag122alt'}
     % all neuromag MEG channels start with MEG
@@ -323,6 +324,7 @@ findmegrefc    = find(strcmp(channel, 'MEGREFC'));
 findmegrefg    = find(strcmp(channel, 'MEGREFG'));
 findmegrefl    = find(strcmp(channel, 'MEGREFL'));
 findmegrefr    = find(strcmp(channel, 'MEGREFR'));
+findmegrefm    = find(strcmp(channel, 'MEGREFM'));
 findeog        = find(strcmp(channel, 'EOG'));
 findmz         = find(strcmp(channel, 'MZ' ));
 findml         = find(strcmp(channel, 'ML' ));
@@ -408,6 +410,7 @@ if findmegrefc,    channel = [channel; labelmegrefc]; end
 if findmegrefg,    channel = [channel; labelmegrefg]; end
 if findmegrefl,    channel = [channel; labelmegrefl]; end
 if findmegrefr,    channel = [channel; labelmegrefr]; end
+if findmegrefm,    channel = [channel; labelmegrefm]; end
 if findeog,        channel = [channel; labeleog]; end
 if findmz ,        channel = [channel; labelmz ]; end
 if findml ,        channel = [channel; labelml ]; end
