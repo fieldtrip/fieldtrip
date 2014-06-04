@@ -885,7 +885,7 @@ elseif isequal(cfg.method,'surface')
     fprintf('The source data is defined on a 3D grid, interpolation to a surface mesh will be performed\n');
     interpolate2surf = 1;
   elseif issource && isfield(data, 'tri')
-    fprintf('The source data is defined on a triangulated surface, allowing for easy surface plotting\n');
+    fprintf('The source data is defined on a triangulated surface, using the surface mesh description in the data\n');
   elseif issource
     % add a transform field to the data
     fprintf('The source data does not contain a triangulated surface, we may need to interpolate to a surface mesh\n');
@@ -895,7 +895,7 @@ elseif isequal(cfg.method,'surface')
   
   if interpolate2surf,
     % deal with the interpolation
-    % FIXME this should partially be dealt with by ft_sourceinterpolate
+    % FIXME this should be dealt with by ft_sourceinterpolate
     
     % read the triangulated cortical surface from file
     surf  = ft_read_headshape(cfg.surffile);
@@ -1117,6 +1117,10 @@ elseif isequal(cfg.method,'slice')
   %%%%% make "quilts", that contain all slices on 2D patched sheet
   % Number of patches along sides of Quilt (M and N)
   % Size (in voxels) of side of patches of Quilt (m and n)
+  
+  % take care of a potential singleton 3d dimension
+  dim = [dim 1];
+
   m = dim(1);
   n = dim(2);
   M = ceil(sqrt(dim(3)));
