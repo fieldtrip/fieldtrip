@@ -268,6 +268,8 @@ ft_connectivityplot(cfg, c);
 % 
 % We will first determine the position on which the cortico-muscular coherence is the largest.
 % 
+
+cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/connectivity'));
 load source
 
 [maxval, maxindx] = max(source.avg.coh);

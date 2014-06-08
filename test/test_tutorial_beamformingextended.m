@@ -1,11 +1,11 @@
-function test_tutorial_beamforming_extended
+function test_tutorial_beamformingextended
 
 % MEM 3gb
 % WALLTIME 00:10:00
 
 % TEST test_beamforming_extended
-% TEST ft_read_mri ft_redefinetrial ft_freqanalysis ft_volumesegment ft_appenddata ft_selectdata ft_prepare_singleshell ft_sourceanalysis ft_prepare_leadfield ft_prepare_headmodel ft_prepare_sourcemodel ft_plot_vol ft_plot_sens ft_plot_mesh ft_sourceinterpolate ft_sourceplot 
-if false
+% TEST ft_read_mri ft_redefinetrial ft_freqanalysis ft_volumesegment ft_appenddata ft_selectdata ft_prepare_singleshell ft_sourceanalysis ft_prepare_leadfield ft_prepare_headmodel ft_prepare_sourcemodel ft_plot_vol ft_plot_sens ft_plot_mesh ft_sourceinterpolate ft_sourceplot
+
 datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/sensor_analysis');
 mridir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer_extended');
 templatedir  = dccnpath('/home/common/matlab/fieldtrip/template/sourcemodel');
@@ -14,17 +14,17 @@ load(fullfile(datadir, 'subjectK.mat'));
 
 % Time windows of interest
 data = ft_appenddata([], data_left, data_right);
-cfg = [];                                           
-cfg.toilim = [-0.8 1.1];           
+cfg = [];
+cfg.toilim = [-0.8 1.1];
 cfg.minlength = 'maxperlen';
 data = ft_redefinetrial(cfg, data);
 
 
-cfg = [];                                           
-cfg.toilim = [-0.8 0];                       
+cfg = [];
+cfg.toilim = [-0.8 0];
 data_bsl = ft_redefinetrial(cfg, data);
-     
-cfg.toilim = [0.3 1.1];                       
+
+cfg.toilim = [0.3 1.1];
 data_exp = ft_redefinetrial(cfg, data);
 
 cfg = [];
@@ -66,7 +66,6 @@ assert(max(abs(oldsegmented.segmentedmri.white(:)-segmentedmri.white(:))) < .01,
 assert(isequal(oldsegmented.segmentedmri.transform, segmentedmri.transform), 'Transform differs from stored data')
 
 %save segmentedmri segmentedmri
-end % if false
 
 % add anatomical information to the segmentation
 segmentedmri.transform = mri.transform;
@@ -82,7 +81,7 @@ cfg.method = 'singleshell';
 hdm = ft_prepare_headmodel(cfg, segmentedmri);
 
 
-template = load(fullfile(templatedir, 'standard_sourcemodel3d8mm')); 
+template = load(fullfile(templatedir, 'standard_sourcemodel3d8mm'));
 % inverse-warp the subject specific grid to the template grid cfg = [];
 cfg.grid.warpmni   = 'yes';
 cfg.grid.template  = template.sourcemodel;
@@ -93,10 +92,10 @@ sourcemodel        = ft_prepare_sourcemodel(cfg);
 
 figure;
 hold on;
-% note that when calling different plotting routines, all objects that we plot 
-% need to be in the same unit and coordinate space, here, we need to transform 
+% note that when calling different plotting routines, all objects that we plot
+% need to be in the same unit and coordinate space, here, we need to transform
 % the head model to 'cm'
-ft_plot_vol(ft_convert_units(hdm, freq_cmb.grad.unit), 'edgecolor', 'none'); 
+ft_plot_vol(ft_convert_units(hdm, freq_cmb.grad.unit), 'edgecolor', 'none');
 alpha 0.4;
 ft_plot_mesh(sourcemodel.pos(sourcemodel.inside,:));
 ft_plot_sens(freq_cmb.grad);
@@ -150,8 +149,8 @@ cfg.method        = 'slice';
 cfg.funparameter  = 'avg.pow';
 cfg.maskparameter = cfg.funparameter;
 cfg.funcolorlim   = [0.0 1.2];
-cfg.opacitylim    = [0.0 1.2]; 
-cfg.opacitymap    = 'rampup';  
+cfg.opacitylim    = [0.0 1.2];
+cfg.opacitymap    = 'rampup';
 ft_sourceplot(cfg,source_diff_int);
 
 cfg.method = 'ortho';
@@ -159,7 +158,7 @@ cfg.atlas           = dccnpath('/home/common/matlab/fieldtrip/template/atlas/aal
 ft_sourceplot(cfg,source_diff_int);
 
 cfg.method = 'surface';
-cfg.projmethod     = 'nearest'; 
+cfg.projmethod     = 'nearest';
 cfg.surffile       = 'surface_white_both.mat';
 cfg.surfdownsample = 10;
 ft_sourceplot(cfg,source_diff_int);
@@ -212,10 +211,10 @@ cfg.funparameter = 'coh';
 cfg.funcolormap = 'jet';
 
 cfg.funcolorlim   = [00 .15];
-cfg.opacitylim    = [00 .15]; 
+cfg.opacitylim    = [00 .15];
 
 cfg.maskparameter = cfg.funparameter;
-cfg.opacitymap    = 'rampup';  
+cfg.opacitymap    = 'rampup';
 
 cfg.atlas         = dccnpath('/home/common/matlab/fieldtrip/template/atlas/aal/ROI_MNI_V4.nii');
 

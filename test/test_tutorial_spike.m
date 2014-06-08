@@ -6,7 +6,6 @@ function test_tutorial_spike
 % TEST test_tutorial_spike
 % TEST ft_read_spike ft_spike_select ft_spike_waveform ft_spike_maketrials ft_spike_isi ft_spike_plot_isireturn ft_spike_psth ft_spikedensity ft_spike_plot_raster ft_spike_rate ft_spike_select ft_spike_xcorr ft_spike_jpsth ft_spike_plot_jpsth
 
-memtic;
 if ispc
   datadir = 'H:';
 else
@@ -228,5 +227,3 @@ figure
 ft_spike_plot_jpsth(cfg,jpsthShuff)
 figure
 ft_spike_plot_jpsth(cfg,jpsthSubtr)
-
-memtoc;
