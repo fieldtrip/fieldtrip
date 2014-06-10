@@ -1,5 +1,6 @@
 function [varargout] = ft_selectdata(varargin)
 
+% FT_SELECTDATA makes a selection in the input data along specific data
 % dimensions, such as channels, time, frequency, trials, etc. It can also
 % be used to average the data along each of the specific dimensions.
 %
