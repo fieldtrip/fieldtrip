@@ -174,6 +174,10 @@ if strcmp(cfg.correctm, 'cluster')
       if isfield(cfg, 'insideorig')
         cfg.connectivity = cfg.connectivity(cfg.insideorig, cfg.insideorig);
       end
+    elseif isfield(cfg, 'avgoverchan') && istrue(cfg.avgoverchan)
+      % channel dimension has been averaged across, no sense in clustering
+      % across space
+      cfg.connectivity = true(1);
     elseif isfield(cfg, 'channel')
       cfg.neighbours   = ft_getopt(cfg, 'neighbours', []);
       cfg.connectivity = channelconnectivity(cfg);

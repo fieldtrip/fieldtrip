@@ -254,8 +254,10 @@ elseif isfreq || istimelock
   % remove to save some memory
   data.biol = [];
 
-  % add gradiometer/electrode information to the configuration
-  if ~isfield(cfg,'neighbours') && isfield(cfg, 'correctm') && strcmp(cfg.correctm, 'cluster')
+  % verify that neighbours are present in case needed (not needed when
+  % averaging over channels)
+  if ~(isfield(cfg, 'avgoverchan') && istrue(cfg.avgoverchan)) &&...
+      ~isfield(cfg,'neighbours') && isfield(cfg, 'correctm') && strcmp(cfg.correctm, 'cluster')
     error('You need to specify a neighbourstructure');
     %cfg.neighbours = ft_neighbourselection(cfg,varargin{1});
   end
