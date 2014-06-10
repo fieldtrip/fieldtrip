@@ -38,6 +38,7 @@ xlabel('sample number')
 ylabel('time (s)')
 
 ts = ft_read_data(cfg.dataset, 'timestamp', 'true'); % raw timestamps
+ts = double(ts); % convert from uint64 into double
 
 figure
 plot(ts)
