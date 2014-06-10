@@ -2072,12 +2072,26 @@ switch atlasformat
         sel = find(tmporig==key(m));
         if ~isempty(sel)
           cnt = cnt+1;
-          tmplabel{end+1,1} = label{m};
-          tmpnew(tmporig==key(m)) = cnt;
+          if any(strcmp(tmplabel,deblank(label{m})))
+            
+            % one feature of a gifti can be that the same labels can exist (and
+            % are treated as a different parcel) while they should be the same
+            % parcel, i.e. when there's an empty space at the end of the label
+            val = find(strcmp(tmplabel, deblank(label{m})));
+          else
+            % add as a new label
+            tmplabel{end+1,1} = label{m};
+            val = cnt;
+          end          
+          tmpnew(tmporig==key(m)) = val;
         end
       end
-      parcelfield = ['parcellation',num2str(k)];
       
+      if size(g.cdata,2)>1
+        parcelfield = ['parcellation',num2str(k)];
+      else
+        parcelfield = ['parcellation'];
+      end
       atlas.(parcelfield) = tmpnew;
       atlas.([parcelfield, 'label']) = tmplabel;    
     end
