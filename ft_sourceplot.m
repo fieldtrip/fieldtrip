@@ -341,7 +341,7 @@ if hasroi
     tmpcfg          = [];
     tmpcfg.roi      = cfg.roi;
     tmpcfg.atlas    = cfg.atlas;
-    tmpcfg.coordsys = data.coordsys;
+    tmpcfg.inputcoord = data.coordsys;
     roi = ft_volumelookup(tmpcfg,data);
   end
 end
