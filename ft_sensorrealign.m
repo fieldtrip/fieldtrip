@@ -19,12 +19,6 @@ function [elec_realigned] = ft_sensorrealign(cfg, elec_original)
 % non-linear search to minimize the distance between the input sensor
 % positions and the corresponding template sensors.
 %
-% HEADSHAPE - You can apply a spatial transformation/deformation that
-% automatically minimizes the distance between the electrodes and the head
-% surface. The warping methods use a non-linear search to minimize the
-% distance between the input sensor positions and the projection of the
-% electrodes on the head surface.
-%
 % INTERACTIVE - You can display the skin surface together with the
 % electrode or gradiometer positions, and manually (using the graphical
 % user interface) adjust the rotation, translation and scaling parameters,
@@ -32,6 +26,12 @@ function [elec_realigned] = ft_sensorrealign(cfg, elec_original)
 %
 % MANUAL - You can display the skin surface and manually determine the
 % electrode positions by clicking on the skin surface.
+%
+% HEADSHAPE - You can apply a spatial transformation/deformation that
+% automatically minimizes the distance between the electrodes and the head
+% surface. The warping methods use a non-linear search to minimize the
+% distance between the input sensor positions and the projection of the
+% electrodes on the head surface.
 %
 % Use as
 %   [sensor] = ft_sensorrealign(cfg) or
@@ -43,9 +43,9 @@ function [elec_realigned] = ft_sensorrealign(cfg, elec_original)
 %   cfg.method         = string representing the method for aligning or placing the electrodes
 %                        'fiducial'        realign using three fiducials (e.g. NAS, LPA and RPA)
 %                        'template'        realign the sensors to match a template set
-%                        'headshape'       realign the sensors to fit the head surface
 %                        'interactive'     realign manually using a graphical user interface
 %                        'manual'          manual positioning of the electrodes by clicking in a graphical user interface
+%                        'headshape'       realign the sensors to fit the head surface
 %   cfg.warp          = string describing the spatial transformation for the template method
 %                        'rigidbody'       apply a rigid-body warp (default)
 %                        'globalrescale'   apply a rigid-body warp with global rescaling

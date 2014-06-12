@@ -668,9 +668,9 @@ switch cfg.method
     
     if dointeractive,
       tmpcfg                       = [];
-      tmpcfg.template.elec         = shape;
+      tmpcfg.template.elec         = shape;     % this is the Polhemus recorded headshape
       tmpcfg.template.elec.chanpos = shape.pnt;
-      tmpcfg.individual.headshape  = scalp;
+      tmpcfg.individual.headshape  = scalp;     % this is the headshape extracted from the anatomical MRI
       tmpcfg.individual.headshapestyle = 'surface';
       tmpcfg = ft_interactiverealign(tmpcfg);
       M      = tmpcfg.m;
