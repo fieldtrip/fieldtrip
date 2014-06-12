@@ -1,6 +1,12 @@
-function [data] = ft_selectdata(varargin)
+function [data] = ft_selectdata_old(varargin)
 
-% FT_SELECTDATA serves to subselect regions-of-interest from the input data,
+% FT_SELECTDATA_OLD is deprecated, please use FT_SELECTDATA instead.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Old documentation for reference
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% This function serves to subselect regions-of-interest from the input data,
 % with or without averaging across the specified dimensions. It also
 % concatenates multiple input data structures along the compatible
 % dimension and is thus a more general implementation of ft_appenddata,
@@ -29,6 +35,8 @@ function [data] = ft_selectdata(varargin)
 %   avgovertime   'no' ('yes') average across time points
 %   avgoverroi    'no' ('yes') average across voxels in ROI
 %   avgoverrpt    'no' ('yes') average across replicates
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Copyright (C) 2009-2011, Jan-Mathijs Schoffelen
 %
