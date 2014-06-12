@@ -1,4 +1,4 @@
-function [cfg] = ft_sourceplot(cfg, data)
+function ft_sourceplot(cfg, data)
 
 % FT_SOURCEPLOT plots functional source reconstruction data on slices or on
 % a surface, optionally as an overlay on anatomical MRI data, where
@@ -43,7 +43,7 @@ function [cfg] = ft_sourceplot(cfg, data)
 % The following parameters can be used in all methods:
 %   cfg.downsample    = downsampling for resolution reduction, integer value (default = 1) (orig: from surface)
 %   cfg.atlas         = string, filename of atlas to use (default = []) SEE FT_PREPARE_ATLAS
-%                        for ROI masking (see "masking" below) or in interactive mode (see "ortho-plotting" below)
+%                        for ROI masking (see "masking" below) or in "ortho-plotting" mode (see "ortho-plotting" below)
 %
 % The following parameters can be used for the functional data:
 %   cfg.funcolormap   = colormap for functional data, see COLORMAP (default = 'auto')
@@ -90,9 +90,6 @@ function [cfg] = ft_sourceplot(cfg, data)
 %                              'voxel', voxelcoordinates as indices
 %   cfg.crosshair     = 'yes' or 'no' (default = 'yes')
 %   cfg.axis          = 'on' or 'off' (default = 'on')
-%   cfg.interactive   = 'yes' or 'no' (default = 'no' if no nargout is desired, 'yes' otherwise)
-%                        in interactive mode the function returns the
-%                        fiducials when closing the figure in the cfg
 %   cfg.queryrange    = number, in atlas voxels (default 3)
 %
 %
@@ -201,19 +198,14 @@ end
 % instead of specifying cfg.coordsys, the user should specify the coordsys in the data
 cfg = ft_checkconfig(cfg, 'forbidden', {'units', 'inputcoordsys', 'coordinates'});
 cfg = ft_checkconfig(cfg, 'deprecated', 'coordsys');
-%if isfield(cfg, 'coordsys') && ~isfield(data, 'coordsys')
-%  data.coordsys = cfg.coordsys;
-%end
 
-needcoordsys = isfield(cfg, 'atlas') && ~isempty(cfg.atlas);
-if needcoordsys
+if isfield(cfg, 'atlas') && ~isempty(cfg.atlas)
   % for the atlas lookup a coordsys is needed
   data     = ft_checkdata(data, 'datatype', {'volume' 'source'}, 'feedback', 'yes', 'hasunit', 'yes', 'hascoordsys', 'yes');
 else
   % check if the input data is valid for this function, a coordsys is not directly needed
   data     = ft_checkdata(data, 'datatype', {'volume' 'source'}, 'feedback', 'yes', 'hasunit', 'yes');
 end
-
 
 % determine the type of data
 issource = ft_datatype(data, 'source');
@@ -223,7 +215,7 @@ if issource && ~isfield(data, 'dim') && (~isfield(cfg, 'method') || ~strcmp(cfg.
 end
 
 % set the defaults for all methods
-cfg.method        = ft_getopt(cfg, 'method', 'ortho');
+cfg.method        = ft_getopt(cfg, 'method',        'ortho');
 cfg.funparameter  = ft_getopt(cfg, 'funparameter',  []);
 cfg.maskparameter = ft_getopt(cfg, 'maskparameter', []);
 cfg.downsample    = ft_getopt(cfg, 'downsample',    1);
@@ -259,11 +251,6 @@ cfg.crosshair           = ft_getopt(cfg, 'crosshair',           'yes');
 cfg.colorbar            = ft_getopt(cfg, 'colorbar',            'yes');
 cfg.axis                = ft_getopt(cfg, 'axis',                'on');
 cfg.queryrange          = ft_getopt(cfg, 'queryrange',          3);
-if nargout
-  cfg.interactive         = ft_getopt(cfg, 'interactive',         'yes');
-else
-  cfg.interactive         = ft_getopt(cfg, 'interactive',         'no');
-end
 
 if isfield(cfg, 'TTlookup'),
   error('TTlookup is old; now specify cfg.atlas, see help!');
@@ -295,7 +282,6 @@ cfg.renderer       = ft_getopt(cfg, 'renderer',      'opengl');
 % for backward compatibility
 if strcmp(cfg.location, 'interactive')
   cfg.location = 'auto';
-  cfg.interactive = 'yes';
 end
 
 % select the functional and the mask parameter
@@ -659,6 +645,7 @@ if isequal(cfg.method,'ortho')
   set(h, 'windowbuttondownfcn', @cb_buttonpress);
   set(h, 'windowbuttonupfcn',   @cb_buttonrelease);
   set(h, 'windowkeypressfcn',   @cb_keyboard);
+  set(h, 'CloseRequestFcn',     @cb_cleanup);
   
   if ~hasfun && ~hasana
     % this seems to be a problem that people often have
@@ -769,7 +756,7 @@ if isequal(cfg.method,'ortho')
   opt.handlesaxes   = [h1 h2 h3];
   opt.handlesfigure = h;
   opt.axis          = cfg.axis;
-  opt.quit          = ~strcmp(cfg.interactive, 'yes');
+  opt.quit          = false;%~strcmp(cfg.interactive, 'yes');
   if hasatlas
     opt.atlas = atlas;
   end
@@ -803,9 +790,6 @@ if isequal(cfg.method,'ortho')
   opt.queryrange    = cfg.queryrange;
   opt.funcolormap   = cfg.funcolormap;
   opt.crosshair     = strcmp(cfg.crosshair, 'yes');
-  opt.lpa           = [];
-  opt.rpa           = [];
-  opt.nas           = [];
   setappdata(h, 'opt', opt);
   cb_redraw(h);
   
@@ -815,29 +799,11 @@ if isequal(cfg.method,'ortho')
   fprintf('click and hold right mouse button to update the position while moving the mouse\n');
   fprintf('use the arrowkeys to navigate in the current axis\n');
   
-  if istrue(cfg.interactive)
-    fprintf('** INTERACTIVE MODE SPECIAL **\n');
-    fprintf('press n/l/r on keyboard to record a fiducial position\n');
-    fprintf('press q on keyboard to quit interactive mode\n');
-    fprintf('** ************************ **\n');
-  end
-  
   while(opt.quit==0)
-    uiwait(h)
-    try
-      opt = getappdata(opt.handlesfigure, 'opt');
-      cfg.nas = opt.nas;
-      cfg.rpa = opt.rpa;
-      cfg.lpa = opt.lpa;
-    catch
-      warning('Figure seem to be closed not by pressing ''q'' - returning of fiducials not possible\n');
-      cfg.nas = [];
-      cfg.rpa = [];
-      cfg.lpa = [];
-      opt.quit = true;
-    end
+    uiwait(h);
+    opt = getappdata(h, 'opt');
   end
-  
+  delete(h);
   
 elseif isequal(cfg.method,'glassbrain')
   tmpcfg          = [];
@@ -860,10 +826,7 @@ elseif isequal(cfg.method,'glassbrain')
   end
   
   if hasana,
-    ana = getsubfield(data, cfg.anaparameter);
-    %ana(1,:,:) = max(ana, [], 1);
-    %ana(:,1,:) = max(ana, [], 2);
-    %ana(:,:,1) = max(ana, [], 3);
+    ana  = getsubfield(data, cfg.anaparameter);
     data = setsubfield(data, cfg.anaparameter, ana);
   end
   
@@ -1022,8 +985,7 @@ elseif isequal(cfg.method,'surface')
   if isfield(surf, 'curv')
     % the curvature determines the color of gyri and sulci
     color = surf.curv(:) * cortex_light + (1-surf.curv(:)) * cortex_dark;
-    color = repmat(cortex_light, size(surf.pnt,1), 1);
-  else
+ else
     color = repmat(cortex_light, size(surf.pnt,1), 1);
   end
   
@@ -1571,15 +1533,6 @@ switch key
   case 'q'
     setappdata(h, 'opt', opt);
     cb_cleanup(h);
-  case 'l'
-    opt.lpa = opt.ijk;
-    setappdata(h, 'opt', opt);
-  case 'r'
-    opt.rpa = opt.ijk;
-    setappdata(h, 'opt', opt);
-  case 'n'
-    opt.nas = opt.ijk;
-    setappdata(h, 'opt', opt);
   case {'i' 'j' 'k' 'm' 28 29 30 31 'leftarrow' 'rightarrow' 'uparrow' 'downarrow'} % TODO FIXME use leftarrow rightarrow uparrow downarrow
     % update the view to a new position
     if     strcmp(tag,'ik') && (strcmp(key,'i') || strcmp(key,'uparrow')    || isequal(key, 30)), opt.ijk(3) = opt.ijk(3)+1; opt.update = [0 0 1];
@@ -1603,10 +1556,6 @@ switch key
   otherwise
     
 end % switch key
-
-%if ~isempty(nas), fprintf('nas = [%f %f %f]\n', nas); cfg.fiducial.nas = nas; else fprintf('nas = undefined\n'); end
-%if ~isempty(lpa), fprintf('lpa = [%f %f %f]\n', lpa); cfg.fiducial.lpa = lpa; else fprintf('lpa = undefined\n'); end
-%if ~isempty(rpa), fprintf('rpa = [%f %f %f]\n', rpa);
 
 uiresume(h);
 
