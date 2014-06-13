@@ -10,9 +10,9 @@ function [rate] = ft_spike_rate(cfg,spike)
 % within the function)
 %
 % Configurations:
-%   cfg.outputunit       = 'rate' (default) or 'spike'. If 'rate', we convert
+%   cfg.outputunit       = 'rate' (default) or 'spikecount'. If 'rate', we convert
 %                          the output per trial to firing rates (spikes/sec).
-%                          If 'spike', we count the number spikes per trial.
+%                          If 'spikecount', we count the number spikes per trial.
 %   cfg.spikechannel     = see FT_CHANNELSELECTION for details
 %   cfg.trials           = vector of indices (e.g., 1:2:10)
 %                          logical selection of trials (e.g., [1010101010])

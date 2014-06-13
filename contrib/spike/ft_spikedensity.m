@@ -17,7 +17,7 @@ function [sdf, sdfdata] = ft_spikedensity(cfg,data)
 %   a SPIKE structure.
 %
 % Configurations:
-%   cfg.timwin         = [begin end], time of the smoothing kernel (default = [-0.1 0.1])
+%   cfg.timwin         = [begin end], time of the smoothing kernel (default = [-0.05 0.05])
 %                        If cfg.winfunc = @alphawin, cfg.timwin(1) will be
 %                        set to 0. Hence, it is possible to use asymmetric
 %                        kernels. 
@@ -31,7 +31,7 @@ function [sdf, sdfdata] = ft_spikedensity(cfg,data)
 %                        (b) vector of length nSamples, used directly as window
 %   cfg.winfuncopt     = options that go with cfg.winfunc
 %                        For cfg.winfunc = 'alpha': the timeconstant in seconds (default = 0.005s)
-%                        For cfg.winfunc = 'gauss': the standard devision in seconds (default =
+%                        For cfg.winfunc = 'gauss': the standard deviation in seconds (default =
 %                                         1/4 of window duration in seconds)
 %                        For cfg.winfunc = 'wname' with 'wname' any standard window function
 %                                          see window opts in that function and add as cell array
