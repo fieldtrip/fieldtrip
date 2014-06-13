@@ -1,12 +1,10 @@
-zipFilename = 'H:/common/matlab/fieldtrip/data/ftp/tutorial/Subject01.zip';
-system(['unzip ' zipFilename ' ' 'Subject01.mri' ' -d ' pwd]);
-mri = ft_read_mri('Subject01.mri');
+function test_tutorial_MNE
 
-if isunix
-  system(['rm ' 'Subject01.mri']);
-elseif ispc
-  system(['del ' 'Subject01.mri']);
-end
+% MEM 4gb
+% WALLTIME 00:30:00
+
+cd(dccnpath('/home/common/matab/fieldtrip/data');
+mri = ft_read_mri('Subject01.mri');
 
 cfg        = [];
 cfg.method = 'interactive';

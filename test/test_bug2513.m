@@ -1,8 +1,9 @@
-if ispc
-  datapath = 'h:\common\matlab\fieldtrip\data\test';
-else
-  datapath = '/home/common/matlab/fieldtrip/data/test';
-end
+function test_bug2513
+
+% WALLTIME 00:10:00
+% MEM 2gb
+
+datapath = dccnpath('/home/common/matlab/fieldtrip/data/test');
 
 % historical preprocessed data
 datahist = dir([datapath filesep '2*']);
@@ -43,11 +44,7 @@ unknown = {};
 failed = [];
 
 %%
-if ispc
-  datapath = 'h:\common\matlab\fieldtrip\data\test';
-else
-  datapath = '/home/common/matlab/fieldtrip/data/test';
-end
+datapath = dccnpath('/home/common/matlab/fieldtrip/data/test');
 
 for i=1:length(filelist)
   try
