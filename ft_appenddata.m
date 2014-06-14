@@ -268,10 +268,10 @@ elseif catlabel
     data.label = cat(1, data.label(:), varargin{i}.label(:));
     
     % check whether the trialinfo and sampleinfo fields are consistent
-    if hassampleinfo && ~all(data.sampleinfo(:)==varargin{i}.sampleinfo(:))
+    if hassampleinfo && ~isequaln(data.sampleinfo, varargin{i}.sampleinfo)
       removesampleinfo = 1;
     end
-    if hastrialinfo && ~all(data.trialinfo(:)==varargin{i}.trialinfo(:))
+    if hastrialinfo && ~isequaln(data.trialinfo, varargin{i}.trialinfo)
       removetrialinfo = 1;
     end
   end
@@ -306,7 +306,7 @@ else
 end
 
 % some fields from the input should be copied over in the output
-copyfield = {'grad', 'elec', 'topo', 'topolabel', 'unmixing'};
+copyfield = {'grad', 'elec', 'topo', 'topolabel', 'unmixing', 'fsample'};
 for i=1:length(copyfield)
   if isfield(varargin{1}, copyfield{i})
     data.(copyfield{i}) = varargin{1}.(copyfield{i});
