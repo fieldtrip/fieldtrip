@@ -155,6 +155,7 @@ elseif ft_senstype(input, 'ctf') && isfield(input, 'chantype')
   chanunit(strcmp('meggrad',          input.chantype)) = {'T'};
   chanunit(strcmp('refmag',           input.chantype)) = {'T'};
   chanunit(strcmp('refgrad',          input.chantype)) = {'T'};
+  chanunit(strcmp('clock',            input.chantype)) = {'s'}; % seconds
   
 elseif ft_senstype(input, 'yokogawa') && isfield(input, 'chantype')
   chanunit(strcmp('meggrad',          input.chantype)) = {'T'};

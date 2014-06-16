@@ -262,6 +262,9 @@ elseif ft_senstype(input, 'ctf') && isheader
   for sel=find(origSensType(:)==11)'
     type{sel} = 'trigger';
   end
+  for sel=find(origSensType(:)==17)'
+    type{sel} = 'clock';
+  end
   for sel=find(origSensType(:)==9)'
     type{sel} = 'eeg';
   end
