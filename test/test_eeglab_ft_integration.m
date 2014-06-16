@@ -10,4 +10,14 @@ function test_eeglab_ft_integration
 
 load test_EEGLAB_ft_integration.mat
 
-source = ft_dipolefitting(cfg, data);
+%% test the original reported problem
+source1 = ft_dipolefitting(cfg, data);
+
+%% also do the nonlinear fit
+cfg.component = [1 2 3];
+cfg.nonlinear = 'yes';
+source2 = ft_dipolefitting(cfg, data);
+
+% do not use the optimalization toolbox (which is the default if available)
+cfg.dipfit.optimfun = 'fminsearch';
+source3 = ft_dipolefitting(cfg, data);
