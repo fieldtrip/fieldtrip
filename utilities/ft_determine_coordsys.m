@@ -121,6 +121,10 @@ if isfield(data, 'coordsys') && ~isempty(data.coordsys)
     label{1} = 'the right';
     label{2} = 'anterior';
     label{3} = 'superior';
+  elseif strcmpi(data.coordsys, 'paxinos')
+    label{1} = 'the right';
+    label{2} = 'superior';
+    label{3} = 'posterior';
   elseif strcmpi(data.coordsys, 'unknown')
     label{1} = 'unknown';
     label{2} = 'unknown';
@@ -334,6 +338,10 @@ if ~isempty(str) && ~strcmp(str, 'unknown')
       labelx = {'-X (posterior)' '+X (anterior)'};
       labely = {'-Y (right)'     '+Y (left)'};
       labelz = {'-Z (inferior)'  '+Z (superior)'};
+    case {'paxinos'}
+      labelx = {'-X (left)'      '+X (right)'};
+      labely = {'-Y (inferior)'  '+Y (superior)'};
+      labelz = {'-Z (anterior)'  '+Z (posterior)'};
     otherwise
       error('unknown coordsys');
   end
