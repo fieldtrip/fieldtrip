@@ -75,6 +75,8 @@ if isempty(jobid) && ~isempty(pbsid)
   sel = strmatch(pbsid, list_pbsid);
   if ~isempty(sel)
     jobid = list_jobid{sel};
+  else
+    warning('cannot determine the jobid that corresponds to pbsid %s', pbsid);
   end
 end
 
@@ -83,6 +85,8 @@ if isempty(pbsid) && ~isempty(jobid)
   sel = strmatch(jobid, list_jobid);
   if ~isempty(sel)
     pbsid = list_pbsid{sel};
+  else
+    warning('cannot determine the pbsid that corresponds to jobid %s', jobid);
   end
 end
 
@@ -135,9 +139,6 @@ switch cmd
     for i=length(list_jobid):-1:1
       qsublist('kill', list_jobid{i}, list_pbsid{i});
     end
-    
-    % it is now safe to unload the function and persistent variables from memory
-    munlock
     
   case 'completed'
     % cmd = 'completed' returns whether the job is completed as a boolean
@@ -195,6 +196,15 @@ switch cmd
   otherwise
     error('unsupported command (%s)', cmd);
 end % switch
+
+if length(list_jobid)~=length(list_pbsid)
+  error('jobid and pbsid lists are inconsistent');
+end
+
+if mislocked && isempty(list_jobid) && isempty(list_pbsid)
+  % it is now safe to unload the function and persistent variables from memory
+  munlock
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper function that detects a file, even with a wildcard in the filename
