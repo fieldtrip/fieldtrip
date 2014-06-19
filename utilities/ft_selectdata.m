@@ -140,6 +140,10 @@ if ~isfield(cfg, 'foilim')
 end
 
 datfield  = fieldnames(varargin{1});
+for i=2:length(varargin)
+  % only consider fields that are present in all inputs
+  datfield = intersect(datfield, fieldnames(varargin{i}));
+end
 datfield  = setdiff(datfield, {'label' 'labelcmb'}); % these fields will be used for selection, but are not treated as data fields
 xtrafield =  {'cfg' 'hdr' 'fsample' 'grad' 'elec' 'transform' 'unit' 'topolabel' 'lfplabel' 'dim'}; % these fields will not be touched in any way by the code
 datfield  = setdiff(datfield, xtrafield);
@@ -336,7 +340,7 @@ for i=1:numel(varargin)
   % also update the fields that describe the dimensions, time/freq/pos have been dealt with as data
   if haschan,    varargin{i} = makeselection_chan   (varargin{i}, selchan{i}, avgoverchan); end % update the label field
   if haschancmb, varargin{i} = makeselection_chancmb(varargin{i}, selchancmb{i}, avgoverchancmb); end % update the labelcmb field
- 
+  
 end % for varargin
 
 if strcmp(cfg.select, 'union')
