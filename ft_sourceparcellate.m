@@ -106,7 +106,7 @@ end
 
 % determine the fields and corresponding dimords to work on
 fn = fieldnames(source);
-fn = setdiff(fn, {'pos', 'inside', 'outside', 'time', 'freq', 'dim', 'transform', 'unit', 'coordsys', 'cfg'}); % remove fields that do not represent the data
+fn = setdiff(fn, {'pos', 'tri', 'inside', 'outside', 'time', 'freq', 'dim', 'transform', 'unit', 'coordsys', 'cfg'}); % remove fields that do not represent the data
 fn = fn(cellfun(@isempty, regexp(fn, 'dimord'))); % remove dimord fields
 dimord = cell(size(fn));
 for i=1:numel(fn)
@@ -230,7 +230,7 @@ for i=1:numel(fn)
     for j1=1:numel(seglabel)
       for j2=1:numel(seglabel)
         k = k + 1;
-        ft_progress(k/K, 'computing parcellation for parameter %s combined with %s', seglabel{j1}, seglabel{j2});
+        ft_progress(k/K, 'computing parcellation for %s combined with %s', seglabel{j1}, seglabel{j2});
         switch cfg.method
           case 'mean'
             tmp(j1,j2,:) = arraymean2(dat(seg==j1,seg==j2,:));
