@@ -798,13 +798,7 @@ if isequal(cfg.method,'ortho')
   fprintf('click left mouse button to reposition the cursor\n');
   fprintf('click and hold right mouse button to update the position while moving the mouse\n');
   fprintf('use the arrowkeys to navigate in the current axis\n');
-  
-  while(opt.quit==0)
-    uiwait(h);
-    opt = getappdata(h, 'opt');
-  end
-  delete(h);
-  
+    
 elseif isequal(cfg.method,'glassbrain')
   tmpcfg          = [];
   tmpcfg.funparameter = cfg.funparameter;
@@ -1531,8 +1525,8 @@ switch key
   case ''
     % do nothing
   case 'q'
-    setappdata(h, 'opt', opt);
-    cb_cleanup(h);
+%     setappdata(h, 'opt', opt);
+%     cb_cleanup(h);
   case {'i' 'j' 'k' 'm' 28 29 30 31 'leftarrow' 'rightarrow' 'uparrow' 'downarrow'} % TODO FIXME use leftarrow rightarrow uparrow downarrow
     % update the view to a new position
     if     strcmp(tag,'ik') && (strcmp(key,'i') || strcmp(key,'uparrow')    || isequal(key, 30)), opt.ijk(3) = opt.ijk(3)+1; opt.update = [0 0 1];
@@ -1645,10 +1639,11 @@ uiresume;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_cleanup(h, eventdata)
 
-opt = getappdata(h, 'opt');
-opt.quit = true;
-setappdata(h, 'opt', opt);
-uiresume
+% opt = getappdata(h, 'opt');
+% opt.quit = true;
+% setappdata(h, 'opt', opt);
+% uiresume
+delete(h);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
