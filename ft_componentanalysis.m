@@ -289,7 +289,10 @@ end
 
 % default is to compute just as many components as there are channels in the data
 if strcmp(cfg.numcomponent, 'all')
+  defaultNumCompsUsed = true(1);
   cfg.numcomponent = length(data.label);
+else
+  defaultNumCompsUsed = false(1);
 end
 
 % determine the size of each trial, they can be variable length
@@ -436,8 +439,17 @@ switch cfg.method
     % check whether the required low-level toolboxes are installed
     ft_hastoolbox('fastica', 1);       % see http://www.cis.hut.fi/projects/ica/fastica
     
-    % set the number of components to be estimated
-    cfg.fastica.numOfIC = cfg.numcomponent;
+    if ~defaultNumCompsUsed &&...
+        (~isfield(cfg, 'fastica') || ~isfield(cfg.fastica, 'numOfIC'))
+      % user has specified cfg.numcomponent and not specified
+      % cfg.fastica.numOfIC, so copy cfg.numcomponent over
+      cfg.fastica.numOfIC = cfg.numcomponent;
+    elseif ~defaultNumCompsUsed &&...
+        isfield(cfg, 'fastica') && isfield(cfg.fastica, 'numOfIC')
+      % user specified both cfg.numcomponent and cfg.fastica.numOfIC,
+      % unsure which one to use
+      error('you can specify either cfg.fastica.numOfIC or cfg.numcomponent (they will have the same effect), but not both');
+    end
     
     try
       % construct key-value pairs for the optional arguments
@@ -461,8 +473,17 @@ switch cfg.method
     % see http://www.sccn.ucsd.edu/eeglab
     ft_hastoolbox('eeglab', 1);
     
-    % set the number of components to be estimated
-    cfg.runica.pca = cfg.numcomponent;
+    if ~defaultNumCompsUsed &&...
+        (~isfield(cfg, 'runica') || ~isfield(cfg.runica, 'pca'))
+      % user has specified cfg.numcomponent and not specified
+      % cfg.runica.pca, so copy cfg.numcomponent over
+      cfg.runica.pca = cfg.numcomponent;
+    elseif ~defaultNumCompsUsed &&...
+        isfield(cfg, 'runica') && isfield(cfg.runica, 'pca')
+      % user specified both cfg.numcomponent and cfg.runica.pca,
+      % unsure which one to use
+      error('you can specify either cfg.runica.pca or cfg.numcomponent (they will have the same effect), but not both');
+    end
     
     % construct key-value pairs for the optional arguments
     optarg = ft_cfg2keyval(cfg.runica);
@@ -480,6 +501,18 @@ switch cfg.method
     % check whether the required low-level toolboxes are installed
     % see http://www.sccn.ucsd.edu/eeglab
     ft_hastoolbox('eeglab', 1);
+    
+    if ~defaultNumCompsUsed &&...
+        (~isfield(cfg, 'binica') || ~isfield(cfg.binica, 'pca'))
+      % user has specified cfg.numcomponent and not specified
+      % cfg.binica.pca, so copy cfg.numcomponent over
+      cfg.binica.pca = cfg.numcomponent;
+    elseif ~defaultNumCompsUsed &&...
+        isfield(cfg, 'binica') && isfield(cfg.binica, 'pca')
+      % user specified both cfg.numcomponent and cfg.binica.pca,
+      % unsure which one to use
+      error('you can specify either cfg.binica.pca or cfg.numcomponent (they will have the same effect), but not both');
+    end
     
     % construct key-value pairs for the optional arguments
     optarg = ft_cfg2keyval(cfg.binica);
