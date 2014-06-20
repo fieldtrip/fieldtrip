@@ -91,7 +91,7 @@ end
 % because we need to verify that the input data indeed contains a
 % substructure. If it does not, then specifying cfg.parameter=xxx.yyy is a
 % user error.
-if isfield(cfg, 'parameter') && strfind(cfg.parameter, '.')
+if isfield(cfg, 'parameter') && ~isempty(strfind(cfg.parameter, '.'))
   [tok,rem] = strtok(cfg.parameter, '.');
   for i = 1:length(varargin)
     if ~isfield(varargin{i}, tok)
@@ -131,7 +131,10 @@ for k = 1:numel(checkfields)
 end
 
 % ensure a consistent selection of the data over all inputs
-[varargin{:}] = ft_selectdata(cfg, varargin{:});
+tmpcfg = maketmpcfg(cfg,...
+  {'parameter', 'trials', 'latency', 'frequency', 'foilim'});
+[varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
+[cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
 
 % start with an empty output structure
 
