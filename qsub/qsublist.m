@@ -82,7 +82,7 @@ end
 
 if isempty(pbsid) && ~isempty(jobid)
   % get it from the persistent list
-  sel = find(strcmp((jobid, list_jobid));
+  sel = find(strcmp(jobid, list_jobid));
   if length(sel)==1
     pbsid = list_pbsid{sel};
   else
