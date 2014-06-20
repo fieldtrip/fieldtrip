@@ -279,7 +279,11 @@ switch cfg.method
     if ~isfield(cfg, 'width'),            cfg.width         = 1;            end
     
   case 'mvar'
-    freq = feval(@ft_freqanalysis_mvar,cfg,data);
+    if isfield(cfg, 'inputfile')
+      freq = feval(@ft_freqanalysis_mvar,cfg);
+    else
+      freq = feval(@ft_freqanalysis_mvar,cfg,data);
+    end
     return
     
   otherwise
