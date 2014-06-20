@@ -640,24 +640,6 @@ end % main function ft_selectdata
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [data] = keepfields(data, fn)
-
-% KEEPFIELDS behaves opposite to RMFIELD: it keeps the specified
-% fieldnames, and removes the rest.
-%
-% Use as
-%   data = keepfields(data, fn)
-%
-% Where fn is a cell-array of fields to keep
-
-fn = setdiff(fieldnames(data), fn);
-for i=1:numel(fn)
-  data = rmfield(data, fn{i});
-end
-
-end % function keepfields
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function data = makeselection(data, seldim, selindx, avgoverdim, datfields, selmode)
 
 if numel(seldim) > 1
