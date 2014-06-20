@@ -64,4 +64,39 @@ cfg.fastica.numOfIC = 2;
 comp = ft_componentanalysis(cfg, data);
 assert(numel(comp.label) == 2);
 
+%%
+
+cfg = [];
+cfg.method = 'runica';
+cfg.runica.pca = 2;
+cfg.numcomponent = 2;
+
+ok = 0;
+try
+  comp = ft_componentanalysis(cfg, data);
+catch err
+  ok = 1;
+end
+
+if ~ok
+  error('ft_componentanalysis should have thrown an error');
+end
+
+%%
+
+cfg = [];
+cfg.method = 'fastica';
+cfg.fastica.numOfIC = 2;
+cfg.numcomponent = 2;
+
+ok = 0;
+try
+  comp = ft_componentanalysis(cfg, data);
+catch err
+  ok = 1;
+end
+
+if ~ok
+  error('ft_componentanalysis should have thrown an error');
+end
 end
