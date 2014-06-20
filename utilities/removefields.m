@@ -1,9 +1,9 @@
-function [s] = removefields(s, fn)
+function [s] = removefields(s, fields)
 
 % REMOVEFIELDS makes a selection of the fields in a structure
 %
 % Use as
-%   s = removefields(s, fieldnames);
+%   s = removefields(s, fields);
 %
 % See also KEEPFIELDS
 
@@ -27,7 +27,18 @@ function [s] = removefields(s, fn)
 %
 % $Id$
 
-fn = intersect(fieldnames(s), fn);
-for i=1:numel(fn)
-  s = rmfield(s, fn{i});
+if isempty(s)
+   % this prevents problems if s is an empty double, i.e. []
+  return
+end
+
+if ischar(fields)
+  fields = {fields};
+elseif ~iscell(fields)
+  error('fields input argument must be a cell array of strings or a single string');
+end
+
+fields = intersect(fieldnames(s), fields);
+for i=1:numel(fields)
+  s = rmfield(s, fields{i});
 end

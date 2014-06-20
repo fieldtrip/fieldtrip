@@ -1,9 +1,9 @@
-function [s] = keepfields(s, fn)
+function [s] = keepfields(s, fields)
 
 % KEEPFIELDS makes a selection of the fields in a structure
 %
 % Use as
-%   s = keepfields(s, fieldnames);
+%   s = keepfields(s, fields);
 %
 % See also REMOVEFIELDS
 
@@ -27,7 +27,18 @@ function [s] = keepfields(s, fn)
 %
 % $Id$
 
-fn = setdiff(fieldnames(s), fn);
-for i=1:numel(fn)
-  s = rmfield(s, fn{i});
+if isempty(s)
+   % this prevents problems if s is an empty double, i.e. []
+  return
+end
+
+if ischar(fields)
+  fields = {fields};
+elseif ~iscell(fields)
+  error('fields input argument must be a cell array of strings or a single string');
+end
+
+fields = setdiff(fieldnames(s), fields);
+for i=1:numel(fields)
+  s = rmfield(s, fields{i});
 end

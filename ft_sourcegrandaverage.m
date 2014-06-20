@@ -131,8 +131,7 @@ for k = 1:numel(checkfields)
 end
 
 % ensure a consistent selection of the data over all inputs
-tmpcfg = maketmpcfg(cfg,...
-  {'parameter', 'trials', 'latency', 'frequency', 'foilim'});
+tmpcfg = keepfields(cfg, {'parameter', 'trials', 'latency', 'frequency', 'foilim'});
 [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
 [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
 
