@@ -2028,16 +2028,3 @@ data.fsample = fsample;
 if isfield(spike,'hdr'), data.hdr = spike.hdr; end
 if isfield(spike,'cfg'), data.cfg = spike.cfg; end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [data] = keepfields(data, fn)
-fn = setdiff(fieldnames(data), fn);
-for i=1:numel(fn)
-  data = rmfield(data, fn{i});
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [data] = removefields(data, fn)
-fn = intersect(fieldnames(data), fn);
-for i=1:numel(fn)
-  data = rmfield(data, fn{i});
-end
