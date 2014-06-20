@@ -59,7 +59,7 @@ persistent previous_matlabcmd
 % keep track of the time
 stopwatch = tic;
 
-% convert the input arguments into something that strmatch can work with
+% convert the input arguments into something that strcmp can work with
 strargin = varargin;
 strargin(~cellfun(@ischar, strargin)) = {''};
 

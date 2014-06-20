@@ -72,8 +72,8 @@ end
 
 if isempty(jobid) && ~isempty(pbsid)
   % get it from the persistent list
-  sel = strmatch(pbsid, list_pbsid);
-  if ~isempty(sel)
+  sel = find(strcmp(pbsid, list_pbsid));
+  if length(sel)==1
     jobid = list_jobid{sel};
   else
     warning('cannot determine the jobid that corresponds to pbsid %s', pbsid);
@@ -82,8 +82,8 @@ end
 
 if isempty(pbsid) && ~isempty(jobid)
   % get it from the persistent list
-  sel = strmatch(jobid, list_jobid);
-  if ~isempty(sel)
+  sel = find(strcmp((jobid, list_jobid));
+  if length(sel)==1
     pbsid = list_pbsid{sel};
   else
     warning('cannot determine the pbsid that corresponds to jobid %s', jobid);
@@ -95,18 +95,16 @@ switch cmd
     % add it to the persistent lists
     list_jobid{end+1} = jobid;
     list_pbsid{end+1} = pbsid;
-    
+
   case 'del'
-    sel = strmatch(jobid, list_jobid);
-    if ~isempty(sel)
-      % remove it from the persistent lists
-      list_jobid(sel) = [];
-      list_pbsid(sel) = [];
-    end
-    
+    sel = strcmp(jobid, list_jobid);
+    % remove the job from the persistent lists
+    list_jobid(sel) = [];
+    list_pbsid(sel) = [];
+
   case 'kill'
-    sel = strmatch(jobid, list_jobid);
-    if ~isempty(sel)
+    sel = strcmp(jobid, list_jobid);
+    if any(sel)
       % remove it from the batch queue
       switch backend
         case 'torque'
@@ -128,7 +126,7 @@ switch cmd
       list_jobid(sel) = [];
       list_pbsid(sel) = [];
     end
-    
+
   case 'killall'
     if ~isempty(list_jobid)
       % give an explicit warning, because chances are that the user will see messages from qdel
@@ -139,7 +137,7 @@ switch cmd
     for i=length(list_jobid):-1:1
       qsublist('kill', list_jobid{i}, list_pbsid{i});
     end
-    
+
   case 'completed'
     % cmd = 'completed' returns whether the job is completed as a boolean
     %
@@ -148,12 +146,12 @@ switch cmd
     % check also polls the status of the job. First checking the files and then the
     % job status ensures that we don't saturate the torque server with job-status
     % requests.
-    
+
     curPwd     = getcustompwd();
     outputfile = fullfile(curPwd, sprintf('%s_output.mat', jobid)); % if the job is aborted to a resource violation, there will not be an output file
     logout     = fullfile(curPwd, sprintf('%s.o*', jobid)); % note the wildcard in the file name
     logerr     = fullfile(curPwd, sprintf('%s.e*', jobid)); % note the wildcard in the file name
-    
+
     % poll the job status to confirm that the job truely completed
     if isfile(logout) && isfile(logerr) && ~isempty(pbsid)
       % only perform the more expensive check once the log files exist
@@ -183,20 +181,20 @@ switch cmd
     else
       retval = 0;
     end
-    
+
   case 'list'
     for i=1:length(list_jobid)
       fprintf('%s %s\n', list_jobid{i}, list_pbsid{i});
     end
-    
+
   case 'getjobid'
     % return the mathing jobid, given the pbsid
     retval = jobid;
-    
+
   case 'getpbsid'
     % return the mathing pbsid, given the jobid
     retval = pbsid;
-    
+
   otherwise
     error('unsupported command (%s)', cmd);
 end % switch
