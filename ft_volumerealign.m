@@ -252,21 +252,57 @@ switch cfg.method
     % do nothing
     
   case 'interactive'
-    h  = figure;
-    h1 = subplot('position',[0.02 0.55 0.44 0.44]);%subplot(2,2,1);
-    h2 = subplot('position',[0.52 0.55 0.44 0.44]);%subplot(2,2,2);
-    h3 = subplot('position',[0.02 0.05 0.44 0.44]);%subplot(2,2,3);
-    handles = {h1 h2 h3};
+    %% start building the figure
+    h = figure;
+    set(h, 'color', [1 1 1]);
+    set(h, 'visible', 'on');
     
-    showcrosshair = true;
-    showmarkers   = 1;
-    dat = mri.(cfg.parameter);
-    if isfield(cfg, 'fiducial') && isfield(cfg.fiducial, 'nas'),  nas = cfg.fiducial.nas; else nas = []; end
-    if isfield(cfg, 'fiducial') && isfield(cfg.fiducial, 'lpa'),  lpa = cfg.fiducial.lpa; else lpa = []; end
-    if isfield(cfg, 'fiducial') && isfield(cfg.fiducial, 'rpa'),  rpa = cfg.fiducial.rpa; else rpa = []; end
-    antcomm = [];
-    pstcomm = [];
-    xzpoint = [];
+    % add callbacks
+    set(h, 'windowbuttondownfcn', @cb_buttonpress);
+    set(h, 'windowbuttonupfcn',   @cb_buttonrelease);
+    set(h, 'windowkeypressfcn',   @cb_keyboard);
+    set(h, 'CloseRequestFcn',     @cb_cleanup);
+ 
+    % enforce the size of the subplots to be isotropic
+    xdim = mri.dim(1) + mri.dim(2);
+    ydim = mri.dim(2) + mri.dim(3);
+  
+    % inspect transform matrix, if the voxels are isotropic then the screen
+    % pixels also should be square
+    hasIsotropicVoxels = norm(mri.transform(1:3,1)) == norm(mri.transform(1:3,2))...
+      && norm(mri.transform(1:3,2)) == norm(mri.transform(1:3,3));
+  
+    xsize(1) = 0.82*mri.dim(1)/xdim;
+    xsize(2) = 0.82*mri.dim(2)/xdim;
+    ysize(1) = 0.82*mri.dim(3)/ydim;
+    ysize(2) = 0.82*mri.dim(2)/ydim;
+  
+    %% create figure handles
+  
+    % axis handles will hold the anatomical data if present, along with labels etc.
+    h1 = axes('position',[0.07 0.07+ysize(2)+0.05 xsize(1) ysize(1)]);
+    h2 = axes('position',[0.07+xsize(1)+0.05 0.07+ysize(2)+0.05 xsize(2) ysize(1)]);
+    h3 = axes('position',[0.07 0.07 xsize(1) ysize(2)]);
+    set(h1,'Tag','ik','Visible','on','XAxisLocation','top');
+    set(h2,'Tag','jk','Visible','on','XAxisLocation','top');
+    set(h3,'Tag','ij','Visible','on');
+  
+    if hasIsotropicVoxels
+      set(h1,'DataAspectRatio',[1 1 1]);
+      set(h2,'DataAspectRatio',[1 1 1]);
+      set(h3,'DataAspectRatio',[1 1 1]);
+    end
+    
+    dat = double(mri.(cfg.parameter));
+    dmin = min(dat(:));
+    dmax = max(dat(:));
+    dat  = (dat-dmin)./(dmax-dmin);
+    if isfield(cfg, 'fiducial') && isfield(cfg.fiducial, 'nas'),  nas = cfg.fiducial.nas; else nas = [nan nan nan]; end
+    if isfield(cfg, 'fiducial') && isfield(cfg.fiducial, 'lpa'),  lpa = cfg.fiducial.lpa; else lpa = [nan nan nan]; end
+    if isfield(cfg, 'fiducial') && isfield(cfg.fiducial, 'rpa'),  rpa = cfg.fiducial.rpa; else rpa = [nan nan nan]; end
+    antcomm = [nan nan nan];
+    pstcomm = [nan nan nan];
+    xzpoint = [nan nan nan];
     x = 1:mri.dim(1);
     y = 1:mri.dim(2);
     z = 1:mri.dim(3);
@@ -274,7 +310,6 @@ switch cfg.method
     yc = round(mri.dim(2)/2);
     zc = round(mri.dim(3)/2);
     
-    updatepanel = [1 2 3];
     if isfield(cfg, 'pnt') 
       pnt = cfg.pnt;
     else
@@ -307,291 +342,62 @@ switch cfg.method
       '   c. press + or - on (numeric) keyboard to change the color range''s upper limit\n',...
       '4. To finalize markers and quit interactive mode, press q on keyboard\n'));
     
-    %'3. To unmark or remark a location\n',...
-    %'   a. click with the middle mouse button to unmark last position\n',...
-    %'   b. select new position with right mouse button and identify it using the\n',...
-    %'      keyboard\n',...
-    while true % break when 'q' is pressed
-      %       fprintf('click with the left mouse button to reslice the display to a new position\n');
-      %       fprintf('click with the right mouse button to mark a position\n');
-      %       fprintf('click with the middle mouse button to unmark the last marked position\n');
-      %       fprintf('press n/l/r on keyboard to record the current position as fiducial location\n');
-      %       fprintf('press a/p/z on keyboard to record the current position as anatomical landmark\n');
-      %       fprintf('press the arrow keys on the keyboard to increment or decrement the slice number by one\n');
-      %       fprintf('press c or C on the keyboard to show or hide the crosshair\n');
-      %       fprintf('press m or M on the keyboard to show or hide the marked positions\n');
-      %       fprintf('press q on keyboard to quit interactive mode\n');
+      % create structure to be passed to gui
+      opt               = [];
+      opt.dim           = mri.dim;
+      opt.ijk           = [xc yc zc];
+      opt.xsize         = xsize;
+      opt.ysize         = ysize;
+      opt.handlesaxes   = [h1 h2 h3];
+      opt.handlesfigure = h;
+      opt.quit          = false;
+      opt.ana           = dat;
+      opt.update        = [1 1 1];
+      opt.init          = true;
+      opt.tag           = 'ik';
+      opt.data          = mri;
+      opt.crosshair     = true;
+      opt.markers       = {markerpos markerlabel markercolor};
+      opt.showmarkers   = true;
+      opt.clim          = [];
+      opt.fiducials     = [nas;lpa;rpa;xzpoint];
+      opt.landmarks     = [antcomm;pstcomm;xzpoint;rpa];
+      opt.pnt           = pnt;
+      
+      setappdata(h, 'opt', opt);
+      cb_redraw(h);
+      
+      while(opt.quit==0)
+        uiwait(h);
+        opt = getappdata(h, 'opt');
+      end
+      delete(h);
+  
+      nas = opt.fiducials(1,:);
+      lpa = opt.fiducials(2,:);
+      rpa = opt.fiducials(3,:);
+      
+   
       
       
-      xc = round(xc); xc = max(1,xc); xc = min(mri.dim(1),xc);
-      yc = round(yc); yc = max(1,yc); yc = min(mri.dim(2),yc);
-      zc = round(zc); zc = max(1,zc); zc = min(mri.dim(3),zc);
-      markers = {markerpos markerlabel markercolor};
-      [h1, h2, h3] = volplot(x, y, z, dat, [xc yc zc], cfg.clim, showcrosshair, updatepanel, handles, showmarkers, markers);
-      drawnow;
-      if dosnapshot && takesnapshot
-        % create a new figure and draw right away, this will keep the old one on the screen
-        snap(end+1) = copyobj(h(1), 0);
-        set(snap(end), 'visible', 'off');
-        print(snap(end), '-dpng', [cfg.snapshotfile,num2str(numel(snap))]);
-        set(0, 'currentfigure', h(1));
-      end
-      takesnapshot = false;
-      
-      try, [d1, d2, key] = ginput(1); catch, key='q'; end
-      switch key
-        
-        % contrast scaling
-        case 43 % numpad +
-          if isempty(cfg.clim)
-            cfg.clim = [min(dat(:)) max(dat(:))];
-          end
-          % reduce color scale range by 10%
-          cscalefactor = (cfg.clim(2)-cfg.clim(1))/10;
-          cfg.clim(2) = cfg.clim(2)-cscalefactor;
-        case 45 % numpad -
-          if isempty(cfg.clim)
-            cfg.clim = [min(dat(:)) max(dat(:))];
-          end
-          % increase color scale range by 10%
-          cscalefactor = (cfg.clim(2)-cfg.clim(1))/10;
-          cfg.clim(2) = cfg.clim(2)+cscalefactor;
-          
-        case 113 % 'q'
-          delete(h(1));
-          
-          break;
-        case 108 % 'l'
-          lpa = [xc yc zc];
-          takesnapshot = true;
-        case 114 % 'r'
-          rpa = [xc yc zc];
-          takesnapshot = true;
-        case 110 % 'n'
-          nas = [xc yc zc];
-          takesnapshot = true;
-        case 97  % 'a'
-          antcomm = [xc yc zc];
-          takesnapshot = true;
-        case 112 % 'p'
-          pstcomm = [xc yc zc];
-          takesnapshot = true;
-        case 122 % 'z'
-          xzpoint = [xc yc zc];
-          takesnapshot = true;
-        case 99  % 'c'
-          showcrosshair = ~showcrosshair;
-        case 109 % 'm'
-          if showmarkers > 0
-            showmarkers = 0;
-          else
-            showmarkers = 2;
-          end
-        case 1 % left mouse click
-          % update the view to a new position
-          l1 = get(get(gca, 'xlabel'), 'string');
-          l2 = get(get(gca, 'ylabel'), 'string');
-          switch l1,
-            case 'i'
-              xc = d1;
-            case 'j'
-              yc = d1;
-            case 'k'
-              zc = d1;
-            otherwise
-              continue;
-          end
-          switch l2,
-            case 'i'
-              xc = d2;
-            case 'j'
-              yc = d2;
-            case 'k'
-              zc = d2;
-            otherwise
-              continue;
-          end
-          if l1=='i' && l2=='j'
-            updatepanel = [1 2 3];
-          elseif l1=='i' && l2=='k'
-            updatepanel = [2 3 1];
-          elseif l1=='j' && l2=='k'
-            updatepanel = [3 1 2];
-          end
-        case 3 % right mouse click
-          % add point to a list
-          l1 = get(get(gca, 'xlabel'), 'string');
-          l2 = get(get(gca, 'ylabel'), 'string');
-          switch l1,
-            case 'i'
-              xc = d1;
-            case 'j'
-              yc = d1;
-            case 'k'
-              zc = d1;
-          end
-          switch l2,
-            case 'i'
-              xc = d2;
-            case 'j'
-              yc = d2;
-            case 'k'
-              zc = d2;
-          end
-          pnt = [pnt; xc yc zc];
-          if l1=='i' && l2=='j'
-            updatepanel = [1 2 3];
-          elseif l1=='i' && l2=='k'
-            updatepanel = [2 3 1];
-          elseif l1=='j' && l2=='k'
-            updatepanel = [3 1 2];
-          end
-        case 2 % middle mouse click
-          l1 = get(get(gca, 'xlabel'), 'string');
-          l2 = get(get(gca, 'ylabel'), 'string');
-          
-          % remove the previous point
-          if size(pnt,1)>0
-            pnt(end,:) = [];
-          end
-          
-          if l1=='i' && l2=='j'
-            updatepanel = [1 2 3];
-          elseif l1=='i' && l2=='k'
-            updatepanel = [2 3 1];
-          elseif l1=='j' && l2=='k'
-            updatepanel = [3 1 2];
-          end
-        case 28 % arrow left
-          % update the coordinates
-          l1 = get(get(gca, 'xlabel'), 'string');
-          l2 = get(get(gca, 'ylabel'), 'string');
-          if l1=='i' && l2=='j'
-            xc = xc-1; updatepanel = [1 2 3];
-          elseif l1=='i' && l2=='k'
-            xc = xc-1; updatepanel = [2 3 1];
-          elseif l1=='j' && l2=='k'
-            yc = yc-1; updatepanel = [3 1 2];
-          end
-        case 30 % arrow up
-          % update the coordinates
-          l1 = get(get(gca, 'xlabel'), 'string');
-          l2 = get(get(gca, 'ylabel'), 'string');
-          if l1=='i' && l2=='j'
-            yc = yc+1; updatepanel = [1 2 3];
-          elseif l1=='i' && l2=='k'
-            zc = zc+1; updatepanel = [2 3 1];
-          elseif l1=='j' && l2=='k'
-            zc = zc+1; updatepanel = [3 1 2];
-          end
-        case 29 % arrow right
-          % update the coordinates
-          l1 = get(get(gca, 'xlabel'), 'string');
-          l2 = get(get(gca, 'ylabel'), 'string');
-          if l1=='i' && l2=='j'
-            xc = xc+1; updatepanel = [1 2 3];
-          elseif l1=='i' && l2=='k'
-            xc = xc+1; updatepanel = [2 3 1];
-          elseif l1=='j' && l2=='k'
-            yc = yc+1; updatepanel = [3 1 2];
-          end
-        case 31 % arrow down
-          % update the coordinates
-          l1 = get(get(gca, 'xlabel'), 'string');
-          l2 = get(get(gca, 'ylabel'), 'string');
-          if l1=='i' && l2=='j'
-            yc = yc-1; updatepanel = [1 2 3];
-          elseif l1=='i' && l2=='k'
-            zc = zc-1; updatepanel = [2 3 1];
-          elseif l1=='j' && l2=='k'
-            zc = zc-1; updatepanel = [3 1 2];
-          end
-        otherwise
-          % do nothing
-      end
-      
-      if all(round([xc yc zc])<=mri.dim) && all(round([xc yc zc])>0)
-        fprintf('============================================================================\n');
-        str = sprintf('voxel %d, indices [%d %d %d]', sub2ind(mri.dim(1:3), round(xc), round(yc), round(zc)), round([xc yc zc]));
-        
-        if isfield(mri, 'coordsys') && isfield(mri, 'unit')
-          str = sprintf('%s, %s coordinates [%.1f %.1f %.1f] %s', str, mri.coordsys, ft_warp_apply(mri.transform, [xc yc zc]), mri.unit);
-        elseif ~isfield(mri, 'coordsys') && isfield(mri, 'unit')
-          str = sprintf('%s, location [%.1f %.1f %.1f] %s', str, ft_warp_apply(mri.transform, [xc yc zc]), mri.unit);
-        elseif isfield(mri, 'coordsys') && ~isfield(mri, 'unit')
-          str = sprintf('%s, %s coordinates [%.1f %.1f %.1f]', str, mri.coordsys, ft_warp_apply(mri.transform, [xc yc zc]));
-        elseif ~isfield(mri, 'coordsys') && ~isfield(mri, 'unis')
-          str = sprintf('%s, location [%.1f %.1f %.1f]', str, ft_warp_apply(mri.transform, [xc yc zc]));
-        end
-        fprintf('%s\n', str);
-        % fprintf('cur_voxel = [%f %f %f], cur_head = [%f %f %f]\n', [xc yc zc], ft_warp_apply(mri.transform, [xc yc zc]));
-      end
-      
-      markerpos   = zeros(0,3);
-      markerlabel = {};
-      markercolor = {};
-      if ~isempty(nas),
-        fprintf('nas_voxel = [%f %f %f], nas_head = [%f %f %f]\n', nas, ft_warp_apply(mri.transform, nas));
-        markerpos   = [markerpos; nas];
-        markerlabel = [markerlabel; {'nas'}];
-        markercolor = [markercolor; {'b'}];
-      end
-      if ~isempty(lpa),
-        fprintf('lpa_voxel = [%f %f %f], lpa_head = [%f %f %f]\n', lpa, ft_warp_apply(mri.transform, lpa));
-        markerpos   = [markerpos; lpa];
-        markerlabel = [markerlabel; {'lpa'}];
-        markercolor = [markercolor; {'g'}];
-      end
-      if ~isempty(rpa),
-        fprintf('rpa_voxel = [%f %f %f], rpa_head = [%f %f %f]\n', rpa, ft_warp_apply(mri.transform, rpa));
-        markerpos   = [markerpos; rpa];
-        markerlabel = [markerlabel; {'rpa'}];
-        markercolor = [markercolor; {'r'}];
-      end
-      if ~isempty(antcomm),
-        fprintf('antcomm_voxel = [%f %f %f], antcomm_head = [%f %f %f]\n', antcomm, ft_warp_apply(mri.transform, antcomm));
-        markerpos   = [markerpos; antcomm];
-        markerlabel = [markerlabel; {'antcomm'}];
-        markercolor = [markercolor; {'b'}];
-      end
-      if ~isempty(pstcomm),
-        fprintf('pstcomm_voxel = [%f %f %f], pstcomm_head = [%f %f %f]\n', pstcomm, ft_warp_apply(mri.transform, pstcomm));
-        markerpos   = [markerpos; pstcomm];
-        markerlabel = [markerlabel; {'pstcomm'}];
-        markercolor = [markercolor; {'g'}];
-      end
-      if ~isempty(xzpoint),
-        fprintf('xzpoint_voxel = [%f %f %f], xzpoint_head = [%f %f %f]\n', xzpoint, ft_warp_apply(mri.transform, xzpoint));
-        markerpos   = [markerpos; xzpoint];
-        markerlabel = [markerlabel; {'xzpoint'}];
-        markercolor = [markercolor; {'y'}];
-      end
-      if ~isempty(pnt)
-        fprintf('%f extra points selected\n', size(pnt,1));
-        markerpos   = [markerpos; pnt];
-        markerlabel = [markerlabel; repmat({''}, size(pnt,1), 1)];
-        markercolor = [markercolor; repmat({'m'}, size(pnt,1), 1)];
-      end
-    end % while true
+    cfg.fiducial.nas    = opt.fiducials(1,:);
+    cfg.fiducial.lpa    = opt.fiducials(2,:);
+    cfg.fiducial.rpa    = opt.fiducials(3,:);
+    cfg.fiducial.zpoint = opt.fiducials(4,:);
     
-    cfg.fiducial.nas    = nas;
-    cfg.fiducial.lpa    = lpa;
-    cfg.fiducial.rpa    = rpa;
-    cfg.fiducial.zpoint = xzpoint;
+    cfg.landmark.ac     = opt.landmarks(1,:);
+    cfg.landmark.pc     = opt.landmarks(2,:);
+    cfg.landmark.xzpoint = opt.landmarks(3,:);
+    cfg.landmark.rpoint  = opt.landmarks(4,:);
     
-    cfg.landmark.ac     = antcomm;
-    cfg.landmark.pc     = pstcomm;
-    cfg.landmark.xzpoint = xzpoint;
-    cfg.landmark.rpoint  = rpa;
-    
-    if ~isempty(nas) && ~isempty(lpa) && ~isempty(rpa)
+    if sum(sum(isfinite(opt.fiducials(1:3,:))))==9
       basedonfid = 1;
       if isempty(cfg.coordsys)
         cfg.coordsys = 'ctf';
       end
     end
     
-    if ~isempty(antcomm) && ~isempty(pstcomm) && ~isempty(xzpoint)
+    if sum(sum(isfinite(opt.landmarks(1:3,:))))==9
       basedonmrk = 1;
     end
     
@@ -999,8 +805,8 @@ else
   warning('no coordinate system realignment has been done');
 end
 
-if exist('pnt', 'var') && ~isempty(pnt)
-  realign.marker = pnt;
+if ~isempty(opt.pnt)
+  realign.marker = opt.pnt;
 end
 
 % do the general cleanup and bookkeeping at the end of the function
@@ -1011,119 +817,464 @@ ft_postamble previous mri
 ft_postamble history realign
 ft_postamble savevar realign
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% helper function to show three orthogonal slices
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [h1, h2, h3] = volplot(x, y, z, dat, c, cscale, showcrosshair, updatepanel, handles, showmarkers, markers)
-
-xi = c(1);
-yi = c(2);
-zi = c(3);
-
-% manual color scaling of anatomy data is usefull in case of some pixel noise
-if nargin<6 || isempty(cscale)
-  cmin = min(dat(:));
-  cmax = max(dat(:));
-else
-  cmin = cscale(1);
-  cmax = cscale(2);
-end
-
-if nargin<8
-  updatepanel = [1 2 3];
-end
-
-if nargin<9
-  h1 = [];
-  h2 = [];
-  h3 = [];
-else
-  h1 = handles{1};
-  h2 = handles{2};
-  h3 = handles{3};
-end
-
-if showmarkers==1
-  markerpos = round(markers{1});
-  markercolor = markers{3};
-  sel1 = find(markerpos(:,2)==repmat(c(2),size(markerpos,1),1));
-  sel2 = find(markerpos(:,1)==repmat(c(1),size(markerpos,1),1));
-  sel3 = find(markerpos(:,3)==repmat(c(3),size(markerpos,1),1));
-elseif showmarkers==2
-  markerpos = round(markers{1});
-  markercolor = markers{3};
-  sel1 = 1:size(markerpos,1);
-  sel2 = 1:size(markerpos,1);
-  sel3 = 1:size(markerpos,1);
-end
-
-for k = 1:numel(updatepanel)
-  
-  update = updatepanel(k);
-  if update==1
-    subplot(h1);
-    imagesc(x, z, squeeze(dat(:,yi,:))'); set(gca, 'ydir', 'normal')
-    xlabel('i'); ylabel('k');
-    caxis([cmin cmax]);
-    if showcrosshair
-      crosshair([x(xi) z(zi)], 'color', 'yellow');
-    end
-    if showmarkers && numel(sel1)>0
-      hold on;
-      for kk = 1:numel(sel1)
-        plot(markerpos(sel1(kk),1), markerpos(sel1(kk),3), 'marker', '.', 'color', markercolor{sel1(kk)});
-      end
-      hold off;
-    end
-    axis equal; axis tight;
-  end
-  
-  if update==2
-    subplot(h2);
-    imagesc(y, z, squeeze(dat(xi,:,:))'); set(gca, 'ydir', 'normal')
-    xlabel('j'); ylabel('k');
-    caxis([cmin cmax]);
-    if showcrosshair
-      crosshair([y(yi) z(zi)], 'color', 'yellow');
-    end
-    if showmarkers && numel(sel2)>0
-      hold on;
-      for kk = 1:numel(sel2)
-        plot(markerpos(sel2(kk),2), markerpos(sel2(kk),3), 'marker', '.', 'color', markercolor{sel2(kk)});
-      end
-      hold off;
-    end
-    axis equal; axis tight;
-  end
-  
-  if update==3
-    subplot(h3);
-    imagesc(x, y, squeeze(dat(:,:,zi))'); set(gca, 'ydir', 'normal')
-    xlabel('i'); ylabel('j');
-    caxis([cmin cmax]);
-    if showcrosshair
-      crosshair([x(xi) y(yi)], 'color', 'yellow');
-    end
-    if showmarkers && numel(sel3)>0
-      hold on;
-      for kk = 1:numel(sel3)
-        plot(markerpos(sel3(kk),1), markerpos(sel3(kk),2), 'marker', '.', 'color', markercolor{sel3(kk)});
-      end
-      hold off;
-    end
-    axis equal; axis tight;
-  end
-  
-end
-
-colormap gray
-
-h = gca;
-
-%-------------------------------------------------------
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function y = assignweights(x, w)
 
 % x is an indexing vector with the same number of arguments as w
 y = w(:)';
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_redraw(h, eventdata)
+
+h   = getparent(h);
+opt = getappdata(h, 'opt');
+
+curr_ax = get(h,       'currentaxes');
+tag = get(curr_ax, 'tag');
+
+data = opt.data;
+
+h1 = opt.handlesaxes(1);
+h2 = opt.handlesaxes(2);
+h3 = opt.handlesaxes(3);
+
+xi = opt.ijk(1);
+yi = opt.ijk(2);
+zi = opt.ijk(3);
+
+if any([xi yi zi] > data.dim) || any([xi yi zi] <= 0)
+  return;
+end
+
+opt.ijk = [xi yi zi 1]';
+xyz = data.transform * opt.ijk;
+opt.ijk = opt.ijk(1:3);
+
+% construct a string with user feedback
+str1 = sprintf('voxel %d, indices [%d %d %d]', sub2ind(data.dim(1:3), xi, yi, zi), opt.ijk);
+
+if opt.init
+  ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'parents', [h1 h2 h3].*opt.update, 'doscale', false);
+  
+  opt.anahandles = findobj(opt.handlesfigure, 'type', 'surface')';
+  parenttag  = get(cell2mat(get(opt.anahandles,'parent')),'tag');
+  [i1,i2,i3] = intersect(parenttag, {'ik';'jk';'ij'});
+  opt.anahandles = opt.anahandles(i3(i2)); % seems like swapping the order
+  opt.anahandles = opt.anahandles(:)';
+  set(opt.anahandles, 'tag', 'ana');
+else
+  ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'surfhandle', opt.anahandles.*opt.update, 'doscale', false);
+
+  if all(round([xi yi zi])<=data.dim) && all(round([xi yi zi])>0)
+    fprintf('============================================================================\n');
+    str = sprintf('voxel %d, indices [%d %d %d]', sub2ind(data.dim(1:3), round(xi), round(yi), round(zi)), round([xi yi zi]));
+    
+    if isfield(data, 'coordsys') && isfield(data, 'unit')
+      str = sprintf('%s, %s coordinates [%.1f %.1f %.1f] %s', str, data.coordsys, ft_warp_apply(data.transform, [xi yi zi]), data.unit);
+    elseif ~isfield(data, 'coordsys') && isfield(data, 'unit')
+      str = sprintf('%s, location [%.1f %.1f %.1f] %s', str, ft_warp_apply(data.transform, [xi yi zi]), data.unit);
+    elseif isfield(data, 'coordsys') && ~isfield(data, 'unit')
+      str = sprintf('%s, %s coordinates [%.1f %.1f %.1f]', str, data.coordsys, ft_warp_apply(data.transform, [xi yi zi]));
+    elseif ~isfield(data, 'coordsys') && ~isfield(data, 'unit')
+      str = sprintf('%s, location [%.1f %.1f %.1f]', str, ft_warp_apply(data.transform, [xi yi zic]));
+    end
+    fprintf('%s\n', str);
+    % fprintf('cur_voxel = [%f %f %f], cur_head = [%f %f %f]\n', [xc yc zc], ft_warp_apply(data.transform, [xc yc zc]));
+  end
+  
+  nas = opt.fiducials(1,:);
+  lpa = opt.fiducials(2,:);
+  rpa = opt.fiducials(3,:);
+  antcomm = opt.landmarks(1,:);
+  pstcomm = opt.landmarks(2,:);
+  xzpoint = opt.landmarks(3,:);
+  pnt     = opt.pnt;
+  
+  markerpos   = zeros(0,3);
+  markerlabel = {};
+  markercolor = {};
+  if ~isempty(nas),
+    fprintf('nas_voxel = [%f %f %f], nas_head = [%f %f %f]\n', nas, ft_warp_apply(data.transform, nas));
+    markerpos   = [markerpos; nas];
+    markerlabel = [markerlabel; {'nas'}];
+    markercolor = [markercolor; {'b'}];
+  end
+  if ~isempty(lpa),
+    fprintf('lpa_voxel = [%f %f %f], lpa_head = [%f %f %f]\n', lpa, ft_warp_apply(data.transform, lpa));
+    markerpos   = [markerpos; lpa];
+    markerlabel = [markerlabel; {'lpa'}];
+    markercolor = [markercolor; {'g'}];
+  end
+  if ~isempty(rpa),
+    fprintf('rpa_voxel = [%f %f %f], rpa_head = [%f %f %f]\n', rpa, ft_warp_apply(data.transform, rpa));
+    markerpos   = [markerpos; rpa];
+    markerlabel = [markerlabel; {'rpa'}];
+    markercolor = [markercolor; {'r'}];
+  end
+  if ~isempty(antcomm),
+    fprintf('antcomm_voxel = [%f %f %f], antcomm_head = [%f %f %f]\n', antcomm, ft_warp_apply(data.transform, antcomm));
+    markerpos   = [markerpos; antcomm];
+    markerlabel = [markerlabel; {'antcomm'}];
+    markercolor = [markercolor; {'b'}];
+  end
+  if ~isempty(pstcomm),
+    fprintf('pstcomm_voxel = [%f %f %f], pstcomm_head = [%f %f %f]\n', pstcomm, ft_warp_apply(data.transform, pstcomm));
+    markerpos   = [markerpos; pstcomm];
+    markerlabel = [markerlabel; {'pstcomm'}];
+    markercolor = [markercolor; {'g'}];
+  end
+  if ~isempty(xzpoint),
+    fprintf('xzpoint_voxel = [%f %f %f], xzpoint_head = [%f %f %f]\n', xzpoint, ft_warp_apply(data.transform, xzpoint));
+    markerpos   = [markerpos; xzpoint];
+    markerlabel = [markerlabel; {'xzpoint'}];
+    markercolor = [markercolor; {'y'}];
+  end
+  if ~isempty(pnt)
+    fprintf('%f extra points selected\n', size(pnt,1));
+    markerpos   = [markerpos; pnt];
+    markerlabel = [markerlabel; repmat({''}, size(pnt,1), 1)];
+    markercolor = [markercolor; repmat({'m'}, size(pnt,1), 1)];
+  end
+  opt.markers = {markerpos markerlabel markercolor};
+  
+end
+set(opt.handlesaxes(1),'Visible','on');
+set(opt.handlesaxes(2),'Visible','on');
+set(opt.handlesaxes(3),'Visible','on');
+
+% make the last current axes current again
+sel = findobj('type','axes','tag',tag);
+if ~isempty(sel)
+  set(opt.handlesfigure, 'currentaxes', sel(1));
+end
+if opt.crosshair
+  if opt.init
+    hch1 = crosshair([xi 1 zi], 'parent', h1, 'color', 'yellow');
+    hch3 = crosshair([xi yi opt.dim(3)], 'parent', h3, 'color', 'yellow');
+    hch2 = crosshair([opt.dim(1) yi zi], 'parent', h2, 'color', 'yellow');
+    opt.handlescross  = [hch1(:)';hch2(:)';hch3(:)'];
+  else
+    crosshair([xi 1 zi], 'handle', opt.handlescross(1, :));
+    crosshair([opt.dim(1) yi zi], 'handle', opt.handlescross(2, :));
+    crosshair([xi yi opt.dim(3)], 'handle', opt.handlescross(3, :));
+  end
+end
+
+if opt.showmarkers
+  markerpos   = round(opt.markers{1});
+  markercolor = opt.markers{3};
+  sel1 = find(markerpos(:,2)==repmat(opt.ijk(2),size(markerpos,1),1));
+  sel2 = find(markerpos(:,1)==repmat(opt.ijk(1),size(markerpos,1),1));
+  sel3 = find(markerpos(:,3)==repmat(opt.ijk(3),size(markerpos,1),1));
+
+  if numel(sel1)>0
+    subplot(h1);
+    hold on;
+    for kk=1:numel(sel1)
+      plot(markerpos(sel1(kk),1), markerpos(sel1(kk),3), 'marker', '.', 'color', markercolor{sel1(kk)});
+    end
+    hold off;
+  end
+  if numel(sel2)>0
+    subplot(h2);
+    hold on;
+    for kk = 1:numel(sel2)
+      plot(markerpos(sel2(kk),2), markerpos(sel2(kk),3), 'marker', '.', 'color', markercolor{sel2(kk)});
+    end
+    hold off;
+  end
+  if numel(sel3)>0
+    subplot(h3);
+    hold on;
+    for kk = 1:numel(sel3)
+      plot(h3, markerpos(sel3(kk),1), markerpos(sel3(kk),2), 'marker', '.', 'color', markercolor{sel3(kk)});
+    end
+    hold off;
+  end    
+end
+
+if opt.init
+  opt.init = false;
+end
+
+setappdata(h, 'opt', opt);
+set(h, 'currentaxes', curr_ax);
+
+uiresume
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_keyboard(h, eventdata)
+
+if isempty(eventdata)
+  % determine the key that corresponds to the uicontrol element that was activated
+  key = get(h, 'userdata');
+else
+  % determine the key that was pressed on the keyboard
+  key = parseKeyboardEvent(eventdata);
+end
+% get focus back to figure
+if ~strcmp(get(h, 'type'), 'figure')
+  set(h, 'enable', 'off');
+  drawnow;
+  set(h, 'enable', 'on');
+end
+
+h   = getparent(h);
+opt = getappdata(h, 'opt');
+
+curr_ax = get(h,       'currentaxes');
+tag     = get(curr_ax, 'tag');
+
+if isempty(key)
+  % this happens if you press the apple key
+  key = '';
+end
+
+switch key
+  case ''
+    % do nothing
+  case 'q'
+    setappdata(h, 'opt', opt);
+    cb_cleanup(h);
+  case {'i' 'j' 'k' 'm' 28 29 30 31 'leftarrow' 'rightarrow' 'uparrow' 'downarrow'} % TODO FIXME use leftarrow rightarrow uparrow downarrow
+    % update the view to a new position
+    if     strcmp(tag,'ik') && (strcmp(key,'i') || strcmp(key,'uparrow')    || isequal(key, 30)), opt.ijk(3) = opt.ijk(3)+1; opt.update = [0 0 1];
+    elseif strcmp(tag,'ik') && (strcmp(key,'j') || strcmp(key,'leftarrow')  || isequal(key, 28)), opt.ijk(1) = opt.ijk(1)-1; opt.update = [0 1 0];
+    elseif strcmp(tag,'ik') && (strcmp(key,'k') || strcmp(key,'rightarrow') || isequal(key, 29)), opt.ijk(1) = opt.ijk(1)+1; opt.update = [0 1 0];
+    elseif strcmp(tag,'ik') && (strcmp(key,'m') || strcmp(key,'downarrow')  || isequal(key, 31)), opt.ijk(3) = opt.ijk(3)-1; opt.update = [0 0 1];
+    elseif strcmp(tag,'ij') && (strcmp(key,'i') || strcmp(key,'uparrow')    || isequal(key, 30)), opt.ijk(2) = opt.ijk(2)+1; opt.update = [1 0 0];
+    elseif strcmp(tag,'ij') && (strcmp(key,'j') || strcmp(key,'leftarrow')  || isequal(key, 28)), opt.ijk(1) = opt.ijk(1)-1; opt.update = [0 1 0];
+    elseif strcmp(tag,'ij') && (strcmp(key,'k') || strcmp(key,'rightarrow') || isequal(key, 29)), opt.ijk(1) = opt.ijk(1)+1; opt.update = [0 1 0];
+    elseif strcmp(tag,'ij') && (strcmp(key,'m') || strcmp(key,'downarrow')  || isequal(key, 31)), opt.ijk(2) = opt.ijk(2)-1; opt.update = [1 0 0];
+    elseif strcmp(tag,'jk') && (strcmp(key,'i') || strcmp(key,'uparrow')    || isequal(key, 30)), opt.ijk(3) = opt.ijk(3)+1; opt.update = [0 0 1];
+    elseif strcmp(tag,'jk') && (strcmp(key,'j') || strcmp(key,'leftarrow')  || isequal(key, 28)), opt.ijk(2) = opt.ijk(2)-1; opt.update = [1 0 0];
+    elseif strcmp(tag,'jk') && (strcmp(key,'k') || strcmp(key,'rightarrow') || isequal(key, 29)), opt.ijk(2) = opt.ijk(2)+1; opt.update = [1 0 0];
+    elseif strcmp(tag,'jk') && (strcmp(key,'m') || strcmp(key,'downarrow')  || isequal(key, 31)), opt.ijk(3) = opt.ijk(3)-1; opt.update = [0 0 1];
+    else
+      % do nothing
+    end;
+    
+    setappdata(h, 'opt', opt);
+    cb_redraw(h);
+    
+    % contrast scaling
+  case 43 % numpad +
+    if isempty(opt.clim)
+      opt.clim = [min(opt.ana(:)) max(opt.ana(:))];
+    end
+    % reduce color scale range by 10%
+    cscalefactor = (opt.clim(2)-opt.clim(1))/10;
+    opt.clim(2) = opt.clim(2)-cscalefactor;
+  case 45 % numpad -
+    if isempty(opt.clim)
+      opt.clim = [min(opt.ana(:)) max(opt.ana(:))];
+    end
+    % increase color scale range by 10%
+    cscalefactor = (opt.clim(2)-opt.clim(1))/10;
+    opt.clim(2) = opt.clim(2)+cscalefactor;
+  
+    setappdata(h, 'opt', opt);
+    cb_redraw(h);
+  case 108 % 'l'
+    opt.fiducials(2,:) = opt.ijk;
+    setappdata(h, 'opt', opt);
+    cb_redraw(h);
+  case 114 % 'r'
+    opt.fiducials(3,:) = opt.ijk;
+    opt.landmarks(4,:) = opt.ijk;
+    setappdata(h, 'opt', opt);
+    cb_redraw(h);
+  case 110 % 'n'
+    opt.fiducials(1,:) = opt.ijk;
+    setappdata(h, 'opt', opt);
+    cb_redraw(h);
+  case 97  % 'a'
+    opt.landmarks(1,:) = opt.ijk;
+    setappdata(h, 'opt', opt);
+    cb_redraw(h);
+  case 112 % 'p'
+    opt.landmarks(2,:) = opt.ijk;
+    setappdata(h, 'opt', opt);
+    cb_redraw(h);
+  case 122 % 'z'
+    opt.landmarks(3,:) = opt.ijk;
+    opt.fiducials(4,:) = opt.ijk;
+    setappdata(h, 'opt', opt);
+    cb_redraw(h);
+  case 99  % 'c'
+    opt.crosshair = ~opt.crosshair;
+    setappdata(h, 'opt', opt);
+    cb_redraw(h);
+  case 109 % 'm'
+    if showmarkers > 0
+      showmarkers = 0;
+    else
+      showmarkers = 2;
+    end
+               case 3 % right mouse click
+          % add point to a list
+          l1 = get(get(gca, 'xlabel'), 'string');
+          l2 = get(get(gca, 'ylabel'), 'string');
+          switch l1,
+            case 'i'
+              xc = d1;
+            case 'j'
+              yc = d1;
+            case 'k'
+              zc = d1;
+          end
+          switch l2,
+            case 'i'
+              xc = d2;
+            case 'j'
+              yc = d2;
+            case 'k'
+              zc = d2;
+          end
+          pnt = [pnt; xc yc zc];
+        case 2 % middle mouse click
+          l1 = get(get(gca, 'xlabel'), 'string');
+          l2 = get(get(gca, 'ylabel'), 'string');
+          
+          % remove the previous point
+          if size(pnt,1)>0
+            pnt(end,:) = [];
+          end
+          
+          if l1=='i' && l2=='j'
+            updatepanel = [1 2 3];
+          elseif l1=='i' && l2=='k'
+            updatepanel = [2 3 1];
+          elseif l1=='j' && l2=='k'
+            updatepanel = [3 1 2];
+          end
+      
+  
+  otherwise
+    
+end % switch key
+
+uiresume(h);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_buttonpress(h, eventdata)
+
+h   = getparent(h);
+cb_getposition(h);
+
+switch get(h, 'selectiontype')
+  case 'normal'
+    % just update to new position, nothing else to be done here
+    cb_redraw(h);
+  case 'alt'
+    set(h, 'windowbuttonmotionfcn', @cb_tracemouse);
+    cb_redraw(h);
+  otherwise
+end
+
+uiresume;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_buttonrelease(h, eventdata)
+
+set(h, 'windowbuttonmotionfcn', '');
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_tracemouse(h, eventdata)
+
+h   = getparent(h);
+cb_getposition(h);
+cb_redraw(h);
+uiresume;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_getposition(h, eventdata)
+
+h   = getparent(h);
+opt = getappdata(h, 'opt');
+
+curr_ax = get(h,       'currentaxes');
+pos     = mean(get(curr_ax, 'currentpoint'));
+
+tag = get(curr_ax, 'tag');
+
+if ~isempty(tag) && ~opt.init
+  if strcmp(tag, 'ik')
+    opt.ijk([1 3])  = round(pos([1 3]));
+    opt.update = [1 1 1];
+  elseif strcmp(tag, 'ij')
+    opt.ijk([1 2])  = round(pos([1 2]));
+    opt.update = [1 1 1];
+  elseif strcmp(tag, 'jk')
+    opt.ijk([2 3])  = round(pos([2 3]));
+    opt.update = [1 1 1];
+  end
+end
+opt.ijk = min(opt.ijk(:)', opt.dim);
+opt.ijk = max(opt.ijk(:)', [1 1 1]);
+
+setappdata(h, 'opt', opt);
+uiresume;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_cleanup(h, eventdata)
+
+opt = getappdata(h, 'opt');
+opt.quit = true;
+setappdata(h, 'opt', opt);
+uiresume
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function h = getparent(h)
+
+p = h;
+while p~=0
+  h = p;
+  p = get(h, 'parent');
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function key = parseKeyboardEvent(eventdata)
+
+key = eventdata.Key;
+
+% handle possible numpad events (different for Windows and UNIX systems)
+% NOTE: shift+numpad number does not work on UNIX, since the shift
+% modifier is always sent for numpad events
+if isunix()
+  shiftInd = match_str(eventdata.Modifier, 'shift');
+  if ~isnan(str2double(eventdata.Character)) && ~isempty(shiftInd)
+    % now we now it was a numpad keystroke (numeric character sent AND
+    % shift modifier present)
+    key = eventdata.Character;
+    eventdata.Modifier(shiftInd) = []; % strip the shift modifier
+  end
+elseif ispc()
+  if strfind(eventdata.Key, 'numpad')
+    key = eventdata.Character;
+  end
+end
+
+if ~isempty(eventdata.Modifier)
+  key = [eventdata.Modifier{1} '+' key];
+end

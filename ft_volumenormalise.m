@@ -9,9 +9,10 @@ function [normalised] = ft_volumenormalise(cfg, mri)
 % example read with FT_READ_MRI.
 %
 % Configuration options are:
-%   cfg.spmversion  = 'spm8' or 'spm2' (default = 'spm8')
-%   cfg.template    = filename of the template anatomical MRI (default = 'T1.mnc' for spm2 or 'T1.nii' for spm8)
-%   cfg.parameter   = cell-array with the functional data which has to be normalised (default = 'all')
+%   cfg.spmversion  = string, 'spm2' or 'spm8' (default = 'spm8')
+%   cfg.template    = string, filename of the template anatomical MRI (default = 'T1.mnc'
+%                     for spm2 or 'T1.nii' for spm8)
+%   cfg.parameter   = cell-array with the functional data to be normalised (default = 'all')
 %   cfg.downsample  = integer number (default = 1, i.e. no downsampling)
 %   cfg.name        = string for output filename
 %   cfg.write       = 'no' (default) or 'yes', writes the segmented volumes to SPM2
@@ -33,17 +34,15 @@ function [normalised] = ft_volumenormalise(cfg, mri)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
+% See also FT_READ_MRI, FT_VOLUMEDOWNSAMPLE, FT_SOURCEINTERPOLATE, FT_SOURCEPLOT
 
 % Undocumented local options:
 %   cfg.keepintermediate = 'yes' or 'no'
 %   cfg.intermediatename = prefix of the the coregistered images and of the
 %                          original images in the original headcoordinate system
-%   cfg.spmparams        = one can feed in parameters from a prior
-%   normalisation
-%
-% See also FT_SOURCEINTERPOLATE, FT_READ_MRI
+%   cfg.spmparams        = one can feed in parameters from a prior normalisation
 
-% Copyright (C) 2004-2006, Jan-Mathijs Schoffelen
+% Copyright (C) 2004-2014, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -178,12 +177,12 @@ else
   cfg.parameter = cfg.parameter(fliplr(indx));
 end
 
-% downsample the volume
-tmpcfg            = [];
-tmpcfg.downsample = cfg.downsample;
-tmpcfg.parameter  = cfg.parameter;
-tmpcfg.smooth     = cfg.smooth;
-mri = ft_volumedownsample(tmpcfg, mri);
+if cfg.downsample~=1
+  % optionally downsample the anatomical and/or functional volumes
+  tmpcfg = keepfields(cfg, {'downsample', 'parameter', 'smooth'});
+  mri = ft_volumedownsample(tmpcfg, mri);
+  [cfg, mri] = rollback_provenance(cfg, mri);
+end
 
 ws = warning('off');
 

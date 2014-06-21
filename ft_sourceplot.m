@@ -291,12 +291,12 @@ cfg.maskparameter = parameterselection(cfg.maskparameter, data);
 try, cfg.funparameter  = cfg.funparameter{1};  end
 try, cfg.maskparameter = cfg.maskparameter{1}; end
 
-if cfg.downsample ~=1 && isvolume
-  % downsample all volumes
-  tmpcfg = [];
-  tmpcfg.parameter  = {cfg.funparameter, cfg.maskparameter, cfg.anaparameter};
-  tmpcfg.downsample = cfg.downsample;
+if isvolume && cfg.downsample~=1
+  % optionally downsample the anatomical and/or functional volumes
+  tmpcfg = keepfields(cfg, {'downsample'});
+  tmpcfg.parameter = {cfg.funparameter, cfg.maskparameter, cfg.anaparameter};
   data = ft_volumedownsample(tmpcfg, data);
+  [cfg, data] = rollback_provenance(cfg, data);
 end
 
 %%% make the local variables:
@@ -798,7 +798,7 @@ if isequal(cfg.method,'ortho')
   fprintf('click left mouse button to reposition the cursor\n');
   fprintf('click and hold right mouse button to update the position while moving the mouse\n');
   fprintf('use the arrowkeys to navigate in the current axis\n');
-    
+  
 elseif isequal(cfg.method,'glassbrain')
   tmpcfg          = [];
   tmpcfg.funparameter = cfg.funparameter;
@@ -979,7 +979,7 @@ elseif isequal(cfg.method,'surface')
   if isfield(surf, 'curv')
     % the curvature determines the color of gyri and sulci
     color = surf.curv(:) * cortex_light + (1-surf.curv(:)) * cortex_dark;
- else
+  else
     color = repmat(cortex_light, size(surf.pnt,1), 1);
   end
   
@@ -1076,7 +1076,7 @@ elseif isequal(cfg.method,'slice')
   
   % take care of a potential singleton 3d dimension
   dim = [dim 1];
-
+  
   m = dim(1);
   n = dim(2);
   M = ceil(sqrt(dim(3)));
@@ -1531,8 +1531,8 @@ switch key
   case ''
     % do nothing
   case 'q'
-%     setappdata(h, 'opt', opt);
-%     cb_cleanup(h);
+    %     setappdata(h, 'opt', opt);
+    %     cb_cleanup(h);
   case {'i' 'j' 'k' 'm' 28 29 30 31 'leftarrow' 'rightarrow' 'uparrow' 'downarrow'} % TODO FIXME use leftarrow rightarrow uparrow downarrow
     % update the view to a new position
     if     strcmp(tag,'ik') && (strcmp(key,'i') || strcmp(key,'uparrow')    || isequal(key, 30)), opt.ijk(3) = opt.ijk(3)+1; opt.update = [0 0 1];
@@ -1688,5 +1688,3 @@ end
 if ~isempty(eventdata.Modifier)
   key = [eventdata.Modifier{1} '+' key];
 end
-
-

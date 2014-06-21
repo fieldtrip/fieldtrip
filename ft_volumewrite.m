@@ -128,12 +128,11 @@ if iscell(cfg.parameter)
   cfg.parameter = cfg.parameter{1};
 end
 
-% downsample the volume
-if cfg.downsample > 1
-  tmpcfg = [];
-  tmpcfg.downsample = cfg.downsample;
-  tmpcfg.parameter  = cfg.parameter;
+if cfg.downsample~=1
+  % optionally downsample the anatomical and/or functional volumes
+  tmpcfg = keepfields(cfg, {'downsample', 'parameter'});
   volume = ft_volumedownsample(tmpcfg, volume);
+  [cfg, volume] = rollback_provenance(cfg, volume);
 end
 
 % copy the data and convert into double values so that it can be scaled later

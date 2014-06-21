@@ -265,12 +265,12 @@ if needana && ~hasanatomy
   error('the input volume needs an anatomy-field');
 end
 
-% perform optional downsampling before segmentation
-if cfg.downsample ~= 1
-  tmpcfg            = [];
-  tmpcfg.downsample = cfg.downsample;
-  tmpcfg.smooth     = 'no'; % smoothing is done in ft_volumesegment itself
+if cfg.downsample~=1
+  % optionally downsample the anatomical and/or functional volumes
+  tmpcfg = keepfields(cfg, {'downsample'});
+  tmpcfg.smooth = 'no'; % smoothing is done in ft_volumesegment itself
   mri = ft_volumedownsample(tmpcfg, mri);
+  [cfg, mri] = rollback_provenance(cfg, mri);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

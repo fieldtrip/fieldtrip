@@ -130,11 +130,11 @@ if isempty(cfg.zrange)
   cfg.zrange = zrange;
 end
 
-if ~isequal(cfg.downsample, 1)
-  % downsample the anatomical volume
-  tmpcfg = [];
-  tmpcfg.downsample = cfg.downsample;
+if cfg.downsample~=1
+  % optionally downsample the anatomical and/or functional volumes
+  tmpcfg = keepfields(cfg, {'downsample'});
   mri = ft_volumedownsample(tmpcfg, mri);
+  [cfg, mri] = rollback_provenance(cfg, mri);
 end
 
 % compute the desired grid positions
