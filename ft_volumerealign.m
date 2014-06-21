@@ -805,7 +805,7 @@ else
   warning('no coordinate system realignment has been done');
 end
 
-if ~isempty(opt.pnt)
+if exist('opt', 'var') && isfield(opt, 'pnt') && ~isempty(opt.pnt)
   realign.marker = opt.pnt;
 end
 
