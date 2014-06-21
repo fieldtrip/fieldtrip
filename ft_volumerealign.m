@@ -13,9 +13,11 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 %
 % Use as
 %   [mri] = ft_volumerealign(cfg, mri)
-%   [mri] = ft_volumerealign(cfg, mri, target);
-% where the input mri should be a single anatomical or functional MRI
-% volume that was for example read with FT_READ_MRI.
+% or
+%   [mri] = ft_volumerealign(cfg, mri, target)
+% where the input mri should be a single anatomical or functional MRI volume that was
+% for example read with FT_READ_MRI and the optional target MRI is the target
+% anatomical MRI for FSL.
 %
 % The configuration can contain the following options
 %   cfg.method         = different methods for aligning the volume
@@ -72,8 +74,8 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 %    numbered and saved as png-file.
 %
 % When cfg.method = 'headshape', the function extracts the scalp surface from
-% the input MRI, and aligns this surface with the headshape. Options pertaining 
-% to this method can be defined in the subcfg cfg.headshape. The following 
+% the input MRI, and aligns this surface with the headshape. Options pertaining
+% to this method can be defined in the subcfg cfg.headshape. The following
 % cfg-option is required:
 %  cfg.headshape.headshape = string pointing to a file describing a headshape, that
 %    can be loaded with FT_READ_HEADSHAPE, or a FieldTrip-structure describing
@@ -81,12 +83,12 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 %
 % The following options are optional:
 %  cfg.headshape.scalpsmooth    = scalar (default = 2): smoothing parameter
-%    for the scalp extraction 
-%  cfg.headsahpe.scalpthreshold = scalar (default = 0.1): threshold parameter 
+%    for the scalp extraction
+%  cfg.headsahpe.scalpthreshold = scalar (default = 0.1): threshold parameter
 %    for the scalp extraction
 %  cfg.headshape.interactive    = 'yes' ('no'): use interactive realignment
 %    to align headshape with scalp surface
-%  cfg.headshape.icp            = 'yes' ('no'): use automatic realignment 
+%  cfg.headshape.icp            = 'yes' ('no'): use automatic realignment
 %    based on the icp-algorithm. If both 'interactive' and 'icp' are
 %    executed, the icp step follows the interactive realignment step.
 %
@@ -96,20 +98,20 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 % should be defined in the subcfg cfg.fsl:
 %   cfg.fsl.path    = string, specifying the path to fsl
 %   cfg.fsl.costfun = string, specifying the cost-function used for
-%                     coregistration 
+%                     coregistration
 %   cfg.fsl.interpmethod = string, specifying the interpolation method
 %                     ('trilinear', 'nearestneighbour', 'sinc')
 %   cfg.fsl.dof     = scalar, specifying the number of parameters for the
 %                     affine transformation. 6 (rigid body), 7 (global
 %                     rescale), 9 (traditional) or 12.
 %   cfg.fsl.reslice = string, specifying whether the output image will be
-%                     resliced conform the target image (default = 'yes') 
+%                     resliced conform the target image (default = 'yes')
 %
 % When cfg.method = 'spm', a third input argument is required. The input volume is
-% coregistered to this target volume, using spm. Options pertaining to the 
+% coregistered to this target volume, using spm. Options pertaining to the
 % behavior of spm can be defined in the subcfg cfg.spm:
 %   cfg.spm.regtype = 'subj', 'rigid'
-%   cfg.spm.smosrc  = scalar value 
+%   cfg.spm.smosrc  = scalar value
 %   cfg.spm.smoref  = scalar value
 %
 % With the 'interactive' and 'fiducial' methods it is possible to define an
@@ -133,7 +135,7 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 
 % Undocumented option:
 %   cfg.weights = vector of weights that is used to weight the individual
-%   headshape points in the icp algorithm. Used optionally in cfg.method     
+%   headshape points in the icp algorithm. Used optionally in cfg.method
 %   = 'headshape'. If not specified, weights are put on points with
 %   z-coordinate<0 (assuming those to be eye rims and nose ridges, i.e.
 %   important points.
@@ -179,38 +181,39 @@ mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes');
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'realignfiducial', 'fiducial'});
+cfg = ft_checkconfig(cfg, 'renamed', {'landmark', 'fiducial'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'landmark', 'fiducial'});
 
 % set the defaults
-cfg.coordsys   = ft_getopt(cfg, 'coordsys',  '');
-cfg.method     = ft_getopt(cfg, 'method',    ''); % deal with this below
+cfg.coordsys   = ft_getopt(cfg, 'coordsys',  []);
+cfg.method     = ft_getopt(cfg, 'method',    []); % deal with this below
 cfg.fiducial   = ft_getopt(cfg, 'fiducial',  []);
-cfg.landmark   = ft_getopt(cfg, 'landmark',  []);
 cfg.parameter  = ft_getopt(cfg, 'parameter', 'anatomy');
 cfg.clim       = ft_getopt(cfg, 'clim',      []);
 cfg.snapshot   = ft_getopt(cfg, 'snapshot',  false);
 cfg.snapshotfile = ft_getopt(cfg, 'snapshotfile', fullfile(pwd,'ft_volumerealign_snapshot'));
 
-if strcmp(cfg.method, '')
-  if isempty(cfg.landmark) && isempty(cfg.fiducial)
+if isempty(cfg.method)
+  if isempty(cfg.fiducial)
+    % fiducials have not yet been specified
     cfg.method = 'interactive';
-  elseif ~isempty(cfg.fiducial)
-    cfg.method = 'fiducial';
-  elseif ~isempty(cfg.landmark)
-    cfg.method = 'landmark';
-  end
-end
-
-if strcmp(cfg.coordsys, '')
-  if strcmp(cfg.method, 'landmark')
-    cfg.coordsys = 'spm';
-  elseif strcmp(cfg.method, 'fiducial')
-    cfg.coordsys = 'ctf';
   else
-    cfg.coordsys = '';
+    % fiducials have already been specified
+    cfg.method = 'fiducial';
   end
 end
 
-basedonmrk = strcmp(cfg.method, 'landmark');
+if isempty(cfg.coordsys)
+  if     isstruct(cfg.fiducial) && all(ismember(fieldnames(cfg.fiducial), {'lpa', 'rpa', 'nas'}))
+    cfg.coordsys = 'ctf';
+  elseif isstruct(cfg.fiducial) && all(ismember(fieldnames(cfg.fiducial), {'ac', 'pc', 'xzpoint'}))
+    cfg.coordsys = 'spm';
+  elseif strcmp(cfg.method, 'interactive')
+    cfg.coordsys = 'ctf';
+  end
+  warning('defaulting to %s coordinate system', cfg.coordsys);
+end
+
 basedonfid = strcmp(cfg.method, 'fiducial');
 
 % these two have to be simultaneously true for a snapshot to be taken
@@ -219,7 +222,6 @@ if dosnapshot,
   % create an empty array of handles
   snap = [];
 end
-takesnapshot = false;
 
 % select the parameter that should be displayed
 cfg.parameter = parameterselection(cfg.parameter, mri);
@@ -242,16 +244,45 @@ elseif iscell(cfg.parameter) && isempty(cfg.parameter)
   end
 end
 
+% start with an empty transform and coordsys
 transform = [];
 coordsys  = [];
+
 switch cfg.method
   case 'fiducial'
-    % do nothing
+    % the actual coordinate transformation will be done further down
     
   case 'landmark'
-    % do nothing
+    % the actual coordinate transformation will be done further down
     
   case 'interactive'
+    
+    switch cfg.coordsys
+      case {'ctf' '4d' 'bti' 'yokogawa' 'asa' 'itab' 'neuromag'}
+        fidlabel  = {'nas', 'lpa', 'rpa', 'zpoint'};
+        fidletter = {'n', 'l', 'r', 'z'};
+        fidexplanation1 = '      press n for nas, l for lpa, r for rpa\n';
+        fidexplanation2 = '      press z for an extra control point that should have a positive z-value\n';
+      case {'spm' 'tal'}
+        fidlabel  = {'ac', 'pc', 'xzpoint', 'right'};
+        fidletter = {'a', 'p', 'z', 'r'};
+        fidexplanation1 = '      press a for ac, p for pc, z for xzpoint\n';
+        fidexplanation2 = '      press r for an extra control point that should be on the right side\n';
+      case 'paxinos'
+        fidlabel  = {'bregma', 'lambda', 'yzpoint'};
+        fidletter = {'b', 'l', 'z'};
+        fidexplanation1 = '      press b for bregma, l for lambda, z for yzpoint\n';
+        fidexplanation2 = '';
+      otherwise
+        error('unknown coordinate system "%s"', cfg.coordsys);
+    end
+    
+    for i=1:length(fidlabel)
+      if ~isfield(cfg.fiducial, fidlabel{i}) || isempty(cfg.fiducial.(fidlabel{i}))
+        cfg.fiducial.(fidlabel{i}) = [nan nan nan];
+      end
+    end
+    
     %% start building the figure
     h = figure;
     set(h, 'color', [1 1 1]);
@@ -262,23 +293,23 @@ switch cfg.method
     set(h, 'windowbuttonupfcn',   @cb_buttonrelease);
     set(h, 'windowkeypressfcn',   @cb_keyboard);
     set(h, 'CloseRequestFcn',     @cb_cleanup);
- 
+    
     % enforce the size of the subplots to be isotropic
     xdim = mri.dim(1) + mri.dim(2);
     ydim = mri.dim(2) + mri.dim(3);
-  
+    
     % inspect transform matrix, if the voxels are isotropic then the screen
     % pixels also should be square
     hasIsotropicVoxels = norm(mri.transform(1:3,1)) == norm(mri.transform(1:3,2))...
       && norm(mri.transform(1:3,2)) == norm(mri.transform(1:3,3));
-  
+    
     xsize(1) = 0.82*mri.dim(1)/xdim;
     xsize(2) = 0.82*mri.dim(2)/xdim;
     ysize(1) = 0.82*mri.dim(3)/ydim;
     ysize(2) = 0.82*mri.dim(2)/ydim;
-  
+    
     %% create figure handles
-  
+    
     % axis handles will hold the anatomical data if present, along with labels etc.
     h1 = axes('position',[0.07 0.07+ysize(2)+0.05 xsize(1) ysize(1)]);
     h2 = axes('position',[0.07+xsize(1)+0.05 0.07+ysize(2)+0.05 xsize(2) ysize(1)]);
@@ -286,7 +317,7 @@ switch cfg.method
     set(h1,'Tag','ik','Visible','on','XAxisLocation','top');
     set(h2,'Tag','jk','Visible','on','XAxisLocation','top');
     set(h3,'Tag','ij','Visible','on');
-  
+    
     if hasIsotropicVoxels
       set(h1,'DataAspectRatio',[1 1 1]);
       set(h2,'DataAspectRatio',[1 1 1]);
@@ -297,12 +328,7 @@ switch cfg.method
     dmin = min(dat(:));
     dmax = max(dat(:));
     dat  = (dat-dmin)./(dmax-dmin);
-    if isfield(cfg, 'fiducial') && isfield(cfg.fiducial, 'nas'),  nas = cfg.fiducial.nas; else nas = [nan nan nan]; end
-    if isfield(cfg, 'fiducial') && isfield(cfg.fiducial, 'lpa'),  lpa = cfg.fiducial.lpa; else lpa = [nan nan nan]; end
-    if isfield(cfg, 'fiducial') && isfield(cfg.fiducial, 'rpa'),  rpa = cfg.fiducial.rpa; else rpa = [nan nan nan]; end
-    antcomm = [nan nan nan];
-    pstcomm = [nan nan nan];
-    xzpoint = [nan nan nan];
+    
     x = 1:mri.dim(1);
     y = 1:mri.dim(2);
     z = 1:mri.dim(3);
@@ -310,7 +336,7 @@ switch cfg.method
     yc = round(mri.dim(2)/2);
     zc = round(mri.dim(3)/2);
     
-    if isfield(cfg, 'pnt') 
+    if isfield(cfg, 'pnt')
       pnt = cfg.pnt;
     else
       pnt = zeros(0,3);
@@ -326,80 +352,55 @@ switch cfg.method
       '      coronal plane, or\n',...
       '   b. use the arrow keys to increase or decrease the slice number by one\n',...
       '2. To mark a fiducial position or anatomical landmark, do BOTH:\n',...
-      '   (this can be done multiple times, until you are satisfied with the positions.\n',...
-      '    for each type of point, the most recent selection is stored.)\n',...
-      '   a. select the position by clicking on it in any slice with the left mouse\n',...
-      '      button\n',...
-      '   b. identify it by pressing either n/l/r for fiducials, or a/p/z for\n',...
-      '      anatomical landmarks\n',...
-      '   c. additional control point for the fiducials can be a point along the\n',...
-      '      positive z-axis, press z\n',...
-      '   d. additional control point for the landmarks can be a point along the\n',...
-      '      positive x-axis (to the participant''s right), press r\n',...
+      '   a. select the position by clicking on it in any slice with the left mouse button\n',...
+      '   b. identify it by pressing the letter corresponding to the fiducial/landmark:\n', fidexplanation1, fidexplanation2, ...
+      '   You can mark the fiducials multiple times, until you are satisfied with the positions.\n',...
       '3. To change the display:\n',...
       '   a. press c on keyboard to toggle crosshair visibility\n',...
-      '   b. press m on keyboard to toggle marked positions visibility\n',...
+      '   b. press f on keyboard to toggle fiducial visibility\n',...
       '   c. press + or - on (numeric) keyboard to change the color range''s upper limit\n',...
       '4. To finalize markers and quit interactive mode, press q on keyboard\n'));
     
-      % create structure to be passed to gui
-      opt               = [];
-      opt.dim           = mri.dim;
-      opt.ijk           = [xc yc zc];
-      opt.xsize         = xsize;
-      opt.ysize         = ysize;
-      opt.handlesaxes   = [h1 h2 h3];
-      opt.handlesfigure = h;
-      opt.quit          = false;
-      opt.ana           = dat;
-      opt.update        = [1 1 1];
-      opt.init          = true;
-      opt.tag           = 'ik';
-      opt.data          = mri;
-      opt.crosshair     = true;
-      opt.markers       = {markerpos markerlabel markercolor};
-      opt.showmarkers   = true;
-      opt.clim          = [];
-      opt.fiducials     = [nas;lpa;rpa;xzpoint];
-      opt.landmarks     = [antcomm;pstcomm;xzpoint;rpa];
-      opt.pnt           = pnt;
-      
-      setappdata(h, 'opt', opt);
-      cb_redraw(h);
-      
-      while(opt.quit==0)
-        uiwait(h);
-        opt = getappdata(h, 'opt');
-      end
-      delete(h);
-  
-      nas = opt.fiducials(1,:);
-      lpa = opt.fiducials(2,:);
-      rpa = opt.fiducials(3,:);
-      
-   
-      
-      
-    cfg.fiducial.nas    = opt.fiducials(1,:);
-    cfg.fiducial.lpa    = opt.fiducials(2,:);
-    cfg.fiducial.rpa    = opt.fiducials(3,:);
-    cfg.fiducial.zpoint = opt.fiducials(4,:);
-    
-    cfg.landmark.ac     = opt.landmarks(1,:);
-    cfg.landmark.pc     = opt.landmarks(2,:);
-    cfg.landmark.xzpoint = opt.landmarks(3,:);
-    cfg.landmark.rpoint  = opt.landmarks(4,:);
-    
-    if sum(sum(isfinite(opt.fiducials(1:3,:))))==9
-      basedonfid = 1;
-      if isempty(cfg.coordsys)
-        cfg.coordsys = 'ctf';
-      end
+    % create structure to be passed to gui
+    opt               = [];
+    opt.dim           = mri.dim;
+    opt.ijk           = [xc yc zc];
+    opt.xsize         = xsize;
+    opt.ysize         = ysize;
+    opt.handlesaxes   = [h1 h2 h3];
+    opt.handlesfigure = h;
+    opt.quit          = false;
+    opt.ana           = dat;
+    opt.update        = [1 1 1];
+    opt.init          = true;
+    opt.tag           = 'ik';
+    opt.mri           = mri;
+    opt.showcrosshair = true;
+    opt.showmarkers   = false;
+    opt.markers       = {markerpos markerlabel markercolor};
+    opt.clim          = [];
+    opt.fiducial      = cfg.fiducial;
+    opt.fidlabel      = fidlabel;
+    opt.fidletter     = fidletter;
+    opt.pnt           = pnt;
+    if isfield(mri, 'unit') && ~strcmp(mri.unit, 'unknown')
+      opt.unit = mri.unit;  % this is shown in the feedback on screen
+    else
+      opt.unit = '';        % this is not shown
     end
     
-    if sum(sum(isfinite(opt.landmarks(1:3,:))))==9
-      basedonmrk = 1;
+    setappdata(h, 'opt', opt);
+    cb_redraw(h);
+    
+    while(opt.quit==0)
+      uiwait(h);
+      opt = getappdata(h, 'opt');
     end
+    delete(h);
+    
+    % store the interactively determined fiducials in the configuration
+    % the actual coordinate transformation will be done further down
+    cfg.fiducial = opt.fiducial;
     
   case 'headshape'
     if strcmp(class(cfg.headshape), 'config')
@@ -446,7 +447,7 @@ switch cfg.method
     cfg.headshape.icp            = ft_getopt(cfg.headshape, 'icp',         true);
     cfg.headshape.scalpsmooth    = ft_getopt(cfg.headshape, 'scalpsmooth',    2, 1); % empty is OK
     cfg.headshape.scalpthreshold = ft_getopt(cfg.headshape, 'scalpthreshold', 0.1);
-
+    
     dointeractive = istrue(cfg.headshape.interactive);
     doicp         = istrue(cfg.headshape.icp);
     
@@ -506,10 +507,10 @@ switch cfg.method
         error('number of weights should be equal to the number of points in the headshape');
       end
     end
-      
+    
     % the icp function wants this as a function handle.
     weights = @(x)assignweights(x,w);
-      
+    
     % construct the coregistration matrix
     nrm = normals(scalp.pnt, scalp.tri, 'vertex');
     [R, t, err, dummy, info] = icp(scalp.pnt', shape.pnt', numiter, 'Minimize', 'plane', 'Normals', nrm', 'Weight', weights, 'Extrapolation', true, 'WorstRejection', 0.05);
@@ -542,7 +543,7 @@ switch cfg.method
       functional.pow      = info.distancein(:);
       smoothdist          = ft_sourceinterpolate(tmpcfg, functional, target);
       scalp.distancein    = smoothdist.pow(:);
-           
+      
       cfg.icpinfo = info;
       cfg.transform_icp = M2;
       
@@ -585,7 +586,7 @@ switch cfg.method
     % update the cfg
     cfg.headshape.headshape    = shape;
     cfg.headshape.headshapemri = scalp;
-      
+    
     % touch it to survive trackconfig
     cfg.headshape;
     
@@ -628,9 +629,9 @@ switch cfg.method
     r1  = num2str(cfg.fsl.searchrange(1));
     r2  = num2str(cfg.fsl.searchrange(2));
     str = sprintf('%s/flirt -in %s -ref %s -out %s -omat %s -bins 256 -cost %s -searchrx %s %s -searchry %s %s -searchrz %s %s -dof %s -interp %s',...
-          cfg.fsl.path, tmpname1, tmpname2, tmpname3, tmpname4, cfg.fsl.costfun, r1, r2, r1, r2, r1, r2, num2str(cfg.fsl.dof), cfg.fsl.interpmethod);
+      cfg.fsl.path, tmpname1, tmpname2, tmpname3, tmpname4, cfg.fsl.costfun, r1, r2, r1, r2, r1, r2, num2str(cfg.fsl.dof), cfg.fsl.interpmethod);
     if isempty(cfg.fsl.path), str = str(2:end); end % remove the first filesep, assume path to flirt to be known
-        
+    
     % system call
     system(str);
     
@@ -640,9 +641,9 @@ switch cfg.method
       % reconstruct the mapping from the target's world coordinate system
       % to the input's voxel coordinate system
       
-      fid = fopen(tmpname4);
-      tmp = textscan(fid, '%f');
-      fclose(fid);
+      vox = fopen(tmpname4);
+      tmp = textscan(vox, '%f');
+      fclose(vox);
       
       % this transforms from input voxels to target voxels
       vox2vox = reshape(tmp{1},4,4)';
@@ -652,15 +653,15 @@ switch cfg.method
         % if images are not radiological, the x-axis is flipped, see:
         %  https://www.jiscmail.ac.uk/cgi-bin/webadmin?A2=ind0810&L=FSL&P=185638
         %  https://www.jiscmail.ac.uk/cgi-bin/webadmin?A2=ind0903&L=FSL&P=R93775
-
+        
         % flip back
-        flipmat = eye(4); flipmat(1,1) = -1; flipmat(1,4) = target.dim(1); 
+        flipmat = eye(4); flipmat(1,1) = -1; flipmat(1,4) = target.dim(1);
         vox2vox = flipmat*vox2vox;
       end
       if det(mri.transform(1:3,1:3))>0
         % flirt apparently flips along the x-dim if the det < 0
         % flip back
-        flipmat = eye(4); flipmat(1,1) = -1; flipmat(1,4) = mri.dim(1); 
+        flipmat = eye(4); flipmat(1,1) = -1; flipmat(1,4) = mri.dim(1);
         vox2vox = vox2vox*flipmat;
       end
       
@@ -698,14 +699,14 @@ switch cfg.method
   case 'spm'
     % ensure spm8 on the path
     ft_hastoolbox('SPM8', 1);
-
+    
     if ~isfield(cfg, 'spm'), cfg.spm = []; end
     cfg.spm.regtype = ft_getopt(cfg.spm, 'regtype', 'subj');
     cfg.spm.smosrc  = ft_getopt(cfg.spm, 'smosrc',  2);
     cfg.spm.smoref  = ft_getopt(cfg.spm, 'smoref',  2);
     
-    if ~isfield(mri,    'coordsys'), 
-      mri = ft_convert_coordsys(mri); 
+    if ~isfield(mri,    'coordsys'),
+      mri = ft_convert_coordsys(mri);
     else
       fprintf('Input volume has coordinate system ''%s''\n', mri.coordsys);
     end
@@ -730,12 +731,12 @@ switch cfg.method
     % headcoordinates approximately correspond
     [tmp,    pvec_mri,    flip_mri, T] = align_ijk2xyz(mri);
     [target]                           = align_ijk2xyz(target);
-        
+    
     tname1 = [tempname, '.img'];
     tname2 = [tempname, '.img'];
     V1 = ft_write_mri(tname1, tmp.anatomy,    'transform', tmp.transform,    'spmversion', spm('ver'), 'dataformat', 'nifti_spm');
     V2 = ft_write_mri(tname2, target.anatomy, 'transform', target.transform, 'spmversion', spm('ver'), 'dataformat', 'nifti_spm');
-  
+    
     flags         = cfg.spm;
     flags.nits    = 0; %set number of non-linear iterations to zero
     params        = spm_normalise(V2,V1,[],[],[],flags);
@@ -751,62 +752,47 @@ switch cfg.method
     % delete the temporary files
     delete(tname1);
     delete(tname2);
-  
+    
   otherwise
     error('unsupported method "%s"', cfg.method);
 end
 
-if basedonfid && basedonmrk
-  basedonmrk = 0;
-  warning('both fiducials and anatomical landmarks have been defined interactively: using the fiducials for realignment');
+if strcmp(cfg.method, 'fiducial') || strcmp(cfg.method, 'interactive')
+  
+  % the fiducial locations are specified in voxels, convert them to head
+  % coordinates according to the existing transform matrix
+  fid1_vox  = cfg.fiducial.(fidlabel{1});
+  fid2_vox  = cfg.fiducial.(fidlabel{2});
+  fid3_vox  = cfg.fiducial.(fidlabel{3});
+  fid1_head = ft_warp_apply(mri.transform, fid1_vox);
+  fid2_head = ft_warp_apply(mri.transform, fid2_vox);
+  fid3_head = ft_warp_apply(mri.transform, fid3_vox);
+  
+  if length(fidlabel)>3
+    % the 4th point is optional
+    fid4_vox  = cfg.fiducial.(fidlabel{4});
+    fid4_head = ft_warp_apply(mri.transform, fid4_vox);
+  else
+    fid4_head = [nan nan nan];
+  end
+  
+  if ~any(isnan(fid4_head))
+    [transform, coordsys] = ft_headcoordinates(fid1_head, fid2_head, fid3_head, fid4_head, cfg.coordsys);
+  else
+    [transform, coordsys] = ft_headcoordinates(fid1_head, fid2_head, fid3_head, cfg.coordsys);
+  end
 end
-
-if basedonfid
-  % the fiducial locations are now specified in voxels, convert them to head
-  % coordinates according to the existing transform matrix
-  nas_head = ft_warp_apply(mri.transform, cfg.fiducial.nas);
-  lpa_head = ft_warp_apply(mri.transform, cfg.fiducial.lpa);
-  rpa_head = ft_warp_apply(mri.transform, cfg.fiducial.rpa);
-  if isfield(cfg.fiducial, 'zpoint') && ~isempty(cfg.fiducial.zpoint)
-    zpnt_head = ft_warp_apply(mri.transform, cfg.fiducial.zpoint);
-    [transform, coordsys] = ft_headcoordinates(nas_head, lpa_head, rpa_head, zpnt_head, cfg.coordsys);
-  else
-    % compute the homogeneous transformation matrix describing the new coordinate system
-    [transform, coordsys] = ft_headcoordinates(nas_head, lpa_head, rpa_head, cfg.coordsys);
-  end
-elseif basedonmrk
-  % the fiducial locations are now specified in voxels, convert them to head
-  % coordinates according to the existing transform matrix
-  ac     = ft_warp_apply(mri.transform, cfg.landmark.ac);
-  pc     = ft_warp_apply(mri.transform, cfg.landmark.pc);
-  xzpoint= ft_warp_apply(mri.transform, cfg.landmark.xzpoint);
-  if isfield(cfg.landmark, 'rpoint') && ~isempty(cfg.landmark.rpoint)
-    rpnt_head = ft_warp_apply(mri.transform, cfg.landmark.rpoint);
-    [transform, coordsys] = ft_headcoordinates(ac, pc, xzpoint, rpnt_head, 'spm');
-  else
-    % compute the homogenous transformation matrix describing the new coordinate system
-    [transform, coordsys] = ft_headcoordinates(ac, pc, xzpoint, 'spm');
-  end
-  
-else
-  % something else has created a transform and coordsys
-  
-end % if basedonXXX
 
 % copy the input anatomical or functional volume
 realign = mri;
 
-if ~isempty(transform)
+if ~isempty(transform) && ~any(isnan(transform(:)))
   % combine the additional transformation with the original one
   realign.transformorig = mri.transform;
   realign.transform     = transform * mri.transform;
   realign.coordsys      = coordsys;
 else
   warning('no coordinate system realignment has been done');
-end
-
-if exist('opt', 'var') && isfield(opt, 'pnt') && ~isempty(opt.pnt)
-  realign.marker = opt.pnt;
 end
 
 % do the general cleanup and bookkeeping at the end of the function
@@ -829,14 +815,13 @@ y = w(:)';
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_redraw(h, eventdata)
-
 h   = getparent(h);
 opt = getappdata(h, 'opt');
 
 curr_ax = get(h,       'currentaxes');
 tag = get(curr_ax, 'tag');
 
-data = opt.data;
+mri = opt.mri;
 
 h1 = opt.handlesaxes(1);
 h2 = opt.handlesaxes(2);
@@ -846,16 +831,16 @@ xi = opt.ijk(1);
 yi = opt.ijk(2);
 zi = opt.ijk(3);
 
-if any([xi yi zi] > data.dim) || any([xi yi zi] <= 0)
+if any([xi yi zi] > mri.dim) || any([xi yi zi] <= 0)
   return;
 end
 
 opt.ijk = [xi yi zi 1]';
-xyz = data.transform * opt.ijk;
-opt.ijk = opt.ijk(1:3);
+xyz = mri.transform * opt.ijk;
+opt.ijk = opt.ijk(1:3)';
 
 % construct a string with user feedback
-str1 = sprintf('voxel %d, indices [%d %d %d]', sub2ind(data.dim(1:3), xi, yi, zi), opt.ijk);
+str1 = sprintf('voxel %d, index [%d %d %d]', sub2ind(mri.dim(1:3), xi, yi, zi), opt.ijk);
 
 if opt.init
   ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'parents', [h1 h2 h3].*opt.update, 'doscale', false);
@@ -868,80 +853,45 @@ if opt.init
   set(opt.anahandles, 'tag', 'ana');
 else
   ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'surfhandle', opt.anahandles.*opt.update, 'doscale', false);
-
-  if all(round([xi yi zi])<=data.dim) && all(round([xi yi zi])>0)
-    fprintf('============================================================================\n');
-    str = sprintf('voxel %d, indices [%d %d %d]', sub2ind(data.dim(1:3), round(xi), round(yi), round(zi)), round([xi yi zi]));
+  
+  if all(round([xi yi zi])<=mri.dim) && all(round([xi yi zi])>0)
+    fprintf('==================================================================================\n');
+    str = sprintf('voxel %d, index [%d %d %d]', sub2ind(mri.dim(1:3), round(xi), round(yi), round(zi)), round([xi yi zi]));
     
-    if isfield(data, 'coordsys') && isfield(data, 'unit')
-      str = sprintf('%s, %s coordinates [%.1f %.1f %.1f] %s', str, data.coordsys, ft_warp_apply(data.transform, [xi yi zi]), data.unit);
-    elseif ~isfield(data, 'coordsys') && isfield(data, 'unit')
-      str = sprintf('%s, location [%.1f %.1f %.1f] %s', str, ft_warp_apply(data.transform, [xi yi zi]), data.unit);
-    elseif isfield(data, 'coordsys') && ~isfield(data, 'unit')
-      str = sprintf('%s, %s coordinates [%.1f %.1f %.1f]', str, data.coordsys, ft_warp_apply(data.transform, [xi yi zi]));
-    elseif ~isfield(data, 'coordsys') && ~isfield(data, 'unit')
-      str = sprintf('%s, location [%.1f %.1f %.1f]', str, ft_warp_apply(data.transform, [xi yi zic]));
+    lab = 'crosshair';
+    vox = [xi yi zi];
+    ind = sub2ind(mri.dim(1:3), round(vox(1)), round(vox(2)), round(vox(3)));
+    pos = ft_warp_apply(mri.transform, vox);
+    switch opt.unit
+      case 'mm'
+        fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%.1f %.1f %.1f] %s\n', lab, ind, vox, pos, opt.unit);
+      case 'cm'
+        fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%.2f %.2f %.2f] %s\n', lab, ind, vox, pos, opt.unit);
+      case 'm'
+        fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%.4f %.4f %.4f] %s\n', lab, ind, vox, pos, opt.unit);
+      otherwise
+        fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%f %f %f] %s\n', lab, ind, vox, pos, opt.unit);
     end
-    fprintf('%s\n', str);
-    % fprintf('cur_voxel = [%f %f %f], cur_head = [%f %f %f]\n', [xc yc zc], ft_warp_apply(data.transform, [xc yc zc]));
   end
   
-  nas = opt.fiducials(1,:);
-  lpa = opt.fiducials(2,:);
-  rpa = opt.fiducials(3,:);
-  antcomm = opt.landmarks(1,:);
-  pstcomm = opt.landmarks(2,:);
-  xzpoint = opt.landmarks(3,:);
-  pnt     = opt.pnt;
-  
-  markerpos   = zeros(0,3);
-  markerlabel = {};
-  markercolor = {};
-  if ~isempty(nas),
-    fprintf('nas_voxel = [%f %f %f], nas_head = [%f %f %f]\n', nas, ft_warp_apply(data.transform, nas));
-    markerpos   = [markerpos; nas];
-    markerlabel = [markerlabel; {'nas'}];
-    markercolor = [markercolor; {'b'}];
+  for i=1:length(opt.fidlabel)
+    lab = opt.fidlabel{i};
+    vox = opt.fiducial.(lab);
+    ind = sub2ind(mri.dim(1:3), round(vox(1)), round(vox(2)), round(vox(3)));
+    pos = ft_warp_apply(mri.transform, vox);
+    switch opt.unit
+      case 'mm'
+        fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%.1f %.1f %.1f] %s\n', lab, ind, vox, pos, opt.unit);
+      case 'cm'
+        fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%.2f %.2f %.2f] %s\n', lab, ind, vox, pos, opt.unit);
+      case 'm'
+        fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%.4f %.4f %.4f] %s\n', lab, ind, vox, pos, opt.unit);
+      otherwise
+        fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%f %f %f] %s\n', lab, ind, vox, pos, opt.unit);
+    end
   end
-  if ~isempty(lpa),
-    fprintf('lpa_voxel = [%f %f %f], lpa_head = [%f %f %f]\n', lpa, ft_warp_apply(data.transform, lpa));
-    markerpos   = [markerpos; lpa];
-    markerlabel = [markerlabel; {'lpa'}];
-    markercolor = [markercolor; {'g'}];
-  end
-  if ~isempty(rpa),
-    fprintf('rpa_voxel = [%f %f %f], rpa_head = [%f %f %f]\n', rpa, ft_warp_apply(data.transform, rpa));
-    markerpos   = [markerpos; rpa];
-    markerlabel = [markerlabel; {'rpa'}];
-    markercolor = [markercolor; {'r'}];
-  end
-  if ~isempty(antcomm),
-    fprintf('antcomm_voxel = [%f %f %f], antcomm_head = [%f %f %f]\n', antcomm, ft_warp_apply(data.transform, antcomm));
-    markerpos   = [markerpos; antcomm];
-    markerlabel = [markerlabel; {'antcomm'}];
-    markercolor = [markercolor; {'b'}];
-  end
-  if ~isempty(pstcomm),
-    fprintf('pstcomm_voxel = [%f %f %f], pstcomm_head = [%f %f %f]\n', pstcomm, ft_warp_apply(data.transform, pstcomm));
-    markerpos   = [markerpos; pstcomm];
-    markerlabel = [markerlabel; {'pstcomm'}];
-    markercolor = [markercolor; {'g'}];
-  end
-  if ~isempty(xzpoint),
-    fprintf('xzpoint_voxel = [%f %f %f], xzpoint_head = [%f %f %f]\n', xzpoint, ft_warp_apply(data.transform, xzpoint));
-    markerpos   = [markerpos; xzpoint];
-    markerlabel = [markerlabel; {'xzpoint'}];
-    markercolor = [markercolor; {'y'}];
-  end
-  if ~isempty(pnt)
-    fprintf('%f extra points selected\n', size(pnt,1));
-    markerpos   = [markerpos; pnt];
-    markerlabel = [markerlabel; repmat({''}, size(pnt,1), 1)];
-    markercolor = [markercolor; repmat({'m'}, size(pnt,1), 1)];
-  end
-  opt.markers = {markerpos markerlabel markercolor};
-  
 end
+
 set(opt.handlesaxes(1),'Visible','on');
 set(opt.handlesaxes(2),'Visible','on');
 set(opt.handlesaxes(3),'Visible','on');
@@ -951,50 +901,62 @@ sel = findobj('type','axes','tag',tag);
 if ~isempty(sel)
   set(opt.handlesfigure, 'currentaxes', sel(1));
 end
-if opt.crosshair
-  if opt.init
-    hch1 = crosshair([xi 1 zi], 'parent', h1, 'color', 'yellow');
-    hch3 = crosshair([xi yi opt.dim(3)], 'parent', h3, 'color', 'yellow');
-    hch2 = crosshair([opt.dim(1) yi zi], 'parent', h2, 'color', 'yellow');
-    opt.handlescross  = [hch1(:)';hch2(:)';hch3(:)'];
-  else
-    crosshair([xi 1 zi], 'handle', opt.handlescross(1, :));
-    crosshair([opt.dim(1) yi zi], 'handle', opt.handlescross(2, :));
-    crosshair([xi yi opt.dim(3)], 'handle', opt.handlescross(3, :));
-  end
+
+if opt.init
+  % draw the crosshairs for the first time
+  hch1 = crosshair([xi 1 zi], 'parent', h1, 'color', 'yellow');
+  hch3 = crosshair([xi yi opt.dim(3)], 'parent', h3, 'color', 'yellow');
+  hch2 = crosshair([opt.dim(1) yi zi], 'parent', h2, 'color', 'yellow');
+  opt.handlescross  = [hch1(:)';hch2(:)';hch3(:)'];
+  opt.handlesmarker = []
+else
+  % update the existing crosshairs, don't change the handles
+  crosshair([xi 1 zi], 'handle', opt.handlescross(1, :));
+  crosshair([opt.dim(1) yi zi], 'handle', opt.handlescross(2, :));
+  crosshair([xi yi opt.dim(3)], 'handle', opt.handlescross(3, :));
 end
 
-if opt.showmarkers
-  markerpos   = round(opt.markers{1});
-  markercolor = opt.markers{3};
-  sel1 = find(markerpos(:,2)==repmat(opt.ijk(2),size(markerpos,1),1));
-  sel2 = find(markerpos(:,1)==repmat(opt.ijk(1),size(markerpos,1),1));
-  sel3 = find(markerpos(:,3)==repmat(opt.ijk(3),size(markerpos,1),1));
+if opt.showcrosshair
+  set(opt.handlescross,'Visible','on');
+else
+  set(opt.handlescross,'Visible','off');
+end
 
-  if numel(sel1)>0
-    subplot(h1);
-    hold on;
-    for kk=1:numel(sel1)
-      plot(markerpos(sel1(kk),1), markerpos(sel1(kk),3), 'marker', '.', 'color', markercolor{sel1(kk)});
-    end
-    hold off;
+markercolor = {'r', 'g', 'b', 'y'};
+
+delete(opt.handlesmarker(opt.handlesmarker(:)>0));
+opt.handlesmarker = [];
+
+for i=1:length(opt.fidlabel)
+  pos = opt.fiducial.(opt.fidlabel{i});
+  if any(isnan(pos))
+    continue
   end
-  if numel(sel2)>0
-    subplot(h2);
-    hold on;
-    for kk = 1:numel(sel2)
-      plot(markerpos(sel2(kk),2), markerpos(sel2(kk),3), 'marker', '.', 'color', markercolor{sel2(kk)});
-    end
-    hold off;
-  end
-  if numel(sel3)>0
-    subplot(h3);
-    hold on;
-    for kk = 1:numel(sel3)
-      plot(h3, markerpos(sel3(kk),1), markerpos(sel3(kk),2), 'marker', '.', 'color', markercolor{sel3(kk)});
-    end
-    hold off;
-  end    
+  
+  posi = pos(1);
+  posj = pos(2);
+  posk = pos(3);
+  
+  subplot(h1);
+  hold on
+  opt.handlesmarker(i,1) = plot3(posi, 0, posk, 'marker', 'o', 'color', markercolor{i});
+  hold off
+  
+  subplot(h2);
+  hold on
+  opt.handlesmarker(i,2) = plot3(opt.dim(1)+1, posj, posk, 'marker', 'o', 'color', markercolor{i});
+  hold off
+  
+  subplot(h3);
+  hold on
+  opt.handlesmarker(i,3) = plot3(posi, posj, opt.dim(3)+1, 'marker', 'o', 'color', markercolor{i});
+  hold off
+end % for each fiducial
+
+if opt.showmarkers
+  set(opt.handlesmarker,'Visible','on');
+else
+  set(opt.handlesmarker,'Visible','off');
 end
 
 if opt.init
@@ -1005,6 +967,8 @@ setappdata(h, 'opt', opt);
 set(h, 'currentaxes', curr_ax);
 
 uiresume
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -1037,11 +1001,30 @@ if isempty(key)
 end
 
 switch key
-  case ''
+  case {'' 'shift+shift' 'alt-alt' 'control+control' 'command-0'}
     % do nothing
+    
+  case '1'
+    subplot(opt.handlesaxes(1));
+    
+  case '2'
+    subplot(opt.handlesaxes(2));
+    
+  case '3'
+    subplot(opt.handlesaxes(3));
+    
+  case opt.fidletter
+    sel = strcmp(key, opt.fidletter);
+    fprintf('==================================================================================\n');
+    fprintf('selected %s\n', opt.fidlabel{sel});
+    opt.fiducial.(opt.fidlabel{sel}) = opt.ijk;
+    setappdata(h, 'opt', opt);
+    cb_redraw(h);
+    
   case 'q'
     setappdata(h, 'opt', opt);
     cb_cleanup(h);
+    
   case {'i' 'j' 'k' 'm' 28 29 30 31 'leftarrow' 'rightarrow' 'uparrow' 'downarrow'} % TODO FIXME use leftarrow rightarrow uparrow downarrow
     % update the view to a new position
     if     strcmp(tag,'ik') && (strcmp(key,'i') || strcmp(key,'uparrow')    || isequal(key, 30)), opt.ijk(3) = opt.ijk(3)+1; opt.update = [0 0 1];
@@ -1064,99 +1047,77 @@ switch key
     cb_redraw(h);
     
     % contrast scaling
-  case 43 % numpad +
+  case {43 'shift+equal'}  % numpad +
     if isempty(opt.clim)
       opt.clim = [min(opt.ana(:)) max(opt.ana(:))];
     end
     % reduce color scale range by 10%
     cscalefactor = (opt.clim(2)-opt.clim(1))/10;
     opt.clim(2) = opt.clim(2)-cscalefactor;
-  case 45 % numpad -
+    setappdata(h, 'opt', opt);
+    cb_redraw(h);
+    
+  case {45 'shift+hyphen'} % numpad -
     if isempty(opt.clim)
       opt.clim = [min(opt.ana(:)) max(opt.ana(:))];
     end
     % increase color scale range by 10%
     cscalefactor = (opt.clim(2)-opt.clim(1))/10;
     opt.clim(2) = opt.clim(2)+cscalefactor;
-  
     setappdata(h, 'opt', opt);
     cb_redraw(h);
-  case 108 % 'l'
-    opt.fiducials(2,:) = opt.ijk;
-    setappdata(h, 'opt', opt);
-    cb_redraw(h);
-  case 114 % 'r'
-    opt.fiducials(3,:) = opt.ijk;
-    opt.landmarks(4,:) = opt.ijk;
-    setappdata(h, 'opt', opt);
-    cb_redraw(h);
-  case 110 % 'n'
-    opt.fiducials(1,:) = opt.ijk;
-    setappdata(h, 'opt', opt);
-    cb_redraw(h);
-  case 97  % 'a'
-    opt.landmarks(1,:) = opt.ijk;
-    setappdata(h, 'opt', opt);
-    cb_redraw(h);
-  case 112 % 'p'
-    opt.landmarks(2,:) = opt.ijk;
-    setappdata(h, 'opt', opt);
-    cb_redraw(h);
-  case 122 % 'z'
-    opt.landmarks(3,:) = opt.ijk;
-    opt.fiducials(4,:) = opt.ijk;
-    setappdata(h, 'opt', opt);
-    cb_redraw(h);
+    
   case 99  % 'c'
-    opt.crosshair = ~opt.crosshair;
+    opt.showcrosshair = ~opt.showcrosshair;
     setappdata(h, 'opt', opt);
     cb_redraw(h);
-  case 109 % 'm'
-    if showmarkers > 0
-      showmarkers = 0;
-    else
-      showmarkers = 2;
+    
+  case 102 % 'f'
+    opt.showmarkers = ~opt.showmarkers;
+    setappdata(h, 'opt', opt);
+    cb_redraw(h);
+    
+  case 3 % right mouse click
+    % add point to a list
+    l1 = get(get(gca, 'xlabel'), 'string');
+    l2 = get(get(gca, 'ylabel'), 'string');
+    switch l1,
+      case 'i'
+        xc = d1;
+      case 'j'
+        yc = d1;
+      case 'k'
+        zc = d1;
     end
-               case 3 % right mouse click
-          % add point to a list
-          l1 = get(get(gca, 'xlabel'), 'string');
-          l2 = get(get(gca, 'ylabel'), 'string');
-          switch l1,
-            case 'i'
-              xc = d1;
-            case 'j'
-              yc = d1;
-            case 'k'
-              zc = d1;
-          end
-          switch l2,
-            case 'i'
-              xc = d2;
-            case 'j'
-              yc = d2;
-            case 'k'
-              zc = d2;
-          end
-          pnt = [pnt; xc yc zc];
-        case 2 % middle mouse click
-          l1 = get(get(gca, 'xlabel'), 'string');
-          l2 = get(get(gca, 'ylabel'), 'string');
-          
-          % remove the previous point
-          if size(pnt,1)>0
-            pnt(end,:) = [];
-          end
-          
-          if l1=='i' && l2=='j'
-            updatepanel = [1 2 3];
-          elseif l1=='i' && l2=='k'
-            updatepanel = [2 3 1];
-          elseif l1=='j' && l2=='k'
-            updatepanel = [3 1 2];
-          end
-      
-  
+    switch l2,
+      case 'i'
+        xc = d2;
+      case 'j'
+        yc = d2;
+      case 'k'
+        zc = d2;
+    end
+    pnt = [pnt; xc yc zc];
+    
+  case 2 % middle mouse click
+    l1 = get(get(gca, 'xlabel'), 'string');
+    l2 = get(get(gca, 'ylabel'), 'string');
+    
+    % remove the previous point
+    if size(pnt,1)>0
+      pnt(end,:) = [];
+    end
+    
+    if l1=='i' && l2=='j'
+      updatepanel = [1 2 3];
+    elseif l1=='i' && l2=='k'
+      updatepanel = [2 3 1];
+    elseif l1=='j' && l2=='k'
+      updatepanel = [3 1 2];
+    end
+    
   otherwise
+    % do nothing
     
 end % switch key
 
