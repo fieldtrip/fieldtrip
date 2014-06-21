@@ -1133,6 +1133,12 @@ ft_postamble trackconfig
 ft_postamble provenance
 ft_postamble previous data
 
+% add a menu to the figure
+% also, delete any possibly existing previous menu, this is safe because delete([]) does nothing
+ftmenu = uimenu(gcf, 'Label', 'FieldTrip');
+uimenu(ftmenu, 'Label', 'Show pipeline',  'Callback', {@menu_pipeline, cfg});
+uimenu(ftmenu, 'Label', 'About',  'Callback', @menu_about);
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION makes an overlay of 3D anatomical, functional and probability
 % volumes. The three volumes must be scaled between 0 and 1.
