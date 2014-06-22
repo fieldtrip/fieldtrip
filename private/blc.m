@@ -1,4 +1,4 @@
-function [data] = blc(data, interval, optional);
+function [data] = blc(data, interval, optional)
 
 % BLC does a baseline correction using the prestimulus interval of the data
 %

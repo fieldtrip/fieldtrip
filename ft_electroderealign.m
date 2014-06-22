@@ -541,7 +541,7 @@ for i=1:size(xyzB,1)
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_creategui(hObject, eventdata, handles);
+function cb_creategui(hObject, eventdata, handles)
 % define the position of each GUI element
 fig = get(hObject, 'parent');
 % constants
@@ -596,7 +596,7 @@ ft_uilayout(fig, 'tag', 'alphaui', 'BackgroundColor', [0.8 0.8 0.8], 'width', 3*
 ft_uilayout(fig, 'tag', 'alpha',   'BackgroundColor', [0.8 0.8 0.8], 'width', 3*CONTROL_WIDTH, 'height', CONTROL_HEIGHT/2, 'vpos', CONTROL_VOFFSET-7*CONTROL_HEIGHT, 'hpos', CONTROL_HOFFSET+3*CONTROL_WIDTH);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_redraw(hObject, eventdata, handles);
+function cb_redraw(hObject, eventdata, handles)
 fig = get(hObject, 'parent');
 headshape = getappdata(fig, 'headshape');
 bnd.pnt = headshape.pnt; %ft_plot_mesh wants headshape in bnd fields
@@ -667,7 +667,7 @@ hold on
 ft_plot_sens(elec,'label',cfg.label);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_apply(hObject, eventdata, handles);
+function cb_apply(hObject, eventdata, handles)
 fig = get(hObject, 'parent');
 elec      = getappdata(fig, 'elec');
 transform = getappdata(fig, 'transform');
@@ -701,7 +701,7 @@ setappdata(fig, 'transform', transform);
 cb_redraw(hObject);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_close(hObject, eventdata, handles);
+function cb_close(hObject, eventdata, handles)
 % make the current transformation permanent and subsequently allow deleting the figure
 cb_apply(gca);
 % get the updated electrode from the figure

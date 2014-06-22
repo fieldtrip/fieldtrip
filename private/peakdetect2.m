@@ -1,4 +1,4 @@
-function [p, v] = peakdetect2(dat, val, mindist);
+function [p, v] = peakdetect2(dat, val, mindist)
 
 % PEAKDETECT2 detects peaks above a certain threshold in single-channel data
 %

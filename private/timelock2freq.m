@@ -1,4 +1,4 @@
-function [pow, csd, fourier] = timelock2freq(mom);
+function [pow, csd, fourier] = timelock2freq(mom)
 
 % TIMELOCK2FREQ transform the reconstructed dipole moment into
 % something that again resembles the physical input parameter in

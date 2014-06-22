@@ -1,4 +1,4 @@
-function [bp, x] = binomialprob(pobs, alpha, subjratio);
+function [bp, x] = binomialprob(pobs, alpha, subjratio)
 
 % BINOMIALPROB computes the probability of observing a significant effect
 % in multiple tests. It allows you to test questions like "How likely

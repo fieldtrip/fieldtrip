@@ -1,4 +1,4 @@
-function [dipout] = residualvariance(dip, grad, vol, dat, varargin);
+function [dipout] = residualvariance(dip, grad, vol, dat, varargin)
 
 % RESIDUALVARIANCE scan with a single dipole and computes the RV
 % at each grid location.

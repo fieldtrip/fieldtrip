@@ -1,4 +1,4 @@
-function [cfg] = keyval2cfg(varargin);
+function [cfg] = keyval2cfg(varargin)
 
 % KEYVAL2CFG converts between a structure and a cell-array with key-value
 % pairs which can be used for optional input arguments. 

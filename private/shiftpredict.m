@@ -1,4 +1,4 @@
-function [prb, cohobs, mcohrnd] = shiftpredict(cfg, dat, datindx, refindx, trltapcnt);
+function [prb, cohobs, mcohrnd] = shiftpredict(cfg, dat, datindx, refindx, trltapcnt)
 
 % SHIFTPREDICT implements a shift-predictor for testing significance
 % of coherence within a single condition. This function is a subfunction 
@@ -252,7 +252,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that shuffles in blocks
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [out] = randblockshift(n, k);
+function [out] = randblockshift(n, k)
 n    = n(:);
 nbin = length(n)/k;
 n    = reshape(n, [k nbin]);

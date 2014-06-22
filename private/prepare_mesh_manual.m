@@ -136,7 +136,7 @@ catch
 end
 
 
-function cb_redraw(hObject, eventdata, handles);
+function cb_redraw(hObject, eventdata, handles)
 fig  = get(hObject, 'parent');
 prop = getappdata(fig,'prop');
 data = getappdata(fig,'data');

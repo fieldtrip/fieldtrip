@@ -1,4 +1,5 @@
-function M=dimindex(A,dim,idx);
+function M=dimindex(A,dim,idx)
+
 % function M=dimindex(A,dim,idx);
 % 
 % The purpose of the function is shown by the following example:

@@ -1,4 +1,4 @@
-function [cfg, varargout] = prepare_resampled_data(cfg, varargin);
+function [cfg, varargout] = prepare_resampled_data(cfg, varargin)
 
 % PREPARE_RESAMPLED_DATA performs resampling of the input data for
 % multiple variables in a single or multiple conditions. The resampling

@@ -1,4 +1,4 @@
-function [newcfg] = cleancfg(cfg, presentused, defaultused, presentunused, defaultunused);
+function [newcfg] = cleancfg(cfg, presentused, defaultused, presentunused, defaultunused)
 
 % CLEANCFG Returns a structure with the config fields that were used
 % and displays on screen which fields were used or not.

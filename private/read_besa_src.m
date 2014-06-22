@@ -1,4 +1,4 @@
-function [src] = read_besa_src(filename);
+function [src] = read_besa_src(filename)
 
 % READ_BESA_SRC reads a beamformer source reconstruction from a BESA file
 %

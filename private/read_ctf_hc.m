@@ -1,4 +1,4 @@
-function [hc] = read_ctf_hc(filename);
+function [hc] = read_ctf_hc(filename)
 
 % READ_CTF_HC reads the MEG headcoil marker positions from an ascii file
 % and computes the coordinate transformation required to get from from

@@ -1,4 +1,5 @@
-function M=dimassign(A,dim,idx,B);
+function M=dimassign(A,dim,idx,B)
+
 % function M=dimassign(A,dim,idx,B);
 % 
 % The purpose of the function is shown by the following example:
