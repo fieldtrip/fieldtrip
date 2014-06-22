@@ -204,9 +204,9 @@ if isempty(cfg.method)
 end
 
 if isempty(cfg.coordsys)
-  if     isstruct(cfg.fiducial) && all(ismember(fieldnames(cfg.fiducial), {'lpa', 'rpa', 'nas'}))
+  if     isstruct(cfg.fiducial) && all(ismember(fieldnames(cfg.fiducial), {'lpa', 'rpa', 'nas', 'zpoint'}))
     cfg.coordsys = 'ctf';
-  elseif isstruct(cfg.fiducial) && all(ismember(fieldnames(cfg.fiducial), {'ac', 'pc', 'xzpoint'}))
+  elseif isstruct(cfg.fiducial) && all(ismember(fieldnames(cfg.fiducial), {'ac', 'pc', 'xzpoint', 'right'}))
     cfg.coordsys = 'spm';
   elseif strcmp(cfg.method, 'interactive')
     cfg.coordsys = 'ctf';
@@ -214,10 +214,8 @@ if isempty(cfg.coordsys)
   warning('defaulting to %s coordinate system', cfg.coordsys);
 end
 
-basedonfid = strcmp(cfg.method, 'fiducial');
-
 % these two have to be simultaneously true for a snapshot to be taken
-dosnapshot   = istrue(cfg.snapshot);
+dosnapshot = istrue(cfg.snapshot);
 if dosnapshot,
   % create an empty array of handles
   snap = [];
@@ -248,6 +246,34 @@ end
 transform = [];
 coordsys  = [];
 
+if strcmp(cfg.method, 'fiducial') || strcmp(cfg.method, 'interactive')
+  switch cfg.coordsys
+    case {'ctf' '4d' 'bti' 'yokogawa' 'asa' 'itab' 'neuromag'}
+      fidlabel  = {'nas', 'lpa', 'rpa', 'zpoint'};
+      fidletter = {'n', 'l', 'r', 'z'};
+      fidexplanation1 = '      press n for nas, l for lpa, r for rpa\n';
+      fidexplanation2 = '      press z for an extra control point that should have a positive z-value\n';
+    case {'spm' 'tal'}
+      fidlabel  = {'ac', 'pc', 'xzpoint', 'right'};
+      fidletter = {'a', 'p', 'z', 'r'};
+      fidexplanation1 = '      press a for ac, p for pc, z for xzpoint\n';
+      fidexplanation2 = '      press r for an extra control point that should be on the right side\n';
+    case 'paxinos'
+      fidlabel  = {'bregma', 'lambda', 'yzpoint'};
+      fidletter = {'b', 'l', 'z'};
+      fidexplanation1 = '      press b for bregma, l for lambda, z for yzpoint\n';
+      fidexplanation2 = '';
+    otherwise
+      error('unknown coordinate system "%s"', cfg.coordsys);
+  end
+  
+  for i=1:length(fidlabel)
+    if ~isfield(cfg.fiducial, fidlabel{i}) || isempty(cfg.fiducial.(fidlabel{i}))
+      cfg.fiducial.(fidlabel{i}) = [nan nan nan];
+    end
+  end
+end % interactive or fiducial
+
 switch cfg.method
   case 'fiducial'
     % the actual coordinate transformation will be done further down
@@ -256,33 +282,6 @@ switch cfg.method
     % the actual coordinate transformation will be done further down
     
   case 'interactive'
-    
-    switch cfg.coordsys
-      case {'ctf' '4d' 'bti' 'yokogawa' 'asa' 'itab' 'neuromag'}
-        fidlabel  = {'nas', 'lpa', 'rpa', 'zpoint'};
-        fidletter = {'n', 'l', 'r', 'z'};
-        fidexplanation1 = '      press n for nas, l for lpa, r for rpa\n';
-        fidexplanation2 = '      press z for an extra control point that should have a positive z-value\n';
-      case {'spm' 'tal'}
-        fidlabel  = {'ac', 'pc', 'xzpoint', 'right'};
-        fidletter = {'a', 'p', 'z', 'r'};
-        fidexplanation1 = '      press a for ac, p for pc, z for xzpoint\n';
-        fidexplanation2 = '      press r for an extra control point that should be on the right side\n';
-      case 'paxinos'
-        fidlabel  = {'bregma', 'lambda', 'yzpoint'};
-        fidletter = {'b', 'l', 'z'};
-        fidexplanation1 = '      press b for bregma, l for lambda, z for yzpoint\n';
-        fidexplanation2 = '';
-      otherwise
-        error('unknown coordinate system "%s"', cfg.coordsys);
-    end
-    
-    for i=1:length(fidlabel)
-      if ~isfield(cfg.fiducial, fidlabel{i}) || isempty(cfg.fiducial.(fidlabel{i}))
-        cfg.fiducial.(fidlabel{i}) = [nan nan nan];
-      end
-    end
-    
     %% start building the figure
     h = figure;
     set(h, 'color', [1 1 1]);
