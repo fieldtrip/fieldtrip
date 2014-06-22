@@ -1,4 +1,4 @@
-function [val, status] = ft_findcfg(cfg, var);
+function [val, status] = ft_findcfg(cfg, var)
 
 % FT_FINDCFG searches for an element in the cfg structure
 % or in the nested previous cfgs

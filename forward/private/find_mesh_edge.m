@@ -1,4 +1,4 @@
-function [pnt, line] = find_mesh_edge(pnt, tri);
+function [pnt, line] = find_mesh_edge(pnt, tri)
 
 % FIND_MESH_EDGE returns the edge of a triangulated mesh
 %

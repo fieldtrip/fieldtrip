@@ -1,4 +1,4 @@
-function [nrm] = normals(pnt, tri, opt);
+function [nrm] = normals(pnt, tri, opt)
 
 % NORMALS compute the surface normals of a triangular mesh
 % for each triangle or for each vertex

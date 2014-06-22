@@ -1,4 +1,4 @@
-function [hdr] = neuralynx_getheader(filename);
+function [hdr] = neuralynx_getheader(filename)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION for reading the 16384 byte header from any Neuralynx file

@@ -1,4 +1,4 @@
-function [pnt, tri] = icosahedron();
+function [pnt, tri] = icosahedron()
 
 % ICOSAHEDRON creates an icosahedron
 %

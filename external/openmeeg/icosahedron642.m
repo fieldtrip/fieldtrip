@@ -1,4 +1,4 @@
-function [pnt, tri] = icosahedron();
+function [pnt, tri] = icosahedron642()
 
 % ICOSAHEDRON642 creates a 3-fold refined icosahedron
 

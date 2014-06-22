@@ -1,4 +1,4 @@
-function [pntr, trir] = refine(pnt, tri, method, varargin);
+function [pntr, trir] = refine(pnt, tri, method, varargin)
 
 % REFINE a 3D surface that is described by a triangulation
 %
