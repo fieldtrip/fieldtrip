@@ -328,9 +328,11 @@ elseif ~is2Dana && ~is2Dfun
   if cfg.downsample~=1
     % optionally downsample the anatomical and/or functional volumes
     tmpcfg = keepfields(cfg, {'downsample'});
+    orgcfg.parameter = cfg.parameter;
     tmpcfg.parameter = 'anatomy';
     anatomical = ft_volumedownsample(tmpcfg, anatomical);
     [cfg, anatomical] = rollback_provenance(cfg, anatomical);
+    cfg.parameter = orgcfg.parameter; % restore the original parameter, it should not be anatomy
   end
   
   % collect the functional volumes that should be converted
