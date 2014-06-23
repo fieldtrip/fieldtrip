@@ -907,7 +907,7 @@ if opt.init
   hch3 = crosshair([xi yi opt.dim(3)], 'parent', h3, 'color', 'yellow');
   hch2 = crosshair([opt.dim(1) yi zi], 'parent', h2, 'color', 'yellow');
   opt.handlescross  = [hch1(:)';hch2(:)';hch3(:)'];
-  opt.handlesmarker = []
+  opt.handlesmarker = [];
 else
   % update the existing crosshairs, don't change the handles
   crosshair([xi 1 zi], 'handle', opt.handlescross(1, :));
@@ -938,17 +938,17 @@ for i=1:length(opt.fidlabel)
   
   subplot(h1);
   hold on
-  opt.handlesmarker(i,1) = plot3(posi, 0, posk, 'marker', 'o', 'color', markercolor{i});
+  opt.handlesmarker(i,1) = plot3(posi, 1, posk, 'marker', 'o', 'color', markercolor{i});
   hold off
   
   subplot(h2);
   hold on
-  opt.handlesmarker(i,2) = plot3(opt.dim(1)+1, posj, posk, 'marker', 'o', 'color', markercolor{i});
+  opt.handlesmarker(i,2) = plot3(opt.dim(1), posj, posk, 'marker', 'o', 'color', markercolor{i});
   hold off
   
   subplot(h3);
   hold on
-  opt.handlesmarker(i,3) = plot3(posi, posj, opt.dim(3)+1, 'marker', 'o', 'color', markercolor{i});
+  opt.handlesmarker(i,3) = plot3(posi, posj, opt.dim(3), 'marker', 'o', 'color', markercolor{i});
   hold off
 end % for each fiducial
 
