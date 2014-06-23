@@ -84,12 +84,12 @@ switch unit
     error('unknown units (%s)', unit);
 end
 
-fprintf('The axes are %g %s long in each direction\n', axmax, unit);
-fprintf('The diameter of the sphere at the origin is %g %s\n', 2*rbol, unit);
-
 % this is useful if the anatomy is from a non-human primate or rodent
 axmax = axisscale*axmax;
 rbol  = axisscale*rbol;
+
+fprintf('The axes are %g %s long in each direction\n', axmax, unit);
+fprintf('The diameter of the sphere at the origin is %g %s\n', 2*rbol, unit);
 
 if isfield(data, 'coordsys') && ~isempty(data.coordsys)
   label = cell(3,1);
