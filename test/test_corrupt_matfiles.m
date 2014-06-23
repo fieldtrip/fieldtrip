@@ -23,6 +23,7 @@ end
 
 function files = findfiles(p)
 d = dir(p);
+d = d([d.bytes]<4*1e9); % skip files that are too large
 
 files = {d(~[d.isdir]).name}';
 files = files(~cellfun(@isempty, regexp(files, '\.mat$'))); % only select the mat files
