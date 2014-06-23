@@ -1,6 +1,6 @@
 function test_corrupt_matfiles
 
-% MEM 6gb
+% MEM 8gb
 % WALLTIME 10:00:00
 
 files = findfiles('/home/common/matlab/fieldtrip/data/test');
