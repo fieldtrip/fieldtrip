@@ -875,15 +875,9 @@ elseif isequal(cfg.method,'surface')
       surf.pnt = temp.pnt;
       clear temp
       % downsample other fields
-      if isfield(surf, 'curv')
-        surf.curv = surf.curv(idx);
-      end
-      if isfield(surf, 'sulc')
-        surf.sulc = surf.sulc(idx);
-      end
-      if isfield(surf, 'hemisphere')
-        surf.hemisphere = surf.hemisphere(idx);
-      end
+      if isfield(surf, 'curv'),       surf.curv       = surf.curv(idx);       end
+      if isfield(surf, 'sulc'),       surf.sulc       = surf.sulc(idx);       end
+      if isfield(surf, 'hemisphere'), surf.hemisphere = surf.hemisphere(idx); end
     end
     
     % these are required
@@ -894,58 +888,25 @@ elseif isequal(cfg.method,'surface')
     fprintf('%d voxels in functional data\n', prod(dim));
     fprintf('%d vertices in cortical surface\n', size(surf.pnt,1));
     
-    if (hasfun  && strcmp(cfg.projmethod,'project')),
-      val=zeros(size(surf.pnt,1),1);
-      if hasmsk
-        maskval = val;
-      end;
-      %convert projvec in mm to a factor, assume mean distance of 70mm
-      cfg.projvec=(70-cfg.projvec)/70;
-      for iproj = 1:length(cfg.projvec),
-        sub = round(ft_warp_apply(inv(data.transform), surf.pnt*cfg.projvec(iproj), 'homogenous'));  % express
-        sub(sub(:)<1) = 1;
-        sub(sub(:,1)>dim(1),1) = dim(1);
-        sub(sub(:,2)>dim(2),2) = dim(2);
-        sub(sub(:,3)>dim(3),3) = dim(3);
-        disp('projecting...')
-        ind = sub2ind(dim, sub(:,1), sub(:,2), sub(:,3));
-        if strcmp(cfg.projcomb,'mean')
-          val = val + cfg.projweight(iproj) * fun(ind);
-          if hasmsk
-            maskval = maskval + cfg.projweight(iproj) * msk(ind);
-          end
-        elseif strcmp(cfg.projcomb,'max')
-          val =  max([val cfg.projweight(iproj) * fun(ind)],[],2);
-          tmp2 = min([val cfg.projweight(iproj) * fun(ind)],[],2);
-          fi = find(val < max(tmp2));
-          val(fi) = tmp2(fi);
-          if hasmsk
-            maskval = max(abs([maskval cfg.projweight(iproj) * fun(ind)]),[],2);
-          end
-        else
-          error('undefined method to combine projections; use cfg.projcomb= mean or max')
-        end
-      end
-      if strcmp(cfg.projcomb,'mean'),
-        val=val/length(cfg.projvec);
-        if hasmsk
-          maskval = max(abs([maskval cfg.projweight(iproj) * fun(ind)]),[],2);
-        end
-      end;
-      if ~isempty(cfg.projthresh),
-        mm=max(abs(val(:)));
-        maskval(abs(val) < cfg.projthresh*mm) = 0;
-      end
+    tmpcfg = [];
+    tmpcfg.parameter = {cfg.funparameter};
+    if ~isempty(cfg.maskparameter)
+      tmpcfg.parameter = [tmpcfg.parameter {cfg.maskparameter}];
     end
+    tmpcfg.interpmethod = cfg.projmethod;
+    tmpcfg.distmat    = cfg.distmat;
+    tmpcfg.sphereradius = cfg.sphereradius;
+    tmpcfg.projvec    = cfg.projvec;
+    tmpcfg.projcomb   = cfg.projcomb;
+    tmpcfg.projweight = cfg.projweight;
+    tmpcfg.projthresh = cfg.projthresh;
+    tmpdata           = ft_sourceinterpolate(tmpcfg, data, surf);
     
-    if (hasfun && ~strcmp(cfg.projmethod,'project')),
-      [interpmat, cfg.distmat] = interp_gridded(data.transform, fun, surf.pnt, 'projmethod', cfg.projmethod, 'distmat', cfg.distmat, 'sphereradius', cfg.sphereradius, 'inside', data.inside);
-      % interpolate the functional data
-      val = interpmat * fun(data.inside(:));
-    end;
-    if (hasmsk && ~strcmp(cfg.projmethod,'project')),
-      % also interpolate the opacity mask
-      maskval = interpmat * msk(data.inside(:));
+    if hasfun, val     = getsubfield(tmpdata, cfg.funparameter);  val     = val(:);     end
+    if hasmsk, maskval = getsubfield(tmpdata, cfg.maskparameter); maskval = maskval(:); end
+    
+    if ~isempty(cfg.projthresh),
+      maskval(abs(val) < cfg.projthresh*max(abs(val(:)))) = 0;
     end
     
   else

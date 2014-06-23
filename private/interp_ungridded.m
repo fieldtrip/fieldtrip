@@ -19,7 +19,6 @@ function varargout = interp_ungridded(pntin, pntout, varargin)
 %                   'smudge'
 %    sphereradius = number
 %    distmat      = NxM matrix with precomputed distances
-%    triin        = triangulation for the first set of vertices
 %    triout       = triangulation for the second set of vertices
 %    data         = NxK matrix with functional data
 %
@@ -56,7 +55,6 @@ projmethod   = ft_getopt(varargin, 'projmethod');     % required
 sphereradius = ft_getopt(varargin, 'sphereradius');   % required for some projection methods
 powerparam   = ft_getopt(varargin, 'power', 1);
 distmat      = ft_getopt(varargin, 'distmat');        % will be computed if needed and not present
-triin        = ft_getopt(varargin, 'triin');          % not yet implemented
 triout       = ft_getopt(varargin, 'triout');   
 dat          = ft_getopt(varargin, 'data');           % functional data defined at pntin
 inside       = ft_getopt(varargin, 'inside');
@@ -87,7 +85,9 @@ if isempty(distmat)
       end
       % determine the nearest voxel for each surface point
       ind     = find_nearest(pntout, pntin, 5);
-      distmat = sparse(1:npntout, ind, ones(size(ind)), npntout, npntin);
+      sel     = ind>0;
+      indx    = 1:npntout;
+      distmat = sparse(indx(sel), ind(sel), ones(size(ind(sel))), npntout, npntin);
 
     case {'sphere_avg', 'sphere_weighteddistance'}
       if isempty(sphereradius)
@@ -166,7 +166,8 @@ switch projmethod
 
   case 'smudge'
     projmat = distmat;
-    
+  
+ 
   otherwise
     error('unsupported projection method');
 end  % case projmethod
