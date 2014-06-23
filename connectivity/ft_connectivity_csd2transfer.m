@@ -395,7 +395,7 @@ elseif strcmp(sfmethod, 'bivariate')
       for k = 1:numel(begchunk)
         fprintf('computing factorization of chunck %d/%d\n', k, numel(begchunk));
         [Htmp, Ztmp, Stmp] = sfactorization_wilson2x2(freq.crsspctrm, freq.freq, ...
-                                             numiteration, tol, cmbindx(begchunk(k):endchunk(k),:), fb, init);
+                                             numiteration, tol, cmbindx(begchunk(k):endchunk(k),:), fb, init, checkconvergence);
                                            
         begix = (k-1)*nperchunk*4+1;
         endix = min(k*nperchunk*4, size(cmbindx,1)*4);
