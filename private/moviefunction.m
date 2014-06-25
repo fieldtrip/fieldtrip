@@ -1,4 +1,4 @@
-function moviefunction(cfg, data)
+function moviefunction(cfg, varargin)
 % we need cfg.plotfun to plot the data
 % data needs to be 3D, N x time x freq (last can be singleton)
 %   N needs to correspond to number of vertices (channels, gridpoints, etc)
@@ -55,286 +55,307 @@ cfg = ft_checkconfig(cfg, 'renamed',	  {'framespersec',      'framerate'});
 cfg = ft_checkconfig(cfg, 'deprecated', {'xparam'});
 cfg = ft_checkconfig(cfg, 'forbidden',  {'yparam'});
 
-% set data flags
-opt = [];
-opt.valx = 1;
-opt.valy = 1;
-opt.issource    = ft_datatype(data, 'source');
-opt.isfreq      = ft_datatype(data, 'freq');
-opt.istimelock  = ft_datatype(data, 'timelock');
-
-if opt.issource+opt.isfreq+opt.istimelock ~= 1
-  error('data cannot be definitely identified as frequency, timelock or source data');
-end
-
-if opt.issource
-  % transfer anatomical information to opt
-  if isfield(data, 'sulc')
-    opt.anatomy.sulc = data.sulc;
-  end
-  
-  if isfield(data, 'tri')
-    opt.anatomy.tri = data.tri;
-  else
-    error('source.tri missing, this function requires a triangulated cortical sheet as source model');
-  end
-  
-  if isfield(data, 'pnt')
-    opt.anatomy.pnt = data.pnt;
-  elseif isfield(data, 'pos')
-    opt.anatomy.pos = data.pos;
-  else
-    error('source.pos or source.pnt is missing');
-  end
-else
-  % identify the interpretation of the functional data
-  dtype = ft_datatype(data); 
-  switch dtype;
-    case 'raw'
-      data   = ft_checkdata(data, 'datatype', 'timelock');
-      dtype  = ft_datatype(data);
-      dimord = data.dimord;
-    case  {'timelock' 'freq' 'chan' 'unknown'}
-      dimord = data.dimord;
-    case 'comp'
-      dimord = 'chan_comp';
-    otherwise
-  end
-  dimtok = tokenize(dimord, '_');
-end
-
-
-% set the defaults
+% set default cfg settings
 cfg.xlim            = ft_getopt(cfg, 'xlim', 'maxmin');
 cfg.ylim            = ft_getopt(cfg, 'ylim', 'maxmin');
 cfg.zlim            = ft_getopt(cfg, 'zlim', 'maxmin');
 cfg.xparam          = ft_getopt(cfg, 'xparam', 'time');
 cfg.yparam          = ft_getopt(cfg, 'yparam', []);
-if isempty(cfg.yparam) && isfield(data, 'freq')
-  cfg.yparam        = 'freq';
-else
-  cfg.yparam        = [];
-end
-if opt.isfreq
-  cfg.funparameter  = ft_getopt(cfg, 'funparameter', 'powspctrm'); % use power as default
-elseif opt.istimelock
-  cfg.funparameter  = ft_getopt(cfg, 'funparameter', 'avg'); % use power as default
-elseif opt.issource
-  cfg.funparameter  = ft_getopt(cfg, 'funparameter', 'avg.pow'); % use power as default
-end
 cfg.maskparameter   = ft_getopt(cfg, 'maskparameter');
 cfg.inputfile       = ft_getopt(cfg, 'inputfile',    []);
 cfg.moviefreq       = ft_getopt(cfg, 'moviefreq', []);
 cfg.movietime       = ft_getopt(cfg, 'movietime', []);
 cfg.movierpt        = ft_getopt(cfg, 'movierpt', 1);
-cfg.interactive     = ft_getopt(cfg, 'interactive', 'yes');
+
+
+for i=1:numel(varargin)
+  if ~isempty(cfg.yparam) && ~isfield(varargin{i}, 'freq')
+    error('data argument %i does not have a .freq field, while all former had', i);
+  elseif isempty(cfg.yparam) && isfield(varargin{i}, 'freq')
+    cfg.yparam        = 'freq';
+  else
+    cfg.yparam        = [];
+  end
+end
+
+% set data flags
+opt = [];
+opt.valx = 1;
+opt.valy = 1;
+opt.record          = ~istrue(ft_getopt(cfg, 'interactive', 'yes'));
+opt.framesfile      = ft_getopt(cfg, 'framesfile',   []);
 opt.samperframe     = ft_getopt(cfg, 'samperframe',  1);
-opt.framerate       = ft_getopt(cfg, 'framerate', 5);
-cfg.framesfile      = ft_getopt(cfg, 'framesfile',   []);
-opt.record          = ~istrue(cfg.interactive);
-
-% read or create the layout that will be used for plotting:
-if ~opt.issource && isfield(cfg, 'layout')
-  opt.layout = ft_prepare_layout(cfg);
-  
-  % Handle the bivariate case
-
-  % Check for bivariate metric with 'chan_chan' in the dimord:
-  selchan = strmatch('chan', dimtok);
-  isfull  = length(selchan)>1;
-
-  % Check for bivariate metric with a labelcmb field:
-  haslabelcmb = isfield(data, 'labelcmb');
-
-  if (isfull || haslabelcmb) && isfield(data, cfg.funparameter)
-    % A reference channel is required:
-    if ~isfield(cfg, 'refchannel')
-      error('no reference channel is specified');
-    end
-
-    % check for refchannel being part of selection
-    if ~strcmp(cfg.refchannel,'gui')
-      if haslabelcmb
-        cfg.refchannel = ft_channelselection(cfg.refchannel, unique(data.labelcmb(:)));
-      else
-        cfg.refchannel = ft_channelselection(cfg.refchannel, data.label);
-      end
-      if (isfull      && ~any(ismember(data.label, cfg.refchannel))) || ...
-          (haslabelcmb && ~any(ismember(data.labelcmb(:), cfg.refchannel)))
-        error('cfg.refchannel is a not present in the (selected) channels)')
-      end
-    end
-
-    if ~isfull,
-      % Convert 2-dimensional channel matrix to a single dimension:
-      if isempty(cfg.directionality)
-        sel1 = find(strcmp(cfg.refchannel, data.labelcmb(:,2)));
-        sel2 = find(strcmp(cfg.refchannel, data.labelcmb(:,1)));
-      elseif strcmp(cfg.directionality, 'outflow')
-        sel1 = [];
-        sel2 = find(strcmp(cfg.refchannel, data.labelcmb(:,1)));
-      elseif strcmp(cfg.directionality, 'inflow')
-        sel1 = find(strcmp(cfg.refchannel, data.labelcmb(:,2)));
-        sel2 = [];
-      end
-      fprintf('selected %d channels for %s\n', length(sel1)+length(sel2), cfg.funparameter);
-      if length(sel1)+length(sel2)==0
-        error('there are no channels selected for plotting: you may need to look at the specification of cfg.directionality');
-      end
-      data.(cfg.funparameter) = data.(cfg.funparameter)([sel1;sel2],:,:);
-      data.label     = [data.labelcmb(sel1,1);data.labelcmb(sel2,2)];
-      data           = rmfield(data, 'labelcmb');
-    else
-      % General case
-      sel               = match_str(data.label, cfg.refchannel);
-      siz               = [size(data.(cfg.funparameter)) 1];
-      if strcmp(cfg.directionality, 'inflow') || isempty(cfg.directionality)
-        %the interpretation of 'inflow' and 'outflow' depend on
-        %the definition in the bivariate representation of the data
-        %in FieldTrip the row index 'causes' the column index channel
-        %data.(cfg.funparameter) = reshape(mean(data.(cfg.funparameter)(:,sel,:),2),[siz(1) 1 siz(3:end)]);
-        sel1 = 1:siz(1);
-        sel2 = sel;
-        meandir = 2;
-      elseif strcmp(cfg.directionality, 'outflow')
-        %data.(cfg.funparameter) = reshape(mean(data.(cfg.funparameter)(sel,:,:),1),[siz(1) 1 siz(3:end)]);
-        sel1 = sel;
-        sel2 = 1:siz(1);
-        meandir = 1;
-
-      elseif strcmp(cfg.directionality, 'inflow-outflow')
-        % do the subtraction and recursively call the function again
-        tmpcfg = cfg;
-        tmpcfg.directionality = 'inflow';
-        tmpdata = data;
-        tmp     = data.(tmpcfg.funparameter);
-        siz     = [size(tmp) 1];
-        for k = 1:siz(3)
-          for m = 1:siz(4)
-            tmp(:,:,k,m) = tmp(:,:,k,m)-tmp(:,:,k,m)';
-          end
-        end
-        tmpdata.(tmpcfg.funparameter) = tmp;
-        moviefunction(tmpcfg, tmpdata);
-        return;
-
-      elseif strcmp(cfg.directionality, 'outflow-inflow')
-        % do the subtraction and recursively call the function again
-        tmpcfg = cfg;
-        tmpcfg.directionality = 'outflow';
-        tmpdata = data;
-        tmp     = data.(tmpcfg.funparameter);
-        siz     = [size(tmp) 1];
-        for k = 1:siz(3)
-          for m = 1:siz(4)
-            tmp(:,:,k,m) = tmp(:,:,k,m)-tmp(:,:,k,m)';
-          end
-        end
-        tmpdata.(tmpcfg.funparameter) = tmp;
-        moviefunction(tmpcfg, tmpdata);
-        return;
-
-      end
-    end
-  end
-
-  % select the channels in the data that match with the layout:
-  [opt.seldat, opt.sellay] = match_str(data.label, opt.layout.label);
-  
-  if isempty(opt.seldat)
-    error('labels in data and labels in layout do not match');
-  end
-  
-  
-  selcfg = [];
-  selcfg.channel = data.label(opt.seldat);
-  data = ft_selectdata(selcfg, data);
-  
-  % get the x and y coordinates and labels of the channels in the data
-  opt.chanx = opt.layout.pos(opt.sellay,1);
-  opt.chany = opt.layout.pos(opt.sellay,2);
-else
-  if ~opt.issource
-    error('you need to specify a layout in case of freq or timelock data');
-  end
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% the actual computation is done in the middle part
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-opt.xvalues   = data.(cfg.xparam);
-opt.yvalues   = [];
-if ~isempty(cfg.yparam)
-  opt.yvalues = data.(cfg.yparam);
-end
-opt.dat       = getsubfield(data, cfg.funparameter);
-opt.framesfile = cfg.framesfile;
+opt.framerate       = ft_getopt(cfg, 'framerate', 5);          
 opt.fixedframesfile = ~isempty(opt.framesfile);
+opt.xvalues   = varargin{1}.(cfg.xparam); % below consistency is checked
+if ~isempty(cfg.yparam)
+  opt.yvalues = varargin{i}.(cfg.yparam); % below consistency is checked
+else
+  opt.yvalues   = [];
+end
+
+% check data options and consistency
+for i=1:numel(varargin)
+  opt.issource{i}   = ft_datatype(varargin{i}, 'source');
+  opt.isfreq{i}     = ft_datatype(varargin{i}, 'freq');
+  opt.istimelock{i} = ft_datatype(varargin{i}, 'timelock');
+  if opt.issource{i}+opt.isfreq{i}+opt.istimelock{i} ~= 1
+    error('data argument %i cannot be definitely identified as frequency, timelock or source data', i);
+  end
+  
+  if opt.issource{i}
+  % transfer anatomical information to opt
+    if isfield(varargin{i}, 'sulc')
+      opt.anatomy{i}.sulc = varargin{i}.sulc;
+    end
+  
+    if isfield(varargin{i}, 'tri')
+      opt.anatomy{i}.tri = varargin{i}.tri;
+    else
+      error('source.tri missing of data input argument %i, this function requires a triangulated cortical sheet as source model', i);
+    end
+
+    if isfield(varargin{i}, 'pnt')
+      opt.anatomy{i}.pnt = varargin{i}.pnt;
+    elseif isfield(varargin{i}, 'pos')
+      opt.anatomy{i}.pos = varargin{i}.pos;
+    else
+      error('source.pos or source.pnt is missing for data input argument %i', i);
+    end
+  else
+    % identify the interpretation of the functional data
+    dtype = ft_datatype(varargin{i}); 
+    switch dtype;
+      case 'raw'
+        varargin{i}   = ft_checkdata(varargin{i}, 'datatype', 'timelock');
+        dtype  = ft_datatype(varargin{i});
+        dimord = varargin{i}.dimord;
+      case  {'timelock' 'freq' 'chan' 'unknown'}
+        dimord = varargin{i}.dimord;
+      case 'comp'
+        dimord = 'chan_comp';
+      otherwise
+    end
+    dimtok = tokenize(dimord, '_');
+  end
+
+  if opt.isfreq{i}
+    opt.funparameter{i}  = ft_getopt(cfg, 'funparameter', 'powspctrm'); % use power as default
+  elseif opt.istimelock{i}
+    opt.funparameter{i}  = ft_getopt(cfg, 'funparameter', 'avg'); % use power as default
+  elseif opt.issource{i}
+    opt.funparameter{i}  = ft_getopt(cfg, 'funparameter', 'avg.pow'); % use power as default
+  end
+
+
+  % read or create the layout that will be used for plotting:
+  if ~opt.issource{i} && isfield(cfg, 'layout')
+    opt.layout{i} = ft_prepare_layout(cfg);
+
+    % Check for bivariate metric with 'chan_chan' in the dimord:
+    selchan = strmatch('chan', dimtok);
+    isfull  = length(selchan)>1;
+
+    % Check for bivariate metric with a labelcmb field:
+    haslabelcmb = isfield(data, 'labelcmb');
+
+    if (isfull || haslabelcmb) && isfield(varargin{i}, opt.funparameter{i})
+      % A reference channel is required:
+      if ~isfield(cfg, 'refchannel')
+        error('no reference channel is specified');
+      end
+
+      % check for refchannel being part of selection
+      if ~strcmp(cfg.refchannel,'gui')
+        if haslabelcmb
+          cfg.refchannel = ft_channelselection(cfg.refchannel, unique(varargin{i}.labelcmb(:)));
+        else
+          cfg.refchannel = ft_channelselection(cfg.refchannel, varargin{i}.label);
+        end
+        if (isfull      && ~any(ismember(varargin{i}.label, cfg.refchannel))) || ...
+            (haslabelcmb && ~any(ismember(varargin{i}.labelcmb(:), cfg.refchannel)))
+          error('cfg.refchannel is a not present in the (selected) channels)')
+        end
+      end
+
+      if ~isfull,
+        % Convert 2-dimensional channel matrix to a single dimension:
+        if isempty(cfg.directionality)
+          sel1 = find(strcmp(cfg.refchannel, varargin{i}.labelcmb(:,2)));
+          sel2 = find(strcmp(cfg.refchannel, varargin{i}.labelcmb(:,1)));
+        elseif strcmp(cfg.directionality, 'outflow')
+          sel1 = [];
+          sel2 = find(strcmp(cfg.refchannel, varargin{i}.labelcmb(:,1)));
+        elseif strcmp(cfg.directionality, 'inflow')
+          sel1 = find(strcmp(cfg.refchannel, varargin{i}.labelcmb(:,2)));
+          sel2 = [];
+        end
+        fprintf('selected %d channels for %s\n', length(sel1)+length(sel2), opt.funparameter{i});
+        if length(sel1)+length(sel2)==0
+          error('there are no channels selected for plotting: you may need to look at the specification of cfg.directionality');
+        end
+        varargin{i}.(opt.funparameter{i}) = varargin{i}.(opt.funparameter{i})([sel1;sel2],:,:);
+        varargin{i}.label     = [varargin{i}.labelcmb(sel1,1);varargin{i}.labelcmb(sel2,2)];
+        varargin{i}           = rmfield(varargin{i}, 'labelcmb');
+      else
+        % General case
+        sel               = match_str(varargin{i}.label, cfg.refchannel);
+        siz               = [size(varargin{i}.(opt.funparameter{i})) 1];
+        if strcmp(cfg.directionality, 'inflow') || isempty(cfg.directionality)
+          %the interpretation of 'inflow' and 'outflow' depend on
+          %the definition in the bivariate representation of the data
+          %in FieldTrip the row index 'causes' the column index channel
+          %varargin{i}.(opt.funparameter{i}) = reshape(mean(varargin{i}.(opt.funparameter{i})(:,sel,:),2),[siz(1) 1 siz(3:end)]);
+          sel1 = 1:siz(1);
+          sel2 = sel;
+          meandir = 2;
+        elseif strcmp(cfg.directionality, 'outflow')
+          %varargin{i}.(opt.funparameter{i}) = reshape(mean(varargin{i}.(opt.funparameter{i})(sel,:,:),1),[siz(1) 1 siz(3:end)]);
+          sel1 = sel;
+          sel2 = 1:siz(1);
+          meandir = 1;
+
+        elseif strcmp(cfg.directionality, 'inflow-outflow')
+          % do the subtraction and recursively call the function again
+          tmpcfg = cfg;
+          tmpcfg.directionality = 'inflow';
+          tmpdata = varargin{i};
+          tmp     = varargin{i}.(tmpopt.funparameter{i});
+          siz     = [size(tmp) 1];
+          for k = 1:siz(3)
+            for m = 1:siz(4)
+              tmp(:,:,k,m) = tmp(:,:,k,m)-tmp(:,:,k,m)';
+            end
+          end
+          tmpdata.(tmpopt.funparameter{i}) = tmp;
+          if numel(varargin)>1   
+            error('channel combinations are not yet supported for more than one input argument');
+          end
+          moviefunction(tmpcfg, tmpdata);
+          return;
+
+        elseif strcmp(cfg.directionality, 'outflow-inflow')
+          % do the subtraction and recursively call the function again
+          tmpcfg = cfg;
+          tmpcfg.directionality = 'outflow';
+          tmpdata = varargin{i};
+          tmp     = varargin{i}.(tmpopt.funparameter{i});
+          siz     = [size(tmp) 1];
+          for k = 1:siz(3)
+            for m = 1:siz(4)
+              tmp(:,:,k,m) = tmp(:,:,k,m)-tmp(:,:,k,m)';
+            end
+          end
+          tmpdata.(tmpopt.funparameter{i}) = tmp;
+          if numel(varargin)>1   
+            error('channel combinations are not yet supported for more than one input argument');
+          end
+          moviefunction(tmpcfg, tmpdata);
+          return;
+
+        end
+      end
+    end
+
+    % select the channels in the data that match with the layout:
+    [opt.seldat{i}, opt.sellay{i}] = match_str(varargin{i}.label, opt.layout{i}.label);
+
+    if isempty(opt.seldat{i}.seldat)
+      error('labels in data and labels in layout do not match for data');
+    end
+
+
+    selcfg = [];
+    selcfg.channel = varargin{i}.label(opt.seldat{i});
+    varargin{i} = ft_selectdata(selcfg, varargin{i});
+
+    % get the x and y coordinates and labels of the channels in the data
+    opt.chanx{i} = opt.layout{i}.pos(opt.sellay{i},1);
+    opt.chany{i} = opt.layout{i}.pos(opt.sellay{i},2);
+  else
+    if ~opt.issource{i}
+      error('you need to specify a layout in case of freq or timelock data');
+    end
+  end
+
+  opt.xvalues   = intersect(opt.xvalues, varargin{i}.(cfg.xparam));
+  if isempty(opt.xvalues)
+    error('%s values are not intersecting across input arguments', (cfg.xparam));
+  end
+  opt.yvalues   = [];
+  if ~isempty(cfg.yparam)
+    opt.yvalues = varargin{i}.(cfg.yparam);
+    if isempty(opt.yvalues)
+      error('%s values are not intersecting across input arguments', (cfg.yparam));
+    end
+  end
+  opt.dat{i}       = getsubfield(varargin{i}, opt.funparameter{i});
+
 
 % check consistency of xparam and yparam
 % NOTE: i set two different defaults for the 'chan_time' and the 'chan_freq_time' case
-if isfield(data,'dimord')
-  % get dimord dimensions
-  dims = textscan(data.dimord,'%s', 'Delimiter', '_');
-  dims = dims{1};
-  
-  % remove subject dimension
-  rpt_dim = strcmp('rpt', dims) | strcmp('subj', dims);
-  if sum(rpt_dim)~=0
-    dims(rpt_dim) = [];
-    opt.dat = squeeze(nanmean(opt.dat, find(rpt_dim)));
+  if isfield(varargin{i},'dimord')
+    % get dimord dimensions
+  %   dimtok = textscan(varargin{i}.dimord,'%s', 'Delimiter', '_');
+  %   dimtok = dimtok{1};
+
+    % remove subject dimension
+    rpt_dim = strcmp('rpt', dimtok) | strcmp('subj', dimtok);
+    if sum(rpt_dim)~=0
+      dimtok(rpt_dim) = [];
+      opt.dat = squeeze(nanmean(opt.dat{i}, find(rpt_dim)));
+    end
+    opt.ydim{i} = find(strcmp(cfg.yparam, dimtok));
+    opt.xdim{i} = find(strcmp(cfg.xparam, dimtok));
+    opt.zdim{i} = setdiff(1:ndims(opt.dat{i}), [opt.ydim{i} opt.xdim{i}]);
+    if opt.zdim ~=1
+      error('input %i data does not have the correct format of N x time (x freq)', i);
+    end
+    % and permute
+    opt.dat{i} = permute(opt.dat, [opt.zdim(:)' opt.xdim opt.ydim]);
+
+    opt.xdim{i} = 2;
+    if ~isempty(cfg.yparam)
+      opt.ydim{i} = 3;
+    else
+      opt.ydim{i} = [];
+    end
+
+  elseif opt.issource{i}
+      % TODO FIXME this is hardcoded now, can it be made more generic?
+      opt.xdim{i} = 2;
+      opt.xvalues   = intersect(opt.xvalues, varargin{i}.(cfg.xparam));
+      opt.ydim{i} = [];
   end
-  opt.ydim = find(strcmp(cfg.yparam, dims));
-  opt.xdim = find(strcmp(cfg.xparam, dims));
-  opt.zdim = setdiff(1:ndims(opt.dat), [opt.ydim opt.xdim]);
-  if opt.zdim ~=1
-    error('input data does not have the correct format of N x time (x freq)');
+
+  if opt.issource{i}
+    if size(varargin{i}.pos)~=size(opt.dat{i},1)
+      error('inconsistent number of vertices in the cortical mesh');
+    end
+
+    if ~isfield(varargin{i}, 'tri')
+      error('source.tri missing, this function requires a triangulated cortical sheet as source model');
+    end  
   end
-  % and permute
-  opt.dat = permute(opt.dat, [opt.zdim(:)' opt.xdim opt.ydim]);
-  
-  opt.xdim = 2;
-  if ~isempty(cfg.yparam)
-    opt.ydim = 3;
+
+
+  if ~isempty(cfg.maskparameter) && ischar(cfg.maskparameter)
+    opt.mask{i} = double(getsubfield(varargin{i}, cfg.maskparameter)~=0);
   else
-    opt.ydim = [];
+    opt.mask{i} = ones(size(opt.dat{i}));
   end
 
-elseif opt.issource
-  % TODO FIXME this is hardcoded now, can it be made more generic?
-  opt.xdim = 2;
-  opt.xvalues = data.time;
-  opt.ydim = [];
-end
-
-if opt.issource
-  if size(data.pos)~=size(opt.dat,1)
-    error('inconsistent number of vertices in the cortical mesh');
+  if length(opt.xvalues)~=size(opt.dat{i}, opt.xdim{i})
+    error('inconsistent size of "%s" compared to "%s"', opt.funparameter{i}, cfg.xparam);
   end
-  
-  if ~isfield(data, 'tri')
-    error('source.tri missing, this function requires a triangulated cortical sheet as source model');
+  if ~isempty(opt.ydim{i}) && length(opt.yvalues)~=size(opt.dat{i},opt.ydim{i})
+    error('inconsistent size of "%s" compared to "%s"', opt.funparameter{i}, cfg.yparam);
   end
-  
 end
 
-
-if ~isempty(cfg.maskparameter) && ischar(cfg.maskparameter)
-  opt.mask = double(getsubfield(data, cfg.maskparameter)~=0);
-else
-  opt.mask =ones(size(opt.dat));
-end
-
-if length(opt.xvalues)~=size(opt.dat, opt.xdim)
-  error('inconsistent size of "%s" compared to "%s"', cfg.funparameter, cfg.xparam);
-end
-if ~isempty(opt.ydim) && length(opt.yvalues)~=size(opt.dat,opt.ydim)
-  error('inconsistent size of "%s" compared to "%s"', cfg.funparameter, cfg.yparam);
-end
-
-% TODO handle colorbar stuff here
-
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % create GUI and plot stuff
+%* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 opt = createGUI(opt);
 
 if isempty(cfg.yparam)
@@ -429,13 +450,13 @@ ft_uilayout(opt.handles.figure, ...
   'height', 0.1);
 
 % settings panel (between different views can be switched)
-opt.handles.panel.view = uipanel(...
-  'tag',    'sidePanels', ... % tag according to position
-  'parent', opt.handles.figure,...
-  'units',  'normalized', ...
-  'title',  'View',...
-  'clipping','on',...
-  'visible', 'on');
+% opt.handles.panel.view = uipanel(...
+%   'tag',    'sidePanels', ... % tag according to position
+%   'parent', opt.handles.figure,...
+%   'units',  'normalized', ...
+%   'title',  'View',...
+%   'clipping','on',...
+%   'visible', 'on');
 
 % settings panel ()
 opt.handles.panel.settings = uipanel(...
@@ -490,26 +511,26 @@ ft_uilayout(opt.handles.figure, ...
 
 % add axes
 % 3 axes for switching to topo viewmode
-opt.handles.axes.A = axes(...
-  'Parent',opt.handles.panel.view,...
-  'Position',[0 0 1 .33], ...
-  'Tag','topoAxes',...
-  'HandleVisibility', 'on', ...
-  'UserData',[]);
-
-opt.handles.axes.B = axes(...
-  'Parent',opt.handles.panel.view,...
-  'Position',[0 0.33 1 .33], ...
-  'Tag','topoAxes',...
-  'HandleVisibility', 'on', ...
-  'UserData',[]);
-
-opt.handles.axes.C = axes(...
-  'Parent',opt.handles.panel.view,...
-  'Position',[0 0.66 1 .33], ...
-  'Tag','topoAxes',...
-  'HandleVisibility', 'on', ...
-  'UserData',[]);
+% opt.handles.axes.A = axes(...
+%   'Parent',opt.handles.panel.view,...
+%   'Position',[0 0 1 .33], ...
+%   'Tag','topoAxes',...
+%   'HandleVisibility', 'on', ...
+%   'UserData',[]);
+% 
+% opt.handles.axes.B = axes(...
+%   'Parent',opt.handles.panel.view,...
+%   'Position',[0 0.33 1 .33], ...
+%   'Tag','topoAxes',...
+%   'HandleVisibility', 'on', ...
+%   'UserData',[]);
+% 
+% opt.handles.axes.C = axes(...
+%   'Parent',opt.handles.panel.view,...
+%   'Position',[0 0.66 1 .33], ...
+%   'Tag','topoAxes',...
+%   'HandleVisibility', 'on', ...
+%   'UserData',[]);
 
 % control panel uicontrols
 
@@ -634,7 +655,7 @@ opt.handles.label.xparam = uicontrol(...
   'Style','text',...
   'Tag','xparamLabel');
 
-if ~isempty(opt.ydim)
+if ~isempty(opt.ydim{1})
   opt.handles.slider.yparam = uicontrol(...
     'Parent',opt.handles.panel.controls,...
     'Units','normalized',...
@@ -784,15 +805,15 @@ opt.handles.axes.movie = axes(...
 % Disable axis labels
 axis(opt.handles.axes.movie, 'equal');
 axis(opt.handles.axes.colorbar, 'equal');
-axis(opt.handles.axes.A, 'equal');
-axis(opt.handles.axes.B, 'equal');
-axis(opt.handles.axes.C, 'equal');
+% axis(opt.handles.axes.A, 'equal');
+% axis(opt.handles.axes.B, 'equal');
+% axis(opt.handles.axes.C, 'equal');
 %
 axis(opt.handles.axes.movie, 'off');
 axis(opt.handles.axes.colorbar, 'off');
-axis(opt.handles.axes.A, 'off');
-axis(opt.handles.axes.B, 'off');
-axis(opt.handles.axes.C, 'off');
+% axis(opt.handles.axes.A, 'off');
+% axis(opt.handles.axes.B, 'off');
+% axis(opt.handles.axes.C, 'off');
 
 end
 
@@ -800,11 +821,13 @@ end
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function updateMovie(opt)
-if ~opt.issource
-  set(opt.handles.grid, 'cdata', griddata(opt.chanx, opt.chany, opt.mask(:,opt.valx,opt.valy).*opt.dat(:,opt.valx,opt.valy), opt.xdata, opt.nanmask.*opt.ydata, 'v4'));
-else
-  set(opt.handles.mesh, 'FaceVertexCData',  squeeze(opt.dat(:,opt.valx,opt.valy)));
-  set(opt.handles.mesh, 'FaceVertexAlphaData', squeeze(opt.mask(:,opt.valx,opt.valy)));
+for i=1:numel(opt.dat)
+  if ~opt.issource{i}
+    set(opt.handles.grid{i}, 'cdata', griddata(opt.chanx{i}, opt.chany{i}, opt.mask{i}(:,opt.valx,opt.valy).*opt.dat{i}(:,opt.valx,opt.valy), opt.xdata{i}, opt.nanmask{i}.*opt.ydata{i}, 'v4'));
+  else
+    set(opt.handles.mesh{i}, 'FaceVertexCData',  squeeze(opt.dat{i}(:,opt.valx,opt.valy)));
+    set(opt.handles.mesh{i}, 'FaceVertexAlphaData', squeeze(opt.mask{i}(:,opt.valx,opt.valy)));
+  end
 end
 
 end
@@ -856,7 +879,7 @@ if ~ishandle(h)
   return
 end
 opt = guidata(h);
-delta = opt.speed/size(opt.dat,opt.xdim);
+delta = opt.speed/numel(opt.xvalues);
 val = get(opt.handles.slider.xparam, 'value');
 val = val + delta;
 
@@ -907,16 +930,16 @@ end
 function cb_slider(h, eventdata)
 opt = guidata(h);
 valx = get(opt.handles.slider.xparam, 'value');
-valx = round(valx*(size(opt.dat,opt.xdim)-1))+1;
-valx = min(valx, size(opt.dat,opt.xdim));
+valx = round(valx*(numel(opt.xvalues)-1))+1;
+valx = min(valx, numel(opt.xvalues));
 valx = max(valx, 1);
 set(opt.handles.label.xparam, 'String', [opt.xparam ' ' num2str(opt.xvalues(valx), '%.2f') 's']);
 
 
 if ~isempty(opt.yvalues)
   valy = get(opt.handles.slider.yparam, 'value');
-  valy = round(valy*(size(opt.dat, opt.ydim)-1))+1;
-  valy = min(valy, size(opt.dat, opt.ydim));
+  valy = round(valy*(numel(opt.yvalues)-1))+1;
+  valy = min(valy, numel(opt.yvalues));
   valy = max(valy, 1);
   
   if valy ~= opt.valy
@@ -1101,10 +1124,11 @@ cmap = feval(maps{val}, size(colormap, 1));
 % end
 
 if get(opt.handles.checkbox.automatic, 'Value')
-  colormap(opt.handles.axes.movie, cmap);
-else
-  adjust_colorbar(opt);
+  colormap(opt.handles.axes.movie_subplot{1}, cmap);
 end
+
+adjust_colorbar(opt);
+
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1127,7 +1151,13 @@ opt =  guidata(h);
 if (~incr&&~decr&&exist('eventdata', 'var')&&~isempty(eventdata)) % init call
   caxis(opt.handles.axes.movie, eventdata);
 end
-[zmin zmax] = caxis(opt.handles.axes.movie);
+zmin = inf;
+zmax = -inf;
+for i=1:numel(opt.dat)
+  [tmpmin tmpmax] = caxis(opt.handles.axes.movie_subplot{i});
+  zmin = min(tmpmin, zmin);
+  zmax = max(tmpmax, zmax);
+end
 yLim = get(opt.handles.colorbar, 'YLim');
 
 if incr
@@ -1161,11 +1191,22 @@ elseif get(opt.handles.checkbox.automatic, 'Value') % if automatic
   set(opt.handles.button.decrLowerColor, 'Enable', 'off');
     
   if get(opt.handles.checkbox.symmetric, 'Value') % maxabs
-    zmax = max(max(abs(opt.dat(:,:,opt.valy))));
+    zmax = -inf;
+    for i=1:numel(opt.dat)
+      tmpmax = max(max(abs(opt.dat{i}(:,:,opt.valy))));
+      zmax = max(tmpmax, zmax);
+    end
     zmin = -zmax;
   else   % maxmin
-    zmin = min(min(opt.dat(:,:,opt.valy)));
-    zmax = max(max(opt.dat(:,:,opt.valy)));
+    zmax = -inf;
+    zmin = inf;
+    for i=1:numel(opt.dat)
+      tmpmin = min(min(opt.dat{i}(:,:,opt.valy)));
+      tmpmax = max(max(opt.dat{i}(:,:,opt.valy)));
+      zmax = max(tmpmax, zmax);
+      zmin = min(tmpmin, zmin);
+    end
+    
   end
 else
   set(opt.handles.lines.upperColor, 'Visible', 'on');
@@ -1175,28 +1216,39 @@ else
     set(opt.handles.button.decrUpperColor, 'Enable', 'off');
     set(opt.handles.button.incrUpperColor, 'Enable', 'on');
     set(opt.handles.button.decrLowerColor, 'Enable', 'on');
-    zmax = max(abs(caxis(opt.handles.axes.movie)));
+    for i=1:numel(opt.dat)
+      [tmpmin tmpmax] = caxis(opt.handles.axes.movie_subplot{i});
+      zmax = max(tmpmax, zmax);
+    end
     zmin = -zmax;
   else
     set(opt.handles.button.incrLowerColor, 'Enable', 'on');
     set(opt.handles.button.decrUpperColor, 'Enable', 'on');
     set(opt.handles.button.incrUpperColor, 'Enable', 'on');
     set(opt.handles.button.decrLowerColor, 'Enable', 'on');
-    [zmin zmax] = caxis(opt.handles.axes.movie);
+    for i=1:numel(opt.dat)
+      [tmpmin tmpmax] = caxis(opt.handles.axes.movie_subplot{i});
+      zmin = min(tmpmin, zmin);
+      zmax = max(tmpmax, zmax);
+    end
   end
 end % incr, decr, automatic, else
 
 maps = get(opt.handles.menu.colormap, 'String');
 cmap = feval(maps{get(opt.handles.menu.colormap, 'Value')}, size(colormap, 1));
-colormap(opt.handles.axes.movie, cmap);
+for i=1:numel(opt.dat)
+  colormap(opt.handles.axes.movie_subplot{i}, cmap);
+end
 
 adjust_colorbar(opt);
 
 if (gcf~=opt.handles.figure)
   close gcf; % sometimes there is a new window that opens up
 end
+for i=1:numel(opt.dat)
+  caxis(opt.handles.axes.movie_subplot{i}, [zmin zmax]);
+end
 
-caxis(opt.handles.axes.movie, [zmin zmax]);
 nColors = size(colormap, 1);
 %yTick = (zmax-zmin)*(get(opt.handles.colorbar, 'YTick')/nColors)+zmin
 yTick = (zmax-zmin)*[0 .25 .5 .75 1]+zmin;
@@ -1268,63 +1320,72 @@ end
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function adjust_colorbar(opt)
-% adjust colorbar
-upper = get(opt.handles.lines.upperColor, 'YData');
-lower = get(opt.handles.lines.lowerColor, 'YData');
-if any(round(upper)==0) || any(round(lower)==0)
-  return;
-end
-maps = get(opt.handles.menu.colormap, 'String');
-cmap = feval(maps{get(opt.handles.menu.colormap, 'Value')}, size(colormap, 1));
-cmap(round(lower(1)):round(upper(1)), :) = repmat(cmap(round(lower(1)), :), 1+round(upper(1))-round(lower(1)), 1);
-colormap(opt.handles.axes.movie, cmap);
+  % adjust colorbar
+  upper = get(opt.handles.lines.upperColor, 'YData');
+  lower = get(opt.handles.lines.lowerColor, 'YData');
+  if any(round(upper)==0) || any(round(lower)==0)
+    return;
+  end
+  maps = get(opt.handles.menu.colormap, 'String');
+  cmap = feval(maps{get(opt.handles.menu.colormap, 'Value')}, size(colormap, 1));
+  cmap(round(lower(1)):round(upper(1)), :) = repmat(cmap(round(lower(1)), :), 1+round(upper(1))-round(lower(1)), 1);
+  for i=1:numel(opt.dat)
+    colormap(opt.handles.axes.movie_subplot{i}, cmap);
+  end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function opt = prepareBrainplot(opt)
-if opt.issource
-  if isfield(opt, 'sulc')
-    vdat = opt.sulc;
-    vdat(vdat>0.5) = 0.5;
-    vdat(vdat<-0.5)= -0.5;
-    vdat = vdat-min(vdat);
-    vdat = 0.35.*(vdat./max(vdat))+0.3;
-    vdat = repmat(vdat,[1 3]);
-    mesh = ft_plot_mesh(opt.anatomy, 'edgecolor', 'none', 'vertexcolor', vdat);
-  else
-    mesh = ft_plot_mesh(opt.anatomy, 'edgecolor', 'none', 'facecolor', [0.5 0.5 0.5]);
+  numArgs = numel(opt.dat);
+  numRows = floor(sqrt(numArgs));
+  numCols = ceil(sqrt(numArgs));
+  for i=1:numArgs
+    subplot(numRows, numCols, i);
+    opt.handles.axes.movie_subplot{i} = gca;
+    if opt.issource{i}
+      if isfield(opt, 'sulc') && ~isempty(opt.sulc{i})
+        vdat = opt.sulc{i};
+        vdat(vdat>0.5) = 0.5;
+        vdat(vdat<-0.5)= -0.5;
+        vdat = vdat-min(vdat);
+        vdat = 0.35.*(vdat./max(vdat))+0.3;
+        vdat = repmat(vdat,[1 3]);
+        mesh = ft_plot_mesh(opt.anatomy{i}, 'edgecolor', 'none', 'vertexcolor', vdat);
+      else
+        mesh = ft_plot_mesh(opt.anatomy{i}, 'edgecolor', 'none', 'facecolor', [0.5 0.5 0.5]);
+      end
+      lighting gouraud
+      % set(mesh, 'Parent', opt.handles.axes.movie);
+      % mesh = ft_plot_mesh(source, 'edgecolor', 'none', 'vertexcolor', 0*opt.dat(:,1,1), 'facealpha', 0*opt.mask(:,1,1));
+      opt.handles.mesh{i} = ft_plot_mesh(opt.anatomy{i}, 'edgecolor', 'none', 'vertexcolor', opt.dat{i}(:,1,1));
+      set(opt.handles.mesh{i}, 'AlphaDataMapping', 'scaled');
+      set(opt.handles.mesh{i}, 'FaceVertexAlphaData', opt.mask{i}(:,opt.valx,opt.valy));
+      % TODO FIXME below does not work
+      %set(opt.handles.mesh, 'FaceAlpha', 'flat');
+      %set(opt.handles.mesh, 'EdgeAlpha', 'flat');
+
+      lighting gouraud
+      cam1 = camlight('left');
+%       set(cam1, 'Parent', opt.handles.axes.movie);
+      cam2 = camlight('right');
+%       set(cam2, 'Parent', opt.handles.axes.movie);
+%       set(opt.handles.mesh, 'Parent', opt.handles.axes.movie);
+      %   cameratoolbar(opt.handles.figure, 'Show');
+    else
+      axes(opt.handles.axes.movie)
+      [dum, opt.handles.grid{i}] = ft_plot_topo(opt.layout{i}.pos(opt.sellay,1), opt.layout{i}.pos(opt.sellay,2), zeros(numel(opt.sellay{i}),1), 'mask', opt.layout{i}.mask, 'outline', opt.layout{i}.outline, 'interpmethod', 'v4', 'interplim', 'mask', 'parent', opt.handles.axes.movie);
+      %[dum, opt.handles.grid] = ft_plot_topo(layout.pos(sellay,1), layout.pos(sellay,2), zeros(numel(sellay),1), 'mask',layout.mask,  'outline', layout.outline, 'interpmethod', 'v4', 'interplim', 'mask', 'parent', opt.handles.axes.movie);
+      % set(opt.handles.grid, 'Parent', opt.handles.axes.movie);
+      opt.xdata{i}   = get(opt.handles.grid{i}, 'xdata');
+      opt.ydata{i}   = get(opt.handles.grid{i}, 'ydata');
+      opt.nanmask{i} = 1-get(opt.handles.grid{i}, 'cdata');
+      if (gcf~=opt.handles.figure)
+        close gcf; % sometimes there is a new window that opens up
+      end
+    end
   end
-  lighting gouraud
-  set(mesh, 'Parent', opt.handles.axes.movie);
-  % mesh = ft_plot_mesh(source, 'edgecolor', 'none', 'vertexcolor', 0*opt.dat(:,1,1), 'facealpha', 0*opt.mask(:,1,1));
-  opt.handles.mesh = ft_plot_mesh(opt.anatomy, 'edgecolor', 'none', 'vertexcolor', opt.dat(:,1,1));
-  set(opt.handles.mesh, 'AlphaDataMapping', 'scaled');
-  set(opt.handles.mesh, 'FaceVertexAlphaData', opt.mask(:,opt.valx,opt.valy));
-  % TODO FIXME below does not work
-  %set(opt.handles.mesh, 'FaceAlpha', 'flat');
-  %set(opt.handles.mesh, 'EdgeAlpha', 'flat');
-  
-  lighting gouraud
-  cam1 = camlight('left');
-  set(cam1, 'Parent', opt.handles.axes.movie);
-  cam2 = camlight('right');
-  set(cam2, 'Parent', opt.handles.axes.movie);
-  set(opt.handles.mesh, 'Parent', opt.handles.axes.movie);
-  %   cameratoolbar(opt.handles.figure, 'Show');
-else
-  axes(opt.handles.axes.movie)
-  [dum, opt.handles.grid] = ft_plot_topo(opt.layout.pos(opt.sellay,1), opt.layout.pos(opt.sellay,2), zeros(numel(opt.sellay),1), 'mask', opt.layout.mask, 'outline', opt.layout.outline, 'interpmethod', 'v4', 'interplim', 'mask', 'parent', opt.handles.axes.movie);
-  %[dum, opt.handles.grid] = ft_plot_topo(layout.pos(sellay,1), layout.pos(sellay,2), zeros(numel(sellay),1), 'mask',layout.mask,  'outline', layout.outline, 'interpmethod', 'v4', 'interplim', 'mask', 'parent', opt.handles.axes.movie);
-  % set(opt.handles.grid, 'Parent', opt.handles.axes.movie);
-  opt.xdata   = get(opt.handles.grid, 'xdata');
-  opt.ydata   = get(opt.handles.grid, 'ydata');
-  opt.nanmask = 1-get(opt.handles.grid, 'cdata');
-  if (gcf~=opt.handles.figure)
-    close gcf; % sometimes there is a new window that opens up
-  end
-end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
