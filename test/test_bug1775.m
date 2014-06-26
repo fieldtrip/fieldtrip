@@ -90,7 +90,7 @@ cfg.grad    = grad;
 cfg.vol     = vol;
 cfg.grid    = grid;
 cfg.method  = 'mne';
-cfg.lambda  = 0;
+cfg.mne.lambda = 0;
 source2 = ft_sourceanalysis(cfg, timelock);
 
 %% make some parcellations

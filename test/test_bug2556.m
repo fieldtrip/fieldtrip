@@ -1,6 +1,5 @@
 function test_bug2556
 
-
 % MEM 2gb
 % WALLTIME 00:10:00
 
@@ -35,6 +34,23 @@ cfg = [];
 cfg.parameter = 'pow';
 source2p = ft_sourceparcellate(cfg, source, parcellation);
 
-assert(isequal(source1p.pow, source2p.pow));
+assert(isequal(source1p.pow,   source2p.pow));
 assert(isequal(source1p.label, source2p.label));
+
+%% part 3, check ft_sourcegrandaverage
+
+cfg = [];
+cfg.keepindividual = 'no';
+grandavg = ft_sourcegrandaverage(cfg, source, source, source);
+
+cfg = [];
+cfg.parameter = 'pow';
+source3p = ft_sourceparcellate(cfg, grandavg, parcellation);
+
+assert(isequal(source1p.pow,   source3p.pow));
+assert(isequal(source1p.label, source3p.label));
+
+
+
+
 
