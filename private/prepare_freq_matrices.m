@@ -50,24 +50,34 @@ if isfield(freq, 'sgncmb')
   freq = rmfield(freq, 'sgncmb');
 end
 
+% rejig frequcny and latancy paramaters
+if isfield(cfg, 'frequency') && ~isfield(cfg, 'foilim')
+    cfg.foilim=[cfg.frequency cfg.frequency];
+end
+if isfield(cfg, 'latency') && ~isfield(cfg, 'toilim')
+    cfg.toilim=[cfg.latency cfg.latency];
+end
+
+
 % select the latency of interest for time-frequency data
 if strcmp(freq.dimord, 'chan_freq_time')
-  tbin = nearest(freq.time, cfg.latency);
-  fprintf('selecting timeslice %d\n', tbin);
-  freq.time = freq.time(tbin);
+  tbin = nearest(freq.time, cfg.toilim(1)):nearest(freq.time, cfg.toilim(2));
+  fprintf('selecting time %5.2f to %5.2f (%u bins)\n', freq.time(tbin(1)),freq.time(tbin(end)),length(tbin));
+  freq.time = mean(freq.time(tbin));
   % remove all other latencies from the data structure and reduce the number of dimensions
-  if isfield(freq, 'powspctrm'),     freq.powspctrm     = squeeze(freq.powspctrm(:,:,tbin));     end;
-  if isfield(freq, 'crsspctrm'),     freq.crsspctrm     = squeeze(freq.crsspctrm(:,:,tbin));     end;
-  if isfield(freq, 'fourierspctrm'), freq.fourierspctrm = squeeze(freq.fourierspctrm(:,:,tbin)); end;
+  if isfield(freq, 'powspctrm'),     freq.powspctrm     = squeeze(mean(freq.powspctrm(:,:,tbin),3));     end;
+  if isfield(freq, 'crsspctrm'),     freq.crsspctrm     = squeeze(mean(freq.crsspctrm(:,:,tbin),3));     end;
+  if isfield(freq, 'fourierspctrm'), freq.fourierspctrm = squeeze(mean(freq.fourierspctrm(:,:,tbin),3)); end;
   freq.dimord = freq.dimord(1:(end-5));  % remove the '_time' part
 elseif strcmp(freq.dimord, 'rpt_chan_freq_time') || strcmp(freq.dimord, 'rpttap_chan_freq_time')
-  tbin = nearest(freq.time, cfg.latency);
-  fprintf('selecting timeslice %d\n', tbin);
-  freq.time = freq.time(tbin);
+  tbin = nearest(freq.time, cfg.toilim(1)):nearest(freq.time, cfg.toilim(2));
+  fprintf('selecting time %5.2f to %5.2f (%u bins)\n', freq.time(tbin(1)),freq.time(tbin(end)),length(tbin));
+
+  freq.time = mean(freq.time(tbin));
   % remove all other latencies from the data structure and reduce the number of dimensions
-  if isfield(freq, 'powspctrm'),    freq.powspctrm     = squeeze(freq.powspctrm(:,:,:,tbin));      end;
-  if isfield(freq, 'crsspctrm'),    freq.crsspctrm     = squeeze(freq.crsspctrm(:,:,:,tbin));      end;
-  if isfield(freq, 'fourierspctrm') freq.fourierspctrm = squeeze(freq.fourierspctrm(:,:,:,tbin));  end;
+  if isfield(freq, 'powspctrm'),    freq.powspctrm     = squeeze(mean(freq.powspctrm(:,:,:,tbin),3));      end;
+  if isfield(freq, 'crsspctrm'),    freq.crsspctrm     = squeeze(mean(freq.crsspctrm(:,:,:,tbin),3));      end;
+  if isfield(freq, 'fourierspctrm') freq.fourierspctrm = squeeze(mean(freq.fourierspctrm(:,:,:,tbin),3));  end;
   freq.dimord = freq.dimord(1:(end-5));  % remove the '_time' part
 else
   tbin = [];
@@ -85,7 +95,8 @@ else
 end
 
 % find the frequency of interest
-fbin = nearest(freq.freq, cfg.frequency);
+fbin = nearest(freq.freq, cfg.foilim(1)):nearest(freq.freq, cfg.foilim(2));
+  fprintf('selecting frequency %5.2f to %5.2f (%u bins)\n', freq.freq(fbin(1)),freq.freq(fbin(end)),length(fbin));
 
 if isfield(freq, 'powspctrm') && isfield(freq, 'crsspctrm')
   % use the power and cross spectrum and construct a square matrix
@@ -112,23 +123,23 @@ if isfield(freq, 'powspctrm') && isfield(freq, 'crsspctrm')
     % FIXME this fails in case dimord=rpt_chan_freq and only 1 trial
     Cf = complex(nan(Nchans,Nchans));
     % first use the complex conjugate for all reversed signal combinations
-    Cf(find(crsspctrmindx)) = freq.crsspctrm(crsspctrmindx(find(crsspctrmindx)), fbin);
+    Cf(find(crsspctrmindx)) = mean(freq.crsspctrm(crsspctrmindx(find(crsspctrmindx)), fbin),2);
     Cf = ctranspose(Cf);
     % and then get get the csd for all signal combinations
-    Cf(find(crsspctrmindx)) = freq.crsspctrm(crsspctrmindx(find(crsspctrmindx)), fbin);
+    Cf(find(crsspctrmindx)) = mean(freq.crsspctrm(crsspctrmindx(find(crsspctrmindx)), fbin),2);
     % put the power on the diagonal
-    Cf(find(eye(Nchans))) = freq.powspctrm(powspctrmindx, fbin);
+    Cf(find(eye(Nchans))) = mean(freq.powspctrm(powspctrmindx, fbin),2);
   else
     Cf  = complex(nan(Ntrials,Nchans,Nchans));
     tmp = complex(nan(Nchans,Nchans));
     for trial=1:Ntrials
       % first use the complex conjugate for all signal combinations reversed
-      tmp(find(crsspctrmindx)) = freq.crsspctrm(trial, crsspctrmindx(find(crsspctrmindx)), fbin);
+      tmp(find(crsspctrmindx)) = mean(freq.crsspctrm(trial, crsspctrmindx(find(crsspctrmindx)), fbin),3);
       tmp = ctranspose(tmp);
       % and then get get the csd for all signal combinations
-      tmp(find(crsspctrmindx)) = freq.crsspctrm(trial, crsspctrmindx(find(crsspctrmindx)), fbin);
+      tmp(find(crsspctrmindx)) = mean(freq.crsspctrm(trial, crsspctrmindx(find(crsspctrmindx)), fbin),3);
       % put the power on the diagonal
-      tmp(find(eye(Nchans))) = freq.powspctrm(trial, powspctrmindx, fbin);
+      tmp(find(eye(Nchans))) = mean(freq.powspctrm(trial, powspctrmindx, fbin),3);
       Cf(trial,:,:) = tmp;
     end
   end
@@ -155,10 +166,10 @@ if isfield(freq, 'powspctrm') && isfield(freq, 'crsspctrm')
       error('The cross-spectral-density with the reference channel is not complete');
     end
     if Ntrials==1
-      Cr = freq.crsspctrm(refindx, fbin);
+      Cr = mean(freq.crsspctrm(refindx, fbin),2);
     else
       for trial=1:Ntrials
-        Cr(trial,:) = freq.crsspctrm(trial, refindx, fbin);
+        Cr(trial,:) = mean(freq.crsspctrm(trial, refindx, fbin),3);
       end
     end
     if flipref
@@ -172,10 +183,10 @@ if isfield(freq, 'powspctrm') && isfield(freq, 'crsspctrm')
       error('Multiple occurences of the reference channel found in powspctrm');
     end
     if Ntrials==1
-      Pr = freq.powspctrm(refindx, fbin);
+      Pr = mean(freq.powspctrm(refindx, fbin),2);
     else
       for trial=1:Ntrials
-        Pr(trial) = freq.powspctrm(trial, refindx, fbin);
+        Pr(trial) = mean(freq.powspctrm(trial, refindx, fbin),3);
       end
       Pr = Pr(:);   % ensure that the first dimension contains the trials
     end
@@ -192,11 +203,11 @@ elseif isfield(freq, 'crsspctrm')
 
   % select time-frequency window of interest
   if hastime
-    freq = ft_selectdata(freq, 'foilim', cfg.frequency, 'toilim', cfg.latency);
+    freq = ft_selectdata(freq, 'foilim', cfg.foilim, 'toilim', cfg.toilim);
     fbin = 1;
     tbin = 1:numel(freq.time);
   else
-    freq = ft_selectdata(freq, 'foilim', cfg.frequency);
+    freq = ft_selectdata(freq, 'foilim', cfg.foilim);
     fbin = 1;
   end
   
@@ -253,10 +264,10 @@ else
 
     if quickflag,
       ntap = sum(freq.cumtapcnt);
-      dat  = transpose(freq.fourierspctrm(:, powspctrmindx, fbin));
+      dat  = transpose(mean(freq.fourierspctrm(:, powspctrmindx, fbin),3));
       Cf(1,:,:) = (dat * ctranspose(dat)) ./ ntap;
       if ~isempty(refindx)
-        ref = transpose(freq.fourierspctrm(:, refindx, fbin));
+        ref = transpose(mean(freq.fourierspctrm(:, refindx, fbin),3));
     Cr(1,:,1) = dat * ctranspose(ref) ./ ntap;
     Pr(1,1,1) = ref * ctranspose(ref) ./ ntap;
       end
@@ -266,10 +277,10 @@ else
         tapbeg = 1 + sum([0 freq.cumtapcnt(1:(k-1))]);
         tapend =     sum([0 freq.cumtapcnt(1:(k  ))]);
         ntap = freq.cumtapcnt(k);
-        dat  = transpose(freq.fourierspctrm(tapbeg:tapend, powspctrmindx, fbin));
+        dat  = transpose(mean(freq.fourierspctrm(tapbeg:tapend, powspctrmindx, fbin),3));
         Cf(k,:,:) = (dat * ctranspose(dat)) ./ ntap;
         if ~isempty(refindx)
-          ref = transpose(freq.fourierspctrm(tapbeg:tapend, refindx, fbin));
+          ref = transpose(mean(freq.fourierspctrm(tapbeg:tapend, refindx, fbin),3));
           Cr(k,:,1) = dat * ctranspose(ref) ./ ntap;
           Pr(k,1,1) = ref * ctranspose(ref) ./ ntap;
         end
@@ -287,6 +298,6 @@ if ~isempty(tbin),
 else
   cfg.latency = [];
 end
-cfg.frequency = freq.freq(fbin);
+cfg.frequency = mean(freq.freq(fbin));
 cfg.channel   = freq.label(powspctrmindx);
 
