@@ -1,4 +1,4 @@
-function [grad] = nimh2grad(hdr);
+function [grad] = nimh2grad(hdr)
 
 % NIMH2GRAD constructs a gradiometer definition from the res4 header whish
 % is read using the NIMH implementation of ctf_read_res4. The grad

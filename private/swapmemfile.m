@@ -1,4 +1,4 @@
-function [data] = swapmemfile(data);
+function [data] = swapmemfile(data)
 
 % SWAPMEMFILE swaps a variable from file into memory and clears it 
 % again from the memory on the subsequent call

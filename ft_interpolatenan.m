@@ -53,10 +53,6 @@ function dataout = ft_interpolatenan(cfg, datain)
 revision = '$Id$';
 
 % do the general setup of the function
-
-% the ft_preamble function works by calling a number of scripts from
-% fieldtrip/utility/private that are able to modify the local workspace
-
 ft_defaults                 % this ensures that the path is correct and that the ft_defaults global variable is available
 ft_preamble init            % this will reset warning_once and show the function help if nargin==0 and return an error
 ft_preamble provenance      % this records the time and memory usage at teh beginning of the function
@@ -64,10 +60,13 @@ ft_preamble trackconfig     % this converts the cfg structure in a config object
 ft_preamble debug           % this allows for displaying or saving the function name and input arguments upon an error
 ft_preamble loadvar datain  % this reads the input data in case the user specified the cfg.inputfile option
 
-% ensure that the input data is valid for this function, this will also do 
-% backward-compatibility conversions of old data that for example was 
-% read from an old *.mat file
-datain = ft_checkdata(datain, 'datatype', {'raw', 'comp'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
+% check if the input data is valid for this function
+datain = ft_checkdata(datain, 'datatype', {'raw+comp', 'raw'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
 
 % check if the input is valid
 cfg             = ft_checkconfig(cfg, 'allowedval',{'method','nearest','linear','spline','pchip','cubic','v5cubic'});

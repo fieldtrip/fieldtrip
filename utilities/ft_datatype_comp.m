@@ -8,41 +8,37 @@ function comp = ft_datatype_comp(comp, varargin)
 % PCA. This data structure is usually generated with the FT_COMPONENTANALYSIS
 % function.
 %
-% An example of a comp data structure with 100 components that resulted from
+% An example of a decomposed raw data structure with 100 components that resulted from
 % a 151-channel MEG recording is shown here:
 %
-%          time: {1x10 cell}
-%         trial: {1x10 cell}
-%      unmixing: [100x151 double]
-%          topo: [151x100 double]
-%     topolabel: {151x1 cell}
-%         label: {100x1 cell}
-%       fsample: 300
-%           cfg: [1x1 struct]
+%       unmixing: [100x151 double]  the compoment unmixing matrix
+%           topo: [151x100 double]  the compoment topographies
+%      topolabel: {151x1 cell}      the channel labels (e.g. 'MRC13')
+%           time: {1x10 cell}       the timeaxis [1*Ntime double] per trial
+%          trial: {1x10 cell}       the numeric data [151*Ntime double] per trial
+%          label: {100x1 cell}      the component labels (e.g. 'runica001')
+%           grad: [1x1 struct]      information about the sensor array (for EEG it is called elec)
+%            cfg: [1x1 struct]      the configuration used by the function that generated this data structure
 %
-% The only difference to the raw data structure is that the comp structure
-% contains the additional fields unmixing, topo and topolabel. See
-% FT_DATATYPE_RAW for further details.
+% The only difference to the raw data structure is that the comp structure contains
+% the additional fields unmixing, topo and topolabel. Besides representing the time
+% series information as a raw data structure (see FT_DATATYPE_RAW), it is also
+% possible for time series information to be represented as timelock or freq
+% structures (see FT_DATATYPE_TIMELOCK or FT_DATATYPE_FREQ).
 %
 % Required fields:
-%   - time, trial, label, topo, unmixing
+%   - unmixing, topo, topolabel
 %
 % Optional fields:
-%   - sampleinfo, trialinfo, grad, elec, hdr, cfg
-%
-% Deprecated fields:
-%   - fsample
-%
-% Obsoleted fields:
-%   - offset
+%   - cfg, all fields from FT_DATATYPE_RAW, FT_DATATYPE_TIMELOCK or FT_DATATYPE_FREQ
 %
 % Historical fields:
-%   - cfg, fsample, grad, label, sampleinfo, time, topo, topolabel, trial,
-%   unmixing, see bug2513
+%   - cfg, offset, fsample, grad, elec, label, sampleinfo, time, topo, topolabel, trial, unmixing, see bug2513
 %
 % Revision history:
-% (2011/latest) The unmixing matrix has been added to the component data
-% structure.
+% (2014) The combination of comp with raw, timelock or freq has been defined explicitly.
+%
+% (2011) The unmixing matrix has been added to the component data structure.
 %
 % (2003) The initial version was defined
 %
@@ -76,34 +72,90 @@ hassampleinfo = ft_getopt(varargin, 'hassampleinfo', []); % the default is deter
 hastrialinfo  = ft_getopt(varargin, 'hastrialinfo', []);  % the default is determined in ft_datatype_raw
 
 if strcmp(version, 'latest')
-  compversion     = '2011';
+  version         = '2014';
   % the following are used further down
   rawversion      = 'latest';
   timelockversion = 'latest';
   freqversion     = 'latest';
-else
-  % Note that this does not ensure for backward compatibility support
-  % that the exact old version of the comp structure will be recreated.
-  % For example compversion=2007 will ensure fsample to be present, but
-  % will not strip off the unmixing field
-  rawversion = compversion;
 end
 
 if isempty(comp)
   return;
 end
 
-switch compversion
-  case '2011'
+switch version
+  case '2014'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if ~isfield(comp, 'unmixing')
-      % in case the unmixing matrix is not present, construct the best estimate
-      % based on the mixing (topo) matrix
+      % in case the unmixing matrix is not present, construct the best estimate based on the mixing (topo) matrix
+      % this is shared with the 2011 code
       if size(comp.topo,1)==size(comp.topo,2)
         comp.unmixing = inv(comp.topo);
       else
         comp.unmixing = pinv(comp.topo);
       end
+    end
+    
+    % convert it into a raw data structure and update it to the latest version
+    if ft_datatype(comp, 'raw')
+      raw = comp;
+      raw = rmfield(raw, 'topo');
+      raw = rmfield(raw, 'unmixing');
+      raw = rmfield(raw, 'topolabel');
+      raw = ft_datatype_raw(raw, 'version', rawversion, 'hassampleinfo', hassampleinfo, 'hastrialinfo', hastrialinfo);
+      
+      % add the component specific fields again
+      raw.unmixing  = comp.unmixing;
+      raw.topo      = comp.topo;
+      raw.topolabel = comp.topolabel;
+      comp = raw;
+      clear raw
+      
+    elseif ft_datatype(comp, 'timelock')
+      timelock = comp;
+      timelock = rmfield(timelock, 'topo');
+      timelock = rmfield(timelock, 'unmixing');
+      timelock = rmfield(timelock, 'topolabel');
+      timelock = ft_datatype_timelock(timelock, 'version', timelockversion);
+      
+      % add the component specific fields again
+      timelock.unmixing  = comp.unmixing;
+      timelock.topo      = comp.topo;
+      timelock.topolabel = comp.topolabel;
+      comp = timelock;
+      clear timelock
+      
+    elseif ft_datatype(comp, 'freq')
+      freq = comp;
+      freq = rmfield(freq, 'topo');
+      freq = rmfield(freq, 'unmixing');
+      freq = rmfield(freq, 'topolabel');
+      freq = ft_datatype_freq(freq, 'version', freqversion);
+      
+      % add the component specific fields again
+      freq.unmixing  = comp.unmixing;
+      freq.topo      = comp.topo;
+      freq.topolabel = comp.topolabel;
+      comp = freq;
+      clear freq
+      
+    end % raw, timelock or freq
+    
+  case '2011'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if ~isfield(comp, 'unmixing')
+      % in case the unmixing matrix is not present, construct the best estimate based on the mixing (topo) matrix
+      % this is shared with the 2014 code
+      if size(comp.topo,1)==size(comp.topo,2)
+        comp.unmixing = inv(comp.topo);
+      else
+        comp.unmixing = pinv(comp.topo);
+      end
+    end
+    
+    if ft_datatype(comp, 'timelock') || ft_datatype(comp, 'freq')
+      % timelock or freq were not supported in 2011, hence force conversion to raw data
+      comp = ft_checkdata(comp, 'datatype', 'raw');
     end
     
   case '2003'
@@ -118,47 +170,4 @@ switch compversion
     error('unsupported version "%s" for comp datatype', version);
 end
 
-% convert it into a raw data structure and update it to the latest version
-if ft_datatype(comp, 'raw')
-  raw = comp;
-  raw = rmfield(raw, 'topo');
-  raw = rmfield(raw, 'unmixing');
-  raw = rmfield(raw, 'topolabel');
-  raw = ft_datatype_raw(raw, 'version', rawversion, 'hassampleinfo', hassampleinfo, 'hastrialinfo', hastrialinfo);
-  
-  % add the component specific fields again
-  raw.unmixing  = comp.unmixing;
-  raw.topo      = comp.topo;
-  raw.topolabel = comp.topolabel;
-  comp = raw;
-  clear raw
-  
-elseif ft_datatype(comp, 'timelock')
-  timelock = comp;
-  timelock = rmfield(timelock, 'topo');
-  timelock = rmfield(timelock, 'unmixing');
-  timelock = rmfield(timelock, 'topolabel');
-  timelock = ft_datatype_timelock(timelock, 'version', timelockversion);
-  
-  % add the component specific fields again
-  timelock.unmixing  = comp.unmixing;
-  timelock.topo      = comp.topo;
-  timelock.topolabel = comp.topolabel;
-  comp = timelock;
-  clear timelock
-  
-elseif ft_datatype(comp, 'freq')
-  freq = comp;
-  freq = rmfield(freq, 'topo');
-  freq = rmfield(freq, 'unmixing');
-  freq = rmfield(freq, 'topolabel');
-  freq = ft_datatype_freq(freq, 'version', freqversion);
-  
-  % add the component specific fields again
-  freq.unmixing  = comp.unmixing;
-  freq.topo      = comp.topo;
-  freq.topolabel = comp.topolabel;
-  comp = freq;
-  clear freq
-  
-end % raw, timelock or freq
+

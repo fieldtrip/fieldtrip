@@ -108,6 +108,11 @@ ft_preamble debug
 ft_preamble loadvar    varargin
 ft_preamble provenance varargin
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'unused',     {'cohtargetchannel'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'zlim', 'absmax', 'maxabs'});
@@ -177,6 +182,7 @@ end
 % ensure that the input is correct, also backward compatibility with old data structures:
 dtype = cell(Ndata, 1);
 for i=1:Ndata
+  % check if the input data is valid for this function
   varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'timelock', 'freq'});
   dtype{i}    = ft_datatype(varargin{i});
   
@@ -657,20 +663,20 @@ if false
   end
 end
 
-% add a menu to the figure, but only if the current figure does not have subplots
-% also, delete any possibly existing previous menu, this is safe because delete([]) does nothing
-delete(findobj(gcf, 'type', 'uimenu', 'label', 'FieldTrip'));
-if numel(findobj(gcf, 'type', 'axes')) <= 1
-  ftmenu = uimenu(gcf, 'Label', 'FieldTrip');
-  uimenu(ftmenu, 'Label', 'Show pipeline',  'Callback', {@menu_pipeline, cfg});
-  uimenu(ftmenu, 'Label', 'About',  'Callback', @menu_about);
-end
-
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
 ft_postamble provenance
 ft_postamble previous varargin
+
+% add a menu to the figure, but only if the current figure does not have subplots
+% also, delete any possibly existing previous menu, this is safe because delete([]) does nothing
+delete(findobj(gcf, 'type', 'uimenu', 'label', 'FieldTrip'));
+if numel(findobj(gcf, 'type', 'axes', '-not', 'tag', 'ft-colorbar')) <= 1
+  ftmenu = uimenu(gcf, 'Label', 'FieldTrip');
+  uimenu(ftmenu, 'Label', 'Show pipeline',  'Callback', {@menu_pipeline, cfg});
+  uimenu(ftmenu, 'Label', 'About',  'Callback', @menu_about);
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION which is called after selecting a time range

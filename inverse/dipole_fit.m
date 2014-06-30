@@ -86,7 +86,7 @@ constr         = ft_getopt(varargin, 'constr'         ); % default is not to hav
 metric         = ft_getopt(varargin, 'metric',    'rv');
 checkinside    = ft_getopt(varargin, 'checkinside', false);
 display        = ft_getopt(varargin, 'display', 'iter');
-optimfun       = ft_getopt(varargin, 'optimfun'       ); if isa(optimfun, 'char'),  optimfun = str2fun(optimfun); end
+optimfun       = ft_getopt(varargin, 'optimfun'       ); if isa(optimfun, 'char'),  optimfun = str2func(optimfun); end
 maxiter        = ft_getopt(varargin, 'maxiter'        );
 reducerank     = ft_getopt(varargin, 'reducerank'     ); % for leadfield computation
 normalize      = ft_getopt(varargin, 'normalize'      ); % for leadfield computation

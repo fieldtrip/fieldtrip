@@ -111,6 +111,11 @@ ft_preamble init
 ft_preamble provenance
 ft_preamble loadvar data
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 % set default rejection parameters
 cfg.headerformat                 = ft_getopt(cfg,                  'headerformat', []);
 cfg.dataformat                   = ft_getopt(cfg,                  'dataformat',   []);
@@ -159,13 +164,18 @@ if pertrial
 end
 
 if nargin > 1
-  % data given as input
-  isfetch = 1;
-  hdr  = ft_fetch_header(data);
+  % check if the input data is valid for this function
   data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
+  % data given as input, use ft_fetch_header and ft_fetch_data in the remainder of the code
+  isfetch = 1;
+  hdr = ft_fetch_header(data);
 elseif nargin == 1
   % only cfg given
   isfetch = 0;
+  
+  if ~isfield(cfg, 'headerfile') && isfield(cfg, 'dataset')
+    cfg = dataset2files(cfg);
+  end
   hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
   
   % check whether the value for trlpadding makes sense; negative trlpadding
@@ -229,7 +239,7 @@ for trlop = 1:numtrl
       
   if strcmp(cfg.memory, 'low') % store nothing in memory
     if isfetch
-      dat = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'));
+      dat = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'), 'skipcheckdata', 1);
     else
       dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'), 'dataformat', cfg.dataformat);
     end
@@ -260,7 +270,7 @@ for trlop = 1:numtrl
     end
   else % store all data in memory, saves computation time
     if isfetch
-      dat{trlop} = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'));
+      dat{trlop} = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'), 'skipcheckdata', 1);
     else
       dat{trlop} = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'), 'dataformat', cfg.dataformat);
     end

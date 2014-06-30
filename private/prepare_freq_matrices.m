@@ -1,4 +1,4 @@
-function [Cf, Cr, Pr, Ntrials, cfg] = prepare_freq_matrices(cfg, freq);
+function [Cf, Cr, Pr, Ntrials, cfg] = prepare_freq_matrices(cfg, freq)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that converts a freq structure into Cf, Cr and Pr

@@ -1,11 +1,11 @@
-function test_bug2336 
+function test_bug2336
 
 % these settings are needed to execute the test script on out cluster
 % WALLTIME 00:30:00
 % MEM 4gb
 
 % script to test the integration of FEM output files created by BESA MRI.
-% 
+%
 % Copyright (C) 2013, BESA GmbH
 %
 % File name: test_bug2336.m
@@ -35,12 +35,12 @@ strPath__ScalpSurface     = sprintf('%sBESA_MRI_PB_FEM_SCALP_ACPC.srf', strPath_
 
 
 % Read leadfield
-[dim lf] = readBESAlft(strPath_Leadfield);   
+[dim lf] = readBESAlft(strPath_Leadfield);
 fprintf('Number of channels: %i\n', dim(1));
 fprintf('Number of nodes: %i\n', dim(2));
 fprintf('Number of orientations: %i\n', dim(3));
 
-   
+
 % Read source space grid nodes
 [ssg IdxNeighbour] = readBESAloc(strPath_SourceSpaceNodes);
 fprintf('Number of nodes: %i\n', size(ssg, 1));
@@ -71,7 +71,7 @@ vol = ft_prepare_headmodel(cfg);
 pos = ssg(1,:);
 sens1 = ft_read_sens(strPath__ElectrodeConfig);
 sens2 = sens1;
-sens2.elecpos = sens.elecpos+randn(size(sens.elecpos));
+sens2.elecpos = sens2.elecpos+randn(size(sens2.elecpos));
 
 [vol1, sens1] = ft_prepare_vol_sens(vol, sens1);
 lf1 = ft_compute_leadfield(pos, sens1, vol1);
@@ -81,21 +81,21 @@ lf2 = ft_compute_leadfield(pos, sens2, vol2);
 
 figure
 subplot(2,2,1)
-ft_plot_topo3d(sens.elecpos, lf(:,1))
+ft_plot_topo3d(sens1.elecpos, lf(:,1))
 subplot(2,2,2)
-ft_plot_topo3d(sens.elecpos, lf(:,2))
+ft_plot_topo3d(sens1.elecpos, lf(:,2))
 subplot(2,2,3)
-ft_plot_topo3d(sens.elecpos, lf(:,3))
+ft_plot_topo3d(sens1.elecpos, lf(:,3))
 
 
 % show 3D stuff
 figure
 ft_plot_dipole(pos, [0 0 1]', 'diameter', 10, 'length', 20);
-ft_plot_topo3d(sens.elecpos, lf(:,3))
+ft_plot_topo3d(sens1.elecpos, lf(:,3))
 
 [X, Y, Z] = ndgrid(1:vol.dim(1), 1:vol.dim(2), 1:vol.dim(3));
 pos = ft_warp_apply(vol.transform, [X(:) Y(:) Z(:)]);
-% ft_plot_mesh(pos);
+ft_plot_mesh(pos);
 
 
 

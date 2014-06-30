@@ -1,5 +1,6 @@
 function [varargout] = ft_selectdata(varargin)
 
+% FT_SELECTDATA makes a selection in the input data along specific data
 % dimensions, such as channels, time, frequency, trials, etc. It can also
 % be used to average the data along each of the specific dimensions.
 %
@@ -139,6 +140,10 @@ if ~isfield(cfg, 'foilim')
 end
 
 datfield  = fieldnames(varargin{1});
+for i=2:length(varargin)
+  % only consider fields that are present in all inputs
+  datfield = intersect(datfield, fieldnames(varargin{i}));
+end
 datfield  = setdiff(datfield, {'label' 'labelcmb'}); % these fields will be used for selection, but are not treated as data fields
 xtrafield =  {'cfg' 'hdr' 'fsample' 'grad' 'elec' 'transform' 'unit' 'topolabel' 'lfplabel' 'dim'}; % these fields will not be touched in any way by the code
 datfield  = setdiff(datfield, xtrafield);
@@ -159,11 +164,17 @@ for i=1:length(orgdim1)
 end
 
 dimord = cell(size(datfield));
-datsiz = cell(size(datfield));
 for i=1:length(datfield)
   dimord{i} = getdimord(varargin{1}, datfield{i});
-  datsiz{i} = getdimsiz(varargin{1}, datfield{i});
 end
+
+% do not consider fields of which the dimensions are unknown
+sel = cellfun(@isempty, regexp(dimord, 'unknown'));
+for i=find(~sel)
+  fprintf('not including "%s" in selection\n', datfield{i});
+end
+datfield = datfield(sel);
+dimord   = dimord(sel);
 
 % determine all dimensions that are present in all data fields
 dimtok = {};
@@ -329,7 +340,7 @@ for i=1:numel(varargin)
   % also update the fields that describe the dimensions, time/freq/pos have been dealt with as data
   if haschan,    varargin{i} = makeselection_chan   (varargin{i}, selchan{i}, avgoverchan); end % update the label field
   if haschancmb, varargin{i} = makeselection_chancmb(varargin{i}, selchancmb{i}, avgoverchancmb); end % update the labelcmb field
- 
+  
 end % for varargin
 
 if strcmp(cfg.select, 'union')
@@ -786,7 +797,7 @@ end
 
 indx = nan(numel(alltimevec), numel(alltimecell));
 for k = 1:numel(alltimecell)
-  [~, ix, iy] = intersect(alltimevec, round(alltimecell{k}/tol)*tol);
+  [dum, ix, iy] = intersect(alltimevec, round(alltimecell{k}/tol)*tol);
   indx(ix,k) = iy;
 end
 
@@ -905,7 +916,7 @@ end
 
 indx = nan+zeros(numel(freqaxis), ndata);
 for k = 1:ndata
-  [~, ix, iy] = intersect(freqaxis, round(varargin{k}.freq(:)/tol)*tol);
+  [dum, ix, iy] = intersect(freqaxis, round(varargin{k}.freq(:)/tol)*tol);
   indx(ix,k) = iy;
 end
 
@@ -1085,14 +1096,6 @@ end
 end % function getselection_pos
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [data] = keepfields(data, fn)
-fn = setdiff(fieldnames(data), fn);
-for i=1:numel(fn)
-  data = rmfield(data, fn{i});
-end
-end % function keepfields
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function x = squeezedim(x, dim)
 siz = size(x);
 for i=(numel(siz)+1):numel(dim)
@@ -1209,4 +1212,46 @@ else
 end
 end % function cellmatmean
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%ISROW True if input is a row vector.
+%   ISROW(V) returns logical 1 (true) if SIZE(V) returns [1 n]
+%   with a nonnegative integer value n, and logical 0 (false) otherwise.
+%
+% This is a drop-in replacement for the MATLAB function with the same name,
+% which does not exist in versions < 2010.
+%
+% See http://bugzilla.fcdonders.nl/show_bug.cgi?id=2567
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function s = isrow(v)
+siz = size(v);
+m = siz(1);
+n = siz(2);
+if numel(siz)==2 && m==1 && n>0
+  s = true;
+else
+  s = false;
+end
+end % function isrow
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%ISROW True if input is a column vector.
+%   ISROW(V) returns logical 1 (true) if SIZE(V) returns [m 1]
+%   with a nonnegative integer value m, and logical 0 (false) otherwise.
+%
+% This is a drop-in replacement for the MATLAB function with the same name,
+% which does not exist in versions < 2010.
+%
+% See http://bugzilla.fcdonders.nl/show_bug.cgi?id=2567
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function s = iscolumn(v)
+siz = size(v);
+m = siz(1);
+n = siz(2);
+if numel(siz)==2 && m>0 && n==1
+  s = true;
+else
+  s = false;
+end
+end % function iscolumn
 

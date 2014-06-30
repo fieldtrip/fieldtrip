@@ -1,4 +1,4 @@
-function [H] = globalrescale(f);
+function [H] = globalrescale(f)
 
 % GLOBALRESCALE creates the homogenous spatial transformation matrix
 % for a 7 parameter rigid-body transformation with global rescaling

@@ -1,4 +1,4 @@
-function [timelock, cfg] = freq2timelock(cfg, freq);
+function [timelock, cfg] = freq2timelock(cfg, freq)
 
 % FREQ2TIMELOCK  transform the frequency data into something
 % on which the timelocked source reconstruction methods can

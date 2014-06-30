@@ -32,8 +32,9 @@ function [hdr] = read_wdq_header(filename)
 fid = fopen(filename, 'r');
 %tmp = fread(fid, 110); % the first 110 bytes are always interpretable equally
 hdr = [];
-hdr.nchan         = fread(fid, 1, 'uint16');
-hdr.nchan         = hdr.nchan - bitand(hdr.nchan, 32);
+hdr.nchan         = fread(fid, 1, 'uint16=>uint16');
+% hdr.nchan         = hdr.nchan - bitand(hdr.nchan, 32);
+hdr.nchan         = double(bitand(hdr.nchan, 255)); % only the lowest bits seem to be coding the number of channels
 i2                = fread(fid, 1, 'uint16');
 hdr.offset        = fread(fid, 1, 'uint8');
 hdr.nbyteschanhdr = fread(fid, 1, 'uint8');

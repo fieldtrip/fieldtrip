@@ -76,6 +76,7 @@ function [dat, label, time, cfg] = preproc(dat, label, time, cfg, begpadding, en
 %   cfg.hilbert       = 'no', 'abs', 'complex', 'real', 'imag', 'absreal', 'absimag' or 'angle' (default = 'no')
 %   cfg.rectify       = 'no' or 'yes'
 %   cfg.precision     = 'single' or 'double' (default = 'double')
+%   cfg.absdiff       = 'no' or 'yes', computes absolute derivative (i.e.first derivative then rectify)
 %
 % Preprocessing options that you should only use for EEG data are
 %   cfg.reref         = 'no' or 'yes' (default = 'no')

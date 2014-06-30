@@ -138,11 +138,13 @@ ischan          = ft_datatype(data, 'chan');
 
 if ~isequal(feedback, 'no')
   if iscomp
-    % it can be comp and raw at the same time, therefore this has to go first
-    ncomp = length(data.label);
-    nchan = length(data.topolabel);
+    % it can be comp and raw/timelock/freq at the same time, therefore this has to go first
+    nchan = size(data.topo,1);
+    ncomp = size(data.topo,2);
     fprintf('the input is component data with %d components and %d original channels\n', ncomp, nchan);
-  elseif israw
+  end
+  
+  if israw
     nchan = length(data.label);
     ntrial = length(data.trial);
     fprintf('the input is raw data with %d channels and %d trials\n', nchan, ntrial);
@@ -160,7 +162,7 @@ if ~isequal(feedback, 'no')
       nchan = length(data.labelcmb);
       nfreq = length(data.freq);
       if isfield(data, 'time'), ntime = num2str(length(data.time)); else ntime = 'no'; end
-      fprintf('the input is freq data with %d channel combinations, %d frequencybins and %s timebins\n', nchan, nfreq, ntime);  
+      fprintf('the input is freq data with %d channel combinations, %d frequencybins and %s timebins\n', nchan, nfreq, ntime);
     else
       error('cannot infer freq dimensions');
     end
@@ -198,30 +200,29 @@ if ~isequal(feedback, 'no')
     fprintf('the input is freqmvar data\n');
   elseif ischan
     nchan = length(data.label);
-    fprintf('the input is chan data\n');
+    fprintf('the input is chan data with %d channels\n', nchan);
   end
 end % give feedback
 
 if issource && isvolume
-  % it should be either one or the other: the choice here is to
-  % represent it as volume description since that is simpler to handle
-  % the conversion is done by remove the grid positions
+  % it should be either one or the other: the choice here is to represent it as volume description since that is simpler to handle
+  % the conversion is done by removing the grid positions
   data = rmfield(data, 'pos');
   issource = false;
 end
 
 % the ft_datatype_XXX functions ensures the consistency of the XXX datatype
 % and provides a detailed description of the dataformat and its history
-if isfreq
-  data = ft_datatype_freq(data);
-elseif istimelock
-  data = ft_datatype_timelock(data);
-elseif isspike
-  data = ft_datatype_spike(data);
-elseif iscomp % this should go before israw
+if iscomp % this should go before israw/istimelock/isfreq
   data = ft_datatype_comp(data, 'hassampleinfo', hassampleinfo);
 elseif israw
   data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
+elseif istimelock
+  data = ft_datatype_timelock(data);
+elseif isfreq
+  data = ft_datatype_freq(data);
+elseif isspike
+  data = ft_datatype_spike(data);
 elseif issegmentation % this should go before isvolume
   data = ft_datatype_segmentation(data, 'segmentationstyle', segmentationstyle, 'hasbrain', hasbrain);
 elseif isvolume
@@ -245,14 +246,20 @@ if ~isempty(dtype)
   for i=1:length(dtype)
     % check that the data matches with one or more of the required ft_datatypes
     switch dtype{i}
+      case 'raw+comp'
+        okflag = okflag + (israw & iscomp);
+      case 'freq+comp'
+        okflag = okflag + (isfreq & iscomp);
+      case 'timelock+comp'
+        okflag = okflag + (istimelock & iscomp);
       case 'raw'
-        okflag = okflag + israw;
+        okflag = okflag + (israw & ~iscomp);
       case 'freq'
-        okflag = okflag + isfreq;
+        okflag = okflag + (isfreq & ~iscomp);
       case 'timelock'
-        okflag = okflag + istimelock;
+        okflag = okflag + (istimelock & ~iscomp);
       case 'comp'
-        okflag = okflag + iscomp;
+        okflag = okflag + (iscomp & ~(israw | istimelock | isfreq));
       case 'spike'
         okflag = okflag + isspike;
       case 'volume'
@@ -277,7 +284,19 @@ if ~isempty(dtype)
   if ~okflag
     % try to convert the data
     for iCell = 1:length(dtype)
-      if isequal(dtype(iCell), {'source'}) && isvolume
+      if isequal(dtype(iCell), {'parcellation'}) && issegmentation
+        data = volume2source(data); % segmentation=volume, parcellation=source
+        data = ft_datatype_parcellation(data);
+        issegmentation = 0;
+        isparcellation = 1;
+        okflag = 1;
+      elseif isequal(dtype(iCell), {'segmentation'}) && isparcellation
+        data = source2volume(data); % segmentation=volume, parcellation=source
+        data = ft_datatype_segmentation(data);
+        isparcellation = 0;
+        issegmentation = 1;
+        okflag = 1;
+      elseif isequal(dtype(iCell), {'source'}) && isvolume
         data = volume2source(data);
         data = ft_datatype_source(data);
         isvolume = 0;
@@ -296,36 +315,80 @@ if ~isempty(dtype)
         israw = 1;
         okflag = 1;
       elseif isequal(dtype(iCell), {'raw'}) && istimelock
+        if iscomp
+          data = removefields(data, {'topo', 'topolabel', 'unmixing'}); % these fields are not desired
+          iscomp = 0;
+        end
         data = timelock2raw(data);
         data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
         istimelock = 0;
         israw = 1;
         okflag = 1;
-      elseif isequal(dtype(iCell), {'timelock'}) && iscomp % this should go before israw
-        data = comp2raw(data);
-        data = raw2timelock(data);
-        data = ft_datatype_timelock(data);
-        iscomp = 0;
+      elseif isequal(dtype(iCell), {'comp'}) && israw
+        data = keepfields(data, {'label', 'topo', 'topolabel', 'unmixing', 'elec', 'grad', 'cfg'}); % these are the only relevant fields
+        data = ft_datatype_comp(data);
         israw = 0;
-        istimelock = 1;
+        iscomp = 1;
+        okflag = 1;
+      elseif isequal(dtype(iCell), {'comp'}) && istimelock
+        data = keepfields(data, {'label', 'topo', 'topolabel', 'unmixing', 'elec', 'grad', 'cfg'}); % these are the only relevant fields
+        data = ft_datatype_comp(data);
+        istimelock = 0;
+        iscomp = 1;
+        okflag = 1;
+      elseif isequal(dtype(iCell), {'comp'}) && isfreq
+        data = keepfields(data, {'label', 'topo', 'topolabel', 'unmixing', 'elec', 'grad', 'cfg'}); % these are the only relevant fields
+        data = ft_datatype_comp(data);
+        isfreq = 0;
+        iscomp = 1;
+        okflag = 1;
+      elseif isequal(dtype(iCell), {'raw'}) && israw
+        if iscomp
+          data = removefields(data, {'topo', 'topolabel', 'unmixing'}); % these fields are not desired
+          iscomp = 0;
+        end
+        data = ft_datatype_raw(data);
+        okflag = 1;
+      elseif isequal(dtype(iCell), {'timelock'}) && istimelock
+        if iscomp
+          data = removefields(data, {'topo', 'topolabel', 'unmixing'}); % these fields are not desired
+          iscomp = 0;
+        end
+        data = ft_datatype_timelock(data);
+        okflag = 1;
+      elseif isequal(dtype(iCell), {'freq'}) && isfreq
+        if iscomp
+          data = removefields(data, {'topo', 'topolabel', 'unmixing'}); % these fields are not desired
+          iscomp = 0;
+        end
+        data = ft_datatype_freq(data);
         okflag = 1;
       elseif isequal(dtype(iCell), {'timelock'}) && israw
+        if iscomp
+          data = removefields(data, {'topo', 'topolabel', 'unmixing'}); % these fields are not desired
+          iscomp = 0;
+        end
         data = raw2timelock(data);
         data = ft_datatype_timelock(data);
         israw = 0;
         istimelock = 1;
         okflag = 1;
       elseif isequal(dtype(iCell), {'raw'}) && isfreq
+        if iscomp
+          data = removefields(data, {'topo', 'topolabel', 'unmixing'}); % these fields are not desired
+          iscomp = 0;
+        end
         data = freq2raw(data);
         data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
         isfreq = 0;
         israw = 1;
         okflag = 1;
-      elseif isequal(dtype(iCell), {'raw'}) && iscomp
-        % this is never executed, because when iscomp==true, then also israw==true
-        data = comp2raw(data);
-        data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
-        iscomp = 0;
+        
+      elseif isequal(dtype(iCell), {'raw'}) && ischan
+        data = chan2timelock(data);
+        data = timelock2raw(data);
+        data = ft_datatype_raw(data);
+        ischan = 0;
         israw = 1;
         okflag = 1;
       elseif isequal(dtype(iCell), {'timelock'}) && ischan
@@ -364,8 +427,7 @@ if ~isempty(dtype)
     else
       str = dtype{1};
     end
-    str = sprintf('This function requires %s data as input.', str);
-    error(str);
+    error('This function requires %s data as input.', str);
   end % if okflag
 end
 
@@ -388,8 +450,7 @@ if ~isempty(dimord)
     else
       str = dimord{1};
     end
-    str = sprintf('This function requires data with a dimord of %s.', str);
-    error(str);
+    error('This function requires data with a dimord of %s.', str);
   end % if okflag
 end
 
@@ -417,8 +478,7 @@ if ~isempty(stype)
     else
       str = stype{1};
     end
-    str = sprintf('This function requires %s data as input, but you are giving %s data.', str, ft_senstype(data));
-    error(str);
+    error('This function requires %s data as input, but you are giving %s data.', str, ft_senstype(data));
   end % if okflag
 end
 
@@ -611,7 +671,7 @@ if issource || isvolume,
         dim(1,i) = nan; % this applies to rpt, ori
       end
     end
-    try 
+    try
       % the following only works for rpt, not for ori
       i = find(isnan(dim));
       if ~isempty(i)
@@ -1610,15 +1670,6 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % convert between datatypes
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function data = comp2raw(data)
-% remove the fields that are specific to the comp representation
-fn = fieldnames(data);
-fn = intersect(fn, {'topo' 'topolabel' 'unmixing'});
-data = rmfield(data, fn);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% convert between datatypes
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function data = volume2source(data)
 if isfield(data, 'dimord')
   % it is a modern source description
@@ -1676,7 +1727,7 @@ elseif isfield(freq, 'fourierspctrm')
   param = 'fourierspctrm';
 else
   error('not supported for this data representation');
-end  
+end
 
 if strcmp(freq.dimord, 'rpt_chan_freq_time') || strcmp(freq.dimord, 'rpttap_chan_freq_time')
   dat = freq.(param);
@@ -1744,7 +1795,7 @@ else
   nsmp = round((endtime-begtime)*fsample) + 1; % numerical round-off issues should be dealt with by this round, as they will/should never cause an extra sample to appear
   % construct general time-axis
   time = linspace(begtime,endtime,nsmp);
-
+  
   % concatenate all trials
   tmptrial = nan(ntrial, nchan, length(time));
   
@@ -1878,7 +1929,7 @@ for iUnit = 1:nUnits
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% sub function for detection channels
+% SUBFUNCTION for detection of channels
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [spikelabel, eeglabel] = detectspikechan(data)
 
@@ -1969,10 +2020,11 @@ for iTrial = 1:nTrials
   data.trial{iTrial} = trialData;
   data.time{iTrial}  = time;
   
-end
+end % for all trials
 
 % create the associated labels and other aspects of data such as the header
 data.label = spike.label;
 data.fsample = fsample;
 if isfield(spike,'hdr'), data.hdr = spike.hdr; end
 if isfield(spike,'cfg'), data.cfg = spike.cfg; end
+

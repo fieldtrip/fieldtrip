@@ -1,4 +1,4 @@
-function [d] = dist(x);
+function [d] = dist(x)
 
 % DIST computes the euclidian distance between the columns of the input matrix
 %

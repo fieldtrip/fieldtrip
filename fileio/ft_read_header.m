@@ -816,7 +816,7 @@ switch headerformat
       end
     end
     warning('on', 'MATLAB:REGEXP:deprecated')
-    
+
     % epochs.xml seems the most common version, but epoch.xml might also
     % occur, so use only one name
     if isfield(orig.xml, 'epoch')
@@ -824,7 +824,7 @@ switch headerformat
       orig.xml = rmfield(orig.xml, 'epoch');
     end
     
-    %make hdr according to FieldTrip rules
+    % make hdr according to FieldTrip rules
     hdr = [];
     Fs = zeros(length(orig.signal),1);
     nChans = zeros(length(orig.signal),1);
@@ -850,7 +850,7 @@ switch headerformat
     hdr.nSamples    = nSamples(1);
     hdr.nTrials     = 1;
     
-    %-get channel labels for signal 1 (main net), otherwise create them
+    % get channel labels for signal 1 (main net), otherwise create them
     if isfield(orig.xml, 'sensorLayout') % asuming that signal1 is hdEEG sensornet, and channels are in xml file sensorLayout
       for iSens = 1:numel(orig.xml.sensorLayout.sensors)
         if ~isempty(orig.xml.sensorLayout.sensors(iSens).sensor.name) && ~(isstruct(orig.xml.sensorLayout.sensors(iSens).sensor.name) && numel(fieldnames(orig.xml.sensorLayout.sensors(iSens).sensor.name))==0)
@@ -870,9 +870,9 @@ switch headerformat
           % non interesting channels like place holders and COM
         end
       end
-      %check if the amount of lables corresponds with nChannels in signal 1
+      % check if the amount of lables corresponds with nChannels in signal 1
       if length(hdr.label) == nChans(1)
-        %good
+        % good
       elseif length(hdr.label) > orig.signal(1).blockhdr(1).nsignals
         warning('found more lables in xml.sensorLayout than channels in signal 1, thus can not use info in sensorLayout, creating labels on the fly')
         for iSens = 1:orig.signal(1).blockhdr(1).nsignals

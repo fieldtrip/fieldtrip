@@ -15,7 +15,7 @@ function write_ply(fn, pnt, tri, format)
 %
 % $Id$
 
-% the elements are described as
+% the element are described as
 %   Mx3 list of vertices for triangles
 %   Mx4 list of vertices for tetraheders
 %   Mx8 list of vertices for hexaheders
@@ -24,6 +24,27 @@ if nargin<4
   format = 'ascii';
 end
 
+if size(tri,2)==4
+  % describe the sides of the tetraheders as polygon surface elements
+  % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1836
+  tri = [
+    tri(:,[3 2 1])
+    tri(:,[2 4 1])
+    tri(:,[3 4 2])
+    tri(:,[4 3 1])
+    ];
+elseif size(tri,2)==8
+  % describe the sides of the hexaheders as polygon surface elements
+  % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1836
+  tri = [
+    tri(:,[4 3 2 1])
+    tri(:,[1 2 6 5])
+    tri(:,[3 7 6 2])
+    tri(:,[4 8 7 3])
+    tri(:,[5 8 4 1])
+    tri(:,[6 7 8 5])
+    ];
+end
 
 if strcmp(format, 'ascii')
   fid = fopen(fn, 'wt');
@@ -64,16 +85,25 @@ if fid~=-1
   if strcmp(format, 'ascii')
     % write the vertex points
     fprintf(fid, '%f\t%f\t%f\n', pnt');
-    if size(tri,2)==3
-      % write the triangles
-      fprintf(fid, '3\t%d\t%d\t%d\n', tri');
-    elseif size(tri,2)==4
-      % write the tetraheders
-      fprintf(fid, '4\t%d\t%d\t%d\t%d\n', tri');
-    elseif size(tri,2)==8
-      % write the hexaheders
-      fprintf(fid, '8\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n', tri');
-    end
+    num = size(tri,2);
+    switch num
+      case 3
+        fprintf(fid, '3\t%d\t%d\t%d\n', tri');
+      case 4
+        fprintf(fid, '4\t%d\t%d\t%d\t%d\n', tri');
+      case 5
+        fprintf(fid, '5\t%d\t%d\t%d\t%d\n', tri');
+      case 6
+        fprintf(fid, '6\t%d\t%d\t%d\t%d\n', tri');
+      case 7
+        fprintf(fid, '7\t%d\t%d\t%d\t%d\n', tri');
+      case 8
+        fprintf(fid, '8\t%d\t%d\t%d\t%d\n', tri');
+      case 9
+        fprintf(fid, '9\t%d\t%d\t%d\t%d\n', tri');
+      otherwise
+        error('unsupported size for polygons (%d)', num);
+    end % case
   else
     fwrite(fid, pnt', 'single');      % float
     num = size(tri,2);

@@ -33,7 +33,7 @@ ft_default.feedback = 'no';
 % % do stats - montecarlo
 % cfg = [];
 % cfg.method      = 'montecarlo';
-% cfg.statistic   = 'depsamplesT';
+% cfg.statistic   = 'ft_statfun_depsamplesT';
 % cfg.alpha       = 0.05; 
 % cfg.correctm    = 'cluster'; 
 % cfg.clusterstatistic = 'maxsum';
@@ -48,7 +48,7 @@ ft_default.feedback = 'no';
 % % do stats - analytic
 % cfg = [];
 % cfg.method      = 'analytic';
-% cfg.statistic   = 'depsamplesT';
+% cfg.statistic   = 'ft_statfun_depsamplesT';
 % cfg.alpha       = 0.05; 
 % cfg.design = [ones(1,5) ones(1,5).*2; 1:5 1:5;];
 % cfg.ivar   = 1;
@@ -85,7 +85,7 @@ end
 % do stats - montecarlo
 cfg = [];
 cfg.method      = 'montecarlo';
-cfg.statistic   = 'depsamplesT';
+cfg.statistic   = 'ft_statfun_depsamplesT';
 cfg.alpha       = 0.05; 
 cfg.correctm    = 'cluster'; 
 cfg.clusterstatistic = 'maxsum';
@@ -99,7 +99,7 @@ stat = ft_freqstatistics(cfg,freq{:});
 % do stats - analytic
 cfg = [];
 cfg.method      = 'analytic';
-cfg.statistic   = 'depsamplesT';
+cfg.statistic   = 'ft_statfun_depsamplesT';
 cfg.alpha       = 0.05; 
 cfg.design = [ones(1,5) ones(1,5).*2; 1:5 1:5;];
 cfg.ivar   = 1;

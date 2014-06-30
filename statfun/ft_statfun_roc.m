@@ -13,7 +13,7 @@ function [s, cfg] = ft_statfun_roc(cfg, dat, design)
 %   [stat] = ft_freqstatistics(cfg, freq1, freq2, ...)
 %   [stat] = ft_sourcestatistics(cfg, source1, source2, ...)
 % with the following configuration option
-%   cfg.statistic    = 'roc'
+%   cfg.statistic    = 'ft_statfun_roc'
 %
 % Configuration options that are relevant for this function are
 %   cfg.ivar         = number, index into the design matrix with the independent variable
@@ -26,7 +26,7 @@ function [s, cfg] = ft_statfun_roc(cfg, dat, design)
 %   a = randn(1,1000) + 1;
 %   b = randn(1,1000);
 %   design = [1*ones(1,1000) 2*ones(1,1000)];
-%   auc = statfun_roc([], [a b], design);
+%   auc = ft_statfun_roc([], [a b], design);
 
 % Copyright (C) 2008, Robert Oostenveld
 %

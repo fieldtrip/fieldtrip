@@ -1,4 +1,4 @@
-function [x, y] = select2d;
+function [x, y] = select2d
 
 % SELECT2D helper function for selecting a rectangular region
 % in the current figure using the mouse.

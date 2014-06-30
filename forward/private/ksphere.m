@@ -1,4 +1,4 @@
-function [pnt, tri] = ksphere(N);
+function [pnt, tri] = ksphere(N)
 
 % KSPHERE returns a triangulated sphere with K vertices that are
 % approximately evenly distributed over the sphere. 

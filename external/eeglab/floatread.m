@@ -43,26 +43,6 @@
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-% $Log: floatread.m,v $
-% Revision 1.6  2005/09/01 20:20:25  hilit
-% If last input (the offset var) is missing set it to 0 -> no offset
-%
-% Revision 1.5  2005/08/24 19:46:35  hilit
-% removing debuging variable
-%
-% Revision 1.4  2005/08/24 19:32:12  scott
-% added capability of specifying a starting offset in matrix format
-%
-% Revision 1.3  2005/08/24 19:02:43  scott
-% typo
-%
-% Revision 1.2  2005/08/24 19:01:08  scott
-% adding offset option
-%
-% Revision 1.1  2002/04/05 17:36:45  jorn
-% Initial revision
-%
-
 % 04-26-99  modified by Sigurd Enghoff to handle variable-sized and
 %           multi-dimensional data.
 % 07-08-99  modified by Sigurd Enghoff, FORMAT argument added.

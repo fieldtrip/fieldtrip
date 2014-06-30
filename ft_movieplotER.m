@@ -61,6 +61,11 @@ ft_defaults
 ft_preamble init
 ft_preamble provenance
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 % check if the input data is valid for this function
 data = ft_checkdata(data, 'datatype', 'timelock');
 

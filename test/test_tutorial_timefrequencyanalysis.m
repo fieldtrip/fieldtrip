@@ -4,7 +4,7 @@ function test_tutorial_timefrequencyanalysis(datadir)
 % WALLTIME 00:10:00
 
 % TEST test_tutorial_timefrequencyanalysis
-% TEST ft_freqanalysis
+% TEST ft_freqanalysis ft_preprocessing ft_multiplotTFR ft_singleplotTFR
 
 if nargin==0
   if ispc

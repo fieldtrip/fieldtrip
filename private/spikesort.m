@@ -1,4 +1,4 @@
-function [numA, numB, indA, indB] = spikesort(numA, numB, varargin);
+function [numA, numB, indA, indB] = spikesort(numA, numB, varargin)
 
 % SPIKESORT uses a variation on the cocktail sort algorithm in combination
 % with a city block distance to achieve N-D trial pairing between spike

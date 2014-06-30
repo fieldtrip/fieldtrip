@@ -1,4 +1,4 @@
-function [x, ut] = svdfft(f, n, trltapcnt);
+function [x, ut] = svdfft(f, n, trltapcnt)
 
 % SVDFFT computes a rotated FFT matrix, using the real part of the
 % cross-spectral density matrix. This rotation ensures that the phase

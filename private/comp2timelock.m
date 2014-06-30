@@ -1,4 +1,4 @@
-function [timelock, cfg] = comp2timelock(cfg, comp);
+function [timelock, cfg] = comp2timelock(cfg, comp)
 
 % COMP2TIMELOCK transform the independent components into something
 % on which the timelocked source reconstruction methods can

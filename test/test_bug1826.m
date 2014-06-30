@@ -1,7 +1,7 @@
 function test_bug1826
 
 % MEM 3gb
-% WALLTIME 00:10:00
+% WALLTIME 00:20:00
 
 % TEST test_bug1826
 % TEST ft_read_mri ft_write_mri ft_volumerealign

@@ -30,7 +30,10 @@ function [dat] = ft_fetch_data(data, varargin)
 % $Id$
 
 % check whether input is data
-data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
+skipcheckdata = ft_getopt(varargin, 'skipcheckdata');
+if isempty(skipcheckdata) || skipcheckdata ~= 1
+  data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
+end
 
 % get the options
 hdr          = ft_getopt(varargin, 'header');

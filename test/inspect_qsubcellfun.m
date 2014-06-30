@@ -1,9 +1,9 @@
-function test_qsubcellfun
+function inspect_qsubcellfun
 
 % MEM 3gb
 % WALLTIME 00:31:04
 
-% TEST test_qsubcellfun
+% TEST inspect_qsubcellfun
 % TEST qsubcellfun qsubfeval qsubget
 
 if isempty(which('qsubcellfun'))

@@ -78,6 +78,7 @@ function [data] = ft_preprocessing(cfg, data)
 %   cfg.hilbert       = 'no', 'abs', 'complex', 'real', 'imag', 'absreal', 'absimag' or 'angle' (default = 'no')
 %   cfg.rectify       = 'no' or 'yes' (default = 'no')
 %   cfg.precision     = 'single' or 'double' (default = 'double')
+%   cfg.absdiff       = 'no' or 'yes', computes absolute derivative (i.e.first derivative then rectify)
 %
 % Preprocessing options that you should only use for EEG data are
 %   cfg.reref         = 'no' or 'yes' (default = 'no')
@@ -159,6 +160,11 @@ ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar data
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 % return immediately after distributed execution
 if ~isempty(ft_getopt(cfg, 'distribute'))
   return
@@ -238,8 +244,8 @@ if hasdata
   % this is used to convert the data back to timelock later
   convert = ft_datatype(data);
   
-  % the input data must be raw
-  data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
+  % check if the input data is valid for this function, the input data must be raw
+  data = ft_checkdata(data, 'datatype', {'raw+comp', 'raw'}, 'hassampleinfo', 'yes');
   
   % check if the input cfg is valid for this function
   cfg = ft_checkconfig(cfg, 'forbidden',   {'trl', 'dataset', 'datafile', 'headerfile'});

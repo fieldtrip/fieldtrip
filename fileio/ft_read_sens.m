@@ -267,7 +267,7 @@ switch fileformat
       sens.fid.pnt    = [x(sel) y(sel) z(sel)];
     end
     
-  case 'localite_pos'
+  case {'localite_pos','localite_ins'}
     if ~usejava('jvm') % Using xml2struct requires java
       fid = fopen(filename);
       

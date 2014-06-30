@@ -1,7 +1,10 @@
-% FT_PREAMBLE_HELP is a helper script that display the calling-function's
+% FT_PREAMBLE_INIT is a helper script that display the calling-function's
 % help in case the user did not specify any input argument. This can be
 % used in all fieldtrip main functions that take at least a cfg input
 % argument, and most also take one or multiple data structures.
+%
+% Use as
+%   ft_preamble init
 
 % Copyright (C) 2011-2012, Robert Oostenveld, DCCN
 %
@@ -36,3 +39,35 @@ if nargin==0
   msg.stack       = stack;
   error(msg);
 end
+
+% determine whether function execution should be aborted or continued
+if isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile) && isfield(cfg, 'outputfilepresent') && ~isempty(cfg.outputfilepresent)
+  % check whether the output file already exists
+  if ~exist(cfg.outputfile, 'file')
+    abort = false;
+  else
+    % the output file exists, determine how to deal with it
+    switch cfg.outputfilepresent
+      case 'keep'
+        if nargout>0
+          % continue executing the parent function
+          warning('output file %s is already present, but you also requested an output argument: continuing function execution', cfg.outputfile);
+          abort = false;
+        else
+          % stop executing the parent function
+          warning('output file %s is already present: aborting function execution', cfg.outputfile);
+          abort = true;
+        end
+      case 'error'
+        error('output file %s is already present', cfg.outputfile);
+      case 'overwrite'
+        warning('output file %s is already present: it will be overwritten', cfg.outputfile);
+        abort = false;
+      otherwise
+        error('invalid option for cfg.outputfilepresent');
+    end % case
+  end
+else
+  abort = false;
+end
+

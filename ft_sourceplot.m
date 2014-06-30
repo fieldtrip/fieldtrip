@@ -1,4 +1,4 @@
-function [cfg] = ft_sourceplot(cfg, data)
+function ft_sourceplot(cfg, data)
 
 % FT_SOURCEPLOT plots functional source reconstruction data on slices or on
 % a surface, optionally as an overlay on anatomical MRI data, where
@@ -43,7 +43,7 @@ function [cfg] = ft_sourceplot(cfg, data)
 % The following parameters can be used in all methods:
 %   cfg.downsample    = downsampling for resolution reduction, integer value (default = 1) (orig: from surface)
 %   cfg.atlas         = string, filename of atlas to use (default = []) SEE FT_PREPARE_ATLAS
-%                        for ROI masking (see "masking" below) or in interactive mode (see "ortho-plotting" below)
+%                        for ROI masking (see "masking" below) or in "ortho-plotting" mode (see "ortho-plotting" below)
 %
 % The following parameters can be used for the functional data:
 %   cfg.funcolormap   = colormap for functional data, see COLORMAP (default = 'auto')
@@ -90,9 +90,6 @@ function [cfg] = ft_sourceplot(cfg, data)
 %                              'voxel', voxelcoordinates as indices
 %   cfg.crosshair     = 'yes' or 'no' (default = 'yes')
 %   cfg.axis          = 'on' or 'off' (default = 'on')
-%   cfg.interactive   = 'yes' or 'no' (default = 'no' if no nargout is desired, 'yes' otherwise)
-%                        in interactive mode the function returns the
-%                        fiducials when closing the figure in the cfg
 %   cfg.queryrange    = number, in atlas voxels (default 3)
 %
 %
@@ -187,6 +184,11 @@ ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar data
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 % this is not supported any more as of 26/10/2011
 if ischar(data)
   error('please use cfg.inputfile instead of specifying the input variable as a sting');
@@ -196,19 +198,14 @@ end
 % instead of specifying cfg.coordsys, the user should specify the coordsys in the data
 cfg = ft_checkconfig(cfg, 'forbidden', {'units', 'inputcoordsys', 'coordinates'});
 cfg = ft_checkconfig(cfg, 'deprecated', 'coordsys');
-%if isfield(cfg, 'coordsys') && ~isfield(data, 'coordsys')
-%  data.coordsys = cfg.coordsys;
-%end
 
-needcoordsys = isfield(cfg, 'atlas') && ~isempty(cfg.atlas);
-if needcoordsys
+if isfield(cfg, 'atlas') && ~isempty(cfg.atlas)
   % for the atlas lookup a coordsys is needed
   data     = ft_checkdata(data, 'datatype', {'volume' 'source'}, 'feedback', 'yes', 'hasunit', 'yes', 'hascoordsys', 'yes');
 else
   % check if the input data is valid for this function, a coordsys is not directly needed
   data     = ft_checkdata(data, 'datatype', {'volume' 'source'}, 'feedback', 'yes', 'hasunit', 'yes');
 end
-
 
 % determine the type of data
 issource = ft_datatype(data, 'source');
@@ -218,7 +215,7 @@ if issource && ~isfield(data, 'dim') && (~isfield(cfg, 'method') || ~strcmp(cfg.
 end
 
 % set the defaults for all methods
-cfg.method        = ft_getopt(cfg, 'method', 'ortho');
+cfg.method        = ft_getopt(cfg, 'method',        'ortho');
 cfg.funparameter  = ft_getopt(cfg, 'funparameter',  []);
 cfg.maskparameter = ft_getopt(cfg, 'maskparameter', []);
 cfg.downsample    = ft_getopt(cfg, 'downsample',    1);
@@ -254,11 +251,6 @@ cfg.crosshair           = ft_getopt(cfg, 'crosshair',           'yes');
 cfg.colorbar            = ft_getopt(cfg, 'colorbar',            'yes');
 cfg.axis                = ft_getopt(cfg, 'axis',                'on');
 cfg.queryrange          = ft_getopt(cfg, 'queryrange',          3);
-if nargout
-  cfg.interactive         = ft_getopt(cfg, 'interactive',         'yes');
-else
-  cfg.interactive         = ft_getopt(cfg, 'interactive',         'no');
-end
 
 if isfield(cfg, 'TTlookup'),
   error('TTlookup is old; now specify cfg.atlas, see help!');
@@ -290,7 +282,6 @@ cfg.renderer       = ft_getopt(cfg, 'renderer',      'opengl');
 % for backward compatibility
 if strcmp(cfg.location, 'interactive')
   cfg.location = 'auto';
-  cfg.interactive = 'yes';
 end
 
 % select the functional and the mask parameter
@@ -300,12 +291,12 @@ cfg.maskparameter = parameterselection(cfg.maskparameter, data);
 try, cfg.funparameter  = cfg.funparameter{1};  end
 try, cfg.maskparameter = cfg.maskparameter{1}; end
 
-if cfg.downsample ~=1 && isvolume
-  % downsample all volumes
-  tmpcfg = [];
-  tmpcfg.parameter  = {cfg.funparameter, cfg.maskparameter, cfg.anaparameter};
-  tmpcfg.downsample = cfg.downsample;
+if isvolume && cfg.downsample~=1
+  % optionally downsample the anatomical and/or functional volumes
+  tmpcfg = keepfields(cfg, {'downsample'});
+  tmpcfg.parameter = {cfg.funparameter, cfg.maskparameter, cfg.anaparameter};
   data = ft_volumedownsample(tmpcfg, data);
+  [cfg, data] = rollback_provenance(cfg, data);
 end
 
 %%% make the local variables:
@@ -336,7 +327,7 @@ if hasroi
     tmpcfg          = [];
     tmpcfg.roi      = cfg.roi;
     tmpcfg.atlas    = cfg.atlas;
-    tmpcfg.coordsys = data.coordsys;
+    tmpcfg.inputcoord = data.coordsys;
     roi = ft_volumelookup(tmpcfg,data);
   end
 end
@@ -654,6 +645,7 @@ if isequal(cfg.method,'ortho')
   set(h, 'windowbuttondownfcn', @cb_buttonpress);
   set(h, 'windowbuttonupfcn',   @cb_buttonrelease);
   set(h, 'windowkeypressfcn',   @cb_keyboard);
+  set(h, 'CloseRequestFcn',     @cb_cleanup);
   
   if ~hasfun && ~hasana
     % this seems to be a problem that people often have
@@ -764,7 +756,7 @@ if isequal(cfg.method,'ortho')
   opt.handlesaxes   = [h1 h2 h3];
   opt.handlesfigure = h;
   opt.axis          = cfg.axis;
-  opt.quit          = ~strcmp(cfg.interactive, 'yes');
+  opt.quit          = false;%~strcmp(cfg.interactive, 'yes');
   if hasatlas
     opt.atlas = atlas;
   end
@@ -798,9 +790,6 @@ if isequal(cfg.method,'ortho')
   opt.queryrange    = cfg.queryrange;
   opt.funcolormap   = cfg.funcolormap;
   opt.crosshair     = strcmp(cfg.crosshair, 'yes');
-  opt.lpa           = [];
-  opt.rpa           = [];
-  opt.nas           = [];
   setappdata(h, 'opt', opt);
   cb_redraw(h);
   
@@ -809,30 +798,6 @@ if isequal(cfg.method,'ortho')
   fprintf('click left mouse button to reposition the cursor\n');
   fprintf('click and hold right mouse button to update the position while moving the mouse\n');
   fprintf('use the arrowkeys to navigate in the current axis\n');
-  
-  if istrue(cfg.interactive)
-    fprintf('** INTERACTIVE MODE SPECIAL **\n');
-    fprintf('press n/l/r on keyboard to record a fiducial position\n');
-    fprintf('press q on keyboard to quit interactive mode\n');
-    fprintf('** ************************ **\n');
-  end
-  
-  while(opt.quit==0)
-    uiwait(h)
-    try
-      opt = getappdata(opt.handlesfigure, 'opt');
-      cfg.nas = opt.nas;
-      cfg.rpa = opt.rpa;
-      cfg.lpa = opt.lpa;
-    catch
-      warning('Figure seem to be closed not by pressing ''q'' - returning of fiducials not possible\n');
-      cfg.nas = [];
-      cfg.rpa = [];
-      cfg.lpa = [];
-      opt.quit = true;
-    end
-  end
-  
   
 elseif isequal(cfg.method,'glassbrain')
   tmpcfg          = [];
@@ -855,10 +820,7 @@ elseif isequal(cfg.method,'glassbrain')
   end
   
   if hasana,
-    ana = getsubfield(data, cfg.anaparameter);
-    %ana(1,:,:) = max(ana, [], 1);
-    %ana(:,1,:) = max(ana, [], 2);
-    %ana(:,:,1) = max(ana, [], 3);
+    ana  = getsubfield(data, cfg.anaparameter);
     data = setsubfield(data, cfg.anaparameter, ana);
   end
   
@@ -880,7 +842,7 @@ elseif isequal(cfg.method,'surface')
     fprintf('The source data is defined on a 3D grid, interpolation to a surface mesh will be performed\n');
     interpolate2surf = 1;
   elseif issource && isfield(data, 'tri')
-    fprintf('The source data is defined on a triangulated surface, allowing for easy surface plotting\n');
+    fprintf('The source data is defined on a triangulated surface, using the surface mesh description in the data\n');
   elseif issource
     % add a transform field to the data
     fprintf('The source data does not contain a triangulated surface, we may need to interpolate to a surface mesh\n');
@@ -890,7 +852,7 @@ elseif isequal(cfg.method,'surface')
   
   if interpolate2surf,
     % deal with the interpolation
-    % FIXME this should partially be dealt with by ft_sourceinterpolate
+    % FIXME this should be dealt with by ft_sourceinterpolate
     
     % read the triangulated cortical surface from file
     surf  = ft_read_headshape(cfg.surffile);
@@ -908,20 +870,14 @@ elseif isequal(cfg.method,'surface')
       fprintf('downsampling surface from %d vertices\n', size(surf.pnt,1));
       [temp.tri, temp.pnt] = reducepatch(surf.tri, surf.pnt, 1/cfg.surfdownsample);
       % find indices of retained patch faces
-      [~, idx] = ismember(temp.pnt, surf.pnt, 'rows');
+      [dummy, idx] = ismember(temp.pnt, surf.pnt, 'rows');
       surf.tri = temp.tri;
       surf.pnt = temp.pnt;
       clear temp
       % downsample other fields
-      if isfield(surf, 'curv')
-        surf.curv = surf.curv(idx);
-      end
-      if isfield(surf, 'sulc')
-        surf.sulc = surf.sulc(idx);
-      end
-      if isfield(surf, 'hemisphere')
-        surf.hemisphere = surf.hemisphere(idx);
-      end
+      if isfield(surf, 'curv'),       surf.curv       = surf.curv(idx);       end
+      if isfield(surf, 'sulc'),       surf.sulc       = surf.sulc(idx);       end
+      if isfield(surf, 'hemisphere'), surf.hemisphere = surf.hemisphere(idx); end
     end
     
     % these are required
@@ -932,58 +888,30 @@ elseif isequal(cfg.method,'surface')
     fprintf('%d voxels in functional data\n', prod(dim));
     fprintf('%d vertices in cortical surface\n', size(surf.pnt,1));
     
-    if (hasfun  && strcmp(cfg.projmethod,'project')),
-      val=zeros(size(surf.pnt,1),1);
-      if hasmsk
-        maskval = val;
-      end;
-      %convert projvec in mm to a factor, assume mean distance of 70mm
-      cfg.projvec=(70-cfg.projvec)/70;
-      for iproj = 1:length(cfg.projvec),
-        sub = round(ft_warp_apply(inv(data.transform), surf.pnt*cfg.projvec(iproj), 'homogenous'));  % express
-        sub(sub(:)<1) = 1;
-        sub(sub(:,1)>dim(1),1) = dim(1);
-        sub(sub(:,2)>dim(2),2) = dim(2);
-        sub(sub(:,3)>dim(3),3) = dim(3);
-        disp('projecting...')
-        ind = sub2ind(dim, sub(:,1), sub(:,2), sub(:,3));
-        if strcmp(cfg.projcomb,'mean')
-          val = val + cfg.projweight(iproj) * fun(ind);
-          if hasmsk
-            maskval = maskval + cfg.projweight(iproj) * msk(ind);
-          end
-        elseif strcmp(cfg.projcomb,'max')
-          val =  max([val cfg.projweight(iproj) * fun(ind)],[],2);
-          tmp2 = min([val cfg.projweight(iproj) * fun(ind)],[],2);
-          fi = find(val < max(tmp2));
-          val(fi) = tmp2(fi);
-          if hasmsk
-            maskval = max(abs([maskval cfg.projweight(iproj) * fun(ind)]),[],2);
-          end
-        else
-          error('undefined method to combine projections; use cfg.projcomb= mean or max')
-        end
-      end
-      if strcmp(cfg.projcomb,'mean'),
-        val=val/length(cfg.projvec);
-        if hasmsk
-          maskval = max(abs([maskval cfg.projweight(iproj) * fun(ind)]),[],2);
-        end
-      end;
-      if ~isempty(cfg.projthresh),
-        mm=max(abs(val(:)));
-        maskval(abs(val) < cfg.projthresh*mm) = 0;
-      end
+    tmpcfg = [];
+    tmpcfg.parameter = {cfg.funparameter};
+    if ~isempty(cfg.maskparameter)
+      tmpcfg.parameter = [tmpcfg.parameter {cfg.maskparameter}];
+      maskparameter    = cfg.maskparameter;
+    else
+      tmpcfg.parameter = [tmpcfg.parameter {'mask'}];
+      data.mask        = msk;
+      maskparameter    = 'mask'; % temporary variable 
     end
+    tmpcfg.interpmethod = cfg.projmethod;
+    tmpcfg.distmat    = cfg.distmat;
+    tmpcfg.sphereradius = cfg.sphereradius;
+    tmpcfg.projvec    = cfg.projvec;
+    tmpcfg.projcomb   = cfg.projcomb;
+    tmpcfg.projweight = cfg.projweight;
+    tmpcfg.projthresh = cfg.projthresh;
+    tmpdata           = ft_sourceinterpolate(tmpcfg, data, surf);
     
-    if (hasfun && ~strcmp(cfg.projmethod,'project')),
-      [interpmat, cfg.distmat] = interp_gridded(data.transform, fun, surf.pnt, 'projmethod', cfg.projmethod, 'distmat', cfg.distmat, 'sphereradius', cfg.sphereradius, 'inside', data.inside);
-      % interpolate the functional data
-      val = interpmat * fun(data.inside(:));
-    end;
-    if (hasmsk && ~strcmp(cfg.projmethod,'project')),
-      % also interpolate the opacity mask
-      maskval = interpmat * msk(data.inside(:));
+    if hasfun, val     = getsubfield(tmpdata, cfg.funparameter);  val     = val(:);     end
+    if hasmsk, maskval = getsubfield(tmpdata, maskparameter);     maskval = maskval(:); end
+    
+    if ~isempty(cfg.projthresh),
+      maskval(abs(val) < cfg.projthresh*max(abs(val(:)))) = 0;
     end
     
   else
@@ -1017,7 +945,6 @@ elseif isequal(cfg.method,'surface')
   if isfield(surf, 'curv')
     % the curvature determines the color of gyri and sulci
     color = surf.curv(:) * cortex_light + (1-surf.curv(:)) * cortex_dark;
-    color = repmat(cortex_light, size(surf.pnt,1), 1);
   else
     color = repmat(cortex_light, size(surf.pnt,1), 1);
   end
@@ -1112,6 +1039,10 @@ elseif isequal(cfg.method,'slice')
   %%%%% make "quilts", that contain all slices on 2D patched sheet
   % Number of patches along sides of Quilt (M and N)
   % Size (in voxels) of side of patches of Quilt (m and n)
+  
+  % take care of a potential singleton 3d dimension
+  dim = [dim 1];
+  
   m = dim(1);
   n = dim(2);
   M = ceil(sqrt(dim(3)));
@@ -1167,6 +1098,12 @@ ft_postamble debug
 ft_postamble trackconfig
 ft_postamble provenance
 ft_postamble previous data
+
+% add a menu to the figure
+% also, delete any possibly existing previous menu, this is safe because delete([]) does nothing
+ftmenu = uimenu(gcf, 'Label', 'FieldTrip');
+uimenu(ftmenu, 'Label', 'Show pipeline',  'Callback', {@menu_pipeline, cfg});
+uimenu(ftmenu, 'Label', 'About',  'Callback', @menu_about);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION makes an overlay of 3D anatomical, functional and probability
@@ -1560,17 +1497,8 @@ switch key
   case ''
     % do nothing
   case 'q'
-    setappdata(h, 'opt', opt);
-    cb_cleanup(h);
-  case 'l'
-    opt.lpa = opt.ijk;
-    setappdata(h, 'opt', opt);
-  case 'r'
-    opt.rpa = opt.ijk;
-    setappdata(h, 'opt', opt);
-  case 'n'
-    opt.nas = opt.ijk;
-    setappdata(h, 'opt', opt);
+    %     setappdata(h, 'opt', opt);
+    %     cb_cleanup(h);
   case {'i' 'j' 'k' 'm' 28 29 30 31 'leftarrow' 'rightarrow' 'uparrow' 'downarrow'} % TODO FIXME use leftarrow rightarrow uparrow downarrow
     % update the view to a new position
     if     strcmp(tag,'ik') && (strcmp(key,'i') || strcmp(key,'uparrow')    || isequal(key, 30)), opt.ijk(3) = opt.ijk(3)+1; opt.update = [0 0 1];
@@ -1594,10 +1522,6 @@ switch key
   otherwise
     
 end % switch key
-
-%if ~isempty(nas), fprintf('nas = [%f %f %f]\n', nas); cfg.fiducial.nas = nas; else fprintf('nas = undefined\n'); end
-%if ~isempty(lpa), fprintf('lpa = [%f %f %f]\n', lpa); cfg.fiducial.lpa = lpa; else fprintf('lpa = undefined\n'); end
-%if ~isempty(rpa), fprintf('rpa = [%f %f %f]\n', rpa);
 
 uiresume(h);
 
@@ -1687,10 +1611,11 @@ uiresume;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_cleanup(h, eventdata)
 
-opt = getappdata(h, 'opt');
-opt.quit = true;
-setappdata(h, 'opt', opt);
-uiresume
+% opt = getappdata(h, 'opt');
+% opt.quit = true;
+% setappdata(h, 'opt', opt);
+% uiresume
+delete(h);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -1729,5 +1654,3 @@ end
 if ~isempty(eventdata.Modifier)
   key = [eventdata.Modifier{1} '+' key];
 end
-
-

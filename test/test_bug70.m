@@ -1,13 +1,10 @@
 function test_bug70
 
 % MEM 1500mb
-% WALLTIME 00:10:00
+% WALLTIME 00:20:00
 
 % TEST test_bug70
 % TEST ft_prepare_headmodel ft_prepare_leadfield
-
-fprintf('***  DIAGNOSTICAL INFORMATION ***\n');
-fprintf('test script is running on host: %s\n', gethostname());
 
 % this is the output of icosahedron162, including it like this
 % makes the test script independent of that function

@@ -1,4 +1,4 @@
-function [h] = fdr(p, q);
+function [h] = fdr(p, q)
 
 % FDR false discovery rate
 %

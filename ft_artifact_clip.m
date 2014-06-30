@@ -65,6 +65,11 @@ ft_preamble init
 ft_preamble provenance
 ft_preamble loadvar data
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed',    {'datatype', 'continuous'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'artfctdef.clip.thresh', 'artfctdef.clip.timethreshold'});

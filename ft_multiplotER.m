@@ -129,7 +129,13 @@ ft_preamble loadvar    varargin
 ft_preamble provenance varargin
 ft_preamble trackconfig
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 for i=1:length(varargin)
+  % check if the input data is valid for this function
   varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'timelock', 'freq'});
 end
 
@@ -753,20 +759,20 @@ if ~isempty(cfg.renderer)
   set(gcf, 'renderer', cfg.renderer)
 end
 
-% add a menu to the figure, but only if the current figure does not have subplots
-% also, delete any possibly existing previous menu, this is safe because delete([]) does nothing
-if numel(findobj(gcf, 'type', 'axes')) <= 1
-  % ftmenu = uicontextmenu; set(gcf, 'uicontextmenu', ftmenu)
-  ftmenu = uimenu(gcf, 'Label', 'FieldTrip');
-  uimenu(ftmenu, 'Label', 'Show pipeline',  'Callback', {@menu_pipeline, cfg});
-  uimenu(ftmenu, 'Label', 'About',  'Callback', @menu_about);
-end
-
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
 ft_postamble provenance
 ft_postamble debug
 ft_postamble previous varargin
+
+% add a menu to the figure, but only if the current figure does not have subplots
+% also, delete any possibly existing previous menu, this is safe because delete([]) does nothing
+delete(findobj(gcf, 'type', 'uimenu', 'label', 'FieldTrip'));
+if numel(findobj(gcf, 'type', 'axes')) <= 1
+  ftmenu = uimenu(gcf, 'Label', 'FieldTrip');
+  uimenu(ftmenu, 'Label', 'Show pipeline',  'Callback', {@menu_pipeline, cfg});
+  uimenu(ftmenu, 'Label', 'About',  'Callback', @menu_about);
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

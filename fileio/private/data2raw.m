@@ -1,4 +1,4 @@
-function [data, dimord] = data2raw(data);
+function [data, dimord] = data2raw(data)
 
 % DATA2RAW is a helper function that converts various types of averages to
 % raw data. This function is used to apply the analysis steps that were

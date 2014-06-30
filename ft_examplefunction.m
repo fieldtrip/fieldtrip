@@ -3,7 +3,7 @@ function dataout = ft_examplefunction(cfg, datain)
 % FT_EXAMPLEFUNCTION demonstrates to new developers how a FieldTrip function should look like
 %
 % Use as
-%  outdata = ft_examplefunction(cfg, indata) 
+%   outdata = ft_examplefunction(cfg, indata) 
 % where indata is <<describe the type of data or where it comes from>> 
 % and cfg is a configuration structure that should contain 
 %
@@ -49,10 +49,16 @@ ft_preamble trackconfig     % this converts the cfg structure in a config object
 ft_preamble debug           % this allows for displaying or saving the function name and input arguments upon an error
 ft_preamble loadvar datain  % this reads the input data in case the user specified the cfg.inputfile option
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  % do not continue function execution in case the outputfile is present and the user indicated to keep it
+  return
+end
+
 % ensure that the input data is valid for this function, this will also do 
 % backward-compatibility conversions of old data that for example was 
 % read from an old *.mat file
-datain = ft_checkdata(datain, 'datatype', {'raw', 'comp'}, 'feedback', 'yes', 'hassampleinfo', 'yes', 'hasoffset', 'yes');
+datain = ft_checkdata(datain, 'datatype', {'raw+comp', 'raw'}, 'feedback', 'yes', 'hassampleinfo', 'yes', 'hasoffset', 'yes');
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'deprecated',  {'normalizecov', 'normalizevar'});

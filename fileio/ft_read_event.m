@@ -19,6 +19,10 @@ function [event] = ft_read_event(filename, varargin)
 %   'threshold'     threshold for analog trigger channels (default is system specific)
 %   'blocking'      wait for the selected number of events (default = 'no')
 %   'timeout'       amount of time in seconds to wait when blocking (default = 5)
+%   'tolerance'     tolerance in samples when merging analogue trigger
+%                   channels, only for Neuromag (default = 1,
+%                   meaning that an offset of one sample in both directions
+%                   is compensated for)
 %
 % Furthermore, you can specify optional arguments as key-value pairs
 % for filtering the events, e.g. to select only events of a specific
@@ -121,6 +125,7 @@ trigindx         = ft_getopt(varargin, 'trigindx');            % this allows to 
 headerformat     = ft_getopt(varargin, 'headerformat');
 dataformat       = ft_getopt(varargin, 'dataformat');
 threshold        = ft_getopt(varargin, 'threshold');           % this is used for analog channels
+tolerance        = ft_getopt(varargin, 'tolerance', 1);
 
 % this allows to read only events in a certain range, supported for selected data formats only
 flt_type         = ft_getopt(varargin, 'type');
@@ -780,8 +785,7 @@ switch eventformat
     begSDV = datenum(begTime);
     % find out if there are epochs in this dataset
     if isfield(hdr.orig.xml,'epochs') && length(hdr.orig.xml.epochs) > 1
-      Msamp2offset = zeros(2,size(hdr.orig.epochdef,1),1+max(hdr.orig.epochdef(:,2)-hdr.orig.epochdef(:,1)));
-      Msamp2offset(:) = NaN;
+      Msamp2offset = nan(2,size(hdr.orig.epochdef,1),1+max(hdr.orig.epochdef(:,2)-hdr.orig.epochdef(:,1)));
       for iEpoch = 1:size(hdr.orig.epochdef,1)
         nSampEpoch = hdr.orig.epochdef(iEpoch,2)-hdr.orig.epochdef(iEpoch,1)+1;
         Msamp2offset(1,iEpoch,1:nSampEpoch) = hdr.orig.epochdef(iEpoch,1):hdr.orig.epochdef(iEpoch,2); %sample number in samples
@@ -1254,6 +1258,44 @@ switch eventformat
         % read the trigger channel and do flank detection
         trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', analogindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixneuromag', true);
         event   = appendevent(event, trigger);
+        
+        % throw out everything that is not a (real) trigger...
+        [sel1, sel2] = match_str({trigger.type}, {'STI001', 'STI002', 'STI003', 'STI004', 'STI005', 'STI006', 'STI007', 'STI008'});
+        trigger_tmp = trigger(sel1);
+        %trigger_bits = size(unique(sel2), 1);
+        all_triggers = unique(sel2);
+        trigger_bits = max(all_triggers) - min(all_triggers) + 1;
+        
+        % collect all samples where triggers occured...
+        all_samples = unique([trigger_tmp.sample]);
+        
+        new_triggers = [];
+        i = 1;
+        while i <= length(all_samples)
+          cur_triggers = [];
+          j = 0;
+          
+          % look also in adjacent samples according to tolerance
+          while (i+j <= length(all_samples)) && (all_samples(i+j) - all_samples(i) <= tolerance)
+            if j >= 1
+              fprintf('Fixing trigger at sample %d\n', all_samples(i));
+            end %if
+            cur_triggers = appendevent(cur_triggers, trigger_tmp([trigger_tmp.sample] == all_samples(i+j)));
+            j = j + 1;
+          end %while
+          
+          % construct new trigger field
+          if ~isempty(cur_triggers)
+            new_triggers(end+1).type = 'Trigger';
+            new_triggers(end).sample = all_samples(i);
+            [sel1, sel2] = match_str({cur_triggers.type}, {'STI001', 'STI002', 'STI003', 'STI004', 'STI005', 'STI006', 'STI007', 'STI008'});
+            new_triggers(end).value = bin2dec((dec2bin(sum(2.^(sel2-1)), trigger_bits)));
+          end %if
+          
+          i = i + j;
+        end %while
+        event = appendevent(event, new_triggers);
+        
       end
       
     elseif isaverage

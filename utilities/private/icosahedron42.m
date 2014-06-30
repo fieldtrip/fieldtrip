@@ -1,4 +1,4 @@
-function [pnt, tri] = icosahedron();
+function [pnt, tri] = icosahedron42()
 
 % ICOSAHEDRON42 creates a 1-fold refined icosahedron
 

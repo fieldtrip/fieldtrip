@@ -1,21 +1,21 @@
 function ft_plot_dipole(pos, ori, varargin)
 
-% FT_PLOT_DIPOLE makes a 3-D representation of a dipole using a small sphere
-% and a stick pointing along the dipole orientation
+% FT_PLOT_DIPOLE makes a 3-D representation of a dipole using a sphere and a stick
+% pointing along the dipole orientation
 %
 % Use as
 %   ft_plot_dipole(pos, mom, ...)
-% where pos and mom are the dipole mosition and moment. Optional
-% input arguments should be specified in key-value pairs and can
-% include
-%   'diameter'    number indicating sphere diameter (default = 'auto')
-%   'length'      number indicating length of the stick (default = 'auto')
-%   'color'       [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r'
-%   'units'       'm', 'cm' or 'mm', used for automatic scaling (default = 'cm')
-%   'scale'       scale the dipole with the amplitude, can be 'none',  'both', 'diameter', 'length' (default = 'none')
+% where pos and mom are the dipole mosition and moment. 
+
+% Optional input arguments should be specified in key-value pairs and can include
+%   'diameter' = number indicating sphere diameter (default = 'auto')
+%   'length'   = number indicating length of the stick (default = 'auto')
+%   'color'    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r' (default = 'r')
+%   'units'    = 'm', 'cm' or 'mm', used for automatic scaling (default = 'cm')
+%   'scale'    = scale the dipole with the amplitude, can be 'none',  'both', 'diameter', 'length' (default = 'none')
 %
 % Example
-%   ft_plot_dipole([0 0 0], [1 2 3])
+%   ft_plot_dipole([0 0 0], [1 2 3], 'color', 'r')
 
 % Copyright (C) 2009, Robert Oostenveld
 %
@@ -41,7 +41,7 @@ ws = warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
 amplitudescale = ft_getopt(varargin, 'scale',    'none');
-color          = ft_getopt(varargin, 'color',    [1 0 0]);
+color          = ft_getopt(varargin, 'color',    'r'); % can also be a RGB triplet
 diameter       = ft_getopt(varargin, 'diameter', 'auto');
 length         = ft_getopt(varargin, 'length',   'auto');
 units          = ft_getopt(varargin, 'units',    'cm');

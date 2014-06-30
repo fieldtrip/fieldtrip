@@ -89,6 +89,11 @@ ft_defaults
 ft_preamble init
 ft_preamble provenance
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % basic check/initialization of input arguments
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -163,12 +168,13 @@ elseif isstruct(cfg.layout) && isfield(cfg.layout, 'pos') && isfield(cfg.layout,
 elseif isequal(cfg.layout, 'butterfly')
   if nargin>1 && ~isempty(data)
     % look at the data to determine the overlapping channels
-    cfg.channel = ft_channelselection(cfg.channel, data.label);
-    chanindx    = match_str(data.label, cfg.channel);
-    nchan       = length(data.label(chanindx));
-    layout.label   = data.label(chanindx);
+    cfg.channel  = ft_channelselection(cfg.channel, data.label);
+    chanindx     = match_str(data.label, cfg.channel);
+    nchan        = length(data.label(chanindx));
+    layout.label = data.label(chanindx);
   else
-    nchan     = length(cfg.channel);
+    assert(iscell(cfg.channel), 'cfg.channel should be a valid set of channels');
+    nchan        = length(cfg.channel);
     layout.label = cfg.channel;
   end
   layout.pos     = zeros(nchan,2);  % centered at (0,0)
@@ -191,9 +197,11 @@ elseif isequal(cfg.layout, 'vertical')
       % re-order them according to the cfg specified by the user
       cfg.channel  = cfg.channel(sel2);
     end
+    assert(iscell(cfg.channel), 'cfg.channel should be a valid set of channels');
     nchan        = length(cfg.channel);
     layout.label = cfg.channel;
   else
+    assert(iscell(cfg.channel), 'cfg.channel should be a valid set of channels');
     nchan        = length(cfg.channel);
     layout.label = cfg.channel;
   end
@@ -226,9 +234,11 @@ elseif any(strcmp(cfg.layout, {'1column', '2column', '3column', '4column', '5col
       % re-order them according to the cfg specified by the user
       cfg.channel  = cfg.channel(sel2);
     end
+    assert(iscell(cfg.channel), 'cfg.channel should be a valid set of channels');
     nchan        = length(cfg.channel);
     layout.label = cfg.channel;
   else
+    assert(iscell(cfg.channel), 'cfg.channel should be a valid set of channels');
     nchan        = length(cfg.channel);
     layout.label = cfg.channel;
   end
@@ -265,7 +275,8 @@ elseif isequal(cfg.layout, 'ordered')
     nchan       = length(data.label(chanindx));
     layout.label   = data.label(chanindx);
   else
-    nchan     = length(cfg.channel);
+    assert(iscell(cfg.channel), 'cfg.channel should be a valid set of channels');
+    nchan        = length(cfg.channel);
     layout.label = cfg.channel;
   end
   ncol = ceil(sqrt(nchan))+1;
@@ -277,7 +288,7 @@ elseif isequal(cfg.layout, 'ordered')
       if k<=nchan
         x = (j-1)/ncol;
         y = (nrow-i-1)/nrow;
-        layout.pos(k,:) = [x y];
+        layout.pos(k,:)    = [x y];
         layout.width(k,1)  = 0.8 * 1/ncol;
         layout.height(k,1) = 0.8 * 1/nrow;
       end
@@ -302,7 +313,6 @@ elseif isequal(cfg.layout, 'ordered')
 elseif ischar(cfg.layout)
   
   % layout file name specified
-  
   if isempty(strfind(cfg.layout, '.'))
     
     cfg.layout = [cfg.layout '.mat'];

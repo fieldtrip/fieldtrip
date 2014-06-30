@@ -130,8 +130,13 @@ ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar data
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 % check if the input data is valid for this function
-data = ft_checkdata(data, 'datatype', {'timelock', 'freq', 'comp'}, 'feedback', 'yes');
+data = ft_checkdata(data, 'datatype', {'comp', 'timelock', 'freq'}, 'feedback', 'yes');
 
 % set the defaults
 if ~isfield(cfg, 'channel'),     cfg.channel = 'all';        end
@@ -299,7 +304,11 @@ if strcmp(cfg.gridsearch, 'yes')
   % construct the dipole grid on which the gridsearch will be done
   tmpcfg = [];
   tmpcfg.vol  = vol;
-  tmpcfg.grad = sens; % this can be electrodes or gradiometers
+  if ft_senstype(sens, 'eeg')
+    tmpcfg.elec = sens;
+  else
+    tmpcfg.grad = sens;
+  end
   % copy all options that are potentially used in ft_prepare_sourcemodel
   try, tmpcfg.grid        = cfg.grid;         end
   try, tmpcfg.mri         = cfg.mri;          end

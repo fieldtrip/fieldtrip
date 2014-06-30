@@ -1,4 +1,4 @@
-function p = randstatprob(randobs, realobs, tail, correctm);
+function p = randstatprob(randobs, realobs, tail, correctm)
 
 % RANDSTATPROB computes the non-parametric probability of the observed
 % value under the assumption that the random observations are equally

@@ -65,6 +65,11 @@ ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar data
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 cfg.foi        = ft_getopt(cfg, 'foi',        'all');
 cfg.feedback   = ft_getopt(cfg, 'feedback',   'none');
 %cfg.channel    = ft_getopt(cfg, 'channel',    'all');

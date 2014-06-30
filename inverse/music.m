@@ -1,4 +1,4 @@
-function [dipout] = music(dip, grad, vol, dat, varargin);
+function [dipout] = music(dip, grad, vol, dat, varargin)
 
 % MUSIC source localization using MUltiple SIgnal Classification
 %

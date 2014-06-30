@@ -301,7 +301,8 @@ set(h, 'linestyle', 'none');
 
 if domask,
   if islogical(Vmask), Vmask = double(Vmask); end
-  set(h, 'FaceAlpha', 'flat');
+  set(h, 'FaceColor', 'texture');
+  set(h, 'FaceAlpha', 'texturemap'); %flat
   set(h, 'AlphaDataMapping', 'scaled');
   set(h, 'AlphaData', Vmask);
   if ~isempty(opacitylim)

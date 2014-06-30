@@ -150,6 +150,11 @@ ft_defaults
 ft_preamble init
 ft_preamble provenance
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 % this is just a wrapper function around the common code that does all the hard work
 % the reason for this wrapper function is to have a placeholder for ER-specific documentation
 

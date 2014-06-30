@@ -114,7 +114,7 @@ function [freq] = ft_freqanalysis(cfg, data)
 % The standard deviation in the frequency domain (sf) at frequency f0 is
 % defined as: sf = f0/width
 % The standard deviation in the temporal domain (st) at frequency f0 is
-% defined as: st = width/f0 = 1/sf
+% defined as: st = 1/(2*pi*sf)
 %
 %
 %  TFR
@@ -195,25 +195,21 @@ ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar data
 
-% defaults for optional input/ouputfile and feedback
-cfg.feedback   = ft_getopt(cfg, 'feedback',   'text');
-cfg.inputlock  = ft_getopt(cfg, 'inputlock',  []);  % this can be used as mutex when doing distributed computation
-cfg.outputlock = ft_getopt(cfg, 'outputlock', []);  % this can be used as mutex when doing distributed computation
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
+% ensure that the required options are present
+cfg.feedback    = ft_getopt(cfg, 'feedback',   'text');
+cfg.inputlock   = ft_getopt(cfg, 'inputlock',  []);  % this can be used as mutex when doing distributed computation
+cfg.outputlock  = ft_getopt(cfg, 'outputlock', []);  % this can be used as mutex when doing distributed computation
+cfg.trials      = ft_getopt(cfg, 'trials',     'all');
 
 % check if the input data is valid for this function
-data = ft_checkdata(data, 'datatype', {'raw', 'comp', 'mvar'}, 'feedback', cfg.feedback, 'hassampleinfo', 'yes');
-
-% select trials of interest
-cfg.trials = ft_getopt(cfg, 'trials', 'all');
-if ~strcmp(cfg.trials, 'all')
-  fprintf('selecting %d trials\n', length(cfg.trials));
-  data = ft_selectdata(data, 'rpt', cfg.trials);
-end
+data = ft_checkdata(data, 'datatype', {'raw', 'raw+comp', 'mvar'}, 'feedback', cfg.feedback, 'hassampleinfo', 'yes');
 
 % check if the input cfg is valid for this function
-if ~isfield(cfg, 'method')
-  error('you must specify a method in cfg.method');
-end
 cfg = ft_checkconfig(cfg, 'renamed',     {'label', 'channel'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'sgn',   'channel'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'labelcmb', 'channelcmb'});
@@ -223,6 +219,13 @@ cfg = ft_checkconfig(cfg, 'renamedval',  {'method', 'fft',    'mtmfft'});
 cfg = ft_checkconfig(cfg, 'renamedval',  {'method', 'convol', 'mtmconvol'});
 cfg = ft_checkconfig(cfg, 'forbidden',   {'latency'}); % see bug 1376 and 1076
 cfg = ft_checkconfig(cfg, 'renamedval',  {'method', 'wltconvol', 'wavelet'});
+
+% select trials of interest
+tmpcfg = [];
+tmpcfg.trials = cfg.trials;
+data = ft_selectdata(tmpcfg, data);
+% restore the provenance information
+[cfg, data] = rollback_provenance(cfg, data);
 
 % switch over method and do some of the method specfic checks and defaulting
 switch cfg.method
@@ -276,7 +279,11 @@ switch cfg.method
     if ~isfield(cfg, 'width'),            cfg.width         = 1;            end
     
   case 'mvar'
-    freq = feval(@ft_freqanalysis_mvar,cfg,data);
+    if isfield(cfg, 'inputfile')
+      freq = feval(@ft_freqanalysis_mvar,cfg);
+    else
+      freq = feval(@ft_freqanalysis_mvar,cfg,data);
+    end
     return
     
   otherwise

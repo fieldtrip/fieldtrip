@@ -1,21 +1,29 @@
 %% write_mff_event.m
 %  Matlab File
 %  author Colin Davey
-%  date 3/2/2012
-%  Copyright 2012 EGI. All rights reserved.
-%  Writes an event file to the MFF.
-%
-%  This function has several limitations: 
-%  -- It doesn't necessarily fit into the Field Trip framework, although it
-%  the newData and hdr parameters are Field Trip style variables.  
-%  -- It doesn't modify the MFF file's history data. 
-%
+%  date 3/2/2012, 4/15/2014
+%  Copyright 2012, 2014 EGI. All rights reserved.
+% 
+%  Writes an events structure (as described at
+%  http://fieldtrip.fcdonders.nl/reference/ft_read_event) to an event-track
+%  file in an existing MFF file (filePath).
+% 
+%  filePath ? The path to the .mff file. 
+% 
+%  trackName ? the name of the track as it will appear in Net Station.
+% 
+%  replace ? a boolean that indicates what the code should do if the track
+%  already exists. If set to ?true?, the existing track will get
+%  overwritten. If set to ?false?, the code will end with an error message.
+% 
+%  hdr ? FieldTrip header. You have the option of passing in the header, or
+%  []. If you pass in the header, it pulls data out of it, rather than
+%  recomputing them.
+% 
+%  This function doesn't modify the MFF file's history data. To do that,
+%  call mff_write_history, described below.
 %%
-function write_mff_event(filePath, eventfilename, trackType, trackName, events, hdr)
-if ~strcmp(trackType, 'EVNT') && ~strcmp(trackType, 'STIM') && ~strcmp(trackType, 'PAT ')
-    fprintf('ERROR - third parameter (trackType) must be on of "EVNT", "STIM" or "PAT ".\n');
-    return;
-end
+function write_mff_event(filePath, trackName, events, replace, hdr)
 if isempty(hdr)
     summaryInfo = mff_getSummaryInfo(filePath);
 else
@@ -24,7 +32,13 @@ end
 infoObj = mff_getObject(com.egi.services.mff.api.MFFResourceType.kMFF_RT_Info, 'info.xml', filePath);
 beginTimeStr = infoObj.getRecordTime();
 MFFUtil = javaObject('com.egi.services.mff.utility.MFFUtil');
-dstURI = [filePath filesep 'Events_' eventfilename '.xml'];
+dstURI = [filePath filesep 'Events_' pathSafe(trackName) '.xml'];
+if ~replace
+    if exist(dstURI, 'file') == 2
+        theException = MException('EGI_MFF:EVENTTRACK_EXISTS', 'Specified event track exists. If you want to overwrite, set 4th parameter to true.');
+        throw(theException);
+    end
+end
 
 fields = fieldnames(events);
 hasDurationRemainders = true;
@@ -37,12 +51,25 @@ if isempty(find(strcmp(fields, 'sampleRemainder'), 1));
 end
 
 %%
-newEventList = javaObject('java.util.ArrayList')
-numEvents = size(events,2)
+newEventList = javaObject('java.util.ArrayList');
+numEvents = size(events,2);
 for p = 1:numEvents
     if isempty(events(p).value)
         event = javaObject('com.egi.services.mff.api.Event');
-        event.setCode(events(p).type);
+        type = events(p).type;
+        typeLen = size(type, 2);
+        if typeLen > 4
+            typeOrig = type;
+            type = type(1:4);
+            fprintf('*** Event type field ''%s'' is over 4 characters. Truncating to ''%s''. ***\n', typeOrig, type);
+        elseif typeLen < 4
+            typeOrig = type;
+            for q = typeLen+1:4
+                type = [type '_'];
+            end
+            fprintf('*** Event type field ''%s'' is under 4 characters. Padding to ''%s''. ***\n', typeOrig, type);
+        end
+        event.setCode(type);
         
         doDurationRemainder = false;
         if hasDurationRemainders
@@ -85,7 +112,6 @@ for p = 1:numEvents
 end
 
 % add events to event object
-
 delegate = javaObject('com.egi.services.mff.api.LocalMFFFactoryDelegate');
 factory = javaObject('com.egi.services.mff.api.MFFFactory', delegate);
 resourceVal = com.egi.services.mff.api.MFFResourceType.kMFF_RT_EventTrack;
@@ -94,21 +120,14 @@ resourceType = javaObject('com.egi.services.mff.api.MFFResourceType', resourceVa
 factory.createResourceAtURI(dstURI, resourceType);
 newEventTrackObj = factory.openResourceAtURI(dstURI, resourceType);
 if ~isempty(newEventTrackObj)
-    
     newEventTrackObj.setEvents(newEventList);
-    newEventTrackObj.setTrackType(trackType);
+    newEventTrackObj.setTrackType('EVNT');
     newEventTrackObj.setName(trackName);
     newEventTrackObj.saveResource();
 
 else
     fprintf('Could not create event track.\n');
 end
-
-%newEventTrackObj = javaObject('com.egi.services.mff.api.EventTrack', true);
-%newEventTrackObj.setEvents(newEventList);
-%newEventTrackObj.setTrackType(trackType);
-%newEventTrackObj.setName(trackName);
-%newEventTrackObj = newEventTrackObj.marshal(newEventTrackObj, dstURI);
 
 function micros = samples2Micros(samples, sampRate)
 sampDuration = 1000000/sampRate;
@@ -120,3 +139,22 @@ while (epochSampleNum > sum(epochNumSamps(1:epoch)))
     epoch = epoch + 1;
 end
 sampleNum = ((epochSampleNum - sum(epochNumSamps(1:epoch-1))) + epochBeginSamps(epoch)) - 1;
+
+% Unsafe Chars: <space>:/\?%*|\"<>
+function pathSafeFile = pathSafe(inFile)
+unsafeInds = find(...
+    inFile == ' ' |...
+    inFile == ':' |...
+    inFile == '/' |...
+    inFile == '\' |...
+    inFile == '?' |...
+    inFile == '%' |...
+    inFile == '*' |...
+    inFile == '|' |...
+    inFile == '\' |...
+    inFile == '"' |...
+    inFile == '<' |...
+    inFile == '>'...
+);
+pathSafeFile = inFile;
+pathSafeFile(unsafeInds) = '_';

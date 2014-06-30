@@ -1,4 +1,4 @@
-function [source] = fixinside(source, opt);
+function [source] = fixinside(source, opt)
 
 % FIXINSIDE ensures that the region of interest (which is indicated by the
 % field "inside") is consistently defined for source structures and volume

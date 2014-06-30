@@ -20,7 +20,7 @@ freq = ft_freqanalysis(cfg, data);
 % compute statistic
 cfg = [];
 cfg.method    = 'montecarlo';
-cfg.statistic = 'indepsamplesZcoh';
+cfg.statistic = 'ft_statfun_indepsamplesZcoh';
 cfg.parameter = 'fourierspctrm';
 cfg.numrandomization = 1;
 cfg.design    = [ones(1,5) ones(1,5)*2];

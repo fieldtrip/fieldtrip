@@ -64,6 +64,11 @@ revision = '$Id$';
 ft_defaults
 ft_preamble init
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 % input1 and input2 are the to be stratified with respect to each other
 % dimensionality of input1 (2) = chan x rpt. if nchan>1, do a "double"
 % stratification

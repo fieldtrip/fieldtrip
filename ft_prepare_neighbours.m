@@ -74,6 +74,11 @@ ft_preamble provenance
 ft_preamble trackconfig
 ft_preamble debug
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'required', {'method'});
 
@@ -82,7 +87,11 @@ cfg.feedback = ft_getopt(cfg, 'feedback', 'no');
 cfg.channel = ft_getopt(cfg, 'channel', 'all');
 
 hasdata = nargin>1;
-if hasdata, data = ft_checkdata(data); end
+
+if hasdata
+  % check if the input data is valid for this function
+  data = ft_checkdata(data);
+end
 
 if strcmp(cfg.method, 'template')
   neighbours = [];

@@ -68,6 +68,11 @@ ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar varargin
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 % check if the input data is valid for this function
 for i=1:length(varargin)
   varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'timelock', 'feedback', 'no');

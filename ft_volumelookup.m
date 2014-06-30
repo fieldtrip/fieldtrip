@@ -89,6 +89,11 @@ ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar volume
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 % the handling of the default cfg options is done further down
 % the checking of the input data is done further down
 
@@ -307,10 +312,12 @@ elseif mask2label
     fn = fn(isboolean);
     isindexed = 0;
   end
-  sel   = find(volume.(cfg.maskparameter)(:));
+  sel = find(volume.(cfg.maskparameter)(:));
   labels.name = cell(0,1);
   for k = 1:numel(fn)
-    labels.name = cat(1, labels.name, atlas.([fn{k},'label']));
+    % ensure that they are concatenated as column
+    tmp = atlas.([fn{k},'label']);
+    labels.name = cat(1, labels.name(:), tmp(:));
   end
   labels.name{end+1} = 'no_label_found';
   labels.count = zeros(length(labels.name),1);

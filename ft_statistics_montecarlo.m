@@ -111,6 +111,11 @@ ft_preamble randomseed
 ft_preamble trackconfig
 ft_preamble debug
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed',     {'factor',           'ivar'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'unitfactor',       'uvar'});
@@ -169,6 +174,10 @@ if strcmp(cfg.correctm, 'cluster')
       if isfield(cfg, 'insideorig')
         cfg.connectivity = cfg.connectivity(cfg.insideorig, cfg.insideorig);
       end
+    elseif isfield(cfg, 'avgoverchan') && istrue(cfg.avgoverchan)
+      % channel dimension has been averaged across, no sense in clustering
+      % across space
+      cfg.connectivity = true(1);
     elseif isfield(cfg, 'channel')
       cfg.neighbours   = ft_getopt(cfg, 'neighbours', []);
       cfg.connectivity = channelconnectivity(cfg);

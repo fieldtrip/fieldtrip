@@ -1,4 +1,4 @@
-function [s] = setsubfield(s, f, v);
+function [s] = setsubfield(s, f, v)
 
 % SETSUBFIELD sets the contents of the specified field to a specified value
 % just like the standard Matlab SETFIELD function, except that you can also

@@ -112,12 +112,12 @@ return;
 %---------------------------------------------------%
 function dcmdir = getdcmdir(dcmfile)
 
-ind = findstr(dcmfile,'/');
+ind = findstr(dcmfile,filesep);
 if(~isempty(ind))
   if(max(ind)~=1)
     dcmdir = dcmfile(1:max(ind)-1);
   else
-  dcmdir = '/';
+  dcmdir = filesep;
   end
 else
   dcmdir = '.';

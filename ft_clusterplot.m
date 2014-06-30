@@ -67,6 +67,11 @@ ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar stat
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 % check if the given data is appropriate
 if isfield(stat,'freq') && length(stat.freq) > 1
   error('stat contains multiple frequencies which is not allowed because it should be averaged over frequencies')

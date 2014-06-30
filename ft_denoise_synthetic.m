@@ -51,6 +51,11 @@ ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar data
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'required', {'gradient'});
 
@@ -60,6 +65,7 @@ if ~isfield(cfg, 'trials'), cfg.trials = 'all'; end
 % store the original type of the input data
 dtype = ft_datatype(data);
 
+% check if the input data is valid for this function
 % this will convert timelocked input data to a raw data representation if needed
 data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hassampleinfo', 'yes');
 

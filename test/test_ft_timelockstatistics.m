@@ -28,7 +28,7 @@ neighbours(3).label = 'chan3';
 neighbours(3).neighblabel = {'chan1', 'chan2'};
 cfg.neighbours  = neighbours;
 cfg.method      = 'montecarlo';
-cfg.statistic   = 'depsamplesT';
+cfg.statistic   = 'ft_statfun_depsamplesT';
 cfg.alpha       = 0.05; 
 cfg.correctm    = 'cluster'; 
 cfg.clusterstatistic = 'maxsum';
@@ -43,7 +43,7 @@ stat = ft_timelockstatistics(cfg,timelock{:});
 % do stats - analytic
 cfg = [];
 cfg.method      = 'analytic';
-cfg.statistic   = 'depsamplesT';
+cfg.statistic   = 'ft_statfun_depsamplesT';
 cfg.alpha       = 0.05; 
 cfg.design = [ones(1,5) ones(1,5).*2; 1:5 1:5;];
 cfg.ivar   = 1;

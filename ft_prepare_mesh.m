@@ -83,6 +83,11 @@ ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar mri
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 % we cannot use nargin, because the data might have been loaded from cfg.inputfile
 hasdata = exist('mri', 'var');
 
@@ -120,10 +125,10 @@ if ~isfield(cfg, 'method')
 end
 
 if hasdata && cfg.downsample~=1
-  % optionally downsample the anatomical MRI and/or the tissue segmentation
-  tmpcfg = [];
-  tmpcfg.downsample = cfg.downsample;
+  % optionally downsample the anatomical volume and/or tissue segmentations
+  tmpcfg = keepfields(cfg, {'downsample'});
   mri = ft_volumedownsample(tmpcfg, mri);
+  [cfg, mri] = rollback_provenance(cfg, mri);
 end
 
 switch cfg.method

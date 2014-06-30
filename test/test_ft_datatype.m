@@ -1,7 +1,7 @@
 function test_ft_datatype
 
 % MEM 3gb
-% WALLTIME 00:45:00
+% WALLTIME 01:30:00
 
 % TEST test_ft_datatype
 % TEST ft_datatype ft_datatype_comp ft_datatype_mvar ft_datatype_source ft_datatype_dip ft_datatype_parcellation ft_datatype_spike ft_datatype_freq ft_datatype_raw ft_datatype_timelock ft_datatype_headmodel ft_datatype_segmentation ft_datatype_volume ft_datatype ft_datatype_sens
@@ -146,11 +146,8 @@ assert(ft_datatype(rawc,       'comp'), 'incorrect datatype');
 assert(ft_datatype(timelockc,  'comp'), 'incorrect datatype');
 assert(ft_datatype(freqc,      'comp'), 'incorrect datatype');
 
-% the default is that for raw+comp ft_datatype returns comp 
+% the default is that for raw+comp ft_datatype returns comp
 % the default for timelock+comp and freq+comp is to return them as timelock or freq for backward compatibility
-assert(strcmp(ft_datatype(rawc       ), 'comp'), 'comp datatype was expected');
-assert(strcmp(ft_datatype(timelockc  ), 'timelock'), 'timelock datatype was expected');
-assert(strcmp(ft_datatype(freqc      ), 'freq'), 'freq datatype was expected');
-
-
-
+assert(strcmp(ft_datatype(rawc       ), 'raw+comp'),      'raw+comp datatype was expected');
+assert(strcmp(ft_datatype(timelockc  ), 'timelock+comp'), 'timelock+comp datatype was expected');
+assert(strcmp(ft_datatype(freqc      ), 'freq+comp'),     'freq+comp datatype was expected');

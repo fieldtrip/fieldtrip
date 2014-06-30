@@ -1,4 +1,4 @@
-function [dat] = read_labview_dtlg(filename, datatype);
+function [dat] = read_labview_dtlg(filename, datatype)
 
 % READ_LABVIEW_DTLG
 %

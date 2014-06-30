@@ -78,6 +78,12 @@ ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar avgL avgR
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
+% check if the input data is valid for this function
 avgL = ft_checkdata(avgL, 'datatype', 'timelock');
 avgR = ft_checkdata(avgR, 'datatype', 'timelock');
 

@@ -380,7 +380,54 @@ switch version
       if ~isfield(sens, 'balance') || ~isfield(sens.balance, 'current')
         sens.balance.current = 'none';
       end
+      
+      % try to add the chantype and chanunit to the CTF G1BR montage
+      if isfield(sens, 'balance') && isfield(sens.balance, 'G1BR') && ~isfield(sens.balance.G1BR, 'chantype')
+        sens.balance.G1BR.chantypeorg = repmat({'unknown'}, size(sens.balance.G1BR.labelorg));
+        sens.balance.G1BR.chanunitorg = repmat({'unknown'}, size(sens.balance.G1BR.labelorg));
+        sens.balance.G1BR.chantypenew = repmat({'unknown'}, size(sens.balance.G1BR.labelnew));
+        sens.balance.G1BR.chanunitnew = repmat({'unknown'}, size(sens.balance.G1BR.labelnew));
+        % the synthetic gradient montage does not fundamentally change the chantype or chanunit
+        [sel1, sel2] = match_str(sens.balance.G1BR.labelorg, sens.label);
+        sens.balance.G1BR.chantypeorg(sel1) = sens.chantype(sel2);
+        sens.balance.G1BR.chanunitorg(sel1) = sens.chanunit(sel2);
+        [sel1, sel2] = match_str(sens.balance.G1BR.labelnew, sens.label);
+        sens.balance.G1BR.chantypenew(sel1) = sens.chantype(sel2);
+        sens.balance.G1BR.chanunitnew(sel1) = sens.chanunit(sel2);
+      end
+      
+      % idem for G2BR
+      if isfield(sens, 'balance') && isfield(sens.balance, 'G2BR') && ~isfield(sens.balance.G2BR, 'chantype')
+        sens.balance.G2BR.chantypeorg = repmat({'unknown'}, size(sens.balance.G2BR.labelorg));
+        sens.balance.G2BR.chanunitorg = repmat({'unknown'}, size(sens.balance.G2BR.labelorg));
+        sens.balance.G2BR.chantypenew = repmat({'unknown'}, size(sens.balance.G2BR.labelnew));
+        sens.balance.G2BR.chanunitnew = repmat({'unknown'}, size(sens.balance.G2BR.labelnew));
+        % the synthetic gradient montage does not fundamentally change the chantype or chanunit
+        [sel1, sel2] = match_str(sens.balance.G2BR.labelorg, sens.label);
+        sens.balance.G2BR.chantypeorg(sel1) = sens.chantype(sel2);
+        sens.balance.G2BR.chanunitorg(sel1) = sens.chanunit(sel2);
+        [sel1, sel2] = match_str(sens.balance.G2BR.labelnew, sens.label);
+        sens.balance.G2BR.chantypenew(sel1) = sens.chantype(sel2);
+        sens.balance.G2BR.chanunitnew(sel1) = sens.chanunit(sel2);
+      end
+      
+      % idem for G3BR
+      if isfield(sens, 'balance') && isfield(sens.balance, 'G3BR') && ~isfield(sens.balance.G3BR, 'chantype')
+        sens.balance.G3BR.chantypeorg = repmat({'unknown'}, size(sens.balance.G3BR.labelorg));
+        sens.balance.G3BR.chanunitorg = repmat({'unknown'}, size(sens.balance.G3BR.labelorg));
+        sens.balance.G3BR.chantypenew = repmat({'unknown'}, size(sens.balance.G3BR.labelnew));
+        sens.balance.G3BR.chanunitnew = repmat({'unknown'}, size(sens.balance.G3BR.labelnew));
+        % the synthetic gradient montage does not fundamentally change the chantype or chanunit
+        [sel1, sel2] = match_str(sens.balance.G3BR.labelorg, sens.label);
+        sens.balance.G3BR.chantypeorg(sel1) = sens.chantype(sel2);
+        sens.balance.G3BR.chanunitorg(sel1) = sens.chanunit(sel2);
+        [sel1, sel2] = match_str(sens.balance.G3BR.labelnew, sens.label);
+        sens.balance.G3BR.chantypenew(sel1) = sens.chantype(sel2);
+        sens.balance.G3BR.chanunitnew(sel1) = sens.chanunit(sel2);
+      end
     end
+    
+    
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   otherwise

@@ -1,4 +1,4 @@
-function y = access(x, cmd);
+function y = access(x, cmd)
 
 % ACCESS Return the number of accesses (assignments and references) to a CONFIGURATION object.
 

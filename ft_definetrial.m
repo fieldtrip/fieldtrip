@@ -119,6 +119,11 @@ ft_defaults
 ft_preamble init
 ft_preamble provenance
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'dataset2files', {'yes'});
 

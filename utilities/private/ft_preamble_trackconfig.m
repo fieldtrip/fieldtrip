@@ -1,6 +1,13 @@
-% FT_PREAMBLE_TRACKCONFIG is a helper script that calls ft_checkconfig to
-% switch the (optional) configuration tracking on. This should be used
-% together with FT_POSTAMBLE_TRACKCONFIG.
+% FT_PREAMBLE_TRACKCONFIG is a helper script that calls ft_checkconfig to switch the
+% (optional) configuration tracking on. This should be used together with
+% FT_POSTAMBLE_TRACKCONFIG.
+%
+% Use as
+%   ft_preamble trackconfig
+%   ... regular code goes here ...
+%   ft_postamble trackconfig
+%
+% See also FT_POSTAMBLE_TRACKCONFIG
 
 % Copyright (C) 2011-2012, Robert Oostenveld, DCCN
 %

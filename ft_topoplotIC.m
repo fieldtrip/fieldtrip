@@ -1,4 +1,4 @@
-function [cfg] = ft_topoplotIC(cfg, varargin)
+function [cfg] = ft_topoplotIC(cfg, comp)
 
 % FT_TOPOPLOTIC plots the topographic distribution of an independent
 % component that was computed using the FT_COMPONENTANALYSIS function,
@@ -57,6 +57,9 @@ function [cfg] = ft_topoplotIC(cfg, varargin)
 %                            'title' to place comment as title
 %                            'layout' to place comment as specified for COMNT in layout
 %                            [x y] coordinates
+%   cfg.title              = string or 'auto' or 'off', specify a figure
+%                            title, or use 'component N' (auto) as the
+%                            title
 %
 % The layout defines how the channels are arranged. You can specify the
 % layout in a variety of ways:
@@ -103,6 +106,11 @@ ft_defaults
 ft_preamble init
 ft_preamble provenance
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 % make sure figure window titles are labeled appropriately, pass this onto
 % the actual plotting function
 % if we don't specify this, the window will be called 'ft_topoplotTFR',
@@ -115,27 +123,29 @@ if nargin > 1
   end
 end
 
+% check if the input data is valid for this function
+% this will remove all time-series information
+comp = ft_checkdata(comp, 'datatype', 'comp');
+
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'required', 'component');
 
-% FIXME why is this done like this instead of using ft_checkdata?
-% add a dimord
-varargin{:}.dimord = 'chan_comp';
-
-% create temporary variable
-selcomp = cfg.component;
+cfg.title = ft_getopt(cfg, 'title', 'auto');
 
 % prepare the layout only once
-cfg.layout = ft_prepare_layout(cfg, varargin{:});
+cfg.layout = ft_prepare_layout(cfg, comp); 
 
 % don't show the callinfo for each separate component
 cfg.showcallinfo = 'no';
 
 % interactive plotting doesn't work for chan_comp dimord. 
-if isfield(cfg, 'interactive')
+if isfield(cfg, 'interactive') && strcmp(cfg.interactive, 'yes')
   warning('Interactive plotting is not supported.');
-end;
+end
 cfg.interactive = 'no';
+
+% create temporary variable
+selcomp = cfg.component;
 
 % allow multiplotting
 nplots = numel(selcomp);
@@ -145,13 +155,23 @@ if nplots>1
   for i = 1:length(selcomp)
     subplot(nxplot, nyplot, i);
     cfg.component = selcomp(i);
-    ft_topoplotTFR(cfg, varargin{:});
-    title(['component ' num2str(selcomp(i))]);
+    ft_topoplotTFR(cfg, comp);
+    
+    if strcmp(cfg.title, 'auto')
+      title(['component ' num2str(selcomp(i))]);
+    elseif ~strcmp(cfg.title, 'off')
+      title(cfg.title);
+    end
   end
 else
   cfg.component = selcomp;
-  ft_topoplotTFR(cfg, varargin{:});
-  title(['component ' num2str(selcomp)]);
+  ft_topoplotTFR(cfg, comp);
+  
+  if strcmp(cfg.title, 'auto')
+    title(['component ' num2str(selcomp)]);
+  elseif ~strcmp(cfg.title, 'off')
+    title(cfg.title);
+  end
 end
 
 % show the callinfo for all components together
@@ -159,5 +179,5 @@ cfg.showcallinfo = 'yes';
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble provenance
-ft_postamble previous varargin
+ft_postamble previous comp
 

@@ -1,4 +1,4 @@
-function [data] = avgref(data, sel);
+function [data] = avgref(data, sel)
 
 % AVGREF computes the average reference in each column
 %   [data] = avgref(data)

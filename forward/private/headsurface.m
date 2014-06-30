@@ -1,4 +1,4 @@
-function [pnt, tri] = headsurface(vol, sens, varargin);
+function [pnt, tri] = headsurface(vol, sens, varargin)
 
 % HEADSURFACE constructs a triangulated description of the skin or brain
 % surface from a volume conduction model, from a set of electrodes or

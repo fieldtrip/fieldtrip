@@ -110,8 +110,8 @@ timreq        = ft_getopt(optarg, 'timreq');
 memreq        = ft_getopt(optarg, 'memreq');
 stack         = ft_getopt(optarg, 'stack',   'auto'); % 'auto' or a number
 compile       = ft_getopt(optarg, 'compile', 'no');   % can be 'auto', 'yes' or 'no'
-backend       = ft_getopt(optarg, 'backend', []);     % this will be dealt with in qsubfeval
-queue         = ft_getopt(optarg, 'queue', []);
+backend       = ft_getopt(optarg, 'backend', []);     % the default will be determined by qsubfeval
+queue         = ft_getopt(optarg, 'queue',   []);
 submitoptions = ft_getopt(optarg, 'options', []);
 batch         = ft_getopt(optarg, 'batch',   getbatch());               % this is a number that is automatically incremented
 batchid       = ft_getopt(optarg, 'batchid', generatebatchid(batch));   % this is a string like user_host_pid_batch
@@ -367,6 +367,12 @@ while (~all(collected))
       collected(collect)   = true;
       collecttime(collect) = toc(stopwatch);
       
+      if isempty(argout) && StopOnError==false
+        % this happens if an error was detected in qsubget and StopOnError is false 
+        % replace the output of the failed jobs with []
+        argout = repmat({[]}, 1, numargout);
+      end
+      
       % redistribute the output arguments
       for j=1:numargout
         varargout{j}{collect} = argout{j};
@@ -405,7 +411,7 @@ end
 fprintf('computational time = %.1f sec, elapsed = %.1f sec, speedup %.1f x\n', nansum(timused), toc(stopwatch), nansum(timused)/toc(stopwatch));
 
 if all(puttime>timused)
-  warning('copying the jobs over the network took more time than their execution');
+  warning('the job submission took more time than the actual execution');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

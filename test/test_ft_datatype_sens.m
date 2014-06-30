@@ -1,4 +1,4 @@
-% function test_ft_datatype_sens
+function test_ft_datatype_sens
 
 % MEM 1500mb
 % WALLTIME 00:10:00

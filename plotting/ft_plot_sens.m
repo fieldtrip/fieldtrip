@@ -8,11 +8,11 @@ function hs = ft_plot_sens(sens, varargin)
 % or PREPARE_VOL_SENS.
 %
 % Optional input arguments should come in key-value pairs and can include
-%   style         = plotting style for the points representing the channels, see plot3 (default = 'k.')
-%   coil          = true/false, plot each individual coil or the channelposition (default = false)
-%   coildiameter  = diameter of the MEG gradiometer coils (default = 0)
-%   label         = show the label, can be 'off', 'label', 'number' (default = 'off')
-%   chantype      = string or cell-array with strings, for example {'meg', 'megref'} (default = 'all')
+%   'style'         = plotting style for the points representing the channels, see plot3 (default = 'k.')
+%   'coil'          = true/false, plot each individual coil or the channelposition (default = false)
+%   'coildiameter'  = diameter of the MEG gradiometer coils (default = 0)
+%   'label'         = show the label, can be 'off', 'label', 'number' (default = 'off')
+%   'chantype'      = string or cell-array with strings, for example {'meg', 'megref'} (default = 'all')
 %
 % Example
 %   sens = ft_read_sens('Subject01.ds');

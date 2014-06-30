@@ -1,7 +1,11 @@
-% FT_POSTAMBLE_HISTORY stores the present cfg structure in the output variable
+% FT_POSTAMBLE_HISTORY stores the configuration structure that is present in the
+% present workspace in the output variable. Furthermore, this function computes the
+% MD5 hash of the output data structures for provenance.
 %
 % Use as
 %   ft_postamble history outputvar
+%
+% See also FT_POSTAMBLE_PROVENANCE
 
 % Copyright (C) 2011-2012, Robert Oostenveld, DCCN
 %

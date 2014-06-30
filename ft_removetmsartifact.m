@@ -1,6 +1,7 @@
 function data = ft_removetmsartifact(cfg, data)
 
 % FT_REMOVETMSARTIFACT removes TMS artifacts from EEG data
+%
 % %% NOTE: Please be aware that this function is deprecated. Please follow
 %          the TMS-EEG tutorial instead
 %          (http://fieldtrip.fcdonders.nl/tutorial/tms-eeg).
@@ -61,7 +62,6 @@ warning('FT_REMOVETMSARTIFACT is deprecated, please follow TMS-EEG tutorial inst
 revision = '$Id$';
 
 % do the general setup of the function
-
 ft_defaults                 % this ensures that the path is correct and that the ft_defaults global variable is available
 ft_preamble init            % this will show the function help if nargin==0 and return an error
 ft_preamble provenance      % this records the time and memory usage at teh beginning of the function
@@ -69,9 +69,12 @@ ft_preamble trackconfig     % this converts the cfg structure in a config object
 ft_preamble debug
 ft_preamble loadvar datain  % this reads the input data in case the user specified the cfg.inputfile option
 
-% ensure that the input data is valid for this function, this will also do
-% backward-compatibility conversions of old data that for example was
-% read from an old *.mat file
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
+% check if the input data is valid for this function
 data = ft_checkdata(data, 'datatype', {'raw'}, 'feedback', 'yes');
 
 % ensure that the required options are present

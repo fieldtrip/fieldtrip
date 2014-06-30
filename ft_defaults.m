@@ -136,6 +136,14 @@ if ~isdeployed
   end
     
   try
+    % these directories contain functions that were added to MATLAB in
+    % recent versions to replace an older function.
+    if matlabversion(-Inf, '2011b')
+      ft_hastoolbox('compat/matlablt2012a', 2, 1);
+    end
+  end
+  
+  try
     % these contains template layouts, neighbour structures, MRIs and cortical meshes
     ft_hastoolbox('template/layout', 1, 1);
     ft_hastoolbox('template/anatomy', 1, 1);

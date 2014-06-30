@@ -13,12 +13,12 @@ function [shape] = ft_read_headshape(filename, varargin)
 %
 % Filename can be a string or cell array of strings. If it is a cell-array,
 % the following situations are supported:
-%   - a two-element cell-array points to files that represent the left and
-%   right hemisphere, respectively, for example freesurfer's {'lh.orig'
-%   'rh.orig'}, or caret's {'X.L.Y.Z.surf.gii' 'X.R.Y.Z.surf.gii'}
-%   - a two-element cell-array points to files that represent the
-%   coordinates and topology in separate files. Current support for
-%   caret-based files {'X.L.Y.Z.coord.gii' 'A.L.B.C.topo.gii'};
+%  - a two-element cell-array with the file names for the left and
+%    right hemisphere, e.g. FreeSurfer's {'lh.orig' 'rh.orig'}, or 
+%    Caret's {'X.L.Y.Z.surf.gii' 'X.R.Y.Z.surf.gii'}
+%  - a two-element cell-array points to files that represent 
+%    the coordinates and topology in separate files, e.g. 
+%    Caret's {'X.L.Y.Z.coord.gii' 'A.L.B.C.topo.gii'};
 %
 % Additional options should be specified in key-value pairs and can be
 %
@@ -516,6 +516,8 @@ else
       nr_items = size(in_str,1);
       ind = 1;
       coil_ind = 1;
+      shape.fid.pnt = [];
+      shape.fid.label = {};
       while ind < nr_items
         if strcmp(in_str{ind},'MEG:x=')
           shape.fid.pnt = [shape.fid.pnt; str2num(strtok(in_str{ind+1},[',','['])) ...
@@ -843,6 +845,21 @@ else
           % FIXME remove vertices that are not in a triangle
           % FIXME add unit
 
+      case 'asa_elc'
+          elec = ft_read_sens(filename);
+          
+          shape.fid.pnt   = elec.chanpos;
+          shape.fid.label = elec.label;
+          
+          npnt = read_asa(filename, 'NumberHeadShapePoints=', '%d');
+          if ~isempty(npnt) && npnt>0
+              origunit = read_asa(filename, 'UnitHeadShapePoints', '%s', 1);
+              pnt  = read_asa(filename, 'HeadShapePoints', '%f', npnt, ':');
+              
+              pnt = scalingfactor(origunit, 'mm')*pnt;
+              
+              shape.pnt = pnt;
+          end
       otherwise
           % try reading it from an electrode of volume conduction model file
           success = false;

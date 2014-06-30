@@ -79,6 +79,15 @@ if isempty(previous_old)
   previous_factor = [];
 end
 
+if ~isequal(class(old), class(new))
+  error('the input arguments should be of the same class');
+end
+
+if iscell(old)
+  factor = cellfun(@scalingfactor, old(:), new(:));
+  return
+end
+
 cachehit = strcmp(old, previous_old) & strcmp(new, previous_new);
 if any(cachehit)
   factor = previous_factor(cachehit);
@@ -105,6 +114,7 @@ A   = 7;
 K   = 11;
 mol = 13;
 cd  = 17;
+unknown = -1;
 
 % each of the derives units is represented by a product and/or ratio of prime numbers
 Hz  = 1/s;

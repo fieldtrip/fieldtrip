@@ -59,7 +59,7 @@ persistent previous_matlabcmd
 % keep track of the time
 stopwatch = tic;
 
-% convert the input arguments into something that strmatch can work with
+% convert the input arguments into something that strcmp can work with
 strargin = varargin;
 strargin(~cellfun(@ischar, strargin)) = {''};
 
@@ -96,7 +96,7 @@ batch         = ft_getopt(optarg, 'batch', 1);
 batchid       = ft_getopt(optarg, 'batchid');
 timoverhead   = ft_getopt(optarg, 'timoverhead', 180);            % allow some overhead to start up the MATLAB executable
 memoverhead   = ft_getopt(optarg, 'memoverhead', 1024*1024*1024); % allow some overhead for the MATLAB executable in memory
-backend       = ft_getopt(optarg, 'backend', defaultbackend);     % this uses the defaultbackend helper function to determine the default
+backend       = ft_getopt(optarg, 'backend', []);                 % the defaultbackend helper function will be used to determine the default
 queue         = ft_getopt(optarg, 'queue', []);                   % the default is specified further down in the code
 submitoptions = ft_getopt(optarg, 'options', []);
 display       = ft_getopt(optarg, 'display', 'no');
@@ -111,10 +111,21 @@ if ~isempty(optbeg)
   varargin = varargin(1:(optbeg-1));
 end
 
+if isempty(backend)
+  % use the system default backend
+  backend = defaultbackend;
+else
+  % use the user-specified backend
+  % this makes it persistent and available to qsublist
+  defaultbackend(backend);
+end
+
 % it should be specified as a cell-array of strings
 if ischar(waitfor)
   waitfor = {waitfor};
 end
+% remove empty elements
+waitfor = waitfor(~cellfun(@isempty, waitfor));
 
 % determine whether the function has been compiled
 compiled = isstruct(varargin{1});
@@ -472,14 +483,14 @@ switch backend
     result = result(pbsid_beg(1)+1:pbsid_end(1)-1);
   case 'sge'
     % in sge, the return string is "Your job <job_number> (<job_name>) has been submitted"
-    result_words = strsplit(result);
+    result_words = tokenize(result, ' ');
     result = result_words{3};
   otherwise
     % for torque, it is enough to remove the white space
     result = strtrim(result);
 end
 
-fprintf(' qstat job id %s\n', result);
+fprintf(' %s id %s\n', backend, result);
 
 % both Torque and SGE will return a log file with stdout and stderr information
 % for local execution we have to emulate these files, because qsubget expects them

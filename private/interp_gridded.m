@@ -43,6 +43,10 @@ if nargin<3
 end
 
 % get the optional arguments
+projvec      = ft_getopt(varargin, 'projvec',       1);
+projweight   = ft_getopt(varargin, 'projweight',    ones(size(projvec)));
+projcomb     = ft_getopt(varargin, 'projcomb',      'mean'); %or max
+projthresh   = ft_getopt(varargin, 'projthresh',    []);
 projmethod   = ft_getopt(varargin, 'projmethod');    % required
 sphereradius = ft_getopt(varargin, 'sphereradius');  % required for some projection methods
 distmat      = ft_getopt(varargin, 'distmat');       % will be computed if not present
@@ -94,6 +98,9 @@ if isempty(distmat)
       end
       ft_progress('close');
 
+    case 'project'
+      % do nothing I believe
+    
     otherwise
       error('unsupported projection method');
   end % case projmethod
@@ -119,17 +126,57 @@ switch projmethod
     [ind1, ind2, d] = find(projmat);
     normnz          = sqrt(full(sum(projmat.^2, 2)));
     projmat         = sparse(ind1, ind2, d./normnz(ind1), npnt, npnt1);
-
+  
+  case 'project'
+      % this method is Joachim's implementation that was originally in
+      % ft_sourceplot, it assumes the functional data to be defined on a
+      % regular 3D grid, and that the transformation to world-space is known
+      
+      
+      % we also need the dim
+      dim = ft_getopt(varargin, 'dim');
+      dat = zeros(size(pnt,1),1);
+      
+      % convert projvec in mm to a factor, assume mean distance of 70mm
+      projvec = (70-projvec)/70;
+      for iproj = 1:length(projvec),
+        sub = round(ft_warp_apply(inv(transform), pnt*projvec(iproj), 'homogenous'));  % express
+        sub(sub(:)<1) = 1;
+        sub(sub(:,1)>dim(1),1) = dim(1);
+        sub(sub(:,2)>dim(2),2) = dim(2);
+        sub(sub(:,3)>dim(3),3) = dim(3);
+        ind = sub2ind(dim, sub(:,1), sub(:,2), sub(:,3));
+        if strcmp(projcomb,'mean')
+          dat = dat + projweight(iproj) * val(ind);
+        elseif strcmp(projcomb,'max')
+          dat  = max([dat projweight(iproj) * val(ind)],[],2);
+          tmp2 = min([dat projweight(iproj) * val(ind)],[],2);
+          fi   = find(dat < max(tmp2));
+          val(fi) = tmp2(fi);
+        else
+          error('undefined method to combine projections; use cfg.projcomb= mean or max')
+        end
+      end
+      if strcmp(projcomb,'mean'),
+        dat = dat/length(projvec);
+      end
+      %     if ~isempty(projthresh),
+      %       mm=max(abs(val(:)));
+      %       maskval(abs(val) < projthresh*mm) = 0;
+      %     end
+      %
+    
   otherwise
     error('unsupported projection method');
 end  % case projmethod
 
-if nargout==1
+if nargout==1 && ~strcmp(projmethod, 'project')
   % return the interpolated values
   varargout{1} = projmat * val(:);
+elseif nargout==1
+  varargout{1} = dat;
 else
   % return the interpolation and the distance matrix
   varargout{1} = projmat;
   varargout{2} = distmat;
 end
-

@@ -68,6 +68,11 @@ ft_preamble provenance
 ft_preamble trackconfig
 ft_preamble debug
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 % set the defaults
 if ~isfield(cfg, 'filename'),    cfg.filename    = [];                end
 if ~isfield(cfg, 'showinfo'),    cfg.showinfo    = {'functionname'};  end

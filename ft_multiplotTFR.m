@@ -130,6 +130,11 @@ ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar data
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 % check if the input data is valid for this function
 data = ft_checkdata(data, 'datatype', 'freq');
 
@@ -666,7 +671,8 @@ ft_postamble provenance
 ft_postamble previous data
 
 % add a menu to the figure
-% ftmenu = uicontextmenu; set(gcf, 'uicontextmenu', ftmenu)
+% also, delete any possibly existing previous menu, this is safe because delete([]) does nothing
+delete(findobj(gcf, 'type', 'uimenu', 'label', 'FieldTrip'));
 ftmenu = uimenu(gcf, 'Label', 'FieldTrip');
 uimenu(ftmenu, 'Label', 'Show pipeline',  'Callback', {@menu_pipeline, cfg});
 uimenu(ftmenu, 'Label', 'About',  'Callback', @menu_about);

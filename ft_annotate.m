@@ -54,6 +54,11 @@ ft_preamble trackconfig     % this converts the cfg structure in a config object
 ft_preamble debug           % this allows for displaying or saving the function name and input arguments upon an error
 ft_preamble loadvar datain  % this reads the input data in case the user specified the cfg.inputfile option
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 % ensure that the required options are present
 cfg = ft_checkconfig(cfg, 'required', 'comment');
 

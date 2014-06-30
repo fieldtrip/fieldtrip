@@ -1,6 +1,12 @@
 function [varargout] = ft_selectdata_new(cfg, varargin)
 
-% FT_SELECTDATA makes a selection in the input data along specific data
+% FT_SELECTDATA_NEW is deprecated, please use FT_SELECTDATA instead.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Old documentation for reference
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% This function makes a selection in the input data along specific data
 % dimensions, such as channels, time, frequency, trials, etc. It can also
 % be used to average the data along each of the specific dimensions.
 %
@@ -634,24 +640,6 @@ end % main function ft_selectdata
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [data] = keepfields(data, fn)
-
-% KEEPFIELDS behaves opposite to RMFIELD: it keeps the specified
-% fieldnames, and removes the rest.
-%
-% Use as
-%   data = keepfields(data, fn)
-%
-% Where fn is a cell-array of fields to keep
-
-fn = setdiff(fieldnames(data), fn);
-for i=1:numel(fn)
-  data = rmfield(data, fn{i});
-end
-
-end % function keepfields
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function data = makeselection(data, seldim, selindx, avgoverdim, datfields, selmode)
 
 if numel(seldim) > 1
@@ -946,7 +934,7 @@ end
 
 indx = nan+zeros(numel(timeaxis), ndata);
 for k = 1:ndata
-  [~, ix, iy] = intersect(timeaxis, round(varargin{k}.time(:)/tol)*tol);
+  [dum, ix, iy] = intersect(timeaxis, round(varargin{k}.time(:)/tol)*tol);
   indx(ix,k) = iy;
 end
 
@@ -1044,7 +1032,7 @@ end
 
 indx = nan+zeros(numel(freqaxis), ndata);
 for k = 1:ndata
-  [~, ix, iy] = intersect(freqaxis, round(varargin{k}.freq(:)/tol)*tol);
+  [dum, ix, iy] = intersect(freqaxis, round(varargin{k}.freq(:)/tol)*tol);
   indx(ix,k) = iy;
 end
 

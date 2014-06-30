@@ -7,22 +7,23 @@ function ft_plot_lay(lay, varargin)
 % where the layout is a FieldTrip structure obtained from FT_PREPARE_LAYOUT.
 %
 % Additional options should be specified in key-value pairs and can be
-%   'point'         = yes/no
-%   'box'           = yes/no
-%   'label'         = yes/no
-%   'labelsize'     = number indicating font size (e.g. 6)
-%   'labeloffset'   = offset of label from point (suggestion is 0.005)
-%   'mask'          = yes/no
-%   'outline'       = yes/no
-%   'verbose'       = yes/no
-%   'pointsymbol'   = string with symbol (e.g. 'o') - all three point options need to be used together
-%   'pointcolor'    = string with color (e.g. 'k')
-%   'pointsize'     = number indicating size (e.g. 8)
+%   'point'       = yes/no
+%   'box'         = yes/no
+%   'label'       = yes/no
+%   'labelsize'   = number indicating font size (e.g. 6)
+%   'labeloffset' = offset of label from point (suggestion is 0.005)
+%   'mask'        = yes/no
+%   'outline'     = yes/no
+%   'verbose'     = yes/no
+%   'pointsymbol' = string with symbol (e.g. 'o') - all three point options need to be used together
+%   'pointcolor'  = string with color (e.g. 'k')
+%   'pointsize'   = number indicating size (e.g. 8)
 %
-%   hpos        = horizontal position of the lower left corner of the local axes
-%   vpos        = vertical position of the lower left corner of the local axes
-%   width       = width of the local axes
-%   height      = height of the local axes
+% It is possible to plot the object in a local pseudo-axis (c.f. subplot), which is specfied as follows
+%   'hpos'        = horizontal position of the lower left corner of the local axes
+%   'vpos'        = vertical position of the lower left corner of the local axes
+%   'width'       = width of the local axes
+%   'height'      = height of the local axes
 
 % Copyright (C) 2009, Robert Oostenveld
 %

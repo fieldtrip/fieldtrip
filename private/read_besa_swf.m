@@ -1,4 +1,4 @@
-function [swf] = read_besa_swf(filename);
+function [swf] = read_besa_swf(filename)
 
 % READ_BESA_SWF
 %

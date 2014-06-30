@@ -77,7 +77,7 @@ if Ndata>1 && ~isnumeric(varargin{end})
 end
 
 data = varargin{indx};
-data = ft_checkdata(data, 'datatype', {'timelock', 'freq', 'comp'});
+data = ft_checkdata(data, 'datatype', {'comp', 'timelock', 'freq'});
 
 % check for option-values to be renamed
 cfg = ft_checkconfig(cfg, 'renamedval', {'electrodes',   'dotnum',      'numbers'});
@@ -278,16 +278,20 @@ end
 % check whether rpt/subj is present and remove if necessary and whether
 hasrpt = any(ismember(dimtok, {'rpt' 'subj'}));
 if strcmp(dtype, 'timelock') && hasrpt,
-  tmpcfg        = [];
-  tmpcfg.trials = cfg.trials;
-  data          = ft_timelockanalysis(tmpcfg, data);
-  if ~strcmp(cfg.parameter, 'avg')
-    % rename avg back into the parameter
-    data.(cfg.parameter) = data.avg;
-    data                 = rmfield(data, 'avg');
+  if ~isfield(data, cfg.parameter) || strcmp(cfg.parameter, 'individual')
+    tmpcfg        = [];
+    tmpcfg.trials = cfg.trials;
+    data          = ft_timelockanalysis(tmpcfg, data);
+    if ~strcmp(cfg.parameter, 'avg')
+      % rename avg back into the parameter
+      data.(cfg.parameter) = data.avg;
+      data                 = rmfield(data, 'avg');
+    end
+    dimord        = data.dimord;
+    dimtok        = tokenize(dimord, '_');
+  else
+    fprintf('input data contains repetitions, ignoring these and using ''%s'' field\n', cfg.parameter);
   end
-  dimord        = data.dimord;
-  dimtok        = tokenize(dimord, '_');
 elseif strcmp(dtype, 'freq') && hasrpt,
   % this also deals with fourier-spectra in the input
   % or with multiple subjects in a frequency domain stat-structure
@@ -531,10 +535,8 @@ end
 % Make vector dat with one value for each channel
 dat    = data.(cfg.parameter);
 % get dimord dimensions
-dims = textscan(data.dimord,'%s', 'Delimiter', '_');
-dims = dims{1};
-ydim = find(strcmp(yparam, dims));
-xdim = find(strcmp(xparam, dims));
+ydim = find(strcmp(yparam, dimtok{1}));
+xdim = find(strcmp(xparam, dimtok{1}));
 zdim = setdiff(1:ndims(dat), [ydim xdim]);
 % and permute
 dat = permute(dat, [zdim(:)' ydim xdim]);
@@ -695,13 +697,19 @@ end
 % Draw topoplot
 cla
 hold on
+
 % Set ft_plot_topo specific options
-if strcmp(cfg.interplimits,'head'),  interplimits = 'mask';
-else interplimits = cfg.interplimits; end
-if strcmp(cfg.style,'both');        style = 'surfiso';     end
-if strcmp(cfg.style,'straight');    style = 'surf';         end
-if strcmp(cfg.style,'contour');     style = 'iso';         end
-if strcmp(cfg.style,'fill');        style = 'isofill';     end
+if strcmp(cfg.interplimits,'head')
+  interplimits = 'mask';
+else
+  interplimits = cfg.interplimits; 
+end
+if strcmp(cfg.style,'both');            style = 'surfiso';     end
+if strcmp(cfg.style,'straight');        style = 'surf';        end
+if strcmp(cfg.style,'contour');         style = 'iso';         end
+if strcmp(cfg.style,'fill');            style = 'isofill';     end
+if strcmp(cfg.style,'straight_imsat');  style = 'imsat';       end
+if strcmp(cfg.style,'both_imsat');      style = 'imsatiso';    end
 
 % check for nans
 nanInds = isnan(datavector);
@@ -717,7 +725,7 @@ end
 
 % Draw plot
 if ~strcmp(cfg.style,'blank')
-  ft_plot_topo(chanX,chanY,datavector,'interpmethod',cfg.interpolation,...
+  opt = {'interpmethod',cfg.interpolation,...
     'interplim',interplimits,...
     'gridscale',cfg.gridscale,...
     'outline',cfg.layout.outline,...
@@ -725,7 +733,12 @@ if ~strcmp(cfg.style,'blank')
     'isolines',cfg.contournum,...
     'mask',cfg.layout.mask,...
     'style',style,...
-    'datmask', maskdatavector);
+    'datmask', maskdatavector};
+  if strcmp(style,'imsat') || strcmp(style,'imsatiso')
+    % add clim to opt
+    opt = [opt {'clim',[zmin zmax]}];
+  end
+  ft_plot_topo(chanX,chanY,datavector,opt{:});
 elseif ~strcmp(cfg.style,'blank')
   ft_plot_lay(lay,'box','no','label','no','point','no')
 end

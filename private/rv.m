@@ -1,4 +1,4 @@
-function [retval] = rv(d1, d2);
+function [retval] = rv(d1, d2)
 
 % RV returns the relative residual variance between measured and simulated data
 %

@@ -9,10 +9,6 @@
 %
 % Author: Arnaud Delorme, Scott Makeig, SCCN/INC/UCSD, La Jolla, 05-20-97 
 
-% This particular instance of icadefs.m has been edited for FieldTrip to
-% enable use of the binica binary distributed with the small EEGLAB subset
-% included in the FieldTrip release.
-
 % Copyright (C) 05-20-97 Scott Makeig, SCCN/INC/UCSD, scott@sccn.ucsd.edu
 %
 % This program is free software; you can redistribute it and/or modify
@@ -75,9 +71,8 @@ clear retinaDisplay tmpScreenSize tmpComputer;
 % ----------------------------------------------------------------------
 
 % INSERT location of ica executable (LINUX ONLY) for binica.m below
-%eeglab_p = fileparts(which('eeglab'));
-[dummy,ftpath] = ft_version();
-ICABINARY = fullfile(ftpath, 'external', 'eeglab', 'ica_linux'); 
+eeglab_p = fileparts(which('eeglab'));
+ICABINARY = fullfile(eeglab_p, 'functions', 'resources', 'ica_linux'); 
 
 try
     set(0,'defaultaxesfontsize',AXES_FONTSIZE);
@@ -100,7 +95,7 @@ if ~exist('OCTAVE_VERSION')
     end;
 end;
 if lowscreendepth    
-    fprintf('icadefs(): Setting display parameters for mono or 8-bit color\n');
+    %fprintf('icadefs(): Setting display parameters for mono or 8-bit color\n');
     BACKCOLOR           = [1 1 1];    % Background figure color 
     BACKEEGLABCOLOR     = [1 1 1];    % EEGLAB main window background
     GUIBUTTONCOLOR      = [1 1 1];    % Buttons colors in figures

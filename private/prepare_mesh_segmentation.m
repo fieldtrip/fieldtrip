@@ -106,7 +106,7 @@ for i =1:numel(cfg.tissue)
     % the code below assumes that it is a probabilistic representation
     % for example {'brain', 'skull', scalp'}
     try
-      seg = mri.(cfg.tissue{i});
+      seg = mri.(fixname(cfg.tissue{i}));
     catch
       error('Please specify cfg.tissue to correspond to tissue types in the segmented MRI')
     end

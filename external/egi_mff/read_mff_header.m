@@ -1,16 +1,21 @@
 %% read_mff_header.m
 %  Matlab File
 %  author Colin Davey
-%  date 3/2/2012
-%  Copyright 2012 EGI. All rights reserved.
+%  date 3/2/2012, 4/15/2014
+%  Copyright 2012, 2014 EGI. All rights reserved.
+% 
+%  Takes the path to the data and returns the header in the structure
+%  described at http://fieldtrip.fcdonders.nl/reference/ft_read_header.
+%
+%  filePath ? The path to the .mff file. 
+%
 %  Return a Field Trip header. Pulls most of the information from the
 %  summary info returned by mff_getSummaryInfo. Stores the summary info in
 %  the .orig field. Gets the sensor label info from the sensor layout
-%  object. 
+%  object. Gets the pib channel info from the pns set object. 
 %%
 function header = read_mff_header(filePath)
 summaryInfo = mff_getSummaryInfo(filePath);
-
 % Pull header info from the summary info. 
 header.Fs = summaryInfo.sampRate;
 header.nChans = summaryInfo.nChans;
@@ -41,16 +46,7 @@ for p = 1:sensors.size
             tmpLabel = char(tmpLabel);
         end
         header.label{p} = tmpLabel;
-        
-        switch sensorType
-          case 0
-            header.chantype{p} = 'eeg';
-          case 1
-            header.chantype{p} = 'unknown'; % FIXME this applies to a channel named VREF, but I am not sure what it is
-          otherwise
-            header.chantype{p} = 'unknown';
-        end
-        
+        header.chantype{p} = 'eeg'; % hard-coded for now. 
         header.chanunit{p} = 'uV'; % hard-coded for now. 
         nChans = nChans + 1;
     end
@@ -58,4 +54,18 @@ end
 if nChans ~= header.nChans
     %Error. Should never occur. todo?: error handling
 end
+% Add the pib channel info. 
+if summaryInfo.pibNChans > 0
+    pnsSetObj = mff_getObject(com.egi.services.mff.api.MFFResourceType.kMFF_RT_PNSSet, 'pnsSet.xml', filePath);
+    pnsSensors = pnsSetObj.getPNSSensors;
+    for p = 1:summaryInfo.pibNChans
+        tmpLabel = sprintf('pib%d', p);
+        header.label{nChans + p} = tmpLabel;
+        
+        pnsSensorObj = pnsSensors.get(p-1);
+        header.chantype{nChans + p} = char(pnsSensorObj.getName);
+        header.chanunit{nChans + p} = char(pnsSensorObj.getUnit);
+    end
+end
+header.nChans = header.nChans + summaryInfo.pibNChans;
 header.orig = summaryInfo;

@@ -36,6 +36,11 @@ ft_preamble provenance
 ft_preamble trackconfig
 ft_preamble debug
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 % set the defaults
 if ~isfield(cfg, 'tissue'),         cfg.tissue = [8 12 14];                  end
 if ~isfield(cfg, 'numvertices'),    cfg.numvertices = [1 2 3] * 500;         end

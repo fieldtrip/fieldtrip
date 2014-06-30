@@ -10,6 +10,12 @@ function [cfg] = ft_databrowser(cfg, data)
 % and cfg.selcfg. You can use multiple functions by giving the names/cfgs as a
 % cell-array.
 %
+% In butterfly mode, you can use the "identify" button to reveal the name
+% of a channel. Please be aware that it searches only vertically. This
+% means that it will return the channel with the amplitude closest to the
+% point you have clicked at the specific time point. This might be
+% counterintuitive at first.
+%
 % Use as
 %   cfg = ft_databrowser(cfg)
 % where the configuration structure contains the reference to the dataset
@@ -130,6 +136,11 @@ ft_preamble provenance
 ft_preamble trackconfig
 ft_preamble debug
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 hasdata = (nargin>1);
 hascomp = hasdata && ft_datatype(data, 'comp');
 
@@ -227,9 +238,9 @@ if strcmp(cfg.viewmode, 'component')
     try, tmpcfg.elecfile = cfg.elecfile; end
     try, tmpcfg.gradfile = cfg.gradfile; end
     if hasdata
-      cfg.layout = ft_prepare_layout(tmpcfg, data)
+      cfg.layout = ft_prepare_layout(tmpcfg, data);
     else
-      cfg.layout = ft_prepare_layout(tmpcfg)
+      cfg.layout = ft_prepare_layout(tmpcfg);
     end
   end
 end
@@ -243,7 +254,7 @@ if hasdata
   istimelock = strcmp(ft_datatype(data),'timelock');
   
   % check if the input data is valid for this function
-  data = ft_checkdata(data, 'datatype', {'raw', 'comp'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
+  data = ft_checkdata(data, 'datatype', {'raw+comp', 'raw'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
   % fetch the header from the data structure in memory
   hdr = ft_fetch_header(data);
   
@@ -1473,11 +1484,6 @@ if nsamplepad>0
   dat = [dat NaN(numel(lab), opt.nanpaddata(opt.trlop))];
   tim = [tim linspace(tim(end),tim(end)+nsamplepad*mean(diff(tim)),nsamplepad)];  % possible machine precision error here
 end
-opt.curdat.label      = lab;
-opt.curdat.time{1}    = tim;
-opt.curdat.trial{1}   = dat;
-opt.curdat.fsample    = opt.fsample;
-opt.curdat.sampleinfo = [begsample endsample offset];
 
 % apply scaling to selected channels
 % using wildcard to support subselection of channels
@@ -1518,6 +1524,12 @@ if ~isempty(cfg.mychanscale)
   chansel = match_str(lab, ft_channelselection(cfg.mychan, lab));
   dat(chansel,:) = dat(chansel,:) .* cfg.mychanscale;
 end
+
+opt.curdat.label      = lab;
+opt.curdat.time{1}    = tim;
+opt.curdat.trial{1}   = dat;
+opt.curdat.fsample    = opt.fsample;
+opt.curdat.sampleinfo = [begsample endsample offset];
 
 % to assure current feature is plotted on top
 ordervec = 1:length(opt.artdata.label);

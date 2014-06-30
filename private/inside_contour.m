@@ -1,4 +1,4 @@
-function bool = inside_contour(pos, contour);
+function bool = inside_contour(pos, contour)
 
 npos = size(pos,1);
 ncnt = size(contour,1);

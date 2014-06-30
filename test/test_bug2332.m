@@ -60,7 +60,7 @@ assert(isequal(datplan.grad.chanposorg, data.grad.chanpos));
 datcmb = ft_combineplanar([], datplan);
 
 % now chanpos should be nans
-assert(all(isnan(datcmb.chanpos(:))));
+assert(all(isnan(datcmb.grad.chanpos(:))));
 % FIXME do we want a chanposorg on combined planar data as well?
 
 %% move back to original working dir

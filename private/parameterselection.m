@@ -1,4 +1,4 @@
-function [select] = parameterselection(param, data);
+function [select] = parameterselection(param, data)
 
 % PARAMETERSELECTION selects the parameters that are present as a volume in the data
 % add that have a dimension that is compatible with the specified dimensions of the

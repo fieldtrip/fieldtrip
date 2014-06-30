@@ -1,4 +1,4 @@
-function [dat] = read_neuralynx_dma(filename, begsample, endsample, channel);
+function [dat] = read_neuralynx_dma(filename, begsample, endsample, channel)
 
 % READ_NEURALYNX_DMA reads specified samples and channels data from a Neuralynx DMA log file
 %
