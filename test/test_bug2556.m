@@ -47,7 +47,8 @@ cfg = [];
 cfg.parameter = 'pow';
 source3p = ft_sourceparcellate(cfg, grandavg, parcellation);
 
-assert(isequal(source1p.pow,   source3p.pow));
+% assert(isequal(source1p.pow,   source3p.pow));
+assert(identical(source1p.pow,   source3p.pow, 'reltol', 1e-8)); % there is a tiny numerical difference
 assert(isequal(source1p.label, source3p.label));
 
 
