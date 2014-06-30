@@ -483,7 +483,7 @@ switch backend
     result = result(pbsid_beg(1)+1:pbsid_end(1)-1);
   case 'sge'
     % in sge, the return string is "Your job <job_number> (<job_name>) has been submitted"
-    result_words = strsplit(result);
+    result_words = tokenize(result, ' ');
     result = result_words{3};
   otherwise
     % for torque, it is enough to remove the white space
