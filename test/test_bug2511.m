@@ -9,7 +9,10 @@ function test_bug2511
 t1 = ft_read_mri('/home/common/matlab/spm8/canonical/single_subj_T1.nii');
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2511.mat'));
 
-% loading the data takes quite some time, as it is 4.7GB on disk
+% loading the data takes quite some time, as it is 4.7GB on disk, which is
+% a bit silly, because only 1 variable is used, and the whole
+% XXX.cfg.previous...... is not needed. JM reduced the file size on
+% 20140629
 
 cfg                  = [];
 cfg.parameter        = 'avg.pow';

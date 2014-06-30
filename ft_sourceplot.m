@@ -892,6 +892,11 @@ elseif isequal(cfg.method,'surface')
     tmpcfg.parameter = {cfg.funparameter};
     if ~isempty(cfg.maskparameter)
       tmpcfg.parameter = [tmpcfg.parameter {cfg.maskparameter}];
+      maskparameter    = cfg.maskparameter;
+    else
+      tmpcfg.parameter = [tmpcfg.parameter {'mask'}];
+      data.mask        = msk;
+      maskparameter    = 'mask'; % temporary variable 
     end
     tmpcfg.interpmethod = cfg.projmethod;
     tmpcfg.distmat    = cfg.distmat;
@@ -903,7 +908,7 @@ elseif isequal(cfg.method,'surface')
     tmpdata           = ft_sourceinterpolate(tmpcfg, data, surf);
     
     if hasfun, val     = getsubfield(tmpdata, cfg.funparameter);  val     = val(:);     end
-    if hasmsk, maskval = getsubfield(tmpdata, cfg.maskparameter); maskval = maskval(:); end
+    if hasmsk, maskval = getsubfield(tmpdata, maskparameter);     maskval = maskval(:); end
     
     if ~isempty(cfg.projthresh),
       maskval(abs(val) < cfg.projthresh*max(abs(val(:)))) = 0;

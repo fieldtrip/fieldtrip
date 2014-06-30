@@ -331,7 +331,9 @@ elseif is2Dana && ~is2Dfun
   if ~strcmp(cfg.interpmethod, 'project')
     for k = 1:numel(cfg.parameter)
       tmp    = getsubfield(functional, cfg.parameter{k});
-      interp = setsubfield(interp, cfg.parameter{k}, interpmat*reshape(tmp, [prod(dim) numel(tmp)./prod(dim)]));
+      tmp    = tmp(functional.inside(:));
+      %interp = setsubfield(interp, cfg.parameter{k}, interpmat*reshape(tmp, [prod(dim) numel(tmp)./prod(dim)]));
+      interp = setsubfield(interp, cfg.parameter{k}, interpmat*tmp);
     end
   else
     for k = 1:numel(cfg.parameter)
