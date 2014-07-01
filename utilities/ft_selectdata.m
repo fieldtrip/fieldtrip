@@ -609,12 +609,26 @@ switch selmode
     error('invalid value for cfg.select');
 end % switch
 
+ok = false(size(indx,1),1);
 for k = 1:ndata
+  % loop through the columns to preserve the order of the channels, where
+  % the order of the input arguments determines the final order
+  ix = find(~ok);
+  [srt,srtix] = sort(indx(ix,k));
+  indx(ix,:)  = indx(ix(srtix),:);
+  ok = ok | isfinite(indx(:,k));
+end
+
+for k = 1:ndata
+  % do a sanity check on double occurrences
+  if numel(unique(indx(isfinite(indx(:,k)),k)))<sum(isfinite(indx(:,k)))
+    error('the selection of channels across input arguments leads to double occurrences');
+  end
   chanindx{k} = indx(:,k);
 end
 
 for k = 1:ndata
-  if isequal(chanindx{k}, 1:numel(varargin{k}.label))
+  if isequal(chanindx{k}, (1:numel(varargin{k}.label))')
     % no actual selection is needed for this data structure
     chanindx{k} = nan;
   end
@@ -665,6 +679,8 @@ else
         end
         
         % return the order according to the (joint) configuration, not according to the (individual) data
+        % FIXME this should adhere to the general code guidelines, where
+        % the order returned will be according to the first data argument!
         [dum, chancmbindx{k}] = match_str(cfgcmb, datcmb);
       end
       
