@@ -69,6 +69,10 @@ switch dir
     filt1 = filtfilt(B, A, dat')';
     filt2 = fliplr(filtfilt(B, A, fliplr(dat)')');
     filt  = (filt1 + filt2)/2;
+  case 'onepass-zerophase'
+    filt = fir_filterdcpadded(B, A, dat', 0)';
+  case 'onepass-minphase'
+    filt = fir_filterdcpadded(B, A, dat', 1)';
   otherwise
     error('unsupported filter direction "%s"', dir);
 end
