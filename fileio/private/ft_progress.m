@@ -149,8 +149,8 @@ else
   % make sure we don't update more than once every 100ms, significant
   % performance hit otherwise in certain conditions
   if ~isempty(tprev) && toc(tprev) < 0.1 && ~closing
-%     lastArgin = varargin;
-%     return;
+    lastArgin = varargin;
+    return;
   end
   tprev = tic();
   lastArgin = [];
