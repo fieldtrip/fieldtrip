@@ -55,18 +55,31 @@ function [dat, label, time, cfg] = preproc(dat, label, time, cfg, begpadding, en
 %   cfg.bpfiltord     = bandpass filter order (default set in low-level function)
 %   cfg.bsfiltord     = bandstop filter order (default set in low-level function)
 %   cfg.medianfiltord = length of median filter
-%   cfg.lpfilttype    = digital filter type, 'but' (default) or 'fir' or 'firls'
-%   cfg.hpfilttype    = digital filter type, 'but' (default) or 'fir' or 'firls'
-%   cfg.bpfilttype    = digital filter type, 'but' (default) or 'fir' or 'firls'
-%   cfg.bsfilttype    = digital filter type, 'but' (default) or 'fir' or 'firls'
-%   cfg.lpfiltdir     = filter direction, 'twopass' (default), 'onepass' or 'onepass-reverse'
-%   cfg.hpfiltdir     = filter direction, 'twopass' (default), 'onepass' or 'onepass-reverse'
-%   cfg.bpfiltdir     = filter direction, 'twopass' (default), 'onepass' or 'onepass-reverse'
-%   cfg.bsfiltdir     = filter direction, 'twopass' (default), 'onepass' or 'onepass-reverse'
+%   cfg.lpfilttype    = digital filter type, 'but' (default) or 'firws' or 'fir' or 'firls'
+%   cfg.hpfilttype    = digital filter type, 'but' (default) or 'firws' or 'fir' or 'firls'
+%   cfg.bpfilttype    = digital filter type, 'but' (default) or 'firws' or 'fir' or 'firls'
+%   cfg.bsfilttype    = digital filter type, 'but' (default) or 'firws' or 'fir' or 'firls'
+%   cfg.lpfiltdir     = filter direction, 'twopass' (default), 'onepass' or 'onepass-reverse' or 'onepass-zerophase' (default for firws) or 'onepass-minphase' (firws, non-linear!)
+%   cfg.hpfiltdir     = filter direction, 'twopass' (default), 'onepass' or 'onepass-reverse' or 'onepass-zerophase' (default for firws) or 'onepass-minphase' (firws, non-linear!)
+%   cfg.bpfiltdir     = filter direction, 'twopass' (default), 'onepass' or 'onepass-reverse' or 'onepass-zerophase' (default for firws) or 'onepass-minphase' (firws, non-linear!)
+%   cfg.bsfiltdir     = filter direction, 'twopass' (default), 'onepass' or 'onepass-reverse' or 'onepass-zerophase' (default for firws) or 'onepass-minphase' (firws, non-linear!)
 %   cfg.lpinstabilityfix = deal with filter instability, 'no', 'reduce', 'split' (default  = 'no')
 %   cfg.hpinstabilityfix = deal with filter instability, 'no', 'reduce', 'split' (default  = 'no')
 %   cfg.bpinstabilityfix = deal with filter instability, 'no', 'reduce', 'split' (default  = 'no')
 %   cfg.bsinstabilityfix = deal with filter instability, 'no', 'reduce', 'split' (default  = 'no')
+%   cfg.lpfiltdf      = lowpass transition width (firws, overrides order, default set in low-level function)
+%   cfg.hpfiltdf      = highpass transition width (firws, overrides order, default set in low-level function)
+%   cfg.bpfiltdf      = bandpass transition width (firws, overrides order, default set in low-level function)
+%   cfg.bsfiltdf      = bandstop transition width (firws, overrides order, default set in low-level function)
+%   cfg.lpfiltwintype = lowpass window type, 'hann' or 'hamming' (default) or 'blackman' or 'kaiser' (firws)
+%   cfg.hpfiltwintype = highpass window type, 'hann' or 'hamming' (default) or 'blackman' or 'kaiser' (firws)
+%   cfg.bpfiltwintype = bandpass window type, 'hann' or 'hamming' (default) or 'blackman' or 'kaiser' (firws)
+%   cfg.bsfiltwintype = bandstop window type, 'hann' or 'hamming' (default) or 'blackman' or 'kaiser' (firws)
+%   cfg.lpfiltdev     = lowpass max passband deviation (firws with 'kaiser' window, default 0.001 set in low-level function)
+%   cfg.hpfiltdev     = highpass max passband deviation (firws with 'kaiser' window, default 0.001 set in low-level function)
+%   cfg.bpfiltdev     = bandpass max passband deviation (firws with 'kaiser' window, default 0.001 set in low-level function)
+%   cfg.bsfiltdev     = bandstop max passband deviation (firws with 'kaiser' window, default 0.001 set in low-level function)
+%   cfg.plotfiltresp  = 'no' or 'yes', plot filter responses (firws, default = 'no')
 %   cfg.demean        = 'no' or 'yes'
 %   cfg.baselinewindow = [begin end] in seconds, the default is the complete trial
 %   cfg.detrend       = 'no' or 'yes', this is done on the complete trial
@@ -170,14 +183,27 @@ if ~isfield(cfg, 'lpfilttype'),   cfg.lpfilttype = 'but';       end
 if ~isfield(cfg, 'hpfilttype'),   cfg.hpfilttype = 'but';       end
 if ~isfield(cfg, 'bpfilttype'),   cfg.bpfilttype = 'but';       end
 if ~isfield(cfg, 'bsfilttype'),   cfg.bsfilttype = 'but';       end
-if ~isfield(cfg, 'lpfiltdir'),    cfg.lpfiltdir = 'twopass';    end
-if ~isfield(cfg, 'hpfiltdir'),    cfg.hpfiltdir = 'twopass';    end
-if ~isfield(cfg, 'bpfiltdir'),    cfg.bpfiltdir = 'twopass';    end
-if ~isfield(cfg, 'bsfiltdir'),    cfg.bsfiltdir = 'twopass';    end
+if ~isfield(cfg, 'lpfiltdir'),    if strcmp(cfg.lpfilttype, 'firws'), cfg.lpfiltdir = 'onepass-zerophase'; else cfg.lpfiltdir = 'twopass'; end, end
+if ~isfield(cfg, 'hpfiltdir'),    if strcmp(cfg.hpfilttype, 'firws'), cfg.hpfiltdir = 'onepass-zerophase'; else cfg.hpfiltdir = 'twopass'; end, end
+if ~isfield(cfg, 'bpfiltdir'),    if strcmp(cfg.bpfilttype, 'firws'), cfg.bpfiltdir = 'onepass-zerophase'; else cfg.bpfiltdir = 'twopass'; end, end
+if ~isfield(cfg, 'bsfiltdir'),    if strcmp(cfg.bsfilttype, 'firws'), cfg.bsfiltdir = 'onepass-zerophase'; else cfg.bsfiltdir = 'twopass'; end, end
 if ~isfield(cfg, 'lpinstabilityfix'),    cfg.lpinstabilityfix = 'no';    end
 if ~isfield(cfg, 'hpinstabilityfix'),    cfg.hpinstabilityfix = 'no';    end
 if ~isfield(cfg, 'bpinstabilityfix'),    cfg.bpinstabilityfix = 'no';    end
 if ~isfield(cfg, 'bsinstabilityfix'),    cfg.bsinstabilityfix = 'no';    end
+if ~isfield(cfg, 'lpfiltdf'),     cfg.lpfiltdf = [];            end
+if ~isfield(cfg, 'hpfiltdf'),     cfg.hpfiltdf = [];            end
+if ~isfield(cfg, 'bpfiltdf'),     cfg.bpfiltdf = [];            end
+if ~isfield(cfg, 'bsfiltdf'),     cfg.bsfiltdf = [];            end
+if ~isfield(cfg, 'lpfiltwintype'),cfg.lpfiltwintype = 'hamming';end
+if ~isfield(cfg, 'hpfiltwintype'),cfg.hpfiltwintype = 'hamming';end
+if ~isfield(cfg, 'bpfiltwintype'),cfg.bpfiltwintype = 'hamming';end
+if ~isfield(cfg, 'bsfiltwintype'),cfg.bsfiltwintype = 'hamming';end
+if ~isfield(cfg, 'lpfiltdev'),    cfg.lpfiltdev = [];           end
+if ~isfield(cfg, 'hpfiltdev'),    cfg.hpfiltdev = [];           end
+if ~isfield(cfg, 'bpfiltdev'),    cfg.bpfiltdev = [];           end
+if ~isfield(cfg, 'bsfiltdev'),    cfg.bsfiltdev = [];           end
+if ~isfield(cfg, 'plotfiltresp'), cfg.plotfiltresp = 'no';      end
 if ~isfield(cfg, 'medianfilter'), cfg.medianfilter  = 'no';     end
 if ~isfield(cfg, 'medianfiltord'),cfg.medianfiltord = 9;        end
 if ~isfield(cfg, 'dftfreq'),      cfg.dftfreq = [50 100 150];   end
@@ -295,13 +321,13 @@ elseif strcmp(cfg.demean, 'yes')
 end
 
 if strcmp(cfg.medianfilter, 'yes'), dat = ft_preproc_medianfilter(dat, cfg.medianfiltord); end
-if strcmp(cfg.lpfilter, 'yes'),     dat = ft_preproc_lowpassfilter(dat, fsample, cfg.lpfreq, cfg.lpfiltord, cfg.lpfilttype, cfg.lpfiltdir, cfg.lpinstabilityfix); end
-if strcmp(cfg.hpfilter, 'yes'),     dat = ft_preproc_highpassfilter(dat, fsample, cfg.hpfreq, cfg.hpfiltord, cfg.hpfilttype, cfg.hpfiltdir, cfg.hpinstabilityfix); end
-if strcmp(cfg.bpfilter, 'yes'),     dat = ft_preproc_bandpassfilter(dat, fsample, cfg.bpfreq, cfg.bpfiltord, cfg.bpfilttype, cfg.bpfiltdir, cfg.bpinstabilityfix); end
+if strcmp(cfg.lpfilter, 'yes'),     dat = ft_preproc_lowpassfilter(dat, fsample, cfg.lpfreq, cfg.lpfiltord, cfg.lpfilttype, cfg.lpfiltdir, cfg.lpinstabilityfix, cfg.lpfiltdf, cfg.lpfiltwintype, cfg.lpfiltdev, cfg.plotfiltresp); end
+if strcmp(cfg.hpfilter, 'yes'),     dat = ft_preproc_highpassfilter(dat, fsample, cfg.hpfreq, cfg.hpfiltord, cfg.hpfilttype, cfg.hpfiltdir, cfg.hpinstabilityfix, cfg.hpfiltdf, cfg.hpfiltwintype, cfg.hpfiltdev, cfg.plotfiltresp); end
+if strcmp(cfg.bpfilter, 'yes'),     dat = ft_preproc_bandpassfilter(dat, fsample, cfg.bpfreq, cfg.bpfiltord, cfg.bpfilttype, cfg.bpfiltdir, cfg.bpinstabilityfix, cfg.bpfiltdf, cfg.bpfiltwintype, cfg.bpfiltdev, cfg.plotfiltresp); end
 if strcmp(cfg.bsfilter, 'yes')
   for i=1:size(cfg.bsfreq,1)
     % apply a bandstop filter for each of the specified bands, i.e. cfg.bsfreq should be Nx2
-    dat = ft_preproc_bandstopfilter(dat, fsample, cfg.bsfreq(i,:), cfg.bsfiltord, cfg.bsfilttype, cfg.bsfiltdir, cfg.bsinstabilityfix);
+    dat = ft_preproc_bandstopfilter(dat, fsample, cfg.bsfreq(i,:), cfg.bsfiltord, cfg.bsfilttype, cfg.bsfiltdir, cfg.bsinstabilityfix, cfg.bsfiltdf, cfg.bsfiltwintype, cfg.bsfiltdev, cfg.plotfiltresp);
   end
 end
 if strcmp(cfg.polyremoval, 'yes')
