@@ -29,7 +29,7 @@ assert(identical(source_coh_lft.pos(maxcohindx, :), [3.2000   -0.6000   7.4000],
 [maxval, maxpowindx] = max(source_diff.avg.pow);
 source_diff.pos(maxpowindx, :)
 
-assert(identical(source_diff.pos(maxpowindx, :), [ 0.8000   -8.6000    2.6000], 'reltol', 0.001), 'gamma power peak location not what it used to be!');
+assert(identical(source_diff.pos(maxpowindx, :), [0.4000   -8.8000    2.4000], 'reltol', 0.001), 'gamma power peak location not what it used to be!');
 
 cfg                   = [];
 cfg.covariance        = 'yes';
