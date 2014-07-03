@@ -111,8 +111,6 @@ cfg = ft_checkconfig(cfg, 'renamed',     {'blc', 'demean'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'blcwindow', 'baselinewindow'});
 
 % set the defaults
-if ~isfield(cfg, 'channel'),       cfg.channel      = 'all';  end
-if ~isfield(cfg, 'trials'),        cfg.trials       = 'all';  end
 if ~isfield(cfg, 'keeptrials'),    cfg.keeptrials   = 'no';   end
 if ~isfield(cfg, 'covariance'),    cfg.covariance   = 'no';   end
 if ~isfield(cfg, 'removemean'),    cfg.removemean   = 'yes';  end
@@ -120,18 +118,13 @@ if ~isfield(cfg, 'vartrllength'),  cfg.vartrllength = 0;      end
 if ~isfield(cfg, 'feedback'),      cfg.feedback     = 'text'; end
 if ~isfield(cfg, 'preproc'),       cfg.preproc      = [];     end
 
-% select trials of interest
-if ~strcmp(cfg.trials, 'all')
-  tmpcfg = [];
-  tmpcfg.trials = cfg.trials;
-  data = ft_selectdata(tmpcfg, data);
-  [cfg, data] = rollback_provenance(cfg, data);
-end
-
-ntrial = length(data.trial);
-
 % ensure that the preproc specific options are located in the cfg.preproc substructure
 cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'});
+
+% select channels and trials of interest, by default this will select all channels and trials
+tmpcfg = keepfields(cfg, {'trials', 'channel'});
+data = ft_selectdata(tmpcfg, data);
+[cfg, data] = rollback_provenance(cfg, data);
 
 if ~isempty(cfg.preproc)
   % preprocess the data, i.e. apply filtering, baselinecorrection, etc.
@@ -140,12 +133,12 @@ if ~isempty(cfg.preproc)
     cfg.preproc.feedback = cfg.feedback;
   end
   data = ft_preprocessing(cfg.preproc, data);
+  [cfg.preproc, data] = rollback_provenance(cfg.preproc, data);
 end
 
-% determine the channels of interest
-cfg.channel = ft_channelselection(cfg.channel, data.label);
-chansel     = match_str(data.label, cfg.channel);
-nchan       = length(cfg.channel);  % number of channels
+% determine the size of the data
+ntrial      = length(data.trial);
+nchan       = length(data.label);   % number of channels
 numsamples  = zeros(ntrial,1);      % number of selected samples in each trial, is determined later
 
 % determine the duration of each trial
@@ -261,7 +254,7 @@ for i=1:ntrial
     begsampl = nearest(data.time{i}, latency(1));
     endsampl = nearest(data.time{i}, latency(2));
     numsamples(i) = endsampl-begsampl+1;
-    dat = data.trial{i}(chansel, begsampl:endsampl);
+    dat = data.trial{i}(:, begsampl:endsampl);
     if (latency(1)<begsamplatency(i))
       trlshift = floor((begsamplatency(i)-latency(1))*data.fsample);
     else
@@ -284,7 +277,7 @@ for i=1:ntrial
     endsampl = nearest(data.time{i}, cfg.covariancewindow(2));
     numcovsigsamples(i) = endsampl-begsampl+1;
     % select the relevant samples from this trial, do NOT pad with zeros
-    dat = data.trial{i}(chansel, begsampl:endsampl);
+    dat = data.trial{i}(:, begsampl:endsampl);
     if ~isempty(dat)  % we did not exlude this case above
       if strcmp(cfg.removemean, 'yes')
         dat = ft_preproc_baselinecorrect(dat);
@@ -343,7 +336,7 @@ timelock.var        = var;
 %timelock.fsample    = data.fsample; % timelock.fsample is obsolete
 timelock.time       = linspace(latency(1), latency(2), size(avg,2));
 timelock.dof        = dof;
-timelock.label      = data.label(chansel);
+timelock.label      = data.label(:);
 if (strcmp(cfg.keeptrials,'yes'))
   timelock.trial = singtrial;
   timelock.dimord = 'rpt_chan_time';
