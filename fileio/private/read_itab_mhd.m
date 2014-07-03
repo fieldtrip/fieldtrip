@@ -164,7 +164,7 @@ mhd.u_center = fread(fid, [1 3], 'float');
 mhd.th_center      = fread(fid, [1 1], 'float');  %  sensor orientation as from markers fit
 mhd.fi_center= fread(fid, [1 1], 'float');
 mhd.rotation_angle= fread(fid, [1 1], 'float');
-mhd.cosdir = fread(fid, [3 3], 'float');         %  for compatibility only
+mhd.cosdir = fread(fid, [3 3], 'float');          %  for compatibility only
 mhd.irefsys      = fread(fid, [1 1], 'int32');    %  reference system   0 - sensor reference system
 %                     1 - Polhemus
 %                     2 - head3
@@ -172,8 +172,8 @@ mhd.irefsys      = fread(fid, [1 1], 'int32');    %  reference system   0 - sens
 
 %  Marker positions for MRI integration
 mhd.num_markers  = fread(fid, [1 1], 'int32');  %  Total number of markers
-mhd.i_coil = fread(fid, [1 64], 'int32');      %  Markers to be used to find sensor position
-mhd.marker = fread(fid, [3 64], 'int32');      %  Position of all the markers
+mhd.i_coil = fread(fid, [1 64], 'int32');       %  Markers to be used to find sensor position
+mhd.marker = fread(fid, [3 64], 'float');       %  Position of all the markers  -  MODIFIED VP
 mhd.best_chi     = fread(fid, [1 1], 'float');  %  Best chi_square value obtained in finding sensor position
 
 mhd.cup_vertex_center  = fread(fid, [1 1], 'float');    %  dist anc sensor  cente vertex  (as entered
