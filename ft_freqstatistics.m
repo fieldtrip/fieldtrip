@@ -107,6 +107,8 @@ if ~isfield(cfg,'design') || isempty(cfg.design)
   error('you should provide a design matrix in the cfg');
 end
 
+origvarargin = varargin;
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % data bookkeeping
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -225,6 +227,28 @@ if ~ischar(cfg.trials)
     error('subselection of trials is only allowed with a single data structure as input');
   end
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% make selection of the frequency, latency and channels that is present in all inputs
+tmpcfg = [];
+tmpcfg.trials      = cfg.trials;
+tmpcfg.channel     = cfg.channel;
+tmpcfg.latency     = cfg.latency;
+tmpcfg.frequency   = cfg.frequency;
+tmpcfg.avgoverchan = cfg.avgoverchan;
+tmpcfg.avgoverfreq = cfg.avgoverfreq;
+tmpcfg.avgovertime = cfg.avgovertime;
+[origvarargin{:}] = ft_selectdata(tmpcfg, origvarargin{:});
+% restore the provenance information
+[cfg, origvarargin{:}] = rollback_provenance(cfg, origvarargin{:});
+
+for i=1:length(varargin)
+try,  varargin{i} = rmfield(varargin{i}, 'cfg'); end
+try,  origvarargin{i} = rmfield(origvarargin{i}, 'cfg'); end
+end
+assert(isequal(varargin, origvarargin));
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 % concatenate into one data structure
 data = ft_appendfreq(cfg, varargin{:});
