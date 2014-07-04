@@ -76,11 +76,11 @@ cfg.freqhigh   = ft_getopt(cfg, 'chanlow');
 cfg.keeptrials = ft_getopt(cfg, 'keeptrials');
 
 % make selection of frequencies and channels
-tmpcfg = keepfields(cfg, 'freqlow', 'chanlow');
+tmpcfg = keepfields(cfg, {'freqlow', 'chanlow'});
 freqlow = ft_selectdata(tmpcfg, freqlow);
 [cfg, freqlow] = rollback_provenance(cfg, freqlow);
 
-tmpcfg = keepfields(cfg, 'freqhigh', 'chanhigh');
+tmpcfg = keepfields(cfg, {'freqhigh', 'chanhigh'});
 freqhigh = ft_selectdata(tmpcfg, freqhigh);
 [cfg, freqhigh] = rollback_provenance(cfg, freqhigh);
 
