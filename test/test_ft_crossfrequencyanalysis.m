@@ -143,7 +143,7 @@ function [sigs, T2]=inhibition(num,fs,shift,timdiff,hf,a,c,n1,n2)
 % generate simulation data
 % input:
 % num:     number of alpha cycles
-% fs:      sampling freqeucy
+% fs:      sampling frequency
 % hf:      gamma frequency
 % shift:   create directionality either alpha leads gamma or alpha lags gamma
 % timdiff:  alpha and gamma time lag
@@ -217,4 +217,3 @@ sigs = [alpha0;alphas;gamma;mix];
   end
 
 end
-

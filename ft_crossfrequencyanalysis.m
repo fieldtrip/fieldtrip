@@ -141,20 +141,20 @@ switch cfg.method
     
     if strcmp(cfg.keeptrials,'no')
       crsspctrm   = squeeze(abs(mean(cfcdata,1)));
-      dimord = 'chan_lf_hf' ;
+      dimord = 'chan_freqlow_freqhigh' ;
     else
       crsspctrm   = abs(cfcdata);
-      dimord = 'rpt_chan_lf_hf' ;
+      dimord = 'rpt_chan_freqlow_freqhigh' ;
     end
     
   case  'mvl'
     
     if strcmp(cfg.keeptrials,'no')
       crsspctrm   = squeeze(abs(mean(cfcdata,1)));
-      dimord = 'chan_lf_hf' ;
+      dimord = 'chan_freqlow_freqhigh' ;
     else
       crsspctrm   = abs(cfcdata);
-      dimord = 'rpt_chan_lf_hf' ;
+      dimord = 'rpt_chan_freqlow_freqhigh' ;
     end
     
   case  'mi'
@@ -162,7 +162,7 @@ switch cfg.method
     [ntrial,nchan,nlf,nhf,nbin] = size(cfcdata);
     
     if strcmp(cfg.keeptrials,'yes')
-      dimord = 'rpt_chan_lf_hf' ;
+      dimord = 'rpt_chan_freqlow_freqhigh' ;
       crsspctrm = zeros(ntrial,nchan,nlf,nhf);
       for k =1:ntrial
         for n=1:nchan
@@ -177,13 +177,13 @@ switch cfg.method
               mi(i,j) = nansum(P.* (log2(P)-log2(Q)))/log2(pha);
             end
           end
-          crsspctrm(k,n,:,:) =mi;
+          crsspctrm(k,n,:,:) = mi;
           
         end
       end
       
     else
-      dimord = 'chan_lf_hf' ;
+      dimord = 'chan_freqlow_freqhigh' ;
       crsspctrm = zeros(nchan,nlf,nhf);
       cfcdatamean = squeeze(mean(cfcdata,1));
       
