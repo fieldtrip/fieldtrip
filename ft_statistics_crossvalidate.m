@@ -12,6 +12,9 @@ function stat = ft_statistics_crossvalidate(cfg, dat, design)
 %   cfg.mva           = a multivariate analysis (default = {dml.standardizer dml.svm})
 %   cfg.statistic     = a cell-array of statistics to report (default = {'accuracy' 'binomial'})
 %   cfg.nfolds        = number of cross-validation folds (default = 5)
+%   cfg.resample      = true/false; upsample less occurring classes during
+%                       training and downsample often occurring classes
+%                       during testing (default = false)
 %
 % Returns:
 %   stat.statistic    = the statistics to report
@@ -56,8 +59,10 @@ if ~isfield(cfg,'statistic'),
 end
 
 if ~isfield(cfg,'nfolds'), cfg.nfolds = 5; end
+if ~isfield(cfg,'resample'), cfg.resample = false; end
 
-cv = dml.crossvalidator('mva',cfg.mva,'type','nfold','folds',cfg.nfolds,'compact',true,'verbose',true);
+cv = dml.crossvalidator('mva', cfg.mva, 'type', 'nfold', 'folds', cfg.nfolds,...
+  'resample', cfg.resample, 'compact', true, 'verbose', true);
 
 if any(isinf(dat(:)))
   warning('Inf encountered; replacing by zeros');
