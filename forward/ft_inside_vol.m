@@ -116,6 +116,53 @@ switch ft_voltype(vol)
     [pnt, tri] = headsurface(vol, [], 'inwardshift', inwardshift, 'surface', 'brain');
     inside = bounding_mesh(pos, pnt, tri);
     
+  case {'simbio'}
+    
+    brain = false(size(vol.tissue));
+    brain = brain | vol.tissue == find(strcmp(vol.tissuelabel, 'gray'));
+    brain = brain | vol.tissue == find(strcmp(vol.tissuelabel, 'white'));
+    brain = brain | vol.tissue == find(strcmp(vol.tissuelabel, 'csf'));
+    
+    minbrain = min(vol.pos(vol.hex(brain(:)), :), [], 1);
+    maxbrain = max(vol.pos(vol.hex(brain(:)), :), [], 1);
+    
+    minpos = min(pos, [], 1);
+    maxpos = max(pos, [], 1);
+    
+    % combine the two bounding boxes
+    minbox = max([minbrain; minpos], [], 1);
+    maxbox = min([maxbrain; maxpos], [], 1);
+    
+    % prune the mesh to the bounding box
+    discard1 = true(size(vol.hex,1),1);
+    discard2 = true(size(vol.hex,1),1);
+    for i=1:8
+      discard1 = discard1 & any(bsxfun(@minus, vol.pos(vol.hex(:,i),:), minbox)<0,2);
+      discard2 = discard2 & any(bsxfun(@minus, vol.pos(vol.hex(:,i),:), maxbox)>0,2);
+    end
+    discard = discard1 | discard2;
+    
+    fprintf('pruning mesh from %d to %d elements (%d%%)\n', length(discard), sum(discard), round(100*sum(discard)/length(discard)));
+    
+    vol.hex    = vol.hex(~discard,:);
+    vol.tissue = vol.tissue(~discard);
+    
+    % determine the center of each volume element
+    elementpos = zeros(size(vol.hex,1),3);
+    for i=1:8
+      elementpos = elementpos + vol.pos(vol.hex(:,i),:);
+    end
+    elementpos = elementpos/8;
+    
+    stopwatch = tic;
+    k = dsearchn(elementpos, pos(1,:));
+    t = toc(stopwatch);
+    fprintf('determining inside points, this takes about %d seconds\n', round(size(pos,1)*t));
+    k = dsearchn(elementpos, pos);
+    
+    % select the source positions that are inside the brain
+    inside = brain(k);
+    
   otherwise
     error('unrecognized volume conductor model');
 end
