@@ -57,6 +57,8 @@ end
 % other options such as location and transform are passed along to ft_plot_slice
 style     = ft_getopt(varargin(sellist), 'style', 'subplot');
 ori       = ft_getopt(varargin(sellist), 'orientation', eye(3));
+clim      = ft_getopt(varargin(sellist), 'clim', []);
+
 if strcmp(style, 'subplot')
   parents    = ft_getopt(varargin(sellist), 'parents');
   surfhandle = ft_getopt(varargin(sellist), 'surfhandle');
@@ -67,6 +69,12 @@ end
 
 if ~isa(dat, 'double')
   dat = cast(dat, 'double');
+end
+
+if ~isempty(clim)
+  % clip the data between the color limits
+  dat(dat<clim(1)) = clim(1);
+  dat(dat>clim(2)) = clim(2);
 end
 
 % determine the orientation key-value pair
