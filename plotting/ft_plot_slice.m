@@ -154,8 +154,10 @@ st = dbstack;
 if ~dointerp && numel(st)>1 && strcmp(st(2).name, 'ft_plot_montage'), dointerp = true; end
 
 % determine the corner points of the volume in voxel and in plotting space
-[corner_vox, corner_head] = cornerpoints(dim+1, transform);
-  
+% extend in all directions with one voxel, shift by half a voxel
+[corner_vox, corner_head] = cornerpoints(dim+1, transform*translate([-0.5 -0.5 -0.5]));
+corner_vox = corner_vox - 0.5;
+
 if dointerp
   %--------cut a slice using interpn
   
@@ -166,7 +168,7 @@ if dointerp
   else
     [X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
   end
-    
+  
   % define 'x' and 'y' axis in projection plane, the definition of x and y is more or less arbitrary
   [x, y] = projplane(ori); % z = ori
   
@@ -190,22 +192,22 @@ if dointerp
   siz        = size(squeeze(X2));
   pos        = [X2(:) Y2(:) Z2(:)]; clear X2 Y2 Z2;
   
+  % get the transformation matrix from plotting space to voxel space
+  % T1 = inv(transform);
+  
+  % get the transformation matrix to get the projection plane at the right location and orientation into plotting space
+  T2  = [x(:) y(:) ori(:) loc(:); 0 0 0 1];
+  
   if false
     % this is for debugging
-    ft_plot_mesh(ft_warp_apply(T2, pos))
     ft_plot_mesh(corner_head)
+    ft_plot_mesh(ft_warp_apply(T2, pos))
     axis on
     grid on
     xlabel('x')
     ylabel('y')
     zlabel('z')
   end
-  
-  % get the transformation matrix from plotting space to voxel space
-  % T1 = inv(transform);
-  
-  % get the transformation matrix to get the projection plane at the right location and orientation into plotting space
-  T2  = [x(:) y(:) ori(:) loc(:); 0 0 0 1];
   
   % get the transformation matrix from projection plane to voxel space
   % M = T1*T2;
@@ -222,7 +224,7 @@ if dointerp
   siz             = size(Xi);
   
   if domask,
-    Vmask = tight(interpn(X, Y, Z, mask, Xi, Yi, Zi, interpmethod));
+    Vmask = interpn(X, Y, Z, mask, Xi, Yi, Zi, interpmethod);
   end
   
   if ~isempty(Xi)
@@ -231,13 +233,18 @@ if dointerp
     % square, i.e. the number of elements in each of the dimensions of Xi, Yi
     % Zi should be 1 more than the functional data, and they should be displaced
     % by half a voxel distance
-    dx2 = mean(diff(Xi,[],2),2); dx1 = mean(diff(Xi,[],1),1);
-    dy2 = mean(diff(Yi,[],2),2); dy1 = mean(diff(Yi,[],1),1);
-    dz2 = mean(diff(Zi,[],2),2); dz1 = mean(diff(Zi,[],1),1);
     
-    Xi  = [Xi-0.5*dx2*ones(1,siz(2)) Xi(:,end)+0.5*dx2; Xi(end,:)+0.5*dx1 Xi(end,end)+0.5*(dx1(end)+dx2(end))];
-    Yi  = [Yi-0.5*dy2*ones(1,siz(2)) Yi(:,end)+0.5*dy2; Yi(end,:)+0.5*dy1 Yi(end,end)+0.5*(dy1(end)+dy2(end))];
-    Zi  = [Zi-0.5*dz2*ones(1,siz(2)) Zi(:,end)+0.5*dz2; Zi(end,:)+0.5*dz1 Zi(end,end)+0.5*(dz1(end)+dz2(end))];
+    % extend along dim 1
+    Xi = cat(1, Xi, Xi(end,:)+mean(diff(Xi,[],1),1));
+    Yi = cat(1, Yi, Yi(end,:)+mean(diff(Yi,[],1),1));
+    Zi = cat(1, Zi, Zi(end,:)+mean(diff(Zi,[],1),1));
+    % extend along dim 2
+    Xi = cat(2, Xi, Xi(:,end)+mean(diff(Xi,[],2),2));
+    Yi = cat(2, Yi, Yi(:,end)+mean(diff(Yi,[],2),2));
+    Zi = cat(2, Zi, Zi(:,end)+mean(diff(Zi,[],2),2));
+    % shift with half a voxel
+    Xi = Xi-0.5;
+    Yi = Yi-0.5;
   end
   
 else
@@ -321,11 +328,11 @@ if dointersect
     [xmesh, ymesh, zmesh] = intersect_plane(mesh{k}.pnt, mesh{k}.tri, v1, v2, v3);
     
     % draw each individual line segment of the intersection
-    if ~isempty(xmesh), 
-      p(k) = patch(xmesh', ymesh', zmesh', nan(1, size(xmesh,1)));
-      if ~isempty(intersectcolor),     set(p(k), 'EdgeColor', intersectcolor(k)); end
-      if ~isempty(intersectlinewidth), set(p(k), 'LineWidth', intersectlinewidth); end
-      if ~isempty(intersectlinestyle), set(p(k), 'LineStyle', intersectlinestyle); end
+    if ~isempty(xmesh),
+      p = patch(xmesh', ymesh', zmesh', nan(1, size(xmesh,1)));
+      if ~isempty(intersectcolor),     set(p, 'EdgeColor', intersectcolor(k)); end
+      if ~isempty(intersectlinewidth), set(p, 'LineWidth', intersectlinewidth); end
+      if ~isempty(intersectlinestyle), set(p, 'LineStyle', intersectlinestyle); end
     end
   end
 end
@@ -349,7 +356,7 @@ else
   axis equal
   axis vis3d
 end
-  
+
 % store for future reference
 previous_dim  = dim;
 
