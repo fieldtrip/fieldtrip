@@ -158,7 +158,6 @@ if ~dointerp && numel(st)>1 && strcmp(st(2).name, 'ft_plot_montage'), dointerp =
 [corner_vox, corner_head] = cornerpoints(dim+1, transform*translate([-0.5 -0.5 -0.5]));
 corner_vox = corner_vox - 0.5;
 
-dointerp = true
 if dointerp
   %--------cut a slice using interpn
   
