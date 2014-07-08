@@ -158,6 +158,7 @@ if ~dointerp && numel(st)>1 && strcmp(st(2).name, 'ft_plot_montage'), dointerp =
 [corner_vox, corner_head] = cornerpoints(dim+1, transform*translate([-0.5 -0.5 -0.5]));
 corner_vox = corner_vox - 0.5;
 
+dointerp = true
 if dointerp
   %--------cut a slice using interpn
   
@@ -188,7 +189,7 @@ if dointerp
   yplane = floor(min(corner_proj(:, 2))):resolution:ceil(max(corner_proj(:, 2)));
   zplane = 0;
   
-  [X2, Y2, Z2] = ndgrid(xplane, yplane, zplane); %2D cartesian grid of projection plane in plane voxels
+  [X2, Y2, Z2] = ndgrid(xplane, yplane, zplane); % 2D cartesian grid of projection plane in plane voxels
   siz        = size(squeeze(X2));
   pos        = [X2(:) Y2(:) Z2(:)]; clear X2 Y2 Z2;
   
@@ -228,11 +229,10 @@ if dointerp
   end
   
   if ~isempty(Xi)
-    % now adjust the Xi, Yi and Zi, to allow for the surface object
-    % convention, where the data point value is defined in the center of each
-    % square, i.e. the number of elements in each of the dimensions of Xi, Yi
-    % Zi should be 1 more than the functional data, and they should be displaced
-    % by half a voxel distance
+    % now adjust the Xi, Yi and Zi, to allow for the surface object convention, where
+    % the data point value is defined in the center of each square, i.e. the number
+    % of elements in each of the dimensions of Xi, Yi Zi should be 1 more than the
+    % functional data, and they should be displaced by half a voxel distance
     
     % extend along dim 1
     Xi = cat(1, Xi, Xi(end,:)+mean(diff(Xi,[],1),1));
@@ -245,6 +245,7 @@ if dointerp
     % shift with half a voxel
     Xi = Xi-0.5;
     Yi = Yi-0.5;
+    Zi = Zi-0.5;
   end
   
 else
@@ -255,9 +256,9 @@ else
   % the '+1' and '-0.5' are needed due to the difference between handling
   % of image and surf. Surf color data is defined in the center of each
   % square, hence needs axes and coordinate adjustment
-  if all(ori==[1 0 0]), xplane = loc(1);   yplane = 1:(dim(2)+1); zplane = 1:(dim(3)+1); end
-  if all(ori==[0 1 0]), xplane = 1:(dim(1)+1); yplane = loc(2);   zplane = 1:(dim(3)+1); end
-  if all(ori==[0 0 1]), xplane = 1:(dim(1)+1); yplane = 1:(dim(2)+1); zplane = loc(3);   end
+  if all(ori==[1 0 0]), xplane = loc(1);       yplane = 1:(dim(2)+1); zplane = 1:(dim(3)+1); end
+  if all(ori==[0 1 0]), xplane = 1:(dim(1)+1); yplane = loc(2);       zplane = 1:(dim(3)+1); end
+  if all(ori==[0 0 1]), xplane = 1:(dim(1)+1); yplane = 1:(dim(2)+1); zplane = loc(3);       end
   
   [Xi, Yi, Zi] = ndgrid(xplane-0.5, yplane-0.5, zplane-0.5); % coordinate is centre of the voxel, 1-based
   siz        = size(squeeze(Xi))-1;
