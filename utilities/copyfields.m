@@ -1,11 +1,12 @@
-function [s] = keepfields(s, fields)
+function [b] = copyfields(a, b, fields)
 
-% KEEPFIELDS makes a selection of the fields in a structure
+% COPYFIELDS copies a selection of the fields from one structure to another
 %
 % Use as
-%   s = keepfields(s, fields);
+%   b = copyfields(a, b, fields);
+% which copies the specified fields over from structure a to structure b.
 %
-% See also REMOVEFIELDS, COPYFIELDS
+% See also KEEPFIELDS, REMOVEFIELDS
 
 % Copyright (C) 2014, Robert Oostenveld
 %
@@ -27,8 +28,14 @@ function [s] = keepfields(s, fields)
 %
 % $Id$
 
-if isempty(s)
-   % this prevents problems if s is an empty double, i.e. []
+if isempty(a)
+  % this prevents problems if a is an empty double, i.e. []
+  return
+end
+
+if isempty(b)
+  % this prevents problems if a is an empty double, i.e. []
+  b = keepfields(a, fields);
   return
 end
 
@@ -38,7 +45,7 @@ elseif ~iscell(fields)
   error('fields input argument must be a cell array of strings or a single string');
 end
 
-fields = setdiff(fieldnames(s), fields);
+fields = intersect(fieldnames(a), fields);
 for i=1:numel(fields)
-  s = rmfield(s, fields{i});
+  b.(fields{i}) = a.(fields{i});
 end

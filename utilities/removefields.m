@@ -5,7 +5,7 @@ function [s] = removefields(s, fields)
 % Use as
 %   s = removefields(s, fields);
 %
-% See also KEEPFIELDS
+% See also KEEPFIELDS, COPYFIELDS
 
 % Copyright (C) 2014, Robert Oostenveld
 %
