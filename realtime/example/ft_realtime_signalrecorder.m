@@ -1,7 +1,7 @@
 function ft_realtime_signalrecorder(cfg)
 
-% FT_REALTIME_SIGNALRECORDER is an example realtime application for online
-% viewing of the data. It should work both for EEG and MEG.
+% FT_REALTIME_SIGNALRECORDER is an example realtime application for recording of data
+% that is streaming to the buffer in real-time. It should work both for EEG and MEG.
 %
 % Use as
 %   ft_realtime_signalrecorder(cfg)
