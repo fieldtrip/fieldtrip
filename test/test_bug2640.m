@@ -1,3 +1,11 @@
+function test_bug2640
+
+% TEST test_bug2640
+% TEST ft_plot_slice ft_plot_ortho
+
+% WALLTIME 00:10:00
+% MEM 1gb
+
 dim = [20, 30, 40];
 dat = 0.1*randn(dim);
 
