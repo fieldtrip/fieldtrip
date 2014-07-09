@@ -119,24 +119,28 @@ if isempty(transform)
 end
 
 % it should be a cell-array
-if ~iscell(mesh)
-  if isempty(mesh)
-    mesh = {};
-  else
-    mesh = {mesh};
+if isstruct(mesh)
+  tmp = mesh;
+  mesh = cell(size(tmp));
+  for i=1:numel(tmp)
+    mesh{i} = tmp(i);
   end
+else
+  mesh = {};
 end
 
 dointersect = ~isempty(mesh);
 if dointersect
   for k = 1:numel(mesh)
-    if isfield(mesh{k}, 'interp_center_pc')
+    if isfield(mesh{k}, 'pos')
       % use pos instead of pnt
       mesh{k}.pnt = mesh{k}.pos;
       mesh{k} = rmfield(mesh{k}, 'pos');
     end
     if ~isfield(mesh{k}, 'pnt') || ~isfield(mesh{k}, 'tri')
-      error('the mesh should be a structure with pnt and tri');
+      % error('the mesh should be a structure with pnt and tri');
+      mesh{k}.pnt = [];
+      mesh{k}.tri = [];
     end
   end
 end
@@ -224,16 +228,14 @@ V  = interpn(X, Y, Z, dat, Xi, Yi, Zi, interpmethod);
 
 if all(isnan(V(:)))
   % the projection plane lies completely outside the box spanned by the data
-  h = [];
-  return;
+else
+  % trim the edges of the projection plane
+  [sel1, sel2] = tight(V);
+  V  = V (sel1,sel2);
+  Xi = Xi(sel1,sel2);
+  Yi = Yi(sel1,sel2);
+  Zi = Zi(sel1,sel2);
 end
-
-% trim the edges of the projection plane
-[sel1, sel2] = tight(V);
-V  = V (sel1,sel2);
-Xi = Xi(sel1,sel2);
-Yi = Yi(sel1,sel2);
-Zi = Zi(sel1,sel2);
 
 if domask,
   Vmask = interpn(X, Y, Z, mask, Xi, Yi, Zi, interpmethod);

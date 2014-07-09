@@ -181,8 +181,7 @@ mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes');
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'realignfiducial', 'fiducial'});
-cfg = ft_checkconfig(cfg, 'renamed', {'landmark', 'fiducial'});
-cfg = ft_checkconfig(cfg, 'renamedval', {'landmark', 'fiducial'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'landmark', 'fiducial'}); % cfg.landmark -> cfg.fiducial 
 
 % set the defaults
 cfg.coordsys   = ft_getopt(cfg, 'coordsys',  []);
