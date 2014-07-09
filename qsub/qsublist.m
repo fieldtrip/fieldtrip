@@ -164,7 +164,7 @@ switch cmd
           retval = strcmp(strtrim(jobstatus), 'DONE');
         case 'sge'
           [dum, jobstatus] = system(['qstat -s z | grep ' pbsid ' | awk ''{print $5}''']);
-          retval = strcmp(strtrim(jobstatus), 'z');
+          retval = strcmp(strtrim(jobstatus), 'z') | strcmp(strtrim(jobstatus), 'qw');
         case 'slurm'
           % only return the status based on the presence of the output files
           % FIXME it would be good to implement a proper check for slurm as well
