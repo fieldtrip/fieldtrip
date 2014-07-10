@@ -126,7 +126,7 @@ for k = 1:numel(cfg.parameter)
     freqOut.(par) = ...
       performNormalization(freq.time, freq.(par), cfg.baseline, cfg.baselinetype);
     
-  elseif strcmp(freq.dimord, 'rpt_chan_freq_time') || strcmp(freq.dimord, 'chan_chan_freq_time')
+  elseif strcmp(freq.dimord, 'rpt_chan_freq_time') || strcmp(freq.dimord, 'chan_chan_freq_time') || strcmp(freq.dimord, 'subj_chan_freq_time')
     
     freqOut.(par) = zeros(size(freq.(par)));
     
