@@ -913,7 +913,7 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'sparsewithpow')
     data.dimord = ['rpt_',data.dimord];
   end
   
-  if flag, siz = size(data.crsspctrm); data.crsspctrm = reshape(data.crsspctrm, siz(2:end)); end
+  if flag, siz = size(data.crsspctrm); data.crsspctrm = reshape(data.crsspctrm, [siz(2:end) 1]); end
 elseif strcmp(current, 'fourier') && strcmp(desired, 'sparse')
   
   if isempty(channelcmb), error('no channel combinations are specified'); end
@@ -993,7 +993,7 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'sparse')
     data.dimord = ['rpt_',data.dimord];
   end
   
-  if flag, siz = size(data.crsspctrm); data.crsspctrm = reshape(data.crsspctrm, siz(2:end)); end
+  if flag, siz = size(data.crsspctrm); data.crsspctrm = reshape(data.crsspctrm, [siz(2:end) 1]); end
 elseif strcmp(current, 'fourier') && strcmp(desired, 'full')
   
   % this is how it is currently and the desired functionality of prepare_freq_matrices
