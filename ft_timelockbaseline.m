@@ -62,7 +62,8 @@ if abort
 end
 
 % check if the input data is valid for this function
-timelock = ft_checkdata(timelock, 'datatype', 'timelock', 'feedback', 'yes');
+timelock = ft_checkdata(timelock, 'datatype',...
+  {'timelock+comp', 'timelock'}, 'feedback', 'yes');
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed', {'blc', 'demean'});

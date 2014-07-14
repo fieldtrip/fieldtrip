@@ -57,7 +57,8 @@ if abort
 end
 
 % check if the input data is valid for this function
-freq = ft_checkdata(freq, 'datatype', 'freq', 'feedback', 'yes');
+freq = ft_checkdata(freq, 'datatype',...
+  {'freq+comp', 'freq'}, 'feedback', 'yes');
 
 % update configuration fieldnames
 cfg              = ft_checkconfig(cfg, 'renamed', {'param', 'parameter'});
@@ -69,7 +70,7 @@ cfg.parameter    =  ft_getopt(cfg, 'parameter', 'powspctrm');
 
 % check validity of input options
 cfg =               ft_checkopt(cfg, 'baseline', {'char', 'doublevector'});
-cfg =               ft_checkopt(cfg, 'baselinetype', 'char', {'absolute', 'relative', 'relchange','db'});
+cfg =               ft_checkopt(cfg, 'baselinetype', 'char', {'absolute', 'relative', 'relchange','db', 'vssum'});
 cfg =               ft_checkopt(cfg, 'parameter', {'char', 'charcell'});
 
 % make sure cfg.parameter is a cell array of strings
@@ -107,15 +108,8 @@ freqOut.freq   = freq.freq;
 freqOut.dimord = freq.dimord;
 freqOut.time   = freq.time;
 
-if isfield(freq, 'grad')
-  freqOut.grad = freq.grad;
-end
-if isfield(freq, 'elec')
-  freqOut.elec = freq.elec;
-end
-if isfield(freq, 'trialinfo')
-  freqOut.trialinfo = freq.trialinfo;
-end
+freqOut = copyfields(freq, freqOut,...
+  {'grad', 'elec', 'trialinfo','topo', 'topolabel', 'unmixing'});
 
 % loop over all fields that should be normalized
 for k = 1:numel(cfg.parameter)
@@ -182,6 +176,8 @@ elseif (strcmp(baselinetype, 'relative'))
   data = data ./ meanVals;
 elseif (strcmp(baselinetype, 'relchange'))
   data = (data - meanVals) ./ meanVals;
+elseif (strcmp(baselinetype, 'vssum'))
+  data = (data - meanVals) ./ (data + meanVals);
 elseif (strcmp(baselinetype, 'db'))
   data = 10*log10(data ./ meanVals);
 else
