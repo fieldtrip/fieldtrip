@@ -281,8 +281,15 @@ if ~isempty(dtype)
     end % switch dtype
   end % for dtype
   
-  % try to convert the data
+  % try to convert the data if needed
   for iCell = 1:length(dtype)
+    if okflag
+      % the requested datatype is specified in descending order of
+      % preference (if there is a preference at all), so don't bother
+      % checking the rest of the requested data types if we already
+      % succeeded in converting
+      break;
+    end
     if isequal(dtype(iCell), {'parcellation'}) && issegmentation
       data = volume2source(data); % segmentation=volume, parcellation=source
       data = ft_datatype_parcellation(data);
@@ -421,14 +428,6 @@ if ~isempty(dtype)
       isspike = 0;
       israw   = 1;
       okflag  = 1;
-    end
-
-    if okflag
-      % the requested datatype is specified in descending order of
-      % preference (if there is a preference at all), so don't bother
-      % checking the rest of the requested data types if we already
-      % succeeded in converting
-      break;
     end
   end % for iCell
   
