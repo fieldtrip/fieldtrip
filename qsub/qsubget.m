@@ -138,7 +138,7 @@ if completed
     % use the stderr and stdout output rather than the MATLAB results
     options = {'lasterr', err, 'diary', stdout};
   elseif isempty(ft_getopt(options, 'lasterr'))
-    fprintf('job %s returned, it required %s and %s\n', jobid, print_tim(ft_getopt(options, 'timused', nan)), print_mem(ft_getopt(options, 'memused', nan)));
+    fprintf('job %s returned, it required %s and %s on %s\n', jobid, print_tim(ft_getopt(options, 'timused', nan)), print_mem(ft_getopt(options, 'memused', nan)), ft_getopt(options, 'hostname', 'unknown'));
   end
   
   % look at the optional arguments
