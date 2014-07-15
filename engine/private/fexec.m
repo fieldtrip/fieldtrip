@@ -187,7 +187,7 @@ try
   fprintf('executing job took %f seconds and %d bytes\n', timused, memused);
   
   % collect the output options
-  optout = {'timused', timused, 'memused', memused, 'lastwarn', lastwarn, 'lasterr', '', 'diary', diarystring, 'release', version('-release'), 'pwd', pwd, 'path', path};
+  optout = {'timused', timused, 'memused', memused, 'lastwarn', lastwarn, 'lasterr', '', 'diary', diarystring, 'release', version('-release'), 'pwd', pwd, 'path', path, 'hostname', getenv('HOSTNAME')};
   
 catch
   % the "catch me" syntax is broken on MATLAB74, this fixes it
