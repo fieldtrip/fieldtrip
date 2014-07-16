@@ -111,10 +111,34 @@ if abort
   return
 end
 
-% make sure figure window titles are labeled appropriately, pass this onto
-% the actual plotting function
-% if we don't specify this, the window will be called 'ft_topoplotTFR',
-% which is confusing to the user
+% check if the input data is valid for this function
+% this will remove all time-series information
+comp = ft_checkdata(comp, 'datatype', 'comp');
+
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'required', 'component');
+
+% set the config defaults
+cfg.title = ft_getopt(cfg, 'title', 'auto');
+
+% interactive plotting doesn't work for chan_comp dimord.
+if isfield(cfg, 'interactive') && strcmp(cfg.interactive, 'yes')
+  warning('Interactive plotting is not supported.');
+end
+cfg.interactive = 'no';
+
+% prepare the layout only once
+cfg.layout = ft_prepare_layout(cfg, comp);
+
+% don't show the callinfo for each separate component
+cfg.showcallinfo = 'no';
+
+% create temporary variable to prevent overwriting the selected components
+selcomp = cfg.component;
+
+% make sure figure window titles are labeled appropriately, pass this onto the actual
+% plotting function if we don't specify this, the window will be called
+% 'ft_topoplotTFR', which is confusing to the user
 cfg.funcname = mfilename;
 if nargin > 1
   cfg.dataname = {inputname(2)};
@@ -123,49 +147,30 @@ if nargin > 1
   end
 end
 
-% check if the input data is valid for this function
-% this will remove all time-series information
-comp = ft_checkdata(comp, 'datatype', 'comp');
-
-% check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'required', 'component');
-
-cfg.title = ft_getopt(cfg, 'title', 'auto');
-
-% prepare the layout only once
-cfg.layout = ft_prepare_layout(cfg, comp); 
-
-% don't show the callinfo for each separate component
-cfg.showcallinfo = 'no';
-
-% interactive plotting doesn't work for chan_comp dimord. 
-if isfield(cfg, 'interactive') && strcmp(cfg.interactive, 'yes')
-  warning('Interactive plotting is not supported.');
-end
-cfg.interactive = 'no';
-
-% create temporary variable
-selcomp = cfg.component;
-
-% allow multiplotting
 nplots = numel(selcomp);
 if nplots>1
+  % make multiple plots in a single figure
   nyplot = ceil(sqrt(nplots));
   nxplot = ceil(nplots./nyplot);
   for i = 1:length(selcomp)
     subplot(nxplot, nyplot, i);
     cfg.component = selcomp(i);
-    ft_topoplotTFR(cfg, comp);
+    
+    % call the common function that is shared with ft_topoplotER and ft_topoplotTFR
+    [cfg] = topoplot_common(cfg, comp);
     
     if strcmp(cfg.title, 'auto')
       title(['component ' num2str(selcomp(i))]);
     elseif ~strcmp(cfg.title, 'off')
       title(cfg.title);
     end
-  end
+  end % for all components
+  
 else
   cfg.component = selcomp;
-  ft_topoplotTFR(cfg, comp);
+  
+  % call the common function that is shared with ft_topoplotER and ft_topoplotTFR
+  [cfg] = topoplot_common(cfg, comp);
   
   if strcmp(cfg.title, 'auto')
     title(['component ' num2str(selcomp)]);
@@ -174,10 +179,14 @@ else
   end
 end
 
+% remove this field again, it is only used for figure labels
+if isfield(cfg, 'funcname'),
+  cfg = rmfield(cfg, 'funcname');
+end
+
 % show the callinfo for all components together
 cfg.showcallinfo = 'yes';
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble provenance
 ft_postamble previous comp
-

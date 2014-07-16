@@ -1,7 +1,7 @@
 function cfg = topoplot_common(cfg, varargin)
 
-% TOPOPLOT_COMMON is shared by FT_TOPOPLOTTFR and FT_TOPOPLOTER, which
-% serve as placeholder for the documentation and pre/postamble.
+% TOPOPLOT_COMMON is shared by FT_TOPOPLOTTFR, FT_TOPOPLOTER and FT_TOPOPLOTIC, which
+% serve as placeholder for the documentation and for the pre/postamble.
 
 % Copyright (C) 2005-2011, F.C. Donders Centre
 %
@@ -115,31 +115,31 @@ cfg = ft_checkconfig(cfg, 'forbidden',  {'hllinewidth', ...
   'highlightfacecolor', ...
   'showlabels'});
 
-% Set other config defaults:
-cfg.xlim           = ft_getopt(cfg, 'xlim',          'maxmin');
-cfg.ylim           = ft_getopt(cfg, 'ylim',          'maxmin');
-cfg.zlim           = ft_getopt(cfg, 'zlim',          'maxmin');
-cfg.style          = ft_getopt(cfg, 'style',         'both');
-cfg.gridscale      = ft_getopt(cfg, 'gridscale',     67);
-cfg.interplimits   = ft_getopt(cfg, 'interplimits',  'head');
-cfg.interpolation  = ft_getopt(cfg, 'interpolation', 'v4');
-cfg.contournum     = ft_getopt(cfg, 'contournum',    6);
-cfg.colorbar       = ft_getopt(cfg, 'colorbar',      'no');
-cfg.shading        = ft_getopt(cfg, 'shading',       'flat');
-cfg.comment        = ft_getopt(cfg, 'comment',       'auto');
-cfg.commentpos     = ft_getopt(cfg, 'commentpos',    'leftbottom');
-cfg.fontsize       = ft_getopt(cfg, 'fontsize',      8);
-cfg.baseline       = ft_getopt(cfg, 'baseline',      'no'); %to avoid warning in timelock/freqbaseline
-cfg.trials         = ft_getopt(cfg, 'trials',        'all');
-cfg.interactive    = ft_getopt(cfg, 'interactive',   'yes');
-cfg.hotkeys        = ft_getopt(cfg, 'hotkeys',       'no');
-cfg.renderer       = ft_getopt(cfg, 'renderer',      []); % matlab sets the default
-cfg.marker         = ft_getopt(cfg, 'marker',        'on');
-cfg.markersymbol   = ft_getopt(cfg, 'markersymbol',  'o');
-cfg.markercolor    = ft_getopt(cfg, 'markercolor',   [0 0 0]);
-cfg.markersize     = ft_getopt(cfg, 'markersize',    2);
-cfg.markerfontsize = ft_getopt(cfg, 'markerfontsize', 8);
-cfg.highlight      = ft_getopt(cfg, 'highlight',     'off');
+% Set other config defaults
+cfg.xlim              = ft_getopt(cfg, 'xlim',          'maxmin');
+cfg.ylim              = ft_getopt(cfg, 'ylim',          'maxmin');
+cfg.zlim              = ft_getopt(cfg, 'zlim',          'maxmin');
+cfg.style             = ft_getopt(cfg, 'style',         'both');
+cfg.gridscale         = ft_getopt(cfg, 'gridscale',     67);
+cfg.interplimits      = ft_getopt(cfg, 'interplimits',  'head');
+cfg.interpolation     = ft_getopt(cfg, 'interpolation', 'v4');
+cfg.contournum        = ft_getopt(cfg, 'contournum',    6);
+cfg.colorbar          = ft_getopt(cfg, 'colorbar',      'no');
+cfg.shading           = ft_getopt(cfg, 'shading',       'flat');
+cfg.comment           = ft_getopt(cfg, 'comment',       'auto');
+cfg.commentpos        = ft_getopt(cfg, 'commentpos',    'leftbottom');
+cfg.fontsize          = ft_getopt(cfg, 'fontsize',      8);
+cfg.baseline          = ft_getopt(cfg, 'baseline',      'no'); %to avoid warning in timelock/freqbaseline
+cfg.trials            = ft_getopt(cfg, 'trials',        'all');
+cfg.interactive       = ft_getopt(cfg, 'interactive',   'yes');
+cfg.hotkeys           = ft_getopt(cfg, 'hotkeys',       'no');
+cfg.renderer          = ft_getopt(cfg, 'renderer',      []); % matlab sets the default
+cfg.marker            = ft_getopt(cfg, 'marker',        'on');
+cfg.markersymbol      = ft_getopt(cfg, 'markersymbol',  'o');
+cfg.markercolor       = ft_getopt(cfg, 'markercolor',   [0 0 0]);
+cfg.markersize        = ft_getopt(cfg, 'markersize',    2);
+cfg.markerfontsize    = ft_getopt(cfg, 'markerfontsize', 8);
+cfg.highlight         = ft_getopt(cfg, 'highlight',     'off');
 cfg.highlightchannel  = ft_getopt(cfg, 'highlightchannel',  'all', 1); % highlight may be 'on', making highlightchannel {} meaningful
 cfg.highlightsymbol   = ft_getopt(cfg, 'highlightsymbol',   '*');
 cfg.highlightcolor    = ft_getopt(cfg, 'highlightcolor',    [0 0 0]);
@@ -702,7 +702,7 @@ hold on
 if strcmp(cfg.interplimits,'head')
   interplimits = 'mask';
 else
-  interplimits = cfg.interplimits; 
+  interplimits = cfg.interplimits;
 end
 if strcmp(cfg.style,'both');            style = 'surfiso';     end
 if strcmp(cfg.style,'straight');        style = 'surf';        end
