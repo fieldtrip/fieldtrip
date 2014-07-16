@@ -197,6 +197,11 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function info = walktree(cfg)
 
+if isempty(cfg) && ~isstruct(cfg)
+  % it should be an empty struct
+  cfg = struct();
+end
+
 this = getnode(cfg);
 
 % parse all previous steps

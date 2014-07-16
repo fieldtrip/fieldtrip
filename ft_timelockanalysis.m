@@ -119,7 +119,7 @@ cfg.removemean   = ft_getopt(cfg, 'removemean',  'yes');
 cfg.vartrllength = ft_getopt(cfg, 'vartrllength', 0);
 cfg.feedback     = ft_getopt(cfg, 'feedback', '   text');
 
-if ft_getopt(cfg, 'preproc'), cfg.preproc = [];end
+if ~isfield(cfg, 'preproc'), cfg.preproc = []; end
 
 % ensure that the preproc specific options are located in the cfg.preproc substructure
 cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'});
