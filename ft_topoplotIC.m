@@ -104,7 +104,10 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
+ft_preamble loadvar    comp
+ft_preamble provenance comp
+ft_preamble trackconfig
+ft_preamble debug
 
 % the abort variable is set to true or false in ft_preamble_init
 if abort
@@ -127,7 +130,7 @@ if isfield(cfg, 'interactive') && strcmp(cfg.interactive, 'yes')
 end
 cfg.interactive = 'no';
 
-% prepare the layout only once
+% prepare the layout, this should be done only once
 cfg.layout = ft_prepare_layout(cfg, comp);
 
 % don't show the callinfo for each separate component
@@ -180,13 +183,19 @@ else
 end
 
 % remove this field again, it is only used for figure labels
-if isfield(cfg, 'funcname'),
-  cfg = rmfield(cfg, 'funcname');
-end
+cfg = removefields(cfg, 'funcname');
 
 % show the callinfo for all components together
 cfg.showcallinfo = 'yes';
 
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble provenance
+ft_postamble trackconfig
 ft_postamble previous comp
+ft_postamble provenance
+ft_postamble debug
+
+if ~nargout
+  clear cfg
+end
+
+

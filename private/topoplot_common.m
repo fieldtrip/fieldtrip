@@ -25,11 +25,6 @@ function cfg = topoplot_common(cfg, varargin)
 
 revision = '$Id$';
 
-% do the general setup of the function, path of this was already done in the
-% ft_topoplotER or ft_topoplotTFR function that wraps around this one
-ft_preamble trackconfig
-ft_preamble debug
-ft_preamble loadvar varargin
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'unused',     {'cohtargetchannel'});
@@ -331,10 +326,6 @@ elseif isfield(data, 'labelcmb') && strcmp(cfg.interactive, 'no')
   selchannel = ft_channelselection(cfg.channel, unique(data.labelcmb(:)));
 end
 
-% Read or create the layout that will be used for plotting:
-lay = ft_prepare_layout(cfg, data);
-cfg.layout = lay;
-
 % Create time-series of small topoplots:
 if ~ischar(cfg.xlim) && length(cfg.xlim)>2 %&& any(ismember(dimtok, 'time'))
   % Switch off interactive mode:
@@ -393,13 +384,13 @@ if (isfull || haslabelcmb) && (isfield(data, cfg.parameter) && ~strcmp(cfg.param
   if strcmp(cfg.refchannel, 'gui')
     % Open a single figure with the channel layout, the user can click on a reference channel
     h = clf;
-    ft_plot_lay(lay, 'box', false);
+    ft_plot_lay(cfg.layout, 'box', false);
     title('Select the reference channel by dragging a selection window, more than 1 channel can be selected...');
     % add the channel information to the figure
     info       = guidata(gcf);
-    info.x     = lay.pos(:,1);
-    info.y     = lay.pos(:,2);
-    info.label = lay.label;
+    info.x     = cfg.layout.pos(:,1);
+    info.y     = cfg.layout.pos(:,2);
+    info.label = cfg.layout.label;
     guidata(h, info);
     % attach data to the figure with the current axis handle as a name
     dataname = num2str(gca);
@@ -740,22 +731,22 @@ if ~strcmp(cfg.style,'blank')
   end
   ft_plot_topo(chanX,chanY,datavector,opt{:});
 elseif ~strcmp(cfg.style,'blank')
-  ft_plot_lay(lay,'box','no','label','no','point','no')
+  ft_plot_lay(cfg.layout,'box','no','label','no','point','no')
 end
 
 % Plotting markers for channels and/or highlighting a selection of channels
 highlightchansel = []; % used for remembering selection of channels
-templay.outline = lay.outline;
-templay.mask    = lay.mask;
+templay.outline = cfg.layout.outline;
+templay.mask    = cfg.layout.mask;
 % For Highlight (channel-selection)
 for icell = 1:length(cfg.highlight)
   if ~strcmp(cfg.highlight{icell},'off')
-    [dum labelindex]   = match_str(ft_channelselection(cfg.highlightchannel{icell}, data.label), lay.label);
+    [dum labelindex]   = match_str(ft_channelselection(cfg.highlightchannel{icell}, data.label), cfg.layout.label);
     highlightchansel   = [highlightchansel; match_str(data.label,ft_channelselection(cfg.highlightchannel{icell}, data.label))];
-    templay.pos        = lay.pos(labelindex,:);
-    templay.width      = lay.width(labelindex);
-    templay.height     = lay.height(labelindex);
-    templay.label      = lay.label(labelindex);
+    templay.pos        = cfg.layout.pos(labelindex,:);
+    templay.width      = cfg.layout.width(labelindex);
+    templay.height     = cfg.layout.height(labelindex);
+    templay.label      = cfg.layout.label(labelindex);
     if strcmp(cfg.highlight{icell}, 'labels') || strcmp(cfg.highlight{icell}, 'numbers')
       labelflg = 1;
     else
@@ -783,11 +774,11 @@ if ~strcmp(cfg.marker,'off')
     channelsNotMark = union(find(isnan(dat)),highlightchansel);
   end
   channelsToMark(channelsNotMark) = [];
-  [dum labelindex] = match_str(ft_channelselection(channelsToMark, data.label),lay.label);
-  templay.pos      = lay.pos(labelindex,:);
-  templay.width    = lay.width(labelindex);
-  templay.height   = lay.height(labelindex);
-  templay.label    = lay.label(labelindex);
+  [dum labelindex] = match_str(ft_channelselection(channelsToMark, data.label),cfg.layout.label);
+  templay.pos      = cfg.layout.pos(labelindex,:);
+  templay.width    = cfg.layout.width(labelindex);
+  templay.height   = cfg.layout.height(labelindex);
+  templay.label    = cfg.layout.label(labelindex);
   if strcmp(cfg.marker, 'labels') || strcmp(cfg.marker, 'numbers')
     labelflg = 1;
   else
@@ -847,9 +838,9 @@ if strcmp(cfg.interactive, 'yes')
   % add the channel position information to the figure
   % this section is required for ft_select_channel to do its work
   info       = guidata(gcf);
-  info.x     = lay.pos(:,1);
-  info.y     = lay.pos(:,2);
-  info.label = lay.label;
+  info.x     = cfg.layout.pos(:,1);
+  info.y     = cfg.layout.pos(:,2);
+  info.label = cfg.layout.label;
   guidata(gcf, info);
   % attach data to the figure with the current axis handle as a name
   dataname = num2str(gca);
@@ -912,10 +903,6 @@ if numel(findobj(gcf, 'type', 'axes')) <= 1
   uimenu(ftmenu, 'Label', 'Show pipeline',  'Callback', {@menu_pipeline, cfg});
   uimenu(ftmenu, 'Label', 'About',  'Callback', @menu_about);
 end
-
-% do the general cleanup and bookkeeping at the end of the function
-ft_postamble debug
-ft_postamble trackconfig
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION which is called after selecting channels in case of cfg.refchannel='gui'
