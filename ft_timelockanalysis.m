@@ -111,19 +111,25 @@ cfg = ft_checkconfig(cfg, 'renamed',     {'blc', 'demean'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'blcwindow', 'baselinewindow'});
 
 % set the defaults
-if ~isfield(cfg, 'keeptrials'),    cfg.keeptrials   = 'no';   end
-if ~isfield(cfg, 'covariance'),    cfg.covariance   = 'no';   end
-if ~isfield(cfg, 'removemean'),    cfg.removemean   = 'yes';  end
-if ~isfield(cfg, 'vartrllength'),  cfg.vartrllength = 0;      end
-if ~isfield(cfg, 'feedback'),      cfg.feedback     = 'text'; end
-if ~isfield(cfg, 'preproc'),       cfg.preproc      = [];     end
+cfg.trials      = ft_getopt(cfg, 'trials',     'all');
+cfg.channel     = ft_getopt(cfg, 'channel',    'all');
+cfg.keeptrials   = ft_getopt(cfg, 'keeptrials',  'no');
+cfg.covariance   = ft_getopt(cfg, 'covariance',  'no');
+cfg.removemean   = ft_getopt(cfg, 'removemean',  'yes');
+cfg.vartrllength = ft_getopt(cfg, 'vartrllength', 0);
+cfg.feedback     = ft_getopt(cfg, 'feedback', '   text');
+
+if ft_getopt(cfg, 'preproc'), cfg.preproc = [];end
 
 % ensure that the preproc specific options are located in the cfg.preproc substructure
 cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'});
 
-% select channels and trials of interest, by default this will select all channels and trials
-tmpcfg = keepfields(cfg, {'trials', 'channel'});
+% select trials of interest
+tmpcfg = [];
+tmpcfg.trials = cfg.trials;
+tmpcfg.channel = cfg.channel;
 data = ft_selectdata(tmpcfg, data);
+% restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
 
 if ~isempty(cfg.preproc)
