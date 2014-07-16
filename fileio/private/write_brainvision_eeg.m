@@ -58,6 +58,12 @@ headerfile = fullfile(p, [f '.vhdr']);
 markerfile = fullfile(p, [f '.vmrk']);
 datafile   = fullfile(p, [f '.eeg']);
 
+% the files internally refer to each other, this should be without the leading directory
+headerfile_without_path = [f '.vhdr'];
+markerfile_without_path = [f '.vmrk'];
+datafile_without_path   = [f '.eeg'];
+
+
 % open the data file and write the binary data
 fid = fopen(datafile, 'wb', 'ieee-le');
 if length(size(dat))>2
@@ -77,9 +83,9 @@ fprintf(fid, 'Brain Vision Data Exchange Header File Version 1.0\r\n');
 fprintf(fid, '; Data created by FieldTrip\r\n');
 fprintf(fid, '\r\n');
 fprintf(fid, '[Common Infos]\r\n');
-fprintf(fid, 'DataFile=%s\r\n',          datafile);
+fprintf(fid, 'DataFile=%s\r\n',          datafile_without_path);
 if ~isempty(markerfile)
-  fprintf(fid, 'MarkerFile=%s\r\n',      markerfile);
+  fprintf(fid, 'MarkerFile=%s\r\n',      markerfile_without_path);
 end
 fprintf(fid, 'DataFormat=%s\r\n',        hdr.DataFormat);
 fprintf(fid, 'DataOrientation=%s\r\n',   hdr.DataOrientation);
@@ -105,7 +111,7 @@ fprintf(fid, 'Brain Vision Data Exchange Marker File, Version 1.0\n');
 fprintf(fid, '\n');
 fprintf(fid, '[Common Infos]\n');
 fprintf(fid, 'Codepage=UTF-8\n');
-fprintf(fid, 'DataFile=%s\n', datafile);
+fprintf(fid, 'DataFile=%s\n', datafile_without_path);
 fprintf(fid, '\n');
 fprintf(fid, '[Marker Infos]\n');
 fprintf(fid, '; Each entry: Mk<Marker number>=<Type>,<Description>,<Position in data points>,\n');
@@ -113,7 +119,21 @@ fprintf(fid, '; <Size in data points>, <Channel number (0 = marker is related to
 fprintf(fid, '; Fields are delimited by commas, some fields might be omitted (empty).\n');
 fprintf(fid, '; Commas in type or description text are coded as "\1".\n');
 for i=1:length(event)
-  warning('writing of events is not yet implemented');
-  % FIXME implement event writing, see http://bugzilla.fcdonders.nl/show_bug.cgi?id=2649
+  type  = event(i).type;          % type is always a string
+  descr = event(i).value;         % value can be empty, string or numeric
+  if isempty(descr),
+    descr = '';
+  elseif isnumeric(descr)
+    descr = num2str(descr);
+  end
+  pos = num2str(event(i).sample); % sample is always numeric, hence convert to string
+  siz = event(i).duration;        % duration can be empty or numeric
+  if isempty(siz),
+    siz = '1';
+  else
+    siz = num2str(siz);
+  end
+  chan = '0';
+  fprintf(fid, 'Mk%d=%s,%s,%s,%s,%s\n', i, type, descr, pos, siz, chan);
 end
 fclose(fid);
