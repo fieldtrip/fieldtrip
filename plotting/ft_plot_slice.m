@@ -54,6 +54,11 @@ function [h, T2] = ft_plot_slice(dat, varargin)
 
 persistent dim X Y Z
 
+if isnan(dat(1))
+  disp('yes')
+end
+
+
 if isequal(dim, size(dat))
   % reuse the persistent variables to speed up subsequent calls with the same input
 else
@@ -296,17 +301,21 @@ if isempty(cmap),
   V = cat(3, V, V, V);
 end
 
+% get positions of the voxels in the interpolation plane in head coordinates
+Xh = reshape(interp_edge_hc(:,1), siz+1);
+Yh = reshape(interp_edge_hc(:,2), siz+1);
+Zh = reshape(interp_edge_hc(:,3), siz+1);
+
 if isempty(h),
-  % get positions of the voxels in the interpolation plane in head coordinates
-  Xh = reshape(interp_edge_hc(:,1), siz+1);
-  Yh = reshape(interp_edge_hc(:,2), siz+1);
-  Zh = reshape(interp_edge_hc(:,3), siz+1);
   % create surface object
-  h = surface(Xh, Yh, Zh, V); clear Xh Yh Zh
+  h = surface(Xh, Yh, Zh, V);
   set(h, 'linestyle', 'none');
 else
   % update the colordata in the surface object
   set(h, 'Cdata', V);
+  set(h, 'Xdata', Xh);
+  set(h, 'Ydata', Yh);
+  set(h, 'Zdata', Zh);
 end
 
 if domask,
