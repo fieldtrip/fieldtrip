@@ -39,6 +39,13 @@ function filt = filter_with_correction(B,A,dat,dir)
 %
 % $Id$
 
+% convert the data to double precision
+% see  http://bugzilla.fcdonders.nl/show_bug.cgi?id=2653
+inputclass = class(dat);
+B = double(B);
+A = double(A);
+dat = double(dat);
+
 poles = roots(A);
 if any(abs(poles) >= 1)
   error('Calculated filter coefficients have poles on or outside the unit circle and will not be stable. Try a higher cutoff frequency or a different type/order of filter.');
@@ -76,3 +83,6 @@ switch dir
   otherwise
     error('unsupported filter direction "%s"', dir);
 end
+
+% cast it back into the type of the input data, which can e.g. be single or int32
+filt = cast(filt, inputclass);
