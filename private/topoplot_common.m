@@ -1,7 +1,7 @@
 function cfg = topoplot_common(cfg, varargin)
 
-% TOPOPLOT_COMMON is shared by FT_TOPOPLOTTFR and FT_TOPOPLOTER, which
-% serve as placeholder for the documentation and pre/postamble.
+% TOPOPLOT_COMMON is shared by FT_TOPOPLOTTFR, FT_TOPOPLOTER and FT_TOPOPLOTIC, which
+% serve as placeholder for the documentation and for the pre/postamble.
 
 % Copyright (C) 2005-2011, F.C. Donders Centre
 %
@@ -25,11 +25,6 @@ function cfg = topoplot_common(cfg, varargin)
 
 revision = '$Id$';
 
-% do the general setup of the function, path of this was already done in the
-% ft_topoplotER or ft_topoplotTFR function that wraps around this one
-ft_preamble trackconfig
-ft_preamble debug
-ft_preamble loadvar varargin
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'unused',     {'cohtargetchannel'});
@@ -115,31 +110,31 @@ cfg = ft_checkconfig(cfg, 'forbidden',  {'hllinewidth', ...
   'highlightfacecolor', ...
   'showlabels'});
 
-% Set other config defaults:
-cfg.xlim           = ft_getopt(cfg, 'xlim',          'maxmin');
-cfg.ylim           = ft_getopt(cfg, 'ylim',          'maxmin');
-cfg.zlim           = ft_getopt(cfg, 'zlim',          'maxmin');
-cfg.style          = ft_getopt(cfg, 'style',         'both');
-cfg.gridscale      = ft_getopt(cfg, 'gridscale',     67);
-cfg.interplimits   = ft_getopt(cfg, 'interplimits',  'head');
-cfg.interpolation  = ft_getopt(cfg, 'interpolation', 'v4');
-cfg.contournum     = ft_getopt(cfg, 'contournum',    6);
-cfg.colorbar       = ft_getopt(cfg, 'colorbar',      'no');
-cfg.shading        = ft_getopt(cfg, 'shading',       'flat');
-cfg.comment        = ft_getopt(cfg, 'comment',       'auto');
-cfg.commentpos     = ft_getopt(cfg, 'commentpos',    'leftbottom');
-cfg.fontsize       = ft_getopt(cfg, 'fontsize',      8);
-cfg.baseline       = ft_getopt(cfg, 'baseline',      'no'); %to avoid warning in timelock/freqbaseline
-cfg.trials         = ft_getopt(cfg, 'trials',        'all');
-cfg.interactive    = ft_getopt(cfg, 'interactive',   'yes');
-cfg.hotkeys        = ft_getopt(cfg, 'hotkeys',       'no');
-cfg.renderer       = ft_getopt(cfg, 'renderer',      []); % matlab sets the default
-cfg.marker         = ft_getopt(cfg, 'marker',        'on');
-cfg.markersymbol   = ft_getopt(cfg, 'markersymbol',  'o');
-cfg.markercolor    = ft_getopt(cfg, 'markercolor',   [0 0 0]);
-cfg.markersize     = ft_getopt(cfg, 'markersize',    2);
-cfg.markerfontsize = ft_getopt(cfg, 'markerfontsize', 8);
-cfg.highlight      = ft_getopt(cfg, 'highlight',     'off');
+% Set other config defaults
+cfg.xlim              = ft_getopt(cfg, 'xlim',          'maxmin');
+cfg.ylim              = ft_getopt(cfg, 'ylim',          'maxmin');
+cfg.zlim              = ft_getopt(cfg, 'zlim',          'maxmin');
+cfg.style             = ft_getopt(cfg, 'style',         'both');
+cfg.gridscale         = ft_getopt(cfg, 'gridscale',     67);
+cfg.interplimits      = ft_getopt(cfg, 'interplimits',  'head');
+cfg.interpolation     = ft_getopt(cfg, 'interpolation', 'v4');
+cfg.contournum        = ft_getopt(cfg, 'contournum',    6);
+cfg.colorbar          = ft_getopt(cfg, 'colorbar',      'no');
+cfg.shading           = ft_getopt(cfg, 'shading',       'flat');
+cfg.comment           = ft_getopt(cfg, 'comment',       'auto');
+cfg.commentpos        = ft_getopt(cfg, 'commentpos',    'leftbottom');
+cfg.fontsize          = ft_getopt(cfg, 'fontsize',      8);
+cfg.baseline          = ft_getopt(cfg, 'baseline',      'no'); %to avoid warning in timelock/freqbaseline
+cfg.trials            = ft_getopt(cfg, 'trials',        'all');
+cfg.interactive       = ft_getopt(cfg, 'interactive',   'yes');
+cfg.hotkeys           = ft_getopt(cfg, 'hotkeys',       'no');
+cfg.renderer          = ft_getopt(cfg, 'renderer',      []); % matlab sets the default
+cfg.marker            = ft_getopt(cfg, 'marker',        'on');
+cfg.markersymbol      = ft_getopt(cfg, 'markersymbol',  'o');
+cfg.markercolor       = ft_getopt(cfg, 'markercolor',   [0 0 0]);
+cfg.markersize        = ft_getopt(cfg, 'markersize',    2);
+cfg.markerfontsize    = ft_getopt(cfg, 'markerfontsize', 8);
+cfg.highlight         = ft_getopt(cfg, 'highlight',     'off');
 cfg.highlightchannel  = ft_getopt(cfg, 'highlightchannel',  'all', 1); % highlight may be 'on', making highlightchannel {} meaningful
 cfg.highlightsymbol   = ft_getopt(cfg, 'highlightsymbol',   '*');
 cfg.highlightcolor    = ft_getopt(cfg, 'highlightcolor',    [0 0 0]);
@@ -331,10 +326,6 @@ elseif isfield(data, 'labelcmb') && strcmp(cfg.interactive, 'no')
   selchannel = ft_channelselection(cfg.channel, unique(data.labelcmb(:)));
 end
 
-% Read or create the layout that will be used for plotting:
-lay = ft_prepare_layout(cfg, data);
-cfg.layout = lay;
-
 % Create time-series of small topoplots:
 if ~ischar(cfg.xlim) && length(cfg.xlim)>2 %&& any(ismember(dimtok, 'time'))
   % Switch off interactive mode:
@@ -393,13 +384,13 @@ if (isfull || haslabelcmb) && (isfield(data, cfg.parameter) && ~strcmp(cfg.param
   if strcmp(cfg.refchannel, 'gui')
     % Open a single figure with the channel layout, the user can click on a reference channel
     h = clf;
-    ft_plot_lay(lay, 'box', false);
+    ft_plot_lay(cfg.layout, 'box', false);
     title('Select the reference channel by dragging a selection window, more than 1 channel can be selected...');
     % add the channel information to the figure
     info       = guidata(gcf);
-    info.x     = lay.pos(:,1);
-    info.y     = lay.pos(:,2);
-    info.label = lay.label;
+    info.x     = cfg.layout.pos(:,1);
+    info.y     = cfg.layout.pos(:,2);
+    info.label = cfg.layout.label;
     guidata(h, info);
     % attach data to the figure with the current axis handle as a name
     dataname = num2str(gca);
@@ -702,7 +693,7 @@ hold on
 if strcmp(cfg.interplimits,'head')
   interplimits = 'mask';
 else
-  interplimits = cfg.interplimits; 
+  interplimits = cfg.interplimits;
 end
 if strcmp(cfg.style,'both');            style = 'surfiso';     end
 if strcmp(cfg.style,'straight');        style = 'surf';        end
@@ -740,22 +731,22 @@ if ~strcmp(cfg.style,'blank')
   end
   ft_plot_topo(chanX,chanY,datavector,opt{:});
 elseif ~strcmp(cfg.style,'blank')
-  ft_plot_lay(lay,'box','no','label','no','point','no')
+  ft_plot_lay(cfg.layout,'box','no','label','no','point','no')
 end
 
 % Plotting markers for channels and/or highlighting a selection of channels
 highlightchansel = []; % used for remembering selection of channels
-templay.outline = lay.outline;
-templay.mask    = lay.mask;
+templay.outline = cfg.layout.outline;
+templay.mask    = cfg.layout.mask;
 % For Highlight (channel-selection)
 for icell = 1:length(cfg.highlight)
   if ~strcmp(cfg.highlight{icell},'off')
-    [dum labelindex]   = match_str(ft_channelselection(cfg.highlightchannel{icell}, data.label), lay.label);
+    [dum labelindex]   = match_str(ft_channelselection(cfg.highlightchannel{icell}, data.label), cfg.layout.label);
     highlightchansel   = [highlightchansel; match_str(data.label,ft_channelselection(cfg.highlightchannel{icell}, data.label))];
-    templay.pos        = lay.pos(labelindex,:);
-    templay.width      = lay.width(labelindex);
-    templay.height     = lay.height(labelindex);
-    templay.label      = lay.label(labelindex);
+    templay.pos        = cfg.layout.pos(labelindex,:);
+    templay.width      = cfg.layout.width(labelindex);
+    templay.height     = cfg.layout.height(labelindex);
+    templay.label      = cfg.layout.label(labelindex);
     if strcmp(cfg.highlight{icell}, 'labels') || strcmp(cfg.highlight{icell}, 'numbers')
       labelflg = 1;
     else
@@ -783,11 +774,11 @@ if ~strcmp(cfg.marker,'off')
     channelsNotMark = union(find(isnan(dat)),highlightchansel);
   end
   channelsToMark(channelsNotMark) = [];
-  [dum labelindex] = match_str(ft_channelselection(channelsToMark, data.label),lay.label);
-  templay.pos      = lay.pos(labelindex,:);
-  templay.width    = lay.width(labelindex);
-  templay.height   = lay.height(labelindex);
-  templay.label    = lay.label(labelindex);
+  [dum labelindex] = match_str(ft_channelselection(channelsToMark, data.label),cfg.layout.label);
+  templay.pos      = cfg.layout.pos(labelindex,:);
+  templay.width    = cfg.layout.width(labelindex);
+  templay.height   = cfg.layout.height(labelindex);
+  templay.label    = cfg.layout.label(labelindex);
   if strcmp(cfg.marker, 'labels') || strcmp(cfg.marker, 'numbers')
     labelflg = 1;
   else
@@ -847,9 +838,9 @@ if strcmp(cfg.interactive, 'yes')
   % add the channel position information to the figure
   % this section is required for ft_select_channel to do its work
   info       = guidata(gcf);
-  info.x     = lay.pos(:,1);
-  info.y     = lay.pos(:,2);
-  info.label = lay.label;
+  info.x     = cfg.layout.pos(:,1);
+  info.y     = cfg.layout.pos(:,2);
+  info.label = cfg.layout.label;
   guidata(gcf, info);
   % attach data to the figure with the current axis handle as a name
   dataname = num2str(gca);
@@ -912,10 +903,6 @@ if numel(findobj(gcf, 'type', 'axes')) <= 1
   uimenu(ftmenu, 'Label', 'Show pipeline',  'Callback', {@menu_pipeline, cfg});
   uimenu(ftmenu, 'Label', 'About',  'Callback', @menu_about);
 end
-
-% do the general cleanup and bookkeeping at the end of the function
-ft_postamble debug
-ft_postamble trackconfig
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION which is called after selecting channels in case of cfg.refchannel='gui'

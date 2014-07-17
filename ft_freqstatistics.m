@@ -107,6 +107,8 @@ if ~isfield(cfg,'design') || isempty(cfg.design)
   error('you should provide a design matrix in the cfg');
 end
 
+origvarargin = varargin;
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % data bookkeeping
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -92,7 +92,7 @@ while (1)
       phi(end+1) = newphi;
       th(end+1)  = (j/Q)*2*pi;
       % in case of even number of contours
-      if mod(M,2) & k>(M/2)
+      if mod(M,2) && k>(M/2)
         th(end) = th(end) + pi/Q;
       end
     end
@@ -115,7 +115,7 @@ while (1)
 end
 
 % take the vertex packing that most closely matches the requirement
-[m, i] = min(abs(storelen-N));
+[dum, i] = min(abs(storelen-N));
 th  = storeM(i).th;
 phi = storeM(i).phi;
 

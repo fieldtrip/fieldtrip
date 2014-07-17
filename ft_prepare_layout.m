@@ -127,8 +127,6 @@ cfg.skipscale  = ft_getopt(cfg, 'skipscale',  'no');
 cfg.skipcomnt  = ft_getopt(cfg, 'skipcomnt',  'no');
 cfg.overlap    = ft_getopt(cfg, 'overlap',    'shift');
 
-cfg = ft_checkconfig(cfg);
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % try to generate the layout structure
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

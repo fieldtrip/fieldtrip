@@ -756,7 +756,6 @@ if isequal(cfg.method,'ortho')
   opt.handlesaxes   = [h1 h2 h3];
   opt.handlesfigure = h;
   opt.axis          = cfg.axis;
-  opt.quit          = false;%~strcmp(cfg.interactive, 'yes');
   if hasatlas
     opt.atlas = atlas;
   end
@@ -786,6 +785,7 @@ if isequal(cfg.method,'ortho')
   opt.fcolmax       = fcolmax;
   opt.opacmin       = opacmin;
   opt.opacmax       = opacmax;
+  opt.clim          = []; % contrast limits for the anatomy, see ft_volumenormalise
   opt.colorbar      = cfg.colorbar;
   opt.queryrange    = cfg.queryrange;
   opt.funcolormap   = cfg.funcolormap;
@@ -896,7 +896,7 @@ elseif isequal(cfg.method,'surface')
     else
       tmpcfg.parameter = [tmpcfg.parameter {'mask'}];
       data.mask        = msk;
-      maskparameter    = 'mask'; % temporary variable 
+      maskparameter    = 'mask'; % temporary variable
     end
     tmpcfg.interpmethod = cfg.projmethod;
     tmpcfg.distmat    = cfg.distmat;
@@ -1318,7 +1318,7 @@ end
 
 if opt.hasana
   if opt.init
-    ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'parents', [h1 h2 h3].*opt.update, 'doscale', false);
+    ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'parents', [h1 h2 h3].*opt.update, 'doscale', false, 'clim', opt.clim);
     
     opt.anahandles = findobj(opt.handlesfigure, 'type', 'surface')';
     parenttag  = get(cell2mat(get(opt.anahandles,'parent')),'tag');
@@ -1327,7 +1327,7 @@ if opt.hasana
     opt.anahandles = opt.anahandles(:)';
     set(opt.anahandles, 'tag', 'ana');
   else
-    ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'surfhandle', opt.anahandles.*opt.update, 'doscale', false);
+    ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'surfhandle', opt.anahandles.*opt.update, 'doscale', false, 'clim', opt.clim);
   end
 end
 
@@ -1463,8 +1463,6 @@ end
 
 set(h, 'currentaxes', curr_ax);
 
-uiresume
-
 
 function cb_keyboard(h, eventdata)
 
@@ -1485,7 +1483,7 @@ end
 h   = getparent(h);
 opt = getappdata(h, 'opt');
 
-curr_ax = get(h,       'currentaxes');
+curr_ax = get(h, 'currentaxes');
 tag     = get(curr_ax, 'tag');
 
 if isempty(key)
@@ -1493,12 +1491,24 @@ if isempty(key)
   key = '';
 end
 
+% the following code is largely shared with FT_VOLUMEREALIGN
 switch key
-  case ''
+  case {'' 'shift+shift' 'alt-alt' 'control+control' 'command-0'}
     % do nothing
+    
+  case '1'
+    subplot(opt.handlesaxes(1));
+    
+  case '2'
+    subplot(opt.handlesaxes(2));
+    
+  case '3'
+    subplot(opt.handlesaxes(3));
+    
   case 'q'
-    %     setappdata(h, 'opt', opt);
-    %     cb_cleanup(h);
+    setappdata(h, 'opt', opt);
+    cb_cleanup(h);
+    
   case {'i' 'j' 'k' 'm' 28 29 30 31 'leftarrow' 'rightarrow' 'uparrow' 'downarrow'} % TODO FIXME use leftarrow rightarrow uparrow downarrow
     % update the view to a new position
     if     strcmp(tag,'ik') && (strcmp(key,'i') || strcmp(key,'uparrow')    || isequal(key, 30)), opt.ijk(3) = opt.ijk(3)+1; opt.update = [0 0 1];
@@ -1516,14 +1526,35 @@ switch key
     else
       % do nothing
     end;
-    
     setappdata(h, 'opt', opt);
     cb_redraw(h);
+    
+    % contrast scaling
+  case {43 'shift+equal'}  % numpad +
+    if isempty(opt.clim)
+      opt.clim = [min(opt.ana(:)) max(opt.ana(:))];
+    end
+    % reduce color scale range by 5%
+    cscalefactor = (opt.clim(2)-opt.clim(1))/2.5;
+    opt.clim(1) = opt.clim(1)+cscalefactor;
+    opt.clim(2) = opt.clim(2)-cscalefactor;
+    setappdata(h, 'opt', opt);
+    cb_redraw(h);
+    
+  case {45 'shift+hyphen'} % numpad -
+    if isempty(opt.clim)
+      opt.clim = [min(opt.ana(:)) max(opt.ana(:))];
+    end
+    % increase color scale range by 5%
+    cscalefactor = (opt.clim(2)-opt.clim(1))/2.5;
+    opt.clim(1) = opt.clim(1)-cscalefactor;
+    opt.clim(2) = opt.clim(2)+cscalefactor;
+    setappdata(h, 'opt', opt);
+    cb_redraw(h);
+    
   otherwise
     
 end % switch key
-
-uiresume(h);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -1543,8 +1574,6 @@ switch get(h, 'selectiontype')
   otherwise
 end
 
-uiresume;
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1560,7 +1589,6 @@ function cb_tracemouse(h, eventdata)
 h   = getparent(h);
 cb_getposition(h);
 cb_redraw(h);
-uiresume;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -1604,7 +1632,6 @@ opt.ijk = min(opt.ijk(:)', opt.dim);
 opt.ijk = max(opt.ijk(:)', [1 1 1]);
 
 setappdata(h, 'opt', opt);
-uiresume;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

@@ -9,7 +9,7 @@ function [h, T2] = ft_plot_slice(dat, varargin)
 %
 % Additional options should be specified in key-value pairs and can be
 %   'transform'    = 4x4 homogeneous transformation matrix specifying the mapping from
-%                    voxel space to the coordinate system in which the data are plotted.
+%                    voxel coordinates to the coordinate system in which the data are plotted.
 %   'location'     = 1x3 vector specifying a point on the plane which will be plotted
 %                    the coordinates are expressed in the coordinate system in which the
 %                    data will be plotted. location defines the origin of the plane
@@ -31,7 +31,8 @@ function [h, T2] = ft_plot_slice(dat, varargin)
 %   'intersectmesh'  = triangulated mesh through which the intersection of the plane will be plotted (e.g. cortical sheet)
 %   'intersectcolor' = color for the intersection
 
-% Copyrights (C) 2010, Jan-Mathijs Schoffelen
+% Copyrights (C) 2010-2014, Jan-Mathijs Schoffelen
+% Copyrights (C) 2014, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -51,14 +52,21 @@ function [h, T2] = ft_plot_slice(dat, varargin)
 %
 % $Id$
 
-persistent previous_dim X Y Z
+persistent dim X Y Z
+
+if isequal(dim, size(dat))
+  % reuse the persistent variables to speed up subsequent calls with the same input
+else
+  dim       = size(dat);
+  [X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
+end
 
 % parse first input argument(s). it is either
 % (dat, varargin)
 % (dat, msk, varargin)
 % (dat, [], varargin)
 if numel(varargin)>0 && (isempty(varargin{1}) || isnumeric(varargin{1}) || islogical(varargin{1}))
-  M        = varargin{1};
+  msk      = varargin{1};
   varargin = varargin(2:end);
 end
 
@@ -87,38 +95,41 @@ if ~isa(dat, 'double')
   dat = cast(dat, 'double');
 end
 
-if exist('M', 'var') && isempty(mask)
-  warning_once('using the mask from the input and not from the varargin list');
-  mask = M; clear M;
+if exist('msk', 'var') && isempty(mask)
+  warning_once('using the second input argument as mask rather than the one from the varargin list');
+  mask = msk; clear msk;
 end
 
-% norm normalise the ori vector
+% normalise the orientation vector to one
 ori = ori./sqrt(sum(ori.^2));
 
-% dimensionality of the input data
-dim = size(dat);
-if isempty(previous_dim),
-  previous_dim = [0 0 0];
-end
-
-% set the location if empty
-if isempty(loc) && (isempty(transform) || all(all(transform-eye(4)==0)==1))
-  loc = dim./2;
+% set the default location
+if isempty(loc) && (isempty(transform) || isequal(transform, eye(4)))
+  loc = (dim+1)./2;
 elseif isempty(loc)
   loc = [0 0 0];
 end
 
-% set the transformation matrix if empty
+% shift the location to be along the orientation vector
+loc = ori*dot(loc,ori);
+
+% set the default transformation matrix
 if isempty(transform)
   transform = eye(4);
 end
 
-% check whether the mesh is ok
-dointersect = ~isempty(mesh);
-if ~iscell(mesh)
-  mesh = {mesh};
+% it should be a cell-array
+if isstruct(mesh)
+  tmp = mesh;
+  mesh = cell(size(tmp));
+  for i=1:numel(tmp)
+    mesh{i} = tmp(i);
+  end
+else
+  mesh = {};
 end
 
+dointersect = ~isempty(mesh);
 if dointersect
   for k = 1:numel(mesh)
     if isfield(mesh{k}, 'pos')
@@ -127,7 +138,9 @@ if dointersect
       mesh{k} = rmfield(mesh{k}, 'pos');
     end
     if ~isfield(mesh{k}, 'pnt') || ~isfield(mesh{k}, 'tri')
-      error('the triangulated mesh should be a structure with pnt and tri');
+      % error('the mesh should be a structure with pnt and tri');
+      mesh{k}.pnt = [];
+      mesh{k}.tri = [];
     end
   end
 end
@@ -146,122 +159,128 @@ dointerp = dointerp || sum(sum(transform-eye(4)))~=0;
 dointerp = dointerp || ~all(round(loc)==loc);
 dointerp = dointerp || sum(ori)~=1;
 dointerp = dointerp || ~(resolution==round(resolution));
-
-% determine the caller function and toggle dointerp to true, if
-% ft_plot_slice has been called from ft_plot_montage
+% determine the caller function and toggle dointerp to true, if ft_plot_slice has been called from ft_plot_montage
 % this is necessary for the correct allocation of the persistent variables
 st = dbstack;
 if ~dointerp && numel(st)>1 && strcmp(st(2).name, 'ft_plot_montage'), dointerp = true; end
 
-% determine the corner points of the volume in voxel and in plotting space
-[corner_vox, corner_head] = cornerpoints(dim+1, transform);
-  
-if dointerp
-  %--------cut a slice using interpn
-  
-  % get voxel indices
-  if all(dim==previous_dim)
-    % for speeding up the plotting on subsequent calls
-    % use persistent variables X Y Z
-  else
-    [X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
-  end
-    
-  % define 'x' and 'y' axis in projection plane, the definition of x and y is more or less arbitrary
-  [x, y] = projplane(ori); % z = ori
-  
-  % project the corner points onto the projection plane
-  corner_proj = nan(size(corner_head));
-  for i=1:8
-    corner   = corner_head(i, :);
-    corner   = corner - loc(:)';
-    corner_x = dot(corner, x);
-    corner_y = dot(corner, y);
-    corner_z = 0;
-    corner_proj(i, :) = [corner_x corner_y corner_z];
-  end
-  
-  % determine a tight grid of points in the projection plane
-  xplane = floor(min(corner_proj(:, 1))):resolution:ceil(max(corner_proj(:, 1)));
-  yplane = floor(min(corner_proj(:, 2))):resolution:ceil(max(corner_proj(:, 2)));
-  zplane = 0;
-  
-  [X2, Y2, Z2] = ndgrid(xplane, yplane, zplane); %2D cartesian grid of projection plane in plane voxels
-  siz        = size(squeeze(X2));
-  pos        = [X2(:) Y2(:) Z2(:)]; clear X2 Y2 Z2;
-  
-  if false
-    % this is for debugging
-    ft_plot_mesh(ft_warp_apply(T2, pos))
-    ft_plot_mesh(corner_head)
-    axis on
-    grid on
-    xlabel('x')
-    ylabel('y')
-    zlabel('z')
-  end
-  
-  % get the transformation matrix from plotting space to voxel space
-  % T1 = inv(transform);
-  
-  % get the transformation matrix to get the projection plane at the right location and orientation into plotting space
-  T2  = [x(:) y(:) ori(:) loc(:); 0 0 0 1];
-  
-  % get the transformation matrix from projection plane to voxel space
-  % M = T1*T2;
-  M = transform\T2;
-  
-  % get the positions of the pixels of the desires plane in voxel space
-  pos = ft_warp_apply(M, pos);
-  
-  Xi              = reshape(pos(:, 1), siz);
-  Yi              = reshape(pos(:, 2), siz);
-  Zi              = reshape(pos(:, 3), siz);
-  V               = interpn(X, Y, Z, dat, Xi, Yi, Zi, interpmethod);
-  [V, Xi, Yi, Zi] = tight(V, Xi, Yi, Zi);
-  siz             = size(Xi);
-  
-  if domask,
-    Vmask = tight(interpn(X, Y, Z, mask, Xi, Yi, Zi, interpmethod));
-  end
-  
-  if ~isempty(Xi)
-    % now adjust the Xi, Yi and Zi, to allow for the surface object
-    % convention, where the data point value is defined in the center of each
-    % square, i.e. the number of elements in each of the dimensions of Xi, Yi
-    % Zi should be 1 more than the functional data, and they should be displaced
-    % by half a voxel distance
-    dx2 = mean(diff(Xi,[],2),2); dx1 = mean(diff(Xi,[],1),1);
-    dy2 = mean(diff(Yi,[],2),2); dy1 = mean(diff(Yi,[],1),1);
-    dz2 = mean(diff(Zi,[],2),2); dz1 = mean(diff(Zi,[],1),1);
-    
-    Xi  = [Xi-0.5*dx2*ones(1,siz(2)) Xi(:,end)+0.5*dx2; Xi(end,:)+0.5*dx1 Xi(end,end)+0.5*(dx1(end)+dx2(end))];
-    Yi  = [Yi-0.5*dy2*ones(1,siz(2)) Yi(:,end)+0.5*dy2; Yi(end,:)+0.5*dy1 Yi(end,end)+0.5*(dy1(end)+dy2(end))];
-    Zi  = [Zi-0.5*dz2*ones(1,siz(2)) Zi(:,end)+0.5*dz2; Zi(end,:)+0.5*dz1 Zi(end,end)+0.5*(dz1(end)+dz2(end))];
-  end
-  
+% determine the voxel center
+% voxel_center_vc = [X(:) Y(:) Z(:)];
+% voxel_center_hc = ft_warp_apply(transform, voxel_center_vc);
+
+% determine the edges, i.e. the corner points of each voxel
+% [Xe, Ye, Ze] = ndgrid(0:dim(1), 0:dim(2), 0:dim(3));
+% Xe = Xe+0.5;
+% Ye = Ye+0.5;
+% Ze = Ze+0.5;
+% voxel_edge_vc = [Xe(:) Ye(:) Ze(:)];
+% voxel_edge_hc = ft_warp_apply(transform, voxel_edge_vc);
+
+% determine the corner points of the box encompassing the whole data block
+% extend the box with half a voxel  in all directions to get the outer edge
+corner_vc = [
+  0.5        0.5        0.5
+  0.5+dim(1) 0.5        0.5
+  0.5+dim(1) 0.5+dim(2) 0.5
+  0.5        0.5+dim(2) 0.5
+  0.5        0.5        0.5+dim(3)
+  0.5+dim(1) 0.5        0.5+dim(3)
+  0.5+dim(1) 0.5+dim(2) 0.5+dim(3)
+  0.5        0.5+dim(2) 0.5+dim(3)
+  ];
+corner_hc = ft_warp_apply(transform, corner_vc);
+
+% define 'x' and 'y' axis in projection plane, the definition of x and y is more or less arbitrary
+[x, y] = projplane(ori);
+% z = ori;
+
+% project the corner points onto the projection plane
+corner_pc = zeros(size(corner_hc));
+for i=1:8
+  corner   = corner_hc(i, :) - loc(:)';
+  corner_pc(i,1) = dot(corner, x);
+  corner_pc(i,2) = dot(corner, y);
+  corner_pc(i,3) = 0;
+end
+
+% get the transformation matrix from the projection plane to head coordinates
+T2 = [x(:) y(:) ori(:) loc(:); 0 0 0 1];
+
+% get the transformation matrix from projection plane to voxel coordinates
+T3 = transform\T2;
+
+% determine a grid of points in the projection plane
+xplane = floor(min(corner_pc(:, 1))):resolution:ceil(max(corner_pc(:, 1)));
+yplane = floor(min(corner_pc(:, 2))):resolution:ceil(max(corner_pc(:, 2)));
+zplane = 0;
+[Xi, Yi, Zi]      = ndgrid(xplane, yplane, zplane);
+siz               = size(squeeze(Xi));
+interp_center_pc  = [Xi(:) Yi(:) Zi(:)];
+% interp_center_hc = ft_warp_apply(T2, interp_center_pc);
+
+% get the positions of the points in the projection plane in voxel coordinates
+interp_center_vc = ft_warp_apply(T3, interp_center_pc);
+
+Xi = reshape(interp_center_vc(:, 1), siz);
+Yi = reshape(interp_center_vc(:, 2), siz);
+Zi = reshape(interp_center_vc(:, 3), siz);
+V  = interpn(X, Y, Z, dat, Xi, Yi, Zi, interpmethod);
+
+if all(isnan(V(:)))
+  % the projection plane lies completely outside the box spanned by the data
 else
-  %-------cut a slice without interpolation
-  [x, y] = projplane(ori);
-  T2     = [x(:) y(:) ori(:) loc(:); 0 0 0 1];
-  
-  % the '+1' and '-0.5' are needed due to the difference between handling
-  % of image and surf. Surf color data is defined in the center of each
-  % square, hence needs axes and coordinate adjustment
-  if all(ori==[1 0 0]), xplane = loc(1);   yplane = 1:(dim(2)+1); zplane = 1:(dim(3)+1); end
-  if all(ori==[0 1 0]), xplane = 1:(dim(1)+1); yplane = loc(2);   zplane = 1:(dim(3)+1); end
-  if all(ori==[0 0 1]), xplane = 1:(dim(1)+1); yplane = 1:(dim(2)+1); zplane = loc(3);   end
-  
-  [Xi, Yi, Zi] = ndgrid(xplane-0.5, yplane-0.5, zplane-0.5); % coordinate is centre of the voxel, 1-based
-  siz        = size(squeeze(Xi))-1;
-  Xi         = reshape(Xi, siz+1); if numel(xplane)==1, xplane = xplane([1 1]); end;
-  Yi         = reshape(Yi, siz+1); if numel(yplane)==1, yplane = yplane([1 1]); end;
-  Zi         = reshape(Zi, siz+1); if numel(zplane)==1, zplane = zplane([1 1]); end;
-  V          = reshape(dat(xplane(1:end-1), yplane(1:end-1), zplane(1:end-1)), siz);
-  if domask,
-    Vmask    = reshape(mask(xplane(1:end-1), yplane(1:end-1), zplane(1:end-1)), siz);
-  end
-  
+  % trim the edges of the projection plane
+  [sel1, sel2] = tight(V);
+  V  = V (sel1,sel2);
+  Xi = Xi(sel1,sel2);
+  Yi = Yi(sel1,sel2);
+  Zi = Zi(sel1,sel2);
+end
+
+if domask,
+  Vmask = interpn(X, Y, Z, mask, Xi, Yi, Zi, interpmethod);
+end
+
+interp_center_vc = [Xi(:) Yi(:) Zi(:)]; clear Xi Yi Zi
+interp_center_pc = ft_warp_apply(inv(T3), interp_center_vc);
+
+% determine a grid of points in the projection plane
+% this reconstruction is needed since the edges may have been trimmed off
+xplane = min(interp_center_pc(:, 1)):resolution:max(interp_center_pc(:, 1));
+yplane = min(interp_center_pc(:, 2)):resolution:max(interp_center_pc(:, 2));
+zplane = 0;
+
+[Xi, Yi, Zi] = ndgrid(xplane, yplane, zplane); % 2D cartesian grid of projection plane in plane voxels
+siz          = size(squeeze(Xi));
+
+% extend with one voxel along dim 1
+Xi = cat(1, Xi, Xi(end,:)+mean(diff(Xi,[],1),1));
+Yi = cat(1, Yi, Yi(end,:)+mean(diff(Yi,[],1),1));
+Zi = cat(1, Zi, Zi(end,:)+mean(diff(Zi,[],1),1));
+% extend with one voxel along dim 2
+Xi = cat(2, Xi, Xi(:,end)+mean(diff(Xi,[],2),2));
+Yi = cat(2, Yi, Yi(:,end)+mean(diff(Yi,[],2),2));
+Zi = cat(2, Zi, Zi(:,end)+mean(diff(Zi,[],2),2));
+% shift with half a voxel along dim 1 and 2
+Xi = Xi-0.5*resolution;
+Yi = Yi-0.5*resolution;
+% Zi = Zi; % do not shift along this direction
+
+interp_edge_pc = [Xi(:) Yi(:) Zi(:)]; clear Xi Yi Zi
+interp_edge_hc = ft_warp_apply(T2, interp_edge_pc);
+
+if false
+  % plot all objects in head coordinates
+  ft_plot_mesh(voxel_center_hc,   'vertexmarker', 'o')
+  ft_plot_mesh(voxel_edge_hc,     'vertexmarker', '+')
+  ft_plot_mesh(corner_hc,         'vertexmarker', '*')
+  ft_plot_mesh(interp_center_hc,  'vertexmarker', 'o', 'vertexcolor', 'r')
+  ft_plot_mesh(interp_edge_hc,    'vertexmarker', '+', 'vertexcolor', 'r')
+  axis on
+  grid on
+  xlabel('x')
+  ylabel('y')
+  zlabel('z')
 end
 
 if isempty(cmap),
@@ -278,26 +297,17 @@ if isempty(cmap),
 end
 
 if isempty(h),
-  % get positions of the plane in plotting space
-  posh = ft_warp_apply(transform, [Xi(:) Yi(:) Zi(:)], 'homogeneous', 1e-8);
-  if ~isempty(posh)
-    Xh   = reshape(posh(:, 1), siz+1);
-    Yh   = reshape(posh(:, 2), siz+1);
-    Zh   = reshape(posh(:, 3), siz+1);
-  else
-    % emulate old behavior, that allowed empty data to be plotted
-    Xh   = [];
-    Yh   = [];
-    Zh   = [];
-  end
+  % get positions of the voxels in the interpolation plane in head coordinates
+  Xh = reshape(interp_edge_hc(:,1), siz+1);
+  Yh = reshape(interp_edge_hc(:,2), siz+1);
+  Zh = reshape(interp_edge_hc(:,3), siz+1);
   % create surface object
-  h    = surface(Xh, Yh, Zh, V);
+  h = surface(Xh, Yh, Zh, V); clear Xh Yh Zh
+  set(h, 'linestyle', 'none');
 else
   % update the colordata in the surface object
   set(h, 'Cdata', V);
 end
-
-set(h, 'linestyle', 'none');
 
 if domask,
   if islogical(Vmask), Vmask = double(Vmask); end
@@ -321,11 +331,11 @@ if dointersect
     [xmesh, ymesh, zmesh] = intersect_plane(mesh{k}.pnt, mesh{k}.tri, v1, v2, v3);
     
     % draw each individual line segment of the intersection
-    if ~isempty(xmesh), 
-      p(k) = patch(xmesh', ymesh', zmesh', nan(1, size(xmesh,1)));
-      if ~isempty(intersectcolor),     set(p(k), 'EdgeColor', intersectcolor(k)); end
-      if ~isempty(intersectlinewidth), set(p(k), 'LineWidth', intersectlinewidth); end
-      if ~isempty(intersectlinestyle), set(p(k), 'LineStyle', intersectlinestyle); end
+    if ~isempty(xmesh),
+      p = patch(xmesh', ymesh', zmesh', nan(1, size(xmesh,1)));
+      if ~isempty(intersectcolor),     set(p, 'EdgeColor', intersectcolor(k)); end
+      if ~isempty(intersectlinewidth), set(p, 'LineWidth', intersectlinewidth); end
+      if ~isempty(intersectlinestyle), set(p, 'LineStyle', intersectlinestyle); end
     end
   end
 end
@@ -339,19 +349,17 @@ if ~isempty(clim)
 end
 
 % update the axes to ensure that the whole volume fits
-ax = [min(corner_head) max(corner_head)];
-axis(ax([1 4 2 5 3 6])-0.5); % reorder into [xmin xmax ymin ymaz zmin zmax]
+ax = [min(corner_hc) max(corner_hc)];
+axis(ax([1 4 2 5 3 6])); % reorder into [xmin xmax ymin ymaz zmin zmax]
+
 st = dbstack;
 if numel(st)>1,
   % ft_plot_slice has been called from another function
-  % assume the axis settings to be handled there
+  % assume the remainder of the axis settings to be handled there
 else
   axis equal
   axis vis3d
 end
-  
-% store for future reference
-previous_dim  = dim;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -364,11 +372,7 @@ y = u(:, 3)';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [V, Xi, Yi, Zi] = tight(V, Xi, Yi, Zi)
-% cut off the nans at the edges
-x = sum(~isfinite(V), 1)<size(V, 1);
-y = sum(~isfinite(V), 2)<size(V, 2);
-V = V(y, x);
-if nargin>1, Xi = Xi(y, x); end
-if nargin>2, Yi = Yi(y, x); end
-if nargin>3, Zi = Zi(y, x); end
+function [sel1, sel2] = tight(V)
+% make a selection to cut off the nans at the edges
+sel1 = sum(~isfinite(V), 2)<size(V, 2);
+sel2 = sum(~isfinite(V), 1)<size(V, 1);

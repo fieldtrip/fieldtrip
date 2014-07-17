@@ -26,7 +26,7 @@ function [vol, M, dcminfo, mr_parms] = load_dicom_fl(flist)
 %    $Date: 2011/03/02 00:04:12 $
 %    $Revision$
 %
-% Copyright © 2011 The General Hospital Corporation (Boston, MA) "MGH"
+% Copyright ?? 2011 The General Hospital Corporation (Boston, MA) "MGH"
 %
 % Terms and conditions for use, reproduction, distribution and contribution
 % are found in the 'FreeSurfer Software License Agreement' contained
@@ -94,7 +94,11 @@ P0 = dcminfo(1).ImagePositionPatient;
 
 % Change Siemens to be RAS %
 % GE is also LPS - change it to be RAS, too - ebeth %
-Manufacturer = dcminfo(1).Manufacturer;
+try
+  Manufacturer = dcminfo(1).Manufacturer;
+catch
+  Manufacturer = 'unknown';
+end
 if(strcmpi(Manufacturer,'Siemens') | strcmpi(Manufacturer,'ge medical systems'))
   % Change to RAS
   Mdc(1,:) = -Mdc(1,:); 

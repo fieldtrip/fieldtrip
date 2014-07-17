@@ -281,143 +281,155 @@ if ~isempty(dtype)
     end % switch dtype
   end % for dtype
   
-  if ~okflag
-    % try to convert the data
-    for iCell = 1:length(dtype)
-      if isequal(dtype(iCell), {'parcellation'}) && issegmentation
-        data = volume2source(data); % segmentation=volume, parcellation=source
-        data = ft_datatype_parcellation(data);
-        issegmentation = 0;
-        isparcellation = 1;
-        okflag = 1;
-      elseif isequal(dtype(iCell), {'segmentation'}) && isparcellation
-        data = source2volume(data); % segmentation=volume, parcellation=source
-        data = ft_datatype_segmentation(data);
-        isparcellation = 0;
-        issegmentation = 1;
-        okflag = 1;
-      elseif isequal(dtype(iCell), {'source'}) && isvolume
-        data = volume2source(data);
-        data = ft_datatype_source(data);
-        isvolume = 0;
-        issource = 1;
-        okflag = 1;
-      elseif isequal(dtype(iCell), {'volume'}) && issource
-        data = source2volume(data);
-        data = ft_datatype_volume(data);
-        isvolume = 1;
-        issource = 0;
-        okflag = 1;
-      elseif isequal(dtype(iCell), {'raw'}) && issource
-        data = data2raw(data);
-        data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
-        issource = 0;
-        israw = 1;
-        okflag = 1;
-      elseif isequal(dtype(iCell), {'raw'}) && istimelock
-        if iscomp
-          data = removefields(data, {'topo', 'topolabel', 'unmixing'}); % these fields are not desired
-          iscomp = 0;
-        end
-        data = timelock2raw(data);
-        data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
-        istimelock = 0;
-        israw = 1;
-        okflag = 1;
-      elseif isequal(dtype(iCell), {'comp'}) && israw
-        data = keepfields(data, {'label', 'topo', 'topolabel', 'unmixing', 'elec', 'grad', 'cfg'}); % these are the only relevant fields
-        data = ft_datatype_comp(data);
-        israw = 0;
-        iscomp = 1;
-        okflag = 1;
-      elseif isequal(dtype(iCell), {'comp'}) && istimelock
-        data = keepfields(data, {'label', 'topo', 'topolabel', 'unmixing', 'elec', 'grad', 'cfg'}); % these are the only relevant fields
-        data = ft_datatype_comp(data);
-        istimelock = 0;
-        iscomp = 1;
-        okflag = 1;
-      elseif isequal(dtype(iCell), {'comp'}) && isfreq
-        data = keepfields(data, {'label', 'topo', 'topolabel', 'unmixing', 'elec', 'grad', 'cfg'}); % these are the only relevant fields
-        data = ft_datatype_comp(data);
-        isfreq = 0;
-        iscomp = 1;
-        okflag = 1;
-      elseif isequal(dtype(iCell), {'raw'}) && israw
-        if iscomp
-          data = removefields(data, {'topo', 'topolabel', 'unmixing'}); % these fields are not desired
-          iscomp = 0;
-        end
-        data = ft_datatype_raw(data);
-        okflag = 1;
-      elseif isequal(dtype(iCell), {'timelock'}) && istimelock
-        if iscomp
-          data = removefields(data, {'topo', 'topolabel', 'unmixing'}); % these fields are not desired
-          iscomp = 0;
-        end
-        data = ft_datatype_timelock(data);
-        okflag = 1;
-      elseif isequal(dtype(iCell), {'freq'}) && isfreq
-        if iscomp
-          data = removefields(data, {'topo', 'topolabel', 'unmixing'}); % these fields are not desired
-          iscomp = 0;
-        end
-        data = ft_datatype_freq(data);
-        okflag = 1;
-      elseif isequal(dtype(iCell), {'timelock'}) && israw
-        if iscomp
-          data = removefields(data, {'topo', 'topolabel', 'unmixing'}); % these fields are not desired
-          iscomp = 0;
-        end
-        data = raw2timelock(data);
-        data = ft_datatype_timelock(data);
-        israw = 0;
-        istimelock = 1;
-        okflag = 1;
-      elseif isequal(dtype(iCell), {'raw'}) && isfreq
-        if iscomp
-          data = removefields(data, {'topo', 'topolabel', 'unmixing'}); % these fields are not desired
-          iscomp = 0;
-        end
-        data = freq2raw(data);
-        data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
-        isfreq = 0;
-        israw = 1;
-        okflag = 1;
-        
-      elseif isequal(dtype(iCell), {'raw'}) && ischan
-        data = chan2timelock(data);
-        data = timelock2raw(data);
-        data = ft_datatype_raw(data);
-        ischan = 0;
-        israw = 1;
-        okflag = 1;
-      elseif isequal(dtype(iCell), {'timelock'}) && ischan
-        data = chan2timelock(data);
-        data = ft_datatype_timelock(data);
-        ischan = 0;
-        istimelock = 1;
-        okflag = 1;
-      elseif isequal(dtype(iCell), {'freq'}) && ischan
-        data = chan2freq(data);
-        data = ft_datatype_freq(data);
-        ischan = 0;
-        isfreq = 1;
-        okflag = 1;
-      elseif isequal(dtype(iCell), {'spike'}) && israw
-        data = raw2spike(data);
-        data = ft_datatype_spike(data);
-        israw = 0;
-        isspike = 1;
-        okflag = 1;
-      elseif isequal(dtype(iCell), {'raw'}) && isspike
-        data = spike2raw(data,fsample);
-        data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
-        isspike = 0;
-        israw   = 1;
-        okflag  = 1;
+  % try to convert the data if needed
+  for iCell = 1:length(dtype)
+    if okflag
+      % the requested datatype is specified in descending order of
+      % preference (if there is a preference at all), so don't bother
+      % checking the rest of the requested data types if we already
+      % succeeded in converting
+      break;
+    end
+    if isequal(dtype(iCell), {'parcellation'}) && issegmentation
+      data = volume2source(data); % segmentation=volume, parcellation=source
+      data = ft_datatype_parcellation(data);
+      issegmentation = 0;
+      isparcellation = 1;
+      okflag = 1;
+    elseif isequal(dtype(iCell), {'segmentation'}) && isparcellation
+      data = source2volume(data); % segmentation=volume, parcellation=source
+      data = ft_datatype_segmentation(data);
+      isparcellation = 0;
+      issegmentation = 1;
+      okflag = 1;
+    elseif isequal(dtype(iCell), {'source'}) && isvolume
+      data = volume2source(data);
+      data = ft_datatype_source(data);
+      isvolume = 0;
+      issource = 1;
+      okflag = 1;
+    elseif isequal(dtype(iCell), {'volume'}) && issource
+      data = source2volume(data);
+      data = ft_datatype_volume(data);
+      isvolume = 1;
+      issource = 0;
+      okflag = 1;
+    elseif isequal(dtype(iCell), {'raw+comp'}) && istimelock && iscomp
+      data = timelock2raw(data);
+      data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
+      istimelock = 0;
+      iscomp = 1;
+      israw = 1;
+      okflag = 1;
+    elseif isequal(dtype(iCell), {'raw'}) && issource
+      data = data2raw(data);
+      data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
+      issource = 0;
+      israw = 1;
+      okflag = 1;
+    elseif isequal(dtype(iCell), {'raw'}) && istimelock
+      if iscomp
+        data = removefields(data, {'topo', 'topolabel', 'unmixing'}); % these fields are not desired
+        iscomp = 0;
       end
-    end % for iCell
-  end % if okflag
+      data = timelock2raw(data);
+      data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
+      istimelock = 0;
+      israw = 1;
+      okflag = 1;
+    elseif isequal(dtype(iCell), {'comp'}) && israw
+      data = keepfields(data, {'label', 'topo', 'topolabel', 'unmixing', 'elec', 'grad', 'cfg'}); % these are the only relevant fields
+      data = ft_datatype_comp(data);
+      israw = 0;
+      iscomp = 1;
+      okflag = 1;
+    elseif isequal(dtype(iCell), {'comp'}) && istimelock
+      data = keepfields(data, {'label', 'topo', 'topolabel', 'unmixing', 'elec', 'grad', 'cfg'}); % these are the only relevant fields
+      data = ft_datatype_comp(data);
+      istimelock = 0;
+      iscomp = 1;
+      okflag = 1;
+    elseif isequal(dtype(iCell), {'comp'}) && isfreq
+      data = keepfields(data, {'label', 'topo', 'topolabel', 'unmixing', 'elec', 'grad', 'cfg'}); % these are the only relevant fields
+      data = ft_datatype_comp(data);
+      isfreq = 0;
+      iscomp = 1;
+      okflag = 1;
+    elseif isequal(dtype(iCell), {'raw'}) && israw
+      if iscomp
+        data = removefields(data, {'topo', 'topolabel', 'unmixing'}); % these fields are not desired
+        iscomp = 0;
+      end
+      data = ft_datatype_raw(data);
+      okflag = 1;
+    elseif isequal(dtype(iCell), {'timelock'}) && istimelock
+      if iscomp
+        data = removefields(data, {'topo', 'topolabel', 'unmixing'}); % these fields are not desired
+        iscomp = 0;
+      end
+      data = ft_datatype_timelock(data);
+      okflag = 1;
+    elseif isequal(dtype(iCell), {'freq'}) && isfreq
+      if iscomp
+        data = removefields(data, {'topo', 'topolabel', 'unmixing'}); % these fields are not desired
+        iscomp = 0;
+      end
+      data = ft_datatype_freq(data);
+      okflag = 1;
+    elseif isequal(dtype(iCell), {'timelock'}) && israw
+      if iscomp
+        data = removefields(data, {'topo', 'topolabel', 'unmixing'}); % these fields are not desired
+        iscomp = 0;
+      end
+      data = raw2timelock(data);
+      data = ft_datatype_timelock(data);
+      israw = 0;
+      istimelock = 1;
+      okflag = 1;
+    elseif isequal(dtype(iCell), {'raw'}) && isfreq
+      if iscomp
+        data = removefields(data, {'topo', 'topolabel', 'unmixing'}); % these fields are not desired
+        iscomp = 0;
+      end
+      data = freq2raw(data);
+      data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
+      isfreq = 0;
+      israw = 1;
+      okflag = 1;
+
+    elseif isequal(dtype(iCell), {'raw'}) && ischan
+      data = chan2timelock(data);
+      data = timelock2raw(data);
+      data = ft_datatype_raw(data);
+      ischan = 0;
+      israw = 1;
+      okflag = 1;
+    elseif isequal(dtype(iCell), {'timelock'}) && ischan
+      data = chan2timelock(data);
+      data = ft_datatype_timelock(data);
+      ischan = 0;
+      istimelock = 1;
+      okflag = 1;
+    elseif isequal(dtype(iCell), {'freq'}) && ischan
+      data = chan2freq(data);
+      data = ft_datatype_freq(data);
+      ischan = 0;
+      isfreq = 1;
+      okflag = 1;
+    elseif isequal(dtype(iCell), {'spike'}) && israw
+      data = raw2spike(data);
+      data = ft_datatype_spike(data);
+      israw = 0;
+      isspike = 1;
+      okflag = 1;
+    elseif isequal(dtype(iCell), {'raw'}) && isspike
+      data = spike2raw(data,fsample);
+      data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
+      isspike = 0;
+      israw   = 1;
+      okflag  = 1;
+    end
+  end % for iCell
   
   if ~okflag
     % construct an error message
@@ -913,7 +925,7 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'sparsewithpow')
     data.dimord = ['rpt_',data.dimord];
   end
   
-  if flag, siz = size(data.crsspctrm); data.crsspctrm = reshape(data.crsspctrm, siz(2:end)); end
+  if flag, siz = size(data.crsspctrm); data.crsspctrm = reshape(data.crsspctrm, [siz(2:end) 1]); end
 elseif strcmp(current, 'fourier') && strcmp(desired, 'sparse')
   
   if isempty(channelcmb), error('no channel combinations are specified'); end
@@ -993,7 +1005,7 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'sparse')
     data.dimord = ['rpt_',data.dimord];
   end
   
-  if flag, siz = size(data.crsspctrm); data.crsspctrm = reshape(data.crsspctrm, siz(2:end)); end
+  if flag, siz = size(data.crsspctrm); data.crsspctrm = reshape(data.crsspctrm, [siz(2:end) 1]); end
 elseif strcmp(current, 'fourier') && strcmp(desired, 'full')
   
   % this is how it is currently and the desired functionality of prepare_freq_matrices

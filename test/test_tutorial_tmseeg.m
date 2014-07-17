@@ -1,5 +1,7 @@
 function test_tutorial_tmseeg
 
+% MEM 16gb
+% WALLTIME 00:20:00
 % TEST test_tutorial_tmseeg
 % TEST ft_math ft_interpolatenan
 
@@ -22,16 +24,16 @@ cfg.reref = 'yes'; % We will rereference our data
 cfg.refchannel = {'all'}; % Here we specify our reference channels
 cfg.implicitref = '5'; % Here we can specify the name of our implicit reference channel after rereferencing
 
-data_tms = ft_preprocessing(cfg);
+data_tms_raw = ft_preprocessing(cfg);
 
-%save('data_tms_raw','data_tms','-v7.3');
+%save('data_tms_raw','data_tms_raw','-v7.3');
 
 if false
   % Inspect using databrowser, this should not run in automated mode
   cfg = [];
   cfg.preproc.demean = 'yes';
   cfg.preproc.baselinewindow = [-0.1 -0.001]; % For plotting purposes we will apply a baseline correction to the pre-stimulation period
-  ft_databrowser(cfg, data_tms);
+  ft_databrowser(cfg, data_tms_raw);
 end
 
 % Average
@@ -39,10 +41,10 @@ cfg = [];
 cfg.preproc.demean = 'yes';
 cfg.preproc.baselinewindow = [-0.1 -0.001];
 
-data_tms_avg = ft_timelockanalysis(cfg, data_tms);
+data_tms_avg = ft_timelockanalysis(cfg, data_tms_raw);
 
-% clear data_tms to save memory
-clear data_tms
+% clear data_tms_raw to save memory
+clear data_tms_raw
 
 % plot all in seperate window
 for i=1:numel(data_tms_avg.label) % Loop through all channels
@@ -145,10 +147,10 @@ cfg.reref = 'yes';
 cfg.refchannel = {'all'};
 cfg.implicitref = '5';
 
-data_tms_clean = ft_preprocessing(cfg);
+data_tms_segmented = ft_preprocessing(cfg);
 
 
-%% compare segmented vs raw
+%% comp_tmsare segmented vs raw
 if false
   % Inspect using databrowser, this should not run in automated mode
   
@@ -156,7 +158,7 @@ if false
   cfg = [];
   cfg.artfctdef = cfg_artifact.artfctdef;
   cfg.continuous = 'yes';
-  ft_databrowser(cfg, data_tms_clean);
+  ft_databrowser(cfg, data_tms_segmented);
   
   % raw
   cfg = [];
@@ -175,23 +177,23 @@ close all;
 % cfg.fastica.approach = 'symm';
 % cfg.fastica.g = 'gauss';
 %
-% comp = ft_componentanalysis(cfg, data_tms_clean);
+% comp_tms = ft_conentanalysis(cfg, data_tms_segmented);
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/tms/sp/comp.mat'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/tms/sp/comp_tms.mat'));
 
-%save('comp','comp','-v7.3');
+%save('comp_tms','comp_tms','-v7.3');
 
-%% Time-lock average components
+%% Time-lock average comp_tmsonents
 cfg = [];
 cfg.vartrllength  = 2;
-comp_avg = ft_timelockanalysis(cfg, comp);
+comp_tms_avg = ft_timelockanalysis(cfg, comp_tms);
 
 %% Databrowser
 if false
   % Inspect using databrowser, this should not run in automated mode
   figure;
   cfg = [];
-  ft_databrowser(cfg, comp_avg);
+  ft_databrowser(cfg, comp_tms_avg);
 end
 
 %% ft_topoplotIC
@@ -200,39 +202,39 @@ cfg = [];
 cfg.component = 1:60;
 cfg.comment = 'no';
 cfg.layout = 'easycapM10';
-ft_topoplotIC(cfg, comp);
+ft_topoplotIC(cfg, comp_tms);
 
 %% databrowser to browse through trials
 if false
   % Inspect using databrowser, this should not run in automated mode
   cfg = [];
   cfg.layout = 'easycapM10';
-  cfg.viewmode = 'component';
-  ft_databrowser(cfg, comp);
+  cfg.viewmode = 'comp_tmsonent';
+  ft_databrowser(cfg, comp_tms);
 end
 
 %% Apply unmixing matrix to same data without demeaning
 
 cfg = [];
 cfg.demean = 'no';
-cfg.unmixing = comp.unmixing;
-cfg.topolabel = comp.topolabel;
+cfg.unmixing = comp_tms.unmixing;
+cfg.topolabel = comp_tms.topolabel;
 
-comp = ft_componentanalysis(cfg, data_tms_clean);
+comp_tms = ft_componentanalysis(cfg, data_tms_segmented);
 
-% Remove components
+% Remove comp_tmsonents
 cfg = [];
 cfg.component = [ 41 56 7 33 1 25 52 37 49 50 31];
 cfg.demean = 'no';
 
-data_tms_clean = ft_rejectcomponent(cfg, comp);
+data_tms_clean_segmented = ft_rejectcomponent(cfg, comp_tms);
 
 %% Have a look at result of removal.
 cfg = [];
 cfg.vartrllength = 2;
 cfg.preproc.demean = 'no';
 
-data_tms_clean_avg = ft_timelockanalysis(cfg, data_tms_clean);
+data_tms_clean_avg = ft_timelockanalysis(cfg, data_tms_clean_segmented);
 
 for i=1:numel(data_tms_clean_avg.label) % Loop through all channels
   figure;
@@ -249,7 +251,7 @@ end;
 % Apply original structure to segmented data, gaps will be filled with nans
 cfg = [];
 cfg.trl = trl;
-data_tms_clean = ft_redefinetrial(cfg, data_tms_clean); % Restructure cleaned data
+data_tms_clean = ft_redefinetrial(cfg, data_tms_clean_segmented); % Restructure cleaned data
 
 % Replacing muscle artifact with nans
 muscle_window = [0.006 0.015];
@@ -260,12 +262,12 @@ end;
 
 % Interpolate nans using cubic interpolation
 cfg = [];
-cfg.method = 'cubic';
+cfg.method = 'pchip';
 cfg.prewindow = 0.01;
 cfg.postwindow = 0.01;
 data_tms_clean = ft_interpolatenan(cfg, data_tms_clean);
 
-%% compare
+%% comp_tmsare
 cfg = [];
 cfg.preproc.demean = 'yes';
 cfg.preproc.baselinewindow = [-0.1 -0.001];

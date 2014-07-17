@@ -5,7 +5,7 @@ function [s] = keepfields(s, fields)
 % Use as
 %   s = keepfields(s, fields);
 %
-% See also REMOVEFIELDS
+% See also REMOVEFIELDS, COPYFIELDS
 
 % Copyright (C) 2014, Robert Oostenveld
 %

@@ -181,8 +181,7 @@ mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes');
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'realignfiducial', 'fiducial'});
-cfg = ft_checkconfig(cfg, 'renamed', {'landmark', 'fiducial'});
-cfg = ft_checkconfig(cfg, 'renamedval', {'landmark', 'fiducial'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'landmark', 'fiducial'}); % cfg.landmark -> cfg.fiducial 
 
 % set the defaults
 cfg.coordsys   = ft_getopt(cfg, 'coordsys',  []);
@@ -377,7 +376,7 @@ switch cfg.method
     opt.showcrosshair = true;
     opt.showmarkers   = false;
     opt.markers       = {markerpos markerlabel markercolor};
-    opt.clim          = [];
+    opt.clim          = cfg.clim;
     opt.fiducial      = cfg.fiducial;
     opt.fidlabel      = fidlabel;
     opt.fidletter     = fidletter;
@@ -842,7 +841,7 @@ opt.ijk = opt.ijk(1:3)';
 str1 = sprintf('voxel %d, index [%d %d %d]', sub2ind(mri.dim(1:3), xi, yi, zi), opt.ijk);
 
 if opt.init
-  ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'parents', [h1 h2 h3].*opt.update, 'doscale', false);
+  ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'parents', [h1 h2 h3].*opt.update, 'doscale', false, 'clim', opt.clim);
   
   opt.anahandles = findobj(opt.handlesfigure, 'type', 'surface')';
   parenttag  = get(cell2mat(get(opt.anahandles,'parent')),'tag');
@@ -851,7 +850,7 @@ if opt.init
   opt.anahandles = opt.anahandles(:)';
   set(opt.anahandles, 'tag', 'ana');
 else
-  ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'surfhandle', opt.anahandles.*opt.update, 'doscale', false);
+  ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'surfhandle', opt.anahandles.*opt.update, 'doscale', false, 'clim', opt.clim);
   
   if all(round([xi yi zi])<=mri.dim) && all(round([xi yi zi])>0)
     fprintf('==================================================================================\n');
@@ -991,7 +990,7 @@ end
 h   = getparent(h);
 opt = getappdata(h, 'opt');
 
-curr_ax = get(h,       'currentaxes');
+curr_ax = get(h, 'currentaxes');
 tag     = get(curr_ax, 'tag');
 
 if isempty(key)
@@ -999,6 +998,7 @@ if isempty(key)
   key = '';
 end
 
+% the following code is largely shared with FT_SOURCEPLOT
 switch key
   case {'' 'shift+shift' 'alt-alt' 'control+control' 'command-0'}
     % do nothing
@@ -1050,8 +1050,9 @@ switch key
     if isempty(opt.clim)
       opt.clim = [min(opt.ana(:)) max(opt.ana(:))];
     end
-    % reduce color scale range by 10%
-    cscalefactor = (opt.clim(2)-opt.clim(1))/10;
+    % reduce color scale range by 5%
+    cscalefactor = (opt.clim(2)-opt.clim(1))/2.5;
+    opt.clim(1) = opt.clim(1)+cscalefactor;
     opt.clim(2) = opt.clim(2)-cscalefactor;
     setappdata(h, 'opt', opt);
     cb_redraw(h);
@@ -1060,8 +1061,9 @@ switch key
     if isempty(opt.clim)
       opt.clim = [min(opt.ana(:)) max(opt.ana(:))];
     end
-    % increase color scale range by 10%
-    cscalefactor = (opt.clim(2)-opt.clim(1))/10;
+    % increase color scale range by 5%
+    cscalefactor = (opt.clim(2)-opt.clim(1))/2.5;
+    opt.clim(1) = opt.clim(1)-cscalefactor;
     opt.clim(2) = opt.clim(2)+cscalefactor;
     setappdata(h, 'opt', opt);
     cb_redraw(h);
@@ -1204,7 +1206,6 @@ uiresume
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function h = getparent(h)
-
 p = h;
 while p~=0
   h = p;

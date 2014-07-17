@@ -110,7 +110,7 @@ function [freq] = ft_freqanalysis(cfg, data)
 %   cfg.gwidth     = determines the length of the used wavelets in standard deviations
 %                    of the implicit Gaussian kernel and should be choosen
 %                    >= 3; (default = 3)
-% 
+%
 % The standard deviation in the frequency domain (sf) at frequency f0 is
 % defined as: sf = f0/width
 % The standard deviation in the temporal domain (st) at frequency f0 is
@@ -205,6 +205,7 @@ cfg.feedback    = ft_getopt(cfg, 'feedback',   'text');
 cfg.inputlock   = ft_getopt(cfg, 'inputlock',  []);  % this can be used as mutex when doing distributed computation
 cfg.outputlock  = ft_getopt(cfg, 'outputlock', []);  % this can be used as mutex when doing distributed computation
 cfg.trials      = ft_getopt(cfg, 'trials',     'all');
+cfg.channel     = ft_getopt(cfg, 'channel',    'all');
 
 % check if the input data is valid for this function
 data = ft_checkdata(data, 'datatype', {'raw', 'raw+comp', 'mvar'}, 'feedback', cfg.feedback, 'hassampleinfo', 'yes');
@@ -223,6 +224,7 @@ cfg = ft_checkconfig(cfg, 'renamedval',  {'method', 'wltconvol', 'wavelet'});
 % select trials of interest
 tmpcfg = [];
 tmpcfg.trials = cfg.trials;
+tmpcfg.channel = cfg.channel;
 data = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
@@ -269,7 +271,6 @@ switch cfg.method
     cfg = ft_checkconfig(cfg, 'unused',  {'downsample'});
     cfg.width  = ft_getopt(cfg, 'width',  7);
     cfg.gwidth = ft_getopt(cfg, 'gwidth', 3);
-    
     
   case 'hilbert'
     warning('method = hilbert requires user action to deal with filtering-artifacts')
@@ -357,31 +358,10 @@ elseif isfield(cfg, 'channelcmb') && ~csdflg
   cfg = rmfield(cfg, 'channelcmb');
 end
 
-% ensure that channelselection and selection of channelcombinations is
-% perfomed consistently
-cfg.channel = ft_channelselection(cfg.channel, data.label);
-
-if isempty(cfg.channel)
-  error('no channels were selected');
-end
-
-
 if isfield(cfg, 'channelcmb')
+  % the channels in the data are already the subset according to cfg.channel
   cfg.channelcmb = ft_channelcombination(cfg.channelcmb, data.label);
-  % check whether there are channels in channelcmb that are not in cfg.channel
-  tmpcmbchan = unique(cfg.channelcmb);
-  for ichan = 1:length(tmpcmbchan)
-    if ~any(strcmp(tmpcmbchan{ichan},cfg.channel))
-      error('channels in cfg.channelcmb not present in cfg.channel')
-    end
-  end
-  selchan = unique([cfg.channel(:); cfg.channelcmb(:)]);
-else
-  selchan = cfg.channel;
 end
-
-% subselect the required channels
-data = ft_selectdata(data, 'channel', selchan);
 
 % determine the corresponding indices of all channels
 chanind    = match_str(data.label, cfg.channel);
@@ -396,7 +376,7 @@ if csdflg
   nchan      = length(chanind);
   cutdatindcmb = zeros(size(chancmbind));
   for ichan = 1:nchan
-    cutdatindcmb(find(chancmbind == chanind(ichan))) = ichan;
+    cutdatindcmb(chancmbind == chanind(ichan)) = ichan;
   end
 end
 
@@ -452,7 +432,6 @@ else
   options = {'pad', cfg.pad, 'padtype', cfg.padtype, 'freqoi', cfg.foi, 'polyorder', cfg.polyremoval};
 end
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Main loop over trials, inside fourierspectra are obtained and transformed into the appropriate outputs
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -460,7 +439,7 @@ end
 
 ft_progress('init', cfg.feedback, 'processing trials');
 for itrial = 1:ntrials
-    
+  
   %disp(['processing trial ' num2str(itrial) ': ' num2str(size(data.trial{itrial},2)) ' samples']);
   fbopt.i = itrial;
   fbopt.n = ntrials;
@@ -545,9 +524,10 @@ for itrial = 1:ntrials
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %%% Memory allocation
-  % memory allocation for mtmfft is slightly different because of the possiblity of variable number of tapers over trials (when using dpss), the below exception
-  % is made so memory can still be allocated fully (see bug #1025
   if strcmp(cfg.method, 'mtmfft') && strcmp(cfg.taper,'dpss')
+    % memory allocation for mtmfft is slightly different because of the possiblity of
+    % variable number of tapers over trials (when using dpss), the below exception is
+    % made so memory can still be allocated fully (see bug #1025
     trllength = cellfun(@numel,data.time);
     % determine number of tapers per trial
     ntaptrl = sum(floor((2 .* (trllength./data.fsample) .* cfg.tapsmofrq) - 1)); % I floored it for now, because I don't know whether this formula is accurate in all cases, by flooring the memory allocated
@@ -600,8 +580,7 @@ for itrial = 1:ntrials
         cumtapcnt = zeros(ntrials,1);
     end
     
-  end
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  end % itrial==1
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %%% Create output
@@ -626,7 +605,6 @@ for itrial = 1:ntrials
       elseif sum(acttboi)==0
         %nacttboi = 1;
       end
-      acttap = squeeze(~isnan(spectrum(:,1,foiind(ifoi),find(acttboi,1))));
       acttap = logical([ones(ntaper(ifoi),1);zeros(size(spectrum,1)-ntaper(ifoi),1)]);
       if powflg
         powdum = abs(spectrum(acttap,:,foiind(ifoi),acttboi)) .^2;
@@ -648,8 +626,7 @@ for itrial = 1:ntrials
         fourierdum = spectrum(acttap,:,foiind(ifoi),acttboi);
       end
       if csdflg
-        csddum =      spectrum(acttap,cutdatindcmb(:,1),foiind(ifoi),acttboi) .* ...
-          conj(spectrum(acttap,cutdatindcmb(:,2),foiind(ifoi),acttboi));
+        csddum =      spectrum(acttap,cutdatindcmb(:,1),foiind(ifoi),acttboi) .* conj(spectrum(acttap,cutdatindcmb(:,2),foiind(ifoi),acttboi));
       end
       
       % switch between keep's
@@ -764,8 +741,8 @@ if (strcmp(cfg.method, 'mtmconvol') || strcmp(cfg.method, 'wavelet')) && keeprpt
 end
 
 % set output variables
-freq = [];
-freq.label = data.label;
+freq        = [];
+freq.label  = data.label;
 freq.dimord = dimord;
 freq.freq   = foi;
 hasdc       = find(foi==0);
@@ -825,13 +802,8 @@ else
   cfg = rmfield(cfg, 'foilim');
 end
 
-% some fields from the input should be copied over in the output
-copyfield = {'grad', 'elec', 'topo', 'topolabel', 'unmixing'};
-for i=1:length(copyfield)
-  if isfield(data, copyfield{i})
-    freq.(copyfield{i}) = data.(copyfield{i});
-  end
-end
+% some fields from the input should always be copied over in the output
+freq = copyfields(data, freq, {'grad', 'elec', 'topo', 'topolabel', 'unmixing'});
 
 if isfield(data, 'trialinfo') && strcmp(cfg.keeptrials, 'yes')
   % copy the trialinfo into the output, but not the sampleinfo

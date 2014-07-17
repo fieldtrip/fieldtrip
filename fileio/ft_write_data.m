@@ -30,7 +30,7 @@ function ft_write_data(filename, dat, varargin)
 %
 % See also FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT, FT_WRITE_EVENT
 
-% Copyright (C) 2007-2012 Robert Oostenveld
+% Copyright (C) 2007-2014, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -62,6 +62,7 @@ append        = ft_getopt(varargin, 'append', false);
 nbits         = ft_getopt(varargin, 'nbits'); % for riff_wave
 chanindx      = ft_getopt(varargin, 'chanindx');
 hdr           = ft_getopt(varargin, 'header');
+evt           = ft_getopt(varargin, 'event');
 dataformat    = ft_getopt(varargin, 'dataformat');
 
 if isempty(dataformat)
@@ -268,7 +269,7 @@ switch dataformat
     %   hdr.label
     %   hdr.nChans
     %   hdr.Fs
-    write_brainvision_eeg(filename, hdr, dat);
+    write_brainvision_eeg(filename, hdr, dat, evt);
     
   case 'fcdc_matbin'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

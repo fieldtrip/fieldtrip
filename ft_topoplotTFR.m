@@ -164,16 +164,20 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
+ft_preamble loadvar    varargin
+ft_preamble provenance varargin
+ft_preamble trackconfig
+ft_preamble debug
 
 % the abort variable is set to true or false in ft_preamble_init
 if abort
   return
 end
 
-% this is just a wrapper function around the common code that does all the hard work
-% the reason for this wrapper function is to have a placeholder for TFR-specific documentation
-
+% make sure figure window titles are labeled appropriately, pass this onto the actual
+% plotting function if we don't specify this, the window will be called
+% 'ft_topoplotTFR', which is confusing to the user
+cfg.funcname = mfilename;
 if nargin > 1
   cfg.dataname = {inputname(2)};
   for k = 3:nargin
@@ -181,23 +185,21 @@ if nargin > 1
   end
 end
 
-% make sure figure window titles are labeled appropriately, pass this onto the actual
-% plotting function if we don't specify this, the window will be called
-% 'ft_topoplotTFR', which is confusing to the user
-cfg.funcname = mfilename;
+% prepare the layout, this should be done only once
+cfg.layout = ft_prepare_layout(cfg, comp);
 
 % call the common function that is shared between ft_topoplotER and ft_topoplotTFR
 [cfg] = topoplot_common(cfg, varargin{:});
 
-% remove it again
-if isfield(cfg, 'funcname'),
-  cfg = rmfield(cfg, 'funcname');
-end
+% remove this field again, it is only used for figure labels
+cfg = removefields(cfg, 'funcname');
 
 % do the general cleanup and bookkeeping at the end of the function
 % this will replace the ft_topoplotTFR callinfo with that of ft_topoplotER
-ft_postamble provenance
+ft_postamble trackconfig
 ft_postamble previous varargin
+ft_postamble provenance
+ft_postamble debug
 
 if ~nargout
   clear cfg

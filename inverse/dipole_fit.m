@@ -114,9 +114,9 @@ end
 if isempty(maxiter)
   % set a default for the maximum number of iterations, depends on the optimization function
   if isequal(optimfun, @fminunc)
-    maxiter = 100;
+    maxiter = 1000;
   else
-    maxiter = 500;
+    maxiter = 3000;
   end
 end
 

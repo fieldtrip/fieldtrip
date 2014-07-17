@@ -173,6 +173,14 @@ while true
     sample = [sample(1)-1 sample];
     time   = [time(1)-1/hdr.Fs time];
 
+    if true
+      figure(h1)
+      % plot the data
+      plot(time, dat);
+      xlim([time(1) time(end)]);
+      ylim([-6 6]);
+    end
+
     if cfg.threshold<0
       % detect negative peaks
       [peakval, peakind] = findpeaks(-dat, 'minpeakheight', -cfg.threshold);
@@ -184,14 +192,6 @@ while true
     sel = (peakind==size(dat,2));
     peakval(sel) = [];
     peakind(sel) = [];
-
-    if true
-      figure(h1)
-      % plot the data
-      plot(time, dat);
-      xlim([time(1) time(end)]);
-      ylim([-6 6]);
-    end
 
     for i=1:length(peakval)
       % make a sound for each heart beat

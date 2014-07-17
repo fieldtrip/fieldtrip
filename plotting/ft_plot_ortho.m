@@ -6,7 +6,7 @@ function [hx, hy, hz] = ft_plot_ortho(dat, varargin)
 %   ft_plot_ortho(dat, ...)
 %   ft_plot_ortho(dat, mask, ...)
 % where dat and mask are equal-sized 3-D arrays.
-% 
+%
 % Additional options should be specified in key-value pairs and can be
 %   'style'        = string, 'subplot' or 'intersect' (default = 'subplot')
 %   'parents'      = (optional) 3-element vector containing the handles of the axes for the subplots (when style = 'subplot')
@@ -57,6 +57,8 @@ end
 % other options such as location and transform are passed along to ft_plot_slice
 style     = ft_getopt(varargin(sellist), 'style', 'subplot');
 ori       = ft_getopt(varargin(sellist), 'orientation', eye(3));
+clim      = ft_getopt(varargin(sellist), 'clim', []);
+
 if strcmp(style, 'subplot')
   parents    = ft_getopt(varargin(sellist), 'parents');
   surfhandle = ft_getopt(varargin(sellist), 'surfhandle');
@@ -67,6 +69,12 @@ end
 
 if ~isa(dat, 'double')
   dat = cast(dat, 'double');
+end
+
+if ~isempty(clim)
+  % clip the data between the color limits
+  dat(dat<clim(1)) = clim(1);
+  dat(dat>clim(2)) = clim(2);
 end
 
 % determine the orientation key-value pair
@@ -106,7 +114,7 @@ switch style
       varargin{sel+1} = ori(2,:);
       set(gcf,'currentaxes',Hx);
       hx = ft_plot_slice(dat, varargin{:});
-      set(Hx, 'view', [0 0]);%, 'xlim', [0.5 size(dat,1)-0.5], 'zlim', [0.5 size(dat,3)-0.5]); 
+      set(Hx, 'view', [0 0]);%, 'xlim', [0.5 size(dat,1)-0.5], 'zlim', [0.5 size(dat,3)-0.5]);
       if isempty(parents),
         % only change axis behavior if no parents are specified
         axis off
