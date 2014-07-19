@@ -39,7 +39,6 @@ global ft_default
 % use an anonymous function
 assign = @(var, val) assignin('caller', var, val);
 
-
 if isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
   
   % the input data should be read from file
