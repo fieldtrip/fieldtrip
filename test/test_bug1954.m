@@ -5,11 +5,13 @@ function test_bug1954
 
 load /home/common/matlab/fieldtrip/template/headmodel/standard_mri.mat
 
+mri.coordsys = 'ras'; % this can also be determined with ft_determine_coordsys
 
 cfg           = [];
 cfg.output    = {'brain','skull','scalp'};
-cfg.coordsys  = 'ras';
+% cfg.coordsys  = 'ras'; % not supported any more, should be specified in the input data
 segmentedmri  = ft_volumesegment(cfg, mri);
+
 % I get warning (exact file name changes each time):
 % Warning: could not open /tmp/tpe20fae07_8585_42ab_a6e4_0e4c656f97b3.img 
 

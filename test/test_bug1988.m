@@ -10,8 +10,11 @@ function test_bug1988
 
 % as it's called in the BF tutorial
 mri = ft_read_mri('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/Subject01.mri');
+
+mri.coordsys = 'ctf'; % this can also be determined with ft_determine_coordsys
+
 cfg = [];
-cfg.coordsys = 'ctf';
+% cfg.coordsys = 'ctf'; % not supported any more, should be specified in the input data
 segmentedmri_bf = ft_volumesegment(cfg, mri);
 
 load /home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat
@@ -24,8 +27,11 @@ assert(isequalwithequalnans(rmfield(segmentedmri_bf, 'cfg'),rmfield(reference_bf
 
 % headmodel_meg, as it's called in the headmodel_meg tutorial
 mri = ft_read_mri('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/Subject01.mri');
+
+mri.coordsys = 'ctf'; % this can also be determined with ft_determine_coordsys
+
 cfg = [];
-cfg.coordsys = 'ctf';
+% cfg.coordsys = 'ctf'; % not supported any more, should be specified in the input data
 cfg.output = 'brain';
 segmentedmri_hm = ft_volumesegment(cfg, mri);
 
@@ -43,8 +49,11 @@ load /home/common/matlab/fieldtrip/data/ftp/tutorial/headmodel_eeg/segmentedmri.
 reference_he = segmentedmri;clear segmentedmri
 
 mri = ft_read_mri('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/Subject01.mri');
+
+mri.coordsys = 'ctf'; % this can also be determined with ft_determine_coordsys
+
 cfg = [];
-cfg.coordsys = 'ctf';
+% cfg.coordsys = 'ctf'; % not supported any more, should be specified in the input data
 cfg.output = {'brain' 'skull' 'scalp'};
 segmentedmri_he = ft_volumesegment(cfg, mri);
 

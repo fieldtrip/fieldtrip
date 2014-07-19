@@ -55,10 +55,12 @@ elseif ispc
     template = 'H:\common\matlab\fieldtrip\external\spm8\templates/T1.nii'; %template is distributed with spm
 end
 
+source.coordsys = 'mni'; % this can also be determined with ft_determine_coordsys
+
 template_mri = ft_read_mri(template);
 cfg            = [];
 cfg.voxelcoord = 'no';
 cfg.parameter  = {'avg.pow'};
 cfg.interpmethod = 'spline';
-cfg.coordsys   = 'mni';
+% cfg.coordsys   = 'mni'; % not supported any more, should be specified in the input data
 source_int  = ft_sourceinterpolate(cfg, source, template_mri);

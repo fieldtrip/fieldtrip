@@ -13,9 +13,10 @@ mri = ft_read_mri('/home/common/matlab/fieldtrip/data/test/latest/mri/nifti/sing
 % ft_volumesegment. From November 2013 onwards, ft_checkdata is used with
 % hascoordsys=yes.
 
+mri.coordsys = 'ctf'; % this can also be determined with ft_determine_coordsys
+
 cfg=[];
-% cfg.coordsys = 'ctf';
-mri.coordsys = 'ctf';
+% cfg.coordsys = 'ctf'; % not supported any more, should be specified in the input data
 tpm = ft_volumesegment(cfg,mri);  % gray, white, csf tissue prob. map
 
 cfg=[];

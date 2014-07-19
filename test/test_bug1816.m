@@ -6,9 +6,6 @@ function test_bug1816
 % test the ft_volumesegment function used for segmentation with FSL BET and FAST
 % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1816
 
-% at this moment the test script does not yet work, but we don't want the automatic regression testing to flag it as failure
-return
-
 % TEST test_bug1816
 % TEST ft_read_mri ft_volumesegment
 
@@ -29,7 +26,15 @@ T1  = ft_read_mri(subjectT1);
 T2  = ft_read_mri(subjectT2);
 DTi = ft_read_mri(subjectDTi);
 
-% segment
+% FIXME what are the (approximate) coordinate systems in which the data is expressed?
+T1.coordsys = 'ctf';
+T2.coordsys = 'ctf';
+DTi.coordsys = 'ctf';
+
+% at this moment the test script does not yet work, but we don't want the automatic regression testing to flag it as failure
+return
+
+% segment using FSL
 
 cfg = [];
 cfg.output = {'brain','skull','scalp','csf','gray','white'};  % define the requested tissue-types. 
@@ -41,9 +46,6 @@ cfg.method = 'fsl';                                           % not implemented 
                                                               % already implemented spm-fieldtrip
                                                               % segmentation.
                                                               
-cfg.coordsys = 'ctf'; % if the coordinate system of the mri is not specified in the mri.coordsys 
-                      % field of the volume, ft_volumesegment will reuqire this information 
-                      % specified in the cfg. I do not know what kind of coordinate system FSL needs.
 cfg. units   = 'mm';  % the physical units in which the output will be expressed   
 
 seg = ft_volumesegment(cfg,T1,T2,DTi)  
