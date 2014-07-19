@@ -24,6 +24,7 @@ switch cfg.debug
     
   otherwise
     % clean up the global variables
+    clear Ce9dei2ZOo_debug Ce9dei2ZOo_funname Ce9dei2ZOo_argin
     % this results in the cleanup function doing nothing
     Ce9dei2ZOo_debug   = 'no';
     Ce9dei2ZOo_funname = [];

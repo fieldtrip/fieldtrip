@@ -25,7 +25,6 @@ function cfg = topoplot_common(cfg, varargin)
 
 revision = '$Id$';
 
-
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'unused',     {'cohtargetchannel'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'cohrefchannel' 'refchannel'});

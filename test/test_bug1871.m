@@ -24,7 +24,6 @@ load bug1871
 freq.powspctrm = ft_struct2single(freq.powspctrm);
 
 cfg = [];
-cfg.channel     = 'MEGGRAD';
 cfg.interactive = 'yes';
 % cfg.showlabels  = 'no'; % this is a deprecated option, use cfg.marker instead
 cfg.marker = 'no'; 
