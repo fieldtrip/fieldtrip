@@ -70,10 +70,8 @@ if istrue(ft_getopt(cfg, 'showcallinfo', 'yes'))
   else
     fprintf('the call to "%s" took %d seconds and required the additional allocation of an estimated %d MB\n', stack.name, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
   end
-  
-  clear stack
-end
-
+end % if showcallinfo=yes
+clear stack
 
 % compute the MD5 hash of each of the output arguments
 % temporarily remove the cfg field for getting the hash (creating a duplicate of the data, but still has the same mem ref, so no extra mem needed)
@@ -96,9 +94,8 @@ for iargout = 1:numel(tmpargout)
     cfg.callinfo.outputhash{iargout} = CalcMD5(mxSerialize(tmparg));
   end
 end
-clear tmpargout tmparg; % remove the extra references
+clear iargout tmpargout tmparg bytenum; % remove the extra references
 
 clear ftohDiW7th_FuncTimer
 clear ftohDiW7th_FuncMem
-clear stack
 

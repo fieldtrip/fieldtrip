@@ -74,8 +74,7 @@ for iargin = 1:numel(tmpargin)
     cfg.callinfo.inputhash{iargin} = CalcMD5(mxSerialize(tmparg));
   end
 end
-clear tmpargin tmparg; % remove the extra references
-
+clear iargin tmpargin tmparg bytenum; % remove the extra references
 
 stack = dbstack('-completenames');
 % stack(1) is this script
