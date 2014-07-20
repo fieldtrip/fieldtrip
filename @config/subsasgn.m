@@ -22,29 +22,109 @@ function y = subsasgn(x, index, val)
 %
 % $Id$
 
+if isa(val, 'config')
+  warning('nested configs are not allowed, converting to struct');
+  val = struct(val);
+end
+
 if length(index)==1
   switch index.type
     case '.'
       y = set(x, index.subs, val);
     case '{}'
-      error('Cell contents reference from a non-cell array object.');
+      y = set(x, index.subs, val);
+      % error('Cell contents reference from a non-cell array object.');
     case '()'
-      error('Index exceeds matrix dimensions.');
+      y = set(x, index.subs, val);
+      % error('Index exceeds matrix dimensions.');
     otherwise
       error('Incorrect contents reference');
   end
 elseif length(index)>1 && strcmp(index(1).type, '()')
-  if ~isfield(x, index(2).subs)
-    % an empty field should be added to all elements of the array
-    for i=1:numel(x)
-      y(i) = subsasgn(x(i), index(2:end), []);
-    end
-  else
-    % the field is already present in the array
-    y = x;
+  
+  ndims = length(index(1).subs);
+  
+  %   if ndims==1 && isvector(x) && ~isequal(index(1).subs{1}, ':')
+  %     index(1).subs = {1 index(1).subs{1}};
+  %     ndims = 2;
+  %   end
+  
+  % copy the array to the output variable
+  y = x;
+  
+  if ndims==1
+    % convert the array into a column vector
+    y = reshape(y, numel(y), 1);
   end
-  % the value of the field should only be changed for the specific element of the array
-  y(index(1).subs{1}) = subsasgn(y(index(1).subs{1}), index(2:end), val);
+  
+  for i=1:ndims
+    if isequal(index(1).subs{i}, ':')
+      index(1).subs{i} = 1:size(x, i);
+    end
+  end
+  
+  % add singleton dimensions to the end
+  index(1).subs((ndims+1):6) = {1};
+  
+  % the array may need to be extended in size
+  for i=1:ndims
+    dimsize = size(y, i);
+    maxindx = max(index(1).subs{i});
+    if dimsize<maxindx
+      % construct an array like {'name1', [], 'name2', [], ...}
+      fn = fieldnames(y);
+      fv = repmat({[]}, size(fn));
+      ff = cat(1, fn', fv');
+      ff = struct(ff{:});
+      switch i
+        case 1
+          y((dimsize+1):maxindx,:,:,:,:,:) = ff;
+        case 2
+          y(:,(dimsize+1):maxindx,:,:,:,:) = ff;
+        case 3
+          y(:,:,(dimsize+1):maxindx,:,:,:) = ff;
+        case 4
+          y(:,:,:,(dimsize+1):maxindx,:,:) = ff;
+        case 5
+          y(:,:,:,:,(dimsize+1):maxindx,:) = ff;
+        case 6
+          y(:,:,:,:,:,(dimsize+1):maxindx) = ff;
+        otherwise
+          error('unsupported style of indexing');
+      end % case
+    end
+  end
+  
+  if ~isfield(y, index(2).subs)
+    % an empty field should be added to all elements of the array
+    for i=1:numel(y)
+      y(i) = subsasgn(y(i), index(2:end), []);
+    end
+  end
+  
+  % the value of the field should be changed for the specific elements of the array
+  s1 = index(1).subs{1};
+  s2 = index(1).subs{2};
+  s3 = index(1).subs{3};
+  s4 = index(1).subs{4};
+  s5 = index(1).subs{5};
+  s6 = index(1).subs{6};
+  y(s1, s2, s3, s4, s5, s6) = subsasgn(y(s1, s2, s3, s4, s5, s6), index(2:end), val);
+  
+  if ndims==1
+    if isscalar(x) && ~isscalar(y)
+      y = reshape(y, 1, numel(y));
+    elseif isrow(x) && ~isrow(y)
+      y = reshape(y, 1, numel(y));
+    elseif iscolumn(x) && ~iscolumn(y)
+      y = reshape(y, numel(y), 1);
+    elseif numel(x) == numel(y)
+      y = reshape(y, size(x));
+    elseif numel(y)>1
+      error('unsupported style of indexing');
+    end
+  end
+  
 else
   % use recursion to find the subfield that is being indexed
   if ~isfield(x, index(1).subs)

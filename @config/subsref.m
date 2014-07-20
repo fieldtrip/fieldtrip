@@ -1,4 +1,4 @@
-function y = subsref(x, index, inc)
+function varargout = subsref(x, index, inc)
 
 % SUBSREF Return the value of a specified field in a config objects and increment its reference counter.
 
@@ -26,32 +26,55 @@ if nargin<3
   inc = true;
 end
 
+if strcmp(index(1).type, '()')
+  ndims = numel(index(1).subs);
+  if ndims==1
+    % convert the array into a column vector
+    x = reshape(x, numel(x), 1);
+  end
+  for i=1:ndims
+    if isequal(index(1).subs{i}, ':')
+      index(1).subs{i} = 1:size(x, i);
+    end
+  end
+end
+
 if length(index)==1
   switch index.type
     case '.'
-      y = get(x, index.subs, inc);
+      varargout      = cell(1, numel(x));
+      [varargout{:}] = get(x, index.subs, inc);
     case '{}'
       error('Cell contents reference from a non-cell array object.');
     case '()'
-        y = x(index.subs{1});
+      % add singleton dimensions to the end
+      index.subs((ndims+1):6) = {1};
+      s1 = index.subs{1};
+      s2 = index.subs{2};
+      s3 = index.subs{3};
+      s4 = index.subs{4};
+      s5 = index.subs{5};
+      s6 = index.subs{6};
+      % get the selection
+      varargout{1} = x(s1, s2, s3, s4, s5, s6);
     otherwise
       error('Incorrect contents reference');
   end
 else
   % use recursion to find the subfield that is being indexed
-  y = subsref(subsref(x, index(1)), index(2:end));
+  varargout      = cell(1, prod(cellfun(@numel, index(1).subs)));
+  [varargout{:}] = subsref(subsref(x, index(1)), index(2:end));
 end
-
 
 % TEST CODE
 % function varargout = subsref(x, index, inc)
 % % SUBSREF Return the value of a specified field in a config objects and increment its reference counter.
-% 
+%
 % y = [];
 % if nargin<3
 %   inc = true;
 % end
-% 
+%
 % if length(index)==1
 %   switch index.type
 %     case '.'
