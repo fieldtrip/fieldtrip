@@ -153,13 +153,6 @@ if iscell(cfg)
   return
 end
 
-% this is for backward compatibility related to the renaming of blc into
-% demean, and blcwindow into baselinewindow. to avoid having to create an
-% svn external for ft_checkconfig in fieldtrip/private, do the check
-% manually
-ft_checkconfig(cfg, 'renamed', {'blc', 'demean'});
-ft_checkconfig(cfg, 'renamed', {'blcwindow', 'baselinewindow'});
-
 % set the defaults for the rereferencing options
 if ~isfield(cfg, 'reref'),        cfg.reref = 'no';             end
 if ~isfield(cfg, 'refchannel'),   cfg.refchannel = {};          end
