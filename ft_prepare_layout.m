@@ -885,8 +885,11 @@ function layout = sens2lay(sens, rz, method, style, overlap)
 
 % remove the balancing from the sensor definition, e.g. 3rd order gradients, PCA-cleaned data or ICA projections
 % this not only removed the linear projections, but also ensures that the channel labels are correctly named
-if isfield(sens, 'balance') && ~strcmp(sens.balance.current, 'none')
-  sens = undobalancing(sens);
+if isfield(sens, 'balance') && ~strcmp(sens.balance.current, 'none')            
+    sens = undobalancing(sens);
+    if isfield(sens, 'chanposorg')
+        sens.chanpos = sens.chanposorg;
+    end
 end
 
 fprintf('creating layout for %s system\n', ft_senstype(sens));
