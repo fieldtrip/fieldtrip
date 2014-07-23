@@ -186,6 +186,7 @@ cfg.channel         = ft_getopt(cfg, 'channel',      'all');
 cfg.numcomponent    = ft_getopt(cfg, 'numcomponent', 'all');
 cfg.normalisesphere = ft_getopt(cfg, 'normalisesphere', 'yes');
 cfg.cellmode        = ft_getopt(cfg, 'cellmode',     'no');
+cfg.doscale         = ft_getopt(cfg, 'doscale',      'yes');
 
 % select channels, has to be done prior to handling of previous (un)mixing matrix
 cfg.channel = ft_channelselection(cfg.channel, data.label);
@@ -222,6 +223,7 @@ if isfield(cfg, 'unmixing') && isfield(cfg, 'topolabel')
   tmpcfg.channel      = cfg.channel;     % the Mx1 labels of the data that is presented now to this function
   tmpcfg.numcomponent = 'all';
   tmpcfg.method       = 'predetermined unmixing matrix';
+  tmpcfg.doscale      = cfg.doscale;
   cfg                 = tmpcfg;
 end
 
@@ -309,17 +311,21 @@ if strcmp(cfg.demean, 'yes')
   end
 end
 
-% determine the scaling of the data, scale it to approximately unity
-% this will improve the performance of some methods, esp. fastica
-scale = norm((data.trial{1}*data.trial{1}')./size(data.trial{1},2));
-scale = sqrt(scale);
-if scale ~= 0
-  fprintf('scaling data with 1 over %f\n', scale);
-  for trial=1:Ntrials
-    data.trial{trial} = data.trial{trial} ./ scale;
+if strcmp(cfg.doscale, 'yes')
+  % determine the scaling of the data, scale it to approximately unity
+  % this will improve the performance of some methods, esp. fastica
+  scale = norm((data.trial{1}*data.trial{1}')./size(data.trial{1},2));
+  scale = sqrt(scale);
+  if scale ~= 0
+    fprintf('scaling data with 1 over %f\n', scale);
+    for trial=1:Ntrials
+      data.trial{trial} = data.trial{trial} ./ scale;
+    end
+  else
+    fprintf('no scaling applied, since factor is 0\n');
   end
 else
-  fprintf('no scaling applied, since factor is 0\n');
+  fprintf('no scaling applied to the data\n');
 end
 
 if strcmp(cfg.method, 'sobi')
@@ -568,6 +574,39 @@ switch cfg.method
     
     clear C D E d
     
+  case 'kpca'
+    
+    % linear kernel (same as normal covariance)
+    %kern = @(X,y) (sum(bsxfun(@times, X, y),2));
+    
+    % polynomial kernel degree 2
+    %kern = @(X,y) (sum(bsxfun(@times, X, y),2).^2);
+    
+    % RBF kernel
+    kern = @(X,y) (exp(-0.5* sqrt(sum(bsxfun(@minus, X, y).^2, 2))));
+    
+    % compute kernel matrix
+    C = zeros(Nchans,Nchans);
+    ft_progress('init', 'text', 'computing kernel matrix...');
+    for k = 1:Nchans
+      ft_progress(k/Nchans);
+      C(k,:) = kern(dat, dat(k,:));
+    end
+    ft_progress('close');
+    
+    % eigenvalue decomposition (EVD)
+    [E,D] = eig(C);
+    
+    % sort eigenvectors in descending order of eigenvalues
+    d = cat(2,(1:1:Nchans)',diag(D));
+    d = sortrows(d,[-2]);
+    
+    % return the desired number of principal components
+    unmixing = E(:,d(1:cfg.numcomponent,1))';
+    mixing = [];
+    
+    clear C D E d
+    
   case 'svd'
     if cfg.numcomponent<Nchans
       % compute only the first components
@@ -749,8 +788,14 @@ if size(mixing,2) > cfg.numcomponent
 end
 
 % compute the activations in each trial
-for trial=1:Ntrials
-  comp.trial{trial} = scale * unmixing * data.trial{trial};
+if strcmp(cfg.doscale, 'yes')
+  for trial=1:Ntrials
+    comp.trial{trial} = scale * unmixing * data.trial{trial};
+  end
+else
+  for trial=1:Ntrials
+    comp.trial{trial} = unmixing * data.trial{trial};
+  end
 end
 
 % store mixing/unmixing matrices in structure
