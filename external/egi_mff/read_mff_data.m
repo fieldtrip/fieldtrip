@@ -49,7 +49,7 @@ else
 end
 dataNumSamples = (summaryInfo.blockBeginSamps(endBlock) - summaryInfo.blockBeginSamps(beginBlock)) + summaryInfo.blockNumSamps(endBlock);
 pibNChans = 0;
-if ~isempty(summaryInfo.pibBinObj)
+if ~isempty(summaryInfo.javaObjs.pibBinObj)
     pibNChans = summaryInfo.pibNChans;
     if summaryInfo.pibHasRef
         pibNChans = pibNChans + 1;
@@ -62,8 +62,8 @@ data = zeros(eegNChans + pibNChans, dataNumSamples);
 % Call to function replaced by inline code for speed purposes. 
 % data(1:eegNChans,:) = read_mff_data_blocks(summaryInfo.binObj, summaryInfo.blocks, beginBlock, endBlock, eegNChans, dataNumSamples, summaryInfo.blockNumSamps);
 %%
-binObj = summaryInfo.binObj;
-blocks = summaryInfo.blocks;
+binObj = summaryInfo.javaObjs.binObj;
+blocks = summaryInfo.javaObjs.blocks;
 startChan = 1;
 endChan = eegNChans;
 sampleInd = 1;
@@ -75,11 +75,11 @@ for blockInd = beginBlock-1:endBlock-1
 end
 
 % PIB data if any...
-if ~isempty(summaryInfo.pibBinObj)
+if ~isempty(summaryInfo.javaObjs.pibBinObj)
 % Call to function replaced by inline code for speed purposes. 
 %     data(eegNChans+1:end,:) = read_mff_data_blocks(summaryInfo.pibBinObj, summaryInfo.pibBlocks, beginBlock, endBlock, pibNChans, dataNumSamples, summaryInfo.blockNumSamps);
-    binObj = summaryInfo.pibBinObj;
-    blocks = summaryInfo.pibBlocks;
+    binObj = summaryInfo.javaObjs.pibBinObj;
+    blocks = summaryInfo.javaObjs.pibBlocks;
     startChan = eegNChans + 1;
     endChan = eegNChans + pibNChans;
     sampleInd = 1;

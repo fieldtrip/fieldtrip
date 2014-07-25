@@ -35,7 +35,7 @@ else
         infoObj = mff_getObject(com.egi.services.mff.api.MFFResourceType.kMFF_RT_Info, 'info.xml', filePath);
         ver = infoObj.getMFFVersion;
         if ver ~= 3;
-            theException = MException('EGI_MFF:WRONG_VER', 'MFF is not version 3. Please convert.');
+            theException = MException('EGI_MFF:WRONG_VER', 'MFF is not version 3. Please convert using EGI''s MFF File Converter. Contact supportteam@egi.com form more information.');
         else
             valid = true;
         end

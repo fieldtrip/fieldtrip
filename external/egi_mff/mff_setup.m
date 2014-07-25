@@ -14,10 +14,36 @@ if ~(exist('com.egi.services.mff.api.MFFFactory', 'class')==8)
     jarpath = fullfile(fileparts(mfilename('fullpath')), 'java', 'M*.jar');
     jarlist = dir(jarpath);
     if size(jarlist, 1) == 1
+        
+        % Some MATLAB versions have a bug in javaclasspath that causes global
+        % variables to be erased. Hence we keep a local copy and restore it afterwards.
+        % See http://bugzilla.fcdonders.nl/show_bug.cgi?id=2133
+
+        var = whos('global');
+        glob = [var.global];
+        name = {var.name};
+        name = name(glob);
+        for i=1:length(name)
+        eval(sprintf('global %s', name{i}));
+        eval(sprintf('localcopy.%s = %s;', name{i}, name{i}));
+        end
+        
         % try to add it to the dynamic classpath
         jarpath = fullfile(fileparts(jarpath), jarlist(1).name);
         warning('adding %s to your Java path', jarpath);
         javaclasspath(jarpath);
+        
+        % The following pertains to http://bugzilla.fcdonders.nl/show_bug.cgi?id=2133
+        % also available as http://bit.ly/1o7QlRk, for which we cannot provide a solution. 
+        warning('In some versions of Matlab, javaclasspath clears all global variables due to a bug in MATLAB. Please execute %s.m immediately after starting MATLAB. See http://bit.ly/1o7QlRk', mfilename('fullpath'));
+
+        % restore the global variables
+        for i=1:length(name)
+        eval(sprintf('global %s', name{i}));
+        eval(sprintf('%s = localcopy.%s;', name{i}, name{i}));
+        end
+        clear localcopy
+
     else
         error('the EGI_MFF format requires one MFF .jar file on your classpath, see http://fieldtrip.fcdonders.nl/getting_started/egi')
     end

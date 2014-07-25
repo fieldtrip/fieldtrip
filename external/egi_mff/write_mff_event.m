@@ -40,14 +40,17 @@ if ~replace
     end
 end
 
-fields = fieldnames(events);
-hasDurationRemainders = true;
-if isempty(find(strcmp(fields, 'durationRemainder'), 1));
-    hasDurationRemainders = false;
-end
-hasSampleRemainders = true;
-if isempty(find(strcmp(fields, 'sampleRemainder'), 1));
-    hasSampleRemainders = false;
+hasDurationRemainders = false;
+hasSampleRemainders = false;
+fields = fieldnames(events(1));
+if ~isempty(find(strcmp(fields, 'orig'), 1));
+    if ~isempty(find(strcmp(fields, 'durationRemainder'), 1));
+        hasDurationRemainders = true;
+    end
+    if ~isempty(find(strcmp(fields, 'sampleRemainder'), 1));
+        hasSampleRemainders = true;
+    end
+else
 end
 
 %%
@@ -73,13 +76,13 @@ for p = 1:numEvents
         
         doDurationRemainder = false;
         if hasDurationRemainders
-            if events(p).durationRemainder ~= 0
+            if events(p).orig.durationRemainder ~= 0
                 doDurationRemainder = true;
             end
         end
         duration = events(p).duration;
         if doDurationRemainder
-            duration = samples2Micros(duration - 1, summaryInfo.sampRate) + events(p).durationRemainder;
+            duration = samples2Micros(duration - 1, summaryInfo.sampRate) + events(p).orig.durationRemainder;
         else
             duration = samples2Micros(events(p).duration, summaryInfo.sampRate);
         end
@@ -93,7 +96,7 @@ for p = 1:numEvents
         % Convert from samples to microsecs
         microsecs = samples2Micros(sample, summaryInfo.sampRate);
         if hasSampleRemainders
-            microsecs = microsecs + events(p).sampleRemainder;
+            microsecs = microsecs + events(p).orig.sampleRemainder;
         end
 
         % String timeInStringForm;

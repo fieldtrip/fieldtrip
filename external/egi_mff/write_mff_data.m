@@ -51,14 +51,14 @@ end
 if ~strcmp(class(newData), 'single')
     newData = single(newData);
 end
-write_mff_signal(srcSummaryInfo.eegFilename, srcSummaryInfo.blocks, dstMFFPath, newData(1:srcSummaryInfo.nChans,:));
+write_mff_signal(srcSummaryInfo.eegFilename, srcSummaryInfo.javaObjs.blocks, dstMFFPath, newData(1:srcSummaryInfo.nChans,:));
 if srcSummaryInfo.pibNChans ~= 0
     pibData = newData(srcSummaryInfo.nChans+1:srcSummaryInfo.nChans+srcSummaryInfo.pibNChans,:);
     if srcSummaryInfo.pibHasRef
         numSamples = size(newData, 2);
         pibData = [pibData ; zeros(1, numSamples)];
     end
-    write_mff_signal(srcSummaryInfo.pibFilename, srcSummaryInfo.pibBlocks, dstMFFPath, pibData);
+    write_mff_signal(srcSummaryInfo.pibFilename, srcSummaryInfo.javaObjs.pibBlocks, dstMFFPath, pibData);
 end
 
 function write_mff_signal(signalFilename, blocks, dstMFFPath, newData)

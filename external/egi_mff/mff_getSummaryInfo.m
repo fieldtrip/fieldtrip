@@ -48,9 +48,9 @@ mfffileObj = mff_getObject(com.egi.services.mff.api.MFFResourceType.kMFF_RT_MFFF
 numblocks = binObj.getNumberOfBlocks();
 if numblocks > 0 % Should always be
 
-    summaryInfo.mfffileObj = mfffileObj;
-    summaryInfo.binObj = binObj; % bin obj for the EEG data
-    summaryInfo.blocks = blocks; % block objects for the EEG bin obj
+    summaryInfo.javaObjs.mfffileObj = mfffileObj;
+    summaryInfo.javaObjs.binObj = binObj; % bin obj for the EEG data
+    summaryInfo.javaObjs.blocks = blocks; % block objects for the EEG bin obj
     summaryInfo.eegFilename = eegFilename;
 
     blockObj = blocks.get(0); %zero based
@@ -59,8 +59,8 @@ if numblocks > 0 % Should always be
     summaryInfo.sampRate = sampRate;
     summaryInfo.nChans = nChans;
 
-    summaryInfo.pibBinObj = pibBinObj; % bin obj for the PIB data
-    summaryInfo.pibBlocks = pibBlocks; % block objects for the PIB bin obj
+    summaryInfo.javaObjs.pibBinObj = pibBinObj; % bin obj for the PIB data
+    summaryInfo.javaObjs.pibBlocks = pibBlocks; % block objects for the PIB bin obj
     summaryInfo.pibNChans = 0;
     summaryInfo.pibFilename = '';
     if ~isempty(pibBinObj)
@@ -330,6 +330,9 @@ if ~isempty(categList) % if there are some categories
             time0 = uint64(aSeg.getEventBegin());
             time0Samp = mff_micros2Sample(time0, sampRate);
             time0Samp = (time0Samp - segBeginSamp) + 1;
+            if time0Samp < 1
+                time0Samp = 1;
+            end
             epochTime0(segInd) = time0Samp;
             if multiSubj
                 keyListArray = aSeg.getKeys;

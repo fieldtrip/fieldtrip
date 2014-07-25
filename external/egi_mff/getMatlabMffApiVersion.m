@@ -1,2 +1,2 @@
 function getMatlabMffApiVersion
-fprintf('Matlab MFF API Version 2.0, 2014.\n');
+fprintf('Matlab MFF API Version 2.1, 2014.\n');
