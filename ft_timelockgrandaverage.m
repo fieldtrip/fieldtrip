@@ -87,6 +87,15 @@ end
 % check if the input data is valid for this function
 for i=1:length(varargin)
   varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'timelock', 'feedback', 'no');
+  if isfield(varargin{i},'trial') && isfield(varargin{i},'avg');% see bug2372 (dieloz)
+    varargin{i} = rmfield(varargin{i},'trial');
+    warning('depreciating trial field: using the avg to compute the grand average');
+    if strcmp(varargin{i}.dimord,'rpt_chan_time');
+      varargin{i}.dimord = 'chan_time';
+    end
+  else
+    error(['dataset ' num2str(i) ' does not contain avg field: see ft_timelockanalysis']);
+  end
 end
 
 % set the defaults
@@ -104,18 +113,14 @@ if iscell(cfg.parameter)
   cfg.parameter = cfg.parameter{1};
 end
 
+if strcmp(cfg.parameter,'trial');
+  error('not supporting averaging over the repetition dimension');
+end
+
 Nsubj    = length(varargin);
 dimord   = varargin{1}.dimord;
 hastime  = ~isempty(strfind(varargin{1}.dimord, 'time'));
-hasrpt   = ~isempty(strfind(varargin{1}.dimord, 'rpt'));
 hasdof   = isfield(varargin{1}, 'dof');
-% check whether the input data is suitable
-if hasrpt
-  fprintf('ignoring the single-subject repetition dimension\n');
-  if strcmp(cfg.parameter, 'trial')
-    error('not supporting averaging over the repetition dimension');
-  end
-end
 
 if ischar(cfg.latency) && strcmp(cfg.latency, 'all')
   tbeg = min(varargin{1}.time);
