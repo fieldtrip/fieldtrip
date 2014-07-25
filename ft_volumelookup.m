@@ -216,7 +216,7 @@ if roi2mask
         % nothing to do
       elseif strcmp(cfg.inputcoord, 'tal') && strcmp(atlas.coordsys, 'mni')
         xyz(1:3,:) = tal2mni(xyz(1:3,:));
-      elseif ~strcmp(inputcoord, atlas.coordsys)
+      elseif ~strcmp(cfg.inputcoord, atlas.coordsys)
         error('there is a mismatch between the coordinate system in the atlas and the coordinate system in the data, which cannot be resolved');
       end
       
