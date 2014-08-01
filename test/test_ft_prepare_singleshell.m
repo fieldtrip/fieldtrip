@@ -13,8 +13,6 @@ function test_ft_prepare_singleshell
 % should have a description of the geometry in the input, or it should
 % have a hdmfile (string) that specifies which file to read
 
-success = true;
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % get the data which is needed
 
@@ -48,9 +46,10 @@ vol1bu=ft_convert_units(vol1b,vol1.unit);
 % Reason for dashboard failure:
 % e.g.  vol1.bnd.pnt(5,:) is different than vol1bu.bnd.pnt(5,:)
 % e.g.  vol1.bnd.pnt(8,:) is different than vol1bu.bnd.pnt(8,:)
+vol1.bnd    = rmfield(vol1.bnd, 'cfg');
+vol1bu.bnd  = rmfield(vol1bu.bnd, 'cfg');
 
-success     = success && isequal(vol1, vol1bu);
-if ~success
+if ~isequal(vol1, vol1bu)
   error('ft_prepare_singleshell and ft_prepare_headmodel gave different outputs');
 end
 
@@ -66,18 +65,13 @@ cfg.headshape = hdmfile;
 vol2b       = ft_prepare_singleshell(cfg);
 
 % the following needs to be done to be able to make the comparison
-vol2 = rmfield(vol2, 'cfg');
+vol2  = rmfield(vol2, 'cfg');
 vol2b = rmfield(vol2b,'cfg');
 
-% note from johzum: not sure if vol2 and vol2b should be equal, since the
-% old way (vol2b) calls ft_prepare_mesh which creates .tri whereas the new 
-% version (vol2) does not have this.  Perhaps only vol2.bnd.pnt should be 
-% compared with vol2b.bnd.pnt?
-success     = success && isequal(vol2, vol2b);
-success     = success && isequal(vol2.bnd.pnt, vol2b.bnd.pnt);
-% Note from johzum: the above line also fails. The values are not near each
-% other at all, and it's not a units or machine precision issue.
-if ~success
+vol2.bnd  = rmfield(vol2.bnd, 'cfg');
+vol2b.bnd = rmfield(vol2b.bnd,'cfg');
+
+if ~isequal(vol2, vol2b)
   error('ft_prepare_singleshell and ft_prepare_headmodel gave different outputs');
 end
 
@@ -92,10 +86,12 @@ cfg.headshape = shape;
 vol3b       = ft_prepare_singleshell(cfg);
 
 % the following needs to be done to be able to make the comparison
-vol3 = rmfield(vol3, 'cfg');
+vol3  = rmfield(vol3, 'cfg');
 vol3b = rmfield(vol3b,'cfg');
 
-success     = success && isequal(vol3, vol3b);
-if ~success
+vol3.bnd  = rmfield(vol3.bnd, 'cfg');
+vol3b.bnd = rmfield(vol3b.bnd,'cfg');
+
+if ~isequal(vol3, vol3b)
   error('ft_prepare_singleshell and ft_prepare_headmodel gave different outputs');
 end

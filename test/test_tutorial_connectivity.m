@@ -36,25 +36,25 @@ cfg.noisecov      = [ 0.3    0    0 ;
   0    0  0.2];
 data              = ft_connectivitysimulation(cfg);
 
-% add instantenous 50Hz noise
-for tr=1:numel(data.trial)
-  r = rand;
-%   noise = sin((1+r)*pi*50.*data.time{tr}) + cos((1-r)*pi*50.*data.time{tr})
-  for c=1:cfg.nsignal
-    timeshift = -0.002; %in seconds
-%     phaseshift = c/pi/5;
-    phaseshift = 0;
-%     phaseshift = 2*pi/(1/50/(c*timeshift));
-    noise(c, :) = sin(2*pi*(50).*data.time{tr}+phaseshift);
-    for h=[-5 -4 -3 -2 -1 1 2 3 4 5]
-%       phaseshift = 2*pi/(1/(50-h)/(c*timeshift));
-%       noise(c, :) = noise(c, :)+sin(1-r*pi.*(50-h).*data.time{tr}+phaseshift);
-    end
-  end
-%   noise = noise*max(data.trial{tr}(:));
-%   data.trial{tr} = data.trial{tr} + repmat(noise, cfg.nsignal, 1);
-  data.trial{tr} = data.trial{tr} + noise;
-end
+% % add instantenous 50Hz noise
+% for tr=1:numel(data.trial)
+%   r = rand;
+% %   noise = sin((1+r)*pi*50.*data.time{tr}) + cos((1-r)*pi*50.*data.time{tr})
+%   for c=1:cfg.nsignal
+%     timeshift = -0.002; %in seconds
+% %     phaseshift = c/pi/5;
+%     phaseshift = 0;
+% %     phaseshift = 2*pi/(1/50/(c*timeshift));
+%     noise(c, :) = sin(2*pi*(50).*data.time{tr}+phaseshift);
+%     for h=[-5 -4 -3 -2 -1 1 2 3 4 5]
+% %       phaseshift = 2*pi/(1/(50-h)/(c*timeshift));
+% %       noise(c, :) = noise(c, :)+sin(1-r*pi.*(50-h).*data.time{tr}+phaseshift);
+%     end
+%   end
+% %   noise = noise*max(data.trial{tr}(:));
+% %   data.trial{tr} = data.trial{tr} + repmat(noise, cfg.nsignal, 1);
+%   data.trial{tr} = data.trial{tr} + noise;
+% end
 
 % cfg = [];
 % cfg.dftfilter =  'yes';
@@ -134,7 +134,6 @@ cfg           = [];
 cfg.parameter = 'grangerspctrm';
 figure
 ft_connectivityplot(cfg, granger);
-close all
 figure
 for row=1:3
   for col=1:3

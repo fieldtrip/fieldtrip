@@ -10,4 +10,6 @@ function test_bug1530
 load('/home/common/matlab/fieldtrip/data/test/bug1530/cfg_sourceDiffIntNorm');
 load('/home/common/matlab/fieldtrip/data/test/bug1530/sourceDiffIntNorm');
 
+% update surffile according to new filename
+cfg.surffile = 'surface_inflated_both.mat';
 ft_sourceplot(cfg, sourceDiffIntNorm);
