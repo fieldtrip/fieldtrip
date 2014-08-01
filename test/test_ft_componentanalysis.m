@@ -50,6 +50,7 @@ for k = 1:numel(datainfo)
   end
   
   [ok,msg] = identical(data, datanew,'abstol',1e-7,'diffabs',1);
+  disp(['now you are in k=' num2str(k)]);
   if ~ok
     disp(msg);
     error('there were differences between reference and new data, see above for details');
