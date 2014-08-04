@@ -130,10 +130,12 @@ cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved t
 cfg = ft_checkconfig(cfg, 'createsubcfg',  {'grid'});
 
 % select trials of interest
-if ~strcmp(cfg.trials, 'all')
-  fprintf('selecting %d trials\n', length(cfg.trials));
-  data = ft_selectdata(data, 'rpt', cfg.trials);
-end
+tmpcfg = [];
+tmpcfg.trials = cfg.trials;
+tmpcfg.channel = cfg.channel;
+data = ft_selectdata(tmpcfg, data);
+% restore the provenance information
+[cfg, data] = rollback_provenance(cfg, data);
 
 if strcmp(cfg.planarmethod, 'sourceproject')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

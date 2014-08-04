@@ -271,20 +271,15 @@ switch cfg.method
 end
 
 % select trials of interest
-if ~strcmp(cfg.trials, 'all')
-  fprintf('selecting %d trials\n', length(cfg.trials));
-  data = ft_selectdata(data, 'rpt', cfg.trials);
-end
-Ntrials  = length(data.trial);
+tmpcfg = [];
+tmpcfg.trials = cfg.trials;
+tmpcfg.channel = cfg.channel;
+data = ft_selectdata(tmpcfg, data);
+% restore the provenance information
+[cfg, data] = rollback_provenance(cfg, data);
 
-% select channels of interest
-chansel = match_str(data.label, cfg.channel);
-fprintf('selecting %d channels\n', length(chansel));
-for trial=1:Ntrials
-  data.trial{trial} = data.trial{trial}(chansel,:);
-end
-data.label = data.label(chansel);
-Nchans     = length(chansel);
+Ntrials  = length(data.trial);
+Nchans   = length(data.label);
 if Nchans==0
   error('no channels were selected');
 end

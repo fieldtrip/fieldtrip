@@ -152,6 +152,10 @@ tmpcfg.channel = cfg.channel;
 tmpcfg.foilim  = cfg.xlim;
 data           = ft_selectdata(tmpcfg, data);
 
+% restore the provenance information
+[cfg, data] = rollback_provenance(cfg, data);
+
+
 dat   = data.(cfg.parameter);
 nchan = numel(data.label);
 nfreq = numel(data.freq);
