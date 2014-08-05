@@ -163,12 +163,11 @@ if ~isfield(cfg, 'metric')
   cfg.metric = 'var';
 end
 
-% select trials of interest
-tmpcfg = [];
-tmpcfg.trials = cfg.trials;
-data = ft_selectdata(tmpcfg, data);
-% restore the provenance information
-[cfg, data] = rollback_provenance(cfg, data);
+% % select trials of interest
+if ~strcmp(cfg.trials, 'all')
+  fprintf('selecting %d trials\n', length(cfg.trials));
+  data = ft_selectdata(data, 'rpt', cfg.trials);
+end
 
 % determine the duration of each trial
 for i=1:length(data.time)
