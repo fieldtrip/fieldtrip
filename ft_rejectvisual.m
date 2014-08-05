@@ -163,11 +163,13 @@ if ~isfield(cfg, 'metric')
   cfg.metric = 'var';
 end
 
-% % select trials of interest
-if ~strcmp(cfg.trials, 'all')
-  fprintf('selecting %d trials\n', length(cfg.trials));
-  data = ft_selectdata(data, 'rpt', cfg.trials);
-end
+orgcfg.latency = cfg.latency;
+tmpcfg = [];
+tmpcfg = keepfields(cfg, {'trials'});
+data = ft_selectdata(tmpcfg, data);
+% restore the provenance information
+[cfg, data] = rollback_provenance(cfg, data);
+cfg.latency = orgcfg.latency;% restore the original latency, it should not be 'all'
 
 % determine the duration of each trial
 for i=1:length(data.time)
