@@ -507,7 +507,9 @@ end % function makeselection
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function data = makeselection_chan(data, selchan, avgoverchan)
-if avgoverchan && all(isnan(selchan))
+if isempty(selchan)
+  error('no channels were selected');
+elseif avgoverchan && all(isnan(selchan))
   str = sprintf('%s, ', data.label{:});
   str = str(1:end-2);
   str = sprintf('mean(%s)', str);
@@ -530,14 +532,17 @@ elseif numel(selchan)>1  && any(~isfinite(selchan))
     end
   end
   data.label = tmp;
-elseif isempty(selchan)
-  data.label = {};
+else
+  % this should never happen
+  error('cannot figure out how to select channels');
 end
 end % function makeselection_chan
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function data = makeselection_chancmb(data, selchancmb, avgoverchancmb)
-if avgoverchancmb && all(isnan(selchancmb))
+if isempty(selchancmb)
+  error('no channel combinations were selected');
+elseif avgoverchancmb && all(isnan(selchancmb))
   % naming the channel combinations becomes ambiguous, but should not
   % suggest that the mean was computed prior to combining
   str1 = sprintf('%s, ', data.labelcmb{:,1});
@@ -570,8 +575,9 @@ elseif numel(selchancmb)>1  && any(~isfinite(selchancmb))
     end
   end
   data.labelcmb = tmp;
-elseif isempty(selchancmb)
-  data.labelcmb = cell(0,2);
+else
+  % this should never happen
+  error('cannot figure out how to select channelcombinations');
 end
 end % function makeselection_chancmb
 
