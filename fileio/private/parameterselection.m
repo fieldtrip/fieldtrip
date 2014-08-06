@@ -43,7 +43,7 @@ if ~isempty(sel)
   % the new default is to try all fields present in the data
   allparam = fieldnames(data);
   % fields can be nested in source.avg
-  if isfield(data, 'avg')
+  if isfield(data, 'avg') && isstruct(data.avg)
     tmp = fieldnames(data.avg);
     for i=1:length(tmp)
       tmp{i} = ['avg.' tmp{i}];
@@ -51,7 +51,7 @@ if ~isempty(sel)
     allparam = cat(1, allparam, tmp);
   end
   % fields can be nested in source.trial
-  if isfield(data, 'trial')
+  if isfield(data, 'trial') && isstruct(data.trial)
     tmp = fieldnames(data.trial);
     for i=1:length(tmp)
       tmp{i} = ['trial.' tmp{i}];
