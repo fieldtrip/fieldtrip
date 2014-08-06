@@ -40,7 +40,7 @@ for k = 1:10
   
   datanew = rmfield(datanew, 'cfg'); % these are per construction different if writeflag = 0;
   data    = rmfield(data,    'cfg');
-  assert(isequalwithequalnans(data, datanew));
+  assert(isequaln(data, datanew));
 end
 
 test_cfg_options;

@@ -87,13 +87,13 @@ end
 % ensure consistent input data
 for i=2:Ndata
   if isfield(varargin{1}, 'topo'),
-    assert(isequalwithequalnans(varargin{1}.topo, varargin{i}.topo), 'the input has inconsistent topo fields')
+    assert(isequaln(varargin{1}.topo, varargin{i}.topo), 'the input has inconsistent topo fields')
   end
   if isfield(varargin{1}, 'topolabel'),
-    assert(isequalwithequalnans(varargin{1}.topolabel, varargin{i}.topolabel), 'the input has inconsistent topolabel fields')
+    assert(isequaln(varargin{1}.topolabel, varargin{i}.topolabel), 'the input has inconsistent topolabel fields')
   end
   if isfield(varargin{1}, 'unmixing'),
-    assert(isequalwithequalnans(varargin{1}.unmixing, varargin{i}.unmixing), 'the input has inconsistent unmixing fields')
+    assert(isequaln(varargin{1}.unmixing, varargin{i}.unmixing), 'the input has inconsistent unmixing fields')
   end
 end
 
@@ -173,7 +173,7 @@ if haselec || hasgrad,
     if haselec, sens{j} = varargin{j}.elec; end
     if hasgrad, sens{j} = varargin{j}.grad; end
     if j>1,
-      if ~isequalwithequalnans(sens{j}, sens{1})
+      if ~isequaln(sens{j}, sens{1})
         removesens = 1;
         warning('sensor information does not seem to be consistent across the input arguments');
         break;

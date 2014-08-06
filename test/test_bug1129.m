@@ -145,7 +145,7 @@ cfg.hpfreq=[8];
 cfg.hpfilter='yes';
 rawfilt=ft_preprocessing(cfg,raw3);
 
-% assert(isequalwithequalnans(data, datanew));
+% assert(isequaln(data, datanew));
 
 %%
 % create a random signal

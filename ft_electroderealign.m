@@ -163,7 +163,7 @@ elec = ft_convert_units(elec); % ensure that the units are specified
 elec = ft_datatype_sens(elec);
 
 % ensure that channel and electrode positions are the same
-assert(isequalwithequalnans(elec.elecpos,elec.chanpos),'This function requires same electrode and channel positions.'); 
+assert(isequaln(elec.elecpos,elec.chanpos),'This function requires same electrode and channel positions.'); 
 
 usetemplate  = isfield(cfg, 'template')  && ~isempty(cfg.template);
 useheadshape = isfield(cfg, 'headshape') && ~isempty(cfg.headshape);

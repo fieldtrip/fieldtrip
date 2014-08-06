@@ -65,10 +65,10 @@ gridLFmix1.leadfield{gridLFcmcur.inside(1)}(1,:)
 gridLFmix2.leadfield{gridLFmmcur.inside(1)}(1,:)
 gridLFmix3.leadfield{gridLFmmcur.inside(1)}(1,:)
 
-assert(isequalwithequalnans(rmfield(gridLFmmcur,'cfg'),rmfield(gridLFcmcur,'cfg')))
-assert(isequalwithequalnans(rmfield(gridLFmix1,'cfg'),rmfield(gridLFcmcur,'cfg')))
-assert(isequalwithequalnans(rmfield(gridLFmix2,'cfg'),rmfield(gridLFcmcur,'cfg')))
-assert(isequalwithequalnans(rmfield(gridLFmix3,'cfg'),rmfield(gridLFcmcur,'cfg')))
+assert(isequaln(rmfield(gridLFmmcur,'cfg'),rmfield(gridLFcmcur,'cfg')))
+assert(isequaln(rmfield(gridLFmix1,'cfg'),rmfield(gridLFcmcur,'cfg')))
+assert(isequaln(rmfield(gridLFmix2,'cfg'),rmfield(gridLFcmcur,'cfg')))
+assert(isequaln(rmfield(gridLFmix3,'cfg'),rmfield(gridLFcmcur,'cfg')))
 
 return
 %% User-provided cfg data
@@ -114,10 +114,10 @@ gridLFmix1= ft_prepare_leadfield(cfgmix1);
 gridLFmix2= ft_prepare_leadfield(cfgmix2);
 gridLFmix3= ft_prepare_leadfield(cfgmix3);
 
-assert(isequalwithequalnans(rmfield(gridLFmmcur,'cfg'),rmfield(gridLFcmcur,'cfg')))
-assert(isequalwithequalnans(rmfield(gridLFmix1,'cfg'),rmfield(gridLFcmcur,'cfg')))
-assert(isequalwithequalnans(rmfield(gridLFmix2,'cfg'),rmfield(gridLFcmcur,'cfg')))
-assert(isequalwithequalnans(rmfield(gridLFmix3,'cfg'),rmfield(gridLFcmcur,'cfg')))
+assert(isequaln(rmfield(gridLFmmcur,'cfg'),rmfield(gridLFcmcur,'cfg')))
+assert(isequaln(rmfield(gridLFmix1,'cfg'),rmfield(gridLFcmcur,'cfg')))
+assert(isequaln(rmfield(gridLFmix2,'cfg'),rmfield(gridLFcmcur,'cfg')))
+assert(isequaln(rmfield(gridLFmix3,'cfg'),rmfield(gridLFcmcur,'cfg')))
 
 
 

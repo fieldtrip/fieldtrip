@@ -38,7 +38,7 @@ for k = 1:numel(datainfo)
 %   
 %   % do the comparison with the header removed, the output argument still
 %   % contains the header
-%   assert(isequalwithequalnans(data, datanew2));
+%   assert(isequaln(data, datanew2));
 end
 
 

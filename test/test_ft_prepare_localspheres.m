@@ -50,7 +50,7 @@ cfg         = [];
 cfg.grad    = grad;
 vol1b       = ft_prepare_localspheres(cfg, segmentedmri);
 vol1b = rmfield(vol1b, 'cfg');
-success     = success && isequalwithequalnans(vol1, vol1b);
+success     = success && isequaln(vol1, vol1b);
 if ~success
   error('ft_prepare_localspheres and ft_prepare_headmodel gave different outputs');
 end
@@ -69,7 +69,7 @@ cfg.grad    = grad;
 cfg.headshape = hdmfile;
 vol2b       = ft_prepare_localspheres(cfg);
 vol2b       = rmfield(vol2b, 'cfg');
-success     = success && isequalwithequalnans(vol2, vol2b);
+success     = success && isequaln(vol2, vol2b);
 if ~success
   error('ft_prepare_localspheres and ft_prepare_headmodel gave different outputs');
 end
@@ -87,7 +87,7 @@ cfg.headshape = shape;
 cfg.grad    = grad;
 vol3b       = ft_prepare_localspheres(cfg);
 vol3b       = rmfield(vol3b, 'cfg');
-success     = success && isequalwithequalnans(vol3, vol3b);
+success     = success && isequaln(vol3, vol3b);
 if ~success
   error('ft_prepare_localspheres and ft_prepare_headmodel gave different outputs');
 end
