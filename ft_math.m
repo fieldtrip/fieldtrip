@@ -303,7 +303,7 @@ else
         error('the operation "%s" requires exactly 2 input arguments', cfg.operation);
       end
       fprintf('taking the log difference between the 2nd input argument and the 1st\n');
-      tmp = log10(tmp ./ varargin{2}.(cfg.parameter));
+      y = log10(x1 ./ varargin{2}.(cfg.parameter));
       
     otherwise
       % assume that the operation is descibed as a string, e.g. (x1-x2)/(x1+x2)
