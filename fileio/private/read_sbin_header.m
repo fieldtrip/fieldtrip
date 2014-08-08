@@ -99,6 +99,7 @@ if unsegmented,
     NSegments   = 1;
     NSamples    = fread(fid,1,'int32',endian);
     NEvent      = fread(fid,1,'int16',endian);
+    EventCodes='';
     for j = 1:NEvent
         EventCodes(j,1:4) = char(fread(fid,[1,4],'char',endian));
     end
@@ -138,7 +139,7 @@ else
     NSegments   = fread(fid,1,'int16',endian);
     NSamples    = fread(fid,1,'int32',endian);          % samples per segment
     NEvent      = fread(fid,1,'int16',endian);          % num events per segment
-    EventCodes = [];
+    EventCodes = ''];
     for j = 1:NEvent
         EventCodes(j,1:4)   = char(fread(fid,[1,4],'char',endian));
     end
