@@ -165,7 +165,7 @@ end
 
 orgcfg.latency = cfg.latency;
 tmpcfg = [];
-tmpcfg = keepfields(cfg, {'trials'});
+tmpcfg = keepfields(cfg, {'trials','channel'});
 data = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
