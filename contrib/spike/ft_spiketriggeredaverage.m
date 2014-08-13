@@ -69,7 +69,7 @@ cfg = ft_checkopt(cfg, 'feedback', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg, 'latency', {'char', 'ascendingdoublebivector'});
 cfg = ft_checkopt(cfg, 'trials', {'char', 'doublevector', 'logical'}); 
 
-cfg = ft_checkconfig(cfg, 'allowed', {'timwin', 'spikechannel', 'channel', 'keeptrials', 'feedback', 'latency', 'trials', 'warning'});
+cfg = ft_checkconfig(cfg, 'allowed', {'timwin', 'spikechannel', 'channel', 'keeptrials', 'feedback', 'latency', 'trials', 'warning', 'progress'});
 
 % autodetect the spike channels
 ntrial = length(data.trial);
