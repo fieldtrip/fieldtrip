@@ -108,7 +108,7 @@ else
   if ~isfield(cfg.hdr, 'Fs'), error('cfg.hdr.Fs, the sampling frequency of the LFP must be specified'); end
 end
 trlDouble = double(cfg.trl); % this is to compute trial lengths etc.  
-%cfg = ft_checkconfig(cfg, 'allowed', {'trlunit', 'timestampspersecond', 'hdr', 'trl'});
+cfg = ft_checkconfig(cfg, 'allowed', {'datafile', 'dataformat', 'dataset', 'event', 'headerfile', 'headerformat', 'trialfun', 'version', 'warning', 'trlunit', 'timestampspersecond', 'hdr', 'trl', 'callinfo', 'progress'});
 
 if strcmp(cfg.trlunit,'timestamps')
   

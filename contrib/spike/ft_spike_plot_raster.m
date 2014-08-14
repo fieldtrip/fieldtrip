@@ -85,7 +85,7 @@ cfg = ft_checkopt(cfg,'plotselection', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'interactive', 'char', {'yes', 'no'});
 
 cfg = ft_checkconfig(cfg, 'allowed', {'spikechannel', 'latency', 'trials', 'linewidth', 'cmapneurons',...
- 'spikelength', 'topplotsize', 'topplotfunc', 'errorbars', 'trialborders', 'plotselection', 'interactive', 'warning'});
+ 'spikelength', 'topplotsize', 'topplotfunc', 'errorbars', 'trialborders', 'plotselection', 'interactive', 'warning', 'progress'});
 
 % check if a third input is present, and check if it's a timelock structure
 if nargin==3

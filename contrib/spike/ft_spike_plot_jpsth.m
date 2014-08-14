@@ -67,7 +67,7 @@ cfg = ft_checkopt(cfg,'window','char', {'no', 'gausswin', 'boxcar'});
 cfg = ft_checkopt(cfg,'winlen', 'double');
 cfg = ft_checkopt(cfg,'gaussvar', 'double');
 
-cfg = ft_checkconfig(cfg, 'allowed', {'channelcmb', 'psth', 'latency', 'colorbar', 'colormap', 'interpolate', 'window', 'winlen', 'gaussvar', 'warning'});
+cfg = ft_checkconfig(cfg, 'allowed', {'channelcmb', 'psth', 'latency', 'colorbar', 'colormap', 'interpolate', 'window', 'winlen', 'gaussvar', 'warning', 'progress'});
 
 % determine the corresponding indices of the requested channel combinations
 cfg.channelcmb = ft_channelcombination(cfg.channelcmb, jpsth.label);
