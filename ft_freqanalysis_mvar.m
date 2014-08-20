@@ -171,7 +171,9 @@ freq.transfer  = h;
 %freq.itransfer = a;
 freq.noisecov  = data.noisecov;
 freq.crsspctrm = crsspctrm;
-freq.dof       = data.dof;
+if isfield(data, 'dof'),
+  freq.dof       = data.dof;
+end
 if isfull
   freq.label    = label;
   if ntoi>1

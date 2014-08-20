@@ -35,6 +35,7 @@ npos      = inf;
 nori      = nan; % this will be 3 in many cases
 ntopochan = inf;
 nspike    = inf; % this is only for the first spike channel
+nlag      = nan;
 
 % use an anonymous function
 assign = @(var, val) assignin('caller', var, val);
@@ -112,11 +113,15 @@ if isfield(data, 'timestamp') && iscell(data.timestamp)
   nspike = length(data.timestamp{1}); % spike data: only for the first channel
 end
 
+if ft_datatype(data, 'mvar') && isfield(data, 'coeffs')
+  nlag = size(data.coeffs,3);
+end
+
 % determine the size of the actual data
 datsiz = getdimsiz(data, field);
 
-tok = {'subj' 'rpt' 'rpttap' 'chan' 'chancmb' 'freq' 'time' 'pos' 'ori' 'topochan'};
-siz = [nsubj nrpt nrpttap nchan nchancmb nfreq ntime npos nori ntopochan];
+tok = {'subj' 'rpt' 'rpttap' 'chan' 'chancmb' 'freq' 'time' 'pos' 'ori' 'topochan' 'lag'};
+siz = [nsubj nrpt nrpttap nchan nchancmb nfreq ntime npos nori ntopochan nlag];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ATTEMPT 2: a general dimord is present and might apply
