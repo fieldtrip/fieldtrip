@@ -62,6 +62,10 @@ ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar varargin
 
+% Restructure if datasets specified as a call array
+if length(varargin)==1 & iscell(varargin{1})
+    varargin=varargin{1};
+end
 % check if the input data is valid for this function
 for i=1:length(varargin)
     varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'freq', 'feedback', 'no');

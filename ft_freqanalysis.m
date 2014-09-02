@@ -62,10 +62,15 @@ function [freq] = ft_freqanalysis(cfg, data)
 %                      subtraction, thus a value of 0. If no removal is requested,
 %                      specify -1.
 %                      see FT_PREPROC_POLYREMOVAL for details
-%   cfg.eigcomplx   = 'imag', 'real1' or 'real2', if cfg.output =
+%
+% IF cfg.output = 'eigcomplx' the following options can also be scpefied:
+%   cfg.eigcomplx   = 'imag', ','real1' or 'real2', if cfg.output =
 %                      'eigcomplx', then this specifies which component of the 
 %                      cross-spectra to perform eigendecomposition on
-%                      (default 'imag');
+%                      (default 'imag' )
+%  cfg.eigcomplxprod = 'yes' or 'no'. Additionally computes the real
+%                      outer-product of the eigendecomposition. (only valid
+%                      when cfg.eigcomplx   = 'imag'. Default = 'yes'). 
 %
 %  METHOD SPECIFIC OPTIONS AND DESCRIPTIONS
 %
@@ -378,6 +383,16 @@ elseif isfield(cfg, 'eigcomplx')  && ~ecxflg
     warning('cfg.eigcomplx is ignored if cfg.method is not ''eigcomplx''');
 end
 
+if isfield(cfg, 'eigcomplx')
+if ~isfield(cfg, 'eigcomplxprod')  strcmp(cfg.eigcomplx,'imag')
+    cfg.eigcomplxprod = 'yes';
+elseif ~isfield(cfg, 'eigcomplxprod') && ~strcmp(cfg.eigcomplx,'imag')
+    cfg.eigcomplxprod = 'no';
+elseif strcmp(cfg.eigcomplxprod,'yes') && ~strcmp(cfg.eigcomplx,'imag')
+    cfg.eigcomplxprod = 'no';
+    warning('cfg.eigcomplxprod=''yes'' is not valid if cfg.eigcomplx ''is not ''imag''');
+end
+end
 
     
     
@@ -679,7 +694,7 @@ for itrial = 1:ntrials
       if ecxflg
           % perform eigendecomposition, then treat as normal pow and csd
           if nacttboi>0;
-              [powdum csddum] = ft_csd_eigendecomp(spectrum(acttap,chanind,foiind(ifoi),acttboi),cutdatindcmb,cfg.eigcomplx);
+              [powdum csddum] = ft_csd_eigendecomp(spectrum(acttap,chanind,foiind(ifoi),acttboi),cutdatindcmb,cfg.eigcomplx,cfg.eigcomplxprod);
               
           else
               powdum=zeros(size(spectrum(acttap,chanind,foiind(ifoi),acttboi)));

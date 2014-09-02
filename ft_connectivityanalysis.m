@@ -825,53 +825,72 @@ end
 if strcmp(cfg.sumcon,'none');
     % do nothing
 else 
+    
+    
+    if ~iscell(cfg.sumcon)
+        cfg.sumcon={cfg.sumcon};
+    end
+    nsums=length(cfg.sumcon);
+    
     nchncmb=length(data.crsspctrm);
     nchn=length(selchan);
+    
+    
     dat_size=size(datout);
-    datout_sum=NaN.*ones([nchn dat_size(2:end)]);
+    for s=1:nsums
+        datout_sum{s}=NaN.*ones([nchn dat_size(2:end)]);
+    end
     
     for i=1:prod(dat_size(2:end))
-
+        
+        
         conmatrx=ones(nchn).*NaN;
         keepchn_idx=find(keepchn);
         for j=1:length(keepchn_idx)
             conmatrx(powindx(keepchn_idx(j),1),powindx(keepchn_idx(j),2))=datout(j,i);
         end
+
         
         if symflg
             conmatrx=tril(conmatrx) + triu(conmatrx',1);
         end
 
-        
-        if strcmp(cfg.sumcon,'max');
-            datout_sum(:,i)=nanmax(conmatrx);
-            outparam_sum=[outparam '_max'];
-        elseif strcmp(cfg.sumcon,'absmax');
-            datout_sum(:,i)=nanmax(abs(conmatrx));
-            outparam_sum=[outparam '_absmax'];
-        elseif  strcmp(cfg.sumcon,'avg');
-            datout_sum(:,i)=nanmean(conmatrx);
-            outparam_sum=[outparam '_avg'];
-        elseif  strcmp(cfg.sumcon,'absavg');
-            datout_sum(:,i)=nanmean(abs(conmatrx));
-            outparam_sum=[outparam '_absavg'];
-        elseif  strcmp(cfg.sumcon,'sumsqr');
-            datout_sum(:,i)=nansum((conmatrx).^2);
-            outparam_sum=[outparam '_sumsqr'];
-        elseif  strcmp(cfg.sumcon,'min');
-            datout_sum(:,i)=nanmin(conmatrx);
-            outparam_sum=[outparam '_min'];
-        elseif  strcmp(cfg.sumcon,'std');
-            datout_sum(:,i)=nanstd(conmatrx);
-            outparam_sum=[outparam '_std'];
-        elseif  strcmp(cfg.sumcon,'var');
-            datout_sum(:,i)=nanvar(conmatrx);
-            outparam_sum=[outparam '_var'];
+        for s=1:nsums
+            
+           
+            
+            
+        if strcmp(cfg.sumcon{s},'max');
+            datout_sum{s}(:,i)=nanmax(conmatrx);
+            outparam_sum{s}=[outparam '_max'];
+        elseif strcmp(cfg.sumcon{s},'absmax');
+            datout_sum{s}(:,i)=nanmax(abs(conmatrx));
+            outparam_sum{s}=[outparam '_absmax'];
+        elseif  strcmp(cfg.sumcon{s},'avg');
+            datout_sum{s}(:,i)=nanmean(conmatrx);
+            outparam_sum{s}=[outparam '_avg'];
+        elseif  strcmp(cfg.sumcon{s},'absavg');
+            datout_sum{s}(:,i)=nanmean(abs(conmatrx));
+            outparam_sum{s}=[outparam '_absavg'];
+        elseif  strcmp(cfg.sumcon{s},'sumsqr');
+            datout_sum{s}(:,i)=nansum((conmatrx).^2);
+            outparam_sum{s}=[outparam '_sumsqr'];
+        elseif  strcmp(cfg.sumcon{s},'min');
+            datout_sum{s}(:,i)=nanmin(conmatrx);
+            outparam_sum{s}=[outparam '_min'];
+        elseif  strcmp(cfg.sumcon{s},'std');
+            datout_sum{s}(:,i)=nanstd(conmatrx);
+            outparam_sum{s}=[outparam '_std'];
+        elseif  strcmp(cfg.sumcon{s},'var');
+            datout_sum{s}(:,i)=nanvar(conmatrx);
+            outparam_sum{s}=[outparam '_var'];
         else
             warning('Unknown cfg.sumcon option. Not computing summarised connectivity measures.');
             clear datout_sum
             break
         end
+        end
+        
     end
 end
     
@@ -938,8 +957,10 @@ end % switch dtype
 
 % add summerised connectivity to output
 if ~strcmp(cfg.sumcon,'none')
-    stat.(outparam_sum) = datout_sum;
+    for s=1:nsums
+    stat.(outparam_sum{s}) = datout_sum{s};
     stat.label=unique(data.labelcmb(:));
+    end
 end
 
 if isfield(data, 'freq'), stat.freq = data.freq; end
