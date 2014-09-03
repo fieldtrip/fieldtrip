@@ -129,9 +129,9 @@ else
 end
 
 if ~isempty(dataname)
-  set(gcf, 'Name', sprintf('%d: %s: %s', gcf, funcname, dataname));
+  set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), funcname, dataname));
 else
-  set(gcf, 'Name', sprintf('%d: %s', gcf, funcname));
+  set(gcf, 'Name', sprintf('%d: %s', double(gcf), funcname));
 end
 set(gcf, 'NumberTitle', 'off');
 

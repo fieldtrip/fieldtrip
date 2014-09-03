@@ -129,7 +129,7 @@ if nargin < 2
 else
   dataname = inputname(2);
 end
-set(gcf, 'Name', sprintf('%d: %s: %s', gcf, funcname, join_str(', ',dataname)));
+set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), funcname, join_str(', ',dataname)));
 set(gcf, 'NumberTitle', 'off');
 
 if isnan(cfg.arrowsize)
