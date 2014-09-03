@@ -1531,6 +1531,54 @@ switch headerformat
     
     % remember the original header details
     hdr.orig = orig;
+  
+  case 'neuroscope_bin'
+    [p,f,e]    = fileparts(filename);
+    headerfile = fullfile(p,[f,'.xml']);
+    hdr        = ft_read_header(headerfile, 'headerformat', 'neuroscope_xml');
+    
+  case 'neuroscope_ds'
+    listing    = dir(filename);
+    filenames  = {listing.name}';
+    headerfile = filenames{~cellfun('isempty',strfind(filenames,'.xml'))};
+    hdr        = ft_read_header(headerfile, 'headerformat', 'neuroscope_xml');
+  
+  case 'neuroscope_xml'
+    ft_hastoolbox('neuroscope', 1);
+    ft_hastoolbox('gifti', 1);
+    
+    % this pertains to generic header file, and the other neuroscope
+    % formats will recurse into this one
+    [p,f,e]    = fileparts(filename);
+    listing    = dir(p);
+    filenames  = {listing.name}';
+    lfpfile    = filenames{~cellfun('isempty',strfind(filenames,'.eeg'))};
+    rawfile    = filenames{~cellfun('isempty',strfind(filenames,'.dat'))};
+    
+    params     = LoadParameters(filename);
+    
+    hdr         = [];
+    hdr.nChans  = params.nChannels;
+    hdr.nTrials = 1; % is it always continuous? FIXME
+    hdr.nSamplesPre = 0;
+    
+    if ~isempty(lfpfile)
+      % use the sampling of the lfp-file to be leading
+      hdr.Fs       = params.rates.lfp;
+      hdr.nSamples = listing(strcmp(filenames,lfpfile)).bytes./(hdr.nChans*params.nBits/8);
+      hdr.TimeStampPerSample = params.rates.wideband./params.rates.lfp;
+    else
+      % use the sampling of the raw-file to be leading
+      hdr.Fs     = params.rates.wideband;
+      hdr.nSamples = listing(strcmp(filenames,rawfile)).bytes./(hdr.nChans*params.nBits/8);
+      hdr.TimeStampPerSample = 1;
+    end
+    hdr.orig = params;
+    
+    hdr.label = cell(hdr.nChans,1);
+    for k = 1:hdr.nChans
+      hdr.label{k} = ['chan',num2str(k,'%0.3d')];
+    end
     
   case 'neurosim_evolution'
     hdr = read_neurosim_evolution(filename);

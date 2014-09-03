@@ -1164,6 +1164,18 @@ switch dataformat
              sum(trlind==iEpoch(i) & (1:length(trlind))<endsample)]);
      end   
      dat = dat(chanindx, :);
+  
+  case 'neuroscope_bin'
+    switch hdr.orig.nBits
+      case 16
+        precision = 'int16';
+      case 32
+        precision = 'int32';
+      otherwise
+        error('unknown precision');
+    end
+    dat = LoadBinary(filename, 'frequency', hdr.Fs, 'offset', begsample-1, 'nRecords', endsample-begsample, 'nChannels', hdr.orig.nChannels, 'channels', chanindx, 'precision', precision).'; 
+     
   otherwise
     if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
       dat = read_biosig_data(filename, hdr, begsample, endsample, chanindx);
