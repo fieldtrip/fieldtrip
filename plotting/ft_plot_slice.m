@@ -32,7 +32,7 @@ function [h, T2] = ft_plot_slice(dat, varargin)
 %   'intersectcolor' = color for the intersection
 
 % Copyrights (C) 2010-2014, Jan-Mathijs Schoffelen
-% Copyrights (C) 2014, Robert Oostenveld
+% Copyrights (C) 2014, Robert Oostenveld and Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -329,6 +329,7 @@ if domask,
   end
 end
 
+
 if dointersect
   % determine three points on the plane
   inplane = eye(3) - (eye(3) * ori') * ori;
@@ -366,9 +367,15 @@ if numel(st)>1,
   % ft_plot_slice has been called from another function
   % assume the remainder of the axis settings to be handled there
 else
-  axis equal
+  set(gca,'xlim',[min(Xh(:))-0.5 max(Xh(:))+0.5]);
+  set(gca,'ylim',[min(Yh(:))-0.5 max(Yh(:))+0.5]);
+  set(gca,'zlim',[min(Zh(:))-0.5 max(Zh(:))+0.5]);
+  
+  set(gca,'dataaspectratio',[1 1 1]);
+  %axis equal; % this for some reason does not work robustly when drawing intersections, replaced by the above
   axis vis3d
 end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
