@@ -638,8 +638,33 @@ if nargin>2
     data_old = rmfield(data_old, 'fsample');
   end
   
-  if numel(data_old.label)==0, data_old.label = {}; end
-  if numel(data_new.label)==0, data_new.label = {}; end
+  % ensure the empty fields to have the same 'size', i.e.
+  % assert(isequal )) chokes on comparing [] with zeros(0,1) 
+  fnnew = fieldnames(data_new);
+  for k = 1:numel(fnnew)
+    if numel(data_new.(fnnew{k}))==0, 
+      if iscell(data_new.(fnnew{k})),
+        data_new.(fnnew{k})={};
+      else
+        data_new.(fnnew{k})=[];
+      end
+    end
+  end
+  
+  fnold = fieldnames(data_old);
+  for k = 1:numel(fnold)
+    if numel(data_old.(fnold{k}))==0, 
+      if iscell(data_old.(fnold{k})),
+        data_old.(fnold{k})={};
+      else
+        data_old.(fnold{k})=[];
+      end
+    end
+  end
+  
+  %if numel(data_old.label)==0, data_old.label = {}; end
+  %if numel(data_new.label)==0, data_new.label = {}; end
+  
   assert(isequal(data_old, data_new));
   
   % check whether the output is the same as the input
