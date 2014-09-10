@@ -8,7 +8,8 @@ function test_bug2647
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2647.mat'));
 stat = ft_freqstatistics(cfg,data,BL);
-assert(all(~isfinite(stat.stat(:))));
+%assert(all(~isfinite(stat.stat(:))));
+assert(~all(~isfinite(stat.stat(:)))); % this should now work after making ft_statfun_actvsblT more robust for NaNs
 
 cfg.design = cfg.design(:,[1:4 6:9]);
 data.powspctrm = data.powspctrm(2:end,:,:,:);
