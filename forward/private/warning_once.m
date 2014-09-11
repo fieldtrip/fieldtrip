@@ -210,7 +210,7 @@ for i=numel(stack)-1:-1:(i0)
 end
 
 % line of last function call
-line = ['.line', num2str(stack(i0).line)];
+line = ['.line', int2str(stack(i0).line)];
 end
 
 % function outcome = issubfield(strct, fname)
