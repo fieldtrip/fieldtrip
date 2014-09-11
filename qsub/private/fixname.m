@@ -41,7 +41,7 @@ while(str(1) == '_'),   str = str(2:end); end;   % remove all underscore at the 
 while(str(end) == '_'), str = str(1:end-1); end; % remove all underscore at the end of the string
 
 %if ~isempty(str2double(str(1))) && ~isequal(str(1), 'i')
-if int8(str(1))>57 || int8(str(1))<48
+if int8(str(1))<58 && int8(str(1))>47
   % the string begins with a digit, prepend an 'x'
   str = ['x' str];
 end
