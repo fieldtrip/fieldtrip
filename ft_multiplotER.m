@@ -384,11 +384,16 @@ elseif strcmp(dtype, 'freq') && hasrpt,
   dimtok = tokenize(dimord, '_');
 end
 
-% Read or create the layout that will be used for plotting
+% % Read or create the layout that will be used for plotting
 cla
 lay = ft_prepare_layout(cfg, varargin{1});
 cfg.layout = lay;
-ft_plot_lay(lay, 'box', false,'label','no','point','no');
+
+% plot layout
+boxflg     = istrue(cfg.box);
+labelflg   = istrue(cfg.showlabels);
+outlineflg = istrue(cfg.showoutline);
+ft_plot_lay(lay, 'box', boxflg, 'label',labelflg, 'outline', outlineflg, 'point','no', 'mask', 'no');
 
 % Apply baseline correction
 if ~strcmp(cfg.baseline, 'no')
@@ -578,18 +583,6 @@ chanLabels = cell(1,length(Lbl));
 
 hold on;
 colorLabels = [];
-
-if isfield(lay, 'outline') && strcmp(cfg.showoutline, 'yes')
-  for i=1:length(lay.outline)
-    if ~isempty(lay.outline{i})
-      tmpX = lay.outline{i}(:,1);
-      tmpY = lay.outline{i}(:,2);
-      h = line(tmpX, tmpY);
-      set(h, 'color', 'k');
-      set(h, 'linewidth', 2);
-    end
-  end
-end
 
 % Plot each data set:
 for i=1:Ndata
