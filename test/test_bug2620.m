@@ -6,7 +6,8 @@ function test_bug2620
 % TEST test_bug2620
 % TEST ft_multiplotER ft_multiplotER
 
-load(dccnpath('bug2060.mat'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2620.mat'));
+
 
 close all
 
