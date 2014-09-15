@@ -9,16 +9,17 @@ function ft_write_headshape(filename, bnd, varargin)
 % or
 %   ft_write_headshape(filename, pos, ...)
 % where the bnd is a structure containing the vertices and triangles
-% (bnd.pnt and bnd.tri), or where pnt describes the surface or source
-% points.
+% (bnd.pnt and bnd.tri), or where pos is a Nx3 matrix that describes the 
+% surface or source points.
 %
 % Required input arguments should be specified as key-value pairs and
 % should include
-%   format		= string, see below
+%   'format'		  = string, see below
+%
 % Optional input arguments should be specified as key-value pairs and
 % can include
-%   data      = data matrix, size(1) should be number of vertices
-%   dimord    = string describing the dimensions of the data, e.g. 'pos_time'
+%   'data'        = data matrix, size(1) should be number of vertices
+%   'unit'        = string, e.g. 'mm'
 %
 % Supported output formats are
 %   'mne_tri'		MNE surface desciption in ascii format
@@ -27,14 +28,14 @@ function ft_write_headshape(filename, bnd, varargin)
 %   'vista'
 %   'tetgen'
 %   'gifti'
-%   'stl'        STereoLithography file format, for use with CAD and generic 3D mesh editing programs
-%   'vtk'        Visualization ToolKit file format, for use with Paraview
-%   'ply'        Stanford Polygon file format, for use with Paraview or Meshlab
-%   'freesurfer' Freesurfer surf-file format, using write_surf
+%   'stl'           STereoLithography file format, for use with CAD and generic 3D mesh editing programs
+%   'vtk'           Visualization ToolKit file format, for use with Paraview
+%   'ply'           Stanford Polygon file format, for use with Paraview or Meshlab
+%   'freesurfer'    Freesurfer surf-file format, using write_surf from FreeSurfer
 %
 % See also FT_READ_HEADSHAPE
 
-% Copyright (C) 2011-2013, Lilla Magyari & Robert Oostenveld
+% Copyright (C) 2011-2014, Lilla Magyari & Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -54,14 +55,22 @@ function ft_write_headshape(filename, bnd, varargin)
 %
 % $Id$
 
-fileformat = ft_getopt(varargin,'format','unknown');
-data       = ft_getopt(varargin,'data',  []); % can be stored in a gifti file
-dimord     = ft_getopt(varargin,'dimord',[]); % optional for data
+fileformat    = ft_getopt(varargin, 'format', 'unknown');
+data          = ft_getopt(varargin, 'data');         % can be stored in a gifti file
+unit          = ft_getopt(varargin, 'unit');
+
+if ~isfield(bnd, 'pnt') && isfield(bnd, 'pos')
+  bnd.pnt = bnd.pos;
+end
 
 if ~isstruct(bnd)
   bnd.pnt = bnd;
 end
 
+if ~isempty(unit)
+  % convert to the desired units prior to writing to disk
+  bnd = ft_convert_units(bnd, unit);
+end
 
 switch fileformat
   case 'mne_pos'
@@ -168,15 +177,16 @@ switch fileformat
     
   case 'gifti'
     ft_hastoolbox('gifti', 1);
+    bnd = ft_convert_units(bnd, 'mm');  % defined in the GIFTI standard to be milimeter
     tmp = [];
     tmp.vertices = bnd.pnt;
     tmp.faces    = bnd.tri;
     if ~isempty(data)
       tmp.cdata = data;
     end
-    tmp = gifti(tmp);
-    save(tmp, filename);
-    
+    tmp = gifti(tmp);     % construct a gifti object
+    save(tmp, filename);  % write the object to file
+
   case 'freesurfer'
     ft_hastoolbox('freesurfer', 1);
     write_surf(filename, bnd.pnt, bnd.tri);

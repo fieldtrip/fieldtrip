@@ -93,6 +93,17 @@ if isfield(volume, 'frequency'), volume = rmfield(volume, 'frequency'); end
 if isfield(volume, 'time'),      volume = rmfield(volume, 'time');      end
 if isfield(volume, 'latency'),   volume = rmfield(volume, 'latency');   end
 
+if isfield(volume, 'pos')
+  if ~isfield(volume, 'dim')
+    volume.dim = pos2dim(volume.pos);
+  end
+  assert(prod(volume.dim)==size(volume.pos,1), 'dimensions are inconsistent with number of grid positions');
+  if  ~isfield(volume, 'transform')
+    volume.transform = pos2transform(volume.pos, volume.dim);
+  end
+  volume = rmfield(volume, 'pos');
+end
+
 switch version
   case '2012b'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
