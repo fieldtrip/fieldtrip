@@ -12,7 +12,7 @@ function [dim] = pos2dim(pos)
 %
 % See also POS2TRANSFORM
 
-% Copyright (C) 2009-2013, Jan-Mathijs Schoffelen
+% Copyright (C) 2009, Jan-Mathijs Schoffelen
 
 if isstruct(pos),
   pos = pos.pos;
@@ -22,10 +22,7 @@ end
 % an ordered way which allows for the extraction of a transformation matrix
 % i.e. slice by slice
 npos = size(pos,1);
-tmp  = abs(diff(pos,[],1));
-
-% zscore
-dpos = (tmp-repmat(mean(tmp,1),[size(tmp,1) 1]))./repmat(std(tmp,[],1),[size(tmp,1) 1]);
+dpos = zscore(abs(diff(pos,[],1)));
 
 [tmp, ind] = max(dpos,[],2);
 dim(1)     = find(tmp>1.5,1,'first');
