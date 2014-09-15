@@ -122,10 +122,10 @@ switch projmethod
   case 'sphere_weighteddistance'
     projmat         = distmat;
     [ind1, ind2, d] = find(projmat);
-    projmat         = sparse(ind1, ind2, 1./d, npnt, npnt1);
+    projmat         = sparse(ind1, ind2, 1./d, npnt, npos);
     [ind1, ind2, d] = find(projmat);
     normnz          = sqrt(full(sum(projmat.^2, 2)));
-    projmat         = sparse(ind1, ind2, d./normnz(ind1), npnt, npnt1);
+    projmat         = sparse(ind1, ind2, d./normnz(ind1), npnt, npos);
   
   case 'project'
       % this method is Joachim's implementation that was originally in
