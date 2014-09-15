@@ -1,35 +1,53 @@
 function ft_sourcewrite(cfg, source)
 
-% FT_SOURCEWRITE exports source analysis results to gifti or nifti format,
-% depending on whether the source locations are described by on a
-% cortically constrained sheet (gifti) or by a regular 3D lattice (nifti)
+% FT_SOURCEWRITE exports source analysis results to gifti or nifti format
+% file, depending on whether the source locations are described by on a
+% cortically constrained sheet (gifti) or by a regular 3D lattice (nifti).
 %
 % Use as
-%  ft_sourcewrite(cfg, source) 
-% where source is a source structure obtained after FT_SOURCEANALYSIS and 
-% cfg is a configuratioun structure that should contain 
+%  ft_sourcewrite(cfg, source)
+% where source is a source structure obtained from FT_SOURCEANALYSIS and
+% cfg is a structure that should contain
 %
 %  cfg.filename  = string, name of the file
 %  cfg.parameter = string, functional parameter to be written to file
+%  cfg.precision = string, can be 'single', 'double', etc.
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 % If you specify this the input data will be read from a *.mat
-% file on disk. This mat file should contain only a single variable, 
+% file on disk. This mat file should contain only a single variable,
 % corresponding with the input data structure.
 %
 % See also FT_SOURCEANALYSIS FT_SOURCEDESCRIPTIVES FT_VOLUMEWRITE
 
 % Copyright (C) 2011, Jan-Mathijs Schoffelen
+% Copyright (C) 2011-2013, Jan-Mathijs Schoffelen, Robert Oostenveld
+%
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
 
 revision = '$Id$';
 
-ft_defaults                 
-ft_preamble init           
-ft_preamble provenance        
-ft_preamble trackconfig     
+ft_defaults
+ft_preamble init
+ft_preamble provenance
+ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar source
 
