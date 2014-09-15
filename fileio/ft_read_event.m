@@ -1732,7 +1732,8 @@ switch eventformat
       hdr = ft_read_header(filename);
     end
     if isfield(hdr.orig, 'epochs') && ~isempty(hdr.orig.epochs)
-      for i = 1:hdr.nTrials
+      trlind = [];
+      for i = 1:numel(hdr.orig.epochs)
         trlind = [trlind i*ones(1, diff(hdr.orig.epochs(i).samples) + 1)];
       end
     else
