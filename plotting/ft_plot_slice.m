@@ -130,6 +130,8 @@ if isstruct(mesh)
   for i=1:numel(tmp)
     mesh{i} = tmp(i);
   end
+elseif iscell(mesh)
+  % do nothing
 else
   mesh = {};
 end
