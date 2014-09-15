@@ -9,6 +9,8 @@ function [transform] = pos2transform(pos, dim)
 %
 % The output transform is a 4x4 homogenous transformation matrix which transforms
 % from 'voxelspace' into the positions provided in the input
+%
+% See also POS2DIM
 
 % Copyright (C) 2009, Jan-Mathijs Schoffelen
 

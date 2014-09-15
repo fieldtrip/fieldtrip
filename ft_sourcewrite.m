@@ -39,46 +39,68 @@ if abort
 end
 
 % check if the input data is valid for this function
-source = ft_checkdata(source, 'datatype', 'source', 'feedback', 'yes');
+source = ft_checkdata(source, 'datatype', 'source', 'hasunit', true, 'feedback', 'yes');
 
 % ensure that the required options are present
 cfg = ft_checkconfig(cfg, 'required', {'parameter', 'filename'});
 
 % get the options
-cfg.parameter = ft_getopt(cfg, 'parameter');
-cfg.filename  = ft_getopt(cfg, 'filename');
+cfg.parameter    = ft_getopt(cfg, 'parameter');
+cfg.filename     = ft_getopt(cfg, 'filename');
+cfg.filetype     = ft_getopt(cfg, 'filetype');      % the default is determined further down
+cfg.parcellation = ft_getopt(cfg, 'parcellation');  % is used for cifti
+cfg.precision    = ft_getopt(cfg, 'precision');     % is used for cifti
 
-if isfield(source, 'dim')
-  % source positions are on a regular 3D lattice, save as nifti
-  if numel(cfg.filename)<=4 || ~strcmp(cfg.filename(end-3:end), '.nii');
-    cfg.filename = cat(2, cfg.filename, '.nii');
+if isempty(cfg.filetype)
+  if isfield(source, 'dim')
+    % source positions are on a regular 3D lattice, save as nifti
+    cfg.filetype = 'nifti';
+  elseif isfield(source, 'tri')
+    % there is a specification of a 2D cortical sheet, save as gifti
+    cfg.filetype = 'gifti';
+  else
+    error('the input data does not look like a 2D sheet, nor as a 3D regular volume');
   end
-  
-  % convert functional data into 4D
-  dat = getsubfield(source, cfg.parameter);
-  dat = reshape(dat, source.dim(1), source.dim(2), source.dim(3), []);
-  
-  if ~isfield(source, 'transform')
-    source.transform = pos2transform(source.pos);
-  end
-  ft_write_mri(cfg.filename, dat, 'dataformat', 'nifti', 'transform', source.transform);
-  
-elseif isfield(source, 'tri')
-  % there's a specification of a mesh, so the source positions are on a 2D
-  % sheet, save as gifti
-  if numel(cfg.filename)<=4 || ~strcmp(cfg.filename(end-3:end), '.gii');
-    cfg.filename = cat(2, cfg.filename, '.gii');
-  end
-  
-  if ~isfield(source, 'pnt')
-    source.pnt = source.pos;
-  end
-  ft_write_headshape(cfg.filename, source, 'data', getsubfield(source,cfg.parameter), 'format', 'gifti');
-  
-else
-  error('the input data does not look like a 2D sheet, nor as a 3D regular volume');
 end
 
+switch (cfg.filetype)
+  case 'nifti'
+    if numel(cfg.filename)<=4 || ~strcmp(cfg.filename(end-3:end), '.nii');
+      cfg.filename = cat(2, cfg.filename, '.nii');
+    end
+    
+    % convert functional data into 4D
+    dat = getsubfield(source, cfg.parameter);
+    dat = reshape(dat, source.dim(1), source.dim(2), source.dim(3), []);
+    
+    if ~isfield(source, 'transform')
+      source.transform = pos2transform(source.pos);
+    end
+    
+    % this is a bit of a kludge, but ft_write_mri can write 3D and 4D nifti
+    ft_write_mri(cfg.filename, dat, 'dataformat', 'nifti', 'transform', source.transform);
+    
+  case 'gifti'
+    if numel(cfg.filename)<=4 || ~strcmp(cfg.filename(end-3:end), '.gii');
+      cfg.filename = cat(2, cfg.filename, '.gii');
+    end
+    
+    % this is a bit of a kludge, but ft_write_headshape can write gifti including data
+    ft_write_headshape(cfg.filename, source, 'data', getsubfield(source, cfg.parameter), 'format', 'gifti');
+    
+  case 'cifti'
+    [p, f, x] = fileparts(cfg.filename);
+    if isequal(x, '.nii')
+      cfg.filename = fullfile(p, f); % strip the extension
+    end
+    cfg.filename = [cfg.filename '.' cfg.parameter '.nii'];
+    
+    ft_write_cifti(cfg.filename, source, 'parameter', cfg.parameter, 'parcellation', cfg.parcellation, 'precision', cfg.precision);
+
+  otherwise
+    error('unsupported output format (%s)', cfg.filetype);
+end % switch filetype
+
 ft_postamble debug
-ft_postamble trackconfig      
-ft_postamble provenance        
+ft_postamble trackconfig
+ft_postamble provenance
