@@ -262,12 +262,16 @@ if hasdata
     % don't use the events in case the data has been resampled
     warning('the data has been resampled, not showing the events');
     event = [];
+  elseif isfield(data, 'cfg') && isfield(data.cfg, 'event')
+    % use the event structure from the data as per bug #2501
+    event = data.cfg.event;
   elseif ~isempty(cfg.event)
     % use the events that the user passed in the configuration
     event = cfg.event;
   else
     % fetch the events from the data structure in memory
-    event = ft_fetch_event(data);
+    %event = ft_fetch_event(data);
+    event = [];
   end
   
   cfg.channel = ft_channelselection(cfg.channel, hdr.label);

@@ -1853,7 +1853,7 @@ switch headerformat
     hdr.nTrials  = 1;
     if isfield(orig, 'epochs') && ~isempty(orig.epochs)
       hdr.nSamples = 0;
-      for i = 1:hdr.nTrials
+      for i = 1:numel(orig.epochs)
         hdr.nSamples =  hdr.nSamples + diff(orig.epochs(i).samples) + 1;
       end
     else

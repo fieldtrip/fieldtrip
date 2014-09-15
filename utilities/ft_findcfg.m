@@ -31,9 +31,9 @@ function [val, status] = ft_findcfg(cfg, var)
 %
 % $Id$
 
-if var(1)~='.'
-  var = ['.' var];
-end
+% if var(1)~='.'
+%   var = ['.' var];
+% end
 val   = [];
 depth = 0;
 status = 0;
@@ -44,7 +44,7 @@ while ~status
     if issubfield(cfg,  var)
       val = getsubfield(cfg, var);
       status = 1;
-    elseif issubfield(cfg, '.previous');
+    elseif issubfield(cfg, 'previous');
       [val, status] = ft_findcfg(cfg.previous, var);
       if status, break; end;
     elseif iscell(cfg)

@@ -508,7 +508,8 @@ end % function makeselection
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function data = makeselection_chan(data, selchan, avgoverchan)
 if isempty(selchan)
-  error('no channels were selected');
+  %error('no channels were selected');
+  data.label = {};
 elseif avgoverchan && all(isnan(selchan))
   str = sprintf('%s, ', data.label{:});
   str = str(1:end-2);

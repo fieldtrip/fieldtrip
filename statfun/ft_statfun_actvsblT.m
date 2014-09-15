@@ -112,7 +112,7 @@ if strcmp(cfg.computestat,'yes')
 % compute the statistic
     % calculate the time averages of the activation and the baseline period
     % for all units-of-observation.
-    meanreshapeddat=mean(reshape(dat,nchan,nfreq,ntime,nrepl),3);
+    meanreshapeddat=nanmean(reshape(dat,nchan,nfreq,ntime,nrepl),3);
     timeavgdat=repmat(eye(nchan*nfreq),ntime,1)*reshape(meanreshapeddat,(nchan*nfreq),nrepl);
 
     % store the positions of the 1-labels and the 2-labels in a nunits-by-2 array
@@ -129,8 +129,8 @@ if strcmp(cfg.computestat,'yes')
     diffmat=dat(:,poslabelsperunit(:,1))-timeavgdat(:,poslabelsperunit(:,2));
 
     % calculate the dependent samples t-statistics
-    avgdiff=mean(diffmat,2);
-    vardiff=var(diffmat,0,2);
+    avgdiff=nanmean(diffmat,2);
+    vardiff=nanvar(diffmat,0,2);
     s.stat=sqrt(nunits)*avgdiff./sqrt(vardiff);
 end;
 

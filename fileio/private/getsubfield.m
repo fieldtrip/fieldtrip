@@ -39,10 +39,8 @@ if ~ischar(f)
   error('incorrect input argument for fieldname');
 end
 
-while (1)
-  [t, f] = strtok(f, '.');
-  s = getfield(s, t);
-  if isempty(f)
-    break
-  end
+t = textscan(f,'%s','delimiter','.');
+t = t{1};
+for k = 1:numel(t)
+  s = s.(t{k});
 end

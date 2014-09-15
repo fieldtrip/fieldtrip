@@ -18,8 +18,9 @@ function [timelock] = ft_timelockanalysis(cfg, data)
 %   cfg.removemean         = 'no' or 'yes' for covariance computation (default = 'yes')
 %   cfg.vartrllength       = 0, 1 or 2 (see below)
 %
-% Depending on cfg.vartrllength, variable trials and missing values
-% are treated differently:
+% Depending on cfg.vartrllength, variable length trials and trials with 
+% differences in their time axes (so even if they are of the same length, e.g. 1
+% second snippets of data cut from a single long recording) are treated differently:
 %   0 - do not accept variable length trials [default]
 %   1 - accept variable length trials, but only take those trials in which
 %       data is present in both the average and the covariance window

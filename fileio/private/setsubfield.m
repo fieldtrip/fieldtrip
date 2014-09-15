@@ -39,13 +39,16 @@ if ~ischar(f)
   error('incorrect input argument for fieldname');
 end
 
-t = {};
-while (1)
-  [t{end+1}, f] = strtok(f, '.');
-  if isempty(f)
-    break
-  end
-  
-end
+% t = {};
+% while (1)
+%   [t{end+1}, f] = strtok(f, '.');
+%   if isempty(f)
+%     break
+%   end
+%   
+% end
+%
+%s = setfield(s, t{:}, v);
 
-s = setfield(s, t{:}, v);
+t = textscan(f,'%s','delimiter','.');
+s = setfield(s, t{1}{:}, v);
