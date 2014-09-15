@@ -1,12 +1,12 @@
-% function test_bug2096
+function test_bug2096
 
-% MEM 2000mb
-% WALLTIME 00:10:00
+% MEM 4000mb
+% WALLTIME 00:20:00
 
 % TEST test_bug2096
-% TEST ft_sourcewrite
+% TEST ft_sourcewrite ft_read_cifti ft_write_cifti
 
-% load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2096.mat'));
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2096'));
 
 %%
 source = [];
@@ -190,28 +190,19 @@ ft_sourcewrite(cfg, source);
 
 source1 = ft_read_cifti('test_bug2096.imagcoh.dconn.nii')
 
-
-%% test reading these files
-% http://brainvis.wustl.edu/cifti/DenseConnectome.dconn.nii
-% http://brainvis.wustl.edu/cifti/DenseTimeSeries.dtseries.nii
-% http://brainvis.wustl.edu/cifti/ParcellatedTimeSeries.ptseries.nii
-
 %% version 1
-p = '/home/common/matlab/fieldtrip/data/test/bug2096';
-p = '/Volumes/Data/roboos/AeroFS/bug2096';
-p = '/Users/robert/Documents - work/previous AeroFS/bug2096';
-p = '/Users/roboos/Desktop/bug2096/cifti1';
-cd(p);
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2096/cifti1'));
 
-cii1 = ft_read_cifti('DenseConnectome.dconn.nii');
-% cii2 = ft_read_cifti('DenseTimeSeries.dtseries.nii');
-% cii3 = ft_read_cifti('ParcellatedTimeSeries.ptseries.nii');
+
+% cii1 = ft_read_cifti('DenseConnectome.dconn.nii');            % this one is disabled because it is 10GB large
+% cii2 = ft_read_cifti('DenseTimeSeries.dtseries.nii');         % this one is disabled because the file contains an internal error (number of greynodes is not consistent with size of data)
+% cii3 = ft_read_cifti('ParcellatedTimeSeries.ptseries.nii');   % this one is disabled because the code cannot deal with cifti-1 parcels
 cii4 = ft_read_cifti('BOLD_REST2_LR.dtseries.nii');
 cii5 = ft_read_cifti('BOLD_REST2_LR_Atlas.dtseries.nii');
 
 %% version 2
-p = '/Users/roboos/Desktop/bug2096/cifti2';
-cd(p);
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2096/cifti2'));
+
 
 cii1 = ft_read_cifti('ones.dscalar.nii');
 cii2 = ft_read_cifti('Conte69.MyelinAndCorrThickness.32k_fs_LR.dscalar.nii');
@@ -220,9 +211,7 @@ cii3 = ft_read_cifti('Conte69.MyelinAndCorrThickness.32k_fs_LR.dtseries.nii');
 cii5 = ft_read_cifti('Conte69.parcellations_VGD11b.32k_fs_LR.dlabel.nii');
 
 %% release data
-p = '/Volumes/HDD811/data/HCP/177746/MNINonLinear/fsaverage_LR32k';
-p = '/Users/roboos/Desktop/fsaverage_LR32k';
-cd(p);
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2096/hcp_release/fsaverage_LR32k'));
 
 filename = {
   '177746.ArealDistortion.32k_fs_LR.dscalar.nii'
@@ -262,9 +251,8 @@ for i=1:length(filename)
   title(datafield{i});
 end
 
-%%
-p = '/Users/roboos/Desktop/TestParcelsForMEG';
-cd(p);
+%% MEG specific development data from DVE
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2096/hcp_devel/TestParcelsForMEG'));
 
 filename = {
   '3T_Q1-Q6related468_MSMsulc_d100_ts2_Znet2.pconn.nii'
@@ -288,8 +276,3 @@ for i=1:length(filename)
   disp(filename{i});
   source = ft_read_cifti(filename{i}, 'representation', 'source');
 end
-
-
-
-
-
