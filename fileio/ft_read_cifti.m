@@ -1,13 +1,12 @@
-function cii = ft_read_cifti(filename, varargin)
+function source = ft_read_cifti(filename, varargin)
 
 % FT_READ_CIFTI reads geometry and functional data or connectivity from a
 % cifti file and returns a structure according to FT_DATATYPE_SOURCE.
 %
 % Use as
-%   cii = ft_read_cifti(filename, ...)
+%   source = ft_read_cifti(filename, ...)
 % where additional input arguments should be specified as key-value pairs
 % and can include
-%   representation = string, can be 'char', 'tree', 'struct' or 'source'
 %   readdata       = boolean, can be false or true
 %
 % See also FT_WRITE_CIFTI, READ_NIFTI2_HDR, WRITE_NIFTI2_HDR
@@ -32,8 +31,10 @@ function cii = ft_read_cifti(filename, varargin)
 %
 % $Id$
 
-representation = ft_getopt(varargin, 'representation', 'source');
-readdata       = ft_getopt(varargin, 'readdata', []); % the default depends on file size, see below
+brainstructure  = ft_getopt(varargin, 'brainstructure'); % the default is determined further down
+readdata        = ft_getopt(varargin, 'readdata', []);   % the default depends on file size, see below
+cortexleft      = ft_getopt(varargin, 'cortexleft', {});
+cortexright     = ft_getopt(varargin, 'cortexright', {});
 
 % convert 'yes'/'no' into boolean
 readdata = istrue(readdata);
@@ -104,24 +105,10 @@ fclose(tmp);
 % this requires the xmltree object from Guillaume Flandin
 % see http://www.artefact.tk/software/matlab/xml/
 % it is also included with the gifti toolbox
+tree = xmltree(xmldata);
 
-switch representation
-  case 'char'
-    cii.xmldata = xmldata;
-  case 'tree'
-    cii.tree = xmltree(xmldata); % using xmltree from artefact.dk
-  case 'struct'
-    tmp = xmltree(xmldata);
-    cii = tree2struct(tmp);
-  case 'source'
-    tmp = xmltree(xmldata);
-    cii = tree2struct(tmp); % the rest of the conversion is done further down
-  otherwise
-    error('unsupported representation')
-end
-
-% include the nifti-2 header in the output structure
-cii.hdr = hdr;
+% convert from xmltree object to a generic MATLAB structure
+cii = tree2struct(tree);
 
 if readdata
   % read the voxel data section
@@ -136,14 +123,16 @@ if readdata
     case 768, [voxdata, nitemsread] = fread(fid, inf, 'uint');    assert(nitemsread==prod(hdr.dim(2:end)), 'could not read all data');
     otherwise, error('unsupported datatype');
   end
+  % include the data in the output structure, note that the fieldname might be changed further down
   cii.data = squeeze(reshape(voxdata, hdr.dim(2:end)));
 end
 fclose(fid);
 
+% include the nifti-2 header in the output structure
+cii.hdr = hdr;
 
-if strcmp(representation, 'source')
-  cii = struct2source(cii);
-end
+% convert to FieldTrip source representation, i.e. according to FT_DATATYPE_SOURCE and FT_DATATYPE_PARCELLATION
+source = struct2source(cii);
 
 % try to get the geometrical information from a corresponding gifti files
 % the following assumes the HCP convention
@@ -232,9 +221,20 @@ Bfilelist = {
   [subject '.CORTEX'                     '.surf.gii']
   };
 
+Lfilelist = cat(1, cortexleft, Lfilelist);
+Rfilelist = cat(1, cortexright, Rfilelist);
 
-if isfield(cii, 'BrainStructurelabel')
-  if all(ismember({'CORTEX_LEFT', 'CORTEX_RIGHT'}, cii.BrainStructurelabel))
+% set the default
+if isempty(brainstructure) && isfield(source, 'brainstructure') && isfield(source, 'brainstructurelabel')
+  brainstructure = 'brainstructure';
+end
+
+if isfield(source, brainstructure)
+  % it contains information about anatomical structures, including cortical surfaces
+  BrainStructure      = source.( brainstructure         );
+  BrainStructurelabel = source.([brainstructure 'label']);
+  
+  if all(ismember({'CORTEX_LEFT', 'CORTEX_RIGHT'}, BrainStructurelabel))
     for i=1:length(Lfilelist)
       Lfilename = fullfile(p, Lfilelist{i});
       Rfilename = fullfile(p, Rfilelist{i});
@@ -245,13 +245,13 @@ if isfield(cii, 'BrainStructurelabel')
         warning('reading right hemisphere geometry from %s',  Rfilename);
         meshR = ft_read_headshape(Rfilename, 'unit', 'mm'); % volume and surface should be in consistent units, gifti is defined in mm, wb_view also expects mm
         
-        indexL = find(cii.BrainStructure==find(strcmp(cii.BrainStructurelabel, 'CORTEX_LEFT')));
-        indexR = find(cii.BrainStructure==find(strcmp(cii.BrainStructurelabel, 'CORTEX_RIGHT')));
+        indexL = find(BrainStructure==find(strcmp(BrainStructurelabel, 'CORTEX_LEFT')));
+        indexR = find(BrainStructure==find(strcmp(BrainStructurelabel, 'CORTEX_RIGHT')));
         
-        cii.pos(indexL,:) = meshL.pnt;
-        cii.pos(indexR,:) = meshR.pnt;
+        source.pos(indexL,:) = meshL.pnt;
+        source.pos(indexR,:) = meshR.pnt;
         
-        cii.tri = [
+        source.tri = [
           indexL(meshL.tri)
           indexR(meshR.tri)
           ];
@@ -259,16 +259,16 @@ if isfield(cii, 'BrainStructurelabel')
         break % only read a single pair of meshes
       end
     end
-  elseif ismember({'CORTEX'}, cii.BrainStructurelabel)
+  elseif ismember({'CORTEX'}, BrainStructurelabel)
     for i=1:length(Bfilelist)
       Bfilename = fullfile(p, Bfilelist{i});
       
       if exist(Bfilename, 'file')
         warning('reading surface geometry from %s',  Bfilename);
         meshB   = ft_read_headshape(Bfilename, 'unit', 'mm'); % volume and surface should be in consistent units, gifti is defined in mm, wb_view also expects mm
-        indexB  = find(cii.BrainStructure==find(strcmp(cii.BrainStructurelabel, 'CORTEX')));
-        cii.pos(indexB,:) = meshB.pnt;
-        cii.tri = indexB(meshB.tri);
+        indexB  = find(BrainStructure==find(strcmp(BrainStructurelabel, 'CORTEX')));
+        source.pos(indexB,:) = meshB.pnt;
+        source.tri = indexB(meshB.tri);
       end
       
       break % only read a single mesh
@@ -277,20 +277,20 @@ if isfield(cii, 'BrainStructurelabel')
 end
 
 if readdata
-  if isfield(cii, 'data')
+  if isfield(source, 'data')
     % rename the data field
-    cii.(fixname(dataname)) = cii.data;
-    cii = rmfield(cii, 'data');
+    source.(fixname(dataname)) = source.data;
+    source = rmfield(source, 'data');
   end
   
   % rename the datalabel field
-  if isfield(cii, 'datalabel')
-    cii.(fixname([dataname 'label'])) = cii.datalabel;
-    cii = rmfield(cii, 'datalabel');
+  if isfield(source, 'datalabel')
+    source.(fixname([dataname 'label'])) = source.datalabel;
+    source = rmfield(source, 'datalabel');
   end
 end
 
-return % function
+return % function ft_read_cifti
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the cifti XML section can be represented in various manners
@@ -663,8 +663,8 @@ source.dimord(end) = [];
 if hasbrainmodel
   source.pos                  = Cifti.pos;
   source.unit                 = 'mm';   % volume and surface should be in consistent units, gifti is defined in mm, wb_view also expects mm
-  source.BrainStructure       = BrainStructure;
-  source.BrainStructurelabel  = BrainStructurelabel;
+  source.brainstructure       = BrainStructure;
+  source.brainstructurelabel  = BrainStructurelabel;
   if ~isempty(Cifti.Volume)
     % this only applies to the voxel coordinates, not to surface vertices which are NaN
     source.pos        = ft_warp_apply(Cifti.Volume.Transform, source.pos+1);  % one offset

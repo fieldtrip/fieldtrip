@@ -6,7 +6,11 @@ function ft_write_cifti(filename, source, varargin)
 %   ft_write_cifti(filename, source, ...)
 % where optional input arguments should come in key-value pairs and may include
 %   parameter      = string, fieldname that contains the data
-%   brainstructure = string, fieldname that describes the labeling of the brain structures (optional)
+%   brainstructure = string, fieldname that describes the brain structures (optional)
+%   parcellation   = string, fieldname that describes the parcellation (optional)
+%
+% The brainstructure refers to the global anatomical structure, such as CortexLeft, Thalamus, etc.
+% The parcellation refers to the the detailled parcellation, such as BA1, BA2, BA3, etc.
 %
 % See also FT_READ_CIFTI, READ_NIFTI2_HDR, WRITE_NIFTI2_HDR
 
@@ -30,16 +34,22 @@ function ft_write_cifti(filename, source, varargin)
 %
 % $Id$
 
-brainstructure  = ft_getopt(varargin, 'brainstructure');
+brainstructure  = ft_getopt(varargin, 'brainstructure'); % the default is determined further down
+parcellation    = ft_getopt(varargin, 'parcellation');   % the default is determined further down
 parameter       = ft_getopt(varargin, 'parameter');
 precision       = ft_getopt(varargin, 'precision', 'single');
 
 % ensure that the external toolbox is present, this adds gifti/@xmltree
 ft_hastoolbox('gifti', 1);
 
-if isempty(brainstructure) && isfield(source, 'BrainStructure') && isfield(source, 'BrainStructurelabel')
-  % these are added by default in ft_read_cifti
-  brainstructure = 'BrainStructure';
+if isempty(brainstructure) && isfield(source, 'brainstructure') && isfield(source, 'brainstructurelabel')
+  % these fields are added by default in ft_write_cifti
+  brainstructure = 'brainstructure';
+end
+
+if isempty(brainstructure) && isfield(source, 'parcellation') && isfield(source, 'parcellationlabel')
+  % these fields are added by default in ft_write_cifti
+  parcellation = 'parcellation';
 end
 
 if ~isempty(brainstructure)
@@ -406,6 +416,8 @@ switch dimord
     hdr.dim             = [6 1 1 1 1 size(source.pos,1) 1 1]; % only single scalar
   case 'scalar_pos'
     hdr.dim             = [6 1 1 1 1 1 size(source.pos,1) 1]; % only single scalar
+  case 'scalar_chan'
+    hdr.dim             = [6 1 1 1 1 1 numel(source.label) 1]; % only single scalar
   case 'pos_time'
     hdr.dim             = [6 1 1 1 1 size(source.pos,1)  length(source.time) 1];
   case 'time_pos'
@@ -522,17 +534,19 @@ if isfield(source, 'tri')
   % THALAMUS_LEFT
   % THALAMUS_RIGHT
   
-  % it contains surface information
-  if isfield(source, 'BrainStructure')
-    % it contains multiple surfaces
-    for i=1:length(source.BrainStructurelabel)
-      sel = find(source.BrainStructure~=i);
+  if isfield(source, brainstructure)
+    % it contains information about anatomical structures, including cortical surfaces
+    BrainStructure      = source.( brainstructure         );
+    BrainStructurelabel = source.([brainstructure 'label']);
+    
+    for i=1:length(BrainStructurelabel)
+      sel = find(BrainStructure~=i);
       [mesh.pnt, mesh.tri] = remove_vertices(source.pos, source.tri, sel);
       mesh.unit = source.unit;
       
       [p, f, x] = fileparts(filename);
       filetok = tokenize(f, '.');
-      surffile = fullfile(p, [filetok{1} '.' source.BrainStructurelabel{i} '.surf.gii']);
+      surffile = fullfile(p, [filetok{1} '.' BrainStructurelabel{i} '.surf.gii']);
       ft_write_headshape(surffile, mesh, 'format', 'gifti');
     end
   else
