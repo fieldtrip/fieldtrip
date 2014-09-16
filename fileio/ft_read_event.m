@@ -298,29 +298,15 @@ switch eventformat
     schan = find(strcmpi(hdr.label,'STATUS'));
     sdata = ft_read_data(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', begsample, 'endsample', endsample, 'chanindx', schan);
     
-    % FIXME the following section still needs to be addressed
-    % http://bugzilla.fcdonders.nl/show_bug.cgi?id=2409
-    % http://bugzilla.fcdonders.nl/show_bug.cgi?id=2415
-    if true
-      % find indices of negative numbers
-      bit24i = find(sdata < 0);
-      % make number positive and preserve bits 0-22 (counting from 0)
-      sdata(bit24i) = bitcmp(abs(sdata(bit24i))-1,24);
-      % re-insert the sign bit on its original location, i.e. bit 23 (counting from 0)
-      sdata(bit24i) = sdata(bit24i)+(2^(24-1));
-      % typecast the data to ensure that the status channel is represented in 32 bits
-      sdata = uint32(sdata);
-    else
-      % convert to integer representation and only preserve the lowest 24 bits
-      sdata = bitand(int32(sdata), 2^24-1);
-    end
+    % convert to 32-bit integer representation and only preserve the lowest 24 bits
+    sdata = bitand(int32(sdata), 2^24-1);
 
     byte1 = 2^8  - 1;
     byte2 = 2^16 - 1 - byte1;
     byte3 = 2^24 - 1 - byte1 - byte2;
     
     % get the respective status and trigger bits
-    trigger = bitand(sdata, bitor(byte1, byte2)); %  contained in the lower two bytes
+    trigger = bitand(sdata, bitor(byte1, byte2)); % this is contained in the lower two bytes
     epoch   = int8(bitget(sdata, 16+1));
     cmrange = int8(bitget(sdata, 20+1));
     battery = int8(bitget(sdata, 22+1));
