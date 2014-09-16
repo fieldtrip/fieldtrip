@@ -47,7 +47,7 @@ issource       =  isfield(data, 'pos');
 isdip          =  isfield(data, 'dip');
 ismvar         =  isfield(data, 'dimord') && ~isempty(strfind(data.dimord, 'lag'));
 isfreqmvar     =  isfield(data, 'freq') && isfield(data, 'transfer');
-ischan         =  isfield(data, 'dimord') && strcmp(data.dimord, 'chan') && ~isfield(data, 'time') && ~isfield(data, 'freq');
+ischan         = check_chan(data);
 issegmentation = check_segmentation(data);
 isparcellation = check_parcellation(data);
 
@@ -142,6 +142,26 @@ if nargout>1
     dimord = data.dimord;
   else
     dimord = 'unknown';
+  end
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [res] = check_chan(data)
+
+if any(isfield(data, {'time', 'freq', 'pos', 'dim', 'transform'}))
+  res = false;
+elseif isfield(data, 'dimord') && strcmp(data.dimord, 'chan')
+  res = true;
+else
+  res = false;
+  fn = fieldnames(data);
+  for i=1:numel(fn)
+    if isfield(data, [fn{i} 'dimord']) && strcmp(data.([fn{i} 'dimord']), 'chan')
+      res = true;
+      break;
+    end
   end
 end
 
