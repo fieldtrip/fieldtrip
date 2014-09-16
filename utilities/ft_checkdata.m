@@ -185,11 +185,11 @@ if ~isequal(feedback, 'no')
       subtype = 'source';
     end
     if isfield(data, 'dim')
-      fprintf('the input is %s data with %d positions on a [%d %d %d] grid\n', subtype, nsource, data.dim(1), data.dim(2), data.dim(3));
+      fprintf('the input is %s data with %d brainordinates on a [%d %d %d] grid\n', subtype, nsource, data.dim(1), data.dim(2), data.dim(3));
     elseif isfield(data, 'tri')
       fprintf('the input is %s data with %d vertex positions and %d triangles\n', subtype, nsource, size(data.tri, 1));
     else
-      fprintf('the input is %s data with %d positions\n', subtype, nsource);
+      fprintf('the input is %s data with %d brainordinates\n', subtype, nsource);
     end
     clear subtype
   elseif isdip
