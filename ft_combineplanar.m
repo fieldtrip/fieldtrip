@@ -2,11 +2,12 @@ function [data] = ft_combineplanar(cfg, data)
 
 % FT_COMBINEPLANAR computes the planar gradient magnitude over both directions
 % combining the two gradients at each sensor to a single positive-valued number.
-% This can be done for averaged ERFs or TFRs (i.e. powerspectra).
+% This can be done for averaged planar gradient ERF or single-trial/avegared TFR 
+% (i.e. powerspectra).
 %
 % Use as
 %   [data] = ft_combineplanar(cfg, data)
-% where data contains an averaged planar gradient (either ERF or TFR).
+% where data contains an averaged planar gradient ERF or single-trial/avegared TFR.
 %
 % In the case of ERFs, the configuration can contain
 %   cfg.demean         = 'yes' or 'no' (default)
