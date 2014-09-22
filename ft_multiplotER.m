@@ -837,7 +837,6 @@ if ~isempty(label)
     % the reading has already been done and varargin contains the data
     cfg = rmfield(cfg, 'inputfile');
   end
-  cfg.xlim = 'maxmin';
   cfg.channel = label;
   % put data name in here, this cannot be resolved by other means
   info = guidata(gcf);
