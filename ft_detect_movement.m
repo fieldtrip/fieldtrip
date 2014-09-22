@@ -55,13 +55,13 @@ function [cfg movement] = ft_detect_movement(cfg, data)
 
 % Copyright (C) 2014, Diego Lozano-Soldevilla, Robert Oostenveld
 %
-% $Id: ft_examplefunction.m 9587 2014-05-23 11:11:25Z roboos $
+% $Id$
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the initial part deals with parsing the input options and data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-revision = '$Id: ft_examplefunction.m 9587 2014-05-23 11:11:25Z roboos $';
+revision = '$Id$';
 
 % do the general setup of the function
 
