@@ -35,7 +35,7 @@ function [warped]= individual2sn(P, input)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id:$
+% $Id$
 
 ft_hastoolbox('spm8up', 1);
 
