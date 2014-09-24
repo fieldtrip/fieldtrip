@@ -211,7 +211,20 @@ level = info.level;
 level(~info.chansel,:) = nan;
 level(:,~info.trlsel)  = nan;
 
+% we need a workaround when finding the max of the minima
+if strcmp(info.metric, 'min')
+    level = level * -1;
+end
+
 [maxperchan maxpertrl maxperchan_all maxpertrl_all] = set_maxper(level, info.chansel, info.trlsel);
+
+if strcmp(info.metric, 'min')
+    maxperchan = maxperchan * -1;
+    maxpertrl = maxpertrl * -1;
+    maxperchan_all = maxperchan_all * -1;
+    maxpertrl_all = maxpertrl_all * -1;
+    level = level * -1;  % see point below
+end
 
 % make the three figures
 if gcf~=h, figure(h); end
