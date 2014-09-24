@@ -56,18 +56,31 @@ if abort
   return
 end
 
-% check if the input data is valid for this function
-source = ft_checkdata(source, 'datatype', 'source', 'hasunit', true, 'feedback', 'yes');
-
 % ensure that the required options are present
 cfg = ft_checkconfig(cfg, 'required', {'parameter', 'filename'});
 
 % get the options
-cfg.parameter    = ft_getopt(cfg, 'parameter');
-cfg.filename     = ft_getopt(cfg, 'filename');
-cfg.filetype     = ft_getopt(cfg, 'filetype');      % the default is determined further down
-cfg.parcellation = ft_getopt(cfg, 'parcellation');  % is used for cifti
-cfg.precision    = ft_getopt(cfg, 'precision');     % is used for cifti
+cfg.parameter      = ft_getopt(cfg, 'parameter');
+cfg.filename       = ft_getopt(cfg, 'filename');
+cfg.filetype       = ft_getopt(cfg, 'filetype');        % the default is determined further down
+cfg.brainstructure = ft_getopt(cfg, 'brainstructure');  % is used for cifti
+cfg.parcellation   = ft_getopt(cfg, 'parcellation');    % is used for cifti
+cfg.precision      = ft_getopt(cfg, 'precision');       % is used for cifti
+
+% check if the input data is valid for this function
+if strcmp(cfg.filetype, 'cifti') && isfield(source, 'brainordinate')
+  % it is a parcellated source representation, i.e. the main structure one channel for each parcel
+  brainordinate = source.brainordinate;
+  source = rmfield(source, 'brainordinate');
+  % split them and checn individually
+  source        = ft_checkdata(source, 'datatype', {'timelock', 'freq', 'chan'}, 'feedback', 'yes');
+  brainordinate = ft_checkdata(brainordinate, 'datatype', 'source', 'hasunit', true, 'feedback', 'no');
+  % merge them again
+  source = copyfields(brainordinate, source, setdiff(fieldnames(brainordinate), {'cfg'}));
+else
+  source = ft_checkdata(source, 'datatype', 'source', 'hasunit', true, 'feedback', 'yes');
+end
+
 
 if isempty(cfg.filetype)
   if isfield(source, 'dim')
@@ -113,8 +126,10 @@ switch (cfg.filetype)
     end
     cfg.filename = [cfg.filename '.' cfg.parameter '.nii'];
     
-    ft_write_cifti(cfg.filename, source, 'parameter', cfg.parameter, 'parcellation', cfg.parcellation, 'precision', cfg.precision);
-
+    % brainstructure should represent the global anatomical structure, such as CortexLeft, Thalamus, etc.
+    % parcellation should represent the detailled parcellation, such as BA1, BA2, BA3, etc.
+    ft_write_cifti(cfg.filename, source, 'parameter', cfg.parameter, 'brainstructure', cfg.brainstructure, 'parcellation', cfg.parcellation, 'precision', cfg.precision);
+    
   otherwise
     error('unsupported output format (%s)', cfg.filetype);
 end % switch filetype
