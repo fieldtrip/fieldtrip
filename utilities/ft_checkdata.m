@@ -308,6 +308,18 @@ if ~isempty(dtype)
       isvolume = 0;
       issource = 1;
       okflag = 1;
+    elseif isequal(dtype(iCell), {'volume'}) && ischan
+      data = parcellated2source(data);
+      data = ft_datatype_volume(data);
+      ischan = 0;
+      isvolume = 1;
+      okflag = 1;
+    elseif isequal(dtype(iCell), {'source'}) && ischan
+      data = parcellated2source(data);
+      data = ft_datatype_source(data);
+      ischan = 0;
+      issource = 1;
+      okflag = 1;
     elseif isequal(dtype(iCell), {'volume'}) && issource
       data = source2volume(data);
       data = ft_datatype_volume(data);
@@ -1678,6 +1690,21 @@ switch fname
   otherwise
     warning('skipping unknown fieldname %s', fname);
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% convert between datatypes
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function data = parcellated2source(data)
+if ~isfield(data, 'brainordinate')
+  error('converting parcellated data requires the specification of the brainordinates');
+end
+source     = data.brainordinate;
+source.cfg = data.cfg;
+parameter   = 'pow';
+parcelparam = 'tissue';
+source.(parameter) = unparcellate(data, data.brainordinate, parameter, parcelparam);
+data = source;
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % convert between datatypes
