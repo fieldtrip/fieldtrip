@@ -326,7 +326,7 @@ elseif ft_senstype(input, 'bti')
     type(configtype==1 & numloops==1) = {'megmag'};
     type(configtype==1 & numloops==2) = {'meggrad'};
     type(configtype==2) = {'eeg'};
-    type(configtype==3) = {'megref'};
+    type(configtype==3) = {'ref'}; % not known if mag or grad
     type(configtype==4) = {'aux'};
     type(configtype==5) = {'trigger'};
     
