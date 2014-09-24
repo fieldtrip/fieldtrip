@@ -52,10 +52,6 @@ if isempty(brainstructure) && isfield(source, 'parcellation') && isfield(source,
   parcellation = 'parcellation';
 end
 
-if ~isempty(brainstructure)
-  assert(ft_datatype(source, 'parcellation') || ft_datatype(source, 'segmentation'), 'the input structure does not define a brainstructure');
-end
-
 if isfield(source, 'inside') && islogical(source.inside)
   % convert into an indexed representation
   source.inside = find(source.inside(:));
@@ -106,8 +102,8 @@ switch dimord
     dimord = 'freq_pos';
     
   case 'chan'
-    % NIFTI_INTENT_CONNECTIVITY_DENSE_SCALARS
-    extension   = '.dscalar.nii';
+    % NIFTI_INTENT_CONNECTIVITY_PARCELLATED_SCALARS
+    extension   = '.pscalar.nii';
     intent_code = 3006;
     intent_name = 'ConnDenseScalar';
     dat = transpose(dat);
@@ -123,7 +119,7 @@ switch dimord
     intent_code = 3000;
     intent_name = 'ConnParcelSries'; % due to length constraints of the NIfTI header field, the first ?e? in ?series? is removed
     dat = transpose(dat);
-    dimord = 'freq_time';
+    dimord = 'time_chan';
   case 'chan_freq'
     % NIFTI_INTENT_CONNECTIVITY_PARCELLATED_SERIES
     extension = '.ptseries.nii';
@@ -416,16 +412,20 @@ switch dimord
     hdr.dim             = [6 1 1 1 1 size(source.pos,1) 1 1]; % only single scalar
   case 'scalar_pos'
     hdr.dim             = [6 1 1 1 1 1 size(source.pos,1) 1]; % only single scalar
+  case 'chan_scalar'
+    hdr.dim             = [6 1 1 1 1 numel(source.label) 1 1]; % only single scalar
   case 'scalar_chan'
     hdr.dim             = [6 1 1 1 1 1 numel(source.label) 1]; % only single scalar
   case 'pos_time'
-    hdr.dim             = [6 1 1 1 1 size(source.pos,1)  length(source.time) 1];
+    hdr.dim             = [6 1 1 1 1 size(source.pos,1) length(source.time) 1];
   case 'time_pos'
-    hdr.dim             = [6 1 1 1 1   length(source.time) size(source.pos,1) 1];
-  case 'pos_pos'
-    hdr.dim             = [6 1 1 1 1 size(source.pos,1)  size(source.pos,1)  1];
+    hdr.dim             = [6 1 1 1 1 length(source.time) size(source.pos,1) 1];
   case 'chan_time'
-    hdr.dim             = [6 1 1 1 1 length(source.chan) length(source.time) 1];
+    hdr.dim             = [6 1 1 1 1 length(source.label) length(source.time) 1];
+  case 'time_chan'
+    hdr.dim             = [6 1 1 1 1 length(source.time) length(source.label) 1];
+  case 'pos_pos'
+    hdr.dim             = [6 1 1 1 1 size(source.pos,1) size(source.pos,1)  1];
   case 'chan_chan'
     hdr.dim             = [6 1 1 1 1 length(source.chan) length(source.chan) 1];
     %   case 'chan_chan_time'
@@ -437,7 +437,7 @@ switch dimord
     %   case 'pos_pos_freq'
     %     hdr.dim             = [6 1 1 1 1 size(source.pos,1)  size(source.pos,1)  length(source.freq)];
   otherwise
-    error('unsupported dimord')
+    error('unsupported dimord "%s"', dimord)
 end % switch
 
 hdr.intent_p1       = 0;
