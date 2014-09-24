@@ -84,7 +84,7 @@ parcellation = ft_checkdata(parcellation, 'datatype', 'parcellation', 'parcellat
 source       = ft_checkdata(source, 'datatype', 'source', 'inside', 'logical', 'sourcerepresentation', 'new');
 
 % ensure that the source and the parcellation are anatomically consistent
-if ~isequal(source.pos, parcellation.pos)
+if ~isequalwithequalnans(source.pos, parcellation.pos)
   error('the source positions are not consistent with the parcellation, please use FT_SOURCEINTERPOLATE');
 end
 
@@ -106,8 +106,9 @@ end
 
 % determine the fields and corresponding dimords to work on
 fn = fieldnames(source);
-fn = setdiff(fn, {'pos', 'tri', 'inside', 'outside', 'time', 'freq', 'dim', 'transform', 'unit', 'coordsys', 'cfg'}); % remove fields that do not represent the data
+fn = setdiff(fn, {'pos', 'tri', 'inside', 'outside', 'time', 'freq', 'dim', 'transform', 'unit', 'coordsys', 'cfg', 'hdr'}); % remove fields that do not represent the data
 fn = fn(cellfun(@isempty, regexp(fn, 'dimord'))); % remove dimord fields
+fn = fn(cellfun(@isempty, regexp(fn, 'label'))); % remove label fields
 dimord = cell(size(fn));
 for i=1:numel(fn)
   dimord{i} = getdimord(source, fn{i});
@@ -126,7 +127,7 @@ else
   dimord = dimord(i2);
 end
 
-% although technically feasible, don't parcellate the parcellation itself
+% although it is technically feasible, don't parcellate the parcellation itself
 sel    = ~strcmp(cfg.parcellation, fn);
 fn     = fn(sel);
 dimord = dimord(sel);
@@ -271,7 +272,7 @@ for i=1:numel(fn)
           else
             threshold = cfg.mean.threshold;
           end
-          tmp(j,:) = arraymean1(dat(seg==j,:), threshold); 
+          tmp(j,:) = arraymean1(dat(seg==j,:), threshold);
         case 'median'
           tmp(j,:) = arraymedian1(dat(seg==j,:));
         case 'min'
@@ -308,6 +309,17 @@ for i=1:numel(fn)
   % to avoid confusion
   clear dat tmp tmpdimord j j1 j2
 end % for each of the fields that should be parcellated
+
+% a brainordinate is a brain location that is specified by either a surface vertex (node) or a volume voxel
+parcel.brainordinate = keepfields(parcellation, {'pos', 'tri'}); % keep the position and triangulation
+fn = fieldnames(parcellation);
+for i=1:numel(fn)
+  if isfield(parcellation, [fn{i} 'label'])
+    % keep each of the labeled fields from the parcellation
+    parcel.brainordinate.( fn{i}         ) = parcellation.( fn{i}         );
+    parcel.brainordinate.([fn{i} 'label']) = parcellation.([fn{i} 'label']);
+  end
+end
 
 ft_postamble debug
 ft_postamble trackconfig
