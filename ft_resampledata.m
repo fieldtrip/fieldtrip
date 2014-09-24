@@ -92,7 +92,7 @@ cfg = ft_checkconfig(cfg, 'renamed', {'blc', 'demean'});
 % set the defaults
 if ~isfield(cfg, 'resamplefs'), cfg.resamplefs = [];      end
 if ~isfield(cfg, 'time'),       cfg.time       = {};      end
-if ~isfield(cfg, 'detrend'),    cfg.detrend    = [];      end  % no default to enforce people to consider backward compatibility problem, see below
+if ~isfield(cfg, 'detrend'),    cfg.detrend    = 'no';    end
 if ~isfield(cfg, 'demean'),     cfg.demean     = 'no';    end
 if ~isfield(cfg, 'feedback'),   cfg.feedback   = 'text';  end
 if ~isfield(cfg, 'trials'),     cfg.trials     = 'all';   end
@@ -104,10 +104,6 @@ convert = ft_datatype(data);
 % check if the input data is valid for this function, this will convert it to raw if needed
 data = ft_checkdata(data, 'datatype', {'raw+comp', 'raw'}, 'feedback', 'yes');
   
-if isempty(cfg.detrend)
-  error('The previous default to apply detrending has been changed. Recommended is to apply a baseline correction instead of detrending. See the help of this function for more details.');
-end
-
 %set default resampling frequency
 if isempty(cfg.resamplefs) && isempty(cfg.time),
   cfg.resamplefs = 256;
@@ -163,13 +159,15 @@ if usefsample
   
   for itr = 1:ntr
     ft_progress(itr/ntr, 'resampling data in trial %d from %d\n', itr, ntr);
-    if strcmp(cfg.demean,'yes')
-      data.trial{itr} = ft_preproc_baselinecorrect(data.trial{itr});
-    end
-    if strcmp(cfg.detrend,'yes')
+    if istrue(cfg.detrend)
       data.trial{itr} = ft_preproc_detrend(data.trial{itr});
     end
-
+    
+    % always remove the mean to avoid edge effects when there's a strong
+    % offset, the cfg.demean option is dealt with below
+    bsl             = mean(data.trial{itr},2);
+    data.trial{itr} = data.trial{itr} - bsl(:,ones(1,size(data.trial{itr},2)));
+    
     % pad the data with zeros to the left
     data.trial{itr} = [zeros(nchan, padsmp(itr))     data.trial{itr}];
     data.time{itr}  = [data.time{itr}(1)-(padsmp(itr):-1:1)./cfg.origfs data.time{itr}];
@@ -190,6 +188,11 @@ if usefsample
     data.time{itr}  = data.time{itr}(begindx:end);
     data.trial{itr} = data.trial{itr}(:, begindx:end);
     
+    % add back the mean 
+    if ~strcmp(cfg.demean, 'yes')
+      data.trial{itr} = data.trial{itr} + bsl(:,ones(1,numel(data.time{itr})));
+    end    
+
   end % for itr
   ft_progress('close');
   
@@ -205,12 +208,16 @@ elseif usetime
   ft_progress('init', cfg.feedback, 'resampling data');
   for itr = 1:ntr
     ft_progress(itr/ntr, 'resampling data in trial %d from %d\n', itr, ntr);
-    if strcmp(cfg.demean,'yes')
-      data.trial{itr} = ft_preproc_baselinecorrect(data.trial{itr});
-    end
-    if strcmp(cfg.detrend,'yes')
+   
+    if istrue(cfg.detrend)
       data.trial{itr} = ft_preproc_detrend(data.trial{itr});
     end
+    
+    % always remove the mean to avoid edge effects when there's a strong
+    % offset, the cfg.demean option is dealt with below
+    bsl             = mean(data.trial{itr},2);
+    data.trial{itr} = data.trial{itr} - bsl(:,ones(1,size(data.trial{itr},2)));
+    
     % perform the resampling
     if length(data.time{itr})>1,
       data.trial{itr} = interp1(data.time{itr}', data.trial{itr}', cfg.time{itr}', cfg.method)';
@@ -219,6 +226,12 @@ elseif usetime
     end
     % update the time axis
     data.time{itr} = cfg.time{itr};
+    
+    % add back the mean 
+    if ~strcmp(cfg.demean, 'yes')
+      data.trial{itr} = data.trial{itr} + bsl(:,ones(1,numel(data.time{itr})));
+    end
+    
   end % for itr
   ft_progress('close');
   
