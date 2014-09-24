@@ -73,8 +73,8 @@ if abort
 end
 
 % check if the given data is appropriate
-if isfield(stat,'freq') && length(stat.freq) > 1
-  error('stat contains multiple frequencies which is not allowed because it should be averaged over frequencies')
+if isfield(stat,'freq') && length(stat.freq) > 1 && isfield(stat, 'time') && length(stat.time) > 1
+  error('stat contains multiple frequencies and time, which is not allowed because it should be averaged over frequencies or over time')
 end
 
 % check if the input cfg is valid for this function
@@ -135,12 +135,21 @@ cfgtopo.parameter = cfg.parameter;
 cfgtopo.layout = ft_prepare_layout(cfg, stat);
 
 % detect 2D or 1D
-is2D = isfield(stat,'time');
+hastime = isfield(stat,'time');
+hasfreq = isfield(stat,'freq');
+is2D = hastime || hasfreq;
 
 % add .time field to 1D data, topoplotER wants it
 if ~is2D
-  stat.time = 0; %doesn't matter what it is, so just choose 0
+  stat.time = 0; %doesn't matter what it is, so just choose 
 end;
+
+if hasfreq
+    % make topoplotER believe we are dealing with time-data instead of freq
+    stat.time = stat.freq;
+    stat = rmfield(stat, 'freq');
+    stat.dimord = 'chan_freq';
+end
 
 if exist('stat.cfg.correcttail') && ((strcmp(stat.cfg.correcttail,'alpha') || strcmp(stat.cfg.correcttail,'prob')) && (stat.cfg.tail == 0));
   if ~(cfg.alpha >= stat.cfg.alpha);
@@ -211,23 +220,32 @@ else
   fprintf('%s%i%s%g%s\n','There are ',Nsigall,' clusters smaller than alpha (',cfg.alpha,')')
   
   if is2D
-    % define time window per cluster
+    % define time or freq window per cluster
     for iPos = 1:length(sigpos)
-      possum_perclus = sum(sigposCLM(:,:,iPos),1); %sum over Chans for each timepoint
+      possum_perclus = sum(sigposCLM(:,:,iPos),1); %sum over chans for each time- or freq-point
       ind_min = min(find(possum_perclus~=0));
       ind_max = max(find(possum_perclus~=0));
-      time_perclus = [stat.time(ind_min) stat.time(ind_max)];
-      fprintf('%s%s%s%s%s%s%s%s%s%s%s\n','Positive cluster: ',num2str(sigpos(iPos)),', pvalue: ',num2str(probpos(iPos)),' (',hlsignpos(iPos),')',', t = ',num2str(time_perclus(1)),' to ',num2str(time_perclus(2)))
+        time_perclus = [stat.time(ind_min) stat.time(ind_max)];
+      if hastime
+        fprintf('%s%s%s%s%s%s%s%s%s%s%s\n','Positive cluster: ',num2str(sigpos(iPos)),', pvalue: ',num2str(probpos(iPos)),' (',hlsignpos(iPos),')',', t = ',num2str(time_perclus(1)),' to ',num2str(time_perclus(2)))
+      elseif hasfreq
+         fprintf('%s%s%s%s%s%s%s%s%s%s%s\n','Positive cluster: ',num2str(sigpos(iPos)),', pvalue: ',num2str(probpos(iPos)),' (',hlsignpos(iPos),')',', f = ',num2str(time_perclus(1)),' to ',num2str(time_perclus(2)))
+      end
     end
     for iNeg = 1:length(signeg)
       negsum_perclus = sum(signegCLM(:,:,iNeg),1);
       ind_min = min(find(negsum_perclus~=0));
       ind_max = max(find(negsum_perclus~=0));
       time_perclus = [stat.time(ind_min) stat.time(ind_max)];
-      fprintf('%s%s%s%s%s%s%s%s%s%s%s\n','Negative cluster: ',num2str(signeg(iNeg)),', pvalue: ',num2str(probneg(iNeg)),' (',hlsignneg(iNeg),')',', t = ',num2str(time_perclus(1)),' to ',num2str(time_perclus(2)))
+      if hastime
+        time_perclus = [stat.time(ind_min) stat.time(ind_max)];
+        fprintf('%s%s%s%s%s%s%s%s%s%s%s\n','Negative cluster: ',num2str(signeg(iNeg)),', pvalue: ',num2str(probneg(iNeg)),' (',hlsignneg(iNeg),')',', t = ',num2str(time_perclus(1)),' to ',num2str(time_perclus(2)))
+      elseif hasfreq
+        fprintf('%s%s%s%s%s%s%s%s%s%s%s\n','Negative cluster: ',num2str(signeg(iNeg)),', pvalue: ',num2str(probneg(iNeg)),' (',hlsignneg(iNeg),')',', f = ',num2str(time_perclus(1)),' to ',num2str(time_perclus(2)))
+      end
     end
     
-    % define timewindow containing all significant clusters
+    % define time- or freq-window containing all significant clusters
     possum = sum(sigposCLM,3); %sum over Chans for timevector
     possum = sum(possum,1);
     negsum = sum(signegCLM,3);
@@ -347,7 +365,11 @@ else
           PlN = (iPl-1)*15 + iT; %plotnumber
           cfgtopo.xlim = [stat.time(ind_timewin_min+PlN-1) stat.time(ind_timewin_min+PlN-1)];
           cfgtopo.highlightchannel = list{PlN};
-          cfgtopo.comment = strcat('time: ',num2str(stat.time(ind_timewin_min+PlN-1)), ' s');
+          if hastime
+            cfgtopo.comment = strcat('time: ',num2str(stat.time(ind_timewin_min+PlN-1)), ' s');
+          elseif hasfreq
+              cfgtopo.comment = strcat('freq: ',num2str(stat.time(ind_timewin_min+PlN-1)), ' Hz');
+          end
           cfgtopo.commentpos = 'title';
           subplot(3,5,iT);
           ft_topoplotTFR(cfgtopo, stat);
@@ -357,7 +379,11 @@ else
           PlN = (iPl-1)*15 + iT; %plotnumber
           cfgtopo.xlim = [stat.time(ind_timewin_min+PlN-1) stat.time(ind_timewin_min+PlN-1)];
           cfgtopo.highlightchannel   = list{PlN};
-          cfgtopo.comment = strcat('time: ',num2str(stat.time(ind_timewin_min+PlN-1)), ' s');
+          if hastime
+            cfgtopo.comment = strcat('time: ',num2str(stat.time(ind_timewin_min+PlN-1)), ' s');
+          elseif hasfreq
+              cfgtopo.comment = strcat('freq: ',num2str(stat.time(ind_timewin_min+PlN-1)), ' Hz');
+          end
           cfgtopo.commentpos = 'title';
           subplot(3,5,iT);
           ft_topoplotTFR(cfgtopo, stat);
