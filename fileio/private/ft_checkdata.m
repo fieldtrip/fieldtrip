@@ -200,7 +200,11 @@ if ~isequal(feedback, 'no')
     fprintf('the input is freqmvar data\n');
   elseif ischan
     nchan = length(data.label);
-    fprintf('the input is chan data with %d channels\n', nchan);
+    if isfield(data, 'brainordinate')
+      fprintf('the input is parcellated data with %d parcels\n', nchan);
+    else
+      fprintf('the input is chan data with %d channels\n', nchan);
+    end
   end
 end % give feedback
 
