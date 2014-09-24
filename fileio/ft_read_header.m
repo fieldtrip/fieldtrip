@@ -1901,9 +1901,21 @@ if checkUniqueLabels
   if length(hdr.label)~=length(unique(hdr.label))
     % all channels must have unique names
     warning('all channels must have unique labels, creating unique labels');
+    megflag = ft_chantype(hdr, 'meg');
+    eegflag = ft_chantype(hdr, 'eeg');
     for i=1:hdr.nChans
       sel = find(strcmp(hdr.label{i}, hdr.label));
       if length(sel)>1
+        % there is no need to rename the first instance
+        % can be particularly disruptive when part of standard MEG
+        % or EEG channel set, so should be avoided
+        if any(megflag(sel))
+          sel = setdiff(sel, sel(find(megflag(sel), 1)));
+        elseif any(eegflag(sel))
+          sel = setdiff(sel, sel(find(eegflag(sel), 1)));  
+        else
+          sel = sel(2:end);
+        end
         for j=1:length(sel)
           hdr.label{sel(j)} = sprintf('%s-%d', hdr.label{sel(j)}, j);
         end
