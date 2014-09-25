@@ -42,6 +42,12 @@ precision       = ft_getopt(varargin, 'precision', 'single');
 % ensure that the external toolbox is present, this adds gifti/@xmltree
 ft_hastoolbox('gifti', 1);
 
+if isfield(source, 'brainordinate')
+  % copy the geometrical description from the parcellation over in the main structure
+  source = copyfields(source.brainordinate, source, fieldnames(source.brainordinate));
+  source = rmfield(source, 'brainordinate');
+end
+
 if isempty(brainstructure) && isfield(source, 'brainstructure') && isfield(source, 'brainstructurelabel')
   % these fields are added by default in ft_write_cifti
   brainstructure = 'brainstructure';
@@ -155,6 +161,25 @@ tree = add(tree, find(tree, 'CIFTI'), 'element', 'Matrix');
 % CIFTI_INDEX_TYPE_LABELS       The dimension represents named label maps.
 
 
+if isfield(source, brainstructure)
+  BrainStructureindex = source.( brainstructure         );
+  BrainStructurelabel = source.([brainstructure 'label']);
+elseif isfield(source, 'pos')
+  BrainStructureindex = ones(1,size(source.pos,1));
+  BrainStructurelabel = {'INVALID'};
+end
+
+if isfield(source, parcellation)
+  Parcellationindex = source.( parcellation         );
+  Parcellationlabel = source.([parcellation 'label']);
+elseif isfield(source, 'pos')
+  Parcellationindex = ones(1,size(source.pos,1));
+  Parcellationlabel = {'INVALID'};
+end
+
+try, BrainStructureindex = BrainStructureindex(:); end
+try, Parcellationindex   = Parcellationindex(:);   end
+
 if any(strcmp(dimtok, 'time'))
   % construct the MatrixIndicesMap for the time axis in the data
   % NumberOfSeriesPoints="2" SeriesExponent="0" SeriesStart="0.0000000000" SeriesStep="1.0000000000" SeriesUnit="SECOND"
@@ -206,36 +231,26 @@ if any(strcmp(dimtok, 'pos'))
   tree = attributes(tree, 'add', branch, 'AppliesToMatrixDimension', printwithcomma(find(strcmp(dimtok, 'pos'))-1));
   tree = attributes(tree, 'add', branch, 'IndicesMapToDataType', 'CIFTI_INDEX_TYPE_BRAIN_MODELS');
   
-  switch source.unit
-    case 'mm'
-      MeterExponent = -3;
-    case 'cm'
-      MeterExponent = -2;
-    case 'dm'
-      MeterExponent = -1;
-    case 'm'
-      MeterExponent = 0;
-    otherwise
-      error('unsupported source.unit')
-  end % case
-  
   if isfield(source, 'dim')
+    switch source.unit
+      case 'mm'
+        MeterExponent = -3;
+      case 'cm'
+        MeterExponent = -2;
+      case 'dm'
+        MeterExponent = -1;
+      case 'm'
+        MeterExponent = 0;
+      otherwise
+        error('unsupported source.unit')
+    end % case
+    
     [tree, uid] = add(tree, branch, 'element', 'Volume');
     tree        = attributes(tree, 'add', uid, 'VolumeDimensions', printwithcomma(source.dim));
     [tree, uid] = add(tree, uid, 'element', 'TransformationMatrixVoxelIndicesIJKtoXYZ');
     tree        = attributes(tree, 'add', uid, 'MeterExponent', num2str(MeterExponent));
     tree        = add(tree, uid, 'chardata', printwithspace(source.transform')); % it needs to be transposed
-  end
-  
-  if isfield(source, brainstructure)
-    BrainStructureindex = source.( brainstructure         );
-    BrainStructurelabel = source.([brainstructure 'label']);
-  else
-    BrainStructureindex = ones(1,size(source.pos,1));
-    BrainStructurelabel = {'INVALID'};
-  end
-  
-  if isfield(source, 'dim')
+
     [X, Y, Z] = ndgrid(1:source.dim(1), 1:source.dim(2), 1:source.dim(3));
     xyz = ft_warp_apply(source.transform, [X(:) Y(:) Z(:)]);
     isvolume = isequal(size(source.pos), size(xyz)) && all(sum((source.pos - xyz).^2,2)./sum((source.pos + xyz).^2,2)<eps);
@@ -287,6 +302,81 @@ if any(strcmp(dimtok, 'pos'))
   end % for each BrainStructurelabel
   
 end % if pos
+
+if any(strcmp(dimtok, 'chan'))
+  tree = add(tree, find(tree, 'CIFTI/Matrix'), 'element', 'MatrixIndicesMap');
+  branch = find(tree, 'CIFTI/Matrix/MatrixIndicesMap');
+  branch = branch(end);
+  tree = attributes(tree, 'add', branch, 'AppliesToMatrixDimension', printwithcomma(find(strcmp(dimtok, 'chan'))-1));
+  tree = attributes(tree, 'add', branch, 'IndicesMapToDataType', 'CIFTI_INDEX_TYPE_PARCELS');
+  
+  if isfield(source, 'dim')
+    switch source.unit
+      case 'mm'
+        MeterExponent = -3;
+      case 'cm'
+        MeterExponent = -2;
+      case 'dm'
+        MeterExponent = -1;
+      case 'm'
+        MeterExponent = 0;
+      otherwise
+        error('unsupported source.unit')
+    end % case
+    
+    [tree, uid] = add(tree, branch, 'element', 'Volume');
+    tree        = attributes(tree, 'add', uid, 'VolumeDimensions', printwithcomma(source.dim));
+    [tree, uid] = add(tree, uid, 'element', 'TransformationMatrixVoxelIndicesIJKtoXYZ');
+    tree        = attributes(tree, 'add', uid, 'MeterExponent', num2str(MeterExponent));
+    tree        = add(tree, uid, 'chardata', printwithspace(source.transform')); % it needs to be transposed
+  end
+  
+  parcel = source.label; % channels are used to represent parcels
+  for i=1:numel(parcel)
+    indx = find(strcmp(Parcellationlabel, parcel{i}));
+    if isempty(indx)
+      continue
+    end
+    selParcel = (Parcellationindex==indx);
+    structure = BrainStructurelabel(unique(BrainStructureindex(selParcel)));
+    
+    branch = find(tree, 'CIFTI/Matrix/MatrixIndicesMap');
+    branch = branch(end);
+    
+    tree = add(tree, branch, 'element', 'Parcel');
+    branch = find(tree, 'CIFTI/Matrix/MatrixIndicesMap/Parcel');
+    branch = branch(end);
+    tree = attributes(tree, 'add', branch, 'Name', parcel{i});
+    
+    for j=1:length(structure)
+      selStructure = (BrainStructureindex==find(strcmp(BrainStructurelabel, structure{j})));
+      indx   = find(selParcel & selStructure);
+      offset = find(selStructure, 1, 'first') - 1;
+      
+      fprintf('parcel %s in structure %s contains %d vertices\n', parcel{i}, structure{j}, length(indx));
+      
+      branch = find(tree, 'CIFTI/Matrix/MatrixIndicesMap/Parcel');
+      branch = branch(end);
+      
+      if any(strcmp({'CORTEX_LEFT', 'CORTEX_RIGHT'}, structure{j}))
+        tree = add(tree, branch, 'element', 'Vertices');
+        branch = find(tree, 'CIFTI/Matrix/MatrixIndicesMap/Parcel/Vertices');
+        branch = branch(end);
+        tree = attributes(tree, 'add', branch, 'BrainStructure', ['CIFTI_STRUCTURE_' structure{j}]);
+        tmp  = indx - offset - 1;
+        tree = add(tree, branch, 'chardata', printwithspace(tmp));
+        
+      else
+        tree = add(tree, branch, 'element', 'VoxelIndicesIJK');
+        branch = find(tree, 'CIFTI/Matrix/MatrixIndicesMap/Parcel/VoxelIndicesIJK');
+        branch = branch(end);
+        tmp = ft_warp_apply(inv(source.transform), source.pos(indx,:)) - 1; % zero offset
+        tree = add(tree, branch, 'chardata', printwithspace(tmp));
+      end
+
+    end % for each structure spanned by this parcel
+  end % for each parcel
+end
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -543,6 +633,10 @@ if isfield(source, 'tri')
       sel = find(BrainStructure~=i);
       [mesh.pnt, mesh.tri] = remove_vertices(source.pos, source.tri, sel);
       mesh.unit = source.unit;
+      
+      if isempty(mesh.pnt) || isempty(mesh.tri)
+        continue;
+      end
       
       [p, f, x] = fileparts(filename);
       filetok = tokenize(f, '.');

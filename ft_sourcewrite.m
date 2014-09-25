@@ -72,9 +72,15 @@ if strcmp(cfg.filetype, 'cifti') && isfield(source, 'brainordinate')
   % it is a parcellated source representation, i.e. the main structure one channel for each parcel
   brainordinate = source.brainordinate;
   source = rmfield(source, 'brainordinate');
-  % split them and checn individually
+  % split them and check individually
   source        = ft_checkdata(source, 'datatype', {'timelock', 'freq', 'chan'}, 'feedback', 'yes');
-  brainordinate = ft_checkdata(brainordinate, 'datatype', 'source', 'hasunit', true, 'feedback', 'no');
+  
+  % ensure it is a parcellation, not a segmentation
+  original      = brainordinate;
+  brainordinate = ft_checkdata(brainordinate, 'datatype', 'parcellation', 'parcellationstyle', 'indexed', 'hasunit', 'yes');
+  brainordinate = copyfields(original, brainordinate, {'transform'}); % if present, keep the transform
+  clear original
+  
   % merge them again
   source = copyfields(brainordinate, source, setdiff(fieldnames(brainordinate), {'cfg'}));
 else

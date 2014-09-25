@@ -79,7 +79,11 @@ else
 end
 
 % ensure it is a parcellation, not a segmentation
+original     = parcellation;
 parcellation = ft_checkdata(parcellation, 'datatype', 'parcellation', 'parcellationstyle', 'indexed');
+parcellation = copyfields(original, parcellation, {'transform'}); % if present, keep the transform 
+clear original
+
 % ensure it is a source, not a volume
 source       = ft_checkdata(source, 'datatype', 'source', 'inside', 'logical', 'sourcerepresentation', 'new');
 
@@ -311,7 +315,7 @@ for i=1:numel(fn)
 end % for each of the fields that should be parcellated
 
 % a brainordinate is a brain location that is specified by either a surface vertex (node) or a volume voxel
-parcel.brainordinate = keepfields(parcellation, {'pos', 'tri'}); % keep the position and triangulation
+parcel.brainordinate = keepfields(parcellation, {'pos', 'tri', 'dim', 'transform'}); % keep the information about the geometry
 fn = fieldnames(parcellation);
 for i=1:numel(fn)
   if isfield(parcellation, [fn{i} 'label'])
