@@ -49,12 +49,12 @@ if isfield(source, 'brainordinate')
 end
 
 if isempty(brainstructure) && isfield(source, 'brainstructure') && isfield(source, 'brainstructurelabel')
-  % these fields are added by default in ft_write_cifti
+  % these fields are asumed to be present from ft_read_cifti
   brainstructure = 'brainstructure';
 end
 
-if isempty(brainstructure) && isfield(source, 'parcellation') && isfield(source, 'parcellationlabel')
-  % these fields are added by default in ft_write_cifti
+if isempty(parcellation) && isfield(source, 'parcellation') && isfield(source, 'parcellationlabel')
+  % these fields are asumed to be present from ft_read_cifti
   parcellation = 'parcellation';
 end
 
@@ -80,7 +80,7 @@ else
 end
 
 switch dimord
-  case 'pos'
+  case {'pos' 'pos_scalar'}
     % NIFTI_INTENT_CONNECTIVITY_DENSE_SCALARS
     extension   = '.dscalar.nii';
     intent_code = 3006;
@@ -107,11 +107,11 @@ switch dimord
     dat = transpose(dat);
     dimord = 'freq_pos';
     
-  case 'chan'
+  case {'chan' 'chan_scalar'}
     % NIFTI_INTENT_CONNECTIVITY_PARCELLATED_SCALARS
     extension   = '.pscalar.nii';
     intent_code = 3006;
-    intent_name = 'ConnDenseScalar';
+    intent_name = 'ConnParcelScalr'; % due to length constraints of the NIfTI header field, the last ?a? is removed
     dat = transpose(dat);
     dimord = 'scalar_chan';
   case 'chan_chan'
@@ -123,14 +123,14 @@ switch dimord
     % NIFTI_INTENT_CONNECTIVITY_PARCELLATED_SERIES
     extension = '.ptseries.nii';
     intent_code = 3000;
-    intent_name = 'ConnParcelSries'; % due to length constraints of the NIfTI header field, the first ?e? in ?series? is removed
+    intent_name = 'ConnParcelSries'; % due to length constraints of the NIfTI header field, the first "e" is removed
     dat = transpose(dat);
     dimord = 'time_chan';
   case 'chan_freq'
     % NIFTI_INTENT_CONNECTIVITY_PARCELLATED_SERIES
     extension = '.ptseries.nii';
     intent_code = 3000;
-    intent_name = 'ConnParcelSries'; % due to length constraints of the NIfTI header field, the first ?e? in ?series? is removed
+    intent_name = 'ConnParcelSries'; % due to length constraints of the NIfTI header field, the first "e" is removed
     dat = transpose(dat);
     dimord = 'freq_chan';
     
@@ -162,23 +162,99 @@ tree = add(tree, find(tree, 'CIFTI'), 'element', 'Matrix');
 
 
 if isfield(source, brainstructure)
-  BrainStructureindex = source.( brainstructure         );
+  BrainStructure      = source.( brainstructure         );
   BrainStructurelabel = source.([brainstructure 'label']);
 elseif isfield(source, 'pos')
-  BrainStructureindex = ones(1,size(source.pos,1));
+  BrainStructure      = ones(1,size(source.pos,1));
   BrainStructurelabel = {'INVALID'};
 end
 
 if isfield(source, parcellation)
-  Parcellationindex = source.( parcellation         );
+  Parcellation      = source.( parcellation         );
   Parcellationlabel = source.([parcellation 'label']);
 elseif isfield(source, 'pos')
-  Parcellationindex = ones(1,size(source.pos,1));
+  Parcellation      = ones(1,size(source.pos,1));
   Parcellationlabel = {'INVALID'};
 end
 
-try, BrainStructureindex = BrainStructureindex(:); end
-try, Parcellationindex   = Parcellationindex(:);   end
+try, BrainStructure = BrainStructure(:); end
+try, Parcellation   = Parcellation(:);   end
+
+list1 = {
+  'CIFTI_STRUCTURE_CORTEX_LEFT'
+  'CIFTI_STRUCTURE_CORTEX_RIGHT'
+  'CIFTI_STRUCTURE_CEREBELLUM'
+  'CIFTI_STRUCTURE_ACCUMBENS_LEFT'
+  'CIFTI_STRUCTURE_ACCUMBENS_RIGHT'
+  'CIFTI_STRUCTURE_ALL_GREY_MATTER'
+  'CIFTI_STRUCTURE_ALL_WHITE_MATTER'
+  'CIFTI_STRUCTURE_AMYGDALA_LEFT'
+  'CIFTI_STRUCTURE_AMYGDALA_RIGHT'
+  'CIFTI_STRUCTURE_BRAIN_STEM'
+  'CIFTI_STRUCTURE_CAUDATE_LEFT'
+  'CIFTI_STRUCTURE_CAUDATE_RIGHT'
+  'CIFTI_STRUCTURE_CEREBELLAR_WHITE_MATTER_LEFT'
+  'CIFTI_STRUCTURE_CEREBELLAR_WHITE_MATTER_RIGHT'
+  'CIFTI_STRUCTURE_CEREBELLUM_LEFT'
+  'CIFTI_STRUCTURE_CEREBELLUM_RIGHT'
+  'CIFTI_STRUCTURE_CEREBRAL_WHITE_MATTER_LEFT'
+  'CIFTI_STRUCTURE_CEREBRAL_WHITE_MATTER_RIGHT'
+  'CIFTI_STRUCTURE_CORTEX'
+  'CIFTI_STRUCTURE_DIENCEPHALON_VENTRAL_LEFT'
+  'CIFTI_STRUCTURE_DIENCEPHALON_VENTRAL_RIGHT'
+  'CIFTI_STRUCTURE_HIPPOCAMPUS_LEFT'
+  'CIFTI_STRUCTURE_HIPPOCAMPUS_RIGHT'
+  'CIFTI_STRUCTURE_INVALID'
+  'CIFTI_STRUCTURE_OTHER'
+  'CIFTI_STRUCTURE_OTHER_GREY_MATTER'
+  'CIFTI_STRUCTURE_OTHER_WHITE_MATTER'
+  'CIFTI_STRUCTURE_PALLIDUM_LEFT'
+  'CIFTI_STRUCTURE_PALLIDUM_RIGHT'
+  'CIFTI_STRUCTURE_PUTAMEN_LEFT'
+  'CIFTI_STRUCTURE_PUTAMEN_RIGHT'
+  'CIFTI_STRUCTURE_THALAMUS_LEFT'
+  'CIFTI_STRUCTURE_THALAMUS_RIGHT'
+  };
+
+list2 = {
+  'CORTEX_LEFT'
+  'CORTEX_RIGHT'
+  'CEREBELLUM'
+  'ACCUMBENS_LEFT'
+  'ACCUMBENS_RIGHT'
+  'ALL_GREY_MATTER'
+  'ALL_WHITE_MATTER'
+  'AMYGDALA_LEFT'
+  'AMYGDALA_RIGHT'
+  'BRAIN_STEM'
+  'CAUDATE_LEFT'
+  'CAUDATE_RIGHT'
+  'CEREBELLAR_WHITE_MATTER_LEFT'
+  'CEREBELLAR_WHITE_MATTER_RIGHT'
+  'CEREBELLUM_LEFT'
+  'CEREBELLUM_RIGHT'
+  'CEREBRAL_WHITE_MATTER_LEFT'
+  'CEREBRAL_WHITE_MATTER_RIGHT'
+  'CORTEX'
+  'DIENCEPHALON_VENTRAL_LEFT'
+  'DIENCEPHALON_VENTRAL_RIGHT'
+  'HIPPOCAMPUS_LEFT'
+  'HIPPOCAMPUS_RIGHT'
+  'INVALID'
+  'OTHER'
+  'OTHER_GREY_MATTER'
+  'OTHER_WHITE_MATTER'
+  'PALLIDUM_LEFT'
+  'PALLIDUM_RIGHT'
+  'PUTAMEN_LEFT'
+  'PUTAMEN_RIGHT'
+  'THALAMUS_LEFT'
+  'THALAMUS_RIGHT'
+  };
+
+% replace the short name with the long name
+[dum, indx1, indx2] = intersect(BrainStructurelabel, list2);
+BrainStructurelabel(indx1) = list1(indx2);
 
 if any(strcmp(dimtok, 'time'))
   % construct the MatrixIndicesMap for the time axis in the data
@@ -264,7 +340,7 @@ if any(strcmp(dimtok, 'pos'))
       BrainStructurelabel{i} = ['CIFTI_STRUCTURE_' BrainStructurelabel{i}];
     end
     
-    sel = (BrainStructureindex==i);
+    sel = (BrainStructure==i);
     IndexCount = sum(sel);
     IndexOffset = find(sel, 1, 'first') - 1; % zero offset
     
@@ -284,7 +360,7 @@ if any(strcmp(dimtok, 'pos'))
       branch = branch(end);
       tmp = source.pos(sel,:);
       tmp = ft_warp_apply(inv(source.transform), tmp);
-      tmp = round(transpose(tmp))-1; % zero offset
+      tmp = round(tmp)' - 1; % zero offset
       tree = add(tree, branch, 'chardata', printwithspace(tmp));
     else
       tmp = find(sel)-IndexOffset-1; % zero offset
@@ -331,14 +407,33 @@ if any(strcmp(dimtok, 'chan'))
     tree        = add(tree, uid, 'chardata', printwithspace(source.transform')); % it needs to be transposed
   end
   
+  if isfield(source, 'tri')
+    
+    % add the surfaces
+    for i=1:length(BrainStructurelabel)
+      sel = find(BrainStructure~=i);
+      [mesh.pnt, mesh.tri] = remove_vertices(source.pos, source.tri, sel);
+      mesh.unit = source.unit;
+      
+      if isempty(mesh.pnt) || isempty(mesh.tri)
+        continue;
+      end
+      
+      [tree, uid] = add(tree, branch, 'element', 'Surface');
+      tree        = attributes(tree, 'add', uid, 'BrainStructure', BrainStructurelabel{i});
+      tree        = attributes(tree, 'add', uid, 'SurfaceNumberOfVertices', printwithspace(size(mesh.pnt,1)));
+    end
+    
+  end % if isfield tri
+  
   parcel = source.label; % channels are used to represent parcels
   for i=1:numel(parcel)
     indx = find(strcmp(Parcellationlabel, parcel{i}));
     if isempty(indx)
       continue
     end
-    selParcel = (Parcellationindex==indx);
-    structure = BrainStructurelabel(unique(BrainStructureindex(selParcel)));
+    selParcel = (Parcellation==indx);
+    structure = BrainStructurelabel(unique(BrainStructure(selParcel)));
     
     branch = find(tree, 'CIFTI/Matrix/MatrixIndicesMap');
     branch = branch(end);
@@ -349,20 +444,20 @@ if any(strcmp(dimtok, 'chan'))
     tree = attributes(tree, 'add', branch, 'Name', parcel{i});
     
     for j=1:length(structure)
-      selStructure = (BrainStructureindex==find(strcmp(BrainStructurelabel, structure{j})));
+      selStructure = (BrainStructure==find(strcmp(BrainStructurelabel, structure{j})));
       indx   = find(selParcel & selStructure);
       offset = find(selStructure, 1, 'first') - 1;
       
-      fprintf('parcel %s in structure %s contains %d vertices\n', parcel{i}, structure{j}, length(indx));
+      fprintf('parcel %s contains %d vertices in %s\n', parcel{i}, length(indx), structure{j});
       
       branch = find(tree, 'CIFTI/Matrix/MatrixIndicesMap/Parcel');
       branch = branch(end);
       
-      if any(strcmp({'CORTEX_LEFT', 'CORTEX_RIGHT'}, structure{j}))
+      if any(strcmp({'CIFTI_STRUCTURE_CORTEX_LEFT', 'CIFTI_STRUCTURE_CORTEX_RIGHT'}, structure{j}))
         tree = add(tree, branch, 'element', 'Vertices');
         branch = find(tree, 'CIFTI/Matrix/MatrixIndicesMap/Parcel/Vertices');
         branch = branch(end);
-        tree = attributes(tree, 'add', branch, 'BrainStructure', ['CIFTI_STRUCTURE_' structure{j}]);
+        tree = attributes(tree, 'add', branch, 'BrainStructure', structure{j});
         tmp  = indx - offset - 1;
         tree = add(tree, branch, 'chardata', printwithspace(tmp));
         
@@ -370,7 +465,8 @@ if any(strcmp(dimtok, 'chan'))
         tree = add(tree, branch, 'element', 'VoxelIndicesIJK');
         branch = find(tree, 'CIFTI/Matrix/MatrixIndicesMap/Parcel/VoxelIndicesIJK');
         branch = branch(end);
-        tmp = ft_warp_apply(inv(source.transform), source.pos(indx,:)) - 1; % zero offset
+        tmp = ft_warp_apply(inv(source.transform), source.pos(indx,:));
+        tmp = round(tmp)' - 1; % zero offset
         tree = add(tree, branch, 'chardata', printwithspace(tmp));
       end
 
@@ -517,13 +613,13 @@ switch dimord
   case 'pos_pos'
     hdr.dim             = [6 1 1 1 1 size(source.pos,1) size(source.pos,1)  1];
   case 'chan_chan'
-    hdr.dim             = [6 1 1 1 1 length(source.chan) length(source.chan) 1];
+    hdr.dim             = [6 1 1 1 1 length(source.label) length(source.label) 1];
     %   case 'chan_chan_time'
-    %     hdr.dim             = [6 1 1 1 1 length(source.chan) length(source.chan) length(source.time)];
+    %     hdr.dim             = [6 1 1 1 1 length(source.label) length(source.label) length(source.time)];
     %   case 'pos_pos_time'
     %     hdr.dim             = [6 1 1 1 1 size(source.pos,1)  size(source.pos,1)  length(source.time)];
     %   case 'chan_chan_freq'
-    %     hdr.dim             = [6 1 1 1 1 length(source.chan) length(source.chan) length(source.freq)];
+    %     hdr.dim             = [6 1 1 1 1 length(source.label) length(source.label) length(source.freq)];
     %   case 'pos_pos_freq'
     %     hdr.dim             = [6 1 1 1 1 size(source.pos,1)  size(source.pos,1)  length(source.freq)];
   otherwise
@@ -588,47 +684,9 @@ fclose(fid);
 
 % write the surface information to one or multiple accompanying gifti files
 if isfield(source, 'tri')
-  
-  % the following are valid values for the structure name according to wb_command
-  % CORTEX_LEFT
-  % CORTEX_RIGHT
-  % CEREBELLUM
-  % ACCUMBENS_LEFT
-  % ACCUMBENS_RIGHT
-  % ALL_GREY_MATTER
-  % ALL_WHITE_MATTER
-  % AMYGDALA_LEFT
-  % AMYGDALA_RIGHT
-  % BRAIN_STEM
-  % CAUDATE_LEFT
-  % CAUDATE_RIGHT
-  % CEREBELLAR_WHITE_MATTER_LEFT
-  % CEREBELLAR_WHITE_MATTER_RIGHT
-  % CEREBELLUM_LEFT
-  % CEREBELLUM_RIGHT
-  % CEREBRAL_WHITE_MATTER_LEFT
-  % CEREBRAL_WHITE_MATTER_RIGHT
-  % CORTEX
-  % DIENCEPHALON_VENTRAL_LEFT
-  % DIENCEPHALON_VENTRAL_RIGHT
-  % HIPPOCAMPUS_LEFT
-  % HIPPOCAMPUS_RIGHT
-  % INVALID
-  % OTHER
-  % OTHER_GREY_MATTER
-  % OTHER_WHITE_MATTER
-  % PALLIDUM_LEFT
-  % PALLIDUM_RIGHT
-  % PUTAMEN_LEFT
-  % PUTAMEN_RIGHT
-  % THALAMUS_LEFT
-  % THALAMUS_RIGHT
-  
+    
   if isfield(source, brainstructure)
     % it contains information about anatomical structures, including cortical surfaces
-    BrainStructure      = source.( brainstructure         );
-    BrainStructurelabel = source.([brainstructure 'label']);
-    
     for i=1:length(BrainStructurelabel)
       sel = find(BrainStructure~=i);
       [mesh.pnt, mesh.tri] = remove_vertices(source.pos, source.tri, sel);
@@ -638,11 +696,16 @@ if isfield(source, 'tri')
         continue;
       end
       
+      if ~isempty(regexp(BrainStructurelabel{i}, '^CIFTI_STRUCTURE_', 'once'))
+        BrainStructurelabel{i} = BrainStructurelabel{i}(17:end);
+      end
+      
       [p, f, x] = fileparts(filename);
       filetok = tokenize(f, '.');
       surffile = fullfile(p, [filetok{1} '.' BrainStructurelabel{i} '.surf.gii']);
       ft_write_headshape(surffile, mesh, 'format', 'gifti');
     end
+    
   else
     mesh.pnt = source.pos;
     mesh.tri = source.tri;
@@ -653,7 +716,8 @@ if isfield(source, 'tri')
     surffile = fullfile(p, [filetok{1} '.surf.gii']);
     ft_write_headshape(surffile, mesh, 'format', 'gifti');
   end
-end
+  
+end % if isfield tri
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -688,29 +752,6 @@ s = s(1:end-1);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function [pntR, triR] = remove_vertices(pnt, tri, removepnt)
-
-% REMOVE_VERTICES removes specified vertices from a triangular mesh
-% renumbering the vertex-indices for the triangles and removing all
-% triangles with one of the specified vertices.
-%
-% Use as
-%   [pnt, tri] = remove_vertices(pnt, tri, indx)
-
-% Copyright (C) 2002, Robert Oostenveld
-%
-% $Log: remove_vertices.m,v $
-% Revision 1.5  2010/03/22 11:41:47  roboos
-% speed up
-%
-% Revision 1.4  2003/11/04 12:04:20  roberto
-% improved help, replaced dhk by tri
-%
-% Revision 1.3  2003/03/11 15:35:20  roberto
-% converted all files from DOS to UNIX
-%
-% Revision 1.2  2003/03/04 21:46:19  roberto
-% added CVS log entry and synchronized all copyright labels
-%
 
 npnt = size(pnt,1);
 ntri = size(tri,1);
