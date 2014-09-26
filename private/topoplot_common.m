@@ -525,8 +525,8 @@ end
 % Make vector dat with one value for each channel
 dat    = data.(cfg.parameter);
 % get dimord dimensions
-ydim = find(strcmp(yparam, dimtok{1}));
-xdim = find(strcmp(xparam, dimtok{1}));
+ydim = find(strcmp(yparam, dimtok));
+xdim = find(strcmp(xparam, dimtok));
 zdim = setdiff(1:ndims(dat), [ydim xdim]);
 % and permute
 dat = permute(dat, [zdim(:)' ydim xdim]);
