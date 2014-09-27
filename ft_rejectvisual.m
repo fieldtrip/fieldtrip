@@ -21,13 +21,8 @@ function [data] = ft_rejectvisual(cfg, data)
 %                     'summary'  show a single number for each channel and trial (default)
 %                     'channel'  show the data per channel, all trials at once
 %                     'trial'    show the data per trial, all channels at once
-%   cfg.reject      = string, detemines how to deal with channels and/or trials that are
-%                     marked for rejection, can be 
-%                     'complete' completely remove marked channels from the data (default)
-%                     'none'     keep marked channels in the output data
-%                     'nan'      fill the channels that are marked with NaNs
 %   cfg.keepchannel = string, determines how to deal with channels that are
-%                     not selected by cfg.channel, can be
+%                     not selected, can be
 %                     'no'     completely remove unselected channels from the data (default)
 %                     'yes'    keep unselected channels in the output data
 %                     'nan'    fill the channels that are unselected with NaNs
@@ -138,7 +133,6 @@ cfg = ft_checkconfig(cfg, 'renamedval',  {'method',  'absmax',  'maxabs'});
 if ~isfield(cfg, 'channel'),     cfg.channel = 'all';          end
 if ~isfield(cfg, 'trials'),      cfg.trials = 'all';           end
 if ~isfield(cfg, 'latency'),     cfg.latency = 'maxperlength'; end
-if ~isfield(cfg, 'reject'),      cfg.reject = 'complete';      end
 if ~isfield(cfg, 'keepchannel'), cfg.keepchannel = 'no';       end
 if ~isfield(cfg, 'feedback'),    cfg.feedback = 'textbar';     end
 if ~isfield(cfg, 'method'),      cfg.method = 'summary';       end
@@ -169,31 +163,21 @@ if ~isfield(cfg, 'metric')
   cfg.metric = 'var';
 end
 
-% find out which channels from the original dataset correspond to the ones
-% used in the artifact rejection
-orgchansel = ft_channelselection(cfg.channel, data.label);
-orgchanselidx = match_str(data.label,orgchansel);
-
-
-orgcfg.latency = cfg.latency;
-orgcfg.channel = cfg.channel;
-
-tmpcfg = [];
-tmpcfg = keepfields(cfg, {'trials'});% ,'channel'});
+orgcfg = cfg;
+tmpcfg = keepfields(cfg, {'trials'});
 data = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
-cfg.latency = orgcfg.latency;% restore the original latency, it should not be 'all'
-cfg.channel = ft_channelselection(orgcfg.channel, data.label);%  restore the original channel, it should not be 'all'
+cfg = copyfields(orgcfg, cfg, {'channel', 'latency'});
 
-% Only extract subselection of channels
-tmpcfg = keepfields(cfg, {'channel'});
-tmpdata = ft_selectdata(tmpcfg, data);
+% restore the original latency, it should not be 'all'
+% restore the original channel selection, it is dealt with below
+cfg.channel = orgcfg.channel;
 
 % determine the duration of each trial
-for i=1:length(tmpdata.time)
-  begsamplatency(i) = min(tmpdata.time{i});
-  endsamplatency(i) = max(tmpdata.time{i});
+for i=1:length(data.time)
+  begsamplatency(i) = min(data.time{i});
+  endsamplatency(i) = max(data.time{i});
 end
 
 % determine the latency window which is possible in all trials
@@ -224,7 +208,7 @@ cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'});
 
 % apply scaling to the selected channel types to equate the absolute numbers (i.e. fT and uV)
 % make a seperate copy to prevent the original data from being scaled
-% tmpdata = data;
+tmpdata = data;
 scaled  = 0;
 if ~isempty(cfg.eegscale)
   scaled = 1;
@@ -304,8 +288,8 @@ fprintf('%d trials marked as GOOD, %d trials marked as BAD\n', sum(trlsel), sum(
 fprintf('%d channels marked as GOOD, %d channels marked as BAD\n', sum(chansel), sum(~chansel));
 
 % construct an artifact matrix from the trl matrix
-if isfield(tmpdata, 'sampleinfo')
-  cfg.artifact = tmpdata.sampleinfo(~trlsel,:);
+if isfield(data, 'sampleinfo')
+  cfg.artifact = data.sampleinfo(~trlsel,:);
 else
   % since sample numbers are unknown, it is not possible to remember them here
   cfg.artifact = [];
@@ -319,100 +303,59 @@ end
 % show the user which trials are removed
 removed = find(~trlsel);
 if ~isempty(removed)
-  % remove the selected trials from the data
-  switch cfg.reject
-    case 'complete'
-      fprintf('the following trials were removed: ');
-      for i=1:(length(removed)-1)
-        fprintf('%d, ', removed(i));
-      end
-      fprintf('%d\n', removed(end));
-      
-      % remove trials
-      data.time  = data.time(trlsel);
-      data.trial = data.trial(trlsel);
-      if isfield(data, 'trialinfo'), data.trialinfo = data.trialinfo(trlsel,:); end;
-      if isfield(data, 'sampleinfo'),  data.sampleinfo  = data.sampleinfo(trlsel,:);  end;
-    case 'nan'
-      fprintf('the following trials were replaced with nans: ');
-      for i=1:(length(removed)-1)
-        fprintf('%d, ', removed(i));
-      end
-      fprintf('%d\n', removed(end));
-      
-      % replace rejected trials with nans
-      for i=1:numel(removed)
-        data.trial{removed(i)}(:)=nan;
-      end;
-    case 'none'
-      % do nothing
-      fprintf('no trials were removed\n');
-  end;
+  fprintf('the following trials were removed: ');
+  for i=1:(length(removed)-1)
+    fprintf('%d, ', removed(i));
+  end
+  fprintf('%d\n', removed(end));
 else
   fprintf('no trials were removed\n');
 end
+
+% remove the selected trials from the data
+data.time  = data.time(trlsel);
+data.trial = data.trial(trlsel);
+if isfield(data, 'trialinfo'), data.trialinfo = data.trialinfo(trlsel,:); end;
+if isfield(data, 'sampleinfo'),  data.sampleinfo  = data.sampleinfo(trlsel,:);  end;
+
 % remove the offset vector if present (only applies to datasets that have been preprocessed a long time ago)
 if isfield(data, 'offset')
   data = rmfield(data, 'offset');
 end
 
 if ~all(chansel)
-  switch cfg.reject
-    case 'complete'
+  switch cfg.keepchannel
+    case 'no'
       % show the user which channels are removed
       removed = find(~chansel);
       fprintf('the following channels were removed: ');
       for i=1:(length(removed)-1)
-        fprintf('%s, ', tmpdata.label{removed(i)});
+        fprintf('%s, ', data.label{removed(i)});
       end
-      fprintf('%s\n', tmpdata.label{removed(end)});
+      fprintf('%s\n', data.label{removed(end)});
       
       % remove channels that are not selected
       for i=1:length(data.trial)
-        %data.trial{i} = data.trial{i}(orgchanselidx(chansel),:);
-        data.trial{i}(orgchanselidx(~chansel),:)=[];
+        data.trial{i} = data.trial{i}(chansel,:);
       end
-      data.label(orgchanselidx(~chansel))=[];
-      %data.label = data.label(chansel);
+      data.label = data.label(chansel);
     case 'nan'
       % show the user which channels are removed
       removed = find(~chansel);
       fprintf('the following channels were filled with NANs: ');
       for i=1:(length(removed)-1)
-        fprintf('%s, ', tmpdata.label{removed(i)});
+        fprintf('%s, ', data.label{removed(i)});
       end
-      fprintf('%s\n', tmpdata.label{removed(end)});
+      fprintf('%s\n', data.label{removed(end)});
       
       % fill the data from the bad channels with nans
       for i=1:length(data.trial)
-        data.trial{i}(orgchanselidx(~chansel),:) = nan;
-      end
-    case 'none'
-      % keep all channels, also when they are not selected
-      fprintf('No channels have been removed');
-  end
-end
-
-chansel = ft_channelselection(cfg.channel,data.label);
-chanselidx = ~ismember(data.label, chansel);
-
-if any(chanselidx)
-  switch cfg.keepchannel
-    case 'no'
-      % Remove input channels not specified by cfg.channel
-      for i=1:length(data.trial)
-        data.trial{i}(chanselidx,:)=[];
-      end
-      data.label(chanselidx,:)=[];
-    case 'nan'
-      % % Replace input channels not specified by cfg.channel with nans
-      for i=1:length(data.trial)
-        data.trial{i}(chanselidx,:)=nan;
+        data.trial{i}(~chansel,:) = nan;
       end
     case 'yes'
-      % Do nothing-keep input channels
-  end;
-end;
+      % keep all channels, also when they are not selected
+  end
+end
 
 % convert back to input type if necessary
 switch dtype
