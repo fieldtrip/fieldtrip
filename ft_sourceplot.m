@@ -949,20 +949,22 @@ elseif isequal(cfg.method,'surface')
     color = repmat(cortex_light, size(surf.pnt,1), 1);
   end
   
-  h1 = patch('Vertices', surf.pnt, 'Faces', surf.tri, 'FaceVertexCData', color , 'FaceColor', 'interp');
+  h1 = patch('Vertices', surf.pnt, 'Faces', surf.tri, 'FaceVertexCData', color, 'FaceColor', 'interp');
   set(h1, 'EdgeColor', 'none');
   axis   off;
   axis vis3d;
   axis equal;
   
-  h2 = patch('Vertices', surf.pnt, 'Faces', surf.tri, 'FaceVertexCData', val , 'FaceColor', 'interp');
-  set(h2, 'EdgeColor', 'none');
-  if hasmsk
-    set(h2, 'FaceVertexAlphaData', maskval);
-    set(h2, 'FaceAlpha',          'interp');
-    set(h2, 'AlphaDataMapping',   'scaled');
-    try
-      alim(gca, [opacmin opacmax]);
+  if hasfun
+    h2 = patch('Vertices', surf.pnt, 'Faces', surf.tri, 'FaceVertexCData', val, 'FaceColor', 'interp');
+    set(h2, 'EdgeColor', 'none');
+    if hasmsk
+      set(h2, 'FaceVertexAlphaData', maskval);
+      set(h2, 'FaceAlpha',          'interp');
+      set(h2, 'AlphaDataMapping',   'scaled');
+      try
+        alim(gca, [opacmin opacmax]);
+      end
     end
   end
   try
