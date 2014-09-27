@@ -165,7 +165,7 @@ switch fileformat
     % sometimes there can also be electrode position information in the header
     hdr = ft_read_header(filename, 'headerformat', fileformat);
     if isfield(hdr, 'elec') && isfield(hdr, 'grad')
-      switch lower(cfg.senstype)
+      switch lower(senstype)
         case 'eeg'
           warning('both electrode and gradiometer information is present, returning the electrode information');
           sens = hdr.elec;
