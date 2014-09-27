@@ -67,25 +67,40 @@ cfg.brainstructure = ft_getopt(cfg, 'brainstructure');  % is used for cifti
 cfg.parcellation   = ft_getopt(cfg, 'parcellation');    % is used for cifti
 cfg.precision      = ft_getopt(cfg, 'precision');       % is used for cifti
 
+
 % check if the input data is valid for this function
-if strcmp(cfg.filetype, 'cifti') && isfield(source, 'brainordinate')
-  % it is a parcellated source representation, i.e. the main structure one channel for each parcel
-  brainordinate = source.brainordinate;
-  source = rmfield(source, 'brainordinate');
-  % split them and check individually
-  source        = ft_checkdata(source, 'datatype', {'timelock', 'freq', 'chan'}, 'feedback', 'yes');
+if strcmp(cfg.filetype, 'cifti')
   
-  % ensure it is a parcellation, not a segmentation
-  original      = brainordinate;
-  brainordinate = ft_checkdata(brainordinate, 'datatype', 'parcellation', 'parcellationstyle', 'indexed', 'hasunit', 'yes');
-  brainordinate = copyfields(original, brainordinate, {'transform'}); % if present, keep the transform
-  clear original
+  % keep the transformation matrix
+  if isfield(source, 'transform')
+    transform = source.transform;
+  elseif isfield(source, 'brainordinate') && isfield(source.brainordinate, 'transform')
+    transform = source.brainordinate.transform;
+  else
+    transform = [];
+  end
   
-  % merge them again
-  source = copyfields(brainordinate, source, setdiff(fieldnames(brainordinate), {'cfg'}));
-else
-  source = ft_checkdata(source, 'datatype', 'source', 'hasunit', true, 'feedback', 'yes');
-end
+  if isfield(source, 'brainordinate')
+    % it is a parcellated source representation, i.e. the main structure one channel for each parcel
+    brainordinate = source.brainordinate;
+    source = rmfield(source, 'brainordinate');
+    
+    % split them and check individually
+    source        = ft_checkdata(source, 'datatype', {'timelock', 'freq', 'chan'}, 'feedback', 'yes');
+    brainordinate = ft_checkdata(brainordinate, 'datatype', 'parcellation', 'parcellationstyle', 'indexed', 'hasunit', 'yes');
+    
+    % merge them again
+    source = copyfields(brainordinate, source, setdiff(fieldnames(brainordinate), {'cfg'}));
+  else
+    source = ft_checkdata(source, 'datatype', 'source', 'hasunit', true, 'feedback', 'yes');
+  end
+  
+  % keep the transformation matrix
+  if ~isempty(transform)
+    source.transform = transform;
+  end
+  
+end % if cifti
 
 
 if isempty(cfg.filetype)

@@ -1,18 +1,37 @@
 function source = ft_read_cifti(filename, varargin)
 
-% FT_READ_CIFTI reads geometry and functional data or connectivity from a
-% cifti file and returns a structure according to FT_DATATYPE_SOURCE.
+% FT_READ_CIFTI read functional data or functional connectivity from a cifti-1 or
+% cifti-2 file. The functional data can consist of a dense or a parcellated
+% representation. The geometrical description of the brainordinates can consist of
+% triangulated surfaces or voxels in a regular 3-D volumetric grid. If available,
+% it also reads the geometrical description of the surfaces from the accompanying
+% gifti files.
 %
 % Use as
-%   source = ft_read_cifti(filename, ...)
-% where additional input arguments should be specified as key-value pairs
-% and can include
-%   readdata         = boolean, can be false or true
-%   cortexleft       = string, filename with left cortex (optional, default is automatic)
-%   cortexright      = string, filename with right cortex (optional, default is automatic)
-%   hemisphereoffset = number, amount in milimeter to move the two hemispheres apart from each other (default = 0)
+%   data = ft_read_cifti(filename, ...)
 %
-% See also FT_WRITE_CIFTI, READ_NIFTI2_HDR, WRITE_NIFTI2_HDR
+% If the file contains a dense representation of functional data, the output data
+% structure is organized according to the FT_DATATYPE_SOURCE or FT_DATATYPE_VOLUME
+% definition.
+%
+% If the contains a parcellated representation of functional data, the output data
+% structure is organized according to the FT_DATATYPE_TIMELOCK or FT_DATATYPE_FREQ
+% definition. In addition, the description of the geometry wil be represented in a
+% data.brainordinate field, which is organized according to the FT_DATATYPE_SOURCE
+% or FT_DATATYPE_VOLUME definition.
+%
+% Any optional input arguments should come in key-value pairs and may include
+%   'readdata'         = boolean, can be false or true (default depends on file size)
+%   'cortexleft'       = string, filename with left cortex (optional, default is automatic)
+%   'cortexright'      = string, filename with right cortex (optional, default is automatic)
+%   'hemisphereoffset' = number, amount in milimeter to move the hemispheres apart from each other (default = 0)
+%
+% See also FT_WRITE_CIFTI, FT_READ_MRI, FT_WRITE_MRI
+
+% Known limitations and bugs
+% - it will fail if multiple MatrixIndicesMap contain BrainModels
+% - fibers (i.e. dfan and dfibersamp) are unsupported/untested
+% - metadata is unsupported
 
 % Copyright (C) 2013-2014, Robert Oostenveld
 %
@@ -42,9 +61,6 @@ hemisphereoffset = ft_getopt(varargin, 'hemisphereoffset', 0); % in mm, move the
 % convert 'yes'/'no' into boolean
 readdata = istrue(readdata);
 
-% ensure that the external toolbox is present, this adds gifti/@xmltree
-ft_hastoolbox('gifti', 1);
-
 % read the header section
 hdr = read_nifti2_hdr(filename);
 
@@ -61,7 +77,7 @@ fseek(fid, 0, 'bof');
 % set the default for readdata
 if isempty(readdata)
   if filesize>1e9
-    warning('filesize>1GB, not reading data by default. Please specify the ''readdata'' option.');
+    warning('Not reading data by default in case filesize>1GB. Please specify the ''readdata'' option.');
     readdata = false;
   else
     readdata = true;
@@ -99,19 +115,22 @@ if any(xmldata==0)
   xmldata = xmldata(xmldata>0);
 end
 
-% write the xml section to a temporary file
-xmlfile = 'debug.xml';
-tmp = fopen(xmlfile, 'w');
-fwrite(tmp, xmldata);
-fclose(tmp);
+try
+  % write the xml section to a temporary file
+  xmlfile = 'debug.xml';
+  tmp = fopen(xmlfile, 'w');
+  fwrite(tmp, xmldata);
+  fclose(tmp);
+end
 
-% this requires the xmltree object from Guillaume Flandin
-% see http://www.artefact.tk/software/matlab/xml/
-% it is also included with the gifti toolbox
+% ensure that the external toolbox is present, this adds gifti/@xmltree
+ft_hastoolbox('gifti', 1);
+
+% convert the character data to an xmltree object
 tree = xmltree(xmldata);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% convert from xmltree object to a generic structure
+% convert the xmltree object to a generic structure
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 numericAttributeTypes = {'NumberOfMatrices', 'AppliesToMatrixDimension', 'IndexOffset', 'IndexCount', 'SurfaceNumberOfNodes', 'VolumeDimensions', 'SurfaceNumberOfVertices', 'SeriesStart', 'SeriesStep', 'NumberOfSeriesPoints', 'SeriesExponent', 'Vertices', 'MeterExponent'};
@@ -122,7 +141,7 @@ Parcel            = [];
 NamedMap          = [];
 Surface           = [];
 Volume            = [];
-BrainModel        = struct([]);
+BrainModel        = struct([]); % this will be constructed both for dense and parcellated files
 
 attr = attributes(tree, 'get', 1);
 if ~iscell(attr), attr = {attr}; end % treat one attribute just like multiple attributes
@@ -216,7 +235,7 @@ for i=1:length(uid_MatrixIndicesMap)
       uid_VoxelIndicesIJK = find(parcel, '/Parcel/VoxelIndicesIJK');
       if ~isempty(uid_VoxelIndicesIJK)
         tmp = str2num(get(parcel, children(parcel, uid_VoxelIndicesIJK), 'value'));
-        Parcel(j).VoxelIndicesIJK = reshape(tmp, 3, [])' + 1; % one offset
+        Parcel(j).VoxelIndicesIJK = reshape(tmp, 3, [])' + 1; % transpose, one offset
       else
         Parcel(j).VoxelIndicesIJK = [];
       end
@@ -272,9 +291,9 @@ for i=1:length(uid_MatrixIndicesMap)
             end
           end
         end
-      end % for
-    end
-  end
+      end % for each LabelTable
+    end % for each NamedMap
+  end % if NamedMap
   
   uid_BrainModel = find(map, '/MatrixIndicesMap/BrainModel');
   for j=1:length(uid_BrainModel)
@@ -289,15 +308,15 @@ for i=1:length(uid_MatrixIndicesMap)
       else
         MatrixIndicesMap(i).BrainModel(j).(attr{k}.key) = attr{k}.val;
       end
-    end % for
+    end % for each attr
     
     switch MatrixIndicesMap(i).BrainModel(j).ModelType
       case 'CIFTI_MODEL_TYPE_SURFACE'
         switch Cifti.Version
           case {'1' '1.0'}
             uid = find(brainmodel, '/BrainModel/NodeIndices');
-            try, MatrixIndicesMap(i).BrainModel(j).NodeIndices = str2num(get(brainmodel, children(brainmodel, uid), 'value')) + 1; end
-            try, MatrixIndicesMap(i).BrainModel(j).VertexIndices = MatrixIndicesMap(i).BrainModel(j).NodeIndices; end % convert from cifti-1
+            % use VertexIndices rather than NodeIndices
+            try, MatrixIndicesMap(i).BrainModel(j).VertexIndices = str2num(get(brainmodel, children(brainmodel, uid), 'value')) + 1; end
             % also copy the global surface information to a higher level
             Surface(end+1).BrainStructure          = MatrixIndicesMap(i).BrainModel(j).BrainStructure;
             Surface(end  ).SurfaceNumberOfVertices = MatrixIndicesMap(i).BrainModel(j).SurfaceNumberOfNodes;
@@ -316,11 +335,11 @@ for i=1:length(uid_MatrixIndicesMap)
         
       case 'CIFTI_MODEL_TYPE_VOXELS'
         tmp = str2num(get(brainmodel, children(brainmodel, find(brainmodel, '/BrainModel/VoxelIndicesIJK')), 'value'));
-        MatrixIndicesMap(i).BrainModel(j).VoxelIndicesIJK = reshape(tmp, 3, [])' + 1;
+        MatrixIndicesMap(i).BrainModel(j).VoxelIndicesIJK = reshape(tmp, 3, [])' + 1; % transpose, one offset
         
       otherwise
         error('unsupported ModelType');
-    end % switch
+    end % switch ModelType
   end % for each BrainModel
 end % for each MatrixIndicesMap
 
@@ -366,32 +385,10 @@ for i=1:length(MatrixIndicesMap)
     case 'CIFTI_INDEX_TYPE_BRAIN_MODELS'
       dimord(MatrixIndicesMap(i).AppliesToMatrixDimension+1) = {'pos'};
       
-      %       IndexOffset         = [MatrixIndicesMap(i).BrainModel(:).IndexOffset];
-      %       IndexCount          = [MatrixIndicesMap(i).BrainModel(:).IndexCount];
-      %       ModelType           = nan(length(MatrixIndicesMap(i).BrainModel),1);
-      %       ModelTypelabel      = cell(length(MatrixIndicesMap(i).BrainModel),1);
-      %       BrainStructure      = nan(length(MatrixIndicesMap(i).BrainModel),1);
-      %       BrainStructurelabel = cell(length(MatrixIndicesMap(i).BrainModel),1);
-      
-      %       tmp = cumsum([0 IndexCount]);
-      %       if ~isequal(IndexOffset, tmp(1:end-1))
-      %         % this happens in some of the example cifti1 files
-      %         % and might be a bug in the actual format of the data in those files
-      %         warning('inconsistency between IndexOffset and IndexCount');
-      %       end
-      
-      % concatenate all brain models, this is consistent with parcels
+      % concatenate all into an array of brain models
       for j=1:length(MatrixIndicesMap(i).BrainModel)
-        % FIXME
-        % %         if strcmp(MatrixIndicesMap(i).BrainModel(end).ModelType, 'CIFTI_MODEL_TYPE_SURFACE') && ~isfield(MatrixIndicesMap(i).BrainModel(end), 'VertexIndices')
-        % %           if isfield(MatrixIndicesMap(i).BrainModel(end), 'NodeIndices')
-        % %             MatrixIndicesMap(i).BrainModel(end).VertexIndices = MatrixIndicesMap(i).BrainModel(end).NodeIndices; % convert from cifti-1
-        % %           elseif (MatrixIndicesMap(i).BrainModel(end).IndexCount==MatrixIndicesMap(i).BrainModel(end).SurfaceNumberOfNodes)
-        % %             MatrixIndicesMap(i).BrainModel(end).VertexIndices = 1:MatrixIndicesMap(i).BrainModel(end).IndexCount; % assume it spans the whole surface
-        % %           end
-        % %         end
         BrainModel = cat(1, BrainModel, MatrixIndicesMap(i).BrainModel(j));
-      end % for all BrainModels
+      end
       
     case 'CIFTI_INDEX_TYPE_PARCELS'
       dimord(MatrixIndicesMap(i).AppliesToMatrixDimension+1) = {'chan'};
@@ -413,7 +410,7 @@ for i=1:length(MatrixIndicesMap)
           BrainModel(end  ).VoxelIndicesIJK         = [];
           IndexOffset = IndexOffset + numel(Parcel(j).Vertices{k});
           BrainModelParcelName{end+1} = Parcel(j).Name;
-        end % for each brain structure
+        end % for each BrainStructure
         
         if ~isempty(Parcel(j).VoxelIndicesIJK)
           BrainModel(end+1).IndexOffset             = IndexOffset;
@@ -427,53 +424,7 @@ for i=1:length(MatrixIndicesMap)
           BrainModelParcelName{end+1} = Parcel(j).Name;
         end
         
-      end % for each parcel
-      
-      
-      %       source.label = {Parcel(:).Name};
-      %
-      %       tmp1 = {};
-      %       tmp2 = [];
-      %       for j=1:numel(Parcel)
-      %         tmp1{end+1} = Parcel(j).Name;
-      %         tmp2(end+1) = sum(cellfun(@numel, Parcel(j).Vertices));
-      %       end
-      %       begpos = [0 cumsum(tmp2(1:end-1))] + 1;
-      %       endpos = begpos + tmp2 - 1;
-      %       for j=1:length(tmp1)
-      %         sel = find(strcmp(tmp1, tmp1{j}), 1, 'first');
-      %         Parcellation(begpos(j):endpos(j)) = sel;
-      %         Parcellationlabel{sel} = tmp1{sel};
-      %       end
-      %
-      %       tmp1 = {};
-      %       tmp2 = [];
-      %       for j=1:numel(Parcel)
-      %         for k=1:numel(Parcel(j).BrainStructure)
-      %           tmp1{end+1} = Parcel(j).BrainStructure{k};
-      %           tmp2(end+1) = numel(Parcel(j).Vertices{k});
-      %         end
-      %       end
-      %       begpos = [0 cumsum(tmp2(1:end-1))] + 1;
-      %       endpos = begpos + tmp2 - 1;
-      %       for j=1:length(tmp1)
-      %         sel = find(strcmp(tmp1, tmp1{j}), 1, 'first');
-      %         BrainStructure(begpos(j):endpos(j)) = sel;
-      %         BrainStructurelabel{sel} = tmp1{sel}(17:end); % strip the first part, i.e. CIFTI_STRUCTURE_
-      %       end
-      %
-      %       Cifti.dataIndex = {};
-      %       Cifti.greynodeIndex = {};
-      %       for j=1:max(Parcellation)
-      %         for k=1:max(BrainStructure)
-      %           Cifti.dataIndex{end+1}     = find(Parcellation==j & BrainStructure==k);
-      %           Cifti.greynodeIndex{end+1} = Parcel(j).Vertices{k} + 1; % convert from zero to one-offset
-      %         end
-      %       end
-      %
-      %       hasbrainmodel = true;
-      %       Cifti.pos = nan(numel(BrainStructure),3);
-      
+      end % for each Parcel
       
     case 'CIFTI_INDEX_TYPE_SERIES'
       % this only applies to cifti version 2
@@ -488,7 +439,7 @@ for i=1:length(MatrixIndicesMap)
           % case 'RADIAN'
         otherwise
           error('unsupported SeriesUnit');
-      end % switch
+      end % switch SeriesUnit
       
     case 'CIFTI_INDEX_TYPE_SCALARS'
       dimord{MatrixIndicesMap(i).AppliesToMatrixDimension+1} = []; % scalars are not explicitly represented
@@ -514,20 +465,20 @@ for i=1:length(MatrixIndicesMap)
           Cifti.fsample = 1/str2double(MatrixIndicesMap(i).TimeStep);
         otherwise
           % other units should be trivial to implement
-          error('unsupported TimeStepUnits');
-      end
+          error('unsupported TimeStepUnits "%s"', MatrixIndicesMap(i).TimeStepUnits);
+      end % switch TimeStepUnits
       
     otherwise
       error('unsupported IndicesMapToDataType');
-  end % switch
-end % fo length MatrixIndicesMap
+  end % switch IndicesMapToDataType
+end % for each MatrixIndicesMap
 
 dimord = dimord(~cellfun(@isempty, dimord));
 source.dimord = sprintf('%s_', dimord{:});
 source.dimord(end) = [];
 
 if ~isempty(BrainModel)
-  % this applies both to dense and parcellated formats
+  % the BrainModel is constructed both for dense and parcellated data
   
   dataIndex     = cell(size(BrainModel));
   greynodeIndex = cell(size(BrainModel));
@@ -557,93 +508,25 @@ if ~isempty(BrainModel)
       otherwise
         error('unsupported ModelType "%s"', BrainModel(i).ModelType);
     end
-  end
-  
-  
-  %           case 'CIFTI_MODEL_TYPE_SURFACE'
-  %             posbeg = geomCount + 1;
-  %             posend = geomCount + MatrixIndicesMap(i).BrainModel(j).SurfaceNumberOfVertices;
-  %             geomCount = geomCount + MatrixIndicesMap(i).BrainModel(j).SurfaceNumberOfVertices; % increment with the number of vertices in the (external) surface
-  %             Cifti.pos(posbeg:posend,:) = nan;
-  %             Cifti.dataIndex{j}         = IndexOffset(j) + (1:IndexCount(j));  % these are indices in the data
-  %             Cifti.greynodeIndex{j}     = posbeg:posend;                       % these are indices in the greynodes (vertices or subcortical voxels)
-  %             if isfield(MatrixIndicesMap(i).BrainModel(j), 'VertexIndices')
-  %               % data is only present on a subset of vertices
-  %               Cifti.greynodeIndex{j} = Cifti.greynodeIndex{j}(MatrixIndicesMap(i).BrainModel(j).VertexIndices+1);
-  %             end
-  %
-  %           case 'CIFTI_MODEL_TYPE_VOXELS'
-  %             posbeg = geomCount + 1;
-  %             posend = geomCount + IndexCount(j);
-  %             geomCount = geomCount + IndexCount(j); % increment with the number of vertices in the subcortical structure
-  %
-  %             Cifti.pos(posbeg:posend,:) = reshape(MatrixIndicesMap(i).BrainModel(j).VoxelIndicesIJK, 3, IndexCount(j))';
-  %             Cifti.dataIndex{j}         = IndexOffset(j) + (1:IndexCount(j));  % these are indices in the data
-  %             Cifti.greynodeIndex{j}     = posbeg:posend;                       % these are indices in the greynodes (vertices or subcortical voxels)
-  %
-  
-  
-  %
-  %   ModelType(posbeg:posend) = j; % indexed representation, see ft_datatype_parcellation
-  %   ModelTypelabel{j} = MatrixIndicesMap(i).BrainModel(j).ModelType;
-  %
-  %   BrainStructure(posbeg:posend) = j; % indexed representation, see ft_datatype_parcellation
-  %   BrainStructurelabel{j} = MatrixIndicesMap(i).BrainModel(j).BrainStructure;
-  %
-  %   if ~isempty(regexp(BrainStructurelabel{j}, '^CIFTI_STRUCTURE_', 'once'))
-  %     BrainStructurelabel{j} = BrainStructurelabel{j}(17:end); % strip the first part, i.e. CIFTI_STRUCTURE_
-  %   end
-  %
-  %   brainordinate.pos                  = Cifti.pos;
-  %   brainordinate.unit                 = 'mm';   % volume and surface should be in consistent units, gifti is defined in mm, wb_view also expects mm
-  %   if ~isempty(Cifti.Volume)
-  %     % this only applies to the voxel coordinates, not to surface vertices which are NaN
-  %     brainordinate.pos        = ft_warp_apply(Cifti.Volume.Transform, brainordinate.pos+1);  % one offset
-  %     brainordinate.pos        = brainordinate.pos .* (10^Cifti.Volume.MeterExponent);        % convert from native to meter
-  %     brainordinate.pos        = brainordinate.pos .* (10^3);                                 % convert from meter to milimeter
-  %     brainordinate.dim        = Cifti.Volume.VolumeDimensions;
-  %     brainordinate.transform  = Cifti.Volume.Transform;
-  %   end
-  %   Ngreynodes = size(brainordinate.pos,1);
-  %   if any(strcmp(dimord, 'pos'))
-  %     % it is a dense source structure, i.e. represented with a position for each brainordinate
-  %     brainordinate.brainstructure      = BrainStructure;
-  %     brainordinate.brainstructurelabel = BrainStructurelabel;
-  %     % copy all brainordinate information over to the main level
-  %     source = copyfields(brainordinate, source, fieldnames(brainordinate));
-  %   elseif any(strcmp(dimord, 'chan'))
-  %     % it is a parcellated source structure, i.e. represented by one channel per parcel
-  %     brainordinate.brainstructure      = BrainStructure;
-  %     brainordinate.brainstructurelabel = BrainStructurelabel;
-  %     brainordinate.parcellation        = Parcellation;
-  %     brainordinate.parcellationlabel   = Parcellationlabel;
-  %     % keep the mapping between positions and greynodes
-  %     brainordinate.posindex = cat(2, Cifti.dataIndex{:});
-  %     brainordinate.srfindex = cat(2, Cifti.greynodeIndex{:});
-  %     % store the brainordinate information in a sub-structure
-  %     source.brainordinate = brainordinate;
-  %   end
-  
+  end % for each BrainModel
   
   pos      = zeros(0,3);
   posIndex = zeros(0,1);
   
-  % represent the position of all vertices of all surfaces, not only the ones used
-  % in the brain models
+  % concatenate all vertices of all surfaces, including vertices that do not have data
   for i=1:numel(Surface)
     pos      = cat(1, pos, nan(Surface(i).SurfaceNumberOfVertices, 3));
     posIndex = cat(1, posIndex, i*ones(Surface(i).SurfaceNumberOfVertices, 1));
   end
   
-  % it would be possible to also represent all voxels, but for efficiency we only
-  % represent the ones that have data assigned to them
+  % it would be possible to represent all voxels, but for efficiency we only include voxel positions with data
   if ~isempty(Volume)
     tmp       = ft_warp_apply(Volume.Transform, cat(1, BrainModel(isnan(surfaceIndex)).VoxelIndicesIJK));
     pos       = cat(1, pos, tmp);
     posIndex  = cat(1, posIndex, nan(size(tmp,1),1));
   end
   
-  % the surfaces come before the voxels
+  % the surface vertices come before the voxels
   if ~isempty(Surface)
     voxeloffset = sum([Surface.SurfaceNumberOfVertices]);
   else
@@ -661,9 +544,9 @@ if ~isempty(BrainModel)
     greynodeIndex{i} = greynodeIndex{i} + greynodeOffset(i);
   end
   
-end % if brainmodel
+end % if BrainModel
 
-brainordinate.brainstructure = zeros(size(pos,1),1);
+brainordinate.brainstructure      = zeros(size(pos,1),1);
 brainordinate.brainstructurelabel = {};
 
 for i=1:numel(BrainModel)
@@ -671,8 +554,8 @@ for i=1:numel(BrainModel)
   if isempty(indx)
     indx = length(brainordinate.brainstructurelabel)+1;
   end
-  brainordinate.brainstructurelabel{indx} = BrainModel(i).BrainStructure;
   brainordinate.brainstructure(greynodeIndex{i}) = indx;
+  brainordinate.brainstructurelabel{indx}        = BrainModel(i).BrainStructure;
 end
 
 list1 = {
@@ -747,7 +630,7 @@ list2 = {
   'THALAMUS_RIGHT'
   };
 
-% replace the long name with the short name
+% replace the long name with the short name, i.e remove 'CIFTI_STRUCTURE_' where applicable
 [dum, indx1, indx2] = intersect(brainordinate.brainstructurelabel, list1);
 brainordinate.brainstructurelabel(indx1) = list2(indx2);
 
@@ -768,7 +651,7 @@ if readdata
     % the data is dense, make it consistent with the graynode positions
     dataIndex     = [dataIndex{:}];
     greynodeIndex = [greynodeIndex{:}];
-    Ngreynodes    = numel(greynodeIndex);
+    Ngreynodes    = size(pos,1);
   else
     % the data is defined on parcels
     Ngreynodes    = length(Parcel);
@@ -781,7 +664,7 @@ if readdata
       [m, n] = size(data);
       if m>n
         dat = nan(Ngreynodes,n);
-        dat(greynodeIndex(dataIndex),1) = data;
+        dat(greynodeIndex(dataIndex),:) = data;
       else
         dat = nan(Ngreynodes,m);
         dat(greynodeIndex(dataIndex),:) = transpose(data);
@@ -827,7 +710,6 @@ source.hdr = hdr;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % try to get the geometrical information from the corresponding gifti files
-% the following assumes HCP/WorkBench conventions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 [p, f, x] = fileparts(filename);
@@ -837,6 +719,7 @@ subject  = 'unknown';
 dataname = 'unknown';
 geomodel = '';
 
+% the following assumes HCP/WorkBench/Caret file naming conventions
 if length(t)==2
   subject  = t{1};
   dataname = t{2};
@@ -858,9 +741,7 @@ else
   error('cannot parse file name');
 end
 
-% the surface anatomy is represented in an external file
-% which can be difficult to match with the data
-
+% construct a list of possible file names for the surface geometry
 Lfilelist = {
   [subject '.L' '.midthickness'  '.' geomodel '.surf.gii']
   [subject '.L' '.pial'          '.' geomodel '.surf.gii']
@@ -918,162 +799,66 @@ Bfilelist = {
 Lfilelist = cat(1, cortexleft, Lfilelist);
 Rfilelist = cat(1, cortexright, Rfilelist);
 
-
 tri = zeros(0,3);
 for i=1:length(Surface)
   
   switch Surface(i).BrainStructure
     case 'CIFTI_STRUCTURE_CORTEX_LEFT'
-      
       for j=1:length(Lfilelist)
         if exist(Lfilelist{j}, 'file')
           warning('reading CORTEX_LEFT from %s', Lfilelist{j});
           mesh = ft_read_headshape(Lfilelist{j}, 'unit', 'mm'); % volume and surface should be in consistent units, gifti is defined in mm, wb_view also expects mm
+          mesh.pnt(:,1) = mesh.pnt(:,1) - hemisphereoffset;
           pos(posIndex==i,:) = mesh.pnt;
           tri = cat(1, tri, mesh.tri + find(posIndex==i, 1, 'first') - 1);
-          
           break
         end
-      end % for
+      end % for each Lfilelist
       
     case 'CIFTI_STRUCTURE_CORTEX_RIGHT'
-      
       for j=1:length(Rfilelist)
         if exist(Rfilelist{j}, 'file')
           warning('reading CORTEX_RIGHT from %s', Rfilelist{j});
           mesh = ft_read_headshape(Rfilelist{j}, 'unit', 'mm'); % volume and surface should be in consistent units, gifti is defined in mm, wb_view also expects mm
+          mesh.pnt(:,1) = mesh.pnt(:,1) + hemisphereoffset;
           pos(posIndex==i,:) = mesh.pnt;
           tri = cat(1, tri, mesh.tri + find(posIndex==i, 1, 'first') - 1);
           break
         end
-      end % for
+      end % for each Rfilelist
       
     otherwise
-      keyboard
-  end
+      for j=1:length(Bfilelist)
+        if exist(Bfilelist{j}, 'file')
+          warning('reading %s from %s', Surface(i).BrainStructure(17:end), Bfilelist{j});
+          mesh = ft_read_headshape(Bfilelist{j}, 'unit', 'mm'); % volume and surface should be in consistent units, gifti is defined in mm, wb_view also expects mm
+          pos(posIndex==i,:) = mesh.pnt;
+          tri = cat(1, tri, mesh.tri + find(posIndex==i, 1, 'first') - 1);
+          break
+        end
+      end % for each Bfilelist
+      
+  end % switch BrainStructure
 end
 
-% if isfield(source, 'brainordinate')
-%   % it is a parcellated source structure, i.e. represented by one channel per parcel
-%   brainordinate = source.brainordinate;
-% else
-%   % it is a dense source structure, i.e. represented with a position for each brainordinate
-%   brainordinate = source;
-% end
-%
-% % update the geometrical description of the brainordinates
-% if isfield(brainordinate, 'brainstructure')
-%   % it contains information about anatomical structures, including cortical surfaces
-%   BrainStructure      = brainordinate.brainstructure;
-%   BrainStructurelabel = brainordinate.brainstructurelabel;
-%
-%   if all(ismember({'CORTEX_LEFT', 'CORTEX_RIGHT'}, BrainStructurelabel))
-%     for i=1:length(Lfilelist)
-%       Rfilename = fullfile(p, Rfilelist{i});
-%
-%       if  && exist(Rfilename, 'file')
-%         warning('reading left hemisphere geometry from %s',  Lfilename);
-%         meshL =
-%         warning('reading right hemisphere geometry from %s',  Rfilename);
-%         meshR = ft_read_headshape(Rfilename, 'unit', 'mm'); % volume and surface should be in consistent units, gifti is defined in mm, wb_view also expects mm
-%
-%         % move the two hemispheres apart from each other
-%         meshL.pnt(:,1) = meshL.pnt(:,1) - hemisphereoffset;
-%         meshR.pnt(:,1) = meshR.pnt(:,1) + hemisphereoffset;
-%
-%         if isfield(brainordinate, 'parcellation')
-%           % in case of a model with CIFTI_MODEL_TYPE_PARCELLATION, the size of the geometry is not specified in the cifti file
-%           % here we extend the positions to all brainordinates, including the ones that do not have data on them
-%
-%           % FIXME there are these two that I should have used
-%           % <Surface BrainStructure="CIFTI_STRUCTURE_CORTEX_LEFT" SurfaceNumberOfVertices="32492"/>
-%           % <Surface BrainStructure="CIFTI_STRUCTURE_CORTEX_RIGHT" SurfaceNumberOfVertices="32492"/>
-%
-%           % concatenate the vertices of both hemispheres
-%           brainordinate.pos = [
-%             meshL.pnt
-%             meshR.pnt
-%             ];
-%
-%           % concatenate the triangles of both hemispheres
-%           brainordinate.tri = [
-%             meshL.tri
-%             meshR.tri + size(meshL.pnt,1); % the vertices of the right hemisphere have an offset
-%             ];
-%
-%           indexL = find(brainordinate.brainstructure==find(strcmp(brainordinate.brainstructurelabel, 'CORTEX_LEFT')));
-%           indexR = find(brainordinate.brainstructure==find(strcmp(brainordinate.brainstructurelabel, 'CORTEX_RIGHT')));
-%           brainordinate.srfindex(indexR) = brainordinate.srfindex(indexR) + size(meshL.pnt,1); % the vertices of the right hemisphere have an offset
-%
-%           % extend the brainstructure and parcellation to all vertices in the concatenated hemispheres
-%           tmp1 = zeros(1, size(brainordinate.pos,1));
-%           tmp2 = zeros(1, size(brainordinate.pos,1));
-%           tmp1(brainordinate.srfindex) = brainordinate.brainstructure(brainordinate.posindex);
-%           tmp2(brainordinate.srfindex) = brainordinate.parcellation(brainordinate.posindex);
-%           brainordinate.brainstructure = tmp1;
-%           brainordinate.parcellation   = tmp2;
-%           brainordinate = removefields(brainordinate, {'posindex', 'srfindex'}); % these are not needed any more
-%
-%         else
-%           % in case of a model with CIFTI_MODEL_TYPE_SURFACE or CIFTI_MODEL_TYPE_VOLUME, the size of the geometry is specified in the cifti file
-%           % the positions already represents all brainordinates, including the ones that do not have data on them
-%
-%           % insert the positions of the hemispheres on the correct place
-%           indexL = find(brainordinate.brainstructure==find(strcmp(brainordinate.brainstructurelabel, 'CORTEX_LEFT')));
-%           indexR = find(brainordinate.brainstructure==find(strcmp(brainordinate.brainstructurelabel, 'CORTEX_RIGHT')));
-%
-%           brainordinate.pos(indexL,:) = meshL.pnt;
-%           brainordinate.pos(indexR,:) = meshR.pnt;
-%
-%           brainordinate.tri = [
-%             indexL(meshL.tri)
-%             indexR(meshR.tri)
-%             ];
-%
-%         end % if isfield parcellation
-%
-%         break % only read a single pair of meshes
-%       end
-%     end
-%
-%   elseif ismember({'CORTEX'}, brainordinate.brainstructurelabel)
-%     for i=1:length(Bfilelist)
-%       Bfilename = fullfile(p, Bfilelist{i});
-%
-%       if exist(Bfilename, 'file')
-%         warning('reading surface geometry from %s',  Bfilename);
-%         meshB   = ft_read_headshape(Bfilename, 'unit', 'mm'); % volume and surface should be in consistent units, gifti is defined in mm, wb_view also expects mm
-%         indexB  = find(brainordinate.brainstructure==find(strcmp(brainordinate.brainstructurelabel, 'CORTEX')));
-%         brainordinate.pos(indexB,:) = meshB.pnt;
-%         brainordinate.tri = indexB(meshB.tri);
-%       end
-%
-%       break % only read a single mesh
-%     end
-%   end
-% end
-
-try,
-  brainordinate.pos = pos;
+% add the vertex and voxel positions
+brainordinate.pos = pos;
+if ~isempty(tri)
+  % add the surface triangulations
+  brainordinate.tri = tri;
 end
-
-try,
-  if ~isempty(tri)
-    brainordinate.tri = tri;
-  end
-end
-
 
 if ~isempty(Volume)
   brainordinate.dim        = Volume.VolumeDimensions;
   brainordinate.transform  = Volume.Transform;
 end
 
-% copy the updated brainordinates back into the source structure
 if isempty(Parcel)
+  % copy the geometrical description of the brainordinates into the main structure
   source = copyfields(brainordinate, source, fieldnames(brainordinate));
 else
   % it is a parcellated source structure, i.e. represented by one channel per parcel
+  % copy the geometrical description of the brainordinates into a sub-structure
   source.brainordinate = brainordinate;
   source.label = {Parcel(:).Name};
 end

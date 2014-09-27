@@ -1,18 +1,36 @@
 function ft_write_cifti(filename, source, varargin)
 
-% FT_WRITE_CIFTI writes a source structure according to FT_DATATYPE_SOURCE to a cifti file.
+% FT_WRITE_CIFTI writes functional data or functional connectivity to a cifti-2
+% file. The geometrical description of the brainordinates can consist of
+% triangulated surfaces or voxels in a regular 3-D volumetric grid. The functional
+% data can consist of a dense or a parcellated representation. Furthermore, it
+% writes the geometrical description of the surfaces to one or multiple gifti
+% files.
 %
 % Use as
-%   ft_write_cifti(filename, source, ...)
-% where optional input arguments should come in key-value pairs and may include
-%   parameter      = string, fieldname that contains the data
-%   brainstructure = string, fieldname that describes the brain structures (optional)
-%   parcellation   = string, fieldname that describes the parcellation (optional)
+%   ft_write_cifti(filename, data, ...)
+% where the filename is a string and the data according to the description below.
+%
+% If the input data describes a dense representation of functional data, the data
+% structure should conform to the FT_DATATYPE_SOURCE or FT_DATATYPE_VOLUME
+% definition.
+%
+% If the input data describes a parcellated representation of functional data, the
+% data structure should conform to the FT_DATATYPE_TIMELOCK or FT_DATATYPE_FREQ
+% definition. In addition, the description of the geometry should be specified in
+% the data.brainordinate field, which should conform to the FT_DATATYPE_SOURCE or
+% FT_DATATYPE_VOLUME definition.
+%
+% Any optional input arguments should come in key-value pairs and may include
+%   'parameter'      = string, fieldname that contains the functional data
+%   'brainstructure' = string, fieldname that describes the brain structures (default = 'brainstructure')
+%   'parcellation'   = string, fieldname that describes the parcellation (default = 'parcellation')
+%   'precision'      = string, can be 'single', 'double', 'int32', etc. (default ='single')
 %
 % The brainstructure refers to the global anatomical structure, such as CortexLeft, Thalamus, etc.
 % The parcellation refers to the the detailled parcellation, such as BA1, BA2, BA3, etc.
 %
-% See also FT_READ_CIFTI, READ_NIFTI2_HDR, WRITE_NIFTI2_HDR
+% See also FT_READ_CIFTI, FT_READ_MRI, FT_WRITE_MRI
 
 % Copyright (C) 2013-2014, Robert Oostenveld
 %
@@ -34,16 +52,14 @@ function ft_write_cifti(filename, source, varargin)
 %
 % $Id$
 
+parameter       = ft_getopt(varargin, 'parameter');
 brainstructure  = ft_getopt(varargin, 'brainstructure'); % the default is determined further down
 parcellation    = ft_getopt(varargin, 'parcellation');   % the default is determined further down
-parameter       = ft_getopt(varargin, 'parameter');
 precision       = ft_getopt(varargin, 'precision', 'single');
 
-% ensure that the external toolbox is present, this adds gifti/@xmltree
-ft_hastoolbox('gifti', 1);
-
 if isfield(source, 'brainordinate')
-  % copy the geometrical description from the parcellation over in the main structure
+  % this applies to a parcellated data representation
+  % copy the geometrical description over in to the main structure
   source = copyfields(source.brainordinate, source, fieldnames(source.brainordinate));
   source = rmfield(source, 'brainordinate');
 end
@@ -64,7 +80,7 @@ if isfield(source, 'inside') && islogical(source.inside)
 end
 
 if isfield(source, 'dim') && ~isfield(source, 'transform')
-  % ensure that the volumetric description is complete
+  % ensure that the volumetric description contains both dim and transform
   source.transform = pos2transform(source.pos);
 end
 
@@ -72,12 +88,8 @@ end
 % get the data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-dat = source.(parameter);
-if isfield(source, [parameter 'dimord'])
-  dimord = source.([parameter 'dimord']);
-else
-  dimord = source.dimord;
-end
+dat    = source.(parameter);
+dimord = getdimord(source, parameter);
 
 switch dimord
   case {'pos' 'pos_scalar'}
@@ -135,37 +147,38 @@ switch dimord
     dimord = 'freq_chan';
     
   otherwise
-    error('unsupported dimord')
+    error('unsupported dimord "%s"', dimord);
 end % switch
 
+% determine each of the dimensions
 dimtok = tokenize(dimord, '_');
 
+% add the extension to the filename
 [p, f] = fileparts(filename);
 filename = fullfile(p, [f extension]);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% construct the XML object describing the geometry
+% get the description of the geometry
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-tree = xmltree;
-tree = set(tree, 1, 'name', 'CIFTI');
-tree = attributes(tree, 'add', find(tree, 'CIFTI'), 'Version', '2');
-tree = add(tree, find(tree, 'CIFTI'), 'element', 'Matrix');
-
-
-% The cifti file contains one Matrix, which contains one or multiple MatrixIndicesMap, which each contain
-% CIFTI_INDEX_TYPE_BRAIN_MODELS The dimension represents one or more brain models.
-% CIFTI_INDEX_TYPE_PARCELS      The dimension represents a parcellation scheme.
-% CIFTI_INDEX_TYPE_SERIES       The dimension represents a series of regular samples.
-% CIFTI_INDEX_TYPE_SCALARS      The dimension represents named scalar maps.
-% CIFTI_INDEX_TYPE_LABELS       The dimension represents named label maps.
-
+ModelType      = zeros(size(source.pos,1), 1);
+ModelTypelabel = {'SURFACE', 'VOXEL'};
+if isfield(source, 'transform')
+  tolerance = 0.01; % in milimeter
+  ijk = ft_warp_apply(inv(source.transform), source.pos); % convert from xyz to ijk
+  sel = sqrt(sum((ijk - round(ijk)).^2,2))<tolerance;
+  % note that some surface points might be marked as voxel if they happen to fall on a grid point
+  ModelType(~sel) = 1; % surface
+  ModelType( sel) = 2; % voxel
+else
+  ModelType(:) = 1; % surface
+end
 
 if isfield(source, brainstructure)
   BrainStructure      = source.( brainstructure         );
   BrainStructurelabel = source.([brainstructure 'label']);
 elseif isfield(source, 'pos')
-  BrainStructure      = ones(1,size(source.pos,1));
+  BrainStructure      = ones(size(source.pos,1),1);
   BrainStructurelabel = {'INVALID'};
 end
 
@@ -173,10 +186,11 @@ if isfield(source, parcellation)
   Parcellation      = source.( parcellation         );
   Parcellationlabel = source.([parcellation 'label']);
 elseif isfield(source, 'pos')
-  Parcellation      = ones(1,size(source.pos,1));
+  Parcellation      = ones(size(source.pos,1),1);
   Parcellationlabel = {'INVALID'};
 end
 
+% ensure that these are column vectors
 try, BrainStructure = BrainStructure(:); end
 try, Parcellation   = Parcellation(:);   end
 
@@ -252,9 +266,28 @@ list2 = {
   'THALAMUS_RIGHT'
   };
 
-% replace the short name with the long name
+% replace the short name with the long name, i.e add 'CIFTI_STRUCTURE_' where applicable
 [dum, indx1, indx2] = intersect(BrainStructurelabel, list2);
 BrainStructurelabel(indx1) = list1(indx2);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% construct the XML object describing the geometry
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% ensure that the external toolbox is present, this adds gifti/@xmltree
+ft_hastoolbox('gifti', 1);
+
+tree = xmltree;
+tree = set(tree, 1, 'name', 'CIFTI');
+tree = attributes(tree, 'add', find(tree, 'CIFTI'), 'Version', '2');
+tree = add(tree, find(tree, 'CIFTI'), 'element', 'Matrix');
+
+% The cifti file contains one Matrix, which contains one or multiple MatrixIndicesMap, each containing
+% CIFTI_INDEX_TYPE_BRAIN_MODELS The dimension represents one or more brain models.
+% CIFTI_INDEX_TYPE_PARCELS      The dimension represents a parcellation scheme.
+% CIFTI_INDEX_TYPE_SERIES       The dimension represents a series of regular samples.
+% CIFTI_INDEX_TYPE_SCALARS      The dimension represents named scalar maps.
+% CIFTI_INDEX_TYPE_LABELS       The dimension represents named label maps.
 
 if any(strcmp(dimtok, 'time'))
   % construct the MatrixIndicesMap for the time axis in the data
@@ -326,12 +359,7 @@ if any(strcmp(dimtok, 'pos'))
     [tree, uid] = add(tree, uid, 'element', 'TransformationMatrixVoxelIndicesIJKtoXYZ');
     tree        = attributes(tree, 'add', uid, 'MeterExponent', num2str(MeterExponent));
     tree        = add(tree, uid, 'chardata', printwithspace(source.transform')); % it needs to be transposed
-
-    [X, Y, Z] = ndgrid(1:source.dim(1), 1:source.dim(2), 1:source.dim(3));
-    xyz = ft_warp_apply(source.transform, [X(:) Y(:) Z(:)]);
-    isvolume = isequal(size(source.pos), size(xyz)) && all(sum((source.pos - xyz).^2,2)./sum((source.pos + xyz).^2,2)<eps);
-  else
-    isvolume = false;
+    
   end
   
   for i=1:length(BrainStructurelabel)
@@ -350,7 +378,7 @@ if any(strcmp(dimtok, 'pos'))
     branch = find(tree, 'CIFTI/Matrix/MatrixIndicesMap/BrainModel');
     branch = branch(end);
     
-    if isvolume
+    if all(ModelType(sel)==find(strcmp(ModelTypelabel, 'VOXEL')))
       tree = attributes(tree, 'add', branch, 'IndexOffset', printwithspace(IndexOffset));
       tree = attributes(tree, 'add', branch, 'IndexCount', printwithspace(IndexCount));
       tree = attributes(tree, 'add', branch, 'ModelType', 'CIFTI_MODEL_TYPE_VOXELS');
@@ -360,7 +388,7 @@ if any(strcmp(dimtok, 'pos'))
       branch = branch(end);
       tmp = source.pos(sel,:);
       tmp = ft_warp_apply(inv(source.transform), tmp);
-      tmp = round(tmp)' - 1; % zero offset
+      tmp = round(tmp)' - 1; % transpose, zero offset
       tree = add(tree, branch, 'chardata', printwithspace(tmp));
     else
       tmp = find(sel)-IndexOffset-1; % zero offset
@@ -407,15 +435,17 @@ if any(strcmp(dimtok, 'chan'))
     tree        = add(tree, uid, 'chardata', printwithspace(source.transform')); % it needs to be transposed
   end
   
+  % surfaces are described with vertex positions (pos/pnt) and triangles (tri)
   if isfield(source, 'tri')
+    % there is a surface description
     
-    % add the surfaces
     for i=1:length(BrainStructurelabel)
       sel = find(BrainStructure~=i);
       [mesh.pnt, mesh.tri] = remove_vertices(source.pos, source.tri, sel);
       mesh.unit = source.unit;
       
       if isempty(mesh.pnt) || isempty(mesh.tri)
+        % the brainordinate positions in this brain structure are not connected with triangles, i.e. in the case of voxels
         continue;
       end
       
@@ -424,7 +454,7 @@ if any(strcmp(dimtok, 'chan'))
       tree        = attributes(tree, 'add', uid, 'SurfaceNumberOfVertices', printwithspace(size(mesh.pnt,1)));
     end
     
-  end % if isfield tri
+  end % if tri
   
   parcel = source.label; % channels are used to represent parcels
   for i=1:numel(parcel)
@@ -443,43 +473,45 @@ if any(strcmp(dimtok, 'chan'))
     branch = branch(end);
     tree = attributes(tree, 'add', branch, 'Name', parcel{i});
     
+    % this is for pretty printing
+    maxparcellen = max(cellfun(@length, parcel));
+    
     for j=1:length(structure)
       selStructure = (BrainStructure==find(strcmp(BrainStructurelabel, structure{j})));
       indx   = find(selParcel & selStructure);
       offset = find(selStructure, 1, 'first') - 1;
       
-      fprintf('parcel %s contains %d vertices in %s\n', parcel{i}, length(indx), structure{j});
+      fprintf('parcel %s contains %5d vertices in %s\n', stringpad(parcel{i}, maxparcellen), length(indx), structure{j});
       
       branch = find(tree, 'CIFTI/Matrix/MatrixIndicesMap/Parcel');
       branch = branch(end);
       
-      if any(strcmp({'CIFTI_STRUCTURE_CORTEX_LEFT', 'CIFTI_STRUCTURE_CORTEX_RIGHT'}, structure{j}))
+      if all(ModelType(selStructure)==find(strcmp(ModelTypelabel, 'VOXEL')))
+        tree = add(tree, branch, 'element', 'VoxelIndicesIJK');
+        branch = find(tree, 'CIFTI/Matrix/MatrixIndicesMap/Parcel/VoxelIndicesIJK');
+        branch = branch(end);
+        tmp = ft_warp_apply(inv(source.transform), source.pos(indx,:));
+        tmp = round(tmp)' - 1; % transpose, zero offset
+        tree = add(tree, branch, 'chardata', printwithspace(tmp));
+      else
         tree = add(tree, branch, 'element', 'Vertices');
         branch = find(tree, 'CIFTI/Matrix/MatrixIndicesMap/Parcel/Vertices');
         branch = branch(end);
         tree = attributes(tree, 'add', branch, 'BrainStructure', structure{j});
         tmp  = indx - offset - 1;
         tree = add(tree, branch, 'chardata', printwithspace(tmp));
-        
-      else
-        tree = add(tree, branch, 'element', 'VoxelIndicesIJK');
-        branch = find(tree, 'CIFTI/Matrix/MatrixIndicesMap/Parcel/VoxelIndicesIJK');
-        branch = branch(end);
-        tmp = ft_warp_apply(inv(source.transform), source.pos(indx,:));
-        tmp = round(tmp)' - 1; % zero offset
-        tree = add(tree, branch, 'chardata', printwithspace(tmp));
       end
-
-    end % for each structure spanned by this parcel
+      
+    end % for each structure contained in this parcel
   end % for each parcel
-end
-
+end % if chan
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % write everything to file
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% 540 bytes with nifti-2 header
+% 4 bytes with the size of the header, 384 for nifti-1 or 540 for nifti-2
+% 540 bytes with the nifti-2 header
 % 4 bytes that indicate the presence of a header extension [1 0 0 0]
 % 4 bytes with the size of the header extension in big endian?
 % 4 bytes with the header extension code NIFTI_ECODE_CIFTI [0 0 0 32]
@@ -537,8 +569,9 @@ for i=1:length(b)
 end
 
 % remove the padding whitespace
-xmldat = xmldat(~whitespace);
+xmldat  = xmldat(~whitespace);
 
+% the header extension needs to be aligned
 xmlsize = length(xmldat);
 xmlpad  = ceil((xmlsize+8)/16)*16 - (xmlsize+8);
 
@@ -593,35 +626,36 @@ end
 
 % dim(1) represents the number of dimensions
 % for a normal nifti file, dim(2:4) are x, y, z, dim(5) is time, dim(6:8) are free to choose
+% the cifti file makes use of dim(6:8)
 switch dimord
   case 'pos_scalar'
-    hdr.dim             = [6 1 1 1 1 size(source.pos,1) 1 1]; % only single scalar
+    hdr.dim             = [6 1 1 1 1 size(source.pos,1)   1                    1]; % only single scalar
   case 'scalar_pos'
-    hdr.dim             = [6 1 1 1 1 1 size(source.pos,1) 1]; % only single scalar
+    hdr.dim             = [6 1 1 1 1 1                    size(source.pos,1)   1]; % only single scalar
   case 'chan_scalar'
-    hdr.dim             = [6 1 1 1 1 numel(source.label) 1 1]; % only single scalar
+    hdr.dim             = [6 1 1 1 1 numel(source.label)  1                    1]; % only single scalar
   case 'scalar_chan'
-    hdr.dim             = [6 1 1 1 1 1 numel(source.label) 1]; % only single scalar
+    hdr.dim             = [6 1 1 1 1 1                    numel(source.label)  1]; % only single scalar
   case 'pos_time'
-    hdr.dim             = [6 1 1 1 1 size(source.pos,1) length(source.time) 1];
+    hdr.dim             = [6 1 1 1 1 size(source.pos,1)   length(source.time)  1];
   case 'time_pos'
-    hdr.dim             = [6 1 1 1 1 length(source.time) size(source.pos,1) 1];
+    hdr.dim             = [6 1 1 1 1 length(source.time)  size(source.pos,1)   1];
   case 'chan_time'
-    hdr.dim             = [6 1 1 1 1 length(source.label) length(source.time) 1];
+    hdr.dim             = [6 1 1 1 1 length(source.label) length(source.time)  1];
   case 'time_chan'
-    hdr.dim             = [6 1 1 1 1 length(source.time) length(source.label) 1];
+    hdr.dim             = [6 1 1 1 1 length(source.time)  length(source.label) 1];
   case 'pos_pos'
-    hdr.dim             = [6 1 1 1 1 size(source.pos,1) size(source.pos,1)  1];
+    hdr.dim             = [6 1 1 1 1 size(source.pos,1)   size(source.pos,1)   1];
   case 'chan_chan'
     hdr.dim             = [6 1 1 1 1 length(source.label) length(source.label) 1];
-    %   case 'chan_chan_time'
-    %     hdr.dim             = [6 1 1 1 1 length(source.label) length(source.label) length(source.time)];
-    %   case 'pos_pos_time'
-    %     hdr.dim             = [6 1 1 1 1 size(source.pos,1)  size(source.pos,1)  length(source.time)];
-    %   case 'chan_chan_freq'
-    %     hdr.dim             = [6 1 1 1 1 length(source.label) length(source.label) length(source.freq)];
-    %   case 'pos_pos_freq'
-    %     hdr.dim             = [6 1 1 1 1 size(source.pos,1)  size(source.pos,1)  length(source.freq)];
+  case 'chan_chan_time'
+    hdr.dim             = [6 1 1 1 1 length(source.label) length(source.label) length(source.time)];
+  case 'pos_pos_time'
+    hdr.dim             = [6 1 1 1 1 size(source.pos,1)   size(source.pos,1)   length(source.time)];
+  case 'chan_chan_freq'
+    hdr.dim             = [6 1 1 1 1 length(source.label) length(source.label) length(source.freq)];
+  case 'pos_pos_freq'
+    hdr.dim             = [6 1 1 1 1 size(source.pos,1)   size(source.pos,1)   length(source.freq)];
   otherwise
     error('unsupported dimord "%s"', dimord)
 end % switch
@@ -665,11 +699,13 @@ fid = fopen(filename, 'wb');
 % write the header, this is 4+540 bytes
 write_nifti2_hdr(fid, hdr);
 
-% write the xml section to a temporary file
-xmlfile = 'debug.xml';
-tmp = fopen(xmlfile, 'w');
-fwrite(tmp, xmldat, 'char');
-fclose(tmp);
+try
+  % write the xml section to a temporary file for debugging
+  xmlfile = 'debug.xml';
+  tmp = fopen(xmlfile, 'w');
+  fwrite(tmp, xmldat, 'char');
+  fclose(tmp);
+end
 
 % write the cifti header extension
 fwrite(fid, [1 0 0 0], 'uint8');
@@ -678,13 +714,14 @@ fwrite(fid, 32, 'int32');                 % etype
 fwrite(fid, xmldat, 'char');              % write the ascii XML section
 fwrite(fid, zeros(1,xmlpad), 'uint8');    % zero-pad to the next 16 byte boundary
 
+% write the actual data
 fwrite(fid, dat, precision);
 
 fclose(fid);
 
-% write the surface information to one or multiple accompanying gifti files
+% write the surfaces as gifti files
 if isfield(source, 'tri')
-    
+  
   if isfield(source, brainstructure)
     % it contains information about anatomical structures, including cortical surfaces
     for i=1:length(BrainStructurelabel)
@@ -693,6 +730,7 @@ if isfield(source, 'tri')
       mesh.unit = source.unit;
       
       if isempty(mesh.pnt) || isempty(mesh.tri)
+        % the brainordinate positions in this brain structure are not connected with triangles, i.e. in the case of voxels
         continue;
       end
       
@@ -703,6 +741,7 @@ if isfield(source, 'tri')
       [p, f, x] = fileparts(filename);
       filetok = tokenize(f, '.');
       surffile = fullfile(p, [filetok{1} '.' BrainStructurelabel{i} '.surf.gii']);
+      warning('writing %s to %s', BrainStructurelabel{i}, surffile);
       ft_write_headshape(surffile, mesh, 'format', 'gifti');
     end
     
@@ -746,6 +785,10 @@ else
 end
 s = s(1:end-1);
 
+function s = stringpad(s, n)
+while length(s)<n
+  s = [' ' s];
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION from roboos/matlab/triangle

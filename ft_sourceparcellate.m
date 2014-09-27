@@ -78,11 +78,20 @@ else
   % the parcellation is specified as separate structure
 end
 
+% keep the transformation matrix
+if isfield(parcellation, 'transform')
+  transform = parcellation.transform;
+else
+  transform = [];
+end
+
 % ensure it is a parcellation, not a segmentation
-original     = parcellation;
 parcellation = ft_checkdata(parcellation, 'datatype', 'parcellation', 'parcellationstyle', 'indexed');
-parcellation = copyfields(original, parcellation, {'transform'}); % if present, keep the transform 
-clear original
+
+% keep the transformation matrix
+if ~isempty(transform)
+  parcellation.transform = transform;
+end
 
 % ensure it is a source, not a volume
 source       = ft_checkdata(source, 'datatype', 'source', 'inside', 'logical', 'sourcerepresentation', 'new');

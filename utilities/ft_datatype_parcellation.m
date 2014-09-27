@@ -98,18 +98,40 @@ end
 
 switch parcelversion
   case '2012'
-    % determine whether the style of the input fields is probabilistic or indexed
-    fn = fieldnames(parcellation);
-   
-    if ~any(strcmp('pos',fn))
-        if any(strcmp('pnt', fn))
-            parcellation.pos = parcellation.pnt;
-            parcellation = rmfield(parcellation, 'pnt');
-            fn = fieldnames(parcellation);
-        end
+    
+    if isfield(parcellation, 'pnt')
+      parcellation.pos = parcellation.pnt;
+      parcellation = rmfield(parcellation, 'pnt');
     end
     
+    % convert the inside/outside fields, they should be logical rather than an index
+    if isfield(parcellation, 'inside')
+      if all(parcellation.inside==0 | parcellation.inside==1)
+        % this is ok
+      else
+        tmp = false(size(parcellation.pos,1),1);
+        tmp(parcellation.inside) = true;
+        parcellation.inside = tmp;
+      end
+    end
+    
+    if isfield(parcellation, 'outside')
+      parcellation = rmfield(parcellation, 'outside');
+    end
+    
+    
     dim = size(parcellation.pos,1);
+    
+    % make a list of fields that represent a parcellation
+    fn = fieldnames(parcellation);
+    sel = false(size(fn));
+    for i=1:numel(fn)
+      sel(i) = isnumeric(parcellation.(fn{i})) && numel(parcellation.(fn{i}))==dim;
+    end
+    % only consider numeric fields of the correct size
+    fn = fn(sel);
+    
+    % determine whether the style of the input fields is probabilistic or indexed
     [indexed, probabilistic] = determine_segmentationstyle(parcellation, fn, dim);
     
     if any(probabilistic) && any(indexed)
