@@ -11,7 +11,6 @@ function [resliced] = ft_volumereslice(cfg, mri)
 %
 % The configuration structure can contain
 %   cfg.resolution = number, in physical units
-% The new spatial extent can be specified with
 %   cfg.xrange     = [min max], in physical units
 %   cfg.yrange     = [min max], in physical units
 %   cfg.zrange     = [min max], in physical units
