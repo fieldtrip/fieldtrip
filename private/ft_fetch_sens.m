@@ -23,12 +23,12 @@ function [sens] = ft_fetch_sens(cfg, data)
 % 
 % Allowed configuration fields:
 %   layout        = reference to a layout, see FT_PREPARE_LAYOUT
-%   senstype      = MEG, EEG, in case of combined MEG-EEG dataset choose
-%                   which sensors to extract
+%   senstype      = string, can be 'meg' or 'eeg', is used choose in combined
+%                   EEG/MEG data (default='eeg')
 %
 % See also FT_READ_SENS, FT_PREPARE_LAYOUT, FT_FETCH_DATA
 
-% Copyright (C) 2011, Jörn M. Horschig
+% Copyright (C) 2011, J?rn M. Horschig
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -80,12 +80,12 @@ if (hasgradfile || hascfggrad || hasdatagrad) && ...
     (haselecfile || hascfgelec || hasdataelec) && ~hassenstype
   error('Cannot determine whether you need gradiometer or electrode sensor definition. Specify cfg.senstype as ''MEG'' or ''EEG''');
 elseif hassenstype
-  switch cfg.senstype
-    case 'MEG'
+  switch lower(cfg.senstype)
+    case 'meg'
       haselecfile = 0;
       hascfgelec  = 0;
       hasdataelec = 0;
-    case 'EEG'
+    case 'eeg'
       hasgradfile = 0;
       hascfggrad  = 0;
       hasdatagrad = 0;
