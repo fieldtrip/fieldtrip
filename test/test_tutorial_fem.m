@@ -109,6 +109,7 @@ end
 cfg = [];
 cfg.vol = vol;
 cfg.grid.resolution = 10;
+cfg.elec = elec_aligned2;
 cfg.grid.unit = 'mm';
 source = ft_prepare_sourcemodel(cfg);
 
