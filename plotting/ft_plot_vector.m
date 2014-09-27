@@ -1,6 +1,6 @@
 function [varargout] = ft_plot_vector(varargin)
 
-% FT_PLOT_VECTOR
+% FT_PLOT_VECTOR visualizes a vector as a line, similar to PLOT.
 %
 % Use as
 %   ft_plot_vector(Y, ...)
