@@ -138,15 +138,15 @@ end
 % check if the input data is valid for this function
 data = ft_checkdata(data, 'datatype', {'comp', 'timelock', 'freq'}, 'feedback', 'yes');
 
-% set the defaults
-if ~isfield(cfg, 'channel'),     cfg.channel = 'all';        end
-if ~isfield(cfg, 'component'),   cfg.component = [];         end  % for comp input
-if ~isfield(cfg, 'frequency'),   cfg.frequency = [];         end  % for freq input
-if ~isfield(cfg, 'latency'),     cfg.latency = 'all';        end
-if ~isfield(cfg, 'feedback'),    cfg.feedback = 'text';      end
-if ~isfield(cfg, 'gridsearch'),  cfg.gridsearch = 'yes';     end
-if ~isfield(cfg, 'nonlinear'),   cfg.nonlinear = 'yes';      end
-if ~isfield(cfg, 'symmetry'),    cfg.symmetry = [];          end
+% get the defaults
+cfg.channel     = ft_getopt(cfg, 'channel', 'all');
+cfg.component   = ft_getopt(cfg, 'component');        % for comp input
+cfg.frequency   = ft_getopt(cfg, 'frequency');        % for freq input
+cfg.latency     = ft_getopt(cfg, 'latency', 'all');   % for timeclock input
+cfg.feedback    = ft_getopt(cfg, 'feedback', 'text');
+cfg.gridsearch  = ft_getopt(cfg, 'gridsearch', 'yes');
+cfg.nonlinear   = ft_getopt(cfg, 'nonlinear', 'yes');
+cfg.symmetry    = ft_getopt(cfg, 'symmetry');
 
 % put the low-level options pertaining to the dipole grid in their own field
 cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'}); % this is moved to cfg.grid.tight by the subsequent createsubcfg
@@ -158,7 +158,7 @@ if ~isfield(cfg, 'model'),
   if ~isempty(cfg.component)
     % each component is fitted independently
     cfg.model = 'moving';
-  elseif ~isempty(cfg.latency)
+  elseif ~isempty(cfg.frequency)
     % fit the data with a dipole at one location
     cfg.model = 'regional';
   elseif ~isempty(cfg.latency)
@@ -356,19 +356,20 @@ if strcmp(cfg.gridsearch, 'yes')
       % find the grid point(s) with the minimum error
       [err, indx] = min(grid.error(grid.inside));
       dip.pos = grid.pos(grid.inside(indx),:);          % note that for a symmetric dipole pair this results in a vector
-      dip.pos = reshape(dip.pos,3,cfg.numdipoles)';    % convert to a Nx3 array
+      dip.pos = reshape(dip.pos,3,cfg.numdipoles)';     % convert to a Nx3 array
       dip.mom = zeros(cfg.numdipoles*3,1);              % set the dipole moment to zero
       if cfg.numdipoles==1
         fprintf('found minimum after scanning on grid point [%g %g %g]\n', dip.pos(1), dip.pos(2), dip.pos(3));
       elseif cfg.numdipoles==2
         fprintf('found minimum after scanning on grid point [%g %g %g; %g %g %g]\n', dip.pos(1), dip.pos(2), dip.pos(3), dip.pos(4), dip.pos(5), dip.pos(6));
       end
+      
     case 'moving'
       for t=1:ntime
         % find the grid point(s) with the minimum error
         [err, indx] = min(grid.error(grid.inside,t));
         dip(t).pos = grid.pos(grid.inside(indx),:);           % note that for a symmetric dipole pair this results in a vector
-        dip(t).pos = reshape(dip(t).pos,3,cfg.numdipoles)';  % convert to a Nx3 array
+        dip(t).pos = reshape(dip(t).pos,3,cfg.numdipoles)';   % convert to a Nx3 array
         dip(t).mom = zeros(cfg.numdipoles*3,1);               % set the dipole moment to zero
         if cfg.numdipoles==1
           fprintf('found minimum after scanning for topography %d on grid point [%g %g %g]\n', t, dip(t).pos(1), dip(t).pos(2), dip(t).pos(3));
@@ -376,12 +377,12 @@ if strcmp(cfg.gridsearch, 'yes')
           fprintf('found minimum after scanning for topography %d on grid point [%g %g %g; %g %g %g]\n', t, dip(t).pos(1), dip(t).pos(2), dip(t).pos(3), dip(t).pos(4), dip(t).pos(5), dip(t).pos(6));
         end
       end
+      
     otherwise
       error('unsupported cfg.model');
   end % switch model
-end % if gridsearch
-
-if strcmp(cfg.gridsearch, 'no')
+  
+elseif strcmp(cfg.gridsearch, 'no')
   % use the initial guess supplied in the configuration for the remainder
   switch cfg.model
     case 'regional'
@@ -393,9 +394,10 @@ if strcmp(cfg.gridsearch, 'no')
     otherwise
       error('unsupported cfg.model');
   end % switch model
-end
+  
+end % if gridsearch yes/no
 
-% multiple dipoles can be represented either as a 1x(N*3) vector or as a  Nx3 matrix,
+% multiple dipoles can be represented either as a 1x(N*3) vector or as a Nx3 matrix,
 % i.e. [x1 y1 z1 x2 y2 z2] or [x1 y1 z1; x2 y2 z2]
 switch cfg.model
   case 'regional'
@@ -410,7 +412,7 @@ end % switch model
 
 if isfield(cfg, 'dipfit')
   % convert the structure with the additional low-level options into key-value pairs
-  optarg = ft_cfg2keyval(getfield(cfg, 'dipfit'));
+  optarg = ft_cfg2keyval(cfg.dipfit);
 else
   % no additional low-level options were specified
   optarg = {};
@@ -436,10 +438,11 @@ if strcmp(cfg.nonlinear, 'yes')
         success = 0;
         disp(lasterr);
       end
+      
     case 'moving'
       % perform the non-linear dipole fit for each latency independently
-      % instead of using dip(t) =  ft_dipole_fit(dip(t),...), I am using temporary variables dipin and dipout
-      % this is to prevent errors of the type "Subscripted assignment between dissimilar structures"
+      % instead of using dip(t) = dipole_fit(dip(t),...), I am using temporary variables dipin and dipout
+      % to prevent errors like "Subscripted assignment between dissimilar structures"
       dipin = dip;
       for t=1:ntime
         % catch errors due to non-convergence
@@ -452,6 +455,7 @@ if strcmp(cfg.nonlinear, 'yes')
             fprintf('found minimum after non-linear optimization for topography %d on [%g %g %g; %g %g %g]\n', t, dipout(t).pos(1,1), dipout(t).pos(1,2), dipout(t).pos(1,3), dipout(t).pos(2,1), dipout(t).pos(2,2), dipout(t).pos(2,3));
           end
         catch
+          % keep the position and moment according to the initial guess
           dipout(t).pos = dipin(t).pos;
           dipout(t).mom = dipin(t).mom;
           success(t) = 0;
@@ -466,7 +470,8 @@ if strcmp(cfg.nonlinear, 'yes')
 end % if nonlinear
 
 if strcmp(cfg.nonlinear, 'no')
-  % the optimal dipole positions are either obrained from scanning or from the initial configured seed
+  % the optimal dipole positions are either obtained from scanning
+  % or from the initial configured specified by the user
   switch cfg.model
     case 'regional'
       success = 1;
