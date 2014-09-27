@@ -158,7 +158,7 @@ else
   res = false;
   fn = fieldnames(data);
   for i=1:numel(fn)
-    if isfield(data, [fn{i} 'dimord']) && strcmp(data.([fn{i} 'dimord']), 'chan')
+    if isfield(data, [fn{i} 'dimord']) && any(strcmp(data.([fn{i} 'dimord']), {'chan', 'chan_chan'}))
       res = true;
       break;
     end

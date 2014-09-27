@@ -1698,16 +1698,42 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % convert between datatypes
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function data = parcellated2source(data)
+function source = parcellated2source(data)
 if ~isfield(data, 'brainordinate')
   error('converting parcellated data requires the specification of the brainordinates');
 end
-source     = data.brainordinate;
-source.cfg = data.cfg;
-parameter   = 'pow';
-parcelparam = 'tissue';
-source.(parameter) = unparcellate(data, data.brainordinate, parameter, parcelparam);
-data = source;
+source = data.brainordinate;
+data   = rmfield(data, 'brainordinate');
+if isfield(data, 'cfg')
+  source.cfg = data.cfg;
+end
+
+fn = fieldnames(data);
+fn = setdiff(fn, {'label', 'time', 'freq', 'hdr', 'cfg', 'grad', 'elec', 'dimord'});
+sel = false(size(fn));
+for i=1:numel(fn)
+  try
+    sel(i) = ismember(getdimord(data, fn{i}), {'chan', 'chan_time', 'chan_freq', 'chan_chan'});
+  end
+end
+parameter = fn(sel);
+
+fn = fieldnames(source);
+sel = false(size(fn));
+for i=1:numel(fn)
+  tmp = source.(fn{i});
+  sel(i) = iscell(tmp) && isequal(tmp(:), data.label(:));
+end
+parcelparam = fn(sel);
+if numel(parcelparam)~=1
+  error('cannot determine which parcellation to use');
+else
+  parcelparam = parcelparam{1}(1:(end-5)); % minus the 'label'
+end
+
+for i=1:numel(parameter)
+  source.(parameter{i}) = unparcellate(data, data.brainordinate, parameter{i}, parcelparam);
+end
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
