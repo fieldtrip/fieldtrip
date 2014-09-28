@@ -68,6 +68,10 @@ function [source] = ft_dipolefitting(cfg, data)
 %   cfg.dipfit.optimfun = function to use, can be 'fminsearch' or 'fminunc' (default is determined automatic)
 %   cfg.dipfit.maxiter  = maximum number of function evaluations allowed (default depends on the optimfun)
 %
+% Optionally, you can modify the leadfields by reducing the rank, i.e.
+% remove the weakest orientation.
+%   cfg.reducerank      = 'no', or number (default = 3 for EEG, 2 for MEG)
+%
 % The volume conduction model of the head should be specified as
 %   cfg.vol           = structure with volume conduction model, see FT_PREPARE_HEADMODEL
 %   cfg.hdmfile       = name of file containing the volume conduction model, see FT_READ_VOL
@@ -139,14 +143,18 @@ end
 data = ft_checkdata(data, 'datatype', {'comp', 'timelock', 'freq'}, 'feedback', 'yes');
 
 % get the defaults
-cfg.channel     = ft_getopt(cfg, 'channel', 'all');
-cfg.component   = ft_getopt(cfg, 'component');        % for comp input
-cfg.frequency   = ft_getopt(cfg, 'frequency');        % for freq input
-cfg.latency     = ft_getopt(cfg, 'latency', 'all');   % for timeclock input
-cfg.feedback    = ft_getopt(cfg, 'feedback', 'text');
-cfg.gridsearch  = ft_getopt(cfg, 'gridsearch', 'yes');
-cfg.nonlinear   = ft_getopt(cfg, 'nonlinear', 'yes');
-cfg.symmetry    = ft_getopt(cfg, 'symmetry');
+cfg.channel         = ft_getopt(cfg, 'channel', 'all');
+cfg.component       = ft_getopt(cfg, 'component');        % for comp input
+cfg.frequency       = ft_getopt(cfg, 'frequency');        % for freq input
+cfg.latency         = ft_getopt(cfg, 'latency', 'all');   % for timeclock input
+cfg.feedback        = ft_getopt(cfg, 'feedback', 'text');
+cfg.gridsearch      = ft_getopt(cfg, 'gridsearch', 'yes');
+cfg.nonlinear       = ft_getopt(cfg, 'nonlinear', 'yes');
+cfg.symmetry        = ft_getopt(cfg, 'symmetry');
+% cfg.reducerank   = ft_getopt(cfg, 'reducerank', 'no');      % the default for this depends on EEG/MEG and is set below
+cfg.normalize       = ft_getopt(cfg, 'normalize');      % this is better not used in dipole fitting
+cfg.normalizeparam  = ft_getopt(cfg, 'normalizeparam'); % this is better not used in dipole fitting
+cfg.backproject     = ft_getopt(cfg, 'backproject');    % this is better not used in dipole fitting
 
 % put the low-level options pertaining to the dipole grid in their own field
 cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'}); % this is moved to cfg.grid.tight by the subsequent createsubcfg
@@ -223,6 +231,13 @@ end
 % prepare the volume conduction model and the sensor array
 % this updates the configuration with the appropriate fields
 [vol, sens, cfg] = prepare_headmodel(cfg, data);
+
+% set the default for reducing the rank of the leadfields
+if ft_senstype(sens, 'eeg')
+  cfg.reducerank = ft_getopt(cfg, 'reducerank', 3);
+else
+  cfg.reducerank = ft_getopt(cfg, 'reducerank', 2);
+end
 
 % select the desired channels, the order should be the same as in the sensor structure
 [selsens, seldata] = match_str(sens.label, data.label);
@@ -328,7 +343,7 @@ if strcmp(cfg.gridsearch, 'yes')
       % reuse the previously computed leadfield
       lf = grid.leadfield{indx};
     else
-      lf = ft_compute_leadfield(grid.pos(indx,:), sens, vol);
+      lf = ft_compute_leadfield(grid.pos(indx,:), sens, vol, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam, 'backproject', cfg.backproject);
     end
     % the model is V=lf*mom+noise, therefore mom=pinv(lf)*V estimates the
     % dipole moment this makes the model potential U=lf*pinv(lf)*V and the
@@ -418,6 +433,12 @@ else
   optarg = {};
 end
 
+% add the options for the leadfield computation
+optarg = ft_setopt(optarg, 'reducerank', cfg.reducerank);
+optarg = ft_setopt(optarg, 'normalize', cfg.normalize);
+optarg = ft_setopt(optarg, 'normalizeparam', cfg.normalizeparam);
+optarg = ft_setopt(optarg, 'backproject', cfg.backproject);
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % perform the non-linear fit
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -490,7 +511,7 @@ switch cfg.model
   case 'regional'
     if success
       % re-compute the leadfield in order to compute the model potential and dipole moment
-      lf = ft_compute_leadfield(dip.pos, sens, vol);
+      lf = ft_compute_leadfield(dip.pos, sens, vol, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam, 'backproject', cfg.backproject);
       % compute all details of the final dipole model
       dip.mom = pinv(lf)*Vdata;
       dip.pot = lf*dip.mom;
@@ -501,7 +522,7 @@ switch cfg.model
     for t=1:ntime
       if success(t)
         % re-compute the leadfield in order to compute the model potential and dipole moment
-        lf = ft_compute_leadfield(dip(t).pos, sens, vol);
+        lf = ft_compute_leadfield(dip(t).pos, sens, vol, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam, 'backproject', cfg.backproject);
         % compute all details of the final dipole model
         dip(t).mom = pinv(lf)*Vdata(:,t);
         dip(t).pot = lf*dip(t).mom;

@@ -134,12 +134,10 @@ end
 [vol, sens, cfg] = prepare_headmodel(cfg, data);
 
 % set the default for reducing the rank of the leadfields
-if ~isfield(cfg, 'reducerank')
-  if ft_senstype(sens, 'eeg')
-    cfg.reducerank = 3;
-  else
-    cfg.reducerank = 2;
-  end
+if ft_senstype(sens, 'eeg')
+  cfg.reducerank = ft_getopt(cfg, 'reducerank', 3);
+else
+  cfg.reducerank = ft_getopt(cfg, 'reducerank', 2);
 end
 
 % construct the dipole grid according to the configuration
