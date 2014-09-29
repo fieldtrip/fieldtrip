@@ -350,15 +350,16 @@ data.dimord = dimord;
 
 % certain fields should remain in the output, but only if they are identical in all inputs
 keepfield = {'grad', 'elec'};
+keepfield = {'grad', 'elec'};
 for j=1:numel(keepfield)
-  if isfield(varargin{i}, keepfield{j})
+  if isfield(varargin{1}, keepfield{j})
+    tmp  = varargin{i}.(keepfield{j});
     keep = true;
-    tmp = varargin{i}.(keepfield{j});
   else
     keep = false;
   end
   for i=1:numel(varargin)
-    if ~isequal(varargin{i}.(keepfield{j}), tmp)
+    if ~isfield(varargin{i}, keepfield{j}) || ~isequal(varargin{i}.(keepfield{j}), tmp)
       keep = false;
       break
     end
