@@ -304,7 +304,7 @@ if dotpm
   % SPM can be quite noisy, this prevents the warnings from displaying on screen
   % warning off;
   
-  switch lower(cfg.spmversion
+  switch lower(cfg.spmversion)
     case 'spm2'
       Va = ft_write_mri([cfg.name,'.img'], mri.anatomy, 'transform', mri.transform, 'spmversion', cfg.spmversion, 'dataformat', 'analyze_img');
       
