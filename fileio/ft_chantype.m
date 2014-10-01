@@ -330,6 +330,12 @@ elseif ft_senstype(input, 'bti')
     type(configtype==4) = {'aux'};
     type(configtype==5) = {'trigger'};
     
+    % refine the distinction between refmag and refgrad to make the types
+    % in grad and header consistent
+    sel = myregexp('^M[CLR][xyz][aA]*$', label);
+    type(sel) = {'refmag'};
+    sel = myregexp('^G[xyz][xyz]A$', label);
+    type(sel) = {'refgrad'};    
   else
     % determine the type on the basis of the channel labels
     % all 4D-BTi MEG channels start with "A" followed by a number
