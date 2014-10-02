@@ -282,7 +282,7 @@ if length(varargin)==1
         % gather x1, x2, ... into a cell-array
         arginval = eval(sprintf('{%s}', arginstr));
         eval(sprintf('operation = @(%s) %s;', arginstr, cfg.operation));
-        if isscalar(s)
+        if numel(s)<=1
           y = arrayfun(operation, arginval{:});
         elseif size(s)==size(arginval{1})
           y = feval(operation, arginval{:});
@@ -301,7 +301,7 @@ if length(varargin)==1
           arginstr = sprintf('xx%i,', 1:length(varargin));
           arginstr = arginstr(1:end-1); % remove the trailing ','
           arginval = eval(sprintf('{%s}', arginstr));
-          if isscalar(s)
+          if numel(s)<=1
             y{i} = arrayfun(operation, arginval{:});
           else
             y{i} = feval(operation, arginval{:});
@@ -380,7 +380,7 @@ else
         % gather x1, x2, ... into a cell-array
         arginval = eval(sprintf('{%s}', arginstr));
         eval(sprintf('operation = @(%s) %s;', arginstr, cfg.operation));
-        if isscalar(s)
+        if numel(s)<=1
           y = arrayfun(operation, arginval{:});
         else
           y = feval(operation, arginval{:});
@@ -399,7 +399,7 @@ else
           arginstr = sprintf('xx%i,', 1:length(varargin));
           arginstr = arginstr(1:end-1); % remove the trailing ','
           arginval = eval(sprintf('{%s}', arginstr));
-          if isscalar(s)
+          if numel(s)<=1
             y{i} = arrayfun(operation, arginval{:});
           else
             y{i} = feval(operation, arginval{:});
