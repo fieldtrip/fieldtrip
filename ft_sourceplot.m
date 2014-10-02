@@ -42,7 +42,7 @@ function ft_sourceplot(cfg, data)
 %
 % The following parameters can be used in all methods:
 %   cfg.downsample    = downsampling for resolution reduction, integer value (default = 1) (orig: from surface)
-%   cfg.atlas         = string, filename of atlas to use (default = []) SEE FT_PREPARE_ATLAS
+%   cfg.atlas         = string, filename of atlas to use (default = []) SEE FT_READ_ATLAS
 %                        for ROI masking (see "masking" below) or in "ortho-plotting" mode (see "ortho-plotting" below)
 %
 % The following parameters can be used for the functional data:
@@ -141,7 +141,7 @@ function ft_sourceplot(cfg, data)
 % corresponding to the input structure.
 %
 % See also FT_SOURCEANALYSIS, FT_SOURCEGRANDAVERAGE, FT_SOURCESTATISTICS,
-% FT_VOLUMELOOKUP, FT_PREPARE_ATLAS, FT_READ_MRI
+% FT_VOLUMELOOKUP, FT_READ_ATLAS, FT_READ_MRI
 
 % TODO have to be built in:
 %   cfg.marker        = [Nx3] array defining N marker positions to display (orig: from sliceinterp)
