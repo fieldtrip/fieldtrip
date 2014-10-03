@@ -533,7 +533,6 @@ for k=1:length(chanseldat)
     cdata = cdata .* cfg.gradscale;
   end
   
-
   % Draw plot (and mask Nan's with maskfield if requested)
   if isequal(cfg.masknans,'yes') && isempty(cfg.maskparameter)
     nans_mask = ~isnan(cdata);
@@ -551,9 +550,10 @@ for k=1:length(chanseldat)
   else
     ft_plot_matrix(cdata,'clim',[zmin zmax],'tag','cip', 'hpos', chanX(k), 'vpos', chanY(k), 'width', chanWidth(k), 'height', chanHeight(k))
   end
+  
   % Currently the handle isn't being used below, this is here for possible use in the future
   h = findobj('tag','cip');
-end
+end % for chanseldat
 
 % write comment:
 k = cellstrmatch('COMNT',lay.label);
