@@ -1182,6 +1182,10 @@ elseif filetype_check_header(filename, 'ply')
   type = 'ply';
   manufacturer = 'Stanford Triangle Format';
   content = 'three dimensional data from 3D scanners, see http://en.wikipedia.org/wiki/PLY_(file_format)';
+elseif filetype_check_extension(filename, '.csv')
+  type = 'csv';
+  manufacturer = 'Generic';
+  content = 'Comma-separated values, see http://en.wikipedia.org/wiki/Comma-separated_values';
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1189,7 +1193,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if strcmp(type, 'unknown')
-  if ~exist(filename, 'file') || ~exist(filename, 'dir')
+  if ~exist(filename, 'file') && ~exist(filename, 'dir')
     warning('file or directory "%s" does not exist, could not determine fileformat', filename);
   else
     warning('could not determine filetype of %s', filename);
