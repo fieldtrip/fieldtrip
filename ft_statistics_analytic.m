@@ -93,35 +93,38 @@ cfg = rmfield(cfg, 'computestat');
 cfg = rmfield(cfg, 'computeprob');
 cfg = rmfield(cfg, 'computecritval');
 
-switch lower(cfg.correctm)
-  case 'bonferroni'
-    fprintf('performing Bonferoni correction for multiple comparisons\n');
-    fprintf('the returned probabilities are uncorrected, the thresholded mask is corrected\n');
-    stat.mask = stat.prob<=(cfg.alpha ./ numel(stat.prob));
-  case 'holm'
-    % test the most significatt significance probability against alpha/N, the second largest against alpha/(N-1), etc.
-    fprintf('performing Holm-Bonferroni correction for multiple comparisons\n');
-    fprintf('the returned probabilities are uncorrected, the thresholded mask is corrected\n');
-    [pvals, indx] = sort(stat.prob(:));                                   % this sorts the significance probabilities from smallest to largest
-    k = find(pvals > (cfg.alpha ./ ((length(pvals):-1:1)')), 1, 'first'); % compare each significance probability against its individual threshold
-    mask = (1:length(pvals))'<k;
-    stat.mask = zeros(size(stat.prob));
-    stat.mask(indx) = mask;
-  case 'hochberg'
-    % test the most significatt significance probability against alpha/N, the second largest against alpha/(N-1), etc.
-    fprintf('performing Hochberg''s correction for multiple comparisons (this is *not* the Benjamini-Hochberg FDR procedure!)\n');
-    fprintf('the returned probabilities are uncorrected, the thresholded mask is corrected\n');
-    [pvals, indx] = sort(stat.prob(:));                     % this sorts the significance probabilities from smallest to largest
-    k = find(pvals <= (cfg.alpha ./ ((length(pvals):-1:1)')), 1, 'last'); % compare each significance probability against its individual threshold
-    mask = (1:length(pvals))'<=k;   
-    stat.mask = zeros(size(stat.prob));
-    stat.mask(indx) = mask;  
-  case 'fdr'
-    fprintf('performing FDR correction for multiple comparisons\n');
-    fprintf('the returned probabilities are uncorrected, the thresholded mask is corrected\n');
-    stat.mask = fdr(stat.prob, cfg.alpha);
-  otherwise
-    fprintf('not performing a correction for multiple comparisons\n');
-    stat.mask = stat.prob<=cfg.alpha;
+if ~isfield(stat, 'prob')
+  warning('probability was not computed');
+else
+  switch lower(cfg.correctm)
+    case 'bonferroni'
+      fprintf('performing Bonferoni correction for multiple comparisons\n');
+      fprintf('the returned probabilities are uncorrected, the thresholded mask is corrected\n');
+      stat.mask = stat.prob<=(cfg.alpha ./ numel(stat.prob));
+    case 'holm'
+      % test the most significatt significance probability against alpha/N, the second largest against alpha/(N-1), etc.
+      fprintf('performing Holm-Bonferroni correction for multiple comparisons\n');
+      fprintf('the returned probabilities are uncorrected, the thresholded mask is corrected\n');
+      [pvals, indx] = sort(stat.prob(:));                                   % this sorts the significance probabilities from smallest to largest
+      k = find(pvals > (cfg.alpha ./ ((length(pvals):-1:1)')), 1, 'first'); % compare each significance probability against its individual threshold
+      mask = (1:length(pvals))'<k;
+      stat.mask = zeros(size(stat.prob));
+      stat.mask(indx) = mask;
+    case 'hochberg'
+      % test the most significant significance probability against alpha/N, the second largest against alpha/(N-1), etc.
+      fprintf('performing Hochberg''s correction for multiple comparisons (this is *not* the Benjamini-Hochberg FDR procedure!)\n');
+      fprintf('the returned probabilities are uncorrected, the thresholded mask is corrected\n');
+      [pvals, indx] = sort(stat.prob(:));                     % this sorts the significance probabilities from smallest to largest
+      k = find(pvals <= (cfg.alpha ./ ((length(pvals):-1:1)')), 1, 'last'); % compare each significance probability against its individual threshold
+      mask = (1:length(pvals))'<=k;
+      stat.mask = zeros(size(stat.prob));
+      stat.mask(indx) = mask;
+    case 'fdr'
+      fprintf('performing FDR correction for multiple comparisons\n');
+      fprintf('the returned probabilities are uncorrected, the thresholded mask is corrected\n');
+      stat.mask = fdr(stat.prob, cfg.alpha);
+    otherwise
+      fprintf('not performing a correction for multiple comparisons\n');
+      stat.mask = stat.prob<=cfg.alpha;
+  end
 end
-

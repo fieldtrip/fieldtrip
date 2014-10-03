@@ -100,22 +100,6 @@ function [stat, cfg] = ft_statistics_montecarlo(cfg, dat, design, varargin)
 %
 % $Id$
 
-% deal with the user specified randomseed first, to mimick old behavior
-cfg.randomseed = ft_getopt(cfg, 'randomseed', 'yes');
-
-% do the general initialization
-ft_defaults;
-ft_preamble init
-ft_preamble provenance
-ft_preamble randomseed
-ft_preamble trackconfig
-ft_preamble debug
-
-% the abort variable is set to true or false in ft_preamble_init
-if abort
-  return
-end
-
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed',     {'factor',           'ivar'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'unitfactor',       'uvar'});
@@ -126,10 +110,10 @@ cfg = ft_checkconfig(cfg, 'renamedval',  {'correctm', 'bonferoni', 'bonferroni'}
 cfg = ft_checkconfig(cfg, 'renamedval',  {'correctm', 'holms', 'holm'});
 cfg = ft_checkconfig(cfg, 'required',    {'statistic'});
 cfg = ft_checkconfig(cfg, 'forbidden',   {'ztransform', ...
-                                          'removemarginalmeans', ...
-                                          'randomfactor', ...
-                                          'voxelthreshold', ...
-                                          'voxelstatistic'});
+  'removemarginalmeans', ...
+  'randomfactor', ...
+  'voxelthreshold', ...
+  'voxelstatistic'});
 
 % set the defaults for the main function
 cfg.alpha        = ft_getopt(cfg, 'alpha',      0.05);
@@ -430,7 +414,7 @@ elseif strcmp(cfg.correcttail, 'alpha') && cfg.tail==0
   cfg.alpha = cfg.alpha / 2;
 end
 
-% compute range of confidence interval p ± 1.96(sqrt(var(p))), with var(p) = var(x/n) = p*(1-p)/N
+% compute range of confidence interval p ? 1.96(sqrt(var(p))), with var(p) = var(x/n) = p*(1-p)/N
 stddev = sqrt(stat.prob.*(1-stat.prob)/Nrand);
 stat.cirange = 1.96*stddev;
 
@@ -443,7 +427,7 @@ if isfield(stat, 'posclusters')
     end
   end
 end
-if isfield(stat, 'negclusters')  
+if isfield(stat, 'negclusters')
   for i=1:length(stat.negclusters)
     stat.negclusters(i).stddev  = sqrt(stat.negclusters(i).prob.*(1-stat.negclusters(i).prob)/Nrand);
     stat.negclusters(i).cirange =  1.96*stat.negclusters(i).stddev;
@@ -453,48 +437,52 @@ if isfield(stat, 'negclusters')
   end
 end
 
-switch lower(cfg.correctm)
-  case 'max'
-    % the correction is implicit in the method
-    fprintf('using a maximum-statistic based method for multiple comparison correction\n');
-    fprintf('the returned probabilities and the thresholded mask are corrected for multiple comparisons\n');
-    stat.mask = stat.prob<=cfg.alpha;
-    stat.posdistribution = posdistribution;
-    stat.negdistribution = negdistribution;
-  case 'cluster'
-    % the correction is implicit in the method
-    fprintf('using a cluster-based method for multiple comparison correction\n');
-    fprintf('the returned probabilities and the thresholded mask are corrected for multiple comparisons\n');
-    stat.mask = stat.prob<=cfg.alpha;
-  case 'bonferroni'
-    fprintf('performing Bonferroni correction for multiple comparisons\n');
-    fprintf('the returned probabilities are uncorrected, the thresholded mask is corrected\n');
-    stat.mask = stat.prob<=(cfg.alpha ./ numel(stat.prob));
-  case 'holm'
-    % test the most significatt significance probability against alpha/N, the second largest against alpha/(N-1), etc.
-    fprintf('performing Holm-Bonferroni correction for multiple comparisons\n');
-    fprintf('the returned probabilities are uncorrected, the thresholded mask is corrected\n');
-    [pvals, indx] = sort(stat.prob(:));                                   % this sorts the significance probabilities from smallest to largest
-    k = find(pvals > (cfg.alpha ./ ((length(pvals):-1:1)')), 1, 'first'); % compare each significance probability against its individual threshold
-    mask = (1:length(pvals))'<k;   
-    stat.mask = zeros(size(stat.prob));
-    stat.mask(indx) = mask;
-  case 'hochberg'
-    % test the most significatt significance probability against alpha/N, the second largest against alpha/(N-1), etc.
-    fprintf('performing Hochberg''s correction for multiple comparisons (this is *not* the Benjamini-Hochberg FDR procedure!)\n');
-    fprintf('the returned probabilities are uncorrected, the thresholded mask is corrected\n');
-    [pvals, indx] = sort(stat.prob(:));                     % this sorts the significance probabilities from smallest to largest
-    k = find(pvals <= (cfg.alpha ./ ((length(pvals):-1:1)')), 1, 'last'); % compare each significance probability against its individual threshold
-    mask = (1:length(pvals))'<=k;   
-    stat.mask = zeros(size(stat.prob));
-    stat.mask(indx) = mask;    
-  case 'fdr'
-    fprintf('performing FDR correction for multiple comparisons\n');
-    fprintf('the returned probabilities are uncorrected, the thresholded mask is corrected\n');
-    stat.mask = fdr(stat.prob, cfg.alpha);
-  otherwise
-    fprintf('not performing a correction for multiple comparisons\n');
-    stat.mask = stat.prob<=cfg.alpha;
+if ~isfield(stat, 'prob')
+  warning('probability was not computed');
+else
+  switch lower(cfg.correctm)
+    case 'max'
+      % the correction is implicit in the method
+      fprintf('using a maximum-statistic based method for multiple comparison correction\n');
+      fprintf('the returned probabilities and the thresholded mask are corrected for multiple comparisons\n');
+      stat.mask = stat.prob<=cfg.alpha;
+      stat.posdistribution = posdistribution;
+      stat.negdistribution = negdistribution;
+    case 'cluster'
+      % the correction is implicit in the method
+      fprintf('using a cluster-based method for multiple comparison correction\n');
+      fprintf('the returned probabilities and the thresholded mask are corrected for multiple comparisons\n');
+      stat.mask = stat.prob<=cfg.alpha;
+    case 'bonferroni'
+      fprintf('performing Bonferroni correction for multiple comparisons\n');
+      fprintf('the returned probabilities are uncorrected, the thresholded mask is corrected\n');
+      stat.mask = stat.prob<=(cfg.alpha ./ numel(stat.prob));
+    case 'holm'
+      % test the most significatt significance probability against alpha/N, the second largest against alpha/(N-1), etc.
+      fprintf('performing Holm-Bonferroni correction for multiple comparisons\n');
+      fprintf('the returned probabilities are uncorrected, the thresholded mask is corrected\n');
+      [pvals, indx] = sort(stat.prob(:));                                   % this sorts the significance probabilities from smallest to largest
+      k = find(pvals > (cfg.alpha ./ ((length(pvals):-1:1)')), 1, 'first'); % compare each significance probability against its individual threshold
+      mask = (1:length(pvals))'<k;
+      stat.mask = zeros(size(stat.prob));
+      stat.mask(indx) = mask;
+    case 'hochberg'
+      % test the most significant significance probability against alpha/N, the second largest against alpha/(N-1), etc.
+      fprintf('performing Hochberg''s correction for multiple comparisons (this is *not* the Benjamini-Hochberg FDR procedure!)\n');
+      fprintf('the returned probabilities are uncorrected, the thresholded mask is corrected\n');
+      [pvals, indx] = sort(stat.prob(:));                     % this sorts the significance probabilities from smallest to largest
+      k = find(pvals <= (cfg.alpha ./ ((length(pvals):-1:1)')), 1, 'last'); % compare each significance probability against its individual threshold
+      mask = (1:length(pvals))'<=k;
+      stat.mask = zeros(size(stat.prob));
+      stat.mask(indx) = mask;
+    case 'fdr'
+      fprintf('performing FDR correction for multiple comparisons\n');
+      fprintf('the returned probabilities are uncorrected, the thresholded mask is corrected\n');
+      stat.mask = fdr(stat.prob, cfg.alpha);
+    otherwise
+      fprintf('not performing a correction for multiple comparisons\n');
+      stat.mask = stat.prob<=cfg.alpha;
+  end
 end
 
 % return the observed statistic
@@ -516,9 +504,4 @@ end
 
 warning(ws); % revert to original state
 
-% do the general cleanup and bookkeeping at the end of the function
-ft_postamble debug
-ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble randomseed
 
