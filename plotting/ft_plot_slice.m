@@ -54,11 +54,6 @@ function [h, T2] = ft_plot_slice(dat, varargin)
 
 persistent dim X Y Z
 
-if isnan(dat(1))
-  disp('yes')
-end
-
-
 if isequal(dim, size(dat))
   % reuse the persistent variables to speed up subsequent calls with the same input
 else
