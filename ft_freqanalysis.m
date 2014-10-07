@@ -595,13 +595,12 @@ for itrial = 1:ntrials
       end
       
       % set ingredients for below
-      acttboi  = squeeze(~isnan(spectrum(1,1,foiind(ifoi),:)));
-      nacttboi = sum(acttboi);
       if ~hastime
         acttboi  = 1;
         nacttboi = 1;
-      elseif sum(acttboi)==0
-        %nacttboi = 1;
+      else
+        acttboi  = ~all(isnan(squeeze(spectrum(1,:,foiind(ifoi),:))), 1);
+        nacttboi = sum(acttboi);
       end
       acttap = logical([ones(ntaper(ifoi),1);zeros(size(spectrum,1)-ntaper(ifoi),1)]);
       if powflg
