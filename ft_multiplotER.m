@@ -97,6 +97,7 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 % cfg.layoutname
 % cfg.zlim/xparam (set to a specific frequency range or time range [zmax zmin] for an average over the frequency/time bins for TFR data.  Use in conjunction with e.g. xparam = 'time', and cfg.parameter = 'powspctrm').
 % cfg.preproc
+% cfg.orient = landscape/portrait
 
 % Copyright (C) 2003-2006, Ole Jensen
 % Copyright (C) 2007-2011, Roemer van der Meij & Jan-Mathijs Schoffelen
@@ -150,30 +151,31 @@ cfg = ft_checkconfig(cfg, 'renamed',    {'zparam', 'parameter'});
 cfg = ft_checkconfig(cfg, 'deprecated', {'xparam'});
 
 % set the defaults
-cfg.baseline        = ft_getopt(cfg, 'baseline',    'no');
-cfg.trials          = ft_getopt(cfg, 'trials',      'all');
-cfg.xlim            = ft_getopt(cfg, 'xlim',        'maxmin');
-cfg.ylim            = ft_getopt(cfg, 'ylim',        'maxmin');
-cfg.zlim            = ft_getopt(cfg, 'zlim',        'maxmin');
-cfg.comment         = ft_getopt(cfg, 'comment',     strcat([date '\n']));
-cfg.axes            = ft_getopt(cfg, 'axes',        'yes');
-cfg.showlabels      = ft_getopt(cfg, 'showlabels',  'no');
-cfg.showoutline     = ft_getopt(cfg, 'showoutline', 'no');
-cfg.box             = ft_getopt(cfg, 'box',         'no');
-cfg.fontsize        = ft_getopt(cfg, 'fontsize',    8);
-cfg.graphcolor      = ft_getopt(cfg, 'graphcolor',  'brgkywrgbkywrgbkywrgbkyw');
-cfg.interactive     = ft_getopt(cfg, 'interactive', 'yes');
-cfg.renderer        = ft_getopt(cfg, 'renderer',    []);
-cfg.maskparameter   = ft_getopt(cfg, 'maskparameter', []);
-cfg.linestyle       = ft_getopt(cfg, 'linestyle',   '-');
-cfg.linewidth       = ft_getopt(cfg, 'linewidth',   0.5);
-cfg.maskstyle       = ft_getopt(cfg, 'maskstyle',   'box');
-cfg.channel         = ft_getopt(cfg, 'channel',     'all');
-cfg.directionality  = ft_getopt(cfg, 'directionality',  '');
-cfg.figurename      = ft_getopt(cfg, 'figurename',   []);
-cfg.preproc         = ft_getopt(cfg, 'preproc', []);
-cfg.tolerance       = ft_getopt(cfg, 'tolerance',  1e-5);
-if numel(findobj(gcf, 'type', 'axes', '-not', 'tag', 'ft-colorbar')) > 1 && strcmp(cfg.interactive,'yes')
+cfg.baseline       = ft_getopt(cfg, 'baseline', 'no');
+cfg.trials         = ft_getopt(cfg, 'trials', 'all');
+cfg.xlim           = ft_getopt(cfg, 'xlim', 'maxmin');
+cfg.ylim           = ft_getopt(cfg, 'ylim', 'maxmin');
+cfg.zlim           = ft_getopt(cfg, 'zlim', 'maxmin');
+cfg.comment        = ft_getopt(cfg, 'comment',strcat([date '\n']));
+cfg.axes           = ft_getopt(cfg, 'axes', 'yes');
+cfg.showlabels     = ft_getopt(cfg, 'showlabels', 'no');
+cfg.showoutline    = ft_getopt(cfg, 'showoutline', 'no');
+cfg.box            = ft_getopt(cfg, 'box', 'no');
+cfg.fontsize       = ft_getopt(cfg, 'fontsize',   8);
+cfg.graphcolor     = ft_getopt(cfg, 'graphcolor', 'brgkywrgbkywrgbkywrgbkyw');
+cfg.interactive    = ft_getopt(cfg, 'interactive', 'yes');
+cfg.renderer       = ft_getopt(cfg, 'renderer'); % let matlab decide on default
+cfg.orient         = ft_getopt(cfg, 'orient', 'landscape');
+cfg.maskparameter  = ft_getopt(cfg, 'maskparameter');
+cfg.linestyle      = ft_getopt(cfg, 'linestyle',  '-');
+cfg.linewidth      = ft_getopt(cfg, 'linewidth', 0.5);
+cfg.maskstyle      = ft_getopt(cfg, 'maskstyle', 'box');
+cfg.channel        = ft_getopt(cfg, 'channel',  'all');
+cfg.directionality = ft_getopt(cfg, 'directionality',  '');
+cfg.figurename     = ft_getopt(cfg, 'figurename');
+cfg.preproc        = ft_getopt(cfg, 'preproc');
+cfg.tolerance      = ft_getopt(cfg, 'tolerance',  1e-5);
+if numel(findobj(gcf, 'type', 'axes', '-not', 'tag', 'ft-colorbar')) > 1 && strcmp(cfg.interactive, 'yes')
   warning('using cfg.interactive = ''yes'' in subplots is not supported, setting cfg.interactive = ''no''')
   cfg.interactive = 'no';
 end
@@ -744,8 +746,12 @@ if strcmp(cfg.box, 'yes')
   abc = axis;
   axis(abc + [-1 +1 -1 +1]*mean(abs(abc))/10)
 end
-orient landscape
 hold off
+
+% Set orientation for printing if specified
+if ~isempty(cfg.orient)
+  orient(gcf, cfg.orient);
+end
 
 % Set renderer if specified
 if ~isempty(cfg.renderer)

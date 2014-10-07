@@ -98,6 +98,7 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 % Undocumented local options:
 % cfg.channel
 % cfg.layoutname
+% cfg.orient = landscape/portrait
 
 % Copyright (C) 2003-2006, Ole Jensen
 % Copyright (C) 2007-2011, Roemer van der Meij & Jan-Mathijs Schoffelen
@@ -165,13 +166,14 @@ cfg.channel        = ft_getopt(cfg, 'channel', 'all');
 cfg.fontsize       = ft_getopt(cfg, 'fontsize', 8);
 cfg.interactive    = ft_getopt(cfg, 'interactive', 'yes');
 cfg.hotkeys        = ft_getopt(cfg, 'hotkeys', 'no');
-cfg.renderer       = ft_getopt(cfg, 'renderer', []); % let matlab decide on default
+cfg.renderer       = ft_getopt(cfg, 'renderer'); % let matlab decide on default
+cfg.orient         = ft_getopt(cfg, 'orient', 'landscape');
 cfg.maskalpha      = ft_getopt(cfg, 'maskalpha', 1);
 cfg.masknans       = ft_getopt(cfg, 'masknans', 'yes');
-cfg.maskparameter  = ft_getopt(cfg, 'maskparameter', []);
+cfg.maskparameter  = ft_getopt(cfg, 'maskparameter');
 cfg.maskstyle      = ft_getopt(cfg, 'maskstyle', 'opacity');
 cfg.directionality = ft_getopt(cfg, 'directionality', '');
-cfg.figurename     = ft_getopt(cfg, 'figurename', []);
+cfg.figurename     = ft_getopt(cfg, 'figurename');
 if ~isfield(cfg, 'box')             
   if ~isempty(cfg.maskparameter)
     cfg.box = 'yes';
@@ -655,8 +657,12 @@ end
 
 axis tight
 axis off
-orient landscape
 hold off
+
+% Set orientation for printing if specified
+if ~isempty(cfg.orient)
+  orient(gcf, cfg.orient);
+end
 
 % Set renderer if specified
 if ~isempty(cfg.renderer)
