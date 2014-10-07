@@ -20,15 +20,15 @@ function [data] = ft_rejectvisual(cfg, data)
 %                     see FT_CHANNELSELECTION for details
 %   cfg.keepchannel = string, determines how to deal with channels that are
 %                     not selected, can be
-%                     'no'     completely remove unselected channels from the data (default)
-%                     'yes'    keep unselected channels in the output data
-%                     'nan'    fill the channels that are unselected with NaNs
+%                     'no'     completely remove deselected channels from the data (default)
+%                     'yes'    keep deselected channels in the output data
+%                     'nan'    fill the channels that are deselected with NaNs
 %   cfg.trials      = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.keeptrial   = string, determines how to deal with trials that are
 %                     not selected, can be
-%                     'no'     completely remove unselected trials from the data (default)
-%                     'yes'    keep unselected trials in the output data
-%                     'nan'    fill the trials that are unselected with NaNs
+%                     'no'     completely remove deselected trials from the data (default)
+%                     'yes'    keep deselected trials in the output data
+%                     'nan'    fill the trials that are deselected with NaNs
 %   cfg.metric      = string, describes the metric that should be computed in summary mode
 %                     for each channel in each trial, can be
 %                     'var'       variance within each channel (default)
@@ -112,7 +112,7 @@ function [data] = ft_rejectvisual(cfg, data)
 
 % Undocumented options
 % cfg.plotlayout = 'square' (default) or '1col', plotting every channel/trial under each other
-% cfg.viewmode   = 'remove' (default) or 'toggle', remove the data points from the plot, or mark them (summary mode), which allows for getting them back
+% cfg.viewmode   = 'remove', 'toggle' or 'hide', only applies to summary mode (default = 'remove')
 
 revision = '$Id$';
 
@@ -257,6 +257,7 @@ switch cfg.method
       fprintf('showing the data per channel, all trials at once\n');
     end
     [chansel, trlsel, cfg] = rejectvisual_channel(cfg, tmpdata);
+    
   case 'trial'
     if scaled
       fprintf('showing the scaled per trial, all channels at once\n');
@@ -264,6 +265,7 @@ switch cfg.method
       fprintf('showing the data per trial, all channels at once\n');
     end
     [chansel, trlsel, cfg] = rejectvisual_trial(cfg, tmpdata);
+    
   case 'summary'
     if scaled
       fprintf('showing a summary of the scaled data for all channels and trials\n');
@@ -271,6 +273,7 @@ switch cfg.method
       fprintf('showing a summary of the data for all channels and trials\n');
     end
     [chansel, trlsel, cfg] = rejectvisual_summary(cfg, tmpdata);
+    
   otherwise
     error('unsupported method %s', cfg.method);
 end % switch method

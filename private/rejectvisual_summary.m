@@ -34,10 +34,8 @@ for i=1:ntrl
   offset(i) = time2offset(data.time{i}, fsample);
 end
 
-
 % set up guidata info
-h = figure();
-info = [];
+info                = [];
 info.data           = data;
 info.cfg            = cfg;
 info.metric         = cfg.metric;
@@ -50,11 +48,12 @@ info.chansel        = chansel;
 info.fsample        = fsample;
 info.offset         = offset;
 info.quit           = 0;
+
+h = figure();
 guidata(h, info);
 
 % set up display
-interactive = 1;
-info = guidata(h);
+interactive = true;
 
 % make the figure large enough to hold stuff
 set(h, 'Position', [50 350 800 500]);
@@ -74,15 +73,16 @@ uicontrol(h, 'Units', 'normalized', 'position', [0.520 0.520 0.400 0.050], 'Styl
 % set up radio buttons for choosing metric
 bgcolor = get(h, 'color');
 g = uibuttongroup('Position', [0.520 0.220 0.375 0.250 ], 'bordertype', 'none', 'backgroundcolor', bgcolor);
-r(1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0 7/7 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'string', 'var', 'HandleVisibility', 'off');
-r(2) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0 6/7 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'min', 'HandleVisibility', 'off');
-r(3) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0 5/7 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'max', 'HandleVisibility', 'off');
-r(4) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0 4/7 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'maxabs', 'HandleVisibility', 'off');
-r(5) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0 3/7 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'range', 'HandleVisibility', 'off');
-r(6) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0 2/7 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'kurtosis', 'HandleVisibility', 'off');
-r(7) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0 1/7 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', '1/var', 'HandleVisibility', 'off');
-r(8) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0 0/7 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'zvalue', 'HandleVisibility', 'off');
+r(1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  7/7 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'string', 'var',       'HandleVisibility', 'off');
+r(2) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  6/7 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'min',       'HandleVisibility', 'off');
+r(3) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  5/7 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'max',       'HandleVisibility', 'off');
+r(4) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  4/7 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'maxabs',    'HandleVisibility', 'off');
+r(5) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  3/7 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'range',     'HandleVisibility', 'off');
+r(6) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  2/7 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'kurtosis',  'HandleVisibility', 'off');
+r(7) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  1/7 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', '1/var',     'HandleVisibility', 'off');
+r(8) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  0/7 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'zvalue',    'HandleVisibility', 'off');
 r(9) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0 -1/7 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'maxzvalue', 'HandleVisibility', 'off');
+
 % pre-select appropriate metric, if defined
 set(g, 'SelectionChangeFcn', @change_metric);
 for i=1:length(r)
@@ -105,7 +105,6 @@ info.badtrllbl  = uicontrol(h, 'Units', 'normalized', 'position', [0.795 0.470 0
 info.badtrltxt  = uicontrol(h, 'Units', 'normalized', 'position', [0.795 0.430 0.230 0.05], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'));
 info.badchanlbl = uicontrol(h, 'Units', 'normalized', 'position', [0.795 0.340 0.230 0.05], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', sprintf('Rejected channels: %i/%i', sum(info.chansel==0), info.nchan));
 info.badchantxt = uicontrol(h, 'Units', 'normalized', 'position', [0.795 0.300 0.230 0.05], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'));
-
 
 % "show rejected" button
 % ui_tog = uicontrol(h, 'Units', 'normalized', 'position', [0.55 0.200 0.25 0.05], 'Style', 'checkbox', 'backgroundcolor', get(h, 'color'), 'string', 'Show rejected?', 'callback', @toggle_rejected);
@@ -209,8 +208,6 @@ function redraw(h)
 info  = guidata(h);
 % work with a copy of the data
 level = info.level;
-level(~info.chansel, :) = nan;
-level(:, ~info.trlsel)  = nan;
 
 % we need a workaround when finding the max of the minima
 if strcmp(info.metric, 'min')
@@ -220,21 +217,34 @@ end
 [maxperchan, maxpertrl, maxperchan_all, maxpertrl_all] = set_maxper(level, info.chansel, info.trlsel);
 
 if strcmp(info.metric, 'min')
-  maxperchan = maxperchan * -1;
-  maxpertrl = maxpertrl * -1;
+  maxperchan     = maxperchan * -1;
+  maxpertrl      = maxpertrl * -1;
   maxperchan_all = maxperchan_all * -1;
-  maxpertrl_all = maxpertrl_all * -1;
+  maxpertrl_all  = maxpertrl_all * -1;
   level = level * -1;  % see point below
 end
 
 % make the three figures
 if gcf~=h, figure(h); end
-%datacursormode on;
+% datacursormode on;
 
 set(h, 'CurrentAxes', info.axes(1))
 cla(info.axes(1));
-% imagesc(level(chansel, trlsel));
-imagesc(level);
+switch info.cfg.viewmode
+  case {'remove', 'toggle'}
+    tmp = level;
+    tmp(~info.chansel, :) = nan;
+    tmp(:, ~info.trlsel)  = nan;
+    imagesc(tmp);
+  case 'hide'
+    imagesc(level(info.chansel==1, info.trlsel==1));
+    if ~all(info.trlsel)
+      set(info.axes(1), 'Xtick', []);
+    end
+    if ~all(info.chansel)
+      set(info.axes(1), 'Ytick', []);
+    end
+end % switch
 axis ij;
 % colorbar;
 title(info.cfg.method);
@@ -243,28 +253,54 @@ xlabel('trial number');
 
 set(h, 'CurrentAxes', info.axes(2))
 cla(info.axes(2));
-set(info.axes(2), 'ButtonDownFcn', @toggle_visual);
-plot(maxperchan(info.chansel==1), find(info.chansel==1), '.');
-if strcmp(info.cfg.viewmode, 'toggle') && (sum(info.chansel==0) > 0)
-  hold on;
-  plot(maxperchan_all(info.chansel==0), find(info.chansel==0), 'o');
-  hold off;
-end
-abc = axis;
-axis([abc(1:2) 0.5 info.nchan+0.5]); % have to use 0 as lower limit because ylim([1 1]) (i.e. the single-channel case) is invalid
+switch info.cfg.viewmode
+  case 'remove'
+    plot(maxperchan(info.chansel==1),     find(info.chansel==1), '.');
+    xmax = max(maxperchan);
+    ymax = info.nchan;
+  case 'toggle'
+    plot(maxperchan_all(info.chansel==1), find(info.chansel==1), '.');
+    hold on;
+    plot(maxperchan_all(info.chansel==0), find(info.chansel==0), 'o');
+    hold off;
+    xmax = max(maxperchan_all);
+    ymax = info.nchan;
+  case 'hide'
+    xmax = max(maxperchan);
+    ymax = sum(info.chansel==1);
+    plot(maxperchan(info.chansel==1), 1:ymax, '.');
+    if ~all(info.chansel)
+      set(info.axes(2), 'Ytick', []);
+    end
+end % switch
+axis([0 xmax 0.5 ymax+0.5]); % have to use 0 as lower limit because ylim([1 1]) (i.e. the single-channel case) is invalid
 axis ij;
 set(info.axes(2), 'ButtonDownFcn', @toggle_visual);  % needs to be here; call to axis resets this property
 ylabel('channel number');
 
 set(h, 'CurrentAxes', info.axes(3))
 cla(info.axes(3));
-plot(find(info.trlsel==1), maxpertrl(info.trlsel==1), '.');
-if strcmp(info.cfg.viewmode, 'toggle') && (sum(info.trlsel==0) > 0)
-  hold on;
-  plot(find(info.trlsel==0), maxpertrl_all(info.trlsel==0), 'o');
-  hold off;
-end
-abc = axis; axis([0.5 info.ntrl+0.5 abc(3:4)]);
+switch info.cfg.viewmode
+  case 'remove'
+    plot(find(info.trlsel==1), maxpertrl(info.trlsel==1), '.');
+    xmax = info.ntrl;
+    ymax = max(maxpertrl);
+  case 'toggle'
+    plot(find(info.trlsel==1), maxpertrl_all(info.trlsel==1), '.');
+    hold on;
+    plot(find(info.trlsel==0), maxpertrl_all(info.trlsel==0), 'o');
+    hold off;
+    xmax = info.ntrl;
+    ymax = max(maxpertrl_all);
+  case 'hide'
+    xmax = sum(info.trlsel==1);
+    ymax = max(maxpertrl);
+    plot(1:xmax, maxpertrl(info.trlsel==1), '.');
+    if ~all(info.trlsel)
+      set(info.axes(3), 'Xtick', []);
+    end
+end % switch
+axis([0.5 xmax+0.5 0 ymax]);
 set(info.axes(3), 'ButtonDownFcn', @toggle_visual);  % needs to be here; call to axis resets this property
 xlabel('trial number');
 
@@ -371,7 +407,7 @@ uiresume;
 function toggle_visual(h, eventdata)
 % copied from select2d, without waitforbuttonpress command
 point1 = get(gca, 'CurrentPoint');    % button down detected
-finalRect = rbbox;                   % return figure units
+finalRect = rbbox;                    % return figure units
 point2 = get(gca, 'CurrentPoint');    % button up detected
 point1 = point1(1, 1:2);              % extract x and y
 point2 = point2(1, 1:2);
@@ -381,28 +417,48 @@ y = sort([point1(2) point2(2)]);
 g     = get(gca, 'Parent');
 info  = guidata(g);
 
-[maxperchan, maxpertrl] = set_maxper(info.level, info.chansel, info.trlsel);
+[maxperchan, maxpertrl, maxperchan_all, maxpertrl_all] = set_maxper(info.level, info.chansel, info.trlsel);
 
 switch gca
   case info.axes(1)
     % visual selection in the summary plot is not supported
+    
   case info.axes(2)
-    chanlabels = 1:info.nchan;
-    toggle = find( ...
+    % the visual selection was made in the channels plot
+    switch info.cfg.viewmode
+      case {'toggle' 'remove'}
+        chanlabels     = 1:info.nchan;
+        origchanlabels = 1:info.nchan;
+      case 'hide'
+        chanlabels = 1:sum(info.chansel==1);
+        [junk, origchanlabels] = find(info.chansel==1);
+    end
+    toggle = ...
       chanlabels >= y(1) & ...
       chanlabels <= y(2) & ...
-      maxperchan(:)' >= x(1) & ...
-      maxperchan(:)' <= x(2));
-    info.chansel(toggle) = false;
+      maxperchan_all(origchanlabels)' >= x(1) & ...
+      maxperchan_all(origchanlabels)' <= x(2);
+    info.chansel(origchanlabels(toggle)) = ~info.chansel(origchanlabels(toggle));
+    
   case info.axes(3)
-    trllabels = 1:info.ntrl;
-    toggle = find( ...
+    % the visual selection was made in the trials plot
+    switch info.cfg.viewmode
+      case {'toggle' 'remove'}
+        trllabels     = 1:info.ntrl;
+        origtrllabels = 1:info.ntrl;
+      case 'hide'
+        trllabels = 1:sum(info.trlsel==1);
+        [junk, origtrllabels] = find(info.trlsel==1);
+    end
+    toggle = ...
       trllabels >= x(1) & ...
       trllabels <= x(2) & ...
-      maxpertrl(:)' >= y(1) & ...
-      maxpertrl(:)' <= y(2));
-    info.trlsel(toggle) = false;
-end % switch
+      maxpertrl_all(origtrllabels) >= y(1) & ...
+      maxpertrl_all(origtrllabels) <= y(2);
+    info.trlsel(origtrllabels(toggle)) = ~info.trlsel(origtrllabels(toggle));
+    
+end % switch gca
+
 % recalculate the metric
 compute_metric(h);
 guidata(h, info);
@@ -481,18 +537,15 @@ end
 set(h, 'String', [new_text; curr_text]);
 drawnow;
 
-function [maxperchan, maxpertrl, varargout] = set_maxper(level, chansel, trlsel)
-level_all = level;
+function [maxperchan, maxpertrl, maxperchan_all, maxpertrl_all] = set_maxper(level, chansel, trlsel)
 % determine the maximum value
+maxperchan_all = max(level, [], 2);
+maxpertrl_all  = max(level, [], 1);
+% determine the maximum value over the remaining selection
 level(~chansel, :) = nan;
 level(:, ~trlsel)  = nan;
-
-maxperchan = max(level, [], 2);
-maxpertrl  = max(level, [], 1);
-maxperchan_all = max(level_all, [], 2);
-maxpertrl_all  = max(level_all, [], 1);
-varargout(1) = {maxperchan_all};
-varargout(2) = {maxpertrl_all};
+maxperchan     = max(level, [], 2);
+maxpertrl      = max(level, [], 1);
 
 function display_trial(h, eventdata)
 info = guidata(h);
