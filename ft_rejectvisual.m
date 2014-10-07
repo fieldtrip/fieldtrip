@@ -12,20 +12,23 @@ function [data] = ft_rejectvisual(cfg, data)
 %   [data] = ft_rejectvisual(cfg, data)
 %
 % The configuration can contain
-%   cfg.channel     = Nx1 cell-array with selection of channels (default = 'all'),
-%                     see FT_CHANNELSELECTION for details
-%   cfg.trials      = 'all' or a selection given as a 1xN vector (default = 'all')
-%   cfg.latency     = [begin end] in seconds, or 'minperlength', 'maxperlength',
-%                     'prestim', 'poststim' (default = 'maxperlength')
 %   cfg.method      = string, describes how the data should be shown, this can be
 %                     'summary'  show a single number for each channel and trial (default)
 %                     'channel'  show the data per channel, all trials at once
 %                     'trial'    show the data per trial, all channels at once
+%   cfg.channel     = Nx1 cell-array with selection of channels (default = 'all'),
+%                     see FT_CHANNELSELECTION for details
 %   cfg.keepchannel = string, determines how to deal with channels that are
 %                     not selected, can be
 %                     'no'     completely remove unselected channels from the data (default)
 %                     'yes'    keep unselected channels in the output data
 %                     'nan'    fill the channels that are unselected with NaNs
+%   cfg.trials      = 'all' or a selection given as a 1xN vector (default = 'all')
+%   cfg.keeptrial   = string, determines how to deal with trials that are
+%                     not selected, can be
+%                     'no'     completely remove unselected trials from the data (default)
+%                     'yes'    keep unselected trials in the output data
+%                     'nan'    fill the trials that are unselected with NaNs
 %   cfg.metric      = string, describes the metric that should be computed in summary mode
 %                     for each channel in each trial, can be
 %                     'var'       variance within each channel (default)
@@ -35,6 +38,8 @@ function [data] = ft_rejectvisual(cfg, data)
 %                     'range'     range from min to max in each channel
 %                     'kurtosis'  kurtosis, i.e. measure of peakedness of the amplitude distribution
 %                     'zvalue'    mean and std computed over all time and trials, per channel
+%   cfg.latency     = [begin end] in seconds, or 'minperlength', 'maxperlength',
+%                     'prestim', 'poststim' (default = 'maxperlength')
 %   cfg.alim        = value that determines the amplitude scaling for the
 %                     channel and trial display, if empty then the amplitude
 %                     scaling is automatic (default = [])
@@ -134,6 +139,7 @@ if ~isfield(cfg, 'channel'),     cfg.channel = 'all';          end
 if ~isfield(cfg, 'trials'),      cfg.trials = 'all';           end
 if ~isfield(cfg, 'latency'),     cfg.latency = 'maxperlength'; end
 if ~isfield(cfg, 'keepchannel'), cfg.keepchannel = 'no';       end
+if ~isfield(cfg, 'keeptrial'),   cfg.keeptrial = 'no';         end
 if ~isfield(cfg, 'feedback'),    cfg.feedback = 'textbar';     end
 if ~isfield(cfg, 'method'),      cfg.method = 'summary';       end
 if ~isfield(cfg, 'alim'),        cfg.alim = [];                end
@@ -162,17 +168,6 @@ end
 if ~isfield(cfg, 'metric')
   cfg.metric = 'var';
 end
-
-orgcfg = cfg;
-tmpcfg = keepfields(cfg, {'trials'});
-data = ft_selectdata(tmpcfg, data);
-% restore the provenance information
-[cfg, data] = rollback_provenance(cfg, data);
-cfg = copyfields(orgcfg, cfg, {'channel', 'latency'});
-
-% restore the original latency, it should not be 'all'
-% restore the original channel selection, it is dealt with below
-cfg.channel = orgcfg.channel;
 
 % determine the duration of each trial
 for i=1:length(data.time)
@@ -287,44 +282,13 @@ end
 fprintf('%d trials marked as GOOD, %d trials marked as BAD\n', sum(trlsel), sum(~trlsel));
 fprintf('%d channels marked as GOOD, %d channels marked as BAD\n', sum(chansel), sum(~chansel));
 
-% construct an artifact matrix from the trl matrix
-if isfield(data, 'sampleinfo')
-  cfg.artifact = data.sampleinfo(~trlsel,:);
-else
-  % since sample numbers are unknown, it is not possible to remember them here
-  cfg.artifact = [];
-end
-
-% remove artifacts from trl-matrix if present (but do *not* reconstruct the trl)
-if isfield(cfg, 'trl')
-  cfg.trl = cfg.trl(trlsel,:);
-end
-
-% show the user which trials are removed
-removed = find(~trlsel);
-if ~isempty(removed)
-  fprintf('the following trials were removed: ');
-  for i=1:(length(removed)-1)
-    fprintf('%d, ', removed(i));
-  end
-  fprintf('%d\n', removed(end));
-else
-  fprintf('no trials were removed\n');
-end
-
-% remove the selected trials from the data
-data.time  = data.time(trlsel);
-data.trial = data.trial(trlsel);
-if isfield(data, 'trialinfo'), data.trialinfo = data.trialinfo(trlsel,:); end;
-if isfield(data, 'sampleinfo'),  data.sampleinfo  = data.sampleinfo(trlsel,:);  end;
-
-% remove the offset vector if present (only applies to datasets that have been preprocessed a long time ago)
-if isfield(data, 'offset')
-  data = rmfield(data, 'offset');
-end
 
 if ~all(chansel)
   switch cfg.keepchannel
+    case 'yes'
+      % keep all channels, also when they are not selected
+      fprintf('no channels were removed from the data\n');
+      
     case 'no'
       % show the user which channels are removed
       removed = find(~chansel);
@@ -334,11 +298,6 @@ if ~all(chansel)
       end
       fprintf('%s\n', data.label{removed(end)});
       
-      % remove channels that are not selected
-      for i=1:length(data.trial)
-        data.trial{i} = data.trial{i}(chansel,:);
-      end
-      data.label = data.label(chansel);
     case 'nan'
       % show the user which channels are removed
       removed = find(~chansel);
@@ -347,15 +306,72 @@ if ~all(chansel)
         fprintf('%s, ', data.label{removed(i)});
       end
       fprintf('%s\n', data.label{removed(end)});
-      
-      % fill the data from the bad channels with nans
+      % mark the selection as nan
       for i=1:length(data.trial)
         data.trial{i}(~chansel,:) = nan;
       end
-    case 'yes'
-      % keep all channels, also when they are not selected
-  end
+      
+    otherwise
+      error('invalid specification of cfg.keepchannel')
+  end % case
 end
+
+if ~all(trlsel)
+  switch cfg.keeptrial
+    case 'yes'
+      % keep all trials, also when they are not selected
+      fprintf('no trials were removed from the data\n');
+      
+    case 'no'
+      % show the user which channels are removed
+      removed = find(~trlsel);
+      fprintf('the following trials were removed: ');
+      for i=1:(length(removed)-1)
+        fprintf('%d, ', removed(i));
+      end
+      fprintf('%d\n', removed(end));
+      
+    case 'nan'
+      % show the user which trials are removed
+      removed = find(~trlsel);
+      fprintf('the following trials were filled with NANs: ');
+      for i=1:(length(removed)-1)
+        fprintf('%d, ', removed(i));
+      end
+      fprintf('%d\n', removed(end));
+      % mark the selection as nan
+      for i=removed
+        data.trial{i}(:,:) = nan;
+      end
+      
+      
+    otherwise
+      error('invalid specification of cfg.keeptrial')
+  end % case
+end
+
+% construct an artifact matrix from the trl matrix prior to making the selection
+if isfield(data, 'sampleinfo')
+  cfg.artifact = data.sampleinfo(~trlsel,:);
+else
+  % since sample numbers are unknown, it is not possible to remember them
+  cfg.artifact = [];
+end
+
+% perform the selection of channels and trials
+orgcfg = cfg;
+tmpcfg = [];
+if strcmp(cfg.keepchannel, 'no')
+  tmpcfg.channel = find(chansel);
+end
+if strcmp(cfg.keeptrial, 'no')
+  tmpcfg.trials = find(trlsel); % note that it is keeptrial without S and trials with S
+end
+data = ft_selectdata(tmpcfg, data);
+% restore the provenance information
+[cfg, data] = rollback_provenance(cfg, data);
+cfg = copyfields(orgcfg, cfg, {'channel', 'trials'});
+
 
 % convert back to input type if necessary
 switch dtype
