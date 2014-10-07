@@ -74,10 +74,10 @@ data = varargin{indx};
 data = ft_checkdata(data, 'datatype', {'comp', 'timelock', 'freq'});
 
 % check for option-values to be renamed
-cfg = ft_checkconfig(cfg, 'renamedval', {'electrodes',   'dotnum',      'numbers'});
-cfg = ft_checkconfig(cfg, 'renamedval', {'zlim',         'absmax',      'maxabs'});
-cfg = ft_checkconfig(cfg, 'renamedval', {'directionality',   'feedforward', 'outflow'});
-cfg = ft_checkconfig(cfg, 'renamedval', {'directionality',   'feedback',    'inflow'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'electrodes',     'dotnum',      'numbers'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'zlim',           'absmax',      'maxabs'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'directionality', 'feedforward', 'outflow'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'directionality', 'feedback',    'inflow'});
 
 % check for renamed options
 cfg = ft_checkconfig(cfg, 'renamed',     {'matrixside',    'directionality'});
@@ -522,40 +522,90 @@ if isfull
   sel2 = intersect(sel2, sellab);
 end
 
-% Make vector dat with one value for each channel
-dat    = data.(cfg.parameter);
-% get dimord dimensions
-ydim = find(strcmp(yparam, dimtok));
-xdim = find(strcmp(xparam, dimtok));
-zdim = setdiff(1:ndims(dat), [ydim xdim]);
-% and permute
-dat = permute(dat, [zdim(:)' ydim xdim]);
-
-if ~isempty(yparam)
-  if isfull
-    dat = dat(sel1, sel2, ymin:ymax, xmin:xmax);
-    dat = nanmean(nanmean(nanmean(dat, meandir), 4), 3);
-  elseif haslabelcmb
-    dat = dat(sellab, ymin:ymax, xmin:xmax);
-    dat = nanmean(nanmean(dat, 3), 2);
+if ~isempty(cfg.parameter)
+  % Make data vector with one value for each channel
+  dat = data.(cfg.parameter);
+  % get dimord dimensions
+  ydim = find(strcmp(yparam, dimtok));
+  xdim = find(strcmp(xparam, dimtok));
+  zdim = setdiff(1:ndims(dat), [ydim xdim]);
+  % and permute
+  dat = permute(dat, [zdim(:)' ydim xdim]);
+  
+  if ~isempty(yparam)
+    % time-frequency data
+    if isfull
+      dat = dat(sel1, sel2, ymin:ymax, xmin:xmax);
+      dat = nanmean(nanmean(nanmean(dat, meandir), 4), 3);
+    elseif haslabelcmb
+      dat = dat(sellab, ymin:ymax, xmin:xmax);
+      dat = nanmean(nanmean(dat, 3), 2);
+    else
+      dat = dat(sellab, ymin:ymax, xmin:xmax);
+      dat = nanmean(nanmean(dat, 3), 2);
+    end
+  elseif ~isempty(cfg.component)
+    % component data, nothing to do
   else
-    dat = dat(sellab, ymin:ymax, xmin:xmax);
-    dat = nanmean(nanmean(dat, 3), 2);
+    % time or frequency data
+    if isfull
+      dat = dat(sel1, sel2, xmin:xmax);
+      dat = nanmean(nanmean(dat, meandir), 3);
+    elseif haslabelcmb
+      dat = dat(sellab, xmin:xmax);
+      dat = nanmean(dat, 2);
+    else
+      dat = dat(sellab, xmin:xmax);
+      dat = nanmean(dat, 2);
+    end
   end
-elseif ~isempty(cfg.component)
+  dat = dat(:);
+  
 else
-  if isfull
-    dat = dat(sel1, sel2, xmin:xmax);
-    dat = nanmean(nanmean(dat, meandir), 3);
-  elseif haslabelcmb
-    dat = dat(sellab, xmin:xmax);
-    dat = nanmean(dat, 2);
-  else
-    dat = dat(sellab, xmin:xmax);
-    dat = nanmean(dat, 2);
-  end
+  error('cannot make selection of data');
 end
-dat = dat(:);
+
+if isfield(data, cfg.maskparameter) 
+  % Make mask vector with one value for each channel
+  msk = data.(cfg.maskparameter);
+  % get dimord dimensions
+  ydim = find(strcmp(yparam, dimtok));
+  xdim = find(strcmp(xparam, dimtok));
+  zdim = setdiff(1:ndims(dat), [ydim xdim]);
+  % and permute
+  msk = permute(msk, [zdim(:)' ydim xdim]);
+  
+  if ~isempty(yparam)
+    % time-frequency data
+    if isfull
+      msk = msk(sel1, sel2, ymin:ymax, xmin:xmax);
+    elseif haslabelcmb
+      msk = msk(sellab, ymin:ymax, xmin:xmax);
+    else
+      msk = msk(sellab, ymin:ymax, xmin:xmax);
+    end
+  elseif ~isempty(cfg.component)
+    % component data, nothing to do
+  else
+    % time or frequency data
+    if isfull
+      msk = msk(sel1, sel2, xmin:xmax);
+    elseif haslabelcmb
+      msk = msk(sellab, xmin:xmax);
+    else
+      msk = msk(sellab, xmin:xmax);
+    end
+  end
+  
+  if size(msk,2)>1 || size(msk,3)>1
+    warning('no masking possible for average over multiple latencies or frequencies -> cfg.maskparameter cleared')
+    msk = [];
+  end
+  
+else
+  msk = [];
+end
+
 
 % Select the channels in the data that match with the layout:
 [seldat, sellay] = match_str(label, cfg.layout.label);
@@ -563,38 +613,28 @@ if isempty(seldat)
   error('labels in data and labels in layout do not match');
 end
 
-datavector = dat(seldat);
+dat = dat(seldat);
+if ~isempty(msk)
+  msk = msk(seldat);
+end
+
 % Select x and y coordinates and labels of the channels in the data
 chanX = cfg.layout.pos(sellay,1);
 chanY = cfg.layout.pos(sellay,2);
 chanLabels = cfg.layout.label(sellay);
 
-% make datmask structure with one value for each channel
-if ~isempty(cfg.maskparameter)
-  datmask = data.(cfg.maskparameter);
-  if numel(datmask) ~= length(data.label)
-    error('data in cfg.maskparameter should be vector with one value per channel')
-  end
-  datmask = datmask(:);
-  % Select the channels in the maskdata that match with the layout:
-  maskdatavector = datmask(sellab(seldat));
-  %maskdatavector = datmask(seldat);
-else
-  maskdatavector = [];
-end
-
 % Get physical min/max range of z:
 if strcmp(cfg.zlim,'maxmin')
-  zmin = min(datavector);
-  zmax = max(datavector);
+  zmin = min(dat);
+  zmax = max(dat);
 elseif strcmp(cfg.zlim,'maxabs')
-  zmin = -max(max(abs(datavector)));
-  zmax = max(max(abs(datavector)));
+  zmin = -max(max(abs(dat)));
+  zmax = max(max(abs(dat)));
 elseif strcmp(cfg.zlim,'zeromax')
   zmin = 0;
-  zmax = max(datavector);
+  zmax = max(dat);
 elseif strcmp(cfg.zlim,'minzero')
-  zmin = min(datavector);
+  zmin = min(dat);
   zmax = 0;
 else
   zmin = cfg.zlim(1);
@@ -702,14 +742,14 @@ if strcmp(cfg.style,'straight_imsat');  style = 'imsat';       end
 if strcmp(cfg.style,'both_imsat');      style = 'imsatiso';    end
 
 % check for nans
-nanInds = isnan(datavector);
+nanInds = isnan(dat);
 if strcmp(cfg.interpolatenan,'yes') && any(nanInds)
   warning('removing NaNs from the data');
   chanX(nanInds) = [];
   chanY(nanInds) = [];
-  datavector(nanInds) = [];
-  if ~isempty(maskdatavector)
-    maskdatavector(nanInds) = [];
+  dat(nanInds)   = [];
+  if ~isempty(msk)
+    msk(nanInds) = [];
   end
 end
 
@@ -723,12 +763,12 @@ if ~strcmp(cfg.style,'blank')
     'isolines',cfg.contournum,...
     'mask',cfg.layout.mask,...
     'style',style,...
-    'datmask', maskdatavector};
+    'datmask', msk};
   if strcmp(style,'imsat') || strcmp(style,'imsatiso')
     % add clim to opt
     opt = [opt {'clim',[zmin zmax]}];
   end
-  ft_plot_topo(chanX,chanY,datavector,opt{:});
+  ft_plot_topo(chanX,chanY,dat,opt{:});
 elseif ~strcmp(cfg.style,'blank')
   ft_plot_lay(cfg.layout,'box','no','label','no','point','no')
 end

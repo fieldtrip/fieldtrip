@@ -464,7 +464,6 @@ if ~isempty(axis) && ~strcmp(axis, 'no')
       error('invalid specification of the "axis" option')
   end
   
-  
   if xaxis
     % x-axis should touch 0,0
     xrange = hlim;
