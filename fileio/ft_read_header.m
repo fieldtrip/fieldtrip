@@ -1552,9 +1552,18 @@ switch headerformat
     [p,f,e]    = fileparts(filename);
     listing    = dir(p);
     filenames  = {listing.name}';
-    lfpfile    = filenames{~cellfun('isempty',strfind(filenames,'.eeg'))};
-    rawfile    = filenames{~cellfun('isempty',strfind(filenames,'.dat'))};
     
+    lfpfile_idx = find(~cellfun('isempty',strfind(filenames,'.eeg')));
+    rawfile_idx = find(~cellfun('isempty',strfind(filenames,'.dat')));
+    
+    if ~isempty(lfpfile_idx)
+      % FIXME this assumes only 1 such file, or at least it only takes the
+      % first one.
+      lfpfile = filenames{lfpfile_idx(1)};
+    end
+    if ~isempty(rawfile_idx)
+      rawfile = filenames{rawfile_idx(1)};
+    end
     params     = LoadParameters(filename);
     
     hdr         = [];

@@ -1174,8 +1174,9 @@ switch dataformat
       otherwise
         error('unknown precision');
     end
-    dat = LoadBinary(filename, 'frequency', hdr.Fs, 'offset', begsample-1, 'nRecords', endsample-begsample, 'nChannels', hdr.orig.nChannels, 'channels', chanindx, 'precision', precision).'; 
-     
+    dat     = LoadBinary(filename, 'frequency', hdr.Fs, 'offset', begsample-1, 'nRecords', endsample-begsample, 'nChannels', hdr.orig.nChannels, 'channels', chanindx, 'precision', precision).'; 
+    scaling = hdr.orig.voltageRange/hdr.orig.amplification/(2^hdr.orig.nBits)*1000;
+    dat     = scaling.*dat;
   otherwise
     if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
       dat = read_biosig_data(filename, hdr, begsample, endsample, chanindx);
