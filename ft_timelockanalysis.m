@@ -148,6 +148,9 @@ ntrial      = length(data.trial);
 nchan       = length(data.label);   % number of channels
 numsamples  = zeros(ntrial,1);      % number of selected samples in each trial, is determined later
 
+if ntrial==0, error('Number of trials selected in data is zero');   end
+if nchan==0,  error('Number of channels selected in data is zero'); end
+
 % determine the duration of each trial
 begsamplatency = zeros(1,ntrial);
 endsamplatency = zeros(1,ntrial);
