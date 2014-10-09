@@ -11,18 +11,13 @@ function test_tutorial_plotting
 % this testscript corresponds to the version on the wiki at 23 December 2012
 
 % use the tutorial dataset from home/common
-if ispc
-    datadir = 'H:';
-  else
-    datadir = '/home';
-end
 
-load(fullfile(datadir,'common', 'matlab' ,'fieldtrip', 'data' ,'ftp' ,'tutorial' ,'plotting' ,'avgFC.mat'));
-load(fullfile(datadir,'common', 'matlab' ,'fieldtrip', 'data' ,'ftp' ,'tutorial' ,'plotting' ,'GA_FC.mat'));
-load(fullfile(datadir,'common', 'matlab' ,'fieldtrip', 'data' ,'ftp' ,'tutorial' ,'plotting' ,'TFRhann.mat'));
-load(fullfile(datadir,'common', 'matlab' ,'fieldtrip', 'data' ,'ftp' ,'tutorial' ,'plotting' ,'statERF.mat'));
-load(fullfile(datadir,'common', 'matlab' ,'fieldtrip', 'data' ,'ftp' ,'tutorial' ,'plotting' ,'statTFR.mat'));
-load(fullfile(datadir,'common', 'matlab' ,'fieldtrip', 'data' ,'ftp' ,'tutorial' ,'plotting' ,'sourceDiff.mat'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/plotting/avgFC.mat'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/plotting/GA_FC.mat'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/plotting/TFRhann.mat'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/plotting/statERF.mat'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/plotting/statTFR.mat'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/plotting/sourceDiff.mat'));
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -142,7 +137,7 @@ ft_clusterplot(cfg,statTFR);
 % (1) multiple axial slices
 
 %% load MRI and interpolate functional source data to MRI
-mri = ft_read_mri(fullfile(datadir,'common', 'matlab' ,'fieldtrip', 'data' ,'ftp' ,'tutorial' ,'plotting' ,'Subject01.mri'));  
+mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/plotting/Subject01.mri'));  
 mri = ft_volumereslice([], mri);
 
 cfg            = [];
