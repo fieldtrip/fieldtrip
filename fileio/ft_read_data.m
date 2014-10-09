@@ -1175,7 +1175,7 @@ switch dataformat
         error('unknown precision');
     end
     dat     = LoadBinary(filename, 'frequency', hdr.Fs, 'offset', begsample-1, 'nRecords', endsample-begsample, 'nChannels', hdr.orig.nChannels, 'channels', chanindx, 'precision', precision).'; 
-    scaling = hdr.orig.voltageRange/hdr.orig.amplification/(2^hdr.orig.nBits)*1000;
+    scaling = hdr.orig.voltageRange/hdr.orig.amplification/(2^hdr.orig.nBits); % scale to S.I. units, i.e. V
     dat     = scaling.*dat;
   otherwise
     if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
