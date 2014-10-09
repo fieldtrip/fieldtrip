@@ -944,7 +944,7 @@ elseif isequal(cfg.method,'surface')
   cortex_dark  = [0.781 0.762 0.664]/2;
   if isfield(surf, 'curv')
     % the curvature determines the color of gyri and sulci
-    color = surf.curv(:) * cortex_light + (1-surf.curv(:)) * cortex_dark;
+    color = surf.curv(:) * cortex_light + (1-surf.curv(:)) * cortex_light;
   else
     color = repmat(cortex_light, size(surf.pnt,1), 1);
   end
