@@ -1,6 +1,6 @@
 function test_tutorial_eeg_preprocessing
 
-% WALLTIME 01:15:00
+% WALLTIME 00:45:00
 % MEM 2gb
 
 % TEST test_tutorial_eeg_preprocessing
@@ -88,16 +88,22 @@ lay = ft_prepare_layout(cfg);
 disp(lay)
 
 %% Artifacts
+if false
+  % do not run the interactive section
 
-cfg        = [];
-cfg.method = 'channel';
-ft_rejectvisual(cfg, data)
+  cfg        = [];
+  cfg.method = 'channel';
+  ft_rejectvisual(cfg, data)
 
-cfg = [];
-cfg.method   = 'summary';
-cfg.layout   = lay;       % this allows for plotting
-cfg.channels = [1:60];    % do not show EOG channels
-data_clean   = ft_rejectvisual(cfg, data);
+  cfg = [];
+  cfg.method   = 'summary';
+  cfg.layout   = lay;       % this allows for plotting
+  cfg.channels = [1:60];    % do not show EOG channels
+  data_clean   = ft_rejectvisual(cfg, data);
+else
+  % just copy the data over
+  data_clean - data;
+end
 
 % In this exercise we suggest that you remove 8 trials with the highest 
 % variance (trial numbers 22, 42, 89, 90, 92, 126, 136 and 150).
