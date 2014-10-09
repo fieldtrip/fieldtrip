@@ -108,13 +108,14 @@ function ft_sourceplot(cfg, data)
 % interpolation is performed onto a specified surface. Note that the
 % coordinate system in which the surface is defined should be the same as
 % the coordinate system that is represented in source.pos.
-%
+% 
 % The following parameters apply to surface-plotting when an interpolation
 % is required
 %   cfg.surffile       = string, file that contains the surface (default = 'surface_white_both.mat')
 %                        'surface_white_both.mat' contains a triangulation that corresponds with the
 %                         SPM anatomical template in MNI coordinates
 %   cfg.surfinflated   = string, file that contains the inflated surface (default = [])
+%                        may require specifying a point-matching (uninflated) surffile                       
 %   cfg.surfdownsample = number (default = 1, i.e. no downsampling)
 %   cfg.projmethod     = projection method, how functional volume data is projected onto surface
 %                        'nearest', 'project', 'sphere_avg', 'sphere_weighteddistance'
