@@ -295,12 +295,17 @@ if any(strcmp(dimtok, 'time'))
   tree = add(tree, find(tree, 'CIFTI/Matrix'), 'element', 'MatrixIndicesMap');
   branch = find(tree, 'CIFTI/Matrix/MatrixIndicesMap');
   branch = branch(end);
+  if length(source.time)>1
+    SeriesStep = median(diff(source.time)); % this assumes evenly spaced samples
+  else
+    SeriesStep = 0;
+  end
   tree = attributes(tree, 'add', branch, 'AppliesToMatrixDimension', printwithcomma(find(strcmp(dimtok, 'time'))-1));
   tree = attributes(tree, 'add', branch, 'IndicesMapToDataType', 'CIFTI_INDEX_TYPE_SERIES');
   tree = attributes(tree, 'add', branch, 'NumberOfSeriesPoints', num2str(length(source.time)));
   tree = attributes(tree, 'add', branch, 'SeriesExponent', num2str(0));
   tree = attributes(tree, 'add', branch, 'SeriesStart', num2str(source.time(1)));
-  tree = attributes(tree, 'add', branch, 'SeriesStep', num2str(median(diff(source.time))));
+  tree = attributes(tree, 'add', branch, 'SeriesStep', num2str(SeriesStep));
   tree = attributes(tree, 'add', branch, 'SeriesUnit', 'SECOND');
 end % if time
 
@@ -310,12 +315,17 @@ if any(strcmp(dimtok, 'freq'))
   tree = add(tree, find(tree, 'CIFTI/Matrix'), 'element', 'MatrixIndicesMap');
   branch = find(tree, 'CIFTI/Matrix/MatrixIndicesMap');
   branch = branch(end);
+  if length(source.freq)>1
+    SeriesStep = median(diff(source.freq)); % this assumes evenly spaced samples
+  else
+    SeriesStep = 0;
+  end
   tree = attributes(tree, 'add', branch, 'AppliesToMatrixDimension', printwithcomma(find(strcmp(dimtok, 'freq'))-1));
   tree = attributes(tree, 'add', branch, 'IndicesMapToDataType', 'CIFTI_INDEX_TYPE_SCALARS');
   tree = attributes(tree, 'add', branch, 'NumberOfSeriesPoints', num2str(length(source.freq)));
   tree = attributes(tree, 'add', branch, 'SeriesExponent', num2str(0));
   tree = attributes(tree, 'add', branch, 'SeriesStart', num2str(source.freq(1)));
-  tree = attributes(tree, 'add', branch, 'SeriesStep', num2str(median(diff(source.freq)))); % this requires even sampling
+  tree = attributes(tree, 'add', branch, 'SeriesStep', num2str(SeriesStep));
   tree = attributes(tree, 'add', branch, 'SeriesUnit', 'HZ');
 end % if freq
 
