@@ -359,13 +359,14 @@ if readdata
     case 768, [voxdata, nitemsread] = fread(fid, inf, 'uint');    assert(nitemsread==prod(hdr.dim(2:end)), 'could not read all data');
     otherwise, error('unsupported datatype');
   end
-  % include the data in the output structure, note that the fieldname might be changed further down
-  data = squeeze(reshape(voxdata, hdr.dim(2:end)));
+  % hdr.dim(1) is the number of dimensions
+  % hdr.dim(2) is reserved for the x-dimension
+  % hdr.dim(3) is reserved for the y-dimension
+  % hdr.dim(4) is reserved for the z-dimension
+  % hdr.dim(5) is reserved for the time-dimension
+  voxdata = reshape(voxdata, hdr.dim(6:end));
 end
 fclose(fid);
-
-% include the nifti-2 header in the output structure
-hdr = hdr;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % convert to FieldTrip source representation, i.e. according to FT_DATATYPE_SOURCE and FT_DATATYPE_PARCELLATION
@@ -661,30 +662,30 @@ if readdata
   
   switch source.dimord
     case {'pos' 'chan'}
-      [m, n] = size(data);
+      [m, n] = size(voxdata);
       if m>n
         dat = nan(Ngreynodes,n);
-        dat(greynodeIndex(dataIndex),:) = data;
+        dat(greynodeIndex(dataIndex),:) = voxdata;
       else
         dat = nan(Ngreynodes,m);
-        dat(greynodeIndex(dataIndex),:) = transpose(data);
+        dat(greynodeIndex(dataIndex),:) = transpose(voxdata);
       end
     case {'pos_pos' 'chan_chan'}
       dat = nan(Ngreynodes,Ngreynodes);
-      dat(greynodeIndex(dataIndex),greynodeIndex(dataIndex)) = data;
+      dat(greynodeIndex(dataIndex),greynodeIndex(dataIndex)) = voxdata;
     case {'pos_time' 'chan_time'}
-      Ntime = size(data,2);
+      Ntime = size(voxdata,2);
       dat = nan(Ngreynodes,Ntime);
-      dat(greynodeIndex(dataIndex),:) = data;
+      dat(greynodeIndex(dataIndex),:) = voxdata;
     case 'time_pos'
-      Ntime = size(data,1);
+      Ntime = size(voxdata,1);
       dat = nan(Ngreynodes,Ntime);
-      dat(greynodeIndex(dataIndex),:) = transpose(data);
+      dat(greynodeIndex(dataIndex),:) = transpose(voxdata);
       source.dimord = 'pos_time';
     case 'time_chan'
-      Ntime = size(data,1);
+      Ntime = size(voxdata,1);
       dat = nan(Ngreynodes,Ntime);
-      dat(greynodeIndex(dataIndex),:) = transpose(data);
+      dat(greynodeIndex(dataIndex),:) = transpose(voxdata);
       source.dimord = 'chan_time';
     otherwise
       error('unsupported dimord');
