@@ -90,13 +90,17 @@ end
 cfg = ft_checkconfig(cfg, 'renamed', {'blc', 'demean'});
 
 % set the defaults
-if ~isfield(cfg, 'resamplefs'), cfg.resamplefs = [];      end
-if ~isfield(cfg, 'time'),       cfg.time       = {};      end
-if ~isfield(cfg, 'detrend'),    cfg.detrend    = 'no';    end
-if ~isfield(cfg, 'demean'),     cfg.demean     = 'no';    end
-if ~isfield(cfg, 'feedback'),   cfg.feedback   = 'text';  end
-if ~isfield(cfg, 'trials'),     cfg.trials     = 'all';   end
-if ~isfield(cfg, 'method'),     cfg.method     = 'pchip'; end  % interpolation method
+if ~isfield(cfg, 'resamplefs'),     cfg.resamplefs     = [];      end
+if ~isfield(cfg, 'time'),           cfg.time           = {};      end
+if ~isfield(cfg, 'detrend'),        cfg.detrend        = 'no';    end
+if ~isfield(cfg, 'demean'),         cfg.demean         = 'no';    end
+if ~isfield(cfg, 'feedback'),       cfg.feedback       = 'text';  end
+if ~isfield(cfg, 'trials'),         cfg.trials         = 'all';   end
+if ~isfield(cfg, 'method'),         cfg.method         = 'pchip'; end  % interpolation method
+
+% give the user control over whether to use resample (applies anti-aliasing
+% filter) or downsample (does not apply filter)
+if ~isfield(cfg, 'resamplemethod'), cfg.resamplemethod = 'resample'; end
 
 % store original datatype
 convert = ft_datatype(data);
@@ -125,6 +129,17 @@ usetime    = ~isempty(cfg.time);
 
 if usefsample && usetime
   error('you should either specify cfg.resamplefs or cfg.time')
+end
+
+% whether to use downsample() or resample()
+usedownsample = 0;
+if strcmp(cfg.resamplemethod, 'resample')
+  usedownsample = 0;
+elseif strcmp(cfg.resamplemethod, 'downsample')
+  warning('using cfg.resamplemethod = ''downsample'', only use this if you have applied an anti-aliasing filter prior to downsampling!');
+  usedownsample = 1;
+else
+  error('unknown resamplemethod ''%s''', cfg.resamplemethod);
 end
 
 % remember the original sampling frequency in the configuration
@@ -173,12 +188,27 @@ if usefsample
     data.time{itr}  = [data.time{itr}(1)-(padsmp(itr):-1:1)./cfg.origfs data.time{itr}];
     
     % perform the resampling
-    if isa(data.trial{itr}, 'single')
-      % temporary convert this trial to double precision
-      data.trial{itr} = transpose(single(resample(double(transpose(data.trial{itr})),fsres,fsorig)));
-    else
-      data.trial{itr} = transpose(resample(transpose(data.trial{itr}),fsres,fsorig));
+    if usedownsample
+      if mod(fsorig, fsres) ~= 0
+        error('when using cfg.resamplemethod = ''downsample'', new sampling rate needs to be a proper divisor of original sampling rate');
+      end
+      
+      if isa(data.trial{itr}, 'single')
+        % temporary convert this trial to double precision
+        data.trial{itr} = transpose(single(downsample(double(transpose(data.trial{itr})),fsorig/fsres)));
+      else
+        data.trial{itr} = transpose(downsample(transpose(data.trial{itr}),fsorig/fsres));
+      end
+      
+    else % resample (default)
+      if isa(data.trial{itr}, 'single')
+        % temporary convert this trial to double precision
+        data.trial{itr} = transpose(single(resample(double(transpose(data.trial{itr})),fsres,fsorig)));
+      else
+        data.trial{itr} = transpose(resample(transpose(data.trial{itr}),fsres,fsorig));
+      end
     end
+    
     % update the time axis
     nsmp = size(data.trial{itr},2);
     data.time{itr} = data.time{itr}(1) + (0:(nsmp-1))/cfg.resamplefs;
