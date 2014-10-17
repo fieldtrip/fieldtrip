@@ -101,12 +101,12 @@ switch style
     elseif isempty(parents) && ~isempty(surfhandle)
       % determine the parents from the surface handle and use the
       % surfhandle for efficient visualization (overwriting existing data)
-      if surfhandle(1), Hx = get(surfhandle(1), 'parent'); else Hx = 0; end
-      if surfhandle(2), Hy = get(surfhandle(2), 'parent'); else Hy = 0; end
-      if surfhandle(3), Hz = get(surfhandle(3), 'parent'); else Hz = 0; end
+      if surfhandle(1), Hx = get(surfhandle(1), 'parent'); else Hx = []; end
+      if surfhandle(2), Hy = get(surfhandle(2), 'parent'); else Hy = []; end
+      if surfhandle(3), Hz = get(surfhandle(3), 'parent'); else Hz = []; end
     end
     
-    if Hx,
+    if ~isempty(Hx)
       if ~isempty(surfhandle) && surfhandle(1)
         varargin(sellist) = ft_setopt(varargin(sellist), 'surfhandle', surfhandle(1));
       end
@@ -121,7 +121,7 @@ switch style
       end
     end
     
-    if Hy,
+    if ~isempty(Hy)
       if ~isempty(surfhandle) && surfhandle(2)
         varargin(sellist) = ft_setopt(varargin(sellist), 'surfhandle', surfhandle(2));
       end
@@ -135,7 +135,7 @@ switch style
       end
     end
     
-    if Hz,
+    if ~isempty(Hz)
       if ~isempty(surfhandle) && surfhandle(3)
         varargin(sellist) = ft_setopt(varargin(sellist), 'surfhandle', surfhandle(3));
       end
