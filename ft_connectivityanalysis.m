@@ -256,7 +256,7 @@ switch cfg.method
     weightppc = 1;
     if hasjack, error('to compute wppc, data should be in rpt format'); end
   case {'plv'}
-    data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
+    data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq' 'source'});
     inparam = 'crsspctrm';
     outparam = 'plvspctrm';
     normrpt = 1;
