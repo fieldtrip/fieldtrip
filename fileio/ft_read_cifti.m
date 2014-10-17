@@ -708,6 +708,7 @@ end % if data
 
 source = copyfields(Cifti, source, {'time', 'freq'});
 source.hdr = hdr;
+source.unit = 'mm'; % per definition
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % try to get the geometrical information from the corresponding gifti files
