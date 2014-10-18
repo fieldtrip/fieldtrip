@@ -1,7 +1,7 @@
 function test_tutorial_natmeg_dipolefitting
 
 % WALLTIME 00:20:00
-% MEM 6gb
+% MEM 8gb
 
 % this script executes the MATLAB content from
 % http://fieldtrip.fcdonders.nl/tutorial/natmeg/dipolefitting
@@ -157,7 +157,7 @@ if false
   cfg.channel = 'MEG*1';
   cfg.keepchannel = 'yes';
   data_meg_clean1 = ft_rejectvisual(cfg, data_meg);
-  
+
   cfg.channel = {'MEG*2', 'MEG*3'};
   data_meg_clean2 = ft_rejectvisual(cfg, data_meg_clean1);
 else
@@ -171,6 +171,9 @@ cfg.trials = find(data_meg_clean2.trialinfo==1);
 timelock_std = ft_timelockanalysis(cfg, data_meg_clean2);
 cfg.trials = find(data_meg_clean2.trialinfo==2);
 timelock_dev = ft_timelockanalysis(cfg, data_meg_clean2);
+
+% save some memory
+clear data_meg_clean2
 
 cfg = [];
 cfg.layout = 'neuromag306all.lay';
@@ -496,6 +499,9 @@ timelock_eeg_std = ft_timelockanalysis(cfg, data_eeg_reref);
 
 cfg.trials = find(data_eeg_reref.trialinfo==2);
 timelock_eeg_dev = ft_timelockanalysis(cfg, data_eeg_reref);
+
+% save some memory
+clear data_eeg_reref
 
 cfg = [];
 cfg.layout = 'neuromag306eeg1005_natmeg.lay';
