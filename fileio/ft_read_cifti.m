@@ -329,7 +329,7 @@ for i=1:length(uid_MatrixIndicesMap)
             Surface(end  ).SurfaceNumberOfVertices = MatrixIndicesMap(i).BrainModel(j).SurfaceNumberOfVertices;
             
           otherwise
-            error('unsupported version');
+            error('unsupported cifti version');
         end % switch version
         
         
@@ -493,14 +493,21 @@ if ~isempty(BrainModel)
     dataIndex{i} = geombeg(i):geomend(i);
     switch BrainModel(i).ModelType
       case 'CIFTI_MODEL_TYPE_SURFACE'
-        try
-          greynodeIndex{i}       = BrainModel(i).VertexIndices;
-          brainstructureIndex{i} = 1:BrainModel(i).SurfaceNumberOfVertices;
-        catch
-          % FIXME is this for CIFTI-1?
-          greynodeIndex{i}       = 1:BrainModel(i).SurfaceNumberOfNodes;
-          brainstructureIndex{i} = 1:BrainModel(i).SurfaceNumberOfNodes;
-        end
+
+        switch Cifti.Version
+          case {'1' '1.0'}
+            try
+              greynodeIndex{i}     = BrainModel(i).VertexIndices;
+            catch
+              greynodeIndex{i}     = 1:BrainModel(i).SurfaceNumberOfNodes;
+            end
+            brainstructureIndex{i} = 1:BrainModel(i).SurfaceNumberOfNodes;
+          case {'2', '2.0'}
+            greynodeIndex{i}       = BrainModel(i).VertexIndices;
+            brainstructureIndex{i} = 1:BrainModel(i).SurfaceNumberOfVertices;
+          otherwise
+            error('unsupported cifti version');
+        end % switch
         
         sel = find(strcmp({Surface(:).BrainStructure}, BrainModel(i).BrainStructure));
         assert(numel(sel)==1);
