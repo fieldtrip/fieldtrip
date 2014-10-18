@@ -108,14 +108,14 @@ function ft_sourceplot(cfg, data)
 % interpolation is performed onto a specified surface. Note that the
 % coordinate system in which the surface is defined should be the same as
 % the coordinate system that is represented in source.pos.
-% 
+%
 % The following parameters apply to surface-plotting when an interpolation
 % is required
 %   cfg.surffile       = string, file that contains the surface (default = 'surface_white_both.mat')
 %                        'surface_white_both.mat' contains a triangulation that corresponds with the
 %                         SPM anatomical template in MNI coordinates
 %   cfg.surfinflated   = string, file that contains the inflated surface (default = [])
-%                        may require specifying a point-matching (uninflated) surffile                       
+%                        may require specifying a point-matching (uninflated) surffile
 %   cfg.surfdownsample = number (default = 1, i.e. no downsampling)
 %   cfg.projmethod     = projection method, how functional volume data is projected onto surface
 %                        'nearest', 'project', 'sphere_avg', 'sphere_weighteddistance'
@@ -444,26 +444,26 @@ elseif hasfun
   clear funmin funmax;
   % ensure that the functional data is real
   if ~isreal(fun)
-    fprintf('taking absolute value of complex data\n');
+    warning('functional data is complex, taking absolute value');
     fun = abs(fun);
   end
   
   %what if fun is 4D?
   if ndims(fun)>3 || prod(dim)==size(fun,1)
     if isfield(data, 'time') && length(data.time)>1 && isfield(data, 'freq') && length(data.freq)>1
-      %data contains timefrequency representation
+      % data contains time-frequency representation
       qi      = [1 1];
       hasfreq = 1;
       hastime = 1;
       fun     = reshape(fun, [dim numel(data.freq) numel(data.time)]);
     elseif isfield(data, 'time') && length(data.time)>1
-      %data contains evoked field
+      % data contains evoked field
       qi      = 1;
       hasfreq = 0;
       hastime = 1;
       fun     = reshape(fun, [dim numel(data.time)]);
     elseif isfield(data, 'freq') && length(data.freq)>1
-      %data contains frequency spectra
+      % data contains frequency spectra
       qi      = 1;
       hasfreq = 1;
       hastime = 0;
@@ -475,7 +475,7 @@ elseif hasfun
       fun     = reshape(fun, dim);
     end
   else
-    %do nothing
+    % do nothing
     qi      = 1;
     hasfreq = 0;
     hastime = 0;
@@ -1321,11 +1321,13 @@ end
 
 if opt.hasana
   if opt.init
-    ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'parents', [h1 h2 h3].*opt.update, 'doscale', false, 'clim', opt.clim);
+    ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'parents', tmph, 'doscale', false, 'clim', opt.clim);
     
     opt.anahandles = findobj(opt.handlesfigure, 'type', 'surface')';
-    parenttag  = get(cell2mat(get(opt.anahandles,'parent')),'tag');
-    [i1,i2,i3] = intersect(parenttag, {'ik';'jk';'ij'});
+    for i=1:length(opt.anahandles)
+      opt.parenttag{i} = get(get(opt.anahandles(i),'parent'),'tag');
+    end
+    [i1,i2,i3] = intersect(opt.parenttag, {'ik' 'jk' 'ij'});
     opt.anahandles = opt.anahandles(i3(i2)); % seems like swapping the order
     opt.anahandles = opt.anahandles(:)';
     set(opt.anahandles, 'tag', 'ana');
@@ -1338,16 +1340,20 @@ if opt.hasfun
   if opt.init
     if opt.hasmsk
       tmpqi = [opt.qi 1];
+      tmph  = [h1 h2 h3];
+      tmph(~opt.update) = 0;
       ft_plot_ortho(opt.fun(:,:,:,tmpqi(1),tmpqi(2)), 'datmask', opt.msk(:,:,:,tmpqi(1),tmpqi(2)), 'transform', eye(4), 'location', opt.ijk, ...
-        'style', 'subplot', 'parents', [h1 h2 h3].*opt.update, ...
+        'style', 'subplot', 'parents', tmph, ...
         'colormap', opt.funcolormap, 'colorlim', [opt.fcolmin opt.fcolmax], ...
         'opacitylim', [opt.opacmin opt.opacmax]);
       
       
     else
       tmpqi = [opt.qi 1];
+      tmph  = [h1 h2 h3];
+      tmph(~opt.update) = 0;
       ft_plot_ortho(opt.fun(:,:,:,tmpqi(1),tmpqi(2)), 'transform', eye(4), 'location', opt.ijk, ...
-        'style', 'subplot', 'parents', [h1 h2 h3].*opt.update, ...
+        'style', 'subplot', 'parents', tmph, ...
         'colormap', opt.funcolormap, 'colorlim', [opt.fcolmin opt.fcolmax]);
     end
     % after the first call, the handles to the functional surfaces
@@ -1356,8 +1362,10 @@ if opt.hasfun
     opt.funhandles = findobj(opt.handlesfigure, 'type', 'surface');
     opt.funtag     = get(opt.funhandles, 'tag');
     opt.funhandles = opt.funhandles(~strcmp('ana', opt.funtag));
-    opt.parenttag  = get(cell2mat(get(opt.funhandles,'parent')),'tag');
-    [i1,i2,i3] = intersect(opt.parenttag, {'ik';'jk';'ij'});
+    for i=1:length(opt.funhandles)
+      opt.parenttag{i} = get(get(opt.funhandles(i),'parent'),'tag');
+    end
+    [i1,i2,i3] = intersect(opt.parenttag, {'ik' 'jk' 'ij'});
     opt.funhandles = opt.funhandles(i3(i2)); % seems like swapping the order
     opt.funhandles = opt.funhandles(:)';
     set(opt.funhandles, 'tag', 'fun');
@@ -1371,14 +1379,18 @@ if opt.hasfun
   else
     if opt.hasmsk
       tmpqi = [opt.qi 1];
+      tmph  = opt.funhandles;
+      tmph(~opt.update) = 0;
       ft_plot_ortho(opt.fun(:,:,:,tmpqi(1),tmpqi(2)), 'datmask', opt.msk(:,:,:,tmpqi(1),tmpqi(2)), 'transform', eye(4), 'location', opt.ijk, ...
-        'style', 'subplot', 'surfhandle', opt.funhandles.*opt.update, ...
+        'style', 'subplot', 'surfhandle', tmph, ...
         'colormap', opt.funcolormap, 'colorlim', [opt.fcolmin opt.fcolmax], ...
         'opacitylim', [opt.opacmin opt.opacmax]);
     else
       tmpqi = [opt.qi 1];
+      tmph  = opt.funhandles;
+      tmph(~opt.update) = 0;
       ft_plot_ortho(opt.fun(:,:,:,tmpqi(1),tmpqi(2)), 'transform', eye(4), 'location', opt.ijk, ...
-        'style', 'subplot', 'surfhandle', opt.funhandles.*opt.update, ...
+        'style', 'subplot', 'surfhandle', tmph, ...
         'colormap', opt.funcolormap, 'colorlim', [opt.fcolmin opt.fcolmax]);
     end
   end
