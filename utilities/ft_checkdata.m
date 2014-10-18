@@ -298,13 +298,17 @@ if ~isempty(dtype)
       data = volume2source(data); % segmentation=volume, parcellation=source
       data = ft_datatype_parcellation(data);
       issegmentation = 0;
+      isvolume = 0;
       isparcellation = 1;
+      issource = 1;
       okflag = 1;
     elseif isequal(dtype(iCell), {'segmentation'}) && isparcellation
       data = source2volume(data); % segmentation=volume, parcellation=source
       data = ft_datatype_segmentation(data);
       isparcellation = 0;
+      issource = 0;
       issegmentation = 1;
+      isvolume = 1;
       okflag = 1;
     elseif isequal(dtype(iCell), {'source'}) && isvolume
       data = volume2source(data);
@@ -1700,8 +1704,10 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function source = parcellated2source(data)
 if ~isfield(data, 'brainordinate')
-  error('converting parcellated data requires the specification of the brainordinates');
+  error('projecting parcellated data onto the full brain model geometry requires the specification of brainordinates');
 end
+% the main structure contains the functional data on the parcels
+% the brainordinate sub-structure contains the original geometrical model
 source = data.brainordinate;
 data   = rmfield(data, 'brainordinate');
 if isfield(data, 'cfg')
@@ -1732,7 +1738,7 @@ else
 end
 
 for i=1:numel(parameter)
-  source.(parameter{i}) = unparcellate(data, data.brainordinate, parameter{i}, parcelparam);
+  source.(parameter{i}) = unparcellate(data, source, parameter{i}, parcelparam);
 end
 
 
@@ -1777,10 +1783,7 @@ if isfield(data, 'dim') && length(data.dim)>=3,
 end
 
 % remove the unwanted fields
-if isfield(data, 'pos'),    data = rmfield(data, 'pos');    end
-if isfield(data, 'xgrid'),  data = rmfield(data, 'xgrid');  end
-if isfield(data, 'ygrid'),  data = rmfield(data, 'ygrid');  end
-if isfield(data, 'zgrid'),  data = rmfield(data, 'zgrid');  end
+data = removefields(data, {'pos', 'xgrid', 'ygrid', 'zgrid', 'tri', 'tet', 'hex'});
 
 % make inside a volume
 data = fixinside(data, 'logical');

@@ -106,19 +106,8 @@ switch parcelversion
     
     % convert the inside/outside fields, they should be logical rather than an index
     if isfield(parcellation, 'inside')
-      if all(parcellation.inside==0 | parcellation.inside==1)
-        % this is ok
-      else
-        tmp = false(size(parcellation.pos,1),1);
-        tmp(parcellation.inside) = true;
-        parcellation.inside = tmp;
-      end
+      parcellation = fixinside(parcellation, 'logical');
     end
-    
-    if isfield(parcellation, 'outside')
-      parcellation = rmfield(parcellation, 'outside');
-    end
-    
     
     dim = size(parcellation.pos,1);
     
@@ -134,75 +123,44 @@ switch parcelversion
     % determine whether the style of the input fields is probabilistic or indexed
     [indexed, probabilistic] = determine_segmentationstyle(parcellation, fn, dim);
     
-    if any(probabilistic) && any(indexed)
-      warning('cannot work with a mixed representation, removing tissue probability maps');
-      sel = find(probabilistic);
-      parcellation       = rmfield(parcellation, fn(sel));
-      probabilistic(sel) = false;
+    if ~any(probabilistic) && ~any(indexed)
+      % rather than being described with a tissue label for each vertex
+      % it can also be described with a tissue label for each surface or volme element
+      for i = 1:length(fn)
+        fname = fn{i};
+        switch fname
+          case 'tri'
+            dim = size(parcellation.tri,1);
+          case 'hex'
+            dim = size(parcellation.hex,1);
+          case 'tet'
+            dim = size(parcellation.tet,1);
+        end
+      end
+      [indexed, probabilistic] = determine_segmentationstyle(parcellation, fn, dim);
     end
     
-    if any(probabilistic)
-      fn = fn(probabilistic);
-      probabilistic = true; indexed = false;
-    elseif any(indexed)
-      fn = fn(indexed);
-      indexed = true; probabilistic = false;
-    end
-    
-    if ~any(probabilistic) && ~any(indexed)  % allow for tissue labels of elements
-        for i = 1:length(fn)
-            fname = fn{i};
-            switch fname
-                case 'tri'
-                    dim = size(parcellation.tri,1);
-                case 'hex'
-                    dim = size(parcellation.hex,1);
-                case 'tet'
-                    dim = size(parcellation.tet,1);
-            end
-        end
-        [indexed, probabilistic] = determine_segmentationstyle(parcellation, fn, dim);
-        
-        if any(probabilistic) && any(indexed)
-            warning('cannot work with a mixed representation, removing tissue probability maps');
-            sel = find(probabilistic);
-            parcellation       = rmfield(parcellation, fn(sel));
-            probabilistic(sel) = false;
-        end
-        
-        if any(probabilistic)
-            fn = fn(probabilistic);
-            probabilistic = true; indexed = false;
-        elseif any(indexed)
-            fn = fn(indexed);
-            indexed = true; probabilistic = false;
-        end
-    end
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % ensure that the parcellation is internally consistent
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
-    if probabilistic
-      parcellation = fixsegmentation(parcellation, fn, 'probabilistic');
-    elseif indexed
-      parcellation = fixsegmentation(parcellation, fn, 'indexed');
+    if any(probabilistic)
+      parcellation = fixsegmentation(parcellation, fn(probabilistic), 'probabilistic');
+    end
+    
+    if any(indexed)
+      parcellation = fixsegmentation(parcellation, fn(indexed), 'indexed');
     end
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % convert the parcellation to the desired style
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
-    if probabilistic && strcmp(parcellationstyle, 'indexed')
-      parcellation  = convert_segmentationstyle(parcellation, fn, [dim 1], 'indexed');
-      indexed       = true;
-      probabilistic = false;
-      clear fn % to avoid any potential confusion
-    elseif indexed && strcmp(parcellationstyle, 'probabilistic')
-      parcellation  = convert_segmentationstyle(parcellation, fn, [dim 1], 'probabilistic');
-      probabilistic = true;
-      indexed       = false;
-      clear fn % to avoid any potential confusion
-    end % converting between probabilistic and indexed
+    if strcmp(parcellationstyle, 'indexed') && any(probabilistic)
+      parcellation  = convert_segmentationstyle(parcellation, fn(probabilistic), [dim 1], 'indexed');
+    elseif strcmp(parcellationstyle, 'probabilistic') && any(indexed)
+      parcellation  = convert_segmentationstyle(parcellation, fn(indexed), [dim 1], 'probabilistic');
+    end % converting converting to desired style
     
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
