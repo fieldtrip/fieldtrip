@@ -72,7 +72,12 @@ else
   try
     [varargout{:}] = subsref(subsref(x, index(1)), index(2:end));
   catch
-    error('Scalar index required for this type of multi-level indexing.');
+    me = lasterror;
+    if strcmp(me.identifier,  'MATLAB:unassignedOutputs')
+      error('Scalar index required for this type of multi-level indexing.');
+    else
+      error(me.message);
+    end
   end
 end
 
