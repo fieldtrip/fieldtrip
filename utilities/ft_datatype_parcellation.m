@@ -123,6 +123,12 @@ switch parcelversion
     % determine whether the style of the input fields is probabilistic or indexed
     [indexed, probabilistic] = determine_segmentationstyle(parcellation, fn, dim);
     
+    % ignore the fields that do not contain a parcellation
+    sel = indexed | probabilistic;
+    fn            = fn(sel);
+    indexed       = indexed(sel);
+    probabilistic = probabilistic(sel);
+
     if ~any(probabilistic) && ~any(indexed)
       % rather than being described with a tissue label for each vertex
       % it can also be described with a tissue label for each surface or volme element

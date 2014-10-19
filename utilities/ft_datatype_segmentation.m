@@ -123,6 +123,12 @@ switch segversion
     % determine whether the style of the input fields is probabilistic or indexed
     fn = fieldnames(segmentation);
     [indexed, probabilistic] = determine_segmentationstyle(segmentation, fn, segmentation.dim);
+
+    % ignore the fields that do not contain a segmentation
+    sel = indexed | probabilistic;
+    fn            = fn(sel);
+    indexed       = indexed(sel);
+    probabilistic = probabilistic(sel);
     
     % convert from an exclusive to cumulative representation
     % this is only only for demonstration purposes
