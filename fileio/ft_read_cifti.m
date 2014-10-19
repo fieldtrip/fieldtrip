@@ -22,9 +22,11 @@ function source = ft_read_cifti(filename, varargin)
 %
 % Any optional input arguments should come in key-value pairs and may include
 %   'readdata'         = boolean, can be false or true (default depends on file size)
+%   'readsurface'      = boolean, can be false or true (default = true)
 %   'cortexleft'       = string, filename with left cortex (optional, default is automatic)
 %   'cortexright'      = string, filename with right cortex (optional, default is automatic)
 %   'hemisphereoffset' = number, amount in milimeter to move the hemispheres apart from each other (default = 0)
+%   'debug'            = boolean, write a debug.xml file (default = true)
 %
 % See also FT_WRITE_CIFTI, FT_READ_MRI, FT_WRITE_MRI
 
@@ -54,9 +56,11 @@ function source = ft_read_cifti(filename, varargin)
 % $Id$
 
 readdata         = ft_getopt(varargin, 'readdata', []);   % the default depends on file size, see below
+readsurface      = ft_getopt(varargin, 'readsurface', true);
 cortexleft       = ft_getopt(varargin, 'cortexleft', {});
 cortexright      = ft_getopt(varargin, 'cortexright', {});
 hemisphereoffset = ft_getopt(varargin, 'hemisphereoffset', 0); % in mm, move the two hemispheres apart from each other
+debug            = ft_getopt(varargin, 'debug', true);
 
 % convert 'yes'/'no' into boolean
 readdata = istrue(readdata);
@@ -115,12 +119,14 @@ if any(xmldata==0)
   xmldata = xmldata(xmldata>0);
 end
 
-try
-  % write the xml section to a temporary file
-  xmlfile = 'debug.xml';
-  tmp = fopen(xmlfile, 'w');
-  fwrite(tmp, xmldata);
-  fclose(tmp);
+if debug
+  try
+    % write the xml section to a temporary file
+    xmlfile = 'debug.xml';
+    tmp = fopen(xmlfile, 'w');
+    fwrite(tmp, xmldata);
+    fclose(tmp);
+  end
 end
 
 % ensure that the external toolbox is present, this adds gifti/@xmltree
@@ -493,7 +499,7 @@ if ~isempty(BrainModel)
     dataIndex{i} = geombeg(i):geomend(i);
     switch BrainModel(i).ModelType
       case 'CIFTI_MODEL_TYPE_SURFACE'
-
+        
         switch Cifti.Version
           case {'1' '1.0'}
             try
@@ -731,146 +737,148 @@ source.unit = 'mm'; % per definition
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % try to get the geometrical information from the corresponding gifti files
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-[p, f, x] = fileparts(filename);
-t = tokenize(f, '.');
-
-subject  = 'unknown';
-dataname = 'unknown';
-geomodel = '';
-
-% the following assumes HCP/WorkBench/Caret file naming conventions
-if length(t)==2
-  subject  = t{1};
-  dataname = t{2};
-elseif length(t)==3
-  subject  = t{1};
-  dataname = t{2};
-  content  = t{3};
-elseif length(t)==4
-  subject  = t{1};
-  dataname = t{2};
-  geomodel = t{3};
-  content  = t{4};
-elseif length(t)==5
-  subject  = t{1};
-  dataname = [t{2} '.' t{3}];
-  geomodel = t{4};
-  content  = t{5};
-else
-  error('cannot parse file name');
-end
-
-% construct a list of possible file names for the surface geometry
-Lfilelist = {
-  [subject '.L' '.midthickness'  '.' geomodel '.surf.gii']
-  [subject '.L' '.pial'          '.' geomodel '.surf.gii']
-  [subject '.L' '.white'         '.' geomodel '.surf.gii']
-  [subject '.L' '.inflated'      '.' geomodel '.surf.gii']
-  [subject '.L' '.very_inflated' '.' geomodel '.surf.gii']
-  [subject '.L' '.sphere'        '.' geomodel '.surf.gii']
-  [subject '.L' '.'              '.' geomodel '.surf.gii']
-  [subject '.L' '.midthickness'               '.surf.gii']
-  [subject '.L' '.pial'                       '.surf.gii']
-  [subject '.L' '.white'                      '.surf.gii']
-  [subject '.L' '.inflated'                   '.surf.gii']
-  [subject '.L' '.very_inflated'              '.surf.gii']
-  [subject '.L' '.sphere'                     '.surf.gii']
-  [subject '.L'                               '.surf.gii']
-  [subject '.CORTEX_LEFT'                     '.surf.gii']
-  };
-
-Rfilelist = {
-  [subject '.R' '.midthickness'  '.' geomodel  '.surf.gii']
-  [subject '.R' '.pial'          '.' geomodel  '.surf.gii']
-  [subject '.R' '.white'         '.' geomodel  '.surf.gii']
-  [subject '.R' '.inflated'      '.' geomodel  '.surf.gii']
-  [subject '.R' '.very_inflated' '.' geomodel  '.surf.gii']
-  [subject '.R' '.sphere'        '.' geomodel  '.surf.gii']
-  [subject '.R' '.'              '.' geomodel  '.surf.gii']
-  [subject '.R' '.midthickness'                '.surf.gii']
-  [subject '.R' '.pial'                        '.surf.gii']
-  [subject '.R' '.white'                       '.surf.gii']
-  [subject '.R' '.inflated'                    '.surf.gii']
-  [subject '.R' '.very_inflated'               '.surf.gii']
-  [subject '.R' '.sphere'                      '.surf.gii']
-  [subject '.R'                                '.surf.gii']
-  [subject '.CORTEX_RIGHT'                     '.surf.gii']
-  };
-
-Bfilelist = {
-  [subject '.midthickness'  '.' geomodel '.surf.gii']
-  [subject '.pial'          '.' geomodel '.surf.gii']
-  [subject '.white'         '.' geomodel '.surf.gii']
-  [subject '.inflated'      '.' geomodel '.surf.gii']
-  [subject '.very_inflated' '.' geomodel '.surf.gii']
-  [subject '.sphere'        '.' geomodel '.surf.gii']
-  [subject                  '.' geomodel '.surf.gii']
-  [subject '.midthickness'               '.surf.gii']
-  [subject '.pial'                       '.surf.gii']
-  [subject '.white'                      '.surf.gii']
-  [subject '.inflated'                   '.surf.gii']
-  [subject '.very_inflated'              '.surf.gii']
-  [subject '.sphere'                     '.surf.gii']
-  [subject                               '.surf.gii']
-  [subject '.CORTEX'                     '.surf.gii']
-  };
-
-% assume that the surface files are in the same directory as the cifti file
-for i=1:numel(Lfilelist)
-  Lfilelist{i} = fullfile(p, Lfilelist{i});
-end
-for i=1:numel(Rfilelist)
-  Rfilelist{i} = fullfile(p, Rfilelist{i});
-end
-for i=1:numel(Bfilelist)
-  Bfilelist{i} = fullfile(p, Bfilelist{i});
-end
-
-Lfilelist = cat(1, cortexleft, Lfilelist);
-Rfilelist = cat(1, cortexright, Rfilelist);
-
-tri = zeros(0,3);
-for i=1:length(Surface)
+if readsurface
   
-  switch Surface(i).BrainStructure
-    case 'CIFTI_STRUCTURE_CORTEX_LEFT'
-      for j=1:length(Lfilelist)
-        if exist(Lfilelist{j}, 'file')
-          warning('reading CORTEX_LEFT from %s', Lfilelist{j});
-          mesh = ft_read_headshape(Lfilelist{j}, 'unit', 'mm'); % volume and surface should be in consistent units, gifti is defined in mm, wb_view also expects mm
-          mesh.pnt(:,1) = mesh.pnt(:,1) - hemisphereoffset;
-          pos(posIndex==i,:) = mesh.pnt;
-          tri = cat(1, tri, mesh.tri + find(posIndex==i, 1, 'first') - 1);
-          break
-        end
-      end % for each Lfilelist
-      
-    case 'CIFTI_STRUCTURE_CORTEX_RIGHT'
-      for j=1:length(Rfilelist)
-        if exist(Rfilelist{j}, 'file')
-          warning('reading CORTEX_RIGHT from %s', Rfilelist{j});
-          mesh = ft_read_headshape(Rfilelist{j}, 'unit', 'mm'); % volume and surface should be in consistent units, gifti is defined in mm, wb_view also expects mm
-          mesh.pnt(:,1) = mesh.pnt(:,1) + hemisphereoffset;
-          pos(posIndex==i,:) = mesh.pnt;
-          tri = cat(1, tri, mesh.tri + find(posIndex==i, 1, 'first') - 1);
-          break
-        end
-      end % for each Rfilelist
-      
-    otherwise
-      for j=1:length(Bfilelist)
-        if exist(Bfilelist{j}, 'file')
-          warning('reading %s from %s', Surface(i).BrainStructure(17:end), Bfilelist{j});
-          mesh = ft_read_headshape(Bfilelist{j}, 'unit', 'mm'); % volume and surface should be in consistent units, gifti is defined in mm, wb_view also expects mm
-          pos(posIndex==i,:) = mesh.pnt;
-          tri = cat(1, tri, mesh.tri + find(posIndex==i, 1, 'first') - 1);
-          break
-        end
-      end % for each Bfilelist
-      
-  end % switch BrainStructure
-end
+  [p, f, x] = fileparts(filename);
+  t = tokenize(f, '.');
+  
+  subject  = 'unknown';
+  dataname = 'unknown';
+  geomodel = '';
+  
+  % the following assumes HCP/WorkBench/Caret file naming conventions
+  if length(t)==2
+    subject  = t{1};
+    dataname = t{2};
+  elseif length(t)==3
+    subject  = t{1};
+    dataname = t{2};
+    content  = t{3};
+  elseif length(t)==4
+    subject  = t{1};
+    dataname = t{2};
+    geomodel = t{3};
+    content  = t{4};
+  elseif length(t)==5
+    subject  = t{1};
+    dataname = [t{2} '.' t{3}];
+    geomodel = t{4};
+    content  = t{5};
+  else
+    error('cannot parse file name');
+  end
+  
+  % construct a list of possible file names for the surface geometry
+  Lfilelist = {
+    [subject '.L' '.midthickness'  '.' geomodel '.surf.gii']
+    [subject '.L' '.pial'          '.' geomodel '.surf.gii']
+    [subject '.L' '.white'         '.' geomodel '.surf.gii']
+    [subject '.L' '.inflated'      '.' geomodel '.surf.gii']
+    [subject '.L' '.very_inflated' '.' geomodel '.surf.gii']
+    [subject '.L' '.sphere'        '.' geomodel '.surf.gii']
+    [subject '.L' '.'              '.' geomodel '.surf.gii']
+    [subject '.L' '.midthickness'               '.surf.gii']
+    [subject '.L' '.pial'                       '.surf.gii']
+    [subject '.L' '.white'                      '.surf.gii']
+    [subject '.L' '.inflated'                   '.surf.gii']
+    [subject '.L' '.very_inflated'              '.surf.gii']
+    [subject '.L' '.sphere'                     '.surf.gii']
+    [subject '.L'                               '.surf.gii']
+    [subject '.CORTEX_LEFT'                     '.surf.gii']
+    };
+  
+  Rfilelist = {
+    [subject '.R' '.midthickness'  '.' geomodel  '.surf.gii']
+    [subject '.R' '.pial'          '.' geomodel  '.surf.gii']
+    [subject '.R' '.white'         '.' geomodel  '.surf.gii']
+    [subject '.R' '.inflated'      '.' geomodel  '.surf.gii']
+    [subject '.R' '.very_inflated' '.' geomodel  '.surf.gii']
+    [subject '.R' '.sphere'        '.' geomodel  '.surf.gii']
+    [subject '.R' '.'              '.' geomodel  '.surf.gii']
+    [subject '.R' '.midthickness'                '.surf.gii']
+    [subject '.R' '.pial'                        '.surf.gii']
+    [subject '.R' '.white'                       '.surf.gii']
+    [subject '.R' '.inflated'                    '.surf.gii']
+    [subject '.R' '.very_inflated'               '.surf.gii']
+    [subject '.R' '.sphere'                      '.surf.gii']
+    [subject '.R'                                '.surf.gii']
+    [subject '.CORTEX_RIGHT'                     '.surf.gii']
+    };
+  
+  Bfilelist = {
+    [subject '.midthickness'  '.' geomodel '.surf.gii']
+    [subject '.pial'          '.' geomodel '.surf.gii']
+    [subject '.white'         '.' geomodel '.surf.gii']
+    [subject '.inflated'      '.' geomodel '.surf.gii']
+    [subject '.very_inflated' '.' geomodel '.surf.gii']
+    [subject '.sphere'        '.' geomodel '.surf.gii']
+    [subject                  '.' geomodel '.surf.gii']
+    [subject '.midthickness'               '.surf.gii']
+    [subject '.pial'                       '.surf.gii']
+    [subject '.white'                      '.surf.gii']
+    [subject '.inflated'                   '.surf.gii']
+    [subject '.very_inflated'              '.surf.gii']
+    [subject '.sphere'                     '.surf.gii']
+    [subject                               '.surf.gii']
+    [subject '.CORTEX'                     '.surf.gii']
+    };
+  
+  % assume that the surface files are in the same directory as the cifti file
+  for i=1:numel(Lfilelist)
+    Lfilelist{i} = fullfile(p, Lfilelist{i});
+  end
+  for i=1:numel(Rfilelist)
+    Rfilelist{i} = fullfile(p, Rfilelist{i});
+  end
+  for i=1:numel(Bfilelist)
+    Bfilelist{i} = fullfile(p, Bfilelist{i});
+  end
+  
+  Lfilelist = cat(1, cortexleft, Lfilelist);
+  Rfilelist = cat(1, cortexright, Rfilelist);
+  
+  tri = zeros(0,3);
+  for i=1:length(Surface)
+    
+    switch Surface(i).BrainStructure
+      case 'CIFTI_STRUCTURE_CORTEX_LEFT'
+        for j=1:length(Lfilelist)
+          if exist(Lfilelist{j}, 'file')
+            fprintf('reading CORTEX_LEFT surface from %s\n', Lfilelist{j});
+            mesh = ft_read_headshape(Lfilelist{j}, 'unit', 'mm'); % volume and surface should be in consistent units, gifti is defined in mm, wb_view also expects mm
+            mesh.pnt(:,1) = mesh.pnt(:,1) - hemisphereoffset;
+            pos(posIndex==i,:) = mesh.pnt;
+            tri = cat(1, tri, mesh.tri + find(posIndex==i, 1, 'first') - 1);
+            break
+          end
+        end % for each Lfilelist
+        
+      case 'CIFTI_STRUCTURE_CORTEX_RIGHT'
+        for j=1:length(Rfilelist)
+          if exist(Rfilelist{j}, 'file')
+            fprintf('reading CORTEX_RIGHT surface from %s\n', Rfilelist{j});
+            mesh = ft_read_headshape(Rfilelist{j}, 'unit', 'mm'); % volume and surface should be in consistent units, gifti is defined in mm, wb_view also expects mm
+            mesh.pnt(:,1) = mesh.pnt(:,1) + hemisphereoffset;
+            pos(posIndex==i,:) = mesh.pnt;
+            tri = cat(1, tri, mesh.tri + find(posIndex==i, 1, 'first') - 1);
+            break
+          end
+        end % for each Rfilelist
+        
+      otherwise
+        for j=1:length(Bfilelist)
+          if exist(Bfilelist{j}, 'file')
+            fprintf('reading %s surface from %s\n', Surface(i).BrainStructure(17:end), Bfilelist{j});
+            mesh = ft_read_headshape(Bfilelist{j}, 'unit', 'mm'); % volume and surface should be in consistent units, gifti is defined in mm, wb_view also expects mm
+            pos(posIndex==i,:) = mesh.pnt;
+            tri = cat(1, tri, mesh.tri + find(posIndex==i, 1, 'first') - 1);
+            break
+          end
+        end % for each Bfilelist
+        
+    end % switch BrainStructure
+  end
+end % if readsurface
 
 % add the vertex and voxel positions
 brainordinate.pos = pos;

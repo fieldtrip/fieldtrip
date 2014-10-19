@@ -141,12 +141,6 @@ switch (cfg.filetype)
     ft_write_headshape(cfg.filename, source, 'data', getsubfield(source, cfg.parameter), 'format', 'gifti');
     
   case 'cifti'
-    [p, f, x] = fileparts(cfg.filename);
-    if isequal(x, '.nii')
-      cfg.filename = fullfile(p, f); % strip the extension
-    end
-    cfg.filename = [cfg.filename '.' cfg.parameter '.nii'];
-    
     % brainstructure should represent the global anatomical structure, such as CortexLeft, Thalamus, etc.
     % parcellation should represent the detailled parcellation, such as BA1, BA2, BA3, etc.
     ft_write_cifti(cfg.filename, source, 'parameter', cfg.parameter, 'brainstructure', cfg.brainstructure, 'parcellation', cfg.parcellation, 'precision', cfg.precision);

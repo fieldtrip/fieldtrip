@@ -22,10 +22,12 @@ function ft_write_cifti(filename, source, varargin)
 % FT_DATATYPE_VOLUME definition.
 %
 % Any optional input arguments should come in key-value pairs and may include
-%   'parameter'      = string, fieldname that contains the functional data
-%   'brainstructure' = string, fieldname that describes the brain structures (default = 'brainstructure')
-%   'parcellation'   = string, fieldname that describes the parcellation (default = 'parcellation')
-%   'precision'      = string, can be 'single', 'double', 'int32', etc. (default ='single')
+%   'parameter'        = string, fieldname that contains the functional data
+%   'brainstructure'   = string, fieldname that describes the brain structures (default = 'brainstructure')
+%   'parcellation'     = string, fieldname that describes the parcellation (default = 'parcellation')
+%   'precision'        = string, can be 'single', 'double', 'int32', etc. (default ='single')
+%   'writesurface'     = boolean, can be false or true (default = true)
+%   'debug'            = boolean, write a debug.xml file (default = true)
 %
 % The brainstructure refers to the global anatomical structure, such as CortexLeft, Thalamus, etc.
 % The parcellation refers to the the detailled parcellation, such as BA1, BA2, BA3, etc.
@@ -56,6 +58,8 @@ parameter       = ft_getopt(varargin, 'parameter');
 brainstructure  = ft_getopt(varargin, 'brainstructure'); % the default is determined further down
 parcellation    = ft_getopt(varargin, 'parcellation');   % the default is determined further down
 precision       = ft_getopt(varargin, 'precision', 'single');
+writesurface    = ft_getopt(varargin, 'writesurface', true);
+debug            = ft_getopt(varargin, 'debug', true);
 
 if isfield(source, 'brainordinate')
   % this applies to a parcellated data representation
@@ -153,9 +157,19 @@ end % switch
 % determine each of the dimensions
 dimtok = tokenize(dimord, '_');
 
-% add the extension to the filename
-[p, f] = fileparts(filename);
-filename = fullfile(p, [f extension]);
+[p, f, x] = fileparts(filename);
+if isequal(x, '.nii')
+  filename = fullfile(p, f); % strip the extension
+end
+
+[p, f, x] = fileparts(filename);
+if any(isequal(x, {'.dtseries', '.ptseries', '.dconn', '.pconn', '.dscalar', '.pscalar'}))
+  filename = fullfile(p, f); % strip the extension
+end
+
+% add the full cifti extension to the filename
+[p, f, x] = fileparts(filename);
+filename = fullfile(p, [f x extension]);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % get the description of the geometry
@@ -709,12 +723,14 @@ fid = fopen(filename, 'wb');
 % write the header, this is 4+540 bytes
 write_nifti2_hdr(fid, hdr);
 
-try
-  % write the xml section to a temporary file for debugging
-  xmlfile = 'debug.xml';
-  tmp = fopen(xmlfile, 'w');
-  fwrite(tmp, xmldat, 'char');
-  fclose(tmp);
+if debug
+  try
+    % write the xml section to a temporary file for debugging
+    xmlfile = 'debug.xml';
+    tmp = fopen(xmlfile, 'w');
+    fwrite(tmp, xmldat, 'char');
+    fclose(tmp);
+  end
 end
 
 % write the cifti header extension
@@ -730,7 +746,7 @@ fwrite(fid, dat, precision);
 fclose(fid);
 
 % write the surfaces as gifti files
-if isfield(source, 'tri')
+if writesurface && isfield(source, 'tri')
   
   if isfield(source, brainstructure)
     % it contains information about anatomical structures, including cortical surfaces
@@ -751,7 +767,7 @@ if isfield(source, 'tri')
       [p, f, x] = fileparts(filename);
       filetok = tokenize(f, '.');
       surffile = fullfile(p, [filetok{1} '.' BrainStructurelabel{i} '.surf.gii']);
-      warning('writing %s to %s', BrainStructurelabel{i}, surffile);
+      fprintf('writing %s surface to %s\n', BrainStructurelabel{i}, surffile);
       ft_write_headshape(surffile, mesh, 'format', 'gifti');
     end
     
@@ -766,7 +782,7 @@ if isfield(source, 'tri')
     ft_write_headshape(surffile, mesh, 'format', 'gifti');
   end
   
-end % if isfield tri
+end % if writesurface and isfield tri
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

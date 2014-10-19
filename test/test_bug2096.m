@@ -6,16 +6,15 @@ function test_bug2096
 % TEST test_bug2096
 % TEST ft_sourcewrite ft_read_cifti ft_write_cifti
 
-% /home/common/matlab/fieldtrip/data/test
+% /home/common/matlab/fieldtrip/data/test/bug2096
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2096'));
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % general purpose tests
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear all; close all
 
-%% 
+%%
 source = [];
 source.dim    = [11 12 13];
 [X Y Z]       = ndgrid(1:source.dim(1), 1:source.dim(2), 1:source.dim(3));
@@ -30,7 +29,7 @@ source.dimord = 'pos';
 cfg = [];
 cfg.filetype  = 'cifti';
 cfg.parameter = 'pow';
-cfg.filename  = 'test_bug2096';
+cfg.filename  = 'test_bug2096.pow';
 ft_sourcewrite(cfg, source);
 
 source1 = ft_read_cifti('test_bug2096.pow.dscalar.nii')
@@ -38,7 +37,7 @@ source1 = ft_read_cifti('test_bug2096.pow.dscalar.nii')
 cfg = [];
 cfg.filetype  = 'cifti';
 cfg.parameter = 'pow';
-cfg.filename  = 'test_bug2096b';
+cfg.filename  = 'test_bug2096b.pow';
 ft_sourcewrite(cfg, source1);
 
 source2 = ft_read_cifti('test_bug2096b.pow.dscalar.nii')
@@ -91,7 +90,7 @@ source.dimord  = 'pos_pos';
 cfg = [];
 cfg.filetype  = 'cifti';
 cfg.parameter = 'imagcoh';
-cfg.filename  = 'test_bug2096';
+cfg.filename  = 'test_bug2096.imagcoh';
 ft_sourcewrite(cfg, source);
 
 source1 = ft_read_cifti('test_bug2096.imagcoh.dconn.nii');
@@ -99,7 +98,7 @@ source1 = ft_read_cifti('test_bug2096.imagcoh.dconn.nii');
 cfg = [];
 cfg.filetype  = 'cifti';
 cfg.parameter = 'imagcoh';
-cfg.filename  = 'test_bug2096b';
+cfg.filename  = 'test_bug2096b.imagcoh';
 ft_sourcewrite(cfg, source1);
 
 source2 = ft_read_cifti('test_bug2096b.imagcoh.dconn.nii')
@@ -121,14 +120,18 @@ source.dimord = 'pos_time';
 cfg = [];
 cfg.filetype = 'cifti';
 cfg.parameter = 'timeseries';
-cfg.filename = 'test_bug2096';
+cfg.filename = 'test_bug2096.timeseries';
 cfg.precision = 'single';
 ft_sourcewrite(cfg, source);
 
 source1 = ft_read_cifti('test_bug2096.timeseries.dtseries.nii');
 
 %%
-parcellation = ft_read_atlas(dccnpath('/home/common/matlab/fieldtrip/template/atlas/aal/ROI_MNI_V4.nii'));
+try
+  parcellation = ft_read_atlas(dccnpath('/home/common/matlab/fieldtrip/template/atlas/aal/ROI_MNI_V4.nii'));
+catch
+  parcellation = ft_read_atlas(fullfile(getenv('HOME'), '/matlab/fieldtrip/template/atlas/aal/ROI_MNI_V4.nii'));
+end
 source = ft_checkdata(parcellation, 'datatype', 'source');
 source = removefields(source, {'tissue', 'tissuelabel'});
 source.pow = randn(prod(parcellation.dim), 1);
@@ -142,7 +145,7 @@ ft_sourceplot(cfg, source);
 cfg = [];
 cfg.filetype  = 'cifti';
 cfg.parameter = 'pow';
-cfg.filename  = 'test_bug2096';
+cfg.filename  = 'test_bug2096.pow';
 ft_sourcewrite(cfg, source);
 
 source1 = ft_read_cifti('test_bug2096.pow.dscalar.nii')
@@ -150,7 +153,7 @@ source1 = ft_read_cifti('test_bug2096.pow.dscalar.nii')
 cfg = [];
 cfg.filetype  = 'cifti';
 cfg.parameter = 'pow';
-cfg.filename  = 'test_bug2096b';
+cfg.filename  = 'test_bug2096b.pow';
 ft_sourcewrite(cfg, source1);
 
 source2 = ft_read_cifti('test_bug2096b.pow.dscalar.nii')
@@ -170,7 +173,7 @@ cfg = [];
 cfg.filetype  = 'cifti';
 cfg.parameter = 'pow';
 cfg.parcellation = 'tissue';
-cfg.filename  = 'test_bug2096';
+cfg.filename  = 'test_bug2096.pow';
 ft_sourcewrite(cfg, sourcep);
 
 sourcep1 = ft_read_cifti('test_bug2096.pow.pscalar.nii')
@@ -178,7 +181,7 @@ sourcep1 = ft_read_cifti('test_bug2096.pow.pscalar.nii')
 cfg = [];
 cfg.filetype  = 'cifti';
 cfg.parameter = 'pow';
-cfg.filename  = 'test_bug2096b';
+cfg.filename  = 'test_bug2096b.pow';
 ft_sourcewrite(cfg, sourcep1);
 
 sourcep2 = ft_read_cifti('test_bug2096b.pow.pscalar.nii')
@@ -205,7 +208,7 @@ source.dimord = 'pos';
 cfg = [];
 cfg.filetype  = 'cifti';
 cfg.parameter = 'activity';
-cfg.filename  = 'test_bug2096';
+cfg.filename  = 'test_bug2096.activity';
 ft_sourcewrite(cfg, source);
 
 source1 = ft_read_cifti('test_bug2096.activity.dscalar.nii')
@@ -231,7 +234,7 @@ source.dimord = 'pos_time';
 cfg = [];
 cfg.filetype  = 'cifti';
 cfg.parameter = 'timeseries';
-cfg.filename  = 'test_bug2096';
+cfg.filename  = 'test_bug2096.timeseries';
 ft_sourcewrite(cfg, source);
 
 source1 = ft_read_cifti('test_bug2096.timeseries.dtseries.nii')
@@ -253,7 +256,7 @@ source.dimord = 'pos_pos';
 cfg = [];
 cfg.filetype  = 'cifti';
 cfg.parameter = 'imagcoh';
-cfg.filename  = 'test_bug2096';
+cfg.filename  = 'test_bug2096.imagcoh';
 ft_sourcewrite(cfg, source);
 
 source1 = ft_read_cifti('test_bug2096.imagcoh.dconn.nii')
@@ -286,7 +289,7 @@ ft_plot_mesh(source.brainordinate, 'vertexcolor', source.brainordinate.parcellat
 cfg = [];
 cfg.filetype  = 'cifti';
 cfg.parameter = 'activity';
-cfg.filename  = 'test_bug2096';
+cfg.filename  = 'test_bug2096.activity';
 ft_sourcewrite(cfg, source);
 
 source1 = ft_read_cifti('test_bug2096.activity.pscalar.nii')
@@ -320,7 +323,7 @@ ft_plot_mesh(source.brainordinate, 'vertexcolor', source.brainordinate.parcellat
 cfg = [];
 cfg.filetype  = 'cifti';
 cfg.parameter = 'timeseries';
-cfg.filename  = 'test_bug2096';
+cfg.filename  = 'test_bug2096.timeseries';
 ft_sourcewrite(cfg, source);
 
 source1 = ft_read_cifti('test_bug2096.timeseries.ptseries.nii')
@@ -350,7 +353,7 @@ ft_plot_mesh(source.brainordinate, 'vertexcolor', source.brainordinate.parcellat
 cfg = [];
 cfg.filetype  = 'cifti';
 cfg.parameter = 'imagcoh';
-cfg.filename  = 'test_bug2096';
+cfg.filename  = 'test_bug2096.imagcoh';
 ft_sourcewrite(cfg, source);
 
 source1 = ft_read_cifti('test_bug2096.imagcoh.pconn.nii')
