@@ -1321,6 +1321,8 @@ end
 
 if opt.hasana
   if opt.init
+    tmph  = [h1 h2 h3];
+    tmph(~opt.update) = 0;
     ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'parents', tmph, 'doscale', false, 'clim', opt.clim);
     
     opt.anahandles = findobj(opt.handlesfigure, 'type', 'surface')';
