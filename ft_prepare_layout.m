@@ -45,9 +45,10 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 % Alternatively you can specify the following layouts which will be
 % generated for all channels present in the data. Note that these layouts
 % are suitable for multiplotting, but not for topoplotting.
-%   cfg.layout = 'ordered'  will give you a NxN ordered layout
-%   cfg.layout = 'vertical' will give you a Nx1 ordered layout
-%   cfg.layout = 'butterfly'  will give you a layout with all channels on top of each other
+%   cfg.layout = 'ordered'   will give you a NxN ordered layout
+%   cfg.layout = 'vertical'  will give you a Nx1 ordered layout
+%   cfg.layout = 'butterfly' will give you a layout with all channels on top of each other
+%   cfg.layout = 'circular'  will distribute the channels on a circle
 %
 % The output layout structure will contain the following fields
 %   layout.label   = Nx1 cell-array with channel labels
@@ -162,7 +163,45 @@ elseif isstruct(cfg.layout) && isfield(cfg.layout, 'pos') && isfield(cfg.layout,
   mindist = min(d(:));
   layout.width  = ones(nchans,1) * mindist * 0.8;
   layout.height = ones(nchans,1) * mindist * 0.6;
+
+elseif isequal(cfg.layout, 'circular')
+  rho = ft_getopt(cfg, 'rho', []);
   
+  if nargin>1 && ~isempty(data)
+    % look at the data to determine the overlapping channels
+    cfg.channel  = ft_channelselection(cfg.channel, data.label);
+    chanindx     = match_str(data.label, cfg.channel);
+    nchan        = length(data.label(chanindx));
+    layout.label = data.label(chanindx);
+  else
+    assert(iscell(cfg.channel), 'cfg.channel should be a valid set of channels');
+    nchan        = length(cfg.channel);
+    layout.label = cfg.channel;
+  end
+  
+  if isempty(rho)
+    % do an equally spaced layout, starting at 12 o'clock, going clockwise
+    rho = linspace(0,1,nchan+1);
+    rho = 2.*pi.*rho(1:end-1);
+  else
+    if numel(rho) ~= nchan
+      error('the number of elements in the polar angle vector should be equal to the number of channels');
+    end
+    
+    % convert to radians
+    rho = 2.*pi.*rho./360;
+  end
+  x   = sin(rho);
+  y   = cos(rho);
+
+  layout.pos     = [x(:) y(:)];
+  layout.width   = ones(nchan,1) * 0.01;
+  layout.height  = ones(nchan,1) * 0.01;
+  layout.mask    = {};
+  layout.outline = {};
+  skipscale = true; % a scale is not desired
+  skipcomnt = true; % a comment is initially not desired, or at least requires more thought
+    
 elseif isequal(cfg.layout, 'butterfly')
   if nargin>1 && ~isempty(data)
     % look at the data to determine the overlapping channels
