@@ -77,16 +77,17 @@ freq = ft_checkdata(freq, 'cmbrepresentation', 'sparse');
 cfg = ft_checkconfig(cfg, 'required', {'foi', 'layout'});
 
 % set the defaults
-if ~isfield(cfg, 'feedback'),   cfg.feedback = 'text';        end
-if ~isfield(cfg, 'alphaparam'), cfg.alphaparam = [];          end
-if ~isfield(cfg, 'widthparam'), cfg.widthparam = [];          end
-if ~isfield(cfg, 'colorparam'), cfg.colorparam = 'cohspctrm'; end
-if ~isfield(cfg, 'newfigure'),  cfg.newfigure = 'yes';        end
+cfg.feedback   = ft_getopt(cfg, 'feedback',   'text');
+cfg.alphaparam = ft_getopt(cfg, 'alphaparam', []);
+cfg.widthparam = ft_getopt(cfg, 'widthparam', []);
+cfg.colorparam = ft_getopt(cfg, 'colorparam', 'cohspctrm');
+cfg.newfigure  = ft_getopt(cfg, 'newfigure',  'yes');
 
-if ~isfield(cfg, 'arrowhead'),   cfg.arrowhead = 'none';       end % none, stop, start, both
-if ~isfield(cfg, 'arrowsize'),   cfg.arrowsize = nan;          end % length of the arrow head, should be in in figure units, i.e. the same units as the layout
-if ~isfield(cfg, 'arrowoffset'), cfg.arrowoffset = nan;        end % absolute, should be in figure units, i.e. the same units as the layout
-if ~isfield(cfg, 'arrowlength'), cfg.arrowlength = 0.8;        end % relative to the complete line
+cfg.arrowhead  = ft_getopt(cfg, 'arrowhead', 'none'); % none, stop, start, both
+cfg.arrowsize  = ft_getopt(cfg, 'arrowsize', nan);    % length of the arrow head, should be in in figure units, i.e. the same units as the layout
+cfg.arrowoffset = ft_getopt(cfg, 'arrowoffset', nan); % absolute, should be in figure units, i.e. the same units as the layout
+cfg.arrowlength = ft_getopt(cfg, 'arrowlength', 0.8);% relative to the complete line
+cfg.linestyle   = ft_getopt(cfg, 'linestyle',   []);
 
 lay = ft_prepare_layout(cfg, freq);
 
@@ -150,40 +151,17 @@ rgb  = colormap;
 if ~isempty(colorparam)
   cmin = min(colorparam(:));
   cmax = max(colorparam(:));
+  
+  % this line creates a sorting vector that cause the most extreme valued
+  % arrows to be plotted last
+  [srt, srtidx] = sort(abs(colorparam));
+ 
   colorparam = (colorparam - cmin)./(cmax-cmin);
   colorparam = round(colorparam * (size(rgb,1)-1) + 1);
 end
 
 if strcmp(cfg.newfigure, 'yes')
-  % also plot the position of the electrodes
-  ft_plot_vector(lay.pos(:,1), lay.pos(:,2), 'style','k.');
-
-  % also plot the outline, i.e. head shape or sulci
-  if isfield(lay, 'outline')
-    fprintf('solid lines indicate the outline, e.g. head shape or sulci\n');
-    for i=1:length(lay.outline)
-      if ~isempty(lay.outline{i})
-        X = lay.outline{i}(:,1);
-        Y = lay.outline{i}(:,2);
-        ft_plot_line(X, Y, 'color', 'k', 'linewidth', 1.5, 'linestyle', '-');
-      end
-    end
-  end
-
-  % also plot the mask, i.e. global outline for masking the topoplot
-  if isfield(lay, 'mask')
-    fprintf('dashed lines indicate the mask for topograpic interpolation\n');
-    for i=1:length(lay.mask)
-      if ~isempty(lay.mask{i})
-        X = lay.mask{i}(:,1);
-        Y = lay.mask{i}(:,2);
-        % the polygon representing the mask should be closed
-        X(end+1) = X(1);
-        Y(end+1) = Y(1);
-        ft_plot_line(X, Y, 'color', 'k', 'linewidth', 1.5, 'linestyle', '-');
-      end
-    end
-  end
+  ft_plot_lay(lay, 'label', 'no', 'box', 'off');
 end % if newfigure
 
 % fix the limits for the axis
@@ -191,55 +169,144 @@ axis(axis);
 
 ft_progress('init', cfg.feedback, 'plotting connections...');
 
-for i=1:ncmb
+if ~exist('srtidx', 'var')
+  srtidx = 1:ncmb;
+end
+
+for i=srtidx(:)'
 
   if strcmp(beglabel{i}, endlabel{i})
     % skip autocombinations
     continue
   end
 
-  ft_progress(i/ncmb, 'plotting connection %d from %d (%s -> %s)\n', i, ncmb, beglabel{i}, endlabel{i});
-
-  if widthparam(i)>0
+  
+  if widthparam(i)>0 && (isempty(alphaparam)||alphaparam(i)>0)
+    ft_progress(i/ncmb, 'plotting connection %d from %d (%s -> %s)\n', i, ncmb, beglabel{i}, endlabel{i});
+    
     begindx = strcmp(beglabel{i}, lay.label);
     endindx = strcmp(endlabel{i}, lay.label);
     xbeg = lay.pos(begindx,1);
     ybeg = lay.pos(begindx,2);
     xend = lay.pos(endindx,1);
     yend = lay.pos(endindx,2);
-
-    if strcmp(cfg.arrowhead, 'none')
-      x = [xbeg xend]';
-      y = [ybeg yend]';
-      % h = line(x, y);
-      h = patch(x, y, 1);
-    else
-      arrowbeg  = [xbeg ybeg];
-      arrowend  = [xend yend];
-      center    = (arrowbeg+arrowend)/2;
-      direction = (arrowend - arrowbeg);
-      direction = direction/norm(direction);
-      offset    = [direction(2) -direction(1)];
-      arrowbeg  = cfg.arrowlength * (arrowbeg-center) + center + cfg.arrowoffset * offset;
-      arrowend  = cfg.arrowlength * (arrowend-center) + center + cfg.arrowoffset * offset;
-
-      h = arrow(arrowbeg, arrowend, 'Ends', cfg.arrowhead, 'length', 0.05);
-
-    end % if arrow
-
-    if ~isempty(widthparam)
-      set(h, 'LineWidth', widthparam(i));
+    
+    if isempty(cfg.linestyle)
+      if strcmp(cfg.arrowhead, 'none')
+        x = [xbeg xend]';
+        y = [ybeg yend]';
+        % h = line(x, y);
+        h = patch(x, y, 1);
+      else
+        arrowbeg  = [xbeg ybeg];
+        arrowend  = [xend yend];
+        center    = (arrowbeg+arrowend)/2;
+        direction = (arrowend - arrowbeg);
+        direction = direction/norm(direction);
+        offset    = [direction(2) -direction(1)];
+        arrowbeg  = cfg.arrowlength * (arrowbeg-center) + center + cfg.arrowoffset * offset;
+        arrowend  = cfg.arrowlength * (arrowend-center) + center + cfg.arrowoffset * offset;
+        
+        h = arrow(arrowbeg, arrowend, 'Ends', cfg.arrowhead, 'length', 0.05);
+        
+      end % if arrow
+      if ~isempty(widthparam)
+        set(h, 'LineWidth', widthparam(i));
+      end
+      
+      if ~isempty(alphaparam)
+        set(h, 'EdgeAlpha', alphaparam(i));
+        set(h, 'FaceAlpha', alphaparam(i)); % for arrowheads
+      end
+      
+      if ~isempty(colorparam)
+        set(h, 'EdgeColor', rgb(colorparam(i),:));
+        set(h, 'FaceColor', rgb(colorparam(i),:)); % for arrowheads
+      end
+    elseif ~isempty(cfg.linestyle)
+      
+      % new style of plotting, using curved lines, this does not allow for
+      % alpha mapping on the line segment
+      switch cfg.linestyle
+        case 'curve'
+          tmp = cscvn([xbeg mean([xbeg,xend])*0.8 xend;ybeg mean([ybeg,yend])*0.8 yend]);
+          pnt = fnplt(tmp);
+          h   = line(pnt(1,:)', pnt(2,:)');
+          
+          if ~isempty(widthparam)
+            set(h, 'LineWidth', widthparam(i));
+          end
+          if ~isempty(colorparam)
+            set(h, 'Color', rgb(colorparam(i),:));
+          end
+          
+          % deal with the arrow
+          if ~strcmp(cfg.arrowhead, 'none')
+            arrowbeg  = pnt(:,1)';
+            arrowend  = pnt(:,end)';
+            directionbeg = (arrowbeg - pnt(:,2)');
+            directionend = (arrowend - pnt(:,end-1)');
+            
+            directionbeg = directionbeg/norm(directionbeg);
+            directionend = directionend/norm(directionend);
+           
+            switch cfg.arrowhead
+              case 'stop'
+                pnt1 = arrowend - 0.05*directionend + 0.02*[directionend(2) -directionend(1)];
+                pnt2 = arrowend;
+                pnt3 = arrowend - 0.05*directionend - 0.02*[directionend(2) -directionend(1)];
+                h_arrow = patch([pnt1(1) pnt2(1) pnt3(1)]', [pnt1(2) pnt2(2) pnt3(2)]', [0 0 0]);
+                
+              case 'start'
+                pnt1 = arrowbeg - 0.05*directionbeg + 0.02*[directionbeg(2) -directionbeg(1)];
+                pnt2 = arrowbeg;
+                pnt3 = arrowbeg - 0.05*directionbeg - 0.02*[directionbeg(2) -directionbeg(1)];
+                h_arrow = patch([pnt1(1) pnt2(1) pnt3(1)]', [pnt1(2) pnt2(2) pnt3(2)]', [0 0 0]);
+                
+              case 'both'
+                pnt1 = arrowbeg - 0.05*directionbeg + 0.02*[directionbeg(2) -directionbeg(1)];
+                pnt2 = arrowbeg;
+                pnt3 = arrowbeg - 0.05*directionbeg - 0.02*[directionbeg(2) -directionbeg(1)];
+                h_arrow(1) = patch([pnt1(1) pnt2(1) pnt3(1)]', [pnt1(2) pnt2(2) pnt3(2)]', [0 0 0]);
+                
+                pnt1 = arrowend - 0.05*directionend + 0.02*[directionend(2) -directionend(1)];
+                pnt2 = arrowend;
+                pnt3 = arrowend - 0.05*directionend - 0.02*[directionend(2) -directionend(1)];
+                h_arrow(2) = patch([pnt1(1) pnt2(1) pnt3(1)]', [pnt1(2) pnt2(2) pnt3(2)]', [0 0 0]);
+                             
+            end
+          else
+            h_arrow = [];
+          end
+          
+          if ~isempty(widthparam)
+            set(h, 'LineWidth', widthparam(i));
+            if ~isempty(h_arrow)
+              set(h_arrow, 'LineWidth', widthparam(i));
+            end
+          end
+          if ~isempty(colorparam)
+            set(h, 'Color', rgb(colorparam(i),:));
+            if ~isempty(h_arrow)
+              set(h_arrow, 'Edgecolor', rgb(colorparam(i),:));
+              set(h_arrow, 'Facecolor', rgb(colorparam(i),:));
+            end
+          end
+          
+          if ~isempty(alphaparam)
+            if ~isempty(h_arrow)
+              set(h_arrow, 'EdgeAlpha', alphaparam(i));
+              set(h_arrow, 'FaceAlpha', alphaparam(i)); % for arrowheads
+            end
+          end
+          
+          
+        otherwise
+          error('unsupported linestyle specified');
+      end
+      
     end
-
-    if ~isempty(alphaparam)
-      set(h, 'EdgeAlpha', alphaparam(i));
-      set(h, 'FaceAlpha', alphaparam(i)); % for arrowheads
-    end
-
-    if ~isempty(colorparam)
-      set(h, 'EdgeColor', rgb(colorparam(i),:));
-      set(h, 'FaceColor', rgb(colorparam(i),:)); % for arrowheads
-    end
+    
 
   end
 end
