@@ -1,16 +1,12 @@
 function [norm] = ft_electroderealign(cfg)
 
-% FT_ELECTRODEREALIGN rotates and translates electrode positions to
-% template electrode positions or towards the head surface. It can
-% either perform a rigid body transformation, in which only the
-% coordinate system is changed, or it can apply additional deformations
-% to the input electrodes.
+% FT_ELECTRODEREALIGN rotates and translates electrode positions to template
+% electrode positions or towards the head surface. It can either perform a rigid body
+% transformation, in which only the coordinate system is changed, or it can apply
+% additional deformations to the input electrodes. This function requires that the
+% channel positions are identical to the electrode positions, i.e. it does not
+% support bipolar channels.
 %
-% Use as
-%   [elec] = ft_electroderealign(cfg)
-% 
-% This function requires the same electrode and channel positions.
-% 
 % Different methods for aligning the input electrodes to the subjects head
 % are implemented, which are described in detail below:
 %
@@ -34,6 +30,9 @@ function [norm] = ft_electroderealign(cfg)
 % MANUAL - You can display the skin surface and manually determine the
 % electrode positions by clicking on the skin surface.
 %
+% Use as
+%   [elec] = ft_electroderealign(cfg) 
+% 
 % The configuration can contain the following options
 %   cfg.method         = string representing the method for aligning or placing the electrodes
 %                        'fiducial'        realign using the NAS, LPA and RPA fiducials
