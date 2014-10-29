@@ -4,7 +4,8 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 % external fiducials or anatomical landmarks. This function does not change the
 % anatomical MRI volume itself, but only adjusts the homogeneous transformation
 % matrix that describes the mapping from voxels to the coordinate system. It also
-% appends a coordsys-field to the output data, which specifies the coordinate system.
+% appends a coordsys-field to the output data, or it updates it. This field specifies
+% how the x/y/z-axes of the coordinate system should be interpreted.
 %
 % For spatial normalisation and deformation (i.e. warping) an MRI to a template brain
 % you should use the FT_VOLUMENORMALISE function.
@@ -1120,9 +1121,9 @@ opt.handlesmarker = [];
 
 for i=1:length(opt.fidlabel)
   pos = opt.fiducial.(opt.fidlabel{i});
-  if any(isnan(pos))
-    continue
-  end
+%   if any(isnan(pos))
+%     continue
+%   end
   
   posi = pos(1);
   posj = pos(2);
