@@ -148,7 +148,9 @@ if strcmp(stype, 'old'),
   [param]    = parameterselection('all', source);
   trlparam   = strmatch('trial', param);
   sel        = setdiff(1:length(param), trlparam);
-  param      = param(sel);
+  ind=find(ismember(param,'inside'));% find the index of 'inside' field
+  % because its position varies with isfield('plvspctrm') vs. 'cohspctrm'
+  param      = param(sel(ind));
   
   for j = 1:length(param)
     dat = getsubfield(source, param{j});
