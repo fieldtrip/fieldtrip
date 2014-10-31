@@ -223,6 +223,8 @@ switch str
     c = angle(c); % negative angle means first row leads second row
   case 'imag'
     c = imag(c);
+  case 'absimag'
+    c = abs(imag(c));  
   case 'real'
     c = real(c);
   case '-logabs' 
