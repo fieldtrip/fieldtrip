@@ -607,6 +607,7 @@ end
 h = figure;
 setappdata(h, 'opt', opt);
 setappdata(h, 'cfg', cfg);
+%set(h, 'renderer', 'painters')
 
 % enable custom data cursor text
 dcm = datacursormode(h);
@@ -1719,7 +1720,7 @@ elseif any(strcmp(cfg.viewmode, {'component', 'vertical'}))
       % this is a cheap quick fix. If it causes error in plotting components, do this conditional on viewmode
       if numel(findobj(h,'tag', 'chanlabel'))<numel(chanindx)
         if opt.plotLabelFlag == 1 || (opt.plotLabelFlag == 2 && mod(i,10)==0)
-          ft_plot_text(labelx(laysel), labely(laysel), opt.hdr.label(chanindx(i)), 'tag', 'chanlabel', 'HorizontalAlignment', 'right','interpreter','none','FontUnits','normalized','FontSize',8);
+          ft_plot_text(labelx(laysel), labely(laysel), opt.hdr.label(chanindx(i)), 'tag', 'chanlabel', 'HorizontalAlignment', 'right','interpreter','none','FontSize',8);
         end
       end
       
