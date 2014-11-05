@@ -425,21 +425,33 @@ if numel(seldim) > 1
   return;
 end
 
-if isnumeric(data.(datfield)) && isrow(data.(datfield)) && seldim==1
-  % getdimord might get confused if the data is halfway a sequence of selections,
-  % where one field has already been subselected but another has not
-  dimord = getdimord(data, datfield);
-  dimtok = tokenize(dimord, '_');
-  if length(dimtok)==1
-    seldim = 2;
+if isnumeric(data.(datfield))
+  if isrow(data.(datfield)) && seldim==1
+    dimord = getdimord(data, datfield);
+    dimtok = tokenize(dimord, '_');
+    if length(dimtok)==1
+      seldim = 2; % switch row and column
+    end
+  elseif iscolumn(data.(datfield)) && seldim==2
+    dimord = getdimord(data, datfield);
+    dimtok = tokenize(dimord, '_');
+    if length(dimtok)==1
+      seldim = 1; % switch row and column
+    end
   end
-elseif isnumeric(data.(datfield)) && iscolumn(data.(datfield)) && seldim==2
-  % getdimord might get confused if the data is halfway a sequence of selections,
-  % where one field has already been subselected but another has not
-  dimord = getdimord(data, datfield);
-  dimtok = tokenize(dimord, '_');
-  if length(dimtok)==1
-    seldim = 1;
+elseif iscell(data.(datfield))
+  if isrow(data.(datfield){1}) && seldim==2
+    dimord = getdimord(data, datfield);
+    dimtok = tokenize(dimord, '_'); % the first is the cell-array, i.e. {rpt} or {pos}
+    if length(dimtok)==2
+      seldim = 3; % switch row and column
+    end
+  elseif iscolumn(data.(datfield){1}) && seldim==3
+    dimord = getdimord(data, datfield);
+    dimtok = tokenize(dimord, '_'); % the first is the cell-array, i.e. {rpt} or {pos}
+    if length(dimtok)==2
+      seldim = 2; % switch row and column
+    end
   end
 end
 
