@@ -414,7 +414,7 @@ switch cfg.method
         end
         
         setappdata(h, 'opt', opt);
-        cb_redraw_surface(h);
+        cb_redraw(h);
         
       case 'surface'
 
