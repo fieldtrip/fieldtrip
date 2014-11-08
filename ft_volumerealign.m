@@ -19,7 +19,7 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 %
 % FIDUCIAL - The coordinate system is updated according to the definition of the
 % coordinates of fiducials that are specified in the configuration.
-
+%
 % HEADSHAPE - Match the head surface from the MRI with a measured head surface using
 % an iterative closest point procedure. The MRI will be updated to match the measured
 % head surface. This includes an optional manual coregistration of the two head
