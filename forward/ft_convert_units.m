@@ -212,7 +212,12 @@ end % if
 if isfield(obj, 'fid') && isfield(obj.fid, 'pnt'), obj.fid.pnt = scale * obj.fid.pnt; end
 
 % dipole grid
-if isfield(obj, 'pos'), obj.pos = scale * obj.pos; end
+if isfield(obj, 'pos'),        obj.pos = scale * obj.pos; end
+if isfield(obj, 'resolution'), obj.resolution = scale * obj.resolution; end
+% x,y,zgrid can also be 'auto'
+if isfield(obj, 'xgrid') && ~ischar(obj.xgrid), obj.xgrid = scale * obj.xgrid; end
+if isfield(obj, 'ygrid') && ~ischar(obj.ygrid), obj.ygrid = scale * obj.ygrid; end
+if isfield(obj, 'zgrid') && ~ischar(obj.zgrid), obj.zgrid = scale * obj.zgrid; end
 
 % anatomical MRI or functional volume
 if isfield(obj, 'transform'),
