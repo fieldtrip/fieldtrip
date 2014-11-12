@@ -124,6 +124,27 @@ cfg.interactive = 'yes';
 figure; ft_multiplotER(cfg,avgFC);
 
 
+%%%%%%%%% Connectivity plots  %%%%%%%%%
+
+cfg = [];
+cfg.covariance = 'yes';
+tmp1 = ft_timelockanalysis(cfg, avgFC);
+
+cfg = [];
+cfg.method = 'corr';
+tmp2 = ft_connectivityanalysis(cfg, tmp1);
+
+cohFC      = tmp2;
+cohFC.coh  = tmp2.corr;
+cohFC.freq = 1;
+cohFC = rmfield(cohFC, 'coh');
+cohFC = rmfield(cohFC, 'time');
+
+cfg = [];
+cfg.foi = 1;
+cfg.layout = 'CTF151.lay';
+figure; ft_topoplotCC(cfg, cohFC);
+
 %%%%%%%%% Cluster plots  %%%%%%%%%
 
 % timelocked data 
