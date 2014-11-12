@@ -882,9 +882,7 @@ if strcmp(cfg.interactive, 'yes')
   info.label = cfg.layout.label;
   guidata(gcf, info);
   % attach data to the figure with the current axis handle as a name
-  dataname = num2str(gca);
-  dotpos   = findstr(dataname,'.');
-  dataname = ['DATA' dataname(1:dotpos-1) 'DOT' dataname(dotpos+1:end)];
+  dataname = fixname(num2str(double(gca)));
   setappdata(gcf,dataname,varargin(1:Ndata));
   if any(strcmp(data.dimord, {'chan_time', 'chan_freq', 'subj_chan_time', 'rpt_chan_time', 'chan_chan_freq', 'chancmb_freq', 'rpt_chancmb_freq', 'subj_chancmb_freq'}))
     set(gcf, 'WindowButtonUpFcn',     {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER, cfg}, 'event', 'WindowButtonUpFcn'});
