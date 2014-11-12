@@ -79,7 +79,7 @@ clear     = istrue(clear);
 
 % get the figure handle, dependent on matlab version
 if matlabversion('2014b', Inf) % >= 2014b?
- while isa(class(handle), 'matlab.ui.Figure')
+ while ~isa(handle, 'matlab.ui.Figure')
     handle = p;
     p = get(handle, 'parent');
  end
