@@ -73,15 +73,15 @@ uicontrol(h, 'Units', 'normalized', 'position', [0.520 0.520 0.400 0.050], 'Styl
 % set up radio buttons for choosing metric
 bgcolor = get(h, 'color');
 g = uibuttongroup('Position', [0.520 0.220 0.375 0.250 ], 'bordertype', 'none', 'backgroundcolor', bgcolor);
-r(1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  7/7 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'string', 'var',       'HandleVisibility', 'off');
-r(2) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  6/7 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'min',       'HandleVisibility', 'off');
-r(3) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  5/7 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'max',       'HandleVisibility', 'off');
-r(4) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  4/7 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'maxabs',    'HandleVisibility', 'off');
-r(5) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  3/7 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'range',     'HandleVisibility', 'off');
-r(6) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  2/7 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'kurtosis',  'HandleVisibility', 'off');
-r(7) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  1/7 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', '1/var',     'HandleVisibility', 'off');
-r(8) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  0/7 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'zvalue',    'HandleVisibility', 'off');
-r(9) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0 -1/7 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'maxzvalue', 'HandleVisibility', 'off');
+r(1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  8/9 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'string', 'var',       'HandleVisibility', 'off');
+r(2) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  7/9 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'min',       'HandleVisibility', 'off');
+r(3) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  6/9 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'max',       'HandleVisibility', 'off');
+r(4) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  5/9 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'maxabs',    'HandleVisibility', 'off');
+r(5) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  4/9 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'range',     'HandleVisibility', 'off');
+r(6) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  3/9 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'kurtosis',  'HandleVisibility', 'off');
+r(7) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  2/9 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', '1/var',     'HandleVisibility', 'off');
+r(8) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  1/9 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'zvalue',    'HandleVisibility', 'off');
+r(9) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  0/9 0.40 0.15 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'maxzvalue', 'HandleVisibility', 'off');
 
 % pre-select appropriate metric, if defined
 set(g, 'SelectionChangeFcn', @change_metric);
@@ -257,6 +257,7 @@ switch info.cfg.viewmode
   case 'remove'
     plot(maxperchan(info.chansel==1),     find(info.chansel==1), '.');
     xmax = max(maxperchan);
+    xmin = min(maxperchan);
     ymax = info.nchan;
   case 'toggle'
     plot(maxperchan_all(info.chansel==1), find(info.chansel==1), '.');
@@ -264,16 +265,18 @@ switch info.cfg.viewmode
     plot(maxperchan_all(info.chansel==0), find(info.chansel==0), 'o');
     hold off;
     xmax = max(maxperchan_all);
+    xmin = min(maxperchan_all);
     ymax = info.nchan;
   case 'hide'
     xmax = max(maxperchan);
+    xmin = min(maxperchan);
     ymax = sum(info.chansel==1);
     plot(maxperchan(info.chansel==1), 1:ymax, '.');
     if ~all(info.chansel)
       set(info.axes(2), 'Ytick', []);
     end
 end % switch
-axis([0 xmax 0.5 ymax+0.5]); % have to use 0 as lower limit because ylim([1 1]) (i.e. the single-channel case) is invalid
+axis([xmin xmax 0.5 ymax+0.5]); % have to use 0 as lower limit because ylim([1 1]) (i.e. the single-channel case) is invalid
 axis ij;
 set(info.axes(2), 'ButtonDownFcn', @toggle_visual);  % needs to be here; call to axis resets this property
 ylabel('channel number');
@@ -285,6 +288,7 @@ switch info.cfg.viewmode
     plot(find(info.trlsel==1), maxpertrl(info.trlsel==1), '.');
     xmax = info.ntrl;
     ymax = max(maxpertrl);
+    ymin = min(maxpertrl);
   case 'toggle'
     plot(find(info.trlsel==1), maxpertrl_all(info.trlsel==1), '.');
     hold on;
@@ -292,15 +296,17 @@ switch info.cfg.viewmode
     hold off;
     xmax = info.ntrl;
     ymax = max(maxpertrl_all);
+    ymin = min(maxpertrl_all);
   case 'hide'
     xmax = sum(info.trlsel==1);
     ymax = max(maxpertrl);
+    ymin = min(maxpertrl);
     plot(1:xmax, maxpertrl(info.trlsel==1), '.');
     if ~all(info.trlsel)
       set(info.axes(3), 'Xtick', []);
     end
 end % switch
-axis([0.5 xmax+0.5 0 ymax]);
+axis([0.5 xmax+0.5 ymin ymax]);
 set(info.axes(3), 'ButtonDownFcn', @toggle_visual);  % needs to be here; call to axis resets this property
 xlabel('trial number');
 
