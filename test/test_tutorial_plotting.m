@@ -18,11 +18,19 @@ load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/plotting/TFRhann.
 load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/plotting/statERF.mat'));
 load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/plotting/statTFR.mat'));
 load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/plotting/sourceDiff.mat'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/plotting/coh.mat'));
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%% Singleplot Functions %%%%%%%%%
+% connectivity plot
+
+cfg           = [];
+cfg.parameter = 'cohspctrm';
+cfg.zlim      = [0 1];
+ft_connectivityplot(cfg, coh,cohm);
+
 % ft_singeplotER
 cfg = [];
 cfg.xlim = [-0.2 1.0];
