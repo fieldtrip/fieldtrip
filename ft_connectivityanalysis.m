@@ -43,6 +43,7 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %     'wpli_debiased'  debiased weighted phase lag index
 %                  (estimates squared wpli)
 %     'wppc'       weighted pairwise phase consistency
+%     'corr'       Pearson correlation, support for timelock or raw data
 %
 % Additional configuration options are
 %   cfg.channel    = Nx1 cell-array containing a list of channels which are
@@ -91,7 +92,6 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %                 'xcorr',     cross correlation function
 %                 'di',        directionality index
 %                 'spearman'   spearman's rank correlation
-%                 'corr'       pearson correlation
 
 % Copyright (C) 2009, Jan-Mathijs Schoffelen, Andre Bastos, Martin Vinck, Robert Oostenveld
 % Copyright (C) 2010-2011, Jan-Mathijs Schoffelen, Martin Vinck
@@ -650,7 +650,7 @@ switch cfg.method
     else
       error('granger for time domain data is not yet implemented');
     end
-        
+    
   case 'dtf'
     % directed transfer function
     if isfield(data, 'labelcmb'),
@@ -742,22 +742,24 @@ switch cfg.method
     
   case 'corr'
     % pearson's correlation coefficient
-    error('unknown method % s', cfg.method);
+    optarg = {'dimord', getdimord(data, inparam), 'feedback', cfg.feedback, 'hasjack', hasjack};
+    if ~isempty(cfg.pchanindx), optarg = cat(2, optarg, {'pchanindx', cfg.pchanindx, 'allchanindx', cfg.allchanindx}); end
+    [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg{:});
     
   case 'xcorr'
     % cross-correlation function
-    error('unknown method % s', cfg.method);
+    error('method %s is not yet implemented', cfg.method);
     
   case 'spearman'
     % spearman's rank correlation
-    error('unknown method % s', cfg.method);
+    error('method %s is not yet implemented', cfg.method);
     
   case 'di'
     % directionality index
-    error('unknown method % s', cfg.method);
+    error('method %s is not yet implemented', cfg.method);
     
   otherwise
-    error('unknown method % s', cfg.method);
+    error('unknown method %s', cfg.method);
     
 end % switch method
 
@@ -845,7 +847,7 @@ switch dtype
     if isfield(data, 'labelcmb'),
       stat.labelcmb = data.labelcmb;
     end
-    tok = tokenize(data.dimord, '_');
+    tok = tokenize(getdimord(data, inparam), '_');
     dimord = '';
     for k = 1:numel(tok)
       if isempty(strfind(tok{k}, 'rpt'))
