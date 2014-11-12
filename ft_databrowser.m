@@ -1930,7 +1930,11 @@ end % function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function key = parseKeyboardEvent(eventdata)
 
-key = eventdata.Key;
+if matlabversion('2014b', Inf)
+    key = eventdata.Source.String;
+else
+    key = eventdata.Key;
+end
 
 % handle possible numpad events (different for Windows and UNIX systems)
 % NOTE: shift+numpad number does not work on UNIX, since the shift
