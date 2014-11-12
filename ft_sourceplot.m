@@ -1334,7 +1334,7 @@ if opt.hasana
     opt.anahandles = opt.anahandles(:)';
     set(opt.anahandles, 'tag', 'ana');
   else
-    ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'surfhandle', opt.anahandles.*opt.update, 'doscale', false, 'clim', opt.clim);
+    ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'surfhandle', opt.anahandles, 'update', opt.update, 'doscale', false, 'clim', opt.clim);
   end
 end
 
@@ -1382,17 +1382,15 @@ if opt.hasfun
     if opt.hasmsk
       tmpqi = [opt.qi 1];
       tmph  = opt.funhandles;
-      tmph(~opt.update) = 0;
       ft_plot_ortho(opt.fun(:,:,:,tmpqi(1),tmpqi(2)), 'datmask', opt.msk(:,:,:,tmpqi(1),tmpqi(2)), 'transform', eye(4), 'location', opt.ijk, ...
-        'style', 'subplot', 'surfhandle', tmph, ...
+        'style', 'subplot', 'surfhandle', tmph, 'update', opt.update, ...
         'colormap', opt.funcolormap, 'colorlim', [opt.fcolmin opt.fcolmax], ...
         'opacitylim', [opt.opacmin opt.opacmax]);
     else
       tmpqi = [opt.qi 1];
       tmph  = opt.funhandles;
-      tmph(~opt.update) = 0;
       ft_plot_ortho(opt.fun(:,:,:,tmpqi(1),tmpqi(2)), 'transform', eye(4), 'location', opt.ijk, ...
-        'style', 'subplot', 'surfhandle', tmph, ...
+        'style', 'subplot', 'surfhandle', tmph, 'update', opt.update, ...
         'colormap', opt.funcolormap, 'colorlim', [opt.fcolmin opt.fcolmax]);
     end
   end

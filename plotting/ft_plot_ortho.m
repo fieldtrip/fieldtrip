@@ -62,6 +62,7 @@ clim      = ft_getopt(varargin(sellist), 'clim', []);
 if strcmp(style, 'subplot')
   parents    = ft_getopt(varargin(sellist), 'parents');
   surfhandle = ft_getopt(varargin(sellist), 'surfhandle');
+  update     = ft_getopt(varargin(sellist), 'update', [1 1 1]);
   if ~isempty(surfhandle) && ~isempty(parents)
     error('if specifying handles, you should either specify handles to the axes or to the surface objects, not both');
   end
@@ -101,13 +102,13 @@ switch style
     elseif isempty(parents) && ~isempty(surfhandle)
       % determine the parents from the surface handle and use the
       % surfhandle for efficient visualization (overwriting existing data)
-      if surfhandle(1), Hx = get(surfhandle(1), 'parent'); else Hx = []; end
-      if surfhandle(2), Hy = get(surfhandle(2), 'parent'); else Hy = []; end
-      if surfhandle(3), Hz = get(surfhandle(3), 'parent'); else Hz = []; end
+      if update(1), Hx = get(surfhandle(1), 'parent'); else Hx = []; end
+      if update(2), Hy = get(surfhandle(2), 'parent'); else Hy = []; end
+      if update(3), Hz = get(surfhandle(3), 'parent'); else Hz = []; end
     end
     
     if ~isempty(Hx)
-      if ~isempty(surfhandle) && surfhandle(1)
+      if ~isempty(surfhandle) && update(1)
         varargin(sellist) = ft_setopt(varargin(sellist), 'surfhandle', surfhandle(1));
       end
       % swap the first 2 dimensions because of meshgrid vs ndgrid issues
@@ -122,7 +123,7 @@ switch style
     end
     
     if ~isempty(Hy)
-      if ~isempty(surfhandle) && surfhandle(2)
+      if ~isempty(surfhandle) && update(2)
         varargin(sellist) = ft_setopt(varargin(sellist), 'surfhandle', surfhandle(2));
       end
       varargin{sel+1} = ori(1,:);
@@ -136,7 +137,7 @@ switch style
     end
     
     if ~isempty(Hz)
-      if ~isempty(surfhandle) && surfhandle(3)
+      if ~isempty(surfhandle) && update(3)
         varargin(sellist) = ft_setopt(varargin(sellist), 'surfhandle', surfhandle(3));
       end
       varargin{sel+1} = ori(3,:);
