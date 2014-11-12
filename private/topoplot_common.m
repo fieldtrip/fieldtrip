@@ -392,9 +392,7 @@ if (isfull || haslabelcmb) && (isfield(data, cfg.parameter) && ~strcmp(cfg.param
     info.label = cfg.layout.label;
     guidata(h, info);
     % attach data to the figure with the current axis handle as a name
-    dataname = num2str(gca);
-    dotpos   = findstr(dataname,'.');
-    dataname = ['DATA' dataname(1:dotpos-1) 'DOT' dataname(dotpos+1:end)];
+    dataname = fixname(num2str(double(gca)));
     setappdata(gcf,dataname,data);
     %set(gcf, 'WindowButtonUpFcn', {@ft_select_channel, 'callback', {@select_topoplotER, cfg, data}});
     set(gcf, 'WindowButtonUpFcn',     {@ft_select_channel, 'multiple', true, 'callback', {@select_topoplotER, cfg}, 'event', 'WindowButtonUpFcn'});
@@ -565,7 +563,7 @@ else
   error('cannot make selection of data');
 end
 
-if isfield(data, cfg.maskparameter) 
+if isfield(data, cfg.maskparameter)
   % Make mask vector with one value for each channel
   msk = data.(cfg.maskparameter);
   % get dimord dimensions
@@ -946,9 +944,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function select_topoplotER(label, cfg, varargin)
 % get appdata belonging to current axis
-dataname = num2str(gca);
-dotpos   = findstr(dataname,'.');
-dataname = ['DATA' dataname(1:dotpos-1) 'DOT' dataname(dotpos+1:end)];
+dataname = fixname(num2str(double(gca)));
 data = getappdata(gcf, dataname);
 
 if isfield(cfg, 'inputfile')
@@ -973,9 +969,7 @@ ft_topoplotER(cfg, data);
 function select_singleplotER(label, cfg)
 if ~isempty(label)
   % get appdata belonging to current axis
-  dataname = num2str(gca);
-  dotpos   = findstr(dataname,'.');
-  dataname = ['DATA' dataname(1:dotpos-1) 'DOT' dataname(dotpos+1:end)];
+  dataname = fixname(num2str(double(gca)));
   data = getappdata(gcf, dataname);
   
   if isfield(cfg, 'inputfile')
@@ -1006,9 +1000,7 @@ end
 function select_singleplotTFR(label, cfg)
 if ~isempty(label)
   % get appdata belonging to current axis
-  dataname = num2str(gca);
-  dotpos   = findstr(dataname,'.');
-  dataname = ['DATA' dataname(1:dotpos-1) 'DOT' dataname(dotpos+1:end)];
+  dataname = fixname(num2str(double(gca)));
   data = getappdata(gcf, dataname);
   
   if isfield(cfg, 'inputfile')
