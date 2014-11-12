@@ -1173,7 +1173,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function keyboard_cb(h, eventdata)
 
-if isempty(eventdata)
+if (isempty(eventdata) && matlabversion(-Inf, '2014a')) || isa(eventdata, 'matlab.ui.eventdata.ActionData')
   % determine the key that corresponds to the uicontrol element that was activated
   key = get(h, 'userdata');
 else
@@ -1930,11 +1930,7 @@ end % function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function key = parseKeyboardEvent(eventdata)
 
-if matlabversion('2014b', Inf)
-    key = eventdata.Source.String;
-else
-    key = eventdata.Key;
-end
+key = eventdata.Key;
 
 % handle possible numpad events (different for Windows and UNIX systems)
 % NOTE: shift+numpad number does not work on UNIX, since the shift
