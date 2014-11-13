@@ -599,9 +599,11 @@ for itrial = 1:ntrials
         acttboi  = 1;
         nacttboi = 1;
       else
-        acttboi  = ~all(isnan(squeeze(spectrum(1,:,foiind(ifoi),:))), 1);
+        acttboi   = ~all(isnan(spectrum(1,:,foiind(ifoi),:)), 2); % check over all channels, some channels might contain a NaN
+        acttboi   = reshape(acttboi, [1 ntoi]);                   % size(spectrum) = [? nchan nfoi ntoi]
         nacttboi = sum(acttboi);
       end
+      
       acttap = logical([ones(ntaper(ifoi),1);zeros(size(spectrum,1)-ntaper(ifoi),1)]);
       if powflg
         powdum = abs(spectrum(acttap,:,foiind(ifoi),acttboi)) .^2;
@@ -666,7 +668,8 @@ for itrial = 1:ntrials
       % do calcdof  dof = zeros(numper,numfoi,numtoi);
       if strcmp(cfg.calcdof,'yes')
         if hastime
-          acttimboiind = ~isnan(squeeze(spectrum(1,1,foiind(ifoi),:)));
+          acttimboiind = ~all(isnan(spectrum(1,:,foiind(ifoi),:)), 2); % check over all channels, some channels might contain a NaN
+          acttimboiind = reshape(acttimboiind, [1 ntoi]);
           dof(ifoi,acttimboiind) = ntaper(ifoi) + dof(ifoi,acttimboiind);
         else % hastime = false
           dof(ifoi) = ntaper(ifoi) + dof(ifoi);
