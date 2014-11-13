@@ -627,8 +627,8 @@ title(cfg.title);
 
 %%% set color and opacity mapping for this figure
 if hasfun
-  cfg.funcolormap = colormap(cfg.funcolormap);
   colormap(cfg.funcolormap);
+  cfg.funcolormap = colormap;
 end
 if hasmsk
   cfg.opacitymap  = alphamap(cfg.opacitymap);
