@@ -866,7 +866,7 @@ switch dtype
     if isfield(stat, 'dim'),
       stat.dim = data.dim;
     end
-    stat.inside = data.inside;
+    stat.inside  = data.inside;
     stat.outside = data.outside;
     stat.(outparam) = datout;
     if ~isempty(varout),
@@ -874,8 +874,16 @@ switch dtype
     end
 end % switch dtype
 
-if isfield(data, 'freq'), stat.freq = data.freq; end
-if isfield(data, 'time'), stat.time = data.time; end
+if isfield(stat, 'dimord')
+  dimtok = tokenize(stat.dimord, '_');
+  % these dimensions in the output data must come from the input data
+  if any(strcmp(dimtok, 'time')), stat.time = data.time; end
+  if any(strcmp(dimtok, 'freq')), stat.freq = data.freq; end
+else
+  % just copy them over, alhtough we don't know for sure whether they are needed in the output
+  if isfield(data, 'freq'), stat.freq = data.freq; end
+  if isfield(data, 'time'), stat.time = data.time; end
+end
 if isfield(data, 'grad'), stat.grad = data.grad; end
 if isfield(data, 'elec'), stat.elec = data.elec; end
 if exist('dof', 'var'), stat.dof = dof; end
