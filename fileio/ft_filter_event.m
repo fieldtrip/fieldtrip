@@ -97,7 +97,7 @@ sel = true(length(event),1);
 for i=1:length(event)
   % test whether they match with the selected arrays
   if testvalue && isnumeric(value),         sel(i) = sel(i) && any(event(i).value == value);               end
-  if testvalue && isstr(value),             sel(i) = sel(i) && any(strcmp(event(i).value,value));          end
+  if testvalue && ischar(value),             sel(i) = sel(i) && any(strcmp(event(i).value,value));          end
   if testsample,        sel(i) = sel(i) && any(event(i).sample == sample);        end
   if testtimestamp,     sel(i) = sel(i) && any(event(i).timestamp == timestamp);  end
   if testoffset,        sel(i) = sel(i) && any(event(i).offset == offset);        end
