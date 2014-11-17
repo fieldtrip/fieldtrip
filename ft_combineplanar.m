@@ -92,6 +92,9 @@ istimelock = ft_datatype(data, 'timelock');
 if isfield(data, 'dimord'),
   dimord = data.dimord;
 end
+if isfield(data, 'dimord'),
+  dimord = data.dimord;
+end
 
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
@@ -102,6 +105,11 @@ end
 planar = ft_senslabel(ft_senstype(data), 'output', 'planarcombined');
 [dum, sel_dH]    = match_str(planar(:,1), data.label);  % indices of the horizontal channels
 [dum, sel_dV]    = match_str(planar(:,2), data.label);  % indices of the vertical   channels
+
+
+hascmb = isfreq & isfield(data, 'labelcmb');
+
+
 
 if length(sel_dH)~=length(sel_dV)
   error('not all planar channel combinations are complete')
@@ -115,6 +123,39 @@ lab_other = data.label(sel_other);
 % they should be sorted according to the order of the planar channels in the data
 [dum, sel_planar] = match_str(data.label(sel_dH),planar(:,1)); 
 lab_comb          = planar(sel_planar,3);
+
+% get equivilent combinatiosn for channel pairs. Thsi only works for full sensorxsensro connectivity
+if hascmb
+    disp('Computing combination of HV components for channel combinations');
+    k=0
+    for i=1:size(planar,1)
+        for j=i+1:size(planar,1)
+            k=k+1;
+            % this identifies which channel combinations to combine
+            [dum, selcmb_dH1]    = match_str(planar(i,1), data.labelcmb(:,1));
+            [dum, selcmb_dH2]    = match_str(planar(j,1), data.labelcmb(:,2));
+            [dum, selcmb_dV1]    = match_str(planar(i,2), data.labelcmb(:,1));
+            [dum, selcmb_dV2]    = match_str(planar(j,2), data.labelcmb(:,2));
+            selcmb1=[intersect(selcmb_dH1,selcmb_dH2) ; intersect(selcmb_dV1,selcmb_dV2);...
+            intersect(selcmb_dH1,selcmb_dV2) ; intersect(selcmb_dV1,selcmb_dH2)];
+        
+            [dum, selcmb_dH1]    = match_str(planar(i,1), data.labelcmb(:,2));
+            [dum, selcmb_dH2]    = match_str(planar(j,1), data.labelcmb(:,1));
+            [dum, selcmb_dV1]    = match_str(planar(i,2), data.labelcmb(:,2));
+            [dum, selcmb_dV2]    = match_str(planar(j,2), data.labelcmb(:,1));
+            selcmb2=[intersect(selcmb_dH1,selcmb_dH2) ; intersect(selcmb_dV1,selcmb_dV2);...
+            intersect(selcmb_dH1,selcmb_dV2) ; intersect(selcmb_dV1,selcmb_dH2)];
+        
+        selcmb(k,:)=[selcmb1 ; selcmb2]';
+    
+            labcmb_comb(k,:)=planar([i j],3);
+
+        end
+    end
+ 
+    end
+
+
 
 % perform baseline correction
 if strcmp(cfg.demean, 'yes')
@@ -221,9 +262,12 @@ elseif (israw || istimelock)
       tmpdat = zeros(2, sum(Nsmp));
       for k = 1:Nsgn
         for m = 1:Nrpt
-          tmpdat(:, (Csmp(m)+1):Csmp(m+1)) = data.trial{m}([sel_dH(k) sel_dV(k)],:);
+          tmpdat(:, (Csmp(m)+1):Csmp(m+1)) = fft(data.trial{m}([sel_dH(k) sel_dV(k)],:),[],2);
         end
-        tmpdat2 = abs(svdfft(tmpdat,1));
+        tmpdat2 = (svdfft(tmpdat,1));
+        for m = 1:Nrpt
+          tmpdat2(:, (Csmp(m)+1):Csmp(m+1)) = ifft(tmpdat2(:, (Csmp(m)+1):Csmp(m+1)),[],2);
+        end
         tmpdat2 = mat2cell(tmpdat2, 1, Nsmp);
         for m = 1:Nrpt
           if k==1, trial{m} = zeros(Nsgn, Nsmp(m)); end
@@ -249,9 +293,9 @@ else
   error('unsupported input data');
 end % which ft_datatype
 
-% remove the fields for which the planar gradient could not be combined
-try, data = rmfield(data, 'crsspctrm');   end
-try, data = rmfield(data, 'labelcmb');    end
+% % remove the fields for which the planar gradient could not be combined
+% try, data = rmfield(data, 'crsspctrm');   end
+% try, data = rmfield(data, 'labelcmb');    end
 
 if isfield(data, 'grad')
   % update the grad and only retain the channel related info
