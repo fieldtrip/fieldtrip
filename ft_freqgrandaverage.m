@@ -67,9 +67,15 @@ if length(varargin)==1 & iscell(varargin{1})
     varargin=varargin{1};
 end
 % check if the input data is valid for this function
+remove_cells=[];
 for i=1:length(varargin)
+    if isempty(varargin{i})
+        remove_cells(end+1)=i;
+    else
     varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'freq', 'feedback', 'no');
+    end
 end
+varargin(remove_cells)=[];
 
 % set the defaults
 cfg.keepindividual = ft_getopt(cfg, 'keepindividual', 'no');
@@ -90,10 +96,10 @@ end
 
 Nsubj    = length(varargin);
 dimord   = varargin{1}.dimord;
-hasfreq  = ~isempty(strfind(varargin{i}.dimord, 'freq')); % this should always be true
-hastime  = ~isempty(strfind(varargin{i}.dimord, 'time'));
-hasrpt   = ~isempty(strfind(varargin{i}.dimord, 'rpt'));
-hastap   = ~isempty(strfind(varargin{i}.dimord, 'tap'));
+hasfreq  = ~isempty(strfind(varargin{1}.dimord, 'freq')); % this should always be true
+hastime  = ~isempty(strfind(varargin{1}.dimord, 'time'));
+hasrpt   = ~isempty(strfind(varargin{1}.dimord, 'rpt'));
+hastap   = ~isempty(strfind(varargin{1}.dimord, 'tap'));
 
 % check whether the input data is suitable
 if hasrpt
