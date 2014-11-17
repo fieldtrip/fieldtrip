@@ -29,7 +29,7 @@ function [pow_new csd_new] = ft_csd_eigendecomp(spectrum,cutdatindcmb,component,
 %                  decompose:  'imag', 'real1' or 'real2'. (Default = 'imag').
 % outprod    = (optional)  specifes whther to additional compute the 
 %                outerporduct of the estimated power 
-%                  (only valid if component = 'imag'. Default = 'yes');
+%                  (only valid if component = 'imag'. Default = 'no');
 %
 % pow_new      = is a n_chans x 1 vector of eigendecomposed power estimates
 % csd_new      = is a n_chancmbs x 2 vector of imaginary (or real) CSDs
@@ -64,7 +64,7 @@ if ~exist(component)
 end
 
 if ~exist(outprod)
-    outprod='yes';
+    outprod='no';
 end
 
 if  strcmp(component,'real1')
