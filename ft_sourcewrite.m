@@ -10,6 +10,7 @@ function ft_sourcewrite(cfg, source)
 % cfg is a structure that should contain
 %
 %  cfg.filename  = string, name of the file
+%  cfg.filetype  = string, can be 'nifti', 'gifti' or 'cifti' (default is automatic)
 %  cfg.parameter = string, functional parameter to be written to file
 %  cfg.precision = string, can be 'single', 'double', etc.
 %
@@ -22,7 +23,7 @@ function ft_sourcewrite(cfg, source)
 % See also FT_SOURCEANALYSIS FT_SOURCEDESCRIPTIVES FT_VOLUMEWRITE
 
 % Copyright (C) 2011, Jan-Mathijs Schoffelen
-% Copyright (C) 2011-2013, Jan-Mathijs Schoffelen, Robert Oostenveld
+% Copyright (C) 2011-2014, Jan-Mathijs Schoffelen, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
