@@ -81,11 +81,11 @@ statTF1.posclusters(1).prob = 0;
 
 cfg = [];
 cfg.layout = 'CTF151.lay';
-figure; ft_clusterplot(cfg, stat);
-figure; ft_clusterplot(cfg, statT);
-figure; ft_clusterplot(cfg, statF);
-figure; ft_clusterplot(cfg, statTF1); % single frequency
-figure; ft_clusterplot(cfg, statT1F); % single latency
+ft_clusterplot(cfg, stat);
+ft_clusterplot(cfg, statT);
+ft_clusterplot(cfg, statF);
+ft_clusterplot(cfg, statTF1); % single frequency
+ft_clusterplot(cfg, statT1F); % single latency
 
 try
   figure; ft_clusterplot(cfg, statTF);
