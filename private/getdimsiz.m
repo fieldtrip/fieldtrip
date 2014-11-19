@@ -7,6 +7,11 @@ function dimsiz = getdimsiz(data, field)
 %
 % See also GETDIMORD
 
+if strncmp(field, 'avg.', 4)
+  field = field(5:end); % strip the avg
+  data.(field) = data.avg.(field);
+end
+
 if ~isfield(data, field)
   error('field "%s" not present in data', field);
 end
