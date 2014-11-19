@@ -49,10 +49,7 @@ function [trg] = read_eep_trg(fn);
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-% $Log: read_eep_trg.m,v $
-% Revision 1.2  2005/06/08 08:16:37  mvelde
-% converted files to unix format
-%
+% $Log: not supported by cvs2svn $
 % Revision 1.1  2004/11/26 13:17:02  jwiskerke
 % Added m-files without binary code in maple distribution.
 %
@@ -64,7 +61,7 @@ function [trg] = read_eep_trg(fn);
 %
 % Revision 1.1.1.1  2003/03/11 15:24:51  roberto
 % updated help and copyrights
-% ANT Software BV, The Netherlands, www.ant-software.nl / info@ant-software.nl
+% ANT Software BV, The Netherlands, www.ant-neuro.com / info@ant-neuro.com
 %
 
 trg = [];
@@ -78,19 +75,12 @@ header = fgetl(fid);
 while ~feof(fid)
   tmp = fscanf(fid, '%f %d %s', 3);
   if ~isempty(tmp)
-    new.time   = tmp(1)*1000;            % in ms
-    new.offset = tmp(2)+1;               % offset 1
-    new.code   = char(tmp(3:end));       % string
-    % numeric event codes are read as strings with some trailing blanks
-    % which confuses event selection.
-    tcode = str2num(new.code);
-    if numel(tcode) == 1
-      new.code = tcode;
-    end
-    new.type   = str2double(new.code);   % numeric
+    new.time   = tmp(1)*1000;			% in ms
+    new.offset = tmp(2)+1;			% offset 1
+    new.code   = char(tmp(3:end));		% string
+    new.type   = str2double(new.code);		% numeric
     trg = [trg; new];
   end
 end
 
-fclose(fid); 
-
+fclose(fid);  
