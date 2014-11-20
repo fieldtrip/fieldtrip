@@ -324,6 +324,28 @@ for k = 1:size(input, 3)
         
               case 'smallworldness'
 
+        if isbinary && isdirected
+          output(k,m) = smallworld(input(:,:,k,m),'bindir');
+        elseif isbinary && ~isdirected
+          output(k,m) = smallworld(input(:,:,k,m),'binund');
+        elseif ~isbinary && isdirected
+            output(k,m) = smallworld(input(:,:,k,m),'weidir');
+        elseif ~isbinary && ~isdirected
+            output(k,m) = smallworld(input(:,:,k,m),'weiund');
+        end
+        
+        case 'smallworldness_local'
+            
+%             if isbinary && isdirected
+%                 [sw sw_local] = smallworld(input(:,:,k,m),'bindir');
+%             elseif isbinary && ~isdirected
+%                 [sw sw_local] = smallworld(input(:,:,k,m),'binund');
+%             elseif ~isbinary && isdirected
+%                 [sw sw_local] = smallworld(input(:,:,k,m),'weidir');
+%             elseif ~isbinary && ~isdirected
+%                 [sw sw_local] = smallworld(input(:,:,k,m),'weiund');
+%             end
+%             output(k,m) = sw_local;
 
         
       otherwise
