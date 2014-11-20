@@ -99,6 +99,8 @@ end
 
 if isfield(data, 'pos')
   npos = size(data.pos,1);
+elseif isfield(data, 'dim')
+  npos = prod(data.dim);
 end
 
 if isfield(data, 'csdlabel')
@@ -316,6 +318,12 @@ switch field
   case {'freq'}
     if isvector(data.(field)) && isequal(datsiz, [1 nfreq])
       dimord = 'freq';
+    end
+    
+  otherwise
+    if isfield(data, 'dim') && isequal(datsiz, data.dim)
+      % FIXME is this the desired dimord for volume data? A dimord of vox or voxel is not recommended according to fixdimord.
+      dimord = 'pos';
     end
     
 end % switch field
