@@ -388,7 +388,7 @@ elseif length(f)<=4 && filetype_check_dir(p, 'config')%&& ~isempty(p) && exist(f
   content = '';
   
   % known EEProbe file types
-elseif filetype_check_extension(filename, '.cnt') && filetype_check_header(filename, 'RIFF')
+elseif filetype_check_extension(filename, '.cnt') && (filetype_check_header(filename, 'RIFF') || filetype_check_header(filename, 'RF64'))
   type = 'eep_cnt';
   manufacturer = 'EEProbe';
   content = 'EEG';
