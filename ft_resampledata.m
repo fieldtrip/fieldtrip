@@ -180,7 +180,7 @@ if usefsample
     
     % always remove the mean to avoid edge effects when there's a strong
     % offset, the cfg.demean option is dealt with below
-    bsl             = mean(data.trial{itr},2);
+    bsl             = nanmean(data.trial{itr},2);
     data.trial{itr} = data.trial{itr} - bsl(:,ones(1,size(data.trial{itr},2)));
     
     % pad the data with zeros to the left
