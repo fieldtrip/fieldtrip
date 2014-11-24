@@ -6,6 +6,9 @@ function test_bug2096
 % TEST test_bug2096
 % TEST ft_sourcewrite ft_read_cifti ft_write_cifti
 
+% needed for the dccnpath function, since we will change directory later on
+addpath(fileparts(mfilename('fullpath')));
+
 % /home/common/matlab/fieldtrip/data/test/bug2096
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2096'));
 
