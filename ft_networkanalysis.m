@@ -16,22 +16,40 @@ function [stat] = ft_networkanalysis(cfg, data)
 % 'pos_pos(_freq)(_time)'.
 %
 % The configuration structure has to contain
-%   cfg.method    = string, specifying the graph measure that will be
-%                   computed. See below for the list of supported measures. 
+%   cfg.method    = string, or a cell-array of strings specifying the graph 
+%                     measure(s) that will be  computed. See below for the 
+%                     list of supported measures. 
 %   cfg.parameter = string specifying the bivariate parameter in the data 
 %                   for which the graph measure will be computed.
 %
 % Supported methods are
 %   assortativity
 %   betweenness,      betweenness centrality (nodes)
-%   charpath,         characteristic path length, needs distance matrix as
-%                     input
+%   charpath*,         
 %   clustering_coef,  clustering coefficient
 %   degrees
 %   density
+%   strengths
 %   distance
 %   edge_betweenness, betweenness centrality (edges)
 %   transitivity
+%   modularity
+%   smallworldness
+%
+%   * charpath requires a distance matrix, If distance matrix is not provided, this
+%   will be computed. 
+%
+% cfg paramaters for specfic graph theory functions:
+%  cfg.modulegamma   =  This is a paramamter for modularity measure. Default
+%                    is 1. <1 gives larger modules, >1 give smaller modules
+%  cfg.randomisations = For smallworldness, a number of random networks 
+%                        need to be computed. This sets the number of 
+%                       random networks to compute (defualt = 100).
+%  cfg.inout          = 'yes or 'no'. If method is 'degrees' or 'strengths' 
+%                       and connectivity is directed, this option will 
+%                       additionally output the in/out-degree/strengths. 
+%                        If disabled, only the sums of the in/out
+%                        measurments will be included (default = 'no'). 
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ... 
@@ -78,26 +96,38 @@ if abort
   return
 end
 
+
 cfg = ft_checkconfig(cfg, 'required', {'method' 'parameter'});
 
 cfg.threshold = ft_getopt(cfg, 'threshold', []);
+cfg.modulegamma = ft_getopt(cfg, 'modulegamma', 1);
+cfg.inout = ft_getopt(cfg, 'inout', 'no');
+cfg.randomisations = ft_getopt(cfg, 'randomisations', 'no');
+
 
 % ensure that the bct-toolbox is on the path
 ft_hastoolbox('BCT', 1);
 
 % check the data for the correct dimord and for the presence of the requested parameter
 if ~strcmp(data.dimord(1:7), 'pos_pos') && ~strcmp(data.dimord(1:9), 'chan_chan'),
-  error('the dimord of the input data should start with ''chan_chan'' or ''pos_pos''');
+  fprintf('Restructuring data structure\n');
+  data=restructure_connectivity(data)
 end
 
 % conversion to double is needed because some BCT functions want to do matrix
 % multiplications on boolean matrices
 input = double(data.(cfg.parameter));
 
-% some metrics explicitly require a certain parameter
+% some metrics explicitly require a certain parameter (distance materix now
+% computed automatically)
 if strcmp(cfg.method, 'charpath') && ~strcmp(cfg.parameter, 'distance')
-  error('characteristic path length can only be computed on distance matrices');
+  fprintf('distance matrix also computed as required for characteristic path length\n');
+  needsdistance=1;
+else
+   needsdistance=0; 
 end
+
+% set default f
 
 % check for binary or not
 isbinary = true;
@@ -146,11 +176,13 @@ else
   fprintf('input graph is undirected\n');
 end
 
+
+    
 fprintf('computing %s\n', cfg.method);
 % allocate memory
 needlabel = true;
 switch cfg.method
-  case {'assortativity' 'charpath' 'density'  'transitivity'}
+  case {'assortativity' 'charpath' 'density'  'transitivity','effic_global'}
     % 1 value per connection matrix
     outsiz = [size(input) 1];
     outsiz(1:2) = [];
@@ -161,7 +193,7 @@ switch cfg.method
       dimord = data.dimord(11:end);
     end
     needlabel = false;
-  case {'betweenness' 'clustering_coef' 'degrees'}
+  case {'betweenness' 'clustering_coef' 'degrees','eccentricity', 'effic_local','modularity'}
     % 1 value per node
     outsiz = [size(input) 1];
     outsiz(1) = [];
@@ -180,9 +212,24 @@ end
 
 binarywarning = 'weights are not taken into account and graph is converted to binary values by thresholding';
 
+% compute distance matrix if required by charpath
+if needsdistance
+    for k = 1:size(input, 3)
+        for m = 1:size(input, 4)
+            if isbinary
+                distance_temp(:,:,k,m) = distance_bin(input(:,:,k,m));
+            elseif ~isbinary
+                distance_temp(:,:,k,m) = distance_wei(input(:,:,k,m));
+            end
+        end
+    end
+end
+
+      
 for k = 1:size(input, 3)
   for m = 1:size(input, 4)
-    
+    [k m]
+      
     % switch to the appropriate function from the BCT
     switch cfg.method
       case 'assortativity'
@@ -201,10 +248,14 @@ for k = 1:size(input, 3)
         end
       case 'breadthdist'
         error('not yet implemented');
-      case 'charpath'
+      case 'charpath';
         % this needs the distance matrix as input, this is dealt with
         % above
-        output(:,k) = charpath(input(:,:,k,m))';
+        if needsdistance
+            input(:,:,k,m)=distance_temp(:,:,k,m);
+        end
+
+        output(:,k)=charpath(input(:,:,k,m))';
       case 'clustering_coef'
         if isbinary && isdirected
           output(:,k,m) = clustering_coef_bd(input(:,:,k,m));
@@ -219,8 +270,7 @@ for k = 1:size(input, 3)
         if ~isbinary, warning_once(binarywarning); end
         
         if isdirected
-          [in, out, output(:,k,m)] = degrees_dir(input(:,:,k,m));
-          % FIXME do something here
+          [indeg(:,k,m), outdeg(:,k,m), output(:,k,m)] = degrees_dir(input(:,:,k,m));
         elseif ~isdirected
           output(:,k,m) = degrees_und(input(:,:,k,m));
         end
@@ -232,22 +282,49 @@ for k = 1:size(input, 3)
         elseif ~isdirected
           output(k,m) = density_und(input(:,:,k,m));
         end
-      case 'distance'
-        if isbinary
-          output(:,:,k,m) = distance_bin(input(:,:,k,m));
-        elseif ~isbinary
-          output(:,:,k,m) = distance_wei(input(:,:,k,m));
-        end
-      case 'edge_betweenness'
-        if isbinary
+      case 'strengths'
+    if isdirected
+          [instrength(:,k,m), outstrength(:,k,m), output(:,k,m)] = strengths_dir(input(:,:,k,m));
+        elseif ~isdirected
+          output(:,k,m) = strengths_und(input(:,:,k,m));
+    end
+        
+        case 'distance'
+            if exist(distance_temp) % dont ant to re-compute distance unecesserily
+                output(:,:,k,m)=distance_temp(:,:,k,m);
+            else
+                if isbinary
+                    output(:,:,k,m) = distance_bin(input(:,:,k,m));
+                elseif ~isbinary
+                    output(:,:,k,m) = distance_wei(input(:,:,k,m));
+                end
+            end
+        case 'edge_betweenness'
+            if isbinary
           output(:,:,k,m) = edge_betweenness_bin(input(:,:,k,m));
         elseif ~isbinary
           output(:,:,k,m) = edge_betweenness_wei(input(:,:,k,m));
-        end
-      case 'efficiency'
-        error('not yet implemented');
-      case 'modularity'
-        error('not yet implemented');
+            end
+        case 'effic_local'
+            if isbinary
+                output(:,:,k,m) = efficiency_bin(input(:,:,k,m),1);
+            elseif ~isbinary
+                output(:,:,k,m) = efficiency_wei(input(:,:,k,m),1);
+            end
+        case 'effic_global'
+            if isbinary
+                output(:,:,k,m) = efficiency_bin(input(:,:,k,m));
+            elseif ~isbinary
+                output(:,:,k,m) = efficiency_wei(input(:,:,k,m));
+            end
+        case 'modularity'
+            if isdirected
+                [modules(:,:,k,m) output(:,:,k,m)] = modularity_dir(W,cfg.modulegamma);
+            elseif ~isdirected
+                [modules(:,:,k,m) output(:,:,k,m)] = modularity_und(W,cfg.modulegamma);
+                
+            end
+
       case 'participation_coef'
         error('not yet implemented');
       case 'transitivity'
@@ -260,20 +337,79 @@ for k = 1:size(input, 3)
         elseif ~isbinary && ~isdirected
           output(k,m) = transitivity_wu(input(:,:,k,m));
         end
+        
+              case 'smallworldness'
+
+        if isbinary && isdirected
+          output(k,m) = smallworld(input(:,:,k,m),'bindir',cfg.randomisations);
+        elseif isbinary && ~isdirected
+          output(k,m) = smallworld(input(:,:,k,m),'binund',cfg.randomisations);
+        elseif ~isbinary && isdirected
+            output(k,m) = smallworld(input(:,:,k,m),'weidir',cfg.randomisations);
+        elseif ~isbinary && ~isdirected
+            output(k,m) = smallworld(input(:,:,k,m),'weiund',cfg.randomisations);
+        end
+        
+        case 'smallworldness_local'
+            
+%             if isbinary && isdirected
+%                 [sw sw_local] = smallworld(input(:,:,k,m),'bindir');
+%             elseif isbinary && ~isdirected
+%                 [sw sw_local] = smallworld(input(:,:,k,m),'binund');
+%             elseif ~isbinary && isdirected
+%                 [sw sw_local] = smallworld(input(:,:,k,m),'weidir');
+%             elseif ~isbinary && ~isdirected
+%                 [sw sw_local] = smallworld(input(:,:,k,m),'weiund');
+%             end
+%             output(k,m) = sw_local;
+
+        
       otherwise
         error('unsupported connectivity metric %s requested');
     end
     
+    
+    
   end % for m
 end % for k
+
+
+
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % create the output structure
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-stat              = [];
+    
+stat=[];
 stat.(cfg.method) = output;
 stat.dimord       = dimord;
+
+% add suplementary outputs
+
+if exist('modules','var')
+    stat.modules=modules;
+end
+
+if output_inout
+    if exist('outstrength','var')
+        stat.strengths_out=outstrength;
+    end
+    if exist('instrength','var')
+        stat.strengths_in=outstrength;
+    end
+    if exist('outdeg','var')
+        stat.degrees_out=outdeg;
+    end
+    if exist('indeg','var')
+        stat.degrees_in=indeg;
+    end
+end
+
+
+    
 if isfield(data, 'label') && needlabel,  stat.label  = data.label;  end
 if isfield(data, 'freq'),   stat.freq   = data.freq;   end
 if isfield(data, 'time'),   stat.time   = data.time;   end
