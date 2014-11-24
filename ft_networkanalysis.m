@@ -16,9 +16,8 @@ function [stat] = ft_networkanalysis(cfg, data)
 % 'pos_pos(_freq)(_time)'.
 %
 % The configuration structure has to contain
-%   cfg.method    = string, or a cell-array of strings specifying the graph 
-%                     measure(s) that will be  computed. See below for the 
-%                     list of supported measures. 
+%   cfg.method    = string specifying the graph  measure(s) that will be 
+%                   computed. See below for the list of supported measures. 
 %   cfg.parameter = string specifying the bivariate parameter in the data 
 %                   for which the graph measure will be computed.
 %
