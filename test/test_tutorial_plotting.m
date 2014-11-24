@@ -119,7 +119,7 @@ figure; ft_multiplotTFR(cfg,TFRhann)
 cfg = [];
 cfg.xlim = [-0.2 1.0];
 cfg.ylim = [-1e-13 3e-13];
-cfg.layout = [CTF151.lay];
+cfg.layout = 'CTF151.lay';
 cfg.interactive = 'yes';
 figure; ft_multiplotER(cfg,avgFC);
 

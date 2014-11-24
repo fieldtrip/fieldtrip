@@ -102,7 +102,7 @@ if false
   data_clean   = ft_rejectvisual(cfg, data);
 else
   % just copy the data over
-  data_clean - data;
+  data_clean = data;
 end
 
 % In this exercise we suggest that you remove 8 trials with the highest 
