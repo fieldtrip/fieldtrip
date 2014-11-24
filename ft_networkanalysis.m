@@ -26,20 +26,17 @@ function [stat] = ft_networkanalysis(cfg, data)
 %   assortativity
 %   betweenness,      betweenness centrality (nodes)
 %   charpath*,         
-%   efficiency*,
-%   eccentricity*
-%   radius*
-%   diamater*
 %   clustering_coef,  clustering coefficient
 %   degrees
 %   density
+%   strengths
 %   distance
 %   edge_betweenness, betweenness centrality (edges)
 %   transitivity
 %   modularity
 %   smallworldness
 %
-%   * requires a distance matrix, If distance matrix is not provided, this
+%   * charpath requires a distance matrix, If distance matrix is not provided, this
 %   will be computed. 
 %
 % Specific cfg paramaters that can be specifed are:
@@ -47,7 +44,12 @@ function [stat] = ft_networkanalysis(cfg, data)
 %                    is 1. <1 gives larger modules, >1 give smaller modules
 % cfg.randomisations = For smallworldness, a number of random networks need
 %                       to be computed. This sets the number of 
-%                        random networks to compute (defualt = 100).
+%                       random networks to compute (defualt = 100).
+% cfg.inout          = 'yes or 'no'. If method is 'degrees' or 'strengths' 
+%                        and connectivity is directed, this option will 
+%                       additionally output the in/out-degree/strengths. 
+%                         If disabled, only the sums of the in/out
+%                          measurments will be included (default = 'no'). 
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ... 
@@ -93,13 +95,17 @@ cfg = ft_checkconfig(cfg, 'required', {'method' 'parameter'});
 
 cfg.threshold = ft_getopt(cfg, 'threshold', []);
 cfg.modulegamma = ft_getopt(cfg, 'modulegamma', 1);
+cfg.inout = ft_getopt(cfg, 'inout', 'no');
+cfg.randomisations = ft_getopt(cfg, 'randomisations', 'no');
+
 
 % ensure that the bct-toolbox is on the path
 ft_hastoolbox('BCT', 1);
 
 % check the data for the correct dimord and for the presence of the requested parameter
 if ~strcmp(data.dimord(1:7), 'pos_pos') && ~strcmp(data.dimord(1:9), 'chan_chan'),
-  error('the dimord of the input data should start with ''chan_chan'' or ''pos_pos''');
+  fprintf('Restructuring data structure\n');
+  data=restructure_connectivity(data)
 end
 
 % conversion to double is needed because some BCT functions want to do matrix
@@ -216,7 +222,7 @@ end
       
 for k = 1:size(input, 3)
   for m = 1:size(input, 4)
-    
+    [k m]
       
     % switch to the appropriate function from the BCT
     switch cfg.method
@@ -258,8 +264,7 @@ for k = 1:size(input, 3)
         if ~isbinary, warning_once(binarywarning); end
         
         if isdirected
-          [in, out, output(:,k,m)] = degrees_dir(input(:,:,k,m));
-          % FIXME do something here
+          [indeg(:,k,m), outdeg(:,k,m), output(:,k,m)] = degrees_dir(input(:,:,k,m));
         elseif ~isdirected
           output(:,k,m) = degrees_und(input(:,:,k,m));
         end
@@ -271,6 +276,13 @@ for k = 1:size(input, 3)
         elseif ~isdirected
           output(k,m) = density_und(input(:,:,k,m));
         end
+      case 'strengths'
+    if isdirected
+          [instrength(:,k,m), outstrength(:,k,m), output(:,k,m)] = strengths_dir(input(:,:,k,m));
+        elseif ~isdirected
+          output(:,k,m) = strengths_und(input(:,:,k,m));
+    end
+        
         case 'distance'
             if exist(distance_temp) % dont ant to re-compute distance unecesserily
                 output(:,:,k,m)=distance_temp(:,:,k,m);
@@ -289,18 +301,16 @@ for k = 1:size(input, 3)
             end
         case 'effic_local'
             if isbinary
-                output(:,:,k,m) = efficiency_bin(W,1);
+                output(:,:,k,m) = efficiency_bin(input(:,:,k,m),1);
             elseif ~isbinary
-                output(:,:,k,m) = efficiency_wei(W,1);
+                output(:,:,k,m) = efficiency_wei(input(:,:,k,m),1);
             end
         case 'effic_global'
             if isbinary
-                output(:,:,k,m) = efficiency_bin(W);
+                output(:,:,k,m) = efficiency_bin(input(:,:,k,m));
             elseif ~isbinary
-                output(:,:,k,m) = efficiency_wei(W);
+                output(:,:,k,m) = efficiency_wei(input(:,:,k,m));
             end
-            %   Eloc = efficiency_wei(W,1);
-            error('not yet implemented');
         case 'modularity'
             if isdirected
                 [modules(:,:,k,m) output(:,:,k,m)] = modularity_dir(W,cfg.modulegamma);
@@ -325,13 +335,13 @@ for k = 1:size(input, 3)
               case 'smallworldness'
 
         if isbinary && isdirected
-          output(k,m) = smallworld(input(:,:,k,m),'bindir');
+          output(k,m) = smallworld(input(:,:,k,m),'bindir',cfg.randomisations);
         elseif isbinary && ~isdirected
-          output(k,m) = smallworld(input(:,:,k,m),'binund');
+          output(k,m) = smallworld(input(:,:,k,m),'binund',cfg.randomisations);
         elseif ~isbinary && isdirected
-            output(k,m) = smallworld(input(:,:,k,m),'weidir');
+            output(k,m) = smallworld(input(:,:,k,m),'weidir',cfg.randomisations);
         elseif ~isbinary && ~isdirected
-            output(k,m) = smallworld(input(:,:,k,m),'weiund');
+            output(k,m) = smallworld(input(:,:,k,m),'weiund',cfg.randomisations);
         end
         
         case 'smallworldness_local'
@@ -371,9 +381,28 @@ stat=[];
 stat.(cfg.method) = output;
 stat.dimord       = dimord;
 
+% add suplementary outputs
+
 if exist('modules','var')
     stat.modules=modules;
 end
+
+if output_inout
+    if exist('outstrength','var')
+        stat.strengths_out=outstrength;
+    end
+    if exist('instrength','var')
+        stat.strengths_in=outstrength;
+    end
+    if exist('outdeg','var')
+        stat.degrees_out=outdeg;
+    end
+    if exist('indeg','var')
+        stat.degrees_in=indeg;
+    end
+end
+
+
     
 if isfield(data, 'label') && needlabel,  stat.label  = data.label;  end
 if isfield(data, 'freq'),   stat.freq   = data.freq;   end
