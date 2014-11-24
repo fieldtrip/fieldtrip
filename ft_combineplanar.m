@@ -226,10 +226,16 @@ elseif (israw || istimelock)
       % this is different from the frequency case FIXME
       tmpdat = zeros(2, sum(Nsmp));
       for k = 1:Nsgn
-        for m = 1:Nrpt
-          tmpdat(:, (Csmp(m)+1):Csmp(m+1)) = data.trial{m}([sel_dH(k) sel_dV(k)],:);
+          % perform fft on data prior to svdfft, then ifft afterwards to
+          % retain phase information
+          for m = 1:Nrpt
+          tmpdat(:, (Csmp(m)+1):Csmp(m+1)) = fft(data.trial{m}([sel_dH(k) sel_dV(k)],:),[],2);
         end
-        tmpdat2 = abs(svdfft(tmpdat,1));
+        tmpdat2 = (svdfft(tmpdat,1));
+        for m = 1:Nrpt
+          tmpdat2(:, (Csmp(m)+1):Csmp(m+1)) = ifft(tmpdat2(:, (Csmp(m)+1):Csmp(m+1)),[],2);
+        end
+        
         tmpdat2 = mat2cell(tmpdat2, 1, Nsmp);
         for m = 1:Nrpt
           if k==1, trial{m} = zeros(Nsgn, Nsmp(m)); end
