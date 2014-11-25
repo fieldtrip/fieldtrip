@@ -25,6 +25,8 @@ function [stat] = ft_networkanalysis(cfg, data)
 %   assortativity
 %   betweenness,      betweenness centrality (nodes)
 %   charpath*,         
+%   effic_global, global efficiency
+%   effic_local, local efficiency
 %   clustering_coef,  clustering coefficient
 %   degrees
 %   density
