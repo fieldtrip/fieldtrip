@@ -62,7 +62,7 @@ function [pow_new csd_new] = ft_csd_eigendecomp(spectrum,cutdatindcmb,component)
 
 revision = '$Id$';
 
-if ~exist('component')
+if ~exist('component','var')
     component='imag';
 end
 
