@@ -10,8 +10,7 @@ function [pow_new csd_new] = ft_csd_eigendecomp(spectrum,cutdatindcmb,component)
 %
 % If compenent is 'imag',  the re-estimated power is computed from the 
 % imaginary CSD  This is then added ot the diagonal of the imaginary CSD
-% matrix (as per the original Drakesmith et al,2013 
-% implimentation).
+% matrix (as per the original Drakesmith et al, 2013 implimentation).
 %
 % If component is 'imag+rop',this is the same as 'imag', except the real 
 % outer-product (rop) of the re-estimate power is added to the imaginary part 

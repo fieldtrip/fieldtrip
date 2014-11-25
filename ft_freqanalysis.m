@@ -62,10 +62,11 @@ function [freq] = ft_freqanalysis(cfg, data)
 %                      specify -1.
 %                      see FT_PREPROC_POLYREMOVAL for details
 %
-% If cfg.output = 'csddecomp' the following options can also be scpefied:
+% If cfg.output = 'csddecomp' the following options can also be specified:
 %   cfg.csddecomp   = 'imag', ','real1' or 'real2'. this specifies which 
 %                      component of the cross-spectra to perform 
 %                      eigendecomposition on (default = 'imag' ).
+%                      see FT_CSD_EIGENDECOMP for details. 
 %
 %
 %  METHOD SPECIFIC OPTIONS AND DESCRIPTIONS
