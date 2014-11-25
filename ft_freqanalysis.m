@@ -32,6 +32,8 @@ function [freq] = ft_freqanalysis(cfg, data)
 %   cfg.output     = 'pow'       return the power-spectra
 %                    'powandcsd' return the power and the cross-spectra
 %                    'fourier'   return the complex Fourier-spectra
+%                    'csddecomp' return a component of the cross-spectra 
+%                                 and its eigendecomposition (for NZPL CSD)
 %   cfg.channel    = Nx1 cell-array with selection of channels (default = 'all'),
 %                      see FT_CHANNELSELECTION for details
 %   cfg.channelcmb = Mx2 cell-array with selection of channel pairs (default = {'all' 'all'}),
@@ -59,6 +61,11 @@ function [freq] = ft_freqanalysis(cfg, data)
 %                      subtraction, thus a value of 0. If no removal is requested,
 %                      specify -1.
 %                      see FT_PREPROC_POLYREMOVAL for details
+%
+% If cfg.output = 'csddecomp' the following options can also be scpefied:
+%   cfg.csddecomp   = 'imag', ','real1' or 'real2'. this specifies which 
+%                      component of the cross-spectra to perform 
+%                      eigendecomposition on (default = 'imag' ).
 %
 %
 %  METHOD SPECIFIC OPTIONS AND DESCRIPTIONS
@@ -330,23 +337,31 @@ if strcmp(cfg.keeptrials,'yes') && strcmp(cfg.keeptapers,'yes')
   end
 end
 
+
 % Set flags for output
 if strcmp(cfg.output,'pow')
   powflg = 1;
   csdflg = 0;
   fftflg = 0;
+  ecxflg = 0;
 elseif strcmp(cfg.output,'powandcsd')
   powflg = 1;
   csdflg = 1;
   fftflg = 0;
+  ecxflg = 0;
 elseif strcmp(cfg.output,'fourier')
   powflg = 0;
   csdflg = 0;
   fftflg = 1;
+  ecxflg = 0;
+elseif strcmp(cfg.output,'csddecomp')
+  powflg = 1;
+  csdflg = 1;
+  fftflg = 0;
+  ecxflg = 1;
 else
   error('Unrecognized output required');
 end
-
 % prepare channel(cmb)
 if ~isfield(cfg, 'channelcmb') && csdflg
   %set the default for the channelcombination
@@ -355,6 +370,16 @@ elseif isfield(cfg, 'channelcmb') && ~csdflg
   % no cross-spectrum needs to be computed, hence remove the combinations from cfg
   cfg = rmfield(cfg, 'channelcmb');
 end
+
+% set default component for csddecomp
+if (~isfield(cfg, 'csddecomp') || strcmp(cfg.csddecomp,'imag')) && ecxflg
+    cfg.csddecomp = 'imag';
+elseif isfield(cfg, 'csddecomp')  && ~ecxflg
+    % delete this option if there is csddecomp is not specfied
+    cfg = rmfield(cfg, 'csddecomp');
+    warning('cfg.csddecomp is ignored if cfg.method is not ''csddecomp''');
+end
+
 
 if isfield(cfg, 'channelcmb')
   % the channels in the data are already the subset according to cfg.channel
@@ -605,7 +630,7 @@ for itrial = 1:ntrials
       end
       
       acttap = logical([ones(ntaper(ifoi),1);zeros(size(spectrum,1)-ntaper(ifoi),1)]);
-      if powflg
+      if powflg & ~ecxflg
         powdum = abs(spectrum(acttap,:,foiind(ifoi),acttboi)) .^2;
         % sinetaper scaling is disabled, because it is not consistent with the other
         % tapers. if scaling is required, please specify cfg.taper =
@@ -621,11 +646,21 @@ for itrial = 1:ntrials
         %             powdum = powdum .* sinetapscale;
         %           end
       end
-      if fftflg
+      if fftflg & ~ecxflg
         fourierdum = spectrum(acttap,:,foiind(ifoi),acttboi);
       end
-      if csdflg
+      if csdflg & ~ecxflg
         csddum =      spectrum(acttap,cutdatindcmb(:,1),foiind(ifoi),acttboi) .* conj(spectrum(acttap,cutdatindcmb(:,2),foiind(ifoi),acttboi));
+      end
+      if ecxflg
+          % perform eigendecomposition, then treat as normal pow and csd
+          if nacttboi>0;
+              [powdum csddum] = ft_csd_eigendecomp(spectrum(acttap,:,foiind(ifoi),acttboi),cutdatindcmb,cfg.csddecomp);
+              
+          else
+              powdum=zeros(size(spectrum(acttap,:,foiind(ifoi),acttboi)));
+              csddum=zeros(size(spectrum(acttap,cutdatindcmb(:,1),foiind(ifoi),acttboi)));
+          end
       end
       
       % switch between keep's
