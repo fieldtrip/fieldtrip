@@ -86,11 +86,6 @@ else
     error('Unrecognised output component. Valid values: ''imag'',''imag+rop'',''real1'',''real2''.');
 end
 
-if strcmp(outprod,'yes') & isimag
-    outprod=1;
-else
-    outprod=0;
-end
 
 
 sen_idx=unique(cutdatindcmb);
