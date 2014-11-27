@@ -394,7 +394,7 @@ if exist('modules','var')
     stat.modules=modules;
 end
 
-if output_inout
+if strcmp(cfg.inout,'yes')
     if exist('outstrength','var')
         stat.strengths_out=outstrength;
     end
