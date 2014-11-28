@@ -57,8 +57,7 @@ if abort
 end
 
 % check if the input data is valid for this function
-freq = ft_checkdata(freq, 'datatype',...
-  {'freq+comp', 'freq'}, 'feedback', 'yes');
+freq = ft_checkdata(freq, 'datatype', {'freq+comp', 'freq'}, 'feedback', 'yes');
 
 % update configuration fieldnames
 cfg              = ft_checkconfig(cfg, 'renamed', {'param', 'parameter'});
@@ -142,6 +141,11 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Output scaffolding
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+if numel(cfg.parameter)==1
+  % convert from cell-array to string
+  cfg.parameter = cfg.parameter{1};
+end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
