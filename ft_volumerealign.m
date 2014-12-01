@@ -1240,9 +1240,9 @@ switch key
     if isempty(opt.clim)
       opt.clim = [min(opt.ana(:)) max(opt.ana(:))];
     end
-    % reduce color scale range by 5%
-    cscalefactor = (opt.clim(2)-opt.clim(1))/2.5;
-    opt.clim(1) = opt.clim(1)+cscalefactor;
+    % reduce color scale range by 10%
+    cscalefactor = (opt.clim(2)-opt.clim(1))/10;
+    %opt.clim(1) = opt.clim(1)+cscalefactor;
     opt.clim(2) = opt.clim(2)-cscalefactor;
     setappdata(h, 'opt', opt);
     cb_redraw(h);
@@ -1251,9 +1251,9 @@ switch key
     if isempty(opt.clim)
       opt.clim = [min(opt.ana(:)) max(opt.ana(:))];
     end
-    % increase color scale range by 5%
-    cscalefactor = (opt.clim(2)-opt.clim(1))/2.5;
-    opt.clim(1) = opt.clim(1)-cscalefactor;
+    % increase color scale range by 10%
+    cscalefactor = (opt.clim(2)-opt.clim(1))/10;
+    %opt.clim(1) = opt.clim(1)-cscalefactor;
     opt.clim(2) = opt.clim(2)+cscalefactor;
     setappdata(h, 'opt', opt);
     cb_redraw(h);

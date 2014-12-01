@@ -872,6 +872,7 @@ elseif isequal(cfg.method,'surface')
       [temp.tri, temp.pnt] = reducepatch(surf.tri, surf.pnt, 1/cfg.surfdownsample);
       % find indices of retained patch faces
       [dummy, idx] = ismember(temp.pnt, surf.pnt, 'rows');
+      idx(idx==0)  = [];
       surf.tri = temp.tri;
       surf.pnt = temp.pnt;
       clear temp
@@ -1547,8 +1548,8 @@ switch key
       opt.clim = [min(opt.ana(:)) max(opt.ana(:))];
     end
     % reduce color scale range by 5%
-    cscalefactor = (opt.clim(2)-opt.clim(1))/2.5;
-    opt.clim(1) = opt.clim(1)+cscalefactor;
+    cscalefactor = (opt.clim(2)-opt.clim(1))/10;
+    %opt.clim(1) = opt.clim(1)+cscalefactor;
     opt.clim(2) = opt.clim(2)-cscalefactor;
     setappdata(h, 'opt', opt);
     cb_redraw(h);
@@ -1558,8 +1559,8 @@ switch key
       opt.clim = [min(opt.ana(:)) max(opt.ana(:))];
     end
     % increase color scale range by 5%
-    cscalefactor = (opt.clim(2)-opt.clim(1))/2.5;
-    opt.clim(1) = opt.clim(1)-cscalefactor;
+    cscalefactor = (opt.clim(2)-opt.clim(1))/10;
+    %opt.clim(1) = opt.clim(1)-cscalefactor;
     opt.clim(2) = opt.clim(2)+cscalefactor;
     setappdata(h, 'opt', opt);
     cb_redraw(h);
