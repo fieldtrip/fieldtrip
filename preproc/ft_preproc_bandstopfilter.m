@@ -1,4 +1,4 @@
-function [filt] = ft_preproc_bandstopfilter(dat,Fs,Fbp,N,type,dir,instabilityfix,df,wintype,dev,plotfiltresp)
+function [filt] = ft_preproc_bandstopfilter(dat,Fs,Fbp,N,type,dir,instabilityfix,df,wintype,dev,plotfiltresp,usefftfilt)
 
 % FT_PREPROC_BANDSTOPFILTER applies a band-stop filter to the data and thereby
 % removes the spectral components in the specified frequency band
@@ -37,6 +37,7 @@ function [filt] = ft_preproc_bandstopfilter(dat,Fs,Fbp,N,type,dir,instabilityfix
 %                'kaiser'
 %   dev        optional max passband deviation/stopband attenuation (firws with kaiser window, default = 0.001 [0.1%, -60 dB])
 %   plotfiltresp optional, 'yes' or 'no', plot filter responses (firws, default = 'no')
+%   usefftfilt optional, 'yes' or 'no', use fftfilt instead of filter (firws, default = 'no')
 %
 % Note that a one- or two-pass filter has consequences for the
 % strength of the filter, i.e. a two-pass filter with the same filter
@@ -118,6 +119,16 @@ end
 % Set default passband deviation/stopband attenuation for Kaiser window
 if nargin < 11 || isempty(plotfiltresp)
   plotfiltresp = 'no';
+end
+
+% Set default filter function
+if nargin < 12 || isempty(usefftfilt)
+  usefftfilt = 'no';
+end
+if strcmp(usefftfilt, 'yes')
+    usefftfilt = 1;
+else
+    usefftfilt = 0;
 end
 
 % Nyquist frequency
@@ -265,7 +276,7 @@ meandat = mean(dat,2);
 dat = bsxfun(@minus, dat, meandat);
 
 try
-  filt = filter_with_correction(B,A,dat,dir);
+  filt = filter_with_correction(B,A,dat,dir,usefftfilt);
 catch
   switch instabilityfix
     case 'no'
