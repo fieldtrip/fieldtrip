@@ -9,12 +9,10 @@ switch mexext
   case 'mexw64'
     % mex -I.\pthreads-win32\include -L.\pthreads-win32\lib\x64 engine.c -leng -lpthreadVC2
     mex alternative.c -leng -output engine
-    mex ft_getopt.c
     
   case 'mexw32'
     % mex -I.\pthreads-win32\include -L.\pthreads-win32\lib\x86 engine.c -leng -lpthreadVC2
     mex alternative.c -leng -output engine
-    mex ft_getopt.c
     
   otherwise
     error('unsupported mex platform');
