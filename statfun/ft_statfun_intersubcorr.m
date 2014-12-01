@@ -2,15 +2,14 @@ function [s, cfg] = ft_statfun_intersubcorr(cfg, dat, design)
 
 % FT_STATFUN_INTERSUBCORR calculates intersubject correlations between two
 % variables (e.g., brain-behavior correlations). First, correlations 
-% (cfg.type default = Spearman's rho) are computed across subjects per 
-% observation (e.g., chan, voxel, time). Then, the rho values are transformed 
-% to t-values, using rho*(sqrt(nunits-2))/sqrt((1-rho^2))). This later step 
-% is needed in order to correct for multiple comparisons using cluster correction. 
-% Note that the rho values are stored in the rho field of the output argument.
+% (cfg.type default = 'Spearman') are computed across subjects per 
+% observation (e.g., per chan). Then, the rho values are transformed 
+% to t-values, using rho*(sqrt(nunits-2))/sqrt((1-rho^2))). This later step
+% is needed in order to correct for multiple comparisons using cluster correction.
+% Note that the rho values are also stored in the rho field of the output argument.
 %
 % In case of calculating brain-behavior correlations, make sure the
-% behavioral data is matched in size to the brain data (e.g., using repmat
-% for matching the data dimensions).
+% behavioral data is matched in size and dimensions to the brain data.
 %
 % Use this function by calling one of the high-level statistics functions as
 %   [stat] = ft_timelockstatistics(cfg, timelock1, timelock2, ...)
@@ -103,16 +102,16 @@ if (nunits*2)~=(n1+n2)
 end
 nsmpls = size(dat,1);
 
-% store the positions of the 1-labels and the 2-labels in a nunits-by-2 array
-poslabelsperunit = zeros(nunits,2);
-poslabel1        = find(design(cfg.ivar,:)==1);
-poslabel2        = find(design(cfg.ivar,:)==2);
-[dum,i]          = sort(design(cfg.uvar,poslabel1), 'ascend');
-poslabelsperunit(:,1) = poslabel1(i);
-[dum,i]          = sort(design(cfg.uvar,poslabel2), 'ascend');
-poslabelsperunit(:,2) = poslabel2(i);
-
 if strcmp(cfg.computestat,'yes') % compute the statistic
+    
+    % store the positions of the 1-labels and the 2-labels in a nunits-by-2 array
+    poslabelsperunit = zeros(nunits,2);
+    poslabel1        = find(design(cfg.ivar,:)==1);
+    poslabel2        = find(design(cfg.ivar,:)==2);
+    [dum,i]          = sort(design(cfg.uvar,poslabel1), 'ascend');
+    poslabelsperunit(:,1) = poslabel1(i);
+    [dum,i]          = sort(design(cfg.uvar,poslabel2), 'ascend');
+    poslabelsperunit(:,2) = poslabel2(i);
     
     for nvox = 1:nsmpls % for each sample/observation
         
@@ -122,16 +121,15 @@ if strcmp(cfg.computestat,'yes') % compute the statistic
         
         % calculate the correlation coefficient between the two variables
         [rho] = corr(dat1, dat2, 'type', cfg.type);
-        rval(nvox,1) = rho;
+        clear dat1 dat2
         
-        %transform rho value into t-value in order to be able to perform cluster corrected stat;
-        tval(nvox,1) = rho*(sqrt(max(nunits)-2))/sqrt((1-rho^2));
-        
+        rval(nvox,1) = rho; 
+        tval(nvox,1) = rho*(sqrt(max(nunits)-2))/sqrt((1-rho^2)); % transform rho value into t-value for MCP correction
+        clear rho        
     end
     
     s.stat = tval;% store t values in s.stat variable for use with ft_statistics_montecarlo.m
-    s.rho = rval; % store r values in s.rho variable (these are the actual correlation coefficients)
-    
+    s.rho = rval; % store r values in s.rho variable (these are the actual correlation coefficients)  
 end
 
 if strcmp(cfg.computecritval,'yes')
