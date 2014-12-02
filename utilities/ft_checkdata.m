@@ -135,9 +135,6 @@ isfreqmvar      = ft_datatype(data, 'freqmvar');
 ischan          = ft_datatype(data, 'chan');
 % FIXME use the istrue function on ismeg and hasxxx options
 
-% replace pnt by pos
-data = fixpos(data);
-
 if ~isequal(feedback, 'no')
   if iscomp
     % it can be comp and raw/timelock/freq at the same time, therefore this has to go first
