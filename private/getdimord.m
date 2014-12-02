@@ -10,6 +10,7 @@ function dimord = getdimord(data, field, varargin)
 if strncmp(field, 'avg.', 4)
   field = field(5:end); % strip the avg
   data.(field) = data.avg.(field);
+  data = rmfield(data, 'avg');
 end
 
 if ~isfield(data, field)

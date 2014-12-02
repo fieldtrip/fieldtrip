@@ -1,15 +1,15 @@
-function varargout = interp_gridded(transform, val, pnt, varargin)
+function varargout = interp_gridded(transform, val, pos, varargin)
 
 % INTERP_GRIDDED computes a matrix that interpolates values that were
 % observed on a regular 3-D grid onto a random set of points.
 %
 % Use as
-%   [val]                = interp_gridded(transform, val, pnt, ...) or
-%   [interpmat, distmat] = interp_gridded(transform, val, pnt, ...)
+%   [val]                = interp_gridded(transform, val, pos, ...) or
+%   [interpmat, distmat] = interp_gridded(transform, val, pos, ...)
 % where
 %   transform  homogenous coordinate transformation matrix for the volume
 %   val        3-D matrix with the values in the volume
-%   pnt        Mx3 matrix with the vertex positions onto which the data should
+%   pos        Mx3 matrix with the vertex positions onto which the data should
 %              be interpolated
 % 
 % Optional arguments are specified in key-value pairs and can be
@@ -54,7 +54,7 @@ inside       = ft_getopt(varargin, 'inside');
 
 dim = size(val);
 dimres = svd(transform(1:3,1:3)); % to reduce the number of elements in the distance matrix
-npnt = size(pnt,1);
+npnt = size(pos,1);
 npos = prod(dim);
 
 if isempty(distmat)
@@ -62,7 +62,7 @@ if isempty(distmat)
   switch projmethod
     case 'nearest'
       % determine the nearest voxel for each vertex
-      sub = round(ft_warp_apply(inv(transform), pnt, 'homogenous'));  % express
+      sub = round(ft_warp_apply(inv(transform), pos, 'homogenous'));  % express
       sub(sub(:)<1) = 1;
       sub(sub(:,1)>dim(1),1) = dim(1);
       sub(sub(:,2)>dim(2),2) = dim(2);
@@ -85,14 +85,14 @@ if isempty(distmat)
       pos  = pos(inside,:);
       npos = size(pos,1);
       % compute the distance between all voxels and each surface point
-      dpntsq  = sum(pnt.^2,2); % squared distance to origin
+      dpntsq  = sum(pos.^2,2); % squared distance to origin
       dpossq  = sum(pos.^2,2); % squared distance to origin
       maxnpnt = double(npnt*ceil(4/3*pi*(sphereradius/max(dimres))^3)); % initial estimate of nonzero entries
       distmat = spalloc(npnt, npos, maxnpnt);
       ft_progress('init', 'textbar', 'computing distance matrix');
       for j = 1:npnt
         ft_progress(j/npnt);
-        d   = sqrt(dpntsq(j) + dpossq - 2 * pos * pnt(j,:)');
+        d   = sqrt(dpntsq(j) + dpossq - 2 * pos * pos(j,:)');
         sel = find(d<sphereradius);
         distmat(j, sel) = single(d(sel)) + eps('single');
       end
@@ -135,12 +135,12 @@ switch projmethod
       
       % we also need the dim
       dim = ft_getopt(varargin, 'dim');
-      dat = zeros(size(pnt,1),1);
+      dat = zeros(size(pos,1),1);
       
       % convert projvec in mm to a factor, assume mean distance of 70mm
       projvec = (70-projvec)/70;
       for iproj = 1:length(projvec),
-        sub = round(ft_warp_apply(inv(transform), pnt*projvec(iproj), 'homogenous'));  % express
+        sub = round(ft_warp_apply(inv(transform), pos*projvec(iproj), 'homogenous'));  % express
         sub(sub(:)<1) = 1;
         sub(sub(:,1)>dim(1),1) = dim(1);
         sub(sub(:,2)>dim(2),2) = dim(2);
