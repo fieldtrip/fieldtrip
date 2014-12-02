@@ -1,7 +1,7 @@
 function test_tutorial_natmeg_beamforming
 
 % WALLTIME 00:20:00
-% MEM 6gb
+% MEM 8gb
 
 % this script executes the MATLAB content from
 % http://fieldtrip.fcdonders.nl/tutorial/natmeg/beamforming

@@ -3,7 +3,7 @@ function test_bug2746
 % TEST test_bug2746
 % TEST loadcnt
 
-% MEM 150mb
+% MEM 1500mb
 % WALLTIME 00:10:00
 
 filename = dccnpath('/home/common/matlab/fieldtrip/data/test/original/eeg/neuroscan32/Subject1_MP.cnt');
