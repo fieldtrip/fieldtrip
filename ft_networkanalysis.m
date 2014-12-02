@@ -16,8 +16,9 @@ function [stat] = ft_networkanalysis(cfg, data)
 % 'pos_pos(_freq)(_time)'.
 %
 % The configuration structure has to contain
-%   cfg.method    = string specifying the graph  measure(s) that will be 
-%                   computed. See below for the list of supported measures. 
+%   cfg.method    = string, or a cell-array of strings specifying the graph 
+%                     measure(s) that will be  computed. See below for the 
+%                     list of supported measures. 
 %   cfg.parameter = string specifying the bivariate parameter in the data 
 %                   for which the graph measure will be computed.
 %
@@ -25,8 +26,6 @@ function [stat] = ft_networkanalysis(cfg, data)
 %   assortativity
 %   betweenness,      betweenness centrality (nodes)
 %   charpath*,         
-%   effic_global, global efficiency
-%   effic_local, local efficiency
 %   clustering_coef,  clustering coefficient
 %   degrees
 %   density
@@ -92,10 +91,10 @@ ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar data
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
-  return
-end
+% % the abort variable is set to true or false in ft_preamble_init
+% if abort
+%   return
+% end
 
 
 cfg = ft_checkconfig(cfg, 'required', {'method' 'parameter'});
@@ -229,7 +228,7 @@ end
       
 for k = 1:size(input, 3)
   for m = 1:size(input, 4)
-    [k m]
+   
       
     % switch to the appropriate function from the BCT
     switch cfg.method
@@ -308,15 +307,15 @@ for k = 1:size(input, 3)
             end
         case 'effic_local'
             if isbinary
-                output(:,:,k,m) = efficiency_bin(input(:,:,k,m),1);
+                output(:,k,m) = efficiency_bin(input(:,:,k,m),1);
             elseif ~isbinary
-                output(:,:,k,m) = efficiency_wei(input(:,:,k,m),1);
+                output(:,k,m) = efficiency_wei(input(:,:,k,m),1);
             end
         case 'effic_global'
             if isbinary
-                output(:,:,k,m) = efficiency_bin(input(:,:,k,m));
+                output(k,m) = efficiency_bin(input(:,:,k,m));
             elseif ~isbinary
-                output(:,:,k,m) = efficiency_wei(input(:,:,k,m));
+                output(k,m) = efficiency_wei(input(:,:,k,m));
             end
         case 'modularity'
             if isdirected
