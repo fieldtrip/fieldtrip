@@ -126,15 +126,17 @@ istimelock      = ft_datatype(data, 'timelock');
 iscomp          = ft_datatype(data, 'comp');
 isspike         = ft_datatype(data, 'spike');
 isvolume        = ft_datatype(data, 'volume');
-issegmentation  = ft_datatype(data, 'segmentation');
-isparcellation  = ft_datatype(data, 'parcellation');
+issegmentation  = ft_datatype(data, 'segmentation') && ~any(ismember('volume', dtype)); % do not enforfe segmentation style
+isparcellation  = ft_datatype(data, 'parcellation') && ~any(ismember('source', dtype)); % do not enforfe parcellation style
 issource        = ft_datatype(data, 'source');
 isdip           = ft_datatype(data, 'dip');
 ismvar          = ft_datatype(data, 'mvar');
 isfreqmvar      = ft_datatype(data, 'freqmvar');
 ischan          = ft_datatype(data, 'chan');
-
 % FIXME use the istrue function on ismeg and hasxxx options
+
+% replace pnt by pos
+data = fixpos(data);
 
 if ~isequal(feedback, 'no')
   if iscomp
@@ -819,10 +821,12 @@ end
 % represent the covariance matrix in a particular manner
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function data = fixcov(data, desired)
-if isfield(data, 'cov')     && ~isfield(data, 'labelcmb')
-  current = 'full';
-elseif isfield(data, 'cov') &&  isfield(data, 'labelcmb')
-  current = 'sparse';
+if any(isfield(data, {'cov', 'corr'}))
+  if ~isfield(data, 'labelcmb')
+    current = 'full';
+  else
+    current = 'sparse';
+  end
 else
   error('Could not determine the current representation of the covariance matrix');
 end
@@ -2099,4 +2103,6 @@ data.label = spike.label;
 data.fsample = fsample;
 if isfield(spike,'hdr'), data.hdr = spike.hdr; end
 if isfield(spike,'cfg'), data.cfg = spike.cfg; end
+
+
 
