@@ -1,17 +1,32 @@
-function data = fixpos(data)
+function data = fixpos(data, recurse)
 
-% helper function that replaces pnt by pos
+% helper function to replace pnt by pos
 
-if isfield(data, 'pnt')
+if nargin==1
+  recurse = 1;
+end
+
+if numel(data)>1
+  % loop over all individual elements
+  for i=1:numel(data)
+    data(i) = fixpos(data(i));
+  end
+  return
+end
+
+% replace pnt by pos
+if isfield(data, 'pnt') && ~isfield(data, 'label')
   data.pos = data.pnt;
   data = rmfield(data, 'pnt');
 end
 
-% recurse into substructures
-fn = fieldnames(data);
-fn = setdiff(fn, {'cfg'});
-for i=1:length(fn)
-  if isstruct(data.(fn{i}))
-    data.(fn{i}) = fixpos(data.(fn{i}));
+if recurse<5
+  % recurse into substructures, not too deep
+  fn = fieldnames(data);
+  fn = setdiff(fn, {'cfg'});
+  for i=1:length(fn)
+    if isstruct(data.(fn{i}))
+      data.(fn{i}) = fixpos(data.(fn{i}), recurse+1);
+    end
   end
 end
