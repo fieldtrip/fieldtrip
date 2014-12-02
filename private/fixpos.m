@@ -20,10 +20,10 @@ if isfield(data, 'pnt') && ~isfield(data, 'label')
   data = rmfield(data, 'pnt');
 end
 
-if recurse<5
+if recurse<3
   % recurse into substructures, not too deep
   fn = fieldnames(data);
-  fn = setdiff(fn, {'cfg'});
+  fn = setdiff(fn, {'cfg'}); % don't recurse into the cfg structure
   for i=1:length(fn)
     if isstruct(data.(fn{i}))
       data.(fn{i}) = fixpos(data.(fn{i}), recurse+1);
