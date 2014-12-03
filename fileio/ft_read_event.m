@@ -635,10 +635,15 @@ switch eventformat
     end
     
     if ~isempty(trg) && ~isempty(hdr)
+      if filetype_check_header(filename, 'RIFF')
+        scaler = 1000; % for 32-bit files from ASAlab triggers are in miliseconds
+      elseif filetype_check_header(filename, 'RF64');
+        scaler = 1; % for 64-bit files from ASAlab triggers are in seconds
+      end
       % translate the EEProbe trigger codes to events
       for i=1:length(trg)
         event(i).type     = 'trigger';
-        event(i).sample   = round((trg(i).time/1000) * hdr.Fs) + 1;    % convert from ms to samples
+        event(i).sample   = round((trg(i).time/scaler) * hdr.Fs) + 1;    % convert from ms to samples
         event(i).value    = trg(i).code;
         event(i).offset   = 0;
         event(i).duration = 0;
