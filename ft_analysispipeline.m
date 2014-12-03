@@ -211,17 +211,14 @@ end
 [dummy, indx] = sortrows(-[height(:) width(:)]);
 pipeline = pipeline(indx);
 
-if istrue(cfg.feedback)
-  fprintf('plotting flowchart\n');
-end
-plotflowchart(cfg, pipeline);
-
-if ~isempty(cfg.filename)
+if isempty(cfg.filename)
+  pipeline2matlabfigure(cfg, pipeline);
+else
   switch cfg.filetype
     case 'matlab'
-      exportmatlabscript(cfg, pipeline);
+      pipeline2matlabscript(cfg, pipeline);
     case 'dot'
-      exportdot(cfg, pipeline);
+      pipeline2dotfile(cfg, pipeline);
     otherwise
       error('unsupported filetype');
   end
@@ -330,7 +327,11 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function plotflowchart(cfg, pipeline)
+function pipeline2matlabfigure(cfg, pipeline)
+
+if istrue(cfg.feedback)
+  fprintf('plotting pipeline as MATLAB figure\n');
+end
 
 layout = cell(numel(pipeline));
 for i=1:length(pipeline)
@@ -550,7 +551,14 @@ end % for numel(showinfo)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function exportmatlabscript(cfg, pipeline)
+function pipeline2matlabscript(cfg, pipeline)
+
+[p, f, x] = fileparts(cfg.filename);
+filename = fullfile(p, [f '.m']);
+
+if istrue(cfg.feedback)
+  fprintf('exporting MATLAB script to file ''%s''\n', filename);
+end
 
 varname = {};
 varhash = {};
@@ -585,13 +593,6 @@ for i=1:length(pipeline)
   script    = cat(2, script, cfgstr, cmd, sep);
 end
 
-[p, f, x] = fileparts(cfg.filename);
-filename = fullfile(p, [f '.m']);
-
-if istrue(cfg.feedback)
-  fprintf('exporting MATLAB script to file ''%s''\n', filename);
-end
-
 % write the complete script to file
 fid = fopen(filename, 'wb');
 fprintf(fid, '%s', script);
@@ -600,9 +601,7 @@ fclose(fid);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function exportdot(cfg, pipeline)
-
-varhash = {pipeline.this};
+function pipeline2dotfile(cfg, pipeline)
 
 [p, f, x] = fileparts(cfg.filename);
 filename = fullfile(p, [f '.dot']);
@@ -615,6 +614,8 @@ end
 fid = fopen(filename, 'wb');
 
 fprintf(fid, 'digraph {\n');
+
+varhash = {pipeline.this};
 
 for i=1:length(pipeline)
   for j=1:length(pipeline(i).parent)
