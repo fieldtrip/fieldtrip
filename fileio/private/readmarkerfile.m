@@ -1,24 +1,28 @@
-function [data] = readmarkerfile(folder);
+function [marker] = readmarkerfile(folder)
 
 % Read the MarkerFile.mrk file in a CTF dataset.
-% Creates structure 'data' which contains number_markers, number_samples,
-%       marker_names, and trial_times.
+%
+% Use as
+%   marker = readmarkerfile(folder)
+%
+% Creates a marker structure which contains number_markers,
+% number_samples, marker_names, and trial_times.
 
 % Contributed by Tom Holroyd by email on 21 May 2005
 
 name = fullfile(folder, 'MarkerFile.mrk');
-if ~exist(name)
-   error('%s not found', name);
+if ~exist(name, 'file')
+  error('%s not found', name);
 end
 
 f = fopen(name, 'rt');
 markfile = {};
 while true
-    l = fgetl(f);
-    if ~ischar(l)
+  l = fgetl(f);
+  if ~ischar(l)
     break
-    end
-    markfile{end + 1} = l;
+  end
+  markfile{end + 1} = l;
 end
 fclose(f);
 
@@ -35,22 +39,22 @@ i = strmatch('NUMBER OF SAMPLES:', markfile, 'exact') + 1;
 nsamples = str2num(char(markfile(i)));
 
 for i = 1:length(nsamples)
-    if nsamples(i) == 0
+  if nsamples(i) == 0
     warning('marker %s in %s has zero samples', names{i}, folder);
-    end
+  end
 end
 
 % Get the samples.  Each is trial and time in seconds.
 j = strmatch('LIST OF SAMPLES:', markfile, 'exact') + 2;
 for i = 1:nmarkers
-    marks{i} = str2num(char(markfile(j(i):j(i) + nsamples(i))));
-
-    % Convert from index origin 0 to 1
-    if nsamples(i) ~= 0
+  marks{i} = str2num(char(markfile(j(i):j(i) + nsamples(i))));
+  
+  % Convert from index origin 0 to 1
+  if nsamples(i) ~= 0
     marks{i}(:, 1) = marks{i}(:, 1) + 1;
-    end
+  end
 end
 
-data = struct('number_markers', {nmarkers}, 'number_samples', {nsamples}, ...
-          'marker_names', {names}, 'trial_times', {marks});
+marker = struct('number_markers', {nmarkers}, 'number_samples', {nsamples}, ...
+  'marker_names', {names}, 'trial_times', {marks});
 
