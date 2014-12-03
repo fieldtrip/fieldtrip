@@ -11,7 +11,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   'headerformat'   string
 %   'fallback'       can be empty or 'biosig' (default = [])
 %   'coordsys'       string, 'head' or 'dewar' (default = 'head')
-%   'checkmaxshield' string, can be 'yes' or 'no' (default = 'yes')
+%   'checkmaxfilter' boolean, whether to check that maxfilter has been correctly applied (default = true)
 %
 % This returns a header structure with the following elements
 %   hdr.Fs                  sampling frequency
@@ -116,7 +116,7 @@ end
 headerformat   = ft_getopt(varargin, 'headerformat');
 retry          = ft_getopt(varargin, 'retry', false);     % the default is not to retry reading the header
 coordsys       = ft_getopt(varargin, 'coordsys', 'head'); % this is used for ctf and neuromag_mne, it can be head or dewar
-checkmaxshield = ft_getopt(varargin, 'checkmaxshield', 'yes');
+checkmaxfilter = ft_getopt(varargin, 'checkmaxfilter', true);
 
 if isempty(headerformat)
   % only do the autodetection if the format was not specified
@@ -1420,7 +1420,7 @@ switch headerformat
         end
         % no error message from fiff_setup_read_raw? Then maxshield
         % was applied, but maxfilter wasn't, so return this error:
-        if istrue(checkmaxshield)
+        if istrue(checkmaxfilter)
           error('Maxshield data should be corrected using Maxfilter prior to importing in FieldTrip.');
         else
           warning_once('Maxshield data should be corrected using Maxfilter prior to importing in FieldTrip.');

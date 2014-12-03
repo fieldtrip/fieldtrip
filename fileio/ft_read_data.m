@@ -17,6 +17,7 @@ function [dat] = ft_read_data(filename, varargin)
 %   'chanindx'       list with channel indices to read
 %   'chanunit'       cell-array with strings, the desired unit of each channel
 %   'checkboundary'  boolean, whether to check for reading segments over a trial boundary
+%   'checkmaxfilter' boolean, whether to check that maxfilter has been correctly applied (default = true)
 %   'cache'          boolean, whether to use caching for multiple reads
 %   'dataformat'     string
 %   'headerformat'   string
@@ -62,19 +63,20 @@ end
 filename = fetch_url(filename);
 
 % get the optional input arguments
-hdr           = ft_getopt(varargin, 'header');
-begsample     = ft_getopt(varargin, 'begsample');
-endsample     = ft_getopt(varargin, 'endsample');
-begtrial      = ft_getopt(varargin, 'begtrial');
-endtrial      = ft_getopt(varargin, 'endtrial');
-chanindx      = ft_getopt(varargin, 'chanindx');
-checkboundary = ft_getopt(varargin, 'checkboundary');
-headerformat  = ft_getopt(varargin, 'headerformat');
-fallback      = ft_getopt(varargin, 'fallback');
-cache         = ft_getopt(varargin, 'cache', false);
-dataformat    = ft_getopt(varargin, 'dataformat');
-chanunit      = ft_getopt(varargin, 'chanunit');
-timestamp     = ft_getopt(varargin, 'timestamp');
+hdr             = ft_getopt(varargin, 'header');
+begsample       = ft_getopt(varargin, 'begsample');
+endsample       = ft_getopt(varargin, 'endsample');
+begtrial        = ft_getopt(varargin, 'begtrial');
+endtrial        = ft_getopt(varargin, 'endtrial');
+chanindx        = ft_getopt(varargin, 'chanindx');
+checkboundary   = ft_getopt(varargin, 'checkboundary');
+checkmaxfilter  = ft_getopt(varargin, 'checkmaxfilter', 'yes');
+headerformat    = ft_getopt(varargin, 'headerformat');
+fallback        = ft_getopt(varargin, 'fallback');
+cache           = ft_getopt(varargin, 'cache', false);
+dataformat      = ft_getopt(varargin, 'dataformat');
+chanunit        = ft_getopt(varargin, 'chanunit');
+timestamp       = ft_getopt(varargin, 'timestamp');
 
 if isempty(dataformat)
   dataformat = ft_filetype(filename);  % the default is automatically detected, but only if not specified
@@ -130,7 +132,7 @@ end
 
 % read the header if it is not provided
 if isempty(hdr)
-  hdr = ft_read_header(filename, 'headerformat', headerformat);
+  hdr = ft_read_header(filename, 'headerformat', headerformat, 'checkmaxfilter', checkmaxfilter);
 end
 
 % set the default channel selection, which is all channels
