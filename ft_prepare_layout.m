@@ -922,6 +922,10 @@ return % function readlay
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function layout = sens2lay(sens, rz, method, style, overlap)
 
+% ensure that the sens structure is according to the latest conventions,
+% i.e. deal with backward compatibility
+sens = ft_datatype_sens(sens);
+
 % remove the balancing from the sensor definition, e.g. 3rd order gradients, PCA-cleaned data or ICA projections
 % this not only removed the linear projections, but also ensures that the channel labels are correctly named
 if isfield(sens, 'balance') && ~strcmp(sens.balance.current, 'none')            
