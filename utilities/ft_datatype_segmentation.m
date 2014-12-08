@@ -123,21 +123,12 @@ switch segversion
     % determine whether the style of the input fields is probabilistic or indexed
     fn = fieldnames(segmentation);
     [indexed, probabilistic] = determine_segmentationstyle(segmentation, fn, segmentation.dim);
-    
-    if any(probabilistic) && any(indexed)
-      warning('cannot work with a mixed representation, removing tissue probability maps');
-      sel = find(probabilistic);
-      segmentation       = rmfield(segmentation, fn(sel));
-      probabilistic(sel) = false;
-    end
-    
-    if any(probabilistic)
-      fn = fn(probabilistic);
-      probabilistic = true; indexed = false;
-    elseif any(indexed)
-      fn = fn(indexed);
-      indexed = true; probabilistic = false;
-    end
+
+    % ignore the fields that do not contain a segmentation
+    sel = indexed | probabilistic;
+    fn            = fn(sel);
+    indexed       = indexed(sel);
+    probabilistic = probabilistic(sel);
     
     % convert from an exclusive to cumulative representation
     % this is only only for demonstration purposes
@@ -160,10 +151,11 @@ switch segversion
     % ensure that the segmentation is internally consistent
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
-    if probabilistic
-      segmentation = fixsegmentation(segmentation, fn, 'probabilistic');
-    elseif indexed
-      segmentation = fixsegmentation(segmentation, fn, 'indexed');
+    if any(probabilistic)
+      segmentation = fixsegmentation(segmentation, fn(probabilistic), 'probabilistic');
+    end
+    if any(indexed)
+      segmentation = fixsegmentation(segmentation, fn(indexed), 'indexed');
     end
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -171,18 +163,15 @@ switch segversion
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     if isempty(segmentationstyle)
-      % keep it as is
-      clear fn % to avoid any potential confusion
-    elseif probabilistic && strcmp(segmentationstyle, 'indexed')
-      segmentation  = convert_segmentationstyle(segmentation, fn, segmentation.dim, 'indexed');
-      indexed       = true;
-      probabilistic = false;
-      clear fn % to avoid any potential confusion
-    elseif indexed && strcmp(segmentationstyle, 'probabilistic')
-      segmentation  = convert_segmentationstyle(segmentation, fn, segmentation.dim, 'probabilistic');
-      probabilistic = true;
-      indexed       = false;
-      clear fn % to avoid any potential confusion
+      % keep it as it is
+    elseif strcmp(segmentationstyle, 'indexed') && any(probabilistic)
+      segmentation  = convert_segmentationstyle(segmentation, fn(probabilistic), segmentation.dim, 'indexed');
+      indexed(probabilistic)       = true;  % these are now indexed
+      probabilistic(probabilistic) = false; % these are now indexed
+    elseif strcmp(segmentationstyle, 'probabilistic') && any(indexed)
+      segmentation  = convert_segmentationstyle(segmentation, fn(indexed), segmentation.dim, 'probabilistic');
+      probabilistic(indexed) = true;  % these are now probabilistic
+      indexed(indexed)       = false; % these are now probabilistic
     end % converting between probabilistic and indexed
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -190,7 +179,7 @@ switch segversion
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     if hasbrain
-      if indexed
+      if all(indexed)
         fn = fieldnames(segmentation);
         sel = false(size(fn));
         for i=1:numel(fn)
@@ -222,7 +211,7 @@ switch segversion
           end % try to construct the brain
         end
         
-      elseif probabilistic
+      elseif all(probabilistic)
         if ~isfield(segmentation, 'brain')
           if ~all(isfield(segmentation, {'gray' 'white' 'csf'}))
             error('cannot construct a brain mask on the fly; this requires gray, white and csf');
@@ -240,6 +229,8 @@ switch segversion
           % store it in the output
           segmentation.brain = brain;
         end
+      else
+        error('cannot construct a brain mask on the fly; this requires a uniquely indexed or a uniquely probabilitic representation');
       end
     end % if hasbrain
     

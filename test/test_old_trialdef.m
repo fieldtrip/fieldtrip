@@ -27,6 +27,8 @@ function test_old_trialdef
 % -sampleinfo and trialinfo should be concatenated in ft_appenddata
 % -sampleinfo and trialinfo should be adjusted by ft_rejectartifact
 
+% needed for the dccnpath function, since we will change directory later on
+addpath(fileparts(mfilename('fullpath')));
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/ctf275/A0132_Aud-Obj-Recognition_20051115_02.ds'));
 headerfile = 'A0132_Aud-Obj-Recognition_20051115_02.res4';

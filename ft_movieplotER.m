@@ -1,7 +1,7 @@
 function [cfg] = ft_movieplotER(cfg, data)
 
-% FT_MOVIEPLOTER makes a movie of the topographic distribution of the
-% time-locked average.
+% FT_MOVIEPLOTER makes a movie of the the event-related potentials, event-related
+% fields or oscillatory activity (power or coherence) versus frequency.
 %
 % Use as
 %   ft_movieplotER(cfg, timelock)
@@ -15,6 +15,9 @@ function [cfg] = ft_movieplotER(cfg, data)
 %   cfg.framespersec = number, frames per second (default = 5)
 %   cfg.framesfile   = [], no file saved, or 'string', filename of saved frames.mat (default = []);
 %   cfg.layout       = specification of the layout, see below
+%   cfg.baseline     = 'yes','no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE or FT_FREQBASELINE
+%   cfg.baselinetype = 'absolute' or 'relative' (default = 'absolute')
+%   cfg.colorbar     = 'yes', 'no' (default = 'no')
 %
 % The layout defines how the channels are arranged. You can specify the
 % layout in a variety of ways:
@@ -72,7 +75,17 @@ data = ft_checkdata(data, 'datatype', 'timelock');
 
 % set the defaults
 cfg.parameter   = ft_getopt(cfg, 'parameter', 'avg');
-cfg.interactive = ft_getopt(cfg, 'interactive', 'no');
+cfg.interactive = ft_getopt(cfg, 'interactive', 'yes');
+cfg.baseline    = ft_getopt(cfg, 'baseline', 'no');
+
+% apply optional baseline correction
+if ~strcmp(cfg.baseline, 'no')
+  tmpcfg = keepfields(cfg, {'baseline', 'baselinetype', 'parameter'});
+  data = ft_timelockbaseline(tmpcfg, data);
+  [cfg, data] = rollback_provenance(cfg, data);
+  % prevent the baseline correction from happening in ft_movieplotTFR
+  cfg = removefields(cfg, {'baseline', 'baselinetype'});
+end
 
 cfg = ft_movieplotTFR(cfg, data);
 

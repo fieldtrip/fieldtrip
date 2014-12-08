@@ -12,13 +12,13 @@ function hs = ft_plot_sens(sens, varargin)
 %   'coil'          = true/false, plot each individual coil or the channelposition (default = false)
 %   'coildiameter'  = diameter of the MEG gradiometer coils (default = 0)
 %   'label'         = show the label, can be 'off', 'label', 'number' (default = 'off')
-%   'chantype'      = string or cell-array with strings, for example {'meg', 'megref'} (default = 'all')
+%   'chantype'      = string or cell-array with strings, for example 'meg' (default = 'all')
 %
 % Example
 %   sens = ft_read_sens('Subject01.ds');
 %   ft_plot_sens(sens, 'style', 'r*')
 
-% Copyright (C) 2009-2013, Robert Oostenveld
+% Copyright (C) 2009-2014, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.

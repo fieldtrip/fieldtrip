@@ -4,10 +4,11 @@
 %   >> data = fir_filterdcpadded(b, a, data, causal);
 %
 % Inputs:
-%   b         - vector of filter coefficients
-%   a         - 1
-%   data      - raw data (times x chans)
-%   causal    - boolean perform causal filtering {default 0}
+%   b             - vector of filter coefficients
+%   a             - 1
+%   data          - raw data (times x chans)
+%   causal        - boolean perform causal filtering {default 0}
+%   usefftfilt    - boolean use fftfilt instead of filter
 %
 % Outputs:
 %   data      - smoothed data
@@ -38,9 +39,12 @@
 %
 % $Id$
 
-function [ data ] = fir_filterdcpadded(b, a, data, causal)
+function [ data ] = fir_filterdcpadded(b, a, data, causal, usefftfilt)
 
 % Defaults
+if nargin < 4 || isempty(usefftfilt)
+    usefftfilt = 0;
+end
 if nargin < 3 || isempty(causal)
     causal = 0;
 end
@@ -79,7 +83,12 @@ end
 
 % Filter data (with double precision)
 isSingle = isa(data, 'single');
-data = filter(double(b), 1, double([startPad; data; endPad])); % Pad and filter with double precision
+
+if usefftfilt
+    data = fftfilt(double(b), double([startPad; data; endPad]));
+else
+    data = filter(double(b), 1, double([startPad; data; endPad])); % Pad and filter with double precision
+end
 
 % Convert to single
 if isSingle

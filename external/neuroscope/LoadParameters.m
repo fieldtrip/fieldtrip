@@ -7,6 +7,10 @@ function parameters = LoadParameters(filename)
 %    parameters = LoadParameters(filename)
 %
 %    filename            parameter file name
+%
+% This is a slightly modified version from the original: it also contains
+% calibration information in the output, added 20141008
+
 
 % Copyright (C) 2004-2011 by Michaël Zugaro
 %
@@ -32,7 +36,6 @@ if ~isempty(p.spikeDetection),
 	parameters.spikeGroups.nGroups = length(p.spikeDetection.channelGroups.group);
 	if parameters.spikeGroups.nGroups == 1,
 		parameters.spikeGroups.nSamples = str2num(p.spikeDetection.channelGroups.group.nSamples);
-		parameters.spikeGroups.peakSamples = str2num(p.spikeDetection.channelGroups.group.peakSampleIndex);
 		channels = p.spikeDetection.channelGroups.group.channels.channel;
 		if isa(channels,'cell'),
 			for channel = 1:length(channels),
@@ -44,7 +47,6 @@ if ~isempty(p.spikeDetection),
 	else
 		for group = 1:parameters.spikeGroups.nGroups,
 			parameters.spikeGroups.nSamples(group) = str2num(p.spikeDetection.channelGroups.group{group}.nSamples);
-			parameters.spikeGroups.peakSamples(group) = str2num(p.spikeDetection.channelGroups.group{group}.peakSampleIndex);
 			channels = p.spikeDetection.channelGroups.group{group}.channels.channel;
 			if isa(channels,'cell'),
 				for channel = 1:length(channels),
@@ -57,22 +59,25 @@ if ~isempty(p.spikeDetection),
 	end
 else
 	parameters.spikeGroups.nSamples = [];
-	parameters.spikeGroups.peakSampleIndex = [];
 	parameters.spikeGroups.groups = {};
 	parameters.spikeGroups.nGroups = 0;
 end
 
-parameters.nChannels = str2num(p.acquisitionSystem.nChannels);
-parameters.nBits = str2num(p.acquisitionSystem.nBits);
-parameters.rates.lfp = str2num(p.fieldPotentials.lfpSamplingRate);
-parameters.rates.wideband = str2num(p.acquisitionSystem.samplingRate);
+parameters.nBits          = str2double(p.acquisitionSystem.nBits);
+parameters.nChannels      = str2double(p.acquisitionSystem.nChannels);
+parameters.voltageRange   = str2double(p.acquisitionSystem.voltageRange);
+parameters.amplification  = str2double(p.acquisitionSystem.amplification);
+parameters.offset         = str2double(p.acquisitionSystem.offset);
+parameters.rates.lfp      = str2double(p.fieldPotentials.lfpSamplingRate);
+parameters.rates.wideband = str2double(p.acquisitionSystem.samplingRate);
+parameters.xmltree        = p;
 try
-	parameters.rates.video = str2num(p.video.samplingRate);
-	parameters.maxX = str2num(p.video.width);
-	parameters.maxY = str2num(p.video.height);
+	parameters.rates.video = str2double(p.video.samplingRate);
+	parameters.maxX        = str2double(p.video.width);
+	parameters.maxY        = str2double(p.video.height);
 catch
 	parameters.rates.video = 0;
-	parameters.maxX = 0;
-	parameters.maxY = 0;
+	parameters.maxX        = 0;
+	parameters.maxY        = 0;
 	disp('... warning: missing video parameters (set to zero)');
 end

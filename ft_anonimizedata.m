@@ -171,12 +171,12 @@ uicontrol('tag', 'button5', 'parent', h, 'units', 'pixels', 'style', 'pushbutton
 uicontrol('tag', 'button6', 'parent', h, 'units', 'pixels', 'style', 'pushbutton', 'string', 'quit',        'userdata', 'q',  'callback', @keyboard_cb)
 
 % use manual positioning of the buttons in pixel units
-ft_uilayout(h, 'tag', 'button1', 'hpos', 20+(80+10)*0, 'vpos', 10, 'width', 80, 'height', 25);
-ft_uilayout(h, 'tag', 'button2', 'hpos', 20+(80+10)*1, 'vpos', 10, 'width', 80, 'height', 25);
-ft_uilayout(h, 'tag', 'button3', 'hpos', 20+(80+10)*2, 'vpos', 10, 'width', 80, 'height', 25);
-ft_uilayout(h, 'tag', 'button4', 'hpos', 20+(80+10)*3, 'vpos', 10, 'width', 80, 'height', 25);
-ft_uilayout(h, 'tag', 'button5', 'hpos', 20+(80+10)*4, 'vpos', 10, 'width', 80, 'height', 25);
-ft_uilayout(h, 'tag', 'button6', 'hpos', 20+(80+10)*5, 'vpos', 10, 'width', 80, 'height', 25);
+ft_uilayout(h, 'tag', 'button1', 'hpos', 20+(100+10)*0, 'vpos', 10, 'width', 100, 'height', 25);
+ft_uilayout(h, 'tag', 'button2', 'hpos', 20+(100+10)*1, 'vpos', 10, 'width', 100, 'height', 25);
+ft_uilayout(h, 'tag', 'button3', 'hpos', 20+(100+10)*2, 'vpos', 10, 'width', 100, 'height', 25);
+ft_uilayout(h, 'tag', 'button4', 'hpos', 20+(100+10)*3, 'vpos', 10, 'width', 100, 'height', 25);
+ft_uilayout(h, 'tag', 'button5', 'hpos', 20+(100+10)*4, 'vpos', 10, 'width', 100, 'height', 25);
+ft_uilayout(h, 'tag', 'button6', 'hpos', 20+(100+10)*5, 'vpos', 10, 'width', 100, 'height', 25);
 
 ft_uilayout(h, 'tag', 'button1', 'retag', 'buttongroup')
 ft_uilayout(h, 'tag', 'button1', 'retag', 'buttongroup')

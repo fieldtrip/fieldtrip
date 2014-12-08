@@ -183,7 +183,7 @@ for i=1:size(dip.pos,1)
   end
   
   if fixedori
-    if isempty(refdip) && isempty(supdip) && isempty(refchan) && isempty(supchan) && (size(lf,2)==3)
+    if isempty(refdip) && isempty(supdip) && isempty(refchan) && isempty(supchan)
       % compute the leadfield for the optimal dipole orientation
       % subsequently the leadfield for only that dipole orientation will
       % be used for the final filter computation

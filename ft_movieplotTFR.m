@@ -1,6 +1,7 @@
 function [cfg] = ft_movieplotTFR(cfg, data)
 
-% FT_MOVIEPLOTTFR makes a movie of a time frequency representation of power or coherence 
+% FT_MOVIEPLOTTFR makes a movie of the time-frequency representation of power or
+% coherence.
 %
 % Use as
 %   ft_movieplotTFR(cfg, data)
@@ -20,6 +21,9 @@ function [cfg] = ft_movieplotTFR(cfg, data)
 %   cfg.movietime    = number, movie frames are all frequencies at the fixed time movietime (default = []);
 %   cfg.layout       = specification of the layout, see below
 %   cfg.interactive  = 'no' or 'yes', make it interactive
+%   cfg.baseline     = 'yes','no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE or FT_FREQBASELINE
+%   cfg.baselinetype = 'absolute' or 'relative' (default = 'absolute')
+%   cfg.colorbar     = 'yes', 'no' (default = 'no')
 %
 % the layout defines how the channels are arranged. you can specify the
 % layout in a variety of ways:
@@ -96,6 +100,8 @@ cfg.framesfile    = ft_getopt(cfg, 'framesfile',   []);
 cfg.moviefreq     = ft_getopt(cfg, 'moviefreq', []);
 cfg.movietime     = ft_getopt(cfg, 'movietime', []);
 cfg.movierpt      = ft_getopt(cfg, 'movierpt', 1);
+cfg.baseline      = ft_getopt(cfg, 'baseline', 'no');
+cfg.colorbar      = ft_getopt(cfg, 'colorbar', 'no');
 cfg.interactive   = ft_getopt(cfg, 'interactive', 'yes');
 dointeractive     = istrue(cfg.interactive);
 
@@ -106,6 +112,13 @@ end
 
 % read or create the layout that will be used for plotting:
 layout = ft_prepare_layout(cfg);
+
+% apply optional baseline correction
+if ~strcmp(cfg.baseline, 'no')
+  tmpcfg = keepfields(cfg, {'baseline', 'baselinetype', 'parameter'});
+  data = ft_freqbaseline(tmpcfg, data);
+  [cfg, data] = rollback_provenance(cfg, data);
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the actual computation is done in the middle part
@@ -168,7 +181,6 @@ else
   cfg.ylim = [];
   hasyparam = false;
 end
-
 
 % select the channels in the data that match with the layout:
 [seldat, sellay] = match_str(data.label, layout.label);
@@ -273,21 +285,22 @@ if dointeractive
   set(t, 'timerfcn', {@cb_timer, h}, 'period', 0.1, 'executionmode', 'fixedspacing');
   
   % collect the data and the options to be used in the figure
-  opt.lay   = layout;
-  opt.chanx = chanx;
-  opt.chany = chany;
+  opt.lay      = layout;
+  opt.chanx    = chanx;
+  opt.chany    = chany;
   opt.xvalues  = xvalues; % freq
   opt.yvalues  = yvalues; % time
-  opt.xparam = xparam;
-  opt.yparam = yparam;
-  opt.dat   = parameter;
-  opt.zlim  = cfg.zlim;
-  opt.speed = 1;
-  opt.cfg   = cfg;
-  opt.sx    = sx; % slider freq
-  opt.sy    = sy; % slider time
-  opt.p     = p;
-  opt.t     = t;
+  opt.xparam   = xparam;
+  opt.yparam   = yparam;
+  opt.dat      = parameter;
+  opt.zlim     = cfg.zlim;
+  opt.speed    = 1;
+  opt.cfg      = cfg;
+  opt.sx       = sx; % slider freq
+  opt.sy       = sy; % slider time
+  opt.p        = p;
+  opt.t        = t;
+  opt.colorbar = istrue(cfg.colorbar);
   if ~hasyparam
     opt.timdim = 2;
   else
@@ -296,6 +309,9 @@ if dointeractive
   [dum, hs] = ft_plot_topo(chanx, chany, zeros(numel(chanx),1), 'mask', layout.mask, 'outline', layout.outline, 'interpmethod', 'v4', 'interplim', 'mask');
   caxis(cfg.zlim);
   axis off;
+  if opt.colorbar
+    colorbar
+  end
   
   % add sum stuff at a higher level for quicker access in the callback
   % routine

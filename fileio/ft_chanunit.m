@@ -168,6 +168,7 @@ elseif ft_senstype(input, 'bti') && isfield(input, 'chantype')
   chanunit(strcmp('meggrad',             input.chantype)) = {'T'}; % this is the plain difference in the field at the two coils, i.e. in T
   chanunit(strcmp('refmag',              input.chantype)) = {'T'};
   chanunit(strcmp('refgrad',             input.chantype)) = {'T'};
+  chanunit(strcmp('ref',                 input.chantype)) = {'T'};
   
 elseif ft_senstype(input, 'itab') && isfield(input, 'chantype')
   chanunit(strcmp('megmag',              input.chantype)) = {'T'};

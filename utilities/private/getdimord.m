@@ -7,6 +7,12 @@ function dimord = getdimord(data, field, varargin)
 %
 % See also GETDIMSIZ
 
+if strncmp(field, 'avg.', 4)
+  field = field(5:end); % strip the avg
+  data.(field) = data.avg.(field);
+  data = rmfield(data, 'avg');
+end
+
 if ~isfield(data, field)
   error('field "%s" not present in data', field);
 end
@@ -94,6 +100,8 @@ end
 
 if isfield(data, 'pos')
   npos = size(data.pos,1);
+elseif isfield(data, 'dim')
+  npos = prod(data.dim);
 end
 
 if isfield(data, 'csdlabel')
@@ -313,6 +321,12 @@ switch field
       dimord = 'freq';
     end
     
+  otherwise
+    if isfield(data, 'dim') && isequal(datsiz, data.dim)
+      % FIXME is this the desired dimord for volume data? A dimord of vox or voxel is not recommended according to fixdimord.
+      dimord = 'pos';
+    end
+    
 end % switch field
 
 if ~exist('dimord', 'var')
@@ -365,6 +379,9 @@ if ~exist('dimord', 'var')
     if isempty(dimtok{end}) && datsiz(end)==1
       % remove the unknown trailing singleton dimension
       dimtok = dimtok(1:end-1);
+    elseif isequal(dimtok{1}, 'pos') && isempty(dimtok{2}) && datsiz(2)==1
+      % remove the unknown leading singleton dimension
+      dimtok(2) = [];
     end
     
     if all(~cellfun(@isempty, dimtok))

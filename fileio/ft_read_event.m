@@ -298,29 +298,26 @@ switch eventformat
     schan = find(strcmpi(hdr.label,'STATUS'));
     sdata = ft_read_data(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', begsample, 'endsample', endsample, 'chanindx', schan);
     
-    % FIXME the following section still needs to be addressed
-    % http://bugzilla.fcdonders.nl/show_bug.cgi?id=2409
-    % http://bugzilla.fcdonders.nl/show_bug.cgi?id=2415
-    if true
+    if matlabversion(-inf, '2012a')
       % find indices of negative numbers
       bit24i = find(sdata < 0);
-      % make number positive and preserve bits 0-22 (counting from 0)
+      % make number positive and preserve bits 0-22
       sdata(bit24i) = bitcmp(abs(sdata(bit24i))-1,24);
-      % re-insert the sign bit on its original location, i.e. bit 23 (counting from 0)
+      % re-insert the sign bit on its original location, i.e. bit24
       sdata(bit24i) = sdata(bit24i)+(2^(24-1));
       % typecast the data to ensure that the status channel is represented in 32 bits
       sdata = uint32(sdata);
     else
-      % convert to integer representation and only preserve the lowest 24 bits
+      % convert to 32-bit integer representation and only preserve the lowest 24 bits
       sdata = bitand(int32(sdata), 2^24-1);
     end
-
+    
     byte1 = 2^8  - 1;
     byte2 = 2^16 - 1 - byte1;
     byte3 = 2^24 - 1 - byte1 - byte2;
     
     % get the respective status and trigger bits
-    trigger = bitand(sdata, bitor(byte1, byte2)); %  contained in the lower two bytes
+    trigger = bitand(sdata, bitor(byte1, byte2)); % this is contained in the lower two bytes
     epoch   = int8(bitget(sdata, 16+1));
     cmrange = int8(bitget(sdata, 20+1));
     battery = int8(bitget(sdata, 22+1));
@@ -638,10 +635,15 @@ switch eventformat
     end
     
     if ~isempty(trg) && ~isempty(hdr)
+      if filetype_check_header(filename, 'RIFF')
+        scaler = 1000; % for 32-bit files from ASAlab triggers are in miliseconds
+      elseif filetype_check_header(filename, 'RF64');
+        scaler = 1; % for 64-bit files from ASAlab triggers are in seconds
+      end
       % translate the EEProbe trigger codes to events
       for i=1:length(trg)
         event(i).type     = 'trigger';
-        event(i).sample   = round((trg(i).time/1000) * hdr.Fs) + 1;    % convert from ms to samples
+        event(i).sample   = round((trg(i).time/scaler) * hdr.Fs) + 1;    % convert from ms to samples
         event(i).value    = trg(i).code;
         event(i).offset   = 0;
         event(i).duration = 0;
@@ -1732,7 +1734,8 @@ switch eventformat
       hdr = ft_read_header(filename);
     end
     if isfield(hdr.orig, 'epochs') && ~isempty(hdr.orig.epochs)
-      for i = 1:hdr.nTrials
+      trlind = [];
+      for i = 1:numel(hdr.orig.epochs)
         trlind = [trlind i*ones(1, diff(hdr.orig.epochs(i).samples) + 1)];
       end
     else

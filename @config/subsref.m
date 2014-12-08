@@ -62,8 +62,23 @@ if length(index)==1
   end
 else
   % use recursion to find the subfield that is being indexed
-  varargout      = cell(1, prod(cellfun(@numel, index(1).subs)));
-  [varargout{:}] = subsref(subsref(x, index(1)), index(2:end));
+  if ischar(index(1).subs)
+    % this happens when indexing a single structure
+    varargout = cell(1, 1);
+  elseif iscell(index(1).subs)
+    % this happens when indexing an array
+    varargout = cell(1, prod(cellfun(@numel, index(1).subs)));
+  end
+  try
+    [varargout{:}] = subsref(subsref(x, index(1)), index(2:end));
+  catch
+    me = lasterror;
+    if strcmp(me.identifier,  'MATLAB:unassignedOutputs')
+      error('Scalar index required for this type of multi-level indexing.');
+    else
+      error(me.message);
+    end
+  end
 end
 
 % TEST CODE

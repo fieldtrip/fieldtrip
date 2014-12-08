@@ -173,6 +173,15 @@ if ~(ischar(cfg.baseline) && strcmp(cfg.baseline, 'no'))
   
 end % ~strcmp(cfg.baseline, 'no')
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Output scaffolding
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+if numel(cfg.parameter)==1
+  % convert from cell-array to string
+  cfg.parameter = cfg.parameter{1};
+end
+
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig

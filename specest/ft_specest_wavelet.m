@@ -15,7 +15,7 @@ function [spectrum,freqoi,timeoi] = ft_specest_wavelet(dat, time, varargin)
 %
 % Optional arguments should be specified in key-value pairs and can include:
 %   pad        = number, total length of data after zero padding (in seconds)
-%   padtype   = string, indicating type of padding to be used (see ft_preproc_padding, default: zero)
+%   padtype   = string, indicating type of padding to be used (see ft_preproc_padding, default = 'zero')
 %   freqoi     = vector, containing frequencies of interest
 %   timeoi     = vector, containing time points of interest (in seconds)
 %   width      = number or vector, width of the wavelet, determines the temporal and spectral resolution
@@ -91,7 +91,7 @@ nfreqoi  = length(freqoi);
 
 % throw a warning if input freqoi is different from output freqoi
 if isnumeric(freqoiinput)
-  % check whether padding is appropriate for the requested frequency resolution 
+  % check whether padding is appropriate for the requested frequency resolution
   rayl = 1/endtime;
   if any(rem(freqoiinput,rayl)) % not always the case when they mismatch
     warning_once('padding not sufficient for requested frequency resolution, for more information please see the FAQs on www.ru.nl/neuroimaging/fieldtrip');
@@ -123,7 +123,7 @@ if isnumeric(timeoiinput)
   if numel(timeoiinput) ~= numel(timeoi) % timeoi will not contain double time-bins when requested
     warning_once('output time-bins are different from input time-bins, multiples of the same bin were requested but not given');
   else
-    if any(abs(timeoiinput-timeoi) >= eps*1e6) 
+    if any(abs(timeoiinput-timeoi) >= eps*1e6)
       warning_once('output time-bins are different from input time-bins');
     end
   end
@@ -159,27 +159,27 @@ for ifreqoi = 1:nfreqoi
   
   
   %%%% debug plotting
-%   figure('name',['wavelet @ ' num2str(freqoi(ifreqoi)) 'Hz' ],'NumberTitle','off');
-%   subplot(2,1,1);
-%   hold on;
-%   plot(real(wavelet));
-%   plot(imag(wavelet),'color','r');
-%   legend('real','imag');
-%   tline = length(wavelet)/2;
-%   if mod(tline,2)==0
-%     line([tline tline],[-max(abs(wavelet)) max(abs(wavelet))],'color','g','linestyle','--')
-%   else
-%     line([ceil(tline) ceil(tline)],[-max(abs(wavelet)) max(abs(wavelet))],'color','g','linestyle','--');
-%     line([floor(tline) floor(tline)],[-max(abs(wavelet)) max(abs(wavelet))],'color','g','linestyle','--');
-%   end;
-%   subplot(2,1,2);
-%   plot(angle(wavelet),'color','g');
-%   if mod(tline,2)==0,
-%     line([tline tline],[-pi pi],'color','r','linestyle','--')
-%   else
-%     line([ceil(tline) ceil(tline)],[-pi pi],'color','r','linestyle','--')
-%     line([floor(tline) floor(tline)],[-pi pi],'color','r','linestyle','--')
-%   end
+  %   figure('name',['wavelet @ ' num2str(freqoi(ifreqoi)) 'Hz' ],'NumberTitle','off');
+  %   subplot(2,1,1);
+  %   hold on;
+  %   plot(real(wavelet));
+  %   plot(imag(wavelet),'color','r');
+  %   legend('real','imag');
+  %   tline = length(wavelet)/2;
+  %   if mod(tline,2)==0
+  %     line([tline tline],[-max(abs(wavelet)) max(abs(wavelet))],'color','g','linestyle','--')
+  %   else
+  %     line([ceil(tline) ceil(tline)],[-max(abs(wavelet)) max(abs(wavelet))],'color','g','linestyle','--');
+  %     line([floor(tline) floor(tline)],[-max(abs(wavelet)) max(abs(wavelet))],'color','g','linestyle','--');
+  %   end;
+  %   subplot(2,1,2);
+  %   plot(angle(wavelet),'color','g');
+  %   if mod(tline,2)==0,
+  %     line([tline tline],[-pi pi],'color','r','linestyle','--')
+  %   else
+  %     line([ceil(tline) ceil(tline)],[-pi pi],'color','r','linestyle','--')
+  %     line([floor(tline) floor(tline)],[-pi pi],'color','r','linestyle','--')
+  %   end
   %%%% debug plotting
   
 end
@@ -189,6 +189,7 @@ spectrum = complex(nan(nchan,nfreqoi,ntimeboi),nan(nchan,nfreqoi,ntimeboi));
 datspectrum = fft(ft_preproc_padding(dat, padtype, 0, postpad), [], 2);
 for ifreqoi = 1:nfreqoi
   str = sprintf('frequency %d (%.2f Hz)', ifreqoi,freqoi(ifreqoi));
+  
   [st, cws] = dbstack;
   if length(st)>1 && strcmp(st(2).name, 'ft_freqanalysis') && verbose
     % specest_convol has been called by ft_freqanalysis, meaning that ft_progress has been initialised

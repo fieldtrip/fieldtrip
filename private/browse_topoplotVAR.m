@@ -12,7 +12,7 @@ function browse_topoplotVAR(cfg, data)
 timelock        = [];
 timelock.label  = data.label;
 timelock.time   = mean(data.time{1});
-timelock.avg    = sum(preproc_baselinecorrect(data.trial{1}).^2, 2);
+timelock.avg    = sum(ft_preproc_baselinecorrect(data.trial{1}).^2, 2);
 timelock.dimord = 'chan_time';
 
 default             = [];

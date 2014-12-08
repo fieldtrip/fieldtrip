@@ -4,6 +4,9 @@ function [scd] = ft_scalpcurrentdensity(cfg, data)
 % second-order derivative (the surface Laplacian) of the EEG potential
 % distribution
 %
+% The relation between the surface Laplacian and the SCD is explained 
+% in more detail on http://tinyurl.com/ptovowl.
+%
 % Use as
 %   [data] = ft_scalpcurrentdensity(cfg, data)
 % or
@@ -113,7 +116,7 @@ end
 dtype = ft_datatype(data);
 
 % check if the input data is valid for this function
-data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'ismeg', 'no');
+data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'iseeg','yes','ismeg',[]); 
 
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
@@ -122,7 +125,10 @@ if ~strcmp(cfg.trials, 'all')
 end
 
 % get the electrode positions
-elec = ft_fetch_sens(cfg, data);
+tmpcfg = cfg;
+tmpcfg.senstype = 'EEG';
+
+elec = ft_fetch_sens(tmpcfg, data);
 
 % remove all junk fields from the electrode array
 tmp  = elec;

@@ -1,4 +1,4 @@
-function filt = filter_with_correction(B,A,dat,dir)
+function filt = filter_with_correction(B,A,dat,dir,usefftfilt)
 
 % FILTER_WITH_CORRECTION applies a to the data and corrects
 % edge-artifacts for one-pass filtering.
@@ -77,9 +77,9 @@ switch dir
     filt2 = fliplr(filtfilt(B, A, fliplr(dat)')');
     filt  = (filt1 + filt2)/2;
   case 'onepass-zerophase'
-    filt = fir_filterdcpadded(B, A, dat', 0)';
+    filt = fir_filterdcpadded(B, A, dat', 0, usefftfilt)';
   case 'onepass-minphase'
-    filt = fir_filterdcpadded(B, A, dat', 1)';
+    filt = fir_filterdcpadded(B, A, dat', 1, usefftfilt)';
   otherwise
     error('unsupported filter direction "%s"', dir);
 end

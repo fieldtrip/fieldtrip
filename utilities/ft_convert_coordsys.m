@@ -19,7 +19,7 @@ function [obj] = ft_convert_coordsys(obj, target, opt, template)
 %
 % The following input objects are supported
 %   anatomical mri, see FT_READ_MRI
-%   anatomical or functional atlas, see FT_PREPARE_ATLAS
+%   anatomical or functional atlas, see FT_READ_ATLAS
 %   (not yet) electrode definition
 %   (not yet) gradiometer array definition
 %   (not yet) volume conductor definition

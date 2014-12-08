@@ -200,3 +200,32 @@ catch
   % expect it to be 16.
 end
 
+%%
+% the following was detected in http://bugzilla.fcdonders.nl/show_bug.cgi?id=2709#c1
+% it seems to be similar to the test performed in the previous section
+
+clear a1 a2
+
+a1(1).b = 1;
+a1(2).b = 1:2;
+a1(3).b = 1:3;
+
+a2 = config(a1);
+
+c1 = {a2.b} % works
+c2 = {a2(:).b} % fails
+c3 = {a2(1:3).b} % fails
+
+try
+  assert(length(c1)==3)
+  assert(length(c2)==3)
+  assert(length(c3)==3)
+catch
+  warning('there is still a situation where the config object is not 100%% compatible with a struct');
+  % I believe this is due to a bug in MATLAB. When calling {a2(:).a} there is a
+  % recursive call to subsref. On the outermost call, nargout=1, whereas I would
+  % expect it to be 16.
+end
+
+
+

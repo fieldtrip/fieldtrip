@@ -17,6 +17,7 @@ function [dat] = read_eep_avr(fn);
 % eeg.variance  ... variance (nchan x npnt)
 % eeg.condlab   ... string with condition label
 % eeg.condcol   ... string with color code for condition
+% eeg.psi       ... pre-stimulus interval
 % eeg.trialc    ... total number of trial in original data
 % eeg.rejtrialc ... number of rejected trials
 %
@@ -45,10 +46,7 @@ function [dat] = read_eep_avr(fn);
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-% $Log: read_eep_avr.m,v $
-% Revision 1.2  2004/12/03 12:47:20  jwiskerke
-% Cleaned the file of unix-dos conversion artefacts.
-%
+% $Log: not supported by cvs2svn $
 % Revision 1.1  2004/11/19 14:55:38  jwiskerke
 % Added files for use with matlab
 %
@@ -61,7 +59,7 @@ function [dat] = read_eep_avr(fn);
 % Revision 1.1.1.1  2003/03/11 15:24:51  roberto
 % updated help and copyrights
 %
-% ANT Software BV, The Netherlands, www.ant-software.nl / info@ant-software.nl
+% ANT Software BV, The Netherlands, www.ant-neuro.com / info@ant-neuro.com
 %
 
 error('could not locate mex file');

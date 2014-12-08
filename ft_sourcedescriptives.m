@@ -231,20 +231,21 @@ if ispccdata
     ft_progress('init', cfg.feedback, 'projecting dipole moment');
     for diplop=1:length(source.inside)
       ft_progress(diplop/length(source.inside), 'projecting dipole moment %d/%d\n', diplop, length(source.inside));
+      i       = source.inside(diplop);
       
       if numel(source.avg.csdlabel)>1,
-        dipsel     = find(strcmp(source.avg.csdlabel{diplop}, 'scandip'));
-        refchansel = find(strcmp(source.avg.csdlabel{diplop}, 'refchan'));
-        refdipsel  = find(strcmp(source.avg.csdlabel{diplop}, 'refdip'));
-        supchansel = find(strcmp(source.avg.csdlabel{diplop}, 'supchan'));
-        supdipsel  = find(strcmp(source.avg.csdlabel{diplop}, 'supdip'));
+        dipsel     = find(strcmp(source.avg.csdlabel{i}, 'scandip'));
+        refchansel = find(strcmp(source.avg.csdlabel{i}, 'refchan'));
+        refdipsel  = find(strcmp(source.avg.csdlabel{i}, 'refdip'));
+        supchansel = find(strcmp(source.avg.csdlabel{i}, 'supchan'));
+        supdipsel  = find(strcmp(source.avg.csdlabel{i}, 'supdip'));
         
         % these are only used to count the number of reference/suppression dipoles and channels
         refsel = [refdipsel refchansel];
         supsel = [supdipsel supchansel];
       end
       
-      i       = source.inside(diplop);
+      
       mom     = source.avg.mom{i}(dipsel,     :);
       ref     = source.avg.mom{i}(refdipsel,  :);
       sup     = source.avg.mom{i}(supdipsel,  :);
@@ -445,7 +446,7 @@ if ispccdata
       tmpcsd  = tmpcsd(scnindx, scnindx) - tmpcsd(scnindx, supindx)*pinv(tmpcsd(supindx, supindx))*tmpcsd(supindx, scnindx);
       source.avg.csd{i}   = tmpcsd;
     end % for diplop
-    source.avg.csdlabel = source.avg.csdlabel(scnindx);
+%     source.avg.csdlabel = source.avg.csdlabel(scnindx);
       
     if isnoise && ~strcmp(cfg.supmethod, 'none')
       source.avg = rmfield(source.avg, 'noisecsd');
@@ -479,13 +480,14 @@ if ispccdata
 
     for diplop = 1:length(source.inside)
       i = source.inside(diplop);
-
+      dipsel = dipselcell{i};
       % compute the power of each source component
       if strcmp(cfg.projectmom, 'yes') && cfg.numcomp>1,
         source.avg.pow(i) = powmethodfun(source.avg.csd{i}(dipsel,dipsel), 1);
       else
         source.avg.pow(i) = powmethodfun(source.avg.csd{i}(dipsel,dipsel));
       end
+    
       if ~isempty(refdipsel),  source.avg.refdippow(i)  = powmethodfun(source.avg.csd{i}(refdipsel,refdipsel));   end
       if ~isempty(supdipsel),  source.avg.supdippow(i)  = powmethodfun(source.avg.csd{i}(supdipsel,supdipsel));   end
       if ~isempty(refchansel), source.avg.refchanpow(i) = powmethodfun(source.avg.csd{i}(refchansel,refchansel)); end

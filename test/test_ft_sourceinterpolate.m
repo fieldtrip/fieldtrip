@@ -1,10 +1,12 @@
 function test_ft_sourceinterpolate
 
-% MEM 1500mb
+% MEM 4500mb
 % WALLTIME 00:10:00
 
 % TEST test_ft_sourceinterpolate
 % TEST ft_sourceinterpolate
+
+% See also test_bug2769 which goes over more interpolation options, but uses fake data
 
 % 3D source to MRI
 mri = ft_read_mri('/home/common/matlab/fieldtrip/data/Subject01.mri');
@@ -23,18 +25,22 @@ grid.inside = 1:size(grid.pos,1);
 grid.outside = [];
 grid.unit = 'mm';
 
+cfg = [];
+cfg.parameter = 'avg.pow';
 i2 = ft_sourceinterpolate(cfg, source1, grid);
-
-% 3D source to 2D sheet
 
 % 2D source to MRI
 load('/home/common/matlab/fieldtrip/data/test/latest/source/meg/source_sheet_timelock_trl_MNE_keepnothing_ctf275.mat');
 source2 = source;
+source2.unit = 'cm'; % FIXME ft_convert_units determines source2 to have 'dm' as unit?
 
-% FIXME ft_convert_units determines source2 to have 'dm' as unit?
-source2.unit = 'cm';
-
-% i4 = ft_sourceinterpolate(cfg, source2, mri);
+cfg = [];
+cfg.parameter = 'avg.pow';
+cfg.downsample = 4; % serious downsampling is needed to keep it fitting in memory with 600 time points
+i3 = ft_sourceinterpolate(cfg, source2, mri);
 
 % 2D source to 3D grid
-% i5 = ft_sourceinterpolate(cfg, source2, grid);
+cfg = [];
+cfg.parameter = 'avg.pow';
+cfg.downsample = 4; % serious downsampling is needed to keep it fitting in memory with 600 time points
+i4 = ft_sourceinterpolate(cfg, source2, grid);

@@ -34,7 +34,7 @@ function [ws warned] = warning_once(varargin)
 %   warning_once(sprintf('the value is %d', 10))
 
 % Copyright (C) 2012, Robert Oostenveld
-% Copyright (C) 2013, Robert Oostenveld, Jörn M. Horschig
+% Copyright (C) 2013, Robert Oostenveld, J?rn M. Horschig
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -166,8 +166,7 @@ else
   
 end
 
-
-end % function
+end % function warning_once
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper functions

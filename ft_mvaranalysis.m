@@ -323,7 +323,7 @@ for j = 1:ntoi
   cfg.toi(j)    = timeaxis(sample);
   
   tmpcfg        = [];
-  tmpcfg.toilim = [timeaxis(sample-floor(tfwin/2)) timeaxis(sample+ceil(tfwin/2)-1)];
+  tmpcfg.toilim = [timeaxis(sample-ceil(tfwin/2)) timeaxis(sample+floor(tfwin/2)-1)];
   tmpcfg.feedback = 'no';
   tmpcfg.minlength= 'maxperlen';
   tmpdata       = ft_redefinetrial(tmpcfg, data);

@@ -41,7 +41,7 @@ function data = ft_math(cfg, varargin)
 %   y = x1 * s
 % if you specify one input argument and a scalar value.
 %
-% It is also possible to specify your own operation as a sting, like this
+% It is also possible to specify your own operation as a string, like this
 %   cfg.operation = '(x1-x2)/(x1+x2)'
 % or using 's' for the scalar value like this
 %   cfg.operation = '(x1-x2)^s'
@@ -55,6 +55,14 @@ function data = ft_math(cfg, varargin)
 % input/output structure.
 %
 % See also FT_DATATYPE
+
+% Undocumented options:
+%   cfg.matrix = rather than using a scalar, a matrix can be specified. In
+%                this case, the dimensionality of cfg.matrix should be equal 
+%                to the dimensionality of data.(cfg.parameter). If used in
+%                combination with cfg.operation, the operation should
+%                involve element-wise combination of the data and the
+%                matrix.
 
 % Copyright (C) 2012-2014, Robert Oostenveld
 %
@@ -173,13 +181,44 @@ for i=1:length(varargin)
   assign(sprintf('x%i', i), getsubfield(varargin{i}, cfg.parameter));
 end
 
-% create the local variable s
+% create the local variables s and m
 s = ft_getopt(cfg, 'scalar');
+m = ft_getopt(cfg, 'matrix');
+
+% check the dimensionality of m against the input data
+if ~isempty(m),
+  for i=1:length(varargin)
+    ok = isequal(size(getsubfield(varargin{i}, cfg.parameter)),size(m));
+    if ~ok, break; end
+  end
+  if ~ok,
+    error('the dimensions of cfg.matrix do not allow for element-wise operations');
+  end
+end
+
+% only one of these can be defined at the moment (i.e. not allowing for
+% operations such as (x1+m)^s for now
+if ~isempty(m) && ~isempty(s),
+  error('you can either specify a cfg.matrix or a cfg.scalar, not both');
+end
+
+% touch it to keep track of it in the output cfg
+if ~isempty(s), cfg.scalar; end
+if ~isempty(m), cfg.matrix; end
+
+% replace s with m, so that the code below is more transparent
+if ~isempty(m),
+  s = m; clear m;
+end
 
 if length(varargin)==1
   switch cfg.operation
     case 'add'
-      fprintf('adding %f to the %s\n', s, cfg.parameter);
+      if isscalar(s),
+        fprintf('adding %f to the %s\n', s, cfg.parameter);
+      else
+        fprintf('adding the contents of cfg.matrix to the %s\n', cfg.parameter);
+      end
       if iscell(x1)
         y = cellplus(x1, s);
       else
@@ -187,7 +226,11 @@ if length(varargin)==1
       end
       
     case 'subtract'
-      fprintf('subtracting %f from the %s\n', s, cfg.parameter);
+      if isscalar(s),
+        fprintf('subtracting %f from the %s\n', s, cfg.parameter);
+      else
+        fprintf('subtracting the contents of cfg.matrix from the %s\n', cfg.parameter);
+      end
       if iscell(x1)
         y = cellminus(x1, s);
       else
@@ -195,6 +238,11 @@ if length(varargin)==1
       end
       
     case 'multiply'
+      if isscalar(s),
+        fprintf('multiplying %s with %f\n', cfg.parameter, s);
+      else
+        fprintf('multiplying %s with the content of cfg.matrix\n', cfg.parameter);
+      end
       fprintf('multiplying %s with %f\n', cfg.parameter, s);
       if iscell(x1)
         y = celltimes(x1, s);
@@ -203,7 +251,11 @@ if length(varargin)==1
       end
       
     case 'divide'
-      fprintf('dividing %s by %f\n', cfg.parameter, s);
+      if isscalar(s),
+        fprintf('dividing %s by %f\n', cfg.parameter, s);
+      else
+        fprintf('dividing %s by the content of cfg.matrix\n', cfg.parameter);
+      end
       if iscell(x1)
         y = cellrdivide(x1, s);
       else
@@ -230,8 +282,11 @@ if length(varargin)==1
         % gather x1, x2, ... into a cell-array
         arginval = eval(sprintf('{%s}', arginstr));
         eval(sprintf('operation = @(%s) %s;', arginstr, cfg.operation));
-        y = arrayfun(operation, arginval{:});
-        
+        if numel(s)<=1
+          y = arrayfun(operation, arginval{:});
+        elseif size(s)==size(arginval{1})
+          y = feval(operation, arginval{:});
+        end
       else
         y = cell(size(x1));
         % do the same thing, but now for each element of the cell array
@@ -246,7 +301,11 @@ if length(varargin)==1
           arginstr = sprintf('xx%i,', 1:length(varargin));
           arginstr = arginstr(1:end-1); % remove the trailing ','
           arginval = eval(sprintf('{%s}', arginstr));
-          y{i} = arrayfun(operation, arginval{:});
+          if numel(s)<=1
+            y{i} = arrayfun(operation, arginval{:});
+          else
+            y{i} = feval(operation, arginval{:});
+          end
         end % for each element
       end % iscell or not
       
@@ -321,8 +380,11 @@ else
         % gather x1, x2, ... into a cell-array
         arginval = eval(sprintf('{%s}', arginstr));
         eval(sprintf('operation = @(%s) %s;', arginstr, cfg.operation));
-        y = arrayfun(operation, arginval{:});
-        
+        if numel(s)<=1
+          y = arrayfun(operation, arginval{:});
+        else
+          y = feval(operation, arginval{:});
+        end
       else
         y = cell(size(x1));
         % do the same thing, but now for each element of the cell array
@@ -337,7 +399,11 @@ else
           arginstr = sprintf('xx%i,', 1:length(varargin));
           arginstr = arginstr(1:end-1); % remove the trailing ','
           arginval = eval(sprintf('{%s}', arginstr));
-          y{i} = arrayfun(operation, arginval{:});
+          if numel(s)<=1
+            y{i} = arrayfun(operation, arginval{:});
+          else
+            y{i} = feval(operation, arginval{:});
+          end
         end % for each element
       end % iscell or not
       
@@ -347,6 +413,26 @@ end % one or multiple input data structures
 % store the result of the operation in the output structure
 data = setsubfield(data, cfg.parameter, y);
 data.dimord = dimord;
+
+% certain fields should remain in the output, but only if they are identical in all inputs
+keepfield = {'grad', 'elec'};
+for j=1:numel(keepfield)
+  if isfield(varargin{1}, keepfield{j})
+    tmp  = varargin{i}.(keepfield{j});
+    keep = true;
+  else
+    keep = false;
+  end
+  for i=1:numel(varargin)
+    if ~isfield(varargin{i}, keepfield{j}) || ~isequal(varargin{i}.(keepfield{j}), tmp)
+      keep = false;
+      break
+    end
+  end
+  if keep
+    data.(keepfield{j}) = tmp;
+  end
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % deal with the output

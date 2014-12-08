@@ -35,6 +35,18 @@ function ft_write_headshape(filename, bnd, varargin)
 %
 % See also FT_READ_HEADSHAPE
 
+% Undocumented optional option:
+%   'metadata'     = struct-array, containing the fields 'name' and
+%                    'value', that will be used as metadata for the vertices. 
+% 
+% In the case of 'gifti' as required format you can optionally add a struct-array
+% containing metadata. This is useful of the resulting files are to be used in
+% combination with workbench. In this case it makes sense to specify the 
+% following names (with example values in brackets):
+%
+%   'AnatomicalStructurePrimary'   (e.g. 'CortexLeft'),
+%   'AnatomicalStructureSecondary' (e.g. 'MidLayer')
+
 % Copyright (C) 2011-2014, Lilla Magyari & Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
@@ -58,6 +70,7 @@ function ft_write_headshape(filename, bnd, varargin)
 fileformat    = ft_getopt(varargin, 'format', 'unknown');
 data          = ft_getopt(varargin, 'data');         % can be stored in a gifti file
 unit          = ft_getopt(varargin, 'unit');
+metadata      = ft_getopt(varargin, 'metadata');
 
 if ~isfield(bnd, 'pnt') && isfield(bnd, 'pos')
   bnd.pnt = bnd.pos;
@@ -177,14 +190,38 @@ switch fileformat
     
   case 'gifti'
     ft_hastoolbox('gifti', 1);
+    
     bnd = ft_convert_units(bnd, 'mm');  % defined in the GIFTI standard to be milimeter
-    tmp = [];
+    
+    % start with an empty structure
+    tmp          = [];
     tmp.vertices = bnd.pnt;
     tmp.faces    = bnd.tri;
     if ~isempty(data)
       tmp.cdata = data;
     end
     tmp = gifti(tmp);     % construct a gifti object
+    
+    % check the presence of metadata
+    if ~isempty(metadata)
+      if isstruct(metadata)
+        fnames = fieldnames(metadata);
+        if any(strcmp(fnames,'name')) && any(strcmp(fnames,'value'))
+          % this is OK, and now assume the metadata to be written at the
+          % level of the vertex info
+          for k = 1:numel(tmp.private.data)
+            n(k,1) = size(tmp.private.data{k}.data,1);
+          end
+          ix = find(n==size(tmp.vertices,1));
+          tmp.private.data{ix}.metadata = metadata;
+        else
+          error('the metadata structure should contain the fields ''name'' and ''value''');
+        end
+      else
+        error('metadata should be provided as a struct-array');
+      end
+    end
+        
     save(tmp, filename);  % write the object to file
 
   case 'freesurfer'

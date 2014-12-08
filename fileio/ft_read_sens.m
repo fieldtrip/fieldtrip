@@ -17,6 +17,8 @@ function [sens] = ft_read_sens(filename, varargin)
 % Additional options should be specified in key-value pairs and can be
 %   'fileformat' = string, see the list of supported file formats (the
 %                  default is determined automatically)
+%   'senstype'   = string, can be 'eeg' or 'meg', specifies which type of 
+%                  sensors to read from a fif file (default='eeg')
 %
 % An electrode definition contain the following fields
 %   elec.elecpos = Nx3 matrix with carthesian (x,y,z) coordinates of each
@@ -40,7 +42,7 @@ function [sens] = ft_read_sens(filename, varargin)
 % See also FT_TRANSFORM_SENS, FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD,
 % FT_DATATYPE_SENS
 
-% Copyright (C) 2005-2010 Robert Oostenveld
+% Copyright (C) 2005-2014 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -163,7 +165,7 @@ switch fileformat
     % sometimes there can also be electrode position information in the header
     hdr = ft_read_header(filename, 'headerformat', fileformat);
     if isfield(hdr, 'elec') && isfield(hdr, 'grad')
-      switch senstype
+      switch lower(senstype)
         case 'eeg'
           warning('both electrode and gradiometer information is present, returning the electrode information');
           sens = hdr.elec;

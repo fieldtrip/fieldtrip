@@ -66,7 +66,8 @@ function [cfg] = ft_checkconfig(cfg, varargin)
 global ft_default
 
 % merge the default configuration with the input configuration
-cfg = mergeconfig(cfg, ft_default);
+% the warning and progress fields are used internally
+cfg = mergeconfig(cfg, removefields(ft_default, {'warning', 'progress'}));
 
 renamed         = ft_getopt(varargin, 'renamed');
 allowed         = ft_getopt(varargin, 'allowed');

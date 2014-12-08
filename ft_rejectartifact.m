@@ -516,8 +516,6 @@ if hasdata
   ft_postamble previous data
   ft_postamble history data
   ft_postamble savevar data
-  if nargout
-    % the output variable is called cfg instead of data
-    cfg = data;
-  end
+  % return the data, the output variable is called cfg instead of data
+  cfg = data;
 end

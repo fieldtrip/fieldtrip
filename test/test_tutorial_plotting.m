@@ -11,24 +11,19 @@ function test_tutorial_plotting
 % this testscript corresponds to the version on the wiki at 23 December 2012
 
 % use the tutorial dataset from home/common
-if ispc
-    datadir = 'H:';
-  else
-    datadir = '/home';
-end
 
-load(fullfile(datadir,'common', 'matlab' ,'fieldtrip', 'data' ,'ftp' ,'tutorial' ,'plotting' ,'avgFC.mat'));
-load(fullfile(datadir,'common', 'matlab' ,'fieldtrip', 'data' ,'ftp' ,'tutorial' ,'plotting' ,'GA_FC.mat'));
-load(fullfile(datadir,'common', 'matlab' ,'fieldtrip', 'data' ,'ftp' ,'tutorial' ,'plotting' ,'TFRhann.mat'));
-load(fullfile(datadir,'common', 'matlab' ,'fieldtrip', 'data' ,'ftp' ,'tutorial' ,'plotting' ,'statERF.mat'));
-load(fullfile(datadir,'common', 'matlab' ,'fieldtrip', 'data' ,'ftp' ,'tutorial' ,'plotting' ,'statTFR.mat'));
-load(fullfile(datadir,'common', 'matlab' ,'fieldtrip', 'data' ,'ftp' ,'tutorial' ,'plotting' ,'sourceDiff.mat'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/plotting/avgFC.mat'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/plotting/GA_FC.mat'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/plotting/TFRhann.mat'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/plotting/statERF.mat'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/plotting/statTFR.mat'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/plotting/sourceDiff.mat'));
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%% Singleplot Functions %%%%%%%%%
-% ft_singeplotER
+% ft_singleplotER
 cfg = [];
 cfg.xlim = [-0.2 1.0];
 cfg.ylim = [-1e-13 3e-13];
@@ -75,7 +70,7 @@ cfg.layout = 'CTF151.lay';
 figure; ft_topoplotTFR(cfg,TFRhann)
 
 % multiple topoplots in one figure
-cfg.xlim = [-0.4:0.2:1.4];
+cfg.xlim = -0.4:0.2:1.4;
 cfg.comment = 'xlim';
 cfg.commentpos = 'title';
 figure; ft_topoplotTFR(cfg,TFRhann)
@@ -111,7 +106,7 @@ cfg.markersize = 12;
 cfg.markercolor = [0 0.69 0.94];
 figure; ft_topoplotTFR(cfg,TFRhann)
 
-%%%%%%%%% Plotting with interactive mode  %%%%%%%%%
+%%%%%%%%% Plotting with interactive mode / multiplots  %%%%%%%%%
 
 cfg = [];
 cfg.baseline = [-0.5 -0.1];
@@ -120,6 +115,35 @@ cfg.baselinetype = 'absolute';
 cfg.layout = 'CTF151.lay';
 cfg.interactive = 'yes';
 figure; ft_multiplotTFR(cfg,TFRhann)
+
+cfg = [];
+cfg.xlim = [-0.2 1.0];
+cfg.ylim = [-1e-13 3e-13];
+cfg.layout = 'CTF151.lay';
+cfg.interactive = 'yes';
+figure; ft_multiplotER(cfg,avgFC);
+
+
+%%%%%%%%% Connectivity plots  %%%%%%%%%
+
+cfg = [];
+cfg.covariance = 'yes';
+tmp1 = ft_timelockanalysis(cfg, avgFC);
+
+cfg = [];
+cfg.method = 'corr';
+tmp2 = ft_connectivityanalysis(cfg, tmp1);
+
+cohFC      = tmp2;
+cohFC.coh  = tmp2.corr;
+cohFC.freq = 1;
+cohFC = rmfield(cohFC, 'coh');
+cohFC = rmfield(cohFC, 'time');
+
+cfg = [];
+cfg.foi = 1;
+cfg.layout = 'CTF151.lay';
+figure; ft_topoplotCC(cfg, cohFC);
 
 %%%%%%%%% Cluster plots  %%%%%%%%%
 
@@ -142,7 +166,7 @@ ft_clusterplot(cfg,statTFR);
 % (1) multiple axial slices
 
 %% load MRI and interpolate functional source data to MRI
-mri = ft_read_mri(fullfile(datadir,'common', 'matlab' ,'fieldtrip', 'data' ,'ftp' ,'tutorial' ,'plotting' ,'Subject01.mri'));  
+mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/plotting/Subject01.mri'));  
 mri = ft_volumereslice([], mri);
 
 cfg            = [];

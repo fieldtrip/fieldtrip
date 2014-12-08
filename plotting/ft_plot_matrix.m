@@ -209,12 +209,13 @@ if ~isempty(highlight)
       % get the same scaling for 'highlight' then what we will get for cdata
       h = uimagesc(hdat, vdat, highlight);
       highlight = get(h, 'CData');
+      delete(h); % this is needed because "hold on" might have been called previously, e.g. in ft_multiplotTFR
       h = uimagesc(hdat, vdat, cdat, clim);
-      
       set(h,'tag',tag);
       set(h,'AlphaData',highlight);
       set(h, 'AlphaDataMapping', 'scaled');
       alim([0 1]);
+    
     case 'saturation'
       satmask = highlight;
       tmpcdat = cdat;
@@ -222,11 +223,9 @@ if ~isempty(highlight)
       % (think of it as the data having an exact range of min=clim(1) to max=(clim2), convert this range to 0-64)
       tmpcdat = (tmpcdat + -clim(1)) * (64 / (-clim(1) + clim(2)));
       %tmpcdat = (tmpcdat + -min(min(tmpcdat))) * (64 / max(max((tmpcdat + -min(min(tmpcdat))))))
-      
       % Make sure NaNs are plotted as white pixels, even when using non-integer mask values
       satmask(isnan(tmpcdat)) = 0;
       tmpcdat(isnan(tmpcdat)) = 32;
-      
       % ind->rgb->hsv ||change saturation values||  hsv->rgb ->  plot
       rgbcdat = ind2rgb(uint8(floor(tmpcdat)), colormap);
       hsvcdat = rgb2hsv(rgbcdat);
@@ -234,12 +233,12 @@ if ~isempty(highlight)
       rgbcdatsat = hsv2rgb(hsvcdat);
       h = imagesc(hdat, vdat, rgbcdatsat,clim);
       set(h,'tag',tag);
+
     case 'outline'
       % the significant voxels could be outlined with a black contour
       % plot outline
       h = uimagesc(hdat, vdat, cdat, clim);
       set(h,'tag',tag);
-      hold on;
       [x,y] = meshgrid(hdat, vdat);
       x = interp2(x, 2); % change to 4 for round corners
       y = interp2(y, 2); % change to 4 for round corners
@@ -247,8 +246,12 @@ if ~isempty(highlight)
       contourlines = interp2(contourlines, 2, 'nearest');  % change to 4 and remove 'nearest' for round corners
       dx = mean(diff(x(1, :))); % remove for round corners
       dy = mean(diff(y(:, 1))); % remove for round corners
+      holdflag = ishold;
+      hold on
       contour(x+dx/2,y+dy/2,contourlines,1,'EdgeColor',[0 0 0],'LineWidth',2);
-      hold off;
+      if ~holdflag
+        hold off % revert to the previous hold state
+      end
       
     otherwise
       error('unsupported highlightstyle')
