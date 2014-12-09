@@ -189,7 +189,6 @@ switch class(val)
     str = '''FIXME: printing structures at this level is not supported''';
     
   otherwise
-    keyboard
     warning('cannot print unknown object at this level');
     str = '''FIXME: printing unknown objects is not supported''';
 end
