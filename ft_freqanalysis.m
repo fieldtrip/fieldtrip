@@ -227,6 +227,15 @@ data = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
 
+% some proper error handling
+if numel(data.trial)==0
+  error('no trials selected.');
+end
+
+if numel(data.trial)==0
+  error('no channels selected.');
+end
+
 % switch over method and do some of the method specfic checks and defaulting
 switch cfg.method
   
