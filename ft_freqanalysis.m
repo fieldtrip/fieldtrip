@@ -228,11 +228,11 @@ data = ft_selectdata(tmpcfg, data);
 [cfg, data] = rollback_provenance(cfg, data);
 
 % some proper error handling
-if numel(data.trial)==0
-  error('no trials selected.');
+if isfield(data, 'trial') && numel(data.trial)==0
+  error('no trials selected.'); % this does not apply for MVAR data
 end
 
-if numel(data.trial)==0
+if numel(data.label)==0
   error('no channels selected.');
 end
 
