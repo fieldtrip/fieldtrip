@@ -29,7 +29,7 @@ function data = ft_datatype_raw(data, varargin)
 %
 % Obsoleted fields:
 %   - offset
-% 
+%
 % Historical fields:
 %   - cfg, elec, fsample, grad, hdr, label, offset, sampleinfo, time,
 %   trial, trialdef, see bug2513
@@ -79,6 +79,14 @@ function data = ft_datatype_raw(data, varargin)
 version       = ft_getopt(varargin, 'version', 'latest');
 hassampleinfo = ft_getopt(varargin, 'hassampleinfo', 'ifmakessense'); % can be yes/no/ifmakessense
 hastrialinfo  = ft_getopt(varargin, 'hastrialinfo',  'ifmakessense'); % can be yes/no/ifmakessense
+
+% do some sanity checks
+assert(isfield(data, 'trial') && isfield(data, 'time') && isfield(data, 'label'), 'inconsistent raw data structure, some field is missing');
+assert(length(data.trial)==length(data.time), 'inconsistent number of trials in raw data structure');
+for i=1:length(data.trial)
+  assert(size(data.trial{i},2)==length(data.time{i}), 'inconsistent number of samples in trial %d', i);
+  assert(size(data.trial{i},1)==length(data.label), 'inconsistent number of channels in trial %d', i);
+end
 
 if isequal(hassampleinfo, 'ifmakessense')
   hassampleinfo = 'no'; % default to not adding it
