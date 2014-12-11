@@ -99,8 +99,23 @@ cfg.showinfo    = ft_getopt(cfg, 'showinfo', {'functionname'});
 cfg.keepremoved = ft_getopt(cfg, 'keepremoved', 'no');
 cfg.feedback    = ft_getopt(cfg, 'feedback', 'yes');
 cfg.prune       = ft_getopt(cfg, 'prune', 'yes');
-cfg.filetype    = ft_getopt(cfg, 'filetype', 'matlab');
+cfg.filetype    = ft_getopt(cfg, 'filetype');
 cfg.fontsize    = ft_getopt(cfg, 'fontsize', 10);
+
+
+if isempty(cfg.filetype) && ~isempty(cfg.filename)
+  [p, f, x] = fileparts(cfg.filename);
+  switch x
+    case '.m'
+      cfg.filetype = 'matlab';
+    case '.html'
+      cfg.filetype = 'html';
+    case '.dot'
+      cfg.filetype = 'dot';
+    otherwise
+      error('cannot determine filetype');
+  end
+end
 
 if ~isfield(cfg, 'remove')
   % this is the default list of configuration elements to be removed. These
