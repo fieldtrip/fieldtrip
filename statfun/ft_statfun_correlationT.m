@@ -40,7 +40,7 @@ function [s, cfg] = ft_statfun_correlationT(cfg, dat, design)
 %
 % Design specification
 %   cfg.ivar  = row number of the design that contains the labels of the conditions that must be
-%               compared (default=1). The labels are the numbers 1 and 2.
+%               correlated (default=1). The labels are the numbers 1 and 2.
 %   cfg.uvar  = row number of design that contains the labels of the units-of-observation (subjects or trials)
 %               (default=2). The labels are assumed to be integers ranging from 1 to
 %               the number of units-of-observation.
