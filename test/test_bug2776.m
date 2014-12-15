@@ -86,8 +86,8 @@ plot(freq2.freq, freq2.powspctrm, 'r.-'); hold on
 plot(freq3.freq, freq3.powspctrm, 'g.-'); hold on
 
 % the total power should remain the same
-assert(abs(sum(freq1.powspctrm)-sum(freq2.powspctrm))<10*eps);
-assert(abs(sum(freq2.powspctrm)-sum(freq3.powspctrm))<10*eps);
+assert(abs(sum(freq1.powspctrm)-sum(freq2.powspctrm))<100*eps);
+assert(abs(sum(freq2.powspctrm)-sum(freq3.powspctrm))<100*eps);
 
 %% compare narrow and broadband
 
@@ -129,5 +129,5 @@ figure
 plot(freq_broad.freq, squeeze(freq_broad.powspctrm), '.-')
 xlim([80 120])
 
-assert(diff(sum(freq_sharp.powspctrm,3))<10*eps)
-assert(diff(sum(freq_broad.powspctrm,3))<10*eps)
+assert(diff(sum(freq_sharp.powspctrm,3))<100*eps)
+assert(diff(sum(freq_broad.powspctrm,3))<100*eps)
