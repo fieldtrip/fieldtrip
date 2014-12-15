@@ -229,11 +229,11 @@ data = ft_selectdata(tmpcfg, data);
 
 % some proper error handling
 if isfield(data, 'trial') && numel(data.trial)==0
-  error('no trials selected.'); % this does not apply for MVAR data
+  error('no trials were selected'); % this does not apply for MVAR data
 end
 
 if numel(data.label)==0
-  error('no channels selected.');
+  error('no channels were selected');
 end
 
 % switch over method and do some of the method specfic checks and defaulting
