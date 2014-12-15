@@ -117,7 +117,7 @@ switch cfg.appenddim
       timelock.dimord = 'rpt_chan_time';
       
       % these don't make sense when concatenating the avg
-      hastrialinfo  = isfield(varargin{1}, 'triainfo');
+      hastrialinfo  = isfield(varargin{1}, 'trialinfo');
       hassampleinfo = isfield(varargin{1}, 'sampleinfo');
       
       ntrial = size(varargin{1}.trial,1);
@@ -188,7 +188,7 @@ switch cfg.appenddim
     
     if isfield(varargin{1}, 'trial')
       % these don't make sense when concatenating the avg
-      hastrialinfo  = isfield(varargin{1}, 'triainfo');
+      hastrialinfo  = isfield(varargin{1}, 'trialinfo');
       hassampleinfo = isfield(varargin{1}, 'sampleinfo');
       
       ntrial = zeros(size(varargin));
