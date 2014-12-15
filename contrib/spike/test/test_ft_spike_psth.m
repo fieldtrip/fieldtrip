@@ -133,42 +133,46 @@ for iBinsize = 1:2
 end
 pause
 close
+
 %% our script should work with variable trial lengths
 % create data with variable length at the start
 
 clear
 spikesPerTrial = 10;
-nTrials = 100;
-shapePar = 2;
-scalePar = 3;
-time       = linspace(0,1,1000);
-data.trial(1:nTrials) = {[]};
-data.time(1:nTrials) = {[]};
+nTrials   = 100;
+shapePar  = 2;
+scalePar  = 3;
+
+data = [];
+data.time = cell(1, nTrials);
+data.trial = cell(1, nTrials);
+
 for iTrial = 1:nTrials    
     
   % create the latency, start and end have a jitter of 100 ms
-  latency = 0 + (100*(rand-0.5))/1000; % is going to include some trials, and exlude some                                      
+  latencyBeg = 0 + (100*(rand-0.5))/1000; % is going to include some trials, and exlude some                                      
   latencyEnd = 1 + (100*(rand-0.5))/1000;
-  timeAxis = latency:0.001:latencyEnd;
+  timeAxis = latencyBeg:0.001:latencyEnd;
   n = length(timeAxis);
   
+  data.trial{iTrial} = zeros(2, n);
+
   iUnit = 1;
   spikeTimes = [];
   smp = [];
-  while length(spikeTimes)<spikesPerTrial & length(smp)<spikesPerTrial
+  while length(spikeTimes)<spikesPerTrial && length(smp)<spikesPerTrial
     spikeTimes = 0.015*gamrnd(shapePar,scalePar,[spikesPerTrial 1]);
   end
   spikeTimes = spikeTimes(1:spikesPerTrial);
   smp = [];
   spikeTimes(spikeTimes>1) = [];
   for iSpike = 1:length(spikeTimes)
-    smp(iSpike)        = nearest(time,spikeTimes(iSpike));    
+    smp(iSpike)        = nearest(timeAxis,spikeTimes(iSpike));    
   end    
   smp(smp>n) = [];
   data.trial{iTrial}(iUnit,smp) = 1;
   
   iUnit = 2;
-  
   spikeTimes = linspace(0,1,10);
   spikeTimes(spikeTimes>timeAxis(end) | spikeTimes<timeAxis(1)) = [];
   smp = [];
@@ -177,7 +181,7 @@ for iTrial = 1:nTrials
   end
   data.trial{iTrial}(iUnit,smp) = 1;
   
-  data.time{iTrial} = timeAxis;
+  data.time{iTrial}   = timeAxis;
   latencies(iTrial,1) = timeAxis(1);
   latencies(iTrial,2) = timeAxis(end);
 end
@@ -187,7 +191,7 @@ data.cfg.trl = [];
 data.label = {};
 data.label{end+1} = 'spk2';
 data.label{end+1} = 'spk3';
-cfg.spikechannel = 1:2
+cfg.spikechannel = 1:2;
 spike = ft_checkdata(data,'datatype', 'spike', 'feedback', 'yes');
 
 %% test with maximum latency and no variable trial length, dof should be 1 then

@@ -8,7 +8,7 @@ function test_bug946
 % make some dummy data
 data1 = [];
 data1.trial = repmat({rand(10,100)},1,10);
-data1.time = repmat({0.01:1},1,10);
+data1.time = repmat({(1:100)/100},1,10);
 data1.label = {'CH01','CH02','CH03','CH04','CH05','CH06','CH07','CH08','CH09','CH10'};
 data1.fsample = 100;
 data1.sampleinfo(:,1) = 1:100:901;
