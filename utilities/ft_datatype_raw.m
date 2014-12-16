@@ -147,7 +147,17 @@ switch version
     end
     
     if ~isfield(data, 'fsample')
-      data.fsample = 1/mean(diff(data.time{1}));
+      for i=1:length(data.time)
+        if length(data.time{i})>1
+          data.fsample = 1/mean(diff(data.time{i}));
+          break
+        else
+          data.fsample = nan;
+        end
+      end
+      if isnan(data.fsample)
+        warning('cannot determine sampling frequency');
+      end
     end
     
     if isfield(data, 'offset')
