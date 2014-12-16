@@ -312,7 +312,7 @@ avg = s ./ repmat(dof(:)', [nchan 1]);
 % var = (ss - (s.^2)./tmp1) ./ tmp2;
 dof = repmat(dof(:)', [nchan 1]);
 
-if any(dof > 1)
+if any(dof(:) > 1)
   var = (ss - (s.^2)./dof) ./ (dof-1);
 else
   var = nan(size(avg));
