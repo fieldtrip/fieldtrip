@@ -148,34 +148,8 @@ for i=1:Nsubj
   if ~isfield(varargin{i}, cfg.parameter)
     error('the field %s is not present in data structure %d', cfg.parameter, i);
   end
-  [dum, chansel] = match_str(cfg.channel, varargin{i}.label);
-  varargin{i}.label = varargin{i}.label(chansel);
-  
-  if hastime
-    timesel = nearest(varargin{i}.time, cfg.latency(1)):nearest(varargin{i}.time, cfg.latency(2));
-    varargin{i}.time = varargin{i}.time(timesel);
-  end
-  
-  if hasdof
-    timesel = nearest(varargin{i}.time, cfg.latency(1)):nearest(varargin{i}.time, cfg.latency(2));
-    varargin{i}.dof = varargin{i}.dof(chansel,timesel);
-  end
-  
-  % select the overlapping samples in the data matrix
-  switch dimord
-    case 'chan'
-      varargin{i}.(cfg.parameter) = varargin{i}.(cfg.parameter)(chansel);
-    case 'chan_time'
-      varargin{i}.(cfg.parameter) = varargin{i}.(cfg.parameter)(chansel,timesel);
-    case {'rpt_chan' 'subj_chan'}
-      varargin{i}.(cfg.parameter) = varargin{i}.(cfg.parameter)(chansel);
-      varargin{i}.dimord = 'chan';
-    case {'rpt_chan_time' 'subj_chan_time'}
-      varargin{i}.(cfg.parameter) = varargin{i}.(cfg.parameter)(:,chansel,timesel);
-      varargin{i}.dimord = 'rpt_chan_time';
-    otherwise
-      error('unsupported dimord');
-  end
+
+  varargin{i} = ft_selectdata(cfg, varargin{i});
 end % for i = subject
 
 % determine the size of the data to be averaged
