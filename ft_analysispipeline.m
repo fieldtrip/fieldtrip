@@ -99,8 +99,23 @@ cfg.showinfo    = ft_getopt(cfg, 'showinfo', {'functionname'});
 cfg.keepremoved = ft_getopt(cfg, 'keepremoved', 'no');
 cfg.feedback    = ft_getopt(cfg, 'feedback', 'yes');
 cfg.prune       = ft_getopt(cfg, 'prune', 'yes');
-cfg.filetype    = ft_getopt(cfg, 'filetype', 'matlab');
+cfg.filetype    = ft_getopt(cfg, 'filetype');
 cfg.fontsize    = ft_getopt(cfg, 'fontsize', 10);
+
+
+if isempty(cfg.filetype) && ~isempty(cfg.filename)
+  [p, f, x] = fileparts(cfg.filename);
+  switch x
+    case '.m'
+      cfg.filetype = 'matlab';
+    case '.html'
+      cfg.filetype = 'html';
+    case '.dot'
+      cfg.filetype = 'dot';
+    otherwise
+      error('cannot determine filetype');
+  end
+end
 
 if ~isfield(cfg, 'remove')
   % this is the default list of configuration elements to be removed. These
@@ -160,9 +175,12 @@ clear data
 
 % walk the tree, gather information about each node
 if istrue(cfg.feedback)
-  fprintf('parsing provenance\n');
+  ft_progress('init', 'dial', 'parsing provenance...');
+else
+  ft_progress('init', 'none');
 end
 pipeline = walktree(datacfg);
+ft_progress('close');
 
 % convert the cell array into a structure array
 for i=1:length(pipeline)
@@ -219,6 +237,8 @@ else
       pipeline2matlabscript(cfg, pipeline);
     case 'dot'
       pipeline2dotfile(cfg, pipeline);
+    case 'html'
+      pipeline2htmlfile(cfg, pipeline);
     otherwise
       error('unsupported filetype');
   end
@@ -228,6 +248,8 @@ end
 % SUBFUNCTION for recursive walking along the cfg.previous.previous info
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function info = walktree(cfg)
+
+ft_progress(0.1); % no percentage complete known
 
 if isempty(cfg) && ~isstruct(cfg)
   % it should be an empty struct
@@ -640,3 +662,111 @@ end
 fprintf(fid, '}\n');
 
 fclose(fid);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function pipeline2htmlfile(cfg, pipeline)
+
+[p, f, x] = fileparts(cfg.filename);
+filename = fullfile(p, [f '.html']);
+
+if istrue(cfg.feedback)
+  fprintf('exporting HTML file to ''%s''\n', filename);
+end
+
+html = '';
+totalproctime = 0;
+
+if istrue(cfg.feedback)
+  ft_progress('init', 'text', 'serialising cfg-structures...');
+else
+  ft_progress('init', 'none');
+end
+
+for k = 1:numel(pipeline)
+  ft_progress(k/numel(pipeline));
+  
+  % strip away the cfg.previous fields, and all data-like fields
+  tmpcfg = removefields(pipeline(k).cfg,...
+    {'previous', 'grid', 'vol', 'event', 'warning'});
+  
+  % record the usercfg and proctime if present
+  if isfield(tmpcfg, 'callinfo')
+    if isfield(tmpcfg.callinfo, 'usercfg')
+      usercfg = removefields(tmpcfg.callinfo.usercfg,...
+        {'previous', 'grid', 'vol', 'event', 'warning'});
+      
+      % avoid processing usercfg twice
+      tmpcfg.callinfo = rmfield(tmpcfg.callinfo, 'usercfg');
+    else
+      usercfg = [];
+    end
+    
+    if isfield(tmpcfg.callinfo, 'proctime')
+      totalproctime = totalproctime + tmpcfg.callinfo.proctime;
+    end
+  end
+  
+  html = [html sprintf('nodes["%s"] = {"id": "%s", "name": "%s", "cfg": "%s", "usercfg": "%s", "parentIds": [',...
+    pipeline(k).this, pipeline(k).this, pipeline(k).name, escapestruct(tmpcfg), escapestruct(usercfg))];
+
+  if ~isempty(pipeline(k).parent)
+    for j = 1:numel(pipeline(k).parent)
+      html = [html '"' pipeline(k).parent{j} '"'];
+      if j < numel(pipeline(k).parent)
+        html = [html ','];
+      end
+    end
+  end
+  
+  html = [html sprintf(']};\n')];
+  
+  if k == numel(pipeline)
+    % we are at the single leaf node
+    html = [html sprintf('var leafId = "%s";\n', pipeline(k).this)];
+  end
+  
+end
+ft_progress('close');
+
+html = [html(1:end-2) sprintf('\n')];
+
+% load the skeleton and put in the html code
+thispath = fileparts(mfilename('fullpath'));
+htmlfile = fileread([thispath '/private/pipeline-skeleton.html']);
+
+timestamp = [datestr(now(), 'ddd') ' ' datestr(now())];
+proctimestr = print_tim(totalproctime);
+htmlfile = strrep(htmlfile, '${TIMESTAMP}', timestamp);
+htmlfile = strrep(htmlfile, '${PIPELINE}', html);
+htmlfile = strrep(htmlfile, '${USER}', getusername());
+htmlfile = strrep(htmlfile, '${PROCTIME}', proctimestr);
+
+% write the file
+fid = fopen(filename, 'w');
+fwrite(fid, htmlfile, 'uchar');
+fclose(fid);
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cfghtml = escapestruct(tmpcfg)
+% convert the cfg structure to a suitable string (escape newlines and
+% quotes)
+
+% strip away big numeric fields
+if isstruct(tmpcfg)
+  fields = fieldnames(tmpcfg);
+  for k = 1:numel(fields)
+    if isnumeric(tmpcfg.(fields{k})) && numel(tmpcfg.(fields{k})) > 400
+      tmpcfg.(fields{k}) = '[numeric data of &gt;400 elements stripped]';
+    end
+  end
+end
+cfghtml = strrep(printstruct('cfg', tmpcfg), '\', '\\');
+cfghtml = strrep(cfghtml, sprintf('\r'), '\r');
+cfghtml = strrep(cfghtml, sprintf('\n'), '\n');
+cfghtml = strrep(cfghtml, sprintf('\t'), '\t');
+cfghtml = strrep(cfghtml, '"', '\"');

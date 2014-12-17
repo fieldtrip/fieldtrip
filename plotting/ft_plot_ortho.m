@@ -17,6 +17,7 @@ function [hx, hy, hz] = ft_plot_ortho(dat, varargin)
 %   'datmask'      = 3D-matrix with the same size as the matrix dat, serving as opacitymap if the second input argument to the function contains a matrix, this will be used as the mask
 %   'interpmethod' = string specifying the method for the interpolation, see INTERPN (default = 'nearest')
 %   'colormap'     = string, see COLORMAP
+%   'clim'         = [min max], lower and upper color limits
 %
 % See also FT_PLOT_SLICE, FT_PLOT_MONTAGE, FT_SOURCEPLOT
 

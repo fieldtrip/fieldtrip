@@ -99,7 +99,7 @@ if nargin>1 && ischar(varargin{1}) && strcmp(varargin{1}, 'init')
     else
       h = waitbar(0, 'Please wait');
     end
-  case {'text', 'textnl', 'textcr'}
+  case {'text', 'textnl', 'textcr', 'dial'}
     if ~isempty(s)
       % print the title to the screen and go to the next line
       fprintf('%s\n', s)

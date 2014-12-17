@@ -1,13 +1,12 @@
-function test_example_combineplanar_pipelineorder()
+function test_example_combineplanar_pipelineorder
 
-if ispc
-  datadir = 'H:';
-else
-  datadir = '/home';
-end
+% WALLTIME 00:10:00
+% MEM 1gb
 
-addpath(fullfile(datadir, 'common', 'matlab', 'fieldtrip', 'data', 'ftp', 'example', 'megrealign'));
-grad275 = ft_read_sens('ctf275.mat');
+% TEST test_example_combineplanar_pipelineorder
+% TEST ft_dipolesimulation ft_combineplanar ft_singleplotER ft_topoplotER
+
+grad275 = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/megrealign/ctf275.mat'));
 
 vol = [];
 vol.r = 12;
@@ -160,3 +159,4 @@ cfg.channel = {'MRO11', 'MRO12', 'MRO14', 'MRO22', 'MRO24', 'MRO31', 'MRO32', 'M
 subplot(424);ft_singleplotER(cfg, data_combined_avg1);title('combined then average');
 subplot(426);ft_singleplotER(cfg, data_combined_avg2);title('average axial then planar+combined');
 subplot(428);ft_singleplotER(cfg, data_combined_avg3);title('average planar then combined');
+

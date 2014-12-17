@@ -12,20 +12,14 @@ global ft_default;
 ft_default.feedback = 'no';
 
 if nargin==0
-  if ispc
-    datadir = 'H:';
-  else
-    datadir = '/home';
-  end
-  
-  load(fullfile(datadir, 'common', 'matlab', 'fieldtrip', 'data', 'ftp', 'tutorial', 'cluster_permutation_timelock', 'GA_ERF_orig.mat'));
+  % this is where the data should be located
+  datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/cluster_permutation_timelock');
 else
-  load(fullfile(datadir, 'GA_ERF_orig.mat'));
-end
 
+load(fullfile(datadir, 'GA_ERF_orig.mat'));
 
- %% plotting the grand-average and the subject-averages
- cfg = [];
+%% plotting the grand-average and the subject-averages
+cfg = [];
 cfg.showlabels  = 'yes';
 cfg.layout    	= 'CTF151.lay';
 figure; ft_multiplotER(cfg,GA_FC, GA_FIC)

@@ -9,14 +9,6 @@ function test_ft_sourceanalysis(datainfo, writeflag, version)
 % writeflag determines whether the output should be saved to disk
 % version determines the output directory
 
-% The directory prefix should be:
-% if ispc
-%   prefix = H:\common\matlab\fieldtrip\data\test
-%   
-% elseif isunix
-%   prefix = '/home/common/matlab/fieldtrip/data/test'
-% end
-
 if nargin<1
   datainfo = ref_datasets;
 end
@@ -35,7 +27,7 @@ vol.unit = 'cm';
 vol.type = 'singlesphere';
 
 % 3D folded cortical sheet
-load('/home/common/matlab/fieldtrip/data/test/corticalsheet.mat');
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/corticalsheet.mat'));
 sourcemodel_sheet = [];
 sourcemodel_sheet.pos = corticalsheet.pnt(1:100,:);          % FIXME reduce the size of the mesh
 sourcemodel_sheet.inside = 1:size(sourcemodel_sheet.pos,1);  % FIXME this should not be needed

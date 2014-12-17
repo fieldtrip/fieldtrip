@@ -11,11 +11,7 @@ function test_ft_senstype
 
 cnt = 0;
 
-if isunix
-  maindir = '/home/common/matlab/fieldtrip/data/test/latest/raw/';
-elseif ispc
-  maindir = 'H:/common/matlab/fieldtrip/data/test/latest/raw/';
-end
+maindir = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw');
   
 subdir = 'eeg';
 d = dir(fullfile(maindir, subdir, '*.mat'));

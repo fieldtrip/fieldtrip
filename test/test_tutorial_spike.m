@@ -6,14 +6,8 @@ function test_tutorial_spike
 % TEST test_tutorial_spike
 % TEST ft_read_spike ft_spike_select ft_spike_waveform ft_spike_maketrials ft_spike_isi ft_spike_plot_isireturn ft_spike_psth ft_spikedensity ft_spike_plot_raster ft_spike_rate ft_spike_select ft_spike_xcorr ft_spike_jpsth ft_spike_plot_jpsth
 
-if ispc
-  datadir = 'H:';
-else
-  datadir = '/home';
-end
-
-filenex = fullfile(datadir, 'common', 'matlab', 'fieldtrip', 'data', 'ftp', 'tutorial', 'spikefield', 'p029_sort_final_01.nex');
-spike    = ft_read_spike(filenex); 
+filenex = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/spikefield/p029_sort_final_01.nex');
+spike   = ft_read_spike(filenex);
  
 cfg              = [];
 cfg.spikechannel = {'sig002a_wf', 'sig003a_wf'}; % select only the two single units
@@ -82,7 +76,7 @@ for k = [1 2] % only do for the single units
 end
 
 % read in the .t file
-filet = fullfile(datadir, 'common', 'matlab', 'fieldtrip', 'data', 'ftp', 'tutorial', 'spike', 'tt6_7.t');
+filet = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/spike/tt6_7.t');
 
 cfg         = [];
 cfg.dataset = filet;

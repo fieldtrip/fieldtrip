@@ -9,16 +9,8 @@ function test_example_megrealign
 global ft_default;
 ft_default.feedback = 'no';
 
-if ispc
-  datadir = 'H:';
-else
-  datadir = '/home';
-end
-
-addpath(fullfile(datadir, 'common', 'matlab', 'fieldtrip', 'data', 'ftp', 'example', 'megrealign'));
-
-grad151 = ft_read_sens('ctf151.mat');
-grad275 = ft_read_sens('ctf275.mat');
+grad151 = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/megrealign/ctf151.mat'));
+grad275 = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/megrealign/ctf275.mat'));
  
 vol = [];
 vol.r = 12;
@@ -70,7 +62,5 @@ title('Interpolated from 151 to 151');
 % now plot them together
 cfg = [];
 figure; ft_multiplotER(cfg, avg151, avg151_151, avg275_151); 
-
 figure; ft_multiplotER(cfg, avg275, avg275_275, avg151_275); 
 
-rmpath(fullfile(datadir, 'common', 'matlab', 'fieldtrip', 'data', 'ftp', 'example', 'megrealign'));

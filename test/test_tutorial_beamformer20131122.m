@@ -12,12 +12,6 @@ function test_tutorial_beamformer20131122
 global ft_default
 ft_default = [];
 
-if ispc
-  dccnpath = @(filename) strrep(strrep(filename,'/home','H:'),'/','\');
-else
-  dccnpath = @(filename) strrep(strrep(filename,'H:','/home'),'\','/');
-end
-
 cd(dccnpath('/home/common/matlab/fieldtrip/data'));
 
 % find the interesting segments of data

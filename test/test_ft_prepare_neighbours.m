@@ -27,8 +27,9 @@ cfg.channel = data.label(1:end/2);
 neighbours = ft_prepare_neighbours(cfg, data);
 
 % remove some channels
-data.label(1) = [];
-neighbours = ft_prepare_neighbours(cfg, data);
+data1 = data;
+data1.label{1} = [data.label{1} '_disabled'];
+neighbours = ft_prepare_neighbours(cfg, data1);
 
 %% template method
 cfg = [];
@@ -49,15 +50,16 @@ cfg.channel = data.label(1:end/2);
 neighbours = ft_prepare_neighbours(cfg, data);
 
 % remove some channels
-data.label(1) = [];
-neighbours = ft_prepare_neighbours(cfg, data);
-
+data1 = data;
+data1.label{1} = [data.label{1} '_disabled'];
+neighbours = ft_prepare_neighbours(cfg, data1);
 
 
 %% do the EEG processing
 fname = fullfile(eeginfo.origdir,'latest', 'raw',eeginfo.type,['preproc_' eeginfo.datatype]);
 data = [];
 load(fname);
+
 % define elec directory
 ft_pos = strfind(eeginfo.origdir, 'fieldtrip') + numel('fieldtrip');
 elec_dir = fullfile(eeginfo.origdir(1:ft_pos), 'template', 'electrode');
@@ -74,8 +76,9 @@ cfg.channel = data.label(1:end/2);
 neighbours = ft_prepare_neighbours(cfg, data);
 
 % remove some channels
-data.label(1) = [];
-neighbours = ft_prepare_neighbours(cfg, data);
+data1 = data;
+data1.label{1} = [data.label{1} '_disabled'];
+neighbours = ft_prepare_neighbours(cfg, data1);
 
 %% template method
 try
@@ -111,13 +114,15 @@ catch e
 end
 
 % use an appropriate template and remove some channels
+data1 = data;
+data1.label{1} = [data.label{1} '_disabled'];
+neighbours = ft_prepare_neighbours(cfg, data1);
+
+%  use an appropriate template and do only on some channels
 cfg = [];
 cfg.method = 'template';
 cfg.template = 'elec1020_neighb.mat';
-data.label(1) = [];
-neighbours = ft_prepare_neighbours(cfg, data);
-
-%  use an appropriate template and do only on some channels
 cfg.channel = data.label(1:end/2);
 neighbours = ft_prepare_neighbours(cfg, data);
+neighbours = ft_prepare_neighbours(cfg, data1);
 
