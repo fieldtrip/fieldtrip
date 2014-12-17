@@ -67,4 +67,33 @@ grandavg = ft_timelockgrandaverage(cfg, avg, avg, avg);
 assert(grandavg.dof(1)==6*3) % this is now at t=1
 assert(grandavg.dof(2)==5*3) % this is now at t=2
 
+%% pull 52 was not complete and was suspected of having problems with different channels
 
+avg1 = [];
+avg1.time = 1:10;
+avg1.label = {'a', 'b', 'c'};
+avg1.dimord = 'chan_time';
+avg1.avg = randn(3, 10);
+avg1.dof = [
+  [1:10]*1
+  [1:10]*10
+  [1:10]*100
+  ];
+
+avg2 = [];
+avg2.time = 6:15;
+avg2.label = {'b', 'c', 'd'};
+avg2.dimord = 'chan_time';
+avg2.avg = randn(3, 10);
+avg2.dof = [
+  [6:15]*10
+  [6:15]*100
+  [6:15]*1000
+  ];
+
+cfg = [];
+cfg.method = 'within';
+grandavg = ft_timelockgrandaverage(cfg, avg1, avg2);
+
+assert(grandavg.dof(  1)== 120);
+assert(grandavg.dof(end)==2000);
