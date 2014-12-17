@@ -10,14 +10,8 @@ function test_tutorial_spikefield
 
 memtic;
 
-if ispc
-  datadir = 'H:';
-else
-  datadir = '/home';
-end
-
-filename = fullfile(datadir, 'common', 'matlab', 'fieldtrip', 'data', 'ftp', 'tutorial', 'spikefield', 'p029_sort_final_01.nex');
-spike    = ft_read_spike(filename); 
+filenex = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/spikefield/p029_sort_final_01.nex');
+spike   = ft_read_spike(filenex); 
  
 cfg              = [];
 cfg.spikechannel = {'sig002a_wf', 'sig003a_wf'};
@@ -25,7 +19,7 @@ spike            = ft_spike_select(cfg, spike);
 
 % get the cfg.trl
 cfg          = [];
-cfg.dataset  = filename;
+cfg.dataset  = filenex;
 cfg.trialfun = 'trialfun_stimon_samples';
 cfg          = ft_definetrial(cfg);
  
@@ -37,7 +31,7 @@ cfg.dftfilter = 'yes';
 data_lfp      = ft_preprocessing(cfg); % read in the LFP
 
 cfg           = [];
-cfg.dataset   = filename;
+cfg.dataset   = filenex;
 cfg.trialfun  = 'trialfun_stimon_samples';
 cfg           = ft_definetrial(cfg);
 trl           = cfg.trl;
@@ -49,7 +43,7 @@ cfg.trl       = trl; % now in samples
 spikeTrials   = ft_spike_maketrials(cfg,spike); 
 
 cfg          = [];
-cfg.dataset  = filename;
+cfg.dataset  = filenex;
 cfg.trialfun = 'trialfun_stimon'; % this was defined in the spike tutorial
 cfg          = ft_definetrial(cfg);
 cfg.timestampspersecond = 40000;

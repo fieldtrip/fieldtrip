@@ -12,12 +12,6 @@ function test_tutorial_beamformerextended20131122
 global ft_default
 ft_default = [];
 
-if ispc
-  dccnpath = @(filename) strrep(strrep(filename,'/home','H:'),'/','\');
-else
-  dccnpath = @(filename) strrep(strrep(filename,'H:','/home'),'\','/');
-end
-
 cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/sensor_analysis'));
 load subjectK
 
@@ -44,12 +38,7 @@ cfg        = [];
 cfg.method = 'singleshell';
 hdm        = ft_prepare_headmodel(cfg, segmentedmri);
 
-if ispc
-  templatedir  = 'H:/common/matlab/fieldtrip/template/sourcemodel';
-elseif isunix
-  templatedir  = '/home/common/matlab/fieldtrip/template/sourcemodel';
-end
-template = load(fullfile(templatedir, 'standard_sourcemodel3d8mm'));
+template = load(dccnpath('/home/common/matlab/fieldtrip/template/sourcemodel/standard_sourcemodel3d8mm'));
 
 % inverse-warp the subject specific grid to the template grid
 cfg                = [];
@@ -137,13 +126,7 @@ source_diff.avg.pow = (source_exp.avg.pow ./ source_bsl.avg.pow) - 1;
 source_diff.pos = template.sourcemodel.pos;
 source_diff.dim = template.sourcemodel.dim;
 
-% note that the exact directory is user- and platform-specific
-if isunix
-  templatefile = '/home/common/matlab/fieldtrip/external/spm8/templates/T1.nii';
-elseif ispc
-  templatefile = 'H:\common\matlab\fieldtrip\external\spm8\templates/T1.nii';
-end
-template_mri = ft_read_mri(templatefile);
+template_mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/external/spm8/templates/T1.nii'));
 
 cfg              = [];
 cfg.voxelcoord   = 'no';
@@ -189,13 +172,7 @@ source_coh_lft      = ft_sourceanalysis(cfg, freq_csd);
 source_coh_lft.pos = template.sourcemodel.pos;
 source_coh_lft.dim = template.sourcemodel.dim;
 
-% note that the exact directory is user-specific
-if isunix
-  templatefile = '/home/common/matlab/fieldtrip/external/spm8/templates/T1.nii';
-elseif ispc
-  templatefile = 'H:\common\matlab\fieldtrip\external\spm8\templates/T1.nii';
-end
-template_mri = ft_read_mri(templatefile);
+template_mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/external/spm8/templates/T1.nii'));
 
 cfg              = [];
 cfg.voxelcoord   = 'no';

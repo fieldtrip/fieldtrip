@@ -8,13 +8,7 @@ function test_ft_movieplotTFR
 
 % the frequency analysis is based on the tutorials
 
-if ispc
-  homedir = 'H:';
-elseif isunix
-  homedir = '/home';
-end
-
-load(fullfile(homedir, 'common', 'matlab', 'fieldtrip', 'data', 'ftp', 'tutorial', 'timefrequencyanalysis', 'dataFIC.mat'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/timefrequencyanalysis/dataFIC.mat'));
 
 cfg              = [];
 timelockFIC      = ft_timelockanalysis(cfg, dataFIC);

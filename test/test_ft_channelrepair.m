@@ -44,14 +44,7 @@ newdata = ft_channelrepair(cfg, data);
 %% part 2 - missing channels and EEG data
 % make use of bug941 data
 % load data
-if ispc
-    home_dir = 'H:';
-else    
-    home_dir = '/home';
-end
-main_dir = fullfile(home_dir, 'common', 'matlab', 'fieldtrip', 'data', 'test');
-bug_data = 'bug941.mat';
-load(fullfile(main_dir, bug_data));
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug941.mat'));
 
 % treat as a bad channel
 data_eeg_clean.elec = elec_new;
@@ -169,14 +162,7 @@ end
 
 %% use the new 'average' method
 % load data
-if ispc
-    home_dir = 'H:';
-else    
-    home_dir = '/home';
-end
-main_dir = fullfile(home_dir, 'common', 'matlab', 'fieldtrip', 'data', 'test');
-bug_data = 'bug941.mat';
-load(fullfile(main_dir, bug_data));
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug941.mat'));
 
 % treat as a bad channel
 data_eeg_clean.elec = elec_new;
@@ -222,3 +208,4 @@ for tr=1:numel(data_eeg_interp.trial)
     fprintf('trial %i is fine\n', tr);
   end
 end
+

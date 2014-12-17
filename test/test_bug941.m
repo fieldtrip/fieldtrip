@@ -6,15 +6,7 @@ function test_bug941
 % TEST test_bug941
 % TEST ft_channelrepair ft_databrowser
 
-% load data
-if ispc
-    home_dir = 'H:';
-else    
-    home_dir = 'home';cd /home/common/matlab/fieldtrip/data/test/
-end
-main_dir = fullfile(home_dir, 'common', 'matlab', 'fieldtrip', 'data', 'test');
-bug_data = 'bug941.mat';
-load(fullfile(main_dir, bug_data));
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug941.mat'));
 
 % code that produces the error
 data_eeg_clean.elec = elec_new;

@@ -6,11 +6,7 @@ function test_bug1894
 % TEST test_bug1894
 % TEST ft_singleplotTFR ft_daattype_freq ft_datatype_sens ft_chantype
 
-if ispc
-  load h:\common\matlab\fieldtrip\data\test\bug1894.mat
-else
-  load /home/common/matlab/fieldtrip/data/test/bug1894.mat
-end
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1894.mat'));
 
 cfg = [];
 ft_multiplotTFR (cfg, freq);

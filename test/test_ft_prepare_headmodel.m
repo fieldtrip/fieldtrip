@@ -141,7 +141,7 @@ for ii=1:numel(method)
   end
   if success, error('23');end
   
-  vol24=ft_prepare_headmodel(cfg,csbnd);  % 3 compartment MESH: should work with all 3 methods
+  vol24=ft_prepare_headmodel(cfg,csbnd);  % 3 compartment MESH, should work with all 3 methods
   switch method{ii}
     case 'bemcp' % this needs a 3 compartment mesh or three layered segmentation
       try % wrong input: single mesh

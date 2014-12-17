@@ -10,12 +10,7 @@ function test_tutorial_headmodel_eeg
 
 clear all;
 %% load mri
-if ispc
-    datadir = 'H:';
-else
-    datadir = '/home';
-end
-mri=ft_read_mri(strcat(datadir,'/common/matlab/fieldtrip/data/Subject01.mri'));
+mri=ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.mri'));
 
 %% segmentation
 
@@ -27,7 +22,7 @@ segmentedmri = ft_volumesegment(cfg,mri);
 
 % check if segmentation is the same as the segmentation on the ftp site
 
-segmentedmri2=load([datadir,'/common/matlab/fieldtrip/data/ftp/tutorial/headmodel_eeg/segmentedmri']);
+segmentedmri2=load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/headmodel_eeg/segmentedmri'));
 segmentedmri2=rmfield(segmentedmri2.segmentedmri,'cfg');
 segmentedmri1=rmfield(segmentedmri,'cfg');
 assert(isequal(segmentedmri2,segmentedmri1),'Segmentation does not match the segmentation on ftp/tutorial/headmodel_eeg');
@@ -52,7 +47,7 @@ vol=ft_prepare_headmodel(cfg,bnd);
 
 % check if segmentation is the same as the segmentation on the ftp site
 
-vol2=load([datadir,'/common/matlab/fieldtrip/data/ftp/tutorial/headmodel_eeg/vol']);
+vol2=load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/headmodel_eeg/vol'));
 vol2=rmfield(vol2.vol,'cfg');
 vol1=rmfield(vol,'cfg');
 assert(isequal(vol2,vol1),'Segmentation does not match the segmentation on ftp/tutorial/headmodel_eeg');
@@ -76,7 +71,7 @@ ft_plot_mesh(vol.bnd(3),'edgecolor','none','facecolor',[0.4 0.6 0.4]);
 close all;
 %% align electrodes
 
-elec = ft_read_sens(strcat(datadir,'/common/matlab/fieldtrip/template/electrode/standard_1020.elc'));
+elec = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/template/electrode/standard_1020.elc'));
 
 figure;
 ft_plot_sens(elec,'style','sk');

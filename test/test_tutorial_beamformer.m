@@ -11,23 +11,15 @@ global ft_default;
 ft_default.feedback = 'no';
 
 if nargin==0
-  if ispc
-    datadir = 'H:';
-  else
-    datadir = '/home';
-  end
-  
-  load(fullfile(datadir, 'common', 'matlab', 'fieldtrip', 'data', 'ftp', 'tutorial', 'beamformer', 'dataFIC.mat'));
-  mri = ft_read_mri(fullfile(datadir, 'common', 'matlab', 'fieldtrip', 'data', 'ftp', 'tutorial', 'beamformer' ,'Subject01.mri'));
-  
-else
-  load(fullfile(datadir, 'dataFIC.mat'));
-  load(fullfile(datadir, 'segmentedmri.mat'));
-  mri = ft_read_mri(fullfile(datadir, 'Subject01.mri'));
+  % this is where the data should be located
+  datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer');
 end
 
+load(fullfile(datadir, 'dataFIC.mat'));
+load(fullfile(datadir, 'segmentedmri.mat'));
+mri = ft_read_mri(fullfile(datadir, 'Subject01.mri'));
 
-%% Preprocess timw windows of interest
+%% Preprocess time windows of interest
 
 cfg = [];
 cfg.toilim = [-0.5 0];
