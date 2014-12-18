@@ -1,4 +1,4 @@
-function test_tutorial_beamformerextended20131122
+function test_tutorial_beamformingextended20131122
 
 % MEM 8gb
 % WALLTIME 02:30:00
@@ -12,15 +12,12 @@ function test_tutorial_beamformerextended20131122
 global ft_default
 ft_default = [];
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/sensor_analysis'));
-load subjectK
-
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/sensor_analysis/subjectK.mat'));
 data_combined = ft_appenddata([], data_left, data_right);
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer_extended'));
-load segmentedmri
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer_extended/segmentedmri.mat'));
 
-mri = ft_read_mri('subjectK.mri');
+mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer_extended/subjectK.mri'));
 
 cfg          = [];
 cfg.coordsys = 'ctf'; % the MRI is expressed in the CTF coordinate system, see below
