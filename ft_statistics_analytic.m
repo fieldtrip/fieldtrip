@@ -16,7 +16,7 @@ function [stat, cfg] = ft_statistics_analytic(cfg, dat, design)
 %
 % The configuration can contain
 %   cfg.statistic        = string, statistic to compute for each sample or voxel (see below)
-%   cfg.correctm         = string, apply multiple-comparison correction, 'no', 'bonferroni', 'holm', 'fdr' (default = 'no')
+%   cfg.correctm         = string, apply multiple-comparison correction, 'no', 'bonferroni', 'holm', 'hochberg', 'fdr' (default = 'no')
 %   cfg.alpha            = number, critical value for rejecting the null-hypothesis (default = 0.05)
 %   cfg.tail             = number, -1, 1 or 0 (default = 0)
 %   cfg.ivar             = number or list with indices, independent variable(s)
@@ -123,8 +123,10 @@ else
       fprintf('performing FDR correction for multiple comparisons\n');
       fprintf('the returned probabilities are uncorrected, the thresholded mask is corrected\n');
       stat.mask = fdr(stat.prob, cfg.alpha);
-    otherwise
+    case 'no'
       fprintf('not performing a correction for multiple comparisons\n');
       stat.mask = stat.prob<=cfg.alpha;
+    otherwise
+      error('unsupported option "%s" for cfg.correctm', cfg.correctm);
   end
 end
