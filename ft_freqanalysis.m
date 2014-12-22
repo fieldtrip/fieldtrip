@@ -374,6 +374,7 @@ end
 chanind    = match_str(data.label, cfg.channel);
 nchan      = size(chanind,1);
 if csdflg
+  assert(nchan>1, 'CSD output requires multiple channels');
   % determine the corresponding indices of all channel combinations
   [dummy,chancmbind(:,1)] = match_str(cfg.channelcmb(:,1), data.label);
   [dummy,chancmbind(:,2)] = match_str(cfg.channelcmb(:,2), data.label);
