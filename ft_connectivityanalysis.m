@@ -861,13 +861,7 @@ switch dtype
     end
     
   case 'source'
-    stat = [];
-    stat.pos = data.pos;
-    if isfield(stat, 'dim'),
-      stat.dim = data.dim;
-    end
-    stat.inside  = data.inside;
-    stat.outside = data.outside;
+    stat = keepfields(data, {'pos', 'dim', 'transform', 'inside', 'outside'});
     stat.(outparam) = datout;
     if ~isempty(varout),
       stat.([outparam, 'sem']) = (varout/nrpt).^0.5;
