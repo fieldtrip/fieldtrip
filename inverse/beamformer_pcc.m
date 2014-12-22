@@ -2,8 +2,28 @@ function [dipout] = beamformer_pcc(dip, grad, vol, dat, Cf, varargin)
 
 % BEAMFORMER_PCC implements an experimental beamformer based on partial canonical
 % correlations or coherences.
+%
+% Additional options should be specified in key-value pairs and can be
+%   refchan       
+%   refdip        
+%   supchan       
+%   supdip        
+%
+%   reducerank    
+%   normalize     
+%   normalizeparam
+%
+%   feedback      
+%   keepcsd       
+%   keepfilter    
+%   keepleadfield 
+%   keepmom       
+%   lambda        
+%   projectnoise  
+%   realfilter    
+%   fixedori      
 
-% Copyright (C) 2005-2008, Robert Oostenveld & Jan-Mathijs Schoffelen
+% Copyright (C) 2005-2014, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -47,9 +67,9 @@ lambda         = ft_getopt(varargin, 'lambda',        0);
 projectnoise   = ft_getopt(varargin, 'projectnoise',  'yes');
 realfilter     = ft_getopt(varargin, 'realfilter',    'yes');
 fixedori       = ft_getopt(varargin, 'fixedori',      'no');
-fixedori       = strcmp(fixedori,      'yes');
 
 % convert the yes/no arguments to the corresponding logical values
+fixedori       = strcmp(fixedori,      'yes');
 keepcsd        = strcmp(keepcsd,       'yes');  % see below
 keepfilter     = strcmp(keepfilter,    'yes');
 keepleadfield  = strcmp(keepleadfield, 'yes');
@@ -154,7 +174,7 @@ else
 end
 
 % start the scanning with the proper metric
-ft_progress('init', feedback, 'beaming sources\n');
+ft_progress('init', feedback, 'beaming sources');
 
 for i=1:size(dip.pos,1)
   if needleadfield
@@ -198,6 +218,8 @@ for i=1:size(dip.pos,1)
       lfa  = lfa * maxpowori;
       dipout.ori{i} = maxpowori;
       dipout.eta{i} = eta;
+      % update the number of dipole components
+      Ndip = size(lfa,2);
     else
       warning_once('Ignoring ''fixedori''. The fixedori option is supported only if there is ONE dipole for location.')
     end
@@ -279,6 +301,14 @@ end
 if isfield(dipout, 'csdlabel')
   dipout.csdlabel(dipout.inside)  = dipout.csdlabel;
   dipout.csdlabel(dipout.outside) = {[]};
+end
+if isfield(dipout, 'ori')
+  dipout.ori(dipout.inside)  = dipout.ori;
+  dipout.ori(dipout.outside) = {[]};
+end
+if isfield(dipout, 'eta')
+  dipout.eta(dipout.inside)  = dipout.eta;
+  dipout.eta(dipout.outside) = {[]};
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
