@@ -17,8 +17,8 @@ ft_defaults
 ft_preamble help
 ft_preamble callinfo
 
-if ~ft_hastoolbox('spm8')
-  error('this requires a full version of SPM8 on your MATLAB path');
+if ~ft_hastoolbox('SPM12') || ft_hastoolbox('SPM8')
+  error('this requires the SPM toolbox on your MATLAB path');
 end
 
 if ~isa(D, 'meeg')

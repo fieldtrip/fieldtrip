@@ -170,7 +170,7 @@ basedonshape  = ~isempty(cfg.headshape);                                        
 basedonmri    = isfield(cfg, 'mri') && ~(isfield(cfg.grid, 'warpmni') && istrue(cfg.grid.warpmni)); % regular 3D grid, based on segmented MRI, restricted to gray matter
 basedonmni    = isfield(cfg, 'mri') && (isfield(cfg.grid, 'warpmni') && istrue(cfg.grid.warpmni));  % regular 3D grid, based on warped MNI template
 basedonvol    = false;                                                                              % surface grid based on inward shifted brain surface from volume conductor
-basedoncortex = isfield(cfg, 'headshape') && (iscell(cfg.headshape) || ft_filetype(cfg.headshape, 'neuromag_fif') || ft_filetype(cfg.headshape, 'freesurfer_triangle_binary')); % cortical sheet from MNE or Freesurfer, also in case of multiple files/hemispheres
+basedoncortex = isfield(cfg, 'headshape') && (iscell(cfg.headshape) || any(ft_filetype(cfg.headshape, {'neuromag_fif', 'freesurfer_triangle_binary', 'caret_surf', 'gifti'}))); % cortical sheet from external software such as Caret or FreeSurfer, can also be two separate hemispheres
 basedonauto   = isfield(cfg.grid, 'resolution') && ~basedonmri && ~basedonmni;                      % regular 3D grid with specification of the resolution
 
 if basedonshape && basedoncortex
@@ -253,6 +253,8 @@ if (isfield(cfg, 'smooth') && ~strcmp(cfg.smooth, 'no')) || basedonmni
     ft_hastoolbox('SPM2', 1);
   elseif strcmpi(cfg.spmversion, 'spm8'),
     ft_hastoolbox('SPM8', 1);
+  elseif strcmpi(cfg.spmversion, 'spm12'),
+    ft_hastoolbox('SPM12', 1);
   end
 end
 

@@ -214,6 +214,7 @@ cfg.clim       = ft_getopt(cfg, 'clim',      []);
 cfg.viewmode   = ft_getopt(cfg, 'viewmode',  'ortho'); % for method=interactive
 cfg.snapshot   = ft_getopt(cfg, 'snapshot',  false);
 cfg.snapshotfile = ft_getopt(cfg, 'snapshotfile', fullfile(pwd,'ft_volumerealign_snapshot'));
+cfg.spmversion   = ft_getopt(cfg, 'spmversion', 'spm8');
 
 if isempty(cfg.method)
   if isempty(cfg.fiducial)
@@ -800,8 +801,14 @@ switch cfg.method
     delete(tmpname4);
     
   case 'spm'
-    % ensure spm8 on the path
-    ft_hastoolbox('SPM8', 1);
+    % ensure that SPM is on the path
+    if strcmpi(cfg.spmversion, 'spm2'),
+      ft_hastoolbox('SPM2',1);
+    elseif strcmpi(cfg.spmversion, 'spm8'),
+      ft_hastoolbox('SPM8',1);
+    elseif strcmpi(cfg.spmversion, 'spm12'),
+      ft_hastoolbox('SPM12',1);
+    end
     
     if ~isfield(cfg, 'spm'), cfg.spm = []; end
     cfg.spm.regtype = ft_getopt(cfg.spm, 'regtype', 'subj');

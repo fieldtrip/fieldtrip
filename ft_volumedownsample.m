@@ -118,6 +118,8 @@ if isfield(cfg, 'smooth') && ~strcmp(cfg.smooth, 'no'),
     ft_hastoolbox('SPM2',1);
   elseif strcmpi(cfg.spmversion, 'spm8'),
     ft_hastoolbox('SPM8',1);
+  elseif strcmpi(cfg.spmversion, 'spm12'),
+    ft_hastoolbox('SPM12',1);
   end
   
   for j = 1:length(cfg.parameter)
