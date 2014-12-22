@@ -106,7 +106,18 @@ end
 
 if isfield(data, 'csdlabel')
   % this is used in PCC beamformers
-  nori = length(data.csdlabel);
+  if length(data.csdlabel)==npos
+    % each position has its own labels
+    len = cellfun(@numel, data.csdlabel);
+    len = len(len~=0);
+    if all(len==len(1))
+      % they all have the same length
+      nori = len(1);
+    end
+  else
+    % one list of labels for all positions
+    nori = length(data.csdlabel);
+  end
 elseif isfinite(npos)
   % assume that there are three dipole orientations per source
   nori = 3;
@@ -252,12 +263,12 @@ switch field
       end
     end
     
-  case {'mom'}
-    if isequalwithoutnans(datsiz, [npos ntime])
+  case {'mom' 'ori' 'eta' 'csdlabel'}
+    if isequalwithoutnans(datsiz, [npos nori nrpt])
       if iscell(data.(field))
-        dimord = '{pos}_time';
+        dimord = '{pos}_ori_rpt';
       else
-        dimord = 'pos_time';
+        dimord = 'pos_ori_rpt';
       end
     elseif isequalwithoutnans(datsiz, [npos nori ntime])
       if iscell(data.(field))
@@ -265,11 +276,23 @@ switch field
       else
         dimord = 'pos_ori_time';
       end
-    elseif isequalwithoutnans(datsiz, [npos nori nrpt])
+    elseif isequalwithoutnans(datsiz, [npos ntime])
       if iscell(data.(field))
-        dimord = '{pos}_ori_rpt';
+        dimord = '{pos}_time';
       else
-        dimord = 'pos_ori_rpt';
+        dimord = 'pos_time';
+      end
+    elseif isequalwithoutnans(datsiz, [npos 3 1])
+      if iscell(data.(field))
+        dimord = '{pos}_ori';
+      else
+        dimord = 'pos_ori';
+      end
+    elseif isequalwithoutnans(datsiz, [npos 1 1])
+      if iscell(data.(field))
+        dimord = '{pos}';
+      else
+        dimord = 'pos';
       end
     end
     
