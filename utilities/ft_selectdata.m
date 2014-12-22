@@ -122,6 +122,11 @@ end
 % this function only works for the upcoming (not yet standard) source representation without sub-structures
 % update the old-style beamformer source reconstruction to the upcoming representation
 if strcmp(dtype, 'source')
+  if isfield(varargin{1}, 'avg')
+    restoreavg = fieldnames(varargin{1}.avg);
+  else
+    restoreavg = {};
+  end
   for i=1:length(varargin)
     varargin{i} = ft_datatype_source(varargin{i}, 'version', 'upcoming');
   end
@@ -144,7 +149,7 @@ for i=2:length(varargin)
   % only consider fields that are present in all inputs
   datfield = intersect(datfield, fieldnames(varargin{i}));
 end
-datfield  = setdiff(datfield, {'label' 'labelcmb'}); % these fields will be used for selection, but are not treated as data fields
+datfield  = setdiff(datfield, {'pos' 'label' 'labelcmb'}); % these fields will be used for selection, but are not treated as data fields
 xtrafield =  {'cfg' 'hdr' 'fsample' 'fsampleorig' 'grad' 'elec' 'transform' 'unit' 'topolabel' 'lfplabel' 'dim'}; % these fields will not be touched in any way by the code
 datfield  = setdiff(datfield, xtrafield);
 orgdim1   = datfield(~cellfun(@isempty, regexp(datfield, 'dimord$')));
@@ -384,6 +389,15 @@ for i=1:length(orgdim1)
   for j=1:length(varargin)
     varargin{j}.(orgdim1{i}) = dimord;
   end
+end
+
+% restore the source.avg field, this keeps the output reasonably consistent with the
+% old-style source representation of the input
+if strcmp(dtype, 'source') && ~isempty(restoreavg)
+  for i=1:length(varargin)
+    varargin{i}.avg = keepfields(varargin{i}, restoreavg);
+    varargin{i}     = removefields(varargin{i}, restoreavg);
+  end  
 end
 
 varargout = varargin;
