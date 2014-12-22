@@ -260,7 +260,7 @@ end
 
 fn = fieldnames(source);
 for i=1:length(fn)
-  if isfield(source, [fn{i} 'label'])
+  if isfield(source, [fn{i} 'label']) && isnumeric(source.(fn{i}))
     res = true;
     return
   end
