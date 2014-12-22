@@ -214,6 +214,10 @@ switch field
       dimord = 'chan_chan_freq_time';
     elseif isequalwithoutnans(datsiz, [nchan nchan nfreq])
       dimord = 'chan_chan_freq';
+    elseif isequalwithoutnans(datsiz, [npos nori])
+      dimord = 'pos_ori';
+    elseif isequalwithoutnans(datsiz, [npos 1])
+      dimord = 'pos';
     end
     
   case {'cov' 'coh' 'csd' 'noisecov' 'noisecsd'}
