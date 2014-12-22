@@ -1386,6 +1386,11 @@ if isempty(haspow), haspow = 'no';  end
 fnames = fieldnames(input);
 tmp    = cell2mat(strfind(fnames, 'dimord')); % get dimord like fields
 
+
+if isfield(input, 'inside') && islogical(input.inside)
+  input = fixinside(input, 'index');
+end
+
 if any(tmp>1)
   current = 'new';
 elseif any(tmp==1)
@@ -1515,7 +1520,7 @@ elseif strcmp(current, 'old') && strcmp(type, 'new'),
       tmp = getfield(stuff, fnames{k});
       siz = size(tmp);
       if isfield(input, 'cumtapcnt') && strcmp(fnames{k}, 'mom')
-        %pcc based mom is orixrpttap
+        %pcc based mom is ori*rpttap
         %tranpose to keep manageable
         for kk = 1:numel(input.inside)
           indx = input.inside(kk);
