@@ -798,10 +798,12 @@ end % cmbrepresentation
 
 if issource && ~isempty(sourcerepresentation)
   data = fixsource(data, 'type', sourcerepresentation);
+  data = fixinside(data, inside); % FIXME fixsource reverts the representation to indexed
 end
 
 if issource && ~strcmp(haspow, 'no')
   data = fixsource(data, 'type', sourcerepresentation, 'haspow', haspow);
+  
 end
 
 if isfield(data, 'grad')
@@ -1386,8 +1388,8 @@ if isempty(haspow), haspow = 'no';  end
 fnames = fieldnames(input);
 tmp    = cell2mat(strfind(fnames, 'dimord')); % get dimord like fields
 
-
 if isfield(input, 'inside') && islogical(input.inside)
+  % the following code expects an indexed representation
   input = fixinside(input, 'index');
 end
 
