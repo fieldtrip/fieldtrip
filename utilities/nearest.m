@@ -89,7 +89,11 @@ maxarray = max(array);
 if insideflag
   if ~toleranceflag
     if val<minarray || val>maxarray
-      error('the value %g should be within the range of the array from %g to %g', val, minarray, maxarray);
+      if numel(array)==1
+        warning('the value %g should be within the range of the array from %g to %g', val, minarray, maxarray);
+      else
+        error('the value %g should be within the range of the array from %g to %g', val, minarray, maxarray);
+      end
     end
   else
     if ~isequal(array, sort(array))
