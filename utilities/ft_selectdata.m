@@ -1000,7 +1000,11 @@ if isfield(cfg, 'frequency')
     
   elseif numel(cfg.frequency)==1
     % this single value should be within the frequency axis of each input data structure
-    fbin = nearest(freqaxis, cfg.frequency, true, true);
+    if numel(freqaxis)>1
+      fbin = nearest(freqaxis, cfg.frequency, true, true); % determine the numerical tolerance
+    else
+      fbin = nearest(freqaxis, cfg.frequency, true, false); % don't consider tolerance
+    end
     cfg.frequency = freqaxis(fbin);
     
     for k = 1:ndata
