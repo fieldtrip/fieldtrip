@@ -286,18 +286,22 @@ if istimelock
   
 elseif isfreq
   tmpcfg = keepfields(cfg, {'latency', 'frequency'});
-  tmpcfg.avgovertime = 'yes';
   tmpcfg.avgoverfreq = 'yes';
+  if isfield(data, 'time')
+    tmpcfg.avgovertime = 'yes';
+  end
   data = ft_selectdata(tmpcfg, data);
   % restore the provenance information
   [cfg, data] = rollback_provenance(cfg, data);
   
   % copy the descriptive fields to the output
   source = copyfields(data, source, {'time', 'freq', 'cumtapcnt'});
-
+  
   % HACK the remainder of the code expects a single number
-  cfg.latency   = mean(cfg.latency);
   cfg.frequency = mean(cfg.frequency);
+  if isfield(data, 'time')
+    cfg.latency   = mean(cfg.latency);
+  end
 
 elseif iscomp
   % FIXME, select the components here
