@@ -887,7 +887,11 @@ if isempty(cfg.latency)
   
 elseif numel(cfg.latency)==1
   % this single value should be within the time axis of each input data structure
-  tbin = nearest(alltimevec, cfg.latency, true, true);
+  if numel(alltimevec)>1
+    tbin = nearest(alltimevec, cfg.latency, true, true); % determine the numerical tolerance
+  else
+    tbin = nearest(alltimevec, cfg.latency, true, false); % don't consider tolerance
+  end
   cfg.latency = alltimevec(tbin);
   
   for k = 1:ndata
