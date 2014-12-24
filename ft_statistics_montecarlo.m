@@ -142,12 +142,10 @@ if strcmp(cfg.correctm, 'cluster')
   cfg.clustercritval   = ft_getopt(cfg, 'clustercritval',   []);
   cfg.clustertail      = ft_getopt(cfg, 'clustertail',      cfg.tail);
   
-  % deal with the neighbourhood of the
-  % channels/triangulation
+  % deal with the neighbourhood of the channels/triangulation
   cfg.connectivity     = ft_getopt(cfg, 'connectivity',     []);
   if ischar(cfg.connectivity) && strcmp(cfg.connectivity, 'bwlabeln')
-    % this is set in statistics_wrapper when input source data is
-    % reshapable, requiring to use spm_bwlabel, rather than clusterstat)
+    % this is set in ft_sourcestatistics when input source data is reshapable, requiring to use spm_bwlabel, rather than clusterstat)
     cfg.connectivity = nan; % this designates that the data is reshapable in 3D space and that these dimensions can be treated by bwlabeln
     if isfield(cfg, 'inside')
       cfg = fixinside(cfg, 'index');
@@ -159,8 +157,7 @@ if strcmp(cfg.correctm, 'cluster')
         cfg.connectivity = cfg.connectivity(cfg.insideorig, cfg.insideorig);
       end
     elseif isfield(cfg, 'avgoverchan') && istrue(cfg.avgoverchan)
-      % channel dimension has been averaged across, no sense in clustering
-      % across space
+      % channel dimension has been averaged across, no sense in clustering across space
       cfg.connectivity = true(1);
     elseif isfield(cfg, 'channel')
       cfg.neighbours   = ft_getopt(cfg, 'neighbours', []);
