@@ -138,7 +138,6 @@ cohFC      = tmp2;
 cohFC.coh  = tmp2.corr;
 cohFC.freq = 1;
 cohFC = rmfield(cohFC, 'coh');
-cohFC = rmfield(cohFC, 'time');
 
 cfg = [];
 cfg.foi = 1;
