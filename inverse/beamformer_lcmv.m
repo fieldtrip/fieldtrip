@@ -175,8 +175,8 @@ if isfield(dip, 'subspace')
   dat_pre_subspace = dat;
   Cy_pre_subspace  = Cy;
 elseif ~isempty(subspace)
-  fprintf('using data-specific subspace projection\n');
   % TODO implement an "eigenspace beamformer" as described in Sekihara et al. 2002 in HBM
+  fprintf('using data-specific subspace projection\n');
   if numel(subspace)==1,
     % interpret this as a truncation of the eigenvalue-spectrum
     % if <1 it is a fraction of the largest eigenvalue
@@ -185,22 +185,19 @@ elseif ~isempty(subspace)
     Cy_pre_subspace  = Cy;
     [u, s, v] = svd(real(Cy));
     if subspace<1,
-      sel      = find(diag(s)./s(1,1) > subspace);
-      subspace = max(sel);
-    else
-      Cy       = s(1:subspace,1:subspace);
-      % this is equivalent to subspace*Cy*subspace' but behaves well numerically
-      % by construction.
-      invCy    = diag(1./diag(Cy));
-      subspace = u(:,1:subspace)';
-      dat      = subspace*dat;
+      subspace = find(diag(s)./s(1,1) > subspace, 1, 'last');
     end
+    Cy       = s(1:subspace,1:subspace);
+    % this is equivalent to subspace*Cy*subspace' but behaves well numerically by construction.
+    invCy    = diag(1./diag(Cy + lambda * eye(size(Cy))));
+    subspace = u(:,1:subspace)';
+    dat      = subspace*dat;
   else
     dat_pre_subspace = dat;
     Cy_pre_subspace  = Cy;
-    Cy    = subspace*Cy*subspace'; % here the subspace can be different from
-    % the singular vectors of Cy, so we have to do the sandwiching as opposed
-    % to line 216
+    Cy    = subspace*Cy*subspace'; 
+    % here the subspace can be different from the singular vectors of Cy, so we
+    % have to do the sandwiching as opposed to line 216
     invCy = pinv(Cy);
     dat   = subspace*dat;
   end
@@ -229,10 +226,10 @@ for i=1:size(dip.pos,1)
   
   if isfield(dip, 'subspace')
     % do subspace projection of the forward model
-    lf = dip.subspace{i} * lf;
+    lf    = dip.subspace{i} * lf;
     % the data and the covariance become voxel dependent due to the projection
-    dat   = dip.subspace{i} * dat_pre_subspace;
-    Cy    = dip.subspace{i} * (Cy_pre_subspace + lambda * eye(size(Cy_pre_subspace))) * dip.subspace{i}';
+    dat   =      dip.subspace{i} * dat_pre_subspace;
+    Cy    =      dip.subspace{i} * (Cy_pre_subspace + lambda * eye(size(Cy_pre_subspace))) * dip.subspace{i}';
     invCy = pinv(dip.subspace{i} * (Cy_pre_subspace + lambda * eye(size(Cy_pre_subspace))) * dip.subspace{i}');
   elseif ~isempty(subspace)
     % do subspace projection of the forward model only

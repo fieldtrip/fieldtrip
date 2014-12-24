@@ -135,6 +135,9 @@ switch dtype
   case 'source'
     ncmb = numel(cmb);
     
+    % the code further down requires this to be a vector with indices
+    data = fixinside(data, 'index');
+    
     if strcmp(inparam, 'pow') && strcmp(outparam, 'powcov'),
       [nvox,nrpt] = size(data.pow);
       if sqrtflag, data.pow = sqrt(data.pow); end
@@ -199,9 +202,9 @@ switch dtype
           data.outside = setdiff((1:nvox*(ncmb+1))', data.inside);
           if isfield(data, 'momdimord'),
             data.crsspctrmdimord = ['pos_',data.momdimord(14:end)];% FIXME this assumes dimord to be 'rpttap_...'
+            data = rmfield(data, 'momdimord');
           end
           data = rmfield(data, 'mom');
-          data = rmfield(data, 'momdimord');
           
         else
           [nrpt,nvox] = size(mom);

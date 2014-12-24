@@ -69,10 +69,10 @@ else
       for i=1:length(head)
         len(i) = length(head{i});
       end
-      [str, siz] = fread(fid, max(len), 'uint8=>char');
+      [str, siz] = fread(fid, max(len), 'uint8');
       fclose(fid);
       for i=1:length(head)
-        val = strncmp(str, head{i}, len(i));
+        val = all(str(1:len(i))==head{i}(:));
         if val
           break
         end

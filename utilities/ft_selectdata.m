@@ -122,6 +122,11 @@ end
 % this function only works for the upcoming (not yet standard) source representation without sub-structures
 % update the old-style beamformer source reconstruction to the upcoming representation
 if strcmp(dtype, 'source')
+  if isfield(varargin{1}, 'avg')
+    restoreavg = fieldnames(varargin{1}.avg);
+  else
+    restoreavg = {};
+  end
   for i=1:length(varargin)
     varargin{i} = ft_datatype_source(varargin{i}, 'version', 'upcoming');
   end
@@ -386,6 +391,15 @@ for i=1:length(orgdim1)
   end
 end
 
+% restore the source.avg field, this keeps the output reasonably consistent with the
+% old-style source representation of the input
+if strcmp(dtype, 'source') && ~isempty(restoreavg)
+  for i=1:length(varargin)
+    varargin{i}.avg = keepfields(varargin{i}, restoreavg);
+    varargin{i}     = removefields(varargin{i}, restoreavg);
+  end  
+end
+
 varargout = varargin;
 
 ft_postamble debug              % this clears the onCleanup function used for debugging in case of an error
@@ -425,21 +439,33 @@ if numel(seldim) > 1
   return;
 end
 
-if isnumeric(data.(datfield)) && isrow(data.(datfield)) && seldim==1
-  % getdimord might get confused if the data is halfway a sequence of selections,
-  % where one field has already been subselected but another has not
-  dimord = getdimord(data, datfield);
-  dimtok = tokenize(dimord, '_');
-  if length(dimtok)==1
-    seldim = 2;
+if isnumeric(data.(datfield))
+  if isrow(data.(datfield)) && seldim==1
+    dimord = getdimord(data, datfield);
+    dimtok = tokenize(dimord, '_');
+    if length(dimtok)==1
+      seldim = 2; % switch row and column
+    end
+  elseif iscolumn(data.(datfield)) && seldim==2
+    dimord = getdimord(data, datfield);
+    dimtok = tokenize(dimord, '_');
+    if length(dimtok)==1
+      seldim = 1; % switch row and column
+    end
   end
-elseif isnumeric(data.(datfield)) && iscolumn(data.(datfield)) && seldim==2
-  % getdimord might get confused if the data is halfway a sequence of selections,
-  % where one field has already been subselected but another has not
-  dimord = getdimord(data, datfield);
-  dimtok = tokenize(dimord, '_');
-  if length(dimtok)==1
-    seldim = 1;
+elseif iscell(data.(datfield))
+  if isrow(data.(datfield){1}) && seldim==2
+    dimord = getdimord(data, datfield);
+    dimtok = tokenize(dimord, '_'); % the first is the cell-array, i.e. {rpt} or {pos}
+    if length(dimtok)==2
+      seldim = 3; % switch row and column
+    end
+  elseif iscolumn(data.(datfield){1}) && seldim==3
+    dimord = getdimord(data, datfield);
+    dimtok = tokenize(dimord, '_'); % the first is the cell-array, i.e. {rpt} or {pos}
+    if length(dimtok)==2
+      seldim = 2; % switch row and column
+    end
   end
 end
 
@@ -861,7 +887,11 @@ if isempty(cfg.latency)
   
 elseif numel(cfg.latency)==1
   % this single value should be within the time axis of each input data structure
-  tbin = nearest(alltimevec, cfg.latency, true, true);
+  if numel(alltimevec)>1
+    tbin = nearest(alltimevec, cfg.latency, true, true); % determine the numerical tolerance
+  else
+    tbin = nearest(alltimevec, cfg.latency, true, false); % don't consider tolerance
+  end
   cfg.latency = alltimevec(tbin);
   
   for k = 1:ndata
@@ -974,7 +1004,11 @@ if isfield(cfg, 'frequency')
     
   elseif numel(cfg.frequency)==1
     % this single value should be within the frequency axis of each input data structure
-    fbin = nearest(freqaxis, cfg.frequency, true, true);
+    if numel(freqaxis)>1
+      fbin = nearest(freqaxis, cfg.frequency, true, true); % determine the numerical tolerance
+    else
+      fbin = nearest(freqaxis, cfg.frequency, true, false); % don't consider tolerance
+    end
     cfg.frequency = freqaxis(fbin);
     
     for k = 1:ndata

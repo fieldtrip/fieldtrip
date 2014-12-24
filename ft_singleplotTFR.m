@@ -492,9 +492,7 @@ end
 % Make the figure interactive:
 if strcmp(cfg.interactive, 'yes')
   % first, attach data to the figure with the current axis handle as a name
-  dataname = num2str(gca);
-  dotpos   = findstr(dataname,'.');
-  dataname = ['DATA' dataname(1:dotpos-1) 'DOT' dataname(dotpos+1:end)];
+  dataname = fixname(num2str(double(gca)));
   setappdata(gcf,dataname,data);
   set(gcf, 'WindowButtonUpFcn',     {@ft_select_range, 'multiple', false, 'callback', {@select_topoplotTFR, cfg}, 'event', 'WindowButtonUpFcn'});
   set(gcf, 'WindowButtonDownFcn',   {@ft_select_range, 'multiple', false, 'callback', {@select_topoplotTFR, cfg}, 'event', 'WindowButtonDownFcn'});
@@ -571,9 +569,7 @@ range = varargin{end-1};
 varargin = varargin(1:end-2); % remove range and last
 
 % get appdata belonging to current axis
-dataname = num2str(gca);
-dotpos   = findstr(dataname,'.');
-dataname = ['DATA' dataname(1:dotpos-1) 'DOT' dataname(dotpos+1:end)];
+dataname = fixname(num2str(double(gca)));
 data = getappdata(gcf, dataname);
 
 if isfield(cfg, 'inputfile')

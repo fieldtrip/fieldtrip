@@ -177,17 +177,17 @@ if isfield(obj, 'bnd'),
   end
 end
 
-% gradiometer array
+% old-fashioned gradiometer array
 if isfield(obj, 'pnt1'), obj.pnt1 = scale * obj.pnt1; end
 if isfield(obj, 'pnt2'), obj.pnt2 = scale * obj.pnt2; end
 if isfield(obj, 'prj'),  obj.prj  = scale * obj.prj;  end
 
 % gradiometer array, electrode array, head shape or dipole grid
-if isfield(obj, 'pnt'),        obj.pnt     = scale * obj.pnt; end
-if isfield(obj, 'chanpos'),    obj.chanpos = scale * obj.chanpos; end
+if isfield(obj, 'pnt'),        obj.pnt        = scale * obj.pnt;        end
+if isfield(obj, 'chanpos'),    obj.chanpos    = scale * obj.chanpos;    end
 if isfield(obj, 'chanposorg'), obj.chanposorg = scale * obj.chanposorg; end
-if isfield(obj, 'coilpos'),    obj.coilpos = scale * obj.coilpos; end
-if isfield(obj, 'elecpos'),    obj.elecpos = scale * obj.elecpos; end
+if isfield(obj, 'coilpos'),    obj.coilpos    = scale * obj.coilpos;    end
+if isfield(obj, 'elecpos'),    obj.elecpos    = scale * obj.elecpos;    end
 
 % gradiometer array that combines multiple coils in one channel
 if isfield(obj, 'tra') && isfield(obj, 'chanunit')
@@ -212,7 +212,12 @@ end % if
 if isfield(obj, 'fid') && isfield(obj.fid, 'pnt'), obj.fid.pnt = scale * obj.fid.pnt; end
 
 % dipole grid
-if isfield(obj, 'pos'), obj.pos = scale * obj.pos; end
+if isfield(obj, 'pos'),        obj.pos = scale * obj.pos; end
+if isfield(obj, 'resolution'), obj.resolution = scale * obj.resolution; end
+% x,y,zgrid can also be 'auto'
+if isfield(obj, 'xgrid') && ~ischar(obj.xgrid), obj.xgrid = scale * obj.xgrid; end
+if isfield(obj, 'ygrid') && ~ischar(obj.ygrid), obj.ygrid = scale * obj.ygrid; end
+if isfield(obj, 'zgrid') && ~ischar(obj.zgrid), obj.zgrid = scale * obj.zgrid; end
 
 % anatomical MRI or functional volume
 if isfield(obj, 'transform'),

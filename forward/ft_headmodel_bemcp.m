@@ -66,7 +66,7 @@ end
 order = surface_nesting(vol.bnd, 'insidefirst');
 
 % rearrange boundaries and conductivities
-if numel(vol.bnd)>1
+if numel(vol.bnd)>1 && ~isequal(order(:)', 1:numel(vol.bnd))
   fprintf('reordering the boundaries to: ');
   fprintf('%d ', order);
   fprintf('\n');

@@ -17,12 +17,13 @@ ft_defaults
 ft_preamble help
 ft_preamble callinfo
 
-if ~ft_hastoolbox('spm8')
-  error('this requires a full version of SPM8 on your MATLAB path');
+if ~ft_hastoolbox('SPM12') && ~ft_hastoolbox('SPM8')
+  % it should be version spm8 or higher, since spm99, spm2 and spm5 did not yet the "meeg" object
+  error('this requires the SPM toolbox on your MATLAB path');
 end
 
 if ~isa(D, 'meeg')
-  error('this requires an SPM8 "meeg" object as input')
+  error('this requires an SPM "meeg" object as input')
 end
 
 % this is how SPM8 represents it

@@ -23,7 +23,6 @@ for k = 1:10
 end
 
 %create grad-structure and add to data
-addpath /home/common/matlab/fieldtrip_private
 [pnt,tri] = icosahedron162;
 nrm       = normals(pnt, tri, 'vertex');
 pnt       = pnt.*12;

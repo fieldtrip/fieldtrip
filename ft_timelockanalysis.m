@@ -112,15 +112,14 @@ cfg = ft_checkconfig(cfg, 'renamed',     {'blc', 'demean'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'blcwindow', 'baselinewindow'});
 
 % set the defaults
-cfg.trials      = ft_getopt(cfg, 'trials',     'all');
-cfg.channel     = ft_getopt(cfg, 'channel',    'all');
+cfg.trials       = ft_getopt(cfg, 'trials',      'all');
+cfg.channel      = ft_getopt(cfg, 'channel',     'all');
 cfg.keeptrials   = ft_getopt(cfg, 'keeptrials',  'no');
 cfg.covariance   = ft_getopt(cfg, 'covariance',  'no');
 cfg.removemean   = ft_getopt(cfg, 'removemean',  'yes');
 cfg.vartrllength = ft_getopt(cfg, 'vartrllength', 0);
-cfg.feedback     = ft_getopt(cfg, 'feedback', '   text');
-
-if ~isfield(cfg, 'preproc'), cfg.preproc = []; end
+cfg.feedback     = ft_getopt(cfg, 'feedback',     'text');
+cfg.preproc      = ft_getopt(cfg, 'preproc',      []);
 
 % ensure that the preproc specific options are located in the cfg.preproc substructure
 cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'});
@@ -147,6 +146,9 @@ end
 ntrial      = length(data.trial);
 nchan       = length(data.label);   % number of channels
 numsamples  = zeros(ntrial,1);      % number of selected samples in each trial, is determined later
+
+if ntrial==0, error('Number of trials selected in data is zero');   end
+if nchan==0,  error('Number of channels selected in data is zero'); end
 
 % determine the duration of each trial
 begsamplatency = zeros(1,ntrial);
@@ -309,7 +311,7 @@ avg = s ./ repmat(dof(:)', [nchan 1]);
 % var = (ss - (s.^2)./tmp1) ./ tmp2;
 dof = repmat(dof(:)', [nchan 1]);
 
-if any(dof > 1)
+if any(dof(:) > 1)
   var = (ss - (s.^2)./dof) ./ (dof-1);
 else
   var = nan(size(avg));

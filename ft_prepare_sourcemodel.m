@@ -78,7 +78,7 @@ function [grid, cfg] = ft_prepare_sourcemodel(cfg, vol, sens)
 %   cfg.grid.tight   = 'yes' or 'no' (default is automatic)
 %   cfg.inwardshift  = number, how much should the innermost surface be moved inward to constrain
 %                      sources to be considered inside the source compartment (default = 0)
-%   cfg.moveinward   = number, , move dipoles inward to ensure a certain distance to the innermost
+%   cfg.moveinward   = number, move dipoles inward to ensure a certain distance to the innermost
 %                      surface of the source compartment (default = 0)
 %   cfg.spherify     = 'yes' or 'no', scale the source model so that it fits inside a sperical
 %                      volume conduction model (default = 'no')
@@ -170,7 +170,7 @@ basedonshape  = ~isempty(cfg.headshape);                                        
 basedonmri    = isfield(cfg, 'mri') && ~(isfield(cfg.grid, 'warpmni') && istrue(cfg.grid.warpmni)); % regular 3D grid, based on segmented MRI, restricted to gray matter
 basedonmni    = isfield(cfg, 'mri') && (isfield(cfg.grid, 'warpmni') && istrue(cfg.grid.warpmni));  % regular 3D grid, based on warped MNI template
 basedonvol    = false;                                                                              % surface grid based on inward shifted brain surface from volume conductor
-basedoncortex = isfield(cfg, 'headshape') && (iscell(cfg.headshape) || ft_filetype(cfg.headshape, 'neuromag_fif') || ft_filetype(cfg.headshape, 'freesurfer_triangle_binary')); % cortical sheet from MNE or Freesurfer, also in case of multiple files/hemispheres
+basedoncortex = isfield(cfg, 'headshape') && (iscell(cfg.headshape) || any(ft_filetype(cfg.headshape, {'neuromag_fif', 'freesurfer_triangle_binary', 'caret_surf', 'gifti'}))); % cortical sheet from external software such as Caret or FreeSurfer, can also be two separate hemispheres
 basedonauto   = isfield(cfg.grid, 'resolution') && ~basedonmri && ~basedonmni;                      % regular 3D grid with specification of the resolution
 
 if basedonshape && basedoncortex
@@ -253,6 +253,8 @@ if (isfield(cfg, 'smooth') && ~strcmp(cfg.smooth, 'no')) || basedonmni
     ft_hastoolbox('SPM2', 1);
   elseif strcmpi(cfg.spmversion, 'spm8'),
     ft_hastoolbox('SPM8', 1);
+  elseif strcmpi(cfg.spmversion, 'spm12'),
+    ft_hastoolbox('SPM12', 1);
   end
 end
 

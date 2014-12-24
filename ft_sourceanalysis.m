@@ -270,19 +270,63 @@ if strcmp(cfg.rawtrial,'yes') && isfield(cfg,'grid') && ~isfield(cfg.grid,'filte
   error('Using each trial to compute its own filter is not currently recommended. Use this option only with precomputed filters in grid.filter');
 end
 
+% start with an empty output structure
+source = [];
+
+if istimelock
+  % add the time axis to the output
+  tmpcfg = keepfields(cfg, {'latency'});
+  tmpcfg.avgovertime = 'no';
+  data = ft_selectdata(tmpcfg, data);
+  % restore the provenance information
+  [cfg, data] = rollback_provenance(cfg, data);
+  
+  % add the time axis to the output
+  source = copyfields(data, source, {'time'});
+  
+elseif isfreq
+  tmpcfg = keepfields(cfg, {'latency', 'frequency'});
+  tmpcfg.avgoverfreq = 'yes';
+  if isfield(data, 'time')
+    tmpcfg.avgovertime = 'yes';
+  end
+  data = ft_selectdata(tmpcfg, data);
+  % restore the provenance information
+  [cfg, data] = rollback_provenance(cfg, data);
+  
+  % copy the descriptive fields to the output
+  source = copyfields(data, source, {'time', 'freq', 'cumtapcnt'});
+  
+  % HACK the remainder of the code expects a single number
+  cfg.frequency = mean(cfg.frequency);
+  if isfield(data, 'time')
+    cfg.latency   = mean(cfg.latency);
+  end
+
+elseif iscomp
+  % FIXME, select the components here
+  % FIXME, add the component numbers to the output
+end
+
 if isfreq
-  if  ~strcmp(data.dimord, 'chan_freq')          && ...
-      ~strcmp(data.dimord, 'chan_freq_time')     && ...
-      ~strcmp(data.dimord, 'rpt_chan_freq')      && ...
-      ~strcmp(data.dimord, 'rpt_chan_freq_time') && ...
-      ~strcmp(data.dimord, 'rpttap_chan_freq')   && ...
-      ~strcmp(data.dimord, 'chancmb_freq')       && ...
-      ~strcmp(data.dimord, 'rpt_chancmb_freq')   && ...
-      ~strcmp(data.dimord, 'rpttap_chancmb_freq')  && ...
-      ~strcmp(data.dimord, 'chan_chan_freq')       && ...
-      ~strcmp(data.dimord, 'rpt_chan_chan_freq')   && ...
-      ~strcmp(data.dimord, 'rpttap_chan_chan_freq')  && ...
-      ~strcmp(data.dimord, 'rpttap_chan_freq_time')
+  if  ~strcmp(data.dimord, 'chan_freq')                 && ...
+      ~strcmp(data.dimord, 'rpt_chan_freq')             && ...
+      ~strcmp(data.dimord, 'rpttap_chan_freq')          && ...
+      ~strcmp(data.dimord, 'chancmb_freq')              && ...
+      ~strcmp(data.dimord, 'rpt_chancmb_freq')          && ...
+      ~strcmp(data.dimord, 'rpttap_chancmb_freq')       && ...
+      ~strcmp(data.dimord, 'chan_chan_freq')            && ...
+      ~strcmp(data.dimord, 'rpt_chan_chan_freq')        && ...
+      ~strcmp(data.dimord, 'rpttap_chan_chan_freq')     && ...
+      ~strcmp(data.dimord, 'chan_freq_time')            && ...
+      ~strcmp(data.dimord, 'rpt_chan_freq_time')        && ...
+      ~strcmp(data.dimord, 'rpttap_chan_freq_time')     && ...
+      ~strcmp(data.dimord, 'chancmb_freq_time')         && ...
+      ~strcmp(data.dimord, 'rpt_chancmb_freq_time')     && ...
+      ~strcmp(data.dimord, 'rpttap_chancmb_freq_time')  && ...
+      ~strcmp(data.dimord, 'chan_chan_freq_time')       && ...
+      ~strcmp(data.dimord, 'rpt_chan_chan_freq_time')   && ...
+      ~strcmp(data.dimord, 'rpttap_chan_chan_freq')     && ...
     error('dimord of input frequency data is not recognized');
   end
 end
@@ -924,24 +968,6 @@ end
 if isfield(grid, 'tri')
   % the source reconstruction was perfomed on a tesselated cortical sheet, remember the triangles
   source.tri = grid.tri;
-end
-
-if istimelock
-  % add the time axis to the output
-  source.time = data.time;
-elseif iscomp
-  % FIXME, add the component numbers to the output
-elseif isfreq
-  % add the frequency axis to the output
-  cfg.frequency    = data.freq(nearest(data.freq, cfg.frequency));
-  source.freq = cfg.frequency;
-  if isfield(data, 'time') && isfield(cfg, 'latency')
-    cfg.latency    = data.time(nearest(data.time, cfg.latency));
-    source.time    = cfg.latency;
-  end
-  if isfield(data, 'cumtapcnt'),
-    source.cumtapcnt = data.cumtapcnt;
-  end
 end
 
 if exist('dip', 'var')

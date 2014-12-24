@@ -133,7 +133,6 @@ isdip           = ft_datatype(data, 'dip');
 ismvar          = ft_datatype(data, 'mvar');
 isfreqmvar      = ft_datatype(data, 'freqmvar');
 ischan          = ft_datatype(data, 'chan');
-
 % FIXME use the istrue function on ismeg and hasxxx options
 
 if ~isequal(feedback, 'no')
@@ -185,11 +184,11 @@ if ~isequal(feedback, 'no')
       subtype = 'source';
     end
     if isfield(data, 'dim')
-      fprintf('the input is %s data with %d positions on a [%d %d %d] grid\n', subtype, nsource, data.dim(1), data.dim(2), data.dim(3));
+      fprintf('the input is %s data with %d brainordinates on a [%d %d %d] grid\n', subtype, nsource, data.dim(1), data.dim(2), data.dim(3));
     elseif isfield(data, 'tri')
       fprintf('the input is %s data with %d vertex positions and %d triangles\n', subtype, nsource, size(data.tri, 1));
     else
-      fprintf('the input is %s data with %d positions\n', subtype, nsource);
+      fprintf('the input is %s data with %d brainordinates\n', subtype, nsource);
     end
     clear subtype
   elseif isdip
@@ -200,7 +199,11 @@ if ~isequal(feedback, 'no')
     fprintf('the input is freqmvar data\n');
   elseif ischan
     nchan = length(data.label);
-    fprintf('the input is chan data with %d channels\n', nchan);
+    if isfield(data, 'brainordinate')
+      fprintf('the input is parcellated data with %d parcels\n', nchan);
+    else
+      fprintf('the input is chan data with %d channels\n', nchan);
+    end
   end
 end % give feedback
 
@@ -294,18 +297,34 @@ if ~isempty(dtype)
       data = volume2source(data); % segmentation=volume, parcellation=source
       data = ft_datatype_parcellation(data);
       issegmentation = 0;
+      isvolume = 0;
       isparcellation = 1;
+      issource = 1;
       okflag = 1;
     elseif isequal(dtype(iCell), {'segmentation'}) && isparcellation
       data = source2volume(data); % segmentation=volume, parcellation=source
       data = ft_datatype_segmentation(data);
       isparcellation = 0;
+      issource = 0;
       issegmentation = 1;
+      isvolume = 1;
       okflag = 1;
     elseif isequal(dtype(iCell), {'source'}) && isvolume
       data = volume2source(data);
       data = ft_datatype_source(data);
       isvolume = 0;
+      issource = 1;
+      okflag = 1;
+    elseif isequal(dtype(iCell), {'volume'}) && (ischan || istimelock || isfreq)
+      data = parcellated2source(data);
+      data = ft_datatype_volume(data);
+      ischan = 0;
+      isvolume = 1;
+      okflag = 1;
+    elseif isequal(dtype(iCell), {'source'}) && (ischan || istimelock || isfreq)
+      data = parcellated2source(data);
+      data = ft_datatype_source(data);
+      ischan = 0;
       issource = 1;
       okflag = 1;
     elseif isequal(dtype(iCell), {'volume'}) && issource
@@ -779,10 +798,12 @@ end % cmbrepresentation
 
 if issource && ~isempty(sourcerepresentation)
   data = fixsource(data, 'type', sourcerepresentation);
+  data = fixinside(data, inside); % FIXME fixsource reverts the representation to indexed
 end
 
 if issource && ~strcmp(haspow, 'no')
   data = fixsource(data, 'type', sourcerepresentation, 'haspow', haspow);
+  
 end
 
 if isfield(data, 'grad')
@@ -799,10 +820,12 @@ end
 % represent the covariance matrix in a particular manner
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function data = fixcov(data, desired)
-if isfield(data, 'cov')     && ~isfield(data, 'labelcmb')
-  current = 'full';
-elseif isfield(data, 'cov') &&  isfield(data, 'labelcmb')
-  current = 'sparse';
+if any(isfield(data, {'cov', 'corr'}))
+  if ~isfield(data, 'labelcmb')
+    current = 'full';
+  else
+    current = 'sparse';
+  end
 else
   error('Could not determine the current representation of the covariance matrix');
 end
@@ -1365,6 +1388,11 @@ if isempty(haspow), haspow = 'no';  end
 fnames = fieldnames(input);
 tmp    = cell2mat(strfind(fnames, 'dimord')); % get dimord like fields
 
+if isfield(input, 'inside') && islogical(input.inside)
+  % the following code expects an indexed representation
+  input = fixinside(input, 'index');
+end
+
 if any(tmp>1)
   current = 'new';
 elseif any(tmp==1)
@@ -1494,7 +1522,7 @@ elseif strcmp(current, 'old') && strcmp(type, 'new'),
       tmp = getfield(stuff, fnames{k});
       siz = size(tmp);
       if isfield(input, 'cumtapcnt') && strcmp(fnames{k}, 'mom')
-        %pcc based mom is orixrpttap
+        %pcc based mom is ori*rpttap
         %tranpose to keep manageable
         for kk = 1:numel(input.inside)
           indx = input.inside(kk);
@@ -1682,6 +1710,50 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % convert between datatypes
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function source = parcellated2source(data)
+if ~isfield(data, 'brainordinate')
+  error('projecting parcellated data onto the full brain model geometry requires the specification of brainordinates');
+end
+% the main structure contains the functional data on the parcels
+% the brainordinate sub-structure contains the original geometrical model
+source = data.brainordinate;
+data   = rmfield(data, 'brainordinate');
+if isfield(data, 'cfg')
+  source.cfg = data.cfg;
+end
+
+fn = fieldnames(data);
+fn = setdiff(fn, {'label', 'time', 'freq', 'hdr', 'cfg', 'grad', 'elec', 'dimord'}); % remove irrelevant fields
+fn(~cellfun(@isempty, regexp(fn, 'dimord$'))) = []; % remove irrelevant (dimord) fields
+sel = false(size(fn));
+for i=1:numel(fn)
+  try
+    sel(i) = ismember(getdimord(data, fn{i}), {'chan', 'chan_time', 'chan_freq', 'chan_chan'});
+  end
+end
+parameter = fn(sel);
+
+fn = fieldnames(source);
+sel = false(size(fn));
+for i=1:numel(fn)
+  tmp = source.(fn{i});
+  sel(i) = iscell(tmp) && isequal(tmp(:), data.label(:));
+end
+parcelparam = fn(sel);
+if numel(parcelparam)~=1
+  error('cannot determine which parcellation to use');
+else
+  parcelparam = parcelparam{1}(1:(end-5)); % minus the 'label'
+end
+
+for i=1:numel(parameter)
+  source.(parameter{i}) = unparcellate(data, source, parameter{i}, parcelparam);
+end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% convert between datatypes
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function data = volume2source(data)
 if isfield(data, 'dimord')
   % it is a modern source description
@@ -1720,10 +1792,7 @@ if isfield(data, 'dim') && length(data.dim)>=3,
 end
 
 % remove the unwanted fields
-if isfield(data, 'pos'),    data = rmfield(data, 'pos');    end
-if isfield(data, 'xgrid'),  data = rmfield(data, 'xgrid');  end
-if isfield(data, 'ygrid'),  data = rmfield(data, 'ygrid');  end
-if isfield(data, 'zgrid'),  data = rmfield(data, 'zgrid');  end
+data = removefields(data, {'pos', 'xgrid', 'ygrid', 'zgrid', 'tri', 'tet', 'hex'});
 
 % make inside a volume
 data = fixinside(data, 'logical');
@@ -2039,4 +2108,6 @@ data.label = spike.label;
 data.fsample = fsample;
 if isfield(spike,'hdr'), data.hdr = spike.hdr; end
 if isfield(spike,'cfg'), data.cfg = spike.cfg; end
+
+
 

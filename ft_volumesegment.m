@@ -175,8 +175,8 @@ cfg.scalpsmooth      = ft_getopt(cfg, 'scalpsmooth',      ''); % see also below
 cfg.brainthreshold   = ft_getopt(cfg, 'brainthreshold',   ''); % see also below
 cfg.scalpthreshold   = ft_getopt(cfg, 'scalpthreshold',   ''); % see also below
 % earlier version of smooth and threshold specification
-cfg.smooth      = ft_getopt(cfg, 'smooth',      '');
-cfg.threshold   = ft_getopt(cfg, 'threshold',   '');
+cfg.smooth           = ft_getopt(cfg, 'smooth',      '');
+cfg.threshold        = ft_getopt(cfg, 'threshold',   '');
 
 % chech whether earlier version of smooth and threshold was specified
 if ~(isempty(cfg.smooth))
@@ -197,7 +197,6 @@ if ~(isempty(cfg.threshold))
   if isempty(cfg.scalpthreshold)
     cfg.scalpthreshold=cfg.threshold;
     warning('Threshold can be specified separately for scalp and brain. User-specified threshold  will be applied for scalpmask.')
-    
   end
 end
 % then set defaults again
@@ -206,11 +205,13 @@ cfg.scalpsmooth      = ft_getopt(cfg, 'scalpsmooth',      5);
 cfg.brainthreshold   = ft_getopt(cfg, 'brainthreshold',   0.5);
 cfg.scalpthreshold   = ft_getopt(cfg, 'scalpthreshold',   0.1);
 
-% check if the required spm is in your path:
+% check if the required version of SPM is on your path
 if strcmpi(cfg.spmversion, 'spm2'),
   ft_hastoolbox('SPM2',1);
 elseif strcmpi(cfg.spmversion, 'spm8'),
   ft_hastoolbox('SPM8',1);
+elseif strcmpi(cfg.spmversion, 'spm12'),
+  ft_hastoolbox('SPM12',1);
 end
 
 if ~isfield(cfg,'name')
@@ -227,11 +228,11 @@ if ~iscell(cfg.output)
   cfg.output = {cfg.output};
 end
 
-% check whether spm is needed to generate tissue probability maps
+% check whether SPM is needed to generate tissue probability maps
 if numel(cfg.output) == 1 && strcmp('scalp', cfg.output)
-  needtpm= 0; % no tpm is necessary for creating (cummulative type) scalpmask
+  needtpm = 0; % not needed for (cummulative type) scalpmask
 else
-  needtpm    = any(ismember(cfg.output, {'tpm' 'gray' 'white' 'csf' 'brain' 'skull' 'skullstrip'}));
+  needtpm = any(ismember(cfg.output, {'tpm' 'gray' 'white' 'csf' 'brain' 'skull' 'skullstrip'}));
 end
 
 if all(isfield(mri,{'gray','white','csf'}))
@@ -300,133 +301,136 @@ if dotpm
   % of the segmentation algorithm
   [mri,permutevec,flipflags] = align_ijk2xyz(mri);
   
-  
-  % spm is quite noisy, prevent the warnings from displaying on screen
+  % SPM can be quite noisy, this prevents the warnings from displaying on screen
   % warning off;
   
-  if strcmpi(cfg.spmversion, 'spm2'),
-    Va = ft_write_mri([cfg.name,'.img'], mri.anatomy, 'transform', mri.transform, 'spmversion', cfg.spmversion, 'dataformat', 'analyze_img');
-    
-    % set the spm segmentation defaults (from /opt/spm2/spm_defaults.m script)
-    defaults.segmented.estimate.priors = str2mat(...
-      fullfile(spm('Dir'),'apriori','gray.mnc'),...
-      fullfile(spm('Dir'),'apriori','white.mnc'),...
-      fullfile(spm('Dir'),'apriori','csf.mnc'));
-    defaults.segmented.estimate.reg    = 0.01;
-    defaults.segmented.estimate.cutoff = 30;
-    defaults.segmented.estimate.samp   = 3;
-    defaults.segmented.estimate.bb     =  [[-88 88]' [-122 86]' [-60 95]'];
-    defaults.segmented.estimate.affreg.smosrc = 8;
-    defaults.segmented.estimate.affreg.regtype = 'mni';
-    %defaults.segmented.estimate.affreg.weight = fullfile(spm('Dir'),'apriori','brainmask.mnc');
-    defaults.segmented.estimate.affreg.weight = '';
-    defaults.segmented.write.cleanup   = 1;
-    defaults.segmented.write.wrt_cor   = 1;
-    
-    flags = defaults.segmented;
-    
-    % perform the segmentation
-    fprintf('performing the segmentation on the specified volume\n');
-    spm_segment(Va,cfg.template,flags);
-    Vtmp = spm_vol({[cfg.name,'_seg1.img'];...
-      [cfg.name,'_seg2.img'];...
-      [cfg.name,'_seg3.img']});
-    
-    % read the resulting volumes
-    for j = 1:3
-      vol = spm_read_vols(Vtmp{j});
-      Vtmp{j}.dat = vol;
-      V(j) = struct(Vtmp{j});
-    end
-    
-    % keep or remove the files according to the configuration
-    if strcmp(cfg.keepintermediate,'no'),
-      delete([cfg.name,'.img']);
-      delete([cfg.name,'.hdr']);
-      delete([cfg.name,'.mat']);
-    end
-    if strcmp(cfg.write,'no'),
-      delete([cfg.name,'_seg1.hdr']);
-      delete([cfg.name,'_seg2.hdr']);
-      delete([cfg.name,'_seg3.hdr']);
-      delete([cfg.name,'_seg1.img']);
-      delete([cfg.name,'_seg2.img']);
-      delete([cfg.name,'_seg3.img']);
-      delete([cfg.name,'_seg1.mat']);
-      delete([cfg.name,'_seg2.mat']);
-      delete([cfg.name,'_seg3.mat']);
-    elseif strcmp(cfg.write,'yes'),
+  switch lower(cfg.spmversion)
+    case 'spm2'
+      Va = ft_write_mri([cfg.name,'.img'], mri.anatomy, 'transform', mri.transform, 'spmversion', cfg.spmversion, 'dataformat', 'analyze_img');
+      
+      % set the spm segmentation defaults (from /opt/spm2/spm_defaults.m script)
+      defaults.segmented.estimate.priors = str2mat(...
+        fullfile(spm('Dir'),'apriori','gray.mnc'),...
+        fullfile(spm('Dir'),'apriori','white.mnc'),...
+        fullfile(spm('Dir'),'apriori','csf.mnc'));
+      defaults.segmented.estimate.reg    = 0.01;
+      defaults.segmented.estimate.cutoff = 30;
+      defaults.segmented.estimate.samp   = 3;
+      defaults.segmented.estimate.bb     =  [[-88 88]' [-122 86]' [-60 95]'];
+      defaults.segmented.estimate.affreg.smosrc = 8;
+      defaults.segmented.estimate.affreg.regtype = 'mni';
+      %defaults.segmented.estimate.affreg.weight = fullfile(spm('Dir'),'apriori','brainmask.mnc');
+      defaults.segmented.estimate.affreg.weight = '';
+      defaults.segmented.write.cleanup   = 1;
+      defaults.segmented.write.wrt_cor   = 1;
+      
+      flags = defaults.segmented;
+      
+      % perform the segmentation
+      fprintf('performing the segmentation on the specified volume\n');
+      spm_segment(Va,cfg.template,flags);
+      Vtmp = spm_vol({[cfg.name,'_seg1.img'];...
+        [cfg.name,'_seg2.img'];...
+        [cfg.name,'_seg3.img']});
+      
+      % read the resulting volumes
       for j = 1:3
-        % put the transformation-matrix in the headers
-        V(j).mat = mri.transform;
-        % write the updated header information back to file ???????
-        V(j) = spm_create_vol(V(j));
+        vol = spm_read_vols(Vtmp{j});
+        Vtmp{j}.dat = vol;
+        V(j) = struct(Vtmp{j});
       end
-    end
-    
-  elseif strcmpi(cfg.spmversion, 'spm8'),
-    Va = ft_write_mri([cfg.name,'.img'], mri.anatomy, 'transform', mri.transform, 'spmversion', cfg.spmversion, 'dataformat', 'nifti_spm');
-    
-    fprintf('performing the segmentation on the specified volume\n');
-    if isfield(cfg, 'tpm')
-      cfg.tpm  = char(cfg.tpm(:));
-      px.tpm   = cfg.tpm;
-      p        = spm_preproc(Va, px);
-    else
-      p        = spm_preproc(Va);
-    end
-    [po,pin] = spm_prep2sn(p);
-    
-    % I took these settings from a batch
-    opts     = [];
-    opts.GM  = [0 0 1];
-    opts.WM  = [0 0 1];
-    opts.CSF = [0 0 1];
-    opts.biascor = 1;
-    opts.cleanup = 0;
-    spm_preproc_write(po, opts);
-    
-    [pathstr,name,ext] = fileparts(cfg.name);
-    Vtmp = spm_vol({fullfile(pathstr,['c1',name,'.img']);...
-      fullfile(pathstr,['c2',name,'.img']);...
-      fullfile(pathstr,['c3',name,'.img'])});
-    
-    % read the resulting volumes
-    for j = 1:3
-      vol = spm_read_vols(Vtmp{j});
-      Vtmp{j}.dat = vol;
-      V(j) = struct(Vtmp{j});
-    end
-    
-    % keep or remove the files according to the configuration
-    if strcmp(cfg.keepintermediate,'no'),
-      delete([cfg.name,'.img']);
-      delete([cfg.name,'.hdr']);
-      if exist([cfg.name,'.mat'], 'file'),
+      
+      % keep or remove the files according to the configuration
+      if strcmp(cfg.keepintermediate,'no'),
+        delete([cfg.name,'.img']);
+        delete([cfg.name,'.hdr']);
         delete([cfg.name,'.mat']);
-      end %does not always exist
-    end
-    
-    % keep the files written to disk or remove them
-    % FIXME check whether this works at all
-    if strcmp(cfg.write,'no'),
-      delete(fullfile(pathstr,['c1',name,'.hdr'])); %FIXME this may not be needed in spm8
-      delete(fullfile(pathstr,['c1',name,'.img']));
-      delete(fullfile(pathstr,['c2',name,'.hdr']));
-      delete(fullfile(pathstr,['c2',name,'.img']));
-      delete(fullfile(pathstr,['c3',name,'.hdr']));
-      delete(fullfile(pathstr,['c3',name,'.img']));
-      delete(fullfile(pathstr,['m',name,'.hdr']));
-      delete(fullfile(pathstr,['m',name,'.img']));
-    elseif strcmp(cfg.write,'yes'),
-      for j = 1:3
-        % put the transformation-matrix in the headers
-        V(j).mat = mri.transform;
-        % write the updated header information back to file ???????
-        V(j) = spm_create_vol(V(j));
       end
-    end
-    
+      if strcmp(cfg.write,'no'),
+        delete([cfg.name,'_seg1.hdr']);
+        delete([cfg.name,'_seg2.hdr']);
+        delete([cfg.name,'_seg3.hdr']);
+        delete([cfg.name,'_seg1.img']);
+        delete([cfg.name,'_seg2.img']);
+        delete([cfg.name,'_seg3.img']);
+        delete([cfg.name,'_seg1.mat']);
+        delete([cfg.name,'_seg2.mat']);
+        delete([cfg.name,'_seg3.mat']);
+      elseif strcmp(cfg.write,'yes'),
+        for j = 1:3
+          % put the transformation-matrix in the headers
+          V(j).mat = mri.transform;
+          % write the updated header information back to file ???????
+          V(j) = spm_create_vol(V(j));
+        end
+      end
+      
+    case 'spm8'
+      Va = ft_write_mri([cfg.name,'.img'], mri.anatomy, 'transform', mri.transform, 'spmversion', cfg.spmversion, 'dataformat', 'nifti_spm');
+      
+      fprintf('performing the segmentation on the specified volume\n');
+      if isfield(cfg, 'tpm')
+        cfg.tpm  = char(cfg.tpm(:));
+        px.tpm   = cfg.tpm;
+        p        = spm_preproc(Va, px);
+      else
+        p        = spm_preproc(Va);
+      end
+      [po,pin] = spm_prep2sn(p);
+      
+      % I took these settings from a batch
+      opts     = [];
+      opts.GM  = [0 0 1];
+      opts.WM  = [0 0 1];
+      opts.CSF = [0 0 1];
+      opts.biascor = 1;
+      opts.cleanup = 0;
+      spm_preproc_write(po, opts);
+      
+      [pathstr,name,ext] = fileparts(cfg.name);
+      Vtmp = spm_vol({fullfile(pathstr,['c1',name,'.img']);...
+        fullfile(pathstr,['c2',name,'.img']);...
+        fullfile(pathstr,['c3',name,'.img'])});
+      
+      % read the resulting volumes
+      for j = 1:3
+        vol = spm_read_vols(Vtmp{j});
+        Vtmp{j}.dat = vol;
+        V(j) = struct(Vtmp{j});
+      end
+      
+      % keep or remove the files according to the configuration
+      if strcmp(cfg.keepintermediate,'no'),
+        delete([cfg.name,'.img']);
+        delete([cfg.name,'.hdr']);
+        if exist([cfg.name,'.mat'], 'file'),
+          delete([cfg.name,'.mat']);
+        end %does not always exist
+      end
+      
+      % keep the files written to disk or remove them
+      % FIXME check whether this works at all
+      if strcmp(cfg.write,'no'),
+        delete(fullfile(pathstr,['c1',name,'.hdr'])); %FIXME this may not be needed in spm8
+        delete(fullfile(pathstr,['c1',name,'.img']));
+        delete(fullfile(pathstr,['c2',name,'.hdr']));
+        delete(fullfile(pathstr,['c2',name,'.img']));
+        delete(fullfile(pathstr,['c3',name,'.hdr']));
+        delete(fullfile(pathstr,['c3',name,'.img']));
+        delete(fullfile(pathstr,['m',name,'.hdr']));
+        delete(fullfile(pathstr,['m',name,'.img']));
+      elseif strcmp(cfg.write,'yes'),
+        for j = 1:3
+          % put the transformation-matrix in the headers
+          V(j).mat = mri.transform;
+          % write the updated header information back to file ???????
+          V(j) = spm_create_vol(V(j));
+        end
+      end
+      
+    otherwise
+      error('unsupported SPM version');
+      
   end
   
   % collect the results
@@ -463,13 +467,13 @@ else
   segmented = mri;
   clear mri;
 end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % now the data contains the tissue probability maps
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % create the requested output fields
 
-
-removefields = {'anatomy' 'csf' 'gray' 'white'};
+remove = {'anatomy' 'csf' 'gray' 'white'};
 
 % check if smoothing or thresholding is required
 
@@ -495,11 +499,12 @@ outp = cfg.output;
 
 if ~isempty(intersect(outp, 'tpm'))
   % output: probability tissue maps
-  removefields = intersect(removefields, {'anatomy'});
+  remove = intersect(remove, {'anatomy'});
 elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' 'skullstrip'}))
-  createoutputs=true;
+  
+  createoutputs = true;
   while createoutputs
-    %create scalpmask - no tpm or brainmask is required to create it
+    % create scalpmask - no tpm or brainmask is required to create it
     if any(strcmp('scalp',outp))
       
       fprintf('creating scalpmask\n');
@@ -518,17 +523,15 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
       a2 = volumefillholes(anatomy, 2);
       a3 = volumefillholes(anatomy, 3);
       
-      %anatomy = volumefillholes(anatomy, 2); % FIXME why along the second dimension?
-      %scalpmask = anatomy>0;
+      % anatomy = volumefillholes(anatomy, 2); % FIXME why along the second dimension?
+      % scalpmask = anatomy>0;
       scalpmask = a1 | a2 | a3;
       clear anatomy a1 a2 a3;
       
       % threshold again to remove little parts outside of head
-      
       scalpmask=volumethreshold(scalpmask);
       
-      % output: scalp (cummulative) (if this is the only requested
-      % output)
+      % output: scalp (cummulative) (if this is the only requested output)
       if numel(outp)==1
         segmented.scalp = scalpmask;
         break
@@ -548,16 +551,16 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
     % output: skullstrip
     if any(strcmp('skullstrip',outp))
       
-      
       fprintf('creating skullstripped anatomy\n');
       brain_ss = cast(brain, class(segmented.anatomy));
       segmented.anatomy = segmented.anatomy.*brain_ss;
       clear brain_ss;
-      removefields = intersect(removefields, {'gray' 'white' 'csf'});
+      remove = intersect(remove, {'gray' 'white' 'csf'});
       if numel(outp)==1
         break
       end
-    end     % end skullstrip
+    end % if skullstrip
+    
     % make binary mask from brain
     brainmask = brain>0;
     clear brain;
@@ -576,24 +579,23 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
       clear dummy;
       if any(strcmp(outp,'white'))
         segmented.white = (tissuetype == 3) & brainmask;
-        removefields = intersect(removefields, {'anatomy' 'gray' 'csf'});
+        remove = intersect(remove, {'anatomy' 'gray' 'csf'});
       end
       if any(strcmp(outp,'gray'))
         segmented.gray = (tissuetype == 2) & brainmask;
-        removefields = intersect(removefields, {'anatomy' 'white' 'csf'});
+        remove = intersect(remove, {'anatomy' 'white' 'csf'});
       end
       if any(strcmp(outp,'csf'))
         segmented.csf = (tissuetype == 1) & brainmask;
-        removefields = intersect(removefields, {'anatomy' 'gray' 'white'});
+        remove = intersect(remove, {'anatomy' 'gray' 'white'});
       end
       
-    end
+    end % if brain or gray/while/csf
     
-    % output: skull
     if any(strcmp('skull', outp)) || any(strcmp('scalp', outp))
       % create skull from brain mask FIXME check this (e.g. strel_bol)
       fprintf('creating skullmask\n');
-      braindil      = imdilate(brainmask>0, strel_bol(6));
+      braindil = imdilate(brainmask>0, strel_bol(6));
       skullmask = braindil & ~brainmask;
       if any(strcmp(outp, 'skull'))
         segmented.skull = skullmask;
@@ -601,7 +603,7 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
           break
         end
       end
-      clear braindil;
+      clear braindil
       
       % output: scalp (exclusive type)
       if numel(outp) > 1 && any(strcmp('scalp',outp))
@@ -614,18 +616,15 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
       end
     end
     
-    createoutputs=false; % exit while loop
-  end
+    createoutputs = false; % exit the while loop
+  end % while createoutputs
+  
 else
   error('unknown output %s requested', cfg.output);
 end
 
 % remove unnecessary fields
-for k = 1:numel(removefields)
-  if isfield(segmented, removefields{k})
-    segmented = rmfield(segmented, removefields{k});
-  end
-end
+segmented = removefields(segmented, remove);
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug

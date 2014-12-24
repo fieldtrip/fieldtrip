@@ -33,7 +33,6 @@ assert(ft_voltype(svolcs,'concentricspheres'))
 % To generate a volume of 3 concentric spheres (works if number of voxels is odd)
 % use this code:
 %
-% addpath /home/common/matlab/fieldtrip_private/
 % res = 1; % in mm
 % for i=3:-1:1
 %   tmp2 = zeros(151,151,151);

@@ -1,16 +1,39 @@
-function cii = ft_read_cifti(filename, varargin)
+function source = ft_read_cifti(filename, varargin)
 
-% FT_READ_CIFTI reads geometry and functional data or connectivity from a
-% cifti file and returns a structure according to FT_DATATYPE_SOURCE.
+% FT_READ_CIFTI read functional data or functional connectivity from a cifti-1 or
+% cifti-2 file. The functional data can consist of a dense or a parcellated
+% representation. The geometrical description of the brainordinates can consist of
+% triangulated surfaces or voxels in a regular 3-D volumetric grid. If available,
+% it also reads the geometrical description of the surfaces from the accompanying
+% gifti files.
 %
 % Use as
-%   cii = ft_read_cifti(filename, ...)
-% where additional input arguments should be specified as key-value pairs
-% and can include
-%   representation = string, can be 'char', 'tree', 'struct' or 'source'
-%   readdata       = boolean, can be false or true
+%   data = ft_read_cifti(filename, ...)
 %
-% See also FT_WRITE_CIFTI, READ_NIFTI2_HDR, WRITE_NIFTI2_HDR
+% If the file contains a dense representation of functional data, the output data
+% structure is organized according to the FT_DATATYPE_SOURCE or FT_DATATYPE_VOLUME
+% definition.
+%
+% If the contains a parcellated representation of functional data, the output data
+% structure is organized according to the FT_DATATYPE_TIMELOCK or FT_DATATYPE_FREQ
+% definition. In addition, the description of the geometry wil be represented in a
+% data.brainordinate field, which is organized according to the FT_DATATYPE_SOURCE
+% or FT_DATATYPE_VOLUME definition.
+%
+% Any optional input arguments should come in key-value pairs and may include
+%   'readdata'         = boolean, can be false or true (default depends on file size)
+%   'readsurface'      = boolean, can be false or true (default = true)
+%   'cortexleft'       = string, filename with left cortex (optional, default is automatic)
+%   'cortexright'      = string, filename with right cortex (optional, default is automatic)
+%   'hemisphereoffset' = number, amount in milimeter to move the hemispheres apart from each other (default = 0)
+%   'debug'            = boolean, write a debug.xml file (default = true)
+%
+% See also FT_WRITE_CIFTI, FT_READ_MRI, FT_WRITE_MRI
+
+% Known limitations and bugs
+% - it will fail if multiple MatrixIndicesMap contain BrainModels
+% - fibers (i.e. dfan and dfibersamp) are unsupported/untested
+% - metadata is unsupported
 
 % Copyright (C) 2013-2014, Robert Oostenveld
 %
@@ -32,14 +55,15 @@ function cii = ft_read_cifti(filename, varargin)
 %
 % $Id$
 
-representation = ft_getopt(varargin, 'representation', 'source');
-readdata       = ft_getopt(varargin, 'readdata', []); % the default depends on file size, see below
+readdata         = ft_getopt(varargin, 'readdata', []);   % the default depends on file size, see below
+readsurface      = ft_getopt(varargin, 'readsurface', true);
+cortexleft       = ft_getopt(varargin, 'cortexleft', {});
+cortexright      = ft_getopt(varargin, 'cortexright', {});
+hemisphereoffset = ft_getopt(varargin, 'hemisphereoffset', 0); % in mm, move the two hemispheres apart from each other
+debug            = ft_getopt(varargin, 'debug', true);
 
 % convert 'yes'/'no' into boolean
 readdata = istrue(readdata);
-
-% ensure that the external toolbox is present, this adds gifti/@xmltree
-ft_hastoolbox('gifti', 1);
 
 % read the header section
 hdr = read_nifti2_hdr(filename);
@@ -57,7 +81,7 @@ fseek(fid, 0, 'bof');
 % set the default for readdata
 if isempty(readdata)
   if filesize>1e9
-    warning('filesize>1GB, not reading data by default. Please specify the ''readdata'' option.');
+    warning('Not reading data by default in case filesize>1GB. Please specify the ''readdata'' option.');
     readdata = false;
   else
     readdata = true;
@@ -95,217 +119,35 @@ if any(xmldata==0)
   xmldata = xmldata(xmldata>0);
 end
 
-% write the xml section to a temporary file
-xmlfile = 'debug.xml';
-tmp = fopen(xmlfile, 'w');
-fwrite(tmp, xmldata);
-fclose(tmp);
-
-% this requires the xmltree object from Guillaume Flandin
-% see http://www.artefact.tk/software/matlab/xml/
-% it is also included with the gifti toolbox
-
-switch representation
-  case 'char'
-    cii.xmldata = xmldata;
-  case 'tree'
-    cii.tree = xmltree(xmldata); % using xmltree from artefact.dk
-  case 'struct'
-    tmp = xmltree(xmldata);
-    cii = tree2struct(tmp);
-  case 'source'
-    tmp = xmltree(xmldata);
-    cii = tree2struct(tmp); % the rest of the conversion is done further down
-  otherwise
-    error('unsupported representation')
-end
-
-% include the nifti-2 header in the output structure
-cii.hdr = hdr;
-
-if readdata
-  % read the voxel data section
-  fseek(fid, hdr.vox_offset, 'bof');
-  switch hdr.datatype
-    case   2, [voxdata, nitemsread] = fread(fid, inf, 'uchar');   assert(nitemsread==prod(hdr.dim(2:end)), 'could not read all data');
-    case   4, [voxdata, nitemsread] = fread(fid, inf, 'short');   assert(nitemsread==prod(hdr.dim(2:end)), 'could not read all data');
-    case   8, [voxdata, nitemsread] = fread(fid, inf, 'int');     assert(nitemsread==prod(hdr.dim(2:end)), 'could not read all data');
-    case  16, [voxdata, nitemsread] = fread(fid, inf, 'float');   assert(nitemsread==prod(hdr.dim(2:end)), 'could not read all data');
-    case  64, [voxdata, nitemsread] = fread(fid, inf, 'double');  assert(nitemsread==prod(hdr.dim(2:end)), 'could not read all data');
-    case 512, [voxdata, nitemsread] = fread(fid, inf, 'ushort');  assert(nitemsread==prod(hdr.dim(2:end)), 'could not read all data');
-    case 768, [voxdata, nitemsread] = fread(fid, inf, 'uint');    assert(nitemsread==prod(hdr.dim(2:end)), 'could not read all data');
-    otherwise, error('unsupported datatype');
-  end
-  cii.data = squeeze(reshape(voxdata, hdr.dim(2:end)));
-end
-fclose(fid);
-
-
-if strcmp(representation, 'source')
-  cii = struct2source(cii);
-end
-
-% try to get the geometrical information from a corresponding gifti files
-% the following assumes the HCP convention
-[p, f, x] = fileparts(filename);
-t = tokenize(f, '.');
-
-subject  = 'unknown';
-dataname = 'unknown';
-geomodel = '';
-
-if length(t)==2
-  subject  = t{1};
-  dataname = t{2};
-elseif length(t)==3
-  subject  = t{1};
-  dataname = t{2};
-  content  = t{3};
-elseif length(t)==4
-  subject  = t{1};
-  dataname = t{2};
-  geomodel = t{3};
-  content  = t{4};
-elseif length(t)==5
-  subject  = t{1};
-  dataname = [t{2} '.' t{3}];
-  geomodel = t{4};
-  content  = t{5};
-else
-  error('cannot parse file name');
-end
-
-% the surface anatomy is represented in an external file
-% which can be difficult to match with the data
-
-Lfilelist = {
-  [subject '.L' '.midthickness'  '.' geomodel '.surf.gii']
-  [subject '.L' '.pial'          '.' geomodel '.surf.gii']
-  [subject '.L' '.white'         '.' geomodel '.surf.gii']
-  [subject '.L' '.inflated'      '.' geomodel '.surf.gii']
-  [subject '.L' '.very_inflated' '.' geomodel '.surf.gii']
-  [subject '.L' '.sphere'        '.' geomodel '.surf.gii']
-  [subject '.L' '.'              '.' geomodel '.surf.gii']
-  [subject '.L' '.midthickness'               '.surf.gii']
-  [subject '.L' '.pial'                       '.surf.gii']
-  [subject '.L' '.white'                      '.surf.gii']
-  [subject '.L' '.inflated'                   '.surf.gii']
-  [subject '.L' '.very_inflated'              '.surf.gii']
-  [subject '.L' '.sphere'                     '.surf.gii']
-  [subject '.L'                               '.surf.gii']
-  [subject '.CORTEX_LEFT'                     '.surf.gii']
-  };
-
-Rfilelist = {
-  [subject '.R' '.midthickness'  '.' geomodel  '.surf.gii']
-  [subject '.R' '.pial'          '.' geomodel  '.surf.gii']
-  [subject '.R' '.white'         '.' geomodel  '.surf.gii']
-  [subject '.R' '.inflated'      '.' geomodel  '.surf.gii']
-  [subject '.R' '.very_inflated' '.' geomodel  '.surf.gii']
-  [subject '.R' '.sphere'        '.' geomodel  '.surf.gii']
-  [subject '.R' '.'              '.' geomodel  '.surf.gii']
-  [subject '.R' '.midthickness'                '.surf.gii']
-  [subject '.R' '.pial'                        '.surf.gii']
-  [subject '.R' '.white'                       '.surf.gii']
-  [subject '.R' '.inflated'                    '.surf.gii']
-  [subject '.R' '.very_inflated'               '.surf.gii']
-  [subject '.R' '.sphere'                      '.surf.gii']
-  [subject '.R'                                '.surf.gii']
-  [subject '.CORTEX_RIGHT'                     '.surf.gii']
-  };
-
-Bfilelist = {
-  [subject '.midthickness'  '.' geomodel '.surf.gii']
-  [subject '.pial'          '.' geomodel '.surf.gii']
-  [subject '.white'         '.' geomodel '.surf.gii']
-  [subject '.inflated'      '.' geomodel '.surf.gii']
-  [subject '.very_inflated' '.' geomodel '.surf.gii']
-  [subject '.sphere'        '.' geomodel '.surf.gii']
-  [subject                  '.' geomodel '.surf.gii']
-  [subject '.midthickness'               '.surf.gii']
-  [subject '.pial'                       '.surf.gii']
-  [subject '.white'                      '.surf.gii']
-  [subject '.inflated'                   '.surf.gii']
-  [subject '.very_inflated'              '.surf.gii']
-  [subject '.sphere'                     '.surf.gii']
-  [subject                               '.surf.gii']
-  [subject '.CORTEX'                     '.surf.gii']
-  };
-
-
-if isfield(cii, 'BrainStructurelabel')
-  if all(ismember({'CORTEX_LEFT', 'CORTEX_RIGHT'}, cii.BrainStructurelabel))
-    for i=1:length(Lfilelist)
-      Lfilename = fullfile(p, Lfilelist{i});
-      Rfilename = fullfile(p, Rfilelist{i});
-      
-      if exist(Lfilename, 'file') && exist(Rfilename, 'file')
-        warning('reading left hemisphere geometry from %s',  Lfilename);
-        meshL = ft_read_headshape(Lfilename, 'unit', 'mm'); % volume and surface should be in consistent units, gifti is defined in mm, wb_view also expects mm
-        warning('reading right hemisphere geometry from %s',  Rfilename);
-        meshR = ft_read_headshape(Rfilename, 'unit', 'mm'); % volume and surface should be in consistent units, gifti is defined in mm, wb_view also expects mm
-        
-        indexL = find(cii.BrainStructure==find(strcmp(cii.BrainStructurelabel, 'CORTEX_LEFT')));
-        indexR = find(cii.BrainStructure==find(strcmp(cii.BrainStructurelabel, 'CORTEX_RIGHT')));
-        
-        cii.pos(indexL,:) = meshL.pnt;
-        cii.pos(indexR,:) = meshR.pnt;
-        
-        cii.tri = [
-          indexL(meshL.tri)
-          indexR(meshR.tri)
-          ];
-        
-        break % only read a single pair of meshes
-      end
-    end
-  elseif ismember({'CORTEX'}, cii.BrainStructurelabel)
-    for i=1:length(Bfilelist)
-      Bfilename = fullfile(p, Bfilelist{i});
-      
-      if exist(Bfilename, 'file')
-        warning('reading surface geometry from %s',  Bfilename);
-        meshB   = ft_read_headshape(Bfilename, 'unit', 'mm'); % volume and surface should be in consistent units, gifti is defined in mm, wb_view also expects mm
-        indexB  = find(cii.BrainStructure==find(strcmp(cii.BrainStructurelabel, 'CORTEX')));
-        cii.pos(indexB,:) = meshB.pnt;
-        cii.tri = indexB(meshB.tri);
-      end
-      
-      break % only read a single mesh
-    end
+if debug
+  try
+    % write the xml section to a temporary file
+    xmlfile = 'debug.xml';
+    tmp = fopen(xmlfile, 'w');
+    fwrite(tmp, xmldata);
+    fclose(tmp);
   end
 end
 
-if readdata
-  if isfield(cii, 'data')
-    % rename the data field
-    cii.(fixname(dataname)) = cii.data;
-    cii = rmfield(cii, 'data');
-  end
-  
-  % rename the datalabel field
-  if isfield(cii, 'datalabel')
-    cii.(fixname([dataname 'label'])) = cii.datalabel;
-    cii = rmfield(cii, 'datalabel');
-  end
-end
+% ensure that the external toolbox is present, this adds gifti/@xmltree
+ft_hastoolbox('gifti', 1);
 
-return % function
+% convert the character data to an xmltree object
+tree = xmltree(xmldata);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% the cifti XML section can be represented in various manners
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function Cifti = tree2struct(tree)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% convert the xmltree object to a generic structure
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 numericAttributeTypes = {'NumberOfMatrices', 'AppliesToMatrixDimension', 'IndexOffset', 'IndexCount', 'SurfaceNumberOfNodes', 'VolumeDimensions', 'SurfaceNumberOfVertices', 'SeriesStart', 'SeriesStep', 'NumberOfSeriesPoints', 'SeriesExponent', 'Vertices', 'MeterExponent'};
 
-Cifti                  = struct(); % the parent of the XML tree, it only contains version info
-Cifti.MatrixIndicesMap = struct(); % this is the interesting content
-
-Volume    = [];
-Parcel    = [];
-NamedMap  = [];
-Surface   = [];
+Cifti             = struct(); % the parent of the XML tree, it only contains version info
+MatrixIndicesMap  = [];
+Parcel            = [];
+NamedMap          = [];
+Surface           = [];
+Volume            = [];
+BrainModel        = struct([]); % this will be constructed both for dense and parcellated files
 
 attr = attributes(tree, 'get', 1);
 if ~iscell(attr), attr = {attr}; end % treat one attribute just like multiple attributes
@@ -331,10 +173,10 @@ for i=1:length(uid_MatrixIndicesMap)
     end
   end
   
-  uid_Volume = find(tree,'/CIFTI/Matrix/MatrixIndicesMap/Volume');
+  uid_Volume = find(map,'/MatrixIndicesMap/Volume');
   % the following will fail if there are multiple volumes
   if ~isempty(uid_Volume)
-    volume = branch(tree, uid_Volume);
+    volume = branch(map, uid_Volume);
     attr = attributes(volume, 'get', 1); % there should only be one attribute here
     if ~iscell(attr), attr = {attr}; end % treat one attribute just like multiple attributes
     for j=1:numel(attr)
@@ -361,7 +203,7 @@ for i=1:length(uid_MatrixIndicesMap)
     end
   end
   
-  uid_Surface = find(map, '/MatrixIndicesMap/Surface');
+  uid_Surface = find(map,'/MatrixIndicesMap/Surface');
   if ~isempty(uid_Surface)
     for j=1:length(uid_Surface)
       surface = branch(map, uid_Surface(j));
@@ -380,7 +222,7 @@ for i=1:length(uid_MatrixIndicesMap)
     end
   end
   
-  uid_Parcel = find(map, '/MatrixIndicesMap/Parcel');
+  uid_Parcel = find(map,'/MatrixIndicesMap/Parcel');
   if ~isempty(uid_Parcel)
     for j=1:length(uid_Parcel)
       parcel = branch(map, uid_Parcel(j));
@@ -398,10 +240,13 @@ for i=1:length(uid_MatrixIndicesMap)
       
       uid_VoxelIndicesIJK = find(parcel, '/Parcel/VoxelIndicesIJK');
       if ~isempty(uid_VoxelIndicesIJK)
-        Parcel(j).VoxelIndicesIJK = get(parcel, children(parcel, uid_VoxelIndicesIJK), 'value');
+        tmp = str2num(get(parcel, children(parcel, uid_VoxelIndicesIJK), 'value'));
+        Parcel(j).VoxelIndicesIJK = reshape(tmp, 3, [])' + 1; % transpose, one offset
       else
         Parcel(j).VoxelIndicesIJK = [];
       end
+      
+      Parcel(j).BrainStructure = {};
       
       uid_Vertices = find(parcel, '/Parcel/Vertices');
       for k=1:length(uid_Vertices)
@@ -416,8 +261,7 @@ for i=1:length(uid_MatrixIndicesMap)
           end
         end % for
         
-        Parcel(j).Vertices{k} = get(vertices, children(vertices, find(vertices, 'Vertices')), 'value');
-        
+        Parcel(j).Vertices{k} = str2num(get(vertices, children(vertices, find(vertices, 'Vertices')), 'value')) + 1; % one offset
       end
     end
   end
@@ -453,9 +297,9 @@ for i=1:length(uid_MatrixIndicesMap)
             end
           end
         end
-      end % for
-    end
-  end
+      end % for each LabelTable
+    end % for each NamedMap
+  end % if NamedMap
   
   uid_BrainModel = find(map, '/MatrixIndicesMap/BrainModel');
   for j=1:length(uid_BrainModel)
@@ -470,46 +314,71 @@ for i=1:length(uid_MatrixIndicesMap)
       else
         MatrixIndicesMap(i).BrainModel(j).(attr{k}.key) = attr{k}.val;
       end
-    end % for
+    end % for each attr
     
     switch MatrixIndicesMap(i).BrainModel(j).ModelType
       case 'CIFTI_MODEL_TYPE_SURFACE'
         switch Cifti.Version
           case {'1' '1.0'}
             uid = find(brainmodel, '/BrainModel/NodeIndices');
-            try, MatrixIndicesMap(i).BrainModel(j).NodeIndices = str2num(get(brainmodel, children(brainmodel, uid), 'value')); end
+            % use VertexIndices rather than NodeIndices
+            try, MatrixIndicesMap(i).BrainModel(j).VertexIndices = str2num(get(brainmodel, children(brainmodel, uid), 'value')) + 1; end
+            % also copy the global surface information to a higher level
+            Surface(end+1).BrainStructure          = MatrixIndicesMap(i).BrainModel(j).BrainStructure;
+            Surface(end  ).SurfaceNumberOfVertices = MatrixIndicesMap(i).BrainModel(j).SurfaceNumberOfNodes;
+            
           case {'2' '2.0'}
             uid = find(brainmodel, '/BrainModel/VertexIndices');
-            try, MatrixIndicesMap(i).BrainModel(j).VertexIndices = str2num(get(brainmodel, children(brainmodel, uid), 'value')); end
+            try, MatrixIndicesMap(i).BrainModel(j).VertexIndices = str2num(get(brainmodel, children(brainmodel, uid), 'value')) + 1; end
+            % also copy the global surface information to a higher level
+            Surface(end+1).BrainStructure          = MatrixIndicesMap(i).BrainModel(j).BrainStructure;
+            Surface(end  ).SurfaceNumberOfVertices = MatrixIndicesMap(i).BrainModel(j).SurfaceNumberOfVertices;
+            
           otherwise
-            error('unsupported version');
+            error('unsupported cifti version');
         end % switch version
         
+        
       case 'CIFTI_MODEL_TYPE_VOXELS'
-        MatrixIndicesMap(i).BrainModel(j).VoxelIndicesIJK = str2num(get(brainmodel, children(brainmodel, find(brainmodel, '/BrainModel/VoxelIndicesIJK')), 'value'));
+        tmp = str2num(get(brainmodel, children(brainmodel, find(brainmodel, '/BrainModel/VoxelIndicesIJK')), 'value'));
+        MatrixIndicesMap(i).BrainModel(j).VoxelIndicesIJK = reshape(tmp, 3, [])' + 1; % transpose, one offset
         
       otherwise
         error('unsupported ModelType');
-    end % switch
+    end % switch ModelType
   end % for each BrainModel
 end % for each MatrixIndicesMap
 
-% add the relevant sections to the main structure
-Cifti.MatrixIndicesMap = MatrixIndicesMap;
-Cifti.Volume           = Volume;
-Cifti.NamedMap         = NamedMap;
-Cifti.Surface          = Surface;
-Cifti.Parcel           = Parcel;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% read the voxel data section
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-return % function
+if readdata
+  fseek(fid, hdr.vox_offset, 'bof');
+  switch hdr.datatype
+    case   2, [voxdata, nitemsread] = fread(fid, inf, 'uchar');   assert(nitemsread==prod(hdr.dim(2:end)), 'could not read all data');
+    case   4, [voxdata, nitemsread] = fread(fid, inf, 'short');   assert(nitemsread==prod(hdr.dim(2:end)), 'could not read all data');
+    case   8, [voxdata, nitemsread] = fread(fid, inf, 'int');     assert(nitemsread==prod(hdr.dim(2:end)), 'could not read all data');
+    case  16, [voxdata, nitemsread] = fread(fid, inf, 'float');   assert(nitemsread==prod(hdr.dim(2:end)), 'could not read all data');
+    case  64, [voxdata, nitemsread] = fread(fid, inf, 'double');  assert(nitemsread==prod(hdr.dim(2:end)), 'could not read all data');
+    case 512, [voxdata, nitemsread] = fread(fid, inf, 'ushort');  assert(nitemsread==prod(hdr.dim(2:end)), 'could not read all data');
+    case 768, [voxdata, nitemsread] = fread(fid, inf, 'uint');    assert(nitemsread==prod(hdr.dim(2:end)), 'could not read all data');
+    otherwise, error('unsupported datatype');
+  end
+  % hdr.dim(1) is the number of dimensions
+  % hdr.dim(2) is reserved for the x-dimension
+  % hdr.dim(3) is reserved for the y-dimension
+  % hdr.dim(4) is reserved for the z-dimension
+  % hdr.dim(5) is reserved for the time-dimension
+  voxdata = reshape(voxdata, hdr.dim(6:end));
+end
+fclose(fid);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% the cifti XML section can be represented in various manners
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function source = struct2source(Cifti)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% convert to FieldTrip source representation, i.e. according to FT_DATATYPE_SOURCE and FT_DATATYPE_PARCELLATION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-dimord = cell(size(Cifti.MatrixIndicesMap));
-hasbrainmodel = false;
+dimord = cell(size(MatrixIndicesMap));
 
 % MatrixIndicesMap.IndicesMapToDataType can be
 % CIFTI_INDEX_TYPE_BRAIN_MODELS The dimension represents one or more brain models.
@@ -518,202 +387,329 @@ hasbrainmodel = false;
 % CIFTI_INDEX_TYPE_SCALARS      The dimension represents named scalar maps.
 % CIFTI_INDEX_TYPE_LABELS       The dimension represents named label maps.
 
-for i=1:length(Cifti.MatrixIndicesMap)
-  switch Cifti.MatrixIndicesMap(i).IndicesMapToDataType
+for i=1:length(MatrixIndicesMap)
+  switch MatrixIndicesMap(i).IndicesMapToDataType
     case 'CIFTI_INDEX_TYPE_BRAIN_MODELS'
-      dimord(Cifti.MatrixIndicesMap(i).AppliesToMatrixDimension+1) = {'pos'};
+      dimord(MatrixIndicesMap(i).AppliesToMatrixDimension+1) = {'pos'};
       
-      IndexOffset         = [Cifti.MatrixIndicesMap(i).BrainModel(:).IndexOffset];
-      IndexCount          = [Cifti.MatrixIndicesMap(i).BrainModel(:).IndexCount];
-      ModelType           = nan(length(Cifti.MatrixIndicesMap(i).BrainModel),1);
-      ModelTypelabel      = cell(length(Cifti.MatrixIndicesMap(i).BrainModel),1);
-      BrainStructure      = nan(length(Cifti.MatrixIndicesMap(i).BrainModel),1);
-      BrainStructurelabel = cell(length(Cifti.MatrixIndicesMap(i).BrainModel),1);
-      
-      tmp = cumsum([0 IndexCount]);
-      if ~isequal(IndexOffset, tmp(1:end-1))
-        % this happens in some of the example cifti1 files
-        % and might be a bug in the actual format of the data in those files
-        warning('inconsistency between IndexOffset and IndexCount');
+      % concatenate all into an array of brain models
+      for j=1:length(MatrixIndicesMap(i).BrainModel)
+        BrainModel = cat(1, BrainModel, MatrixIndicesMap(i).BrainModel(j));
       end
       
-      % count the number of greynodes in all combined brain models
-      geomCount = 0;
-      Cifti.pos = nan(0,3);
+    case 'CIFTI_INDEX_TYPE_PARCELS'
+      dimord(MatrixIndicesMap(i).AppliesToMatrixDimension+1) = {'chan'};
       
-      % concatenate all greynode positions
-      for j=1:length(Cifti.MatrixIndicesMap(i).BrainModel)
-        hasbrainmodel = true;
+      % construct an array of brain models
+      IndexOffset = 0;
+      BrainModelParcelName = {};
+      
+      for j=1:numel(Parcel)
         
-        switch Cifti.MatrixIndicesMap(i).BrainModel(j).ModelType
-          case 'CIFTI_MODEL_TYPE_SURFACE'
-            switch Cifti.Version
-              case {'1' '1.0'}
-                posbeg = geomCount + 1;
-                posend = geomCount + Cifti.MatrixIndicesMap(i).BrainModel(j).SurfaceNumberOfNodes;
-                geomCount = geomCount + Cifti.MatrixIndicesMap(i).BrainModel(j).SurfaceNumberOfNodes; % increment with the number of vertices in the (external) surface
-                Cifti.pos(posbeg:posend,:) = nan;
-                Cifti.dataIndex{j}         = IndexOffset(j) + (1:IndexCount(j));  % these are indices in the data
-                Cifti.greynodeIndex{j}     = posbeg:posend;                       % these are indices in the greynodes (vertices or subcortical voxels)
-                if isfield(Cifti.MatrixIndicesMap(i).BrainModel(j), 'NodeIndices')
-                  % data is only present on a subset of vertices
-                  Cifti.greynodeIndex{j} = Cifti.greynodeIndex{j}(Cifti.MatrixIndicesMap(i).BrainModel(j).NodeIndices+1);
-                end
-                
-              case {'2' '2.0'}
-                posbeg = geomCount + 1;
-                posend = geomCount + Cifti.MatrixIndicesMap(i).BrainModel(j).SurfaceNumberOfVertices;
-                geomCount = geomCount + Cifti.MatrixIndicesMap(i).BrainModel(j).SurfaceNumberOfVertices; % increment with the number of vertices in the (external) surface
-                Cifti.pos(posbeg:posend,:) = nan;
-                Cifti.dataIndex{j}         = IndexOffset(j) + (1:IndexCount(j));  % these are indices in the data
-                Cifti.greynodeIndex{j}     = posbeg:posend;                       % these are indices in the greynodes (vertices or subcortical voxels)
-                if isfield(Cifti.MatrixIndicesMap(i).BrainModel(j), 'VertexIndices')
-                  % data is only present on a subset of vertices
-                  Cifti.greynodeIndex{j} = Cifti.greynodeIndex{j}(Cifti.MatrixIndicesMap(i).BrainModel(j).VertexIndices+1);
-                end
-                
-              otherwise
-                error('unsupported version');
-            end % switch version
-            
-            
-          case 'CIFTI_MODEL_TYPE_VOXELS'
-            posbeg = geomCount + 1;
-            posend = geomCount + IndexCount(j);
-            geomCount = geomCount + IndexCount(j); % increment with the number of vertices in the subcortical structure
-            
-            Cifti.pos(posbeg:posend,:) = reshape(Cifti.MatrixIndicesMap(i).BrainModel(j).VoxelIndicesIJK, 3, IndexCount(j))';
-            Cifti.dataIndex{j}         = IndexOffset(j) + (1:IndexCount(j));  % these are indices in the data
-            Cifti.greynodeIndex{j}     = posbeg:posend;                       % these are indices in the greynodes (vertices or subcortical voxels)
-            
-          otherwise
-            error('unexpected ModelType');
-        end % switch
+        for k=1:numel(Parcel(j).BrainStructure)
+          sel = strcmp({Surface(:).BrainStructure}, Parcel(j).BrainStructure{k});
+          BrainModel(end+1).IndexOffset             = IndexOffset;
+          BrainModel(end  ).IndexCount              = numel(Parcel(j).Vertices{k});
+          BrainModel(end  ).BrainStructure          = Parcel(j).BrainStructure{k};
+          BrainModel(end  ).ModelType               = 'CIFTI_MODEL_TYPE_SURFACE';
+          BrainModel(end  ).SurfaceNumberOfVertices = Surface(sel).SurfaceNumberOfVertices;
+          BrainModel(end  ).VertexIndices           = Parcel(j).Vertices{k};
+          BrainModel(end  ).VoxelIndicesIJK         = [];
+          IndexOffset = IndexOffset + numel(Parcel(j).Vertices{k});
+          BrainModelParcelName{end+1} = Parcel(j).Name;
+        end % for each BrainStructure
         
-        % perform a sanity check on the data and greynode indices
-        assert(numel(Cifti.dataIndex{j})==numel(Cifti.greynodeIndex{j}));
-        
-        ModelType(posbeg:posend) = j; % indexed representation, see ft_datatype_parcellation
-        ModelTypelabel{j} = Cifti.MatrixIndicesMap(i).BrainModel(j).ModelType;
-        
-        BrainStructure(posbeg:posend) = j; % indexed representation, see ft_datatype_parcellation
-        BrainStructurelabel{j} = Cifti.MatrixIndicesMap(i).BrainModel(j).BrainStructure;
-        
-        if ~isempty(regexp(BrainStructurelabel{j}, '^CIFTI_STRUCTURE_', 'once'))
-          BrainStructurelabel{j} = BrainStructurelabel{j}(17:end); % strip the first part
+        if ~isempty(Parcel(j).VoxelIndicesIJK)
+          BrainModel(end+1).IndexOffset             = IndexOffset;
+          BrainModel(end  ).IndexCount              = size(Parcel(j).VoxelIndicesIJK,1);
+          BrainModel(end  ).BrainStructure          = 'CIFTI_STRUCTURE_INVALID';
+          BrainModel(end  ).ModelType               = 'CIFTI_MODEL_TYPE_VOXELS';
+          BrainModel(end  ).SurfaceNumberOfVertices = [];
+          BrainModel(end  ).VertexIndices           = [];
+          BrainModel(end  ).VoxelIndicesIJK         = Parcel(j).VoxelIndicesIJK;
+          IndexOffset = IndexOffset + size(Parcel(j).VoxelIndicesIJK,1);
+          BrainModelParcelName{end+1} = Parcel(j).Name;
         end
         
-      end % for all BrainModels
-      
-    case 'CIFTI_INDEX_TYPE_PARCELS'
-      dimord(Cifti.MatrixIndicesMap(i).AppliesToMatrixDimension+1) = {'chan'};
-      source.channel = {Cifti.Parcel(:).Name};
+      end % for each Parcel
       
     case 'CIFTI_INDEX_TYPE_SERIES'
       % this only applies to cifti version 2
-      switch Cifti.MatrixIndicesMap(i).SeriesUnit
+      switch MatrixIndicesMap(i).SeriesUnit
         case 'SECOND'
-          dimord(Cifti.MatrixIndicesMap(i).AppliesToMatrixDimension+1) = {'time'};
-          Cifti.time = (((1:Cifti.MatrixIndicesMap(i).NumberOfSeriesPoints)-1) * Cifti.MatrixIndicesMap(i).SeriesStep + Cifti.MatrixIndicesMap(i).SeriesStart) * 10^Cifti.MatrixIndicesMap(i).SeriesExponent;
+          dimord(MatrixIndicesMap(i).AppliesToMatrixDimension+1) = {'time'};
+          Cifti.time = (((1:MatrixIndicesMap(i).NumberOfSeriesPoints)-1) * MatrixIndicesMap(i).SeriesStep + MatrixIndicesMap(i).SeriesStart) * 10^MatrixIndicesMap(i).SeriesExponent;
         case 'HZ'
-          dimord(Cifti.MatrixIndicesMap(i).AppliesToMatrixDimension+1) = {'freq'};
-          Cifti.freq = (((1:Cifti.MatrixIndicesMap(i).NumberOfSeriesPoints)-1) * Cifti.MatrixIndicesMap(i).SeriesStep + Cifti.MatrixIndicesMap(i).SeriesStart) * 10^Cifti.MatrixIndicesMap(i).SeriesExponent;
+          dimord(MatrixIndicesMap(i).AppliesToMatrixDimension+1) = {'freq'};
+          Cifti.freq = (((1:MatrixIndicesMap(i).NumberOfSeriesPoints)-1) * MatrixIndicesMap(i).SeriesStep + MatrixIndicesMap(i).SeriesStart) * 10^MatrixIndicesMap(i).SeriesExponent;
           % case 'METER'
           % case 'RADIAN'
         otherwise
           error('unsupported SeriesUnit');
-      end % switch
+      end % switch SeriesUnit
       
     case 'CIFTI_INDEX_TYPE_SCALARS'
-      dimord{Cifti.MatrixIndicesMap(i).AppliesToMatrixDimension+1} = []; % scalars are not explicitly represented
-      for j=1:length(Cifti.NamedMap)
-        Cifti.mapname{j} = fixname(Cifti.NamedMap(j).MapName);
+      dimord{MatrixIndicesMap(i).AppliesToMatrixDimension+1} = []; % scalars are not explicitly represented
+      for j=1:length(NamedMap)
+        Cifti.mapname{j} = fixname(NamedMap(j).MapName);
       end
       
     case 'CIFTI_INDEX_TYPE_LABELS'
-      dimord{Cifti.MatrixIndicesMap(i).AppliesToMatrixDimension+1} = []; % labels are not explicitly represented
-      for j=1:length(Cifti.NamedMap)
-        key = Cifti.NamedMap(j).LabelTable.Key;
-        lab = Cifti.NamedMap(j).LabelTable.Label;
+      dimord{MatrixIndicesMap(i).AppliesToMatrixDimension+1} = []; % labels are not explicitly represented
+      for j=1:length(NamedMap)
+        key = NamedMap(j).LabelTable.Key;
+        lab = NamedMap(j).LabelTable.Label;
         sel = key>0;
         Cifti.labeltable{j}(key(sel)) = lab(sel);
-        Cifti.mapname{j} = fixname(Cifti.NamedMap(j).MapName);
+        Cifti.mapname{j} = fixname(NamedMap(j).MapName);
       end
       
     case 'CIFTI_INDEX_TYPE_TIME_POINTS'
       % this only applies to cifti-1, in cifti-2 this has been replaced by CIFTI_INDEX_TYPE_SERIES
-      dimord(Cifti.MatrixIndicesMap(i).AppliesToMatrixDimension+1) = {'time'};
-      switch Cifti.MatrixIndicesMap(i).TimeStepUnits
+      dimord(MatrixIndicesMap(i).AppliesToMatrixDimension+1) = {'time'};
+      switch MatrixIndicesMap(i).TimeStepUnits
         case 'NIFTI_UNITS_SEC'
-          Cifti.fsample = 1/str2double(Cifti.MatrixIndicesMap(i).TimeStep);
+          Cifti.fsample = 1/str2double(MatrixIndicesMap(i).TimeStep);
         otherwise
           % other units should be trivial to implement
-          error('unsupported TimeStepUnits');
-      end
+          error('unsupported TimeStepUnits "%s"', MatrixIndicesMap(i).TimeStepUnits);
+      end % switch TimeStepUnits
       
     otherwise
       error('unsupported IndicesMapToDataType');
-  end % switch
-end
+  end % switch IndicesMapToDataType
+end % for each MatrixIndicesMap
 
 dimord = dimord(~cellfun(@isempty, dimord));
 source.dimord = sprintf('%s_', dimord{:});
 source.dimord(end) = [];
 
-if hasbrainmodel
-  source.pos                  = Cifti.pos;
-  source.unit                 = 'mm';   % volume and surface should be in consistent units, gifti is defined in mm, wb_view also expects mm
-  source.BrainStructure       = BrainStructure;
-  source.BrainStructurelabel  = BrainStructurelabel;
-  if ~isempty(Cifti.Volume)
-    % this only applies to the voxel coordinates, not to surface vertices which are NaN
-    source.pos        = ft_warp_apply(Cifti.Volume.Transform, source.pos+1);  % one offset
-    source.pos        = source.pos .* (10^Cifti.Volume.MeterExponent);        % convert from native to meter
-    source.pos        = source.pos .* (10^3);                                 % convert from meter to milimeter
-    source.dim        = Cifti.Volume.VolumeDimensions;
-    source.transform  = Cifti.Volume.Transform;
+if ~isempty(BrainModel)
+  % the BrainModel is constructed both for dense and parcellated data
+  
+  dataIndex           = cell(size(BrainModel));
+  greynodeIndex       = cell(size(BrainModel));
+  brainstructureIndex = cell(size(BrainModel));
+  surfaceIndex        = nan(size(BrainModel)); % remains nan if it maps into the volume
+  
+  geombeg = [BrainModel.IndexOffset]+1;
+  geomend = geombeg + [BrainModel.IndexCount] - 1;
+  
+  for i=1:numel(BrainModel)
+    dataIndex{i} = geombeg(i):geomend(i);
+    switch BrainModel(i).ModelType
+      case 'CIFTI_MODEL_TYPE_SURFACE'
+        
+        switch Cifti.Version
+          case {'1' '1.0'}
+            try
+              greynodeIndex{i}     = BrainModel(i).VertexIndices;
+            catch
+              greynodeIndex{i}     = 1:BrainModel(i).SurfaceNumberOfNodes;
+            end
+            brainstructureIndex{i} = 1:BrainModel(i).SurfaceNumberOfNodes;
+          case {'2', '2.0'}
+            greynodeIndex{i}       = BrainModel(i).VertexIndices;
+            brainstructureIndex{i} = 1:BrainModel(i).SurfaceNumberOfVertices;
+          otherwise
+            error('unsupported cifti version');
+        end % switch
+        
+        sel = find(strcmp({Surface(:).BrainStructure}, BrainModel(i).BrainStructure));
+        assert(numel(sel)==1);
+        surfaceIndex(i) = sel;
+        
+      case 'CIFTI_MODEL_TYPE_VOXELS'
+        greynodeIndex{i}       = 1:BrainModel(i).IndexCount;
+        brainstructureIndex{i} = 1:BrainModel(i).IndexCount;
+        surfaceIndex(i) = nan; % does not map onto surface
+        
+      otherwise
+        error('unsupported ModelType "%s"', BrainModel(i).ModelType);
+    end
+  end % for each BrainModel
+  
+  pos      = zeros(0,3);
+  posIndex = zeros(0,1);
+  
+  % concatenate all vertices of all surfaces, including vertices that do not have data
+  for i=1:numel(Surface)
+    pos      = cat(1, pos, nan(Surface(i).SurfaceNumberOfVertices, 3));
+    posIndex = cat(1, posIndex, i*ones(Surface(i).SurfaceNumberOfVertices, 1));
   end
-  Ngreynodes = size(source.pos,1);
+  
+  % it would be possible to represent all voxels, but for efficiency we only include voxel positions with data
+  if ~isempty(Volume)
+    tmp       = ft_warp_apply(Volume.Transform, cat(1, BrainModel(isnan(surfaceIndex)).VoxelIndicesIJK));
+    pos       = cat(1, pos, tmp);
+    posIndex  = cat(1, posIndex, nan(size(tmp,1),1));
+  end
+  
+  % the surface vertices come before the voxels
+  if ~isempty(Surface)
+    voxeloffset = sum([Surface.SurfaceNumberOfVertices]);
+  else
+    voxeloffset  = 0;
+  end
+  
+  greynodeOffset = nan(size(BrainModel));
+  brainstructureOffset = nan(size(BrainModel));
+  for i=1:numel(BrainModel)
+    if strcmp(BrainModel(i).ModelType, 'CIFTI_MODEL_TYPE_SURFACE')
+      sel = find(strcmp({Surface(:).BrainStructure}, BrainModel(i).BrainStructure));
+      greynodeOffset(i) = find(posIndex==sel, 1, 'first') - 1;
+    else
+      sel = strcmp({BrainModel(1:i-1).ModelType}, 'CIFTI_MODEL_TYPE_VOXELS');
+      greynodeOffset(i) = voxeloffset + sum([BrainModel(sel).IndexCount]);
+    end
+    % shift the greynodes to become consistent with the voxel data
+    greynodeIndex{i} = greynodeIndex{i} + greynodeOffset(i);
+    % shift the brainstructures to become consistent with the brainordinate positions
+    brainstructureOffset(i) = numel([brainstructureIndex{1:i-1}]);
+    brainstructureIndex{i} = brainstructureIndex{i} + brainstructureOffset(i);
+  end
+  
+end % if BrainModel
+
+brainordinate.brainstructure      = zeros(size(pos,1),1);
+brainordinate.brainstructurelabel = {};
+
+for i=1:numel(BrainModel)
+  indx = find(strcmp(brainordinate.brainstructurelabel, BrainModel(i).BrainStructure));
+  if isempty(indx)
+    indx = length(brainordinate.brainstructurelabel)+1;
+  end
+  brainordinate.brainstructure(brainstructureIndex{i}) = indx;
+  brainordinate.brainstructurelabel{indx} = BrainModel(i).BrainStructure;
 end
 
-if isfield(Cifti, 'data')
-  if hasbrainmodel
-    % make the data consistent with the graynode positions
-    dataIndex     = [Cifti.dataIndex{:}];
-    greynodeIndex = [Cifti.greynodeIndex{:}];
+list1 = {
+  'CIFTI_STRUCTURE_CORTEX_LEFT'
+  'CIFTI_STRUCTURE_CORTEX_RIGHT'
+  'CIFTI_STRUCTURE_CEREBELLUM'
+  'CIFTI_STRUCTURE_ACCUMBENS_LEFT'
+  'CIFTI_STRUCTURE_ACCUMBENS_RIGHT'
+  'CIFTI_STRUCTURE_ALL_GREY_MATTER'
+  'CIFTI_STRUCTURE_ALL_WHITE_MATTER'
+  'CIFTI_STRUCTURE_AMYGDALA_LEFT'
+  'CIFTI_STRUCTURE_AMYGDALA_RIGHT'
+  'CIFTI_STRUCTURE_BRAIN_STEM'
+  'CIFTI_STRUCTURE_CAUDATE_LEFT'
+  'CIFTI_STRUCTURE_CAUDATE_RIGHT'
+  'CIFTI_STRUCTURE_CEREBELLAR_WHITE_MATTER_LEFT'
+  'CIFTI_STRUCTURE_CEREBELLAR_WHITE_MATTER_RIGHT'
+  'CIFTI_STRUCTURE_CEREBELLUM_LEFT'
+  'CIFTI_STRUCTURE_CEREBELLUM_RIGHT'
+  'CIFTI_STRUCTURE_CEREBRAL_WHITE_MATTER_LEFT'
+  'CIFTI_STRUCTURE_CEREBRAL_WHITE_MATTER_RIGHT'
+  'CIFTI_STRUCTURE_CORTEX'
+  'CIFTI_STRUCTURE_DIENCEPHALON_VENTRAL_LEFT'
+  'CIFTI_STRUCTURE_DIENCEPHALON_VENTRAL_RIGHT'
+  'CIFTI_STRUCTURE_HIPPOCAMPUS_LEFT'
+  'CIFTI_STRUCTURE_HIPPOCAMPUS_RIGHT'
+  'CIFTI_STRUCTURE_INVALID'
+  'CIFTI_STRUCTURE_OTHER'
+  'CIFTI_STRUCTURE_OTHER_GREY_MATTER'
+  'CIFTI_STRUCTURE_OTHER_WHITE_MATTER'
+  'CIFTI_STRUCTURE_PALLIDUM_LEFT'
+  'CIFTI_STRUCTURE_PALLIDUM_RIGHT'
+  'CIFTI_STRUCTURE_PUTAMEN_LEFT'
+  'CIFTI_STRUCTURE_PUTAMEN_RIGHT'
+  'CIFTI_STRUCTURE_THALAMUS_LEFT'
+  'CIFTI_STRUCTURE_THALAMUS_RIGHT'
+  };
+
+list2 = {
+  'CORTEX_LEFT'
+  'CORTEX_RIGHT'
+  'CEREBELLUM'
+  'ACCUMBENS_LEFT'
+  'ACCUMBENS_RIGHT'
+  'ALL_GREY_MATTER'
+  'ALL_WHITE_MATTER'
+  'AMYGDALA_LEFT'
+  'AMYGDALA_RIGHT'
+  'BRAIN_STEM'
+  'CAUDATE_LEFT'
+  'CAUDATE_RIGHT'
+  'CEREBELLAR_WHITE_MATTER_LEFT'
+  'CEREBELLAR_WHITE_MATTER_RIGHT'
+  'CEREBELLUM_LEFT'
+  'CEREBELLUM_RIGHT'
+  'CEREBRAL_WHITE_MATTER_LEFT'
+  'CEREBRAL_WHITE_MATTER_RIGHT'
+  'CORTEX'
+  'DIENCEPHALON_VENTRAL_LEFT'
+  'DIENCEPHALON_VENTRAL_RIGHT'
+  'HIPPOCAMPUS_LEFT'
+  'HIPPOCAMPUS_RIGHT'
+  'INVALID'
+  'OTHER'
+  'OTHER_GREY_MATTER'
+  'OTHER_WHITE_MATTER'
+  'PALLIDUM_LEFT'
+  'PALLIDUM_RIGHT'
+  'PUTAMEN_LEFT'
+  'PUTAMEN_RIGHT'
+  'THALAMUS_LEFT'
+  'THALAMUS_RIGHT'
+  };
+
+% replace the long name with the short name, i.e remove 'CIFTI_STRUCTURE_' where applicable
+[dum, indx1, indx2] = intersect(brainordinate.brainstructurelabel, list1);
+brainordinate.brainstructurelabel(indx1) = list2(indx2);
+
+if ~isempty(Parcel)
+  brainordinate.parcellation = zeros(size(pos,1),1);
+  brainordinate.parcellationlabel = {};
+  for i=1:numel(Parcel)
+    brainordinate.parcellationlabel{i} = Parcel(i).Name;
+    sel = find(strcmp(BrainModelParcelName, Parcel(i).Name));
+    for j=1:numel(sel)
+      brainordinate.parcellation(greynodeIndex{sel(j)}) = i; % FIXME should this be greynodeIndex or brainstructureIndex?
+    end
+  end
+end
+
+if readdata
+  if isempty(Parcel)
+    % the data is dense, make it consistent with the graynode positions
+    dataIndex     = [dataIndex{:}];
+    greynodeIndex = [greynodeIndex{:}];
+    Ngreynodes    = size(pos,1);
   else
     % the data is defined on parcels
-    Ngreynodes    = length(Cifti.Parcel);
+    Ngreynodes    = length(Parcel);
     dataIndex     = 1:Ngreynodes;
     greynodeIndex = 1:Ngreynodes;
   end
   
   switch source.dimord
     case {'pos' 'chan'}
-      [m, n] = size(Cifti.data);
+      [m, n] = size(voxdata);
       if m>n
         dat = nan(Ngreynodes,n);
-        dat(greynodeIndex(dataIndex),1) = Cifti.data;
+        dat(greynodeIndex(dataIndex),:) = voxdata;
       else
         dat = nan(Ngreynodes,m);
-        dat(greynodeIndex(dataIndex),:) = transpose(Cifti.data);
+        dat(greynodeIndex(dataIndex),:) = transpose(voxdata);
       end
     case {'pos_pos' 'chan_chan'}
       dat = nan(Ngreynodes,Ngreynodes);
-      dat(greynodeIndex(dataIndex),greynodeIndex(dataIndex)) = Cifti.data;
+      dat(greynodeIndex(dataIndex),greynodeIndex(dataIndex)) = voxdata;
     case {'pos_time' 'chan_time'}
-      Ntime = size(Cifti.data,2);
+      Ntime = size(voxdata,2);
       dat = nan(Ngreynodes,Ntime);
-      dat(greynodeIndex(dataIndex),:) = Cifti.data;
+      dat(greynodeIndex(dataIndex),:) = voxdata;
     case 'time_pos'
-      Ntime = size(Cifti.data,1);
+      Ntime = size(voxdata,1);
       dat = nan(Ngreynodes,Ntime);
-      dat(greynodeIndex(dataIndex),:) = transpose(Cifti.data);
+      dat(greynodeIndex(dataIndex),:) = transpose(voxdata);
       source.dimord = 'pos_time';
     case 'time_chan'
-      Ntime = size(Cifti.data,1);
+      Ntime = size(voxdata,1);
       dat = nan(Ngreynodes,Ntime);
-      dat(greynodeIndex(dataIndex),:) = transpose(Cifti.data);
+      dat(greynodeIndex(dataIndex),:) = transpose(voxdata);
       source.dimord = 'chan_time';
     otherwise
       error('unsupported dimord');
@@ -734,6 +730,188 @@ if isfield(Cifti, 'data')
   end
 end % if data
 
-source = copyfields(Cifti, source, {'hdr', 'time', 'freq'});
+source = copyfields(Cifti, source, {'time', 'freq'});
+source.hdr = hdr;
+source.unit = 'mm'; % per definition
 
-return % function
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% try to get the geometrical information from the corresponding gifti files
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if readsurface
+  
+  [p, f, x] = fileparts(filename);
+  t = tokenize(f, '.');
+  
+  subject  = 'unknown';
+  dataname = 'unknown';
+  geomodel = '';
+  
+  % the following assumes HCP/WorkBench/Caret file naming conventions
+  if length(t)==2
+    subject  = t{1};
+    dataname = t{2};
+  elseif length(t)==3
+    subject  = t{1};
+    dataname = t{2};
+    content  = t{3};
+  elseif length(t)==4
+    subject  = t{1};
+    dataname = t{2};
+    geomodel = t{3};
+    content  = t{4};
+  elseif length(t)==5
+    subject  = t{1};
+    dataname = [t{2} '.' t{3}];
+    geomodel = t{4};
+    content  = t{5};
+  else
+    error('cannot parse file name');
+  end
+  
+  % construct a list of possible file names for the surface geometry
+  Lfilelist = {
+    [subject '.L' '.midthickness'  '.' geomodel '.surf.gii']
+    [subject '.L' '.pial'          '.' geomodel '.surf.gii']
+    [subject '.L' '.white'         '.' geomodel '.surf.gii']
+    [subject '.L' '.inflated'      '.' geomodel '.surf.gii']
+    [subject '.L' '.very_inflated' '.' geomodel '.surf.gii']
+    [subject '.L' '.sphere'        '.' geomodel '.surf.gii']
+    [subject '.L' '.'              '.' geomodel '.surf.gii']
+    [subject '.L' '.midthickness'               '.surf.gii']
+    [subject '.L' '.pial'                       '.surf.gii']
+    [subject '.L' '.white'                      '.surf.gii']
+    [subject '.L' '.inflated'                   '.surf.gii']
+    [subject '.L' '.very_inflated'              '.surf.gii']
+    [subject '.L' '.sphere'                     '.surf.gii']
+    [subject '.L'                               '.surf.gii']
+    [subject '.CORTEX_LEFT'                     '.surf.gii']
+    };
+  
+  Rfilelist = {
+    [subject '.R' '.midthickness'  '.' geomodel  '.surf.gii']
+    [subject '.R' '.pial'          '.' geomodel  '.surf.gii']
+    [subject '.R' '.white'         '.' geomodel  '.surf.gii']
+    [subject '.R' '.inflated'      '.' geomodel  '.surf.gii']
+    [subject '.R' '.very_inflated' '.' geomodel  '.surf.gii']
+    [subject '.R' '.sphere'        '.' geomodel  '.surf.gii']
+    [subject '.R' '.'              '.' geomodel  '.surf.gii']
+    [subject '.R' '.midthickness'                '.surf.gii']
+    [subject '.R' '.pial'                        '.surf.gii']
+    [subject '.R' '.white'                       '.surf.gii']
+    [subject '.R' '.inflated'                    '.surf.gii']
+    [subject '.R' '.very_inflated'               '.surf.gii']
+    [subject '.R' '.sphere'                      '.surf.gii']
+    [subject '.R'                                '.surf.gii']
+    [subject '.CORTEX_RIGHT'                     '.surf.gii']
+    };
+  
+  Bfilelist = {
+    [subject '.midthickness'  '.' geomodel '.surf.gii']
+    [subject '.pial'          '.' geomodel '.surf.gii']
+    [subject '.white'         '.' geomodel '.surf.gii']
+    [subject '.inflated'      '.' geomodel '.surf.gii']
+    [subject '.very_inflated' '.' geomodel '.surf.gii']
+    [subject '.sphere'        '.' geomodel '.surf.gii']
+    [subject                  '.' geomodel '.surf.gii']
+    [subject '.midthickness'               '.surf.gii']
+    [subject '.pial'                       '.surf.gii']
+    [subject '.white'                      '.surf.gii']
+    [subject '.inflated'                   '.surf.gii']
+    [subject '.very_inflated'              '.surf.gii']
+    [subject '.sphere'                     '.surf.gii']
+    [subject                               '.surf.gii']
+    [subject '.CORTEX'                     '.surf.gii']
+    };
+  
+  % assume that the surface files are in the same directory as the cifti file
+  for i=1:numel(Lfilelist)
+    Lfilelist{i} = fullfile(p, Lfilelist{i});
+  end
+  for i=1:numel(Rfilelist)
+    Rfilelist{i} = fullfile(p, Rfilelist{i});
+  end
+  for i=1:numel(Bfilelist)
+    Bfilelist{i} = fullfile(p, Bfilelist{i});
+  end
+  
+  Lfilelist = cat(1, cortexleft, Lfilelist);
+  Rfilelist = cat(1, cortexright, Rfilelist);
+  
+  tri = zeros(0,3);
+  for i=1:length(Surface)
+    
+    switch Surface(i).BrainStructure
+      case 'CIFTI_STRUCTURE_CORTEX_LEFT'
+        for j=1:length(Lfilelist)
+          if exist(Lfilelist{j}, 'file')
+            fprintf('reading CORTEX_LEFT surface from %s\n', Lfilelist{j});
+            mesh = ft_read_headshape(Lfilelist{j}, 'unit', 'mm'); % volume and surface should be in consistent units, gifti is defined in mm, wb_view also expects mm
+            mesh.pnt(:,1) = mesh.pnt(:,1) - hemisphereoffset;
+            pos(posIndex==i,:) = mesh.pnt;
+            tri = cat(1, tri, mesh.tri + find(posIndex==i, 1, 'first') - 1);
+            break
+          end
+        end % for each Lfilelist
+        
+      case 'CIFTI_STRUCTURE_CORTEX_RIGHT'
+        for j=1:length(Rfilelist)
+          if exist(Rfilelist{j}, 'file')
+            fprintf('reading CORTEX_RIGHT surface from %s\n', Rfilelist{j});
+            mesh = ft_read_headshape(Rfilelist{j}, 'unit', 'mm'); % volume and surface should be in consistent units, gifti is defined in mm, wb_view also expects mm
+            mesh.pnt(:,1) = mesh.pnt(:,1) + hemisphereoffset;
+            pos(posIndex==i,:) = mesh.pnt;
+            tri = cat(1, tri, mesh.tri + find(posIndex==i, 1, 'first') - 1);
+            break
+          end
+        end % for each Rfilelist
+        
+      otherwise
+        for j=1:length(Bfilelist)
+          if exist(Bfilelist{j}, 'file')
+            fprintf('reading %s surface from %s\n', Surface(i).BrainStructure(17:end), Bfilelist{j});
+            mesh = ft_read_headshape(Bfilelist{j}, 'unit', 'mm'); % volume and surface should be in consistent units, gifti is defined in mm, wb_view also expects mm
+            pos(posIndex==i,:) = mesh.pnt;
+            tri = cat(1, tri, mesh.tri + find(posIndex==i, 1, 'first') - 1);
+            break
+          end
+        end % for each Bfilelist
+        
+    end % switch BrainStructure
+  end
+end % if readsurface
+
+% add the vertex and voxel positions
+brainordinate.pos = pos;
+if ~isempty(tri)
+  % add the surface triangulations
+  brainordinate.tri = tri;
+end
+
+if ~isempty(Volume)
+  brainordinate.dim        = Volume.VolumeDimensions;
+  brainordinate.transform  = Volume.Transform;
+end
+
+if isempty(Parcel)
+  % copy the geometrical description of the brainordinates into the main structure
+  source = copyfields(brainordinate, source, fieldnames(brainordinate));
+else
+  % it is a parcellated source structure, i.e. represented by one channel per parcel
+  % copy the geometrical description of the brainordinates into a sub-structure
+  source.brainordinate = brainordinate;
+  source.label = {Parcel(:).Name};
+end
+
+if readdata
+  if isfield(source, 'data')
+    % rename the data field
+    source.(fixname(dataname)) = source.data;
+    source = rmfield(source, 'data');
+  end
+  
+  % rename the datalabel field
+  if isfield(source, 'datalabel')
+    source.(fixname([dataname 'label'])) = source.datalabel;
+    source = rmfield(source, 'datalabel');
+  end
+end

@@ -7,6 +7,12 @@ function dimord = getdimord(data, field, varargin)
 %
 % See also GETDIMSIZ
 
+if strncmp(field, 'avg.', 4)
+  field = field(5:end); % strip the avg
+  data.(field) = data.avg.(field);
+  data = rmfield(data, 'avg');
+end
+
 if ~isfield(data, field)
   error('field "%s" not present in data', field);
 end
@@ -94,11 +100,24 @@ end
 
 if isfield(data, 'pos')
   npos = size(data.pos,1);
+elseif isfield(data, 'dim')
+  npos = prod(data.dim);
 end
 
 if isfield(data, 'csdlabel')
   % this is used in PCC beamformers
-  nori = length(data.csdlabel);
+  if length(data.csdlabel)==npos
+    % each position has its own labels
+    len = cellfun(@numel, data.csdlabel);
+    len = len(len~=0);
+    if all(len==len(1))
+      % they all have the same length
+      nori = len(1);
+    end
+  else
+    % one list of labels for all positions
+    nori = length(data.csdlabel);
+  end
 elseif isfinite(npos)
   % assume that there are three dipole orientations per source
   nori = 3;
@@ -195,6 +214,10 @@ switch field
       dimord = 'chan_chan_freq_time';
     elseif isequalwithoutnans(datsiz, [nchan nchan nfreq])
       dimord = 'chan_chan_freq';
+    elseif isequalwithoutnans(datsiz, [npos nori])
+      dimord = 'pos_ori';
+    elseif isequalwithoutnans(datsiz, [npos 1])
+      dimord = 'pos';
     end
     
   case {'cov' 'coh' 'csd' 'noisecov' 'noisecsd'}
@@ -244,12 +267,12 @@ switch field
       end
     end
     
-  case {'mom'}
-    if isequalwithoutnans(datsiz, [npos ntime])
+  case {'mom' 'ori' 'eta' 'csdlabel'}
+    if isequalwithoutnans(datsiz, [npos nori nrpt])
       if iscell(data.(field))
-        dimord = '{pos}_time';
+        dimord = '{pos}_ori_rpt';
       else
-        dimord = 'pos_time';
+        dimord = 'pos_ori_rpt';
       end
     elseif isequalwithoutnans(datsiz, [npos nori ntime])
       if iscell(data.(field))
@@ -257,11 +280,23 @@ switch field
       else
         dimord = 'pos_ori_time';
       end
-    elseif isequalwithoutnans(datsiz, [npos nori nrpt])
+    elseif isequalwithoutnans(datsiz, [npos ntime])
       if iscell(data.(field))
-        dimord = '{pos}_ori_rpt';
+        dimord = '{pos}_time';
       else
-        dimord = 'pos_ori_rpt';
+        dimord = 'pos_time';
+      end
+    elseif isequalwithoutnans(datsiz, [npos 3 1])
+      if iscell(data.(field))
+        dimord = '{pos}_ori';
+      else
+        dimord = 'pos_ori';
+      end
+    elseif isequalwithoutnans(datsiz, [npos 1 1])
+      if iscell(data.(field))
+        dimord = '{pos}';
+      else
+        dimord = 'pos';
       end
     end
     
@@ -311,6 +346,12 @@ switch field
   case {'freq'}
     if isvector(data.(field)) && isequal(datsiz, [1 nfreq])
       dimord = 'freq';
+    end
+    
+  otherwise
+    if isfield(data, 'dim') && isequal(datsiz, data.dim)
+      % FIXME is this the desired dimord for volume data? A dimord of vox or voxel is not recommended according to fixdimord.
+      dimord = 'pos';
     end
     
 end % switch field
@@ -365,6 +406,9 @@ if ~exist('dimord', 'var')
     if isempty(dimtok{end}) && datsiz(end)==1
       % remove the unknown trailing singleton dimension
       dimtok = dimtok(1:end-1);
+    elseif isequal(dimtok{1}, 'pos') && isempty(dimtok{2}) && datsiz(2)==1
+      % remove the unknown leading singleton dimension
+      dimtok(2) = [];
     end
     
     if all(~cellfun(@isempty, dimtok))

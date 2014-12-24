@@ -37,8 +37,8 @@ function [output] = ft_volumelookup(cfg, volume)
 % The configuration options for labels from a mask:
 %   cfg.inputcoord    = 'mni' or 'tal', coordinate system of the mri/source/stat
 %   cfg.atlas         = string, filename of atlas to use, either the AFNI
-%                        brik file that is available from http://afni.nimh.nih.gov/afni/doc/misc/ttatlas_tlrc,
-%                        or the WFU atlasses available from http://fmri.wfubmc.edu. see FT_PREPARE_ATLAS
+%                        brik file that is available from http://afni.nimh.nih.gov/afni/doc/misc/afni_ttatlas/,
+%                        or the WFU atlasses available from http://fmri.wfubmc.edu. see FT_READ_ATLAS
 %   cfg.maskparameter = string, field in volume to be lookedup, data in field should be logical
 %   cfg.maxqueryrange = number, should be 1, 3, 5 (default = 1)
 %

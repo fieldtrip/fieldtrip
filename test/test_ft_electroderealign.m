@@ -12,15 +12,10 @@ interactive = false;  % use this for running it without user interaction
 % interactive = true;  % use this for running it with user interaction 
 
 %% load mri, segmentation and electrode definition
-if ispc
-    datadir = 'H:';
-else
-    datadir = '/home';
-end
-mri=ft_read_mri(strcat(datadir,'/common/matlab/fieldtrip/data/Subject01.mri'));
-load(strcat(datadir,'/common/matlab/fieldtrip/data/ftp/tutorial/headmodel_eeg/segmentedmri'));
-elec = ft_read_sens(strcat(datadir,'/common/matlab/fieldtrip/template/electrode/standard_1020.elc'));
-temp = ft_read_sens(strcat(datadir,'/common/matlab/fieldtrip/template/electrode/standard_1005.elc'));
+mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.mri'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/headmodel_eeg/segmentedmri'));
+elec = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/template/electrode/standard_1020.elc'));
+temp = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/template/electrode/standard_1005.elc'));
 
 % create a bem and a fem mesh
 

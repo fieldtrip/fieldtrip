@@ -10,6 +10,15 @@ function file = dccnpath(filename)
 % drive is mapped to H:. The function basically converts between H:\ and
 % /home and uses the appropriate file seperator depending on the operating
 % system.
+%
+% An in-place implementation of this function can be realized with an
+% anonymous function like this:
+%
+% if ispc
+%   dccnpath = @(filename) strrep(strrep(filename,'/home','H:'),'/','\');
+% else
+%   dccnpath = @(filename) strrep(strrep(filename,'H:','/home'),'\','/');
+% end
 
 % Copyright (C) 2012, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %
@@ -39,4 +48,3 @@ else
   file = strrep(file,'\','/');
 end
 
-end

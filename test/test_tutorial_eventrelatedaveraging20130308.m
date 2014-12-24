@@ -50,6 +50,8 @@ function test_tutorial_eventrelatedaveraging20130308
 % 
 % The ft_definetrial and ft_preprocessing functions require the original MEG dataset, which is available from ftp://ftp.fcdonders.nl/pub/fieldtrip/tutorial/Subject01.zip.
 
+cd(dccnpath('/home/common/matlab/fieldtrip/data'));
+
 % find the interesting segments of data
 cfg = [];                                           % empty configuration
 cfg.dataset                 = 'Subject01.ds';       % name of CTF dataset  
@@ -327,7 +329,7 @@ ft_topoplotER(cfg,avgFICplanarComb);
 % 
 % 
 % Logged in as: Robert Oostenveld (robert)
-% tutorial/eventrelatedaveraging.txt · Last modified: 2012/12/23 11:56 by 131.174.44.100
+% tutorial/eventrelatedaveraging.txt ? Last modified: 2012/12/23 11:56 by 131.174.44.100
 
 
 

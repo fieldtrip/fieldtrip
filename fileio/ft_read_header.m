@@ -11,6 +11,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   'headerformat'   string
 %   'fallback'       can be empty or 'biosig' (default = [])
 %   'coordsys'       string, 'head' or 'dewar' (default = 'head')
+%   'checkmaxfilter' boolean, whether to check that maxfilter has been correctly applied (default = true)
 %
 % This returns a header structure with the following elements
 %   hdr.Fs                  sampling frequency
@@ -112,9 +113,10 @@ if  ~realtime && ~exist(filename, 'file')
 end
 
 % get the options
-headerformat = ft_getopt(varargin, 'headerformat');
-retry        = ft_getopt(varargin, 'retry', false);     % the default is not to retry reading the header
-coordsys     = ft_getopt(varargin, 'coordsys', 'head'); % this is used for ctf and neuromag_mne, it can be head or dewar
+headerformat   = ft_getopt(varargin, 'headerformat');
+retry          = ft_getopt(varargin, 'retry', false);     % the default is not to retry reading the header
+coordsys       = ft_getopt(varargin, 'coordsys', 'head'); % this is used for ctf and neuromag_mne, it can be head or dewar
+checkmaxfilter = ft_getopt(varargin, 'checkmaxfilter', true);
 
 if isempty(headerformat)
   % only do the autodetection if the format was not specified
@@ -1413,13 +1415,16 @@ switch headerformat
           allow_maxshield = true;
           raw = fiff_setup_read_raw(filename,allow_maxshield);
         catch
-          %unknown problem, or MNE version 2.6.x or less:
+          % unknown problem, or MNE version 2.6.x or less:
           rethrow(me);
         end
         % no error message from fiff_setup_read_raw? Then maxshield
         % was applied, but maxfilter wasn't, so return this error:
-        error(['Maxshield data has not had maxfilter applied to it - cannot be read by fieldtrip. ' ...
-          'Apply Neuromag maxfilter before converting to fieldtrip format.']);
+        if istrue(checkmaxfilter)
+          error('Maxshield data should be corrected using Maxfilter prior to importing in FieldTrip.');
+        else
+          warning_once('Maxshield data should be corrected using Maxfilter prior to importing in FieldTrip.');
+        end
       end
       hdr.nSamples    = raw.last_samp - raw.first_samp + 1; % number of samples per trial
       hdr.nSamplesPre = 0;
@@ -1552,9 +1557,18 @@ switch headerformat
     [p,f,e]    = fileparts(filename);
     listing    = dir(p);
     filenames  = {listing.name}';
-    lfpfile    = filenames{~cellfun('isempty',strfind(filenames,'.eeg'))};
-    rawfile    = filenames{~cellfun('isempty',strfind(filenames,'.dat'))};
     
+    lfpfile_idx = find(~cellfun('isempty',strfind(filenames,'.eeg')));
+    rawfile_idx = find(~cellfun('isempty',strfind(filenames,'.dat')));
+    
+    if ~isempty(lfpfile_idx)
+      % FIXME this assumes only 1 such file, or at least it only takes the
+      % first one.
+      lfpfile = filenames{lfpfile_idx(1)};
+    end
+    if ~isempty(rawfile_idx)
+      rawfile = filenames{rawfile_idx(1)};
+    end
     params     = LoadParameters(filename);
     
     hdr         = [];
@@ -1901,9 +1915,21 @@ if checkUniqueLabels
   if length(hdr.label)~=length(unique(hdr.label))
     % all channels must have unique names
     warning('all channels must have unique labels, creating unique labels');
+    megflag = ft_chantype(hdr, 'meg');
+    eegflag = ft_chantype(hdr, 'eeg');
     for i=1:hdr.nChans
       sel = find(strcmp(hdr.label{i}, hdr.label));
       if length(sel)>1
+        % there is no need to rename the first instance
+        % can be particularly disruptive when part of standard MEG
+        % or EEG channel set, so should be avoided
+        if any(megflag(sel))
+          sel = setdiff(sel, sel(find(megflag(sel), 1)));
+        elseif any(eegflag(sel))
+          sel = setdiff(sel, sel(find(eegflag(sel), 1)));  
+        else
+          sel = sel(2:end);
+        end
         for j=1:length(sel)
           hdr.label{sel(j)} = sprintf('%s-%d', hdr.label{sel(j)}, j);
         end

@@ -161,12 +161,33 @@ if iscell(filename)
         end
       end
       
-      
-      shape.hemisphere = []; % keeps track of the order of files in concatenation
+      shape.brainstructure = []; % keeps track of the order of files in concatenation
       for h = 1:length(bnd)
-        shape.hemisphere      = [shape.hemisphere; h*ones(length(bnd(h).pnt), 1)];
+        shape.brainstructure  = [shape.brainstructure; h*ones(length(bnd(h).pnt), 1)];
         [p,f,e]               = fileparts(filename{h});
-        shape.hemispherelabel{h,1} = f;
+        
+        % do an educated guess, otherwise default to the filename
+        iscortexright = ~isempty(strfind(f,'rh'));
+        iscortexright = iscortexright || ~isempty(strfind(f,'.R.'));
+        iscortexright = iscortexright || ~isempty(strfind(f,'Right'));
+        iscortexright = iscortexright || ~isempty(strfind(f,'RIGHT'));
+        
+        iscortexleft = ~isempty(strfind(f,'lh'));
+        iscortexleft = iscortexleft || ~isempty(strfind(f,'.L.'));
+        iscortexleft = iscortexleft || ~isempty(strfind(f,'Left'));
+        iscortexleft = iscortexleft || ~isempty(strfind(f,'LEFT'));
+        
+        if iscortexright && iscortexleft
+          % something strange is going on, default to the filename and let the user take care of this
+          shape.brainstructurelabel{h,1} = f;
+        elseif iscortexleft
+          shape.brainstructurelabel{h,1} = 'CORTEX_LEFT';
+        elseif iscortexright
+          shape.brainstructurelabel{h,1} = 'CORTEX_RIGHT';
+        else
+          % nothing to be guessed
+          shape.brainstructurelabel{h,1} = f;
+        end
       end
       
     end

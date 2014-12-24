@@ -94,8 +94,8 @@ for i=1:length(varargin)
       varargin{i}.dimord = 'chan_time';
     end
   else
-    if isfield(varargin{i},'trial') ~isfield(varargin{i},'avg');
-      error(['dataset ' num2str(i) ' does not contain avg field: see ft_timelockanalysis']);
+    if isfield(varargin{i},'trial') && ~isfield(varargin{i},'avg');
+      error(['dataset ' num2str(i) ' does not contain avg field: seeft_timelockanalysis']);
     end
   end
 end
@@ -132,55 +132,14 @@ else
   tend = cfg.latency(2);
 end
 
-% select the data in all inputs
-% determine which channels, and latencies are available for all inputs
-for i=1:Nsubj
-  cfg.channel = ft_channelselection(cfg.channel, varargin{i}.label);
-  if hastime
-    tbeg = max(tbeg, varargin{i}.time(1  ));
-    tend = min(tend, varargin{i}.time(end));
-  end
-end
-cfg.latency = [tbeg tend];
-
-% pick the selections
-for i=1:Nsubj
-  if ~isfield(varargin{i}, cfg.parameter)
-    error('the field %s is not present in data structure %d', cfg.parameter, i);
-  end
-  [dum, chansel] = match_str(cfg.channel, varargin{i}.label);
-  varargin{i}.label = varargin{i}.label(chansel);
-  
-  if hastime
-    timesel = nearest(varargin{i}.time, cfg.latency(1)):nearest(varargin{i}.time, cfg.latency(2));
-    varargin{i}.time = varargin{i}.time(timesel);
-  end
-  
-  if hasdof
-    timesel = nearest(varargin{i}.time, cfg.latency(1)):nearest(varargin{i}.time, cfg.latency(2));
-    varargin{i}.dof = varargin{i}.dof(chansel,timesel);
-  end
-  
-  % select the overlapping samples in the data matrix
-  switch dimord
-    case 'chan'
-      varargin{i}.(cfg.parameter) = varargin{i}.(cfg.parameter)(chansel);
-    case 'chan_time'
-      varargin{i}.(cfg.parameter) = varargin{i}.(cfg.parameter)(chansel,timesel);
-    case {'rpt_chan' 'subj_chan'}
-      varargin{i}.(cfg.parameter) = varargin{i}.(cfg.parameter)(chansel);
-      varargin{i}.dimord = 'chan';
-    case {'rpt_chan_time' 'subj_chan_time'}
-      varargin{i}.(cfg.parameter) = varargin{i}.(cfg.parameter)(:,chansel,timesel);
-      varargin{i}.dimord = 'rpt_chan_time';
-    otherwise
-      error('unsupported dimord');
-  end
-end % for i = subject
+% ensure that the data in all inputs has the same channels, time-axis, etc.
+tmpcfg = keepfields(cfg, {'parameter', 'channel', 'latency'});
+[varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
+% restore the provenance information
+[cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
 
 % determine the size of the data to be averaged
-% dim = cell(1,numel(cfg.parameter));
-dim{1} = size(varargin{1}.(cfg.parameter));
+datsiz = size(varargin{1}.(cfg.parameter));
 
 % give some feedback on the screen
 if strcmp(cfg.keepindividual, 'no')
@@ -194,22 +153,22 @@ else
 end
 
 % allocate memory to hold the data and collect it
-avgmat = zeros([Nsubj, dim{1}]);
+avgmat = zeros([Nsubj, datsiz]);
 
 if strcmp(cfg.keepindividual, 'yes')
   for s=1:Nsubj
     avgmat(s, :, :) = varargin{s}.(cfg.parameter);
   end
-  grandavg.individual = avgmat;         % Nsubj x Nchan x Nsamples
-
+  grandavg.individual = avgmat; % Nsubj x Nchan x Nsamples
+  
 else % ~strcmp(cfg.keepindividual, 'yes')
-  avgdof  = ones([Nsubj, dim{1}]);
-  avgvar  = zeros([Nsubj, dim{1}]);
+  avgdof  = ones([Nsubj, datsiz]);
+  avgvar  = zeros([Nsubj, datsiz]);
   for s=1:Nsubj
     switch cfg.method
       case 'across'
         avgmat(s, :, :, :) = varargin{s}.(cfg.parameter);
-        avgvar(s, :, :, :) = varargin{s}.(cfg.parameter) .^2;     % preparing the computation of the variance
+        avgvar(s, :, :, :) = varargin{s}.(cfg.parameter) .^2; % preparing the computation of the variance
       case 'within'
         avgmat(s, :, :, :) = varargin{s}.(cfg.parameter).*varargin{s}.dof;
         avgdof(s, :, :, :) = varargin{s}.dof;
@@ -217,20 +176,20 @@ else % ~strcmp(cfg.keepindividual, 'yes')
           avgvar(s, :, :, :) = (varargin{s}.(cfg.parameter).^2).*varargin{s}.dof;
           % avgvar(s, :, :, :) = varargin{s}.var .* (varargin{s}.dof-1); % reversing the last div in ft_timelockanalysis
         else
-          avgvar(s, :, :, :) = zeros([dim{1}]); % shall we remove the .var field from the structure under these conditions ?
+          avgvar(s, :, :, :) = zeros([datsiz]); % shall we remove the .var field from the structure under these conditions ?
         end
       otherwise
         error('unsupported value for cfg.method')
     end % switch
   end
   % average across subject dimension
-  ResultDOF      = reshape(sum(avgdof, 1), dim{1});
-  grandavg.avg   = reshape(sum(avgmat, 1), dim{1})./ResultDOF; % computes both means (plain and weighted)
+  ResultDOF      = reshape(sum(avgdof, 1), datsiz);
+  grandavg.avg   = reshape(sum(avgmat, 1), datsiz)./ResultDOF; % computes both means (plain and weighted)
   % Nchan x Nsamples, skips the singleton
   % if strcmp(cfg.method, 'across')
-  ResultVar      = reshape(sum(avgvar,1), dim{1})-reshape(sum(avgmat,1), dim{1}).^2./ResultDOF;
+  ResultVar      = reshape(sum(avgvar,1), datsiz)-reshape(sum(avgmat,1), datsiz).^2./ResultDOF;
   % else  % cfg.method = 'within'
-    % ResultVar      = squeeze(sum(avgvar,1)); % subtraction of means was done for each block already
+  % ResultVar      = squeeze(sum(avgvar,1)); % subtraction of means was done for each block already
   % end
   switch cfg.normalizevar
     case 'N-1'
@@ -253,28 +212,34 @@ if isfield(varargin{1}, 'labelcmb')
   grandavg.labelcmb = varargin{1}.labelcmb;
 end
 
-if strcmp(cfg.method, 'across')
-  if isfield(varargin{1}, 'grad') % positions are different between subjects
-    warning('discarding gradiometer information because it cannot be averaged');
-  end
-  if isfield(varargin{1}, 'elec') % positions are different between subjects
-    warning('discarding electrode information because it cannot be averaged');
-  end
-else  % cfg.method = 'within'
-  % misses the test for all equal grad fields (should be the case for
-  % averaging across blocks, if all block data is corrected for head
-  % position changes
-  if isfield(varargin{1}, 'grad')
-    grandavg.grad = varargin{1}.grad;
-  end
-  if isfield(varargin{1}, 'elec')
-    grandavg.elec = varargin{1}.elec;
-  end
+switch cfg.method
   
+  case 'across'
+    if isfield(varargin{1}, 'grad') % positions are different between subjects
+      warning('discarding gradiometer information because it cannot be averaged');
+    end
+    if isfield(varargin{1}, 'elec') % positions are different between subjects
+      warning('discarding electrode information because it cannot be averaged');
+    end
+    
+  case 'within'
+    % misses the test for all equal grad fields (should be the case for
+    % averaging across blocks, if all block data is corrected for head
+    % position changes
+    if isfield(varargin{1}, 'grad')
+      grandavg.grad = varargin{1}.grad;
+    end
+    if isfield(varargin{1}, 'elec')
+      grandavg.elec = varargin{1}.elec;
+    end
+    
+  otherwise
+    error('unsupported method "%s"', cfg.method);
 end
+
 if strcmp(cfg.keepindividual, 'yes')
   grandavg.dimord = ['subj_',varargin{1}.dimord];
-elseif strcmp(cfg.keepindividual, 'no')
+else
   grandavg.dimord = varargin{1}.dimord;
 end
 

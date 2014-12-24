@@ -1,15 +1,16 @@
 function ft_sourcewrite(cfg, source)
 
-% FT_SOURCEWRITE exports source analysis results to gifti or nifti format
-% file, depending on whether the source locations are described by on a
-% cortically constrained sheet (gifti) or by a regular 3D lattice (nifti).
+% FT_SOURCEWRITE exports source-reconstructed results to gifti or nifti format file.
+% The appropriate output file depends on whether the source locations are described by
+% on a cortically constrained sheet (gifti) or by a regular 3D lattice (nifti).
 %
 % Use as
 %  ft_sourcewrite(cfg, source)
 % where source is a source structure obtained from FT_SOURCEANALYSIS and
 % cfg is a structure that should contain
 %
-%  cfg.filename  = string, name of the file
+%  cfg.filename  = string, filename without the extension
+%  cfg.filetype  = string, can be 'nifti', 'gifti' or 'cifti' (default is automatic)
 %  cfg.parameter = string, functional parameter to be written to file
 %  cfg.precision = string, can be 'single', 'double', etc.
 %
@@ -22,7 +23,7 @@ function ft_sourcewrite(cfg, source)
 % See also FT_SOURCEANALYSIS FT_SOURCEDESCRIPTIVES FT_VOLUMEWRITE
 
 % Copyright (C) 2011, Jan-Mathijs Schoffelen
-% Copyright (C) 2011-2013, Jan-Mathijs Schoffelen, Robert Oostenveld
+% Copyright (C) 2011-2014, Jan-Mathijs Schoffelen, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -56,18 +57,52 @@ if abort
   return
 end
 
-% check if the input data is valid for this function
-source = ft_checkdata(source, 'datatype', 'source', 'hasunit', true, 'feedback', 'yes');
-
 % ensure that the required options are present
 cfg = ft_checkconfig(cfg, 'required', {'parameter', 'filename'});
 
 % get the options
-cfg.parameter    = ft_getopt(cfg, 'parameter');
-cfg.filename     = ft_getopt(cfg, 'filename');
-cfg.filetype     = ft_getopt(cfg, 'filetype');      % the default is determined further down
-cfg.parcellation = ft_getopt(cfg, 'parcellation');  % is used for cifti
-cfg.precision    = ft_getopt(cfg, 'precision');     % is used for cifti
+cfg.parameter      = ft_getopt(cfg, 'parameter');
+cfg.filename       = ft_getopt(cfg, 'filename');
+cfg.filetype       = ft_getopt(cfg, 'filetype');        % the default is determined further down
+cfg.brainstructure = ft_getopt(cfg, 'brainstructure');  % is used for cifti
+cfg.parcellation   = ft_getopt(cfg, 'parcellation');    % is used for cifti
+cfg.precision      = ft_getopt(cfg, 'precision');       % is used for cifti
+
+
+% check if the input data is valid for this function
+if strcmp(cfg.filetype, 'cifti')
+  
+  % keep the transformation matrix
+  if isfield(source, 'transform')
+    transform = source.transform;
+  elseif isfield(source, 'brainordinate') && isfield(source.brainordinate, 'transform')
+    transform = source.brainordinate.transform;
+  else
+    transform = [];
+  end
+  
+  if isfield(source, 'brainordinate')
+    % it is a parcellated source representation, i.e. the main structure one channel for each parcel
+    brainordinate = source.brainordinate;
+    source = rmfield(source, 'brainordinate');
+    
+    % split them and check individually
+    source        = ft_checkdata(source, 'datatype', {'timelock', 'freq', 'chan'}, 'feedback', 'yes');
+    brainordinate = ft_checkdata(brainordinate, 'datatype', 'parcellation', 'parcellationstyle', 'indexed', 'hasunit', 'yes');
+    
+    % merge them again
+    source = copyfields(brainordinate, source, setdiff(fieldnames(brainordinate), {'cfg'}));
+  else
+    source = ft_checkdata(source, 'datatype', 'source', 'hasunit', true, 'feedback', 'yes');
+  end
+  
+  % keep the transformation matrix
+  if ~isempty(transform)
+    source.transform = transform;
+  end
+  
+end % if cifti
+
 
 if isempty(cfg.filetype)
   if isfield(source, 'dim')
@@ -107,14 +142,10 @@ switch (cfg.filetype)
     ft_write_headshape(cfg.filename, source, 'data', getsubfield(source, cfg.parameter), 'format', 'gifti');
     
   case 'cifti'
-    [p, f, x] = fileparts(cfg.filename);
-    if isequal(x, '.nii')
-      cfg.filename = fullfile(p, f); % strip the extension
-    end
-    cfg.filename = [cfg.filename '.' cfg.parameter '.nii'];
+    % brainstructure should represent the global anatomical structure, such as CortexLeft, Thalamus, etc.
+    % parcellation should represent the detailled parcellation, such as BA1, BA2, BA3, etc.
+    ft_write_cifti(cfg.filename, source, 'parameter', cfg.parameter, 'brainstructure', cfg.brainstructure, 'parcellation', cfg.parcellation, 'precision', cfg.precision);
     
-    ft_write_cifti(cfg.filename, source, 'parameter', cfg.parameter, 'parcellation', cfg.parcellation, 'precision', cfg.precision);
-
   otherwise
     error('unsupported output format (%s)', cfg.filetype);
 end % switch filetype

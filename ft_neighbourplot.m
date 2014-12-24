@@ -118,6 +118,7 @@ else
 end
 hf = figure;
 axis equal
+axis vis3d
 axis off
 hold on;
 hl = [];

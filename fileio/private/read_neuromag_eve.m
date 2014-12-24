@@ -1,20 +1,22 @@
-function [col1, col2, col3, col4] = read_babysquid_eve(filename)
+function [col1, col2, col3, col4] = read_neuromag_eve(filename)
 
-% READ_BABYSQUID_EVE imports events from the *.eve file that accompanies the *.fif
-% file.
+% READ_NEUROMAG_EVE imports events from the *.eve marker file that can accompany a
+% *.fif dataset.
 %
 % Use as
-%  [smp, tim, val3, val4] = read_babysquid_eve(filename)
+%  [smp, tim, val3, val4] = read_neuromag_eve(filename)
 %
-% Column one is the sample number. Column two is the tiem. Column three is is most
+% Column one is the sample number. Column two is the time. Column three is is most
 % cases always zero, but is useful when you need to mark a segment rather than a
 % time point. Column four value is the event type you assign, i.e. the value of
 % the trigger.
 %
-% The recording to disk may start later than the actual acquisition. This is
-% represented in hdr.orig.raw.first_samp
+% The recording of the data to disk may start later than the actual data
+% acquisition. This is represented in hdr.orig.raw.first_samp. This potential
+% offset needs to be taken into acocunt when combining it with the data from the
+% file on disk.
 
-% Copyright (C) 2013 Robert Oostenveld
+% Copyright (C) 2013, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.

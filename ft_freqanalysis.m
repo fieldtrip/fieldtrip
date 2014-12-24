@@ -86,8 +86,6 @@ function [freq] = ft_freqanalysis(cfg, data)
 %   cfg.tapsmofrq  = vector 1 x numfoi, the amount of spectral smoothing through
 %                    multi-tapering. Note that 4 Hz smoothing means
 %                    plus-minus 4 Hz, i.e. a 8 Hz smoothing box.
-%   cfg.foilim     = [begin end], frequency band of interest
-%       OR
 %   cfg.foi        = vector 1 x numfoi, frequencies of interest
 %   cfg.taper      = 'dpss', 'hanning' or many others, see WINDOW (default = 'dpss')
 %                     For cfg.output='powandcsd', you should specify the channel combinations
@@ -229,6 +227,15 @@ data = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
 
+% some proper error handling
+if isfield(data, 'trial') && numel(data.trial)==0
+  error('no trials were selected'); % this does not apply for MVAR data
+end
+
+if numel(data.label)==0
+  error('no channels were selected');
+end
+
 % switch over method and do some of the method specfic checks and defaulting
 switch cfg.method
   
@@ -367,6 +374,7 @@ end
 chanind    = match_str(data.label, cfg.channel);
 nchan      = size(chanind,1);
 if csdflg
+  assert(nchan>1, 'CSD output requires multiple channels');
   % determine the corresponding indices of all channel combinations
   [dummy,chancmbind(:,1)] = match_str(cfg.channelcmb(:,1), data.label);
   [dummy,chancmbind(:,2)] = match_str(cfg.channelcmb(:,2), data.label);
@@ -597,14 +605,15 @@ for itrial = 1:ntrials
       end
       
       % set ingredients for below
-      acttboi  = squeeze(~isnan(spectrum(1,1,foiind(ifoi),:)));
-      nacttboi = sum(acttboi);
       if ~hastime
         acttboi  = 1;
         nacttboi = 1;
-      elseif sum(acttboi)==0
-        %nacttboi = 1;
+      else
+        acttboi   = ~all(isnan(spectrum(1,:,foiind(ifoi),:)), 2); % check over all channels, some channels might contain a NaN
+        acttboi   = reshape(acttboi, [1 ntoi]);                   % size(spectrum) = [? nchan nfoi ntoi]
+        nacttboi = sum(acttboi);
       end
+      
       acttap = logical([ones(ntaper(ifoi),1);zeros(size(spectrum,1)-ntaper(ifoi),1)]);
       if powflg
         powdum = abs(spectrum(acttap,:,foiind(ifoi),acttboi)) .^2;
@@ -669,7 +678,8 @@ for itrial = 1:ntrials
       % do calcdof  dof = zeros(numper,numfoi,numtoi);
       if strcmp(cfg.calcdof,'yes')
         if hastime
-          acttimboiind = ~isnan(squeeze(spectrum(1,1,foiind(ifoi),:)));
+          acttimboiind = ~all(isnan(spectrum(1,:,foiind(ifoi),:)), 2); % check over all channels, some channels might contain a NaN
+          acttimboiind = reshape(acttimboiind, [1 ntoi]);
           dof(ifoi,acttimboiind) = ntaper(ifoi) + dof(ifoi,acttimboiind);
         else % hastime = false
           dof(ifoi) = ntaper(ifoi) + dof(ifoi);

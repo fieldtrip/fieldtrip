@@ -22,10 +22,11 @@ function [data] = fixdimord(data)
 %  'rpttap'
 %  'pos'
 %  'ori'
+%  'rgb'
 %  'comp'
 %  'voxel'
 
-% Copyright (C) 2009-2010, Robert Oostenveld, Jan-Mathijs Schoffelen
+% Copyright (C) 2009-2014, Robert Oostenveld, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -139,6 +140,9 @@ for i=1:length(dimtok)
       % don't change, it is ok
       
     case {'ori'}
+      % don't change, it is ok
+      
+    case {'rgb'}
       % don't change, it is ok
       
     case {'voxel' 'vox' 'repl' 'wcond'}

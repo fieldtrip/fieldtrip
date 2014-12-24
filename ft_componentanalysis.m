@@ -16,6 +16,7 @@ function [comp] = ft_componentanalysis(cfg, data)
 %   cfg.trials       = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.numcomponent = 'all' or number (default = 'all')
 %   cfg.demean       = 'no' or 'yes' (default = 'yes')
+%   cfg.updatesens   = 'no' or 'yes' (default = 'yes')
 %
 % The runica method supports the following method-specific options. The values that
 % these options can take can be found with HELP RUNICA.
@@ -187,6 +188,7 @@ cfg.numcomponent    = ft_getopt(cfg, 'numcomponent', 'all');
 cfg.normalisesphere = ft_getopt(cfg, 'normalisesphere', 'yes');
 cfg.cellmode        = ft_getopt(cfg, 'cellmode',     'no');
 cfg.doscale         = ft_getopt(cfg, 'doscale',      'yes');
+cfg.updatesens      = ft_getopt(cfg, 'updatesens',  'yes');
 
 % select channels, has to be done prior to handling of previous (un)mixing matrix
 cfg.channel = ft_channelselection(cfg.channel, data.label);
@@ -810,13 +812,26 @@ end
 comp.topolabel = data.label(:);
 
 % apply the montage also to the elec/grad, if present
-if isfield(data, 'grad') || (isfield(data, 'elec') && isfield(data.elec, 'tra'))
-  fprintf('applying the mixing matrix to the sensor description\n');
-  if isfield(data, 'grad')
-    sensfield = 'grad';
+if isfield(data, 'grad')
+  sensfield = 'grad';
+  if strcmp(cfg.updatesens, 'yes')
+    fprintf('applying the backprojection matrix to the gradiometer description\n');
   else
-    sensfield = 'elec';
+    fprintf('not applying the backprojection matrix to the gradiometer description\n');
   end
+elseif isfield(data, 'elec') && isfield(data.elec, 'tra')
+  sensfield = 'elec';
+  if strcmp(cfg.updatesens, 'yes')
+    fprintf('applying the backprojection matrix to the electrode description\n');
+  else
+    fprintf('not applying the backprojection matrix to the electrode description\n');
+  end
+else
+  fprintf('not applying the backprojection matrix to the sensor description\n');
+  sensfield = [];
+end
+
+if ~isempty(sensfield) && strcmp(cfg.updatesens, 'yes')
   % construct a montage and apply it to the sensor description
   montage          = [];
   montage.labelorg = data.label;
@@ -829,6 +844,9 @@ if isfield(data, 'grad') || (isfield(data, 'elec') && isfield(data.elec, 'tra'))
   if isfield(comp.(sensfield), 'type')
     comp.(sensfield) = rmfield(comp.(sensfield), 'type');
   end
+elseif ~isempty(sensfield) && strcmp(cfg.updatesens, 'no')
+  % simply copy it over
+  comp.(sensfield) = data.(sensfield);
 end
 
 % copy the sampleinfo into the output

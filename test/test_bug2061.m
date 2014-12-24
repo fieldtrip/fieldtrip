@@ -49,3 +49,21 @@ avg = ft_timelockanalysis(cfg, data);
 
 % the variance should be nan
 assert(all(isnan(avg.var(:))));
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% create some test data, now with multiple channels
+data = [];
+data.label = {'Cz', 'Fz'};
+data.time = {
+  [0 1 2 3 4 5]
+};
+data.trial =  {
+  [1 1 1 1 1 1; 2 2 2 2 2 2]
+};
+
+cfg = [];
+cfg.vartrllength = 2;
+avg = ft_timelockanalysis(cfg, data);
+
+% the variance should be nan
+assert(all(isnan(avg.var(:))));

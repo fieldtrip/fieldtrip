@@ -1,6 +1,6 @@
 function [varargout] = ft_plot_vector(varargin)
 
-% FT_PLOT_VECTOR
+% FT_PLOT_VECTOR visualizes a vector as a line, similar to PLOT.
 %
 % Use as
 %   ft_plot_vector(Y, ...)
@@ -463,7 +463,6 @@ if ~isempty(axis) && ~strcmp(axis, 'no')
     otherwise
       error('invalid specification of the "axis" option')
   end
-  
   
   if xaxis
     % x-axis should touch 0,0

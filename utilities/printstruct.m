@@ -52,8 +52,21 @@ if isa(val, 'config')
   val = struct(val);
 end
 
+% note here that because we don't know the final size of the string,
+% iteratively appending is actually faster than creating a cell array and
+% subsequently doing a cat(2, strings{:}) (also sprintf() is slow)
 str = '';
-if isstruct(val)
+
+% note further that in the string concatenations I use the numerical value
+% of a newline (\n), which is 10
+
+if numel(val) == 0
+  if iscell(val)
+    str = [name ' = {};' 10];
+  else
+    str = [name ' = [];' 10];
+  end
+elseif isstruct(val)
   if numel(val)>1
     str = cell(size(val));
     for i=1:numel(val)
@@ -65,32 +78,26 @@ if isstruct(val)
     % print it as a named structure
     fn = fieldnames(val);
     for i=1:length(fn)
-      if numel(val)==0
-        warning('not displaying empty structure')
-      else
-        fv = val.(fn{i});
-        switch class(fv)
-          case 'char'
-            % line = sprintf('%s = ''%s'';\n', fn{i}, fv);
-            % line = [name '.' line];
-            line = printstr([name '.' fn{i}], fv);
-            str  = [str line];
-          case {'single' 'double' 'int8' 'int16' 'int32' 'int64' 'uint8' 'uint16' 'uint32' 'uint64' 'logical'}
-            line = printmat([name '.' fn{i}], fv);
-            str  = [str line];
-          case 'cell'
-            line = printcell([name '.' fn{i}], fv);
-            str  = [str line];
-          case 'struct'
-            line = printstruct([name '.' fn{i}], fv);
-            str  = [str line];
-          case 'function_handle'
-            printstr([name '.' fn{i}], func2str(fv));
-            str  = [str line];
-          otherwise
-            error('unsupported');
-        end
+      fv = val.(fn{i});
+      switch class(fv)
+        case 'char'
+          line = printstr([name '.' fn{i}], fv);
+        case {'single' 'double' 'int8' 'int16' 'int32' 'int64' 'uint8' 'uint16' 'uint32' 'uint64' 'logical'}
+          if ismatrix(fv)
+            line = [name '.' fn{i} ' = ' printmat(fv) ';' 10];
+          else
+            line = '''FIXME: printing multidimensional arrays is not supported''';
+          end
+        case 'cell'
+          line = printcell([name '.' fn{i}], fv);
+        case 'struct'
+          line = [printstruct([name '.' fn{i}], fv) 10];
+        case 'function_handle'
+          line = printstr([name '.' fn{i}], func2str(fv));
+        otherwise
+          error('unsupported');
       end
+      str  = [str line];
     end
   end
 elseif ~isstruct(val)
@@ -98,8 +105,8 @@ elseif ~isstruct(val)
   switch class(val)
     case 'char'
       str = printstr(name, val);
-    case {'single' 'double' 'int8' 'int16' 'int32' 'int64' 'uint8' 'uint16' 'uint32' 'uint64' 'logical'}
-      str = printmat(name, val);
+    case {'double' 'single' 'int8' 'int16' 'int32' 'int64' 'uint8' 'uint16' 'uint32' 'uint64' 'logical'}
+      str = [name ' = ' printmat(val)];
     case 'cell'
       str = printcell(name, val);
     otherwise
@@ -114,7 +121,6 @@ if isempty(val)
   str = sprintf('%s = {};\n', name);
   return;
 end
-typ = cellfun(@class, val(:), 'UniformOutput', false);
 if all(size(val)==1)
   str = sprintf('%s = { %s };\n', name, printval(val{1}));
 else
@@ -125,35 +131,10 @@ else
       dum = [dum ' ' printval(val{i,j}) ',']; % add the element with a comma
     end
     dum = [dum ' ' printval(val{i,siz(2)})]; % add the last one without comma
-    str = sprintf('%s%s\n', str, dum);
+    
+    str = [str dum 10];
   end
   str = sprintf('%s};\n', str);
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function str = printmat(name, val)
-siz = size(val);
-if prod(siz)==0
-  str = sprintf('%s = [];\n', name);
-elseif prod(siz)==1
-  str = sprintf('%s = %s;\n', name, printval(val));
-elseif numel(siz)==2 && siz(1)==1
-    str = '';
-    for col=1:siz(2)
-      str = sprintf('%s %s', str, printval(val(1,col)));
-    end
-   str = sprintf('%s = [%s ];\n', name, str);
-elseif numel(siz)==2
-    str = sprintf('%s = [\n', name);
-  for row=1:siz(1)
-    for col=1:siz(2)
-      str = sprintf('%s %s', str, printval(val(row,col)));
-    end
-    str = sprintf('%s\n', str);
-  end
-  str = sprintf('%s];\n', str);
-else
-  str = sprintf('%s = %s;\n', name, printval(val));
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -171,76 +152,37 @@ else
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function str = printbool(val)
-% val is a 1xN vector with booleans
-dum = {'false ', ' true '}; % note the spaces at the end
-str = cat(2, dum{val+1});
-str = str(1:end-1); % remove the last space
+function str = printmat(val)
+if numel(val) == 0
+  str = '[]';
+elseif numel(val) == 1
+  % an integer will never get trailing decimals when using %g
+  str = sprintf('%g', val);
+elseif ismatrix(val)
+  if isa(val, 'double')
+    str = mat2str(val);
+  else
+    % add class information for non-double numeric matrices
+    str = mat2str(val, 'class');
+  end
+  str = strrep(str, ';', [';' 10]);
+else
+  warning('multidimensional arrays are not supported');
+  str = '''FIXME: printing multidimensional arrays is not supported''';
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function str = printval(val)
-siz = size(val);
+
 switch class(val)
   case 'char'
-    str = sprintf('''%s''', val);
+    str = ['''' val ''''];
     
-  case 'logical'
-    if all(siz==0)
-      str = '[]';
-    elseif all(siz==1)
-      str = sprintf('%s', printbool(val));
-    elseif length(siz)==2
-      str = [];
-      for i=1:siz(1);
-        str = [ str sprintf('%s ', printbool(val(i,:))) '; ' ];
-      end
-      str = sprintf('[ %s ]', str(1:end-3));
-    else
-      warning('multidimensional arrays are not supported');
-      str = '''FIXME: printing multidimensional logical arrays is not supported''';
-    end
-    
-  case {'single' 'double'}
-    if all(siz==0)
-      str = '[]';
-    elseif all(siz==1)
-      if isinteger(val)
-        str = sprintf('%d', val);
-      else
-        str = sprintf('%g', val);
-      end
-    elseif length(siz)==2
-      str = [];
-      for i=1:siz(1);
-        if all(isinteger(val(i,:)))
-          str = [ str sprintf('%d ', val(i,:)) '; ' ];
-        else
-          str = [ str sprintf('%g ', val(i,:)) '; ' ];
-        end
-      end
-      str = sprintf('[ %s ]', str(1:end-3));
-    else
-      warning('multidimensional arrays are not supported');
-      str = '''FIXME: printing multidimensional single and double arrays is supported''';
-    end
-    
-  case {'int8' 'int16' 'int32' 'int64' 'uint8' 'uint16' 'uint32' 'uint64'}
-    % this is the same as for double, except for the %d instead of %g
-    if all(siz==1)
-      str = sprintf('%d', val);
-    elseif length(siz)==2
-      str = [];
-      for i=1:siz(1);
-        str = [ str sprintf('%d ', val(i,:)) '; ' ];
-      end
-      str = sprintf('[ %s ]', str(1:end-3));
-    else
-      warning('multidimensional arrays are not supported');
-      str = '''FIXME: printing multidimensional int/uint arrays is not supported''';
-    end
+  case {'single' 'double' 'int8' 'int16' 'int32' 'int64' 'uint8' 'uint16' 'uint32' 'uint64' 'logical'}
+    str = printmat(val);
     
   case 'function_handle'
-    str = sprintf('@%s', func2str(val));
+    str = ['@' func2str(val)];
     
   case 'struct'
     warning('cannot print structure at this level');
@@ -250,9 +192,3 @@ switch class(val)
     warning('cannot print unknown object at this level');
     str = '''FIXME: printing unknown objects is not supported''';
 end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% helper function to determine whether a floating point value contains an integer number
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function y = isinteger(x)
-y = (x==round(x));

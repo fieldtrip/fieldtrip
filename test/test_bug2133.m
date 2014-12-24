@@ -6,7 +6,6 @@ function test_bug2133
 % TEST test_bug2133
 % TEST ft_read_header read_eeg_mff
 
-% translate beween windows h:\ and linux /home path
 filename = dccnpath('/home/common/matlab/fieldtrip/data/test/original/eeg/egi/NS500Sine6Hz.mff');
 
 global testvariable

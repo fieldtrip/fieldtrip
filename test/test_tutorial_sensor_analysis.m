@@ -13,17 +13,10 @@ ft_default.feedback = 'no';
 ft_default.trackconfig = 'no';
 
 if nargin==0
-  if ispc
-    datadir = 'H:';
-  else
-    datadir = '/home';
-  end
-  
-  load(fullfile(datadir, 'common', 'matlab', 'fieldtrip', 'data', 'ftp', 'tutorial', 'sensor_analysis', 'subjectK.mat'));
-  
-else
-  load(fullfile(datadir, 'subjectK.mat'));
+  datadir = '/home/common/matlab/fieldtrip/data/ftp/tutorial/sensor_analysis';
 end
+
+load(fullfile(datadir, 'subjectK.mat'));
 
 %% show a trial
 

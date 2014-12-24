@@ -65,6 +65,9 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.chanscale               = Nx1 vector with scaling factors, one per channel specified in cfg.channel
 %   cfg.compscale               = string, 'global' or 'local', defines whether the colormap for the topographic scaling is
 %                                  applied per topography or on all visualized components (default 'global')
+%   cfg.renderer                = string, 'opengl', 'zbuffer', 'painters',
+%                                  see MATLAB Figure Properties. If the
+%                                  databrowser crashes, set to 'painters'.
 %
 % The scaling to the EEG, EOG, ECG, EMG and MEG channels is optional and
 % can be used to bring the absolute numbers of the different channel types
@@ -180,6 +183,7 @@ if ~isfield(cfg, 'continuous'),      cfg.continuous = [];                 end % 
 if ~isfield(cfg, 'ploteventlabels'), cfg.ploteventlabels = 'type=value';  end
 cfg.zlim           = ft_getopt(cfg, 'zlim',          'maxmin');
 cfg.compscale      = ft_getopt(cfg, 'compscale',     'global');
+cfg.renderer       = ft_getopt(cfg, 'renderer',      []);
 
 
 if ~isfield(cfg, 'viewmode')
@@ -607,6 +611,9 @@ end
 h = figure;
 setappdata(h, 'opt', opt);
 setappdata(h, 'cfg', cfg);
+if ~isempty(cfg.renderer)
+  set(h, 'renderer', cfg.renderer);
+end
 
 % enable custom data cursor text
 dcm = datacursormode(h);
@@ -647,7 +654,12 @@ uicontrol('tag', 'labels',  'parent', h, 'units', 'normalized', 'style', 'pushbu
 uicontrol('tag', 'buttons', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', 'leftarrow')
 uicontrol('tag', 'buttons', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', 'rightarrow')
 
-uicontrol('tag', 'labels',  'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'channel','userdata', 'c')
+if strcmp(cfg.viewmode, 'component')
+  uicontrol('tag', 'labels',  'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'component','userdata', 'c')
+else
+  uicontrol('tag', 'labels',  'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'channel','userdata', 'c')
+end
+
 uicontrol('tag', 'buttons', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', 'uparrow')
 uicontrol('tag', 'buttons', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', 'downarrow')
 
@@ -1161,7 +1173,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function keyboard_cb(h, eventdata)
 
-if isempty(eventdata)
+if (isempty(eventdata) && matlabversion(-Inf, '2014a')) || isa(eventdata, 'matlab.ui.eventdata.ActionData')
   % determine the key that corresponds to the uicontrol element that was activated
   key = get(h, 'userdata');
 else
@@ -1714,7 +1726,7 @@ elseif any(strcmp(cfg.viewmode, {'component', 'vertical'}))
       % this is a cheap quick fix. If it causes error in plotting components, do this conditional on viewmode
       if numel(findobj(h,'tag', 'chanlabel'))<numel(chanindx)
         if opt.plotLabelFlag == 1 || (opt.plotLabelFlag == 2 && mod(i,10)==0)
-          ft_plot_text(labelx(laysel), labely(laysel), opt.hdr.label(chanindx(i)), 'tag', 'chanlabel', 'HorizontalAlignment', 'right','interpreter','none','FontUnits','normalized','FontSize',8);
+          ft_plot_text(labelx(laysel), labely(laysel), opt.hdr.label(chanindx(i)), 'tag', 'chanlabel', 'HorizontalAlignment', 'right','interpreter','none','FontUnits','normalized', 'FontSize',.2/numel(chanindx));
         end
       end
       

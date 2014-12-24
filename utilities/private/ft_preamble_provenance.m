@@ -71,7 +71,15 @@ for iargin = 1:numel(tmpargin)
   bytenum = whos('tmparg');
   bytenum = bytenum.bytes;
   if bytenum<2^31
-    cfg.callinfo.inputhash{iargin} = CalcMD5(mxSerialize(tmparg));
+    try
+      cfg.callinfo.inputhash{iargin} = CalcMD5(mxSerialize(tmparg));
+    catch
+      % the mxSerialize mex file is not available on all platforms
+      % http://bugzilla.fcdonders.nl/show_bug.cgi?id=2452
+      % do not compute a hash
+    end
+  else
+    % the data is too large, do not compute a hash
   end
 end
 clear iargin tmpargin tmparg bytenum; % remove the extra references

@@ -153,7 +153,6 @@ end % for each dipole
 axis off
 axis vis3d
 axis equal
-camlight % fixme, this probably should be in the calling function
 
 if ~holdflag
   hold off

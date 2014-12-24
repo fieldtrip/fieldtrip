@@ -1,12 +1,21 @@
-% function test_bug2096
+function test_bug2096
 
-% MEM 2000mb
-% WALLTIME 00:10:00
+% MEM 4000mb
+% WALLTIME 00:20:00
 
 % TEST test_bug2096
-% TEST ft_sourcewrite
+% TEST ft_sourcewrite ft_read_cifti ft_write_cifti
 
-% load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2096.mat'));
+% needed for the dccnpath function, since we will change directory later on
+addpath(fileparts(mfilename('fullpath')));
+
+% /home/common/matlab/fieldtrip/data/test/bug2096
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2096'));
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% general purpose tests
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+clear all; close all
 
 %%
 source = [];
@@ -23,7 +32,7 @@ source.dimord = 'pos';
 cfg = [];
 cfg.filetype  = 'cifti';
 cfg.parameter = 'pow';
-cfg.filename  = 'test_bug2096';
+cfg.filename  = 'test_bug2096.pow';
 ft_sourcewrite(cfg, source);
 
 source1 = ft_read_cifti('test_bug2096.pow.dscalar.nii')
@@ -31,7 +40,7 @@ source1 = ft_read_cifti('test_bug2096.pow.dscalar.nii')
 cfg = [];
 cfg.filetype  = 'cifti';
 cfg.parameter = 'pow';
-cfg.filename  = 'test_bug2096b';
+cfg.filename  = 'test_bug2096b.pow';
 ft_sourcewrite(cfg, source1);
 
 source2 = ft_read_cifti('test_bug2096b.pow.dscalar.nii')
@@ -47,10 +56,10 @@ source.pos    = pnt;
 source.tri    = tri;
 source.pow    = (1:size(pnt,1))';
 source.dimord = 'pos';
-% source.BrainStructure = ones(1, size(pnt,1));
-% source.BrainStructurelabel = {'CORTEX'};
-source.BrainStructure = [1 1 1 1 1 1 2 2 2 2 2 2];
-source.BrainStructurelabel = {'CORTEX_LEFT', 'CORTEX_RIGHT'};
+% source.brainstructure = ones(1, size(pnt,1));
+% source.brainstructurelabel = {'CORTEX'};
+source.brainstructure = [1 1 1 1 1 1 2 2 2 2 2 2];
+source.brainstructurelabel = {'CORTEX_LEFT', 'CORTEX_RIGHT'};
 
 cfg = [];
 cfg.filetype  = 'cifti';
@@ -84,7 +93,7 @@ source.dimord  = 'pos_pos';
 cfg = [];
 cfg.filetype  = 'cifti';
 cfg.parameter = 'imagcoh';
-cfg.filename  = 'test_bug2096';
+cfg.filename  = 'test_bug2096.imagcoh';
 ft_sourcewrite(cfg, source);
 
 source1 = ft_read_cifti('test_bug2096.imagcoh.dconn.nii');
@@ -92,7 +101,7 @@ source1 = ft_read_cifti('test_bug2096.imagcoh.dconn.nii');
 cfg = [];
 cfg.filetype  = 'cifti';
 cfg.parameter = 'imagcoh';
-cfg.filename  = 'test_bug2096b';
+cfg.filename  = 'test_bug2096b.imagcoh';
 ft_sourcewrite(cfg, source1);
 
 source2 = ft_read_cifti('test_bug2096b.imagcoh.dconn.nii')
@@ -114,11 +123,76 @@ source.dimord = 'pos_time';
 cfg = [];
 cfg.filetype = 'cifti';
 cfg.parameter = 'timeseries';
-cfg.filename = 'test_bug2096';
+cfg.filename = 'test_bug2096.timeseries';
 cfg.precision = 'single';
 ft_sourcewrite(cfg, source);
 
 source1 = ft_read_cifti('test_bug2096.timeseries.dtseries.nii');
+
+%%
+try
+  parcellation = ft_read_atlas(dccnpath('/home/common/matlab/fieldtrip/template/atlas/aal/ROI_MNI_V4.nii'));
+catch
+  parcellation = ft_read_atlas(fullfile(getenv('HOME'), '/matlab/fieldtrip/template/atlas/aal/ROI_MNI_V4.nii'));
+end
+source = ft_checkdata(parcellation, 'datatype', 'source');
+source = removefields(source, {'tissue', 'tissuelabel'});
+source.pow = randn(prod(parcellation.dim), 1);
+source.pow(parcellation.tissue==0) = nan;
+source.dimord = 'pos';
+
+cfg = [];
+cfg.funparameter = 'pow';
+ft_sourceplot(cfg, source);
+
+cfg = [];
+cfg.filetype  = 'cifti';
+cfg.parameter = 'pow';
+cfg.filename  = 'test_bug2096.pow';
+ft_sourcewrite(cfg, source);
+
+source1 = ft_read_cifti('test_bug2096.pow.dscalar.nii')
+
+cfg = [];
+cfg.filetype  = 'cifti';
+cfg.parameter = 'pow';
+cfg.filename  = 'test_bug2096b.pow';
+ft_sourcewrite(cfg, source1);
+
+source2 = ft_read_cifti('test_bug2096b.pow.dscalar.nii')
+
+cfg = [];
+cfg.parameter = 'pow';
+sourcep = ft_sourceparcellate(cfg, source, parcellation);
+
+cfg = [];
+cfg.funparameter = 'pow';
+ft_sourceplot(cfg, sourcep);
+
+assert(isfield(sourcep, 'pow'));
+assert(isfield(sourcep, 'brainordinate'));
+
+cfg = [];
+cfg.filetype  = 'cifti';
+cfg.parameter = 'pow';
+cfg.parcellation = 'tissue';
+cfg.filename  = 'test_bug2096.pow';
+ft_sourcewrite(cfg, sourcep);
+
+sourcep1 = ft_read_cifti('test_bug2096.pow.pscalar.nii')
+
+cfg = [];
+cfg.filetype  = 'cifti';
+cfg.parameter = 'pow';
+cfg.filename  = 'test_bug2096b.pow';
+ft_sourcewrite(cfg, sourcep1);
+
+sourcep2 = ft_read_cifti('test_bug2096b.pow.pscalar.nii')
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% specific tests for dscalar, dtseries, dconn
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+clear all; close all
 
 %% test the dscalar output
 [pnt, tri] = icosahedron;
@@ -128,8 +202,8 @@ pntR = pnt; pntR(:,1) = pntR(:,1) + 1; % shift along X
 source = [];
 source.pos    = [pntL; pntR];
 source.tri    = [tri; tri+12];
-source.BrainStructure = [1 1 1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2 2 2];
-source.BrainStructurelabel = {'CORTEX_LEFT', 'CORTEX_RIGHT'};
+source.brainstructure = [1 1 1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2 2 2];
+source.brainstructurelabel = {'CORTEX_LEFT', 'CORTEX_RIGHT'};
 source.activity = zeros(size(source.pos,1), 1);
 source.activity(:,1) = 1:24;
 source.dimord = 'pos';
@@ -137,7 +211,7 @@ source.dimord = 'pos';
 cfg = [];
 cfg.filetype  = 'cifti';
 cfg.parameter = 'activity';
-cfg.filename  = 'test_bug2096';
+cfg.filename  = 'test_bug2096.activity';
 ft_sourcewrite(cfg, source);
 
 source1 = ft_read_cifti('test_bug2096.activity.dscalar.nii')
@@ -151,8 +225,8 @@ pntR = pnt; pntR(:,1) = pntR(:,1) + 1; % shift along X
 source = [];
 source.pos    = [pntL; pntR];
 source.tri    = [tri; tri+12];
-source.BrainStructure = [1 1 1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2 2 2];
-source.BrainStructurelabel = {'CORTEX_LEFT', 'CORTEX_RIGHT'};
+source.brainstructure = [1 1 1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2 2 2];
+source.brainstructurelabel = {'CORTEX_LEFT', 'CORTEX_RIGHT'};
 source.time = 1:10;
 source.timeseries = zeros(size(source.pos,1), length(source.time));
 for i=1:size(source.timeseries,2)
@@ -163,7 +237,7 @@ source.dimord = 'pos_time';
 cfg = [];
 cfg.filetype  = 'cifti';
 cfg.parameter = 'timeseries';
-cfg.filename  = 'test_bug2096';
+cfg.filename  = 'test_bug2096.timeseries';
 ft_sourcewrite(cfg, source);
 
 source1 = ft_read_cifti('test_bug2096.timeseries.dtseries.nii')
@@ -177,52 +251,144 @@ pntR = pnt; pntR(:,1) = pntR(:,1) + 1; % shift along X
 source = [];
 source.pos    = [pntL; pntR];
 source.tri    = [tri; tri+12];
-source.imagcoh = rand(size(source.pos,1));
+source.brainstructure = [1 1 1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2 2 2];
+source.brainstructurelabel = {'CORTEX_LEFT', 'CORTEX_RIGHT'};
+source.imagcoh = rand(24,24);
 source.dimord = 'pos_pos';
-source.BrainStructure = [1 1 1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2 2 2];
-source.BrainStructurelabel = {'CORTEX_LEFT', 'CORTEX_RIGHT'};
 
 cfg = [];
 cfg.filetype  = 'cifti';
 cfg.parameter = 'imagcoh';
-cfg.filename  = 'test_bug2096';
+cfg.filename  = 'test_bug2096.imagcoh';
 ft_sourcewrite(cfg, source);
 
 source1 = ft_read_cifti('test_bug2096.imagcoh.dconn.nii')
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% specific tests for pscalar, ptseries, pconn
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+clear all; close all
 
-%% test reading these files
-% http://brainvis.wustl.edu/cifti/DenseConnectome.dconn.nii
-% http://brainvis.wustl.edu/cifti/DenseTimeSeries.dtseries.nii
-% http://brainvis.wustl.edu/cifti/ParcellatedTimeSeries.ptseries.nii
+%% test the pscalar output
+[pnt, tri] = icosahedron;
+pntL = pnt; pntL(:,1) = pntL(:,1) - 1; % shift along X
+pntR = pnt; pntR(:,1) = pntR(:,1) + 1; % shift along X
+
+source = [];
+source.brainordinate.pos    = [pntL; pntR];
+source.brainordinate.tri    = [tri; tri+12];
+source.brainordinate.brainstructure = [1 1 1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2 2 2];
+source.brainordinate.brainstructurelabel = {'CORTEX_LEFT', 'CORTEX_RIGHT'};
+source.brainordinate.parcellation =   [1 1 1 2 2 2 3 3 3 4 4 4 4 4 4 5 5 5 6 6 6 7 7 7];
+source.brainordinate.parcellationlabel = {'parcel1' 'parcel2' 'parcel3' 'parcel4' 'parcel5' 'parcel6' 'parcel7'};
+source.activity = zeros(length(source.brainordinate.parcellationlabel) , 1);
+source.activity(:,1) = 1:7;
+source.dimord = 'chan';
+source.label  = source.brainordinate.parcellationlabel;
+
+figure
+ft_plot_mesh(source.brainordinate, 'vertexcolor', source.brainordinate.parcellation(:), 'edgecolor', 'none')
+
+cfg = [];
+cfg.filetype  = 'cifti';
+cfg.parameter = 'activity';
+cfg.filename  = 'test_bug2096.activity';
+ft_sourcewrite(cfg, source);
+
+source1 = ft_read_cifti('test_bug2096.activity.pscalar.nii')
+
+figure
+ft_plot_mesh(source1.brainordinate, 'vertexcolor', source1.brainordinate.parcellation(:), 'edgecolor', 'none')
+
+%% test the ptsetries output
+[pnt, tri] = icosahedron;
+pntL = pnt; pntL(:,1) = pntL(:,1) - 1; % shift along X
+pntR = pnt; pntR(:,1) = pntR(:,1) + 1; % shift along X
+
+source = [];
+source.brainordinate.pos    = [pntL; pntR];
+source.brainordinate.tri    = [tri; tri+12];
+source.brainordinate.brainstructure = [1 1 1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2 2 2];
+source.brainordinate.brainstructurelabel = {'CORTEX_LEFT', 'CORTEX_RIGHT'};
+source.brainordinate.parcellation =   [1 1 1 2 2 2 3 3 3 4 4 4 4 4 4 5 5 5 6 6 6 7 7 7];
+source.brainordinate.parcellationlabel = {'parcel1' 'parcel2' 'parcel3' 'parcel4' 'parcel5' 'parcel6' 'parcel7'};
+source.time = 1:10;
+source.timeseries = zeros(7, length(source.time));
+for i=1:size(source.timeseries,2)
+  source.timeseries(:,i) = 1:7;
+end
+source.dimord = 'chan_time';
+source.label  = source.brainordinate.parcellationlabel;
+
+figure
+ft_plot_mesh(source.brainordinate, 'vertexcolor', source.brainordinate.parcellation(:), 'edgecolor', 'none')
+
+cfg = [];
+cfg.filetype  = 'cifti';
+cfg.parameter = 'timeseries';
+cfg.filename  = 'test_bug2096.timeseries';
+ft_sourcewrite(cfg, source);
+
+source1 = ft_read_cifti('test_bug2096.timeseries.ptseries.nii')
+
+figure
+ft_plot_mesh(source1.brainordinate, 'vertexcolor', source1.brainordinate.parcellation, 'edgecolor', 'none')
+
+%% test the pconn output
+[pnt, tri] = icosahedron;
+pntL = pnt; pntL(:,1) = pntL(:,1) - 1; % shift along X
+pntR = pnt; pntR(:,1) = pntR(:,1) + 1; % shift along X
+
+source = [];
+source.brainordinate.pos    = [pntL; pntR];
+source.brainordinate.tri    = [tri; tri+12];
+source.brainordinate.brainstructure = [1 1 1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2 2 2];
+source.brainordinate.brainstructurelabel = {'CORTEX_LEFT', 'CORTEX_RIGHT'};
+source.brainordinate.parcellation =   [1 1 1 2 2 2 3 3 3 4 4 4 4 4 4 5 5 5 6 6 6 7 7 7];
+source.brainordinate.parcellationlabel = {'parcel1' 'parcel2' 'parcel3' 'parcel4' 'parcel5' 'parcel6' 'parcel7'};
+source.imagcoh = rand(7,7);
+source.dimord = 'chan_chan';
+source.label  = source.brainordinate.parcellationlabel;
+
+figure
+ft_plot_mesh(source.brainordinate, 'vertexcolor', source.brainordinate.parcellation(:), 'edgecolor', 'none')
+
+cfg = [];
+cfg.filetype  = 'cifti';
+cfg.parameter = 'imagcoh';
+cfg.filename  = 'test_bug2096.imagcoh';
+ft_sourcewrite(cfg, source);
+
+source1 = ft_read_cifti('test_bug2096.imagcoh.pconn.nii')
+
+figure
+ft_plot_mesh(source1.brainordinate, 'vertexcolor', source1.brainordinate.parcellation, 'edgecolor', 'none')
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% specific tests reading from external files
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+clear all; close all
 
 %% version 1
-p = '/home/common/matlab/fieldtrip/data/test/bug2096';
-p = '/Volumes/Data/roboos/AeroFS/bug2096';
-p = '/Users/robert/Documents - work/previous AeroFS/bug2096';
-p = '/Users/roboos/Desktop/bug2096/cifti1';
-cd(p);
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2096/cifti1'));
 
-cii1 = ft_read_cifti('DenseConnectome.dconn.nii');
-% cii2 = ft_read_cifti('DenseTimeSeries.dtseries.nii');
-% cii3 = ft_read_cifti('ParcellatedTimeSeries.ptseries.nii');
+% cii1 = ft_read_cifti('DenseConnectome.dconn.nii');            % this one is disabled because it is 10GB large
+% cii2 = ft_read_cifti('DenseTimeSeries.dtseries.nii');         % this one is disabled because the file contains an internal error (number of greynodes is not consistent with size of data)
+% cii3 = ft_read_cifti('ParcellatedTimeSeries.ptseries.nii');   % this one is disabled because the code cannot deal with cifti-1 parcels
 cii4 = ft_read_cifti('BOLD_REST2_LR.dtseries.nii');
 cii5 = ft_read_cifti('BOLD_REST2_LR_Atlas.dtseries.nii');
 
 %% version 2
-p = '/Users/roboos/Desktop/bug2096/cifti2';
-cd(p);
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2096/cifti2'));
 
 cii1 = ft_read_cifti('ones.dscalar.nii');
 cii2 = ft_read_cifti('Conte69.MyelinAndCorrThickness.32k_fs_LR.dscalar.nii');
 cii3 = ft_read_cifti('Conte69.MyelinAndCorrThickness.32k_fs_LR.dtseries.nii');
-% cii4 = ft_read_cifti('Conte69.MyelinAndCorrThickness.32k_fs_LR.ptseries.nii');
+cii4 = ft_read_cifti('Conte69.MyelinAndCorrThickness.32k_fs_LR.ptseries.nii');
 cii5 = ft_read_cifti('Conte69.parcellations_VGD11b.32k_fs_LR.dlabel.nii');
 
 %% release data
-p = '/Volumes/HDD811/data/HCP/177746/MNINonLinear/fsaverage_LR32k';
-p = '/Users/roboos/Desktop/fsaverage_LR32k';
-cd(p);
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2096/hcp_release/fsaverage_LR32k'));
 
 filename = {
   '177746.ArealDistortion.32k_fs_LR.dscalar.nii'
@@ -256,15 +422,14 @@ datafield = {
 
 for i=1:length(filename)
   disp(filename{i});
-  source = ft_read_cifti(filename{i}, 'representation', 'source');
+  source = ft_read_cifti(filename{i});
   figure
   ft_plot_mesh(source, 'vertexcolor', source.(datafield{i}), 'edgecolor', 'none');
   title(datafield{i});
 end
 
-%%
-p = '/Users/roboos/Desktop/TestParcelsForMEG';
-cd(p);
+%% MEG specific development data from DVE
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2096/hcp_devel/TestParcelsForMEG'));
 
 filename = {
   '3T_Q1-Q6related468_MSMsulc_d100_ts2_Znet2.pconn.nii'
@@ -286,10 +451,7 @@ filename = {
 
 for i=1:length(filename)
   disp(filename{i});
-  source = ft_read_cifti(filename{i}, 'representation', 'source');
+  source = ft_read_cifti(filename{i});
 end
-
-
-
 
 

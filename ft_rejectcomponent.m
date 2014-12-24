@@ -20,9 +20,10 @@ function [data] = ft_rejectcomponent(cfg, comp, data)
 % this option of including data as input, if you wish to use the output
 % data.grad in further computation, for example for leadfield computation.
 %
-% The configuration should contain
-%   cfg.component = list of components to remove, e.g. [1 4 7]
+% The configuration structure can contain
+%   cfg.component = list of components to remove, e.g. [1 4 7] or see FT_CHANNELSELECTION
 %   cfg.demean    = 'no' or 'yes', whether to demean the input data (default = 'yes')
+%   cfg.updatesens   = 'no' or 'yes' (default = 'yes')
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -69,10 +70,11 @@ if abort
   return
 end
 
-% set defaults
-cfg.component  = ft_getopt(cfg, 'component',  []);
-cfg.demean     = ft_getopt(cfg, 'demean',    'yes');
-cfg.feedback   = ft_getopt(cfg, 'feedback',  'text');
+% set the defaults
+cfg.component       = ft_getopt(cfg, 'component',  []);
+cfg.demean          = ft_getopt(cfg, 'demean',    'yes');
+cfg.feedback        = ft_getopt(cfg, 'feedback',  'text');
+cfg.updatesens      = ft_getopt(cfg, 'updatesens',  'yes');
 
 % the data can be passed as input arguments or can be read from disk
 nargin = 1;
@@ -97,11 +99,19 @@ else
   error('incorrect number of input arguments');
 end
 
-if min(cfg.component)<1
+% cfg.component can be indicated by number or by label
+cfg.component = ft_channelselection(cfg.component, comp.label);
+reject = match_str(comp.label, cfg.component);
+
+if isempty(reject)
+  warning('no components were selected for rejection');
+end
+
+if min(reject)<1
   error('you cannot remove components that are not present in the data');
 end
 
-if max(cfg.component)>ncomps
+if max(reject)>ncomps
   error('you cannot remove components that are not present in the data');
 end
 
@@ -114,11 +124,11 @@ if nargin==3 && strcmp(cfg.demean, 'yes')
 end
 
 % set the rejected component amplitudes to zero
-fprintf('removing %d components\n', length(cfg.component));
+fprintf('removing %d components\n', length(reject));
 if ~hasdata,
-  fprintf('keeping %d components\n',  ncomps-length(cfg.component));
+  fprintf('keeping %d components\n',  ncomps-length(reject));
 else
-  fprintf('keeping %d components\n',  nchans-length(cfg.component));
+  fprintf('keeping %d components\n',  nchans-length(reject));
 end
 
 % create a projection matrix by subtracting the subspace spanned by the
@@ -137,7 +147,7 @@ if hasdata
   % when comp contains non-orthogonal (=ica) topographies, and contains a complete decomposition
   
   montage     = [];
-  montage.tra = eye(length(selcomp)) - mixing(:, cfg.component)*unmixing(cfg.component, :);
+  montage.tra = eye(length(selcomp)) - mixing(:, reject)*unmixing(reject, :);
   % we are going from data to components, and back again
   montage.labelorg = comp.topolabel(selcomp);
   montage.labelnew = comp.topolabel(selcomp);
@@ -146,7 +156,7 @@ if hasdata
   
 else
   mixing = comp.topo(selcomp, :);
-  mixing(:, cfg.component) = 0;
+  mixing(:, reject) = 0;
   
   montage     = [];
   montage.tra = mixing;
@@ -171,12 +181,27 @@ end % if hasdata
 % apply the montage to the data and to the sensor description
 data = ft_apply_montage(data, montage, 'keepunused', keepunused, 'feedback', cfg.feedback);
 
-if isfield(data, 'grad') || (isfield(data, 'elec') && isfield(data.elec, 'tra')),
-  if isfield(data, 'grad')
-    sensfield = 'grad';
+% apply the montage also to the elec/grad, if present
+if isfield(data, 'grad')
+  sensfield = 'grad';
+  if strcmp(cfg.updatesens, 'yes')
+    fprintf('applying the backprojection matrix to the gradiometer description\n');
   else
-    sensfield = 'elec';
+    fprintf('not applying the backprojection matrix to the gradiometer description\n');
   end
+elseif isfield(data, 'elec') && isfield(data.elec, 'tra')
+  sensfield = 'elec';
+  if strcmp(cfg.updatesens, 'yes')
+    fprintf('applying the backprojection matrix to the electrode description\n');
+  else
+    fprintf('not applying the backprojection matrix to the electrode description\n');
+  end
+else
+  fprintf('not applying the backprojection matrix to the sensor description\n');
+  sensfield = [];
+end
+
+if ~isempty(sensfield) && strcmp(cfg.updatesens, 'yes')
   % keepunused = 'yes' is required to get back e.g. reference or otherwise
   % unused sensors in the sensor description. the unused components need to
   % be removed in a second step

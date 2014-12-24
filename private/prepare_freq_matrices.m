@@ -74,11 +74,13 @@ else
 end
 
 % the time-frequency latency has already been squeezed away (see above)
-if strcmp(freq.dimord, 'chan_freq') || strcmp(freq.dimord, 'chancmb_freq') || strcmp(freq.dimord, 'chan_chan_freq')
+if strcmp(freq.dimord, 'chan_freq') || strcmp(freq.dimord, 'chancmb_freq') || strcmp(freq.dimord, 'chan_chan_freq') || strcmp(freq.dimord, 'chan_chan_freq_time')
   Ntrials = 1;
 elseif strcmp(freq.dimord, 'rpt_chan_freq') || strcmp(freq.dimord, 'rpt_chancmb_freq') || strcmp(freq.dimord, 'rpt_chan_chan_freq')
   Ntrials = size(freq.cumtapcnt,1);
 elseif strcmp(freq.dimord, 'rpttap_chan_freq') || strcmp(freq.dimord, 'rpttap_chancmb_freq') || strcmp(freq.dimord, 'rpttap_chan_chan_freq')
+  Ntrials = size(freq.cumtapcnt,1);
+elseif strcmp(freq.dimord, 'rpttap_chan_freq_time') || strcmp(freq.dimord, 'rpttap_chancmb_freq_time') || strcmp(freq.dimord, 'rpttap_chan_chan_freq_time')
   Ntrials = size(freq.cumtapcnt,1);
 else
   error('unrecognized dimord for frequency data');

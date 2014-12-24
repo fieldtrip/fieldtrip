@@ -12,11 +12,7 @@ function datasets = ref_datasets
 %   TYPE = eeg, meg, lfp
 %   DATATYPE = for example ctf64, ctf151, ctf275
 
-if isunix
-  origdir = '/home/common/matlab/fieldtrip/data/test/';
-elseif ispc
-  origdir = fullfile('H:', 'common', 'matlab', 'fieldtrip', 'data', 'test');
-end
+origdir = dccnpath('/home/common/matlab/fieldtrip/data/test/');
 
 datasets = [];
 

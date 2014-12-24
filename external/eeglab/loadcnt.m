@@ -360,7 +360,18 @@ if type == 'cnt'
   
       % while (ftell(fid) +1 < h.eventtablepos)
       %d(:,i)=fread(fid,h.nchannels,'int16');
-      %end      
+      %end
+      
+      % the following chunk has been added by Jan-Mathijs to deal
+      % with numeric accuracy issues (FieldTrip bug 2746)
+      if startpos~=round(startpos)
+        if abs(startpos-round(startpos))<1e-3
+          disp('Numeric accuracy issue with the first sample: Rounding off to the nearest integer value');
+          startpos = round(startpos);
+        else
+          error('The discrepancy between the requested sample and the nearest integer is too large');
+        end
+      end
       fseek(fid, startpos, 0);
       % **** This marks the beginning of the code modified for reading 
       % large .cnt files

@@ -1,8 +1,8 @@
 function [cfg] = ft_connectivityplot(cfg, varargin)
 
-% FT_CONNECTIVITYPLOT plots frequency-resolved connectivity between EEG/MEG
-% channels. The data are rendered in a square grid of subplots and each
-% subplot containing the connectivity spectrum.
+% FT_CONNECTIVITYPLOT plots channel-level frequency resolved connectivity. The
+% data are rendered in a square grid of subplots, each subplot containing the
+% connectivity spectrum between the two respective channels.
 %
 % Use as
 %   ft_connectivityplot(cfg, data)
