@@ -39,7 +39,6 @@ cfg.ivar   = 1;
 cfg.uvar   = 2;
 stat = ft_timelockstatistics(cfg,timelock{:});
 
-
 % do stats - analytic
 cfg = [];
 cfg.method      = 'analytic';

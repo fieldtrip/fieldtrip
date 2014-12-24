@@ -77,9 +77,9 @@ if ~exist('OCTAVE_VERSION')
     caller_ext  = '';
   end
   % evalin('caller', 'mfilename') does not work for Matlab 6.1 and 6.5
-  istimelock = strcmp(caller_name,'ft_timelockstatistics');
-  isfreq     = strcmp(caller_name,'ft_freqstatistics');
-  issource   = strcmp(caller_name,'ft_sourcestatistics');
+  istimelock = strcmp(caller_name,'ft_timelockstatistics') || strcmp(caller_name,'ft_timelockstatistics_old');
+  isfreq     = strcmp(caller_name,'ft_freqstatistics')     || strcmp(caller_name,'ft_freqstatistics_old');
+  issource   = strcmp(caller_name,'ft_sourcestatistics')   || strcmp(caller_name,'ft_sourcestatistics_old');
 else
   % cannot determine the calling function in Octave, try looking at the
   % data instead

@@ -29,8 +29,7 @@ function [varargout] = ft_selectdata(varargin)
 %
 % For data with a frequency dimension you can specify
 %   cfg.frequency   = scalar    -> can be 'all'
-%   cfg.frequency   = [beg end] -> this is less common, preferred is to use foilim
-%   cfg.foilim      = [beg end]
+%   cfg.frequency   = [beg end]
 %   cfg.avgoverfreq = string, can be 'yes' or 'no' (default = 'no')
 %
 % If multiple input arguments are provided, FT_SELECTDATA will adjust the individual inputs
@@ -100,6 +99,7 @@ end
 
 cfg = ft_checkconfig(cfg, 'renamed', {'selmode',  'select'});
 cfg = ft_checkconfig(cfg, 'renamed', {'toilim' 'latency'});
+cfg = ft_checkconfig(cfg, 'renamed', {'foilim' 'latency'});
 cfg = ft_checkconfig(cfg, 'renamed', {'avgoverroi' 'avgoverpos'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'parameter' 'avg.pow' 'pow'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'parameter' 'avg.mom' 'mom'});
@@ -132,16 +132,23 @@ if strcmp(dtype, 'source')
   end
 end
 
-cfg.channel = ft_getopt(cfg, 'channel', 'all', 1);
 cfg.latency = ft_getopt(cfg, 'latency', 'all', 1);
+if isnumeric(cfg.latency) && numel(cfg.latency)==2 && cfg.latency(1)==cfg.latency(2)
+  % this is better specified by a single number
+  cfg.latency = cfg.latency(1);
+end
+
+cfg.channel = ft_getopt(cfg, 'channel', 'all', 1);
 cfg.trials  = ft_getopt(cfg, 'trials',  'all', 1);
 
 if length(varargin)>1 && ~isequal(cfg.trials, 'all')
   error('it is ambiguous to make a subselection of trials while at the same time concatenating multiple data structures')
 end
 
-if ~isfield(cfg, 'foilim')
-  cfg.frequency = ft_getopt(cfg, 'frequency', 'all', 1);
+cfg.frequency = ft_getopt(cfg, 'frequency', 'all', 1);
+if isnumeric(cfg.frequency) && numel(cfg.frequency)==2 && cfg.frequency(1)==cfg.frequency(2)
+  % this is better specified by a single number
+  cfg.frequency = cfg.frequency(1);
 end
 
 datfield  = fieldnames(varargin{1});
@@ -150,7 +157,7 @@ for i=2:length(varargin)
   datfield = intersect(datfield, fieldnames(varargin{i}));
 end
 datfield  = setdiff(datfield, {'label' 'labelcmb'}); % these fields will be used for selection, but are not treated as data fields
-xtrafield =  {'cfg' 'hdr' 'fsample' 'fsampleorig' 'grad' 'elec' 'transform' 'unit' 'topolabel' 'lfplabel' 'dim'}; % these fields will not be touched in any way by the code
+xtrafield =  {'cfg' 'hdr' 'fsample' 'fsampleorig' 'grad' 'elec' 'transform' 'dim' 'unit' 'topolabel' 'lfplabel'}; % these fields will not be touched in any way by the code
 datfield  = setdiff(datfield, xtrafield);
 orgdim1   = datfield(~cellfun(@isempty, regexp(datfield, 'dimord$')));
 datfield  = setdiff(datfield, orgdim1);
@@ -941,15 +948,13 @@ else
   % no splitting is needed, each input data structure has one selection
 end
 
-
 end % function getselection_time
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [freqindx, cfg] = getselection_freq(cfg, varargin)
 % possible specifications are
 % cfg.frequency = value     -> can be 'all'
-% cfg.frequency = [beg end] -> this is less common, preferred is to use foilim
-% cfg.foilim    = [beg end]
+% cfg.frequency = [beg end]
 
 selmode  = varargin{end};
 tol      = varargin{end-1};
@@ -1038,29 +1043,6 @@ if isfield(cfg, 'frequency')
     error('incorrect specification of cfg.frequency');
   end
 end % if cfg.frequency
-
-if isfield(cfg, 'foilim')
-  if ~ischar(cfg.foilim) && numel(cfg.foilim)==2
-    % the [min max] range can be specifed with +inf or -inf, but should
-    % at least partially overlap with the time axis of the input data
-    minfreq = min(freqaxis);
-    maxfreq = max(freqaxis);
-    if all(cfg.foilim<minfreq) || all(cfg.foilim>maxfreq)
-      error('the selected range falls outside the frequency axis in the data');
-    end
-    fbin = nan(1,2);
-    fbin(1) = nearest(freqaxis, cfg.foilim(1), false, false);
-    fbin(2) = nearest(freqaxis, cfg.foilim(2), false, false);
-    cfg.foilim = freqaxis(fbin);
-    
-    for k = 1:ndata
-      freqindx{k} = indx(fbin(1):fbin(2), k);
-    end
-    
-  else
-    error('incorrect specification of cfg.foilim');
-  end
-end % cfg.foilim
 
 for k = 1:ndata
   if isequal(freqindx{k}, 1:length(varargin{k}.freq))

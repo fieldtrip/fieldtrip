@@ -18,6 +18,15 @@ end
 
 dimsiz = cellmatsize(data.(field));
 
+try
+  % there can be additional trailing singleton dimensions
+  dimord = getdimord(data, field);
+  dimtok = tokenize(dimord, '_');
+  for i=(length(dimsiz)+1):length(dimtok)
+    dimsiz(i) = 1;
+  end
+end
+
 end % main function
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
