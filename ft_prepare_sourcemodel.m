@@ -36,7 +36,7 @@ function [grid, cfg] = ft_prepare_sourcemodel(cfg, vol, sens)
 %
 % The following fields are not used in this function, but will be copied along to the output
 %   cfg.grid.leadfield
-%   cfg.grid.filter or alternatively cfg.grid.avg.filter
+%   cfg.grid.filter
 %   cfg.grid.subspace
 %   cfg.grid.lbex
 %

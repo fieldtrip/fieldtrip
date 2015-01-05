@@ -8,7 +8,7 @@ function [cfg, M] = ft_sourcemovie(cfg, source, source2)
 % where the input source data is obtained from FT_SOURCEANALYSIS and cfg is
 % a configuratioun structure that should contain
 %
-%  cfg.funparameter    = string, functional parameter that is color coded (default = 'avg.pow')
+%  cfg.funparameter    = string, functional parameter that is color coded (default = 'pow')
 %  cfg.maskparameter   = string, functional parameter that is used for opacity (default = [])
 %
 % To facilitate data-handling and distributed computing you can use
@@ -64,7 +64,7 @@ zlim          = ft_getopt(cfg, 'zlim');
 olim          = ft_getopt(cfg, 'alim');                           % don't use alim as variable name
 xparam        = ft_getopt(cfg, 'xparam', 'time');                 % use time as default
 yparam        = ft_getopt(cfg, 'yparam');                         % default is dealt with below
-funparameter  = ft_getopt(cfg, 'funparameter', 'avg.pow');        % use power as default
+funparameter  = ft_getopt(cfg, 'funparameter', 'pow');            % use power as default
 maskparameter = ft_getopt(cfg, 'maskparameter');
 parcellation  = ft_getopt(cfg, 'parcellation');
 
@@ -84,9 +84,9 @@ cfg.yparam        = yparam;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if nargin==2
-  fun = getsubfield(source, funparameter); % might be avg.pow
+  fun = getsubfield(source, funparameter);
 elseif nargin>2 && isfield(source2, 'pos'), 
-  fun  = getsubfield(source, funparameter); % might be avg.pow
+  fun  = getsubfield(source, funparameter);
   fun2 = getsubfield(source2, funparameter); 
 elseif nargin>2
   % assume the first data argument to be a parcellation, and the second a
