@@ -1,4 +1,4 @@
-function data = ft_math(cfg, varargin)
+  function data = ft_math(cfg, varargin)
 
 % FT_MATH performs mathematical operations on FieldTrip data structures,
 % such as addition, subtraction, division, etc.
@@ -8,8 +8,8 @@ function data = ft_math(cfg, varargin)
 % with one or multiple FieldTrip data structures as input and where cfg is a
 % configuration structure that should contain
 %
-%  cfg.operation  = string, can be 'add', 'subtract', 'divide', 'multiply', 'log10'
-%                   or a functional specification of the operation (see below)
+%  cfg.operation  = string, can be 'add', 'subtract', 'divide', 'multiply',
+%                   'log10', 'abs' or a functional specification of the operation (see below)
 %  cfg.parameter  = string, field from the input data on which the operation is
 %                   performed, e.g. 'pow' or 'avg'
 %
@@ -270,6 +270,14 @@ if length(varargin)==1
         y = log10(x1);
       end
       
+    case 'abs'
+      fprintf('taking the abs of %s\n', cfg.parameter);
+      if iscell(x1)
+        y = cellabs(x1);
+      else
+        y = abs(x1);
+      end
+      
     otherwise
       % assume that the operation is descibed as a string, e.g. x1^s
       % where x1 is the first argument and s is obtained from cfg.scalar
@@ -488,3 +496,6 @@ z = cellfun(@rdivide, x, y, 'UniformOutput', false);
 
 function z = celllog10(x)
 z = cellfun(@log10, x, 'UniformOutput', false);
+
+function z = cellabs(x)
+z = cellfun(@abs, x, 'UniformOutput', false);
