@@ -539,7 +539,7 @@ if ~isempty(BrainModel)
   end
   
   % it would be possible to represent all voxels, but for efficiency we only include voxel positions with data
-  if ~isempty(Volume)
+  if ~isempty(Volume) && any(isnan(surfaceIndex))
     tmp       = ft_warp_apply(Volume.Transform, cat(1, BrainModel(isnan(surfaceIndex)).VoxelIndicesIJK));
     pos       = cat(1, pos, tmp);
     posIndex  = cat(1, posIndex, nan(size(tmp,1),1));
