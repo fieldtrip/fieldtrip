@@ -903,6 +903,7 @@ else
   source.label = {Parcel(:).Name};
 end
 
+haslabeltable = false;
 if ~isempty(NamedMap)
   % the following assumes a single NamedMap
   if isfield(NamedMap, 'LabelTable')
