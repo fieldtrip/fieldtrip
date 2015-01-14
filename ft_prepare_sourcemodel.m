@@ -30,13 +30,12 @@ function [grid, cfg] = ft_prepare_sourcemodel(cfg, vol, sens)
 %
 % Configuration options for a predefined grid
 %   cfg.grid.pos        = N*3 matrix with position of each source
+%   cfg.grid.inside     = N*1 vector with boolean value whether grid point is inside brain (optional)
 %   cfg.grid.dim        = [Nx Ny Nz] vector with dimensions in case of 3-D grid (optional)
-%   cfg.grid.inside     = vector with indices of the sources inside the brain (optional)
-%   cfg.grid.outside    = vector with indices of the sources outside the brain (optional)
 %
 % The following fields are not used in this function, but will be copied along to the output
 %   cfg.grid.leadfield
-%   cfg.grid.filter
+%   cfg.grid.filter or alternatively cfg.grid.avg.filter
 %   cfg.grid.subspace
 %   cfg.grid.lbex
 %
@@ -347,56 +346,7 @@ if basedonpos
   % a grid is already specified in the configuration, reuse as much of the
   % prespecified grid as possible (but only known objects)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  grid.pos  = cfg.grid.pos;
-  grid.unit = cfg.grid.unit;
-  if isfield(cfg.grid, 'mom')
-    grid.mom = cfg.grid.mom;
-  end
-  if isfield(cfg.grid, 'tri')
-    grid.tri = cfg.grid.tri;
-  end
-  if isfield(cfg.grid, 'dim')
-    grid.dim = cfg.grid.dim;
-  end
-  if isfield(cfg.grid, 'xgrid')
-    % FIXME is it desirable to have this in the grid?
-    grid.xgrid = cfg.grid.xgrid;
-  end
-  if isfield(cfg.grid, 'ygrid')
-    % FIXME is it desirable to have this in the grid?
-    grid.ygrid = cfg.grid.ygrid;
-  end
-  if isfield(cfg.grid, 'zgrid')
-    % FIXME is it desirable to have this in the grid?
-    grid.zgrid = cfg.grid.zgrid;
-  end
-  if isfield(cfg.grid, 'dim')
-    grid.dim = cfg.grid.dim;
-  elseif isfield(grid, 'xgrid') && isfield(grid, 'ygrid') && isfield(grid, 'zgrid')
-    grid.dim = [length(grid.xgrid) length(grid.ygrid) length(grid.zgrid)];
-  end
-  if isfield(cfg.grid, 'inside')
-    grid.inside = cfg.grid.inside;
-  end
-  if isfield(cfg.grid, 'outside')
-    grid.outside = cfg.grid.outside;
-  end
-  if isfield(cfg.grid, 'lbex')
-    grid.lbex = cfg.grid.lbex;
-  end
-  if isfield(cfg.grid, 'subspace')
-    grid.subspace = cfg.grid.subspace;
-  end
-  if isfield(cfg.grid, 'leadfield')
-    grid.leadfield = cfg.grid.leadfield;
-  end
-  if isfield(cfg.grid, 'filter')
-    grid.filter = cfg.grid.filter;
-  end
-  % this is not supported any more
-  if isfield(cfg.grid, 'avg') && isfield(cfg.grid.avg, 'filter')
-    error('please put your filters in cfg.grid instead of cfg.grid.avg');
-  end
+  grid = keepfields(cfg.grid, {'pos', 'unit', 'xgrid', 'ygrid', 'zgrid', 'mom', 'tri', 'dim', 'transform', 'inside', 'lbex', 'subspace', 'leadfield', 'filter'});
 end
 
 if basedonmri
@@ -459,11 +409,8 @@ if basedonmri
     fn = booleanfields(mri);
     if isempty(fn)
       % convert indexed segmentation into probabilistic
-      segstyle = 'indexed';
-      mri      = ft_datatype_segmentation(mri, 'segmentationstyle', 'probabilistic');
-      fn       = booleanfields(mri);
-    else
-      segstyle = 'probabilistic';
+      mri = ft_datatype_segmentation(mri, 'segmentationstyle', 'probabilistic');
+      fn  = booleanfields(mri);
     end
     
     dat = false(mri.dim);
@@ -479,7 +426,7 @@ if basedonmri
   end
   
   
-  % determine for each voxel whether it belongs to the cortex
+  % determine for each voxel whether it belongs to the grey matter
   fprintf('thresholding MRI data at a relative value of %f\n', cfg.threshold);
   head = dat./max(dat(:)) > cfg.threshold;
   
@@ -497,9 +444,9 @@ if basedonmri
   zgrid               = floor(min(poshead(:,3))):resolution:ceil(max(poshead(:,3)));
   [X,Y,Z]             = ndgrid(xgrid,ygrid,zgrid);
   pos2head            = [X(:) Y(:) Z(:)];
-  pos2mri             = ft_warp_apply(inv(mri.transform), pos2head);          % transform to MRI voxel coordinates
+  pos2mri             = ft_warp_apply(inv(mri.transform), pos2head);        % transform to MRI voxel coordinates
   pos2mri             = round(pos2mri);
-  inside              = find(getinside(pos2mri, head));                    % use helper subfunction
+  inside              = getinside(pos2mri, head);                           % use helper subfunction
   
   grid.pos            = pos2head/scale;                                     % convert to source units
   grid.xgrid          = xgrid/scale;                                        % convert to source units
@@ -507,9 +454,8 @@ if basedonmri
   grid.zgrid          = zgrid/scale;                                        % convert to source units
   grid.dim            = [length(grid.xgrid) length(grid.ygrid) length(grid.zgrid)];
   grid.inside         = inside(:);
-  grid.outside        = setdiff(1:size(grid.pos,1),grid.inside)';
   grid.unit           = cfg.grid.unit;
-  
+
   if issegmentation
     % pass on the segmentation information on the grid points, the
     % individual masks have been smoothed above
@@ -521,9 +467,8 @@ if basedonmri
     % overlapping due to smoothing
     % grid = ft_datatype_segmentation(grid, 'segmentationstyle', segstyle);
   end
-  fprintf('the regular 3D grid masked by the input MRI contains %d grid points\n', size(grid.pos,1));
-  fprintf('%d grid points inside the mask\n',  length(grid.inside));
-  fprintf('%d grid points outside the mask\n', length(grid.outside));
+  fprintf('the full grid contains %d grid points\n', numel(grid.inside));
+  fprintf('%d grid points are mared as inside the brain\n',  sum(grid.inside));
 end
 
 if basedoncortex
@@ -573,8 +518,7 @@ if basedonshape
   grid.pos     = headsurface([], [], 'headshape', headshape, 'inwardshift', cfg.inwardshift, 'npnt', cfg.spheremesh);
   grid.tri     = headshape.tri;
   grid.unit    = headshape.unit;
-  grid.inside  = 1:size(grid.pos,1);
-  grid.outside = [];
+  grid.inside  = true(size(grid.pos,1));
 end
 
 if basedonvol
@@ -585,8 +529,7 @@ if basedonvol
   % please note that cfg.inwardshift should be expressed in the units consistent with cfg.grid.unit
   grid.pos     = headsurface(vol, sens, 'inwardshift', cfg.inwardshift, 'npnt', cfg.spheremesh);
   grid.unit    = cfg.grid.unit;
-  grid.inside  = 1:size(grid.pos,1);
-  grid.outside = [];
+  grid.inside  = true(size(grid.pos,1));
 end
 
 if basedonmni
@@ -607,12 +550,12 @@ if basedonmni
   % check whether the mni template grid exists for the specified resolution
   % if not create it: FIXME (this needs to be done still)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  if ischar(fname) && ~exist(fname, 'file')
-    error('the MNI template grid based on the specified resolution does not yet exist');
-  end
   
   % get the mri
   if ischar(cfg.mri)
+    if ~exist(fname, 'file')
+      error('the MNI template grid based on the specified resolution does not exist');
+    end
     mri = ft_read_mri(cfg.mri);
   else
     mri = cfg.mri;
@@ -627,8 +570,11 @@ if basedonmni
   end
   
   % ensure these to have units in mm, the conversion of the source model is done further down
-  mri     = ft_convert_units(mri, 'mm');
+  mri     = ft_convert_units(mri,     'mm');
   mnigrid = ft_convert_units(mnigrid, 'mm');
+  
+  % ensure that it is specified with logical inside
+  mnigrid = fixinside(mnigrid);
   
   % spatial normalisation of mri and construction of subject specific dipole grid positions
   tmpcfg           = [];
@@ -636,7 +582,7 @@ if basedonmni
   if isfield(cfg.grid, 'templatemri')
     tmpcfg.template = cfg.grid.templatemri;
   end
-  normalise        = ft_volumenormalise(tmpcfg, mri);
+  normalise = ft_volumenormalise(tmpcfg, mri);
   
   if ~isfield(normalise, 'params') && ~isfield(normalise, 'initial')
     fprintf('applying an inverse warp based on a linear transformation only\n');
@@ -649,14 +595,11 @@ if basedonmni
   end
   grid.unit    = mnigrid.unit;
   grid.inside  = mnigrid.inside;
-  grid.outside = mnigrid.outside;
   grid.params  = normalise.params;
   grid.initial = normalise.initial;
   if ft_datatype(mnigrid, 'parcellation')
-    fn = booleanfields(mnigrid);
-    for i=1:numel(fn)
-      grid.(fn{i}) = mnigrid.(fn{i});
-    end
+    % copy the boolean fields over
+    grid = copyfields(mnigrid, grid, booleanfields(mnigrid));
   end
   
 end
@@ -690,24 +633,18 @@ if ~isempty(cfg.moveinward)
     grid.pos(~inside,:) = pnt3;
   end
   if cfg.moveinward>cfg.inwardshift
-    grid.inside  = 1:size(grid.pos,1);
-    grid.outside = [];
+    grid.inside  = true(size(grid.pos,1),1);
   end
 end
 
-% determine the dipole locations that are inside the source compartment of the volume conduction model
-if ~isfield(grid, 'inside') && ~isfield(grid, 'outside')
-  inside = ft_inside_vol(grid.pos, vol, 'grad', sens, 'headshape', cfg.headshape, 'inwardshift', cfg.inwardshift); % this returns a boolean vector
-  grid.inside  = find(inside==true);
-  grid.outside = find(inside==false);
-elseif ~isfield(grid, 'inside')
-  grid.inside = setdiff(1:size(grid.pos,1), grid.outside);
-elseif ~isfield(grid, 'outside')
-  grid.outside = setdiff(1:size(grid.pos,1), grid.inside);
+% determine the dipole locations that are inside the source compartment of the
+% volume conduction model, i.e. inside the brain
+if ~isfield(grid, 'inside')
+  grid.inside = ft_inside_vol(grid.pos, vol, 'grad', sens, 'headshape', cfg.headshape, 'inwardshift', cfg.inwardshift); % this returns a boolean vector
 end
 
 if strcmp(cfg.grid.tight, 'yes')
-  fprintf('%d dipoles inside, %d dipoles outside brain\n', length(grid.inside), length(grid.outside));
+  fprintf('%d dipoles inside, %d dipoles outside brain\n', sum(grid.inside), sum(~grid.inside));
   fprintf('making tight grid\n');
   xmin = min(grid.pos(grid.inside,1));
   ymin = min(grid.pos(grid.inside,2));
@@ -725,24 +662,21 @@ if strcmp(cfg.grid.tight, 'yes')
   sel = sel & (grid.pos(:,2)>=ymin & grid.pos(:,2)<=ymax); % select all grid positions inside the tight box
   sel = sel & (grid.pos(:,3)>=zmin & grid.pos(:,3)<=zmax); % select all grid positions inside the tight box
   grid.pos   = grid.pos(sel,:);
-  % update the inside and outside vector
-  tmp = zeros(1,prod(grid.dim));
-  tmp(grid.inside)  = 1;        % these are originally inside the brain
-  tmp(grid.outside) = 0;        % these are originally outside the brain
-  tmp               = tmp(sel); % within the tight box, these are inside the brain
-  grid.inside  = find(tmp);
-  grid.outside = find(~tmp);
+  % update the grid locations that are marked as inside the brain
+  tmp = false(prod(grid.dim),1);
+  tmp(grid.inside) = true;      % these are originally inside the brain
+  tmp              = tmp(sel); % within the tight box, these are inside the brain
   grid.xgrid   = grid.xgrid(xmin_indx:xmax_indx);
   grid.ygrid   = grid.ygrid(ymin_indx:ymax_indx);
   grid.zgrid   = grid.zgrid(zmin_indx:zmax_indx);
   grid.dim     = [length(grid.xgrid) length(grid.ygrid) length(grid.zgrid)];
-  if exist('issegmentation', 'var') && issegmentation
-    for i=1:numel(fn)
-      grid.(fn{i}) = grid.(fn{i})(sel);
-    end
+  % update all boolean fields, this includes the inside field
+  fn = booleanfields(grid);
+  for i=1:numel(fn)
+    grid.(fn{i}) = grid.(fn{i})(sel);
   end
 end
-fprintf('%d dipoles inside, %d dipoles outside brain\n', length(grid.inside), length(grid.outside));
+fprintf('%d dipoles inside, %d dipoles outside brain\n', sum(grid.inside), sum(~grid.inside));
 
 % apply the symmetry constraint, i.e. add a symmetric dipole for each location defined sofar
 % set up the symmetry constraints

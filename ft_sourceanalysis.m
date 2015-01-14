@@ -22,7 +22,7 @@ function [source] = ft_sourceanalysis(cfg, data, baseline)
 %                    'rv'      scan residual variance with single dipole
 %                    'music'   multiple signal classification
 %                    'mvl'     multivariate Laplace source localization
-%                    'eloreta' exact low-resolution electromagnetic tomography  
+%                    'eloreta' exact low-resolution electromagnetic tomography
 % The DICS and PCC methods are for frequency domain data, all other methods
 % are for time domain data. ELORETA can be used both for frequency and time
 % domain data.
@@ -35,12 +35,11 @@ function [source] = ft_sourceanalysis(cfg, data, baseline)
 %   cfg.grid.resolution = number (e.g. 1 cm) for automatic grid generation
 % Alternatively the position of a few sources at locations of interest can
 % be specified, for example obtained from an anatomical or functional MRI
-%   cfg.grid.pos        = Nx3 matrix with position of each source
+%   cfg.grid.pos        = N*3 matrix with position of each source
+%   cfg.grid.inside     = N*1 vector with boolean value whether grid point is inside brain (optional)
 %   cfg.grid.dim        = [Nx Ny Nz] vector with dimensions in case of 3-D grid (optional)
-%   cfg.grid.inside     = vector with indices of the sources inside the brain (optional)
-%   cfg.grid.outside    = vector with indices of the sources outside the brain (optional)
 % You can also use the FT_PREPARE_LEADFIELD function to create a grid with
-% dipole positions and with precomputed leadfields. 
+% dipole positions and with precomputed leadfields.
 %
 % Besides the source positions, you may also include previously computed
 % spatial filters and/or leadfields like this
@@ -212,7 +211,7 @@ cfg.channel          = ft_getopt(cfg, 'channel',  'all');
 cfg.supdip           = ft_getopt(cfg, 'supdip',        []);
 
 % the default for this depends on EEG/MEG and is set below
-% if ~isfield(cfg, 'reducerank'),     cfg.reducerank = 'no';      end  
+% if ~isfield(cfg, 'reducerank'),     cfg.reducerank = 'no';      end
 
 % put the low-level options pertaining to the source reconstruction method in their own field
 cfg = ft_checkconfig(cfg, 'createsubcfg',  cfg.method);
@@ -302,7 +301,7 @@ elseif isfreq
   if isfield(data, 'time')
     cfg.latency   = mean(cfg.latency);
   end
-
+  
 elseif iscomp
   % FIXME, select the components here
   % FIXME, add the component numbers to the output
@@ -327,7 +326,7 @@ if isfreq
       ~strcmp(data.dimord, 'chan_chan_freq_time')       && ...
       ~strcmp(data.dimord, 'rpt_chan_chan_freq_time')   && ...
       ~strcmp(data.dimord, 'rpttap_chan_chan_freq')     && ...
-    error('dimord of input frequency data is not recognized');
+      error('dimord of input frequency data is not recognized');
   end
 end
 
@@ -660,7 +659,7 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne', 'rv', 'music'
         data.cov(i,:,:) = eye(Nchans);
       end
     end
-    hascovariance = 0;    
+    hascovariance = 0;
     warning_once('No covariance matrix found - will assume identity covariance matrix (mininum-norm solution)');
   end
   
@@ -843,55 +842,55 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne', 'rv', 'music'
       dip(i) = beamformer_lcmv(grid, sens, vol, squeeze_avg, squeeze(Cy(i,:,:)), optarg{:});
     end
     
-% the following has been disabled since it turns out to be wrong (see
-% bugzilla bug 2395)
-%   elseif 0 && strcmp(cfg.method, 'lcmv')
-%     %don't loop over repetitions (slow), but reshape the input data to obtain single trial timecourses efficiently
-%     %in the presence of filters pre-computed on the average (or whatever)
-%     tmpdat = reshape(permute(avg,[2 3 1]),[siz(2) siz(3)*siz(1)]);
-%     tmpdip = beamformer_lcmv(grid, sens, vol, tmpdat, squeeze(mean(Cy,1)), optarg{:});
-%     tmpmom = tmpdip.mom{tmpdip.inside(1)};
-%     sizmom = size(tmpmom);
-% 
-%     for i=1:length(tmpdip.inside)
-%       indx = tmpdip.inside(i);
-%       tmpdip.mom{indx} = permute(reshape(tmpdip.mom{indx}, [sizmom(1) siz(3) siz(1)]), [3 1 2]);
-%     end
-%     try, tmpdip = rmfield(tmpdip, 'pow'); end
-%     try, tmpdip = rmfield(tmpdip, 'cov'); end
-%     try, tmpdip = rmfield(tmpdip, 'noise'); end
-%     for i=1:Nrepetitions
-%       dip(i).pos     = tmpdip.pos;
-%       dip(i).inside  = tmpdip.inside;
-%       dip(i).outside = tmpdip.outside;
-%       dip(i).mom     = cell(1,size(tmpdip.pos,1));
-%       if isfield(tmpdip, 'ori')
-%         dip(i).ori   = cell(1,size(tmpdip.pos,1));
-%       end
-%       dip(i).cov     = cell(1,size(tmpdip.pos,1));
-%       dip(i).pow     = nan(size(tmpdip.pos,1),1);
-%       for ii=1:length(tmpdip.inside)
-%         indx             = tmpdip.inside(ii);
-%         tmpmom           = reshape(tmpdip.mom{indx}(i,:,:),[sizmom(1) siz(3)]);
-%         dip(i).mom{indx} = tmpmom;
-%         if isfield(tmpdip, 'ori')
-%           dip(i).ori{indx} = tmpdip.ori{indx};
-%         end
-%        
-%         % the following recovers the single trial power and covariance, but
-%         % importantly the latency over which the power is defined is the
-%         % latency of the event-related field in the input and not the
-%         % latency of the covariance window, which can differ from the
-%         % former
-%         dip(i).cov{indx} = (tmpmom*tmpmom')./siz(3);
-%         if isempty(cfg.lcmv.powmethod) || strcmp(cfg.lcmv.powmethod, 'trace')
-%           dip(i).pow(indx) = trace(dip(i).cov{indx});
-%         else
-%           [tmpu,tmps,tmpv] = svd(dip(i).cov{indx});
-%           dip(i).pow(indx) = tmps(1);
-%         end
-%       end
-%     end
+    % the following has been disabled since it turns out to be wrong (see
+    % bugzilla bug 2395)
+    %   elseif 0 && strcmp(cfg.method, 'lcmv')
+    %     %don't loop over repetitions (slow), but reshape the input data to obtain single trial timecourses efficiently
+    %     %in the presence of filters pre-computed on the average (or whatever)
+    %     tmpdat = reshape(permute(avg,[2 3 1]),[siz(2) siz(3)*siz(1)]);
+    %     tmpdip = beamformer_lcmv(grid, sens, vol, tmpdat, squeeze(mean(Cy,1)), optarg{:});
+    %     tmpmom = tmpdip.mom{tmpdip.inside(1)};
+    %     sizmom = size(tmpmom);
+    %
+    %     for i=1:length(tmpdip.inside)
+    %       indx = tmpdip.inside(i);
+    %       tmpdip.mom{indx} = permute(reshape(tmpdip.mom{indx}, [sizmom(1) siz(3) siz(1)]), [3 1 2]);
+    %     end
+    %     try, tmpdip = rmfield(tmpdip, 'pow'); end
+    %     try, tmpdip = rmfield(tmpdip, 'cov'); end
+    %     try, tmpdip = rmfield(tmpdip, 'noise'); end
+    %     for i=1:Nrepetitions
+    %       dip(i).pos     = tmpdip.pos;
+    %       dip(i).inside  = tmpdip.inside;
+    %       dip(i).outside = tmpdip.outside;
+    %       dip(i).mom     = cell(1,size(tmpdip.pos,1));
+    %       if isfield(tmpdip, 'ori')
+    %         dip(i).ori   = cell(1,size(tmpdip.pos,1));
+    %       end
+    %       dip(i).cov     = cell(1,size(tmpdip.pos,1));
+    %       dip(i).pow     = nan(size(tmpdip.pos,1),1);
+    %       for ii=1:length(tmpdip.inside)
+    %         indx             = tmpdip.inside(ii);
+    %         tmpmom           = reshape(tmpdip.mom{indx}(i,:,:),[sizmom(1) siz(3)]);
+    %         dip(i).mom{indx} = tmpmom;
+    %         if isfield(tmpdip, 'ori')
+    %           dip(i).ori{indx} = tmpdip.ori{indx};
+    %         end
+    %
+    %         % the following recovers the single trial power and covariance, but
+    %         % importantly the latency over which the power is defined is the
+    %         % latency of the event-related field in the input and not the
+    %         % latency of the covariance window, which can differ from the
+    %         % former
+    %         dip(i).cov{indx} = (tmpmom*tmpmom')./siz(3);
+    %         if isempty(cfg.lcmv.powmethod) || strcmp(cfg.lcmv.powmethod, 'trace')
+    %           dip(i).pow(indx) = trace(dip(i).cov{indx});
+    %         else
+    %           [tmpu,tmps,tmpv] = svd(dip(i).cov{indx});
+    %           dip(i).pow(indx) = tmps(1);
+    %         end
+    %       end
+    %     end
     
   elseif strcmp(cfg.method, 'eloreta'),
     for i=1:Nrepetitions
@@ -971,39 +970,23 @@ if isfield(grid, 'tri')
 end
 
 if exist('dip', 'var')
-  % do some cleaning up, keep the dipole positions etc. in the global structure and not in each trial
-  source.pos     = dip(1).pos;
-  source.inside  = dip(1).inside;
-  source.outside = dip(1).outside;
-  dip = rmfield(dip, 'pos');
-  dip = rmfield(dip, 'inside');
-  dip = rmfield(dip, 'outside');
-  if isfield(dip(1), 'leadfield')
-    source.leadfield = dip(1).leadfield;
-    dip = rmfield(dip, 'leadfield');
-  end
+  source = copyfields(dip, source, {'pos', 'inside', 'leadfield'});
+  dip = removefields(dip, {'pos', 'inside', 'leadfield'});
 elseif exist('grid', 'var')
   % no scanning has been done, probably only the leadfield has been computed
-  try, source.pos       = grid.pos;       end
-  try, source.inside    = grid.inside;    end
-  try, source.outside   = grid.outside;   end
-  try, source.leadfield = grid.leadfield; end
+  source = copyfields(grid, source, {'pos', 'inside', 'leadfield'});
+  grid = removefields(grid, {'pos', 'inside', 'leadfield'});
 end
 
-if strcmp(cfg.keepleadfield, 'yes') && ~isfield(source, 'leadfield')
-  % add the precomputed leadfields to the output source
-  source.leadfield = grid.leadfield;
-elseif strcmp(cfg.keepleadfield, 'no') && isfield(source, 'leadfield')
-  % remove the precomputed leadfields from the output source
-  source = rmfield(source, 'leadfield');
+if ~istrue(cfg.keepleadfield)
+  % remove the precomputed leadfields from the output source (if present)
+  source = removefields(source, {'leadfield'});
 end
 
 
 % remove the precomputed leadfields from the cfg regardless of what keepleadfield is saying
 % it should not be kept in cfg, since there it takes up too much space
-if isfield(cfg, 'grid') && isfield(cfg.grid, 'leadfield')
-  cfg.grid = rmfield(cfg.grid, 'leadfield');
-end
+cfg.grid = removefields(cfg.grid, {'leadfield'});
 
 if convertfreq
   % FIXME, convert the source reconstruction back to a frequency representation
@@ -1044,6 +1027,9 @@ elseif strcmp(cfg.permutation, 'yes')
   source.avgB = dip(2);
   source.trialA = dip(1+2*(1:cfg.numpermutation));
   source.trialB = dip(2+2*(1:cfg.numpermutation));
+elseif (strcmp(cfg.jackknife, 'yes') || strcmp(cfg.bootstrap, 'yes') || strcmp(cfg.pseudovalue, 'yes') || strcmp(cfg.singletrial, 'yes') || strcmp(cfg.rawtrial, 'yes')) && strcmp(cfg.keeptrials, 'yes')
+  % keep the source reconstruction for each repeated or resampled trial
+  source.trial = dip;
 elseif exist('dip', 'var')
   % it looks like beamformer analysis was done on an average input, keep the average source reconstruction
   source.method = 'average';
@@ -1052,19 +1038,10 @@ else
   % apparently no computations were performed
 end
 
-if (strcmp(cfg.jackknife, 'yes') || strcmp(cfg.bootstrap, 'yes') || strcmp(cfg.pseudovalue, 'yes') || strcmp(cfg.singletrial, 'yes') || strcmp(cfg.rawtrial, 'yes')) && strcmp(cfg.keeptrials, 'yes')
-  % keep the source reconstruction for each repeated or resampled trial
-  source.trial  = dip;
-end
-
 % remember the trialinfo
 if (strcmp(cfg.keeptrials, 'yes') || strcmp(cfg.method, 'pcc')) && isfield(data, 'trialinfo')
   source.trialinfo = data.trialinfo;
 end
-
-% clean up the output source structure, e.g. ensure that the size of output
-% elements is npos*1 and not 1*npos
-source = ft_checkdata(source);
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
