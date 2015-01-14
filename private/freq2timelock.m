@@ -42,7 +42,7 @@ if isfield(freq, 'fourierspctrm')
     spctrm = dimindex(freq.fourierspctrm, fdim, fbin)';
   end
   % select the desired channels in the data
-  cfg.channel = channelselection(cfg.channel, freq.label);
+  cfg.channel = ft_channelselection(cfg.channel, freq.label);
   [dum, chansel] = match_str(cfg.channel, freq.label);
   spctrm = spctrm(chansel,:);
   % concatenate the real and imaginary part
@@ -50,7 +50,7 @@ if isfield(freq, 'fourierspctrm')
 elseif isfield(freq, 'crsspctrm')
   fprintf('constructing real/imag data representation from csd matrix\n');
   % hmmm... I have no idea whether this is correct
-  cfg.channel = channelselection(cfg.channel, freq.label);
+  cfg.channel = ft_channelselection(cfg.channel, freq.label);
   % this subfunction also takes care of the channel selection
   [Cf, Cr, Pr, Ntrials, dum] = prepare_freq_matrices(cfg, freq);
   cfg.frequency = dum.frequency;
