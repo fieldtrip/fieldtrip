@@ -510,7 +510,8 @@ if ~isempty(BrainModel)
             brainstructureIndex{i} = 1:BrainModel(i).SurfaceNumberOfNodes;
           case {'2', '2.0'}
             greynodeIndex{i}       = BrainModel(i).VertexIndices;
-            brainstructureIndex{i} = 1:BrainModel(i).SurfaceNumberOfVertices;
+            %brainstructureIndex{i} = 1:BrainModel(i).SurfaceNumberOfVertices;
+            brainstructureIndex{i} = 1:numel(BrainModel(i).VertexIndices);
           otherwise
             error('unsupported cifti version');
         end % switch
@@ -539,7 +540,7 @@ if ~isempty(BrainModel)
   end
   
   % it would be possible to represent all voxels, but for efficiency we only include voxel positions with data
-  if ~isempty(Volume)
+  if ~isempty(Volume) && any(isnan(surfaceIndex))
     tmp       = ft_warp_apply(Volume.Transform, cat(1, BrainModel(isnan(surfaceIndex)).VoxelIndicesIJK));
     pos       = cat(1, pos, tmp);
     posIndex  = cat(1, posIndex, nan(size(tmp,1),1));
@@ -902,11 +903,32 @@ else
   source.label = {Parcel(:).Name};
 end
 
+haslabeltable = false;
+if ~isempty(NamedMap)
+  % the following assumes a single NamedMap
+  if isfield(NamedMap, 'LabelTable')
+    % use the key-label combination in the label table
+    haslabeltable = true;
+    key           = NamedMap.LabelTable.Key;
+  end
+  source.datalabel = NamedMap.LabelTable.Label(:);
+end
+
 if readdata
   if isfield(source, 'data')
     % rename the data field
     source.(fixname(dataname)) = source.data;
+    
+    % adopt FT convention for parcel-to-label mapping
+    if haslabeltable
+      tempdata = nan+zeros(size(source.data));
+      for k = 1:numel(key)
+        tempdata(source.data==key(k)) = k;
+      end
+      source.data = tempdata;
+    end
     source = rmfield(source, 'data');
+    
   end
   
   % rename the datalabel field
@@ -914,4 +936,5 @@ if readdata
     source.(fixname([dataname 'label'])) = source.datalabel;
     source = rmfield(source, 'datalabel');
   end
+  
 end

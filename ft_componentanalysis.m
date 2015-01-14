@@ -226,6 +226,7 @@ if isfield(cfg, 'unmixing') && isfield(cfg, 'topolabel')
   tmpcfg.numcomponent = 'all';
   tmpcfg.method       = 'predetermined unmixing matrix';
   tmpcfg.doscale      = cfg.doscale;
+  tmpcfg.updatesens   = cfg.updatesens;
   cfg                 = tmpcfg;
 end
 
