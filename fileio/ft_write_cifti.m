@@ -138,17 +138,47 @@ switch dimord
   case 'chan_time'
     % NIFTI_INTENT_CONNECTIVITY_PARCELLATED_SERIES
     extension = '.ptseries.nii';
-    intent_code = 3000;
+    intent_code = 3004;
     intent_name = 'ConnParcelSries'; % due to length constraints of the NIfTI header field, the first "e" is removed
     dat = transpose(dat);
     dimord = 'time_chan';
   case 'chan_freq'
     % NIFTI_INTENT_CONNECTIVITY_PARCELLATED_SERIES
     extension = '.ptseries.nii';
-    intent_code = 3000;
+    intent_code = 3004;
     intent_name = 'ConnParcelSries'; % due to length constraints of the NIfTI header field, the first "e" is removed
     dat = transpose(dat);
     dimord = 'freq_chan';
+    
+  case 'chan_chan_time'
+    % NIFTI_INTENT_CONNECTIVITY_PARCELLATED_PARCELLATED_SERIES
+    extension = '.pconnseries.nii';
+    intent_code = 3011;
+    intent_name = 'ConnPPSr';
+    dat = permute(dat, [3 1 2]);
+    dimord = 'time_chan_chan';
+  case 'chan_chan_freq'
+    % NIFTI_INTENT_CONNECTIVITY_PARCELLATED_PARCELLATED_SERIES
+    extension = '.pconnseries.nii';
+    intent_code = 3011;
+    intent_name = 'ConnPPSr';
+    dat = permute(dat, [3 1 2]);
+    dimord = 'freq_chan_chan';
+    
+  case 'pos_pos_time'
+    % this is not part of the Cifti v2 specification, but would have been NIFTI_INTENT_CONNECTIVITY_DENSE_DENSE_SERIES
+    extension = '.dconnseries.nii'; % user's choise
+    intent_code = 3000;
+    intent_name = 'ConnUnknown';
+    dat = permute(dat, [3 1 2]);
+    dimord = 'time_pos_pos';
+  case 'pos_pos_freq'
+    % this is not part of the Cifti v2 specification, but would have been NIFTI_INTENT_CONNECTIVITY_DENSE_DENSE_SERIES
+    extension = '.dconnseries.nii'; % user's choise
+    intent_code = 3000;
+    intent_name = 'ConnUnknown';
+    dat = permute(dat, [3 1 2]);
+    dimord = 'freq_pos_pos';
     
   otherwise
     error('unsupported dimord "%s"', dimord);
@@ -651,38 +681,24 @@ end
 % dim(1) represents the number of dimensions
 % for a normal nifti file, dim(2:4) are x, y, z, dim(5) is time, dim(6:8) are free to choose
 % the cifti file makes use of dim(6:8)
-switch dimord
-  case 'pos_scalar'
-    hdr.dim             = [6 1 1 1 1 size(source.pos,1)   1                    1]; % only single scalar
-  case 'scalar_pos'
-    hdr.dim             = [6 1 1 1 1 1                    size(source.pos,1)   1]; % only single scalar
-  case 'chan_scalar'
-    hdr.dim             = [6 1 1 1 1 numel(source.label)  1                    1]; % only single scalar
-  case 'scalar_chan'
-    hdr.dim             = [6 1 1 1 1 1                    numel(source.label)  1]; % only single scalar
-  case 'pos_time'
-    hdr.dim             = [6 1 1 1 1 size(source.pos,1)   length(source.time)  1];
-  case 'time_pos'
-    hdr.dim             = [6 1 1 1 1 length(source.time)  size(source.pos,1)   1];
-  case 'chan_time'
-    hdr.dim             = [6 1 1 1 1 length(source.label) length(source.time)  1];
-  case 'time_chan'
-    hdr.dim             = [6 1 1 1 1 length(source.time)  length(source.label) 1];
-  case 'pos_pos'
-    hdr.dim             = [6 1 1 1 1 size(source.pos,1)   size(source.pos,1)   1];
-  case 'chan_chan'
-    hdr.dim             = [6 1 1 1 1 length(source.label) length(source.label) 1];
-  case 'chan_chan_time'
-    hdr.dim             = [6 1 1 1 1 length(source.label) length(source.label) length(source.time)];
-  case 'pos_pos_time'
-    hdr.dim             = [6 1 1 1 1 size(source.pos,1)   size(source.pos,1)   length(source.time)];
-  case 'chan_chan_freq'
-    hdr.dim             = [6 1 1 1 1 length(source.label) length(source.label) length(source.freq)];
-  case 'pos_pos_freq'
-    hdr.dim             = [6 1 1 1 1 size(source.pos,1)   size(source.pos,1)   length(source.freq)];
-  otherwise
-    error('unsupported dimord "%s"', dimord)
-end % switch
+hdr.dim = [6 1 1 1 1 1 1 1];
+
+for i=1:length(dimtok)
+  switch dimtok{i}
+    case 'pos'
+      hdr.dim(5+i) = size(source.pos,1);
+    case 'chan'
+      hdr.dim(5+i) = numel(source.label);
+    case 'time'
+      hdr.dim(5+i) = numel(source.time);
+    case 'freq'
+      hdr.dim(5+i) = numel(source.freq);
+    case 'scalar'
+      hdr.dim(5+i) = 1;
+    otherwise
+      error('unsupported dimord "%s"', dimord)
+  end
+end
 
 hdr.intent_p1       = 0;
 hdr.intent_p2       = 0;
