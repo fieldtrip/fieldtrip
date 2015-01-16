@@ -24,13 +24,14 @@ function [dipout] = beamformer_lcmv(dip, grad, vol, dat, Cy, varargin)
 %  'lambda'           = regularisation parameter
 %  'powmethod'        = can be 'trace' or 'lambda1'
 %  'feedback'         = give ft_progress indication, can be 'text', 'gui' or 'none' (default)
-%  'fixedori'         = use fixed or free orientation,                 can be 'yes' or 'no'
-%  'projectnoise'     = project noise estimate through filter,         can be 'yes' or 'no'
+%  'fixedori'         = use fixed or free orientation,                   can be 'yes' or 'no'
+%  'projectnoise'     = project noise estimate through filter,           can be 'yes' or 'no'
 %  'projectmom'       = project the dipole moment timecourse on the direction of maximal power, can be 'yes' or 'no'
-%  'keepfilter'       = remember the beamformer filter,                can be 'yes' or 'no'
-%  'keepleadfield'    = remember the forward computation,              can be 'yes' or 'no'
-%  'keepmom'          = remember the estimated dipole moment,          can be 'yes' or 'no'
-%  'keepcov'          = remember the estimated dipole covariance,      can be 'yes' or 'no'
+%  'keepfilter'       = remember the beamformer filter,                  can be 'yes' or 'no'
+%  'keepleadfield'    = remember the forward computation,                can be 'yes' or 'no'
+%  'keepmom'          = remember the estimated dipole moment timeseries, can be 'yes' or 'no'
+%  'keepcov'          = remember the estimated dipole covariance,        can be 'yes' or 'no'
+%  'kurtosis'         = compute the kurtosis of the dipole timeseries,   can be 'yes' or 'no'
 %
 % These options influence the forward computation of the leadfield
 %  'reducerank'       = reduce the leadfield rank, can be 'no' or a number (e.g. 2)
@@ -42,7 +43,7 @@ function [dipout] = beamformer_lcmv(dip, grad, vol, dat, Cy, varargin)
 % is specified, its orientation will be used and only the strength will
 % be fitted to the data.
 
-% Copyright (C) 2003-2008, Robert Oostenveld
+% Copyright (C) 2003-2014, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -84,15 +85,17 @@ lambda         = keyval('lambda',        varargin); if isempty(lambda  ),      l
 projectnoise   = keyval('projectnoise',  varargin); if isempty(projectnoise),  projectnoise = 'yes';         end
 projectmom     = keyval('projectmom',    varargin); if isempty(projectmom),    projectmom = 'no';            end
 fixedori       = keyval('fixedori',      varargin); if isempty(fixedori),      fixedori = 'no';              end
+computekurt    = keyval('kurtosis',      varargin); if isempty(computekurt),   computekurt = 'no';           end
 
 % convert the yes/no arguments to the corresponding logical values
-keepfilter     = strcmp(keepfilter,    'yes');
-keepleadfield  = strcmp(keepleadfield, 'yes');
-keepcov        = strcmp(keepcov,       'yes');
-keepmom        = strcmp(keepmom,       'yes');
-projectnoise   = strcmp(projectnoise,  'yes');
-projectmom     = strcmp(projectmom,    'yes');
-fixedori       = strcmp(fixedori,      'yes');
+keepfilter     = istrue(keepfilter);
+keepleadfield  = istrue(keepleadfield);
+keepcov        = istrue(keepcov);
+keepmom        = istrue(keepmom);
+projectnoise   = istrue(projectnoise);
+projectmom     = istrue(projectmom);
+fixedori       = istrue(fixedori);
+computekurt    = istrue(computekurt);
 
 % default is to use the trace of the covariance matrix, see Van Veen 1997
 if isempty(powmethod)
@@ -266,7 +269,7 @@ for i=1:size(dip.pos,1)
   end
   if projectmom
     [u, s, v] = svd(filt * Cy * ctranspose(filt));
-    mom = u(:,1);
+    mom = u(:,1); % dominant dipole direction
     filt = (mom') * filt;
   end
   if powlambda1
@@ -284,6 +287,10 @@ for i=1:size(dip.pos,1)
     % estimate the instantaneous dipole moment at the current position
     dipout.mom{i} = filt * dat;
   end
+  if computekurt && ~isempty(dat)
+    % compute the kurtosis of the dipole time series
+    dipout.kurtosis(i,:) = kurtosis((filt*dat)');
+  end    
   if projectnoise
     % estimate the power of the noise that is projected through the filter
     if powlambda1
@@ -351,6 +358,10 @@ end
 if isfield(dipout, 'noise')
   dipout.noise(dipout.inside)  = dipout.noise;
   dipout.noise(dipout.outside) = nan;
+end
+if isfield(dipout, 'kurtosis')
+  dipout.kurtosis(dipout.inside,:)  = dipout.kurtosis;
+  dipout.kurtosis(dipout.outside,:) = nan;
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
