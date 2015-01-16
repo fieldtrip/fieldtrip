@@ -126,6 +126,7 @@ headerformat     = ft_getopt(varargin, 'headerformat');
 dataformat       = ft_getopt(varargin, 'dataformat');
 threshold        = ft_getopt(varargin, 'threshold');           % this is used for analog channels
 tolerance        = ft_getopt(varargin, 'tolerance', 1);
+checkmaxfilter   = ft_getopt(varargin, 'checkmaxfilter');      % will be passed to ft_read_header
 
 % this allows to read only events in a certain range, supported for selected data formats only
 flt_type         = ft_getopt(varargin, 'type');
@@ -1219,7 +1220,7 @@ switch eventformat
     end
     
     if isempty(hdr)
-      hdr = ft_read_header(filename, 'headerformat', headerformat);
+      hdr = ft_read_header(filename, 'headerformat', headerformat, 'checkmaxfilter', checkmaxfilter);
     end
     
     % note below we've had to include some chunks of code that are only
