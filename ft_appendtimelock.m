@@ -220,6 +220,8 @@ switch cfg.appenddim
       end % for varargin
     end
     timelock.dimord = 'rpt_chan_time';
+  otherwise
+    error('it is not allowed to concatenate across dimension %s',cfg.appenddim);      
 end
 
 % do the general cleanup and bookkeeping at the end of the function
