@@ -5,7 +5,7 @@ function test_bug2767
 
 % TEST test_bug2767
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/01_ljh_firststd_meg_182.fif');
+filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2767/01_ljh_firststd_meg_182.fif');
 
 hdr = ft_read_header(filename);
 dat = ft_read_data(filename);
