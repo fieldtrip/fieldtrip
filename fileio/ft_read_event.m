@@ -100,12 +100,26 @@ if isempty(db_blob)
 end
 
 if iscell(filename)
-  % use recursion to read from multiple event sources
-  event = [];
+  warning_once(sprintf('concatenating events from %d files', numel(filename)));
+  % use recursion to read events from multiple files
+  hdr    = cell(size(filename));
+  event  = cell(size(filename));
+  offset = 0;
   for i=1:numel(filename)
     tmp   = ft_read_event(filename{i}, varargin{:});
     event = appendevent(event(:), tmp(:));
+    hdr{i}   = ft_read_header(filename{i}, varargin{:});
+    varargin = ft_setopt(varargin, 'header', hdr{i});
+    event{i} = ft_read_event(filename{i}, varargin{:});
+    for j=1:numel(event{i})
+      % add the offset due to the previous files
+      event{i}(j).sample = event{i}(j).sample + offset;
+    end
+    % update the offset for the next file
+    offset = offset+hdr{i}.nSamples*hdr{i}.nTrials;
   end
+  % return the concatenated events
+  event = appendevent(event{:});
   return
 end
 

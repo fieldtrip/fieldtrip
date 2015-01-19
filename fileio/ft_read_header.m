@@ -102,6 +102,46 @@ if isempty(db_blob)
   db_blob = false;
 end
 
+if iscell(filename)
+  % use recursion to read events from multiple files
+  warning_once(sprintf('concatenating header from %d files', numel(filename)));
+  hdr    = cell(size(filename));
+  event  = cell(size(filename));
+  offset = 0;
+  for i=1:numel(filename)
+    hdr{i}   = ft_read_header(filename{i}, varargin{:});
+  end
+  ntrl = nan(size(filename));
+  nsmp = nan(size(filename));
+  for i=1:numel(filename)
+    assert(isequal(hdr{i}.label, hdr{1}.label));
+    assert(isequal(hdr{i}.Fs, hdr{1}.Fs));
+    ntrl(i) = hdr{i}.nTrials;
+    nsmp(i) = hdr{i}.nSamples;
+  end
+  combined = hdr{1};
+  if isfield(combined, 'orig')
+    combined.orig = cell(size(filename));
+    for i=1:numel(filename)
+      combined.orig{i} = hdr{i}.orig;
+    end
+  end
+  if all(ntrl==1)
+    % each file is a continuous recording
+    combined.nTrials  = ntrl(1);
+    combined.nSamples = sum(nsmp);
+  elseif all(nsmp==nsmp(1))
+    % each file holds segments of the same length
+    combined.nTrials  = sum(ntrl);
+    combined.nSamples = nsmp(1);
+  else
+    error('cannot concatenate files');
+  end
+  % return the header of the concatenated datafiles
+  hdr = combined;
+  return
+end
+
 % optionally get the data from the URL and make a temporary local copy
 filename = fetch_url(filename);
 

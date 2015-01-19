@@ -59,6 +59,42 @@ if isempty(db_blob)
   db_blob = 0;
 end
 
+if iscell(filename)
+  warning_once(sprintf('concatenating data from %d files', numel(filename)));
+  % this only works if the data is indexed by means of samples, not trials
+  assert(isempty(ft_getopt(varargin, 'begtrial')));
+  assert(isempty(ft_getopt(varargin, 'endtrial')));
+  % use recursion to read data from multiple files
+  hdr  = cell(size(filename));
+  dat  = cell(size(filename));
+  nsmp = nan(size(filename));
+  for i=1:numel(filename)
+    hdr{i}  = ft_read_header(filename{i}, varargin{:});
+    nsmp(i) = hdr{i}.nSamples*hdr{i}.nTrials;
+  end
+  
+  offset = [0 cumsum(nsmp(1:end-1))];
+  begsample = ft_getopt(varargin, 'begsample', 1);
+  endsample = ft_getopt(varargin, 'endsample', sum(nsmp));
+  
+  for i=1:numel(filename)
+    thisbegsample = begsample - offset(i);
+    thisendsample = endsample - offset(i);
+    if thisbegsample<=nsmp(i) && thisendsample>=1
+      varargin = ft_setopt(varargin, 'header', hdr{i});
+      varargin = ft_setopt(varargin, 'begsample', max(thisbegsample,1));
+      varargin = ft_setopt(varargin, 'endsample', min(thisendsample,nsmp(i)));
+      dat{i} = ft_read_data(filename{i}, varargin{:});
+    else
+      dat{i} = [];
+    end
+  end
+  
+  % return the concatenated data
+  dat = cat(2, dat{:});
+  return
+end
+
 % optionally get the data from the URL and make a temporary local copy
 filename = fetch_url(filename);
 
