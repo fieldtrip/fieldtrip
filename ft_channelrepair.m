@@ -85,7 +85,7 @@ end
 % set the default configuration
 cfg.badchannel     = ft_getopt(cfg, 'badchannel',     {});
 cfg.missingchannel = ft_getopt(cfg, 'missingchannel', {});
-cfg.trials         = ft_getopt(cfg, 'trials',         'all');
+cfg.trials         = ft_getopt(cfg, 'trials',         'all', 1);
 cfg.method         = ft_getopt(cfg, 'method',         'nearest');
 cfg.lambda         = ft_getopt(cfg, 'lambda',         []); % subfunction will handle this
 cfg.order          = ft_getopt(cfg, 'order',          []); % subfunction will handle this

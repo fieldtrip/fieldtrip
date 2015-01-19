@@ -152,7 +152,7 @@ cfg = ft_checkconfig(cfg, 'deprecated', {'xparam', 'yparam'});
 % set the defaults
 cfg.baseline       = ft_getopt(cfg, 'baseline', 'no');
 cfg.baselinetype   = ft_getopt(cfg, 'baselinetype', 'absolute');
-cfg.trials         = ft_getopt(cfg, 'trials', 'all');
+cfg.trials         = ft_getopt(cfg, 'trials', 'all', 1);
 cfg.xlim           = ft_getopt(cfg, 'xlim', 'maxmin');
 cfg.ylim           = ft_getopt(cfg, 'ylim', 'maxmin');
 cfg.zlim           = ft_getopt(cfg, 'zlim', 'maxmin');
