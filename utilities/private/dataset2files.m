@@ -28,6 +28,16 @@ function [filename, headerfile, datafile] = dataset2files(filename, format)
 
 persistent previous_argin previous_argout
 
+if iscell(filename)
+  % use recursion to go over multiple files
+  headerfile = cell(size(filename));
+  datafile   = cell(size(filename));
+  for i=1:numel(filename)
+    [filename{i}, headerfile{i}, datafile{i}] = dataset2files(filename{i}, format);
+  end
+  return
+end
+
 if isempty(format)
   format = ft_filetype(filename);
 end
