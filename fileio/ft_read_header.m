@@ -119,13 +119,8 @@ if iscell(filename)
     ntrl(i) = hdr{i}.nTrials;
     nsmp(i) = hdr{i}.nSamples;
   end
-  combined = hdr{1};
-  if isfield(combined, 'orig')
-    combined.orig = cell(size(filename));
-    for i=1:numel(filename)
-      combined.orig{i} = hdr{i}.orig;
-    end
-  end
+  combined      = hdr{1};
+  combined.orig = hdr; % store the original header details of each file
   if all(ntrl==1)
     % each file is a continuous recording
     combined.nTrials  = ntrl(1);

@@ -102,21 +102,31 @@ end
 if iscell(filename)
   warning_once(sprintf('concatenating events from %d files', numel(filename)));
   % use recursion to read events from multiple files
-  hdr    = cell(size(filename));
-  event  = cell(size(filename));
-  offset = 0;
+
+  hdr = ft_getopt(varargin, 'header');
+  if isempty(hdr) || ~isfield(hdr, 'orig') || ~iscell(hdr.orig)
+    for i=1:numel(filename)
+      % read the individual file headers
+      hdr{i}  = ft_read_header(filename{i}, varargin{:});
+    end
+  else
+    % use the individual file headers that were read previously
+    hdr = hdr.orig;
+  end
+  nsmp = nan(size(filename));
   for i=1:numel(filename)
-    tmp   = ft_read_event(filename{i}, varargin{:});
-    event = appendevent(event(:), tmp(:));
-    hdr{i}   = ft_read_header(filename{i}, varargin{:});
+    nsmp(i) = hdr{i}.nSamples*hdr{i}.nTrials;
+  end
+  offset = [0 cumsum(nsmp(1:end-1))];
+  
+  event = cell(size(filename));
+  for i=1:numel(filename)
     varargin = ft_setopt(varargin, 'header', hdr{i});
     event{i} = ft_read_event(filename{i}, varargin{:});
     for j=1:numel(event{i})
       % add the offset due to the previous files
-      event{i}(j).sample = event{i}(j).sample + offset;
+      event{i}(j).sample = event{i}(j).sample + offset(i);
     end
-    % update the offset for the next file
-    offset = offset+hdr{i}.nSamples*hdr{i}.nTrials;
   end
   % return the concatenated events
   event = appendevent(event{:});

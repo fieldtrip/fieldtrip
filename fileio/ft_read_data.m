@@ -65,15 +65,24 @@ if iscell(filename)
   assert(isempty(ft_getopt(varargin, 'begtrial')));
   assert(isempty(ft_getopt(varargin, 'endtrial')));
   % use recursion to read data from multiple files
-  hdr  = cell(size(filename));
-  dat  = cell(size(filename));
+
+  hdr = ft_getopt(varargin, 'header');
+  if isempty(hdr) || ~isfield(hdr, 'orig') || ~iscell(hdr.orig)
+    for i=1:numel(filename)
+      % read the individual file headers
+      hdr{i}  = ft_read_header(filename{i}, varargin{:});
+    end
+  else
+    % use the individual file headers that were read previously
+    hdr = hdr.orig;
+  end
   nsmp = nan(size(filename));
   for i=1:numel(filename)
-    hdr{i}  = ft_read_header(filename{i}, varargin{:});
     nsmp(i) = hdr{i}.nSamples*hdr{i}.nTrials;
   end
-  
   offset = [0 cumsum(nsmp(1:end-1))];
+  
+  dat       = cell(size(filename));
   begsample = ft_getopt(varargin, 'begsample', 1);
   endsample = ft_getopt(varargin, 'endsample', sum(nsmp));
   
