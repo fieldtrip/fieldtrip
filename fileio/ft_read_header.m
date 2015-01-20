@@ -163,6 +163,11 @@ if isempty(headerformat)
   headerformat = ft_filetype(filename);
 end
 
+if iscell(headerformat)
+  % this happens for datasets specified as cell array for concatenation
+  headerformat = headerformat{1};
+end
+
 % if we are dealing with a compressed dataset, inflate it first
 if strcmp(headerformat, 'compressed')
   filename = inflate_file(filename);

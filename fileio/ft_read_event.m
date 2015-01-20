@@ -127,11 +127,6 @@ end
 filename = fetch_url(filename);
 
 % get the options
-eventformat      = ft_getopt(varargin, 'eventformat');
-if isempty(eventformat)
-  % only do the autodetection if the format was not specified
-  eventformat = ft_filetype(filename);
-end
 hdr              = ft_getopt(varargin, 'header');
 detectflank      = ft_getopt(varargin, 'detectflank', 'up');   % up, down or both
 trigshift        = ft_getopt(varargin, 'trigshift');           % default is assigned in subfunction
@@ -141,6 +136,17 @@ dataformat       = ft_getopt(varargin, 'dataformat');
 threshold        = ft_getopt(varargin, 'threshold');           % this is used for analog channels
 tolerance        = ft_getopt(varargin, 'tolerance', 1);
 checkmaxfilter   = ft_getopt(varargin, 'checkmaxfilter');      % will be passed to ft_read_header
+eventformat      = ft_getopt(varargin, 'eventformat');
+
+if isempty(eventformat)
+  % only do the autodetection if the format was not specified
+  eventformat = ft_filetype(filename);
+end
+
+if iscell(eventformat)
+  % this happens for datasets specified as cell array for concatenation
+  eventformat = eventformat{1};
+end
 
 % this allows to read only events in a certain range, supported for selected data formats only
 flt_type         = ft_getopt(varargin, 'type');

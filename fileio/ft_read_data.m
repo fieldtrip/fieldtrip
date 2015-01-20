@@ -118,6 +118,11 @@ if isempty(dataformat)
   dataformat = ft_filetype(filename);  % the default is automatically detected, but only if not specified
 end
 
+if iscell(dataformat)
+  % this happens for datasets specified as cell array for concatenation
+  dataformat = dataformat{1};
+end
+
 % test whether the file or directory exists
 if ~strcmp(dataformat, 'fcdc_buffer') && ~strcmp(dataformat, 'ctf_shm') && ~strcmp(dataformat, 'fcdc_mysql') && ~exist(filename, 'file')
   error('FILEIO:InvalidFileName', 'file or directory ''%s'' does not exist', filename);
