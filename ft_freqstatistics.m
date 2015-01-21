@@ -109,6 +109,12 @@ end
 
 origvarargin = varargin;
 
+% expand a single cfg.frequency input (e.g. cfg.frequency = 20) to limits
+% (cfg.frequency = [20 20]), see bug 2809
+if isnumeric(cfg.frequency) && numel(cfg.frequency) == 1
+  cfg.frequency = [cfg.frequency cfg.frequency];
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % data bookkeeping
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
