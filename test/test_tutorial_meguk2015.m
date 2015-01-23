@@ -1,4 +1,4 @@
-% function test_tutorial_meguk2015
+function test_tutorial_meguk2015
 
 % WALLTIME 00:30:00
 % MEM 4gb
