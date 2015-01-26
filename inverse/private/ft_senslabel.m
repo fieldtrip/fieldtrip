@@ -2901,7 +2901,8 @@ elseif isempty(eval(type))
       for i = 1:33
         label{i} = sprintf('E%d', i);
       end
-      label{end+1} = 'Cz';
+      % there might also be a reference channel, but its name is inconsistent
+      % it might be Cz, REF, VREF or 'vertex reference'
       
     case 'egi64'
       % this should be  uppercase for consistency with ft_read_header
@@ -2909,7 +2910,8 @@ elseif isempty(eval(type))
       for i = 1:65
         label{i} = sprintf('E%d', i);
       end
-      label{end+1} = 'Cz';
+      % there might also be a reference channel, but its name is inconsistent
+      % it might be Cz, REF, VREF or 'vertex reference'
       
     case 'egi128'
       % this should be  uppercase for consistency with ft_read_header
@@ -2917,7 +2919,8 @@ elseif isempty(eval(type))
       for i = 1:129
         label{i} = sprintf('E%d', i);
       end
-      label{end+1} = 'Cz';
+      % there might also be a reference channel, but its name is inconsistent
+      % it might be Cz, REF, VREF or 'vertex reference'
       
     case 'egi256'
       % this should be  uppercase for consistency with ft_read_header
@@ -2925,7 +2928,8 @@ elseif isempty(eval(type))
       for i = 1:257
         label{i} = sprintf('E%d', i);
       end
-      label{end+1} = 'Cz';
+      % there might also be a reference channel, but its name is inconsistent
+      % it might be Cz, REF, VREF or 'vertex reference'
       
     case 'itab28'
       label = {
