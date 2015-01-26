@@ -971,6 +971,7 @@ switch dataformat
         dat = data(chanindx, begsample:endsample);  % reading over boundaries
       end
     elseif (hdr.orig.isaverage)
+      assert(isfield(hdr.orig, 'evoked'), '%s does not contain evoked data', filename);
       dat = cat(2, hdr.orig.evoked.epochs);            % concatenate all epochs, this works both when they are of constant or variable length
       if checkboundary
         trialnumber = [];
