@@ -829,9 +829,9 @@ switch dataformat
     if isunix && filename(1)~=filesep
       % add the full path to the dataset directory
       filename = fullfile(pwd, filename);
-    else
-      % FIXME I don't know how this is supposed to work on Windows computers
-      % with the drive letter in front of the path
+    elseif ispc && filename(2)~=':'
+      % add the full path, including drive letter
+      filename = fullfile(pwd, filename);
     end
     % pass the header along to speed it up, it will be read on the fly in case it is empty 
     dat = read_mff_data(filename, 'sample', begsample, endsample, chanindx, hdr);

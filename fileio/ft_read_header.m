@@ -821,6 +821,7 @@ switch headerformat
     % The following represents the code that was written by Ingrid, Robert
     % and Giovanni to get started with the EGI mff dataset format. It might
     % not support all details of the file formats.
+    %
     % An alternative implementation has been provided by EGI, this is
     % released as fieldtrip/external/egi_mff and referred further down in
     % this function as 'egi_mff_v2'.
@@ -1053,9 +1054,9 @@ switch headerformat
     if isunix && filename(1)~=filesep
       % add the full path to the dataset directory
       filename = fullfile(pwd, filename);
-    else
-      % FIXME I don't know how this is supposed to work on Windows computers
-      % with the drive letter in front of the path
+    elseif ispc && filename(2)~=':'
+      % add the full path, including drive letter
+      filename = fullfile(pwd, filename);
     end
     hdr = read_mff_header(filename);
     
