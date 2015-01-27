@@ -16,6 +16,9 @@ timelock1.cfg    = struct([]);
 timelock2 = timelock1;
 timelock2.avg  = ones(2,5)*2;
 
+timelock3 = timelock1;
+timelock3.var = ones(2,5);
+
 source1 = [];
 source1.pos = randn(10,3);
 source1.pow = randn(10,1);
@@ -68,6 +71,20 @@ tmp = ft_math(cfg, timelock1);
 assert(isfield(tmp, cfg.parameter), 'the output parameter is missing');
 assert(isfield(tmp, 'dimord'), 'the output dimord is missing');
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% do operation with one timelock input, multiple parameters
+
+cfg = [];
+cfg.showcallinfo = 'no';
+cfg.trackconfig  = 'no';
+cfg.parameter    = {'avg', 'var'};
+
+cfg.operation = 'log10';
+tmp = ft_math(cfg, timelock3);
+assert(isfield(tmp, 'avg') && isfield(tmp, 'var'), 'the output parameter is missing');
+assert(isfield(tmp, 'dimord'), 'the output dimord is missing');
+assert(isequal(tmp.var, log10(timelock3.var)));
+assert(isequal(tmp.avg, log10(timelock3.avg)));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % do operation with one source input
