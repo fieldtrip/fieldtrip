@@ -1,5 +1,4 @@
 function [data] = ft_preprocessing(cfg, data)
-
 % FT_PREPROCESSING reads MEG and/or EEG data according to user-specified trials
 % and applies several user-specified preprocessing steps to the signals.
 %
