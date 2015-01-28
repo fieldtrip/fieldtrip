@@ -32,7 +32,7 @@ function [dat] = ft_read_data(filename, varargin)
 %
 % See also FT_READ_HEADER, FT_READ_EVENT, FT_WRITE_DATA, FT_WRITE_EVENT
 
-% Copyright (C) 2003-2013 Robert Oostenveld
+% Copyright (C) 2003-2015 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -59,6 +59,51 @@ if isempty(db_blob)
   db_blob = 0;
 end
 
+if iscell(filename)
+  warning_once(sprintf('concatenating data from %d files', numel(filename)));
+  % this only works if the data is indexed by means of samples, not trials
+  assert(isempty(ft_getopt(varargin, 'begtrial')));
+  assert(isempty(ft_getopt(varargin, 'endtrial')));
+  % use recursion to read data from multiple files
+
+  hdr = ft_getopt(varargin, 'header');
+  if isempty(hdr) || ~isfield(hdr, 'orig') || ~iscell(hdr.orig)
+    for i=1:numel(filename)
+      % read the individual file headers
+      hdr{i}  = ft_read_header(filename{i}, varargin{:});
+    end
+  else
+    % use the individual file headers that were read previously
+    hdr = hdr.orig;
+  end
+  nsmp = nan(size(filename));
+  for i=1:numel(filename)
+    nsmp(i) = hdr{i}.nSamples*hdr{i}.nTrials;
+  end
+  offset = [0 cumsum(nsmp(1:end-1))];
+  
+  dat       = cell(size(filename));
+  begsample = ft_getopt(varargin, 'begsample', 1);
+  endsample = ft_getopt(varargin, 'endsample', sum(nsmp));
+  
+  for i=1:numel(filename)
+    thisbegsample = begsample - offset(i);
+    thisendsample = endsample - offset(i);
+    if thisbegsample<=nsmp(i) && thisendsample>=1
+      varargin = ft_setopt(varargin, 'header', hdr{i});
+      varargin = ft_setopt(varargin, 'begsample', max(thisbegsample,1));
+      varargin = ft_setopt(varargin, 'endsample', min(thisendsample,nsmp(i)));
+      dat{i} = ft_read_data(filename{i}, varargin{:});
+    else
+      dat{i} = [];
+    end
+  end
+  
+  % return the concatenated data
+  dat = cat(2, dat{:});
+  return
+end
+
 % optionally get the data from the URL and make a temporary local copy
 filename = fetch_url(filename);
 
@@ -79,11 +124,17 @@ chanunit        = ft_getopt(varargin, 'chanunit');
 timestamp       = ft_getopt(varargin, 'timestamp');
 
 if isempty(dataformat)
-  dataformat = ft_filetype(filename);  % the default is automatically detected, but only if not specified
+  % only do the autodetection if the format was not specified
+  dataformat = ft_filetype(filename);
+end
+
+if iscell(dataformat)
+  % this happens for datasets specified as cell-array for concatenation
+  dataformat = dataformat{1};
 end
 
 % test whether the file or directory exists
-if ~strcmp(dataformat, 'fcdc_buffer') && ~strcmp(dataformat, 'ctf_shm') && ~strcmp(dataformat, 'fcdc_mysql') && ~exist(filename, 'file')
+if ~any(strcmp(dataformat, {'fcdc_buffer', 'ctf_shm', 'fcdc_mysql'})) && ~exist(filename, 'file')
   error('FILEIO:InvalidFileName', 'file or directory ''%s'' does not exist', filename);
 end
 
@@ -130,7 +181,7 @@ if isempty(checkboundary)
   checkboundary = ~ft_getopt(varargin, 'continuous');
 end
 
-% read the header if it is not provided
+% read the header if not provided
 if isempty(hdr)
   hdr = ft_read_header(filename, 'headerformat', headerformat, 'checkmaxfilter', checkmaxfilter);
 end
@@ -779,9 +830,9 @@ switch dataformat
     if isunix && filename(1)~=filesep
       % add the full path to the dataset directory
       filename = fullfile(pwd, filename);
-    else
-      % FIXME I don't know how this is supposed to work on Windows computers
-      % with the drive letter in front of the path
+    elseif ispc && filename(2)~=':'
+      % add the full path, including drive letter
+      filename = fullfile(pwd, filename);
     end
     % pass the header along to speed it up, it will be read on the fly in case it is empty 
     dat = read_mff_data(filename, 'sample', begsample, endsample, chanindx, hdr);
@@ -921,6 +972,7 @@ switch dataformat
         dat = data(chanindx, begsample:endsample);  % reading over boundaries
       end
     elseif (hdr.orig.isaverage)
+      assert(isfield(hdr.orig, 'evoked'), '%s does not contain evoked data', filename);
       dat = cat(2, hdr.orig.evoked.epochs);            % concatenate all epochs, this works both when they are of constant or variable length
       if checkboundary
         trialnumber = [];

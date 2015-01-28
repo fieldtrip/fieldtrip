@@ -72,7 +72,7 @@ function [hdr] = ft_read_header(filename, varargin)
 % See also FT_READ_DATA, FT_READ_EVENT, FT_WRITE_DATA, FT_WRITE_EVENT,
 % FT_CHANTYPE, FT_CHANUNIT
 
-% Copyright (C) 2003-2013 Robert Oostenveld
+% Copyright (C) 2003-2015 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -102,32 +102,63 @@ if isempty(db_blob)
   db_blob = false;
 end
 
-% optionally get the data from the URL and make a temporary local copy
-filename = fetch_url(filename);
-
-realtime = any(strcmp(ft_filetype(filename), {'fcdc_buffer', 'ctf_shm', 'fcdc_mysql'}));
-
-% check whether the file or directory exists, not for realtime
-if  ~realtime && ~exist(filename, 'file')
-  error('FILEIO:InvalidFileName', 'file or directory ''%s'' does not exist', filename);
+if iscell(filename)
+  % use recursion to read events from multiple files
+  warning_once(sprintf('concatenating header from %d files', numel(filename)));
+  hdr = cell(size(filename));
+  for i=1:numel(filename)
+    hdr{i} = ft_read_header(filename{i}, varargin{:});
+  end
+  ntrl = nan(size(filename));
+  nsmp = nan(size(filename));
+  for i=1:numel(filename)
+    assert(isequal(hdr{i}.label, hdr{1}.label));
+    assert(isequal(hdr{i}.Fs, hdr{1}.Fs));
+    ntrl(i) = hdr{i}.nTrials;
+    nsmp(i) = hdr{i}.nSamples;
+  end
+  combined      = hdr{1};
+  combined.orig = hdr; % store the original header details of each file
+  if all(ntrl==1)
+    % each file is a continuous recording
+    combined.nTrials  = ntrl(1);
+    combined.nSamples = sum(nsmp);
+  elseif all(nsmp==nsmp(1))
+    % each file holds segments of the same length
+    combined.nTrials  = sum(ntrl);
+    combined.nSamples = nsmp(1);
+  else
+    error('cannot concatenate files');
+  end
+  % return the header of the concatenated datafiles
+  hdr = combined;
+  return
 end
 
 % get the options
 headerformat   = ft_getopt(varargin, 'headerformat');
 retry          = ft_getopt(varargin, 'retry', false);     % the default is not to retry reading the header
-coordsys       = ft_getopt(varargin, 'coordsys', 'head'); % this is used for ctf and neuromag_mne, it can be head or dewar
-checkmaxfilter = ft_getopt(varargin, 'checkmaxfilter', true);
+
+% optionally get the data from the URL and make a temporary local copy
+filename = fetch_url(filename);
 
 if isempty(headerformat)
   % only do the autodetection if the format was not specified
   headerformat = ft_filetype(filename);
 end
 
-% if we are dealing with a compressed dataset, inflate it first
+if iscell(headerformat)
+  % this happens for datasets specified as cell-array for concatenation
+  headerformat = headerformat{1};
+end
+
 if strcmp(headerformat, 'compressed')
-  filename = inflate_file(filename);
+  % we are dealing with a compressed dataset, inflate it first
+  filename     = inflate_file(filename);
   headerformat = ft_filetype(filename);
 end
+
+realtime = any(strcmp(headerformat, {'fcdc_buffer', 'ctf_shm', 'fcdc_mysql'}));
 
 % The checkUniqueLabels flag is used for the realtime buffer in case
 % it contains fMRI data. It prevents 1000000 voxel names to be checked
@@ -143,10 +174,17 @@ if realtime
   fallback = false;
   
 else
+  % check whether the file or directory exists
+  if  ~exist(filename, 'file')
+    error('FILEIO:InvalidFileName', 'file or directory ''%s'' does not exist', filename);
+  end
+  
   checkUniqueLabels = true;
-  % the cache and fallback option are according to the user's specification
-  cache    = ft_getopt(varargin, 'cache');
-  fallback = ft_getopt(varargin, 'fallback');
+  % get the rest of the options, this is skipped for realtime operation
+  cache          = ft_getopt(varargin, 'cache');
+  fallback       = ft_getopt(varargin, 'fallback');
+  coordsys       = ft_getopt(varargin, 'coordsys', 'head'); % this is used for ctf and neuromag_mne, it can be head or dewar
+  checkmaxfilter = ft_getopt(varargin, 'checkmaxfilter', true);
   
   if isempty(cache),
     if strcmp(headerformat, 'bci2000_dat') || strcmp(headerformat, 'eyelink_asc') || strcmp(headerformat, 'gtec_mat') || strcmp(headerformat, 'biosig')
@@ -781,6 +819,7 @@ switch headerformat
     % The following represents the code that was written by Ingrid, Robert
     % and Giovanni to get started with the EGI mff dataset format. It might
     % not support all details of the file formats.
+    %
     % An alternative implementation has been provided by EGI, this is
     % released as fieldtrip/external/egi_mff and referred further down in
     % this function as 'egi_mff_v2'.
@@ -818,7 +857,7 @@ switch headerformat
       end
     end
     warning('on', 'MATLAB:REGEXP:deprecated')
-
+    
     % epochs.xml seems the most common version, but epoch.xml might also
     % occur, so use only one name
     if isfield(orig.xml, 'epoch')
@@ -962,17 +1001,17 @@ switch headerformat
         warning('the data contains multiple epochs with variable length, possibly causing discontinuities in the data')
         % sanity check
         if epochdef(end,2) ~= hdr.nSamples
-            % check for NS 4.5.4 picosecond timing
-            if (epochdef(end,2)/1000) == hdr.nSamples
-                for iEpoch=1:size(epochdef,1)
-                    epochdef(iEpoch,1)=((epochdef(iEpoch,1)-1)/1000)+1;
-                    epochdef(iEpoch,2)=epochdef(iEpoch,2)/1000;    
-                    epochdef(iEpoch,3)=epochdef(iEpoch,3)/1000;
-                end;
-                disp('mff apparently generated by NetStation 4.5.4.  Adjusting time scale to microseconds from nanoseconds.');
-            else
-                error('number of samples in all epochs do not add up to total number of samples')
+          % check for NS 4.5.4 picosecond timing
+          if (epochdef(end,2)/1000) == hdr.nSamples
+            for iEpoch=1:size(epochdef,1)
+              epochdef(iEpoch,1)=((epochdef(iEpoch,1)-1)/1000)+1;
+              epochdef(iEpoch,2)=epochdef(iEpoch,2)/1000;
+              epochdef(iEpoch,3)=epochdef(iEpoch,3)/1000;
             end;
+            disp('mff apparently generated by NetStation 4.5.4.  Adjusting time scale to microseconds from nanoseconds.');
+          else
+            error('number of samples in all epochs do not add up to total number of samples')
+          end;
         end
       end
       orig.epochdef = epochdef;
@@ -1013,9 +1052,9 @@ switch headerformat
     if isunix && filename(1)~=filesep
       % add the full path to the dataset directory
       filename = fullfile(pwd, filename);
-    else
-      % FIXME I don't know how this is supposed to work on Windows computers
-      % with the drive letter in front of the path
+    elseif ispc && filename(2)~=':'
+      % add the full path, including drive letter
+      filename = fullfile(pwd, filename);
     end
     hdr = read_mff_header(filename);
     
@@ -1433,10 +1472,10 @@ switch headerformat
       info.raw        = raw; % keep all the details
       
     elseif isepoched
-        hdr.nSamples    = length(epochs.times);
-        hdr.nSamplesPre = sum(epochs.times < 0);
-        hdr.nTrials     = size(epochs.data, 1);
-        info.epochs     = epochs;  % this is used by read_data to get the actual data, i.e. to prevent re-reading
+      hdr.nSamples    = length(epochs.times);
+      hdr.nSamplesPre = sum(epochs.times < 0);
+      hdr.nTrials     = size(epochs.data, 1);
+      info.epochs     = epochs;  % this is used by read_data to get the actual data, i.e. to prevent re-reading
       
     elseif isaverage
       try,
@@ -1467,6 +1506,10 @@ switch headerformat
           info.vartriallength = 0;
         end
       catch
+        % this happens if fiff_read_evoked_all cannot find evoked
+        % responses, in which case it errors due to not assigning the
+        % output variable "data"
+        warning('%s does not contain data', filename);
         hdr.nSamples    = 0;
         hdr.nSamplesPre = 0;
         hdr.nTrials     = 0;
@@ -1536,7 +1579,7 @@ switch headerformat
     
     % remember the original header details
     hdr.orig = orig;
-  
+    
   case 'neuroscope_bin'
     [p,f,e]    = fileparts(filename);
     headerfile = fullfile(p,[f,'.xml']);
@@ -1547,7 +1590,7 @@ switch headerformat
     filenames  = {listing.name}';
     headerfile = filenames{~cellfun('isempty',strfind(filenames,'.xml'))};
     hdr        = ft_read_header(headerfile, 'headerformat', 'neuroscope_xml');
-  
+    
   case 'neuroscope_xml'
     ft_hastoolbox('neuroscope', 1);
     ft_hastoolbox('gifti', 1);
@@ -1926,7 +1969,7 @@ if checkUniqueLabels
         if any(megflag(sel))
           sel = setdiff(sel, sel(find(megflag(sel), 1)));
         elseif any(eegflag(sel))
-          sel = setdiff(sel, sel(find(eegflag(sel), 1)));  
+          sel = setdiff(sel, sel(find(eegflag(sel), 1)));
         else
           sel = sel(2:end);
         end

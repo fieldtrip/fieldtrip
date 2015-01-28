@@ -35,8 +35,8 @@ for i=1:numel(fn)
         tmp = tmp(~sel);  % remove NaN values
       end
       clear sel
-      probabilistic(i) =  islogical(tmp) || all(tmp>=-0.001 & tmp<=1.001); % allow some roundoff error
-      indexed(i)       = ~islogical(tmp) && all(abs(tmp - round(tmp))<1000*eps);
+      probabilistic(i) =  islogical(tmp) || all(tmp>=-0.001   & tmp<=1.001); % allow some roundoff error
+      indexed(i)       = ~islogical(tmp) && all(tmp>=-0.001) && all(abs(tmp - round(tmp))<1000*eps);
       
       if probabilistic(i) && indexed(i)
         % the xxxlabel does not exist, so treat it as a probabilistic representation

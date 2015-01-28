@@ -1,10 +1,10 @@
-  function data = ft_math(cfg, varargin)
+function data = ft_math(cfg, varargin)
 
 % FT_MATH performs mathematical operations on FieldTrip data structures,
 % such as addition, subtraction, division, etc.
 %
 % Use as
-%   data = ft_examplefunction(cfg, data1, data2, ...)
+%   data = ft_math(cfg, data1, data2, ...)
 % with one or multiple FieldTrip data structures as input and where cfg is a
 % configuration structure that should contain
 %
@@ -58,7 +58,7 @@
 
 % Undocumented options:
 %   cfg.matrix = rather than using a scalar, a matrix can be specified. In
-%                this case, the dimensionality of cfg.matrix should be equal 
+%                this case, the dimensionality of cfg.matrix should be equal
 %                to the dimensionality of data.(cfg.parameter). If used in
 %                combination with cfg.operation, the operation should
 %                involve element-wise combination of the data and the
@@ -112,14 +112,20 @@ end
 cfg = ft_checkconfig(cfg, 'required', {'operation', 'parameter'});
 cfg = ft_checkconfig(cfg, 'renamed', {'value', 'scalar'});
 
+if ~iscell(cfg.parameter)
+  cfg.parameter = {cfg.parameter};
+end
+
 % this function only works for the upcoming (not yet standard) source representation without sub-structures
 if ft_datatype(varargin{1}, 'source')
   % update the old-style beamformer source reconstruction
   for i=1:length(varargin)
     varargin{i} = ft_datatype_source(varargin{i}, 'version', 'upcoming');
   end
-  if isfield(cfg, 'parameter') && length(cfg.parameter)>4 && strcmp(cfg.parameter(1:4), 'avg.')
-    cfg.parameter = cfg.parameter(5:end); % remove the 'avg.' part
+  for p = 1:length(cfg.parameter)
+    if length(cfg.parameter{p})>4 && strcmp(cfg.parameter{p}(1:4), 'avg.')
+      cfg.parameter{p} = cfg.parameter{p}(5:end); % remove the 'avg.' part
+    end
   end
 end
 
@@ -127,8 +133,10 @@ end
 % the actual computation is done in the middle part
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if ~issubfield(varargin{1}, cfg.parameter)
-  error('the requested parameter is not present in the data');
+for p=1:length(cfg.parameter)
+  if ~issubfield(varargin{1}, cfg.parameter{p})
+    error('the requested parameter is not present in the data');
+  end
 end
 
 % ensure that the data in all inputs has the same channels, time-axis, etc.
@@ -140,7 +148,13 @@ tmpcfg.parameter = cfg.parameter;
 
 cfg.parameter = tmpcfg.parameter;
 
-dimord = getdimord(varargin{1}, cfg.parameter);
+for p = 1:length(cfg.parameter)
+  dimordtmp{p} = getdimord(varargin{1}, cfg.parameter{p});
+  if p>1 && ~strcmp(dimordtmp{1}, dimordtmp{p})
+    error('the dimord of multiple parameters must be the same');
+  end
+end
+dimord = dimordtmp{1}; clear dimordtmp
 dimtok = tokenize(dimord, '_');
 
 % this determines which descriptive fields will get copied over
@@ -175,251 +189,253 @@ end
 % use an anonymous function
 assign = @(var, val) assignin('caller', var, val);
 
-fprintf('selecting %s from the first input argument\n', cfg.parameter);
-% create the local variables x1, x2, ...
-for i=1:length(varargin)
-  assign(sprintf('x%i', i), getsubfield(varargin{i}, cfg.parameter));
-end
-
-% create the local variables s and m
-s = ft_getopt(cfg, 'scalar');
-m = ft_getopt(cfg, 'matrix');
-
-% check the dimensionality of m against the input data
-if ~isempty(m),
+for p = 1:length(cfg.parameter)
+  fprintf('selecting %s from the first input argument\n', cfg.parameter{p});
+  % create the local variables x1, x2, ...
   for i=1:length(varargin)
-    ok = isequal(size(getsubfield(varargin{i}, cfg.parameter)),size(m));
-    if ~ok, break; end
+    assign(sprintf('x%i', i), getsubfield(varargin{i}, cfg.parameter{p}));
   end
-  if ~ok,
-    error('the dimensions of cfg.matrix do not allow for element-wise operations');
+  
+  % create the local variables s and m
+  s = ft_getopt(cfg, 'scalar');
+  m = ft_getopt(cfg, 'matrix');
+  
+  % check the dimensionality of m against the input data
+  if ~isempty(m),
+    for i=1:length(varargin)
+      ok = isequal(size(getsubfield(varargin{i}, cfg.parameter{p})),size(m));
+      if ~ok, break; end
+    end
+    if ~ok,
+      error('the dimensions of cfg.matrix do not allow for element-wise operations');
+    end
   end
-end
-
-% only one of these can be defined at the moment (i.e. not allowing for
-% operations such as (x1+m)^s for now
-if ~isempty(m) && ~isempty(s),
-  error('you can either specify a cfg.matrix or a cfg.scalar, not both');
-end
-
-% touch it to keep track of it in the output cfg
-if ~isempty(s), cfg.scalar; end
-if ~isempty(m), cfg.matrix; end
-
-% replace s with m, so that the code below is more transparent
-if ~isempty(m),
-  s = m; clear m;
-end
-
-if length(varargin)==1
-  switch cfg.operation
-    case 'add'
-      if isscalar(s),
-        fprintf('adding %f to the %s\n', s, cfg.parameter);
-      else
-        fprintf('adding the contents of cfg.matrix to the %s\n', cfg.parameter);
-      end
-      if iscell(x1)
-        y = cellplus(x1, s);
-      else
-        y = x1 + s;
-      end
-      
-    case 'subtract'
-      if isscalar(s),
-        fprintf('subtracting %f from the %s\n', s, cfg.parameter);
-      else
-        fprintf('subtracting the contents of cfg.matrix from the %s\n', cfg.parameter);
-      end
-      if iscell(x1)
-        y = cellminus(x1, s);
-      else
-        y = x1 - s;
-      end
-      
-    case 'multiply'
-      if isscalar(s),
-        fprintf('multiplying %s with %f\n', cfg.parameter, s);
-      else
-        fprintf('multiplying %s with the content of cfg.matrix\n', cfg.parameter);
-      end
-      fprintf('multiplying %s with %f\n', cfg.parameter, s);
-      if iscell(x1)
-        y = celltimes(x1, s);
-      else
-        y = x1 .* s;
-      end
-      
-    case 'divide'
-      if isscalar(s),
-        fprintf('dividing %s by %f\n', cfg.parameter, s);
-      else
-        fprintf('dividing %s by the content of cfg.matrix\n', cfg.parameter);
-      end
-      if iscell(x1)
-        y = cellrdivide(x1, s);
-      else
-        y = x1 ./ s;
-      end
-      
-    case 'log10'
-      fprintf('taking the log10 of %s\n', cfg.parameter);
-      if iscell(x1)
-        y = celllog10(x1);
-      else
-        y = log10(x1);
-      end
-      
-    case 'abs'
-      fprintf('taking the abs of %s\n', cfg.parameter);
-      if iscell(x1)
-        y = cellabs(x1);
-      else
-        y = abs(x1);
-      end
-      
-    otherwise
-      % assume that the operation is descibed as a string, e.g. x1^s
-      % where x1 is the first argument and s is obtained from cfg.scalar
-      
-      arginstr = sprintf('x%i,', 1:length(varargin));
-      arginstr = arginstr(1:end-1); % remove the trailing ','
-      eval(sprintf('operation = @(%s) %s;', arginstr, cfg.operation));
-      
-      if ~iscell(varargin{1}.(cfg.parameter))
-        % gather x1, x2, ... into a cell-array
-        arginval = eval(sprintf('{%s}', arginstr));
+  
+  % only one of these can be defined at the moment (i.e. not allowing for
+  % operations such as (x1+m)^s for now
+  if ~isempty(m) && ~isempty(s),
+    error('you can either specify a cfg.matrix or a cfg.scalar, not both');
+  end
+  
+  % touch it to keep track of it in the output cfg
+  if ~isempty(s), cfg.scalar; end
+  if ~isempty(m), cfg.matrix; end
+  
+  % replace s with m, so that the code below is more transparent
+  if ~isempty(m),
+    s = m; clear m;
+  end
+  
+  if length(varargin)==1
+    switch cfg.operation
+      case 'add'
+        if isscalar(s),
+          fprintf('adding %f to the %s\n', s, cfg.parameter{p});
+        else
+          fprintf('adding the contents of cfg.matrix to the %s\n', cfg.parameter{p});
+        end
+        if iscell(x1)
+          y = cellplus(x1, s);
+        else
+          y = x1 + s;
+        end
+        
+      case 'subtract'
+        if isscalar(s),
+          fprintf('subtracting %f from the %s\n', s, cfg.parameter{p});
+        else
+          fprintf('subtracting the contents of cfg.matrix from the %s\n', cfg.parameter{p});
+        end
+        if iscell(x1)
+          y = cellminus(x1, s);
+        else
+          y = x1 - s;
+        end
+        
+      case 'multiply'
+        if isscalar(s),
+          fprintf('multiplying %s with %f\n', cfg.parameter{p}, s);
+        else
+          fprintf('multiplying %s with the content of cfg.matrix\n', cfg.parameter{p});
+        end
+        fprintf('multiplying %s with %f\n', cfg.parameter{p}, s);
+        if iscell(x1)
+          y = celltimes(x1, s);
+        else
+          y = x1 .* s;
+        end
+        
+      case 'divide'
+        if isscalar(s),
+          fprintf('dividing %s by %f\n', cfg.parameter{p}, s);
+        else
+          fprintf('dividing %s by the content of cfg.matrix\n', cfg.parameter{p});
+        end
+        if iscell(x1)
+          y = cellrdivide(x1, s);
+        else
+          y = x1 ./ s;
+        end
+        
+      case 'log10'
+        fprintf('taking the log10 of %s\n', cfg.parameter{p});
+        if iscell(x1)
+          y = celllog10(x1);
+        else
+          y = log10(x1);
+        end
+        
+      case 'abs'
+        fprintf('taking the abs of %s\n', cfg.parameter{p});
+        if iscell(x1)
+          y = cellabs(x1);
+        else
+          y = abs(x1);
+        end
+        
+      otherwise
+        % assume that the operation is descibed as a string, e.g. x1^s
+        % where x1 is the first argument and s is obtained from cfg.scalar
+        
+        arginstr = sprintf('x%i,', 1:length(varargin));
+        arginstr = arginstr(1:end-1); % remove the trailing ','
         eval(sprintf('operation = @(%s) %s;', arginstr, cfg.operation));
-        if numel(s)<=1
-          y = arrayfun(operation, arginval{:});
-        elseif size(s)==size(arginval{1})
-          y = feval(operation, arginval{:});
-        end
-      else
-        y = cell(size(x1));
-        % do the same thing, but now for each element of the cell array
-        for i=1:numel(y)
-          for j=1:length(varargin)
-            % rather than working with x1 and x2, we need to work on its elements
-            % xx1 is one element of the x1 cell-array
-            assign(sprintf('xx%d', j), eval(sprintf('x%d{%d}', j, i)))
-          end
-          
-          % gather xx1, xx2, ... into a cell-array
-          arginstr = sprintf('xx%i,', 1:length(varargin));
-          arginstr = arginstr(1:end-1); % remove the trailing ','
+        
+        if ~iscell(varargin{1}.(cfg.parameter{p}))
+          % gather x1, x2, ... into a cell-array
           arginval = eval(sprintf('{%s}', arginstr));
+          eval(sprintf('operation = @(%s) %s;', arginstr, cfg.operation));
           if numel(s)<=1
-            y{i} = arrayfun(operation, arginval{:});
-          else
-            y{i} = feval(operation, arginval{:});
+            y = arrayfun(operation, arginval{:});
+          elseif size(s)==size(arginval{1})
+            y = feval(operation, arginval{:});
           end
-        end % for each element
-      end % iscell or not
-      
-  end % switch
-  
-  
-else
-  
-  switch cfg.operation
-    case 'add'
-      for i=2:length(varargin)
-        fprintf('adding the %s input argument\n', nth(i));
-        if iscell(x1)
-          y = cellplus(x1, varargin{i}.(cfg.parameter));
         else
-          y = x1 + varargin{i}.(cfg.parameter);
-        end
-      end
-      
-    case 'multiply'
-      for i=2:length(varargin)
-        fprintf('multiplying with the %s input argument\n', nth(i));
-        if iscell(x1)
-          y = celltimes(x1, varargin{i}.(cfg.parameter));
-        else
-          y = x1 .* varargin{i}.(cfg.parameter);
-        end
-      end
-      
-    case 'subtract'
-      if length(varargin)>2
-        error('the operation "%s" requires exactly 2 input arguments', cfg.operation);
-      end
-      fprintf('subtracting the 2nd input argument from the 1st\n');
-      if iscell(x1)
-        y = cellminus(x1, varargin{2}.(cfg.parameter));
-      else
-        y = x1 - varargin{2}.(cfg.parameter);
-      end
-      
-    case 'divide'
-      if length(varargin)>2
-        error('the operation "%s" requires exactly 2 input arguments', cfg.operation);
-      end
-      fprintf('dividing the 1st input argument by the 2nd\n');
-      if iscell(x1)
-        y = cellrdivide(x1, varargin{2}.(cfg.parameter));
-      else
-        y = x1 ./ varargin{2}.(cfg.parameter);
-      end
+          y = cell(size(x1));
+          % do the same thing, but now for each element of the cell array
+          for i=1:numel(y)
+            for j=1:length(varargin)
+              % rather than working with x1 and x2, we need to work on its elements
+              % xx1 is one element of the x1 cell-array
+              assign(sprintf('xx%d', j), eval(sprintf('x%d{%d}', j, i)))
+            end
             
-    case 'log10'
-      if length(varargin)>2
-        error('the operation "%s" requires exactly 2 input arguments', cfg.operation);
-      end
-      fprintf('taking the log difference between the 2nd input argument and the 1st\n');
-      y = log10(x1 ./ varargin{2}.(cfg.parameter));
-      
-    otherwise
-      % assume that the operation is descibed as a string, e.g. (x1-x2)/(x1+x2)
-      
-      % ensure that all input arguments are being used
-      for i=1:length(varargin)
-        assert(~isempty(regexp(cfg.operation, sprintf('x%i', i), 'once')), 'not all input arguments are assigned in the operation')
-      end
-      
-      arginstr = sprintf('x%i,', 1:length(varargin));
-      arginstr = arginstr(1:end-1); % remove the trailing ','
-      eval(sprintf('operation = @(%s) %s;', arginstr, cfg.operation));
-      
-      if ~iscell(varargin{1}.(cfg.parameter))
-        % gather x1, x2, ... into a cell-array
-        arginval = eval(sprintf('{%s}', arginstr));
-        eval(sprintf('operation = @(%s) %s;', arginstr, cfg.operation));
-        if numel(s)<=1
-          y = arrayfun(operation, arginval{:});
-        else
-          y = feval(operation, arginval{:});
-        end
-      else
-        y = cell(size(x1));
-        % do the same thing, but now for each element of the cell array
-        for i=1:numel(y)
-          for j=1:length(varargin)
-            % rather than working with x1 and x2, we need to work on its elements
-            % xx1 is one element of the x1 cell-array
-            assign(sprintf('xx%d', j), eval(sprintf('x%d{%d}', j, i)))
-          end
-          
-          % gather xx1, xx2, ... into a cell-array
-          arginstr = sprintf('xx%i,', 1:length(varargin));
-          arginstr = arginstr(1:end-1); % remove the trailing ','
-          arginval = eval(sprintf('{%s}', arginstr));
-          if numel(s)<=1
-            y{i} = arrayfun(operation, arginval{:});
+            % gather xx1, xx2, ... into a cell-array
+            arginstr = sprintf('xx%i,', 1:length(varargin));
+            arginstr = arginstr(1:end-1); % remove the trailing ','
+            arginval = eval(sprintf('{%s}', arginstr));
+            if numel(s)<=1
+              y{i} = arrayfun(operation, arginval{:});
+            else
+              y{i} = feval(operation, arginval{:});
+            end
+          end % for each element
+        end % iscell or not
+        
+    end % switch
+    
+    
+  else
+    
+    switch cfg.operation
+      case 'add'
+        for i=2:length(varargin)
+          fprintf('adding the %s input argument\n', nth(i));
+          if iscell(x1)
+            y = cellplus(x1, varargin{i}.(cfg.parameter{p}));
           else
-            y{i} = feval(operation, arginval{:});
+            y = x1 + varargin{i}.(cfg.parameter{p});
           end
-        end % for each element
-      end % iscell or not
-      
-  end % switch
-end % one or multiple input data structures
-
-% store the result of the operation in the output structure
-data = setsubfield(data, cfg.parameter, y);
+        end
+        
+      case 'multiply'
+        for i=2:length(varargin)
+          fprintf('multiplying with the %s input argument\n', nth(i));
+          if iscell(x1)
+            y = celltimes(x1, varargin{i}.(cfg.parameter{p}));
+          else
+            y = x1 .* varargin{i}.(cfg.parameter{p});
+          end
+        end
+        
+      case 'subtract'
+        if length(varargin)>2
+          error('the operation "%s" requires exactly 2 input arguments', cfg.operation);
+        end
+        fprintf('subtracting the 2nd input argument from the 1st\n');
+        if iscell(x1)
+          y = cellminus(x1, varargin{2}.(cfg.parameter{p}));
+        else
+          y = x1 - varargin{2}.(cfg.parameter{p});
+        end
+        
+      case 'divide'
+        if length(varargin)>2
+          error('the operation "%s" requires exactly 2 input arguments', cfg.operation);
+        end
+        fprintf('dividing the 1st input argument by the 2nd\n');
+        if iscell(x1)
+          y = cellrdivide(x1, varargin{2}.(cfg.parameter{p}));
+        else
+          y = x1 ./ varargin{2}.(cfg.parameter{p});
+        end
+        
+      case 'log10'
+        if length(varargin)>2
+          error('the operation "%s" requires exactly 2 input arguments', cfg.operation);
+        end
+        fprintf('taking the log difference between the 2nd input argument and the 1st\n');
+        y = log10(x1 ./ varargin{2}.(cfg.parameter{p}));
+        
+      otherwise
+        % assume that the operation is descibed as a string, e.g. (x1-x2)/(x1+x2)
+        
+        % ensure that all input arguments are being used
+        for i=1:length(varargin)
+          assert(~isempty(regexp(cfg.operation, sprintf('x%i', i), 'once')), 'not all input arguments are assigned in the operation')
+        end
+        
+        arginstr = sprintf('x%i,', 1:length(varargin));
+        arginstr = arginstr(1:end-1); % remove the trailing ','
+        eval(sprintf('operation = @(%s) %s;', arginstr, cfg.operation));
+        
+        if ~iscell(varargin{1}.(cfg.parameter{p}))
+          % gather x1, x2, ... into a cell-array
+          arginval = eval(sprintf('{%s}', arginstr));
+          eval(sprintf('operation = @(%s) %s;', arginstr, cfg.operation));
+          if numel(s)<=1
+            y = arrayfun(operation, arginval{:});
+          else
+            y = feval(operation, arginval{:});
+          end
+        else
+          y = cell(size(x1));
+          % do the same thing, but now for each element of the cell array
+          for i=1:numel(y)
+            for j=1:length(varargin)
+              % rather than working with x1 and x2, we need to work on its elements
+              % xx1 is one element of the x1 cell-array
+              assign(sprintf('xx%d', j), eval(sprintf('x%d{%d}', j, i)))
+            end
+            
+            % gather xx1, xx2, ... into a cell-array
+            arginstr = sprintf('xx%i,', 1:length(varargin));
+            arginstr = arginstr(1:end-1); % remove the trailing ','
+            arginval = eval(sprintf('{%s}', arginstr));
+            if numel(s)<=1
+              y{i} = arrayfun(operation, arginval{:});
+            else
+              y{i} = feval(operation, arginval{:});
+            end
+          end % for each element
+        end % iscell or not
+        
+    end % switch
+  end % one or multiple input data structures
+  
+  % store the result of the operation in the output structure
+  data = setsubfield(data, cfg.parameter{p}, y);
+end % p over length(cfg.parameter)
 data.dimord = dimord;
 
 % certain fields should remain in the output, but only if they are identical in all inputs

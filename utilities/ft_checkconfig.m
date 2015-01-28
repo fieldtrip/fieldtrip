@@ -493,7 +493,7 @@ if ~isempty(checkfilenames) && strcmp(checkfilenames, 'yes')
   end
   
   if ~isempty(cfg.dataset)
-    if strcmp(cfg.dataset, 'gui') || strcmp(cfg.dataset, 'uigetfile')
+    if isequal(cfg.dataset, 'gui') || isequal(cfg.dataset, 'uigetfile')
       % display a graphical file selection dialog
       [f, p] = uigetfile('*.*', 'Select a data file');
       if isequal(f, 0)

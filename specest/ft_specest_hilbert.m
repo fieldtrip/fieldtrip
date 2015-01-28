@@ -4,7 +4,7 @@ function [spectrum,freqoi,timeoi] = ft_specest_hilbert(dat, time, varargin)
 % applying a bandpass filter and then doing a hilbert transform.
 %
 % Use as
-%   [spectrum,freqoi,timeoi] = specest_hilbert(dat,time,...)
+%   [spectrum,freqoi,timeoi] = ft_specest_hilbert(dat,time,...)
 % where
 %   dat      = matrix of chan*sample
 %   time     = vector, containing time in seconds for each sample

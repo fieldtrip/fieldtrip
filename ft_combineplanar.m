@@ -83,7 +83,7 @@ cfg.demean         = ft_getopt(cfg, 'demean',         'no');
 cfg.foilim         = ft_getopt(cfg, 'foilim',         [-inf inf]);
 cfg.baselinewindow = ft_getopt(cfg, 'baselinewindow', [-inf inf]);
 cfg.combinemethod  = ft_getopt(cfg, 'combinemethod',  'sum');
-cfg.trials         = ft_getopt(cfg, 'trials',         'all');
+cfg.trials         = ft_getopt(cfg, 'trials',         'all', 1);
 cfg.feedback       = ft_getopt(cfg, 'feedback',       'none');
 
 if isfield(cfg, 'baseline')

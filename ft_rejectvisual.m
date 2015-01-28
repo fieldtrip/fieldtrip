@@ -145,7 +145,7 @@ cfg = ft_checkconfig(cfg, 'renamed',  {'keepchannels',  'keepchannel'});
 
 % set the defaults
 cfg.channel     = ft_getopt(cfg, 'channel'    , 'all');
-cfg.trials      = ft_getopt(cfg, 'trials'     , 'all');
+cfg.trials      = ft_getopt(cfg, 'trials'     , 'all', 1);
 cfg.latency     = ft_getopt(cfg, 'latency'    , 'maxperlength');
 cfg.keepchannel = ft_getopt(cfg, 'keepchannel', 'no');
 cfg.keeptrial   = ft_getopt(cfg, 'keeptrial'  , 'no');

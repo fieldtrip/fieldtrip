@@ -95,7 +95,7 @@ cfg = ft_checkconfig(cfg, 'forbidden',   {'transform'});
 cfg.parameter   = ft_getopt(cfg, 'parameter',   []); % the default is assigned further down
 cfg.channel     = ft_getopt(cfg, 'channel',     'all');
 cfg.latency     = ft_getopt(cfg, 'latency',     'all');
-cfg.trials      = ft_getopt(cfg, 'trials',      'all');
+cfg.trials      = ft_getopt(cfg, 'trials',      'all', 1);
 cfg.frequency   = ft_getopt(cfg, 'frequency',   'all');
 cfg.avgoverchan = ft_getopt(cfg, 'avgoverchan', 'no');
 cfg.avgoverfreq = ft_getopt(cfg, 'avgoverfreq', 'no');
@@ -108,6 +108,12 @@ if ~isfield(cfg,'design') || isempty(cfg.design)
 end
 
 origvarargin = varargin;
+
+% expand a single cfg.frequency input (e.g. cfg.frequency = 20) to limits
+% (cfg.frequency = [20 20]), see bug 2809
+if isnumeric(cfg.frequency) && numel(cfg.frequency) == 1
+  cfg.frequency = [cfg.frequency cfg.frequency];
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % data bookkeeping

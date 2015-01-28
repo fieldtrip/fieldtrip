@@ -24,9 +24,15 @@ function [s] = ft_statfun_diff_itc(cfg, dat, design)
 %  cfg.complex    = 'diffabs' to compute the difference of the absolute ITC values (default), or
 %                   'absdiff' to compute the absolute value of the difference in the complex ITC values.
 % 
+% NOTE: For this specific statistic there is no known parametric distribution, hence
+% the probability and critical value cannot be computed. This specific statistic can
+% therefore only be used with cfg.method='montecarlo'. If you want to do this in combination
+% with cfg.correctm='cluster', you need cfg.clusterthreshold='nonparametric_common' or
+% cfg.clusterthreshold='nonparametric_individual'.
+%
 % See FT_FREQSTATISTICS and FT_STATISTICS_MONTECARLO for more details
 
-% Copyright (C) 2008, Robert Oostenveld
+% Copyright (C) 2008-2014, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.

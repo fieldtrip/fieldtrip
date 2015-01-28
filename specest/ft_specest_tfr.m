@@ -5,7 +5,7 @@ function [spectrum, freqoi, timeoi] = ft_specest_tfr(dat, time, varargin)
 % convolution in the time domain
 %
 % Use as
-%   [spectrum,freqoi,timeoi] = specest_convol(dat,time,...)
+%   [spectrum,freqoi,timeoi] = ft_specest_convol(dat,time,...)
 % where
 %   dat      = matrix of chan*sample
 %   time     = vector, containing time in seconds for each sample

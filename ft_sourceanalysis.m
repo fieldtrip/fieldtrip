@@ -1052,11 +1052,6 @@ else
   % apparently no computations were performed
 end
 
-if (strcmp(cfg.jackknife, 'yes') || strcmp(cfg.bootstrap, 'yes') || strcmp(cfg.pseudovalue, 'yes') || strcmp(cfg.singletrial, 'yes') || strcmp(cfg.rawtrial, 'yes')) && strcmp(cfg.keeptrials, 'yes')
-  % keep the source reconstruction for each repeated or resampled trial
-  source.trial  = dip;
-end
-
 % remember the trialinfo
 if (strcmp(cfg.keeptrials, 'yes') || strcmp(cfg.method, 'pcc')) && isfield(data, 'trialinfo')
   source.trialinfo = data.trialinfo;
