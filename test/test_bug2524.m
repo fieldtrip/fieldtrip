@@ -14,7 +14,15 @@ ft_write_mri([tmp,'.nii'],data,'transform',trans,'dataformat','nifti');
 mri = ft_read_mri([tmp,'.nii']);
 
 assert(mri.transform(1,1)==5);
+
+% use a command line tool from FSL
+[r,s] = system('which fslhd');
+disp(r)
+disp(s)
 [r,s] = system(['fslhd ',tmp,'.nii | grep pixdim']);
+disp(r)
+disp(s)
+
 assert(numel(strfind(s,'5.0'))==3);
 
 delete([tmp,'.nii']);
