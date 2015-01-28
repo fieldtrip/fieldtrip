@@ -58,7 +58,7 @@ if numel(val)==2
     error('The limits you selected are outside the range available in the data');
   end
   indx(1) = sel(1);
-  indx(2) = sel(end);  
+  indx(2) = sel(end);
   if indx(1)>1 && abs(array(indx(1)-1)-val(1))<=intervaltol
     indx(1)=indx(1)-1;
   end
@@ -90,9 +90,9 @@ if insideflag
   if ~toleranceflag
     if val<minarray || val>maxarray
       if numel(array)==1
-        warning('the value %g should be within the range of the array from %g to %g', val, minarray, maxarray);
+        warning('the selected value %g should be within the range of the array from %g to %g', val, minarray, maxarray);
       else
-        error('the value %g should be within the range of the array from %g to %g', val, minarray, maxarray);
+        error('the selected value %g should be within the range of the array from %g to %g', val, minarray, maxarray);
       end
     end
   else
@@ -130,15 +130,15 @@ elseif val<minarray
 else
   % implements a threshold to correct for errors due to numerical precision
   % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=498 and http://bugzilla.fcdonders.nl/show_bug.cgi?id=1943
-%   if maxarray==minarray
-%     precision = 1;
-%   else
-%     precision = (maxarray-minarray) / 10^6;
-%   end
-%   
-%   % return the first occurence of the nearest number
-%   [dum, indx] = min(round((abs(array(:) - val)./precision)).*precision);
-
+  %   if maxarray==minarray
+  %     precision = 1;
+  %   else
+  %     precision = (maxarray-minarray) / 10^6;
+  %   end
+  %
+  %   % return the first occurence of the nearest number
+  %   [dum, indx] = min(round((abs(array(:) - val)./precision)).*precision);
+  
   % use find instead, see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1943
   wassorted = true;
   if ~issorted(array)

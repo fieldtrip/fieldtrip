@@ -546,14 +546,16 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isempty(trackconfig)
   try
-    if strcmp(trackconfig, 'on') && isa(cfg, 'struct')
-      % turn ON configuration tracking
-      cfg = config(cfg);
-      % remember that configtracking has been turned on
-      cfg.trkcfgcount = 1;
-    elseif strcmp(trackconfig, 'on') && isa(cfg, 'config')
-      % remember how many times configtracking has been turned on
-      cfg.trkcfgcount = cfg.trkcfgcount+1; % count the 'ONs'
+    if strcmp(trackconfig, 'on')
+      if isa(cfg, 'struct')
+        % turn ON configuration tracking
+        cfg = config(cfg);
+        % remember that configtracking has been turned on
+        cfg.trkcfgcount = 1;
+      elseif isa(cfg, 'config')
+        % remember how many times trackconfig has been turned on
+        cfg.trkcfgcount = cfg.trkcfgcount+1; % count the 'ONs'
+      end
     end
     
     if strcmp(trackconfig, 'off') && isa(cfg, 'config')
