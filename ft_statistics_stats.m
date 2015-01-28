@@ -241,9 +241,9 @@ case {'kruskalwallis'}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 case 'ttest_window_avg_vs_const'
-  % this used to be a feature of the timelockanaolysis as it was
+  % this used to be a feature of the timelockanalysis as it was
   % originally implemented by Jens Schwartzbach, but it has been
-  % superseded by the use of prepare_timefreq_data for data selection
+  % superseded by the use of ft_selectdata for data selection
   error(sprintf('%s is not supported any more, use cfg.avgovertime=''yes'' instead', cfg.statistic));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

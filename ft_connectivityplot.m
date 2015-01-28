@@ -145,16 +145,13 @@ if ~isfield(data, cfg.parameter)
   error('the data does not contain the requested parameter %s', cfg.parameter);
 end
 
-cfg.channel = ft_channelselection(cfg.channel, data.label);
-
-tmpcfg         = [];
-tmpcfg.channel = cfg.channel;
-tmpcfg.foilim  = cfg.xlim;
-data           = ft_selectdata(tmpcfg, data);
-
+% get the selection of the data
+tmpcfg           = [];
+tmpcfg.channel   = cfg.channel;
+tmpcfg.frequency = cfg.xlim;
+data             = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
-
 
 dat   = data.(cfg.parameter);
 nchan = numel(data.label);

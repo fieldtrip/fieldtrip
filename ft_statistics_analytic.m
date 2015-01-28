@@ -63,9 +63,9 @@ cfg = ft_checkconfig(cfg, 'renamedval',  {'correctm', 'bonferoni', 'bonferroni'}
 cfg = ft_checkconfig(cfg, 'renamedval',  {'correctm', 'holms', 'holm'});
 
 % set the defaults
-if ~isfield(cfg, 'correctm'), cfg.correctm = 'no'; end
-if ~isfield(cfg, 'alpha'),    cfg.alpha = 0.05;    end
-if ~isfield(cfg, 'tail'),     cfg.tail = 0;        end
+cfg.correctm = ft_getopt(cfg, 'correctm', 'no');
+cfg.alpha   = ft_getopt(cfg, 'tail', 0.05);
+cfg.tail    = ft_getopt(cfg, 'alpha', 0);
 
 % fetch function handle to the low-level statistics function
 statfun = ft_getuserfun(cfg.statistic, 'statfun');
