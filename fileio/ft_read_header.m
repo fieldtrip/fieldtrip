@@ -138,6 +138,7 @@ end
 % get the options
 headerformat   = ft_getopt(varargin, 'headerformat');
 retry          = ft_getopt(varargin, 'retry', false);     % the default is not to retry reading the header
+coordsys       = ft_getopt(varargin, 'coordsys', 'head'); % this is used for ctf and neuromag_mne, it can be head or dewar
 
 % optionally get the data from the URL and make a temporary local copy
 filename = fetch_url(filename);
@@ -183,7 +184,6 @@ else
   % get the rest of the options, this is skipped for realtime operation
   cache          = ft_getopt(varargin, 'cache');
   fallback       = ft_getopt(varargin, 'fallback');
-  coordsys       = ft_getopt(varargin, 'coordsys', 'head'); % this is used for ctf and neuromag_mne, it can be head or dewar
   checkmaxfilter = ft_getopt(varargin, 'checkmaxfilter', true);
   
   if isempty(cache),
