@@ -123,6 +123,7 @@ end
 dimord = getdimord(varargin{1}, cfg.parameter);
 dimsiz = getdimsiz(varargin{1}, cfg.parameter);
 dimtok = tokenize(dimord, '_');
+dimsiz(end+1:length(dimtok)) = 1; % there can be additional trailing singleton dimensions
 rptdim = find( strcmp(dimtok, 'subj') |  strcmp(dimtok, 'rpt') |  strcmp(dimtok, 'rpttap'));
 datdim = find(~strcmp(dimtok, 'subj') & ~strcmp(dimtok, 'rpt') & ~strcmp(dimtok, 'rpttap'));
 datsiz = dimsiz(datdim);
