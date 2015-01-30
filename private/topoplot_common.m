@@ -928,7 +928,12 @@ if isempty(get(gcf, 'Name'))
     if ~iscell(dataname)
       dataname={dataname};
     end
-    set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), funcname, strjoin(dataname,', ')));
+    if ft_isoctave()
+      dataname_str=strjoin(dataname,', ');
+    else
+      dataname_str=join_str(', ', dataname);
+    end
+    set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), funcname, dataname_str));
     set(gcf, 'NumberTitle', 'off');
   else
     set(gcf, 'name', cfg.figurename);
