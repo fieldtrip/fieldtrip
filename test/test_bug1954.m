@@ -34,7 +34,8 @@ end
 cfg = [];
 cfg.method = 'bemcp';
 vol1 = ft_prepare_headmodel(cfg, segmentedmri);
-% vol1.mat are all NaN
+any(isnan(vol1.mat(:)))
+% vol1.mat: none are NaN
 
 cfg = [];
 cfg.method = 'dipoli';
@@ -45,6 +46,7 @@ segmentedmri.bnd=bnd;
 cfg=[];
 cfg.method='bemcp';
 vol1o=ft_prepare_bemmodel(cfg,segmentedmri);
-% vol1o.mat also all NaN
+any(isnan(vol1o.mat(:)))
+% vol1o.mat: all are NaN
 
 
