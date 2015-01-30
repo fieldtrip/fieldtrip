@@ -122,7 +122,11 @@ if ~isdeployed
   
   try
     % some alternative implementations of statistics functions
-    addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'stats'));
+    if ~ft_isoctave()
+      % Octave has already the required functions in the 'statistics' and
+      % 'nan' packages
+      addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'stats'));
+    end
   end
 
   try
