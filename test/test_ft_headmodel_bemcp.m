@@ -183,33 +183,34 @@ lf_exist_bemcp_m=ft_prepare_leadfield(cfg);
 % view results
 % Hack: to make LF appear as if it were an ERP
 
-clear lfnames lf
-lfnames=whos('lf*');
-for ll=1:length(lfnames)
-  lf=eval(lfnames(ll).name);
-  tlock=[];
-  tlock.time=[1 2 3];
-  tlock.avg=lf.leadfield{dsearchn(sourcemodel.pos,[-20 0 50])};
-  tlock.label=lf.cfg.channel;
-  tlock.dimord='chan_time';
-  
-  cfg=[];
-  cfg.layout='elec1010.lay';
-  cfg.xlim=[0.9 1.1];
-  figure;
-  ft_topoplotER(cfg,tlock);
-  cfg.xlim=[1.9 2.1];
-  figure;
-  ft_topoplotER(cfg,tlock);
-  cfg.xlim=[2.9 3.1];
-  figure;
-  ft_topoplotER(cfg,tlock);
-  
-  disp(lfnames(ll).name)
-  
-  keyboard; % pause to take note of results
-  close all;
+if 0 % only run this manually, not as part of test-battery
+  clear lfnames lf
+  lfnames=whos('lf*');
+  for ll=1:length(lfnames)
+    lf=eval(lfnames(ll).name);
+    tlock=[];
+    tlock.time=[1 2 3];
+    tlock.avg=lf.leadfield{dsearchn(sourcemodel.pos,[-20 0 50])};
+    tlock.label=lf.cfg.channel;
+    tlock.dimord='chan_time';
+    
+    cfg=[];
+    cfg.layout='elec1010.lay';
+    cfg.xlim=[0.9 1.1];
+    figure;
+    ft_topoplotER(cfg,tlock);
+    cfg.xlim=[1.9 2.1];
+    figure;
+    ft_topoplotER(cfg,tlock);
+    cfg.xlim=[2.9 3.1];
+    figure;
+    ft_topoplotER(cfg,tlock);
+    
+    disp(lfnames(ll).name)
+    
+    keyboard; % pause to take note of results
+    close all;
+  end
+  % For me, sensible patterns come from the lf*cs and lf*dipoli, but not
+  % lf*bemcp*
 end
-% For me, sensible patterns come from the lf*cs and lf*dipoli, but not
-% lf*bemcp*
-
