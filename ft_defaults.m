@@ -222,6 +222,11 @@ end % function ft_default
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function checkMultipleToolbox(toolbox, keyfile)
+if ft_isoctave()
+    % which(...,'-all') syntax is not supported in Octave
+    return
+end
+
 list = which(keyfile, '-all');
 if length(list)>1
   [ws, warned] = warning_once(sprintf('Multiple versions of %s on your path will confuse FieldTrip', toolbox));
