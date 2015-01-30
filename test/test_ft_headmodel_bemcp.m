@@ -133,8 +133,8 @@ hold on;ft_plot_mesh(sourcemodel.pos(sourcemodel.inside,:));
 
 % make sure vol*.mat of bemcp not NaN
 % see bug 1954
-if any(isnan(vol_exist_bemcp.mat(:)))
-  warning('NaN in vol_exist_bemcp.mat')
+if any(isnan(vol_exist_bemcp_mm.mat(:)))
+  warning('NaN in vol_exist_bemcp_mm.mat')
 end
 if any(isnan(vol_new_bemcp.mat(:)))
   warning('NaN in vol_new_bemcp.mat')
