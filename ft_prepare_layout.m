@@ -898,22 +898,30 @@ function layout = readlay(filename)
 if ~exist(filename, 'file')
   error(sprintf('could not open layout file: %s', filename));
 end
-[chNum,X,Y,Width,Height,Lbl,Rem] = textread(filename,'%f %f %f %f %f %q %q');
+fid=fopen(filename);
+lay_string=fread(fid,inf,'char=>char')';
+fclose(fid);
 
-if length(Rem)<length(Lbl)
-  Rem{length(Lbl)} = [];
-end
+% pattern to match is 5 numeric values followed by a string that can
+% contain whitespaces and plus characters, followed by newline
+pat=['(\d+)\s+([\d\.-]+)\s+([\d\.-]+)\s+([\d\.-]+)\s+([\d\.-]+)\s+'...
+        '([\w\s\+]+\w)\s*' sprintf('\n')];
 
-for i=1:length(Lbl)
-  if ~isempty(Rem{i})
-    % this ensures that channel names with a space in them are also supported (i.e. Neuromag)
-    Lbl{i} = [Lbl{i} ' ' Rem{i}];
-  end
-end
-layout.pos    = [X Y];
-layout.width  = Width;
-layout.height = Height;
-layout.label  = Lbl;
+matches=regexp(sprintf('%s\n',lay_string),pat,'tokens');
+
+% convert to (nchannel x 6) matrix
+layout_matrix=cat(1,matches{:});
+
+% convert values in first five columns to numeric
+num_values_cell=layout_matrix(:,1:5)';
+str_values=sprintf('%s %s %s %s %s; ', num_values_cell{:});
+num_values=str2num(str_values);
+
+% store layout information (omit channel number in first column)
+layout.pos    = num_values(:,2:3);
+layout.width  = num_values(:,4);
+layout.height = num_values(:,5);
+layout.label  = layout_matrix(:,6);
 return % function readlay
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
