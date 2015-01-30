@@ -945,8 +945,11 @@ axis equal
 delete(findobj(gcf, 'type', 'uimenu', 'label', 'FieldTrip'));
 if numel(findobj(gcf, 'type', 'axes')) <= 1
   ftmenu = uimenu(gcf, 'Label', 'FieldTrip');
-  uimenu(ftmenu, 'Label', 'Show pipeline',  'Callback', {@menu_pipeline, cfg});
-  uimenu(ftmenu, 'Label', 'About',  'Callback', @menu_about);
+  if ~ft_isoctave()
+    % not supported by Octave
+    uimenu(ftmenu, 'Label', 'Show pipeline',  'Callback', {@menu_pipeline, cfg});
+    uimenu(ftmenu, 'Label', 'About',  'Callback', @menu_about);
+  end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
