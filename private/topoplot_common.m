@@ -109,6 +109,13 @@ cfg = ft_checkconfig(cfg, 'forbidden',  {'hllinewidth', ...
   'highlightfacecolor', ...
   'showlabels'});
 
+if ft_isoctave()
+    % Octave does not support 'v4', and 'cubic' not yet implemented
+    default_interpmethod='linear';
+else
+    default_interpmethod='v4';
+end
+
 % Set other config defaults
 cfg.xlim              = ft_getopt(cfg, 'xlim',          'maxmin');
 cfg.ylim              = ft_getopt(cfg, 'ylim',          'maxmin');
@@ -116,7 +123,7 @@ cfg.zlim              = ft_getopt(cfg, 'zlim',          'maxmin');
 cfg.style             = ft_getopt(cfg, 'style',         'both');
 cfg.gridscale         = ft_getopt(cfg, 'gridscale',     67);
 cfg.interplimits      = ft_getopt(cfg, 'interplimits',  'head');
-cfg.interpolation     = ft_getopt(cfg, 'interpolation', 'v4');
+cfg.interpolation     = ft_getopt(cfg, 'interpolation', default_interpmethod);
 cfg.contournum        = ft_getopt(cfg, 'contournum',    6);
 cfg.colorbar          = ft_getopt(cfg, 'colorbar',      'no');
 cfg.shading           = ft_getopt(cfg, 'shading',       'flat');
