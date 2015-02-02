@@ -370,6 +370,7 @@ if readdata
   % hdr.dim(3) is reserved for the y-dimension
   % hdr.dim(4) is reserved for the z-dimension
   % hdr.dim(5) is reserved for the time-dimension
+  % hdr.dim(6:8) are used for CIFTI
   voxdata = reshape(voxdata, hdr.dim(6:end));
 end
 fclose(fid);
