@@ -153,7 +153,6 @@ switch version
     
     if isfield(source, 'trial') && isstruct(source.trial)
       npos = size(source.pos,1);
-      nrpt = numel(source.trial); % note that this field is also used further doen
       
       % concatenate the fields for each trial and move them to the main structure
       fn = fieldnames(source.trial);

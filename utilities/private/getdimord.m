@@ -274,7 +274,7 @@ switch field
       else
         dimord = 'pos';
       end
-    elseif isequal(datsiz, [npos nrpt]) % only if nrpt is known
+    elseif isequalwithoutnans(datsiz, [npos nrpt])
       if iscell(data.(field))
         dimord = '{pos}_rpt';
       else
