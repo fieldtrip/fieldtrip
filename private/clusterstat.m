@@ -166,7 +166,7 @@ if needpos,
     % into 3D, i.e. when it is described on an ordered set of positions on a 3D-grid
     if isfield(cfg, 'origdim'),
       cfg.dim = cfg.origdim;
-    end %this snippet is to support correct clustering of N-dimensional data, not fully tested yet
+    end % this snippet is to support correct clustering of N-dimensional data, not fully tested yet
     tmp = zeros(cfg.dim);
     tmp(cfg.inside) = postailobs;
     

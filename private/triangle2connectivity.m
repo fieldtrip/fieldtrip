@@ -4,15 +4,17 @@ function [connmat] = triangle2connectivity(tri, pos)
 %
 % Use as
 %  [connmat] = triangle2connectivity(tri)
+% or
+%  [connmat] = triangle2connectivity(tri, pos)
 %
 % The input tri is an Mx3 matrix describing a triangulated surface,
 % containing indices to connecting vertices. The output connmat is a sparse
 % logical NxN matrix, with ones, where vertices are connected, and zeros
 % otherwise.
 %
-% With an optional second input argument describing the Nx3 positions of
-% the vertices, the output will be a sparse matrix with the lengths of the
-% edges between the vertices.
+% If you specify the vertex positions in the second input argument as Nx3
+% matrix, the output will be a sparse matrix with the lengths of the
+% edges between the connected vertices.
 
 % Copyright (C) 2015, Jan-Mathijs Schoffelen
 %
