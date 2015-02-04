@@ -41,7 +41,7 @@ assert(isfield(output, 'time'), 'missing output field');
 cfg = [];
 cfg.parameter = 'pow';
 cfg.operation = 'multiply';
-cfg.value = 0;
+cfg.scalar = 0;
 output = ft_math(cfg, output);
 assert(all(output.pow(:)==0), 'power should be zero');
 
@@ -94,7 +94,7 @@ assert(isfield(output, 'time'), 'missing output field');
 cfg = [];
 cfg.parameter = 'pow';
 cfg.operation = 'multiply';
-cfg.value = 0;
+cfg.scalar = 0;
 output = ft_math(cfg, output);
 assert(all(output.pow(:)==0), 'power should be zero');
 
@@ -108,7 +108,7 @@ assert( isfield(output, 'time'), 'missing output field');
 cfg = [];
 cfg.parameter = 'mom';
 cfg.operation = 'multiply';
-cfg.value = 0;
+cfg.scalar = 0;
 output = ft_math(cfg, output);
 assert(all(output.mom{1}(:)==0), 'moment should be zero');
 
@@ -122,7 +122,7 @@ assert( isfield(output, 'time'), 'missing output field');
 cfg = [];
 cfg.parameter = 'mom';
 cfg.operation = 'multiply';
-cfg.value = 0;
+cfg.scalar = 0;
 output = ft_math(cfg, output);
 assert(all(output.mom{1}(:)==0), 'moment should be zero');
 

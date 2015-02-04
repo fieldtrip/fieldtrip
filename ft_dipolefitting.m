@@ -35,10 +35,9 @@ function [source] = ft_dipolefitting(cfg, data)
 %   cfg.grid            = structure, see FT_PREPARE_LEADFIELD
 % or the position of a few dipoles at locations of interest can be
 % specified, for example obtained from an anatomical or functional MRI
-%   cfg.grid.pos        = Nx3 matrix with position of each source
+%   cfg.grid.pos        = N*3 matrix with position of each source
+%   cfg.grid.inside     = N*1 vector with boolean value whether grid point is inside brain (optional)
 %   cfg.grid.dim        = [Nx Ny Nz] vector with dimensions in case of 3-D grid (optional)
-%   cfg.grid.inside     = vector with indices of the sources inside the brain (optional)
-%   cfg.grid.outside    = vector with indices of the sources outside the brain (optional)
 %
 % If you do not start with a grid search, you have to give a starting location
 % for the nonlinear search
@@ -335,15 +334,27 @@ if strcmp(cfg.gridsearch, 'yes')
   try, tmpcfg.inwardshift = cfg.inwardshift;  end
   grid = ft_prepare_sourcemodel(tmpcfg);
 
+  ngrid = size(grid.pos,1);
+  
+  switch cfg.model
+    case 'regional'
+      grid.error = nan(ngrid, 1);
+    case 'moving'
+      grid.error = nan(ngrid, ntime);
+    otherwise
+      error('unsupported cfg.model');
+  end
+  
+  insideindx = find(grid.inside);
   ft_progress('init', cfg.feedback, 'scanning grid');
-  for i=1:length(grid.inside)
-    ft_progress(i/length(grid.inside), 'scanning grid location %d/%d\n', i, length(grid.inside));
-    indx = grid.inside(i);
+  for i=1:length(insideindx)
+    ft_progress(i/length(insideindx), 'scanning grid location %d/%d\n', i, length(insideindx));
+    thisindx = insideindx(i);
     if isfield(grid, 'leadfield')
       % reuse the previously computed leadfield
-      lf = grid.leadfield{indx};
+      lf = grid.leadfield{thisindx};
     else
-      lf = ft_compute_leadfield(grid.pos(indx,:), sens, vol, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam, 'backproject', cfg.backproject);
+      lf = ft_compute_leadfield(grid.pos(thisindx,:), sens, vol, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam, 'backproject', cfg.backproject);
     end
     % the model is V=lf*mom+noise, therefore mom=pinv(lf)*V estimates the
     % dipole moment this makes the model potential U=lf*pinv(lf)*V and the
@@ -356,10 +367,10 @@ if strcmp(cfg.gridsearch, 'yes')
     switch cfg.model
       case 'regional'
         % sum the error over all latencies
-        grid.error(indx,1) = sum(sum(((eye(nchans)-lf*pinv(lf))*Vdata).^2));
+        grid.error(thisindx,1) = sum(sum(((eye(nchans)-lf*pinv(lf))*Vdata).^2));
       case 'moving'
         % remember the error for each latency independently
-        grid.error(indx,:) = sum(((eye(nchans)-lf*pinv(lf))*Vdata).^2);
+        grid.error(thisindx,:) = sum(((eye(nchans)-lf*pinv(lf))*Vdata).^2);
       otherwise
         error('unsupported cfg.model');
     end % switch model
@@ -369,8 +380,8 @@ if strcmp(cfg.gridsearch, 'yes')
   switch cfg.model
     case 'regional'
       % find the grid point(s) with the minimum error
-      [err, indx] = min(grid.error(grid.inside));
-      dip.pos = grid.pos(grid.inside(indx),:);          % note that for a symmetric dipole pair this results in a vector
+      [err, indx] = min(grid.error);
+      dip.pos = grid.pos(indx,:);                       % note that for a symmetric dipole pair this results in a vector
       dip.pos = reshape(dip.pos,3,cfg.numdipoles)';     % convert to a Nx3 array
       dip.mom = zeros(cfg.numdipoles*3,1);              % set the dipole moment to zero
       if cfg.numdipoles==1
@@ -382,8 +393,8 @@ if strcmp(cfg.gridsearch, 'yes')
     case 'moving'
       for t=1:ntime
         % find the grid point(s) with the minimum error
-        [err, indx] = min(grid.error(grid.inside,t));
-        dip(t).pos = grid.pos(grid.inside(indx),:);           % note that for a symmetric dipole pair this results in a vector
+        [err, indx] = min(grid.error(:,t));
+        dip(t).pos = grid.pos(indx,:);                        % note that for a symmetric dipole pair this results in a vector
         dip(t).pos = reshape(dip(t).pos,3,cfg.numdipoles)';   % convert to a Nx3 array
         dip(t).mom = zeros(cfg.numdipoles*3,1);               % set the dipole moment to zero
         if cfg.numdipoles==1
@@ -401,10 +412,10 @@ elseif strcmp(cfg.gridsearch, 'no')
   % use the initial guess supplied in the configuration for the remainder
   switch cfg.model
     case 'regional'
-      dip = struct(cfg.dip);
+      dip = struct(cfg.dip);      % ensure that it is a struct, not a config object
     case 'moving'
       for t=1:ntime
-        dip(t) = struct(cfg.dip);
+        dip(t) = struct(cfg.dip); % ensure that it is a struct, not a config object
       end
     otherwise
       error('unsupported cfg.model');
