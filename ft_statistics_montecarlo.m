@@ -153,6 +153,7 @@ if strcmp(cfg.correctm, 'cluster')
         cfg = fixinside(cfg, 'index');
       end
     elseif isfield(cfg, 'tri')
+      % input data describes a surface along which neighbours can be defined
       fprintf('using connectivity of vertices along triangulated surface\n');
       cfg.connectivity = triangle2connectivity(cfg.tri);
       if isfield(cfg, 'insideorig')

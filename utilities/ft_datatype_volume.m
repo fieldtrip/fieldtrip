@@ -88,9 +88,7 @@ end
 if isfield(volume, 'xgrid'),     volume = rmfield(volume, 'xgrid');     end
 if isfield(volume, 'ygrid'),     volume = rmfield(volume, 'ygrid');     end
 if isfield(volume, 'zgrid'),     volume = rmfield(volume, 'zgrid');     end
-if isfield(volume, 'freq'),      volume = rmfield(volume, 'freq');      end
 if isfield(volume, 'frequency'), volume = rmfield(volume, 'frequency'); end
-if isfield(volume, 'time'),      volume = rmfield(volume, 'time');      end
 if isfield(volume, 'latency'),   volume = rmfield(volume, 'latency');   end
 
 if isfield(volume, 'pos')

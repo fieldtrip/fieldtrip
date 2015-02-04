@@ -80,7 +80,7 @@ if abort
 end
 
 % check if the input data is valid for this function
-datain = ft_checkdata(datain, 'datatype', {'timelock', 'freq', 'source'}, 'feedback', 'yes', 'hastrials', 'yes');
+datain = ft_checkdata(datain, 'datatype', {'timelock', 'freq', 'source'}, 'feedback', 'yes');
 
 % ensure that the required options are present
 cfg = ft_checkconfig(cfg, 'required', {'confound'}, 'renamed', {'Ftest','ftest'});
@@ -92,6 +92,7 @@ cfg.normalize  = ft_getopt(cfg, 'normalize', 'yes');
 cfg.model      = ft_getopt(cfg, 'model', 'no');
 cfg.statistics = ft_getopt(cfg, 'statistics', 'no');
 cfg.ftest      = ft_getopt(cfg, 'ftest');
+cfg.parameter  = ft_getopt(cfg, 'parameter'); % the default is handled further down
 
 regr = cfg.confound;
 if any(isnan(regr(:)))
@@ -126,10 +127,44 @@ else
   fprintf('skipping normalization procedure \n');
 end
 
+switch ft_datatype(datain)
+  case 'freq'
+    cfg.parameter = ft_getopt(cfg, 'parameter', 'powspctrm');
+  case 'timelock'
+    cfg.parameter = ft_getopt(cfg, 'parameter', 'trial');
+  case 'source'
+    cfg.parameter = ft_getopt(cfg, 'parameter', 'pow');
+end
+
+dimord = getdimord(datain, cfg.parameter);
+dimsiz = getdimsiz(datain, cfg.parameter);
+dimtok = tokenize(dimord, '_');
+rptdim = find(strcmp(dimtok, 'rpt'));
+datdim = setdiff(1:length(dimtok), rptdim);
+
+nrpt = dimsiz(rptdim);
+
+
+dat = datain.(cfg.parameter);
+if strcmp(dimtok{1}, '{pos}')
+  indx = find(datain.inside);
+  npos = length(indx);
+  tmp = nan([nrpt npos datdim(2:end)]); % only positions inside the brain
+  for i=indx'
+    tmp(:,i,:,:,:) = dat{i}(:,:,:,:);
+  end
+  dat = tmp;
+else
+  dat = permute(dat, [rptdim datdim]);
+end
+
+dat = reshape(dat, nrpt, []);
+
 % determine datatype
-isfreq     = ft_datatype(datain, 'freq');
-istimelock = ft_datatype(datain, 'timelock');
-issource   = ft_datatype(datain, 'source');
+isfreq     = false; % ft_datatype(datain, 'freq');
+istimelock = false; % ft_datatype(datain, 'timelock');
+issource   = false; % ft_datatype(datain, 'source');
+
 
 % input handling
 if istimelock
@@ -140,9 +175,6 @@ if istimelock
       nrpt  = size(datain.trial, 1);
       nchan = size(datain.trial, 2);
       ntime = size(datain.trial, 3);
-      
-      % initialize output variable
-      dataout       = datain;
       
       if nrpt~=size(regr,1)
         error('the size of your confound matrix does not match with the number of trials/subjects');
@@ -165,9 +197,6 @@ elseif isfreq
       nfreq = size(datain.powspctrm, 3);
       ntime = size(datain.powspctrm, 4); % this will be a singleton dimension in case there is no time
       
-      % initialize output variable
-      dataout       = datain;
-      
       if nrpt~=size(regr,1)
         error('the size of your confound matrix does not match with the number of trials/subjects');
       end
@@ -189,9 +218,6 @@ elseif issource
   nvox    = size(datain.pos, 1);
   ninside = size(datain.inside, 2);
   
-  % initialize output variable
-  dataout       = datain;
-  
   if nrpt~=size(regr,1)
     error('the size of your confound matrix does not match with the number of trials/subjects');
   end
@@ -202,8 +228,9 @@ elseif issource
     dat(i,:) = datain.trial(1,i).pow(datain.inside); % reshape to [nrpt, nvox]
   end
   
-else
-  error('the input data should be either timelock, freq, or source with trials')
+  % else
+  %   error('the input data should be either timelock, freq, or source with trials')
+  
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -304,7 +331,50 @@ if ~isempty(cfg.ftest)
 end
 
 % prepare the output, start with only the administrative fields
-dataout = keepfields(datain, {'label', 'time', 'freq', 'pos', 'dim', 'transform', 'inside', 'outside', 'trialinfo', 'sampleinfo'});
+dataout = keepfields(datain, {'label', 'time', 'freq', 'pos', 'dim', 'transform', 'inside', 'outside', 'trialinfo', 'sampleinfo', 'dimord'});
+
+if strcmp(cfg.model, 'yes')
+    fprintf('outputting the model which contains the confounds x weights \n');
+  dataout.model = keepfields(datain, {'label', 'time', 'freq', 'pos', 'dim', 'transform', 'inside', 'outside', 'trialinfo', 'sampleinfo', 'dimord'});
+  dataout.model.(cfg.parameter) = reshape(model, [nrpt, dimsiz(datdim)]);
+  clear model;
+end
+
+% beta statistics
+if strcmp(cfg.statistics, 'yes')
+  dataout.stat     = reshape(tval, [nconf dimsiz(datdim)]);
+  dataout.prob     = reshape(prob, [nconf dimsiz(datdim)]);
+  clear tval prob;
+end
+
+% reduced models analyses
+if ~isempty(cfg.ftest)
+  dataout.fvar   = reshape(F, [numel(cfg.ftest) dimsiz(datdim)]);
+  dataout.pvar   = reshape(p, [numel(cfg.ftest) dimsiz(datdim)]);
+  clear F p;
+end
+
+dataout.(cfg.parameter) = reshape(Yc, [nrpt dimsiz(datdim)]); 
+clear Yc;
+
+if istimelock && strcmp(cfg.parameter, 'trial')
+  
+  if isfield(datain, 'avg')
+    % recompute the average
+    fprintf('updataing average and variance\n');
+    tempcfg            = [];
+    tempcfg.keeptrials = 'yes';
+    dataout = ft_timelockanalysis(tempcfg, dataout); % reaveraging
+    
+    if strcmp(cfg.model, 'yes')
+      % also average the model
+      tempcfg            = [];
+      tempcfg.keeptrials = 'yes';
+      dataout.model      = ft_timelockanalysis(tempcfg, dataout.model); % reaveraging
+    end
+  end  
+end
+
 
 if istimelock
   
@@ -313,7 +383,7 @@ if istimelock
   dataout.dimord = 'rpt_chan_time';
   
   if isfield(datain, 'avg') % recompute the average
-    fprintf('updating average and variance\n');
+    fprintf('updataing average and variance\n');
     tempcfg            = [];
     tempcfg.keeptrials = 'yes';
     dataout = ft_timelockanalysis(tempcfg, dataout); % reaveraging
