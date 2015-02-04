@@ -483,12 +483,12 @@ end
 if istrue(checkinside)
   if isfield(cfg, 'inside') && any(cfg.inside>1)
     inside = false(size(cfg.pos,1));
-    inside(cfg.inside)  = true;
+    inside(cfg.inside) = true;
     cfg = removefields(cfg, {'inside', 'outside'});
     cfg.inside = inside;
-  elseif isfield(cfg, 'grid') && isfield(cfg.grid, 'inside') && && any(cfg.grid.inside>1)
+  elseif isfield(cfg, 'grid') && isfield(cfg.grid, 'inside') && any(cfg.grid.inside>1)
     inside = false(size(cfg.grid.pos,1));
-    inside(cfg.grid.inside)  = true;
+    inside(cfg.grid.inside) = true;
     cfg.grid = removefields(cfg.grid, {'inside', 'outside'});
     cfg.grid.inside = inside;
   end
