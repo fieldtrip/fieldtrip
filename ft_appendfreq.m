@@ -73,6 +73,7 @@ end
 cfg = ft_checkconfig(cfg, 'required', 'parameter');
 
 % set the defaults
+cfg.channel    = ft_getopt(cfg, 'channel', 'all');
 cfg.appenddim  = ft_getopt(cfg, 'appenddim',  'auto');
 cfg.tolerance  = ft_getopt(cfg, 'tolerance',  1e-5);
 
@@ -95,19 +96,14 @@ tol    = cfg.tolerance;
 dimtok = tokenize(dimord{1}, '_');
 switch cfg.appenddim
   case 'auto'
-    % determine the appenddim and recursively call ft_appendfreq
-    tmpcfg = cfg;
     
     % only allow to append across observations if these are present in the data
     if any(strcmp(dimtok, 'rpt'))
-      tmpcfg.appenddim = 'rpt';
-      
+      cfg.appenddim = 'rpt';
     elseif any(strcmp(dimtok, 'rpttap'))
-      tmpcfg.appenddim = 'rpttap';
-      
+      cfg.appenddim = 'rpttap';
     elseif any(strcmp(dimtok, 'subj'))
-      tmpcfg.appenddim = 'subj';
-      
+      cfg.appenddim = 'subj';
     else
       % we need to check whether the other dimensions are the same.
       % if not, consider some tolerance.
@@ -118,58 +114,31 @@ switch cfg.appenddim
         boolval3 = checktime(varargin{:}, 'identical', tol);
         if boolval1 && boolval2 && boolval3
           % each of the input datasets contains a single repetition (perhaps an average), these can be concatenated
-          tmpcfg.appenddim = 'rpt';
+          cfg.appenddim = 'rpt';
         elseif ~boolval1 && boolval2 && boolval3
-          tmpcfg.appenddim = 'chan';
+          cfg.appenddim = 'chan';
         elseif boolval1 && ~boolval2 && boolval3
-          tmpcfg.appenddim = 'freq';
+          cfg.appenddim = 'freq';
         elseif boolval1 && boolval2 && ~boolval3
-          tmpcfg.appenddim = 'time';
+          cfg.appenddim = 'time';
         else
           error('the input datasets have multiple non-identical dimensions, this function only appends one dimension at a time');
         end
       else
         if boolval1 && boolval2
           % each of the input datasets contains a single repetition (perhaps an average), these can be concatenated
-          tmpcfg.appenddim = 'rpt';
+          cfg.appenddim = 'rpt';
         elseif ~boolval1 && boolval2
-          tmpcfg.appenddim = 'chan';
+          cfg.appenddim = 'chan';
         elseif boolval1 && ~boolval2
-          tmpcfg.appenddim = 'freq';
+          cfg.appenddim = 'freq';
         end
       end
       
-      freq = ft_appendfreq(tmpcfg, varargin{:});
-      return;
-    end % determining the dimension for appending
-    
-    % otherwise we need to check whether the other dimensions are the same. if
-    % not, consider some tolerance.
-    boolval1 = checkchan(varargin{:}, 'identical');
-    boolval2 = checkfreq(varargin{:}, 'identical', tol);
-    if isfield(varargin{1}, 'time'),
-      boolval3 = checktime(varargin{:}, 'identical', tol);
-      if boolval1 && boolval2 && boolval3
-        tmpcfg.appenddim = 'rpt';
-      elseif ~boolval1 && boolval2 && boolval3
-        tmpcfg.appenddim = 'chan';
-      elseif boolval1 && ~boolval2 && boolval3
-        tmpcfg.appenddim = 'freq';
-      elseif boolval1 && boolval2 && ~boolval3
-        tmpcfg.appenddim = 'time';
-      end
-    else
-      if boolval1 && boolval2
-        tmpcfg.appenddim = 'rpt';
-      elseif ~boolval1 && boolval2
-        tmpcfg.appenddim = 'chan';
-      elseif boolval1 && ~boolval2
-        tmpcfg.appenddim = 'freq';
-      end
-    end
-    freq = ft_appendfreq(tmpcfg, varargin{:});
-    return;
-    
+    end % determine the dimension for appending
+end
+
+switch cfg.appenddim
   case {'rpt' 'rpttap' 'subj'}
     catdim = find(ismember(dimtok, {'rpt' 'rpttap' 'subj'}));
     if numel(catdim)==0
@@ -193,9 +162,19 @@ switch cfg.appenddim
       boolval3 = true;
     end
     
-    if any([boolval1 boolval2 boolval3]==false)
-      error('appending across observations is not possible, because the dimensions are incompatible');
+    if any([boolval2 boolval3]==false)
+      error('appending across observations is not possible, because the frequency and/or temporal dimensions are incompatible');
     end
+    
+    % select and reorder the channels that are in every dataset
+    tmpcfg           = [];
+    tmpcfg.channel   = cfg.channel;
+    tmpcfg.tolerance = cfg.tolerance;
+    [varargin{:}]    = ft_selectdata(tmpcfg, varargin{:});
+    for i=1:Ndata
+      [cfg_rolledback, varargin{i}] = rollback_provenance(cfg, varargin{i});
+    end
+    cfg = cfg_rolledback;
     
     % update the dimord
     if catdim==0
@@ -206,7 +185,7 @@ switch cfg.appenddim
       % FIXME append dof
       % before append cumtapcnt cumsumcnt trialinfo check if there's a
       % subfield in each dataset. Append fields of different dataset might
-      % lead in empty and/or non-exinting fields in a particular dataset
+      % lead in empty and/or non-existing fields in a particular dataset
       hascumsumcnt = [];
       hascumtapcnt = [];
       hastrialinfo = [];
@@ -366,6 +345,7 @@ switch cfg.appenddim
     freq.dimord = varargin{1}.dimord;
     
   otherwise
+    error('it is not allowed to concatenate across dimension %s',cfg.appenddim);   
 end
 
 param = cfg.parameter;

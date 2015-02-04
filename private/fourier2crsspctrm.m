@@ -44,14 +44,14 @@ if ~isfield(cfg, 'keepfourier'), cfg.keepfourier = 'no';                        
 if ~isfield(cfg, 'feedback'),    cfg.feedback    = 'text';                        end
 
 %select the channels on which the power-spectra will be computed
-chn     = channelselection(cfg.channel,freq.label);
+chn = ft_channelselection(cfg.channel,freq.label);
 for j = 1:length(chn)
   chnindx(j,1) = find(strcmp(chn(j), freq.label));
   %chnindx(j,1) = find(strcmp(chn{j}, freq.label));
 end
 
 %convert the channelcombinations to indices
-chncmb  = channelcombination(cfg.channelcmb, freq.label);
+chncmb  = ft_channelcombination(cfg.channelcmb, freq.label);
 cmbindx = zeros(size(chncmb,1),2);
 for j = 1:size(chncmb,1)
   cmbindx(j,1) = find(strcmp(chncmb(j,1), freq.label));

@@ -513,7 +513,7 @@ if istrue(checkfilenames)
   end
   
   if ~isempty(cfg.dataset)
-    if strcmp(cfg.dataset, 'gui') || strcmp(cfg.dataset, 'uigetfile')
+    if isequal(cfg.dataset, 'gui') || isequal(cfg.dataset, 'uigetfile')
       % display a graphical file selection dialog
       [f, p] = uigetfile('*.*', 'Select a data file');
       if isequal(f, 0)
@@ -566,14 +566,16 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isempty(trackconfig)
   try
-    if strcmp(trackconfig, 'on') && isa(cfg, 'struct')
-      % turn ON configuration tracking
-      cfg = config(cfg);
-      % remember that configtracking has been turned on
-      cfg.trkcfgcount = 1;
-    elseif strcmp(trackconfig, 'on') && isa(cfg, 'config')
-      % remember how many times configtracking has been turned on
-      cfg.trkcfgcount = cfg.trkcfgcount+1; % count the 'ONs'
+    if strcmp(trackconfig, 'on')
+      if isa(cfg, 'struct')
+        % turn ON configuration tracking
+        cfg = config(cfg);
+        % remember that configtracking has been turned on
+        cfg.trkcfgcount = 1;
+      elseif isa(cfg, 'config')
+        % remember how many times trackconfig has been turned on
+        cfg.trkcfgcount = cfg.trkcfgcount+1; % count the 'ONs'
+      end
     end
     
     if strcmp(trackconfig, 'off') && isa(cfg, 'config')

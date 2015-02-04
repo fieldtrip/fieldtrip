@@ -141,35 +141,38 @@ if strcmp(cfg.correctm, 'cluster')
   cfg.clusteralpha     = ft_getopt(cfg, 'clusteralpha',     0.05);
   cfg.clustercritval   = ft_getopt(cfg, 'clustercritval',   []);
   cfg.clustertail      = ft_getopt(cfg, 'clustertail',      cfg.tail);
+  cfg.connectivity     = ft_getopt(cfg, 'connectivity',     []); % the default is dealt with below
   
-  % deal with the neighbourhood of the channels/triangulation
-  cfg.connectivity  = ft_getopt(cfg, 'connectivity',     []);
-  if ischar(cfg.connectivity) && strcmp(cfg.connectivity, 'bwlabeln')
-    % this is set in statistics_wrapper when input source data is reshapable, requiring to use spm_bwlabel, rather than clusterstat)
-    cfg.connectivity = nan; % this designates that the data is reshapable in 3D space and that these dimensions can be treated by bwlabeln
-    if isfield(cfg, 'inside')
-      cfg = fixinside(cfg, 'index');
-    end
-  elseif isempty(cfg.connectivity)
-    if isfield(cfg, 'tri')
+  % deal with the neighbourhood of the channels/triangulation/voxels
+  if isempty(cfg.connectivity)
+    if isfield(cfg, 'dim')
+      % input data can be reshaped into a 3D volume, use bwlabeln/spm_bwlabel rather than clusterstat
+      fprintf('using connectivity of voxels in 3-D volume\n');
+      cfg.connectivity = nan;
+      if isfield(cfg, 'inside')
+        cfg = fixinside(cfg, 'index');
+      end
+    elseif isfield(cfg, 'tri')
+      % input data describes a surface along which neighbours can be defined
+      fprintf('using connectivity of vertices along triangulated surface\n');
       cfg.connectivity = triangle2connectivity(cfg.tri);
       if isfield(cfg, 'insideorig')
         cfg.connectivity = cfg.connectivity(cfg.insideorig, cfg.insideorig);
       end
     elseif isfield(cfg, 'avgoverchan') && istrue(cfg.avgoverchan)
-      % channel dimension has been averaged across, no sense in clustering
-      % across space
+      % channel dimension has been averaged across, no sense in clustering across space
       cfg.connectivity = true(1);
     elseif isfield(cfg, 'channel')
       cfg.neighbours   = ft_getopt(cfg, 'neighbours', []);
       cfg.connectivity = channelconnectivity(cfg);
     else
-      % no connectivity in the spatial dimension
+      % there is no connectivity in the spatial dimension
       cfg.connectivity = false(size(dat,1));
     end
   else
     % use the specified connectivity: op hoop van zegen
   end
+  
 else
   % these options only apply to clustering, to ensure appropriate configs they are forbidden when _not_ clustering
   cfg = ft_checkconfig(cfg, 'unused', {'clusterstatistic', 'clusteralpha', 'clustercritval', 'clusterthreshold', 'clustertail', 'neighbours'});

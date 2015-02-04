@@ -4,7 +4,7 @@ function [spectrum,ntaper,freqoi,timeoi] = ft_specest_mtmconvol(dat, time, varar
 % by multiplication in the frequency domain
 %
 % Use as
-%   [spectrum,freqoi,timeoi] = specest_mtmconvol(dat,time,...)
+%   [spectrum,freqoi,timeoi] = ft_specest_mtmconvol(dat,time,...)
 % where
 %   dat      = matrix of chan*sample
 %   time     = vector, containing time in seconds for each sample

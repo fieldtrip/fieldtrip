@@ -18,31 +18,18 @@ end
 if strncmp(field, 'avg.', 4)
   prefix = [];
   field = field(5:end); % strip the avg
-  data.(field) = data.avg.(field); % copy the avg into the main structure
+  data.(field) = data.avg.(field); % move the avg into the main structure
   data = rmfield(data, 'avg');
 elseif strncmp(field, 'trial.', 6)
   prefix = numel(data.trial);
   field = field(7:end); % strip the trial
-  data.(field) = data.trial(1).(field); % copy the first trial into the main structure
+  data.(field) = data.trial(1).(field); % move the first trial into the main structure
   data = rmfield(data, 'trial');
 else
   prefix = [];
 end
 
 dimsiz = cellmatsize(data.(field));
-
-% figure out whether there are additional trailing singleton dimensions
-try
-  % don't call getdimord in case getdimord is calling us, we don't want to recurse
-  s = dbstack;
-  if ~strcmp(s(2).name, 'getdimord')
-    dimord = getdimord(data, field);
-    dimtok = tokenize(dimord, '_');
-    for i=(length(dimsiz)+1):length(dimtok)
-      dimsiz(i) = 1;
-    end
-  end
-end % try
 
 % add nrpt in case of source.trial
 dimsiz = [prefix dimsiz];

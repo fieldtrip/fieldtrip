@@ -112,7 +112,7 @@ cfg = ft_checkconfig(cfg, 'renamed',     {'blc', 'demean'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'blcwindow', 'baselinewindow'});
 
 % set the defaults
-cfg.trials       = ft_getopt(cfg, 'trials',      'all');
+cfg.trials       = ft_getopt(cfg, 'trials',      'all', 1);
 cfg.channel      = ft_getopt(cfg, 'channel',     'all');
 cfg.keeptrials   = ft_getopt(cfg, 'keeptrials',  'no');
 cfg.covariance   = ft_getopt(cfg, 'covariance',  'no');

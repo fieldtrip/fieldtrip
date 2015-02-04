@@ -85,7 +85,7 @@ cfg.refchannel = ft_getopt(cfg, 'refchannel', 'MEGREF');
 cfg.channel    = ft_getopt(cfg, 'channel',    'MEG');
 cfg.truncate   = ft_getopt(cfg, 'truncate',   'no');
 cfg.zscore     = ft_getopt(cfg, 'zscore',     'no');
-cfg.trials     = ft_getopt(cfg, 'trials',     'all');
+cfg.trials     = ft_getopt(cfg, 'trials',     'all', 1);
 cfg.pertrial   = ft_getopt(cfg, 'pertrial',   'no');
 cfg.feedback   = ft_getopt(cfg, 'feedback',   'none');
 

@@ -107,7 +107,7 @@ end
 
 % set the default configuration
 cfg.channel      = ft_getopt(cfg, 'channel',      'MEG');
-cfg.trials       = ft_getopt(cfg, 'trials',       'all');
+cfg.trials       = ft_getopt(cfg, 'trials',       'all', 1);
 cfg.planarmethod = ft_getopt(cfg, 'planarmethod', 'sincos');
 cfg.feedback     = ft_getopt(cfg, 'feedback',     'text');
 

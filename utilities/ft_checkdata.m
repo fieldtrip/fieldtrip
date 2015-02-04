@@ -418,7 +418,7 @@ if ~isempty(dtype)
       isfreq = 0;
       israw = 1;
       okflag = 1;
-
+      
     elseif isequal(dtype(iCell), {'raw'}) && ischan
       data = chan2timelock(data);
       data = timelock2raw(data);
@@ -859,8 +859,9 @@ else
 end
 
 % first go from univariate fourier to the required bivariate representation
-if strcmp(current, 'fourier') && strcmp(desired, 'fourier')
+if isequal(current, desired)
   % nothing to do
+  
 elseif strcmp(current, 'fourier') && strcmp(desired, 'sparsewithpow')
   dimtok = tokenize(data.dimord, '_');
   if ~isempty(strmatch('rpttap',   dimtok)),
@@ -1110,6 +1111,7 @@ elseif (strcmp(current, 'full')       && strcmp(desired, 'fourier')) || ...
   
 elseif strcmp(current, 'full') && strcmp(desired, 'sparsewithpow')
   error('not yet implemented');
+  
 elseif strcmp(current, 'sparse') && strcmp(desired, 'sparsewithpow')
   % convert back to crsspctrm/powspctrm representation: useful for plotting functions etc
   indx     = labelcmb2indx(data.labelcmb);
@@ -1163,7 +1165,7 @@ elseif strcmp(current, 'full') && strcmp(desired, 'sparse')
   end
   % remove obsolete fields
   data           = rmfield(data, 'label');
-  try, data      = rmfield(data, 'dof'); end
+  try data      = rmfield(data, 'dof'); end
   % replace updated fields
   data.labelcmb  = labelcmb;
   if ntim>1,
@@ -1177,9 +1179,7 @@ elseif strcmp(current, 'full') && strcmp(desired, 'sparse')
   end
   
 elseif strcmp(current, 'sparsewithpow') && strcmp(desired, 'sparse')
-  
-  % this representation for sparse data contains autospectra
-  % as e.g. {'A' 'A'} in labelcmb
+  % this representation for sparse data contains autospectra as e.g. {'A' 'A'} in labelcmb
   if isfield(data, 'crsspctrm'),
     dimtok         = tokenize(data.dimord, '_');
     catdim         = match_str(dimtok, {'chan' 'chancmb'});
@@ -1260,9 +1260,9 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'full')
   end % for ii
   
   % remove obsolete fields
-  try, data      = rmfield(data, 'powspctrm');  end
-  try, data      = rmfield(data, 'labelcmb');   end
-  try, data      = rmfield(data, 'dof');        end
+  try data      = rmfield(data, 'powspctrm');  end
+  try data      = rmfield(data, 'labelcmb');   end
+  try data      = rmfield(data, 'dof');        end
   
   if ntim>1,
     data.dimord = 'chan_chan_freq_time';
@@ -1332,9 +1332,9 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'fullfast')
   end % for ii
   
   % remove obsolete fields
-  try, data      = rmfield(data, 'powspctrm');  end
-  try, data      = rmfield(data, 'labelcmb');   end
-  try, data      = rmfield(data, 'dof');        end
+  try data      = rmfield(data, 'powspctrm');  end
+  try data      = rmfield(data, 'labelcmb');   end
+  try data      = rmfield(data, 'dof');        end
   
   if ntim>1,
     data.dimord = 'chan_chan_freq_time';
@@ -1342,12 +1342,12 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'fullfast')
     data.dimord = 'chan_chan_freq';
   end
   
-elseif strcmp(current, 'sparsewithpow') && strcmp(desired, 'full')
+elseif strcmp(current, 'sparsewithpow') && any(strcmp(desired, {'full', 'fullfast'}))
   % this is how is currently done in prepare_freq_matrices
   data = ft_checkdata(data, 'cmbrepresentation', 'sparse');
   data = ft_checkdata(data, 'cmbrepresentation', 'full');
   
-end
+end % convert from one to another bivariate representation
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % convert to new source representation
@@ -1550,7 +1550,7 @@ elseif strcmp(current, 'old') && strcmp(type, 'new'),
     % convert cell-array ori into matrix
     ori = nan(3,npos);
     if ~islogical(output.inside)
-      try,
+      try
         ori(:,output.inside) = cat(2, output.ori{output.inside});
       catch
         %when oris are in wrong orientation (row rather than column)
@@ -1559,7 +1559,7 @@ elseif strcmp(current, 'old') && strcmp(type, 'new'),
         end
       end
     else
-      try,
+      try
         ori(:,find(output.inside)) = cat(2, output.ori{find(output.inside)});
       catch
         tmpinside = find(output.inside);
@@ -1718,7 +1718,7 @@ if isfield(data, 'cfg')
 end
 
 fn = fieldnames(data);
-fn = setdiff(fn, {'label', 'time', 'freq', 'hdr', 'cfg', 'grad', 'elec', 'dimord'}); % remove irrelevant fields
+fn = setdiff(fn, {'label', 'time', 'freq', 'hdr', 'cfg', 'grad', 'elec', 'dimord', 'unit'}); % remove irrelevant fields
 fn(~cellfun(@isempty, regexp(fn, 'dimord$'))) = []; % remove irrelevant (dimord) fields
 sel = false(size(fn));
 for i=1:numel(fn)
@@ -1772,7 +1772,7 @@ if isfield(data, 'dimord')
   %this part depends on the assumption that the list of positions is describing a full 3D volume in
   %an ordered way which allows for the extraction of a transformation matrix
   %i.e. slice by slice
-  try,
+  try
     if isfield(data, 'dim'),
       data.dim = pos2dim(data.pos, data.dim);
     else
@@ -1839,8 +1839,6 @@ for i=1:nrpt
     data.time{i}  = data.time{i}(begsmp:endsmp);
   end
 end
-nsmp = cellfun('size',data.time,2);
-seln = find(nsmp>1,1, 'first');
 
 if isfield(freq, 'trialinfo'), data.trialinfo = freq.trialinfo; end;
 
@@ -1901,17 +1899,11 @@ end
 % convert between datatypes
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [data] = timelock2raw(data)
-try
-  nsmp = cellfun('size',data.time,2);
-catch
-  nsmp = size(data.time,2);
-end
 switch data.dimord
   case 'chan_time'
     data.trial{1} = data.avg;
     data.time     = {data.time};
     data          = rmfield(data, 'avg');
-    seln = find(nsmp>1,1, 'first');
   case 'rpt_chan_time'
     tmptrial = {};
     tmptime  = {};
@@ -1925,7 +1917,6 @@ switch data.dimord
     data       = rmfield(data, 'trial');
     data.trial = tmptrial;
     data.time  = tmptime;
-    seln = find(nsmp>1,1, 'first');
   case 'subj_chan_time'
     tmptrial = {};
     tmptime  = {};
@@ -1939,7 +1930,6 @@ switch data.dimord
     data       = rmfield(data, 'individual');
     data.trial = tmptrial;
     data.time  = tmptime;
-    seln = find(nsmp>1,1, 'first');
   otherwise
     error('unsupported dimord');
 end
@@ -2103,6 +2093,3 @@ data.label = spike.label;
 data.fsample = fsample;
 if isfield(spike,'hdr'), data.hdr = spike.hdr; end
 if isfield(spike,'cfg'), data.cfg = spike.cfg; end
-
-
-

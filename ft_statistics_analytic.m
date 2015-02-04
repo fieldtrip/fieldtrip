@@ -64,8 +64,8 @@ cfg = ft_checkconfig(cfg, 'renamedval',  {'correctm', 'holms', 'holm'});
 
 % set the defaults
 cfg.correctm = ft_getopt(cfg, 'correctm', 'no');
-cfg.alpha   = ft_getopt(cfg, 'tail', 0.05);
-cfg.tail    = ft_getopt(cfg, 'alpha', 0);
+cfg.alpha    = ft_getopt(cfg, 'alpha', 0.05);
+cfg.tail     = ft_getopt(cfg, 'tail', 0);
 
 % fetch function handle to the low-level statistics function
 statfun = ft_getuserfun(cfg.statistic, 'statfun');

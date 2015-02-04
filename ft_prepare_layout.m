@@ -928,10 +928,15 @@ sens = ft_datatype_sens(sens);
 
 % remove the balancing from the sensor definition, e.g. 3rd order gradients, PCA-cleaned data or ICA projections
 % this not only removed the linear projections, but also ensures that the channel labels are correctly named
+if isfield(sens, 'chanposorg')
+    chanposorg = sens.chanposorg;
+else
+    chanposorg = [];
+end
 if isfield(sens, 'balance') && ~strcmp(sens.balance.current, 'none')            
     sens = undobalancing(sens);
-    if isfield(sens, 'chanposorg')
-        sens.chanpos = sens.chanposorg;
+    if size(chanposorg, 1) == numel(sens.label)
+        sens.chanpos = chanposorg;
     end
 end
 

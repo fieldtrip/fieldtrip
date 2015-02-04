@@ -53,17 +53,18 @@ if abort
   return
 end
 
+Ndata = length(varargin);
+
 % check if the input data is valid for this function
-for i=1:length(varargin)
+for i=1:Ndata
   varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'timelock', 'feedback', 'yes', 'hassampleinfo', 'ifmakessense');
 end
 
 % set the defaults
-cfg.channel   = ft_getopt(cfg, 'channel', 'all');
-cfg.appenddim = ft_getopt(cfg, 'appenddim', 'auto');
+cfg.channel    = ft_getopt(cfg, 'channel', 'all');
+cfg.appenddim  = ft_getopt(cfg, 'appenddim', 'auto');
 cfg.tolerance  = ft_getopt(cfg, 'tolerance',  1e-5);
 
-Ndata = length(varargin);
 % ensure that all inputs are sufficiently consistent
 if ~checktime(varargin{:}, 'identical', cfg.tolerance);
   error('this function requires identical time axes for all input structures');
@@ -93,7 +94,6 @@ end
 timelock        = [];
 timelock.time   = varargin{1}.time;
 ntime           = length(timelock.time);
-
 
 switch cfg.appenddim
   case 'chan'
@@ -161,31 +161,22 @@ switch cfg.appenddim
     
   case 'rpt' % append over trial or dataset dimension
     % select the channels that are in every dataset
-    for i = 1:Ndata
-      cfg.channel = ft_channelselection(cfg.channel, varargin{i}.label);
+    tmpcfg           = [];
+    tmpcfg.channel   = cfg.channel;
+    tmpcfg.tolerance = cfg.tolerance;
+    [varargin{:}]    = ft_selectdata(tmpcfg, varargin{:});
+    for i=1:Ndata
+      [cfg_rolledback, varargin{i}] = rollback_provenance(cfg, varargin{i});
     end
-    timelock.label  = cfg.channel;
+    cfg = cfg_rolledback;
     
-    nchan  = length(timelock.label);
+    timelock.label = varargin{1}.label;
+    nchan          = numel(timelock.label);
     if nchan<1
       error('No channels in common');
     end
     
-    hascov        = isfield(varargin{1}, 'cov') && numel(size(varargin{1}.cov))==3;
-    for m = 1:Ndata
-      [a,b] = match_str(timelock.label, varargin{m}.label);
-      if ~all(a==b)
-        if isfield(varargin{m},'trial')
-          varargin{m}.trial = reorderdim(varargin{m}.trial, 2, b);
-        else % .avg and .var will be recomputed anyway if .trial exists
-          varargin{m}.avg = reorderdim(varargin{m}.avg, 1, b);
-          if isfield(varargin{m}, 'var')
-            varargin{m}.var = reorderdim(varargin{m}.var, 1, b);
-          end
-        end
-      end
-    end
-    
+    hascov = isfield(varargin{1}, 'cov') && numel(size(varargin{1}.cov))==3;
     if isfield(varargin{1}, 'trial')
       % these don't make sense when concatenating the avg
       hastrialinfo  = isfield(varargin{1}, 'trialinfo');
@@ -229,6 +220,8 @@ switch cfg.appenddim
       end % for varargin
     end
     timelock.dimord = 'rpt_chan_time';
+  otherwise
+    error('it is not allowed to concatenate across dimension %s',cfg.appenddim);      
 end
 
 % do the general cleanup and bookkeeping at the end of the function

@@ -21,7 +21,7 @@ event1 = ft_read_event(filename1);
 event2 = ft_read_event(filename2);
 event3 = ft_read_event(filename3);
 
-assert(length(unique({event1.type}))==8); % 'STI001'    'STI002'    'STI003'    'STI004'    'STI009'    'STI010'    'STI011'    'STI101'
-assert(length(unique({event2.type}))==1); % 'STI101'
-assert(length(unique({event3.type}))==2); % 'STI101' and 'trigger'
+assert(length(unique({event1.type}))==8+1); % 'STI001' 'STI002' 'STI003' 'STI004' 'STI009' 'STI010' 'STI011' 'STI101' and an additional 'Trigger'
+assert(length(unique({event2.type}))==1);   % 'STI101'
+assert(length(unique({event3.type}))==2);   % 'STI101' and 'trigger'
 

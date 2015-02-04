@@ -182,7 +182,7 @@ cfg = ft_checkconfig(cfg, 'deprecated', {'topo'});
 % set the defaults
 cfg.method          = ft_getopt(cfg, 'method',       'runica');
 cfg.demean          = ft_getopt(cfg, 'demean',       'yes');
-cfg.trials          = ft_getopt(cfg, 'trials',       'all');
+cfg.trials          = ft_getopt(cfg, 'trials',       'all', 1);
 cfg.channel         = ft_getopt(cfg, 'channel',      'all');
 cfg.numcomponent    = ft_getopt(cfg, 'numcomponent', 'all');
 cfg.normalisesphere = ft_getopt(cfg, 'normalisesphere', 'yes');

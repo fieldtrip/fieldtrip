@@ -370,6 +370,7 @@ if readdata
   % hdr.dim(3) is reserved for the y-dimension
   % hdr.dim(4) is reserved for the z-dimension
   % hdr.dim(5) is reserved for the time-dimension
+  % hdr.dim(6:8) are used for CIFTI
   voxdata = reshape(voxdata, hdr.dim(6:end));
 end
 fclose(fid);
@@ -686,6 +687,7 @@ if readdata
   end
   
   switch source.dimord
+    % the following representations are directly consistent with FieldTrip
     case {'pos' 'chan'}
       [m, n] = size(voxdata);
       if m>n
@@ -695,13 +697,19 @@ if readdata
         dat = nan(Ngreynodes,m);
         dat(greynodeIndex(dataIndex),:) = transpose(voxdata);
       end
-    case {'pos_pos' 'chan_chan'}
-      dat = nan(Ngreynodes,Ngreynodes);
-      dat(greynodeIndex(dataIndex),greynodeIndex(dataIndex)) = voxdata;
     case {'pos_time' 'chan_time'}
       Ntime = size(voxdata,2);
       dat = nan(Ngreynodes,Ntime);
       dat(greynodeIndex(dataIndex),:) = voxdata;
+    case {'pos_pos' 'chan_chan'}
+      dat = nan(Ngreynodes,Ngreynodes);
+      dat(greynodeIndex(dataIndex),greynodeIndex(dataIndex)) = voxdata;
+    case {'pos_pos_time' 'chan_chan_time'}
+      Ntime = size(voxdata,3);
+      dat = nan(Ngreynodes,Ngreynodes,Ntime);
+      dat(greynodeIndex(dataIndex),greynodeIndex(dataIndex),:) = voxdata;
+      
+      % the following representations need to be transposed to be consistent with FieldTrip
     case 'time_pos'
       Ntime = size(voxdata,1);
       dat = nan(Ngreynodes,Ntime);
@@ -712,8 +720,19 @@ if readdata
       dat = nan(Ngreynodes,Ntime);
       dat(greynodeIndex(dataIndex),:) = transpose(voxdata);
       source.dimord = 'chan_time';
+    case 'time_pos_pos'
+      Ntime = size(voxdata,1);
+      dat = nan(Ngreynodes,Ngreynodes,Ntime);
+      dat(greynodeIndex(dataIndex),greynodeIndex(dataIndex),:) = permute(voxdata, [2 3 1]);
+      source.dimord = 'pos_pos_time';
+    case 'time_chan_chan'
+      Ntime = size(voxdata,1);
+      dat = nan(Ngreynodes,Ngreynodes,Ntime);
+      dat(greynodeIndex(dataIndex),greynodeIndex(dataIndex),:) = permute(voxdata, [2 3 1]);
+      source.dimord = 'chan_chan_time';
+      
     otherwise
-      error('unsupported dimord');
+      error('unsupported dimord %s', source.dimord);
   end % switch
   
   if isfield(Cifti, 'mapname') && length(Cifti.mapname)>1
@@ -729,7 +748,7 @@ if readdata
     % the name of the data will be based on the filename
     source.data = dat;
   end
-end % if data
+end % if readdata
 
 source = copyfields(Cifti, source, {'time', 'freq'});
 source.hdr = hdr;
@@ -937,4 +956,4 @@ if readdata
     source = rmfield(source, 'datalabel');
   end
   
-end
+end % if readdata

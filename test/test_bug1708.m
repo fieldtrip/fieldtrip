@@ -10,7 +10,7 @@ function test_bug1708
 % coilori
 
 % try to reproduce first
-load('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf275.mat');
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf275.mat'));
 
 cfg  = [];
 cfg.gradient = 'none';

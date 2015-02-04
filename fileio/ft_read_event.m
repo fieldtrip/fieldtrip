@@ -100,12 +100,36 @@ if isempty(db_blob)
 end
 
 if iscell(filename)
-  % use recursion to read from multiple event sources
-  event = [];
-  for i=1:numel(filename)
-    tmp   = ft_read_event(filename{i}, varargin{:});
-    event = appendevent(event(:), tmp(:));
+  warning_once(sprintf('concatenating events from %d files', numel(filename)));
+  % use recursion to read events from multiple files
+
+  hdr = ft_getopt(varargin, 'header');
+  if isempty(hdr) || ~isfield(hdr, 'orig') || ~iscell(hdr.orig)
+    for i=1:numel(filename)
+      % read the individual file headers
+      hdr{i}  = ft_read_header(filename{i}, varargin{:});
+    end
+  else
+    % use the individual file headers that were read previously
+    hdr = hdr.orig;
   end
+  nsmp = nan(size(filename));
+  for i=1:numel(filename)
+    nsmp(i) = hdr{i}.nSamples*hdr{i}.nTrials;
+  end
+  offset = [0 cumsum(nsmp(1:end-1))];
+  
+  event = cell(size(filename));
+  for i=1:numel(filename)
+    varargin = ft_setopt(varargin, 'header', hdr{i});
+    event{i} = ft_read_event(filename{i}, varargin{:});
+    for j=1:numel(event{i})
+      % add the offset due to the previous files
+      event{i}(j).sample = event{i}(j).sample + offset(i);
+    end
+  end
+  % return the concatenated events
+  event = appendevent(event{:});
   return
 end
 
@@ -113,11 +137,6 @@ end
 filename = fetch_url(filename);
 
 % get the options
-eventformat      = ft_getopt(varargin, 'eventformat');
-if isempty(eventformat)
-  % only do the autodetection if the format was not specified
-  eventformat = ft_filetype(filename);
-end
 hdr              = ft_getopt(varargin, 'header');
 detectflank      = ft_getopt(varargin, 'detectflank', 'up');   % up, down or both
 trigshift        = ft_getopt(varargin, 'trigshift');           % default is assigned in subfunction
@@ -126,6 +145,18 @@ headerformat     = ft_getopt(varargin, 'headerformat');
 dataformat       = ft_getopt(varargin, 'dataformat');
 threshold        = ft_getopt(varargin, 'threshold');           % this is used for analog channels
 tolerance        = ft_getopt(varargin, 'tolerance', 1);
+checkmaxfilter   = ft_getopt(varargin, 'checkmaxfilter');      % will be passed to ft_read_header
+eventformat      = ft_getopt(varargin, 'eventformat');
+
+if isempty(eventformat)
+  % only do the autodetection if the format was not specified
+  eventformat = ft_filetype(filename);
+end
+
+if iscell(eventformat)
+  % this happens for datasets specified as cell array for concatenation
+  eventformat = eventformat{1};
+end
 
 % this allows to read only events in a certain range, supported for selected data formats only
 flt_type         = ft_getopt(varargin, 'type');
@@ -894,9 +925,9 @@ switch eventformat
     if isunix && filename(1)~=filesep
       % add the full path to the dataset directory
       filename = fullfile(pwd, filename);
-    else
-      % FIXME I don't know how this is supposed to work on Windows computers
-      % with the drive letter in front of the path
+    elseif ispc && filename(2)~=':'
+      % add the full path, including drive letter
+      filename = fullfile(pwd, filename);
     end
     % pass the header along to speed it up, it will be read on the fly in case it is empty
     event = read_mff_event(filename, hdr);
@@ -1219,7 +1250,7 @@ switch eventformat
     end
     
     if isempty(hdr)
-      hdr = ft_read_header(filename, 'headerformat', headerformat);
+      hdr = ft_read_header(filename, 'headerformat', headerformat, 'checkmaxfilter', checkmaxfilter);
     end
     
     % note below we've had to include some chunks of code that are only
