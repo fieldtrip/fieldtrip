@@ -43,15 +43,38 @@ elseif size(parameter,2)==2
 end
 
 if isfield(data, 'label')
-  % univariate data or 'chan_chan_xxx' bivariate data
-  fun = zeros(size(parcellation.pos, 1), size(tmp, 2))+nan;
-  for k = 1:numel(data.label)
-    sel = match_str(parcellation.([parcelparam,'label']), data.label{k});
-    if ~isempty(sel)
-      sel = parcellation.(parcelparam)==sel;
-      sel = sel(:); % ensure it is a column vector
-      fun(sel,:) = repmat(tmp(k,:), [sum(sel) 1]);
+  % the data is chan_xxx or chan_chan_xxx
+  
+  dimord = getdimord(data, parameter);
+  dimtok = tokenize(dimord, '_');
+  dimsiz = getdimsiz(data, parameter);
+  % replace the number of parcels by the number of vertices in a parcel
+  dimsiz(strcmp(dimtok, 'chan')) = size(parcellation.pos,1);
+  
+  fun = nan(dimsiz);
+  
+  [parcelindx, chanindx] = match_str(parcellation.([parcelparam,'label']), data.label);
+  
+  if strcmp(dimtok{1}, 'chan') && strcmp(dimtok{2}, 'chan')
+    % chan_chan_xxx
+    for i=1:numel(parcelindx)
+      for j=1:numel(parcelindx)
+        p1 = parcellation.(parcelparam)==parcelindx(i);
+        p2 = parcellation.(parcelparam)==parcelindx(j);
+        c1 = chanindx(i);
+        c2 = chanindx(j);
+        fun(p1,p2,:) = repmat(tmp(c1,c2,:), [sum(p1) sum(p2) 1]);
+      end
     end
+    
+  elseif strcmp(dimtok{1}, 'chan')
+    % chan_xxx
+    for i=1:numel(parcelindx)
+      p1 = parcellation.(parcelparam)==parcelindx(i);
+      c1 = chanindx(i);
+      fun(p1,:) = repmat(tmp(c1,:), [sum(p1) 1]);
+    end
+    
   end
   
   varargout{1} = fun;

@@ -14,17 +14,8 @@ end
 
 if ~isfield(data, field)
   error('field "%s" not present in data', field);
-end
-
-dimsiz = cellmatsize(data.(field));
-
-try
-  % there can be additional trailing singleton dimensions
-  dimord = getdimord(data, field);
-  dimtok = tokenize(dimord, '_');
-  for i=(length(dimsiz)+1):length(dimtok)
-    dimsiz(i) = 1;
-  end
+else
+  dimsiz = cellmatsize(data.(field));
 end
 
 end % main function

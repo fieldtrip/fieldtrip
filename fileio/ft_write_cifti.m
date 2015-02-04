@@ -127,7 +127,7 @@ switch dimord
     % NIFTI_INTENT_CONNECTIVITY_PARCELLATED_SCALARS
     extension   = '.pscalar.nii';
     intent_code = 3006;
-    intent_name = 'ConnParcelScalr'; % due to length constraints of the NIfTI header field, the last ?a? is removed
+    intent_name = 'ConnParcelScalr'; % due to length constraints of the NIfTI header field, the last "a" is removed
     dat = transpose(dat);
     dimord = 'scalar_chan';
   case 'chan_chan'
@@ -150,35 +150,17 @@ switch dimord
     dat = transpose(dat);
     dimord = 'freq_chan';
     
-  case 'chan_chan_time'
+  case {'chan_chan_time' 'chan_chan_freq'}
     % NIFTI_INTENT_CONNECTIVITY_PARCELLATED_PARCELLATED_SERIES
     extension = '.pconnseries.nii';
     intent_code = 3011;
     intent_name = 'ConnPPSr';
-    dat = permute(dat, [3 1 2]);
-    dimord = 'time_chan_chan';
-  case 'chan_chan_freq'
-    % NIFTI_INTENT_CONNECTIVITY_PARCELLATED_PARCELLATED_SERIES
-    extension = '.pconnseries.nii';
-    intent_code = 3011;
-    intent_name = 'ConnPPSr';
-    dat = permute(dat, [3 1 2]);
-    dimord = 'freq_chan_chan';
     
-  case 'pos_pos_time'
+  case {'pos_pos_time' 'pos_pos_freq'}
     % this is not part of the Cifti v2 specification, but would have been NIFTI_INTENT_CONNECTIVITY_DENSE_DENSE_SERIES
     extension = '.dconnseries.nii'; % user's choise
     intent_code = 3000;
     intent_name = 'ConnUnknown';
-    dat = permute(dat, [3 1 2]);
-    dimord = 'time_pos_pos';
-  case 'pos_pos_freq'
-    % this is not part of the Cifti v2 specification, but would have been NIFTI_INTENT_CONNECTIVITY_DENSE_DENSE_SERIES
-    extension = '.dconnseries.nii'; % user's choise
-    intent_code = 3000;
-    intent_name = 'ConnUnknown';
-    dat = permute(dat, [3 1 2]);
-    dimord = 'freq_pos_pos';
     
   otherwise
     error('unsupported dimord "%s"', dimord);
@@ -490,7 +472,7 @@ if any(strcmp(dimtok, 'chan'))
   end
   
   % surfaces are described with vertex positions (pos/pnt) and triangles (tri)
-  if isfield(source, 'tri')
+  if isfield(source, 'pos') && isfield(source, 'tri')
     % there is a surface description
     
     for i=1:length(BrainStructurelabel)
@@ -679,9 +661,12 @@ switch precision
 end
 
 % dim(1) represents the number of dimensions
-% for a normal nifti file, dim(2:4) are x, y, z, dim(5) is time, dim(6:8) are free to choose
-% the cifti file makes use of dim(6:8)
-hdr.dim = [6 1 1 1 1 1 1 1];
+% for a normal nifti file, dim(2:4) are x, y, z, dim(5) is time
+% cifti makes use of dim(6:8), which are free to choose
+hdr.dim = [4+length(dimtok) 1 1 1 1 1 1 1];
+
+% the nifti specification does not allow for more than 7 dimensions to be specified
+assert(hdr.dim(1)<8);
 
 for i=1:length(dimtok)
   switch dimtok{i}
@@ -762,7 +747,7 @@ fwrite(fid, dat, precision);
 fclose(fid);
 
 % write the surfaces as gifti files
-if writesurface && isfield(source, 'tri')
+if writesurface && isfield(source, 'pos') && isfield(source, 'tri')
   
   if isfield(source, brainstructure)
     % it contains information about anatomical structures, including cortical surfaces

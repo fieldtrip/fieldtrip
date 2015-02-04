@@ -92,17 +92,21 @@ elseif nargin>2
   % assume the first data argument to be a parcellation, and the second a
   % parcellated structure
   tmp = getsubfield(source2, funparameter);
-  fun = zeros(size(source.pos, 1), size(tmp, 2));
+  siz = [size(tmp) 1];
+  fun = zeros([size(source.pos, 1), siz(2:end)]);
   parcels      = source.(parcellation);
   parcelslabel = source.([parcellation,'label']);
   for k = 1:numel(source2.label)
     sel = match_str(source.([parcellation,'label']), source2.label{k});
     if ~isempty(sel)
       sel = source.(parcellation)==sel;
-      fun(sel,:) = repmat(tmp(k,:), [sum(sel) 1]);
+      fun(sel,:,:) = repmat(tmp(k,:,:), [sum(sel) 1]);
     end
   end
   source.(xparam) = source2.(xparam);
+  if ~isempty(yparam)
+    source.(yparam) = source2.(yparam);
+  end
 end
 if size(source.pos)~=size(fun,1)
   error('inconsistent number of vertices in the cortical mesh');
@@ -148,7 +152,7 @@ if ~isempty(yparam)
   ybeg = nearest(yparam, ylim(1));
   yend = nearest(yparam, ylim(2));
   % update the configuration
-  cfg.ylim = xparam([ybeg yend]);
+  cfg.ylim = xparam([xbeg xend]);
   hasyparam = true;
 else
   % this allows us not to worry about the yparam any more
@@ -197,7 +201,11 @@ opt.dat     = fun;
 opt.mask    = abs(mask);
 opt.pos     = source.pos;
 opt.tri     = source.tri;
-opt.vindx   = source.inside(:);
+if isfield(source, 'inside')
+  opt.vindx   = source.inside(:);
+else
+  opt.vindx   = 1:size(opt.pos,1);
+end
 opt.speed   = 1;
 opt.record  = 0;
 opt.threshold = 0;
@@ -210,6 +218,7 @@ if exist('parcelslabel', 'var'), opt.parcellationlabel = parcelslabel; end
 % FIXME here we should first check whether the meshes correspond!
 if nargin>2 && isfield(source2, 'pos')
   opt.dat2 = fun2;
+  opt.dat1 = opt.dat;
 end
 
 % get a handle to a figure
@@ -230,6 +239,9 @@ cambutton    = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutto
 playbutton   = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'play',   'userdata', 'p');
 recordbutton = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'record', 'userdata', 'r');
 quitbutton   = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'quit',   'userdata', 'q');
+if isfield(opt, 'dat2'), 
+  displaybutton = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'display: var1',   'userdata', 'f');
+end
 
 thrmin   = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', 'downarrow');
 thr      = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'threshold', 'userdata', 't');
@@ -249,6 +261,10 @@ stringy  = uicontrol('parent', h, 'units', 'normalized', 'style', 'text');
 stringz  = uicontrol('parent', h, 'units', 'normalized', 'style', 'text');
 stringp  = uicontrol('parent', h, 'units', 'normalized', 'style', 'text');
 
+if isfield(opt,'dat2')
+  set(displaybutton, 'position', [0.005 0.34 0.18 0.05], 'callback', @cb_keyboard);
+end
+
 set(cambutton,    'position', [0.095 0.28 0.09 0.05], 'callback', @cb_keyboard);
 set(quitbutton,   'position', [0.005 0.28 0.09 0.05], 'callback', @cb_keyboard);
 set(playbutton,   'position', [0.005 0.22 0.09 0.05], 'callback', @cb_keyboard);
@@ -264,8 +280,8 @@ set(climmaxplus,  'position', [0.155 0.125 0.03 0.025], 'callback', @cb_keyboard
 set(spdmin,       'position', [0.005 0.04 0.03 0.05], 'callback', @cb_keyboard);
 set(spd,          'position', [0.035 0.04 0.12 0.05], 'callback', @cb_keyboard);
 set(spdplus,      'position', [0.155 0.04 0.03 0.05], 'callback', @cb_keyboard);
-set(sliderx,      'position', [0.01 0.4 0.26 0.03], 'callback',  @cb_slider);%[0.200 0.04  0.78 0.03], 'callback', @cb_slider);
-set(slidery,      'position', [0.200 0.005 0.78 0.03], 'callback', @cb_slider);
+set(sliderx,      'position', [0.02 0.4 0.3 0.03], 'callback',  @cb_slider);%[0.200 0.04  0.78 0.03], 'callback', @cb_slider);
+set(slidery,      'position', [0.350 0.5  0.03 0.35], 'callback', @cb_slider);
 set(stringx,      'position', [0.800 0.93 0.18 0.03]);
 set(stringy,      'position', [0.800 0.90 0.18 0.03]);
 set(stringz,      'position', [0.650 0.96 0.33 0.03]);
@@ -294,7 +310,8 @@ else
   hs1 = ft_plot_mesh(source, 'edgecolor', 'none', 'facecolor', [0.5 0.5 0.5]);
 end
 lighting gouraud
-hs = ft_plot_mesh(source, 'edgecolor', 'none', 'vertexcolor', 0*opt.dat(:,1,1));%, 'facealpha', 0*opt.mask(:,1,1));
+siz = [size(opt.dat) 1];
+hs = ft_plot_mesh(source, 'edgecolor', 'none', 'vertexcolor', 0*opt.dat(:,ceil(siz(2)/2),ceil(siz(3)/2)));%, 'facealpha', 0*opt.mask(:,1,1));
 lighting gouraud
 cam1 = camlight('left');
 cam2 = camlight('right');
@@ -317,7 +334,11 @@ if ~hasyparam
   end
   
 else
-  error('not yet implemented');  
+  tline = imagesc(opt.xparam, opt.yparam, squeeze(mean(opt.dat(opt.vindx,:,:)))'); axis xy; hold on;
+  abc   = [opt.xparam([1 end]) opt.yparam([1 end])];
+  vline = plot(opt.xparam(ceil(siz(2)/2)).*[1 1], abc(3:4));
+  hline = plot(abc(1:2), opt.yparam(ceil(siz(3)/2)).*[1 1]);
+  %error('not yet implemented');  
 end
 set(hy, 'tag', 'timecourse');
 
@@ -329,12 +350,16 @@ opt.hy  = hy; % handle to the axes containing the timecourse
 opt.cam = [cam1 cam2]; % handles to the light objects
 opt.vline = vline; % handle to the line in the ERF plot
 opt.tline = tline; % handle to the ERF
+if exist('hline', 'var')
+  opt.hline = hline;
+end
 if nargin>2 && isfield(source2, 'pos'), 
   opt.tline2 = tline2; 
 end
 opt.playbutton   = playbutton; % handle to the playbutton
 opt.recordbutton = recordbutton; % handle to the recordbutton
 opt.quitbutton   = quitbutton; % handle to the quitbutton
+try, opt.displaybutton = displaybutton; end
 
 %opt.p   = p;
 opt.t   = t;
@@ -416,18 +441,32 @@ if previous_valx~=valx || previous_valy~=valy
   set(opt.hs, 'FaceVertexAlphaData', mask);
 
   set(opt.vline, 'xdata', [1 1]*opt.xparam(valx));
+  if isfield(opt, 'hline')
+    set(opt.hline, 'ydata', [1 1]*opt.yparam(valy));
+  end
 end
 
 % update ERF-plot
-set(opt.hy,    'ylim',   opt.cfg.zlim);
-set(opt.vline, 'ydata',  opt.cfg.zlim);
+if ~isfield(opt, 'hline')
+  set(opt.hy,    'ylim',   opt.cfg.zlim);
+  set(opt.vline, 'ydata',  opt.cfg.zlim);
+else
+  set(opt.hy,    'clim',   opt.cfg.zlim);
+end
 if ~(numel(previous_vindx)==numel(opt.vindx) && all(previous_vindx==opt.vindx))
-  tmp = mean(opt.dat(opt.vindx,:,valy),1);
-  set(opt.tline, 'ydata', tmp);
+  if ~isfield(opt, 'hline')
+    tmp = mean(opt.dat(opt.vindx,:,valy),1);
+    set(opt.tline, 'ydata', tmp);
+  else
+    tmp = shiftdim(mean(opt.dat(opt.vindx,:,:),1))';
+    set(opt.tline, 'cdata', tmp);
+  end
   %set(opt.hy,    'ylim',  [min(tmp(:)) max(tmp(:))]);
   %set(opt.vline, 'ydata', [min(tmp(:)) max(tmp(:))]);
   
   if isfield(opt, 'dat2')
+    tmp = mean(opt.dat1(opt.vindx,:,valy),1);
+    set(opt.tline, 'ydata', tmp);
     tmp = mean(opt.dat2(opt.vindx,:,valy),1);
     set(opt.tline2, 'ydata', tmp);
   end
@@ -531,8 +570,11 @@ h   = getparent(h);
 opt = getappdata(h, 'opt');
 if strcmp(get(get(h, 'currentaxes'), 'tag'), 'timecourse')
   % get the current point
-  %pos = get(opt.hy, 'currentpoint');
-  %set(opt.sliderx, 'value', nearest(opt.xparam, pos(1)));  
+  pos = get(opt.hy, 'currentpoint');
+  set(opt.sliderx, 'value', nearest(opt.xparam, pos(1,1))./numel(opt.xparam));  
+  if isfield(opt, 'hline')
+    set(opt.slidery, 'value', nearest(opt.yparam, pos(1,2))./numel(opt.yparam));
+  end
 elseif strcmp(get(get(h, 'currentaxes'), 'tag'), 'mesh')
   % get the current point, which is defined as the intersection through the
   % axis-box (in 3D)
@@ -644,6 +686,19 @@ switch key
       set(opt.hx, 'Clim', opt.cfg.zlim);
       setappdata(h, 'opt', opt);
     end
+  case 'f'
+    if isfield(opt, 'dat2')
+    if isequalwithequalnans(opt.dat,opt.dat2),
+      opt.dat = opt.dat1;
+      set(opt.displaybutton, 'string', 'display: var1');
+    end
+    if isequalwithequalnans(opt.dat,opt.dat1),
+      opt.dat = opt.dat2;
+      set(opt.displaybutton, 'string', 'display: var2');
+    end
+    end
+    setappdata(h, 'opt', opt);
+    cb_slider(h);
   case 'control+control'
     % do nothing
   case 'shift+shift'
