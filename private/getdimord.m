@@ -268,7 +268,19 @@ switch field
       else
         dimord = 'pos_freq';
       end
-    elseif prod(datsiz==npos)
+    elseif isequal(datsiz, [npos 1]) % in case there are no repetitions
+      if iscell(data.(field))
+        dimord = '{pos}';
+      else
+        dimord = 'pos';
+      end
+    elseif isequal(datsiz, [npos nrpt]) % only if nrpt is known
+      if iscell(data.(field))
+        dimord = '{pos}_rpt';
+      else
+        dimord = 'pos_rpt';
+      end
+    elseif isequal(datsiz, [1 npos])
       if iscell(data.(field))
         dimord = '{pos}';
       else
@@ -278,8 +290,6 @@ switch field
       dimord = 'rpt_pos_time';
     elseif isequalwithoutnans(datsiz, [nrpt npos nfreq])
       dimord = 'rpt_pos_freq';
-    elseif isequalwithoutnans(datsiz, [npos nrpt]) % only if nrpt is known
-      dimord = 'pos_rpt';
     end
     
   case {'mom'}
