@@ -121,9 +121,9 @@ if strcmp(cfg.correctm, 'cluster') && length(varargin{1}.label)>1
 end
 
 dimord = getdimord(varargin{1}, cfg.parameter);
+dimtok = tokenize(dimord, '_');
 dimsiz = getdimsiz(varargin{1}, cfg.parameter);
 dimsiz(end+1:length(dimtok)) = 1; % there can be additional trailing singleton dimensions
-dimtok = tokenize(dimord, '_');
 rptdim = find( strcmp(dimtok, 'subj') |  strcmp(dimtok, 'rpt') |  strcmp(dimtok, 'rpttap'));
 datdim = find(~strcmp(dimtok, 'subj') & ~strcmp(dimtok, 'rpt') & ~strcmp(dimtok, 'rpttap'));
 datsiz = dimsiz(datdim);
