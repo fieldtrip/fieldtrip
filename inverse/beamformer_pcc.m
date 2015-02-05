@@ -1,27 +1,42 @@
 function [dipout] = beamformer_pcc(dip, grad, vol, dat, Cf, varargin)
 
-% BEAMFORMER_PCC implements an experimental beamformer based on partial canonical
-% correlations or coherences.
+% BEAMFORMER_PCC implements an experimental beamformer based on partial
+% canonical correlations or coherences. Dipole locations that are outside
+% the head will return a NaN value.
+%
+% Use as
+%   [dipout] = beamformer_pcc(dipin, grad, vol, dat, cov, ...)
+% where
+%   dipin       is the input dipole model
+%   grad        is the gradiometer definition
+%   vol         is the volume conductor definition
+%   dat         is the data matrix with the ERP or ERF
+%   cov         is the data covariance or cross-spectral density matrix
+% and
+%   dipout      is the resulting dipole model with all details
+%
+% The input dipole model consists of
+%   dipin.pos   positions for dipole, e.g. regular grid, Npositions x 3
+%   dipin.mom   dipole orientation (optional), 3 x Npositions
+% and can additionally contain things like a precomputed filter.
 %
 % Additional options should be specified in key-value pairs and can be
-%   refchan       
-%   refdip        
-%   supchan       
-%   supdip        
-%
-%   reducerank    
-%   normalize     
+%   refchan
+%   refdip
+%   supchan
+%   supdip
+%   reducerank
+%   normalize
 %   normalizeparam
-%
-%   feedback      
-%   keepcsd       
-%   keepfilter    
-%   keepleadfield 
-%   keepmom       
-%   lambda        
-%   projectnoise  
-%   realfilter    
-%   fixedori      
+%   feedback
+%   keepcsd
+%   keepfilter
+%   keepleadfield
+%   keepmom
+%   lambda
+%   projectnoise
+%   realfilter
+%   fixedori
 
 % Copyright (C) 2005-2014, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
@@ -83,36 +98,37 @@ keepcsd = 1;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % find the dipole positions that are inside/outside the brain
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if ~isfield(dip, 'inside') && ~isfield(dip, 'outside');
-  insideLogical = ft_inside_vol(dip.pos, vol);
-  dip.inside = find(insideLogical);
-  dip.outside = find(~dip.inside);
-elseif isfield(dip, 'inside') && ~isfield(dip, 'outside');
-  dip.outside    = setdiff(1:size(dip.pos,1), dip.inside);
-elseif ~isfield(dip, 'inside') && isfield(dip, 'outside');
-  dip.inside     = setdiff(1:size(dip.pos,1), dip.outside);
+if ~isfield(dip, 'inside')
+  dip.inside = ft_inside_vol(dip.pos, vol);
 end
 
+if any(dip.inside>1)
+  % convert to logical representation
+  tmp = false(size(dip.pos,1),1);
+  tmp(dip.inside) = true;
+  dip.inside = tmp;
+end
+
+% keep the original details on inside and outside positions
+originside = dip.inside;
+origpos    = dip.pos;
+
 % select only the dipole positions inside the brain for scanning
-dip.origpos     = dip.pos;
-dip.originside  = dip.inside;
-dip.origoutside = dip.outside;
+dip.pos    = dip.pos(originside,:);
+dip.inside = true(size(dip.pos,1),1);
 if isfield(dip, 'mom')
-  dip.mom = dip.mom(:, dip.inside);
+  dip.mom = dip.mom(:, originside);
 end
 needleadfield = 1;
 if isfield(dip, 'leadfield')
   fprintf('using precomputed leadfields\n');
-  dip.leadfield = dip.leadfield(dip.inside);
+  dip.leadfield = dip.leadfield(originside);
 end
 if isfield(dip, 'filter')
   fprintf('using precomputed filters\n');
-  dip.filter = dip.filter(dip.inside);
+  dip.filter = dip.filter(originside);
   needleadfield = 0;
 end
-dip.pos     = dip.pos(dip.inside, :);
-dip.inside  = 1:size(dip.pos,1);
-dip.outside = [];
 
 if ~isempty(refdip)
   rf = ft_compute_leadfield(refdip, grad, vol, 'reducerank', reducerank, 'normalize', normalize);
@@ -273,42 +289,42 @@ end % for all dipoles
 
 ft_progress('close');
 
-dipout.inside  = dip.originside;
-dipout.outside = dip.origoutside;
-dipout.pos     = dip.origpos;
+% wrap it all up, prepare the complete output
+dipout.inside  = originside;
+dipout.pos     = origpos;
 
 % reassign the scan values over the inside and outside grid positions
 if isfield(dipout, 'leadfield')
-  dipout.leadfield(dipout.inside)  = dipout.leadfield;
-  dipout.leadfield(dipout.outside) = {[]};
+  dipout.leadfield( originside) = dipout.leadfield;
+  dipout.leadfield(~originside) = {[]};
 end
 if isfield(dipout, 'filter')
-  dipout.filter(dipout.inside)  = dipout.filter;
-  dipout.filter(dipout.outside) = {[]};
+  dipout.filter( originside) = dipout.filter;
+  dipout.filter(~originside) = {[]};
 end
 if isfield(dipout, 'mom')
-  dipout.mom(dipout.inside)  = dipout.mom;
-  dipout.mom(dipout.outside) = {[]};
+  dipout.mom( originside) = dipout.mom;
+  dipout.mom(~originside) = {[]};
 end
 if isfield(dipout, 'csd')
-  dipout.csd(dipout.inside)  = dipout.csd;
-  dipout.csd(dipout.outside) = {[]};
+  dipout.csd( originside) = dipout.csd;
+  dipout.csd(~originside) = {[]};
 end
 if isfield(dipout, 'noisecsd')
-  dipout.noisecsd(dipout.inside)  = dipout.noisecsd;
-  dipout.noisecsd(dipout.outside) = {[]};
+  dipout.noisecsd( originside) = dipout.noisecsd;
+  dipout.noisecsd(~originside) = {[]};
 end
 if isfield(dipout, 'csdlabel')
-  dipout.csdlabel(dipout.inside)  = dipout.csdlabel;
-  dipout.csdlabel(dipout.outside) = {[]};
+  dipout.csdlabel( originside) = dipout.csdlabel;
+  dipout.csdlabel(~originside) = {[]};
 end
 if isfield(dipout, 'ori')
-  dipout.ori(dipout.inside)  = dipout.ori;
-  dipout.ori(dipout.outside) = {[]};
+  dipout.ori( originside) = dipout.ori;
+  dipout.ori(~originside) = {[]};
 end
 if isfield(dipout, 'eta')
-  dipout.eta(dipout.inside)  = dipout.eta;
-  dipout.eta(dipout.outside) = {[]};
+  dipout.eta( originside) = dipout.eta;
+  dipout.eta(~originside) = {[]};
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -342,4 +358,3 @@ else
     X = V(:,1:r)*s*U(:,1:r)';
   end
 end
-

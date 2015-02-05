@@ -2,7 +2,7 @@ function [dipout] = beamformer_dics(dip, grad, vol, dat, Cf, varargin)
 
 % BEAMFORMER_DICS scans on pre-defined dipole locations with a single dipole
 % and returns the beamformer spatial filter output for a dipole on every
-% location.  Dipole locations that are outside the head will return a
+% location. Dipole locations that are outside the head will return a
 % NaN value.
 %
 % Use as
@@ -88,7 +88,7 @@ keepleadfield  = keyval('keepleadfield', varargin); if isempty(keepleadfield), k
 lambda         = keyval('lambda',        varargin); if isempty(lambda  ),      lambda = 0;                   end
 projectnoise   = keyval('projectnoise',  varargin); if isempty(projectnoise),  projectnoise = 'yes';         end
 fixedori       = keyval('fixedori',      varargin); if isempty(fixedori),      fixedori = 'no';              end
-subspace       = keyval('subspace',      varargin); 
+subspace       = keyval('subspace',      varargin);
 
 % convert the yes/no arguments to the corresponding logical values
 keepcsd        = strcmp(keepcsd,       'yes');
@@ -125,55 +125,55 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % find the dipole positions that are inside/outside the brain
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if ~isfield(dip, 'inside') && ~isfield(dip, 'outside');
-  insideLogical = ft_inside_vol(dip.pos, vol);
-  dip.inside = find(insideLogical);
-  dip.outside = find(~dip.inside);
-elseif isfield(dip, 'inside') && ~isfield(dip, 'outside');
-  dip.outside    = setdiff(1:size(dip.pos,1), dip.inside);
-elseif ~isfield(dip, 'inside') && isfield(dip, 'outside');
-  dip.inside     = setdiff(1:size(dip.pos,1), dip.outside);
+if ~isfield(dip, 'inside')
+  dip.inside = ft_inside_vol(dip.pos, vol);
 end
 
-% flags to avoid calling isfield repeatedly in the loop over grid positions
-% (saves a lot of time)
-hasmom = 0;
-hasleadfield = 0;
-hasfilter = 0;
-hassubspace = 0;
+if any(dip.inside>1)
+  % convert to logical representation
+  tmp = false(size(dip.pos,1),1);
+  tmp(dip.inside) = true;
+  dip.inside = tmp;
+end
+
+% keep the original details on inside and outside positions
+originside = dip.inside;
+origpos    = dip.pos;
+
+% flags to avoid calling isfield repeatedly in the loop over grid positions (saves a lot of time)
+hasmom        = false;
+hasleadfield  = false;
+hasfilter     = false;
+hassubspace   = false;
 
 % select only the dipole positions inside the brain for scanning
-dip.origpos     = dip.pos;
-dip.originside  = dip.inside;
-dip.origoutside = dip.outside;
-if hasmom
+dip.pos    = dip.pos(originside,:);
+dip.inside = true(size(dip.pos,1),1);
+if isfield(dip, 'mom')
   hasmom = 1;
-  dip.mom = dip.mom(:,dip.inside);
+  dip.mom = dip.mom(:,originside);
 end
 if isfield(dip, 'leadfield')
   hasleadfield = 1;
   if dofeedback
     fprintf('using precomputed leadfields\n');
   end
-  dip.leadfield = dip.leadfield(dip.inside);
+  dip.leadfield = dip.leadfield(originside);
 end
 if isfield(dip, 'filter')
   hasfilter = 1;
   if dofeedback
     fprintf('using precomputed filters\n');
   end
-  dip.filter = dip.filter(dip.inside);
+  dip.filter = dip.filter(originside);
 end
 if isfield(dip, 'subspace')
   hassubspace = 1;
   if dofeedback
     fprintf('using subspace projection\n');
   end
-  dip.subspace = dip.subspace(dip.inside);
+  dip.subspace = dip.subspace(originside);
 end
-dip.pos     = dip.pos(dip.inside, :);
-dip.inside  = 1:size(dip.pos,1);
-dip.outside = [];
 
 % dics has the following sub-methods, which depend on the function input arguments
 % power only, cortico-muscular coherence and cortico-cortical coherence
@@ -257,7 +257,7 @@ elseif ~isempty(subspace)
     invCf    = diag(1./diag(Cf));
     subspace = u(:,1:subspace)';
     dat      = subspace*dat;
-
+    
     if strcmp(submethod, 'dics_refchan')
       Cr = subspace*Cr;
     end
@@ -272,7 +272,7 @@ elseif ~isempty(subspace)
     else
       invCf = pinv(Cf);
     end
-  
+    
     if strcmp(submethod, 'dics_refchan')
       Cr = subspace*Cr;
     end
@@ -280,14 +280,11 @@ elseif ~isempty(subspace)
 end
 
 % start the scanning with the proper metric
-if dofeedback
-  ft_progress('init', feedback, 'scanning grid');
-end
+ft_progress('init', feedback, 'scanning grid');
 switch submethod
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% dics_power
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % dics_power
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case 'dics_power'
     % only compute power of a dipole at the grid positions
     for i=1:size(dip.pos,1)
@@ -299,7 +296,7 @@ switch submethod
         lf = dip.leadfield{i};
       elseif  hasleadfield && ~hasmom
         % reuse the leadfield that was previously computed
-        lf = dip.leadfield{i};    
+        lf = dip.leadfield{i};
       elseif ~hasleadfield && hasmom
         % compute the leadfield for a fixed dipole orientation
         lf = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,i);
@@ -321,10 +318,10 @@ switch submethod
         % do subspace projection of the forward model only
         lforig = lf;
         lf     = subspace * lf;
-    
+        
         % according to Kensuke's paper, the eigenspace bf boils down to projecting
         % the 'traditional' filter onto the subspace
-        % spanned by the first k eigenvectors [u,s,v] = svd(Cy); filt = ESES*filt; 
+        % spanned by the first k eigenvectors [u,s,v] = svd(Cy); filt = ESES*filt;
         % ESES = u(:,1:k)*u(:,1:k)';
         % however, even though it seems that the shape of the filter is identical to
         % the shape it is obtained with the following code, the w*lf=I does not
@@ -401,14 +398,12 @@ switch submethod
           dipout.leadfield{i} = lf;
         end
       end
-      if dofeedback
-        ft_progress(i/size(dip.pos,1), 'scanning grid %d/%d\n', i, size(dip.pos,1));
-      end
+      ft_progress(i/size(dip.pos,1), 'scanning grid %d/%d\n', i, size(dip.pos,1));
     end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% dics_refchan
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % dics_refchan
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case 'dics_refchan'
     % compute cortico-muscular coherence, using reference cross spectral density
     for i=1:size(dip.pos,1)
@@ -433,10 +428,10 @@ switch submethod
         % do subspace projection of the forward model only
         lforig = lf;
         lf     = subspace * lf;
-    
+        
         % according to Kensuke's paper, the eigenspace bf boils down to projecting
         % the 'traditional' filter onto the subspace
-        % spanned by the first k eigenvectors [u,s,v] = svd(Cy); filt = ESES*filt; 
+        % spanned by the first k eigenvectors [u,s,v] = svd(Cy); filt = ESES*filt;
         % ESES = u(:,1:k)*u(:,1:k)';
         % however, even though it seems that the shape of the filter is identical to
         % the shape it is obtained with the following code, the w*lf=I does not
@@ -471,7 +466,7 @@ switch submethod
       elseif hasfilter && size(filt,1) == 1
         error('the precomputed filter you provided projects to a single dipole orientation, but you request fixedori=''no''; this is invalid. Either provide a filter with the three orientations retained, or specify fixedori=''yes''.');
       end
-
+      
       if powlambda1
         [pow, ori] = lambda1(filt * Cf * ctranspose(filt));            % compute the power and orientation at the dipole location, Gross eqn. 4, 5 and 8
       elseif powtrace
@@ -509,14 +504,12 @@ switch submethod
           dipout.leadfield{i} = lf;
         end
       end
-      if dofeedback
-        ft_progress(i/size(dip.pos,1), 'scanning grid %d/%d\n', i, size(dip.pos,1));
-      end
+      ft_progress(i/size(dip.pos,1), 'scanning grid %d/%d\n', i, size(dip.pos,1));
     end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% dics_refdip
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % dics_refdip
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case 'dics_refdip'
     if hassubspace || ~isempty(subspace)
       error('subspace projections are not supported for beaming cortico-cortical coherence');
@@ -580,49 +573,45 @@ switch submethod
       if keepleadfield
         dipout.leadfield{i} = lf2;
       end
-      if dofeedback
-        ft_progress(i/size(dip.pos,1), 'scanning grid %d/%d\n', i, size(dip.pos,1));
-      end
+      ft_progress(i/size(dip.pos,1), 'scanning grid %d/%d\n', i, size(dip.pos,1));
     end
-
+    
 end % switch submethod
 
-if dofeedback
-  ft_progress('close');
-end
+ft_progress('close');
 
-dipout.inside  = dip.originside;
-dipout.outside = dip.origoutside;
-dipout.pos     = dip.origpos;
+% wrap it all up, prepare the complete output
+dipout.inside  = originside;
+dipout.pos     = origpos;
 
 % reassign the scan values over the inside and outside grid positions
 if isfield(dipout, 'leadfield')
-  dipout.leadfield(dipout.inside)  = dipout.leadfield;
-  dipout.leadfield(dipout.outside) = {[]};
+  dipout.leadfield( originside) = dipout.leadfield;
+  dipout.leadfield(~originside) = {[]};
 end
 if isfield(dipout, 'filter')
-  dipout.filter(dipout.inside)  = dipout.filter;
-  dipout.filter(dipout.outside) = {[]};
+  dipout.filter( originside) = dipout.filter;
+  dipout.filter(~originside) = {[]};
 end
 if isfield(dipout, 'ori')
-  dipout.ori(dipout.inside)  = dipout.ori;
-  dipout.ori(dipout.outside) = {[]};
+  dipout.ori( originside) = dipout.ori;
+  dipout.ori(~originside) = {[]};
 end
 if isfield(dipout, 'pow')
-  dipout.pow(dipout.inside)  = dipout.pow;
-  dipout.pow(dipout.outside) = nan;
+  dipout.pow( originside) = dipout.pow;
+  dipout.pow(~originside) = nan;
 end
 if isfield(dipout, 'noise')
-  dipout.noise(dipout.inside)  = dipout.noise;
-  dipout.noise(dipout.outside) = nan;
+  dipout.noise( originside) = dipout.noise;
+  dipout.noise(~originside) = nan;
 end
 if isfield(dipout, 'coh')
-  dipout.coh(dipout.inside)  = dipout.coh;
-  dipout.coh(dipout.outside) = nan;
+  dipout.coh( originside) = dipout.coh;
+  dipout.coh(~originside) = nan;
 end
 if isfield(dipout, 'csd')
-  dipout.csd(dipout.inside)  = dipout.csd;
-  dipout.csd(dipout.outside) = {[]};
+  dipout.csd( originside) = dipout.csd;
+  dipout.csd(~originside) = {[]};
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

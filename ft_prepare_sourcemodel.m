@@ -138,7 +138,10 @@ cfg.symmetry   = ft_getopt(cfg, 'symmetry',   []);
 cfg.grid       = ft_getopt(cfg, 'grid',       []);
 cfg.spmversion = ft_getopt(cfg, 'spmversion', 'spm8');
 cfg.grid.unit  = ft_getopt(cfg.grid, 'unit',  'auto');
-cfg.grid       = ft_checkconfig(cfg.grid, 'renamed',  {'pnt' 'pos'});
+
+% this code expects the inside to be represented as a logical array
+cfg.grid = ft_checkconfig(cfg.grid, 'renamed',  {'pnt' 'pos'});
+cfg = ft_checkconfig(cfg, 'index2logical', 'yes');
 
 if ~isfield(cfg, 'vol') && nargin>1
   % put it in the configuration structure
@@ -518,7 +521,7 @@ if basedonshape
   grid.pos     = headsurface([], [], 'headshape', headshape, 'inwardshift', cfg.inwardshift, 'npnt', cfg.spheremesh);
   grid.tri     = headshape.tri;
   grid.unit    = headshape.unit;
-  grid.inside  = true(size(grid.pos,1));
+  grid.inside  = true(size(grid.pos,1),1);
 end
 
 if basedonvol
@@ -529,7 +532,7 @@ if basedonvol
   % please note that cfg.inwardshift should be expressed in the units consistent with cfg.grid.unit
   grid.pos     = headsurface(vol, sens, 'inwardshift', cfg.inwardshift, 'npnt', cfg.spheremesh);
   grid.unit    = cfg.grid.unit;
-  grid.inside  = true(size(grid.pos,1));
+  grid.inside  = true(size(grid.pos,1),1);
 end
 
 if basedonmni
@@ -661,20 +664,17 @@ if strcmp(cfg.grid.tight, 'yes')
   sel =       (grid.pos(:,1)>=xmin & grid.pos(:,1)<=xmax); % select all grid positions inside the tight box
   sel = sel & (grid.pos(:,2)>=ymin & grid.pos(:,2)<=ymax); % select all grid positions inside the tight box
   sel = sel & (grid.pos(:,3)>=zmin & grid.pos(:,3)<=zmax); % select all grid positions inside the tight box
-  grid.pos   = grid.pos(sel,:);
   % update the grid locations that are marked as inside the brain
-  tmp = false(prod(grid.dim),1);
-  tmp(grid.inside) = true;      % these are originally inside the brain
-  tmp              = tmp(sel); % within the tight box, these are inside the brain
-  grid.xgrid   = grid.xgrid(xmin_indx:xmax_indx);
-  grid.ygrid   = grid.ygrid(ymin_indx:ymax_indx);
-  grid.zgrid   = grid.zgrid(zmin_indx:zmax_indx);
-  grid.dim     = [length(grid.xgrid) length(grid.ygrid) length(grid.zgrid)];
-  % update all boolean fields, this includes the inside field
+  grid.pos   = grid.pos(sel,:);
+  % update the boolean fields, this requires the original dim
   fn = booleanfields(grid);
   for i=1:numel(fn)
     grid.(fn{i}) = grid.(fn{i})(sel);
   end
+  grid.xgrid   = grid.xgrid(xmin_indx:xmax_indx);
+  grid.ygrid   = grid.ygrid(ymin_indx:ymax_indx);
+  grid.zgrid   = grid.zgrid(zmin_indx:zmax_indx);
+  grid.dim     = [length(grid.xgrid) length(grid.ygrid) length(grid.zgrid)];
 end
 fprintf('%d dipoles inside, %d dipoles outside brain\n', sum(grid.inside), sum(~grid.inside));
 

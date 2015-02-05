@@ -2,7 +2,7 @@ function [dipout] = beamformer_lcmv(dip, grad, vol, dat, Cy, varargin)
 
 % BEAMFORMER_LCMV scans on pre-defined dipole locations with a single dipole
 % and returns the beamformer spatial filter output for a dipole on every
-% location.  Dipole locations that are outside the head will return a
+% location. Dipole locations that are outside the head will return a
 % NaN value.
 %
 % Use as
@@ -113,38 +113,39 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % find the dipole positions that are inside/outside the brain
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if ~isfield(dip, 'inside') && ~isfield(dip, 'outside');
-  insideLogical = ft_inside_vol(dip.pos, vol);
-  dip.inside = find(insideLogical);
-  dip.outside = find(~dip.inside);
-elseif isfield(dip, 'inside') && ~isfield(dip, 'outside');
-  dip.outside    = setdiff(1:size(dip.pos,1), dip.inside);
-elseif ~isfield(dip, 'inside') && isfield(dip, 'outside');
-  dip.inside     = setdiff(1:size(dip.pos,1), dip.outside);
+if ~isfield(dip, 'inside')
+  dip.inside = ft_inside_vol(dip.pos, vol);
 end
 
+if any(dip.inside>1)
+  % convert to logical representation
+  tmp = false(size(dip.pos,1),1);
+  tmp(dip.inside) = true;
+  dip.inside = tmp;
+end
+
+% keep the original details on inside and outside positions
+originside = dip.inside;
+origpos    = dip.pos;
+
 % select only the dipole positions inside the brain for scanning
-dip.origpos     = dip.pos;
-dip.originside  = dip.inside;
-dip.origoutside = dip.outside;
+dip.pos    = dip.pos(originside,:);
+dip.inside = true(size(dip.pos,1),1);
 if isfield(dip, 'mom')
-  dip.mom = dip.mom(:, dip.inside);
+  dip.mom = dip.mom(:, originside);
 end
 if isfield(dip, 'leadfield')
   fprintf('using precomputed leadfields\n');
-  dip.leadfield = dip.leadfield(dip.inside);
+  dip.leadfield = dip.leadfield(originside);
 end
 if isfield(dip, 'filter')
   fprintf('using precomputed filters\n');
-  dip.filter = dip.filter(dip.inside);
+  dip.filter = dip.filter(originside);
 end
 if isfield(dip, 'subspace')
   fprintf('using subspace projection\n');
-  dip.subspace = dip.subspace(dip.inside);
+  dip.subspace = dip.subspace(originside);
 end
-dip.pos     = dip.pos(dip.inside, :);
-dip.inside  = 1:size(dip.pos,1);
-dip.outside = [];
 
 isrankdeficient = (rank(Cy)<size(Cy,1));
 
@@ -322,46 +323,44 @@ end
 
 ft_progress('close');
 
-dipout.inside  = dip.originside;
-dipout.outside = dip.origoutside;
-dipout.pos     = dip.origpos;
-
 % reassign the scan values over the inside and outside grid positions
+dipout.pos     = origpos;
+dipout.inside  = originside;
 if isfield(dipout, 'leadfield')
-  dipout.leadfield(dipout.inside)  = dipout.leadfield;
-  dipout.leadfield(dipout.outside) = {[]};
+  dipout.leadfield( originside) = dipout.leadfield;
+  dipout.leadfield(~originside) = {[]};
 end
 if isfield(dipout, 'filter')
-  dipout.filter(dipout.inside)  = dipout.filter;
-  dipout.filter(dipout.outside) = {[]};
+  dipout.filter( originside) = dipout.filter;
+  dipout.filter(~originside) = {[]};
 end
 if isfield(dipout, 'mom')
-  dipout.mom(dipout.inside)  = dipout.mom;
-  dipout.mom(dipout.outside) = {[]};
+  dipout.mom( originside) = dipout.mom;
+  dipout.mom(~originside) = {[]};
 end
 if isfield(dipout, 'ori')
-  dipout.ori(dipout.inside)  = dipout.ori;
-  dipout.ori(dipout.outside) = {[]};
+  dipout.ori( originside) = dipout.ori;
+  dipout.ori(~originside) = {[]};
 end
 if isfield(dipout, 'cov')
-  dipout.cov(dipout.inside)  = dipout.cov;
-  dipout.cov(dipout.outside) = {[]};
+  dipout.cov( originside) = dipout.cov;
+  dipout.cov(~originside) = {[]};
 end
 if isfield(dipout, 'noisecov')
-  dipout.noisecov(dipout.inside)  = dipout.noisecov;
-  dipout.noisecov(dipout.outside) = {[]};
+  dipout.noisecov( originside) = dipout.noisecov;
+  dipout.noisecov(~originside) = {[]};
 end
 if isfield(dipout, 'pow')
-  dipout.pow(dipout.inside)  = dipout.pow;
-  dipout.pow(dipout.outside) = nan;
+  dipout.pow( originside) = dipout.pow;
+  dipout.pow(~originside) = nan;
 end
 if isfield(dipout, 'noise')
-  dipout.noise(dipout.inside)  = dipout.noise;
-  dipout.noise(dipout.outside) = nan;
+  dipout.noise( originside) = dipout.noise;
+  dipout.noise(~originside) = nan;
 end
 if isfield(dipout, 'kurtosis')
-  dipout.kurtosis(dipout.inside,:)  = dipout.kurtosis;
-  dipout.kurtosis(dipout.outside,:) = nan;
+  dipout.kurtosis( originside) = dipout.kurtosis;
+  dipout.kurtosis(~originside) = nan;
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
