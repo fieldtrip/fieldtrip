@@ -321,8 +321,8 @@ if isfield(dipout, 'mom')
   dipout.mom(~originside) = {[]};
 end
 if isfield(dipout, 'pow')
-  dipout.pow( originside) = dipout.pow;
-  dipout.pow(~originside) = nan;
+  dipout.pow( originside,:) = dipout.pow;
+  dipout.pow(~originside,:) = nan;
 end
 if isfield(dipout, 'noisecov')
   dipout.noisecov( originside) = dipout.noisecov;
