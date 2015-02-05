@@ -7,16 +7,32 @@ function dimsiz = getdimsiz(data, field)
 %
 % See also GETDIMORD
 
-if strncmp(field, 'avg.', 4)
-  field = field(5:end); % strip the avg
-  data.(field) = data.avg.(field);
+if ~isfield(data, field) && isfield(data, 'avg') && isfield(data.avg, field)
+  field = ['avg.' field];
+elseif ~isfield(data, field) && isfield(data, 'trial') && isfield(data.trial, field)
+  field = ['trial.' field];
+elseif ~isfield(data, field)
+  error('field "%s" not present in data', field);
 end
 
-if ~isfield(data, field)
-  error('field "%s" not present in data', field);
+if strncmp(field, 'avg.', 4)
+  prefix = [];
+  field = field(5:end); % strip the avg
+  data.(field) = data.avg.(field); % move the avg into the main structure
+  data = rmfield(data, 'avg');
+elseif strncmp(field, 'trial.', 6)
+  prefix = numel(data.trial);
+  field = field(7:end); % strip the trial
+  data.(field) = data.trial(1).(field); % move the first trial into the main structure
+  data = rmfield(data, 'trial');
 else
-  dimsiz = cellmatsize(data.(field));
+  prefix = [];
 end
+
+dimsiz = cellmatsize(data.(field));
+
+% add nrpt in case of source.trial
+dimsiz = [prefix dimsiz];
 
 end % main function
 

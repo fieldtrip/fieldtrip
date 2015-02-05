@@ -13,7 +13,10 @@ function test_ft_headmodel_bemcp
 load standard_mri
 % this is already (non?)linearly aligned with MNI
 
-%% method 1: segment MRI then compute bnd from it
+% flag for location where running code
+atdonders=1;
+
+  %% method 1: segment MRI then compute bnd from it
 
 cfg           = [];
 cfg.output    = {'brain','skull','scalp'};
@@ -43,7 +46,6 @@ if 0 % I would like to test this, but the MRI is not coregistered and not sure h
   
   % read in the already-segmented mri (in case its segmentation is better
   % than above)
-  atdonders=0;
   if atdonders
     load('/home/common/matlab/fieldtrip/data/ftp/tutorial/headmodel_eeg/segmentedmri.mat')
   else

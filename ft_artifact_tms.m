@@ -152,7 +152,7 @@ switch cfg.method
       fsample = data.fsample;
       [tmpcfg, artifact] = ft_artifact_zvalue(tmpcfg, data);
     else
-      cfg = ft_checkconfig(cfg, 'dataset2files', {'yes'});
+      cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
       cfg = ft_checkconfig(cfg, 'required', {'headerfile', 'datafile'});
       hdr = ft_read_header(cfg.headerfile);
       fsample = hdr.Fs;
@@ -181,7 +181,7 @@ switch cfg.method
     
   case 'marker'
     % Check if the cfg is correct for this method
-    cfg = ft_checkconfig(cfg, 'dataset2files', {'yes'});
+    cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
     ft_checkconfig(cfg, 'required','trialdef');
     cfg.trialfun = ft_getopt(cfg, 'trialfun', 'ft_trialfun_general');
     trialdef = cfg.trialdef;

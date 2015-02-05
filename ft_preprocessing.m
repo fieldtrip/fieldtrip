@@ -385,7 +385,7 @@ else
   end
   
   % check if the input cfg is valid for this function
-  cfg = ft_checkconfig(cfg, 'dataset2files', {'yes'});
+  cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
   cfg = ft_checkconfig(cfg, 'required', {'headerfile', 'datafile'});
   cfg = ft_checkconfig(cfg, 'renamed',    {'datatype', 'continuous'});
   cfg = ft_checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});

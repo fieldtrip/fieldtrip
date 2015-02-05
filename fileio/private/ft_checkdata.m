@@ -20,7 +20,6 @@ function [data] = ft_checkdata(data, varargin)
 %   senstype           = ctf151, ctf275, ctf151_planar, ctf275_planar, neuromag122, neuromag306, bti148, bti248, bti248_planar, magnetometer, electrode
 %   inside             = logical, index
 %   ismeg              = yes, no
-%   hastrials          = yes, no
 %   hasunit            = yes, no
 %   hascoordsys        = yes, no
 %   hassampleinfo      = yes, no, ifmakessense (only applies to raw data)
@@ -82,6 +81,10 @@ function [data] = ft_checkdata(data, varargin)
 %   time -> offset in freqanalysis
 %   average over trials
 %   csd as matrix
+
+% FIXME the following is difficult, if not impossible, to support without knowing the parameter
+% FIXME it is presently (dec 2014) not being used anywhere in FT, so can be removed
+%   hastrials          = yes, no
 
 % get the optional input arguments
 feedback             = ft_getopt(varargin, 'feedback', 'no');
@@ -796,16 +799,6 @@ if ~isempty(cmbrepresentation)
   end
 end % cmbrepresentation
 
-if issource && ~isempty(sourcerepresentation)
-  data = fixsource(data, 'type', sourcerepresentation);
-  data = fixinside(data, inside); % FIXME fixsource reverts the representation to indexed
-end
-
-if issource && ~strcmp(haspow, 'no')
-  data = fixsource(data, 'type', sourcerepresentation, 'haspow', haspow);
-  
-end
-
 if isfield(data, 'grad')
   % ensure that the gradiometer structure is up to date
   data.grad = ft_datatype_sens(data.grad);
@@ -1361,6 +1354,8 @@ end % convert from one to another bivariate representation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [output] = fixsource(input, varargin)
 
+% FIXME this should be merged into ft_datatype_source
+
 % FIXSOURCE converts old style source structures into new style source structures and the
 % other way around
 %
@@ -1418,7 +1413,7 @@ elseif strcmp(current, 'old') && strcmp(type, 'new'),
     output = rmfield(input,  'trial');
   else
     % this could occur later in the pipeline, e.g. when doing group statistics using individual subject descriptive statistics
-    warning('the input does not contain an avg or trial field');
+    % warning('the input does not contain an avg or trial field');
     stuff  = struct; % empty structure
     output = input;
   end

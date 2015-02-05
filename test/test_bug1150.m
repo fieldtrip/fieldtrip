@@ -19,7 +19,7 @@ temp.cumtapcnt = temp.cumtapcnt(1:10);
 temp.trialinfo = temp.trialinfo(1:10,:);
 
 sourcenew  = ft_checkdata(temp, 'sourcerepresentation', 'new');
-if ~strcmp(sourcenew.powdimord, 'pos_rpt')
-  error('incorrect posdimord');
+if ~isequal(size(sourcenew.pow), [38556 10])
+  error('incorrect dimensions');
 end
 

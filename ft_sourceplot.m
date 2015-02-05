@@ -208,6 +208,9 @@ end
 % instead of specifying cfg.coordsys, the user should specify the coordsys in the functional data
 cfg = ft_checkconfig(cfg, 'forbidden', {'units', 'inputcoordsys', 'coordinates'});
 cfg = ft_checkconfig(cfg, 'deprecated', 'coordsys');
+cfg = ft_checkconfig(cfg, 'renamedval', {'funparameter', 'avg.pow', 'pow'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'funparameter', 'avg.coh', 'coh'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'funparameter', 'avg.mom', 'mom'});
 
 if isfield(cfg, 'atlas') && ~isempty(cfg.atlas)
   % the atlas lookup requires the specification of the coordsys

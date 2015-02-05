@@ -7,15 +7,28 @@ function dimord = getdimord(data, field, varargin)
 %
 % See also GETDIMSIZ
 
-if strncmp(field, 'avg.', 4)
-  field = field(5:end); % strip the avg
-  data.(field) = data.avg.(field);
-  data = rmfield(data, 'avg');
-end
-
-if ~isfield(data, field)
+if ~isfield(data, field) && isfield(data, 'avg') && isfield(data.avg, field)
+  field = ['avg.' field];
+elseif ~isfield(data, field) && isfield(data, 'trial') && isfield(data.trial, field)
+  field = ['trial.' field];
+elseif ~isfield(data, field)
   error('field "%s" not present in data', field);
 end
+
+if strncmp(field, 'avg.', 4)
+  prefix = '';
+  field = field(5:end); % strip the avg
+  data.(field) = data.avg.(field); % copy the avg into the main structure
+  data = rmfield(data, 'avg');
+elseif strncmp(field, 'trial.', 6)
+  prefix = '(rpt)_';
+  field = field(7:end); % strip the trial
+  data.(field) = data.trial(1).(field); % copy the first trial into the main structure
+  data = rmfield(data, 'trial');
+else
+  prefix = '';
+end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ATTEMPT 1: the specific dimord is simply present
@@ -26,10 +39,12 @@ if isfield(data, [field 'dimord'])
   return
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % if not present, we need some additional information about the data strucure
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % nan means that the value is not known and might remain unknown
-% inf means that the value is not known and but should be known
+% inf means that the value is not known but should be known
 ntime     = inf;
 nfreq     = inf;
 nchan     = inf;
@@ -259,15 +274,25 @@ switch field
       else
         dimord = 'pos';
       end
-    elseif isequalwithoutnans(datsiz, [npos nrpt]) % only if nrpt is known
+    elseif isequalwithoutnans(datsiz, [npos nrpt])
       if iscell(data.(field))
         dimord = '{pos}_rpt';
       else
         dimord = 'pos_rpt';
       end
+    elseif isequal(datsiz, [1 npos])
+      if iscell(data.(field))
+        dimord = '{pos}';
+      else
+        dimord = 'pos';
+      end
+    elseif isequalwithoutnans(datsiz, [nrpt npos ntime])
+      dimord = 'rpt_pos_time';
+    elseif isequalwithoutnans(datsiz, [nrpt npos nfreq])
+      dimord = 'rpt_pos_freq';
     end
     
-  case {'mom' 'ori' 'eta' 'csdlabel'}
+  case {'mom'}
     if isequalwithoutnans(datsiz, [npos nori nrpt])
       if iscell(data.(field))
         dimord = '{pos}_ori_rpt';
@@ -280,23 +305,77 @@ switch field
       else
         dimord = 'pos_ori_time';
       end
+    elseif isequalwithoutnans(datsiz, [npos nori nfreq])
+      if iscell(data.(field))
+        dimord = '{pos}_ori_nfreq';
+      else
+        dimord = 'pos_ori_nfreq';
+      end
     elseif isequalwithoutnans(datsiz, [npos ntime])
       if iscell(data.(field))
         dimord = '{pos}_time';
       else
         dimord = 'pos_time';
       end
-    elseif isequalwithoutnans(datsiz, [npos 3 1])
+    elseif isequalwithoutnans(datsiz, [npos nfreq])
+      if iscell(data.(field))
+        dimord = '{pos}_freq';
+      else
+        dimord = 'pos_freq';
+      end
+    elseif isequalwithoutnans(datsiz, [npos 3])
       if iscell(data.(field))
         dimord = '{pos}_ori';
       else
         dimord = 'pos_ori';
       end
-    elseif isequalwithoutnans(datsiz, [npos 1 1])
+    elseif isequalwithoutnans(datsiz, [npos 1])
       if iscell(data.(field))
         dimord = '{pos}';
       else
         dimord = 'pos';
+      end
+    elseif isequalwithoutnans(datsiz, [npos nrpt])
+      if iscell(data.(field))
+        dimord = '{pos}_rpt';
+      else
+        dimord = 'pos_rpt';
+      end
+    end
+    
+  case {'filter'}
+    if isequalwithoutnans(datsiz, [npos nori nchan]) || (isequal(datsiz([1 2]), [npos nori]) && isinf(nchan))
+      if iscell(data.(field))
+        dimord = '{pos}_ori_chan';
+      else
+        dimord = 'pos_ori_chan';
+      end
+    end
+    
+  case {'leadfield'}
+    if isequalwithoutnans(datsiz, [npos nchan nori]) || (isequal(datsiz([1 3]), [npos nori]) && isinf(nchan))
+      if iscell(data.(field))
+        dimord = '{pos}_chan_ori';
+      else
+        dimord = 'pos_chan_ori';
+      end
+    end
+    
+  case {'ori' 'eta'}
+    if isequal(datsiz, [npos nori]) || isequal(datsiz, [npos 3])
+      if iscell(data.(field))
+        dimord = '{pos}_ori';
+      else
+        dimord = 'pos_ori';
+      end
+    end
+    
+  case {'csdlabel'}
+    if isequal(datsiz, [npos nori]) || isequal(datsiz, [npos 3])
+      if iscell(data.(field))
+        dimord = '{pos}_ori';
+      else
+        dimord = 'pos_ori';
       end
     end
     
@@ -423,7 +502,7 @@ if ~exist('dimord', 'var')
 end % if dimord does not exist
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% ATTEMPT 6: return "unknown_unknown"
+% ATTEMPT 6: return "unknown" for all unknown dimensions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~exist('dimord', 'var')
   % this should not happen
@@ -433,7 +512,7 @@ if ~exist('dimord', 'var')
   warning('could not determine dimord of "%s" in the following data', field)
   disp(data);
   
-  dimtok = repmat({'unknown'}, size(datsiz));
+  dimtok(cellfun(@isempty, dimtok)) = {'unknown'};
   if all(~cellfun(@isempty, dimtok))
     if iscell(data.(field))
       dimtok{1} = ['{' dimtok{1} '}'];
@@ -443,14 +522,18 @@ if ~exist('dimord', 'var')
   end
 end
 
+% add '(rpt)' in case of source.trial
+dimord = [prefix dimord];
+
+
 end % function
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function ok = isequalwithoutnans(a, b)
-% this is *only* used to compare matrix sizes, so we can ignore any
-% singleton last dimension
+
+% this is *only* used to compare matrix sizes, so we can ignore any singleton last dimension
 numdiff = numel(b)-numel(a);
 
 if numdiff > 0

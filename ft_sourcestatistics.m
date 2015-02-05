@@ -123,8 +123,8 @@ tmpcfg = keepfields(cfg, {'frequency', 'avgoverfreq', 'latency', 'avgovertime', 
 
 dimord = getdimord(varargin{1}, cfg.parameter);
 dimsiz = getdimsiz(varargin{1}, cfg.parameter);
-dimtok = tokenize(dimord, '_');
 dimsiz(end+1:length(dimtok)) = 1; % there can be additional trailing singleton dimensions
+dimtok = tokenize(dimord, '_');
 rptdim = find( strcmp(dimtok, 'subj') |  strcmp(dimtok, 'rpt') |  strcmp(dimtok, 'rpttap'));
 datdim = find(~strcmp(dimtok, 'subj') & ~strcmp(dimtok, 'rpt') & ~strcmp(dimtok, 'rpttap'));
 datsiz = dimsiz(datdim);
@@ -222,8 +222,7 @@ stat.dimord = cfg.dimord;
 stat = copyfields(varargin{1}, stat, {'freq', 'time', 'pos', 'dim', 'transform'});
 
 % these were only present to inform the low-level functions
-cfg = rmfield(cfg, 'dim');
-cfg = rmfield(cfg, 'dimord');
+cfg = removefields(cfg, {'dim', 'dimord', 'tri', 'inside'});
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug

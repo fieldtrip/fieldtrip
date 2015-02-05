@@ -124,11 +124,10 @@ source4p = ft_sourceparcellate(cfg, source4, parcellation);
 source5 = [];
 source5.pos       = source2.pos;
 source5.inside    = source2.inside;
-source5.outside   = source2.outside;
 source5.freq      = 1:2;
 source5.coh       = cell(size(source2.pos,1), size(source2.pos,1));
-for i=source2.inside(:)'
-  for j=source2.inside(:)'
+for i=find(source2.inside)'
+  for j=find(source2.inside)'
     source5.coh{i,j} = randn(3, 2);
   end
 end
@@ -146,7 +145,6 @@ source5p = ft_sourceparcellate(cfg, source5, parcellation);
 source6 = [];
 source6.pos       = source2.pos;
 source6.inside    = source2.inside;
-source6.outside   = source2.outside;
 source6.time      = 1:20;
 source6.mom       = randn(size(source2.pos,1),20);
 source6.momdimord = 'pos_time';

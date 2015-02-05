@@ -370,6 +370,7 @@ if readdata
   % hdr.dim(3) is reserved for the y-dimension
   % hdr.dim(4) is reserved for the z-dimension
   % hdr.dim(5) is reserved for the time-dimension
+  % hdr.dim(6:8) are used for CIFTI
   voxdata = reshape(voxdata, hdr.dim(6:end));
 end
 fclose(fid);
@@ -926,10 +927,10 @@ if ~isempty(NamedMap)
   % the following assumes a single NamedMap
   if isfield(NamedMap, 'LabelTable')
     % use the key-label combination in the label table
-    haslabeltable = true;
-    key           = NamedMap.LabelTable.Key;
+    haslabeltable    = true;
+    key              = NamedMap.LabelTable.Key;
+    source.datalabel = NamedMap.LabelTable.Label(:);
   end
-  source.datalabel = NamedMap.LabelTable.Label(:);
 end
 
 if readdata

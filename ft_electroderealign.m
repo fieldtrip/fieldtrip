@@ -128,13 +128,18 @@ if ~isfield(cfg, 'feedback'),      cfg.feedback = 'no';       end
 if ~isfield(cfg, 'casesensitive'), cfg.casesensitive = 'yes'; end
 if ~isfield(cfg, 'headshape'),     cfg.headshape = [];        end % for triangulated head surface, without labels
 if ~isfield(cfg, 'template'),      cfg.template = [];         end % for electrodes or fiducials, always with labels
-if ~isfield(cfg, 'warp'),          cfg.warp = 'rigidbody';    end
-if ~isfield(cfg, 'label'),         cfg.label = 'off';        end % show labels
+if ~isfield(cfg, 'label'),         cfg.label = 'off';         end % show labels
+if ~isfield(cfg, 'warp') && strcmp(cfg.method, 'interactive')
+  cfg.warp = 'traditional';
+elseif ~isfield(cfg, 'warp')
+  cfg.warp = 'rigidbody';
+end
 
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'realignfiducials', 'fiducial'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'realignfiducial',  'fiducial'});
 cfg = ft_checkconfig(cfg, 'forbidden', 'outline');
 cfg = ft_checkconfig(cfg, 'renamedval',{'warp', 'homogenous', 'rigidbody'});
+cfg = ft_checkconfig(cfg, 'renamedval',{'warp', 'homogeneous', 'rigidbody'});
 
 if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
   % convert the nested config-object back into a normal structure
@@ -409,7 +414,11 @@ elseif strcmp(cfg.method, 'fiducial')
   % compute the combined transform and realign the electrodes to the template
   norm         = [];
   norm.m       = elec2common * inv(templ2common);
-  norm.chanpos = ft_warp_apply(norm.m, elec.chanpos, 'homogeneous');
+  if ~strcmp(cfg.warp, 'rigidbody')
+    error('method=fiducial implies rigid body warp. See also http://bugzilla.fcdonders.nl/show_bug.cgi?id=1722');
+  else
+    norm.chanpos   = ft_warp_apply(norm.m, elec.chanpos, 'homogeneous');
+  end
   norm.label   = elec.label;
   
   nas_indx = match_str(lower(elec.label), lower(cfg.fiducial{1}));
@@ -502,7 +511,16 @@ switch cfg.method
   case 'template'
     norm.chanpos   = ft_warp_apply(norm.m, orig.chanpos, cfg.warp);
     norm.elecpos   = norm.chanpos;
-  case {'fiducial' 'interactive'}
+  case 'fiducial'
+    if ~strcmp(cfg.warp, 'rigidbody')
+      error('method=fiducial implies rigid body warp. See also http://bugzilla.fcdonders.nl/show_bug.cgi?id=1722');
+    end
+    norm.chanpos   = ft_warp_apply(norm.m, orig.chanpos, 'homogeneous'); % note that 'homogeneous' and 'rigidbody' mean something different to ft_warp_apply
+    norm.elecpos   = norm.chanpos;
+  case 'interactive'
+    if ~strcmp(cfg.warp, 'traditional')
+      error('method=interactive implies traditional (9 parameter) warp; see also http://bugzilla.fcdonders.nl/show_bug.cgi?id=1722');
+    end
     norm.chanpos   = ft_warp_apply(norm.m, orig.chanpos);
     norm.elecpos   = norm.chanpos;
   case 'manual'

@@ -83,7 +83,7 @@ end
 
 % check if cfg.parameter is specified in an old-fashioned way (e.g.
 % 'avg.pow')
-% if this is the case, and the data indeed is also specified in this old 
+% if this is the case, and the data indeed is also specified in this old
 % way, then later on we will strip the 'avg.' part from the cfg, as the
 % data field will be moved up to the main structure by ft_datatype_source
 % with version=upcoming.
@@ -98,7 +98,7 @@ if isfield(cfg, 'parameter') && ~isempty(strfind(cfg.parameter, '.'))
       error('data does not contain ''%s'' substructure', tok);
     end
   end
-
+  
   cfg.parameter = rem(2:end);
 end
 
@@ -112,8 +112,8 @@ end
 cfg = ft_checkconfig(cfg, 'forbidden', {'concatenate', 'randomization', 'permutation', 'c1', 'c2'});
 
 % set the defaults
-if ~isfield(cfg, 'parameter'),      cfg.parameter = 'pow';     end
-if ~isfield(cfg, 'keepindividual'), cfg.keepindividual = 'no'; end
+cfg.parameter       = ft_getopt(cfg, 'parameter', 'pow');
+cfg.keepindividual  = ft_getopt(cfg, 'keepindividual', 'no');
 
 % check that these fields are identical for each input source
 checkfields = {'pos' 'dim' 'xgrid' 'ygrid' 'zgrid' 'transform' 'inside' 'outside'};
@@ -136,6 +136,7 @@ tmpcfg = keepfields(cfg, {'parameter', 'trials', 'latency', 'frequency', 'foilim
 [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
 
 % start with an empty output structure
+grandavg = [];
 
 if iscell(varargin{1}.(cfg.parameter))
   
@@ -239,17 +240,12 @@ else
 end % if iscell
 
 % the fields that describe the actual data need to be copied over from the input to the output
-dimord = getdimord(grandavg, cfg.parameter);
+grandavg = copyfields(varargin{1}, grandavg, {'pos', 'time', 'freq', 'dim', 'transform', 'inside', 'outside', 'unit', 'coordsys'});
 
-% some standard fields from the input should be copied over in the output
-copyfield = {'pos' 'dim' 'inside' 'outside' 'unit' 'coordsys'};
-if ~isempty(strfind(dimord, 'time')), copyfield{end+1} = 'time'; end
-if ~isempty(strfind(dimord, 'freq')), copyfield{end+1} = 'freq'; end
-for i=1:length(copyfield)
-  if isfield(varargin{1}, copyfield{i})
-    grandavg.(copyfield{i}) = varargin{1}.(copyfield{i});
-  end
-end
+% these fields might not be needed
+dimord = getdimord(grandavg, cfg.parameter);
+if isempty(strfind(dimord, 'time')), grandavg = removefields(grandavg, 'time'); end
+if isempty(strfind(dimord, 'freq')), grandavg = removefields(grandavg, 'freq'); end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug

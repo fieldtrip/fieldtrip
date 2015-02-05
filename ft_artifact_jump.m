@@ -152,7 +152,7 @@ if strcmp(cfg.artfctdef.jump.method, 'zvalue')
     cfg = ft_checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
     [tmpcfg, artifact] = ft_artifact_zvalue(tmpcfg, data);
   else
-    cfg = ft_checkconfig(cfg, 'dataset2files', {'yes'});
+    cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
     cfg = ft_checkconfig(cfg, 'required', {'headerfile', 'datafile'});
     tmpcfg.datafile    = cfg.datafile;
     tmpcfg.headerfile  = cfg.headerfile;
