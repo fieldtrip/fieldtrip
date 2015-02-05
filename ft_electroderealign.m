@@ -521,7 +521,7 @@ switch cfg.method
     if ~strcmp(cfg.warp, 'traditional')
       error('method=interactive implies traditional (9 parameter) warp; see also http://bugzilla.fcdonders.nl/show_bug.cgi?id=1722');
     end
-    norm.chanpos   = ft_warp_apply(norm.m, orig.chanpos, cfg.warp);
+    norm.chanpos   = ft_warp_apply(norm.m, orig.chanpos);
     norm.elecpos   = norm.chanpos;
   case 'manual'
     % the positions are already assigned in correspondence with the mesh
