@@ -99,7 +99,7 @@ end
 
 cfg = ft_checkconfig(cfg, 'renamed', {'selmode',  'select'});
 cfg = ft_checkconfig(cfg, 'renamed', {'toilim' 'latency'});
-cfg = ft_checkconfig(cfg, 'renamed', {'foilim' 'latency'});
+cfg = ft_checkconfig(cfg, 'renamed', {'foilim' 'frequency'});
 cfg = ft_checkconfig(cfg, 'renamed', {'avgoverroi' 'avgoverpos'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'parameter' 'avg.pow' 'pow'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'parameter' 'avg.mom' 'mom'});

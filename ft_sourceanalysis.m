@@ -969,20 +969,19 @@ if isfield(grid, 'tri')
   source.tri = grid.tri;
 end
 
+if exist('grid', 'var')
+  source = copyfields(grid, source, {'pos', 'inside', 'leadfield', 'filter'});
+end
+
 if exist('dip', 'var')
-  source = copyfields(dip, source, {'pos', 'inside', 'leadfield'});
-  dip = removefields(dip, {'pos', 'inside', 'leadfield'});
-elseif exist('grid', 'var')
-  % no scanning has been done, probably only the leadfield has been computed
-  source = copyfields(grid, source, {'pos', 'inside', 'leadfield'});
-  grid = removefields(grid, {'pos', 'inside', 'leadfield'});
+  % the fields in the dip structure might be more recent than those in the grid structure
+  source = copyfields(dip, source, {'pos', 'inside', 'leadfield', 'filter'}); 
 end
 
 if ~istrue(cfg.keepleadfield)
   % remove the precomputed leadfields from the output source (if present)
   source = removefields(source, {'leadfield'});
 end
-
 
 % remove the precomputed leadfields from the cfg regardless of what keepleadfield is saying
 % it should not be kept in cfg, since there it takes up too much space

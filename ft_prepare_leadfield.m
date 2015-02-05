@@ -123,6 +123,10 @@ cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'});  % this is moved t
 cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved to cfg.grid.unit by the subsequent createsubcfg
 cfg = ft_checkconfig(cfg, 'createsubcfg',  {'grid'});
 
+% this code expects the inside to be represented as a logical array
+cfg.grid = ft_checkconfig(cfg.grid, 'renamed',  {'pnt' 'pos'});
+cfg = ft_checkconfig(cfg, 'index2logical', 'yes');
+
 if strcmp(cfg.sel50p, 'yes') && strcmp(cfg.lbex, 'yes')
   error('subspace projection with either lbex or sel50p is mutually exclusive');
 end
@@ -228,8 +232,8 @@ else
   ft_progress('close');
 end
 
-% fill the positions outside the brain with NaNs
-grid.leadfield(~grid.inside) = {nan};
+% represent the leadfield for positions outside the brain as empty array
+grid.leadfield(~grid.inside) = {[]};
 
 % add the label of the channels
 grid.label           = sens.label;

@@ -2,8 +2,8 @@ function [dipout] = residualvariance(dip, grad, vol, dat, varargin)
 
 % RESIDUALVARIANCE scan with a single dipole and computes the RV
 % at each grid location.
-% 
-% Use as 
+%
+% Use as
 %   [dipout] = residualvariance(dip, grad, vol, dat, ...)
 
 % Copyright (C) 2004-2006, Robert Oostenveld
@@ -29,12 +29,34 @@ function [dipout] = residualvariance(dip, grad, vol, dat, varargin)
 % get the optional settings, or use default value
 feedback      = keyval('feedback',      varargin); if isempty(feedback),      feedback = 'text';            end
 
-% ensure that these are row-vectors
-dip.inside = dip.inside(:)';
-dip.outside = dip.outside(:)';
 
-Nchan = length(grad.label);
-Ndip  = length(dip.inside);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% find the dipole positions that are inside/outside the brain
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if ~isfield(dip, 'inside')
+  dip.inside = ft_inside_vol(dip.pos, vol);
+end
+
+if any(dip.inside>1)
+  % convert to logical representation
+  tmp = false(size(dip.pos,1),1);
+  tmp(dip.inside) = true;
+  dip.inside = tmp;
+end
+
+% keep the original details on inside and outside positions
+originside = dip.inside;
+origpos    = dip.pos;
+
+% select only the dipole positions inside the brain for scanning
+dip.pos    = dip.pos(originside,:);
+dip.inside = true(size(dip.pos,1),1);
+if isfield(dip, 'mom'),
+  dip.mom = dip.mom(:,originside);
+end
+if isfield(dip, 'subspace')
+  dip.subspace = dip.subspace(originside);
+end
 
 if isfield(dip, 'subspace')
   % remember the original data prior to the voxel dependant subspace projection
@@ -42,11 +64,14 @@ if isfield(dip, 'subspace')
   fprintf('using subspace projection\n');
 end
 
-ft_progress('init', feedback, 'computing inverse');
-for i=1:length(dip.inside)
+mom = nan(size(dip.pos,1),1);
+rv  = nan(size(dip.pos,1),1);
+pow = nan(size(dip.pos,1),1);
 
-  ft_progress(i/length(dip.inside), 'computing inverse %d/%d\n', i, length(dip.inside));
-  i = dip.inside(i);
+ft_progress('init', feedback, 'computing inverse');
+for i=1:size(dip.pos,1)
+  
+  ft_progress(i/size(dip.pos,1), 'computing inverse %d/%d\n', i, size(dip.pos,1));
   
   if isfield(dip, 'leadfield')
     % reuse the leadfield that was previously computed
@@ -55,7 +80,7 @@ for i=1:length(dip.inside)
     % compute the leadfield
     lf = ft_compute_leadfield(dip.pos(i,:), grad, vol);
   end
-
+  
   if isfield(dip, 'subspace')
     % do subspace projection of the forward model
     lf = dip.subspace{i} * lf;
@@ -67,26 +92,22 @@ for i=1:length(dip.inside)
   lfi    = pinv(lf);
   mom{i} = lfi * dat;
   rv(i)  = sum(sum((dat - lf*mom{i}).^2, 1), 2)./sum(sum(dat.^2, 1), 2);
-
+  
   % for plotting convenience also compute power at each location
   % FIXME is this normalization correct?
   pow(i) = mean(sum(mom{i}(:).^2, 1));
 end
 ft_progress('close');
 
-% locations outside the head get assigned an 
-for i=dip.outside
-  mom{i} = [];
-  rv(i)  = nan;
-  pow(i) = nan;
-end
+% wrap it all up, prepare the complete output
+dipout.inside  = originside;
+dipout.pos     = origpos;
+
+dipout.mom = nan(size(originside));
+dipout.rv  = nan(size(originside));
+dipout.pow = nan(size(originside));
 
 % assign the output data
-dipout.mom = mom(:);  % ensure that it is a column vector
-dipout.rv  = rv(:);   % ensure that it is a column vector
-dipout.pow = pow(:);  % ensure that it is a column vector
-
-% add other descriptive information to the output source model
-dipout.pos     = dip.pos;
-dipout.inside  = dip.inside;
-dipout.outside = dip.outside;
+dipout.mom(originside) = mom(:);  % ensure that it is a column vector
+dipout.rv(originside)  = rv(:);   % ensure that it is a column vector
+dipout.pow(originside) = pow(:);  % ensure that it is a column vector

@@ -64,18 +64,24 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % find the dipole positions that are inside/outside the brain
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if ~isfield(dip, 'inside') && ~isfield(dip, 'outside');
-  [dip.inside, dip.outside] = find_inside_vol(dip.pos, vol);
-elseif isfield(dip, 'inside') && ~isfield(dip, 'outside');
-  dip.outside = setdiff(1:size(dip.pos,1), dip.inside);
-elseif ~isfield(dip, 'inside') && isfield(dip, 'outside');
-  dip.inside = setdiff(1:size(dip.pos,1), dip.outside);
+if ~isfield(dip, 'inside')
+  dip.inside = ft_inside_vol(dip.pos, vol);
 end
 
+if any(dip.inside>1)
+  % convert to logical representation
+  tmp = false(size(dip.pos,1),1);
+  tmp(dip.inside) = true;
+  dip.inside = tmp;
+end
+
+% keep the original details on inside and outside positions
+originside = dip.inside;
+origpos    = dip.pos;
+
 % select only the dipole positions inside the brain for scanning
-dip.origpos     = dip.pos;
-dip.originside  = dip.inside;
-dip.origoutside = dip.outside;
+dip.pos    = dip.pos(originside,:);
+dip.inside = true(size(dip.pos,1),1);
 if isfield(dip, 'mom')
   dip.mom = dip.mom(:, dip.inside);
 end
@@ -87,9 +93,6 @@ if isfield(dip, 'filter')
   fprintf('using precomputed filters\n');
   dip.filter = dip.filter(dip.inside);
 end
-dip.pos     = dip.pos(dip.inside, :);
-dip.inside  = 1:size(dip.pos,1);
-dip.outside = [];
 
 isrankdeficient = (rank(all_cov)<size(all_cov,1));
 
@@ -124,9 +127,9 @@ ft_progress('init', feedback, 'scanning grid');
 all_angles = 0:pi/72:pi;
 
 for diplop=1:size(dip.pos,1)
-
+  
   vox_pos = dip.pos(diplop,:);
-
+  
   if isfield(dip, 'leadfield')
     % reuse the leadfield that was previously computed
     lf = dip.leadfield{diplop};
@@ -138,7 +141,7 @@ for diplop=1:size(dip.pos,1)
     % compute the leadfield
     lf = ft_compute_leadfield(vox_pos, sens, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
   end
-
+  
   if strcmp(fixedori, 'spinning')
     % perform a non-linear search for the optimum orientation
     [tanu, tanv] = calctangent(vox_pos - meansphereorigin); % get tangential components
@@ -149,27 +152,27 @@ for diplop=1:size(dip.pos,1)
       all_costfun_val(i) = costfun_val;
     end
     [junk, min_ind] = min(all_costfun_val);
-
+    
     optim_options = optimset('Display', 'final', 'TolX', 1e-3, 'Display', 'off');
     [opt_angle, fval, exitflag, output] = fminsearch('SAM_costfun', all_angles(min_ind), optim_options, vox_pos, tanu, tanv, lf, all_cov, inv_cov, noise_cov);
     MDip        = settang(opt_angle, tanu, tanv);
     MagDip      = sqrt(dot(MDip,MDip));
     opt_vox_or  = (MDip/MagDip)';
-
+    
     % figure
     % plot(all_angles, all_costfun_val, 'k-'); hold on; plot(opt_angle, fval, 'g*')
     % drawnow
-
+    
   else
     % Use Sekihara's method of finding the optimum orientation
     %
     % Sekihara et al. Asymptotic SNR of scalar and vector minimum-variance
     % beamformers for neuromagnetic source reconstruction. IEEE Trans. Biomed.
     % Eng, No 10, Vol. 51, 2004, pp 1726-1734
-
+    
     % Compute the lead field for 3 orthogonal components
     L = lf; % see above
-
+    
     switch fixedori
       case 'gareth'
         % Compute Y1 = L' R(^-1) * L
@@ -178,10 +181,10 @@ for diplop=1:size(dip.pos,1)
         Y2 = L' * (inv_cov * inv_cov) * L;
         % find the eigenvalues and eigenvectors
         [U,S] = eig(Y2,Y1);
-
+        
       case 'robert'
         [U,S] = svd(real(pinv(L' * inv_cov * L)));
-
+        
       case 'stephen'
         %% Stephen Robinsons stuff? this did not work!
         L2_inv = inv(L2);
@@ -191,28 +194,28 @@ for diplop=1:size(dip.pos,1)
         Y = L2_inv*U;
         Y = Y./sqrt(dot(Y,Y));
         U = Y;
-
+        
       otherwise
         error('unknown orimethod');
     end
-
+    
     % The optimum orientation is the eigenvector that corresponds to the
     % smallest eigenvalue.
-
+    
     % Double check that this is the case, because for single sphere head
     % model, one of the eigenvectors corresponds to the radial direction,
     % giving lead fields that are zero (to within machine precission).
     % The eigenvalue corresponding to this eigenvector can actually be
     % the smallest and can give the optimum (but wrong) Z-value!)
-
+    
     ori1 = U(:,1); ori1 = ori1/norm(ori1);
     ori2 = U(:,2); ori2 = ori2/norm(ori2);
     % ori3 = U(:,3); ori3 = ori3/norm(ori3);
-
+    
     L1 = L * ori1;
     L2 = L * ori2;
     % L3 = L * ori3;
-
+    
     if (norm(L1)/norm(L2)) < 1e-6
       % the first orientation seems to be the silent orientation
       % use the second orientation instead
@@ -220,14 +223,14 @@ for diplop=1:size(dip.pos,1)
     else
       opt_vox_or = ori1;
     end
-
+    
   end, % if fixedori
-
+  
   % compute the spatial filter for the optimal source orientation
   gain        = lf * opt_vox_or;
   trgain_invC = gain' * inv_cov;
   SAMweights  = trgain_invC / (trgain_invC * gain);
-
+  
   % remember all output details for this dipole
   dipout.pow(diplop)    = SAMweights * all_cov * SAMweights';
   dipout.noise(diplop)  = SAMweights * noise_cov * SAMweights';
@@ -236,42 +239,40 @@ for diplop=1:size(dip.pos,1)
   if ~isempty(dat)
     dipout.mom{diplop} = SAMweights * dat;
   end
-
+  
   ft_progress(diplop/size(dip.pos,1), 'scanning grid %d/%d\n', diplop, size(dip.pos,1));
 end % for each dipole position
 
 ft_progress('close');
 
 % wrap it all up, prepare the complete output
-dipout.inside   = dip.originside;
-dipout.outside  = dip.origoutside;
-dipout.pos      = dip.origpos;
+dipout.inside   = originside;
+dipout.pos      = origpos;
 
 % reassign the scan values over the inside and outside grid positions
 if isfield(dipout, 'leadfield')
-  dipout.leadfield(dipout.inside) = dipout.leadfield;
-  dipout.leadfield(dipout.outside) = {[]};
+  dipout.leadfield( originside) = dipout.leadfield;
+  dipout.leadfield(~originside) = {[]};
 end
 if isfield(dipout, 'filter')
-  dipout.filter(dipout.inside) = dipout.filter;
-  dipout.filter(dipout.outside) = {[]};
+  dipout.filter( originside) = dipout.filter;
+  dipout.filter(~originside) = {[]};
 end
 if isfield(dipout, 'mom')
-  dipout.mom(dipout.inside) = dipout.mom;
-  dipout.mom(dipout.outside) = {[]};
+  dipout.mom( originside) = dipout.mom;
+  dipout.mom(~originside) = {[]};
 end
 if isfield(dipout, 'ori')
-  dipout.ori(dipout.inside) = dipout.ori;
-  dipout.ori(dipout.outside) = {[]};
+  dipout.ori( originside) = dipout.ori;
+  dipout.ori(~originside) = {[]};
 end
 if isfield(dipout, 'pow')
-  dipout.pow(dipout.inside) = dipout.pow;
-  dipout.pow(dipout.outside) = nan;
+  dipout.pow( originside) = dipout.pow;
+  dipout.pow(~originside) = nan;
 end
 if isfield(dipout, 'noise')
-  dipout.noise(dipout.inside) = dipout.noise;
-  dipout.noise(dipout.outside) = nan;
+  dipout.noise( originside) = dipout.noise;
+  dipout.noise(~originside) = nan;
 end
 
 return % end of beamformer_sam() main function
-

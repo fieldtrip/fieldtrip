@@ -2,7 +2,7 @@ function [dipout] = minimumnormestimate(dip, grad, vol, dat, varargin)
 
 % MINIMUMNORMESTIMATE computes a linear estimate of the current in a
 % distributed source model.
-% 
+%
 % Use as
 %   [dipout] = minimumnormestimate(dip, grad, vol, dat, ...)
 %
@@ -12,11 +12,11 @@ function [dipout] = minimumnormestimate(dip, grad, vol, dat, varargin)
 %                        covariance matrix. (default=0)
 %   'sourcecov'        = Nsource x Nsource matrix with source covariance
 %                        (can be empty, the default will then be identity)
-%   'lambda'           = scalar, regularisation parameter (can be empty, 
-%                        it will then be estimated from snr) 
+%   'lambda'           = scalar, regularisation parameter (can be empty,
+%                        it will then be estimated from snr)
 %  'snr'               = scalar, signal to noise ratio
 %  'reducerank'        = reduce the leadfield rank, can be 'no' or a number
-%                        (e.g. 2) 
+%                        (e.g. 2)
 %  'normalize'         = normalize the leadfield
 %  'normalizeparam'    = parameter for depth normalization (default = 0.5)
 %  'keepfilter'        = 'no' or 'yes', keep the spatial filter in the
@@ -67,10 +67,6 @@ function [dipout] = minimumnormestimate(dip, grad, vol, dat, varargin)
 %
 % $Id$
 
-% ensure that these are row-vectors
-dip.inside  = dip.inside(:)';
-dip.outside = dip.outside(:)';
-
 % get the optional inputs for the MNE method according to Dale et al 2000, and Liu et al. 2002
 noisecov       = ft_getopt(varargin, 'noisecov');
 sourcecov      = ft_getopt(varargin, 'sourcecov');
@@ -94,6 +90,40 @@ elseif ~isempty(lambda) && ~isempty(snr)
   error('either lambda or snr should be specified, not both');
 end
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% find the dipole positions that are inside/outside the brain
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if ~isfield(dip, 'inside')
+  dip.inside = ft_inside_vol(dip.pos, vol);
+end
+
+if any(dip.inside>1)
+  % convert to logical representation
+  tmp = false(size(dip.pos,1),1);
+  tmp(dip.inside) = true;
+  dip.inside = tmp;
+end
+
+% keep the original details on inside and outside positions
+originside = dip.inside;
+origpos    = dip.pos;
+
+% select only the dipole positions inside the brain for scanning
+dip.pos    = dip.pos(originside,:);
+dip.inside = true(size(dip.pos,1),1);
+if isfield(dip, 'mom'),
+  dip.mom = dip.mom(:,originside);
+end
+if isfield(dip, 'leadfield')
+  hasleadfield = 1;
+  dip.leadfield = dip.leadfield(originside);
+end
+if isfield(dip, 'filter')
+  hasfilter = 1;
+  dip.filter = dip.filter(originside);
+end
+
 %if ~isempty(snr) && doscale
 %  error('scaling of the source covariance in combination with a specified snr parameter is not allowed');
 %end
@@ -108,35 +138,35 @@ elseif hasleadfield
 else
   fprintf('computing forward model\n');
   if isfield(dip, 'mom')
-    for i=dip.inside
+    for i=size(dip.pos,1)
       % compute the leadfield for a fixed dipole orientation
       dip.leadfield{i} = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,i);
     end
   else
-    for i=dip.inside
+    for i=size(dip.pos,1)
       % compute the leadfield
       dip.leadfield{i} = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
     end
   end
-  for i=dip.outside
-    dip.leadfield{i} = nan;
+  for i=size(dip.pos,1)
+    dip.leadfield{i} = [];
   end
 end
 
 % compute the spatial filter
 if ~hasfilter
-  Nchan = size(dip.leadfield{dip.inside(1)},1);
   
-  % count the number of leadfield components for each source
+  % count the number of channels and leadfield components
+  Nchan   = size(dip.leadfield{1},1);
   Nsource = 0;
-  for i=dip.inside
+  for i=1:size(dip.pos,1)
     Nsource = Nsource + size(dip.leadfield{i}, 2);
   end
   
   % concatenate the leadfield components of all sources into one large matrix
   lf = zeros(Nchan, Nsource);
   n = 1;
-  for i=dip.inside
+  for i=1:size(dip.pos,1)
     cbeg = n;
     cend = n + size(dip.leadfield{i}, 2) - 1;
     lf(:,cbeg:cend) = dip.leadfield{i};
@@ -150,7 +180,7 @@ if ~hasfilter
     warning('computing a unregularised minimum norm solution. This typically does not work due to numerical accuracy problems');
     w = pinv(lf);
   elseif ~isempty(noisecov)
-    fprintf('computing the solution where the noise covariance is used for regularisation\n'); 
+    fprintf('computing the solution where the noise covariance is used for regularisation\n');
     % the noise covariance has been given and can be used to regularise the solution
     if isempty(sourcecov)
       sourcecov = speye(Nsource);
@@ -176,7 +206,7 @@ if ~hasfilter
       diagS   = diag(S);
       sel     = find(diagS>Tol.*diagS(1));
       P       = diag(1./sqrt(diag(S(sel,sel))))*U(:,sel)'; % prewhitening matrix
-      A       = P*A; % prewhitened leadfields 
+      A       = P*A; % prewhitened leadfields
       C       = eye(size(P,1)); % prewhitened noise covariance matrix
     end
     
@@ -219,80 +249,87 @@ if ~hasfilter
     if dowhiten
       w = w*P;
     end
-       
-  end
+    
+  end % if empty noisecov
   
   % for each of the timebins, estimate the source strength
   mom = w * dat;
   
-  % re-assign the estimated source strength over the inside and outside dipoles
+  % assign the estimated source strength to each dipole
   n = 1;
-  for i=dip.inside
+  for i=1:size(dip.pos,1)
     cbeg = n;
     cend = n + size(dip.leadfield{i}, 2) - 1;
     dipout.mom{i} = mom(cbeg:cend,:);
     n = n + size(dip.leadfield{i}, 2);
   end
-  dipout.mom(dip.outside) = {nan};
-
+  
 elseif hasfilter
   
   % use the spatial filters from the data
   dipout.mom = cell(size(dip.pos,1),1);
-  for i=dip.inside
+  for i=1:size(dip.pos,1)
     dipout.mom{i} = dip.filter{i} * dat;
   end
-  dipout.mom(dip.outside) = {nan};
   
-end
+end % if hasfilter
 
 % for convenience also compute power (over the three orientations) at each location and for each time
-dipout.pow = nan( size(dip.pos,1), size(dat,2));
-for i=dip.inside
+dipout.pow = nan(size(dip.pos,1), size(dat,2));
+for i=1:size(dip.pos,1)
   dipout.pow(i,:) = sum(dipout.mom{i}.^2, 1);
 end
-
-% add other descriptive information to the output source model
-dipout.pos     = dip.pos;
-dipout.inside  = dip.inside;
-dipout.outside = dip.outside;
 
 % deal with keepfilter option
 if keepfilter && ~hasfilter
   % spatial filters have been computed, store them in the output
   % re-assign spatial filter to conventional 1 cell per dipole location
   n = 1;
-  for i=dip.inside(:)'
+  for i=1:size(dip.pos,1)
     cbeg = n;
     cend = n + size(dip.leadfield{i}, 2) - 1;
     dipout.filter{i} = w(cbeg:cend,:);
     n    = n + size(dip.leadfield{i}, 2);
   end
-  dipout.filter(dip.outside)  = {nan};
-  
 elseif keepfilter
   dipout.filter = dip.filter;
 end
 
 % deal with noise covariance
 if ~isempty(noisecov) && ~hasfilter
-  
   % compute estimate of the projected noise
   n = 1;
-  for i=dip.inside(:)'
+  for i=1:size(dip.pos,1)
     cbeg = n;
     cend = n + size(dip.leadfield{i}, 2) - 1;
     dipout.noisecov{i} = w(cbeg:cend,:)*noisecov*w(cbeg:cend,:)';
     n    = n + size(dip.leadfield{i}, 2);
   end
-  dipout.noisecov(dip.outside) = {nan};
-
 elseif ~isempty(noisecov)
-  
   % compute estimate of the projected noise
-  for i=dip.inside(:)'
+  for i=1:size(dip.pos,1)
     dipout.noisecov{i} = dipout.filter{i}*noisecov*dipout.filter{i}';
   end
-  dipout.noisecov(dip.outside) = {nan};
-
 end
+
+% wrap it all up, prepare the complete output
+dipout.inside  = originside;
+dipout.pos     = origpos;
+
+if isfield(dipout, 'mom')
+  dipout.mom( originside) = dipout.mom;
+  dipout.mom(~originside) = {[]};
+end
+if isfield(dipout, 'pow')
+  dipout.pow( originside,:) = dipout.pow;
+  dipout.pow(~originside,:) = nan;
+end
+if isfield(dipout, 'noisecov')
+  dipout.noisecov( originside) = dipout.noisecov;
+  dipout.noisecov(~originside) = {[]};
+end
+if isfield(dipout, 'filter')
+  dipout.filter( originside) = dipout.filter;
+  dipout.filter(~originside) = {[]};
+end
+
