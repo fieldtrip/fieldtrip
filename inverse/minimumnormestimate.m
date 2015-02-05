@@ -291,8 +291,6 @@ if keepfilter && ~hasfilter
     dipout.filter{i} = w(cbeg:cend,:);
     n    = n + size(dip.leadfield{i}, 2);
   end
-  dipout.filter(dip.outside)  = {nan};
-  
 elseif keepfilter
   dipout.filter = dip.filter;
 end
@@ -307,14 +305,11 @@ if ~isempty(noisecov) && ~hasfilter
     dipout.noisecov{i} = w(cbeg:cend,:)*noisecov*w(cbeg:cend,:)';
     n    = n + size(dip.leadfield{i}, 2);
   end
-  dipout.noisecov(dip.outside) = {nan};
-  
 elseif ~isempty(noisecov)
   % compute estimate of the projected noise
   for i=1:size(dip.pos,1)
     dipout.noisecov{i} = dipout.filter{i}*noisecov*dipout.filter{i}';
   end
-  dipout.noisecov(dip.outside) = {nan};
 end
 
 % wrap it all up, prepare the complete output
