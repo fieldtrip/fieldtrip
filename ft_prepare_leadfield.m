@@ -229,7 +229,11 @@ else
 end
 
 % fill the positions outside the brain with NaNs
-grid.leadfield(grid.outside) = {nan};
+grid.leadfield(~grid.inside) = {nan};
+
+% add the label of the channels
+grid.label           = sens.label;
+grid.leadfielddimord = '{pos}_chan_ori';
 
 % mollify the leadfields
 if ~strcmp(cfg.mollify, 'no')
