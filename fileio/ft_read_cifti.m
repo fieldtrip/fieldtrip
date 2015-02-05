@@ -927,10 +927,10 @@ if ~isempty(NamedMap)
   % the following assumes a single NamedMap
   if isfield(NamedMap, 'LabelTable')
     % use the key-label combination in the label table
-    haslabeltable = true;
-    key           = NamedMap.LabelTable.Key;
+    haslabeltable    = true;
+    key              = NamedMap.LabelTable.Key;
+    source.datalabel = NamedMap.LabelTable.Label(:);
   end
-  source.datalabel = NamedMap.LabelTable.Label(:);
 end
 
 if readdata
