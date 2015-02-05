@@ -482,7 +482,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if istrue(checkinside)
   if isfield(cfg, 'inside') && any(cfg.inside>1)
-    inside = false(size(cfg.pos,1));
+    inside = false(size(cfg.pos,1),1);
     inside(cfg.inside) = true;
     cfg = removefields(cfg, {'inside', 'outside'});
     cfg.inside = inside;
