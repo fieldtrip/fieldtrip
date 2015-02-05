@@ -487,7 +487,7 @@ if istrue(checkinside)
     cfg = removefields(cfg, {'inside', 'outside'});
     cfg.inside = inside;
   elseif isfield(cfg, 'grid') && isfield(cfg.grid, 'inside') && any(cfg.grid.inside>1)
-    inside = false(size(cfg.grid.pos,1));
+    inside = false(size(cfg.grid.pos,1),1);
     inside(cfg.grid.inside) = true;
     cfg.grid = removefields(cfg.grid, {'inside', 'outside'});
     cfg.grid.inside = inside;
