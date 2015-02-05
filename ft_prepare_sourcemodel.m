@@ -669,12 +669,13 @@ if strcmp(cfg.grid.tight, 'yes')
   grid.xgrid   = grid.xgrid(xmin_indx:xmax_indx);
   grid.ygrid   = grid.ygrid(ymin_indx:ymax_indx);
   grid.zgrid   = grid.zgrid(zmin_indx:zmax_indx);
-  grid.dim     = [length(grid.xgrid) length(grid.ygrid) length(grid.zgrid)];
   % update all boolean fields, this includes the inside field
   fn = booleanfields(grid);
   for i=1:numel(fn)
     grid.(fn{i}) = grid.(fn{i})(sel);
   end
+  % update grid dimension *after* the boolean fields have been updated
+  grid.dim     = [length(grid.xgrid) length(grid.ygrid) length(grid.zgrid)];
 end
 fprintf('%d dipoles inside, %d dipoles outside brain\n', sum(grid.inside), sum(~grid.inside));
 
