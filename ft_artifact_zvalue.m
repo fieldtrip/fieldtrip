@@ -163,26 +163,26 @@ if pertrial
   end
 end
 
-if nargin > 1
-  % check if the input data is valid for this function
-  data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
-  % data given as input, use ft_fetch_header and ft_fetch_data in the remainder of the code
-  isfetch = 1;
-  hdr = ft_fetch_header(data);
-elseif nargin == 1
-  % only cfg given
-  isfetch = 0;
-  
-  if ~isfield(cfg, 'headerfile') && isfield(cfg, 'dataset')
-    cfg = dataset2files(cfg);
-  end
+% the data is either passed into the function by the user or read from file with cfg.inputfile
+hasdata = exist('data', 'var');
+
+if ~hasdata
+  % only cfg given, read data from disk
+  cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
   hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
-  
-  % check whether the value for trlpadding makes sense; negative trlpadding
-  % only allowed with in-memory data
+  trl = cfg.trl;
+
+else
+  % check whether the value for trlpadding makes sense
+  % negative trlpadding only allowed with in-memory data
   if cfg.artfctdef.zvalue.trlpadding < 0
     error('negative trlpadding is only allowed with in-memory data');
   end
+  % check if the input data is valid for this function
+  data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
+  cfg = ft_checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
+  hdr = ft_fetch_header(data);
+  trl = data.sampleinfo;
 end
 
 % set default cfg.continuous
@@ -194,11 +194,6 @@ if ~isfield(cfg, 'continuous')
   end
 end
 
-if isfield(cfg,'trl')
-  trl = cfg.trl;
-else
-  trl = data.sampleinfo;
-end
 trlpadding    = round(cfg.artfctdef.zvalue.trlpadding*hdr.Fs);
 fltpadding    = round(cfg.artfctdef.zvalue.fltpadding*hdr.Fs);
 artpadding    = round(cfg.artfctdef.zvalue.artpadding*hdr.Fs);
@@ -206,7 +201,7 @@ trl(:,1)      = trl(:,1) - trlpadding;       % pad the trial with some samples, 
 trl(:,2)      = trl(:,2) + trlpadding;       % artifacts at the edges of the relevant trials.
 if size(trl, 2) >= 3
   trl(:,3)      = trl(:,3) - trlpadding;     % the offset can ofcourse be adjusted as well
-elseif isfetch
+elseif hasdata
   % reconstruct offset
   for tr=1:size(trl, 1)
     % account for 0 might not be in data.time
@@ -227,7 +222,7 @@ thresholdsum  = strcmp(cfg.artfctdef.zvalue.cumulative, 'yes');
 
 if numsgn<1
   error('no channels selected');
-end 
+end
 
 % read the data and apply preprocessing options
 sumval = zeros(numsgn, 1);
@@ -236,9 +231,9 @@ numsmp = zeros(numsgn, 1);
 ft_progress('init', cfg.feedback, ['searching for artifacts in ' num2str(numsgn) ' channels']);
 for trlop = 1:numtrl
   ft_progress(trlop/numtrl, 'searching in trial %d from %d\n', trlop, numtrl);
-      
+  
   if strcmp(cfg.memory, 'low') % store nothing in memory
-    if isfetch
+    if hasdata
       dat = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'), 'skipcheckdata', 1);
     else
       dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'), 'dataformat', cfg.dataformat);
@@ -269,7 +264,7 @@ for trlop = 1:numtrl
       numsmp(:,trlop) = size(dat,2);
     end
   else % store all data in memory, saves computation time
-    if isfetch
+    if hasdata
       dat{trlop} = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'), 'skipcheckdata', 1);
     else
       dat{trlop} = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'), 'dataformat', cfg.dataformat);
@@ -308,7 +303,7 @@ if pertrial>1
   sumsqr = ft_preproc_smooth(sumsqr, pertrial)*pertrial;
   numsmp = ft_preproc_smooth(numsmp, pertrial)*pertrial;
 end
-  
+
 % compute the average and the standard deviation
 datavg = sumval./numsmp;
 datstd = sqrt(sumsqr./numsmp - (sumval./numsmp).^2);
@@ -332,7 +327,7 @@ end
 for trlop = 1:numtrl
   if strcmp(cfg.memory, 'low') % store nothing in memory (note that we need to preproc AGAIN... *yawn*
     fprintf('.');
-    if isfetch
+    if hasdata
       dat = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'));
     else
       dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'), 'dataformat', cfg.dataformat);
@@ -383,7 +378,7 @@ end
 %  fprintf('searching channel %s ', cfg.artfctdef.zvalue.channel{sgnlop});
 %  for trlop = 1:numtrl
 %    fprintf('.');
-%    if isfetch
+%    if hasdata
 %      dat{trlop} = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind(sgnlop), 'checkboundary', strcmp(cfg.continuous,'no'));
 %    else
 %      dat{trlop} = read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind(sgnlop), 'checkboundary', strcmp(cfg.continuous,'no'));
