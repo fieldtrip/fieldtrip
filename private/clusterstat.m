@@ -158,15 +158,21 @@ for i=1:Nrand
   negtailrnd(:,i) = (statrnd(:,i) <= negtailcritval);
 end
 
+if ~isfield(cfg, 'inside')
+  cfg.inside = true(cfg.dim);
+end % cfg.inside is set in ft_sourcestatistics, but is also needed for timelock and freq
+
+if isfield(cfg, 'origdim'),
+  cfg.dim = cfg.origdim;
+end % this snippet is to support correct clustering of N-dimensional data, not fully tested yet
+
 % first do the clustering on the observed data
 if needpos,
   
   if ~isfinite(channeighbstructmat)
     % this pertains to data for which the spatial dimension can be reshaped
     % into 3D, i.e. when it is described on an ordered set of positions on a 3D-grid
-    if isfield(cfg, 'origdim'),
-      cfg.dim = cfg.origdim;
-    end % this snippet is to support correct clustering of N-dimensional data, not fully tested yet
+    
     tmp = zeros(cfg.dim);
     tmp(cfg.inside) = postailobs;
     
@@ -189,12 +195,13 @@ if needpos,
   Nobspos = max(posclusobs(:)); % number of clusters exceeding the threshold
   fprintf('found %d positive clusters in observed data\n', Nobspos);
   
-end
+end % if needpos
 if needneg,
   
   if ~isfinite(channeighbstructmat)
     % this pertains to data for which the spatial dimension can be reshaped
     % into 3D, i.e. when it is described on an ordered set of positions on a 3D-grid
+    
     
     tmp = zeros(cfg.dim);
     tmp(cfg.inside) = negtailobs;
@@ -218,7 +225,7 @@ if needneg,
   Nobsneg = max(negclusobs(:));
   fprintf('found %d negative clusters in observed data\n', Nobsneg);
   
-end
+end % if needneg
 
 stat = [];
 stat.stat = statobs;
