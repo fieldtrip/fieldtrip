@@ -37,7 +37,6 @@ cfg.grad=rej2.grad;
 grid2 = ft_prepare_leadfield(cfg, rej2);
 
 assert(~isequaln(grid1.leadfield,grid2.leadfield))
-norm(grid1.leadfield{grid1.inside(1)}-grid2.leadfield{grid2.inside(1)})/norm(grid1.leadfield{grid1.inside(1)})
 
 
 
