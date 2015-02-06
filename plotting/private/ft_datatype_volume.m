@@ -29,6 +29,11 @@ function volume = ft_datatype_volume(volume, varargin)
 %   - none
 %
 % Revision history:
+%
+% (2014) The subfields in the avg and trial fields are now present in the
+% main structure, e.g. source.avg.pow is now source.pow. Furthermore, the
+% inside is always represented as logical array.
+%
 % (2012b) Ensure that the anatomy-field (if present) does not contain
 % infinite values.
 %
@@ -52,7 +57,7 @@ function volume = ft_datatype_volume(volume, varargin)
 % FT_DATATYPE_MVAR, FT_DATATYPE_RAW, FT_DATATYPE_SOURCE, FT_DATATYPE_SPIKE,
 % FT_DATATYPE_TIMELOCK, FT_DATATYPE_VOLUME
 
-% Copyright (C) 2011, Robert Oostenveld
+% Copyright (C) 2011-2015, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -76,7 +81,7 @@ function volume = ft_datatype_volume(volume, varargin)
 version = ft_getopt(varargin, 'version', 'latest');
 
 if strcmp(version, 'latest')
-  version = '2012b';
+  version = '2014';
 end
 
 if isempty(volume)
@@ -103,6 +108,35 @@ if isfield(volume, 'pos')
 end
 
 switch version
+  case '2014'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if isfield(volume, 'dimord')
+      volume = rmfield(volume, 'dimord');
+    end
+
+    if isfield(volume, 'anatomy')
+      volume.anatomy(~isfinite(volume.anatomy)) = 0;
+    end
+    
+    if isfield(volume, 'avg') && isstruct(volume.avg)
+      % move the average fields to the main structure
+      fn = fieldnames(volume.avg);
+      for i=1:length(fn)
+        dat = volume.avg.(fn{i});
+        try
+          volume.(fn{i}) = reshape(dat, volume.dim);
+        catch
+          warning('could not reshape %s to expected dimensions');
+          volume.(fn{i}) = dat;
+        end
+        clear dat
+      end
+      volume = rmfield(volume, 'avg');
+    end
+    
+    % ensure that it is always logical
+    volume = fixinside(volume, 'logical');
+    
   case '2012b'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if isfield(volume, 'dimord')
