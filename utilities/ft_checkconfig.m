@@ -193,6 +193,7 @@ end
 if ~isempty(allowed)
   % there are some general options that should always be allowed
   allowed = union(allowed, {
+    'trkcfgcount'
     'trackconfig'
     'checkconfig'
     'checksize'
