@@ -51,7 +51,7 @@ spikeTrials2 = ft_spike_maketrials(cfg,spike);
 
 data_all = ft_appendspike([],data_lfp, spike);
 
-disp(data_all.trial{1}(:,4002:4005))
+disp(data_all.trial{1}(:,4002:4005));
 
 cfg              = [];
 cfg.method       = 'nan'; % replace the removed segment with nans
@@ -108,12 +108,12 @@ cfg.spikechannel = spike.label{1};
 cfg.channel      = data_lfp.label;
 stsFFT           = ft_spiketriggeredspectrum(cfg, data_all);
 
-ang = angle(stsFFT.fourierspctrm{1})
+ang = angle(stsFFT.fourierspctrm{1});
 
-mag = abs(stsFFT.fourierspctrm{1})
+mag = abs(stsFFT.fourierspctrm{1});
 
 cfg           = [];
-cfg.method    = 'convol';
+cfg.method    = 'mtmconvol';
 cfg.foi       = 20:10:100;
 cfg.t_ftimwin = 5./cfg.foi; % 5 cycles per frequency
 cfg.taper     = 'hanning';
