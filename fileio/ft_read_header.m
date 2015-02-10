@@ -395,13 +395,7 @@ switch headerformat
     hdr = read_biosemi_bdf(filename);
     if any(diff(hdr.orig.SampleRate))
       error('channels with different sampling rate not supported');
-    end
-    % assign the channel type and units for the known channels
-    hdr.chantype = repmat({'unknown'}, size(hdr.label));
-    hdr.chanunit = repmat({'unknown'}, size(hdr.label));
-    chan = ~cellfun(@isempty, regexp(hdr.label, '^[A-D]\d*$'));
-    hdr.chantype(chan) = {'eeg'};
-    hdr.chanunit(chan) = {'uV'};
+    end   
     
     if ft_filetype(filename, 'bham_bdf')
       % TODO channel renaming should be made a general option
