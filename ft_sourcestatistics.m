@@ -135,18 +135,19 @@ cfg.dimord = sprintf('%s_', dimtok{datdim});
 cfg.dimord = cfg.dimord(1:end-1); % remove trailing _
 cfg.dim    = dimsiz(datdim);
 
-if isfield(varargin{1}, 'dim') && prod(cfg.dim)==prod(varargin{1}.dim)
-  % one value per grid position, the positions can be mapped onto a 3-D volume
-  cfg.dimord = 'pos';
-  cfg.dim    = varargin{1}.dim;
-elseif isfield(varargin{1}, 'pos') && prod(cfg.dim)==size(varargin{1}.pos,1)
-  % one value per grid position, the positions cannot be mapped onto a 3-D volume
-  if numel(cfg.dim)==1
-    cfg.dim(2) = 1;  % add a trailing singleton dimensions
+if isfield(varargin{1}, 'dim')
+  % the positions can be mapped onto a 3-D volume
+  if prod(cfg.dim)==prod(varargin{1}.dim)
+    % one value per grid position, i.e. [nx ny nz]
+    cfg.origdim = varargin{1}.dim;
+  else
+    % multiple value per grid position
+    cfg.origdim = [varargin{1}.dim cfg.dim(2:end)];
   end
-else
-  % multiple values per grid position, e.g. pos_freq_time
-  % the dim and dimord should be correctly determined by the preceding code
+end
+
+if numel(cfg.dim)==1
+  cfg.dim(2) = 1;  % add a trailing singleton dimensions
 end
 
 if isempty(rptdim)
