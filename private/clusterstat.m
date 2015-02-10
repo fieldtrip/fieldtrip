@@ -184,6 +184,7 @@ if needpos,
       posclusobs = bwlabeln(tmp, conndef(length(cfg.dim),'min')); % spm_bwlabel yet (feb 2011) supports only 2D/3D data
     end
     posclusobs = posclusobs(cfg.inside);
+    
   else
     if 0
       posclusobs = findcluster(reshape(postailobs, [cfg.dim,1]),cfg.chancmbneighbstructmat,cfg.chancmbneighbselmat,cfg.minnbchan);
@@ -191,7 +192,7 @@ if needpos,
       posclusobs = findcluster(reshape(postailobs, [cfg.dim,1]),channeighbstructmat,cfg.minnbchan);
     end
     posclusobs = posclusobs(:);
-  end
+  end % if channeighbstructmat
   Nobspos = max(posclusobs(:)); % number of clusters exceeding the threshold
   fprintf('found %d positive clusters in observed data\n', Nobspos);
   
@@ -201,7 +202,6 @@ if needneg,
   if ~isfinite(channeighbstructmat)
     % this pertains to data for which the spatial dimension can be reshaped
     % into 3D, i.e. when it is described on an ordered set of positions on a 3D-grid
-    
     
     tmp = zeros(cfg.dim);
     tmp(cfg.inside) = negtailobs;
@@ -214,6 +214,7 @@ if needneg,
       negclusobs = bwlabeln(tmp, conndef(length(cfg.dim),'min')); % spm_bwlabel yet (feb 2011) supports only 2D/3D data
     end
     negclusobs = negclusobs(cfg.inside);
+    
   else
     if 0
       negclusobs = findcluster(reshape(negtailobs, [cfg.dim,1]),cfg.chancmbneighbstructmat,cfg.chancmbneighbselmat,cfg.minnbchan);
@@ -221,7 +222,8 @@ if needneg,
       negclusobs = findcluster(reshape(negtailobs, [cfg.dim,1]),channeighbstructmat,cfg.minnbchan);
     end
     negclusobs = negclusobs(:);
-  end
+  end % if channeighbstructmat
+  
   Nobsneg = max(negclusobs(:));
   fprintf('found %d negative clusters in observed data\n', Nobsneg);
   

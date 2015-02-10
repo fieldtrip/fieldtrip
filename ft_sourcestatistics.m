@@ -78,6 +78,7 @@ if abort
   return
 end
 
+
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'required',    {'method', 'design'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'approach',   'method'});
@@ -134,6 +135,20 @@ cfg.dimord = sprintf('%s_', dimtok{datdim});
 cfg.dimord = cfg.dimord(1:end-1); % remove trailing _
 cfg.dim    = dimsiz(datdim);
 
+if isfield(varargin{1}, 'dim') && prod(cfg.dim)==prod(varargin{1}.dim)
+  % one value per grid position, the positions can be mapped onto a 3-D volume
+  cfg.dimord = 'pos';
+  cfg.dim    = varargin{1}.dim;
+elseif isfield(varargin{1}, 'pos') && prod(cfg.dim)==size(varargin{1}.pos,1)
+  % one value per grid position, the positions cannot be mapped onto a 3-D volume
+  if numel(cfg.dim)==1
+    cfg.dim(2) = 1;  % add a trailing singleton dimensions
+  end
+else
+  % multiple values per grid position, e.g. pos_freq_time
+  % the dim and dimord should be correctly determined by the preceding code
+end
+
 if isempty(rptdim)
   % repetitions are across multiple inputs
   dat = nan(prod(dimsiz), length(varargin));
@@ -184,20 +199,10 @@ catch
 end
 
 % perform the statistical test
-if strcmp(func2str(statmethod),'ft_statistics_montecarlo')
-  % because ft_statistics_montecarlo (or to be precise, clusterstat) requires to know whether it is getting source data,
-  % the following (ugly) work around is necessary
-  if num>1
-    [stat, cfg] = statmethod(cfg, dat, design);
-  else
-    [stat] = statmethod(cfg, dat, design);
-  end
+if num>1
+  [stat, cfg] = statmethod(cfg, dat, design);
 else
-  if num>1
-    [stat, cfg] = statmethod(cfg, dat, design);
-  else
-    [stat] = statmethod(cfg, dat, design);
-  end
+  [stat] = statmethod(cfg, dat, design);
 end
 
 if ~isstruct(stat)
