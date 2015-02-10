@@ -48,27 +48,27 @@ ifeq "$(UNAME)" "Darwin"
 endif
 
 CFLAGS += $(INCPATH) -Wunused -Wall -pedantic -O3
-
+CXX ?= g++
 ##############################################################################
 all: odmTest$(SUFFIX)
 
 FtConnection.o: FtConnection.cc FtBuffer.h
-	g++ -c FtConnection.cc $(CFLAGS)	
+	$(CXX) -c FtConnection.cc $(CFLAGS)	
 	
 SignalConfiguration.o: SignalConfiguration.cc SignalConfiguration.h
-	g++ -c SignalConfiguration.cc $(CFLAGS)	
+	$(CXX) -c SignalConfiguration.cc $(CFLAGS)	
 	
 StringServer.o: StringServer.cc StringServer.h
-	g++ -c StringServer.cc $(CFLAGS)	
+	$(CXX) -c StringServer.cc $(CFLAGS)	
 	
 GdfWriter.o: GdfWriter.cc GdfWriter.h 
-	g++ -c GdfWriter.cc $(CFLAGS)	
+	$(CXX) -c GdfWriter.cc $(CFLAGS)	
 	
 odmTest.o: odmTest.cc OnlineDataManager.h StringServer.o GDF_BackgroundWriter.h
-	g++ -c odmTest.cc $(CFLAGS)
+	$(CXX) -c odmTest.cc $(CFLAGS)
 
 odmTest$(SUFFIX): odmTest.o SignalConfiguration.o GdfWriter.o FtConnection.o StringServer.o
-	g++ -o $@ $^ $(LDFLAGS) 
+	$(CXX) -o $@ $^ $(LDFLAGS) 
 
 clean:
 	$(RM) *.o *.exe

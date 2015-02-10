@@ -36,8 +36,8 @@ LDFLAGS = -L$(FTBUFFER)/src
 LDLIBS = -lbuffer $(CPPOBJS)
 CXXFLAGS = -Wunused -Wall -pedantic -O3 -g
 CXXFLAGS += -I$(FTBUFFER)/src -I. -I$(CPPDIR) -DDEBUG
-CXX=/usr/bin/g++
-
+CXX ?= /usr/bin/g++
+ 
 ifeq "$(UNAME)" "Darwin"
 	LDLIBS += -lpthread
     fixpath = $1

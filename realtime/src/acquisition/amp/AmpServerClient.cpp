@@ -197,8 +197,17 @@ void AmpServerClient::getAmpDetails() {
 }
 
 int AmpServerClient::getNumChannels() {
+	return this->nchannels + AMP_DIGITAL_CHANNELS;
+}
+
+int AmpServerClient::getNumAnalogChannels() {
 	return this->nchannels;
 }
+
+int AmpServerClient::getNumDigitalChannels() {
+	return AMP_DIGITAL_CHANNELS;
+}
+
 
 int AmpServerClient::getSamplingFreq() {
 	return config->sfreq;
@@ -240,20 +249,25 @@ unsigned int AmpServerClient::readNewData(int32_t * ptr, unsigned int topass, Ft
 				if (this->lastdin1 != din1) {
 					elist.add(vsamp, "DIN1", din1);
 					this->lastdin1 = din1;
+					DPRINTF("DIN1 => %d\n", din1);
 				}
 				if (this->lastdin2 != din2) {
 					elist.add(vsamp, "DIN2", din2);
 					this->lastdin2 = din2;
+					DPRINTF("DIN2 => %d\n", din2);
 				}
 				offset+= 32;
 				for (unsigned int chan = 0; chan < this->nchannels; chan++) {
 					//~ DPRINTF("Processing channel %d\n", chan);
-					int32_t * p = reinterpret_cast<int32_t*>( this->rcvbuffer + offset);
+					int32_t * p = reinterpret_cast<int32_t*>((this->rcvbuffer + offset));
 					*p = ntohl( *p );
-					ptr[vsamp * this->nchannels + chan] = *p;
+					ptr[vsamp * (this->nchannels + AMP_DIGITAL_CHANNELS) + chan] = *p;
 					offset += sizeof(int);
 					
 				}
+				float *ftPtr = reinterpret_cast<float *>(ptr);
+				ftPtr[vsamp * (this->nchannels + AMP_DIGITAL_CHANNELS) + this->nchannels] = (float)din1;
+				ftPtr[vsamp * (this->nchannels + AMP_DIGITAL_CHANNELS) + this->nchannels + 1] = (float)din2;
 				vsamp++;
 				rsamp += this->subsample;
 				pcount --;
@@ -326,7 +340,7 @@ unsigned char AmpServerClient::decodeDin(unsigned char din) {
 		result += 1;
 	}
 	if ((din & 8) != 0) {
-		result += 0;
+		result += 32;
 	}
 	if ((din & 16) != 0) {
 		result += 16;
@@ -338,9 +352,9 @@ unsigned char AmpServerClient::decodeDin(unsigned char din) {
 		result += 8;
 	}
 	if ((din & 128) != 0) {
-		result += 0;
+		result += 128;
 	} 
-	return result;
+	return 255-result;
 	
 	
 }

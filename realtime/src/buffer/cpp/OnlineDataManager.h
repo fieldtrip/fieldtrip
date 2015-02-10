@@ -635,6 +635,9 @@ class OnlineDataManager : public StringRequestHandler {
 					for (int i=0;i<nStream;i++) {
 						int idx = streamSel.getIndex(i);
 						dest[i] = slope[idx]*(src[idx] - offset[idx]);
+						// if (i == nStream - 16) {
+						// 	printf ("a >> %f\n", (double)dest[i]);
+						// }
 					}
 					dest += nStream;
 				}
