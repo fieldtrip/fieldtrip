@@ -145,7 +145,7 @@ if strcmp(cfg.correctm, 'cluster')
   
   % deal with the neighbourhood of the channels/triangulation/voxels
   if isempty(cfg.connectivity)
-    if isfield(cfg, 'dim')
+    if isfield(cfg, 'dim') && ~isfield(cfg, 'channel')
       % input data can be reshaped into a 3D volume, use bwlabeln/spm_bwlabel rather than clusterstat
       fprintf('using connectivity of voxels in 3-D volume\n');
       cfg.connectivity = nan;
