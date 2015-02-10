@@ -115,6 +115,9 @@ if ~isfield(artfctdef, 'range'),    artfctdef.range = inf;           end
 if ~isfield(artfctdef, 'min'),      artfctdef.min =  -inf;           end
 if ~isfield(artfctdef, 'max'),      artfctdef.max =   inf;           end
 
+% the data is either passed into the function by the user or read from file with cfg.inputfile
+hasdata = exist('data', 'var');
+
 % read the header, or get it from the input data
 if ~hasdata
   cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
