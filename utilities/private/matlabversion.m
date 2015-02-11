@@ -1,6 +1,6 @@
 function [inInterval] = matlabversion(min, max)
 
-% MATLABVERSION checks if the current matlab version is within the interval
+% MATLABVERSION checks if the current MATLAB version is within the interval
 % specified by min and max.
 %
 % Use, e.g., as:
@@ -9,12 +9,12 @@ function [inInterval] = matlabversion(min, max)
 %  end
 %
 % Both strings and numbers, as well as infinities, are supported, eg.:
-%  matlabversion(7.1, 7.9)    % is version between 7.1 and 7.9?
-%  matlabversion(6, '7.10')   % is version between 6 and 7.10? (note: '7.10', not 7.10)
-%  matlabversion(-Inf, 7.6)   % is version <= 7.6?
-%  matlabversion('2008b', '2010a')
-%  matlabversion('2008b', Inf)
-%  matlabversion('2009b')     % exactly 2009b
+%  matlabversion(7.1, 7.9)          % is version between 7.1 and 7.9?
+%  matlabversion(6, '7.10')         % is version between 6 and 7.10? (note: '7.10', not 7.10)
+%  matlabversion(-Inf, 7.6)         % is version <= 7.6?
+%  matlabversion('2009b')           % exactly 2009b
+%  matlabversion('2008b', '2010a')  % between two versions
+%  matlabversion('2008b', Inf)      % from a version onwards
 %  etc.
 %
 % See also VERSION, VER, VERLESSTHAN
