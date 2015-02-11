@@ -71,7 +71,7 @@ switch spikeformat
     error('file does not contain spike timestamps or waveforms');
 
   case 'matlab'
-    % plain matlab file with a single variable in it
+    % plain MATLAB file with a single variable in it
     load(filename, 'spike');
 
   case 'mclust_t'

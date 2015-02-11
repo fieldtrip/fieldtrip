@@ -14,7 +14,7 @@ function [tissue1, tissue2, tissue3] = validate_seg(tissue1, tissue2, tissue3)
 % the input is invalid and cannot be converted to overlapping segmentations, this function will give
 % an error.
 %
-% This function makes use of functions from the Matlab Signal Processing Toolbox.
+% This function makes use of functions from the MATLAB Signal Processing Toolbox.
 %
 % See also TRIANGULATE_SEG, PREPARE_MESH_SEGMENTATION
 

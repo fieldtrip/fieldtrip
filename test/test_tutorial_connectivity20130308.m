@@ -147,7 +147,7 @@ cfg.zlim      = [0 1];
 ft_connectivityplot(cfg, granger);
 
 
-% Instead of plotting it with ft_connectivityplot, you can use the following low-level Matlab plotting code which gives a better understanding of the numerical representation of the results.
+% Instead of plotting it with ft_connectivityplot, you can use the following low-level MATLAB plotting code which gives a better understanding of the numerical representation of the results.
 % 
 figure
 for row=1:3
@@ -420,4 +420,4 @@ ylabel('coherence')
 % Summary and further reading
 % This tutorial demonstrates how to compute connectivity measures between two time series. If you want to learn how to make a distributed representation of connectivity throughout the whole brain, you may want to continue with the corticomuscular coherence tutorial.
 % 
-% This tutorial was last tested by Robert with revision 6026 of FieldTrip (~20120611) on a 64-bit Mac OS X machine using Matlab 2011b.
+% This tutorial was last tested by Robert with revision 6026 of FieldTrip (~20120611) on a 64-bit Mac OS X machine using MATLAB 2011b.

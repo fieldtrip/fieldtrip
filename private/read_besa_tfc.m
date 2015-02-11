@@ -79,7 +79,7 @@ while i<1000
 end
     
 % Generate return values
-% FIXME the following statement does not work for Matlab 7.2 on XP (see mail from Stephan Bickel)
+% FIXME the following statement does not work for MATLAB 7.2 on XP (see mail from Stephan Bickel)
 Time = [TimeStartInMS:TimeIntervalInMS:(NumberTimeSamples-1)*TimeIntervalInMS+TimeStartInMS];
 Frequency = [FreqStartInHZ:FreqIntervalInHZ:(NumberFrequencies-1)*FreqIntervalInHZ+FreqStartInHZ];
 if vers == 1

@@ -38,7 +38,7 @@ function test_tutorial_timefrequencyanalysis20130308
 % 
 % To calculate the time-frequency analysis for the example dataset we will perform the following steps:
 % 
-% Read the data into Matlab using ft_definetrial and ft_preprocessing
+% Read the data into MATLAB using ft_definetrial and ft_preprocessing
 % Compute the power values for each frequency bin and each time bin using the function ft_freqanalysis
 % Visualize the results. This can be done by creating time-frequency plots for one (ft_singleplotTFR) or several channels (ft_multiplotTFR), or by creating a topographic plot for a specified time- and frequency interval (ft_topoplotTFR).
 % 
@@ -349,7 +349,7 @@ ft_multiplotTFR(cfg, TFRwave)
 % 
 % After having finished this tutorial on time-frequency analysis, you can continue with the beamformer source reconstruction tutorial if you are interested in the source-localization of the power changes or the cluster-based permutation tests on time-frequency data tutorial if you are interested how to do statistics on the time-frequency representations.
 % 
-% This tutorial was last tested with version 20120612 of FieldTrip by Jan-Mathijs, using Matlab 2011b on a 64-bit MacOS platform.
+% This tutorial was last tested with version 20120612 of FieldTrip by Jan-Mathijs, using MATLAB 2011b on a 64-bit MacOS platform.
 % 
 % 
 % 1) , 4) Tallon-Baudry and Bertrand (1999) Oscillatory gamma activity in humans and its role in object representation. Trends Cogn Sci. 3(4):151-162

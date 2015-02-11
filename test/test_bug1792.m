@@ -25,7 +25,7 @@ cfg.coilfreq = [293, 307, 314, 321];%, 328];
 %ft_realtime_coillocalizer(cfg);
 ft_realtime_headlocalizer(cfg);
 
-% % stream the testdata to ft buffer in one matlab session
+% % stream the testdata to ft buffer in one MATLAB session
 % cfg = [];
 % cfg.source.datafile = '/home/common/matlab/fieldtrip/data/test/bug1792/20130418_test_cHPI.fif';
 % cfg.target.datafile = 'buffer://localhost:1972';

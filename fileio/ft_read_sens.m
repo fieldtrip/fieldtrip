@@ -214,8 +214,8 @@ switch fileformat
     end
     
   case 'matlab'
-    % matlab files can contain either electrodes or gradiometers
-    matfile = filename;   % this solves a problem with the matlab compiler v3
+    % MATLAB files can contain either electrodes or gradiometers
+    matfile = filename;   % this solves a problem with the MATLAB compiler v3
     ws = warning('off', 'MATLAB:load:variableNotFound');
     tmp = load(matfile, 'elec', 'grad', 'sens', 'elc');
     warning(ws);
@@ -228,7 +228,7 @@ switch fileformat
     elseif isfield(tmp, 'elc')
       sens = tmp.elc;
     else
-      error('no electrodes or gradiometers found in Matlab file');
+      error('no electrodes or gradiometers found in MATLAB file');
     end
     
   case 'zebris_sfp'

@@ -345,7 +345,7 @@ for i=1:numel(source.dip)
 end
 
 if false
-  % the following causes matlab to crash (hard!) on mac011 with matlab2012b and 2014a
+  % the following causes MATLAB to crash (hard!) on mac011 with version 2012b and 2014a
   figure
   hold on
   plot3(pos1(:,1), pos1(:,2), pos1(:,3), 'r.')

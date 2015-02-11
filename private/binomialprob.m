@@ -83,6 +83,6 @@ elseif ~isthresh && ~isalpha
   error('can only determine alpha automatically from thresholded statistical maps');
 end
 
-% this uses Matlab stats toolbox
+% this uses MATLAB stats toolbox
 bp = 1 - binocdf(x, N, p);
 

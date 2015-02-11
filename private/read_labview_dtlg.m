@@ -125,7 +125,7 @@ end
 for i=1:nd
   fseek(fid, offset(i), 'bof');
   n = fread(fid, ndim, 'int32')';
-  % Labview uses the C-convention for storing data, and Matlab uses the Fortran convention
+  % Labview uses the C-convention for storing data, and MATLAB uses the Fortran convention
   n = fliplr(n);
   data{i} = fread(fid, n, datatype);
 end

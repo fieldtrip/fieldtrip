@@ -11,7 +11,7 @@ function [filt] = highpassfilter(dat,Fs,Fhp,N,type,dir)
 %   N          optional filter order, default is 6 (but) or 25 (fir)
 %   type       optional filter type, can be
 %                'but' Butterworth IIR filter (default)
-%                'fir' FIR filter using Matlab fir1 function 
+%                'fir' FIR filter using MATLAB fir1 function 
 %   dir        optional filter direction, can be
 %                'onepass'         forward filter only
 %                'onepass-reverse' reverse filter only, i.e. backward in time

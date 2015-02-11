@@ -9,7 +9,7 @@ function test_old_besa2fieldtrip
 % and returns it as fieldtrip object (e.g. timelocked, freq, source).
 %
 % The besa2fieldtrip function both should work on original besa files,
-% as well as on matlab files containing a particular structure (for the
+% as well as on MATLAB files containing a particular structure (for the
 % direct besa->matlab interface).
 
 basedir = '/home/common/matlab/fieldtrip/testdata/original/besa/file';

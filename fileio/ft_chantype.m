@@ -232,7 +232,7 @@ elseif ft_senstype(input, 'ctf') && isheader
   origSensType = [];
   if isfield(input, 'orig')
     if isfield(input.orig, 'sensType') && isfield(input.orig, 'Chan')
-      % the header was read using the open-source matlab code that originates from CTF and that was modified by the FCDC
+      % the header was read using the open-source MATLAB code that originates from CTF and that was modified by the FCDC
       origSensType = input.orig.sensType;
     elseif isfield(input.orig, 'res4') && isfield(input.orig.res4, 'senres')
       % the header was read using the CTF p-files, i.e. readCTFds

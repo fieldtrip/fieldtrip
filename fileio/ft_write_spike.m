@@ -60,7 +60,7 @@ nchans = length(spike.label);
 switch dataformat
   case 'matlab'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % plain matlab file
+    % plain MATLAB file
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     [path, file, ext] = fileparts(filename);
     filename = fullfile(path, [file, '.mat']);

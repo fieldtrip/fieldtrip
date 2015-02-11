@@ -142,7 +142,7 @@ gx = zeros(size(x));
 hx = zeros(size(x));
 x(find(x>1)) = 1;       % to avoid rounding off errors
 x(find(x<-1)) = -1;     % to avoid rounding off errors
-% using Matlab function to compute legendre polynomials
+% using MATLAB function to compute legendre polynomials
 % P = zeros(size(x,1), size(x,2), N);
 % for k=1:N
 %  tmp = legendre(k,x);

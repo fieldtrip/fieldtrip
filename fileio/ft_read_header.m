@@ -562,7 +562,7 @@ switch headerformat
     hdr.orig = orig;
     
   case {'ctf_old', 'read_ctf_res4'}
-    % read it using the open-source matlab code that originates from CTF and that was modified by the FCDC
+    % read it using the open-source MATLAB code that originates from CTF and that was modified by the FCDC
     orig             = read_ctf_res4(headerfile);
     hdr.Fs           = orig.Fs;
     hdr.nChans       = orig.nChans;
@@ -1187,7 +1187,7 @@ switch headerformat
     end
     
   case 'fcdc_matbin'
-    % this is multiplexed data in a *.bin file, accompanied by a matlab file containing the header
+    % this is multiplexed data in a *.bin file, accompanied by a MATLAB file containing the header
     load(headerfile, 'hdr');
     
   case 'fcdc_mysql'

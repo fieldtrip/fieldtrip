@@ -1,7 +1,7 @@
 function [s] = setsubfield(s, f, v)
 
 % SETSUBFIELD sets the contents of the specified field to a specified value
-% just like the standard Matlab SETFIELD function, except that you can also
+% just like the standard SETFIELD function, except that you can also
 % specify nested fields using a '.' in the fieldname. The nesting can be
 % arbitrary deep.
 %
