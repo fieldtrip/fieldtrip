@@ -167,7 +167,7 @@ end
 
 % determine the number of output arguments
 try
-  % the nargout function in Matlab 6.5 and older does not work on function handles
+  % the nargout function in MATLAB 6.5 and older does not work on function handles
   num = nargout(statmethod);
 catch
   num = 1;

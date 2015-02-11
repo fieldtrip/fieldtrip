@@ -254,7 +254,7 @@ end
 
 ft_postamble debug
 ft_postamble trackconfig      % this converts the config object back into a struct and can report on the unused fields
-ft_postamble provenance       % this records the time and memory at the end of the function, prints them on screen and adds this information together with the function name and matlab version etc. to the output cfg
+ft_postamble provenance       % this records the time and memory at the end of the function, prints them on screen and adds this information together with the function name and MATLAB version etc. to the output cfg
 ft_postamble previous data    % this copies the datain.cfg structure into the cfg.previous field. You can also use it for multiple inputs, or for "varargin"
 ft_postamble history data     % this adds the local cfg structure to the output data structure, i.e. dataout.cfg = cfg
 ft_postamble savevar data     % this saves the output data structure to disk in case the user specified the cfg.outputfile option

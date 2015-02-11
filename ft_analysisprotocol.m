@@ -222,7 +222,7 @@ for i=1:length(cfg.remove)
   end
 end
 
-% convert this part of the configuration to a matlab script
+% convert this part of the configuration to a MATLAB script
 if isfield(datacfg, 'previous')
   thiscfg = rmfield(datacfg, 'previous');
 else
@@ -603,7 +603,7 @@ pos = get(get(gcbo, 'CurrentAxes'), 'CurrentPoint');
 x = pos(1,1);
 y = pos(1,2);
 patches = guidata(h);
-patches = patches.patches; % stupid matlab syntax doesn't allow guidata(h).patches
+patches = patches.patches; % stupid MATLAB syntax doesn't allow guidata(h).patches
 
 for k = 1:numel(patches)
   patchX = patches{k}.x;
