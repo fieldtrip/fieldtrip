@@ -109,11 +109,9 @@ cfg = ft_checkconfig(cfg, 'renamedval',  {'correctm', 'yes', 'max'});
 cfg = ft_checkconfig(cfg, 'renamedval',  {'correctm', 'bonferoni', 'bonferroni'});
 cfg = ft_checkconfig(cfg, 'renamedval',  {'correctm', 'holms', 'holm'});
 cfg = ft_checkconfig(cfg, 'required',    {'statistic'});
-cfg = ft_checkconfig(cfg, 'forbidden',   {'ztransform', ...
-  'removemarginalmeans', ...
-  'randomfactor', ...
-  'voxelthreshold', ...
-  'voxelstatistic'});
+cfg = ft_checkconfig(cfg, 'forbidden',   {'ztransform', 'removemarginalmeans', 'randomfactor', 'voxelthreshold', 'voxelstatistic'});
+cfg = ft_checkconfig(cfg, 'renamedval',  {'statfun', 'depsamplesF', 'ft_statfun_depsamplesFmultivariate'});
+cfg = ft_checkconfig(cfg, 'renamedval',  {'statfun', 'ft_statfun_depsamplesF', 'ft_statfun_depsamplesFmultivariate'});
 
 % set the defaults for the main function
 cfg.alpha        = ft_getopt(cfg, 'alpha',      0.05);
@@ -202,9 +200,6 @@ end
 
 % fetch function handle to the low-level statistics function
 statfun = ft_getuserfun(cfg.statistic, 'statfun');
-if isempty(statfun) && (strcmp(cfg.statistic,'depsamplesF') || strcmp(cfg.statistic,'ft_statfun_depsamplesF'));
-  error(['statistic function ' cfg.statistic ' has recently changed its name to ft_statfun_depsamplesFmultivariate']);
-end
 if isempty(statfun)
   error('could not locate the appropriate statistics function');
 else
