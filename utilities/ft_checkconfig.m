@@ -572,10 +572,10 @@ if ~isempty(trackconfig)
         % turn ON configuration tracking
         cfg = config(cfg);
         % remember that configtracking has been turned on
-        cfg.trkcfgcount = 1;
+        cfg = access(cfg, 'set', 'trkcfgcount', 1);
       elseif isa(cfg, 'config')
         % remember how many times trackconfig has been turned on
-        cfg.trkcfgcount = cfg.trkcfgcount+1; % count the 'ONs'
+        cfg = access(cfg, 'set', 'trkcfgcount', access(cfg, 'get', 'trkcfgcount'));
       end
     end
     
