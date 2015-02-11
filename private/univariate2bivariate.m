@@ -170,47 +170,42 @@ switch dtype
       % FIXME this assumes only 1 freq bin
       sizmom = size(data.mom{data.inside(1)});
       
-      if sizmom(2)==1,
-        mom = zeros(sizmom(1), size(data.pos,1));
-        mom(:, data.inside) = cat(2, data.mom{data.inside});
+      if sizmom(1)==1,
+        mom = zeros(size(data.pos,1), sizmom(2));
+        mom(data.inside, :) = cat(1, data.mom{data.inside});
         
         if keeprpt,
-          [nrpt,nvox] = size(mom);
-          data.crsspctrm = [mom.*conj(mom(:,ones(1,nvox)*cmb)) abs(mom).^2];
+          [nvox, nrpt]   = size(mom);
+          data.crsspctrm = transpose([mom.*conj(mom(ones(1,nvox)*cmb,:));abs(mom).^2]);
           data = rmfield(data, 'mom');
-          data = rmfield(data, 'momdimord');
           powindx = [nvox+(1:nvox) nvox+(1:nvox); cmb*ones(1,nvox) nvox+(1:nvox)]';
           
           data.pos = [data.pos repmat(data.pos(cmb,:),[nvox 1]);data.pos data.pos];
           data.inside = [data.inside(:); data.inside(:)+nvox];
           data.outside = [data.outside(:); data.outside(:)+nvox];
+          data.crsspctrmdimord = 'rpttap_pos';
           
         elseif ncmb<size(mom,2)
           % do it computationally more efficient
-          [nrpt,nvox] = size(mom);
-          data.crsspctrm = reshape((transpose(mom)*conj(mom(:,cmb)))./nrpt, [nvox*ncmb 1]);
-          tmppow = mean(abs(mom).^2)';
+          [nvox, nrpt] = size(mom);
+          data.crsspctrm = reshape((mom*mom(cmb,:)')./nrpt, [nvox*ncmb 1]);
+          tmppow = mean(abs(mom).^2,2);
           data.crsspctrm = cat(1, data.crsspctrm, tmppow);
           tmpindx1 = transpose(ncmb*nvox + ones(ncmb+1,1)*(1:nvox));
           tmpindx2 = repmat(tmpindx1(cmb(:),end), [1 nvox])';
           tmpindx3 = repmat(cmb(:), [1 nvox])'; % expressed in original voxel indices
-          powindx = [tmpindx1(:) [tmpindx2(:);tmpindx1(:,end)]];
+          powindx  = [tmpindx1(:) [tmpindx2(:);tmpindx1(:,end)]];
           
           data.pos = [repmat(data.pos, [ncmb 1]) data.pos(tmpindx3(:),:); data.pos data.pos];
           data.inside = data.inside(:)*ones(1,ncmb+1) + (ones(length(data.inside),1)*nvox)*(0:ncmb);
           data.inside = data.inside(:);
           data.outside = setdiff((1:nvox*(ncmb+1))', data.inside);
-          if isfield(data, 'momdimord'),
-            data.crsspctrmdimord = ['pos_',data.momdimord(14:end)];% FIXME this assumes dimord to be 'rpttap_...'
-            data = rmfield(data, 'momdimord');
-          end
           data = rmfield(data, 'mom');
-          
+          data.crsspctrmdimord = 'pos';
         else
-          [nrpt,nvox] = size(mom);
-          data.crsspctrm = (transpose(mom)*conj(mom))./nrpt;
+          [nvox, nrpt] = size(mom);
+          data.crsspctrm = (mom*mom')./nrpt;
           data = rmfield(data, 'mom');
-          data = rmfield(data, 'momdimord');
           powindx = [];
           data.crsspctrmdimord = 'pos_pos_freq'; % FIXME hard coded
         end
@@ -218,7 +213,7 @@ switch dtype
         data.dimord = data.crsspctrmdimord;
         clear mom;
         
-      elseif sizmom(2)>1
+      elseif sizmom(1)>1
         % source moments are multivariate
         tmpindx = reshape(1:size(data.pos,1)*sizmom(2), [sizmom(2) size(data.pos,1)]);
         tmpinside = tmpindx(:, data.inside);
