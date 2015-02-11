@@ -597,7 +597,7 @@ elseif avgoverchancmb && ~any(isnan(selchancmb))
   % str2 = sprintf('mean(%s)', str2);
   data.label = {str1, str2};
 elseif all(isfinite(selchancmb))
-  data.labelcmb = data.labelcmb(selchancmb);
+  data.labelcmb = data.labelcmb(selchancmb,:);
 elseif numel(selchancmb)==1 && any(~isfinite(selchancmb))
   % do nothing
 elseif numel(selchancmb)>1  && any(~isfinite(selchancmb))
