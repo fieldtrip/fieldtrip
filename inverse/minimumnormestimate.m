@@ -228,26 +228,27 @@ if ~hasfilter
       lambda = trace(A * R * A')/(trace(C)*snr^2);
     end
     
-    %% equation 5 from Lin et al 2004 (this implements Dale et al 2000, and Liu et al. 2002)
-    %denom = (A*R*A'+(lambda^2)*C);
-    %if cond(denom)<1e12
-    %  w = R * A' / denom;
-    %else
-    %  fprintf('taking pseudo-inverse due to large condition number\n');
-    %  w = R * A' * pinv(denom);
-    %end
-    
-    % as documented on MNE website, this is replacing the part of the code above, it gives
-    % more stable results numerically.
-    Rc      = chol(R, 'lower');
-    [U,S,V] = svd(A * Rc, 'econ');
-    s  = diag(S);
-    ss = s ./ (s.^2 + lambda);
-    w  = Rc * V * diag(ss) * U';
-    
-    % unwhiten the filters to bring them back into signal subspace
-    if dowhiten
+    if dowhiten,
+      % as documented on MNE website, this is replacing the part of the code below, it gives
+      % more stable results numerically.
+      Rc      = chol(R, 'lower');
+      [U,S,V] = svd(A * Rc, 'econ');
+      s  = diag(S);
+      ss = s ./ (s.^2 + lambda);
+      w  = Rc * V * diag(ss) * U';
+   
+      % unwhiten the filters to bring them back into signal subspace
       w = w*P;
+   
+    else
+      %% equation 5 from Lin et al 2004 (this implements Dale et al 2000, and Liu et al. 2002)
+      denom = (A*R*A'+(lambda^2)*C);
+      if cond(denom)<1e12
+        w = R * A' / denom;
+      else
+        fprintf('taking pseudo-inverse due to large condition number\n');
+        w = R * A' * pinv(denom);
+      end
     end
     
   end % if empty noisecov
