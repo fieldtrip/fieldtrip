@@ -385,7 +385,7 @@ if isfield(cfg.grid, 'filter')
   if numel(cfg.grid.filter) == size(grid.pos, 1)
     grid.filter = cfg.grid.filter;
   else
-    warning_once('ignoring predefined filter as it does not match the grid''s dimension');
+    warning_once('ignoring predefined filter as it does not match the number of source positions');
   end
 end
 
