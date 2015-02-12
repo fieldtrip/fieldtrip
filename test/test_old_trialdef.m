@@ -132,7 +132,7 @@ cfg.trl(:,4) = [ones(5,1); ones(5,1)*2];
 cfg.continuous = 'yes';
 cfg.artfctdef.type  = 'eog';
 cfg.artfctdef.eog.channel = 'MLO11';
-cfg.artfctdef.eog.feedback = 'yes';
+cfg.artfctdef.eog.feedback = 'no'; % yes does not work in the test script, see http://bugzilla.fcdonders.nl/show_bug.cgi?id=2840
 cfg          = ft_rejectartifact(cfg);
 
 datay = data1;

@@ -14,7 +14,7 @@ ft_default.feedback = 'no';
 if nargin==0
   % this is where the data should be located
   datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/cluster_permutation_timelock');
-else
+end
 
 load(fullfile(datadir, 'GA_ERF_orig.mat'));
 
