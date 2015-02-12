@@ -196,7 +196,7 @@ if ~(isempty(cfg.threshold))
   end
   if isempty(cfg.scalpthreshold)
     cfg.scalpthreshold=cfg.threshold;
-    warning('Threshold can be specified separately for scalp and brain. User-specified threshold  will be applied for scalpmask.')
+    warning('Threshold can be specified separately for scalp and brain. User-specified threshold will be applied for scalpmask.')
   end
 end
 % then set defaults again

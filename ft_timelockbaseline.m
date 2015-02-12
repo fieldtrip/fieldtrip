@@ -155,7 +155,7 @@ if ~(ischar(cfg.baseline) && strcmp(cfg.baseline, 'no'))
       elseif d == 2
         timelock.(par)(chansel,:) = ft_preproc_baselinecorrect(timelock.(par)(chansel,:), tbeg, tend);
       else
-        warning('Not doing anything -  matrices up to only three dimensions are supported');
+        warning('Not doing anything - matrices up to only three dimensions are supported');
       end
 
     end
