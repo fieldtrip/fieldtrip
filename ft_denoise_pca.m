@@ -135,12 +135,12 @@ else
 end
 
 % select trials of interest
-if ~isfield(cfg, 'trials'),   cfg.trials = 'all';  end % set the default
-if ~strcmp(cfg.trials, 'all')
-  fprintf('selecting %d trials\n', length(cfg.trials));
-  data    = ft_selectdata(data, 'rpt', cfg.trials);
-  refdata = ft_selectdata(refdata, 'rpt', cfg.trials);
-end
+tmpcfg  = keepfields(cfg, 'trials');
+data    = ft_selectdata(tmpcfg, data);
+refdata = ft_selectdata(tmpcfg, refdata);
+% restore the provenance information
+[cfg, data]    = rollback_provenance(cfg, data);
+[dum, refdata] = rollback_provenance(cfg, refdata); 
 
 refchan = ft_channelselection(cfg.refchannel, refdata.label);
 refindx = match_str(refdata.label, refchan);
