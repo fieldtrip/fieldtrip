@@ -55,7 +55,7 @@ if abort
 end
 
 % set the defaults
-if ~isfield(cfg, 'trials'),       cfg.trials = 'all';           end
+cfg.trials = ft_getopt(cfg, 'trials', 'all', 1);
 
 % store original datatype
 dtype = ft_datatype(data);
@@ -64,10 +64,10 @@ dtype = ft_datatype(data);
 data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
 
 % select trials of interest
-if ~strcmp(cfg.trials, 'all')
-  fprintf('selecting %d trials\n', length(cfg.trials));
-  data = ft_selectdata(data, 'rpt', cfg.trials);
-end
+tmpcfg = keepfields(cfg, 'trials');
+data   = ft_selectdata(tmpcfg, data);
+% restore the provenance information
+[cfg, data] = rollback_provenance(cfg, data);
 
 % initialise some variables
 nchan  = numel(data.label);
