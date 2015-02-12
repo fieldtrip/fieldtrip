@@ -297,12 +297,13 @@ if hasdata
   end
   
   % set the defaults
-  if ~isfield(cfg, 'trials'), cfg.trials = 'all'; end
+  cfg.trials = ft_getopt(cfg, 'trials', 'all', 1);
   
   % select trials of interest
-  if ~strcmp(cfg.trials, 'all')
-    data = ft_selectdata(data, 'rpt', cfg.trials);
-  end
+  tmpcfg = keepfields(cfg, 'trials');
+  data   = ft_selectdata(tmpcfg, data);
+  % restore the provenance information
+  [cfg, data] = rollback_provenance(cfg, data);
   
   % translate the channel groups (like 'all' and 'MEG') into real labels
   cfg.channel = ft_channelselection(cfg.channel, data.label);
