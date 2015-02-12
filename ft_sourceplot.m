@@ -199,7 +199,6 @@ if nargin==3
   % interpolate on the fly
   tmpcfg = keepfields(cfg, {'downsample', 'interpmethod'});
   tmpcfg.parameter = cfg.funparameter;
-  orgcfg.parameter = cfg.funparameter;
   functional = ft_sourceinterpolate(tmpcfg, functional, anatomical);
   [cfg, functional] = rollback_provenance(cfg, functional);
 end

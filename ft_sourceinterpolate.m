@@ -247,7 +247,7 @@ elseif (~is2Dana && is2Dfun) || (is2Dana && is2Dfun)
     clear ax ay az
   end
   
-  interpmat = interp_ungridded(functional.pos, anatomical.pos, 'projmethod', cfg.interpmethod, 'sphereradius', cfg.sphereradius, 'power', cfg.power); %FIXME include other key-value pairs as well
+  interpmat = interp_ungridded(functional.pos, anatomical.pos, 'projmethod', cfg.interpmethod, 'sphereradius', cfg.sphereradius, 'power', cfg.power); % FIXME include other key-value pairs as well
   interpmat(~anatomical.inside(:), :) = 0;
   
   % identify the inside voxels after interpolation
@@ -321,7 +321,7 @@ elseif is2Dana && ~is2Dfun
   else
     for k = 1:numel(cfg.parameter)
       tmp    = getsubfield(functional, cfg.parameter{k});
-      tmpnew = interp_gridded(functional.transform, tmp, anatomical.pos, 'projmethod', 'project', 'projvec', cfg.projvec, 'projweight', cfg.projweight, 'projcomb', cfg.projcomb, 'projthresh', cfg.projthresh, 'dim', dim);
+      tmpnew = interp_gridded(functional.transform, tmp, anatomical.pos, 'dim', functional.dim, 'projmethod', 'project', 'projvec', cfg.projvec, 'projweight', cfg.projweight, 'projcomb', cfg.projcomb, 'projthresh', cfg.projthresh);
       interp = setsubfield(interp, cfg.parameter{k}, tmpnew);
     end
   end

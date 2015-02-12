@@ -1,7 +1,8 @@
 function varargout = interp_gridded(transform, val, pos, varargin)
 
 % INTERP_GRIDDED computes a matrix that interpolates values that were
-% observed on a regular 3-D grid onto a random set of points.
+% observed on positions in a regular 3-D grid onto positions that are
+% unstructured, e.g. the vertices of a cortical sheet.
 %
 % Use as
 %   [val]                = interp_gridded(transform, val, pos, ...) or
@@ -18,7 +19,7 @@ function varargout = interp_gridded(transform, val, pos, varargin)
 %    distmat      = NxM matrix with precomputed distances
 %    inside       = indices for inside voxels (or logical array)
 
-% Copyright (C) 2007, Jan-Mathijs Schoffelen & Robert Oostenveld
+% Copyright (C) 2007-2015, Jan-Mathijs Schoffelen & Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -45,7 +46,7 @@ end
 % get the optional arguments
 projvec      = ft_getopt(varargin, 'projvec',       1);
 projweight   = ft_getopt(varargin, 'projweight',    ones(size(projvec)));
-projcomb     = ft_getopt(varargin, 'projcomb',      'mean'); %or max
+projcomb     = ft_getopt(varargin, 'projcomb',      'mean'); % or max
 projthresh   = ft_getopt(varargin, 'projthresh',    []);
 projmethod   = ft_getopt(varargin, 'projmethod');    % required
 sphereradius = ft_getopt(varargin, 'sphereradius');  % required for some projection methods
@@ -131,7 +132,6 @@ switch projmethod
       % this method is Joachim's implementation that was originally in
       % ft_sourceplot, it assumes the functional data to be defined on a
       % regular 3D grid, and that the transformation to world-space is known
-      
       
       % we also need the dim
       dim = ft_getopt(varargin, 'dim');
